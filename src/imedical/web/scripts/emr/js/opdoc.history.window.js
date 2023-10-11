@@ -1,4 +1,11 @@
-﻿$(function () {
+﻿var patientID = opener?opener.patientID:envVar.hisuiWindowArgs.patientID;
+var episodeID = opener?opener.windowArgs.admID:envVar.hisuiWindowArgs.admID;
+var userLocID = opener?opener.userLocID:envVar.hisuiWindowArgs.userLocID;
+var ssgroupID = opener?opener.ssgroupID:envVar.hisuiWindowArgs.ssgroupID;
+var userID = opener?opener.userID:envVar.hisuiWindowArgs.userID;
+var showHistoryEMRmethod = 'showHistoryEMR';  //济宁使用 showxmlpreview
+var refEmrLastDocID = opener?opener.windowArgs.refEmrLastDocID:envVar.hisuiWindowArgs.refEmrLastDocID;
+$(function () {
     //病历引用功能
     var isClicked = false;
     $('#refEmrDoc').bind('click', function (evt) {
@@ -6,8 +13,11 @@
             isClicked = true;
             setTimeout(function ()  { isClicked =  false; },  2000);
             var idx = $('#insCombo').combobox('getValue');
-            opener.windowArgs.refEmrDocCallback(allInstance[idx]);
-            //closeWindow();
+            if (judgeIsIE()){
+                opener.windowArgs.refEmrDocCallback(allInstance[idx]);
+            }else{
+                envVar.hisuiWindowArgs.refEmrDocCallback(allInstance[idx]);
+            }
         }
     });
     if ('' != refEmrLastDocID) {
@@ -15,8 +25,11 @@
             if (!isClicked) {
                 isClicked = true;
                 setTimeout(function() { isClicked = false; }, 2000);
-                opener.windowArgs.refEmrLastDocCallback(refEmrLastDocID,episodeID);
-                //closeWindow();
+                if (judgeIsIE()){
+                    opener.windowArgs.refEmrLastDocCallback(refEmrLastDocID,episodeID);
+                }else{
+                    envVar.hisuiWindowArgs.refEmrLastDocCallback(refEmrLastDocID,episodeID);
+                }
             }
         });
     }
@@ -26,12 +39,12 @@
 //显示门诊病历详细内容
 function showEmrDoc(insData) {
     if (getViewPrivilege(insData).canView == '0') {
-        var Viewblank = 'emr.blank.csp?info=OPCannotView';
+        var Viewblank = 'emr.blank.csp?info=OPCannotView&MWToken='+getMWToken();
         $('#frameDetail').attr('src', Viewblank);
     }else {
         if (''===insData) return;
         admHisUrl = 'emr.record.browse.browsform.editor.csp?VisitType=OP&'; //id=2461||1&chartItemType=Single&pluginType=DOC
-        var src = admHisUrl + 'id=' + insData.id + '&chartItemType=' + insData.chartItemType + '&pluginType=' + insData.pluginType;
+        var src = admHisUrl + 'id=' + insData.id + '&chartItemType=' + insData.chartItemType + '&pluginType=' + insData.pluginType + '&MWToken=' + getMWToken();
         $('#frameDetail').attr('src', src);
         //通过权限规则脚本控制是否显示引用按钮
         if (getQuotePrivilege(insData).canquote == '1') {
@@ -40,7 +53,11 @@ function showEmrDoc(insData) {
         }
         $("#insComboSpan").show();
         //自动记录病例操作日志
-        opener.windowArgs.hisLog('EMR.OP.AdmHistoryLst.Browse', insData);
+        if (judgeIsIE()){
+            opener.windowArgs.hisLog('EMR.OP.AdmHistoryLst.Browse', insData);
+        }else{
+            envVar.hisuiWindowArgs.hisLog('EMR.OP.AdmHistoryLst.Browse', insData);
+        }
     }
 }
 //实例集合
@@ -72,6 +89,12 @@ function showHistoryEMR(adm) {
         var insCombo = $HUI.combobox("#insCombo",{
             valueField:'id',textField:'text',multiple:false,selectOnNavigation:false,editable:false,
             data:comboDataJson,
+            onShowPanel:function(){
+                document.getElementById("admHisPnl").style.visibility="hidden";
+            },
+            onHidePanel:function(){
+                document.getElementById("admHisPnl").style.visibility="visible";
+            },
             onSelect:function(rec) {
                 showEmrDoc(allInstance[rec.id]);
             },
@@ -96,7 +119,7 @@ function showHistoryEMR(adm) {
 /// 济宁使用集成平台的页面
 function showxmlpreview(adm) {
     $('#insComboSpan').hide();
-    var oeordLnk = 'dhctt.xmlpreview.csp?xmlName=EMRPreview&EpisodeID='+adm;
+    var oeordLnk = 'dhctt.xmlpreview.csp?xmlName=EMRPreview&EpisodeID='+adm+'&MWToken='+getMWToken();
     $('#frameDetail').attr('scrolling', 'yes').attr('src', oeordLnk);
 }
 
@@ -133,9 +156,3 @@ function getViewPrivilege(insData) {
     return result;
 }
 
-//关闭窗口
-function closeWindow() {
-    window.opener = null;
-    window.open('', '_self');
-    window.close();
-}

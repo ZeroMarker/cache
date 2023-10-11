@@ -37,7 +37,7 @@ function InitCTLocGrid()
 	$('#CTLocGrid').datagrid({
 		loadMsg:'数据装载中......',
 		autoRowHeight: true,
-		url: '../web.eprajax.hisinterface.hospitalinfo.cls?Action=getLocs&frameType=HISUI',
+		url: '../web.eprajax.hisinterface.hospitalinfo.cls?Action=getLocs&frameType=HISUI&HospID='+hospId,
 		idField:'ID', 
 		singleSelect:true,
 		fitColumns: true,
@@ -222,7 +222,7 @@ function saveQueryCase()
 	
 	//取查询条件 start
 	var table = parent.$('#tblCondition');
-	var length = parent.$("#tblCondition tr").length;
+	var length = parent.$("#tblCondition .row-item-big-long").length;
 	var ConditionArr = new Array();
 	for (var i = 0,j = 0; i < length ; i++,j++) {
 		ConditionArr[j] = new Array();
@@ -236,7 +236,7 @@ function saveQueryCase()
 				ORCode = parent.document.getElementById("relation" + i).getAttribute("code");
 				ORName = "";
 			}
-			else if(i == 1)
+			else if((i == 1)||(i == 2))
 			{
 				ORCode = parent.document.getElementById("relation" + i).getAttribute("code");
 				ORName = parent.document.getElementById("relation" + i).innerText;
@@ -248,7 +248,15 @@ function saveQueryCase()
 			}
     		
     		//获取项目、大小操作
-			if (i < 2)
+    		if (i == 0)
+    		{
+	    		ItemCode = parent.document.getElementById("name" + i).getAttribute("code");
+				ItemName = parent.document.getElementById("name" + i).innerText;
+				
+				OPCode = parent.document.getElementById("op" + i).getAttribute("code");
+				OPName = parent.document.getElementById("op" + i).innerText;
+	    	}
+			else if ((i == 1)||(i == 2))
 			{
 				var itemCode0 = parent.$("#name" + i).combobox("getValue");
 				//ItemCode = itemCode0.substring(2);
@@ -256,9 +264,7 @@ function saveQueryCase()
 				var ItemName = parent.$("#name" + i).combobox("getText");
 				
 				OPCode = parent.document.getElementById("op" + i).getAttribute("code");
-				OPName = parent.document.getElementById("op" + i).innerText;
-				
-				
+				OPName = parent.document.getElementById("op" + i).innerText;	
 			}
 			else
 			{
@@ -270,7 +276,7 @@ function saveQueryCase()
 			}
 			//取查询条件值
 			var valType = ItemCode.split("^")[3];
-			if (ItemCode.split("^")[4] != "1")
+			if ((ItemCode.split("^")[4] != "1")||(i == 0))
 			{
 				valType = "select";
 			}
@@ -285,7 +291,12 @@ function saveQueryCase()
 			}
 			else if (valType == "select")
 			{
-				txtValue = parent.$("#txtValue" + i).combogrid("getValue");
+				if(i == 0)
+				{
+					txtValue = parent.$("#txtValue" + i).combogrid("getValue");
+				}else{
+					txtValue = parent.$("#txtValue" + i).combogrid("getText");
+				}
 			}
 			else
 			{

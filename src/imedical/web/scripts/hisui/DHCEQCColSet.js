@@ -239,7 +239,8 @@ function BSave_Click()
 	}
 	else
 	{
-		messageShow("","","",t['success'])
+		//modified by ZY20230309 bug:3308989
+		//messageShow("","success","",t['success'])
 		location.reload();
 	}
 }

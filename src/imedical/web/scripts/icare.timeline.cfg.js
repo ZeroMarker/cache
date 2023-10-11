@@ -196,7 +196,7 @@ var createtab2 = function(){
 		onSelect:function(rowIndex,rowData){
 			$("#typeGrid").datagrid('load');
 		},
-		insOrUpdHandler:function(row){
+		insOrUpdHandler:function(row,onAfterSave){
 			var param ;
 			if (row.ID==""){
 				if (!row.Code){
@@ -208,7 +208,7 @@ var createtab2 = function(){
 				param = $.extend(this.updReq,{"dto.cate.id":row.Code});
 			}
 			$.extend(param,{"dto.cate.Description":row.Description});
-			$cm(param,defaultCallBack);
+			$cm(param,getCommCMCallback(onAfterSave));
 		},
 		getNewRecord:function(){
 			return {ID:"",Code:"",Description:""};
@@ -222,6 +222,18 @@ var createtab2 = function(){
 				}
 			});
 		}
+		,afterToolbar:[{
+			id:'cateGrid_tb_trans',
+			iconCls:'icon-translate-word',
+			handler:function(){
+				var rows=$('#cateGrid').datagrid('getRows');
+				var DescriptionArr=[];
+				$.each(rows,function(){
+					if(this.Description) DescriptionArr.push(this.Description)
+				})
+				i18n_start_basedata_trans('icare.TimeLineCategroy',{Description:DescriptionArr})
+			}	
+		}]
 	});
 	/*子项维护*/
 	$('#typeGrid').mgrid({
@@ -229,9 +241,27 @@ var createtab2 = function(){
 		key:'type',editGrid:true,
 		title:'子项列表',pagination:false,
 		columns:[[
-			{field:'Code',title:'项目代码',editor:{type:'text'}},
+			{field:'Code',title:'项目代码',width:80,editor:{type:'text'}},
 			{field:'Description',title:'项目描述',width:100,editor:{type:'text'}},
-			{field:'ShowType',title:'显示联系',formatter:function(v){if (v=="N"){ return "仅显示状态"}return "显示数据"; },editor:{type:'icheckbox',options:{on:'Y',off:'N'}}}
+			{field:'ShowType',title:'显示联系',width:80,formatter:function(v){if (v=="N"){ return "仅显示状态"}return "显示数据"; },editor:{type:'icheckbox',options:{on:'Y',off:'N'}}}
+			,{field:'ProcessShowStyle',title:'时间轴样式',width:100,editor:{type:'combogrid',options:{
+				idField:'id',textField:'text',data:[{id:'std',text:'通用样式',note:''},{id:'time-1',text:'按时间显示1',note:'当且仅当没有分支、子流程、底部图表才会按此显示'},{id:'time-2',text:'按时间显示2',note:'当且仅当没有分支、子流程、底部图表才会按此显示'},{id:'time-3',text:'按时间显示3',note:'当且仅当没有分支、子流程、底部图表才会按此显示'}],columns:[[
+					{field:'text',title:'样式名',width:100},{field:'img',width:320,title:'样式图',formatter:function(v,row){
+						return '<img style="width:300px;height:auto;border:1px solid #ccc;" src="../images/TimeLine/new/process-'+row.id+'.png">';
+					}},{field:'note',title:'备注',width:100}
+				]],panelWidth:545,panelHeight:490,nowrap:false
+			}},formatter:function(v){
+					if (v){
+						if(v.indexOf("time-")>-1){ 
+							return "按时间显示"+v.split('-')[1];
+						}else{
+							return '通用样式' 
+						}
+					}else{
+						return '';	
+					}
+				}
+			}
 		]],
 		onBeforeLoad:function(param){
 			if ($('#cateGrid').datagrid('getSelected')){
@@ -251,7 +281,7 @@ var createtab2 = function(){
 			$("#typeBtnGrid").datagrid('load');
 			$("#typeChartGrid").datagrid('load');
 		},
-		insOrUpdHandler:function(row){
+		insOrUpdHandler:function(row,onAfterSave){
 			var param ;
 			if (row.ID==""){
 				if (!row.Code){
@@ -263,12 +293,12 @@ var createtab2 = function(){
 				param = $.extend(this.updReq,{"dto.type.id":row.Code});
 			}
 			var cateCode = $('#cateGrid').datagrid('getSelected').Code;
-			$.extend(param,{"dto.cateCode":cateCode,"dto.type.Description":row.Description,"dto.type.ShowType":row.ShowType});
+			$.extend(param,{"dto.cateCode":cateCode,"dto.type.Description":row.Description,"dto.type.ShowType":row.ShowType,'dto.type.ProcessShowStyle':row.ProcessShowStyle});
 			//$('#actGrid').datagrid('acceptChanges'); //前端提交getChanges方法
-			$cm(param,defaultCallBack);
+			$cm(param,getCommCMCallback(onAfterSave));
 		},
 		getNewRecord:function(){
-			return {ID:"",Code:"",Description:"",ShowType:""};
+			return {ID:"",Code:"",Description:"",ShowType:"",ProcessShowStyle:''};
 		},
 		delHandler:function(row){
 			var _t = this;
@@ -279,7 +309,20 @@ var createtab2 = function(){
 					$cm(_t.delReq,defaultCallBack);
 				}
 			});
-		}
+		}		
+		,afterToolbar:[{
+			id:'typeGrid_tb_trans',
+			iconCls:'icon-translate-word',
+			text:'翻译',
+			handler:function(){
+				var rows=$('#typeGrid').datagrid('getRows');
+				var DescriptionArr=[];
+				$.each(rows,function(){
+					if(this.Description) DescriptionArr.push(this.Description)
+				})
+				i18n_start_basedata_trans('icare.ClinicalDataType',{Description:DescriptionArr})
+			}	
+		}]
 	});
 	/*子项--按钮维护*/
 	$('#typeBtnGrid').mgrid({
@@ -321,7 +364,7 @@ var createtab2 = function(){
 					return false;
 				}
 		},
-		insOrUpdHandler:function(row){
+		insOrUpdHandler:function(row,onAfterSave){
 			var param ;
 			if (row.ID==""){
 				if (!row.Code){
@@ -339,7 +382,7 @@ var createtab2 = function(){
 				"dto.tool.ToolType":"ClinicalDataTypeBtn"
 			});
 			//$('#actGrid').datagrid('acceptChanges'); //前端提交getChanges方法
-			$cm(param,defaultCallBack);
+			$cm(param,getCommCMCallback(onAfterSave));
 		},
 		getNewRecord:function(){
 			var dataTypeRow = $('#typeGrid').datagrid("getSelected");
@@ -400,7 +443,7 @@ var createtab2 = function(){
 					return false;
 				}
 		},
-		insOrUpdHandler:function(row){
+		insOrUpdHandler:function(row,onAfterSave){
 			var param ;
 			if (row.ID==""){
 				if (!row.Code){
@@ -418,7 +461,7 @@ var createtab2 = function(){
 				"dto.tool.ToolType":"ClinicalDataTypeChartBook"
 			});
 			//$('#actGrid').datagrid('acceptChanges'); //前端提交getChanges方法
-			$cm(param,defaultCallBack);
+			$cm(param,getCommCMCallback(onAfterSave));
 		},
 		getNewRecord:function(){
 			var dataTypeRow = $('#typeGrid').datagrid("getSelected");
@@ -452,6 +495,10 @@ var createtab2 = function(){
 			{field:'GroupName',title:'分组名',width:60,editor:{type:'text'}},
 			{field:'Mth',title:'方法名',width:100,editor:{type:'text'}},
 			{field:'ParentCode',title:"父行为",width:120,editor:{type:'text'}},
+			{field:'TimeLimit',title:'超时时间(秒)',width:120,editor:{type:"text"}},
+			{field:'ForceMaster',title:"强制主分支",width:100,formatter:function(v){if (v=="Y"){ return "是"}return "否"; },editor:{type:'icheckbox',options:{on:'Y',off:'N'}}},
+			{field:'HideNoData',title:"按数据显示",width:100,formatter:function(v){if (v=="Y"){ return "是"}return "否"; },editor:{type:'icheckbox',options:{on:'Y',off:'N'}}},  //按数据显示即无数据不显示
+			{field:'IsSensitive',title:"敏感信息",width:100,formatter:function(v){if (v=="Y"){ return "是"}return "否"; },editor:{type:'icheckbox',options:{on:'Y',off:'N'}}},  //按数据显示即无数据不显示
 			{field:'Active',title:"激活状态",width:100,formatter:function(v){if (v=="N"){ return "禁用"}return "启用"; },editor:{type:'icheckbox',options:{on:'Y',off:'N'}}}
 		]],
 		rowStyler: function(index,row){
@@ -467,7 +514,7 @@ var createtab2 = function(){
 					return false;
 				}
 		},
-		insOrUpdHandler:function(row){
+		insOrUpdHandler:function(row,onAfterSave){
 			var param ;
 			if (row.ID==""){
 				if (!row.Code){
@@ -487,9 +534,14 @@ var createtab2 = function(){
 				"dto.act.GroupName":row.GroupName,
 				"dto.act.ParentCode":row.ParentCode,
 				"dto.act.DataTypeCode":row.DataType
+				,"dto.act.TimeLimit":row.TimeLimit
+				,"dto.act.ForceMaster":row.ForceMaster
+				,"dto.act.HideNoData":row.HideNoData
+				,"dto.act.IsSensitive":row.IsSensitive
+				
 			});
 			//$('#actGrid').datagrid('acceptChanges'); //前端提交getChanges方法
-			$cm(param,defaultCallBack);
+			$cm(param,getCommCMCallback(onAfterSave));
 		},
 		getNewRecord:function(){
 			var dataTypeRow = $('#typeGrid').datagrid("getSelected");
@@ -503,7 +555,22 @@ var createtab2 = function(){
 					$cm(_t.delReq,defaultCallBack);
 				}
 			});
-		}
+		},afterToolbar:[{
+			id:'actGrid_tb_trans',
+			iconCls:'icon-translate-word',
+			text:'翻译',
+			handler:function(){
+				var rows=$('#actGrid').datagrid('getRows');
+				var DescriptionArr=[];
+				var GroupNameArr=[];
+				$.each(rows,function(){
+					if(this.Description) DescriptionArr.push(this.Description);
+					if(this.GroupName) GroupNameArr.push(this.GroupName)
+				})
+				
+				i18n_start_basedata_trans('icare.ClinicalDataTypeAct',{Description:DescriptionArr,GroupName:GroupNameArr})
+			}	
+		}]
 	});
 }
 var createtab3 = function(){
@@ -538,7 +605,7 @@ var createtab3 = function(){
 					}
 				}
 			},
-			insOrUpdHandler:function(row){
+			insOrUpdHandler:function(row,onAfterSave){
 				var param ;
 				if (row.ID==""){
 					if (!row.Description){
@@ -555,7 +622,7 @@ var createtab3 = function(){
 					"dto.linkcfg.Description":row.Description,
 					"dto.linkcfg.Parameters":row.Parameters
 				});
-				$cm(param,defaultCallBack);
+				$cm(param,getCommCMCallback(onAfterSave));
 			},
 			getNewRecord:function(){
 				return {ID:"",Description:"",Parameters:""};
@@ -621,7 +688,7 @@ $(function(){
 		onLoadSuccess:function(data){
 			$(this).datagrid("getPanel").panel("setTitle",timeLineArr[selectedTimeLineInd].Description+"的显示项目");
 		},
-		insOrUpdHandler:function(row){
+		insOrUpdHandler:function(row,onAfterSave){
 			var param ;
 			if (row.ID==""){
 				if (!row.Code){
@@ -648,7 +715,7 @@ $(function(){
 				"dto.items.ViewConfig":row.ViewConfigId||"",
 				"dto.items.DisplayExpression":row.DisplayExpression
 			});
-			$cm(param,defaultCallBack);
+			$cm(param,getCommCMCallback(onAfterSave) );
 		},
 		getNewRecord:function(){
 			return {ID:"",CategoryCode:"",CategoryDesc:"",ViewTypeDesc:"",ViewConfigParam:"",Sequence:""};
@@ -688,6 +755,14 @@ $(function(){
 	
 	
 });
+
+/// 获取公共的保存成功后的回调函数(因为保存成功或失败还有回调，所以要每次传入回调，获取)
+function getCommCMCallback(onAfterSave){
+	return function(rtn){
+		onAfterSave(rtn.success==1,rtn.msg)
+	}
+}
+
 /*
 	editor:{type:'switchbox',options:{onClass:'primary',offClass:'gray',onText:'Y',offText:'N',onSwitchChange:function(){
 						var _t = $(this);

@@ -1550,7 +1550,7 @@ function caSign(signProperty,userInfo,instanceId)
 
 	//开始签名
 	var cert = GetSignCert(strKey);
-    var UsrCertCode = GetUniqueID(cert);
+    var UsrCertCode = GetUniqueID(cert,strKey);
     if (!UsrCertCode || '' == UsrCertCode) return '用户唯一标示为空！';
     
 	var signlevel = signProperty.SignatureLevel;
@@ -2104,6 +2104,10 @@ function eventSaveDocument(commandJson)
 	else if (commandJson["args"]["result"] == "ERROR")
 	{
 	    setMessage('保存失败','warning');
+	}
+	else if (commandJson["args"]["result"] == "INVALID")
+	{
+	    setMessage('病历存在非法字符，不能保存。','warning'); 
 	}
 	else if (commandJson["args"]["result"] != "NONE")
 	{

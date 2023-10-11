@@ -46,12 +46,12 @@ if(!(typeof $.cm=="function")){
  */
 function saveByDataGrid(className,methodName,gridid,handle,datatype){
 	if(!endEditing(gridid)){
-		$.messager.alert("提示","请编辑必填数据!");
+		$.messager.alert("提示","请编辑必填数据!","warning");
 		return;
 	}
 	var rowsData = $(gridid).datagrid('getChanges');
 	if(rowsData.length<=0){
-		$.messager.alert("提示","没有待保存数据!");
+		$.messager.alert("提示","没有待保存数据!","warning");
 		return;
 	}
 	var dataList = [];
@@ -504,4 +504,275 @@ Number.prototype.add = function (arg){
     return accAdd(arg,this);
 }
 
+/// 获取多少天之后的某一天
+function GetDateAfter(curr_Date,t,flag){
+	if(flag=="+"){
+		curr_Date.setDate(curr_Date.getDate() + parseInt(t));
+	}else if(flag=="-"){
+		curr_Date.setDate(curr_Date.getDate() - parseInt(t));	
+	}else{
+		curr_Date=new Date();	
+	}
+	var Year = curr_Date.getFullYear();
+	var Month = curr_Date.getMonth()+1;
+	var Day = curr_Date.getDate();
+	//return Year+"-"+Month+"-"+Day;
+	
+	if(typeof(DateFormat)=="undefined"){ //2017-03-15 cy
+		return Year+"-"+Month+"-"+Day;
+	}else{
+		if(DateFormat=="4"){ //日期格式 4:"DMY" DD/MM/YYYY 2017-03-07 cy
+			return Day+"/"+Month+"/"+Year;
+		}else if(DateFormat=="3"){ //日期格式 3:"YMD" YYYY-MM-DD
+			return Year+"-"+Month+"-"+Day;
+		}else if(DateFormat=="1"){ //日期格式 1:"MDY" MM/DD/YYYY
+			return Month+"/"+Day+"/"+Year;
+		}else{ //2017-03-15 cy
+			return Year+"-"+Month+"-"+Day;
+		}
+	}
+}
+ 
+/// 格式化日期  bianshuai 2014-09-18
+function formatDate(t){
+	var curr_Date = new Date();  
+	curr_Date.setDate(curr_Date.getDate() + parseInt(t)); 
+	var Year = curr_Date.getFullYear();
+	var Month = curr_Date.getMonth()+1;
+	var Day = curr_Date.getDate();
+	//return Year+"-"+Month+"-"+Day;
+	if(typeof(DateFormat)=="undefined"){ //2017-03-15 cy
+		return Year+"-"+Month+"-"+Day;
+	}else{
+		if(DateFormat=="4"){ //日期格式 4:"DMY" DD/MM/YYYY 2017-03-07 cy
+			return Day+"/"+Month+"/"+Year;
+		}else if(DateFormat=="3"){ //日期格式 3:"YMD" YYYY-MM-DD
+			return Year+"-"+Month+"-"+Day;
+		}else if(DateFormat=="1"){ //日期格式 1:"MDY" MM/DD/YYYY
+			return Month+"/"+Day+"/"+Year;
+		}else{ //2017-03-15 cy
+			return Year+"-"+Month+"-"+Day;
+		}
+	}
+}
+
+function ajaxLoading(){   
+    $("<div class=\"datagrid-mask\"></div>").css({display:"block",width:"100%",height:$(window).height()}).appendTo("body");   
+    $("<div class=\"datagrid-mask-msg\"></div>").html("正在处理，请稍候。。。").appendTo("body").css({display:"block",left:($(document.body).outerWidth(true) - 190) / 2,top:($(window).height() - 45) / 2});   
+ }   
+ function ajaxLoadEnd(){   
+     $(".datagrid-mask").remove();   
+     $(".datagrid-mask-msg").remove();               
+}
+/**
+* @datagrid中是否标记
+* @param 	value 	 	|string 	|值
+*						Y:是
+*						N:否   
+* @author zhouxin
+*/
+function FormatterYN(value){
+	
+  if(value=="Y"){
+	return "<font color='#21ba45'>是</font>"
+  }else if(value=="N"){
+	return "<font color='#f16e57'>否</font>"
+  }else{
+    return "";
+  }
+}
+
+/**
+ * 保存或者更新表通用方法
+ * @creater zhouxin
+ * @param entity 			|类名称：User.DHCPueEmrTypeCon
+ * @param parStr            |参数串：字段名称_$c(1)_值
+ *                                   多个字段值用$c(2)分隔
+ *                                   多条记录用$c(3)分隔
+ * @param saveType          |保存类型： 
+ *                                   1:更新全部字段，未传入的字典更新为空
+ *                                   2:更新传入字段，未传入的字典不更新 
+ * @param successHandler    |回调函数
+ *
+ * @demo  saveEntity("User.DHCPueEmrTypeCon","ID$c(1)1",function(data){ alert() })	 
+ */
+function saveEntity(entity,parStr,saveType,handler){
+	var type=(typeof(saveType) == undefined)?1:saveType;
+	var fun;
+	if((typeof handler)=='function'){
+		fun=handler
+	}else{
+		fun=function(data){
+			if(data==0){
+				$.messager.alert('提示','保存成功');
+			}else{
+				$.messager.alert('提示','保存失败:'+data)
+			}
+		};	
+	}
+	runClassMethod("web.DHCPUEEmrTypeCon","Save",{'entity':entity,'params':parStr,'saveType':type},fun)	 
+}
+/**
+ * 删除datagrid记录通用方法
+ * @creater zhouxin
+ * @param entity 			|类名称：User.DHCPueEmrTypeCon
+ * @param gridid            |gridid：datagrid的id
+ *
+ * @demo  removeCom("User.DHCPueEmrTypeCon","1^2")	 
+ */
+function removeCom(entity,gridid){
+	var rowsData = $(gridid).datagrid('getSelections')
+	if (rowsData == null) {
+		$.messager.alert("提示","请选择!");
+		return;	
+	}
+	var idsArr=[]
+	for(var i=0; i<rowsData.length; i++){
+		idsArr.push(rowsData[i].ID);
+	}
+	removeEntity(entity,idsArr.join("^"),function(){$(gridid).datagrid('reload')});
+}
+/**
+ * 删除表记录通用方法
+ * @creater zhouxin
+ * @param entity 			|类名称：User.DHCPueEmrTypeCon
+ * @param parStr            |参数串：id1_^_id2
+ * @param successHandler    |回调函数
+ *
+ * @demo  removeEntity("User.DHCPueEmrTypeCon","1^2")	 
+ */
+function removeEntity(entity,idStr,handler){
+	$.messager.confirm("操作提示", "确认要删除吗？", function (data) {  
+            if (data) {  
+                runClassMethod(
+					"web.DHCADVModel",
+				    "removeBath",
+					{
+		 				'idStr':idStr,
+		 				'entity':entity
+		 			},
+		 			function(data){
+			 			if(data.code!=0){
+				 			$.messager.alert("提示","操作失败!"+data.msg);
+				 		}else{
+					 		if((typeof handler)=='function'){
+								handler();
+							} 
+					 	}
+					});
+            } 
+    }); 
+}
+
+
+
+
+/**  
+ * layout方法扩展   隐藏和显示layout布局  调用方式：$("#id").layout("show","west"); $("#id").layout("hidden","west")
+ * @param {Object} jq  
+ * @param {Object} region  
+ */  
+$.extend($.fn.layout.methods, {   
+    /**  
+     * 面板是否存在和可见  
+     * @param {Object} jq  
+     * @param {Object} params  
+     */  
+    isVisible: function(jq, params) {   
+        var panels = $.data(jq[0], 'layout').panels;   
+        var pp = panels[params];   
+        if(!pp) {   
+            return false;   
+        }   
+        if(pp.length) {   
+            return pp.panel('panel').is(':visible');   
+        } else {   
+            return false;   
+        }   
+    },   
+    /**  
+     * 隐藏除某个region，center除外。  
+     * @param {Object} jq  
+     * @param {Object} params  
+     */  
+    hidden: function(jq, params) {   
+        return jq.each(function() {   
+            var opts = $.data(this, 'layout').options;   
+            var panels = $.data(this, 'layout').panels;   
+            if(!opts.regionState){   
+                opts.regionState = {};   
+            }   
+            var region = params;   
+            function hide(dom,region,doResize){   
+                var first = region.substring(0,1);   
+                var others = region.substring(1);   
+                var expand = 'expand' + first.toUpperCase() + others;   
+                if(panels[expand]) {   
+                    if($(dom).layout('isVisible', expand)) {   
+                        opts.regionState[region] = 1;   
+                        panels[expand].panel('close');   
+                    } else if($(dom).layout('isVisible', region)) {   
+                        opts.regionState[region] = 0;   
+                        panels[region].panel('close');   
+                    }   
+                } else {   
+                    panels[region].panel('close');   
+                }   
+                if(doResize){   
+                    $(dom).layout('resize');   
+                }   
+            };   
+            if(region.toLowerCase() == 'all'){   
+                hide(this,'east',false);   
+                hide(this,'north',false);   
+                hide(this,'west',false);   
+                hide(this,'south',true);   
+            }else{   
+                hide(this,region,true);   
+            }   
+        });   
+    },   
+    /**  
+     * 显示某个region，center除外。  
+     * @param {Object} jq  
+     * @param {Object} params  
+     */  
+    show: function(jq, params) {   
+        return jq.each(function() {   
+            var opts = $.data(this, 'layout').options;   
+            var panels = $.data(this, 'layout').panels;   
+            var region = params;   
+  
+            function show(dom,region,doResize){   
+                var first = region.substring(0,1);   
+                var others = region.substring(1);   
+                var expand = 'expand' + first.toUpperCase() + others;   
+                if(panels[expand]) {   
+                    if(!$(dom).layout('isVisible', expand)) {   
+                        if(!$(dom).layout('isVisible', region)) {   
+                            if(opts.regionState[region] == 1) {   
+                                panels[expand].panel('open');   
+                            } else {   
+                                panels[region].panel('open');   
+                            }   
+                        }   
+                    }   
+                } else {   
+                    panels[region].panel('open');   
+                }   
+                if(doResize){   
+                    $(dom).layout('resize');   
+                }   
+            };   
+            if(region.toLowerCase() == 'all'){   
+                show(this,'east',false);   
+                show(this,'north',false);   
+                show(this,'west',false);   
+                show(this,'south',true);   
+            }else{   
+                show(this,region,true);   
+            }   
+        });   
+    }   
+}); 
  

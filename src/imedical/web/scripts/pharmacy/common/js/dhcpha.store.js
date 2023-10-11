@@ -49,6 +49,12 @@ var DHCPHA_STORE = ({
             ClassName: 'web.DHCSTPharmacyDict',
             QueryName: 'RetReason',
             hospId:session['LOGON.HOSPID']
+        },
+        // …Í«ÎÕÀ“©‘≠“Ú
+        ReqRetReason: {
+            ClassName: 'web.DHCINPHA.Request',
+            QueryName: 'BLCReasonForRefund',
+            hospId:session['LOGON.HOSPID']
         }
     },
     ComboGrid: {

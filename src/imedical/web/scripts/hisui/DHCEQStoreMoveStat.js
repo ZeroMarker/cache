@@ -11,19 +11,24 @@ function BodyLoadHandler(){
 	initButtonWidth();
 	InitPage();	
 	SetStatus();
-	Muilt_LookUp("FromLoc^ToLoc^Model");
+	Muilt_LookUp("FromLoc^ToLoc^Model^Provider^IsPrint^Hospital");  //回车选择 Modied By QW20210629 BUG:QW0131 院区
 	SetElement("MoveType",GetElementValue("MoveTypeID"));
 	fillData();
 	RefreshData();
+	//ui改造 add by hyy 2023-1-31
+	creatToolbar();
+	initPanelHeaderStyle();
+	initButtonColor();
+	$('#tDHCEQStoreMoveStat').datagrid('options').view.onAfterRender = ReLoadGrid;
 }
-///begin add by jyp 2018-08-16 Hisui改造：原BodyLoadHandler()方法无法获取当前页行数
-var onAfterRender = $.fn.datagrid.defaults.view.onAfterRender;
-$.extend($.fn.datagrid.defaults.view, {
-            onAfterRender: function(target){
-                onAfterRender.call(this, target);
-	            hiddenTableIcon("DHCEQStoreMoveStat","TRowID","TDetail");
-            }
-});
+
+function ReLoadGrid()
+{
+	hiddenTableIcon("DHCEQStoreMoveStat","TRowID","TDetail");
+	creatToolbar();
+	fixTGrid();		//czf 2783239 2022-09-05
+}
+
 ///end add by jyp 2018-08-16 Hisui改造：原BodyLoadHandler()方法无法获取当前页行数
 function SetStatus()
 {
@@ -31,17 +36,26 @@ function SetStatus()
 }
 function InitPage()
 {
-	KeyUp("FromLoc^ToLoc^Model^EquipType^EquipCat","N");
+	KeyUp("FromLoc^ToLoc^Model^EquipType^EquipCat^Provider^IsPrint^Hospital","N");  //清空选择 Modied By QW20210629 BUG:QW0131 院区
 	var obj=document.getElementById(GetLookupName("EquipCat"));
 	if (obj) obj.onclick=EquipCat_Click;
 	var obj=document.getElementById("BPrint");
 	if (obj) obj.onclick=BPrint_Click;
-	///zy 2009-07-15 BugNo.ZY0007
+	var obj=document.getElementById("BBatprint");	// MZY0143	3084752		2022-11-16	批量打印条码
+	if (obj) obj.onclick=BBatprint;
 	var obj=document.getElementById("MoveType");
 	if (obj) obj.onchange=MoveType;
 	////////////////////
 	var obj=document.getElementById("BFind");
 	if (obj) obj.onclick=BFind_Click;
+	//Add By QW20210629 BUG:QW0131 院区 begin
+	var HosCheckFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","990051");
+	if(HosCheckFlag=="0")
+	{
+		hiddenObj("cHospital",1);
+		hiddenObj("Hospital",1);
+	}
+	//Add By QW20210629 BUG:QW0131 院区 end
 }
 
 /// 创建:zy 2009-07-15 BugNo.ZY0007
@@ -104,6 +118,17 @@ function GetEquipCat(value)
 {
 	GetLookUpID("EquipCatDR",value);
 }
+ //Modify by zx 2020-08-20
+function GetProvider(value)
+{
+	GetLookUpID("ProviderDR",value);
+}
+//Add By QW20210422 bug:QW0100
+function GetIsPrint(value)
+{
+	GetLookUpID("IsPrintDR",value);
+}
+
 ///modify by jyp 2018-08-16 Hisui改造：导出数据时无法取TJobz1的值
 function BPrint_Click()
 {
@@ -115,8 +140,25 @@ function BPrint_Click()
 	if (ObjTJob.rows[0]["TJob"])  TJob=ObjTJob.rows[0]["TJob"];
 	//end add by jyp 2018-08-16
 	if (TJob=="")  return;
-	PrintDHCEQEquipNew("StoreMoveList",1,TJob,GetElementValue("vData"))
+	//Modefied by zc0093  润乾导出修改 2021-01-07 begin
+	var PrintFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo",'990062');
+	if (PrintFlag=="1")
+	{
+		// MZY0114	2446315		2022-01-27
+		if (!CheckColset("StoreMoveList"))
+		{
+			messageShow('popover','alert','提示',"导出数据列未设置!")
+			return ;
+		}
+		var url="dhccpmrunqianreport.csp?reportName=DHCEQStoreMoveExport.raq&CurTableName=StoreMoveList&CurUserID="+session['LOGON.USERID']+"&CurGroupID="+session['LOGON.GROUPID']+"&Job="+TJob
+    	window.open(url,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0');   //
+	}
+	else
+	{
+		PrintDHCEQEquipNew("StoreMoveList",1,TJob,GetElementValue("vData"))
+	}
 	return
+	//Modefied by zc0093  润乾导出修改 2021-01-07 end
 	//2011-07-20 DJ end
 	var encmeth=GetElementValue("GetRepPath");
 	if (encmeth=="") return;
@@ -228,14 +270,15 @@ function BPrint_Click()
 	{
 		messageShow("","","",e.message);
 	}
-
-
 } 
 ///modify by jyp 2018-08-16 Hisui改造：修改连接csp路径
 function BFind_Click()
 {
 	var val="&vData="
 	val=val+GetVData();
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		val += "&MWToken="+websys_getMWToken()
+	}
 	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQStoreMoveStat"+val;
 }
 
@@ -257,6 +300,15 @@ function GetVData()
 	val=val+"^StoreMoveNo="+GetElementValue("StoreMoveNo");
 	val=val+"^EquipNo="+GetElementValue("EquipNo");
 	val=val+"^Flag="+GetElementValue("Flag");
+	val=val+"^ProviderDR="+GetElementValue("ProviderDR");  //Modify by zx 2020-08-20
+	val=val+"^ContractNo="+GetElementValue("ContractNo");		//czf 20200818 1476413
+	val=val+"^IsPrintDR="+GetElementValue("IsPrintDR");  //Add By QW20210422 bug:QW0100
+	val=val+"^LeaveFactoryNo="+GetElementValue("LeaveFactoryNo");  //Modify by zx 2020-05-19 Bug 1880109
+	val=val+"^HospitalDR="+GetElementValue("HospitalDR");   //Add By QW20210629 BUG:QW0131 院区
+	val=val+"^SAuditDate="+GetElementValue("SAuditDate");	// MZY0157	3412819		2023-03-29
+	val=val+"^EAuditDate="+GetElementValue("EAuditDate");
+	val=val+"^QXType="+GetElementValue("QXType");
+	val=val+"^ApproveRoleDR="+GetElementValue("ApproveRoleDR");
 	return val;
 }
 
@@ -283,6 +335,10 @@ function fillData()
 	val=val+"equipcat=EquipCat="+GetElementValue("EquipCatDR")+"^";
 	val=val+"statcat=StatCat="+GetElementValue("StatCatDR")+"^";
 	val=val+"equiptype=EquipType="+GetElementValue("EquipTypeDR")+"^";
+	val=val+"prov=Provider="+GetElementValue("ProviderDR")+"^";  //Modify by zx 2020-08-20
+	val=val+"isprint=IsPrint="+GetElementValue("IsPrintDR")+"^";  //Add By QW20210422 bug:QW0100
+	val=val+"hos=Hospital="+GetElementValue("HospitalDR")+"^"; //Add By QW20210629 BUG:QW0131 院区
+	val=val+"model=Model="+GetElementValue("ModelDR")+"^";		// MZY0144	3075104		2022-11-24
 	var encmeth=GetElementValue("GetDRDesc");
 	var result=cspRunServerMethod(encmeth,val);
 	var list=result.split("^");
@@ -298,5 +354,64 @@ function RefreshData()
 	var vdata1=GetElementValue("vData");
 	var vdata2=GetVData();
 	if (vdata1!=vdata2) BFind_Click();
+}
+//Add By QW20210629 BUG:QW0131 院区
+function GetHospital(value)
+{
+	GetLookUpID("HospitalDR",value); 			
+}
+
+//czf 2022-06-06
+//显示转移明细合计行
+function creatToolbar()
+{
+	var currentobj=$("#tDHCEQStoreMoveStat").datagrid('getRows');
+	if (currentobj.length>0)
+	{
+		var TJob=currentobj[0]['TJob'];
+		if (TJob=="")  return;
+		
+        //modified by ZY 20221011 修改合计行取值位置
+        //var Data = tkMakeServerCall("web.DHCEQStoreMoveList","GetSumInfo",TJob); 
+        var Data = tkMakeServerCall("web.DHCEQ.Plat.LIBCommon","GetTempGlobalTotalInfo",'StoreMoveStat','',TJob,''); 
+		$("#sumTotal").html(Data);
+	}
+}
+// MZY0143	3084752		2022-11-16
+function BBatprint()
+{
+	var TJob="";
+	var ObjTJob=$('#tDHCEQStoreMoveStat').datagrid('getData');
+	if (ObjTJob.rows[0]["TJob"]) TJob=ObjTJob.rows[0]["TJob"];
+	if (TJob=="") return;
+	
+	var TotalRows=tkMakeServerCall("web.DHCEQ.Plat.LIBCommon","GetTempGlobalData","StoreMoveStat","",TJob);
+	//alert(TJob+":"+TotalRows)
+	var SMRowIDs="";
+	for (var i=1; i<TotalRows; i++)
+	{
+		var result=tkMakeServerCall("web.DHCEQ.Plat.LIBCommon","GetTempGlobalData","StoreMoveStat","",TJob,"",i);
+		var Detail=result.split("^");
+		//alert(TJob+":"+i+":"+Detail[11])
+		// TStatus
+		if (Detail[11]=="审核")
+		{
+			if (SMRowIDs=="")
+			{
+				SMRowIDs=","+Detail[0]+",";
+			}
+			else
+			{
+				if (SMRowIDs.indexOf(","+Detail[0]+",")==-1) SMRowIDs=SMRowIDs+Detail[0]+",";
+			}
+		}
+	}
+	//alert(SMRowIDs)
+	if (SMRowIDs=="") return;
+	var list=SMRowIDs.split(",");
+	for (var i=1; i<list.length-1; i++)
+	{
+		printEquipBar(list[i],"StoreMove");
+	}
 }
 document.body.onload = BodyLoadHandler;

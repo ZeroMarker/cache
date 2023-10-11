@@ -9,7 +9,7 @@ function BodyLoadHandler()
     InitUserInfo(); //系统参数
 	InitEvent();	
 	disabled(true);//灰化
-	initButtonWidth()  //hisui改造:按钮长度一致 add by lmm 2018-08-20
+	//initButtonWidth()  //hisui改造:按钮长度一致 add by lmm 2018-08-20
 }
 function InitEvent()
 {

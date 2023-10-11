@@ -3,22 +3,26 @@ var cbxWardFlag= "Y";
 $(function(){
 	$('#chkLoc')[0].status = false;
 	initPatientList();
+	InitIllness();
 });
 //Desc:初始化病区  不选中
 function initPACWard(){
 		$('#wardcombo').combobox({  
-	    url:'../EMRservice.Ajax.hisData.cls?Action=GetDicList&DicCode=s10&PageType=all&LoadType=combobox',  
+	    url:'../EMRservice.Ajax.hisData.cls?Action=GetDicList&DicCode=S10&PageType=all&LoadType=combobox',  
 	    valueField:'Id',  
 	    textField:'Text',
 	    width:167,
+		filter: function(q, row){
+			return ((row["Text"].toUpperCase().indexOf(q.toUpperCase()) >= 0)||(row["Alias"].toUpperCase().indexOf(q.toUpperCase()) >= 0));
+		},
 	    onSelect: function(record){
 		    //加载病区
 		    
-	    	InitDoctorName(record.Id);
+	    	InitDoctorName(record.Id,"S10");
 	    },
 	    onLoadSuccess:function(d){
 	    	if(userIsNur=="1"){
-		    	$('#wardcombo').combobox('select',locID);
+				$('#wardcombo').combobox('select',wardID);
                     return;
 		    }
 		}
@@ -34,10 +38,10 @@ function initCombox()
 	    width:167,
 	    panelHeight:350,
 		filter: function(q, row){
-			return (row["Text"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
+			return ((row["Text"].toUpperCase().indexOf(q.toUpperCase()) >= 0)||(row["Alias"].toUpperCase().indexOf(q.toUpperCase()) >= 0));
 		},
 	    onSelect: function(record){
-	    	InitDoctorName(record.Id);
+	    	InitDoctorName(record.Id,"S07");
 	    },
 	    onLoadSuccess:function(d){
 	    	var data=eval(d);
@@ -65,7 +69,7 @@ function initCombox()
 		panelHeight:'auto',
 		valueField:'id',  
 	    textField:'text',
-	    data: [{id:'',text: '全部'},{id: 'O',text: '门诊'},{id: 'E',text: '急诊'},{id: 'I',text: '住院'}],
+	    data: [{id:'',text: emrTrans('全部')},{id: 'O',text: emrTrans('门诊')},{id: 'E',text: emrTrans('急诊')},{id: 'I',text: emrTrans('住院')}],
 		onLoadSuccess:function()
 		{
 			$('#cboAdmType').combobox('setValue','');
@@ -77,21 +81,21 @@ function initCombox()
 		panelHeight:'auto',
 		valueField:'id',  
 	    textField:'text',
-	    data: [{"id":"all","text":"全部"},{"id":"A","text":"在院"},{"id":"D","text":"出院"}],
+	    data: [{"id":"all","text":emrTrans("全部")},{"id":"A","text":emrTrans("在院")},{"id":"D","text":emrTrans("出院")}],
 		onLoadSuccess:function()
 		{
-			$('#cboAdmStatus').combobox('setValue', 'all');
+			$('#cboAdmStatus').combobox('setValue', 'A');
 		}	
 	});
 	
 }
 
 //Desc:初始化医生
-function InitDoctorName(cbxlocID)
+function InitDoctorName(cbxlocID,dictcode)
 {
 	$('#cbxUser').combobox({
 		width:167,
-		url:'../EMRservice.Ajax.patientInfo.cls?action=GetUserName&cbxLocID='+cbxlocID,  
+		url:'../EMRservice.Ajax.patientInfo.cls?action=GetUserName&cbxLocID='+cbxlocID+'&DictCode='+dictcode,  
 	    valueField:'UserID',  
 	    textField:'UserDesc',
 	    onLoadSuccess:function(d){
@@ -123,7 +127,8 @@ function initPatientList()
     fitColumns: true,
     loadMsg:'数据装载中......',
     autoRowHeight: true,
-    url:'../EMRservice.Ajax.patientInfo.cls?action=GetAdmList', 
+    //url:'../EMRservice.Ajax.patientInfo.cls?action=GetAdmList',  
+    data:[], 
     singleSelect:true,
     idField:'EpisodeID', 
     rownumbers:true,
@@ -146,6 +151,7 @@ function initPatientList()
         {field:'PADischgeDate',title:'出院日期',width:80,sortable:true},
         {field:'PAPMISex',title:'性别',width:80},
         {field:'PAAdmDepCodeDR',title:'就诊科室',width:80},
+        {field:'PatIllness',title:'病情',width:80},
         {field:'PAAdmDocCodeDR',title:'医生',width:80}, 
         {field:'PAAdmWard',title:'病房',width:80,sortable:true}, 
         {field:'PAAdmReason',title:'付费方式',width:80},
@@ -158,7 +164,14 @@ function initPatientList()
 			var PatientID = seleRow.PatientID;
 			var EpisodeID = seleRow.EpisodeID;
 			var mradm = seleRow.mradm;
-			if (top.frames[0] && top.frames[0].switchPatient)
+			//判断是否同源，若不同则只取parent层方法
+			var flag = false;
+			try{
+				flag = Boolean(top.frames[0].switchPatient);
+				}catch(e){
+					flag = false;
+					}
+			if (flag&&top.frames[0] && top.frames[0].switchPatient)
 			{
 				// 刷新门诊病历上方患者信息栏
 				if('function' === typeof top.frames[0].switchPatient) top.frames[0].switchPatient(PatientID,EpisodeID,mradm);
@@ -211,12 +224,8 @@ function GetData()
 	 {
 		 expectedLocId = "";
 	 }
-	 
-	 if (expectedLocId != "")
-	 {
-		 var expectedUserId = $("#cbxUser").combobox('getValue');
-		 var expectedUserText = $('#cbxUser').combobox('getText');
-	 }
+	 var expectedUserId = $("#cbxUser").combobox('getValue');
+	 var expectedUserText = $('#cbxUser').combobox('getText');
 	 if (typeof(expectedUserText) == "undefined" || expectedUserText == "")
 	 {
 		 expectedUserId = "";
@@ -250,7 +259,10 @@ function GetData()
 			return;
 		}
 	}
+	$('#patientListData').datagrid("options").url  = '../EMRservice.Ajax.patientInfo.cls?action=GetAdmList';
 	
+	var IllnessArry=$("#Illness").combobox("getValues");
+	var Illness = IllnessArry.join("|");
 	$('#patientListData').datagrid('load', {  
 		
    	 	PatientNo: patientNo,  
@@ -270,7 +282,8 @@ function GetData()
     	ExpectedUserID: expectedUserId,
 		MRN: MRN,
 		QueryItem: (queryItem == "请输入诊断内容")? "":queryItem,
-		WardId:wardId
+		WardId:wardId,
+		Illness:Illness
 	}); 
 }
 $("#PatientListQuery").click(function () {
@@ -299,12 +312,14 @@ $("#patientNo").blur( function () {
 $('#patientNo').bind('keypress', function(event) {
 	if (event.keyCode == "13") {
 		setPatientNoLength();
+		GetData();
 	}
 });
 //新增回车补全病案号方法 add by niucaicai 2016-10-17
 $('#medicareNo').bind('keypress', function(event) {
 	if (event.keyCode == "13") {
 		setMedicareNoLength();
+		GetData();
 	}
 });
 
@@ -361,4 +376,14 @@ function my_blur(obj, myid)
 		document.getElementById(myid).value = document.getElementById(myid).defaultValue;
 		obj.style.color='#999'
 	}
+}
+function InitIllness() {
+	$("#Illness").combobox({
+		textField:"val",
+		valueField:"key",
+		data:[{key:"C",val:"病危"},{key:"S",val:"病重"},{key:"D",val:"死亡"}],
+		eaditable:false,
+		multiple:true,		
+		rowStyle:'checkbox', //显示成勾选行形式	
+	});
 }

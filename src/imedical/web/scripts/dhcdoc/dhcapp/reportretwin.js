@@ -45,7 +45,16 @@ function LinkOpenWin(EpisodeID, Oeori, TraType){
 		if (LinkUrl != ""){
 			link = LinkUrl;
 		}
-
-		window.open(link,"_blank","height=600, width=1200, top=30, left=50,toolbar=no, menubar=no, scrollbars=yes, resizable=no, location=no, status=no");
+		//window.open(link,"_blank","height=600, width=1200, top=30, left=50,toolbar=no, menubar=no, scrollbars=yes, resizable=no, location=no, status=no");
+		websys_showModal({
+				url:link,
+				title:$g('¼ì²é±¨¸æ'),
+				width:1200,height:600,
+				closable:true,
+				iconCls:'icon-w-paper',
+				CallBackFunc:function(result){
+					websys_showModal("close");
+				}
+			})
 	},'',false)
 }

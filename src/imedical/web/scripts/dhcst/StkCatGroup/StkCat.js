@@ -46,7 +46,7 @@ var StkCatGriDs = new Ext.data.Store({
 var StkCatGridCm = new Ext.grid.ColumnModel([
     new Ext.grid.RowNumberer(),
     {
-        header: '代码',
+        header: $g('代码'),
         dataIndex: 'Code',
         width: 180,
         align: 'left',
@@ -64,7 +64,7 @@ var StkCatGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '名称',
+        header: $g('名称'),
         dataIndex: 'Desc',
         width: 300,
         align: 'left',
@@ -85,8 +85,8 @@ var StkCatGridCm = new Ext.grid.ColumnModel([
 //初始化默认排序功能
 StkCatGridCm.defaultSortable = true;
 var addStkCat = new Ext.Toolbar.Button({
-    text: '新建',
-    tooltip: '新建',
+    text: $g('新建'),
+    tooltip: $g('新建'),
     iconCls: 'page_add',
     width: 70,
     height: 30,
@@ -95,14 +95,14 @@ var addStkCat = new Ext.Toolbar.Button({
     }
 });
 var saveStkCat = new Ext.Toolbar.Button({
-    text: '保存',
-    tooltip: '保存',
+    text: $g('保存'),
+    tooltip: $g('保存'),
     iconCls: 'page_save',
     width: 70,
     height: 30,
     handler: function () {
         if (HospId == '') {
-            Msg.info('warning', '请先选择医院!');
+            Msg.info('warning', $g('请先选择医院!'));
             return false;
         }
         //获取所有的新记录
@@ -122,22 +122,22 @@ var saveStkCat = new Ext.Toolbar.Button({
         }
 
         if (data == '') {
-            Msg.info('error', '没有修改或添加新数据!');
+            Msg.info('error', $g('没有修改或添加新数据!'));
             return false;
         } else {
-            var mask = ShowLoadMask(Ext.getBody(), '处理中请稍候...');
+            var mask = ShowLoadMask(Ext.getBody(), $g('处理中请稍候...'));
             Ext.Ajax.request({
                 url: StkCatGridUrl + '?actiontype=save',
                 params: { data: data },
                 failure: function (result, request) {
                     mask.hide();
-                    Msg.info('error', '请检查网络连接!');
+                    Msg.info('error', $g('请检查网络连接!'));
                 },
                 success: function (result, request) {
                     var jsonData = Ext.util.JSON.decode(result.responseText);
                     mask.hide();
                     if (jsonData.success == 'true') {
-                        Msg.info('success', '保存成功!');
+                        Msg.info('success', $g('保存成功!'));
                         StkCatGriDs.load();
                     } else {
                         Msg.info('warning', jsonData.info);
@@ -151,14 +151,14 @@ var saveStkCat = new Ext.Toolbar.Button({
 });
 
 var deleteStkCat = new Ext.Toolbar.Button({
-    text: '删除',
-    tooltip: '删除',
+    text: $g('删除'),
+    tooltip: $g('删除'),
     iconCls: 'page_delete',
     width: 70,
     height: 30,
     handler: function () {
         if (HospId == '') {
-            Msg.info('warning', '请先选择医院!');
+            Msg.info('warning', $g('请先选择医院!'));
             return false;
         }
         deleteDetail();
@@ -168,30 +168,30 @@ var deleteStkCat = new Ext.Toolbar.Button({
 function deleteDetail() {
     var cell = StkCatGrid.getSelectionModel().getSelectedCell();
     if (cell == null) {
-        Msg.info('error', '请选择数据!');
+        Msg.info('error', $g('请选择数据!'));
         return false;
     } else {
         var record = StkCatGrid.getStore().getAt(cell[0]);
         var RowId = record.get('RowId');
         if (RowId != '') {
-            Ext.MessageBox.confirm('提示', '确定要删除选定的行?', function (btn) {
+            Ext.MessageBox.confirm($g('提示'), $g('确定要删除选定的行?'), function (btn) {
                 if (btn == 'yes') {
-                    var mask = ShowLoadMask(Ext.getBody(), '处理中请稍候...');
+                    var mask = ShowLoadMask(Ext.getBody(), $g('处理中请稍候...'));
                     Ext.Ajax.request({
                         url: StkCatGridUrl + '?actiontype=delete&rowid=' + RowId,
-                        waitMsg: '删除中...',
+                        waitMsg: $g('删除中...'),
                         failure: function (result, request) {
                             mask.hide();
-                            Msg.info('error', '请检查网络连接!');
+                            Msg.info('error', $g('请检查网络连接!'));
                         },
                         success: function (result, request) {
                             var jsonData = Ext.util.JSON.decode(result.responseText);
                             mask.hide();
                             if (jsonData.success == 'true') {
-                                Msg.info('success', '删除成功!');
+                                Msg.info('success', $g('删除成功!'));
                                 StkCatGriDs.load();
                             } else {
-                                Msg.info('error', '删除失败!');
+                                Msg.info('error', $g('删除失败!'));
                             }
                         },
                         scope: this
@@ -234,7 +234,7 @@ Ext.onReady(function () {
         labelwidth: 30,
         height: 30,
         labelAlign: 'right',
-        title: '库存分类维护',
+        title: $g('库存分类维护'),
         region: 'center',
         frame: true,
         autoHeight: true
@@ -248,7 +248,7 @@ Ext.onReady(function () {
             {
                 id: 'stkcat',
                 region: 'center',
-                title: '库存分类',
+                title: $g('库存分类'),
                 layout: 'fit', // specify layout manager for items
                 items: StkCatGrid
             }

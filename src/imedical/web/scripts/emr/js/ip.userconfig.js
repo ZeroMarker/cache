@@ -1,4 +1,4 @@
-﻿//添加用户配置信息
+//添加用户配置信息
 function addUserConfigData(userID,userLocID,type,config)
 {
 	jQuery.ajax({

@@ -12,7 +12,7 @@ $(function(){
 function DelHanldClick(){
 	var rows = CardPurchaseDataGrid.datagrid("getSelections");
     if (rows.length > 0) {
-        $.messager.confirm("提示", "你确定要删除吗?",
+        $.messager.confirm("提示", "你确定要置为无效吗?",
         function(r) {
             if (r) {
                 var ids = [];
@@ -29,15 +29,15 @@ function DelHanldClick(){
 				if(JSON.parse(value).result=="0"){
 					LoadCardPurchaseManage();
 					CardPurchaseDataGrid.datagrid('unselectAll');
-					$.messager.show({title:"提示",msg:"删除成功"});
+					$.messager.show({title:"提示",msg:"成功"});
 				}else{
-					$.messager.alert('提示',"删除失败:"+JSON.parse(value).result);
+					$.messager.alert('提示',"失败:"+JSON.parse(value).result);
 				}
 				editRow = undefined;
             }
         });
     } else {
-        $.messager.alert("提示", "请选择要删除的行", "error");
+        $.messager.alert("提示", "请选择要置为无效的行", "error");
     }
 }
 function AddHanldClick(){
@@ -211,7 +211,7 @@ function InitTable(){
 		handler: function(){AddHanldClick()}
 	},{
 		iconCls: 'icon-cancel',
-		text:"删除",
+		text:"置为无效",
 		handler: function(){DelHanldClick()}
 	}]
     var TableColumns=[[    

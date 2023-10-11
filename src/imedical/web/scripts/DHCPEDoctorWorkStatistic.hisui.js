@@ -17,9 +17,28 @@ $(function(){
 	$("#BClear").click(function() {	
 		BClear_click();		
         });
+		
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEDoctorWorkStatistic.raq");
     
 })
-
+// 解决iframe中 润乾csp 跳动问题
+function ShowRunQianUrl(iframeId, url) {
+    var iframeObj = document.getElementById(iframeId)
+    if (iframeObj) {
+	    iframeObj.src=url;
+	    //debugger;
+	    $(iframeObj).hide();
+	    if (iframeObj.attachEvent) {
+		    iframeObj.attachEvent("onload", function(){
+		        $(this).show();
+		    });
+	    } else {
+		    iframeObj.onload = function(){
+		        $(this).show();
+		    };
+	    }
+    }
+}
 
 //清屏
 function BClear_click(){
@@ -65,6 +84,10 @@ function BFind_click(){
 	else if (ShowFlag == "Person") reportName = "DHCPEDocPerWorkStatistic.raq";
 	else { alert("请选择查询类型！"); return false;}
 	
+	var CurLoc = session["LOGON.CTLOCID"];	
+	var CurGroup = session['LOGON.GROUPID'];
+	var CurUser = session["LOGON.USERID"];
+	
 	var lnk = "&BeginDate=" + BeginDate
 			+ "&EndDate=" + EndDate
 			+ "&DocNo=" + DocNo
@@ -74,21 +97,26 @@ function BFind_click(){
 			+ "&OEItem=" + OEItem
 			+ "&VIPLevel=" + VIPLevel
 			+ "&ShowFlag=" + ShowFlag
+			+ "&CurLoc=" + CurLoc
+			+ "&CurGroup=" + CurGroup
+			+ "&CurUser=" + CurUser
 			;
 	
-	document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=" + reportName + lnk;
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=" + reportName + lnk);
+	//document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=" + reportName + lnk;
 	
 }
 
 function InitCombobox(){
 	
+	
 	//VIP等级	
 	var VIPObj = $HUI.combobox("#VIPLevel",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindVIP&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindVIP&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
 		valueField:'id',
 		textField:'desc',
 		});
-	
+
 	//团体
 	var GroupNameObj = $HUI.combogrid("#GroupName",{
 		panelWidth:450,
@@ -115,7 +143,7 @@ function InitCombobox(){
 			{field:'TAdmDate',title:'日期',width:100}		
 		]]
 	})
-	
+	/*
 	//站点名称
 	var StationNameObj = $HUI.combogrid("#StationName",{
 		panelWidth:440,
@@ -180,7 +208,82 @@ function InitCombobox(){
 			{field:'id',title:'ID',width:80}         		
 		]]
 	})
-	
+	*/
+	// 站点-多院区
+	$HUI.combobox("#StationName", {
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindStationByType&ResultSetType=array&Type=NLX&LocID="+session['LOGON.CTLOCID'],
+		valueField:'id',
+		textField:'desc',
+		onBeforeLoad:function(param){
+			param.Desc = param.q;
+		},
+		onSelect:function(record) {
+			 
+			 /***切换站点体检项目重新加载***/
+			 $("#OEItemDesc").combogrid('setValue',"");
+			
+			 $HUI.combogrid("#OEItemDesc",{
+                onBeforeLoad:function(param){
+                   	param.Desc = param.q;
+                   	var StationId = record.id;
+					param.Station = StationId;
+					param.Type="F";
+					param.LocID=session['LOGON.CTLOCID'];
+					param.hospId = session['LOGON.HOSPID'];
+
+                }
+            });
+			$('#OEItemDesc').combogrid('grid').datagrid('reload'); 
+			 /***切换站点体检项目重新加载***/
+			 
+        
+		},
+		onChange:function(newValue, oldValue) {
+			var ItemID = $("#OEItemDesc").combogrid('getValue');
+			var Flag=tkMakeServerCall("web.DHCPE.CT.HISUICommon","GetStationFlag",newValue,ItemID,session['LOGON.CTLOCID']);
+			if (Flag==0) {
+			    $("#OEItemDesc").combogrid('setValue',"");    
+			}
+		
+			
+		}
+	});
+
+	//体检项目-多院区
+	var OEItemDescObj=$HUI.combogrid("#OEItemDesc", {
+		panelWidth:450,
+		panelHeight:245,
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindStationOrder",
+		idField:'id',
+		textField:'desc',
+		mode:'remote',
+		delay:200,
+		pagination:true,
+		minQueryLen:1,
+        rownumbers:true,//序号   
+		fit: true,
+		pageSize: 5,
+		pageList: [5,10],
+		onBeforeLoad:function(param){
+			param.Desc = param.q;
+			var StationId=$("#StationName").combobox("getValue");
+			param.Station = StationId;
+			param.Type="F";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID'];
+		},
+        onShowPanel:function()
+		{
+			$('#OEItemDesc').combogrid('grid').datagrid('reload');
+		},		
+		columns:[[
+			{field:'Code',title:'编码',width:80},
+			{field:'desc',title:'名称',width:180},
+			{field:'id',title:'ID',width:80}         		
+		]]
+
+	});
+
 	//医生姓名
 	var DocNameObj = $HUI.combogrid("#DocName",{
 		panelWidth:400,
@@ -198,6 +301,10 @@ function InitCombobox(){
 		textField:'UserName',	
         onBeforeLoad:function(param){
 			param.Desc = param.q;
+			param.Type="F";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID'];
+
 		},		
 		columns:[[
 			{field:'UserCode',title:'用户ID',width:80},
@@ -213,8 +320,8 @@ function InitCombobox(){
 		panelHeight:"auto",
 		editable:false,
 		data:[
-			{id:'Item',text:'按医嘱查询',selected:true},
-			{id:'Person',text:'按人查询'}
+			{id:'Item',text:$g('按医嘱查询'),selected:true},
+			{id:'Person',text:$g('按人查询')}
 		]
 	});
 }

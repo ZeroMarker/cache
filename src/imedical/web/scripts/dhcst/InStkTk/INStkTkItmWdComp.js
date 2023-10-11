@@ -13,12 +13,12 @@ Ext.onReady(function() {
     var gLocId=session["LOGON.CTLOCID"];
     var gUserId=session["LOGON.USERID"];
     var PhaLoc = new Ext.ux.LocComboBox({
-                fieldLabel : '科室',
+                fieldLabel : $g('科室'),
                 id : 'PhaLoc',
                 name : 'PhaLoc',
                 anchor : '90%',
                 width : 160,
-                emptyText : '科室...',
+                emptyText : $g('科室...'),
                 listWidth : 250,
                 //hideLabel:true,
                 valueNotFoundText : '',
@@ -27,7 +27,7 @@ Ext.onReady(function() {
     
     // 起始日期
     var StartDate = new Ext.ux.DateField({
-                fieldLabel : '起始日期',
+                fieldLabel :$g( '起始日期'),
                 id : 'StartDate',
                 name : 'StartDate',
                 anchor : '90%',
@@ -37,7 +37,7 @@ Ext.onReady(function() {
 
     // 结束日期
     var EndDate = new Ext.ux.DateField({
-                fieldLabel : '结束日期',
+                fieldLabel : $g('结束日期'),
                 id : 'EndDate',
                 name : 'EndDate',
                 anchor : '90%',
@@ -46,7 +46,7 @@ Ext.onReady(function() {
             });
             
     var LocManaGrp = new Ext.form.ComboBox({
-                fieldLabel : '管理组',
+                fieldLabel : $g('管理组'),
                 id : 'LocManaGrp',
                 name : 'LocManaGrp',
                 //anchor : '95%',
@@ -56,7 +56,7 @@ Ext.onReady(function() {
                 displayField : 'Description',
                 allowBlank : true,
                 triggerAction : 'all',
-                emptyText : '管理组...',
+                emptyText : $g('管理组...'),
                 selectOnFocus : true,
                 forceSelection : true,
                 minChars : 1,
@@ -72,7 +72,7 @@ Ext.onReady(function() {
             });     
         
     var PhaWindow = new Ext.form.ComboBox({
-            fieldLabel : '实盘窗口',
+            fieldLabel : $g('实盘窗口'),
             id : 'PhaWindow',
             name : 'PhaWindow',
             //anchor : '95%',
@@ -82,7 +82,7 @@ Ext.onReady(function() {
             displayField : 'Description',
             allowBlank : true,
             triggerAction : 'all',
-            emptyText : '实盘窗口...',
+            emptyText : $g('实盘窗口...'),
             selectOnFocus : true,
             forceSelection : true,
             minChars : 1,
@@ -109,7 +109,7 @@ Ext.onReady(function() {
     }); 
 
     var DHCStkCatGroup = new Ext.form.ComboBox({
-                fieldLabel : '库存分类',
+                fieldLabel : $g('库存分类'),
                 id : 'DHCStkCatGroup',
                 name : 'DHCStkCatGroup',
                 anchor : '90%',
@@ -133,7 +133,7 @@ Ext.onReady(function() {
             });
         
     var StkBin = new Ext.form.ComboBox({
-        fieldLabel : '货位',
+        fieldLabel : $g('货位'),
         id : 'StkBin',
         name : 'StkBin',
         anchor : '90%',
@@ -164,14 +164,14 @@ Ext.onReady(function() {
         columns: 1,
         style: 'padding:5px 5px 5px 5px;',
         items : [{
-                    checked: true,                           
-                    boxLabel: '未填数默认为0',
+                    checked: false,                           
+                    boxLabel: $g('未填数默认为0'),
                     id: 'InputSelFlag1',
                     name:'InputSelFlag',
                     inputValue: 0
                 },{
-                    checked: false,                          
-                    boxLabel: '未填数默认为账盘数',
+                    checked: true,                          
+                    boxLabel: $g('未填数默认为账盘数'),
                     id: 'InputSelFlag2',
                     name:'InputSelFlag',
                     inputValue: '1'                           
@@ -179,7 +179,7 @@ Ext.onReady(function() {
     });
     
 	var TkComplete=new Ext.form.Checkbox({
-		fieldLabel:'实盘完成',
+		fieldLabel:$g('实盘完成'),
 		id:'TkComplete',
 		name:'TkComplete',
 		width:80,
@@ -188,8 +188,8 @@ Ext.onReady(function() {
 	});
     // 查询盘点单
     var QueryBT = new Ext.Toolbar.Button({
-                text : '查询',
-                tooltip : '点击查询',
+                text : $g('查询'),
+                tooltip : $g('点击查询'),
                 iconCls : 'page_find',
                 width : 70,
                 height : 30,
@@ -209,11 +209,11 @@ Ext.onReady(function() {
         var EndDate = Ext.getCmp("EndDate").getValue().format(App_StkDateFormat).toString();
         var PhaLoc = Ext.getCmp("PhaLoc").getValue();   
         if(PhaLoc==""){
-            Msg.info("warning", "请选择盘点科室!");
+            Msg.info("warning", $g("请选择盘点科室!"));
             return;
         }
         if(StartDate==""||EndDate==""){
-            Msg.info("warning", "请选择开始日期和截止日期!");
+            Msg.info("warning", $g("请选择开始日期和截止日期!"));
             return;
         }
         var CompFlag='Y';       //账盘完成
@@ -255,8 +255,8 @@ Ext.onReady(function() {
     }
     // 查询实盘明细按钮
     var SearchBT = new Ext.Toolbar.Button({
-                text : '查询',
-                tooltip : '点击查询',
+                text : $g('查询'),
+                tooltip : $g('点击查询'),
                 iconCls : 'page_find',
                 width : 70,
                 height : 30,
@@ -267,8 +267,8 @@ Ext.onReady(function() {
     
 		// 另存按钮
 	var SaveAsBT = new Ext.Toolbar.Button({
-				text : '另存',
-				tooltip : '另存为Excel',
+				text : $g('另存'),
+				tooltip : $g('另存为Excel'),
 				iconCls : 'page_excel',
 				width : 70,
 				height : 30,
@@ -278,8 +278,8 @@ Ext.onReady(function() {
 			});
     // 清空按钮
     var RefreshBT = new Ext.Toolbar.Button({
-                text : '清屏',
-                tooltip : '点击清屏',
+                text : $g('清屏'),
+                tooltip : $g('点击清屏'),
                 iconCls : 'page_clearscreen',
                 width : 70,
                 height : 30,
@@ -305,27 +305,64 @@ Ext.onReady(function() {
     }
 
     var CompleteBT=new Ext.Toolbar.Button({
-        text:'确认完成',
-        tooltip:'确认完成',
+        text:$g('确认完成'),
+        tooltip:$g('确认完成'),
         iconCls:'page_gear',
         width:70,
         height:30,
         handler:function(){
-            Complete();
+            //Complete();
+            CheckNullInputFlag();
         }
     });
+    
+   function CheckNullInputFlag(){
+	    var selectRow=MasterInfoGrid.getSelectionModel().getSelected();
+        if(selectRow==null){
+        	Msg.info("warning",$g("没有需要确认汇总的盘点单!"));
+        	return;
+        }
+	    var InputSelValue="";
+        var selectRadio = Ext.getCmp('NullInputFlag').getValue();   
+        if(selectRadio){
+            InputSelValue =selectRadio.inputValue;    // selectRadio.getValue();                
+        }
+        if(InputSelValue == 0)
+        {
+	        Ext.Msg.prompt($g("系统提示"),$g("实盘为0对数据影响较大请输入>>>实盘为0<<<来确认操作"),callback);
+        }
+        else if(InputSelValue===""){
+            Msg.info('warning',$g('请选择未填实盘数默认方式!'));
+            return;
+        }
+        else{
+	        Complete();
+        }
+    }
+    
+    function callback(but,txt){
+		if(but == "ok") {
+			if(txt != "实盘为0"){
+				Msg.info('error', $g('输入确认信息有误，请重新输入！'));
+				Ext.Msg.prompt($g("系统提示"),$g("实盘为0对数据影响较大请输入>>>实盘为0<<<来确认操作"),callback);
+			}
+			else{
+				Complete();
+			}
+		}
+	}
     
     //保存实盘数据
     function Complete(){
         var selectRow=MasterInfoGrid.getSelectionModel().getSelected();
         if(selectRow==null){
-        	Msg.info("warning","没有需要确认汇总的盘点单!");
+        	Msg.info("warning",$g("没有需要确认汇总的盘点单!"));
         	return;
         }
         var Inst=selectRow.get("inst");
         var InputType=selectRow.get("InputType");
         if(InputType==0){
-        	Msg.info("warning","该盘点单尚未进行实盘录入!");
+        	Msg.info("warning",$g("该盘点单尚未进行实盘录入!"));
         	return;
         }
         var InputSelValue="";
@@ -335,38 +372,38 @@ Ext.onReady(function() {
         }
         
         if(InputSelValue===""){
-            Msg.info('warning','请选择未填实盘数默认方式!');
+            Msg.info('warning',$g('请选择未填实盘数默认方式!'));
             return;
         }
         if(Inst==null || Inst==""){
-            Msg.info('warning','没有需要确认汇总的盘点单!');
+            Msg.info('warning',$g('没有需要确认汇总的盘点单!'));
             return;
         }
-        var mask=ShowLoadMask(Ext.getBody(),"处理中...");
+        var mask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
         Ext.Ajax.request({
             url:url,
             params:{actiontype:'StkTkCompletet',Inst:Inst,UserId:gUserId,InputNullFlag:InputSelValue,InputType:InputType},
             method:'post',
-            waitMsg:'处理中...',
+            waitMsg:$g('处理中...'),
             success:function(response,opt){
                 var jsonData=Ext.util.JSON.decode(response.responseText);
                 if(jsonData.success=='true'){
-                    Msg.info('success','操作成功!');
+                    Msg.info('success',$g('操作成功!'));
                     Query();
                 }else{
                     var ret=jsonData.info;
                     if(ret=='-1'){
-                        Msg.info('warning','没有需要确认的盘点单!');
+                        Msg.info('warning',$g('没有需要确认的盘点单!'));
                     }else if(ret=='-99'){
-                        Msg.info('error','加锁失败!');
+                        Msg.info('error',$g('加锁失败!'));
                     }else if(ret=='-2'){
-                        Msg.info('error','实盘数已经确认汇总!');
+                        Msg.info('error',$g('实盘数已经确认汇总!'));
                     }else if(ret=='-5'){
-                        Msg.info('error','汇总实盘数失败!');
+                        Msg.info('error',$g('汇总实盘数失败!'));
                     }else if(ret=='-100'){
-                        Msg.info('error','更新实盘标志失败!');
+                        Msg.info('error',$g('更新实盘标志失败!'));
                     }else{
-                        Msg.info('error','操作失败:'+ret);
+                        Msg.info('error',$g('操作失败:')+ret);
                     }
                 }
                 
@@ -375,8 +412,8 @@ Ext.onReady(function() {
         });
     }
      var CancelCompleteBT = new Ext.Toolbar.Button({
-                text : '取消汇总',
-                tooltip : '取消汇总',
+                text : $g('取消汇总'),
+                tooltip : $g('取消汇总'),
                 iconCls : 'page_gear',
                 width : 70,
                 height : 30,
@@ -388,35 +425,35 @@ Ext.onReady(function() {
      function Cancel(){
         var selectRow=MasterInfoGrid.getSelectionModel().getSelected();
         if(selectRow==null){
-        	Msg.info("warning","没有需要取消汇总的盘点单!");
+        	Msg.info("warning",$g("没有需要取消汇总的盘点单!"));
         	return;
         }
         var Inst=selectRow.get("inst");
-                var mask=ShowLoadMask(Ext.getBody(),"处理中...");
+                var mask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
         Ext.Ajax.request({
             url:url,
             params:{actiontype:'StkCancelComplete',Inst:Inst},
             method:'post',
-            waitMsg:'处理中...',
+            waitMsg:$g('处理中...'),
             success:function(response,opt){
                 var jsonData=Ext.util.JSON.decode(response.responseText);
                 if(jsonData.success=='true'){
-                    Msg.info('success','操作成功!');
+                    Msg.info('success',$g('操作成功!'));
                     Query();
                 }else{
                     var ret=jsonData.info;
                     if(ret=='-1'){
-                        Msg.info('warning','没有需要确认的盘点单!');
+                        Msg.info('warning',$g('没有需要确认的盘点单!'));
                     }else if(ret=='-2'){
-                        Msg.info('error','没有需要确认的盘点单!');
+                        Msg.info('error',$g('没有需要确认的盘点单!'));
                     }else if(ret=='-3'){
-                        Msg.info('error','实盘数已经确认盘点!');
+                        Msg.info('error',$g('实盘数已经确认盘点!'));
                     }else if(ret=='-4'){
-                        Msg.info('error','该记录没有汇总！');
+                        Msg.info('error',$g('该记录没有汇总！'));
                     }else if(ret=='-5'){
-                        Msg.info('error','部分记录已经完成调整，请在盘点调整界面修改实盘数量继续完成盘点！');
+                        Msg.info('error',$g('部分记录已经完成调整，请在盘点调整界面修改实盘数量继续完成盘点！'));
                     }else{
-                        Msg.info('error','操作失败:'+ret);
+                        Msg.info('error',$g('操作失败:'+ret));
                     }
                 }
                 mask.hide();
@@ -449,23 +486,23 @@ Ext.onReady(function() {
     
     function renderCompFlag(value){
         if(value=='Y'){
-            return '完成';
+            return $g('完成');
         }else{
-            return '未完成'
+            return $g('未完成')
         }   
     }
     function renderManaFlag(value){
         if(value=='Y'){
-            return '管理药';
+            return $g('管理药');
         }else{
-            return '非管理药'
+            return $g('非管理药')
         }   
     }
     function renderYesNo(value){
         if(value=='Y'){
-            return '是';
+            return $g('是');
         }else{
-            return '否'
+            return $g('否')
         }   
     }
     
@@ -479,98 +516,98 @@ Ext.onReady(function() {
                 hidden : true,
                 hideable : false
             }, {
-                header : "盘点单号",
+                header :$g( "盘点单号"),
                 dataIndex : 'instNo',
                 width : 120,
                 align : 'left',
                 sortable : true
             }, {
-                header : "盘点日期",
+                header : $g("盘点日期"),
                 dataIndex : 'date',
                 width : 100,
                 align : 'left',
                 sortable : true
             }, {
-                header : '盘点时间',
+                header : $g('盘点时间'),
                 dataIndex : 'time',
                 width : 100,
                 align : 'left',
                 sortable : true
             }, {
-                header : '盘点人',
+                header : $g('盘点人'),
                 dataIndex : 'userName',
                 width : 70,
                 align : 'left',
                 sortable : true
             }, {
-                header : '管理药标志',
+                header : $g('管理药标志'),
                 dataIndex : 'manFlag',
                 width : 50,
                 align : 'left',
                 renderer:renderManaFlag,
                 sortable : true
             }, {
-                header : "账盘单位",
+                header : $g("账盘单位"),
                 dataIndex : 'freezeUom',
                 width : 80,
                 align : 'left',
                 renderer:function(value){
                     if(value==1){
-                        return '入库单位';
+                        return $g('入库单位');
                     }else{
-                        return '基本单位';
+                        return $g('基本单位');
                     }
                 },
                 sortable : true
             }, {
-                header : "包含不可用",
+                header : $g("包含不可用"),
                 dataIndex : 'includeNotUse',
                 width : 50,
                 align : 'center',
                 renderer:renderYesNo,
                 sortable : true
             }, {
-                header : "仅不可用",
+                header : $g("仅不可用"),
                 dataIndex : 'onlyNotUse',
                 renderer:renderYesNo,
                 width : 50,
                 align : 'center',
                 sortable : true
             }, {
-                header : "类组",
+                header : $g("类组"),
                 dataIndex : 'scgDesc',
                 width : 100,
                 align : 'left',
                 sortable : true
             }, {
-                header : "库存分类",
+                header : $g("库存分类"),
                 dataIndex : 'scDesc',
                 width : 100,
                 align : 'left',
                 sortable : true
             }, {
-                header : "开始货位",
+                header : $g("开始货位"),
                 dataIndex : 'frSb',
                 width : 100,
                 align : 'left',
                 sortable : true
             }, {
-                header : "截止货位",
+                header : $g("截止货位"),
                 dataIndex : 'toSb',
                 width : 100,
                 align : 'left',
                 sortable : true
             },{
-                header : "实盘类型",
+                header : $g("实盘类型"),
                 dataIndex : 'InputType',
                 width : 100,
                 align : 'left',
                 sortable : true,
                 renderer:function(value){
                     if(value==1){
-                        return "分批次";
+                        return $g("分批次");
                     }else if(value==2){
-                        return "按品种";
+                        return $g("按品种");
                     }else{
                         return "";
                     }                   
@@ -581,16 +618,16 @@ Ext.onReady(function() {
                     store : MasterInfoStore,
                     pageSize : PageSize,
                     displayInfo : true,
-                    displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
+                    displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
                     emptyMsg : "No results to display",
-                    prevText : "上一页",
-                    nextText : "下一页",
-                    refreshText : "刷新",
-                    lastText : "最后页",
-                    firstText : "第一页",
-                    beforePageText : "当前页",
-                    afterPageText : "共{0}页",
-                    emptyMsg : "没有数据"
+                    prevText : $g("上一页"),
+                    nextText : $g("下一页"),
+                    refreshText : $g("刷新"),
+                    lastText : $g("最后页"),
+                    firstText : $g("第一页"),
+                    beforePageText : $g("当前页"),
+                    afterPageText : $g("共{0}页"),
+                    emptyMsg : $g("没有数据")
                 });
     var MasterInfoGrid = new Ext.grid.GridPanel({
                 id : 'MasterInfoGrid',
@@ -626,7 +663,7 @@ Ext.onReady(function() {
         	params:{actiontype:'CollectItmCountQty',start:0,limit:size,sort:'Rowid',dir:'ASC',Params:gStrDetailParams},
         	callback:function(r,options,success){
         		if(success==false){
-        			Ext.MessageBox.alert("查询错误", InstItmStore.reader.jsonData.Error);
+        			Ext.MessageBox.alert($g("查询错误"), InstItmStore.reader.jsonData.Error);
         		}
         	}
         });
@@ -649,44 +686,44 @@ Ext.onReady(function() {
                 sortable : true,
                 hidden : true
             },{
-                header : '代码',
+                header : $g('代码'),
                 dataIndex : 'InciCode',
                 width : 100,
                 align : 'left',
                 sortable : true
             }, {
-                header : "名称",
+                header : $g("名称"),
                 dataIndex : 'InciDesc',
                 width : 250,
                 align : 'left',
                 sortable : true
             }, {
-                header : "规格",
+                header : $g("规格"),
                 dataIndex : 'Spec',
                 width : 120,
                 align : 'left',
                 sortable : true
             }, {
-                header : '冻结数量',
+                header : $g('冻结数量'),
                 dataIndex : 'FreezeQty',
                 width : 150,
                 align : 'right',
                 sortable : true
             },{
-                header:'实盘数量',
+                header:$g('实盘数量'),
                 dataIndex:'CountQty',
                 width:150,
                 align:'right',
                 sortable:true
             }, {
-                header : '冻结数量(基本单位)',
+                header : $g('冻结数量(基本单位)'),
                 dataIndex : 'FreezeBQty',
                 width : 150,
                 align : 'right',
                 sortable : false,
                 hidden:true
             },{
-                header:'实盘数量(基本单位)',
+                header:$g('实盘数量(基本单位)'),
                 dataIndex:'CountBQty',
                 width:150,
                 align:'right',
@@ -694,14 +731,14 @@ Ext.onReady(function() {
                 sortable : false,
                 hidden:true
             },{
-                header:'冻结进价金额',
+                header:$g('冻结进价金额'),
                 dataIndex:'FreezeRpAmt',
                 width:150,
                 align:'right',
                 sortable:true,
                 sortable : false
             },{
-                header:'实盘进价金额',
+                header:$g('实盘进价金额'),
                 dataIndex:'CountRpAmt',
                 width:150,
                 align:'right',
@@ -728,16 +765,16 @@ Ext.onReady(function() {
                 store : InstItmStore,
                 pageSize : PageSize,
                 displayInfo : true,
-                displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
+                displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
                 emptyMsg : "No results to display",
-                prevText : "上一页",
-                nextText : "下一页",
-                refreshText : "刷新",
-                lastText : "最后页",
-                firstText : "第一页",
-                beforePageText : "当前页",
-                afterPageText : "共{0}页",
-                emptyMsg : "没有数据",
+                prevText :$g( "上一页"),
+                nextText : $g("下一页"),
+                refreshText : $g("刷新"),
+                lastText : $g("最后页"),
+                firstText : $g("第一页"),
+                beforePageText : $g("当前页"),
+                afterPageText : $g("共{0}页"),
+                emptyMsg : $g("没有数据"),
                 doLoad:function(C){
                     var B={},
                     A=this.getParams();
@@ -791,7 +828,7 @@ Ext.onReady(function() {
         	params:{actiontype:'QueryItmTkWd',Inst:inst,Inci:inci},
         	callback:function(r,options,success){
         		if(success==false){
-        			Msg.info("error","查询有误,请查看日志!");
+        			Msg.info("error",$g("查询有误,请查看日志!"));
         			return;
         		}
         	}
@@ -800,7 +837,7 @@ Ext.onReady(function() {
         	params:{actiontype:'QueryItmTkWdDetail',Inst:inst,Inci:inci},
         	callback:function(r,options,success){
         		if(success==false){
-        			Msg.info("error","查询有误,请查看日志!");
+        			Msg.info("error",$g("查询有误,请查看日志!"));
         			return;
         		}
         	}
@@ -826,31 +863,31 @@ Ext.onReady(function() {
                 sortable : true,
                 hidden : true
             },{
-                header : '批号',
+                header : $g('批号'),
                 dataIndex : 'BatNo',
                 width : 100,
                 align : 'left',
                 sortable : true
             }, {
-                header : "效期",
+                header : $g("效期"),
                 dataIndex : 'ExpDate',
                 width : 100,
                 align : 'left',
                 sortable : true
             }, {
-                header : "单位",
+                header : $g("单位"),
                 dataIndex : 'FreUomDesc',
                 width : 60,
                 align : 'left',
                 sortable : true
             }, {
-                header : '冻结数量',
+                header : $g('冻结数量'),
                 dataIndex : 'FreQty',
                 width : 80,
                 align : 'right',
                 sortable : true
             },{
-                header:'实盘数量',
+                header:$g('实盘数量'),
                 dataIndex:'CountQty',
                 width:80,
                 align:'right',
@@ -919,43 +956,43 @@ Ext.onReady(function() {
                 sortable : true,
                 hidden : true
             },{
-                header : '批号',
+                header : $g('批号'),
                 dataIndex : 'BatNo',
                 width : 100,
                 align : 'left',
                 sortable : true
             }, {
-                header : "效期",
+                header : $g("效期"),
                 dataIndex : 'ExpDate',
                 width : 100,
                 align : 'left',
                 sortable : true
             }, {
-                header : "单位",
+                header : $g("单位"),
                 dataIndex : 'CountUom',
                 width : 60,
                 align : 'left',
                 sortable : true
             },{
-                header:'实盘数量',
+                header:$g('实盘数量'),
                 dataIndex:'CountQty',
                 width:80,
                 align:'right',
                 sortable:true
             },{
-                header:'实盘日期',
+                header:$g('实盘日期'),
                 dataIndex:'CountDate',
                 width:90,
                 align:'right',
                 sortable:true
             },{
-                header : "实盘时间",
+                header : $g("实盘时间"),
                 dataIndex : 'CountTime',
                 width : 80,
                 align : 'left',
                 sortable : true
             },{
-                header : "实盘人",
+                header : $g("实盘人"),
                 dataIndex : 'CountUserName',
                 width : 80,
                 align : 'left',
@@ -998,7 +1035,7 @@ Ext.onReady(function() {
             tbar:[QueryBT,'-',CompleteBT,'-',CancelCompleteBT,'-',SaveAsBT],
         	items:[{
 				xtype:'fieldset',
-				title:'查询条件',
+				title:$g('查询条件'),
 				style:DHCSTFormStyle.FrmPaddingV,
 				defaults:{width:160},
 				items : [PhaLoc,StartDate,EndDate,TkComplete,NullInputFlag]					
@@ -1016,7 +1053,7 @@ Ext.onReady(function() {
                                 //autoScroll:true,
                                 split: true,
                                 //collapsible: true, 
-                                title:'盘点单-实盘数汇总',
+                                title:$g('盘点单-实盘数汇总'),
                                 layout:'border',
                                 items:[{
                                             region:'north',
@@ -1032,7 +1069,7 @@ Ext.onReady(function() {
                                 
                             },{
                                 region:'center',
-                                title:'盘点明细',
+                                title:$g('盘点明细'),
                                 layout:'border',
                                 items:[{
                                             region:'north',
@@ -1044,7 +1081,7 @@ Ext.onReady(function() {
                                             layout:'fit',
                                             items:[InstItmGrid ]
                                        },{
-                                                title:'实盘批次明细',
+                                                title:$g('实盘批次明细'),
                                                 region:'east',
                                                 width:500,
                                                 split:true,
@@ -1054,7 +1091,7 @@ Ext.onReady(function() {
                                                 layout:'fit',
                                                 items:[InstDetailGrid]
                                             },{
-	                                         title:'账盘批次明细',
+	                                         title:$g('账盘批次明细'),
                                                 region:'center',
                                                 layout:'fit',
                                                 items:[InstiGrid]

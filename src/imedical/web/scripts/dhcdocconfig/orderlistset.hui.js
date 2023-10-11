@@ -81,6 +81,9 @@ $(function () {
 		$.ajax({
 			url : url,
 			type: "POST",
+            data: {
+                MWToken:('undefined'!==typeof websys_getMWToken)?websys_getMWToken():""
+			},
 			success:function (response) {
 				if ($('#updateym').attr("value")=="新增") var successmsg="新增成功"
 				else var successmsg="修改成功"
@@ -518,6 +521,9 @@ function SaveDataToServer(rowData) {
     $.ajax({
             url : url,
             type:"POST",
+            data: {
+                MWToken:('undefined'!==typeof websys_getMWToken)?websys_getMWToken():""
+			},
             success : function (response) {
                 response = eval('(' + response + ')');
                 if (response.ResultCode == 0) {
@@ -552,8 +558,10 @@ function DeleteData() {
                     }
                     //删除已经保存的数据
                     if (ids.length > 0) {
+                        var url="dhcdocorderlistset.request.csp?action=del&IDs=" + ids.join('^');
+                        url=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(url):url;
                         $.ajax({
-                                url : "dhcdocorderlistset.request.csp?action=del&IDs=" + ids.join('^'),
+                                url : url,
                                 success : function (response) {
                                     response = eval('(' + response + ')');
                                     if (response.ResultCode == 0) {
@@ -598,8 +606,10 @@ function DeleteymData(){
                     }
                     //删除已经保存的数据
                     if (ids.length > 0) {
+                        var url="dhcdocorderlistset.request.csp?action=delym&IDs=" + ids.join('^');
+                        url=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(url):url;
                         $.ajax({
-                                url : "dhcdocorderlistset.request.csp?action=delym&IDs=" + ids.join('^'),
+                                url : url,
                                 success : function (response) {
                                     response = eval('(' + response + ')');
                                     if (response.ResultCode == 0) {
@@ -644,8 +654,10 @@ var rows = $('#message').datagrid('getSelections');
                     }
                     //删除已经保存的数据
                     if (ids.length > 0) {
+                        var url="dhcdocorderlistset.request.csp?action=delelemessage&IDs=" + ids.join('^');
+                        url=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(url):url;
                         $.ajax({
-                                url : "dhcdocorderlistset.request.csp?action=delelemessage&IDs=" + ids.join('^'),
+                                url : url,
                                 success : function (response) {
                                     response = eval('(' + response + ')');
                                     if (response.ResultCode == 0) {
@@ -691,8 +703,10 @@ var rows = $('#grid').datagrid('getSelections');
                     }
                     //删除已经保存的数据
                     if (ids.length > 0) {
+                        var url="dhcdocorderlistset.request.csp?action=delelegrid&IDs=" + ids.join('^');
+                        url=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(url):url;
                         $.ajax({
-                                url : "dhcdocorderlistset.request.csp?action=delelegrid&IDs=" + ids.join('^'),
+                                url : url,
                                 success : function (response) {
                                     response = eval('(' + response + ')');
                                     if (response.ResultCode == 0) {
@@ -863,6 +877,9 @@ function updatemessage(){
    $.ajax({
             url : url,
             type:"POST",
+            data: {
+                MWToken:('undefined'!==typeof websys_getMWToken)?websys_getMWToken():""
+			},
             success:function (response) {
 			   var successmsg="保存成功"
                 response = eval('(' + response + ')');
@@ -909,6 +926,9 @@ function updategrid(){
    $.ajax({
             url : url,
             type:"POST",
+            data: {
+                MWToken:('undefined'!==typeof websys_getMWToken)?websys_getMWToken():""
+			},
             success:function (response) {
 			   var successmsg="保存成功"
                 response = eval('(' + response + ')');
@@ -983,6 +1003,9 @@ function updateShortcutKey(){
    $.ajax({
         url : url,
         type:"POST",
+        data: {
+            MWToken:('undefined'!==typeof websys_getMWToken)?websys_getMWToken():""
+        },
         success:function (response) {
 		   var successmsg="保存成功"
             response = eval('(' + response + ')');
@@ -1030,8 +1053,10 @@ function DeleteShortcutKeyData(){
                     }
                     //删除已经保存的数据
                     if (ids.length > 0) {
+                        var url="dhcdocorderlistset.request.csp?action=deleleShortcutKey&IDs=" + ids.join('^');
+                        url=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(url):url;
                         $.ajax({
-                            url : "dhcdocorderlistset.request.csp?action=deleleShortcutKey&IDs=" + ids.join('^'),
+                            url : url,
                             success : function (response) {
                                 response = eval('(' + response + ')');
                                 if (response.ResultCode == 0) {

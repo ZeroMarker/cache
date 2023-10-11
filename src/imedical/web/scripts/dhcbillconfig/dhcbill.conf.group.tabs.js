@@ -1,6 +1,6 @@
 ﻿/**
  * FileName: dhcbill.conf.group.tabs.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-10-23
  * Description: 页签授权
  */
@@ -27,7 +27,7 @@ $(function() {
 				   {title: '是否默认', field: 'defFlag', width: 80, align: 'center',
 					formatter: function (value, row, index) {
 						if (value) {
-							return "<input type='checkbox' onclick='defFlagCKClick(this, " + JSON.stringify(row) + ")' " + (value == "Y" ? "checked" : "") + "/>";
+							return "<input type='checkbox' onclick='defFlagCKClick(this, " + JSON.stringify(row) + ")'" + (value == "Y" ? " checked" : "") + (($.inArray(row.type, ["ESC", "IPB"]) != -1) ? " disabled" : "") + "/>";
 						}
 					}
 				   },
@@ -38,8 +38,8 @@ $(function() {
 		queryParams: {
 			ClassName: "BILL.CFG.COM.GroupAuth",
 			QueryName: "FindGroupTabs",
-			groupId: GV.GroupId,
-			hospId: GV.HospId,
+			groupId: CV.GroupId,
+			hospId: CV.HospId,
 			rows: 99999999
 		}
 	});
@@ -63,32 +63,35 @@ function defFlagCKClick(obj, row) {
 
 function saveClick() {
 	$.messager.confirm("确认", "确认保存？", function(r) {
-		if (r) {
-			var myAry = [];
-			$.each(GV.TabTreegrid.getCheckedNodes("checked"), function (index, row) {
-				if (row.tabRowID) {
-					var myTabRowID = row.tabRowID;
-					var myGTRowID = row.gtRowID || "";
-					var defFlag = $(GV.TabTreegrid.getPanel().find(".datagrid-row[node-id=" + row.id + "] td[field=defFlag] input:checkbox")).prop("checked") ? "Y" : "N";
-					var str = myGTRowID + "^" + myTabRowID + "^" + defFlag;
-					myAry.push(str);
-				}
-			});
-			var checkedStr = myAry.join(PUBLIC_CONSTANT.SEPARATOR.CH2);
-			
-			$.m({
-				ClassName: "BILL.CFG.COM.GroupAuth",
-				MethodName: "SaveGroupTabs",
-				groupId: GV.GroupId,
-				hospId: GV.HospId,
-				GTStr: checkedStr
-			}, function (rtn) {
-				if (rtn == "0") {
-					$.messager.popover({msg: "保存成功", type: "success"});
-				}else {
-					$.messager.popover({msg: "保存失败", type: "error"});
-				}
-			});
+		if (!r) {
+			return;
 		}
+		var myAry = [];
+		$.each(GV.TabTreegrid.getCheckedNodes("checked"), function (index, row) {
+			if (row.tabRowID) {
+				var myTabRowID = row.tabRowID;
+				var myGTRowID = row.gtRowID || "";
+				var defFlag = $(GV.TabTreegrid.getPanel().find(".datagrid-row[node-id=" + row.id + "] td[field=defFlag] input:checkbox")).prop("checked") ? "Y" : "N";
+				var str = myGTRowID + "^" + myTabRowID + "^" + defFlag;
+				myAry.push(str);
+			}
+		});
+		var checkedStr = myAry.join(PUBLIC_CONSTANT.SEPARATOR.CH2);
+		
+		$.m({
+			ClassName: "BILL.CFG.COM.GroupAuth",
+			MethodName: "SaveGroupTabs",
+			groupId: CV.GroupId,
+			hospId: CV.HospId,
+			GTStr: checkedStr
+		}, function (rtn) {
+			var myAry = rtn.split("^");
+			if (myAry[0] == 0) {
+				GV.TabTreegrid.load();
+				$.messager.popover({msg: "保存成功", type: "success"});
+				return;
+			}
+			$.messager.popover({msg: "保存失败：" + (myAry[1] || myAry[0]), type: "error"});
+		});
 	});
 }

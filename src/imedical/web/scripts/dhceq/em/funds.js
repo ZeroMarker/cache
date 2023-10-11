@@ -23,7 +23,8 @@ function initDocument()
 			QueryName:"GetFunds",
 			FromType:getElementValue("FromType"),
 			FromID:getElementValue("FromID"),
-			FundsAmount:getElementValue("FundsAmount")
+			FundsAmount:getElementValue("FundsAmount"),
+			DataChangeFlag:getElementValue("DataChangeFlag")		//czf 2020-10-29
 		},
 		fit:true,
 		border:'fasle',
@@ -72,6 +73,12 @@ function initDocument()
 	        }
         },
 		onSelect:function(index,row){
+			//modified by ZY0286 处理选择行的问题
+			if (editFlag!="undefined")
+			{
+			$('#tDHCEQFunds').datagrid('endEdit', editFlag);
+			editFlag="undefined"
+			}
 			selectRow = index;
 		},
 		onLoadSuccess:function(){
@@ -98,11 +105,21 @@ function initDocument()
 			}
 		}
 	});
+	// MZY0111	2407723		2022-01-14	非采购合同不能保存
+	if (getElementValue("FromType")==8)
+	{
+		if (tkMakeServerCall("web.DHCEQ.Con.BUSContract","GetContractTypeBySI",getElementValue("FromID"))!=0) setElement("ReadOnly", 1);
+	}
 	if (getElementValue("ReadOnly")==1)
 	{
 		$("#add").linkbutton("disable");
 		$("#delete").linkbutton("disable");
 		disableElement("BSave",true);
+	}
+	if (getElementValue("DataChangeFlag")=="Y")		//add by czf 20201029 单据调整
+	{
+		websys_showModal('options').mth();
+		//websys_showModal("close");
 	}
 }
 
@@ -252,6 +269,9 @@ function BSave_Clicked()
 		val=val+"^"+rows[i].TFee;
 		val=val+"^"+rows[i].TOldRowDR;
 		val=val+"^"+rows[i].THold1;
+		//Modefied by ZC0080 2020-08-07 调整资金来源保存调整前的累计折旧  begin
+		val=val+"^"+rows[i].TPreDepreTotalFee;
+		/*
 		if(getElementValue("FromType")=="0")
 		{
 			val=val+"^"+rows[i].TPreDepreTotalFee;
@@ -259,7 +279,8 @@ function BSave_Clicked()
 		else
 		{
 			val=val+"^";
-		}
+		}*/
+		//Modefied by ZC0080 2020-08-07 调整资金来源保存调整前的累计折旧  end
 		//Modify by zx 2020-02-24 BUG ZX0077 列定义取值调整
 		val=val+"^"+rows[i].TFinaceItemDR;
 		val=val+"^"+rows[i].TFunctionCatDR;
@@ -269,7 +290,7 @@ function BSave_Clicked()
 		val=val+"^"+rows[i].TPreFundsFee;
 		val=val+"||"
 	}
-	var result=tkMakeServerCall("web.DHCEQFunds","SaveFunds",getElementValue("FromType"),getElementValue("FromID"),val);
+	var result=tkMakeServerCall("web.DHCEQFunds","SaveFunds",getElementValue("FromType"),getElementValue("FromID"),val,getElementValue("DataChangeFlag"));		//czf 2020-10-29
 	result=result.replace(/\\n/g,"\n")
 	if (result<0)
 	{
@@ -287,9 +308,9 @@ function BSave_Clicked()
 	else
 	{
 		alertShow("保存成功!")
-		location.reload();
 		//刷新父界面
-		//websys_showModal("options").mth();  //modify by lmm 2019-02-19
+		websys_showModal("options").mth();  //modify by lmm 2019-02-19
+		location.reload();
 	}
 }
 
@@ -357,6 +378,15 @@ function bindGridEvent()
     {
         var objGrid = $("#tDHCEQFunds");        // 表格对象
         var feeEdt = objGrid.datagrid('getEditor', {index:editFlag,field:'TFee'});            // 数量
+        /*	CZF 2021-06-03
+        // MZY0070	1756530		2021-02-20
+		var OtherDepreTotal=0
+        var UnitDepreFee=0;		//单位折旧额
+        if (getElementValue("FromType")==7)
+		{
+		    UnitDepreFee=tkMakeServerCall("web.DHCEQFunds","getUnitDepreFee",getElementValue("FromID"));
+		}
+		*/
         // 数量  绑定 离开事件 
         $(feeEdt.target).bind("blur",function(){
 	        var OtherFunds=0
@@ -371,6 +401,14 @@ function bindGridEvent()
 					if(i==editFlag)
 					{
 						var CurFee=$(feeEdt.target).val();
+						/*	CZF 2021-06-03
+						// MZY0070	1756530		2021-02-20
+						var CurDepreTotal=UnitDepreFee*(CurFee*1);
+						var DepreTotalEdt = objGrid.datagrid('getEditor', {index:i,field:'TDepreTotal'}); 
+						$(DepreTotalEdt.target).val(CurDepreTotal.toFixed(2));
+						rows[i].TCurDepreTotalFee=(+rows[i].TCurDepreTotalFee+CurDepreTotal).toFixed(2);
+						OtherDepreTotal=OtherDepreTotal+CurDepreTotal.toFixed(2);
+						*/
 					}
 					else
 					{
@@ -385,6 +423,11 @@ function bindGridEvent()
 			}
 			var Fee=getElementValue("FundsAmount")-OtherFunds;
 			rows[CurRow].TFee=Fee;
+			/*	CZF 2021-06-03
+			// MZY0070	1756530		2021-02-20
+			rows[CurRow].TDepreTotal=0-OtherDepreTotal;		//变动累计折旧
+			rows[CurRow].TCurDepreTotalFee=rows[CurRow].TCurDepreTotalFee-OtherDepreTotal;	//变动后累计折旧
+			*/
 			objGrid.datagrid('refreshRow', CurRow); 
 			$('#tDHCEQFunds').datagrid('endEdit',editFlag);
 			RefreshTable();

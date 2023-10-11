@@ -3,7 +3,8 @@ var PageLogicObj={
 	dw:$(window).width()-400,
 	dh:$(window).height()-100,
 	toolbar:"",
-	m_CardNoFlag:0
+	m_CardNoFlag:0,
+    m_ReturnReason:""
 }
 $(function(){
 	//初始化
@@ -15,6 +16,7 @@ $(function(){
 	$("#CardNo").focus();
 })
 $(window).load(function() {
+	$.DHCDoc.setKeyDesc()
 	//InitCSPShortcutKey("opadm.return.hui.csp");
 	//如不进行toolbar 按钮text描述修改,会在表格加载数据时清空toolbar里面快捷键
 	ReSetGridToolBar();
@@ -98,6 +100,8 @@ function PageHandle(){
 		$("#RegNo").val(PatNo);
 		RegReturnListTabDataGridLoad();
 	}
+	//支付方式
+	LoadPayMode();
 }
 function Init(){
 	PageLogicObj.m_RegReturnListTabDataGrid=InitRegReturnListTabDataGrid();
@@ -151,6 +155,7 @@ function InitRegReturnListTabDataGrid(){
 		{field:'RegfeeDate',title:'挂号日期',width:90},
 		{field:'RegfeeTime',title:'挂号时间',width:80},
 		{field:'TabInvoiceNo',title:'发票号',width:100},
+		{field:'TabEinvprtNo',title:'电子票号',width:100},
 		{field:'TabReturnFlag',title:'退号标识',showTip:true,width:140,
 			styler: function(value,row,index){
 				if (value!="可退"){
@@ -468,7 +473,8 @@ function LoadReturnReason(){
 	for (var j=0;j<LenR;j++){
 		var Desc=ReturnStrArry[j].split("!")[0];
 		var RowID=ReturnStrArry[j].split("!")[1];
-		ArrData.push({"id":RowID,"text":Desc})
+		ArrData.push({"id":RowID,"text":Desc});
+        if (Desc=="其他") PageLogicObj.m_ReturnReason=RowID;
 	}
 	var cbox = $HUI.combobox("#ReturnReason", {
 			valueField: 'id',
@@ -514,7 +520,7 @@ function SetReturnSum(row){
 		    ExcludeFlag:0
 		},false);
 	}else{
-		var MRFee=row['MRFee'];
+		//var MRFee=row['MRFee']; 
 	}
 	var o=$HUI.checkbox("#ReturnMR");
 	if (o.getValue()){
@@ -550,7 +556,7 @@ function UpdateclickHandler(type){
 	var groupid=session['LOGON.GROUPID'];
 	var rtn=$.cm({
 	    ClassName : "web.DHCOPAdmReg",
-	    MethodName : "CheckAdmDiagnos",
+	    MethodName : "CheckCancelOPRegist",
 	    dataType:"text",
 	    adm:xPaadm,
 	    GroupRowId:groupid
@@ -560,9 +566,15 @@ function UpdateclickHandler(type){
 		$.messager.alert("提示",rtnArray[1]);
 		return false;
 	}
-	var CostSum=$("#ReturnCash").val();
+	var CostSum=$("#Mon").val() //$("#ReturnCash").val();
 	var PayModeStr=row['INVPayMode'];
-	$.messager.confirm('确认对话框', '是否确定要退号?'+"<div>退回现金:<div style='color:#f16e57'>"+CostSum+"元</div></div>"+"<div>支付方式:<div style='color:#2ab66a'>"+PayModeStr+"</div></div>", function(r){
+	var PayModeName=$("#PayMode").combobox("getText");
+	if ((PayModeName!="现金")&&(PayModeStr.indexOf(PayModeName)<0)){
+		$.messager.alert("提示","不能退回除现金和原支付方式以外的其他支付方式");
+		return false;
+		}
+	if (PayModeName=="") PayModeName="原支付方式"
+	$.messager.confirm('确认对话框', '是否确定要退号?'+"<div>退回"+PayModeName+":<div style='color:#f16e57'>"+CostSum+"元</div></div>"+"<div>原支付方式:<div style='color:#2ab66a'>"+PayModeStr+"</div></div>", function(r){
 		if (r){
 			var ReturnMR="N"
 			var o=$HUI.checkbox("#ReturnMR");
@@ -635,9 +647,13 @@ function UpdateclickHandler(type){
 			    EpisodeID:AdmId
 		},false);
 		//退号原因
-		var ReturnReasonDr=$("#ReturnReason").combobox("getValue");
-		ReturnReasonDr=CheckComboxSelData("ReturnReason",ReturnReasonDr);
-		
+		var ReturnReason=$("#ReturnReason").combobox("getText").replace(/^\s*|\s*$/g,"");
+        var ReturnReasonDr=$("#ReturnReason").combobox("getValue");
+        if ((ReturnReasonDr=="")&&(ReturnReason!="")){
+            ReturnReasonDr=PageLogicObj.m_ReturnReason+"^"+ReturnReason;
+        }else{
+            ReturnReasonDr=CheckComboxSelData("ReturnReason",ReturnReasonDr)+"^";
+        }
 		//医保结算退号,如果失败需要加入异常订单
 		if (InsuAdmInfoDr!="") {
 			var InsuRetValue=InsuOPRegStrike(0,userid,InsuAdmInfoDr,"",AdmReasonId,"");
@@ -651,6 +667,7 @@ function UpdateclickHandler(type){
 				return false;
 			}
 		}
+		var PayMode=$("#PayMode").combobox("getValue");
 		var rtn=$.cm({
 		    ClassName : "web.DHCOPAdmReg",
 		    MethodName : "CancelOPRegistBroker",
@@ -659,7 +676,7 @@ function UpdateclickHandler(type){
 		    RegFeeRowId:RegRowId,
 		    UserRowId:userid, GroupRowId:groupid, LogonLocRowId:ctlocid,
 		    ReturnMR:ReturnMR,
-		    ReturnReasonDr:ReturnReasonDr
+		    ReturnReasonDr:ReturnReasonDr,PayMode:PayMode
 		},function(ret){
 			var retarr=ret.split("$");	
 			if (retarr[0]!="0"){
@@ -723,13 +740,23 @@ function UpdateclickHandler(type){
 }
 function SetPid(value){
 	if (value!="0") {
-		if(value=="cancel") {$.messager.alert("提示",t['AdmIsCanceled']);}
-		if(value=="diagnos") {$.messager.alert("提示","此人已经有诊断或医嘱不能退号或换号!");}
-		if(value=="orditem") {$.messager.alert("提示","已经有过医嘱,不允许退换号!");}
-		if(value=="Invoice") {$.messager.alert("提示","已经打印过发票,不允许退换号!");}
-		if(value=="overtime") {$.messager.alert("提示","已经过了退号时间!");}
-		if(value=="NotSameHosp") {$.messager.alert("提示","不能跨院退号,请核实所退号所在医院!");}
-		if ((value!="Invoice")&&(value!="orditem")&&(value!="diagnos")&&(value!="overtime")&&(value!="cancel")&&(value!="NotSameHosp")){
+		if(value=="cancel") {
+			$.messager.alert("提示",t['AdmIsCanceled']);
+		}else if(value=="diagnos") {
+			$.messager.alert("提示","此人已经有诊断或医嘱不能退号或换号!");
+		}else if(value=="orditem") {
+			$.messager.alert("提示","已经有过医嘱,不允许退换号!");
+		}else if(value=="Invoice") {
+			$.messager.alert("提示","已经打印过发票,不允许退换号!");
+		}else if(value=="overtime") {
+			$.messager.alert("提示","已经过了退号时间!");
+		}else if(value=="NotSameHosp") {
+			$.messager.alert("提示","不能跨院退号,请核实所退号所在医院!");
+		}else if(value=="NeedReason") {
+			$.messager.alert("提示","强制退号需要填写退号原因");
+		}else if(value=="CESReg") {
+			$.messager.alert("提示","此人为应急系统患者,且在应急系统中未收挂号费用,不允许退号!");
+		}else {
 			$.messager.alert("提示","退号失败:"+value);
 		}
 	}else{
@@ -921,16 +948,46 @@ function ReprintRegist() {
 	var groupid=session['LOGON.GROUPID'];	
 	var ctlocid=session['LOGON.CTLOCID'];
 	var ret=$.cm({
-		ClassName:"web.DHCOPAdmReg",
-		MethodName:"GetPrintData",
+		ClassName:"DHCDoc.Common.pa",
+		MethodName:"GetOPPrintData",
 		dataType:"text",
 		RegfeeRowId:RegRowId, AppFlag:"", RePrintFlag:"Y"
 	},false);
 	PrintOut(ret);
+	var admid=row["AdmId"];
+	var ret=$.cm({
+		ClassName:"web.DHCOPAdmReg",
+		MethodName:"SavePrintRecode",
+		dataType:"text",
+		Adm:admid, UserID:userid
+	},false);
 	$.messager.popover({msg: '重打成功!',type:'success'});
 }
 function PrintOut(PrintData) {
 	try {
+		var PrintDataArySum=eval(PrintData)
+		var PrintDataAry=PrintDataArySum[0]
+		var MyPara = "" + String.fromCharCode(2);
+		var PersonPay="",RegFee="";
+		for (Element in PrintDataAry){
+			if (Element=="PersonPay"){PersonPay=PrintDataAry[Element]}
+			if (Element=="AppFee"){
+				if (PrintDataAry[Element]!=0){PrintDataAry[Element]="预约费:"+PrintDataAry[Element]+"元"}else{PrintDataAry[Element]=""}
+			}
+			if (Element=="OtherFee"){
+				if (PrintDataAry[Element]!=0) {PrintDataAry[Element]=PrintDataAry[Element]+"元"}else{PrintDataAry[Element]=""}
+			}
+			if (Element=="RegFee"){
+				RegFee=PrintDataAry[Element]
+				if (PrintDataAry[Element]!=0){PrintDataAry[Element]=PrintDataAry[Element]+"元"}else{PrintDataAry[Element]=""}
+			}
+			MyPara=MyPara +"^"+ Element + String.fromCharCode(2) + PrintDataAry[Element];
+		}
+		ProportionNote="本收据中,"+RegFee+"元"+"不属于医保报销范围";
+		MyPara=MyPara +"^"+ "ProportionNote" + String.fromCharCode(2) +ProportionNote;
+		DHC_PrintByLodop(getLodop(),MyPara,"","","");	
+	} catch(e) {$.messager.alert("提示",e.message)};
+	/*try {
 		if (PrintData=="") return;
 		var PrintArr=PrintData.split("^");
 		var AdmNo=PrintArr[0];
@@ -1015,7 +1072,7 @@ function PrintOut(PrintData) {
     	AccAmount="" //SaveNumbleFaxed(parseFloat(AccBalance)+parseFloat(Total));
 		var cardnoprint=$('#CardNo').val();
 		if (cardnoprint=="") {
-			cardnoprint=ServerObj.CardNo
+			cardnoprint=CardNo
 		}
 		var TimeD=TimeRange;
 		if (AppFee!=0){AppFee="预约费:"+AppFee}else{AppFee=""}
@@ -1039,7 +1096,7 @@ function PrintOut(PrintData) {
 		var myobj=document.getElementById("ClsBillPrint");
 		//PrintFun(myobj,MyPara,"");
 		DHC_PrintByLodop(getLodop(),MyPara,"","","");	
-	} catch(e) {$.messager.alert("提示",e.message)};
+	} catch(e) {$.messager.alert("提示",e.message)};*/
 }
 function Trim(str){
 	return str.replace(/[\t\n\r ]/g, "");
@@ -1166,6 +1223,7 @@ function UpdatePatAdmReasonClickHandle(){
 	}
 	var admid=row["AdmId"];
 	var src="opadm.chgadmreason.hui.csp?EpisodeID="+admid;
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
 	createModalDialog("ChgAdmReason","修改患者类型及就诊费别", "700", PageLogicObj.dh,"icon-w-edit","",$code,"");
 }
@@ -1216,4 +1274,22 @@ function AccpinvClick() {
 		title:'集中打印',
 		width:'95%',height:'95%'
 	})
+}
+function LoadPayMode(){
+	$.cm({ 
+		ClassName:"web.UDHCOPGSConfig", 
+		QueryName:"ReadGSINSPMList",
+		GPRowID:session['LOGON.GROUPID'],
+		HospID:session['LOGON.HOSPID'],
+		TypeFlag:"REG",
+		rows:9999
+	},function(Data){
+		var cbox = $HUI.combobox("#PayMode", {
+				valueField: 'CTPMRowID',
+				textField: 'CTPMDesc', 
+				editable:true,
+				data: Data.rows
+		 });
+		 $("#PayMode").combobox("setValue","");
+	});
 }

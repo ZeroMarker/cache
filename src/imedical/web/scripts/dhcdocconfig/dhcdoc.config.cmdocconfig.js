@@ -39,8 +39,9 @@ var arrayObj7 = new Array(
 	  new Array("Check_FormulaCanAppendItem","FormulaCanAppendItem"),
 	  new Array("Check_NotDisplayZeroStockCMItem","NotDisplayZeroStockCMItem"),
 	  new Array("Check_CMOpenForAllHosp","CMOpenForAllHosp"),
-	  new Array("Check_CMOrdNeedTCMDiag","CMOrdNeedTCMDiag"),
-	  new Array("Check_CMOrdSameArcName","CMOrdSameArcName")
+	  //new Array("Check_CMOrdNeedTCMDiag","CMOrdNeedTCMDiag"),
+	  new Array("Check_CMOrdSameArcName","CMOrdSameArcName"),
+	  new Array("Check_CMNoStockOnePrompt","CMNoStockOnePrompt")
 );
 //默认煎药方式
 var arrayObj8 = new Array(
@@ -50,6 +51,7 @@ $(function(){
 	InitHospList();
 	$("#SaveDetails").click(SaveDetailsClickHandle);
 	$("#SavePublic").click(SavePublicClickHandle);
+	$("#ConfigTakingMedicineMethod").click(SaveTakingMedicineMethodHandle);
 });
 function InitHospList()
 {
@@ -59,6 +61,21 @@ function InitHospList()
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){
 		Init();
+		InitCache();
+		$('#dataTabs').tabs({
+			onSelect:function(title,index){
+				if(index==1){
+					InitPublicTerritory();
+				}
+			}
+		});
+	}
+}
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
 	}
 }
 function Init(){
@@ -230,6 +247,8 @@ function SaveDetailsClickHandle(){
 		if (CMPrescTypeLinkFeeStr=="") CMPrescTypeLinkFeeStr=ARCIMRowid;
 		else  CMPrescTypeLinkFeeStr=CMPrescTypeLinkFeeStr+"^"+ARCIMRowid;
 	}
+	var o=$HUI.combobox("#Combo_TakingMedicineMethod");
+	var TakingMedicineMethod=o.getValues().join("!");
 	//1-5
 	var SaveStr=CNMedAppendItem+"#"+CNMedCookModeFeeItem+"#"+CNMedDefaultFrequence+"#"+CNMedDefaultInstruction+"#"+CNMedDefaultDuration
 	//6-10
@@ -237,6 +256,7 @@ function SaveDetailsClickHandle(){
 	//11-15
 	var SaveStr=SaveStr+"#"+IPCookModeFeeNoAutoAdd+"#"+ApperFormulaItem+"#"+PrintFormulaItem+"#"+CNMedNormDefaultRefLoc+"#"+NotAllowChangeCook
 	var SaveStr=SaveStr+"#"+CNMedNormIPDefaultRefLoc+"#"+IPDefaultCMPrescType+"#"+OPDefaultCMPrescType+"#"+CMPrescTypeLinkFeeStr+"#"+CNMedDefaultCookMode;
+	var SaveStr=SaveStr+"#"+TakingMedicineMethod
 	var value=$.m({
 		ClassName:"DHCDoc.DHCDocConfig.CMDocConfig",
 		MethodName:"SaveCMPrescDetails",
@@ -284,6 +304,7 @@ function LoadCMPrescTypeDetail(Code){
 		var OPDefaultCMPrescType=ValArr[20];
 		var CMPrescTypeLinkFeeStr=ValArr[21];
 		var CNMedDefaultCookMode=ValArr[22];
+		var TakingMedicineMethod=ValArr[23];
 		/*$("#SSDBCombo_Item").combobox('setValue', CNMedAppendItem);
 		
 		window.setTimeout(function (){
@@ -324,6 +345,15 @@ function LoadCMPrescTypeDetail(Code){
 					}
 				});
 			}
+		}
+		var sbox = $HUI.combobox("#Combo_TakingMedicineMethod");
+		var TakingMedicineMethodvalue=sbox.getValues();
+		for (i=0;i<TakingMedicineMethodvalue.length;i++){
+			if (TakingMedicineMethodvalue[i]!="")  sbox.unselect(TakingMedicineMethodvalue[i]);
+		}
+		var TakingMedicineMethodArr=TakingMedicineMethod.split("!");
+		for (i=0;i<TakingMedicineMethodArr.length;i++){
+			if (TakingMedicineMethodArr[i]!="")  sbox.select(TakingMedicineMethodArr[i]);
 		}
 }
 
@@ -369,6 +399,7 @@ function InitPrescTypeDetail(){
 	LoadCNMedIPDefaultRefLoc();
 	InitCMPrescTypeLinkFeeGrid();
 	LoadDefaultCookModeData();
+	InitTakingMedicineMethod();
 }
 function InitPublicTerritory(){
 	//就诊类型 药物使用方式 List_Instr  LoadListData
@@ -384,7 +415,9 @@ function InitPublicTerritory(){
 	//医嘱单长期医嘱
 	InitCNMedAddLongOrderGrid();
 	//煎药方式
-	InitCNMedCookArcMode()
+	InitCNMedCookArcMode();
+	// 用法类型对照
+	InitCNMedInstrContrast();
 	///可用医嘱类型
 	LoadCNMedPrior("List_CNMedPrior");
 	//账单大类
@@ -471,15 +504,15 @@ function InitCNMeditemInstr(){
 		}];
 	 ///用法列表columns
     var CNMeditemInstrColumns=[[    
-                    { field: 'Code', title: '代码', width: 10,editor : {type : 'text',options : {}}
+                    { field: 'Code', title: '代码', width: 30,editor : {type : 'text',options : {}}
 					},
-        			{ field: 'Desc', title: '名称', width: 10,editor : {type : 'text',options : {}}
+        			{ field: 'Desc', title: '名称', width: 30,editor : {type : 'text',options : {}}
 					}
     			 ]];
 	// 用法列表Grid
 	CNMeditemInstrDataGrid=$('#tabCNMeditemInstr').datagrid({  
 		fit : true,
-		width : 'auto',
+		//width : 'auto',
 		border : false,
 		striped : true,
 		singleSelect : true,
@@ -609,15 +642,15 @@ function InitCNMedPackMode(){
 		}];
 	 ///包装方式列表columns
     var CNMedPackModeColumns=[[    
-                    { field: 'Code', title: '代码', width: 10,editor : {type : 'text',options : {}}
+                    { field: 'Code', title: '代码', width: 30,editor : {type : 'text',options : {}}
 					},
-        			{ field: 'Desc', title: '名称', width: 10,editor : {type : 'text',options : {}}
+        			{ field: 'Desc', title: '名称', width: 30,editor : {type : 'text',options : {}}
 					}
     			 ]];
 	// 包装方式列表Grid
 	CNMedPackModeDataGrid=$('#tabCNMedPackMode').datagrid({  
 		fit : true,
-		width : 'auto',
+		//width : 'auto',
 		border : false,
 		striped : true,
 		singleSelect : true,
@@ -755,7 +788,7 @@ function InitCHNPHFrequence()
 	 ///包装方式列表columns
     var CHNPHFrequenceColumns=[[ 
 					{ field: 'CPFRowid', title: 'ID',hidden:true},	
-                    { field: 'CPFFrequence', title: '频次', width: 20,
+                    { field: 'CPFFrequence', title: '频次', width: 30,
 					   editor :{  
 							type:'combobox',  
 							options:{
@@ -769,14 +802,14 @@ function InitCHNPHFrequence()
 							  }
      					  }
 					},
-        			{ field: 'CPFFactor', title: '系数', width: 10,
+        			{ field: 'CPFFactor', title: '系数', width: 20,
 					  editor : {
 						  type : 'text',
 						  options : {
 						  }
 					  }
 					},
-					{ field: 'CPFDefault', title: '默认', width: 10,
+					{ field: 'CPFDefault', title: '默认', width: 20,
 					  editor : {
                                 type : 'icheckbox',
                                 options : {
@@ -789,7 +822,7 @@ function InitCHNPHFrequence()
 	// 包装方式列表Grid
 	CHNPHFrequenceDataGrid=$('#tabFrequence').datagrid({  
 		fit : true,
-		width : 'auto',
+		//width : 'auto',
 		border : false,
 		striped : true,
 		singleSelect : true,
@@ -902,14 +935,14 @@ function InitCNMedCookMode()
 	 ///列表columns
     var CNMedCookModeColumns=[[ 
 	                { field: 'ArcOrd', title: 'ID', width: 10,hidden:true},
-					{ field: 'Code', title: '代码', width: 10,
+					{ field: 'Code', title: '代码', width: 20,
 					  editor : {type : 'text',options : {required:true}}
 
 					},	
                     { field: 'Desc', title: '名称', width: 20,
 					  editor : {type : 'text',options : {required:true}}
 					},
-        			{ field: 'ArcOrdID', title: '医嘱套名称', width: 35,
+        			{ field: 'ArcOrdID', title: '医嘱套名称', width: 45,
 					   editor :{  
 							type:'combobox',  
 							options:{
@@ -936,7 +969,7 @@ function InitCNMedCookMode()
 							  return record.ArcOrd;
 						  }
 					},
-					{ field: 'ActiveFlag', title: '可用', width: 10,
+					{ field: 'ActiveFlag', title: '可用', width: 20,
 					  editor : {
                                 type : 'icheckbox',
                                 options : {
@@ -949,7 +982,7 @@ function InitCNMedCookMode()
 	// 包装方式列表Grid
 	CNMedCookModeDataGrid=$('#tabCNMedCookMode').datagrid({  
 		fit : true,
-		width : 'auto',
+		//width : 'auto',
 		height:'150',
 		border : false,
 		striped : true,
@@ -1061,6 +1094,10 @@ function InitCNMedAddLongOrderGrid()
                     $.messager.confirm("提示", "你确定要删除吗?",
                     function(r) {
                         if (r) {
+							if ((!rows[0].IDOut)||(rows[0].IDOut=="")){
+		                        CNMedAddLongOrderEditRow = undefined;
+						   		CNMedAddLongOrderGrid.datagrid('deleteRow',SelectedRow);
+		                    }else{
 							var ids = [];
                             for (var i = 0; i < rows.length; i++) {
                                 ids.push(rows[i].IDOut);
@@ -1080,7 +1117,7 @@ function InitCNMedAddLongOrderGrid()
 						  }
 						   CNMedAddLongOrderEditRow = undefined;
 						   CNMedAddLongOrderGrid.datagrid('deleteRow',SelectedRow);
-							//SaveCHNPHFrequenceData();*/
+		                   }							//SaveCHNPHFrequenceData();*/
 							
                         }
                     });
@@ -1179,7 +1216,7 @@ function InitCNMedAddLongOrderGrid()
 	// 包装方式列表Grid
 	CNMedAddLongOrderGrid=$('#tabCNMedAddLongOrder').datagrid({  
 		fit : true,
-		width : 'auto',
+		//width : 'auto',
 		border : false,
 		striped : true,
 		singleSelect : true,
@@ -1464,6 +1501,7 @@ function InittabCMPrescType(){
 			handler: function() {
 				var rows = CMPrescTypeDataGrid.datagrid("getSelections");
                 if (rows.length > 0) {
+	                var Index=CMPrescTypeDataGrid.datagrid("getRowIndex",rows[rows.length-1].Code)
 					var Code=rows[rows.length-1].Code;
 					var value=$.m({
 						ClassName:"DHCDoc.DHCDocConfig.CMDocConfig",
@@ -1472,6 +1510,11 @@ function InittabCMPrescType(){
 					   	HospId:$HUI.combogrid('#_HospList').getValue()
 					},false);
 					CMPrescTypeDataGrid.datagrid("reload");
+					Index=parseFloat(Index)-1
+					if (Index<0) Index=0
+					setTimeout(function(){
+				        CMPrescTypeDataGrid.datagrid("selectRow",Index)
+				    },500)
                 } else {
                     $.messager.alert("提示", "请选择要移动的行", "error");
                 }
@@ -1482,6 +1525,7 @@ function InittabCMPrescType(){
 			handler: function() {
 				var rows = CMPrescTypeDataGrid.datagrid("getSelections");
                 if (rows.length > 0) {
+	                var Index=CMPrescTypeDataGrid.datagrid("getRowIndex",rows[rows.length-1].Code)
 					var Code=rows[rows.length-1].Code;
 					var value=$.m({
 						ClassName:"DHCDoc.DHCDocConfig.CMDocConfig",
@@ -1490,6 +1534,12 @@ function InittabCMPrescType(){
 					   	HospId:$HUI.combogrid('#_HospList').getValue()
 					},false);
 					CMPrescTypeDataGrid.datagrid("reload");
+					Index=parseFloat(Index)+1
+					var rowlength=CMPrescTypeDataGrid.datagrid("getRows").length
+					if (Index>=rowlength) Index=parseFloat(rowlength)-1
+					setTimeout(function(){
+				        CMPrescTypeDataGrid.datagrid("selectRow",Index)
+				    },500)
                 } else {
                     $.messager.alert("提示", "请选择要移动的行", "error");
                 }
@@ -1740,7 +1790,15 @@ function InitCMPrescTypeLinkFeeGrid()
             text: '保存',
             iconCls: 'icon-save',
             handler: function() {
-	            SaveDetailsClickHandle();
+	            if (CMPrescTypeLinkFeeEditRow != undefined){
+		            var CMPrescTypeRow=tabCMPrescTypeLinkFeeGrid.datagrid("selectRow",CMPrescTypeLinkFeeEditRow).datagrid("getSelected"); 
+		           	var ARCIMRowid=CMPrescTypeRow.ARCIMRowid;
+		           	if ((!ARCIMRowid)||(ARCIMRowid=="")){
+			           	$.messager.alert("提示", "请维护一条数据进行保存");
+			           	return false
+			           	}
+			       SaveDetailsClickHandle();
+	            }
             }
         },{
             text: '取消编辑',
@@ -1909,12 +1967,12 @@ function InitCNMedCookArcMode(){
 		}];
 	 ///煎药方式列表columns 附加医嘱，接收科室
     var CNMedCookArcModeColumns=[[   
-    				{ field: 'RowID', title: 'RowID', width: 10,hidden:true },
-                    { field: 'Code', title: '代码', width: 20,editor : {type : 'text',options : {}}
+    				{ field: 'RowID',hidden:true },
+                    { field: 'Code', title: '代码', width: 40,editor : {type : 'text',options : {}}
 					},
-        			{ field: 'Desc', title: '名称', width: 20,editor : {type : 'text',options : {}}
+        			{ field: 'Desc', title: '名称', width: 40,editor : {type : 'text',options : {}}
 					},
-					{field:'ArcItem',title:'附加医嘱',width:40,sortable:true,
+					{field:'ArcItem',title:'附加医嘱',width:70,sortable:true,
 						formatter:function(value,rec){  
 							var btn=""
 							if (rec.Rowid!=""){
@@ -1923,11 +1981,20 @@ function InitCNMedCookArcMode(){
 							return btn;
                		 	}
 					},
-					{field:'RecLocID',title:'接收科室',width:40,sortable:true,
+					{field:'RecLocID',title:'接收科室',width:70,sortable:true,
 						formatter:function(value,rec){  
 							var btn=""
 							if (rec.Rowid!=""){
 			                   var btn = '<a href="#"  class="editcls"  onclick="RecLocShow(\'' + rec.RowID + '\')">'+'接收科室'+'</a>';
+							}
+							return btn;
+               			}
+					},
+					{field:'LimitInstr',title:'使用方式',width:70,sortable:true,
+						formatter:function(value,rec){  
+							var btn=""
+							if (rec.Rowid!=""){
+			                   var btn = '<a href="#"  class="editcls"  onclick="LimitInstrShow(\'' + rec.RowID + '\')">'+'使用方式'+'</a>';
 							}
 							return btn;
                			}
@@ -1940,7 +2007,7 @@ function InitCNMedCookArcMode(){
 		border : false,
 		striped : true,
 		singleSelect : true,
-		fitColumns : true,
+		fitColumns : false,
 		autoRowHeight : false,
 		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.DocConfig&QueryName=FindCNMedCookMode&value=&HospId="+$HUI.combogrid('#_HospList').getValue(),
 		loadMsg : '加载中..',  
@@ -1956,7 +2023,9 @@ function InitCNMedCookArcMode(){
 			var selected=CNMedCookArcModeDataGrid.datagrid('getRows'); 
 		}
 	});
-	LoadCNMedCookDataGrid()
+	setTimeout(function(){
+        LoadCNMedCookDataGrid()
+    },500)
 }
 function LoadCNMedCookDataGrid()
 {
@@ -1971,6 +2040,10 @@ function LoadCNMedCookDataGrid()
 	})
 }
 function RecLocShow(RowID){
+	if ($.isNumeric(RowID)===false){
+		$.messager.alert("提示", "请先保存行数据", "error");
+		return;
+	}
 	$("#CookRecLoc-dialog").dialog("open");
 	CookArcRowid=RowID
 	InitCookRecLoc()
@@ -2057,6 +2130,12 @@ function InitCookRecLoc(){
 					if(value=="0"){
 						$.messager.popover({msg: '保存成功',type:'success'});
 				        LoadCookRecLocDataGrid()		
+					}else{
+						if(value=="Repeat"){
+							$.messager.alert("提示","数据重复","warning");	
+						}else{
+							$.messager.alert("提示",value,"warning");	
+						}	
 					}
 			            
 		        }
@@ -2155,6 +2234,10 @@ function LoadCookRecLocDataGrid(){
 	})
 }
 function ArcItemShow(RowID){
+	if ($.isNumeric(RowID)===false){
+		$.messager.alert("提示", "请先保存行数据", "error");
+		return;
+	}
 	$("#CookArcItem-dialog").dialog("open");
 	CookArcRowid=RowID
 	InitCookArcItemRecLoc()
@@ -2229,6 +2312,10 @@ function InitCookArcItemRecLoc(){
 			        } 
 			        var editors = CookArcItemDataGrid.datagrid('getEditors', CookArcItemDataGridEditRow);
 			        var Number=editors[1].target.val()
+					if (Number==""){
+				        $.messager.alert("提示","请填写数量!");
+                        return false;
+				        }
 			        var subrowid=ArcimSelRow.RowID
 			        var value=$.m({
 						ClassName:"DHCDoc.DHCDocConfig.DocConfig",
@@ -2239,8 +2326,13 @@ function InitCookArcItemRecLoc(){
 					if(value=="0"){
 						$.messager.popover({msg: '保存成功',type:'success'});
 				        LoadCookArcItemDataGrid()		
+					}else{
+						if(value=="Repeat"){
+							$.messager.alert("提示","数据重复","warning");	
+						}else{
+							$.messager.alert("提示",value,"warning");	
+						}	
 					}
-			            
 		        }
 			}
 		}];
@@ -2292,7 +2384,7 @@ function InitCookArcItemRecLoc(){
                     		}
 	        			  }
 					},
-        			{ field: 'Number', title: '数量', width: 20,editor : {type : 'text',options : {}}
+        			{ field: 'Number', title: '数量', width: 20,editor:{type:'numberbox',options:{min:0,precision:2}}
 					}
     			 ]];
 	// 煎药方式列表Grid
@@ -2341,6 +2433,43 @@ function LoadCookArcItemDataGrid(){
 		CookArcItemDataGrid.datagrid("clearSelections")
 	})
 }
+function LimitInstrShow(RowID){
+	if ($.isNumeric(RowID)===false){
+		$.messager.alert("提示", "请先保存行数据", "error");
+		return;
+	}
+	$('#CookInstr-dialog').dialog("open");
+	$('#CookInstrList').empty();
+	var selInstrStr=$.cm({
+		ClassName : "DHCDoc.DHCDocConfig.DocConfig",
+	    MethodName : "GetCookModeInstr",
+		Rowid:RowID, 
+		HospId:$HUI.combogrid('#_HospList').getValue(),
+		dataType:'text'
+	},false);
+	var selInstrArr=selInstrStr.split('^');
+	var rows=$('#Combo_DefaultInstr').combobox('getData');
+	for(var i=0;i<rows.length;i++){
+		var row=rows[i];
+		var selected=selInstrArr.indexOf(row.InstrRowID)>-1;
+		$("<option></option>").val(row.InstrRowID).text(row.InstrDesc).attr('selected',selected).appendTo('#CookInstrList');
+	}
+	$('#BCookInstrSave').unbind('click').bind('click',function(){
+		var InstrArr=new Array();
+		$("#CookInstrList").find('option:selected,li[selected]').each(function(){
+			InstrArr.push($(this).val());
+		});
+		var ret=$.cm({
+			ClassName : "DHCDoc.DHCDocConfig.DocConfig",
+			MethodName : "SaveCookModeInstr",
+			Rowid:RowID, 
+			InstrStr:InstrArr.join('^'),
+			HospId:$HUI.combogrid('#_HospList').getValue(),
+			dataType:'text'
+		},false);
+		$.messager.popover({msg: '保存成功!',type:'success'});
+	});
+}
 function SaveCNMedCookArcModeData(){
 	var str=""  
 	var rows = CNMedCookArcModeDataGrid.datagrid("getRows");	
@@ -2379,6 +2508,399 @@ function SaveCNMedCookArcModeData(){
 	},false);
 	if(value=="0"){
 		$.messager.popover({msg: '保存成功!',type:'success'});
-       LoadCNMedCookDataGrid()			
+       	LoadCNMedCookDataGrid()			
+	}
+}
+var ConfigTakingMedDataGrid,ConfigTakingMedEditRow;
+function SaveTakingMedicineMethodHandle(){
+	$("#ConfigTakingMedicineMethod-dialog").dialog("open");
+	InitConfigTakingMedDataGrid()
+}
+
+function InitConfigTakingMedDataGrid(){
+	///煎药方式
+	 var ConfigTakingMedicineMethodToolBar = [{
+            text: '增加',
+            iconCls: 'icon-add',
+            handler: function() { 
+            	ConfigTakingMedEditRow = undefined;
+                ConfigTakingMedDataGrid.datagrid("rejectChanges").datagrid("unselectAll");
+                
+                ConfigTakingMedDataGrid.datagrid("insertRow", {
+                    index: 0,
+                    row: {RowID:""}
+                });
+                ConfigTakingMedDataGrid.datagrid("beginEdit", 0);
+                ConfigTakingMedEditRow = 0;
+            }
+        },{
+            text: '删除',
+            iconCls: 'icon-cancel',
+            handler: function() {
+                var rows = ConfigTakingMedDataGrid.datagrid("getSelections");
+                if (rows.length > 0) {
+                    $.messager.confirm("提示", "你确定要删除吗?如果删除会影响已经维护的数据",
+                    function(r) {
+                        if (r) {
+	                        var rows = ConfigTakingMedDataGrid.datagrid("getSelections");
+	                        RowID=rows[0].RowID
+	                        if (RowID){
+		                        var value=$.m({
+									ClassName:"DHCDoc.DHCDocConfig.DocConfig",
+									MethodName:"DelectTakingMedicineMethod",
+								   	RowID:RowID
+								},false);
+								if(value=="0"){
+									$.messager.popover({msg: '删除成功',type:'success'});
+							        LoadConfigTakingMedDataGrid();
+									InitTakingMedicineMethod();
+								}
+	                        }else{
+								ConfigTakingMedEditRow = undefined;
+                				ConfigTakingMedDataGrid.datagrid("rejectChanges").datagrid("unselectAll");
+	                        }
+                        }
+                    });
+                } else {
+                    $.messager.alert("提示", "请选择要删除的行", "error");
+                }
+            }
+        },{
+            text: '取消编辑',
+            iconCls: 'icon-undo',
+            handler: function() {
+                //取消当前编辑行把当前编辑行罢undefined回滚改变的数据,取消选择的行
+                ConfigTakingMedEditRow = undefined;
+                ConfigTakingMedDataGrid.datagrid("rejectChanges").datagrid("unselectAll");
+            }
+        },{
+			text: '保存',
+			iconCls: 'icon-save',
+			handler: function() {
+				if (ConfigTakingMedEditRow != undefined){
+		            var ArcimSelRow=ConfigTakingMedDataGrid.datagrid("selectRow",ConfigTakingMedEditRow).datagrid("getSelected"); 
+		           	var RowID=ArcimSelRow.RowID
+			        var editors = ConfigTakingMedDataGrid.datagrid('getEditors', ConfigTakingMedEditRow);
+			        var Code=editors[0].target.val()
+			        if (Code==""){
+						$.messager.alert("提示","代码不能为空");
+                        return false;
+			        } 
+			        var Desc=editors[1].target.val()
+			         if (Desc==""){
+						$.messager.alert("提示","描述不能为空");
+                        return false;
+			        } 
+			        var ToStock=editors[2].target.is(':checked');
+					if(ToStock){ ToStock="Y";}else{ToStock="N";}
+			        var value=$.m({
+						ClassName:"DHCDoc.DHCDocConfig.DocConfig",
+						MethodName:"SaveTakingMedicineMethod",
+					   	RowID:RowID, Code:Code, Desc:Desc,ToStock:ToStock
+					},false);
+					if(value=="0"){
+						$.messager.popover({msg: '保存成功',type:'success'});
+				        LoadConfigTakingMedDataGrid();	
+				        InitTakingMedicineMethod();
+				        var rows = CMPrescTypeDataGrid.datagrid("getSelections");
+						var PrescTypeCode=rows[rows.length-1].Code;
+						LoadCMPrescTypeDetail(PrescTypeCode);	
+					}else{
+						$.messager.alert("提示",value);
+                        return false;
+						}
+			            
+		        }
+			}
+		}];
+	 ///煎药方式列表columns 附加医嘱，接收科室
+    var ConfigTakingMedColumns=[[   
+    				{ field: 'RowID', title: 'Rowid', width: 10,hidden:true },
+        			{ field: 'Code', title: '代码', width: 20,editor : {type : 'text',options : {}}},
+        			{ field: 'Desc', title: '描述', width: 20,editor : {type : 'text',options : {}}},
+					{ field: 'ToStock', title: '是否判断库存', width: 70,
+					   editor : {
+                            type : 'icheckbox',
+                            options : {
+                                on : 'Y',
+                                off : ''
+                            }
+                       },
+                       styler: function(value,row,index){
+			 				if (value=="Y"){
+				 				return 'color:#21ba45;';
+				 			}else{
+					 			return 'color:#f16e57;';
+					 		}
+		 				},
+		 				formatter:function(value,record){
+				 			if (value=="Y") return "是";
+				 			else  return "否";
+				 		}
+					}
+    			 ]];
+	// 煎药方式列表Grid
+	ConfigTakingMedDataGrid=$('#ConfigTakingMedicineMethodtab').datagrid({  
+		fit : true,
+		width : 'auto',
+		border : false,
+		striped : true,
+		singleSelect : true,
+		fitColumns : true,
+		autoRowHeight : false,
+		loadMsg : '加载中..',  
+		pagination : false,  //是否分页
+		rownumbers : true,  //
+		idField:"RowID",
+		//pageList : [15,50,100,200],
+		columns :ConfigTakingMedColumns,
+		toolbar :ConfigTakingMedicineMethodToolBar,
+		onClickRow:function(rowIndex, rowData){
+			ConfigTakingMedDataGrid.datagrid('selectRow',rowIndex);
+			SelectedRow=rowIndex
+			var selected=ConfigTakingMedDataGrid.datagrid('getRows'); 
+		},
+		onDblClickRow:function(rowIndex, rowData){
+			if (ConfigTakingMedEditRow != undefined) {
+				$.messager.alert("提示", "有正在编辑的行，请先点击保存");
+		        return false;
+			}
+			ConfigTakingMedDataGrid.datagrid("beginEdit", rowIndex);
+			ConfigTakingMedEditRow=rowIndex;
+		}
+	});
+	LoadConfigTakingMedDataGrid()
+	}
+function LoadConfigTakingMedDataGrid(){
+	$.q({
+	    ClassName : "DHCDoc.DHCDocConfig.DocConfig",
+	    QueryName : "FindTakingMedicineMethod",
+	    Pagerows:ConfigTakingMedDataGrid.datagrid("options").pageSize,rows:99999
+	},function(GridData){
+		ConfigTakingMedDataGrid.datagrid('loadData',GridData);
+		ConfigTakingMedEditRow=undefined
+		ConfigTakingMedDataGrid.datagrid("clearSelections")
+	})
+	}
+function InitTakingMedicineMethod(){
+	$("#Combo_TakingMedicineMethod").combobox({ 
+		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.DocConfig&QueryName=FindTakingMedicineMethod",
+		valueField:'RowID',
+		textField:'Desc',
+		multiple:true,
+		//rowStyle:'checkbox', //显示成勾选行形式
+		selectOnNavigation:false,
+		panelHeight:"auto",
+		editable:false,
+		loadFilter:function(data){
+			return data['rows'];
+		},
+		formatter:function(row){  
+			var rhtml;
+			if(row.selected==true){
+				rhtml = row.Desc+"<span id='i"+row.RowID+"' class='icon icon-ok'></span>";
+			}else{
+				rhtml = row.Desc+"<span id='i"+row.RowID+"' class='icon'></span>";
+			}
+			return rhtml;
+		},
+		onChange:function(newval,oldval){
+			$(this).combobox("panel").find('.icon').removeClass('icon-ok');
+			for (var i=0;i<newval.length;i++){
+				$(this).combobox("panel").find('#i'+newval[i]).addClass('icon-ok');
+			}
+		}
+	});
+	}
+var CNMedInstrContrastDataGrid,InstrContrastDataGridEditRow;
+
+function InitCNMedInstrContrast(){
+	///煎药方式
+	 var CNMedInstrContrastToolBar = [{
+            text: '增加',
+            iconCls: 'icon-add',
+            handler: function() { 
+            	InstrContrastDataGridEditRow = undefined;
+                CNMedInstrContrastDataGrid.datagrid("rejectChanges").datagrid("unselectAll");
+                CNMedInstrContrastDataGrid.datagrid("insertRow", {
+                    index: 0,
+                    row: {}
+                });
+                CNMedInstrContrastDataGrid.datagrid("beginEdit", 0);
+                InstrContrastDataGridEditRow = 0;     
+            }
+        },{
+            text: '删除',
+            iconCls: 'icon-cancel',
+            handler: function() {
+                var rows = CNMedInstrContrastDataGrid.datagrid("getSelections");
+                if (rows.length > 0) {
+                    $.messager.confirm("提示", "你确定要删除吗?",
+                    function(r) {
+                        if (r) {
+	                        var rows = CNMedInstrContrastDataGrid.datagrid("getSelections");
+	                        Rowid=rows[0].RowID
+	                        if (Rowid){
+		                        var value=$.m({
+									ClassName:"DHCDoc.DHCDocConfig.DocConfig",
+									MethodName:"DelectInstrContrast",
+								   	RowID:Rowid,
+								   	HospId:$HUI.combogrid('#_HospList').getValue()
+								},false);
+								if(value=="0"){
+									$.messager.popover({msg: '删除成功',type:'success'});
+							        LoadInstrContrastDataGrid()		
+								}
+	                        }else{
+								InstrContrastDataGridEditRow = undefined;
+				                CNMedInstrContrastDataGrid.datagrid("rejectChanges");
+				                CNMedInstrContrastDataGrid.datagrid("unselectAll");
+	                        }
+                        }
+                    });
+                } else {
+                    $.messager.alert("提示", "请选择要删除的行", "error");
+                }
+            }
+        },{
+            text: '取消编辑',
+            iconCls: 'icon-redo',
+            handler: function() {
+                //取消当前编辑行把当前编辑行罢undefined回滚改变的数据,取消选择的行
+                InstrContrastDataGridEditRow = undefined;
+                CNMedInstrContrastDataGrid.datagrid("rejectChanges");
+                CNMedInstrContrastDataGrid.datagrid("unselectAll");
+            }
+        },{
+			text: '保存',
+			iconCls: 'icon-save',
+			handler: function() {
+				SaveCNMedInstrContrastData();
+			}
+		}];
+	 ///煎药方式列表columns 附加医嘱，接收科室
+    var CNMedInstrContrastColumns=[[   
+		{ field: 'RowID', title: 'RowID', width: 10,hidden:true },
+        { field: 'CMPrescType', title: '医嘱类型', width: 60,
+        	editor : {
+            	type : 'combobox',
+            	options : {
+                	url:$URL+"?ClassName=DHCDoc.DHCDocConfig.DocConfig&QueryName=FindLinkInstrContrast&ValType=PrescType&Value=CNMedPrior&HospId="+$HUI.combogrid('#_HospList').getValue(),
+                	valueField:'RowId',
+					textField:'Desc',
+					required:true,
+					loadFilter:function(data){
+						return data['rows'];
+					}
+                }
+            },
+			formatter:function(value, record){
+			  return record.CMPrescTypeDesc;
+			}
+		},
+		{ field: 'CMPrescInstr', title: '用法', width: 60,
+			editor : {
+				type : 'combobox',
+				options : {
+					url:$URL+"?ClassName=DHCDoc.DHCDocConfig.DocConfig&QueryName=FindLinkInstrContrast&ValType=PrescInstr&Value=AdmTypeInstr,0&HospId="+$HUI.combogrid('#_HospList').getValue(),
+                	valueField:'RowId',
+					textField:'Desc',
+					required:true,
+					loadFilter:function(data){
+						return data['rows'];
+					}
+				}
+			},
+			formatter:function(value, record){
+			  return record.CMPrescInstrDesc;
+			}
+		}
+     ]];
+	// 煎药方式列表Grid
+	CNMedInstrContrastDataGrid=$('#tabCNMedInstrContrast').datagrid({  
+		fit : true,
+		width : 'auto',
+		border : false,
+		striped : true,
+		singleSelect : true,
+		fitColumns : true,
+		autoRowHeight : false,
+		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.DocConfig&QueryName=FindInstrContrast&HospId="+$HUI.combogrid('#_HospList').getValue(),
+		loadMsg : '加载中..',  
+		pagination : false,  //是否分页
+		rownumbers : true,  //
+		idField:"RowID",
+		//pageList : [15,50,100,200],
+		columns :CNMedInstrContrastColumns,
+		toolbar :CNMedInstrContrastToolBar,
+		onClickRow:function(rowIndex, rowData){
+			CNMedInstrContrastDataGrid.datagrid('selectRow',rowIndex);
+			SelectedRow=rowIndex
+			var selected=CNMedInstrContrastDataGrid.datagrid('getRows'); 
+		}
+	});
+	LoadInstrContrastDataGrid()
+}
+function LoadInstrContrastDataGrid(){
+	$.q({
+	    ClassName : "DHCDoc.DHCDocConfig.DocConfig",
+	    QueryName : "FindInstrContrast",
+	    HospId:$HUI.combogrid('#_HospList').getValue(),
+	    Pagerows:CNMedInstrContrastDataGrid.datagrid("options").pageSize,rows:99999
+	},function(GridData){
+		CNMedInstrContrastDataGrid.datagrid('loadData',GridData);
+		InstrContrastDataGridEditRow=undefined
+		CNMedInstrContrastDataGrid.datagrid("clearSelections")
+	})
+}
+function SaveCNMedInstrContrastData(){
+	if (InstrContrastDataGridEditRow != undefined){
+		var InstrContrastSelRow=CNMedInstrContrastDataGrid.datagrid("selectRow",InstrContrastDataGridEditRow).datagrid("getSelected"); 
+		var CMPrescType=InstrContrastSelRow.CMPrescType;
+		var editors = CNMedInstrContrastDataGrid.datagrid('getEditors', InstrContrastDataGridEditRow);   		
+		var CMPrescType = editors[0].target.combobox('getValue');
+		var CMPrescTypeDesc = editors[0].target.combobox('getText');
+		if (!CMPrescType){
+			$.messager.alert("提示","请选择医嘱类型!");
+            return false;
+	    }
+		var CMPrescInstr= editors[1].target.combobox('getValue');
+		var CMPrescInstrDesc = editors[1].target.combobox('getText');
+		if ((CMPrescInstrDesc=="")||(CMPrescInstr=="")){
+			$.messager.alert("提示","请选择用法!");
+            return false;
+	    }
+	    var SameFlag=0
+	    var rows = CNMedInstrContrastDataGrid.datagrid("getRows");	
+		for(var i=0; i<rows.length; i++){
+	      if (InstrContrastDataGridEditRow==i) continue;
+	      if (rows[i].CMPrescType==CMPrescType){
+		      SameFlag=1
+		      
+		      }
+		}	  
+		if (SameFlag==1){
+			$.messager.alert("提示","医嘱类型重复!");
+            return false;
+	    }
+		var value=$.m({
+			ClassName:"DHCDoc.DHCDocConfig.DocConfig",
+			MethodName:"SaveCNMedInstrContrastData",
+		   	CMPrescType:CMPrescType+"^"+CMPrescTypeDesc,
+		   	CMPrescInstr:CMPrescInstr+"^"+CMPrescInstrDesc,
+		   	HospId:$HUI.combogrid('#_HospList').getValue()
+		},false);
+		if(value=="0"){
+			CNMedInstrContrastDataGrid.datagrid("endEdit", InstrContrastDataGridEditRow);
+			InstrContrastDataGridEditRow = undefined;
+			CNMedInstrContrastDataGrid.datagrid('unselectAll').datagrid('load');
+			$.messager.popover({msg: '保存成功!',type:'success'});      					
+		}else{
+			$.messager.alert('提示',"保存失败!请选择有效的处方类型和用法!");
+			return false;
+		}
+		InstrContrastDataGridEditRow = undefined;
+	}else{
+		$.messager.alert("提示", "请选择医嘱类型和用法", "error");
 	}
 }

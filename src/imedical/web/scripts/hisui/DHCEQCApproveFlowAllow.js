@@ -7,6 +7,7 @@ function BodyLoadHandler()
 	setButtonText();///Add By QW 2018-09-29 HISUI改造:按钮文字规范
 	InitEvent();
 	disabled(true);
+	$('#cApproveFlowAllow').css("color", "black"); //add by sjh SJH0033 2020-09-03 修改不正确的字体颜色
 }
 
 function InitEvent()

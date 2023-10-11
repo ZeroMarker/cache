@@ -1,609 +1,611 @@
-// /名称: 新建调价单(一次调所有批次)
-// /描述: 新建调价单(一次调所有批次)
-// /编写者：liangjiaquan
-// /编写日期: 2018.11.07
-var rpdecimal=2;
-var spdecimal=2;
-var colArr=[];
-Ext.onReady(function() {
-	var userId = session['LOGON.USERID'];
-	var HospId=session['LOGON.HOSPID'];
-	var LocId=session['LOGON.CTLOCID'];
-	var GroupId=session['LOGON.GROUPID'];
-	Ext.QuickTips.init();
-	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
-	
-	if(gParam.length<1){
-		GetParams();  //初始化参数配置
-	}	
-	if(gParamCommon.length<1){
-		GetParamCommon();  //初始化公共参数配置 wyx 公共变量取类组设置gParamCommon[9]
-
-	}
-	
-	// 药品类组
-	var StkGrpType=new Ext.ux.StkGrpComboBox({ 
-		id : 'StkGrpType',
-		name : 'StkGrpType',
-		fieldLabel:'<font color=blue>类　　组</font>',
-		StkType:App_StkTypeCode,     //标识类组类型
-		LocId:LocId,
-		UserId:userId,
-		anchor:'90%'
-	}); 
-	
-	// 调价单号
-	var AdjSpNo = new Ext.form.TextField({
-		fieldLabel : '调价单号',
-		id : 'AdjSpNo',
-		name : 'AdjSpNo',
-		anchor:'90%'
-	});
-	
-	// 开始日期
-	var StartDate=new Ext.ux.DateField({
-		id:'StartDate',
-		name:'StartDate',
-		fieldLabel:'开始日期',
-		value:new Date().add(Date.DAY,-1)
-	})
-	
-	// 截止日期
-	var EndDate=new Ext.ux.DateField({
-		id:'EndDate',
-		name:'EndDate',
-		fieldLabel:'截止日期',
-		value:new Date()
-	})
-	
-	var IncId=new Ext.form.TextField({
-		id:'IncId',
-		name:'IncId',
-		value:''
-	});
-	
-	// 药品名称
-	var IncDesc=new Ext.form.TextField({
-		id:'IncDesc',
-		name:'IncDesc',
-		fieldLabel:'药品名称',
-		width:250,
-		anchor:'90%',
-		listeners:{
-			'specialkey':function(field,e){
-				var keycode=e.getKey();
-				if(keycode==13){
-					var input=field.getValue();
-					var stkgrpid=Ext.getCmp("StkGrpType").getValue();
-					GetPhaOrderWindow(input, stkgrpid, App_StkTypeCode, "", "N","", HospId, getDrug);
-				}
-			}
-		}
-	});
-	
-	// 返回方法
-	function getDrug(record) {
-		if (record == null || record == "") {
-			return;
-		}
-		var inciDr = record.get("InciDr");
-		var inciCode=record.get("InciCode");
-		var inciDesc=record.get("InciDesc");
-		Ext.getCmp("IncId").setValue(inciDr);
-		Ext.getCmp("IncDesc").setValue(inciDesc);
-	}
-	
-	// 查询
-	var SearchBT = new Ext.Toolbar.Button({
-		id : "SearchBT",
-		text : '查询',
-		tooltip : '点击查询',
-		width : 70,
-		height : 30,
-		iconCls : 'page_find',
-		handler : function() {
-			AdjPriceSearch();
-		}
-	});
-	
-	//查询调价信息
-	function AdjPriceSearch(){
-		BatchGrid.store.removeAll();
-		BatchGrid.getView().refresh();
-		var stkgrpid=Ext.getCmp("StkGrpType").getValue();
-		var stdate=Ext.getCmp("StartDate").getValue().format("Y-m-d");
-		var eddate=Ext.getCmp("EndDate").getValue().format("Y-m-d");
+	// /名称: 新建调价单(一次调所有批次)
+	// /描述: 新建调价单(一次调所有批次)
+	// /编写者：liangjiaquan
+	// /编写日期: 2018.11.07
+	var rpdecimal=8;
+	var spdecimal=8;
+	var colArr=[];
+	Ext.onReady(function() {
+		var userId = session['LOGON.USERID'];
+		var HospId=session['LOGON.HOSPID'];
+		var LocId=session['LOGON.CTLOCID'];
+		var GroupId=session['LOGON.GROUPID'];
+		Ext.QuickTips.init();
+		Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 		
-		var inciDesc=Ext.getCmp("IncDesc").getValue();
-		if (inciDesc==""){
-			Ext.getCmp("IncId").setValue("");
+		if(gParam.length<1){
+			GetParams();  //初始化参数配置
+		}	
+		if(gParamCommon.length<1){
+			GetParamCommon();  //初始化公共参数配置 wyx 公共变量取类组设置gParamCommon[9]
+
 		}
-		var incid=Ext.getCmp("IncId").getValue();
-		if(Ext.getCmp("IncDesc").getValue()==""){incid="";}			
-		var aspno=Ext.getCmp("AdjSpNo").getValue();
-		var params=aspno+"^No^"+incid+"^"+stkgrpid+"^"+HospId;
-		DetailStore.load({params:{start:0,limit:999,StartDate:stdate,EndDate:eddate,Others:params}});
-	}
-	
-	// 清空按钮
-	var ClearBT = new Ext.Toolbar.Button({
-		id : "ClearBT",
-		text : '清屏',
-		tooltip : '点击清屏',
-		width : 70,
-		height : 30,
-		iconCls : 'page_refresh',
-		handler : function() {
-			clearData();
-		}
-	});
-	
-	// 清空方法
-	function clearData() {	
-		Ext.getCmp("StartDate").setValue(new Date().add(Date.DAY,-1));
-		Ext.getCmp("EndDate").setValue(new Date());
-		Ext.getCmp("StkGrpType").setValue("");
-		StkGrpType.store.load();
-		Ext.getCmp("AdjSpNo").setValue("");
-		Ext.getCmp("IncDesc").setValue("");			
-		DetailGrid.store.removeAll();
-		DetailGrid.getView().refresh();
-		BatchGrid.store.removeAll();
-		BatchGrid.getView().refresh();
-		// 变更按钮是否可用
-		//changeButtonEnable("1^1^1^1^1^0^0^0");
-	}
-	
-	// 清空方法2 仅供“新建”使用
-	function clearData2() {	
-		Ext.getCmp("StartDate").setValue(new Date().add(Date.DAY,-1));
-		Ext.getCmp("EndDate").setValue(new Date());
-		Ext.getCmp("AdjSpNo").setValue("");
-		Ext.getCmp("IncDesc").setValue("");			
-		DetailGrid.store.removeAll();
-		DetailGrid.getView().refresh();
-		// 变更按钮是否可用
-		//changeButtonEnable("1^1^1^1^1^0^0^0");
-	}
-	
-	// 增加一条
-	var AddDetailBT=new Ext.Button({
-		text:'增加一条',
-		tooltip:'',
-		iconCls:'page_add',
-		handler:function()
-		{	
-			addNewRow();
-		}
-	});
-	
-	// 删除一条
-	var DelDetailBT=new Ext.Button({
-		text:'删除一条',
-		tooltip:'',
-		iconCls:'page_delete',
-		handler:function()
-		{
-			deleteDrug();
-		}
-	});
-	
-	// 新建按钮
-	var AddBT = new Ext.Toolbar.Button({
-		id : "AddBT",
-		text : '新建',
-		tooltip : '点击新建',
-		width : 70,
-		height : 30,
-		iconCls : 'page_add',
-		handler : function() {
-			clearData2();
-			addNewRow();   // 新增一行
-		}
-	});
-	
-	function addNewRow() {
-		// 判断是否已经有添加行
-		var aspReasonId="";
-		var aspReason="";
-		var aspRemark=""
-		var preexedate=new Date().add(Date.DAY,1);
-		var rowCount = DetailGrid.getStore().getCount();
-		if (rowCount > 0) {
-			var rowData = DetailStore.data.items[rowCount - 1];
-			var data = rowData.get("InciId");
-			if (data == null || data.length <= 0) {
-				Msg.info("warning", "已存在新建行!");
-				return;
-			}
-			var aspno=rowData.get("AspNo");
-			var curaspno=Ext.getCmp("AdjSpNo").getValue();
-			preexedate=rowData.get("PreExecuteDate");
-			aspRemark=rowData.get("Remark");
-			if(aspno!="" & aspno!=null & (curaspno==null || curaspno=="")){
-				Msg.info("warning","不能追加，请选择某一调价单进行追加，如果要新建调价单，请先清空！");
-				return;
-			}
-			//默认调价原因
-			if(IfSetAspReason()=='Y'){
-				aspReasonId=rowData.get("AdjReasonId");
-				aspReason=rowData.get("AdjReason");
-			}
-			//默认计划生效日期
-			if(gParam[2]=='Y'){
-				preexedate=rowData.get("PreExecuteDate");
-			}
-		}
-		var record = Ext.data.Record.create([{
-				name : 'AspId',
-				type : 'string'
-			}, {
-				name : 'StkCatDesc',
-				type : 'string'
-			}, {
-				name : 'InciId',
-				type : 'string'
-			}, {
-				name : 'InciCode',
-				type : 'string'
-			}, {
-				name : 'InciDesc',
-				type : 'string'
-			}, {
-				name : 'AspUomId',
-				type : 'string'
-			}, {
-				name : 'PriorSpUom',
-				type : 'double'
-			}, {
-				name : 'MaxSp',
-				type : 'double'
-			},{
-				name : 'ResultSpUom',
-				type : 'double'
-			},{
-				name : 'DiffSpUom',
-				type : 'double'
-			}, {
-				name : 'PriorRpUom',
-				type : 'double'
-			}, {
-				name : 'ResultRpUom',
-				type : 'double'
-			},{
-				name : 'DiffRpUom',
-				type : 'double'
-			}, {
-				name : 'AdjDate',
-				type : 'date'
-			}, {
-				name : 'PreExecuteDate',  //计划生效日期
-				type : 'date'
-			}, {
-				name : 'ExeDate',  //实际生效日期
-				type : 'date'
-			}, {
-				name : 'AdjReasonId',
-				type : 'string'
-			},{
-				name:'AdjReason',
-				type:'string'
-			},{
-				name : 'MarkType',
-				type : 'string'
-			}, {
-				name : 'WarrentNo',      //物价文件号
-				type : 'string'
-			}, {
-				name : 'WnoDate',      //物价文件日期
-				type : 'string'
-			},{
-				name : 'InvNo',      		//发票号，发票号
-				type : 'string'
-			}, {
-				name : 'InvDate',      	//发票日期,发票日期
-				type : 'string'
-			}, {
-				name : 'Remark',
-				type : 'string'
-			}, {
-				name : 'AspNo',
-				type : 'string'
-			}, {
-				name : 'AdjUserName',
-				type : 'string'
-			}, {
-	            name: 'FreeDrugFlag',
-	            type: 'string'
-			}]);
-		var NewRecord = new record({
-			AspId : '',
-			StkCatDesc: '',
-			InciId : '',
-			InciCode : '',
-			InciDesc : '',
-			AspUomId : '',
-			PriorSpUom : 0,
-			MaxSp : 0,
-			ResultSpUom : 0,
-			DiffSpUom : 0,
-			PriorRpUom : 0,
-			ResultRpUom : 0,
-			DiffRpUom : 0,
-			AdjDate : new Date(),
-			PreExecuteDate : preexedate,
-			AdjReasonId:aspReasonId,
-			AdjReason:aspReason,
-			MarkType : '',
-			WarrentNo : '',
-			WarrentDate:'',
-			InvNo:'',
-			InvDate:'',
-			Remark : aspRemark,
-			AspNo : '',
-			AdjUserName : '',
-			FreeDrugFlag:''
+		
+		// 药品类组
+		var StkGrpType=new Ext.ux.StkGrpComboBox({ 
+			id : 'StkGrpType',
+			name : 'StkGrpType',
+			fieldLabel:'<font color=blue>'+$g('类　　组')+'</font>',
+			StkType:App_StkTypeCode,     //标识类组类型
+			LocId:LocId,
+			UserId:userId,
+			anchor:'90%'
+		}); 
+		
+		// 调价单号
+		var AdjSpNo = new Ext.form.TextField({
+			fieldLabel : $g('调价单号'),
+			id : 'AdjSpNo',
+			name : 'AdjSpNo',
+			anchor:'90%'
 		});
-		DetailStore.add(NewRecord);
-		var colindex=GetColIndex(DetailGrid,"InciDesc");
-		DetailGrid.getSelectionModel().select(DetailStore.getCount() - 1, colindex);
-		DetailGrid.startEditing(DetailStore.getCount() - 1, colindex);
-	};
-	
-	// 保存按钮
-	var SaveBT = new Ext.Toolbar.Button({
-		id : "SaveBT",
-		text : '保存',
-		tooltip : '点击保存',
-		width : 70,
-		height : 30,
-		iconCls : 'page_save',
-		handler : function() {
-			if(CheckDataBeforeSave()==true){
-				//保存调价单
-				save();
-				//变更按钮是否可用
-				//changeButtonEnable("0^0^1^1^1^1^1^1");
-			}
-		}
-	});
-	
-	function CheckDataBeforeSave(){
-		var rowCount = DetailGrid.getStore().getCount();
-		if (rowCount<=0) 
-		{ 
-			Msg.info("warning","没有调价记录!");	
-			return false;
-		}			
-		for (var i = 0; i < rowCount; i++) {
-			var rowData = DetailStore.getAt(i);
-			//新增或数据发生变化时执行下述操作
-			if(rowData.data.newRecord || rowData.dirty){
-				var ResultSp = rowData.get("ResultSpUom");
-				var ResultRp = rowData.get("ResultRpUom");
-				var freedrugflag=rowData.get('FreeDrugFlag');
-				if((freedrugflag=="Y")&&((ResultRp!=0)||(ResultSp!=0))){
-					Msg.info("warning", "第"+(i+1)+"行免费药调后进价和调后售价都必须为0!");
-					return false;
-					break;
-				}
-				var AdjSpReasonId = rowData.get("AdjReasonId");
-				var AdjSpUomId = rowData.get("AspUomId");
-				var PriceFileDate =Ext.util.Format.date(rowData.get("PreExecuteDate"),"Y-m-d");;
-				var unequalflag=CheckRpEqualSp(i);
-				if (unequalflag==false)
-				{	
-					Msg.info("warning","第"+(i+1)+"行药品为零加成,进售价不符,请核实！");
-				}
-				if (ResultSp == null || ResultSp.length <= 0) {
-					Msg.info("warning", "第"+(i+1)+"行调后售价不能为空!");
-					return false;
-					break;
-				}
-				if (ResultSp == null || ResultSp.length <= 0) {
-					Msg.info("warning", "第"+(i+1)+"行调后售价不能为空!");
-					return false;
-					break;
-				}
-				if (AdjSpUomId == null || AdjSpUomId.length <= 0) {
-					Msg.info("warning", "第"+(i+1)+"行单位不能为空!");
-					return false;
-					break;
-				}
-				if (PriceFileDate == null || PriceFileDate.length <= 0) {
-					Msg.info("warning", "第"+(i+1)+"行计划生效日期不能为空!");
-					return false;
-					break;
-				}
-				var nowdate = new Date();
-				if (PriceFileDate <= nowdate.format("Y-m-d")) {
-					Msg.info("warning", "第"+(i+1)+"行计划生效日期不能小于或等于当前日期!");
-					return false;
-					break;
-				}
-				if (AdjSpReasonId == null || AdjSpReasonId.length <= 0) {
-					Msg.info("warning", "第"+(i+1)+"行调价原因不能为空!");
-					return false;
-					break;
-				}	
-			}	
-		}	
-		return true;
-	}
-	
-	/*根据药品判断是否零加成*/
-	function CheckRpEqualSp(rownum)
-	{
-		var adjsaleData = DetailStore.getAt(rownum);
-		var adjsaleInci = adjsaleData.get("InciId");  //药品id
-		///判断药品类组
-		var equalflag=tkMakeServerCall("web.DHCST.Common.AppCommon","GetZeroMarginByInci",adjsaleInci,GroupId,LocId,userId)   //是否需要售价等于进价
-		if (equalflag!="Y")
-		{
-			return true;
-		}
-	    var ResultSp = adjsaleData.get("ResultSpUom");
-		var ResultRp = adjsaleData.get("ResultRpUom");
-		if (ResultSp!=ResultRp)
-		{
-			return false;
-		}	
-	}
-	
-	// 保存调价单
-	function save()
-	{
-		//调价单号
-		var AdjSpNo = Ext.getCmp("AdjSpNo").getValue();
-		var StkGrp=Ext.getCmp("StkGrpType").getValue();
-		var list="";
-		//保存明细
-		var rowCount = DetailGrid.getStore().getCount();
-		if (rowCount==0) 
-		{
-			Msg.info("warning","没有调价记录!");	
-			return ;
-		}			
-		for (var i = 0; i < rowCount; i++) {
-			var rowData = DetailStore.getAt(i);
-			//新增或数据发生变化时执行下述操作
-			if(rowData.data.newRecord || rowData.dirty){
-				var AspRowid = rowData.get("AspId");
-				var IncRowid = rowData.get("InciId");
-				if(IncRowid=="" || IncRowid.length<=0)
-				{
-					//移除空行
-					DetailGrid.getStore().remove(rowData);
-					break;
-				}
-				var PreExecuteDate =Ext.util.Format.date(rowData.get("PreExecuteDate"),App_StkDateFormat);
-				var IncDesc=rowData.get("InciDesc");
-				var AdjSpUomId = rowData.get("AspUomId");
-				var ResultSp = rowData.get("ResultSpUom");
-				var ResultRp = rowData.get("ResultRpUom");
-				if (ResultSp<ResultRp) {
-					Msg.info("warning", "第"+(i+1)+"行调后售价小于调后进价!");
-					return false;
-					break;
-				}
-				var AdjSpReasonId = rowData.get("AdjReasonId");
-				var PriceFileNo = rowData.get("WarrentNo");
-				var PriceFileDate =Ext.util.Format.date(rowData.get("WnoDate"),App_StkDateFormat);
-				var Remark = rowData.get("Remark");
-				var InvoNo = rowData.get("InvNo");
-				var InvoDate = Ext.util.Format.date(rowData.get("InvDate"),App_StkDateFormat);
-				var PriorRp=rowData.get("PriorRpUom");
-				var PriorSp=rowData.get("PriorSpUom");
-				var data =AspRowid+"^"+ PreExecuteDate + "^" + IncRowid + "^" + AdjSpUomId + "^"
-						+ ResultSp + "^" + ResultRp + "^" + userId+ "^" + AdjSpReasonId+ "^" + HospId+ "^" 
-						+ PriceFileNo +"^" + PriceFileDate +"^" + Remark+ "^"+InvoNo+"^"+InvoDate+"^"+PriorRp+"^"+PriorSp;
-				if(list==""){
-					list=data;
-				}else{
-					list=list+xRowDelim()+data;
-				}					
-			}
-		}
-		if (list==""){
-			Msg.info("warning","没有需要保存的数据");
-			return;						
-		}
-		var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
-		var url = DictUrl+ "inadjpriceactionallbatch.csp?actiontype=Save";
-		Ext.Ajax.request({
-			url : url,
-			method : 'POST',
-			params: {AspNo:AdjSpNo,StkGrp:StkGrp,LocId:LocId,list:list},
-			waitMsg : '保存中...',
-			success : function(result, request) {
-				var jsonData = Ext.util.JSON.decode(result.responseText);
-				mask.hide();
-				if (jsonData.success == 'true') {
-					Msg.info("success","保存成功!");
-					// 回传
-					if(AdjSpNo==""){
-						AdjSpNo = jsonData.info;
-						Ext.getCmp("AdjSpNo").setValue(AdjSpNo);
-					}						
-					AdjPriceSearch();
-				}else{
-					var ret=jsonData.info;
-					var arr=ret.split("^");
-					ret=arr[0];
-					var IncDesc=arr[1];
-					if(ret==-5){
-						Msg.info("error", IncDesc+"存在未生效的调价单，不能新建调价单！");
-					}else if(ret==-7){
-						Msg.info("error", IncDesc+"当天已调价，不能再建调价单！");
-					}else if(ret==-1){
-						Msg.info("error", "药品"+IncDesc+"Id不能为空！");
-					}else if(ret==-2){
-						Msg.info("error", "药品"+IncDesc+"无效！");
-					}else if(ret==-3){
-						Msg.info("error", "调价单号不能为空！");
-					}else if(ret==-4){
-						Msg.info("error", "计划生效日期不能为空！");
-					}else{
-						Msg.info("error", IncDesc+"保存失败："+jsonData.info);
+		
+		// 开始日期
+		var StartDate=new Ext.ux.DateField({
+			id:'StartDate',
+			name:'StartDate',
+			fieldLabel:$g('开始日期'),
+			value:new Date().add(Date.DAY,-1)
+		})
+		
+		// 截止日期
+		var EndDate=new Ext.ux.DateField({
+			id:'EndDate',
+			name:'EndDate',
+			fieldLabel:$g('截止日期'),
+			value:new Date()
+		})
+		
+		var IncId=new Ext.form.TextField({
+			id:'IncId',
+			name:'IncId',
+			value:''
+		});
+		
+		// 药品名称
+		var IncDesc=new Ext.form.TextField({
+			id:'IncDesc',
+			name:'IncDesc',
+			fieldLabel:$g('药品名称'),
+			width:250,
+			anchor:'90%',
+			listeners:{
+				'specialkey':function(field,e){
+					var keycode=e.getKey();
+					if(keycode==13){
+						var input=field.getValue();
+						var stkgrpid=Ext.getCmp("StkGrpType").getValue();
+						GetPhaOrderWindow(input, stkgrpid, App_StkTypeCode, "", "N","", HospId, getDrug);
 					}
 				}
-			},
-			scope : this
-		});	
-	}
-	
-	// 删除选中行药品
-	function deleteDrug() {
-		var cell = DetailGrid.getSelectionModel().getSelectedCell();
-		if (cell == null) {
-			Msg.info("warning", "没有选中行!");
-			return;
+			}
+		});
+		
+		// 返回方法
+		function getDrug(record) {
+			if (record == null || record == "") {
+				return;
+			}
+			var inciDr = record.get("InciDr");
+			var inciCode=record.get("InciCode");
+			var inciDesc=record.get("InciDesc");
+			Ext.getCmp("IncId").setValue(inciDr);
+			Ext.getCmp("IncDesc").setValue(inciDesc);
 		}
-		// 选中行
-		var row = cell[0];
-		var record = DetailGrid.getStore().getAt(row);
-		var AspRowId = record.get("AspId");
-		if (AspRowId == null || AspRowId.length <= 0) {
-			DetailGrid.getStore().remove(record);
+		
+		// 查询
+		var SearchBT = new Ext.Toolbar.Button({
+			id : "SearchBT",
+			text : $g('查询'),
+			tooltip : $g('点击查询'),
+			width : 70,
+			height : 30,
+			iconCls : 'page_find',
+			handler : function() {
+				AdjPriceSearch();
+			}
+		});
+		
+		//查询调价信息
+		function AdjPriceSearch(){
+			BatchGrid.store.removeAll();
+			BatchGrid.getView().refresh();
+			var stkgrpid=Ext.getCmp("StkGrpType").getValue();
+			var stdate=Ext.getCmp("StartDate").getValue().format("Y-m-d");
+			var eddate=Ext.getCmp("EndDate").getValue().format("Y-m-d");
+			
+			var inciDesc=Ext.getCmp("IncDesc").getValue();
+			if (inciDesc==""){
+				Ext.getCmp("IncId").setValue("");
+			}
+			var incid=Ext.getCmp("IncId").getValue();
+			if(Ext.getCmp("IncDesc").getValue()==""){incid="";}			
+			var aspno=Ext.getCmp("AdjSpNo").getValue();
+			var params=aspno+"^No^"+incid+"^"+stkgrpid+"^"+HospId;
+			DetailStore.load({params:{start:0,limit:999,StartDate:stdate,EndDate:eddate,Others:params}});
+		}
+		
+		// 清空按钮
+		var ClearBT = new Ext.Toolbar.Button({
+			id : "ClearBT",
+			text : $g('清屏'),
+			tooltip : $g('点击清屏'),
+			width : 70,
+			height : 30,
+			iconCls : 'page_refresh',
+			handler : function() {
+				clearData();
+			}
+		});
+		
+		// 清空方法
+		function clearData() {	
+			Ext.getCmp("StartDate").setValue(new Date().add(Date.DAY,-1));
+			Ext.getCmp("EndDate").setValue(new Date());
+			Ext.getCmp("StkGrpType").setValue("");
+			StkGrpType.store.load();
+			Ext.getCmp("AdjSpNo").setValue("");
+			Ext.getCmp("IncDesc").setValue("");			
+			DetailGrid.store.removeAll();
 			DetailGrid.getView().refresh();
-		}else{
-			Ext.MessageBox.show({
-				title : '提示',
-				msg : '是否确定删除该药品调价信息',
-				buttons : Ext.MessageBox.YESNO,
-				fn : showResult,
-				icon : Ext.MessageBox.QUESTION
-			});
+			BatchGrid.store.removeAll();
+			BatchGrid.getView().refresh();
+			// 变更按钮是否可用
+			//changeButtonEnable("1^1^1^1^1^0^0^0");
 		}
-		BatchStore.removeAll()
-		StatuTabPagingToolbarBatch.updateInfo();
-	}
-	
-	// 删除提示
-	function showResult(btn) {
-		if (btn == "yes") {
-			var cell = DetailGrid.getSelectionModel().getSelectedCell();
-			var row = cell[0];
-			var record = DetailGrid.getStore().getAt(row);
-			var AspRowId = record.get("AspId");
-			// 删除该行数据
-			var url = DictUrl
-					+ "inadjpriceactionallbatch.csp?actiontype=DeleteAspItm&AspRowid="
-					+ AspRowId;
-            var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+		
+		// 清空方法2 仅供“新建”使用
+		function clearData2() {	
+			Ext.getCmp("StartDate").setValue(new Date().add(Date.DAY,-1));
+			Ext.getCmp("EndDate").setValue(new Date());
+			Ext.getCmp("AdjSpNo").setValue("");
+			Ext.getCmp("IncDesc").setValue("");			
+			DetailGrid.store.removeAll();
+			DetailGrid.getView().refresh();
+			// 变更按钮是否可用
+			//changeButtonEnable("1^1^1^1^1^0^0^0");
+		}
+		
+		// 增加一条
+		var AddDetailBT=new Ext.Button({
+			text:$g('增加一条'),
+			tooltip:'',
+			iconCls:'page_add',
+			handler:function()
+			{	
+				addNewRow();
+			}
+		});
+		
+		// 删除一条
+		var DelDetailBT=new Ext.Button({
+			text:$g('删除一条'),
+			tooltip:'',
+			iconCls:'page_delete',
+			handler:function()
+			{
+				deleteDrug();
+			}
+		});
+		
+		// 新建按钮
+		var AddBT = new Ext.Toolbar.Button({
+			id : "AddBT",
+			text :$g( '新建'),
+			tooltip : $g('点击新建'),
+			width : 70,
+			height : 30,
+			iconCls : 'page_add',
+			handler : function() {
+				clearData2();
+				addNewRow();   // 新增一行
+			}
+		});
+		
+		function addNewRow() {
+			// 判断是否已经有添加行
+			var aspReasonId="";
+			var aspReason="";
+			var aspRemark=""
+			var preexedate=new Date().add(Date.DAY,1);
+			var rowCount = DetailGrid.getStore().getCount();
+			if (rowCount > 0) {
+				var rowData = DetailStore.data.items[rowCount - 1];
+				var data = rowData.get("InciId");
+				if (data == null || data.length <= 0) {
+					Msg.info("warning", $g("已存在新建行!"));
+					return;
+				}
+				var aspno=rowData.get("AspNo");
+				var curaspno=Ext.getCmp("AdjSpNo").getValue();
+				preexedate=rowData.get("PreExecuteDate");
+				aspRemark=rowData.get("Remark");
+				if(aspno!="" & aspno!=null & (curaspno==null || curaspno=="")){
+					Msg.info("warning",$g("不能追加，请选择某一调价单进行追加，如果要新建调价单，请先清空！"));
+					return;
+				}
+				//默认调价原因
+				if(IfSetAspReason()=='Y'){
+					aspReasonId=rowData.get("AdjReasonId");
+					aspReason=rowData.get("AdjReason");
+				}
+				//默认计划生效日期
+				if(gParam[2]=='Y'){
+					preexedate=rowData.get("PreExecuteDate");
+				}
+			}
+			var record = Ext.data.Record.create([{
+					name : 'AspId',
+					type : 'string'
+				}, {
+					name : 'StkCatDesc',
+					type : 'string'
+				}, {
+					name : 'InciId',
+					type : 'string'
+				}, {
+					name : 'InciCode',
+					type : 'string'
+				}, {
+					name : 'InciDesc',
+					type : 'string'
+				}, {
+					name : 'AspUomId',
+					type : 'string'
+				}, {
+					name : 'PriorSpUom',
+					type : 'double'
+				}, {
+					name : 'MaxSp',
+					type : 'double'
+				},{
+					name : 'ResultSpUom',
+					type : 'double'
+				},{
+					name : 'DiffSpUom',
+					type : 'double'
+				}, {
+					name : 'PriorRpUom',
+					type : 'double'
+				}, {
+					name : 'ResultRpUom',
+					type : 'double'
+				},{
+					name : 'DiffRpUom',
+					type : 'double'
+				}, {
+					name : 'AdjDate',
+					type : 'date'
+				}, {
+					name : 'PreExecuteDate',  //计划生效日期
+					type : 'date'
+				}, {
+					name : 'ExeDate',  //实际生效日期
+					type : 'date'
+				}, {
+					name : 'AdjReasonId',
+					type : 'string'
+				},{
+					name:'AdjReason',
+					type:'string'
+				},{
+					name : 'MarkType',
+					type : 'string'
+				}, {
+					name : 'WarrentNo',      //物价文件号
+					type : 'string'
+				}, {
+					name : 'WnoDate',      //物价文件日期
+					type : 'string'
+				},{
+					name : 'InvNo',      		//发票号，发票号
+					type : 'string'
+				}, {
+					name : 'InvDate',      	//发票日期,发票日期
+					type : 'string'
+				}, {
+					name : 'Remark',
+					type : 'string'
+				}, {
+					name : 'AspNo',
+					type : 'string'
+				}, {
+					name : 'AdjUserName',
+					type : 'string'
+				}, {
+		            name: 'FreeDrugFlag',
+		            type: 'string'
+				}]);
+			var NewRecord = new record({
+				AspId : '',
+				StkCatDesc: '',
+				InciId : '',
+				InciCode : '',
+				InciDesc : '',
+				AspUomId : '',
+				PriorSpUom : 0,
+				MaxSp : 0,
+				ResultSpUom : 0,
+				DiffSpUom : 0,
+				PriorRpUom : 0,
+				ResultRpUom : 0,
+				DiffRpUom : 0,
+				AdjDate : new Date(),
+				PreExecuteDate : preexedate,
+				AdjReasonId:aspReasonId,
+				AdjReason:aspReason,
+				MarkType : '',
+				WarrentNo : '',
+				WarrentDate:'',
+				InvNo:'',
+				InvDate:'',
+				Remark : aspRemark,
+				AspNo : '',
+				AdjUserName : '',
+				FreeDrugFlag:''
+			});
+			DetailStore.add(NewRecord);
+			var colindex=GetColIndex(DetailGrid,"InciDesc");
+			DetailGrid.getSelectionModel().select(DetailStore.getCount() - 1, colindex);
+			DetailGrid.startEditing(DetailStore.getCount() - 1, colindex);
+		};
+		
+		// 保存按钮
+		var SaveBT = new Ext.Toolbar.Button({
+			id : "SaveBT",
+			text : $g('保存'),
+			tooltip : $g('点击保存'),
+			width : 70,
+			height : 30,
+			iconCls : 'page_save',
+			handler : function() {
+				if(CheckDataBeforeSave()==true){
+					//保存调价单
+					save();
+					//变更按钮是否可用
+					//changeButtonEnable("0^0^1^1^1^1^1^1");
+				}
+			}
+		});
+		
+		function CheckDataBeforeSave(){
+			var rowCount = DetailGrid.getStore().getCount();
+			if (rowCount<=0) 
+			{ 
+				Msg.info("warning",$g("没有调价记录!"));	
+				return false;
+			}			
+			for (var i = 0; i < rowCount; i++) {
+				var rowData = DetailStore.getAt(i);
+				//新增或数据发生变化时执行下述操作
+				if(rowData.data.newRecord || rowData.dirty){
+					var ResultSp = rowData.get("ResultSpUom");
+					var ResultRp = rowData.get("ResultRpUom");
+					var freedrugflag=rowData.get('FreeDrugFlag');
+					if((freedrugflag=="Y")&&((ResultRp!=0)||(ResultSp!=0))){
+						Msg.info("warning", $g("第")+(i+1)+$g("行免费药调后进价和调后售价都必须为0!"));
+						return false;
+						break;
+					}
+					var AdjSpReasonId = rowData.get("AdjReasonId");
+					var AdjSpUomId = rowData.get("AspUomId");
+					var PriceFileDate =Ext.util.Format.date(rowData.get("PreExecuteDate"),"Y-m-d");
+					var unequalflag=CheckRpEqualSp(i);
+					if (unequalflag==false)
+					{	
+						Msg.info("warning",$g("第")+(i+1)+$g("行药品为零加成,进售价不符,请核实！"));
+					}
+					if (ResultSp == null || ResultSp.length <= 0) {
+						Msg.info("warning", $g("第")+(i+1)+$g("行调后售价不能为空!"));
+						return false;
+						break;
+					}
+					if (ResultSp == null || ResultSp.length <= 0) {
+						Msg.info("warning", $g("第")+(i+1)+$g("行调后售价不能为空!"));
+						return false;
+						break;
+					}
+					if (AdjSpUomId == null || AdjSpUomId.length <= 0) {
+						Msg.info("warning",$g( "第")+(i+1)+$g("行单位不能为空!"));
+						return false;
+						break;
+					}
+					if (PriceFileDate == null || PriceFileDate.length <= 0) {
+						Msg.info("warning", $g("第")+(i+1)+$g("行计划生效日期不能为空!"));
+						return false;
+						break;
+					}
+					var nowdate = new Date();
+					if (PriceFileDate <= nowdate.format("Y-m-d")) {
+						Msg.info("warning", $g("第")+(i+1)+$g("行计划生效日期不能小于或等于当前日期!"));
+						return false;
+						break;
+					}
+					if (AdjSpReasonId == null || AdjSpReasonId.length <= 0) {
+						Msg.info("warning", $g("第")+(i+1)+$g("行调价原因不能为空!"));
+						var newcolIndex = GetColIndex(DetailGrid, 'AdjReasonId');
+	                	DetailGrid.startEditing(i, newcolIndex);
+						return false;
+						break;
+					}	
+				}	
+			}	
+			return true;
+		}
+		
+		/*根据药品判断是否零加成*/
+		function CheckRpEqualSp(rownum)
+		{
+			var adjsaleData = DetailStore.getAt(rownum);
+			var adjsaleInci = adjsaleData.get("InciId");  //药品id
+			///判断药品类组
+			var equalflag=tkMakeServerCall("web.DHCST.Common.AppCommon","GetZeroMarginByInci",adjsaleInci,GroupId,LocId,userId)   //是否需要售价等于进价
+			if (equalflag!="Y")
+			{
+				return true;
+			}
+		    var ResultSp = adjsaleData.get("ResultSpUom");
+			var ResultRp = adjsaleData.get("ResultRpUom");
+			if (ResultSp!=ResultRp)
+			{
+				return false;
+			}	
+		}
+		
+		// 保存调价单
+		function save()
+		{
+			//调价单号
+			var AdjSpNo = Ext.getCmp("AdjSpNo").getValue();
+			var StkGrp=Ext.getCmp("StkGrpType").getValue();
+			var list="";
+			//保存明细
+			var rowCount = DetailGrid.getStore().getCount();
+			if (rowCount==0) 
+			{
+				Msg.info("warning","没有调价记录!");	
+				return ;
+			}			
+			for (var i = 0; i < rowCount; i++) {
+				var rowData = DetailStore.getAt(i);
+				//新增或数据发生变化时执行下述操作
+				if(rowData.data.newRecord || rowData.dirty){
+					var AspRowid = rowData.get("AspId");
+					var IncRowid = rowData.get("InciId");
+					if(IncRowid=="" || IncRowid.length<=0)
+					{
+						//移除空行
+						DetailGrid.getStore().remove(rowData);
+						break;
+					}
+					var PreExecuteDate =Ext.util.Format.date(rowData.get("PreExecuteDate"),App_StkDateFormat);
+					var IncDesc=rowData.get("InciDesc");
+					var AdjSpUomId = rowData.get("AspUomId");
+					var ResultSp = rowData.get("ResultSpUom");
+					var ResultRp = rowData.get("ResultRpUom");
+					if (ResultSp<ResultRp) {
+						Msg.info("warning", $g("第")+(i+1)+$g("行调后售价小于调后进价!"));
+						return false;
+						break;
+					}
+					var AdjSpReasonId = rowData.get("AdjReasonId");
+					var PriceFileNo = rowData.get("WarrentNo");
+					var PriceFileDate =Ext.util.Format.date(rowData.get("WnoDate"),App_StkDateFormat);
+					var Remark = rowData.get("Remark");
+					var InvoNo = rowData.get("InvNo");
+					var InvoDate = Ext.util.Format.date(rowData.get("InvDate"),App_StkDateFormat);
+					var PriorRp=rowData.get("PriorRpUom");
+					var PriorSp=rowData.get("PriorSpUom");
+					var data =AspRowid+"^"+ PreExecuteDate + "^" + IncRowid + "^" + AdjSpUomId + "^"
+							+ ResultSp + "^" + ResultRp + "^" + userId+ "^" + AdjSpReasonId+ "^" + HospId+ "^" 
+							+ PriceFileNo +"^" + PriceFileDate +"^" + Remark+ "^"+InvoNo+"^"+InvoDate+"^"+PriorRp+"^"+PriorSp;
+					if(list==""){
+						list=data;
+					}else{
+						list=list+xRowDelim()+data;
+					}					
+				}
+			}
+			if (list==""){
+				Msg.info("warning",$g("没有需要保存的数据"));
+				return;						
+			}
+			var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
+			var url = DictUrl+ "inadjpriceactionallbatch.csp?actiontype=Save";
 			Ext.Ajax.request({
 				url : url,
 				method : 'POST',
-				waitMsg : '删除中...',
+				params: {AspNo:AdjSpNo,StkGrp:StkGrp,LocId:LocId,list:list},
+				waitMsg : '保存中...',
 				success : function(result, request) {
 					var jsonData = Ext.util.JSON.decode(result.responseText);
 					mask.hide();
 					if (jsonData.success == 'true') {
-						Msg.info("success", "删除成功!");
+						Msg.info("success",$g("保存成功!"));
+						// 回传
+						if(AdjSpNo==""){
+							AdjSpNo = jsonData.info;
+							Ext.getCmp("AdjSpNo").setValue(AdjSpNo);
+						}						
+						AdjPriceSearch();
+					}else{
+						var ret=jsonData.info;
+						var arr=ret.split("^");
+						ret=arr[0];
+						var IncDesc=arr[1];
+						if(ret==-5){
+							Msg.info("error", IncDesc+$g("存在未生效的调价单，不能新建调价单！"));
+						}else if(ret==-7){
+							Msg.info("error", IncDesc+$g("当天已调价，不能再建调价单！"));
+						}else if(ret==-1){
+							Msg.info("error", $g("药品")+IncDesc+$g("Id不能为空！"));
+						}else if(ret==-2){
+							Msg.info("error", $g("药品")+IncDesc+$g("无效！"));
+						}else if(ret==-3){
+							Msg.info("error", $g("调价单号不能为空！"));
+						}else if(ret==-4){
+							Msg.info("error", $g("计划生效日期不能为空！"));
+						}else{
+							Msg.info("error", IncDesc+$g("保存失败：")+jsonData.info);
+						}
+					}
+				},
+				scope : this
+			});	
+		}
+		
+		// 删除选中行药品
+		function deleteDrug() {
+			var cell = DetailGrid.getSelectionModel().getSelectedCell();
+			if (cell == null) {
+				Msg.info("warning", $g("没有选中行!"));
+				return;
+			}
+			// 选中行
+			var row = cell[0];
+			var record = DetailGrid.getStore().getAt(row);
+			var AspRowId = record.get("AspId");
+			if (AspRowId == null || AspRowId.length <= 0) {
+				DetailGrid.getStore().remove(record);
+				DetailGrid.getView().refresh();
+			}else{
+				Ext.MessageBox.show({
+					title : $g('提示'),
+					msg : $g('是否确定删除该药品调价信息'),
+					buttons : Ext.MessageBox.YESNO,
+					fn : showResult,
+					icon : Ext.MessageBox.QUESTION
+				});
+			}
+			BatchStore.removeAll()
+			StatuTabPagingToolbarBatch.updateInfo();
+		}
+		
+		// 删除提示
+		function showResult(btn) {
+			if (btn == "yes") {
+				var cell = DetailGrid.getSelectionModel().getSelectedCell();
+				var row = cell[0];
+				var record = DetailGrid.getStore().getAt(row);
+				var AspRowId = record.get("AspId");
+				// 删除该行数据
+				var url = DictUrl
+						+ "inadjpriceactionallbatch.csp?actiontype=DeleteAspItm&AspRowid="
+						+ AspRowId;
+	            var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
+				Ext.Ajax.request({
+					url : url,
+					method : 'POST',
+					waitMsg : $g('删除中...'),
+					success : function(result, request) {
+						var jsonData = Ext.util.JSON.decode(result.responseText);
+						mask.hide();
+					if (jsonData.success == 'true') {
+						Msg.info("success", $g("删除成功!"));
 						DetailGrid.getStore().remove(record);
 						DetailGrid.getView().refresh();
 					} else {
-						Msg.info("error", "删除失败："+jsonData.info);
+						Msg.info("error", $g("删除失败：")+jsonData.info);
 					}
 				},
 				scope : this
@@ -613,7 +615,7 @@ Ext.onReady(function() {
 	
 	// 单位
 	var CTUom = new Ext.form.ComboBox({
-		fieldLabel : '单位',
+		fieldLabel : $g('单位'),
 		id : 'CTUom',
 		name : 'CTUom',
 		anchor : '90%',
@@ -623,7 +625,7 @@ Ext.onReady(function() {
 		displayField : 'Description',
 		allowBlank : false,
 		triggerAction : 'all',
-		emptyText : '单位...',
+		emptyText : $g('单位...'),
 		selectOnFocus : true,
 		forceSelection : true,
 		minChars : 1,
@@ -634,7 +636,7 @@ Ext.onReady(function() {
 	
 	ReasonForAdjSpStore.load();
 	var AdjSpReason = new Ext.form.ComboBox({
-		fieldLabel : '调价原因',
+		fieldLabel : $g('调价原因'),
 		id : 'AdjSpReason',
 		name : 'AdjSpReason',
 		anchor : '90%',
@@ -644,7 +646,7 @@ Ext.onReady(function() {
 		displayField : 'Description',
 		allowBlank : false,
 		triggerAction : 'all',
-		emptyText : '调价原因...',
+		emptyText : $g('调价原因...'),
 		selectOnFocus : true,
 		forceSelection : true,
 		listWidth : 150,
@@ -682,7 +684,7 @@ Ext.onReady(function() {
 	});
 	
 	var ADJRSNComm = new Ext.form.ComboBox({
-		fieldLabel : '调价原因',
+		fieldLabel : $g('调价原因'),
 		id : 'ADJRSNComm',
 		name : 'ADJRSNComm',
 		anchor : '90%',
@@ -692,7 +694,7 @@ Ext.onReady(function() {
 		displayField : 'Description',
 		//allowBlank : false,
 		triggerAction : 'all',
-		emptyText : '调价原因...',
+		emptyText : $g('调价原因...'),
 		selectOnFocus : true,
 		forceSelection : true,
 		minChars : 1,
@@ -736,7 +738,7 @@ Ext.onReady(function() {
 			var url=DictUrl+"inadjpriceaction.csp?actiontype=GetMtSp&InciId="+inci+"&UomId="+uomId+"&Rp="+Rp;
 			var sp=ExecuteDBSynAccess(url);
 			if(sp==0){
-				Msg.info("warning","调后售价为0，请检查该药品定价类型是否正确！");
+				Msg.info("warning",$g("调后售价为0，请检查该药品定价类型是否正确！"));
 			}
 			record.set("ResultSpUom",sp);
 		}
@@ -788,7 +790,7 @@ Ext.onReady(function() {
 			sortable : true,
 			hidden : true
 		}, {
-			header : "调价单号",
+			header : $g("调价单号"),
 			dataIndex : 'AspNo',
 			width : 120,
 			align : 'right',
@@ -801,13 +803,13 @@ Ext.onReady(function() {
 			sortable : true,
 			hidden : true
 		}, {
-			header : '药品代码',
+			header : $g('药品代码'),
 			dataIndex : 'InciCode',
 			width : 80,
 			align : 'left',
 			sortable : true
 		}, {
-			header : '药品名称',
+			header : $g('药品名称'),
 			dataIndex : 'InciDesc',
 			width : 230,
 			align : 'left',
@@ -825,7 +827,7 @@ Ext.onReady(function() {
 				}
 			}))
 		}, {
-			header : "调价单位",
+			header : $g("调价单位"),
 			dataIndex : 'AspUomId',
 			width : 80,
 			align : 'left',
@@ -833,19 +835,19 @@ Ext.onReady(function() {
 			editor : new Ext.grid.GridEditor(CTUom),
 			renderer : Ext.util.Format.comboRenderer2(CTUom,"AspUomId","AspUomDesc") // pass combo instance to reusable renderer					
 		}, {
-			header : "调前售价",
+			header : $g("调前售价"),
 			dataIndex : 'PriorSpUom',
 			width : 90,
 			align : 'right',
 			sortable : true
 		}, {
-			header : "调前进价",
+			header : $g("调前进价"),
 			dataIndex : 'PriorRpUom',
 			width : 90,
 			align : 'right',
 			sortable : true
 		}, {
-			header : "调后进价",
+			header : $g("调后进价"),
 			dataIndex : 'ResultRpUom',
 			width : 90,
 			align : 'right',
@@ -861,14 +863,14 @@ Ext.onReady(function() {
 						var resultStVal=field.startValue;
 						var resultRpNew = field.getValue();
 						if (resultRpNew == null || resultRpNew.length <= 0) {
-							Msg.info("warning", "调后进价不能为空!");
+							Msg.info("warning", $g("调后进价不能为空!"));
 							return;
 						}
 						var cell = DetailGrid.getSelectionModel().getSelectedCell();
 						var rowData = DetailStore.getAt(cell[0]);
 						var freedrugflag=rowData.get('FreeDrugFlag');
 						if((freedrugflag=="Y")&&(resultRpNew!=0)){
-							Msg.info("warning", "第"+(cell[0]+1)+"行免费药调后进价必须为0!");
+							Msg.info("warning", $g("第")+(cell[0]+1)+$g("行免费药调后进价必须为0!"));
 							return;
 						}
 						var UomDr=rowData.get("AspUomId");
@@ -888,7 +890,7 @@ Ext.onReady(function() {
 				}
 			}))
 		}, {
-			header : "调后售价",
+			header : $g("调后售价"),
 			dataIndex : 'ResultSpUom',
 			width : 80,
 			align : 'right',
@@ -903,36 +905,36 @@ Ext.onReady(function() {
 					'blur':function(field,e){
 						var resultSpNew = field.getValue();
 						if (resultSpNew == null || resultSpNew.length <= 0) {
-							Msg.info("warning", "调后售价不能为空!");
+							Msg.info("warning", $g("调后售价不能为空!"));
 							return;
 						}
 						var cell = DetailGrid.getSelectionModel().getSelectedCell();
 						var rowData = DetailStore.getAt(cell[0]);
 		                var MaxSp=rowData.get("MaxSp")
 		                if((MaxSp!="")&&(MaxSp<resultSpNew)){
-							Msg.info("warning", "调后售价大于最高售价!");
+							Msg.info("warning",$g( "调后售价大于最高售价!"));
 	                    	return;
 	                    }
 						var ResultSp = field.getValue();
 						var freedrugflag=rowData.get('FreeDrugFlag');
 						if((freedrugflag=="Y")&&(ResultSp!=0)){
-							Msg.info("warning", "免费药调后售价必须为0!");
+							Msg.info("warning", $g("免费药调后售价必须为0!"));
 							return;
 						}
 		                var ResultRp = rowData.get("ResultRpUom");
 		                var MaxSp= rowData.get("MaxSp");
 		                if((ResultSp<ResultRp)&(MaxSp!="")){
-		                	Msg.info("warning", "第"+(cell[0]+1)+"行调后售价小于调后进价!");
+		                	Msg.info("warning", $g("第")+(cell[0]+1)+$g("行调后售价小于调后进价!"));
 	                    }
 		                if((MaxSp<ResultSp)&(MaxSp!="")){
-		                 	Msg.info("warning", "第"+(cell[0]+1)+"行调后售价大于最高售价!");
+		                 	Msg.info("warning", $g("第")+(cell[0]+1)+$g("行调后售价大于最高售价!"));
 	                        return;
 	                    }
 	                    var colindex=GetColIndex(DetailGrid,"ResultSpUom");
 						DetailGrid.stopEditing(cell[0], colindex);
 	                    var unequalflag=CheckRpEqualSp(cell[0]);
 						if (unequalflag==false){	
-							Msg.info("warning","该药品为零加成,进售价不符,请核实!");
+							Msg.info("warning",$g("该药品为零加成,进售价不符,请核实!"));
 						}
 						var UomDr=rowData.get("AspUomId");
 						var InciDr=rowData.get("InciId");
@@ -949,25 +951,25 @@ Ext.onReady(function() {
 				}
 			}))
 		}, {
-			header : "差价(售价)",
+			header : $g("差价(售价)"),
 			dataIndex : 'DiffSpUom',
 			width : 90,
 			align : 'right',
 			sortable : true
 		}, {
-			header : "差价(进价)",
+			header : $g("差价(进价)"),
 			dataIndex : 'DiffRpUom',
 			width : 90,
 			align : 'right',
 			sortable : true
 		}, {
-			header : "最高售价",
+			header : $g("最高售价"),
 			dataIndex : 'MaxSp',
 			width : 80,
 			align : 'right',
 			sortable : true
 		}, {
-			header : "计划生效日期",
+			header : $g("计划生效日期"),
 			dataIndex : 'PreExecuteDate',
 			align : 'right',
 			sortable : true,
@@ -979,13 +981,13 @@ Ext.onReady(function() {
 					'change' :function(field, e) {
 						var expDate = field.getValue();
 						if (expDate == null || expDate.length <= 0) {
-							Msg.info("warning", "计划生效日期不能为空!");
+							Msg.info("warning", $g("计划生效日期不能为空!"));
 							return;
 						}
 						var nowdate = new Date();
 						if (expDate.format("Y-m-d") <= nowdate
 								.format("Y-m-d")) {
-							Msg.info("warning", "计划生效日期不能小于或等于当前日期!");
+							Msg.info("warning", $g("计划生效日期不能小于或等于当前日期!"));
 							return;
 						}
 					},
@@ -1002,26 +1004,26 @@ Ext.onReady(function() {
 				}
 			})
 		}, {
-			header : "制单日期",
+			header : $g("制单日期"),
 			dataIndex : 'AdjDate',
 			width : 80,
 			align : 'right',
 			sortable : true,
 			renderer:Ext.util.Format.dateRenderer(App_StkDateFormat)					
 		}, {
-			header:'实际生效日期',
+			header:$g('实际生效日期'),
 			width : 80,
 			dataIndex:'ExeDate',
 			align : 'right',
 			renderer:Ext.util.Format.dateRenderer(App_StkDateFormat)
 		}, {
-			header : "定价类型",
+			header : $g("定价类型"),
 			dataIndex : 'MarkType',
 			width : 80,
 			align : 'left',
 			sortable : true
 		}, {
-			header : "物价文件号",
+			header : $g("物价文件号"),
 			dataIndex : 'WarrentNo',
 			width : 80,
 			align : 'left',
@@ -1039,7 +1041,7 @@ Ext.onReady(function() {
 				}
         	})
 		}, {
-			header : "物价文件日期",
+			header : $g("物价文件日期"),
 			dataIndex : 'WnoDate',
 			width : 80,
 			align : 'right',
@@ -1059,7 +1061,7 @@ Ext.onReady(function() {
 				}
 			})
 		}, {
-			header : "发票号",
+			header : $g("发票号"),
 			dataIndex : 'InvNo',
 			width : 80,
 			align : 'left',
@@ -1077,7 +1079,7 @@ Ext.onReady(function() {
 				}
         	})
 		}, {
-			header : "发票日期",
+			header : $g("发票日期"),
 			dataIndex : 'InvDate',
 			width : 80,
 			align : 'left',
@@ -1095,7 +1097,7 @@ Ext.onReady(function() {
 				}
 			})
 		},{
-			header : "调价原因",
+			header : $g("调价原因"),
 			dataIndex : 'AdjReasonId',
 			width:80,
         	align:'left',
@@ -1103,19 +1105,19 @@ Ext.onReady(function() {
 			renderer:rendererReason,
 			editor:new Ext.grid.GridEditor(ADJRSNComm)
 		}, {
-			header : "调价人",
+			header : $g("调价人"),
 			dataIndex : 'AdjUserName',
 			width : 80,
 			align : 'left',
 			sortable : true
 		},{
-			header : "库存分类",
+			header : $g("库存分类"),
 			dataIndex : 'StkCatDesc',
 			width : 80,
 			align : 'left',
 			sortable : true
 		},{
-			header : "备注",
+			header : $g("备注"),
 			dataIndex : 'Remark',
 			width : 350,
 			align : 'left',
@@ -1134,7 +1136,7 @@ Ext.onReady(function() {
 				}
 			})
 		 },{
-			header: "免费药标识",
+			header: $g("免费药标识"),
 			dataIndex: 'FreeDrugFlag',
 			width: 80,
 			align: 'left',
@@ -1143,8 +1145,8 @@ Ext.onReady(function() {
 	]);
 	
 	var GridColSetBT = new Ext.Toolbar.Button({
-		text:'列设置',
-		tooltip:'列设置',
+		text:$g('列设置'),
+		tooltip:$g('列设置'),
 		iconCls:'page_gear',
 		handler:function(){
 			GridColSet(DetailGrid,"DHCSTADJSP");
@@ -1153,7 +1155,7 @@ Ext.onReady(function() {
 	
 	var DetailGrid = new Ext.grid.EditorGridPanel({
 		id : 'DetailGrid',
-		title : '调价单明细',
+		title : $g('调价单明细'),
 		region:'center',
 		cm : DetailCm,
 		store : DetailStore,
@@ -1169,7 +1171,7 @@ Ext.onReady(function() {
 				if (e.field=='AdjReasonId'){
 					if (e.record.data['AdjReasonId']!='') ADJRSNComm.setValue(e.record.data['AdjReasonId']);
 				}
-				/*取配置,动态设置小数保留位数,yunhaibao201511224*/
+				/*取配置,动态设置小数保留位数,yunhaibao201511224
 				if((e.field=="ResultRpUom")||(e.field=="ResultSpUom")){
 					var adjpriceuomid=e.record.get('AspUomId');
 					var adjpriceinci=e.record.get('InciId');
@@ -1177,7 +1179,7 @@ Ext.onReady(function() {
 					var decimalarr=decimalstr.split("^");
 					Ext.getCmp("ResultRpUomEditor").decimalPrecision=decimalarr[0];
 					Ext.getCmp("ResultSpUomEditor").decimalPrecision=decimalarr[2];
-				}
+				}*/
 			}	
 		}
 	});
@@ -1208,7 +1210,7 @@ Ext.onReady(function() {
 		//height:100,
 		items:[{
 			id:'delete',
-			text:'删除',
+			text:$g('删除'),
 			handler:deleteDrug
 		}]
 	});
@@ -1257,7 +1259,7 @@ Ext.onReady(function() {
 		var inciCode=record.get("InciCode");
 		var inciDesc=record.get("InciDesc");
 		if(CheckRepeatItm(inciDr)==true){
-			Msg.info("warning","该药品调价记录已经录入，不能重复录入");
+			Msg.info("warning",$g("该药品调价记录已经录入，不能重复录入"));
 			return;
 		}
 		var cell = DetailGrid.getSelectionModel().getSelectedCell();
@@ -1274,7 +1276,7 @@ Ext.onReady(function() {
 		Ext.Ajax.request({
 			url : url,
 			method : 'GET',
-			waitMsg : '查询中...',
+			waitMsg : $g('查询中...'),
 			success : function(result, request) {
 				var jsonData = Ext.util.JSON.decode(result.responseText);
 				if (jsonData.success == 'true') {
@@ -1379,7 +1381,7 @@ Ext.onReady(function() {
 	
 	//悬浮提示
 	function formatQtip(data,metadata){   
-	    var title ="备注";  
+	    var title =$g("备注");  
 	    var tip =data;   
 	    metadata.attr = 'ext:qtitle="' + title + '"' + ' ext:qtip="' + tip + '"';    
 	    return data;    
@@ -1395,67 +1397,67 @@ Ext.onReady(function() {
 		sortable : true,
 		hidden : true
 	},{
-		header : '批号',
+		header : $g('批号'),
 		dataIndex : 'BatNo',
 		width : 100,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "效期",
+		header : $g("效期"),
 		dataIndex : 'ExpDate',
 		width : 100,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "调价单位",
+		header : $g("调价单位"),
 		dataIndex : 'UomDesc',
 		width : 80,
 		align : 'left',
 		sortable : true
 	}, {
-		header : '调前进价',
+		header :$g( '调前进价'),
 		dataIndex : 'PriorRp',
 		width : 100,
 		align : 'right',
 		sortable : true
 	}, {
-		header : '调后进价',
+		header : $g('调后进价'),
 		dataIndex : 'ResultRp',
 		width : 100,
 		align : 'right',
 		sortable : true
 	}, {
-		header : '差价(进价)',
+		header : $g('差价(进价)'),
 		dataIndex : 'DifRp',
 		width : 100,
 		align : 'right',
 		sortable : true
 	}, {
-		header : '调前售价',
+		header : $g('调前售价'),
 		dataIndex : 'PriorSp',
 		width : 100,
 		align : 'right',
 		sortable : true
 	}, {
-		header : '调后售价',
+		header : $g('调后售价'),
 		dataIndex : 'ResultSp',
 		width : 100,
 		align : 'right',
 		sortable : true
 	}, {
-		header : '差价(售价)',
+		header : $g('差价(售价)'),
 		dataIndex : 'DifSp',
 		width : 100,
 		align : 'right',
 		sortable : true
 	}, {
-		header : "批次供应商",
+		header : $g("批次经营企业"),
 		dataIndex : 'PVenDesc',
 		width : 150,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "批次厂商",
+		header : $g("批次生产企业"),
 		dataIndex : 'PManf',
 		width : 150,
 		align : 'left',
@@ -1490,21 +1492,21 @@ Ext.onReady(function() {
 		store : BatchStore,
 		pageSize : PageSize,
 		displayInfo : true,
-		displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
-		prevText : "上一页",
-		nextText : "下一页",
-		refreshText : "刷新",
-		lastText : "最后页",
-		firstText : "第一页",
-		beforePageText : "当前页",
-		afterPageText : "共{0}页",
-		emptyMsg : "没有数据"
+		displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
+		prevText : $g("上一页"),
+		nextText : $g("下一页"),
+		refreshText : $g("刷新"),
+		lastText : $g("最后页"),
+		firstText :$g( "第一页"),
+		beforePageText : $g("当前页"),
+		afterPageText : $g("共{0}页"),
+		emptyMsg : $g("没有数据")
 	});
 	
 	var BatchGrid = new Ext.grid.GridPanel({
 		id:'BatchGrid',
 		region: 'south',
-		title : '批次明细',
+		title : $g('批次明细'),
 		split: true,
 		height: 250,
 		minSize: 200,
@@ -1527,7 +1529,7 @@ Ext.onReady(function() {
 						// 选中行
 						var row = cell[0];
 						var rowData = DetailGrid.getStore().getAt(row);
-						Msg.info("warning",rowData.get("InciDesc")+" 没有可调价的批次记录!");
+						Msg.info("warning",rowData.get("InciDesc")+$g(" 没有可调价的批次记录!"));
 						DetailGrid.getStore().remove(rowData);
 						addNewRow();
 						var colindex=GetColIndex(DetailGrid,"InciDesc");
@@ -1549,12 +1551,12 @@ Ext.onReady(function() {
 		region:"north",
 		labelWidth : 60,
 		labelAlign : 'right',
-		title:'调价单录入',
+		title:$g('调价单录入'),
 		frame : true,
 		tbar : [SearchBT, '-', ClearBT, '-', AddBT,	'-', SaveBT],
 		items : [{
 			xtype : 'fieldset',
-			title : '查询信息', //--<font color=blue>蓝色字体显示的项目既是查询条件也是调价录入限制条件</font>',
+			title : $g('查询信息'), //--<font color=blue>蓝色字体显示的项目既是查询条件也是调价录入限制条件</font>',
 			layout : 'column',
 			defaults:{border:false},
 			style: DHCSTFormStyle.FrmPaddingV,
@@ -1588,7 +1590,7 @@ Ext.onReady(function() {
 	colArr=sortColoumByEnterSort(DetailGrid); //将回车的调整顺序初始化好
 	var RpRule=tkMakeServerCall("web.DHCSTCOMMPARA","GetRpRule",HospId)
 	if(RpRule!=3){
-		Msg.info("warning","非批次价模式请用统一价调价菜单!!!");
+		Msg.info("warning",$g("非批次价模式请用统一价调价菜单!!!"));
 		SearchBT.setDisabled(true);
 		ClearBT.setDisabled(true);
 		AddBT.setDisabled(true);

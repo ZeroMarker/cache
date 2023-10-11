@@ -4,20 +4,20 @@
 //创建人  ln
 
 $(function(){
-			
-     InitCombobox();
+	InitCombobox();
+
     //查询
 	$("#BFind").click(function() {	
 		BFind_click();		
-        });
-      
+    });
+    
     //清屏
 	$("#BClear").click(function() {	
 		BClear_click();		
-        });
-    
-})
+    });
 
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEGroupFeeStatistic.raq");
+});
 
 //清屏
 function BClear_click(){
@@ -33,18 +33,18 @@ function BClear_click(){
 //查询
 function BFind_click(){
 		
-		var GADM=$("#GADM").combogrid("getValue");
-		if (GADM == "undefined" || GADM == undefined) {var GADM="";}
+	var GADM=$("#GADM").combogrid("getValue");
+	if (GADM == "undefined" || GADM == undefined) {var GADM="";}
 
-		var lnk="";
-		lnk=lnk+"&BeginDate="+$("#BeginDate").datebox('getValue');
-		lnk=lnk+"&EndDate="+$("#EndDate").datebox('getValue');
-		lnk=lnk+"&GADM="+GADM;
-		lnk=lnk+"&CTLOCID="+session['LOGON.CTLOCID'];
-		//alert(lnk)
-	    document.getElementById('ReportFile').src="dhccpmrunqianreport.csp?reportName=DHCPEGroupFeeStatistic.raq"+lnk;
-	
+	var lnk = "&BeginDate="+$("#BeginDate").datebox('getValue')
+			+ "&EndDate="+$("#EndDate").datebox('getValue')
+			+ "&GADM="+GADM
+			+ "&CTLOCID="+session['LOGON.CTLOCID'];
+	//alert(lnk)
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEGroupFeeStatistic.raq" + lnk);
+	// document.getElementById('ReportFile').src="dhccpmrunqianreport.csp?reportName=DHCPEGroupFeeStatistic.raq"+lnk;
 }
+
 function InitCombobox(){
 	
 	//团体
@@ -71,6 +71,5 @@ function InitCombobox(){
 			{field:'TGStatus',title:'状态',width:100},
 			{field:'TAdmDate',title:'日期',width:100}		
 		]]
-	})
-
+	});
 }

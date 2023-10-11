@@ -1,29 +1,6 @@
 ﻿var obj = new Object();	
 function InitCPForm(){
     $.parser.parse(); // 解析整个页面
-    /*
-	$("#CPWPatList").lookup({
-		url:$URL+"?ClassName=DHCMA.CPW.CPS.InterfaceSrv&QueryName=QryCPWVPatByWard&ResultSetType=array",
-		mode:'remote',
-		idField:'EpisodeID',
-		textField:'PatName',
-		columns:[[
-			{field:'BedNo',title:'床号',width:50},  
-			{field:'PapmiNo',title:'登记号',width:100},
-			{field:'PatName',title:'姓名',width:100},
-			{field:'PatSex',title:'性别',width:50},
-			{field:'Status',title:'状态',width:50}
-		]],
-		pagination:false,
-		onSelect:function(index,rowData){
-			EpisodeID=rowData['EpisodeID'];
-			obj.InitCPWInfo();
-		},
-		panelWidth:380,
-		editable:false,
-		minQueryLen:3
-	});
-	*/
 	obj.InitCPWInfo();
 	
 	return obj;
@@ -38,10 +15,12 @@ obj.InitCPWInfo = function() {
 	}, function (JsonStr) {
 		if (JsonStr == "") return;
 		var JsonObj = $.parseJSON(JsonStr);
-		obj.CPWCurrDesc = JsonObj.CPWDesc;		//当前步骤名称
+		obj.CPWCurrDesc = JsonObj.CPWDesc;		//当前路径名称
 		obj.CPWStatus = JsonObj.CPWStatus;		//当前路径状态
 		obj.PathFormID = JsonObj.PathFormID		//当前路径的表单ID
-		obj.PathwayID = JsonObj.PathwayID			//出入径记录ID
+		obj.PathwayID = JsonObj.PathwayID		//出入径记录ID
+		obj.CurrEpID = JsonObj.CPWEpisID		//当前阶段ID
+		obj.CurrEpNo = JsonObj.CurrEpisNo		//当前阶段序号
 
 		$('#CPWDesc').text(JsonObj.CPWDesc)
 		$('#CPWStatus').text(JsonObj.CPWStatus)
@@ -49,37 +28,37 @@ obj.InitCPWInfo = function() {
 		$('#CPWTime').text(JsonObj.CPWTime)
 
 		var htmlIcon = ""
-		htmlIcon = htmlIcon + '<span class="Icon Icon-D">单</span>'
-		htmlIcon = htmlIcon + '<span class="Icon Icon-B">变</span>'
+		htmlIcon = htmlIcon + '<span class="Icon Icon-D">'+$g('单')+'</span>'
+		htmlIcon = htmlIcon + '<span class="Icon Icon-B">'+$g('变')+'</span>'
 		htmlIcon = htmlIcon + '<span class="Icon Icon-T">T</span>'
 		htmlIcon = htmlIcon + '<span class="Icon Icon-Y">¥</span>'
 		$('#CPWIcon').html(htmlIcon)
 		$(".Icon-D").popover({
-			content: '单病种信息：' + JsonObj.SDDesc
+			content: $g('单病种信息：') + JsonObj.SDDesc
 		});
 		$(".Icon-B").popover({
 			content: JsonObj.VarDesc
 		});
 		$(".Icon-T").popover({
-			content: '入径天数：' + JsonObj.CPWDays + '天<br />计划天数：' + JsonObj.FormDays + '天'
+			content: $g('入径天数：') + JsonObj.CPWDays + $g('天')+'<br />'+$g('计划天数：') + JsonObj.FormDays + $g('天')
 		});
 		$(".Icon-Y").popover({
-			content: '住院总费用：' + JsonObj.PatCost + '<br />计划费用：' + JsonObj.FormCost + '元'
+			content: $g('住院总费用：') + JsonObj.PatCost + '<br />'+$g('计划费用：') + JsonObj.FormCost + $g('元')
 		});
 		
-		/*
-		$m({
-			ClassName: "DHCMA.CPW.CPS.InterfaceSrv",
-			MethodName: "GetPatName",
-			aEpisodeID: "3!!1" //EpisodeID
-		}, function (PatName) {
-			$("#CPWPatList").val(PatName);
-		});
-		*/
-		if((obj.CPWStatus == "出径")||(obj.CPWStatus == "完成")){
+		if((obj.CPWStatus == $g("出径"))||(obj.CPWStatus == $g("完成"))||(obj.CPWStatus == $g("作废"))){
 			$('#btnExecute').linkbutton("disable");
 			$('#btnCancel').linkbutton("disable");
-			$('#menubtn-blue').menubutton("disable");
+			//$('#menubtn-blue').linkbutton("disable");			//保证作废时样式与其他按钮一致
+			$('#menubtn-blue').unbind();
+			$('#menubtn-blue').css({'background-color': '#bbb',"pointer-events":"none"});	
+		}
+		if(UserType=="MED"){
+			$('#btnExecute').linkbutton("disable");
+			$('#btnCancel').linkbutton("disable");
+			//$('#menubtn-blue').menubutton("disable");
+			$('#menubtn-blue').unbind();
+			$('#menubtn-blue').css({'background-color': '#bbb',"pointer-events":"none"});
 		}
 		obj.InitCPWSteps();	//步骤信息
 	});
@@ -108,17 +87,23 @@ obj.InitCPWSteps = function() {
 		var SignDoc	  = objStr[ind].SignDoc;
 		var SignNur	  = objStr[ind].SignNur;
 		var SttDate   = objStr[ind].SttDate;
+		var SttTime   = objStr[ind].SttTime;
 		var EndDate   = objStr[ind].EndDate;
-		if ( SttDate && EndDate ){
+		var EndTime	  = objStr[ind].EndTime;
+		var EpisNo	  = objStr[ind].EpisIndNo
+		var SttDateTime = (SttTime != "" && SttTime != undefined) ? SttDate + " " + SttTime : SttDate;
+		var EndDateTime = (EndTime != "" && EndTime != undefined) ? EndDate + " " + EndTime : EndDate;
+		
+		if ( SttDateTime && EndDateTime ){
 			tmpJsonDate={};
 			tmpJsonDate["EpisID"] = EpisID;
-			tmpJsonDate["DateFrom"] = SttDate;
-			tmpJsonDate["DateEnd"] = EndDate;
+			tmpJsonDate["DateFrom"] = SttDateTime;
+			tmpJsonDate["DateEnd"] = EndDateTime;
 			obj.arrEpisDate.push(tmpJsonDate);
 		} 
 		
 		//异步加载各阶段项目内容
-		(function(tmpEpisID){
+		(function(tmpEpisID,tmpEpisNo){
 			$m({
 				ClassName:"DHCMA.CPW.CPS.ImplSrv",
 				QueryName:"QryImplItems",
@@ -136,30 +121,53 @@ obj.InitCPWSteps = function() {
 					var ItmIsImp=parseInt(objitm[jnd].IsImp);
 					var ItmIsVar=parseInt(objitm[jnd].IsVar);
 					
-					//var isDisabled = Boolean(ItmIsImp||ItmIsVar);
-					//可重复执行、撤销
-					var isDisabled = Boolean(ItmIsVar);
-					if (UserType == "D"){
-						if(ItmTypeDesc == "主要护理工作") isDisabled=true
-					}else if(UserType == "N"){
-						if(ItmTypeDesc != "主要护理工作") isDisabled=true
+					// 根据配置决定选择框是否可用  Modified by yankai 20220321
+					var retConfig = $m({
+						ClassName:"DHCMA.Util.BT.Config",
+						MethodName:"GetValueByCode",
+						aCode:"CPWCPFormItemActive",
+						aHospID:session['DHCMA.HOSPID']
+					},false)
+					
+					if (retConfig == "0"){		
+						if(obj.CurrEpNo == tmpEpisNo) isDisabled=false;
+						else isDisabled = true;
+					}else if(retConfig == "1"){
+						if(obj.CurrEpNo >= tmpEpisNo) isDisabled=false;
+						else isDisabled = true;
+					}else if (retConfig == "2"){
+						isDisabled = false;
 					}else{
-						isDisabled=true
+						isDisabled = true;
 					}
+					if (!isDisabled){		//isDisabled=false
+						if (UserType == "D"){
+							if(ItmTypeDesc == $g("主要护理工作")) isDisabled=true
+						}else if(UserType == "N"){
+							if(ItmTypeDesc != $g("主要护理工作")) isDisabled=true
+						}else{
+						}
+					} 
+					
 					var itmClass="normal";
-					if(ItmIsOption) itmClass="optional"
+					//if(ItmIsOption) itmClass="optional"
 					if(ItmIsImp){
 						itmClass += " done";
 					}else if(ItmIsVar){
 						itmClass += " variat";
 					}
 					
-					var ItmHtml="<li class='"+itmClass+"'><input label='' id='Itm-"+ItmID+"' data-options=\"disabled:"+isDisabled+",onCheckChange:function(event,value){obj.checkItm(event,value,"+ItmIsImp+")}\" class='hisui-checkbox' type='checkbox'><label for='Itm-"+ItmID+"'>"+ItmDesc+"</label></li>"
-					
-					if(ItmTypeDesc == "主要诊疗工作"){
+					//var ItmHtml="<li class='"+itmClass+"'><input label='' id='Itm-"+ItmID+"' data-options=\"disabled:"+isDisabled+",onCheckChange:function(event,value){obj.checkItm(event,value,"+ItmIsImp+")}\" class='hisui-checkbox' type='checkbox'><label for='Itm-"+ItmID+"'>"+ItmDesc+"</label></li>"
+					if (ItmIsOption){
+						var ItmHtml="<li class='"+itmClass+"'><input label='' id='Itm-"+ItmID+"' data-options=\"disabled:"+isDisabled+",onCheckChange:function(event,value){obj.checkItm(event,value,"+ItmIsImp+")}\" class='hisui-checkbox' type='checkbox'><label class='lab-checkbox' for='Itm-"+ItmID+"'>"+ItmDesc+"</label></li>"	
+					}else{
+						var ItmHtml="<li class='"+itmClass+"'><input label='' id='Itm-"+ItmID+"' data-options=\"disabled:"+isDisabled+",onCheckChange:function(event,value){obj.checkItm(event,value,"+ItmIsImp+")}\" class='hisui-checkbox' type='checkbox'><label class='lab-checkbox' for='Itm-"+ItmID+"'>"+"<span style='color:red'>*</span>"+ItmDesc+"</label></li>"	
+					}
+
+					if(ItmTypeDesc == $g("主要诊疗工作")){
 						ZLHtml += ItmHtml;
 						var id="ItmTypeZL-"+tmpEpisID
-					}else if(ItmTypeDesc == "重点医嘱"){
+					}else if(ItmTypeDesc == $g("重点医嘱")){
 						YZHtml += ItmHtml;
 						var id="ItmTypeYZ-"+tmpEpisID
 					}else{
@@ -174,45 +182,45 @@ obj.InitCPWSteps = function() {
 				if(ZLHtml != ""){
 					isDisabled=(UserType=="D")?false:true;
 					if((!obj.EpisChecked["ItmTypeZL-"+tmpEpisID])||(obj.EpisChecked["ItmTypeZL-"+tmpEpisID].length<1)) isDisabled=true;
-					ItmsHtml += "<div class='itmtype'><input label='主要诊疗工作' id='ItmTypeZL-"+tmpEpisID+"' data-options=\"disabled:"+isDisabled+",onCheckChange:function(event,value){obj.checkType(event,value)}\" class='hisui-checkbox' type='checkbox'></div>"
+					ItmsHtml += "<div class='itmtype'><input label='' id='ItmTypeZL-"+tmpEpisID+"' data-options=\"disabled:"+isDisabled+",onCheckChange:function(event,value){obj.checkType(event,value)}\" class='hisui-checkbox' type='checkbox'/><label class='lab-checkbox' for='ItmTypeZL-"+tmpEpisID+"'>"+$g('主要诊疗工作')+"</label></div>"
 					ItmsHtml += "<div class='itmlist'><ul>"+ZLHtml+"</ul></div>";
 				}
 				if(YZHtml != ""){
 					isDisabled=(UserType=="D")?false:true;
 					if((!obj.EpisChecked["ItmTypeYZ-"+tmpEpisID])||(obj.EpisChecked["ItmTypeYZ-"+tmpEpisID].length<1)) isDisabled=true;
-					ItmsHtml += "<div class='itmtype'><input label='重点医嘱' id='ItmTypeYZ-"+tmpEpisID+"' data-options=\"disabled:"+isDisabled+",onCheckChange:function(event,value){obj.checkType(event,value)}\" class='hisui-checkbox' type='checkbox'></div>"
+					ItmsHtml += "<div class='itmtype'><input label='' id='ItmTypeYZ-"+tmpEpisID+"' data-options=\"disabled:"+isDisabled+",onCheckChange:function(event,value){obj.checkType(event,value)}\" class='hisui-checkbox' type='checkbox'/><label class='lab-checkbox' for='ItmTypeYZ-"+tmpEpisID+"'>"+$g('重点医嘱')+"</label></div>"
 					ItmsHtml += "<div class='itmlist'><ul>"+YZHtml+"</ul></div>";
 				}
 				if(HLHtml != ""){
 					isDisabled=(UserType=="N")?false:true;
 					if((!obj.EpisChecked["ItmTypeHL-"+tmpEpisID])||(obj.EpisChecked["ItmTypeHL-"+tmpEpisID].length<1)) isDisabled=true;
-					ItmsHtml += "<div class='itmtype'><input label='主要护理工作' id='ItmTypeHL-"+tmpEpisID+"' data-options=\"disabled:"+isDisabled+",onCheckChange:function(event,value){obj.checkType(event,value)}\" class='hisui-checkbox' type='checkbox'></div>"
+					ItmsHtml += "<div class='itmtype'><input label='' id='ItmTypeHL-"+tmpEpisID+"' data-options=\"disabled:"+isDisabled+",onCheckChange:function(event,value){obj.checkType(event,value)}\" class='hisui-checkbox' type='checkbox'/><label class='lab-checkbox' for='ItmTypeHL-"+tmpEpisID+"'>"+$g('主要护理工作')+"</label></div>"
 					ItmsHtml += "<div class='itmlist'><ul>"+HLHtml+"</ul></div>";
 				}
 				var EpisConID="#EpisID-"+tmpEpisID+" .episItems";
 				$(EpisConID).html(ItmsHtml); 
 				$.parser.parse(EpisConID); 
 			})
-		})(EpisID)	//解决闭包
+		})(EpisID,EpisNo)	//解决闭包
 
 		var Datestr="";
-		if(SttDate == ""){
-			Datestr = "未执行";
-		}else if(EndDate == ""){
-			Datestr = "<input id='DateFrom_"+EpisID+"' class='hisui-datebox episDatebox' arrIndex="+ind+" style='width:114px;height:24px;' value="+SttDate+"/>"+"至今";
+		if(SttDateTime == ""){
+			Datestr = $g("未执行");
+		}else if(EndDateTime == ""){
+			Datestr = "<input id='DateFrom_"+EpisID+"' class='hisui-datetimebox episDatebox' arrIndex="+ind+" value='"+SttDateTime+"'/>"+$g("至今");
 		}else{
-			Datestr = "<input id='DateFrom_"+EpisID+"' class='hisui-datebox episDatebox' arrIndex="+ind+" style='width:114px;height:24px;' value="+SttDate+"/>"+"至"+"<input id='DateEnd_"+EpisID+"' class='hisui-datebox episDatebox' arrIndex="+ind+" style='width:114px;height:24px;' value="+EndDate+"/><span style='float:right'><a href='#' id='editDate' onclick='editEpisDate("+EpisID+")' style='margin:0;padding:0;' class='hisui-linkbutton' title='修改阶段日期' data-options='iconCls:\"icon-edit\",plain:true'></a></span>";
+			Datestr = "<input id='DateFrom_"+EpisID+"' class='hisui-datetimebox episDatebox' arrIndex="+ind+" value='"+SttDateTime+"'/>"+$g("至")+"<input id='DateEnd_"+EpisID+"' class='hisui-datetimebox episDatebox' arrIndex="+ind+" value='"+EndDateTime+"'/><span style='float:right'><a href='#' id='editDate' onclick='editEpisDate("+EpisID+")' style='margin:0;padding:0;' class='hisui-linkbutton' title="+$g('修改阶段日期')+" data-options='iconCls:\"icon-edit\",plain:true'></a></span>";
 		}
 		var Signstr="";
-		SignDoc=SignDoc||"医生未签名";
-		SignNur=SignNur||"护士未签名";
+		SignDoc=SignDoc||$g("医生未签名");
+		SignNur=SignNur||$g("护士未签名");
 		Signstr="<span id='SignDoc-"+EpisID+"'>"+SignDoc+"</span> / <span id='SignNur-"+EpisID+"'>"+SignNur+"</span>";
-		var Signimg="<a href='#' class='btnsign' id='btnsign'>签名</a><a href='#' class='btnsign' id='btncancel'>撤销</a>"
+		var Signimg="<span style='float:right' ><a href='#' class='btnsign' id='btnsign'>"+$g('签名')+"</a><a href='#' class='btnsign' id='btncancel'>"+$g('撤销')+"</a><span/>"
 		
 		var Episclass=(ind==len-1)?"epis lastepis":"epis"
 		EpisHtml = "<div id=EpisID-"+EpisID+" class='"+Episclass+"'>"
 		EpisHtml +=		"<div class='episDesc'>"+EpisDesc+"</div>"
-		EpisHtml +=		"<div class='episDate'>"+Datestr+"</div>"
+		EpisHtml +=		"<div class='episDate' style='height:30px'>"+Datestr+"</div>"
 		EpisHtml +=		"<div class='episSign'>"+Signstr+Signimg+"</div>"
 		EpisHtml +=		"<div class='episItems'></div>"
 		EpisHtml +=	"</div>"
@@ -223,22 +231,46 @@ obj.InitCPWSteps = function() {
 	$.parser.parse('.container');
 	
 	$('.btnsign').on('click', function () {
-		if((obj.CPWStatus == "出径")||(obj.CPWStatus == "完成")){
+		if(UserType=="MED"){
+			return;
+		}
+		
+		var Flag = $m({
+			ClassName:"DHCMA.Util.BT.Config",
+			MethodName:"GetValueByCode",
+			aCode:"CPWCPSigeFlag",
+			aHospID:session['DHCMA.HOSPID']
+		},false)
+		if ((Flag==0)&&(obj.CPWStatus == $g("完成"))){
 			$.messager.popover({
-				msg: '已经'+obj.CPWStatus+',不允许操作！',
+				msg: $g('已经')+obj.CPWStatus+$g(',不允许操作！'),
+				type: 'error'
+			});
+			return
+		}
+		if((obj.CPWStatus == $g("出径"))||(obj.CPWStatus == $g("作废"))){
+			$.messager.popover({
+				msg: $g('已经')+obj.CPWStatus+$g(',不允许操作！'),
 				type: 'error'
 			});
 		}else{
-			var EpisID=$(this).parent().parent().attr('id').split("-")[1];
+			var EpisID=$(this).parent().parent().parent().attr('id').split("-")[1];
 			var signtxt=$(this).text();
 			
-			if(signtxt == "签名"){
-				obj.SignStep(UserType,EpisID);
-			}else if(signtxt == "撤销"){
+			if(signtxt == $g("签名")){
+				var VarCount = $cm({ ClassName: "DHCMA.CPW.CPS.ImplementSrv", MethodName: "CheckVarToSign", aPathwayID: obj.PathwayID, aEpisID: obj.PathwayID + "||" + EpisID, aSignType: UserType }, false);
+				if ((parseInt(VarCount) > 0)&&(Flag==1)&&(obj.CPWStatus == $g("完成"))) {
+					$.messager.confirm($g("提示"), $g("有变异信息未处理！是否继续签名？"), function (r){
+							if(r){
+								obj.SignStep(UserType,EpisID);
+							}	
+						})
+				}else{obj.SignStep(UserType,EpisID);}
+			}else if(signtxt == $g("撤销")){
 				obj.UnSignStep(UserType,EpisID);
 			}else{
 				$.messager.popover({
-					msg: '签名设置错误',
+					msg: $g('签名设置错误'),
 					type: 'error'
 				});
 			}
@@ -246,103 +278,148 @@ obj.InitCPWSteps = function() {
 	});
 	
 	obj.BeforeEditDate=""
-    $(".episDatebox").datebox({
+    $(".episDatebox").datetimebox({
 		disabled:'disabled',
 		onShowPanel:function(){
-			obj.BeforeEditDate=$(this).datebox('getValue');
+			obj.BeforeEditDate=$(this).datetimebox('getValue');
 		},
 		onHidePanel: function(n) {
 			var id = $(this).attr("id");			 
 			var curType=id.split("_")[0];
 			var curEpisID=id.split("_")[1];
-			var date=$(this).datebox('getValue');  
-			var arrInd=parseInt($(this).attr("arrIndex"));		 
-			var preDate="",preEpisID="",postDate="",postEpisId="";
-			if (curType=="DateFrom"){
-				//非第一阶段的检查前一阶段结束日期
-				if(arrInd>0){									
-					preDate = obj.arrEpisDate[arrInd-1].DateEnd;
-					preEpisID = obj.arrEpisDate[arrInd-1].EpisID;
-					if (Common_CompareDate(preDate,date)){
-						$.messager.confirm("提示", "当前日期小于前一阶段结束日期！<br />是否继续修改？", function (r){
-							if(r){
-								$("#DateEnd_"+preEpisID).combobox('enable');
-								$("#DateEnd_"+preEpisID).combobox('showPanel');
-							}else{
-								$('#'+id).datebox('setValue', obj.BeforeEditDate);
-								$('#'+id).combobox('disable');
-								if($("#DateEnd_"+curEpisID).length) $("#DateEnd_"+curEpisID).combobox('disable');
-								return;
-							}	
-						})
+			var date=$(this).datetimebox('getText'); 
+			var arrInd=parseInt($(this).attr("arrIndex"));					 
+			var preDate="",preEpisID="",nextDate="",nextEpisId="";
+			//检查所选日期不能大于当前日期
+			var myDate=new Date();
+			var Month=myDate.getMonth()+1
+			var sysDateTime=myDate.getFullYear()+"-"+Month+"-"+myDate.getDate()+" "+myDate.getHours()+":"+myDate.getMinutes()+":"+myDate.getSeconds();
+			if (Common_CompareDate(date,sysDateTime)){
+				$.messager.confirm($g("提示"), $g("所选时间不能大于当前时间！<br />是否重新修改？"), function (r){
+					if(r){
+						$('#'+id).combobox('enable').combobox('showPanel');
+						return;
+					}else{
+						//$('#'+id).datetimebox('setValue', obj.BeforeEditDate).datetimebox({disabled:true});
+						//if($("#DateEnd_"+curEpisID).length) $("#DateEnd_"+curEpisID).combobox('disable');
+						//$("#DateFrom_"+curEpisID).combobox('disable');
+						obj.InitCPWSteps();
+						return;	
 					}
-				}
-				//存在本阶段结束日期的进行检查
-				if ($("#DateEnd_"+curEpisID).length){			
-					postDate=obj.arrEpisDate[arrInd].DateEnd;
-					postEpisId=curEpisID;
-					if (Common_CompareDate(date,postDate)){
-						$.messager.confirm("提示", "当前日期大于本阶段结束日期！<br />是否继续修改？", function (r){
-							if(r){
-								$("#DateEnd_"+curEpisID).combobox('enable');
-								$("#DateEnd_"+curEpisID).combobox('showPanel');
+				})
+			}else{
+				if (curType=="DateFrom"){
+					//非第一阶段的检查前一阶段开始日期
+					if(arrInd>0){
+						preEpisID = obj.arrEpisDate[arrInd-1].EpisID;									
+						preDate = $("#DateFrom_"+preEpisID).datetimebox('getText'); 	// 前一阶段开始时间
+						if (!Common_CompareDate(date,preDate)){
+							if (arrInd-1 != 0){		// 前一阶段不是第一阶段
+								$.messager.confirm($g("提示"), $g("所选时间应大于前一阶段开始时间！<br />是否继续修改？"), function (r){
+									if(r){
+										$("#DateEnd_"+preEpisID).datetimebox('setValue', date);
+										$("#DateFrom_"+preEpisID).combobox('enable');
+										$("#DateFrom_"+preEpisID).combobox('showPanel');
+									}else{
+										//$('#'+id).datetimebox('setValue', obj.BeforeEditDate).datetimebox({disabled:true});
+										//if($("#DateEnd_"+curEpisID).length) $("#DateEnd_"+curEpisID).combobox('disable');
+										obj.InitCPWSteps();
+										return;
+									}	
+								})	
 							}else{
-								$('#'+id).datebox('setValue', obj.BeforeEditDate);
-								$('#'+id).combobox('disable');
-								if($("#DateEnd_"+curEpisID).length) $("#DateEnd_"+curEpisID).combobox('disable');
-								return;	
-							}
-						})
-					}	 
-				}
-			}else if(curType=="DateEnd"){
-				//检查本阶段开始日期
-				preDate = obj.arrEpisDate[arrInd].DateFrom;
-				preEpisID = curEpisID;
-				if (Common_CompareDate(preDate,date)){
-					$.messager.confirm("提示", "当前日期小于本阶段开始日期！<br />是否继续修改？", function (r){
-						if (arrInd==0){		//第一阶段不允许修改开始日期（默认入径日期）
-							if(r){
-								$('#'+id).datebox('setValue', obj.BeforeEditDate);
-								$('#'+id).combobox('showPanel');
-							}else{
-								$('#'+id).datebox('setValue', obj.BeforeEditDate);
-								$('#'+id).combobox('disable');
-								$("#DateFrom_"+curEpisID).combobox('disable');
-								return;
+								$.messager.confirm($g("提示"), $g("所选时间应大于第一阶段开始时间！<br />是否重新修改？"), function (r){
+									if(r){
+										$('#'+id).combobox('enable').combobox('showPanel');
+									}else{
+										//$('#'+id).datetimebox('setValue', obj.BeforeEditDate).datetimebox({disabled:true});
+										//if($("#DateEnd_"+curEpisID).length) $("#DateEnd_"+curEpisID).combobox('disable');
+										obj.InitCPWSteps();
+										return;	
+									}
+								})
 							}	
 						}else{
-							if(r){
-								$("#DateFrom_"+preEpisID).combobox('enable');
-								$("#DateFrom_"+preEpisID).combobox('showPanel');
-							}else{
-								$('#'+id).datebox('setValue', obj.BeforeEditDate);
-								$('#'+id).combobox('disable');
-								$("#DateFrom_"+curEpisID).combobox('disable');
-								return;
-							}
+							// 最终无问题时同时更新前一阶段结束时间
+							$("#DateEnd_"+preEpisID).datetimebox('setValue', date);
 						}
-					})
-				}
-				if (arrInd<obj.arrEpisDate.length-1){
-					//检查下一阶段开始日期
-					postDate = obj.arrEpisDate[arrInd+1].DateFrom;
-					postEpisId=obj.arrEpisDate[arrInd+1].EpisID;
-					if (Common_CompareDate(date,postDate)){
-						 $.messager.confirm("提示", "当前日期大于下一阶段开始日期！<br />是否继续修改？", function (r){
+					}
+					//存在本阶段结束日期的进行检查
+					if ($("#DateEnd_"+curEpisID).length){
+						nextDate=$("#DateEnd_"+curEpisID).datetimebox('getText');
+						if (!Common_CompareDate(nextDate,date)){
+							$.messager.confirm($g("提示"), $g("所选时间应小于本阶段结束时间！<br />是否继续修改？"), function (r){
 								if(r){
-									$("#DateFrom_"+postEpisId).combobox('enable');
-									$("#DateFrom_"+postEpisId).combobox('showPanel');
+									$("#DateEnd_"+curEpisID).combobox('enable');
+									$("#DateEnd_"+curEpisID).combobox('showPanel');
 								}else{
-									$('#'+id).datebox('setValue', obj.BeforeEditDate);
-									$('#'+id).combobox('disable');
-									$("#DateFrom_"+curEpisID).combobox('disable');
+									//$('#'+id).datetimebox('setValue', obj.BeforeEditDate);
+									//$('#'+id).combobox('disable');
+									//if($("#DateEnd_"+curEpisID).length) $("#DateEnd_"+curEpisID).combobox('disable');
+									obj.InitCPWSteps();
 									return;	
 								}
-						 })
-					}					
-				}
-			}		
+							})
+						}	 
+					}
+				}else if(curType=="DateEnd"){
+					//检查本阶段开始日期
+					preDate = $("#DateFrom_"+curEpisID).datetimebox('getText');
+					if (!Common_CompareDate(date,preDate)){
+						if (arrInd==0){
+							$.messager.confirm($g("提示"), $g("所选时间应大于本阶段开始时间！<br />是否重新修改？"), function (r){
+								if(r){
+									$('#'+id).combobox('enable').combobox('showPanel');
+								}else{
+									//$('#'+id).datetimebox('setValue', obj.BeforeEditDate).datetimebox({disabled:true});
+									//if($("#DateFrom_"+curEpisID).length) $("#DateFrom_"+curEpisID).combobox('disable');
+									obj.InitCPWSteps();
+									return;	
+								}	
+							})
+						}else{
+							$.messager.confirm($g("提示"), $g("所选时间应大于本阶段开始时间！<br />是否继续修改？"), function (r){
+								if(r){
+									$("#DateFrom_"+curEpisID).combobox('enable');
+									$("#DateFrom_"+curEpisID).combobox('showPanel');
+								}else{
+									//$('#'+id).datetimebox('setValue', obj.BeforeEditDate);
+									//$('#'+id).combobox('disable');
+									//$("#DateFrom_"+curEpisID).combobox('disable');
+									obj.InitCPWSteps();
+									return;
+								}	
+							})	
+						}
+					}
+					if (arrInd<obj.arrEpisDate.length-1){		//非最后阶段
+						//检查下一阶段结束日期
+						nextEpisId=obj.arrEpisDate[arrInd+1].EpisID;
+						if ($("#DateEnd_"+nextEpisId).length){
+							nextDate = $("#DateEnd_"+nextEpisId).datetimebox('getText');
+							if (!Common_CompareDate(nextDate,date)){
+								 $.messager.confirm($g("提示"), $g("所选时间应小于下一阶段结束时间！<br />是否继续修改？"), function (r){
+									if(r){
+										$("#DateFrom_"+nextEpisId).datetimebox('setValue', date);	
+										$("#DateEnd_"+nextEpisId).combobox('enable');
+										$("#DateEnd_"+nextEpisId).combobox('showPanel');
+									}else{
+										//$('#'+id).datetimebox('setValue', obj.BeforeEditDate);
+										//$('#'+id).combobox('disable');
+										//$("#DateFrom_"+curEpisID).combobox('disable');
+										obj.InitCPWSteps();
+										return;	
+									}
+								 })
+							}else{
+								// 最终无问题的，如存在下一阶段开始时间，则同时进行更新
+								$("#DateFrom_"+nextEpisId).datetimebox('setValue', date);	
+							}
+						}
+											
+					}
+				}	
+			}
 		}
 	})
 }
@@ -352,8 +429,8 @@ obj.SaveEditDate = function(){
 	var inDateStr=""
 	for (var j=0;j<obj.arrEpisDate.length;j++){
 		var xEpisID=obj.arrEpisDate[j].EpisID;
-		var xDateFrom=$("#DateFrom_"+xEpisID).datebox('getValue');
-		var xDateEnd=$("#DateEnd_"+xEpisID).datebox('getValue');
+		var xDateFrom=$("#DateFrom_"+xEpisID).datetimebox('getValue');
+		var xDateEnd=$("#DateEnd_"+xEpisID).datetimebox('getValue');
 			
 		inDateStr = inDateStr+xEpisID
 		inDateStr = inDateStr+"^"+xDateFrom
@@ -369,20 +446,15 @@ obj.SaveEditDate = function(){
 	}, false);
 	
 	if(retFlag){
-		$.messager.popover({ msg: "日期修改成功！", type: 'success' });
+		$.messager.popover({ msg: $g("日期修改成功！"), type: 'success' });
 		obj.InitCPWSteps();
 	}else{
-		$.messager.popover({ msg: "日期修改失败,请重试！", type: 'error' });
+		$.messager.popover({ msg: $g("日期修改失败,请重试！"), type: 'error' });
 	}
 }
 
 obj.SignStep = function (Type,StepSelecedID) {
-	/*var VarCount = $cm({ ClassName: "DHCMA.CPW.CPS.ImplementSrv", MethodName: "CheckVarToSign", aPathwayID: obj.PathwayID, aEpisID: obj.PathwayID + "||" + StepSelecedID, aSignType: Type }, false);
-	if (parseInt(VarCount) > 0) {
-		$.messager.popover({ msg: "有变异信息未处理，不允许签名", type: 'error' });
-		return;
-	}*/
-	
+
 	var SignText = ""; 
 	if (Type=="D"){ 
 		SignText = $('#SignDoc-'+StepSelecedID).text();
@@ -392,11 +464,17 @@ obj.SignStep = function (Type,StepSelecedID) {
 		}
 	}else if(Type=="N"){
 		SignText = $('#SignNur-'+StepSelecedID).text();
-		if ((SignText != "护士未签名")&&(SignText!="") ){
-			$.messager.popover({ msg: "不能重复签名", type: 'error' });
+		if ((SignText != $g("护士未签名"))&&(SignText!="") ){
+			$.messager.popover({ msg: $g("不能重复签名"), type: 'error' });
 			return;
 		}
 	}
+	
+	// 设置CA签名参数
+	var retSign=""
+	var CA_Code = Type=="D"? "DocSignToCPW":"NurseSignToCPW";
+	var CA_OperType = Type=="D"?"DS":"NS";						//医生签名DS,护士签名NS
+	var aInputStr=obj.PathwayID + "||" + StepSelecedID + "^" + session['DHCMA.USERID'] + "^" + Type;
 	
 	var strCheckItm = $m({
 		ClassName: "DHCMA.CPW.CPS.ImplementSrv",
@@ -406,25 +484,35 @@ obj.SignStep = function (Type,StepSelecedID) {
 		aUserType: Type
 	}, false)
 	if (strCheckItm == "1") {
-		$.messager.confirm("提示", "存在未执行的非必选项目，确定不执行？", function (r) {
+		$.messager.confirm($g("提示"), $g("存在未执行的非必选项目，确定不执行？"), function (r) {
 			if (r) {
-				$.messager.confirm("签名", "确定签名?<br />签名信息：" + session['LOGON.USERNAME'], function (r) {
+				$.messager.confirm($g("签名"), $g("确定签名?<br />签名信息：") + session['LOGON.USERNAME'], function (r) {
 					if (r) {
-						var Signret = $m({
-							ClassName: "DHCMA.CPW.CP.PathwayEpis",
-							MethodName: "Sign",
-							aEpisID: obj.PathwayID + "||" + StepSelecedID,
-							aUserID: session['DHCMA.USERID'],
-							aUserType: Type
-						}, false);
-						if(parseInt(Signret) > 0){
-							$.messager.popover({ msg: "签名成功！", type: 'success' });
-							obj.InitCPWSteps();
-						}else{
-							$.messager.popover({ msg: "签名失败！err"+parseInt(Signret), type: 'error' });
-						}
+						//CA签名验证
+						CASignLogonModal('CPW',CA_Code,{
+							signData: aInputStr,				// 签名数据
+							dhcmaOperaType:CA_OperType,
+							ModalOption:{
+								isHeaderMenuOpen:false			//当前页面打开认证弹窗
+							}
+						},function(){
+							var retSign=$m({
+								ClassName: "DHCMA.CPW.CP.PathwayEpis",
+								MethodName: "Sign",
+								aEpisID: obj.PathwayID + "||" + StepSelecedID,
+								aUserID: session['DHCMA.USERID'],
+								aUserType: Type
+							}, false)
+							if (parseInt(retSign) > 0) {
+								$.messager.popover({ msg: $g("签名成功！"), type: 'success' });
+								obj.InitCPWSteps();	//步骤信息
+								return retSign;
+							}else{
+								$.messager.popover({ msg: $g("签名失败！")+"err"+parseInt(retSign), type: 'error' });
+							}	
+						})
 					} else {
-						$.messager.popover({ msg: "签名取消" });
+						$.messager.popover({ msg: $g("签名取消") });
 						return;
 					}
 				});
@@ -433,19 +521,29 @@ obj.SignStep = function (Type,StepSelecedID) {
 			}
 		});
 	} else {
-		var Signret = $m({
-			ClassName: "DHCMA.CPW.CP.PathwayEpis",
-			MethodName: "Sign",
-			aEpisID: obj.PathwayID + "||" + StepSelecedID,
-			aUserID: session['DHCMA.USERID'],
-			aUserType: Type
-		}, false);
-		if(parseInt(Signret) > 0){
-			$.messager.popover({ msg: "签名成功！", type: 'success' });
-			obj.InitCPWSteps();
-		}else{
-			$.messager.popover({ msg: "签名失败！err"+parseInt(Signret), type: 'error' });
-		}
+		//CA签名验证
+		CASignLogonModal('CPW',CA_Code,{
+			signData: aInputStr,				// 签名数据
+			dhcmaOperaType:CA_OperType,
+			ModalOption:{
+				isHeaderMenuOpen:false			//当前页面打开认证弹窗
+			}
+		},function(){
+			var retSign=$m({
+				ClassName: "DHCMA.CPW.CP.PathwayEpis",
+				MethodName: "Sign",
+				aEpisID: obj.PathwayID + "||" + StepSelecedID,
+				aUserID: session['DHCMA.USERID'],
+				aUserType: Type
+			}, false)
+			if (parseInt(retSign) > 0) {
+				$.messager.popover({ msg: $g("签名成功！"), type: 'success' });
+				obj.InitCPWSteps();	//步骤信息
+				return retSign;
+			}else{
+				$.messager.popover({ msg: $g("签名失败！")+"err"+parseInt(retSign), type: 'error' });
+			}	
+		})
 	}
 }
 obj.UnSignStep = function (Type,StepSelecedID) {
@@ -456,8 +554,8 @@ obj.UnSignStep = function (Type,StepSelecedID) {
 	}
 	var SignTxt=$('#EpisID-'+StepSelecedID+' #'+SignID).text();
 	
-	if(SignTxt.indexOf("未签名") > 0){
-		$.messager.popover({ msg: "未签名无需撤销！", type: 'error' });
+	if(SignTxt.indexOf($g("未签名")) > 0){
+		$.messager.popover({ msg: $g("未签名无需撤销！"), type: 'error' });
 		return;
 	}
 	
@@ -469,18 +567,19 @@ obj.UnSignStep = function (Type,StepSelecedID) {
 		aUserType: Type
 	}, false);
 	if(parseInt(Signret) > 0){
-		$.messager.popover({ msg: "撤销成功！", type: 'success' });
+		$.messager.popover({ msg: $g("撤销成功！"), type: 'success' });
 		obj.InitCPWSteps();
 	}else{
-		$.messager.popover({ msg: "撤销失败！err"+parseInt(Signret), type: 'error' });
+		$.messager.popover({ msg: $g("撤销失败！")+"err"+parseInt(Signret), type: 'error' });
 	}
 }
+
 obj.checkItm = function(event,value,ItmIsImp){
 	var ItmIDstr=event.target.id;
 	if(ItmIDstr){
 		var ItmID=ItmIDstr.split("-")[1];
 		if(value){
-			obj.ItmChecked.push(ItmID);
+			if(obj.ItmChecked.indexOf(ItmID)<0) obj.ItmChecked.push(ItmID);
 			if(ItmIsImp){
 				obj.ItmCheckedType+=1;
 			}else{
@@ -501,18 +600,16 @@ obj.checkType = function(event,value){
 	for(var ind=0;ind<len;ind++){
 		var tmpVal=obj.EpisChecked[event.target.id][ind];
 		if(value){
-			if(obj.ItmChecked.indexOf(tmpVal)<0) obj.ItmChecked.push(tmpVal);
-			$('#Itm-'+tmpVal).checkbox('setValue',true);
+			$('#Itm-'+tmpVal).checkbox('setValue',true);	//自动触发obj.checkItm事件
 		}else{
-			obj.ItmChecked.remove(tmpVal);
-			$('#Itm-'+tmpVal).checkbox('setValue',false);
+			$('#Itm-'+tmpVal).checkbox('setValue',false);	//自动触发obj.checkItm事件
 		}
 	}
 }
 obj.MarkItm = function(markType,IsImpl){
 	if(obj.ItmChecked.length < 1) {
 		$.messager.popover({
-			msg: '请先选择要操作的项目！',
+			msg: $g('请先选择要操作的项目！'),
 			type: 'error'
 		});
 		return;
@@ -521,7 +618,7 @@ obj.MarkItm = function(markType,IsImpl){
 		if(IsImpl){
 			if(obj.ItmCheckedType>0){
 				$.messager.popover({
-				msg: '无效操作',
+				msg: $g('无效操作'),
 				type: 'info'
 			});
 			return;
@@ -529,7 +626,7 @@ obj.MarkItm = function(markType,IsImpl){
 		}else{
 			if(obj.ItmCheckedType<0){
 				$.messager.popover({
-					msg: '无效操作',
+					msg: $g('无效操作'),
 					type: 'info'
 				});
 				return;
@@ -548,13 +645,13 @@ obj.MarkItm = function(markType,IsImpl){
 	}, function (ret) {
 		if (parseInt(ret) > 0) {
 			$.messager.popover({
-				msg: '操作成功',
+				msg: $g('操作成功'),
 				type: 'success'
 			});
 			obj.InitCPWSteps();
 		} else {
 			$.messager.popover({
-				msg: '操作失败,ret=' + ret,
+				msg: $g('操作失败')+',ret=' + ret,
 				type: 'error'
 			});
 		}

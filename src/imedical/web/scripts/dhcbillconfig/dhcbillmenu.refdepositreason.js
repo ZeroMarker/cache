@@ -2,8 +2,7 @@
  * FileName: dhcbillmenu.refdepositreason.js
  * User: TangTao
  * Date: 2014-04-10
- * Function: 退押金原因设置
- * Description:
+ * Description: 退押金原因设置
  */
 
 var lastIndex = "";
@@ -132,7 +131,6 @@ function initGrid() {
 	$('#tRefDepRea').datagrid({
 		fit: true,
 		border: false,
-		striped: true,
 		singleSelect: true,
 		fitColumns: false,
 		pagination: true,
@@ -140,7 +138,6 @@ function initGrid() {
 		pageSize: 20,
 		columns: CateColumns,
 		toolbar: '#tToolBar',
-		data: [],
 		onLoadSuccess: function (data) {
 			EditIndex = -1;
 		}

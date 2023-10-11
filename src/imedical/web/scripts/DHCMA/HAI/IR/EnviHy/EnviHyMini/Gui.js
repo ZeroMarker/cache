@@ -1,6 +1,10 @@
 ﻿var objScreen = new Object();
 function InitEnviHyMiniWin(){
-	var obj = objScreen;		
+	var obj = objScreen;	
+	obj.AdminPower=0;
+	if (tDHCMedMenuOper['Admin']==1) {
+		obj.AdminPower =1;
+	}		
 	obj.Report ='';
 	obj.HospData = ''; 
   	$.parser.parse(); // 解析EasyUI组件
@@ -66,6 +70,7 @@ function InitEnviHyMiniWin(){
 		pageSize: 20,
 		pageList : [20,50,100,200],
 	    url:$URL,
+	    overflow:true,
 	    queryParams:{
 		    ClassName:"DHCHAI.IRS.EnviHyReportSrv",
 			QueryName:"QryEvReport",
@@ -80,7 +85,7 @@ function InitEnviHyMiniWin(){
 			aStandard:'',
 	    },
 		columns:[[
-			{field:"BarCode",title:"申请号",},
+			{field:"BarCode",title:"申请号",width:120},
 			{field:'EvItemDesc',title:'监测项目',sortable:true},
 			{field:'EvItemObjDesc',title:'监测对象',sortable:true,
 				formatter: function(value,row,index){
@@ -98,11 +103,25 @@ function InitEnviHyMiniWin(){
 			{field:'StandardDesc',title:'是否合格',align:'center',sortable:true,
 				styler: function(value,row,index){
 					if (value=="不合格"){
-						return 'background-color:#FF7256;';
+						return 'background-color:#FFEDEB;color:#FF1414;';
+					}else if (value=="合格"){
+						return 'background-color:#F8FFF3;color:#229A06;';
 					}else{
-						return 'background-color:#AAAAAA;'
+						return 'background-color:#ECECEC;color:#000000;';
 					}
 				},
+				formatter:function(value,row,index){
+					if (value=="") (value="无结果")
+		        	if (row.ReCheckSign == '1'){
+						return  value;
+					} else if (row.ReCheckSign == '2'){
+						return value;
+					} else if (row.ReCheckSign == '3'){
+						return  value;
+					} else {
+						return value;
+					}
+		        }
 			},
 			{field:'EnterTypeDesc',title:'录入方式',sortable:true},
 			{field:'ApplyDate',title:'申请日期',sortable:true},
@@ -112,7 +131,8 @@ function InitEnviHyMiniWin(){
 			{field:'RepDate',title:'报告日期',sortable:true},
 			{field:'RepTime',title:'报告时间',sortable:true},
 			{field:'RepLocDesc',title:'报告科室',sortable:true},
-			{field:'RepUserDesc',title:'报告人',sortable:true}
+			{field:'RepUserDesc',title:'报告人',sortable:true},
+			{field:'Resume',title:'备注',sortable:true}
 		]],
 		onDblClickRow:function(rowIndex,rowData){
 			if(rowIndex>-1){

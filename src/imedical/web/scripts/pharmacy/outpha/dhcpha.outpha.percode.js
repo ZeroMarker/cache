@@ -96,23 +96,23 @@ function InitPharmacyStaffList() {
 				hidden: true
 			}, {
 				field: 'TLocDesc',
-				title: '药房名称',
+				title: $g("药房名称"),
 				width: 200
 			}, {
 				field: 'TUserCode',
-				title: '人员代码',
+				title: $g("人员代码"),
 				width: 100
 			}, {
 				field: 'TUserName',
-				title: '姓名',
+				title: $g("姓名"),
 				width: 100
 			}, {
 				field: 'TCheckFlag',
-				title: '审核',
+				title: $g("审核"),
 				width: 75,
 				align: 'center',
 				formatter: function (value, row, index) {
-					if (value == "是") {
+					if (value == $g("是")) {
 						return gridChkIcon;
 					} else {
 						return gridUnChkIcon;
@@ -120,11 +120,11 @@ function InitPharmacyStaffList() {
 				}
 			}, {
 				field: 'TPyFlag',
-				title: '配药',
+				title: $g("配药"),
 				width: 75,
 				align: 'center',
 				formatter: function (value, row, index) {
-					if (value == "是") {
+					if (value == $g("是")) {
 						return gridChkIcon;
 					} else {
 						return gridUnChkIcon;
@@ -132,11 +132,11 @@ function InitPharmacyStaffList() {
 				}
 			}, {
 				field: 'TFyFlag',
-				title: '发药',
+				title: $g("发药"),
 				width: 75,
 				align: 'center',
 				formatter: function (value, row, index) {
-					if (value == "是") {
+					if (value == $g("是")) {
 						return gridChkIcon;
 					} else {
 						return gridUnChkIcon;
@@ -144,11 +144,11 @@ function InitPharmacyStaffList() {
 				}
 			}, {
 				field: 'TUseFlag',
-				title: '无效',
+				title: $g("无效"),
 				width: 75,
 				align: 'center',
 				formatter: function (value, row, index) {
-					if (value == "是") {
+					if (value == $g("是")) {
 						return gridChkIcon;
 					} else {
 						return gridUnChkIcon;
@@ -194,22 +194,22 @@ function InitPharmacyStaffList() {
 				$("#CUserName").combobox('setValue', userid);
 				$("#CUserName").combobox('setText', username);
 				$("#CUserCode").val(usercode);
-				if (pyflag == "是") {
+				if (pyflag == $g("是")) {
 					$("#CPyFlag").prop("checked", true);
 				} else {
 					$("#CPyFlag").prop("checked", false);
 				}
-				if (fyflag == "是") {
+				if (fyflag == $g("是")) {
 					$("#CFyFlag").prop("checked", true);
 				} else {
 					$("#CFyFlag").prop("checked", false);
 				}
-				if (useflag == "是") {
+				if (useflag == $g("是")) {
 					$("#CUseFlag").prop("checked", true);
 				} else {
 					$("#CUseFlag").prop("checked", false);
 				}
-				if (checkflag == "是") {
+				if (checkflag == $g("是")) {
 					$("#CheckFlag").prop("checked", true);
 				} else {
 					$("#CheckFlag").prop("checked", false);
@@ -223,12 +223,12 @@ function InitPharmacyStaffList() {
 function Add() {
 	var locId = $("#CLocDesc").combobox('getValue');
 	if ($('#CLocDesc').combobox("getText") == "") {
-		$.messager.alert('错误提示', "请选择药房名称!");
+		$.messager.alert($g("错误提示"), $g("请选择药房名称!"));
 		return;
 	}
 	var UserName = $("#CUserName").combobox('getText');
 	if ($('#CUserName').combobox("getText") == "") {
-		$.messager.alert('错误提示', "请选择药房人员!");
+		$.messager.alert($g("错误提示"), $g("请选择药房人员!"));
 		return;
 	}
 	var UserCode = $("#CUserName").combobox('getValue');
@@ -260,10 +260,10 @@ function Add() {
 	var retCode = retValue.split("^")[0];
 	var retMessage = retValue.split("^")[1];
 	if (retCode != 0) {
-		$.messager.alert('信息提示', retMessage);
+		$.messager.alert($g("信息提示"), retMessage);
 	} else {
 		$('#pharmacystaffdg').datagrid('reload');
-		$.messager.alert('信息提示', "添加成功!");
+		$.messager.alert($g("信息提示"), $g("添加成功!"));
 	}
 }
 
@@ -271,25 +271,25 @@ function Add() {
 function Update() {
 	var seletcted = $("#pharmacystaffdg").datagrid("getSelected");
 	if (seletcted == null) {
-		$.messager.alert('提示', "请选择需要修改的数据!", "info");
+		$.messager.alert($g("提示"), $g("请选择需要修改的数据!"), "info");
 	}
 	//验证不能修改药房科室、人员代码、人员姓名！
 	var locId = $("#CLocDesc").combobox('getValue');
 	var selLocId = seletcted.TCtLocId;
 	if (selLocId != locId) {
-		$.messager.alert('提示', "不能修改药房名称，只能增加或者置为无效!", "info");
+		$.messager.alert($g("提示"), $g("不能修改药房名称，只能增加或者置为无效!"), "info");
 		return;
 	}
 	var UserCode = $("#CUserCode").val();
 	var selUserCode = seletcted.TUserCode;
 	if (selUserCode != UserCode) {
-		$.messager.alert('提示', "不能修改人员代码，只能增加或者置为无效!", "info");
+		$.messager.alert($g("提示"), $g("不能修改人员代码，只能增加或者置为无效!"), "info");
 		return;
 	}
 	var UserName = $("#CUserName").combobox('getText');
 	var selUserName = seletcted.TUserName;
 	if (selUserName != UserName) {
-		$.messager.alert('提示', "不能修改人员姓名，只能增加或者置为无效!", "info");
+		$.messager.alert($g("提示"), $g("不能修改人员姓名，只能增加或者置为无效!"), "info");
 		return;
 	}
 	var RowId = seletcted.TPhpid;
@@ -321,9 +321,9 @@ function Update() {
 	var retValue = tkMakeServerCall("PHA.OP.CfPerCode.OperTab", "updatePhPerson", RowId, PyFlag, FyFlag, UseFlag, UserId, CheckFlag);
 	if (retValue == 0) {
 		$('#pharmacystaffdg').datagrid('reload');
-		$.messager.alert('信息提示', "修改成功!");
+		$.messager.alert($g("信息提示"), $g("修改成功!"));
 	} else {
-		$.messager.alert('信息提示', "修改失败!");
+		$.messager.alert($g("信息提示"), $g("修改失败!"));
 	}
 }
 
@@ -331,14 +331,14 @@ function Update() {
 function Delete() {
 	var seletcted = $("#pharmacystaffdg").datagrid("getSelected");
 	var RowId = seletcted.TPhpid;
-	$.messager.confirm('信息提示', "确认删除吗？", function (r) {
+	$.messager.confirm($g("信息提示"), $g("确认删除吗？"), function (r) {
 		if (r) {
 			var retValue = tkMakeServerCall("PHA.OP.CfPerCode.OperTab", "deletePhPerson", RowId);
 			if (retValue == 0) {
 				$('#pharmacystaffdg').datagrid('reload');
-				$.messager.alert('信息提示', "删除成功!");
+				$.messager.alert($g("信息提示"), $g("删除成功!"));
 			} else {
-				$.messager.alert('信息提示', "删除失败!");
+				$.messager.alert($g("信息提示"), $g("删除失败!"));
 			}
 		}
 	});

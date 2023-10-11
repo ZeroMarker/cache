@@ -20,7 +20,7 @@ function PrintReturn(retrowid, reprint) {
 			rePrintFlag: reprint
 		},
 		aptListFields: ["label14", "totalMoney", "label16", "userName"],
-		listBorder: {style:4, startX:1, endX:190},
+		listBorder: {headBorder: true, style:4, startX:1, endX:190},
 		page: {rows:30, x:4, y:2, fontname:'ºÚÌå', fontbold:'false', fontsize:'12', format:'µÚ{1}Ò³/¹²{2}Ò³'},
 	});
 }

@@ -356,6 +356,18 @@ function InitReportWinEvent(obj){
 		var SQBacteria33Dr = $.form.GetValue("cboSQBacteria33");
 		var SQMDR33Dr      = $.form.GetValue("cboSQMDR33");
 		var IRComInfPathogen3 = SQInfPos31Dr+"#"+SQBacteria31Dr+"#"+SQMDR31Dr+"#"+SQBacteria32Dr+"#"+SQMDR32Dr+"#"+SQBacteria33Dr+"#"+SQMDR33Dr;
+		
+		var CategoryDesc=$.form.GetText("cboInfCategoryDr");
+		if (IRInfectionDesc=="存在"){
+    		if ((CategoryDesc=="医院感染")&&(YYInfPos11Dr=="")&&(YYInfPos21Dr=="")&&(YYInfPos31Dr=="")){
+       			layer.msg('医院感染请填写至少一项感染部位!',{icon: 2});
+				return false;
+     		}else if ((CategoryDesc=="社区感染")&&(SQInfPos11Dr=="")&&(SQInfPos21Dr=="")&&(SQInfPos31Dr=="")){
+        		layer.msg('社区感染请填写至少一项感染部位!',{icon: 2});
+				return false;
+     		}
+
+   		}
 		Input = Input + CHR_1 + IRComInfPathogen3;    //14
 		var chkCSSIsOpr = $.form.GetValue("chkCSSIsOpr"); //是否手术
 		var CSSIncisionDr = $.form.GetValue("cboCSSIncisionr");

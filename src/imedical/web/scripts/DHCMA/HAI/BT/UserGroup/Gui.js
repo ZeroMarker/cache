@@ -1,0 +1,98 @@
+﻿//页面Gui
+function InitWin(){
+	var obj = new Object();
+	obj.RecRowID = "";
+	obj.RecRowIDT ="";
+	
+	obj.gridDicType = $HUI.datagrid("#gridDicType",{
+		fit: true,
+		//title: "字典类型",
+		headerCls:'panel-header-gray',
+		iconCls:'icon-resort',
+		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
+		rownumbers: false, //如果为true, 则显示一个行号列
+		singleSelect: true,
+		autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
+		nowrap:true,
+		fitColumns: true,
+		loadMsg:'数据加载中...',
+		pageSize: 20,
+		pageList : [20,50,100,200],
+	   
+		columns:[[
+			{field:'ID',title:'ID',width:80,align:'center'},
+			{field:'BTCode',title:'角色代码',width:120},
+			{field:'BTDesc',title:'角色名称',width:220}
+			,{field:'BTMainUrl',title:'首页地址',width:260}
+		]],
+		onSelect:function(rindex,rowData){
+			if (rindex>-1) {
+				obj.gridDicType_onSelect();
+			}
+		},
+		onDblClickRow:function(rowIndex,rowData){
+			if(rowIndex>-1){
+				obj.gridDicType_onDbselect(rowData);
+			}
+		},
+		onLoadSuccess:function(data){
+			$("#btnAdd").linkbutton("enable");
+			$("#btnEdit").linkbutton("disable");
+			$("#btnDelete").linkbutton("disable");
+			$("#btnAddT").linkbutton("disable");
+			$("#btnDeleteT").linkbutton("disable");
+		}
+	});
+	
+	obj.gridDicTypeT = $HUI.datagrid("#gridDicTypeT",{
+		fit: true,
+		//title: "字典类型",
+		headerCls:'panel-header-gray',
+		iconCls:'icon-resort',
+		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
+		rownumbers: false, //如果为true, 则显示一个行号列
+		singleSelect: true,
+		autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
+		nowrap:true,
+		fitColumns: true,
+		loadMsg:'数据加载中...',
+		pageSize: 20,
+		pageList : [20,50,100,200],
+	   
+		columns:[[
+			{field:'TypeDesc',title:'菜单分类',width:160},
+			{field:'MenuDesc',title:'菜单名称',width:260}
+			,{field:'MenuUrl',title:'菜单地址',width:260}
+			,{field:'IndNo',title:'菜单顺序',width:120}
+		]],
+		onSelect:function(rindex,rowData){
+			if (rindex>-1) {
+				obj.gridDicTypeT_onSelect();
+			}
+		},
+		onLoadSuccess:function(data){
+			$("#btnAddT").linkbutton("enable");
+			$("#btnDeleteT").linkbutton("disable");
+		}
+	});
+	
+	//加载菜单方法
+	obj.cboHosp = $HUI.combobox("#cboMenu", {
+		url: $URL,
+		editable: true,
+		allowNull: true, 
+		defaultFilter:4,     //text字段包含匹配或拼音首字母包含匹配 不区分大小写
+		valueField: 'ID',
+		textField: 'BTDesc',
+		onBeforeLoad: function (param) {    //在请求加载数据之前触发，返回 false 则取消加载动作
+			param.ClassName = 'DHCHAI.BTS.UserMenuSrv';
+			param.QueryName = 'QrySysMenu';
+			param.ResultSetType = 'array';
+		}
+	});
+	InitWinEvent(obj);	
+	obj.LoadEvent(arguments);
+	return obj;
+}
+$(InitWin);
+

@@ -117,6 +117,9 @@ function BSave_Clicked()
 	{
 		var val="&RowID="+jsonData.Data
 		url="dhceq.ba.benefitsummary.csp?"+val
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.location.href= url;
 	}
 	else
@@ -141,6 +144,9 @@ function BDelete_Clicked()
 	{
 		var val=""	//"&RowID="+jsonData.Data
 		url="dhceq.ba.benefitsummary.csp?"+val
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.location.href= url;
 	}
 	else
@@ -164,6 +170,9 @@ function BSubmit_Clicked()
 	{
 		var val="&RowID="+jsonData.Data
 		url="dhceq.ba.benefitsummary.csp?"+val
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.location.href= url;
 	}
 	else

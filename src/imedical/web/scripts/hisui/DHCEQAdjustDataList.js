@@ -8,6 +8,8 @@ function BodyLoadHandler()
 	fillData();
 	SetValues();
 	RefreshData();	
+	initButtonColor();//cjc 2023-01-18 设置极简积极按钮颜色
+	initPanelHeaderStyle();//cjc 2023-01-17 初始化极简面板样式
 }
 
 function SetValues()
@@ -89,7 +91,9 @@ function BFind_Click()
 {
 	var val="&vData="
 	val=val+GetVData();
-	//alertShow("vData="+val);
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		val += "&MWToken="+websys_getMWToken()
+	}
 	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQAdjustDataList"+val;  //hisui 改造 add by wy 2019-10-30
 }
 

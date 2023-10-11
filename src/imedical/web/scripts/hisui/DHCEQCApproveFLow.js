@@ -2,11 +2,25 @@ var SelectedRow = -1; ///Modify By QW 2018-08-31 HISUI改造
 //装载页面  函数名称固定
 function BodyLoadHandler() 
 {
+	hidePanelTitle(); //added by LMH 20230211 UI 极简组件界面弹框面板标题隐藏
+	initPanelHeaderStyle(); //added by LMH 20230211 UI 极简组件界面标题格式
+	showBtnIcon('BAdd^BUpdate^BDelete^BClose^BMultipeDefine',false); //modified by LMH 20230211 动态设置是否极简显示按钮图标
+	initButtonColor(); //added by LMH 20230211 UI 初始化按钮颜色
 	initButtonWidth();///Add By QW 2018-08-31 HISUI改造:修改按钮长度
 	setButtonText();///Add By QW 2018-09-29 HISUI改造:按钮文字规范
 	InitPage();
 	ChangeStatus(false);
 	InitUserInfo();
+	// MZY0094	2094508		2021-09-13
+	var ApproveSet=tkMakeServerCall("web.DHCEQCApproveSet","GetOneApproveSet",GetElementValue("ApproveSetDR"));
+	var Detail=ApproveSet.split("^");
+	document.getElementById("cEQTitle").innerHTML = "设备审批流: "+Detail[1];
+	if (HospFlag!="2")
+	{
+		$("#HospLimit").next().hide()
+		HiddenObj("cHospLimit",1)
+		$("#tDHCEQCApproveFlow").datagrid('hideColumn','THospLimit');
+	}
 }
 
 function InitPage()
@@ -29,15 +43,19 @@ function InitPage()
 			CancelFlagChange();
 		}	
 	});
-	$('#NextToFlow').lookup('options').onBeforeShowPanel= function(){
-		return  BNextToFlow_Click();
+	//Modified By QW20200820 BUG:QW0075 放大镜展开前事件修改 begin
+	$('#NextToFlow').lookup('options').onBeforeOpen= function(){  
+		BNextToFlow_Click();
 	};
+	//Modified By QW20200820 BUG:QW0075 放大镜展开前事件修改 end
 	$('#GotoType').combobox('options').onSelect=function(){
 		GotoType_Click();
 	}
-	$('#CancelToStep').lookup('options').onBeforeShowPanel= function(){
-		return  BCancelToStep_Click();
+	//Modified By QW20200820 BUG:QW0075 放大镜展开前事件修改 begin
+	$('#CancelToStep').lookup('options').onBeforeOpen= function(){ 
+		BCancelToStep_Click();
 	};
+	//Modified By QW20200820 BUG:QW0075 放大镜展开前事件修改 end
 	$('#CancelToType').combobox('options').onSelect=function(){
 		CancelToType_Click();
 	}
@@ -46,9 +64,11 @@ function InitPage()
 			ChangeTypeFlag_Change();
 		}	
 	});
-	$('#CanChangeStep').lookup('options').onBeforeShowPanel= function(){
-		return  BCanChangeStep_Click();
+	//Modified By QW20200820 BUG:QW0075 放大镜展开前事件修改 begin
+	$('#CanChangeStep').lookup('options').onBeforeOpen= function(){ 
+		BCanChangeStep_Click();
 	};
+	//Modified By QW20200820 BUG:QW0075 放大镜展开前事件修改 end
 	//End By QW 2018-08-31 HISUI改造
 	KeyUp("ApproveRole^CancelToStep^Action");		//20110224  Mozy0043
 	Muilt_LookUp("ApproveRole^CancelToStep^Action");	//20110224  Mozy0043
@@ -62,7 +82,7 @@ function SelectRowHandler(index,rowdata)
 	if(index==SelectedRow)
     {
 		SetElement("RowID","");
-		Fill("^^^^^^^^^^^^^^^^^^^^^")
+		Fill("^^^^^^^^^^^^^^^^^^^^^^^^")
 		SelectedRow=-1;
 		ChangeStatus(false);
 		$('#tDHCEQCApproveFlow').datagrid('unselectAll');
@@ -91,7 +111,8 @@ function FillData(RowID)
 function Fill(ReturnList)
 {
 	list=ReturnList.split("^");
-	var sort=19;                                     ///Add By QW20200108 BUG:QW0035 增加字段AF_ComponentSetID
+    ///modified by ZY20221115 bug:3079710
+	var sort=21;
 	//SetElement("ApproveSetDR",list[0]);
 	SetElement("ApproveRoleDR",list[1]);
 	SetElement("Step",list[2]);
@@ -127,7 +148,8 @@ function Fill(ReturnList)
 	SetElement("ComponentSetID",list[18]);
 	SetElement("ComponentSet",list[sort+6]);
 	//Add By QW20200108 BUG:QW0035 end 组件设置
-	
+	SetElement("HospLimit",list[19]);		//czf 2021-09-01 院区限制
+	SetElement("DefaultOpinion",list[20]);	//czf 2022-10-12 默认意见
 }
 
 function BClose_click()
@@ -183,7 +205,8 @@ function GetValue()
   	combindata=combindata+"^"+GetElementValue("MultipleDefineDR") ;
   	///End  by QW 2019-08-31 多方审批
   	combindata=combindata+"^"+GetElementValue("ComponentSetID") ; //Add By QW20200108 BUG:QW0035 组件设置
- 	
+ 	combindata=combindata+"^"+GetElementValue("HospLimit") ;	//czf 2021-09-01 院区限制0:不限 1:本院 2:医院默认医院 3.本院及默认医院
+  	combindata=combindata+"^"+GetElementValue("DefaultOpinion") ;	//默认意见 czf 2022-10-12
   	return combindata;
 }
 //删除按钮点击函数
@@ -258,16 +281,10 @@ function BCancelToStep_Click()
 	var value=GetElementValue("CancelToType");
 	var ApproveSetDR=GetElementValue("ApproveSetDR")
 	var Step=GetElementValue("Step")
-	if ((value=="0")||(value=="")) //1:默认下一步
+	//Modified By QW20200820 BUG:QW0075 放大镜展开前事件修改 begin
+	if (value=="2") //3:人为指定步骤
 	{
-		//LookUp("","web.DHCEQCApproveFlow:GetGoToApproveStep","GetGoToApproveStepValue","ApproveSetDR","Step");
-	}
-	else if (value=="1") //2:指定步骤
-	{
-		return true;
-	}
-	else if (value=="2") //3:人为指定步骤
-	{
+		$('#CancelToStep').lookup('hidePanel')
 		var ApproveFlowID=GetElementValue("RowID")
 		var Type=1
 		if (ApproveFlowID=="")
@@ -278,11 +295,7 @@ function BCancelToStep_Click()
 		var str="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCApproveFlowAllow&Type=1&ApproveFlowDR="+ApproveFlowID;
     	SetWindowSize(str,1,"","",0,120,""); 		
 	}
-	else if (value=="3") //3:根据条件流转步骤
-	{
-		//
-	}
-	return false;
+	//Modified By QW20200820 BUG:QW0075 放大镜展开前事件修改 end
 }
 function GetApproveStepValue(Value)
 {
@@ -317,17 +330,10 @@ function BNextToFlow_Click()
 	var value=GetElementValue("GotoType");
 	var ApproveSetDR=GetElementValue("ApproveSetDR")
 	var Step=GetElementValue("Step")
-	if ((value=="0")||(value=="")) //1:默认下一步
+	//Modified By QW20200820 BUG:QW0075 放大镜展开前事件修改 begin
+	if (value=="2") //3:人为指定步骤
 	{
-		
-		//LookUp("","web.DHCEQCApproveFlow:GetGoToApproveStep","GetGoToApproveStepValue","ApproveSetDR","Step");
-	}
-	else if (value=="1") //2:指定步骤
-	{
-		return true;
-	}
-	else if (value=="2") //3:人为指定步骤
-	{
+		$('#NextToFlow').lookup('hidePanel')
 		var ApproveFlowID=GetElementValue("RowID")
 		var Type=0
 		if (ApproveFlowID=="")
@@ -338,11 +344,7 @@ function BNextToFlow_Click()
 		var str="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCApproveFlowAllow&Type=0&ApproveFlowDR="+ApproveFlowID;
     	SetWindowSize(str,1,"","",0,120,""); 		
 	}
-	else if (value=="3") //3:根据条件流转步骤
-	{
-		//
-	}
-	 return false;
+	//Modified By QW20200820 BUG:QW0075 放大镜展开前事件修改 begin
 }
 function GetGoToApproveStepValue(Value)
 {
@@ -397,7 +399,7 @@ function BCanChangeStep_Click()
 	var value=GetElementValue("CancelToType");
 	var ApproveSetDR=GetElementValue("ApproveSetDR")
 	var Step=GetElementValue("Step")
-	
+	$('#CanChangeStep').lookup('hidePanel') //Modified By QW20200820 BUG:QW0075 放大镜展开前事件修改
 	var ApproveFlowID=GetElementValue("RowID")
 	var Type=2; //可被中断步骤
 	if (ApproveFlowID=="")
@@ -407,7 +409,6 @@ function BCanChangeStep_Click()
 	}
 	var str="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCApproveFlowAllow&Type=2&ApproveFlowDR="+ApproveFlowID;
     SetWindowSize(str,1,"","",0,120,"");
-    return false;
 }
 
 

@@ -19,6 +19,7 @@ function PrintConsent(cstID){
 	myPara = myPara+"^"+"PatDiagDesc"+String.fromCharCode(2)+printData.PatDiag;
 	myPara = myPara+"^"+"DirectLoc"+String.fromCharCode(2)+printData.CstRLoc;
 	myPara = myPara+"^"+"CstRLocID"+String.fromCharCode(2)+printData.CstRLoc;   
+	myPara = myPara+"^"+"HospDesc"+String.fromCharCode(2)+printData.HospDesc; //hxy 2023-02-10
 	LODOP=getLodop();
 	LODOP.PRINT_INIT("CST PRINT");
 	DHCP_GetXMLConfig("InvPrintEncrypt","DHC_MDTZQTYSMDT");
@@ -105,7 +106,8 @@ function PrintCst_Xml(jsonObj){
 	MyPara = MyPara+"^PatName"+String.fromCharCode(2)+jsonObj.PatName;		 /// 姓名
     MyPara = MyPara+"^DisGroup"+String.fromCharCode(2)+jsonObj.DisGroup;	 /// 病种
     MyPara = MyPara+"^CsDataRange"+String.fromCharCode(2)+jsonObj.CsDataRange;	 /// 会诊日期
-    MyPara = MyPara+"^CsTimeRange"+String.fromCharCode(2)+jsonObj.Time;	 /// 会诊时间
+    MyPara = MyPara+"^CsTimeRange"+String.fromCharCode(2)+jsonObj.Time;	 	 /// 会诊时间
+    MyPara = MyPara+"^CstNPlace"+String.fromCharCode(2)+jsonObj.CstNPlace;	 /// 会诊时间
     MyPara = MyPara+"^HosDesc"+String.fromCharCode(2)+jsonObj.HospDesc+"疑难病会诊告知单";		 /// 医院
     if(jsonObj.DisGroup=="肿瘤2")
     MyPara = MyPara+"^s1"+String.fromCharCode(2)+"√";
@@ -127,9 +129,15 @@ function PrintCst_Xml(jsonObj){
     MyPara = MyPara+"^s9"+String.fromCharCode(2)+"√";
 	DHCP_GetXMLConfig("InvPrintEncrypt","DHC_MDTConsult");
 	//调用具体打印方法
-	var myobj=document.getElementById("ClsBillPrint");
-	DHCP_XMLPrint(myobj, MyPara, "");
+	//var myobj=document.getElementById("ClsBillPrint");
+	//DHCP_XMLPrint(myobj, MyPara, "");
 	//DHCP_PrintFun(myobj, MyPara, "");
+	LODOP=getLodop()
+	LODOP.PRINT_INIT("CST PRINT");
+	DHCP_GetXMLConfig("InvPrintEncrypt","DHC_MDTConsult");
+	DHC_CreateByXML(LODOP,MyPara,"",[],"PRINT-CST-NT");  //MyPara 为xml打印要求的格式
+	LODOP.PRINT()
+	return;
 
 }
 //打印MDT申请记录单
@@ -166,6 +174,7 @@ function PrintCons(CstID){
     MyPara = MyPara+"^PatDiag"+String.fromCharCode(2)+printData.PatDiag;		 		/// 初步诊断
     MyPara = MyPara+"^CstPurpose"+String.fromCharCode(2)+printData.CstPurpose;			/// 会诊目的
     MyPara = MyPara+"^CstOpinion"+String.fromCharCode(2)+printData.CstOpinion;			/// 会诊意见
+    MyPara = MyPara+"^HospDesc"+String.fromCharCode(2)+printData.HospDesc;			    /// 医院描述
 
 	var mdtCsLocs = printData.mdtCsLocs;  /// 会诊科室列表
 	if (mdtCsLocs != ""){

@@ -6,6 +6,8 @@ var editRow = ""; editDRow = "";
 /// 页面初始化函数
 function initPageDefault(){
 	
+	init(); //ylp 初始化医院 //20230222
+
 	//初始化咨询信息列表
 	InitMainList();
 	
@@ -17,7 +19,18 @@ function initPageDefault(){
 		$("#itemTempDesc").css("height",DescH+"px"); 
 	}, 500); //ed
 }
+function init(){
+	
+	hospComp = GenHospComp("DHC_EmConsDicType");  //hxy 2020-05-27 st //2020-05-31 add
+	hospComp.options().onSelect = function(){///选中事件
+		$("#dgMainList").datagrid('reload',{params:hospComp.getValue()});
+	}
 
+	$('#queryBTN').on('click',function(){
+		$("#dgMainList").datagrid('reload',{params:hospComp.getValue()});
+	 })
+		
+}
 /// 界面元素监听事件
 function InitWidListener(){
 	/**
@@ -83,7 +96,7 @@ function InitMainList(){
 		options: {
 			valueField: "value", 
 			textField: "text",
-			url:$URL+"?ClassName=web.DHCAPPCommonUtil&MethodName=GetHospDs",
+			url:$URL+"?ClassName=web.DHCMDTCom&MethodName=GetHospDs"+"&MWToken="+websys_getMWToken(),
 			//required:true,
 			panelHeight:"auto",  //设置容器高度自动增长
 			onSelect:function(option){
@@ -102,11 +115,11 @@ function InitMainList(){
 	var columns=[[
 		{field:'ID',title:'ID',width:100,hidden:true,align:'left'}, //hxy 2020-05-06 左对齐
 		{field:'Code',title:'代码',width:100,editor:textEditor,align:'left'},
-		{field:'Desc',title:'描述',width:150,editor:textEditor,align:'left'},
+		{field:'Desc',title:'描述',width:350,editor:textEditor,align:'left'},
 		{field:'ActCode',title:'aitActCode',width:100,editor:textEditor,hidden:true,align:'left'},
 		{field:'ActDesc',title:'是否可用',width:80,editor:activeEditor,align:'left'},
 		{field:'HospID',title:'HospID',width:100,editor:textEditor,hidden:true,align:'left'},
-		{field:'HospDesc',title:'医院',width:200,editor:HospEditor,align:'left'}
+		{field:'HospDesc',title:'医院',width:200,editor:HospEditor,align:'left',hidden:true}
 	]];
 	
 	/**
@@ -143,7 +156,7 @@ function InitMainList(){
 		}
 	};
 	
-	var uniturl = $URL+"?ClassName=web.DHCMDTSMSTemp&MethodName=QryConsultGroup";
+	var uniturl = $URL+"?ClassName=web.DHCMDTSMSTemp&MethodName=QryConsultGroup"+"&params="+hospComp.getValue()+"&MWToken="+websys_getMWToken();
 	new ListComponent('dgMainList', columns, uniturl, option).Init();
 
 }
@@ -210,7 +223,7 @@ function insertRow(){
 	
 	$("#dgMainList").datagrid('insertRow', {
 		index: 0, // 行数从0开始计算
-		row: {ID:'', Code:'', Desc:'', ActCode:'Y', ActDesc:'是', HospID:'', HospDesc:''}
+		row: {ID:'', Code:'', Desc:'', ActCode:'Y', ActDesc:'是', HospID:hospComp.getValue(), HospDesc:''}
 	});
 	$("#dgMainList").datagrid('beginEdit', 0);//开启编辑并传入要编辑的行
 	editRow=0;
@@ -357,6 +370,19 @@ function win4(){
 function win5(){
 	        //var value=$("#btn5").val();
 	        var value=$("#btn5").attr("data");
+	        var pos=$("#itemTempDesc").getFieldPos();
+            $("#itemTempDesc").insertPos(pos,value)
+	}
+function win6(){
+	        //var value=$("#btn4").val();
+	        var value=$("#btn6").attr("data");
+	        var pos=$("#itemTempDesc").getFieldPos();
+            $("#itemTempDesc").insertPos(pos,value)
+	}
+
+function win7(){
+	        //var value=$("#btn5").val();
+	        var value=$("#btn7").attr("data");
 	        var pos=$("#itemTempDesc").getFieldPos();
             $("#itemTempDesc").insertPos(pos,value)
 	}

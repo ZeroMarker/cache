@@ -21,7 +21,7 @@ $(function() {
 })
 function InitDict()
 {
-	DHCST.ComboBox.Init({ Id: 'cmbLoc', Type: 'Loc' }, {placeholder: "制剂科室...",
+	DHCST.ComboBox.Init({ Id: 'cmbLoc', Type: 'Loc' }, {
 	    editable: true,
 	    onLoadSuccess: function() {
 	        var datas = $("#cmbLoc").combobox("getData");
@@ -52,8 +52,8 @@ function Query() {
 		$.messager.alert('提示', '请选择制剂科室！', 'warning');
 		return;
 	}
-    var tabTitle = $('#tabsInManu').tabs('getSelected').panel('options').title;
-    if (tabTitle == "制剂统计") {
+    var index = $('#tabsInManu').tabs('getTabIndex', $('#tabsInManu').tabs('getSelected'));
+    if (index == 0) {
 	    var raqObj = {
             raqName: "DHCST_InManu_ManuStat_Common.raq",
             raqParams: {
@@ -66,7 +66,7 @@ function Query() {
         };
         var raqSrc = DHCST.RaqPrint(raqObj)
         $("#tabInManuStat iframe").attr("src", raqSrc);
-    }else if (tabTitle == "制剂明细统计") {
+    }else if (index == 1) {
 	    var raqObj = {
             raqName: "DHCST_InManu_ManuBatStat_Common.raq",
             raqParams: {

@@ -92,8 +92,8 @@ function InitDicEditWin(){
 		editable: false,
 		//multiple:true,  //多选   
 		mode: 'remote',
-		valueField: 'RangeID',
-		textField: 'RangeDesc',
+		valueField: 'OID',
+		textField: 'Desc',
 		onBeforeLoad: function (param) {
 			param.ClassName = 'DHCMA.Util.EPS.DictionarySrv';
 			param.QueryName = 'QryDicInfo';

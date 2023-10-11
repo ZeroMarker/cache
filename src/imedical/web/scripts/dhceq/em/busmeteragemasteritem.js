@@ -7,7 +7,7 @@ function initDocument()
 	defindTitleStyle(); 
 	initLookUp();
 	initButton();
-	initButtonWidth();
+	//initButtonWidth();
 	jQuery("#BComputer").linkbutton({iconCls: 'icon-w-ok'});
 	jQuery("#BComputer").on("click", BComputer_Click);
 	
@@ -144,5 +144,9 @@ function checkboxComputerFlagChange(TComputerFlag,rowIndex)
 	}
 }
 
-
-
+// ZC0116	2500940		2022-03-23
+//元素参数重新获取值
+function getParam(ID)
+{
+	if (ID=="EquipTypeDR"){return getElementValue("EquipTypeDR")}
+}

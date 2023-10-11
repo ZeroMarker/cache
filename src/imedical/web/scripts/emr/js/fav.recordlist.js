@@ -22,7 +22,7 @@
             episodeType = (episodeType == "all")?"":episodeType;
             queryData(value,episodeType);
         },
-        prompt : "请输入诊断内容..."
+        prompt : emrTrans("请输入诊断内容")+"..."
     });
 });
 
@@ -57,11 +57,11 @@ function cancelFavRecrod(instanceId,episodeId,favInfoId,pluginType,chartItemType
             {
                 var tmpArray = removeRecord("favoriteRecordList #"+episodeId,instanceId);
                 
-                $(tmpArray).find(".titlediv>img").remove();
-                var titlediv = "<img class='favIcon icon-star-light-yellow' onclick='doFavorite("+'"'+ instanceId +'","'+episodeId+'","'+favInfoId +'","'+pluginType+'","'+chartItemType+'","'+emrDocId+'","'+episodeDate+'","'+episodeType+'","'+episodeLoc+'"'+")' title='添加收藏' alt align='top' border='0' style='width:20px;height:inherit'/>";
+                $(tmpArray).find(".titlediv>span").remove();
+                var titlediv = "<span class='favIcon icon icon-star-light-yellow' onclick='doFavorite("+'"'+ instanceId +'","'+episodeId+'","'+favInfoId +'","'+pluginType+'","'+chartItemType+'","'+emrDocId+'","'+episodeDate+'","'+episodeType+'","'+episodeLoc+'"'+")' title='"+emrTrans("添加收藏")+"' alt align='top' border='0' style='width:20px;height:inherit'/>";
                 $(tmpArray).find(".titlediv").append(titlediv);
                 
-                $(tmpArray).find(".datediv>img").remove();
+                $(tmpArray).find(".datediv>span").remove();
                 
                 if ($("#editEpisode #"+episodeId+" .apply_nav").length>0)
                 {
@@ -89,8 +89,8 @@ function remarkingFav(instanceId,favInfoId,instanceName,episodeId,pluginType,cha
 {
     //记录用户(整理收藏.查看病历.点评病历)行为
     AddActionLog(userId,userLocId,"FavoritesView.RecordView.Record.Comment","");
-    
-    var content = '<iframe id="framremark'+instanceId+'" frameborder="0" src="emr.fav.remarking.csp?FavInfoID='+favInfoId+'&InstanceID='+instanceId+'&InstanceName='+instanceName+'&EpisodeID='+episodeId+'&UserID='+userId+'&UserLocID='+userLocId+'&pluginType='+pluginType+'&chartItemType='+chartItemType+'&emrDocId='+emrDocId+'" style="width:100%;height:100%;scrolling:no;"></iframe>';
+    var url = "emr.fav.remarking.csp?FavInfoID="+favInfoId+"&InstanceID="+instanceId+"&InstanceName="+instanceName+"&EpisodeID="+episodeId+"&UserID="+userId+"&UserLocID="+userLocId+"&pluginType="+pluginType+"&chartItemType="+chartItemType+"&emrDocId="+emrDocId+"&MWToken="+getMWToken();
+    var content = "<iframe id='iframeModifyTitle' scrolling='auto' frameborder='0' src="+url+" style='width:100%;height:100%;display:block;'></iframe>";;
     parent.addTab("tabFavorite","remark"+instanceId,emrTrans("对 ")+instanceName+emrTrans(" 评价"),content,true);
     
 }
@@ -115,11 +115,11 @@ function doFavorite(instanceId,episodeId,favInfoId,pluginType,chartItemType,emrD
                 
                 var titleText = $(tmpArray).find(".title").text();
                 
-                $(tmpArray).find(".titlediv>img").remove();
-                var titlediv = "<img class='favIcon icon-star-yellow' onclick='cancelFavRecrod("+'"'+ instanceId +'","'+episodeId+'","'+favInfoId +'","'+pluginType+'","'+chartItemType+'","'+emrDocId+'","'+episodeDate+'","'+episodeType+'","'+episodeLoc+'"'+")' title='取消收藏' alt align='top' border='0' style='width:20px;height:inherit'/>";
+                $(tmpArray).find(".titlediv>span").remove();
+                var titlediv = "<span class='favIcon icon-star-yellow' onclick='cancelFavRecrod("+'"'+ instanceId +'","'+episodeId+'","'+favInfoId +'","'+pluginType+'","'+chartItemType+'","'+emrDocId+'","'+episodeDate+'","'+episodeType+'","'+episodeLoc+'"'+")' title='"+emrTrans("取消收藏")+"' alt align='top' border='0' style='width:20px;height:inherit'/>";
                 $(tmpArray).find(".titlediv").append(titlediv);
                 
-                var datediv = "<img class='favIcon icon-add-note' onclick='remarkingFav("+'"'+ instanceId +'","'+ favInfoId +'","'+titleText+'","'+episodeId+'","'+pluginType+'","'+chartItemType+'","'+emrDocId+'"'+")' title='病历评价' alt align='top' border='0' style='width:20px;height:inherit'/>";
+                var datediv = "<span class='favIcon icon-add-note' onclick='remarkingFav("+'"'+ instanceId +'","'+ favInfoId +'","'+titleText+'","'+episodeId+'","'+pluginType+'","'+chartItemType+'","'+emrDocId+'"'+")' title='"+emrTrans("病历评价")+"' alt align='top' border='0' style='width:20px;height:inherit'/>";
                 $(tmpArray).find(".datediv").append(datediv);
                 
                 if ($("#favoriteRecordList #"+episodeId+" .apply_nav").length>0)
@@ -237,13 +237,13 @@ function setRecords(data,type,favInfoId,episodeId,episodeDate,episodeType,episod
         var datediv = "<div class='datediv'><div class='date'>"+data[i].happendate+" "+data[i].happentime+"</div>";
         if (type == "FavoriteRecord")
         {
-            titlediv = titlediv + "<img class='favIcon icon-star-yellow' onclick='cancelFavRecrod("+'"'+ data[i].id +'","'+episodeId+'","'+favInfoId +'","'+data[i].documentType+'","'+data[i].chartItemType+'","'+data[i].emrDocId+'","'+episodeDate+'","'+episodeType+'","'+episodeLoc+'"'+")' title='取消收藏' alt align='top' border='0' style='width:20px;height:inherit'/>";
+            titlediv = titlediv + "<span class='favIcon icon-star-yellow' onclick='cancelFavRecrod("+'"'+ data[i].id +'","'+episodeId+'","'+favInfoId +'","'+data[i].documentType+'","'+data[i].chartItemType+'","'+data[i].emrDocId+'","'+episodeDate+'","'+episodeType+'","'+episodeLoc+'"'+")' title='"+emrTrans("取消收藏")+"' alt align='top' border='0' style='width:20px;height:inherit'/>";
             
-            datediv = datediv + "<img class='favIcon icon-add-note' onclick='remarkingFav("+'"'+ data[i].id +'","'+ favInfoId +'","'+data[i].text+'","'+episodeId+'","'+data[i].documentType+'","'+data[i].chartItemType+'","'+data[i].emrDocId+'"'+")' title='病历评价' alt align='top' border='0' style='width:20px;height:inherit'/>";
+            datediv = datediv + "<span class='favIcon icon-add-note' onclick='remarkingFav("+'"'+ data[i].id +'","'+ favInfoId +'","'+data[i].text+'","'+episodeId+'","'+data[i].documentType+'","'+data[i].chartItemType+'","'+data[i].emrDocId+'"'+")' title='"+emrTrans("病历评价")+"' alt align='top' border='0' style='width:20px;height:inherit'/>";
         } 
         else
         {
-            titlediv = titlediv + "<img class='favIcon icon-star-light-yellow' onclick='doFavorite("+'"'+ data[i].id +'","'+episodeId+'","'+favInfoId+'","'+data[i].documentType+'","'+data[i].chartItemType+'","'+data[i].emrDocId+'","'+episodeDate+'","'+episodeType+'","'+episodeLoc+'"'+")' title='添加收藏' alt align='top' border='0' style='width:20px;height:inherit'/>";
+            titlediv = titlediv + "<span class='favIcon icon-star-light-yellow' onclick='doFavorite("+'"'+ data[i].id +'","'+episodeId+'","'+favInfoId+'","'+data[i].documentType+'","'+data[i].chartItemType+'","'+data[i].emrDocId+'","'+episodeDate+'","'+episodeType+'","'+episodeLoc+'"'+")' title='"+emrTrans("添加收藏")+"' alt align='top' border='0' style='width:20px;height:inherit'/>";
         }
         titlediv = titlediv + "</div>";
         $(tag).append(titlediv);
@@ -270,7 +270,8 @@ $(document).on('click','.apply .content .info', function(){
     var categoryId = $(this).parent().attr("categoryId");
     var actionType = "LOAD";
     var status = "NORMAL";
-    window.open("emr.record.browse.browsform.editor.csp?patientId="+patientId+"&id="+id+"&pluginType="+pluginType+"&chartItemType="+chartItemType+"&emrDocId="+emrDocId+"&Action=reference","","width:100%,height:100%,top=0,left=0");
+    var url = "emr.record.browse.browsform.editor.csp?patientId="+patientId+"&id="+id+"&pluginType="+pluginType+"&chartItemType="+chartItemType+"&emrDocId="+emrDocId+"&Action=reference"+"&MWToken="+getMWToken();
+    window.open(url,"","width:100%,height:100%,top=0,left=0");
     
     //记录用户(整理收藏.查看病历.打开病历)行为
     AddActionLog(userId,userLocId,"FavoritesView.RecordView.Record.Open",text);
@@ -292,13 +293,32 @@ function getEpisodeList()
         fitColumns: true,
         remoteSort: false,
         columns:[[  
-            {field:'EpisodeDate',title:'就诊日期',width:150,align:'center'},
-            {field:'EpisodeTime',title:'就诊时间',width:150,align:'center'},
-            {field:'Diagnosis',title:'诊断',width:400,align:'center'},
-            {field:'EpisodeType',title:'类型',width:103,formatter:formatColor,align:'center'},
-            {field:'EpisodeDeptDesc',title:'科室',width:200,align:'center'},
-            {field:'MainDocName',title:'主治医生',width:143,align:'center'},
-            {field:'DischargeDate',title:'出院日期',width:150,align:'center'},
+            {field:'EpisodeDate',title:'就诊日期',width:150,align:'left'},
+            {field:'EpisodeTime',title:'就诊时间',width:150,align:'left'},
+            {field:'Diagnosis',title:'诊断',width:400,align:'left'},
+            {field:'EpisodeType',title:'类型',width:103,formatter:formatColor,align:'left',
+            	styler: function (value) 
+            	{
+            	    if (value == "住院")
+				    {
+				        return 'background-color:#47CE27;color:#fff;'
+				    }
+				    else if (value == "门诊")
+				    {
+				        return 'background-color:#FF3D3D;color:#fff;'
+				    }
+				    else if (value == "急诊")
+				    {
+				        return 'background-color:#339EFF;color:#fff;'
+				    }else
+				    {
+				        return '';
+				    }
+	            }
+            },
+            {field:'EpisodeDeptDesc',title:'科室',width:200,align:'left'},
+            {field:'MainDocName',title:'主治医生',width:143,align:'left'},
+            {field:'DischargeDate',title:'出院日期',width:150,align:'left'},
             {field:'EpisodeID',title:'就诊号',hidden:true}
         ]],
         onSelect:function(rowIndex,rowData){
@@ -313,15 +333,15 @@ function formatColor(val,row)
     val = emrTrans(val);
     if (row.EpisodeType == "住院")
     {
-        return '<span style="color:green;">'+val+'</span>';
+        return '<span">'+val+'</span>';
     }
     else if (row.EpisodeType == "门诊")
     {
-        return '<span style="color:red;">'+val+'</span>';
+        return '<span">'+val+'</span>';
     }
     else if (row.EpisodeType == "急诊")
     {
-        return '<span style="color:blue;">'+val+'</span>';
+        return '<span">'+val+'</span>';
     }else
     {
         return '<span>'+val+'</span>';

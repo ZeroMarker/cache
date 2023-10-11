@@ -7,6 +7,7 @@ $(document).ready(function(){
 	InitButton();				// 初始化按钮
 	ReportControl();			// 表单控制   	
 	InitReport(recordId);	// 加载页面信息
+	InitCheckRadio();
 })
 // 初始化按钮
 function InitButton(){
@@ -28,11 +29,20 @@ function ReportControl(){
 			$(this).is(':checked');		
 		});
 	});
-	// 其它医疗缺陷(默认隐藏) 
-	$('#advMedicalReportType-label-97195-97894').hide();
+	// 其它医疗缺陷 input (有值显示，无值隐藏) 
+	var MedTypeOth= $('#advMedicalReportType-label-97195-97894').val();
+	if(MedTypeOth!=""){
+		 $('#advMedicalReportType-label-97195-97894').show();
+	}else{
+	     $('#advMedicalReportType-label-97195-97894').hide();
+	}
+	
+}
+//页面初始加载checkbox,radio控制子元素不可以填写
+function InitCheckRadio(){
+	// 其它医疗缺陷 input(默认隐藏 勾选显示) 
 	$('#advMedicalReportType-label-97195').click(function () { 
-		var $isChecked = $("#advMedicalReportType-label-97195").is(":checked");
-		if($isChecked){
+		if ($(this).is(':checked')){
 			 $('#advMedicalReportType-label-97195-97894').show();
 		}else{
 		     $('#advMedicalReportType-label-97195-97894').hide();
@@ -53,7 +63,7 @@ function InitReport(recordId)
 function SaveReport(flag)
 {
 	if($('#PatName').val()==""){
-		$.messager.alert("提示:","患者姓名为空，请输登记号或病案号回车选择记录录入患者信息！");	
+		$.messager.alert($g("提示:"),$g("患者姓名为空，请输登记号或病案号回车选择记录录入患者信息！"));	
 		return false;
 	}
 	// 保存前,对页面必填项进行检查
@@ -64,7 +74,7 @@ function SaveReport(flag)
 	if(caflag.IsSucc){
 		SaveReportCom(flag);
 	}else{
-		$.messager.alert("提示:","签名失败！");	
+		$.messager.alert($g("提示:"),$g("签名失败！"));	
 		return false;
 	}
 	

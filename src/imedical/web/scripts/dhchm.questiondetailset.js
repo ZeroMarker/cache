@@ -33,7 +33,15 @@ function page_OnClick(QuesID,NextOrder,Job,SubjectOrder,flag)
 				}else{
 					$.messager.alert("提示","保存成功!","success",function(){
 						var countWin = $('div[data-type="websysmodel"]').length;
-						parent.window.$("#WinModalEasyUI"+countWin).window("close");
+						
+						if(parent.window.$("#WinModalEasyUI"+countWin)){
+							parent.window.$("#WinModalEasyUI"+countWin).window("close");
+							}
+						if(parent.window.$("#IQuestionTable")){
+							parent.window.close();
+							}
+					
+					    
 					});
 					
 				}
@@ -42,7 +50,8 @@ function page_OnClick(QuesID,NextOrder,Job,SubjectOrder,flag)
 		}
 	}
 	var lnk="dhchm.questiondetailset.csp?QuesID="+QuesID+"&SubjectOrder="+NextOrder+"&Job="+Job+"&PreIADM="+JV("PreIADM");
-	location.href=lnk;
+	//location.href=lnk;
+	location.href=PEURLAddToken(lnk);
 }
 
 
@@ -212,14 +221,23 @@ function getCheckVal(detailId)
 function getRadioVal(detailId)
 {
 	var raValList="";
+	var radioTab = JO("tab_"+detailId);
+	if(radioTab.style.display == "none") return "";   //隐藏的问题 不再收集答案
 	var radioArry = document.getElementsByName("rad_"+detailId);
 	for(var j=0;j<radioArry.length;j++){
 		var radioId=radioArry[j].id;
 		if(JO(radioId).checked){
+			var remark="";
+			var linkId=radioId.split("~")[0];
+			var optionId=radioId.split("~")[1];
+			if (JO("optionNote_"+linkId+"~"+optionId)) {	
+				remark=JO("optionNote_"+linkId+"~"+optionId).value;
+			}
+			
 			if(raValList!=""){
-				raValList+="@"+JV(radioId);
+				raValList+="@"+JV(radioId)+Trim(remark);
 			}else{
-				raValList=JV(radioId);
+				raValList=JV(radioId)+Trim(remark);
 			}	
 		}		
 	}
@@ -233,7 +251,24 @@ function getRadioVal(detailId)
  * @Author   wangguoying
  * @DateTime 2019-03-22
 */
-function chkQustion_onclick(chk, detailId) {
+function chkQustion_onclick(chk, detailId,linkDetailId) {
+	set_parent_flag();
+	
+	var display = chk.checked ? "block" : "none";
+	
+	
+	// 显示或隐藏关联问题
+	if (linkDetailId != '') {
+		var array1 = linkDetailId.split(",");
+
+		for ( var i = 0; i < array1.length; i++) {
+			if(JO("tab_" + array1[i])){
+				JO("tab_" + array1[i]).style.display = display;
+			}			
+		}
+	}
+	
+	
 	if (chk.checked) {		
 		JO("queAnswerFlag_"+detailId).value += (chk.value+"@");				
 		JO("spn_"+detailId).style.display = "none";
@@ -244,20 +279,61 @@ function chkQustion_onclick(chk, detailId) {
 		if (JO("optionNote_"+linkId+"~"+optionId)) {				
 			JO("optionNote_"+linkId+"~"+optionId).style.display = "inline";
 			JO("optionNote_"+linkId+"~"+optionId).focus();
-		}				
+		}	
+		
+		
+					
 	}	
 	else {
 		
 		JO("queAnswerFlag_"+detailId).value = JO("queAnswerFlag_"+detailId).value.replace(chk.value+"@", "");
 		
 		// 如果点选的是【其他】，则隐藏其他内容输入框
-		var div = chk.parentNode.parentNode;  //.parentNode;
-		if (div.children.length > 2) {
-			div.children[2].value = "";
-			div.children[2].style.display = "none";
+		var div = chk.parentNode;  //.parentNode;
+		if (div.children.length > 3) {
+			div.children[3].value = "";
+			div.children[3].style.display = "none";
 		}
+		
 	}
 } 
+
+function isHadRecord(excludeDetailId){
+	var ret = false;
+	if (excludeDetailId != '') {
+		var array2 = excludeDetailId.split(",");
+		for ( var i = 0; i < array2.length; i++) {
+			var array3 = document.getElementsByName("rad_" + array2[i]);
+			for ( var j = 0; j < array3.length; j++) {
+				var radTemp = array3[j];
+				if (radTemp.checked) {
+					ret = true;
+					break;
+				}
+			}
+			if(ret) break;
+			var input = document.getElementsById("input_" + array2[i]);
+			if(input){
+				var value= "";
+				var detailType=JO("detailType_"+array2[i]).value;
+				if((detailType=="T")||(detailType=="N")){ //录入型
+					value=JO("input_"+detailId).value;
+				}else if(detailType=="D"){  //时间型
+					var linkId=JO("input_"+detailId).getAttribute("comboname");
+					var valObj=document.getElementsByName(linkId)[0];
+					value=valObj.value;
+				}
+				if(Trim(value)!=""){
+					ret = true;
+				}
+			}
+		}
+	}
+	return ret;
+}
+
+
+
 /**
  * 单选型选项点击事件
  * @param    {[type]}    rad             [单选按钮元素]
@@ -267,17 +343,19 @@ function chkQustion_onclick(chk, detailId) {
  * @Author   wangguoying
  * @DateTime 2019-03-25
  */
-function radQuestion_onclick(rad, linkDetailId, excludeDetailId, detailId) {		
+function radQuestion_onclick(rad, linkDetailId, excludeDetailId, detailId) {
+	set_parent_flag();		
 	JO("queAnswerFlag_" + detailId).value = rad.value;
 	JO("spn_" + detailId).style.display = "none";
 
+	var display = rad.checked? "block":"none";
 	// 显示该显示的问题
 	if (linkDetailId != '') {
 		var array1 = linkDetailId.split(",");
 
 		for ( var i = 0; i < array1.length; i++) {
 			if(JO("tab_" + array1[i])){
-				JO("tab_" + array1[i]).style.display = "block";
+				JO("tab_" + array1[i]).style.display = display;
 			}			
 		}
 	}
@@ -291,7 +369,7 @@ function radQuestion_onclick(rad, linkDetailId, excludeDetailId, detailId) {
 				JO("tab_" + array2[i]).style.display = "none";
 			}
 			
-
+			/*
 			var array3 = document.getElementsByName("rad_" + array2[i]);
 			for ( var j = 0; j < array3.length; j++) {
 				var radTemp = array3[j];
@@ -299,9 +377,27 @@ function radQuestion_onclick(rad, linkDetailId, excludeDetailId, detailId) {
 				if (radTemp.checked) {
 					radTemp.checked = false;
 				}
-			}
+			}*/
 		}
 	}
+	// 如果点选的是【其他】，则隐藏其他内容输入框
+	var div = rad.parentNode;  //.parentNode;
+	if (div.children.length > 3) {
+		if(rad.checked && div.children[3].nodeName!="SCRIPT"){
+			div.children[3].focus();
+			div.children[3].style.display = "inline";
+		}else{
+			div.children[3].value = "";
+			div.children[3].style.display = "none";
+		}
+		
+	}
+	/*
+	$("[name='rad_"+detailId+"']").each(function(index,element){
+		if(rad.checked && element.id == rad.id){
+			alert(element.id);
+		}
+	});*/
 }
 
 
@@ -313,6 +409,7 @@ function radQuestion_onclick(rad, linkDetailId, excludeDetailId, detailId) {
  */
 function onChangeDateTime(detailId)
 {
+	set_parent_flag();
 	if(JO("input_"+detailId)){
 		var linkId=JO("input_"+detailId).getAttribute("comboname");
 		var valObj=document.getElementsByName(linkId)[0];
@@ -330,6 +427,7 @@ function onChangeDateTime(detailId)
  * @DateTime 2019-03-25
  */
 function txt_onblur(detailId) {
+	set_parent_flag();
 	var chk=JO("input_"+detailId);
 	var content = $.trim(chk.value);
 	if (content.indexOf("~")>=0 || content.indexOf("@")>=0 || content.indexOf("#")>=0) {
@@ -338,15 +436,36 @@ function txt_onblur(detailId) {
 		return;
 	}
 	if(content!=""){
+		var minVal = $.trim($("#min_"+detailId).text());
+		var maxVal = $.trim($("#max_"+detailId).text());
+		var rang = $.trim($("#range_"+detailId).text());
+		var rangMax = "",rangMin="";
+		if(rang!=""){
+			rangMin = rang.split("-")[0];
+			rangMax = rang.split("-")[1]
+		}
+		if( minVal!="" && parseFloat(minVal)>parseFloat(content) ){
+			$.messager.popover({msg:"下限为："+minVal,type:"error",timeout:2000});
+			$("#input_"+detailId).val("");
+		}else if(maxVal!="" && parseFloat(content)>parseFloat(maxVal)){
+			$.messager.popover({msg:"上限为："+maxVal,type:"error",timeout:2000});
+			$("#input_"+detailId).val("");
+		}
+		
+		if((rangMin!="" && parseFloat(content)<parseFloat(rangMin))||(rangMax!="" && parseFloat(rangMax)<parseFloat(content))){
+			$("#input_"+detailId).css("color","red");
+		}else{
+			$("#input_"+detailId).css("color","");
+		}
+		
 		JO("spn_"+detailId).style.display = "none";
 	}
-
 }
 
 
 //【其他】内容输入框失去焦点触发事件
 function txtOther_onblur(chk,appendStrWithoutValue) {
-	
+	set_parent_flag();
 }
 
 //将选项值追加到对应的queAnswerFlag输入框中
@@ -409,4 +528,65 @@ function init(){
 	document.onkeypress = banBackSpace;
 	//对功能按键的获取
 	document.onkeydown = banBackSpace;
+}
+
+/**
+ * 设置父窗体更新标记
+ * @Author   wangguoying
+ * @DateTime 2021-04-11
+ */
+function set_parent_flag(){
+	if(parent.window._saveFlag){
+		parent.window._saveFlag=0;
+	}
+}
+/**
+ * 保存当前页的记录
+ * @Author   wangguoying
+ * @return  boolen
+ * @DateTime 2021-04-11
+ */
+function save_curPage(){
+	if(!isCanToNextPage()) return false;
+	var resultList=getResultList();
+	//alert("resultList="+resultList);
+	var isCharge = tkMakeServerCall("web.DHCPE.HM.ExamSurveyHandler","IsCharged",JV("PreIADM"));
+	var notice = isCharge == "1"?"":"未付费，";
+	var ret=tkMakeServerCall("web.DHCPE.HM.ExamSurveyHandler","SetCurResultGlobal",Job,QuesID,SubjectOrder,resultList);
+	var ret=tkMakeServerCall("web.DHCPE.HM.ExamSurveyHandler","SaveSurveyResult",Job,QuesID,JV("RegNo"),JV("PreIADM"),"");
+	if(ret.split("^")[0]!="0"){
+		$.messager.alert("错误",ret.split("^")[1],"error");
+		return false;
+	}else{
+		$.messager.popover({msg: notice+'保存成功！',type:'success',timeout: 2000,showType: 'show'});
+		
+		if(parent.window){
+			if(parent.window._saveFlag == 0 ){
+				parent.window._saveFlag=1;
+			}
+			parent.window.setHadSaveClass(SubjectOrder);
+		}
+		return true;
+	}
+}
+
+
+function formatNumber(val){
+	if(val != ""){
+		return parseFloat(val);
+	}else{
+		return val;
+	}
+}
+
+function sl_formatter(value){
+	if(value!=""){
+		var tmp=value.split("."); 
+		if(tmp.length>1 && tmp[1]=="00"){
+			return tmp[0]+".0";
+		}else{ 
+			value = parseFloat(value);
+		}
+	}
+	return value;
 }

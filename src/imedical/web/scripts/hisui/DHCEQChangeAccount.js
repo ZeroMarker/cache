@@ -18,6 +18,17 @@ function BodyLoadHandler()
 	//SetLink();  //hisui改造 modify by lmm 2018-08-18 不调用
 }
 
+///add by czf 2020-11-05 1560271
+///描述：hisui改造 调整金额和调整累计折旧变动时更新对应调后金额
+$(function(){
+	$('input#ChangeFee').on('keyup',function(){
+		ChangeFee_Changed();
+	})
+	$('input#ChangeDepreTotalFee').on('keyup',function(){
+		ChangeDepreTotalFee_Changed();
+	})
+});
+
 function InitPage()
 {
 	InitUserInfo();
@@ -32,14 +43,28 @@ function InitPage()
 		DisableBElement("BAffixISPrint",true);
 		DisableBElement("BAffixSMPrint",true);
 		DisableBElement("BPrintCA",true);
+		DisableBElement("BPicture",true);
+		DisableBElement("BAppendFile",true);
 	}
 	InitButton(false);
 	setRequiredElements("MRObjLocDR_LocDesc^MRSourceType^MRExObjDR_ExObj^MRFaultCaseRemark^ChangeReasonRemark")   //add  by yh 20190719
+	/* //modified by czf 2020-11-05 1560271
 	var obj=document.getElementById("ChangeFee");
 	if (obj) obj.onchange=ChangeFee_Changed;
 	var obj=document.getElementById("ChangeDepreTotalFee");
 	if (obj) obj.onchange=ChangeDepreTotalFee_Changed;
+	*/
+	//modified by ZY0279 20210908
+	//Add By QW20210629 BUG:QW0129 是否显示维修单据 begin
+	var CheckFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","401008");
+	if(CheckFlag=="0")
+	{
+		hiddenObj("cMaintRequest",1);
+		hiddenObj("MaintRequest",1);
+	}
+	//Add By QW20210629 BUG:QW0129 是否显示维修单据 end
 }
+
 ///add by lmm 2018-08-18
 ///描述：hisui改造 点击详细列图标打开详细界面
 ///入参：rowIndex 行号
@@ -70,7 +95,7 @@ function TFundsHandler(rowData,rowIndex)
 	}
 	
 	var lnk='dhceq.em.funds.csp?FromType=7&FromID='+TRowID+'&ReadOnly='+ReadOnly+'&FundsAmount='+FundsAmount+'&DepreTotal='+DepreTotal;
-    showWindow(lnk,"资金来源","","","icon-w-paper","","","","middle")  //modify by lmm 2020-06-04 UI
+    showWindow(lnk,"资金来源","","","icon-w-paper","","","","middle",refreshWindow)  //modify by QW20210702 BUG:QW0135 错误修正
 }
   //hisui改造 modify by lmm 2018-08-18 不调用
 /*
@@ -186,6 +211,14 @@ function InitButton(isselected)
 	if (obj) obj.onclick=BAffixSMPrint_Click; //2010-03-15 党军 end DJ0041
 	var obj=document.getElementById("BPrintCA");
 	if (obj) obj.onclick=BPrintCA_Click;
+	//Add By QW20210629 BUG:QW0129 begin
+	var obj=document.getElementById("BPicture"); 
+	if (obj) obj.onclick=BPicture_Clicked; 
+	var obj=document.getElementById("BAppendFile");
+	if (obj) obj.onclick=BAppendFile_Clicked;
+	DisableBElement("BPicture",!isselected);
+	DisableBElement("BAppendFile",!isselected);
+	//Add By QW20210629 BUG:QW0129 end
 	DisableBElement("BAdd",isselected);
 	DisableBElement("BUpdate",!isselected);
 	DisableBElement("BDelete",!isselected);
@@ -199,7 +232,7 @@ function InitButton(isselected)
 function BAffix_Click()
 {
 	var str='websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCAAffix&EquipDR='+GetElementValue("EquipDR")+'&ChangeAccountDR='+GetElementValue("RowID")+'&AddChange='+GetChkElementValue("AddChange")+'&CAAffixIDS='+GetElementValue("CAAffixIDS")  //hisui改造 modify by lmm 2018-08-18 修改界面按钮长度不一致
-	showWindow(str,"调账附件","","","icon-w-paper","modal","","","middle",changeValue);   //modify by lmm 2020-06-04 UI
+	showWindow(str,"调账关联附件","","","icon-w-paper","modal","","","middle",changeValue);   //modify by lmm 2020-06-04 UI
 }
 
 // modified by sjh 2019-12-03 BUG00018
@@ -459,9 +492,19 @@ function Selected(selectrow,rowdata)
 	}
 }
 
+///modified by ZY0293 20220310  增加会计周期的判断提醒
 function BAudit_Click()
 {
-	AuditData();
+	var Rtn=tkMakeServerCall("web.DHCEQ.EM.BUSAccountPeriod","IsCurPeriod");
+    var RtnObj=JSON.parse(Rtn)
+    if (RtnObj.SQLCODE==0)
+    {
+		messageShow("confirm","info","提示","当前操作会内容会统计入会计周期:"+RtnObj.Data+"中<br>请确定是否要继续执行操作?","",AuditData,function(){return},"确定","取消");
+    }
+    else
+    {
+	    AuditData();
+	}
 }
 
 function BAdd_Click() 
@@ -481,8 +524,14 @@ function BDelete_Click()
 		messageShow("","","",t[-4002]);
 		return;
 	}
-	var truthBeTold = window.confirm(t[-4003]);
-    if (!truthBeTold) return;
+     messageShow("confirm","info","提示",t[-4003],"",function(){
+			GetUpdate(rowid);
+		},function(){
+			return;
+		});
+}
+//Add By QW20210531 BUG:QW0117 修改弹框样式-方法提取
+function GetUpdate(rowid){
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="")
 	{
@@ -533,7 +582,7 @@ function CombinData()
 	//add by zy 20150610 ZY0128  //hold3 增加的折旧月份数
   	combindata=combindata+"^"+GetElementValue("Hold1");
   	combindata=combindata+"^"+GetElementValue("Hold3");
-  	combindata=combindata+"^"+GetElementValue("Hold4");
+  combindata=combindata+"^"+GetElementValue("MaintRequestDR"); //Modified By QW20210629 BUG:QW0129
   	combindata=combindata+"^"+GetElementValue("Hold5");
   	return combindata;
 }
@@ -567,15 +616,23 @@ function AuditData()
 	}
 	else if (result==2)
 	{		
-		var truthBeTold = window.confirm("本次调账未关联附件,是否继续?");
-	    if (!truthBeTold) return;
+	    messageShow("confirm","info","提示","本次调账未关联附件,是否继续?","",function(){
+			GetAudit(rowid);
+		},function(){
+			return;
+		});
 	}
 	else if (result==3)
 	{
 		alertShow("调账金额为0,不能关联附件!");
 	    return;
-	}
-	
+	}else{
+		GetAudit(rowid);
+		}
+}
+//Add By QW20210531 BUG:QW0117 修改弹框样式-方法提取
+function GetAudit(rowid)
+{
 	var encmeth=GetElementValue("GetAudit");
 	if (encmeth=="")
 	{
@@ -743,7 +800,10 @@ function SetData(rowid)
 	SetElement("Hold1",list[31]);
 	SetElement("ChangeDepreTotalFee",list[32]);	//Mozy0148
 	SetElement("Hold3",list[33]);
-	SetElement("Hold4",list[34]);
+	//Modified By QW20210629 BUG:QW0129 Begin
+	SetElement("MaintRequestDR",list[34]); 
+	SetElement("MaintRequest",list[sort+8]); 
+	//Modified By QW20210629 BUG:QW0129 End
 	SetElement("Hold5",list[35]);
 }
 
@@ -810,7 +870,10 @@ function Clear()
 	//add by zy 20150610 ZY0128  //hold3 增加的折旧月份数
 	SetElement("Hold1","");
 	SetElement("Hold3","");
-	SetElement("Hold4","");
+	//Modified By QW20210629 BUG:QW0129 Begin
+	SetElement("MaintRequestDR",""); 
+	SetElement("MaintRequest",""); 
+	//Modified By QW20210629 BUG:QW0129 End
 	SetElement("Hold5","");
 	SetEquipInfo();
 }
@@ -1133,5 +1196,31 @@ function changeValue(Element,Value,Type)
 	}
 	
 	
+}
+//Add By QW20210629 BUG:QW0129 维修单据
+function GetMaintRequest(value)
+{
+	GetLookUpID("MaintRequestDR",value);
+}
+
+//Add By QW20210629 BUG:QW0129 文件上传
+function BAppendFile_Clicked()
+{
+	var result=GetElementValue("RowID")
+	if (result=="") return;
+	
+	var Status=GetElementValue("Status");
+	var str='dhceq.plat.appendfile.csp?&CurrentSourceType=51&CurrentSourceID='+result+'&Status=0&ReadOnly=';
+	showWindow(str,"电子资料","","","icon-w-paper","modal","","","large");
+}
+//Add By QW20210629 BUG:QW0129 图片上传
+function BPicture_Clicked()
+{
+	var ReadOnly=GetElementValue("ReadOnly");
+	var result=GetElementValue("RowID");
+	if (result=="") return;
+	
+	var str='dhceq.plat.picturemenu.csp?&CurrentSourceType=51&CurrentSourceID='+result+'&Status=&ReadOnly='+ReadOnly;
+	showWindow(str,"图片信息","","","icon-w-paper","modal","","","middle");	//modify by lmm 2020-06-04 UI
 }
 document.body.onload = BodyLoadHandler;

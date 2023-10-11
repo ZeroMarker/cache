@@ -5,43 +5,43 @@ var OriginGridUrl = 'dhcst.originaction.csp';
 GetParamCommon();
 var conditionCodeField = new Ext.form.TextField({
     id:'conditionCodeField',
-    fieldLabel:'代码',
+    fieldLabel:$g('代码'),
     allowBlank:true,
-    emptyText:'代码...',
+    emptyText:$g('代码...'),
     anchor:'90%',
     selectOnFocus:true
 });
 var conditionDescField = new Ext.form.TextField({
     id:'conditionDescField',
-    fieldLabel:'名称',
+    fieldLabel:$g('名称'),
     allowBlank:true,
-    emptyText:'名称...',
+    emptyText:$g('名称...'),
     anchor:'90%',
     selectOnFocus:true
 });
 
 var conditionAliasField = new Ext.form.TextField({
     id:'conditionAliasField',
-    fieldLabel:'别名',
+    fieldLabel:$g('别名'),
     allowBlank:true,
-    emptyText:'别名...',
+    emptyText:$g('别名...'),
     anchor:'90%',
     selectOnFocus:true
 });
 
 var conditionHospField = new Ext.ux.ComboBox({
-	fieldLabel : '医院',
+	fieldLabel :$g( '医院'),
 	id : 'conditionHospField',
 	store : HospStore,
 	allowBlank:true,
-	emptyText:'医院...',
+	emptyText:$g('医院...'),
 	anchor:'90%',
 	selectOnFocus:true,
 	hidden:true
 });
 
 var HospGirdField = new Ext.ux.ComboBox({
-	fieldLabel : '医院',
+	fieldLabel : $g('医院'),
 	id : 'HospGirdField',
 	store : HospStore,
 	listeners:{
@@ -120,7 +120,7 @@ var OriginGridDs = new Ext.data.Store({
 var OriginGridCm = new Ext.grid.ColumnModel([
      new Ext.grid.RowNumberer(),
      {
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'Code',
         width:180,
         align:'left',
@@ -137,7 +137,7 @@ var OriginGridCm = new Ext.grid.ColumnModel([
             }
         })
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'Desc',
         width:300,
         align:'left',
@@ -154,7 +154,7 @@ var OriginGridCm = new Ext.grid.ColumnModel([
             }
         })
     },{
-        header:"别名",
+        header:$g("别名"),
         dataIndex:'Alias',
         width:300,
         align:'left',
@@ -171,7 +171,7 @@ var OriginGridCm = new Ext.grid.ColumnModel([
             }
         })
     },{
-        header:"医院",
+        header:$g("医院"),
         dataIndex:'HospId',
         width:300,
         align:'left',
@@ -186,8 +186,8 @@ var OriginGridCm = new Ext.grid.ColumnModel([
 OriginGridCm.defaultSortable = true;
 
 var findOrigin = new Ext.Toolbar.Button({
-    text:'查询',
-    tooltip:'查询',
+    text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
     width : 70,
     height : 30,
@@ -197,8 +197,8 @@ var findOrigin = new Ext.Toolbar.Button({
 });
 
 var addOrigin = new Ext.Toolbar.Button({
-    text:'新建',
-    tooltip:'新建',
+    text:$g('新建'),
+    tooltip:$g('新建'),
     iconCls:'page_add',
     width : 70,
     height : 30,
@@ -208,8 +208,8 @@ var addOrigin = new Ext.Toolbar.Button({
 });
 
 var saveOrigin = new Ext.Toolbar.Button({
-    text:'保存',
-    tooltip:'保存',
+    text:$g('保存'),
+    tooltip:$g('保存'),
     iconCls:'page_save',
     width : 70,
     height : 30,
@@ -224,11 +224,11 @@ var saveOrigin = new Ext.Toolbar.Button({
             var alias = mr[i].data["Alias"].trim();
             var hospId=mr[i].data["HospId"].trim();
             if (code==""){
-	             Msg.info("warning", "代码为空");
+	             Msg.info("warning", $g("代码为空"));
             	return false;       
 	        }
 	        if (desc==""){
-		       	Msg.info("warning", "名称为空");
+		       	Msg.info("warning", $g("名称为空"));
             	return false;
 		    }
             if((code!="")&&(desc!="")){
@@ -242,22 +242,22 @@ var saveOrigin = new Ext.Toolbar.Button({
         }
         
         if(data==""){
-            Msg.info("error", "没有修改或添加新数据!");
+            Msg.info("error", $g("没有修改或添加新数据!"));
             return false;
         }else{
             Ext.Ajax.request({
                 url: OriginGridUrl+'?actiontype=save',
                 params: {data:data},
                 failure: function(result, request) {
-                    Msg.info("error", "请检查网络连接!");
+                    Msg.info("error", $g("请检查网络连接!"));
                 },
                 success: function(result, request) {
                     var jsonData = Ext.util.JSON.decode( result.responseText );
                     if (jsonData.success=='true') {
-                        Msg.info("success", "保存成功!");
+                        Msg.info("success", $g("保存成功!"));
                         OriginGridDs.load({params:{start:0,limit:OriginPagingToolbar.pageSize,sort:'RowId',dir:'desc',conditionCode:Ext.getCmp('conditionCodeField').getValue(),conditionDesc:Ext.getCmp('conditionDescField').getValue(),conditionType:App_StkTypeCode}});
                     }else{
-                        Msg.info("error", "保存失败!" +jsonData.info);
+                        Msg.info("error", $g("保存失败!") +jsonData.info);
                         //OriginGridDs.load({params:{start:0,limit:OriginPagingToolbar.pageSize,sort:'RowId',dir:'desc',conditionCode:Ext.getCmp('conditionCodeField').getValue(),conditionDesc:Ext.getCmp('conditionDescField').getValue(),conditionType:App_StkTypeCode}});
                     }
                 },
@@ -268,7 +268,7 @@ var saveOrigin = new Ext.Toolbar.Button({
 });
 
 var saveAsOrigin = new Ext.Toolbar.Button({
-	text:'另存',
+	text:$g('另存'),
 	iconCls:'page_excel',
 	handler:function(){
 		ExportAllToExcel(OriginGrid);
@@ -277,39 +277,39 @@ var saveAsOrigin = new Ext.Toolbar.Button({
 
 
 var deleteOrigin = new Ext.Toolbar.Button({
-    text:'删除',
-    tooltip:'删除',
+    text:$g('删除'),
+    tooltip:$g('删除'),
     iconCls:'page_delete',
     width : 70,
     height : 30,
     handler:function(){
         var cell = OriginGrid.getSelectionModel().getSelectedCell();
         if(cell==null){
-            Msg.info("error", "请选择数据!");
+            Msg.info("error", $g("请选择数据!"));
             return false;
         }else{
             var record = OriginGrid.getStore().getAt(cell[0]);
             var RowId = record.get("RowId");
             if(RowId!=""){
-                Ext.MessageBox.confirm('提示','确定要删除选定的行?',
+                Ext.MessageBox.confirm($g('提示'),$g('确定要删除选定的行?'),
                     function(btn) {
                         if(btn == 'yes'){
                             Ext.Ajax.request({
                                 url:OriginGridUrl+'?actiontype=delete&rowid='+RowId,
-                                waitMsg:'删除中...',
+                                waitMsg:$g('删除中...'),
                                 failure: function(result, request) {
-                                    Msg.info("error", "请检查网络连接!");
+                                    Msg.info("error", $g("请检查网络连接!"));
                                 },
                                 success: function(result, request) {
                                     var jsonData = Ext.util.JSON.decode( result.responseText );
                                     if (jsonData.success=='true') {
-                                        Msg.info("success", "删除成功!");
+                                        Msg.info("success", $g("删除成功!"));
                                         OriginGridDs.load({params:{start:0,limit:OriginPagingToolbar.pageSize,sort:'RowId',dir:'desc',conditionCode:Ext.getCmp('conditionCodeField').getValue(),conditionDesc:Ext.getCmp('conditionDescField').getValue(),conditionType:App_StkTypeCode}});
                                     }else{
                                         if(jsonData.info==-1){
-                                            Msg.info("error", "产地在药品定义里使用过，不能删除!");
+                                            Msg.info("error", $g("产地在药品定义里使用过，不能删除!"));
                                         }else{
-                                            Msg.info("error", "删除失败!");
+                                            Msg.info("error", $g("删除失败!"));
                                         }
                                     }
                                 },
@@ -319,7 +319,7 @@ var deleteOrigin = new Ext.Toolbar.Button({
                     }
                 )
             }else{
-                Msg.info("error", "数据有错,没有RowId!");
+                Msg.info("error", $g("数据有错,没有RowId!"));
             }
         }
     }
@@ -331,13 +331,13 @@ var HospWinButton = GenHospWinButton("PH_Manufacturer");
 HospWinButton.on("click" , function(){
 	var cell = OriginGrid.getSelectionModel().getSelectedCell();
 	if(cell==null){
-		Msg.info("warning", "请选择数据!");
+		Msg.info("warning", $g("请选择数据!"));
 		return;
 	}
 	var record = OriginGrid.getStore().getAt(cell[0]);
 	var rowID = record.get("RowId");
 	if (rowID===''){
-		Msg.info("warning","请先保存数据!");
+		Msg.info("warning",$g("请先保存数据!"));
 		return;	
 	}
     GenHospWin("DHC_STOrigin",rowID,function(){OriginGridDs.reload();}).show() 
@@ -358,7 +358,7 @@ var formPanel = new Ext.form.FormPanel({
     tbar:[findOrigin,'-',addOrigin,'-',saveOrigin,'-',saveAsOrigin,'-',HospWinButton],
     items : [{
         xtype : 'fieldset',
-        title : '查询条件',
+        title : $g('查询条件'),
         defaults: {border:false},
 		style:DHCSTFormStyle.FrmPaddingV,
         layout : 'column',
@@ -387,14 +387,14 @@ var OriginPagingToolbar = new Ext.PagingToolbar({
     store:OriginGridDs,
     pageSize:35,
     displayInfo:true,
-    displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-    emptyMsg:"没有记录"
+    displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+    emptyMsg:$g("没有记录")
 });
 
 //表格
 OriginGrid = new Ext.grid.EditorGridPanel({
     store:OriginGridDs,
-    title:'产地明细',
+    title:$g('产地明细'),
     cm:OriginGridCm,
     trackMouseOver:true,
     region:'center',
@@ -426,7 +426,7 @@ function QueryOrigin(){
 		},
 		callback : function(o,response,success) { 
 			if (success == false){  
-				Ext.MessageBox.alert("查询错误",OriginGridDs.reader.jsonData.Error);  
+				Ext.MessageBox.alert($g("查询错误"),OriginGridDs.reader.jsonData.Error);  
 			}
 		}
 	});
@@ -437,7 +437,7 @@ Ext.onReady(function(){
     Ext.QuickTips.init();
     Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
      var panel = new Ext.Panel({
-        title:'产地维护',
+        title:$g('产地维护'),
         activeTab:0,
         region:'north',
         height:DHCSTFormStyle.FrmHeight(1),

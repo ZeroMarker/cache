@@ -1,4 +1,4 @@
-//dhcrisworkbenchex.new.js ,
+//dhcrisworkbnechex.new.js ,
     var UserRowID=session['LOGON.USERID'];
     // alert(UserRowID);
   	var CTLOCID=session['LOGON.CTLOCID'];
@@ -297,9 +297,68 @@ var ExportBtn = new Ext.Button({
     text:'导出',
     iconCls:'btn-ris-export',
     handler:function(){
-	    ExportList_onclick();
+	    //ExportList_onclick();
+	    	var typeDR = "" ;		// 病人类型 
+	var PatientNo = formatRegNo(Ext.getCmp("PatientNo").getValue()); 	//登记号
+	Ext.getCmp("PatientNo").setValue(PatientNo);
+	var StudyNo = "";    	//检查号
+	var LocDr = Ext.getCmp("RecDep").getValue();		//科室ID
+	var StatusCode = Ext.getCmp("RisStatus").getValue();	//状态Id
+	var ReportDoc = "";		//报告医生
+	var VerifyDoc = "";	// 审核医生
+	var Name = ""; 			// 姓名
+	var ResourceDR = "";	//预约资源rowid
+	var RegEQDR = "" ;  	// 登记资源rowid 
+	var RoomDR = "" ; 		// 房间
+	var InPatientNo = "" ; 	// 住院号
+	var IsFindbyDate = "false" ; 		// 日期的勾选框 CheckDate
+	var IsAppointmentOrder = "" ;		// ckAppointment 需要预约的勾选框
+	var IsBedOrder = "" ;		//ckbedOrder 床旁医嘱
+	var EQGroupDR = "" ;	//检查组rowid
+	var No = "" ;			//编号
+	var IsSetFilm = "false" ; 		//ckSentFilm 已发片
+	var Islock = "false" ; 			// Lock 锁定
+	var IsNotLoc = "N" ;    	// ChkNotLoc 不显示本科病人
+	var QueryByRegDate = "N" ; 		// ckRegDate 登记日期
+	var Resource = "" ;		// Resource 
+	var EQGroup = "" ;
+	var Room = "" ;
+	var Status = Ext.getCmp("RisStatus").getRawValue();
+	var Patienttype = "" ;
+	var RegDevice = "" ;
+	var IsUItem = "N" ;
+	var IsCostRecords = "N" ;
+	var AppLocID = "";
+	var StartDate = Ext.getCmp("StartDate").getRawValue();
+	var EndDate = Ext.getCmp("EndDate").getRawValue();
+	var BookedType=1 ;   //默认	
+	var Condition1=typeDR+"^"+PatientNo+"^"+StudyNo+"^"+LocDr+"^"+StatusCode+"^"+ReportDoc+"^"+VerifyDoc+"^"+Name+"^"+ResourceDR;
+	var Condition2=RegEQDR+"^"+RoomDR+"^"+InPatientNo+"^"+IsFindbyDate+"^"+IsAppointmentOrder+"^"+IsBedOrder+"^"+EQGroupDR+"^^"+No
+		+"^"+IsSetFilm+"^"+Islock+"^"+IsNotLoc+"^"+QueryByRegDate;
+	var Condition3=Resource+"^"+EQGroup+"^"+Room+"^"+Status+"^"+Patienttype+"^"+RegDevice+"^"+StartDate+"^"+EndDate+"^"+IsUItem+"^"+IsCostRecords+"^"+AppLocID;
+    var strCondition=Condition1+"^"+Condition2+"^"+Condition3;
+   
+	var rtn=$cm(
+	{
+		dataType:'text',
+		ResultSetType:"Excel",  //表示通过DLL生成Excel，可支持IE与Chrome系。Chrome系浏览器请安装中间件
+		//ResultSetTypeDo:"Export",    //默认Export，可以设置为：Print
+		//localDir:"D:\\tmp\\",	      //固定文件路径
+		//localDir:"Self",            //用户选择路径
+		//loca//lDir:""                 //默认桌面
+		ExcelName:"excelname",				 //默认DHCCExcel
+		ClassName:"web.DHCRisWorkBenchDoEx",
+		QueryName:"QueryExamItem",
+		strCondition:strCondition,
+		StdDate:StartDate,
+		enddate:EndDate,
+		BookedType:BookedType
+	},false)
+	location.href = rtn;
+    
     }
 });
+
 
 
 
@@ -773,8 +832,7 @@ function printRegInfo()
 
 			
 			var myobj=document.getElementById("ClsBillPrint");
-			DHCP_PrintFunHDLP("",MyPara,"");
-					
+			DHCP_PrintFun(myobj,MyPara,"");		
 
 		}
 
@@ -1088,37 +1146,6 @@ var AppBtn = new Ext.Button({
   			}
   			//lnk="dhc.ris.appointment.allres.csp?EpisodeID="+PaadmDR+"&OeorditemID="+orderBodyList+"&LocId="+LocDR;
   			//lnk="dhc.ris.appoint.selectseat.csp?EpisodeID="+PaadmDR+"&OeorditemID="+orderBodyList+"&LocId="+LocDR;
-  			
-  			// 增加医嘱关系判断
-  			
-			var retConflict=tkMakeServerCall("web.DHCRisPlatRelationship","GetRelationShipFromOrdelist",orderBodyList);
-			//alert(retConflict+"1");
-			var conflictInfolist=retConflict.split("&&");
-			var hint="";
-			for (i=0;i<conflictInfolist.length ;i++ )
-			{
-				if ( conflictInfolist[i]!="")
-				{
-					var infoConfilct=conflictInfolist[i].split("^");
-					if (infoConfilct[2]!="")
-					{
-						if (hint=="")
-						{
-							hint=infoConfilct[2];
-						}
-						else
-						{
-							hint=hint+"\r\n"+infoConfilct[2];
-						}
-					}
-				}
-			}
-			if (hint!="")
-			{
-			    var ConflictFlag=confirm(hint+"\r\n是否继续预约?");
-			    if (ConflictFlag==false){return}
-			}
-			
   			openBookWindow(PaadmDR,orderBodyList,LocDR);
   		}else{
 			//alert("请先选择一条记录!")
@@ -1195,16 +1222,11 @@ var UnbookBtn = new Ext.Button({
 	  		{
 	  			var row=rows[i];
 	  			
-				  var TPatientStatus = row.get("TPatientStatus")
-				if (TPatientStatus == "登记"){
-					alert("已经登记，不允许取消预约!");
+	  			var TPatientStatus = row.get("TPatientStatus")
+	      		if (TPatientStatus!="预约") {
+		      		alert("该记录未预约，不允许取消预约 !");
 		      		return ;
-				}
-				///2019/09/18修复提示错误
-				if (TPatientStatus!="预约") {
-					alert("该记录未预约，不允许取消预约 !");
-					return ;
-				}
+		      	}
 	  			var LocDRGet=row.get('RecLocId');
 	  			
 	  			var patientIdGet=row.get('Tregno');
@@ -2387,75 +2409,6 @@ function SetLockValue(ischecked){
 
 function ExportList_onclick()
 {
-	
-	grid2excel(CarrierGrid,{IE11IsLowIE:false,filename:'检查列表导出',allPage:true,callback:function(success,data){
-		if(success){
-			alert("导出成功");
-		}else{
-			alert("导出失败");
-		}
-		
-	}});
-	/*
-	var typeDR = "" ;		// 病人类型 
-	var PatientNo = formatRegNo(Ext.getCmp("PatientNo").getValue()); 	//登记号
-	Ext.getCmp("PatientNo").setValue(PatientNo);
-	
-	var StudyNo = "";    	//检查号
-	var LocDr = Ext.getCmp("RecDep").getValue();		//科室ID
-	var StatusCode = Ext.getCmp("RisStatus").getValue();	//状态Id
-	var ReportDoc = "";		//报告医生
-	var VerifyDoc = "";	// 审核医生
-	var Name = ""; 			// 姓名
-	var ResourceDR = "";	//预约资源rowid
-	var RegEQDR = "" ;  	// 登记资源rowid 
-	var RoomDR = "" ; 		// 房间
-	var InPatientNo = "" ; 	// 住院号
-	var IsFindbyDate = "false" ; 		// 日期的勾选框 CheckDate
-	var IsAppointmentOrder = "" ;		// ckAppointment 需要预约的勾选框
-	var IsBedOrder = "" ;		//ckbedOrder 床旁医嘱
-	var EQGroupDR = "" ;	//检查组rowid
-	var No = "" ;			//编号
-	var IsSetFilm = "false" ; 		//ckSentFilm 已发片
-	var Islock = "false" ; 			// Lock 锁定
-	var IsNotLoc = "N" ;    	// ChkNotLoc 不显示本科病人
-	var QueryByRegDate = "N" ; 		// ckRegDate 登记日期
-	var Resource = "" ;		// Resource 
-	var EQGroup = "" ;
-	var Room = "" ;
-	var Status = Ext.getCmp("RisStatus").getRawValue();
-	var Patienttype = "" ;
-	var RegDevice = "" ;
-	var IsUItem = "N" ;
-	var IsCostRecords = "N" ;
-	var AppLocID = "";
-	
-	
-	var StartDate = Ext.getCmp("StartDate").getRawValue();
-	
-	var EndDate = Ext.getCmp("EndDate").getRawValue();
-	
-	var BookedType=1 ;   //默认
-	
-	
-	
-	var Condition1=typeDR+"^"+PatientNo+"^"+StudyNo+"^"+LocDr+"^"+StatusCode+"^"+ReportDoc+"^"+VerifyDoc+"^"+Name+"^"+ResourceDR;
-	var Condition2=RegEQDR+"^"+RoomDR+"^"+InPatientNo+"^"+IsFindbyDate+"^"+IsAppointmentOrder+"^"+IsBedOrder+"^"+EQGroupDR+"^^"+No
-		+"^"+IsSetFilm+"^"+Islock+"^"+IsNotLoc+"^"+QueryByRegDate;
-	var Condition3=Resource+"^"+EQGroup+"^"+Room+"^"+Status+"^"+Patienttype+"^"+RegDevice+"^"+StartDate+"^"+EndDate+"^"+IsUItem+"^"+IsCostRecords+"^"+AppLocID;
-
- 	var strCondition=Condition1+"^"+Condition2+"^"+Condition3;
-
-
-	var rtn = tkMakeServerCall("websys.Query","ToExcel","exportExamList","web.DHCRisWorkBenchDoEx","QueryExamItem",strCondition,StartDate,EndDate,BookedType);
-	
-	location.href = rtn;
-	
-	*/
-	
-	
-	
-	/*
 	try 
 	{
 		var xlApp,xlsheet,xlBook
@@ -2481,7 +2434,17 @@ function ExportList_onclick()
 	 	    alert("请查询记录后在导出!");
 	 	    return ;
 	 	}
-        
+        /*GetRegNo_"^"_GetName_"^"_GetSexDesc_"^"_GetstrAge_"^"_GetstrDOB_"^"_GetIDCDesc_"^"_GetStudyNo_"^"_GetstrOrderName_"^"_Getrequestdoc_"^"_GetstrAccessionNum_"^"_
+    	 	        0             1            2             3             4             5               6             7                    8                   9
+    	 	      GetstrDate_"^"_GetstrTime_"^"_strRppDate_"^"_strRppTime_"^"_$g(GetBookedDuration)_"^"_GetstrRegDate_"^"_GetstrRegTime_"^"_$g(GetRptDocName)_"^"_$g(GetVerifyDocName)_"^"_GetPatientStatus_"^"_paadmdr_"^"_Oeorditemdr_"^"_GetLocName_"^"_GetTotalPrice_"^"_GetPatientStatusCode_"^"_Getbilled_"^"_Gettypedesc_"^"_GetNum_"^"_
+    	 	        10                 11          12             13                14                      15               16                  17                       18                     19               20            21              22              23                   24                  25              26          27    
+    	 	      Getprice_"^"_GetIndex_"^"_GetEQDesc_"^"_GetResDesc_"^"_Getifbed_"^"_GetReportStatus_"^"_GetMainDoc_"^"_GetAssDoc_"^"_
+    	 	        28            29           30             31            32               33               34            35
+    	 	      GetRoomDesc_"^"_GetEQGroupDesc_"^"_GetWardName_"^"_$g(GetOldNo)_"^"_$g(Required)_"^"_strXDate_"^"_GetItemStatusCode_"^"_PapatmasDR_"^"_BodyDesc_"^"_Weight_"^"_TelNo_"^"_GetIPNo_"^"_FileSent_"^"_GetBedNo_"^"_$g(ReportSend)_"^"_$g(HaveImage)_"^"_RecLocId_"^"_RecLoc_"^"_$g(AutoInputFee)_"^"_
+    	 	          36                37               38               39                40            41               42                43               44        45         46          47         48           49              50                 51              52          53             54
+    	
+    	 	      $g(EndInputFee)_"^"_Detail_"^"_RejectAppReason_"^"_BilledDesc_"^"_PinYin_"^"_ToDayOeItem_"^"_CostRecords_"^"_AppDate_"^"_Urgentflag_"^"_$g(RegDoc)_"^"_Epissubtype_"^"_$g(GetSGroupDesc)_"^"_GetSGroupDR
+    	 	          55                 56            57               58           59            60               61           62            63              64           65                 66                67*/
 	 	for (var i=1;i<=Nums;i++)
 	 	{
 	        var PrintData=tkMakeServerCall('web.DHCRisWorkBenchDoEx','SetPrintData',UserID,i);
@@ -2585,7 +2548,33 @@ function ExportList_onclick()
 			 	  xlsheet.cells(j+3,31)=MainDoc;
 			 	  xlsheet.cells(j+3,32)=AssDoc; 
 			 	  xlsheet.cells(j+3,33)=RoomDesc; 
-			 	  
+			 	  /*
+    	 	      //xlsheet.cells(j+3,34)=EQGroupDesc; 
+    	 	      xlsheet.cells(j+3,35)=WardName; 
+    	 	      xlsheet.cells(j+3,36)=OldNo; 
+    	 	      xlsheet.cells(j+3,37)=Required; 
+    	 	      //xlsheet.cells(j+3,38)=XDate; 
+    	 	      xlsheet.cells(j+3,39)=BodyDesc; 
+    	 	      xlsheet.cells(j+3,40)=Weight; 
+    	 	      xlsheet.cells(j+3,41)=TelNo; 
+    	 	      xlsheet.cells(j+3,42)=IPNo; 
+    	 	      xlsheet.cells(j+3,43)=FileSent; 
+    	 	      xlsheet.cells(j+3,44)=BedNo; 
+    	 	      //xlsheet.cells(j+3,45)=ReportSend; 
+    	 	      //xlsheet.cells(j+3,46)=HaveImage; 
+    	 	      xlsheet.cells(j+3,47)=RecLoc; 
+    	 	      xlsheet.cells(j+3,48)=AutoInputFee; 
+    	 	      xlsheet.cells(j+3,49)=EndInputFee; 
+    	 	      xlsheet.cells(j+3,50)=Detail; 
+    	 	      xlsheet.cells(j+3,51)=BilledDesc; 
+    	 	      xlsheet.cells(j+3,52)=PinYin; 
+    	 	      xlsheet.cells(j+3,53)=CostRecords; 
+    	 	      xlsheet.cells(j+3,54)=AppDate; 
+    	 	      xlsheet.cells(j+3,55)=Urgentflag; 
+    	 	      xlsheet.cells(j+3,56)=RegDoc; 
+    	 	      xlsheet.cells(j+3,57)=Epissubtype; 
+    	 	      xlsheet.cells(j+3,58)=SGroupDesc; 
+    	 	      */
      			
     	 	      xlsheet.cells(j+3,34)=WardName; 
     	 	      xlsheet.cells(j+3,35)=OldNo; 
@@ -2630,7 +2619,6 @@ function ExportList_onclick()
 	{
 		alert(e.message);
 	}
-	*/
 }
 
 

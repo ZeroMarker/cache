@@ -15,6 +15,12 @@ function initParams(){
 
 function initPage(){
 	$("#appTableTitle").html(AppTableTitle);
+	if(seeCstType==1){ //hxy 2021-04-12 st
+		$("#columnsSaveOrderBtn").hide();
+	}else{
+		$("#columnsSaveOrderBtn").show();
+	} //ed
+	
 }
 
 function initTable(){
@@ -52,6 +58,7 @@ function initTable(){
 function filedFormatter(value,rowData,index){
 	var dicItmID = value.split("##")[0];
 	var value = value.split("##")[1];
+	if(value==undefined){value="";} //hxy 2021-04-14 在不够四列时，显示为空代替未定义
 	var ret= "";
 	if((value=="checkbox")||(value=="N")){
 		ret = "<input class='dicSaveItm' data-id='"+dicItmID+"' type='checkbox' onclick='checkOneDom(this)'></input>"

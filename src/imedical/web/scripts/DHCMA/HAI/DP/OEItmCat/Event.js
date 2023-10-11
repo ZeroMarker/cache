@@ -1,0 +1,307 @@
+﻿//页面Event
+function InitOEItmCatWinEvent(obj){
+	obj.LoadEvent = function(args){
+		$('#gridOEItmCat').datagrid('loadData',{ 'total':'0',rows:[] });  //初始加载显示记录为0
+		$('#gridOEItmType').datagrid('loadData',{ 'total':'0',rows:[] });  //初始加载显示记录为0
+		obj.gridOEItmCatLoad();
+		obj.gridOEItmTypeLoad();
+		obj.gridOEItmTypeLoad();
+		
+		$('#btnSave').on('click', function(){
+		 	obj.btnSave_click();
+		});
+		$('#btnSave2').on('click', function(){
+		 	obj.btnSave2_click();
+		});
+		$('#btnClose').on('click', function(){
+		    $HUI.dialog('#OEItmCatEdit').close();
+		});
+		$('#btnClose2').on('click', function(){
+			$HUI.dialog('#OEItmTypeEdit').close();
+		});
+		$("#btnAdd").on('click', function(){
+			obj.layer_rd = '';
+			obj.Layer();
+		});
+		$("#btnAdd2").on('click', function(){
+			obj.layer_rd = '';
+			obj.Layer2();
+		});
+		$("#btnEdit").on('click', function(){
+			var rowData = obj.gridOEItmCat.getSelected();
+			obj.layer_rd=rowData;
+			obj.Layer(rowData);
+		});
+		$("#btnEdit2").on('click', function(){
+			var rowData = obj.gridOEItmType.getSelected();
+			obj.layer_rd=rowData;
+			obj.Layer2(rowData);
+		});	
+		//删除		
+		$('#btnDelete').click(function () {
+			var rowData = obj.gridOEItmCat.getSelected();
+			var rowDataID =rowData["ID"];
+			$.messager.confirm("删除", "确定删除选中数据记录?", function (r) {				
+				if (r) {				
+					var flg = $m({
+						ClassName:"DHCHAI.DP.OEItmCat",
+						MethodName:"DeleteById",
+						Id:rowDataID
+					},false);
+					if (parseInt(flg)<0){
+						if (parseInt(flg)=='-777') {
+							$.messager.alert("提示","-777：当前无删除权限，请启用删除权限后再删除记录!",'info');
+						}else {
+							$.messager.alert("提示","删除失败!",'info');
+						}
+						return;
+					} else {
+						$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
+						obj.RecRowID = "";
+						obj.gridOEItmCatLoad();//刷新当前页
+					}
+				} 
+			});		
+		});	
+		//删除2		
+		$('#btnDelete2').click(function () {
+			var rowData = obj.gridOEItmType.getSelected();
+			var rowDataID =rowData["ID"];
+			$.messager.confirm("删除", "确定删除选中数据记录?", function (r) {				
+				if (r) {				
+					var flg = $m({
+						ClassName:"DHCHAI.DP.OEItmType",
+						MethodName:"DeleteById",
+						Id:rowDataID
+					},false);
+					if (parseInt(flg)<0){
+						if (parseInt(flg)=='-777') {
+							$.messager.alert("提示","-777：当前无删除权限，请启用删除权限后再删除记录!",'info');
+						}else {
+							$.messager.alert("提示","删除失败!",'info');
+						}
+						return;
+					} else {
+						$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
+						obj.RecRowID = "";
+						obj.gridOEItmTypeLoad();//刷新当前页
+					}
+				} 
+			});		
+		});
+	}
+	
+	//窗体初始化
+	obj.OEItmCatEdit =function() {
+		$('#OEItmCatEdit').dialog({
+			title: '医嘱分类编辑',
+			iconCls:"icon-w-paper",
+			modal: true,
+			isTopZindex:true
+		});
+	},
+	
+	//窗体2初始化
+	obj.OEItmTypeEdit =function() {
+		$('#OEItmTypeEdit').dialog({
+			title: '医嘱类型编辑',
+			iconCls:"icon-w-paper",
+			modal: true,
+			isTopZindex:true
+		});
+	},
+/////////////医嘱分类维护界面///////////////////////////////////////////////		
+	//保存
+	obj.btnSave_click = function(){
+		var errinfo="";
+		var rd = obj.layer_rd;
+		var ID = (rd ? rd["ID"] : '');
+		var BTCode = $('#txtBTCode').val();
+		var BTDesc = $('#txtBTDesc').val();
+		var TypeDr = $('#cboOEType').combobox('getValue');
+		if (!BTCode) {
+			errinfo = errinfo + "分类代码不允许为空!<br>";
+		}
+		if (!BTDesc) {
+			errinfo = errinfo + "分类名称不允许为空!<br>";
+		}
+		if (errinfo) {
+			$.messager.alert("错误提示", errinfo, 'info');
+			return;
+		}	
+		var InputStr = ID;
+		InputStr += "^" + BTCode;
+		InputStr += "^" + BTDesc;
+		InputStr += "^" + TypeDr;
+		var flg = $m({
+			ClassName:"DHCHAI.DP.OEItmCat",
+			MethodName:"Update",
+			InStr:InputStr,
+			aSeparete:"^"
+		},false);
+		if (parseInt(flg) <= 0) {
+			if (parseInt(flg) == 0) {
+				$.messager.alert("失败提示", "保存失败!返回码=" + flg, 'info');
+			} else if (parseInt(flg) == '-100') {
+				$.messager.alert("失败提示", "代码重复!" , 'info');
+			} else {
+				$.messager.alert("失败提示", "保存失败!返回码=" + flg, 'info');
+			}
+		} else {
+			$HUI.dialog('#OEItmCatEdit').close();
+			$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
+			obj.gridOEItmCatLoad();//刷新当前页
+		}
+	}
+
+	//单击选中事件：选择易感因素
+	obj.gridOEItmCat_onSelect = function (){
+		var rowData = obj.gridOEItmCat.getSelected();
+		if (rowData["ID"] == obj.RecRowID) {
+			$("#btnAdd").linkbutton("enable");
+			$("#btnEdit").linkbutton("disable");
+			$("#btnDelete").linkbutton("disable");
+			obj.RecRowID="";
+			obj.gridOEItmCat.clearSelections();
+		}else{
+			obj.RecRowID = rowData["ID"];
+			$("#btnAdd").linkbutton("disable");
+			$("#btnEdit").linkbutton("enable");
+			$("#btnDelete").linkbutton("enable");
+		}	
+	}
+		
+	//双击编辑事件
+	obj.gridOEItmCat_onDbselect = function(rd){
+		obj.layer_rd=rd;
+		obj.Layer(rd);
+	}
+	
+	//编辑窗体-初始化
+	obj.Layer = function(rd){
+		if (rd){
+			var txtCode = rd["BTCode"];
+			var txtDesc = rd["BTDesc"];
+			var cboOEType = rd["TypeID"];
+			$('#txtBTCode').val(txtCode);
+			$('#txtBTDesc').val(txtDesc);
+			$('#cboOEType').combobox('setValue',cboOEType);
+			$('#cboOEType').combobox('setText',rd["TypeDesc"]);
+			$("#txtBTCode,#txtBTDesc").validatebox({required:true});
+		}else {
+			obj.RecRowID="";
+			$('#txtBTCode').val("");
+			$('#txtBTDesc').val("");
+			$('#cboOEType').combobox('setValue','');
+			$("#txtBTCode,#txtBTDesc").validatebox({required:true});
+		}
+		$('#OEItmCatEdit').show();
+		obj.OEItmCatEdit();
+	}
+/////////////医嘱类型维护界面///////////////////////////////////////////////
+	//保存
+	obj.btnSave2_click = function(){
+		var errinfo="";
+		var rd = obj.layer_rd;
+		var ID = (rd ? rd["ID"] : '');
+		var BTCode = $('#txtBTCode2').val();
+		var BTDesc = $('#txtBTDesc2').val();
+		if (!BTCode) {
+			errinfo = errinfo + "医嘱类型代码不允许为空!<br>";
+		}
+		if (!BTDesc) {
+			errinfo = errinfo + "医嘱类型名称不允许为空!<br>";
+		}
+		if (errinfo) {
+			$.messager.alert("错误提示", errinfo, 'info');
+			return;
+		}	
+		var InputStr = ID;
+		InputStr += "^" + BTCode; 
+		InputStr += "^" + BTDesc;
+		var flg = $m({
+			ClassName:"DHCHAI.DP.OEItmType",
+			MethodName:"Update",
+			InStr:InputStr,
+			aSeparete:"^"
+		},false);
+		if (parseInt(flg) <= 0) {
+			if (parseInt(flg) == 0) {
+				$.messager.alert("失败提示", "保存失败!返回码=" + flg, 'info');
+			} else if (parseInt(flg) == '-100') {
+				$.messager.alert("失败提示", "医嘱类型代码不允许修改!" , 'info');
+			} else {
+				$.messager.alert("失败提示", "保存失败!返回码=" + flg, 'info');
+			}
+		} else {
+			$HUI.dialog('#OEItmTypeEdit').close();
+			$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
+			obj.gridOEItmTypeLoad();//刷新当前页
+		}
+	}
+
+	//单击选中事件
+	obj.gridOEItmType_onSelect = function (){
+		var rowData = obj.gridOEItmType.getSelected();
+		if (rowData["ID"] == obj.RecRowID) {
+			$("#btnAdd2").linkbutton("enable");
+			$("#btnEdit2").linkbutton("disable");
+			$("#btnDelete2").linkbutton("disable");
+			obj.RecRowID="";
+			obj.gridOEItmType.clearSelections();
+		}else{
+			obj.RecRowID = rowData["ID"];
+			$("#btnAdd2").linkbutton("disable");
+			$("#btnEdit2").linkbutton("enable");
+			$("#btnDelete2").linkbutton("enable");
+		}	
+	}
+		
+	//双击编辑事件
+	obj.gridOEItmType_onDbselect = function(rd){
+		obj.layer_rd=rd;
+		obj.Layer2(rd);
+	}
+	
+	//易感因素编辑窗体-初始化
+	obj.Layer2 = function(rd){
+		if (rd){
+			var txtBTCode2 = rd["BTCode"];
+			var txtBTDesc2 = rd["BTDesc"];
+			$('#txtBTCode2').val(txtBTCode2);
+			$('#txtBTDesc2').val(txtBTDesc2);
+			$("#txtBTCode2,#txtBTDesc2").validatebox({required:true});
+		}else {
+			obj.RecRowID="";
+			$('#txtBTCode2').val("");
+			$('#txtBTDesc2').val("");
+			$("#txtBTCode2,#txtBTDesc2").validatebox({required:true});
+		}
+		$('#OEItmTypeEdit').show();
+		obj.OEItmTypeEdit();
+	}
+	
+	obj.gridOEItmCatLoad = function(){
+		$("#gridOEItmCat").datagrid("loading");	
+		$cm ({
+		    ClassName:"DHCHAI.DPS.OEItmCatSrv",
+			QueryName:"QryOEItmCat",		
+	    	page:1,
+			rows:9999
+		},function(rs){
+			$('#gridOEItmCat').datagrid({loadFilter:pagerFilter}).datagrid('loadData', rs);					
+		});
+    }
+    
+    obj.gridOEItmTypeLoad = function(){
+		$("#gridOEItmType").datagrid("loading");	
+		$cm ({
+		    ClassName:"DHCHAI.DPS.OEItmCatSrv",
+			QueryName:"QryOEItmType",		
+	    	page:1,
+			rows:9999
+		},function(rs){
+			$('#gridOEItmType').datagrid({loadFilter:pagerFilter}).datagrid('loadData', rs);					
+		});
+    }
+}

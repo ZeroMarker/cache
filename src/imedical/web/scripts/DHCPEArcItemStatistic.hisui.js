@@ -18,6 +18,7 @@ $(function(){
 		BClear_click();		
         });
     
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEItemDetailStatistic.raq");
 })
 
 
@@ -55,17 +56,36 @@ function BFind_click(){
 	    reportName = "DHCPESetDetatilStatistic.raq";
 	    var lnk = "&BeginDate=" + BeginDate + "&EndDate=" + EndDate;
 	}
-	else { alert("请选择查询类型！"); return false;}
-	
+	else { alert("请选择查询类型！"); return false;}	
+	var CurLoc = session["LOGON.CTLOCID"];	
 	
 	var lnk = "&BeginDate=" + BeginDate
 			+ "&EndDate=" + EndDate
 			+ "&ARCIM=" + ARCIMDR
+			+ "&CurLoc=" + CurLoc
 			;
-			
-	document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=" + reportName + lnk;
+	
+    ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=" + reportName + lnk);	
+	//document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=" + reportName + lnk;
 }
-
+// 解决iframe中 润乾csp 跳动问题
+function ShowRunQianUrl(iframeId, url) {
+    var iframeObj = document.getElementById(iframeId)
+    if (iframeObj) {
+	    iframeObj.src=url;
+	    //debugger;
+	    $(iframeObj).hide();
+	    if (iframeObj.attachEvent) {
+		    iframeObj.attachEvent("onload", function(){
+		        $(this).show();
+		    });
+	    } else {
+		    iframeObj.onload = function(){
+		        $(this).show();
+		    };
+	    }
+    }
+}
 function InitCombobox(){
 	
 	//体检项目
@@ -85,6 +105,9 @@ function InitCombobox(){
 		textField:'desc',	
         onBeforeLoad:function(param){
 			param.Desc = param.q;
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId=session['LOGON.HOSPID']
+
 		},		
 		columns:[[
 			{field:'Code',title:'编码',width:80},
@@ -107,8 +130,8 @@ function InitCombobox(){
 		panelHeight:"auto",
 		editable:false,
 		data:[
-			{id:'Item',text:'按医嘱查询',selected:true},
-			{id:'Set',text:'按套餐查询'}
+			{id:'Item',text:$g('按医嘱查询'),selected:true},
+			{id:'Set',text:$g('按套餐查询')}
 		]
 	});
 

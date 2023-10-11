@@ -6,6 +6,9 @@ var editRow = ""; editDRow = ""; editPRow = "";
 /// 页面初始化函数
 function initPageDefault(){
 	
+	init(); //ylp 初始化医院 //20230222
+	InitCombobox();
+	
 	//初始化字典类型列表
 	InitMainList();
 	
@@ -15,11 +18,43 @@ function initPageDefault(){
 	//初始化界面按钮事件
 	InitWidListener();
 	
+	///初始化属性存储列表
+	InitTreeList();
+}
+function init(){
+	
+	hospComp = GenHospComp("DHC_EmConsDicType");  //hxy 2020-05-27 st //2020-05-31 add
+	hospComp.options().onSelect = function(){///选中事件
+		$("#main").datagrid('reload',{params:hospComp.getValue()});
+	}
+
+	$('#queryBTN').on('click',function(){
+		$("#main").datagrid('reload',{params:hospComp.getValue()});
+	 })
+		
 }
 
 /// 界面元素监听事件
 function InitWidListener(){
 	
+}
+
+function InitCombobox(){
+	var ActFlagArr = [{"value":"Y","text":'是'}, {"value":"N","text":'否'}];
+	
+	$("#Active").combobox({
+		data: ActFlagArr,
+		valueField: "value",
+		textField: "text",
+		panelHeight:"auto",  //设置容器高度自动增长	
+	})
+	
+	$("#ParList").combobox({
+		url:$URL+"?ClassName=web.DHCEMConsDicItem&MethodName=QryEmConsItemArray"+"&MWToken="+websys_getMWToken(),
+		valueField: "value",
+		textField: "text",
+		panelHeight:"auto",  //设置容器高度自动增长	
+	})
 }
 
 ///初始化字典类型列表
@@ -60,7 +95,7 @@ function InitMainList(){
 		options: {
 			valueField: "value", 
 			textField: "text",
-			url:$URL+"?ClassName=web.DHCMDTCom&MethodName=GetHospDs",
+			url:$URL+"?ClassName=web.DHCMDTCom&MethodName=GetHospDs"+"&MWToken="+websys_getMWToken(),
 			//required:true,
 			panelHeight:"auto",  //设置容器高度自动增长
 			onSelect:function(option){
@@ -78,12 +113,12 @@ function InitMainList(){
 	 */
 	var columns=[[
 		{field:'ID',title:'ID',width:100,hidden:true},
-		{field:'Code',title:'代码',width:100,editor:textEditor},
-		{field:'Desc',title:'描述',width:150,editor:textEditor},
+		{field:'Code',title:'代码',width:200,editor:textEditor},
+		{field:'Desc',title:'描述',width:200,editor:textEditor},
 		{field:'ActCode',title:'aitActCode',width:100,editor:textEditor,hidden:true},
-		{field:'ActDesc',title:'启用',width:80,editor:activeEditor},
+		{field:'ActDesc',title:'启用',width:140,editor:activeEditor},
 		{field:'HospID',title:'HospID',width:100,editor:textEditor,hidden:true},
-		{field:'HospDesc',title:'医院',width:200,editor:HospEditor}
+		{field:'HospDesc',title:'医院',width:200,editor:HospEditor,hidden:true}
 	]];
 	
 	/**
@@ -107,12 +142,29 @@ function InitMainList(){
 	        	        
 	        /// 字典项目列表
 			$("#item").datagrid('reload',{mID:rowData.ID});
+			
+			/// 树列表
+			$("#tree").treegrid('reload',{mID:rowData.ID});
+			
+			if(isTreeData()){
+				$HUI.tabs("#tabs").select("树形配置");
+			}else{
+				$HUI.tabs("#tabs").select("项目属性");
+			}
 	    }
 	};
 	
-	var uniturl = $URL+"?ClassName=web.DHCMDTDicType&MethodName=QryDicType";
+	var uniturl = $URL+"?ClassName=web.DHCMDTDicType&MethodName=QryDicType"+"&params="+hospComp.getValue()+"&MWToken="+websys_getMWToken();
 	new ListComponent('main', columns, uniturl, option).Init();
 
+}
+
+function isTreeData(){
+	var rowsData = $("#main").treegrid('getSelected');
+	var desc = rowsData.Desc;
+	var ret=false;
+	desc.indexOf("(树)")!=-1?ret=true:"";
+	return ret;
 }
 
 /// 保存编辑行
@@ -177,7 +229,7 @@ function insertRow(){
 	
 	$("#main").datagrid('insertRow', {
 		index: 0, // 行数从0开始计算
-		row: {ID:'', Code:'', Desc:'', ActCode:'Y', ActDesc:'是', HospID:'', HospDesc:''}
+		row: {ID:'', Code:'', Desc:'', ActCode:'Y', ActDesc:'是', HospID:hospComp.getValue(), HospDesc:''}
 	});
 	$("#main").datagrid('beginEdit', 0);//开启编辑并传入要编辑的行
 	editRow=0;
@@ -252,7 +304,7 @@ function InitItemList(){
 	 * 定义datagrid
 	 */
 	var option = {
-		title:'字典项目',
+		//title:'字典项目',
 		//nowrap:false,
 		headerCls:'panel-header-gray',
 		singleSelect : true,
@@ -267,12 +319,10 @@ function InitItemList(){
         },
         onClickRow:function(rowIndex, rowData){
 	        	        
-	        /// 字典项目属性列表
-			$("#detail").datagrid('reload',{mID:rowData.ID});
 	    }
 	};
 	
-	var uniturl = $URL+"?ClassName=web.DHCMDTDicItem&MethodName=QryDicItem&mID=0";
+	var uniturl = $URL+"?ClassName=web.DHCMDTDicItem&MethodName=QryDicItem&mID=0"+"&MWToken="+websys_getMWToken();
 	new ListComponent('item', columns, uniturl, option).Init();
 
 }
@@ -373,5 +423,191 @@ function deleteItmRow(){
 	}
 }
 
+///初始化属性存储列表
+function InitTreeList(){
+	
+	/**
+	 * 定义columns
+	 */
+	var columns=[[
+		{field:'ID',title:'ID',width:70,hidden:tree,align:'center'},
+		{field:'Code',title:'代码',width:140},
+		{field:'Desc',title:'描述',width:200},
+		{field:'Url',title:'连接',width:200},
+		{field:'ActDesc',title:'启用',width:100}
+	]];
+	
+	/**
+	 * 定义dtreegrid
+	 */
+	 
+	var uniturl = $URL+"?ClassName=web.DHCMDTDicItem&MethodName=QryDicItem&mID=0&IsTreeGrid=1"+"&MWToken="+websys_getMWToken();
+	$('#tree').treegrid({
+		url:uniturl,
+		idField:'ID',
+		treeField:'Code',
+		fit:true,
+		border:false,
+		columns:columns,
+		headerCls:'panel-header-gray',
+		singleSelect : true,
+		iconCls:'icon-paper',
+	    onDblClickRow: function (rowIndex, rowData) {//双击选择行编辑
+            
+        },
+        onClickRow:function(rowIndex, rowData){       
+	       
+	    }
+	});
+}
+
+function treeItmSave(){
+	
+	var rowData = $("#main").treegrid("getSelected");
+	if (rowData == null) {
+		$.messager.alert("提示","请先选择字典类型!");
+		return;
+	}
+	var mID = rowData.ID;           /// 主项目ID
+	var HospID = rowData.HospID;   /// 医院ID
+	var ID = $("#tID").val();
+	var Code = $("#Code").val();
+	var Desc = $("#Desc").val();
+	var Url = $("#Url").val();
+	var ParID = $("#ParList").combobox("getValue");
+	if(ParID==undefined){
+		ParID="";
+	}
+	var ActCode = $("#Active").combobox("getValue");
+	if(ActCode==undefined){
+		ActCode="";
+	}
+	if((Code=="")||(Desc=="")){
+		$.messager.alert("提示","代码或描述不能为空!"); 
+		return false;
+	}
+	
+	
+	var mListData=ID +"^"+ Code +"^"+ Desc +"^"+ ActCode +"^"+ HospID +"^"+ mID +"^"+ ParID +"^"+ Url;
+
+	//保存数据
+	runClassMethod("web.DHCMDTDicItem","save",{"mParam":mListData},function(jsonString){
+
+		if ((jsonString == "-1")||((jsonString == "-3"))){
+			$.messager.alert('提示','代码重复,请核实后再试！','warning');
+			return;	
+		}else if ((jsonString == "-2")||((jsonString == "-4"))){
+			$.messager.alert('提示','描述重复,请核实后再试！','warning');
+			return;
+		}
+		
+		
+		$("#treeOpPanel").window('close');
+		$("#tree").treegrid('reload',{mID:mID});
+	})
+}
+
+/// 插入新行
+function insertTreeRow(){
+	
+	var rowData = $("#main").datagrid("getSelected");
+	if (rowData == null) {
+		$.messager.alert("提示","请先选择字典类型!");
+		return;
+	}
+	
+	var mID = rowData.ID;           /// 主项目ID
+	var HospID = rowData.HospID;   /// 医院ID
+	var tID="";
+	var treeRowData = $("#tree").treegrid("getSelected");
+	if (treeRowData != null) {
+		tID = treeRowData.ID;
+	}
+	$("#tID").val("");
+	loadTreePanelData(mID,tID,"","");  ///增加面板增加数据
+	
+	$("#treeOpPanel").window({
+		title:"新增",
+	}).window('open');
+	
+}
+
+/// 修改
+function updTreeRow(){
+	
+	var rowData = $("#main").datagrid("getSelected");
+	if (rowData == null) {
+		$.messager.alert("提示","请先选择字典类型!");
+		return;
+	}
+	var treeRowData = $("#tree").treegrid("getSelected");
+	if (treeRowData == null) {
+		$.messager.alert("提示","请先选择一条数据!");
+		return;
+	}
+
+	var mID = rowData.ID;           /// 主项目ID
+	var tID = treeRowData.ID;
+	var HospID = rowData.HospID;   /// 医院ID
+	var Code = treeRowData.Code;
+	var Desc = treeRowData.Desc;
+	var Url = treeRowData.Url;
+	var ParID = treeRowData._parentId;
+	
+	if (ParID == "") {
+		$.messager.alert("提示","当前节点为根节点，不能修改!");
+		return;
+	}
+	
+	$("#tID").val(tID);
+	
+	loadTreePanelData(mID,ParID,Code,Desc,Url);  ///增加面板增加数据
+	
+	$("#treeOpPanel").window({
+		title:"修改",
+	}).window('open');
+	
+}
+
+function loadTreePanelData(mID,tID,code,desc,url){
+	$("#Code").val(code);
+	$("#Desc").val(desc);
+	$("#Url").val(url);
+	var url = $URL+"?ClassName=web.DHCMDTDicItem&MethodName=QryEmConsItemArray&mID="+mID+"&tID=";
+	$("#ParList").combobox("reload",url);
+	$("#ParList").combobox("setValue",tID);
+	$("#Active").combobox("setValue","Y");
+	
+	$("#tree").treegrid('reload',{mID:mID});
+}
+
+/// 删除选中行
+function deleteTreeRow(){
+	
+	var rowsData = $("#tree").treegrid('getSelected'); //选中要删除的行
+	if (rowsData != null) {
+		$.messager.confirm("提示", "您确定要删除这些数据吗？", function (res) {//提示是否删除
+			if (res) {
+				runClassMethod("web.DHCMDTDicItem","delete",{"ID":rowsData.ID},function(jsonString){
+
+					if (jsonString == -1){
+						$.messager.alert('提示','此项目已使用，不允许删除！','warning');
+					}else if (jsonString < 0){
+						$.messager.alert('提示','删除失败！','warning');
+					}
+					$("#tree").treegrid('reload');
+				})
+			}
+		});
+	}else{
+		 $.messager.alert('提示','请选择要删除的项','warning');
+		 return;
+	}
+}
+
+function getTreeGridId(){
+	addLine++;
+	return "nodeId"+addLine;
+}
 /// JQuery 初始化页面
 $(function(){ initPageDefault(); })

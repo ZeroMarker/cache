@@ -37,7 +37,6 @@ function InitviewScreenEvent(obj) {
 	}
 	obj.OpenEMR =function(aEpisodeID,aPatientID) {
 
-		debugger;
 		var strUrl = cspUrl+"&PatientID=" + aPatientID+"&EpisodeID="+aEpisodeID + "&2=2";
 		//var strUrl = "./emr.record.browse.csp?PatientID=" + aPatientID+"&EpisodeID="+aEpisodeID + "&2=2";
 	    websys_showModal({

@@ -1,223 +1,418 @@
-// Ãû³Æ:²ÎÊıÉèÖÃ¹ÜÀí
-
-var init = function(){
-    
-    var ReSetAppParam = {
-        text : '³õÊ¼»¯²ÎÊı',
-        iconCls : 'icon-init',
-        handler : function(){
-            if(!confirm('µÚÒ»´ÎÌáÊ¾: ÄúÕıÔÚÖØÖÃ²ÎÊı, Õâ»áÉ¾³ıÖ®Ç°µÄËùÓĞ²ÎÊıÊı¾İ, ÊÇ·ñ¼ÌĞø?')){
-                return;
-            }
-            if(!confirm('µÚ¶ş´ÎÌáÊ¾: ÄúÕıÔÚÖØÖÃ²ÎÊı, Õâ»áÉ¾³ıÖ®Ç°µÄËùÓĞ²ÎÊıÊı¾İ, ÊÇ·ñ¼ÌĞø?')){
-                return;
-            }
-            if(!confirm('×îºóÒ»´ÎÌáÊ¾: ÄúÕıÔÚÖØÖÃ²ÎÊı, Õâ»áÉ¾³ıÖ®Ç°µÄËùÓĞ²ÎÊıÊı¾İ, ÊÇ·ñ¼ÌĞø?')){
-                return;
-            }
-            
-            var result = tkMakeServerCall('web.CSSDHUI.Init.InitParamete', 'ReSetParame');
-            if(result<0){
-                $UI.msg('error', 'µ±Ç°ÔİÎŞÊı¾İ£¬ÎŞ·¨½øĞĞ³õÊ¼»¯£¬ÇëÏÈÍ¬²½Êı¾İ£¡');
-            }else{
-                $UI.msg('success', 'ÖØÖÃ³É¹¦!');
-                $UI.clear(AppGrid);
-                $UI.clear(AppParamGrid);
-                AppGrid.reload();
-            }
-        }
-    };
-    var AppSynBT = {
-        text: 'Í¬²½Ó¦ÓÃ',
-        iconCls: 'icon-reload',
-        handler: function(){
-            var synRet = tkMakeServerCall('web.CSSDHUI.Init.InitParamete','InitParameter');
-            var synRetArr = synRet.split('^');
-            $UI.msg('success', 'Í¬²½Êı¾İ³É¹¦£¡');
-            $UI.clear(AppGrid);
-            $UI.clear(AppParamGrid);
-            AppGrid.reload();
-        }
-    };
-    
-    var AppGrid = $UI.datagrid('#AppGrid', {
-        lazy: false,
-        queryParams: {
-            ClassName: 'web.CSSDHUI.System.BaseCodeType',
-            QueryName: 'SelectAll',
-            type:"C"
-        },
-        remoteSort: false,
-        pagination: false,
-        toolbar: [ReSetAppParam, AppSynBT],
-        showAddDelItems: false,
-        fitColumns: true,
-        columns: [[
-            {
-                title: 'RowId',
-                field: 'RowId',
-                width: 80,
-                hidden: true
-            },{
-                title: '´úÂë',
-                field: 'Code',
-                width: 200
-            },{
-                title: 'Ãû³Æ',
-                field: 'Description',
-                width: 200
-            }
-        ]],
-        onSelect: function(index, row){
-            var Parref = row['RowId'];
-            $UI.clear(AppParamGrid);
-            AppParamGrid.load({
-                ClassName: 'web.CSSDHUI.System.SystemParame',
-                MethodName: 'SelectAll',
-                Parref: Parref
-            });
-        }
-    });
-
-    
-    var AppParamSaveBT = {
-        text: '±£´æ',
-        iconCls: 'icon-save',
-        handler: function(){
-            var AppRow = AppGrid.getSelected();
-            if(isEmpty(AppRow)){
-                $UI.msg('alert', 'ÇëÑ¡ÔñÏàÓ¦µÄÓ¦ÓÃ³ÌĞò!');
-                return;
-            }
-            var Parref = AppRow['RowId'];
-            var Detail = AppParamGrid.getChangesData('Code');
-            if(isEmpty(Detail)){
-                $UI.msg('alert', 'Ã»ÓĞĞèÒª±£´æµÄÄÚÈİ!');
-                return;
-            }
-            $.cm({
-                ClassName: 'web.CSSDHUI.System.SystemParame',
-                MethodName: 'Save',
-                Parref: Parref,
-                Detail: JSON.stringify(Detail)
-            },function(jsonData){
-                if(jsonData.success === 0){
-                    $UI.msg('success', jsonData.msg);
-                    AppParamGrid.reload();
-                }else{
-                    $UI.msg('error', jsonData.msg);
-                }
-            });
-        }
-    }
-    
-    var AppParamGrid = $UI.datagrid('#AppParamGrid', {
-        queryParams: {
-            ClassName: 'web.CSSDHUI.System.SystemParame',
-            MethodName: 'SelectAll',
-            rows: 999
-        },
-        remoteSort: false,
-        //deleteRowParams: {
-        //    ClassName: 'web.CSSDHUI.System.SystemParame',
-        //    MethodName: 'Delete'
-        //},
-        pagination: false,
-        //toolbar: [AppParamSaveBT],
-        showAddSaveDelItems: true,
-        beforeAddFn: function(){
-            var AppRow = AppGrid.getSelected();
-            if(isEmpty(AppRow)){
-                $UI.msg('alert', 'ÇëÑ¡ÔñÏàÓ¦µÄ²ÎÊı!');
-                return false;
-            }
-        },
-		beforeDelFn:function(){
-			var parameRow = $('#AppParamGrid').datagrid('getSelected');
-			if(!isEmpty(parameRow)){
-				var parameRowid = parameRow.RowId;
-				if (!isEmpty(parameRowid)) {
-					$UI.msg('alert','²ÎÊıÒÑÎ¬»¤£¬²»ÄÜÉ¾³ı!');
-					return false;
+ï»¿// å‚æ•°è®¾ç½®ç®¡ç†
+var init = function() {
+	var AppParamValueGrid;
+	var HospId = gHospId;
+	var TableName = 'CSSD_Parameter';
+	function InitHosp() {
+		var hospComp = InitHospCombo(TableName, gSessionStr);
+		if (typeof hospComp === 'object') {
+			HospId = $HUI.combogrid('#_HospList').getValue();
+			Query();
+			$('#_HospList').combogrid('options').onSelect = function(index, record) {
+				HospId = record.HOSPRowId;
+				Query();
+			};
+		} else {
+			Query();
+		}
+	}
+	var Query = function() {
+		AppGrid.load({
+			ClassName: 'web.CSSDHUI.System.BaseCodeType',
+			QueryName: 'SelectAll'
+		});
+	};
+	function QueryDetail(Parref) {
+		$UI.clear(AppParamGrid);
+		$UI.clear(AppParamValueGrid);
+		var Params = JSON.stringify(addSessionParams({ Parref: Parref, BDPHospital: HospId }));
+		AppParamGrid.load({
+			ClassName: 'web.CSSDHUI.System.SystemParame',
+			MethodName: 'SelectAll',
+			Params: Params
+		});
+	}
+	
+	// ç¨‹åºæ¨¡å—
+	function AppSyn() {
+		showMask();
+		var Params = JSON.stringify(addSessionParams({ BDPHospital: HospId, Type: 'SysParame', InitFlag: 'N', SynFlag: '1' }));
+		$.cm({
+			ClassName: 'web.CSSDHUI.DataInit',
+			MethodName: 'jsInit',
+			Params: Params
+		}, function(jsonData) {
+			hideMask();
+			if (jsonData.success === 0) {
+				$UI.msg('success', jsonData.msg);
+				Query();
+			} else {
+				$UI.msg('error', jsonData.msg);
+			}
+		});
+	}
+	
+	var AppCm = [[
+		{
+			title: 'RowId',
+			field: 'RowId',
+			width: 80,
+			hidden: true
+		}, {
+			title: 'ä»£ç ',
+			field: 'Code',
+			width: 200
+		}, {
+			title: 'åç§°',
+			field: 'Description',
+			width: 200
+		}
+	]];
+	AppGrid = $UI.datagrid('#AppGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.BaseCodeType',
+			QueryName: 'SelectAll',
+			rows: 999
+		},
+		remoteSort: false,
+		pagination: false,
+		showAddDelItems: false,
+		fitColumns: true,
+		columns: AppCm,
+		toolbar: [{
+			text: 'åŒæ­¥å‚æ•°',
+			iconCls: 'icon-reload',
+			handler: function() {
+				AppSyn();
+			}
+		}],
+		onSelect: function(index, row) {
+			var Parref = row['RowId'];
+			QueryDetail(Parref);
+		},
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
+				$('#AppGrid').datagrid('selectRow', 0);
+			}
+		}
+	});
+	
+	// å‚æ•°
+	var AppParamCm = [[
+		{
+			title: 'RowId',
+			field: 'RowId',
+			width: 80,
+			hidden: true
+		}, {
+			title: 'ä»£ç ',
+			field: 'Code',
+			width: 100,
+			required: true,
+			editor: 'validatebox'
+		}, {
+			title: 'åç§°',
+			field: 'Description',
+			width: 150,
+			required: true,
+			editor: 'validatebox'
+		}, {
+			title: 'å‚æ•°å€¼',
+			align: 'left',
+			field: 'ParaValue',
+			width: 100,
+			editor: 'validatebox'
+		}, {
+			title: 'è¯´æ˜',
+			field: 'ParaExplain',
+			width: 200,
+			showTip: true,
+			tipWidth: 300,
+			editor: 'text'
+		}
+	]];
+	AppParamGrid = $UI.datagrid('#AppParamGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.SystemParame',
+			MethodName: 'SelectAll',
+			rows: 99999999
+		},
+		remoteSort: false,
+		pagination: false,
+		showAddSaveDelItems: true,
+		fitColumns: true,
+		columns: AppParamCm,
+		checkField: 'Code',
+		onLoadSuccess: function(data) {
+			var ItemRow = $('#AppParamGrid').datagrid('getRows');
+			for (var i = 0; i < ItemRow.length; i++) {
+				var ParaExplain = ItemRow[i].ParaExplain;
+				if (isEmpty(ParaExplain)) {
+					$(this).css('showTip', false);
 				}
-			}else{
-				$UI.msg('alert','ÇëÑ¡ÔñÒªÉ¾³ıµÄµ¥¾İ!');
+			}
+		},
+		onClickCell: function(index, field, value) {
+			AppParamGrid.commonClickCell(index, field);
+		},
+		onBeforeCellEdit: function(index, field) {
+			var RowData = $(this).datagrid('getRows')[index];
+			if (field === 'Code' && !isEmpty(RowData['RowId'])) {
 				return false;
 			}
 		},
-        saveDataFn: function(){
-            var AppRow = AppGrid.getSelected();
-            if(isEmpty(AppRow)){
-                $UI.msg('alert', 'ÇëÑ¡ÔñÏàÓ¦µÄÓ¦ÓÃ³ÌĞò!');
-                return;
-            }
-            var Parref = AppRow['RowId'];
-            var Detail = AppParamGrid.getChangesData();
-            if(isEmpty(Detail)){
-                //$UI.msg('alert', 'Ã»ÓĞĞèÒª±£´æµÄÄÚÈİ!');
-                return;
-            }
-            $.cm({
-                ClassName: 'web.CSSDHUI.System.SystemParame',
-                MethodName: 'Save',
-                Parref: Parref,
-                Detail: JSON.stringify(Detail)
-            },function(jsonData){
-                if(jsonData.success === 0){
-                    $UI.msg('success', jsonData.msg);
-                    AppParamGrid.reload();
-                }else{
-                    $UI.msg('error', jsonData.msg);
-                }
-            });
-        },
-        fitColumns: true,
-        columns: [[
-            {
-                title: 'RowId',
-                field: 'RowId',
-                width: 80,
-                hidden: true
-            },{
-                title: '´úÂë',
-                field: 'Code',
-                width: 150,
-                editor: {
-                    type: 'validatebox',
-                    options: {
-                        required: true
-                    }
-                }
-            },{
-                title: 'Ãû³Æ',
-                field: 'Description',
-                width: 200,
-                editor: {
-                    type: 'validatebox',
-                    options: {
-                        required: true
-                    }
-                }
-            },{
-                title: '²ÎÊıÖµ',
-                align:'left',
-                field: 'ParaValue',
-                width: 200,
-                editor: 'validatebox'
-            }
-        ]],
-        onClickCell: function(index, field ,value){
-            AppParamGrid.commonClickCell(index, field);
-        },
-        onBeforeCellEdit: function(index, field){
-            var RowData = $(this).datagrid('getRows')[index];
-            if(field == 'Code' && !isEmpty(RowData['RowId'])){
-                return false;
-            }
-        }
-    });
-    
-    
+		onSelect: function(index, row) {
+			$UI.clear(AppParamValueGrid);
+			var Parref = row['RowId'];
+			if (!isEmpty(Parref)) {
+				AppParamValueGrid.load({
+					ClassName: 'web.CSSDHUI.System.SystemParame',
+					MethodName: 'SelectProp',
+					Parref: Parref,
+					rows: 9999999
+				});
+			}
+		},
+		beforeAddFn: function() {
+			var AppRow = AppGrid.getSelected();
+			if (isEmpty(AppRow)) {
+				$UI.msg('alert', 'è¯·é€‰æ‹©ç›¸åº”çš„ç¨‹åºæ¨¡å—!');
+				return false;
+			}
+		},
+		beforeDelFn: function() {
+			var parameRow = $('#AppParamGrid').datagrid('getSelected');
+			if (!isEmpty(parameRow)) {
+				var parameRowid = parameRow.RowId;
+				if (!isEmpty(parameRowid)) {
+					$UI.msg('alert', 'å‚æ•°å·²ç»´æŠ¤ï¼Œä¸èƒ½åˆ é™¤!');
+					return false;
+				}
+			} else {
+				$UI.msg('alert', 'è¯·é€‰æ‹©è¦åˆ é™¤çš„å‚æ•°!');
+				return false;
+			}
+		},
+		saveDataFn: function() {
+			var AppRow = AppGrid.getSelected();
+			if (isEmpty(AppRow)) {
+				$UI.msg('alert', 'è¯·é€‰æ‹©ç›¸åº”çš„åº”ç”¨ç¨‹åº!');
+				return;
+			}
+			var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			var Parref = AppRow['RowId'];
+			var Detail = AppParamGrid.getChangesData();
+			var Params = JSON.stringify(addSessionParams({ Parref: Parref, BDPHospital: HospId }));
+			if (isEmpty(Detail)) {
+				return;
+			}
+			if (Detail === false) {
+				$UI.msg('alert', 'å­˜åœ¨æœªå¡«å†™çš„å¿…å¡«é¡¹ï¼Œä¸èƒ½ä¿å­˜!');
+				return;
+			}
+			var Obj = $('#AppParamGrid').datagrid('getSelected');
+			if (isEmpty(Obj.Description) || isEmpty(Obj.Code)) {
+				$UI.msg('alert', 'ä»£ç æˆ–åç§°ä¸èƒ½ä¸ºç©º!');
+				return;
+			}
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.SystemParame',
+				MethodName: 'jsSave',
+				Params: Params,
+				Detail: JSON.stringify(Detail)
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', jsonData.msg);
+					AppParamGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		}
+	});
+	
+	// å‚æ•°å€¼
+	var TypeFieldData = [{ RowId: 'G', Description: 'å®‰å…¨ç»„' }, { RowId: 'L', Description: 'ç§‘å®¤' },
+		{ RowId: 'U', Description: 'ç”¨æˆ·' }
+	];
+	$HUI.combobox('#TypeField', {
+		data: TypeFieldData,
+		valueField: 'RowId',
+		textField: 'Description',
+		editable: false,
+		onSelect: function(record) {
+			var Type = record['RowId'];
+			var PointerTarget = $('#PointerField');
+			PointerTarget.combobox('setValue', '');
+			var Params = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			if (Type === 'G') {
+				PointerTarget.combobox('reload',
+					$URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetGroup&ResultSetType=Array'
+					+ '&Params=' + Params);
+			} else if (Type === 'L') {
+				PointerTarget.combobox('reload',
+					$URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array'
+					+ '&Params=' + JSON.stringify(addSessionParams({ Type: 'All', BDPHospital: HospId })));
+			} else if (Type === 'U') {
+				PointerTarget.combobox('reload',
+					$URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetUser&ResultSetType=Array'
+					+ '&Params=' + Params);
+			}
+		}
+	});
+	
+	$HUI.combobox('#PointerField', {
+		valueField: 'RowId',
+		textField: 'Description'
+	});
+	
+	function ParamValueAdd() {
+		var ParamRow = AppParamGrid.getSelected();
+		if (isEmpty(ParamRow)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©ç›¸åº”çš„å‚æ•°!');
+			return;
+		}
+		var Parref = ParamRow['RowId'];
+		if (isEmpty(Parref)) {
+			$UI.msg('alert', 'è¯·å…ˆä¿å­˜ç›¸åº”çš„å‚æ•°!');
+			return;
+		}
+		ParamValueWin(Parref, '');
+	}
+	
+	function ParamValueUpdate() {
+		var RowData = AppParamValueGrid.getSelected();
+		if (isEmpty(RowData)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©éœ€è¦ä¿®æ”¹çš„è¡Œ!');
+			return;
+		}
+		var RowId = RowData['RowId'];
+		ParamValueWin('', RowId);
+	}
 
-}
+	function ParamValueDel() {
+		AppParamValueGrid.commonDeleteRow();
+	}
+	
+	var ParamValueWin = function(Parref, RowId) {
+		$HUI.dialog('#ParamValueWin', {
+			buttons: [{
+				text: 'ä¿å­˜',
+				handler: function() {
+					var Detail = $UI.loopBlock('#ParamValueForm');
+					if (isEmpty(Detail)) {
+						$UI.msg('alert', 'æ²¡æœ‰éœ€è¦ä¿å­˜çš„å†…å®¹!');
+						return;
+					}
+					var Obj = $UI.loopBlock('#ParamValueForm');
+					if (isEmpty(Obj.TypeField) || isEmpty(Obj.PointerField)) {
+						$UI.msg('alert', 'ç±»å‹æˆ–ç±»å‹å€¼ä¸èƒ½ä¸ºç©º!');
+						return;
+					}
+					$.cm({
+						ClassName: 'web.CSSDHUI.System.SystemParame',
+						MethodName: 'jsSaveProp',
+						Parref: Parref,
+						Detail: JSON.stringify(Detail)
+					}, function(jsonData) {
+						if (jsonData.success === 0) {
+							$UI.msg('success', jsonData.msg);
+							AppParamValueGrid.reload();
+							$HUI.dialog('#ParamValueWin').close();
+						} else {
+							$UI.msg('error', jsonData.msg);
+						}
+					});
+				}
+			}],
+			onOpen: function() {
+				$UI.clearBlock('#ParamValueForm');
+				if (!isEmpty(RowId)) {
+					$.cm({
+						ClassName: 'web.CSSDHUI.System.SystemParame',
+						MethodName: 'GetPropDetail',
+						RowId: RowId
+					}, function(jsonData) {
+						$UI.fillBlock('#ParamValueForm', jsonData);
+					});
+				}
+			}
+		}).open();
+	};
+	
+	var Cm = [[
+		{
+			title: 'RowId',
+			field: 'RowId',
+			width: 60,
+			hidden: true
+		}, {
+			title: 'ç±»å‹',
+			field: 'TypeDesc',
+			width: 100
+		}, {
+			title: 'ç±»å‹å€¼',
+			field: 'PointerDesc',
+			width: 240
+		}, {
+			title: 'å‚æ•°å€¼',
+			field: 'Value',
+			width: 160
+		}
+	]];
+	AppParamValueGrid = $UI.datagrid('#AppParamValueGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.SystemParame',
+			MethodName: 'SelectProp',
+			rows: 9999999
+		},
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.System.SystemParame',
+			MethodName: 'jsDeleteProp'
+		},
+		columns: Cm,
+		toolbar: [{
+			text: 'æ–°å¢',
+			iconCls: 'icon-add',
+			handler: function() {
+				ParamValueAdd();
+			}
+		}, {
+			text: 'ä¿®æ”¹',
+			iconCls: 'icon-write-order',
+			handler: function() {
+				ParamValueUpdate();
+			}
+		}, {
+			text: 'åˆ é™¤',
+			iconCls: 'icon-cancel',
+			handler: function() {
+				ParamValueDel();
+			}
+		}],
+		fitColumns: true,
+		remoteSort: false,
+		singleSelect: true,
+		pagination: false,
+		showAddDelItems: false,
+		beforeAddFn: function() {
+			var ParamRow = AppParamGrid.getSelected();
+			if (isEmpty(ParamRow)) {
+				$UI.msg('alert', 'è¯·é€‰æ‹©ç›¸åº”çš„å‚æ•°!');
+				return false;
+			}
+		}
+	});
+	
+	function AdjLayoutSize() {
+		var SouthHeight = $(window).height() * 0.35;
+		$('#ItmLayout').layout('panel', 'south').panel('resize', { height: SouthHeight });
+		$('#ItmLayout').layout();
+	}
+	window.onresize = function() {
+		AdjLayoutSize();
+	};
+	AdjLayoutSize();
+	InitHosp();
+};
 $(init);

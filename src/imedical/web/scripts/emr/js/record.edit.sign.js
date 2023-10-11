@@ -70,6 +70,14 @@ function init()
  	$("#divUserName")[0].innerText = userName;
  	$("#txtUser").val(userCode)
  	$("#divPwd").css('display','none');
+ 	if (isEnableSelectUserLevel == "Y") {
+		$("#txtLevel").combobox({
+			valueField: 'LevelCode',
+			textField: 'LevelDesc',
+			width:204,
+			panelHeight:120
+		});
+	}
 	txtUserChange();
 	getIdentityVerifcation(); 
 	$('#checkSure').focus();
@@ -86,9 +94,12 @@ function checkSure()
 	if (isEnableSelectUserLevel == "Y")
 	{
 		 var result = eval("("+$("#hiddenUserInfo").val()+")");
-		 result.UserLevel = $('#txtLevel').combobox('getValue');
-		 result.LevelDesc = $("#txtLevel").combobox('getText');
-		 userInfo = JSON.stringify(result);
+		 if (result.UserLevel != "")
+		 {
+		 	result.UserLevel = $('#txtLevel').combobox('getValue');
+		 	result.LevelDesc = $("#txtLevel").combobox('getText');
+		 	userInfo = JSON.stringify(result);
+		 }
 	}
 	window.returnValue = '{"action":"sign","userInfo":'+userInfo+'}';
 	closeWindow();		
@@ -161,6 +172,7 @@ function getIdentityVerifcation()
 			return;	
 		}
 	}
+    tmpPassword = base64encode(tmpPassword);
 	jQuery.ajax({
 		type: "POST",
 		dataType: "text",

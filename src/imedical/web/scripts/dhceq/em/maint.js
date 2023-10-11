@@ -17,6 +17,9 @@ function initDocument()
 	FillEquipData();
 	SetEnabled();
 	defindTitleStyle();
+	// MZY0147	3164887		2022-12-20
+	initTemplateList(getElementValue("TemplateDR"),"5",getElementValue("EquipDR"),"");
+	initPicAndAppendFile();
 }
 
 //初始化查询头面板
@@ -30,6 +33,8 @@ function initTopPanel()
 	jQuery("#BPicture").on("click", BPicture_Click);
 	jQuery("#BPMReport").on("click", BPMReport_Click);
 	jQuery("#BFeeInfo").on("click", BFeeInfo_Click);	//Mozy0252	826991		2020-3-3
+	jQuery("#BCollection").on("click", BCollection_Click);	//add by lmm 2020-08-10
+	jQuery("#BAppendFile").on("click", BAppendFile_Click);	//add by zc0104 2021-06-11 添加电子资料按钮点击事件
 	//add by csj 20181129 先选设备再选计划
 	$("#PlanName").lookup({"onBeforeShowPanel":function(){
 	    if ($("#EquipDR").val()=="") {
@@ -91,7 +96,7 @@ function GetMaintInfoList()
 	combindata=combindata+"^"+getElementValue("MaintFee") ; //16
 	combindata=combindata+"^"+getElementValue("ContractDR") ; //17  Hold1改为合同  modify by lmm 2020-04-29 1279496
 	combindata=combindata+"^"+getElementValue("Hold2") ; //18
-	combindata=combindata+"^"+getElementValue("Hold3") ; //19
+	combindata=combindata+"^"+getElementValue("AffixDR") ; //19		//Modify By DJ 2021-07-12
 	combindata=combindata+"^"+getElementValue("Hold4") ; //20
 	combindata=combindata+"^"+getElementValue("Hold5") ; //21
 	combindata=combindata+"^"+getElementValue("MeasureFlag") ; //22
@@ -134,8 +139,10 @@ function FillData()
 		},function(jsonData){
 			if (jsonData.SQLCODE<0) {$.messager.alert(jsonData.Data);return;}
     			setElement("Equip",jsonData.Data["EQName"]);
-				setElement("UseLocDR",jsonData.Data["EQUseLocDR"]);
-				setElement("UseLoc",jsonData.Data["EQUseLocDR_CTLOCDesc"]);
+				//Modefied by zc0102 2021-5-19 使用科室保存后页面不显示  begin
+				//setElement("UseLocDR",jsonData.Data["EQUseLocDR"]);
+				//setElement("UseLoc",jsonData.Data["EQUseLocDR_CTLOCDesc"]);
+				//Modefied by zc0102 2021-5-19 使用科室保存后页面不显示  end
 		});
 	}
 	var RowID=getElementValue("RowID");
@@ -177,7 +184,7 @@ function FillData()
 	setElement("ContractDR",list[24]);   //Hold1改为合同 modify by lmm 2020-04-29 1279496
 	setElement("Contract",list[sort+20]);   //modify by lmm 2020-04-29 1279496
 	setElement("Hold2",list[25]);
-	setElement("Hold3",list[26]);
+	setElement("AffixDR",list[26]);		//Modify By DJ 2021-07-12
 	setElement("Hold4",list[27]);
 	setElement("Hold5",list[28]);
 	setElement("MeasureFlag",list[17]);
@@ -210,6 +217,7 @@ function FillData()
 	setElement("CertificateNo",list[sort+17])	//Mozy0193	20170817 
 	setElement("PlanExecuteDR",list[sort+18])	//add by csj 20181103 计划执行DR
 	setElement("PlanExecute",list[sort+19])		//add by csj 20181103 计划执行单号
+	setElement("Affix",list[sort+21])			//Add By DJ 2021-07-12
 	//modified by csj 20191018 都可以有执行单号
 	if(getElementValue("PlanExecuteDR")=="") { 
 		disableElement("PlanExecute",true);
@@ -227,6 +235,10 @@ function FillData()
 function FillEquipData()
 {
 	$("#Banner").attr("src",'dhceq.plat.banner.csp?&EquipDR='+getElementValue("EquipDR"))
+	// MZY0147	3164887		2022-12-20
+	var Str=tkMakeServerCall("web.DHCEQ.EM.BUSEquipRange","GetRangSourceByEquip",getElementValue("EquipDR"),"3",getElementValue("MTType"));
+	var Info=Str.split("^");
+	setElement("TemplateDR",Info[0]);
 }
 
 
@@ -254,6 +266,8 @@ function SetEnabled()
 		jQuery("#BPMReport").unbind();
 		jQuery("#BMaintPlanItem").unbind();
 		jQuery("#BFeeInfo").unbind();	//Mozy0252	826991		2020-3-3
+		jQuery("#BAppendFile").linkbutton("disable")  //Modefied by zc0104 2021-06-11 电子资料按钮处理
+		jQuery("#BAppendFile").unbind();			  //Modefied by zc0104 2021-06-11 电子资料按钮处理
 		
 	}
 	else if (Status=="0")
@@ -300,7 +314,37 @@ function SetEnabled()
 		
 	}	
 	//add by lmm 2019-08-28 end
+	//add by lmm 2020-08-10 1379412
+	if (getElementValue("CollectFlag")!="Y")
+	{
+		jQuery("#BCollection").linkbutton("disable")
+		jQuery("#BCollection").unbind();			
+	}
+	else if (getElementValue("CollectFlag")=="Y")
+	{
+		jQuery("#BUpdate").linkbutton("disable")
+		jQuery("#BDelete").linkbutton("disable")
+		jQuery("#BSubmit").linkbutton("disable")
+		jQuery("#BCancelSubmit").linkbutton("disable")
+		jQuery("#BUpdate").unbind();
+		jQuery("#BDelete").unbind();
+		jQuery("#BSubmit").unbind();
+		jQuery("#BCancelSubmit").unbind();
+		jQuery("#BPicture").linkbutton("disable")
+		jQuery("#BFeeInfo").linkbutton("disable")	
+		jQuery("#BPicture").unbind();
+		jQuery("#BFeeInfo").unbind();
+		jQuery("#BAppendFile").linkbutton("disable")  //Modefied by zc0104 2021-06-11 电子资料按钮处理
+		jQuery("#BAppendFile").unbind();			  //Modefied by zc0104 2021-06-11 电子资料按钮处理
+		
+	}
 	
+	//add by lmm 2020-09-03 1486508
+	if ((getElementValue("CollectFlag")=="Y")&&(getElementValue("Status")=="2")&&(getElementValue("CertificateNo")!=""))
+	{
+		jQuery("#BCollection").linkbutton("disable")
+		jQuery("#BCollection").unbind();			
+	}
 }
 
 
@@ -314,7 +358,9 @@ function BUpdate_Click()
 	//checkMustItemNull();
 	if(CheckInvalidData()) return;
 	var combindata=GetMaintInfoList();
-	var Rtn = tkMakeServerCall("web.DHCEQ.EM.BUSMaint", "SaveData",combindata);
+	// MZY0147	3164887		2022-12-20
+	var dataList=getTemplateListValue();
+	var Rtn = tkMakeServerCall("web.DHCEQ.EM.BUSMaint", "SaveData",combindata,"","",getElementValue("TemplateDR"),dataList);
 	if (Rtn<0) 
 	{
 		alertShow("保存失败！");
@@ -333,7 +379,11 @@ function BUpdate_Click()
 	{
 		var url="dhceq.em.inspect.csp?";
 	}
-    window.location.href= url+"?&RowID="+Rtn+"&EquipDR="+getElementValue("EquipDR")+"&BussType="+getElementValue("BussType")+"&MaintTypeDR="+getElementValue("MaintTypeDR");
+	url += "?&RowID="+Rtn+"&EquipDR="+getElementValue("EquipDR")+"&BussType="+getElementValue("BussType")+"&MaintTypeDR="+getElementValue("MaintTypeDR");
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+    window.location.href= url;
 	
 }
 /*
@@ -399,7 +449,11 @@ function SubmitData(RowID,PERowID,BussType,EquipDR,CancelFlag){
 	{
 		var url="dhceq.em.inspect.csp?";
 	}
-    window.location.href= url+"?&RowID="+Rtn+"&EquipDR="+getElementValue("EquipDR")+"&BussType="+getElementValue("BussType")+"&MaintTypeDR="+getElementValue("MaintTypeDR");
+	url += "?&RowID="+Rtn+"&EquipDR="+getElementValue("EquipDR")+"&BussType="+getElementValue("BussType")+"&MaintTypeDR="+getElementValue("MaintTypeDR");
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+    window.location.href= url;
 	
 }
 /*
@@ -436,7 +490,11 @@ function DeleteData()
 	{
 		var url="dhceq.em.inspect.csp?";
 	}
-	window.location.href= url+"?&BussType="+getElementValue("BussType")+"&MaintTypeDR="+getElementValue("MaintTypeDR");
+	url += "?&BussType="+getElementValue("BussType")+"&MaintTypeDR="+getElementValue("MaintTypeDR");
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.location.href= url;
 }
 /*
  *Description:保养记录作废事件
@@ -465,9 +523,11 @@ function BCancelSubmit_Click()
 	{
 		var url="dhceq.em.inspect.csp?";
 	}
-    window.location.href= url+"?&BussType="+getElementValue("BussType")+"&MaintTypeDR="+getElementValue("MaintTypeDR");		//2011-08-29 HZY0005 
-
-	
+	url += "?&BussType="+getElementValue("BussType")+"&MaintTypeDR="+getElementValue("MaintTypeDR");
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+    window.location.href= url; 
 }
 /*
  *Description:图片上传链接界面
@@ -479,7 +539,18 @@ function BPicture_Click()
 	if (getElementValue("EquipDR")=="") {alertShow("请选择设备");return}
 	var Status=getElementValue("Status")
 	//modify by lmm 2020-05-19 1319957
-	var str='dhceq.plat.picturemenu.csp?&CurrentSourceType=32&CurrentSourceID='+getElementValue("EquipDR")+'&EquipDR='+getElementValue("EquipDR");	//modified by lmm 2020-04-27 1282940
+	//modified by zc0107 2021-11-14 2048721 begiin
+	//var str='dhceq.plat.picturemenu.csp?&CurrentSourceType=32&CurrentSourceID='+getElementValue("EquipDR")+'&EquipDR='+getElementValue("EquipDR");	//modified by lmm 2020-04-27 1282940
+	///Modefied by zc0125 2022-11-09 保养与检查插入业务类型不一样 begin
+	if (getElementValue("BussType")==1)
+	{
+		var str='dhceq.plat.picturemenu.csp?&CurrentSourceType=32&CurrentSourceID='+getElementValue("RowID")+'&EquipDR='+getElementValue("EquipDR");	
+	}
+	else
+	{
+		var str='dhceq.plat.picturemenu.csp?&CurrentSourceType=33&CurrentSourceID='+getElementValue("RowID")+'&EquipDR='+getElementValue("EquipDR");	
+	}
+	///Modefied by zc0125 2022-11-09 保养与检查插入业务类型不一样 end
 	showWindow(str,"上传图片","","","icon-w-paper","modal","","","middle"); //modify by lmm 2020-06-05 UI
 }
 /*
@@ -575,6 +646,7 @@ function setSelectValue(vElementID,rowData)
 		setElement("UseLocDR",rowData.TUseLocDR);
 		setElement("UseLoc",rowData.TUseLoc);
 		FillEquipData();
+		initTemplateList(getElementValue("TemplateDR"),"5",getElementValue("EquipDR"),"");
 	}
 	else if(vElementID=="PlanName")
 	{
@@ -710,4 +782,166 @@ function clearData(vElementID)
 			setElement("Service","");
 		}
 	}
+}
+
+///add by lmm 2020-08-10 1379412
+function BCollection_Click()
+{
+	var RowID=getElementValue("RowID");  
+	var combindata=""
+	combindata=combindata+getElementValue("CertificateNo") ; 
+	combindata=combindata+"^"+getElementValue("CertificateValidityDate") ; 
+	
+	var Rtn = tkMakeServerCall("web.DHCEQ.EM.BUSMaint","SaveCertificateInfo",RowID,combindata);
+	if (Rtn<0) 
+	{
+		alertShow("保存失败！");
+		return;	
+	}
+	alertShow("保存成功！");  
+	if ((getElementValue("BussType")==2)&&(getElementValue("MaintTypeDR")==5))
+	{
+		var url="dhceq.em.meterage.csp?";
+	}
+	else if (getElementValue("BussType")==1)
+	{
+		var url="dhceq.em.maint.csp?";
+	}	
+	else
+	{
+		var url="dhceq.em.inspect.csp?";
+	}
+	//modfiy by lmm 2020-09-03 1486508
+	url += "?&RowID="+RowID+"&EquipDR="+getElementValue("EquipDR")+"&BussType="+getElementValue("BussType")+"&MaintTypeDR="+getElementValue("MaintTypeDR")+"&CollectFlag="+getElementValue("CollectFlag");
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+    window.location.href= url;
+}
+/*
+ *Description:文件上传链接界面
+ *author:zc0104 2021-06-11
+*/
+function BAppendFile_Click()
+{
+	if (getElementValue("RowID")=="") return; 
+	if (getElementValue("EquipDR")=="") {alertShow("请选择设备");return}
+	//modify by lmm 2020-05-19 1319957
+	var str='dhceq.plat.appendfile.csp?&CurrentSourceType=33&CurrentSourceID='+getElementValue("RowID")+'&Status='+getElementValue("Status");	// MZY0147	3164887		2022-12-20
+	showWindow(str,"电子资料","","","icon-w-paper","modal","","","large"); //modify by lmm 2020-06-05 UI
+}
+// MZY0147	3164887		2022-12-20
+function initPicAndAppendFile()
+{
+	$HUI.datagrid("#tDHCEQPicAndAppendFile",{
+	    url:$URL, 
+	    queryParams:{
+	        ClassName:"web.DHCEQ.Lib.Common",
+	        QueryName:"GetAppendFileAndPic",
+	        SourceType:"33",
+			SourceID:getElementValue("RowID")
+	    },
+	    fit:true,
+		striped : true,
+	    cache: false,
+		fitColumns:false,
+    	columns:[[
+    		{field:'TRowID',title:'TRowID',width:0,align:'center',hidden:true},
+    		{field:'TSourceType',title:'TSourceType',width:0,align:'center',hidden:true},
+    		{field:'TSourceID',title:'TSourceID',width:0,align:'center',hidden:true},
+    		{field:'TPicTypeDR',title:'TPicTypeDR',width:0,align:'center',hidden:true},
+	        {field:'TPicType',title:'类型',width:'200',align:'center'},
+	        {field:'TName',title:'名称',width:200,align:'center'}, 
+	        {field:'TFileType',title:'TFileType',width:0,align:'center',hidden:true},
+	        {field:'TFlag',title:'TFlag',width:0,align:'center',hidden:true},
+	       	{field:'TToSwfFlag',title:'TToSwfFlag',width:0,align:'center',hidden:true},
+	        {field:'TFlag',title:'TFlag',width:0,align:'center',hidden:true},
+	        {field:'TOpt',title:'预览',width:100,align:'center',formatter: fomartOperation},
+	        {field:'TDownLoad',title:'下载',width:100,align:'center',formatter: fomartDownLoad}
+	    ]],
+		pagination:true,
+		pageSize:5,
+		pageNumber:1,
+		pageList:[5,10,15,20],
+    	toolbar:
+    	[{
+            iconCls: 'icon-upload-cloud',
+            text:'上传图片',
+            handler: function(){
+                UpLoadPic()
+            }},
+            {
+            iconCls: 'icon-upload-cloud',
+            text:'上传电子资料',
+            handler: function(){
+                 UpLoadAppendFile()
+            }
+        }]
+	});
+}
+function getPicType()
+{
+	var PicTypesJson=tkMakeServerCall("web.DHCEQ.Process.DHCEQCPicSourceType","GetPicTypeMenu",33,"")
+	window.eval("var PicTypes = " + PicTypesJson);
+	var childdatainfo=""
+	for (var i=0;i<PicTypes.length;i++)
+	{
+		var childinfo="{id:'"+PicTypes[i].id+"',text:'"+PicTypes[i].text.replace("<span style='color:red'>*</span>","")+"'}"
+		if (childdatainfo!="") childdatainfo=childdatainfo+","
+		childdatainfo=childdatainfo+childinfo
+	}
+	return "[{id:0,text:'请选择'},"+childdatainfo+"]"
+}
+function UpLoadPic()
+{
+	var str='dhceq.plat.picturemenu.csp?&CurrentSourceType=33&CurrentSourceID='+getElementValue("RowID")+'&EquipDR='+getElementValue("EquipDR")+'&Status='+getElementValue("MTStatus")+'&ReadOnly='+getElementValue("ReadOnly");
+	showWindow(str,"上传图片","","","icon-w-paper","modal","","","middle");
+}
+function UpLoadAppendFile()
+{
+	var Status=getElementValue("MTStatus");
+	var url='dhceq.plat.appendfile.csp?&CurrentSourceType=33&CurrentSourceID='+getElementValue("RowID")+'&Status='+Status+'&ReadOnly='+getElementValue("ReadOnly");
+	showWindow(url,"电子资料","","","icon-w-paper","modal","","","large");
+}
+function fomartOperation(value,row,index){
+	if (row.TFlag=="File")
+	{
+		if ((row.TToSwfFlag!="Y")&&(row.TFileType!="pdf"))
+		{
+			var ftpappendfilename=row.TRowID+"."+row.TFileType;
+			var btn ='<a href="#" onclick="AppendFileSwitchAndView(&quot;'+ftpappendfilename+'&quot;)"><img border=0 complete="complete" src="../scripts_lib/hisui-0.1.0/dist/css/icons/eye.png"/></a>'; 
+		}
+		else
+		{
+			var btn ='<A onclick="showWindow(&quot;dhceq.process.appendfileview.csp?RowID='+row.TRowID+'&ToSwfFlag=Y&quot;,&quot;文件预览&quot;,&quot;&quot;,&quot;&quot;,&quot;icon-w-paper&quot;,&quot;modal&quot;,&quot;&quot;,&quot;&quot;,&quot;large&quot;)" href="#"><img border=0 complete="complete" src="../scripts_lib/hisui-0.1.0/dist/css/icons/eye.png"/></A>';
+		}
+	}
+	else
+	{
+		var btn ='<A onclick="showWindow(&quot;dhceq.plat.pictureview.csp?PTRowID='+row.TRowID+'&SourceType=33&SourceID='+getElementValue("RowID")+'&ReadOnly=1&quot;,&quot;图片预览&quot;,&quot;&quot;,&quot;&quot;,&quot;icon-w-paper&quot;,&quot;modal&quot;,&quot;&quot;,&quot;&quot;,&quot;large&quot;)" href="#"><img border=0 complete="complete" src="../scripts_lib/hisui-0.1.0/dist/css/icons/eye.png"/></A>';
+	}
+	return btn;
+}
+
+function AppendFileSwitchAndView(ftpappendfilename)
+{
+	var DHCEQTomcatServer=getElementValue("DHCEQTomcatServer")
+	var url=DHCEQTomcatServer+"DHCEQOfficeView/uploadfile.jsp?ftpappendfilename="+ftpappendfilename;
+	showWindow(url,"文件预览","","","icon-w-paper","modal","","","large");
+}
+function fomartDownLoad(value,row,index)
+{
+	if (row.TFlag=="File")
+	{
+		var ftpappendfilename=tkMakeServerCall("web.DHCEQ.Process.DHCEQAppendFile","GetFtpStreamSrcByAFRowID",row.TRowID);
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			ftpappendfilename += "&MWToken="+websys_getMWToken()
+		}
+		var btn="<a onclick='window.open(&quot;"+ftpappendfilename+"&quot;)'><img border=0 complete='complete' src='../scripts_lib/hisui-0.1.0/dist/css/icons/download.png' /></a>";
+	}
+	else
+	{
+		var btn ="";
+	}
+	return btn;
 }

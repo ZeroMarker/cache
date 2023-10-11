@@ -16,7 +16,7 @@ function InitLabTCMapWin(){
 			singleSelect: true,
 			autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
 			loadMsg:'数据加载中...',
-			pageSize: 10,
+			pageSize: 20,
 			pageList : [10,20,50,100,200],
 		    url:$URL,
 		    queryParams:{
@@ -24,14 +24,18 @@ function InitLabTCMapWin(){
 				QueryName:"QryLabTCMap"
 		    },
 			columns:[[
-				{field:'ID',title:'ID',width:'50'},
-				{field:'TestCode',title:'检验项目',width:'80',sortable:'true'},
-				{field:'TestDesc',title:'项目名称',width:'150'},
-				{field:'TestSetList',title:'检验医嘱',width:'300'},
-				{field:'RstFormat',title:'结果类型',width:'80'},
-				{field:'AbFlagS',title:'异常标记',width:'80'},
-				{field:'HospGroup',title:'医院',width:'125'},
-				{field:'IsActive',title:'是否有效',width:'90'}
+				{field:'ID',title:'ID',width:50},
+				{field:'TestCode',title:'检验项目',width:80,sortable:'true'},
+				{field:'TestDesc',title:'项目名称',width:150},
+				{field:'TestSetList',title:'检验医嘱',width:320},
+				{field:'RstFormat',title:'结果类型',width:80},
+				{field:'AbFlagS',title:'异常标记',width:70},
+				{field:'HospGroup',title:'医院',width:125},
+				{field:'IsActive',title:'是否有效',width:70,
+					formatter: function ( value,row,index ) {
+						return (row['IsActive'] == '1' ? '是' : '否');
+					}
+				}
 			]],
 			onSelect:function(rindex,rowData){
 				if (rindex>-1) {		
@@ -44,13 +48,14 @@ function InitLabTCMapWin(){
 				}
 			},
 			onLoadSuccess:function(data){
-				//$("#btnEdit_one").hasClass("l-btn-disabled")
-				//$("#btnEdit_one").linkbutton("disable");
+
+				$("#btnEdit_one").linkbutton("disable");
 				$("#btnEdit_two").linkbutton("disable");
 				$("#btnEdit_three").linkbutton("disable");
-				/* $("#btnsearch_one").linkbutton("disable");
-				$("#btnsearch_two").linkbutton("disable");
-				$("#btnsearch_three").linkbutton("disable"); */
+						
+				obj.RecRowID1="";
+				obj.LabTCMapRstLoad();  //加载检验项目结果
+				obj.LabTCMapAbLoad();  //加载检验项目定值结果
 			}
 		});
 		
@@ -74,9 +79,13 @@ function InitLabTCMapWin(){
 					aMapID:obj.RecRowID1
 				},
 				columns:[[
-					{field:'TestRes',title:'定性结果',width:'150'},
-					{field:'MapText',title:'标准结果',width:'150'},
-					{field:'IsActive',title:'是否有效',width:'150'}
+					{field:'TestRes',title:'定性结果',width:130},
+					{field:'MapText',title:'标准结果',width:170},
+					{field:'IsActive',title:'是否有效',width:130,
+						formatter: function ( value,row,index ) {
+							return (row['IsActive'] == '1' ? '是' : '否');
+						}
+					}
 				]],
 				onBeforeLoad: function (param) {
 					var firstLoad = $(this).attr("firstLoad");
@@ -100,7 +109,7 @@ function InitLabTCMapWin(){
 				onLoadSuccess:function(data){
 					//$("#btnEdit_two").hasClass("l-btn-disabled")
 					//$("#btnEdit_two").linkbutton("disable");
-					$("#btnEdit_three").linkbutton("disable");
+					$("#btnEdit_two").linkbutton("disable");
 					/*$("#btnsearch_one").linkbutton("disable");
 					$("#btnsearch_two").linkbutton("disable");
 					$("#btnsearch_three").linkbutton("disable"); */
@@ -127,9 +136,13 @@ function InitLabTCMapWin(){
 						aMapID:obj.RecRowID1
 				    },
 					columns:[[
-						{field:'AbFlag',title:'异常标志',width:'150'},
-						{field:'MapText',title:'异常标志（H、L等）',width:'150'},
-						{field:'IsActive',title:'是否有效',width:'150'},
+						{field:'AbFlag',title:'异常标志（H、L等）',width:170},
+						{field:'MapText',title:'标准备注',width:130},
+						{field:'IsActive',title:'是否有效',width:120,
+							formatter: function ( value,row,index ) {
+								return (row['IsActive'] == '1' ? '是' : '否');
+							}
+						},
 					]],
 					onBeforeLoad: function (param) {
 			            var firstLoad = $(this).attr("firstLoad");

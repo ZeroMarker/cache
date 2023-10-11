@@ -7,27 +7,36 @@ function PrintHealthGuide(PAADM,PatientID,CotentType,Type,PrinterName)
 {
 	
 	HGCreatePrintPage(PrinterName,PAADM,PatientID,CotentType)
-	if (Type=="V"){  //预览
-		LODOP.PREVIEW();
-	}else if (Type=="P"){  //打印
-		LODOP.PRINT();
-		
-	}else{  //导出
-		if (PrinterName!=""){  //如果设置了打印机名称，通过设置的虚拟打印机生成对应的文件
-			LODOP.PRINT();
-		}else{  //没有设置打印机名称，生成图片文件
-			LODOP.SET_SAVE_MODE("FILE_PROMPT",0);
-			LODOP.SET_SAVE_MODE("SAVEAS_IMGFILE_EXENAME",".jpg");
-			var ret=LODOP.SAVE_TO_FILE("D:\\DHCPE\\"+PAADM+".jpg");
-			if (ret){
-				//成功保存导出状态、
-				alert(ret)
+	
+	//增加打印项目信息
+	var PrintURL=tkMakeServerCall("web.DHCPE.HealthGuide","GetPrintInfo",PAADM,PatientID,CotentType,"Body");
+	//LODOP.ADD_PRINT_URL("5mm","12mm","RightMargin:6mm","BottomMargin:25mm",PrintURL);  //Top,Left,Width,Height,strURL
+	//LODOP.SET_PRINT_MODE("FULL_WIDTH_FOR_OVERFLOW",true);
+	var xmlHttp=createXmlHttp();
+	xmlHttp.onreadystatechange = function (a,b){
+	    if (xmlHttp.readyState == 4) {
+		    LODOP.ADD_PRINT_HTM(55,20,"100%","100%",xmlHttp.responseText);
+		    LODOP.SET_PRINT_MODE("FULL_WIDTH_FOR_OVERFLOW",true);
+			if (Type=="V"){
+				LODOP.PREVIEW();
+			}else if (Type=="P"){
+				LODOP.PRINT();
 			}else{
-				alert(ret)
-				//失败保存失败
-			}
-		}
+				LODOP.SET_SAVE_MODE("FILE_PROMPT",0);
+				LODOP.SET_SAVE_MODE("SAVEAS_IMGFILE_EXENAME",".jpg");
+				var ret=LODOP.SAVE_TO_FILE("D:\\DHCPE\\"+PAADM+".jpg");
+				if (ret){
+					//成功保存导出状态、
+					alert(ret)
+				}else{
+					alert(ret)
+					//失败保存失败
+				}
+			}	
+		} 
 	}
+	xmlHttp.open("GET", PrintURL, true);
+    xmlHttp.send(null);
 	
 }
 
@@ -64,10 +73,7 @@ function HGCreatePrintPage(PrinterName,PAADM,PatientID,CotentType)
 	LODOP.SET_PRINT_STYLEA(0,"Vorient",1);
 	LODOP.SET_PRINT_STYLEA(0,"NumberStartPage",1);
 	
-	//增加打印项目信息
-	var PrintURL=tkMakeServerCall("web.DHCPE.HealthGuide","GetPrintInfo",PAADM,PatientID,CotentType,"Body");
-	LODOP.ADD_PRINT_URL("5mm","12mm","RightMargin:6mm","BottomMargin:25mm",PrintURL);  //Top,Left,Width,Height,strURL
-	LODOP.SET_PRINT_MODE("FULL_WIDTH_FOR_OVERFLOW",true);
+	
 	
 	//LODOP.PRINT_DESIGN()
 }
@@ -95,22 +101,32 @@ function PEPrintReport(Type,PAADM,PatientID,CSPName)
 	var Header=ReportArr[1];
 	var Footer=ReportArr[2];
 	PECreatePrintPage(PrintURL,Header,Footer)
-	if (Type=="V"){
-		LODOP.PREVIEW();
-	}else if (Type=="P"){
-		LODOP.PRINT();
-	}else{
-		LODOP.SET_SAVE_MODE("FILE_PROMPT",0);
-		LODOP.SET_SAVE_MODE("SAVEAS_IMGFILE_EXENAME",".jpg");
-		var ret=LODOP.SAVE_TO_FILE("D:\\DHCPE\\"+PAADM+".jpg");
-		if (ret){
-			//成功保存导出状态、
-			alert(ret)
-		}else{
-			alert(ret)
-			//失败保存失败
-		}
+	//LODOP.ADD_PRINT_URL(55,20,"100%","100%",PrintURL);
+	var xmlHttp=createXmlHttp();
+	xmlHttp.onreadystatechange = function (a,b){
+	    if (xmlHttp.readyState == 4) {
+		    LODOP.ADD_PRINT_HTM(55,20,"100%","100%",xmlHttp.responseText);
+			if (Type=="V"){
+				LODOP.PREVIEW();
+			}else if (Type=="P"){
+				LODOP.PRINT();
+			}else{
+				LODOP.SET_SAVE_MODE("FILE_PROMPT",0);
+				LODOP.SET_SAVE_MODE("SAVEAS_IMGFILE_EXENAME",".jpg");
+				var ret=LODOP.SAVE_TO_FILE("D:\\DHCPE\\"+PAADM+".jpg");
+				if (ret){
+					//成功保存导出状态、
+					alert(ret)
+				}else{
+					alert(ret)
+					//失败保存失败
+				}
+			}	
+		} 
 	}
+	xmlHttp.open("GET", PrintURL, true);
+    xmlHttp.send(null);
+	
 }
 function PECreatePrintPage(PrintURL,Header,Footer) {
 	//alert(Footer)
@@ -158,6 +174,16 @@ function PECreatePrintPage(PrintURL,Header,Footer) {
 	LODOP.SET_PRINT_STYLEA(0,"PageUnIndex",1);
 	LODOP.SET_PRINT_STYLEA(0,"NumberStartPage",2);  //从第二页开始计算页码
 	
-	LODOP.ADD_PRINT_URL(55,20,"100%","100%",PrintURL);
 	
+	
+}
+
+function createXmlHttp() {
+    //根据window.XMLHttpRequest对象是否存在使用不同的创建方式
+    if (window.XMLHttpRequest) {
+       xmlHttp = new XMLHttpRequest();                  //FireFox、Opera等浏览器支持的创建方式
+    } else {
+       xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");//IE浏览器支持的创建方式
+    }
+    return xmlHttp;
 }

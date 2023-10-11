@@ -18,10 +18,16 @@ function initDocument()
 		disableElement("BEndDate",true);
 		disableElement("BEndTime",true);
 	}
+	else
+	{
+		hiddenObj("BCancel",1); 
+	}
 	fillData();
 	jQuery("#BExecute").linkbutton({iconCls: 'icon-w-run'});
 	jQuery("#BExecute").on("click", BExecute_Clicked);
-	initButtonWidth();
+	//jQuery("#BCancel").on("click", BCancel_Clicked);  //Modefied by zc0084 2020-10-14 作废按钮调用
+	//showBtnIcon('BFind^BCancel^BExecute',false); //added by LMH 20230206 动态设置是否极简显示按钮图标
+	//initButtonWidth();
 	defindTitleStyle();
 	$HUI.datagrid("#tDHCEQSBillList",{
 		url:$URL,
@@ -77,6 +83,8 @@ function BExecute_Clicked()
 {
 	var data=getInputList();
 	data=JSON.stringify(data);
+	//Modefied by zc0084 2020-10-14 执行方法调整 begin
+	/*
 	var rows = $('#tDHCEQSBillList').datagrid('getRows');
 	var dataList="";
 	for (var i = 0; i < rows.length; i++) 
@@ -99,7 +107,9 @@ function BExecute_Clicked()
 		messageShow('alert','error','提示',"账单明细不能为空!");
 		return;
 	}
-	var jsonData = tkMakeServerCall("web.DHCEQ.RM.BUSSBill", "SaveBill",data,dataList);
+	var jsonData = tkMakeServerCall("web.DHCEQ.RM.BUSSBill", "SaveBill",data,dataList);*/
+	var jsonData = tkMakeServerCall("web.DHCEQ.RM.BUSSBill", "SaveBillNew",data,'2');
+	//Modefied by zc0084 2020-10-14 执行方法调整 end
 	jsonData=JSON.parse(jsonData);
 	if (jsonData.SQLCODE==0)
 	{
@@ -118,6 +128,9 @@ function reloadbill(jsonData)
 	websys_showModal("options").mth();
 	var val="BillDR="+jsonData.Data
 	url="dhceq.rm.sbilllist.csp?"+val;
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
 	window.location.href= url;
 }
 function creatToolbar()
@@ -153,4 +166,19 @@ function fillData()
 	jsonData=jQuery.parseJSON(jsonData);
 	if (jsonData.SQLCODE<0) {messageShow("","","",jsonData.Data);return;}
 	setElementByJson(jsonData.Data);
+}
+//Modefied by zc0084 2020-10-14 作废方法
+function BCancel_Clicked()
+{
+	var jsonData = tkMakeServerCall("web.DHCEQ.RM.BUSSBill", "SaveBillNew",getElementValue("BillDR"),'1');
+	jsonData=JSON.parse(jsonData);
+	if (jsonData.SQLCODE==0)
+	{
+		websys_showModal("close");  
+	}
+	else
+    {
+		messageShow('alert','error','提示',"错误信息:"+jsonData.Data);
+		return;
+    }
 }

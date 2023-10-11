@@ -69,7 +69,7 @@ var queryKeyUpHandler = function(e){
 				if (!tableSet[tipTypeObj.schema]) {
 					DHC.Ajax.req({
 						url: "dhctt.request.csp", 
-						data: {schema: tipTypeObj.schema, table: lastString, act:"getAllTable"}, 
+						data: {Namespace:$("#OpenNamespace").text(),schema: tipTypeObj.schema, table: lastString, act:"getAllTable"}, 
 						type:"GET", 		
 						async: true,
 						dataType: "json",
@@ -107,7 +107,7 @@ var queryKeyUpHandler = function(e){
 				}else{
 					DHC.Ajax.req({
 						url: "dhctt.request.csp", 
-						data: {schema: tipTypeObj.schema, table: tipTypeObj.table,column:lastString,act:"getTableAllColumn"}, 
+						data: {"Namespace":$("#Namespace").val(),schema: tipTypeObj.schema, table: tipTypeObj.table,column:lastString,act:"getTableAllColumn"}, 
 						type:"GET", 		
 						async: true,
 						dataType: "json",
@@ -237,7 +237,7 @@ var queryKeyUpHandler = function(e){
 				}else{
 					DHC.Ajax.req({
 						url: "dhctt.request.csp", 
-						data: {schema: tipTypeObj.schema, table: tipTypeObj.table,column:lastString,act:"getTableAllColumn"}, 
+						data: {"Namespace":$("#Namespace").val(),schema: tipTypeObj.schema, table: tipTypeObj.table,column:lastString,act:"getTableAllColumn"}, 
 						type:"GET", 		
 						async: true,
 						dataType: "json",
@@ -440,7 +440,7 @@ var updateOnblur = function(e){
 		var RuntimeMode = $("#RuntimeMode").val();
 		$.ajax({
 	        url: "dhctt.request.csp", 
-	        data: {tname:tname,cname:t.data("cn"),cval:encodeURIComponent(t.val()),ival:t.data("id"),act:"updateSql",RuntimeMode:RuntimeMode}, 
+	        data: {Namespace:t.data('ns'),tname:tname,cname:t.data("cn"),cval:encodeURIComponent(t.val()),ival:t.data("id"),act:"updateSql",RuntimeMode:RuntimeMode}, 
 	        type: "POST",
 	        success: function handler(txt){
 		        if (txt.indexOf("1 Row Affected")>-1) {
@@ -467,17 +467,39 @@ var tabledblClickRowHandler = function(e){
 	//var tableJObj = $("#resultSetTable");
 	//var tn = tableJObj.data("tn");
 	//tableJObj.find("tr th:eq("+src.cellIndex+") a").data("cn");
-	
-	var cn = $(tableObj.rows[0].cells[$(src).find("a").attr("col")]).find("a").data("cn");
+	var colIndex = src.cellIndex; //$(src).find("a").attr("col");
+	var cn = $(tableObj.rows[0].cells[colIndex]).find("a").data("cn");
 	
 	var id = $(row.cells[0]).data("id");
 	if (id!=""){
-		$(src).html("<input data-cn='"+cn+"' data-id='"+id+"' data-oldval='"+src.innerText+"' value='"+src.innerText+"' onblur='updateOnblur(this)'/>");
+		$(src).html("<input data-ns='"+$("#OpenNamespace").text()+"' data-cn='"+cn+"' data-id='"+id+"' data-oldval='"+src.innerText+"' value='"+src.innerText+"' onblur='updateOnblur(this)'/>");
 		$(src).find("input").select();
 	}else{
 		alert("没有Id列,无法快速更新!");
 	}
-} 
+}
+function ToExcel(){
+	var sql = $('#SQLHTMLDiv').text();
+	var ns = $("#OpenNamespace").text();
+	$cm({
+		_headers:{X_ACCEPT_TAG:1,MW_DOWNLOAD:1},
+		dataType:'text',
+		ClassName:"web.DHCTTSqlLog",
+		MethodName:"SelectToExcel",
+		SQLStatement:sql, 
+		RuntimeMode:$("#RuntimeMode").val(),
+		Namespace:ns,
+		ExcelName:"data"
+	},function(rtn){
+			if (rtn.indexOf("websys.file.utf8.csp")>-1){
+				console.log(rtn);
+				location.href = rtn;
+			}else{
+				alert(rtn);
+			}
+	});
+	return false;
+}
 DHC.onReady(function(){	
 	if (typeof columnSet == "undefined") columnSet={};
 	Query = document.getElementById("Query");	

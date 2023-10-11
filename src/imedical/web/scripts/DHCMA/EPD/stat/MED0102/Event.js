@@ -19,10 +19,6 @@ function InitMED0102WinEvent(obj){
 			$.messager.alert("错误提示",'开始日期应小于或等于结束日期！','info');
 			return;
 		}
-		if(!checkThreeTime(DateFrom,DateTo)){
-			$.messager.alert("错误提示",'查询日期间隔超过了三个月！','info');
-			return;
-		}
 		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMed.EPD.LocDiseasStat.raq&aHospIDs='+aHospID +'&aDateFrom=' + DateFrom +'&aDateTo='+ DateTo ;	
 		ReportFrame.src = p_URL;
 	});

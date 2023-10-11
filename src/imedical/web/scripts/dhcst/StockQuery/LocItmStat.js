@@ -1,7 +1,7 @@
-ï»¿// /åç§°: åº“å­˜ç»Ÿè®¡
-// /æè¿°: åº“å­˜ç»Ÿè®¡
-// /ç¼–å†™è€…ï¼šgwj
-// /ç¼–å†™æ—¥æœŸ: 2013.03.26
+// /Ãû³Æ: ¿â´æÍ³¼Æ
+// /ÃèÊö: ¿â´æÍ³¼Æ
+// /±àĞ´Õß£ºgwj
+// /±àĞ´ÈÕÆÚ: 2013.03.26
 Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
@@ -12,35 +12,39 @@ Ext.onReady(function() {
 	var gLocId=session['LOGON.CTLOCID'];
 	var gGroupId=session['LOGON.GROUPID'];
 	if(gParamCommon.length<1){
-		GetParamCommon();  //åˆå§‹åŒ–å…¬å…±å‚æ•°é…ç½®
+		GetParamCommon();  //³õÊ¼»¯¹«¹²²ÎÊıÅäÖÃ
 	}
 	ChartInfoAddFun();
-	// ç™»å½•è®¾ç½®é»˜è®¤å€¼
+	// µÇÂ¼ÉèÖÃÄ¬ÈÏÖµ
 	SetLogInDept(PhaDeptStore, "PhaLoc");
 	
 	
 	function ChartInfoAddFun() {
 		var PhaLoc = new Ext.ux.LocComboBox({
-					fieldLabel : 'ç§‘å®¤',
+					fieldLabel : $g('¿ÆÊÒ') ,
 					id : 'PhaLoc',
 					name : 'PhaLoc',
 					anchor : '90%',
 					//width : 140,
 					groupId:gGroupId,
                     listeners : {
-	                    'select' : function(e) {
-                                 var SelLocId=Ext.getCmp('PhaLoc').getValue();//add wyx æ ¹æ®é€‰æ‹©çš„ç§‘å®¤åŠ¨æ€åŠ è½½ç±»ç»„
-                                 StkGrpType.getStore().removeAll();
-                                 StkGrpType.getStore().setBaseParam("locId",SelLocId)
-                                 StkGrpType.getStore().setBaseParam("userId",UserId)
-                                 StkGrpType.getStore().setBaseParam("type",App_StkTypeCode)
-                                 StkGrpType.getStore().load();
-							}
+	                    'select' : function(e) {SetDefaultSCG();}
 					}
 				});
+	function SetDefaultSCG()
+	{
+		 Ext.getCmp("StkGrpType").setValue("");
+		 var SelLocId=Ext.getCmp('PhaLoc').getValue();//add wyx ¸ù¾İÑ¡ÔñµÄ¿ÆÊÒ¶¯Ì¬¼ÓÔØÀà×é
+         StkGrpType.getStore().removeAll();
+         StkGrpType.getStore().setBaseParam("locId",SelLocId)
+         StkGrpType.getStore().setBaseParam("userId",UserId)
+         StkGrpType.getStore().setBaseParam("type",App_StkTypeCode)
+         StkGrpType.getStore().load();
+         Ext.getCmp("StkCat").setValue("");
+	}
     
 		var DateTime = new Ext.ux.DateField({
-					fieldLabel : 'æ—¥æœŸ',
+					fieldLabel : $g('ÈÕÆÚ') ,
 					id : 'DateTime',
 					name : 'DateTime',
 					anchor : '90%',
@@ -51,20 +55,20 @@ Ext.onReady(function() {
 		var StkGrpType=new Ext.ux.StkGrpComboBox({ 
 			id : 'StkGrpType',
 			name : 'StkGrpType',
-			StkType:App_StkTypeCode,     //æ ‡è¯†ç±»ç»„ç±»å‹
+			StkType:App_StkTypeCode,     //±êÊ¶Àà×éÀàĞÍ
 			//width : 140,
 			anchor:'90%',
 			LocId:gLocId,
 			UserId:gUserId,
-			fieldLabel : 'ç±»ç»„'
+			fieldLabel : $g('Àà×é') 
 		}); 
 
-		StkGrpType.on('change', function() {
+		StkGrpType.on('select', function() {
 			Ext.getCmp("StkCat").setValue("");
 		});
 
 		var StkCat = new Ext.ux.ComboBox({
-					fieldLabel : 'åº“å­˜åˆ†ç±»',
+					fieldLabel : $g('¿â´æ·ÖÀà') ,
 					id : 'StkCat',
 					name : 'StkCat',
 					anchor : '90%',
@@ -77,7 +81,7 @@ Ext.onReady(function() {
 
 
 		var PhManufacturer = new Ext.ux.ComboBox({
-					fieldLabel : 'å‚å•†',
+					fieldLabel : $g('Éú²úÆóÒµ') ,
 					id : 'PhManufacturer',
 					name : 'PhManufacturer',
 					anchor : '90%',
@@ -90,7 +94,7 @@ Ext.onReady(function() {
 	
 				
 		var LocManGrp=new Ext.ux.ComboBox({
-		        fieldLabel : 'ç®¡ç†ç»„',
+		        fieldLabel :$g( '¹ÜÀí×é') ,
 		        id : 'LocManGrp',
 		        name : 'LocManGrp',
 		        anchor : '90%',
@@ -101,7 +105,7 @@ Ext.onReady(function() {
     	});
     
 		var StkBin = new Ext.ux.ComboBox({
-					fieldLabel : 'è´§ä½ç ',
+					fieldLabel : $g('»õÎ»Âë') ,
 					id : 'StkBin',
 					name : 'StkBin',
 					anchor : '90%',
@@ -114,7 +118,7 @@ Ext.onReady(function() {
 		});
 
 		var ManageDrug = new Ext.form.Checkbox({
-					fieldLabel : 'ç®¡ç†è¯',
+					fieldLabel : $g('¹ÜÀíÒ©') ,
 					id : 'ManageDrug',
 					name : 'ManageDrug',
 					anchor : '90%',				
@@ -122,10 +126,10 @@ Ext.onReady(function() {
 					checked : false
 		});
 
-		//åŒ…æ‹¬é›¶åº“å­˜
+		//°üÀ¨Áã¿â´æ
 		var UseFlag = new Ext.form.Checkbox({
-					//fieldLabel : 'åŒ…æ‹¬é›¶åº“å­˜',
-					boxLabel:'åŒ…æ‹¬',
+					//fieldLabel : '°üÀ¨Áã¿â´æ',
+					boxLabel:$g('°üÀ¨') ,
 					hideLabel:true,
 					labelWidth:30,
 					id : 'UseFlag',
@@ -135,10 +139,10 @@ Ext.onReady(function() {
 					checked : false
 		});
 		
-		//æ’é™¤éé›¶åº“å­˜
+		//ÅÅ³ı·ÇÁã¿â´æ
 		var NotUseFlag = new Ext.form.Checkbox({
-					//fieldLabel : 'æ’é™¤éé›¶åº“å­˜',
-					boxLabel:'æ’é™¤',
+					//fieldLabel : 'ÅÅ³ı·ÇÁã¿â´æ',
+					boxLabel:$g('ÅÅ³ı') ,
 					hideLabel:true,
 					id : 'NotUseFlag',
 					name : 'NotUseFlag',
@@ -168,10 +172,10 @@ Ext.onReady(function() {
 				value : '6'
 		});
     
-    // æ¸…ç©ºæŒ‰é’®
+    // Çå¿Õ°´Å¥
 		var RefreshBT = new Ext.Toolbar.Button({
-					text : 'æ¸…å±',
-					tooltip : 'ç‚¹å‡»æ¸…å±',
+					text : $g('ÇåÆÁ') ,
+					tooltip : $g('µã»÷ÇåÆÁ') ,
 					iconCls : 'page_clearscreen',
 					width : 70,
 					height : 30,
@@ -181,7 +185,7 @@ Ext.onReady(function() {
 				});
 
 		
-		 //æ¸…ç©ºæ–¹æ³•
+		 //Çå¿Õ·½·¨
 		 
 		function clearData() {
 			gStrParam='';
@@ -190,6 +194,8 @@ Ext.onReady(function() {
 			Ext.getCmp("UseFlag").setValue(false);
 			Ext.getCmp("NotUseFlag").setValue(false);
 			Ext.getCmp("StkCat").setValue('');
+			SetLogInDept(PhaLoc.getStore(), "PhaLoc");
+			SetDefaultSCG();
 			Ext.getCmp("PhManufacturer").setValue('');
 			Ext.getCmp("LocManGrp").setValue('');
 			Ext.getCmp("StkBin").setValue('');
@@ -203,10 +209,10 @@ Ext.onReady(function() {
 		
 
 
-		// æŸ¥è¯¢æŒ‰é’®
+		// ²éÑ¯°´Å¥
 		var SearchBT = new Ext.Toolbar.Button({
-					text : 'æŸ¥è¯¢',
-					tooltip : 'ç‚¹å‡»æŸ¥è¯¢',
+					text : $g('²éÑ¯') ,
+					tooltip : $g('µã»÷²éÑ¯') ,
 					iconCls : 'page_find',
 					width : 70,
 					height : 30,
@@ -216,27 +222,27 @@ Ext.onReady(function() {
 					}
 				});
     
-		// æŸ¥è¯¢æ–¹æ³•
+		// ²éÑ¯·½·¨
 		 
 		function searchData() {
 			
-			// å¿…é€‰æ¡ä»¶
+			// ±ØÑ¡Ìõ¼ş
 			var sphaLoc = Ext.getCmp("PhaLoc").getValue();
 			var sphaLocdesc = Ext.getCmp("PhaLoc").getRawValue();
 			//wyx add 2014-01-15
 			if (sphaLocdesc ==""||sphaLocdesc == null || sphaLoc.length <= 0) {
-				Msg.info("warning", "ç§‘å®¤ä¸èƒ½ä¸ºç©ºï¼");
+				Msg.info("warning", $g("¿ÆÊÒ²»ÄÜÎª¿Õ£¡") );
 				Ext.getCmp("PhaLoc").focus();
 				return;
 			}
 			if (sphaLoc == null || sphaLoc.length <= 0) {
-				Msg.info("warning", "ç§‘å®¤ä¸èƒ½ä¸ºç©ºï¼");
+				Msg.info("warning", $g("¿ÆÊÒ²»ÄÜÎª¿Õ£¡") );
 				Ext.getCmp("PhaLoc").focus();
 				return;
 			}
 			var datetmp=Ext.getCmp("DateTime").getValue()
 			if (datetmp=="") {
-				Msg.info("warning", "æ—¥æœŸä¸èƒ½ä¸ºç©ºï¼");
+				Msg.info("warning", $g("ÈÕÆÚ²»ÄÜÎª¿Õ£¡")) ;
 				Ext.getCmp("DateTime").focus();
 				return;
 				}
@@ -245,18 +251,18 @@ Ext.onReady(function() {
 			//var StockType = Ext.getCmp("Type").getValue();
 			
 			if (date == null || date.length <= 0) {
-				Msg.info("warning", "æ—¥æœŸä¸èƒ½ä¸ºç©ºï¼");
+				Msg.info("warning", $g("ÈÕÆÚ²»ÄÜÎª¿Õ£¡")) ;
 				Ext.getCmp("DateTime").focus();
 				return;
 			}
 			if ((StkGrpRowId == null || StkGrpRowId.length <= 0)&(gParamCommon[9]=="N")) {
-				Msg.info("warning", "ç±»ç»„ä¸èƒ½ä¸ºç©ºï¼");
+				Msg.info("warning", $g("Àà×é²»ÄÜÎª¿Õ£¡")) ;
 				Ext.getCmp("StkGrpType").focus();
 				return;
 			}
 			
 			
-			// å¯é€‰æ¡ä»¶
+			// ¿ÉÑ¡Ìõ¼ş
 			var StkCat = Ext.getCmp("StkCat").getValue();
 			var PhcCatList = "";
 			//var PhcCat = Ext.getCmp("PhcCat").getValue();
@@ -269,8 +275,8 @@ Ext.onReady(function() {
 			var MoveMon=Ext.getCmp('UseTime').getValue();
 			var NotMoveNon=Ext.getCmp('NotUseTime').getValue();
 		
-/// ç§‘å®¤id^æ—¥æœŸ^ç±»ç»„id^å‚å®¶id^ç®¡ç†ç»„id^
-/// åº“ä½id^æ˜¯å¦ç®¡ç†è¯^é›¶åº“å­˜^6ä¸ªæœˆæœ‰è¿›å‡º^æ’é™¤é›¶åº“å­˜^6ä¸ªæœˆæ— è¿›å‡º^
+/// ¿ÆÊÒid^ÈÕÆÚ^Àà×éid^³§¼Òid^¹ÜÀí×éid^
+/// ¿âÎ»id^ÊÇ·ñ¹ÜÀíÒ©^Áã¿â´æ^6¸öÔÂÓĞ½ø³ö^ÅÅ³ıÁã¿â´æ^6¸öÔÂÎŞ½ø³ö^
 			
 			var strParam=sphaLoc+"^"+date+"^"+StkGrpRowId+"^"+Phmanid+"^"+ManGrpId+"^"+SBid+"^"+ManageDrug+"^"+UseFlag+"^"+MoveMon+"^"+NotUseFlag+"^"+NotMoveNon+"^"+StkCat;
 			
@@ -289,10 +295,10 @@ Ext.onReady(function() {
 			}
 		}
 
-		// å¦å­˜æŒ‰é’®
+		// Áí´æ°´Å¥
 		var SaveAsBT = new Ext.Toolbar.Button({
-					text : 'å¦å­˜',
-					tooltip : 'å¦å­˜ä¸ºExcel',
+					text : $g('Áí´æ') ,
+					tooltip : $g('Áí´æÎªExcel') ,
 					iconCls : 'page_excel',
 					width : 70,
 					height : 30,
@@ -307,11 +313,11 @@ Ext.onReady(function() {
 		});
 		
 		function manFlagRender(value){
-			if(value==1){
-				return 'ç®¡ç†è¯'	;		
-			}else if(value==0){
-				return 'éç®¡ç†è¯';
-			}
+			if(value==="1"){
+				return $g('¹ÜÀíÒ©') 	;		
+			}else if(value==="0"){
+				return $g('·Ç¹ÜÀíÒ©') ;
+			}else return ""
 		}
 				
 		
@@ -326,7 +332,7 @@ Ext.onReady(function() {
 					sortable : true,
 					hidden : true
 				}, {
-					header : 'ä»£ç ',
+					header :$g( '´úÂë') ,
 					dataIndex : 'InciCode',
 					width : 100,
 					align : 'left',
@@ -334,7 +340,7 @@ Ext.onReady(function() {
 					//,
 					//renderer:cellMerge
 				}, {
-					header : "åç§°",
+					header : $g("Ãû³Æ") ,
 					dataIndex : 'InciDesc',
 					width : 200,
 					align : 'left',
@@ -342,13 +348,13 @@ Ext.onReady(function() {
 					//,
 					//renderer:cellMerge
 				}, {
-					header : "è´§ä½",
+					header : $g("»õÎ»") ,
 					dataIndex : 'StkBin',
 					width : 90,
 					align : 'left',
 					sortable : true
 				}, {
-					header : 'åº“å­˜(åŒ…è£…å•ä½)',
+					header : $g('¿â´æ(°ü×°µ¥Î»)') ,
 					dataIndex : 'PurStockQty',
 					width : 100,
 					align : 'right',
@@ -356,72 +362,68 @@ Ext.onReady(function() {
 					sortable : true,
 					renderer:SetNumber
 				}, {
-					header : "åŒ…è£…å•ä½",
+					header :$g( "°ü×°µ¥Î»") ,
 					dataIndex : 'PurUomDesc',
 					width : 50,
 					align : 'left',
 					sortable : false
 				}, {
-					header : "åº“å­˜(åŸºæœ¬å•ä½)",
+					header : $g("¿â´æ(»ù±¾µ¥Î»)") ,
 					dataIndex : 'StockQty',
 					width : 100,
 					align : 'right',
 					sortable : true,
 					renderer:SetNumber
 				}, {
-					header : "åŸºæœ¬å•ä½",
+					header : $g("»ù±¾µ¥Î»") ,
 					dataIndex : 'BUomDesc',
 					width : 40,
 					align : 'left',
 					sortable : false
 				}, /*{
-					header : "åº“å­˜(å•ä½)",
+					header : $g("¿â´æ(µ¥Î»)") ,
 					dataIndex : 'StkQtyUom',
 					width : 100,
 					align : 'left',
 					sortable : true
 				}, */{
-					header : "é›¶å”®ä»·",
+					header : $g("ÁãÊÛ¼Û") ,
 					dataIndex : 'Sp',
 					width : 80,
 					align : 'right',
 					sortable : false,
-					renderer:SetNumber
 				}, {
-					header : "æœ€æ–°è¿›ä»·",
+					header :$g( "×îĞÂ½ø¼Û") ,
 					dataIndex : 'Rp',
 					width : 80,
 					align : 'right',
-					sortable : false,
-					renderer:SetNumber
+					sortable : false
 				}, {
-					header : 'å”®ä»·é‡‘é¢',
+					header : $g('ÊÛ¼Û½ğ¶î') ,
 					dataIndex : 'SpAmt',
 					width : 120,
 					align : 'right',
 					sortable : false,
-					renderer:SetNumber
 				}, {
-					header : 'è¿›ä»·é‡‘é¢',
+					header : $g('½ø¼Û½ğ¶î') ,
 					dataIndex : 'RpAmt',
 					width : 120,
 					align : 'right',
 					sortable : false,
-					renderer:SetNumber
 				}, {
-					header : "è§„æ ¼",
+					header :$g( "¹æ¸ñ") ,
 					dataIndex : 'Spec',
 					width : 100,
 					align : 'left',
 					sortable : false
 				}, {
-					header : 'å‚å•†',
+					header : $g('Éú²úÆóÒµ') ,
 					dataIndex : 'ManfDesc',
 					width : 50,
 					align : 'left',
 					sortable : false
 				},{
-					header : "æ˜¯å¦ç®¡ç†è¯",
+					header : $g("ÊÇ·ñ¹ÜÀíÒ©") ,
 					dataIndex : 'ManFlag',
 					width : 120,
 					align : 'left',
@@ -430,21 +432,21 @@ Ext.onReady(function() {
 				}]);
 		StockQtyCm.defaultSortable = true;
     	var myBigTimeout = 900000;  
-		// è®¿é—®è·¯å¾„
+		// ·ÃÎÊÂ·¾¶
 		var DspPhaUrl = DictUrl
 					+ 'locitmstataction.csp?actiontype=LocItmStat';
 		
-		// é€šè¿‡AJAXæ–¹å¼è°ƒç”¨åå°æ•°æ®
+		// Í¨¹ıAJAX·½Ê½µ÷ÓÃºóÌ¨Êı¾İ
 		var proxy = new Ext.data.HttpProxy({
 					url : DspPhaUrl,
 					method : "POST",
 					timeout: myBigTimeout
 				});
-		// æŒ‡å®šåˆ—å‚æ•°
+		// Ö¸¶¨ÁĞ²ÎÊı
 		var fields = ["Inci","InciCode","InciDesc","BUomDesc","BUomId","StockQty",
 		"StkQtyUom","StkBin","PurUomDesc","PurUomId",
 	  "PurStockQty","Spec","ManfDesc","Sp","SpAmt","Rp","RpAmt","ManFlag"];
-		// æ”¯æŒåˆ†é¡µæ˜¾ç¤ºçš„è¯»å–æ–¹å¼
+		// Ö§³Ö·ÖÒ³ÏÔÊ¾µÄ¶ÁÈ¡·½Ê½
 		var reader = new Ext.data.JsonReader({
 					root : 'rows',
 					totalProperty : "results",
@@ -452,7 +454,7 @@ Ext.onReady(function() {
 					fields : fields
 				});
 		
-		// æ•°æ®é›†
+		// Êı¾İ¼¯
 		var StockStatStore = new Ext.data.Store({
 					proxy : proxy,
 					reader : reader,
@@ -480,37 +482,37 @@ Ext.onReady(function() {
 					sortable : true,
 					hidden : true
 				},{
-					header : 'ä»£ç ',
+					header : $g('´úÂë') ,
 					dataIndex : 'InciCode',
 					width : 100,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "åç§°",
+					header : $g("Ãû³Æ") ,
 					dataIndex : 'InciDesc',
 					width : 200,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "è´§ä½",
+					header : $g("»õÎ»") ,
 					dataIndex : 'StkBin',
 					width : 90,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "æ‰¹å·",
+					header : $g("ÅúºÅ") ,
 					dataIndex : 'Btno',
 					width : 100,
 					align : 'left',
 					sortable : false
 				}, {
-					header : "æœ‰æ•ˆæœŸ",
+					header : $g("ÓĞĞ§ÆÚ") ,
 					dataIndex : 'Expdate',
 					width : 100,
 					align : 'left',
 					sortable : false
 				}, {
-					header : 'åº“å­˜(åŒ…è£…å•ä½)',
+					header : $g('¿â´æ(°ü×°µ¥Î»)') ,
 					dataIndex : 'PurStockQty',
 					width : 100,
 					align : 'right',
@@ -518,78 +520,75 @@ Ext.onReady(function() {
 					sortable : true,
 					renderer:SetNumber
 				}, {
-					header : "åŒ…è£…å•ä½",
+					header : $g("°ü×°µ¥Î»"), 
 					dataIndex : 'PurUomDesc',
 					width : 50,
 					align : 'left',
 					sortable : false
 				}, {
-					header : "åº“å­˜(åŸºæœ¬å•ä½)",
+					header : $g("¿â´æ(»ù±¾µ¥Î»)") ,
 					dataIndex : 'StockQty',
 					width : 100,
 					align : 'right',
 					sortable : true,
 					renderer:SetNumber
 				}, {
-					header : "åŸºæœ¬å•ä½",
+					header : $g("»ù±¾µ¥Î»") ,
 					dataIndex : 'BUomDesc',
 					width : 40,
 					align : 'left',
 					sortable : false
 				}, /*{
-					header : "åº“å­˜(å•ä½)",
+					header :$g( "¿â´æ(µ¥Î»)",
 					dataIndex : 'StkQtyUom',
 					width : 100,
 					align : 'left',
 					sortable : true
 				},*/ {
-					header : "é›¶å”®ä»·",
+					header : $g("ÁãÊÛ¼Û") ,
 					dataIndex : 'Sp',
 					width : 80,
 					align : 'right',
 					sortable : false,
-					renderer:SetNumber
 				}, {
-					header : "æœ€æ–°è¿›ä»·",
+					header : $g("×îĞÂ½ø¼Û") ,
 					dataIndex : 'Rp',
 					width : 80,
 					align : 'right',
 					sortable : false,
-					renderer:SetNumber
 				}, {
-					header : 'å”®ä»·é‡‘é¢',
+					header : $g('ÊÛ¼Û½ğ¶î') ,
 					dataIndex : 'SpAmt',
 					width : 120,
 					align : 'right',
 					sortable : false
 				}, {
-					header : 'è¿›ä»·é‡‘é¢',
+					header : $g('½ø¼Û½ğ¶î') ,
 					dataIndex : 'RpAmt',
 					width : 120,
 					align : 'right',
 					sortable : false,
-					renderer:SetNumber
 				}, {
-					header : 'è§„æ ¼',
+					header : $g('¹æ¸ñ') ,
 					dataIndex : 'Spec',
 					width : 50,
 					align : 'left',
 					sortable : false
 				}, {
-					header : 'å‚å•†',
+					header : $g('Éú²úÆóÒµ') ,
 					dataIndex : 'ManfDesc',
 					width : 50,
 					align : 'left',
 					sortable : false
 				},{
-					header : "æ‰¹æ¬¡ä¾›åº”å•†",
+					header : $g("Åú´Î¾­ÓªÆóÒµ") ,
 					dataIndex : 'PVenDesc',
 					width : 150,
 					align : 'left',
 					//renderer : Ext.util.Format.usMoney,
 					sortable : true
 				},  {
-					header : "æ˜¯å¦ç®¡ç†è¯",
+					header : $g("ÊÇ·ñ¹ÜÀíÒ©") ,
 					dataIndex : 'ManFlag',
 					width : 120,
 					align : 'left',
@@ -598,19 +597,19 @@ Ext.onReady(function() {
 				}]);
 		BatQtyCm.defaultSortable = true;
 				
-		// è®¿é—®è·¯å¾„
+		// ·ÃÎÊÂ·¾¶
 		var BatQtystatUrl = DictUrl
 					+ 'locitmstataction.csp?actiontype=LocBatStat&start=&limit=';
-		// é€šè¿‡AJAXæ–¹å¼è°ƒç”¨åå°æ•°æ®
+		// Í¨¹ıAJAX·½Ê½µ÷ÓÃºóÌ¨Êı¾İ
 		var proxybat = new Ext.data.HttpProxy({
 					url : BatQtystatUrl,
 					method : "POST"
 				});
-		// æŒ‡å®šåˆ—å‚æ•°
+		// Ö¸¶¨ÁĞ²ÎÊı
 		var batfields = ["Inclb","Inci","InciCode","InciDesc","BUomDesc","BUomId","StockQty",
 		"StkQtyUom","StkBin","Btno","Expdate","PurUomDesc","PurUomId",
 	  "PurStockQty","Spec","ManfDesc","Sp","SpAmt","Rp","RpAmt","PVenDesc","ManFlag"];
-		// æ”¯æŒåˆ†é¡µæ˜¾ç¤ºçš„è¯»å–æ–¹å¼
+		// Ö§³Ö·ÖÒ³ÏÔÊ¾µÄ¶ÁÈ¡·½Ê½
 		var readerbat = new Ext.data.JsonReader({
 					root : 'rows',
 					totalProperty : "results",
@@ -632,32 +631,32 @@ Ext.onReady(function() {
 					store : StockStatStore,
 					pageSize : PageSize,
 					displayInfo : true,
-					displayMsg : 'å½“å‰è®°å½• {0} -- {1} æ¡ å…± {2} æ¡è®°å½•',
+					displayMsg : $g('µ±Ç°¼ÇÂ¼ {0} -- {1} Ìõ ¹² {2} Ìõ¼ÇÂ¼') ,
 					emptyMsg : "No results to display",
-					prevText : "ä¸Šä¸€é¡µ",
-					nextText : "ä¸‹ä¸€é¡µ",
-					refreshText : "åˆ·æ–°",
-					lastText : "æœ€åé¡µ",
-					firstText : "ç¬¬ä¸€é¡µ",
-					beforePageText : "å½“å‰é¡µ",
-					afterPageText : "å…±{0}é¡µ",
-					emptyMsg : "æ²¡æœ‰æ•°æ®"
+					prevText : $g("ÉÏÒ»Ò³") ,
+					nextText : $g("ÏÂÒ»Ò³") ,
+					refreshText : $g("Ë¢ĞÂ") ,
+					lastText : $g("×îºóÒ³") ,
+					firstText : $g("µÚÒ»Ò³") ,
+					beforePageText : $g("µ±Ç°Ò³") ,
+					afterPageText :$g( "¹²{0}Ò³") ,
+					emptyMsg : $g("Ã»ÓĞÊı¾İ") 
 		});
 		
 		var StatuTabPagingToolbar2 = new Ext.PagingToolbar({
 					store : BatStatStore,
 					pageSize : PageSize,
 					displayInfo : true,
-					displayMsg : 'å½“å‰è®°å½• {0} -- {1} æ¡ å…± {2} æ¡è®°å½•',
+					displayMsg : $g('µ±Ç°¼ÇÂ¼ {0} -- {1} Ìõ ¹² {2} Ìõ¼ÇÂ¼') ,
 					emptyMsg : "No results to display",
-					prevText : "ä¸Šä¸€é¡µ",
-					nextText : "ä¸‹ä¸€é¡µ",
-					refreshText : "åˆ·æ–°",
-					lastText : "æœ€åé¡µ",
-					firstText : "ç¬¬ä¸€é¡µ",
-					beforePageText : "å½“å‰é¡µ",
-					afterPageText : "å…±{0}é¡µ",
-					emptyMsg : "æ²¡æœ‰æ•°æ®"
+					prevText : $g("ÉÏÒ»Ò³") ,
+					nextText :$g( "ÏÂÒ»Ò³") ,
+					refreshText : $g("Ë¢ĞÂ") ,
+					lastText :$g( "×îºóÒ³") ,
+					firstText :$g( "µÚÒ»Ò³") ,
+					beforePageText : $g("µ±Ç°Ò³") ,
+					afterPageText : $g("¹²{0}Ò³") ,
+					emptyMsg : $g("Ã»ÓĞÊı¾İ") 
 		});
     
 		var StockQtyGrid = new Ext.grid.GridPanel({
@@ -686,7 +685,7 @@ Ext.onReady(function() {
 					//bbar : StatuTabPagingToolbar2
 		});
 		
-		//åˆå¹¶DetailGridLBä¸­ç›¸åŒçš„è¯å“ä¿¡æ¯
+		//ºÏ²¢DetailGridLBÖĞÏàÍ¬µÄÒ©Æ·ĞÅÏ¢
 function cellMerge(value, meta, record, rowIndex, colIndex, store) {
 	var lastRowCode="",lastRowDesc="",lastRowSpec="",lastRowUom="";
 	if(rowIndex>0){
@@ -727,7 +726,7 @@ function cellMerge(value, meta, record, rowIndex, colIndex, store) {
 			bodyStyle : 'padding:10px 0px 0px 0px;',
 			tbar : [SearchBT, '-', RefreshBT, '-', SaveAsBT],
 			items : [{
-						title:'å¿…é€‰æ¡ä»¶',
+						title:$g('±ØÑ¡Ìõ¼ş') ,
 						xtype:'fieldset',
 						style:'padding:10px 0px 0px 0px',
 						items:[PhaLoc,DateTime,StkGrpType]
@@ -736,14 +735,14 @@ function cellMerge(value, meta, record, rowIndex, colIndex, store) {
 					PhManufacturer,
 					LocManGrp,StkBin,
 				  ManageDrug,
-				  {xtype: 'compositefield',align:'middle',items:[UseFlag,UseTime,{xtype:'tbtext',style:'padding-top:3px',text:'ä¸ªæœˆæœ‰è¿›å‡ºé›¶åº“å­˜'}]},
-				  {xtype: 'compositefield',items:[NotUseFlag,NotUseTime,{xtype:'tbtext',style:'padding-top:3px',text:'ä¸ªæœˆæ— è¿›å‡ºéé›¶åº“å­˜'}]}
+				  {xtype: 'compositefield',align:'middle',items:[UseFlag,UseTime,{xtype:'tbtext',style:'padding-top:3px',text:'¸öÔÂÓĞ½ø³öÁã¿â´æ'}]},
+				  {xtype: 'compositefield',items:[NotUseFlag,NotUseTime,{xtype:'tbtext',style:'padding-top:3px',text:'¸öÔÂÎŞ½ø³ö·ÇÁã¿â´æ'}]}
 //				  {
 //				  	items : [{
 //							items : [
 //							        {xtype: 'compositefield',
-//							        	items:[UseFlag,UseTime,{xtype:'tbtext',text:'ä¸ªæœˆæœ‰è¿›å‡º'}]},
-//							        {xtype: 'compositefield',items:[NotUseFlag,NotUseTime,{xtype:'tbtext',text:'ä¸ªæœˆæ— è¿›å‡º'}]}
+//							        	items:[UseFlag,UseTime,{xtype:'tbtext',text:'¸öÔÂÓĞ½ø³ö'}]},
+//							        {xtype: 'compositefield',items:[NotUseFlag,NotUseTime,{xtype:'tbtext',text:'¸öÔÂÎŞ½ø³ö'}]}
 //							        ]
 //						}]
 //				  }
@@ -758,8 +757,8 @@ function cellMerge(value, meta, record, rowIndex, colIndex, store) {
 //							//xtype: 'fieldset',
 //							items : [
 //							        {xtype: 'compositefield',
-//							        	items:[UseTime,{xtype:'tbtext',text:'ä¸ªæœˆæœ‰è¿›å‡º'}]},
-//							        {xtype: 'compositefield',items:[NotUseTime,{xtype:'tbtext',text:'ä¸ªæœˆæ— è¿›å‡º'}]}
+//							        	items:[UseTime,{xtype:'tbtext',text:'¸öÔÂÓĞ½ø³ö'}]},
+//							        {xtype: 'compositefield',items:[NotUseTime,{xtype:'tbtext',text:'¸öÔÂÎŞ½ø³ö'}]}
 //							        ]
 //						}]
 //				  }
@@ -769,19 +768,19 @@ function cellMerge(value, meta, record, rowIndex, colIndex, store) {
 		var tabPanel=new Ext.TabPanel({
    		activeTab:1,
    		items:[{
-   			title:'é¡¹ç›®æ˜ç»†',
+   			title:$g('ÏîÄ¿Ã÷Ï¸') ,
    			id:'ItmDetail',
    			layout:'fit',
    			items:[StockQtyGrid]
    		},{
-   			title:'æ‰¹æ¬¡æ˜ç»†',
+   			title:$g('Åú´ÎÃ÷Ï¸') ,
    			id:'BatDetail',
    			layout:'fit',
    			items:[BatQtyGrid]
    		}]
    })
 tabPanel.on("afterrender",function(tab){tab.activate(0)})
-		// 5.2.é¡µé¢å¸ƒå±€
+		// 5.2.Ò³Ãæ²¼¾Ö
 		var mainPanel = new Ext.Viewport({
 					layout : 'border',
 					items : [            // create instance immediately
@@ -792,12 +791,12 @@ tabPanel.on("afterrender",function(tab){tab.activate(0)})
                 			minSize: 200,
                 			maxSize: 350,
                 			collapsible: true,
-			                title: 'ç§‘å®¤',
+			                title: $g('¿ÆÊÒ') ,
 			                layout: 'fit', // specify layout manager for items
 			                items: HisListTab   
 			             },{ 
 			                	region:'center',
-			                	title: 'åº“å­˜',
+			                	title: $g('¿â´æ') ,
 			                	layout: 'fit', // specify layout manager for items
 			                	items: tabPanel
 			            }

@@ -20,7 +20,7 @@ $(function() {
 
 })
 function InitDict(){
-	 DHCST.ComboBox.Init({ Id: 'cmbLoc', Type: 'Loc' }, {placeholder: "制剂科室...",
+	 DHCST.ComboBox.Init({ Id: 'cmbLoc', Type: 'Loc' }, {
 	    editable: false,
 	    onLoadSuccess: function() {
 	        var datas = $("#cmbLoc").combobox("getData");
@@ -35,14 +35,14 @@ function InitDict(){
 	$("#txtStartDate").datebox("setValue",GetDate(-3));
     $("#txtEndDate").datebox("setValue", GetDate(0));
     //DHCST.ComboBox.Init({ Id: 'cmbInci',Type: 'InRec' }, {placeholder: "制剂..."}); 
-    DHCST.ComboGrid.Init({ Id: 'cmbInci', Type: 'IncItm' }, { placeholder: "制剂..." }); // width: 315
+    DHCST.ComboGrid.Init({ Id: 'cmbInci', Type: 'IncItm' }, {}); // width: 315
 	 DHCST.ComboBox.Init({Id: 'cmbStatus',data: {
         data: [
-            { "RowId": "10", "Description": "保存" },
+            { "RowId": "10", "Description": $g("保存") },
             //{ "RowId": "15", "Description": "完成" },
-            { "RowId": "21", "Description": "已审核" }
+            { "RowId": "21", "Description": $g("已审核") }
         ]
-    }}, {placeholder: "制剂状态..."});
+    }}, {});
 }
 function InitGridManuOrd(){
 	var columns = [
@@ -171,7 +171,7 @@ function ExportInManuOrd(){
 	$.cm({
 		dataType:'text',
 		ResultSetType:"Excel",
-		ExcelName:"制剂单列表", 
+		ExcelName:$g("制剂单列表"), 
 		ClassName:"web.DHCST.ManuOrder",
 		QueryName:"ExportInManuList",
 		Params:params
@@ -185,7 +185,7 @@ function ExportInManuOrdBat(){
 	$.cm({
 		dataType:'text',
 		ResultSetType:"Excel",
-		ExcelName:"制剂明细", 
+		ExcelName:$g("制剂明细"), 
 		ClassName:"web.DHCST.ManuOrder",
 		QueryName:"ExportInManuDetail",
 		InManu:params

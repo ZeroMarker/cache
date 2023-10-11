@@ -24,11 +24,13 @@
    	}
 	
    	obj.LoadRep = function(){
-		var aHospID 	= $('#cboHospital').combobox('getValue');
+		var aHospID 	= $('#cboHospital').combobox('getValues').join('|');
 		var aDateFrom 	= $('#dtDateFrom').datebox('getValue');
 		var aDateTo		= $('#dtDateTo').datebox('getValue');
-		var aStaType 	= Common_CheckboxValue('chkStatunit');
+		var aLocType 	= Common_CheckboxValue('chkStatunit');
 		var aQrycon 	= $('#cboQryCon').combobox('getValue');
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
 		ReportFrame = document.getElementById("ReportFrame");
 		if(aDateFrom > aDateTo){
 			$.messager.alert("提示","开始日期应小于或等于结束日期！", 'info');
@@ -38,7 +40,11 @@
 			$.messager.alert("提示","请选择开始日期、结束日期！", 'info');
 			return;
 		}
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S050MRBPos.raq&aHospIDs='+aHospID +'&aDateFrom=' + aDateFrom +'&aDateTo='+ aDateTo+'&aStaType='+aStaType+'&aQryCon='+aQrycon;	
+		if ((aStatDimens=="")){
+			$.messager.alert("提示","请选择展示维度！", 'info');
+			return;
+		}
+		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S050MRBPos.raq&aHospIDs='+aHospID +'&aDateFrom=' + aDateFrom +'&aDateTo='+ aDateTo+'&aLocType='+aLocType+'&aQryCon='+aQrycon+'&aStatDimens='+aStatDimens+'&aLocIDs='+aLocIDs+'&aPath='+cspPath;		
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
@@ -47,35 +53,48 @@
 		
 	}
     obj.echartLocInfRatio = function(runQuery){
-		if (!runQuery) return;
-		var M1Pat="";
-		var M2Pat="";
-		var M3Pat="";
-		var M4Pat="";
-		var M5Pat="";
-		var M6Pat="";
-		var M7Pat="";
-		var M8Pat="";
-		var M9Pat="";
+	    if (!runQuery) return;
 		arrRecord 		= runQuery.record;
-		for (var indRd = 0; indRd < arrRecord.length; indRd++){
-			var rd = arrRecord[indRd];
-			if ((rd["DimensKey"].indexOf('-A-')>-1)) {
-				 M1Pat=rd["M1PatCase"];
-				 M2Pat=rd["M2PatCase"];
-				 M3Pat=rd["M3PatCase"];
-				 M4Pat=rd["M4PatCase"];
-				 M5Pat=rd["M5PatCase"];
-				 M6Pat=rd["M6PatCase"];
-				 M7Pat=rd["M7PatCase"];
-				 M8Pat=rd["M8PatCase"];
-				 M9Pat=rd["M9PatCase"];	
-			}
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
+		if(aLocIDs==""){
+			var rd = arrRecord[0];					//取首条记录
 		}
+		else{
+			var rd = arrRecord[arrRecord.length-1];	//取末条记录
+		}
+		
+		if(rd.MMRBCase==0){
+			$('#EchartDiv').addClass('no-result');
+			return;
+		}
+		var M1MRBCase=rd["M1MRBCase"];
+		var M2MRBCase=rd["M2MRBCase"];
+		var M3MRBCase=rd["M3MRBCase"];
+		var M4MRBCase=rd["M4MRBCase"];
+		var M5MRBCase=rd["M5MRBCase"];
+		var M6MRBCase=rd["M6MRBCase"];
+		var M7MRBCase=rd["M7MRBCase"];
+		var M8MRBCase=rd["M8MRBCase"];
+		var M9MRBCase=rd["M9MRBCase"];
+		//取多耐类别描述
+		var MRBDescList = $cm ({
+			ClassName:"DHCHAI.STATV2.S040MRBInf",
+			QueryName:"QryMRBSrv"
+		},false);
+		var M1Desc=MRBDescList.rows[0].M1Desc;	
+		var M2Desc=MRBDescList.rows[0].M2Desc;	
+		var M3Desc=MRBDescList.rows[0].M3Desc;	
+		var M4Desc=MRBDescList.rows[0].M4Desc;	
+		var M5Desc=MRBDescList.rows[0].M5Desc;	
+		var M6Desc=MRBDescList.rows[0].M6Desc;	
+		var M7Desc=MRBDescList.rows[0].M7Desc;	
+		var M8Desc=MRBDescList.rows[0].M8Desc;	
+		var M9Desc=MRBDescList.rows[0].M9Desc;	
+		
 		// 使用刚指定的配置项和数据显示图表。
 		option = {
 			    title : {
-			        text: '全院多重耐药菌感染检出例数统计图',
+			        text: '多重耐药菌检出例数统计图',
 			        textStyle:{
 						fontSize:28
 					},
@@ -85,10 +104,18 @@
 			        trigger: 'item',
 			        formatter: "{a} <br/>{b} : {c} ({d}%)"
 			    },
+				toolbox: {
+					feature: {
+						dataView: {show: false, readOnly: false},
+						magicType: {show: false, type: ['line', 'bar']},
+						restore: {show: true},
+						saveAsImage: {show: true}
+					}
+				},
 			    legend: {
 			        orient: 'vertical',
 			        left: 'left',
-			        data:["耐甲氧西林的金黄色葡萄球菌","耐万古霉素的粪肠球菌","耐万古霉素的屎肠球菌","耐三、四代头孢菌素的大肠埃希菌","耐三、四代头孢菌素的肺炎克雷伯菌","耐碳青霉烯类的大肠埃希菌","耐碳青霉烯类的肺炎克雷伯菌","耐碳青霉烯类的鲍曼不动杆菌","耐碳青霉烯类的铜绿假单胞菌"]
+			        data:[M1Desc,M2Desc,M3Desc,M4Desc,M5Desc,M6Desc,M7Desc,M8Desc,M9Desc]
 			    },
 			    series : [
 			        {
@@ -96,17 +123,17 @@
 			            type: 'pie',
 			            radius : '55%',
 			            center: ['50%', '60%'],
-			            data: [
-			            	{"value": M1Pat,"name":"耐甲氧西林的金黄色葡萄球菌"},
-			            	{"value": M2Pat,"name":"耐万古霉素的粪肠球菌"},
-			            	{"value": M3Pat,"name":"耐万古霉素的屎肠球菌"},
-			            	{"value": M4Pat,"name":"耐三、四代头孢菌素的大肠埃希菌"},
-			            	{"value": M5Pat,"name":"耐三、四代头孢菌素的肺炎克雷伯菌"},
-			            	{"value": M6Pat,"name":"耐碳青霉烯类的大肠埃希菌"},
-			            	{"value": M7Pat,"name":"耐碳青霉烯类的肺炎克雷伯菌"},
-			            	{"value": M8Pat,"name":"耐碳青霉烯类的鲍曼不动杆菌"},
-			            	{"value": M9Pat,"name":"耐碳青霉烯类的铜绿假单胞菌"},
-			            	],
+			           data: [
+			            	{"value": M1MRBCase,"name":M1Desc},
+			            	{"value": M2MRBCase,"name":M2Desc},
+			            	{"value": M3MRBCase,"name":M3Desc},
+			            	{"value": M4MRBCase,"name":M4Desc},
+			            	{"value": M5MRBCase,"name":M5Desc},
+			            	{"value": M6MRBCase,"name":M6Desc},
+			            	{"value": M7MRBCase,"name":M7Desc},
+			            	{"value": M8MRBCase,"name":M8Desc},
+			            	{"value": M9MRBCase,"name":M9Desc}
+			            ]
 			        }
 			    ]
 			};
@@ -114,23 +141,21 @@
 	}
    	obj.ShowEChaert1 = function(){
 		obj.myChart.clear()
-		 //当月科室感染率图表
-		var aHospID = $('#cboHospital').combobox('getValue');
-		var aDateFrom = $('#dtDateFrom').datebox('getValue');
-		var aDateTo= $('#dtDateTo').datebox('getValue');
-		var aLocType = Common_CheckboxValue('chkStatunit');
-		var aQryCon = $('#cboQryCon').combobox('getText');
-		if(aQryCon=="显示全部病区(科室)"){
-			var aQryCon = 1;
-		}else{
-			var aQryCon = 2;	
-		}
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S050MRBPos' + "&QueryName=" + 'QryMRBPos' + "&Arg1=" + aHospID + "&Arg2=" + aDateFrom + "&Arg3=" + aDateTo +"&Arg4="+aLocType+"&Arg5="+aQryCon+"&ArgCnt=" + 5;
-
+		//当月科室感染率图表
+		var aHospID 	= $('#cboHospital').combobox('getValues').join('|');
+		var aDateFrom 	= $('#dtDateFrom').datebox('getValue');
+		var aDateTo		= $('#dtDateTo').datebox('getValue');
+		var aLocType 	= Common_CheckboxValue('chkStatunit');
+		var aQrycon 	= $('#cboQryCon').combobox('getValue');
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
+		/*
+		var dataInput 	= "ClassName=" + 'DHCHAI.STATV2.S050MRBPos' + "&QueryName=" + 'QryMRBPos' + "&Arg1=" + aHospID + "&Arg2=" + aDateFrom + "&Arg3=" + aDateTo +"&Arg4="+aLocType+"&Arg5="+aQrycon+"&Arg6="+aStatDimens+"&Arg7="+aLocIDs+"&ArgCnt=" + 7;
+		
 		$.ajax({
 			url: "./dhchai.query.csp",
 			type: "post",
-			timeout: 30000, //30秒超时
+			timeout: 120000, //120秒超时
 			async: true,   //异步
 			beforeSend:function(){
 				obj.myChart.showLoading();	
@@ -151,7 +176,24 @@
 				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
 				obj.myChart.hideLoading();    //隐藏加载动画
 			}
-		});
+		});*/
+		obj.myChart.showLoading();
+		$cm({
+			ClassName:'DHCHAI.STATV2.S050MRBPos',
+			QueryName:'QryMRBPos',
+			aHospIDs:aHospID,
+			aDateFrom:aDateFrom,
+			aDateTo:aDateTo,
+			aLocType:aLocType,
+			aQryCon:aQrycon,
+			aStatDimens:aStatDimens,
+			aLocIDs:aLocIDs,
+			page:1,
+			rows:999
+		},function(rs){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			obj.echartLocInfRatio(rs);
+		})
 	}
 	
 }

@@ -6,18 +6,19 @@
     }
     FavUserID = getFavUserID();
     ////初始化收藏名称
-    var image = Gender=="女"?"../scripts/emr/image/icon/woman.jpg":"../scripts/emr/image/icon/man.jpg";
-    $("#photo").append('<img src="'+image+'"/>');
-    $(".tdtitle").append('<span>病人ID:</span><span class="tcol1">'+PatientNo+'</span>');
-    var info = '<div><span>姓名:</span><span id="Name">'+Name+'</span></div>';
-    info = info + '<div><span>性别:</span><span id="Gender">'+Gender+'</span></div>';
-    info = info + '<div><span>出生日期:</span><span id="BOD">'+BOD+'</span></div>';
+    var image = Gender=="女"?"../scripts/emr/image/icon/woman_big.png":"../scripts/emr/image/icon/man_big.png";
+    var alt = Gender=="女"?"woman_big.png":"man_big.png";
+    $("#photo").attr({"src":image, "alt":alt});
+    var info = '<div class="contantdiv"><span>&emsp;'+emrTrans("病人ID")+'：</span><span id="PatientNo">'+PatientNo+'</span></div>';
+    info = info + '<div class="contantdiv"><span>&emsp;&emsp;'+emrTrans("姓名")+'：</span><span id="Name">'+Name+'</span></div>';
+    info = info + '<div class="contantdiv"><span>&emsp;&emsp;'+emrTrans("性别")+'：</span><span id="Gender">'+Gender+'</span></div>';
+    info = info + '<div class="contantdiv"><span>'+emrTrans("出生日期")+'：</span><span id="BOD">'+BOD+'</span></div>';
     $("#content").append(info);
     //初始化收藏位置
     initCatalogTree("cbxLocation",true);
     
     //添加收藏
-    $("#btnAdd").click(function(){ 
+    $("#btnAdd").bind('click', function(){ 
         //当前患者是否已经被收藏
         var rtn = isFavoriteInfo();
         if (rtn === "0"){
@@ -31,30 +32,27 @@
                 }
             });
         }
-        //addFavorite();
-        //记录用户(收藏病历.提交)行为
-        AddActionLog(UserID,UserLocID,"FavoritesAdd.Commit","");  			
+        returnValue = "FavoritesAdd.Commit";
     });
     
     //关闭窗口
-    $("#btnCancel").click(function(){
-        //记录用户(收藏病历.取消)行为
-        AddActionLog(UserID,UserLocID,"FavoritesAdd.Cancel",""); 
+    $("#btnCancel").bind('click', function(){
+		returnValue = "FavoritesAdd.Cancel";
         closeWindow();
     });
     
     $('#tags').tagsInput({
-        width:'310px',
+        width:'300px',
         height:'73px',
         onAddTag:function(tag){
             var curlength = tag.length;
             if(curlength > 15)
             {
-                alert("超出15字数限制，请重新输入！");
+                $.messager.alert('提示信息','超出15字数限制，请重新输入！','info');
                 $('#tags').removeTag(tag);
             }
         },
-        defaultText:"输入关键字(0-15字)，回车试试看"
+        defaultText:emrTrans("输入关键字(0-15字)，回车试试看")
     });
 });
 
@@ -91,7 +89,7 @@ function initCatalogTree(id,required)
             var data = eval(d);
             if (id == "cbxNewLocation")
             {
-                data = [{id:0,text:"收藏夹",children:data}];
+                data = [{id:0,text:emrTrans("收藏夹"),children:data}];
             }
             $('#'+id).combotree('loadData',data);
             var node = $('#'+id).combotree('tree').tree('getRoot');
@@ -101,7 +99,9 @@ function initCatalogTree(id,required)
             }
             
         },
-        error : function(d) { alert("目录加载失败");}
+        error : function(d) {
+            $.messager.alert('提示信息','目录加载失败！','info');
+        }
     }); 
 }
 
@@ -148,7 +148,7 @@ function addFavorite()
             if (data == "1")
             {
                 SetToLog(catalogId,tags);
-                alert("添加成功");
+                $.messager.alert('提示信息','添加成功','info');
                 closeWindow();
             }
             else
@@ -162,12 +162,10 @@ function addFavorite()
 //关闭窗口
 function closeWindow()
 {
-    window.opener = null;
-    window.open('','_self');
-    window.close();	
+	parent.closeDialog("dialogFavAdd");
 }
 
-$("#btnNew").click(function(){
+$("#btnNew").bind('click', function(){
     
     //记录用户(收藏病历.新建目录)行为
     AddActionLog(UserID,UserLocID,"FavoritesAdd.NewDir","");
@@ -179,12 +177,13 @@ function newCatalog()
 {
     $('#newCatalog').window({
         title: "创建文件夹",
-        width: 300,  
-        height: 150,  
+        width: 312,  
+        height: 197,  
         modal: true,
         minimizable: false,
         maximizable: false,
         collapsible: false,
+        iconCls: 'icon-w-card',
         closed: true,
         onOpen: function(){
             initCatalogTree("cbxNewLocation",false);
@@ -196,7 +195,7 @@ function newCatalog()
     $('#newCatalog').css("display","block");
 }
 
-$("#btnClose").click(function(){
+$("#btnClose").bind('click', function(){
     
     //记录用户(收藏病历.新建目录.关闭)行为
     AddActionLog(UserID,UserLocID,"FavoritesAdd.NewDir.Close","");
@@ -204,7 +203,7 @@ $("#btnClose").click(function(){
     $('#newCatalog').window('close');
 });
 
-$("#btnCreate").click(function(){
+$("#btnCreate").bind('click', function(){
     //记录用户(创建收藏目录)行为
     AddActionLog(UserID,UserLocID,"FavoritesAdd.NewDir.Create","");
     saveNewCatalogTree()
@@ -257,7 +256,6 @@ function SetToLog(catalogId,tags){
             Condition = Condition + '"Tags":"' + tags + '",';
             Condition = Condition + '"CatalogID":"' + catalogId + '"}';
             var ConditionAndContent = Condition;
-            //alert(ConditionAndContent);
             var SecCode = "";
             $.ajax({ 
                 //type: "POST", 

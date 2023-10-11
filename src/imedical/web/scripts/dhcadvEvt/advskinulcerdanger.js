@@ -47,15 +47,30 @@ function InitButton(){
 function SaveReport(flag){
 	///保存前,对页面必填项进行检查
 	if($('#PatName').val()==""){
-		$.messager.alert("提示:","患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！");	
+		$.messager.alert($g("提示:"),$g("患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！"));	
 		return false;
 	}
-	if(!(checkRequired())){
+	if(!(checkRequired()&&checkother())){
 		return;
 	}
 	SaveReportCom(flag);
 }
-
+function checkother()
+{
+	// 评估条件(必须符合以下2项或2项以上，请在相应条目前打钩)
+	var AssConnum=0
+	$("input[type=checkbox][id^='AssConditions-']").each(function(){
+		if ($(this).is(':checked')){
+			AssConnum=AssConnum+1;
+		}
+	})
+	if(AssConnum<2)
+	{
+		$.messager.alert($g("提示")+":",$g("评估条件(必须符合以下2项或2项以上，请在相应条目前打钩)")+"！");
+		return false;
+	}
+	return true;
+}
 //加载报表信息
 function InitReport(recordId)
 {

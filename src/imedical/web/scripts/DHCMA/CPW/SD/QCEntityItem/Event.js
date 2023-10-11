@@ -1,45 +1,7 @@
 ﻿//页面Event
 function InitWinEvent(obj){
-	obj.RecRowID="",obj.ItemID=""
-	$('#winQCEntityItem').dialog({
-		title: '质控项目维护',
-		iconCls:"icon-w-edit",
-		closed: true,
-		modal: true,
-		isTopZindex:true
-		
-	});	
-	$('#winQCItemRule').dialog({
-		title: '项目校验规则维护',
-		iconCls:"icon-w-edit",
-		closed: true,
-		modal: true,
-		isTopZindex:true
-		
-	});
+	obj.RecRowID="",obj.VerItemID="",obj.ItemDicId=""
     obj.LoadEvent = function(args){ 
-    	//选择项目分类
-    	$('#BTExpress').combobox({
-			onSelect: function(r){
-				$('#GetDataParam').combobox('clear');//清空选中项
-				if (r.BTCode=="BaseInfo") {
-					$HUI.combobox("#GetDataParam",{
-						url:$URL+'?ClassName=DHCMA.CPW.SDS.QCEntityItemSrv&QueryName=QryClassProperty&ResultSetType=Array&aClassName=DHCMA.Util.EPx.Episode',
-						valueField:'PropertyName',
-						textField:'PropertyName',	
-					})
-				}else if (r.BTCode=="ORInfo") {
-					$HUI.combobox("#GetDataParam",{
-						url:$URL+'?ClassName=DHCMA.CPW.SDS.QCEntityItemSrv&QueryName=QryClassProperty&ResultSetType=Array&aClassName=DHCMA.CPW.SD.Data.Operation',
-						valueField:'PropertyName',
-						textField:'PropertyName',	
-					})
-				}else{
-					$('#GetDataParam').combobox('loadData', {});
-				}
-			}
-		});
-     	
 		//添加
      	$('#btnAdd').on('click', function(){
 			obj.layer()
@@ -83,42 +45,157 @@ function InitWinEvent(obj){
 		$('#btnDeleteR').on('click', function(){
 	     	obj.btnDeleteR_click();
      	});
-     }
-    $('#ItemKey').searchbox({
-	    searcher:function(value,name){
-	    	obj.gridQCEntityItem.load({
+     	///历史表单对照
+     	//自动对照
+     	$('#btnAutoMatch').on('click', function(){
+			obj.btnAutoMatch_click();
+     	});
+     	//手工对照
+     	$('#btnMatch').on('click', function(){
+			obj.btnMatch_click();
+     	});
+     	//已对照
+     	$('#btnMatched').on('click', function(){
+			obj.gridQCEntityItemVer.load({
 					ClassName:"DHCMA.CPW.SDS.QCEntityItemSrv",
 					QueryName:"QryQCEntityItem",
 					aParRef:obj.ParrefID,
+					aVersion:obj.HisVerID,
+					aMatched:1	
+					});
+     	});
+     	//未对照
+     	$('#btnNoMatch').on('click', function(){
+			obj.gridQCEntityItemVer.load({
+					ClassName:"DHCMA.CPW.SDS.QCEntityItemSrv",
+					QueryName:"QryQCEntityItem",
+					aParRef:obj.ParrefID,
+					aVersion:obj.HisVerID,
+					aMatched:0	
+					});
+     	});
+     	//撤销对照
+     	$('#btnCancel').on('click', function(){
+			obj.btnCancel_click();
+     	});
+     	//查看对照项目值域差异
+     	$('#btnItemAlias').on('click', function(){
+			obj.btnItemAlias_click();
+     	});
+     	//导出项目值域差异
+     	$('#btnDifExport').on('click', function(){
+			ExportGridByCls(obj.DicDifGrid,"项目值域差异明细")
+     	});
+     	///项目数据源标准化取值配置
+     	//保存配置信息
+     	$('#StandSv').on('click', function(){
+			obj.btnStandSv_click();
+     	});
+     	//重置配置信息
+     	$('#StandReset').on('click', function(){
+			obj.btnStandReset_click();
+     	});
+     }
+     obj.btnAutoMatch_click=function(){
+	     $m({
+		  ClassName:'DHCMA.CPW.SDS.QCEntityItemVerSrv',
+		  MethodName:'MatchQCItem',
+		  aParRef:obj.ParrefID,
+		  aVersion:obj.HisVerID,
+		  aAutoMatch:1 
+		  },function(ret){
+			  if (parseInt(ret)>0) {
+				$.messager.popover({msg: '自动对照'+ret+'条项目！',type:'success',timeout: 2000});
+			  }else{
+				$.messager.popover({msg: '没有可自动对照的项目！',type:'error',timeout: 2000});
+			}
+		})
+		obj.gridQCEntityItemVer.reload();
+	 }
+	 obj.btnMatch_click=function(){
+	     $m({
+		  ClassName:'DHCMA.CPW.SDS.QCEntityItemVerSrv',
+		  MethodName:'MatchQCItem',
+		  aParRef:obj.ParrefID,
+		  aItemID:obj.ItemID,
+		  aItemVerID:obj.VerItemID
+		  },function(ret){
+			  if (parseInt(ret)>0) {
+				$.messager.popover({msg: '成功对照'+ret+'条项目！',type:'success',timeout: 2000});
+			  }else{
+				$.messager.popover({msg: '项目对照失败！',type:'error',timeout: 2000});
+			}
+		})
+		obj.gridQCEntityItemVer.reload();
+		obj.VerItemID="";
+	 }
+	 obj.btnCancel_click=function(){
+	     $m({
+		  ClassName:'DHCMA.CPW.SDS.QCEntityItemVerSrv',
+		  MethodName:'CancelMatchQCItem',
+		  aItemVerID:obj.VerItemID
+		  },function(ret){
+			  if (parseInt(ret)>0) {
+				$.messager.popover({msg: '取消项目对照成功！',type:'success',timeout: 2000});
+			  }else{
+				$.messager.popover({msg: '取消对照失败！'+ret,type:'error',timeout: 2000});
+			}
+		})
+		obj.gridQCEntityItemVer.reload();
+		obj.VerItemID="";
+	 }
+    $('#ItemKey').searchbox({
+	    searcher:function(value,name){
+		    obj.gridQCEntityItemLoad();
+	    },
+	    prompt:'请输入描述/代码'
+	});	
+	$('#ItemVerKey').searchbox({
+	    searcher:function(value,name){
+	    	obj.gridQCEntityItemVer.load({
+					ClassName:"DHCMA.CPW.SDS.QCEntityItemSrv",
+					QueryName:"QryQCEntityItem",
+					aParRef:obj.ParrefID,
+					aVersion:obj.HisVerID,
 					aKey:value		
 					});
 	    },
 	    prompt:'请输入关键字/代码'
 	});	
 	obj.gridQCEntity_onSelect = function (rd){
-		if (rd["BTID"] == obj.ParrefID) {
-			obj.ParrefID=""
-			obj.gridQCEntity.clearSelections();
-			obj.gridQCEntityItem.loadData([]);
-			
-		} else {	
-			obj.ParrefID=rd["BTID"]
-			obj.gridQCEntityItem.load({
-				    ClassName:"DHCMA.CPW.SDS.QCEntityItemSrv",
-					QueryName:"QryQCEntityItem"	,
-					aParRef:obj.ParrefID	
-			}
-			) ;
-		}
+		$('#ItemKey').searchbox('setValue',"")
+		obj.gridQCEntityItem.loadData([]);
+		obj.QCVersion.clear();
+		obj.ParrefID=rd["BTID"]
+		obj.QCVersion.select(rd.CurVerID)
 	}
 	obj.gridQCEntityItem_onDbselect= function (rd){
 		obj.layer(rd);
 	}
 	obj.gridQCEntityItem_onSelect= function (rd){
+		obj.ItemID=rd.BTID
 		$("#btnEdit").linkbutton("enable");
 		$("#btnDelete").linkbutton("enable");
 	}
-	//保存分类
+	obj.gridQCEntityItemVer_onSelect= function (rd){
+		obj.VerItemID=rd.BTID
+	}
+	obj.gridQCEntityItemLoad = function(){
+		$cm ({
+			ClassName:'DHCMA.CPW.SDS.QCEntityItemSrv',
+			QueryName:'QryQCEntityItem',
+			ResultSetType:"Array",
+			aParRef:obj.ParrefID,
+			aVersion:2,
+			aKey:$('#ItemKey').searchbox('getValue'),
+			page:1,      //可选项，页码，默认1			
+			rows:9999   //可选项，获取多少条数据，默认50
+		},function(rs){
+			$('#gridQCEntityItem').datagrid({loadFilter:pagerFilter}).datagrid('loadData', rs);			
+		})
+
+    }
+	//保存项目
 	obj.btnSave_click = function(flg){
 		var errinfo = "";
 		var Code = $('#BTCode').val();
@@ -131,13 +208,14 @@ function InitWinEvent(obj){
 		var LinkItem = $('#BTLinkItem').combobox('getValue');
 		if (typeof(LinkItem)=='undefined') LinkItem=""
 		var TriggerCondition = $('#TriggerCondition').val();
-		var BTExpressParam = $('#BTExpressParam').val();
+		var BTExpressParam = '';
+		var BTResume = $('#BTResume').val();
 		var UpType = $('#BTUpType').combobox('getValue');
 		if (!Code) {
 			errinfo = errinfo + "代码为空!<br>";
 		}
 		if (!Desc) {
-			errinfo = errinfo + "名称为空!<br>";
+			errinfo = errinfo + "描述为空!<br>";
 		}	
 		if (errinfo) {
 			$.messager.alert("错误提示", errinfo, 'info');
@@ -168,6 +246,8 @@ function InitWinEvent(obj){
 		inputStr = inputStr + String.fromCharCode(1) + GetDataParam
 		inputStr = inputStr + String.fromCharCode(1) + ItemSubCat
 		inputStr = inputStr + String.fromCharCode(1) + UpType
+		inputStr = inputStr + String.fromCharCode(1) + BTResume
+		inputStr = inputStr + String.fromCharCode(1) + obj.QCVerID
 		var flg = $m({
 			ClassName:"DHCMA.CPW.SD.QCEntityItem",
 			MethodName:"Update",
@@ -183,7 +263,8 @@ function InitWinEvent(obj){
 		}else {
 			$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
 			$HUI.dialog('#winQCEntityItem').close();
-			obj.gridQCEntityItem.reload() ;//刷新当前页
+			obj.gridQCEntityItemLoad()
+			//obj.gridQCEntityItem.reload() ;//刷新当前页
 		}
 	}
 	//删除分类 
@@ -201,11 +282,15 @@ function InitWinEvent(obj){
 					aId:rowID
 				},false);
 				if (parseInt(flg) < 0) {
-					$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');	
+					if (parseInt(flg)==-777) {
+						$.messager.alert("错误提示","系统参数配置不允许删除！", 'info');
+					} else {
+						$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					}
 				} else {
 					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
-					
-					obj.gridQCEntityItem.reload() ;//刷新当前页	
+					obj.gridQCEntityItemLoad()
+					//obj.gridQCEntityItem.reload() ;//刷新当前页	
 				}
 			} 
 		});
@@ -260,11 +345,15 @@ function InitWinEvent(obj){
 			if (row.RowID) {
 				$.messager.confirm("删除", "是否删除已保存规则:"+row.RuleContent, function (r) {	
 					if (r) {			
-						$m({
+						var flg = $m({
 							ClassName:"DHCMA.CPW.SD.QCItemValidRule",
 							MethodName:"DeleteById",
 							aId:row.RowID
-							},false)
+						},false)
+						if (parseInt(flg)==-777) {
+							$.messager.alert("错误提示","系统参数配置不允许删除！", 'info');
+							return;
+						} 
 						obj.RuleGrid.reload();
 					}
 				})
@@ -289,7 +378,7 @@ function InitWinEvent(obj){
 			$("#BTLinkItem").combobox('setValue', rd["BTLinkedItem"]);	
 			$("#TriggerCondition").val(rd["BTTriggerCondition"])
 			$("#BTIsActive").checkbox('setValue',rd["BTIsActive"]=="是"?true:false)
-			$("#BTExpressParam").val(rd["BTExpressParam"])
+			$("#BTResume").val(rd["BTResume"])
 			$("#BTCat").val(rd["BTItemCat"]);
 			$("#BTSubCat").val(rd["BTItemSubCat"]);
 			if (rd["BTExpressCode"]=="BaseInfo") {
@@ -309,21 +398,26 @@ function InitWinEvent(obj){
 			$("#BTCode").val('');
 			$("#BTDesc").val('');
 			$("#BTType").combobox('setValue','');
+			$("#BTUpType").combobox('setValue','');
 			$("#BTExpress").combobox('setValue','');
 			$("#IndNo").val('');
 			$("#BTLinkItem").combobox('setValue','');
 			$("#TriggerCondition").val('');
 			$("#BTIsActive").checkbox('uncheck');
 			$("#TriggerCondition").val('');	
-			$("#BTExpressParam").val('');
+			$("#BTResume").val('');
 			$("#BTCat").val('');	
+			$("#BTSubCat").val('');
 			$("#BTIsNeeded").val('');
 			$("#GetDataParam").val('');
 		}
 		$HUI.dialog('#winQCEntityItem').open();
 	}
+	obj.ShowItemStand=function(ItemID) {
+		obj.InitConfigData(ItemID);
+		$HUI.dialog('#winQCItemMatch').open();
+	}
 	obj.ShowItemRule=function(ItemID) {
-		obj.ItemID=ItemID
 		obj.RuleGrid = $HUI.datagrid("#RuleGrid",{
 			fit:true,
 			singleSelect: false,
@@ -398,5 +492,123 @@ function InitWinEvent(obj){
 			}
 		});
 		$HUI.dialog('#winQCItemRule').open();
+	}
+	obj.btnItemAlias_click=function(){
+	 	obj.DicDifGrid = $HUI.datagrid("#DicDifGrid",{
+			pagination: false, //如果为true, 则在DataGrid控件底部显示分页工具栏
+			rownumbers: true, //如果为true, 则显示一个行号列
+			fit:true,
+			singleSelect: true,
+			//定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
+			autoRowHeight: false, 
+			loadMsg:'数据加载中...',
+		    url:$URL,
+		    queryParams:{
+			    ClassName:"DHCMA.CPW.SDS.QCEntityItemVerSrv",
+				QueryName:"QryVerItemDicDif",
+				aParRef:obj.ParrefID,
+				aVersion:obj.HisVerID
+		    },
+			columns:[[
+				{field:'ItemCode',title:'质控代码',width:'120'},
+				{field:'ItemDesc',title:'质控项目',width:'120',showTip:true},
+				{field:'DifMessage',title:'差异明细',width:'520',showTip:true,tipWidth:450}
+
+			]]
+			,onBeforeLoad:function(){
+
+			}
+			,onLoadError:function(e){
+				$.messager.alert("提示",e.responseText, 'info');
+			}
+			,onLoadSuccess:function(){
+
+			}
+		});
+		$HUI.dialog('#winQCItemDicDif').open()    
+	 }
+	//数据源标准化配置事件
+	obj.btnStandSv_click=function(){	
+		var SoureceId	= Common_GetValue('Source')
+		var GetField	= Common_GetValue('GetField')
+		var StandDic	= Common_GetValue('StandDic')
+		var StandDicSub	= Common_GetValue('StandDicSub')
+		var GetTiming	= Common_GetValue('GetTiming')
+		var CalExp		= Common_GetValue('CalExp')
+		var DataFormat	= Common_GetValue('DataFormat')
+		if (SoureceId=="") {
+			$.messager.alert("提示","请选择数据源进行配置！", 'info');
+			return
+		}
+		InputStr="^"
+		InputStr+=obj.ItemID+"^"
+		InputStr+=obj.ItemDicId+"^"
+		InputStr+=SoureceId+"^"
+		InputStr+=GetField+"^"
+		InputStr+=StandDic+"^"
+		InputStr+=StandDicSub+"^"
+		InputStr+=GetTiming+"^"
+		InputStr+=CalExp+"^"
+		InputStr+=DataFormat
+		$m({
+			ClassName:'DHCMA.CPW.SD.QCItemDataConfig',
+			MethodName:'Update',
+			aInputStr:InputStr	
+		},function(flg){
+			if (parseInt(flg)<1) {
+				$.messager.alert("错误提示", "保存失败，请联系信息科!" , 'info');
+			}else {
+				$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
+				$HUI.dialog('#winQCItemMatch').close();
+			}	
+		})
+	}
+	obj.btnStandReset_click=function(){
+		var InputStr=obj.ItemID
+		$.messager.confirm("重置", "是否重置该条数据配置信息?", function (r) {		
+			if(r){
+				$m({
+					ClassName:'DHCMA.CPW.SDS.QCItemDataConfigSrv',
+					MethodName:'ResetConfig',
+					aInputStr:InputStr	
+				},function(flg){
+					if (parseInt(flg)<0) {
+						$.messager.alert("错误提示", "重置失败，请联系信息科!" , 'info');
+					}else {
+						$.messager.popover({msg: '重置成功！',type:'success',timeout: 1000});
+					}
+				})
+				obj.ClearMatchData()
+			}
+		})
+	}
+	obj.InitConfigData=function(ItemID){
+		var Condata=$m({
+			ClassName:'DHCMA.CPW.SDS.QCItemDataConfigSrv',
+			MethodName:'GetConfigData',
+			aInputStr:ItemID
+		},false)
+		ConfigData=[]
+		if (Condata.length==0) {obj.ClearMatchData();return;}
+		ConfigData=Condata.split('^')
+		obj.Source.select(ConfigData[0]);
+		obj.StandDic.select(ConfigData[2]);
+		obj.StandDicSub.select(ConfigData[3]);
+		obj.GetField.select(ConfigData[1]);	
+		obj.GetTiming.setValue(ConfigData[4]);
+		$('#CalExp').val(ConfigData[5]);
+		$('#DataFormat').val(ConfigData[6]);	
+	}
+	obj.ClearMatchData=function(){
+		obj.Source.setValue('');
+		obj.GetField.setValue('');
+		obj.StandDic.setValue('');
+		obj.StandDicSub.setValue('');
+		obj.GetTiming.setValue('');
+		$('#CalExp').val('');
+		$('#DataFormat').val('');
+		obj.GetField.loadData([]);
+		obj.StandDic.loadData([]);
+		obj.StandDicSub.loadData([]);
 	}
 }

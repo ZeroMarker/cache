@@ -11,6 +11,9 @@ $(function(){
 	//注册配置加载数据
 	DataListLoad()
 })
+$(window).load(function() {
+	InitTip();
+})
 function Init(){
 	//初始化界面上ComboBox
 	InitComboBox();
@@ -19,8 +22,8 @@ function Init(){
 }
 function InitEvent(){
 	//定义新增按钮事件
-	$("#Save").bind("click",SaveClick)
-	$("#BFind").bind("click",DataListLoad)
+	$("#Save").bind("click",SaveClick);
+	$("#BFind").bind("click",DataListLoad);
 }
 function InitDataGrid(){
 	var Columns=[[    
@@ -42,6 +45,7 @@ function InitDataGrid(){
 		pageSize: 20,
 		idField:'RowID',
 		columns :Columns,
+		remoteSort:false,
 		toolbar: [
 		{
 			iconCls: 'icon-add ',
@@ -73,6 +77,13 @@ function InitDataGrid(){
 			handler: function(){
 				DeleteClick()
 			}
+		},'-',{
+			id:"tip",
+			iconCls: 'icon-help',
+			handler: function(){
+				InitTip();
+				$("#tip").popover('show');
+			}
 		}],
 		onDblClickRow:function(index, rowData){
 			PageLogicObj.m_RowId=rowData["ID"]
@@ -83,8 +94,9 @@ function InitDataGrid(){
 		onSelect:function(index,rowData){
 			PageLogicObj.m_RowId=rowData["ID"]
 		}
-	});
-	dataGrid.datagrid('loadData',{ 'total':'0',rows:[] });
+	}).datagrid({loadFilter:DocToolsHUI.lib.pagerFilter});
+	//dataGrid.datagrid('loadData',{ 'total':'0',rows:[] });
+	
 	return dataGrid;
 }
 function DataListLoad(){
@@ -94,8 +106,7 @@ function DataListLoad(){
 		ClsName:$("#ClassListSearch").combobox("getValue"),
 	    rows:99999
 	},function(GridData){
-		$("#DataList").datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
-		$("#DataList").datagrid("clearSelections")
+		$("#DataList").datagrid('loadData',GridData).datagrid("clearSelections")
 	});
 }
 function InitComboBox(){
@@ -381,4 +392,26 @@ var FieldJson={
 	UPLSClassPropertyIndex:"",
 	UPLSClassPropertyDescription:"ClassPropertyDesc",
 	UPLSClassPropertyLink:"PropertyLinkName"
+}
+function InitTip(){
+	var _content = "<ul class='tip_class'><li style='font-weight:bold'>医生站业务更新日志使用说明</li>" + 
+		'<li>1、业务更新日志适用于所有存在实体类的日志记录场景。首先在日志设置页面设置需要记录的表及相应属性,然后在相应业务场景调用"获取日志内容数据接口"</li>' +
+		'<li><span>获取修改前后的修改数据,最后调用"日志保存"接口,即可查询到相应的修改记录。</span></li>' + 
+		"<li>2、医生站业务更新日志设置表：DHCDocUpLogSet；日志记录表: DHC_DocDataChangeLog。</li>" +
+		'<li>3、获取日志内容数据接口：' +
+		"<li><span>##class(web.DHCDocDataChangeLog).GetLogJsonData</span></li>" + 
+		'<li><span>入参:</span>表名_$C(2)_操作记录ID名，多个表名以"^"分割</li>' + 
+		"<li><span>出参:</span>日志内容json</li>" + 
+		'<li><span>示例:</span>##class(web.DHCDocDataChangeLog).GetLogJsonData("User.RBApptSchedule"_$c(2)_ScheduleID_"^"_</li></li>' + 
+		'<li><span>"User.DHCRBApptSchedule"_$c(2)_ScheduleID)</span></li>' +
+		"<li>4、日志保存接口：</li>" + 
+		"<li><span>##class(web.DHCDocDataChangeLog).SaveLog</li></span>" + 
+		"<li><span>入参:</span>表名、类名、功能描述、操作对象、操作类型、修改后数据、修改前数据</li>" +
+		"<li><span>出参:</span>0 成功 其他 失败</li>" +
+		'<li><span>示例:</span>##class(web.DHCDocDataChangeLog).SaveLog("RB_ApptSchedule#DHC_RBApptSchedule","User.RBApptSchedule#User.DHCRBApptSchedule",</li>' +
+		'<li><span>"排班信息","User.RBApptSchedule#User.DHCRBApptSchedule_"_ScheduleID,$p($g(^RB("RES",+ScheduleID)),"^",17),"U",NewDataJson,OldDataJson)</span></li>'
+	$("#tip").popover({
+		trigger:'hover',
+		content:_content
+	});
 }

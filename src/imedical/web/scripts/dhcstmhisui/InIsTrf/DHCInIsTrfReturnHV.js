@@ -1,105 +1,120 @@
-
-var init = function(){
-	
+ï»¿var init = function() {
 	$UI.linkbutton('#SearchBT', {
-		onClick: function(){
-			var HvFlag="Y";
-			FindWin(Select,"",HvFlag);
+		onClick: function() {
+			var HvFlag = 'Y';
+			FindWin(Select, '', HvFlag);
 		}
 	});
 	
-	function Select(RowId){
+	function Select(RowId) {
 		$UI.clearBlock('#Conditions');
 		$UI.clear(DetailGrid);
 		$.cm({
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 			MethodName: 'Select',
 			Init: RowId
-		}, function(jsonData){
-			$UI.fillBlock('#Conditions',jsonData);
+		}, function(jsonData) {
+			$UI.fillBlock('#Conditions', jsonData);
+			$('#InitFrLoc').combobox('setValue', jsonData.InitFrLoc.RowId);
 			SetEditDisable();
 			var InitComp = jsonData['InitComp'];
 			var InitState = jsonData['InitState'];
-			if(InitComp == "Y"){
-				if(InitState == '21'){
-					var BtnEnaleObj = {'#SaveBT':false, '#DeleteBT':false, '#CompleteBT':false, '#CancelCompBT':false};
-				}else if(InitState == '31'){
-					var BtnEnaleObj = {'#SaveBT':false, '#DeleteBT':false, '#CompleteBT':false, '#CancelCompBT':false};
-				}else{
-					var BtnEnaleObj = {'#SaveBT':false, '#DeleteBT':false, '#CompleteBT':false, '#CancelCompBT':true};
+			if (InitComp == 'Y') {
+				if (InitState == '21') {
+					var BtnEnaleObj = { '#SaveBT': false, '#DeleteBT': false, '#CompleteBT': false, '#CancelCompBT': false };
+				} else if (InitState == '31') {
+					var BtnEnaleObj = { '#SaveBT': false, '#DeleteBT': false, '#CompleteBT': false, '#CancelCompBT': false };
+				} else {
+					var BtnEnaleObj = { '#SaveBT': false, '#DeleteBT': false, '#CompleteBT': false, '#CancelCompBT': true };
 				}
-			}else{
-				var BtnEnaleObj = {'#SaveBT':true, '#DeleteBT':true, '#CompleteBT':true, '#CancelCompBT':false};
+			} else {
+				var BtnEnaleObj = { '#SaveBT': true, '#DeleteBT': true, '#CompleteBT': true, '#CancelCompBT': false };
 			}
 			ChangeButtonEnable(BtnEnaleObj);
 		});
 		
-		var ParamsObj = {Init: RowId};
+		var ParamsObj = { Init: RowId };
 		var Params = JSON.stringify(ParamsObj);
 		DetailGrid.load({
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
 			QueryName: 'DHCINIsTrfD',
+			query2JsonStrict: 1,
 			Params: Params,
-			rows:99999
+			rows: 99999,
+			totalFooter: '"InciCode":"åˆè®¡"',
+			totalFields: 'RpAmt,SpAmt'
 		});
 	}
 	
 	$UI.linkbutton('#SaveBT', {
-		onClick: function(){
+		onClick: function() {
 			var MainObj = $UI.loopBlock('#Conditions');
-			if(MainObj['InitComp'] == 'Y'){
-				$UI.msg('alert', '¸Ãµ¥¾İÒÑ¾­Íê³É,²»¿ÉÖØ¸´±£´æ!');
+			if (MainObj['InitComp'] == 'Y') {
+				$UI.msg('alert', 'è¯¥å•æ®å·²ç»å®Œæˆ,ä¸å¯é‡å¤ä¿å­˜!');
 				return;
 			}
-			if(isEmpty(MainObj['InitFrLoc'])){
-				$UI.msg('alert', '³ö¿â¿ÆÊÒ²»¿ÉÎª¿Õ!')
+			if (isEmpty(MainObj['InitFrLoc'])) {
+				$UI.msg('alert', 'å‡ºåº“ç§‘å®¤ä¸å¯ä¸ºç©º!');
 				return;
 			}
-			if(isEmpty(MainObj['InitToLoc'])){
-				$UI.msg('alert', '½ÓÊÕ¿ÆÊÒ²»¿ÉÎª¿Õ!')
+			if (isEmpty(MainObj['InitToLoc'])) {
+				$UI.msg('alert', 'æ¥æ”¶ç§‘å®¤ä¸å¯ä¸ºç©º!');
 				return;
 			}
 			MainObj['InitState'] = '10';
 			var Main = JSON.stringify(MainObj);
 			var Detail = DetailGrid.getChangesData('Inclb');
-			//ÅĞ¶Ï
-			var ifChangeMain=$UI.isChangeBlock('#Conditions');
-			if (Detail === false){	//Î´Íê³É±à¼­»òÃ÷Ï¸Îª¿Õ
+			// åˆ¤æ–­
+			var ifChangeMain = $UI.isChangeBlock('#Conditions');
+			if (Detail === false) {	// æœªå®Œæˆç¼–è¾‘æˆ–æ˜ç»†ä¸ºç©º
 				return;
 			}
-			if (!ifChangeMain && (isEmpty(Detail))){	//Ö÷µ¥ºÍÃ÷Ï¸²»±ä
-				$UI.msg("alert", "Ã»ÓĞĞèÒª±£´æµÄĞÅÏ¢!");
+			if (!ifChangeMain && (isEmpty(Detail))) {	// ä¸»å•å’Œæ˜ç»†ä¸å˜
+				$UI.msg('alert', 'æ²¡æœ‰éœ€è¦ä¿å­˜çš„ä¿¡æ¯!');
 				return;
+			}
+			var InStkTkParamObj = GetAppPropValue('DHCSTINSTKTKM');
+			if (InStkTkParamObj.AllowBusiness != 'Y') {
+				var IfFrLocExistInStkTk = tkMakeServerCall('web.DHCSTMHUI.INStkTk', 'CheckInStkTkByLoc', MainObj['InitFrLoc']);
+				if (IfFrLocExistInStkTk == 'Y') {
+					$UI.msg('alert', 'é€€åº“ç§‘å®¤å­˜åœ¨æœªå®Œæˆçš„ç›˜ç‚¹å•ä¸å…è®¸ä¿å­˜!');
+					return false;
+				}
+				var IfToLocExistInStkTk = tkMakeServerCall('web.DHCSTMHUI.INStkTk', 'CheckInStkTkByLoc', MainObj['InitToLoc']);
+				if (IfToLocExistInStkTk == 'Y') {
+					$UI.msg('alert', 'åº“æˆ¿å­˜åœ¨æœªå®Œæˆçš„ç›˜ç‚¹å•ä¸å…è®¸ä¿å­˜!');
+					return false;
+				}
 			}
 			$.cm({
 				ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 				MethodName: 'jsSave',
 				Main: Main,
 				Detail: JSON.stringify(Detail)
-			},function(jsonData){
-				if(jsonData.success === 0){
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
 					$UI.msg('success', jsonData.msg);
 					var InitId = jsonData.rowid;
 					Select(InitId);
-					if(InitParamObj['AutoPrintAfterSave'] == 'Y'){
+					if (InitParamObj['AutoPrintAfterSave'] == 'Y') {
 						PrintInIsTrfReturn(InitId, 'Y');
 					}
-				}else{
+				} else {
 					$UI.msg('error', jsonData.msg);
 				}
 			});
 		}
 	});
 	$UI.linkbutton('#CompleteBT', {
-		onClick: function(){
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			var InitId = ParamsObj['RowId'];
-			if(isEmpty(InitId)){
+			if (isEmpty(InitId)) {
 				return;
 			}
 			var InitComp = ParamsObj['InitComp'];
-			if(InitComp == 'Y'){
-				$UI.msg('alert', '¸Ãµ¥¾İÒÑÍê³É,²»¿ÉÖØ¸´²Ù×÷!');
+			if (InitComp == 'Y') {
+				$UI.msg('alert', 'è¯¥å•æ®å·²å®Œæˆ,ä¸å¯é‡å¤æ“ä½œ!');
 				return;
 			}
 			var Params = JSON.stringify(ParamsObj);
@@ -107,34 +122,34 @@ var init = function(){
 				ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 				MethodName: 'jsSetCompleted',
 				Params: Params
-			},function(jsonData){
-				if(jsonData.success === 0){
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
 					$UI.msg('success', jsonData.msg);
 					var InitId = jsonData.rowid;
-					//Select(InitId);
+					// Select(InitId);
 					$('#InitComp').checkbox('setValue', true);
-					var BtnEnaleObj = {'#SaveBT':false, '#DeleteBT':false, '#CompleteBT':false, '#CancelCompBT':true};
+					var BtnEnaleObj = { '#SaveBT': false, '#DeleteBT': false, '#CompleteBT': false, '#CancelCompBT': true };
 					ChangeButtonEnable(BtnEnaleObj);
-					//Íê³Éºó×Ô¶¯´òÓ¡ »ò Íê³Éºó×Ô¶¯³ö¿âÉóºË£¬³ö¿âÉóºËºó×Ô¶¯´òÓ¡
-					if((InitParamObj.AutoPrintAfterComp=='Y') || (InitParamObj.AutoAckOutAfterCompleted=='Y' && InitParamObj.AutoPrintAfterAckOut=='Y')){
+					// å®Œæˆåè‡ªåŠ¨æ‰“å° æˆ– å®Œæˆåè‡ªåŠ¨å‡ºåº“å®¡æ ¸ï¼Œå‡ºåº“å®¡æ ¸åè‡ªåŠ¨æ‰“å°
+					if ((InitParamObj.AutoPrintAfterComp == 'Y') || (InitParamObj.AutoAckOutAfterCompleted == 'Y' && InitParamObj.AutoPrintAfterAckOut == 'Y')) {
 						PrintInIsTrfReturn(InitId, 'Y');
 					}
-				}else{
+				} else {
 					$UI.msg('error', jsonData.msg);
 				}
 			});
 		}
 	});
 	$UI.linkbutton('#CancelCompBT', {
-		onClick: function(){
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			var InitId = ParamsObj['RowId'];
-			if(isEmpty(InitId)){
+			if (isEmpty(InitId)) {
 				return;
 			}
 			var InitComp = ParamsObj['InitComp'];
-			if(InitComp != 'Y'){
-				$UI.msg('alert', '¸Ãµ¥¾İ²»ÊÇÍê³É×´Ì¬,²»¿É²Ù×÷!');
+			if (InitComp != 'Y') {
+				$UI.msg('alert', 'è¯¥å•æ®ä¸æ˜¯å®ŒæˆçŠ¶æ€,ä¸å¯æ“ä½œ!');
 				return;
 			}
 			var Params = JSON.stringify(ParamsObj);
@@ -142,148 +157,211 @@ var init = function(){
 				ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 				MethodName: 'jsCancelComplete',
 				Params: Params
-			},function(jsonData){
-				if(jsonData.success === 0){
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
 					$UI.msg('success', jsonData.msg);
 					var InitId = jsonData.rowid;
-					//Select(InitId);
+					// Select(InitId);
 					$('#InitComp').checkbox('setValue', false);
-					var BtnEnaleObj = {'#SaveBT':true, '#DeleteBT':true, '#CompleteBT':true, '#CancelCompBT':false};
+					var BtnEnaleObj = { '#SaveBT': true, '#DeleteBT': true, '#CompleteBT': true, '#CancelCompBT': false };
 					ChangeButtonEnable(BtnEnaleObj);
-				}else{
+				} else {
 					$UI.msg('error', jsonData.msg);
 				}
 			});
 		}
 	});
 	$UI.linkbutton('#DeleteBT', {
-		onClick: function(){
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			var InitId = ParamsObj['RowId'];
-			if(isEmpty(InitId)){
+			if (isEmpty(InitId)) {
 				return;
 			}
 			var InitComp = ParamsObj['InitComp'];
-			if(InitComp == 'Y'){
-				$UI.msg('alert', '¸Ãµ¥¾İÒÑ¾­Íê³É,²»¿ÉÉ¾³ı!');
+			if (InitComp == 'Y') {
+				$UI.msg('alert', 'è¯¥å•æ®å·²ç»å®Œæˆ,ä¸å¯åˆ é™¤!');
 				return;
 			}
-			$UI.confirm('Äú½«ÒªÉ¾³ıµ¥¾İ,ÊÇ·ñ¼ÌĞø?', '', '', Delete);
+			$UI.confirm('æ‚¨å°†è¦åˆ é™¤å•æ®,æ˜¯å¦ç»§ç»­?', '', '', Delete);
 		}
 	});
-	function Delete(){
+	function Delete() {
 		var ParamsObj = $UI.loopBlock('#Conditions');
 		var Params = JSON.stringify(ParamsObj);
 		$.cm({
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 			MethodName: 'jsDelete',
 			Params: Params
-		},function(jsonData){
-			if(jsonData.success === 0){
+		}, function(jsonData) {
+			if (jsonData.success === 0) {
 				$UI.msg('success', jsonData.msg);
 				$UI.clearBlock('#Conditions');
 				$UI.clear(DetailGrid);
 				SetDefaValues();
-			}else{
+			} else {
 				$UI.msg('error', jsonData.msg);
 			}
 		});
 	}
 	
 	$UI.linkbutton('#ClearBT', {
-		onClick: function(){
+		onClick: function() {
 			Clear();
 		}
 	});
-	function Clear(){
+	function Clear() {
 		$UI.clearBlock('#Conditions');
 		$UI.clear(DetailGrid);
 		SetDefaValues();
-		var BtnEnaleObj = {'#SaveBT':false, '#DeleteBT':false, '#CompleteBT':false, '#CancelCompBT':false};
+		var BtnEnaleObj = { '#SaveBT': false, '#DeleteBT': false, '#CompleteBT': false, '#CancelCompBT': false };
 		ChangeButtonEnable(BtnEnaleObj);
 		SetEditEnable();
 	}
-	function SetEditDisable(){
+	function SetEditDisable() {
 		$HUI.combobox('#InitFrLoc').disable();
 		$HUI.combobox('#InitToLoc').disable();
 		$HUI.combobox('#InitScg').disable();
 	}
-	function SetEditEnable(){
+	function SetEditEnable() {
 		$HUI.combobox('#InitFrLoc').enable();
 		$HUI.combobox('#InitToLoc').enable();
 		$HUI.combobox('#InitScg').enable();
 	}
 	
 	$UI.linkbutton('#PrintBT', {
-		onClick: function(){
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			var InitId = ParamsObj['RowId'];
-			if(isEmpty(InitId)){
-				$UI.msg('alert', 'ÇëÑ¡ÔñĞèÒª´òÓ¡µÄµ¥¾İ!');
+			if (isEmpty(InitId)) {
+				$UI.msg('alert', 'è¯·é€‰æ‹©éœ€è¦æ‰“å°çš„å•æ®!');
 				return;
 			}
-			if(InitParamObj['PrintNoComplete']=="N" && $('#InitComp').checkbox('getValue') == false){
-				Msg.info('warning','²»ÔÊĞí´òÓ¡Î´Íê³ÉµÄ×ªÒÆµ¥!');
+			if (InitParamObj['PrintNoComplete'] == 'N' && $('#InitComp').checkbox('getValue') == false) {
+				$UI.msg('warning', 'ä¸å…è®¸æ‰“å°æœªå®Œæˆçš„è½¬ç§»å•!');
 				return;
 			}
 			PrintInIsTrfReturn(InitId);
 		}
 	});
 	$UI.linkbutton('#PrintHVColBT', {
-		onClick: function(){
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			var InitId = ParamsObj['RowId'];
-			if(isEmpty(InitId)){
-				$UI.msg('alert', 'ÇëÑ¡ÔñĞèÒª´òÓ¡µÄµ¥¾İ!');
+			if (isEmpty(InitId)) {
+				$UI.msg('alert', 'è¯·é€‰æ‹©éœ€è¦æ‰“å°çš„å•æ®!');
 				return;
 			}
-			if(InitParamObj['PrintNoComplete']=="N" && $('#InitComp').checkbox('getValue') == false){
-				Msg.info('warning','²»ÔÊĞí´òÓ¡Î´Íê³ÉµÄ×ªÒÆµ¥!');
+			if (InitParamObj['PrintNoComplete'] == 'N' && $('#InitComp').checkbox('getValue') == false) {
+				$UI.msg('warning', 'ä¸å…è®¸æ‰“å°æœªå®Œæˆçš„è½¬ç§»å•!');
 				return;
 			}
 			PrintInIsTrfReturnHVCol(InitId);
 		}
 	});
-	
-	var InitFrLoc = $HUI.combobox('#InitFrLoc',{
+	$UI.linkbutton('#SelOutBT', {
+		onClick: function() {
+			OutReq(Select);
+		}
+	});
+
+	var InitFrLocParams, InitToLocParams;
+	if (InitParamObj['DefaReturnLoc'] == '0') {		// åº“æˆ¿ä½¿ç”¨
+		InitFrLocParams = JSON.stringify(addSessionParams({
+			Type: 'Trans',
+			Element: 'InitFrLoc'
+		}));
+		InitToLocParams = JSON.stringify(addSessionParams({
+			Type: 'Login',
+			Element: 'InitToLoc'
+		}));
+	} else {	// ä¸´åºŠä½¿ç”¨
+		InitFrLocParams = JSON.stringify(addSessionParams({
+			Type: 'Login',
+			Element: 'InitFrLoc',
+			LoginLocType: 2
+		}));
+		InitToLocParams = JSON.stringify(addSessionParams({
+			Type: 'Trans',
+			Element: 'InitToLoc'
+		}));
+	}
+	var InitToLoc = $HUI.combobox('#InitToLoc', {
 		url: $URL
 			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
-			+ JSON.stringify(addSessionParams({Type:'All'})),
+			+ InitToLocParams,
 		valueField: 'RowId',
-		textField: 'Description'
+		textField: 'Description',
+		onSelect: function(record) {
+			if (InitParamObj['DefaReturnLoc'] == '0') {
+				var ToLocId = record['RowId'];
+				$('#InitFrLoc').combobox('clear');
+				$('#InitFrLoc').combobox('reload', $URL
+				+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
+				+ JSON.stringify(addSessionParams({
+					Type: 'Trans',
+					LocId: ToLocId,
+					TransLocType: 'T'
+				})));
+			}
+			var ToLoc = record['RowId'];
+			var FrLoc = $('#InitFrLoc').combobox('getValue');
+			$HUI.combotree('#InitScg').setFilterByLoc(FrLoc, ToLoc);
+		}
 	});
-	
-	var InitToLoc = $HUI.combobox('#InitToLoc',{
+	var InitFrLoc = $HUI.combobox('#InitFrLoc', {
 		url: $URL
-			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
-			+ JSON.stringify(addSessionParams({Type:'Login'})),
+			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params=' + InitFrLocParams,
 		valueField: 'RowId',
-		textField: 'Description'
+		textField: 'Description',
+		onSelect: function(record) {
+			if (InitParamObj['DefaReturnLoc'] == '1') {
+				var FrLocId = record['RowId'];
+				$('#InitToLoc').combobox('clear');
+				$('#InitToLoc').combobox('reload', $URL
+				+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
+				+ JSON.stringify(addSessionParams({
+					Type: 'Trans',
+					LocId: FrLocId,
+					TransLocType: 'F',
+					Element: 'InitToLoc'
+				})));
+				var DefaInfo = tkMakeServerCall('web.DHCSTMHUI.DHCTransferLocConf', 'GetDefLoc', FrLocId, gGroupId);
+				var ToLocId = DefaInfo.split('^')[0], ToLocDesc = DefaInfo.split('^')[1];
+				if (ToLocId && ToLocDesc) {
+					AddComboData($('#InitToLoc'), ToLocId, ToLocDesc);
+					$('#InitToLoc').combobox('setValue', ToLocId);
+				}
+			}
+			var FrLoc = record['RowId'];
+			var ToLoc = $('#InitToLoc').combobox('getValue');
+			$HUI.combotree('#InitScg').setFilterByLoc(FrLoc, ToLoc);
+		}
 	});
-	$('#InitToLoc').combobox('setValue', session['LOGON.CTLOCID']);
 	
-	var OperateType = $HUI.combobox('#OperateType',{
-		url : $URL
+	var OperateType = $HUI.combobox('#OperateType', {
+		url: $URL
 			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetOperateType&ResultSetType=Array&Params='
-			+ JSON.stringify(addSessionParams({Type: 'OM'})),
+			+ JSON.stringify(addSessionParams({ Type: 'OM' })),
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-	var VirtualFlag = $HUI.checkbox('#VirtualFlag',{
-		onCheckChange: function(e, value){
-			if(value){
+	var VirtualFlag = $HUI.checkbox('#VirtualFlag', {
+		onCheckChange: function(e, value) {
+			if (value) {
 				var InitToLoc = $('#InitToLoc').combobox('getValue');
-				var Info = tkMakeServerCall('web.DHCSTMHUI.Common.UtilCommon','GetMainLoc',InitToLoc);
-				var InfoArr = Info.split("^");
+				var Info = tkMakeServerCall('web.DHCSTMHUI.Common.UtilCommon', 'GetMainLoc', InitToLoc);
+				var InfoArr = Info.split('^');
 				var VituralLoc = InfoArr[0], VituralLocDesc = InfoArr[1];
 				AddComboData($('#InitToLoc'), VituralLoc, VituralLocDesc);
 				$('#InitToLoc').combobox('setValue', VituralLoc);
-			}else{
+			} else {
 				$('#InitToLoc').combobox('setValue', gLocId);
 			}
 		}
 	});
-	var DetailCm = [[{
+	var DetailCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
 			saveCol: true,
@@ -295,11 +373,11 @@ var init = function(){
 			width: 80,
 			hidden: true
 		}, {
-			title: 'Îï×Ê´úÂë',
+			title: 'ç‰©èµ„ä»£ç ',
 			field: 'InciCode',
 			width: 120
 		}, {
-			title: 'Îï×ÊÃû³Æ',
+			title: 'ç‰©èµ„åç§°',
 			field: 'InciDesc',
 			width: 180
 		}, {
@@ -308,19 +386,20 @@ var init = function(){
 			width: 80,
 			hidden: true
 		}, {
-			title: '¸ßÖµÌõÂë',
+			title: 'é«˜å€¼æ¡ç ',
 			field: 'HVBarCode',
-			jump:false,
+			jump: false,
 			saveCol: true,
 			editor: {
 				type: 'validatebox',
 				options: {
-					required: true
+					required: true,
+					tipPosition: 'bottom'
 				}
 			},
 			width: 150
 		}, {
-			title: '¹æ¸ñ',
+			title: 'è§„æ ¼',
 			field: 'Spec',
 			width: 80
 		}, {
@@ -330,73 +409,109 @@ var init = function(){
 			width: 80,
 			hidden: true
 		}, {
-			title: 'ÅúºÅ~Ğ§ÆÚ',
+			title: 'æ‰¹å·~æ•ˆæœŸ',
 			field: 'BatExp',
 			width: 200
 		}, {
-			title: '³§ÉÌ',
+			title: 'ç”Ÿäº§å‚å®¶',
 			field: 'ManfDesc',
 			width: 160
 		}, {
-			title: 'Åú´Î¿â´æ',
+			title: 'æ‰¹æ¬¡åº“å­˜',
 			field: 'InclbQty',
 			align: 'right',
 			width: 80
 		}, {
-			title: '³ö¿âÊıÁ¿',
+			title: 'å‡ºåº“æ•°é‡',
 			field: 'Qty',
 			saveCol: true,
 			align: 'right',
-			width: 80
+			width: 80,
+			editor: {
+				type: 'numberbox',
+				options: {
+					required: true,
+					tipPosition: 'bottom',
+					min: 0,
+					precision: 0
+				}
+			}
 		}, {
-			title: 'µ¥Î»Id',
+			title: 'å•ä½Id',
 			field: 'UomId',
 			saveCol: true,
 			width: 50,
 			hidden: true
 		}, {
-			title: 'µ¥Î»',
+			title: 'å•ä½',
 			field: 'UomDesc',
 			width: 50
 		}, {
-			title: '½ø¼Û',
+			title: 'è¿›ä»·',
 			field: 'Rp',
 			align: 'right',
 			width: 80
 		}, {
-			title: 'ÊÛ¼Û',
+			title: 'å”®ä»·',
 			field: 'Sp',
 			align: 'right',
 			width: 80
 		}, {
-			title: '½ø¼Û½ğ¶î',
+			title: 'è¿›ä»·é‡‘é¢',
 			field: 'RpAmt',
 			align: 'right',
 			width: 80
 		}, {
-			title: 'ÊÛ¼Û½ğ¶î',
+			title: 'å”®ä»·é‡‘é¢',
 			field: 'SpAmt',
 			align: 'right',
 			width: 80
 		}, {
-			title: 'Ãğ¾úÅúºÅ',
+			title: 'å›½å®¶åŒ»ä¿ç¼–ç ',
+			field: 'MatInsuCode',
+			width: 160
+		}, {
+			title: 'å›½å®¶åŒ»ä¿åç§°',
+			field: 'MatInsuDesc',
+			width: 160
+		}, {
+			title: 'ç­èŒæ‰¹å·',
 			field: 'SterilizedBat',
 			width: 160
 		}, {
-			title: 'ÇëÇóÊıÁ¿',
+			title: 'è¯·æ±‚æ•°é‡',
 			field: 'ReqQty',
 			align: 'right',
 			width: 80
 		}, {
-			title: 'ÇëÇó·½¿â´æ',
+			title: 'è¯·æ±‚æ–¹åº“å­˜',
 			field: 'ReqLocStkQty',
 			align: 'right',
 			width: 100
 		}, {
-			title: 'Õ¼ÓÃÊıÁ¿',
+			title: 'å ç”¨æ•°é‡',
 			field: 'InclbDirtyQty',
 			align: 'right',
 			width: 100
+		}, {
+			title: 'æ¡ç ç±»å‹',
+			field: 'OriginalStatus',
+			width: 80,
+			formatter: OriginalStatusFormatter
+		}, {
+			title: 'InitiDR',
+			field: 'InitiDR',
+			align: 'InitiDR',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'å¤‡æ³¨',
+			field: 'Remark',
+			saveCol: true,
+			width: 100,
+			editor: {
+				type: 'text'
+			}
 		}
 	]];
 	
@@ -404,62 +519,75 @@ var init = function(){
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
 			QueryName: 'DHCINIsTrfD',
-			rows:99999
+			query2JsonStrict: 1,
+			rows: 99999,
+			totalFooter: '"InciCode":"åˆè®¡"',
+			totalFields: 'RpAmt,SpAmt'
 		},
 		deleteRowParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
 			MethodName: 'jsDelete'
 		},
 		columns: DetailCm,
+		checkField: 'dhcit',
 		remoteSort: false,
 		showBar: true,
+		showFooter: true,
 		showAddDelItems: true,
 		pagination: false,
-		beforeAddFn: function(){
-			if($HUI.checkbox('#InitComp').getValue()){
-				$UI.msg('alert', 'µ¥¾İÒÑÍê³É, ²»¿ÉÔö¼Ó');
+		beforeAddFn: function() {
+			if ($HUI.checkbox('#InitComp').getValue()) {
+				$UI.msg('alert', 'å•æ®å·²å®Œæˆ, ä¸å¯å¢åŠ ');
 				return false;
 			}
-			if(isEmpty($HUI.combobox('#InitFrLoc').getValue())){
-				$UI.msg('alert', 'ÍË¿â¿ÆÊÒ²»¿ÉÎª¿Õ!');
+			if (isEmpty($HUI.combobox('#InitFrLoc').getValue())) {
+				$UI.msg('alert', 'é€€åº“ç§‘å®¤ä¸å¯ä¸ºç©º!');
 				return false;
 			}
 			var OperateType = $HUI.combobox('#OperateType').getValue();
 			if (InitParamObj.OutTypeNotNull == 'Y' && isEmpty(OperateType)) {
-				$UI.msg('alert', 'ÇëÑ¡Ôñ³ö¿âÀàĞÍ!');
+				$UI.msg('alert', 'è¯·é€‰æ‹©å‡ºåº“ç±»å‹!');
 				return false;
 			}
-			if(isEmpty($HUI.combotree('#InitScg').getValue())){
-				$UI.msg('alert', 'Àà×é²»¿ÉÎª¿Õ!');
+			if (isEmpty($HUI.combotree('#InitScg').getValue())) {
+				$UI.msg('alert', 'ç±»ç»„ä¸å¯ä¸ºç©º!');
 				return false;
 			}
 			return true;
 		},
-		afterAddFn: function(){
+		afterAddFn: function() {
 			SetEditDisable();
-			var BtnEnaleObj = {'#SaveBT':true, '#DeleteBT':false, '#CompleteBT':true, '#CancelCompBT':false};
+			var BtnEnaleObj = { '#SaveBT': true, '#DeleteBT': false, '#CompleteBT': true, '#CancelCompBT': false };
 			ChangeButtonEnable(BtnEnaleObj);
 		},
-		onClickCell: function(index, field ,value){
+		onClickCell: function(index, field, value) {
+			if ($HUI.checkbox('#InitComp').getValue()) {
+				$UI.msg('alert', 'å•æ®å·²å®Œæˆ, ä¸å¯ä¿®æ”¹');
+				return false;
+			}
+			var Row = DetailGrid.getRows()[index];
+			if ((!isEmpty(Row.Inclb) && (field == 'Qty') && (Row.OriginalStatus != 'NotUnique'))) {
+				return false;
+			}
 			DetailGrid.commonClickCell(index, field);
 		},
-		onBeginEdit: function(index, row){
-			//Ôö¼ÓÍê³ÉÇé¿ö×ÖÊıÊäÈëÏŞÖÆ
+		onBeginEdit: function(index, row) {
+			// å¢åŠ å®Œæˆæƒ…å†µå­—æ•°è¾“å…¥é™åˆ¶
 			$('#DetailGrid').datagrid('beginEdit', index);
 			var ed = $('#DetailGrid').datagrid('getEditors', index);
-			for (var i = 0; i < ed.length; i++){
+			for (var i = 0; i < ed.length; i++) {
 				var e = ed[i];
-				if(e.field == 'HVBarCode'){
-					$(e.target).bind('keydown', function(event){
-						if(event.keyCode == 13){
+				if (e.field == 'HVBarCode') {
+					$(e.target).bind('keydown', function(event) {
+						if (event.keyCode == 13) {
 							var BarCode = $(this).val();
-							if(isEmpty(BarCode)){
+							if (isEmpty(BarCode)) {
 								DetailGrid.stopJump();
 								return;
 							}
 							var FindIndex = DetailGrid.find('HVBarCode', BarCode);
-							if(FindIndex >= 0 && FindIndex != index){
-								$UI.msg('alert', 'ÌõÂë²»¿ÉÖØ¸´Â¼Èë!');
+							if (FindIndex >= 0 && FindIndex != index) {
+								$UI.msg('alert', 'æ¡ç ä¸å¯é‡å¤å½•å…¥!');
 								$(this).val('');
 								$(this).focus();
 								DetailGrid.stopJump();
@@ -470,10 +598,10 @@ var init = function(){
 								ClassName: 'web.DHCSTMHUI.DHCItmTrack',
 								MethodName: 'GetItmByBarcode',
 								BarCode: BarCode
-							},false);
+							}, false);
 							
-							if(!isEmpty(BarCodeData.sucess) && BarCodeData.sucess != 0){
-								$UI.msg('alert', BarCodeData.msg)
+							if (!isEmpty(BarCodeData.success) && BarCodeData.success != 0) {
+								$UI.msg('alert', BarCodeData.msg);
 								$(this).val('');
 								$(this).focus();
 								DetailGrid.stopJump();
@@ -490,39 +618,44 @@ var init = function(){
 							var RecallFlag = BarCodeData['RecallFlag'];
 							var Inci = BarCodeData['Inci'];
 							var dhcit = BarCodeData['dhcit'];
+							var OriginalStatus = BarCodeData['OriginalStatus'];
 							var InitScg = $('#InitScg').combobox('getValue');
-							if(!CheckScgRelation(InitScg, ScgStk)){
-								$UI.msg('alert', 'ÌõÂë'+BarCode+'ÊôÓÚ'+ScgStkDesc+'Àà×é,Óëµ±Ç°²»·û!');
+							if (OriginalStatus == 'NotUnique') {
+								var LocId = $('#InitFrLoc').combobox('getValue');
+								Inclb = tkMakeServerCall('web.DHCSTMHUI.DHCItmTrack', 'GetInclbByBarCode', LocId, BarCode); // è·å–æ­£ç¡®çš„inclb
+							}
+							if (!CheckScgRelation(InitScg, ScgStk)) {
+								$UI.msg('alert', 'æ¡ç ' + BarCode + 'å±äº' + ScgStkDesc + 'ç±»ç»„,ä¸å½“å‰ä¸ç¬¦!');
 								$(this).val('');
 								$(this).focus();
 								DetailGrid.stopJump();
 								return;
-							}else if(Inclb == ''){
-								$UI.msg('alert', BarCode + 'Ã»ÓĞÏàÓ¦¿â´æ¼ÇÂ¼,²»ÄÜÖÆµ¥!');
+							} else if (Inclb == '') {
+								$UI.msg('alert', BarCode + 'æ²¡æœ‰ç›¸åº”åº“å­˜è®°å½•,ä¸èƒ½åˆ¶å•!');
 								$(this).val('');
 								$(this).focus();
 								DetailGrid.stopJump();
 								return;
-							}else if(IsAudit != 'Y'){
-								$UI.msg('alert', BarCode + 'ÓĞÎ´ÉóºËµÄ'+OperNo+',ÇëºËÊµ!');
+							} else if (IsAudit != 'Y' && OriginalStatus != 'NotUnique') {
+								$UI.msg('alert', BarCode + 'æœ‰æœªå®¡æ ¸çš„' + OperNo + ',è¯·æ ¸å®!');
 								$(this).val('');
 								$(this).focus();
 								DetailGrid.stopJump();
 								return;
-							}else if(Type=='T'){
-								$UI.msg('alert', BarCode + 'ÒÑ¾­³ö¿â,²»¿ÉÖÆµ¥!');
+							} else if (Type == 'T' && OriginalStatus != 'NotUnique') {
+								$UI.msg('alert', BarCode + 'å·²ç»å‡ºåº“,ä¸å¯åˆ¶å•!');
 								$(this).val('');
 								$(this).focus();
 								DetailGrid.stopJump();
 								return;
-							}else if(Status!='Enable'){
-								$UI.msg('alert', BarCode + '´¦ÓÚ²»¿ÉÓÃ×´Ì¬,²»¿ÉÖÆµ¥!');
+							} else if (Status != 'Enable') {
+								$UI.msg('alert', BarCode + 'å¤„äºä¸å¯ç”¨çŠ¶æ€,ä¸å¯åˆ¶å•!');
 								$(this).val('');
 								$(this).focus();
 								DetailGrid.stopJump();
 								return;
-							}else if(RecallFlag=='Y'){
-								$UI.msg('alert', BarCode + '´¦ÓÚËø¶¨×´Ì¬,²»¿ÉÖÆµ¥!');
+							} else if (RecallFlag == 'Y') {
+								$UI.msg('alert', BarCode + 'å¤„äºé”å®šçŠ¶æ€,ä¸å¯åˆ¶å•!');
 								$(this).val('');
 								$(this).focus();
 								DetailGrid.stopJump();
@@ -531,7 +664,7 @@ var init = function(){
 							
 							var ProLocId = $('#InitFrLoc').combobox('getValue');
 							var ReqLocId = $('#InitToLoc').combobox('getValue');
-							var ParamsObj = {InciDr: Inci, ProLocId: ProLocId, ReqLocId: ReqLocId, QtyFlag: 1, Inclb: Inclb};
+							var ParamsObj = { InciDr: Inci, ProLocId: ProLocId, ReqLocId: ReqLocId, QtyFlag: 1, Inclb: Inclb };
 							var Params = JSON.stringify(ParamsObj);
 							var InclbData = $.cm({
 								ClassName: 'web.DHCSTMHUI.Util.DrugUtil',
@@ -539,17 +672,18 @@ var init = function(){
 								page: 1,
 								rows: 1,
 								Params: Params
-							},false);
-							if(!InclbData || InclbData.rows.length < 1){
-								$UI.msg('alert', BarCode + 'Ã»ÓĞÏàÓ¦¿â´æ¼ÇÂ¼,²»ÄÜÖÆµ¥!');
+							}, false);
+							if (!InclbData || InclbData.rows.length < 1) {
+								$UI.msg('alert', BarCode + 'æ²¡æœ‰ç›¸åº”åº“å­˜è®°å½•,ä¸èƒ½åˆ¶å•!');
 								$(this).val('');
 								$(this).focus();
 								DetailGrid.stopJump();
 								return;
 							}
-							var InclbInfo = $.extend(InclbData.rows[0], {InciDr:Inci, dhcit: dhcit, HVBarCode: BarCode});
-//							row['HVBarCode'] = BarCode;
-//							row['dhcit'] = dhcit;
+							$(this).val(BarCode).validatebox('validate');
+							var InclbInfo = $.extend(InclbData.rows[0], { InciDr: Inci, dhcit: dhcit, HVBarCode: BarCode, OriginalStatus: OriginalStatus });
+							//							row['HVBarCode'] = BarCode;
+							//							row['dhcit'] = dhcit;
 							ReturnInfoFunc(index, InclbInfo);
 						}
 					});
@@ -558,15 +692,16 @@ var init = function(){
 		}
 	});
 	
-	function ReturnInfoFunc(RowIndex, row){
-		if(row.AvaQty < 1){
-			$UI.msg('alert', '¿ÉÓÃ¿â´æ²»×ã');
+	function ReturnInfoFunc(RowIndex, row) {
+		if (row.AvaQty < 1) {
+			$UI.msg('alert', 'å¯ç”¨åº“å­˜ä¸è¶³');
 			return;
 		}
 		DetailGrid.updateRow({
 			index: RowIndex,
 			row: {
 				HVBarCode: row.HVBarCode,
+				OriginalStatus: row.OriginalStatus,
 				dhcit: row.dhcit,
 				InciId: row.InciDr,
 				InciCode: row.InciCode,
@@ -574,7 +709,6 @@ var init = function(){
 				Spec: row.Spec,
 				Inclb: row.Inclb,
 				BatExp: row.BatExp,
-				Qty: row.OperQty,
 				UomId: row.PurUomId,
 				UomDesc: row.PurUomDesc,
 				Rp: row.Rp,
@@ -582,20 +716,39 @@ var init = function(){
 				RpAmt: row.Rp,
 				SpAmt: row.Sp,
 				InclbDirtyQty: row.DirtyQty,
-				Qty: 1
+				Qty: 1,
+				MatInsuCode: row.MatInsuCode,
+				MatInsuDesc: row.MatInsuDesc
 			}
 		});
 		$('#DetailGrid').datagrid('refreshRow', RowIndex);
 		DetailGrid.commonAddRow();
 	}
 	
-		//ÉèÖÃÈ±Ê¡Öµ
-	function SetDefaValues(){
+	// è®¾ç½®ç¼ºçœå€¼
+	function SetDefaValues() {
+		var OperateTypeInfo = GetInitTypeDefa();
+		var OperateTypeId = OperateTypeInfo.split('^')[0];
 		$('#InitToLoc').combobox('setValue', session['LOGON.CTLOCID']);
+		var DefaultData = {
+			InitDate: DateFormatter(new Date())
+		};
+		if (InitParamObj['DefaReturnLoc'] == '0') {
+			DefaultData.InitToLoc = gLocObj;
+		} else {
+			DefaultData.InitFrLoc = gLocObj;
+		}
+		$UI.fillBlock('#Conditions', DefaultData);
 		$('#InitScg').combotree('options')['setDefaultFun']();
+		if (ItmTrackParamObj.AutoVirFlag == 'Y') {
+			$('#VirtualFlag').checkbox('setValue', true);
+		} else {
+			$('#VirtualFlag').checkbox('setValue', false);
+		}
+		$HUI.combobox('#OperateType').setValue(OperateTypeId);
 	}
 	SetDefaValues();
-	var BtnEnaleObj = {'#SaveBT':false, '#DeleteBT':false, '#CompleteBT':false, '#CancelCompBT':false};
+	var BtnEnaleObj = { '#SaveBT': false, '#DeleteBT': false, '#CompleteBT': false, '#CancelCompBT': false };
 	ChangeButtonEnable(BtnEnaleObj);
-}
+};
 $(init);

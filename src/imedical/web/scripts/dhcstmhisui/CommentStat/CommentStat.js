@@ -1,134 +1,91 @@
-var init = function() {	
-	/*--°´Å¥ÊÂ¼ş--*/
-	$UI.linkbutton('#QueryBT',{
-		onClick:function(){
-			var ParamsObj=$UI.loopBlock('#Conditions');
-			if(isEmpty(ParamsObj.StartDate)){
-				$UI.msg('alert','¿ªÊ¼ÈÕÆÚ²»ÄÜÎª¿Õ!');
+ï»¿var init = function() {
+	/* --æŒ‰é’®äº‹ä»¶--*/
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
+			var ParamsObj = $UI.loopBlock('#Conditions');
+			if (isEmpty(ParamsObj.StartDate)) {
+				$UI.msg('alert', 'å¼€å§‹æ—¥æœŸä¸èƒ½ä¸ºç©º!');
 				return;
 			}
-			if(isEmpty(ParamsObj.EndDate)){
-				$UI.msg('alert','½ØÖ¹ÈÕÆÚ²»ÄÜÎª¿Õ!');
+			if (isEmpty(ParamsObj.EndDate)) {
+				$UI.msg('alert', 'æˆªæ­¢æ—¥æœŸä¸èƒ½ä¸ºç©º!');
 				return;
 			}
-			var Params=JSON.stringify(ParamsObj);
-			Params=encodeUrlStr(Params)
+			var Params = JSON.stringify(ParamsObj);
+			Params = encodeUrlStr(Params);
 			var CheckedRadioObj = $("input[name='ReportType']:checked");
-			var CheckedValue=CheckedRadioObj.val();
-			var CheckedTitle=CheckedRadioObj.attr("label")
-			var Url=CheckedUrl(CheckedValue,Params)
-			AddTab(CheckedTitle,Url);
+			var CheckedValue = CheckedRadioObj.val();
+			var CheckedTitle = CheckedRadioObj.attr('label');
+			var Url = CheckedUrl(CheckedValue, Params);
+			AddStatTab(CheckedTitle, Url, '#tabs');
 		}
 	});
-	function CheckedUrl(Checked,Params){
-		//°´µãÆÀÃ÷Ï¸»ã×Ü
-		if('FlagDeatail'==Checked){
-			p_URL = PmRunQianUrl+'?reportName=DHCSTM_HUI_ComDetail.raq&Params='+Params;
-		}
-		//°´²»ºÏÀíÔ­Òò»ã×Ü
-		else if('FlagReason'==Checked){
-			p_URL = PmRunQianUrl+'?reportName=DHCSTM_HUI_ComDetailByReason.raq&Params='+Params;
-		}
-		//°´¿ªµ¥Ò½Éú»ã×Ü
-		else if('FlagDoctor'==Checked){
-			p_URL = PmRunQianUrl+'?reportName=DHCSTM_HUI_ComDetailByDoctor.raq&Params='+Params;
-		}
-		//°´¿ªµ¥¿ÆÊÒ»ã×Ü
-		else if('FlagOriLoc'==Checked){
-			p_URL = PmRunQianUrl+'?reportName=DHCSTM_HUI_ComDetailByOriLoc.raq&Params='+Params;
-		}
-		//°´ºÏ¸ñÂÊ»ã×Ü
-		else if('FlagQuality'==Checked){
-			p_URL = PmRunQianUrl+'?reportName=DHCSTM_HUI_ComDetailByQuality.raq&Params='+Params;
-		}
-		//°´µãÆÀÃ÷Ï¸»ã×Ü
-		else{
-			p_URL = PmRunQianUrl+'?reportName=DHCSTM_HUI_ComDetail.raq&Params='+Params;
+	function CheckedUrl(Checked, Params) {
+		if ('FlagDeatail' == Checked) {
+			// æŒ‰ç‚¹è¯„æ˜ç»†æ±‡æ€»
+			p_URL = PmRunQianUrl + '?reportName=DHCSTM_HUI_ComDetail.raq&Params=' + Params;
+		} else if ('FlagReason' == Checked) {
+			// æŒ‰ä¸åˆç†åŸå› æ±‡æ€»
+			p_URL = PmRunQianUrl + '?reportName=DHCSTM_HUI_ComDetailByReason.raq&Params=' + Params;
+		} else if ('FlagDoctor' == Checked) {
+			// æŒ‰å¼€å•åŒ»ç”Ÿæ±‡æ€»
+			p_URL = PmRunQianUrl + '?reportName=DHCSTM_HUI_ComDetailByDoctor.raq&Params=' + Params;
+		} else if ('FlagOriLoc' == Checked) {
+			// æŒ‰å¼€å•ç§‘å®¤æ±‡æ€»
+			p_URL = PmRunQianUrl + '?reportName=DHCSTM_HUI_ComDetailByOriLoc.raq&Params=' + Params;
+		} else if ('FlagQuality' == Checked) {
+			// æŒ‰åˆæ ¼ç‡æ±‡æ€»
+			p_URL = PmRunQianUrl + '?reportName=DHCSTM_HUI_ComDetailByQuality.raq&Params=' + Params;
+		} else {
+			// æŒ‰ç‚¹è¯„æ˜ç»†æ±‡æ€»
+			p_URL = PmRunQianUrl + '?reportName=DHCSTM_HUI_ComDetail.raq&Params=' + Params;
 		}
 		return p_URL;
 	}
-	function AddTab(title, url) {
-		if ($('#tabs').tabs('exists', title)) {
-			$('#tabs').tabs('select', title); //Ñ¡ÖĞ²¢Ë¢ĞÂ
-			var currTab = $('#tabs').tabs('getSelected');
-			if (url != undefined && currTab.panel('options').title != '±¨±í') {
-				$('#tabs').tabs('update', {
-					tab: currTab,
-					options: {
-						content: createFrame(url)
-					}
-				})
-			}
-		} else {
-			var content = createFrame(url);
-			$('#tabs').tabs('add', {
-				title: title,
-				content: content,
-				closable: true
-			});
-		}
-	}
-	function createFrame(url) {
-		var s = '<iframe scrolling="auto" frameborder="0" src="' + url + '" style="width:100%;height:98%;"></iframe>';
-		return s;
-	}
 	
-	$UI.linkbutton('#ClearBT',{
-		onClick:function(){
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
 			Default();
 		}
 	});
 	
-	/*--°ó¶¨¿Ø¼ş--*/
-	var LocParams=JSON.stringify(addSessionParams({Type:'All'}));
+	/* --ç»‘å®šæ§ä»¶--*/
+	var LocParams = JSON.stringify(addSessionParams({ Type: 'All' }));
 	var LocBox = $HUI.combobox('#Loc', {
-		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+LocParams,
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + LocParams,
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-	var HandlerParams=function(){
-		var Scg=$("#ScgStk").combotree('getValue');
-		var Obj={StkGrpRowId:Scg,StkGrpType:"M"};
-		return Obj
-	}
-	$("#InciDesc").lookup(InciLookUpOp(HandlerParams,'#InciDesc','#Inci'));
+	var HandlerParams = function() {
+		var Scg = $('#ScgStk').combotree('getValue');
+		var Obj = { StkGrpRowId: Scg, StkGrpType: 'M' };
+		return Obj;
+	};
+	$('#InciDesc').lookup(InciLookUpOp(HandlerParams, '#InciDesc', '#Inci'));
 	var StkCatBox = $HUI.combobox('#StkCat', {
 		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetStkCat&ResultSetType=array',
 		valueField: 'RowId',
 		textField: 'Description'
 	});
 	$('#ScgStk').combotree({
-		onChange:function(newValue, oldValue){
+		onChange: function(newValue, oldValue) {
 			StkCatBox.clear();
-			var url=$URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetStkCat&ResultSetType=array&StkGrpId='+newValue;
+			var url = $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetStkCat&ResultSetType=array&StkGrpId=' + newValue;
 			StkCatBox.reload(url);
 		}
 	});
 	
-	/*--ÉèÖÃ³õÊ¼Öµ--*/
-	var Default=function(){
+	/* --è®¾ç½®åˆå§‹å€¼--*/
+	var Default = function() {
 		$UI.clearBlock('#Conditions');
 		$UI.clearBlock('#ReportConditions');
-		var DefaultValue={
-			StartDate:DateFormatter(new Date()),
-			EndDate:DateFormatter(new Date()),
-			}
-		$UI.fillBlock('#Conditions',DefaultValue)
-		var Tabs=$('#tabs').tabs('tabs')
-		var Tiles = new Array();
-		var Len = Tabs.length;
-		if(Len>0){
-			for(var j=0;j<Len;j++){
-				var Title = Tabs[j].panel('options').title;
-				if(Title!='±¨±í'){
-					Tiles.push(Title);
-				}
-			}
-			for(var i=0;i<Tiles.length;i++){
-				$('#tabs').tabs('close', Tiles[i]);
-			}
-		}
+		var DefaultValue = {
+			StartDate: DateFormatter(new Date()),
+			EndDate: DateFormatter(new Date())
+		};
+		$UI.fillBlock('#Conditions', DefaultValue);
+		CloseStatTab('#tabs');
 	};
-	Default()
-}
+	Default();
+};
 $(init);

@@ -2,7 +2,7 @@
  * FileName:  dhcinsu.contrastconfig.show.js
  * Anchor: tangzf
  * Date: 2020-03-09
- * Description: 医保对照维护
+ * Description: 医保对照维护 
  */
 //===========修改部分=================开始
 //在医保字典表中的基本编码(不包含医保类型编码,医保类型编码由程序来匹配。即：数据库中实际配置的是DosageZZA)
@@ -11,7 +11,9 @@ var DicCode="";
 // 这里的方法由自己来写返回值 固定格式(List)
 var HisDicClass="";         //类名
 var HisDicMethod="";                            //方法名
-// 院区在m里通过session 获取
+// 院区在m里通过session 获取                     //修改了MWToken不在支持院区此方式获取 20230317 
+var HOSPID = "";                                //院区
+var INDIDInsuType="" ;                          //医保类型
 //===========修改部分=================结束
 $(function(){
 	var getParam = INSUGetRequest();
@@ -27,6 +29,8 @@ $(function(){
 		$.messager.alert('提示',getParam['ParamDicType'] + '类,类方法或者医保基础数据维护不正确','error');
 		return;	
 	}
+	HOSPID = getParam['HOSPID'];
+	INDIDInsuType = getParam['INDIDInsuType'];
 	setPageLayout() ;
 	setElementEvent();
 });
@@ -94,25 +98,36 @@ function setPageLayout(){
 			//alert(22);
 		}
 	})
-
-	//医保类型下拉框
-	$('#InsuTypeBox').combobox({
-		url:APP_PATH+"/INSUDictionaryContrast/GetDicDataList&DicKey=DLLType&ExtStr=",
-		valueField:'diccode',
-		textField:'dicdesc'
-		,onLoadSuccess:function(){
-			var $comboxObj=$('#InsuTypeBox');
-			var data=$comboxObj.combobox('getData');
-			if(data.length>0){
-				var defaultVal=data[0].diccode;
-				$comboxObj.combobox('setValue',defaultVal);
-				RefushGridViews();
-			}
-		}
-		,onSelect:function(record){
+	$("#InsuTypeDiv").hide();
+	if (INDIDInsuType!=""){
+		$("#InsuTypeDiv").show();
+       //医保类型下拉框
+       $('#InsuTypeBox').combobox({
+	    url:APP_PATH+"/INSUDictionaryContrast/GetDicDataList&DicKey=DLLType&ExtStr="+HOSPID,
+	    valueField:'diccode',
+	     textField:'dicdesc'
+	   ,onLoadSuccess:function(){
+		var $comboxObj=$('#InsuTypeBox');
+		var data=$comboxObj.combobox('getData');
+		if(data.length>0){
+			var defaultVal=data[0].diccode;
+			$comboxObj.combobox('setValue',defaultVal);
 			RefushGridViews();
 		}
-	})
+	  if (INDIDInsuType!=""){
+			$comboxObj.combobox('setValue',INDIDInsuType); //20230421
+			RefushGridViews();
+		}
+	}
+	,onSelect:function(record){
+		RefushGridViews();
+	}
+    })
+
+}
+
+
+	
 	
 	//对照类型
 	$('#InsuConTypeBox').combobox({   
@@ -197,6 +212,7 @@ function setPageLayout(){
 		pagination: true,
 		rownumbers: false,
 		pageSize:20,
+		displayMsg:'',
 		pageList:[20,50,100],
 		columns:[[
 		    {field:'dodo',title:'对照',width:80,align:'center'
@@ -315,10 +331,10 @@ function SaveHisDicConDoALL(HisSelRowData, InsuRowData){
 function SaveHisDicConDo(HisSelRowData, InsuRowData){
 	var KeyCode=DicCode;                                                     //字典类型识别码
 	var InsuType=$('#InsuTypeBox').combobox('getValue');     //医保类型
-	var HospitalNo="";
-	if($("#hospitalDiv").is(":hidden")==false){
+	var HospitalNo=HOSPID;
+	/*if($("#hospitalDiv").is(":hidden")==false){
 		HospitalNo=$('#HospitalBox').combobox('getValue');   //医院编码
-	}
+	}*/
 	var HisCode=HisSelRowData.HisCode;          //HIS编码
 	var HisDesc=HisSelRowData.HisDesc;          //HIS描述
 	var diccode=InsuRowData.diccode             //医保编码
@@ -387,7 +403,7 @@ function reloadInsuDicGV(loadType){
 	var InsuType=$('#InsuTypeBox').combobox('getValue');     //医保类型
 	//var SearchKey=$('#SearchMedBox').val();                          //检索关键字
 	var SearchKey=$('#SearchMedBox').searchbox('getValue');   //检索关键字
-	var ExtStr=SearchKey;
+	var ExtStr=SearchKey+"^"+HOSPID;
 	//alert("KeyCode="+KeyCode+"|ExtStr"+ExtStr);
 	
 	//重新加载查询结果
@@ -412,10 +428,10 @@ function reloadHisDicConGV(loadType){
 	}
 
 	var InsuType=$('#InsuTypeBox').combobox('getValue');     //医保类型
-	var HospitalNo="";
-	if($("#hospitalDiv").is(":hidden")==false){
+	var HospitalNo=HOSPID;
+	/*if($("#hospitalDiv").is(":hidden")==false){
 		HospitalNo=$('#HospitalBox').combobox('getValue');   //医院编码
-	}
+	}*/
 	//var SearchKey=$('#SearchHisBox').val();                    //检索关键字
 	var SearchKey=$('#SearchHisBox').searchbox('getValue');   //检索关键字
 	
@@ -441,10 +457,10 @@ function Import()
 {
 	var KeyCode=DicCode;
 	var InsuType=$('#InsuTypeBox').combobox('getValue');     //医保类型
-	var HospitalNo="";
-	if($("#hospitalDiv").is(":hidden")==false){
+	var HospitalNo=HOSPID;
+	/*if($("#hospitalDiv").is(":hidden")==false){
 		HospitalNo=$('#HospitalBox').combobox('getValue');   //医院编码
-	}
+	}*/
 	importData(KeyCode,InsuType,HospitalNo);		 //insuimportdictionarycon.js
 	reloadHisDicConGV('reload');
 }

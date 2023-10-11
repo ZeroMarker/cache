@@ -2,8 +2,7 @@
  * FileName: dhcbillmenu.arrears.js
  * User: TangTao
  * Date: 2014-04-10
- * Function: 非绿色通道欠费额度
- * Description:
+ * Description: 非绿色通道欠费额度
  */
 
 var lastIndex = "";
@@ -81,7 +80,7 @@ function initGrid() {
 						valueField: 'RowID',
 						textField: 'READesc',
 						required: true,
-						defaultFilter: 4,
+						defaultFilter: 5,
 						onBeforeLoad: function (param) {
 							$.extend(param, {
 										Code: "",
@@ -135,7 +134,7 @@ function initGrid() {
 						url: $URL + '?ClassName=DHCBILLConfig.DHCBILLArrears&QueryName=FindAdmType&ResultSetType=array',
 						valueField: 'TAdmTypeCode',
 						textField: 'TAdmTypeDesc',
-						defaultFilter: 4,
+						defaultFilter: 5,
 						onSelect: function (rec) {
 							if (rec) {
 								thisTJFAAdmType = rec.TAdmTypeCode;
@@ -270,11 +269,16 @@ function initGrid() {
 		pagination: true,
 		rownumbers: true,
 		pageSize: 20,
-		data: [],
 		columns: CateColumns,
 		toolbar: '#tToolBar',
 		onLoadSuccess: function (data) {
 			EditIndex = -1;
+			thisTJFAAdmReasonDr = "";
+			thisTJFAEPSDr = "";
+			thisTJFAAdmType = "";
+			thisTJFADiaCatDr = "";
+			thisTJFALocDr = "";
+			thisTJFAWardDr = "";
 		}
 	});
 }
@@ -373,17 +377,10 @@ $('#BtnSave').bind('click', function () {
 	var selected = $('#tArrearsTable').datagrid('getSelected');
 	if (selected) {
 		//selected.TJFARowID为undefined，说明是新建项目，调用保存接口
-		var ComboTD = $('#ComboTD').combobox('getValue');
+		var ComboTD = getValueById('ComboTD');
 		if ((selected.TJFARowID == "") || (typeof(selected.TJFARowID) == "undefined")) {
 			if ((thisTJFAAdmReasonDr == "") || (ComboTD == "")) {
 				$.messager.alert('提示', "通道 或者 收费类别为空，不允许添加", 'info');
-				EditIndex = -1;
-				thisTJFAAdmReasonDr = "";
-				thisTJFAEPSDr = "";
-				thisTJFAAdmType = "";
-				thisTJFADiaCatDr = "";
-				thisTJFALocDr = "";
-				thisTJFAWardDr = "";
 				initLoadGrid(ComboTD);
 				return;
 			};
@@ -397,18 +394,11 @@ $('#BtnSave').bind('click', function () {
 				Guser: PUBLIC_CONSTANT.SESSION.USERID,
 				HospId: getValueById("Hospital")
 			}, function (rtn) {
-				if (rtn == "0") {
+				if (rtn == 0) {
 					$.messager.alert('提示', "保存成功", 'success');
 				} else {
 					$.messager.alert('提示', "保存失败，错误代码：" + rtn, 'error');
 				}
-				EditIndex = -1;
-				thisTJFAAdmReasonDr = "";
-				thisTJFAEPSDr = "";
-				thisTJFAAdmType = "";
-				thisTJFADiaCatDr = "";
-				thisTJFALocDr = "";
-				thisTJFAWardDr = "";
 				initLoadGrid(ComboTD);
 			});
 		} else {
@@ -419,13 +409,6 @@ $('#BtnSave').bind('click', function () {
 			var selected = $('#tArrearsTable').datagrid('getSelected');
 			if ((thisTJFAAdmReasonDr == "") || (ComboTD == "")) {
 				$.messager.alert('提示', "通道 或者 收费类别为空，不允许修改", 'info');
-				EditIndex = -1;
-				thisTJFAAdmReasonDr = "",
-				thisTJFAEPSDr = "",
-				thisTJFAAdmType = "";
-				thisTJFADiaCatDr = "";
-				thisTJFALocDr = "";
-				thisTJFAWardDr = "";
 				initLoadGrid(ComboTD);
 				return;
 			};
@@ -438,24 +421,18 @@ $('#BtnSave').bind('click', function () {
 			thisTJFAWardDr = selected.TJFAWardDesc;
 			var ArrearsStr = selected.TJFARowID + "^" + ComboTD + "^" + thisTJFAEPSDr + "^" + thisTJFAAdmReasonDr + "^" + thisTJFAAdmType + "^" + thisTJFADiaCatDr;
 			var ArrearsStr = ArrearsStr + "^" + thisTJFALocDr + "^" + thisTJFAWardDr;
+
 			$.cm({
 				ClassName: "DHCBILLConfig.DHCBILLArrears",
 				MethodName: "UpdateArrears",
 				ArrearsInfo: ArrearsStr,
 				Guser: PUBLIC_CONSTANT.SESSION.USERID
 			}, function (rtn) {
-				if (rtn == "0") {
+				if (rtn == 0) {
 					$.messager.alert('提示', "修改成功", 'success');
 				} else {
 					$.messager.alert('提示', "修改失败，错误代码：" + rtn, 'error');
 				}
-				EditIndex = -1;
-				thisTJFAAdmReasonDr = "";
-				thisTJFAEPSDr = "";
-				thisTJFAAdmType = "";
-				thisTJFADiaCatDr = "";
-				thisTJFALocDr = "";
-				thisTJFAWardDr = "";
 				initLoadGrid(ComboTD);
 			});
 		}
@@ -469,54 +446,53 @@ $('#BtnDelete').bind('click', function () {
 		return;
 	}
 	$.messager.confirm('确认', '您确认想要删除记录吗？', function (r) {
-		if (r) {
-			var selected = $('#tArrearsTable').datagrid('getSelected');
-			if (selected) {
-				if (typeof(selected.TJFARowID) != "undefined") {
-					var ComboTD = $('#ComboTD').combobox('getValue');
-					if (thisTJFAAdmReasonDr == "") {
-						thisTJFAAdmReasonDr = selected.TJFAAdmReasonDesc;
-					}
-					if (thisTJFAEPSDr == "") {
-						thisTJFAEPSDr = selected.TJFAEPSDesc;
-					}
-					if (thisTJFAAdmType == "") {
-						thisTJFAAdmType = selected.TJFAAdmTypeDesc;
-					}
-					if (thisTJFADiaCatDr == "") {
-						thisTJFADiaCatDr = selected.TJFADiaCatDesc;
-					}
-					if (thisTJFALocDr == "") {
-						thisTJFALocDr = selected.TJFALocDesc;
-					}
-					if (thisTJFAWardDr == "") {
-						thisTJFAWardDr = selected.TJFAWardDesc;
-					}
-
-					var ArrearsStr = selected.TJFARowID + "^" + ComboTD + "^" + thisTJFAEPSDr + "^" + thisTJFAAdmReasonDr + "^" + thisTJFAAdmType + "^" + thisTJFADiaCatDr;
-					var ArrearsStr = ArrearsStr + "^" + thisTJFALocDr + "^" + thisTJFAWardDr;
-					$.cm({
-						ClassName: "DHCBILLConfig.DHCBILLArrears",
-						MethodName: "DeleteArrears",
-						ArrearsInfo: ArrearsStr,
-						Guser: PUBLIC_CONSTANT.SESSION.USERID
-					}, function (rtn) {
-						if (rtn == "0") {
-							$.messager.alert('提示', "删除成功", 'success');
-						} else {
-							$.messager.alert('提示', "删除失败，错误代码：" + rtn, 'error');
-						}
-						EditIndex = -1;
-						initLoadGrid(ComboTD);
-					});
+		if (!r) {
+			return;
+		}
+		var selected = $('#tArrearsTable').datagrid('getSelected');
+		if (selected) {
+			if (typeof(selected.TJFARowID) != "undefined") {
+				var ComboTD = getValueById('ComboTD');
+				if (thisTJFAAdmReasonDr == "") {
+					thisTJFAAdmReasonDr = selected.TJFAAdmReasonDesc;
 				}
+				if (thisTJFAEPSDr == "") {
+					thisTJFAEPSDr = selected.TJFAEPSDesc;
+				}
+				if (thisTJFAAdmType == "") {
+					thisTJFAAdmType = selected.TJFAAdmTypeDesc;
+				}
+				if (thisTJFADiaCatDr == "") {
+					thisTJFADiaCatDr = selected.TJFADiaCatDesc;
+				}
+				if (thisTJFALocDr == "") {
+					thisTJFALocDr = selected.TJFALocDesc;
+				}
+				if (thisTJFAWardDr == "") {
+					thisTJFAWardDr = selected.TJFAWardDesc;
+				}
+
+				var ArrearsStr = selected.TJFARowID + "^" + ComboTD + "^" + thisTJFAEPSDr + "^" + thisTJFAAdmReasonDr + "^" + thisTJFAAdmType + "^" + thisTJFADiaCatDr;
+				var ArrearsStr = ArrearsStr + "^" + thisTJFALocDr + "^" + thisTJFAWardDr;
+				$.cm({
+					ClassName: "DHCBILLConfig.DHCBILLArrears",
+					MethodName: "DeleteArrears",
+					ArrearsInfo: ArrearsStr,
+					Guser: PUBLIC_CONSTANT.SESSION.USERID
+				}, function (rtn) {
+					if (rtn == 0) {
+						$.messager.alert('提示', "删除成功", 'success');
+					} else {
+						$.messager.alert('提示', "删除失败，错误代码：" + rtn, 'error');
+					}
+					initLoadGrid(ComboTD);
+				});
 			}
 		}
 	});
 });
 
 $('#BtnFind').bind('click', function () {
-	EditIndex = -1;
 	var ComboTD = getValueById('ComboTD');
 	initLoadGrid(ComboTD);
 });

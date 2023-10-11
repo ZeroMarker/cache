@@ -9,8 +9,79 @@ $(function(){
 //取病历目录
 function load()
 {
-	wordDoc();
+    if (versionID == "4"){
+        EmrEditor.initEditor({
+            rootID: "#containerWord",
+            product: product,
+            patInfo: {
+                episodeID: episodeId,
+                userID: userID,
+                userName: userName,
+                userLocID: userLocID,
+                ssgroupID: ssgroupID,
+                ipAddress: ipAddress,
+                pmdType: pmdType,
+                pmdCode: pmdCode
+            },
+            parameters:{
+                status: "browse",
+                region: "content",
+                revise: {
+                    del: {
+                        show: "0"
+                    },
+                    add: {
+                        show: "0"
+                    },
+                    style: {
+                        show: "0"
+                    }
+                }
+            },
+            pluginType: "WORD",
+            editorEvent: editorEvent,
+            commandJson: {
+                action: "LOAD_DOCUMENT_BYEPISODEID",
+                params: {
+                    episodeID: episodeId,
+                    userLocID: userLocID,
+                    ssgroupID: ssgroupID,
+                    order: "",
+                    status: "Sign"
+                },
+                type: {
+                    serial: "2"
+                },
+                product: product
+            }
+        });
+    }else{
+        wordDoc();
+    }
 }
+
+var editorEvent = {
+    eventloadglobalparameters: function(commandJson){
+        if ("fail" === commandJson.result){
+            console.log(commandJson);
+        }
+    },
+    eventLoadDocumentByEpisodeID: function(commandJson){
+        if ("fail" === commandJson.result){
+            alert("加载病历失败！");
+            $("#containerWord").css("display","none");
+            return;
+        }
+        var display = $("#containerWord").css("display");
+        if ("none" === display){
+            $("#containerWord").css("display","block");
+        }
+        printDocumentID = commandJson.params.documentID;
+        if (PrintFlag == "Y") {
+            printDocument();
+        }
+    }
+};
 
 //创建word编辑器
 function wordDoc()
@@ -106,6 +177,19 @@ function setWorkEnvironment()
 function setConnect()
 {
 	var netConnect = "";
+	
+	var port = window.location.port;
+	var protocol = window.location.protocol.split(":")[0];
+	
+	if (protocol == "http")
+	{
+		port = port==""?"80":port;
+	}
+	else if (protocol == "https")
+	{
+		port = port==""?"443":port;
+	}
+	
 	$.ajax({
 		type: 'Post',
 		dataType: 'text',
@@ -115,7 +199,10 @@ function setConnect()
 		data: {
 			"OutputType":"String",
 			"Class":"EMRservice.BL.BLSysOption",
-			"Method":"GetNetConnectJson"
+			"Method":"GetNetConnectJson",
+            "p1":window.location.hostname,
+			"p2":port,
+			"p3":protocol
 		},
 		success: function (ret) {
 
@@ -157,13 +244,54 @@ function openDocument()
 	
 	var argJson = {action:"LOAD_DOCUMENT",args:{params:{"LoadType":"episode","PatientID":patientId,"EpisodeID":episodeId,"LocID":userLocID},InstanceID:"1||1",actionType:"LOAD"}};
 	cmdDoExecute(argJson);	
+	if (PrintFlag=="Y") {
+		printDocument();
+	}
 }
 
 //打印文档
 function printDocument()
 {
-	
-	
+    if (versionID == "4"){
+        if (printDocumentID.length > 0){
+            var commandJson = EmrEditor.syncExecute({
+                action:"PRINT_DOCUMENT",
+                params: {
+                    documentID: printDocumentID
+                },
+                product: product
+            });
+            if ("fail" === commandJson.result){
+                console.log(commandJson);
+                alert("发生错误", "打印失败");
+                return;
+            }
+            /*记录打印日志
+            var data = {
+                action: "PRINT_ENCDOCUMENT",
+                param: {
+                    documentID: printDocumentID,
+                    userID: userID,
+                    userLocID: userLocID,
+                    ipAddress: ipAddress,
+                    pmdType: pmdType,
+                    pmdCode: pmdCode
+                },
+                product: product
+            };
+            ajaxGETCommon(data, function(ret){
+                if (PrintFlag === "Y"){
+                    parent.closedialog();
+                }
+            }, function (error) {
+                alert("发生错误 printDcoument error:"+error);
+            }, false);*/
+            if (PrintFlag === "Y"){
+                parent.closedialog();
+            }
+        }
+        return;
+    }
 	var instanceIDs = "";
 	
 	$.ajax({
@@ -198,17 +326,26 @@ function printDocument()
 	
 		instanceID=instanceIDs[i];
 		
+		//重传信息;
+		setPatientInfo();
+		
 		var argJson = {action:"LOAD_DOCUMENT",args:{params:{"LoadType":"","PatientID":patientId,"EpisodeID":episodeId,"LocID":userLocID},InstanceID:instanceID,actionType:"LOAD"}};
 		cmdDoExecute(argJson);
-		
-		var argJson = {action:"PRINT_DOCUMENT",args:{"actionType":"Print"}}; 
+        var printActionType = "Print";
+        if (PrintFlag=="Y") {
+            printActionType = "PrintDirectly";
+        }
+		var argJson = {action:"PRINT_DOCUMENT",args:{"actionType":printActionType}};
 		cmdDoExecute(argJson); 
 		
 		
 	}
-	
-	//重新加载回病历
-	openDocument()
+	if (PrintFlag=="Y") {
+		parent.closedialog();
+	}else{
+		//重新加载回病历
+		openDocument();
+	}
 	
 }
 
@@ -248,4 +385,38 @@ function closeWindow()
 	window.opener=null;
 	window.open('','_self');
 	window.close();	
+}
+
+function ajaxGETCommon(data, onSuccess, onError, isAsync) {
+    isAsync = isAsync || false;
+    $.ajax({
+        type: "GET",
+        dataType: "json",
+        url: "../EMR.DOC.SRV.RequestCommon.cls",
+        async: isAsync,
+        cache: false,
+        data: {"paramdata":JSON.stringify(data)},
+        success: function (ret) {
+            if("true" === ret.success){
+                if (!onSuccess) {}
+                else {
+                    if (ret.errorCode){
+                        alert("数据请求失败提示："+ret.errorMessage);
+                        onSuccess("");
+                    }else{
+                        onSuccess(ret.data);
+                    }
+                }
+            }else{
+                alert("ajaxGETCommon:请求失败，"+JSON.stringify(ret));
+            }
+        },
+        error: function (ret) {
+            if (!onError) {
+                alert("发生请求错误：ajaxGETCommon error:"+JSON.stringify(ret));
+            }else {
+                onError(ret);
+            }
+        }
+    });
 }

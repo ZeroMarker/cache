@@ -158,6 +158,7 @@ function GetAdmInfoNew(){
 		if(obj){
 			//obj.size=1
 			//obj.multiple=false
+		 	$('#AdmInfo').combobox('loadData',[]);
 			for(var i=0;i<AdmInfoinfo.split("!").length;i++){
 				DHCWeb_AddToCombobox('AdmInfo',AdmInfoinfo.split("!")[i],AdmInfoinfo.split("!")[i].split("^")[0]+"^"+AdmInfoinfo.split("!")[i].split("^")[3]) // tangzf 2019-5-19
 				//obj.options[i]=new Option(AdmInfo.split("!")[i],AdmInfo.split("!")[i].split("^")[0]+"^"+AdmInfo.split("!")[i].split("^")[3])
@@ -372,6 +373,7 @@ function init_INSUType(){
 			})
 }
 function init_AdmInfo(){
+
 	$HUI.combobox("#AdmInfo", {
 			valueField:'id',
 			textField:'text',

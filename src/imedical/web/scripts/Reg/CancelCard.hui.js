@@ -1,5 +1,5 @@
 var PageLogicObj={
-	m_Computername:GetComputerName()
+	m_Computername:ClientIPAddress //GetComputerName()
 }
 $(function(){
 	//事件初始化
@@ -104,6 +104,7 @@ function SetPatInfoByCardID(){
 		ClassName:"web.DHCBL.CARD.UCardRefInfo", 
 		MethodName:"getpatinfo",
 		dataType:"text", 
+		HospId:session["LOGON.HOSPID"], 
 		itmjs:"", itmjsex:"",CardID:ServerObj.CardID
 	},function(value){
 		var val=value.split("^");
@@ -114,6 +115,7 @@ function SetPatInfoByCardID(){
 			$("#IDCardNo").val(val[3])
 			$("#RLCredNo").val(val[12]);
 			$("#CardNo").val(val[4]);
+            ModifyCredData(val[23]);
 			var Data=$("#RLCredTypeList").combobox("getData");
 			for (var i=0;i<Data.length;i++){
 				var id=Data[i]["id"];
@@ -193,8 +195,11 @@ function BtnCancelClickHandle(){
 							if(rtn){
 								/*var src="websys.default.hisui.csp?WEBSYS.TCOMPONENT=UDHCACAcc.FootManage";
 								window.showModalDialog(src,"账户结算","dialogwidth:80em;dialogheight:60em;center:1;status:no");*/
+								var CardNo=$("#CardNo").val()
+								var CardTypeDefine=$("#CardTypeDefine").combobox("getValue").split("^")[0]
 								websys_showModal({
-									url:"websys.default.hisui.csp?WEBSYS.TCOMPONENT=UDHCACAcc.FootManage",
+									url:"dhcbill.opbill.accdep.footmanage.csp?WinFrom=CancelCard&CardNo="+CardNo+ "&CardTypeRowId="+CardTypeDefine,
+									//url:"websys.default.hisui.csp?WEBSYS.TCOMPONENT=UDHCACAcc.FootManage",
 									title:'账户结算',
 									width:'80%',height:'60%',
 								})
@@ -205,6 +210,12 @@ function BtnCancelClickHandle(){
 						var AlertStr="退卡成功!"
 						if(myrtnAry[3]!="") {
 							var AlertStr="退卡成功!该账户还关联卡号:"+myrtnAry[3]+",不做账户结算!"
+						}
+						var NewCardINVRowID=myrtnAry[2]
+						var CardINVRowID=myrtnAry[4]
+						var rtn=RegPayObj.RefundCardPay(NewCardINVRowID,CardINVRowID)
+						if (!rtn){
+							AlertStr=AlertStr+",但Mispose退费失败！"	//需计费做一个针对这种异常账单的处理界面
 						}
 						$.messager.alert("提示",AlertStr,"info",function(){
 							var InvInfo=myrtnAry[1];
@@ -271,4 +282,17 @@ function GetComputerName(){
 		var ComputerName=WshNetwork.ComputerName;
 	}
 	return ComputerName;
+}
+
+function ModifyCredData(CardTypeID){
+    var CardTypeID=CardTypeID||"";
+    var CardCreadType=$.cm({
+        ClassName:"web.UDHCOPOtherLB",
+        MethodName:"ReadCredTypeExp",
+        JSFunName:"GetCredTypeToHUIJson",
+        ListName:"",
+        HospId:session["LOGON.HOSPID"], 
+        CardTypeID:CardTypeID
+    },false);
+    $("#RLCredTypeList").combobox("loadData",CardCreadType);
 }

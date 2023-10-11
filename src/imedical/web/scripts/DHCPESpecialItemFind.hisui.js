@@ -154,6 +154,8 @@ function BFind_click(){
 			Status:$("#Status").combobox('getValue'),
 			StationID:$("#StationDesc").combobox('getValue'),
 			Item:$("#ArcimDesc").combogrid('getValue'),
+			LocID:session['LOGON.CTLOCID'],
+			UserID:session['LOGON.USERID']
 			
 		});	
 }
@@ -238,6 +240,8 @@ function InitSpecialItemFindGrid(){
 		queryParams:{
 			ClassName:"web.DHCPE.FetchReport",
 			QueryName:"SearchSpecialItem",
+			LocID:session['LOGON.CTLOCID'],
+			UserID:session['LOGON.USERID']
 
 		},
 		frozenColumns:[[
@@ -307,7 +311,7 @@ function InitSpecialItemFindGrid(){
 	})	
 }
 
-
+/*
 function InitCombobox(){
 	
 	
@@ -345,6 +349,11 @@ function InitCombobox(){
 			
 			var STId=$("#StationDesc").combobox('getValue');
 			param.StationID = STId;
+			param.Item = param.q;
+			param.Type="F";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID'];
+
 		},
 		onShowPanel:function()
 		{
@@ -371,4 +380,76 @@ function InitCombobox(){
 			
 		}
 		})	
+}
+
+*/
+
+function InitCombobox(){
+	
+	
+	//VIP等级-多院区	
+	var VIPObj = $HUI.combobox("#VIPLevel",{
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindVIP&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
+		valueField:'id',
+		textField:'desc',
+	});
+		
+	
+	//状态
+	var StatusObj = $HUI.combobox("#Status",{
+		valueField:'id',
+		textField:'text',
+		panelHeight:'140',
+		data:[
+            //{id:'0',text:'预约'},
+            {id:'1',text:$g('未完成')},
+            {id:'3',text:$g('谢绝检查')},
+            {id:'6',text:$g('已完成')},
+           
+        ]
+
+	 });	
+
+	//项目-多院区
+	var ArcimDescObj = $HUI.combogrid("#ArcimDesc",{
+		panelWidth:300,
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindSpecialItem",
+		mode:'remote',
+		delay:200,
+		idField:'id',
+		textField:'desc',
+		onBeforeLoad:function(param){
+			var STId=$("#StationDesc").combobox('getValue');
+			param.StationID = STId;
+			param.Item = param.q;
+			param.LocID=session['LOGON.CTLOCID'];
+
+		},
+		onShowPanel:function()
+		{
+			$('#ArcimDesc').combogrid('grid').datagrid('reload');
+		},
+		columns:[[
+			 {field:'id',title:'ID',width:80},
+			{field:'desc',title:'医嘱名称',width:200},	
+		]]
+	});
+	
+	
+
+	//站点-多院区
+	var StationObj = $HUI.combobox("#StationDesc",{
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindStationBase&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
+		valueField:'id',
+		textField:'desc',
+		onChange:function(newValue, oldValue)
+		{
+			var ItemID = $("#ArcimDesc").combogrid("getValue");
+			var Flag=tkMakeServerCall("web.DHCPE.HISUICommon","GetStationFlag",newValue,ItemID);
+			if (Flag==0) {
+			    $("#ArcimDesc").combogrid('setValue',"");
+			}
+			
+		}
+	})
 }

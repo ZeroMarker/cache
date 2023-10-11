@@ -25,25 +25,17 @@ function InitRisReportWin(){
 
 			var htm="";
 			htm+='<div class="report"><table class="onereport">';
-			htm+='<tr class="Item"><td colspan= 2>'+CheckItem+'</td></tr>';
+			htm+='<tr class="kw-chapter"><td colspan= 2 ><a></a>'+CheckItem+'</td></tr>';
 			htm+='<tr><td class="title">检查所见：</td><td class="examdesc"><p>'+ExamDesc;
-			htm+='</p></td></tr>';
+			htm+='</p><br/></td></tr>';
 			htm+='<tr><td class="title">诊断意见：</td><td><p class="course">'+ResultDesc+'</p></td></tr>';
 			//htm+='<tr class="sign" ><td colspan= 2>'+ '登记日期：' + RegDate + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;报告日期：' + RepDate + ' ' + RepUser+ '</td></tr>';
             //平台接口没有登记时间
-			htm+='<tr class="sign" ><td colspan= 2>'+ '报告日期：' + RepDate + ' ' + RepUser+ '</td></tr>';
+			htm+='<tr><td class="title">报告日期：</td><td><p class="course">' + RepDate + ' ' + RepUser+ '</p></td></tr>';
 			htm+='</table></div>';
 			$(".col-sm-12.col-xs-12").append(htm);
 		}
 	}
-	
-	$("body").mCustomScrollbar({
-		//scrollButtons: { enable: true },
-		//autoHideScrollbar: true,
-		theme: "dark-thick",
-		axis: "y",
-		scrollInertia: 100
-	});
 	InitRisReportWinEvent(obj);
 	obj.LoadEvents(arguments);
 	return obj;

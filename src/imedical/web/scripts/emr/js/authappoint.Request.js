@@ -525,22 +525,66 @@ function commitRequest(){
 		alert("修改后内容 含有非法字符，请重新输入！");
 		return;
 	}
-		//病历已打印 申请权限时提示
-	Ext.Ajax.request({
-		url: '../EMRservice.Ajax.AuthAppoint.cls',
-		params: {
-			Action: "getRequestPriv",
-			EpisodeID: episodeID,
-		},
-		success: function(response, opts){
-			var requestPriv = eval(response.responseText);
-			for(var i=0;i<requestPriv.length;i++){
-				if (requestPriv[i].requestPriv !== "0"){
-					var view = confirm(requestPriv[i].requestPriv);
-					if(!view){
-						cancelRequest();
-					}else{
-						Ext.Ajax.request({
+	
+	var msg = "<p>给予医生： " + currAuthor + " </p>"
+            + "<p>患者： " + currPatient + " </p>"
+            + "<p>操作： " + actionNameString + " </p>"
+            + "<p><span style='float:left;'>范围： <div style='float:left;width:85%;height:150px;overflow-y:auto;'>" + requestCateText + " <div></span></p>";
+	Ext.MessageBox.show({
+		title: '确定申请授权？',
+		msg: msg,
+		buttons: {yes:"确定",no:"取消"},
+		width: 400,
+		closable: false,
+		fn: function(r){
+		if(r=='yes'){
+	
+			//病历已打印 申请权限时提示
+			Ext.Ajax.request({
+				url: '../EMRservice.Ajax.AuthAppoint.cls',
+				params: {
+					Action: "getRequestPriv",
+					EpisodeID: episodeID,
+				},
+				success: function(response, opts){
+					var requestPriv = eval(response.responseText);
+					for(var i=0;i<requestPriv.length;i++){
+						if (requestPriv[i].requestPriv !== "0"){
+							var view = confirm(requestPriv[i].requestPriv);
+							if(!view){
+								cancelRequest();
+							}else{
+								Ext.Ajax.request({
+										url: '../EMRservice.Ajax.AuthAppoint.cls',
+										timeout: 5000,
+										params: {
+											Action: "request",
+											EpisodeID: episodeID,
+											RequestCateCharpter: requestCateCharpter,
+											RequestUserID: userID,
+											RequestDept: userLoc,
+											EPRAction: actionString,
+											RequestReason: requestReason,
+											BeforeRequestContent: beforeRequestContent,
+											AfterRequestContent: afterRequestContent,
+											RequestNumber: requestNumber
+										},
+										success: function(response, opts){
+											//alert(response.responseText);
+											if ((response.responseText !== "-1")||(response.responseText !== "0")) {
+												Ext.MessageBox.alert('','权限申请已成功',function(){cancelRequest()});
+											}
+											else {
+												Ext.MessageBox.alert('操作提示', '申请权限操作提交失败')
+											}
+										},
+										failure: function(response, opts){
+											Ext.MessageBox.alert('提示', response.responseText);
+										}
+									});	
+								}	
+							}else{	
+							Ext.Ajax.request({
 								url: '../EMRservice.Ajax.AuthAppoint.cls',
 								timeout: 5000,
 								params: {
@@ -556,7 +600,7 @@ function commitRequest(){
 									RequestNumber: requestNumber
 								},
 								success: function(response, opts){
-									//alert(response.responseText);
+								//alert(response.responseText);
 									if ((response.responseText !== "-1")||(response.responseText !== "0")) {
 										Ext.MessageBox.alert('','权限申请已成功',function(){cancelRequest()});
 									}
@@ -567,118 +611,20 @@ function commitRequest(){
 								failure: function(response, opts){
 									Ext.MessageBox.alert('提示', response.responseText);
 								}
-							});	
-						}	
-					}else{	
-					Ext.Ajax.request({
-						url: '../EMRservice.Ajax.AuthAppoint.cls',
-						timeout: 5000,
-						params: {
-							Action: "request",
-							EpisodeID: episodeID,
-							RequestCateCharpter: requestCateCharpter,
-							RequestUserID: userID,
-							RequestDept: userLoc,
-							EPRAction: actionString,
-							RequestReason: requestReason,
-							BeforeRequestContent: beforeRequestContent,
-							AfterRequestContent: afterRequestContent,
-							RequestNumber: requestNumber
-						},
-						success: function(response, opts){
-						//alert(response.responseText);
-							if ((response.responseText !== "-1")||(response.responseText !== "0")) {
-								Ext.MessageBox.alert('','权限申请已成功',function(){cancelRequest()});
-							}
-							else {
-								Ext.MessageBox.alert('操作提示', '申请权限操作提交失败')
-							}
-						},
-						failure: function(response, opts){
-							Ext.MessageBox.alert('提示', response.responseText);
+							});
 						}
-					});
-				}
-			}
-		},
-		failure: function(response, opts){
-			Ext.MessageBox.alert('提示', response.responseText);
-		}
-	});
-	//liuzhongwan 禁止为模板申请创建权限，若只为模板申请了new权限则自动追加save权限申请
-	//liuzhongwan 弹出一个提示窗口用于屏蔽连续点击提交按钮的行为
-	/*
-	var msg = "<p>给予医生： " + currAuthor + " </p>"
-            + "<p>患者： " + currPatient + " </p>"
-            + "<p>操作： " + actionNameString + " </p>"
-            + "<p><span style='float:left;'>范围： <div style='float:left;width:85%;height:150px;overflow-y:auto;'>" + requestCateText + " <div></span></p>";
-	Ext.MessageBox.show({
-		title: '确定申请授权？',
-		msg: msg,
-		buttons: {yes:"确定",no:"取消"},
-		width: 400,
-		closable: false,
-		fn: function(r){
-		if(r=='yes'){
-			Ext.Ajax.request({
-				url: '../EMRservice.Ajax.AuthAppoint.cls',
-				timeout: 5000,
-				params: {
-					Action: "request",
-					EpisodeID: episodeID,
-					RequestCateCharpter: requestCateCharpter,
-					RequestUserID: userID,
-					RequestDept: userLoc,
-					EPRAction: actionString,
-					RequestReason: requestReason,
-					BeforeRequestContent: beforeRequestContent,
-					AfterRequestContent: afterRequestContent
-				},
-				success: function(response, opts){
-					//alert(response.responseText);
-					if ((response.responseText !== "-1")||(response.responseText !== "0")) {
-						Ext.MessageBox.alert('','权限申请已成功',function(){cancelRequest()});
-					}
-					else {
-						Ext.MessageBox.alert('操作提示', '申请权限操作提交失败')
 					}
 				},
 				failure: function(response, opts){
 					Ext.MessageBox.alert('提示', response.responseText);
 				}
 			});
+	
 		}
 		}
 	});
-	*/
-	/*Ext.Ajax.request({
-		url: '../EMRservice.Ajax.AuthAppoint.cls',
-		timeout: 5000,
-		params: {
-			Action: "request",
-			EpisodeID: episodeID,
-			RequestCateCharpter: requestCateCharpter,
-			RequestUserID: userID,
-			RequestDept: userLoc,
-			EPRAction: actionString,
-			RequestReason: requestReason,
-			BeforeRequestContent: beforeRequestContent,
-			AfterRequestContent: afterRequestContent,
-			RequestNumber: requestNumber
-		},
-		success: function(response, opts){
-		//alert(response.responseText);
-			if ((response.responseText !== "-1")||(response.responseText !== "0")) {
-				Ext.MessageBox.alert('','权限申请已成功',function(){cancelRequest()});
-			}
-			else {
-				Ext.MessageBox.alert('操作提示', '申请权限操作提交失败')
-			}
-		},
-		failure: function(response, opts){
-			Ext.MessageBox.alert('提示', response.responseText);
-		}
-	});*/	
+
+	
 }
 function cancelRequest(){
 	window.close();

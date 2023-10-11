@@ -20,11 +20,11 @@ Ext.onReady(function() {
 	}
 	// 请求部门
 	var RequestPhaLoc = new Ext.ux.LocComboBox({
-				fieldLabel : '请求部门',
+				fieldLabel : $g('请求部门'),
 				id : 'RequestPhaLoc',
 				name : 'RequestPhaLoc',
 				//anchor : '70%',				
-				emptyText : '请求部门...',				
+				emptyText : $g('请求部门...'),				
 				listWidth : 250,
 				//groupId:session['LOGON.GROUPID'],
 				defaultLoc:""
@@ -32,17 +32,17 @@ Ext.onReady(function() {
 	
 	// 供给部门
 	var SupplyPhaLoc = new Ext.ux.LocComboBox({
-				fieldLabel : '供给部门',
+				fieldLabel : $g('供给部门'),
 				id : 'SupplyPhaLoc',
 				name : 'SupplyPhaLoc',
 				//anchor : '70%',
-				emptyText : '供给部门...',
+				emptyText : $g('供给部门...'),
 				listWidth : 250,
 				groupId:session['LOGON.GROUPID']
 			});
 	// 起始日期
 	var StartDate = new Ext.ux.DateField({
-				fieldLabel : '起始日期',
+				fieldLabel : $g('起始日期'),
 				id : 'StartDate',
 				name : 'StartDate',
 				width : 120,
@@ -50,7 +50,7 @@ Ext.onReady(function() {
 			});
 	// 截止日期
 	var EndDate = new Ext.ux.DateField({
-				fieldLabel : '截止日期',
+				fieldLabel : $g('截止日期'),
 				id : 'EndDate',
 				name : 'EndDate',
 				width : 120,
@@ -60,7 +60,7 @@ Ext.onReady(function() {
 	// 包含部分转移
 	var PartlyStatus = new Ext.form.Checkbox({
 				//fieldLabel : '包含部分转移',
-				boxLabel:'包含部分转移',
+				boxLabel:$g('包含部分转移'),
 				hideLable:true,
 				id : 'PartlyStatus',
 				name : 'PartlyStatus',
@@ -71,7 +71,7 @@ Ext.onReady(function() {
 			});
 			
 var TransStatus = new Ext.form.Checkbox({
-				boxLabel : '包含已转移',
+				boxLabel : $g('包含已转移'),
 				id : 'TransStatus',
 				name : 'TransStatus',
 				anchor : '90%',
@@ -79,12 +79,31 @@ var TransStatus = new Ext.form.Checkbox({
 				checked : false,
 				disabled : false
 			});
+var ReqStatus = new Ext.ux.form.LovCombo({
+		id : 'ReqStatus',
+		name : 'ReqStatus',
+		fieldLabel : $g('请求状态'),
+		//listWidth : 400,
+		anchor: '90%',
+		//labelStyle : "text-align:right;width:100;",
+		labelSeparator : '',
+		separator:',',	
+		hideOnSelect : false,
+		maxHeight : 300,
+		editable:false,
+		store : GetReqStatusNotTransCompStore ,
+		valueField : 'RowId',
+		displayField : 'Description',
+		triggerAction : 'all'
+	});
+			
+			
 			
 	// 查询转移单按钮
 	var SearchBT = new Ext.Toolbar.Button({
 				id : "SearchBT",
-				text : '查询',
-				tooltip : '点击查询请求单',
+				text : $g('查询'),
+				tooltip : $g('点击查询请求单'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_find',
@@ -96,8 +115,8 @@ var TransStatus = new Ext.form.Checkbox({
 	// 导出按钮
 	var ExportBT = new Ext.Toolbar.Button({
 				id : "ExportBT",
-				text : '另存',
-				tooltip : '点击导出',
+				text : $g('另存'),
+				tooltip : $g('点击导出'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_excel',
@@ -109,8 +128,8 @@ var TransStatus = new Ext.form.Checkbox({
 	// 打印按钮
 	var PrintBT = new Ext.Toolbar.Button({
 				id : "PrintBT",
-				text : '打印',
-				tooltip : '点击打印',
+				text : $g('打印'),
+				tooltip : $g('点击打印'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_print',
@@ -121,8 +140,8 @@ var TransStatus = new Ext.form.Checkbox({
 	// 清空按钮
 	var ClearBT = new Ext.Toolbar.Button({
 				id : "ClearBT",
-				text : '清屏',
-				tooltip : '点击清屏',
+				text :$g( '清屏'),
+				tooltip : $g('点击清屏'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_clearscreen',
@@ -134,8 +153,10 @@ var TransStatus = new Ext.form.Checkbox({
 	 * 清空方法
 	 */
 	function clearData() {
+		SetLogInDept(RequestPhaLoc.getStore(),'SupplyPhaLoc');
 		Ext.getCmp("RequestPhaLoc").setValue("");
-		Ext.getCmp("SupplyPhaLoc").setDisabled(0);
+		//Ext.getCmp("SupplyPhaLoc").setDisabled(0);
+		Ext.getCmp("ReqStatus").setValue("");
 		Ext.getCmp("StartDate").setValue(DefaultStDate());
 		Ext.getCmp("EndDate").setValue(DefaultEdDate());
 		MasterGrid.store.removeAll();
@@ -146,7 +167,7 @@ var TransStatus = new Ext.form.Checkbox({
 	}
 	 // 全选
 	 var AllBT = new Ext.form.Checkbox({
-					boxLabel : '作废全选',
+					boxLabel : $g('作废全选'),
 					id : 'AllBT',
 					name : 'AllBT',
 					anchor : '90%',
@@ -173,8 +194,8 @@ var TransStatus = new Ext.form.Checkbox({
 	// 保存按钮
 	var SaveBT = new Ext.Toolbar.Button({
 				id : "SaveBT",
-				text : '保存',
-				tooltip : '点击保存',
+				text : $g('保存'),
+				tooltip :$g( '点击保存'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_save',
@@ -196,20 +217,29 @@ var TransStatus = new Ext.form.Checkbox({
 	 */		
 	function CheckDataBeforeSave() {
 				
-		var requestphaLoc = Ext.getCmp("RequestPhaLoc")
-				.getValue();
+		var requestphaLoc = Ext.getCmp("RequestPhaLoc").getValue();
+		
+		var requestphaLoc=""
+		var rowData = MasterGrid.getSelectionModel().getSelected();
+		if(rowData==null || rowData==""){
+			Msg.info("warning",$g("没有选择的请求单!"));
+			return;
+		}else{
+			requestphaLoc=rowData.get('toLoc');
+		}
 		if (requestphaLoc == null || requestphaLoc.length <= 0) {
-			Msg.info("warning", "请选择请求部门!");
+			Msg.info("warning", $g("请选择请求部门!"));
 			return false;
 		}
+			
 		var supplyphaLoc = Ext.getCmp("SupplyPhaLoc")
 				.getValue();
 		if (supplyphaLoc == null || supplyphaLoc.length <= 0) {
-			Msg.info("warning", "请选择供应部门!");
+			Msg.info("warning", $g("请选择供应部门!"));
 			return false;
 		}
 		if (requestphaLoc == supplyphaLoc) {
-			Msg.info("warning", "请求部门和供应部门不能相同!");
+			Msg.info("warning", $g("请求部门和供应部门不能相同!"));
 			return false;
 		}
 		
@@ -224,11 +254,11 @@ var TransStatus = new Ext.form.Checkbox({
 			}
 		}
 		if(rowCount<=0){
-			Msg.info("warning", "没有需要保存的数据!");
+			Msg.info("warning", $g("没有需要保存的数据!"));
 			return false;
 		}
 		if (count <= 0) {
-			Msg.info("warning", "需要保存的数据无效!");
+			Msg.info("warning", $g("需要保存的数据无效!"));
 			return false;
 		}
 		// 2.重新填充背景
@@ -244,7 +274,7 @@ var TransStatus = new Ext.form.Checkbox({
 						&& item_i == item_j) {
 					changeBgColor(i, "yellow");
 					changeBgColor(j, "yellow");
-					Msg.info("warning", "药品批次重复，请重新输入!");
+					Msg.info("warning", $g("药品批次重复，请重新输入!"));
 					return false;
 				}
 			}
@@ -259,14 +289,14 @@ var TransStatus = new Ext.form.Checkbox({
 			}
 			var item = rowData.get("incidr");
 			if (item == undefined) {
-				Msg.info("warning", "药品信息输入错误!");
+				Msg.info("warning", $g("药品信息输入错误!"));
 				DetailGrid.getSelectionModel().select(i, 1);
 				changeBgColor(i, "yellow");
 				return false;
 			}
 			var qty = DetailStore.getAt(i).get("qty");
 			if ((item != undefined) && (qty == null || qty < 0)) {
-				Msg.info("warning", "转移数量不能小于0!");
+				Msg.info("warning", $g("转移数量不能小于0!"));
 				DetailGrid.getSelectionModel().select(i, 1);
 				changeBgColor(i, "yellow");
 				return false;
@@ -274,7 +304,7 @@ var TransStatus = new Ext.form.Checkbox({
 
 			var avaQty = DetailStore.getAt(i).get("avaqty");
 			if ((item != undefined) && ((qty - avaQty) > 0)) {
-				Msg.info("warning", "转移数量不能大于可用库存数量!");
+				Msg.info("warning", $g("转移数量不能大于可用库存数量!"));
 				DetailGrid.getSelectionModel().select(i, 1);
 				changeBgColor(i, "yellow");
 				return false;
@@ -295,13 +325,15 @@ var TransStatus = new Ext.form.Checkbox({
 	function saveOrder() {
 		//供应科室RowId^请求科室RowId^库存转移请求单RowId^出库类型RowId^完成标志^单据状态^制单人RowId^类组RowId^库存类型^备注
 		var supplyPhaLoc = Ext.getCmp("SupplyPhaLoc").getValue();
-		var requestPhaLoc = Ext.getCmp("RequestPhaLoc").getValue();
+		//var requestPhaLoc = Ext.getCmp("RequestPhaLoc").getValue();
+		var requestPhaLoc=""
 		var rowData=MasterGrid.getSelectionModel().getSelected();
 		if(rowData==null || rowData==""){
-			Msg.info("warning","没有选择的请求单!");
+			Msg.info("warning",$g("没有选择的请求单!"));
 			return;
 		}else{
 			reqid=rowData.get('req');
+			requestPhaLoc=rowData.get('toLoc');
 		}
 		var operatetype = "";	
 		var Complete='N';
@@ -338,7 +370,7 @@ var TransStatus = new Ext.form.Checkbox({
 			
 		}
 		if(ListDetail==""){
-			Msg.info("warning","没有需要保存的数据!");
+			Msg.info("warning",$g("没有需要保存的数据!"));
 			return;
 		}
 		var url = DictUrl
@@ -347,14 +379,14 @@ var TransStatus = new Ext.form.Checkbox({
 					url : url,
 					params:{Rowid:'',MainInfo:MainInfo,ListDetail:ListDetail},
 					method : 'POST',
-					waitMsg : '处理中...',
+					waitMsg : $g('处理中...'),
 					success : function(result, request) {
 						var jsonData = Ext.util.JSON
 								.decode(result.responseText);
 						if (jsonData.success == 'true') {
 							// 刷新界面
 							var InitRowid = jsonData.info;
-							Msg.info("success", "保存成功!");
+							Msg.info("success", $g("保存成功!"));
 									
 							// 跳转到出库制单界面
 							window.location.href='dhcst.dhcinistrf.csp?Rowid='+InitRowid+'&QueryFlag=1';
@@ -362,15 +394,15 @@ var TransStatus = new Ext.form.Checkbox({
 						} else {
 							var ret=jsonData.info;
 							if(ret==-99){
-								Msg.info("error", "加锁失败,不能保存!");
+								Msg.info("error", $g("加锁失败,不能保存!"));
 							}else if(ret==-2){
-								Msg.info("error", "生成出库单号失败,不能保存!");
+								Msg.info("error", $g("生成出库单号失败,不能保存!"));
 							}else if(ret==-1){
-								Msg.info("error", "保存出库单失败!");
+								Msg.info("error", $g("保存出库单失败!"));
 							}else if(ret==-5){
-								Msg.info("error", "保存出库单明细失败!");
+								Msg.info("error", $g("保存出库单明细失败!"));
 							}else {
-								Msg.info("error", "部分明细保存不成功："+ret);
+								Msg.info("error", $g("部分明细保存不成功：")+ret);
 							}
 							
 						}
@@ -382,7 +414,7 @@ var TransStatus = new Ext.form.Checkbox({
 
 	// 单位
 	var CTUom = new Ext.form.ComboBox({
-				fieldLabel : '单位',
+				fieldLabel : $g('单位'),
 				id : 'CTUom',
 				name : 'CTUom',
 				anchor : '90%',
@@ -392,7 +424,7 @@ var TransStatus = new Ext.form.Checkbox({
 				displayField : 'Description',
 				allowBlank : false,
 				triggerAction : 'all',
-				emptyText : '单位...',
+				emptyText : $g('单位...'),
 				selectOnFocus : true,
 				forceSelection : true,
 				minChars : 1,
@@ -405,7 +437,7 @@ var TransStatus = new Ext.form.Checkbox({
 	function Query() {
 		var supplyphaLoc = Ext.getCmp("SupplyPhaLoc").getValue();
 		if (supplyphaLoc =='' || supplyphaLoc.length <= 0) {
-			Msg.info("warning", "请选择供应部门!");
+			Msg.info("warning", $g("请选择供应部门!"));
 			return;
 		}
 		var requestphaLoc = Ext.getCmp("RequestPhaLoc").getValue();
@@ -413,7 +445,9 @@ var TransStatus = new Ext.form.Checkbox({
 		var endDate = Ext.getCmp("EndDate").getRawValue();
 		var PartlyStatus = (Ext.getCmp("PartlyStatus").getValue()==true?1:0);
 		var TransStatus = (Ext.getCmp("TransStatus").getValue()==true?1:0);
-		var ListParam=startDate+'^'+endDate+'^'+supplyphaLoc+'^'+requestphaLoc+'^'+PartlyStatus+'^'+TransStatus;
+		var ReqStatus = Ext.getCmp("ReqStatus").getValue();
+		
+		var ListParam=startDate+'^'+endDate+'^'+supplyphaLoc+'^'+requestphaLoc+'^'+ReqStatus;   //PartlyStatus+'^'+TransStatus;
 		var Page=GridPagingToolbar.pageSize;
 		
 		DetailGrid.store.removeAll();
@@ -466,51 +500,51 @@ var TransStatus = new Ext.form.Checkbox({
 				sortable : true,
 				hidden : true
 			}, {
-				header : "请求单号",
+				header : $g("请求单号"),
 				dataIndex : 'reqNo',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "请求部门",
+				header : $g("请求部门"),
 				dataIndex : 'toLocDesc',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "供给部门",
+				header : $g("供给部门"),
 				dataIndex : 'frLocDesc',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "请求日期",
+				header : $g("请求日期"),
 				dataIndex : 'date',
 				width : 90,
 				align : 'center',
 				sortable : true
 			}, {
-				header : "单据类型",
+				header :$g( "单据类型"),
 				dataIndex : 'status',
 				width : 120,
 				align : 'left',
 				renderer : renderReqType,
 				sortable : true
 			}, {
-				header : "制单人",
+				header : $g("制单人"),
 				dataIndex : 'userName',
 				width : 90,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "转移状态",
+				header : $g("转移状态"),
 				dataIndex : 'transferStatus',
-				width : 80,
+				width :200,
 				align : 'left',
-				renderer : renderStatus,
+				//renderer : renderStatus,
 				sortable : true
 			},{
-				header : "请求部门ID",
+				header : $g("请求部门ID"),
 				dataIndex : 'toLoc',
 				width : 120,
 				align : 'left',
@@ -522,26 +556,26 @@ var TransStatus = new Ext.form.Checkbox({
 	function renderStatus(value){
 		var InstrfStatus='';
 		if(value==0){
-			InstrfStatus='未转移';			
+			InstrfStatus=$g('未转移');			
 		}else if(value==1){
-			InstrfStatus='部分转移';
+			InstrfStatus=$g('部分转移');
 		}else if(value==2){
-			InstrfStatus='全部转移';
+			InstrfStatus=$g('全部转移');
 		}
 		return InstrfStatus;
 	}
 	function renderReqType(value){
 		var ReqType='';
 		if(value=='O'){
-			ReqType='请领单';
+			ReqType=$g('请领单');
 		}else if(value=='C'){
-			ReqType='申领计划';
+			ReqType=$g('申领计划');
 		}else if(value=='1'){
-			ReqType='基数药品补货';
+			ReqType=$g('基数药品补货');
 		}else if(value=='2'){
-			ReqType='精神毒麻补货';
+			ReqType=$g('精神毒麻补货');
 		}else if(value=='3'){
-			ReqType='大输液补货';
+			ReqType=$g('大输液补货');
 		}
 		return ReqType;
 	}
@@ -550,8 +584,8 @@ var TransStatus = new Ext.form.Checkbox({
 		store:MasterStore,
 		pageSize:PageSize,
 		displayInfo:true,
-		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录"
+		displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+		emptyMsg:$g("没有记录")
 	});
 	var MasterGrid = new Ext.grid.GridPanel({
 				title : '',
@@ -567,6 +601,7 @@ var TransStatus = new Ext.form.Checkbox({
 				bbar:[GridPagingToolbar],
 				viewConfig:{getRowClass : function(record,rowIndex,rowParams,store){ 
 						var transferStatus=record.get("transferStatus");
+						/*
 						switch(transferStatus){
 							case "1":
 								return 'classTransPart';
@@ -575,6 +610,10 @@ var TransStatus = new Ext.form.Checkbox({
 								return 'classSalmon';
 								break;
 						}
+						*/ 
+						if(transferStatus.indexOf($g("部分转移"))>=0)return 'classTransPart';
+						else if(transferStatus.indexOf($g("全部转移"))>=0)return 'classSalmon';
+						
 				}
 				}
 			});
@@ -584,8 +623,8 @@ var TransStatus = new Ext.form.Checkbox({
 		var ReqId = MasterStore.getAt(rowIndex).get("req"); 
 		var ReqLocDesc=MasterStore.getAt(rowIndex).get("toLocDesc");
 		var ReqLocId=MasterStore.getAt(rowIndex).get("toLoc");
-		addComboData(RequestPhaLoc.getStore(),ReqLocId,ReqLocDesc);    //GetGroupDeptStore  这个store未定义，重新获取 yangsj2019-11-13
-		Ext.getCmp("RequestPhaLoc").setValue(ReqLocId);
+		//addComboData(RequestPhaLoc.getStore(),ReqLocId,ReqLocDesc);    //GetGroupDeptStore  这个store未定义，重新获取 yangsj2019-11-13
+		//Ext.getCmp("RequestPhaLoc").setValue(ReqLocId);
 		var strParam=ReqId
 		DetailStore.setBaseParam("Params",strParam);
 		DetailStore.load({params:{start:0,limit:StatuTabPagingToolbar.pageSize,sort:'req',dir:'Desc'}});
@@ -628,7 +667,7 @@ var TransStatus = new Ext.form.Checkbox({
 	
 	var nm = new Ext.grid.RowNumberer();
 	var DetailCm = new Ext.grid.ColumnModel([nm,{
-		              header : "作废",
+		              header :$g( "作废"),
 		              width : 50,
 		              sortable: false,             
 		              dataIndex: 'cancel',//数据源中的状态列             
@@ -650,47 +689,47 @@ var TransStatus = new Ext.form.Checkbox({
 			             
 		                     
 		        }, {
-				header : "转移细项RowId",
+				header : $g("转移细项RowId"),
 				dataIndex : 'initi',
 				width : 100,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "请求细项RowId",
+				header : $g("请求细项RowId"),
 				dataIndex : 'inrqi',
 				width : 100,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "药品RowId",
+				header : $g("药品RowId"),
 				dataIndex : 'incidr',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : '药品代码',
+				header : $g('药品代码'),
 				dataIndex : 'incicode',
 				width : 80,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '药品名称',
+				header : $g('药品名称'),
 				dataIndex : 'incidesc',
 				width : 230,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "批次RowId",
+				header : $g("批次RowId"),
 				dataIndex : 'inclb',
 				width : 180,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "转移数量",
+				header : $g("转移数量"),
 				dataIndex : 'qty',
 				width : 80,
 				align : 'right',
@@ -706,11 +745,11 @@ var TransStatus = new Ext.form.Checkbox({
 								
 								var qty = field.getValue();
 								if (qty == null || qty.length <= 0) {
-									Msg.info("warning", "转移数量不能为空!");
+									Msg.info("warning", $g("转移数量不能为空!"));
 									return;
 								}
 								if (qty <= 0) {
-									Msg.info("warning", "转移数量不能小于或等于0!");
+									Msg.info("warning", $g("转移数量不能小于或等于0!"));
 									return;
 								}
 								var cell = DetailGrid.getSelectionModel().getSelectedCell();
@@ -719,7 +758,7 @@ var TransStatus = new Ext.form.Checkbox({
 								record.set("spamt",	salePriceAMT);
 								var AvaQty = record.get("avaqty");
 								if (qty > AvaQty) {
-									Msg.info("warning", "转移数量不能大于可用库存数量!");
+									Msg.info("warning", $g("转移数量不能大于可用库存数量!"));
 									return;
 								}
 							}
@@ -727,127 +766,127 @@ var TransStatus = new Ext.form.Checkbox({
 					}
 				})
 			}, {
-				header : "转移单位",
+				header : $g("转移单位"),
 				dataIndex : 'uomdesc',
 				width : 80,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "批号/效期",
+				header : $g("批号/效期"),
 				dataIndex : 'batexp',
 				width : 150,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "可用数量",
+				header : $g("可用数量"),
 				dataIndex : 'avaqty',
 				width : 80,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "进价",
+				header : $g("进价"),
 				dataIndex : 'rp',
 				width : 60,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "售价",
+				header : $g("售价"),
 				dataIndex : 'sp',
 				width : 60,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "请求数量",
+				header : $g("请求数量"),
 				dataIndex : 'rqty',
 				width : 80,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "生产厂商",
+				header : $g("生产企业"),
 				dataIndex : 'manfName',
 				width : 180,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "货位码",
+				header : $g("货位码"),
 				dataIndex : 'stkbin',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "请求方库存",
+				header : $g("请求方库存"),
 				dataIndex : 'reqstkqty',
 				width : 100,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "供给方库存",
+				header :$g("供给方库存"),
 				dataIndex : 'prostkqty',
 				width : 100,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "批次库存",
+				header : $g("批次库存"),
 				dataIndex : 'inclbqty',
 				width : 90,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "占用数量",
+				header : $g("占用数量"),
 				dataIndex : 'dirtyqty',
 				width : 80,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "批次售价",
+				header : $g("批次售价"),
 				dataIndex : 'newsp',
 				width : 100,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "规格",
+				header : $g("规格"),
 				dataIndex : 'spec',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "处方通用名",
+				header : $g("处方通用名"),
 				dataIndex : 'geneDesc',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "剂型",
+				header : $g("剂型"),
 				dataIndex : 'formDesc',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "售价金额",
+				header : $g("售价金额"),
 				dataIndex : 'spamt',
 				width : 100,
 				align : 'right',				
 				sortable : true,
 				renderer:FormatGridSpAmount
 			}, {
-				header : "转换率",
+				header : $g("转换率"),
 				dataIndex : 'confac',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "基本单位",
+				header : $g("基本单位"),
 				dataIndex : 'buomdr',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "转移请求子表RowId",
+				header : $g("转移请求子表RowId"),
 				dataIndex : 'inrqi',
 				width : 100,
 				align : 'left',
@@ -865,15 +904,15 @@ var TransStatus = new Ext.form.Checkbox({
 					store : DetailStore,
 					pageSize : TransferPageSize,
 					displayInfo : true,
-					displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
-					prevText : "上一页",
-					nextText : "下一页",
-					refreshText : "刷新",
-					lastText : "最后页",
-					firstText : "第一页",
-					beforePageText : "当前页",
-					afterPageText : "共{0}页",
-					emptyMsg : "没有数据"
+					displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
+					prevText : $g("上一页"),
+					nextText : $g("下一页"),
+					refreshText : $g("刷新"),
+					lastText : $g("最后页"),
+					firstText : $g("第一页"),
+					beforePageText : $g("当前页"),
+					afterPageText : $g("共{0}页"),
+					emptyMsg : $g("没有数据")
 				});
 
 	var DetailGrid = new Ext.grid.EditorGridPanel({
@@ -938,7 +977,7 @@ var TransStatus = new Ext.form.Checkbox({
 		items : [{
 			layout: 'column',    // Specifies that the items will now be arranged in columns
 			xtype:'fieldset',
-			title:'查询条件',
+			title:$g('查询条件'),
 			defaults: {border:false},    // Default config options for child items
 			style:DHCSTFormStyle.FrmPaddingV,
 			items:[{ 				
@@ -950,11 +989,18 @@ var TransStatus = new Ext.form.Checkbox({
 	        	xtype: 'fieldset',	        	
 	        	items: [StartDate,EndDate]				
 			},{ 				
+				columnWidth: 0.3,
+	        	xtype: 'fieldset',	
+	        	items: [ReqStatus]
+			}
+			/*
+			,{ 				
 				columnWidth: 0.1,
 	        	xtype: 'fieldset',	
 	        	labelWidth:10,        	
 	        	items: [PartlyStatus,TransStatus]
-	        }]
+	        }*/
+	        ]
 		}]
 	});
 	 function QueryListDetailID(){
@@ -982,7 +1028,7 @@ var TransStatus = new Ext.form.Checkbox({
 		    	// 访问路径
 	         var url =DictUrl+
 		        'inrequestaction.csp?actiontype=CancelReqItm';
-			var loadMask=ShowLoadMask(Ext.getBody(),"处理中...");
+			var loadMask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 			Ext.Ajax.request({
 						url : url,
 						method : 'POST',
@@ -992,14 +1038,14 @@ var TransStatus = new Ext.form.Checkbox({
 							var jsonData = Ext.util.JSON
 									.decode(result.responseText);
 							if (jsonData.success == 'true') {				
-								Msg.info("success", "作废成功!");
+								Msg.info("success", $g("作废成功!"));
 								// 重新加载数据	
        						    MasterStore.reload();
        							DetailStore.reload();
        							DetailGrid.getView().refresh();
 							} else {
 								//var ret=jsonData.info;
-									Msg.info("error", "作废失败!");
+									Msg.info("error", $g("作废失败!"));
 							}
 						},
 						scope : this
@@ -1015,15 +1061,15 @@ var TransStatus = new Ext.form.Checkbox({
 		function CancelDetails() {
          // 用户对话框
                    Ext.Msg.show({
-	                 title:'批量作废选中项',
-	                 msg:'确定批量作废选中项？',
+	                 title:$g('批量作废选中项'),
+	                 msg:$g('确定批量作废选中项？'),
 	                 scope: this,
 	                 buttons: Ext.Msg.OKCANCEL,
 	                 icon:Ext.MessageBox.QUESTION,
                      fn: function(id){
 	                     if (id=='ok'){
 		                    var ListDetailID=QueryListDetailID();
-		                    if (ListDetailID=="") {Msg.info("warning","没有勾选作废项!");}
+		                    if (ListDetailID=="") {Msg.info("warning",$g("没有勾选作废项!"));}
 		                    if (ListDetailID!=""){
 		                        CancelDetailsAction(ListDetailID); 
 		                    }
@@ -1037,7 +1083,7 @@ var TransStatus = new Ext.form.Checkbox({
 		{
 			var cell = DetailGrid.getSelectionModel().getSelectedCell();
 			if (cell == null) {
-				Msg.info("warning", "没有选中行!");
+				Msg.info("warning", $g("没有选中行!"));
 				return;
 			}
 			var row = cell[0];
@@ -1050,19 +1096,19 @@ var TransStatus = new Ext.form.Checkbox({
 			var rowMainData=MasterGrid.getSelectionModel().getSelected();
 			var ReqLocId=""
 			if(rowMainData==null || rowMainData==""){
-				Msg.info("warning","没有选择的请求单!");
+				Msg.info("warning",$g("没有选择的请求单!"));
 				return;
 			}else{
 				ReqLocId=rowMainData.get('toLoc');
 			}
 			if (ReqLocId=="")
 			{
-				Msg.info("warning", "没有选中行!");
+				Msg.info("warning", $g("没有选中行!"));
 				return
 			}
 			var cell = DetailGrid.getSelectionModel().getSelectedCell();
 			if (cell == null) {
-				Msg.info("warning", "没有选中行!");
+				Msg.info("warning",$g( "没有选中行!"));
 				return;
 			}
 			// 选中行
@@ -1370,25 +1416,25 @@ var TransStatus = new Ext.form.Checkbox({
 				{ 
 					id: 'mncancelSelectAll', 
 					handler: CancelSelectAll, 
-					text: '全选作废列',
+					text: $g('全选作废列'),
 					click:true
 					 
 				},{ 
 					id: 'mncancelDetails', 
 					handler: CancelDetails, 
-					text: '批量作废',
+					text: $g('批量作废'),
 					click:true,
 					hidden:(gParam[9]=='Y'?false:true)
 					 
 				},{ 
 					id: 'mnchangeInclb', 
 					handler: ChangeInclb, 
-					text: '修改批次',
+					text: $g('修改批次'),
 					click:true					 
 				},{ 
 					id: 'mndelete', 
 					handler: DeleteDetail, 
-					text: '删除',
+					text: $g('删除'),
 					click:true					 
 				}
 				]
@@ -1398,14 +1444,14 @@ var TransStatus = new Ext.form.Checkbox({
 				layout : 'border',
 					items : [            // create instance immediately
 		            {
-		            	title:'库存转移-依据请求单',
+		            	title:$g('库存转移-依据请求单'),
 		                region: 'north',
 		                height: DHCSTFormStyle.FrmHeight(2), // give north and south regions a height
 		                layout: 'fit', // specify layout manager for items
 		                items:HisListTab
 		            }, {
 		                region: 'west',
-		                title: '请求单',
+		                title: $g('请求单'),
 		                collapsible: true,
 		                split: true,
 		                width: 400, // give east and west regions a width
@@ -1417,7 +1463,7 @@ var TransStatus = new Ext.form.Checkbox({
 		               
 		            }, {
 		                region: 'center',
-		                title: '请求单明细',
+		                title: $g('请求单明细'),
 		                layout: 'fit', // specify layout manager for items
 		                items: DetailGrid       
 		               
@@ -1445,7 +1491,7 @@ var TransStatus = new Ext.form.Checkbox({
 			data: prtData,
 			listBorder: {style:4, startX:1, endX:190},
 			aptListFields: ["label14", "printUserName", "label16", "perintDate"],
-			page: {rows:28, x:4, y:4, fontname:'黑体', fontbold:'false', fontsize:'12', format:'第{1}页/共{2}页'},
+			page: {rows:28, x:4, y:4, fontname:'黑体', fontbold:'false', fontsize:'12', format:$g('第{1}页/共{2}页')},
 		});
 	}
 	
@@ -1457,7 +1503,7 @@ var TransStatus = new Ext.form.Checkbox({
 		var pritntimenow = nowdate.getFullYear()+"-"+(nowdate.getMonth()+1)+"-"+nowdate.getDate()+" "+(nowdate.getHours())+":"+(nowdate.getMinutes())+":"+(nowdate.getSeconds());
 		var rowCount = DetailStore.getCount();
 		if (rowCount == 0) {
-			Msg.info("warning", "没有明细数据!");
+			Msg.info("warning", $g("没有明细数据!"));
 			return null;
 		}
 		var gTotalNum = rowCount;
@@ -1465,7 +1511,7 @@ var TransStatus = new Ext.form.Checkbox({
 		//主信息
 		var rowMainData = MasterGrid.getSelectionModel().getSelected();
 		if(rowMainData == null || rowMainData==""){
-			Msg.info("warning", "没有选择的请求单!");
+			Msg.info("warning", $g("没有选择的请求单!"));
 			return null;
 		} else {
 			var prolocdesc = rowMainData.get('frLocDesc');
@@ -1473,7 +1519,7 @@ var TransStatus = new Ext.form.Checkbox({
 			var reqno = rowMainData.get('reqNo');
 		}
 		var Para = {
-			title: App_LogonHospDesc + prolocdesc + "发放单",
+			title: App_LogonHospDesc + prolocdesc + $g("发放单"),
 			reqNo: reqno,
 			reqlocdesc: reqlocdesc,
 			printUserName: session['LOGON.USERNAME'],

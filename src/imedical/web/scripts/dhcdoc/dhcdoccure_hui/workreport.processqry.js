@@ -6,25 +6,38 @@ $(document).ready(function(){
 });
 
 function Init(){
+	var CureStatusData=[{
+			Code: 'F',
+			Desc: $g('已执行')
+		},{
+			Code: 'C',
+			Desc: $g('撤销执行')
+		},{
+			Code: 'D',
+			Desc: $g('停止执行')
+		},{
+			Code: 'ALL',
+			Desc: $g('全部')
+		}
+	] 
+	if(ServerObj.CureAppVersion=="V1"){
+		CureStatusData.push({
+			Code: 'I',
+			Desc: $g('预约')
+		})	
+		CureStatusData.push({
+			Code: 'C',
+			Desc: $g('取消预约')
+		})	
+		CureStatusData.push({
+			Code: 'E',
+			Desc: $g('直接执行')
+		})	
+	}
 	$HUI.combobox('#CureStatus',{       
     	valueField:'Code',   
     	textField:'Desc',
-    	data: [{
-			Code: 'I',
-			Desc: '预约'
-		},{
-			Code: 'A',
-			Desc: '完成'
-		},{
-			Code: 'C',
-			Desc: '取消预约'
-		},{
-			Code: 'E',
-			Desc: '直接执行'
-		},{
-			Code: 'ALL',
-			Desc: '全部'
-		}] 
+    	data: CureStatusData
 	});
 	
 	InitDate();
@@ -35,8 +48,12 @@ function Init(){
 }
 
 function InitEvent(){
-	$('#btnFind').bind('click', function(){
+	$('#btnFind').click(function(){
 		   CureProcessDataGridLoad();
+    });
+    
+    $('#btnClear').click(function(){
+		   ClearClickHandle();
     });
     
     $('#btnExport').bind('click', function(){
@@ -46,6 +63,13 @@ function InitEvent(){
 	$('#btnPrint').bind('click', function(){
 		   PrintCureProcess();
     });
+}
+
+function ClearClickHandle(){
+	InitDate();
+	$('#CureStatus,#ResGroup').combobox('setValue',"");
+	$HUI.lookup("#ComboArcim").setText("");
+    PageSizeItemObj.m_SelectArcimID="";    	
 }
 
 function InitCureProcessDataGrid()
@@ -63,10 +87,9 @@ function InitCureProcessDataGrid()
 		singleSelect:true,    
 		url : '',
 		loadMsg : '加载中..',  
-		pagination : true,  //
-		rownumbers : true,  //
+		pagination : true,
+		rownumbers : true, 
 		idField:"DCAARowId",
-		//pageNumber:0,
 		pageSize : 20,
 		pageList : [20,50,100],
 		columns :[[ 
@@ -83,7 +106,7 @@ function InitCureProcessDataGrid()
 				{field:'ApplyStatus',title:'申请状态',width:80},
 				{field:'OrdReLoc',title:'接收科室',width:100},   
 				{field:'ApplyAppInfo',title:'预约明细',width:150},
-				{field:'AppointStatus',title:'预约状态',width:80},
+				{field:'AppointStatus',title:'治疗状态',width:80},
 				{field:'RecordInfo',title:'治疗结果',width:120},
 				{field:'ApplyInfo',title:'登记记录',width:150}, 
 				{field:'IStatusInfo',title:'预约记录',width:150},
@@ -106,17 +129,19 @@ function CureProcessDataGridLoad()
 	if(gtext=="")PageSizeItemObj.m_SelectArcimID="";
 	var queryArcim=PageSizeItemObj.m_SelectArcimID;
 	var queryGroup=$('#ResGroup').combobox('getValue');
-	
+	var SessionStr="^" + com_Util.GetSessionStr();
 	$.cm({
 		ClassName:PageSizeItemObj.PUBLIC_WORKREPORT_CLASSNAME,
 		QueryName:"QryCureProcess",
-		'StartDate':StartDate,
-		'EndDate':EndDate,
-		'UserID':session['LOGON.USERID'],
-		'queryLoc':queryLoc,
-		'queryStatus':queryStatus,
-		'queryArcim':queryArcim,
-		'queryGroup':queryGroup,
+		StartDate:StartDate,
+		EndDate:EndDate,
+		UserID:session['LOGON.USERID'],
+		queryLoc:queryLoc,
+		queryStatus:queryStatus,
+		queryArcim:queryArcim,
+		queryGroup:queryGroup,
+		EpisodeID:ServerObj.EpisodeID,
+		SessionStr:SessionStr,
 		Pagerows:CureProcessDataGrid.datagrid("options").pageSize,
 		rows:99999
 	},function(GridData){

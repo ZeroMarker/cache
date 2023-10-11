@@ -83,9 +83,9 @@ $(document).ready(function() {
 				//alert(result)  
 				//2017-11-10 congyue 修改alert语句，由直接弹出result改为对result值判断，为0则弹出保存成功，非0则弹出“出错+result”
 				if(result==0){ 
-					alert("保存成功");	
+					$.messager.alert("提示","保存成功");	
 				}else{
-					alert("出错"+result);
+					$.messager.alert("提示","出错"+result);
 				}	
 			
 		});

@@ -74,6 +74,21 @@ function select(selectSpechar){
             selectValue = selectValue + "^" + thisValue.substring(thisValue.indexOf("</SUP>")+6) + "#DEFAULT";
         }
     }
+    else if (thisValue.indexOf("<SUB>") > 0)
+    {
+        if (thisValue.substring(0,thisValue.indexOf("<SUB>"))!="" )
+        {
+            selectValue = selectValue + "^" + thisValue.substring(0,thisValue.indexOf("<SUB>")) + "#DEFAULT";
+        }
+        if (thisValue.substring(thisValue.indexOf("<SUB>")+5,thisValue.indexOf("</SUB>"))!="" )
+        {
+            selectValue = selectValue + "^" + thisValue.substring(thisValue.indexOf("<SUB>")+5,thisValue.indexOf("</SUB>")) + "#SUB";
+        }
+        if (thisValue.substring(thisValue.indexOf("</SUB>")+6)!="" )
+        {
+            selectValue = selectValue + "^" + thisValue.substring(thisValue.indexOf("</SUB>")+6) + "#DEFAULT";
+        }
+    } 	
     else
     {
         selectValue = selectValue + "^" + thisValue + "#DEFAULT";

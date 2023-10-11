@@ -6,11 +6,31 @@ function InitPathTCMListWin(){
 	obj.RecRowID3 = "";	
     $.parser.parse(); // 解析整个页面 	
 	
-	$HUI.combobox("#comArcResume",{
-				url:$URL+"?ClassName=DHCMA.CPW.BTS.PathTCMExtSrv&QueryName=QryDocConfig&ResultSetType=array",
-				valueField:'ID',
-				textField:'DocConfigDesc'
-	});	
+	//增加院区配置 add by yankai20210803
+	var DefHospOID = $cm({ClassName:"DHCMA.Util.IO.MultiHospInterface",MethodName:"GetDefaultHosp",aTableName:"DHCMA_CPW_BT.PathTCM",aHospID:session['LOGON.HOSPID'],dataType:'text'},false);
+	var SessionStr=session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
+	obj.cboSSHosp = Common_ComboToSSHosp3("cboSSHosp","","","DHCMA_CPW_BT.PathTCM",SessionStr,"");
+	$('#cboSSHosp').combobox({
+  		onSelect: function(title,index){
+	  		obj.gridPathTCM.load({
+				ClassName:"DHCMA.CPW.BTS.PathTCMSrv",
+				QueryName:"QryPathTCM",
+				aHospID: $("#cboSSHosp").combobox('getValue')
+			});
+	  	}
+	 })
+	var retMultiHospCfg = $m({
+		ClassName:"DHCMA.Util.BT.Config",
+		MethodName:"GetValueByCode",
+		aCode:"SYSIsOpenMultiHospMode",
+		aHospID:session['DHCMA.HOSPID']
+	},false);
+	if(retMultiHospCfg!="Y" && retMultiHospCfg!="1"){
+		$("#lay_north").hide();
+		$("#layout").layout('panel',"center").panel({fit:true});
+		$("#layout").layout('resize');
+		$("#lay_center").parent().css({'top':'0'});
+	}
 	
 	obj.gridPathTCM = $HUI.datagrid("#gridPathTCM",{
 		fit: true,
@@ -21,13 +41,17 @@ function InitPathTCMListWin(){
 		rownumbers: false, //如果为true, 则显示一个行号列
 		singleSelect: true,
 		autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
+		remoteSort:"false",
+		sortName:"BTID",
+		sortOrder:"asc",
 		loadMsg:'数据加载中...',
 		pageSize: 10,
 		pageList : [10,20,50,100,200],
 	    url:$URL,
 	    queryParams:{
 		    ClassName:"DHCMA.CPW.BTS.PathTCMSrv",
-			QueryName:"QryPathTCM"
+			QueryName:"QryPathTCM",
+			aHospID: $("#cboSSHosp").combobox('getValue')
 	    },
 		columns:[[
 			{field:'BTID',title:'ID',width:'50'},
@@ -57,6 +81,8 @@ function InitPathTCMListWin(){
 			$("#btnSubAdd").linkbutton("disable");
 			$("#btnSubEdit").linkbutton("disable");
 			$("#btnSubDelete").linkbutton("disable");
+			
+			obj.gridPathTCM_onSelect();
 		}
 	});
 	
@@ -69,6 +95,9 @@ function InitPathTCMListWin(){
 		rownumbers: false, //如果为true, 则显示一个行号列
 		//singleSelect: true,
 		autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
+		remoteSort:"false",
+		sortName:"TCMOSDr",
+		sortOrder:"asc",
 		loadMsg:'数据加载中...',
 		pageSize: 10,
 		pageList : [10,20,50,100,200],
@@ -156,6 +185,9 @@ function InitPathTCMListWin(){
 		pageSize: 10,
 		pageList : [10,20,50,100,200],
 	    url:$URL,
+	    remoteSort:"false",
+		sortName:"BTSID",
+		sortOrder:"asc",
 	    queryParams:{
 		    ClassName:"DHCMA.CPW.BTS.PathTCMExtSrv",
 			QueryName:"QryPathTCMExt",
@@ -203,11 +235,17 @@ function InitPathTCMListWin(){
 	$("#txtOrdMastID").lookup({
 		width:267,
 		panelWidth:450,
-		url:$URL+"?ClassName=DHCMA.CPW.BTS.PathTCMExtSrv&QueryName=QryArcimByAliasAndItemCat&aHospID="+session['DHCMA.HOSPID'],  //江苏省中医院要求中药饮片分类医嘱查询
+		url:$URL,		//+"?ClassName=DHCMA.CPW.BTS.PathTCMExtSrv&QueryName=QryArcimByAliasAndItemCat&aHospID="+$("#cboSSHosp").combobox('getValue'),  //江苏省中医院要求中药饮片分类医嘱查询
 		editable: true,
 		mode:'remote',      //当设置为 'remote' 模式时，用户输入的值将会被作为名为 'q' 的 http 请求参数发送到服务器，以获取新的数据。
 		idField:'ArcimID',
 		textField:'ArcimDesc',
+		onBeforeLoad:function(param){
+	        param.ClassName = 'DHCMA.CPW.BTS.PathTCMExtSrv';
+			param.QueryName = 'QryArcimByAliasAndItemCat';
+			param.aHospID = $("#cboSSHosp").combobox('getValue');
+			param.ResultSetType = 'array';
+	    },
 		columns:[[  
 			{field:'ArcimCode',title:'代码',width:120},  
 			{field:'ArcimDesc',title:'描述',width:240},  
@@ -246,6 +284,12 @@ function InitPathTCMListWin(){
 			param.aTypeCode = 'CPWTCMOrdType'
 		}
 	});
+	
+	$HUI.combobox("#comArcResume",{
+		url:$URL+"?ClassName=DHCMA.CPW.BTS.PathTCMExtSrv&QueryName=QryDocConfig&ResultSetType=array",
+		valueField:'ID',
+		textField:'DocConfigDesc'
+	});	
 	
 	InitPathTCMListWinEvent(obj);	
 	obj.LoadEvent(arguments);

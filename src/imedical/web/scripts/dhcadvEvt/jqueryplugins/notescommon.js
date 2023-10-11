@@ -30,7 +30,7 @@ var noteflag = 1  //唯一标志，避免重复添加
 function bandAddnotes(id){
 	var dom='"' + id + '"';
 	$("#"+id).tooltip({position: 'top',
-	    content: "<button onclick='addNotes("+dom+")' style='background-color:#fff;border:0px;'>添加批注</button>",
+	    content: "<button onclick='addNotes("+dom+")' style='background-color:#fff;border:0px;'>"+$g('添加批注')+"</button>",
 	    hideDelay: 600,
 	    showDelay: 1,
 	    onShow: function(){
@@ -54,7 +54,7 @@ function addNotes(id){
 	if($('#noteswin').is(":visible")){return;}  //窗体处在打开状态,退出
 	$('body').append('<div id="noteswin"></div>');
 	$('#noteswin').window({
-		title:'报告批注',
+		title:$g('报告批注'),
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,
@@ -93,7 +93,7 @@ function showNotes(domId){
 	if($('#noteswin').is(":visible")){return;}  //窗体处在打开状态,退出
 	$('body').append('<div id="noteswin"></div>');
 	$('#noteswin').window({
-		title:'批注信息',
+		title:$g('批注信息'),
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,

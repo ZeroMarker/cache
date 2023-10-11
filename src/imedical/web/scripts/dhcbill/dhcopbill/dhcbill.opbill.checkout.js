@@ -1,987 +1,941 @@
-/**
+ï»¿/**
  * @file dhcbill.opbill.checkout.js
- * ÃÅÕïÊÕ·ÑÊÕÒøÌ¨¹¦ÄÜ
+ * é—¨è¯Šæ”¶è´¹æ”¶é“¶å°åŠŸèƒ½
  * @author Lid
  * @date 2020-05-29
  */
- 
+
 /** @class
-* ¶¨ÒåÃüÃû¿Õ¼ä
-* @abstract
-*/
+ * å®šä¹‰å‘½åç©ºé—´
+ * @abstract
+ */
 var dhcbill = window.dhcbill || {};
- 
+
 /** @class
-* ¶¨ÒåÃÅÕïÊÕ·ÑÃüÃû¿Õ¼ä
-* @abstract
-*/
+ * å®šä¹‰é—¨è¯Šæ”¶è´¹å‘½åç©ºé—´
+ * @abstract
+ */
 dhcbill.opbill = window.dhcbill.opbill || {};
 
 /** @class
-* ¶¨ÒåÊÕÒøÌ¨Ãû¿Õ¼ä
-* @abstract
-*/
+ * å®šä¹‰æ”¶é“¶å°åç©ºé—´
+ * @abstract
+ */
 dhcbill.opbill.checkout = window.dhcbill.opbill.checkout || {};
 
 /** @class
-* ÊÕÒøÌ¨Àà
-*
-*/
-dhcbill.opbill.checkout.CheckOut = function(cfg) {
-	cfg = cfg || {};
-	/** @cfg {String} [title="ÊÕÒøÌ¨"] ±êÌâ*/
-	this.title = cfg['title'] || 'ÊÕÒøÌ¨';
-	this.allowPayMent = cfg['allowPayMent'] || '';
-	this.prtRowIdStr = cfg['prtRowIdStr'] || '';
-	this.insTypeId = cfg['insTypeId'] || '';
-	this.typeFlag = cfg['typeFlag'] || '';
-	this.accMRowId = cfg['accMRowId'] || '';
-	this.episodeIdStr = cfg['episodeIdStr'] || '';
-	this.patientId = cfg['patientId'] || '';
-	this.cardNo = cfg['cardNo'] || '';
-	this.cardTypeId = cfg['cardTypeId'] || '';
-	this.reloadFlag = cfg['reloadFlag'] || '';
+ * æ”¶é“¶å°ç±»
+ */
+dhcbill.opbill.checkout.CheckOut = function (args) {
+    args = args || {};
+    this.allowPayMent = args.allowPayMent || "";
+    this.prtRowIdStr = args.prtRowIdStr || "";
+    this.insTypeId = args.insTypeId || "";
+    this.typeFlag = args.typeFlag || "";
+    this.accMRowId = args.accMRowId || "";
+    this.accMLeft = args.accMLeft || "";
+    this.episodeIdStr = args.episodeIdStr || "";
+    this.patientId = args.patientId || "";
+    this.cardNo = args.cardNo || "";
+    this.cardTypeId = args.cardTypeId || "";
+    this.reloadFlag = args.reloadFlag || "";
 };
 
-//¹¹½¨Ò»¸ö¿é¼¶×÷ÓÃÓò
-(function(){
+//æ„å»ºä¸€ä¸ªå—çº§ä½œç”¨åŸŸ
+(function () {
+
+    //ç§æœ‰æˆå‘˜å±æ€§
+    var _allowPayMent = "N";
+    var _isManyPayment = false; //æ˜¯å¦å¼€å¯å¤šç§æ”¯ä»˜
+    var _accMRowId = "";
+    var _prtRowIdStr = "";
+    var _episodeIdStr = "";
+    var _patientId = "";
+    var _cardNo = "";
+    var _cardTypeId = "";
+    var _reloadFlag = "";
+	var _payMConETP = {}          //å­˜æ”¾ç¬¬ä¸‰æ–¹äº¤æ˜“è¡¨RowId
 	
-	//Ë½ÓĞ³ÉÔ±ÊôĞÔ
-	var _allowPayMent = "N";
-	var _isManyPayment = false;  //ÊÇ·ñ¿ªÆô¶àÖÖÖ§¸¶
-	var _accMRowId = "";
-	var _prtRowIdStr = "";
-	var _episodeIdStr = "";
-	var _patientId = "";
-	var _cardNo = "";
-	var _cardTypeId = "";
-	var _reloadFlag = "";
-	/**
-	* Ö§¸¶·½Ê½ÁĞ±í
-	* @static @private
-	*/
-	var _payInfo = "";
-	/**
-	* Ö§¸¶·½Ê½ÈİÆ÷¶ÔÏó
-	* @static @private
-	*/
-	var _$container = null;
+    /**
+     * æ”¯ä»˜æ–¹å¼å®¹å™¨å¯¹è±¡
+     * @static @private
+     */
+    var _$container = null;
+
+    //é€‰ä¸­æ”¯ä»˜æ–¹å¼
+    var _selectedPayMode = function ($this) {
+        _$container.find('.select-item').removeClass('selected');
+        $this.addClass('selected');
+    }
+
+    //åˆå§‹åŒ–å‘ç¥¨é‡‘é¢ä¿¡æ¯
+    var _initInvAmtData = function () {
+        var invAmtInfo = $.m({ClassName: "web.DHCBillConsIF", MethodName: "GetInvAmtData", prtRowIdStr: _prtRowIdStr}, false);
+        var aryAmt = invAmtInfo.split("^");
+        setValueById("invAmt", aryAmt[0]);
+        setValueById("discAmt", aryAmt[1]);
+        setValueById("payorAmt", aryAmt[2]);
+        setValueById("patShareAmt", aryAmt[3]);
+        setValueById("insuAmt", aryAmt[4]);
+        var selfPayAmt = Number(aryAmt[3]).sub(aryAmt[4]).toFixed(2); //è‡ªè´¹æ”¯ä»˜é¢
+        setValueById("selfPayAmt", selfPayAmt);
+
+        _calcRoundErr(selfPayAmt);
+    }
 	
-	//Ñ¡ÖĞÖ§¸¶·½Ê½
-	var _selectedPayMode = function($this) {
-	   _$container.find('.select-item').removeClass('selected').removeAttr('paymode-selected');
-       $this.addClass('selected');
-       $this.attr('paymode-selected', 1);
-	}
-	
-	//³õÊ¼»¯·¢Æ±½ğ¶îĞÅÏ¢
-	var _initInvAmtData = function() {
-		var invAmtInfo = $.m({ClassName: "web.DHCBillConsIF", MethodName: "GetInvAmtData", prtRowIdStr: _prtRowIdStr}, false);
-		//È¡Ò½±£Ö§¸¶·½Ê½½ğ¶î
-		var invPayMAmtInfo = $.m({ClassName: "web.DHCBillConsIF", MethodName: "GetInvPayMAmtData", prtRowIdStr: _prtRowIdStr, flag: 0}, false);
-		var aryAmt = invAmtInfo.split("^");
-		setValueById("invAmt", aryAmt[0]);
-		setValueById("discAmt", aryAmt[1]);
-		setValueById("payorAmt", aryAmt[2]);
-		setValueById("patShareAmt", aryAmt[3]);
-		setValueById("ybAmt", aryAmt[4]);
-		var selfPayAmt = numCompute(aryAmt[3], aryAmt[4], "-");
-		setValueById("selfPayAmt", selfPayAmt);
-		setValueById("roundErrAmt", aryAmt[5]);
-		
-		_calcRoundErr(selfPayAmt);
-	}
-	
-	//¼ÆËãÏÖ½ğµÄ·Ö±ÒÎó²î
-	var _calcRoundErrCASH = function() {
-		var cashAmt = getValueById("txtPayMzCASH");
-		_calcRoundErr(cashAmt);
-	}
-	
-	//¼ÆËã·Ö±ÒÎó²î
-	var _calcRoundErr = function(cashAmt) {
-		var cashPayAmtRoundInfo = $.m({ClassName: "web.DHCBillConsIF", MethodName: "GetManyInvRoundErrAmt", prtRowIdStr: _prtRowIdStr, amt: cashAmt}, false);
-		var cashRoundSum = cashPayAmtRoundInfo.split("^")[0];
-		setValueById("roundCASHAmt", cashRoundSum);
-		setValueById("roundErrAmt", numCompute(cashRoundSum, cashAmt, "-"));
-		$("#roundErrAmt").attr("data", cashPayAmtRoundInfo.split("^")[1]);
-	}
-	
-	//ÅĞ¶ÏÊÇ·ñÊÇÄ¬ÈÏÖ§¸¶·½Ê½½ğ¶îÊäÈë¿ò
-	var _isDefaultPayMAmtTxtbox = function($this) {
-		return $this.hasClass('default-paymode-amt');
-	}
-	
-	//»ñÈ¡Ä¬ÈÏÖ§¸¶·½Ê½ÎÄ±¾¿òµ±Ç°½ğ¶î
-	var _getDefaultPayMAmt = function() {
-		return +(getValueById(_getDefaultPayMId()));  //¿¼ÂÇÎó²î½ğ¶î
-	}
-	
-	//»ñÈ¡Ä¬ÈÏÖ§¸¶·½Ê½ÎÄ±¾¿òid
-	var _getDefaultPayMId = function() {
-		var $defaultPayMAmt = _$container.find(".select-item-amt .default-paymode-amt");
-		return $defaultPayMAmt.attr('id');
-	}
-	
-	//»ñÈ¡Ä¬ÈÏÖ§¸¶Ö§¸¶·½Ê½´úÂë
-	var _getDefaultPayMCode = function() {
-		var $defaultPayM = _$container.find(".select-item-amt .default-paymode-amt");
-		return $defaultPayM.attr('id').split('z')[1];	
-	}
-	
-	//ÉèÖÃÄ¬ÈÏÖ§¸¶·½Ê½½ğ¶î
-	var _setDefaultPayMAmt = function(val) {
-		setValueById(_getDefaultPayMId(), val);
-	}
-	
-	//»ñÈ¡Ö§¸¶·½Ê½ÁĞ±íÖĞÏÖ½ğÖ§¸¶½ğ¶î
-	var _getCASHPayAmt = function() {
-		return +getValueById("txtPayMzCASH");
-	}
-	
-	//»ñÈ¡×Ô·Ñ½ğ¶î
-	var _getSelfPayAmt = function() {
-		return +getValueById("selfPayAmt");	
-	}
-	
-	//»ñÈ¡·Ö±ÒÎó²î½ğ¶î
-	var _getRoundErrAmt = function() {
-		return +getValueById("roundErrAmt");	
-	}
-	
-	//»ñÈ¡ÏÖ½ğÉáÈë½ğ¶î
-	var _getRoundCASHAmt = function() {
-		return +getValueById("roundCASHAmt");
-	}
-	
-	//»ñÈ¡»ñÈ¡Ö§¸¶·½Ê½½ğ¶îºÏ¼Æ
-	var _getAllPayMAmtSum = function() {
-		var sum = 0;
-		var inputs = _$container.find(".select-item-amt .paymode-amt");   //»ñÈ¡ËùÓĞÊäÈë¿ò
-    	$.each(inputs, function(index, element) {
-	    	sum += +($(element).val());
-	    });
-	    return sum;
-	}
-	
-	//»ñÈ¡ÔºÄÚÕË»§Óà¶î
-	var _getAccMBalance = function() {
-		var accMLeft = "";
-		if (_accMRowId) {
-			accMLeft = $.m({ClassName: "web.UDHCAccManageCLS", MethodName: "getAccBalance", Accid: _accMRowId}, false);
-		}
-		setValueById("accountBalance", accMLeft);
-		return accMLeft;
-	}
-	
-	//Ğ£ÑéÖ§¸¶·½Ê½ºÏ¼Æ½ğ¶îÊÇ·ñÕıÈ·
-	var _checkAllPayMAmtSum = function() {
-		if (_isManyPayment) {
-			var sum = _getAllPayMAmtSum();
-			var sefPayAmt = _getSelfPayAmt();
-			return (+sum == +sefPayAmt);
-		}else {
-			return true;  //µ¥Ö§¸¶·½Ê½Ä£Ê½²»ÓÃĞ£Ñé
-		}
-	}
-	
-	//Ğ£Ñé·Ö±ÒÎó²î½ğ¶îÊÇ·ñÕıÈ·
-	var _checkRoundAmt = function() {
-		var roundErrAmt = _getRoundErrAmt();
-		var sefPayAmt = _getSelfPayAmt();
-		var roundCASHAmt = _getRoundCASHAmt();
-		if (_isManyPayment) {
-			var cashPayAmt = _getCASHPayAmt();
-			return numCompute(cashPayAmt, roundErrAmt, "+") == +roundCASHAmt;
-		}else{
-			return numCompute(sefPayAmt, roundErrAmt, "+") == +roundCASHAmt;
-		}
-		return false;
-	}
-	
-	//ÖØÖÃÖ§¸¶·½Ê½ÁĞ±í½ğ¶î
-	var _resetPayMAmtTextbox = function() {
-		var inputs = _$container.find(".select-item-amt .paymode-amt");  //»ñÈ¡ËùÓĞÊäÈë¿ò
-    	$.each(inputs, function(index, element) {
-	    	$(element).removeAttr("data-oldval");
-	    	$(element).val("");
-	    });
-	}
-	
-	//¼ÆËãÖ§¸¶·½Ê½½ğ¶î¿òµÄ
-	//Ëã·¨¹æÔò£º
-	//		1.Ä¬ÈÏ¼ÓÔØÊ±£¬×Ô·Ñ½ğ¶îÔÚÄ¬ÈÏÖ§¸¶·½Ê½ÉÏ
-	//		2.ÊÕ·ÑÔªÌîĞ´·ÇÄ¬ÈÏÖ§¸¶·½Ê½½ğ¶îºó£¬×Ô¶¯¿Û¼õÄ¬ÈÏÖµÖ§¸¶·½Ê½½ğ¶î£¬Èç¹ûÄ¬ÈÏÖ§¸¶½ğ¶îĞ¡ÓÚ0£¬ÔòÌáÊ¾Òì³£¡£
-	//Ëã·¨´æÔÚµÄÎÊÌâ
-	//		1.Èç¹ûÊÕ·ÑÔ±ĞŞ¸ÄÁËÄ¬ÈÏÖ§¸¶·½Ê½µÄ½ğ¶î£¬½«µ¼ÖÂËã·¨Òì³£¡£
-	var _calcTextBoxPayMAmt = function($this, e) {
-		var oldVal = +($this.attr('data-oldval'));
-		var newVal = +($this.val());
-		var changeAmt = numCompute(newVal, oldVal, "-");
-		var defaultPayMAmt = _getDefaultPayMAmt();  //Ä¬ÈÏÖ§¸¶·½Ê½µ±Ç°½ğ¶î
-		var balance = numCompute(defaultPayMAmt, changeAmt, "-");
-		if (+balance < 0) {
-			if(oldVal == 0) {
-				oldVal = "";
-			}
-			$this.attr('data-oldval', oldVal);
-			$this.val(oldVal);
-			$this.validatebox("validate");
-			return false;
-		}
-		_setDefaultPayMAmt(balance);
-		
-		if($this.hasClass("CASH-class")){
-			_calcRoundErr(newVal);	
-		}else{
-			_calcRoundErrCASH();
-		}
-	}
-	
-	/**
-	* ³õÊ¼»¯¶àÖÖÖ§¸¶·½Ê½°´Å¥
-	* @static @private
-	*/
-	var _initAllowPayMentBtn = function() {
-	    $HUI.switchbox('#switchManyPayM', {
-	        onText: '¶àÖÖÖ§¸¶',
-	        offText: 'µ¥ÖÖÖ§¸¶',
-	        size: 'small',
-	        checked: false,
-	        onSwitchChange: function(e, obj) {
-	            _$container.find(".select-item-amt").toggleClass("hidden");
-	           	_isManyPayment = obj.value;
-	           	var defaultPayMCode = _getDefaultPayMCode();
-	           	//ÉèÖÃÄ¬ÈÏÖ§¸¶µÄ½ğ¶î
-		        var selfPayAmt = numCompute(getValueById("patShareAmt"), getValueById("ybAmt"), "-");
-	    		var defaultPayMId = _getDefaultPayMId();
-	            
-	            if(obj.value) {
-		            //¿ªÆô¶àÖÖÖ§¸¶
-	    			_setDefaultPayMAmt(selfPayAmt);
-	    			_calcRoundErrCASH();
-		            //¶¨Î»¹â±êµ½µÚÒ»¸ö·ÇÄ¬ÈÏÖ§¸¶½ğ¶î¿ò
-		         	var inputs = _$container.find(".select-item-amt .paymode-amt");  //»ñÈ¡ËùÓĞÊäÈë¿ò
-			    	$.each(inputs,function(index, element) {
-				    	if (!$(element).hasClass("default-paymode-amt")) {
-					    	$(element).get(0).focus();
-					    	_selectedPayMode($(element).parent().prev());
-					    	return false;
-					    }
-				    });
-	            }else {
-		        	_calcRoundErr(selfPayAmt);
-		        }
-	        }
-	    });
-	}
-	
-	/**
-	* ³õÊ¼»¯Ö§¸¶·½Ê½ÁĞ±íÑ¡ÔñÊÂ¼ş
-	* @param {String} Ö§¸¶ÁĞ±íÈİÆ÷Ñ¡ÔñÆ÷
-	* @param {String} »ØµôÊÂ¼ş£¬ÔİÊ±²»ÓÃ
-	* @static @private
-	*/
-    var _initSelectBox = function(selector, selectCallback) {
-    	_$container = $(selector);
-		
-		//°ó¶¨¿ì½İ¼ü
-		$(document).keydown(function(e) {
-			var keyCode = websys_getKey(e);
-			var hotKey = "";
-			$.each(_$container.find(".select-item[data]"), function(index, element) {
-				hotKey = $(this).attr("data").split("^")[6];
-				if (keyCode == KEYCODE[hotKey]) {
-					$(this).click();
-				}
-			});
+	var _getAdditionalData = function (paymId) {
+        return $.m({ClassName: "web.UDHCOPGSConfig", MethodName: "GetAdditionalData", payMode: paymId, groupId: PUBLIC_CONSTANT.SESSION.GROUPID, hospId: PUBLIC_CONSTANT.SESSION.HOSPID}, false);
+    }
+    
+    //è®¡ç®—ç°é‡‘çš„åˆ†å¸è¯¯å·®
+    var _calcRoundErrCASH = function () {
+        var cashAmt = _getCASHPayAmt();
+        _calcRoundErr(cashAmt);
+    }
+
+    //è®¡ç®—åˆ†å¸è¯¯å·®
+    var _calcRoundErr = function (cashAmt) {
+        var cashPayAmtRoundInfo = $.m({ClassName: "web.DHCBillConsIF", MethodName: "GetManyInvRoundErrAmt", prtRowIdStr: _prtRowIdStr, amt: cashAmt}, false);
+        var cashRoundSum = cashPayAmtRoundInfo.split("^")[0];
+        setValueById("roundCASHAmt", cashRoundSum);
+        setValueById("roundErrAmt", numCompute(cashRoundSum, cashAmt, "-"));
+        $("#roundErrAmt").attr("data", cashPayAmtRoundInfo.split("^")[1]);
+    }
+
+    //åˆ¤æ–­æ˜¯å¦æ˜¯é»˜è®¤æ”¯ä»˜æ–¹å¼é‡‘é¢è¾“å…¥æ¡†
+    var _isDefaultPayMAmtTxtbox = function ($this) {
+        return $this.hasClass('default-paymode-amt');
+    }
+
+    //è·å–é»˜è®¤æ”¯ä»˜æ–¹å¼æ–‡æœ¬æ¡†å½“å‰é‡‘é¢
+    var _getDefaultPayMAmt = function () {
+        return +$("#" + _getDefaultPayMId()).val();  //è€ƒè™‘è¯¯å·®é‡‘é¢
+    }
+
+    //è·å–é»˜è®¤æ”¯ä»˜æ–¹å¼æ–‡æœ¬æ¡†id
+    var _getDefaultPayMId = function () {
+        var $defaultPayMAmt = _$container.find(".select-item-amt .default-paymode-amt");
+        return $defaultPayMAmt.attr('id');
+    }
+
+    //è·å–é»˜è®¤æ”¯ä»˜æ”¯ä»˜æ–¹å¼ä»£ç 
+    var _getDefaultPayMCode = function () {
+        var $defaultPayM = _$container.find(".select-item-amt .default-paymode-amt");
+        return $defaultPayM.attr('id').split('z')[1];
+    }
+
+    //è®¾ç½®é»˜è®¤æ”¯ä»˜æ–¹å¼é‡‘é¢
+    var _setDefaultPayMAmt = function (val) {
+        setValueById(_getDefaultPayMId(), val);
+    }
+
+    //è·å–æ”¯ä»˜æ–¹å¼åˆ—è¡¨ä¸­ç°é‡‘æ”¯ä»˜é‡‘é¢
+    var _getCASHPayAmt = function () {
+        return +$("#txtPayMzCASH").val();
+    }
+
+    //è·å–è‡ªè´¹é‡‘é¢
+    var _getSelfPayAmt = function () {
+        return +$("#selfPayAmt").val();
+    }
+
+    //è·å–åˆ†å¸è¯¯å·®é‡‘é¢
+    var _getRoundErrAmt = function () {
+        return +$("#roundErrAmt").val();
+    }
+
+    //è·å–ç°é‡‘èˆå…¥é‡‘é¢
+    var _getRoundCASHAmt = function () {
+        return +$("#roundCASHAmt").val();
+    }
+
+    //è·å–è·å–æ”¯ä»˜æ–¹å¼é‡‘é¢åˆè®¡
+    var _getAllPayMAmtSum = function () {
+        var sum = 0;
+        var inputs = _$container.find(".select-item-amt .paymode-amt"); //è·å–æ‰€æœ‰è¾“å…¥æ¡†
+        $.each(inputs, function (index, element) {
+            sum = numCompute(sum, $(element).val(), "+");
+        });
+        return sum;
+    }
+
+    //æ ¡éªŒæ”¯ä»˜æ–¹å¼åˆè®¡é‡‘é¢æ˜¯å¦æ­£ç¡®
+    var _checkAllPayMAmtSum = function () {
+        if (_isManyPayment) {
+            var sum = _getAllPayMAmtSum();
+            var selfPayAmt = _getSelfPayAmt();
+            return +sum == +selfPayAmt;
+        }
+		return true; //å•æ”¯ä»˜æ–¹å¼æ¨¡å¼ä¸ç”¨æ ¡éªŒ
+    }
+
+    //æ ¡éªŒåˆ†å¸è¯¯å·®é‡‘é¢æ˜¯å¦æ­£ç¡®
+    var _checkRoundAmt = function () {
+        var roundErrAmt = _getRoundErrAmt();
+        var selfPayAmt = _getSelfPayAmt();
+        var roundCASHAmt = _getRoundCASHAmt();
+        if (_isManyPayment) {
+            var cashPayAmt = _getCASHPayAmt();
+            return numCompute(cashPayAmt, roundErrAmt, "+") == +roundCASHAmt;
+        }
+		return numCompute(selfPayAmt, roundErrAmt, "+") == +roundCASHAmt;
+    }
+
+    //è®¡ç®—æ”¯ä»˜æ–¹å¼é‡‘é¢æ¡†çš„
+    //ç®—æ³•è§„åˆ™ï¼š
+    //		1.é»˜è®¤åŠ è½½æ—¶ï¼Œè‡ªè´¹é‡‘é¢åœ¨é»˜è®¤æ”¯ä»˜æ–¹å¼ä¸Š
+    //		2.æ”¶è´¹å‘˜å¡«å†™éé»˜è®¤æ”¯ä»˜æ–¹å¼é‡‘é¢åï¼Œè‡ªåŠ¨æ‰£å‡é»˜è®¤å€¼æ”¯ä»˜æ–¹å¼é‡‘é¢ï¼Œå¦‚æœé»˜è®¤æ”¯ä»˜é‡‘é¢å°äº0ï¼Œåˆ™æç¤ºå¼‚å¸¸ã€‚
+    //ç®—æ³•å­˜åœ¨çš„é—®é¢˜
+    //		1.å¦‚æœæ”¶è´¹å‘˜ä¿®æ”¹äº†é»˜è®¤æ”¯ä»˜æ–¹å¼çš„é‡‘é¢ï¼Œå°†å¯¼è‡´ç®—æ³•å¼‚å¸¸ã€‚
+    var _calcTextBoxPayMAmt = function ($this, e) {
+        var oldVal = $this.attr('data-oldval') ? +$this.attr('data-oldval') : 0;
+        var newVal = $this.val() ? +$this.val() : 0;
+        var changeAmt = numCompute(newVal, oldVal, "-");
+        var defaultPayMAmt = _getDefaultPayMAmt();   //é»˜è®¤æ”¯ä»˜æ–¹å¼å½“å‰é‡‘é¢
+        var balance = numCompute(defaultPayMAmt, changeAmt, "-");
+        if (balance < 0) {
+            if (oldVal == 0) {
+                oldVal = "";
+            }
+            $this.attr("data-oldval", oldVal);
+            $this.val(oldVal);
+            $this.validatebox("validate");
+            return false;
+        }
+        _setDefaultPayMAmt(balance);
+        if ($this.hasClass("CASH-class")) {
+            _calcRoundErr(newVal);
+            return;
+        }
+        _calcRoundErrCASH();
+    }
+
+    /**
+     * åˆå§‹åŒ–å¤šç§æ”¯ä»˜æ–¹å¼æŒ‰é’®
+     * @static @private
+     */
+    var _initAllowPaymentBtn = function () {
+        $HUI.switchbox('#switchManyPayM', {
+            onText: 'å¤šç§æ”¯ä»˜',
+            offText: 'å•ç§æ”¯ä»˜',
+            size: 'small',
+            checked: false,
+            onSwitchChange: function (e, obj) {
+	         	_isManyPayment = obj.value;
+                _$container.find(".select-item-amt").toggleClass("hidden");
+                var defaultPayMCode = _getDefaultPayMCode();
+                var selfPayAmt = numCompute(getValueById("patShareAmt"), getValueById("insuAmt"), "-");
+                var inputs = _$container.find(".select-item-amt .paymode-amt"); //è·å–æ‰€æœ‰è¾“å…¥æ¡†
+                if (_isManyPayment) {
+                    //å¼€å¯å¤šç§æ”¯ä»˜æ—¶ï¼Œè®¾ç½®é»˜è®¤æ”¯ä»˜çš„é‡‘é¢
+                    _setDefaultPayMAmt(selfPayAmt);
+                    _calcRoundErrCASH();
+                    //å®šä½å…‰æ ‡åˆ°ç¬¬ä¸€ä¸ªéé»˜è®¤æ”¯ä»˜é‡‘é¢æ¡†
+                    $.each(inputs, function (index, element) {
+                        if (!$(element).hasClass("default-paymode-amt")) {
+                            $(element).get(0).focus();
+                            _selectedPayMode($(element).parent().prev());
+                            return false;
+                        }
+                    });
+                } else {
+	            	inputs.numberbox("clear");
+	                _selectedPayMode($(".default-paymode"));
+                    _calcRoundErr(selfPayAmt);
+                }
+            }
+        });
+    }
+
+    /**
+     * åˆå§‹åŒ–æ”¯ä»˜æ–¹å¼åˆ—è¡¨é€‰æ‹©äº‹ä»¶
+     * @param {String} æ”¯ä»˜åˆ—è¡¨å®¹å™¨é€‰æ‹©å™¨
+     * @param {String} å›æ‰äº‹ä»¶ï¼Œæš‚æ—¶ä¸ç”¨
+     * @static @private
+     */
+    var _initSelectBox = function (selector, callback) {
+        _$container = $(selector);
+
+        //ç»‘å®šå¿«æ·é”®
+        $(document).keydown(function (e) {
+            var key = websys_getKey(e);
+            //é˜»æ­¢é»˜è®¤äº‹ä»¶
+            prevDefHotKey(e);
+            
+			//é¡µé¢è®¾ç½®çš„å¿«æ·é”®
+            var hotKey = "";
+            $.each(_$container.find(".select-item[data]"), function (index, element) {
+                hotKey = $(this).attr("data").split("^")[6];
+                if (key == KEYCODE[hotKey]) {
+                    $(this).click();
+                }
+            });
+            
 			cancelBubble(e);
-		});
+        });
 
-    	//¶àÖÖÖ§¸¶·½Ê½Ê±£¬¸øÄ¬ÈÏÖ§¸¶·½Ê½ÉèÖÃÄ¬ÈÏ½ğ¶î
-    	if (_allowPayMent == "Y") {
-	    	//var selfPayAmt = getValueById("patShareAmt") - getValueById("ybAmt");
-	    	//var defaultPayMId = _getDefaultPayMId();
-	    	//_setDefaultPayMAmt(selfPayAmt);
-	    	//ÎªËùÓĞµÄ½ğ¶îÊäÈë¿ò¼ÓÑéÖ¤
-	    	var inputs = _$container.find(".select-item-amt .paymode-amt");  //»ñÈ¡ËùÓĞÊäÈë¿ò
-	    	$.each(inputs, function(index, element) {
-		    	$(element).validatebox({
-					//required: true,
-		    		validType: "lessthanzero['.container .select-item-amt .paymode-amt', '#selfPayAmt']"
-				});
-		    });
-	    };
-		
-	    //¿òÑ¡ÊÂ¼ş
-	    _$container
-	    	//½«½¹µã¶¨Î»µ½ÈİÆ÷
-	    	.focus()
-	        //µãÑ¡ÇĞ»»Ñ¡ÖĞÊÂ¼ş
-	        .on('click', '.select-item', function(e) {
-		        var payMCode = $(this).attr('id').split("z")[1];
-		        var txtPayMAmtId = $(this).next().find(":first-child");
-	            if ($(this).hasClass('selected')) {
-	                //$(this).removeClass('selected');
-	            } else {
-		            _$container.find('.select-item').removeClass('selected').removeAttr('paymode-selected');
-	                $(this).addClass('selected');
-	                $(this).attr('paymode-selected', 1);
+        if (_allowPayMent == "Y") {
+            //ä¸ºæ‰€æœ‰çš„é‡‘é¢è¾“å…¥æ¡†åŠ éªŒè¯
+            var inputs = _$container.find(".select-item-amt .paymode-amt"); //è·å–æ‰€æœ‰è¾“å…¥æ¡†
+            $.each(inputs, function (index, element) {
+                $(element).validatebox({
+                    //required: true,
+                    validType: "lessthanzero['.container .select-item-amt .paymode-amt', '#selfPayAmt']"
+                });
+            });
+        };
+
+        //æ¡†é€‰äº‹ä»¶
+        _$container
+        //å°†ç„¦ç‚¹å®šä½åˆ°å®¹å™¨
+        .focus()
+        //ç‚¹é€‰åˆ‡æ¢é€‰ä¸­äº‹ä»¶
+        .on('click', '.select-item', function (e) {
+            if (!$(this).hasClass('selected')) {
+	            _selectedPayMode($(this));
+            }
+            if ($(this).next().hasClass('hidden')) {
+                _selectedPayMClick($(this), e);
+            } else {
+                $(this).next().find(":first-child").focus();
+            }
+        })
+        //ç‚¹é€‰å…¨é€‰å…¨ä¸é€‰,é¢„ç•™ï¼Œä»¥åä¾›å¤šç§æ”¯ä»˜æ–¹å¼ä½¿ç”¨
+        .on('click', '.toggle-all-btn', function (e) {
+            if ($(this).attr('data-all')) {
+                $(this).removeAttr('data-all');
+                _$container.find('.select-item').removeClass('selected');
+            } else {
+                $(this).attr('data-all', 1);
+                _$container.find('.select-item').addClass('selected');
+            }
+        })
+        //æ”¯ä»˜æ–¹å¼é‡‘é¢æ¡†é€‰ä¸­äº‹ä»¶
+        .on('click', '.select-item-amt', function (e) {
+            _selectedPayMode($(this).prev());
+        })
+        .on('keydown', '.select-item-amt input', function (e) {
+            var key = websys_getKey(e);
+            if (key == 13) {
+                if ($(e.target).is('input')) {
+                    var inputs = _$container.find(".select-item-amt .paymode-amt"); //è·å–æ‰€æœ‰è¾“å…¥æ¡†
+                    var idx = inputs.index(this);  //è·å–å½“å‰è¾“å…¥æ¡†çš„ä½ç½®ç´¢å¼•
+                    var step = 1;
+                    if (idx == inputs.length - 1) {
+                        //åˆ¤æ–­æ˜¯å¦æ˜¯æœ€åä¸€ä¸ªè¾“å…¥æ¡†
+                        idx = -1;
+                        focusById("btn-ok");
+                        return;
+                    }
+                    if (_isDefaultPayMAmtTxtbox($(inputs[idx + step]))) {    //åˆ¤æ–­æ˜¯å¦æ˜¯é»˜è®¤æ”¯ä»˜æ–¹å¼è¾“å…¥æ¡†ï¼Œå¦‚æœæ˜¯å°±è·³è¿‡
+                        step++;
+                    }
+                    $(inputs[idx + step]).focus().select();
+                    _selectedPayMode($(inputs[idx + step]).parent().prev());
+                    e.stopPropagation();
+                }
+            }
+        })
+        .on('focus', '.select-item-amt input', function (e) {
+            if ($(e.target).is('input')) {
+                $(this).attr('data-oldval', $(this).val());
+                enableById('btn-ok');
+                e.stopPropagation();
+            }
+        })
+        .on('blur', '.select-item-amt input', function (e) {
+            if ($(e.target).is('input')) {
+                _calcTextBoxPayMAmt($(this), e);
+                if (!+$(this).val()) {
+	                return false;
 	            }
-	            if ($(this).next().hasClass('hidden')) {
-		        	_selectedPayMClick($(this), e);
-		        }else {
-			        txtPayMAmtId.focus();
+                //éªŒè¯é‡‘é¢æ˜¯å¦åˆæ³•
+                var thisId = $(this).attr('id');
+                var payMCode = thisId.split("z")[1];
+                var bool = _checkPayM(payMCode);
+                if (!bool) {
+                    focusById(thisId);
+                    return false;
+                }
+                e.stopPropagation();
+            }
+        })
+        .on('click', '.select-item .paym-additionaldata-flag', function (e) {
+            if ($(e.target).is('span')) {
+                var $payMode = $(this).parent();
+                _selectedPayMode($payMode);
+                _showAddDataDlg($payMode);
+            }
+            e.stopPropagation();
+        });
+    };
+
+    //é€‰ä¸­æ”¯ä»˜æ–¹å¼
+    var _selectedPayMClick = function ($this, e) {
+        enableById('btn-ok');
+        var payMCode = $this.attr('id').split('z')[1];
+        switch(payMCode) {
+	    case "CASH":
+	    	setTimeout(function () {
+                focusById("actualMoney");
+            }, 100);
+	    	break;
+	    case "QF":
+	    	_checkQF(payMCode);
+	    	break;
+	    case "CPP":
+	    	_checkCPP(payMCode);
+	    	break;
+	    default:
+	    	setTimeout(function () {
+                focusById("btn-ok");
+            }, 100);
+	    }
+    }
+
+    /**
+     * åˆå§‹åŒ–æŒ‰é’®äº‹ä»¶
+     * @static @private
+     */
+    var _initButtonEvents = function (selector, callback) {
+        var $linkbuttons = $(selector);
+        $linkbuttons.each(function (index, element) {
+            $(this).click(function (e) {
+                switch ($(this).attr("id")) {
+                case "btn-ok":
+                    _okClick(e);
+                    break;
+                case "btn-cancel":
+                    _cancelClick(e);
+                    break;
+                case "btn-reset":
+                    _resetClick(e);
+                    break;
+                default:
+                }
+            });
+        });
+    };
+
+    /**
+     * åˆå§‹åŒ–æ–‡æœ¬æ¡†äº‹ä»¶
+     * @static @private
+     */
+    var _initTextboxEvents = function () {
+	    //å®æ”¶
+	    $("#actualMoney")
+	    .keydown(function (e) {
+	        var key = websys_getKey(e);
+	        if (key == 13) {
+		        if (!CV.NeedActualMoney || ($(e.target).val())) {
+			        setTimeout(function () {
+		                focusById("btn-ok");
+		            }, 100);
 			    }
-			    /*
-	         	var aryData = $(this).attr('data').split("^");
-				var requiredFlag = aryData[3];  //Y-ÓĞ±ØÌîĞÅÏ¢£¬N£ºÎŞ
-				if(requiredFlag == "Y") {
-					$(".required-info").toggleClass("hidden");
-				}
-				*/
-	        })
-	        //µãÑ¡È«Ñ¡È«²»Ñ¡,Ô¤Áô£¬ÒÔºó¹©¶àÖÖÖ§¸¶·½Ê½Ê¹ÓÃ
-	        .on('click', '.toggle-all-btn', function(e) {
-	            if ($(this).attr('data-all')) {
-	                $(this).removeAttr('data-all');
-	                _$container.find('.select-item').removeClass('selected');
+	        }
+	    })
+	    .blur(function (e) {
+		    if ($(e.target).val()) {
+			    return _validActualMoney();
+			}
+	    });
+	}
+	
+	var _validActualMoney = function() {
+		var actualMoney = $("#actualMoney").val();
+		if (!CV.NeedActualMoney && !actualMoney) {
+			return true;
+		}
+     	var roundCASHAmt = $("#roundCASHAmt").val();
+   		var change = numCompute(actualMoney, roundCASHAmt, "-");
+   		if (change < 0) {
+            $.messager.popover({msg: "å®æ”¶é‡‘é¢è¾“å…¥é”™è¯¯", type: "info"});
+            $("#actualMoney").focus().select();
+        } else {
+	        $("#backChange").val(change);
+	    }
+        return !(change < 0);
+	}
+	
+    //é™„åŠ æ•°æ®å¼¹å‡ºå¯¹è¯æ¡†
+    var _showAddDataDlg = function ($this) {
+        var payMDr = $this.attr("data").split('^')[0];
+        var opt = {
+         	title: 'é™„åŠ æ•°æ®',
+        	payMode: payMDr,
+        	patientId: _patientId
+        };
+        var additionObj = new dhcbill.opbill.checkout.AdditionData(opt);
+        additionObj.show(function (code, obj) {
+            if (code) {
+                $this.data("additionalData", obj);
+            }
+        });
+    }
+    
+    //ç¡®è®¤æŒ‰é’®äº‹ä»¶
+    var _okClick = function (e) {
+        if ($("#btn-ok").linkbutton("options").disabled) {
+            return;
+        }
+
+        if (!_paym.validate() || !_paym.required()) {
+            return;
+        }
+
+        //è°ƒç”¨ç¬¬ä¸‰æ–¹æ¥å£ï¼Œ_ok()åœ¨æ­¤æ–¹æ³•ä¸­è°ƒç”¨
+    	_paySrv.check();
+    }
+	
+	//æ”¯ä»˜æˆåŠŸåè¿”å›ä¸»ç•Œé¢
+	var _ok = function () {
+		var paymStr = _paym.info();
+		if (paymStr == "") {
+            $.messager.popover({msg: "è·å–æ”¯ä»˜æ–¹å¼æ•°æ®é”™è¯¯", type: "error"});
+            return;
+        }
+        var rtnValue = {
+	        code: true,
+          	message: paymStr
+    	};
+        websys_showModal("options").callbackFunc(rtnValue);
+        websys_showModal("close");
+	}
+	
+    //å–æ¶ˆæŒ‰é’®äº‹ä»¶
+    var _cancelClick = function (e) {
+        var rtnValue = {
+		    code: false,
+		    message: "å–æ¶ˆ"
+		};
+        websys_showModal("options").callbackFunc(rtnValue);
+        websys_showModal("close");
+    }
+
+    //é‡ç½®æŒ‰é’®äº‹ä»¶
+    var _resetClick = function (e) {
+        location = location;
+    }
+
+    //æ ¡éªŒæ”¯ä»˜æ–¹å¼
+    var _checkPayM = function (payMCode) {
+        if (!_checkAllPayMAmtSum()) {
+            //_checkPayMæ–¹æ³•åœ¨onbluräº‹ä»¶è°ƒç”¨ï¼Œç”¨confirmä¼šæœ‰æ­»å¾ªç¯ï¼Œå…ˆæ”¹ä¸ºæç¤º
+            $.messager.popover({msg: "æ”¯ä»˜æ–¹å¼é‡‘é¢åˆè®¡ä¸æ‚£è€…è‡ªè´¹é‡‘é¢ä¸ç­‰ï¼Œè¯·é‡ç½®", type: "info"});
+            return false;
+        }
+
+        if (!_checkRoundAmt()) {
+            $.messager.popover({msg: "ç°é‡‘åˆ†å¸è¯¯å·®é‡‘é¢ä¸å¹³ï¼Œè¯·é‡ç½®", type: "info"});
+            return false;
+        }
+
+        if (!_checkCPP(payMCode)) {
+            return false;
+        }
+        
+        if (!_checkQF(payMCode)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    //é¢„äº¤é‡‘å……å€¼
+    var _accPayDeposit = function (payMAmt) {
+        var url = "dhcbill.opbill.accdep.pay.csp?WinFrom=opcharge&AccMRowID=" + _accMRowId;
+        url += "&CardNo=" + _cardNo + "&CardTypeRowId=" + _cardTypeId + "&PatientID=" + _patientId;
+        url += "&PatFactPaySum=" + payMAmt;
+        websys_showModal({
+            url: url,
+            title: 'å……å€¼',
+            iconCls: 'icon-w-inv',
+            width: '85%',
+            height: '85%',
+            callbackFunc: function () {
+                if (_isManyPayment) {
+                    //å¤šç§æ”¯ä»˜æ–¹å¼æ—¶ï¼Œå…‰æ ‡å®šä½åˆ°é¢„äº¤é‡‘æ”¯ä»˜çš„ä¸‹ä¸€ä¸ªæ”¯ä»˜æ–¹å¼
+                } else {
+                    //å•æ”¯ä»˜æ–¹å¼ï¼Œè§¦å‘ç¡®å®šæŒ‰é’®å•å‡»äº‹ä»¶
+                    setTimeout(function () {
+                        $("#btn-ok").click();
+                    }, 50);
+                }
+            }
+        });
+    }
+
+    //æ ¡éªŒé¢„äº¤é‡‘æ”¯ä»˜æ–¹å¼
+    var _checkCPP = function (payMCode) {
+        if (payMCode != "CPP") {
+            return true;
+        }
+        var payMAmt =  _isManyPayment ? $('#txtPayMzCPP').val() : _getSelfPayAmt();
+        if (payMAmt == 0) {
+            return true;  //é‡‘é¢ä¸º0æ—¶ä¸ç”¨æ ¡éªŒ
+        }
+        if (!_accMRowId) {
+	        $.messager.popover({msg: "æ— æœ‰æ•ˆè´¦æˆ·ï¼Œä¸èƒ½ä½¿ç”¨é¢„äº¤é‡‘æ”¯ä»˜æˆ–é€€æ¬¾", type: "info"});
+	        return false;
+	    }
+	    if (+_accMLeft >= +payMAmt) {
+		    return true;
+		}
+	   var msg = "ä½™é¢ä¸è¶³ï¼Œè¯·å…ˆå……å€¼ <font color='red'>" + numCompute(payMAmt, accMLeft, "-") + "</font> å…ƒ";
+	    if (_reloadFlag) {
+            $.messager.popover({msg: msg, type: "info"});
+            return false;
+        }
+        msg += "<br>æ˜¯å¦å……å€¼ï¼Ÿ";
+        $.messager.confirm("ç¡®è®¤", msg, function (r) {
+            if (!r) {
+                return;
+            }
+            _accPayDeposit(payMAmt);
+        });
+        return false;
+    }
+
+    //æ ¡éªŒæ¬ è´¹æ”¯ä»˜æ–¹å¼
+    var _checkQF = function (payMCode) {
+        var bool = true;
+        if (payMCode != "QF") {
+            return bool;
+        }
+        var payMAmt = _isManyPayment ? $('#txtPayMzQF').val() : _getSelfPayAmt();
+        if (payMAmt == 0) {
+            return bool;     //é‡‘é¢ä¸º0æ—¶ä¸ç”¨æ ¡éªŒ
+        }
+        if (!CV.WarrPay) {
+            return bool;     //é…ç½®ä¸éœ€æ‹…ä¿æ—¶ä¸å†æ ¡éªŒ
+        }
+        var rtn = $.m({ClassName: "web.DHCOPQFPat", MethodName: "CheckWarBal", admStr: _episodeIdStr, payAmt: payMAmt, sFlag: 0}, false);
+        if (rtn == 0) {
+	        return bool;
+	    }
+	    var myAry = rtn.split("^");
+	    $.messager.popover({msg: (myAry[1] || myAry[0]), type: "info"});
+	    disableById("btn-ok");
+        return false;
+    }
+
+    //éªŒè¯æ”¯ä»˜æ–¹å¼
+    var _paym = {
+	    validate: function() {
+		    var bool = true;
+	        if (_$container) {
+	            if (_isManyPayment) {
+	                var inputs = _$container.find(".select-item-amt .paymode-amt"); //è·å–æ‰€æœ‰è¾“å…¥æ¡†
+	                $.each(inputs, function (index, element) {
+	                    var payMAmt = +$(element).val();
+	                    if (payMAmt == 0) {
+	                        return true;
+	                    }
+	                    var aryData = $(element).attr('data').split("^");
+	                    var payMCode = aryData[1];
+	                    if (!_checkPayM(payMCode)) {
+	                        bool = false;
+	                        return false;
+	                    }
+	                    if ((payMCode == "CASH") && (!_validActualMoney())) {
+	                     	bool = false;
+	                        return false;
+	                    }
+	                });
 	            } else {
-	                $(this).attr('data-all', 1);
-	                _$container.find('.select-item').addClass('selected');
+	                var $selectPayMode = _$container.find(".selected");
+	                if ($selectPayMode.length > 0) {
+	                    var aryData = $selectPayMode.attr('data').split("^");
+	                    var payMCode = aryData[1];
+	                    if (!_checkPayM(payMCode)) {
+	                        bool = false;
+	                    }
+	                    if ((payMCode == "CASH") && (!_validActualMoney())) {
+	                     	bool = false;
+	                        return false;
+	                    }
+	                }
 	            }
-	        })
-	        //Ö§¸¶·½Ê½½ğ¶î¿òÑ¡ÖĞÊÂ¼ş
-	        .on('click', '.select-item-amt', function(e) {
-		        _selectedPayMode($(this).prev());
-		    })
-		    .on('keydown', '.select-item-amt input', function(e) {
-				var key = websys_getKey(e);
-				if (key == 13) {
-					if ($(e.target).is('input')) {
-						//_calcTextBoxPayMAmt($(this), e);
-						var inputs = _$container.find(".select-item-amt .paymode-amt");  //»ñÈ¡ËùÓĞÊäÈë¿ò
-						var idx = inputs.index(this);  //»ñÈ¡µ±Ç°ÊäÈë¿òµÄÎ»ÖÃË÷Òı
-						var step = 1;
-						if (idx == inputs.length - 1) {
-							//ÅĞ¶ÏÊÇ·ñÊÇ×îºóÒ»¸öÊäÈë¿ò
-							idx = -1;
-							focusById("btn-ok");
-							return;
-						}else {
-							
-						}
-						if (_isDefaultPayMAmtTxtbox($(inputs[idx + step]))) { //ÅĞ¶ÏÊÇ·ñÊÇÄ¬ÈÏÖ§¸¶·½Ê½ÊäÈë¿ò£¬Èç¹ûÊÇ¾ÍÌø¹ı
-							step++;
-						}
-						inputs[idx + step].focus();
-						inputs[idx + step].select();
-						_selectedPayMode($(inputs[idx + step]).parent().prev());
-						e.stopPropagation();
-					}
-				}
-			})
-			.on('focus', '.select-item-amt input', function(e) {
-				if ($(e.target).is('input')) {
-					$(this).attr('data-oldval',$(this).val());
-					enableById('btn-ok');
-					e.stopPropagation();
-				}
-			})
-			.on('blur', '.select-item-amt input', function(e) {
-				if ($(e.target).is('input')) {
-					_calcTextBoxPayMAmt($(this), e);
-					//ÑéÖ¤½ğ¶îÊÇ·ñºÏ·¨
-					var thisId = $(this).attr('id');
-					var payMCode = thisId.split("z")[1];
-					var bool = validatePayM(payMCode);
-					if (!bool) {
-						focusById(thisId);
-						return false;
-					}
-					e.stopPropagation();
-				}
-			})
-			.on('click', '.select-item .paym-additionaldata-flag', function(e) {
-				if ($(e.target).is('span')) {
-					var $payMode = $(this).parent();
-					_selectedPayMode($payMode);
-					_showAddDataDlg($payMode);
-				}
-				e.stopPropagation();
-			});
-	};
-	
-	//Ñ¡ÖĞÖ§¸¶·½Ê½
-	var _selectedPayMClick = function($this, e) {
-		enableById('btn-ok');
-		var payMCode = $this.attr('id').split("z")[1];
-		
-		if(!_checkCPP(payMCode)) {
-			return false;
-		}
-		
-		if(!_checkQF(payMCode)) {
-			return false;
-		}
-		
-		if (payMCode == "CASH") {
-			setTimeout(function() {
-					focusById("actualMoney");
-				}, 100);
-		}else if(payMCode=="QF") {
-			
-		}else if(payMCode=="CPP") {
-			
-		}else if(payMCode=="CCP") {
-				
-		}else{
-			setTimeout(function() {
-					focusById("btn-ok");
-				}, 100);
-		}
-	}
+	        }
+	        return bool;
+		},
+		//éªŒè¯é™„åŠ ä¿¡æ¯å¿…å¡«é¡¹
+		required: function() {
+			var bool = true;
+	        if (_$container) {
+	            if (_isManyPayment) {
+	                var inputs = _$container.find(".select-item-amt .paymode-amt");  //è·å–æ‰€æœ‰è¾“å…¥æ¡†
+	                $.each(inputs, function (index, element) {
+	                    var payMAmt = +$(element).val();
+	                    if (payMAmt == 0) {
+	                        return true;
+	                    }
+	                    var aryData = $(element).attr('data').split("^");
+	                    var payMDr = aryData[0];
+	                    var payMCode = aryData[1];
+	                    var payMDesc = aryData[2];
+	                    var requiredFlag = aryData[3];
+	                    if (requiredFlag == "Y") {
+	                        var $payMode = $(element).parent().prev();
+	                        var addiObj = $(element).parent().prev().data("additionalData") || {};
+	                        var payMAddiStr = _getAdditionalData(payMDr);
+	                        var myAry, code, desc, isRequired;
+	                        $.each(payMAddiStr.split("^"), function (index, item) {
+		                        myAry = item.split("!");
+	                          	code = myAry[0];
+	                        	desc = myAry[1];
+	                          	isRequired = myAry[2];
+	                            if (isRequired == "Y") {
+	                                if (!addiObj[code]) {
+	                                    bool = false;
+	                                    _showAddDataDlg($payMode);
+	                                    return false;
+	                                }
+	                            }
+	                        });
+	                    }
+	                    return bool;
+	                });
+	            } else {
+	                var $selectPayMode = _$container.find(".selected");
+	                if ($selectPayMode.length > 0) {
+	                    var aryData = $selectPayMode.attr('data').split("^");
+	                    var payMDr = aryData[0];
+	                    var payMCode = aryData[1];
+	                    var payMDesc = aryData[2];
+	                    var requiredFlag = aryData[3];
+	                    if (requiredFlag == "Y") {
+	                    	var addiObj = $selectPayMode.data("additionalData") || {};
+	                        var payMAddiStr = _getAdditionalData(payMDr);
+							var myAry, code, desc, isRequired;
+	                        $.each(payMAddiStr.split("^"), function (index, item) {
+		                        myAry = item.split("!");
+	                          	code = myAry[0];
+	                           	desc = myAry[1];
+	                           	isRequired = myAry[2];
+	                            if (isRequired == "Y") {
+	                                if (!addiObj[code]) {
+	                                    bool = false;
+	                                    _showAddDataDlg($selectPayMode);
+	                                    return false;
+	                                }
+	                            }
+	                        });
+	                    }
+	                }
+	            }
+	        }
+	        return bool;
+		},
+		//ç”Ÿæˆæ”¯ä»˜æ–¹å¼ä¸²
+		info: function() {
+			var payMAry = [];
+	        if (_$container) {
+	            if (_isManyPayment) {
+	                var inputs = _$container.find(".select-item-amt .paymode-amt"); //è·å–æ‰€æœ‰è¾“å…¥æ¡†
+	                $.each(inputs, function (index, element) {
+	                    var payMAmt = +$(element).val();
+	                    if (payMAmt == 0) {
+	                        return true;
+	                    }
+	                    var aryData = $(element).attr("data").split("^");
+	                    var payMDr = aryData[0];
+	                    var payMCode = aryData[1];
+	                    var addiObj = $(element).parent().prev().data("additionalData") || {};
+	                    var myPayCard = addiObj.PayCard || "";  //æ”¯ä»˜å¡å·ï¼Œå¯¹é™¢å†…è´¦å·æ”¯ä»˜æ—¶ä¼ è´¦å·rowid
+	                    var myPatUnitDr = addiObj.HCP || "";
+	                    var myBankDr = addiObj.Bank || "";
+	                    var myCheckNo = addiObj.CheckNO || "";
+	                    var myChequeDate = addiObj.CheckDate || "";
+	                    var myPayAccNo = addiObj.PayAccNO || "";
+	                    var invRoundErrDetails = "";
+	                    var actualMoney = "";
+	                    var backChange = "";
+	                    if (payMCode == "CASH") {
+	                        payMAmt = _getRoundCASHAmt();
+	                        invRoundErrDetails = $("#roundErrAmt").attr("data");
+	                     	actualMoney = $("#actualMoney").val(); //å®æ”¶
+	                     	backChange = $("#backChange").val();   //æ‰¾é›¶
+	                    }
+						var ETPRowID = _payMConETP[payMDr] || "";   //ç¬¬ä¸‰æ–¹æ”¯ä»˜äº¤æ˜“è¡¨RowId
+						
+	                    var tmpStr = payMDr + "^" + myBankDr + "^" + myCheckNo + "^" + myPayCard;
+						tmpStr += "^" + myPatUnitDr + "^" + myChequeDate + "^" + myPayAccNo;
+						tmpStr += "^" + payMAmt + "^" + invRoundErrDetails + "^" + actualMoney;
+						tmpStr += "^" + backChange + "^" + ETPRowID;
+	                    tmpStr = tmpStr.replace(/undefined/g, ""); //æ›¿æ¢æ‰€æœ‰çš„undefined
+	                    payMAry.push(tmpStr);
+	                });
+	            } else {
+	                var $selectPayMode = _$container.find(".selected");
+	                if ($selectPayMode.length > 0) {
+	                    var aryData = $selectPayMode.attr("data").split("^");
+	                    var payMDr = aryData[0];
+	                    var payMCode = aryData[1];
 
-	/**
-	* ³õÊ¼»¯°´Å¥ÊÂ¼ş
-	* @static @private
-	*/
-	var _initButtonEvents = function(selector, selectCallback){
-		var $linkbuttons = $(selector);
-		$linkbuttons.each(function(index, element) {
-			$(this).on('click',function(e) {
-				switch($(this).attr("id")) {
-				case "btn-ok":
-					_btnOkClick(e);
-					break;
-				case "btn-cancel":
-					_btnCancelClick(e);
-					break;
-				case "btn-reset":
-					_btnResetClick(e);
-					break;
-				default:
-				}
-			});
-		})
+	                    var addiObj = $selectPayMode.data("additionalData") || {};
+	                    var myPayCard = addiObj.PayCard || "";   //æ”¯ä»˜å¡å·ï¼Œå¯¹é™¢å†…è´¦å·æ”¯ä»˜æ—¶ä¼ è´¦æˆ·rowid
+	                    var myPatUnitDr = addiObj.HCP || "";
+	                    var myBankDr = addiObj.Bank || "";
+	                    var myCheckNo = addiObj.CheckNO || "";
+	                    var myChequeDate = addiObj.CheckDate || "";
+	                    var myPayAccNo = addiObj.PayAccNO || "";
+
+	                    var selfPayAmt = _getSelfPayAmt();
+	                    var invRoundErrDetails = "";
+	                    if (payMCode == "CASH") {
+	                        selfPayAmt = _getRoundCASHAmt();
+	                        invRoundErrDetails = $("#roundErrAmt").attr("data");
+	                    }
+	                    var actualMoney = $("#actualMoney").val();     //å®æ”¶
+	                    var backChange = $("#backChange").val();       //æ‰¾é›¶
+						var ETPRowID = _payMConETP[payMDr] || "";      //ç¬¬ä¸‰æ–¹æ”¯ä»˜äº¤æ˜“è¡¨RowId
+						
+	                    var tmpStr = payMDr + "^" + myBankDr + "^" + myCheckNo + "^" + myPayCard;
+						tmpStr += "^" + myPatUnitDr + "^" + myChequeDate + "^" + myPayAccNo;
+						tmpStr += "^" + selfPayAmt + "^" + invRoundErrDetails + "^" + actualMoney;
+						tmpStr += "^" + backChange + "^" + ETPRowID;
+	                    tmpStr = tmpStr.replace(/undefined/g, ""); //æ›¿æ¢æ‰€æœ‰çš„undefined
+	                    payMAry.push(tmpStr);
+	                }
+	            }
+	        }
+	        return payMAry.join(PUBLIC_CONSTANT.SEPARATOR.CH2);
+		}
 	};
-	
-	/**
-	* ³õÊ¼»¯ÎÄ±¾¿òÊÂ¼ş
-	* @static @private
-	*/
-	var _initTextboxEvents = function() {
-		//ÊµÊÕ
-		$("#actualMoney").keydown(function(e) {
-			_actualMoneyKeydown(e);
-		});
-	}
-	
-	var _actualMoneyKeydown = function(e) {
-		var key = websys_getKey(e);
-		if (key == 13) {
-			if (!$(e.target).val()) {
+
+    //åˆ¤æ–­æ˜¯å¦æœ‰ç¬¬ä¸‰æ–¹æ”¯ä»˜
+    var _paySrv = {
+	    payMAry: [],
+	    check: function() {
+		    this.payMAry = [];   //éœ€è¦åˆå§‹åŒ–ï¼Œé˜²æ­¢åœ¨äºŒæ¬¡è°ƒç”¨æ—¶å·²ç»å­˜åœ¨
+	        if (_$container) {
+	            if (_isManyPayment) {
+	                var inputs = _$container.find(".select-item-amt .paymode-amt"); //è·å–æ‰€æœ‰è¾“å…¥æ¡†
+	                $.each(inputs, function (index, element) {
+	                    var payMAmt = +$(element).val();
+	                    var aryData = $(element).attr('data').split("^");
+	                    var payMDr = aryData[0];
+	                    if ((payMAmt > 0) && _paySrv.needPaySrv(payMDr)) {
+		                    var myObj = {};
+		                    myObj[payMDr] = payMAmt;
+			            	_paySrv.payMAry.push(myObj);
+		                }
+	                });
+	            } else {
+	                var $selectPayMode = _$container.find(".selected");
+	                if ($selectPayMode.length > 0) {
+	                    var aryData = $selectPayMode.attr("data").split("^");
+	                    var payMDr = aryData[0];
+	                    var payMCode = aryData[1];
+	                    var payMAmt = (payMCode == "CASH") ? _getRoundCASHAmt() : _getSelfPayAmt();
+	                    if ((payMAmt > 0) && _paySrv.needPaySrv(payMDr)) {
+		                    var myObj = {};
+	                        myObj[payMDr] = payMAmt;
+			             	_paySrv.payMAry.push(myObj);
+	                    }
+	                }
+	            }
+	        }
+	        //ä½¿ç”¨é˜Ÿåˆ—"å…ˆè¿›å…ˆå‡º"æ–¹æ³•è°ƒç”¨ç¬¬ä¸‰æ–¹æ”¯ä»˜æ¥å£
+	        _paySrv.shiftPay();
+		},
+		needPaySrv: function(payMode) {
+			var rtn = $.m({ClassName: "DHCBILL.Common.DHCBILLCommon", MethodName: "GetCallModeByPayMode", PayMode: payMode}, false);
+			var myAry = rtn.split("^");
+			//éœ€è¦è°ƒç”¨ç¬¬ä¸‰æ–¹äº¤æ˜“æ—¶ï¼Œè‹¥_payMConETP[payMode]å­˜åœ¨åˆ™ä¸å†è°ƒç”¨ï¼Œä¸å­˜åœ¨åˆ™è°ƒç”¨
+			return ((myAry[0] > 0) && !_payMConETP[payMode]);
+		},
+		shiftPay: function() {
+			//_paySrv.payMAry.length == 0æ—¶è¡¨ç¤ºå…¨éƒ¨äº¤æ˜“æˆåŠŸï¼Œåˆ™è¿”å›ä¸»ç•Œé¢
+			if (_paySrv.payMAry.length > 0) {
+				var obj = _paySrv.payMAry[0];   //æ¯æ¬¡å–æ•°ç»„ç¬¬1é¡¹
+				$.each(Object.keys(obj), function(index, prop) {
+					_paySrv.pay(prop, obj[prop]);
+				});
 				return;
 			}
-			setValueById("actualMoney", $(e.target).val());  //numberbox ÔÚÊ§È¥½¹µãÊ±ºò²ÅÄÜ»ñÈ¡µ½Öµ£¬ËùÒÔÕâÀï¸øÆä¸³ÖµÒÔ±ãÄÜÈ¡µ½
-			var actualMoney = getValueById("actualMoney");
-			var roundCASHAmt = getValueById("roundCASHAmt");
-			var change = numCompute(actualMoney, roundCASHAmt, "-");
-			if (+change < 0) {
-				$.messager.popover({msg: "Êµ¸¶½ğ¶îÊäÈë´íÎó", type: "info"});
-				$(e.target).focus().select();
-				return;
-			}else {
-				setValueById("backChange", change);
+			_ok();
+		},
+		pay: function(payMode, payMAmt) {
+			var adm = "";
+			var expStr = PUBLIC_CONSTANT.SESSION.CTLOCID + "^" + PUBLIC_CONSTANT.SESSION.GROUPID + "^" + PUBLIC_CONSTANT.SESSION.HOSPID;
+	        expStr += "^" + PUBLIC_CONSTANT.SESSION.USERID + "^" + _patientId + "^" + adm;
+	        expStr += "^" + _prtRowIdStr.replace(/\^/g, "!") + "^^C";
+	       	PayService("OP", payMode, payMAmt, expStr, _paySrv.callback);
+		},
+		callback: function(rtnValue) {
+			if (rtnValue.ResultCode == 0) {
+				_payMConETP[rtnValue.PayMode] = rtnValue.ETPRowID;    //å°†äº¤æ˜“æµæ°´è¡¨RowIdæ”¾å…¥_payMConETP
+				_paySrv.payMAry.shift();   //æˆåŠŸæ—¶åˆ é™¤ç¬¬ä¸€é¡¹
 				setTimeout(function() {
-						focusById("btn-ok");
-					}, 100);
+					_paySrv.shiftPay();
+				}, (1000 * ((_paySrv.payMAry.length > 0) ? 1 : 0)));
+				return;
 			}
+			$.messager.popover({msg: rtnValue.ResultMsg, type: "error"});
 		}
-	}
-	
-	//¸½¼ÓÊı¾İµ¯³ö¶Ô»°¿ò
-	var _showAddDataDlg = function($this) {
-		var payMDr = $this.attr('data').split('^')[0];
-		var opt = {'title': '¸½¼ÓÊı¾İ', 'payMode': payMDr, 'patientId': _patientId};
-		var additionObj = new dhcbill.opbill.checkout.AdditionData(opt);
-		additionObj.show(function(code, obj) {
-			if (code) {
-				$this.data("additionalData", obj);
-			}
-		});
-	}
-	
-	//È·ÈÏ°´Å¥ÊÂ¼ş
-	var _btnOkClick = function(e) {
-		if ($("#btn-ok").linkbutton("options").disabled) {
-			return false;
-		}
-		
-		if (!_checkPayM()) {
-			return false;
-		}
-		
-		if (!_checkRequired()) {
-			return false;
-		}
-
-		var payInfo = _bulidPayInfo();
-		if (payInfo == "") {
-			$.messager.popover({msg: "»ñÈ¡Ö§¸¶·½Ê½Êı¾İ´íÎó", type: "error"});
-			return false;
-		}
-
-		var code = true;
-		websys_showModal("options").callbackFunc(_getReturnValue(code, payInfo));
-		websys_showModal("close");
-	}
-	
-	//È¡Ïû°´Å¥ÊÂ¼ş
-	var _btnCancelClick = function(e) {
-		var code = false;
-		var msg = "È¡Ïû";
-		websys_showModal("options").callbackFunc(_getReturnValue(code, msg));
-		websys_showModal("close");
-	}
-	
-	//ÊÕÒøÌ¨»Øµ÷º¯Êı·µ»ØÖµ
-	var _getReturnValue = function(code, msg) {
-		return {"code": code, "message": msg, "accMRowId": _accMRowId};
-	}
-	
-	//ÖØÖÃ°´Å¥ÊÂ¼ş
-	var _btnResetClick = function(e) {
-		location = location;
-	}
-	
-	//Ğ£ÑéÖ§¸¶·½Ê½
-	var validatePayM = function(payMCode) {
-		
-		if (!_checkCPP(payMCode)) {
-			return false;
-		}
-		if (!_checkQF(payMCode)) {
-			return false;
-		}
-		
-		if (!_checkAllPayMAmtSum()) {
-			//validatePayM·½·¨ÔÚonblurÊÂ¼şµ÷ÓÃ£¬ÓÃconfirm»áÓĞËÀÑ­»·£¬ÏÈ¸ÄÎªÌáÊ¾
-			$.messager.popover({msg: "Ö§¸¶·½Ê½½ğ¶îºÏ¼ÆÓë»¼Õß×Ô·Ñ½ğ¶î²»µÈ£¬ÇëÖØÖÃ", type: "info"});
-			/*
-			$.messager.confirm("ÌáÊ¾", "Ö§¸¶·½Ê½½ğ¶îºÏ¼ÆÓë»¼Õß×Ô·Ñ½ğ¶î²»µÈ£¬ÊÇ·ñÖØÖÃ?", function (r) {
-				if (r) {
-					_btnResetClick();
-				}
-			});
-			*/
-			return false;
-		}
-		
-		if (!_checkRoundAmt) {
-			$.messager.popover({msg: "ÏÖ½ğ·Ö±ÒÎó²î½ğ¶î²»Æ½£¬ÇëÖØÖÃ", type: "info"});
-			/*
-			$.messager.confirm("ÌáÊ¾", "ÏÖ½ğ·Ö±ÒÎó²î½ğ¶î²»Æ½£¬ÊÇ·ñÖØÖÃ?", function (r) {
-				if (r) {
-					_btnResetClick();
-				}
-			});
-			*/
-			return false;
-		}
-		
-		return true;
-	}
-	
-	//Ô¤½»½ğ³äÖµ
-	var _accPayDeposit = function(payMAmt) {
-		var url = "dhcbill.opbill.accdep.pay.csp?winfrom=opcharge&AccMRowID=" + _accMRowId;
-		url += "&CardNo=" + _cardNo + "&PatientID=" + _patientId + "&PatFactPaySum=" + payMAmt;
-		websys_showModal({
-			url: url,
-			title: '³äÖµ',
-			iconCls: 'icon-w-inv',
-			width: '85%',
-			height: '85%',
-			callbackFunc: function() {
-				if (_isManyPayment) {
-					//¶àÖÖÖ§¸¶·½Ê½Ê±£¬¹â±ê¶¨Î»µ½Ô¤½»½ğÖ§¸¶µÄÏÂÒ»¸öÖ§¸¶·½Ê½
-					
-				}else{
-					//µ¥Ö§¸¶·½Ê½£¬´¥·¢È·¶¨°´Å¥µ¥»÷ÊÂ¼ş
-					setTimeout(function() {
-							$("#btn-ok").click();
-						}, 50);
-				}
-			}
-		});
-	}
-	
-	//Ğ£ÑéÔ¤½»½ğÖ§¸¶·½Ê½
-	var _checkCPP = function(payMCode) {
-		var bool = true;
-		if (payMCode != "CPP") {
-			return bool;
-		}
-		var payMAmt = +(_isManyPayment ? $('#txtPayMzCPP').val() : _getSelfPayAmt());
-		if (payMAmt == 0) {
-			return bool;  //½ğ¶îÎª0Ê±²»ÓÃĞ£Ñé
-		}
-		var myRtn = DHCACC_CheckMCFPay(payMAmt, _cardNo, _episodeIdStr, _cardTypeId);
-		var myAry = myRtn.split("^");
-		_accMRowId = myAry[1];
-		if (+_accMRowId > 0) {
-			_getAccMBalance();
-		}
-		if (myAry[0] != "0") {
-			bool = false;
-			switch(myAry[0]) {
-			case "-200":
-				$.messager.popover({msg: "¿¨ÎŞĞ§", type: "info"});
-				break;
-			case "-201":
-				$.messager.popover({msg: "¸Ã»¼Õß²»´æÔÚÓĞĞ§µÄÕË»§£¬²»ÄÜÓÃÀ´Ö§¸¶»òÍË¿î", type: "info"});
-				disableById("btn-ok");
-				break;
-			case "-205":
-				if (+myAry[4] != 0) {
-					var msg = "Óà¶î²»×ã£¬ÇëÏÈ³äÖµ <font color='red'>" + (+myAry[4]).toFixed(2) + "</font> Ôª";
-					if (_reloadFlag) {
-						$.messager.popover({msg: msg, type: "info"});
-					}else {
-						msg += "<br>ÊÇ·ñ³äÖµ£¿";
-						$.messager.confirm("È·ÈÏ", msg, function (r) {
-							if (r) {
-								_accPayDeposit(payMAmt);
-							}
-						});
-					}
-				}
-				break;
-			case "-206":
-				$.messager.popover({msg: "¿¨ºÅÂë²»Ò»ÖÂ£¬ÇëÊ¹ÓÃÔ­¿¨", type: "info"});
-				break;
-			case "-210":
-				$.messager.popover({msg: "¿¨ºÅÑéÖ¤Ê§°Ü", type: "info"});
-				break;
-			default:
-				$.messager.popover({msg: "Î´Öª´íÎó", type: "info"});
-			}
-		}
-		return bool;
-	}
-	
-	//Ğ£ÑéÇ··ÑÖ§¸¶·½Ê½
-	var _checkQF = function(payMCode) {
-		var bool = true;
-		if (payMCode != "QF") {
-			return bool;
-		}
-		var payMAmt = +(_isManyPayment ? $('#txtPayMzQF').val() : _getSelfPayAmt());
-		if (payMAmt == 0) {
-			return bool;  //½ğ¶îÎª0Ê±²»ÓÃĞ£Ñé
-		}
-		var myRtn = $.m({ClassName: "web.DHCOPQFPat", MethodName: "CheckWarBal", admStr: _episodeIdStr, payAmt: payMAmt, sFlag: 0}, false);
-		if (myRtn != "0") {
-			bool = false;
-			switch(myRtn) {
-			case "-1":
-				$.messager.popover({msg: "»¼ÕßÃ»ÓĞÓĞĞ§µÄµ£±£ĞÅÏ¢£¬²»ÄÜÇ··Ñ½áËã", type: "info"});
-				break;
-			case "-2":
-				$.messager.popover({msg: "»¼Õßµ£±£½ğ¶î²»×ã£¬²»ÄÜÇ··Ñ½áËã", type: "info"});
-				break;
-			}
-		}
-		if(!bool){
-			disableById("btn-ok");
-		}
-		return bool;
-	}
-	
-	//ÑéÖ¤Ö§¸¶·½Ê½
-	var _checkPayM = function() {
-		var bool = true;
-		if (_$container) {
-			if (_isManyPayment) {
-				var inputs = _$container.find(".select-item-amt .paymode-amt");  //»ñÈ¡ËùÓĞÊäÈë¿ò
-		    	$.each(inputs, function(index, element) {
-			    	var payMAmt = +$(element).val();
-			    	if (payMAmt == 0) {
-				    	return true;
-				    }
-			    	var aryData = $(element).attr('data').split("^");
-					var payMCode = aryData[1];
-					if (!validatePayM(payMCode)) {
-						bool = false;
-						return false;
-					}
-		    	});
-			}else {
-				var $selectPayMode = _$container.find(".selected");
-				if ($selectPayMode.length > 0) {
-					var aryData = $selectPayMode.attr('data').split("^");
-					var payMCode = aryData[1];
-					if (!validatePayM(payMCode)) {
-						bool = false;
-					}
-				}
-			}
-		}
-		return bool;
-	}
-	
-	//ÑéÖ¤¸½¼ÓĞÅÏ¢±ØÌîÏî
-	var _checkRequired = function() {
-		var bool = true;
-		if (_$container) {
-			if (_isManyPayment) {
-				var inputs = _$container.find(".select-item-amt .paymode-amt");  //»ñÈ¡ËùÓĞÊäÈë¿ò
-		    	$.each(inputs, function(index, element) {
-			    	var payMAmt = +$(element).val();
-			    	if (payMAmt == 0) {
-				    	return true;
-				    }
-			    	var aryData = $(element).attr('data').split("^");
-			    	var payMDr = aryData[0];
-					var payMCode = aryData[1];
-					var payMDesc = aryData[2];
-					var requiredFlag = aryData[3];
-					if (requiredFlag == "Y") {
-						var $payMode = $(element).parent().prev();
-						var addiObj = $(element).parent().prev().data("additionalData") || {};
-						var payMAddiStr = $.m({ClassName: "web.UDHCOPGSConfig", MethodName: "GetAdditionalData", payMode: payMDr, groupId: PUBLIC_CONSTANT.SESSION.GROUPID, hospId: PUBLIC_CONSTANT.SESSION.HOSPID}, false);
-						var tmpAry = payMAddiStr.split("^");
-						$.each(tmpAry, function(index, val) {
-							var code = val.split("!")[0];
-							var desc = val.split("!")[1];
-							var isRequired = val.split("!")[2];
-							if (isRequired == "Y") {
-								if (!addiObj[code]) {
-									bool = false;
-									_showAddDataDlg($payMode);
-									//$.messager.popover({msg: "ÇëÊäÈë<font color=red>" + payMDesc + "µÄ"  + desc + "</font>", type: "info"});
-									return false;
-								}
-							}
-						});
-					}
-					return bool;
-			    });
-			}else {
-				var $selectPayMode = _$container.find(".selected");
-				if ($selectPayMode.length > 0) {
-					var aryData = $selectPayMode.attr('data').split("^");
-					var payMDr = aryData[0];
-					var payMCode = aryData[1];
-					var payMDesc = aryData[2];
-					var requiredFlag = aryData[3];
-					if (requiredFlag == "Y") {
-						var addiObj = $selectPayMode.data("additionalData") || {};
-						var payMAddiStr = $.m({ClassName: "web.UDHCOPGSConfig", MethodName: "GetAdditionalData", payMode: payMDr, groupId: PUBLIC_CONSTANT.SESSION.GROUPID, hospId: PUBLIC_CONSTANT.SESSION.HOSPID}, false);
-						var tmpAry = payMAddiStr.split("^");
-						$.each(tmpAry, function(index, val) {
-							var code = val.split("!")[0];
-							var desc = val.split("!")[1];
-							var isRequired = val.split("!")[2];
-							if (isRequired == "Y") {
-								if (!addiObj[code]) {
-									bool = false;
-									_showAddDataDlg($selectPayMode);
-									//$.messager.popover({msg: "ÇëÊäÈë<font color=red>" + payMDesc + "µÄ"  + desc + "</font>", type: "info"});
-									return false;
-								}
-							}
-						});
-					}	
-				}
-			}
-		}
-		return bool;
-	}
-		
-	//Éú³ÉÖ§¸¶·½Ê½´®
-	var _bulidPayInfo = function() {
-		var payMStr = "";
-		if (_$container) {
-			if (_isManyPayment) {
-				var payMAry = [];
-				var inputs = _$container.find(".select-item-amt .paymode-amt");  //»ñÈ¡ËùÓĞÊäÈë¿ò
-		    	$.each(inputs, function(index, element){
-			    	var payMAmt = +$(element).val();
-			    	if (payMAmt == 0) {
-				    	return true;
-				    }
-			    	var aryData = $(element).attr('data').split("^");
-			    	var payMDr = aryData[0];
-					var payMCode = aryData[1];    	
-			    	var addiObj = $(element).parent().prev().data("additionalData") || {};
-					var myPayCard = addiObj.PayCard || "";    //Ö§¸¶¿¨ºÅ£¬¶ÔÔºÄÚÕËºÅÖ§¸¶Ê±´«ÕËºÅrowid
-					var myPatUnitDr = addiObj.HCP || "";
-					var myBankDr = addiObj.Bank || "";
-					var myCheckNo = addiObj.CheckNO || "";
-					var myChequeDate = addiObj.CheckDate || "";
-					var myPayAccNo = addiObj.PayAccNO || "";
-					
-					//var selfPayAmt = getValueById("selfPayAmt");
-					var payMTextboxId = $(element).attr('id');
-					var payMAmt = +getValueById(payMTextboxId);
-					var invRoundErrDetails = "";
-					var actualMoney = "";
-					var backChange = "";
-					if (payMCode == "CASH") {
-						payMAmt = getValueById("roundCASHAmt");
-						invRoundErrDetails = $("#roundErrAmt").attr("data");
-						var actualMoney = getValueById("actualMoney"); //ÊµÊÕ
-						var backChange = getValueById("backChange");   //ÕÒÁã
-					}
-					var tmpStr = payMDr + "^" + myBankDr + "^" + myCheckNo + "^" + myPayCard + "^" + myPatUnitDr + "^" + myChequeDate + "^" + myPayAccNo + "^" + payMAmt + "^" + invRoundErrDetails + "^" + actualMoney + "^" + backChange;
-					tmpStr = tmpStr.replace(/undefined/g, "");   //Ìæ»»ËùÓĞµÄundefined
-					
-					payMAry.push(tmpStr);
-			    });
-			    
-			    payMStr = payMAry.join(PUBLIC_CONSTANT.SEPARATOR.CH2);
-			    
-			}else {
-				var $selectPayMode = _$container.find(".selected");
-				if ($selectPayMode.length > 0) {
-					var aryData = $selectPayMode.attr('data').split("^");
-					var payMDr = aryData[0];
-					var payMCode = aryData[1];
-
-					var addiObj = $selectPayMode.data("additionalData") || {};
-					
-					var myPayCard = addiObj.PayCard || "";    //Ö§¸¶¿¨ºÅ£¬¶ÔÔºÄÚÕËºÅÖ§¸¶Ê±´«ÕË»§rowid
-					var myPatUnitDr = addiObj.HCP || "";
-					var myBankDr = addiObj.Bank || "";
-					var myCheckNo = addiObj.CheckNO || ""; 
-					var myChequeDate = addiObj.CheckDate || "";
-					var myPayAccNo = addiObj.PayAccNO || "";
-					
-					var selfPayAmt = getValueById("selfPayAmt");
-					var invRoundErrDetails = "";
-					if(payMCode == "CASH") {
-						selfPayAmt = getValueById("roundCASHAmt");
-						invRoundErrDetails = $("#roundErrAmt").attr("data");
-					}
-					var actualMoney = getValueById("actualMoney"); //ÊµÊÕ
-					var backChange = getValueById("backChange");   //ÕÒÁã
-					
-					var payMStr = payMDr + "^" + myBankDr + "^" + myCheckNo + "^" + myPayCard + "^" + myPatUnitDr + "^" + myChequeDate + "^" + myPayAccNo + "^" + selfPayAmt + "^" + invRoundErrDetails + "^" + actualMoney + "^" + backChange;
-					payMStr = payMStr.replace(/undefined/g, "");   //Ìæ»»ËùÓĞµÄundefined
-				}
-			}
-			_payInfo = payMStr;
-		}
-		return payMStr;
-	}          
-	
-	//¹«ÓĞ³ÉÔ±·½·¨
-	/**
-	* »ñÈ¡±êÌâ
-	* @return {String} ·µ»Ø±êÌâ
-	*/
-	dhcbill.opbill.checkout.CheckOut.prototype.getTitle = function(){
-		
-		return this._title;
 	};
 
-	/**
-	* »ñÈ¡Ö§¸¶·½Ê½ÁĞ±íĞÅÏ¢
-	* @return {String} ·µ»Ø±êÌâ
-	*/
-	dhcbill.opbill.checkout.CheckOut.prototype.getPayInfo = function(){
-		
-		return this._payInfo;
-	};
-	
-	/**
-	* ³õÊ¼»¯½çÃæ
-	* @return {Boolean} true-³É¹¦£¬false-Ê§°Ü
-	*/
-	dhcbill.opbill.checkout.CheckOut.prototype.initPanel = function() {
-		
-		_prtRowIdStr = this.prtRowIdStr;
-		_accMRowId = this.accMRowId;
-		_allowPayMent = this.allowPayMent;
-		if(this.episodeIdStr){
-			_episodeIdStr = this.episodeIdStr;
-		}else{
-			_episodeIdStr = $.m({ClassName: "web.DHCBillConsIF", MethodName: "GetAdmByPrtRowId", prtRowIdStr: _prtRowIdStr}, false);
-		}
-		_patientId = this.patientId;
-		_cardNo = this.cardNo;
-		_cardTypeId = this.cardTypeId;
-		_reloadFlag = this.reloadFlag;
-		
-		
-		_getAccMBalance();
-		
-		_initInvAmtData();
-		
-		_initAllowPayMentBtn();
-		
-		//$("#btnPayMzCASH").addClass('selected');
-		_initSelectBox('.container');
-		
-		_initButtonEvents('.btn-container .hisui-linkbutton');
-		//_initButtonEvents('.btn-container');
-		_initTextboxEvents();
-		
-		return true;
-	};
+    /**
+     * åˆå§‹åŒ–ç•Œé¢
+     */
+    dhcbill.opbill.checkout.CheckOut.prototype.initPanel = function () {
+        _prtRowIdStr = this.prtRowIdStr;
+        _accMRowId = this.accMRowId;
+        _accMLeft = this.accMLeft;
+        _allowPayMent = this.allowPayMent;
+        _episodeIdStr = this.episodeIdStr;
+        _patientId = this.patientId;
+        _cardNo = this.cardNo;
+        _cardTypeId = this.cardTypeId;
+        _reloadFlag = this.reloadFlag;
+
+        _initInvAmtData();
+
+        _initAllowPaymentBtn();
+
+        _initSelectBox('.container');
+
+        _initButtonEvents('.btn-container .l-btn');
+        
+        _initTextboxEvents();
+    };
 })();
 
 $(function () {
-	var checkOutObj = new dhcbill.opbill.checkout.CheckOut({
-		allowPayMent: getValueById("allowPayMent"),
-		prtRowIdStr: getValueById("prtRowIdStr"),
-		insTypeId: getValueById("insTypeId"),
-		typeFlag: getValueById("typeFlag"),
-		accMRowId: getValueById("accMRowId"),
-		episodeIdStr: getValueById("episodeIdStr"),
-		patientId: getValueById("patientId"),
-		cardNo: getValueById("cardNo"),
-		cardTypeId: getValueById("cardTypeId"),
-		reloadFlag: getValueById("reloadFlag")
-	});
-	
-	checkOutObj.initPanel();
+    var checkOutObj = new dhcbill.opbill.checkout.CheckOut(CV.Args);
+    checkOutObj.initPanel();
 });
 
-$(window).load(function() {
-	$(".msg-popover").removeClass("hidden");
+$(window).load(function () {
+    $(".msg-popover").removeClass("hidden");
 });
 
 /**
-* ÑéÖ¤À©Õ¹£¬ÏÈ·ÅÕâ£¬ÒÔºóÒª·Åµ½Í³Ò»·½·¨ÖĞ
-*/
+ * éªŒè¯æ‰©å±•ï¼Œå…ˆæ”¾è¿™ï¼Œä»¥åè¦æ”¾åˆ°ç»Ÿä¸€æ–¹æ³•ä¸­
+ */
 $.extend($.fn.validatebox.defaults.rules, {
     lessthanzero: {
-        validator: function(value, param) {
-	        //×¢Òâ£ºÒ»¶¨Òª×ª»»Ç¿ÖÆ×ª»»ÎªNumberÀàĞÍ£¬·ñÔò»áÓĞÒì³£¡£
-	        // ¿ª·¢Ê±ÒòÎªÃ»ÓĞ×ö×ª»»£¬¾Í°´×Ö·û´®±È½Ï£¬×ßÁËºÜ¶àÍäÂ·¡£
-	        var value = +value;
-	        var sum = 0;
-	        var balance = 0;
-        	var $inputs = $(param[0]);
-        	$inputs.each(function(index, element){
-	        	if($(element).hasClass('default-paymode-amt')){
-		        	balance = +$(element).val();
-		        }
-	        	sum += +$(element).val();
-	        })
-        	var selfPayAmt = +$(param[1]).val();
-        	var temp = 0;
-        	if(Number(balance) < Number(value)){
-	        	temp = sum - (+balance);
-	        }else{
-		    	temp = sum - (+value);
-		    }
-		    temp = temp.toFixed(2);
+        validator: function (value, param) {
+            var sum = 0;
+            var balance = 0;
+            var $inputs = $(param[0]);
+            $inputs.each(function (index, element) {
+                if ($(element).hasClass('default-paymode-amt')) {
+                    balance = +$(element).val();
+                }
+                sum = numCompute(sum, $(element).val(), "+");
+            });
+            var selfPayAmt = +$(param[1]).val();
+            var temp = 0;
+            if (+balance < +value) {
+                temp = numCompute(sum, balance, "-");
+            } else {
+                temp = numCompute(sum, value, "-");
+            }
             return !(temp > selfPayAmt);
-        },  
-        message: 'Ö§¸¶·½Ê½ºÏ¼Æ½ğ¶î²»ÄÜ´óÓÚ×Ô·Ñ½ğ¶î'  
+        },
+        message: 'æ”¯ä»˜æ–¹å¼åˆè®¡é‡‘é¢ä¸èƒ½å¤§äºè‡ªè´¹é‡‘é¢'
     }
 });

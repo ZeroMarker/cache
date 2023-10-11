@@ -15,7 +15,7 @@ var LgHospID = session['LOGON.HOSPID'];  /// 医院ID
 var LgGroupID = session['LOGON.GROUPID'];  /// 安全组ID
 var LgParams = LgGroupID +"^"+ LgLocID +"^"+ LgUserID;
 var WriGrpFlag="";
-var ItemTypeArr = [{"value":"N","text":'待审'}, {"value":"Y","text":'已审'}];
+var ItemTypeArr = [{"value":"N","text":$g('待审')}, {"value":"Y","text":$g('已审')}];
 var del = String.fromCharCode(2);
 
 /// 页面初始化函数
@@ -146,7 +146,7 @@ function InitPatList(){
 				else {return '<font style="color:red;font-weight:bold;">未打印</font>'}
 			}
 		},
-		{field:'AuditFlag',title:'审核状态',width:80,align:'left'},
+		{field:'AuditFlag',title:'审核状态',width:110,align:'left'},
 		{field:'EpisodeID',title:'EpisodeID',width:100,align:'left'}
 	]];
 	
@@ -255,6 +255,9 @@ function WriteMdt(EpisodeID, CstID){
 	if (CsNoType == "Nur"){
 		Link = "dhcem.consultnur.csp?EpisodeID="+EpisodeID +"&CstID="+CstID +"&CstItmID="+CstID+"&seeCstType=1";
 	}
+	if ('undefined'!==typeof websys_getMWToken){ //hxy 2023-02-11 Token改造
+		Link += "&MWToken="+websys_getMWToken();
+	}
 	$("#newWinFrame").attr("src",Link);
 }
 
@@ -275,6 +278,19 @@ function PrintCstHtml(){
 		$.messager.alert("提示","未选择打印数据！");
 		return;	
 	}
+	
+	var CsStatCode = rowsData.CstStatus;
+	if(CsStatCode=="取消"){
+		$.messager.alert("提示","申请单已经取消,不能打印！","warning");
+		return;
+	}
+	
+	if((CsStatCode=="发送")||(CsStatCode.indexOf("审核")!=-1)||(CsStatCode=="驳回")||(CsStatCode=="拒绝")||(CsStatCode=="接收")||(CsStatCode=="取消接收")||(CsStatCode=="到达")||(CsStatCode=="取消完成")){
+		if(ConsNoCompCanPrt==1){
+			$.messager.alert("提示","会诊未完成,不能打印！","warning");
+			return;
+		}
+	}
 
 	$m({
 		ClassName:"web.DHCEMConsultCom",
@@ -282,7 +298,11 @@ function PrintCstHtml(){
 		CstID:rowsData.CstID
 	},function(txtData){
 		if(PrintModel==1){
-			window.open("dhcem.printconsone.csp?CstItmIDs="+txtData);
+			var Link="dhcem.printconsone.csp?CstItmIDs="+txtData; //hxy 2023-02-11 Token改造 st
+			if ('undefined'!==typeof websys_getMWToken){ 
+				Link += "&MWToken="+websys_getMWToken();
+			}
+			window.open(Link); //ed
 			InsCsMasPrintFlag(rowsData.CstID);  /// 修改会诊打印标志 //hxy 2020-03-24 add rowsData.CstID
 		}else{
 			var prtRet = PrintCstNew(txtData,LgHospID);
@@ -342,7 +362,7 @@ function InsCsRefAudit(){
 	var CstNote = $("#CstRefReason").val(); /// 驳回会诊原因
 	CstNote = $_TrsSymbolToTxt(CstNote);    /// 处理特殊符号
 	/// 保存
-	runClassMethod("web.DHCEMConsult","InsCsRefAudit",{"CstID":CstID, "UserID":LgUserID, "CstNote":CstNote},function(jsonString){
+	runClassMethod("web.DHCEMConsult","InsCsRefAudit",{"CstID":CstID, "UserID":LgUserID, "CstNote":CstNote,"LgParams":LgParams},function(jsonString){ //hxy 2022-12-30 LgParams (为了调用平台接口时传入部门)
 		if (jsonString == -1){
 			$.messager.alert("提示:","申请单非发送状态，不允许进行驳回操作！","warning");
 			return;
@@ -383,6 +403,11 @@ function OpenMdtConsWin(){
 
 /// 新建审核会诊窗口
 function newConsult(){
+	var AuditFlag = $HUI.combobox("#AuditFlag").getValue();/// 审核状态
+	if (AuditFlag == "Y"){
+		$.messager.alert('提示',"当前会诊记录已经审核，不能再次审核!","error");
+		return;
+	}
 	
 	var rowData = $('#bmDetList').datagrid('getSelected');
 	if (rowData == null){
@@ -405,19 +430,19 @@ function newConsult(){
 		isEditFlag = 0;	
 	}
 
-	newCreateConsultWin();  /// 新建咨询窗口
+	newCreateConsultWin(rowData.NextStCode);  /// 新建咨询窗口
 	InitConsItem(rowData);  /// 页面DataGrid初始定义已选列表
 	InitConsultDefault(rowData);  //初始化界面默认信息
 }
 
 /// 新建审核会诊窗口
-function newCreateConsultWin(){
+function newCreateConsultWin(NextStCode){
 	var option = {
 			buttons:[{
 				text:'保存',
 				iconCls:'icon-save',
 				handler:function(){
-					saveConsultDetail();
+					saveConsultDetail(NextStCode);
 					}
 			},{
 				text:'取消',
@@ -446,7 +471,7 @@ function InitConsItem(rowData){
 	var LocEditor={  //设置其为可编辑
 		type: 'combobox',//设置编辑格式
 		options: {
-			url: LINK_CSP+"?ClassName=web.DHCEMConsultCom&MethodName=JsonLoc&HospID"+session['LOGON.HOSPID'],
+			//url: LINK_CSP+"?ClassName=web.DHCEMConsultCom&MethodName=JsonLoc&HospID"+session['LOGON.HOSPID'],
 			valueField: "value", 
 			textField: "text",
 			//editable:false,
@@ -471,7 +496,18 @@ function InitConsItem(rowData){
 				/// 联系方式
 				var ed=$("#dgConsItem").datagrid('getEditor',{index:editSelRow,field:'TelPhone'});
 				$(ed.target).val(GetLocTelPhone(option.value));
-			}
+			},
+			onShowPanel:function(){ //hxy 2021-06-21
+				
+				var ed=$("#dgConsItem").datagrid('getEditor',{index:editSelRow,field:'LocGrpID'});
+				var LocGrpID = $(ed.target).val(); 
+				var ed=$("#dgConsItem").datagrid('getEditor',{index:editSelRow,field:'LocDesc'});
+				if(LocGrpID!=""){
+					var unitUrl = $URL+"?ClassName=web.DHCEMConsultGroup&MethodName=JsonConsGroupItm&ECRowID="+LocGrpID; 
+				}
+				$(ed.target).combobox('reload',unitUrl);
+			}	
+
 		}
 	}
 	
@@ -506,7 +542,9 @@ function InitConsItem(rowData){
 					/// 获取所有行内
 					var rowsData = $('#dgConsItem').datagrid('getRows');
 					rowsData[editSelRow].PrvTp = ctpcpCtInfo.split("^")[1];
-					$("tr[datagrid-row-index='"+ editSelRow +"'] td[field='PrvTp'] div").text(ctpcpCtInfo.split("^")[1]);
+					//$("tr[datagrid-row-index='"+ editSelRow +"'] td[field='PrvTp'] div").text(ctpcpCtInfo.split("^")[1]); //hxy 2021-03-23 st
+					var ed=$("#dgConsItem").datagrid('getEditor',{index:editSelRow,field:'PrvTp'});
+					$(ed.target).combobox('setValue',ctpcpCtInfo.split("^")[1]); //ed
 					var ed=$("#dgConsItem").datagrid('getEditor',{index:editSelRow,field:'PrvTpID'});
 					$(ed.target).val(ctpcpCtInfo.split("^")[0]);
 				});
@@ -525,20 +563,83 @@ function InitConsItem(rowData){
 		}
 	}
 	
+	// 职称编辑格 //hxy 2021-03-23 add
+	var CType="DOC^PHA"; /// 对医生会诊申请兼容药师处理
+	if(CsNoType=="Nur"){
+		var CType = "NUR";
+	}
+	var PrvTpEditor={  //设置其为可编辑
+		type: 'combobox',//设置编辑格式
+		options: {
+			url: $URL+"?ClassName=web.DHCEMConsultCom&MethodName=JsonPrvTp&Type="+CType+"&LgHospID="+LgHospID,
+			valueField: "value", 
+			textField: "text",
+			enterNullValueClear:false,
+			//panelHeight:"auto",  //设置容器高度自动增长
+			blurValidValue:false, //hxy 2021-06-07 true->false 在会诊科室“类型”下拉列表展开的情况下点击科室记录，类型及护士文本框内容被清空
+			onSelect:function(option){
+				var ed=$("#dgConsItem").datagrid('getEditor',{index:editSelRow,field:'PrvTpID'});
+				$(ed.target).val(option.value);
+				var ed=$("#dgConsItem").datagrid('getEditor',{index:editSelRow,field:'PrvTp'});
+				$(ed.target).combobox('setValue', option.text);
+				
+				///设置级联指针
+				var ed=$("#dgConsItem").datagrid('getEditor',{index:editSelRow,field:'UserID'});
+				$(ed.target).val("");
+				var ed=$("#dgConsItem").datagrid('getEditor',{index:editSelRow,field:'UserName'});
+				$(ed.target).combobox('setValue', "");
+				
+				var ed=$("#dgConsItem").datagrid('getEditor',{index:editSelRow,field:'LocID'}); //hxy 2021-05-25 st
+				var LocID = $(ed.target).val();
+				if(LocID!=""){
+					var PrvTpID = option.value;
+					var ProvType=CsNoType=="Nur"?"NURSE":"DOCTOR";
+					var Datas=serverCall("web.DHCEMConsultCom","JsonLocCareProv",{ProvType:ProvType,LocID:LocID,PrvTpID:PrvTpID,LgUserID:LgUserID});
+					if(Datas=="[]"){
+						$.messager.alert("提示","当前类型无人员,请选择其他类型！");
+						var ed=$("#dgConsItem").datagrid('getEditor',{index:editSelRow,field:'PrvTpID'});
+						$(ed.target).val("");
+						var ed=$("#dgConsItem").datagrid('getEditor',{index:editSelRow,field:'PrvTp'});
+						$(ed.target).combobox('setValue',"");
+					} 
+				}//ed
+			},
+			onChange:function(newValue, oldValue){
+				if (newValue == ""){
+					var ed=$("#dgConsItem").datagrid('getEditor',{index:editSelRow,field:'PrvTpID'});
+					$(ed.target).val("");
+					var ed=$("#dgConsItem").datagrid('getEditor',{index:editSelRow,field:'UserName'});
+					$(ed.target).combobox('setValue', "");
+					var ed=$("#dgConsItem").datagrid('getEditor',{index:editSelRow,field:'UserID'});
+					$(ed.target).val("");
+				}
+			}
+		}
+	}
+	
+	var LocEditorCon={},hiddenVal=true; //hxy 2021-06-21 科室编辑和大科 只有当配置医师大科启用并且是医生会诊时，大科列才显示，科室才可编辑
+	if((CsNoType!="Nur")&&(LeaderFlag=="1")){
+		LocEditorCon=LocEditor;
+		hiddenVal=false;
+	}
 	///  定义columns
 	var columns=[[
 		{field:'itmID',title:'itmID',width:100,editor:texteditor,hidden:true},
+		{field:'LocGrpID',title:'大科ID',width:100,editor:texteditor,hidden:true}, //2021-06-17 add
+		{field:'LocGrp',title:'大科',width:100,hidden:hiddenVal}, //2021-06-17 add
+		{field:'LocID',title:'科室ID',width:100,editor:texteditor,hidden:true},  //
+		{field:'LocDesc',title:'科室',width:280,editor:LocEditorCon}, // 2021-06-17 add ,editor:LocEditor
 		{field:'PrvTpID',title:'职称ID',width:100,editor:texteditor,align:'center',hidden:true},
-		{field:'PrvTp',title:'职称',width:120,align:'center'},
-		{field:'LocID',title:'科室ID',width:100,editor:texteditor,hidden:true},
-		{field:'LocDesc',title:'科室',width:280},
+		{field:'PrvTp',title:'类型',width:120,align:'center',editor:PrvTpEditor}, //hxy 2021-02-20 职称->类型 //2021-03-23 add ,editor:PrvTpEditor
+		//{field:'LocID',title:'科室ID',width:100,editor:texteditor,hidden:true},
+		//{field:'LocDesc',title:'科室',width:280},
 		{field:'UserID',title:TypeDesc+'ID',width:100,editor:texteditor,hidden:true},
 		{field:'UserName',title:TypeDesc,width:200,editor:DocEditor},
-		{field:'TelPhone',title:'联系方式',width:130,editor:texteditor},
-		{field:'operation',title:"操作",width:110,align:'center',formatter:SetCellUrl}
+		{field:'TelPhone',title:'联系方式',width:130,editor:texteditor}//,
+		//{field:'operation',title:"操作",width:110,align:'center',formatter:SetCellUrl}
 	]];
 	
-	var uniturl = LINK_CSP+"?ClassName=web.DHCEMConsultQuery&MethodName=JsonQryConsult&CstID="+rowData.CstID;
+	var uniturl = LINK_CSP+"?ClassName=web.DHCEMConsultQuery&MethodName=JsonQryConsult&CstID="+rowData.CstID+"&LgParams=^^^"+LgUserID; //2021-06-17 add LgParams
 	//定义datagrid
 	$('#dgConsItem').datagrid({
 		showHeader:true,
@@ -549,8 +650,12 @@ function InitConsItem(rowData){
 		rownumbers : true,
 		singleSelect : true,
 		pagination: false,
-	    onDblClickRow: function (rowIndex, rowData) {
-		    
+	    onClickRow: function (rowIndex, rowData) { //hxy 2021-05-19 onDblClickRow-onClickRow
+	        if((LeaderFlag=="1")&&(rowData.LeadEditFlag=="0"))return; //2021-06-21 大科启用且大科编辑标识为0时，返回
+		    if((CsNoType=="Nur")&&(GrpAllowUpd!=1)&&(rowData.isGrpFlag==1)){//hxy 2021-05-28 配置选择专科小组后是否允许修改会诊科室为不允许时(!=1)，不可修改
+		    	$.messager.alert("提示:","当前已选"+rowData.LocGrp+"，且未配置选择专科小组后允许修改，故不可修改！");
+		    	return; 
+		    }
 			if (isEditFlag == 1) return;
 			
 			var CstType = $("#CsType").text(); 	          /// 会诊类型
@@ -566,20 +671,24 @@ function InitConsItem(rowData){
             /// 联系方式
 			var ed=$("#dgConsItem").datagrid('getEditor',{index:rowIndex,field:'TelPhone'});
 			$(ed.target).attr("disabled", true);
+			if(AudModPrvTp!=1){ //hxy 2021-03-23
+				var ed=$("#dgConsItem").datagrid('getEditor',{index:rowIndex,field:'PrvTp'});
+				$(ed.target).combobox('disable');
+			}
         }
 	});
 }
 
 /// 链接
 function SetCellUrl(value, rowData, rowIndex){	
-	var html = "<a href='#' onclick='delRow("+ rowIndex +")'><img src='../scripts_lib/hisui-0.1.0/dist/css/icons/cancel.png' border=0/></a>";
+	var html = "<a href='#' onclick='delRow("+ rowIndex +","+rowData.isGrpFlag+")'><img src='../scripts_lib/hisui-0.1.0/dist/css/icons/cancel.png' border=0/></a>";
 	    //html += "<a href='#' onclick='insRow()'><img src='../scripts/dhcpha/jQuery/themes/icons/edit_add.png' border=0/></a>";
 	return html;
 }
 
 /// 删除行
-function delRow(rowIndex){
-	
+function delRow(rowIndex,isGrpFlag){
+	if((GrpAllowUpd!=1)&&(isGrpFlag==1))return; //hxy 2021-05-28 配置选择专科小组后是否允许修改会诊科室为不允许时(!=1)，不可修改
 	if (isEditFlag == 1) return;
 	/// 行对象
     var rowObj={UserID:'', UserName:'', TelPhone:''};
@@ -621,12 +730,21 @@ function InitConsultDefault(rowObj){
 	$("#ConsNPlace").val(rowObj.CstNPlace); /// 会诊地点
 	$HUI.datebox("#CstNDate").setValue(rowObj.CstNDate);      /// 会诊日期
 	$HUI.timespinner("#CstNTime").setValue(rowObj.CstNTime);  /// 会诊时间
+	if($("#ConsNPlace").val()==""){//hxy 2021-05-29 st
+		if(AuditDefPlace.split(",")[0]==1){
+			if(AuditDefPlace.indexOf("1,")>-1){
+				$("#ConsNPlace").val(rowObj.CstRLoc+AuditDefPlace.replace("1,",""));
+			}else{
+				$("#ConsNPlace").val(rowObj.CstRLoc);
+			}
+		}
+	}//ed
 }
 
  /**
   * 保存会诊数据
   */
-function saveConsultDetail(){
+function saveConsultDetail(NextStCode){
 	
 	/// 结束行编辑状态
 	if ((editSelRow != -1)||(editSelRow == "0")) { 
@@ -665,11 +783,23 @@ function saveConsultDetail(){
 	}
 
 	/// 会诊科室
+	var PrvTpFlag=0; //hxy 2021-02-07 职称填写标志（0已填，1未）
 	var ConsDetArr=[],HasRepetDoc=false,DocList="^";
 	var isEmptyFlag = 0;
+	var isEmptyLeadFlag=0; //大科住院总审核时，会诊人不能为空：是否为空标识
 	var rowData = $('#dgConsItem').datagrid('getRows');
 	$.each(rowData, function(index, item){
-		if(trim(item.LocDesc) != ""){
+		if(trim(item.LocGrp) != ""){ //2021-06-21
+			if ((item.UserID == "")&&(item.LeadEditFlag=="1")) isEmptyLeadFlag = 1; //hxy 2021-06-21
+			if((DocList.indexOf("^"+item.UserID+"^")!=-1)&&(trim(item.UserID) != "")){
+				HasRepetDoc=true;
+			}
+			DocList=DocList+item.UserID+"^";
+			
+		    var TmpData = item.LocID +"^"+ item.UserID +"^"+ item.PrvTpID +"^"+item.MarID +"^"+ item.LocGrpID+"^"+ item.itmID;
+		    ConsDetArr.push(TmpData);
+		    if(item.PrvTpID=="")PrvTpFlag=1; //
+		}else if(trim(item.LocDesc) != ""){
 			if (item.UserID == "") isEmptyFlag = 1;
 			if((DocList.indexOf("^"+item.UserID+"^")!=-1)&&(trim(item.UserID) != "")){
 				HasRepetDoc=true;
@@ -678,15 +808,26 @@ function saveConsultDetail(){
 			
 		    var TmpData = item.LocID +"^"+ item.UserID +"^"+ item.PrvTpID +"^"+item.MarID +"^"+ item.LocGrpID+"^"+ item.itmID;
 		    ConsDetArr.push(TmpData);
+		    if(item.PrvTpID=="")PrvTpFlag=1; //
 		}
 	})
+	
+	if((CsNoType!="Nur")&&(IsMustPrvTp==1)&&(PrvTpFlag==1)){
+		$.messager.alert("提示","请选择类型！","warning");
+		return;
+	}
 	
 	if(HasRepetDoc){
 		$.messager.alert("提示:","存在同一人员多条记录，请确认！","warning");
 		return;
 	}
 	
-	if(((AudNeedUser==1)||((MoreFlag=="1")&&(MulWriFlag==1)))&&(isEmptyFlag == 1)){
+	if(((AudNeedUser==1)||((MoreFlag=="1")&&(MulWriFlag==1)))&&(isEmptyFlag == 1)&&(LeaderFlag != 1)){ //hxy 2021-06-21 add &&(LeaderFlag != 1)
+		$.messager.alert("提示:","会诊"+TypeDesc+"不能为空！","warning");
+		return;
+	}
+	
+	if((CsNoType!="Nur")&&(NextStCode=="75")&&(isEmptyLeadFlag == 1)){ //hxy 2021-06-21 对于医师大科住院总的审核，会诊人不能为空
 		$.messager.alert("提示:","会诊"+TypeDesc+"不能为空！","warning");
 		return;
 	}
@@ -708,12 +849,13 @@ function saveConsultDetail(){
 
 	/// 保存
 	runClassMethod("web.DHCEMConsult","InsConsAudit",{"CstID":CstID, "LgParams":LgParams, "mListData":mListData},function(jsonString){
-		if (jsonString == -1){
+		var jsonArr = jsonString.split("^")
+		if (jsonArr[0] == -1){
 			$.messager.alert("提示:","申请单非发送状态，不允许进行审核操作！","warning");
 			return;
 		}
-		if (jsonString < 0){
-			$.messager.alert("提示:","会诊审核数据保存失败，失败原因:"+jsonString,"warning");
+		if (jsonArr[0] < 0){
+			$.messager.alert("提示:","会诊审核数据审核失败，失败原因:"+(jsonArr.length == 1?jsonArr[0]:jsonArr[1]),"warning");
 		}else{
 			$('#newConWin').dialog('close');
 			$.messager.alert("提示:","审核成功！","warning");
@@ -792,7 +934,7 @@ function GetCurSystemDate(offset){
 /// 检查项目绑定提示栏
 function BindTips(){
 	
-	var html='<div id="tip" style="border-radius:3px; display:none; border:1px solid #000; padding:10px; margin:5px; position: absolute; background-color: #000;color:#FFF;"></div>';
+	var html='<div id="tip" style="word-break:break-all;word-wrap:break-word;border-radius:3px; display:none; border:1px solid #000; padding:10px; margin:5px; position: absolute; background-color: #000;color:#FFF;"></div>';
 	$('body').append(html);
 	
 	/// 鼠标离开
@@ -883,9 +1025,9 @@ function cancelAudit(){
 	}
 	var CstID = rowData.CstID;
 	/// 保存
-	runClassMethod("web.DHCEMConsult","InsRevConsAudit",{"CstID":CstID, "UserID":LgUserID},function(jsonString){
+	runClassMethod("web.DHCEMConsult","InsRevConsAudit",{"CstID":CstID, "LgParams":LgParams},function(jsonString){
 		if (jsonString == -1){
-			$.messager.alert("提示:","申请单非审核状态，不允许进行取消审核操作！","warning");
+			$.messager.alert("提示:","申请单当前所在状态，不允许进行取消审核操作！","warning");
 			return;
 		}
 		if (jsonString < 0){

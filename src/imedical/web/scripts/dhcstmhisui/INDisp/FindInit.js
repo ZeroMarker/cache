@@ -1,7 +1,7 @@
-var SelInitWin = function (Fn, DispLoc, ReqLoc) {
-	$HUI.dialog('#SelInitWin').open();
+var SelInitWin = function(Fn, DispLoc, ReqLoc, HvFlag) {
+	$HUI.dialog('#SelInitWin', { width: gWinWidth, height: gWinHeight }).open();
 	$HUI.radio("[name='DispMode']", {
-		onChecked: function (e, value) {
+		onChecked: function(e, value) {
 			var DispMode = $("input[name='DispMode']:checked").val();
 			if (DispMode == '0') {
 				$('#InitUserList').combobox({
@@ -21,25 +21,26 @@ var SelInitWin = function (Fn, DispLoc, ReqLoc) {
 		}
 	});
 	var LocParams = JSON.stringify(addSessionParams({
-		Type: 'All'
+		Type: 'LeadLoc',
+		LocId: DispLoc
 	}));
 	var LocBox = $HUI.combobox('#FrLoc', {
 		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + LocParams,
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-	//专业组
+	// 专业组
 	var GrpListParams = JSON.stringify(addSessionParams({
 		User: gUserId,
 		SubLoc: ReqLoc,
-		ReqFlag: ""
+		ReqFlag: ''
 	}));
 	var GrpListBox = $HUI.combobox('#InitGrpList', {
 		url: $URL + '?ClassName=web.DHCSTMHUI.DHCSubLocUserGroup&QueryName=GetLocGrp&ResultSetType=array&Params=' + GrpListParams,
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-	//科室人员
+	// 科室人员
 	var UserListBox = $HUI.combobox('#InitUserList', {
 		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetDeptUser&ResultSetType=array&Params='
 			+ JSON.stringify({
@@ -48,63 +49,65 @@ var SelInitWin = function (Fn, DispLoc, ReqLoc) {
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-	var MainCm = [[{
-		title: 'RowId',
-		field: 'RowId',
-		width: 50,
-		hidden: true
-	}, {
-		title: '单号',
-		field: 'InitNo',
-		align: 'left',
-		editor: 'text',
-		width: 150,
-		sortable: true
-	}, {
-		title: '供给科室',
-		field: 'FrLocDesc',
-		width: 150,
-		sortable: true
-	}, {
-		title: '制单时间',
-		field: 'InitDateTime',
-		width: 150
-	}, {
-		title: '单据状态',
-		field: 'StatusCode',
-		width: 70
-	}, {
-		title: '制单人',
-		field: 'UserName',
-		width: 80
-	}, {
-		title: '进价金额',
-		field: 'RpAmt',
-		align: 'right',
-		width: 100
-	}, {
-		title: '售价金额',
-		field: 'SpAmt',
-		align: 'right',
-		width: 100
-	}, {
-		title: '进销差',
-		field: 'MarginAmt',
-		align: 'right',
-		width: 100
-	}, {
-		title: '备注',
-		field: 'Remark',
-		width: 150
-	}
+	var MainCm = [[
+		{
+			title: 'RowId',
+			field: 'RowId',
+			width: 50,
+			hidden: true
+		}, {
+			title: '单号',
+			field: 'InitNo',
+			align: 'left',
+			editor: 'text',
+			width: 150,
+			sortable: true
+		}, {
+			title: '供给科室',
+			field: 'FrLocDesc',
+			width: 150,
+			sortable: true
+		}, {
+			title: '制单时间',
+			field: 'InitDateTime',
+			width: 150
+		}, {
+			title: '单据状态',
+			field: 'StatusCode',
+			width: 70
+		}, {
+			title: '制单人',
+			field: 'UserName',
+			width: 80
+		}, {
+			title: '进价金额',
+			field: 'RpAmt',
+			align: 'right',
+			width: 100
+		}, {
+			title: '售价金额',
+			field: 'SpAmt',
+			align: 'right',
+			width: 100
+		}, {
+			title: '进销差',
+			field: 'MarginAmt',
+			align: 'right',
+			width: 100
+		}, {
+			title: '备注',
+			field: 'Remark',
+			width: 150
+		}
 	]];
 	var MainGrid = $UI.datagrid('#InitMainGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
-			QueryName: 'DHCINIsTrfM'
+			QueryName: 'DHCINIsTrfM',
+			query2JsonStrict: 1
 		},
 		columns: MainCm,
-		onSelect: function (index, row) {
+		onSelect: function(index, row) {
 			var Init = row['RowId'];
 			var ParamsObj = {
 				Init: Init,
@@ -114,162 +117,174 @@ var SelInitWin = function (Fn, DispLoc, ReqLoc) {
 			DetailGrid.load({
 				ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
 				QueryName: 'DHCINIsTrfD',
+				query2JsonStrict: 1,
 				Params: JSON.stringify(ParamsObj)
 			});
 		},
-		onLoadSuccess: function (data) {
+		onLoadSuccess: function(data) {
 			if (data.rows.length > 0) {
 				MainGrid.selectRow(0);
 			}
 		}
 	});
 
-	var DetailCm = [[{
-		field: 'ck',
-		checkbox: true
-	}, {
-		title: 'RowId',
-		field: 'RowId',
-		width: 50,
-		saveCol: true,
-		hidden: true
-	}, {
-		title: '物资批次Id',
-		field: 'Inclb',
-		width: 50,
-		saveCol: true,
-		hidden: true
-	}, {
-		title: '物资代码',
-		field: 'InciCode',
-		width: 120
-	}, {
-		title: '物资名称',
-		field: 'InciDesc',
-		width: 180
-	}, {
-		title: '规格',
-		field: 'Spec',
-		width: 80
-	}, {
-		title: '批号~效期',
-		field: 'BatExp',
-		width: 200
-	}, {
-		title: '厂商',
-		field: 'ManfDesc',
-		width: 160
-	}, {
-		title: '批次库存',
-		field: 'InclbQty',
-		align: 'right',
-		width: 80
-	}, {
-		title: '转移数量',
-		field: 'Qty',
-		align: 'right',
-		width: 80
-	}, {
-		title: '发放数量',
-		field: 'DispQty',
-		width: 80,
-		saveCol: true,
-		editor: {
-			type: 'numberbox',
-			options: {
-				min: 0,
-				required: true
-			}
-		},
-		align: 'right'
-	}, {
-		title: '单位Id',
-		field: 'UomId',
-		saveCol: true,
-		hidden: true,
-		width: 50
-	}, {
-		title: '单位',
-		field: 'UomDesc',
-		width: 50
-	}, {
-		title: '进价',
-		field: 'Rp',
-		align: 'right',
-		width: 80
-	}, {
-		title: '售价',
-		field: 'Sp',
-		align: 'right',
-		width: 80
-	}, {
-		title: '进价金额',
-		field: 'RpAmt',
-		align: 'right',
-		width: 80
-	}, {
-		title: '售价金额',
-		field: 'SpAmt',
-		align: 'right',
-		width: 80
-	}, {
-		title: '可用数量',
-		field: 'InclbAvaQty',
-		align: 'right',
-		width: 100
-	}
+	var DetailCm = [[
+		{
+			field: 'ck',
+			checkbox: true
+		}, {
+			title: 'RowId',
+			field: 'RowId',
+			width: 50,
+			saveCol: true,
+			hidden: true
+		}, {
+			title: '物资批次Id',
+			field: 'Inclb',
+			width: 50,
+			saveCol: true,
+			hidden: true
+		}, {
+			title: '物资代码',
+			field: 'InciCode',
+			width: 120
+		}, {
+			title: '物资名称',
+			field: 'InciDesc',
+			width: 180
+		}, {
+			title: '规格',
+			field: 'Spec',
+			width: 80
+		}, {
+			title: '批号~效期',
+			field: 'BatExp',
+			width: 200
+		}, {
+			title: '生产厂家',
+			field: 'ManfDesc',
+			width: 160
+		}, {
+			title: '批次库存',
+			field: 'InclbQty',
+			align: 'right',
+			width: 80
+		}, {
+			title: '转移数量',
+			field: 'Qty',
+			align: 'right',
+			width: 80
+		}, {
+			title: '发放数量',
+			field: 'DispQty',
+			width: 80,
+			saveCol: true,
+			editor: {
+				type: 'numberbox',
+				options: {
+					min: 0,
+					tipPosition: 'bottom',
+					required: true,
+					precision: GetFmtNum('FmtQTY')
+				}
+			},
+			align: 'right'
+		}, {
+			title: '单位Id',
+			field: 'UomId',
+			saveCol: true,
+			hidden: true,
+			width: 50
+		}, {
+			title: '单位',
+			field: 'UomDesc',
+			width: 50
+		}, {
+			title: '进价',
+			field: 'Rp',
+			align: 'right',
+			width: 80
+		}, {
+			title: '售价',
+			field: 'Sp',
+			align: 'right',
+			width: 80
+		}, {
+			title: '进价金额',
+			field: 'RpAmt',
+			align: 'right',
+			width: 80
+		}, {
+			title: '售价金额',
+			field: 'SpAmt',
+			align: 'right',
+			width: 80
+		}, {
+			title: '可用数量',
+			field: 'InclbAvaQty',
+			align: 'right',
+			width: 100
+		}
 	]];
 	var DetailGrid = $UI.datagrid('#InitDetailGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
-			QueryName: 'DHCINIsTrfD'
+			QueryName: 'DHCINIsTrfD',
+			query2JsonStrict: 1
 		},
 		columns: DetailCm,
 		singleSelect: false,
-		onClickCell: function (index, field, value) {
-			DetailGrid.commonClickCell(index, field);
-		},
+		onClickRow: function(index, row) {
+			DetailGrid.commonClickRow(index, row);
+		}
 	});
 
 	$UI.linkbutton('#InitQueryBT', {
-		onClick: function () {
-			var ParamsObj = $UI.loopBlock('#InitConditions');
-			if (isEmpty(ParamsObj.StartDate)) {
-				$UI.msg('alert', '起始日期不能为空!');
-				return;
-			}
-			if (isEmpty(ParamsObj.EndDate)) {
-				$UI.msg('alert', '截止日期不能为空!');
-				return;
-			}
-			ParamsObj.Status = '31';
-			ParamsObj.ToLoc = DispLoc;
-			var Params = JSON.stringify(ParamsObj);
-			$UI.clear(MainGrid);
-			$UI.clear(DetailGrid);
-			MainGrid.load({
-				ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
-				QueryName: 'DHCINIsTrfM',
-				Params: Params
-			});
+		onClick: function() {
+			InitQuery();
 		}
 	});
+	function InitQuery() {
+		var ParamsObj = $UI.loopBlock('#InitConditions');
+		if (isEmpty(ParamsObj.StartDate)) {
+			$UI.msg('alert', '起始日期不能为空!');
+			return;
+		}
+		if (isEmpty(ParamsObj.EndDate)) {
+			$UI.msg('alert', '截止日期不能为空!');
+			return;
+		}
+		ParamsObj.Status = '31';
+		ParamsObj.ToLoc = DispLoc;
+		ParamsObj.HVFlag = HvFlag;
+		var Params = JSON.stringify(ParamsObj);
+		$UI.clear(MainGrid);
+		$UI.clear(DetailGrid);
+		MainGrid.load({
+			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
+			QueryName: 'DHCINIsTrfM',
+			query2JsonStrict: 1,
+			Params: Params
+		});
+	}
 	$UI.linkbutton('#InitClearBT', {
-		onClick: function () {
+		onClick: function() {
 			Clear();
 		}
 	});
 
 	$UI.linkbutton('#InitSelectBT', {
-		onClick: function () {
+		onClick: function() {
 			SaveDispByInit();
 		}
 	});
 	function SaveDispByInit() {
-		DetailGrid.endEditing();
+		if (!DetailGrid.endEditing()) {
+			return;
+		}
 		var SelectedRow = MainGrid.getSelected();
 		if (isEmpty(SelectedRow)) {
-			$UI.msg('alert', "请选择转移单!");
+			$UI.msg('alert', '请选择转移单!');
 			return;
 		}
 		var Rows = DetailGrid.getSelections();
@@ -287,11 +302,11 @@ var SelInitWin = function (Fn, DispLoc, ReqLoc) {
 		var ParamsObj = $UI.loopBlock('#InitConditions');
 		var DispMode = $("input[name='DispMode']:checked").val();
 		if ((DispMode == '1') && (isEmpty(ParamsObj['UserList']))) {
-			$UI.msg('alert', '请选择发放人员!')
+			$UI.msg('alert', '请选择发放人员!');
 			return;
 		}
 		if ((DispMode == '0') && (isEmpty(ParamsObj['GrpList']))) {
-			$UI.msg('alert', '请选择发放专业组!')
+			$UI.msg('alert', '请选择发放专业组!');
 			return;
 		}
 		var Params = JSON.stringify(ParamsObj);
@@ -305,7 +320,7 @@ var SelInitWin = function (Fn, DispLoc, ReqLoc) {
 			Params: Params,
 			DispLoc: DispLoc,
 			ReqLoc: ReqLoc
-		}, function (jsonData) {
+		}, function(jsonData) {
 			if (jsonData.success === 0) {
 				$UI.msg('success', jsonData.msg);
 				Fn(jsonData.rowid);
@@ -320,12 +335,13 @@ var SelInitWin = function (Fn, DispLoc, ReqLoc) {
 		$UI.clearBlock('#InitConditions');
 		$UI.clear(MainGrid);
 		$UI.clear(DetailGrid);
-		var Dafult = {
+		var DefaultData = {
 			StartDate: DefaultStDate(),
 			EndDate: DefaultEdDate()
-		}
-		$UI.fillBlock('#InitConditions', Dafult);
+		};
+		$UI.fillBlock('#InitConditions', DefaultData);
 	}
 
 	Clear();
-}
+	InitQuery();
+};

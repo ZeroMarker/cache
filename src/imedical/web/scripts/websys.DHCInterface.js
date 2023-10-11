@@ -4,7 +4,7 @@ var init = function(){
 		var r = $("#twebsys_DHCInterface").datagrid("getSelected");
 		if (r && r["TID"]){
 			var ID = r["TID"];
-			websys_lu('websys.default.jquery.csp?WEBSYS.TCOMPONENT=websys.DHCInterface.Edit&ID='+ID,false,'top=100,left=300,height=520,width=900')
+			websys_lu('websys.default.jquery.csp?WEBSYS.TCOMPONENT=websys.DHCInterface.Edit&ID='+ID,false,'top=20,left=300,height=800,width=900')
 		}else{
 			$.messager.alert("提示","请选择一行记录.");
 		}

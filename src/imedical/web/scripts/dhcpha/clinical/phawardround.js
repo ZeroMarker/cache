@@ -3,17 +3,19 @@
 * pengzhikun
 */
 var url="dhcpha.clinical.action.csp";
-var titleNotes='<span style="font-weight:bold;">重点关注药物</span>';
-var titleNote='<span style="font-weight:bold;">出院带药列表</span>';
+if ("undefined"!==typeof(websys_getMWToken)){
+	url += "?MWToken="+websys_getMWToken()
+	}
+var titleNotes='<span style="font-weight:bold;">'+$g("重点关注药物")+'</span>';
+var titleNote='<span style="font-weight:bold;">'+$g("出院带药列表")+'</span>';
 var EpisodeID=""
 var tmp=""; 			/// 缓存点击每个分级菜单，显示界面时，取到的病人基本信息
-var choseFlag="";   	/// 出院患者加载出院带药标志 qunianpeng 2018/3/12
 $(document).ready(function(){	
 
 	EpisodeID=getParam("EpisodeID")		/// 默认打开新入院患者界面 qunianpeng 2018/3/10
 	PatientID=getParam("PatientID")
- 	choseMenu("新入院患者");
-	$('.easyui-accordion ul li a:contains("新入院患者")').css({"background":"#87CEFA"});	
+ 	choseMenu($g("新入院患者"));
+	$('.easyui-accordion ul li a:contains('+$g("新入院患者")+')').css({"background":"#87CEFA"});	
 	
 	//根据点击明细显示窗口panel
 	$('.easyui-accordion ul li a').click(function(){
@@ -33,47 +35,50 @@ $(document).ready(function(){
 
 function choseMenu(item){
 	switch(item){
-		case "新入院患者":
+		case $g("新入院患者"):
 			//防止重复点击，而此时Flag=1，导致不执行创建界面
 			if(Flag1==0){
 				//隐藏mainpanel的所有子节点
 				$("#mainPanel").children().css("display","none")
-				//动态创建一个"新入院患者"的panel
+				//动态创建一个$g("新入院患者")的panel
 				createPanel();
 				//设置mainPanel可见
 				$('#mainPanel').css("display","block"); 
 				$('#mainPanel').panel({
-					title:item+"<span style='color:red;'>[红色*号标注的为必填项]</span>"
+					title:item+"<span style='color:red;'>"+$g('[红色*号标注的为必填项]')+"</span>"
 				});
+				$('input[name="ordFiter"][value=""]').attr("checked", true);
 			}			
 			break;
 			
-		case "住院期间患者":
+		case $g("住院期间患者"):
 			if(Flag2==0){
 				//隐藏mainpanel的所有子节点
 				$("#mainPanel").children().css("display","none")
-				//动态创建一个"住院期间患者"的panel
+				//动态创建一个$g("住院期间患者")的panel
 				createInHopPanel();
 				$('#mainPanel').css("display","block"); 
 				$('#mainPanel').panel({
-					title:item+"<span style='color:red;'>[红色*号标注的为必填项]</span>"
+					title:item+"<span style='color:red;'>"+$g('[红色*号标注的为必填项]')+"</span>"
 				});
 				//加载数据
 				//loadData();
+				$('input[name="ordFiter"][value=""]').attr("checked", true);
 			}
 			break;			
-		case "出院患者":
+		case $g("出院患者"):
 			if(Flag3==0){
 				//隐藏mainpanel的所有子节点
 				$("#mainPanel").children().css("display","none")
-				//动态创建一个"住院期间患者"的panel
+				//动态创建一个$g("住院期间患者")的panel
 				createOutHopPanel();
 				$('#mainPanel').css("display","block"); 
 				$('#mainPanel').panel({
-					title:item+"<span style='color:red;'>[红色*号标注的为必填项]</span>"
+					title:item+"<span style='color:red;'>"+$g('[红色*号标注的为必填项]')+"</span>"
 				});
 				//加载数据
 				//loadData();
+				$('input[name="ordFiter"][value="OUT"]').attr("checked", true);
 			}
 			break;			
 		default:
@@ -83,7 +88,7 @@ function choseMenu(item){
 } 
 
 
-//--创建"新入院患者"主界面--//
+//--创建$g("新入院患者")主界面--//
 var Flag1=0;//防止重复点击，多次创建面板
 function createPanel() {
 	if(Flag1==0){
@@ -121,33 +126,29 @@ function InitPatientInfo(EpisodeID)
    	   type: "POST",
   	   url: url,
    	   data: "action=getPatWardInf&AdmDr="+EpisodeID+"&Status="+"New",
-       //dataType: "json",
-       success: function(val){
-			if(val == -999){						///没有查房记录则病人体征基本信息从电子病历中取  qunianpeng 2018/3/13
-		   		var patInfo=tkMakeServerCall("web.DHCSTPHCMCOMMON","GetPatInfoByEmr",EpisodeID);
-				var patDataArray=patInfo.split("@");
-				$('#PreDisHis').val(patDataArray[1]);			/// 现病史
-			  	$('#PasDisHis').val(patDataArray[2]);			/// 既往病史
-			  	$('#PasMedHis').val(patDataArray[12]);			/// 既往用药史
-			  	$('#PerAndFamHis').val(patDataArray[3]);		/// 个人史及家族史
-		      	//$('#DisAndTre').val(patDataArray[4]);			/// 伴发疾病与用药情况
-		      	//$('#AllergicHis').val(patDataArray[5]); 		/// 过敏史	  
-                var patAllergicHis=tkMakeServerCall("web.DHCSTPHCMCOMMON","GetPatAllergies",PatientID);	   //lbb  2020.2.5 调用医生站接口取过敏史
-		      	$('#AllergicHis').val(patAllergicHis)  		      /// 过敏史				
+       dataType: "json",
+       success: function(Data){
+		 if(Data.RowId==""){						///没有查房记录则病人体征基本信息从电子病历中取  qunianpeng 2018/3/13
+				$('#PreDisHis').val(Data.CurrentMed);			/// 现病史
+			  	$('#PasDisHis').val(Data.PastHistory);			/// 既往病史
+			  	$('#PasMedHis').val(Data.patPMDrgHisDesc);			/// 既往用药史
+			  	$('#PerAndFamHis').val(Data.Personal);		/// 个人史及家族史
+		        $('#DisAndTre').val(Data.Family);			/// 伴发疾病与用药情况
+		      	$('#AllergicHis').val(Data.Allergy); 		/// 过敏史	      		      	
 		   }
-	      if(val!=-999){
-		  	var tmps=val.split("!");
-		  	var listMain=tmps[0].split("^");		/// 主信息
-		  	$('#RowId').val(tmps[8]);				/// 表ID		  	
-		  	$('#patBloodType').val(listMain[10]);	/// 血型
-		  	$('#InHosdiag').val(listMain[11]);		/// 诊断            
-		  	$('#PreDisHis').val(tmps[2]);			/// 现病史
-		  	$('#PasDisHis').val(tmps[3]);			/// 既往病史
-		  	$('#PasMedHis').val(tmps[4]);			/// 既往用药史
-		  	$('#PerAndFamHis').val(tmps[5]);		/// 个人史及家族史
-	      	$('#DisAndTre').val(tmps[6]);			/// 伴发疾病与用药情况
-	      	$('#AllergicHis').val(tmps[7]); 		/// 过敏史
-	      	$('#NewInPatGuideContent').val(listMain[13]);		/// 指导意见
+	      else{
+		  	$('#RowId').val(Data.RowId);				/// 表ID		  	
+		  	$('#patBloodType').val(Data.WRBloodType);	/// 血型
+		  	$('#InHosdiag').val(Data.WRICDesc);		/// 诊断            
+		  	$('#PreDisHis').val(Data.wrHisPreComList);			/// 现病史
+		  	$('#PasDisHis').val(Data.wrPasDisHisList);			/// 既往病史
+		  	$('#PasMedHis').val(Data.wrPasMedHisList);			/// 既往用药史
+		  	$('#PerAndFamHis').val(Data.wrPerFamHisList);		/// 个人史及家族史
+	      	$('#DisAndTre').val(Data.wrConDisTreList);			/// 伴发疾病与用药情况
+	      	$('#AllergicHis').val(Data.wrAllergHisList); 		/// 过敏史
+	      	$('#NewInPatGuideContent').val(Data.WRGuidance);		/// 指导意见
+	      	$('#patWeight').val(Data.PatW);
+		  
 
 	         var maxlimit=800;
 	      	  if ($('#NewInPatGuideContent').val().length >maxlimit){  
@@ -156,7 +157,7 @@ function InitPatientInfo(EpisodeID)
                  $('input[name="remLen"]').val(maxlimit-$('#NewInPatGuideContent').val().length);
 		       }
 	      	//设置勾选框的选中状态
-	      	var checkList=tmps[1].substring(0,tmps[1].length).split("^");
+	      	var checkList=Data.wrGuidanceList.substring(0,Data.wrGuidanceList.length).split("^");
 	      	$("input[type='checkbox']").each(function(){
 		       for(var i=0;i<checkList.length;i++){
 		          /*if($(this).val()==checkList[i]&$(this).val()==1){
@@ -173,7 +174,7 @@ function InitPatientInfo(EpisodeID)
 				   }
 		       }
 		  	});
-		  	$('#otherGuiscopeN').val(tmps[9]);  	///其它  2017-09-13 yuliping
+		  	$('#otherGuiscopeN').val(Data.wrGuidanceOther);  	///其它  2017-09-13 yuliping
 		  	
 		  	//获取查房记录ID，如果id不存在，即无查房记录，则不加载药品信息列表
 		  	wardRoundID=$('#RowId').val();
@@ -194,7 +195,7 @@ function InitPatientInfo(EpisodeID)
     });     
 }
 
-//--创建"住院期间患者"主界面--//
+//--创建住院期间患者主界面--//
 var Flag2=0;//防止重复点击，多次创建面板
 function createInHopPanel(){
 	if(Flag2==0){
@@ -223,7 +224,7 @@ function createInHopPanel(){
 	}
 }
 
-//--创建"出院患者"主界面--//
+//--创建出院患者主界面--//
 var Flag3=0;//防止重复点击，多次创建面板
 function createOutHopPanel(){
 	if(Flag3==0){
@@ -233,7 +234,6 @@ function createOutHopPanel(){
 		Flag1=0;
 		Flag2=0;
 		InitOutPatientInfo(EpisodeID);			
-		choseFlag = "OUT";	/// 选中tab设置标志(出院患者医嘱界面要默认加载出院带药) qunianpeng 2018/3/12
 	}
 }
 
@@ -266,13 +266,11 @@ function InitOutPatientInfo(EpisodeID)
    	   type: "POST",
   	   url: url,
    	   data: "action=getPatWardInf&AdmDr="+EpisodeID+"&Status="+"Out",
-       //dataType: "json",
-       success: function(val){
-	      if(val!=-999){
-		  	var tmps=val.split("!");
-		  	var listMain=tmps[0].split("^"); 			/// 主信息
-		  	$('#OutRowId').val(tmps[8]);  				/// 表ID
-	      	$('#OutPatGuideContent').val(listMain[13]); /// 指导意见
+       dataType: "json",
+      success: function(Data){
+	      if(Data.RowId!=""){ 
+		  	$('#OutRowId').val(Data.RowId);  				/// 表ID
+	      	$('#OutPatGuideContent').val(Data.WRGuidance); /// 指导意见
 	          var maxlimit=800;
 		       if ($('#OutPatGuideContent').val().length >maxlimit){  
                    $('#OutPatGuideContent').val(($('#OutPatGuideContent').val().substring(0, maxlimit))); 
@@ -280,7 +278,7 @@ function InitOutPatientInfo(EpisodeID)
                  $('input[name="remLen3"]').val(maxlimit-$('#OutPatGuideContent').val().length);
 		       }
 	      	//设置勾选框的选中状态
-	      	var checkList=tmps[1].substring(0,tmps[1].length).split("^");
+	      	var checkList=Data.wrGuidanceList.substring(0,Data.wrGuidanceList.length).split("^");
 	      	$("input[type='checkbox']").each(function(){
 		       for(var i=0;i<checkList.length;i++){
 		           /*if($(this).val()==checkList[i]&$(this).val()==1){
@@ -298,7 +296,7 @@ function InitOutPatientInfo(EpisodeID)
 		       }
 		  	});
 		  	
-		  	$('#otherGuiscopeO').val(tmps[9]);		/// 其它  2017-09-13 yuliping
+		  	$('#otherGuiscopeO').val(Data.wrGuidanceOther);		/// 其它  2017-09-13 yuliping
 		  	//获取查房记录ID，如果id不存在，即无查房记录，则不加载药品信息列表
 		  	wardRoundID=$('#OutRowId').val();
 			if(wardRoundID!=""){
@@ -323,7 +321,7 @@ function InitOutPatientInfo(EpisodeID)
 /**
 * 界面上基本内容的显示控制
 * 1.控制子条目勾选框的显隐
-* 2.每个界面"编辑内容.."，获取焦点、失去焦点，内容控制
+* 2.每个界面$g("编辑内容..")，获取焦点、失去焦点，内容控制
 */
 function pageBasicControll(){
 	//控制name="checkboxMain"选择框下子条目的显示和隐藏
@@ -339,37 +337,37 @@ function pageBasicControll(){
 	})
 	/*新入院*/
 	$('#NewInPatGuideContent').focus(function(){
-		if($(this).text()=="编辑内容.."){
+		if($(this).text()==$g("编辑内容..")){
 			$(this).text("");
 		}
 	})
 	$('#NewInPatGuideContent').blur(function(){
 		if($(this).text().trim()==""){
-			$(this).text("编辑内容..");
+			$(this).text($g("编辑内容.."));
 		}
 	})
 	
 	/*住院期间*/
 	$('#InPatGuideContent').focus(function(){
-		if($(this).text()=="编辑内容.."){
+		if($(this).text()==$g("编辑内容..")){
 			$(this).text("");
 		}
 	})
 	$('#InPatGuideContent').blur(function(){
 		if($(this).text().trim()==""){
-			$(this).text("编辑内容..");
+			$(this).text($g("编辑内容.."));
 		}
 	})
 	
 	/*出院*/
 	$('#OutPatGuideContent').focus(function(){
-		if($(this).text()=="编辑内容.."){
+		if($(this).text()==$g("编辑内容..")){
 			$(this).text("");
 		}
 	})
 	$('#OutPatGuideContent').blur(function(){
 		if($(this).text().trim()==""){
-			$(this).text("编辑内容..");
+			$(this).text($g("编辑内容.."));
 		}
 	})
 		
@@ -379,16 +377,16 @@ function pageBasicControll(){
 function InitPageData(){
 	//定义columns
 	var columns=[[
-		{field:"orditm",title:'orditm',width:90,hidden:true},
-	    {field:'incidesc',title:'名称',width:300,align:'left'},
+		{field:"orditm",title:$g('orditm'),width:90,hidden:true},
+	    {field:'incidesc',title:$g('名称'),width:300,align:'left'},
 	    //{field:'genenic',title:'通用名',width:300,align:'left'},
 	    //{field:'manf',title:'生产企业',width:300,align:'left'},
-	    {field:'dosage',title:'剂量',width:60,align:'left'}, 	/// 增加剂量-是否执行 qunianpeng 2018/3/12
-		{field:'instru',title:'用法',width:60,align:'left'},
-		{field:'freq',title:'频次',width:60,align:'left'},
-		{field:'duration',title:'疗程',width:40,align:'left'},
-		{field:'execStat',title:'是否执行',width:50,align:'left',hidden:true},
-	    {field:'dgID',title:'dgID',width:300,hidden:true},
+	    {field:'dosage',title:$g('剂量'),width:60,align:'left'}, 	/// 增加剂量-是否执行 qunianpeng 2018/3/12
+		{field:'instru',title:$g('用法'),width:60,align:'left'},
+		{field:'freq',title:$g('频次'),width:60,align:'left'},
+		{field:'duration',title:$g('疗程'),width:40,align:'left'},
+		{field:'execStat',title:$g('是否执行'),width:50,align:'left',hidden:true},
+	    {field:'dgID',title:$g('dgID'),width:300,hidden:true},
 
 		{field:'operation',title:'<a href="#" onclick="patOeInfoWindow()"><img style="margin-left:3px;" src="../scripts/dhcpha/jQuery/themes/icons/edit_add.png" border=0/></a>',
 		    width:30,
@@ -408,7 +406,7 @@ function InitPageData(){
 	    rownumbers:true,		/// 行号 
 	    remoteSort:false,		/// 界面排序
 		fitColumns:true,    	/// duwensheng 2016-09-13 自适应大小，防止横向滑动
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 	    onDblClickRow: function (rowIndex, rowData) {	
             //if (editRow != "") { 
               //  $("#susdrgdg").datagrid('endEdit', editRow); 
@@ -429,7 +427,7 @@ function InitPageData(){
 	    remoteSort:false,		/// 界面排序
 		fitColumns:true,    	/// duwensheng 2016-09-13 自适应大小，防止横向滑动
 	    rownumbers:true,		/// 行号 
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 	    onDblClickRow: function (rowIndex, rowData) {
             //if (editRow != "") { 
               //  $("#susdrgdg").datagrid('endEdit', editRow); 
@@ -450,7 +448,7 @@ function InitPageData(){
 	    remoteSort:false,			/// 界面排序
 		fitColumns:true,    		/// duwensheng 2016-09-13 自适应大小，防止横向滑动
 	    rownumbers:true,			/// 行号 
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 	    onDblClickRow: function (rowIndex, rowData) {
             //if (editRow != "") { 
               //  $("#susdrgdg").datagrid('endEdit', editRow); 
@@ -554,7 +552,7 @@ function delRow(datagID,rowIndex)
 function patOeInfoWindow()
 {
 	$('#mwin').window({
-		title:'病人用药列表',
+		title:$g('病人用药列表'),
 		collapsible:true,
 		border:false,
 		closed:"true",
@@ -574,38 +572,38 @@ function InitPatMedGrid()
 {
 	//定义columns
 	var columns=[[
-		{field:"ck",checkbox:true,width:20},
+		{field:"ck",checkbox:true,width:20,disabled:true},
 		{field:"moeori",title:'moeori',width:90,hidden:true},
 		{field:"orditm",title:'orditm',width:90,hidden:true},
 		{field:'phcdf',title:'phcdf',width:80,hidden:true},
-		{field:'priorty',title:'优先级',width:80},
-		{field:'StartDate',title:'开始日期',width:80},
-		{field:'EndDate',title:'结束日期',width:80},
-		{field:'incidesc',title:'名称',width:280},
-		{field:'genenic',title:'处方通用名',width:160},
+		{field:'priorty',title:$g('优先级'),width:80},
+		{field:'StartDate',title:$g('开始日期'),width:80},
+		{field:'EndDate',title:$g('结束日期'),width:80},
+		{field:'incidesc',title:$g('名称'),width:280},
+		{field:'genenic',title:$g('处方通用名'),width:160},
 		{field:'genenicdr',title:'genenicdr',width:80,hidden:true},
-		{field:'dosage',title:'剂量',width:60},
+		{field:'dosage',title:$g('剂量'),width:60},
 		{field:'dosuomID',title:'dosuomID',width:80,hidden:true},
-		{field:'instru',title:'用法',width:80},
+		{field:'instru',title:$g('用法'),width:80},
 		{field:'instrudr',title:'instrudr',width:80,hidden:true},
-		{field:'freq',title:'频次',width:40},
+		{field:'freq',title:$g('频次'),width:40},
 		{field:'freqdr',title:'freqdr',width:80,hidden:true},
-		{field:'duration',title:'疗程',width:40},
+		{field:'duration',title:$g('疗程'),width:40},
 		{field:'durId',title:'durId',width:80,hidden:true},
-		{field:'form',title:'剂型',width:80},
+		{field:'form',title:$g('剂型'),width:80},
 		{field:'formdr',title:'formdr',width:80,hidden:true},
-		{field:'doctor',title:'医生',width:80},
-		{field:'execStat',title:'是否执行',width:80},		/// 增加执行/发药 qunianpeng 2018/3/12
-		{field:'sendStat',title:'是否发药',width:80},
-		{field:'apprdocu',title:'批准文号',width:80},
-		{field:'manf',title:'厂家',width:80},
+		{field:'doctor',title:$g('医生'),width:80},
+		{field:'execStat',title:$g('是否执行'),width:80},		/// 增加执行/发药 qunianpeng 2018/3/12
+		{field:'sendStat',title:$g('是否发药'),width:80},
+		{field:'apprdocu',title:$g('批准文号'),width:80},
+		{field:'manf',title:$g('厂家'),width:80},
 		{field:'manfdr',title:'manfdr',width:80,hidden:true}
 
 	]];
 	
 	//定义datagrid
 	$('#medInfo').datagrid({
-		url:url+'?action=GetPatOEInfo',	
+		url:url+'&action=GetPatOEInfo',	
 		fit:true,
 		border:false,
 		rownumbers:true,
@@ -613,13 +611,14 @@ function InitPatMedGrid()
 		pageSize:15,  			/// 每页显示的记录条数
 		pageList:[15,30,45],    /// 可以设置每页记录条数的列表
 	    singleSelect:false,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		rowStyler:function(index,row){
 			if ((row.OeFlag=="D")||(row.OeFlag=="C")){
 				return 'background-color:pink;';
 			}
-		},onClickRow:function(rowIndex, rowData){
+		},
+		onClickRow:function(rowIndex, rowData){
 			var flag=0;
 			///获取当前行是否选中
 			if($('tr[datagrid-row-index='+rowIndex+']').hasClass('datagrid-row-checked')){
@@ -640,10 +639,27 @@ function InitPatMedGrid()
 		},
 		queryParams:{
 			params:EpisodeID,
-			PriCode:choseFlag
+			PriCode: $('input[name="ordFiter"]:checked').val()	
+		},
+		onLoadSuccess: function(data){
+			if(Flag1 == 1){
+				var selectedRows = $('#drugdg').datagrid('getRows');
+			}else if(Flag2 == 1){
+				var selectedRows = $('#drugdatagrid').datagrid('getRows');
+			}else if(Flag3 == 1){
+				var selectedRows = $('#outdrugdg').datagrid('getRows');	
+			}else{
+				return;	
+			}
+			$.each(data.rows, function (i, v) {
+				for(var index in selectedRows){
+					if(selectedRows[index].incidesc === v.incidesc){
+						$('#medInfo').datagrid('selectRow', i);	
+					}
+				}
+            });	
 		}
 	});
-	
 	$('#medInfo').datagrid('loadData', {total:0,rows:[]});
 }
 
@@ -810,7 +826,7 @@ function cancelWin()
 function LoadPatMedInfo(priCode)
 {
 	$('#medInfo').datagrid({
-		url:url+'?action=GetPatOEInfo',	
+		url:url+'&action=GetPatOEInfo',	
 		queryParams:{
 			params:EpisodeID,
 			PriCode:priCode}
@@ -853,7 +869,7 @@ function saveNewInPatPhaWardInfo(){
 	var AdmInf=$('#InHosdiag').val();    
 	//指导意见
 	var content=$('#NewInPatGuideContent').val();
-	if(content=="编辑内容.."){
+	if(content==$g("编辑内容..")){
 		content=""; 			/// qunianpeng 2017/11/22 防止未输入内容，保存了默认内容
 	}
 	//体重
@@ -919,7 +935,7 @@ function saveNewInPatPhaWardInfo(){
 	
 	$.ajax({  
 		type: 'POST',							/// 提交方式 post 或者get  
-		url: url+'?action=SavePhaWardRoundInf',	/// 提交到那里  
+		url: url+'&action=SavePhaWardRoundInf',	/// 提交到那里  
 		data: "rowid="+rowid+"&"+"input="+input,/// 提交的参数  
 		success:function(msg){ 
 			if(msg!=0){
@@ -954,7 +970,7 @@ function saveInPatPhaWardInfo(){
 	
 	//指导意见
 	var content=$('#InPatGuideContent').val();
-	if ((content=="")||(content=="编辑内容..")){
+	if ((content=="")||(content==$g("编辑内容.."))){
 		$.messager.alert("提示","记录不完整，请重新输入！");    //sufan  2016/09/13
 		return;
 		}
@@ -994,7 +1010,7 @@ function saveInPatPhaWardInfo(){
 	var input=wardMainInf+"^"+ckList+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+tmpItmArr
 	$.ajax({  
 		type: 'POST',							/// 提交方式 post 或者get  
-		url: url+'?action=SavePhaWardRoundInf', /// 提交到那里  
+		url: url+'&action=SavePhaWardRoundInf', /// 提交到那里  
 		data: "rowid="+rowid+"&"+"input="+input,/// 提交的参数  
 		success:function(msg){ 
 			if(msg!=0){
@@ -1028,7 +1044,7 @@ function saveOutPatPhaWardInfo(){
 	
 	//指导意见
 	var content=$('#OutPatGuideContent').val();
-	if ((content=="")||(content=="编辑内容..")){
+	if ((content=="")||(content==$g("编辑内容.."))){
 		$.messager.alert("提示","记录不完整，请重新输入！");   //sufan 2016/09/13
 		return;
 		}
@@ -1071,7 +1087,7 @@ function saveOutPatPhaWardInfo(){
 	
 	$.ajax({  
 		type: 'POST',							/// 提交方式 post 或者get  
-		url: url+'?action=SavePhaWardRoundInf', /// 提交到那里  
+		url: url+'&action=SavePhaWardRoundInf', /// 提交到那里  
 		data: "rowid="+rowid+"&"+"input="+input, /// 提交的参数  
 		success:function(msg){ 
 			if(msg!=0){
@@ -1091,11 +1107,12 @@ function saveOutPatPhaWardInfo(){
 
 function clearData(){
 	window.location.reload();
+	//window.parent.loadParWin();
 }
 
 function query(){
 	 $('#recordWin').window({
-		title:'药学查房记录',
+		title:$g('药学查房记录'),
 		collapsible:true,
 		border:false,
 		closed:"true",
@@ -1123,9 +1140,9 @@ function find_phaWardGrid(stDate,endDate)
 	
 	//定义columns
 	var columns=[[
-		{field:"wardRoundID",title:'RowID',width:100},
-		{field:'WRDate',title:'记录日期',width:200},
-		{field:'WRUser',title:'记录人',width:200}
+		{field:"wardRoundID",title:$g('RowID'),width:100},
+		{field:'WRDate',title:$g('记录日期'),width:200},
+		{field:'WRUser',title:$g('记录人'),width:200}
 	]];
 	
 	//定义datagrid
@@ -1137,8 +1154,8 @@ function find_phaWardGrid(stDate,endDate)
 		columns:columns,
 		pageSize:15,  				/// 每页显示的记录条数
 		pageList:[15,30,45],  		/// 可以设置每页记录条数的列表
-	    	singleSelect:true,      /// nisijia   2016-09-23
-		loadMsg: '正在加载信息...',
+	    singleSelect:true,      /// nisijia   2016-09-23
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		onDblClickRow:function() { 
     		var selected = $('#phaWardRecord').datagrid('getSelected'); 
@@ -1196,7 +1213,7 @@ function find_phaWardGrid(stDate,endDate)
 	});
 	
 	$('#phaWardRecord').datagrid({
-		url:url+'?action=getPatWardRecord',	
+		url:url+'&action=getPatWardRecord',	
 		queryParams:{
 			AdmDr:EpisodeID,
 			Status:"In",
@@ -1274,7 +1291,7 @@ function InitGuiScopeTable(){
 	var htmlStr=""
 	if(rtn==""){
 		//父节点为空，提示信息
-		 htmlStr= htmlStr+"<tr><td style='color:red'>请维护字典!"
+		 htmlStr= htmlStr+"<tr><td style='color:red'>$g('请维护字典!')"
 		}else{
 		rtnArr=rtn.split("!")
 		patlen=rtnArr.length+1;

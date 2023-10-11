@@ -19,6 +19,20 @@ function initMethod(){
 	
 	//年龄
 	$("#GroupHurtAge").on('change',changeAge)
+	
+	///登记号 回车事件
+	$('#patRegNo').bind('keydown',GetEmPatInfo);
+	
+	$("#PatNo").bind('keydown',GetEmPatInfo);
+	
+    //群伤事件登记号患者查询 
+    $('#QueryPatInfo').bind("click",QueryPatInfo); 
+    
+    //群伤事件患者关联
+    $('#LinkPat').bind("click",LinkPat);
+     
+    //群伤事件患者取消关联
+    $('#CanLinkPat').bind("click",CanLinkPat); 
 }
 
 function initCombobox(){
@@ -57,19 +71,12 @@ function QueryGroupHurt(){
 	var GroupHurtEndDate=$('#GroupHurtEndDate').combobox('getValue');
 	var params=GroupHurtStDate+"^"+GroupHurtEndDate+"^"+LgHospID;
 	$('#GroupPatGrid').datagrid({
-		url:'dhcapp.broker.csp?ClassName=web.DHCEMPatCheckLevQuery&MethodName=QueryGroupHurt',	
+		url:'dhcapp.broker.csp?ClassName=web.DHCEMPatCheckLevQuery&MethodName=QueryGroupHurtNew',	
 		queryParams:{
 			params:params
-		},onDblClickRow:function(index,row){
-			if(parent.top.frames[0]){
-				parent.top.frames[0].initDefaultValue(); //hxy 2020-06-01 调用清屏
-				parent.top.frames[0].$("#EmPatNo").val(row.GroupHurtReg);		/// 登记号
-				parent.top.frames[0].GetEmRegPatInfo();
-				parent.top.frames[0].websys_showModal("close");
-			}
 		}
-		
 	});	
+	ReloadPatList("");
 }
 
 /// 群伤病人保存 lp 18-1-22
@@ -77,7 +84,7 @@ function SaveGroupHurtPat(){
 	var GroupHurtType="";
 	GroupHurtType=$('#GroupHurtType').combobox('getValue');
 	if(GroupHurtType==""||typeof GroupHurtType=="undefined"){
-		$.messager.alert('提示：','请选择群伤类型！');	
+		$.messager.alert('提示：','请选择关联的群伤事件！');	
 		return;
 	}
 	var GroupHurtPatName="";
@@ -145,6 +152,7 @@ function SaveGroupHurtPat(){
 
 /// 群伤病人双击事件 lp 18-1-22
 function ConveyInfo(rowIndex, rowData){
+	return;
 	$('#EmPatNo').val(rowData.GroupHurtReg);
 	$('#empatname').val(rowData.GroupHurtName);
 	$('#GroupHurtBirth').val(rowData.GroupHurtBirth);
@@ -154,8 +162,24 @@ function ConveyInfo(rowIndex, rowData){
 	$('#emcountry').combobox('setValue',rowData.GroupHurtcountrydr);
 	$('#PatientID').val(rowData.PatientID);
 	$('#GroupHurtRegWin').window('close');
+	ReportView(rowData)
+	
 }
 
+function LoadPatList(rowIndex, rowData){
+	ReloadPatList(rowData.Index);
+}
+
+function CheckThisPat(index,row){
+	if(parent.top.frames[0]){
+		parent.top.frames[0].initDefaultValue(); //hxy 2020-06-01 调用清屏
+		parent.top.frames[0].$("#EmPatNo").val(row.PatNo);		/// 登记号
+		parent.top.frames[0].GetEmRegPatInfo();
+		parent.top.frames[0].CheckThree(); //hxy 2023-01-03
+		parent.top.frames[0].websys_showModal("close");
+	}
+	return;
+}
 
 /// 群伤病人录入 lp 18-1-22
 function GroupHurtReg(){
@@ -392,4 +416,247 @@ function formatDate(t){
 			return Year+"-"+Month+"-"+Day;
 		}
 	}
+}
+//编辑窗体
+function ReportView(rowData)
+{
+	
+	var RegNO=rowData.GroupHurtReg
+	var lnk = "dhcem.patchecklev.hisui.csp?RegNO="+RegNO;
+	var openCss = 'width='+(window.screen.availWidth-100)+',height='+(window.screen.availHeight-100)+ ', top=100, left=50, location=no,toolbar=no, menubar=no, scrollbars=yes, resizable=no,status=no'
+	window.open(lnk,'newwindow',openCss)
+}
+
+
+/// 病人信息查询 wxj-2020-09-27
+function QueryPatInfo()
+{
+	var RowData = $("#GroupPatGrid").datagrid("getSelected");
+	if(!RowData){
+		$.messager.alert("提示","未选中群伤事件！");
+		return;
+	}
+	var Params = RowData.Index;
+	var patRegNo=$('#patRegNo').val();  //病人登记号
+	ReloadPatList(Params);	
+}
+function ReloadPatList(Params){
+	$('#GetpatInfo').datagrid({
+		url:'dhcapp.broker.csp?ClassName=web.DHCEMPatCheckLevQuery&MethodName=GetPatInfo',	
+		queryParams:{
+			Params:Params
+		}
+	});	
+}
+
+///  登记号回车
+function GetEmPatInfo(e)
+{
+	 if(e.keyCode == 13)
+	 {
+		var EmPatNo = $("#PatNo").val();
+		var EmPatNo = GetWholePatNo(EmPatNo);
+		$("#PatNo").val(EmPatNo)
+		SetPatMessage();
+	 }
+}
+
+function SetPatMessage(){
+	var EmPatNo = $("#PatNo").val();
+	var QsIndex = $("#QsIndex").val();
+	$.cm({ 
+		ClassName:"web.DHCEMPatCheckLevQuery",
+		MethodName:"GetPatientData",
+		QsIndex:QsIndex,
+		PatNo:EmPatNo,
+		LgHospID:LgHospID
+	},function (data){
+		if(data=="-2"){
+			$.messager.alert('提示',"未找到对应患者！");
+			$("#PatNo").val("");
+			$("#PatMessage").html("");
+			$("#QsPatientID").val("");
+			return;	
+		}
+		
+		if(data=="-1"){
+			$.messager.alert('提示',"患者已经位于此群伤事件中！");
+			$("#PatNo").val("");
+			$("#QsPatientID").val("");
+			$("#PatMessage").html("");
+			return;	
+		}
+		
+		var showPatMessage="<table cellspacing='0' cellpadding='0'><tr><td class='labeltitle'>"+$g("姓名")+":</td><td class='labeltext'>"+data.PatName+"</td><td class='labeltitle'>"+$g("性别")+":</td><td class='labeltext'>"+data.PatSex+"</td></tr><tr><td class='labeltitle'>"+$g("年龄")+":</td><td class='labeltext'>"+data.PatAge+"</td><td class='labeltitle'>"+$g("出生日期")+":</td><td class='labeltext'>"+data.Birthday+"</td></tr></table>";
+		$("#PatMessage").html(showPatMessage);
+		$("#QsPatientID").val(data.PatientID);
+	})
+}
+
+///补0病人登记号
+function GetWholePatNo(EmPatNo){
+
+	///  判断登记号是否为空
+	var EmPatNo=$.trim(EmPatNo);
+	if (EmPatNo == ""){
+		return;
+	}
+	
+	///  登记号长度值
+	runClassMethod("web.DHCEMPatCheckLevCom","GetPatRegNoLen",{},function(jsonString){
+
+		var patLen = jsonString;
+		var plen = EmPatNo.length;
+		if (EmPatNo.length > patLen){
+			$.messager.alert('错误提示',"登记号输入错误！");
+			return;
+		}
+
+		for (var i=1;i<=patLen-plen;i++){
+			EmPatNo="0"+EmPatNo;  
+		}
+	},'',false)
+	
+	return EmPatNo;
+}
+
+/// 群伤关联患者
+/// wxj 2020-09-27
+function LinkPat(){
+	var row = $('#GetpatInfo').datagrid('getSelected');
+	if(!row){
+		$.messager.alert('提示：','请选择关联的患者！');	
+		return;
+	}
+	//alert(row.PatName)
+	
+	
+    var patRegNo=$('#patRegNo').val();  //病人登记号
+    var GroupHurtType="";
+	GroupHurtType=$('#GroupHurtType').combobox('getValue');
+	if(GroupHurtType==""||typeof GroupHurtType=="undefined"){
+		$.messager.alert('提示：','请选择关联的群伤事件！');	
+		return;
+	}
+	var GroupHurtPatName="";
+	    GroupHurtPatName=row.PatName;
+	var GroupHurtPatSex=row.PatSex;
+    var GroupHurtPatAge =row.PatAge;
+    var GroupHurtPatID =row.PatID;
+	var GroupHurtPatBirth=row.birthday;
+	var GroupHurtPatNation=$('#GroupHurtNation').combobox('getValue');
+	if(typeof GroupHurtNation=="undefined"){
+		GroupHurtNation="";
+	}
+	var total=""
+	var GroupHurtDate = $HUI.datetimebox("#GroupHurtDate").getValue();
+	var GroupHurtSite = $("#GroupHurtSite").val();
+	var GroupHurtDesc = $("#GroupHurtDesc").val();
+	var params=GroupHurtType+"^"+GroupHurtPatName+"^"+GroupHurtPatSex+"^"+GroupHurtPatAge+"^"+GroupHurtPatNation+"^"+GroupHurtPatBirth+"^"+total+"^"+LgUserID;
+	params=params+"^"+GroupHurtDate+"^"+GroupHurtSite+"^"+GroupHurtDesc+"^"+GroupHurtPatID;
+	
+	runClassMethod("web.DHCEMPatCheckLev","InsGroupHurtPat",{"params":params},function(data){
+		var teg=data;
+		if(teg<0){
+			$.messager.alert('提示：','该患者已经关联群伤事件！');
+			return;		
+		}else{
+			$.messager.alert('提示：','关联成功！');
+			//clearGroupHurtRegWin(); //清空table数据
+			QueryGroupHurt();
+		}
+	})
+   
+}
+
+/// 群伤取消关联患者
+/// wxj 2020-09-27
+function CanLinkPat(){
+	var row = $('#GetpatInfo').datagrid('getSelected');
+	if(!row){
+		$.messager.alert('提示：','请选择取消关联的患者！');	
+		return;
+	}
+    var QsRowID =row.GPSRowID;
+	runClassMethod("web.DHCEMPatCheckLev","DelGroupHurtPat",{"QsRowID":QsRowID},function(data){
+		var teg=data;
+		if(teg<0){
+			$.messager.alert('提示：','取消关联失败！');
+			return;		
+		}else{
+			$.messager.alert('提示：','取消关联成功！');
+			QueryGroupHurt();
+			$('#GetpatInfo').datagrid("reload");
+		}
+	})
+   
+}
+
+
+function formatOp(value, rowData, rowIndex){
+	return "<a href='#' onclick='AddGroupPat(\""+rowData.Index+"\")'>Add</a>"	
+}
+/// 事件患者关联
+function LinkPat(){
+	var row = $('#GroupPatGrid').datagrid('getSelected');
+	if(!row){
+		$.messager.alert('提示：','请选择关联的数据！');	
+		return;
+	}
+	AddGroupPat(row.Index);
+}
+
+function AddGroupPat(Params){
+	$("#QsIndex").val(Params);
+	$("#AddGroupPatWin").window("open");
+}
+
+function qxAddGroupPat(){
+	$("#PatNo").val("");
+	$("#PatMessage").html("");
+	$("#QsPatientID").val("");
+	$("#QsIndex").val("");
+	$("#AddGroupPatWin").window("close");
+}
+
+function qdAddGroupPat(){
+	var PatientID = $("#QsPatientID").val();
+	var QsIndex = $("#QsIndex").val();
+	
+	if(PatientID===""){
+		$.messager.alert('提示：','未选择关联的患者！');
+		return;
+	}
+	
+	$.cm({ 
+		ClassName:"web.DHCEMPatCheckLev",
+		MethodName:"InsGroupHurtPatNew",
+		QsIndex:QsIndex,
+		PatientID:PatientID
+	},function (data){
+		if(data==0){
+			$.messager.alert('提示：','添加成功！');
+			UpdateGroupHurtPatNum();
+			qxAddGroupPat();
+			ReloadPatList(QsIndex);
+		}else{
+			$.messager.alert('提示：','添加失败！');
+			return;
+		}
+	})
+}
+
+function UpdateGroupHurtPatNum(){
+	
+	var rowData = $('#GroupPatGrid').datagrid("getSelected");
+	var rowIndex = $('#GroupPatGrid').datagrid("getRowIndex",rowData);
+	var GroupHurtPatNum = parseInt(rowData.GroupHurtPatNum)+1;
+	
+	
+	$('#GroupPatGrid').datagrid("updateRow",{
+		index:rowIndex,
+		row:{
+			"GroupHurtPatNum":GroupHurtPatNum
+		}
+	});		
 }

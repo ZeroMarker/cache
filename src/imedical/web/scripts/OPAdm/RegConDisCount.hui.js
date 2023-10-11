@@ -1,5 +1,6 @@
 var PageLogicObj={
-	m_DHCRegConDisCountDataGrid:""
+	m_DHCRegConDisCountDataGrid:"",
+    m_AuthFlag:tkMakeServerCall("DHCDoc.Interface.Inside.InvokeAuth","GetSwitch")        //权力系统启用
 };
 $(function(){
 	Init();
@@ -63,18 +64,33 @@ function InitPriority(){
 }
 function InitRBCASStatusDataGrid(){
 	var toobar=[{
+        id:"ConDisAdd",
         text: '新增',
         iconCls: 'icon-add',
         handler: function() { AddClickHandle("N");}
     },{
+        id:"ConDisUpdate",
         text: '修改',
         iconCls: 'icon-update',
         handler: function() { AddClickHandle("U");}
     },"-",{
+        id:"ConDisDetail",
         text: '详细设置',
         iconCls: 'icon-edit',
         handler: function() { DetailClickHandle();}
-    }];
+    }/*,{
+        text: '翻译',
+        iconCls: 'icon-translate-word',
+        handler: function() {
+         	var SelectedRow = PageLogicObj.m_DHCRegConDisCountDataGrid.datagrid('getSelected');
+			if (!SelectedRow){
+			$.messager.alert("提示","请选择需要翻译的行!","info");
+			return false;
+			}
+			CreatTranLate("User.DHCRegConDisCount","RCDDesc",SelectedRow["RCDDesc"])
+			        }
+     }*/
+	 ];
 	var Columns=[[ 
 		{field:'RCDRowid',hidden:true,title:''},
 		{field:'RCDCode',title:'优惠代码',width:300},
@@ -170,12 +186,16 @@ function AddClickHandle(param){
 		RCDEndTime:EndTime,
 		RCDOtherDesc:OtherDesc,
 		RCDHospitalDr:HospitalDr,
+		dataType:"text"
 	},function(rtn){
 		if (rtn=="0"){
 			$.messager.show({title:"提示",msg:"操作成功"});
 			PageLogicObj.m_DHCRegConDisCountDataGrid.datagrid('uncheckAll');
 			DHCRegConDisCountDataGridLoad();
 			ClearData();
+		}else if(rtn=="repeat"){
+			$.messager.alert("提示","操作失败!优惠代码或优惠描述记录重复!","error");
+			return false;
 		}else{
 			$.messager.alert("提示","操作失败!错误代码:"+rtn,"error");
 			return false;
@@ -298,6 +318,7 @@ function DHCRegConDisCountDataGridLoad(){
 	},function(GridData){
 		PageLogicObj.m_DHCRegConDisCountDataGrid.datagrid('clearSelections').datagrid('clearChecked').datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
 	}); 
+    LoadAuthHtml();
 }
 
 function LoadDetailCombo(){
@@ -420,9 +441,15 @@ function SaveDetailClickHandle(){
 	}else{
 		OldCard=0;	
 	}
+    var ClassName="web.DHCRegConDisCount";
+    var MethodName="UpdateDHCRegConDisCountSet";
+    if (PageLogicObj.m_AuthFlag==1){
+        ClassName="DHCDoc.Interface.Inside.InvokeAuth";
+        MethodName="InvokeRegConDisCountSetAuth";
+    }
 	$.cm({
-		ClassName:"web.DHCRegConDisCount",
-		MethodName:"UpdateDHCRegConDisCountSet",
+		ClassName:ClassName,
+		MethodName:MethodName,
 		RCDRowid:RCDRowid,
 		Age:Age,
 		AgeCompare:AgeCompare,
@@ -435,14 +462,20 @@ function SaveDetailClickHandle(){
 		DocSessionDr:DocSessionDr,
 		dataType:"text"		
 	},function(ret){
-		if(ret==0) {
-			$("#add-dialog").dialog("close");
-	 		DHCRegConDisCountDataGridLoad();
- 		}
-   		else{
-	   		$.messager.alert("提示","保存失败,错误信息:"+ret,"error");
-	   		return false;
-   		}
+        if (PageLogicObj.m_AuthFlag==1){
+            var Arr=ret.split("^");
+            $.messager.alert("提示",Arr[1]);
+            $("#add-dialog").dialog("close");
+            DHCRegConDisCountDataGridLoad();
+        }else{
+            if(ret==0) {
+                $("#add-dialog").dialog("close");
+                DHCRegConDisCountDataGridLoad();
+            }else{
+                $.messager.alert("提示","保存失败,错误信息:"+ret,"error");
+                return false;
+            }
+        }
 	})
 }
 
@@ -519,4 +552,18 @@ function getValue(id){
 		return $("#"+id).val()
 	}
 	return ""
+}
+
+function LoadAuthHtml() {
+    $m({
+        ClassName: "BSP.SYS.SRV.AuthItemApply",
+        MethodName: "GetStatusHtml",
+        AuthCode: "HIS-DOC-REGDISCOUNT"
+    }, function (rtn) {
+        if (rtn != "") {
+            $(rtn).insertAfter('#BSave');
+            $(rtn).insertAfter('#ConDisDetail');
+        }
+    })
+    return;
 }

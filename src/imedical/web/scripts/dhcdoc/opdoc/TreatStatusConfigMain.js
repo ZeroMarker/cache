@@ -4,6 +4,7 @@ opl.view=(function(){
 	var editRow1,editRow2;
 	function Init(){
 		InitHospList();
+		InitCache();
 	}
 	function InitHospList()
 	{
@@ -107,9 +108,15 @@ opl.view=(function(){
 					if (len==0) {
 						$($('.datagrid-toolbar table tbody tr')[1]).append('<td id="RecAdmDefShwoBtnCount-div"><div class="datagrid-btn-separator"></div></td><td><label style="padding:0 5px;">默认显示按钮数</label></td><td><input class="hisui-combobox textbox" id="RecAdmDefShwoBtnCount"/><td><label style="color:red;">(选择即可保存)</label></td></td>');
 						InitRecAdmDefShwoBtnCount();
+					}else{
+						$("#RecAdmDefShwoBtnCount-div").show();
+						$("#RecAdmDefShwoBtnCount-div").nextAll().show();
 					}
 				}else{
-					if (len==1) $("#RecAdmDefShwoBtnCount-div").hide();
+					if (len==1) {
+						$("#RecAdmDefShwoBtnCount-div").hide();
+						$("#RecAdmDefShwoBtnCount-div").nextAll().hide();
+					}
 				}
 				LoadDataGrid2(rowData.CSPname);
 			}
@@ -243,21 +250,24 @@ opl.view=(function(){
 			return false;
 		}
 		var name =  editors[1].target.val();
-		if (name==""){
+		/*if (name==""){
 			$.messager.alert("提示","按钮名称不能为空!","info",function(){
 				SetRowFocus(DataGrid2,editRow2,"name");
 			});
 			return false;
-		}
+		}*/
 		var clickHandler=editors[2].target.val();
-		var URLconfig=editors[3].target.val();
-		var iconStyle=editors[4].target.val();
-		var iconRoute=editors[5].target.val();
-		var customStyle=editors[6].target.val();
-		var herSplitLine=editors[7].target.combobox('getValue');
-		var verSplitLine=editors[8].target.combobox('getValue');
-		var activeStatus=editors[9].target.val();
-		var disableStatus=editors[10].target.val();
+		var iconStyle=editors[3].target.val();
+		var tooltip=editors[4].target.val();
+		var shortcut=editors[5].target.val();
+		var express=editors[6].target.val();
+		var URLconfig=editors[7].target.val();
+		var iconRoute=editors[8].target.val();
+		var customStyle=editors[9].target.val();
+		var herSplitLine=editors[10].target.combobox('getValue');
+		var verSplitLine=editors[11].target.combobox('getValue');
+		var activeStatus=editors[12].target.val();
+		var disableStatus=editors[13].target.val();
 		var ID=rows.RowId;
 		if (ID==undefined){
 			ID="";
@@ -266,19 +276,13 @@ opl.view=(function(){
 		Str=Str+String.fromCharCode(1)+iconStyle+String.fromCharCode(1)+iconRoute+String.fromCharCode(1)+customStyle;
 		Str=Str+String.fromCharCode(1)+URLconfig+String.fromCharCode(1)+""+String.fromCharCode(1)+clickHandler;
 		Str=Str+String.fromCharCode(1)+herSplitLine+String.fromCharCode(1)+verSplitLine+String.fromCharCode(1)+activeStatus;
-		Str=Str+String.fromCharCode(1)+disableStatus;
-		$.m({
-			ClassName:"DHCDoc.OPDoc.AjaxTreatStatusConfig",
-			MethodName:"SaveTreatStatusConfigData",
-			cspId:cspId,
-			Str:Str
-		},function(val){
-			if (val=="0"){
-				LoadDataGrid2(cspName);
-			}else{
-				$.messager.alert("提示","保存失败! "+val);
-			}
-		});
+		Str=Str+String.fromCharCode(1)+disableStatus+String.fromCharCode(1)+tooltip+String.fromCharCode(1)+shortcut+String.fromCharCode(1)+express;
+		var val=tkMakeServerCall("DHCDoc.OPDoc.AjaxTreatStatusConfig","SaveTreatStatusConfigData",cspId,Str)
+		if (val=="0"){
+			LoadDataGrid2(cspName);
+		}else{
+			$.messager.alert("提示","保存失败! "+val);
+		}
 	}
 	function IsActive1(type){
 		var rows=DataGrid1.datagrid('getSelected');
@@ -463,16 +467,25 @@ opl.view=(function(){
  			{field:'clickHandler',title:'单击事件',width:150,
  				editor : {type : 'text',options : {}}
  			},
- 			{field:'URLconfig',title:'链接',width:150,
+ 			{field:'iconStyle',title:'图标样式',width:150,
  				editor : {type : 'text',options : {}}
  			},
- 			{field:'iconStyle',title:'图标样式',width:150,
+ 			{field:'tooltip',title:'悬浮提示文本',width:150,
+ 				editor : {type : 'text',options : {}}
+ 			},
+ 			{field:'shortcut',title:'快捷键',width:100,
+ 				editor : {type : 'text',options : {}}
+ 			},
+ 			{field:'express',title:'表达式',width:200,
+ 				editor : {type : 'text',options : {}}
+ 			},
+ 			{field:'URLconfig',title:'链接',width:150,
  				editor : {type : 'text',options : {}}
  			},
  			{field:'iconRoute',title:'图标路径',width:150,
  				editor : {type : 'text',options : {}}
  			},
- 			{field:'customStyle',title:'字体样式',width:150,
+ 			{field:'customStyle',title:'字体样式',width:100,
  				editor : {type : 'text',options : {}}
  			},
  			{field:'herSplitLine',title:'是否水平分割',width:100,
@@ -519,13 +532,13 @@ opl.view=(function(){
  				}
  			},
  			/*{field:'DisplayNum',title:'显示顺序',width:150},*/
- 			{field:'activeStatus',title:'激活状态',width:100,
+ 			{field:'activeStatus',title:'激活状态',width:80,
  				editor : {type : 'text',options : {}}
  			},
- 			{field:'disableStatus',title:'禁用状态',width:100,
+ 			{field:'disableStatus',title:'禁用状态',width:80,
  				editor : {type : 'text',options : {}}
  			},
- 			{field:'IsVisible',title:'是否可见',width:80,
+ 			{field:'IsVisible',title:'是否可见',width:70,
  				formatter:function(value,record){
 		 			if (value=="1") return "是";
 		 			else  if (value=="0") return "否";
@@ -538,7 +551,7 @@ opl.view=(function(){
 			 		}
  				}
  			},
- 			{field:'IsActive',title:'是否有效',width:80,
+ 			{field:'IsActive',title:'是否有效',width:70,
  				formatter:function(value,record){
 		 			if (value=="1") return "是";
 		 			else  if (value=="0") return "否";
@@ -625,6 +638,23 @@ opl.view=(function(){
                 editRow2=rowIndex;
 			},
 			onClickRow:function(rowIndex, rowData){
+			},
+			onBeginEdit:function(index, row){
+				var ed = DataGrid2.datagrid('getEditor', {index:index,field:'shortcut'});
+				$(ed.target).attr('readOnly',true).keydown(function(e){
+					e.preventDefault();
+            		window.onhelp = function(){ return false };
+					if((e.keyCode<37)||(e.keyCode>135)) return false;
+					var keyName=e.key||window.event.code;
+					if(keyName.indexOf('Digit')==0) keyName=keyName.split('Digit')[1];
+            		if(keyName.indexOf('Key')==0) keyName=keyName.split('Key')[1];
+					keyName=keyName.toUpperCase();
+					if(e.shiftKey) keyName='Shift+'+keyName;
+					if(e.ctrlKey) keyName='Ctrl+'+keyName;
+					$(this).val(keyName);
+					return false;
+				});
+
 			}
 		}).datagrid({loadFilter:DocToolsHUI.lib.pagerFilter})
 	}
@@ -684,6 +714,13 @@ opl.view=(function(){
 					$("#RecAdmDefShwoBtnCount").combobox('setValue',count);
 				}
 		 });
+	}
+	function InitCache(){
+		var hasCache = $.DHCDoc.ConfigHasCache();
+		if (hasCache!=1) {
+			$.DHCDoc.CacheConfigPage();
+			$.DHCDoc.storageConfigPageCache();
+		}
 	}
 	return {
 		"Init":Init

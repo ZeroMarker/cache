@@ -48,7 +48,7 @@ Date.prototype.format = function(format)
 function getIpAddress()
 {
 	var clientInfo = getClientInfo();   //调平台组接口获取客户端信息
-	if (clientInfo !== "") {return clientInfo[0];}
+	if ((clientInfo !== "")&&(clientInfo[0].length<100)) {return clientInfo[0];}
 	else{
 	 	try
 		{
@@ -95,11 +95,11 @@ function getClientInfo()
 	jQuery.ajax({
 		type : "GET", 
 		dataType : "text",
-		url : "../EMRservice.Ajax.common.cls", 
+		url : "../EMRservice.Ajax.common.cls?MWToken="+getMWToken(), 
 		async : false,
 		data : {
 			"OutputType":"String",
-			"Class":"EMRservice.HISInterface.PatientInfoAssist",
+			"Class":"EMRservice.HISInterface.BaseServiceTool",
 			"Method":"GetClientInfo"		
 		},
 		success : function(d) {
@@ -513,7 +513,7 @@ function my_blur(obj, myid)
 }
 
 /// 创建HISUI-Dialog弹窗
-function createModalDialog(dialogId, dialogTitle, width, height, iframeId, iframeContent,callback,arr,maximi,minimi){
+function createModalDialog(dialogId, dialogTitle, width, height, iframeId, iframeContent,callback,arr,maximi,minimi,iconCls){
     if ($("#modalIframe").length<1)
 	{
         $("body").append('<iframe id="modalIframe" style="position: absolute; z-index: 1999; width: 100%; height: 100%; top: 0;left:0;scrolling:no;" frameborder="0"></iframe>');
@@ -530,6 +530,7 @@ function createModalDialog(dialogId, dialogTitle, width, height, iframeId, ifram
 	if (maximi == undefined) maximi = false;
     if (minimi == undefined) minimi = false;
     var returnValue = "";
+    if(iconCls == undefined) iconCls = 'icon-w-card';
     $HUI.dialog('#'+dialogId,{ 
         title: emrTrans(dialogTitle),
         width: width,
@@ -544,6 +545,7 @@ function createModalDialog(dialogId, dialogTitle, width, height, iframeId, ifram
         closable: true,
         isTopZindex: true,
         content: iframeContent,
+        iconCls:iconCls,
         onBeforeClose:function(){
             var tempFrame = $('#'+iframeId)[0].contentWindow;
 			if (tempFrame.dialogBeforeClose)
@@ -564,6 +566,7 @@ function createModalDialog(dialogId, dialogTitle, width, height, iframeId, ifram
             if(document.getElementById("editor"))
     			document.getElementById("editor").style.visibility="visible"; //隐藏插件
 			//$("#"+dialogId).dialog('destroy'); 创建病程病历时，模态窗自动关闭，执行该方法，jquery-1.11.3.min.js报对象不支持此方法，注释即可
+			selectedToothObj = "";//关闭dialog框时，将牙位图使用的全局变量清空；此全局变量，在双击牙位图图片打开编辑页面时，将牙位图中的牙位牙面信息传给dialog框 add by niucaicai
         }
     });
 }
@@ -588,4 +591,236 @@ function emrTrans(value)
 		value = $g(value)
 	}
 	return value;
+}
+
+//创建EASYUI-Dialog弹窗
+function createEasyUIModalDialog(dialogId, dialogTitle, width, height, iframeId, iframeContent,callback,args,iconCls){
+    if ($("#modalIframe").length<1)
+    {
+        $("body").append('<iframe id="modalIframe" style="position: absolute; z-index: 1999; width: 100%; height: 100%; top: 0;left:0;scrolling:no;" frameborder="0"></iframe>');
+    }
+    else
+    {
+        $("#modalIframe").css("display","block");
+    }
+    $("body").append("<div id='"+dialogId+"'</div>");
+    if (isNaN(width)) width = 800;
+    if (isNaN(height)) height = 500;  
+    if(document.getElementById("emrEditor")&&(judgeIsIE()==false))
+        document.getElementById("emrEditor").style.visibility="hidden"; //隐藏插件
+	var fit = false;
+    var returnValue = "";
+    if(iconCls == undefined) iconCls = 'icon-w-card';
+    var closableFlag = typeof sysOption.isShowCloseBtn != "undefined"?sysOption.isShowCloseBtn:true;
+	if('HisUIKnowledgebase'===dialogId){
+		 fit = true;
+	}
+    $('#'+dialogId).dialog({ 
+		fit:fit,
+        title: dialogTitle,
+        width: width,
+        height: height,
+        cache: false,
+        collapsible: false,
+        minimizable:false,
+        maximizable: false,
+        resizable: false,
+        modal: true,
+        closed: false,
+        closable: closableFlag,
+        isTopZindex: true,
+        content: iframeContent,
+        iconCls:iconCls,
+        onClose:function(){
+            $("#modalIframe").hide();
+            if(document.getElementById("emrEditor"))
+                document.getElementById("emrEditor").style.visibility="visible"; //隐藏插件
+            //$("#"+dialogId).dialog('destroy'); 模态窗自动关闭，执行该方法，jquery-1.11.3.min.js报对象不支持此方法，注释即可
+            var tempFrame = $('#'+iframeId)[0].contentWindow;
+            if (tempFrame)
+            {
+                returnValue = tempFrame.returnValue;
+                if ((returnValue != "") && (returnValue !== undefined) && (typeof(callback) === "function"))
+                {
+                    // 返回状态标识 or 返回值
+                    if (returnValue == true) {
+                        callback(args);
+                    }else {
+                        callback(returnValue,args);
+                    }
+                }
+            }
+        }
+    });
+}
+//关闭EasyUI-Dialog,子页面调用
+function closeEasyUIDialog(dialogId)
+{
+    $('#'+dialogId).dialog('close');
+}
+//将HISUI系统日期或时间配置转为YYYY-MM-DD或HH:MM:SS格式
+function getHISDateTimeFormate(type,value)
+{
+    var retvalue = ""
+    jQuery.ajax({
+        type: "get",
+        dataType: "text",
+        url: "../EMRservice.Ajax.common.cls",
+        async: false,
+        data: {
+            "OutputType":"String",
+            "Class":"EMRservice.Tools.Tool",
+            "Method":"ChangeHISStandardDateTimeStyleToYMDorHMS",
+            "p1":type,
+            "p2":value
+        },
+        success: function(d) 
+        {
+            if (d != "") 
+            {
+                retvalue = d;
+            }
+        },
+        error : function() 
+        { 
+            retvalue = value;
+        }
+    }); 
+    return retvalue;   
+}
+
+/// 创建返回值可为空的HISUI-Dialog弹窗
+function createModalDialogCanEmpty(dialogId, dialogTitle, width, height, iframeId, iframeContent,callback,arr,maximi,minimi,iconCls){
+    if ($("#modalIframe").length<1)
+	{
+        $("body").append('<iframe id="modalIframe" style="position: absolute; z-index: 1999; width: 100%; height: 100%; top: 0;left:0;scrolling:no;" frameborder="0"></iframe>');
+    }
+	else
+	{
+        $("#modalIframe").css("display","block");
+    }
+    $("body").append("<div id='"+dialogId+"'</div>");
+	if (isNaN(width)) width = 800;
+	if (isNaN(height)) height = 500;  
+    if(document.getElementById("editor")&&(judgeIsIE()==false))
+    	document.getElementById("editor").style.visibility="hidden"; //隐藏插件
+	if (maximi == undefined) maximi = false;
+    if (minimi == undefined) minimi = false;
+    var returnValue = "";
+    if(iconCls == undefined) iconCls = 'icon-w-card';
+    $HUI.dialog('#'+dialogId,{ 
+        title: emrTrans(dialogTitle),
+        width: width,
+        height: height,
+        cache: false,
+        collapsible: false,
+        minimizable:minimi,
+        maximizable:maximi,
+        resizable: false,
+        modal: true,
+        closed: false,
+        closable: true,
+        isTopZindex: true,
+        content: iframeContent,
+        iconCls: iconCls,
+        onBeforeClose:function(){
+            var tempFrame = $('#'+iframeId)[0].contentWindow;
+			if (tempFrame.dialogBeforeClose)
+			{
+				tempFrame.dialogBeforeClose();
+			}
+            if (tempFrame)
+			{
+				returnValue = tempFrame.returnValue;
+			    if (typeof(callback) === "function")
+				{
+                    callback(returnValue,arr);
+                }
+			}
+        },
+        onClose:function(){
+            $("#modalIframe").hide();
+            if(document.getElementById("editor"))
+    			document.getElementById("editor").style.visibility="visible"; //隐藏插件
+			//$("#"+dialogId).dialog('destroy'); 创建病程病历时，模态窗自动关闭，执行该方法，jquery-1.11.3.min.js报对象不支持此方法，注释即可
+			selectedToothObj = "";//关闭dialog框时，将牙位图使用的全局变量清空；此全局变量，在双击牙位图图片打开编辑页面时，将牙位图中的牙位牙面信息传给dialog框 add by niucaicai
+        }
+    });
+}
+//获取Token
+function getMWToken()
+{
+	if (typeof websys_getMWToken == "function" )
+	{
+		return websys_getMWToken();
+	}
+	else
+	{
+		return ""
+	}
+}
+
+
+/// 创建最外层HISUI-Dialog弹窗
+function createModalDialogTop(dialogId, dialogTitle, width, height, iframeId, iframeContent,callback,arr,maximi,minimi,iconCls){
+    if (parent.parent.parent.$("#modalIframe").length<1)
+	{
+        parent.parent.parent.$("body").append('<iframe id="modalIframe" style="position: absolute; z-index: 1999; width: 100%; height: 100%; top: 0;left:0;scrolling:no;" frameborder="0"></iframe>');
+    }
+	else
+	{
+        parent.parent.parent.$("#modalIframe").css("display","block");
+    }
+    parent.parent.parent.$("body").append("<div id='"+dialogId+"'</div>");
+	if (isNaN(width)) width = 800;
+	if (isNaN(height)) height = 500;  
+    if(document.getElementById("editor")&&(judgeIsIE()==false))
+    	document.getElementById("editor").style.visibility="hidden"; //隐藏插件
+	if (maximi == undefined) maximi = false;
+    if (minimi == undefined) minimi = false;
+    var returnValue = "";
+    if(iconCls == undefined) iconCls = 'icon-w-card';
+    parent.parent.parent.$HUI.dialog('#'+dialogId,{ 
+        title: emrTrans(dialogTitle),
+        width: width,
+        height: height,
+        cache: false,
+        collapsible: false,
+        minimizable:minimi,
+        maximizable:maximi,
+        resizable: false,
+        modal: true,
+        closed: false,
+        closable: true,
+        isTopZindex: true,
+        content: iframeContent,
+        iconCls: iconCls,
+        onBeforeClose:function(){
+            var tempFrame = parent.parent.parent.$('#'+iframeId)[0].contentWindow;
+			if (tempFrame.dialogBeforeClose)
+			{
+				tempFrame.dialogBeforeClose();
+			}
+            if (tempFrame && tempFrame.returnValue)
+			{
+				returnValue = tempFrame.returnValue;
+			    if ((returnValue !== "") &&(typeof(callback) === "function"))
+				{
+                    callback(returnValue,arr);
+                }
+			}
+        },
+        onClose:function(){
+            parent.parent.parent.$("#modalIframe").hide();
+            if(document.getElementById("editor"))
+    			document.getElementById("editor").style.visibility="visible"; //隐藏插件
+			//$("#"+dialogId).dialog('destroy'); 创建病程病历时，模态窗自动关闭，执行该方法，jquery-1.11.3.min.js报对象不支持此方法，注释即可
+			selectedToothObj = "";//关闭dialog框时，将牙位图使用的全局变量清空；此全局变量，在双击牙位图图片打开编辑页面时，将牙位图中的牙位牙面信息传给dialog框 add by niucaicai
+        }
+    });
+}
+//关闭dialog,子页面调用
+function closeDialogTop(dialogId)
+{
+	parent.parent.parent.$HUI.dialog('#'+dialogId).close();
 }

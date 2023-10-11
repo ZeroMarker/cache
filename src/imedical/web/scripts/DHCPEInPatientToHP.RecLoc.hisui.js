@@ -84,42 +84,74 @@ function BSaveRecLoc_click()
 function InitCombobox()
 {
 	  //默认总检会诊费
-	   var OPNameObj = $HUI.combogrid("#GenConUser",{
+	  	var OPNameObj = $HUI.combogrid("#GenConUser",{
 		panelWidth:470,
+		panelHeight:260,
 		url:$URL+"?ClassName=web.DHCPE.Report.DoctorWorkStatistic&QueryName=SearchUSERSXT",
 		mode:'remote',
 		delay:200,
+		pagination:true,
+		minQueryLen:1,
+        rownumbers:true,//序号 
+		fit: true,
+		pageSize: 5,
+		pageList: [5,10],
 		idField:'DocDr',
 		textField:'DocName',
 		onBeforeLoad:function(param){
 			param.Desc = param.q;
+			param.Type="B";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID'];
+
 		},
 		columns:[[
-		    {field:'DocDr',title:'ID',width:40},
-		    {field:'Initials',title:'工号',width:200},
-			{field:'DocName',title:'姓名',width:200},	
+		    {field:'DocDr',title:'ID',width:50},
+			{field:'DocName',title:'姓名',width:200},
+			{field:'Initials',title:'工号',width:190} 
 				
-		]]
-		});
+		]],
+		onLoadSuccess:function(){
+			
+		}
+
+		}); 
+		
 		
 		 //默认医生
 	   var OPNameObj = $HUI.combogrid("#DefaultDoc",{
 		panelWidth:470,
+		panelHeight:260,
 		url:$URL+"?ClassName=web.DHCPE.Report.DoctorWorkStatistic&QueryName=SearchUSERSXT",
 		mode:'remote',
 		delay:200,
+		pagination:true,
+		minQueryLen:1,
+        rownumbers:true,//序号 
+		fit: true,
+		pageSize: 5,
+		pageList: [5,10],
 		idField:'DocDr',
 		textField:'DocName',
 		onBeforeLoad:function(param){
 			param.Desc = param.q;
+			param.Type="B";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID'];
+
 		},
 		columns:[[
-		    {field:'DocDr',title:'ID',width:40},
-		    {field:'Initials',title:'工号',width:200},
+		    {field:'DocDr',title:'ID',width:50},
 			{field:'DocName',title:'姓名',width:200},
+			{field:'Initials',title:'工号',width:190} 
 				
-		]]
+		]],
+		onLoadSuccess:function(){
+			
+		}
+
 		});
+
 		 //接收科室
 	   var OPNameObj = $HUI.combogrid("#RecLocDesc",{
 		panelWidth:470,
@@ -130,6 +162,7 @@ function InitCombobox()
 		textField:'Desc',
 		onBeforeLoad:function(param){
 			param.ctlocdesc= param.q;
+			param.hospId = session['LOGON.HOSPID'];
 		},
 		columns:[[
 		    {field:'CTLOCID',title:'ID',width:40},
@@ -177,8 +210,8 @@ function InitIPToHPRecLocDataGrid()
 		onSelect: function (rowIndex, rowData) {
 			    
 				$("#ID").val(rowData.StationID);
-				$("#DefaultDocID").val(rowData.ReclocID);
-				$("#RecLocID").val(rowData.UserID);
+				$("#DefaultDocID").val(rowData.UserID);
+				$("#RecLocID").val(rowData.ReclocID);
 				$("#StationDesc").val(rowData.StationDesc);
 				$("#RecLocDesc").combogrid('setValue',rowData.RecLocDesc);
 				$("#DefaultDoc").combogrid('setValue',rowData.DefaultDoc);

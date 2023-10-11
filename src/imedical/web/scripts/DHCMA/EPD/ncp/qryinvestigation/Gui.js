@@ -44,8 +44,12 @@ function InitviewScreen(){
 			{field:'expander',title:'操作',width:45,align:'center',
 				formatter: function(value,row,index){
 					var ReportID = row["ReportID"];
-					var EpisodeID = row["EpisodeID"];					
-					var btn = '<a href="#" class="btn_detail" onclick="objScreen.OpenNCPReport(\'' + ReportID + '\',\'' + EpisodeID + '\')"></a>';
+					var EpisodeID = row["EpisodeID"];
+					if ((typeof HISUIStyleCode != 'undefined') && (HISUIStyleCode=="lite")) {
+						var btn = '<a href="#" class="icon icon-paper" onclick="objScreen.OpenNCPReport(\'' + ReportID + '\',\'' + EpisodeID + '\')"></a>';
+					} else {
+						var btn = '<a href="#" class="btn_detail" onclick="objScreen.OpenNCPReport(\'' + ReportID + '\',\'' + EpisodeID + '\')"></a>';
+					}
 					return btn;
 				}
 			}, 
@@ -89,7 +93,7 @@ function InitviewScreen(){
 			{field:'InICUDate',title:'入住ICU日期',width:100},
 			{field:'OccupationDesc',title:'患者职业',width:150},
 			{field:'GatherDesc',title:'是否有聚集性发病',width:130},
-			{field:'TravelLiveDesc',title:'武汉旅居史',width:100},
+			{field:'TravelLiveDesc',title:'高风险地区旅居史',width:140},
 			{field:'IsContactFeverDesc',title:'是否接触过发热病人',width:140},
 			{field:'IsContactDiagDesc',title:'是否确诊接触史',width:120},
 			{field:'ReportDate',title:'报告日期',width:100},

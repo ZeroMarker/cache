@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<meta name="viewport"
+			content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<!-- <meta http-equiv="refresh" content="3"> -->
+		<link href="../common/css/mui.min.css" rel="stylesheet" />
+		<link href="../common/css/iconfont.css" rel="stylesheet" />
+		<link href="../common/css/iziToast.min.css" rel="stylesheet" />
+		<link href="bedMap.css" rel="stylesheet" />
+		<link href="../common/css/public.css" rel="stylesheet" />
+		
+		<title></title>
+	</head>
+	<body class="">
+		<div class="mui-content YaHei">
+			<div id="slider" class="mui-slider mui-fullscreen">
+				<div class="mui-slider-group" style="width: 100%; padding-bottom: 27px;">
+					<div class="mui-slider-item mui-active">
+						<div id="alllogNull" class="nullData">
+							<div class="nullImage"></div>
+							<div class="nullTip"></div>
+						</div>
+						<div id="allLogWrapper" class="mui-scroll-wrapper allLogWrapper">
+							<div id="allLogScroll" class="mui-scroll"></div>
+						</div>
+					</div>
+					<div class="mui-slider-item">
+						<!-- 病区日志 -->
+						<div id="wardLog" class="wardLog">
+							<div id="halflogNull" class="nullData">
+								<div class="nullImage"></div>
+								<div class="nullTip"></div>
+							</div>
+							<div id="halfLogWrapper" class="mui-scroll-wrapper halfLogWrapper">
+								<div id="halfLogScroll" class="mui-scroll"></div>
+							</div>
+						</div>
+
+						<!--  半边床位图 -->
+						<div id="bedMap" class="bedMap">
+							<div id="bedMapLocs" class="bedMapLocs mui-segmented-control"></div>
+							<div id="modeSwitch" class="cardMode mui-switch mui-switch-blue mui-switch-mini">
+								<div class="mui-switch-handle">简</div>
+							</div>
+							<div id="bedMapContainer" class="bedMapContainer"></div>
+						</div>
+					</div>
+					<!-- 护士管床 -->
+					<div id="nurseBed" class="mui-slider-item">
+						<div class="nurseHalf">
+							<table class="headTable">
+								<thead><tr><th class="nurse">主管护士</th><th class="forBed">管床</th></tr></thead>
+							</table>
+							<div id="nurseBedNull" class="nullData">
+								<div class="nullImage"></div>
+								<div class="nullTip"></div>
+							</div>
+							<div id="nurseBedWrapper" class="mui-scroll-wrapper nurseBedWrapper">
+								<div class="mui-scroll">
+									<table>
+										<colgroup><col width="20%"/><col width="80%"/></colgroup>
+										<tbody id="nurseBedBody"></tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+						<div class="nurseHalf">
+							<table class="headTable">
+								<thead><tr><th class="nurse">主管医生</th><th class="forBed">管床</th></tr></thead>
+							</table>
+							<div id="docBedNull" class="nullData">
+								<div class="nullImage"></div>
+								<div class="nullTip"></div>
+							</div>
+							<div id="docBedWrapper" class="mui-scroll-wrapper nurseBedWrapper">
+								<div class="mui-scroll">
+									<table>
+										<colgroup><col width="20%"/><col width="80%"/></colgroup>
+										<tbody id="docBedBody"></tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!--  全床位图 -->
+					<div id="fullBedMap" class="mui-slider-item">
+						<div id= "up" class="up"></div>
+						<div id="allbedNull" class="nullData">
+							<div class="nullImage"></div>
+							<div class="nullTip"></div>
+						</div>
+						<div id="allBedWrapper" class="mui-scroll-wrapper allBedWrapper">
+							<div id="allBedScroll" class="mui-scroll">
+							</div>
+						</div>
+					</div>
+
+				</div>
+				<div id="sliderIndicator" class="mui-slider-indicator">
+					<div class="mui-indicator mui-active" data-index="0">护理白板</div>
+					<div class="mui-indicator" data-index="1">首页</div>
+					<div class="mui-indicator" data-index="2">管床信息</div>
+					<div class="mui-indicator" data-index="3">床位图</div>
+
+				</div>
+			</div>
+		</div>
+		<!-- 患者信息 -->
+		<div id="PatInfoPopover" class="mui-popover PatInfoPopover YaHei" data-disable-auto-close="true">
+			<!-- <div id="PatInfoPopover" class="mui-popover PatInfoPopover mui-active" data-disable-auto-close="true"> -->
+			<div class="headTip iconfont iconpat">患者信息
+				<div id="patClose" class="iconfont iconerror1">
+				</div>
+			</div>
+			<div class="popContent">
+				<div class="patBase">
+					<div class="sexImg">
+						<img src="../common/images/unknown.svg">
+					</div>
+					<div class="patBaseInfo">
+						<div class="bedCode">床号</div>
+						<div class="vline"></div>
+						<div class="name">姓名</div>
+						<div class="vline"></div>
+						<div class="age">年龄</div>
+						<div class="vline"></div>
+						<div class="ctLocDesc">科室</div>
+						<div class="vline"></div>
+						<div class="wardDesc">病区</div>
+						<div class="vline"></div>
+						<div class="roomDesc">病房</div>
+					</div>
+					<div class="patImg">
+						<!-- <img data-title="热" class="tempImg" src="../common/images/webemr/热.png"> -->
+					</div>
+				</div>
+				<div class="line"></div>
+				<div class="patDetail">
+					<div class="item">
+						<div class="inline three">
+							<div class="label">病案号</div>
+							<input id="medicareNo" value="" disabled="disabled">
+						</div>
+						<div class="inline three">
+							<div class="label">登记号</div>
+							<input id="regNo" value="" disabled="disabled">
+						</div>
+						<div class="inline three">
+							<div class="label">医保号</div>
+							<input id="insuranceCard" value="" disabled="disabled">
+						</div>
+					</div>
+					<div class="item">
+						<div class="inline three">
+							<div class="label">入院日期</div>
+							<input id="inHospDateTime" value="" disabled="disabled">
+						</div>
+						<div class="inline three">
+							<div class="label">入科日期</div>
+							<input id="inDeptDateTime" value="" disabled="disabled">
+						</div>
+						<div class="inline three">
+							<div class="label">在院天数</div>
+							<input id="inDays" value="" disabled="disabled">
+						</div>
+					</div>
+					<div class="item">
+						<div class="inline three">
+							<div class="label">病区</div>
+							<input id="wardDesc" value="" disabled="disabled">
+						</div>
+						<div class="inline three">
+							<div class="label">主治医师</div>
+							<input id="mainDoctor" value="" disabled="disabled">
+						</div>
+						<div class="inline three">
+							<div class="label">责任护士</div>
+							<input id="mainNurse" value="" disabled="disabled">
+						</div>
+					</div>
+					<div class="item">
+						<div class="inline one">
+							<div class="label">过敏史</div>
+							<input id="allergys" value="" disabled="disabled">
+						</div>
+					</div>
+					<div class="item">
+						<div class="inline three">
+							<div class="label">民族</div>
+							<input id="nation" value="" disabled="disabled">
+						</div>
+						<div class="inline three">
+							<div class="label">RH血型</div>
+							<input id="RHBlood" value="" disabled="disabled">
+						</div>
+						<div class="inline three">
+							<div class="label">ABO血型</div>
+							<input id="bloodType" value="" disabled="disabled">
+						</div>
+					</div>
+					<div class="item">
+						<div class="inline three">
+							<div class="label">护理级别</div>
+							<input id="careLevel" value="" disabled="disabled">
+						</div>
+						<div class="inline three">
+							<div class="label">押金费用</div>
+							<input id="balance" value="" disabled="disabled">
+						</div>
+						<div class="inline three">
+							<div class="label">费用合计</div>
+							<input id="totalCost" value="" disabled="disabled">
+						</div>
+					</div>
+					<div class="item">
+						<div class="inline three important">
+							<div class="label">病情级别</div>
+							<input id="illState" value="" disabled="disabled">
+						</div>
+						<div class="inline three important">
+							<div class="label">身份证号</div>
+							<input id="personID" value="" disabled="disabled">
+						</div>
+						<div class="inline three important">
+							<div class="label">联系电话</div>
+							<input id="telphone" value="" disabled="disabled">
+						</div>
+					</div>
+					<div class="item">
+						<div class="inline three important">
+							<div class="label">联系人</div>
+							<input id="patLinkman" value="" disabled="disabled">
+						</div>
+						<div class="inline three important">
+							<div class="label">联系方式</div>
+							<input id="connectTel" value="" disabled="disabled">
+						</div>
+						<div class="inline three important">
+							<div class="label">家庭住址</div>
+							<input id="homeAddres" value="" disabled="disabled">
+						</div>
+					</div>
+					<div class="item">
+						<div class="inline one important">
+							<div class="label">诊断</div>
+							<input id="diagnosis" value="" disabled="disabled">
+						</div>
+					</div>
+				</div>
+				<button id="closePat" type="button">关闭</button>
+			</div>
+		</div>
+
+		<!-- 床号录入 -->
+		<div id="ManualPopover" class="mui-popover ManualPopover YaHei" data-disable-auto-close="false">
+			<div class="headTip iconfont iconbed">选择床号
+				<div id="editClose" class="iconfont iconerror1">关闭</div>
+			</div>
+			<div class="mui-input-row totalText">
+				<label class="textTip">项目<br/>备注</label>
+				<input id="customValue" type="text" class="mui-input-clear totalSelfDef" placeholder="请输入项目备注">
+			</div>
+			<div id="customWrapper" class="customText mui-scroll-wrapper">
+				<div id="selectedUl" class="mui-scroll mui-scroll-iPhone">
+				</div>
+			</div>
+			<div id="manualSeg" class="manualSegment mui-scroll-wrapper mui-slider-indicator mui-segmented-control mui-segmented-control-inverted">
+				<div id="manualSegScroll" class="mui-scroll"></div>
+			</div>
+			<div id="manualBedMap" class="manualBedMap"></div>
+			<div class="buttonC">
+				<button id="commitBtn" type="button">保存</button>
+				<button id="cancelBtn" type="button">取消</button>
+			</div>
+		</div>
+
+		<!-- 病区日志项目配置 -->
+		<div id="itemPopover" class="mui-popover itemPopover YaHei">
+			<div class="headTip iconfont iconmodel">日志模板配置
+				<div id="itemClose" class="iconfont iconerror1">关闭</div>
+			</div>
+			<div class="itemSearchArea">
+				<div class="mui-input-row">
+					<input id="searchInput" type="search" class="mui-input-clear" placeholder="请输入项目名称搜索">
+				</div>
+				<!-- <input  placeholder="" type="text"> -->
+				<button id="searchBtn" type="button" class="mui-btn mui-btn-primary mui-btn-block">搜索</button>
+			</div>
+			<div id="itemWrapper" class="mui-scroll-wrapper">
+				<div class="mui-scroll mui-scroll-iPhone">
+					<ul id="itemUl" class="mui-table-view">
+						<!-- <li class="mui-table-view-cell">
+							<div class="iconfont iconright"></div>
+							<div class="itemText">病人总数</div>
+						</li>
+						<li class="mui-table-view-cell">今日出院</li> -->
+					</ul>
+				</div>
+			</div>
+			<br />
+			<div class="itemCreateArea">
+				<label id="tip">自定义项目</label>
+				<input id="newItemInput" name="newItemInput" type="text" placeholder="请输入项目名称"
+					onkeyup="value=value.replace(/[^A-Za-z0-9\u4E00-\u9FA5]/g,'')"
+					onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^A-Za-z0-9\u4E00-\u9FA5]/g,''))">
+				<button id="createItem" type="button" class="mui-btn mui-btn-primary mui-btn-block">创建</button>
+			</div>
+			<div id="tempLog" style="display: none;"></div>
+		</div>
+		<div id="dhcBackdrop" class="dhc-backdrop"></div>
+		<img id="null" style="opacity: 0; display: none;" class="cardImg">
+		<div id="toop" class="toop"></div>
+		<div id="logDataToop" class="logDataToop" data-id=""></div>
+		<script type="text/javascript" src="../common/js/mui.js"></script>
+		<script type="text/javascript" src="../common/js/jquery-3.4.1.js"></script>
+		<script type="text/javascript" src="../common/js/DHCTools.js"></script>
+		<script type="text/javascript" src="../common/js/iziToast.js"></script>
+		<script type="text/javascript" src="../configJS/globalSet.js"></script>
+		<script type="text/javascript" src="../common/js/DHCWebService.js"></script>
+		<script type="text/javascript" src="../common/js/pinyin_dict_firstletter.js"></script>
+		<script type="text/javascript" src="../common/js/pinyin_dict_notone.js"></script>
+		<script type="text/javascript" src="../common/js/pinyinUtil.js"></script>
+		<script type="text/javascript" src="./bedMap.js"></script>
+	</body>
+</html>

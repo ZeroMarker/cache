@@ -7,6 +7,7 @@ function InitHospList()
 {
 	var hospComp = GenHospComp("DHC_PALocAmount");
 	hospComp.jdata.options.onSelect = function(e,t){
+		PALocAmountDataGrid.datagrid("unselectAll");
 		InitPALocAmountGrid();
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){

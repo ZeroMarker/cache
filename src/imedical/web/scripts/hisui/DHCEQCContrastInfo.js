@@ -105,8 +105,91 @@ function BFind_Click()
 {
 	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCContrastInfo&DataType="+GetElementValue("DataType")+"&ContrastTypeDR="+GetElementValue("ContrastTypeDR")+"&SysDesc="+GetElementValue("SysDesc")+"&Flag="+GetElementValue("Flag")+"&ExID="+GetElementValue("ExID")+"&ExCode="+GetElementValue("ExCode")+"&ExDesc="+GetElementValue("ExDesc")+"&FromDate="+GetElementValue("FromDate")+"&ToDate="+GetElementValue("ToDate");  //modifed by kdf 2016-11-09
 }
-
-function BSaveExcel_Click() 
+function BSaveExcel_Click()
+{
+	if (GetElementValue("ChromeFlag")=="1")
+	{
+		BSaveChrome_Click()
+	}
+	else
+	{
+		BSaveExcel_IE()
+	}
+}
+function BSaveChrome_Click()
+{
+	GetNum()
+	if (num<1)
+	{
+		alertShow("表没值");
+		return;
+	}
+	
+	var FileName=GetFileName();
+	if (FileName=="") {return;}
+	var NewFileName=filepath(FileName,"\\","\\\\")
+	var NewFileName=NewFileName.substr(0,NewFileName.length-4)
+		
+  	var GetPrescPath=document.getElementById("GetRepPath");
+	if (GetPrescPath)
+	{
+		 var encmeth=GetPrescPath.value
+	} 
+	else 
+	{
+		var encmeth=''
+	}
+	if (encmeth!="") 
+	{
+		var	TemplatePath=cspRunServerMethod(encmeth);
+	}
+	
+	var AllListInfo=new Array();
+	for (Row=1;Row<=num;Row++)
+    { 
+   		var list=document.getElementById('GetList');
+	 	if (list) {var encmeth=list.value} else {var encmeth=''};
+		var OneDetail=cspRunServerMethod(encmeth,'','',Row);
+		var OneDetailList=OneDetail.split("^");
+		AllListInfo.push(OneDetail)
+    }
+    
+	///Chrome兼容性处理
+	var Str ="(function test(x){"
+	Str +="var xlApp,xlsheet,xlBook;"
+	Str +="var Template='"+TemplatePath+"DHCEQContrastInfo.xls';";
+	Str +="xlApp = new ActiveXObject('Excel.Application');"
+	Str +="xlBook = xlApp.Workbooks.Add(Template);"
+	Str +="xlsheet = xlBook.ActiveSheet;"
+	Str +="var AllListInfoStr='"+AllListInfo+"';"
+	Str +="var AllListInfo=AllListInfoStr.split(',');"
+	Str +="for (Row=1;Row<="+num+";Row++){"
+	Str +="var OneDetailList=AllListInfo[Row-1].split('^');"
+	Str +="xlsheet.Rows(Row+1).Insert();"
+	Str +="xlsheet.cells(Row+1,1)=OneDetailList[0];"					//类型
+	Str +="xlsheet.cells(Row+1,2)=OneDetailList[1];"					//SYSID
+	Str +="xlsheet.cells(Row+1,3)=OneDetailList[2];"					//编码
+	Str +="xlsheet.cells(Row+1,4)=OneDetailList[3];"					//描述
+	Str +="xlsheet.cells(Row+1,5)=OneDetailList[4];"					//EXID
+	Str +="xlsheet.cells(Row+1,6)=OneDetailList[5];"					//扩展编码
+	Str +="xlsheet.cells(Row+1,7)=OneDetailList[6];"					//扩展描述
+	Str +="xlsheet.cells(Row+1,8)=OneDetailList[7];"
+	Str +="xlsheet.cells(Row+1,9)=OneDetailList[8];"
+	Str +="xlsheet.cells(Row+1,10)=OneDetailList[9];}"				//备注
+	Str +="var savefile='"+NewFileName+".xls';"
+	Str +="xlBook.SaveAs(savefile);"
+	Str +="xlBook.Close (savechanges=false);"
+	Str +="xlApp.Quit();"
+	Str +="xlApp=null;"
+	Str +="xlsheet.Quit;"
+	Str +="xlsheet=null;"
+	Str +="return 1;}());";
+	//以上为拼接Excel打印代码为字符串
+	CmdShell.notReturn = 0;   //设置无结果调用，不阻塞调用
+	var rtn = CmdShell.EvalJs(Str);   //通过中间件运行打印程序
+	alertShow("导出完成!");
+}
+function BSaveExcel_IE() 
 {
 	GetNum()
 	if (num<1)

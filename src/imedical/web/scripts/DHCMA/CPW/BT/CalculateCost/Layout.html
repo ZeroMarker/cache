@@ -1,0 +1,215 @@
+﻿<div id="Win" class="hisui-layout" data-options="fit:true">
+	<div data-options="region:'north',border:false" style="height:80px;padding:10px;padding-bottom:0px;">
+		<div id="divBase" class="hisui-panel" data-options="iconCls:'icon-paper',fit:true,headerCls:'panel-header-gray'" style="padding-top:10px;border-radius:4px 4px 0 0;border-bottom:0;">
+			<table class="search-table" width="100%">
+				<tr>			
+					<td class="r-label">											
+						<label>路径名称</label>
+					</td>
+					<td >
+						<input class="textbox" id="txtPathName"   disabled>
+					</td>
+					<td class="r-label">											
+						<label>路径类型</label>
+					</td>
+					<td >
+						<input class="textbox" id="txtPathType"   disabled>
+					</td>
+					<td class="r-label">
+						<label>参考费用</label>
+					</td>
+					<td >
+						<input class="textbox" id="txtFormCost"   disabled/>
+					</td>
+					<td class="r-label">
+						<label>参考天数</label>
+					</td>
+					<td>
+						<input class="textbox" id="txtFormDays"   disabled/>
+					</td>
+					<td>
+						<div class="hisui-panel" data-options="border:false" style="text-align:center;">
+							<a id="btnBudgetCost" class="hisui-linkbutton" data-options="iconCls:'icon-w-cal'">开始测算</a>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div> 
+		  
+	<div data-options="region:'center',border:false" style="padding:0px 10px 10px 10px;">
+		<div id="tabCalcType" class="hisui-tabs tabs-gray" data-options="fit:true" style="border-radius:0 0 4px 4px;">   
+			<!-- <div title="费用测算" data-options="iconCls:'icon-add-note'" style="padding:20px;"></div> -->
+			<div id="tab_Dtl" title="明细">
+				<div class="hisui-layout" id="layDetail" data-options="fit:true,clickExpand:true" >
+					<div data-options="region:'center',title:'',split:true" style="border-top:0;border-bottom:0;border-left:0">
+						<div class="hisui-panel " data-options="fit:true,border:false">							
+							<table id="gridFeeDetail" data-options="toolbar: '#btnBar'"></table>
+							<div id="btnBar" style="padding:4px;height:26px;">
+								<a id='btnAdd' class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true">新增</a>
+								<a id='btnEdit' class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true,stopAllEventOnDisabled:true">修改</a>
+								<a id='btnDelete' class="hisui-linkbutton" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true">删除</a>
+								<a id='btnAllDel' class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true,stopAllEventOnDisabled:true">全部删除</a>
+								<span style="margin-top:3px;float:right;color:#1474AF;"><span class="icon icon-tip" style="margin-right:5px;">&nbsp;&nbsp;&nbsp;&nbsp;</span>提示：请选择准确的医嘱项，不支持对医嘱套进行测算！</span>
+							</div>												
+						</div>					
+					</div>
+					<div data-options="region:'east',fit:false,split:false,title:'从关联医嘱中选择',iconCls:'icon-paper',border:false,collapsed:true,headerCls:'panel-header-gray'" style="width:650px;border-radius:0 0 4px 0;">						
+						<div id="layout" class="hisui-layout" data-options="fit:true">
+							<div data-options="region:'north'" style="height:55px;border:0;">
+								<div id="divOption" class="hisui-panel" fit="true" style="border:0;border-bottom:1px solid #cccccc;">
+									<table class="search-table">
+									    <tr>
+											<td class="r-label"><label for="cboFormEp2">所属阶段</label></td>
+											<td><input class="hisui-combobox" id="cboFormEp2" style="width:140px"/></td>
+											<td class="r-label"><label for="cboOrdItem2">所属项目</label></td>
+											<td><input class="hisui-combobox" id="cboOrdItem2" style="width:140px"/></td>
+											<td class="r-label">
+												<a id="btnSearch" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+												<a id="btnAddLeft" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">添加</a>
+											</td>
+										</tr>
+									</table>
+								</div>
+							</div>
+							<div data-options="region:'center'" style="text-align:center;border:none;">						
+								<div class="hisui-panel " data-options="fit:true,border:false" style="border-radius:0 0 4px 4px">
+									<table id="gridFormOrd"></table>
+								</div>
+							</div>
+						</div>						
+					</div>
+				</div>			
+			</div>   
+			<div id="tab_summary" title="汇总" data-options="closable:false" style="">   
+				<div class="hisui-panel"  data-options="fit:true,border:false" style="">
+					<table id="tbFeeSummary" class="grid-table" >
+						<caption>成本测算(参考病案首页)</caption>
+						<tr>
+							<td rowspan=3 class="td-category">总费用:<span id="totalCost"></span></td><td class="td-label">医疗服务收入:1+3+4+5</td><td id="ylfwsr" class="td-info"></td><td id="ylfwsrzb" class="td-info"></td><td class="td-label" class="td-label">检查收入:(5)+(7)+(8)</td><td id="jcsr" class="td-info"></td><td id="jcsrzb" class="td-info"></td>
+							<td class="td-label" class="td-label">化验收入:(6)</td><td id="hysr" class="td-info"></td><td id="hysrzb" class="td-info"></td><td class="td-label">药品耗材收入:6+7+9</td><td id="yphcsr" class="td-info"></td><td id="yphcsrzb" class="td-info"></td><td class="td-label"></td><td class="td-right"></td>
+						</tr>
+						<tr>
+							<td>药品血液收入:6+7+8</td><td id="ypxysr"></td><td id="ypxysrzb"></td><td>耗材收入:9</td><td id="hcsr"></td><td id="hcsrzb"></td>
+							<td>其他收入:10</td><td id="qtsr"></td><td id="qtsrzb"></td><td>自费比例</td><td id="zfbl" colspan=2></td><td></td><td class="td-right"></td>
+						</tr>
+						<tr>
+							<td>医技类费用:(5)+(6)+(7)</td><td id="yjlsr"></td><td id="yjlsrzb"></td><td>成本类费用:6+7+8+9+10</td><td id="cblsr"></td><td id="cblsrzb"></td>
+							<td>治疗类费用:(2)+(9)+(11)+(12)</td><td id="zllsr"></td><td id="zllsrzb"></td><td></td><td colspan=2></td><td></td><td class="td-right"></td>
+						</tr>
+						<tr>
+							<td class="td-category">1.综合医疗服务类</td><td>(1)一般医疗服务费</td><td id="ybylfwf" colspan=2></td><td>(2)一般治疗操作费</td><td id="ybzlczf" colspan=2></td><td>(3)护理费</td><td id="hlf" colspan=2></td>
+							<td>(4)其他费用</td><td id="qtfy" colspan=2></td><td></td><td class="td-right"></td>
+						</tr>
+						<tr>
+							<td class="td-category">2.诊断类</td><td>(5)病理诊断费</td><td id="blzdf" colspan=2></td><td>(6)实验室诊断费</td><td id="syszdf" colspan=2></td><td>(7)影像学诊断费</td><td id="yxxzdf" colspan=2></td>
+							<td>(8)临床诊断项目费</td><td id="lczdxmf" colspan=2></td><td></td><td class="td-right"></td>
+						</tr>
+						<tr>
+							<td class="td-category">3.治疗类</td><td>(9)非手术治疗项目费</td><td id="fsszlxmf" colspan=2></td><td>(9.1)临床物理治疗费</td><td id="lcwlzlf"  colspan=2></td><td>(10)手术治疗费</td><td id="sszlf" colspan=2></td><td>(10.1)麻醉费</td><td id="mzf" colspan=2></td>
+							<td>(10.2)手术费</td><td id="ssf" colspan=2 class="td-right"></td>
+						</tr>
+						<tr>
+							<td class="td-category">4.康复类</td><td>(11)康复费</td><td id="kff" colspan=2></td><td></td><td colspan=2></td><td></td><td colspan=2></td>
+							<td></td><td colspan=2></td><td></td><td class="td-right"></td>
+						</tr>
+						<tr>
+							<td class="td-category">5.中医类</td><td>(12)中医治疗费</td><td id="zyzlf" colspan=2></td><td></td><td colspan=2></td><td></td><td colspan=2></td>
+							<td></td><td colspan=2></td><td></td><td class="td-right"></td>
+						</tr>
+						<tr>
+							<td class="td-category">6.西药类</td><td>(13)西药费</td><td id="xyf" colspan=2></td><td>(13.1)抗菌药物费用</td><td id="kjywfy" colspan=2></td><td></td><td colspan=2></td>
+							<td></td><td colspan=2></td><td></td><td class="td-right"></td>
+						</tr>
+						<tr>
+							<td class="td-category">7.中药类</td><td>(14)中成药费</td><td id="zchyf" colspan=2></td><td>(15)中草药费</td><td id="zcyf" colspan=2></td><td></td><td colspan=2></td>
+							<td></td><td colspan=2></td><td></td><td class="td-right"></td>
+						</tr>
+						<tr>
+							<td class="td-category">8.血液和血液制品类</td><td>(16)血费</td><td id="xf" colspan=2></td><td>(17)白蛋白类制品费</td><td id="bdblzpf" colspan=2></td><td>(18)球蛋白类制品费</td><td id="qdblzpf" colspan=2></td>
+							<td>(19)凝血因子类制品费</td><td id="nxyzlzpf" colspan=2></td><td>(20)细胞因子类制品费</td><td id="xbyzlzpf" class="td-right"></td>
+						</tr>
+						<tr>
+							<td class="td-category">9.耗材类</td><td>(21)检查用一次性医用材料费</td><td id="jcyycxyyhcf" colspan=2></td><td>(22)治疗用一次性医用材料费</td><td id="zlyycxyyhcf" colspan=2></td><td>(23)手术用一次性医用材料费</td><td id="ssyycxyyhcf" colspan=2></td>
+							<td></td><td colspan=2></td><td></td><td class="td-right"></td>
+						</tr>
+						<tr>
+							<td class="td-category">10.其他类</td><td>(24)其他费</td><td id="qtf" colspan=2></td><td></td><td colspan=2></td><td></td><td colspan=2></td>
+							<td></td><td colspan=2></td><td></td><td class="td-right"></td>
+						</tr>
+					</table>
+				</div>    
+			</div>
+		</div>
+	</div> 
+</div>	
+
+<div id="winOrdBudgetRecEdit" class="hisui-dialog" style="width:600px;height:350px;padding:10px;"　
+data-options="closable:true,closed:true,title:'测算医嘱编辑',iconCls:'icon-w-update',resizable:false,modal:true">
+	<div class="hisui-panel " data-options="fit:true,border:false">	
+		<table class="search-table">
+		    <tr>
+				<td class="r-label"><label for="cboFormEp">所属阶段</label></td>
+				<td><input class="hisui-combobox" id="cboFormEp" style="width:200px"/></td>
+			
+				<td class="r-label"><label for="cboOrdItem">所属项目</label></td>
+				<td><input class="hisui-combobox" id="cboOrdItem" style="width:200px"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label for="cboCategory">分类标记</label></td >
+				<td><input class="hisui-combobox" id="cboCategory" style="width:200px"/></td>
+			
+				<td class="r-label"><label for="cboPriority">医嘱类型</label></td >
+				<td><input class="hisui-combobox" id="cboPriority" style="width:200px"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label for="txtOrdMast">医嘱名称</label></td >
+				<td><input class="textbox" id="txtOrdMast" style="width:200px"/><input class="textbox" id="txtOrdGeneID" style="display:none;"/></td>
+			
+				<td class="r-label"><label>剂量</label></td>
+				<td ><input class=" textbox" id="txtOrdDoseQty"  style="width:94px;vertical-align: middle;" onkeyup="value=value.replace(/[^\d^\.]+/g,'')" /><input class="hisui-combobox" id="cboOrdUOM"  style="width:100px;"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>频次</label></td>
+				<td ><input class="textbox" id="cboOrdFreq" placeholder="请输入查询" style="width:200px;"/></td>
+			
+				<td class="r-label"><label>用法</label></td>
+				<td ><input class="textbox" id="cboOrdInstruc" placeholder="请输入查询" style="width:200px;"/></td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>疗程</label></td>
+				<td ><input class="textbox" id="cboOrdDurat" placeholder="请输入查询" style="width:200px;"/></td>
+			
+				<td class="r-label"><label>用药天数</label></td>
+				<td ><input class="hisui-numberbox textbox" id="txtOrdUseDays"  style="width:100px;" data-options="isKeyupChange:true"/>单位：天</td>
+			</tr>
+			<tr>
+				<td class="r-label"><label>数量</label></td>
+				<td ><input class="hisui-numberbox textbox" id="txtOrdQty"  style="width:100px;" data-options="isKeyupChange:true"/><input class="hisui-combobox" id="cboOrdQtyUOM" disabled="disabled"  style="width:100px;"/></td>
+			
+				<td class="r-label"><label>检查部位</label></td>
+				<td >
+					<input class="textbox" id="txtOrdPos" disabled="disabled" style="display:none;width:167px;"/>
+					<input class="textbox" id="txtOrdPosShow" disabled="disabled" style="width:164px;" placeholder="检查医嘱可维护"/>
+					<a id="btnAddPos" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'" style="margin:-3px 0px 0px -5px"></a>
+				</td>
+			</tr>
+											
+			<tr >
+				<td colspan="4" Style="text-align:center">
+				<a id="btnSave" class="hisui-linkbutton"  style="margin-right:10px;">保存</a>
+				</td>
+			</tr>
+		</table>
+	</div>
+</div>
+
+	
+<!-- 医嘱套弹窗-->
+<div id="ARCOSItemDialog" class="hisui-dialog" style="width:1500px;height:800px;padding:10px;"　
+data-options="closable:true,closed:true,title:'医嘱套费用明细',iconCls:'icon-w-update',resizable:false,modal:true">
+	<div class="hisui-panel"  data-options="fit:true,border:false" style="">
+		<table id="gridARCOSItem" class="hisui-datagrid">
+		</table>
+	</div>
+</div>

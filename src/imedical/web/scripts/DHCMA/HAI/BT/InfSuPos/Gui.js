@@ -3,10 +3,10 @@ function InitInfSuPosWin(){
 	var obj = new Object();
 	obj.PosRowID = '';
    	obj.KeyRowID = '';	
-   
+   	var flg =0;
    	obj.gridInfSuPos = $HUI.datagrid("#gridInfSuPos",{
 		fit: true,
-		title:'疑似诊断',
+		//title:'疑似诊断',
 		headerCls:'panel-header-gray',
 		iconCls:'icon-resort',
 		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
@@ -15,38 +15,44 @@ function InitInfSuPosWin(){
 		loadMsg:'数据加载中...',
 		pageSize: 20,
 		pageList : [20,50,100,200],
-	
 		url:$URL,
 	    queryParams:{
 			ClassName:'DHCHAI.IRS.CRuleInfSuSrv',
 			QueryName:'QryInfSuPos'
-	    },
-	 
+	    },	 
 		columns:[[
 			{field:'Diagnos',title:'疑似诊断',width:200},
-			{field:'CateDesc',title:'分类',width:180},
+			{field:'CateDesc',title:'分类',width:120},
 			{field:'KeyWord',title:'关键词',width:300}, 
-			{field:'PRIDesc',title:'优先级',width:80}, 
-			{field:'Property',title:'属性',width:80},
+			{field:'PRIDesc',title:'优先级',width:70}, 
+			{field:'Property',title:'属性',width:60},
 			{field:'CurrentDesc',title:'是否通用',width:80}, 
 			{field:'Note',title:'说明',width:200}, 
 			{field:'ActDate',title:'更新日期',width:100},
 			{field:'ActTime',title:'更新时间',width:80},
 			{field:'ActUser',title:'更新用户',width:120}
 		]],
-		onClickCell:function(rowIndex, field, value){
+		onSelect:function(rowIndex,rowData){
 			if (rowIndex>-1) {
-				var flg =0
-				if (field=='Diagnos') flg =1; 
-				$("#btnAddPos").linkbutton("disable");
-				$("#btnAddKey").linkbutton("disable");
-				var rowData = $('#gridInfSuPos').datagrid('getRows')[rowIndex];
 				obj.gridInfSuPos_onSelect(rowData,flg);
 			}
-			
+		},
+		onClickCell:function(rowIndex, field, value){
+			if (rowIndex>-1) {
+				if (field=='Diagnos') {
+					flg =1;
+				}else {
+					flg =0;
+				}
+				if ((obj.KeyRowID)||(obj.PosRowID)) {
+					$("#btnAddPos").linkbutton("enable");
+					$("#btnAddKey").linkbutton("enable");
+					$("#btnEdit").linkbutton("disable");
+					$("#btnDelete").linkbutton("disable");
+				}				
+			}
 		},
 		onDblClickCell:function(rowIndex, field, value){
-			var flg =0
 			if (field=='Diagnos') flg =1;
 			if (rowIndex>-1) {
 				var rowData = $('#gridInfSuPos').datagrid('getRows')[rowIndex];

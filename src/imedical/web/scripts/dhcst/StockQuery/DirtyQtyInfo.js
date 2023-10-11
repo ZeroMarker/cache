@@ -32,7 +32,7 @@ function DirtyQtyQuery(Inclb,IncInfo,Fn) {
 	function searchData() {
 		// 必选条件
 		if (Inclb == null || Inclb.length <= 0) {
-			Msg.info("warning", "请在主界面选择某一条记录查看其占用信息！");
+			Msg.info("warning", $g("请在主界面选择某一条记录查看其占用信息！"));
 			return;
 		}
 		
@@ -42,9 +42,9 @@ function DirtyQtyQuery(Inclb,IncInfo,Fn) {
 
 	function renderType(value){
 		if(value=='T'){
-			return '出库单';
+			return $g('出库单');
 		}else if(value=='R'){
-			return '退货单';
+			return $g('退货单');
 		}
 	}
 		var nm = new Ext.grid.RowNumberer();
@@ -56,31 +56,31 @@ function DirtyQtyQuery(Inclb,IncInfo,Fn) {
 					sortable : true,
 					hidden : true
 				}, {
-					header : '单号',
+					header : $g('单号'),
 					dataIndex : 'No',
 					width : 200,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "数量",
+					header : $g("数量"),
 					dataIndex : 'Qty',
 					width : 100,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "单位",
+					header : $g("单位"),
 					dataIndex : 'Uom',
 					width : 90,
 					align : 'left',
 					sortable : true
 				}, {
-					header : '单据日期',
+					header : $g('单据日期'),
 					dataIndex : 'Date',
 					width : 100,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "单据类型",
+					header : $g("单据类型"),
 					dataIndex : 'Type',
 					width : 80,
 					align : 'left',
@@ -131,7 +131,7 @@ function DirtyQtyQuery(Inclb,IncInfo,Fn) {
 							var Type = DirtyQtyStore.getAt(rowIndex).get("Type");
 							var Rowid = DirtyQtyStore.getAt(rowIndex).get("Rowid");
 							if(Type=='T'){
-								Ext.Msg.confirm('提示','清除后将删除对应出库单明细,确定要清除出库占用数吗？',
+								Ext.Msg.confirm($g('提示'),$g('清除后将删除对应出库单明细,确定要清除出库占用数吗？'),
 	      						function(btn){
 	        						if(btn=='yes'){
 		        						clearReserveQty(Rowid)						
@@ -143,7 +143,7 @@ function DirtyQtyQuery(Inclb,IncInfo,Fn) {
 	     				}}
 				});
 	var window = new Ext.Window({
-				title : '占用单据信息<双击行清除占用>',
+				title : $g('占用单据信息<双击行清除占用>'),
 				width : 600,
 				height : 600,
 				layout:'fit',
@@ -154,28 +154,28 @@ function DirtyQtyQuery(Inclb,IncInfo,Fn) {
 						var url = DictUrl
 						+ "dhcinistrfaction.csp?actiontype=DeleteDetail&RowId="
 						+ InItIRowId ;
-						var loadMask=ShowLoadMask(Ext.getBody(),"处理中...");
+						var loadMask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 						Ext.Ajax.request({
 									url : url,
 									method : 'POST',
-									waitMsg : '查询中...',
+									waitMsg : $g('查询中...'),
 									success : function(result, request) {
 										var jsonData = Ext.util.JSON
 												.decode(result.responseText);
 										if (jsonData.success == 'true') {
-											Msg.info("success", "清除成功!");
+											Msg.info("success", $g("清除成功!"));
 										} else {
 											var ret=jsonData.info
 											if(ret=="-1"){
-												Msg.info("error", "清除失败,出库单为完成状态!");
+												Msg.info("error", $g("清除失败,出库单为完成状态!"));
 											}else if(ret=="-2"){
-												Msg.info("error", "清除失败,出库单为完成状态!");
+												Msg.info("error", $g("清除失败,出库单为完成状态!"));
 											}else if(ret=="-3"){
-												Msg.info("error", "清除失败,出库单为出库审核状态!");
+												Msg.info("error", $g("清除失败,出库单为出库审核状态!"));
 											}else if(ret=="-4"){
-												Msg.info("error", "清除失败,出库单为入库审核状态!");
+												Msg.info("error", $g("清除失败,出库单为入库审核状态!"));
 											}else{
-												Msg.info("error", "清除失败,"+jsonData.info);
+												Msg.info("error", $g("清除失败,")+jsonData.info);
 											}
 										
 										}

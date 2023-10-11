@@ -126,3 +126,8 @@ function addShareResource()
 	websys_showModal("options").mth();
 	$('#tDHCEQShareResource').datagrid('reload');
 }
+//add by LMH 20220928 2804641
+function getParam(ID)
+{
+	if (ID=='EquipTypeDR'){return getElementValue('EquipTypeDR')}
+}

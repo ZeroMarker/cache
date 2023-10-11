@@ -45,10 +45,10 @@ function InitviewScreen(){
 			aParRef:""
 	    },
 		columns:[[	
-			{field:'BTCode',title:'代码',width:'80',sortable:true},
-			{field:'BTDesc',title:'名称',width:'200',sortable:true},
-			{field:'IndexCat',title:'分类',width:'100',sortable:true},
-			{field:'RaqName',title:'报表链接',width:'300',sortable:true},
+			{field:'BTCode',title:'指标代码',width:'80',sortable:true},
+			{field:'BTDesc',title:'指标描述',width:'200',sortable:true},
+			{field:'IndexCat',title:'指标类别',width:'100',sortable:true},
+			{field:'RaqName',title:'报表名称',width:'300',sortable:true},
 			{field:'IsActive',title:'有效',width:'50',sortable:true}
 			
 		]],

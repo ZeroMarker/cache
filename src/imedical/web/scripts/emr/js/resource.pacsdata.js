@@ -350,6 +350,7 @@ function getData()
 				if (quoteData[item.OEOrdItemDR][childList[j].code] != undefined)
 				{
 					result = result + childList[j].desc + quoteData[item.OEOrdItemDR][childList[j].code].replace(/\n/g,"") + childList[j].separate;
+					result=reSense(result);
 				}
 			}
 			if (checkedItems.length-1 > index)
@@ -403,4 +404,11 @@ function checkOnClick(obj)
 function UnCheckAll()
 {
 	$("#pacsData").datagrid("uncheckAll");
+}
+///检查引用时< >符号转义后的处理
+function reSense(val){
+	var result=val
+	result=result.replace(/&lt/g, '<');
+	result=result.replace(/&gt/g, '>');
+	return result
 }

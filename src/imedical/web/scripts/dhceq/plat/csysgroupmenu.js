@@ -1,19 +1,23 @@
+//Modify by zx 2020-09-16
+var editIndex=undefined;
+var modifyBeforeRow = {};
 /// Modfied by zc 2015-07-30 ZC0027
 /// 描述:新增checkchange方法
 function checkchange(TAccessCheckbox,rowIndex)
 {
-		//var row = $('#menudatagrid').datagrid('getSelected');
-		var row = $('#groupmenudatagrid').datagrid('getRows')[rowIndex];
-		if (row) {
-			if(TAccessCheckbox.checked==true) row.TOpt="Y"
-			else row.TOpt="N"
-    		//var rowIndex = $('#menudatagrid').datagrid('getRowIndex', row);
-    		$('#groupmenudatagrid').datagrid('updateRow',{	//在表格与某个具体列绑定相同事件时，先响应具体列事件，但是执行updateRow方法将导致表格onclick事件失效
-			index:rowIndex,
-			row:row})
-			$('#groupmenudatagrid').datagrid('selectRow',rowIndex)
-			$('#groupmenudatagrid').datagrid('options').onClickRow(rowIndex,row)
-		}
+	endEditing();  //Modify by zx 2020-09-16
+	//var row = $('#menudatagrid').datagrid('getSelected');
+	var row = $('#groupmenudatagrid').datagrid('getRows')[rowIndex];
+	if (row) {
+		if(TAccessCheckbox.checked==true) row.TOpt="Y"
+		else row.TOpt="N"
+		//var rowIndex = $('#menudatagrid').datagrid('getRowIndex', row);
+		$('#groupmenudatagrid').datagrid('updateRow',{	//在表格与某个具体列绑定相同事件时，先响应具体列事件，但是执行updateRow方法将导致表格onclick事件失效
+		index:rowIndex,
+		row:row})
+		$('#groupmenudatagrid').datagrid('selectRow',rowIndex)
+		$('#groupmenudatagrid').datagrid('options').onClickRow(rowIndex,row)
+	}
 }
 $(document).ready(function () { 
 /*$('#menu').combogrid({ 
@@ -109,9 +113,11 @@ $HUI.datagrid('#groupmenudatagrid',{
     	{field:'TRowid',title:'TRowid',width:50,align:'center',hidden:true},    
         {field:'TGroupDR',title:'TGroupDR',width:200,align:'center',hidden:true}, /// Modfied by zc 2015-07-30 ZC0027
         {field:'TMenuDR',title:'TMenuDR',width:200,align:'center',hidden:true}, /// Modfied by zc 2015-07-30 ZC0027
-        {field:'TMenuCode',title:'代码',width:50,align:'center'},    //Modified by HHM 2016-04-06
-        {field:'TMenu',title:'菜单',width:200,align:'center'}, 
-        {field:'TOpt',title:'操作',width:100,align:'center',formatter: fomartOperation},  /// Modfied by zc 2015-07-30 ZC0027              
+        {field:'TMenuType',title:'菜单类型',width:50,align:'center'},    //Modify by zx 2020-09-16
+        {field:'TMenuCode',title:'代码',width:100,align:'center'},    //Modified by HHM 2016-04-06
+        {field:'TMenu',title:'菜单',width:100,align:'center'}, 
+        {field:'TOpt',title:'操作',width:50,align:'center',formatter: fomartOperation},  /// Modfied by zc 2015-07-30 ZC0027
+        {field:'TUrlParms',title:'重定义参数',width:100,align:'center',editor:{type: 'text',options:{}}}      //Modify by zx 2020-09-16        
     ]],
     singleSelect: true, 
 	selectOnCheck: true,
@@ -122,7 +128,6 @@ $HUI.datagrid('#groupmenudatagrid',{
                 if(item.checked){
                    $('#groupmenudatagrid').datagrid('checkRow', index);
                }
- 
            });
 
         }},
@@ -155,7 +160,8 @@ function fomartOperation(value,row,index){
 
 /// Modfied by CSJ 20181023
 /// 描述:修改SavegridData方法
-function SavegridData(){           
+function SavegridData(){         
+	$('#groupmenudatagrid').datagrid('endEdit',editIndex);   //Modify by zx Bug ZX0119 不结束编辑改变值获取不到
 	var rows = jQuery("#groupmenudatagrid").datagrid('getRows');
 	//messageShow("","","",JSON.stringify(rows))
 	for(var i=0;i<rows.length;i++)
@@ -165,6 +171,7 @@ function SavegridData(){
 		PSTData=PSTData+"^"+rows[i].TGroupDR;
 		PSTData=PSTData+"^"+rows[i].TMenuDR;
 		PSTData=PSTData+"^"+rows[i].TOpt;
+		PSTData=PSTData+"^"+rows[i].TUrlParms;  //Modify by zx 2020-09-16
 		$.ajax({
 			url:'dhceq.jquery.method.csp',
 			Type:'POST',
@@ -194,3 +201,36 @@ function SavegridData(){
 	}
 }
 
+/// Modfied by zx 202-09-16
+/// 描述:增加可编辑表格处理
+function onClickRow(index)
+{
+	if (editIndex!=index) 
+	{
+		if (endEditing())
+		{
+			$('#groupmenudatagrid').datagrid('selectRow', index).datagrid('beginEdit', index);
+		
+			editIndex = index;
+			modifyBeforeRow = $.extend({},$('#groupmenudatagrid').datagrid('getRows')[editIndex]);
+		} else {
+			$('#groupmenudatagrid').datagrid('selectRow', editIndex);
+		}
+	}
+	else
+	{
+		endEditing();
+	}
+}
+/// Modfied by zx 202-09-16
+/// 描述:可编辑表格关闭
+function endEditing(){
+	if (editIndex == undefined){return true}
+	if ($('#groupmenudatagrid').datagrid('validateRow', editIndex)){
+		$('#groupmenudatagrid').datagrid('endEdit', editIndex);
+		editIndex = undefined;
+		return true;
+	} else {
+		return false;
+	}
+}

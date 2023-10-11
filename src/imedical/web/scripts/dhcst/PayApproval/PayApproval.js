@@ -15,25 +15,25 @@ var strParam2="";
 var LocField = new Ext.ux.LocComboBox({
 	id:'LocField',
 	name:'LocField',
-	fieldLabel:'科室',
+	fieldLabel:$g('科室'),
 	listWidth:210,
 	groupId:gGroupId,
 	anchor:'90%'
 });
 
 var Vendor = new Ext.ux.VendorComboBox({
-	fieldLabel : '供应商',
+	fieldLabel : $g('经营企业'),
 	id : 'Vendor',
 	name : 'Vendor',
 	anchor : '90%',
-	emptyText : '供应商...'
+	emptyText : $g('经营企业...')
 });
 
 var startDateField = new Ext.ux.DateField({
 	id:'startDateField',
 	listWidth:120,
     allowBlank:true,
-	fieldLabel:'起始日期',
+	fieldLabel:$g('起始日期'),
 	anchor:'90%',
 	value:new Date()
 });
@@ -42,14 +42,14 @@ var endDateField = new Ext.ux.DateField({
 	id:'endDateField',
 	listWidth:120,
     allowBlank:true,
-	fieldLabel:'截止日期',
+	fieldLabel:$g('截止日期'),
 	anchor:'90%',
 	value:new Date()
 });
 
 var INVNnmber = new Ext.form.TextField({
 	id:'INVNnmber',
-	fieldLabel:'发票号',
+	fieldLabel:$g('发票号'),
 	allowBlank:true,
 	listWidth:150,
 	emptyText:'',
@@ -59,61 +59,61 @@ var INVNnmber = new Ext.form.TextField({
 
 var onlyRequest = new Ext.form.Checkbox({
 	id: 'onlyRequest',
-	fieldLabel:'仅申请计划',
+	fieldLabel:$g('仅申请计划'),
 	allowBlank:true
 });
 
 var InvoiceField = new Ext.form.Radio({ 
 	id:'InvoiceField',
 	name:'InvoiceCondition',
-	boxLabel:'有发票'  
+	boxLabel:$g('有发票' ) 
 });
 var noInvoiceField = new Ext.form.Radio({  
 	id:'noInvoiceField',
 	name:'InvoiceCondition',
-	boxLabel:'无发票'  
+	boxLabel:$g('无发票' ) 
 });
 var allInvoiceField = new Ext.form.Radio({ 
 	id:'allInvoiceField',
 	name:'InvoiceCondition',
-	boxLabel:'全部',
+	boxLabel:$g('全部'),
 	checked:true
 });
 	
 var Approvalflag = new Ext.form.Radio({ 
 	id:'Approval',
-	boxLabel:'已审批',
+	boxLabel:$g('已审批'),
 	name:'AuditCondition'
 });
 var noApprovalflag = new Ext.form.Radio({  
 	id:'noApproval',
 	name:'AuditCondition',
-	boxLabel:'未审批' 
+	boxLabel:$g('未审批' )
 });
 var allApprovalflag = new Ext.form.Radio({ 
 	id:'allApproval',
 	name:'AuditCondition',
-	boxLabel:'全部',
+	boxLabel:$g('全部'),
 	checked:true
 });
 	
 var IncludeRet = new Ext.form.Checkbox({
 	id: 'IncludeRet',
-	fieldLabel:'包含退货',
+	fieldLabel:$g('包含退货'),
 	anchor:'90%',
 	allowBlank:true
 });
 
 var IncludeGift = new Ext.form.Checkbox({
 	id:'IncludeGift',
-	fieldLabel:'包含赠送',
+	fieldLabel:$g('包含赠送'),
 	anchor:'90%',
 	allowBlank:true
 });
 
 var find = new Ext.Toolbar.Button({
-	text:'查询',
-    tooltip:'查询',
+	text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
 	width : 70,
 	height : 30,
@@ -122,20 +122,20 @@ var find = new Ext.Toolbar.Button({
 		if((startDate!="")&&(startDate!=null)){
 			startDate = startDate.format(App_StkDateFormat);
 		}else{
-			Msg.info("error","请选择起始日期!");
+			Msg.info("error",$g("请选择起始日期!"));
 			return false;
 		}
 		var endDate = Ext.getCmp('endDateField').getValue();
 		if((endDate!="")&&(endDate!=null)){
 			endDate = endDate.format(App_StkDateFormat);
 		}else{
-			Msg.info("error","请选择截止日期!");
+			Msg.info("error",$g("请选择截止日期!"));
 			return false;
 		}
 			
 		var locId = Ext.getCmp('LocField').getValue();
 		if((locId=="")||(locId==null)){
-			Msg.info("error","请选择申请部门!");
+			Msg.info("error",$g("请选择申请部门!"));
 			return false;
 		}
 		var vendorId = Ext.getCmp('Vendor').getValue();	
@@ -161,7 +161,7 @@ var find = new Ext.Toolbar.Button({
 			params:{start:0,limit:pagesize,sort:'RowId',dir:'desc',strParam:strParam1},
 				callback : function(o,response,success) { 
 					if (success == false){  
-						Ext.MessageBox.alert("查询错误",VendorGridDs.reader.jsonData.Error);  
+						Ext.MessageBox.alert($g("查询错误"),VendorGridDs.reader.jsonData.Error);  
 					}
 				}
 			});
@@ -169,19 +169,23 @@ var find = new Ext.Toolbar.Button({
 });
 
 var clear = new Ext.Toolbar.Button({
-	text:'清屏',
-    tooltip:'点击清屏',
+	text:$g('清屏'),
+    tooltip:$g('点击清屏'),
     iconCls:'page_clearscreen',
 	width : 70,
 	height : 30,
 	handler:function(){
 		//Ext.getCmp('LocField').setValue("");
-		//Ext.getCmp('startDateField').setValue("");
-		//Ext.getCmp('endDateField').setValue("");
+		SetLogInDept(PhaDeptStore, "LocField");
+		Ext.getCmp('startDateField').setValue(new Date());
+		Ext.getCmp('endDateField').setValue(new Date());
 		Ext.getCmp('IncludeRet').setValue(false);
 		Ext.getCmp('IncludeGift').setValue(false);
-		//Ext.getCmp('INVNnmber').setValue("");
+		Ext.getCmp('INVNnmber').setValue("");
+		Ext.getCmp('Vendor').setValue("");
 		
+		Ext.getCmp('allApproval').setValue(true);
+		Ext.getCmp('allInvoiceField').setValue(true);
 		VendorGridDs.load({params:{start:0,limit:0}})
 		Ext.getCmp("VendorGrid").getStore().removeAll();
 		Ext.getCmp("VendorGrid").getView().refresh();
@@ -196,8 +200,8 @@ var clear = new Ext.Toolbar.Button({
 });
 
 var Approval = new Ext.Toolbar.Button({
-	text:'审批',
-    tooltip:'审批',
+	text:$g('审批'),
+    tooltip:$g('审批'),
     iconCls:'page_gear',
 	width : 70,
 	height : 30,
@@ -215,7 +219,7 @@ function saveApproval(){
 	}
 	
 	}
-	if(m==rowCount){Msg.info("warning","请选择入库/退货单!");
+	if(m==rowCount){Msg.info("warning",$g("请选择入库/退货单!"));
 			return false;
 		}
 	for(var i=0;i<rowCount;i++){
@@ -226,18 +230,18 @@ function saveApproval(){
 			var type=rowData.data["type"];
 			var IngrNo=rowData.data["gdNo"];
 			if((IngrId!="")&&(IngrId!=null)){
-				var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+				var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 				Ext.Ajax.request({
 					url: URL+'?actiontype=approval&InGrId='+IngrId+"&type="+type,
 					failure: function(result, request) {
 						 mask.hide();
-						Msg.info("error","请检查网络连接!");
+						Msg.info("error",$g("请检查网络连接!"));
 					},
 					success: function(result, request) {
 						var jsonData = Ext.util.JSON.decode( result.responseText );
 						 mask.hide();
 						if (jsonData.success=='true') {
-							Msg.info("success","审批成功!");
+							Msg.info("success",$g("审批成功!"));
 							refreshRecList();
 							
 							
@@ -264,8 +268,8 @@ function saveApproval(){
 }
 
 var noApproval = new Ext.Toolbar.Button({
-	text:'取消审批',
-    tooltip:'取消审批',
+	text:$g('取消审批'),
+    tooltip:$g('取消审批'),
     iconCls:'page_gear',
 	width : 70,
 	height : 30,
@@ -283,7 +287,7 @@ function CancleAppr(){
 	}
 	
 	}
-	if(m==rowCount){Msg.info("warning","请选择入库/退货单!");
+	if(m==rowCount){Msg.info("warning",$g("请选择入库/退货单!"));
 			return false;
 		}				
 	for(var i=0;i<rowCount;i++){
@@ -295,18 +299,18 @@ function CancleAppr(){
 			var IngrNo=rowData.data["gdNo"];
 			var type=rowData.data["type"];
 			if((IngrId!="")&&(IngrId!=null)){
-			var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+			var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 			Ext.Ajax.request({
 				url: URL+'?actiontype=noapproval&InGrId='+IngrId+"&type="+type,
 				failure: function(result, request) {
 					 mask.hide();
-					Msg.info("error","请检查网络连接!");
+					Msg.info("error",$g("请检查网络连接!"));
 				},
 				success: function(result, request) {
 					var jsonData = Ext.util.JSON.decode( result.responseText );
 					 mask.hide();
 					if (jsonData.success=='true') {
-						Msg.info("success","取消审批成功!");
+						Msg.info("success",$g("取消审批成功!"));
 						refreshRecList();
 					}else{
 						/*
@@ -329,7 +333,7 @@ function CancleAppr(){
 		}
 	}
 }
-//=========================供应商主信息=================================
+//=========================经营企业主信息=================================
 var sm = new Ext.grid.CheckboxSelectionModel(); 
 
 //var VendorGrid="";
@@ -367,32 +371,32 @@ var VendorGridCm = new Ext.grid.ColumnModel([
         sortable:true,
         hidden : true
     },{
-        header:"供应商",
+        header:$g("经营企业"),
         dataIndex:'vendorName',
         width:160,
         align:'left',
         sortable:true
     },{
-        header:"入库进价金额",
+        header:$g("入库进价金额"),
         dataIndex:'rpAmt',
         width:120,
         align:'right',
         sortable:true
     },{
-        header:"应付款金额",
+        header:$g("应付款金额"),
         dataIndex:'toPayAmt',
         width:90,
         align:'right',
         sortable:true
     },{
-        header:"已付款金额",
+        header:$g("已付款金额"),
         dataIndex:'payedAmt',
         width:90,
         align:'right',
         sortable:true
     }
     ,{
-        header:"冲帐金额",
+        header:$g("冲帐金额"),
         dataIndex:'toDashAmt',
         width:90,
         align:'right',
@@ -408,8 +412,8 @@ var VendorPagingToolbar = new Ext.PagingToolbar({
     store:VendorGridDs,
 	pageSize:20,
     displayInfo:true,
-    displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-    emptyMsg:"没有记录"
+    displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+    emptyMsg:$g("没有记录")
     /*,
 	doLoad:function(C){
 		var B={},
@@ -494,29 +498,29 @@ var RecRetGridCm = new Ext.grid.ColumnModel([nm,chkSm
         sortable:true,
         hidden : true
     },{
-        header:"单号",
+        header:$g("单号"),
         dataIndex:'gdNo',
         width:140,
         align:'left',
         sortable:true
     },{
-        header:"类型",
+        header:$g("类型"),
         dataIndex:'type',
         width:40,
         align:'left',
         sortable:true,
         renderer:function(v, p, record){
-			if (v=="G"){return "入库"}
-			if (v="R") {return "退货"}
+			if (v=="G"){return $g("入库")}
+			if (v=="R") {return $g("退货")}
 		}
     },{
-        header:"进价金额",
+        header:$g("进价金额"),
         dataIndex:'RpAmt',
         width:100,
         align:'right',
         sortable:true
     },{
-        header:"审批标志",
+        header:$g("审批标志"),
         dataIndex:'ApprvFlag',
         width:70,
         align:'left',
@@ -526,31 +530,31 @@ var RecRetGridCm = new Ext.grid.ColumnModel([nm,chkSm
 				return '<div class="x-grid3-check-col'+(((v=='Y')||(v==true))?'-on':'')+' x-grid3-cc-'+this.id+'">&#160;</div>';
 			}
     },{
-        header:"制单人",
+        header:$g("制单人"),
         dataIndex:'CreateUser',
         width:60,
         align:'left',
         sortable:true
     },{
-        header:"制单日期",
+        header:$g("制单日期"),
         dataIndex:'CreateDate',
         width:80,
         align:'left',
         sortable:true
     },{
-        header:"审核人",
+        header:$g("审核人"),
         dataIndex:'AuditUser',
         width:60,
         align:'left',
         sortable:true
     },{
-        header:"审核日期",
+        header:$g("审核日期"),
         dataIndex:'AuditDate',
         width:80,
         align:'left',
         sortable:true
     },{
-        header:"付清标志",
+        header:$g("付清标志"),
         dataIndex:'PayedFlag',
         width:70,
         align:'left',
@@ -576,8 +580,8 @@ var RecRetPagingToolbar = new Ext.PagingToolbar({
     store:RecRetGridDs,
 	pageSize:20,
     displayInfo:true,
-    displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-    emptyMsg:"没有记录"
+    displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+    emptyMsg:$g("没有记录")
 });
 
 //表格
@@ -614,6 +618,7 @@ var RecRetGrid = new Ext.grid.EditorGridPanel({
 				}
 			}
 			//RecRetDetailGridDs.proxy = new Ext.data.HttpProxy({url:URL+'?actiontype=queryItem',method:'GET'});
+
 			var pagesize=RecRetDetailToolbar.pageSize;
 			RecRetDetailGridDs.setBaseParam('sort','RowId');
 			RecRetDetailGridDs.setBaseParam('dir','desc');
@@ -624,7 +629,7 @@ var RecRetGrid = new Ext.grid.EditorGridPanel({
 				params:{start:0,limit:pagesize},
 				callback : function(o,response,success) { 
 					if (success == false){  
-						Ext.MessageBox.alert("查询错误",RecRetDetailGridDs.reader.jsonData.Error);  
+						Ext.MessageBox.alert($g("查询错误"),RecRetDetailGridDs.reader.jsonData.Error);  
 					}
 				}
 			});
@@ -654,8 +659,8 @@ RecRetGrid.on('rowclick',function(grid,rowIndex,e){
 
 
 //配置数据源
-var RecRetDetailGridProxy= new Ext.data.HttpProxy({url:URL+'?actiontype=queryItem',method:'GET'});
-var RecRetDetailFields=['RowId','IncId','IncCode','IncDesc','Spec','Manf',{name: 'Qty', type: 'float'},'Uom','BatchNo','ExpDate',{name: 'Rp', type: 'float'}, {name: 'RpAmt', type: 'float'},{name: 'Sp', type: 'float'},{name: 'SpAmt', type: 'float'},'InvNo','InvDate',{name: 'InvMoney', type: 'float'},'SxNo','TypePointer'];
+var RecRetDetailGridProxy= new Ext.data.HttpProxy({url:URL+'?actiontype=queryItem',method:'POST'});
+var RecRetDetailFields=['RowId','IncId','IncCode','IncDesc','Spec','Manf',{name: 'Qty', type: 'float'},'Uom','BatchNo','ExpDate','Rp','RpAmt','Sp', 'SpAmt','InvNo','InvDate', 'InvMoney','SxNo','TypePointer'];
 		
 var RecRetDetailGridDs = new Ext.data.Store({
 	proxy:RecRetDetailGridProxy,
@@ -684,99 +689,99 @@ var RecRetDetailGridCm = new Ext.grid.ColumnModel([
 		hidden : true,
 		hideable : false
 	},{
-        header:"药品Id",
+        header:$g("药品Id"),
         dataIndex:'IncId',
         width:180,
         align:'left',
         sortable:true,
 		hidden:true
     },{
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'IncCode',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'IncDesc',
         width:200,
         align:'left',
         sortable:true
     },{
-		header : '厂商',
+		header : $g('生产企业'),
 		dataIndex : 'Manf',
 		width : 170,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "批号",
+		header :$g( "批号"),
 		dataIndex : 'BatchNo',
 		width : 80,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "有效期",
+		header : $g("有效期"),
 		dataIndex : 'ExpDate',
 		width : 90,
 		align : 'center',
 		sortable : true
 	}, {
-		header : '单位',
+		header : $g('单位'),
 		dataIndex : 'Uom',
 		width : 70,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "数量",
+		header : $g("数量"),
 		dataIndex : 'Qty',
 		width : 80,
 		align : 'right',
 		sortable : true
 	}, {
-        header:"进价",
+        header:$g("进价"),
         dataIndex:'Rp',
         width:100,
         align:'right',
         sortable:true
     }, {
-        header:"进价金额",
+        header:$g("进价金额"),
         dataIndex:'RpAmt',
         width:100,
         align:'right',
         sortable:true
     }, {
-		header : "售价",
+		header :$g( "售价"),
 		dataIndex : 'Sp',
 		width : 80,
 		align : 'right',
 		
 		sortable : true
 	}, {
-        header:"售价金额",
+        header:$g("售价金额"),
         dataIndex:'SpAmt',
         width:100,
         align:'right',
         sortable:true
     },{
-		header : "发票号",
+		header :$g( "发票号"),
 		dataIndex : 'InvNo',
 		width : 80,
 		align : 'left',
 		sortable : true
 	},{
-		header : "发票日期",
+		header : $g("发票日期"),
 		dataIndex : 'InvDate',
 		width : 80,
 		align : 'left',
 		sortable : true
 	},{
-		header : "发票金额",
+		header : $g("发票金额"),
 		dataIndex : 'InvMoney',
 		width : 80,
 		align : 'right',
 		sortable : true
 	},{
-		header : "随行单号",
+		header : $g("随行单号"),
 		dataIndex : 'SxNo',
 		width : 80,
 		align : 'left',
@@ -798,8 +803,8 @@ var RecRetDetailToolbar = new Ext.PagingToolbar({
     store:RecRetDetailGridDs,
 	pageSize:20,
     displayInfo:true,
-    displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-    emptyMsg:"没有记录"
+    displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+    emptyMsg:$g("没有记录")
 });
 
 //表格
@@ -816,7 +821,7 @@ RecRetDetailGrid = new Ext.grid.EditorGridPanel({
 	bbar:RecRetDetailToolbar
 });
 
-//-----------供应商与入库单间的联动-------------
+//-----------经营企业与入库单间的联动-------------
 VendorGrid.on('rowclick',function(grid,rowIndex,e){
 	RecRetGridDs.removeAll();
 	var selectedRow = VendorGridDs.data.items[rowIndex];
@@ -826,20 +831,20 @@ VendorGrid.on('rowclick',function(grid,rowIndex,e){
 	if((startDate!="")&&(startDate!=null)){
 		startDate = startDate.format(App_StkDateFormat);
 	}else{
-		Msg.info("error","请选择起始日期!");
+		Msg.info("error",$g("请选择起始日期!"));
 		return false;
 	}
 	var endDate = Ext.getCmp('endDateField').getValue();
 	if((endDate!="")&&(endDate!=null)){
 		endDate = endDate.format(App_StkDateFormat);
 	}else{
-		Msg.info("error","请选择截止日期!");
+		Msg.info("error",$g("请选择截止日期!"));
 		return false;
 	}
 		
 	var locId = Ext.getCmp('LocField').getValue();
 	if((locId=="")||(locId==null)){
-		Msg.info("error","请选择申请部门!");
+		Msg.info("error",$g("请选择申请部门!"));
 		return false;
 	}
 	var IncludeRetflag = (Ext.getCmp('IncludeRet').getValue()==true?'Y':'N');
@@ -860,7 +865,7 @@ VendorGrid.on('rowclick',function(grid,rowIndex,e){
 		params:{start:0,limit:20,sort:'RowId',dir:'desc',strParam:strParam2},
 		callback : function(o,response,success) { 
 			if (success == false){  
-				Ext.MessageBox.alert("查询错误",RecRetGridDs.reader.jsonData.Error);  
+				Ext.MessageBox.alert($g("查询错误"),RecRetGridDs.reader.jsonData.Error);  
 			}
 		}
 	});
@@ -912,7 +917,7 @@ Ext.onReady(function(){
 		items:[IncludeRet,IncludeGift]
 	};
 	var col3={ 		
-		title:'审批情况',	
+		title:$g('审批情况'),	
 		//frame : false,
 		//columnWidth: 0.15,
 		autoHeight:true,
@@ -928,7 +933,7 @@ Ext.onReady(function(){
 				
 	};
 	var col4={ 	
-		title:'发票情况',	
+		title:$g('发票情况'),	
 		//frame : false,			
 		autoHeight:true,
 		height:100,
@@ -944,7 +949,7 @@ Ext.onReady(function(){
 	};
 	
 	var MainPanel = new Ext.form.FormPanel({
-		title:'付款审批',
+		title:$g('付款审批'),
 		region:'north',
 		labelAlign : 'right',
 		height:DHCSTFormStyle.FrmHeight(3)+28,
@@ -954,7 +959,7 @@ Ext.onReady(function(){
 		items : [{
 			xtype:'fieldset',
 			//anchor:'95%',
-			title:'查询条件',
+			title:$g('查询条件'),
 			//autoHeight:true,
 			style:DHCSTFormStyle.FrmPaddingV,
 			layout:'column',
@@ -970,7 +975,7 @@ Ext.onReady(function(){
  
 	var VendorPanel = new Ext.Panel({
 		deferredRender : true,
-		title:'供应商信息',
+		title:$g('经营企业信息'),
 		activeTab: 0,
 		region:'west',
 		height:300,
@@ -988,7 +993,7 @@ Ext.onReady(function(){
 	var InGdRecRetPanel = new Ext.Panel({
 		deferredRender : true,
 		autoScroll:false,
-		title:'入库/退货单',
+		title:$g('入库/退货单'),
 		activeTab: 0,
 		region:'center',
 		height:300,
@@ -999,7 +1004,7 @@ Ext.onReady(function(){
 	
 	var RecRetDetailPanel = new Ext.Panel({
 		deferredRender : true,
-		title:'入库/退货明细信息',
+		title:$g('入库/退货明细信息'),
 		activeTab: 0,
 		region:'south',
 		height:170,

@@ -18,8 +18,7 @@
 	$('#ApplyResultAdd').dialog({
 		title: '卫生学结果录入',
 		iconCls:'icon-w-paper',
-		width: 700,
-		height:370,
+		height:400,
 		closed: true, 
 		modal: true,
 		isTopZindex:true
@@ -33,6 +32,7 @@
 		obj.execute =0;  //执行
 		$('#cboAHospital').combobox('enable');
 		$('#cboALoc').combobox('enable');
+		
 		$('#cboAEvItem').combobox('enable');
 		$('#cboAEvObject').combobox('enable');
 		$('#txtEHEnterTypeDr').combobox('disable');
@@ -60,7 +60,7 @@
 			$(this).hide();
 		})
 		$HUI.combobox("#cboAEvItem",{
-			url:$URL+'?ClassName=DHCHAI.IRS.EnviHyItemSrv&QueryName=QryEvItem&ResultSetType=Array&aLocID='+$('#cboALoc').combobox('getValue'),
+			url:$URL+'?ClassName=DHCHAI.IRS.EnviHyItemSrv&QueryName=QryEvItem&ResultSetType=Array&aLocID='+$('#cboALoc').combobox('getValue')+'&aIsActive=1',
 			valueField:'ID',
 			textField:'ItemDesc',
 			allowNull: true, 
@@ -73,12 +73,22 @@
 			},onChange:function(newvalue,oldvalue){
 				obj.LoadEvObjectSpen(newvalue);
 			}
-		});		
+		});	
+		/*  只有新增的时候才走这里
+		if(obj.AdminPower==1){
+			$('#cboAEvItem').combobox('enable');
+			websys_enable('AEvObjectTxt');	
+		}else{
+			$('#cboAEvItem').combobox('disable');
+			websys_disable('AEvObjectTxt');	
+		}
+		*/
+				
 		//申请单编辑modal
 		$HUI.dialog('#ApplyResultAdd').open();
+		
 	}
-	
-	obj.LoadEvObjectSpen = function(EvItemID){
+	obj.LoadEvObjectSpen = function(EvItemID) {
 		obj.execute =1;  //执行
 		var EvObjectdata=$cm({
 			ClassName:'DHCHAI.IRS.EnviHyItemSrv',
@@ -120,79 +130,81 @@
 			websys_disable('txtCenterNum');
 			websys_disable('txtSurroundNum');
 			websys_disable('txtReferToNum');
+		} else {
+			websys_enable('txtCenterNum');
+			websys_enable('txtSurroundNum');
+			websys_enable('txtReferToNum');
 		}
 		
 		if ((obj.EHEnterTypeDr==0)||(obj.EHEnterTypeDr==2)) {
 			$.messager.alert("错误提示","录入方式为空或者录入方式为按标本录入，请到监测项目界面修改！", 'info');
 			$('#addA').hide();
 			return;
-		}else {
+		}else {	
 			$('#addA').show();
 			$('#txtEHEnterTypeDr').combobox('setValue',obj.EHEnterTypeDr);
 			$('#txtEHEnterTypeDr').combobox('setText',EHEnterTypeDesc);
-			var isEdit=1;
-			if(obj.EHEnterTypeDr==3){			//
-				//中心值、周边值、项目值、参照值-->赋值
-				$.each($("#tableEnterResult2 tr"),function(index){
-					if (index<1) {
-						$(this).show();	
-					} else {
-						if (index<2){
-							$(this).show();
-							$('#cboRstType'+index).combobox({disabled:(!isEdit)});
-							$('#txtResult'+index).attr("disabled",(!isEdit));
-							$('#txtRstBactDesc'+index).lookup({disabled:(!isEdit)});
-						} else {
-							$(this).hide();
-						}
-					}
-				})
-				//表单设置初始值
-				for (var row = 1; row <= 20; row++){		
-					if(row<=1){
-						$('#cboRstType'+row).combobox('setValue','');
-						$('#txtResult'+row).val("");
-						$('#txtRstBactID'+row).val("");
-						$('#txtRstBactDesc'+row).val("");
-						$("#lblItemNum"+row).text("中心值");
-					}else if(row<=2){
-						$('#cboRstType'+row).combobox('setValue','');
-						$('#txtResult'+row).val("");
-						$('#txtRstBactID'+row).val("");
-						$('#txtRstBactDesc'+row).val("");
-						$("#lblItemNum"+row).text("周边值");
-					}
-				}
-				
-			}else if(obj.EHEnterTypeDr==1){
-				//中心值、周边值、项目值、参照值-->赋值
-				$.each($("#tableEnterResult2 tr"),function(index){
-					if (index<1) {
-						$(this).show();	
-					} else {
-						$(this).hide();
-					}
-				})
-				//表单设置初始值
-				for (var row = 1; row <= 20; row++){		
-					if(row<=1){
-						$('#cboRstType'+row).combobox('setValue','');
-						$('#txtResult'+row).val("");
-						$('#txtRstBactID'+row).val("");
-						$('#txtRstBactDesc'+row).val("");
-						$("#lblItemNum"+row).text("项目值");
-					}
-				}
-			}
-			$('#Result').removeAttr("style"); //显示div
-			$.parser.parse('#Result');        //需要再次解析 不解析全部界面时 滚动条压边，解析全部清空填写数据(除文本框以外)
+			obj.ShowItem(obj.EHEnterTypeDr, parseInt(ReferToNum));
+			
 		}
 	}
+	//调整标本个数
+	$('#txtReferToNum').keyup(function(event){
+		ReferToNum = $("#txtReferToNum").val();   //
+		obj.ShowItem(obj.EHEnterTypeDr, parseInt(ReferToNum));
+	});	
+	
+	//显示项目
+	obj.ShowItem = function(aEnterType,aReferToNum) {
+		var isEdit=1;
+		var num = 1 ;  //按项目
+		if (aEnterType==3)   num =2; //按中心+周边
+		
+		//中心值、周边值、项目值、参照值-->初始化	
+		$.each($("#tableEnterResult2 tr"),function(index){
+			if (index<1) {
+				$(this).show();	
+			} else {
+				if (index<(num+aReferToNum)){
+					$(this).show();
+					$('#cboRstType'+index).combobox({disabled:(!isEdit)});
+					$('#txtResult'+index).attr("disabled",(!isEdit));
+					$('#txtRstBactDesc'+index).lookup({disabled:(!isEdit)});
+				} else {
+					$(this).hide();
+				}
+			}
+		})
+		
+		for (var i = 1; i <= num; i++) {
+			var SpecNumDesc	 = "项目值";
+			if ((num==2)&&(i==1))  SpecNumDesc	 = "中心值";
+			if ((num==2)&&(i==2))  SpecNumDesc	 = "周边值";
+			$('#cboRstType'+i).combobox('setValue','');
+			$('#txtResult'+i).val("");
+			$('#txtRstBactID'+i).val("");
+			$('#txtRstBactDesc'+i).val("");
+			$("#lblItemNum"+i).text(i+" : "+SpecNumDesc);
+		}
+		if (aReferToNum>0) {
+			for (var row = (num+1); row <= (num+aReferToNum); row++){ //参照点
+				$('#cboRstType'+row).combobox('setValue',"6");
+				$('#cboRstType'+row).combobox('setText',"阴性");
+				$('#txtResult'+row).attr('disabled','disabled');
+				$('#txtRstBactID'+row).attr('disabled','disabled');
+				$('#txtRstBactDesc'+row).attr('disabled','disabled');
+				$("#lblItemNum"+row).text("参照值"+(row-num));
+			}
+		}
+		$('#txtResume').show();
+		$('#txtResume2').val('');
+		$.parser.parse('#tableEnterResult2');        //解析全部清空填写数据(除文本框以外)
+		
+	}
+	
 	// 申请、修改申请记录
 	$('#addA').on('click', function(){
-
 		var ReCheckRepID="",IsReCheck="",ReportID=""
-	
 		var HospitalDr      = $("#cboAHospital").combobox('getValue');
 		var MonitorLocDr    = $("#cboALoc").combobox('getValue');
 		var MonitorDate   	= $("#AMonitorDate").datebox('getValue');
@@ -204,89 +216,61 @@
 		var ReferToNum		= $("#txtReferToNum").val();
 		var SpecimenNum    	= parseInt(CenterNum)+parseInt(SurroundNum)+parseInt(ReferToNum);
 		var IsObjNull		= $("#AEvIsObjNull").val();
+		var txtResume2      = $("#txtResume2").val();
 		
 		//录入结果信息（中心值、周边值、项目值、参照值-->取值）
 		var resultInfo = '';
 		var ErrorMsg="";
-		$.each($("#tableEnterResult2 tr"),function(index){
-			if (index>=0) {
-				if(obj.EHEnterTypeDr==3){
-					if (index<1){
-						var i = parseInt(index)+1;
-						RstTypeCode  = $('#cboRstType'+i).combobox('getValue');
-						RstTypeDesc  = $('#cboRstType'+i).combobox('getText');
-						Result       = $('#txtResult'+i).val();
-						BactID       = $('#txtRstBactID'+i).val();
-						BactDesc     = $('#txtRstBactDesc'+i).val();
-						SpecNumDesc	 = "中心值";
-						if (((RstTypeDesc!="未检出")&&(!Result)) ||(!RstTypeCode)){
-							ErrorMsg = ErrorMsg+ '第'+i+'行请录入正确的结果信息！</br>'
-						}
-						
-						var rowInfo = i + '^' + SpecNumDesc + '^' + RstTypeCode + '^' + RstTypeDesc + '^' + Result + '^' + BactID + '^' + BactDesc
-						
-						if (resultInfo!=''){
-							resultInfo += '!!' + rowInfo;
-						} else {
-							resultInfo = rowInfo;
-						}
-						
-					}else if(index<2){
-						var i = parseInt(index)+1;
-						RstTypeCode  = $('#cboRstType'+i).combobox('getValue');
-						RstTypeDesc  = $('#cboRstType'+i).combobox('getText');
-						Result       = $('#txtResult'+i).val();
-						BactID       = $('#txtRstBactID'+i).val();
-						BactDesc     = $('#txtRstBactDesc'+i).val();
-						SpecNumDesc	 = "周边值";
-						if (((RstTypeDesc!="未检出")&&(!Result)) ||(!RstTypeCode)){
-							ErrorMsg = ErrorMsg+ '第'+i+'行请录入正确的结果信息！</br>'
-						}
-						var rowInfo = i + '^' + SpecNumDesc + '^' + RstTypeCode + '^' + RstTypeDesc + '^' + Result + '^' + BactID + '^' + BactDesc
-					
-						if (resultInfo!=''){
-							resultInfo += '!!' + rowInfo;
-						} else {
-							resultInfo = rowInfo;
-						}
-					}else{
-						return;	
-					}
-						
-				}else if(obj.EHEnterTypeDr==1){
-					if (index<1){
-						RstTypeCode  = $('#cboRstType'+"1").combobox('getValue');
-						RstTypeDesc  = $('#cboRstType'+"1").combobox('getText');
-						Result       = $('#txtResult'+"1").val();
-						BactID       = $('#txtRstBactID'+"1").val();
-						BactDesc     = $('#txtRstBactDesc'+"1").val();
-						SpecNumDesc	 = "项目值";
-						if (((RstTypeDesc!="未检出")&&(!Result)) ||(!RstTypeCode)){
-							ErrorMsg = ErrorMsg+ '第'+(parseInt(index)+1)+'行请录入正确的结果信息！</br>'
-						}
-						var rowInfo = (parseInt(index)+1) + '^' + SpecNumDesc + '^' + RstTypeCode + '^' + RstTypeDesc + '^' + Result + '^' + BactID + '^' + BactDesc		
-						
-						if (resultInfo!=''){
-							resultInfo += '!!' + rowInfo;
-						} else {
-							resultInfo = rowInfo;
-						}
-					}else{
-						return;	
-					}
+		var num=1;  //按项目
+		if (obj.EHEnterTypeDr==3)  num=2 ;  //按中心+周边
+		for (var i = 1; i <= num; i++) {
+			var RstTypeCode  = $('#cboRstType'+i).combobox('getValue');
+			var RstTypeDesc  = $('#cboRstType'+i).combobox('getText');
+			var Result       = $('#txtResult'+i).val();
+			var BactID       = $('#txtRstBactID'+i).val();
+			var BactDesc     = $('#txtRstBactDesc'+i).val();
+			var SpecNumDesc	 = "项目值";
+			if ((num==2)&&(i==1))  SpecNumDesc	 = "中心值";
+			if ((num==2)&&(i==2))  SpecNumDesc	 = "周边值";
+			if (((RstTypeDesc!="未检出")&&(!Result)) ||(!RstTypeCode)){
+				ErrorMsg = ErrorMsg+ '第'+i+'行'+SpecNumDesc+'请录入正确的结果信息！</br>'
+			}
+			
+			var rowInfo = i + '^' + SpecNumDesc + '^' + RstTypeCode + '^' + RstTypeDesc + '^' + Result + '^' + BactID + '^' + BactDesc;
+			
+			if (resultInfo!=''){
+				resultInfo += '!!' + rowInfo;
+			} else {
+				resultInfo = rowInfo;
+			}
+		}
+		if (parseInt(ReferToNum)>0) {  
+			for (var i = (num+1); i <= (num+parseInt(ReferToNum)); i++){ //参照点		
+				var RstTypeCode  = $('#cboRstType'+i).combobox('getValue');
+				var RstTypeDesc  = $('#cboRstType'+i).combobox('getText');
+				var SpecNumDesc	 = "参照值";
+				if ((RstTypeDesc!="阴性")&&(RstTypeDesc!="阳性")){
+					ErrorMsg = ErrorMsg+ '第'+i+'行：参照值结果类型只能录入阴性或阳性！</br>'
+				}
+				var rowInfo = i + '^' + SpecNumDesc + '^' + RstTypeCode + '^' + RstTypeDesc + '^' + '' + '^' + '' + '^' + '';					
+				if (resultInfo!=''){
+					resultInfo += '!!' + rowInfo;
+				} else {
+					resultInfo = rowInfo;
 				}
 			}
-		});
+		}
 		var ErrorStr = ErrorMsg;
 		
 		var InfEnviHyItem = $m({
 			ClassName:"DHCHAI.IR.EnviHyItem",
 			MethodName:"GetObjById",
 			id:EvItemDr
-			},false);
+		},false);
 		if (InfEnviHyItem!=""){
 			var cm=JSON.parse(InfEnviHyItem);
-			var EHSpecimenNum = cm.EHSpecimenNum
+			var EHSpecimenNum = cm.EHSpecimenNum;
+			var EHIsSpecNum = cm.EHIsSpecNum;
 		}
 		
 		if (HospitalDr == '') {
@@ -308,9 +292,10 @@
 			ErrorStr += '标本数量不允许为空！<br/>';
       
 		}
-		if ((parseInt(EHSpecimenNum))<parseInt(SpecimenNum)) {
+		if ((EHIsSpecNum!="1")&&((parseInt(EHSpecimenNum))<parseInt(SpecimenNum))) {
 			ErrorStr = ErrorStr + "参照点个数、中心个数、周边个数总数不允许大于标本个数!<br>";
 		}
+		
 		if (ErrorStr != '') {
 			$.messager.alert("错误提示",ErrorStr, 'info');
 			return;
@@ -337,7 +322,7 @@
 		InputStr += "^" + ''; 			//RepLocDr
 		InputStr += "^" + ''; 			//RepUserDr
 		InputStr += "^" + ''; 			//Standard
-		InputStr += "^" + ''; 			//Resume
+		InputStr += "^" + txtResume2;   //Resume
 		InputStr += "^" + ''; 			//CollDate
 		InputStr += "^" + ''; 			//CollTime
 		InputStr += "^" + ''; 			//CollUserDr
@@ -349,7 +334,7 @@
 		InputStr += "^" + ReCheckRepID; //ReCheckRepDr
 		InputStr += "^" + EHItemObjTxt; //ItemObjTxt
 		InputStr += "^" + MonitorLocDr; 			
-		InputStr += "^" + ReferToNum; 			
+		InputStr += "^" + ReferToNum;	
 		
 		$m({
 			ClassName:"DHCHAI.IR.EnviHyReport",
@@ -375,7 +360,8 @@
 				baseInfo += '^' + LogonLocID;
 				baseInfo += '^' + LogonUserID;
 				baseInfo += '^' + '4';  //4录入结果
-				
+				baseInfo += '^' + ''; 
+				baseInfo += '^' + txtResume2; 
 				var flg = $m({
 					ClassName   : "DHCHAI.IRS.EnviHyReportSrv",
 					MethodName  : "SaveReportResults",
@@ -485,14 +471,21 @@
 		$('#txtReferToNum').val(obj.Report.ReferToNum);	
 		$("#AEvIsObjNull").val(obj.Report.IsObjNull);
 		$('#txtEHEnterTypeDr').combobox('setValue',obj.Report.EnterTypeId);
-		$('#txtEHEnterTypeDr').combobox('setText',obj.Report.EnterTypeDesc);	
-		
+		$('#txtEHEnterTypeDr').combobox('setText',obj.Report.EnterTypeDesc);
+		$('#txtResume2').val(obj.Report.Resume);	
+		var SpenNum = $m({
+            ClassName:'DHCHAI.IR.EnviHyItem',
+            MethodName:'GetSpenNumById',
+            Id:obj.Report.EvItemID
+        },false)
+        var SpenNumArr=SpenNum.split("^");
+        obj.EHEnterTypeDr=SpenNumArr[5];
+
 		obj.arrResult = obj.GetResult(obj.Report.ReportID,obj.Report.Barcode);
-		
+		var	ReferToNum=$("#txtReferToNum").val();
 		//中心值、周边值、项目值、参照值-->赋值
 		$.each($("#tableEnterResult2 tr"),function(index){
-			var	ReferToNum=$("#txtReferToNum").val();
-			var length=obj.arrResult.length-parseInt(ReferToNum)-1;
+			var length=obj.arrResult.length-1;
 			if (index<length) {
 				var i=parseInt(index)+1;
 				var objResult = obj.arrResult[i];
@@ -501,27 +494,43 @@
 					$('#cboRstType'+i).combobox({disabled:(!isEdit)});
 					$('#txtResult'+i).attr("disabled",(!isEdit));
 					$('#txtRstBactDesc'+i).lookup({disabled:(!isEdit)});
-				} else {
-					$(this).hide();
+				} else {				
+					if (index!=(length-1)){
+						$(this).hide();
+					}else{
+						$(this).show();
+					}
 				}
 			}else {
 				$(this).hide();
 			}
 		})
+		$('#txtResume').show();
 		$('#txtRstItem').attr("disabled",true);
 		$('#txtRstObject').attr("disabled",(!isEdit));
 		
-		//表单设置初始值
+		//表单设置赋值
 		for (var row = 1; row <= 20; row++){
 			var objResult = obj.arrResult[row];
 			if (objResult){
 				if(objResult.SpecNumDesc!="参照值"){
-					$("#lblItemNum"+row).text(objResult.SpecNumDesc);
+					$("#lblItemNum"+row).text(row+" : "+objResult.SpecNumDesc);
 					$('#cboRstType'+row).combobox('setValue',objResult.RstTypeCode);
 					$('#cboRstType'+row).combobox('setText',objResult.RstTypeDesc);
 					$('#txtResult'+row).val(objResult.Result);
+					$('#txtRstBactID'+row).removeAttr("disabled");
+					$('#txtRstBactDesc'+row).removeAttr("disabled");
 					$('#txtRstBactID'+row).val(objResult.BactID);
 					$('#txtRstBactDesc'+row).val(objResult.BactDesc);
+				}
+
+				if (objResult.SpecNumDesc.indexOf("参照值")>=0){  //参照点
+					$("#lblItemNum"+row).text(objResult.SpecNumDesc);
+					$('#cboRstType'+row).combobox('setValue',objResult.RstTypeCode);
+					$('#cboRstType'+row).combobox('setText',objResult.RstTypeDesc);
+					$('#txtResult'+row).attr('disabled','disabled');
+					$('#txtRstBactID'+row).attr('disabled','disabled');
+					$('#txtRstBactDesc'+row).attr('disabled','disabled');
 				}
 			}
 		}
@@ -558,9 +567,35 @@
 		return arrResult
 	}
 	//关闭
-	$('#closeA').on('click', function(){
-		
+	$('#closeA').on('click', function(){		
 		$HUI.dialog('#ApplyResultAdd').close();
 	})
-	
+	// 删除记录
+	$("#btnDelete").click(function(e){
+		var selectObj = obj.gridReuslt.getSelected();
+		var index = obj.gridReuslt.getRowIndex(selectObj);  //获取当前选中行的行号(从0开始)
+		if (!selectObj) {
+			$.messager.alert("提示", "请选择一行要删除的环境卫生学数据!", 'info');
+			return;
+		}else {
+			$.messager.confirm("提示", "是否要删除环境卫生学数据："+selectObj.BarCode+":"+selectObj.EvItemDesc+" ?", function (r) {
+				if (r){				
+					var ReportID=selectObj.ReportID
+					var rstInfo = $m({
+						ClassName   : "DHCHAI.IR.EnviHyReport",
+						MethodName  : "DeleteById",
+						Id  : ReportID
+					},false);
+		
+					if (!rstInfo){
+						$.messager.alert("提示", "删除失败!", 'info');
+					}
+					else{
+						$.messager.alert("提示", "删除成功!", 'info');
+						obj.reloadgridApply();
+					};
+				}
+			});
+		}				
+	});
 }

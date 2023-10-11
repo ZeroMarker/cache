@@ -13,6 +13,7 @@
 				params.ClassName = className;
 				params.MethodName = methodName;
 				params.ArgCnt = ArgCnt;
+                params.MWToken=('undefined'!==typeof websys_getMWToken)?websys_getMWToken():"";
 				$.ajax({
 				   type: 'POST',
 				   url: this._METHOD_URL,
@@ -37,6 +38,7 @@
 					params["Arg" + (i + 1)] = queryInfo["Arg" + (i + 1)];
 				}
 				params.ArgCnt = queryInfo.ArgCnt;
+                params.MWToken=('undefined'!==typeof websys_getMWToken)?websys_getMWToken():"";
 				$.ajax({
 				   type: 'POST',
 				   url: this._QUERY_URL,

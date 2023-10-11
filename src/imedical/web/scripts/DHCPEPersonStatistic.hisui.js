@@ -3,6 +3,7 @@
 //功能	体检综合查询
 //创建	2019.06.26
 //创建人  xy
+var SessionStr =session['LOGON.USERID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
 
 $(function(){
 			
@@ -63,7 +64,8 @@ function BPrintView(PAADM){
 		$.messager.alert("提示","存在未付费项目，不能预览","info");
 		return false;
 	}
-	PEPrintDJD("V",PAADM,"");//DHCPEPrintDJDCommon.js lodop预览导诊单
+    PrintDJDByType(PAADM, "PAADM", "V", "");  // DHCPEPrintDJDCommon.js   lodop预览导诊单
+	//PEPrintDJD("V",PAADM,"");//DHCPEPrintDJDCommon.js lodop预览导诊单
 	//Print(value,PrintFlag,viewmark); //DHCPEIAdmItemStatusAdms.PatItemPrint.js
 	
  }
@@ -242,7 +244,7 @@ function BFind_click(){
 			iRegNo=tkMakeServerCall("web.DHCPE.DHCPECommon","RegNoMask",iRegNo);
 			$("#RegNo").val(iRegNo);
 	}
-
+   
 	$("#PersonStatisticGrid").datagrid('load',{
 			ClassName:"web.DHCPE.Report.PEPersonStatistic",
 			QueryName:"PEPersonStatistic",
@@ -257,6 +259,8 @@ function BFind_click(){
 			ReCheck:ReCheck+"^"+ChargeStatus,
 			Status:iStatus,
 			DepName:$("#Depart").val(),
+			SessionStr:SessionStr
+
 			});
 }
 
@@ -279,6 +283,7 @@ function InitPersonStatisticGrid(){
 		queryParams:{
 			ClassName:"web.DHCPE.Report.PEPersonStatistic",
 			QueryName:"PEPersonStatistic",
+			SessionStr:SessionStr
 
 		},
 		frozenColumns:[[
@@ -301,15 +306,19 @@ function InitPersonStatisticGrid(){
 			{field:'PA_FinalAmount',width:100,title:'实际金额',align:'right',},
 			{field:'GAmount',width:100,title:'公费金额',align:'right',},
 			{field:'IAmount',width:100,title:'自费金额',align:'right',},
-			{field:'PA_Payed',width:100,title:'已付金额',align:'right',
+			{field:'PA_Payed',width:180,title:'已付金额',align:'right',
 				formatter:function(value,rowData,rowIndex){	
-					if(rowData.PA_ADMDR!=""){
-						return "<a href='#'  class='grid-td-text' onclick=BFAmountPayList("+rowData.PA_ADMDR+"\)>"+value+"</a>";
+					if((rowData.PA_ADMDR!="")){
+						if(((value!="0.00")&&(rowData.PA_GDesc==""))||((value.split("自费：")[1]!="0.00")&&(rowData.PA_GDesc!=""))){
+							return "<a href='#'  class='grid-td-text' onclick=BFAmountPayList("+rowData.PA_ADMDR+"\)>"+value+"</a>";
+						}else{
+							return value;
+							}
 			
-					}else{return value}
+					}else{
+						return value;
+						}
 					
-					
-	
 			}},
 			{field:'PA_UnPayed',width:100,title:'未付金额',align:'right',},
 			{field:'PA_Company',width:100,title:'单位'},
@@ -317,12 +326,13 @@ function InitPersonStatisticGrid(){
 			{field:'PA_Saler',width:100,title:'业务员'},
 			{field:'PA_PartName',width:100,title:'部门'},
 			{field:'PA_TeamName',width:100,title:'分组名称'},  
-			{field:'PIADM_ItemList',width:100,title:'查看预约项目',
+			{field:'PIADM_ItemList',width:100,title:'查看预约项目',align:'center',
 			   
 				formatter:function(value,rowData,rowIndex){	
 					
 				if(rowData.PA_ADMDR!=""){
-					return '<a><img style="padding:0 10px 0px 30px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/paper.png"  title="项目明细" border="0" onclick="BItemList('+rowData.PIADM_RowId+')"></a>';
+					return "<span style='cursor:pointer;' class='icon-read-details' title='项目明细' onclick='BItemList("+rowData.PIADM_RowId+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";
+					//return '<a><img style="padding:0 10px 0px 30px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/paper.png"  title="项目明细" border="0" onclick="BItemList('+rowData.PIADM_RowId+')"></a>';
 					
 				}
 				}},
@@ -333,8 +343,9 @@ function InitPersonStatisticGrid(){
 			{field:'TCardDesc',width:80,title:'证件类型'},
 			{field:'TIDCard',width:180,title:'证件号'},
 			 
-			{field:'TRoundFee',width:80,title:'凑整费',align:'right',},  
-			{field:'TIFSTSF',width:80,title:'视同收费',
+			{field:'TRoundFee',width:80,title:'凑整费',align:'right',}, 
+            {field:'TIFSTSF',width:80,title:'视同收费',align:'center',},		
+			/*{field:'TIFSTSF',width:80,title:'视同收费',
 				formatter:function(value,rowData,rowIndex){
 					var rvalue="",checked="";
 					if(value!=""){
@@ -344,7 +355,7 @@ function InitPersonStatisticGrid(){
 						return rvalue;
 					}
 				
-				}},
+				}},*/
 			{field:'TPrtFlag',title:'是否打印',hidden:true,
 				formatter:function(value,rowData,rowIndex){
 					var rvalue="",checked="";
@@ -357,8 +368,10 @@ function InitPersonStatisticGrid(){
 			{field:'TReport',title:'体检预览',width:70,
 				formatter:function(value,rowData,rowIndex){
 				if(rowData.PA_ADMDR!=""){
-					return '<a><img style="padding:0 10px 0px 5px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/paper.png" title="报告预览" border="0" onclick="ReportView('+rowData.PA_ADMDR+')"></a>\
-					<a><img style="cursor:pointer" src="../scripts_lib/hisui-0.1.0/dist/css/icons/add_note.png" title="指引单预览" border="0" onclick="BPrintView('+rowData.PA_ADMDR+')"></a>';		
+					return "<span style='cursor:pointer;padding-left:10px;' class='icon-report-eye' title='报告预览' onclick='ReportView("+rowData.PA_ADMDR+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>\
+					<span style='cursor:pointer;' class='icon-add-note' title='指引单预览' onclick='BPrintView("+rowData.PA_ADMDR+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";
+					/*return '<a><img style="padding:0 10px 0px 5px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/paper.png" title="报告预览" border="0" onclick="ReportView('+rowData.PA_ADMDR+')"></a>\
+					<a><img style="cursor:pointer" src="../scripts_lib/hisui-0.1.0/dist/css/icons/add_note.png" title="指引单预览" border="0" onclick="BPrintView('+rowData.PA_ADMDR+')"></a>';	*/	
 				}
 				}},
 					
@@ -373,18 +386,22 @@ function InitPersonStatisticGrid(){
 //报告预览 
 function ReportView(PAADM)
 {
-	var NewVerReportFlag = tkMakeServerCall("web.DHCPE.HISUICommon","GetSettingByLoc",session['LOGON.CTLOCID'],"NewVerReport");
+	var LocID=session['LOGON.CTLOCID'];
+	var NewVerReportFlag = tkMakeServerCall("web.DHCPE.HISUICommon","GetSettingByLoc",LocID,"NewVerReport");
+	var printerName = tkMakeServerCall("web.DHCPE.Report", "GetVirtualPrinter");
 	//alert(NewVerReportFlag)
-	//if (NewVerReportFlag == "Y") {
-	
 	if(NewVerReportFlag == "Word") {
-		calPEReportProtocol("BPrintView",PAADM);
+		//calPEReportProtocol("BPrintView",PAADM);
+		websocoket_report("BPrintView",PAADM);
 	} else if (NewVerReportFlag == "Lodop") {
-		PEPrintReport("V",PAADM,"");
+		//PEPrintReport("V",PAADM,"");
+		PEPrintReport("V", PAADM, printerName, "");
 	} else {
-		PEPrintReport("V",PAADM,"");
+		$.messager.alert("提示", "无对应打印格式，请前往体检配置中维护！", "info");
+		return false;
 	}
 	
+
 	/*
 	var NewVerReportFlag=tkMakeServerCall("web.DHCPE.HISUICommon","GetSettingByLoc",session['LOGON.CTLOCID'],"NewVerReport");
 	if(NewVerReportFlag=="Lodop"){
@@ -434,7 +451,7 @@ function calPEReportProtocol(sourceID,jarPAADM){
 function BFAmountPayList(ADMID){
 	
 	var lnk="dhcpefinalamountpaylist.hisui.csp"+"?ADMID="+ADMID;
-	 websys_lu(lnk,false,'width=500,height=400,hisui=true,title=支付方式列表')
+	 websys_lu(lnk,false,'width=500,height=400,hisui=true,title='+$g("自费支付方式列表"))
 	
 	
 }
@@ -442,12 +459,13 @@ function BFAmountPayList(ADMID){
 //查看预约项目
 function BItemList(AdmId){
 	var lnk="dhcpepreitemlist.list.hisui.csp"+"?ADMID="+AdmId;
-	 websys_lu(lnk,false,'width=1200,height=600,hisui=true,title=项目明细')
+	 websys_lu(lnk,false,'width=1200,height=600,hisui=true,title='+$g("项目明细"))
 }
 
 function InitCombobox(){
 	
 
+  /*
 	//VIP等级	
 	var VIPObj = $HUI.combobox("#VIPLevel",{
 		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindVIP&ResultSetType=array",
@@ -455,15 +473,24 @@ function InitCombobox(){
 		textField:'desc',
 		});
 		
+	*/
 		
-		//复查
+	//VIP等级-多院区	
+	var VIPObj = $HUI.combobox("#VIPLevel",{
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindVIP&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
+		valueField:'id',
+		textField:'desc',
+	});
+		
+		
+	//复查
 	var ReCheckObj = $HUI.combobox("#ReCheck",{
 		valueField:'id',
 		textField:'text',
 		panelHeight:'70',
 		data:[
-            {id:'0',text:'非复查'},
-            {id:'1',text:'复查'},
+            {id:'0',text:$g('非复查')},
+            {id:'1',text:$g('复查')},
         ]
 
 	});
@@ -483,8 +510,8 @@ function InitCombobox(){
 		textField:'text',
 		panelHeight:'70',
 		data:[
-            {id:'0',text:'否'},
-            {id:'1',text:'是'},
+            {id:'0',text:$g('否')},
+            {id:'1',text:$g('是')},
         ]
 
 	});
@@ -495,9 +522,9 @@ function InitCombobox(){
 		textField:'text',
 		panelHeight:'100',
 		data:[
-            {id:'0',text:'未付费'},
-            {id:'1',text:'部分收费'},
-            {id:'2',text:'全部收费'},
+            {id:'0',text:$g('未付费')},
+            {id:'1',text:$g('部分收费')},
+            {id:'2',text:$g('全部收费')},
         ]
 
 	});

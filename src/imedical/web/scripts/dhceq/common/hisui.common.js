@@ -15,19 +15,24 @@ function initLookUp(vExcludesids)
 		if ((","+vExcludesids+",").indexOf(","+id+",")==-1)
 		{
 			//取元素的信息
-			var options=jQuery("#"+id).attr("data-options");
-			if ((options!=undefined)&&(options!=""))
+			var disable=jQuery("#"+id).prop("disabled");   //Modefied by zc 2022-11-22
+			var readonly=jQuery("#"+id).prop("readonly");	//Modefied by zc 2022-11-22
+			if ((readonly===false)&&(disable===false))		//Modefied by zc 2022-11-22
 			{
-				//转json格式
-				options='{'+options+'}';
-				var options=eval('('+options+')');
-				var componentName=options.component;
-				if ((componentName!=undefined)&&(componentName!=""))
+				var options=jQuery("#"+id).attr("data-options");
+				if ((options!=undefined)&&(options!=""))
 				{
-					//modify by lmm 2020-02-28 增加下拉框自动检索最小字数
-					var vminQueryLen="0"
-					//modify by lmm 2020-06-17 增加放大镜弹窗尺寸
-					singlelookup(id,componentName,options.paras,options.jsfunction,vminQueryLen,options.defaultsize)
+					//转json格式
+					options='{'+options+'}';
+					var options=eval('('+options+')');
+					var componentName=options.component;
+					if ((componentName!=undefined)&&(componentName!=""))
+					{
+						//modify by lmm 2020-02-28 增加下拉框自动检索最小字数
+						var vminQueryLen="0"
+						//modify by lmm 2020-06-17 增加放大镜弹窗尺寸
+						singlelookup(id,componentName,options.paras,options.jsfunction,vminQueryLen,options.defaultsize)
+					}
 				}
 			}
 		}
@@ -48,9 +53,34 @@ function initLookUp(vExcludesids)
 ///modify by lmm 2020-06-17 vDefaultSize：增加放大镜弹窗尺寸
 function singlelookup(vElementID,vComponentName,vQueryParams,vfunction,vminQueryLen,vDefaultSize)
 {
+	//Modify by zx 2022-11-22 改为异步调用
 	if (vComponentName!="")
 	{
-		var lookupinfo=tkMakeServerCall("web.DHCEQ.Plat.CTCComponentSet","GetComponentsInfo",vComponentName)
+		$cm({
+			ClassName:"web.DHCEQ.Plat.CTCComponentSet",
+			MethodName:"GetComponentsInfo",
+			vComponentNames:vComponentName
+			},function(lookupObj){
+				var componentInfo=lookupObj[vComponentName]
+				if (componentInfo!="")
+				{
+					var options=jQuery("#"+vElementID).attr("data-options");
+					var optionflag=0
+					if ((options!=undefined)&&(options!=""))
+					{
+						//转json格式
+						optionflag=1
+						options='{'+options+'}';
+						var options=eval('('+options+')');
+					}
+					if (((vQueryParams=="")||(vQueryParams==undefined))&&(optionflag==1)){vQueryParams=options.paras}
+					if (((vfunction=="")||(vfunction==undefined))&&(optionflag==1)){vfunction=options.jsfunction}
+					if (((vDefaultSize=="")||(vDefaultSize==undefined))&&(optionflag==1)){vDefaultSize=options.defaultsize}
+						lookupHander(new component(componentInfo,vDefaultSize),vElementID,vQueryParams,vfunction,vminQueryLen);
+					}
+			});
+		}
+		/*var lookupinfo=tkMakeServerCall("web.DHCEQ.Plat.CTCComponentSet","GetComponentsInfo",vComponentName)
 		var lookupObj=JSON.parse(lookupinfo)
 		var componentInfo=lookupObj[vComponentName]
 		if (componentInfo!="")
@@ -68,8 +98,9 @@ function singlelookup(vElementID,vComponentName,vQueryParams,vfunction,vminQuery
 			if (((vfunction=="")||(vfunction==undefined))&&(optionflag==1)){vfunction=options.jsfunction}
 			if (((vDefaultSize=="")||(vDefaultSize==undefined))&&(optionflag==1)){vDefaultSize=options.defaultsize}
 			lookupHander(new component(componentInfo,vDefaultSize),vElementID,vQueryParams,vfunction,vminQueryLen);
-		}
-	}
+		}*/
+	
+	
 }
 ///Add By DJ 2018-07-30
 ///描述:根据列信息定义字符串生成列对象
@@ -148,7 +179,7 @@ function lookupHander(component,vElementID,vQueryParams,vfunction,vminQueryLen)
 			if ((vQueryParams!="")&&(vQueryParams!=undefined))
 			{
 				for (var i=0;i<vQueryParams.length;i++)
-				{
+				{	
 				    //获取combogrid输入框值
 				    if(vQueryParams[i].type=="1") {param[vQueryParams[i].name]=$('#'+vQueryParams[i].value).lookup("getText");}
 					//获取默认值  常量
@@ -166,6 +197,7 @@ function lookupHander(component,vElementID,vQueryParams,vfunction,vminQueryLen)
 			else
 			{
 				var option=component.params.split("#");
+				
 			    for (var i=0;i<option.length;i++)
 			    {
 				    var oneParaInfo=option[i].split("*");
@@ -229,6 +261,7 @@ function getCurColumnsInfo(componentName,groupID,userID,hospID,frozen)
 		UserID:userID,
 		HosptailID:hospID,
 		Frozen:frozen,     /// Modefiedy by ZC0041 2018-10-29 添加冻结列标识
+		rows:200	// MZY0133	2612987		2022-09-09	设置输出行数
 		},false)
     	///modified by zy 20180930  ZY0170  增加同一Sort输出的操作列处理
 	var preSort=-1;
@@ -281,8 +314,10 @@ function setColData(oneItem,multipCol)
     this.field = oneItem.TName;
     this.title = oneItem.TCaption;
     this.description=oneItem.TDescription;
+    //modified by ZY0279 20210827
     //Modify By zx 2020-02-20 BUG ZX0076 列排序
-    this.sortable=oneItem.TOrderMode;
+    if (oneItem.TOrderMode>0) this.sortable=true
+    else this.sortable=false
     //modified by ZY0199 2019-12-11  
     //0:string,1:int,2:float,3:date,4:time,5:bool
     if ((oneItem.TDataType=="1")||(oneItem.TDataType=="2"))this.align ="right" ;
@@ -560,12 +595,15 @@ function lookuptab(vElementID)
 ///入参:vElementIDs 需要所设置必填项的元素名串 格式:"元素名1^元素名2^.....^元素名n"
 ///返回值:无
 ///说明:setItemRequire为平台公共函数.位置:"scripts/hisui/websys.hisui.js"
-function setRequiredElements(vElementIDs)
-{
+/// czf 2022-03-15 增加value
+function setRequiredElements(vElementIDs,value)
+{	
+	if(value==0||value==false) value=false;
+	else value=true;
 	var ElementList=vElementIDs.split("^")
 	for (var i=0;i<ElementList.length;i++)
 	{
-		setItemRequire(ElementList[i],true)
+		setItemRequire(ElementList[i],value)
 	}
 }
 ///Add By DJ 2018-07-06
@@ -592,13 +630,27 @@ function disableElement(vElementID,vValue)
 	{
 		if (vValue==true)
 		{
-			disableById(vElementID)
+			disableById(vElementID);
+			if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){ 
+				if ((vElementID=="BSave")||(vElementID=="BSubmit")||(vElementID=="BAudit"))
+				{
+					$("#"+vElementID).css({'background-color':'#E5E5E5','color':'#999'})
+				}
+			}
 		}
 		else
 		{
-			enableById(vElementID)
+			enableById(vElementID);
+			if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){ 
+				// 极简版
+				if ((vElementID=="BSave")||(vElementID=="BSubmit")||(vElementID=="BAudit"))
+				{
+					$("#"+vElementID).css({"background-color":"#28ba05","color":"#ffffff"})
+				}
+			}
 		}
 	}
+	
 }
 
 ///Add By CZF0075 2020-02-25
@@ -776,7 +828,7 @@ function getColCaption(colName)
 function initApproveButton()
 {
 	var ApproveSetDR=getElementValue("ApproveSetDR");
-	for (var i=1;i<=6;i++)
+	for (var i=1;i<=9;i++)   //zc 2022-11-17 modify by zyq 2022-12-15
 	{
 		hiddenObj("BApprove"+i,1);
 	}
@@ -811,6 +863,47 @@ function initApproveButton()
 	if (ApproveSetDR=="") return;
 	
 	///设置审批按钮标题及是否可用
+	// Modify by zx 2022-11-23 改为异步处理
+	$cm({
+		ClassName:"web.DHCEQ.Plat.CTCApproveSet",
+		MethodName:"GetApproveFlow",
+		ApproveSet:ApproveSetDR
+	},function(ApproveFlowObj){
+		//var ApproveFlowObj=JSON.parse(ApproveFlowInfo)
+	    if (ApproveFlowObj.SQLCODE<0){messageShow("","","",ApproveFlowObj.Data);return;}
+		var List=ApproveFlowObj.Data.split("^")
+		for (var i=1;i<=List.length;i++)
+		{
+			var FlowInfo=List[i-1];
+			var FlowList=FlowInfo.split(",");
+			if ((curRole==nextRole)&&(nextStep==FlowList[0])&&(nextStep==RoleStep))
+			{
+				var obj=document.getElementById("BApprove"+nextStep);
+				if (obj) 
+				{
+					jQuery("#BApprove"+nextStep).linkbutton({iconCls: 'icon-w-stamp'});
+					jQuery("#BApprove"+nextStep).on("click", BApprove_Clicked);
+					if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){ 
+						// 极简版
+						$("#BApprove"+nextStep).css({"background-color":"#28ba05","color":"#ffffff"})
+					}
+					disableElement("EditOpinion",false);
+					hiddenObj("BApprove"+i,0);
+					setElement("EditOpinion",FlowList[4]);	//取审批流默认意见 czf 2022-10-12
+					setItemRequire("EditOpinion",true);	//设置审批意见必填 czf 2022-10-12
+				}
+			}
+			else
+			{
+				hiddenObj("BApprove"+i,1);
+			}
+			//Modify By zx 2020-02-20 BUG ZX0076 防止赋值后样式变化
+			//setElement("BApprove"+i,FlowList[2])
+			jQuery("#BApprove"+i).linkbutton({text:FlowList[2]});
+		}
+		return;
+	});
+	/*
     var ApproveFlowInfo=tkMakeServerCall("web.DHCEQ.Plat.CTCApproveSet","GetApproveFlow",ApproveSetDR)
     var ApproveFlowObj=JSON.parse(ApproveFlowInfo)
     if (ApproveFlowObj.SQLCODE<0){messageShow("","","",ApproveFlowObj.Data);return;}
@@ -828,6 +921,9 @@ function initApproveButton()
 				jQuery("#BApprove"+nextStep).on("click", BApprove_Clicked);
 				disableElement("EditOpinion",false);
 				hiddenObj("BApprove"+i,0);
+				setElement("EditOpinion",FlowList[4]);	//取审批流默认意见 czf 2022-10-12
+				setItemRequire("EditOpinion",true);	//设置审批意见必填 czf 2022-10-12
+				//hiddenObj("BApprove1",0);		 MZY0144	3079745		2022-11-24
 			}
 		}
 		else
@@ -839,6 +935,7 @@ function initApproveButton()
 		jQuery("#BApprove"+i).linkbutton({text:FlowList[2]});
 	}
 	return;
+	*/
 }
 
 ///Add By ZY 2019-10-18
@@ -849,7 +946,7 @@ function initApproveButtonNew()
 {
 	var ApproveSetDR=getElementValue("ApproveSetDR");
 	//2019-07-25
-	for (var i=1;i<=6;i++)
+	for (var i=1;i<=8;i++)    //zc 2022-11-17
 	{
 		hiddenObj("BApprove"+i,1);
 	}
@@ -907,8 +1004,19 @@ function initApproveButtonNew()
 				//hiddenObj("BApprove"+i,0);
 				jQuery("#BApprove1").linkbutton({iconCls: 'icon-w-stamp'});
 				jQuery("#BApprove1").on("click", BApprove_Clicked);
+                //modified by ZY20230309 bug:3229449
+                if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+                    // 极简版
+                    if (($("#BApprove1").attr('class')).indexOf("l-btn-disabled")==-1){
+                        $("#BApprove1").css({"background-color":"#28ba05","color":"#ffffff"})
+                    }else{
+                        $("#BApprove1").css({'background-color':'#E5E5E5','color':'#999'})
+                    }
+                }
 				disableElement("EditOpinion",false);
-				setElement("EditOpinion","同意");
+				//setElement("EditOpinion","同意");
+				setElement("EditOpinion",FlowList[4]);	//取审批流默认意见 czf 2022-10-12
+				setItemRequire("EditOpinion",true);	//设置审批意见必填 czf 2022-10-12
 				hiddenObj("BApprove1",0);
 			}
 		}
@@ -1062,6 +1170,37 @@ function getFaultTypeRowID(type,i)
 		return rtnObj.Data
  	}
 }
+///Add By WY 2023-2-21 3316395
+///描述:自动生成存放地点
+///入参:type 系统参数配置的故障类型录入方式0 放大镜选择模式，1 手工录入自动保存基础数据，2 两种模式均可
+///		i 列表元素时指当前记录行号
+///返回值:存放地点RowID
+function getLocationRowID(type,i)
+{
+	var LocationName="MRLocationDR_LDesc";
+	var LocationDRName="MRLocationDR";
+	if ((i)&&(i!=""))
+	{
+		LocationName="T"+LocationName+"z"+i;
+		LocationDRName="T"+LocationDRName+"z"+i;
+	}
+	
+ 	if (getElementValue(LocationDRName)!="")
+ 	{
+  		return getElementValue(LocationDRName);
+ 	}
+ 	else
+ 	{
+	 	if ((type==0)||(type=="")) return "";
+	 	var Location=getElementValue(LocationName);
+	 	if (Location=="") return "";
+	 	var val=Location+"^";
+	    var rtn=tkMakeServerCall("web.DHCEQ.Plat.CTLocaton","UpdLocation",val)
+	    var rtnObj=JSON.parse(rtn)
+		if (rtnObj.SQLCODE<0) {messageShow("","","",rtnObj.Data);return rtnObj.SQLCODE;}
+		return rtnObj.Data
+ 	}
+}
 ///Add By DJ 2018-07-30
 ///描述:tab标签页选择
 ///入参:vtabsname 标签组名
@@ -1123,7 +1262,10 @@ function appendTree(vtree,vid,vtext,vparent)
 ///入参:vExcludesids 初始化除外元素 格式"元素名1,元素名2,....元素名n"
 function initButtonWidth(vExcludesids)
 {
-	var maxWidth=116 
+	var maxWidth=116;
+	if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+		maxWidth=68;
+	}
 	//遍历按钮id存入数组
 	$(".hisui-linkbutton").each(function(){
 		var id=$(this).attr("id");
@@ -1207,7 +1349,8 @@ function createTimeLine(options)
 		section:'',
 		item:'',
 		lastFlag:'',
-		onOrOff:'0'	//add by czf 2019-12-16 CZF0050
+		onOrOff:'0',	//add by czf 2019-12-16 CZF0050
+		operatetype:'0'	
 	};
     var options = jQuery.extend(defaults, options || {});
 	if (options.id=="") return;
@@ -1256,6 +1399,7 @@ function createTimeLine(options)
 		}else if(itemConten!=""){
 			//add by czf 2019-12-16 CZF0050
 			if (options.onOrOff==1) html=html+'<div style="color:#C0C0C0">'+itemConten+'</div>';
+			else if(options.operatetype==1) html=html+'<div style="color:#FF0000">'+itemConten+'</div>';		//czf 1525716
 			else html=html+'<div>'+itemConten+'</div>';
 		}
 	}
@@ -1632,6 +1776,14 @@ function checkMustLookupDRNull(Strs)
 /// 新增height:3row(3行)  width:3col(3列)   size:fix1col  fix2col  fix3col  fix4col  fix4col(固定列弹窗)
 function showWindow(url,title,width,height,icon,showtype,left,top,size,cfun)
 {
+	//modified by cjt 2023-02-28 修改处理逻辑
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		if (url.indexOf("?")==-1) {
+			url += "?MWToken="+websys_getMWToken()
+		} else {
+			url += "&MWToken="+websys_getMWToken()
+		}
+	}
 	//add by lmm 2020-06-02	
 	if ((height!="")&&(height.toString().indexOf("row")>0))
 	{
@@ -1956,7 +2108,7 @@ function createApproveRecord(vElementID,vBussType,vBussID)
 ///描述：导出列专用弹窗
 function colSetWindows(url)
 {
-	showWindow(url,"导出列设置","","","icon-w-paper","","","","middle")  	
+	showWindow(url,"导出列设置","","","icon-w-paper","","","","large");  	// MZY0121	2578376		2022-04-15
 }
 ///Add By ZC0077 2020-06-24
 ///描述:根据元素串分别取消元素设置的必填项属性.
@@ -1970,4 +2122,297 @@ function RemoveRequiredElements(vElementIDs)
 	{
 		setItemRequire(ElementList[i],false)
 	}
+}
+
+///Add By ZY0271 2021-06-21
+///描述:根据元素串获取元素敏感设置.
+///入参:vElementIDs 需要获取元素敏感设置的元素名串 格式:"元素名1^元素名2^.....^元素名n"
+///返回值:无
+///说明:界面初始化的时候调用此函数
+function initElementVisit(ComponentName,vElementIDs,groupID)
+{
+	var vElementIDs=vElementIDs.split("^")
+	for (var i=0;i<vElementIDs.length;i++)
+	{
+		///0:正常显示,1:隐藏元素,2:password样式显示
+		var vElementID=vElementIDs[i]
+		var jsonData=tkMakeServerCall("web.DHCEQ.Plat.CTCComponentSet","initElementVisit",ComponentName,vElementID,groupID)
+		var jsonData=JSON.parse(jsonData);
+		if(jsonData.SQLCODE=="1"){
+			hiddenObj(vElementID,1)
+		}else if(jsonData.SQLCODE=="2"){
+			var obj=document.getElementById(vElementID);
+			if (obj)
+			{
+				obj.type="password"
+				disableElement(vElementID,true);
+			}
+		}
+	}
+}
+
+/**
+ * 将数组元素内字段转换为对象并输出，例[['a','b']]-->[{elementID:"a",showText:"texta"},{elementID:"b",showText:"textb"}]
+ * @param {String} dataGridID 可编辑datagrid表格id
+ * @param {String} editIndex 开启编辑行行号
+ * @param {Array} combogridIDArr 修改可编辑conbogrid元素id数组
+ * @returns {Array} combogridTextArr combogrid文本信息[{elementID:"a",showText:"texta"}]
+ * @author cjc 2811936 2022-07-22
+ */
+function initCombogridIDArr(dataGridID,editIndex,combogridIDArr)
+{
+	var combogridTextArr=new Array();
+	combogridIDArr.forEach(function(elementID){
+		var elementEdt = $("#"+dataGridID).datagrid('getEditor', {index:editIndex,field:elementID});
+		var showText= $(elementEdt.target).combobox('getText');
+		combogridTextArr.push({"elementID":elementID,"showText":showText})
+	})
+	return combogridTextArr;
+	
+}
+/**
+ * 更新编辑过的行文本
+ * @param {String} dataGridID 可编辑datagrid表格id
+ * @param {String} editIndex 开启编辑行行号
+ * @param {Array} combogridTextArr combogrid文本信息[{elementID:"a",showText:"texta"}]
+ * @returns 无
+ * @author cjc 2811936 2022-07-22
+ */
+function fillCombogridData(dataGridID,editIndex,combogridTextArr)
+{
+	combogridTextArr.forEach(function(item){
+		$("#"+dataGridID).datagrid('getRows')[editIndex][item.elementID] = item.showText;
+		$("#"+dataGridID).datagrid('updateRow', { index: editIndex, row: { name: item.elementID } });
+	})
+}
+
+/**
+ * 生命周期时间周样式生成
+ * @param {Json} jsonData 生成生命周期样式数据
+ * @returns {String} timeLineHtml 生命周期样式html
+ * @author zx 2022-08-11
+ * @explain <br>:实现otherInfo换行  &nbsp;实现otherInfo空格
+ */
+function createTimeLineNew(jsonData)
+{
+    var timeLineHtml='';
+    $.each(jsonData, function(index, singleItem)
+    {
+		
+        if(index==0)
+        {
+            timeLineHtml = timeLineHtml + '<li class="eq-new-times-ul-li" style="position:relative;"><b class="eq-new-times-point"></b><div class="eq-new-times-desc"><span class="eq-new-times-last-action">'+singleItem.actionDesc+'</span><span>'+
+			singleItem.dateInfo+'</span></div><div class="eq-new-times-info"><span>'+singleItem.otherInfo+'</span></div><div class="eq-new-times-ul-li-first">';
+            
+        }
+        else
+        {
+	        var styleStr="";
+	        if(index==jsonData.length-1)
+			{
+	            styleStr='style="position:relative;"';
+	        }
+	        if(singleItem.lastApproveFlag){
+		        timeLineHtml = timeLineHtml + '<li class="eq-new-times-ul-li" '+styleStr+'><p class="eq-new-times-ul-li"></p><b class="eq-new-times-firstpoint"></b>'
+				+ '<div class="eq-new-times-desc"><span class="eq-new-times-fir-action">'+singleItem.actionDesc+'</span><span class="eq-new-times-fir-date">'+singleItem.dateInfo+'</span></div><div class="eq-new-times-info"><span>'+singleItem.otherInfo+'</span>';
+		    }else{
+			    if(singleItem.offApprove){
+		            timeLineHtml = timeLineHtml + '<li class="eq-new-times-ul-li-off" '+styleStr+'><b class="eq-new-times-point-off"></b><div class="eq-new-times-desc"><span>'+singleItem.actionDesc+'</span><span>'+
+					singleItem.dateInfo+'</span></div><div class="eq-new-times-info"><span>'+singleItem.otherInfo+'</span>';
+				}else{
+		            timeLineHtml = timeLineHtml + '<li class="eq-new-times-ul-li" '+styleStr+'><b class="eq-new-times-point"></b><div class="eq-new-times-desc"><span>'+singleItem.actionDesc+'</span><span>'+
+					singleItem.dateInfo+'</span></div><div class="eq-new-times-info"><span>'+singleItem.otherInfo+'</span>';
+				}
+			}
+	    }
+        if(index==jsonData.length-1)
+		{ 
+			var borderColor="#C0C0C0";
+			if(singleItem.lastApproveFlag) borderColor="#457af7";
+            timeLineHtml = timeLineHtml + '</div><div class="eq-new-times-ul-li-last" style="border-color:'+borderColor+';">';
+        }
+	    timeLineHtml = timeLineHtml + '</div></li>';
+    });
+    return timeLineHtml;
+}
+///Add By TXR 2023-01-10
+///描述:隐藏button图标
+///入参:buttonid 按钮id  ^分隔
+///返回值:无
+function hiddenTab(buttonid)
+{
+	if (buttonid=="") return
+	var ElementList=buttonid.split("^")
+	for (var i=0;i<ElementList.length;i++)
+	{
+		jQuery(ElementList[i]).linkbutton({iconCls:''});
+	}
+}
+/**
+ * 描点点击样式生成
+ * @param {Json} jsonData 描点点击数据
+ * @returns {String} anchorHtml 描点样式html
+ * @author zx 2023-01-10
+ */
+function createAnchor(jsonData)
+{
+    var anchorHtml='<ul class="eq-anchor-ul">';
+    $.each(jsonData, function(index, singleItem)
+    {   
+    	if(index===0){
+	    	anchorHtml = anchorHtml + '<li class="eq-anchor-ul-li" style="position: relative"><b class="eq-anchor-first-point"></b></div><div class="eq-anchor-info"><a href="#'+singleItem.anchorPoint+'">'+singleItem.actionDesc+'</a>'+
+         		'</div><div class="eq-anchor-ul-li-first"></div></li>';
+	    } else if(index===jsonData.length-1){
+			anchorHtml = anchorHtml + '<li class="eq-anchor-ul-li" style="position: relative"><b class="eq-anchor-point eq-anchor-last-point"></b></div><div class="eq-anchor-info"><a href="#'+singleItem.anchorPoint+'">'+singleItem.actionDesc+'</a>'+
+         		'</div><div class="eq-anchor-ul-li-last"></div></li>';
+		} else {
+		    anchorHtml = anchorHtml + '<li class="eq-anchor-ul-li"><b class="eq-anchor-point"></b></div><div class="eq-anchor-info"><a href="#'+singleItem.anchorPoint+'">'+singleItem.actionDesc+'</a></div></li>';
+		}
+    });
+    return anchorHtml+'</ul>';
+}
+
+/**
+ * 初始化极简积极按钮颜色
+ * 积极按钮：新增、保存、提交、审核
+ * @author czf 2023-01-10
+ */
+function initButtonColor()
+{
+	if (jQuery("#BAdd").length>0)
+	{
+		if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+			// 极简版
+			if (($("#BAdd").attr('class')).indexOf("l-btn-disabled")==-1){
+				$("#BAdd").css({"background-color":"#28ba05","color":"#ffffff"})
+			}else{
+				$("#BAdd").css({'background-color':'#E5E5E5','color':'#999'})
+			}
+		}
+	}
+	//组件界面新增样式调整 added by LMH
+	if (jQuery("#BAddNew").length>0)
+	{
+		if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+			// 极简版
+			if (($("#BAddNew").attr('class')).indexOf("l-btn-disabled")==-1){
+				$("#BAddNew").css({"background-color":"#28ba05","color":"#ffffff"})
+			}else{
+				$("#BAddNew").css({'background-color':'#E5E5E5','color':'#999'})
+			}
+		}
+	}
+	if (jQuery("#BSave").length>0)
+	{
+		if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+			// 极简版
+			if (($("#BSave").attr('class')).indexOf("l-btn-disabled")==-1){
+				$("#BSave").css({"background-color":"#28ba05","color":"#ffffff"})
+			}else{
+				$("#BSave").css({'background-color':'#E5E5E5','color':'#999'})
+			}
+		}
+	}
+	if (jQuery("#BUpdate").length>0)
+	{
+		if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+			// 极简版
+			if (($("#BUpdate").attr('class')).indexOf("l-btn-disabled")==-1){
+				$("#BUpdate").css({"background-color":"#28ba05","color":"#ffffff"})
+			}else{
+				$("#BUpdate").css({'background-color':'#E5E5E5','color':'#999'})
+			}
+		}
+	}
+	if (jQuery("#BSubmit").length>0)
+	{
+		if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+			// 极简版
+			if (($("#BSubmit").attr('class')).indexOf("l-btn-disabled")==-1){
+				$("#BSubmit").css({"background-color":"#28ba05","color":"#ffffff"})
+			}else{
+				$("#BSubmit").css({'background-color':'#E5E5E5','color':'#999'})
+			}
+		}
+	}
+	if (jQuery("#BAudit").length>0)
+	{
+		if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){ 
+			// 极简版
+			if (($("#BAudit").attr('class')).indexOf("l-btn-disabled")==-1){
+				$("#BAudit").css({"background-color":"#28ba05","color":"#ffffff"})
+			}else{
+				$("#BAudit").css({'background-color':'#E5E5E5','color':'#999'})
+			}
+		}
+	}
+	if (jQuery("#BApprove").length>0)
+	{
+		if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){ 
+			// 极简版
+			if (($("#BApprove").attr('class')).indexOf("l-btn-disabled")==-1){
+				$("#BApprove").css({"background-color":"#28ba05","color":"#ffffff"})
+			}else{
+				$("#BApprove").css({'background-color':'#E5E5E5','color':'#999'})
+			}
+		}
+	}
+}
+
+/**
+ * 显示/隐藏按钮图标
+ * @param {String} vElementIDs 按钮ID1^按钮ID2^按钮ID3
+ * @param {String} true/false
+ * @author czf 2023-01-10
+ */
+function showBtnIcon(vElementIDs,value)
+{
+	var ElementList=vElementIDs.split("^")
+	for (var i=0;i<ElementList.length;i++)
+	{
+		var ElementID=ElementList[i];
+		if(value){
+			$("#"+ElementID).addClass('showicon');
+		}
+		else{
+			$("#"+ElementID).removeClass('showicon');
+		}
+		
+	}
+}
+
+/**
+ * 初始化panel标题样式
+ * @author czf 2023-01-10
+ */
+function initPanelHeaderStyle()
+{
+    if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){ 
+        $('.maintitle').css({'padding-left':'10px','font-size':'14px','font-weight':700,'color':'#000','background-image':'none'})
+        $('.edittitle').css({'padding-left':'10px','font-size':'14px','font-weight':700,'color':'#000','background-image':'none'})
+        $('.listtitle').css({'padding-left':'10px','font-size':'14px','font-weight':700,'color':'#000','background-image':'none'})
+        $('.formtitle').css({'padding-left':'10px','font-size':'14px','font-weight':700,'color':'#000','background-image':'none'})
+    }
+    $('body').css('background-color','#fff');   //设置背景色为白色
+    if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){ 
+        //修改极简边框颜色
+		///组件界面也需要设置padding值
+        $('.i-tableborder').css({'border':'1px solid #E2E2E2','padding':'0px 0px 0px 0px'});
+        $('.eq-component-button').css({'padding':'10px 0px 0px 0px'});
+        $('.maintitle').css('border-color','#E2E2E2');
+		$('.edittitle').css('border-color','#E2E2E2');
+		$('.listtitle').css('border-color','#E2E2E2');
+		$('.formtitle').css('border-color','#E2E2E2');
+    }
+}
+
+/**
+ * 隐藏面板标题
+ * @author czf 2023-01-10
+ */
+function hidePanelTitle()
+{
+	$('.maintitle').parent().hide();
+	$('.edittitle').parent().hide();
+	$('.i-tableborder').css({'border-top-right-radius':'4px','border-top-left-radius':'4px'});
 }

@@ -1,5 +1,8 @@
 var PageLogicObj = {
-    CardTypeId: ""
+    CardTypeId: "",
+    CardTypeDesc: "",
+    m_CardRegDOMArr: new Array(),
+    m_DefaultId: ""
 }
 $(function () {
     var hospComp = GenUserHospComp();
@@ -10,12 +13,30 @@ $(function () {
     hospComp.jdata.options.onSelect = function (e, t) {
         //卡类型表格初始化
         CardTypeListDataGridLoad()
+        LoadPatType()
     }
     hospComp.jdata.options.onLoadSuccess = function (data) {
         //卡类型表格初始化
-        CardTypeListDataGridLoad()
+        CardTypeListDataGridLoad();
+        LoadPatType()
+        isjQueryLoadend();
     }
 })
+//判断JQ是否加载完成没有的话 继续判断
+function isjQueryLoadend() {
+    if ($("#CardTypeWin").length > 0) {
+        InitCache();
+    } else {
+        setTimeout(isjQueryLoadend, 1000)
+    }
+}
+function InitCache() {
+    var hasCache = $.DHCDoc.ConfigHasCache();
+    if (hasCache != 1) {
+        $.DHCDoc.CacheConfigPage();
+        $.DHCDoc.storageConfigPageCache();
+    }
+}
 function Init() {
     InitCardTypeDataGrid();
     //初始化卡号检索方式
@@ -64,6 +85,7 @@ function InitEvent() {
     $("#BFind").click(BFindClickHandle)
     $("#GlobalSet").click(GlobalSetHandle)
     $("#SetSave").click(SetSaveHandle)
+    $("#i-config").click(SaveSelecconfig);
 }
 function BFindClickHandle() {
     CardTypeListDataGridLoad()
@@ -119,28 +141,41 @@ function InitCardTypeDataGrid() {
                 text: '授权医院',
                 iconCls: 'icon-house',
                 handler: ReHospitalHandle
-            }
-            /*,{
-                iconCls: 'icon-cancel',
-                text:'删除',
-                handler: function(){
-                    if(PageLogicObj.CardTypeId==""){
-                        $.messager.alert("提示", "请选择卡类型!", 'info');
-                        return 
-                    }
-                    DeleteCardType(PageLogicObj.CardTypeId)
-                }
-            }*/
+            }/*,{
+	        text: '翻译',
+	        iconCls: 'icon-translate-word',
+	        handler:function(){
+		        if(PageLogicObj.CardTypeId==""){
+					$.messager.alert("提示", "请选择卡类型!", 'info');
+					return 
+				}
+				
+				CreatTranLate("User.DHCCardTypeDef","CTDDesc",PageLogicObj.CardTypeDesc)
+		        }
+		}
+		/*,{
+			iconCls: 'icon-cancel',
+			text:'删除',
+			handler: function(){
+				if(PageLogicObj.CardTypeId==""){
+					$.messager.alert("提示", "请选择卡类型!", 'info');
+					return 
+				}
+				DeleteCardType(PageLogicObj.CardTypeId)
+			}
+		}*/
         ],
         onCheck: function (index, row) {
 
         }, onSelect: function (index, rowData) {
             var CardTypeId = rowData["RowId"];
             PageLogicObj.CardTypeId = CardTypeId
+            PageLogicObj.CardTypeDesc = rowData["CTDDesc"]
         },
         onDblClickRow: function (index, row) {
             var CardTypeId = row["RowId"];
             PageLogicObj.CardTypeId = CardTypeId
+            PageLogicObj.CardTypeDesc = row["CTDDesc"]
             //LoadCardWin()
             $('#CardTypeWin').dialog("open")
             LoadCardTypeData(PageLogicObj.CardTypeId)
@@ -223,16 +258,21 @@ function InitCardTypeWin() {
     }
     //初始化读卡设备
     InitHardComDR()
-
     //初始化条码设备
     InitBarCodeComDR()
-
     //发票打印模版名称
     InitINVPRTXMLName()
-
     //病案首页打印模版
     InitPatPageXMLName()
-
+    //患者类型
+    LoadPatType()
+    // 初始化外部卡数据
+    InitExtCardLinkStr()
+    //证件类型列表
+    InitCreadType()
+	//账户创建模式
+	InitAccMCreatMode()
+	
     var cbox = $HUI.datebox("#DateFrom", {})
 
     var cbox = $HUI.datebox("#DateTo", {})
@@ -260,21 +300,37 @@ function InitCardTypeWin() {
 }
 ///"UDHCCardPatInfoRegExp","","0"
 function InitFocusElement(jsonObj) {
+    /*$.cm({
+            ClassName:"web.DHCBL.UDHCCommFunLibary",
+            QueryName:"ReadComponentItem",
+            ComponentName:"UDHCCardPatInfoRegExp",
+            DisType:"",
+            HiddenFlag:0,
+            rows:99999
+        },function(GridData){
+            var cbox = $HUI.combobox("#"+jsonObj.id, {
+                    valueField: 'Name',
+                    textField: 'Caption', 
+                    editable:true,
+                    data: GridData["rows"]
+             });
+    });*/
+    var HospID = $HUI.combogrid('#_HospUserList').getValue();
     $.cm({
-        ClassName: "web.DHCBL.UDHCCommFunLibary",
-        QueryName: "ReadComponentItem",
-        ComponentName: "UDHCCardPatInfoRegExp",
-        DisType: "",
-        HiddenFlag: 0,
-        rows: 99999
-    }, function (GridData) {
+        ClassName: "web.DHCBL.CARD.CardPATRegConfig",
+        MethodName: "GetCardRegDOMCache",
+        HospId: HospID //session['LOGON.HOSPID']
+    }, function (data) {
+        for (var oe in data) {
+            var text = data[oe];
+            PageLogicObj.m_CardRegDOMArr.push({ "id": oe, "text": text });
+        }
         var cbox = $HUI.combobox("#" + jsonObj.id, {
-            valueField: 'Name',
-            textField: 'Caption',
-            editable: true,
-            data: GridData["rows"]
+            valueField: 'id',
+            textField: 'text',
+            data: PageLogicObj.m_CardRegDOMArr
         });
-    });
+    })
 }
 function InitCombobox(jsonObj) {
     $.cm({
@@ -475,6 +531,21 @@ function CheckBefore() {
         });
         return false;
     }
+    var ExtCardLinkStr = getValue("ExtCardLinkStr");
+    var AllowNoCardNoFlag = getValue("AllowNoCardNoFlag");
+    if ((AllowNoCardNoFlag == "Y") && (ExtCardLinkStr == "")) {
+        $.messager.alert("提示", "【外部卡号可为空】配置,需先维护外部卡关联", 'info', function () {
+            $("#ExtCardLinkStr").focus();
+        });
+        return false;
+    }
+    var AccMCreatMod = $("#AccMCreatMode").combobox("getValue")
+    if (AccMCreatMod==""){
+	    $.messager.alert("提示", "创建账户类型不能为空", 'info', function () {
+            $("#AccMCreatMode").focus();
+        });
+        return false;
+	    }
     return true
 }
 ///根据元素的classname获取元素值
@@ -487,7 +558,11 @@ function getValue(id) {
         var val = $("#" + id).switchbox("getValue")
         return val = (val ? 'Y' : 'N')
     } else if (className.indexOf("hisui-combobox") >= 0) {
-        return $("#" + id).combobox("getValue")
+        /*if(id=="NotPayCardFeePatType"){
+            return $("#"+id).combobox("getValues")
+        }
+        else return $("#"+id).combobox("getValue") */
+        return $("#" + id).combobox("getValues")
     } else if (className.indexOf("hisui-datebox") >= 0) {
         return $("#" + id).datebox("getValue")
     } else {
@@ -505,7 +580,18 @@ function setValue(id, val) {
         val = (val == "Y" ? true : false)
         $("#" + id).switchbox("setValue", val)
     } else if (className.indexOf("hisui-combobox") >= 0) {
-        $("#" + id).combobox("setValue", val)
+        /*if(id=="NotPayCardFeePatType"){
+            if (val!=""){
+                var valarr=val.split(",")
+                $("#"+id).combobox("setValues",valarr)
+            }else {
+                $("#"+id).combobox("setValues","")
+            }
+        }
+        else $("#"+id).combobox("setValue",val) */
+		//如果val为空时，且combobox为多选，会导致选择数据时多一个"," 有问题(如：NotPayCardFeePatType)
+        var valArr = (val!="") ? val.split(",") : [];
+        $("#" + id).combobox("setValues", valArr);
     } else if (className.indexOf("hisui-datebox") >= 0) {
         $("#" + id).datebox("setValue", val)
     } else {
@@ -668,5 +754,193 @@ function ReHospitaldelectClickHandle() {
         $.messager.popover({ msg: '删除成功!', type: 'success', timeout: 1000 });
         LoadReHospitalDataGrid();
     })
-
 }
+function LoadPatType() {
+    var HospID = $HUI.combogrid('#_HospUserList').getValue();
+    var SessionStr = "^" + session['LOGON.USERID'] + "^" + session['LOGON.CTLOCID'] + "^" + session['LOGON.GROUPID'] + "^" + HospID + "^" + session['LOGON.SITECODE'] + "^"
+    $.cm({
+        ClassName: "web.UDHCOPOtherLB",
+        MethodName: "ReadPatTypeAll",
+        JSFunName: "GetPatTypeToHUIJson",
+        ListName: "",
+        SessionStr: SessionStr,
+        dataType: "text",
+    }, function (data) {
+        $("#NotPayCardFeePatType").combobox({
+            valueField: 'id',
+            textField: 'text',
+            multiple: true,
+            editable: false,
+            blurValidValue: true,
+            data: JSON.parse(data),
+            onSelect: function (rec) {
+                //PatTypeOnChange();
+            }
+        })
+    })
+}
+function InitExtCardLinkStr() {
+    var cbox = $HUI.combobox("#ExtCardLinkStr", {
+        valueField: 'id',
+        textField: 'text',
+        editable: false,
+        multiple: true,
+        rowStyle: 'checkbox',
+        selectOnNavigation: false,
+        panelHeight: "auto",
+        data: eval("(" + ServerObj.ExtCardJson + ")"),
+        onLoadSuccess: function () {
+            return;
+            var sbox = $HUI.combobox("#ExtCardLinkStr");
+            var DiagOtherInfoArr = ServerObj.DiagOtherInfo.split(String.fromCharCode(1));
+            for (i = 0; i < DiagOtherInfoArr[8].split("^").length; i++) {
+                sbox.select(DiagOtherInfoArr[8].split("^")[i]);
+            }
+        }
+    });
+}
+
+function InitCreadType() {
+    //添加图标
+    var target = $("#CredTypeList")[0];
+    $(target).width($(target).width() - 40).addClass('combo2');
+    var arrow = $('<span class="combo2-arrow"></span>').insertAfter(target);
+    $(arrow).off('click.combo2').on('click.combo2', function () {
+        if ($(this).hasClass('disabled')) return false;
+        OpenCredTypeList();
+    })
+    //加载数据
+    var Data = $.cm({
+        ClassName: "web.UDHCAccCredType",
+        MethodName: "GetActiveCredType"
+    }, false);
+    for (var i = 0; i < Data.length; i++) {
+        $("#jzul").append("<li id='in-" + Data[i]["TCredTypeID"] + "' value=" + Data[i]["TCredTypeID"] + ">" + Data[i]["TCredDesc"] + "</li>");
+        $("#jzul-set").append("<li id='i-" + Data[i]["TCredTypeID"] + "' value=" + Data[i]["TCredTypeID"] + ">" + "设置为默认" + "</li>");
+    }
+    $("#jzul>li,#zydateul>li,#prelocul>li").on('click', function () {
+        if ($(this).hasClass('active')) {
+            $(this).removeClass('active');
+        } else {
+            $(this).addClass('active');
+        }
+    });
+    return
+}
+function SaveSelecconfig() {
+    var CredTypeList = "";
+    var CredTypeListStr = "";
+    var CredTypeDefault = "";
+    $("#jzul>li.active").each(function () {
+        if (CredTypeListStr == "") {
+            CredTypeListStr = $(this).attr("value");
+            CredTypeList = $(this).text();
+        } else {
+            CredTypeListStr = CredTypeListStr + "," + $(this).attr("value");
+            CredTypeList = CredTypeList + "," + $(this).text();
+        }
+    })
+    $("#jzul-set>li.default").each(function () {
+        if (CredTypeDefault == "") {
+            CredTypeDefault = $(this).attr("value");
+        } else {
+            CredTypeDefault = CredTypeDefault + "," + $(this).attr("value");
+        }
+    })
+    $("#CredTypeList").val(CredTypeList);
+    $("#CredTypeListStr").val(CredTypeListStr);
+    $("#CredTypeDefault").val(CredTypeDefault);
+    $('#dialog-CreadSelect').window('close');
+    return;
+}
+
+function OpenCredTypeList() {
+    $('#dialog-CreadSelect').window('open');
+    var CredTypeListStr = $("#CredTypeListStr").val();
+    var CredTypeDefault = $("#CredTypeDefault").val();
+    if (CredTypeListStr != "") {
+        CredTypeListStr = "," + CredTypeListStr + ",";
+    } else {
+        $("#jzul-set>li").each(function () {
+            if ($(this).text() == "默认") {
+                $(this).text("设置为默认").removeClass("default");
+            }
+        });
+    }
+    $("#jzul>li").each(function () {
+        var curCid = $(this).attr("value");
+        cid = "," + curCid + ",";
+        if (CredTypeListStr.indexOf(cid) >= 0) {
+            if (!$(this).hasClass('active')) {
+                $(this).addClass('active');
+            }
+            if (cid == ("," + CredTypeDefault + ",")) {
+                $(this).addClass('selected');
+                $("#i-" + curCid).html("默认");
+                $("#i-" + curCid).addClass("default");
+                PageLogicObj.m_DefaultId = curCid;
+            } else {
+                $(this).removeClass('selected');
+                $("#i-" + curCid).html("设置为默认");
+                $("#i-" + curCid).removeClass("default");
+            }
+        } else {
+            $(this).removeClass('active');
+            $(this).removeClass('selected');
+            if ($("#i-" + curCid).text() == "默认") {
+                $("#i-" + curCid).text("设置为默认").removeClass("default");
+            }
+        }
+    });
+    $("#jzul-set>li").unbind("click");
+    $("#jzul-set>li").on('click', function () {
+        var cidV = $(this).attr("id");
+        cid = cidV.split("-")[1];
+        var inLoc = cid;
+        var isDefault = $(this).hasClass("default");
+        var LocName = $("#in-" + cid).text();
+        var Msg = "您确认<span style='color:blue; font-size:16px;'>设置为默认</span>【" + LocName + "】为默认么？";
+        var action = "edit";
+        if (isDefault) {
+            Msg = "您确认<span style='color:red; font-size:16px;'>取消</span>【" + LocName + "】默认么？";
+            action = "cancel";
+        }
+        $.messager.confirm('提示', Msg, function (r) {
+            if (r) {
+                if (action == "cancel") {
+                    inLoc = "";
+                }
+                if (action == "cancel") {
+                    $("#in-" + cid).removeClass('selected');
+                    $("#i-" + cid).text("设置为默认");
+                    $("#i-" + cid).removeClass("default");
+                    PageLogicObj.m_DefaultId = "";
+                } else {
+                    if (PageLogicObj.m_DefaultId != "") {
+                        $("#in-" + PageLogicObj.m_DefaultId).removeClass("selected");
+                        $("#i-" + PageLogicObj.m_DefaultId).removeClass("default");
+                        $("#i-" + PageLogicObj.m_DefaultId).text("设置为默认");
+                    }
+                    $("#in-" + cid).addClass("selected");
+                    $("#in-" + cid).addClass("active");
+                    $("#i-" + cid).addClass("default");
+                    $("#i-" + cid).text("默认");
+                    PageLogicObj.m_DefaultId = cid;
+                }
+            }
+        });
+    });
+}
+function InitAccMCreatMode(){
+	$("#AccMCreatMode").combobox({
+            valueField: 'id',
+            textField: 'text',
+            multiple: false,
+            editable: false,
+            blurValidValue: true,
+            data: [{id:"P",text:"患者主索引"},{id:"C",text:"卡索引"}],
+            onSelect: function (rec) {
+                //PatTypeOnChange();
+            }
+        })
+	}

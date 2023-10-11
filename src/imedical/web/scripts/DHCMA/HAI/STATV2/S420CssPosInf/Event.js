@@ -1,4 +1,4 @@
-﻿function InitS420cssposinfWinEvent(obj){
+function InitS420cssposinfWinEvent(obj){
 	
    	obj.LoadEvent = function(args){
 		
@@ -6,7 +6,13 @@
 		setTimeout(function(){
 			obj.LoadRep();
 		},50);
-
+		//表的点击事件
+		$('#btnSearchTable').on('click',function(e,value){
+			$('#ReportFrame').css('display', 'block');
+			$('#EchartDiv').css('display', 'none');
+			obj.LoadRep();
+		});
+		
 		//图的点击事件
 		$('#btnSearchChart').on('click',function(e,value){
 			$('#EchartDiv').css('display', 'block');
@@ -15,77 +21,76 @@
 			obj.ShowEChaert1();
 		});
 		
-		//表的点击事件
-		$('#btnSearchTable').on('click',function(e,value){
-			$('#ReportFrame').css('display', 'block');
-			$('#EchartDiv').css('display', 'none');
-			obj.LoadRep();
-		});
    	}
+	
    	obj.LoadRep = function(){
 		var SurNumID 	= $('#cboSurNum').combobox('getValue');	
 		var aLocType 	= Common_CheckboxValue('chkStatunit');
-		
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs = $('#cboLoc').combobox('getValues').join(',');	
+		// var aQryCon= $('#cboQryCon').combobox('getValue');
 		ReportFrame = document.getElementById("ReportFrame");
-	
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S420CssPosInf.raq&aSurNumID='+SurNumID +'&aStaType='+aLocType+'&aInfType='+"1";
+		p_URL = Append_Url('dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S420CssPosInf.raq&aSurNumID='+SurNumID +'&aStaType='+aLocType+'&aInfType='+"1");	//+'&aQryCon='+aQryCon
 		if(!ReportFrame.src){
-			ReportFrame.frameElement.src=p_URL;
+			ReportFrame.frameElement.src = p_URL ;
 		}else{
 			ReportFrame.src = p_URL;
 		} 
 		
 	}
-    obj.echartLocInfRatio = function(runQuery){
+     obj.echartLocInfRatio = function(runQuery){
 		if (!runQuery) return;
-		var arrInfDiagDesc = new Array();	//感染诊断
-		var arrInfDiagCnt  = new Array();   //感染部位例数
-		var arrPosDesc	   = new Array();	//感染部位
-		arrRecord 		= runQuery.record;
+
+		var arrRecord = runQuery.rows;
+		RemoveArr(arrRecord);
+		 arrRecord = arrRecord.sort(function(x, y) {
+			return parseInt(y.InfDiagCnt) - parseInt(x.InfDiagCnt)
+		});
+		 objPos = {}; objDiag = {};mapDOP={}
 		for (var indRd = 0; indRd < arrRecord.length; indRd++){
 			var rd = arrRecord[indRd];
-			if ((rd["DimensKey"].indexOf('-A-')>-1)) {
-				arrInfDiagDesc.push(rd["InfDiagDesc"]);
-				arrInfDiagCnt.push(rd["InfDiagCnt"]);
-				arrPosDesc.push(rd["PosDesc"]);
-			}
-		}
-	
-       var arrInfPosDesc= new Array();     //定义一个临时数组 
-       for(var i = 0; i < arrPosDesc.length; i++){    //循环遍历当前数组 
-           //判断当前数组下标为i的元素是否已经保存到临时数组 
-           //如果已保存，则跳过，否则将此元素保存到临时数组中 
-           if(arrInfPosDesc.indexOf(arrPosDesc[i]) == -1){ 
-               arrInfPosDesc.push(arrPosDesc[i]); 
-           } 
-       } 
-       var arrnum =new Array(arrInfPosDesc.length);
-       for(var index = 0;index < arrnum.length;index++){
-	       arrnum[index] = 0;
-	     }
-		for(var i = 0; i < arrInfPosDesc.length; i++){
-			for(var j = 0; j < arrPosDesc.length; j++){
-				if(arrPosDesc[j]==arrInfPosDesc[i]){
-					arrnum[i]=Number(arrnum[i])+Number(arrInfDiagCnt[j]);	
-				} 
-			}
-		}
-		var arrDiagDesc = new Array();
-		var arrDiagCnt = new Array();
-		for(var i = 0; i < arrInfPosDesc.length; i++){
-			for(var j = 0; j < arrPosDesc.length; j++){
-				if(arrInfPosDesc[i]==arrPosDesc[j]){
-					arrDiagDesc.push(arrInfDiagDesc[j]);
-					arrDiagCnt.push(arrInfDiagCnt[j]);
-				}
-			}
 			
+			var PosDesc = $.trim(rd["PosDesc"]); 
+			var InfDiagDesc = $.trim(rd["InfDiagDesc"]); 
+			if (InfDiagDesc == ""){ 
+				continue;
+			}
+			var InfDiagCnt = parseInt(rd["InfDiagCnt"]);
+			if (typeof objDiag[InfDiagDesc] == "undefined"){
+				objDiag[InfDiagDesc] = InfDiagCnt
+			}else{
+				objDiag[InfDiagDesc] = objDiag[InfDiagDesc]+InfDiagCnt
+			}
+			if (typeof objPos[PosDesc] == "undefined") {
+				objPos[PosDesc] = InfDiagCnt
+			} else {
+				objPos[PosDesc] = objPos[PosDesc] + InfDiagCnt
+			}
+			mapDOP[InfDiagDesc] = PosDesc  
 		}
-		var arrLegend = arrInfDiagDesc;
-		arrLegend=arrInfDiagDesc.concat(arrPosDesc);
+	   
+		 var arrLegend=new Array();
+		 var arrInfPosDesc = new Array();
+		 var arrnum = new Array();
+		 var arrDiagDesc = new Array();
+		 var arrDiagCnt = new Array();
+		 Object.getOwnPropertyNames(objDiag).forEach(function (key) { 
+			 arrLegend.push(key);
+		 })
+		 Object.getOwnPropertyNames(objPos).forEach(function (key) {
+			 arrLegend.push(key);
+			 arrInfPosDesc.push(key);
+			 arrnum.push(objPos[key]);
+			 for (var diag in mapDOP){
+				 if (mapDOP[diag] == key){
+					 arrDiagDesc.push(diag)
+					 arrDiagCnt.push(objDiag[diag])
+				 }
+			 }
+		 })
 		option = {
 			title : {
-			        text: '全院感染部位情况统计图',
+			        text: '医院感染科室部位情况统计图',
 			        textStyle:{
 						fontSize:28
 					},
@@ -95,6 +100,14 @@
 		        trigger: 'item',
 		        formatter: '{a} <br/>{b}: {c} ({d}%)'
 		    },
+			toolbox: {
+				feature: {
+					dataView: {show: false, readOnly: false},
+					magicType: {show: false, type: ['line', 'bar']},
+					restore: {show: true},
+					saveAsImage: {show: true}
+				}
+			},
 		    legend: {
 		        orient: 'vertical',
 		        left: 10,
@@ -162,7 +175,7 @@
 		            },
 		            data: (function(){
 				            var arr=[];
-				        	for (var i = 0; i < arrInfDiagDesc.length; i++) {	
+						for (var i = 0; i < arrDiagDesc.length; i++) {	
  								arr.push({"value": arrDiagCnt[i],"name":arrDiagDesc[i]});
 							}
 							return arr;  
@@ -177,30 +190,33 @@
 		obj.myChart.clear()
 		var SurNumID 	= $('#cboSurNum').combobox('getValue');	
 		var aLocType 	= Common_CheckboxValue('chkStatunit');
+		// var aQryCon= $('#cboQryCon').combobox('getValue');
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs = $('#cboLoc').combobox('getValues').join(',');	
 		
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S420CssPosInf' + "&QueryName=" + 'QryInfPosCSS' + "&Arg1=" + SurNumID + "&Arg2=" + aLocType + "&Arg3=" + "1" +"&ArgCnt=" + 3;
-
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 30000, //30秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				var tkclass="DHCHAI.STATV2.S420CssPosInf";
-				var tkQuery="QryInfPosCSS";
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
-		});
+		obj.myChart.showLoading();	
+		var className="DHCHAI.STATV2.S420CssPosInf";
+		var queryName="QryInfPosCSS";
+		$cm({
+		    ClassName: className,
+		    QueryName: queryName,
+		    aSurNumID: SurNumID,
+		    aStaType: aLocType,
+			aInfType:1,
+			aStatDimens:aStatDimens,
+            aLocIDs:aLocIDs,
+			page:1,    //可选项，页码，默认1
+			rows:999   //可选项，获取多少条数据，默认50
+		},
+		function(data){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			obj.echartLocInfRatio(data);
+		}
+		,function(XMLHttpRequest, textStatus, errorThrown){
+			alert("类" + className + ":" + queryName+ "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
+			obj.myChart.hideLoading();    //隐藏加载动画
+		}); 
+		
 	}
-	
+   
 }

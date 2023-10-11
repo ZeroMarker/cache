@@ -72,6 +72,7 @@ function reportControl(){
 		"width":800,
 		"max-width":800
 	});
+	RepSetRead("Participants","input",1);	
 	//名称
 	$('#ManaImprovement-94378-94951').css({
 		"width":300,
@@ -118,12 +119,12 @@ function reportControl(){
 			if ((this.value!="")){
 				$("[id^='"+rowid+"'][id$='"+rownum+"']").attr("readonly",'readonly');
 				$("input[id^='"+rowid+"'][id$='"+rownum+"']").datebox({"disabled":true});
-				$('a:contains("删除")').parent().hide();
+				$('a:contains('+$g("删除")+')').parent().hide();
 			}
 			if(AssessFlag!="Y"){
 				$("[id^='"+rowid+"'][id$='"+rownum+"']").attr("readonly",'readonly');
 				$("input[id^='"+rowid+"'][id$='"+rownum+"']").datebox({"disabled":true});
-				$('a:contains("增加")').parent().hide();
+				$('a:contains('+$g("增加")+')').parent().hide();
 			}
 		})	
 	}
@@ -151,23 +152,23 @@ function setManImprove()
 		if($(this).is(':checked')){                
 			if(this.id.indexOf("PersonFactorCom-99762")>=0){ // 患者及家属	
 				i=i+1;
-				PersonFactorCom=i+"、"+"患者及家属："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				PersonFactorCom=i+"、"+$g("患者及家属")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				PersonFactorComlist=PersonFactorComlist+PersonFactorCom;
 			}
 			if(this.id.indexOf("PersonFactorCom-99763")>=0){     //护士
 				i=i+1;	
-				PersonFactorCom=i+"、"+"护士："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				PersonFactorCom=i+"、"+$g("护士")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				PersonFactorComlist=PersonFactorComlist+PersonFactorCom;
 			} 
 			if(this.id.indexOf("PersonFactorCom-99764")>=0){ //医生因素	
 				i=i+1;
-				PersonFactorCom=i+"、"+"医生因素："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				PersonFactorCom=i+"、"+$g("医生因素")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				PersonFactorComlist=PersonFactorComlist+PersonFactorCom
 			}
 		}
 	});
 	if(PersonFactorComlist!=""){
-		list=list+"\n"+"人：人员因素"+"\n"+PersonFactorComlist;
+		list=list+"\n"+$g("人：人员因素")+"\n"+PersonFactorComlist;
 	}
 
 	$("input[id^='DiviceFactorCom']").each(function(){
@@ -178,7 +179,7 @@ function setManImprove()
 		}
 	});	
 	if(DiviceFactorComlist!=""){
-		list=list+"\n"+"机：设备因素"+"\n"+DiviceFactorComlist;
+		list=list+"\n"+$g("机：设备因素")+"\n"+DiviceFactorComlist;
 	}
 		
 	$("input[id^='GoodsFactorCom']").each(function(){
@@ -189,7 +190,7 @@ function setManImprove()
 		}
 	});
 	if(GoodsFactorComlist!=""){
-		list=list+"\n"+"物：物品因素"+"\n"+GoodsFactorComlist;
+		list=list+"\n"+$g("物：物品因素")+"\n"+GoodsFactorComlist;
 	}
 	
 	$("input[id^='ManaFactorCom']").each(function(){
@@ -200,7 +201,7 @@ function setManImprove()
 		}
 	});
 	if(ManaFactorComlist!=""){
-		list=list+"\n"+"法：方法、政策、管理因素"+"\n"+ManaFactorComlist;
+		list=list+"\n"+$g("法：方法、政策、管理因素")+"\n"+ManaFactorComlist;
 	}
 	
 	$("input[id^='EnvirFactorCom']").each(function(){
@@ -211,7 +212,7 @@ function setManImprove()
 		}
 	});
 	if(EnvirFactorComlist!=""){
-		list=list+"\n"+"环：环境因素"+"\n"+EnvirFactorComlist;
+		list=list+"\n"+$g("环：环境因素")+"\n"+EnvirFactorComlist;
 	}
 	
 	$("input[id^='OthFactorCom']").each(function(){
@@ -222,7 +223,7 @@ function setManImprove()
 		}
 	});
 	if(OthFactorComlist!=""){
-		list=list+"\n"+"其他：其他因素"+"\n"+OthFactorComlist;
+		list=list+"\n"+$g("其他：其他因素")+"\n"+OthFactorComlist;
 	}
 	var Caserow=0
 	var CaseList=list.split("\n")
@@ -279,7 +280,7 @@ function checkother(){
 			if((this.value=="title")&&($("input[name$='.96082'][class='lable-input']").val()=="")){
 				ManaImprovementoth=-1;
 			}
-			if((this.value=="制度、流程及规范制定或修订")){
+			if((this.value==$g("制度、流程及规范制定或修订"))){
 				if(!($("#ManaImprovement-94378-94949").is(':checked'))&&!($("#ManaImprovement-94378-94950").is(':checked'))){
 					ManaImprovementoth=-2;
 				}
@@ -290,11 +291,11 @@ function checkother(){
 		}	
 	})
 	if(ManaImprovementoth==-2){
-		$.messager.alert("提示:","【管理改进】勾选'制度、流程及规范制定或修订'，请勾选和填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("管理改进")+"】"+$g("勾选")+$g('制度、流程及规范制定或修订')+"，"+$g("请勾选和填写内容")+"！");	
 		return false;
 	}
 	if(ManaImprovementoth==-1){
-		$.messager.alert("提示:","【管理改进】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("管理改进")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -400,7 +401,7 @@ function StaffEnter()
 {
 	$('#staffwin').show();
 	$('#staffwin').window({
-		title:'科室人员信息',
+		title:$g('科室人员信息'),
 		collapsible:false, //true, //hxy 2020-03-18 st
 		minimizable:false,
 		maximizable:false, //ed
@@ -428,8 +429,8 @@ function InitStaffGrid()
 	//定义columns
 	var columns=[[
 	     {field:"ck",checkbox:'true',width:40},
-		 {field:'userCode',title:'用户Code',width:100},
-		 {field:'userName',title:'用户姓名',width:100}
+		 {field:'userCode',title:$g('用户Code'),width:100},
+		 {field:'userName',title:$g('用户姓名'),width:100}
 		]];
 	
 	//定义datagrid
@@ -459,7 +460,16 @@ function InitStaffGrid()
 		 {
 	       var userName = rowData.userName
 	       MeetMember(userName)
-		 },	
+		 },onLoadSuccess:function(data){  
+			if(userName!=""){
+				for(var i=0;i<data.rows.length;i++){
+					var Name = data.rows[i].userName+"，";
+					if(userName.indexOf(Name)>=0){
+						$("#user").datagrid("selectRow",i);
+					}
+				}
+			}
+		}
 	});	
 	$("#UserNames").val($("#Participants").val()); /// 给弹出的人员窗口里面人员赋值(表单的参会人员)
 	$(".datagrid-header-check input[type=checkbox]").on("click",function(){ ///2018-04-13 cy 评价界面
@@ -536,7 +546,7 @@ function getInputValue(id){
 		inputvalue="";
 	}
 	if((inputvalue!="无")&&(inputvalue!="")){
-		inputvalue="整改措施："+inputvalue;
+		inputvalue=$g("整改措施：")+inputvalue;
 	}
 	return inputvalue;
 	

@@ -5,11 +5,6 @@
  * Description: 预交金账
  */
 
-var GV = {
-	DefEndDate: getDefStDate(-1),
-	AccFlag: "YJACOUNT"
-};
-
 $(function () {
 	initQueryMenu();
 	initAccountList();
@@ -27,7 +22,7 @@ function initQueryMenu() {
 			handinClick();
 		}
 	});
-		
+	
 	$HUI.checkbox("#checkHand", {
 		onChecked: function(e, value) {
 			handChecked();
@@ -44,9 +39,9 @@ function initQueryMenu() {
 * 取开始结束日期
 */
 function getDate() {
-	var stDate = $.m({ClassName: "web.UDHCJFAcount", MethodName: "getstdate", flag: GV.AccFlag, HospID: PUBLIC_CONSTANT.SESSION.HOSPID}, false);
+	var stDate = $.m({ClassName: "web.UDHCJFAcount", MethodName: "getstdate", flag: CV.AccFlag, hospId: PUBLIC_CONSTANT.SESSION.HOSPID}, false);
 	setValueById("stDate", stDate);
-	setValueById("endDate", GV.DefEndDate);
+	setValueById("endDate", CV.DefEndDate);
 }
 
 function initAccountList() {
@@ -73,7 +68,6 @@ function initAccountList() {
 		pagination: true,
 		pageSize: 20,
 		toolbar: toolbar,
-		data: [],
 		columns:[[{title: '日期', field: 'Tprtdate', width: 180},
 				  {title: '摘要', field: 'Tpatinfo', width: 200},
 				  {title: '借方', field: 'Tjfamt', align: 'right', width: 180},
@@ -98,7 +92,7 @@ function loadAccountList() {
 		sttime: "",
 		enddate: getValueById("endDate"),
 		endtime: "",
-		hospital: PUBLIC_CONSTANT.SESSION.HOSPID,
+		hospId: PUBLIC_CONSTANT.SESSION.HOSPID,
 		jsflag: getValueById("checkHand") ? 1 : 0
 	};
 	loadDataGridStore("accountList", queryParams);
@@ -110,8 +104,8 @@ function handChecked() {
 	$.m({
 		ClassName: "web.UDHCJFAcount",
 		MethodName: "getlastAcctInfo",
-		Flag: GV.AccFlag,
-		HospitalID: PUBLIC_CONSTANT.SESSION.HOSPID
+		Flag: CV.AccFlag,
+		hospId: PUBLIC_CONSTANT.SESSION.HOSPID
 	}, function(rtn) {
 		var myAry = rtn.split("^");
 		setValueById("stDate", myAry[0]);
@@ -162,9 +156,9 @@ function handinClick() {
 				ClassName: "web.UDHCJFAcount",
 				MethodName: "InsertRemain",
 				adduser: PUBLIC_CONSTANT.SESSION.USERID,
-				flag: GV.AccFlag,
+				flag: CV.AccFlag,
 				job: job,
-				HospitalID: PUBLIC_CONSTANT.SESSION.HOSPID,
+				hospId: PUBLIC_CONSTANT.SESSION.HOSPID,
 				AcctInfo: acctInfo
 			}, function(rtn) {
 				switch(rtn) {
@@ -182,7 +176,7 @@ function handinClick() {
 function judgeDate() {
 	var stDate = getValueById("stDate");
 	var endDate = getValueById("endDate");
-	var rtn = $.m({ClassName: "web.UDHCJFAcount", MethodName: "JudgeDate", flag: GV.AccFlag, stDate: stDate, endDate: endDate, HospitalID: PUBLIC_CONSTANT.SESSION.HOSPID}, false);
+	var rtn = $.m({ClassName: "web.UDHCJFAcount", MethodName: "JudgeDate", flag: CV.AccFlag, stDate: stDate, endDate: endDate, hospId: PUBLIC_CONSTANT.SESSION.HOSPID}, false);
 	return rtn.split("^");
 }
 

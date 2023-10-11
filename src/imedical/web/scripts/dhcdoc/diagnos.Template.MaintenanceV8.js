@@ -1,5 +1,3 @@
-var PageLogicObj = {
-}
 var DiagListDataGrid;
 var UserDiagTempDataGrid;
 var LocDiagTempDataGrid;
@@ -8,12 +6,15 @@ $(window).load(function(){
 	InitTab();
 	LoadUserPrivateList();
 	InitCombobox();
-	
 })
 $(document).ready(function(){
 	/*$('#DiagSearch').keydown(DiagLookUpItem);
 	$('#imgDiagSearch').click(DiagLookUpItem);*/
-	IntDiagSearch();
+	if (ServerObj.CDSSEnableFlag =="Y") {
+		IntCDSSDiagSearch();
+	}else{
+		IntDiagSearch();
+	}
 	$(document.body).bind("keydown",BodykeydownHandler)
 })
 function BodykeydownHandler(e){
@@ -491,23 +492,24 @@ function InitCombobox(){
 }
 function ChangeItemStatus(locId){
 	if (ServerObj.IsHaveMenuAuthDiagFav!="1"){
-		LocDiagTempDataGrid.datagrid({toolbar:[]});
+		//LocDiagTempDataGrid.datagrid({toolbar:[]});
 		DiagListDataGrid.datagrid({toolbar:[]});
+		 $('div.datagrid-toolbar').eq(1).hide();
    		$("#catType").combobox('disable');
    		$("#DiagSearch").lookup('disable');
    		$("#LocTempDesc").val('').prop("disabled",true); 
 	}else{
 		//判断该用户是否有权限维护科室模板
 	   if ((ServerObj.UserLogonLocStr.indexOf("^"+locId+"^")==-1)||(ServerObj.UserLogonLocStr=="")){
-		   LocDiagTempDataGrid.datagrid({toolbar:[]});
-		   //$('div.datagrid-toolbar').eq(1).hide();
+		   //LocDiagTempDataGrid.datagrid({toolbar:[]});
+		   $('div.datagrid-toolbar').eq(1).hide();
 		   DiagListDataGrid.datagrid({toolbar:[]});
 		   $("#catType").combobox('disable');
 		   $("#DiagSearch").lookup('disable');
 		   $("#LocTempDesc").val('').prop("disabled",true);  
 	   }else{
-		   //$('div.datagrid-toolbar').eq(1).show();
-		   LocDiagTempDataGrid.datagrid({toolbar:Loctoobar});
+		   $('div.datagrid-toolbar').eq(1).show();
+		   //LocDiagTempDataGrid.datagrid({toolbar:Loctoobar});
 		   DiagListDataGrid.datagrid({toolbar:Datatoolbar});
 		   $("#catType").combobox('enable');
 		   $("#DiagSearch").lookup('enable');
@@ -576,6 +578,7 @@ function InitTab(){
 		onSelect:function(index, row){
 			LocDiagTempDataGrid.datagrid('clearSelections');
 			$("#DiagSearch").focus();
+			DiagListDataGrid.datagrid('clearSelections');
 			LoadDiagData(row.DHCDIAMASRowid);
 			DiagListDataGrid.datagrid({toolbar:Datatoolbar});
 			//$("#DiagAddDiv").show();
@@ -647,12 +650,14 @@ function InitTab(){
 		onSelect:function(index, row){
 			UserDiagTempDataGrid.datagrid('clearSelections');
 			$("#DiagSearch").focus();
+			DiagListDataGrid.datagrid('clearSelections');
 			LoadDiagData(row.DHCDIAMASRowid);
 			ChangeItemStatus(row.CTlocRowid);
-			LocDiagTempDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',$(this).datagrid('getData'));
+			//LocDiagTempDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',$(this).datagrid('getData'));
 		},
         onLoadSuccess: function () {
             $('.editcls-up').linkbutton({ plain: true, iconCls: 'icon-arrow-top' });
+			ChangeItemStatus(session['LOGON.CTLOCID']);
         }
 	})
 	
@@ -689,6 +694,13 @@ function InitTab(){
 	var DataColumns=[[ 
 	    {field:'DHCMRDiaICDRowid',hidden:true,title:''},
 		{field:'DHCMRDiaICDICDDR',hidden:true,title:''},
+		{field:'DHCMRDiaICDICDType',title:'类型',width:40,
+			formatter: function(value,row,index){
+				if(value==2) return "证型";
+				if(value==1) return "中医";
+				return "西医";
+			}
+		},
 		{field:'DHCMRDiaICDICDDesc',title:'诊断名称',width:400},
 		{field:'DHCMRDiaICDICDNotes',title:'ICD诊断备注',width:200,
 			editor:{type : 'text'}
@@ -933,6 +945,9 @@ var ItemzLookupGrid;
 		}
 	}catch(e){}
 }*/
+function IntCDSSDiagSearch(){
+	InitDiagnosICDDescLookUp("DiagSearch");
+}
 function IntDiagSearch(){
 	$("#DiagSearch").lookup({
         url:$URL,
@@ -981,24 +996,31 @@ function DiagnosSelhandler(value){
 	var listArry=value.split("^")
 	var DiagnosDesc=listArry[0];
 	var DiagnosValue=listArry[1];
+	var SDSTermDR=listArry[2];
+	var SDSDisplayIDStr=listArry[3]; 
 	var catType = $HUI.combobox("#catType").getValue();
 	if (catType=="2"){ //添加证型
 		var ret=AddSyndromItem(DiagnosValue,DiagnosDesc);
 		if (ret) SaveDiagItemData();
 	}else{
-		var ret=AddRowDiagItem(DiagnosValue,DiagnosDesc);
+		var ret=AddRowDiagItem(DiagnosValue,DiagnosDesc,SDSTermDR,SDSDisplayIDStr);
 		if (ret) {
 			SaveDiagItemData(1);
 		}
 	}
 }
-function AddRowDiagItem(DiagnosValue,DiagnosDesc){
+function AddRowDiagItem(DiagnosValue,DiagnosDesc,SDSTermDR,SDSDisplayIDStr){
+	if (!SDSTermDR) SDSTermDR="";
+	if (!SDSDisplayIDStr) SDSDisplayIDStr="";
 	var CurPageData=DiagListDataGrid.datagrid('getData'); //获取当前页的数据
 	DiagListDataGrid.datagrid('appendRow',{
 			DHCMRDiaICDICDDR: DiagnosValue,
 			DHCMRDiaICDICDDesc: DiagnosDesc,
 			DHCMRDiaICDICDNotes:"",
-			DHCMRDiaICDRowid:""
+			DHCMRDiaICDRowid:"",
+			SDSTermDR:SDSTermDR,
+			SDSDisplayIDStr:SDSDisplayIDStr,
+			DHCMRDiaICDICDType:$HUI.combobox("#catType").getValue()
 	});
 	DiagListDataGrid.datagrid("selectRow",CurPageData.rows.length-1);
 	$("#DiagSearch").lookup("setText",'').focus();
@@ -1031,7 +1053,14 @@ function AddSyndromItem(DiagnosValue,DiagnosDesc){
 					});
 					return false;
 				}
-			}
+			}else{
+				if (sel.DHCMRDiaICDICDType!="1") {
+					$.messager.alert("提示","请选中一条中医诊断!","info",function(){
+						$("#DiagSearch").focus();
+					});
+					return false;
+				}	
+				}
 		}
 		var OldTextSyndromInfo=text.split("*")[1];
 		if ((OldTextSyndromInfo=="")||(OldTextSyndromInfo==undefined)){
@@ -1104,6 +1133,10 @@ function SaveDiagItemData(isReLoadFlag){
 		var DiagnosValue=sel.DHCMRDiaICDICDDR;
 		var DiagnosText=sel.DHCMRDiaICDICDDesc;
 		var DHCMRDiaICDRowid=sel.DHCMRDiaICDRowid; //模板明细ID
+		var catType=sel.DHCMRDiaICDICDType
+		if (catType==""){
+			catType=$("#catType").combobox('getValue');
+			}
 		var MainICDInfo="",NewSyndromInfo="",mainId="";
 		if (DiagnosValue!=""){
 			  var mainId=DiagnosValue.split("*")[0];
@@ -1139,6 +1172,9 @@ function SaveDiagItemData(isReLoadFlag){
 			var sel1=LocDiagTempDataGrid.datagrid("getSelected");
 		}
 		var selValue=sel1.DHCDIAMASRowid;
+		var SDSTermDR=sel.SDSTermDR; //诊断中心词ID
+		var SDSDisplayIDStr=sel.SDSDisplayIDStr; //诊断属性ID串
+		//var CDSS
 		$.m({
 		    ClassName:"web.DHCDocDiagnosNew",
 		    MethodName:"PrivateSaveNew",
@@ -1147,7 +1183,9 @@ function SaveDiagItemData(isReLoadFlag){
 		    DiagnosStr:DiagnosValue,
 		    ListNum:"1",
 		    DHCMRDiaICDRowid:DHCMRDiaICDRowid,
-			catType:$("#catType").combobox('getValue')
+			catType:catType,
+			SDSTermDR:SDSTermDR,
+			SDSDisplayIDStr:SDSDisplayIDStr
 		},function(val){
 			var Ret=val.split("^")[0];
     		var Message=val.split("^")[1];
@@ -1250,6 +1288,10 @@ function DelDiagDataHandler(){
 	}
 }
 function LoadDiagData(id,type){
+	var catType = $HUI.combobox("#catType").getValue();
+	if (catType=="2"){
+		$HUI.combobox("#catType").setValue(1)
+		}
 	if (typeof(type) == "undefined") type="";
 	$.q({
 	    ClassName : "web.DHCDocDiagnosNew",
@@ -1265,10 +1307,12 @@ function LoadDiagData(id,type){
 			if (LastPage>1){
 				DiagListDataGrid.datagrid('getPager').pagination('select',LastPage); //跳转到最后一页
 				var LastPageData=DiagListDataGrid.datagrid('getData');
-				DiagListDataGrid.datagrid("scrollTo",LastPageData.rows.length-1);
-			    DiagListDataGrid.datagrid("selectRow",LastPageData.rows.length-1);
+				if (LastPageData.rows.length!=0){
+					DiagListDataGrid.datagrid("scrollTo",LastPageData.rows.length-1);
+				    DiagListDataGrid.datagrid("selectRow",LastPageData.rows.length-1);
+				}
 			    $("#DiagSearch").focus();
-			}else{
+			}else if (total > 0){
 				DiagListDataGrid.datagrid("selectRow",total-1);
 			}
 		}
@@ -1297,6 +1341,8 @@ function LoadLocTempDataList(locId,type){
 				LocDiagTempDataGrid.datagrid("selectRow",total-1);
 			}
 			UserDiagTempDataGrid.datagrid("clearSelections");
+		}else{
+			LocDiagTempDataGrid.datagrid("clearSelections");
 		}
 	});
 }
@@ -1353,4 +1399,13 @@ function SaveICDDiagNotes(){
 		$.messager.alert("提示","保存ICD诊断备注失败!");
 		return false;
 	}
+}
+function CDSSPropertyConfirmCallBack(CDSSStr){
+	var SDSSArr=CDSSStr.split("^");
+	var SDSTermDR=SDSSArr[0];
+	var SDSDisplayIDStr=SDSSArr[2];
+	var rtn=DiagnosSelhandler(SDSSArr[1]+"^"+SDSSArr[8]+"^"+SDSTermDR+"^"+SDSDisplayIDStr);
+}
+function CDSSPropertyCcancelfirmCallBack(){
+	$("#DiagSearch").val("").focus();
 }

@@ -1,7 +1,10 @@
 /// Creator:bianshuai
 /// CreateDate:014-09-09
 /// Descript:用药建议书写界面
-var url='dhcpha.clinical.action.csp' ;
+var url="dhcpha.clinical.action.csp";
+if ("undefined"!==typeof(websys_getMWToken)){
+	url += "?MWToken="+websys_getMWToken()
+	}
 var AdmDr="";
 var AppType="";
 var orditm=""
@@ -21,14 +24,14 @@ $(function(){
 	})
 	
 	$('#textarea').bind("focus",function(){
-		if(this.value=="请输入建议信息..."){
+		if(this.value==$g("请输入建议信息...")){
 			$('#textarea').val("");
 		}
 	});
 	
 	$('#textarea').bind("blur",function(){
 		if(this.value==""){
-			$('#textarea').val("请输入建议信息...");
+			$('#textarea').val($g("请输入建议信息..."));
 		}
 	});
 	
@@ -44,8 +47,11 @@ $(function(){
 });
 function qouteLabResult(addTxt){
 	 var text = $("#textarea").val();
-	 $('#textarea').val("");
-	 if(text=="请输入建议信息...") {
+	 if(text.indexOf(addTxt)!="-1"){
+			$.messager.alert('错误提示',"已添加！");
+			return;
+	 }
+	 if(text==$g("请输入建议信息...")) {
 		 $("#textarea").val(addTxt);
 	 }else{
 		 $("#textarea").val(text +" "+ addTxt);
@@ -56,7 +62,7 @@ function qouteLabResult(addTxt){
 function AutoLoadMedInfo(AdmDr)
 {
 	$('#medInfo').datagrid({
-		url:url+'?action=GetPatOrdItmInfo',	
+		url:url+'&action=GetPatOrdItmInfo',	
 		queryParams:{
 			params:AdmDr}
 	});
@@ -69,7 +75,7 @@ function InitPatInfo()
 {
 	$.ajax({ 
         type: "POST", 
-        url: 'dhcpha.clinical.action.csp', 
+        url: url, 
         data: "action=GetPatEssInfo&EpisodeID="+AdmDr, 
         error: function (XMLHttpRequest, textStatus, errorThrown){
         }, 
@@ -88,28 +94,28 @@ function InitPatInfo()
 function SetPatientInfo(patientInfo) {
 	var adrRepObj = jQuery.parseJSON(patientInfo);	
 	var splitor = '&nbsp&nbsp|&nbsp&nbsp';
-	var htmlStr = '&nbsp<span class="spancolorleft">登记号:</span> <span class="spancolor">'
+	var htmlStr = '&nbsp<span class="spancolorleft">'+$g("登记号:")+'</span> <span class="spancolor">'
 			+ adrRepObj.medicalNo + '</span>';
 	htmlStr += splitor
-			+ '<span class="spancolorleft">床号:</span><span class="spancolor">'
+			+ '<span class="spancolorleft">'+$g("床号:")+'</span><span class="spancolor">'
 			+ adrRepObj.admbed + '</span>';
 	htmlStr += splitor
-			+ '<span class="spancolorleft">姓名:</span> <span class="spancolor">'
+			+ '<span class="spancolorleft">'+$g("姓名:")+'</span> <span class="spancolor">'
 			+ adrRepObj.patname + '</span>';
 	htmlStr += splitor
-			+ '<span class="spancolorleft">性别:</span> <span class="spancolor">'
+			+ '<span class="spancolorleft">'+$g("性别:")+'</span> <span class="spancolor">'
 			+ adrRepObj.patsex + '</span>';
 	htmlStr += splitor
-			+ '<span class="spancolorleft">年龄:</span> <span class="spancolor">'
+			+ '<span class="spancolorleft">'+$g("年龄:")+'</span> <span class="spancolor">'
 			+ adrRepObj.patage + '</span>';
 	htmlStr += splitor
-			+ '<span class="spancolorleft">付费方式:</span><span class="spancolor">'
+			+ '<span class="spancolorleft">'+$g("付费方式:")+'</span><span class="spancolor">'
 			+ adrRepObj.paytype + '</span>';
 	htmlStr += splitor
-			+ '<span class="spancolorleft">入院日期:</span> <span class="spancolor">'
+			+ '<span class="spancolorleft">'+$g("入院日期:")+'</span> <span class="spancolor">'
 			+ adrRepObj.admdate + '</span>';
 	htmlStr += splitor
-			+ '<span class="spancolorleft">诊断:</span> <span class="spancolor">'
+			+ '<span class="spancolorleft">'+$g("诊断:")+'</span> <span class="spancolor">'
 			+ adrRepObj.patdiag + '</span>';
 	$('#patInfo').append(htmlStr);
 	jQuery(".patInfo").css("display", "inline-block");
@@ -123,28 +129,29 @@ function InitPatMedGrid()
 	var columns=[[
 		{field:"ck",checkbox:true,width:20},
 		{field:"moeori",title:'moeori',width:90,hidden:true},
-		{field:'Pri',title:'优先级',width:60},
-		{field:"orditm",title:'医嘱ID',width:90,hidden:true},
-		{field:'MedName',title:'名称',width:200},
-		{field:'StartDate',title:'开始日期',width:80},
-		{field:'EndDate',title:'结束日期',width:80},
-		{field:'Dosage',title:'剂量',width:80},
-		{field:'Instance',title:'用法',width:80},
-		{field:'freq',title:'频次',width:80},
-		{field:'duration',title:'疗程',width:80},
-		{field:'Doctor',title:'医生',width:80},
+		{field:'Pri',title:$g('优先级'),width:60},
+		{field:'AuditStat',title:$g('审核状态'),width:60},
+		{field:"orditm",title:$g('医嘱ID'),width:90,hidden:true},
+		{field:'MedName',title:$g('名称'),width:200},
+		{field:'StartDate',title:$g('开始日期'),width:80},
+		{field:'EndDate',title:$g('结束日期'),width:80},
+		{field:'Dosage',title:$g('剂量'),width:80},
+		{field:'Instance',title:$g('用法'),width:80},
+		{field:'freq',title:$g('频次'),width:80},
+		{field:'duration',title:$g('疗程'),width:80},
+		{field:'Doctor',title:$g('医生'),width:80},
 		{field:'OeFlag',title:'OeFlag',width:80,hidden:true},
 		{field:'doctorID',title:'doctorID',width:80,hidden:true},
-		{field:'execStat',title:'是否执行',width:80},		/// 增加执行和发药 qunianpeng 2018/3/12
-		{field:'sendStat',title:'是否发药',width:80},
-		{field:'orderbak',title:'医嘱备注',width:80}
+		{field:'execStat',title:$g('是否执行'),width:80},		/// 增加执行和发药 qunianpeng 2018/3/12
+		{field:'sendStat',title:$g('是否发药'),width:80},
+		{field:'orderbak',title:$g('医嘱备注'),width:80}
 
 	]];
 	var allFlag = $("#chk-all").is(':checked');
 	//定义datagrid
 	$('#medInfo').datagrid({
 		//title:'医嘱信息列表', 
-		url:url+'?action=GetPatOrdItmInfoNew&AdmDr='+AdmDr+"&AppType=''&AllFlag="+allFlag,
+		url:url+'&action=GetPatOrdItmInfoNew&AdmDr='+AdmDr+"&AppType=''&AllFlag="+allFlag,
 		fit:true,
 		//fitColumns:true,
 		rownumbers:true,
@@ -152,7 +159,7 @@ function InitPatMedGrid()
 		pageSize:30,           // 每页显示的记录条数
 		pageList:[15,30,45],   // 可以设置每页记录条数的列表
 	    singleSelect:false,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		onLoadSuccess:function(){
 			var items = $('#medInfo').datagrid('getRows');
@@ -209,12 +216,30 @@ function addOrdInfo()
 		$.messager.alert('错误提示',"请选择医嘱！");
 		return;		
 	}
+	var result = true;
     $.each(checkedItems, function(index, item){
-		ordstr.push(item.orditm);
-		doctorID=item.doctorID;
+	    if(item.AuditStat==$g("已审核"))
+	 {      if(confirm($g("是否建议"))){
+		        ordstr.push(item.orditm);
+	            doctorID=item.doctorID;
+	            result = true; 
+		        return true;
+	        }
+	        else{
+		        result = false; 
+		        return false;
+	    }		
+	 }
+	 else{
+	    ordstr.push(item.orditm);
+	    doctorID=item.doctorID;
+	 }
     })
-    $('#ordstr').html(ordstr.join(","));
-    AddToAdviceList(ordstr.join(","),doctorID);
+    if (result){ 
+       $('#ordstr').html(ordstr.join(","));
+       AddToAdviceList(ordstr.join(","),doctorID);
+    }
+    
 }
 
 /// 默认显示横向滚动条
@@ -343,10 +368,10 @@ function InitAdivisesPanel(retVal,AdvIDrtn)
 	htmlstr=htmlstr+"<div style='border-bottom: 2px solid #95B8E7;background: none repeat scroll 0% 0% #ADFAFC;padding: 10px 10px 15px 15px;position: relative;border-radius: 5px;box-shadow: 0px 3px 3px 0px #CCC inset;' name=list id="+AdvID+" >"
 	else
 	htmlstr=htmlstr+"<div style='border-bottom: 2px solid #95B8E7;background: none repeat scroll 0% 0% #FFFFFF;padding: 10px 10px 15px 15px;position: relative;border-radius: 5px;box-shadow: 0px 3px 3px 0px #CCC inset;' name=list id="+AdvID+" >"	
-	htmlstr=htmlstr+"<span style='font-weight:bold;'>有效期："+medAdvMasArr[0]+"</span><span style='font-weight:bold;'>至"+medAdvMasArr[1]+"</span><span style='font-weight:bold;margin-left:30px;color:red;'>"+medAdvMasArr[2]+"</span>"
+	htmlstr=htmlstr+"<span style='font-weight:bold;'>"+$g("有效期")+"："+medAdvMasArr[0]+"</span><span style='font-weight:bold;'>"+$g("至")+""+medAdvMasArr[1]+"</span><span style='font-weight:bold;margin-left:30px;color:red;'>"+medAdvMasArr[2]+"</span>"
 	htmlstr=htmlstr+"<br>"
 	//医嘱
-	htmlstr=htmlstr+"<span style='font-weight:bold;'>原医嘱:</span>";
+	htmlstr=htmlstr+"<span style='font-weight:bold;'>"+$g("原医嘱")+":</span>";
 	htmlstr=htmlstr+"<br>"
 	var medAdvDrgItmArr=medAdvDrgItmStr.split("||");
 	for(var k=0;k<medAdvDrgItmArr.length;k++)
@@ -356,7 +381,7 @@ function InitAdivisesPanel(retVal,AdvIDrtn)
 	}
 	//建议
 	var medAdvContentArr=medAdvContentStr.split("||");
-	htmlstr=htmlstr+"<span style='font-weight:bold;'>用药建议:</span>"
+	htmlstr=htmlstr+"<span style='font-weight:bold;'>"+$g("用药建议")+":</span>"
 	htmlstr=htmlstr+"<br>"
 	for(var k=0;k<medAdvContentArr.length;k++)
 	{
@@ -365,7 +390,7 @@ function InitAdivisesPanel(retVal,AdvIDrtn)
 			htmlstr=htmlstr+"<br>";
 		}
 	}
-	htmlstr=htmlstr+"<span style='margin-left:300px;font-weight:bold;'>药师："+medAdvMasArr[3]+"</span><span style='margin-left:20px;font-weight:bold;'>"+medAdvMasArr[0]+"</span>"
+	htmlstr=htmlstr+"<span style='margin-left:300px;font-weight:bold;'>"+$g("药师")+"："+medAdvMasArr[3]+"</span><span style='margin-left:20px;font-weight:bold;'>"+medAdvMasArr[0]+"</span>"
 	htmlstr=htmlstr+"</div>";
 	
 	$('#Adivises').append(htmlstr);
@@ -375,7 +400,7 @@ function InitAdivisesPanel(retVal,AdvIDrtn)
 function sureAddMedAdvDetail()
 {
 	var medAdvDetailList=$('#textarea').val(); //用药建议
-	if((medAdvDetailList=="请输入建议信息...")||(medAdvDetailList=="")){  //wangxuejian 2016-09-27
+	if((medAdvDetailList==$g("请输入建议信息..."))||(medAdvDetailList=="")){  //wangxuejian 2016-09-27
 		$.messager.alert("提示","请先输入意见,再进行提交！");
 		return;
 	}
@@ -408,6 +433,7 @@ function sureAddMedAdvDetail()
 			$('#medAdvWin').css('display','none');	// 提交建议后 加载个人建议模板的div被显示  手动隐藏  qunianpeng 2018/3/21
 	    }
     });
+	$('#medInfo').datagrid('reload');
 }
 
 ///加载病人用药建议列表
@@ -416,7 +442,7 @@ function LoadPatAdviceList()
 	if (AdmDr==""){return;}
 	$.ajax({ 
         type: "POST", 
-        url: "dhcpha.clinical.action.csp",
+        url: url,
         async:false,
         //新增评论人科室字段userLocCode 
         data:{action:"getPatAdviceList",AdmDr:AdmDr},
@@ -437,7 +463,79 @@ function LoadPatAdviceList()
         } 
     });
 }
-
+function PassOrd(){
+    var d=$('#medInfo').datagrid("getData");
+	var detail=d.rows;
+	var doctorID="";
+	$('#ordstr').html("");	
+	var ordstr=[];
+	var checkedItems = $('#medInfo').datagrid('getChecked');
+	if(checkedItems=="")    //qunianpeng 2016-09-08
+	{
+		$.messager.alert('错误提示',"请选择医嘱！");
+		return;		
+	}
+    var result = true;
+    $.each(checkedItems, function(index, item){
+	//var status=tkMakeServerCall("web.DHCSTPHCMCOMMON","CheckIfAudit",item.orditm)
+	if(item.AuditStat==$g("已建议"))
+	{
+		$.messager.alert('提示',"已经进行用药建议,不能审核");
+		result = false; 
+		return false;		
+	}
+	else if(item.AuditStat==$g("已审核"))
+	{
+		$.messager.alert('提示',"已经审核,不能重复审核");
+		result = false; 
+		return false;		
+	}
+	else{
+		ordstr.push(item.orditm);
+		doctorID=item.doctorID;
+	}
+    })
+    if (result){ 
+    $('#ordstr').html(ordstr.join(","));
+    var medAdvDrgItmList=ordstr.join(",")
+    var AdvID="";       	/// 用药建议ID
+	var UserID=LgUserID;                     	/// 用户ID
+	var dataList=AdmDr+"^"+UserID+"^"+doctorID; /// 主信息
+	dataList=dataList+"!"+medAdvDrgItmList;
+	
+	var data=jQuery.param({"action":"SaveMedAdvMaster","AdvID":AdvID,"dataList":dataList});
+	$.ajax({
+        type:"POST",
+        url:url,
+        data:data,
+        dataType:"json",
+        error: function (XMLHttpRequest, textStatus, errorThrown){
+    		
+    	}, 
+        success: function (val) {
+			updPatMedAdv(val)
+	    }
+    });
+    }
+}
+function updPatMedAdv(AdvID){
+	PRINTCOM.jsRunServer(
+		{
+			ClassName: 'web.DHCSTPHCMADVICE',
+			MethodName: 'updPatMedAdv',
+			medAdvID: AdvID,
+			curStatus: "0"
+		},
+		function(retJson){
+			if(retJson!=0){
+				$.messager.alert("提示","医嘱审核失败！");
+				return;	
+			}else{
+				$.messager.alert("提示","审核医嘱成功！");	
+				$('#medInfo').datagrid('reload')
+			}
+		}) 
+}
 /// 删除用药建议
 function delMedAdvDetail()
 {
@@ -446,7 +544,7 @@ function delMedAdvDetail()
 		$.messager.alert("提示","请选择要删除的记录！");
 		return;
 	}
-	$.post("dhcpha.clinical.action.csp",{action:"delPatMedAdv",AdvID:AdvID},function(data,status){
+	$.post(url,{action:"delPatMedAdv",AdvID:AdvID},function(data,status){
 		var retVal=data.replace(/(^\s*)|(\s*$)/g,"");
 		if(retVal=="0"){
 			$('#'+AdvID).remove();
@@ -465,8 +563,8 @@ function InitMedAdvList()
 	///定义columns
 	var columns=[[
 		{field:"ID",title:'ID',width:90,hidden:true},
-		{field:'Code',title:'代码',width:100},
-		{field:'Desc',title:'描述',width:200},
+		{field:'Code',title:$g('代码'),width:100},
+		{field:'Desc',title:$g('描述'),width:200},
 	]];
 	
 	///定义datagrid
@@ -479,11 +577,11 @@ function InitMedAdvList()
 		pageSize:40,        // 每页显示的记录条数
 		pageList:[40,80],   // 可以设置每页记录条数的列表
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		onDblClickRow:function(rowIndex, rowData){
 			var tmpDesc=rowData.Desc;
-			if($('#textarea').val()=="请输入建议信息..."){
+			if($('#textarea').val()==$g("请输入建议信息...")){
 				$('#textarea').val("").val(tmpDesc);
 			}else{
 				$('#textarea').val($('#textarea').val()+","+tmpDesc);
@@ -500,7 +598,7 @@ function createSuggestWin()
 {
 	$('#medAdvWin').css('display','');  // 加载个人建议模板的div显示 qunianpeng 2018/3/21
 	$('#medAdvWin').window({
-		title:'建议列表',    
+		title:$g('建议列表'),    
 		collapsible:true,
 		border:true,
 		closed:"true",
@@ -515,7 +613,7 @@ function createSuggestWin()
 	
 	///自动加载建议字典
 	$('#medAdvdg').datagrid({
-		url:url+'?action=QueryMedAdvTemp',
+		url:url+'&action=QueryMedAdvTemp',
 		queryParams:{
 			params:LgCtLocID+"^"+LgUserID
 		}
@@ -526,7 +624,7 @@ function createSuggestWin()
 function medAdvTemp()
 {
 	$('#medAdvTempWin').window({
-		title:'用药建议模板维护',    
+		title:$g('用药建议模板维护'),    
 		collapsible:true,
 		border:true,
 		closed:"true",
@@ -536,7 +634,7 @@ function medAdvTemp()
 		//maximized:true						/// 最大化
 	});
 
-	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.medadvtemp.csp"></iframe>';
+	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.medadvtemp.csp?MWToken='+websys_getMWToken()+'"></iframe>';
 	$('#medAdvTempWin').html(iframe);
 	$('#medAdvTempWin').window('open');
 }
@@ -548,7 +646,7 @@ function LoadPatMedInfo(priCode,AppTypeCode)
 	var allFlag = $("#chk-all").is(':checked');
 	var priCode = $("input[type=radio]:checked").val();
 	$('#medInfo').datagrid({
-		url:url+'?action=GetPatOrdItmInfoNew',	
+		url:url+'&action=GetPatOrdItmInfoNew',	
 		queryParams:{
 			AdmDr:AdmDr,
 			priCode:priCode,

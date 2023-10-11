@@ -89,6 +89,7 @@ function myparser(s){
 }
 function BRegHaninDetails(TID){
 	var src="opadm.reghandin.hui.csp?RepID="+TID;
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
 	createModalDialog("Project","挂号员日结账明细", '650', '630',"icon-w-list","",$code,"");
 }

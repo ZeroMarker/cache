@@ -7,6 +7,7 @@ var LgUserID = session['LOGON.USERID'];  /// 用户ID
 var LgName = session['LOGON.USERNAME'];  /// 用户ID
 var ID = "";       /// 会诊ID
 var DisGrpID = ""; /// 病种ID
+var objid = "";
 /// 页面初始化函数
 function initPageDefault(){
 	
@@ -29,37 +30,86 @@ function InitPatEpisodeID(){
 
 	ID = getParam("ID");               /// 会诊ID
 	DisGrpID = getParam("DisGrpID");   /// 病种ID
+	Type = getParam("Type");   /// 类型
+	if (Type == "G"){
+		objid = "LocGrpList";
+	}
+	if (Type == "E"){
+		objid = "OuterExpList";
+	}
+	_TableDom="";
+	///单独安排界面
+	if(window.parent.$("#"+objid).length){
+		_TableDom=window.parent.$("#"+objid);
+	}else{
+		var len = window.parent.frames.length
+		if(len){
+			for (var index=0;index<len;index++){
+				var thisUrl = window.parent.frames[index].location.href;
+				if(thisUrl.indexOf("dhcmdt.consarrange.csp")!=-1){
+					_TableDom= window.parent.frames[index].$("#"+objid);	
+				}
+			}	
+		}	
+	}
+	
+	///父界面弹出
+	if(!_TableDom){
+		if(window.parent.frames[0]){
+			if(window.parent.frames[0].$){
+				if(window.parent.frames[0].$("#"+objid).length){
+					_TableDom=window.parent.frames[0].$("#"+objid);	
+				}
+			}
+		}
+	}
+	
+	//资料审查安排界面
+	if(!_TableDom){
+		if(window.parent.frames[2]){
+			if(window.parent.frames[2].$){
+				if(window.parent.frames[2].$("#"+objid).length){
+					_TableDom=window.parent.frames[2].$("#"+objid);
+				}
+			}
+		}
+	}
 }
 
 /// 页面 Button 绑定事件
 function InitBlButton(){
-
 	$("#itemList").on("click",".checkbox",selectItem);
+	$(".hisui-checkbox").on("click",selectItem);
 }
 
 /// 选中项目
 function selectItem(){
-	
-	if ($(this).is(':checked')){
+	if ($(this).checkbox("getValue")){
 		/// 选择科室 科室下专家组全部选中
 		if (this.name == "LocArr"){
-			$('[name="ProDoc"][value="'+ this.id +'"]').prop("checked",true);
+			$('input[name="ProDoc"][value="'+ this.id +'"]').checkbox("check");
 		}
 		/// 选择医生
 		if (this.name == "ProDoc"){
 			if (!$("input[name='LocArr'][id='"+ this.value +"']").is(':checked')){
-				$("input[name='LocArr'][id='"+ this.value +"']").prop("checked",true);	
+				
+				$("input[name='LocArr'][id='"+ this.value +"']").attr("checked","checked");
+				$("input[name='LocArr'][id='"+ this.value +"']").next().attr("class","checkbox checked")
+				//$("input[name='LocArr'][id='"+ this.value +"']").checkbox("check");
 			}
 		}
 	}else{
 		/// 取消科室 科室下专家组全部取消
 		if (this.name == "LocArr"){
-			$('[name="ProDoc"][value="'+ this.id +'"]').prop("checked",false);
+			$('input[name="ProDoc"][value="'+ this.id +'"]').checkbox("uncheck");
 		}
 		/// 选择医生
 		if (this.name == "ProDoc"){
 			if ($("input[name='ProDoc'][value='"+ this.value +"']:checked").length == 0){
-				$("input[name='LocArr'][id='"+ this.value +"']").prop("checked",false);	
+				
+				$("input[name='LocArr'][id='"+ this.value +"']").removeAttr("checked");
+				$("input[name='LocArr'][id='"+ this.value +"']").next().attr("class","checkbox")
+				//$("input[name='LocArr'][id='"+ this.value +"']").checkbox("uncheck");
 			}
 		}
 	}
@@ -67,9 +117,9 @@ function selectItem(){
 }
 
 /// 初始化病种科室组
-function InitDisGrpLocArr(offset){
+function InitDisGrpLocArr(){
 	
-	runClassMethod("web.DHCMDTConsultQuery","JsGetDisGrpLoc",{"GrpID":DisGrpID},function(jsonObject){
+	runClassMethod("web.DHCMDTConsultQuery","JsGetDisGrpLoc",{"GrpID":DisGrpID, "Type":Type},function(jsonObject){
 		
 		if (jsonObject != null){
 			InsDisLocArea(jsonObject);
@@ -79,19 +129,29 @@ function InitDisGrpLocArr(offset){
 
 /// 病种科室组
 function InsDisLocArea(itemObjArr){
+		
+	var isdefaultflag = 1;
+	var rowData = _TableDom.datagrid("getRows");
+	
+	if ((rowData)&&(rowData[0].LocID == "")) isdefaultflag = 0;
 	/// 标题行
-	var htmlstr = '<tr><td style="width:30px" class="center"></td><td style="width:30px" class="center"></td><td></td><td style="width:30px" class="center"></td><td></td><td style="width:30px" class="center"></td><td></td><td style="width:30px" class="center"></td><td></td>';
+	var htmlstr = '<tr><td style="width:30px" class="center"></td><td style="width:150px" class="center"></td><td></td><td style="width:150px" class="center"></td><td></td><td style="width:150px" class="center"></td><td></td><td style="width:30px" class="center"></td><td></td>';
 	for (var i=0; i<itemObjArr.length; i++){
-		htmlstr = htmlstr + '<tr><td><input id="'+ itemObjArr[i].id +'" name="LocArr" type="checkbox" class="checkbox" value=""></input></td><td colspan="8" class="tb_td_required" style="border:1px dotted #ccc;">'+ (i + 1) + "、" + itemObjArr[i].text +'</td></tr>';
+		//htmlstr = htmlstr + '<tr><td colspan=8><input data-options="onChecked:function(event,val){checkfunc('+ itemObjArr[i].id +',\'LocArr\',\'\')},onUnchecked:function(event,val){uncheckfunc('+ itemObjArr[i].id +',\'LocArr\',\'\')}" id="'+ itemObjArr[i].id +'" name="LocArr" type="checkbox" class="hisui-checkbox" value="" label = "'+ (i + 1) + "、" + itemObjArr[i].text +'"></input></td><td></td></tr>';
+		htmlstr = htmlstr + '<tr><td colspan=8><input id="'+ itemObjArr[i].id +'" name="LocArr" type="checkbox" class="hisui-checkbox" value="" label = "'+ (i + 1) + "、" + itemObjArr[i].text +'"></input></td><td></td></tr>';
 
 		/// 项目
 		var itemArr = itemObjArr[i].items;
 		var itemhtmlArr = []; itemhtmlstr = "";
 		for (var j=1; j<=itemArr.length; j++){
-			if(itemArr[j-1].text==LgName){
-			  itemhtmlArr.push('<td><input id="'+ itemArr[j-1].value +'" name="ProDoc" type="checkbox" checked="checked" class="checkbox" value="'+ itemObjArr[i].id +'"></input></td><td>'+ itemArr[j-1].text +'</td>');
+			if((itemArr[j-1].text==LgName)&(isdefaultflag == 0)){
+			  itemhtmlArr.push('<td><input  id="'+ itemArr[j-1].value +'" name="ProDoc" type="checkbox" checked="checked" class="hisui-checkbox" data-id="" value="'+ itemObjArr[i].id +'" label = "'+  itemArr[j-1].text+'"></input></td><td></td>');
+			  //itemhtmlArr.push('<td><input  data-options="onChecked:function(event,val){checkfunc('+ itemArr[j-1].value +',\'ProDoc\','+itemObjArr[i].id+')},onUnchecked:function(event,val){uncheckfunc('+ itemArr[j-1].value +',\'ProDoc\','+itemObjArr[i].id+')}"  id="'+ itemArr[j-1].value +'" name="ProDoc" type="checkbox" checked="checked" class="hisui-checkbox" data-id="" value="'+ itemObjArr[i].id +'" label = "'+  itemArr[j-1].text+'"></input></td><td></td>');
+
 			}else{
-				itemhtmlArr.push('<td><input id="'+ itemArr[j-1].value +'" name="ProDoc" type="checkbox" class="checkbox" value="'+ itemObjArr[i].id +'"></input></td><td>'+ itemArr[j-1].text +'</td>');
+				//itemhtmlArr.push('<td><input data-options="onChecked:function(event,val){checkfunc('+ itemArr[j-1].value +',\'ProDoc\','+itemObjArr[i].id+')},onUnchecked:function(event,val){uncheckfunc('+ itemArr[j-1].value +',\'ProDoc\','+itemObjArr[i].id+')}" id="'+ itemArr[j-1].value +'" name="ProDoc" type="checkbox" class="hisui-checkbox" data-id="" value="'+ itemObjArr[i].id +'" label = "'+  itemArr[j-1].text+'"></input></td></td><td></td>');
+				itemhtmlArr.push('<td><input  id="'+ itemArr[j-1].value +'" name="ProDoc" type="checkbox" class="hisui-checkbox" data-id="" value="'+ itemObjArr[i].id +'" label = "'+  itemArr[j-1].text+'"></input></td></td><td></td>');
+
 				}
 			
 			if (j % 4 == 0){
@@ -111,13 +171,24 @@ function InsDisLocArea(itemObjArr){
 		htmlstr = htmlstr + itemhtmlstr;
 	}
 	$("#itemList").append(htmlstr);
+	$.parser.parse("#itemList");
 }
 
 /// 关闭弹出窗口
 function TakClsWin(){
 
 	$("#itemList").html("");
-	window.parent.$("#mdtWin").window("close");        /// 关闭弹出窗口
+	if(window.parent.$("#mdtWin").length){
+		if(window.parent.$("#mdtWin").attr("class")){
+			if(window.parent.$("#mdtWin").hasClass("window-body")) window.parent.$("#mdtWin").window("close");        /// 关闭弹出窗口
+		}
+	}
+	
+	if(window.parent.$('#CommonWinArrange').length){
+		commonParentCloseWinById('CommonWinArrange');
+	}else{
+		commonParentCloseWin();
+	}
 }
 
 /// 获取选择的科室
@@ -126,25 +197,32 @@ function TakPreLoc(){
 	var LocArr = [];
 	var LocObjArr = $("input[name='ProDoc']:checked");
 	for (var n=0; n<LocObjArr.length; n++){
-		LocArr.push(LocObjArr[n].value +"^"+ LocObjArr[n].id);
+		LocArr.push(LocObjArr[n].value +"^"+ LocObjArr[n].id +"^"+ $(LocObjArr[n]).attr("data-id"));
 	}
 	
-	window.parent.$("#LocGrpList").datagrid("reload",{Params:LocArr.join("#")});
+	 _TableDom.datagrid("reload",{Params:LocArr.join("#")});
+
 	TakClsWin(); /// 关闭弹出窗口
 }
 
 /// 初始化页面选中项
 function InitLocSelect(){
 	
-	var rowData = window.parent.$("#LocGrpList").datagrid('getRows');
+	var rowData = _TableDom.datagrid('getRows');
+	
 	$.each(rowData, function(index, item){
+		
 		if(trim(item.LocDesc) != ""){
 			if (!$("input[name='LocArr'][id='"+ item.LocID +"']").is(':checked')){
-				$("input[name='LocArr'][id='"+ item.LocID +"']").attr("checked",true);
+				$("input[name='LocArr'][id='"+ item.LocID +"']").attr("checked","checked");
+				$("input[name='LocArr'][id='"+ item.LocID +"']").next().attr("class","checkbox checked")
+				//$("input[name='LocArr'][id='"+ item.LocID +"']").checkbox("check");
 			}
 			if (!$("input[name='ProDoc'][id='"+ item.UserID +"']").is(':checked')){
-				$("input[name='ProDoc'][id='"+ item.UserID +"']").attr("checked",true);
+				$("input[name='ProDoc'][id='"+ item.UserID +"']").checkbox("check");
 			}
+			
+			$("input[name='ProDoc'][id='"+ item.UserID +"']").attr("data-id",item.itmID);
 		}
 	})
 }

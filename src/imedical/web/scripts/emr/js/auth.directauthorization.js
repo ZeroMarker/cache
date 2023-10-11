@@ -54,6 +54,7 @@ eprDirectAuthorization.selectSSGroupID = "";
             toolbar: '#patientListTableTBar',
             title: titltObjName,
             onClickRow: function(rowIndex, rowData) {
+	            document.getElementById('searchSpan').style.display = "none";
                 //选中患者
                 var episodeID = rowData["EpisodeID"];
                 //获取选中医生
@@ -163,6 +164,11 @@ eprDirectAuthorization.selectSSGroupID = "";
             toolbar: '#docListTableTBar',
             title: '医生列表',
             onClickRow: function(rowIndex, rowData) {
+	            if (rowData.SSUserID == appointUserID)
+	            {
+		            $.messager.alert('操作提示', '不能本人对本人进行授权!');
+                    return;
+		        }
                 //获取选中医生
                 var rows = $('#patientListTable').datagrid("getSelections");    // 获取所有选中的行
                 var length = rows.length;
@@ -185,7 +191,7 @@ eprDirectAuthorization.selectSSGroupID = "";
                 Condition: '',
                 LoadType:'combogrid'
             },
-            panelWidth: 300,
+            panelWidth: 410,
             idField: 'Id',
             textField: 'Text',
             method: 'get',
@@ -319,51 +325,22 @@ eprDirectAuthorization.selectSSGroupID = "";
 			var selectedDocID = rows[0]["SSUserID"];
 			var selecteddocCTLocID= rows[0]["CTLocID"];
 			var selecteddocSSGroupID= rows[0]["SSGroupID"];
-			
-            $('#emrTree').tree({
-                //url: '../web.eprajax.GivePower.cls?Action=tree&EpisodeID=' + episodeID,
-				url: '../EMRservice.Ajax.AuthDirectAppoint.cls?Action=gettree&EpisodeID=' + episodeID + '&selectedDocID=' + selectedDocID + '&selecteddocCTLocID=' + selecteddocCTLocID + '&selecteddocSSGroupID=' + selecteddocSSGroupID,
-                method: 'get',
-                animate: true,
-                checkbox: true,
-		checked: false,
-                cascadeCheck: true
-            });
-        }
+			getEmrTreeData("searchInput",episodeID,selectedDocID,selecteddocCTLocID,selecteddocSSGroupID);
 
+        }
+		getAllPrivRuleKey();
         //给予操作类型
         $('#inputGivePowerType').combogrid({
-            idField: 'id',
-            textField: 'text',
-            data: [{
-                id: '1',
-                text: emrTrans('保存'),
-                value: 'save'
-            }, {
-                id: '2',
-                text: emrTrans('打印'),
-                value: 'print'
-            }, {
-                id: '3',
-                text: emrTrans('删除'),
-                value: 'delete'
-            }, {
-                id: '4',
-                text: emrTrans('查看病历'),
-                value: 'view'
-            }, {
-                id: '5',
-                text: emrTrans('创建病历'),
-                value: 'new'
-            }],
-                panelWidth: 300,
-                showHeader: true,
-                multiple: true,
-                columns: [[
-                { field: 'ck', checkbox: true },
-                { field: 'id', title: 'id', width: 80, hidden: true },
-                { field: 'value', title: 'value', width: 80, hidden: true },
-                { field: 'text', title: emrTrans('操作类型'), width: 250 }
+            idField: 'seq',
+            textField: 'name',
+            panelWidth: 300,
+            showHeader: true,
+            multiple: true,
+            columns: [[
+            { field: 'ck', checkbox: true },
+            { field: 'seq', title: 'id', width: 80, hidden: true },
+        	{ field: 'id', title: 'value', width: 80, hidden: true },
+            { field: 'name', title: emrTrans('操作类型'), width: 250 }
             ]],
                 onLoadSuccess: function() {
                     //$('#inputGivePowerType').combogrid('grid').datagrid('selectRecord', 2);
@@ -372,18 +349,32 @@ eprDirectAuthorization.selectSSGroupID = "";
             });
 
             //授权小时
+            var maxGiveValue = 72;
             $('#inputGivePowerSpan').numberbox({
                 min: 0,
-                max: 72,
-                value: 24
+                max: maxGiveValue,
+                value: 24,
+               	formatter:function(value){
+		            if(value==maxGiveValue){
+			            $(this).removeClass("validatebox-invalid");
+			            }
+		            return value;
+		            }
             });
-
+ 
+            var givePowerSpan = "";
+            var appointCateCharpter="";
+            var givePowerTypes = "";
+            var userID = "";
+            var episodeID = "";
+            var docUserID = "";
+            var docCTLocID = "";
             //授权按钮事件
             $('#treeGivePowerBtn').on('click', function() {
                 //获取患者episodeID
                 var patientGridRows = $('#patientListTable').datagrid("getSelections");
                 var patientGridRow = patientGridRows[0];
-                var episodeID = ""
+                
                 var patientName = "";
                 if (patientGridRows.length == 0) {
                     $.messager.alert('错误', '请选择一位患者！', 'error');
@@ -396,8 +387,6 @@ eprDirectAuthorization.selectSSGroupID = "";
                 //获取医生信息
                 var docGridRows = $('#docListTable').datagrid("getSelections");
                 var docGridRow = docGridRows[0];
-                var docUserID = "";
-                var docCTLocID = "";
                 var docName = "";
                 if (docGridRows.length == 0) {
                     $.messager.alert('错误', '请选择一名医生！', 'error');
@@ -405,14 +394,18 @@ eprDirectAuthorization.selectSSGroupID = "";
                 }
                 else {
                     docUserID = docGridRow["SSUserID"];
+                    if (docGridRow["SSUserID"] == appointUserID)
+		            {
+			            $.messager.alert('操作提示', '不能本人对本人进行授权!');
+	                    return;
+			        }
                     docCTLocID = docGridRow["CTLocID"];
                     docName = docGridRow["UserName"];
                 }
                 //授权人信息
-                var userID = appointUserID;
+                userID = appointUserID;
                 var userCTLocID = appointUserLoc;
                 //授权范围
-                var appointCateCharpter = "";
                 var appointCateCharpterText = "";
 				var msgGridDataArray = new Array();
                 var nodes = $('#emrTree').tree('getChecked');
@@ -435,20 +428,18 @@ eprDirectAuthorization.selectSSGroupID = "";
                     return;
                 }
                 //授权时间
-                var givePowerSpan = "";
                 givePowerSpan = $('#inputGivePowerSpan').val();
                 if (givePowerSpan == "") {
                     $.messager.alert('错误', '请输入一个有效的授权时间！', 'error');
                     return;
                 }
                 //授权类型
-                var givePowerTypes = "";
                 var givePowerTypesText = "";
                 var givePowerTypeGridRows = $('#inputGivePowerType').combogrid('grid').datagrid("getChecked");
                 for (var j = 0; j < givePowerTypeGridRows.length; j++) {
                     var givePowerTypeGridRow = givePowerTypeGridRows[j];
-                    var value = givePowerTypeGridRow["value"];
-                    var text = givePowerTypeGridRow["text"];
+                    var value = givePowerTypeGridRow["id"];
+                    var text = givePowerTypeGridRow["name"];
                     if (givePowerTypes == "") {
                         givePowerTypes = value;
                         givePowerTypesText = text;
@@ -528,7 +519,7 @@ eprDirectAuthorization.selectSSGroupID = "";
 				*/
 				$('#MessageWin').window({
 					width: 570,
-					height: 570,
+					height: 567,
 					modal: true,
 					closed: true,
 					collapsible: false,
@@ -542,7 +533,6 @@ eprDirectAuthorization.selectSSGroupID = "";
 				$('#MsgDocName').html(docName);
 				$('#MsgPatName').html(patientName);
 				$('#actionsName').html(givePowerTypesText);
-				var MessageWinCount = 0;
 				$('#MsgWinTable').datagrid({
 					data:msgGridDataArray,
 					showHeader: true,
@@ -563,33 +553,23 @@ eprDirectAuthorization.selectSSGroupID = "";
 				        }    
 				});
                 
-				$('#MsgBtnOK').on('click', function() {
-					//alert("num:" + MessageWinCount);
-					if (MessageWinCount > 0)
-					{
-						$('#MessageWin').window('close');
-						return;
-					}
-					
-					var ret = "";
-					var obj = $.ajax({
-						url: "../EMRservice.Ajax.AuthDirectAppoint.cls?Action=givepower&AppointSpan=" + givePowerSpan + "&AppointCateCharpter=" + appointCateCharpter + "&AppointUserID=" + userID + "&EPRAcitons=" + givePowerTypes + "&EpisodeID=" + episodeID + "&UserID=" + docUserID + "&DocLocID=" + docCTLocID,
-						type: 'post',
-						async: false
-					});
-					var ret = obj.responseText;
-					//alert("houtai:"+ret);
-					if ((ret != "" || (ret != null)) && (ret != "-1")) {
-						$.messager.alert('完成', '授权成功！', 'info');
-						$('#MessageWin').window('close');
-					}
-					else {
-						$.messager.alert('错误', '授权失败，请再次尝试！', 'error');
-					}
-					MessageWinCount = MessageWinCount + 1;
-				});
             });
-			
+            $('#MsgBtnOK').on('click', function() {
+                var ret = "";
+                var obj = $.ajax({
+                    url: "../EMRservice.Ajax.AuthDirectAppoint.cls?Action=givepower&AppointSpan=" + givePowerSpan + "&AppointCateCharpter=" + appointCateCharpter + "&AppointUserID=" + userID + "&EPRAcitons=" + givePowerTypes + "&EpisodeID=" + episodeID + "&UserID=" + docUserID + "&DocLocID=" + docCTLocID,
+                    type: 'post',
+                    async: false
+                });
+                var ret = obj.responseText;
+                if ((ret != "" || (ret != null)) && (ret != "-1")) {
+                    $.messager.alert('完成', '授权成功！', 'info');
+                    $('#MessageWin').window('close');
+                }
+                else {
+                    $.messager.alert('错误', '授权失败，请再次尝试！', 'error');
+                }
+            });			
 			$('#MsgBtnCancel').on('click', function() {
 				$('#MessageWin').window('close');
 			});
@@ -619,6 +599,7 @@ eprDirectAuthorization.selectSSGroupID = "";
                 showHeader: true,
                 multiple: true,
                 fitColumns: true,
+                border:false,
                 columns: [
 					[
                         { field: 'ck', checkbox: true },
@@ -682,7 +663,7 @@ eprDirectAuthorization.selectSSGroupID = "";
                 pageSize: 20,
                 pageList: [10, 20, 50],
                 pagePosition: 'bottom',
-                toolbar: '#historyTableTBar',
+                //toolbar: '#historyTableTBar',
                 rowStyler: function(index, row) {
                     if (row["IsValid"] == "生效中") {
                         return 'background-color:#c7dafe;';
@@ -765,6 +746,31 @@ eprDirectAuthorization.selectSSGroupID = "";
 					}
                 });
             });
+        $('#searchRecord').searchbox({ 
+		    searcher:function(value,name){ 
+			    //获取选中医生,根据被授权的医生能够看到的病历展现结构进行授权
+			    var rows = $('#docListTable').datagrid("getSelections");
+				var selectedDocID = rows[0]["SSUserID"];
+				var selecteddocCTLocID= rows[0]["CTLocID"];
+				var selecteddocSSGroupID= rows[0]["SSGroupID"];
+				var rows2 = $('#patientListTable').datagrid("getSelections");
+				var episodeID =  rows2[0]["EpisodeID"];
+				getEmrTreeData("searchInput",episodeID,selectedDocID,selecteddocCTLocID,selecteddocSSGroupID);
+		    }          
+  }); 
+  
+  	if ("undefined"==typeof HISUIStyleCode || HISUIStyleCode=="")
+	{
+	 	// 炫彩版
+	}
+	else if (HISUIStyleCode=="lite")
+	{
+		 // 极简版
+		 $("#eastPanel").css('background-color','#F1F1F1');
+	}else
+	{
+		// 极简版
+	}   
 
         })(jQuery);
 function InitDatagridDetail(index,row)
@@ -791,3 +797,54 @@ $('#treeHistoryBtn').on('click', function() {
 	$('#historyTable').datagrid('reload');
 	$('#treeHistoryWin').window('open');
 });
+//获取授权类型
+function getAllPrivRuleKey()
+{
+	var result = "";
+	$.ajax({
+		type: "GET",
+		url: "../EMRservice.Ajax.common.cls", 
+		async : false,
+		data: {
+			"OutputType":"Stream",
+			"Class":"EMRservice.BL.BLAuthPrivRuleKey",
+			"Method":"GetAllPrivRuleKeyArray",
+		},
+		success: function (d){
+			if(d !="")
+			{
+				result =eval("("+d+")");
+				$('#inputGivePowerType').combogrid({data:result});
+			}
+		 },
+		error : function(d) { alert("getAllPrivRuleKey error");}
+	});	
+}
+function getEmrTreeData(myid,episodeID,selectedDocID,selecteddocCTLocID,selecteddocSSGroupID)
+{
+	var selectValue = $('#searchRecord').searchbox('getValue')
+    jQuery.ajax({
+		type : "GET",
+		dataType : "text",
+		url : "../EMRservice.Ajax.AuthDirectAppoint.cls",
+		async : true,
+		data : {"Action":"gettree","EpisodeID":episodeID,"selectedDocID":selectedDocID,"selecteddocCTLocID":selecteddocCTLocID,"selecteddocSSGroupID":selecteddocSSGroupID,"Condition":selectValue},
+		success : function(d) {
+           if ( d != "") 
+		   {
+			   document.getElementById('searchSpan').style.display = "";
+			   $('#treeCenterDiv').css('border-top','1px dashed #cccccc');
+			   $('#emrTree').tree({
+			        data: eval("("+d+")"),
+			        animate: true,
+			        checkbox: true,
+			        onlyLeafCheck:true,
+			        cascadeCheck: false
+			    });
+		   }
+		},
+		error : function(d) { alert("add kbTree error");}
+	});
+}
+
+

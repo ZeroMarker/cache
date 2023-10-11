@@ -24,11 +24,68 @@ $(function(){
 		if (!isCheck) {
 			return false;
 		}
-		var f = $("#file").filebox("files")[0];
-		readWorkbookFromLocalFile(f, function(workbook) {
-			storageDocAuth(workbook);
+		$.messager.confirm("提示", "确认导入医生权限么？",function (r) {
+			if (r) {
+				var f = $("#file").filebox("files")[0];
+				readWorkbookFromLocalFile(f, function(workbook) {
+					storageDocAuth(workbook);
+				});
+			}
+			
 		});
+		
 	})
+	
+	$("#tpl").on('click', function () {
+		/*
+		var rtn = $cm({
+			dataType:'text',
+			ResultSetType:"Excel",
+			ExcelName:"AntTPL", //默认DHCCExcel
+			ClassName:"DHCAnt.KSS.Common.Query",
+			QueryName:"QryAntTPL"
+		},false);
+		location.href = rtn;
+		*/
+		$cm({
+			ResultSetType:"ExcelPlugin", 
+			ExcelName:"抗菌药物医生权限模板",
+			PageName:"AntAuth",
+			ClassName:"DHCAnt.KSS.Common.Query",
+			QueryName:"QryAntTPL"
+		},false);
+		
+	})
+	
+	$("#kss").on('click', function () {
+		$cm({
+			ResultSetType:"ExcelPlugin", 
+			ExcelName:"抗菌药物级别权限模板",
+			PageName:"AntAuth",
+			ClassName:"DHCAnt.KSS.Common.Query",
+			QueryName:"QryAntKssTPL"
+		},false);
+		
+	})
+	
+	$("#kssimport").click(function () {
+		var isCheck = checkFile ();
+		if (!isCheck) {
+			return false;
+		}
+		$.messager.confirm("提示", "确认导入级别权限么？",function (r) {
+			if (r) {
+				var f = $("#file").filebox("files")[0];
+				readWorkbookFromLocalFile(f, function(workbook) {
+					storageKssAuth(workbook);
+				});
+			}
+			
+		});
+	
+		
+	})
+	
 })
 
 function checkFile () {
@@ -186,3 +243,56 @@ function storageDocAuth(workbook) {
 	return true;
 	
 }
+
+function storageKssAuth(workbook) {
+	$.messager.progress({
+		title: "提示",
+		msg: '正在导入数据',
+		text: '导入中....'
+	});
+	var sheetNames = workbook.SheetNames;
+	var worksheet = workbook.Sheets[sheetNames[0]];
+	var csv = XLSX.utils.sheet_to_csv(worksheet);
+	var errMsg = "",excelStr="";
+	
+	var rows = csv.split('\n');
+	rows.pop();
+	var totalNum = rows.length;
+	
+	for (var i=0; i< rows.length; i++) {
+		if(i == 0) continue;
+		var columns = rows[i].split(",");
+		var inStr = columns.join("^")
+		if (excelStr == "") excelStr = inStr;
+		else  excelStr = excelStr + "!" + inStr;
+	}
+	var start = new Date().getTime();
+	$cm({
+		ClassName:"DHCAnt.KSS.Config.Authority",
+		MethodName:"ImportKssAuth",
+		excelStr:excelStr,
+		dataType:"text"
+	},function(responseText){
+		setTimeout(function () {
+			$.messager.progress("close");
+			var end = new Date().getTime();
+			var time = (end - start)/1000;
+			if (responseText == 1) {
+				var successMsg = '导入成功，共导入<i style="color: blue;font-size:1.5em;">&nbsp;' + (totalNum-1) + '</i>&nbsp;&nbsp;条记录，共耗时<i style="color: blue;font-size:1.5em;">&nbsp;' + time + '</i>&nbsp;&nbsp;秒！'; 
+				$.messager.alert('提示', successMsg, "success",function () {
+					parent.reloadAuthGrid();
+				});
+			} else {
+				var errMsg = '导入失败！失败原因为：<font style="color:red">'+ responseText+"</font>" ;
+				$.messager.alert('提示',errMsg, "error",function () {
+					parent.reloadAuthGrid();
+				});
+			}
+		},50)
+		
+	})
+	
+	return true;
+	
+}
+

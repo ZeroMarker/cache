@@ -1013,6 +1013,7 @@ function DetailClickHandler(){
 		var url="websys.default.csp?WEBSYS.TCOMPONENT=UDHCARCOrderSetItem.Edit&UserID="+session['LOGON.USERID']+"&OSID="+ARCOSRowid;
 		//var url="websys.default.csp?WEBSYS.TCOMPONENT=UDHCOEOrder.CHNMEDEntry&EpisodeID="+EpisodeID+"&MRADMID="+MRADMID+"&PatientID="+PatientID;
 		//websys_lu(url,true,"status=1,scrollbars=1,top=50,left=10,width=1000,height=530");
+		if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
 	    win=window.open(url,1,"status=1,scrollbars=1,top=50,left=10,width=1000,height=530");
 	}
 }

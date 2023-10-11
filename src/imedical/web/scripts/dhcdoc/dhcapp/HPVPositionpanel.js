@@ -8,7 +8,7 @@
 	}
 	function OtherInfo(){
 		var rtnObj = {}
-		rtnObj["PisReqSpec"] = 1+"#"+$("#Position").val() +"##"+ 1 +"#"+ "" +"#"+ 1+ "#"+ "";;
+		rtnObj["PisReqSpec"] = ""+String.fromCharCode(1)+$("#Position").val() +String.fromCharCode(1)+""+String.fromCharCode(1)+ "1" +String.fromCharCode(1)+ "" +String.fromCharCode(1)+ ""+ String.fromCharCode(1)+ "";
 		return rtnObj;
 		}
 	function PrintInfo(){

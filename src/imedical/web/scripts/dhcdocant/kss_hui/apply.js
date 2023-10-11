@@ -16,10 +16,16 @@ $(function(){
 		var consultDisplay1 = true,
 			consultDisplay2 = true,
 			consultDisplay3 = true,
-			$applyGrid = $("<div id='i-apply-grid'></div>"),
+			$applyGrid = "";
+		if (HISUIStyleCode=="blue") {
+			$applyGrid = $("<div style='border:1px solid #ccc;height:400px;border-radius:4px;'><div id='i-apply-grid'></div></div>");
+		} else {
+			$applyGrid = $("<div style='border:1px solid #E2E2E2;height:400px;border-radius:4px;'><div id='i-apply-grid'></div></div>");
+		}
+		var 
 			consultDepNums = tkMakeServerCall("DHCAnt.KSS.Common.Method","GetConsultDepNums",session['LOGON.HOSPID']),
 			curUserCtcareId = tkMakeServerCall("DHCAnt.KSS.Common.Method", "TransSSUserToCTCare", session['LOGON.USERID']),
-			$applyWin = $("<div id='i-apply-win' style='width:900px;height:400px;'>Window Content</div>");
+			$applyWin = $("<div id='i-apply-win' style='width:900px;height:400px;padding:10px;'></div>");
 			if (consultDepNums == "1") {
 				consultDisplay1 = false;
 			} else if (consultDepNums == "2") {
@@ -36,23 +42,27 @@ $(function(){
 		
 		$('#i-apply-win').window({
 			//iconCls:'icon-search',
-			title: '<span style="font-size:14px;">抗菌药物申请列表</span>',
+			title: '<span style="font-size:14px;">'+$g("抗菌药物申请列表")+'</span>',
 			modal: true,
 			border:false,
+			iconCls: 'icon-w-list',
+			maximizable:false,
 			minimizable:false,
 			collapsible:false,
 			onClose: function () {
 				$("#i-apply-win").remove();
 			}
 		});
+							
 		
 		$('#i-apply-grid').datagrid({
 				idField:'id',
 				method:	'post',
 				striped:true,
-				border:false,
+				border:true,
 				nowrap: true,
 				fit:true,
+				bodyCls:'panel-body-gray',
 				rownumbers:true,
 				singleSelect:true,
 				//checkOnSelect:false,
@@ -88,7 +98,7 @@ $(function(){
 					};
 				},*/
 				columns:[[
-					{field:'action',title:'操作',width:40,align:'center',
+					{field:'action',title:$g('操作'),width:40,align:'center',
 						formatter:function(value,row,index){
 							if ((row.AppStatus == "A")&&(row.cOeori == "")){
 								var s = '<a href="#" style="color:#40A2DE;" onclick="DHCANT.undoApply(' + row.id + ", '" + row.AppStatus + "'" + ')">撤销</a>';
@@ -136,7 +146,7 @@ $(function(){
 				url:'dhcant.kss.main.request.csp?action=GetQueryData',
 				toolbar:[{
 						text:'确定',
-						iconCls: 'icon-edit',
+						iconCls: 'icon-ok',
 						handler: function(){
 							var selected = $('#i-apply-grid').datagrid('getSelected');
 							if (!selected){
@@ -173,8 +183,8 @@ $(function(){
 													"<div style='margin-bottom:10px;'><span style='margin-right:10px;'>处方医师</span><input id='CQMX-PrescDoc' class='textbox' type='text'>" +
 													"<span style='margin:0px 10px 0px 30px;'>病历号码</span><input id='CQMX-IPNo' class='textbox' type='text'></div>" +
 													"<div style='margin-bottom:10px;'><span style='margin-right:10px;'>处方日期</span><input id='CQMX-PrescDate' class='textbox' type='text'></div>" + 
-													"<div style='margin-bottom:10px;text-align:center;'><a id='CQMX-Save' class='hisui-linkbutton hover-dark'>保存</a></div>";
-									DHCANT.diagShow("cqmx-win","碳青霉烯类及替加环素使用信息登记表",510,330,content);
+													"<div style='text-align:center;'><a id='CQMX-Save' class='hisui-linkbutton hover-dark'>保存</a></div>";
+									DHCANT.diagShow("cqmx-win","碳青霉烯类及替加环素使用信息登记表",495,327,content);
 									DHCANT.drawCqmx(selected.ArcimName);
 									var AnditAARowidArr=selected.id + "^";
 									DHCANT.saveCqmx(selected.ArcimId, AnditAARowidArr);
@@ -217,6 +227,15 @@ $(function(){
 							$('#i-apply-grid').datagrid('unselectRow', index);
 						};
 					});
+                    var ApplyId=rowData.id;
+					if (websys_getAppScreenIndex()==0){
+						var Obj={
+							ApplyId:rowData.id,
+							EpisodeID:GlobalObj.EpisodeID,
+							PageShowFromWay:"ListEntry"
+						}
+						websys_emit("onOpenKSSInterface",Obj);
+					}
 				},
 				onDblClickRow: function(rowIndex, rowData){
 					$("input[name='ck']").each(function(index, el){
@@ -571,7 +590,7 @@ $(function(){
 		var AuditAnti = new AuditInfo(GlobalObj.EpisodeID, userid);
 	};
 	window.AntLoad = function () {
-		var AUTOOPEN = tkMakeServerCall("DHCAnt.Base.MainConfigExcute", "GetValueByMCGCode", "AUTOOPEN");
+		var AUTOOPEN = tkMakeServerCall("DHCAnt.Base.MainConfigExcute", "GetValueByMCGCode", "AUTOOPEN",session['LOGON.HOSPID']);
 		if ( AUTOOPEN == 1) {
 			var EpisodeID=GlobalObj.EpisodeID
 			var userid=session['LOGON.USERID'];
@@ -621,11 +640,28 @@ $(function(){
 	};
 	//抗菌药物控制
 	window.CheckDoctorTypePoison_7 = function (PoisonRowId, ArcimRowid, Row, OrderPoisonCode, callBackFun) {
-	
-		var isExit = tkMakeServerCall("DHCAnt.KSS.Config.PoisonSet", "ValidatePhpo", session['LOGON.HOSPID'], PoisonRowId, GlobalObj.PAAdmType);
-		if (isExit == 1) {
+		var PoisonObject = $cm({
+			ClassName: "DHCAnt.KSS.Config.PoisonSet",
+			MethodName: "ValidatePhpoNew",
+			InHosp: session['LOGON.HOSPID'],
+			InPoisonRowId:PoisonRowId,
+			InAdmType: GlobalObj.PAAdmType,
+			ArcimRowid: ArcimRowid 
+		},false)
+		if (PoisonObject.code==0) {
 			callBackFun(true);
 			return true;   
+		} else if (PoisonObject.code<0) {
+			$.messager.alert("提示",PoisonObject.msg,"info",function(){
+				DeleteRow(Row,"Group");
+				callBackFun(false);
+			});	
+			return false;	
+		} else {
+			if (PoisonObject.OrderPoisonCode!="") {
+				OrderPoisonCode = PoisonObject.OrderPoisonCode;
+				PoisonRowId = PoisonObject.PoisonRowId;
+			}
 		}
 		var DoctorTypePoisonStr = GlobalObj.DoctorTypePoisonStr;
 		var PAADMRowid = GlobalObj.EpisodeID;
@@ -634,6 +670,8 @@ $(function(){
 		var AW = "",AH = "",ASH = "",ACH = "",AURL = "",AWAIM = "";
 		var OrderPoisonDesc = "",ShowTabStr = "";
 		var DoctorTypePoisonArr=new  Array();
+		var OrderPriorRowid = GetCellData(Row, "OrderPriorRowid");
+		
 		new Promise(function(resolve,rejected){
 			//判断是否需要皮试,暂时不做标准版QP
 			var needPS = 0; //tkMakeServerCall("DHCAnt.KSS.FunctionExtend", "IsPSDrug", ArcimRowid);
@@ -770,7 +808,7 @@ $(function(){
 						SetCellData(Row,"UserReasonId",fillDaupid);   
 						callBackFun(true); 
 					} else if (fillCode == "4") {
-						$.messager.confirm('确认','该药品已发送过申请，请先完成审核，继续只能越使用，是否继续？',function(r){  
+						$.messager.confirm('确认','该药品已发送过申请，请先完成审核，继续只能越级使用，是否继续？',function(r){  
 							if (r){
 								if (fillEM==0) {
 									$.messager.alert("提示","您越级次数已超过，不能再越级！","info",function(){
@@ -813,12 +851,12 @@ $(function(){
 							if (PoisonRowId == TypePoisonRowId) {
 								ReasonFlag=1
 								if (TypeControl == 'F'){
-									$.messager.alert("提示","该药品属于"+OrderPoisonDesc+"(管制分类)"+t['PoisonClassIsFobidden'],"info",function(){
+									$.messager.alert("提示","该药品属于"+OrderPoisonDesc+"，"+t['PoisonClassIsFobidden'],"info",function(){
 										DeleteRow(Row,"Group");
 										resolve(false);
 									});
 								}else if(TypeControl == 'A'){
-									$.messager.confirm('确认对话框', "该药品属于"+OrderPoisonDesc+"(管制分类)"+t['PoisonClassNeedConfirm'], function(r){
+									$.messager.confirm('确认对话框', "该药品属于"+OrderPoisonDesc+"，为管制药品请注意！", function(r){	//t['PoisonClassNeedConfirm']
 										if (!r) {
 										   DeleteRow(Row,"Group");
 									    }
@@ -838,10 +876,11 @@ $(function(){
 										SetCellData(Row,"ShowTabStr",ShowTabStr);
 									}
 									var IsCallBacked=false;
-									var antMainUrl = AURL + "?ShowTabStr=" + ShowTabStr + "&EpisodeID=" + PAADMRowid + "&ArcimRowid=" + ArcimRowid + "&OrderPoisonCode=" + OrderPoisonCode + "&PAAdmType=" + GlobalObj.PAAdmType + "&EmerFlag=" + EmerFlag ;
+									var antMainUrl = AURL + "?ShowTabStr=" + ShowTabStr + "&EpisodeID=" + PAADMRowid + "&ArcimRowid=" + ArcimRowid + "&OrderPoisonCode=" + OrderPoisonCode + "&PAAdmType=" + GlobalObj.PAAdmType + "&EmerFlag=" + EmerFlag + "&OrderPriorRowid=" + OrderPriorRowid;
 									websys_showModal({
 										url:antMainUrl,
 										title:'抗菌药物申请',
+										iconCls:'icon-w-predrug',
 										width:AW,height:AH,
 										CallBackFunc:function(result){
 											IsCallBacked=true;
@@ -894,10 +933,11 @@ $(function(){
 											SetCellData(Row, "ShowTabStr", ShowTabStr);
 										}
 										var IsCallBacked=false;
-										var antMainUrl = AURL + "?ShowTabStr=" + ShowTabStr + "&EpisodeID=" + PAADMRowid + "&ArcimRowid=" + ArcimRowid + "&OrderPoisonCode=" + OrderPoisonCode + "&PAAdmType=" + GlobalObj.PAAdmType + "&EmerFlag=" + EmerFlag ;
+										var antMainUrl = AURL + "?ShowTabStr=" + ShowTabStr + "&EpisodeID=" + PAADMRowid + "&ArcimRowid=" + ArcimRowid + "&OrderPoisonCode=" + OrderPoisonCode + "&PAAdmType=" + GlobalObj.PAAdmType + "&EmerFlag=" + EmerFlag + "&OrderPriorRowid=" + OrderPriorRowid;
 										websys_showModal({
 											url:antMainUrl,
 											title:'抗菌药物申请',
+											iconCls:'icon-w-predrug',
 											width:AW,height:AH,
 											CallBackFunc:function(result){
 												IsCallBacked=true;
@@ -957,10 +997,11 @@ $(function(){
 					ShowTabStr="UserReason"
 					SetCellData(Row,"ShowTabStr",ShowTabStr);
 					var IsCallBacked=false;
-					var antMainUrl = AURL + "?ShowTabStr=" + ShowTabStr + "&EpisodeID=" + PAADMRowid + "&ArcimRowid=" + ArcimRowid + "&OrderPoisonCode=" + OrderPoisonCode + "&PAAdmType=" + GlobalObj.PAAdmType + "&EmerFlag=" + EmerFlag ;
+					var antMainUrl = AURL + "?ShowTabStr=" + ShowTabStr + "&EpisodeID=" + PAADMRowid + "&ArcimRowid=" + ArcimRowid + "&OrderPoisonCode=" + OrderPoisonCode + "&PAAdmType=" + GlobalObj.PAAdmType + "&EmerFlag=" + EmerFlag + "&OrderPriorRowid=" + OrderPriorRowid;
 					websys_showModal({
 						url:antMainUrl,
 						title:'抗菌药物申请',
+						iconCls:'icon-w-predrug',
 						width:AWAIM,height:AH,
 						CallBackFunc:function(result){
 							IsCallBacked=true;
@@ -997,6 +1038,7 @@ $(function(){
 	};
 	//联合用药控制
 	window.CheckAntCombined = function (rowids,callBackFun) {
+		//debugger;
 		var Paadmid = GlobalObj.EpisodeID;
         var ParrAllInfo = "";
         for (var i=0; i<rowids.length; i++) {
@@ -1014,9 +1056,13 @@ $(function(){
             }
         };
         if ( ParrAllInfo != "") {
+	        //alert(1)
 	         ParrAllInfo = tkMakeServerCall("DHCAnt.KSS.Combined","FilterOMSTOrder",ParrAllInfo,session['LOGON.HOSPID']);
+             //alert(2)
              var CURetArr=tkMakeServerCall("DHCAnt.KSS.Combined","GetCombinedNumFormDAUP",Paadmid,ParrAllInfo,session['LOGON.HOSPID']);
+            // alert(3)
              var CHret=tkMakeServerCall("DHCAnt.KSS.Combined","IfChangeFormDAUP",Paadmid,ParrAllInfo,session['LOGON.HOSPID']);
+             //alert(4)
              var CUret=CURetArr.split("|")[0];
              var SameArcimName=CURetArr.split("|")[1];
 	    }
@@ -1034,7 +1080,9 @@ $(function(){
 				    resolve(rtn);
 				}else{
 					if (ParrAllInfo != ""){
+						//alert(11)
 						var combinedPara = tkMakeServerCall("DHCAnt.KSS.FunctionExtend","GetCombinedPara");
+						//alert(2)
 			            var combinedArr = combinedPara.split("^");
 			            var CW = combinedArr[0],CH = combinedArr[1],CURL = combinedArr[2];
 			            if((CUret>1)||(CHret==1)){
@@ -1044,6 +1092,7 @@ $(function(){
 								url:CombinedUseUrl,
 								title:'抗菌药物联合用药',
 								width:CW,height:CH,
+								iconCls:'icon-w-predrug',
 								CallBackFunc:function(result){
 									IsCallBacked=true;
 									websys_showModal("close");
@@ -1059,7 +1108,7 @@ $(function(){
 							});
 				        }else{
 					        //首次用药
-			                var FirstKssret=tkMakeServerCall("DHCAnt.KSS.Combined","SaveCombinedInfo",Paadmid,ParrAllInfo,"","");
+			                var FirstKssret=tkMakeServerCall("DHCAnt.KSS.Combined","SaveCombinedInfo",Paadmid,ParrAllInfo,"","",session['LOGON.HOSPID']);
 			                resolve(true);
 					    }
 				    }else{
@@ -1160,7 +1209,7 @@ $(function(){
 			});
 		},
 		diagShow: function (id,title,W,H,content) {	//diagShow("cqmx-win",900,400)
-			$Win = $("<div id='" + id + "' style='width:"+ W +"px;height:"+ H +"px;padding:10px;'></div>");
+			$Win = $("<div id='" + id + "' style='width:"+ W +"px;height:"+ H +"px;padding:10px;overflow:hidden;'></div>");
 			//$Win = $("<div id='" + id + "' style='height:"+ H +"px;padding:10px;'></div>");
 			$("#id").remove();
 			$("body").prepend($Win);
@@ -1168,7 +1217,7 @@ $(function(){
 			$("#" + id).prepend($content);
 			
 			$('#' + id).window({
-				//iconCls:'icon-search',
+				iconCls:'icon-w-edit',
 				title: title,
 				modal: true,
 				border:false,

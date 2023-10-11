@@ -3,6 +3,8 @@ function InitPatViewWinEvent(obj){
 	obj.LoadEvent = function(arguments){
 		if (IndexTab == 'ASPOrdItem') {
 			obj.tab_show(IndexTab);
+		}else if((typeof(index) != undefined)&(index!="")){
+			obj.tab_show(index)
 		} else {
 			obj.tab_show(0);
 		}

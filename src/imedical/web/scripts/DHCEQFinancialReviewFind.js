@@ -5,6 +5,13 @@ function BodyLoadHandler()
 {
 	InitUserInfo();
 	InitPage();
+	initButtonWidth()
+	initButtonColor();//cjc 2023-01-18 设置极简积极按钮颜色
+	initPanelHeaderStyle();//cjc 2023-01-17 初始化极简面板样式
+	
+	//add by cjc 20230208管理类组输入框宽度
+	document.getElementById("EquipType").classList.add("textbox");
+	document.getElementById("EquipType").style.width='';
 }
 
 function InitPage()
@@ -21,10 +28,10 @@ function InitPage()
 
 function FillEquipType()
 {
-	var equiptypeinfos=GetElementValue("EquipTypeInfos");
+	var equiptypeinfos=getElementValue("EquipTypeInfos");
 	var obj=document.getElementById("EquipType");
 	var equiptypelist=equiptypeinfos.split("&");
-	var typeids=GetElementValue("EquipTypeIDs");
+	var typeids=getElementValue("EquipTypeIDs");
 	if (typeids!="") typeids=","+typeids+",";
 	for (var i=0;i<equiptypelist.length;i++)
 	{
@@ -41,7 +48,7 @@ function FillEquipType()
 function EquipType_Change()
 {
 	var typeids=GetSelectedEquipType(1);
-	SetElement("EquipTypeIDs",typeids);
+	setElement("EquipTypeIDs",typeids);
 }
 
 function GetSelectedEquipType(type)
@@ -61,20 +68,24 @@ function GetSelectedEquipType(type)
 }
 function BussinessType_Change()
 {
-	var BussinessType=GetElementValue("BussinessType");
-	SetElement("BussinessTypeDR",BussinessType);
+	var BussinessType=getElementValue("BussinessType");
+	setElement("BussinessTypeDR",BussinessType);
 }
 function SetBussinessType()
 {
-	SetElement("BussinessType",GetElementValue("BussinessTypeDR"));
+	setElement("BussinessType",getElementValue("BussinessTypeDR"));
 }
 function BFind_Click()
 {
-	var BussinessNo=GetElementValue("BussinessNo");
-	var BussinessTypeDR=GetElementValue("BussinessTypeDR");
-	var EquipTypeIDs=GetElementValue("EquipTypeIDs");
-	var Month=GetElementValue("Month");
-	var TMENU=GetElementValue("TMENU");
-	window.location.href= 'websys.default.csp?WEBSYS.TCOMPONENT=DHCEQFinancialReviewFind&BussinessNo='+BussinessNo+"&EquipTypeIDs="+EquipTypeIDs+"&BussinessTypeDR="+BussinessTypeDR+"&Month="+Month+"&TMENU="+TMENU;
+	var BussinessNo=getElementValue("BussinessNo");
+	var BussinessTypeDR=getElementValue("BussinessType");
+	var EquipTypeIDs=getElementValue("EquipTypeIDs");
+	var Month=getElementValue("Month");
+	var TMENU=getElementValue("TMENU");
+	var url='websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQFinancialReviewFind&BussinessNo='+BussinessNo+"&EquipTypeIDs="+EquipTypeIDs+"&BussinessTypeDR="+BussinessTypeDR+"&Month="+Month+"&TMENU="+TMENU;
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.location.href=url;
 }
 document.body.onload = BodyLoadHandler;

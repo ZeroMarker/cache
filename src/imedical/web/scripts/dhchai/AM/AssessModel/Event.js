@@ -47,7 +47,11 @@ function InitAssModelWinEvent(obj){
 		var SttDate = $('#dtSttDate').datebox('getValue');
 		var EndDate = $('#dtEndDate').datebox('getValue');
 		var IsActive = $('#chkIsActive').checkbox('getValue')? '1':'0';
-		
+		var arrSuRule = $('#cboSuRule').combobox('getValues');
+		var SuRule="";
+		if (arrSuRule) {
+			SuRule = arrSuRule.toString();
+		}
 		if (!AMCode) {
 			errinfo = errinfo + "评估模型代码不允许为空!<br>";
 		}
@@ -86,6 +90,8 @@ function InitAssModelWinEvent(obj){
 		inputStr = inputStr + CHR_1 + EndDate;
 		inputStr = inputStr + CHR_1 + ClassName;
 		inputStr = inputStr + CHR_1 + AMNode;
+		inputStr = inputStr + CHR_1 + SuRule;
+		inputStr = inputStr + CHR_1 + 1;
 		
 		var flg = $m({
 			ClassName:"DHCHAI.AM.AssessModel",
@@ -169,13 +175,18 @@ function InitAssModelWinEvent(obj){
 			var EndDate = rd["EndDate"];
 			var Note = rd["Note"];
 			var IsActive = rd["IsActive"];
-		 
+		    var SuRuleIDs = rd["SuRuleIDs"];
+			var arrSuRule="";
+			if (SuRuleIDs) {
+				arrSuRule=SuRuleIDs.split(",");
+			}
 			$('#txtCode').val(Code);
 			$('#txtDesc').val(Desc);
 			if (AdmStatus) {
 				$HUI.radio("#radAdmStatus-"+AdmStatus).setValue(true);     // 就诊状态
 			}
 			$('#txtClassName').val(ClassName);
+			$('#cboSuRule').combobox('setValues',arrSuRule);
 			$('#txtNote').val(Note);
 			$('#dtSttDate').datebox('setValue',SttDate);
 			$('#dtEndDate').datebox('setValue',EndDate);
@@ -185,8 +196,8 @@ function InitAssModelWinEvent(obj){
 			obj.RecRowID = "";
 			$('#txtCode').val('');
 			$('#txtDesc').val('');	
+			$('#cboSuRule').combobox('clear');
 			$HUI.radio('#radAdmStatus').uncheck();
-			$('#txtClassName').val('');
 			$('#txtNote').val('');
 			$('#dtSttDate').datebox('clear');
 			$('#dtEndDate').datebox('clear');
@@ -194,5 +205,31 @@ function InitAssModelWinEvent(obj){
 		}
 		$('#AssModelEdit').show();
 		obj.AssModelEdit();
+	}
+	
+	$('#btnSuRule').on('click', function(){
+		OpenMenu('DHCHAIBaseIR-CRuleSuRule','疑似筛查规则','dhcma.hai.ir.crulesurule.csp');
+	});
+	
+	// 菜单跳转
+	function OpenMenu(menuCode,menuDesc,menuUrl) {
+		var strUrl = '../csp/'+menuUrl+'?+&1=1';
+		//主菜单
+		var data = [{
+			"menuId": "",
+			"menuCode": menuCode,
+			"menuDesc": menuDesc,
+			"menuResource": menuUrl,
+			"menuOrder": "1",
+			"menuIcon": "icon"
+		}];
+		if( typeof window.parent.showNavTab === 'function' ){   //bootstrap 版本
+			window.parent.showNavTab(data[0]['menuCode'], data[0]['menuDesc'], data[0]['menuResource'], data[0]['menuCode'], data[0]['menuIcon'], false);
+		}else{ //HISUI 版本
+			window.parent.addTab({
+				url:menuUrl,
+				title:menuDesc
+			});
+		}
 	}
 }

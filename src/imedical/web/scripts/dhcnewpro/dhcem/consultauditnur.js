@@ -263,6 +263,9 @@ function WriteMdt(EpisodeID, CstID){
 	if (CsNoType == "Nur"){
 		Link = "dhcem.consultnur.csp?EpisodeID="+EpisodeID +"&CstID="+CstID +"&CstItmID="+CstID;
 	}
+	if ('undefined'!==typeof websys_getMWToken){ //hxy 2023-02-11 Token改造
+		Link += "&MWToken="+websys_getMWToken();
+	}
 	$("#newWinFrame").attr("src",Link);
 }
 
@@ -290,11 +293,19 @@ function PrintCstHtml(){
 		MethodName:"GetCstItmIDs",
 		CstID:rowsData.CstID
 	},function(txtData){
-		if(txtData=="")	window.open("dhcem.printconsone.csp?CstID="+rowsData.CstID+"&CstItmID="+"");
+		var Link="dhcem.printconsone.csp?CstID="+rowsData.CstID+"&CstItmID="+"";
+		if ('undefined'!==typeof websys_getMWToken){ //hxy 2023-02-11 Token改造
+			Link += "&MWToken="+websys_getMWToken();
+		}
+		if(txtData=="")	window.open(Link);
 		if(txtData!=""){
 			var CstItmArr = txtData.split("^");
 			for(var i=0;i<CstItmArr.length;i++){
-				window.open("dhcem.printconsone.csp?CstID="+rowsData.CstID+"&CstItmID="+CstItmArr[i]);	
+				var Link="dhcem.printconsone.csp?CstID="+rowsData.CstID+"&CstItmID="+CstItmArr[i];
+				if ('undefined'!==typeof websys_getMWToken){ //hxy 2023-02-11 Token改造
+					Link += "&MWToken="+websys_getMWToken();
+				}
+				window.open(Link);
 			}
 		}
 	});

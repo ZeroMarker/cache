@@ -120,7 +120,9 @@ function InitDict() {
 		url: PHA_STORE.PHCForm().url
 	});
 	var opts=$.extend({},{width:160},PHA_STORE.ArcItmMast());
-	PHA.LookUp("conMultiArcDesc", opts);
+	opts.width = 160;
+	opts.panelWidth = 450;
+	PHA.ComboGrid("conMultiArcDesc", opts);
 	
 	PHA.ComboBox("conMultiPhaLoc", {
 		multiple: true,
@@ -170,10 +172,10 @@ function InitDict() {
 	PHA.ComboBox("conAdmType", {
 		data: [{
 			RowId: "1",
-			Description: "门急诊"
+			Description: $g("门急诊")
 		}, {
 			RowId: "3",
-			Description: "住院"
+			Description: $g("住院")
 		}],
 		panelHeight: "auto"
 	});
@@ -204,19 +206,20 @@ function InitDict() {
 	PHA.ComboBox("conResult", {
 		data: [{
 			RowId: "1",
-			Description: "仅有结果"
+			Description: $g("仅有结果"),
+			selected: true
 		}, {
 			RowId: "2",
-			Description: "仅无结果"
+			Description: $g("仅无结果")
 		}, {
 			RowId: "3",
-			Description: "仅合理"
+			Description: $g("仅合理")
 		}, {
 			RowId: "4",
-			Description: "仅不合理"
+			Description: $g("仅不合理")
 		}, {
 			RowId: "5",
-			Description: "仅医生申诉"
+			Description: $g("仅医生申诉")
 		}],
 		panelHeight: "auto"
 	});
@@ -227,10 +230,10 @@ function InitDict() {
 	PHA.ComboBox("conSaveType", {
 		data: [{
 			RowId: "Random",
-			Description: "随机数"
+			Description: $g("随机数")
 		}, {
 			RowId: "Percent",
-			Description: "百分比"
+			Description: $g("百分比")
 		}],
 		panelHeight: "auto",
 		width:85
@@ -291,13 +294,13 @@ function InitSetDefVal() {
 	});
 	
 	$("#conSaveType").combobox("setValue", "Random");
-
+	$("#conResult").combobox("setValue", "1");
 }
 
 function ImportHandler() {
 	$("#conFileBox").filebox({
-		prompt: '请选择文件...',
-		buttonText: '选择',
+		prompt: $g('请选择文件...'),
+		buttonText: $g('选择'),
 		width: 250,
 		accept: 'application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 	})
@@ -305,7 +308,7 @@ function ImportHandler() {
 		var filelist = $('#conFileBox').filebox("files");
 		if (filelist.length == 0) {
 			//alert("请先选择文件");
-			PHA.Alert('提示', "请先选择文件！", 'warning');
+			PHA.Alert($g('提示'), $g("请先选择文件！"), 'warning');
 			return
 		}
 		var file = filelist[0];
@@ -318,7 +321,7 @@ function ImportHandler() {
 				importData=(importData=="")?prescno:importData+"^"+prescno ;
 			}
 			if ((importData=="")||(importData==null)||(importData==undefined)){
-				PHA.Alert('提示', "没有获取到需要导入的处方信息，请注意Excel模板格式是否正确！", 'warning');
+				PHA.Alert($g('提示'), $g("没有获取到需要导入的处方信息，请注意Excel模板格式是否正确！"), 'warning');
 				return ;
 			}
 			var importRet = tkMakeServerCall("PHA.PRC.Create.ReGeneral","ImportCommentData",importData,logonLocId,logonUserId)
@@ -326,10 +329,10 @@ function ImportHandler() {
 			var RetSucc = RetArr[0];
 			var RetVal = RetArr[1];
 			if (RetSucc < 0) {
-				PHA.Alert('提示', "保存失败，错误代码："+RetVal, 'warning');
+				PHA.Alert('提示', $g("保存失败，错误代码："+RetVal), 'warning');
 			} else {				
-				var msgInfo = "抽取成功!";
-				PHA.Alert('提示', msgInfo, 'success');
+				var msgInfo = $g("抽取成功!");
+				PHA.Alert($g('提示'), msgInfo, 'success');
 				$('#importConComNo').val(RetVal);
 				
 			}
@@ -339,8 +342,8 @@ function ImportHandler() {
 }
 
 function ComfirmQuery(){
-	var comInfo = "您确认统计点评总数吗?"
-	PHA.Confirm("查询提示", comInfo, function () {
+	var comInfo = $g("您确认统计点评总数吗?")
+	PHA.Confirm($g("查询提示"), comInfo, function () {
 		Query();
 	})
 }
@@ -360,17 +363,28 @@ function Query(){
 	}
 	PHA.Loading("Show") 
 	var pid = tkMakeServerCall("PHA.PRC.Create.ReGeneral", "JobGetReCntDataNum", queryParStr, saveParStr, findFlag, logonInfo);
-	// 调后台,5s一次
-	var jobInterval = setInterval(function() {
-		var jobRet = tkMakeServerCall("PHA.PRC.Com.Util", "JobRecieve", pid);
-		if (jobRet != "") {
-			clearInterval(jobInterval);
+	// 调后台,3s一次
+	setTimeout('JobRecieve('+pid+')', 3000);
+}
+
+function JobRecieve(pid) {
+	$cm({
+		ClassName: "PHA.PRC.Com.Util",
+		MethodName: "JobRecieve",
+		pid: pid,
+		dataType: 'text'
+	}, function(jobRet){
+		if (jobRet == "-1"){
+			setTimeout(function(){
+				JobRecieve(pid);
+			}, 2000);
+		} else {
 			PHA.Loading("Hide")
 			var jobRetArr = jobRet.split("^");
 			var jobRetSucc = jobRetArr[0];
 			var jobRetVal = jobRetArr[1];
 			if (jobRetSucc < 0) {
-				PHA.Alert('提示', "查询失败，错误代码："+jobRetVal, 'warning');
+				PHA.Alert('提示', "查询失败，错误代码："+ jobRetVal, 'warning');
 			} else {
 				if (jobRetVal == 0) {
 					var msgInfo = "没有符合条件的点评明细,请更换查询条件后再试!";
@@ -380,8 +394,7 @@ function Query(){
 				}
 			}
 		}
-	},5000);
-	
+	})
 }
 
 function ComfirmClear(){
@@ -404,7 +417,7 @@ function Clear(){
 	$("#conMultiPosion").combobox("setValue",'');		
 	$("#genePHCCat").triggerbox("setValue", '');
 	$("#genePHCCat").triggerbox("setValueId", '');	
-	$("#conMultiArcDesc").val('');			
+	$("#conMultiArcDesc").combogrid('setValue','');			
 	$("#conMultiForm").combobox("setValue",'');			
 	$("#conAgeMax").val(''); 					
 	$("#conDoctor").combobox("setValue",'');			
@@ -503,7 +516,7 @@ function GetQueryParStr(){
 	var poisonStr = $("#conMultiPosion").combobox('getValues')||'';		//管制分类
 	//var stkCatId = $("#conDrugCatTree").combobox('getValue')||'';		//药学分类
 	var stkCatId = $("#genePHCCat").triggerbox("getValueId")
-	var arcimId = $("#conMultiArcDesc").lookup('getValue')||'';			//医嘱名称
+	var arcimId = $("#conMultiArcDesc").combogrid('getValue')||'';			//医嘱名称
 	var formStr = $("#conMultiForm").combobox('getValues')||'';			//剂型
 	var ageMax = $.trim($("#conAgeMax").val())||''; 					//年龄上限
 	var doctorId = $("#conDoctor").combobox('getValue')||'';			//医生
@@ -697,5 +710,3 @@ function GetSpaceQty()
 	}
 
 }
-
-

@@ -1,534 +1,595 @@
-/*
-ÒÀ¾İ¶©µ¥Èë¿â
+ï»¿/*
+ä¾æ®è®¢å•å…¥åº“
 */
-var ImpByPoFN=function(Fn){
-	$HUI.dialog('#ImportByPoWin').open();
-	$UI.linkbutton('#PoQueryBT',{
-		onClick:function(){
+var ImpByPoFN = function(Fn) {
+	$HUI.dialog('#ImportByPoWin', { width: gWinWidth, height: gWinHeight }).open();
+	$UI.linkbutton('#PoQueryBT', {
+		onClick: function() {
 			QueryInpoIngrInfo();
 		}
 	});
-	$UI.linkbutton('#PoClearBT',{
-		onClick:function(){
+	$UI.linkbutton('#PoClearBT', {
+		onClick: function() {
 			InpoIngrClear();
 		}
 	});
-	$UI.linkbutton('#PoSaveBT',{
-		onClick:function(){
-			if(CheckDataBeforeSave()){
+	$UI.linkbutton('#PoSplitBT', {
+		onClick: function() {
+			PosplitDetail();
+		}
+	});
+	$UI.linkbutton('#PoSaveBT', {
+		onClick: function() {
+			if (CheckDataBeforeSave()) {
 				InpoIngrSave();
 			}
 		}
 	});
-	//Grid ÁĞ comboxData
+	// Grid åˆ— comboxData
 	var UomCombox = {
-		type:'combobox',
-		options:{
+		type: 'combobox',
+		options: {
 			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetInciUom&ResultSetType=array',
 			valueField: 'RowId',
 			textField: 'Description',
-			required:true,
-			mode:'remote',
-			onBeforeLoad:function(param){
-				var rows =IngrInpoDetailGrid.getRows();
+			required: true,
+			mode: 'remote',
+			editable: false,
+			onBeforeLoad: function(param) {
+				var rows = IngrInpoDetailGrid.getRows();
 				var row = rows[IngrInpoDetailGrid.editIndex];
-				if(!isEmpty(row)){
-					param.Inci =row.IncId;
+				if (!isEmpty(row)) {
+					param.Inci = row.IncId;
 				}
 			},
-			onSelect:function(record){
-				var rows =IngrInpoDetailGrid.getRows();
+			onSelect: function(record) {
+				var rows = IngrInpoDetailGrid.getRows();
 				var row = rows[IngrInpoDetailGrid.editIndex];
-				row.IngrUom=record.Description;
-				var NewUomid=record.RowId;
-				var OldUomid=row.IngrUomId;
-				if(isEmpty(NewUomid)||(NewUomid==OldUomid)){return false;}
-				var BUomId=row.BUomId;
-				var confac=row.ConFacPur;
-				if (NewUomid==BUomId){ //Èë¿âµ¥Î»×ª»»Îª»ù±¾µ¥Î»
-					var rp=row.Rp;
-					var sp=row.Sp;
-					row.Rp=Number(rp).div(confac);
-					row.Sp=Number(sp).div(confac);
-				}else{ //»ù±¾µ¥Î»×ª»»ÎªÈë¿âµ¥Î»
-					var rp=row.Rp;
-					var sp=row.Sp;
-					row.Rp=Number(rp).mul(confac);
-					row.Sp=Number(sp).mul(confac);
+				row.IngrUom = record.Description;
+				var NewUomid = record.RowId;
+				var OldUomid = row.IngrUomId;
+				if (isEmpty(NewUomid) || (NewUomid == OldUomid)) { return false; }
+				var BUomId = row.BUomId;
+				var confac = row.ConFacPur;
+				if (NewUomid == BUomId) { // å…¥åº“å•ä½è½¬æ¢ä¸ºåŸºæœ¬å•ä½
+					var rp = row.Rp;
+					var sp = row.Sp;
+					row.Rp = Number(rp).div(confac);
+					row.Sp = Number(sp).div(confac);
+				} else { // åŸºæœ¬å•ä½è½¬æ¢ä¸ºå…¥åº“å•ä½
+					var rp = row.Rp;
+					var sp = row.Sp;
+					row.Rp = Number(rp).mul(confac);
+					row.Sp = Number(sp).mul(confac);
 				}
-				row.IngrUomId=NewUomid;
-				$('#IngrInpoDetailGrid').datagrid('refreshRow', IngrInpoDetailGrid.editIndex);
+				row.IngrUomId = NewUomid;
+				setTimeout(function() {
+					IngrInpoDetailGrid.refreshRow();
+				}, 0);
 			},
-			onShowPanel:function(){
+			onShowPanel: function() {
 				$(this).combobox('reload');
 			}
 		}
 	};
-	/// grid combobox
-	var PhManufacturerParams=JSON.stringify(addSessionParams({StkType:"M"}));
+	// / grid combobox
+	var PhManufacturerParams = JSON.stringify(addSessionParams({ StkType: 'M' }));
 	var PhManufacturerBox = {
-		type:'combobox',
-		options:{
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetPhManufacturer&ResultSetType=array&Params='+PhManufacturerParams,
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetPhManufacturer&ResultSetType=array&Params=' + PhManufacturerParams,
 			valueField: 'RowId',
-			textField: 'Description',
-			onBeforeLoad:function(param){
-			}
+			textField: 'Description'
 		}
 	};
-	var SpecDescParams=JSON.stringify(sessionObj)
+	var SpecDescParams = JSON.stringify(sessionObj);
 	var SpecDescbox = {
-		type:'combobox',
-		options:{
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetSpecDesc&ResultSetType=array&Params='+SpecDescParams,
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetSpecDesc&ResultSetType=array&Params=' + SpecDescParams,
 			valueField: 'Description',
 			textField: 'Description',
-			mode:'remote',
-			onBeforeLoad:function(param){
-				var Select=IngrInpoDetailGrid.getSelected();
-				if(!isEmpty(Select)){
-					param.Inci =Select.IncId;
+			mode: 'remote',
+			onBeforeLoad: function(param) {
+				var Select = IngrInpoDetailGrid.getSelected();
+				if (!isEmpty(Select)) {
+					param.Inci = Select.IncId;
 				}
 			}
 		}
 	};
-	var RecLocParams=JSON.stringify(addSessionParams({Type:"Login"}));
-//	var RecLocBox = $HUI.combobox('#PoRecLoc', {
-//			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+RecLocParams,
-//			valueField: 'RowId',
-//			textField: 'Description'
-//	});
-	$("#PoRecLoc").lookup({
+	var RecLocParams = JSON.stringify(addSessionParams({ Type: 'Login' }));
+	var RecLocBox = $HUI.combobox('#PoRecLoc', {
+			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+RecLocParams,
+			valueField: 'RowId',
+			textField: 'Description'
+	});
+	/*
+	$('#PoRecLoc').lookup({
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.Common.Dicts',
 			QueryName: 'GetCTLoc',
-			Params: RecLocParams
+			Params: RecLocParams,
+			rows: 99999
 		}
+	});*/
+	var VendorParams = JSON.stringify(addSessionParams({ APCType: 'M' }));
+	var VendorBox = $HUI.combobox('#VendorBox', {
+			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetVendor&ResultSetType=array&Params='+VendorParams,
+			valueField: 'RowId',
+			textField: 'Description'
 	});
-	var VendorParams=JSON.stringify(addSessionParams({APCType:"M",RcFlag:"Y"}));
-//	var VendorBox = $HUI.combobox('#VendorBox', {
-//			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetVendor&ResultSetType=array&Params='+VendorParams,
-//			valueField: 'RowId',
-//			textField: 'Description'
-//	});
-	$("#VendorBox").lookup({
+	/*
+	$('#VendorBox').lookup({
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.Common.Dicts',
 			QueryName: 'GetVendor',
-			Params: VendorParams
+			Params: VendorParams,
+			rows: 99999
 		}
 	});
-
-	var SourceOfFundParams=JSON.stringify(addSessionParams());
-//	var SourceOfFundBox = $HUI.combobox('#PoSourceOfFund', {
-//			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetSourceOfFund&ResultSetType=array&Params='+SourceOfFundParams,
-//			valueField: 'RowId',
-//			textField: 'Description'
-//	});
-	$("#PoSourceOfFund").lookup({
+	*/
+	var SourceOfFundParams = JSON.stringify(addSessionParams());
+	var SourceOfFundBox = $HUI.combobox('#PoSourceOfFund', {
+			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetSourceOfFund&ResultSetType=array&Params='+SourceOfFundParams,
+			valueField: 'RowId',
+			textField: 'Description'
+	});
+	/*
+	$('#PoSourceOfFund').lookup({
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.Common.Dicts',
 			QueryName: 'GetSourceOfFund',
-			Params: SourceOfFundParams
+			Params: SourceOfFundParams,
+			rows: 99999
 		}
-	});
+	});*/
 	var IngrInpoMainCm = [[
-			{
-				title : "RowId",
-				field : 'PoId',
-				width : 50,
-				hidden : true
-			},{
-				title : "¶©µ¥ºÅ",
-				field : 'PoNo',
-				width : 100
-			},{
-				title : "Éê¹º¿ÆÊÒ",
-				field : 'ReqLocDesc',
-				width : 100
-			},{
-				title : "¶©¹º¿ÆÊÒ",
-				field : 'PoLocDesc',
-				width : 100
-			},{
-				title : "¹©Ó¦ÉÌ",
-				field : 'Vendor',
-				width : 100
-			},{
-				title : "¶©µ¥×´Ì¬",
-				field : 'PoStatus',
-				width : 100,
-				formatter :function(v){
-						if(v==0){return "Î´Èë¿â"}
-						else if(v==1){return "²¿·ÖÈë¿â"}
-						else {return "È«²¿Èë¿â"}
-					}
-			},{
-				title : "¶©µ¥ÈÕÆÚ",
-				field : 'PoDate',
-				width : 100
-			},{
-				title : "VenId",
-				field : 'VenId',
-				width : 50,
-				hidden : true
-			},{
-				title : "PurUserId",
-				field : 'PurUserId',
-				width : 50,
-				hidden : true
-			},{
-				title : "StkGrpId",
-				field : 'StkGrpId',
-				width : 50,
-				hidden : true
-			},{
-				title : "CmpFlag",
-				field : 'CmpFlag',
-				width : 50,
-				hidden : true
-			},{
-				title : "µç×ÓÓÊ¼ş",
-				field : 'Email',
-				width : 100
-			},{
-				title : "ReqLoc",
-				field : 'ReqLoc',
-				width : 50,
-				hidden : true
-			},{
-				title : "PoLoc",
-				field : 'PoLoc',
-				width : 50,
-				hidden : true
-			},{
-				title : "ÊÇ·ñÉóÅú",
-				field : 'Approveed',
-				width : 100,
-				formatter : function(value){
-				if(value=='Y')
-				return 'ÊÇ';
-				else
-				return '·ñ';}
-			},{
-				title : "¶©µ¥ºÅ",
-				field : 'ApproveedUser',
-				width : 50,
-				hidden : true
-			},{
-				title : "ApproveedDate",
-				field : 'ApproveedDate',
-				width : 50,
-				hidden : true
-			},{
-				title : "CancelReasonId",
-				field : 'CancelReasonId',
-				width : 50,
-				hidden : true
-			},{
-				title : "CancelReason",
-				field : 'CancelReason',
-				width : 50,
-				hidden : true
+		{
+			title: 'RowId',
+			field: 'PoId',
+			width: 50,
+			hidden: true
+		}, {
+			title: 'è®¢å•å·',
+			field: 'PoNo',
+			width: 100
+		}, {
+			title: 'ç”³è´­ç§‘å®¤',
+			field: 'ReqLocDesc',
+			width: 100
+		}, {
+			title: 'è®¢è´­ç§‘å®¤',
+			field: 'PoLocDesc',
+			width: 100
+		}, {
+			title: 'ä¾›åº”å•†',
+			field: 'Vendor',
+			width: 100
+		}, {
+			title: 'è®¢å•çŠ¶æ€',
+			field: 'PoStatus',
+			width: 100,
+			formatter: function(v) {
+				if (v == 0) { return 'æœªå…¥åº“'; } else if (v == 1) { return 'éƒ¨åˆ†å…¥åº“'; } else { return 'å…¨éƒ¨å…¥åº“'; }
 			}
+		}, {
+			title: 'è®¢å•æ—¥æœŸ',
+			field: 'PoDate',
+			width: 100
+		}, {
+			title: 'VenId',
+			field: 'VenId',
+			width: 50,
+			hidden: true
+		}, {
+			title: 'PurUserId',
+			field: 'PurUserId',
+			width: 50,
+			hidden: true
+		}, {
+			title: 'StkGrpId',
+			field: 'StkGrpId',
+			width: 50,
+			hidden: true
+		}, {
+			title: 'CmpFlag',
+			field: 'CmpFlag',
+			width: 50,
+			hidden: true
+		}, {
+			title: 'ç”µå­é‚®ä»¶',
+			field: 'Email',
+			width: 100
+		}, {
+			title: 'ReqLoc',
+			field: 'ReqLoc',
+			width: 50,
+			hidden: true
+		}, {
+			title: 'PoLoc',
+			field: 'PoLoc',
+			width: 50,
+			hidden: true
+		}, {
+			title: 'æ˜¯å¦å®¡æ‰¹',
+			field: 'Approveed',
+			width: 100,
+			formatter: function(value) {
+				if (value == 'Y')
+					return 'æ˜¯';
+				else
+					return 'å¦';
+			}
+		}, {
+			title: 'è®¢å•å·',
+			field: 'ApproveedUser',
+			width: 50,
+			hidden: true
+		}, {
+			title: 'ApproveedDate',
+			field: 'ApproveedDate',
+			width: 50,
+			hidden: true
+		}, {
+			title: 'CancelReasonId',
+			field: 'CancelReasonId',
+			width: 50,
+			hidden: true
+		}, {
+			title: 'CancelReason',
+			field: 'CancelReason',
+			width: 50,
+			hidden: true
+		}
 	]];
 	var IngrInpoMainGrid = $UI.datagrid('#IngrInpoMainGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.INPO',
-			QueryName: 'Query'
+			QueryName: 'Query',
+			query2JsonStrict: 1
 		},
 		columns: IngrInpoMainCm,
-		showBar:true,
-		onSelect:function(index, row){
+		onSelect: function(index, row) {
 			IngrInpoDetailGrid.load({
 				ClassName: 'web.DHCSTMHUI.DHCINGdRecItm',
 				QueryName: 'QueryPoItmForRec',
+				query2JsonStrict: 1,
+				rows: 99999,
 				Parref: row.PoId
 			});
 		},
-		onLoadSuccess: function(data){
-			if(data.rows.length > 0){
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
 				IngrInpoMainGrid.selectRow(0);
 			}
 		}
-	})
+	});
 	var IngrInpoDetailGridCm = [[
-			{
-				title : "RowId",
-				field : 'Inpoi',
-				width : 50,
-				hidden : true
-			},{
-				title : "IncId",
-				field : 'IncId',
-				width : 50,
-				hidden : true
-			},{
-				title : "Îï×Ê´úÂë",
-				field : 'IncCode',
-				width : 100
-			},{
-				title : "Îï×ÊÃû³Æ",
-				field : 'IncDesc',
-				width : 100
-			},{
-				title : "¹æ¸ñ",
-				field : 'Spec',
-				width : 100
-			},{
-				title : "ÊıÁ¿",
-				field : 'RecQty',
-				width : 100,
-				align : 'right',
-				editor:{
-					type:'numberbox',
-					options:{
-						required:true
-					}
+		{
+			field: 'ck',
+			checkbox: true
+		}, {
+			title: 'RowId',
+			field: 'Inpoi',
+			width: 50,
+			saveCol: true,
+			hidden: true
+		}, {
+			title: 'IncId',
+			field: 'IncId',
+			width: 50,
+			saveCol: true,
+			hidden: true
+		}, {
+			title: 'ç‰©èµ„ä»£ç ',
+			field: 'IncCode',
+			width: 100
+		}, {
+			title: 'ç‰©èµ„åç§°',
+			field: 'IncDesc',
+			width: 100
+		}, {
+			title: 'è§„æ ¼',
+			field: 'Spec',
+			width: 100
+		}, {
+			title: 'æœªå…¥åº“æ•°é‡',
+			field: 'RecQty',
+			width: 100,
+			align: 'right',
+			saveCol: true,
+			editor: {
+				type: 'numberbox',
+				options: {
+					required: true,
+					tipPosition: 'bottom',
+					min: 0,
+					precision: GetFmtNum('FmtQTY')
 				}
-			},{
-				title : "µ¥Î»",
-				field : 'IngrUomId',
-				width : 100,
-				formatter: CommonFormatter(UomCombox,'IngrUomId','IngrUom'),
-				editor:UomCombox
-			},{
-				title : "½ø¼Û",
-				field : 'Rp',
-				width : 80,
-				align : 'right',
-				editor:{
-					type:'numberbox',
-					options:{
-						required:true
-					}
-				}
-			},{
-				title : "Éú²ú³§ÉÌ",
-				field : 'ManfId',
-				width : 100,
-				formatter: CommonFormatter(PhManufacturerBox,'ManfId','Manf'),
-				editor:PhManufacturerBox
-			},{
-				title : "ÊÛ¼Û",
-				field : 'Sp',
-				width : 100,
-				align : 'right'
-			},{
-				title : "ÅúºÅ",
-				field : 'BatchNo',
-				width : 80,
-				editor:{
-					type:'text',
-					options:{
-					}
-				}
-			},{
-				title : "ÓĞĞ§ÆÚ",
-				field : 'ExpDate',
-				width : 80,
-				editor:{
-					type:'datebox',
-					options:{
-					}
-				}
-			},{
-				title : "»ù±¾µ¥Î»",
-				field : 'BUomId',
-				width : 50,
-				hidden : true
-			},{
-				title : "×ª»»ÂÊ",
-				field : 'ConFacPur',
-				width : 100
-			},{
-				title : "¶©¹ºÊıÁ¿",
-				field : 'PurQty',
-				width : 100,
-				align : 'right'
-			},{
-				title : "ÒÑÈë¿âÖÆµ¥ÊıÁ¿",
-				field : 'ImpQty',
-				width : 100,
-				align : 'right'
-			},{
-				title : "ÅúºÅÒªÇó",
-				field : 'BatchReq',
-				width : 50,
-				hidden : true
-			},{
-				title : "ÓĞĞ§ÆÚÒªÇó",
-				field : 'ExpReq',
-				width : 50,
-				hidden : true
-			},{
-				title : "BarcodeQty",
-				field : 'BarcodeQty',
-				width : 50,
-				align : 'right',
-				hidden : true
-			},{
-				title : "AvaBarcodeQty",
-				field : 'AvaBarcodeQty',
-				width : 50,
-				align : 'right',
-				hidden : true
-			},{
-				title : "¾ßÌå¹æ¸ñ",
-				field : 'SpecDesc',
-				width : 100,
-				formatter: CommonFormatter(SpecDescbox,'SpecDesc','SpecDesc'),
-				editor:SpecDescbox
-			},{
-				title : "×¢²áÖ¤ºÅ",
-				field : 'AdmNo',
-				width : 90,
-				editor:{
-					type:'text',
-					options:{
-					}
-				}
-			},{
-				title : "×¢²áÖ¤ºÅĞ§ÆÚ",
-				field : 'AdmExpdate',
-				width : 100,
-				editor:{
-					type:'datebox',
-					options:{
-					}
-				}
-			},{
-				title : "¸ßÖµ±êÖ¾",
-				field : 'HVFlag',
-				width : 100
-			},{
-				title : "ÒÑÈë¿âÊıÁ¿",
-				field : 'ImpQtyAudited',
-				width : 100,
-				align : 'right'
 			}
-		]];
+		}, {
+			title: 'å•ä½',
+			field: 'IngrUomId',
+			width: 100,
+			saveCol: true,
+			formatter: CommonFormatter(UomCombox, 'IngrUomId', 'IngrUom'),
+			editor: UomCombox
+		}, {
+			title: 'è¿›ä»·',
+			field: 'Rp',
+			width: 80,
+			align: 'right',
+			saveCol: true,
+			editor: {
+				type: 'numberbox',
+				options: {
+					required: true,
+					tipPosition: 'bottom',
+					min: 0,
+					precision: GetFmtNum('FmtRP')
+				}
+			}
+		}, {
+			title: 'ç”Ÿäº§å‚å®¶',
+			field: 'ManfId',
+			width: 100,
+			saveCol: true,
+			formatter: CommonFormatter(PhManufacturerBox, 'ManfId', 'Manf'),
+			editor: PhManufacturerBox
+		}, {
+			title: 'æ‰¹å·',
+			field: 'BatchNo',
+			width: 80,
+			saveCol: true,
+			editor: {
+				type: 'text',
+				options: {
+				}
+			}
+		}, {
+			title: 'æœ‰æ•ˆæœŸ',
+			field: 'ExpDate',
+			width: 80,
+			saveCol: true,
+			editor: {
+				type: 'datebox',
+				options: {
+				}
+			}
+		}, {
+			title: 'å”®ä»·',
+			field: 'Sp',
+			width: 100,
+			align: 'right',
+			saveCol: true
+		}, {
+			title: 'è½¬æ¢ç‡',
+			field: 'ConFacPur',
+			width: 100
+		}, {
+			title: 'è®¢è´­æ•°é‡',
+			field: 'PurQty',
+			width: 100,
+			align: 'right'
+		}, {
+			title: 'å·²å…¥åº“åˆ¶å•æ•°é‡',
+			field: 'ImpQty',
+			width: 110,
+			align: 'right'
+		}, {
+			title: 'å…·ä½“è§„æ ¼',
+			field: 'SpecDesc',
+			width: 100,
+			saveCol: CodeMainParamObj.UseSpecList == 'Y' ? true : false,
+			formatter: CommonFormatter(SpecDescbox, 'SpecDesc', 'SpecDesc'),
+			hidden: CodeMainParamObj.UseSpecList == 'Y' ? false : true,
+			editor: (CodeMainParamObj.UseSpecList == 'Y' ? false : true) ? null : SpecDescbox
+		}, {
+			title: 'æ³¨å†Œè¯å·',
+			field: 'AdmNo',
+			width: 90,
+			saveCol: true,
+			editor: {
+				type: 'text',
+				options: {
+				}
+			}
+		}, {
+			title: 'æ³¨å†Œè¯å·æ•ˆæœŸ',
+			field: 'AdmExpdate',
+			width: 100,
+			saveCol: true,
+			editor: {
+				type: 'datebox',
+				options: {
+				}
+			}
+		}, {
+			title: 'é«˜å€¼æ ‡å¿—',
+			field: 'HVFlag',
+			width: 100,
+			formatter: BoolFormatter
+		}, {
+			title: 'å·²å…¥åº“æ•°é‡',
+			field: 'ImpQtyAudited',
+			width: 100,
+			align: 'right'
+		}, {
+			title: 'æ‰¹å·è¦æ±‚',
+			field: 'BatchReq',
+			width: 50,
+			hidden: true
+		}, {
+			title: 'æœ‰æ•ˆæœŸè¦æ±‚',
+			field: 'ExpReq',
+			width: 50,
+			hidden: true
+		}, {
+			title: 'BarcodeQty',
+			field: 'BarcodeQty',
+			width: 50,
+			align: 'right',
+			hidden: true
+		}, {
+			title: 'AvaBarcodeQty',
+			field: 'AvaBarcodeQty',
+			width: 50,
+			align: 'right',
+			hidden: true
+		}, {
+			title: 'åŸºæœ¬å•ä½',
+			field: 'BUomId',
+			width: 50,
+			hidden: true
+		}
+	]];
 	var IngrInpoDetailGrid = $UI.datagrid('#IngrInpoDetailGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINGdRecItm',
-			QueryName: 'QueryPoItmForRec'
+			QueryName: 'QueryPoItmForRec',
+			query2JsonStrict: 1
 		},
+		singleSelect: false,
+		pagination: false,
 		columns: IngrInpoDetailGridCm,
-		showBar:true,
-		onClickCell: function(index, field ,value){
-			IngrInpoDetailGrid.commonClickCell(index,field,value);
+		onClickRow: function(index, row) {
+			IngrInpoDetailGrid.commonClickRow(index, row);
 		}
+		
 	});
 	function QueryInpoIngrInfo() {
-		var ParamsObj=$UI.loopBlock('#PoConditions');
-		if(isEmpty(ParamsObj.PoRecLoc)){
-			$UI.msg('alert','Èë¿â¿ÆÊÒ²»ÄÜÎª¿Õ!');
+		var ParamsObj = $UI.loopBlock('#PoConditions');
+		if (isEmpty(ParamsObj.PoRecLoc)) {
+			$UI.msg('alert', 'å…¥åº“ç§‘å®¤ä¸èƒ½ä¸ºç©º!');
 			return false;
 		}
-		var Params=JSON.stringify(ParamsObj);
+		ParamsObj.AuditFlag = 'Y';
+		ParamsObj.includeCancelInPo = 'N';
+		var Params = JSON.stringify(ParamsObj);
 		$UI.clear(IngrInpoDetailGrid);
+		$UI.clear(IngrInpoMainGrid);
 		IngrInpoMainGrid.load({
 			ClassName: 'web.DHCSTMHUI.INPO',
 			QueryName: 'Query',
-			Params:Params
+			query2JsonStrict: 1,
+			Params: Params
 		});
 	}
 	function CheckDataBeforeSave() {
-		var ParamsObj=$UI.loopBlock('#PoConditions');
-		var RecLoc=ParamsObj.PoRecLoc;
-		var Row=IngrInpoMainGrid.getSelected();
-		if(isEmpty(Row)){
-			$UI.msg('alert','ÇëÑ¡ÔñÒª±£´æµÄµ¥¾İ!');
+		if (!IngrInpoDetailGrid.endEditing()) {
 			return false;
 		}
-
+		var ParamsObj = $UI.loopBlock('#PoConditions');
+		var RecLoc = ParamsObj.PoRecLoc;
+		var Row = IngrInpoMainGrid.getSelected();
+		if (isEmpty(Row)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©è¦ä¿å­˜çš„å•æ®!');
+			return false;
+		}
 		var Status = Row.PoStatus;
-		if (Status ==2) {
-			$UI.msg('alert','¸Ã¶©µ¥ÒÑ¾­È«²¿Èë¿â£¬²»ÄÜÔÙÈë¿â!');
+		if (Status == 2) {
+			$UI.msg('alert', 'è¯¥è®¢å•å·²ç»å…¨éƒ¨å…¥åº“ï¼Œä¸èƒ½å†å…¥åº“!');
 			return false;
 		}
 		if (isEmpty(RecLoc)) {
-			$UI.msg('alert','ÇëÑ¡ÔñÈë¿â¿ÆÊÒ!');
+			$UI.msg('alert', 'è¯·é€‰æ‹©å…¥åº“ç§‘å®¤!');
 			return false;
 		}
-		var RowsData=IngrInpoDetailGrid.getRows();
-		// ÓĞĞ§ĞĞÊı
+		var RowsData = IngrInpoDetailGrid.getSelections();
+		// æœ‰æ•ˆè¡Œæ•°
 		var count = 0;
 		for (var i = 0; i < RowsData.length; i++) {
 			var item = RowsData[i].IncId;
 			if (!isEmpty(item)) {
 				count++;
 			}
+			var RecQty = RowsData[i].RecQty;
+			if (RecQty == null || RecQty <= 0) {
+				$UI.msg('alert', 'æ•°é‡ä¸èƒ½å°äºæˆ–ç­‰äº0!');
+				return false;
+			}
 		}
 		if (RowsData.length <= 0 || count <= 0) {
-			$UI.msg('alert','ÎŞÈë¿âÃ÷Ï¸Êı¾İ!');
+			$UI.msg('alert', 'æ— å…¥åº“æ˜ç»†æ•°æ®!');
 			return false;
 		}
 		return true;
 	}
 	function InpoIngrSave() {
-		var ParamsObj=$UI.loopBlock('PoConditions');
+		var ParamsObj = $UI.loopBlock('PoConditions');
 		var SaveParamsObj = $UI.loopBlock('#PoSaveConditions');
-		var RecLoc=ParamsObj.PoRecLoc;
-		var SourceOfFund=SaveParamsObj.PoSourceOfFund;
-		var Row=IngrInpoMainGrid.getSelected();
-		if(isEmpty(Row)){
-			$UI.msg('alert','ÇëÑ¡ÔñÒª±£´æµÄµ¥¾İ!');
+		var RecLoc = ParamsObj.PoRecLoc;
+		var SourceOfFund = SaveParamsObj.PoSourceOfFund;
+		var Row = IngrInpoMainGrid.getSelected();
+		if (isEmpty(Row)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©è¦ä¿å­˜çš„å•æ®!');
 			return false;
 		}
 		var PoId = Row.PoId;
-		var HVflag=GetCertDocHVFlag(PoId,"PO");
-		if(HVflag=="Y"){
-			$UI.msg('alert','´Ë¶©µ¥Îª¸ßÖµ¶©µ¥,ÇëÈ¥¸ßÖµÉú³ÉÌõÂë½çÃæµ¼Èë¶©µ¥,×¢²áÌõÂë!');
+		var HVflag = GetCertDocHVFlag(PoId, 'PO');
+		if (HVflag == 'Y') {
+			$UI.msg('alert', 'æ­¤è®¢å•ä¸ºé«˜å€¼è®¢å•,è¯·å»é«˜å€¼ç”Ÿæˆæ¡ç ç•Œé¢å¯¼å…¥è®¢å•,æ³¨å†Œæ¡ç !');
 			return false;
 		}
 		var PurchaseUser = Row.PurUserId;
 		var Vendor = Row.VenId;
 		var StkGrpId = Row.StkGrpId;
 		var ReqLocId = Row.ReqLoc;
-		var Complete = "N";
-		var AdjCheque = "N";
-		var GiftFlag = "N";
-		var Main=JSON.stringify(addSessionParams({RecLoc:RecLoc,PurchaseUser:PurchaseUser,ApcvmDr:Vendor,StkGrpId:StkGrpId,SourceOfFund:SourceOfFund,ReqLocId:ReqLocId,Complete:Complete,AdjCheque:AdjCheque,GiftFlag:GiftFlag,PoId:PoId}));
-		var DetailObj=IngrInpoDetailGrid.getRowsData();
-		if (DetailObj.length==0){
-			$UI.msg('alert','ÎŞÃ÷Ï¸!');
-			return false;
-		}
-		var Detail=JSON.stringify(DetailObj);
+		if (RecLoc == ReqLocId) { ReqLocId = ''; }
+		var Complete = 'N';
+		var AdjCheque = 'N';
+		var GiftFlag = 'N';
+		var MainParamsObj = $UI.loopBlock('#MainConditions');
+		var IngrTypeId = MainParamsObj.IngrTypeId;
+		var Main = JSON.stringify(addSessionParams({ RecLoc: RecLoc, PurchaseUser: PurchaseUser, ApcvmDr: Vendor, StkGrpId: StkGrpId, SourceOfFund: SourceOfFund, ReqLocId: ReqLocId, Complete: Complete, AdjCheque: AdjCheque, GiftFlag: GiftFlag, PoId: PoId, IngrTypeId: IngrTypeId }));
+		var DetailObj = IngrInpoDetailGrid.getSelectedData();
+		var Detail = JSON.stringify(DetailObj);
 		$.cm({
 			ClassName: 'web.DHCSTMHUI.DHCINGdRec',
 			MethodName: 'jsSave',
 			MainInfo: Main,
 			ListData: Detail
-		},function(jsonData){
-			$UI.msg('alert',jsonData.msg);
-			if(jsonData.success==0){
-				var IngrRowid=jsonData.rowid;
+		}, function(jsonData) {
+			$UI.msg('success', jsonData.msg);
+			if (jsonData.success == 0) {
+				var IngrRowid = jsonData.rowid;
 				$HUI.dialog('#ImportByPoWin').close();
-				if(IngrParamObj.AutoPrintAfterSave=="Y"){
-					PrintRec(IngrRowid,"Y");
+				if (IngrParamObj.AutoPrintAfterSave == 'Y') {
+					PrintRec(IngrRowid, 'Y');
 				}
 				Fn(IngrRowid);
 			}
 		});
 	}
-
+	var PosplitDetail = function() {
+		var RowsData = IngrInpoDetailGrid.getSelections();
+		for (var i = 0; i < RowsData.length; i++) {
+			IngrInpoDetailGrid.commonAddRow();
+			IngrInpoDetailGrid.updateRow({
+				index: IngrInpoDetailGrid.editIndex,
+				row: RowsData[i]
+			});
+			setTimeout(function() {
+				IngrInpoDetailGrid.refreshRow();
+			}, 0);
+		}
+	};
 	function InpoIngrClear() {
 		$UI.clearBlock('#PoConditions');
 		$UI.clearBlock('#PoSaveConditions');
 		$UI.clear(IngrInpoMainGrid);
 		$UI.clear(IngrInpoDetailGrid);
-		var LocId = $("#RecLoc").combobox('getValue');
-		var LocDesc = $("#RecLoc").combobox('getText');
-		var Dafult={
+		var LocId = $('#RecLoc').combobox('getValue');
+		var LocDesc = $('#RecLoc').combobox('getText');
+		var DefaultData = {
 			PoStartDate: DefaultStDate(),
 			PoEndDate: DefaultEdDate(),
-			PoRecLoc: {RowId: LocId, Description: LocDesc},
-			Status:0
+			PoRecLoc: { RowId: LocId, Description: LocDesc },
+			Status: 0
 		};
-		$UI.fillBlock('#PoConditions',Dafult);
+		$UI.fillBlock('#PoConditions', DefaultData);
 	}
 	InpoIngrClear();
 	QueryInpoIngrInfo();
-}
+};

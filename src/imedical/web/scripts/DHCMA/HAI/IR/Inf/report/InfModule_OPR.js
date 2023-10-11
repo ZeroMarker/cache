@@ -3,26 +3,32 @@
 	obj.OperID = '';
 	obj.OperLocID = '';
 	obj.OperDocID = '';
+    obj.InfOperID ='';  //手术感染诊断与手术关联的ID
+	obj.InfOperDate = '';
+	obj.InfEpsID = '';
 	
 	obj.OperDate = '';
 	obj.IsHist=""; //当IsHist为1时获取病人索引,查询历史信息
+	obj.OldEpsodeID=""; //最多只能选择某次历史就诊的手术记录一条及本次就诊相关的手术记录
 	obj.EpisodeIDs=""; // 选择历次就诊手术信息对应的就诊号
 	obj.DelEpisodeIDs=""; // 删除手术信息时，如果手术信息关联的非本次就诊，需同步删除医院感染历史就诊表信息
 	// 手术信息
 	obj.refreshgridINFOPS = function(){
 		
 		obj.gridINFOPS = $HUI.datagrid("#gridINFOPS",{ 
-			title:'手术信息',
-			headerCls:'panel-header-gray',
-			iconCls:'icon-paper',
+			//title:'手术信息',
+			//headerCls:'panel-header-gray',
+			//iconCls:'icon-paper',
 			rownumbers: true, //如果为true, 则显示一个行号列
 			singleSelect: true,
+			nowrap: false, 	//不换行(false为自动换行)
+			fitColumns:true,
 			autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
 			loadMsg:'数据加载中...',
 			columns:[[
-				{field:'OperName',title:'手术名称',width:200},
-				{field:'OperType',title:'手术类型',width:90},
-				{field:'OperLoc',title:'手术科室',width:130},
+				{field:'OperName',title:'手术名称',width:120},
+				{field:'OperType',title:'手术类型',width:75},
+				{field:'OperLoc',title:'手术科室',width:100},
 				{field:'OperDate',title:'手术开始时间',width:100,
 					formatter: function(value,row,index){
 						return row.OperDate+" "+row.SttTime;	
@@ -33,10 +39,12 @@
 						return row.EndDate+" "+row.EndTime;	
 					}
 				},
-				{field:'OperDocTxt',title:'手术医生',width:90},
-				{field:'Anesthesia',title:'麻醉方式',width:80},
+				{field:'OperHours',title:'时长(时)',width:75},
+				{field:'OperDocTxt',title:'手术医生',width:75},
+				{field:'Anesthesia',title:'麻醉方式',width:75},
+				{field:'ASAScore',title:'ASA评分',width:70},
 				{field:'CuteType',title:'切口类型',width:70},
-				{field:'NNISLevel',title:'NNIS分级',width:75},
+				{field:'NNISLevel',title:'NNIS分级',width:70},
 				{field:'CuteHealing',title:'愈合情况',width:70,align:'center'},
 				{field:'IsOperInf',title:'切口感染',width:70,align:'center',
 					formatter: function(value,row,index){
@@ -47,7 +55,7 @@
 						}
 					}
 				},
-				{field:'InfType',title:'感染类型',width:80},
+				{field:'InfType',title:'手术部位',width:70},
 				{field:'IsInHospInf',title:'引起院感',width:70,align:'center',
 					formatter: function(value,row,index){
 						if (value==1){
@@ -65,7 +73,11 @@
 					obj.gridINFOPS.clearSelections();  //清除选中行
 				} else {
 					obj.OperRowID = rindex;
-					$("#btnINFOPSDel").linkbutton("enable");
+					if ((obj.RepStatusCode==3)||(obj.RepStatusCode==4)) {  //审核、删除状态报告
+						$("#btnINFOPSDel").linkbutton("disable");
+					}else {
+						$("#btnINFOPSDel").linkbutton("enable");
+					}
 				}	
 			},
 			onDblClickRow:function(rindex, rowdata) {
@@ -74,6 +86,15 @@
 				}
 			},
 			onLoadSuccess:function(data){
+				//update 20230211 已经报告的手术诊断取第一条手术信息为关联的信息
+				if ((ReportID)&&(data.total>0)&&(!obj.InfOperID)) {
+					var InfPos=$('#cboInfPos').combotree('getText');
+					if  ((InfPos.indexOf("手术切口")>0||InfPos.indexOf("腔隙感染")>0)) {
+						obj.InfOperID= data.rows[0].OperAnaesID;  	
+						obj.InfOperDate = data.rows[0].OperDate;
+						obj.InfEpsID =data.rows[0]. EpisodeID;
+					}
+				} 
 				$("#btnINFOPSDel").linkbutton("disable");
 			}
 		});
@@ -94,6 +115,22 @@
 		OpenINFOPSSync();
 	}
 
+	//是否存在与此次感染相关的手术信息
+	$HUI.radio("[name='radInfOpr']",{  
+		onChecked:function(e,value){
+			var IsInfOpr = $(e.target).val();   //当前选中的值
+			if (IsInfOpr==1) {
+				$('#divINFOPS').removeAttr("style");
+				OpenINFOPSSync();
+				obj.refreshgridINFOPS();				
+			}else {
+				$('#gridINFOPS').datagrid('loadData', {total:0,rows:[]});	
+				$('#divINFOPS').attr("style","display:none");
+			}
+		}
+	});
+
+
     // 手术信息提取事件
 	$('#btnINFOPSSync').click(function(e){
 		/// TODO同步手术
@@ -108,7 +145,7 @@
 		OpenINFOPSSync();
 	});
 	//手术信息提取弹出事件
-	obj.LayerOpenINFOPSSync = function() {
+	obj.LayerOpenINFOPSSync = function() {		
 		$HUI.dialog('#LayerOpenINFOPSSync',{
 			title:"手术信息-提取 [双击数据进行编辑]", 
 			iconCls:'icon-w-paper',
@@ -128,10 +165,20 @@
 	function refreshgridINFOPSSync(){
 		obj.gridINFOPSSync = $HUI.datagrid("#gridINFOPSSync",{
 			fit:true,
+			showGroup: true,
+			groupField:'AdmDate',
+			checkOnSelect:false,
+			view: groupview,
+			groupFormatter:function(value, rows){
+				if(value==undefined) return;
+				return $g('入院日期')+'：'+value + ' , '+$g('共')+'( ' + rows.length + ' )'+$g('条手术记录')+'';
+			},
+			scrollbarSize: 0,
 			headerCls:'panel-header-gray',
 			iconCls:'icon-paper',
 			rownumbers: true, //如果为true, 则显示一个行号列
 			singleSelect: true,
+			nowrap: false, 	//不换行(false为自动换行)
 			autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
 			loadMsg:'数据加载中...',
 			url:$URL,
@@ -139,24 +186,26 @@
 				ClassName:'DHCHAI.IRS.INFOPSSrv',
 				QueryName:'QryINFOPSByRep',
 				aEpisodeID:EpisodeID,
-				IsHist:obj.IsHist
+				IsHist:1    //update 20230211 手术信息都可以加载历史手术
 			},
 			columns:[[
-				{field:'OperName',title:'手术名称',width:200},
+				{field:'OperName',title:'手术名称',width:120},
 				{field:'OperType',title:'手术类型',width:80},
-				{field:'OperLoc',title:'手术科室',width:150},
-				{field:'OperDate',title:'手术开始时间',width:120,
+				{field:'OperLoc',title:'手术科室',width:120},
+				{field:'OperDate',title:'手术开始时间',width:100,
 					formatter: function(value,row,index){
 						return row.OperDate+" "+row.SttTime;	
 					}
 				},
-				{field:'EndDate',title:'手术结束时间',width:120,
+				{field:'EndDate',title:'手术结束时间',width:100,
 					formatter: function(value,row,index){
 						return row.EndDate+" "+row.EndTime;	
 					}
 				},
-				{field:'OperDocTxt',title:'手术医生',width:100},
+				{field:'OperHours',title:'手术时长(时)',width:90},
+				{field:'OperDocTxt',title:'手术医生',width:90},
 				{field:'Anesthesia',title:'麻醉方式',width:100},
+				{field:'ASAScore',title:'ASA评分',width:80},
 				{field:'CuteType',title:'切口类型',width:80},
 				{field:'CuteHealing',title:'愈合情况',width:80},
 				{field:'NNISLevel',title:'NNIS分级',width:80}
@@ -178,19 +227,33 @@
 	// 弹出手术信息弹框
 	function OpenINFOPSEdit(d,r){
 		$('#LayerOpenINFOPSEdit').show();
-		obj.LayerOpenINFOPSEdit();
-		$('#LayerOpenINFOPSEdit').dialog({
-			buttons:[{
-				text:'保存',
-				handler:function(){	
-					INFOPSAdd(d,r);
-				}
-			},{
-				text:'取消',
-				handler:function(){$HUI.dialog('#LayerOpenINFOPSEdit').close();}
-			}]
-		});
-		
+		if ((obj.RepStatusCode==3)||(obj.RepStatusCode==4)) {
+			obj.LayerOpenINFOPSEdit();
+		}else {			
+			$('#LayerOpenINFOPSEdit').dialog({
+				title:'手术信息-编辑',
+				iconCls:'icon-w-paper',
+				width: 720,  
+				height:370,    
+				modal: true,
+				isTopZindex:true,
+				buttons:[{
+					text:'保存',
+					handler:function(){	
+						var display =$('#divINFOPS').css('display');
+						if (display=="none") {
+							$HUI.radio('#radInfOpr-1').setValue(true);
+							$('#divINFOPS').removeAttr("style");
+							$HUI.dialog('#LayerOpenINFOPSSync').close();
+						}
+						INFOPSAdd(d,r);
+					}
+				},{
+					text:'取消',
+					handler:function(){$HUI.dialog('#LayerOpenINFOPSEdit').close();}
+				}]
+			});
+		}
 		InitINFOPSEditData(d);
 	}
 	
@@ -199,13 +262,14 @@
 		$HUI.dialog('#LayerOpenINFOPSEdit',{
 			title:'手术信息-编辑',
 			iconCls:'icon-w-paper',
-			width: 700,    
+			width: 720,  
+			height:325,  
 			modal: true,
 			isTopZindex:true
 		});
 	}
 
-	$('#chkIsOperInf').checkbox({   //切口感染
+	/* $('#chkIsOperInf').checkbox({   //切口感染
 		onCheckChange:function(e,value){
 			if (value) {	
 				$('#cboInfType').combobox("enable");
@@ -214,16 +278,35 @@
 				$('#cboInfType').combobox('disable');
 			}
 		}
-	});
+	}); */
 		
 	// 手术编辑框信息初始化
 	function InitINFOPSEditData(d){
-		
+		$('#txtOperEndDateTime').datetimebox({
+			onHidePanel:function(){
+			  var selEdDateTime=$('#txtOperEndDateTime').datetimebox('getValue');
+			  var selStDateTime=$('#txtOperSttDateTime').datetimebox('getValue');
+			  if((selStDateTime!="")&&(selEdDateTime!=""))
+			  {
+				  //计算小时数 chenjb 
+				  //var d = new Date("2018-02-19T12:00:00");
+				  var dStDt = new Date(selStDateTime);
+				  var dEdDt = new Date(selEdDateTime);
+				  var hourDiff=((dEdDt - dStDt) / 1000 / 60 / 60).toFixed(2);
+				  //alert(hourDiff);
+				  if(hourDiff>0)
+				  {
+				  	$('#txtOperHour').val(hourDiff);
+				  }
+			  }
+			}
+		});
 		obj.cboOperType = Common_ComboDicID("cboOperType","HAIOperType");
 		obj.cboAnesMethod = Common_ComboDicID("cboAnesMethod","Anesthesia");
 		obj.cboIncisionr = Common_ComboDicID("cboIncisionr","CuteType");
 		obj.cboHealing = Common_ComboDicID("cboHealing","CuteHealing");
 		obj.cboNNISLevel = Common_ComboDicID("cboNNISLevel","NNISLevel");
+		obj.cboASAScore = Common_ComboDicID("cboASAScore","ASAScore");
 		
 		obj.cboInfType = $HUI.combobox("#cboInfType", {
 			editable: true,       
@@ -235,7 +318,7 @@
 			   	$("#cboInfType").combobox('reload',url);
 			}
 		});
-		$('#cboInfType').combobox('disable');
+		//$('#cboInfType').combobox('disable');
 		
 		obj.cboOper = $HUI.lookup("#cboOper", {
 			panelWidth:450,
@@ -275,7 +358,7 @@
 			minQueryLen:1,             //isCombo为true时，可以搜索要求的字符最小长度
 			valueField: 'ID',
 			textField: 'LocDesc',
-			queryParams:{ClassName: 'DHCHAI.BTS.LocationSrv',QueryName: 'QryLocSrv',aHospID:$.LOGON.HOSPID,aLocCate:"I",aLocType:"E",aIsActive:1,aIsGroup:1},
+			queryParams:{ClassName: 'DHCHAI.BTS.LocationSrv',QueryName: 'QryLocSrv',aHospID:$.LOGON.HOSPID,aLocCate:"I",aLocType:"W",aIsActive:1,aIsGroup:1},
 			columns:[[  
 				{field:'LocCode',title:'科室代码',width:160},   
 				{field:'LocDesc',title:'科室名称',width:260}  
@@ -345,6 +428,9 @@
 			$('#cboIncisionr').combobox('setText',d.CuteType);
 			$('#cboNNISLevel').combobox('setValue',d.NNISLevelID);
 			$('#cboNNISLevel').combobox('setText',d.NNISLevel);
+			$('#cboASAScore').combobox('setValue',d.ASAScoreID);
+			$('#cboASAScore').combobox('setText',d.ASAScore);
+			$('#txtOperHour').val(d.OperHours);
 			$('#cboHealing').combobox('setValue',d.CuteHealingID);
 			$('#cboHealing').combobox('setText',d.CuteHealing);
 			
@@ -391,6 +477,7 @@
 			$('#cboAnesMethod').combobox('clear');
 			$('#cboIncisionr').combobox('clear');
 			$('#cboNNISLevel').combobox('clear');
+			$('#cboASAScore').combobox('clear');
 			$('#cboHealing').combobox('clear');
 			$('#cboInfType').combobox('clear');
 			$('#txtOperSttDateTime').datetimebox('clear');
@@ -401,6 +488,7 @@
 			$("#chkIsOperInf").checkbox('setValue',false);
 			$("#chkIsInHospInf").checkbox('setValue',false);
 			$("#chkImplants").checkbox('setValue',false);
+			$('#txtOperHour').val("");
 		}
 	}
 
@@ -415,15 +503,42 @@
 		}else{
 			var OperType = $('#cboOperType').combobox('getText');
 		}
-		
+		var DEpisodeID=EpisodeID;		
+    	var ID ='';
+    	var OperAnaesID='';
+    	if (d){
+    		ID = d.ID;
+    		OperAnaesID = d.OperAnaesID;
+    		DEpisodeID=d.EpisodeID;
+    	}
 		var SttDateTime = $('#txtOperSttDateTime').datetimebox('getValue');
 		var OperDate = SttDateTime.split(' ')[0];
-		if (obj.IsHist==1){
+		
+		var InfPos=$('#cboInfPos').combotree('getText');
+		if ((!obj.InfOperID)&&((InfPos.indexOf("手术切口")>0||InfPos.indexOf("腔隙感染")>0))) obj.InfOperID=OperAnaesID;  //update 20230211 诊断与手术关联的信息
+		if ((obj.InfOperID)&&(obj.InfOperID==OperAnaesID)) {
+			 obj.InfOperDate = OperDate;
+			 obj.InfEpsID = DEpisodeID;
+		} 
+		
+		if (obj.OldEpsodeID=="") {
+			obj.OldEpsodeID=DEpisodeID;
+		}else{
+			if (obj.OldEpsodeID!=EpisodeID) {  //先关联历史就诊
+				if ((obj.OldEpsodeID!=DEpisodeID)&&(EpisodeID!=DEpisodeID)){
+					$.messager.alert("提示", "只能选择某一次历史就诊手术信息，不能选择多次历史就诊手术信息！", 'info');
+					return ;
+				}
+			}else {  //先关联本次就诊
+				obj.OldEpsodeID=DEpisodeID;
+			}
+		}
+		if ((obj.InfEpsID)&&(obj.InfOperDate))	 { //update 20230211 添加手术信息感染科室归属判断
 			var TransInfo = $m({
 				ClassName:"DHCHAI.DPS.PAAdmTransSrv",
 				MethodName:"GetTransInfoByDate",		
-				aEpisodeDr: EpisodeID,
-				aDate:OperDate
+				aEpisodeDr: obj.InfEpsID,
+				aDate:obj.InfOperDate
 			},false);
 			var InfLoc =TransInfo.split("^")[0];
 			var objLoc = $cm({
@@ -435,13 +550,12 @@
 				$('#txtInfLoc').val(InfLoc);	
 				$('#cboInfLoc').lookup('setText',objLoc.BTDesc);	
 			}
-			$('#txtInfDate').datebox('setValue',OperDate);
 		}
 		var SttTime = SttDateTime.split(' ')[1];
 		var EndDateTime = $('#txtOperEndDateTime').datetimebox('getValue');
 		var EndDate = EndDateTime.split(' ')[0];
 		var EndTime = EndDateTime.split(' ')[1];
-		
+	
 		var AnesthesiaID = $('#cboAnesMethod').combobox('getValue');
 		if (AnesthesiaID==''){
 			var Anesthesia = '';
@@ -459,6 +573,12 @@
 			var NNISLevel = '';
 		}else{
 			var NNISLevel = $('#cboNNISLevel').combobox('getText');
+		}
+		var ASAScoreID = $('#cboASAScore').combobox('getValue');
+		if (ASAScoreID==''){
+			var ASAScore = '';
+		}else{
+			var ASAScore = $('#cboASAScore').combobox('getText');
 		}
 		var CuteHealingID = $('#cboHealing').combobox('getValue');
 		if (CuteHealingID==''){
@@ -486,62 +606,59 @@
 		var ImplantFlag = $('#chkImplants').checkbox('getValue')? '1':'0';
 		var IsOperInf = $('#chkIsOperInf').checkbox('getValue')? '1':'0';
    		
+   		var OperHours=$('#txtOperHour').val();
+   			
+   		
 		var errinfo = "";
    		if (OperTypeID==''){
-			errinfo = errinfo + "手术类型不能为空!<br>";
+			errinfo = errinfo + ($g("手术类型不能为空!")+"<br>");
     	}
     	if (obj.OperID==''){
-			errinfo = errinfo + "请选择标准手术名称!<br>";
+			errinfo = errinfo + ($g("请选择标准手术名称!")+"<br>");
     	}
     	if (obj.OperLocID==''){
-    		errinfo = errinfo + "请选择标准科室名称!<br>";
+    		errinfo = errinfo + ($g("请选择标准科室名称!")+"<br>");
     	}
     	if (SttDateTime==''){
-			errinfo = errinfo + "开始时间不能为空!<br>";
+			errinfo = errinfo + ($g("开始时间不能为空!")+"<br>");
     	}
     	if (EndDateTime==''){
-			errinfo = errinfo + "结束时间不能为空!<br>";
+			errinfo = errinfo + ($g("结束时间不能为空!")+"<br>");
     	}
 		if ((Common_CompareDate(OperDate,EndDate)>0)||((EndDate == OperDate)&&(SttTime>EndTime))){
-    		errinfo = errinfo + "开始时间不能在结束时间之后!<br>"; 
+    		errinfo = errinfo + ($g("开始时间不能在结束时间之后!")+"<br>"); 
     	}
 
 		if ((Common_CompareDate(OperDate,NowDate)>0)||((OperDate == NowDate)&&(SttTime>NowTime))||
 			(Common_CompareDate(EndDate,NowDate)>0)||((EndDate == NowDate)&&(EndTime>NowTime))) {
-    		errinfo = errinfo + "开始时间、结束时间不能在当前时间之后!<br>"; 
+    		errinfo = errinfo + ($g("开始时间、结束时间不能在当前时间之后!")+"<br>"); 
     	}
     	
     	if (obj.OperDocID==''){
-			errinfo = errinfo + "手术医生不能为空!<br>";
+			errinfo = errinfo + ($g("手术医生不能为空!")+"<br>");
     	}
     	if (AnesthesiaID==''){
-			errinfo = errinfo + "麻醉方式不能为空!<br>";
-    	}
-    	if (NNISLevelID==''){
-			errinfo = errinfo + "NNIS分级不能为空!<br>";
+			errinfo = errinfo + ($g("麻醉方式不能为空!")+"<br>");
     	}
     	if (CuteTypeID==''){
-			errinfo = errinfo + "切口类型不能为空!<br>";
+			errinfo = errinfo + ($g("切口类型不能为空!")+"<br>");
     	}
     	if ((IsOperInf==1)&&(InfTypeID=='')){
-			errinfo = errinfo + "感染类型不能为空!<br>";
+			errinfo = errinfo + ($g("手术部位不能为空!")+"<br>");
+    	}
+    	if ((NNISLevel=='')){
+			errinfo = errinfo + ($g("NNIS分级不能为空!")+"<br>");
     	}
 		if (errinfo !='') {
 			$.messager.alert("提示", errinfo, 'info');
 			return ;
 		}
-	
-    	var ID ='';
-    	var OperAnaesID=''
-    	if (d){
-    		ID = d.ID;
-    		OperAnaesID = d.OperAnaesID;
-    	}
+    	
     	// 手麻记录ID特殊处理
 		if (OperAnaesID=='-1') OperAnaesID = '';
 		var row ={
 			ID:ID,
-			EpisodeID:EpisodeID,
+			EpisodeID:DEpisodeID,
 			OperAnaesID:OperAnaesID,
 			OperID:OperID,  //增加一个字段用于判断输入的手术名称是否标准手术
 			OperName:OperName,
@@ -552,7 +669,7 @@
 			EndDate:EndDate,
 			SttTime:SttTime,
 			EndTime:EndTime,
-			OperHours:'',
+			OperHours:OperHours,
 			OperDocTxt:OperDocTxt,
 			OperDocID:OperDocID,
 			OperDoc:OperDoc,
@@ -570,8 +687,8 @@
 			InfTypeID:InfTypeID,
 			InfType:InfType,
 			IsInHospInf:IsInHospInf,
-			ASAScoreID:'',
-			ASAScore:'',
+			ASAScoreID:ASAScoreID,
+			ASAScore:ASAScore,
 			PreoperWBC:'',
 			CuteNumber:'',
 			EndoscopeFlag:'',
@@ -615,7 +732,7 @@
 					}else{	//添加
 						obj.gridINFOPS.appendRow({  //插入一个新行
 							ID:ID,
-							EpisodeID:EpisodeID,
+							EpisodeID:DEpisodeID,
 							OperAnaesID:OperAnaesID,
 							OperID:OperID,  //增加一个字段用于判断输入的手术名称是否标准手术
 							OperName:OperName,
@@ -626,7 +743,7 @@
 							EndDate:EndDate,
 							SttTime:SttTime,
 							EndTime:EndTime,
-							OperHours:'',
+							OperHours:OperHours,
 							OperDocTxt:OperDocTxt,
 							OperDocID:OperDocID,
 							OperDoc:OperDoc,
@@ -644,8 +761,8 @@
 							InfTypeID:InfTypeID,
 							InfType:InfType,
 							IsInHospInf:IsInHospInf,
-							ASAScoreID:'',
-							ASAScore:'',
+							ASAScoreID:ASAScoreID,
+							ASAScore:ASAScore,
 							PreoperWBC:'',
 							CuteNumber:'',
 							EndoscopeFlag:'',
@@ -674,7 +791,7 @@
 			}else{	//添加
 				obj.gridINFOPS.appendRow({  //插入一个新行
 					ID:ID,
-					EpisodeID:EpisodeID,
+					EpisodeID:DEpisodeID,
 					OperAnaesID:OperAnaesID,
 					OperID:OperID,  //增加一个字段用于判断输入的手术名称是否标准手术
 					OperName:OperName,
@@ -685,7 +802,7 @@
 					EndDate:EndDate,
 					SttTime:SttTime,
 					EndTime:EndTime,
-					OperHours:'',
+					OperHours:OperHours,
 					OperDocTxt:OperDocTxt,
 					OperDocID:OperDocID,
 					OperDoc:OperDoc,
@@ -703,8 +820,8 @@
 					InfTypeID:InfTypeID,
 					InfType:InfType,
 					IsInHospInf:IsInHospInf,
-					ASAScoreID:'',
-					ASAScore:'',
+					ASAScoreID:ASAScoreID,
+					ASAScore:ASAScore,
 					PreoperWBC:'',
 					CuteNumber:'',
 					EndoscopeFlag:'',
@@ -737,9 +854,42 @@
 				if (r){				
 					obj.gridINFOPS.deleteRow(index);
 					var tmpEpisodeID = selectObj.EpisodeID;
-					if (tmpEpisodeID!=EpisodeID) {
+					obj.EpisodeIDs=obj.EpisodeIDs.replace(tmpEpisodeID,"");
+					if (tmpEpisodeID!=EpisodeID) { // 历史手术信息就诊ID
 			    		obj.DelEpisodeIDs = obj.DelEpisodeIDs+"^"+tmpEpisodeID;
 		    		}
+		    		var OperAnaesID = selectObj. OperAnaesID;
+					if (obj.InfOperID==OperAnaesID) {  //删除与诊断相关的手术,取首行的信息为关联信息
+					   var rowData=$("#gridINFOPS").datagrid('getRows')[0];
+					   if (rowData) {
+						   	obj.InfOperID = rowData.OperAnaesID;
+			 				obj.InfOperDate = rowData.OperDate;
+			 				obj.InfEpsID = rowData.EpisodeID;
+			 				debugger
+			 				var TransInfo = $m({
+								ClassName:"DHCHAI.DPS.PAAdmTransSrv",
+								MethodName:"GetTransInfoByDate",		
+								aEpisodeDr: obj.InfEpsID,
+								aDate:obj.InfOperDate
+							},false);
+							var InfLoc =TransInfo.split("^")[0];
+							var objLoc = $cm({
+								ClassName:"DHCHAI.BT.Location",
+								MethodName:"GetObjById",		
+								aId: InfLoc
+							},false);
+							if (!objLoc) return;
+							if (InfLoc){
+								$('#txtInfLoc').val(InfLoc);	
+								$('#cboInfLoc').lookup('setText',objLoc.BTDesc);	
+							}
+		
+					   }else {
+						   	obj.InfOperID = "";
+			 				obj.InfOperDate = "";
+			 				obj.InfEpsID = "";
+					   }
+					}
 				}
 			});
 		}				
@@ -751,7 +901,8 @@
     	for (var i=0;i<obj.gridINFOPS.getRows().length;i++){
     		var Input = obj.gridINFOPS.getRows()[i].ID;
     		var tmpEpisodeID=obj.gridINFOPS.getRows()[i].EpisodeID;
-    		if (tmpEpisodeID==EpisodeID) {
+    		
+    		if (tmpEpisodeID!=EpisodeID) {
 	    		obj.EpisodeIDs = obj.EpisodeIDs+"^"+tmpEpisodeID;
 	    		if (obj.DelEpisodeIDs.indexOf(tmpEpisodeID)>=0){
 		    		obj.DelEpisodeIDs=obj.DelEpisodeIDs.replace(tmpEpisodeID,"");
@@ -784,9 +935,7 @@
     		Input = Input + CHR_1 + obj.gridINFOPS.getRows()[i].ImplantFlag;
     		Input = Input + CHR_1 + obj.gridINFOPS.getRows()[i].PreoperAntiFlag;
     		Input = Input + CHR_1 + obj.gridINFOPS.getRows()[i].BloodLoss;
-    		Input = Input + CHR_1 + obj.gridINFOPS.getRows()[i].BloodLossFlag;
     		Input = Input + CHR_1 + obj.gridINFOPS.getRows()[i].BloodTrans;
-    		Input = Input + CHR_1 + obj.gridINFOPS.getRows()[i].BloodTransFlag;
     		Input = Input + CHR_1 + obj.gridINFOPS.getRows()[i].PostoperComps;
     		Input = Input + CHR_1 + '';
     		Input = Input + CHR_1 + '';

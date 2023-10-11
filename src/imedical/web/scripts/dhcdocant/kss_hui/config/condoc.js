@@ -118,13 +118,15 @@ function save(){
 		layer.alert("会诊医生不能为空！", {title:'提示',icon: 0}); 
 		return false;
 	}
-	if (CUROBJ.doc != desc) {
-		var hasDoc = $.InvokeMethod("DHCAnt.KSS.Config.BaseData","ifHasConDoc", desc, hosp);
+	
+	//if (CUROBJ.doc != desc) {
+		var hasDoc = $.InvokeMethod("DHCAnt.KSS.Config.BaseData","ifHasConDoc", desc, hosp, parCode, id);
 		if (hasDoc == 1) {
 			layer.alert("会诊医生已添加！", {title:'提示',icon: 0}); 
 			return false;
 		}
-	}
+	//}
+	
 	if (active == "") {
 		layer.alert("激活标志不能为空！", {title:'提示',icon: 0}); 
 		return false;
@@ -197,7 +199,8 @@ function editCfg () {
 			param.ClassName="DHCAnt.KSS.Config.BaseData";
 			param.QueryName="QryConLoc";
 			param.ModuleName="combobox";
-			param.ArgCnt=0;
+			param.Arg1=PLObject.m_Hosp.getValue()||"";
+			param.ArgCnt=1;
 		},
 		onSelect:function(record) {
 			var locid=$(this).simplecombobox("getValue");

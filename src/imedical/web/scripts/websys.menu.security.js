@@ -261,6 +261,8 @@ function onCheckHandler(node,checked){
 	var t=$(node.target);
 	if(checked){
 		t.addClass('tree-node-checked');
+		var pt = $('#tree-'+type.toLowerCase()).tree('getParent',node.target);
+		if (pt && pt.target) $('#tree-'+type.toLowerCase()).tree('check',pt.target);
 	}else{
 		t.removeClass('tree-node-checked');
 	}

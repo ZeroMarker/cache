@@ -1,10 +1,13 @@
 /// Creator: bianshuai
 /// CreateDate: 2014-09-18
-//  Descript: 不良反应监测
+//  Descript: 用药预警监测
 
 var HospID = "";
 var AppType="ADR";
 var url="dhcpha.clinical.action.csp";
+if ("undefined"!==typeof(websys_getMWToken)){
+	url += "?MWToken="+websys_getMWToken()
+	}
 var HospID=session['LOGON.HOSPID']
 var monItmArrList="";
 $(function(){
@@ -17,8 +20,8 @@ $(function(){
 	$('#dept').combobox({
 		mode:'remote',
 		onShowPanel:function(){ //qunianpeng 2017/8/14 支持拼音码和汉字
-			$('#dept').combobox('reload',url+'?action=GetAllLocNewVersion&hospId='+HospID+'  ')
-			//$('#dept').combobox('reload',url+'?action=SelAllLoc&HospID='+HospID)
+			$('#dept').combobox('reload',url+'&action=GetAllLocNewVersion&hospId='+HospID+'  ')
+			//$('#dept').combobox('reload',url+'&action=SelAllLoc&HospID='+HospID)
 		}
 	}); 
 
@@ -26,15 +29,15 @@ $(function(){
 	$('#ward').combobox({
 		mode:'remote',
 		onShowPanel:function(){ //qunianpeng 2017/8/14 支持拼音码和汉字
-			$('#ward').combobox('reload',url+'?action=GetAllWardNewVersion&hospId='+HospID+'  ')
-			//$('#ward').combobox('reload',url+'?action=SelAllWard')
+			$('#ward').combobox('reload',url+'&action=GetAllWardNewVersion&hospId='+HospID+'  ')
+			//$('#ward').combobox('reload',url+'&action=SelAllWard')
 		}
 	});
 
 	//监测项目
 	$('#monitem').combobox({
 		onShowPanel:function(){
-			$('#monitem').combobox('reload',url+'?action=SelMonItemByTheme&Theme='+AppType)
+			$('#monitem').combobox('reload',url+'&action=SelMonItemByTheme&Theme='+AppType)
 		},	
 		panelHeight:"auto"  //设置容器高度自动增长
 	});
@@ -50,9 +53,9 @@ $(function(){
 	
 	var phdesccolumns=[[
 		{field:'ck',checkbox:true,resize:false},
-		{field:'Desc',title:'描述',width:380}, 
+		{field:'Desc',title:$g('描述'),width:380}, 
 		{field:'RowID',title:'rowid',width:50},
-		{field:'Type',title:'类型',width:50},
+		{field:'Type',title:$g('类型'),width:50},
 	]];
 	
 	$('#phdesc').combogrid({ 
@@ -68,7 +71,7 @@ $(function(){
             var monItmID=$('#monitem').combobox('getValue'); //监测项目
             //重新加载  
             $('#phdesc').combogrid("grid").datagrid({
-	            url:url+'?action=FunLibSubTheItm',
+	            url:url+'&action=FunLibSubTheItm',
 				queryParams:{
 					page:1,
 					rows:30,
@@ -97,7 +100,7 @@ function Query()
 	var params=StDate+"^"+EndDate+"^"+trsUndefinedToEmpty(WardID)+"^"+trsUndefinedToEmpty(LocID)+"^"+PatNo+"^"+AppType+"^"+trsUndefinedToEmpty(MonItem)+"^"+""+"^"+""+"^"+HospID;
 
 	$('#maindg').datagrid({
-		url:url+'?action=GetUntoEffectPatList',	
+		url:url+'&action=GetUntoEffectPatList',	
 		queryParams:{
 			params:params}
 	});
@@ -108,26 +111,26 @@ function InitPatList()
 {
 	//定义columns
 	var columns=[[
-		{field:'Ward',title:'病区',width:160},
-		{field:'PatNo',title:'登记号',width:80,formatter:SetCellUrl},
-		{field:'InMedicare',title:'病案号',width:80,hidden:true},
-		{field:'PatName',title:'姓名',width:80},
-		{field:'Bed',title:'床号',width:80},
-		{field:'PatSex',title:'性别',width:80},
-		{field:'PatAge',title:'年龄',width:80},
-		{field:'PatHeight',title:'身高',width:80},
-		{field:'PatWeight',title:'体重',width:80},
-		{field:'AdmLoc',title:'科室',width:160},
-		{field:'AdmDoc',title:'医生',width:80},
-		{field:'PatDiag',title:'诊断',width:180},
-		{field:'PatInDate',title:'入院时间',width:120},
-		{field:'ExpCause',title:'异常原因',width:200,formatter:showExpCause},
+		{field:'Ward',title:$g('病区'),width:160},
+		{field:'PatNo',title:$g('登记号'),width:80,formatter:SetCellUrl},
+		{field:'InMedicare',title:$g('病案号'),width:80,hidden:true},
+		{field:'PatName',title:$g('姓名'),width:80},
+		{field:'Bed',title:$g('床号'),width:80},
+		{field:'PatSex',title:$g('性别'),width:80},
+		{field:'PatAge',title:$g('年龄'),width:80},
+		{field:'PatHeight',title:$g('身高'),width:80},
+		{field:'PatWeight',title:$g('体重'),width:80},
+		{field:'AdmLoc',title:$g('科室'),width:160},
+		{field:'AdmDoc',title:$g('医生'),width:80},
+		{field:'PatDiag',title:$g('诊断'),width:180},
+		{field:'PatInDate',title:$g('入院时间'),width:120},
+		{field:'ExpCause',title:$g('异常原因'),width:200,formatter:showExpCause},
 		{field:"AdmDr",title:'AdmDr',width:90}
 	]];
 	
 	//定义datagrid
 	$('#maindg').datagrid({
-		title:'病人列表',
+		title:$g('病人列表'),
 		url:'',
 		fit:true,
 		rownumbers:true,
@@ -135,7 +138,7 @@ function InitPatList()
 		pageSize:40,  // 每页显示的记录条数
 		pageList:[40,80],   // 可以设置每页记录条数的列表
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true
 	});
 	

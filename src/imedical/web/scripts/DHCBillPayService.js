@@ -1,279 +1,348 @@
-ï»¿/// DHCBillPayService.js
+/// DHCBillPayService.js
 
 /**
- * @fileOverview <æ”¯ä»˜ç»„ä»¶æ”¯ä»˜å‡½æ•°>
+ * @fileOverview <Ö§¸¶×é¼şÖ§¸¶º¯Êı>
  * @author <zhenghao>
- * @version <Posã€æ‰«ç ã€çª—å£é“¶è¡Œç›´è¿>
+ * @version <Pos¡¢É¨Âë¡¢´°¿ÚÒøĞĞÖ±Á¬>
  * @updateDate <2018-03-20>
  */
 
-/// m_RefFlagé…ç½®è¯´æ˜ï¼š
-/// é…ç½®1ï¼š	ä¼˜ç‚¹(å½“æ—¥é€€è´¹å¯ä»¥å®æ—¶åˆ°è´¦)
-///			ç¼ºç‚¹(1.é—¨è¯Šç»“ç®—æ‹†å¤šå¼ ç¥¨éœ€è¦åˆ·poså¤šæ¬¡; 2.é—¨è¯Šéƒ¨åˆ†é€€è´¹éœ€è¦æ“ä½œ2æ¬¡pos[å…ˆå…¨é€€å†éƒ¨åˆ†æ”¶]; 3.å¿…é¡»åˆ°åŸç¼´æ¬¾posç»ˆç«¯è¿›è¡Œé€€è´¹;)
-/// é…ç½®0ï¼š	ä¼˜ç‚¹(1.é—¨è¯Šç»“ç®—æ‹†å¤šå¼ ç¥¨åªéœ€åˆ·posä¸€æ¬¡; 2.é—¨è¯Šéƒ¨åˆ†é€€è´¹åªéœ€è¦æ“ä½œ1æ¬¡pos[é€€å·®é¢] 3.å¯ä»¥å†ä»»æ„ç»ˆç«¯è¿›è¡Œé€€è´¹)
-///			ç¼ºç‚¹(å½“æ—¥é€€è´¹ä¸èƒ½åŠæ—¶åˆ°è´¦)
-/// æ­¤é…ç½®éœ€è·ŸåŒ»é™¢æ ¸å®ï¼Œæ˜¯èµ°å½“æ—¥æ’¤é”€è¿˜æ˜¯å½“æ—¥é€€è´§(å‰æé“¶è¡Œæ”¯æŒå½“æ—¥é€€è´§)
-var m_RefFlag = 0;    //é…ç½®ï¼š0-è¡¨ç¤ºå·®é¢é€€è´¹;1è¡¨ç¤ºå…¨é€€å†æ”¶;
+/**
+ * m_RefFlagÅäÖÃËµÃ÷:
+ * 		ÅäÖÃ0: ±íÊ¾²î¶îÍË·Ñ
+ *			   ÓÅµã(1.ÃÅÕï½áËã²ğ¶àÕÅÆ±Ö»ĞèË¢posÒ»´Î; 2.ÃÅÕï²¿·ÖÍË·ÑÖ»ĞèÒª²Ù×÷1´Îpos[ÍË²î¶î] 3.¿ÉÒÔÔÙÈÎÒâÖÕ¶Ë½øĞĞÍË·Ñ)
+ *	      	   È±µã(µ±ÈÕÍË·Ñ²»ÄÜ¼°Ê±µ½ÕË)
+ * 		ÅäÖÃ1: ±íÊ¾È«ÍËÔÙÊÕ
+ *			   ÓÅµã(µ±ÈÕÍË·Ñ¿ÉÒÔÊµÊ±µ½ÕË)
+ *		  	   È±µã(1.ÃÅÕï½áËã²ğ¶àÕÅÆ±ĞèÒªË¢pos¶à´Î; 2.ÃÅÕï²¿·ÖÍË·ÑĞèÒª²Ù×÷2´Îpos[ÏÈÈ«ÍËÔÙ²¿·ÖÊÕ]; 3.±ØĞëµ½Ô­½É¿îposÖÕ¶Ë½øĞĞÍË·Ñ;)
+ * 		´ËÅäÖÃĞè¸úÒ½ÔººËÊµ£¬ÊÇ×ßµ±ÈÕ³·Ïú»¹ÊÇµ±ÈÕÍË»õ(Ç°ÌáÒøĞĞÖ§³Öµ±ÈÕÍË»õ)
+ */
+
+var m_RefFlag = 0;
 
 /**
- * [PayService æ”¯ä»˜æœåŠ¡]
- * @param {[String]} tradeType    [ä¸šåŠ¡ç±»å‹ OP/PRE/DEP/IP/INSU/CARD]
- * @param {[String]} payMode   	  [æ”¯ä»˜æ–¹å¼ID]
- * @param {[String]} tradeAmt     [é‡‘é¢]
- * @param {[String]} expStr       [æ‰©å±•ä¸²(ç§‘å®¤^å®‰å…¨ç»„^é™¢åŒº^æ“ä½œå‘˜ID^ç—…äººID^å°±è¯Š^ä¸šåŠ¡è¡¨æŒ‡é’ˆä¸²(ä»¥!åˆ†éš”,å¯ä¸ºç©º))]
- * @return{[obj]} 	 rtnValue     [è¿”å›å€¼ obj.ResultCodeç»“æœä»£ç (0æˆåŠŸ;1äº¤æ˜“æˆåŠŸæˆ–éƒ¨åˆ†äº¤æ˜“æˆåŠŸ,éœ€æç¤ºResultMsg;å…¶ä»–:å¤±è´¥);obj.ResultMsgç»“æœæè¿°;obj.ETPRowIDè®¢å•ID(å¤šä¸ª^åˆ†éš”,é—¨è¯Šæ”¶è´¹ç”¨);obj.SuccessPrtStræˆåŠŸä¸šåŠ¡ID(å¤šä¸ª^åˆ†éš”,é—¨è¯Šæ”¶è´¹ç”¨)]
+ * [PayService Ö§¸¶·şÎñ]
+ * @param  {[String]} tradeType       [ÒµÎñÀàĞÍ OP/PRE/DEP/IP/INSU/CARD]
+ * @param  {[String]} payMode   	  [Ö§¸¶·½Ê½ID]
+ * @param  {[String]} tradeAmt        [½ğ¶î]
+ * @param  {[String]} expStr          [À©Õ¹´®(¿ÆÊÒ^°²È«×é^ÔºÇø^²Ù×÷Ô±ID^²¡ÈËID^¾ÍÕï^ÒµÎñ±íÖ¸Õë´®(ÒÔ!·Ö¸ô,¿ÉÎª¿Õ))]
+ * @param  {[function]} callback      [»Øµ÷º¯Êı]
+ * @return {[obj]}  rtnValue          [·µ»ØÖµ obj.ResultCode½á¹û´úÂë(0³É¹¦;1½»Ò×³É¹¦»ò²¿·Ö½»Ò×³É¹¦,ĞèÌáÊ¾ResultMsg;ÆäËû:Ê§°Ü);obj.ResultMsg½á¹ûÃèÊö;obj.ETPRowID¶©µ¥ID(¶à¸ö^·Ö¸ô,ÃÅÕïÊÕ·ÑÓÃ);obj.SuccessPrtStr³É¹¦ÒµÎñID(¶à¸ö^·Ö¸ô,ÃÅÕïÊÕ·ÑÓÃ)]
  */
-function PayService(tradeType, payMode, tradeAmt, expStr) {
-	//ç§‘å®¤^å®‰å…¨ç»„^é™¢åŒº^æ“ä½œå‘˜ID^ç—…äººID^å°±è¯Š^ä¸šåŠ¡è¡¨æŒ‡é’ˆä¸²(ä»¥!åˆ†éš”,å¯ä¸ºç©º)
-	var expStrAry = expStr.split('^');
-	var hisPrtStr = expStrAry[6]; //ä¸šåŠ¡id
+function PayService() {
+	var tradeType = arguments[0];
+	var payMode = arguments[1];
+	var tradeAmt = arguments[2];
+	var expStr = arguments[3];
+	var callback = arguments[4];
+
+	//¿ÆÊÒ^°²È«×é^ÔºÇø^²Ù×÷Ô±ID^²¡ÈËID^¾ÍÕï^ÒµÎñ±íÖ¸Õë´®(ÒÔ!·Ö¸ô,¿ÉÎª¿Õ)
+	var expStrAry = expStr.split("^");
+	var hisPrtStr = expStrAry[6] || ""; //ÒµÎñid
 
 	var rtnValue = {
-		ResultCode: "00",
-		ResultMsg: "è¯¥æ”¯ä»˜æ–¹å¼ä¸éœ€è°ƒç”¨æ¥å£æ”¶è´¹",
+		ResultCode: 0,
+		ResultMsg: "¸ÃÖ§¸¶·½Ê½²»Ğèµ÷ÓÃ½Ó¿ÚÊÕ·Ñ",
+		PayMode: payMode,
 		ETPRowID: ""
 	};
 	var payModeInfo = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "GetCallModeByPayMode", payMode);
-	var tmpAry = payModeInfo.split("^");
-	var payCallFlag = tmpAry[0];     //æ˜¯å¦è°ƒç”¨é“¶åŒ»å¡è½¯POSæ¥å£
-	var payMethodClass = tmpAry[1];  //æ”¯ä»˜æ–¹å¼å¯¹åº”çš„adapterç±»
-	var payCallMode = tmpAry[2];     //æ¥å£ç±»å‹
-	//var payRefFlag = tmpAry[3]; 	 //é€€è´¹æ ‡å¿—
-
-	if ((tradeAmt == "") && (hisPrtStr != "")) {
+	var myAry = payModeInfo.split("^");
+	var payCallFlag = myAry[0];     //ÊÇ·ñµ÷ÓÃµÚÈı·½½Ó¿Ú
+	var payMethodClass = myAry[1];  //Ö§¸¶·½Ê½¶ÔÓ¦µÄadapterÀà
+	var payCallMode = myAry[2];     //½Ó¿ÚÀàĞÍ
+	
+	if (payCallFlag == 0) {
+		callback(rtnValue);
+		return;
+	}
+	if (!tradeAmt && hisPrtStr) {
 		tradeAmt = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "GetChargeAmt", tradeType, hisPrtStr, payMode);
 	}
-	if (+tradeAmt == 0) {
-		rtnValue.ResultCode = "00";
-		rtnValue.ResultMsg = "æ”¯ä»˜é‡‘é¢ä¸º0ï¼Œä¸è°ƒç”¨ç¬¬ä¸‰æ–¹æ”¯ä»˜!";
-		return rtnValue;
+	if (tradeAmt == 0) {
+		rtnValue.ResultMsg = "Ö§¸¶½ğ¶îÎª0£¬²»µ÷ÓÃµÚÈı·½Ö§¸¶";
+		callback(rtnValue);
+		return;
 	}
-
-	if ((payCallMode == "DLL") && (payCallFlag != "0")) {
-		//è°ƒç”¨PosæœåŠ¡jsè°ƒç”¨
-		var rtnValue = posPay(tradeType, tradeAmt, payMode, expStr);  //DHCBillMisPosPay.js
-	} else if ((payCallMode == "WS") && (payCallFlag != "0")) {
-		//è°ƒç”¨ç›´è¿æœåŠ¡jsè°ƒç”¨
-		rtnValue = "";
-	} else if ((payCallMode == "SP") && (payCallFlag != "0")) {
-		//å¼¹å‡ºæ‰«ç æ‰£è´¹ç»„ä»¶(æ¨¡æ€çª—å£)
-		var lnk = "dhcbill.scancodepay.csp";
-		var iHeight = 260;
-		var iWidth = 440;
-		var iTop = (window.screen.availHeight - 30 - iHeight) / 2; //è·å¾—çª—å£çš„å‚ç›´ä½ç½®
-		var iLeft = (window.screen.availWidth - 10 - iWidth) / 2; //è·å¾—çª—å£çš„æ°´å¹³ä½ç½®
-		var parm = {
+	switch(payCallMode) {
+	case "DLL":
+		//µ÷ÓÃPOS·şÎñjsµ÷ÓÃ
+		rtnValue = posPay(tradeType, tradeAmt, payMode, expStr);  //DHCBillMisPosPay.js
+		rtnValue.PayMode = payMode;
+		callback(rtnValue);
+		break;
+	case "WS":
+		//µ÷ÓÃÒøÒ½Ö±Á¬·şÎñjsµ÷ÓÃ
+		break;
+	case "SP":
+		m_RefFlag = 0;   //É¨Âë¸¶Ö»Ö§³ÖÍË»õ
+		
+		//µ¯³öÉ¨Âë¿Û·Ñ×é¼ş
+		var argumentObj = {
 			tradeType: tradeType,
 			payMode: payMode,
 			tradeAmt: tradeAmt,
 			expStr: expStr
 		};
-		rtnValue = window.showModalDialog(lnk, parm, 'dialogHeight:' + iHeight + 'px;dialogWidth:' + iWidth + 'px;dialogHeight:' + iHeight + 'px;dialogLeft:' + iLeft + 'px;dialogTop:' + iTop + 'px;resizable:no;status:no;scroll:no');
-		//æ‰«ç ä»˜åªæ”¯æŒé€€è´§
-		m_RefFlag = 0;
-	} else {
-		return rtnValue;
+		var url = "dhcbill.scancodepay.csp?arguments=" + encodeURIComponent(JSON.stringify(argumentObj));
+		websys_showModal({
+			url: url,
+			title: 'É¨ÂëÖ§¸¶',
+			iconCls: 'icon-w-scan-code',
+			height: 260,
+			width: 440,
+			closable: false,
+			callbackFunc: function(rtnValue) {
+				rtnValue.PayMode = payMode;
+				callback(rtnValue);
+			}
+		});
+		break;
+	default:
 	}
-
-	return rtnValue;
 }
 
 /**
- * [RefundPayService æ”¯ä»˜ç»„ä»¶é€€æ¬¾æœåŠ¡]
- * @param {[String]} tradeType      [ä¸šåŠ¡ç±»å‹]
- * @param {[String]} receipRowID    [åŸä¸šåŠ¡ID]
- * @param {[String]} abortPrtRowID  [è´Ÿä¸šåŠ¡ID]
- * @param {[String]} newPrtRowID    [é—¨è¯Šé€€è´¹é‡æ”¶æ–°ç¥¨]
- * @param {[String]} refundAmt    	[é€€æ¬¾é‡‘é¢  å‡ºé™¢é€€æŠ¼é‡‘ã€é—¨è¯Šé€€è´¦æˆ·ä½™é¢ å¿…ä¼ ]
- * @param {[String]} originalType   [åŸä¸šåŠ¡ç±»å‹  äº¤å‰ä¸šåŠ¡å¿…ä¼ ]
- * @param {[String]} rtnValue    	[obj.rtnCode:ä»£ç (0:äº¤æ˜“æˆåŠŸ,æ•°æ®å¤„ç†æ­£å¸¸;1:äº¤æ˜“æˆåŠŸ,éœ€æé†’æ•°æ®å¤„ç†å¼‚å¸¸);obj.rtnMsg:æè¿°]
+ * [RefundPayService Ö§¸¶×é¼şÍË¿î·şÎñ]
+ * @param {[String]} tradeType      [ÒµÎñÀàĞÍ]
+ * @param {[String]} initPrtRowId   [Ô­ÒµÎñID]
+ * @param {[String]} abortPrtRowId  [¸ºÒµÎñID]
+ * @param {[String]} newPrtRowId    [ÃÅÕïÍË·ÑÖØÊÕĞÂÆ±]
+ * @param {[String]} refundAmt    	[ÍË¿î½ğ¶î  ³öÔºÍËÑº½ğ¡¢ÃÅÕïÍËÕË»§Óà¶î ±Ø´«]
+ * @param {[String]} originalType   [Ô­ÒµÎñÀàĞÍ  ½»²æÒµÎñ±Ø´«]
+ * @param {[String]} expStr         [¿ÆÊÒ^°²È«×é^ÔºÇø^²Ù×÷Ô±ID]
+ * @param {[String]} rtnValue    	[obj.ResultCode:´úÂë(0:½»Ò×³É¹¦,Êı¾İ´¦ÀíÕı³£;1:½»Ò×³É¹¦,ĞèÌáĞÑÊı¾İ´¦ÀíÒì³£);obj.ResultMsg:ÃèÊö]
  */
-function RefundPayService(tradeType, receipRowID, abortPrtRowID, newPrtRowID, refundAmt, originalType, expStr) {
-	//ç§‘å®¤^å®‰å…¨ç»„^é™¢åŒº^æ“ä½œå‘˜ID^ç—…äººID^å°±è¯Š
-	var expStrAry = expStr.split('^');
-	var hisPrtStr = abortPrtRowID + "!" + newPrtRowID; //ä¸šåŠ¡id
-	var rtnValue = {
-		rtnCode: 0,
-		rtnMsg: "æˆåŠŸ"
-	};
-	//add by xiongwang 2018-04-30 åˆ¤æ–­æ”¹é€€è´¹è®°å½•æ˜¯å¦å·²è°ƒç”¨æ¥å£é€€è´¹(ä¸å­˜åœ¨ä¸€æ¡é€€è´¹è®°å½•éœ€è¦è°ƒç”¨å‡ æ¬¡æ¥å£æƒ…å†µ)
-	var TradeRefAmt = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "GetETPRefAmtByAbortPrt", originalType, abortPrtRowID);
-	if (TradeRefAmt > 0) {
-		var rtnValue = {
-			rtnCode: 1,
-			rtnMsg: "è¯¥è®°å½•å·²æˆåŠŸé€€è´¹,ä¸éœ€å†é€€è´¹"
-		};
-		return rtnValue;
-	}
-	var OrgETPRowID = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "GetOrgETPRowIDByPrt", receipRowID, originalType);
-	var payMode = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "GetPayModedrByETPRowID", OrgETPRowID);
-	var payCallInfo = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "GetCallModeByPayMode", payMode);
-	//å…¬ç”¨å–é€€è´¹é‡‘é¢æ–¹æ³•????éœ€æ·»åŠ 
-	if (refundAmt == "") {
-		refundAmt = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "GetRefundAmt", originalType, abortPrtRowID, newPrtRowID, payMode, refundAmt);
-	}
-	if (+refundAmt == 0) {
-		//ä½œåºŸä»æ‰“ï¼Ÿï¼Ÿï¼Ÿ
-		var rtnValue = {
-			rtnCode: "0",
-			rtnMsg: "é‡‘é¢ä¸º0,ä¸éœ€è°ƒç”¨æ¥å£"
-		};
-		return rtnValue;
-	}
-
-	var payCallFlag = payCallInfo.split("^")[0];
-	var payCallMode = payCallInfo.split("^")[2];
-
-	if ((payCallMode == "DLL") && (payCallFlag != "0")) {
-		var bankTradeType = "D"; //é€€è´¹
-		//è°ƒç”¨PosæœåŠ¡jsè°ƒç”¨
-		var rtnValue = posPayRefund(receipRowID, abortPrtRowID, newPrtRowID, tradeType, payMode, OrgETPRowID, originalType, refundAmt, expStr);
-	} else if ((payCallMode == "WS") && (payCallFlag != "0")) {
-		//è°ƒç”¨ç›´è¿æœåŠ¡jsè°ƒç”¨
-		var rtnValue = {
-			rtnCode: "0",
-			rtnMsg: ""
-		};
-	} else if ((payCallMode == "SP") && (payCallFlag != "0")) {
-		//^ä¸šåŠ¡è¡¨æŒ‡é’ˆä¸²(ä»¥!åˆ†éš”,å¯ä¸ºç©º)^åŸè®¢å•ID^æ”¶é€€æ ‡å¿—(Cæ”¶Dé€€)
-		var expStr = expStr + "^" + hisPrtStr;
-		var rtnValue = refundScanCodePay(tradeType, refundAmt, OrgETPRowID, expStr);
-	}
+function RefundPayService() {
+	var tradeType = arguments[0];
+	var initPrtRowId = arguments[1];
+	var abortPrtRowId = arguments[2];
+	var newPrtRowId = arguments[3];
+	var refundAmt = arguments[4];
+	var originalType = arguments[5];
+	var expStr = arguments[6];
 	
+	var _getPendRefAry = function() {
+		var pendRefJsonStr = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "GetPendingRefData", tradeType, initPrtRowId, abortPrtRowId, newPrtRowId, originalType);
+		return JSON.parse(pendRefJsonStr);
+	};
+	
+	var _callRefSrv = function() {
+		var rtnJson = {
+			ResultCode: -2001,
+			ResultMsg: "ÍË¿îÊ§°Ü"
+		};
+		switch(payCallMode) {
+		case "DLL":
+			//µ÷ÓÃPOS·şÎñjsµ÷ÓÃ
+			rtnJson = posPayRefund(initPrtRowId, abortPrtRowId, newPrtRowId, tradeType, payMode, orgETPRowId, originalType, pendRefAmt, expStr);
+			break;
+		case "WS":
+			//µ÷ÓÃÒøÒ½Ö±Á¬·şÎñjsµ÷ÓÃ
+			rtnJson.ResultMsg = "ÒøÒ½Ö±Á¬½Ó¿ÚÎ´ÊµÏÖ";
+			break;
+		case "SP":
+			//É¨ÂëÍË·Ñ
+			//^ÒµÎñ±íÖ¸Õë´®(ÒÔ!·Ö¸ô,¿ÉÎª¿Õ)^Ô­¶©µ¥ID^ÊÕÍË±êÖ¾(CÊÕDÍË)
+			expStr += "^" + hisPrtStr;
+			rtnJson = refundScanCodePay(tradeType, orgETPRowId, pendRefAmt, expStr);
+			break;
+		default:
+		}
+		return rtnJson;
+	};
+	
+	var hisPrtStr = abortPrtRowId + "!" + newPrtRowId;  //ÒµÎñid
+	var rtnValue = {
+		ResultCode: 0,
+		ResultMsg: "ÍË¿î³É¹¦"
+	};
+	var pendRefAmt = 0;           //´ıÍË¿î½ğ¶î
+	var orgETPRowId = "";         //Ô­Ö§¸¶¶©µ¥Id
+	var payMode = "";             //ÍË·Ñ·½Ê½Id
+	var payCallMode = "";         //µ÷ÓÃ½Ó¿Ú·şÎñÄ£Ê½
+	
+	var refJson = {};
+	var pendRefAry = _getPendRefAry();
+	if (pendRefAry.length == 0) {
+		rtnValue.ResultCode = 0;
+		rtnValue.ResultMsg = "ÎŞ¿ÉÍË¿î¶©µ¥";
+		return rtnValue;
+	}
+	for(var i = 0, len = pendRefAry.length; i < len; i++) {
+		refJson = pendRefAry[i];        //{"ETPID": 1, "PayMID":"1", "PendRefAmt":2.00, "PayCallMode":"SP"}
+		orgETPRowId = refJson.ETPID;
+		payMode = refJson.PayMID;
+		payCallMode = refJson.PayCallMode;
+		pendRefAmt = (refundAmt == 0) ? refJson.PendRefAmt : refundAmt;
+		if (pendRefAmt == 0) {
+			//×÷·ÏÖØ´ò²»ĞèÒªµ÷ÓÃ½Ó¿Ú
+			rtnValue.ResultMsg = "½ğ¶îÎª0£¬²»Ğèµ÷ÓÃ½Ó¿Ú";
+			continue;
+		}
+		var rtnJson = _callRefSrv();
+		rtnValue.ResultCode += rtnJson.ResultCode;
+		if (rtnValue.ResultCode != 0) {
+			rtnValue.ResultMsg += rtnJson.ResultMsg;
+		}
+	}
 	return rtnValue;
 }
 
 /**
- * [RelationService ä¸šåŠ¡å…³è”æœåŠ¡]
- * @param {[String]} ETPRowID    [è®¢å•ID]
- * @param {[String]} hisPrtStr   [ä¸šåŠ¡è¡¨ID]
- * @param {[String]} tradeType   [ä¸šåŠ¡ç±»å‹ OP/PRE/DEP/IP/INSU/CARD]
- * @return{[obj]} 	 rtnValue    [è¿”å›å€¼ obj.ResultCodeç»“æœä»£ç (0æˆåŠŸ;é0å¤±è´¥);obj.ResultMsgç»“æœæè¿°]
+ * [RelationService ÒµÎñ¹ØÁª·şÎñ]
+ * @param {[String]} ETPRowID    [¶©µ¥ID]
+ * @param {[String]} hisPrtStr   [ÒµÎñ±íID]
+ * @param {[String]} tradeType   [ÒµÎñÀàĞÍ OP/PRE/DEP/IP/INSU/CARD]
+ * @return{[obj]} 	 rtnValue    [·µ»ØÖµ obj.ResultCode½á¹û´úÂë(0³É¹¦;·Ç0Ê§°Ü);obj.ResultMsg½á¹ûÃèÊö]
  */
 function RelationService(ETPRowID, hisPrtStr, tradeType) {
-	var linkRtn = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "RelationOrderToHIS", ETPRowID, hisPrtStr, tradeType);
-	var ResultCode = linkRtn.split('^')[0];
-	var ResultMsg = linkRtn.split('^')[1];
-	var RtnValue = {
-		ResultCode: ResultCode,
-		ResultMsg: ResultMsg
+	var rtn = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "RelationOrderToHIS", ETPRowID, hisPrtStr, tradeType);
+	var myAry = rtn.split("^");
+	var code = myAry[0];
+	var msg = myAry[1];
+	var rtnValue = {
+		ResultCode: code,
+		ResultMsg: msg
 	};
-	return RtnValue;
+	return rtnValue;
 }
 
 /**
- * [CancelPayService æ”¯ä»˜å†²é”€æœåŠ¡]
- * @param {[String]} ETPRowID		[è®¢å•ID]
- * @param {[String]} ExpStr			[æ‰©å±•ä¸²(ç§‘å®¤^å®‰å…¨ç»„^é™¢åŒº^æ“ä½œå‘˜ID)]
+ * [CancelPayService Ö§¸¶³åÏú·şÎñ]
+ * @param {[String]} ETPRowID		[¶©µ¥ID]
+ * @param {[String]} ExpStr			[À©Õ¹´®(¿ÆÊÒ^°²È«×é^ÔºÇø^²Ù×÷Ô±ID)]
  */
-function CorrectScanCodePay(ETPRowID, ExpStr) {
-	var RtnValue = {
-		ResultCode: "0",
-		ResultMsg: "è®¢å•ä¸éœ€é€€è´¹"
+function CancelPayService(ETPRowID, ExpStr) {
+	var rtnValue = {
+		ResultCode: 0,
+		ResultMsg: "¶©µ¥²»ĞèÍË·Ñ"
 	};
-	var paymode = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "GetPayModedrByETPRowID", ETPRowID);
-	var payModeInfo = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "GetCallModeByPayMode", paymode);
-	var payCallMode = payModeInfo.split("^")[4];
-	if ((payCallMode == "DLL") && (payCallFlag != "0")) {
-		//è°ƒç”¨PosæœåŠ¡jsè°ƒç”¨
-		//POSæ”¶è´¹æˆåŠŸ,HISæ”¶è´¹å¤±è´¥,æ˜¯å¦ä¹Ÿè€ƒè™‘å†²æ­£????
-		rtnValue = "";
-	} else if ((payCallMode == "WS") && (payCallFlag != "0")) {
-		//è°ƒç”¨ç›´è¿æœåŠ¡jsè°ƒç”¨
-		rtnValue = "";
-	} else if ((payCallMode == "SP") && (payCallFlag != "0")) {
-		//var cacelRtn = cancelScanCodePay(ETPRowID, "");
-		var RtnValue = correctScanCodePay(ETPRowID, ExpStr);
+	var rtn = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "GetCanRevokeFlag", ETPRowID);
+	var myAry = rtn.split("^");
+	if (myAry[0] != 0) {
+		rtnValue.ResultCode = myAry[0];
+		rtnValue.ResultMsg = myAry[1];
+		return rtnValue;
 	}
-	return RtnValue;
+	
+	var paymId = GetETPPayModeID(ETPRowID);
+	var payModeInfo = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "GetCallModeByPayMode", paymId);
+	var myAry = payModeInfo.split("^");
+	var payCallFlag = myAry[0];     //ÊÇ·ñµ÷ÓÃµÚÈı·½½Ó¿Ú
+	var payCallMode = myAry[2];     //½Ó¿ÚÀàĞÍ
+	if (payCallFlag == 0) {
+		return rtnValue;
+	}
+	switch(payCallMode) {
+	case "DLL":
+		//µ÷ÓÃPos·şÎñjsµ÷ÓÃ
+		var rtnValue = correctPosPay(ETPRowID, ExpStr);
+		break;
+	case "WS":
+		//µ÷ÓÃÖ±Á¬·şÎñjsµ÷ÓÃ
+		rtnValue = "";
+		break;
+	case "SP":
+		rtnValue = correctScanCodePay(ETPRowID, ExpStr);
+		break;
+	default:
+	}
+	return rtnValue;
 }
 
 /**
  * @author <zfb>
  * @date <2018-3-12>
- * @desc <æŒ‰ç°é‡‘ç»“ç®—>
- * @param {[String]} PrtRowID [ä¸šåŠ¡è¡¨ID]
- * @return{[String]} myrtn [0æˆåŠŸ]
+ * @desc <°´ÏÖ½ğ½áËã>
+ * @param {[String]} PrtRowID [ÒµÎñ±íID]
+ * @return{[String]} myrtn [0³É¹¦]
  */
-function UpdateCARDToCASH(PrtRowID) {
-	var myrtn = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "UpdateCARDToCASH", PrtRowID);
-	return myrtn;
+function UpdateCARDToCASH(prtRowIdStr) {
+	return tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "UpdateCARDToCASH", prtRowIdStr);
 }
 
 /**
  * @author <zfb>
  * @date <2018-3-12>
- * @desc <è·å–é“¶è¡Œäº¤æ˜“ç±»å‹>
- * @param {[String]} OrgETPRowID [åŸæ­£è®°å½•ä¸šåŠ¡è¡¨å¯¹åº”äº¤æ˜“è¡¨rowid]
- * @param {[String]} bankType [é“¶è¡Œposç±»å‹ ä¾‹å¦‚:è”è¿ªLD/åˆ›è¯†CSç­‰]
- * @param {[String]} posTerminal [ä¸šåŠ¡è¡¨ID]
- * @return{[String]} bankTradeType [é“¶è¡Œäº¤æ˜“ç±»å‹C/D/T]
+ * @desc <»ñÈ¡ÒøĞĞ½»Ò×ÀàĞÍ>
+ * @param {[String]} orgETPRowId [Ô­Õı¼ÇÂ¼ÒµÎñ±í¶ÔÓ¦½»Ò×±írowId]
+ * @param {[String]} bankType [ÒøĞĞposÀàĞÍ ÀıÈç:ÁªµÏLD/´´Ê¶CSµÈ]
+ * @param {[String]} posTerminal [ÒµÎñ±íID]
+ * @return{[String]} bankTradeType [ÒøĞĞ½»Ò×ÀàĞÍC/D/T]
  */
-function GetBankTradeType(OrgETPRowID, PosConfig) {
-	var bankTradeType = tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic", "CheckRefundTradeType", OrgETPRowID, PosConfig);
-	return bankTradeType;
+function GetBankTradeType(orgETPRowId, PosConfig) {
+	return tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic", "CheckRefundTradeType", orgETPRowId, PosConfig);
 }
 
-//é—¨è¯Šæ”¶è´¹è°ƒç”¨
-//è°ƒç”¨æ¥å£æ”¶è´¹,è¿”å›éœ€è¦å®Œæˆçš„å‘ç¥¨ä¸²
+/**
+ * ÃÅÕïÊÕ·Ñµ÷ÓÃ
+ * µ÷ÓÃ½Ó¿ÚÊÕ·Ñ£¬·µ»ØĞèÒªÍê³ÉµÄ·¢Æ±´®
+ * *
+ * ÓĞ¸öBug,ÏîÄ¿ÓÖÉÏÁËÉ¨Âë¸¶,ÓÖÉÏÁËPOS
+ * É¨ÂëĞèÒªÖ§³ÖÍË»õ,POSÒª×ßÈ«ÍËÔÙÊÕ(ÕâÀï²»ÄÜµ¥¶À¸ù¾İm_RefFlagÅĞ¶Ï)
+ * *
+ */
 function OPPayService(myPRTStr, PayMode, ExpStr) {
 	var RtnPrtStr = "";
-	/*æœ‰ä¸ªBUG,é¡¹ç›®åˆä¸Šäº†æ‰«ç ä»˜,åˆä¸Šäº†POS)
-	 *æ‰«ç éœ€è¦æ”¯æŒé€€è´§,POSè¦èµ°å…¨é€€å†æ”¶(è¿™é‡Œä¸èƒ½å•ç‹¬æ ¹æ®m_RefFlagåˆ¤æ–­)
-	 */
-	//æ ¹æ®POSé…ç½®m_RefFlagå¤„ç†(0-è¡¨ç¤ºå·®é¢é€€è´¹;1è¡¨ç¤ºå…¨é€€å†æ”¶,æ”¶è´¹æ—¶éœ€å•å¼ æ”¶è´¹;)
-	if (m_RefFlag == "1") {
-		//å•å¼ æ”¯ä»˜
-		var PrtLen = myPRTStr.split("^").length;
-		for (i = 0; i < PrtLen; i++) {
-			var PrtRowID = myPRTStr.split("^")[i];
+	
+	//¸ù¾İPOSÅäÖÃm_RefFlag´¦Àí(0-±íÊ¾²î¶îÍË·Ñ;1±íÊ¾È«ÍËÔÙÊÕ,ÊÕ·ÑÊ±Ğèµ¥ÕÅÊÕ·Ñ)
+	var prtRowIDAry = myPRTStr.split("^");
+	if (m_RefFlag == 1) {
+		//µ¥ÕÅÖ§¸¶
+		var i;
+		for (i = 0; i < prtRowIDAry.length; i++) {
+			var PrtRowID = prtRowIDAry[i];
 			var myExpStr = ExpStr + "^" + PrtRowID;
 			var PayRtn = PayService("OP", PayMode, "", myExpStr);
 			switch (PayRtn.ResultCode) {
 			case "0":
-				//æ‹¼æ¥éœ€è¿”å›çš„å‘ç¥¨ä¸²
+				//Æ´½ÓĞè·µ»ØµÄ·¢Æ±´®
 				if (RtnPrtStr == "") {
 					RtnPrtStr = PrtRowID;
 				} else {
 					RtnPrtStr = RtnPrtStr + "^" + PrtRowID;
 				}
-				//æ”¯ä»˜æˆåŠŸ è°ƒç”¨å…³è”è®¢å•(è®¢å•IDä¸ä¸ºç©ºæ—¶)
+				//Ö§¸¶³É¹¦ µ÷ÓÃ¹ØÁª¶©µ¥(¶©µ¥ID²»Îª¿ÕÊ±)
 				if (PayRtn.ETPRowID != "") {
 					var RelaRtn = RelationService(PayRtn.ETPRowID, PrtRowID, "OP");
-					if (RelaRtn.ResultCode != "0") {
-						alert("æ”¯ä»˜æˆåŠŸ," + RelaRtn.ResultMsg + "è¯·è”ç³»ä¿¡æ¯ç§‘å¤„ç†");
+					if (RelaRtn.ResultCode != 0) {
+						$.messager.alert("ÌáÊ¾", "Ö§¸¶³É¹¦," + RelaRtn.ResultMsg + "£¬ÇëÁªÏµĞÅÏ¢¿Æ´¦Àí", "error");
 					}
 				}
 				break;
 			case "1":
-				//æ‹¼æ¥éœ€è¿”å›çš„å‘ç¥¨ä¸²
+				//Æ´½ÓĞè·µ»ØµÄ·¢Æ±´®
 				if (RtnPrtStr == "") {
 					RtnPrtStr = PrtRowID;
 				} else {
 					RtnPrtStr = RtnPrtStr + "^" + PrtRowID;
 				}
-				//æ”¯ä»˜æˆåŠŸ è°ƒç”¨å…³è”è®¢å•
+				//Ö§¸¶³É¹¦ µ÷ÓÃ¹ØÁª¶©µ¥
 				var RelaRtn = RelationService(PayRtn.ETPRowID, PrtRowID, "OP");
-				if (RelaRtn.ResultCode != "0") {
-					alert("æ”¯ä»˜æˆåŠŸ," + RelaRtn.ResultMsg + "è¯·è”ç³»ä¿¡æ¯ç§‘å¤„ç†");
+				if (RelaRtn.ResultCode != 0) {
+					$.messager.alert("ÌáÊ¾", "Ö§¸¶³É¹¦," + RelaRtn.ResultMsg + "£¬ÇëÁªÏµĞÅÏ¢¿Æ´¦Àí", "error");
 				}
-				alert(PayRtn.ResultMsg + ",è¯·è”ç³»ä¿¡æ¯ç§‘å¤„ç†"); //HISæœ‰å¼‚å¸¸ä¹Ÿç»§ç»­äº¤æ˜“
+				$.messager.alert("ÌáÊ¾", PayRtn.ResultMsg + "£¬ÇëÁªÏµĞÅÏ¢¿Æ´¦Àí", "error"); //HISÓĞÒì³£Ò²¼ÌĞø½»Ò×
 				break;
 			default:
-				alert(PayRtn.ResultMsg);
+				$.messager.alert("ÌáÊ¾", PayRtn.ResultMsg, "error");
 			}
-			//é‡åˆ°æ”¯ä»˜å¼‚å¸¸,ä¸å†ç»§ç»­æ”¯ä»˜,
-			if ((PayRtn.ResultCode != "0") && (PayRtn.ResultCode != "1")) {
+			
+			//Óöµ½Ö§¸¶Òì³£,²»ÔÙ¼ÌĞøÖ§¸¶
+			if ([0, 1].indexOf(+PayRtn.ResultCode) == -1) {
 				var FailPrtStr = "";
-				for (j = i; j < PrtLen; j++) {
-					var FailPrtRowID = myPRTStr.split("^")[j];
+				var j;
+				for (j = i; j < prtRowIDAry.length; j++) {
+					var FailPrtRowID = prtRowIDAry[j];
 					if (FailPrtStr == "") {
 						FailPrtStr = FailPrtRowID;
 					} else {
 						FailPrtStr = FailPrtStr + "^" + FailPrtRowID;
 					}
 				}
-				var RtnFailPrtStr = DealtFailPrtData(FailPrtStr); //å¤„ç†æ”¯ä»˜å¤±è´¥æ•°æ®
+
+				var RtnFailPrtStr = DealtFailPrtData(FailPrtStr);   //´¦ÀíÖ§¸¶Ê§°ÜÊı¾İ
 				if (RtnPrtStr == "") {
 					RtnPrtStr = RtnFailPrtStr;
 				} else {
@@ -283,84 +352,122 @@ function OPPayService(myPRTStr, PayMode, ExpStr) {
 			}
 		}
 	} else {
-		var prtRowIDAry = myPRTStr.split("^");
 		var payPRTStr = prtRowIDAry.join("!");
 		var myExpStr = ExpStr + "^" + payPRTStr;
 		var PayRtn = PayService("OP", PayMode, "", myExpStr);
 		switch (PayRtn.ResultCode) {
 		case "0":
-			//æ”¯ä»˜æˆåŠŸ è°ƒç”¨å…³è”è®¢å•
+			//Ö§¸¶³É¹¦ µ÷ÓÃ¹ØÁª¶©µ¥
 			RtnPrtStr = myPRTStr;
 			if (PayRtn.ETPRowID != "") {
 				var RelaRtn = RelationService(PayRtn.ETPRowID, payPRTStr, "OP");
-				if (RelaRtn.ResultCode != "0") {
-					alert("æ”¯ä»˜æˆåŠŸ," + RelaRtn.ResultMsg + "è¯·è”ç³»ä¿¡æ¯ç§‘å¤„ç†");
+				if (RelaRtn.ResultCode != 0) {
+					$.messager.alert("ÌáÊ¾", "Ö§¸¶³É¹¦£¬" + RelaRtn.ResultMsg + "£¬ÇëÁªÏµĞÅÏ¢¿Æ´¦Àí", "error");
 				}
 			}
 			break;
 		case "1":
 			RtnPrtStr = myPRTStr;
 			var RelaRtn = RelationService(PayRtn.ETPRowID, payPRTStr, "OP");
-			if (RelaRtn.ResultCode != "0") {
-				alert("æ”¯ä»˜æˆåŠŸ," + RelaRtn.ResultMsg + "è¯·è”ç³»ä¿¡æ¯ç§‘å¤„ç†");
+			if (RelaRtn.ResultCode != 0) {
+				$.messager.alert("ÌáÊ¾", "Ö§¸¶³É¹¦£¬" + RelaRtn.ResultMsg + "£¬ÇëÁªÏµĞÅÏ¢¿Æ´¦Àí", "error");
 			}
-			alert(PayRtn.ResultMsg + ",è¯·è”ç³»ä¿¡æ¯ç§‘å¤„ç†");
+			$.messager.alert("ÌáÊ¾", PayRtn.ResultMsg + "£¬ÇëÁªÏµĞÅÏ¢¿Æ´¦Àí", "error");
 			break;
 		default:
-			alert(PayRtn.ResultMsg);
-			RtnPrtStr = DealtFailPrtData(myPRTStr);  //å¤„ç†æ”¯ä»˜å¤±è´¥æ•°æ®
+			$.messager.alert("ÌáÊ¾", PayRtn.ResultMsg, "error");
+			RtnPrtStr = DealtFailPrtData(myPRTStr);    //´¦ÀíÖ§¸¶Ê§°ÜÊı¾İ
 		}
 	}
 	return RtnPrtStr;
 }
 
-/* @param {[String]} FailPrtStr     [è°ƒç”¨ç¬¬ä¸‰æ–¹æ”¯ä»˜å¤±è´¥çš„å‘ç¥¨ä¸²](ä»¥"^"åˆ†å‰²)
- * @return{[String]} myRtn			[è¿”å›éœ€è¦ç»§ç»­å®Œæˆçš„å‘ç¥¨ä¸²](ä»¥"^"åˆ†å‰²)
+/**
+ * @param {[String]} FailPrtStr     [µ÷ÓÃµÚÈı·½Ö§¸¶Ê§°ÜµÄ·¢Æ±´®](ÒÔ"^"·Ö¸î)
+ * @return{[String]} myRtn			[·µ»ØĞèÒª¼ÌĞøÍê³ÉµÄ·¢Æ±´®](ÒÔ"^"·Ö¸î)
  */
 function DealtFailPrtData(FailPrtStr) {
 	var myRtn = "";
-	//åŒ»ä¿æ‚£è€…äº¤æ˜“å¤±è´¥æ€ä¹ˆå¤„ç†(0æ›´æ–°æˆç°é‡‘éœ€è¦ç»§ç»­å®Œæˆ;1å›æ»šåŒ»ä¿;2æ”¶è´¹å‘˜è‡ªå·±åˆ°å¼‚å¸¸å¤„ç†ç•Œé¢å¤„ç†)
-	var HandleFlag = "0";
-	//åˆ†è‡ªè´¹å’ŒåŒ»ä¿2ç§æƒ…å†µåˆ†åˆ«å¤„ç†
-	var myYBINS = DHCWebD_GetObjValue("YBFlag");
-	if ((m_YBConFlag == "1") && (myYBINS > 0)) {
-		//åŒ»ä¿æ‚£è€…å¤„ç†æ–¹å¼(æ›´æ–°æˆç°é‡‘();è¿˜æ˜¯éœ€è¡¥äº¤æ˜“)
-		if (HandleFlag == "0") {
-			//æ›´æ–°æˆç°é‡‘æˆåŠŸéœ€è¦ç»§ç»­å®Œæˆ
-			var Len = FailPrtStr.split("^").length;
-			for (i = 0; i < Len; i++) {
-				var myrtn = UpdateCARDToCASH(FailPrtStr);
-				if (myrtn == "0") {
-					myRtn = FailPrtStr;
-					alert("åŒ»ä¿ç—…äººæ”¯ä»˜å¤±è´¥,æŒ‰ç°é‡‘ç»“ç®—,è¯·æ³¨æ„æ”¶å–ç°é‡‘.");
-				} else {
-					alert("åŒ»ä¿ç—…äººæ”¯ä»˜å¤±è´¥,æŒ‰ç°é‡‘ç»“ç®—å¤±è´¥,è¯·åˆ°æ”¶è´¹å¼‚å¸¸å¤„ç†ç•Œé¢å¤„ç†.");
-				}
+	//Ò½±£»¼Õß½»Ò×Ê§°ÜÔõÃ´´¦Àí(0:¸üĞÂ³ÉÏÖ½ğĞèÒª¼ÌĞøÍê³É;1:»Ø¹öÒ½±£;2:ÊÕ·ÑÔ±×Ô¼ºµ½Òì³£´¦Àí½çÃæ´¦Àí)
+	var HandleFlag = 0;
+	
+	//·Ö×Ô·ÑºÍÒ½±£2ÖÖÇé¿ö·Ö±ğ´¦Àí
+	var insTypeId = getValueById("insTypeId");
+	var admSource = tkMakeServerCall("web.DHCBillCommon", "GetPropValById", "PAC_AdmReason", insTypeId, "REA_AdmSource");
+	if ((CV.INVYBConFlag == 1) && (admSource > 0)) {
+		//Ò½±£»¼Õß´¦Àí·½Ê½(¸üĞÂ³ÉÏÖ½ğ? »¹ÊÇĞè²¹½»Ò×)
+		if (HandleFlag == 0) {
+			//¸üĞÂ³ÉÏÖ½ğ³É¹¦ĞèÒª¼ÌĞøÍê³É
+			var myrtn = UpdateCARDToCASH(FailPrtStr);
+			if (myrtn == 0) {
+				myRtn = FailPrtStr;
+				$.messager.alert("ÌáÊ¾", "Ò½±£²¡ÈËÖ§¸¶Ê§°Ü£¬°´ÏÖ½ğ½áËã£¬Çë×¢ÒâÊÕÈ¡ÏÖ½ğ", "info");
+			} else {
+				$.messager.alert("ÌáÊ¾", "Ò½±£²¡ÈËÖ§¸¶Ê§°Ü£¬°´ÏÖ½ğ½áËãÊ§°Ü£¬Çëµ½ÊÕ·ÑÒì³£´¦Àí½çÃæ´¦Àí", "error");
 			}
-		} else if (HandleFlag == "1") {
-			//æ’¤é”€åŒ»ä¿ç»“ç®—
-			var Len = FailPrtStr.split("^").length;
-			for (i = Len; i > 0; i--) {
-				var FailPrtRowID = FailPrtStr.split("^")[i];
+		} else if (HandleFlag == 1) {
+			//³·ÏúÒ½±£½áËã
+			var FailPrtAry = FailPrtStr.split("^");
+			var i;
+			for (i = FailPrtAry.length; i > 0; i--) {
+				var FailPrtRowID = FailPrtAry[i];
 				var ExpStr = "" + "^" + session['LOGON.GROUPID'] + "^";
-				//å¾…å®Œæˆ
+				//´ıÍê³É
 				//var rollRtn = HISRollBack(FailPrtRowID, InsDivDR, InsTypeDR, AdmSource, ExpStr);
 			}
-			myRtn = "";
 		} else {
-			//ä¸å¤„ç†
-			alert("åŒ»ä¿ç—…äººæ”¯ä»˜å¤±è´¥,è¯·åˆ°æ”¶è´¹å¼‚å¸¸å¤„ç†ç•Œé¢å¤„ç†.");
-			myRtn = "";
+			//²»´¦Àí
+			$.messager.alert("ÌáÊ¾", "Ò½±£²¡ÈËÖ§¸¶Ê§°Ü£¬Çëµ½ÊÕ·ÑÒì³£´¦Àí½çÃæ´¦Àí", "error");
 		}
 	} else {
-		//è‡ªè´¹æ‚£è€…å›æ»š
+		//×Ô·Ñ»¼Õß»Ø¹ö
 		var ExpStr = "" + "^" + session['LOGON.GROUPID'] + "^";
 		var myrtn = DHCWebOPYB_DeleteHISData(FailPrtStr, ExpStr);
-		if (myrtn == "0") {
-			alert("è‡ªè´¹ç—…äººæ”¯ä»˜å¤±è´¥,å›æ»šå‘ç¥¨æˆåŠŸ,è¯·é‡è¯•");
+		if (myrtn == 0) {
+			$.messager.alert("×Ô·Ñ²¡ÈËÖ§¸¶Ê§°Ü£¬»Ø¹ö·¢Æ±³É¹¦£¬ÇëÖØÊÔ");
 		} else {
-			alert("è‡ªè´¹ç—…äººæ”¯ä»˜å¤±è´¥,å›æ»šå‘ç¥¨å¤±è´¥,è¯·åˆ°å¼‚å¸¸å¤„ç†å›æ»šå‘ç¥¨!");
+			$.messager.alert("×Ô·Ñ²¡ÈËÖ§¸¶Ê§°Ü£¬»Ø¹ö·¢Æ±Ê§°Ü£¬Çëµ½Òì³£´¦Àí»Ø¹ö·¢Æ±");
 		}
 	}
 	return myRtn;
+}
+
+/**
+ * [CheckPayService Ö§¸¶²éÖ¤·şÎñ£¨²»È·¶¨¶©µ¥ÊÇ·ñ³É¹¦²éÖ¤µÚÈı·½£©]
+ * @param {[String]} IBPRowid    [¶©µ¥ID]
+ * @return{[obj]} 	 rtnValue    [·µ»ØÖµ obj.ResultCode½á¹û´úÂë(0³É¹¦;·Ç0Ê§°Ü);obj.ResultMsg½á¹ûÃèÊö]
+ */
+function CheckPayService(ETPRowID) {
+	var rtnValue = {
+		ResultCode: -1,
+		ResultMsg: "¶©µ¥Ö§¸¶Ê§°Ü"
+	};
+	var paymId = GetETPPayModeID(ETPRowID);
+	var payModeInfo = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "GetCallModeByPayMode", paymId);
+	var payCallMode = payModeInfo.split("^")[2];
+	var payCallFlag = payModeInfo.split("^")[0];
+	if (payCallFlag == 0) {
+		rtnValue.ResultCode = 0;
+		rtnValue.ResultMsg = "¸ÃÖ§¸¶·½Ê½²»Ğèµ÷ÓÃ½Ó¿Ú";
+		return rtnValue;
+	}
+	if (payCallMode == "DLL") {
+		//µ÷ÓÃPos·şÎñjsµ÷ÓÃ
+		rtnValue = BankPayCheck(ETPRowID);
+	} else if (payCallMode == "WS") {
+		//µ÷ÓÃÖ±Á¬·şÎñjsµ÷ÓÃ
+	} else if (payCallMode == "SP") {
+	}
+	return rtnValue;
+}
+
+/**
+ * @author <suhuide>
+ * @date <2021-11-17>
+ * @desc <¸ù¾İ¶©µ¥±íRowID»ñÈ¡µÚÈı·½Ö§¸¶·½Ê½ID>
+ * @param {[String]} ETPRowID: DHC_BillExtTradePay.RowId
+ * @return{[String]} PayModeID: CT_PayMode.RowId
+ */
+function GetETPPayModeID(ETPRowID) {
+	return tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "GetETPPayModeID", ETPRowID);
 }

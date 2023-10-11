@@ -26,7 +26,7 @@ Ext.onReady(function() {
    
 	function ChartInfoAddFun() {
 		var PhaLoc = new Ext.ux.LocComboBox({
-			fieldLabel : '药房',
+			fieldLabel : $g('药房'),
 			id : 'PhaLoc',
 			name : 'PhaLoc',
 			anchor : '90%',
@@ -44,7 +44,7 @@ Ext.onReady(function() {
 		});
 
 		var DateTime = new Ext.ux.DateField({
-					fieldLabel : '日期',
+					fieldLabel : $g('日期'),
 					id : 'DateTime',
 					name : 'DateTime',
 					anchor : '90%',
@@ -54,7 +54,7 @@ Ext.onReady(function() {
 		var StkGrpType=new Ext.ux.StkGrpComboBox({ 
 			id : 'StkGrpType',
 			name : 'StkGrpType',
-			fieldLabel : '类组',
+			fieldLabel : $g('类组'),
 			StkType:App_StkTypeCode,     //标识类组类型
 			anchor : '90%',
 			LocId:gLocId,
@@ -66,11 +66,11 @@ Ext.onReady(function() {
 		
 		var TypeStore = new Ext.data.SimpleStore({
 					fields : ['RowId', 'Description'],
-					data : [['0', '全部'], ['1', '库存为零'], ['2', '库存为正'],
-							['3', '库存为负']]
+					data : [['0', $g('全部')], ['1', $g('库存为零')], ['2', $g('库存为正')],
+							['3', $g('库存为负')]]
 				});
 		var Type = new Ext.form.ComboBox({
-					fieldLabel : '类型',
+					fieldLabel : $g('类型'),
 					id : 'Type',
 					name : 'Type',
 					anchor:'90%',
@@ -92,10 +92,10 @@ Ext.onReady(function() {
 		//批次是否有库存
 		var incilIfNotZeroStore = new Ext.data.SimpleStore({
 					fields : ['RowId', 'Description'],
-					data : [['0', '全部'], ['1', '有库存'], ['2', '无库存']]
+					data : [['0', $g('全部')], ['1', $g('有库存')], ['2', $g('无库存')]]
 				});
 		var incilIfNotZero = new Ext.form.ComboBox({
-					fieldLabel : '是否有库存',
+					fieldLabel : $g('是否有库存'),
 					id : 'incilIfNotZero',
 					name : 'incilIfNotZero',
 					anchor:'70%',
@@ -123,10 +123,10 @@ Ext.onReady(function() {
 		//批次库存是否可用
 		var incilStkActiveStore = new Ext.data.SimpleStore({
 					fields : ['RowId', 'Description'],
-					data : [['0', '全部'], ['1', '可用'], ['2', '不可用']]
+					data : [['0', $g('全部')], ['1', $g('可用')], ['2', $g('不可用')]]
 				});
 		var incilStkActive = new Ext.form.ComboBox({
-					fieldLabel : '库存不可用',
+					fieldLabel : $g('库存不可用'),
 					id : 'incilStkActive',
 					name : 'incilStkActive',
 					anchor:'70%',
@@ -153,10 +153,10 @@ Ext.onReady(function() {
 		//批次医嘱是否可用
 		var incilArcActiveStore = new Ext.data.SimpleStore({
 					fields : ['RowId', 'Description'],
-					data : [['0', '全部'], ['1', '可用'], ['2', '不可用']]
+					data : [['0', $g('全部')], ['1', $g('可用')], ['2', $g('不可用')]]
 				});
 		var incilArcActive = new Ext.form.ComboBox({
-					fieldLabel : '医嘱不可用',
+					fieldLabel : $g('医嘱不可用'),
 					id : 'incilArcActive',
 					name : 'incilArcActive',
 					anchor:'70%',
@@ -205,7 +205,7 @@ function BatchReload()
 }
 
 		var InciDesc = new Ext.form.TextField({
-					fieldLabel : '药品名称',
+					fieldLabel : $g('药品名称'),
 					id : 'InciDesc',
 					name : 'InciDesc',
 					anchor : '90%',
@@ -249,10 +249,10 @@ function BatchReload()
 
 		var ImportStore = new Ext.data.SimpleStore({
 					fields : ['RowId', 'Description'],
-					data : [['国产', '国产'], ['进口', '进口'], ['合资', '合资']]
+					data : [[$g('国产'), $g('国产')], [$g('进口'), $g('进口')], [$g('合资'), $g('合资')]]
 				});
 		var INFOImportFlag = new Ext.form.ComboBox({
-					fieldLabel : '进口标志',
+					fieldLabel : $g('进口标志'),
 					id : 'INFOImportFlag',
 					name : 'INFOImportFlag',
 					anchor : '90%',					
@@ -268,7 +268,7 @@ function BatchReload()
 				});
 		
 		var DHCStkCatGroup = new Ext.ux.ComboBox({
-					fieldLabel : '库存分类',
+					fieldLabel : $g('库存分类'),
 					id : 'DHCStkCatGroup',
 					name : 'DHCStkCatGroup',
 					store : StkCatStore,
@@ -279,7 +279,7 @@ function BatchReload()
 				
 		// 药学大类
 		var PhcCat = new Ext.ux.ComboBox({
-					fieldLabel : '药学大类',
+					fieldLabel : $g('药学大类'),
 					id : 'PhcCat',
 					name : 'PhcCat',				
 					store : PhcCatStore,
@@ -294,7 +294,7 @@ function BatchReload()
 
 		// 药学子类
 		var PhcSubCat = new Ext.ux.ComboBox({
-					fieldLabel : '药学子类',
+					fieldLabel : $g('药学子类'),
 					id : 'PhcSubCat',
 					name : 'PhcSubCat',			
 					store : PhcSubCatStore,
@@ -305,7 +305,7 @@ function BatchReload()
 
 		// 药学小类
 		var PhcMinCat = new Ext.ux.ComboBox({
-					fieldLabel : '药学小类',
+					fieldLabel : $g('药学小类'),
 					id : 'PhcMinCat',
 					name : 'PhcMinCat',		
 					store : PhcMinCatStore,
@@ -314,7 +314,7 @@ function BatchReload()
 					params:{PhcSubCatId:'PhcSubCat'}
 				});
 var PHCCATALL = new Ext.form.TextField({
-	fieldLabel : '药学分类',
+	fieldLabel : $g('药学分类'),
 	id : 'PHCCATALL',
 	name : 'PHCCATALL',
 	anchor : '90%',
@@ -333,7 +333,7 @@ function GetAllCatNew(catdescstr,newcatid){
 
 var PHCCATALLButton = new Ext.Button({
 	id:'PHCCATALLButton',
-	text : '药学分类',
+	text : $g('药学分类'),
 	handler : function() {	
 		PhcCatNewSelect(gNewCatId,GetAllCatNew)
 
@@ -341,7 +341,7 @@ var PHCCATALLButton = new Ext.Button({
 });
 
 		var ARCItemCat = new Ext.ux.ComboBox({
-					fieldLabel : '医嘱子类',
+					fieldLabel : $g('医嘱子类'),
 					id : 'ARCItemCat',
 					name : 'ARCItemCat',
 					store : ArcItemCatStore,
@@ -351,7 +351,7 @@ var PHCCATALLButton = new Ext.Button({
 				});
 
 		var PHCDFPhcDoDR = new Ext.ux.ComboBox({
-					fieldLabel : '管制分类',
+					fieldLabel : $g('管制分类'),
 					id : 'PHCDFPhcDoDR',
 					name : 'PHCDFPhcDoDR',
 					store : PhcPoisonStore,
@@ -360,7 +360,7 @@ var PHCCATALLButton = new Ext.Button({
 				});
 
 		var PhManufacturer = new Ext.ux.ComboBox({
-					fieldLabel : '厂商',
+					fieldLabel : $g('厂商'),
 					id : 'PhManufacturer',
 					name : 'PhManufacturer',
 					store : PhManufacturerStore,
@@ -370,7 +370,7 @@ var PHCCATALLButton = new Ext.Button({
 				});
 
 		var PHCDOfficialType = new Ext.ux.ComboBox({
-					fieldLabel : '医保类别',
+					fieldLabel : $g('医保类别'),
 					id : 'PHCDOfficialType',
 					name : 'PHCDOfficialType',
 					store : OfficeCodeStore,
@@ -379,7 +379,7 @@ var PHCCATALLButton = new Ext.Button({
 				});
 
 		var PHCForm = new Ext.ux.ComboBox({
-					fieldLabel : '剂型',
+					fieldLabel : $g('剂型'),
 					id : 'PHCForm',
 					name : 'PHCForm',			
 					store : PhcFormStore,
@@ -389,7 +389,7 @@ var PHCCATALLButton = new Ext.Button({
 				});		
 
 		var ManageDrug = new Ext.form.Checkbox({
-					boxLabel : '管理药',
+					boxLabel : $g('管理药'),
 					id : 'ManageDrug',
 					name : 'ManageDrug',
 					anchor : '90%',				
@@ -399,7 +399,7 @@ var PHCCATALLButton = new Ext.Button({
 
 
 		var UseFlag = new Ext.form.Checkbox({
-					boxLabel : '仅在用品种',
+					boxLabel : $g('仅在用品种'),
 					id : 'UseFlag',
 					name : 'UseFlag',
 					anchor : '90%',					
@@ -408,7 +408,7 @@ var PHCCATALLButton = new Ext.Button({
 				});
 
 		var NotUseFlag = new Ext.form.Checkbox({
-					boxLabel : '仅不可用品种',
+					boxLabel : $g('仅不可用品种'),
 					id : 'NotUseFlag',
 					name : 'NotUseFlag',
 					anchor : '90%',					
@@ -417,9 +417,17 @@ var PHCCATALLButton = new Ext.Button({
 				});
 				
 		var StoNoZeroFlag = new Ext.form.Checkbox({
-					boxLabel : '仅有库存医嘱批次不可用',
+					boxLabel : $g('仅有库存医嘱批次不可用'),
 					id : 'StoNoZeroFlag',
 					name : 'StoNoZeroFlag',
+					anchor : '90%',					
+					height : 20,
+					checked : false
+				});
+		var ReservedFlag = new Ext.form.Checkbox({
+					boxLabel : $g('仅有在途数'),
+					id : 'ReservedFlag',
+					name : 'ReservedFlag',
 					anchor : '90%',					
 					height : 20,
 					checked : false
@@ -427,10 +435,10 @@ var PHCCATALLButton = new Ext.Button({
 				
 		var ArcStatStore = new Ext.data.SimpleStore({
 					fields : ['RowId', 'Description'],
-					data : [['0', '全部'], ['1', '医嘱项截止'], ['2', '医嘱项在用']]
+					data : [['0', $g('全部')], ['1',$g( '医嘱项截止')], ['2', $g('医嘱项在用')]]
 				});
 		var ArcStat = new Ext.form.ComboBox({
-					fieldLabel : '医嘱项状态',
+					fieldLabel : $g('医嘱项状态'),
 					id : 'ArcStat',
 					name : 'ArcStat',
 					anchor:'90%',
@@ -452,8 +460,8 @@ var PHCCATALLButton = new Ext.Button({
 
 		// 查询按钮
 		var SearchBT = new Ext.Toolbar.Button({
-					text : '查询',
-					tooltip : '点击查询',
+					text : $g('查询'),
+					tooltip : $g('点击查询'),
 					iconCls : 'page_find',
 					width : 70,
 					height : 30,
@@ -471,7 +479,7 @@ var PHCCATALLButton = new Ext.Button({
 		setNormalValue("HisListTab")
 		var PhaLocDesc = Ext.getCmp("PhaLoc").getRawValue();
 		if (PhaLocDesc ==""||PhaLocDesc == null || PhaLocDesc.length <= 0) {
-				Msg.info("warning", "药房不能为空！");
+				Msg.info("warning", $g("药房不能为空！"));
 				Ext.getCmp("PhaLoc").focus();
 				return;
 			}	
@@ -480,14 +488,14 @@ var PHCCATALLButton = new Ext.Button({
 			
 			var phaLoc = Ext.getCmp("PhaLoc").getValue();
 			if (phaLoc == null || phaLoc.length <= 0) {
-				Msg.info("warning", "药房不能为空！");
+				Msg.info("warning", $g("药房不能为空！"));
 				Ext.getCmp("PhaLoc").focus();
 				return;
 			}
 		//wyx add 2014-01-15
 		var DateTimetmp = Ext.getCmp("DateTime").getValue()
 		if (DateTimetmp=="") {
-		    Msg.info("warning", "日期不能为空！");
+		    Msg.info("warning", $g("日期不能为空！"));
 		    Ext.getCmp("DateTime").focus();
 		    return;
 				}
@@ -497,17 +505,17 @@ var PHCCATALLButton = new Ext.Button({
 			var StkGrpRowId = Ext.getCmp("StkGrpType").getValue();
 			var StockType = Ext.getCmp("Type").getValue();
 			if (date == null || date.length <= 0) {
-				Msg.info("warning", "日期不能为空！");
+				Msg.info("warning",$g( "日期不能为空！"));
 				Ext.getCmp("DateTime").focus();
 				return;
 			}
 			if ((StkGrpRowId == null || StkGrpRowId.length <= 0)&(gParamCommon[9]=="N")) {
-				Msg.info("warning", "类组不能为空！");
+				Msg.info("warning", $g("类组不能为空！"));
 				Ext.getCmp("StkGrpType").focus();
 				return;
 			}
 			if (StockType == null || StockType.length <= 0) {
-				Msg.info("warning", "类型不能为空！");
+				Msg.info("warning", $g("类型不能为空！"));
 				Ext.getCmp("Type").focus();
 				return;
 			}
@@ -526,6 +534,8 @@ var PHCCATALLButton = new Ext.Button({
 			var ManageDrug = (Ext.getCmp("ManageDrug").getValue()==true?'Y':'N');
 			var UseFlag = (Ext.getCmp("UseFlag").getValue()==true?'Y':'N');
 			var NotUseFlag = (Ext.getCmp("NotUseFlag").getValue()==true?'Y':'N');
+			var ReservedFlag = (Ext.getCmp("ReservedFlag").getValue()==true?'Y':'N');
+			
 			var ImpFlag=Ext.getCmp("INFOImportFlag").getValue();
 			var StoNoZeroFlag = (Ext.getCmp("StoNoZeroFlag").getValue()==true?'Y':'N');
 			var InciDesc=Ext.getCmp("InciDesc").getValue();
@@ -537,7 +547,7 @@ var PHCCATALLButton = new Ext.Button({
 			+"^"+ImpFlag+"^"+DHCStkCatGroup+"^"+PhcCat+"^"+PhcSubCat+"^"+PhcMinCat
 			+"^"+ARCItemCat+"^"+PHCDFPhcDoDR+"^"+PhManufacturer+"^"+PHCDOfficialType
 			+"^"+PHCForm+"^"+ManageDrug+"^"+UseFlag+"^"+NotUseFlag+"^"+gNewCatId
-			+"^"+ArcStatValue+"^"+StoNoZeroFlag;
+			+"^"+ArcStatValue+"^"+StoNoZeroFlag+"^"+ReservedFlag;
 			BatchGrid.store.removeAll();
 			StockQtyStore.setBaseParam("Params",strParam);
 			StockQtyStore.removeAll();
@@ -556,17 +566,17 @@ var PHCCATALLButton = new Ext.Button({
 
 		function manFlagRender(value){
 			if(value==1){
-				return '管理药'	;		
+				return $g('管理药')	;		
 			}else if (value==0) {
-				return '非管理药';
+				return $g('非管理药');
 			
 			}
 		}
 				
 		// 清空按钮
 		var RefreshBT = new Ext.Toolbar.Button({
-					text : '清屏',
-					tooltip : '点击清屏',
+					text : $g('清屏'),
+					tooltip : $g('点击清屏'),
 					iconCls : 'page_clearscreen',
 					width : 70,
 					height : 30,
@@ -599,6 +609,8 @@ var PHCCATALLButton = new Ext.Button({
 			Ext.getCmp("ManageDrug").setValue(false);
 			Ext.getCmp("UseFlag").setValue(true);
 			Ext.getCmp("NotUseFlag").setValue(false);
+			Ext.getCmp("ReservedFlag").setValue(false);
+			
 			Ext.getCmp("INFOImportFlag").setValue('');
 			gIncId="";
 			StockQtyGrid.store.removeAll();
@@ -620,8 +632,8 @@ var PHCCATALLButton = new Ext.Button({
 
 		// 另存按钮
 		var SaveAsBT = new Ext.Toolbar.Button({
-					text : '另存',
-					tooltip : '另存为Excel',
+					text : $g('另存'),
+					tooltip : $g('另存为Excel'),
 					iconCls : 'page_excel',
 					width : 70,
 					height : 30,
@@ -652,25 +664,25 @@ var PHCCATALLButton = new Ext.Button({
 					sortable : true,
 					hidden : true
 				}, {
-					header : '代码',
+					header : $g('代码'),
 					dataIndex : 'InciCode',
 					width : 100,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "名称",
+					header : $g("名称"),
 					dataIndex : 'InciDesc',
 					width : 200,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "货位",
+					header : $g("货位"),
 					dataIndex : 'StkBin',
 					width : 90,
 					align : 'left',
 					sortable : true
 				}, {
-					header : '库存(包装单位)',
+					header : $g('库存(包装单位)'),
 					dataIndex : 'PurStockQty',
 					width : 100,
 					align : 'right',
@@ -678,109 +690,109 @@ var PHCCATALLButton = new Ext.Button({
 					sortable : true,
 					renderer:SetNumber
 				}, {
-					header : "包装单位",
+					header : $g("包装单位"),
 					dataIndex : 'PurUomDesc',
 					width : 50,
 					align : 'left',
 					sortable : false
 				}, {
-					header : "库存(基本单位)",
+					header : $g("库存(基本单位)"),
 					dataIndex : 'StockQty',
 					width : 100,
 					align : 'right',
 					sortable : true,
 					renderer:SetNumber
 				}, {
-					header : "基本单位",
+					header : $g("基本单位"),
 					dataIndex : 'BUomDesc',
 					width : 60,
 					align : 'left',
 					sortable : false
 				}, {
-					header : "库存(单位)",
+					header : $g("库存(单位)"),
 					dataIndex : 'StkQtyUom',
 					width : 100,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "占用库存",
+					header : $g("占用库存"),
 					dataIndex : 'DirtyQty',
 					width : 100,
 					align : 'right',
 					sortable : true,
 				}, {
-					header : "可用库存",
+					header : $g("可用库存"),
 					dataIndex : 'AvaQty',
 					width : 100,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "在途数",
+					header : $g("在途数"),
 					dataIndex : 'ReservedQty',
 					width : 100,
 					align : 'right',
 					sortable : true,
 					//renderer:SetNumber
 				}, {
-					header : "零售价",
+					header : $g("零售价"),
 					dataIndex : 'Sp',
 					width : 80,
 					align : 'right',
 					sortable : false,
 					renderer:SetNumber
 				}, {
-					header : "最新进价",
+					header : $g("最新进价"),
 					dataIndex : 'Rp',
 					width : 80,
 					align : 'right',
 					sortable : false,
 					renderer:SetNumber
 				}, {
-					header : '售价金额',
+					header : $g('售价金额'),
 					dataIndex : 'SpAmt',
 					width : 120,
 					align : 'right',
 					sortable : false,
 					renderer:FormatGridSpAmount
 				}, {
-					header : '进价金额',
+					header : $g('进价金额'),
 					dataIndex : 'RpAmt',
 					width : 120,
 					align : 'right',
 					sortable : false,
 					renderer:FormatGridRpAmount
 				}, {
-					header : "规格",
+					header : $g("规格"),
 					dataIndex : 'Spec',
 					width : 100,
 					align : 'left',
 					sortable : false
 				}, {
-					header : '厂商',
+					header : $g('厂商'),
 					dataIndex : 'ManfDesc',
 					width : 50,
 					align : 'left',
 					sortable : false
 				}, {
-					header : "处方通用名",
+					header : $g("处方通用名"),
 					dataIndex : 'Gene',
 					width : 80,
 					align : 'left',
 					sortable : false
 				}, {
-					header : "医保类别",
+					header : $g("医保类别"),
 					dataIndex : 'OfficalCode',
 					width : 80,
 					align : 'left',
 					sortable : false
 				}, {
-					header : "剂型",
+					header : $g("剂型"),
 					dataIndex : 'FormDesc',
 					width : 100,
 					align : 'left',
 					sortable : false
 				}, {
-					header : "是否管理药",
+					header : $g("是否管理药"),
 					dataIndex : 'ManFlag',
 					width : 120,
 					align : 'left',
@@ -788,8 +800,8 @@ var PHCCATALLButton = new Ext.Button({
 					renderer:manFlagRender
 				}]);
 		var GridColSetBT = new Ext.Toolbar.Button({
-	      text:'列设置',
-          tooltip:'列设置',
+	      text:$g('列设置'),
+          tooltip:$g('列设置'),
           iconCls:'page_gear',
           //	width : 70,
          //	height : 30,
@@ -829,17 +841,17 @@ var PHCCATALLButton = new Ext.Button({
 
 		var StatuTabPagingToolbar = new Ext.PagingToolbar({
 					store : StockQtyStore,
-					pageSize : PageSize,
+					pageSize : 999999, //PageSize,
 					displayInfo : true,
-					displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
-					prevText : "上一页",
-					nextText : "下一页",
-					refreshText : "刷新",
-					lastText : "最后页",
-					firstText : "第一页",
-					beforePageText : "当前页",
-					afterPageText : "共{0}页",
-					emptyMsg : "没有数据"
+					displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
+					prevText :$g( "上一页"),
+					nextText : $g("下一页"),
+					refreshText : $g("刷新"),
+					lastText : $g("最后页"),
+					firstText : $g("第一页"),
+					beforePageText : $g("当前页"),
+					afterPageText : $g("共{0}页"),
+					emptyMsg : $g("没有数据")
 				});
 
 		var StockQtyGrid = new Ext.grid.GridPanel({
@@ -853,7 +865,15 @@ var PHCCATALLButton = new Ext.Button({
 					loadMask : true,
 					border:false,
 					bbar : [StatuTabPagingToolbar],
-					tbar:[GridColSetBT]
+					tbar:[GridColSetBT],
+					view: new Ext.ux.grid.BufferView({  
+				          // custom row height  
+				      	  rowHeight: 25,
+		   				  borderHeight:1,
+				      	  // render rows as they come into viewable area.  
+				          scrollDelay: false,  
+				          emptyText: "无相关数据"  
+					})  
 				});
 		// 添加表格单击行事件
 		StockQtyGrid.getSelectionModel().on('rowselect', function(sm, rowIndex, r) {
@@ -874,7 +894,7 @@ var PHCCATALLButton = new Ext.Button({
 		
 			
 		var ColumnNotUseFlag = new Ext.grid.CheckColumn({
-   		header: '医嘱不可用',
+   		header: $g('医嘱不可用'),
    		dataIndex: 'NotUseFlag',
    		width: 80,
    		sortable:true,
@@ -884,7 +904,7 @@ var PHCCATALLButton = new Ext.Button({
 		}
 	    });	
 		var ColumnStkNotUseFlag = new Ext.grid.CheckColumn({
-   		header: '库存不可用',
+   		header: $g('库存不可用'),
    		dataIndex: 'StkNotUseFlag',
    		width: 80,
    		sortable:true,
@@ -903,92 +923,92 @@ var PHCCATALLButton = new Ext.Button({
 					hidden : true
 				}, ColumnNotUseFlag,
 				   ColumnStkNotUseFlag,{
-					header : '批号',
+					header : $g('批号'),
 					dataIndex : 'BatNo',
 					width : 100,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "效期",
+					header : $g("效期"),
 					dataIndex : 'ExpDate',
 					width : 100,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "库存",
+					header : $g("库存"),
 					dataIndex : 'QtyUom',
 					width : 90,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "占用",
+					header : $g("占用"),
 					dataIndex : 'DirtyQty',
 					width : 90,
 					align : 'left',
 					sortable : true,
 				}, {
-					header : "可用",
+					header : $g("可用"),
 					dataIndex : 'AvaQty',
 					width : 90,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "在途",
+					header : $g("在途"),
 					dataIndex : 'InclbResQty',
 					width : 90,
 					align : 'left',
 					sortable : true,
 					//renderer:SetNumber
 				}, {
-					header : '进价(基本)',
+					header : $g('进价(基本)'),
 					dataIndex : 'BRp',
 					width : 90,
 					align : 'right',
 					//renderer : Ext.util.Format.usMoney,
 					sortable : true
 				}, {
-					header : "进价(包装)",
+					header : $g("进价(包装)"),
 					dataIndex : 'PRp',
 					width : 90,
 					align : 'right',
 					//renderer : Ext.util.Format.usMoney,
 					sortable : true
 				}, {
-					header : '售价(基本)',
+					header : $g('售价(基本)'),
 					dataIndex : 'BSp',
 					width : 90,
 					align : 'right',
 					//renderer : Ext.util.Format.usMoney,
 					sortable : true
 				}, {
-					header : "售价(包装)",
+					header : $g("售价(包装)"),
 					dataIndex : 'PSp',
 					width : 90,
 					align : 'right',
 					//renderer : Ext.util.Format.usMoney,
 					sortable : true
 				}, {
-					header : "供应商",
+					header : $g("供应商"),
 					dataIndex : 'PVenDesc',
 					width : 150,
 					align : 'left',
 					//renderer : Ext.util.Format.usMoney,
 					sortable : true
 				}, {
-					header : "厂商",
+					header : $g("厂商"),
 					dataIndex : 'PManf',
 					width : 150,
 					align : 'left',
 					//renderer : Ext.util.Format.usMoney,
 					sortable : true
 				}, {
-					header : "加锁人",
+					header : $g("加锁人"),
 					dataIndex : 'LockUser',
 					width : 80,
 					align : 'center',
 					sortable : true
 				}, {
-					header : "加锁时间",
+					header : $g("加锁时间"),
 					dataIndex : 'LockDate',
 					width : 130,
 					align : 'left',
@@ -1024,21 +1044,21 @@ var PHCCATALLButton = new Ext.Button({
 
 		var StatuTabPagingToolbarBatch = new Ext.PagingToolbar({
 					store : BatchStore,
-					pageSize : PageSize,
+					pageSize :99999,// PageSize,
 					displayInfo : true,
-					displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
-					prevText : "上一页",
-					nextText : "下一页",
-					refreshText : "刷新",
-					lastText : "最后页",
-					firstText : "第一页",
-					beforePageText : "当前页",
-					afterPageText : "共{0}页",
-					emptyMsg : "没有数据"
+					displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
+					prevText : $g("上一页"),
+					nextText : $g("下一页"),
+					refreshText : $g("刷新"),
+					lastText :$g( "最后页"),
+					firstText : $g("第一页"),
+					beforePageText : $g("当前页"),
+					afterPageText :$g( "共{0}页"),
+					emptyMsg : $g("没有数据")
 				});
         //yunhaibao20151118,批次可用设置
         var NoUseBT = new Ext.Toolbar.Button({
-          	text:'修改不可用状态',
+          	text:$g('修改不可用状态'),
           	iconCls:'page_edit',
          	handler:function(){
 				var mr=BatchStore.getModifiedRecords();
@@ -1056,20 +1076,20 @@ var PHCCATALLButton = new Ext.Button({
 					}
 				}
 				if (BatListDetail==""){
-					Msg.info("warning", "无可用保存信息!");
+					Msg.info("warning", $g("无可用保存信息!"));
 					return
 				}
 				var url = DictUrl+ 'locitmstkaction.csp?actiontype=ChangeBatchUseFlag';
-				var loadMask=ShowLoadMask(Ext.getBody(),"处理中...");
+				var loadMask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 				Ext.Ajax.request({
 							url : url,
 							method : 'POST',
 							params:{BatListDetail:BatListDetail},
-							waitMsg : '处理中...',
+							waitMsg : $g('处理中...'),
 							success : function(result, request) {
 								var jsonData = Ext.util.JSON.decode(result.responseText);
 								if (jsonData.success == 'true') {
-									Msg.info("success", "修改成功!");
+									Msg.info("success", $g("修改成功!"));
 									
 									BatchReload(); 
 									/*
@@ -1083,7 +1103,7 @@ var PHCCATALLButton = new Ext.Button({
 						            */
 
 								} else {
-										Msg.info("error", "修改失败!\n"+jsonData.info);
+										Msg.info("error", $g("修改失败!\n")+jsonData.info);
 								}
 							},
 							scope : this
@@ -1102,14 +1122,22 @@ var PHCCATALLButton = new Ext.Button({
 					plugins:[ColumnNotUseFlag,ColumnStkNotUseFlag], 
 					tbar:[NoUseBT],
 					border:false,
-					bbar : [StatuTabPagingToolbarBatch]					
+					bbar : [StatuTabPagingToolbarBatch],
+					view: new Ext.ux.grid.BufferView({  
+				          // custom row height  
+				      	  rowHeight: 25,
+		   				  borderHeight:1,
+				      	  // render rows as they come into viewable area.  
+				          scrollDelay: false,  
+				          emptyText: "无相关数据"  
+					})			
 			});
 		
 		function TransShow() {
 			var gridSelected =Ext.getCmp("StockQtyGrid"); 
 			var rows=StockQtyGrid.getSelectionModel().getSelections() ; 
 			if(rows.length==0){
-				Ext.Msg.show({title:'错误',msg:'请选择要查看的药品！',buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
+				Ext.Msg.show({title:$g('错误'),msg:$g('请选择要查看的药品！'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
 			}else {
 				var selectedRow = rows[0];
 				var Incil = selectedRow.get("Incil");
@@ -1117,7 +1145,7 @@ var PHCCATALLButton = new Ext.Button({
 				var IncDesc=selectedRow.get("InciDesc");
 				var PurUom=selectedRow.get("PurUomDesc");
 				var BUom=selectedRow.get("BUomDesc");
-				var IncInfo=IncDesc+'         包装单位：'+PurUom+'     基本单位：'+BUom;
+				var IncInfo=IncDesc+$g('         包装单位：')+PurUom+$g('     基本单位：')+BUom;
 				TransQuery(Incil, Date,IncInfo);								
 			}
 		}	
@@ -1125,8 +1153,8 @@ var PHCCATALLButton = new Ext.Button({
 
          // 用户对话框，用一个回调函数处理结果:
                    Ext.Msg.show({
-	                 title:'全院在途数清除',
-	                 msg:'确定清除全院在途数？',
+	                 title:$g('全院在途数清除'),
+	                 msg:$g('确定清除全院在途数？'),
 	                 scope: this,
 	                 buttons: Ext.Msg.OKCANCEL,
 	                 icon:Ext.MessageBox.QUESTION,
@@ -1144,8 +1172,8 @@ var PHCCATALLButton = new Ext.Button({
                   var phaLoc = Ext.getCmp("PhaLoc").getValue();
          // 用户对话框，用一个回调函数处理结果:
                    Ext.Msg.show({
-	                 title:'科室在途数清除',
-	                 msg:'确定清除科室在途数？',
+	                 title:$g('科室在途数清除'),
+	                 msg:$g('确定清除科室在途数？'),
 	                 scope: this,
 	                 buttons: Ext.Msg.OKCANCEL,
 	                 icon:Ext.MessageBox.QUESTION,
@@ -1161,14 +1189,14 @@ var PHCCATALLButton = new Ext.Button({
 			var gridSelected =Ext.getCmp("StockQtyGrid"); 
 			var rows=StockQtyGrid.getSelectionModel().getSelections() ; 
 			if(rows.length==0){
-				Ext.Msg.show({title:'错误',msg:'请选择要查看的药品！',buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
+				Ext.Msg.show({title:$g('错误'),msg:$g('请选择要查看的药品！'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
 			}else {
 				var selectedRow = rows[0];
 				var incil = selectedRow.get("Incil");  
          // 用户对话框，用一个回调函数处理结果:
                    Ext.Msg.show({
-	                 title:'科室单品在途数清除',
-	                 msg:'确定清除科室单品在途数？',
+	                 title:$g('科室单品在途数清除'),
+	                 msg:$g('确定清除科室单品在途数？'),
 	                 scope: this,
 	                 buttons: Ext.Msg.OKCANCEL,
 	                 icon:Ext.MessageBox.QUESTION,
@@ -1185,8 +1213,8 @@ var PHCCATALLButton = new Ext.Button({
                   var phaLoc = Ext.getCmp("PhaLoc").getValue();
          // 用户对话框，用一个回调函数处理结果:
                    Ext.Msg.show({
-	                 title:'科室库存同步',
-	                 msg:'确定同步科室库存？',
+	                 title:$g('科室库存同步'),
+	                 msg:$g('确定同步科室库存？'),
 	                 scope: this,
 	                 buttons: Ext.Msg.OKCANCEL,
 	                 icon:Ext.MessageBox.QUESTION,
@@ -1202,14 +1230,14 @@ var PHCCATALLButton = new Ext.Button({
 			var gridSelected =Ext.getCmp("StockQtyGrid"); 
 			var rows=StockQtyGrid.getSelectionModel().getSelections() ; 
 			if(rows.length==0){
-				Ext.Msg.show({title:'错误',msg:'请选择要查看的药品！',buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
+				Ext.Msg.show({title:$g('错误'),msg:$g('请选择要查看的药品！'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
 			}else {
 				var selectedRow = rows[0];
 				var incil = selectedRow.get("Incil");  
          // 用户对话框，用一个回调函数处理结果:
                    Ext.Msg.show({
-	                 title:'科室单品库存同步',
-	                 msg:'确定同步科室单品库存？',
+	                 title:$g('科室单品库存同步'),
+	                 msg:$g('确定同步科室单品库存？'),
 	                 scope: this,
 	                 buttons: Ext.Msg.OKCANCEL,
 	                 icon:Ext.MessageBox.QUESTION,
@@ -1227,24 +1255,24 @@ var PHCCATALLButton = new Ext.Button({
 		
 		    var url = DictUrl
 					+ 'locitmstkaction.csp?actiontype=ClrResQtyAll';
-			var loadMask=ShowLoadMask(Ext.getBody(),"处理中...");
+			var loadMask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 			Ext.Ajax.request({
 						url : url,
 						method : 'POST',
 						//params:{IngrNo:IngrNo,MainInfo:MainInfo,ListDetail:ListDetail},
-						waitMsg : '处理中...',
+						waitMsg : $g('处理中...'),
 						success : function(result, request) {
 							var jsonData = Ext.util.JSON
 									.decode(result.responseText);
 							if (jsonData.success == 'true') {
 						
-								Msg.info("success", "清除成功!");
+								Msg.info("success", $g("清除成功!"));
 								// 重新加载数据
 								searchData()
 
 							} else {
 								//var ret=jsonData.info;
-									Msg.info("error", "清除失败!");
+									Msg.info("error", $g("清除失败!"));
 							}
 						},
 						scope : this
@@ -1255,23 +1283,23 @@ var PHCCATALLButton = new Ext.Button({
 		function ClrResQtyLoc(phaLoc){
 		    var url = DictUrl
 					+ 'locitmstkaction.csp?actiontype=ClrResQtyLoc';
-			var loadMask=ShowLoadMask(Ext.getBody(),"处理中...");
+			var loadMask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 			Ext.Ajax.request({
 						url : url,
 						method : 'POST',
 						params:{PhaLoc:phaLoc},
-						waitMsg : '处理中...',
+						waitMsg : $g('处理中...'),
 						success : function(result, request) {
 							var jsonData = Ext.util.JSON
 									.decode(result.responseText);
 							if (jsonData.success == 'true') {
-								Msg.info("success", "清除成功!");
+								Msg.info("success", $g("清除成功!"));
 								// 重新加载数据
 								searchData()
 
 							} else {
 								//var ret=jsonData.info;
-									Msg.info("error", "清除失败!");
+									Msg.info("error", $g("清除失败!"));
 							}
 						},
 						scope : this
@@ -1283,23 +1311,23 @@ var PHCCATALLButton = new Ext.Button({
 		
 		    var url = DictUrl
 					+ 'locitmstkaction.csp?actiontype=ClrResQtyLocInci';
-			var loadMask=ShowLoadMask(Ext.getBody(),"处理中...");
+			var loadMask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 			Ext.Ajax.request({
 						url : url,
 						method : 'POST',
 						params:{Incil:incil},
-						waitMsg : '处理中...',
+						waitMsg : $g('处理中...'),
 						success : function(result, request) {
 							var jsonData = Ext.util.JSON
 									.decode(result.responseText);
 							if (jsonData.success == 'true') {
-								Msg.info("success", "清除成功!");
+								Msg.info("success", $g("清除成功!"));
 								// 重新加载数据
 								searchData()
 
 							} else {
 								//var ret=jsonData.info;
-									Msg.info("error", "清除失败!");
+									Msg.info("error", $g("清除失败!"));
 							}
 						},
 						scope : this
@@ -1311,23 +1339,23 @@ var PHCCATALLButton = new Ext.Button({
 
 		    var url = DictUrl
 					+ 'locitmstkaction.csp?actiontype=SynInciLoc';
-			var loadMask=ShowLoadMask(Ext.getBody(),"处理中...");
+			var loadMask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 			Ext.Ajax.request({
 						url : url,
 						method : 'POST',
 						params:{PhaLoc:phaLoc},
-						waitMsg : '处理中...',
+						waitMsg : $g('处理中...'),
 						success : function(result, request) {
 							var jsonData = Ext.util.JSON
 									.decode(result.responseText);
 							if (jsonData.success == 'true') {
-								Msg.info("success", "同步成功!");
+								Msg.info("success", $g("同步成功!"));
 								// 重新加载数据
 								//searchData()
 
 							} else {
 								//var ret=jsonData.info;
-									Msg.info("error", "同步失败!");
+									Msg.info("error", $g("同步失败!"));
 							}
 						},
 						scope : this
@@ -1338,23 +1366,23 @@ var PHCCATALLButton = new Ext.Button({
 		function SynInciLocInci(incil){
 		    var url = DictUrl
 					+ 'locitmstkaction.csp?actiontype=SynInciLocInci';
-			var loadMask=ShowLoadMask(Ext.getBody(),"处理中...");
+			var loadMask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 			Ext.Ajax.request({
 						url : url,
 						method : 'POST',
 						params:{Incil:incil},
-						waitMsg : '处理中...',
+						waitMsg : $g('处理中...'),
 						success : function(result, request) {
 							var jsonData = Ext.util.JSON
 									.decode(result.responseText);
 							if (jsonData.success == 'true') {
-								Msg.info("success", "同步成功!");
+								Msg.info("success", $g("同步成功!"));
 								// 重新加载数据
 								//searchData()
 
 							} else {
 								//var ret=jsonData.info;
-									Msg.info("error", "同步失败!");
+									Msg.info("error", $g("同步失败!"));
 							}
 						},
 						scope : this
@@ -1366,14 +1394,14 @@ var PHCCATALLButton = new Ext.Button({
 			var gridSelected =Ext.getCmp("StockQtyGrid"); 
 			var rows=StockQtyGrid.getSelectionModel().getSelections() ; 
 			if(rows.length==0){
-				Ext.Msg.show({title:'错误',msg:'请选择要查看的药品！',buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
+				Ext.Msg.show({title:$g('错误'),msg:$g('请选择要查看的药品！'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
 			}else {
 				var selectedRow = rows[0];
 				var Incil = selectedRow.get("Incil");
 				var IncDesc=selectedRow.get("InciDesc");
 				var PurUom=selectedRow.get("PurUomDesc");
 				var BUom=selectedRow.get("BUomDesc");
-				var IncInfo=IncDesc+' 包装单位：'+PurUom+' 基本单位：'+BUom;
+				var IncInfo=IncDesc+$g(' 包装单位：')+PurUom+$g(' 基本单位：')+BUom;
 				DayTotalQuery(Incil,IncInfo); 
 			} 
 		}
@@ -1383,7 +1411,7 @@ var PHCCATALLButton = new Ext.Button({
 			var gridSelected =Ext.getCmp("StockQtyGrid"); 
 			var rows=StockQtyGrid.getSelectionModel().getSelections() ; 
 			if(rows.length==0){
-				Ext.Msg.show({title:'错误',msg:'请选择要查看的药品！',buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
+				Ext.Msg.show({title:$g('错误'),msg:$g('请选择要查看的药品！'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
 			}else {
 				var selectedRow = rows[0];
 				var Incil = selectedRow.get("Incil");
@@ -1407,50 +1435,50 @@ var PHCCATALLButton = new Ext.Button({
 				{ 
 					id: 'mnuTrans', 
 					handler: TransShow, 
-					text: '台账信息',
+					text: $g('台账信息'),
 					click:true,
 					hidden:(gParam[0]=='Y'?false:true)
 					 
 				},{ 
 					id: 'mnuClrResQtyAll', 
 					handler: ClrResQtyAllShow, 
-					text: '全院在途数清除',
+					text: $g('全院在途数清除'),
 					click:true,
 					hidden:(gParam[1]=='Y'?false:true)
 				},{ 
 					id: 'mnuClrResQtyLoc', 
 					handler: ClrResQtyLocShow, 
-					text: '科室在途数清除',
+					text: $g('科室在途数清除'),
 					click:true,
 					hidden:(gParam[2]=='Y'?false:true)
 				},{ 
 					id: 'mnuClrResQtyLocInci', 
 					handler: ClrResQtyLocInciShow, 
-					text: '科室单品在途数清除',
+					text: $g('科室单品在途数清除'),
 					click:true,
 					hidden:(gParam[3]=='Y'?false:true) 
 				},{ 
 					id: 'mnuSynInciLoc', 
 					handler: SynInciLocShow, 
-					text: '科室库存同步',
+					text: $g('科室库存同步'),
 					click:true,
 					hidden:(gParam[4]=='Y'?false:true)
 				},{ 
 					id: 'mnumnuSynInciLocInci', 
 					handler: SynInciLocInciShow, 
-					text: '科室单品库存同步',
+					text: $g('科室单品库存同步'),
 					click:true,
 					hidden:(gParam[5]=='Y'?false:true) 
 				},{ 
 					id: 'mnudayTotal', 
 					handler: DayTotalShow, 
-					text: '全院科室库存',
+					text: $g('全院科室库存'),
 					click:true,
 					hidden:(gParam[6]=='Y'?false:true)
 				},{ 
 					id: 'mnuReserveQty', 
 					handler: ReserveQtyShow, 
-					text: '在途数查询',
+					text: $g('在途数查询'),
 					click:true,
 					hidden:false
 				}
@@ -1463,7 +1491,7 @@ var PHCCATALLButton = new Ext.Button({
 			var gridSelected =Ext.getCmp("BatchGrid"); 
 			var rows=BatchGrid.getSelectionModel().getSelections() ; 
 			if(rows.length==0){
-				Ext.Msg.show({title:'错误',msg:'请选择要查看的药品批次！',buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
+				Ext.Msg.show({title:$g('错误'),msg:$g('请选择要查看的药品批次！'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
 			}else {
 				selectedRow = rows[0];
 				var Inclb = selectedRow.get("Inclb");
@@ -1472,7 +1500,7 @@ var PHCCATALLButton = new Ext.Button({
 				var IncDesc=selectedInc.get("InciDesc");
 				var PurUom=selectedInc.get("PurUomDesc");
 				var BUom=selectedInc.get("BUomDesc");
-				var IncInfo=IncDesc+'         包装单位：'+PurUom+'     基本单位：'+BUom;
+				var IncInfo=IncDesc+$g('         包装单位：')+PurUom+$g('     基本单位：')+BUom;
 				DirtyQtyQuery(Inclb,IncInfo,ReloadBatchGrid);							
 			}
 		}
@@ -1481,7 +1509,7 @@ var PHCCATALLButton = new Ext.Button({
 			var gridSelected =Ext.getCmp("BatchGrid"); 
 			var rows=BatchGrid.getSelectionModel().getSelections() ; 
 			if(rows.length==0){
-				Ext.Msg.show({title:'错误',msg:'请选择要追踪的药品批次！',buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
+				Ext.Msg.show({title:$g('错误'),msg:$g('请选择要追踪的药品批次！'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
 			}else {
 				selectedRow = rows[0];
 				var Date=Ext.util.Format.date(Ext.getCmp("DateTime").getValue(),App_StkDateFormat);
@@ -1495,7 +1523,7 @@ var PHCCATALLButton = new Ext.Button({
 				var IncDesc=selectedInc.get("InciDesc");
 				var PurUom=selectedInc.get("PurUomDesc");
 				var BUom=selectedInc.get("BUomDesc");
-				var InclbInfo='<p>'+IncDesc+'　批号：'+BatNo+' 效期：'+ExpDate+'　包装单位：'+PurUom+'　基本单位：'+BUom+'</p>'+'批次供应商：'+PVenDesc+'　批次厂商：'+PManf;
+				var InclbInfo='<p>'+IncDesc+$g('　批号：')+BatNo+$g(' 效期：')+ExpDate+$g('　包装单位：')+PurUom+$g('　基本单位：')+BUom+'</p>'+$g('批次供应商：')+PVenDesc+$g('　批次厂商：')+PManf;
 				BatTransQuery(Inclb,Date,InclbInfo);							
 			}
 		}
@@ -1516,11 +1544,11 @@ var PHCCATALLButton = new Ext.Button({
 				{ 
 					id: 'mnuDirtyQty', 
 					handler: DirtyQtyShow, 
-					text: '查看占用单据' 
+					text: $g('查看占用单据' )
 				},{ 
 					id: 'mnuBatTrans', 
 					handler: BatTransShow, 
-					text: '批次台账信息'
+					text: $g('批次台账信息')
 				}
 			] 
 		}); 
@@ -1534,14 +1562,14 @@ var PHCCATALLButton = new Ext.Button({
 			bodyStyle : 'padding:10px 0px 0px 0px;',
 			tbar : [SearchBT, '-', RefreshBT, '-', SaveAsBT],			   						
 			items : [{
-						title:'必选条件',
+						title:$g('必选条件'),
 						xtype:'fieldset',
 						style:'padding:10px 0px 0px 0px',
 						items:[PhaLoc,DateTime,StkGrpType,Type]
 					},InciDesc,INFOImportFlag,DHCStkCatGroup,{xtype:'compositefield',items:[PHCCATALL,PHCCATALLButton]},ARCItemCat,PHCDFPhcDoDR,PhManufacturer,PHCForm,ArcStat,
-				ManageDrug,UseFlag,NotUseFlag,//StoNoZeroFlag,
+				ManageDrug,UseFlag,NotUseFlag,ReservedFlag,//StoNoZeroFlag,
 					{
-						title:'批次条件',
+						title:$g('批次条件'),
 						xtype:'fieldset',
 						style:'padding:10px 0px 0px 0px',
 						items:[incilIfNotZero,incilStkActive,incilArcActive]
@@ -1562,7 +1590,7 @@ var PHCCATALLButton = new Ext.Button({
                 			maxSize: 350,
                 			collapsible: true,
                 			border:true,
-			                title: '库存查询',
+			                title: $g('库存查询'),
 			                layout: 'fit', // specify layout manager for items
 			                items: HisListTab
 			               
@@ -1572,12 +1600,12 @@ var PHCCATALLButton = new Ext.Button({
 			                layout:'border',
 			                items:[{
 			                	region:'center',
-			                	title: '库存信息',
+			                	title: $g('库存信息'),
 			                	layout: 'fit', // specify layout manager for items
 			                	items: StockQtyGrid    
 			                },{
 			                	region:'south',
-			                	title:'批次信息',
+			                	title:$g('批次信息'),
 			                	split:true,
 			                	height:300,
 			                	minSize:100,

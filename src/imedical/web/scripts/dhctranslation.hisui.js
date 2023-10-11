@@ -24,8 +24,24 @@ var delDefaultCallBack = function(rtn){
 		var row = grid.datagrid('getSelected');
 		var currEditIndex = grid.datagrid('getRowIndex',row);
 		grid.datagrid('deleteRow',currEditIndex);
+		/*doto --> hisui*/
+		var txt = grid.datagrid('getPager').find('.pagination-info').text();
+		var myrow = grid.datagrid('getRows').length;
+		//txt = txt.replace(/(\d+),/,myrow+',');
+		var index=0,txtArr=[0,0,0];
+		txt = txt.replace(/(\d)+/g,function(a){
+			index++;
+			txtArr[index-1]=a;
+			if (index==2){return parseInt(txtArr[index-2])+parseInt(myrow)-1;}  // 第二个数字 = 第一个数字+当页行数-1
+			return a;
+		})
+		grid.datagrid('getPager').find('.pagination-info').text(txt);
 	}else{
-		$.messager.popover({msg:$g("删除失败."+rtn),type:'error'});
+		if (rtn.indexOf("^")>-1){
+			$.messager.popover({msg:$g(rtn.slice(rtn.indexOf('^')+1)),type:'error'});
+		}else{
+			$.messager.popover({msg:$g("删除失败."+rtn),type:'error'});
+		}
 	}
 }
 function tabSelect(title,index){
@@ -605,6 +621,11 @@ function initTab2(){
 }
 function initTab3(){
 	unInitArr[3]=false;
+	$('#ReqItemName').on('keydown',function(event){
+		if (event.keyCode == 13) {    
+			$('#pageFindBtn').click();
+		}
+	});
 	$('#pageFindBtn').click(function(){
 		$('#tPageTrans').datagrid('load');
 	});	
@@ -694,6 +715,7 @@ function initTab3(){
 		codeField:'itemname',
 		onBeforeLoad:function(param){
 			var queryParams = $(this).datagrid('options').queryParams;
+			param.ReqItemName = $('#ReqItemName').val();
 			var langid=$('#pageLanguage').combobox('getValue');
 			if(!(langid>0)){
 				langid=session['LOGON.LANGID'];
@@ -742,7 +764,7 @@ function initTab3(){
 					var langid=$('#pageLanguage').combobox('getValue');
 					$.extend(_t.delReq,{"Type":"PAGE","langid":langid,"objid":cspname,"itemname":row.itemname});
 					curGridId = 'tPageTrans';
-					$cm(_t.delReq,delDefaultCallBack);
+					$m(_t.delReq,delDefaultCallBack);
 				}
 			});
 		}
@@ -841,7 +863,7 @@ function initTab4(){
 		getNewRecord:function(){
 			var q = this.queryParams;
 			var langDesc = $('#EPRLanguage').combobox('getText');
-			return {ID:"",classname:q.qclassname,propertyname:q.qpropertyname,Phrase:"",Translation:"",langDesc:langDesc,langid:q.langid};
+			return {ID:"",classname:q.qclassname,propertyname:q.qpropertyname,Phrase:"",Translation:"",langDesc:langDesc,langId:q.langid};
 		},
 		delHandler:function(row){
 			var _t = this;
@@ -879,5 +901,5 @@ function initTab4(){
 }
 function initTab5(){
 	var jobj = $("#datatranspage");
-	if (jobj.length>0&&jobj[0].src=="about:blank") jobj[0].src = "dhc.bdp.bdp.bdptranslation.csp";
+	if (jobj.length>0&&jobj[0].src=="about:blank") jobj[0].src = websys_writeMWToken("dhc.bdp.bdp.bdptranslation.csp");
 }

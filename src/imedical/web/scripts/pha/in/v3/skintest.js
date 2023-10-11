@@ -8,10 +8,11 @@ PHA_COM.App.Csp = "pha.in.v3.skintest.csp";
 PHA_COM.Temp = {}
 
 $(function () {
-	var bodyWidth = $(document.body).width();
-	var bodyHeight = $(document.body).height();
-	$('#layout-first').layout('panel','north').panel('resize', {height: (bodyHeight - 70) * 0.5});
-	$('#layout-first').layout('resize');
+	PHA_COM.ResizePanel({
+		layoutId: 'layout-first',
+		region: 'north',
+		height: 0.5
+	});
 	InitHosp();
 	InitDict();
 	InitGridAlg();
@@ -37,9 +38,7 @@ function InitEvents() {
 /**
  * @description: 初始化字典
  */
-function InitDict(){
-	
-}
+function InitDict() {}
 
 /**
  * @description: 表格 - 过敏原
@@ -53,18 +52,20 @@ function InitGridAlg() {
 				hidden: true
 			}, {
 				field: "algDesc",
-				title: '过敏原名称',
+				title: $g('过敏原名称'),
 				width: 160
 			}, {
 				field: "rlaAlg",
 				descField: 'rlaAlgDesc',
-				title: '项目',
-				title: '关联过敏原',
+				title: $g('项目'),
+				title: $g('关联过敏原'),
 				width: 160,
-				editor: ComboBoxEditor("rlaAlg"),
-                formatter: function(value, rowData, index){
-	                return rowData.rlaAlgDesc
-	            }
+				formatter: function (value, rowData, index) {
+					return rowData['rlaAlgDesc'];
+				},
+				editor: PHA_GridEditor.ComboBox({
+					url: $URL + '?ClassName=PHA.IN.SkinTest.Query&QueryName=RelaAlg&ResultSetType=array'
+				})
 			}, {
 				field: "algTypeId",
 				title: 'algTypeId',
@@ -72,15 +73,15 @@ function InitGridAlg() {
 				hidden: true
 			}, {
 				field: "algTypeDesc",
-				title: '类型',
+				title: $g('类型'),
 				width: 80
 			}, {
 				field: 'startDate',
-				title: '开始日期',
+				title: $g('开始日期'),
 				width: 100
 			}, {
 				field: 'endDate',
-				title: '截止日期',
+				title: $g('截止日期'),
 				width: 100
 			}
 		]
@@ -98,16 +99,17 @@ function InitGridAlg() {
 		columns: columns,
 		rownumbers: true,
 		fitColumns: true,
-		onSelect: function(rowIndex, rowData){},
-		onClickRow: function(rowIndex, rowData){
+		onSelect: function (rowIndex, rowData) {},
+		onClickRow: function (rowIndex, rowData) {
+			GridEndEidting('gridAlg');
+			ShowSelectedItem({});
 			Query();
-			OnSelectSkinTest({});
 			$("#gridSkinTestItm").datagrid("clear");
 		},
-		onClickCell: function(index, field, value){
+		onDblClickCell: function (index, field, value) {
 			if (field == 'rlaAlg') {
-				GridStartEdit({
-					gridID: 'gridAlg',
+				PHA_GridEditor.Edit({
+					gridID: "gridAlg",
 					index: index,
 					field: field
 				});
@@ -128,84 +130,100 @@ function InitGridSkinTest() {
 				title: 'pist',
 				width: 100,
 				hidden: true
-			},
-			{
+			}, {
 				field: "alg",
 				title: 'alg',
 				width: 100,
 				hidden: true
 			}, {
 				field: "algDesc",
-				title: '过敏原',
+				title: $g('过敏原'),
 				width: 100,
 				hidden: true
 			}, {
 				field: "itemCode",
-				title: '项目代码',
+				title: $g('项目代码'),
 				width: 120
 			}, {
 				field: "itemId",
 				descField: 'itemDesc',
-				title: '项目',
+				title: $g('项目'),
 				width: 320,
-				editor: ComboBoxEditor("skinTestItem"),
-                formatter: function(value, rowData, index){
-	                return rowData.itemDesc
-	            }
+				formatter: function (value, rowData, index) {
+					return rowData['itemDesc']
+				},
+				editor: PHA_GridEditor.ComboBox({
+					url: $URL + '?ClassName=PHA.IN.SkinTest.Query&QueryName=QueryItem&ResultSetType=array',
+					onBeforeLoad: function (param) {
+						var itemType = GetItemType();
+						if (itemType == false) {
+							return;
+						}
+						var hospId = $('#_HospList').combogrid('getValue') || "";
+						if (hospId == "") {
+							return;
+						}
+						param.hospId = hospId;
+						param.QText = param.q;
+						if (typeof(param.QText) == "undefined") {
+							var selectedRow = $("#gridSkinTest").datagrid("getSelected") || {};
+							param.QText = selectedRow.itemDesc || "";
+						}
+						param.inputStr = itemType;
+					}
+				})
 			}, {
 				field: "itemType",
-				title: '项目类型',
+				title: $g('项目类型'),
 				align: "center",
 				width: 50,
 				hidden: true
 			}, {
 				field: "validTime",
-				title: '皮试时效(h)',
+				title: $g('皮试时效(h)'),
 				align: "center",
 				width: 90,
-				editor: {
-                    type: 'numberbox',
-                    options: {
-                        required: true
-                    }
-				}
+				editor: PHA_GridEditor.ValidateBox({})
 			}, {
 				field: "desensitFlag",
-				title: '允许脱敏',
+				title: $g('允许脱敏'),
 				align: "center",
 				width: 70,
-				editor: CheckBoxEditor(),
-				formatter: CheckBoxFormatter
+				formatter: CheckBoxFormatter,
+				editor: PHA_GridEditor.CheckBox({})
 			}, {
 				field: "noTestFlag",
-				title: '允许免试',
+				title: $g('允许免试'),
 				align: "center",
 				width: 70,
-				editor: CheckBoxEditor(),
-				formatter: CheckBoxFormatter
+				formatter: CheckBoxFormatter,
+				editor: PHA_GridEditor.CheckBox({})
+			}, {
+				field: "defNoTest",
+				title: $g('默认免试'),
+				align: "center",
+				width: 70,
+				formatter: CheckBoxFormatter,
+				editor: PHA_GridEditor.CheckBox({})
 			}, {
 				field: "exceptionFlag",
-				title: '控制例外',
+				title: $g('控制例外'),
 				align: "center",
 				width: 70,
-				editor: CheckBoxEditor(),
-				formatter: CheckBoxFormatter
+				formatter: CheckBoxFormatter,
+				editor: PHA_GridEditor.CheckBox({})
 			}, {
 				field: "startDate",
-				title: '开始日期',
+				title: $g('开始日期'),
 				align: "center",
 				width: 100,
-				editor: {
-					type: 'datebox'
-				}
+				editor: PHA_GridEditor.DateBox({})
 			}, {
 				field: "endDate",
-				title: '结束日期',
+				title: $g('结束日期'),
 				align: "center",
 				width: 100,
-				editor: {
-					type: 'datebox'
-				}
+				editor: PHA_GridEditor.DateBox({})
 			}
 		]
 	];
@@ -222,19 +240,22 @@ function InitGridSkinTest() {
 		pagination: false,
 		columns: columns,
 		fitColumns: false,
-		onClickCell: function(index, field, value){
+		isAutoShowPanel: true,
+		editFieldSort: ["itemId", "validTime", "desensitFlag", "noTestFlag", "exceptionFlag", "startDate", "endDate"],
+		onDblClickCell: function (index, field, value) {
 			if (field == 'itemCode') {
-				QueryItm(index);
 				return;
 			}
-			GridStartEdit({
-				gridID: 'gridSkinTest',
+			PHA_GridEditor.Edit({
+				gridID: "gridSkinTest",
 				index: index,
 				field: field
 			});
 		},
-		onClickRow: function(rowIndex, rowData){
-			OnSelectSkinTest(rowData);
+		onClickRow: function (rowIndex, rowData) {
+			GridEndEidting('gridSkinTest');
+			ShowSelectedItem(rowData);
+			QueryItm(rowIndex);
 		},
 		toolbar: "#gridSkinTestBar"
 	};
@@ -246,139 +267,181 @@ function InitGridSkinTest() {
  */
 function InitGridSkinTestItm() {
 	var columns = [
-		[
-			{
+		[{
 				field: "pisti",
 				title: 'pisti',
 				width: 100,
 				hidden: true
-			},
-			{
+			}, {
 				field: "admType",
 				descField: 'admTypeDesc',
-				title: '就诊类型',
+				title: $g('就诊类型'),
 				width: 100,
-				editor: ComboBoxEditor("admType"),
-                formatter: function(value, rowData, index){
-	                return rowData.admTypeDesc
-	            }
+				formatter: function (value, rowData, index) {
+					return rowData['admTypeDesc']
+				},
+				editor: PHA_GridEditor.ComboBox({
+					url: $URL + '?ClassName=PHA.IN.SkinTest.Query&QueryName=AdmType&ResultSetType=array',
+					panelHeight: 'auto'
+				})
 			}, {
 				field: "locID",
 				descField: 'locDesc',
-				title: '科室',
+				title: $g('科室'),
 				width: 180,
-				editor: ComboBoxEditor("locID"),
-                formatter: function(value, rowData, index){
-	                return rowData.locDesc;
-	            }
+				formatter: function (value, rowData, index) {
+					return rowData['locDesc'];
+				},
+				editor: PHA_GridEditor.ComboBox({
+					url: PHA_STORE.CTLoc().url,
+					onBeforeLoad: function (param) {
+						param.QText = param.q;
+					}
+				})
 			}, {
 				field: "itemType",
 				descField: 'itemTypeDesc',
-				title: '项目类型',
+				title: $g('项目类型'),
 				width: 100,
-				editor: ComboBoxEditor("ItemType"),
-                formatter: function(value, rowData, index){
-	                return rowData.itemTypeDesc;
-	            }
+				formatter: function (value, rowData, index) {
+					return rowData['itemTypeDesc'];
+				},
+				editor: PHA_GridEditor.ComboBox({
+					url: $URL + '?ClassName=PHA.IN.SkinTest.Query&QueryName=ItemType&ResultSetType=array',
+					panelHeight: 'auto',
+					onBeforeNext: function (cmbRowData, gridRowData, gridRowIndex) {
+						gridRowData.autoInsFlag = cmbRowData.RowId == 'G' ? 'N' : 'Y';
+						
+						$('#gridSkinTestItm').datagrid('updateRowData', {
+							index: gridRowIndex,
+							row: gridRowData
+						});
+					}
+				})
 			}, {
 				field: "itemId",
 				descField: 'itemDesc',
-				title: '项目',
+				title: $g('项目'),
 				width: 320,
-				editor: ComboBoxEditor("skinTestItmItem"),
-                formatter: function(value, rowData, index){
-	                return rowData.itemDesc
-	            }
+				formatter: function (value, rowData, index) {
+					return rowData['itemDesc'];
+				},
+				editor: PHA_GridEditor.ComboBox({
+					url: $URL + '?ClassName=PHA.IN.SkinTest.Query&QueryName=QueryItem&ResultSetType=array',
+					onBeforeLoad: function (param) {
+						var hospId = $('#_HospList').combogrid('getValue') || "";
+						if (hospId == "") {
+							return false;
+						}
+						param.hospId = hospId;
+						param.QText = param.q;
+						var selectedRow = $("#gridSkinTestItm").datagrid("getSelected") || {};
+						if (typeof(param.QText) == "undefined") {
+							param.QText = selectedRow.itemDesc || "";
+						}
+						param.inputStr = selectedRow.itemType || "";
+					}
+				})
 			}, {
 				field: "resultFlag",
-				title: '结果标志',
+				title: $g('结果标志'),
 				align: "center",
 				width: 80,
-				editor: CheckBoxEditor(),
-				formatter: CheckBoxFormatter
+				formatter: CheckBoxFormatter,
+				editor: PHA_GridEditor.CheckBox({})
 			}, {
 				field: "priID",
 				descField: 'priDesc',
-				title: '优先级',
+				title: $g('优先级'),
 				align: "center",
 				width: 130,
-				editor: ComboBoxEditor("priID"),
-                formatter: function(value, rowData, index){
-	                return rowData.priDesc;
-	            }
+				formatter: function (value, rowData, index) {
+					return rowData['priDesc'];
+				},
+				editor: PHA_GridEditor.ComboBox({
+					url: PHA_STORE.OECPriority().url,
+					onBeforeLoad: function (param) {
+						param.QText = param.q;
+					}
+				})
 			}, {
 				field: "doseQty",
-				title: '剂量',
+				title: $g('剂量'),
 				align: "center",
 				width: 80,
-				editor: {
-                    type: 'numberbox',
-                    options: {
-	                    precision: 2
-	                }
-				}
+				editor: PHA_GridEditor.ValidateBox({})
 			}, {
 				field: "unitID",
 				descField: 'unitDesc',
-				title: '剂量单位',
+				title: $g('剂量单位'),
 				align: "center",
 				width: 80,
-				editor: ComboBoxEditor("unitID"),
-                formatter: function(value, rowData, index){
-	                return rowData.unitDesc;
-	            }
+				formatter: function (value, rowData, index) {
+					return rowData['unitDesc'];
+				},
+				editor: PHA_GridEditor.ComboBox({
+					url: $URL + '?ClassName=PHA.IN.SkinTest.Query&QueryName=DoseUom&ResultSetType=array',
+					panelHeight: 'auto',
+					onBeforeLoad: function (param) {
+						var selectedRow = $("#gridSkinTestItm").datagrid("getSelected") || {};
+						param.inputStr = selectedRow.itemId || "";
+					}
+				}),
 			}, {
 				field: "freqID",
 				descField: 'freqDesc',
-				title: '频次',
+				title: $g('频次'),
 				align: "center",
 				width: 130,
-				editor: ComboBoxEditor("freqID"),
-                formatter: function(value, rowData, rowIndex){
-	                return rowData.freqDesc;
-	            }
+				formatter: function (value, rowData, rowIndex) {
+					return rowData['freqDesc'];
+				},
+				editor: PHA_GridEditor.ComboBox({
+					url: PHA_STORE.PHCFreq().url,
+					onBeforeLoad: function (param) {
+						param.QText = param.q;
+					}
+				})
 			}, {
 				field: "instID",
 				descField: 'instDesc',
-				title: '用法',
+				title: $g('用法'),
 				align: "center",
 				width: 120,
-				editor: ComboBoxEditor("instID"),
-                formatter: function(value, rowData, index){
-	                return rowData.instDesc;
-	            }
+				formatter: function (value, rowData, index) {
+					return rowData['instDesc'];
+				},
+				editor: PHA_GridEditor.ComboBox({
+					url: PHA_STORE.PHCInstruc().url,
+					onBeforeLoad: function (param) {
+						param.QText = param.q;
+					}
+				}),
 			}, {
 				field: "seqNo",
-				title: '关联',
+				title: $g('关联'),
 				align: "center",
 				width: 80,
-				editor: {
-                    type: 'numberbox',
-                    options: {}
-				}
+				editor: PHA_GridEditor.ValidateBox({})
 			}, {
 				field: "autoInsFlag",
-				title: '自动插入',
+				title: $g('自动插入'),
 				align: "center",
 				width: 80,
-				editor: CheckBoxEditor(),
-				formatter: CheckBoxFormatter
+				formatter: CheckBoxFormatter,
+				editor: PHA_GridEditor.CheckBox({})
 			}, {
 				field: "startDate",
-				title: '开始日期',
+				title: $g('开始日期'),
 				align: "center",
 				width: 120,
-				editor: {
-					type: 'datebox'
-				}
+				editor: PHA_GridEditor.DateBox({})
 			}, {
 				field: "endDate",
-				title: '截止日期',
+				title: $g('截止日期'),
 				align: "center",
 				width: 120,
-				editor: {
-					type: 'datebox'
-				}
+				editor: PHA_GridEditor.DateBox({})
 			}
 		]
 	];
@@ -395,9 +458,11 @@ function InitGridSkinTestItm() {
 		pagination: false,
 		columns: columns,
 		fitColumns: false,
-		onClickCell: function(index, field, value){
-			GridStartEdit({
-				gridID: 'gridSkinTestItm',
+		isAutoShowPanel: true,
+		editFieldSort: ["itemType", "itemId", "resultFlag", "priID", "doseQty", "unitID", "freqID", "instID", "seqNo", "autoInsFlag", "startDate", "endDate"],
+		onDblClickCell: function (index, field, value) {
+			PHA_GridEditor.Edit({
+				gridID: "gridSkinTestItm",
 				index: index,
 				field: field
 			});
@@ -410,10 +475,10 @@ function InitGridSkinTestItm() {
 /**
  * @description: 过敏原CRUD操作
  */
-function QueryAlg(){
+function QueryAlg() {
 	$("#gridAlg").datagrid('reload');
 }
-function SaveAlg(){
+function SaveAlg() {
 	if (GridEndEidting("gridAlg") == false) {
 		return;
 	}
@@ -421,7 +486,7 @@ function SaveAlg(){
 	if (changeData.length == 0) {
 		return;
 	}
-	var jsonDataStr =  JSON.stringify(changeData);
+	var jsonDataStr = JSON.stringify(changeData);
 	// 保存
 	var retStr = $.cm({
 		ClassName: 'PHA.IN.SkinTest.Save',
@@ -455,19 +520,19 @@ function Query() {
 	var algMaintainType = tkMakeServerCall("PHA.IN.SkinTest.Query", "GetAlgMaintainType", (selectedRow.alg || ""));
 	if (algMaintainType != "") {
 		$("input[name='itemType']").radio('disable');
-		$("input[name='itemType'][value='" + algMaintainType + "']").radio('setValue',true);
+		$("input[name='itemType'][value='" + algMaintainType + "']").radio('setValue', true);
 	} else {
 		$("input[name='itemType']").radio('enable');
 	}
 }
 
-function Add(){
+function Add() {
 	$("input[name='itemType']").radio('disable');
 	var selectedRow = $("#gridAlg").datagrid("getSelected") || {};
 	var alg = selectedRow.alg || "";
 	if (alg == "") {
 		PHA.Popover({
-			msg: "请选择过敏原!",
+			msg: $g("请选择过敏原!"),
 			type: "alert"
 		});
 		return false;
@@ -478,22 +543,18 @@ function Add(){
 		return;
 	}
 	var startDate = tkMakeServerCall("PHA.IN.SkinTest.Query", "GetDate", "t");
-	AddNewRowCom({
+	
+	PHA_GridEditor.Add({
 		gridID: 'gridSkinTest',
-		editField: 'itemId',
-		defaultData: {
-			pist: '',
-			alg: alg,
-			algDesc: '',
-			itemId: '',
-			itemDesc: '',
+		field: 'itemId',
+		rowData: {
 			itemType: itemType,
+			alg: alg,
 			validTime: '72',
 			desensitFlag: 'N',
 			noTestFlag: 'N',
 			exceptionFlag: 'N',
-			startDate: startDate,
-			endDate: ''
+			startDate: startDate
 		}
 	});
 }
@@ -503,7 +564,7 @@ function Save() {
 	var hospId = $('#_HospList').combogrid('getValue') || "";
 	if (hospId == "") {
 		PHA.Popover({
-			msg: "请选择需要医院!",
+			msg: $g("请选择需要医院!"),
 			type: "alert"
 		});
 		return false;
@@ -516,7 +577,7 @@ function Save() {
 	if (changeData.length == 0) {
 		return;
 	}
-	var jsonDataStr =  JSON.stringify(changeData);
+	var jsonDataStr = JSON.stringify(changeData);
 	// 保存
 	var retStr = $.cm({
 		ClassName: 'PHA.IN.SkinTest.Save',
@@ -525,9 +586,9 @@ function Save() {
 		hospId: hospId,
 		dataType: 'text'
 	}, false);
-	AfterRunServer(retStr, function(){
+	AfterRunServer(retStr, function () {
 		Query();
-		OnSelectSkinTest({});
+		ShowSelectedItem({});
 		$("#gridSkinTestItm").datagrid("clear");
 	});
 }
@@ -537,7 +598,7 @@ function Delete() {
 	var hospId = $('#_HospList').combogrid('getValue') || "";
 	if (hospId == "") {
 		PHA.Popover({
-			msg: "请选择需要医院!",
+			msg: $g("请选择需要医院!"),
 			type: "alert"
 		});
 		return false;
@@ -546,14 +607,14 @@ function Delete() {
 	var selectedRow = $("#gridSkinTest").datagrid("getSelected");
 	if (selectedRow == null) {
 		PHA.Popover({
-			msg: "请选择需要删除的项目!",
+			msg: $g("请选择需要删除的项目!"),
 			type: "alert"
 		});
 		return;
 	}
 	var pist = selectedRow.pist || "";
 	// 删除确认
-	PHA.Confirm("删除提示", "是否确认删除该项目?", function () {
+	PHA.Confirm($g("删除提示"), $g("是否确认删除该项目?"), function () {
 		if (pist == "") {
 			var rowIndex = $("#gridSkinTest").datagrid('getRowIndex', selectedRow);
 			$("#gridSkinTest").datagrid('deleteRow', rowIndex);
@@ -570,9 +631,9 @@ function Delete() {
 			hospId: hospId,
 			dataType: 'text'
 		}, false);
-		AfterRunServer(retStr, function(){
+		AfterRunServer(retStr, function () {
 			Query();
-			OnSelectSkinTest({});
+			ShowSelectedItem({});
 			$("#gridSkinTestItm").datagrid("clear");
 		});
 	});
@@ -593,10 +654,6 @@ function QueryItm(rowIndex) {
 		pist = selectedRow.pist || "";
 	}
 	if (pist == "") {
-		PHA.Popover({
-			msg: "未选择项目或选择的项目没有保存!",
-			type: "alert"
-		});
 		return;
 	}
 	var inputStr = pist;
@@ -610,40 +667,21 @@ function AddItm() {
 	var pist = selectedRow.pist || "";
 	if (pist == "") {
 		PHA.Popover({
-			msg: "未选择项目或选择的项目没有保存!",
+			msg: $g("未选择项目或选择的项目没有保存!"),
 			type: "alert"
 		});
 		return;
 	}
 	var startDate = tkMakeServerCall("PHA.IN.SkinTest.Query", "GetDate", "t");
-	AddNewRowCom({
+	
+	PHA_GridEditor.Add({
 		gridID: 'gridSkinTestItm',
-		editField: 'itemType',
-		defaultData: {
-			pisti : '',
+		field: 'itemType',
+		rowData: {
 			pist: pist,
-			admType : '',
-			admTypeDesc : '',
-			locID : '',
-			locDesc : '',
-			itemType : '',
-			itemTypeDesc : '',
-			itemId : '',
-			itemDesc : '',
-			resultFlag : 'Y',
-			priID : '',
-			priDesc : '',
-			doseQty : '',
-			unitID : '',
-			unitDesc : '',
-			freqID : '',
-			freqDesc : '',
-			instID : '',
-			instDesc : '',
-			seqNo : '',
-			autoInsFlag : 'Y',
-			startDate : startDate,
-			endDate : ''
+			resultFlag: 'Y',
+			autoInsFlag: 'Y',
+			startDate: startDate
 		}
 	});
 }
@@ -663,7 +701,7 @@ function SaveItm() {
 	for (var i = 0; i < changeData.length; i++) {
 		changeData[i].maxRows = maxRows;
 	}
-	var jsonDataStr =  JSON.stringify(changeData);
+	var jsonDataStr = JSON.stringify(changeData);
 	// 保存
 	var retStr = $.cm({
 		ClassName: 'PHA.IN.SkinTest.Save',
@@ -679,14 +717,14 @@ function DeleteItm() {
 	var selectedRow = $("#gridSkinTestItm").datagrid("getSelected");
 	if (selectedRow == null) {
 		PHA.Popover({
-			msg: "请选择需要删除的项目!",
+			msg: $g("请选择需要删除的项目!"),
 			type: "alert"
 		});
 		return;
 	}
 	var pisti = selectedRow.pisti || "";
 	// 删除确认
-	PHA.Confirm("删除提示", "是否确认删除该项目?", function () {
+	PHA.Confirm($g("删除提示"), $g("是否确认删除该项目?"), function () {
 		var rowIndex = $("#gridSkinTestItm").datagrid('getRowIndex', selectedRow);
 		if (pisti == "") {
 			$("#gridSkinTestItm").datagrid('deleteRow', rowIndex);
@@ -703,39 +741,15 @@ function DeleteItm() {
 	});
 }
 
-
-
 /**
  * @description: 以下为公共过程方法
  */
-function AddNewRowCom(_options){
-	var _gridID = _options.gridID;
-	var _defaultData = _options.defaultData;
-	var _editField = _options.editField;
-	var isEndEidting = $("#" + _gridID).datagrid("endEditing");
-	if (!isEndEidting) {
-		PHA.Popover({
-			msg: "请先完成表格上一行编辑!",
-			type: "alert",
-			timeout: 1000
-		});
-		return;
-	}
-	$("#" + _gridID).datagrid("appendRow", _defaultData);
-	var rowsData = $("#" + _gridID).datagrid('getRows');
-	GridStartEdit({
-		gridID: _gridID,
-		index: rowsData.length - 1,
-		field: _editField
-	});
-}
-
-function GetItemType(){
+function GetItemType() {
 	var checkedRadioObj = $("input[name='itemType']:checked");
 	var itemType = checkedRadioObj == undefined ? "" : checkedRadioObj.val();
 	if (itemType == "" || itemType == undefined) {
 		PHA.Popover({
-			msg: "请选择保存类型!",
+			msg: $g("请选择保存类型!"),
 			type: "alert",
 			timeout: 1000
 		});
@@ -744,45 +758,11 @@ function GetItemType(){
 	return itemType;
 }
 
-function GridStartEdit(_options){
-	var _gridID = _options.gridID;
-	var _index = _options.index;
-	var _field = _options.field;
-	$("#" + _gridID).datagrid('beginEditCell', {
-        index: _index,
-        field: _field
-    });
-    
-    var _thisEditor = $("#" + _gridID).datagrid('getEditor', {
-		index: _index,
-		field: _field
-	});
-	if (_thisEditor == null) {
-		return;
-	}
-	if (_thisEditor.type == "combobox") {
-		$(_thisEditor.target).combobox('showPanel');
-		return;
-	}
-	if (_thisEditor.type == "combogrid") {
-		$(_thisEditor.target).combogrid('showPanel');
-		return;
-	}
-	if (_thisEditor.type == "combotree") {
-		$(_thisEditor.target).combotree('showPanel');
-		return;
-	}
-	if (_thisEditor.type == "datebox") {
-		$(_thisEditor.target).datebox('showPanel');
-		return;
-	}
-}
-
-function GridEndEidting(_gridID){
+function GridEndEidting(_gridID) {
 	var isEndEidting = $("#" + _gridID).datagrid("endEditing");
 	if (!isEndEidting) {
 		PHA.Popover({
-			msg: "未填入必填项,无法完成编辑!",
+			msg: $g("未填入必填项,无法完成编辑!"),
 			type: "alert",
 			timeout: 1000
 		});
@@ -791,11 +771,11 @@ function GridEndEidting(_gridID){
 	return true;
 }
 
-function GetChangeData(_gridID){
+function GetChangeData(_gridID) {
 	var changeData = $("#" + _gridID).datagrid("getChanges") || [];
 	if (changeData.length == 0) {
 		PHA.Popover({
-			msg: "没有需要保存的数据!",
+			msg: $g("没有需要保存的数据!"),
 			type: "error",
 			timeout: 1000
 		});
@@ -809,13 +789,13 @@ function AfterRunServer(retStr, succCallFn, errCallFn) {
 	var retVal = retArr[0];
 	var retInfo = retArr[1];
 	if (retVal < 0) {
-		PHA.Alert("提示", retInfo, retVal);
+		PHA.Alert($g("提示"), retInfo, retVal);
 		if (errCallFn) {
 			errCallFn();
 		}
 	} else {
 		PHA.Popover({
-			msg: retInfo || "成功!",
+			msg: retInfo || $g("成功!"),
 			type: "success",
 			timeout: 500
 		});
@@ -825,8 +805,9 @@ function AfterRunServer(retStr, succCallFn, errCallFn) {
 	}
 }
 
-function OnSelectSkinTest(rowData){
-	var curSelectedItem = "当前选择项目: ";
+// 显示当前项目
+function ShowSelectedItem(rowData) {
+	var curSelectedItem = $g("当前选择项目: ");
 	var itemDesc = rowData.itemDesc || "";
 	if (itemDesc != "") {
 		curSelectedItem += itemDesc;
@@ -834,210 +815,20 @@ function OnSelectSkinTest(rowData){
 	$("#curSelectedItem").text(curSelectedItem);
 }
 
-function ComboBoxEditor(type){
-	if (type == "rlaAlg") {
-		return {
-	        type: 'combobox',
-	        options: {
-	            valueField: 'RowId',
-	            textField: 'Description',
-	            mode: 'remote',
-	            url: $URL + '?ClassName=PHA.IN.SkinTest.Query&QueryName=RelaAlg&ResultSetType=array',
-	            onBeforeLoad: function(param){
-	                param.QText = param.q;
-	            }
-	        }
-	    }
-	}
-	if (type == "skinTestItem") {
-		return {
-	        type: 'combobox',
-	        options: {
-	            valueField: 'RowId',
-	            textField: 'Description',
-	            required: true,
-	            mode: 'remote',
-	            url: $URL + '?ClassName=PHA.IN.SkinTest.Query&QueryName=QueryItem&ResultSetType=array',
-	            onBeforeLoad: function(param){
-	                var itemType = GetItemType();
-	                if (itemType == false) {
-	                    return;
-	                }
-	                var hospId = $('#_HospList').combogrid('getValue') || "";
-					if (hospId == "") {
-						return false;
-					}
-					param.hospId = hospId;
-	                param.QText = param.q;
-	                if (typeof (param.QText) == "undefined") {
-	                    var selectedRow = $("#gridSkinTest").datagrid("getSelected") || {};
-	                    param.QText = selectedRow.itemDesc || "";
-	                }
-	                param.inputStr = itemType;
-	            }
-	        }
-	    }
-	}
-	if (type == "skinTestItmItem") {
-		return {
-            type: 'combobox',
-            options: {
-                valueField: 'RowId',
-                textField: 'Description',
-                required: true,
-                mode: 'remote',
-                url: $URL + '?ClassName=PHA.IN.SkinTest.Query&QueryName=QueryItem&ResultSetType=array',
-                onBeforeLoad: function(param){
-	                var hospId = $('#_HospList').combogrid('getValue') || "";
-					if (hospId == "") {
-						return false;
-					}
-					param.hospId = hospId;
-                    param.QText = param.q;
-                    var selectedRow = $("#gridSkinTestItm").datagrid("getSelected") || {};
-                    if (typeof (param.QText) == "undefined") {
-                        param.QText = selectedRow.itemDesc || "";
-                    }
-                    param.inputStr = selectedRow.itemType || "";
-                }
-            }
-        }
-	}
-	if (type == "admType") {
-		return {
-            type: 'combobox',
-            options: {
-                valueField: 'RowId',
-                textField: 'Description',
-                panelHeight: 'auto',
-                mode: 'remote',
-                url: $URL + '?ClassName=PHA.IN.SkinTest.Query&QueryName=AdmType&ResultSetType=array'
-            }
-        }
-	}
-	if (type == "locID") {
-		return {
-	        type: 'combobox',
-	        options: {
-	            valueField: 'RowId',
-	            textField: 'Description',
-	            mode: 'remote',
-	            url: PHA_STORE.CTLoc().url,
-	            onBeforeLoad: function(param){
-	                param.QText = param.q;
-	            }
-	        }
-	    }
-	}
-	if (type == "ItemType") {
-		return {
-            type: 'combobox',
-            options: {
-                valueField: 'RowId',
-                textField: 'Description',
-                panelHeight: 'auto',
-                required: true,
-                mode: 'remote',
-                editable: false,
-                url: $URL + '?ClassName=PHA.IN.SkinTest.Query&QueryName=ItemType&ResultSetType=array',
-                onSelect: function(record){
-	                // 自动插入是否勾选
-                    var rowData = $('#gridSkinTestItm').datagrid('getSelected');
-                    var rowIndex = $('#gridSkinTestItm').datagrid('getRowIndex', rowData);
-                    $('#gridSkinTestItm').datagrid('beginEditCell', {
-				        index: rowIndex,
-				        field: "autoInsFlag"
-				    });
-                    var _thisEditor = $("#gridSkinTestItm").datagrid('getEditor', {
-						index: rowIndex,
-						field: "autoInsFlag"
-					});
-					var target = _thisEditor.target;
-					target.checkbox('setValue', record.RowId == "G" ? false : true);
-					// 清空项目下拉
-					$('#gridSkinTestItm').datagrid('beginEditCell', {
-				        index: rowIndex,
-				        field: "itemId"
-				    });
-					var _thisEditor = $("#gridSkinTestItm").datagrid('getEditor', {
-						index: rowIndex,
-						field: "itemId"
-					});
-					var target = _thisEditor.target;
-					target.combobox('clear');
-	            }
-            }
-        }
-	}
-	if (type == "priID") {
-		return {
-            type: 'combobox',
-            options: {
-                valueField: 'RowId',
-                textField: 'Description',
-                mode: 'remote',
-                onBeforeLoad: function(param){
-                    param.QText = param.q;
-                },
-                url: PHA_STORE.OECPriority().url
-            }
-        }
-	}
-	if (type == "unitID") {
-		return {
-            type: 'combobox',
-            options: {
-                valueField: 'RowId',
-                textField: 'Description',
-                mode: 'remote',
-                panelHeight: 'auto',
-                url: $URL + '?ClassName=PHA.IN.SkinTest.Query&QueryName=DoseUom&ResultSetType=array',
-                onBeforeLoad: function(param) {
-                    var selectedRow = $("#gridSkinTestItm").datagrid("getSelected") || {};
-                    param.inputStr = selectedRow.itemId || "";
-                }
-            }
-        }
-	}
-	if (type == "freqID") {
-		return {
-            type: 'combobox',
-            options: {
-                valueField: 'RowId',
-                textField: 'Description',
-                mode: 'remote',
-                onBeforeLoad: function(param){
-                    param.QText = param.q;
-                },
-                url: PHA_STORE.PHCFreq().url
-            }
-        }
-	}
-	if (type == "instID") {
-		return {
-            type: 'combobox',
-            options: {
-                valueField: 'RowId',
-                textField: 'Description',
-                mode: 'remote',
-                onBeforeLoad: function(param){
-                    param.QText = param.q;
-                },
-                url: PHA_STORE.PHCInstruc().url
-            }
-        }
-	}
-}
-
-function CheckBoxEditor(){
+/*
+ * 以下定义表格编辑器
+ */
+function CheckBoxEditor() {
 	return {
 		type: 'icheckbox',
-	    options: { on: 'Y', off: 'N' }
+		options: {
+			on: 'Y',
+			off: 'N'
+		}
 	}
 }
-
-function CheckBoxFormatter(val, rowData, rowIndex){
-	if (val == "Y"){
+function CheckBoxFormatter(val, rowData, rowIndex) {
+	if (val == "Y") {
 		return PHA_COM.Fmt.Grid.Yes.Chinese;
 	} else {
 		return PHA_COM.Fmt.Grid.No.Chinese;
@@ -1045,11 +836,11 @@ function CheckBoxFormatter(val, rowData, rowIndex){
 }
 
 /*
-* @description: 多院区配置 - 加载初始化医院
-*/
-function InitHosp(){
+ * @description: 多院区配置 - 加载初始化医院
+ */
+function InitHosp() {
 	var hospComp = GenHospComp("PHAIN_SkinTest");
-	hospComp.options().onSelect = function(record){
+	hospComp.options().onSelect = function (record) {
 		console.log(record);
 		var selectedRow = $('#gridAlg').datagrid('getSelected');
 		if (selectedRow == null) {
@@ -1064,14 +855,17 @@ function InitHosp(){
 }
 
 /*
-* @description: 帮助窗口信息
-*/
-function OpenHelpWin(helpInfo){
+ * @description: 帮助窗口信息
+ */
+function OpenHelpWin(helpInfo) {
+	var hasScroll = false;
 	if (helpInfo == 1) {
 		helpInfo = GetSkinTestHelpHtml();
+		hasScroll = true;
 	}
 	if (helpInfo == 2) {
 		helpInfo = GetSkinTestItmHelpHtml();
+		hasScroll = true;
 	}
 	var winId = "skintest_helpWin";
 	var winContentId = "skintest_helpWin" + "_" + "content";
@@ -1079,66 +873,68 @@ function OpenHelpWin(helpInfo){
 		$("<div id='" + winId + "'></div>").appendTo("body");
 		$('#' + winId).dialog({
 			width: 600,
-	    	height: 400,
-	    	modal: true,
-	    	title: '帮助',
-	    	iconCls: 'icon-help',
-	    	content: "<div id='" + winContentId + "'style='margin:20px;'></div>",
-	    	closable: true
+			height: 400,
+			modal: true,
+			title: $g('帮助'),
+			iconCls: 'icon-w-list',
+			content: "<div id='" + winContentId + "'style='margin:5px 10px 0px 10px;'></div>",
+			closable: true
 		});
-		$('#' + winContentId).width($('#' + winContentId).parent().width() - 40);
-		$('#' + winContentId).height($('#' + winContentId).parent().height() - 40);
 	}
+	$('#' + winContentId).width($('#' + winContentId).parent().width() - (hasScroll ? 38 : 20));
+	$('#' + winContentId).height($('#' + winContentId).parent().height() - 20);
 	$('#' + winContentId).html(helpInfo);
 	$('#' + winId).dialog('open');
 }
 
-function GetSkinTestHelpHtml(){
+function GetSkinTestHelpHtml() {
 	var skinTestHelpHtml = "";
-	skinTestHelpHtml += GetTitle("1、项目名称：");
-	skinTestHelpHtml += GetContent("过敏原下包含哪些药品，可以按医嘱项定义，也可以按通用名定义，但是只能按一种定义，不能同时定义。");
-	skinTestHelpHtml += GetTitle("2、时效：");
-	skinTestHelpHtml += GetContent("该药品判断多长时间内的皮试结果或用药记录。");
-	skinTestHelpHtml += GetTitle("3、允许脱敏：");
-	skinTestHelpHtml += GetContent("该药品是否可以脱敏治疗。");
-	skinTestHelpHtml += GetTitle("4、允许免试：");
-	skinTestHelpHtml += GetContent("该药品是否可以免试。");
-	skinTestHelpHtml += GetTitle("5、控制例外：");
-	skinTestHelpHtml += GetContent("勾选后治疗药品不置皮试结果仍可以缴费/发药。适用于破伤风类药品，取一只先做皮试，剩下的继续治疗。");
+	skinTestHelpHtml += GetTitle($g("1、项目名称："));
+	skinTestHelpHtml += GetContent($g("过敏原下包含哪些药品，可以按医嘱项定义，也可以按通用名定义，但是只能按一种定义，不能同时定义。"));
+	skinTestHelpHtml += GetTitle($g("2、时效："));
+	skinTestHelpHtml += GetContent($g("该药品判断多长时间内的皮试结果或用药记录。"));
+	skinTestHelpHtml += GetTitle($g("3、允许脱敏："));
+	skinTestHelpHtml += GetContent($g("该药品是否可以脱敏治疗。"));
+	skinTestHelpHtml += GetTitle($g("4、允许免试："));
+	skinTestHelpHtml += GetContent($g("该药品是否可以免试。"));
+	skinTestHelpHtml += GetTitle($g("5、默认免试："));
+	skinTestHelpHtml += GetContent($g("开医嘱弹出皮试框时会默认勾选免试，该配置仅在允许免试的情况下才能勾选。当存在皮试阳性记录或过敏记录（不包括同药学分类的过敏记录）等禁用治疗的情况下无效。"));
+	skinTestHelpHtml += GetTitle($g("6、控制例外："));
+	skinTestHelpHtml += GetContent($g("勾选后治疗药品不置皮试结果仍可以缴费/发药。适用于破伤风类药品，取一只先做皮试，剩下的继续治疗。"));
 	return skinTestHelpHtml;
 }
 
-function GetSkinTestItmHelpHtml(){
+function GetSkinTestItmHelpHtml() {
 	var skinTestHelpHtml = "";
-	skinTestHelpHtml += GetTitle("1、就诊类型：");
-	skinTestHelpHtml += GetContent("下拉框，可以选择“空/门诊/急诊/住院”,为空时代表此规则适用于全院，选择“门诊/急诊/住院”代表规则仅适用的就诊类型，“门诊/急诊/住院”和“空”的规则可以同时存在，但前者优先级更高。");
-	skinTestHelpHtml += GetTitle("2、科室：");
-	skinTestHelpHtml += GetContent("可以选择空（即全院），或者具体开单科室，如果维护了科室的优先取科室定义的皮试用药，否则取空的记录。");
-	skinTestHelpHtml += GetTitle("3、类型：");
-	skinTestHelpHtml += GetContent("包含医嘱项/通用名。");
-	skinTestHelpHtml += GetTitle("4、项目名称：");
-	skinTestHelpHtml += GetContent("字典型（医嘱项目或通用名），可以定义与上方通用名或医嘱项实现结果互认的通用名或医嘱项；也可以定义开治疗用药时自动插入的皮试用药。");
-	skinTestHelpHtml += GetTitle("5、结果标志：");
-	skinTestHelpHtml += GetContent("单选框，勾选的药品在自动产生时会置上“皮试标志”（OE_OrdItem - OEORI_AdministerSkinTest）,是护士操作置皮试结果的医嘱，用以解决溶媒（如：氯化钠注射液10ml）不需要置皮试结果。一个治疗用药每种就诊类型关联的皮试用药的“结果标志”不能为空，至少有一种药品维护。勾选了结果标志的才能和上方的通用名/医嘱项实现皮试结果的同步。");
-	skinTestHelpHtml += GetTitle("6、医嘱优先级：");
-	skinTestHelpHtml += GetContent("下拉框，可以选择“临时医嘱/临时嘱托”，自动产生皮试药品的医嘱优先级，皮试用药需要单独收费领药配置为“临时医嘱”，如果不需要则设置为“临时嘱托”。");
-	skinTestHelpHtml += GetTitle("7、剂量：");
-	skinTestHelpHtml += GetContent("数值型文本框，自动产生的皮试用药的剂量。");
-	skinTestHelpHtml += GetTitle("8、单位：");
-	skinTestHelpHtml += GetContent("下拉框，取配置药品的等效单位。");
-	skinTestHelpHtml += GetTitle("9、频次：");
-	skinTestHelpHtml += GetContent("下拉框，可以选择“ONCE/ST”，自动产生的皮试用药的频次。");
-	skinTestHelpHtml += GetTitle("10、关联序号：");
-	skinTestHelpHtml += GetContent("仅适用于同种“就诊类型”的配置，皮试药品多数需要糖盐稀释配置，用以解决自动产生的成组皮试用药的关联关系。");
-	skinTestHelpHtml += GetTitle("11、自动插入：");
-	skinTestHelpHtml += GetContent("只有医嘱项才能配置为自动插入。配置为自动插入的必须维护优先级、剂量、频次、用法、单位等。");
+	skinTestHelpHtml += GetTitle($g("1、就诊类型："));
+	skinTestHelpHtml += GetContent($g("下拉框，可以选择“空/门诊/急诊/住院”,为空时代表此规则适用于全院，选择“门诊/急诊/住院”代表规则仅适用的就诊类型，“门诊/急诊/住院”和“空”的规则可以同时存在，但前者优先级更高。"));
+	skinTestHelpHtml += GetTitle($g("2、科室："));
+	skinTestHelpHtml += GetContent($g("可以选择空（即全院），或者具体开单科室，如果维护了科室的优先取科室定义的皮试用药，否则取空的记录。"));
+	skinTestHelpHtml += GetTitle($g("3、类型："));
+	skinTestHelpHtml += GetContent($g("包含医嘱项/通用名。"));
+	skinTestHelpHtml += GetTitle($g("4、项目名称："));
+	skinTestHelpHtml += GetContent($g("字典型（医嘱项目或通用名），可以定义与上方通用名或医嘱项实现结果互认的通用名或医嘱项；也可以定义开治疗用药时自动插入的皮试用药。"));
+	skinTestHelpHtml += GetTitle($g("5、结果标志："));
+	skinTestHelpHtml += GetContent($g("单选框，勾选的药品在自动产生时会置上“皮试标志”（OE_OrdItem - OEORI_AdministerSkinTest）,是护士操作置皮试结果的医嘱，用以解决溶媒（如：氯化钠注射液10ml）不需要置皮试结果。一个治疗用药每种就诊类型关联的皮试用药的“结果标志”不能为空，至少有一种药品维护。勾选了结果标志的才能和上方的通用名/医嘱项实现皮试结果的同步。"));
+	skinTestHelpHtml += GetTitle($g("6、医嘱优先级："));
+	skinTestHelpHtml += GetContent($g("下拉框，可以选择“临时医嘱/临时嘱托”，自动产生皮试药品的医嘱优先级，皮试用药需要单独收费领药配置为“临时医嘱”，如果不需要则设置为“临时嘱托”。"));
+	skinTestHelpHtml += GetTitle($g("7、剂量："));
+	skinTestHelpHtml += GetContent($g("数值型文本框，自动产生的皮试用药的剂量。"));
+	skinTestHelpHtml += GetTitle($g("8、单位："));
+	skinTestHelpHtml += GetContent($g("下拉框，取配置药品的等效单位。"));
+	skinTestHelpHtml += GetTitle($g("9、频次："));
+	skinTestHelpHtml += GetContent($g("下拉框，可以选择“ONCE/ST”，自动产生的皮试用药的频次。"));
+	skinTestHelpHtml += GetTitle($g("10、关联序号："));
+	skinTestHelpHtml += GetContent($g("仅适用于同种“就诊类型”的配置，皮试药品多数需要糖盐稀释配置，用以解决自动产生的成组皮试用药的关联关系。"));
+	skinTestHelpHtml += GetTitle($g("11、自动插入："));
+	skinTestHelpHtml += GetContent($g("只有医嘱项才能配置为自动插入。配置为自动插入的必须维护优先级、剂量、频次、用法、单位等。"));
 	return skinTestHelpHtml;
 }
 
-function GetTitle(str, falg){
-	return "<b>" + str + "</b><br/>";
+function GetTitle(str, falg) {
+	return "<p style='line-height:28.5px'><b>" + str + "</b></p>";
 }
 
-function GetContent(str){
-	return "&nbsp;&nbsp;&nbsp;&nbsp;" + str + "<br/>";
+function GetContent(str) {
+	return "<p style='line-height:28.5px'>&nbsp;&nbsp;&nbsp;&nbsp;" + str + "</p>";
 }

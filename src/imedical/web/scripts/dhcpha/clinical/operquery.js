@@ -3,6 +3,9 @@
 //  Descript: 手术项目查询
 
 var url="dhcpha.clinical.action.csp";
+if ("undefined"!==typeof(websys_getMWToken)){
+	url += "?MWToken="+websys_getMWToken()
+	}
 $(function(){
 	
 	var EpisodeID=getParam("EpisodeID");
@@ -10,19 +13,19 @@ $(function(){
 	//定义columns
 	var columns=[[
 		{field:'EpisodeID',title:'EpisodeID',width:70,align:'left',hidden:true},
-	    {field:'OperCode',title:'手术编码',width:120,align:'left'},
-	    {field:'OperDesc',title:'手术名称',width:150,align:'left'},
-	    {field:'OperStartDate',title:'开始时间',width:130,align:'center'},
-	    {field:'OperEndDate',title:'结束时间',width:130,align:'center'},
-	    {field:'PreDiag',title:'术前诊断',width:220,align:'left'},
-	    {field:'BodsDesc',title:'部位',width:100,align:'left'},
-	    {field:'OperPosition',title:'身体位置',width:100,align:'left'},
-	    {field:'qktype',title:'切口类型',width:100,align:'left'}
+	    {field:'OperCode',title:$g('手术编码'),width:120,align:'left'},
+	    {field:'OperDesc',title:$g('手术名称'),width:150,align:'left'},
+	    {field:'OperStartDate',title:$g('开始时间'),width:130,align:'center'},
+	    {field:'OperEndDate',title:$g('结束时间'),width:130,align:'center'},
+	    {field:'PreDiag',title:$g('术前诊断'),width:220,align:'left'},
+	    {field:'BodsDesc',title:$g('部位'),width:100,align:'left'},
+	    {field:'OperPosition',title:$g('身体位置'),width:100,align:'left'},
+	    {field:'qktype',title:$g('切口类型'),width:100,align:'left'}
 	]];
 	
 	// 定义datagrid
 	$('#operlist').datagrid({
-		title:'手术列表',
+		title:$g('手术列表'),
 		url:'',
 		fit:true,
 		rownumbers:true,
@@ -30,11 +33,11 @@ $(function(){
 		pageSize:40,  // 每页显示的记录条数
 		pageList:[40,80],   // 可以设置每页记录条数的列表
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true
 	});
     $('#operlist').datagrid({
-		url:url+'?action=getPatOperList',	
+		url:url+'&action=getPatOperList',	
 		queryParams:{
 			EpisodeID:EpisodeID}
 	});

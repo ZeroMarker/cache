@@ -27,11 +27,13 @@ function Init(){
 }
 function InitScheduleAdjustListTabDataGrid(){
 	var Columns=[[ 
-		{field:'THoliday',title:'节假日',width:100},
+		{field:'TOriginalDate',title:'原出诊日期',width:100},
+		{field:'TAdjustDate',title:'迁移至日期',width:100},
+		{field:'LogInfo',title:'迁移结果',width:300},
+		
 		{field:'UpdateDate',title:'更新日期',width:100},
 		{field:'UpdateTime',title:'更新时间',width:100},
 		{field:'UserName',title:'操作人',width:100},
-		{field:'TAdjustDate',title:'调整到日期',width:100},
 		{field:'HospitalDesc',title:'医院',width:260},
     ]]
 	var ScheduleAdjustListTabDataGrid=$("#ScheduleAdjustListTab").datagrid({
@@ -71,34 +73,43 @@ function AdjustClick(){
 	var userid=session['LOGON.USERID'];	
 	var groupid=session['LOGON.GROUPID'];	
 	var ctlocid=session['LOGON.CTLOCID'];
-	var Holiday=$("#Holiday").datebox('getValue');
-	if (Holiday=="") {
-		$.messager.alert("提示","请选择节假日!");
+	var OriginalDate=$("#OriginalDate").datebox('getValue');
+	if (OriginalDate=="") {
+		$.messager.alert("提示","请选择<i>原出诊日期</i>!");
 		DisableBtn("BAdjust",false);
 		return false;
 	}
 	var AdjustDate=$("#AdjustDate").datebox('getValue');
 	if (AdjustDate=="") {
-		$.messager.alert("提示","请选择调整到日期!");
+		$.messager.alert("提示","请选择迁移日期!");
 		DisableBtn("BAdjust",false);
 		return false;
 	}
-	$.cm({
-		ClassName:"web.DHCOPRegHolidayAdjust",
-		MethodName:"AdjustHoliday",
-		Holiday:Holiday, AdjustDate:AdjustDate,HospitalDr:HospID,
-		dataType:'text'
-	},function(rtn){
-		if(rtn=="0"){
-			$.messager.alert("提示","调整成功!","info",function(){
-				ScheduleAdjustListTabDataGridLoad();
+	$.messager.prompt("提示", "本操作会<b>原出诊日期</b>排班数据复制至<b>迁移日期</b>,并将<b>原出诊日期</b>排班删除,请输入<b>确认迁移</b>以继续该操作!", function (r) {
+		if (r=="确认迁移") {
+			
+			$.cm({
+				ClassName:"web.DHCOPRegHolidayAdjust",
+				MethodName:"AdjustHoliday",
+				OriginalDate:OriginalDate, AdjustDate:AdjustDate,HospitalDr:HospID,
+				SessionStr:GetSessionStr?GetSessionStr():(session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']),
+				dataType:'text'
+			},function(rtn){
+				var rtnArr=rtn.split("^");
+				if(rtnArr[0]=="0"){
+					$.messager.alert("提示",rtnArr[1],"info",function(){
+						ScheduleAdjustListTabDataGridLoad();
+					});
+				}else{
+					$.messager.alert("提示","调整失败!:"+rtn.split("^")[1]);
+				}
 				DisableBtn("BAdjust",false);
-			});
-		}else{
-			$.messager.alert("提示","调整失败!");
+			})
+		} else {
+			$.messager.popover({ msg: "操作取消" });
 			DisableBtn("BAdjust",false);
 		}
-	})
+	});
 }
 function DelClick(){
 	var row=PageLogicObj.m_ScheduleAdjustListTabDataGrid.datagrid("getSelected");
@@ -107,11 +118,11 @@ function DelClick(){
 		return false;
 	}
 	var HospID=$HUI.combogrid('#_HospUserList').getValue();
-	var Holiday=row['THoliday'];
+	var OriginalDate=row['TOriginalDate'];
 	$.cm({
 		ClassName:"web.DHCOPRegHolidayAdjust",
 		MethodName:"DelAdjustHoliday",
-		Holiday:Holiday,
+		OriginalDate:OriginalDate,
 		HospitalDr:HospID,
 		dataType:'text'
 	},function(rtn){

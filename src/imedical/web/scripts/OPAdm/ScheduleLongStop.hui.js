@@ -30,7 +30,7 @@ function Init(){
 	hospComp.jdata.options.onLoadSuccess= function(data){
 		var HospID=$HUI.combogrid('#_HospUserList').getValue();
 		LoadLoc(HospID);
-		$("#Doc").combobox('select','').combobox('loadData',[{}])
+		$("#Doc").combobox('select','').combobox('loadData',[])
 		PageLogicObj.m_LongStopListTabDataGrid=InitLongStopListTabDataGrid();
 		LongStopListTabDataGridLoad();
 	}
@@ -181,8 +181,18 @@ function StopClick(){
 	    	GroupId:session['LOGON.GROUPID'],
 	    	dataType:"text"
 		},false)
-	  	if(ret=="0"){
-		  	$.messager.popover({msg: '操作成功!',type:'info',timeout: 2000,showType: 'show'});
+		var retArr=ret.split("^");
+	  	if(retArr[0]=="0"){
+		  	if (retArr[1]>0) {
+			  	var IsAudit=tkMakeServerCall("web.DHCOPRegHolidayAdjust","CheckBatchStopRequestFlag",Loc,"S",session['LOGON.GROUPID'],session['LOGON.HOSPID']);
+			  	if (IsAudit ==1 ){
+				  	$.messager.popover({msg: $('#Loc').combobox('getText')+" "+$('#Doc').combobox('getText')+ ' 长时段停诊申请成功！请等待相关人员审核后生效！',type:'info',timeout: 2000,showType: 'show'});
+				}else{
+					$.messager.popover({msg: '停诊操作成功!',type:'info',timeout: 2000,showType: 'show'});
+				}
+			}else{
+				$.messager.popover({msg: '停诊操作成功!',type:'info',timeout: 2000,showType: 'show'});
+			}
 		  	$("#StartDate,#EndDate").datebox('setValue','');
 		  	$("#Loc,#Doc,#Reason").combobox('select','');
 		  	LongStopListTabDataGridLoad();
@@ -211,12 +221,22 @@ function CancelStopClick(){
 	var ret=$.cm({
     	ClassName : "web.DHCOPRegHolidayAdjust",
     	MethodName : "UpdateNotAvail",
-    	Rowid:NARowId, UserID:session['LOGON.USERID'], StopMethod:"N",
+    	Rowid:NARowId, UserID:session['LOGON.USERID'], StopMethod:"",	//StopMethod为空，在后端查找应该回转的状态
     	GroupId:session['LOGON.GROUPID'],
     	dataType:"text"
 	},false)
-    if(ret=="0"){
-	    $.messager.alert("提示","操作成功!");
+	var retArr=ret.split("^");
+    if(retArr[0]=="0"){
+	    if (retArr[1]>0) {
+		    var IsAudit=tkMakeServerCall("web.DHCOPRegHolidayAdjust","CheckBatchStopRequestFlag",row.DepID,"N",session['LOGON.GROUPID'],session['LOGON.HOSPID']);
+		  	if (IsAudit ==1 ){
+			  	$.messager.popover({msg: row.TLoc+" "+row.TDoc+' 撤销长时段停诊申请成功！请等待相关人员审核后生效！',type:'info',timeout: 2000,showType: 'show'});
+			}else{
+		    	$.messager.popover({msg: '撤销长时段停诊成功！',type:'info',timeout: 2000,showType: 'show'});
+		    }
+		}else{
+			$.messager.popover({msg: '撤销长时段停诊成功！',type:'info',timeout: 2000,showType: 'show'});
+		}
 	    LongStopListTabDataGridLoad();
 	    return false;
 	}else if(ret=="-203"){
@@ -233,7 +253,8 @@ function LoadLoc(hospitalid){
 		QueryName:"FindLoc",
 		Loc:"",
 		UserID:session['LOGON.USERID'],
-		HospitalDr:hospitalid
+		HospitalDr:hospitalid,
+		rows:100000
 	},function(Data){
 		var cbox = $HUI.combobox("#Loc", {
 				valueField: 'Hidden',
@@ -253,7 +274,7 @@ function LoadLoc(hospitalid){
 				onChange:function(newValue,oldValue){
 					if (newValue==""){
 						$("#Doc").combobox('select','');
-						$("#Doc").combobox('loadData',[{}])
+						$("#Doc").combobox('loadData',[]);
 					}
 				}
 		 });
@@ -264,7 +285,8 @@ function LoadDoc(DepRowId){
 		ClassName:"web.DHCRBResSession",
 		QueryName:"FindResDoc",
 		DepID:DepRowId,
-		HospID:$HUI.combogrid('#_HospUserList').getValue()
+		HospID:$HUI.combogrid('#_HospUserList').getValue(),
+		rows:100000
 	},function(Data){
 		var cbox = $HUI.combobox("#Doc", {
 				valueField: 'Hidden1',

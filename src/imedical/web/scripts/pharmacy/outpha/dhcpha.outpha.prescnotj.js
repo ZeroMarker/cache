@@ -85,21 +85,21 @@ function InitStk(){
 function InitPrescnoTJList(){
 	//定义columns
 	var columns=[[
-		{field:'TPrescType',title:'费别',width:100,align:'center'},
-	    {field:'TPrescNum',title:'处方数量',width:100,align:'right'},
-	    {field:'TPrescTotal',title:'处方总数',width:100,align:'right'},
-	    {field:'TPrescBL',title:'处方比率(%)',width:80,align:'right'},
-	    {field:'TPrescMax',title:'最高处方',width:100,hidden:true},
-	    {field:'TPrescMin',title:'最低处方',width:100,hidden:true},
-	    {field:'TPrescMaxPmi',title:'最高方登记号',width:100,align:'center'},
-	    {field:'TPrescMinPmi',title:'最低方登记号',width:100,align:'center'},
-	    {field:'TPrescMaxMoney',title:'最高方金额',width:80,align:'right'},
-	    {field:'TPrescMinMoney',title:'最低方金额',width:80,align:'right'},
-	    {field:'TPrescMoney',title:'合计金额',width:100,align:'right'},
-	    {field:'TPrescPhNum',title:'品种数',width:80,align:'right'},
-	    {field:'TCYFS',title:'草药付数',width:80,align:'right'},
-	    {field:'TJYFS',title:'代煎付数',width:80,align:'right'},
-	    {field:'TJYCF',title:'代煎处方数量',width:80,align:'right'}
+		{field:'TPrescType',title:("费别"),width:100,align:'center'},
+	    {field:'TPrescNum',title:("处方数量"),width:100,align:'right'},
+	    {field:'TPrescTotal',title:("处方总数"),width:100,align:'right'},
+	    {field:'TPrescBL',title:("处方比率(%)"),width:80,align:'right'},
+	    {field:'TPrescMax',title:("最高处方"),width:100,hidden:true},
+	    {field:'TPrescMin',title:("最低处方"),width:100,hidden:true},
+	    {field:'TPrescMaxPmi',title:("最高方登记号"),width:100,align:'center'},
+	    {field:'TPrescMinPmi',title:("最低方登记号"),width:100,align:'center'},
+	    {field:'TPrescMaxMoney',title:("最高方金额"),width:80,align:'right'},
+	    {field:'TPrescMinMoney',title:("最低方金额"),width:80,align:'right'},
+	    {field:'TPrescMoney',title:("合计金额"),width:100,align:'right'},
+	    {field:'TPrescPhNum',title:("品种数"),width:80,align:'right'},
+	    {field:'TCYFS',title:("草药付数"),width:80,align:'right'},
+	    {field:'TJYFS',title:("代煎付数"),width:80,align:'right'},
+	    {field:'TJYCF',title:("代煎处方数量"),width:80,align:'right'}
          ]];  
          
     var dataGridOption={
@@ -128,7 +128,7 @@ function Query()
 	}
 	var presctype=$("#sel-presctype").val();
 	if (presctype==null){
-		dhcphaMsgBox.alert("请选择需要统计的处方类型!");
+		dhcphaMsgBox.alert($g("请选择需要统计的处方类型!"));
 		return;
 	}
 	/*var chkop="";
@@ -181,7 +181,7 @@ function ClearConditions(){
 function BPrintHandler(){	
 	if($('#prescnotjdg').datagrid('getData').rows.length == 0) //获取当面界面数据行数
 	{
-		dhcphaMsgBox.alert("页面没有数据");
+		dhcphaMsgBox.alert($g("页面没有数据"));
 		return ;
 	}
 	var PrescNotjdgOption=$("#prescnotjdg").datagrid("options")

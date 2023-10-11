@@ -7,9 +7,9 @@ function BodyLoadHandler()
 	setButtonText();///Add By QW 2018-09-29 HISUI改造:按钮文字规范
 	InitUserInfo();
 	InitEvent();	//初始化
-	KeyUp("Model^Unit^ServiceItem^ConsumableItem^ServDetItem");
+	KeyUp("Model^Unit^ServiceItem^ConsumableItem^ServDetItem^StoreLoc^SourceID");	//modified by ZY0282 20211110
 	disabled(true);//灰化
-	Muilt_LookUp("Model^Unit^ServiceItem^ConsumableItem^ServDetItem^CycleUnit");
+	Muilt_LookUp("Model^Unit^ServiceItem^ConsumableItem^ServDetItem^CycleUnit^StoreLoc^SourceID");	//modified by ZY0282 20211110
 	SetElement("SourceType",GetElementValue("SourceTypeDR"));
 	SetElement("QuantityType",GetElementValue("QuantityTypeDR"))
 	EnableModel();
@@ -183,7 +183,7 @@ function BUpdate_Click() //修改
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="") return;
 	var plist=CombinData(); //函数调用
-	var result=cspRunServerMethod(encmeth,'','',plist);
+	var result=cspRunServerMethod(encmeth,'','',plist,'2','0');
 	result=result.replace(/\\n/g,"\n")
 	if(result=="") 
 	{
@@ -207,7 +207,7 @@ function BAdd_Click() //添加
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="") return;
 	var plist=CombinData(); //函数调用
-	var result=cspRunServerMethod(encmeth,'','',plist,'2','');
+	var result=cspRunServerMethod(encmeth,'','',plist,'2','0');
 	result=result.replace(/\\n/g,"\n")
 	if(result=="")
 	{
@@ -234,9 +234,9 @@ function CombinData()
   	combindata=combindata+"^"+GetElementValue("CycleNum"); //维护周期
   	combindata=combindata+"^"+GetElementValue("CycleUnitDR");
   	combindata=combindata+"^"+GetElementValue("Type"); //类型
-  	combindata=combindata+"^"+GetElementValue("Hold1") ;
-	combindata=combindata+"^"+GetElementValue("Hold2") ;
-	combindata=combindata+"^"+GetElementValue("Hold3") ;
+  	combindata=combindata+"^"+GetElementValue("Hold1") ;	//SICSubType
+	combindata=combindata+"^"+GetElementValue("Hold2") ;	//SICSubKey
+	combindata=combindata+"^"+GetElementValue("StoreLocDR") ;	//StoreLocDR  原Hold3
 	combindata=combindata+"^"+GetElementValue("Hold4") ;
 	combindata=combindata+"^"+GetElementValue("Hold5") ;
 	combindata=combindata+"^"+GetElementValue("BussType") ; //add by sjh 2020-01-20
@@ -289,6 +289,8 @@ function Clear()
 	SetElement("CycleNum","");
 	SetElement("MonthStatFlag","");   //Modefied by zc 2014-11-04 zc0019  end
 	SetElement("BussType","");//add by sjh 2020-01-20
+	SetElement("StoreLocDR","");	//czf 1915092
+	SetElement("StoreLoc","");
 }
 	
 function SetData(rowid)
@@ -298,7 +300,7 @@ function SetData(rowid)
 	var gbldata=cspRunServerMethod(encmeth,'','',rowid);
 	gbldata=gbldata.replace(/\\n/g,"\n"); //"\n"转换为回车符
 	var list=gbldata.split("^");
-	
+	///modified by ZY0237 表结构增加了字段，元素取值也要跟着一起变。
 	SetElement("RowID",list[0]); //rowid
 	SetElement("SourceTypeDR",list[1]);
 	SetElement("SourceIDDR",list[2]);
@@ -308,23 +310,25 @@ function SetData(rowid)
 	SetElement("Quantity",list[6]);
 	SetElement("ModelDR",list[7]);
 	SetElement("SourceType",list[1]);
-	SetElement("SourceID",list[20]);
-	SetElement("ServiceItem",list[21]);
-	SetElement("ConsumableItem",list[22]);
-	SetElement("Unit",list[23]);
-	SetElement("Model",list[24]);
+	SetElement("SourceID",list[21]);
+	SetElement("ServiceItem",list[22]);
+	SetElement("ConsumableItem",list[23]);
+	SetElement("Unit",list[24]);
+	SetElement("Model",list[25]);
 	EnableModel();
 	// Mozy	2010-11-22
 	SetElement("QuantityTypeDR",list[8]);	// 数量类型
 	SetElement("QuantityType",list[8]);
 	SetElement("ServDetItemDR",list[9]);	// 细项
-	SetElement("ServDetItem",list[26]);
+	SetElement("ServDetItem",list[27]);
 	SetElement("MonthStatFlag",list[10]);   //Modefied by zc 2014-11-04 zc0019  begin
 	SetElement("CycleNum",list[11]);
 	SetElement("CycleUnitDR",list[12]);
-	SetElement("CycleUnit",list[27]);
+	SetElement("CycleUnit",list[28]);
 	SetElement("Type",list[13]);   //Modefied by zc 2014-11-04 zc0019  end
 	SetElement("BussType",list[19]); //BussType  add by sjh 2020-01-20
+	SetElement("StoreLocDR",list[16]);	//czf 1915092
+	SetElement("StoreLoc",list[29]);
 	EnableUnit();
 	TypeSelect();   //Modefied by zc 2014-11-04 zc0019
 }
@@ -406,8 +410,9 @@ function EnableUnit()
 function QuantityType_change()
 {
 	EnableUnit();
-	SetElement("Unit","");
-	SetElement("UnitDR","");
+	//modified by ZY0282 20211110
+	//SetElement("Unit","");
+	//SetElement("UnitDR","");
 }
 //Modefied by zc 2014-11-04 zc0019
 function TypeSelect()
@@ -467,7 +472,7 @@ function condition()//条件
 }
 function CheckInvalidData()
 {
-	if (IsValidateNumber(GetElementValue("Quantity"),1,0,0,1)==0)
+	if (IsValidateNumber(GetElementValue("Quantity"),1,1,0,1)==0)		//czf 1915083 2021-05-22
 	{
 		alertShow("数量异常,请修正.");
 		//SetElement("Quantity","");
@@ -516,6 +521,11 @@ function CheckTypeSelect()
 function GetCycleUnit(value) 
 {
 	GetLookUpID("CycleUnitDR",value);
+}
+
+function GetStoreLoc(value)
+{
+	GetLookUpID("StoreLocDR",value);
 }
 //定义页面加载方法
 document.body.onload = BodyLoadHandler;

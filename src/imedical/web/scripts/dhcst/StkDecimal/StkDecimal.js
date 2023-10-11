@@ -6,7 +6,7 @@ var StkDecimalId = "";
 //=========================小数规则设置=================================
 
 var Flag = new Ext.grid.CheckColumn({
-	header:'是否使用',
+	header:$g('是否使用'),
 	dataIndex:'UseFlag',
 	width:150,
 	sortable:true,
@@ -66,7 +66,7 @@ var StkDecimalGridDs = new Ext.data.Store({
 var StkDecimalGridCm = new Ext.grid.ColumnModel([
 	 new Ext.grid.RowNumberer(),
 	 {
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'Name',
         width:100,
         align:'left',
@@ -83,7 +83,7 @@ var StkDecimalGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'Desc',
         width:150,
         align:'left',
@@ -106,8 +106,8 @@ var StkDecimalGridCm = new Ext.grid.ColumnModel([
 StkDecimalGridCm.defaultSortable = true;
 
 var addStkDecimal = new Ext.Toolbar.Button({
-	text:'新建',
-    tooltip:'新建',
+	text:$g('新建'),
+    tooltip:$g('新建'),
     iconCls:'page_add',
 	width : 70,
 	height : 30,
@@ -117,8 +117,8 @@ var addStkDecimal = new Ext.Toolbar.Button({
 });
 
 var saveStkDecimal = new Ext.Toolbar.Button({
-	text:'保存',
-    tooltip:'保存',
+	text:$g('保存'),
+    tooltip:$g('保存'),
     iconCls:'page_save',
 	width : 70,
 	height : 30,
@@ -132,11 +132,11 @@ var saveStkDecimal = new Ext.Toolbar.Button({
 			var useFlag = mr[i].data["UseFlag"]
 			var rowNum = StkDecimalGridDs.indexOf(mr[i])+1;
 			if (name==""){
-				Msg.info("warning", "第"+rowNum+"行代码为空!");
+				Msg.info("warning", $g("第")+rowNum+$g("行代码为空!"));
 				return;
 			}
 			if (desc==""){
-				Msg.info("warning", "第"+rowNum+"行名称为空!");
+				Msg.info("warning",$g( "第")+rowNum+$g("行名称为空!"));
 				return;
 			}
 			if((name!="")&&(desc!="")){
@@ -150,23 +150,23 @@ var saveStkDecimal = new Ext.Toolbar.Button({
 		}
 		
 		if(data==""){
-			Msg.info("warning","没有修改或添加新数据!");
+			Msg.info("warning",$g("没有修改或添加新数据!"));
 			return false;
 		}else{
-			var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+			var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 			Ext.Ajax.request({
 				url: StkDecimalGridUrl+'?actiontype=save',
 				params: {data:data},
 
 				failure: function(result, request) {
 					 mask.hide();
-					Msg.info("error","请检查网络连接!");
+					Msg.info("error",$g("请检查网络连接!"));
 				},
 				success: function(result, request) {
 					var jsonData = Ext.util.JSON.decode( result.responseText );
 					 mask.hide();
 					if (jsonData.success=='true') {
-						Msg.info("success","保存成功!");
+						Msg.info("success",$g("保存成功!"));
 						StkDecimalGridDs.load();
 					}else{
 						Msg.info("warning",jsonData.info);
@@ -180,40 +180,40 @@ var saveStkDecimal = new Ext.Toolbar.Button({
 });
 
 var deleteStkDecimal = new Ext.Toolbar.Button({
-	text:'删除',
-    tooltip:'删除',
+	text:$g('删除'),
+    tooltip:$g('删除'),
     iconCls:'page_delete',
 	width : 70,
 	height : 30,
 	handler:function(){
 		var cell = StkDecimalGrid.getSelectionModel().getSelectedCell();
 		if(cell==null){
-			Msg.info("error","请选择数据!");
+			Msg.info("error",$g("请选择数据!"));
 			return false;
 		}else{
 			var record = StkDecimalGrid.getStore().getAt(cell[0]);
 			var RowId = record.get("RowId");
 			if(RowId!=""){
-				Ext.MessageBox.confirm('提示','确定要删除选定的行?',
+				Ext.MessageBox.confirm($g('提示'),$g('确定要删除选定的行?'),
 					function(btn) {
 						if(btn == 'yes'){
-							var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+							var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 							Ext.Ajax.request({
 								url:StkDecimalGridUrl+'?actiontype=delete&rowid='+RowId,
-								waitMsg:'删除中...',
+								waitMsg:$g('删除中...'),
 								failure: function(result, request) {
 									 mask.hide();
-									Msg.info("error","请检查网络连接!");
+									Msg.info("error",$g("请检查网络连接!"));
 								},
 								success: function(result, request) {
 									var jsonData = Ext.util.JSON.decode( result.responseText );
 									 mask.hide();
 									if (jsonData.success=='true') {
-										Msg.info("success","删除成功!");
+										Msg.info("success",$g("删除成功!"));
 										StkDecimalGridDs.load();
 										StkDecimalItmGridDs.load({params:{StkDecimalId:""}});
 									}else{
-										Msg.info("error","删除失败!");
+										Msg.info("error",$g("删除失败!"));
 									}
 								},
 								scope: this
@@ -300,7 +300,7 @@ var StkDecimalItmGridDs = new Ext.data.Store({
 //模型
 var StkDecimalItmGridCm = new Ext.grid.ColumnModel([
 	new Ext.grid.RowNumberer(),{
-        header:"规则下限",
+        header:$g("规则下限"),
         dataIndex:'Min',
         width:150,
         align:'right',
@@ -318,7 +318,7 @@ var StkDecimalItmGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"规则上限",
+        header:$g("规则上限"),
         dataIndex:'Max',
         width:150,
         align:'right',
@@ -336,7 +336,7 @@ var StkDecimalItmGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"小数位数",
+        header:$g("小数位数"),
         dataIndex:'DecimalLen',
         width:150,
         align:'right',
@@ -359,8 +359,8 @@ var StkDecimalItmGridCm = new Ext.grid.ColumnModel([
 StkDecimalItmGridCm.defaultSortable = true;
 
 var addStkDecimalItm = new Ext.Toolbar.Button({
-	text:'新建',
-    tooltip:'新建',
+	text:$g('新建'),
+    tooltip:$g('新建'),
     iconCls:'page_add',
 	width : 70,
 	height : 30,
@@ -368,15 +368,15 @@ var addStkDecimalItm = new Ext.Toolbar.Button({
 		if(StkDecimalId!=""){
 			addNewMXRow();
 		}else{
-			Msg.info("error", "请选择规则!");
+			Msg.info("error", $g("请选择规则!"));
 			return false;
 		}
 	}
 });
 
 var saveStkDecimalItm = new Ext.Toolbar.Button({
-	text:'保存',
-    tooltip:'保存',
+	text:$g('保存'),
+    tooltip:$g('保存'),
 	width : 70,
 	height : 30,
     iconCls:'page_save',
@@ -396,24 +396,24 @@ var saveStkDecimalItm = new Ext.Toolbar.Button({
 			var len = mr[i].data["DecimalLen"];
 			var rowNum = StkDecimalItmGridDs.indexOf(mr[i])+1;
 			if (min<0){
-				Msg.info("warning", "第"+rowNum+"行规则下限不能小于0!");
+				Msg.info("warning", $g("第")+rowNum+$g("行规则下限不能小于0!"));
 				return;
 			}
 			if (max<=0){
-				Msg.info("warning", "第"+rowNum+"行规则上限不能小于等于0!");
+				Msg.info("warning", $g("第")+rowNum+$g("行规则上限不能小于等于0!"));
 				return;
 			}
 		    if (len==""){
-				Msg.info("warning", "第"+rowNum+"行小数位数不能为空!");
+				Msg.info("warning", $g("第")+rowNum+$g("行小数位数不能为空!"));
 				return;
 			}
 			
 			if (len<0){
-				Msg.info("warning", "第"+rowNum+"行小数位数不能小于0!");
+				Msg.info("warning", $g("第")+rowNum+$g("行小数位数不能小于0!"));
 				return;
 			}
 			if (max<=min){
-				Msg.info("warning","规则下限不能大于或等于上限!");
+				Msg.info("warning",$g("规则下限不能大于或等于上限!"));
 				return;
 			}
 			if((min!=""||min=="0")&&(max!=""||max=="0")&&(len!=""||len=="0")){
@@ -427,25 +427,25 @@ var saveStkDecimalItm = new Ext.Toolbar.Button({
 		}
 		
 		if(addData==""){
-			Msg.info("warning","没有修改或添加新数据！");
+			Msg.info("warning",$g("没有修改或添加新数据！"));
 			return;
 		}else{
 			Ext.Ajax.request({
 				url: StkDecimalGridUrl+'?actiontype=addRelation',
 				params: {data:addData},
 				failure: function(result, request) {
-					Msg.info("error", "请检查网络连接!");
+					Msg.info("error", $g("请检查网络连接!"));
 				},
 				success: function(result, request) {
 					var jsonData = Ext.util.JSON.decode( result.responseText );
 					if (jsonData.success=='true') {
-						Msg.info("success", "保存成功!");
+						Msg.info("success", $g("保存成功!"));
 						StkDecimalItmGridDs.load({params:{StkDecimalId:StkDecimalId}});
 					}else if (jsonData.info==-1) {
-						Msg.info("warning","规则明细上下限重复!");
+						Msg.info("warning",$g("规则明细上下限重复!"));
 						return;
 					}else{
-						Msg.info("error", "保存失败!");
+						Msg.info("error",$g( "保存失败!"));
 						StkDecimalItmGridDs.load({params:{StkDecimalId:StkDecimalId}});
 					}
 				},
@@ -456,39 +456,39 @@ var saveStkDecimalItm = new Ext.Toolbar.Button({
 });
 
 var deleteStkDecimalItm = new Ext.Toolbar.Button({
-	text:'删除',
-    tooltip:'删除',
+	text:$g('删除'),
+    tooltip:$g('删除'),
 	width : 70,
 	height : 30,
     iconCls:'page_delete',
 	handler:function(){
 		var cell = StkDecimalItmGrid.getSelectionModel().getSelectedCell();
 		if(cell==null){
-			Msg.info("warning", "请选择数据!");
+			Msg.info("warning", $g("请选择数据!"));
 			return false;
 		}else{
 			var record = StkDecimalItmGrid.getStore().getAt(cell[0]);
 			var RowId = record.get("RowId");
 			if(RowId!=""){
-				Ext.MessageBox.confirm('提示','确定要删除选定的行?',
+				Ext.MessageBox.confirm($g('提示'),$g('确定要删除选定的行?'),
 					function(btn) {
 						if(btn == 'yes'){
-							var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+							var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 							Ext.Ajax.request({
 								url:StkDecimalGridUrl+'?actiontype=deleteChild&rowid='+RowId,
-								waitMsg:'删除中...',
+								waitMsg:$g('删除中...'),
 								failure: function(result, request) {
 									 mask.hide();
-									Msg.info("error", "请检查网络连接!");
+									Msg.info("error", $g("请检查网络连接!"));
 								},
 								success: function(result, request) {
 									var jsonData = Ext.util.JSON.decode( result.responseText );
 									 mask.hide();
 									if (jsonData.success=='true') {
-										Msg.info("success", "删除成功!");
+										Msg.info("success", $g("删除成功!"));
 										StkDecimalItmGridDs.load({params:{StkDecimalId:StkDecimalId}});
 									}else{
-										Msg.info("error", "删除失败!");
+										Msg.info("error", $g("删除失败!"));
 									}
 								},
 								scope: this
@@ -519,10 +519,10 @@ function CheckRange(){
 			var jMin = jData.get("Min")*1;
 			var jMax = jData.get("Max")*1;
 			if ((jMin>=iMin)&&(jMin<iMax)){
-				return "第"+(i+1)+"行与第"+(j+1)+"行,下限数据交叉,请核实"
+				return $g("第")+(i+1)+$g("行与第")+(j+1)+$g("行,下限数据交叉,请核实")
 			}
 			if ((jMax<=iMax)&&(jMax>iMax)){
-				return "第"+(i+1)+"行与第"+(j+1)+"行,上限数据交叉,请核实"
+				return $g("第")+(i+1)+$g("行与第")+(j+1)+$g("行,上限数据交叉,请核实")
 			}
 		}
 	}
@@ -557,7 +557,7 @@ var HospPanel = InitHospCombo('DHC_StkDecimal',function(combo, record, index){
 	HospId = this.value; 
 	StkDecimalGridDs.reload();
 	StkDecimalItmGrid.store.removeAll();
-	StkDecimalItmGrid.getView().refresh();
+	//StkDecimalItmGrid.getView().refresh();
 });
 //===========模块主页面=================================================
 Ext.onReady(function(){
@@ -567,7 +567,7 @@ Ext.onReady(function(){
 	var StkDecimalPanel = new Ext.Panel({
 		id:"StkDecimalPanel",
 		deferredRender : true,
-		title:'小数规则设置',
+		title:$g('小数规则设置'),
 		activeTab: 0,
 		region:'west',
 		width:500,
@@ -581,7 +581,7 @@ Ext.onReady(function(){
 	var StkDecimalItmPanel = new Ext.Panel({
 		id:"StkDecimalItmPanel",
 		deferredRender : true,
-		title:'规则明细',
+		title:$g('规则明细'),
 		activeTab: 0,
 		region:'center',
 		layout:'fit',

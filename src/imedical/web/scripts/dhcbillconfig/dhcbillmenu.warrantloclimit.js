@@ -1,9 +1,8 @@
 ﻿/*
  * FileName: dhcbillmenu.warrantloclimit.js
- * User: xiongwang
+ * Author: xiongwang
  * Date: 2017-08-18
- * Function: 担保额度设置
- * Description: 
+ * Description: 担保额度设置
  */
 
 var lastIndex = "";
@@ -62,7 +61,7 @@ $(function () {
 	$("#tTBLocCombo").combobox({
 		valueField: 'LocRowid',
         textField: 'LocDesc',
-		defaultFilter: 4,
+		defaultFilter: 5,
 		selectOnNavigation: false,
         onBeforeLoad: function(param) {
 	    	$.extend(param, {desc: ""});
@@ -82,7 +81,7 @@ $(function () {
 	$("#tTBAdmReasonCombo").combobox({
 		valueField: 'RowID',
         textField: 'READesc',
-		defaultFilter: 4,
+		defaultFilter: 5,
 		selectOnNavigation: false,
         onBeforeLoad: function(param) {
 	       	$.extend(param, {Code: "", Desc: ""});
@@ -112,15 +111,13 @@ function initGrid() {
 						url: $URL + "?ClassName=DHCBILLConfig.DHCBILLWarrant&QueryName=FindLoc&ResultSetType=array",
 						valueField: 'LocRowid',
 						textField: 'LocDesc',
-						defaultFilter: 4,
+						defaultFilter: 5,
 						onBeforeLoad: function (param) {
 							$.extend(param, {desc: "", hospId: getValueById("hospital")});
 							return true;
 						},
-						onSelect: function (rec) {
-							if (rec) {
-								thisLocRowid = rec.LocRowid;   //获取选中的就诊类型ID
-							}
+						onChange: function(newValue, oldValue) {
+							thisLocRowid = newValue || "";
 						}
 					}
 				}
@@ -136,15 +133,13 @@ function initGrid() {
 						url: $URL + "?ClassName=DHCBILLConfig.DHCBILLWarrant&QueryName=FindAdmReason&ResultSetType=array",
 						valueField: 'RowID',
 						textField: 'READesc',
-						defaultFilter: 4,
+						defaultFilter: 5,
 						onBeforeLoad: function (param) {
 							$.extend(param, {Code: "", Desc: "", HospId: getValueById("hospital")});
 							return true;
 						},
-						onSelect: function (rec) {
-							if (rec) {
-								thisAdmReasonid = rec.RowID;
-							}
+						onChange: function(newValue, oldValue) {
+							thisAdmReasonid = newValue || "";
 						}
 					}
 				}
@@ -157,6 +152,7 @@ function initGrid() {
 				editor: {
 					type: 'combobox',
 					options: {
+						panelHeight: 'auto',
 						valueField: 'id',
 						textField: 'name',
 						editable: false,
@@ -229,7 +225,6 @@ function initGrid() {
 		pageSize: 20,
 		columns: CateColumns,
 		toolbar: '#tToolBar',
-		data: [],
 		onLoadSuccess: function (data) {
 			thisLocRowid = "",
 			thisAdmReasonid = "",
@@ -285,20 +280,32 @@ $('#BtnUpdate').bind('click', function () {
 			$.messager.alert('提示', "一次只能修改一条记录", 'info');
 			return;
 		}
-		thisLocRowid = selected.JFWLLLocDR;
-		thisAdmReasonid = selected.JFWLLAdmReasonDR;
-		thisJFWLLTimeLimitType = selected.JFWLLTimeLimitType;
 
 		$('#tWarrantLocLimit').datagrid('beginEdit', thisIndex);
 		$('#tWarrantLocLimit').datagrid('selectRow', thisIndex);
 		EditIndex = thisIndex;
-		var selected = $('#tWarrantLocLimit').datagrid('getSelected');
 
 		var thisEd = $('#tWarrantLocLimit').datagrid('getEditor', {
 				index: EditIndex,
 				field: 'JFWLLLocDesc'
 			});
 		$(thisEd.target).combobox('select', selected.JFWLLLocDR);
+		
+		var thisEd = $('#tWarrantLocLimit').datagrid('getEditor', {
+				index: EditIndex,
+				field: 'JFWLLAdmReasonDesc'
+			});
+		$(thisEd.target).combobox('select', selected.JFWLLAdmReasonDR);
+		
+		var thisEd = $('#tWarrantLocLimit').datagrid('getEditor', {
+				index: EditIndex,
+				field: 'JFWLLTimeLimitTypeDesc'
+			});
+		$(thisEd.target).combobox('select', selected.JFWLLTimeLimitType);
+		
+		thisLocRowid = selected.JFWLLLocDR;
+		thisAdmReasonid = selected.JFWLLAdmReasonDR;
+		thisJFWLLTimeLimitType = selected.JFWLLTimeLimitType;
 	}
 });
 
@@ -332,7 +339,7 @@ $('#BtnSave').bind('click', function () {
 				Guser: PUBLIC_CONSTANT.SESSION.USERID,
 				HospID: getValueById("hospital")
 			}, function(rtn) {
-				if (rtn == "0") {
+				if (rtn == 0) {
 					$.messager.alert('提示', "保存成功", 'success');
 				} else {
 					$.messager.alert('提示', "保存失败，错误代码：" + rtn, 'error');
@@ -365,7 +372,7 @@ $('#BtnSave').bind('click', function () {
 				Guser: PUBLIC_CONSTANT.SESSION.USERID,
 				HospID: getValueById("hospital")
 			}, function(rtn) {
-				if (rtn == "0") {
+				if (rtn == 0) {
 					$.messager.alert('提示', "修改成功", 'success');
 				} else {
 					$.messager.alert('提示', "修改失败，错误代码：" + rtn, 'error');
@@ -383,26 +390,27 @@ $('#BtnDelete').bind('click', function () {
 		return;
 	}
 	$.messager.confirm('确认', '您确认想要删除记录吗？', function (r) {
-		if (r) {
-			var selected = $('#tWarrantLocLimit').datagrid('getSelected');
-			if (selected) {
-				if ((typeof(selected.JFWLLRowID) != "undefined") || (typeof(selected.JFWLLRowID) != "")) {
-					var CateStr = selected.JFWLLRowID + "^" + selected.JFWLLLocDR + "^" + selected.JFWLLAdmReasonDR + "^" + selected.JFWLLTimeLimitType;
-					CateStr = CateStr + "^" + selected.JFWLLTimeLimit + "^" + selected.JFWLLLimitAmount;
-					$.m({
-						ClassName: "DHCBILLConfig.DHCBILLWarrant",
-						MethodName: "DeleteWarrantLocLimit",
-						LocLimitInfo: CateStr,
-						Guser: PUBLIC_CONSTANT.SESSION.USERID
-					}, function(rtn) {
-						if (rtn == "0") {
-							$.messager.alert('提示', "删除成功", 'success');
-						} else {
-							$.messager.alert('提示', "删除失败，错误代码：" + rtn, 'error');
-						}
-						initLoadGrid();
-					});
-				}
+		if (!r) {
+			return;
+		}
+		var selected = $('#tWarrantLocLimit').datagrid('getSelected');
+		if (selected) {
+			if ((typeof(selected.JFWLLRowID) != "undefined") || (typeof(selected.JFWLLRowID) != "")) {
+				var CateStr = selected.JFWLLRowID + "^" + selected.JFWLLLocDR + "^" + selected.JFWLLAdmReasonDR + "^" + selected.JFWLLTimeLimitType;
+				CateStr = CateStr + "^" + selected.JFWLLTimeLimit + "^" + selected.JFWLLLimitAmount;
+				$.m({
+					ClassName: "DHCBILLConfig.DHCBILLWarrant",
+					MethodName: "DeleteWarrantLocLimit",
+					LocLimitInfo: CateStr,
+					Guser: PUBLIC_CONSTANT.SESSION.USERID
+				}, function(rtn) {
+					if (rtn == 0) {
+						$.messager.alert('提示', "删除成功", 'success');
+					} else {
+						$.messager.alert('提示', "删除失败，错误代码：" + rtn, 'error');
+					}
+					initLoadGrid();
+				});
 			}
 		}
 	});

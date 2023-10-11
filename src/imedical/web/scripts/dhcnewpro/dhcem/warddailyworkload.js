@@ -7,7 +7,7 @@
 var LgUserID = session['LOGON.USERID'];  /// 用户ID
 var LgLocID = session['LOGON.CTLOCID'];  /// 科室ID
 var LgHospID = session['LOGON.HOSPID'];  /// 医院ID
-var ItemTypeArr = [{"value":"早班","text":'早班'}, {"value":"中班","text":'中班'}, {"value":"夜班","text":'夜班'}];;
+var ItemTypeArr = [{"value":$g("早班"),"text":$g('早班')}, {"value":$g("中班"),"text":$g('中班')}, {"value":$g("夜班"),"text":$g('夜班')}];;
 
 /// 页面初始化函数
 function initPageDefault(){
@@ -188,7 +188,7 @@ function updTriWorkLoad(){
 	var rowsData = $("#bmDetList").datagrid('getSelected'); //选中要删除的行
 	if (rowsData != null) {
 		GetTriWorkInfo(rowsData);
-		newTriWin("修改");        /// 新建窗口
+		newTriWin($g("修改"));        /// 新建窗口
 	}else{
 		$.messager.alert("提示:","请先选中待处理行！","warning");
 	}
@@ -221,7 +221,7 @@ function newTriWorkLoad(){
 //		return;
 //	}
 	
-	newTriWin("填报");       /// 新建急救车派车窗口
+	newTriWin($g("填报"));       /// 新建急救车派车窗口
 	InitTriDefault();  /// 初始化界面默认信息
 }
 
@@ -229,20 +229,20 @@ function newTriWorkLoad(){
 function newTriWin(title){
 	var option = {
 			buttons:[{
-				text:'保存',
+				text:$g('保存'),
 				iconCls:'icon-w-save',
 				handler:function(){
 					InsTriWorkLoad();
 					}
 			},{
-				text:'取消',
+				text:$g('取消'),
 				iconCls:'icon-w-cancel',
 				handler:function(){
 					$('#newConWin').dialog('close');
 				}
 			}]
 		};
-	new DialogUX('急诊病区日工作量'+title, 'newConWin', '1200', '700', option).Init(); //hxy 2020-06-03 title
+	new DialogUX($g('急诊病区日工作量')+title, 'newConWin', '1200', '700', option).Init(); //hxy 2020-06-03 title
 
 }
 

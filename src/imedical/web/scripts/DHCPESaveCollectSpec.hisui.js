@@ -1,4 +1,4 @@
- //名称	DHCPESaveCollectSpec.hisui.js
+//名称	DHCPESaveCollectSpec.hisui.js
 //功能  标本采集
 //创建	2019.07.08
 //创建人  xy
@@ -45,11 +45,21 @@ $(function() {
 	$("#SpecNo").keydown(function(e) {
 
 		if (e.keyCode == 13) {
-			BSave_Click();
+			//BSave_Click();
+			SpecNo_Click()
 		}
 
 	});
 	
+	$("#RegNo").keydown(function(e) {
+
+		if (e.keyCode == 13) {
+			RegNo_Click();
+		}
+
+	});
+
+
 	$("#PlacerNo").keydown(function(e) {
 
 	if (e.keyCode == 13) {
@@ -132,6 +142,11 @@ function BCancelPlacerNo_Click(){
 		$.messager.alert("提示","医嘱不是核实状态,不能撤销预制号",'info');
 		return false;
 	}
+	if(selectrow.TPlacesNo==""){
+		$.messager.alert("提示","预制号为空,不能撤销预制号",'info');
+		return false;
+	}
+
 	//获取选中行的index
 	var selectindex=$('#SaveCollectSpecGrid').datagrid('getRowIndex',selectrow)
 	
@@ -161,7 +176,8 @@ function BCancelPlacerNo_Click(){
 
 function Save_Click() {
 	$('#SaveCollectSpecGrid').datagrid('endEdit', editIndex); //最后一行结束行编辑	
-
+	  $("#SaveCollectSpecGrid").datagrid('reload');
+/*
 	$.messager.confirm('确定', '确定要保存数据吗？', function(t) {
 		if (t) {
 			var rows = $('#SaveCollectSpecGrid').datagrid("getRows");
@@ -179,6 +195,7 @@ function Save_Click() {
 							RoomID: $("#RoomID").val(),
 							PAADM: $("#PAADM").val(),
 							RegNo: $("#RegNo").val(),
+							HospID:session['LOGON.HOSPID']
 						})
 					}
 				}
@@ -187,6 +204,7 @@ function Save_Click() {
 
 		}
 	});
+	*/
 }
 /*
 function SetRoomID()
@@ -392,7 +410,7 @@ function Init() {
 	$("#CardID").val(Str[2]);
 	$("#RegNo").val(Str[3]);
 
-	var ret = tkMakeServerCall("web.DHCPE.BarPrint", "GetSaveSpecInfo", $("#SpecNo").val(), $("#RoomRecordID").val(), $("#RoomID").val(), $("#PAADM").val())
+	var ret = tkMakeServerCall("web.DHCPE.BarPrint", "GetSaveSpecInfo", $("#SpecNo").val(), $("#RoomRecordID").val(), $("#RoomID").val(), $("#PAADM").val(),SpecNoType)
 	$("#CheckInfo").val(ret);
 
 
@@ -423,7 +441,8 @@ function Find() {
 		RoomID: $("#RoomID").val(),
 		PAADM: $("#PAADM").val(),
 		RegNo: $("#RegNo").val(),
-		HospID:session['LOGON.HOSPID']
+		HospID:session['LOGON.HOSPID'],
+		SpecNoType:SpecNoType
 	})
 
 }
@@ -467,6 +486,8 @@ function RefuseApp(ID) {
 			RoomID: $("#RoomID").val(),
 			PAADM: $("#PAADM").val(),
 			RegNo: $("#RegNo").val(),
+			HospID:session['LOGON.HOSPID'],
+			SpecNoType:SpecNoType
 		})
 	}
 }
@@ -481,7 +502,23 @@ function ShowSoftKey_click() {
 
 //打印
 function BPrint_Click() {
-	var PAADM = "";
+	
+	if(SpecNoType=="" ){
+		SpecNoType="血";
+	}
+	
+	//BloodFlag:2 血,1 非血,空 所有标本类型
+	var BloodFlag="";
+	if(SpecNoType.indexOf("血")>-1){
+		var BloodFlag="2"; 
+	}else if((SpecNoType.indexOf("尿")>-1)||(SpecNoType.indexOf("便")>-1)){
+		var BloodFlag="1";
+	}else{
+		var BloodFlag="";
+	}
+
+	//var PAADM = "";
+	var PAADM = $("#PAADM").val();
 	var PrintBarFlag = 0;
 	var PrintBarCode = $("#PrintBarCode").checkbox('getValue');
 	if (PrintBarCode) { var PrintBarFlag = 1;}
@@ -489,20 +526,28 @@ function BPrint_Click() {
     
  	var RegNo = $("#RegNo").val();   
 	var SpecNo = $("#SpecNo").val();
+	var LocID=session['LOGON.CTLOCID'];
+	var SpecOneFlag=tkMakeServerCall("web.DHCPE.HISUICommon","GetSettingByLoc",LocID,"CollectSpecOne");
 
+/*
 	if (SpecNo==""){ var Value = tkMakeServerCall("web.DHCPE.BarPrint", "IsCurDate", RegNo);}
 	else {var Value = tkMakeServerCall("web.DHCPE.BarPrint", "IsCurDate", SpecNo);}
 	var Arr = Value.split("^");
 	var PAADM = Arr[2];
-
+*/
    if (RegNo==""){
 		$.messager.alert("提示", "标本号不能为空", "info");
 		return false;
 	}else{
 		if (SpecNo!==""){
-			PrintAllApp(SpecNo, "Spec", "N")
+			if (SpecOneFlag=="Y"){
+				PrintAllApp(SpecNo, "Spec", "N","",BloodFlag)
+			}else{
+				PrintAllApp(PAADM, "PAADM", "N","",BloodFlag)
+			}
+			
 		}else{
-			PrintAllApp(PAADM, "PAADM", "N")
+			PrintAllApp(PAADM, "PAADM", "N","",BloodFlag)
 		}
 	}
   
@@ -526,25 +571,35 @@ function InitSaveCollectSpecGrid() {
 		queryParams: {
 			ClassName: "web.DHCPE.BarPrint",
 			QueryName: "FindOItemStatusForSpecNo",
+			SpecNoType:SpecNoType
 		},
 		onClickRow: onClickRow,
 		onAfterEdit: function(index, row, changes) {
-			/*
+			
+		//$('#SaveCollectSpecGrid').datagrid('endEdit', editIndex); //最后一行结束行编辑 
 			modifyAfterRow = $('#SaveCollectSpecGrid').datagrid('getRows')[index]['TRefuse'] 
+			//alert(modifyBeforeRow+"^"+modifyAfterRow)
 			if(modifyBeforeRow!=modifyAfterRow){
-			var ret=tkMakeServerCall("web.DHCPE.BarPrint","RefuseItemBySpecNo",row.TSpecNo);
-			if(ret=="0"){
-				$("#SaveCollectSpecGrid").datagrid('load',{
-					ClassName:"web.DHCPE.BarPrint",
-					QueryName:"FindOItemStatusForSpecNo",
-					SpecNo:$.trim($("#SpecNo").val()),
-					RoomRecordID:$("#RoomRecordID").val(),
-					RoomID:$("#RoomID").val(),
-					PAADM:$("#PAADM").val(),
-					RegNo:$("#RegNo").val(),
-				})
+				$.messager.confirm('确定', '确定要保存数据吗？', function(t) {
+				if (t) { 
+					var ret=tkMakeServerCall("web.DHCPE.BarPrint","RefuseItemBySpecNo",row.TSpecNo);
+					if(ret=="0"){
+						$("#SaveCollectSpecGrid").datagrid('load',{
+							ClassName:"web.DHCPE.BarPrint",
+							QueryName:"FindOItemStatusForSpecNo",
+							SpecNo:$.trim($("#SpecNo").val()),
+							RoomRecordID:$("#RoomRecordID").val(),
+							RoomID:$("#RoomID").val(),
+							PAADM:$("#PAADM").val(),
+							RegNo:$("#RegNo").val(),
+							SpecNoType:SpecNoType
+						})
+					}
+				}
+			})
+		
 			}
-			}*/
+
 
 		},
 		onLoadSuccess: function(data) {
@@ -567,19 +622,21 @@ function InitSaveCollectSpecGrid() {
 					hidden: true
 				}, {
 					field: 'TPlacerColor',
-					title: 'PlacerColor',
-					hidden: true
-				}, {
-					field: 'TItemName',
-					width: '200',
-					title: '医嘱',
-					formatter: function(value, row, index) {
-						return '<span style="color:white">' + value + '</span>';
-					},
-
+					width: '100',
+					title: '容器颜色',
 					styler: function(value, row, index) {
 						return 'background-color:' + row.TPlacerColor;
 					}
+
+				}, {
+					field: 'TPlacerCode',
+					width: '100',
+					title: '容器名称'
+				}, {
+					field: 'TItemName',
+					width: '200',
+					title: '医嘱'
+					
 				}, {
 					field: 'TSpecName',
 					width: '100',
@@ -612,13 +669,7 @@ function InitSaveCollectSpecGrid() {
 					field: 'TOSTATDesc',
 					width: '80',
 					title: '医嘱状态'
-				}, {
-					field: 'TPlacerCode',
-					width: '100',
-					title: '容器'
-				},
-
-				{
+				},{
 					field: 'TRefuse',
 					width: '80',
 					title: '状态',
@@ -644,7 +695,7 @@ function InitSaveCollectSpecGrid() {
 					field: 'TAge',
 					width: '60',
 					title: '年龄'
-				},
+				}
 
 
 			]
@@ -668,6 +719,8 @@ function InitSaveCollectSpecGrid() {
 	})
 
 }
+
+
 
 
 //列表编辑
@@ -711,4 +764,256 @@ function onClickRow(index, value) {
 
 	}
 
+}
+
+
+
+function SpecNo_Click() {
+	var vStatus = "",
+		vDetailStatus = "",
+		ReturnValue = "";
+
+	var SpecNo = $("#SpecNo").val();
+	if (SpecNo == "") {
+		$.messager.popover({
+			msg: "标本号不能为空",
+			type: "info"
+		});
+		return false;
+	}
+     //判断输入的标本号是不是包含在该采集界面维护的类型中
+    var Flag=tkMakeServerCall("web.DHCPE.BarPrint", "IsCanSaveSpec",SpecNo,SpecNoType);
+    if(Flag=="0"){
+	    $.messager.popover({
+			msg: "输入的标本号不在该界面采集，请核实！",
+			type: "info"
+		});
+		return false;
+	    
+    }else{
+	    if (Flag!="1"){
+		     $.messager.popover({
+				msg: Flag,
+				type: "info"
+			});
+			return false;
+		    
+	    }
+	    
+    }
+
+
+	var Value = tkMakeServerCall("web.DHCPE.BarPrint", "IsCurDateBySpecNo", SpecNo);
+	//alert(Value)
+	var Arr = Value.split("^"); 
+		var PAADM = Arr[2];
+		$("#PAADM").val(Arr[2]);
+		GetSaveCollectByPAADM(PAADM); 
+		
+}
+
+
+
+function RegNo_Click()
+{
+	var CTLocID=session['LOGON.CTLOCID'];
+	var iRegNo=$("#RegNo").val(); 
+	if(iRegNo!="") {
+	 	var iRegNo=$.m({
+			"ClassName":"web.DHCPE.DHCPECommon",
+			"MethodName":"RegNoMask",
+            "RegNo":iRegNo,
+			"CTLocID":CTLocID
+		}, false);
+		
+			$("#RegNo").val(iRegNo)
+		} 
+		if (iRegNo=="") 
+	   {
+			$.messager.popover({msg: "请输入登记号", type: "info"});
+		   return false;
+	   }
+	   
+		var PAADMS=tkMakeServerCall("web.DHCPE.BarPrint","GetSaveCollectRecord",iRegNo);
+		//alert(PAADMS)
+		if (PAADMS.split("^")[0]!="0"){
+			//alert(PADMS.split("^")[1]);
+			$.messager.popover({msg: PAADMS.split("^")[1], type: "info"});
+			return false;
+		}
+		var PAADM=PAADMS.split("^")[1];
+		if (PAADM==""){
+			$.messager.popover({msg: "没有要采集标本的记录", type: "info"});
+			return false;
+			}
+		var PAADMArr=PAADM.split("$");
+		
+		if (PAADMArr.length>2){
+           openPEPAADMRecord(iRegNo)
+   
+		}else{
+			GetSaveCollectByPAADM(PAADMArr[0]);
+			
+	}
+		
+}
+
+
+var openPEPAADMRecord= function(RegNo){
+    
+    $HUI.window("#PEPAADMRecordWin",{
+        title:"体检就诊信息",
+        minimizable:false,
+        collapsible:false,
+        modal:true,
+        width:930,
+        height:400
+    });
+    
+    var PEPAADMLisObj = $HUI.datagrid("#PEPAADMRecordList",{
+        url:$URL,
+        queryParams:{
+            ClassName:"web.DHCPE.BarPrint",
+            QueryName:"FindPAADMInfo",
+            RegNo:RegNo, 
+			HospID:session['LOGON.HOSPID']
+        },
+        columns:[[
+        	{field:'PAADM',title:'PAADM',hidden:true},
+            {field:'Name',width:120,title:'姓名'},
+            {field:'RegNo',width:120,title:'登记号'},
+            {field:'HPNo',width:120,title:'体检编号'},
+            {field:'AdmDate',width:100,title:'日期'},
+            {field:'StatusDesc',width:100,title:'状态'},
+            {field:'GName',width:200,title:'团体名称'},
+            {field:'TeamName',width:120,title:'分组名称'},
+        ]],
+        pagination:true,
+        displayMsg:"",
+        pageSize:20,
+        fit:true,
+        onDblClickRow: function(rowIndex,rowData){
+	          $("#SpecNo").val("");
+	           GetSaveCollectByPAADM(rowData.PAADM);
+	 
+  				}
+        
+        })
+    
+}
+
+
+function GetSaveCollectByPAADM(PAADM){
+		var vStatus = "",vDetailStatus = "",ReturnValue = "";
+		$("#PAADM").val(PAADM);
+			var Status = tkMakeServerCall("web.DHCPE.PreIADM", "GetStatusByPAADM", PAADM);
+			var AdmArr = Status.split("^");
+			var PIADM = AdmArr[1];
+			//alert(Status)
+		if (PIADM == "") {
+				return false;
+			}
+		if (AdmArr[0] == "REGISTERED") {
+			$.messager.confirm("确认", "确定要到达吗？", function(r) {
+				if (r) {
+					$.m({
+						ClassName: "web.DHCPE.DHCPEIAdm",
+						MethodName: "UpdateIADMInfo",
+						PreIADMID: PIADM,
+						Type: 3
+					}, function(ReturnValue) {
+						if (ReturnValue != '0') {
+							var Status = tkMakeServerCall("web.DHCPE.PreIADM", "GetStatusByPAADM", PAADM);
+							if(Status.split("^")[0]!="ARRIVED"){
+								$.messager.alert("提示", "到达失败", "error");
+								return false;
+							}
+						}else{
+							SaveCollectByPAADM(PAADM);		
+						}
+					});
+				}
+			});
+
+	}else{
+		SaveCollectByPAADM(PAADM);
+	}
+}
+
+
+function SaveCollectByPAADM(PAADM)
+{	
+	var vStatus = "",vDetailStatus = "",ReturnValue = "";
+	var Value = tkMakeServerCall("web.DHCPE.BarPrint", "IsCurDateByPAADM", PAADM);
+	//alert(Value)
+	var Arr = Value.split("^");
+	if (Arr[0] == "0") {
+		$.messager.popover({msg: Arr[1],type: "info"});
+		return false;
+	} else if (Arr[0] == "1") {
+
+		$.messager.confirm("确认", "该标本体检者不是当天到达,是否继续标本核对?", function(r) {
+			if (r) {
+				var RoomID = $("#RoomID").val();
+				if (RoomID != "") {
+
+					var CurRoomID = Value.split("^")[1];
+					vStatus = Value.split("^")[4];
+					vDetailStatus = Value.split("^")[5];
+					if ((CurRoomID != vRoomRecordID) && (vRoomRecordID != "")) //
+					{
+						if (!confirm("到达者和叫号者不是同一个人,是否继续?")) return false;
+
+					} else if (vRoomRecordID == "") {
+						if (!confirm("没有叫号,是否继续?")) return false;
+					}
+				}
+				//parent.vRoomRecordID="";
+				vRoomRecordID = CurRoomID;
+				if (vStatus == "N") { //判断是不是同一个人
+					if (vDetailStatus != "E") { //不是正检状态的，设置正检，下屏
+						var UserID = session['LOGON.USERID'];
+						var ret = tkMakeServerCall("web.DHCPE.RoomManager", "ArriveCurRoom", vRoomRecordID, UserID, RoomID);
+
+					}
+				}
+                
+				Init();
+				Find();
+				BPrint_Click();
+
+			}
+		});
+
+		
+	} else {
+
+		var RoomID = $("#RoomID").val();
+		if (RoomID != "") {
+			var CurRoomID = Value.split("^")[1];
+			vStatus = Value.split("^")[4];
+			vDetailStatus = Value.split("^")[5];
+			if ((CurRoomID != vRoomRecordID) && (vRoomRecordID != "")) //
+			{
+				if (!confirm("到达者和叫号者不是同一个人,是否继续?")) return false;
+
+			} else if (vRoomRecordID == "") {
+				if (!confirm("没有叫号,是否继续?")) return false;
+			}
+		}
+		//parent.vRoomRecordID="";
+		vRoomRecordID = CurRoomID;
+		if (vStatus == "N") { //判断是不是同一个人
+			if (vDetailStatus != "E") { //不是正检状态的，设置正检，下屏
+				var UserID = session['LOGON.USERID'];
+				var ret = tkMakeServerCall("web.DHCPE.RoomManager", "ArriveCurRoom", vRoomRecordID, UserID, RoomID);
+
+			}
+		}
+
+		Init();
+		Find();
+		BPrint_Click();
+	}
+	
 }

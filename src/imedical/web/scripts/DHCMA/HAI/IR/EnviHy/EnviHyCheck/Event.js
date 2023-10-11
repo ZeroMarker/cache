@@ -1,5 +1,7 @@
 ﻿//页面Event
 function InitviewScreenEvent(obj){
+	obj.gridReuslt1=obj.gridReuslt
+	obj.data=""
 	//按钮事件绑定
 	obj.LoadEvent = function(args){
 		//根据执行操作显示页签
@@ -14,6 +16,10 @@ function InitviewScreenEvent(obj){
 		//导出按钮事件
 		$('#btnExport').on('click', function(){
 			obj.btnExport_onClick();
+		});
+		//取消审核结果
+		$('#btnDelReps').on('click', function(){
+			obj.btnDelRep_onClick();
 		});
 		//审核结果
 		$('#btnChkReps').on('click', function(){
@@ -106,7 +112,9 @@ function InitviewScreenEvent(obj){
 	}
 
 	obj.gridReusltLoad = function(){
-		$("#gridReuslt").datagrid("loading");	
+		$("#gridReuslt").datagrid("loading");
+		//$(".RstItem").css("display","none");
+		
 		$cm ({
 			ClassName     : "DHCHAI.IRS.EnviHyReportSrv",
 			QueryName     : "QryReportByDate",
@@ -115,16 +123,23 @@ function InitviewScreenEvent(obj){
 			aDateFrom     : $('#txtStartDate').datebox('getValue'),
 			aDateTo       : $('#txtEndDate').datebox('getValue'),
 			aMonitorLocDr : $('#txtMonitorLocID').val(),
-			aItemDr       : '',  //监测项目ID
+			aItemDr       : $('#cboEvItem').combobox('getValues').toString(),  //监测项目ID
 			aStatusCode   : $('#cboStatus').combobox('getValue'),
 			aStandardCode : $('#cboStandard').combobox('getValue'),
 			page:1,
 			rows:50
 		},function(rs){
-			$('#gridReuslt').datagrid({loadFilter:pagerFilter}).datagrid('loadData', rs);		
+			$('#EnterResult').css("display","block")
+			$('#gridReuslt').datagrid({loadFilter:pagerFilter}).datagrid('loadData', rs);	
+    		$('#gridReuslt').datagrid("selectRow", 0);
+    		if(rs.length>0){
+	    		$('#RstItem').css("width",190);
+    			$('#RstObject').css("width",191);	
+	    	}else{
+			$('#EnterResult').css("display","none");
+		    }	
 		});
 	}
-
 	obj.btnFind_onClick = function(){
 		var DateFrom	= $('#txtStartDate').datebox('getValue');
 		var DateTo 		= $('#txtEndDate').datebox('getValue');
@@ -291,11 +306,78 @@ function InitviewScreenEvent(obj){
 	
 	//审核结果
 	obj.btnCheckRep_onClick = function(){
+		var rows =""
+		if(obj.gridReuslt.getRows()){
+			rows = obj.gridReuslt.getRows().length;
+			}
+		var chkRows = obj.gridReuslt.getChecked();
+		var chkLength=""
+		if(chkRows){
+			 chkLength=chkRows.length
+		}
+		if (rows>0) {	
+			if (chkLength>0) {
+			 	$.messager.confirm("确认", "是否批量审核报告?", function (r) {
+				if (r) {
+					var reportIds = '';
+					//报告人审核人是否允许同一人
+					var IsRepCheckUser = $cm ({
+						ClassName:"DHCHAI.BT.Config",
+						MethodName:"GetValByCode",
+						aCode:"EnvIsRepCheckUser"
+					},false);
+					var RepCheckUserFlg=0;
+					for (var row = 0; row < chkLength; row++){
+						var rd = chkRows[row];
+						if (!rd) continue;
+						var repId = rd['ReportID'];
+						var RepUserID = rd['RepUserID'];
+						
+						if ((IsRepCheckUser!=1)&&(RepUserID==LogonUserID)){
+							RepCheckUserFlg=1;
+							break ;
+						}
+						if (reportIds != ''){
+							reportIds += ',' + repId;
+						} else {
+							reportIds = repId;
+						}
+					}
+					if (RepCheckUserFlg==1) {
+						$.messager.alert("提示","报告人和审核人不允许为同一人！", 'info');
+						return;
+					} 
+					var flg = $m({
+						ClassName   : "DHCHAI.IRS.EnviHyReportSrv",
+						MethodName  : "SaveBactRepOpera",
+						aReportIDs  : reportIds,
+						aBarcode    : '',
+						aStatusCode : 5,  //3接收标本
+						aLogonLocDr : LogonLocID,
+						aLogonUserDr: LogonUserID
+					},false);
+					if (parseInt(flg) < 1) {
+						$.messager.alert("错误提示","审核报告操作错误!Error=" + flg, 'info');
+					} else {
+						$.messager.popover({msg: '审核报告操作成功！',type:'success',timeout: 1000});
+						obj.gridReusltLoad() ;//刷新
+					}
+				}
+			});
+		} 
+			
+		}else {
+			$.messager.alert("错误提示", "无记录,不可操作!", 'info');
+			return;
+		}
+	}
+	//取消审核
+	obj.btnDelRep_onClick = function(){
 		var rows = obj.gridReuslt.getRows().length;
 		if (rows>0) {
 			var chkRows = obj.gridReuslt.getChecked();
 			if (chkRows.length>0) {
-				 $.messager.confirm("确认", "是否批量审核报告?", function (r) {
+				 $.messager.confirm("确认", "是否批量取消审核报告?", function (r) {
 					if (r) {
 						var reportIds = '';
 						for (var row = 0; row < chkRows.length; row++){
@@ -314,14 +396,14 @@ function InitviewScreenEvent(obj){
 							MethodName  : "SaveBactRepOpera",
 							aReportIDs  : reportIds,
 							aBarcode    : '',
-							aStatusCode : 5,  //3接收标本
+							aStatusCode : 4,  //3接收标本
 							aLogonLocDr : LogonLocID,
 							aLogonUserDr: LogonUserID
 						},false);
 						if (parseInt(flg) < 1) {
-							$.messager.alert("错误提示","审核报告操作错误!Error=" + flg, 'info');
+							$.messager.alert("错误提示","取消审核报告操作错误!Error=" + flg, 'info');
 						} else {
-							$.messager.popover({msg: '审核报告操作成功！',type:'success',timeout: 1000});
+							$.messager.popover({msg: '取消审核报告操作成功！',type:'success',timeout: 1000});
 							obj.gridReusltLoad() ;//刷新
 						}
 					}
@@ -500,12 +582,12 @@ function InitviewScreenEvent(obj){
 		        aReportID:ReportID
 		    },
 	        columns:[[
-		        { field:"UpdateStatus",title:"状态",width:'100'},
-		        { field:"UpdateLocDesc",title:"操作科室",width:'100'},
-				{ field:"UpdateUser",title:"操作人",width:'120'},
-				{ field:"UpdateDate",title:"操作日期",width:'100'},
-				{ field:"UpdateTime",title:"操作时间",width:'80'},
-				{ field:"BatchNumber",title:"批次号",width:'160'}
+		        { field:"UpdateStatus",title:"状态",width:'130'},
+		        { field:"UpdateLocDesc",title:"操作科室",width:'150'},
+				{ field:"UpdateUser",title:"操作人",width:'150'},
+				{ field:"UpdateDate",title:"操作日期",width:'150'},
+				{ field:"UpdateTime",title:"操作时间",width:'109'},
+				//{ field:"BatchNumber",title:"批次号",width:'160'}
 	        ]]
 	    });
 		$HUI.dialog('#winStatusList').open();

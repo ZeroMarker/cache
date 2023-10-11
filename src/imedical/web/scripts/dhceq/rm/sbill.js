@@ -8,9 +8,10 @@ function initDocument()
 {
 	initUserInfo();
 	initButton(); //按钮初始化
-	jQuery("#BAdd").linkbutton({iconCls: 'icon-w-add'});
-	jQuery("#BAdd").on("click", BAdd_Clicked);
-	initButtonWidth();
+	//jQuery("#BAdd").linkbutton({iconCls: 'icon-w-add'}); // modifie by LMH 20230206 多余
+	//jQuery("#BAdd").on("click", BAdd_Clicked);    //modifie by LMH 20230206 多余
+	//showBtnIcon('BFind^BAdd',false); // added by LMH 20230206 动态设置是否极简显示按钮图标
+	//initButtonWidth();  //modified by LMH 20230302 UI
 	defindTitleStyle();
 	$HUI.datagrid("#tDHCEQSBill",{
 		url:$URL,
@@ -24,7 +25,7 @@ function initDocument()
 			ShareType:''
 		},
 		toolbar:[{}], 
-		fitColumns : true,
+		//fitColumns : true, //modified by LMH 20230206 UI 列少默认向左对齐
 	    scrollbarSize:0, 
 		border:false,
 	    fit:true,

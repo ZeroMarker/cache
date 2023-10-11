@@ -6,8 +6,8 @@ function BodyLoadHandler()
     InitUserInfo();
     initButtonWidth()  //hisui改造 add by kdf 2018-10-22
 	InitEvent();	
-	KeyUp("ConfigItemCat")	//清空选择
-	Muilt_LookUp("ConfigItemCat");
+	KeyUp("ConfigItemCat^ValueUnit")	//MZY0061	1610237		2020-12-2	清空选择
+	Muilt_LookUp("ConfigItemCat^ValueUnit");
 	disabled(true)//灰化
 }
 function InitEvent()
@@ -75,7 +75,7 @@ function CombinData()
   	combindata=combindata+"^"+GetElementValue("Desc") ; //描述
   	combindata=combindata+"^"+GetElementValue("Remark") ; //备注
   	combindata=combindata+"^"+GetElementValue("ConfigItemCatDR") ; //配置类型分类型
-  	combindata=combindata+"^"+GetElementValue("ValueUnit") ; //单位
+  	combindata=combindata+"^"+GetElementValue("ValueUnitDR") ; //MZY0061	1610237		2020-12-2	单位
   	/*
   	var obj=document.getElementById("InvalidFlag")
   	if (obj.checked){var MainFlag="Y"}
@@ -86,8 +86,8 @@ function CombinData()
 }
 ///选择表格行触发此方法
 /// modified by kdf 2018-10-22 hisui-改造
-function SelectRowHandler(index ,rowdata)	{
-	
+function SelectRowHandler(index ,rowdata)
+{
 	if (SelectedRow==index)	{
 		Clear();
 		disabled(true)//灰化		
@@ -100,7 +100,7 @@ function SelectRowHandler(index ,rowdata)	{
 		rowid=rowdata.TRowID ;
 		SetData(rowid);//调用函数
 		disabled(false);//反灰化
-		}
+	}
 }
 function Clear()
 {
@@ -109,7 +109,8 @@ function Clear()
 	SetElement("Remark","");
 	SetElement("ConfigItemCat","");
 	SetElement("ValueUnit","");
-	}
+	SetElement("ValueUnitDR","");	// MZY0061	1610237		2020-12-2
+}
 function SetData(rowid)
 {
 	var encmeth=GetElementValue("GetData");
@@ -125,6 +126,7 @@ function SetData(rowid)
 	SetElement("ConfigItemCat",list[4]); //单位代码
 	SetElement("ValueUnit",list[5]);
 	SetElement("ConfigItemCatDR",list[6])
+	SetElement("ValueUnitDR",list[7]);	// MZY0061	1610237		2020-12-2
 }
 function condition()//条件
 {
@@ -146,5 +148,12 @@ function disabled(value)//灰化
 	DisableBElement("BUpdate",value)
 	DisableBElement("BDelete",value)	
 	DisableBElement("BAdd",!value)
-}	
+}
+// MZY0061	1610237		2020-12-2
+function ValueUnitDR(value) // 单位
+{
+	var obj=document.getElementById("ValueUnitDR");
+	var val=value.split("^");
+	if (obj) obj.value=val[1];
+}
 document.body.onload = BodyLoadHandler;

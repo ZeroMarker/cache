@@ -5,7 +5,8 @@ $(function(){
 //modified by sjh SJH0027 2020-06-12 修改台帐界面中“账”字为“帐”
 function initDocument(){
 	//综合查询时影藏编辑按钮
-	if (getElementValue("ReadOnly")==1) {$('#EquipInfo').layout('panel', 'center').panel({ title: '信息总览' });}
+	//Modify by zx 2020-08-20 编辑按钮放开,控制可编辑内容 BUG ZX0102
+	//if (getElementValue("ReadOnly")==1) {$('#EquipInfo').layout('panel', 'center').panel({ title: '信息总览' });}
 	//隐藏头部按钮
 	if(getElementValue("ToolBarFlag")!=1){$("#EquipShow").layout('remove','north');}
 	//隐藏其他信息查看
@@ -71,7 +72,7 @@ function lifeInfoKeywords()
 	                    text:"其他信息",
 	                    type:'section', //节
 	                    items:[
-	                        {text:'折旧',id:"35",selected:true},{text:'调帐',id:"51",selected:true},{text:'启用及停用',id:'41',selected:true},{text:'数据调整',id:"61",selected:true},{text:'鉴定报告',id:"82",selected:true}	//Mozy0226	2019-9-22
+	                        {text:'折旧',id:"35",selected:true},{text:'调帐',id:"51",selected:true},{text:'启用及停用',id:'41',selected:true},{text:'数据调整',id:"61",selected:true},{text:'鉴定报告',id:"82",selected:true},{text:'拆分',id:"55",selected:true}	//czf 2021-07-28 2014955
 	                    ]
 	                }
 	            ]
@@ -118,6 +119,46 @@ function fillData()
 	if(Data!="Y"){
 		disableElement("BMeterage",true)
 	}
+    //modified by ZY 2913588,2913589,2913590
+    
+    var ExclusiveType=tkMakeServerCall("web.DHCEQ.EM.BUSOpenCheckRequest","GetExclusiveType",1,RowID)
+    if (ExclusiveType=="DHCEQLand") //土地信息
+    {
+        var desc=$("#EQEquipTypeDR_ETDesc").html()
+        $("#EQEquipTypeDR_ETDesc").html('<a href="#" style="margin:0;font-weight:800;" onclick="javascript:equipLand()">'+desc+'</a>')
+    }
+    else if (ExclusiveType=="DHCEQBuilding")    //房屋信息
+    {
+        var desc=$("#EQEquipTypeDR_ETDesc").html()
+        $("#EQEquipTypeDR_ETDesc").html('<a href="#" style="margin:0;font-weight:800;" onclick="javascript:equipBuilding()">'+desc+'</a>')
+    }
+    else if (ExclusiveType=="DHCEQIntangibleAssets")    //无形资产信息
+    {
+        var desc=$("#EQEquipTypeDR_ETDesc").html()
+        $("#EQEquipTypeDR_ETDesc").html('<a href="#" style="margin:0;font-weight:800;" onclick="javascript:equipIntangibleAssets()">'+desc+'</a>')
+    }
+    else if (ExclusiveType=="DHCEQVehicle") //车辆信息
+    {
+        var desc=$("#EQStatCatDR_SCDesc").html()
+        $("#EQStatCatDR_SCDesc").html('<a href="#" style="margin:0;font-weight:800;" onclick="javascript:equipVehicle()">'+desc+'</a>')
+    }
+    
+    $HUI.switchbox('#IdleFlagSwitch',{
+       onText:'闲置',
+       offText:'非闲置',
+       onClass:'primary',
+       offClass:'gray',
+       checked:false,
+       onSwitchChange:function(e,obj){
+           var RowID=getElementValue("RowID");
+           var ExclusiveType=tkMakeServerCall("web.DHCEQ.EM.BUSEquip","UpdateIdleFlag",RowID,obj.value)
+       }
+    })
+	//modified by ZY 20221111 2993799
+    var EQIdleFlag=getElementValue("EQIdleFlag")
+    if (EQIdleFlag==0) EQIdleFlag=false
+    else EQIdleFlag=true
+    $('#IdleFlagSwitch').switchbox('setValue', EQIdleFlag);
 }
 
 ///Creator: zx
@@ -145,20 +186,37 @@ function setElementByJson(vJsonInfo)
 			if(AddDepreMonths>0) $("#EQLimitYearsNum").text(vJsonInfo["EQLimitYearsNum"]+" (增"+AddDepreMonths+"月)");
 			else $("#EQLimitYearsNum").text(vJsonInfo["EQLimitYearsNum"]+" (减"+AddDepreMonths+"月)");
 		}
+        //modified by ZY 2913588,2913589,2913590
+        /*
 		if (vJsonInfo["EQEquipTypeDR"]==getElementValue("BuildingType"))
 		{
 			$("#EQEquipTypeDR_ETDesc").html('<a href="#" style="margin:0;font-weight:800;" onclick="javascript:equipBuilding()">'+vJsonInfo["EQEquipTypeDR_ETDesc"]+'</a>')
+		}
+		else if (vJsonInfo["EQStatCatDR"]==getElementValue("VehicleType")) //Modified By QW20220406 BUG:QW0157 房屋车辆改造
+		{
+			$("#EQStatCatDR_SCDesc").html('<a href="#" style="margin:0;font-weight:800;" onclick="javascript:equipVehicle()">'+vJsonInfo["EQStatCatDR_SCDesc"]+'</a>')
 		}
 		else
 		{
 			$("#EQEquipTypeDR_ETDesc").text(vJsonInfo["EQEquipTypeDR_ETDesc"])
 		}
+		if(key=="EQEquiCatDR_ECDesc") //Add By QW202208016 begin 需求号:2760300 增加资产分类显示,若为土地可跳转
+		{
+			var ECCode=vJsonInfo["EQEquiCatDR_ECCode"]
+			if((ECCode.substring(0,3)=="101")||(ECCode=="7040101"))    ///土地
+			{
+				$("#EQEquiCatDR_ECDesc").html('<a href="#" style="margin:0;font-weight:800;" onclick="javascript:equipLand()">'+vJsonInfo["EQEquiCatDR_ECDesc"]+'</a>')
+			}
+        }*/
 		//alertShow(vJsonInfo["EQHold1"])
 		//if(vJsonInfo["EQHold1"]!="") $("#EQAdvanceDisFlagDesc").text(vJsonInfo["EQAdvanceDisFlagDesc"]+" （"+vJsonInfo["EQHold1"]+"）");
 	}
 	setElement("EQStatus",vJsonInfo.EQStatus)
 	setElement("EQStatusDisplay",vJsonInfo.EQStatusDisplay)
 	setElement("EQParentDR",vJsonInfo.EQParentDR);		//Mozy	914928	2019-7-11
+	setElement("EQName",vJsonInfo.EQName); //Add By QW20220406 BUG:QW0157 房屋车辆改造
+    //modified by ZY 20221111 2993799
+    setElement("EQIdleFlag",vJsonInfo.EQIdleFlag);
 }
 
 ///Creator: zx
@@ -226,6 +284,7 @@ function createLifeInfo(jsonData)
 	for (var i=jsonData.rows.length-1;i>=0;i--)
 	{
 		var changeDate=jsonData.rows[i].TChangeDate; //变动日期
+		var changeTime=jsonData.rows[i].TChangeTime; //变动时间  //Modife by zc 2020-09-18 ZC0083 添加时间
 		var appendType=jsonData.rows[i].TAppendType;	//变动类型
 		var sourceTypeDR=jsonData.rows[i].TSourceTypeDR;
 		var sourceID=jsonData.rows[i].TSourceID;
@@ -245,7 +304,7 @@ function createLifeInfo(jsonData)
 		opt={
 			id:'LifeInfoView',
 			section:section,
-			item:'^^'+changeDate+'%^'+url+'^'+appendType+':'+usedFee+'%^^'+keyInfo,
+			item:'^^'+changeDate+" "+changeTime+'%^'+url+'^'+appendType+':'+usedFee+'%^^'+keyInfo,   //Modife by zc 2020-09-18 ZC0083 添加时间
 			lastFlag:flag
 		}
 		
@@ -274,12 +333,11 @@ function lifeInfoDetail(sourceType,sourceID)
 	else if(sourceType=="11")
 	{
 		showWindow(url,"业务详情","","","icon-w-paper","modal","","","large");  
-		
 	}
 	else if((sourceType=="32")||(sourceType=="33"))
 	{
-		showWindow(url,"业务详情","","9row","icon-w-paper","modal","","","middle");  
-		
+		//Modefied by zc0109 2021-12-02  修改弹框大小 begin
+		showWindow(url,"业务详情","","","icon-w-paper","modal","","","large");  
 	}
 	else
 	{
@@ -455,8 +513,10 @@ function showFundsTip(data)
 ///Description 台帐信息编辑弹框
 function equipEdit()
 {
+	//Modify by zx 2020-08-20 BUG ZX0102
 	var RowID=$("#RowID").val();
-	var url="dhceq.em.equipedit.csp?RowID="+RowID;
+	var ReadOnly=getElementValue("ReadOnly");
+	var url="dhceq.em.equipedit.csp?RowID="+RowID+"&ReadOnly="+ReadOnly;
 	showWindow(url,"资产信息编辑","","15row","icon-w-paper","modal","","","large");  //modify by lmm 2020-06-01 UI
 }
 
@@ -476,8 +536,8 @@ function initCardInfo()
     	//jsonData.Data=GetJSONDataBySys(jsonData.Data);  //Add by JYP 2019-08-26
 		$("#AffixNum").text("("+jsonData.Data["AffixNum"]+")");
 		$("#PicNum").text("("+jsonData.Data["PicNum"]+")");
-		//Modify by zx 2020-02-19 BUG ZX0076
-		//$("#DocNum").text("("+jsonData.Data["DocNum"]+")");
+		//Modify by zx 2021-05-20 显示随机文件数量
+		$("#DocNum").text("("+jsonData.Data["DocNum"]+")");
 		$("#AppendFileNum").text("("+jsonData.Data["AppendFileNum"]+")");
 		$("#ContractNum").text("("+jsonData.Data["ContractNum"]+")");
 		$("#ConfigNum").text("("+jsonData.Data["ConfigNum"]+")");
@@ -661,10 +721,12 @@ function contractDetail(linkID)
 ///Description 调帐弹出框
 function changeAccount()
 {
-	var RowID=getElementValue("RowID");
-	var ReadOnly=getElementValue("ReadOnly");
-	var url="dhceqchangeaccount.csp?RowID="+RowID+"&ReadOnly="+ReadOnly;
-	showWindow(url,"调帐信息","","","icon-w-paper","modal","","","large",refreshWindow);  //modify by lmm 2019-02-20
+    var RowID=getElementValue("RowID");
+    var ReadOnly=getElementValue("ReadOnly");
+    ///modified by ZY 2857906 20220818
+    //var url="dhceqchangeaccount.csp?RowID="+RowID+"&ReadOnly="+ReadOnly;
+    var url="dhceq.em.changeaccount.csp?RowID="+RowID+"&ReadOnly="+ReadOnly;
+    showWindow(url,"调帐信息","","","icon-w-paper","modal","30","15","verylarge",refreshWindow);  //MZY0157	3220814		2023-03-29
 }
 
 ///Creator: zx
@@ -681,7 +743,7 @@ function equipStart()
 	}
 	var StatusDisplay=getElementValue("EQStatusDisplay");
 	var url='websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQEquipStart&EquipID='+RowID+"&ReadOnly="+ReadOnly+"&FromStatusDR="+Status+"&FromStatus="+StatusDisplay+"&StartFlag=Y";
-	showWindow(url,"资产启用","","","icon-w-paper","modal","","","large");  //modify by lmm 2020-06-01 UI
+	showWindow(url,"资产启用","","","icon-w-paper","modal","","","large",reloadPage);  //modify by lmm 2020-06-01 UI
 }
 ///Creator: zx
 ///CreatDate: 2018-09-13
@@ -697,8 +759,18 @@ function equipStop()
 	}
 	var StatusDisplay=getElementValue("EQStatusDisplay");
 	var url='websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQEquipStop&EquipID='+RowID+"&ReadOnly="+ReadOnly+"&FromStatusDR="+Status+"&FromStatus="+StatusDisplay+"&StopFlag=Y";
-	showWindow(url,"资产停用","","","icon-w-paper","modal","","","large");  //modify by lmm 2020-06-01 UI
+	showWindow(url,"资产停用","","","icon-w-paper","modal","","","large",reloadPage);  //modify by lmm 2020-06-01 UI
 }
+
+function reloadPage()
+{
+	var str="dhceq.em.equip.csp?&RowID="+getElementValue("RowID")+"&ReadOnly="+getElementValue("ReadOnly")+"&ToolBarFlag="+getElementValue("ToolBarFlag")+"&LifeInfoFlag="+getElementValue("LifeInfoFlag")+"&DetailListFlag="+getElementValue("DetailListFlag");
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		str += "&MWToken="+websys_getMWToken()
+	}
+	window.location.href=str
+}
+
 
 ///Creator: jyp
 ///CreatDate: 2019-02-16
@@ -708,9 +780,8 @@ function equipAttribute()
 	var RowID=getElementValue("RowID");
 	var ReadOnly=getElementValue("ReadOnly");
 	var Status=getElementValue("EQStatus");
-
 	var url='dhceq.em.equipattributelist.csp?SourceID='+RowID+"&SourceType=3"+"&ReadOnly="+ReadOnly;
-	showWindow(url,"设备属性","","","icon-w-paper","modal","","","middle");  //modify by lmm 2020-06-01 UI
+	showWindow(url,"设备属性","","","icon-w-paper","modal","220","65","middle");  //MZY0157	3220824		2023-03-29
 }
 ///Creator: zx
 ///CreatDate: 2018-09-13
@@ -720,7 +791,7 @@ function maintRequest()
 	//modified by csj 20190125 
 	var RowID=getElementValue("RowID");
 	var url="dhceq.em.mmaintrequestsimple.csp?ExObjDR="+RowID+"&QXType=&WaitAD=off&Status=0&RequestLocDR="+curLocID+"&StartDate=&EndDate=&InvalidFlag=N&vData=^Action=^SubFlag=&LocFlag="+curLocID;
-	showWindow(url,"维修申请","","","icon-w-paper","modal","","","small");  //modify by lmm 2020-06-01 UI
+	showWindow(url,"维修申请","694px","727px","icon-w-paper","modal","373","51","middle");  //MZY0157	3220827		2023-03-29
 }
 
 ///Creator: zx
@@ -729,9 +800,8 @@ function maintRequest()
 function meterage()
 {
 	var RowID=getElementValue("RowID");
-	var url="dhceq.em.meterage.csp?BussType=2&EquipDR="+RowID+"&RowID="+"&MaintTypeDR=5";  //modify by mwz 2019-12-16 MWZ0024	//modified by czf 1316899
-	showWindow(url,"计量记录","","10row","icon-w-paper","modal","","","middle");  		//modify by lmm 2020-06-01 UI
-	
+	var url="dhceq.em.meterage.csp?BussType=2&EquipDR="+RowID+"&RowID="+"&MaintTypeDR=5";
+	showWindow(url,"计量记录","","437px","icon-w-paper","modal","","","large");		// MZY0151	2023-02-01
 }
 
 ///Creator: zx
@@ -741,7 +811,7 @@ function inspect()
 {
 	var RowID=getElementValue("RowID");
 	var url="dhceq.em.inspect.csp?BussType=2&EquipDR="+RowID+"&RowID="+"&MaintTypeDR=4";	//modified by csj 20191202 添加巡检维护类型参数
-	showWindow(url,"检查记录","","10row","icon-w-paper","modal","","","middle");  		//modify by lmm 2020-06-01 UI
+	showWindow(url,"检查记录","","","icon-w-paper","modal","","","large");		// MZY0154	3249067		2023-03-03
 }
 
 function returnRequest()
@@ -749,7 +819,7 @@ function returnRequest()
 	//modified by csj 20190125 
 	var RowID=getElementValue("RowID");
 	//modified by ZY0229 20200511
-	url="dhceq.em.return.csp?EquipDR="+RowID+"&OutTypeDR=1&WaitAD=off&QXType=2";
+	url="dhceq.em.return.csp?EquipDR="+RowID+"&ROutTypeDR=1&WaitAD=off&QXType=2"; 
 	showWindow(url,"资产退货","","","icon-w-paper","modal","","","large");   //modify by lmm 2019-02-16
 }
 
@@ -842,7 +912,7 @@ function treeEdit()
 	//add by zx 2019-06-11
 	var ReadOnly=getElementValue("ReadOnly");
 	var url='dhceqassociated.csp?ParEquipDR='+RowID+"&ReadOnly="+ReadOnly; 
-	showWindow(url,"设备树","","","icon-w-paper","modal","","","middle");  //modify by lmm 2020-06-04 UI
+	showWindow(url,"设备树","","","icon-w-paper","modal","","","large");	// MZY0094	2117902		2021-09-13
 }
 
 //Modify by zx 2020-02-19 BUG ZX0076
@@ -888,12 +958,19 @@ function printCard()
     var PrintFlag=getElementValue("PrintFlag");
     if ((RowID=="")||(RowID<1))	return;
     
+    var HasAffix=getElementValue("HasAffixFlag");
     if(PrintFlag==0)
 	{
 	    PrintEQCard(RowID); //add by zx 2018-12-18 打印调用
 	}
 	if(PrintFlag==1)
 	{
+		PrintEQCard(RowID,2);	//czf 2022-01-24 润乾连续打印卡片报错，改为Lodop打印
+		if (HasAffix==1)
+        {
+       		messageShow("confirm","info","提示","是否打印反面？","",printCardVerso,"");
+        }
+		/*
         var d=new Date()
         var day=d.getDate()
         var month=d.getMonth() + 1
@@ -903,18 +980,24 @@ function printCard()
         var fileName=""	;
         if(PreviewRptFlag==0)
         { 
-        fileName="{DHCEQCardPrint.raq(RowId="+RowID+")}";
-        DHCCPM_RQDirectPrint(fileName);
-        fileName="{DHCEQCardVersoPrint.raq(RowID="+RowID +")}";  	
-	    DHCCPM_RQDirectPrint(fileName);	
-        
+	        fileName="{DHCEQCardPrint.raq(RowId="+RowID+")}";
+	        DHCCPM_RQDirectPrint(fileName);
+	        if (HasAffix==1)		//czf 20210322
+	        {
+		        fileName="{DHCEQCardVersoPrint.raq(RowID="+RowID+")}"; 
+			DHCCPM_RQDirectPrint(fileName);	
+	        }
         }
         if(PreviewRptFlag==1)
         { 
-        fileName="DHCEQCardPrint.raq&RowId="+RowID ;
-        messageShow("confirm","info","提示","是否打印反面,点击是,正面会消失","",printCardVerso,"");
-        DHCCPM_RQPrint(fileName);
-        }												//add by wl 2019-11-11 WL0010 end	 	
+	        fileName="DHCEQCardPrint.raq&RowId="+RowID ;
+	        DHCCPM_RQPrint(fileName);
+	        if (HasAffix==1)
+	        {
+	       		messageShow("confirm","info","提示","是否打印反面,点击是,正面会消失","",printCardVerso,"");
+	        }
+        }	
+        */											//add by wl 2019-11-11 WL0010 end	 	
     }
 }
 
@@ -937,6 +1020,8 @@ function printCardVerso()
 	//润乾打印
 	if(PrintFlag==1)
 	{
+		printCardVersoLodop(RowID);	//czf 改为lodop打印
+		/*
 		if(PreviewRptFlag==0)
 		{ 
 		    fileName="{DHCEQCardVersoPrint.raq(RowID="+RowID
@@ -953,41 +1038,90 @@ function printCardVerso()
 		    +"&USERNAME="+curUserName	   
 			DHCCPM_RQPrint(fileName);	
 		}
+		*/
 	}		
 }
 //add by mwz 2020-03-27  MWZ0030
 //台帐顶部增加产品库链接
 function productPicture()
 {
-	var ReadOnly=0;
-	var Status=0;
+	//modified by zy 20220926   2826780
 	var RowID=getElementValue("RowID");
 	var result=tkMakeServerCall("web.DHCEQ.Plat.CTProduct","SaveProductDataBySource","1",RowID);
 	var list=result.split("^");
 	if (list[0]==0)
 	{
-		var ProductID=list[1]
-		if (ProductID=="") return;
-		var url='dhceq.plat.picturemenu.csp?&CurrentSourceType=96&CurrentSourceID='+ProductID+'&Status='+Status+'&ReadOnly='+ReadOnly;
-		showWindow(url,"产品资料","","","icon-w-paper","modal","","","middle");    //modify by lmm 2020-05-12 UI调整
+		var PMProductDR=list[1]
+		if (PMProductDR=="") return;
+		var url='dhceq.plat.proxyauthorization.csp?&PMProductDR='+PMProductDR+'&PMSourceType=1&PMSourceID='+RowID;
+		//modified by ZY20230208 bug:3163825
+		showWindow(url,"产品授权书信息","","","icon-w-paper","modal","45","15","large");	// MZY0157	3220840		2023-03-29
+		//showWindow(url,"产品授权书维护","","","icon-w-paper","modal","","","large");
+	}
+	else
+	{
+		messageShow("","","","产品库信息生成错误:"+list[0]+":"+list[1])
+		return
 	}
 }
 // add by zx 2019-07-05 
 // 房屋信息弹框
 function equipBuilding()
 {
-	var RowID=getElementValue("RowID");
-	var ReadOnly=getElementValue("ReadOnly");
-	var url='dhceq.em.building.csp?&EquipDR='+RowID+"&ReadOnly="+ReadOnly; 
-	showWindow(url,"房屋信息","3col","7row","icon-w-paper");  		//modify by lmm 2020-06-01 UI
+    var RowID=getElementValue("RowID");
+    var ReadOnly=getElementValue("ReadOnly");
+    //Modified By QW20220406 BUG:QW0157 房屋车辆改造 begin
+    //modified by ZY 2913588,2913589,2913590
+    //var EQName=getElementValue("EQName");
+    //var url='dhceq.em.building.csp?&EquipDR='+RowID+"&ReadOnly="+ReadOnly+"&EQName="+EQName; 
+    var url='dhceq.em.building.csp?&BDSourceType=1&BDSourceID='+RowID+"&ReadOnly="+ReadOnly; 
+    //Modified By QW20220406 BUG:QW0157 房屋车辆改造 end
+    showWindow(url,"房屋信息","3col","9row","icon-w-paper");        //modify by lmm 2020-06-01 UI   //czf 1730763 2021-01-22
 }
 
+// Add By QW202208016 begin 需求号:2760300 增加资产分类显示,若为土地可跳转 土地信息弹框
+function equipLand()
+{
+    var RowID=getElementValue("RowID");
+    var ReadOnly=getElementValue("ReadOnly");
+    //modified by ZY 2913588,2913589,2913590
+    //var EQName=getElementValue("EQName");
+    //var url='dhceq.em.land.csp?&EquipDR='+RowID+"&ReadOnly="+ReadOnly+"&EQName="+EQName; 
+    var url='dhceq.em.land.csp?&LSourceType=1&LSourceID='+RowID+"&ReadOnly="+ReadOnly; 
+    showWindow(url,"土地信息","3col","9row","icon-w-paper"); 
+}
 ///Creator: czf 2020-05-07 1300634
 ///Description 工程师报修弹出框
 function engineerMaintRequest()
 {
 	var RowID=getElementValue("RowID");
-	var url="dhceq.em.mmaintrequest.csp?ExObjDR="+RowID+"&QXType=&WaitAD=off&Status=&RequestLocDR="+curLocID+"&StartDate=&EndDate=&InvalidFlag=N&vData=^Action=^SubFlag=&LocFlag="+curLocID+"&MaintType=1";
+	//modified by ZY20230215  bug :  修改维修界面的csp链接
+	var url="dhceq.em.maintrequest.csp?ExObjDR="+RowID+"&QXType=&WaitAD=off&Status=&RequestLocDR="+curLocID+"&StartDate=&EndDate=&InvalidFlag=N&vData=^Action=^SubFlag=&LocFlag="+curLocID+"&MaintType=1";
 	//showWindow(url,"工程师维修申请","","17row","icon-w-paper","modal","","","large");   //modify by lmm 2020-06-01
 	showWindow(url,"工程师维修申请","","","icon-w-paper","modal","","","large");   //modify by lmm 2020-06-01 UI
+}
+
+// add by lmm 2020-07-23
+// 车辆信息弹框
+function equipVehicle()
+{
+    var RowID=getElementValue("RowID");
+    var ReadOnly=getElementValue("ReadOnly");
+    //Modified By QW20220406 BUG:QW0157 房屋车辆改造 begin
+    //modified by ZY 2913588,2913589,2913590
+    //var EQName=getElementValue("EQName");
+    //var url='dhceq.em.vehicle.csp?&EquipDR='+RowID+"&ReadOnly="+ReadOnly+"&EQName="+EQName; 
+    var url='dhceq.em.vehicle.csp?&VSourceType=1&VSourceID='+RowID+"&ReadOnly="+ReadOnly; 
+    //Modified By QW20220406 BUG:QW0157 房屋车辆改造 end
+    showWindow(url,"车辆信息","4col","7row","icon-w-paper");        //modify by lmm 2020-06-01 UI
+}
+
+///add by ZY 20220913 2907381、2907386、2907390
+// 无形资产信息弹框
+function equipIntangibleAssets()
+{
+    var RowID=getElementValue("RowID");
+    var ReadOnly=getElementValue("ReadOnly");
+    var url='dhceq.em.intangibleassets.csp?&IASourceType=1&IASourceID='+RowID+"&ReadOnly="+ReadOnly; 
+    showWindow(url,"无形资产信息","4col","7row","icon-w-paper");
 }

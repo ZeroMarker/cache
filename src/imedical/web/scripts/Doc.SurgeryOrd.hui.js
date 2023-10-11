@@ -95,8 +95,8 @@ function InitSurgeryOrdTabDataGrid(){
 		var reg2=/&nbsp/g;
 		var OrdColumns=[[ 
 		 			{field:'CheckOrd',title:'选择',checkbox:'true',align:'center',width:70,auto:false},
-		 			{field:'TStDate',title:'日期',align:'center',width:120,auto:false},
-		 			{field:'TStTime',title:'时间',align:'center',width:90,auto:false},
+		 			{field:'TStDate',title:'日期',align:'center',width:90,auto:false},
+		 			{field:'TStTime',title:'时间',align:'center',width:65,auto:false},
 		 			{field:'TOrderDesc',title:'医嘱',align:'left',width:350,auto:false,
 		 				formatter: function(value,row,index){
 			 				var inparaOrderDesc=$("#orderDesc").val();
@@ -107,6 +107,9 @@ function InitSurgeryOrdTabDataGrid(){
 							return '<a class="editcls-TOrderDesc" id= "' + row["HIDDEN"] + '"onmouseover="ShowOrderDescDetail(this)">'+ordtitle+'</a>';
 		 				}
 		 			},
+		 			{field:'billqty',title:'数量',align:'center',width:80,auto:false},
+		 			{field:'ArcPrice',title:'单价',align:'right',width:80,auto:false},
+		 			{field:'OrderSum',title:'总金额',align:'right',width:80,auto:false},
 		 			{field:'TDoctor',title:'开医嘱人',align:'center',width:80,auto:false},
 		 			{field:'TNurse',title:'停止处理护士',align:'center',width:80,auto:false},
 		 			{field:'TStopDate',title:'撤销日期',align:'center',width:120,auto:false,
@@ -130,10 +133,8 @@ function InitSurgeryOrdTabDataGrid(){
                         }
 		 			},
 		 			{field:'OrderType',title:'医嘱子类类型',align:'center',width:90,auto:false},
-		 			{field:'billqty',title:'数量',align:'center',width:80,auto:false},
+		 			{field:'MaterialBarCode',title:'材料条码',align:'center',width:90,auto:false},
 		 			{field:'TBillUom',title:'计价单位',align:'center',width:80,auto:false},
-		 			{field:'ArcPrice',title:'单价',align:'right',width:80,auto:false},
-		 			
 		 			{field:'GroupSign',title:'组符号',align:'center',width:80,auto:false,
 		 			 	styler: function(value,row,index){
 			 			 	return 'color:red;';
@@ -198,9 +199,9 @@ function InitSurgeryOrdTabDataGrid(){
 				selRowIndex="";
 			},
 			onUncheck:function(rowIndex, rowData){
-				var OrderId=rowData.OrderId;
+				var OrderId=rowData.HIDDEN;
 				if ((selRowIndex!=="")||(OrderId.indexOf("||")<0)) return false;
-				var OrderId=rowData.OrderId;
+				var OrderId=rowData.HIDDEN;
 				var TOeoriOeori=rowData.HIDDEN2;
 				var GroupSign=rowData.GroupSign;
 				var OrdList=PageLogicObj.m_SurgeryOrdTabDataGrid.datagrid('getData');
@@ -219,12 +220,16 @@ function InitSurgeryOrdTabDataGrid(){
 				}
 				selRowIndex="";
 			},onLoadSuccess:function(data){
-				/*if (ServerObj.patData.patFlag==0){
-					for (var i=startNum;i<parseInt(startNum)+3;i++){
-						$('div.datagrid-toolbar a').eq(i).hide();
-						$('div.datagrid-toolbar div').eq(i).hide();
+				SetPatAllFee()
+				/*
+				var Length=data.rows.length
+				var AllOrderSum=0
+				for (var i=0;i<Length;i++){
+					var OrderSum=data.rows[i].OrderSum
+					AllOrderSum=parseFloat(AllOrderSum)+parseFloat(OrderSum)
 					}
-				}*/
+				SetPatAllFee(AllOrderSum.toFixed(2))
+				*/
 			}
 		});
 		$.extend($.fn.datagrid.methods,{
@@ -332,11 +337,11 @@ function InitSurgeryOrdTabDataGrid(){
 }
 function InitscopeDesc(){
 	var scopeDes=[
-		  {"id":1,"text":"全部"}
-		 ,{"id":2,"text":"作废"}
-		 ,{"id":3,"text":"当前","selected":true}
-		 ,{"id":4,"text":"待审核"}
-		 ,{"id":5,"text":"已停止"}
+		  {"id":1,"text":$g("全部")}
+		 ,{"id":2,"text":$g("作废")}
+		 ,{"id":3,"text":$g("当前"),"selected":true}
+		 ,{"id":4,"text":$g("待审核")}
+		 ,{"id":5,"text":$g("已停止")}
 		 //,{"id":6,"text":"今日有效"}
 		 //,{"id":7,"text":"三日有效"}
 		]
@@ -358,9 +363,9 @@ function InitlocDesc(){
 		textField: 'text',
 		editable:false, 
 		data: [
-		  {"id":"1","text":"本科室与病区","selected":true}
-		 ,{"id":"2","text":"其它科室"}
-		 ,{"id":"3","text":"全部"}
+		  {"id":"1","text":$g("本科室与病区"),"selected":true}
+		 ,{"id":"2","text":$g("其它科室")}
+		 ,{"id":"3","text":$g("全部")}
 		]  ,
 		onSelect: function (rec) {
 			GridParams.stloc=rec.id;
@@ -405,17 +410,18 @@ function LoadPatOrdDataGrid(){
 	    Pagerows:PageLogicObj.m_SurgeryOrdTabDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
 		PageLogicObj.m_SurgeryOrdTabDataGrid.datagrid('uncheckAll').datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData);
+		
 	}); 
 }
 function ShowCancelMulOrdWin(){
    if (!CheckIsCheckOrd()) return false;
    var SelOrdRowStr=GetSelOrdRowStr();
    if (!CheckOrdDealPermission(SelOrdRowStr,"C")) return false;
-   var title="撤销(DC)医嘱";
+   var title=$g("撤销(DC)医嘱");
    destroyDialog("OrdDiag");
    var Content=initDiagDivHtml("C");
    var iconCls="icon-w-back";
-   createModalDialog("OrdDiag",title, 380, 260,iconCls,"撤消(DC)",Content,"MulOrdDealWithCom('C')");
+   createModalDialog("OrdDiag",title, 380, 260,iconCls,$g("撤消(DC)"),Content,"MulOrdDealWithCom('C')");
    InitOECStatusChReason();
    $('#OECStatusChReason').next('span').find('input').focus();
 }
@@ -423,11 +429,11 @@ function ShowUnUseMulOrdWin(){
    if (!CheckIsCheckOrd()) return false;
    var SelOrdRowStr=GetSelOrdRowStr();
    if (!CheckOrdDealPermission(SelOrdRowStr,"U")) return false;
-   var title="作废医嘱";
+   var title=$g("作废医嘱");
    destroyDialog("OrdDiag");
    var Content=initDiagDivHtml("U")
    var iconCls="icon-w-back";
-   createModalDialog("OrdDiag",title, 380, 260,iconCls,"作废",Content,"MulOrdDealWithCom('U')");
+   createModalDialog("OrdDiag",title, 380, 260,iconCls,$g("作废"),Content,"MulOrdDealWithCom('U')");
    InitOECStatusChReason();
    $('#OECStatusChReason').next('span').find('input').focus();
 }
@@ -553,10 +559,10 @@ function InitOECStatusChReason(){
 function initDiagDivHtml(type){
 if((type=="C")||(type=="U")){
 	   var html="<div id='DiagWin' style='margin-top: 5px;'>"
-		   html +="	<table class='search-table' cellpadding='5' style='margin:0 auto;border:none;'>"
+		   html +="	<table class='search-table' cellpadding='5' style='padding: 0 63px;;border:none;'>"
 		   		html +="	 <tr>"
 			       	html +="	 <td class='r-label'>"
-			       		html +="	 请选择原因"
+			       		html +=$g("	 请选择原因")
 			       	html +="	 </td>"
 			       	html +="	 <td>"
 			       		html +="	 <input id='OECStatusChReason' class='textbox'></input>"
@@ -565,7 +571,7 @@ if((type=="C")||(type=="U")){
 		       
 		   		html +="	 <tr>"
 		       		html +="	 <td class='r-label'>"
-		       			html +="	 密码"
+		       			html +=$g("	 密码")
 		       		html +="	 </td>"
 		       		html +="	 <td>"
 		       			html +="	 <input type='password' id='winPinNum' class='hisui-validatebox textbox' data-options='required:true' onkeydown='PasswordKeyDownHandle(\"Confirm\",\""+type+"\")'/>"
@@ -590,7 +596,7 @@ if((type=="C")||(type=="U")){
 function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,_event){
    if(_btntext==""){
 	   var buttons=[{
-		   text:'关闭',
+		   text:$g('关闭'),
 			iconCls:'icon-w-close',
 			handler:function(){
    				destroyDialog(id);
@@ -604,7 +610,7 @@ function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,
 				if(_event!="") eval(_event);
 			}
 		},{
-			text:'关闭',
+			text:$g('关闭'),
 			iconCls:'icon-w-close',
 			handler:function(){
    				destroyDialog(id);
@@ -675,39 +681,11 @@ function ShowOrderDescDetail(that){
 	$(that).webuiPopover('show');
 }
 function ordDetailInfoShow(OrdRowID){
-	destroyDialog("tabOrdDetailInfo");
-	var Content="<table id='tabOrdDetailInfo' style='margin:5px;border:none;width:300px;'></table>";
-	var iconCls="icon-w-paper";
-	createModalDialog("OrdDetailInfo","医嘱明细", 350, 400,iconCls,"",Content,"");
-    
-	var OrdDetailColumns=[[
-		{field:'Group',hidden:true},
-		{field:'PropertyCode',hidden:true},
-		{field:'PropertyName',title:'属性'},
-		{field:'PropertyValue',title:'值'}
-	]]
-	OrdDetailInfoDataGrid=$("#tabOrdDetailInfo").propertygrid({  
-		fit : true,
-		border : false,
-		striped : true,
-		singleSelect : false,
-		fitColumns : false,
-		autoRowHeight : false,
-		rownumbers:false,
-		pagination : false, 
-		showGroup: true,
-		pageSize: 9999, 
-		idField:'PropertyName',
-		groupField:'Group',
-		columns :OrdDetailColumns
-	});
-	$.q({
-	    ClassName : "web.DHCDocInPatPortalCommon",
-	    QueryName : "FindOrdDetailInfo",
-	    OrdRowID : OrdRowID,
-	    Pagerows:OrdDetailInfoDataGrid.datagrid("options").pageSize,rows:99999
-	},function(GridData){
-		OrdDetailInfoDataGrid.propertygrid('loadData',GridData);
+	websys_showModal({
+		url:"dhc.orderdetailview.csp?ord=" + OrdRowID,
+		title:'医嘱明细',
+		width:350,height:400,
+        iconCls:'icon-w-trigger-box'
 	});
 }
 function pagerFilter(data){
@@ -784,4 +762,20 @@ function PasswordKeyDownHandle(HandleType,EventType){
         return false;
      }
   }
+}
+
+function xhrRefresh(Args){
+	LoadPatOrdDataGrid();
+}
+
+function SetPatAllFee(){
+	var AllFee=$.m({
+	    ClassName : GridParams.ClassName,
+	    MethodName:"GetSosOrderAllFee",
+	    papmi : GridParams.papmi,adm : GridParams.adm,
+	    doctor : GridParams.doctor,scope : GridParams.scope,
+	    stloc : GridParams.stloc,nursebill : GridParams.nursebill,
+	    inputOrderDesc : GridParams.inputOrderDesc
+	},false);
+	$("#PatAllFee").html(AllFee)
 }

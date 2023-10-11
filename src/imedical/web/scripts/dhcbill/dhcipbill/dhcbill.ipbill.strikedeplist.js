@@ -1,11 +1,9 @@
 ﻿/**
  * FileName: dhcbill.ipbill.strikedeplist.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-12-05
  * Description: 已冲退预交金查询
  */
-
-var GV = {};
 
 $(function () {
 	initQueryMenu();
@@ -13,8 +11,7 @@ $(function () {
 });
 
 function initQueryMenu() {
-	var today = getDefStDate(0);
-	$(".datebox-f").datebox("setValue", today);
+	$(".datebox-f").datebox("setValue", CV.DefDate);
 	
 	$HUI.linkbutton("#btn-find", {
 		onClick: function () {
@@ -31,42 +28,47 @@ function initQueryMenu() {
 	//操作员
 	$HUI.combobox("#guser", {
 		panelHeight: 150,
-		url: $URL + '?ClassName=web.UDHCJFDepositSearch&QueryName=FindIPCashier&ResultSetType=array',
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryInvUser&ResultSetType=array&invType=I&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
 		valueField: 'id',
 		textField: 'text',
-		defaultFilter: 4,
-		onBeforeLoad: function (param) {
-			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
-		}
+		defaultFilter: 5
 	});
 }
 
 function initStrikeDepList() {
 	$HUI.datagrid("#strikeDepList", {
 		fit: true,
-		striped: true,
 		border: false,
 		singleSelect: true,
 		rownumbers: true,
 		pagination: true,
 		pageSize: 20,
-		columns:[[{title: '发票号', field: 'TInvNo', width: 100},
-				  {title: '病案号', field: 'TMedicareCode', width: 100},
-				  {title: '患者姓名', field: 'TPatName', width: 100},
-				  {title: '收据号', field: 'TRcptNo', width: 100},
-				  {title: '就诊科室', field: 'TLocDesc', width: 100},
-				  {title: '收费时间', field: 'TPrintDate', width: 150,
-					formatter: function (value, row, index) {
-						return value + " " + row.TPrintTime;
+		className: "web.UDHCJFDepositSearch",
+		queryName: "FindDepositByStrike",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["TPrintDate", "TInvPrtDate"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if (cm[i].field == "TPrintTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.TPrintDate + " " + value;
+					};
+				}
+				if (cm[i].field == "TInvPrtTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.TInvPrtDate + " " + value;
+					};
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if ($.inArray(cm[i].field, ["TPrintTime", "TInvPrtTime"]) != -1) {
+						cm[i].width = 160;
 					}
-				  },
-				  {title: '金额', field: 'TPayAmt', align: 'right', width: 100},
-				  {title: '支付方式', field: 'TPayModeDesc', width: 150},
-				  {title: '状态', field: 'TPrtStatus', width: 100},
-				  {title: '操作员', field: 'TUserName', width: 100},
-				  {title: '冲账日期', field: 'TPrtDate', width: 100},
-				  {title: '结算操作员', field: 'TInvuserN', width: 100}
-			]],
+				}
+			}
+		},
 		url: $URL,
 		queryParams: {
 			ClassName: "web.UDHCJFDepositSearch",
@@ -100,7 +102,7 @@ function exportClick() {
 	var fileName = "DHCBILL-IPBILL-YCTYJJMX.rpx" + "&StDate=" + getValueById("stDate") + "&EndDate=" + getValueById("endDate");
 	fileName += "&Guser=" + (getValueById("guser") || "") + "&flag=" + (getValueById("isHandin") ? 1 : 0);
 	fileName += "&HospId=" + PUBLIC_CONSTANT.SESSION.HOSPID;
-	var maxHeight = ($(window).height() || 550) * 0.8;
-	var maxWidth = ($(window).width() || 1366) * 0.8;
+	var maxHeight = $(window).height() * 0.8;
+	var maxWidth = $(window).width() * 0.8;
 	DHCCPM_RQPrint(fileName, maxWidth, maxHeight);
 }

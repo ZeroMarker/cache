@@ -24,6 +24,9 @@ $(function () {
 		$('#BtnSave').hide();
 	}
 	
+	//+2023-03-18 ZhYW 把权力项申请按钮显示到界面上
+	BILL_INF.getStatusHtml("HIS-IPBILL-BILLPOINT", "BtnSave");
+	
 	var tableName = "Bill_IP_BillCondition";
 	var defHospId = $.m({
 		ClassName: "web.DHCBL.BDP.BDPMappingHOSP",
@@ -55,15 +58,37 @@ $(function () {
 	$("#tTBArcCatCombo").combobox({
 		valueField: 'RowID',
         textField: 'TarDesc',
-        onBeforeLoad:function(param){
+        defaultFilter: 5,
+        onBeforeLoad: function(param) {
 			$.extend(param, {HospId: getValueById("Hospital")});
 			return true;
         },
-        onSelect:function(rec){
+        onSelect: function(rec){
 			FindClick();
 		},
-		onChange:function(newValue, oldValue){
-			if(!newValue){
+		onChange: function(newValue, oldValue) {
+			if(!newValue) {
+				FindClick();
+			}
+		}
+	});
+	
+	//计费点
+	$("#tTBBillConCombo").combobox({
+		panelHeight: 'auto',
+		valueField: 'value',
+        textField: 'text',
+        defaultFilter: 5,
+        data: CV.BillCondition,
+		loadFilter: function(data) {
+			data.unshift({value: '', text: $g('全部')});   //往数组开始位置增加一项
+			return data;
+		},
+		onSelect: function(rec) {
+			FindClick();
+		},
+		onChange: function(newValue, oldValue) {
+			if(!newValue) {
 				FindClick();
 			}
 		}
@@ -71,21 +96,6 @@ $(function () {
 });
 
 function initGrid() {
-	var BillCondition = [{
-			id: 'OD',
-			name: 'Order Entry or Discontinued'
-		}, {
-			id: 'OE',
-			name: 'Order Executed'
-		}, {
-			id: 'NE',
-			name: 'Nurse Executed'
-		}, {
-			id: 'CR',
-			name: 'Pharmacy Collected or Return'
-		}
-	];
-
 	var CateColumns = [[{
 				field: 'BCRowid',
 				title: 'BCRowid',
@@ -102,13 +112,20 @@ function initGrid() {
 						url: $URL + '?ClassName=DHCBILLConfig.DHCBILLSysType&QueryName=FindItmCat&ResultSetType=array',
 						valueField: 'RowID',
 						textField: 'TarDesc',
+						defaultFilter: 5,
 						required: true,
 						multiple: true,
 						onBeforeLoad: function (param) {
 							$.extend(param, {HospId: getValueById("Hospital")});
 							return true;
 						},
+						onLoadSuccess: function() {
+							$(this).next("span").find("input").focus();
+						},
 						onSelect: function (rec) {
+							if (!rec) {
+								return;
+							}
 							var selected = $('#tTarCate').datagrid('getSelected');
 							var thisIndex = $('#tTarCate').datagrid('getRowIndex', selected);
 							var thisEd = $('#tTarCate').datagrid('getEditor', {
@@ -118,7 +135,7 @@ function initGrid() {
 							var arcGrpDR = $(thisEd.target).combobox('getValue');
 							var rtn = checkArcGrpBillCondition(rec.RowID, arcGrpDR);
 							if (!rtn) {
-								$.messager.alert('提示', '非药品不能设置计费点为CR', 'info');
+								$.messager.alert('提示', '只有药品才能设置计费点为CR', 'info');
 								$(this).combobox('clear');
 								return;
 							}
@@ -175,10 +192,10 @@ function initGrid() {
 					type: 'combobox',
 					options: {
 						panelHeight: 'auto',
-						valueField: 'id',
-						textField: 'name',
+						valueField: 'value',
+						textField: 'text',
 						editable: false,
-						data: BillCondition,
+						data: CV.BillCondition,
 						required: true,
 						onSelect: function (rec) {
 							var selected = $('#tTarCate').datagrid('getSelected');
@@ -190,7 +207,7 @@ function initGrid() {
 							var arcGrpDRStr = $(thisEd.target).combobox('getValues');
 							var rtn = checkArcGrpBillCondition(arcGrpDRStr, rec.id);
 							if (!rtn) {
-								$.messager.alert('提示', '非药品不能设置计费点为CR', 'info');
+								$.messager.alert('提示', '只有药品才能设置计费点为CR', 'info');
 								$(this).combobox('clear');
 							}
 						}
@@ -211,13 +228,11 @@ function initGrid() {
 	$('#tTarCate').datagrid({
 		fit: true,
 		border: false,
-		striped: true,
 		singleSelect: true,
 		fitColumns: false,
 		pagination: true,
 		rownumbers: true,
 		pageSize: 20,
-		data: [],
 		columns: CateColumns,
 		toolbar: '#tToolBar',
 		onLoadSuccess: function (data) {
@@ -277,16 +292,15 @@ $('#BtnUpdate').bind('click', function () {
 			$.messager.alert('提示', "一次只能修改一条记录", 'info');
 			return;
 		}
-		$('#tTarCate').datagrid('beginEdit', thisIndex);
-		$('#tTarCate').datagrid('selectRow', thisIndex);
+		$('#tTarCate').datagrid('beginEdit', thisIndex).datagrid('selectRow', thisIndex);
 		EditIndex = thisIndex;
 		var selected = $('#tTarCate').datagrid('getSelected');
 		var thisEd = $('#tTarCate').datagrid('getEditor', {
 				index: EditIndex,
 				field: 'BCSubCateDesc'
 			});
-		$(thisEd.target).combobox('clear');
-		$(thisEd.target).combobox('select', selected.BCSubCate);
+		$(thisEd.target).combobox('clear').combobox('select', selected.BCSubCate).combobox('disable');
+		
 		var thisEd = $('#tTarCate').datagrid('getEditor', {
 				index: EditIndex,
 				field: 'BCConditionDesc'
@@ -318,7 +332,7 @@ $('#BtnSave').bind('click', function () {
 				initLoadGrid("");
 				return;
 			}
-			$.cm({
+			$.m({
 				ClassName: "DHCBILLConfig.DHCBILLSysType",
 				MethodName: "InsertBillCondition",
 				NewItmCat: ArcStr,
@@ -326,22 +340,16 @@ $('#BtnSave').bind('click', function () {
 				User: PUBLIC_CONSTANT.SESSION.USERID,
 				HospId: getValueById("Hospital")
 			}, function(rtn) {
-				var myAry = rtn.split('^');
-				switch(myAry[0]) {
-				case '0':
-					$.messager.alert('提示', "保存成功", 'success');
-					break;
-				case '-1001':
-					$.messager.alert('提示', "医嘱子类不存在，不能添加", 'info');
-					break;
-				case '-1002':
-					$.messager.alert('提示', "计费点不存在，不能添加", 'info');
-					break;
-				case '-1003':
-					$.messager.alert('提示', "保存失败：" + myAry[1], 'error');
-					break;
-				default:
-					$.messager.alert('提示', "保存失败，错误代码：" + myAry[0], 'error');
+				var myAry = rtn.split("^");
+				var iconCls = (myAry[0] == 0) ? "success" : "error";
+				if (CV.EnablePMASystem != 0) {
+					$.messager.popover({msg: (myAry[1] || myAry[0]), type: iconCls});
+					//把权力项申请按钮显示到界面上
+					BILL_INF.getStatusHtml("HIS-IPBILL-BILLPOINT", "BtnSave");
+				}else {
+					//未启用权力系统
+					var msg = (myAry[0] == 0) ? "保存成功" : ("保存失败：" + (myAry[1] || myAry[0]));
+					$.messager.popover({msg: msg, type: iconCls});
 				}
 				EditIndex = -1;
 				initLoadGrid("");
@@ -353,6 +361,9 @@ $('#BtnSave').bind('click', function () {
 					index: EditIndex,
 					field: 'BCSubCateDesc'
 				});
+			if (!thisEd) {
+				return;
+			}
 			var ArcStr = $(thisEd.target).combobox('getValues');
 			var thisEd = $('#tTarCate').datagrid('getEditor', {
 					index: EditIndex,
@@ -361,7 +372,7 @@ $('#BtnSave').bind('click', function () {
 			var BCConStr = $(thisEd.target).combobox('getValue');
 			ArcStr = "" + ArcStr + "";
 			if ((ArcStr == "undefined") || (BCConStr == "undefined") || (ArcStr == "") || (BCConStr == "")) {
-				$.messager.alert('提示', "数据为空,不允许修改", 'info');
+				$.messager.alert('提示', "数据为空，不允许修改", "info");
 				EditIndex = -1;
 				initLoadGrid("");
 				return;
@@ -375,22 +386,16 @@ $('#BtnSave').bind('click', function () {
 				User: PUBLIC_CONSTANT.SESSION.USERID,
 				HospId: getValueById("Hospital")
 			}, function(rtn) {
-				var myAry = rtn.split('^');
-				switch(myAry[0]) {
-				case '0':
-					$.messager.alert('提示', "修改成功", 'success');
-					break;
-				case '-1001':
-					$.messager.alert('提示', "医嘱子类不存在，不能修改", 'info');
-					break;
-				case '-1002':
-					$.messager.alert('提示', "计费点不存在，不能修改", 'info');
-					break;
-				case '-1003':
-					$.messager.alert('提示', "医嘱子类已维护计费点，不能修改", 'error');
-					break;
-				default:
-					$.messager.alert('提示', "修改失败，错误代码：" + myAry[0], 'error');
+				var myAry = rtn.split("^");
+				var iconCls = (myAry[0] == 0) ? "success" : "error";
+				if (CV.EnablePMASystem != 0) {
+					$.messager.popover({msg: (myAry[1] || myAry[0]), type: iconCls});
+					//把权力项申请按钮显示到界面上
+					BILL_INF.getStatusHtml("HIS-IPBILL-BILLPOINT", "BtnSave");
+				}else {
+					//未启用权力系统
+					var msg = (myAry[0] == 0) ? "修改成功" : ("修改失败：" + (myAry[1] || myAry[0]));
+					$.messager.popover({msg: msg, type: iconCls});
 				}
 				EditIndex = -1;
 				initLoadGrid("");
@@ -414,7 +419,7 @@ $('#BtnDelete').bind('click', function () {
 					RowID: selected.BCRowid,
 					Guser: PUBLIC_CONSTANT.SESSION.USERID
 				}, function (rtn) {
-					if (rtn == "0") {
+					if (rtn == 0) {
 						$.messager.alert('提示', "删除成功", 'success');
 					} else {
 						$.messager.alert('提示', "删除失败，错误代码：" + rtn, 'error');
@@ -438,15 +443,9 @@ function FindClick() {
 	initLoadGrid(ExpStr);
 }
 
-/**
- * Creator: ZhYW
- * CreatDate: 2018-03-02
- * Description: 判断医嘱子类是否存在非药品
- *              rtn =0:不存在, <>0存在
- */
 function checkArcGrpBillCondition(arc, CP) {
 	var rtn = true;
-	var arcGrpDRStr = arc.toString();
+	var arcGrpDRStr = String(arc);
 	var rtn = $.m({ClassName: "DHCBILLConfig.DHCBILLSysType", MethodName: "CheckContainDrugByArcGrp", arcGrpDRStr: arcGrpDRStr}, false);
 	if ((rtn != 0) && (CP == 'CR')) {
 		rtn = false;

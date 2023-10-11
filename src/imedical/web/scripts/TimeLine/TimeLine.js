@@ -14,13 +14,13 @@ function transConfig(){
 	var linkSize={  //报告打开大小
 			'default':{width:1000,height:450},
 			'0101':{width:1200,height:450},  //诊断
-			'0306':{width:1200,height:310},  //血压
-			'0401':{width:1000,height:'auto',maxHeight:'750'},  //检查
+			'0306':{width:1200,height:300},  //血压
+			'0401':{width:1400,height:'auto',maxHeight:'750'},  //检查
 			'0501':{width:1000,height:450},  //检验
 			'2001':{width:1000,height:'auto',maxHeight:'750'},  //病理
 			'2101':{width:1000,height:450},  //心电
 			'0901':{width:1200,height:550},  //病历文书
-			'1901':{width:1200,height:550},  //过敏
+			'1901':{width:1300,height:610},  //过敏
 			'1301':{width:920,height:'auto',maxHeight:'750'} , //会诊记录
 			'1501':{width:900,height:'auto',maxHeight:'600'}
 		};
@@ -35,22 +35,22 @@ function transConfig(){
         	'0202':{
 	            start:10,
 	            step:10,
-	            color:'#F3A02E'
+	            color:window.Scene=='2'?'#ff9933':'#F3A02E'
 	        },
 	        '0203':{
 	            start:50,
 	            step:20,
-	            color:'#EA5252'
+	            color:window.Scene=='2'?'#ee0f0f':'#EA5252'
 	        },
 	        '0204':{
 	            start:35,
 	            step:1,
-	            color:'#2E8CB9'
+	            color:window.Scene=='2'?'#339eff':'#2E8CB9'
 	        },
 	        'default':{
 	            start:10,
 	            step:30,
-	            color:'#2E8CB9'
+	            color:window.Scene=='2'?'#339eff':'#2E8CB9'
 	        },
 	        '03061':{
 	            start:60,
@@ -80,7 +80,7 @@ function transConfig(){
 	}
 	orderViewConfig['0701']={ //临时药品
 		isOrderView:true,
-		ordIdKey:'Parameters',
+		ordIdKey:'ObjectID', //'Parameters',  20230309改为ObjectID Parameters改为存储医嘱项Arcim
 		ordIdKeyFormatter:orderViewConfig.ordIdCommFormatter,
 		ordViewType:'DRUG',
 		ordViewBizIdKey:''
@@ -96,6 +96,7 @@ function transConfig(){
 		ordIdKey:'DataValue',
 		ordViewType:'AN',
 		ordViewBizIdKey:''
+		,winWidth:1580
 	}
 	orderViewConfig['0401']={ //检查
 		isOrderView:true,
@@ -121,9 +122,33 @@ function transConfig(){
 		ordIdKey:'DataValue',
 		ordIdKeyFormatter:orderViewConfig.ordIdCommFormatter,
 		ordViewType:'CV',
-		ordViewBizIdKey:'ObjectID'
+		ordViewBizIdKey:'ObjectID',
+		chartsMinHeight:280
 	}
-	
+	orderViewConfig['1301']={ //会诊
+		isOrderView:true,
+		ordIdKey:'',  //json中字段名---oeorditem
+		ordIdKeyFormatter:function(id,item){
+			var p = item.Parameters;
+			var parr = p.split("&");
+			for(var i=0; i<parr.length; i++){
+				if(parr[i].indexOf('OrdItemId=')>-1){
+					return parr[i].split("=")[1]
+				}
+			}
+			return "";
+		},
+		ordViewType:'CST',
+		ordViewBizIdKey:'ObjectID' //json中字段名取某值作闭环第三入bizid
+	}	
+	orderViewConfig['2401']={ //高值材料
+		isOrderView:true,
+		ordIdKey:'ObjectID',
+		ordIdKeyFormatter:orderViewConfig.ordIdCommFormatter,
+		ordViewType:'HVM',
+		ordViewBizIdKey:'',
+		chartsMinHeight:300
+	}
 	
     var config=[];var temp={};configIndex={};
     for (var i=0 ;i<CategroyData.CategroyConfig.length;i++){
@@ -335,26 +360,73 @@ function initGrid(){
 		var datatype=$(this).closest('.tl-row-header').data('for');
 		if (datatype=="0601"){
 			//##Class(icare.TimeLineView).GetDrugCatogry(episodeId)
+//			$m({
+//				ClassName:'icare.web.TimeLineData'	,
+//				MethodName:'GetDrugCatogry',
+//				wantreturnval:1,
+//				EpisodeID:episodeId
+//			},function(res){
+//				if(res==""){
+//					$.messager.popover({msg:'此次就诊没有长期药品医嘱不需要设置',type:'alert'})	;
+//					return ;
+//				}
+//				var allDrugArr=res.split(',');
+//				var temp={cols:3,list:[]};
+//				$.each(allDrugArr,function(idx,value){
+//					temp.list.push({text:value,
+//									value:value,
+//									checked:(GV.DataConfig.showDrugNames.length==0||GV.DataConfig.showDrugNames.indexOf(value)>-1)
+//								});
+//				})
+//				showCkTableWin(temp,{title:'设定药品显示项',width:600});
+//			})
+			///新的逻辑 获取医嘱项ID 按医嘱项ID进行匹配过滤
+			
+			var showDrugArcimArr=GV.DataConfig.showDrugArcimArr||[];
 			$m({
 				ClassName:'icare.web.TimeLineData'	,
-				MethodName:'GetDrugCatogry',
+				MethodName:'GetDrugArcItm',
 				wantreturnval:1,
 				EpisodeID:episodeId
 			},function(res){
-				if(res==""){
+				var obj=$.parseJSON(res);
+				var rows=obj.rows;
+				if(rows.length==0) {
 					$.messager.popover({msg:'此次就诊没有长期药品医嘱不需要设置',type:'alert'})	;
-					return ;
+					return;
 				}
-				var allDrugArr=res.split(',');
-				var temp={cols:3,list:[]};
-				$.each(allDrugArr,function(idx,value){
-					temp.list.push({text:value,
-									value:value,
-									checked:(GV.DataConfig.showDrugNames.length==0||GV.DataConfig.showDrugNames.indexOf(value)>-1)
-								});
+				
+				var newList=[];catIndex={};
+		
+				$.each(rows,function(ind,item){
+					var catid=item.cat||'null';
+					var catdesc=item.catdesc||'未分类';
+					if(typeof catIndex[catid]=='undefined'){
+						catIndex[catid]=newList.push({value:catid,text:catdesc,checked:true,list:[]})-1
+					}
+					
+					var itemChecked=showDrugArcimArr.length==0||showDrugArcimArr.indexOf(item.id)>-1;
+					
+					var par=newList[catIndex[catid]];
+					par.list.push({
+						value:item.id,
+						text:item.desc,
+						checked:itemChecked
+					})
+					if(!itemChecked) par.checked=false;   //分类下面只要有一个没选 则全选按钮改为不勾选
+					
 				})
-				showCkTableWin(temp,{title:'设定药品显示项',width:600});
+				
+				var cols=3;
+				if(rows.length>30) cols=4;
+				if(rows.length>40) cols=5;
+				width=cols*200;
+				
+				var temp={cols:cols,newList:newList};
+				showCkTableWin(temp,{title:'设定药品显示项',width:width});
+				
 			})
+
 		}else if (datatype=="1701"){ //门诊就诊信息
 			$m({
 				ClassName:'icare.web.TimeLineData'	,
@@ -401,8 +473,19 @@ function showReportWin(url,cfg){
 	var $content_items=$('<div class="reportWinContent-items" style="width:'+width*url.length+'px;"></div>').appendTo($content);
 	
 	$.each(url,function(idx,oneurl){
+		oneurl=getTokenUrl(oneurl);
+		
+		///his为https 报告链接为http或ftp 且浏览器不是医为49  则采用新窗口打开
+		if (location.href.indexOf('https://')==0 && (oneurl.indexOf('http://')==0 || oneurl.indexOf('ftp://')==0) && typeof cefbound != 'object' ) {
+			easyOriginWin('报告查看'+idx,oneurl,width,height)
+			return;
+		}
+		
 		$content_items.append('<div class="reportWinContent-item" style="overflow:hidden;width:'+width+'px;height:'+(height-37)+'px;"><iframe scrolling="auto" frameborder=0 style="width:100%;height:100%;" src="'+oneurl+'"></iframe></div>')
 	})
+	if ($content_items.find('.reportWinContent-item').length==0) {
+		return;	
+	}
 	$content_items.append('<div style="clear:both;"></div>');
 	$content_prev=$('<div class="reportWinContent-prev hidden">&lt;</div>').appendTo($content);
 	$content_next=$('<div class="reportWinContent-next hidden">&gt;</div>').appendTo($content);
@@ -413,6 +496,16 @@ function showReportWin(url,cfg){
 	GV.reportWin.empty();
 	$content.appendTo(GV.reportWin);
 	if(url.length>1) $content_next.removeClass('hidden');
+	
+	
+	if(url.length>1) {
+		window._reportWin_srcollLeft0Interval=window.setInterval(function(){   //检验的多报告窗口会莫名奇妙向左滚动 增加监听改为0
+			if($content.is(':visible')&&$content.scrollLeft()>0) {
+				$content.scrollLeft(0);
+				//console.log('scroll 0')
+			}
+		},200);
+	}
 	
 	$content_prev.off('click').on('click',function(){
 		var $con=$(this).closest('.reportWinContent');
@@ -438,26 +531,30 @@ function showReportWin(url,cfg){
 			$con.find('.reportWinContent-prev').removeClass('hidden');
 		}
 	})
-	
-	
-	
 	GV.reportWin.dialog({
 		iconCls:'icon-w-paper',
 		modal:true,
 		title:cfg.title||'报告',
 		width:width,
-		height:height
+		height:height,
+		onClose:function(){
+			if (window._reportWin_srcollLeft0Interval) window.clearInterval(window._reportWin_srcollLeft0Interval);	
+		}
 	}).dialog('open');
 	
 	$content_prev.cl
 }
 
-function ifShowDrug(DataValue){
-	if (!GV.DataConfig.showDrugNames ||GV.DataConfig.showDrugNames.length==0) return true;
+function ifShowDrug(DataValue,Parameters){
+	//if (!GV.DataConfig.showDrugNames ||GV.DataConfig.showDrugNames.length==0) return true;
+	if (!GV.DataConfig.showDrugArcimArr ||GV.DataConfig.showDrugArcimArr.length==0) return true;
+	
 	var flag=false;
-	$.each(GV.DataConfig.showDrugNames,function(){
-		if(DataValue.indexOf(this)>-1) {
-			flag=true	;return false;
+	arcimarr=Parameters.split('^');
+	$.each(GV.DataConfig.showDrugArcimArr,function(ind,t){
+		if(arcimarr.indexOf(t)>-1) {
+			flag=true;
+			return false;
 		}
 	})
 	return flag;
@@ -475,11 +572,13 @@ function getLongDrugHover(r){
 		})
 		title=titleArr.join(',');
 		o.specification=specificationArr.join(',')
-		o.usage=o.DataValue.replace(/\[(.+)\]/,'').split(' ')[2];
+		o.usage=o.DataValue.replace(/\[(.+)\]/,'').split(' ')[1]; //这个才是用法 20220109
+		o.freq=o.DataValue.replace(/\[(.+)\]/,'').split(' ')[2];
 	}else{
 		var arr=o.DataValue.split(" ");
 		o.specification=arr[1];
-		o.usage=arr[3];
+		o.usage=arr[2];  //这个才是用法 20220109
+		o.freq=arr[3];
 		title=arr[0];
 	}
 
@@ -543,7 +642,7 @@ function fillData(){
 			//
 			$.each(t.records,function(idx){
 				var item=this;
-				if(!ifShowDrug(item.DataValue)) return true;
+				if(!ifShowDrug(item.DataValue,item.Parameters)) return true;
 				var o={text:item.DataValue};
 				if (calDays(searchDate,item.startDate)>=0){  //开始日期在 显示出首日内
 					//计算left位置
@@ -588,7 +687,12 @@ function fillData(){
 				/*
 				var ordArr=item.objId.split("||");
 				o.isOrderViewTrigger=true,o.ordId=ordArr[0]+'||'+parseInt( ordArr[1] );*/
-
+				o.startDate=websys_formatDate(item.startDate);
+				o.startTime=item.startTime;
+				o.startDoc=item.startDoc;
+				o.endDate=websys_formatDate(item.endDate);
+				o.endTime=item.endTime;
+				o.endDoc=item.endDoc;
 
 
 				
@@ -688,6 +792,9 @@ function fillData(){
 						o.isOrderViewTrigger=true,o.ordId=ordArr[0]+'||'+parseInt( ordArr[1] );
 					}*/
 					
+					if(DataTypeCode=="0701" && o.text.indexOf(',')>-1){ //临时药品 多个医嘱名换行
+						o.texts=o.text.split(',').slice(0,4);   //只保留4个
+					}
 					
 					if (OneItem=="Diagnose"){
 						var j=$('#itemLabelNoArrowTmpl').tmpl(o).appendTo( jObjList.eq(index)  );
@@ -707,7 +814,12 @@ function fillData(){
 							if (item.Parameters!="") {
 								var parameterArr=item.Parameters.split('$$$');
 								$.each(parameterArr,function(ind){
-									parameterArr[ind]=linkPath+(linkPath.indexOf('?')>-1?"&":"?")+parameterArr[ind];
+									if (parameterArr[ind].indexOf('?')>-1 || parameterArr[ind].indexOf('http')==0) { //包含?或http开头不拼接
+										parameterArr[ind]=parameterArr[ind];
+									}else{
+										parameterArr[ind]=linkPath+(linkPath.indexOf('?')>-1?"&":"?")+parameterArr[ind];
+									} 
+									
 								})
 								linkPath=parameterArr.join('$$$');
 							}
@@ -730,21 +842,21 @@ function fillData(){
 			})
 		} 
 	})
-	
-	
 	if (ClinicalData && ClinicalData.PatientInfo && typeof ClinicalData.PatientInfo.allergyCount=='string' ){
 		var sp=$('.tl-row-header[data-for="1901"]').find('.title');
 		if (ClinicalData.PatientInfo.allergyCount>0) {
 			sp.addClass('headerLink headerWithCount');
-			sp.append('<span class="count">'+ClinicalData.PatientInfo.allergyCount+'</span>');
+			if (sp.find('.count').length>0) {
+				sp.find('.count').text(ClinicalData.PatientInfo.allergyCount+'');
+			}else{
+				sp.append('<span class="count">'+ClinicalData.PatientInfo.allergyCount+'</span>');
+			}
+			
 		}else{
 			sp.removeClass('headerLink headerWithCount');
 			sp.find('.count').remove();
 		}
-	}
-	
-	
-	
+	}	
 	//内容撑起右侧高度  要修改左侧高度
 	
 	$('#right').find('.tl-row-data').each(function(){
@@ -753,14 +865,37 @@ function fillData(){
 		$('#left').find('.tl-row-header[data-for="'+datatype+'"]').height( $(this).height());
 	})
 	debounce_fixGridBodyScroll();
-	$('.orderview-trigger').orderview({
-		ordGetter:function(){
-			return $(this).data('ord');	
-		},
-		trigger:'contextmenu',
-		autoHeight:false
-		,winHeight:600
-	})
+	
+	$('.orderview-trigger').each(function(ind,item){
+		var winHeight = 600 ;
+		var ovOpt = $(item).data('options');
+		if ( ("string"===typeof ovOpt) && ( (ovOpt.indexOf("ordViewType:'CST'")>-1)||(ovOpt.indexOf("ordViewType:'DRUG'")>-1)||(ovOpt.indexOf("ordViewType:'AN'")>-1) )){
+			winHeight = 800;
+		}
+		var chartsMinHeight=340;
+		var winWidth=1340;
+		// GV.DataConfig.orderViewConfig 里设置高度 图表高度信息
+		var dataTypeCode=$(item).closest('.tl-row-data').data('for');
+		var itemOrderViewConfig=GV.DataConfig.orderViewConfig[dataTypeCode];
+		if (itemOrderViewConfig) {
+			if (itemOrderViewConfig.winHeight) winHeight=itemOrderViewConfig.winHeight;
+			if (itemOrderViewConfig.chartsMinHeight) chartsMinHeight=itemOrderViewConfig.chartsMinHeight;
+			if (itemOrderViewConfig.winWidth) winWidth=itemOrderViewConfig.winWidth;
+		}
+		
+		
+		$(item).orderview({
+			ordGetter:function(){
+				return $(this).data('ord');	
+			},
+			trigger:'contextmenu',
+			autoHeight:false
+			,winHeight:winHeight
+			,chartsMinHeight:chartsMinHeight
+			,winWidth:winWidth
+		})
+	});
+	
 	
 }
 function reFillLongDrugData(){
@@ -776,7 +911,7 @@ function reFillLongDrugData(){
 		if (ViewType=="N" && DataTypeCode=="0601"){//长期药品
 			$.each(t.records,function(idx){
 				var item=this;
-				if(!ifShowDrug(item.DataValue)) return true;
+				if(!ifShowDrug(item.DataValue,item.Parameters)) return true;
 				
 				var o={text:item.DataValue};
 				if (calDays(searchDate,item.startDate)>=0){  //开始日期在 显示出首日内
@@ -820,6 +955,13 @@ function reFillLongDrugData(){
 				var ordArr=item.objId.split("||");
 				o.isOrderViewTrigger=true,o.ordId=ordArr[0]+'||'+parseInt( ordArr[1] );*/
 				
+				o.startDate=websys_formatDate(item.startDate);
+				o.startTime=item.startTime;
+				o.startDoc=item.startDoc;
+				o.endDate=websys_formatDate(item.endDate);
+				o.endTime=item.endTime;
+				o.endDoc=item.endDoc;
+	
 				var j=$('#itemLineTmpl').tmpl(o).appendTo( $('#right').find('.tl-row-data[data-for="'+DataTypeCode+'"]>.c')  );
 				var obj=getLongDrugHover(item);
 				j.find('.tl-itemLine-bg').popover({
@@ -857,7 +999,8 @@ function fillPatInfo(){
 	if(!$('#top .tl-patInfo').is(':visible')) return;
 	//病人信息
 	var patInfo= ClinicalData.PatientInfo;
-    patInfo.patIconCls=patInfo.sex=="男"?"sex-male":(patInfo.sex=="女"?"sex-female":"sex-unknown");
+	var patSex=''+patInfo.sexZH+patInfo.sex;
+    patInfo.patIconCls=((patSex.indexOf('男')>-1)?"sex-male":((patSex.indexOf('女')>-1)?"sex-female":"sex-unknown"));
     patInfo.inDate=websys_formatDate(patInfo.inDate||''); //住院日期格式转换
     //console.log(patInfo);
     if (timeLineId=="OutpatientView"){
@@ -900,7 +1043,11 @@ function fillPatInfo(){
 				//先尝试该变url的形式进行
 				//此处先直接跳转timeline
 				//location.href='/dthealth/web/csp/timeline.csp?'+'&PatientID='+newv.PatientID+'&EpisodeID='+newv.EpisodeID+'&mradm='+newv.mradm||'';
-				location.href=rewriteUrl(location.href,{PatientID:newv.PatientID,EpisodeID:newv.EpisodeID,mradm:newv.mradm||''})
+				var url = location.href;
+				if (url.indexOf("dhc.logon.csp")>-1){
+					url = "timeline.csp";
+				}
+				location.href=getTokenUrl(rewriteUrl(url,{PatientID:newv.PatientID,EpisodeID:newv.EpisodeID,mradm:newv.mradm||''}))
 			}
 		});
 		var tempOnChange=admSelector.select2('options').onChange;
@@ -936,15 +1083,27 @@ function fillAdmHistory(){
 	listStartIndex<0?listStartIndex=0:'';
 	
 	var one_outerWidth=104;
+	if (window.Scene=='2') one_outerWidth=140;
+	var pageSize=4;
+	if (window.Scene=='2') pageSize=5;
+	var listWidth=0;
+	if (window.Scene=='2') {
+		var cnt=Math.min(SeeDoctorInfor.length,5)
+			
+		listWidth=one_outerWidth*cnt;
+	}
 	
     var admHistoryInfo={
-	    title:timeLineId=="AdmView"?'历次住院记录':'历次住院、急诊留观记录',
+	    title:timeLineId=="AdmView"?$g('历次住院记录'):$g('历次住院、急诊留观记录'),
 	    admList:SeeDoctorInfor,
 	    activeIndex:activeIndex,
 	    listStartIndex:listStartIndex,
 	    left:-listStartIndex*one_outerWidth,
-	    one_outerWidth:one_outerWidth
+	    one_outerWidth:one_outerWidth,
+	    pageSize:pageSize,listWidth:listWidth
 	}
+	
+	
     $('#admHistoryTmpl').tmpl(admHistoryInfo).appendTo('#top .tl-admHistory');
     
     $('#top .tl-admHistory').on('click','.tl-admHistory-selector-list td span',function(){
@@ -953,7 +1112,11 @@ function fillAdmHistory(){
 			$(this).addClass('active');
 			//alert($(this).text()+','+$(this).data("adm"))
 			//location.href='/dthealth/web/csp/timeline.csp?'+'&PatientID='+patientID+'&EpisodeID='+$(this).data("adm");
-			location.href=rewriteUrl(location.href,{PatientID:patientID,EpisodeID:$(this).data("adm"),mradm:''})
+			var url = location.href;
+			if (url.indexOf("dhc.logon.csp")>-1){
+				url = "timeline.csp";
+			}
+			location.href=getTokenUrl(rewriteUrl(url,{PatientID:patientID,EpisodeID:$(this).data("adm"),mradm:''}))
 		}
 	})
 	$('#top .tl-admHistory').on('click','.tl-admHistory-selector-prev',function(){
@@ -962,8 +1125,8 @@ function fillAdmHistory(){
 			var table=selector.find('.tl-admHistory-selector-list>table');
 			var listStartIndex=table.data('listStartIndex');
 			var listMaxIndex=table.data('listMaxIndex');
-			if (listStartIndex>4){
-				table.data('listStartIndex',listStartIndex-4).css('left',-(listStartIndex-4)*one_outerWidth);
+			if (listStartIndex>-admHistoryInfo.pageSize){
+				table.data('listStartIndex',listStartIndex-admHistoryInfo.pageSize).css('left',-(listStartIndex-admHistoryInfo.pageSize)*one_outerWidth);
 				selector.find('.tl-admHistory-selector-next').removeClass('disabled');
 			}else{
 				
@@ -980,8 +1143,8 @@ function fillAdmHistory(){
 			var table=selector.find('.tl-admHistory-selector-list>table');
 			var listStartIndex=table.data('listStartIndex');
 			var listMaxIndex=table.data('listMaxIndex');
-			if (listStartIndex+4<listMaxIndex){
-				table.data('listStartIndex',listStartIndex+4).css('left',-(listStartIndex+4)*one_outerWidth);
+			if (listStartIndex+admHistoryInfo.pageSize<listMaxIndex){
+				table.data('listStartIndex',listStartIndex+admHistoryInfo.pageSize).css('left',-(listStartIndex+admHistoryInfo.pageSize)*one_outerWidth);
 				selector.find('.tl-admHistory-selector-prev').removeClass('disabled');
 			}else{
 				table.data('listStartIndex',listMaxIndex).css('left',-listMaxIndex*one_outerWidth);
@@ -1028,28 +1191,41 @@ var debounce_fixGridBodyScroll=debounce(fixGridBodyScroll,200);
 function calDayWidth(){
 	var maxWidth=Math.max($(window).width(),GV.minWidth);
 	//var tDayWidth=Math.floor((maxWidth-217-10-20-20)/7/5)*5;
-	var tDayWidth=Math.floor((maxWidth-217-10-20-5)/7/1)*1;
+	var leftWidth=217;
+	if(window.Scene=='2') leftWidth=192;
+	
+	var tDayWidth=Math.floor((maxWidth-leftWidth-10-20-5)/7/1)*1;
+	tDayWidth=Math.floor((maxWidth-leftWidth-10-20-1)/7/1)*1;
 	//tDayWidth=Math.min(tDayWidth,200);
 	GV.dayWidth=tDayWidth;
 }
 
 var init=function(){
-
-
+	if(typeof HISUIStyleCode=='string' && HISUIStyleCode=='lite'){
+		$('body').addClass('ui-lite')	;
+	}
+	if(typeof Scene=='undefined') Scene='1';
+	$('body').addClass('ui-scene-'+Scene)	;
+	
+	
+	if(window.Scene=='2') GV.minWidth=1100;
 	if (OneItem=="Diagnose"){
 		transData2ClinicalData(DiagnoseInfor);
 		transConfig2CategroyData(DiagnoseType);
 		GV.minWidth=1200;
+		if(window.Scene=='2') GV.minWidth=1100;
 	}else if(OneItem=="BloodPressure"){
 		transData2ClinicalData(BloodPressureInfor);
 		transConfig2CategroyData();
 		GV.minWidth=1200;
+		if(window.Scene=='2') GV.minWidth=1100;
 		$('#top').empty();
 		$('#top').height(10);
 	}else{
 		if (PageFrom==""){
 			if((typeof outEpisodeID!="undefined" && outEpisodeID>0)||(typeof ClinicalData.inEpisodeID!="undefined" && ClinicalData.inEpisodeID>0)){
 				GV.minWidth=1340;
+				if(window.Scene=='2') GV.minWidth=1100;
 			}
 		}
 	}
@@ -1111,9 +1287,8 @@ var init=function(){
 		})
 	}
 	
-	
-	//设置显示项
-	$('#top .tl-patInfo').off('click').on('click','.settings',function(){
+	///设定显示项
+	var viewConfigClickHandler=function(){
 		if (!GV.AllCategroyData){
 			$m({
 				ClassName:'icare.web.TimeLineData'	,
@@ -1131,17 +1306,32 @@ var init=function(){
 		}else{
 			showViewConfig();
 		}
+		
+	}
+	
+	//设置显示项
+	$('#top .tl-patInfo').off('click').on('click','.settings',function(){
+		viewConfigClickHandler();
 	})
 	//从住院打开门诊   从门诊打开住院  带个参数PageFrom ，否则互相打开，就成了套娃了，实际很有趣
 	if (PageFrom==""&&typeof outEpisodeID!="undefined" && outEpisodeID>0){
 		$('.tl-link .out-icon').closest('.tl-link').removeClass('hidden');
+		$('.tl-btn-out').removeClass('hidden');
 	}else{
 		$('.tl-link .out-icon').closest('.tl-link').addClass('hidden');
+		$('.tl-btn-out').addClass('hidden');
 	}
 	if (PageFrom==""&&typeof ClinicalData.inEpisodeID!="undefined" && ClinicalData.inEpisodeID>0){
 		$('.tl-link .in-icon').closest('.tl-link').removeClass('hidden');
+		$('.tl-btn-in').removeClass('hidden');
 	}else{
 		$('.tl-link .in-icon').closest('.tl-link').addClass('hidden');
+		$('.tl-btn-in').addClass('hidden');
+	}
+	
+	if(timeLineId=='AdmView') { //患者示踪
+		$('.tl-link .map-marker-icon').closest('.tl-link').removeClass('hidden');
+		$('.tl-btn-map').removeClass('hidden');
 	}
 	
 	$('#top .tl-link').on('click',function(e){
@@ -1152,20 +1342,54 @@ var init=function(){
 			//套娃窗口
 			SC_CHILD_WINDOW=openRussianDollWin(path,{name:"out"+Math.random()});
     		//SC_CHILD_WINDOW = window.open(path, "门诊病情", "height=800, width=1370, statusbar=yes,scrollbars=yes,menubar=no,toolbar=no,resizable=yes,left=10,top=10");
-		}
-		if(icon.hasClass('in-icon')){
+		}else if(icon.hasClass('in-icon')){
 			SC_WinClose();
 			var path = "timeline.csp?PatientID=" + patientID + "&EpisodeID=" + ClinicalData.inEpisodeID + "&PageFrom="+timeLineId;
 			//套娃窗口
 			SC_CHILD_WINDOW=openRussianDollWin(path,{name:"in"+Math.random()});
-		}
-		if(icon.hasClass('instructions-icon')){
+		}else if(icon.hasClass('instructions-icon')){
 			e.preventDefault();
 			var url=$(this).attr('href');
 			easyModal('使用说明',url,830,1000);
 
+		}else if(icon.hasClass('map-marker-icon')){
+			e.preventDefault();
+			var url='dhc.episodeview.csp?EpisodeID='+episodeId;
+			easyModal('患者示踪',url,750,700);
+
 		}
 	})
+	$('.tl-btn').on('click',function(e){
+		var $t=$(this);
+		if($t.hasClass('tl-btn-out')){
+			SC_WinClose();
+			var path = "timeline.csp?PatientID=" + patientID + "&EpisodeID=" + outEpisodeID + "&PageFrom="+timeLineId;
+			//套娃窗口
+			SC_CHILD_WINDOW=openRussianDollWin(path,{name:"out"+Math.random()});
+    		//SC_CHILD_WINDOW = window.open(path, "门诊病情", "height=800, width=1370, statusbar=yes,scrollbars=yes,menubar=no,toolbar=no,resizable=yes,left=10,top=10");
+		}else if($t.hasClass('tl-btn-in')){
+			SC_WinClose();
+			var path = "timeline.csp?PatientID=" + patientID + "&EpisodeID=" + ClinicalData.inEpisodeID + "&PageFrom="+timeLineId;
+			//套娃窗口
+			SC_CHILD_WINDOW=openRussianDollWin(path,{name:"in"+Math.random()});
+		}else if($t.hasClass('tl-btn-instructions')){
+			e.preventDefault();
+			var url=$(this).attr('href');
+			easyModal('使用说明',url,830,1000);
+
+		}else if($t.hasClass('tl-btn-map')){
+			e.preventDefault();
+			var url='dhc.episodeview.csp?EpisodeID='+episodeId;
+			easyModal('患者示踪',url,750,700);
+
+		}else if($t.hasClass('tl-btn-settings')){
+			e.preventDefault();
+			//设置
+			viewConfigClickHandler();
+		}
+	})
+	$('.tl-btn').tooltip({})
+	
 	window.onunload = SC_WinClose;
 }
 function SC_WinClose(){
@@ -1176,11 +1400,40 @@ function SC_WinClose(){
 }
 
 function showCkTableWin(data,cfg){
+	if (data.list && data.list.length>9 &&!data.newList) { 
+		var isAllChecked=true;
+		$.each(data.list,function(){if(!this.checked) isAllChecked=false;})
+		var newList=[{
+			value:'all',
+			text:'全选',
+			list:data.list	,
+			checked:isAllChecked
+		}]
+		data.newList=newList;
+	
+	}
+	
+	
 	
 	if (!cfg.height||cfg.height=="auto"){
-		var tableH=Math.ceil(data.list.length/data.cols)*30;
-		cfg.height=tableH+(300-213)+20;
+		if(data.newList){
+			var tableH=0;
+			$.each(data.newList,function(){
+				tableH=tableH+Math.ceil(this.list.length/data.cols)*30+30
+			}) 
+			cfg.height=tableH+(300-213)+20;
+		}else if (data.list) {
+			var tableH=Math.ceil(data.list.length/data.cols)*30;
+			cfg.height=tableH+(300-213)+20;
+		}else {
+			cfg.height=300;
+		}
+
 	}
+	cfg.width=Math.min($(window).width()-20,cfg.width||500);
+	cfg.height=Math.min($(window).height()-20,cfg.height||300);
+	
+	
 	if (!GV.ckTableWin){
 		GV.ckTableWin=$('<div id="ckTableWin"><div id="ckTableWinContent" style="padding:10px;"></div></div>').appendTo('body');
 		GV.ckTableWin.dialog({
@@ -1194,11 +1447,12 @@ function showCkTableWin(data,cfg){
 					text:'保存'	,
 					handler:function(){
 						var temp=[];
-						$('#ckTableWinContent').find('table td input').each(function(){
+						$('#ckTableWinContent').find('table td input').not('.ck-table-cat-select-all').each(function(){
 							if($(this).checkbox('getValue')){
 								temp.push($(this).val());
 							}	
 						})
+						
 						var result=temp.join('|');
 						if (GV.ckTableWin.dialog('options').title=="设定显示项"){
 							if(result==""){
@@ -1227,8 +1481,9 @@ function showCkTableWin(data,cfg){
 							if(result==""){
 								$.messager.popover({msg: '至少选择一项药品',type:'alert'});
 								GV.ckTableWin.dialog('close');
-							}else if (result!=GV.DataConfig.showDrugNames.join("|")){
-								GV.DataConfig.showDrugNames=temp
+							}else if (!GV.DataConfig.showDrugArcimArr || result!=GV.DataConfig.showDrugArcimArr.join('|')) {   //(result!=GV.DataConfig.showDrugNames.join("|")){
+								//GV.DataConfig.showDrugNames=temp
+								GV.DataConfig.showDrugArcimArr=temp;
 								reFillLongDrugData(); //重新填充长期药品数据
 								GV.ckTableWin.dialog('close');
 							}else{
@@ -1250,7 +1505,7 @@ function showCkTableWin(data,cfg){
 									departNames:result
 								},function(res){
 									var newHref = location.href.replace("&SetDepart=1", "");
-    								location.href = newHref + "&SetDepart=1";
+    								location.href = getTokenUrl(newHref + "&SetDepart=1");
 								})
 								GV.ckTableWin.dialog('close');
 							}else{
@@ -1278,6 +1533,18 @@ function showCkTableWin(data,cfg){
 	}).window('open');
 
 	$.parser.parse('#ckTableWinContent');
+	
+	$('input.ck-table-cat-select-all').each(function(){
+		$(this).checkbox({
+			onCheckChange:function(e,val){
+				var cat=$(this).val();
+				$('input.ck-table-item-cat-'+cat).checkbox('setValue',val);
+				
+			}
+		})
+	})
+	
+	
 }
 function showViewConfig(){
 	var temp={cols:3,list:[]};
@@ -1357,6 +1624,38 @@ function diagnose_changeDate(index){
 		fillData();
 	})
 }
+
+/*
+*诊疗界面全局刷新
+*{papmi, adm, mradm, forceRefresh}
+*/
+function xhrRefresh(obj){
+	var adm=obj.adm||'',
+		mradm=obj.mradm||'',
+		papmi=obj.papmi||'';
+		
+	if (adm==episodeId && !OneItem) { //就诊相同
+	
+		if(obj.forceRefresh) {
+			//刷新数据
+			if (timeLineId=="OutpatientView"){
+				var index=$('#weekSelector').arrayselector('getValue');
+				$('#weekSelector').arrayselector('options').onChange.call($('#weekSelector')[0],index  );
+			}else{
+				var date=$('#weekSelector').weekselector('getValue');
+				changeDate(date);
+			}
+		}
+		
+	}else{
+		var url = location.href;
+		location.href=getTokenUrl(rewriteUrl(url,{PatientID:papmi,EpisodeID:adm,mradm:mradm}))
+	}
+	
+	
+	
+}
+
 
 
 $(function(){

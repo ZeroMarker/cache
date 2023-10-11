@@ -7,7 +7,7 @@
 var LgUserID = session['LOGON.USERID'];  /// 用户ID
 var LgLocID = session['LOGON.CTLOCID'];  /// 科室ID
 var LgHospID = session['LOGON.HOSPID'];  /// 医院ID
-var ItemTypeArr = [{"value":"N","text":'院内'}, {"value":"Y","text":'院外'}];;
+var ItemTypeArr = [{"value":"N","text":$g('院内')}, {"value":"Y","text":$g('院外')}];;
 
 /// 页面初始化函数
 function initPageDefault(){
@@ -100,7 +100,7 @@ function InitPatList(){
 		{field:'RecUser',title:'接通知者',width:100,align:'center'},
 		{field:'PatLoc',title:'就诊科室',width:120 ,hidden:true},
 		{field:'RDate',title:'派车日期',width:140,align:'center'}, 
-		{field:'MtType',title:'类型',width:100,align:'center'},
+		{field:'MtType',title:'类型',width:100,align:'center',formatter:FMMtType},
 		{field:'MtNotes',title:'备注',width:260},
 		{field:'ScDoc',title:'医生',width:100,align:'center'},
 		{field:'ScNur',title:'护士',width:100,align:'center'},
@@ -120,6 +120,11 @@ function InitPatList(){
 	
 	///  定义datagrid
 	var option = {
+		iconCls:'icon-paper', //hxy 2022-11-21 st
+		headerCls:'panel-header-gray',
+		title:$g('急诊科救护车派车管理'),
+		toolbar:'#toolbar',
+		border:true, //ed
 		//showHeader:false,
 		rownumbers : true,
 		singleSelect : true,
@@ -130,7 +135,7 @@ function InitPatList(){
 			//WriteMdt(rowData.EpisodeID, rowData.CstID);
         },
         rowStyler:function(rowIndex, rowData){
-			if (rowData.AuditFlag == "已审"){
+			if (rowData.AuditFlag == $g("已审")){
 				return 'background-color:pink;';
 			}
 		}
@@ -244,21 +249,22 @@ function newDisAmbMan(){
 /// 新建窗口
 function newDisAmbWin(){
 	var option = {
+			iconCls:"icon-w-paper", //hxy 2022-11-21
 			buttons:[{
-				text:'保存',
-				iconCls:'icon-w-save',
+				text:$g('保存'),
+				iconCls:'', /*icon-w-save*/
 				handler:function(){
 					saveDisAmbMan();
 					}
 			},{
-				text:'取消',
-				iconCls:'icon-w-cancel',
+				text:$g('取消'),
+				iconCls:'', /*icon-w-cancel*/
 				handler:function(){
 					$('#newConWin').dialog('close');
 				}
 			}]
 		};
-	new DialogUX('急诊科救护车派车', 'newConWin', '900', '450', option).Init();
+	new DialogUX($g('急诊科救护车派车'), 'newConWin', '693', '357', option).Init();
 
 }
 
@@ -491,6 +497,10 @@ function PrintDisAmbMan(){
 
 /// 急诊救护车派车单
 function PrintDis_Xml(jsonObj){
+	var LODOP = getLodop();
+	LODOP.PRINT_INIT("CST PRINT");
+	DHCP_GetXMLConfig("InvPrintEncrypt","DHCEM_Ambulance");
+		
 	var MyPara = "";
 	///病人信息
 	MyPara = "PatNo"+String.fromCharCode(2)+jsonObj.PatNo;					 		/// 登记号
@@ -527,10 +537,12 @@ function PrintDis_Xml(jsonObj){
 	
 	MyPara = MyPara+"^BackDate"+String.fromCharCode(2)+jsonObj.BackDate +" "+jsonObj.BackTime   	/// 返回日期
 	
-	DHCP_GetXMLConfig("InvPrintEncrypt","DHCEM_Ambulance");
-	//调用具体打印方法
-	var myobj=document.getElementById("ClsBillPrint");
-	DHCP_PrintFunHDLP(myobj, MyPara, "");
+//	DHCP_GetXMLConfig("InvPrintEncrypt","DHCEM_Ambulance");
+//	//调用具体打印方法
+//	var myobj=document.getElementById("ClsBillPrint");
+//	DHCP_PrintFunHDLP(myobj, MyPara, "");
+	DHC_CreateByXML(LODOP,MyPara,"",[],"PRINT-CST-NT");  //MyPara 为xml打印要求的格式
+	var printRet = LODOP.PRINT();
 }
 
 /// 内容为 undefined 显示空
@@ -542,11 +554,15 @@ function txtUtil(txt){
 /// 急诊院前出诊记录新增
 function InsOpenHosVis(){
 	var link = "dhcem.prehosvis.csp";
-    var iWidth="1100";                         //弹出窗口的宽度;
-    var iHeight="600";                        //弹出窗口的高度;
-	var iTop = (window.screen.height-30-iHeight)/2;       //获得窗口的垂直位置;
-    var iLeft = (window.screen.width-10-iWidth)/2;        //获得窗口的水平位置;
-	window.open(link, 'newWin', 'height='+iHeight+', width='+iWidth+', top='+iTop+', left='+iLeft+', toolbar=no, menubar=no, scrollbars=no,resizable=no, location=no, status=no');
+	websys_showModal({
+		url: link,
+		iconCls:"icon-w-paper",
+		title: $g('急诊院前出诊记录'),
+		closed: true,
+		width:'778px',
+		height:'436px',
+		onClose:function(){}
+	});
 }
 
 /// 急诊院前出诊记录修改
@@ -557,6 +573,17 @@ function UpdOpenHosVis(PhvID){
 	   PhvID=rowsData.PhvID;
 	}
 	var link = "dhcem.prehosvis.csp?PhvID="+ PhvID;
+	websys_showModal({
+		url: link,
+		iconCls:"icon-w-paper",
+		title: $g('急诊院前出诊记录修改'),
+		width:'778px',
+		height:'436px',
+		closed: true,
+		onClose:function(){}
+	});
+	
+	return ;
     var iWidth="1100";                         //弹出窗口的宽度;
     var iHeight="600";                        //弹出窗口的高度;
 	var iTop = (window.screen.height-30-iHeight)/2;       //获得窗口的垂直位置;
@@ -585,6 +612,19 @@ function OpenHosReg(){  //
 	}
 	
 	var link = "dhcem.prehosreg.csp?MaID="+ MaID+"&EpisodeID=" + EpisodeID+"&PhvID=" + PhvID + "&RegID=" + RegID;
+	
+	websys_showModal({
+		url: link,
+		width:"770px", //hxy 2022-11-21 st
+		height:"400px", //ed
+		iconCls:"icon-w-paper",
+		title: $g('急诊院前登记'),
+		closed: true,
+		onClose:function(){}
+	});
+	
+	return;
+	
     var iWidth="900";                         //弹出窗口的宽度;
     var iHeight="400";                        //弹出窗口的高度;
 	var iTop = (window.screen.height-30-iHeight)/2;       //获得窗口的垂直位置;
@@ -620,6 +660,18 @@ function GetPreHosVisInfo(VisID){
 			$('#VisID').text(VisID)
 		}
 	},'json',false)
+}
+
+//hxy 2023-01-15
+function FMMtType(value, rowData, rowIndex){
+	var html="";
+	if(value=="Y"){
+		html="<span>"+$g("院外")+"</span>";
+	}
+	if(value=="N"){
+		html="<span>"+$g("院内")+"</span>";
+	}
+	return html;	
 }
 
 /// JQuery 初始化页面

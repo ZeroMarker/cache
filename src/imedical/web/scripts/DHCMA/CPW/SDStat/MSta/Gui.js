@@ -2,9 +2,42 @@
 function InitMED0101Win(){
 	var obj = new Object();
     $.parser.parse(); 
-	
+	var HospID=session['DHCMA.HOSPID']
 	//初始查询条件
-    obj.cboHospital = Common_ComboToSSHosp("cboHospital",SSHospCode,"SD");
+	$HUI.combobox('#cboHospital',
+	    {
+			url:$URL+'?ClassName=DHCMA.Util.EPS.HospitalSrv&QueryName=QryHospInfo&ResultSetType=Array&aHospID='+HospID,
+			valueField:'OID',
+			textField:'Desc',
+	    	onSelect:function(rd){
+		    	HospID=rd.OID;
+		    	var url =$URL+'?ClassName=DHCMA.Util.EPS.LocationSrv&QueryName=QryLocInfo&ResultSetType=Array&aHospID='+HospID+'&aAdmType=I';
+        		$('#cboLocation').combobox('setValue','');
+        		$('#cboLocation').combobox('reload', url);
+		   },
+		   onLoadSuccess:function(){
+			   	Common_SetValue('cboHospital',HospID);
+			   	$('#search').click();
+			   }		    
+	    } )	
+	$HUI.combobox('#cboLocation',
+	    {
+			url:$URL+'?ClassName=DHCMA.Util.EPS.LocationSrv&QueryName=QryLocInfo&ResultSetType=Array&aHospID='+HospID+'&aAdmType=I',
+			valueField:'OID',
+			textField:'Desc'		    
+	    })
+	    
+	$HUI.combobox('#DateType',
+	    {
+		    data:[
+		    	{'DateType':'1','Desc':"出院日期"},
+		    	{'DateType':'2','Desc':"就诊日期"}
+		    ],
+			valueField:'DateType',
+			textField:'Desc'
+	    }) 
+	Common_SetValue('DateType','1');
+    /*obj.cboHospital = Common_ComboToSSHosp("cboHospital",SSHospCode,"SD");
 	//医院科室联动
 	$HUI.combobox('#cboHospital',{
 	    onSelect:function(rows){
@@ -12,7 +45,7 @@ function InitMED0101Win(){
 		    Common_ComboToLoc("cboLocation","E","","I",HospID);
 		   
 	    }
-    });
+    });*/
     $HUI.combobox('#cboQC',
 	    {
 			url:$URL+'?ClassName=DHCMA.CPW.SDS.QCEntitySrv&QueryName=QryQCEntity&ResultSetType=Array',

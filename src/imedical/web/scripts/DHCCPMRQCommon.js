@@ -87,7 +87,7 @@ function DHCCPM_RQPrint(parameter) {
 
 ///润乾直接打印
 /// 格式: {无参数报表名称.rpx}{有参数报表名称.raq(par1=val1;par2=val2)}
-function DHCCPM_RQDirectPrint(filename)
+function DHCCPM_RQDirectPrintPDF(filename)
 {
 	if (filename==""){
 		alert("请输入报表名称和报表参数");
@@ -154,3 +154,30 @@ function getBroswer(){
 	    
 	    return { broswer : "", version : "0" };
 	}
+	
+	
+///mzc
+///2021-08-08		
+///润乾本地直接打印及多个打印
+///filename={无参数报表名称.rpx}{无参数报表名称.rpx(参数1=value1;参数2=value2;...)}{报表2(参数1=value1;参数2=value2;...)}&printerName=打印机名称
+///printerName：设置默认打印机,默认没有
+function DHCCPM_RQDirectPrint(filename)
+{
+	
+	if (filename==""){
+		alert("请输入报表名称和报表参数");
+		return;
+	}else{
+		var reportName =filename.substring(filename.indexOf("{")+1,filename.indexOf("("));
+		//如果报表名称是.raq 4.0报表进行转换成.rpx
+		if(filename.lastIndexOf(".raq")!=-1){
+			//reportName=reportName.substring(0,reportName.indexOf("."))+".rpx";
+			filename=filename.replace(".raq",".rpx");    
+		}
+	}
+	
+	var rqappserver = tkMakeServerCall("web.DHCBL.RQ.WebServerConfig","GetProjectURL");
+	var runqianurl=rqappserver+"report/jsp/directprintlocal.jsp?report="+filename;
+	//alert(runqianurl);
+	open(runqianurl, "TRAK_hidden");
+}

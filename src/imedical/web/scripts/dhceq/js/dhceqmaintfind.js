@@ -65,7 +65,10 @@ function initDocument()
 
 function BAdd_Clicked()
 {
-	url="dhceqmaint.csp?"+"&BussType=1";	
+	url="dhceqmaint.csp?"+"&BussType=1";
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}	
     window.open(url,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0')
 }
 

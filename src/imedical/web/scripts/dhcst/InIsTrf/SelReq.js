@@ -10,10 +10,10 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 	// 请求部门
 	var RequestPhaLocS = new Ext.ux.LocComboBox({
-		fieldLabel : '请求部门',
+		fieldLabel : $g('请求部门'),
 		id : 'RequestPhaLocS',
 		name : 'RequestPhaLocS',
-		emptyText:'请求部门',
+		emptyText:$g('请求部门'),
 		anchor : '90%',
 		width : 120,
 		defaultLoc:{}
@@ -21,7 +21,7 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 	
 	// 起始日期
 	var StartDateS = new Ext.ux.DateField({
-				fieldLabel : '起始日期',
+				fieldLabel : $g('起始日期'),
 				id : 'StartDateS',
 				name : 'StartDate',
 				anchor : '90%',
@@ -30,7 +30,7 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 			});
 	// 截止日期
 	var EndDateS = new Ext.ux.DateField({
-				fieldLabel : '截止日期',
+				fieldLabel : $g('截止日期'),
 				id : 'EndDateS',
 				name : 'EndDate',
 				anchor : '90%',
@@ -40,7 +40,7 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 	
 	// 包含部分转移
 	var PartlyStatusS = new Ext.form.Checkbox({
-				boxLabel : '包含部分转移',
+				boxLabel : $g('包含部分转移'),
 				id : 'PartlyStatusS',
 				name : 'PartlyStatus',
 				anchor : '90%',
@@ -50,16 +50,35 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 	
 	// 显示已完成转移的请求明细
 	var ShowTransfered = new Ext.form.Checkbox({
-				boxLabel : '显示转移完成药品',
+				boxLabel : $g('显示转移完成药品'),
 				id : 'ShowTransfered',
 				name : 'ShowTransfered',
 				anchor : '90%',
 				checked : false,
 				disabled : false
 			});
+			
+	var ReqStatus = new Ext.ux.form.LovCombo({
+		id : 'ReqStatus',
+		name : 'ReqStatus',
+		fieldLabel : $g('请求状态'),
+		//listWidth : 400,
+		anchor: '90%',
+		//labelStyle : "text-align:right;width:100;",
+		labelSeparator : '',
+		separator:',',	
+		hideOnSelect : false,
+		maxHeight : 300,
+		editable:false,
+		store : GetReqStatusStore ,
+		valueField : 'RowId',
+		displayField : 'Description',
+		triggerAction : 'all'
+	});
+				
 		// 全选
 		var AllBT = new Ext.form.Checkbox({
-					boxLabel : '作废全选',
+					boxLabel : $g('作废全选'),
 					id : 'AllBT',
 					name : 'AllBT',
 					anchor : '90%',
@@ -112,8 +131,8 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 	
 	// 3关闭按钮
 	var closeBTS = new Ext.Toolbar.Button({
-				text : '关闭',
-				tooltip : '关闭界面',
+				text : $g('关闭'),
+				tooltip :$g( '关闭界面'),
 				iconCls : 'page_delete',
 				width : 70,
 				height : 30,
@@ -125,8 +144,8 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 	// 查询请求单按钮
 	var SearchBTS = new Ext.Toolbar.Button({
 				id : "SearchBT",
-				text : '查询',
-				tooltip : '点击查询请求单',
+				text : $g('查询'),
+				tooltip : $g('点击查询请求单'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_find',
@@ -140,8 +159,8 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 	// 清空按钮
 	var ClearBTS = new Ext.Toolbar.Button({
 				id : "ClearBTSR",
-				text : '清屏',
-				tooltip : '点击清屏',
+				text : $g('清屏'),
+				tooltip :$g( '点击清屏'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_clearscreen',
@@ -158,6 +177,7 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 		Ext.getCmp("EndDateS").setValue(DefaultEdDate());
 		Ext.getCmp("PartlyStatusS").setValue(false);
 		Ext.getCmp("ShowTransfered").setValue(false);
+		Ext.getCmp("ReqStatus").setValue("");
 		MasterGridS.store.removeAll();
 		MasterGridS.getView().refresh();
 		DetailGridS.store.removeAll();
@@ -167,8 +187,8 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 	// 保存按钮
 	var SaveBTS = new Ext.Toolbar.Button({
 				id : "SaveBTS",
-				text : '选取',
-				tooltip : '选取',
+				text : $g('选取'),
+				tooltip : $g('选取'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_goto',
@@ -189,21 +209,21 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 		var requestphaLoc = Ext.getCmp("RequestPhaLocS")
 				.getValue();
 		if (requestphaLoc == null || requestphaLoc.length <= 0) {
-			Msg.info("warning", "请选择请求部门!");
+			Msg.info("warning", $g("请选择请求部门!"));
 			return false;
 		}
 		
 		if (SupplyLocId == null || SupplyLocId.length <= 0) {
-			Msg.info("warning", "请关闭窗口，选择供应部门!");
+			Msg.info("warning", $g("请关闭窗口，选择供应部门!"));
 			return false;
 		}
 		if (requestphaLoc == SupplyLocId) {
-			Msg.info("warning", "请求部门和供应部门不能相同!");
+			Msg.info("warning", $g("请求部门和供应部门不能相同!"));
 			return false;
 		}
 		var selectRow=MasterGridS.getSelectionModel().getSelected();
 		if(selectRow==null){
-			Msg.info("warning", "请选择要出库的请求单!");
+			Msg.info("warning", $g("请选择要出库的请求单!"));
 			return false;
 		}
 		return true;
@@ -221,15 +241,15 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 		var selectRow=MasterGridS.getSelectionModel().getSelected();
 		var reqid=selectRow.get("req");
 		if(reqid==null || reqid==""){
-			Msg.info("warning","请选择要出库的请求单!");
+			Msg.info("warning",$g("请选择要出库的请求单!"));
 			return;
 		}
 		if (DetailStore.getCount()<1)
 		{
-			Msg.info("warning","没有需要转移的明细数据!")
+			Msg.info("warning",$g("没有需要转移的明细数据!"))
 			return;
 		}
-		var mask=ShowLoadMask('findWin',"正在生成出库单...");
+		var mask=ShowLoadMask('findWin',$g("正在生成出库单..."));
 		var MainInfo = supplyPhaLoc + "^" + requestPhaLoc + "^" + userId ;		
 		var url = DictUrl
 				+ "dhcinistrfaction.csp?actiontype=CreateTransferByReq&MainInfo=" + MainInfo+"&ReqId="+reqid;
@@ -249,19 +269,19 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 		} else {
 			var ret=jsonData.info;
 			if(ret==-99){
-				Msg.info("error", "加锁失败,不能生成出库单!");
+				Msg.info("error", $g("加锁失败,不能生成出库单!"));
 			}else if(ret==-2){
-				Msg.info("error", "生成出库单号失败!");
+				Msg.info("error", $g("生成出库单号失败!"));
 			}else if(ret==-1){
-				Msg.info("error", "生成出库单失败!");
+				Msg.info("error", $g("生成出库单失败!"));
 			}else if(ret==-5){
-				Msg.info("error", "生成出库单明细失败!");
+				Msg.info("error", $g("生成出库单明细失败!"));
 			}else if(ret==-7){
-				Msg.info("warning", "明细数据可用库存不足!");
+				Msg.info("warning", $g("明细数据可用库存不足!"));
 			}else if(ret==-8){
-				Msg.info("warning", "请求单有效数据已全部出库!");
+				Msg.info("warning",$g( "请求单有效数据已全部出库!"));
 			}else {
-				Msg.info("error", "生成出库单失败："+ret);
+				Msg.info("error", $g("生成出库单失败：")+ret);
 			}
 			
 		}
@@ -272,7 +292,7 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 	function Query() {
 		var supplyphaLoc = Ext.getCmp("SupplyPhaLoc").getValue();  //SupplyLocId;
 		if (supplyphaLoc =='' || supplyphaLoc.length <= 0) {
-			Msg.info("warning", "请选择供应部门!");
+			Msg.info("warning",$g( "请选择供应部门!"));
 			return;
 		}
 		var requestphaLoc = Ext.getCmp("RequestPhaLocS").getValue();
@@ -280,8 +300,9 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 		var endDate = Ext.getCmp("EndDateS").getRawValue();
 		var partlyStatus = (Ext.getCmp("PartlyStatusS").getValue()==true?1:0);
 		var allStatus = (Ext.getCmp("ShowTransfered").getValue()==true?1:0);
+		var ReqStatus = Ext.getCmp("ReqStatus").getValue();
 		
-		var ListParam=startDate+'^'+endDate+'^'+supplyphaLoc+'^'+requestphaLoc+'^'+partlyStatus+'^'+allStatus;
+		var ListParam=startDate+'^'+endDate+'^'+supplyphaLoc+'^'+requestphaLoc+'^'+ReqStatus+'^'+allStatus;  //partlyStatus
 		var Page=GridPagingToolbar.pageSize;
 		MasterStore.setBaseParam('ParamStr',ListParam);
 		MasterStore.removeAll();
@@ -289,7 +310,7 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 			params:{start:0, limit:Page},
 			callback : function(r,options, success){
 					if(success==false){
-	     				Msg.info("error", "查询错误，请查看日志!");
+	     				Msg.info("error", $g("查询错误，请查看日志!"));
 	     			}else{
 	     				if(r.length>0){
 		     				MasterGridS.getSelectionModel().selectFirstRow();
@@ -340,48 +361,48 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 				sortable : true,
 				hidden : true
 			}, {
-				header : "请求单号",
+				header : $g("请求单号"),
 				dataIndex : 'reqNo',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "请求部门",
+				header : $g("请求部门"),
 				dataIndex : 'toLocDesc',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "供给部门",
+				header : $g("供给部门"),
 				dataIndex : 'frLocDesc',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "请求日期",
+				header : $g("请求日期"),
 				dataIndex : 'date',
 				width : 90,
 				align : 'center',
 				sortable : true
 			}, {
-				header : "单据类型",
+				header : $g("单据类型"),
 				dataIndex : 'status',
 				width : 120,
 				align : 'left',
 				renderer: renderReqType,
 				sortable : true
 			}, {
-				header : "制单人",
+				header : $g("制单人"),
 				dataIndex : 'userName',
 				width : 90,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "转移状态",
+				header : $g("请求状态"),
 				dataIndex : 'transferStatus',
-				width : 80,
+				width : 160,
 				align : 'left',
-				renderer: renderStatus,
+				//renderer: renderStatus,
 				sortable : true
 			}]);
 	MasterCm.defaultSortable = true;
@@ -389,20 +410,20 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 	function renderStatus(value){
 		var InstrfStatus='';
 		if(value==0){
-			InstrfStatus='未转移';			
+			InstrfStatus=$g('未转移');			
 		}else if(value==1){
-			InstrfStatus='部分转移';
+			InstrfStatus=$g('部分转移');
 		}else if(value==2){
-			InstrfStatus='全部转移';
+			InstrfStatus=$g('全部转移');
 		}
 		return InstrfStatus;
 	}
 	function renderReqType(value){
 		var ReqType='';
 		if(value=='O'){
-			ReqType='请领单';
+			ReqType=$g('请领单');
 		}else if(value=='C'){
-			ReqType='申领计划';
+			ReqType=$g('申领计划');
 		}
 		return ReqType;
 	}
@@ -411,8 +432,8 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 		store:MasterStore,
 		pageSize:PageSize,
 		displayInfo:true,
-		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录"
+		displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+		emptyMsg:$g("没有记录")
 	});
 	var MasterGridS = new Ext.grid.GridPanel({
 				title : '',
@@ -472,7 +493,7 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 
 	var nm = new Ext.grid.RowNumberer();
 	var DetailCm = new Ext.grid.ColumnModel([nm,{
-		              header : "作废",
+		              header :$g( "作废"),
 		              width : 50,
 		              sortable: false,             
 		              dataIndex: 'cancel',//数据源中的状态列             
@@ -497,88 +518,88 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 			             
 		                     
 		        },{
-				header : "请求明细RowId",
+				header : $g("请求明细RowId"),
 				dataIndex : 'rowid',
 				width : 100,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "药品RowId",
+				header : $g("药品RowId"),
 				dataIndex : 'inci',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : '药品代码',
+				header : $g('药品代码'),
 				dataIndex : 'code',
 				width : 80,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '药品名称',
+				header : $g('药品名称'),
 				dataIndex : 'desc',
 				width : 230,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "供应方库存",
+				header : $g("供应方库存"),
 				dataIndex : 'prvqty',
 				width : 80,
 				align : 'right',
 				sortable : true				
 			}, {
-				header : "请求数量",
+				header : $g("请求数量"),
 				dataIndex : 'qty',
 				width : 80,
 				align : 'right',
 				sortable : true				
 			}, {
-				header : "已转移数量",
+				header : $g("已转移数量"),
 				dataIndex : 'transQty',
 				width : 80,
 				align : 'right',
 				sortable : true				
 			}, {
-				header : "未转移数量",
+				header : $g("未转移数量"),
 				dataIndex : 'NotTransQty',
 				width : 80,
 				align : 'right',
 				sortable : true				
 			}, {
-				header : "单位",
+				header :$g( "单位"),
 				dataIndex : 'uomDesc',
 				width : 80,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "售价",
+				header : $g("售价"),
 				dataIndex : 'sp',
 				width : 60,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "生产厂商",
+				header : $g("生产企业"),
 				dataIndex : 'manf',
 				width : 180,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "规格",
+				header : $g("规格"),
 				dataIndex : 'spec',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "处方通用名",
+				header : $g("处方通用名"),
 				dataIndex : 'generic',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "剂型",
+				header : $g("剂型"),
 				dataIndex : 'drugForm',
 				width : 100,
 				align : 'left',
@@ -588,8 +609,8 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 		store:DetailStore,
 		pageSize:PageSize,
 		displayInfo:true,
-		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录"
+		displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+		emptyMsg:$g("没有记录")
 	});
 
 	var DetailGridS = new Ext.grid.GridPanel({
@@ -638,27 +659,27 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 		    	// 访问路径
 	         var url =DictUrl+
 		        'inrequestaction.csp?actiontype=CancelReqItm';
-			var loadMask=ShowLoadMask(Ext.getBody(),"处理中...");
+			var loadMask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 			Ext.Ajax.request({
 						url : url,
 						method : 'POST',
 						params:{ListDetailID:ListDetailID,CancelFlag:CancelFlag},
-						waitMsg : '处理中...',
+						waitMsg : $g('处理中...'),
 						success : function(result, request) {
 							var jsonData = Ext.util.JSON
 									.decode(result.responseText);
 							if (jsonData.success == 'true') {
 								if (CancelFlag=="N"){
-									Msg.info("success", "取消作废成功!");
+									Msg.info("success", $g("取消作废成功!"));
 								}else{
-									Msg.info("success", "作废成功!");
+									Msg.info("success",$g("作废成功!"));
 								}
 								// 重新加载数据
 								DetailGridS.getView().refresh();
 
 							} else {
 								//var ret=jsonData.info;
-								Msg.info("error", "作废失败!");
+								Msg.info("error", $g("作废失败!"));
 							}
 						},
 						scope : this
@@ -674,15 +695,15 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 		function CancelDetails() {
          // 用户对话框
                    Ext.Msg.show({
-	                 title:'批量作废选中项',
-	                 msg:'确定批量作废选中项？',
+	                 title:$g('批量作废选中项'),
+	                 msg:$g('确定批量作废选中项？'),
 	                 scope: this,
 	                 buttons: Ext.Msg.OKCANCEL,
 	                 icon:Ext.MessageBox.QUESTION,
                      fn: function(id){
 	                     if (id=='ok'){
 		                    var ListDetailID=QueryListDetailID();
-		                    if (ListDetailID=="") {Msg.info("warning","没有勾选作废项!");}
+		                    if (ListDetailID=="") {Msg.info("warning",$g("没有勾选作废项!"));}
 		                    if (ListDetailID!=""){
 		                        CancelDetailsAction(ListDetailID,"Y"); 
 		                       }
@@ -713,13 +734,13 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 				{ 
 					id: 'mncancelSelectAll', 
 					handler: CancelSelectAll, 
-					text: '全选作废列',
+					text: $g('全选作废列'),
 					click:true
 					 
 				},{ 
 					id: 'mncancelDetails', 
 					handler: CancelDetails, 
-					text: '批量作废',
+					text: $g('批量作废'),
 					click:true,
 					hidden:(gParam[9]=='Y'?false:true)
 					 
@@ -742,7 +763,7 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 		autoScroll : false,		
 		items:[{
 			xtype:'fieldset',
-			title:'查询条件',
+			title:$g('查询条件'),
 			defaults: {border:false}, 
 			style:DHCSTFormStyle.FrmPaddingV,
 			layout: 'column',    // Specifies that the items will now be arranged in columns
@@ -761,6 +782,14 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 	        	items: [StartDateS,EndDateS]
 				
 			},{ 				
+				columnWidth: 0.25,
+	        	xtype: 'fieldset',
+	        	defaults: {width: 140},    // Default config options for child items
+	        	defaultType: 'textfield',
+	        	items: [ReqStatus,ShowTransfered]
+				
+			}
+			/*,{ 				
 				columnWidth: 0.2,
 	        	xtype: 'fieldset',
 	        	border: false,
@@ -768,7 +797,7 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 	        	//defaults: {width: 140,labelWidth : 10},    // Default config options for child items
 	        	items: [ShowTransfered,PartlyStatusS]
 				
-			}/*,{ 				
+			}*//*,{ 				
 				columnWidth: 0.24,
 	        	xtype: 'fieldset',
 	        	border: false,
@@ -779,7 +808,7 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 		}]		
 	});
 	var findWin = new Ext.Window({
-		title:'选取请求单',
+		title:$g('选取请求单'),
 		id:'findWin',
 		width:document.body.clientWidth*0.9,
 		height:document.body.clientHeight*0.9,
@@ -796,7 +825,7 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 	            items:HisListTab
 	        }, {
 	            region: 'west',
-	            title: '请求单',
+	            title: $g('请求单'),
 	            collapsible: true,
 	            split: true,
 	            width: document.body.clientWidth*0.88*0.32,
@@ -808,7 +837,7 @@ var SelReq=function(SupplyLocId,Fn,HideFlag) {
 	           
 	        }, {
 	            region: 'center',
-	            title: '请求单明细',
+	            title: $g('请求单明细'),
 	            layout: 'fit', // specify layout manager for items
 	            items: DetailGridS       
 	           

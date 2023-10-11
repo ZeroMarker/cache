@@ -58,33 +58,33 @@ function InitGridRequest() {
 	var columns = [
 		[{
 				field: 'req',
-				title: '请求单Id',
+				title: ("请求单Id"),
 				width: 80,
 				align: 'left',
 				hidden: true
 			}, {
 				field: 'reqCode',
-				title: '请求单号',
+				title: ("请求单号"),
 				width: 80,
 				align: 'left'
 			}, {
 				field: 'reqDate',
-				title: '请求日期',
+				title: ("请求日期"),
 				width: 100,
 				align: 'left'
 			}, {
 				field: 'reqTime',
-				title: '请求时间',
+				title: ("请求时间"),
 				width: 100,
 				align: 'left'
 			}, {
 				field: 'reason',
-				title: '请求原因',
+				title: ("请求原因"),
 				width: 100,
 				align: 'left'
 			}, {
 				field: 'retFlag',
-				title: '已退标志',
+				title: ("已退标志"),
 				width: 80,
 				align: 'center',
 				editor: {
@@ -103,44 +103,44 @@ function InitGridRequest() {
 				}
 			}, {
 				field: 'userName',
-				title: '请求人',
+				title: ("请求人"),
 				width: 100,
 				align: 'left'
 			}, {
 				field: 'pano',
-				title: '登记号',
+				title: ("登记号"),
 				width: 120,
 				align: 'left'
 			}, {
 				field: 'paname',
-				title: '病人姓名',
+				title: ("病人姓名"),
 				width: 100,
 				align: 'left'
 			}, {
 				field: 'age',
-				title: '年龄',
+				title: ("年龄"),
 				width: 80,
 				align: 'left'
 			}, {
 				field: 'pasex',
-				title: '性别',
+				title: ("性别"),
 				width: 80,
 				align: 'left'
 			}, {
 				field: 'invNo',
-				title: '发票号',
+				title: ("发票号"),
 				width: 100,
 				halign: 'left',
 				align: 'left',
 				hidden: true
 			}, {
 				field: 'dispLoc',
-				title: '药房',
+				title: ("药房"),
 				width: 100,
 				align: 'left'
 			}, {
 				field: 'ordDeptLoc',
-				title: '门诊科室',
+				title: ("门诊科室"),
 				width: 150,
 				align: 'left'
 			}
@@ -158,6 +158,7 @@ function InitGridRequest() {
 		pageSize: 50,
 		pageList: [50, 100, 300, 500],
 		pagination: true,
+		toolbar:[],
 		onSelect: function (rowIndex, rowData) {
 			if (rowData) {
 				QueryDetail();
@@ -185,7 +186,8 @@ function QueryParams() {
 	if (($('#onlyflag').is(':checked')) == true) {
 		onlyFlag = "on";
 	}
-	return stDate + "^" + edDate + "^" + phaLocId + "^" + patNo + "^" + onlyFlag;
+	var patName = $('#txtPatName').val().trim();
+	return stDate + "^" + edDate + "^" + phaLocId + "^" + patNo + "^" + onlyFlag + "^" + patName;
 }
 // 查询
 function Query() {
@@ -205,7 +207,8 @@ function Query() {
 				PrescNo: "",
 				PatNo: paramsArr[3],
 				ctloc: SessionLoc,
-				onlyAdmDoc: paramsArr[4]
+				onlyAdmDoc: paramsArr[4],
+				pmiName: paramsArr[5]
 			}
 		});
 }
@@ -224,39 +227,39 @@ function InitGridRequestDetail() {
 				hidden: true
 			}, {
 				field: 'arcimDesc',
-				title: '药品名称',
+				title: ("药品名称"),
 				width: 450,
 				align: 'left'
 			}, {
 				field: 'uom',
-				title: '单位',
+				title: ("单位"),
 				width: 120,
 				align: 'left'
 			}, {
 				field: 'dispQty',
-				title: '发药数量',
+				title: ("发药数量"),
 				width: 150,
 				halign: 'left',
 				align: 'left'
 			}, {
 				field: 'reqQty',
-				title: '请求数量',
+				title: ("请求数量"),
 				width: 150,
 				halign: 'left',
 				align: 'left'
 			}, {
 				field: 'retQty',
-				title: '已退数量',
+				title: ("已退数量"),
 				width: 150,
 				hidden: true
 			}, {
 				field: 'dispAmt',
-				title: '发药金额',
+				title: ("发药金额"),
 				width: 150,
 				hidden: true
 			}, {
 				field: 'sp',
-				title: '单价',
+				title: ("单价"),
 				width: 120,
 				halign: 'right',
 				align: 'right',
@@ -267,19 +270,19 @@ function InitGridRequestDetail() {
 				}*/
 			}, {
 				field: 'prescno',
-				title: '处方号',
+				title: ("处方号"),
 				width: 180,
 				halign: 'left',
 				align: 'left'
 			}, {
 				field: 'reqAmt',
-				title: '请求金额',
+				title: ("请求金额"),
 				width: 140,
 				halign: 'right',
 				align: 'right'
 			}, {
 				field: 'cyFlag',
-				title: '草药处方标志',
+				title: ("草药处方标志"),
 				width: 80,
 				hidden: true
 			}
@@ -338,7 +341,7 @@ function QueryDetail() {
 	var row = $('#gridRequest').datagrid('getSelected');
 	var reqId = row.req;
 	if ((reqId == null) || (reqId == "")) {
-		$.messager.alert("提示", "请先选择记录", "warning");
+		$.messager.alert($g("提示"), $g("请先选择记录"), "warning");
 		return;
 	}
 	$('#gridRequestDetail').datagrid({
@@ -368,7 +371,7 @@ function GetCheckedReqItmArr() {
 function DeleteReqItm() {
 	var reqItmIdStr = GetCheckedReqItmArr();
 	if ((reqItmIdStr == "") || (reqItmIdStr == undefined)) {
-		$.messager.alert("提示", "请先勾选需要删除的记录", "warning");
+		$.messager.alert($g("提示"), $g("请先勾选需要删除的记录"), "warning");
 		return;
 	}
 
@@ -377,8 +380,10 @@ function DeleteReqItm() {
 	var delVal = delRetArr[0];
 	var delInfo = delRetArr[1];
 	if (delVal < 0) {
-		$.messager.alert("提示", delInfo, "warning");
+		$.messager.alert($g("提示"), delInfo, "warning");
 		//return;
+	}else{
+		$.messager.alert($g("提示"), $g("删除成功"), "info");
 	}
 	QueryDetail();
 }
@@ -397,7 +402,7 @@ function Clear() {
 function Print() {
 	var row = $('#gridRequest').datagrid('getSelected');
 	if ((row == null) || (row == "")) {
-		$.messager.alert("提示", "请勾选需要打印的退药申请单", "warning");
+		$.messager.alert($g("提示"), $g("请勾选需要打印的退药申请单"), "warning");
 		return;
 	}
 	
@@ -412,7 +417,7 @@ function Print() {
 		XMLTemplate: "DHCOutReturnRequest",
 		data:prtJson,
 		listBorder: {style:4, startX:1, endX:90,space:1},
-		aptListFields: ["lasttitle","lasttitle2"],
-		listAutoWrap:true
-	});
+		 aptListFields: ["lasttitle","lasttitle2"],
+		 listAutoWrap:true
+	 });
 }

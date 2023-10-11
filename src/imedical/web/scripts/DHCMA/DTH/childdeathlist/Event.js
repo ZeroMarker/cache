@@ -6,7 +6,7 @@ function InitChildDeathListEvent(obj){
 		$('#btnFind').on('click', function(){
 			obj.btnFind_click();
 		});
-		
+		obj.gridChildDeathReportLoad();
 		//登记号回车查询事件
 		$('#txtRegNo').keydown(function (e) {
 			var e = e || window.event;
@@ -74,7 +74,8 @@ function InitChildDeathListEvent(obj){
 	}
 	
 	obj.gridChildDeathReportLoad = function(){	
-		obj.gridChildDeathReport.load({
+		console.log($('#cboRepStatus').combobox('getValue'));
+		$cm ({
 			ClassName:"DHCMed.DTHService.ReportChildSrv",
 			QueryName:"QryDeathPatients",
 			aDateType: $('#cboDateType').combobox('getValue'), 			
@@ -83,8 +84,13 @@ function InitChildDeathListEvent(obj){
 			aLocID: $('#cboRepLoc').combobox('getValue'),
 			aHospID:$('#cboSSHosp').combobox('getValue'),   
 			aExamConts: obj.GetExamConditions(),
-			aExamSepeare: "^"
-	    });
+			aExamSepeare: "^",
+		    aRepStatus:$('#cboRepStatus').combobox('getValue'),
+	    	page:1,
+			rows:999
+		},function(rs){
+			$('#gridChildDeath').datagrid({loadFilter:pagerFilter}).datagrid('loadData', rs);				
+		});
     }
 	
 }

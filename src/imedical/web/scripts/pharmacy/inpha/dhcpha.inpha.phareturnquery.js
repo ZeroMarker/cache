@@ -54,6 +54,9 @@ function InitPhaLoc() {
         placeholder: "药房名称..."
     }
     $("#sel-phaloc").dhcphaSelect(selectoption);
+	$('#sel-phaloc').on('select2:select', function (event) {
+		InitPhaWard(event.params.data.id)
+    });
     if (DHCPHA_CONSTANT.DEFAULT.LOC.type == "D") {
         var select2option = '<option value=' + "'" + DHCPHA_CONSTANT.DEFAULT.LOC.id + "'" + 'selected>' + DHCPHA_CONSTANT.DEFAULT.LOC.text + '</option>'
         $("#sel-phaloc").append(select2option); //设默认值,没想到好办法,yunhaibao20160805
@@ -62,12 +65,15 @@ function InitPhaLoc() {
         });
     }
 }
-
+//改为按接收科室配置取患者病区(可满足跨院区发药的情况)  by zhaoxinlong 2022.04.22
 //初始化病区
 function InitWardList() {
+	if ((recLocId == undefined) || (recLocId == "undefined")) {
+        recLocId = DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID;
+    }
     var selectoption = {
         url: DHCPHA_CONSTANT.URL.COMMON_INPHA_URL +
-            "?action=GetWardLocDs&style=select2",
+            "?action=GetWardLocDsByRecLoc&style=select2"+"&reclocId="+reclocId,
         allowClear: true,
         width: '13em',
         placeholder: "病区..."
@@ -324,7 +330,7 @@ function InitReturnDetailList() {
             },
             {
                 field: 'TManf',
-                title: '厂商',
+                title: '生产企业',
                 width: 120
             },
             {

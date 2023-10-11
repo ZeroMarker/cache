@@ -42,6 +42,7 @@ function InitOPDocLogTabDataGrid(){
 	return OPDocLogTabDataGrid;
 }
 function OPDocLogTabDataGridLoad(){
+	
 	var OpDate=$("#OpDate").datebox('getValue');
 	var OpDate2=$("#OpDate2").datebox('getValue');
 	$.cm({
@@ -52,13 +53,19 @@ function OPDocLogTabDataGridLoad(){
 	    Pagerows:1,
 	    rows:99999
 	},function(GridData){
-		PageLogicObj.m_OPDocLogTabDataGrid.datagrid('loadData',GridData);
+		PageLogicObj.m_OPDocLogTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
 	});
+	
 }
 function ExportClickHandle(){
 	try {
 		var StartDate=$('#OpDate').datebox('getValue');
     	var EndDate=$('#OpDate2').datebox('getValue');
+		var rows = PageLogicObj.m_OPDocLogTabDataGrid.datagrid('getRows');
+		if ((!rows)||(rows.length==0)){
+			$.messager.alert("提示","请查询出数据后导出!");
+		    return false;	
+		}
 		var rtn = $.cm({
 			dataType:'text',
 			ResultSetType:'Excel',

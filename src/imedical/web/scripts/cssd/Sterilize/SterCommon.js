@@ -1,33 +1,21 @@
-var ParamObj = GetAppPropValue('CSSDSTERILIZE');
-function IfSterFinish(){
-	var IsSterFinish = ParamObj.IsSterFinish;
-	return IsSterFinish;
-}
-function IfMachineBindCar(){
-	var IsMachineBindCar = ParamObj.IsMachineBindCar;
-	return IsMachineBindCar;
-}
-///return:起始日期
-function DefaultStDate(){
+锘縱ar SterParamObj = GetAppPropValue('CSSDSTERILIZE');
+var MachineFtpObj = GetAppPropValue('CSSDMACHINEFTP');
+// return:璧峰鏃ユ湡
+function DefaultStDate() {
 	var Today = new Date();
-	var DefStartDate = ParamObj.DefStartDate;
-	if(isEmpty(DefStartDate)){
-		return Today;
+	var DefStartDate = SterParamObj.DefStartDate;
+	if (isEmpty(DefStartDate)) {
+		return DateFormatter(Today);
 	}
 	var EdDate = DateAdd(Today, 'd', parseInt(DefStartDate));
-	return DateFormatter(EdDate);	
-		
+	return DateFormatter(EdDate);
 }
-function DefaultEdDate(){
+function DefaultEdDate() {
 	var Today = new Date();
-	var DefEndDate = ParamObj.DefEndDate;
-	if(isEmpty(DefEndDate)){
-		return Today;
+	var DefEndDate = SterParamObj.DefEndDate;
+	if (isEmpty(DefEndDate)) {
+		return DateFormatter(Today);
 	}
 	var EdDate = DateAdd(Today, 'd', parseInt(DefEndDate));
 	return DateFormatter(EdDate);
-}
-function RequiredDelete(){
-	var RequiredDelete = ParamObj.RequiredDelete;
-	return RequiredDelete;
 }

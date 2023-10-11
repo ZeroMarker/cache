@@ -35,7 +35,7 @@ function InitScheduleQueryTabDataGrid(){
 		border : false,
 		striped : true,
 		singleSelect : true,
-		fitColumns : false,
+		fitColumns : true,
 		rownumbers:true,
 		autoRowHeight : false,
 		pagination : true,  

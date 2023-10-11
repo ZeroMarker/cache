@@ -1,6 +1,6 @@
 ﻿/**
  * FileName: dhcbill.conf.page.set.main.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-11-01
  * Description: 页面配置
  */
@@ -36,7 +36,7 @@ $(function() {
 		}
 	});
 	
-	GV.PageList = $HUI.datagrid("#pageList",{
+	GV.PageList = $HUI.datagrid("#pageList", {
 		fit: true,
 		border: false,
 		singleSelect: true,
@@ -59,12 +59,12 @@ $(function() {
 		},
 		onLoadSuccess: function(data) {
 			GV.PageList.unselectAll();
-			GV.PageList.getPanel().find(".l-btn:not('#btn-add')").linkbutton("disable");
+			GV.PageList.getPanel().find(".l-btn[id!='']:not('#btn-add')").linkbutton("disable");
 			$(".layout:first").layout("panel", "center").panel("setTitle", "页面配置");
 			$("iframe").attr("src", "dhcbill.nodata.warning.csp");
 		},
 		onSelect: function(index, row) {
-			GV.PageList.getPanel().find(".l-btn:not('#btn-add')").linkbutton("enable");
+			GV.PageList.getPanel().find(".l-btn[id!='']:not('#btn-add')").linkbutton("enable");
 			$(".layout:first").layout("panel", "center").panel("setTitle", row.pageName + "页面配置");
 			loadConfPage(row.rowId, row.confURL);
 		}
@@ -73,6 +73,7 @@ $(function() {
 
 function loadConfPage(pageId, url) {
 	var src = url + "?PageId=" + pageId;
+	src = websys_writeMWToken(src);
 	if ($("iframe").attr("src") != src) {
 		$("iframe").attr("src", src);
 	}
@@ -135,23 +136,24 @@ function save(row) {
 					
 					var pageInfo = getValueById("edit-cspName") + "^" + getValueById("edit-pageName") + "^" + getValueById("edit-confURL");
 					$.messager.confirm("确认", "确认保存？", function(r) {
-						if (r) {
-							$.m({
-								ClassName: "web.DHCBillWebPage",
-								MethodName: "Save",
-								id: id,
-								pageInfo: pageInfo
-							}, function (rtn) {
-								var myAry = rtn.split("^");
-								if (myAry[0] == "0") {
-									$.messager.popover({msg: "保存成功", type: "success"});
-									editDlgObj.close();
-									GV.PageList.reload();
-								} else {
-									$.messager.popover({msg: "保存失败：" + myAry[0], type: "error"});
-								}
-							});
+						if (!r) {
+							return;
 						}
+						$.m({
+							ClassName: "web.DHCBillWebPage",
+							MethodName: "Save",
+							id: id,
+							pageInfo: pageInfo
+						}, function (rtn) {
+							var myAry = rtn.split("^");
+							if (myAry[0] == 0) {
+								$.messager.popover({msg: "保存成功", type: "success"});
+								editDlgObj.close();
+								GV.PageList.reload();
+								return;
+							}
+							$.messager.popover({msg: "保存失败：" + (myAry[1] || myAry[0]), type: "error"});
+						});
 					});
 				}
 			}, {
@@ -175,19 +177,20 @@ function deleteClick() {
 	}
 	var id = row.rowId;
 	$.messager.confirm("确认", "确认删除？", function(r) {
-		if (r) {
-			$.cm({
-				ClassName: "web.DHCBillWebPage",
-				MethodName: "Delete",
-				id: id
-			}, function (json) {
-				if (json.success == "0") {
-					$.messager.popover({msg: json.msg, type: "success"});
-					GV.PageList.reload();
-				} else {
-					$.messager.popover({msg: json.msg, type: "error"});
-				}
-			});
+		if (!r) {
+			return;
 		}
+		$.cm({
+			ClassName: "web.DHCBillWebPage",
+			MethodName: "Delete",
+			id: id
+		}, function (json) {
+			if (json.success == 0) {
+				$.messager.popover({msg: json.msg, type: "success"});
+				GV.PageList.reload();
+				return;
+			}
+			$.messager.popover({msg: json.msg, type: "error"});
+		});
 	});
 }

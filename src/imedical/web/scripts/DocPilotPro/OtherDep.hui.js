@@ -76,7 +76,7 @@ function PilotProOtherDepListTabDataLoad(){
 var LastSelLocId="";
 function LoadDepartment(){
 	var cbox = $HUI.combobox("#PPCreateDepartment", {
-		url:$URL+"?ClassName=web.PilotProject.DHCDocPilotProject&QueryName=FindLoc&Loc=&ResultSetType=array",
+		url:$URL+"?ClassName=web.PilotProject.DHCDocPilotProject&QueryName=FindLoc&Loc=&InHosp="+ServerObj.InHosp+"&ResultSetType=array",
 		valueField:'RowId',
 		textField:'Desc',
 		filter: function(q, row){
@@ -137,6 +137,8 @@ function LoadStartUser(){
 		QueryName:"FindStartUser",
 		dataType:"json",
 		PPStartUser:"",
+		ShowCode:"Y",
+		InHosp:ServerObj.InHosp,
 		rows:99999
 	},false); 
 	var cbox = $HUI.combobox("#PPStartUser", {
@@ -151,7 +153,7 @@ function LoadStartUser(){
 					
 					var sid = "";
 					var loc=""
-					url = $URL+"?ClassName=web.PilotProject.DHCDocPilotProject&QueryName=FindLoc&Loc="+loc+"&User="+sid+"&ResultSetType=array";
+					url = $URL+"?ClassName=web.PilotProject.DHCDocPilotProject&QueryName=FindLoc&Loc="+loc+"&InHosp="+ServerObj.InHosp+"&User="+sid+"&ResultSetType=array";
 					PageLogicObj.m_Loc.reload(url);
 					PageLogicObj.m_Loc.setValue("");
 				}
@@ -163,7 +165,7 @@ function LoadStartUser(){
 			onSelect: function (record) {
 				var sid = record.Hidden;
 				var loc=""
-				url = $URL+"?ClassName=web.PilotProject.DHCDocPilotProject&QueryName=FindLoc&Loc="+loc+"&User="+sid+"&ResultSetType=array";
+				url = $URL+"?ClassName=web.PilotProject.DHCDocPilotProject&QueryName=FindLoc&Loc="+loc+"&InHosp="+ServerObj.InHosp+"&User="+sid+"&ResultSetType=array";
 				PageLogicObj.m_Loc.reload(url);
 				PageLogicObj.m_Loc.setValue("");
 			}
@@ -222,12 +224,21 @@ function AddClickHandle(){
 			return false;
 		}
 	}
+	var dynObj = $cm({
+			ClassName: "web.PilotProject.CFG.FindGCP",
+			MethodName: "GetPI",
+			PPRowId: ServerObj.PPRowId
+		},false)
+	if ((dynObj.user==TPPStartUserDr)&&(dynObj.loc==TPPCreateDepartmentDr)) {
+		$.messager.alert("提示","与主要研究者和立项科室重复！","warning");
+		return false;
+	}
 	PageLogicObj.m_PilotProOtherDepListTabDataGrid.datagrid('appendRow',{
 		TPPDRowId: 3,
 		TPPCreateDepartmentDr: TPPCreateDepartmentDr,
 		TPPStartUserDr: TPPStartUserDr,
 		TPPCreateDepartment:TPPCreateDepartment,
-		TPPStartUser:TPPStartUser
+		TPPStartUser:TPPStartUser.split("(")[0]
 	});
 	ResetOtherDepData("Add");
 }

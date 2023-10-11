@@ -257,6 +257,7 @@ function BFind_Clicked()
 	        StartDate:getElementValue("StartDate"),
 	        EndDate:getElementValue("EndDate"),
 	        RequestLocDR:getElementValue("RequestLocDR"),
+        	BussType:getElementValue("BussType"),
 		    },
 	});
 	
@@ -284,112 +285,118 @@ function InvoiceOperation(value,row,index)
 ///desc:发票补录弹窗界面
 function MapGridData()
 {
-	
-	var rows = $('#invoicefinddatagrid').datagrid('getChecked')   //.TRowID;
-	if (rows=="")
-	{
-		messageShow("","","","未选中数据！")
-	    return;
-	    
-	 }
-	
+    ///modified by ZY20221206 bug:3104507
     var combindata="";
     var providerinfos=""
-	$.each(rows, function(rowIndex, rowData){
-		if (combindata=="")
-		{ 
-			combindata=rowData.TRowID;
-		}
-		 else combindata=combindata+","+rowData.TRowID; 
-		 if (providerinfos=="")
-		 {
-			providerinfos=rowData.TProviderDR
-			ProviderDR=rowData.TProviderDR
-		 }
-		 else
-		 {
-			if ((","+providerinfos+",").indexOf(","+rowData.TProviderDR+",")==-1)
-			{
-			providerinfos=providerinfos+","+rowData.TProviderDR
-			}
-			 
-		 }
-	}); 
-	var prolen=providerinfos.split(",").length
-	if (prolen>1)
-	{
-		messageShow("","","","选中入库明细供应商不一致！")
-		return
-	}
-	var url="dhceq.plat.invoicemapinstock.csp?&InvoiceStr="+combindata+"&ProviderDR="+ProviderDR+"&MenuName=Invoice";
-	var title="发票关联入库明细"
-	var width=""
-	var height=""
-	var icon="icon-w-edit"
-	var showtype=""
-	showWindow(url,title,width,height,icon,showtype,"","","large",ReloadGrid)
-	
+    var rows = $('#invoicefinddatagrid').datagrid('getRows');
+    for (var i = 0; i < rows.length; i++) 
+    {
+        var rowData=rows[i];
+        if (rowData.TFlag=="Y")
+        {
+            if (combindata=="")
+            { 
+                combindata=rowData.TRowID;
+            }
+            else combindata=combindata+","+rowData.TRowID; 
+             
+            if (providerinfos=="")
+            {
+               providerinfos=rowData.TProviderDR
+               ProviderDR=rowData.TProviderDR
+            }
+            else
+            {
+               if ((","+providerinfos+",").indexOf(","+rowData.TProviderDR+",")==-1)
+               {
+                   providerinfos=providerinfos+","+rowData.TProviderDR
+               }
+                
+            } 
+        }
+        
+    }
+    if ((combindata=="")||(providerinfos==""))
+    {
+        messageShow("","","","未选中数据！")
+        return;
+    }
+    
+    var prolen=providerinfos.split(",").length
+    if (prolen>1)
+    {
+        messageShow("","","","选中入库明细供应商不一致！")
+        return
+    }
+    var url="dhceq.plat.invoicemapinstock.csp?&InvoiceStr="+combindata+"&ProviderDR="+ProviderDR+"&MenuName=Invoice";
+    var title="发票关联入库明细"
+    var width=""
+    var height=""
+    var icon="icon-w-edit"
+    var showtype=""
+    showWindow(url,title,width,height,icon,showtype,"","","large",ReloadGrid)
+    
 }
 ///add by lmm 2019-09-19
 ///desc:回调事件
 function setSelectValue(vElementID,item)
 {
-	setElement(vElementID+"DR",item.TRowID)
+    setElement(vElementID+"DR",item.TRowID)
 }
 
 ///add by lmm 2019-09-19
 ///desc:清空事件
 function clearData(vElementID)
 {
-	setElement(vElementID+"DR","")	
+    setElement(vElementID+"DR","")  
 }
 
 ///add by lmm 2019-09-19
 ///desc:重载列表
 function ReloadGrid()
 {
-	$("#invoicefinddatagrid").datagrid('reload');
-	
+    $("#invoicefinddatagrid").datagrid('reload');
+    
 }
 ///add by lmm 2019-09-19
 ///desc:勾选发票与入库明细关联
 function MapInStockList()
 {
-	var rows = $('#invoicefinddatagrid').datagrid('getChecked')   
-	if (rows=="")
-	{
-		messageShow("","","","未选中数据！")
-	    return;
-	    
-	 }
-	 var InvoiceStr=""
-	$.each(rows, function(rowIndex, rowData){
-		if (InvoiceStr=="")
-		{ 
-			InvoiceStr=rowData.TRowID;
-		}
-		 else InvoiceStr=InvoiceStr+","+rowData.TRowID; 
-	}); 
-	var InStockListStr=getElementValue("InStockListStr")
-	var Rtn = tkMakeServerCall("web.DHCEQ.Plat.BUSInvoice", "InvoiceMapBuss",InvoiceStr,InStockListStr,getElementValue("BussType"));	// Mozy003005	1248957		2020-4-1
-	if (Rtn=='0')
-	{
-		websys_showModal("options").mth();  //modify by lmm 2019-02-19
-		$.messager.popover({msg: '确认关联！',type:'success',timeout: 1000});		
-		$("#invoicefinddatagrid").datagrid('reload');
-		return;
-		//$.messager.alert('确认关联！',data, 'warning')
-	}
-	else
-	{
-		$.messager.popover({msg: '关联失败！',type:'error',timeout: 1000});		
-		return;
-	}
-	
-	
+    ///modified by ZY20221206 bug:3104507
+    var InvoiceStr="";
+    var rows = $('#invoicefinddatagrid').datagrid('getRows');
+    for (var i = 0; i < rows.length; i++) 
+    {
+        var oneRow=rows[i];
+        if (oneRow.TFlag=="Y")
+        {
+            if (InvoiceStr=="")
+            { 
+                InvoiceStr=oneRow.TRowID;
+            }
+             else InvoiceStr=InvoiceStr+","+oneRow.TRowID; 
+        }
+        
+    }
+    if (InvoiceStr=="")
+    {
+        messageShow("","","","未选中数据！")
+        return;
+    }
+    var InStockListStr=getElementValue("InStockListStr")
+    var Rtn = tkMakeServerCall("web.DHCEQ.Plat.BUSInvoice", "InvoiceMapBuss",InvoiceStr,InStockListStr,getElementValue("BussType"));    // Mozy003005   1248957     2020-4-1
+    if (Rtn=='0')
+    {
+        websys_showModal("options").mth();  //modify by lmm 2019-02-19
+        $.messager.popover({msg: '确认关联！',type:'success',timeout: 1000});        
+        $("#invoicefinddatagrid").datagrid('reload');
+        return;
+        //$.messager.alert('确认关联！',data, 'warning')
+    }
+    else
+    {
+        $.messager.popover({msg: '关联失败！',type:'error',timeout: 1000});      
+        return;
+    }
+    
 }
-
-
-
-
-

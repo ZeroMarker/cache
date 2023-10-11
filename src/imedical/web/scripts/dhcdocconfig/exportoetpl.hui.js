@@ -11,80 +11,44 @@
  
 //页面全局变量
 var PageOBJ = {
-	m_UserCombox : "",
-	m_DepCombox: "",
 	m_QueDateTableGrid:""
 }
-
 $(document).ready(function(){
 	//初始化
 	Init();
 	//事件初始化
 	InitEvent();
-	
+	InitCache();
 });
-function Init() {
-	//科室
-	var locCombo = $HUI.combobox("#FCTLocName", {
-		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.CommonFunction&QueryName=LookUpCTLoc&desc=&ResultSetType=array&HospId="+session['LOGON.HOSPID'],
-		valueField:'ID',
-		textField:'CTLOC',
-		mode: "local",
-		filter: function(q, row){
-			var ops = $(this).combobox('options');  
-			var mCode = false;
-			if (row.ContactName) {
-				mCode = row.ContactName.toUpperCase().indexOf(q.toUpperCase()) >= 0
-			}
-			var mValue = row[ops.textField].indexOf(q) >= 0;
-			return mCode||mValue;  
-		}
-	})
-	PageOBJ.m_DepCombox = locCombo;
-	
-	//用户
-	var userCombo = $HUI.combobox("#FUserName", {
-		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.CommonFunction&QueryName=LookUpUser&desc=&ResultSetType=array&HospId="+session['LOGON.HOSPID'],
-		valueField:'ID',
-		textField:'USER'
-		
-		
-	})
-	PageOBJ.m_UserCombox = userCombo;
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
 }
-
+function Init() {
+	InitFType();
+}
 function InitEvent () {
-	$("#Departments").radio({
-		onChecked:function () {
-			PageOBJ.m_UserCombox.disable();
-			PageOBJ.m_DepCombox.enable();
-			PageOBJ.m_UserCombox.setValue("");
+	$('input[name=HandleDataType]').radio({
+		onChecked:function (e) {
+			if('OrdTempDataType'==$(e.target).attr('id')){
+				$('input[name=OrdFavType]').next().show();
+			}else{
+				$('input[name=OrdFavType]').next().hide();
+			}
 		}
-	})
-	
-	$("#Personal").radio({
-		onChecked:function () {
-			PageOBJ.m_DepCombox.disable();
-			PageOBJ.m_UserCombox.enable();
-			PageOBJ.m_DepCombox.setValue("");
-		}
-	})
-	
+	});
 	//查询
 	$('#FindButton').click(FindHandler);
-	
 	//清空
 	$('#resetButton').click(resetCondition);
-	
 	//导入
 	$('#Import').click(ImportHandler);
-	
 	//导出
 	$('#Export').click(ExportHandler);
-	
-	//
 	$(document.body).bind("keydown",BodykeydownHandler)
-	
 	$('#Template_tabs').tabs({
 		onSelect: function (title,index) {
 			$(".tpl ul>li").each(function(){
@@ -100,7 +64,6 @@ function InitEvent () {
 		}
 	});
 }
-
 //查询
 function FindHandler(){
 	var Params=GetParams()
@@ -110,12 +73,13 @@ function FindHandler(){
 	var ParamsArr=Params.split("^");
 	var HandleDataType=ParamsArr[0],OperType=ParamsArr[1],CTLocName=ParamsArr[2],CTLocID=ParamsArr[3];
 	var UserName=ParamsArr[4],UserID=ParamsArr[5],AppKey=ParamsArr[6];
+	var HospName=ParamsArr[7],HospID=ParamsArr[8];
 	if (HandleDataType=="OrdTemp"){
 		//医嘱模板
-		FindOrdTempHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey)
+		FindOrdTempHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey,HospID)
 	}else if (HandleDataType=="DiaTemp"){
 		//诊断模板
-		FindDiagTempHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey)
+		FindDiagTempHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey,HospID)
 	}else if (HandleDataType=="ARCOS"){
 		//医嘱套
 		FindARCOSHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey)
@@ -146,11 +110,12 @@ function FindDocItemDefaultHandler(OperType,CTLocID,CTLocName,UserID,UserName,Ap
 		{field:'ArcimDesc',title:'医嘱项',width:200},
 		{field:'Priority',title:'医嘱类型',width:100},
 		{field:'Dose',title:'单次剂量',width:70},
-		{field:'DoseUom',title:'计量单位',width:70},
+		{field:'DoseUom',title:'剂量单位',width:70},
 		{field:'Instr',title:'用法',width:70},
 		{field:'PHFreq',title:'频次',width:70},
 		{field:'Durat',title:'疗程',width:70},
 		{field:'PackQty',title:'数量',width:70},
+		{field:'PackUom',title:'数量单位',width:100},
 		{field:'SkinTest',title:'皮试',width:70},
 		{field:'SkinAction',title:'皮试备注',width:100},
 		{field:'Notes',title:'备注',width:100},
@@ -160,7 +125,9 @@ function FindDocItemDefaultHandler(OperType,CTLocID,CTLocName,UserID,UserName,Ap
 		{field:'ExceedReason',title:'超量原因',width:100},
 		{field:'RecLocDesc',title:'接收科室',width:120},
 		{field:'RecLocCode',title:'接收科室代码',width:120},
-		{field:'RecLocHospCode',title:'接收科室所在院区代码',width:100}
+		{field:'RecLocHospCode',title:'接收科室所在院区代码',width:100},
+		{field:'OrderFreqTimeDoseStr',title:'同频次不同剂量串',width:100},
+		{field:'OrderFreqWeekStr',title:'周频次选择串',width:100}
     ]]
 	PageOBJ.m_QueDateTableGrid=$("#DateTable").datagrid({
 		fit : true,
@@ -213,11 +180,11 @@ function FindARCOSHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
 		{field:'HospCode',title:'院区代码',width:70},
 		{field:'CelerType',title:'快速标识',width:50},
 		{field:'CMPrescTypeCode',title:'处方类型',width:120},
-		{field:'CMDuratDesc',title:'付数',width:80},
-		{field:'CMFreqDesc',title:'频次',width:80},
-		{field:'CMInstrDesc',title:'用法',width:80},
+		{field:'CMDuratDesc',title:'草药付数',width:80},
+		{field:'CMFreqDesc',title:'草药频次',width:80},
+		{field:'CMInstrDesc',title:'草药用法',width:80},
 		{field:'CMDoseQty',title:'一次用量',width:80},
-		{field:'CMNotes',title:'备注',width:100},
+		{field:'CMNotes',title:'草药备注',width:100},
 		{field:'P1',width:100,hidden:true},
 		{field:'P2',width:100,hidden:true},
 		{field:'P3',width:100,hidden:true},
@@ -228,7 +195,7 @@ function FindARCOSHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
 		{field:'ARCIMCode',title:'医嘱项代码',width:120},
 		{field:'ARCIMDesc',title:'医嘱项名称',width:200},
 		{field:'DoseQty',title:'单次剂量',width:70},
-		{field:'DoseUOM',title:'计量单位',width:70},
+		{field:'DoseUOM',title:'剂量单位',width:70},
 		{field:'Frequence',title:'频次',width:70},
 		{field:'Duration',title:'疗程',width:70},
 		{field:'Instruction',title:'用法',width:100},
@@ -276,7 +243,7 @@ function FindARCOSHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
 }
 
 ///查询诊断模板
-function FindDiagTempHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
+function FindDiagTempHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey,HospID){
 	var objectReference = "";
 	var ObjectType="";
 	if(OperType == "Personal"){
@@ -288,18 +255,19 @@ function FindDiagTempHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
 	}
 	$("#Instructions").remove();
 	var Columns=[[ 
-		{field:'MASHospCode',title:'医院代码',width:100},
-		{field:'MASType',title:'类型',width:100},
-		{field:'MASTypeDesc',title:'类型描述',width:100},
-		{field:'MASTypeCode',title:'类型代码',width:60},
-		{field:'MASDesc',title:'模板名称',width:100},
-		{field:'MASIndex',title:'模板标号',width:50},
-		{field:'ICDListNum',title:'列位置',width:50},
-		{field:'ICDListIndex',title:'顺序编号',width:50},
-		{field:'ALLDesc',title:'总描述',width:200},
-		{field:'ICDDesc',title:'描述',width:100},
-		{field:'ICDCode',title:'描述代码',width:100},
-		{field:'ICDSyndromeCodeInfo',title:'证型代码',width:200}
+		{field:'HospDesc',title:'院区',width:200},
+		{field:'FavCatType',title:'分类代码',width:100},
+		{field:'TypeValueDesc',title:'分类值描述',width:100},
+		{field:'TypeValueCode',title:'分类值代码',width:90},
+		{field:'Cat',title:'模板分类名',width:90},
+		{field:'DiagType',title:'类型',width:50},
+		{field:'ICDCode',title:'ICD代码',width:100},
+		{field:'Prefix',title:'前缀',width:100},
+		{field:'ICDDesc',title:'ICD描述',width:300},
+		{field:'Note',title:'备注',width:150},
+		{field:'SyndCode',title:'证型代码',width:80},
+		{field:'SyndDesc',title:'证型描述',width:200},
+		{field:'SyndNote',title:'证型备注',width:100}
     ]]
 	PageOBJ.m_QueDateTableGrid=$("#DateTable").datagrid({
 		fit : true,
@@ -319,7 +287,7 @@ function FindDiagTempHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
 	    QueryName : "FindDiagTemp",
 	    objtype:ObjectType,
 	    objvalue:objectReference,
-	    HospRowId:session['LOGON.HOSPID'],
+	    HospRowId:HospID,
 	    Pagerows:PageOBJ.m_QueDateTableGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
 		PageOBJ.m_QueDateTableGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
@@ -327,7 +295,7 @@ function FindDiagTempHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
 	
 }
 ///查询医嘱模板数据
-function FindOrdTempHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
+function FindOrdTempHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey,HospID){
 	var objectReference = "";
 	var ObjectType="";
 	if(OperType == "Personal"){
@@ -341,21 +309,18 @@ function FindOrdTempHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
 	}
 	$("#Instructions").remove();
 	var Columns=[[ 
-		{field:'HospCode',title:'院区代码',width:100},
-		{field:'valueDesc',title:'类型描述',width:100},
-		{field:'valueCode',title:'类型代码',width:100},
-		{field:'valueIndex',title:'类型索引',width:60},
-		{field:'Type',title:'类型',width:100},
-		{field:'AppKey',title:'应用代码',width:200},
-		{field:'Tab',title:'表名',width:100},
-		{field:'Col',title:'列名',width:70},
-		{field:'ARCIMorARCOS',title:'医嘱或医嘱套',width:100},
-		{field:'Desc',title:'项目描述',width:200},
-		{field:'Code',title:'项目代码',width:200},
-		{field:'Index',title:'序号',width:100},
-		{field:'itemrowid',title:'项目ID',width:100},
-		{field:'PartCodeInfo',title:'部位代码列表',width:200}
-		
+		{field:'HospDesc',title:'院区',width:200},
+		{field:'FavCatType',title:'分类代码',width:250},
+		{field:'TypeValueDesc',title:'分类值描述',width:100},
+		{field:'TypeValueCode',title:'分类值代码',width:90},
+		{field:'Cat',title:'大类',width:100},
+		{field:'SubCat',title:'子分类',width:100},
+		{field:'ItemType',title:'医嘱或医嘱套',width:100},
+		{field:'ItemDesc',title:'项目描述',width:300},
+		{field:'itemNotes',title:'备注',width:100},
+		{field:'PartCodeInfo',title:'部位代码列表',width:150},
+		{field:'TypeValue',title:'分类值',width:60},
+		{field:'ItemID',title:'项目ID',width:100}
     ]]
 	PageOBJ.m_QueDateTableGrid=$("#DateTable").datagrid({
 		fit : true,
@@ -376,7 +341,7 @@ function FindOrdTempHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
 	    objtype:ObjectType,
 	    objvalue:objectReference,
 	    paramKey:AppKey,
-	    HospRowId:session['LOGON.HOSPID'],
+	    HospRowId:HospID,
 	    Pagerows:PageOBJ.m_QueDateTableGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
 		PageOBJ.m_QueDateTableGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
@@ -385,15 +350,12 @@ function FindOrdTempHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
 }
 //清空
 function resetCondition(){
-	PageOBJ.m_UserCombox.setValue("");
-	PageOBJ.m_DepCombox.setValue("");
-	$("#AppKey").val("");
+	$('#FType,#FTypeValue').combobox('setValue','');
 	$("#Departments").radio("uncheck");
 	$("#Personal").radio("uncheck");
 	$("#TemplateExcel").filebox("clear");
-	PageOBJ.m_UserCombox.enable();
-	PageOBJ.m_DepCombox.enable();
-	PageOBJ.m_QueDateTableGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',[]);
+	if(PageOBJ.m_QueDateTableGrid)
+		PageOBJ.m_QueDateTableGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',[]);
 }
 
 
@@ -481,53 +443,6 @@ function ExportDocItemDefaultHandler(OperType,CTLocID,CTLocName,UserID,UserName,
 	//以上为拼接Excel打印代码为字符串
 	CmdShell.notReturn =1;   //设置无结果调用，不阻塞调用
 	var rtn =CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
-	/*var oXL = new ActiveXObject("Excel.Application"); //创建AX对象excel   
-	var oWB = oXL.Workbooks.Add(); //获取workbook对象   
-	var oSheet = oWB.ActiveSheet; //激活当前sheet
-	oSheet.Columns.NumberFormatLocal = "@";
-	//设置工作薄名称  
-	oSheet.name = xlsname+"DocItemDefault"; 
-	var TitleList=$.m({
-		 ClassName:"web.DHCDocPrefTabs",
-		 MethodName:"GetQueryTitleList",
-		 ClassQuery:"web.DHCDocPrefTabs:FindDocItemDefault"
-	},false);
-	TitleList=TitleList.split(String.fromCharCode(1))[1]
-	for (var i=0;i<TitleList.split(String.fromCharCode(9)).length;i++) {
-		oSheet.Cells(1,i+1).value = TitleList.split(String.fromCharCode(9))[i];
-	}	
-	var data=$.cm({
-	   ClassName:"web.DHCDocPrefTabs",
-	   QueryName:"FindDocItemDefault",
-	   objtype:ObjectType, 
-	   objvalue:objectReference,
-	   rows:99999
-	},false);	
-	for (var i=0;i<data['total'];i++){
-		var j=0;
-		for ( var id in data['rows'][i]) {
-			oSheet.Cells(i+2,j+1).value = data['rows'][i][id];
-			j++;
-		}
-	}
-	oXL.Visible = false; //设置excel可见属性
-	var fname = oXL.Application.GetSaveAsFilename(xlsname+"DocItemDefault.xls", "Excel Spreadsheets (*.xls), *.xls");
-	oWB.SaveAs(fname);
-	oWB.Close(savechanges=false);
-	oXL.Quit();
-	oXL=null;*/
-	/*//后台直接导出
-	var ret=tkMakeServerCall("web.DHCDocPrefTabs","ExportDocItemDefaultXls",ObjectType,objectReference,xlsname);
-	if (ret==1){
-		//下载到本地
-	    var filename=xlsname+"DocItemDefault.xls";
-	    //dhctt.file.csp
-	    $("#DownLoad").attr("href","websys.file.utf8.csp?act=download&dirname="+path+"&filename="+unescape(filename)+"&servertype=HTTP");
-	    //document.getElementById("DownLoad").click();
-	    $("#DownLoad")[0].click();
-	}else{
-		$.messager.alert("提示", "文件导出失败!", 'info');
-	}*/
 }
 //导出医嘱套
 function ExportARCOSHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
@@ -570,7 +485,9 @@ function ExportARCOSHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
 		for (var i=0;i<data['total'];i++){
 			var j=0;
 			for ( var id in data['rows'][i]) {
-				Str +="xlSheet.cells("+(i+2)+","+(j+1)+")='"+data['rows'][i][id]+"';";
+				var val=data['rows'][i][id];
+				val=val.replace(/'/g,"")
+				Str +="xlSheet.cells("+(i+2)+","+(j+1)+")='"+val+"';";
 				j++;
 			}
 		}
@@ -588,54 +505,6 @@ function ExportARCOSHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
 	//以上为拼接Excel打印代码为字符串
 	CmdShell.notReturn =1;   //设置无结果调用，不阻塞调用
 	var rtn =CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
-	/*var oXL = new ActiveXObject("Excel.Application"); //创建AX对象excel   
-	var oWB = oXL.Workbooks.Add(); //获取workbook对象   
-	var oSheet = oWB.ActiveSheet; //激活当前sheet
-	oSheet.Columns.NumberFormatLocal = "@";
-	//设置工作薄名称  
-	oSheet.name = xlsname+"ARCOS"; 
-	var TitleList=$.m({
-		 ClassName:"web.DHCDocPrefTabs",
-		 MethodName:"GetQueryTitleList",
-		 ClassQuery:"web.DHCDocPrefTabs:FindARCOS"
-	},false);
-	TitleList=TitleList.split(String.fromCharCode(1))[1]
-	for (var i=0;i<TitleList.split(String.fromCharCode(9)).length;i++) {
-		oSheet.Cells(1,i+1).value = TitleList.split(String.fromCharCode(9))[i];
-	}	
-	var data=$.cm({
-	   ClassName:"web.DHCDocPrefTabs",
-	   QueryName:"FindARCOS",
-	   objtype:ObjectType, 
-	   objvalue:objectReference,
-	   rows:99999
-	},false);	
-	for (var i=0;i<data['total'];i++){
-		var j=0;
-		for ( var id in data['rows'][i]) {
-			oSheet.Cells(i+2,j+1).value = data['rows'][i][id];
-			j++;
-		}
-	}
-	oXL.Visible = false; //设置excel可见属性
-	var fname = oXL.Application.GetSaveAsFilename(xlsname+"ARCOS.xls", "Excel Spreadsheets (*.xls), *.xls");
-	oWB.SaveAs(fname);
-	oWB.Close(savechanges=false);
-	oXL.Quit();
-	oXL=null;*/
-	/*
-	//后台直接导出
-	var ret=tkMakeServerCall("web.DHCDocPrefTabs","ExportARCOSXls",ObjectType,objectReference,xlsname);
-	if (ret==1){
-		//下载到本地
-	    var filename=xlsname+"ARCOS.xls";
-	    //dhctt.file.csp
-	    $("#DownLoad").attr("href","websys.file.utf8.csp?act=download&dirname="+path+"&filename="+unescape(filename)+"&servertype=HTTP");
-	    //document.getElementById("DownLoad").click();
-	    $("#DownLoad")[0].click();
-	}else{
-		$.messager.alert("提示", "文件导出失败!", 'info');
-	}*/
 }
 //导出诊断模板
 function ExportDiagTempHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
@@ -678,7 +547,9 @@ function ExportDiagTempHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey
 		for (var i=0;i<data['total'];i++){
 			var j=0;
 			for ( var id in data['rows'][i]) {
-				Str +="xlSheet.cells("+(i+2)+","+(j+1)+")='"+data['rows'][i][id]+"';";
+				var val=data['rows'][i][id];
+				val=val.replace(/'/g,"")
+				Str +="xlSheet.cells("+(i+2)+","+(j+1)+")='"+val+"';";
 				j++;
 			}
 		}
@@ -696,41 +567,6 @@ function ExportDiagTempHandler(OperType,CTLocID,CTLocName,UserID,UserName,AppKey
 	//以上为拼接Excel打印代码为字符串
 	CmdShell.notReturn =1;   //设置无结果调用，不阻塞调用
 	var rtn =CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
-	/*var oXL = new ActiveXObject("Excel.Application"); //创建AX对象excel   
-	var oWB = oXL.Workbooks.Add(); //获取workbook对象   
-	var oSheet = oWB.ActiveSheet; //激活当前sheet
-	oSheet.Columns.NumberFormatLocal = "@";
-	//设置工作薄名称  
-	oSheet.name = xlsname+"DocItemDefault"; 
-	var TitleList=$.m({
-		 ClassName:"web.DHCDocPrefTabs",
-		 MethodName:"GetQueryTitleList",
-		 ClassQuery:"web.DHCDocPrefTabs:FindDiagTemp"
-	},false);
-	TitleList=TitleList.split(String.fromCharCode(1))[1]
-	for (var i=0;i<TitleList.split(String.fromCharCode(9)).length;i++) {
-		oSheet.Cells(1,i+1).value = TitleList.split(String.fromCharCode(9))[i];
-	}	
-	var data=$.cm({
-	   ClassName:"web.DHCDocPrefTabs",
-	   QueryName:"FindDiagTemp",
-	   objtype:ObjectType, 
-	   objvalue:objectReference,
-	   rows:99999
-	},false);	
-	for (var i=0;i<data['total'];i++){
-		var j=0;
-		for ( var id in data['rows'][i]) {
-			oSheet.Cells(i+2,j+1).value = data['rows'][i][id];
-			j++;
-		}
-	}
-	oXL.Visible = false; //设置excel可见属性
-	var fname = oXL.Application.GetSaveAsFilename(xlsname+"DiagTemp.xls", "Excel Spreadsheets (*.xls), *.xls");
-	oWB.SaveAs(fname);
-	oWB.Close(savechanges=false);
-	oXL.Quit();
-	oXL=null;*/
 }
 //导出医嘱模板
 function ExportOETabItems(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){	
@@ -759,7 +595,7 @@ function ExportOETabItems(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
 		Str +="xlSheet.Columns.NumberFormatLocal = '@';"
 		//设置工作薄名称  
 		Str +="xlSheet.name = '"+xlsname+"OrdTemplate.xlsx';"; 
-		var TitleList="*院区代码"+String.fromCharCode(9)+"类型描述"+String.fromCharCode(9)+"*类型代码"+String.fromCharCode(9)+"*类型"+String.fromCharCode(9)+"*应用代码"+String.fromCharCode(9)+"*表名"+String.fromCharCode(9)+"*列名"+String.fromCharCode(9)+"*医嘱或医嘱套"+String.fromCharCode(9)+"项目描述"+String.fromCharCode(9)+"*项目代码 "+String.fromCharCode(9)+"*列索引"+String.fromCharCode(9)+"部位代码列表";
+		var TitleList="*院区代码"+String.fromCharCode(9)+"分类代码"+String.fromCharCode(9)+"*分类值"+String.fromCharCode(9)+"*分类值描述"+String.fromCharCode(9)+"*分类值代码"+String.fromCharCode(9)+"*大类"+String.fromCharCode(9)+"*子分类"+String.fromCharCode(9)+"*医嘱或医嘱套"+String.fromCharCode(9)+"项目ID"+String.fromCharCode(9)+"*项目描述 "+String.fromCharCode(9)+"*部位代码列表"+String.fromCharCode(9)+"备注";
 		for (var i=0;i<TitleList.split(String.fromCharCode(9)).length;i++) {
 			Str +="xlSheet.cells("+(1)+","+(i+1)+")='"+TitleList.split(String.fromCharCode(9))[i]+"';";
 		}
@@ -769,31 +605,16 @@ function ExportOETabItems(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
 		   objtype:ObjectType, 
 		   objvalue:ObjectReference,
 		   paramKey:AppKey,
+		   HospRowId:session['LOGON.HOSPID'],
 		   rows:99999
 		},false);
 		for (var i=0;i<data['total'];i++){
-			var onedata=data['rows'][i];
-			var HospCode=onedata.HospCode;
-			var valueDesc=onedata.valueDesc; 
-			var valueCode=onedata.valueCode; 
-			var AppKey1=onedata.AppKey; 
-			
-			var Type=onedata.Type;
-			var Tab=onedata.Tab; 
-			var Col=onedata.Col;
-			var ARCIMorARCOS=onedata.ARCIMorARCOS;
-			var Desc=onedata.Desc; 
-			var Code=onedata.Code; 
-			var Index=onedata.Index;
-			var IndexArr=Index.split("||");
-			var Index=IndexArr[0]+"||"+IndexArr[1];
-			var itemrowid=onedata.itemrowid; 
-			var PartCodeInfo=onedata.PartCodeInfo; 
-			if (ARCIMorARCOS="ARCOS") Code=Code.replace(/-/g,"");
-			var str=HospCode+String.fromCharCode(9)+valueDesc+String.fromCharCode(9)+valueCode+String.fromCharCode(9)+Type+String.fromCharCode(9)+AppKey1+String.fromCharCode(9)+Tab+String.fromCharCode(9)+Col+String.fromCharCode(9)+ARCIMorARCOS+String.fromCharCode(9)+Desc+String.fromCharCode(9)+Code+String.fromCharCode(9)+Index+String.fromCharCode(9)+PartCodeInfo;
-			var strArr=str.split(String.fromCharCode(9));
-			for (var j=0;j<strArr.length;j++) {
-				Str +="xlSheet.cells("+(i+2)+","+(j+1)+")='"+strArr[j]+"';";
+			var j=0;
+			for ( var id in data['rows'][i]) {
+				var val=data['rows'][i][id];
+				val=val.replace(/'/g,"")
+				Str +="xlSheet.cells("+(i+2)+","+(j+1)+")='"+val+"';";
+				j++;
 			}
 		}
 		var filename=xlsname+"OrdTemplate.xls";
@@ -810,56 +631,6 @@ function ExportOETabItems(OperType,CTLocID,CTLocName,UserID,UserName,AppKey){
 	//以上为拼接Excel打印代码为字符串
 	CmdShell.notReturn =1;   //设置无结果调用，不阻塞调用
 	var rtn =CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
-	
-	/*var oXL = new ActiveXObject("Excel.Application"); //创建AX对象excel   
-	var oWB = oXL.Workbooks.Add(); //获取workbook对象   
-	var oSheet = oWB.ActiveSheet; //激活当前sheet
-	oSheet.Columns.NumberFormatLocal = "@";
-	//设置工作薄名称  
-	oSheet.name = xlsname+"OrdTemplate"; 
-	var TitleList="*院区代码"+String.fromCharCode(9)+"类型描述"+String.fromCharCode(9)+"*类型代码"+String.fromCharCode(9)+"*类型"+String.fromCharCode(9)+"*应用代码"+String.fromCharCode(9)+"*表名"+String.fromCharCode(9)+"*列名"+String.fromCharCode(9)+"*医嘱或医嘱套"+String.fromCharCode(9)+"项目描述"+String.fromCharCode(9)+"*项目代码 "+String.fromCharCode(9)+"*列索引"+String.fromCharCode(9)+"部位代码列表";
-	for (var i=0;i<TitleList.split(String.fromCharCode(9)).length;i++) {
-		oSheet.Cells(1,i+1).value = TitleList.split(String.fromCharCode(9))[i];
-	}	
-	var data=$.cm({
-	   ClassName:"web.DHCDocPrefTabs",
-	   QueryName:"FindPrefTabs",
-	   objtype:ObjectType, 
-	   objvalue:ObjectReference,
-	   paramKey:AppKey,
-	   rows:99999
-	},false);	
-	for (var i=0;i<data['total'];i++){
-		var onedata=data['rows'][i];
-		var HospCode=onedata.HospCode;
-		var valueDesc=onedata.valueDesc; 
-		var valueCode=onedata.valueCode; 
-		var AppKey1=onedata.AppKey; 
-		
-		var Type=onedata.Type;
-		var Tab=onedata.Tab; 
-		var Col=onedata.Col;
-		var ARCIMorARCOS=onedata.ARCIMorARCOS;
-		var Desc=onedata.Desc; 
-		var Code=onedata.Code; 
-		var Index=onedata.Index;
-		var IndexArr=Index.split("||");
-		var Index=IndexArr[0]+"||"+IndexArr[1];
-		var itemrowid=onedata.itemrowid; 
-		var PartCodeInfo=onedata.PartCodeInfo; 
-		if (ARCIMorARCOS="ARCOS") Code=Code.replace(/-/g,"");
-		var str=HospCode+String.fromCharCode(9)+valueDesc+String.fromCharCode(9)+valueCode+String.fromCharCode(9)+Type+String.fromCharCode(9)+AppKey1+String.fromCharCode(9)+Tab+String.fromCharCode(9)+Col+String.fromCharCode(9)+ARCIMorARCOS+String.fromCharCode(9)+Desc+String.fromCharCode(9)+Code+String.fromCharCode(9)+Index+String.fromCharCode(9)+PartCodeInfo;
-		var strArr=str.split(String.fromCharCode(9));
-		for (var j=0;j<strArr.length;j++) {
-			oSheet.Cells(i+2,j+1).value = strArr[j];
-		}
-	}
-	oXL.Visible = false; //设置excel可见属性
-	var fname = oXL.Application.GetSaveAsFilename(xlsname+"OrdTemplate.xls", "Excel Spreadsheets (*.xls), *.xls");
-	oWB.SaveAs(fname);
-	oWB.Close(savechanges=false);
-	oXL.Quit();
-	oXL=null;*/
 }
 
 //导入
@@ -869,7 +640,7 @@ function ImportHandler(){
 		$.messager.alert("提示","请选择需要操作的数据类型!","info");
 		return false;
 	}
-	var fileObj = $("#TemplateExcel").filebox("files");
+	/*var fileObj = $("#TemplateExcel").filebox("files");
 	var fileObj2 = $("#TemplateExcel").filebox("options");
 	if (fileObj.length == 0) {
 		$.messager.alert("提示", "请选择模版!", 'info');
@@ -884,8 +655,8 @@ function ImportHandler(){
 	var fileName = $("#filebox_file_id_1").val();
 	if (fileName == ""){
 		fileName = fileObj[0].name;
-	}
-	
+	}*/
+	var fileName=""
 	if (HandleDataType=="OrdTemp"){
 		//医嘱模板
 		ImportOETabItems(fileName)
@@ -902,163 +673,261 @@ function ImportHandler(){
 }
 ///导入用户常用用法
 function ImportDocItemDefaultHandler(fileName){
-	//创建操作EXCEL应用程序的实例
-	var oXL = new ActiveXObject("Excel.application");  
-	//打开指定路径的excel文件
-    var oWB = oXL.Workbooks.open(fileName);  
-    //操作第一个sheet(从一开始，而非零)  
-    oWB.worksheets(1).select();  
-    var oSheet = oWB.ActiveSheet;  
-    //使用的行数  
-    var rows =  oSheet.usedrange.rows.count
-    var ret=1;
+	var str ="(function test(x){"+
+			"var oXL = new ActiveXObject('Excel.Application');"+
+			"var fileName=''; "+
+			//http://127.0.0.1/dthealth/med/Results/Template/tpl.xlsx
+			"var fileName = oXL.Application.GetOpenFilename ('Excel Spreadsheets (*.xls), *.xls');" +
+			"if (fileName==''){return '';}" +
+			"var oWB = oXL.Workbooks.open(fileName);"+
+			"oWB.worksheets(1).select();"+
+			"var oSheet = oWB.ActiveSheet;  "+
+			"var rows =  oSheet.usedrange.rows.count;"+
+			" var ret=0;"+
+			"var Spl=String.fromCharCode(2);"+
+			"var tempStr='';"+ 
+			"for (var i = 2; i <= rows; i++) {"+
+				"var ObjectType=oSheet.Cells(i, 1).value==undefined?'':oSheet.Cells(i,1).value;"+
+			"var ObjectCode=oSheet.Cells(i, 3).value==undefined?'':oSheet.Cells(i,3).value;"+
+			"var HospCode=oSheet.Cells(i, 4).value==undefined?'':oSheet.Cells(i,4).value;"+
+			"var ARCIMCode=oSheet.Cells(i, 5).value==undefined?'':oSheet.Cells(i,5).value;"+
+			"var Priority=oSheet.Cells(i, 7).value==undefined?'':oSheet.Cells(i,7).value;"+
 
-    var tempStr=""
-    var Spl=String.fromCharCode(2)
-    try {  
-         for (var i = 2; i <= rows; i++) { 
-			var ObjectType=oSheet.Cells(i, 1).value==undefined?"":oSheet.Cells(i,1).value;
-			var ObjectCode=oSheet.Cells(i, 3).value==undefined?"":oSheet.Cells(i,3).value;
-			var HospCode=oSheet.Cells(i, 4).value==undefined?"":oSheet.Cells(i,4).value;
-			var ARCIMCode=oSheet.Cells(i, 5).value==undefined?"":oSheet.Cells(i,5).value;
-			var Priority=oSheet.Cells(i, 7).value==undefined?"":oSheet.Cells(i,7).value;
+			"var Dose=oSheet.Cells(i, 8).value==undefined?'':oSheet.Cells(i,8).value;"+
+			"var DoseUom=oSheet.Cells(i, 9).value==undefined?'':oSheet.Cells(i,9).value;"+
+			"var Instr=oSheet.Cells(i, 10).value==undefined?'':oSheet.Cells(i,10).value;"+
+			"var PHFreq=oSheet.Cells(i, 11).value==undefined?'':oSheet.Cells(i,11).value;"+
+			"var Durat=oSheet.Cells(i, 12).value==undefined?'':oSheet.Cells(i,12).value;"+
 
-			var Dose=oSheet.Cells(i, 8).value==undefined?"":oSheet.Cells(i,8).value;
-			var DoseUom=oSheet.Cells(i, 9).value==undefined?"":oSheet.Cells(i,9).value;
-			var Instr=oSheet.Cells(i, 10).value==undefined?"":oSheet.Cells(i,10).value;
-			var PHFreq=oSheet.Cells(i, 11).value==undefined?"":oSheet.Cells(i,11).value;
-			var Durat=oSheet.Cells(i, 12).value==undefined?"":oSheet.Cells(i,12).value;
+			"var PackQty=oSheet.Cells(i, 13).value==undefined?'':oSheet.Cells(i,13).value;"+
+			"var SkinTest=oSheet.Cells(i, 14).value==undefined?'':oSheet.Cells(i,14).value;"+
+			"var SkinAction=oSheet.Cells(i, 15).value==undefined?'':oSheet.Cells(i,15).value;"+
+			"var Notes=oSheet.Cells(i, 16).value==undefined?'':oSheet.Cells(i,16).value;"+
+			"var TPAAdmType=oSheet.Cells(i, 17).value==undefined?'':oSheet.Cells(i,17).value;"+
 
-			var PackQty=oSheet.Cells(i, 13).value==undefined?"":oSheet.Cells(i,13).value;
-			var SkinTest=oSheet.Cells(i, 14).value==undefined?"":oSheet.Cells(i,14).value;
-			var SkinAction=oSheet.Cells(i, 15).value==undefined?"":oSheet.Cells(i,15).value;
-			var Notes=oSheet.Cells(i, 16).value==undefined?"":oSheet.Cells(i,16).value;
-			var TPAAdmType=oSheet.Cells(i, 17).value==undefined?"":oSheet.Cells(i,17).value;
-
-			var SpeedFlowRate=oSheet.Cells(i, 18).value==undefined?"":oSheet.Cells(i,18).value;
-			var FlowRateUnit=oSheet.Cells(i, 19).value==undefined?"":oSheet.Cells(i,19).value;
-			var ExceedReason=oSheet.Cells(i, 20).value==undefined?"":oSheet.Cells(i,20).value;
-			var RecLocCode=oSheet.Cells(i, 22).value==undefined?"":oSheet.Cells(i,22).value;
-			var RecLocHospCode=oSheet.Cells(i, 23).value==undefined?"":oSheet.Cells(i,23).value;
-			var RelevanceNo="";
-			var OrderFreqTimeDoseStr=oSheet.Cells(i, 24).value==undefined?"":oSheet.Cells(i,24).value;
-			var OrderFreqWeekStr=oSheet.Cells(i, 25).value==undefined?"":oSheet.Cells(i,25).value;
-			var PackUom=oSheet.Cells(i, 26).value==undefined?"":oSheet.Cells(i,26).value;
-			var onetempStr=ObjectType+Spl+ObjectCode+Spl+HospCode+Spl+ARCIMCode+Spl+Priority;
-			onetempStr=onetempStr+Spl+Dose+Spl+DoseUom+Spl+Instr+Spl+PHFreq+Spl+Durat;
-			onetempStr=onetempStr+Spl+PackQty+Spl+SkinTest+Spl+SkinAction+Spl+Notes+Spl+TPAAdmType;
-			onetempStr=onetempStr+Spl+SpeedFlowRate+Spl+FlowRateUnit+Spl+ExceedReason+Spl+RecLocCode+Spl+RecLocHospCode;
-			onetempStr=onetempStr+Spl+RelevanceNo+Spl+OrderFreqTimeDoseStr+Spl+OrderFreqWeekStr+Spl+PackUom;
-
-			if (tempStr=="") tempStr=onetempStr
-			else tempStr=tempStr+String.fromCharCode(1)+onetempStr
-         }  
-    } catch(e) {  
-    }  
-    
-	if (tempStr!=""){
-		ret=tkMakeServerCall("web.DHCDocPrefTabs","ImportDocItemDefaultXls",tempStr,session['LOGON.USERID']);
+			"var SpeedFlowRate=oSheet.Cells(i, 18).value==undefined?'':oSheet.Cells(i,18).value;"+
+			"var FlowRateUnit=oSheet.Cells(i, 19).value==undefined?'':oSheet.Cells(i,19).value;"+
+			"var ExceedReason=oSheet.Cells(i, 20).value==undefined?'':oSheet.Cells(i,20).value;"+
+			"var RecLocCode=oSheet.Cells(i, 22).value==undefined?'':oSheet.Cells(i,22).value;"+
+			"var RecLocHospCode=oSheet.Cells(i, 23).value==undefined?'':oSheet.Cells(i,23).value;"+
+			"var RelevanceNo='';"+
+			"var OrderFreqTimeDoseStr=oSheet.Cells(i, 24).value==undefined?'':oSheet.Cells(i,24).value;"+
+			"var OrderFreqWeekStr=oSheet.Cells(i, 25).value==undefined?'':oSheet.Cells(i,25).value;"+
+			"var PackUom=oSheet.Cells(i, 26).value==undefined?'':oSheet.Cells(i,26).value;"+
+			"var onetempStr=ObjectType+Spl+ObjectCode+Spl+HospCode+Spl+ARCIMCode+Spl+Priority;"+
+			"onetempStr=onetempStr+Spl+Dose+Spl+DoseUom+Spl+Instr+Spl+PHFreq+Spl+Durat;"+
+			"onetempStr=onetempStr+Spl+PackQty+Spl+SkinTest+Spl+SkinAction+Spl+Notes+Spl+TPAAdmType;"+
+			"onetempStr=onetempStr+Spl+SpeedFlowRate+Spl+FlowRateUnit+Spl+ExceedReason+Spl+RecLocCode+Spl+RecLocHospCode;"+
+			"onetempStr=onetempStr+Spl+RelevanceNo+Spl+OrderFreqTimeDoseStr+Spl+OrderFreqWeekStr+Spl+PackUom;"+
+			"if (tempStr=='') {tempStr=onetempStr;}else{tempStr=tempStr+String.fromCharCode(1)+onetempStr;}"+
+			
+				 "};"+
+			"oXL.Application.Quit();"+
+			"return tempStr;}());";
+	CmdShell.notReturn = 0;    //有返回值调用
+	var rtn =CmdShell.EvalJs(str);     //运行代码且得到返回值 
+	var Str=rtn.rtn
+	if (Str!=""){
+		var tempStr=""
+		var Count=0
+		var ret=0
+		var retInfo=""
+		for (var i = 0; i < Str.split(String.fromCharCode(1)).length; i++) { 
+			var onetempStr=Str.split(String.fromCharCode(1))[i]
+			if (tempStr=='') {tempStr=onetempStr;}else{tempStr=tempStr+String.fromCharCode(1)+onetempStr;}
+			if ((tempStr!="")&&(Count>50)){
+				rtn=tkMakeServerCall("web.DHCDocPrefTabs","ImportDocItemDefaultXls",tempStr,session['LOGON.USERID']);
+				retnumber=rtn.split("^")[0]
+				retInfo=retInfo+rtn.split("^")[1]
+				ret=parseFloat(ret)+parseFloat(retnumber)
+				tempStr="";
+				Count=0;
+			}
+			Count=Count+1;
+		}
+		if (tempStr!=""){
+			rtn=tkMakeServerCall("web.DHCDocPrefTabs","ImportDocItemDefaultXls",tempStr,session['LOGON.USERID']);
+			retnumber=rtn.split("^")[0]
+			retInfo=retInfo+rtn.split("^")[1]
+			ret=parseFloat(ret)+parseFloat(retnumber)
+		}
+		$.messager.alert("提示", "导入成功"+ret+"条数据!"+retInfo, 'info');
+		
 	}
-	//退出操作excel的实例对象  
-	oXL.Application.Quit();  
-	//手动调用垃圾收集器  
-	//CollectGarbage();
-	$.messager.alert("提示", "导入成功"+ret+"条数据!", 'info');
-	$("#TemplateExcel").filebox("clear");	
+	
+	return	
 }
 ///导入医嘱套
 function ImportARCOSHandler(fileName){
-	//创建操作EXCEL应用程序的实例
-	var oXL = new ActiveXObject("Excel.application");  
-	//打开指定路径的excel文件
-    var oWB = oXL.Workbooks.open(fileName);  
-    //操作第一个sheet(从一开始，而非零)  
-    oWB.worksheets(1).select();  
-    var oSheet = oWB.ActiveSheet;  
-    //使用的行数  
-    var rows =  oSheet.usedrange.rows.count
-    var ret=1;
+	var str ="(function test(x){"+
+			"var oXL = new ActiveXObject('Excel.Application');"+
+			//http://127.0.0.1/dthealth/med/Results/Template/tpl.xlsx
+			"var fileName=''; "+
+			"var fileName = oXL.Application.GetOpenFilename ('Excel Spreadsheets (*.xls), *.xls');" +
+			"if (fileName==''){return '';}" +
+			"var oWB = oXL.Workbooks.open(fileName);"+
+			"oWB.worksheets(1).select();"+
+			"var oSheet = oWB.ActiveSheet;  "+
+			"var rows =  oSheet.usedrange.rows.count;"+
+			" var ret=0;"+
+			"var Spl=String.fromCharCode(2);"+
+			"var tempStr='';"+ 
+			"for (var i = 2; i <= rows; i++) {"+
+				"var ARCOSNum=oSheet.Cells(i, 1).value==undefined?'':oSheet.Cells(i,1).value;"+
+				"var ARCOSCode=oSheet.Cells(i, 3).value==undefined?'':oSheet.Cells(i,3).value;"+
+				"var ARCOSDesc=oSheet.Cells(i, 4).value==undefined?'':oSheet.Cells(i,4).value;"+
+			"var ARCOSAlias=oSheet.Cells(i, 5).value==undefined?'':oSheet.Cells(i,5).value;"+
+			"var ARCOSOrdCat=oSheet.Cells(i, 6).value==undefined?'':oSheet.Cells(i,6).value;"+
+			"var ARCOSOrdSubCat=oSheet.Cells(i, 7).value==undefined?'':oSheet.Cells(i,7).value;"+
 
-    var tempStr=""
-    var Spl=String.fromCharCode(2)
-    try {  
-         for (var i = 2; i <= rows; i++) { 
-			var ARCOSNum=oSheet.Cells(i, 1).value==undefined?"":oSheet.Cells(i,1).value;
-			var ARCOSCode=oSheet.Cells(i, 3).value==undefined?"":oSheet.Cells(i,3).value;
-			var ARCOSDesc=oSheet.Cells(i, 4).value==undefined?"":oSheet.Cells(i,4).value;
-			var ARCOSAlias=oSheet.Cells(i, 5).value==undefined?"":oSheet.Cells(i,5).value;
-			var ARCOSOrdCat=oSheet.Cells(i, 6).value==undefined?"":oSheet.Cells(i,6).value;
-			var ARCOSOrdSubCat=oSheet.Cells(i, 7).value==undefined?"":oSheet.Cells(i,7).value;
-			var ARCOSEffDateFrom=""	//oSheet.Cells(i, 8).value==undefined?"":oSheet.Cells(i,8).value;
-			var UserCode=oSheet.Cells(i, 10).value==undefined?"":oSheet.Cells(i,10).value;
-			var LocCode=oSheet.Cells(i, 12).value==undefined?"":oSheet.Cells(i,12).value;
-			var FavMedUnitDesc=oSheet.Cells(i, 13).value==undefined?"":oSheet.Cells(i,13).value;
-			var HospCode=oSheet.Cells(i, 14).value==undefined?"":oSheet.Cells(i,14).value;
-			var CelerType=oSheet.Cells(i, 15).value==undefined?"":oSheet.Cells(i,15).value;
-			var CMPrescTypeCode=oSheet.Cells(i, 16).value==undefined?"":oSheet.Cells(i,16).value;
-			var CMDuratDesc=oSheet.Cells(i, 17).value==undefined?"":oSheet.Cells(i,17).value;
-			var CMFreqDesc=oSheet.Cells(i, 18).value==undefined?"":oSheet.Cells(i,18).value;
-			var CMInstrDesc=oSheet.Cells(i, 19).value==undefined?"":oSheet.Cells(i,19).value;
-			var CMDoseQty=oSheet.Cells(i, 20).value==undefined?"":oSheet.Cells(i,20).value;
-			var CMNotes=oSheet.Cells(i, 21).value==undefined?"":oSheet.Cells(i,21).value;
+			"var UserCode=oSheet.Cells(i, 10).value==undefined?'':oSheet.Cells(i,10).value;"+
+			"var LocCode=oSheet.Cells(i, 12).value==undefined?'':oSheet.Cells(i,12).value;"+
+			"var FavMedUnitDesc=oSheet.Cells(i, 13).value==undefined?'':oSheet.Cells(i,13).value;"+
+			"var HospCode=oSheet.Cells(i, 14).value==undefined?'':oSheet.Cells(i,14).value;"+
+			"var CelerType=oSheet.Cells(i, 15).value==undefined?'':oSheet.Cells(i,15).value;"+
+			"var CMPrescTypeCode=oSheet.Cells(i, 16).value==undefined?'':oSheet.Cells(i,16).value;"+
+			"var CMDuratDesc=oSheet.Cells(i, 17).value==undefined?'':oSheet.Cells(i,17).value;"+
+			"var CMFreqDesc=oSheet.Cells(i, 18).value==undefined?'':oSheet.Cells(i,18).value;"+
+			"var CMInstrDesc=oSheet.Cells(i, 19).value==undefined?'':oSheet.Cells(i,19).value;"+
+			"var CMDoseQty=oSheet.Cells(i, 20).value==undefined?'':oSheet.Cells(i,20).value;"+
+			"var CMNotes=oSheet.Cells(i, 21).value==undefined?'':oSheet.Cells(i,21).value;"+
 			
-			var ARCIMCode=oSheet.Cells(i, 26).value==undefined?"":oSheet.Cells(i,26).value;
-			var DoseQty=oSheet.Cells(i, 28).value==undefined?"":oSheet.Cells(i,28).value;
-			var DoseUOM=oSheet.Cells(i, 29).value==undefined?"":oSheet.Cells(i,29).value;
-			var Frequence=oSheet.Cells(i, 30).value==undefined?"":oSheet.Cells(i,30).value;
-			var Duration=oSheet.Cells(i, 31).value==undefined?"":oSheet.Cells(i,31).value;
-			var Instruction=oSheet.Cells(i, 32).value==undefined?"":oSheet.Cells(i,32).value;
-			var PackQty=oSheet.Cells(i, 33).value==undefined?"":oSheet.Cells(i,33).value;
-			var PackQtyBillUOM=oSheet.Cells(i, 34).value==undefined?"":oSheet.Cells(i,34).value;
-			var DHCDocOrdRecLocCode=oSheet.Cells(i, 35).value==undefined?"":oSheet.Cells(i,35).value;
-			var DHCDocOrdRecHospCode=oSheet.Cells(i, 36).value==undefined?"":oSheet.Cells(i,36).value;
-			var ARCOSItmLinkDoctor=oSheet.Cells(i, 37).value==undefined?"":oSheet.Cells(i,37).value;
-			var Tremark=oSheet.Cells(i, 38).value==undefined?"":oSheet.Cells(i,38).value;
-			var OECPRDesc=oSheet.Cells(i, 39).value==undefined?"":oSheet.Cells(i,39).value;
-			var SampleDesc=oSheet.Cells(i, 40).value==undefined?"":oSheet.Cells(i,40).value;
-			var NO=oSheet.Cells(i, 41).value==undefined?"":oSheet.Cells(i,41).value;
-			var OrderPriorRemarks=oSheet.Cells(i, 42).value==undefined?"":oSheet.Cells(i,42).value;
-			var DHCDocOrdStage=oSheet.Cells(i, 43).value==undefined?"":oSheet.Cells(i,43).value;
-			var DHCMustEnter=oSheet.Cells(i, 44).value==undefined?"":oSheet.Cells(i,44).value;
-			var SpeedFlowRate=oSheet.Cells(i, 45).value==undefined?"":oSheet.Cells(i,45).value;
-			var FlowRateUnit=oSheet.Cells(i, 46).value==undefined?"":oSheet.Cells(i,46).value;
-			var OrderBodyPartLabel=oSheet.Cells(i, 47).value==undefined?"":oSheet.Cells(i,47).value;
-			var NotifyClinician=oSheet.Cells(i, 48).value==undefined?"":oSheet.Cells(i,48).value;
-			var SkinTest=oSheet.Cells(i, 49).value==undefined?"":oSheet.Cells(i,49).value;
-			var SkinTestAction=oSheet.Cells(i, 50).value==undefined?"":oSheet.Cells(i,50).value;
-			var RemoveCeler=oSheet.Cells(i, 51).value==undefined?"":oSheet.Cells(i,51).value;
+			"var ARCIMCode=oSheet.Cells(i, 26).value==undefined?'':oSheet.Cells(i,26).value;"+
+			"var DoseQty=oSheet.Cells(i, 28).value==undefined?'':oSheet.Cells(i,28).value;"+
+			"var DoseUOM=oSheet.Cells(i, 29).value==undefined?'':oSheet.Cells(i,29).value;"+
+			"var Frequence=oSheet.Cells(i, 30).value==undefined?'':oSheet.Cells(i,30).value;"+
+			"var Duration=oSheet.Cells(i, 31).value==undefined?'':oSheet.Cells(i,31).value;"+
+			"var Instruction=oSheet.Cells(i, 32).value==undefined?'':oSheet.Cells(i,32).value;"+
+			"var PackQty=oSheet.Cells(i, 33).value==undefined?'':oSheet.Cells(i,33).value;"+
+			"var PackQtyBillUOM=oSheet.Cells(i, 34).value==undefined?'':oSheet.Cells(i,34).value;"+
+			"var DHCDocOrdRecLocCode=oSheet.Cells(i, 35).value==undefined?'':oSheet.Cells(i,35).value;"+
+			"var DHCDocOrdRecHospCode=oSheet.Cells(i, 36).value==undefined?'':oSheet.Cells(i,36).value;"+
+			"var ARCOSItmLinkDoctor=oSheet.Cells(i, 37).value==undefined?'':oSheet.Cells(i,37).value;"+
+			"var Tremark=oSheet.Cells(i, 38).value==undefined?'':oSheet.Cells(i,38).value;"+
+			"var OECPRDesc=oSheet.Cells(i, 39).value==undefined?'':oSheet.Cells(i,39).value;"+
+			"var SampleDesc=oSheet.Cells(i, 40).value==undefined?'':oSheet.Cells(i,40).value;"+
+			"var NO=oSheet.Cells(i, 41).value==undefined?'':oSheet.Cells(i,41).value;"+
+			"var OrderPriorRemarks=oSheet.Cells(i, 42).value==undefined?'':oSheet.Cells(i,42).value;"+
+			"var DHCDocOrdStage=oSheet.Cells(i, 43).value==undefined?'':oSheet.Cells(i,43).value;"+
+			"var DHCMustEnter=oSheet.Cells(i, 44).value==undefined?'':oSheet.Cells(i,44).value;"+
+			"var SpeedFlowRate=oSheet.Cells(i, 45).value==undefined?'':oSheet.Cells(i,45).value;"+
+			"var FlowRateUnit=oSheet.Cells(i, 46).value==undefined?'':oSheet.Cells(i,46).value;"+
+			"var OrderBodyPartLabel=oSheet.Cells(i, 47).value==undefined?'':oSheet.Cells(i,47).value;"+
+			"var NotifyClinician=oSheet.Cells(i, 48).value==undefined?'':oSheet.Cells(i,48).value;"+
+			"var SkinTest=oSheet.Cells(i, 49).value==undefined?'':oSheet.Cells(i,49).value;"+
+			"var SkinTestAction=oSheet.Cells(i, 50).value==undefined?'':oSheet.Cells(i,50).value;"+
+			"var RemoveCeler=oSheet.Cells(i, 51).value==undefined?'':oSheet.Cells(i,51).value;"+
+			"var ARCOSEffDateFrom='';"+
 
-			var onetempStr=ARCOSNum+Spl+ARCOSCode+Spl+ARCOSDesc+Spl+ARCOSAlias+Spl+ARCOSOrdCat;
-			onetempStr=onetempStr+Spl+ARCOSOrdSubCat+Spl+ARCOSEffDateFrom+Spl+UserCode+Spl+LocCode+Spl+FavMedUnitDesc;
-			onetempStr=onetempStr+Spl+HospCode+Spl+CelerType+Spl+CMPrescTypeCode+Spl+CMDuratDesc+Spl+CMFreqDesc;
-			onetempStr=onetempStr+Spl+CMInstrDesc+Spl+CMDoseQty+Spl+CMNotes+Spl+Spl;
-			onetempStr=onetempStr+Spl+Spl+Spl+Spl+Spl;
+			"var onetempStr=ARCOSNum+Spl+ARCOSCode+Spl+ARCOSDesc+Spl+ARCOSAlias+Spl+ARCOSOrdCat;"+
+			"onetempStr=onetempStr+Spl+ARCOSOrdSubCat+Spl+ARCOSEffDateFrom+Spl+UserCode+Spl+LocCode+Spl+FavMedUnitDesc;"+
+			"onetempStr=onetempStr+Spl+HospCode+Spl+CelerType+Spl+CMPrescTypeCode+Spl+CMDuratDesc+Spl+CMFreqDesc;"+
+			"onetempStr=onetempStr+Spl+CMInstrDesc+Spl+CMDoseQty+Spl+CMNotes+Spl+Spl;"+
+			"onetempStr=onetempStr+Spl+Spl+Spl+Spl+Spl;"+
 			
-			onetempStr=onetempStr+Spl+ARCIMCode+Spl+DoseQty+Spl+DoseUOM+Spl+Frequence+Spl+Duration;
-			onetempStr=onetempStr+Spl+Instruction+Spl+PackQty+Spl+PackQtyBillUOM+Spl+DHCDocOrdRecLocCode+Spl+DHCDocOrdRecHospCode;
-			onetempStr=onetempStr+Spl+ARCOSItmLinkDoctor+Spl+Tremark+Spl+OECPRDesc+Spl+SampleDesc+Spl+NO;
-			onetempStr=onetempStr+Spl+OrderPriorRemarks+Spl+DHCDocOrdStage+Spl+DHCMustEnter+Spl+SpeedFlowRate+Spl+FlowRateUnit;
-			onetempStr=onetempStr+Spl+OrderBodyPartLabel+Spl+NotifyClinician+Spl+SkinTest+Spl+SkinTestAction+Spl+RemoveCeler;
-			if (tempStr=="") tempStr=onetempStr
-			else tempStr=tempStr+String.fromCharCode(1)+onetempStr
-         }  
-    } catch(e) {  
-    }  
-    
-    
-	if (tempStr!=""){
-		console.log(tempStr);
-		ret=tkMakeServerCall("web.DHCDocPrefTabs","ImportARCOSXls",tempStr);
+			"onetempStr=onetempStr+Spl+ARCIMCode+Spl+DoseQty+Spl+DoseUOM+Spl+Frequence+Spl+Duration;"+
+			"onetempStr=onetempStr+Spl+Instruction+Spl+PackQty+Spl+PackQtyBillUOM+Spl+DHCDocOrdRecLocCode+Spl+DHCDocOrdRecHospCode;"+
+			"onetempStr=onetempStr+Spl+ARCOSItmLinkDoctor+Spl+Tremark+Spl+OECPRDesc+Spl+SampleDesc+Spl+NO;"+
+			"onetempStr=onetempStr+Spl+OrderPriorRemarks+Spl+DHCDocOrdStage+Spl+DHCMustEnter+Spl+SpeedFlowRate+Spl+FlowRateUnit;"+
+			"onetempStr=onetempStr+Spl+OrderBodyPartLabel+Spl+NotifyClinician+Spl+SkinTest+Spl+SkinTestAction+Spl+RemoveCeler;"+
+			"if (tempStr=='') {tempStr=onetempStr;}else{tempStr=tempStr+String.fromCharCode(1)+onetempStr;}"+
+			
+				 "};"+
+			"oXL.Application.Quit();"+
+			"return tempStr;}());";
+	CmdShell.notReturn = 0;    //有返回值调用
+	var rtn =CmdShell.EvalJs(str);     //运行代码且得到返回值 
+	var Str=rtn.rtn
+	if (Str!=""){
+		var tempStr=""
+		var Count=0
+		var ret=0
+		var retInfo=""
+		for (var i = 0; i < Str.split(String.fromCharCode(1)).length; i++) { 
+			var onetempStr=Str.split(String.fromCharCode(1))[i]
+			if (tempStr=='') {tempStr=onetempStr;}else{tempStr=tempStr+String.fromCharCode(1)+onetempStr;}
+			if ((tempStr!="")&&(Count>50)){
+				rtn=tkMakeServerCall("web.DHCDocPrefTabs","ImportARCOSXls",tempStr);
+				retnumber=rtn.split("^")[0]
+				retInfo=retInfo+rtn.split("^")[1]
+				ret=parseFloat(ret)+parseFloat(retnumber)
+				tempStr="";
+				Count=0;
+			}
+			Count=Count+1;
+		}
+		if (tempStr!=""){
+			rtn=tkMakeServerCall("web.DHCDocPrefTabs","ImportARCOSXls",tempStr);
+			retnumber=rtn.split("^")[0]
+			retInfo=retInfo+rtn.split("^")[1]
+			ret=parseFloat(ret)+parseFloat(retnumber)
+		}
+		$.messager.alert("提示", "导入成功"+ret+"条数据!"+retInfo, 'info');
+		
 	}
-	//退出操作excel的实例对象  
-	oXL.Application.Quit();  
-	//手动调用垃圾收集器  
-	//CollectGarbage();
-	$.messager.alert("提示", "导入成功"+ret+"条数据!", 'info');
-	$("#TemplateExcel").filebox("clear");	
+	//document.getElementById("resultdiv").innerText = rtn; 
+	return;
 }
 //导入诊断模板
 function ImportDiagTempHandler(fileName){
+	var str ="(function test(x){"+
+			"var oXL = new ActiveXObject('Excel.Application');"+
+			"var fileName=''; "+
+			"var fileName = oXL.Application.GetOpenFilename ('Excel Spreadsheets (*.xls), *.xls');" +
+			"if (fileName==''){return '';}" +
+			"var oWB = oXL.Workbooks.open(fileName);"+
+			"oWB.worksheets(1).select();"+
+			"var oSheet = oWB.ActiveSheet;  "+
+			"var rows =  oSheet.usedrange.rows.count;"+
+			" var ret=0;"+
+			"var Spl=String.fromCharCode(2);"+
+			"var tempStr='';"+ 
+			"for (var i = 2; i <= rows; i++) {"+
+				"var TypeCode=oSheet.Cells(i, 2).value;"+
+				"var TypeValue=oSheet.Cells(i, 3).value;"+
+				"var Cat=oSheet.Cells(i, 6).value;"+
+				"var DiagType=oSheet.Cells(i, 7).value;"+
+				"var ICDCode=oSheet.Cells(i, 8).value;"+
+				"var Note=oSheet.Cells(i, 10).value==undefined?'':oSheet.Cells(i,10).value;"+
+				"var SyndCode=oSheet.Cells(i, 11).value==undefined?'':oSheet.Cells(i,11).value;"+
+				"var SyndNote=oSheet.Cells(i, 13).value==undefined?'':oSheet.Cells(i,13).value;"+
+				"var Prefix=oSheet.Cells(i, 14).value==undefined?'':oSheet.Cells(i,14).value;"+
+				"var onetempStr=TypeCode+Spl+TypeValue+Spl+DiagType+Spl+ICDCode+Spl+Note;"+
+				"onetempStr=onetempStr+Spl+SyndCode+Spl+SyndNote+Spl+Prefix+Spl+Cat;"+
+				"if (tempStr=='') {tempStr=onetempStr;}else{tempStr=tempStr+String.fromCharCode(1)+onetempStr;}"+
+			"};"+
+			"oXL.Application.Quit();"+
+			"return tempStr;}());";
+	CmdShell.notReturn = 0;    //有返回值调用
+	var rtn =CmdShell.EvalJs(str);     //运行代码且得到返回值 
+	var Str=rtn.rtn
+	if (Str!=""){
+		var tempStr=""
+		var Count=0
+		var ret=0
+		var retInfo=""
+		for (var i = 0; i < Str.split(String.fromCharCode(1)).length; i++) { 
+			var onetempStr=Str.split(String.fromCharCode(1))[i]
+			if (tempStr=='') {tempStr=onetempStr;}else{tempStr=tempStr+String.fromCharCode(1)+onetempStr;}
+			if ((tempStr!="")&&(Count>50)){
+				retnumber=tkMakeServerCall("web.DHCDocPrefTabs","ImportDiagTempXls",tempStr);
+				ret=parseFloat(ret)+parseFloat(retnumber)
+				tempStr="";
+				Count=0;
+			}
+			Count=Count+1;
+		}
+		if (tempStr!=""){
+			retnumber=tkMakeServerCall("web.DHCDocPrefTabs","ImportDiagTempXls",tempStr);
+
+			ret=parseFloat(ret)+parseFloat(retnumber)
+		}
+		$.messager.alert("提示", "导入成功"+ret+"条数据!", 'info');
+		FindHandler();
+		
+	}
+	//document.getElementById("resultdiv").innerText = rtn; 
+	return;
 	//创建操作EXCEL应用程序的实例
 	var oXL = new ActiveXObject("Excel.application");  
 	//打开指定路径的excel文件
@@ -1069,7 +938,9 @@ function ImportDiagTempHandler(fileName){
     //使用的行数  
     var rows =  oSheet.usedrange.rows.count
     var ret=1;
-
+	var BeforeCode=""
+	var Count=0
+	
     var tempStr=""
     var Spl=String.fromCharCode(2)
     try {  
@@ -1089,8 +960,22 @@ function ImportDiagTempHandler(fileName){
 
 			var onetempStr=HospCode+Spl+valueType+Spl+valueCode+Spl+MASDesc+Spl+MASIndex;
 			onetempStr=onetempStr+Spl+ICDListNum+Spl+ICDListIndex+Spl+ICDDesc+Spl+ICDCode+Spl+ICDSyndromeCodeInfo;
+			
+			
+			
+			//同一列名分两次导入会有问题，这里按列名拆分
+			if ((tempStr!="")&&(Count>50)&&(BeforeCode!=valueCode)){
+				console.log(i+","+Count+","+tempStr);
+				ret=ret+tkMakeServerCall("web.DHCDocPrefTabs","ImportDiagTempXls",tempStr);
+				tempStr="";
+				Count=0;
+			}
 			if (tempStr=="") tempStr=onetempStr
 			else tempStr=tempStr+String.fromCharCode(1)+onetempStr
+			Count=Count+1;
+			BeforeCode=valueCode;
+			
+			
          }  
     } catch(e) {  
     }  
@@ -1109,6 +994,59 @@ function ImportDiagTempHandler(fileName){
 }
 //导入医嘱模板
 function ImportOETabItems(fileName){
+	var str ="(function test(x){"+
+			"var oXL = new ActiveXObject('Excel.Application');"+
+			"var fileName=''; "+
+			"var fileName = oXL.Application.GetOpenFilename ('Excel Spreadsheets (*.xls), *.xls');" +
+			"if (fileName==''){return '';}" +
+			"var oWB = oXL.Workbooks.open(fileName);"+
+			"oWB.worksheets(1).select();"+
+			"var oSheet = oWB.ActiveSheet;  "+
+			"var rows =  oSheet.usedrange.rows.count;"+
+			" var ret=0;"+
+			"var Spl=String.fromCharCode(2);"+
+			"var tempStr='';"+ 
+			"for (var i = 2; i <= rows; i++) {"+
+				"var FavCatType=oSheet.Cells(i, 2).value||'';"+
+				"var TypeValue=oSheet.Cells(i, 3).value||'';"+
+				"var Cat=oSheet.Cells(i,6).value==undefined?'':oSheet.Cells(i,6).value;"+
+				"var SubCat=oSheet.Cells(i,7).value==undefined?'':oSheet.Cells(i,7).value;"+
+				"var ItemID=oSheet.Cells(i,9).value||'';"+
+				"var PartCodeInfo=oSheet.Cells(i, 11).value||'';"+
+				"var Note=oSheet.Cells(i,12).value==undefined?'':oSheet.Cells(i,12).value;"+
+				"var ItemType=oSheet.Cells(i,8).value||'';"+
+				"var onetempStr=FavCatType+Spl+TypeValue+Spl+Cat+Spl+SubCat+Spl+ItemID+Spl+PartCodeInfo+Spl+Note+Spl+ItemType;"+
+				"if (tempStr=='') {tempStr=onetempStr;}else{tempStr=tempStr+String.fromCharCode(1)+onetempStr;}"+
+			"};"+
+			"oXL.Application.Quit();"+
+			"return tempStr;}());";
+	CmdShell.notReturn = 0;    //有返回值调用
+	var rtn =CmdShell.EvalJs(str);     //运行代码且得到返回值 
+	var Str=rtn.rtn
+	if (Str!=""){
+		var tempStr=""
+		var Count=0
+		var ret=0
+		var retInfo=""
+
+		for (var i = 0; i < Str.split(String.fromCharCode(1)).length; i++) { 
+			var onetempStr=Str.split(String.fromCharCode(1))[i]
+			if (tempStr=='') {tempStr=onetempStr;}else{tempStr=tempStr+String.fromCharCode(1)+onetempStr;}
+			if ((tempStr!="")&&(Count>50)){
+				ret=tkMakeServerCall("web.DHCDocPrefTabs","ImportPreferenceXls",tempStr);
+				tempStr="";
+				Count=0;
+			}
+			Count=Count+1;
+		}
+		if (tempStr!=""){
+			ret=tkMakeServerCall("web.DHCDocPrefTabs","ImportPreferenceXls",tempStr);
+		}
+		$.messager.alert("提示", "导入成功"+ret, 'info');
+		FindHandler();
+	}
+	//document.getElementById("resultdiv").innerText = rtn; 
+	return;
 	/*var str ="(function test(x){"+
 			"var xlApp = new ActiveXObject('Excel.Application');"+
 			//http://127.0.0.1/dthealth/med/Results/Template/tpl.xlsx
@@ -1141,7 +1079,8 @@ function ImportOETabItems(fileName){
     //使用的行数  
     var rows =  oSheet.usedrange.rows.count
     var ret=1;
-
+    var BeforeCode=""
+	var Count=0
     var tempStr=""
     var Spl=String.fromCharCode(2)
     try {  
@@ -1160,15 +1099,26 @@ function ImportOETabItems(fileName){
 			
 			var onetempStr=HospCode+Spl+valueCode+Spl+valueType+Spl+Type+Spl+TabName;
 			onetempStr=onetempStr+Spl+ColName+Spl+ARCIMorARCOS+Spl+ItemCode+Spl+Index+Spl+PartCodeInfo;
+			
+			//同一列名分两次导入会有问题，这里按列名拆分
+			if ((tempStr!="")&&(Count>50)&&(BeforeCode!=valueCode)){
+				console.log(i+","+Count+","+tempStr);
+				ret=tkMakeServerCall("web.DHCDocPrefTabs","ImportPreferenceXls",tempStr);
+				tempStr="";
+				Count=0;
+			}
+			
 			if (tempStr=="") tempStr=onetempStr
 			else tempStr=tempStr+String.fromCharCode(1)+onetempStr
+			Count=Count+1;
+			BeforeCode=valueCode;
          }  
     } catch(e) {  
     }  
     
     
     if (tempStr!=""){
-		console.log(tempStr);
+		console.log("fin:"+tempStr);
 		ret=tkMakeServerCall("web.DHCDocPrefTabs","ImportPreferenceXls",tempStr);
 	}
    //退出操作excel的实例对象  
@@ -1213,18 +1163,24 @@ function BodykeydownHandler(e){
 }
 
 function GetParams(){
-	var CTLocName = PageOBJ.m_DepCombox.getText();	//$("#FCTLocName").val();
-	var CTLocID = PageOBJ.m_DepCombox.getValue();	//$("#FCTLocID").val();
-	var UserName = PageOBJ.m_UserCombox.getText();	//$("#FUserName").val();
-	var UserID = PageOBJ.m_UserCombox.getValue(); 	//$("#FUserID").val();
-	var AppKey = $.trim($("#AppKey").val());
+	var CTLocName='',CTLocID='',UserName='',UserID='',HospName='',HospID='';
+	var OperType=$('#FType').combobox('getValue');
+	if(OperType=='Personal'){
+		UserName=$('#FTypeValue').combobox('getText');
+		UserID=$('#FTypeValue').combobox('getValue');
+	}else if(OperType=='Departments'){
+		CTLocName=$('#FTypeValue').combobox('getText');
+		CTLocID=$('#FTypeValue').combobox('getValue');
+	}else if(OperType=='Hospital'){
+		HospName=$('#FTypeValue').combobox('getText');
+		HospID=$('#FTypeValue').combobox('getValue');
+	}
+	var AppKey = $('input[name=OrdFavType]:checked').attr('id')||'';
 	var HandleDataType = $('input:radio[name="HandleDataType"]:checked').val();
-	var OperType = $('input:radio[name="OperType"]:checked').val();
 	if ((HandleDataType == undefined)||(HandleDataType == "")){
 		$.messager.alert("提示","请选择需要操作的数据类型!","info");
 		return false;
 	}
-	
 	if ((OperType == undefined)&&(("^OrdTemp^DiaTemp^ARCOS^UserFav^").indexOf("^"+HandleDataType+"^")<0)){
 		$.messager.alert("提示","请选择条件!","info");
 		return false;
@@ -1241,5 +1197,68 @@ function GetParams(){
 		}
 		//查询科室模版
 	}
-	return HandleDataType+"^"+OperType+"^"+CTLocName+"^"+CTLocID+"^"+UserName+"^"+UserID+"^"+AppKey;
+	HospID=session['LOGON.HOSPID'];
+	return HandleDataType+"^"+OperType+"^"+CTLocName+"^"+CTLocID+"^"+UserName+"^"+UserID+"^"+AppKey+'^'+HospName+'^'+HospID;
+}
+function InitFType()
+{
+	$('#FType').combobox({
+		url:'',
+		editable:false,
+		data:[{value:'',text:'全部'},{value:'Personal',text:'个人'},{value:'Departments',text:'科室'}],	//,{value:'Hospital',text:'医院'}
+		onSelect:function(){
+			InitFTypeValue();
+		},
+		onLoadSuccess:function(){
+			InitFTypeValue();
+		}
+	});
+}
+function InitFTypeValue()
+{
+	var FType=$('#FType').combobox('getValue');
+	if(FType==''){
+		$('#FTypeValue').combobox({url:'',data:[]});
+	}else if(FType=='Personal'){
+		$('#FTypeValue').combobox({
+			url:$URL+"?ClassName=DHCDoc.DHCDocConfig.CommonFunction&QueryName=LookUpUser&desc=&ResultSetType=array&HospId="+session['LOGON.HOSPID'],
+			valueField:'ID',
+			textField:'USER',
+			filter: function(q, row){
+				var ops = $(this).combobox('options');  
+				var mCode = row.USER.toUpperCase().indexOf(q.toUpperCase()) >= 0
+				var mValue = row[ops.textField].indexOf(q) >= 0;
+				return mCode||mValue;  
+				}
+		});
+	}else if(FType=='Departments'){
+		$('#FTypeValue').combobox({
+			url:$URL+"?ClassName=DHCDoc.DHCDocConfig.CommonFunction&QueryName=LookUpCTLoc&desc=&ResultSetType=array&HospId="+session['LOGON.HOSPID'],
+			valueField:'ID',
+			textField:'CTLOC',
+			mode: "local",
+			filter: function(q, row){
+				var ops = $(this).combobox('options');  
+				var mCode = false;
+				if (row.ContactName) {
+					mCode = row.ContactName.toUpperCase().indexOf(q.toUpperCase()) >= 0
+				}
+				var mValue = row[ops.textField].indexOf(q) >= 0;
+				return mCode||mValue;  
+			}
+		});
+	}else{
+		$('#FTypeValue').combobox({
+			url:$URL+"?ClassName=DHCDoc.OPDoc.Workflow&QueryName=QueryHosp&ResultSetType=array",
+			valueField:'id',
+			textField:'text',
+			mode: "local",
+			filter: function(q, row){
+				var ops = $(this).combobox('options');  
+				var mCode = row.code.toUpperCase().indexOf(q.toUpperCase()) >= 0
+				var mValue = row[ops.textField].indexOf(q) >= 0;
+				return mCode||mValue;  
+			}
+		});
+	}
 }

@@ -22,8 +22,8 @@ $(function() {
         $('body').layout('resize');
     }
 
-    if (sysOption.ResTabPosition === 'right') {
-        $('#dataTabs').tabs({tabPosition:"right"});
+    if (sysOption.ResTabPosition != 'top') {
+        $('#dataTabs').tabs({tabPosition:sysOption.ResTabPosition});
     }
     
     if ('' === patInfo.EpisodeID) {
@@ -221,12 +221,12 @@ function switchEMRContent(_patientID, _episodeID, _mradm) {
     //关闭弹出的资源区
     emrEditor.closeResourceWindow();
     reacquireParams();
-    var sthmsg = '病历正在初始化...';
-    setSysMenuDoingSth(sthmsg); 
-     //刷新惠每
+	//刷新CDSS
 	if(typeof initCDSSData == "function" && typeof cdssLock != "undefined" && cdssLock=="Y"){
 		initCDSSData(_episodeID,_patientID);
 	}   
+    var sthmsg = '病历正在初始化...';
+    setSysMenuDoingSth(sthmsg); 
     try {
         //刷新编辑器
         emrEditor.initDocument();

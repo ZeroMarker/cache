@@ -5,9 +5,12 @@
 var CurrentSourceID=GetQueryString("CurrentSourceID")
 var CurrentSourceType=GetQueryString("CurrentSourceType")
 var EquipDR=GetQueryString("EquipDR")
+var Status=GetQueryString("Status")
 var LastPicSelectRowid=0
 var LastPicListSelectRowid=0
+var PicSelectRowid=0 //add by lmm 2017-10-11 458645
 var PictureGridUrl = 'dhceq.process.pictureaction.csp';
+var ReadOnly=GetQueryString("ReadOnly")
 //=========================控件===========================================
 var PicNoField=	new Ext.form.TextField({		
 					id:'PicNoField',
@@ -140,12 +143,15 @@ var PictureGridCm = new Ext.grid.ColumnModel([
         sortable:false
     },{  
      header: "预览",  
+     dataIndex:'TPicNum',
   	 renderer:pictureview
  	},{
 	header:'保存',
+	dataIndex:'TSourceType',
 	renderer:pictureupload
 	},{
 	header:'删除',
+	dataIndex:'TSourceType',
 	renderer:picturedelete
 	}
 ]);
@@ -190,7 +196,8 @@ PictureGrid = new Ext.grid.EditorGridPanel({
 	bbar:PicturePagingToolbar,
 	tbar:[PicNoField,'-',PicNameField,'-',findPicture,'-',{  
             text:'新增',
-            iconCls:'page_add',  
+            iconCls:'page_add', 
+            disabled:ReadOnly>0,
             handler:function(){  
                 CreatePicuploadWin("","")
                 }  
@@ -201,7 +208,7 @@ PictureGrid = new Ext.grid.EditorGridPanel({
 	'rowclick':function(){
 		var rowObj = PictureGrid.getSelectionModel().getSelected(); 
 		var TRowID = rowObj.get('TRowID');
-		if(LastPicSelectRowid==TRowID) 
+		if(PicSelectRowid==TRowID)   //modify by lmm 2017-10-11 458645
 		{
 			//PictureGrid.getSelectionModel().clearSelections();
 			//LastPicSelectRowid=0;
@@ -211,6 +218,7 @@ PictureGrid = new Ext.grid.EditorGridPanel({
 		else {
 			LastPicSelectRowid=TRowID
 			PicListGridDs.load({params:{start:0,limit:PicListPagingToolbar.pageSize,rowid:TRowID,Arg1:TRowID,ArgCnt:1,page:1,rows:PicListPagingToolbar.pageSize}});
+			PicSelectRowid=0;  //modify by lmm 2017-10-11 458645
 		}
 		}
 	}
@@ -219,7 +227,11 @@ PictureGrid = new Ext.grid.EditorGridPanel({
 if(window.parent.PicType!=-1) PictureGridDs.load({params:{start:0,limit:PicturePagingToolbar.pageSize,Arg1:CurrentSourceType,Arg2:CurrentSourceID,Arg3:"^^^^^"+window.parent.PicType,ArgCnt:3,page:1,rows:PicturePagingToolbar.pageSize}});
 //============================图片明细数据源===============================
 //var PicListGridProxy= new Ext.data.HttpProxy({url:PictureGridUrl+'?actiontype=GetPictureList',method:'POST'});
-var PicListGridProxy= new Ext.data.HttpProxy({url:'dhceq.jquery.csp?ClassName=web.DHCEQ.Process.DHCEQPictureList&QueryName=GetPictureList',method:'POST'});
+var url='dhceq.jquery.csp?ClassName=web.DHCEQ.Process.DHCEQPictureList&QueryName=GetPictureList';
+if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+	url += "&MWToken="+websys_getMWToken()
+}
+var PicListGridProxy= new Ext.data.HttpProxy({url:url,method:'POST'});
 var PicListGridDs = new Ext.data.Store({
 	proxy:PicListGridProxy,
     reader:new Ext.data.JsonReader({
@@ -264,7 +276,8 @@ var PicListGridCm = new Ext.grid.ColumnModel([
         sortable:false
     },DefaultFlagField,
 {  
-     header: "预览",  
+     header: "预览", 
+     dataIndex:'TSuffix', 
   	 renderer:piclistview
  	},{
 	header:'保存',
@@ -274,6 +287,7 @@ var PicListGridCm = new Ext.grid.ColumnModel([
 	renderer:piclistdelete
 	},{
 	header:'下载',
+	dataIndex:'TSuffix',
 	renderer:piclistdownload
 	}
     
@@ -327,9 +341,29 @@ PicListGrid = new Ext.grid.EditorGridPanel({
 	bbar:PicListPagingToolbar,
 	tbar:['-',{  
             text:'新增', 
-            iconCls:'page_add', 
-            handler:function(){  
-            	CreatePicListuploadWin(GetPictureData(),"")
+            iconCls:'page_add',
+            disabled:ReadOnly>0, 
+            handler:function(){
+	            browsername=GetBrowserInfo(1)
+	            browserverinfo=GetBrowserInfo(2)
+	            if ((browsername=="msie")&&(browserverinfo>9.0))
+	            {
+					var PTRowID=GetPictureData()
+					if (PTRowID.TRowID==undefined)
+					{
+						alertShow("请选择主表")
+						return
+					}
+					var str='../csp/dhceq.process.picbatchupload.csp?PTRowID='+PTRowID.TRowID
+					if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+						str += "&MWToken="+websys_getMWToken()
+					}
+					window.open(str,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0')
+	            }
+	            else
+	            {
+		            CreatePicListuploadWin(GetPictureData(),"")
+	            }
                 }  
             },'-'
 	]
@@ -345,6 +379,56 @@ PicListGrid = new Ext.grid.EditorGridPanel({
 
 
 //=============================功能函数=========================
+///Add By DJ 2016-09-26
+///描述:获取IE浏览器版本
+function GetBrowserInfo(vType)
+{
+	var agent = navigator.userAgent.toLowerCase() ;
+	var regStr_ie = /msie [\d.]+;/gi ;
+	var regStr_ff = /firefox\/[\d.]+/gi
+	var regStr_chrome = /chrome\/[\d.]+/gi ;
+	var regStr_saf = /safari\/[\d.]+/gi ;
+	var regStr_ie11 = /rv[\:][\d.]+/gi ;
+	var Return=""
+	//IE
+	if(agent.indexOf("msie") > 0)		{Return=regStr_ie}
+	
+	//IE11
+	if(agent.indexOf("rv") > 0)			{Return=regStr_ie11}
+	
+	//firefox
+	if(agent.indexOf("firefox") > 0)	{Return=regStr_ff}
+
+	//Chrome
+	//if(agent.indexOf("chrome") > 0)		{Return=regStr_chrome}
+
+	//Safari
+	//if(agent.indexOf("safari") > 0 && agent.indexOf("chrome") < 0)	{Return=regStr_saf}
+	
+	if (Return=="")
+	{
+		return	""
+	}
+	else
+	{
+		var browser=agent.match(Return);
+		if (vType=="1")		//浏览器
+		{
+			var browsername = (browser+"").replace(/[0-9.:;\/]/ig,"");
+			if (browsername=="rv") browsername="msie"
+			return browsername
+		}
+		else if (vType=="2")	//版本
+		{
+			var verinfo = (browser+"").replace(/[^0-9.]/ig,"");
+			return verinfo
+		}
+		else		//浏览器及版本号
+		{
+			return browser ;
+		}
+	}
+}
 
 function GetPictureData()
 {
@@ -361,36 +445,49 @@ function GetPiclistData()
 	return data
 }
 
-function pictureview(){
-			var str ="<button  onclick='Picview()'><font color='#FF0000'>预览</font></button>"; 
+function pictureview(value, metaData, record, rowIndex, colIndex, store){
+			if(value==0) var str="<button  disabled=true><font color='#FF0000'>暂无预览</font></button>"; 
+			else var str ="<button  onclick='Picview()'><font color='#FF0000'>预览</font></button>"; 
 			return str;
 		  }
-function pictureupload(){
-			var str ="<button  onclick='CreatePicuploadWin(GetPictureData(),GetPiclistData())'><font color='#FF0000'>编辑</font></button>"; 
+function pictureupload(value, metaData, record, rowIndex, colIndex, store){
+			if ((value!=CurrentSourceType)||(ReadOnly>0)) metaData.attr ='disabled=true' //这里如果设置disabled=false似乎无法生效，所以只能用if语句来决定是否要设置这条属性
+			var str ="<button onclick='CreatePicuploadWin(GetPictureData(),GetPiclistData())'><font color='#FF0000'>更新</font></button>"; 
 			return str;
 		  }
-function picturedelete(){
-			var str ="<button  onclick='DeletePicData(&quot;DeletePicture&quot;,PictureGrid.getSelectionModel().getSelected().data.TRowID)'><font color='#FF0000'>删除</font></button>"; 
+function picturedelete(value, metaData, record, rowIndex, colIndex, store){
+			if ((value!=CurrentSourceType)||(ReadOnly>0)) metaData.attr ='disabled=true'
+			var str ="<button onclick='DeletePicData(&quot;DeletePicture&quot;,PictureGrid.getSelectionModel().getSelected().data.TRowID)'><font color='#FF0000'>删除</font></button>"; 
 			return str;
 		  }
-function piclistview(){
-			var str ="<button  onclick='Picview()'><font color='#FF0000'>预览</font></button>"; 
+function piclistview(value, metaData, record, rowIndex, colIndex, store){
+			if(value=="") var str ="<button  disabled=true><font color='#FF0000'>暂无预览</font></button>"; 
+			else var str ="<button  onclick='Picview()'><font color='#FF0000'>预览</font></button>"; 
 			return str;
 		  }
-function piclistupload(){
-			var str ="<button  onclick='CreatePicListuploadWin(GetPictureData(),GetPiclistData())'><font color='#FF0000'>编辑</font></button>"; 
+function piclistupload(value, metaData, record, rowIndex, colIndex, store){
+			var rowObj = PictureGrid.getSelectionModel().getSelected(); 
+			var TSourceType = rowObj.get('TSourceType');
+			if ((TSourceType!=CurrentSourceType)||(ReadOnly>0)) metaData.attr ='disabled=true'
+			var str ="<button  onclick='CreatePicListuploadWin(GetPictureData(),GetPiclistData())'><font color='#FF0000'>更新</font></button>"; 
 			return str;
 		  }
-function piclistdelete(){
-			var str ="<button  onclick='DeletePicData(&quot;DeletePiclist&quot;,PicListGrid.getSelectionModel().getSelected().data.TRowID)'><font color='#FF0000'>删除</font></button>"; 
+function piclistdelete(value, metaData, record, rowIndex, colIndex, store){
+			var rowObj = PictureGrid.getSelectionModel().getSelected(); 
+			var TSourceType = rowObj.get('TSourceType');
+			if ((TSourceType!=CurrentSourceType)||(ReadOnly>0)) metaData.attr ='disabled=true'
+			var str ="<button onclick='DeletePicData(&quot;DeletePiclist&quot;,PicListGrid.getSelectionModel().getSelected().data.TRowID)'><font color='#FF0000'>删除</font></button>"; 
 			return str;
 		  }
-function piclistdownload(){
-			var str ="<button  onclick='Picdownload(PicListGrid.getSelectionModel().getSelected().data.TFtpStreamSrc)'><font color='#FF0000'>下载</font></button>"; 
+function piclistdownload(value, metaData, record, rowIndex, colIndex, store){
+			if(value=="") var str ="<button  disabled=true><font color='#FF0000'>暂无下载</font></button>"; 
+			else var str ="<button  onclick='Picdownload(PicListGrid.getSelectionModel().getSelected().data.TFtpStreamSrc)'><font color='#FF0000'>下载</font></button>"; 
 			return str;
 		  }
 function DeletePicData(actiontype,RowID)
 {
+	var truthBeTold = window.confirm("确定删除改记录吗?");
+    if (!truthBeTold) return;
 	//不允许跨业务删除
 	if(PictureGrid.getSelectionModel().getSelected().data.TSourceType!=CurrentSourceType){Msg.info("error","无法跨业务删除");return}
 	var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
@@ -401,8 +498,8 @@ function DeletePicData(actiontype,RowID)
 				 mask.hide();
 				if(jsonData.success==true){
 					Msg.info("success","删除成功!");
-		   			PictureGrid.store.reload()
-		   			PicListGrid.store.removeAll()
+					if (actiontype=="DeletePiclist") UpdateForPicListChange()
+					else UpdateForPicChange()
 				}else{
 						Msg.info("error","删除失败!");
 				}	
@@ -423,6 +520,24 @@ function Picview(){
 	Arguments.PiclistData=GetPiclistData();
 	Arguments.Getactiontype="GetFtpStreamSrcByRowid"
 	window.parent.showModalDialog("dhceq.process.pictureview.csp",Arguments,'dialogWidth=810px;dialogHeight:645px')
+}
+function UpdateForPicListChange(){	//当明细表发生变化时调用，用来更新主表明细表
+	PictureGrid.store.reload({callback : function(r, options, success) {
+		var row=PictureGrid.store.find("TRowID",LastPicSelectRowid)
+		if (row>=0) PictureGrid.getSelectionModel().selectRow(row)
+		else LastPicSelectRowid=0 //正常来说不会执行到这句
+		PicListGrid.store.reload()
+		LastPicListSelectRowid=0
+		}
+	})
+	
+}
+function UpdateForPicChange(){	//当主表发生变化时调用，用来更新主表明细表
+	LastPicSelectRowid=0
+	LastPicListSelectRowid=0
+	PictureGrid.store.reload()
+	PicListGrid.store.removeAll()
+	
 }
 
 

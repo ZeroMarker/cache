@@ -27,7 +27,7 @@ function InitASPOrdItemWin(){
 		["div","#FFE1E1","长期医嘱"],
 		["div","#FFCC66","临时医嘱"],
 		["div","#FF0000","长期医嘱+临时医嘱"],
-		["img","../Scripts/dhchai/img/timeline.png","干预"]
+		["img","../scripts/dhchai/img/timeline.png","干预"]
 	];
 	obj.MethodCodes	= {		//合理/不合理/需关注处置方案Code-对应字典IRASPOpinionType
 		"inReason" : {

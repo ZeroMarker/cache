@@ -1,35 +1,23 @@
 ﻿/**
  * FileName: dhcbill.conf.page.reg.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-11-05
  * Description: 住院登记页面配置
  */
 
 $(function() {
-	$(document).keydown(function (e) {
-		banBackSpace(e);
-	});
-	
-	$HUI.linkbutton("#btn-save", {
-		onClick: function () {
-			saveClick();
-		}
-	});
-	
-	$HUI.linkbutton("#btn-delete", {
-		onClick: function () {
-			deleteClick();
-		}
-	});
+	$("#btn-saveDOM").click(saveDOMClick);
+	$("#btn-saveParam").click(saveParamClick);
 	
 	var options = {
 		onText: '是',
 		offText: '否',
 		size: 'small',
 		onClass: 'primary',
-		offClass: 'gray'
+		offClass: 'gray',
+		checked: false
 	};
-	$("#showInsuFlag").switchbox(options);
+	$("#dl-tb div[id], .search-table div[id]").switchbox(options);
 	
 	initDOMList();
 	initPageConfList();
@@ -54,6 +42,7 @@ $(function() {
 			$(this).combobox('select', defHospId);
 		},
 		onChange: function(newValue, oldValue) {
+			loadParamCfg();
 			reloadDOMList();
 			reloadPageConfList();
 		}
@@ -74,26 +63,32 @@ function initDOMList() {
 			moveDownClick();
 		}
 	});
+
+	var _content = "<ul class='tip-class'><li style='font-weight:bold'>DOM元素配置说明</li>" + 
+		"<li>1、若住院登记页面元素有变动，需先删除配置记录</li>" +
+		"<li><span>并刷新住院登记页面缓存DOM元素后重新配置。</span></li>" + 
+		"<li>2、上移、下移调整回车跳转顺序</li>" +
+		"</ul>";
+	$("#btn-tipDOM").popover({
+		trigger: 'hover',
+		content: _content
+	});
 	GV.DOMList = $HUI.datagrid("#domList", {
 		fit: true,
-		title: 'DOM元素',
-		headerCls: 'panel-header-gray',
-		iconCls: 'icon-paper',
+		border: false,
 		singleSelect: true,
-		fitColumns: true,
 		rownumbers: false,
 		pageSize: 999999999,
 		toolbar: '#dl-tb',
 		loadMsg: '',
-		data: [],
 		columns: [[{title: 'id', field: 'id', hidden: true},
-				   {title: 'DOM元素名称', field: 'text', width: 130},
-				   {title: '是否必填', field: 'required', width: 80, align: 'center',
+				   {title: 'DOM元素名称', field: 'text', width: 110},
+				   {title: '是否必填', field: 'required', width: 70, align: 'center',
 				   	formatter: function (value, row, index) {
 						return "<input type='checkbox' " + (value == "1" ? "checked" : "") + "/>";
 					}
 				   },
-				   {title: '是否禁用', field: 'disabled', width: 80, align: 'center',
+				   {title: '是否禁用', field: 'disabled', width: 70, align: 'center',
 				    formatter: function (value, row, index) {
 						return "<input type='checkbox' " + (value == "1" ? "checked" : "") + "/>";
 					}
@@ -123,20 +118,22 @@ function initPageConfList() {
 	var selectRowIndex = undefined;
 	GV.PageConfList = $HUI.datagrid("#pageConfList", {
 		fit: true,
-		title: '配置记录列表',
-		headerCls: 'panel-header-gray',
-		iconCls: 'icon-paper',
+		border: false,
 		singleSelect: true,
-		fitColumns: true,
 		pagination: true,
-		pageSize: 30,
-		toolbar: '#pl-tb',
+		pageSize: 20,
+		displayMsg: '',
+		toolbar: [{
+	            text: '删除',
+	            iconCls: 'icon-cancel',
+	            handler: deleteClick
+	        }
+	    ],
 		loadMsg: '',
-		data: [],
 		columns: [[{title: 'site', field: 'site', hidden: true},
-				   {title: '保存模式', field: 'modeDesc', width: 130},
+				   {title: '保存模式', field: 'modeDesc', width: 80},
 				   {title: 'siteId', field: 'siteId', hidden: true},
-				   {title: '安全组/院区', field: 'userDesc', width: 100},
+				   {title: '安全组/院区', field: 'userDesc', width: 200},
 				   {title: 'confIdStr', field: 'confIdStr', hidden: true}
 			]],
 		onLoadSuccess: function(data) {
@@ -156,7 +153,7 @@ function initPageConfList() {
 			selectRowIndex = undefined;
 			GV.PCSite = "";
 			GV.PCSiteDR = "";
-			$("#showInsuFlag").switchbox("setValue", true);
+			$("#dl-tb div[id]").switchbox("setValue", false);
 			reloadDOMList();
 		}
 	});
@@ -173,18 +170,18 @@ function selectConfRowHandler(index, row) {
 		ClassName: "web.DHCIPBillRegConf",
 		MethodName: "GetConfValById",
 		confIdStr: confIdStr,
-		code: GV.ShowInsuCode
+		code: GV.DOMShowInsuCode
 	}, function(rtn) {
-		$("#showInsuFlag").switchbox("setValue", (rtn == "1"));
+		$("#showInsuFlag").switchbox("setValue", (rtn == 1));
 	});
-
+	
 	$.cm({
 		ClassName: "web.DHCIPBillRegConf",
 		MethodName: "GetConfValById",
 		confIdStr: confIdStr,
 		code: GV.DOMSEQCode
 	}, function(jsonObj) {
-		GV.DOMList.loadData({"total": jsonObj.length, "rows": jsonObj});
+		GV.DOMList.loadData({total: jsonObj.length, rows: jsonObj});
 	});
 }
 
@@ -306,7 +303,7 @@ function setCKEditorCellVal(rowIndex, fieldName, value) {
 	return $(obj).prop("checked", value);
 }
 
-function saveClick() {
+function saveDOMClick() {
 	$("#modeDlg").show();
 	var dlgObj = $HUI.dialog("#modeDlg", {
 		title: (GV.PCSite) ? '修改' : '新增',
@@ -324,8 +321,7 @@ function saveClick() {
 				rowStyle: 'checkbox',
 				method: 'GET',
 				disabled: (GV.PCSiteDR != ""),
-				blurValidValue: true,
-				defaultFilter: 4
+				defaultFilter: 5
 			});
 			
 			//保存模式
@@ -348,15 +344,29 @@ function saveClick() {
 					$("#siteId").combobox("clear").combobox("loadData", []);
 					switch(rec.id) {
 					case "GROUP":
-						var url = $URL + "?ClassName=web.DHCIPBillRegConf&QueryName=QuerySSGroup&ResultSetType=array&hospId=" + getValueById("hospital");
+						var url = $URL + "?ClassName=BILL.CFG.COM.GroupAuth&QueryName=QuerySSGroup&ResultSetType=array&hospId=" + getValueById("hospital");
 						$.extend($("#siteId").combobox("options"), {valueField: 'id', textField: 'text'});
-						$("#siteId").combobox("reload", url).combobox("setValue", GV.PCSiteDR);
+						$.cm({
+							ClassName: "BILL.CFG.COM.GroupAuth",
+							QueryName: "QuerySSGroup",
+							ResultSetType: "array",
+							hospId: getValueById("hospital")
+						}, function(data) {
+							$("#siteId").combobox("loadData", data).combobox("setValue", GV.PCSiteDR);
+						});
 						break;
 					case "HOSPITAL":
 						var tableName = "Bill_IP_Reg";
 						var url = $URL + "?ClassName=web.DHCBL.BDP.BDPMappingHOSP&QueryName=GetHospDataForCombo&ResultSetType=array&tablename=" + tableName;
 						$.extend($("#siteId").combobox("options"), {valueField: 'HOSPRowId', textField: 'HOSPDesc'});
-						$("#siteId").combobox("reload", url).combobox("setValue", GV.PCSiteDR);
+						$.cm({
+							ClassName: "web.DHCBL.BDP.BDPMappingHOSP",
+							QueryName: "GetHospDataForCombo",
+							ResultSetType: "array",
+							tablename: tableName
+						}, function(data) {
+							$("#siteId").combobox("loadData", data).combobox("setValue", GV.PCSiteDR);
+						});
 						break;
 					default:
 					}
@@ -372,8 +382,8 @@ function saveClick() {
 						var val = "";
 						$.each($(document).find("label[class='clsRequired']"), function (index, item) {
 							id = $(this).parent().next().find("input")[0].id;
-							val = $("#"+id).combobox("options").multiple ? $("#"+id).combobox("getValues") : getValueById(id);
-							if (!val) {
+							val = $("#" + id).combobox("options").multiple ? $("#" + id).combobox("getValues") : getValueById(id);
+							if (val == "") {
 								$.messager.popover({msg: "请选择<font color=red>" + $(this).text() + "</font>", type: "info"});
 								bool = false;
 								return false;
@@ -384,10 +394,11 @@ function saveClick() {
 						}
 
 						$.messager.confirm("确认", "确认保存?", function(r) {
-							if (r) {
-								save();
-								dlgObj.close();
+							if (!r) {
+								return;
 							}
+							save();
+							dlgObj.close();
 						});
 					}
 				}, {
@@ -406,8 +417,8 @@ function saveClick() {
 function save() {
 	var confObj = {};
 	
-	confObj[GV.ShowInsuCode + "VAL"] = $("#showInsuFlag").switchbox("getValue") ? 1 : 0;
-	confObj[GV.ShowInsuCode + "DESC"] = "是否显示医保信息面板";
+	confObj[GV.DOMShowInsuCode + "VAL"] = $("#showInsuFlag").switchbox("getValue") ? 1 : 0;
+	confObj[GV.DOMShowInsuCode + "DESC"] = "是否显示患者医保信息";
 	
 	var myRows = [];
 	$.each(GV.DOMList.getRows(), function(index, row) {
@@ -429,7 +440,7 @@ function save() {
 	
 	var confAry = [];
 	$.each(siteIdAry, function(index, siteId) {
-		$.each(GV.CodeStr.split("^"), function(idx, code) {
+		$.each(GV.DOMCodeStr.split("^"), function(idx, code) {
 			var myObj = {};
 			myObj.PCSite = getValueById("site");
 			myObj.PCSiteDR = siteId;
@@ -446,12 +457,13 @@ function save() {
 		pageId: GV.PageId,
 		confList: confAry
 	}, function(rtn) {
-		if (rtn == "0") {
+		var myAry = rtn.split("^");
+		if (myAry[0] == 0) {
 			$.messager.popover({msg: "保存成功", type: "success"});
 			GV.PageConfList.load();
-		}else {
-			$.messager.popover({msg: "保存失败：" + rtn, type: "error"});
+			return;
 		}
+		$.messager.popover({msg: "保存失败：" + (myAry[1] || myAry[0]), type: "error"});
 	});
 }
 
@@ -466,19 +478,102 @@ function deleteClick() {
 	}
 	var confIdStr = row.confIdStr;
 	$.messager.confirm("确认", "确认删除?", function (r) {
-		if (r) {
-			$.cm({
-				ClassName: "web.DHCBillPageConf",
-				MethodName: "Delete",
-				idStr: confIdStr
-			}, function(rtn) {
-				if (rtn.success == "0") {
-					$.messager.popover({msg: "保存成功", type: "success"});
-					GV.PageConfList.load();
-				}else {
-					$.messager.popover({msg: "保存失败：" + rtn.msg, type: "error"});
-				}
-			});
+		if (!r) {
+			return;
 		}
+		$.cm({
+			ClassName: "web.DHCBillPageConf",
+			MethodName: "Delete",
+			idStr: confIdStr
+		}, function(rtn) {
+			if (rtn.success == 0) {
+				$.messager.popover({msg: "保存成功", type: "success"});
+				GV.PageConfList.load();
+				return;
+			}
+			$.messager.popover({msg: "保存失败：" + rtn.msg, type: "error"});
+		});
+	});
+}
+
+function loadParamCfg() {
+	//病区床位已满是否可办理入院
+	$.m({
+		ClassName: "web.DHCBillPageConf",
+		MethodName: "GetConfValue",
+		pageId: GV.PageId,
+		site: GV.ParamSite,
+		code: GV.ParamFullBedAdmin,
+		siteId: getValueById("hospital")
+	}, function (rtn) {
+		$("#fullBedAdmin").switchbox("setValue", (rtn == 1));
+	});
+	
+	//是否校验患者类别与费别对照
+	$.m({
+		ClassName: "web.DHCBillPageConf",
+		MethodName: "GetConfValue",
+		pageId: GV.PageId,
+		site: GV.ParamSite,
+		code: GV.ParamSocStatMtchInsType,
+		siteId: getValueById("hospital")
+	}, function (rtn) {
+		$("#socStatMtchInsType").switchbox("setValue", (rtn == 1));
+	});
+	
+	//是否需要维护陪护人信息
+	$.m({
+		ClassName: "web.DHCBillPageConf",
+		MethodName: "GetConfValue",
+		pageId: GV.PageId,
+		site: GV.ParamSite,
+		code: GV.ParamEditAccompany,
+		siteId: getValueById("hospital")
+	}, function (rtn) {
+		$("#editAccompany").switchbox("setValue", (rtn == 1));
+	});
+}
+
+function saveParamClick() {
+	var hospital = getValueById("hospital");
+	
+	$.messager.confirm("确认", "确认保存？", function(r) {
+		if (!r) {
+			return;
+		}
+		var confObj = {};
+		confObj[GV.ParamFullBedAdmin + "VAL"] = $("#fullBedAdmin").switchbox("getValue") ? 1 : 0;
+		confObj[GV.ParamFullBedAdmin + "DESC"] = "病区床位已满是否可办理入院";
+		
+		confObj[GV.ParamSocStatMtchInsType + "VAL"] = $("#socStatMtchInsType").switchbox("getValue") ? 1 : 0;
+		confObj[GV.ParamSocStatMtchInsType + "DESC"] = "是否校验患者类别与费别对照";
+		
+		confObj[GV.ParamEditAccompany + "VAL"] = $("#editAccompany").switchbox("getValue") ? 1 : 0;
+		confObj[GV.ParamEditAccompany + "DESC"] = "是否需要维护陪护人信息";
+		
+		var confAry = [];
+		$.each(GV.ParamCodeStr.split("^"), function(index, item) {
+			var myObj = {};
+			myObj.PCSite = GV.ParamSite;
+			myObj.PCSiteDR = hospital;
+			myObj.PCCode = item;
+			myObj.PCValue = confObj[item + "VAL"];
+			myObj.PCDesc = confObj[item + "DESC"];
+			confAry.push(JSON.stringify(myObj));
+		});
+		
+		$.m({
+			ClassName: "web.DHCBillPageConf",
+			MethodName: "SaveConfInfo",
+			pageId: GV.PageId,
+			confList: confAry
+		}, function(rtn) {
+			var myAry = rtn.split("^");
+			if (myAry[0] == 0) {
+				$.messager.popover({msg: "保存成功", type: "success"});
+				return;
+			}
+			$.messager.popover({msg: "保存失败：" + (myAry[1] || myAry[0]), type: "error"});
+		});
 	});
 }

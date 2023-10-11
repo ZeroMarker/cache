@@ -25,7 +25,14 @@ function InitQueryWinEvent(obj){
 			obj.btnDelete_click();
 		});	
 	}
-
+	var pg = $("#DiagnosPos").datagrid("getPager");
+	if(pg){
+		$(pg).pagination({
+			onRefresh:function(){
+				obj.gridDiagPos.clearSelections();
+			}
+		});
+	}
 	//窗体初始化
 	obj.DicEdit = $('#DicEdit').dialog({
 		title:'诊断部位维护',
@@ -98,7 +105,8 @@ function InitQueryWinEvent(obj){
 			}
 		}else {
 			$HUI.dialog('#DicEdit').close();
-			obj.gridDiagPos.reload() ;//刷新当前页
+			$('#DiagnosPos').treegrid('reload');
+			obj.gridDiagPos.clearSelections();
 			$.messager.popover({msg: '保存成功！',type:'success',timeout: 2000});
 		}
 	}

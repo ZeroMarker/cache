@@ -467,7 +467,14 @@
 					DisCateID = objDisease.IDCateDr;
 					objDic = obj.objDicManage(DisCateID);
 					if (objDic) {
-						DisCate = objDic.Description; 
+						var DisCate = $m({                  
+							ClassName:"web.DHCBL.Authorize.BDPTranslation",
+							MethodName:"GetTransDesc",
+							TableName:"DHCMed.SS.Dictionary",
+							FieldName:"Description",
+							Languages:session['LOGON.LANGCODE'],
+							FieldDesc:objDic.Description
+						},false);
 					}					
 				}
 			}
@@ -482,7 +489,7 @@
 			RegAddress = arrCurrRep[13];		// 现住址
 			RegProvinceID = arrCurrRep[14].split(CHR_1)[0];	    // 省
 			RegProvince = arrCurrRep[14].split(CHR_1)[1];	    
-			RegCityID = arrCurrRep[18].split(CHR_1)[0];			// 市
+			RegCityID = arrCurrRep[15].split(CHR_1)[0];			// 市
 			RegCity = arrCurrRep[15].split(CHR_1)[1];			
 			RegCountyID = arrCurrRep[16].split(CHR_1)[0];		    // 县
 			RegCounty = arrCurrRep[16].split(CHR_1)[1];		
@@ -529,7 +536,14 @@
 					DisCateID = objDisease.IDCateDr;
 					objDic = obj.objDicManage(DisCateID);
 					if (objDic) {
-						DisCate = objDic.Description; 
+						var DisCate = $m({                  
+							ClassName:"web.DHCBL.Authorize.BDPTranslation",
+							MethodName:"GetTransDesc",
+							TableName:"DHCMed.SS.Dictionary",
+							FieldName:"Description",
+							Languages:session['LOGON.LANGCODE'],
+							FieldDesc:objDic.Description
+						},false);
 					}					
 				}
 			}
@@ -571,12 +585,12 @@
 		if (obj.objCurrPaadm) {	// 就诊信息
 			var RepPlace = "";
 			if (ServerObj.AdmType=="O") {
-				RepPlace = "门诊";
+				RepPlace = $g("门诊");
 			} else if (ServerObj.AdmType=="I") {
-				RepPlace = "病区";
+				RepPlace = $g("病区");
 				if (IsInHosp=="") { IsInHosp = 1; }	
 			} else if (ServerObj.AdmType=="E") {
-				RepPlace = "急诊";
+				RepPlace = $g("急诊");
 			}
 			if (AdmitDate=="") { AdmitDate = obj.objCurrPaadm.AdmitDate }
 			if (AdmitTime=="") { AdmitTime = obj.objCurrPaadm.AdmitTime }
@@ -590,7 +604,8 @@
 			if (!Contactor) { Contactor = obj.objCurrPatient.RelativeName; }			// 监护人姓名
 			if (!Telephone) { Telephone = obj.objCurrPatient.RelativeTelephone; }	// 联系方式
 			if (!FixedTel) { FixedTel = obj.objCurrPatient.FixedTel; }				// 工作单位
-			if (!CardType) { CardType = obj.objCurrPatient.PersonalIDType; }			
+			if (!CardTypeID) { CardTypeID = obj.objCurrPatient.PersonalIDCode; }	
+			if (!CardType) { CardType = obj.objCurrPatient.PersonalIDType; }		
 			if (!Identify) { Identify = obj.objCurrPatient.PAPMIDVAnumber; }
 		}
 		
@@ -674,7 +689,9 @@
 		$('#cboCurrVillage').combobox('setText',CurrVillage);
 		$('#txtCurrRoad').val(CurrRoad);	                // 街道
 		$('#txtCurrAddress').val(CurrAddress);	// 现住址
-		
+		if (session['LOGON.LANGCODE']=="EN"){
+			$('#txtCurrAddress').val(CurrProvince+CurrCity+CurrCounty+CurrVillage);    
+		}
 		$('#cboDisCate').combobox('setValue',DisCateID);    // 疾病分类
 		$('#cboDisCate').combobox('setText',DisCate);    
 		$('#cboDisDesc').combobox('setValue',DiseaseID);    // 疾病字典	
@@ -696,21 +713,21 @@
 			obj.btnExecheck_click(); 	
 		});
 		$('#btnCancheck').on("click", function(){
-			$.messager.confirm("提示", "请确认是否取消审核?", function (r) {
+			$.messager.confirm($g("提示"), $g("请确认是否取消审核?"), function (r) {
 				if (r){
 					obj.btnCancheck_click(); 
 				}
 			});
 		});
 		$('#btnReturn').on("click", function(){
-			$.messager.confirm("提示", "请确认是否退回?", function (r) {
+			$.messager.confirm($g("提示"), $g("请确认是否退回?"), function (r) {
 				if (r){
 					obj.btnReturn_click(); 
 				}
 			});
 		});
 		$('#btnDelete').on("click", function(){
-			$.messager.confirm("提示", "请确认是否作废？", function (r) {
+			$.messager.confirm($g("提示"), $g("请确认是否作废？"), function (r) {
 				if (r){
 					obj.btnDelete_click(); 
 				}
@@ -757,8 +774,10 @@
 	}
 	
 	obj.btnPrint_click = function() {	// 打印	
-		var fileName="{DHCMed.FBD.SusAbRep.raq(aReportID="+obj.reportID+"&aType=1)}";
-		DHCCPM_RQDirectPrint(fileName);
+		//var fileName="{DHCMed.FBD.SusAbRep.raq(aReportID="+obj.reportID+"&aType=1)}";
+		var fileName="DHCMed.FBD.SusAbRep.raq&aReportID="+obj.reportID+"&aType=1";
+		DHCCPM_RQPrint(fileName)
+		//DHCCPM_RQDirectPrint(fileName);
 	}
 	
 	obj.btnClose_click = function() {
@@ -773,7 +792,7 @@
 		var objStatus = obj.IsExistDic("FBDREPORTSTATUS", statusCode);
 		if (objStatus) { statusID = objStatus.ID; }
 		if (obj.reportID=="" || statusID=="") {
-			$.messager.alert("提示", "操作失败!", 'info');
+			$.messager.alert($g("提示"), $g("操作失败!"), 'info');
 			return;
 		}
 		var checkDate = "", checkTime = "", resume = "";
@@ -791,27 +810,42 @@
 		},false);
 		
 		if (ret>0) {
-			$.messager.alert("提示", "操作成功!", 'info');
+			$.messager.alert($g("提示"), $g("操作成功!"), 'info');
 			obj.refreshFormInfo(ret);
 		} else {
-			$.messager.alert("提示", "操作失败!", 'info');
+			$.messager.alert($g("提示"), $g("操作失败!"), 'info');
 		}
 	}
 	
 	obj.saveReportInfo = function(statusCode, separate) {
 		var errorStr = "", sepobj = "#";
 		var inputStr = obj.saveReportStr(statusCode, separate, sepobj);
-		if (inputStr=="") { return; }
+        if ((inputStr=="")||((typeof inputStr == 'undefined'))) { return; } 
 		
 		var signList = document.getElementsByName("chkList"), chkSignCount = 0;
 		for (var i=0; i<signList.length; i++) {
 			if (signList[i].checked) {
 				chkSignCount = chkSignCount + 1;
+				var signDr = "", subID = "", ExtraID = "", ExtraText = "";
+				if (signList[i].value!="") { subID = signList[i].value.split("||")[1]; }
+				if (signList[i].id!="") {
+					signDr = signList[i].id.substring(3, signList[i].id.length);
+					ExtraID = "txt" + signDr;
+				}
+				
+				if (ExtraID!="") {
+					var objExtra = document.getElementById(ExtraID);
+					if (objExtra) { ExtraText = objExtra.value; }
+					if ((objExtra) && (ExtraText=="")) {
+						$.messager.alert($g("提示"), $g("如选发热 则体温必填，呕吐(腹泻) 则__次/天必填，其他 则其他项必填!"), 'info');
+						return;
+					}
+				}
 			}
 		}
 		
 		if (chkSignCount==0 && statusCode==1) {
-			$.messager.alert("提示", "请至少选择一项主要症状与体征!", 'info');
+			$.messager.alert($g("提示"), $g("请至少选择一项主要症状!"), 'info');
 			return;
 		}
 		var retRep = $m({                  
@@ -824,12 +858,12 @@
 	
 		if (retRep>0) {
 			var retSign = obj.saveSign(retRep, separate);
-			if (retSign<0) { errorStr = errorStr + "体征信息保存失败!"; }
+			if (retSign<0) { errorStr = errorStr + $g("体征信息保存失败!"); }
 		} else {
-			errorStr = errorStr + "报告信息保存失败!";
+			errorStr = errorStr + $g("报告信息保存失败!");
 		}
 		if (errorStr=="") {
-			errorStr = "保存成功!";
+			errorStr = $g("保存成功!");
 			obj.refreshFormInfo(retRep);
 			//新建报告保存成功后不关闭窗口直接刷新时，界面显示空白问题处理
 			if (typeof(history.pushState) === 'function') {
@@ -840,7 +874,7 @@
 		    	history.pushState("", "", Url);
 			}
 		}
-		$.messager.alert("提示", errorStr, 'info');
+		$.messager.alert($g("提示"), errorStr, 'info');
 	}
 	
 	obj.saveSign = function(reportID, separate) {	// 保存主要体征
@@ -963,50 +997,65 @@
 		
 		if (statusCode==1 || statusCode==2) {
 			var errorStr = "";
-			if (StatusID=="") { errorStr = errorStr + "报告状态错误!"; }
-			if (CardNo=="") { errorStr = errorStr + "请填写病例编号!"; }
-			if (IsInHosp=="") { errorStr = errorStr + "请选择是否住院!"; }
-			if (PatName=="") { errorStr = errorStr + "请填写姓名!"; }
-			if (Sex=="") { errorStr = errorStr + "请填写性别!"; }
-			if (Age=="") { errorStr = errorStr + "请填写年龄!"; }
-			if (Birthday=="") { errorStr = errorStr + "请填写出生日期!"; }
-			if (Telephone=="") { errorStr = errorStr + "请填写联系方式!"; }
-			if (FixedTel=="") { errorStr = errorStr + "请填写固定电话!"; }
-			
-			if (OccupationID=="") { errorStr = errorStr + "请选择患者职业!"; }
-			if (CardTypeID=="") { errorStr = errorStr + "请选择证件类型"; }
-			if (Identify=="") { errorStr = errorStr + "请填写证件号"; }
-			if ((RegProvinceID=="")||(CurrProvince=="")) { errorStr = errorStr + "请选择户籍所在省!"; }
-			if ((RegCityID=="")||(CurrCity=="")) { errorStr = errorStr + "请选择户籍所在市!"; }
-			if ((RegCountyID=="")||(CurrCounty=="")) { errorStr = errorStr + "请选择户籍所在县!"; }
-			if ((RegVillageID=="")||(CurrVillage=="")) { errorStr = errorStr + "请选择户籍所在乡!"; }
-			if (RegRoad=="") { errorStr = errorStr + "请填写户籍所在街道!"; }
-			if ((CurrProvinceID=="")||(CurrProvince=="")) { errorStr = errorStr + "请选择现住省!"; }
-			if ((CurrCityID=="")||(CurrCity=="")) { errorStr = errorStr + "请选择现住市!"; }
-			if ((CurrCountyID=="")||(CurrCounty=="")) { errorStr = errorStr + "请选择现住县!"; }
-			if ((CurrVillageID=="")||(CurrVillage=="")) { errorStr = errorStr + "请选择现住乡!"; }
-			if (CurrRoad=="") { errorStr = errorStr + "请填写现住街道!"; }
-			if (DisCateID=="") { errorStr = errorStr + "请选择疾病分类!"; }
-			if (DiseaseID=="") { errorStr = errorStr + "请选择疾病名称!"; }
-			if (SickDate=="") { errorStr = errorStr + "请填写发病日期!"; }
-			if (SickTime=="") { errorStr = errorStr + "请填写发病时间!"; }
-			if (AdmitDate=="") { errorStr = errorStr + "请填写就诊日期!"; }
-			if (AdmitTime=="") { errorStr = errorStr + "请填写就诊时间!"; }
-			if (PreDiagnosDrs=="") { errorStr = errorStr + "请填写初步诊断!"; }
-			if (SusAbCauseDrs=="") { errorStr = errorStr + "请填写可疑病因!"; }
-			if (LurkTime=="") { errorStr = errorStr + "请填写潜伏时间！"; }
-			if (ReasonID=="") { errorStr = errorStr + "请填写上报原因！"; }
-			if (MainSym=="") { errorStr = errorStr + "请填写主要症状！"; }
-			if (OtherSym=="") { errorStr = errorStr + "请填写其他症状！"; }
-			if (MainSign=="") { errorStr = errorStr + "请填写主要体征！"; }
-			if (SusAbFood=="") { errorStr = errorStr + "请填写可疑食品名称！"; }
-			if (TestResult=="") { errorStr = errorStr + "请填写实验室检查结果！"; }
-			if (TestAssist=="") { errorStr = errorStr + "请填写辅助检查结果！"; }
+			if (StatusID=="") { errorStr = errorStr + $g("报告状态错误")+"!<br>"; }
+			if (CardNo=="") { errorStr = errorStr + $g("请填写病例编号")+"!<br>"; }
+			if (IsInHosp=="") { errorStr = errorStr + $g("请选择是否住院")+"!<br>"; }
+			if (PatName=="") { errorStr = errorStr + $g("请填写姓名")+"!<br>"; }
+			if (Sex=="") { errorStr = errorStr + $g("请填写性别")+"!<br>"; }
+			if (Age=="") { errorStr = errorStr + $g("请填写年龄")+"!<br>"; }
+			if (Birthday=="") { errorStr = errorStr + $g("请填写出生日期")+"!<br>"; }
+			if (Telephone=="") { errorStr = errorStr + $g("请填写联系方式")+"!<br>"; }
+			//if (FixedTel=="") { errorStr = errorStr + "请填写固定电话!"; }
+			if ($.trim($('#txtTelephone').val()) != ""){
+				if (!(/^1[3456789]\d{9}$/.test($.trim($('#txtTelephone').val())))) {
+					errorStr += $g('输入的电话号码格式不符合规定！请重新输入!')+'<br>';
+				}
+			}
+			if (OccupationID=="") { errorStr = errorStr + $g("请选择患者职业")+"!<br>"; }
+			if (CardTypeID=="") { errorStr = errorStr + $g("请选择证件类型")+"!<br>"; }
+			if (Identify=="") { errorStr = errorStr + $g("请填写证件号")+"!<br>"; }
+			if ((RegProvinceID=="")||(CurrProvince=="")) { errorStr = errorStr + $g("请选择户籍所在省")+"!<br>"; }
+			if ((RegCityID=="")||(CurrCity=="")) { errorStr = errorStr + $g("请选择户籍所在市")+"!<br>"; }
+			if ((RegCountyID=="")||(CurrCounty=="")) { errorStr = errorStr + $g("请选择户籍所在县")+"!<br>"; }
+			if ((RegVillageID=="")||(CurrVillage=="")) { errorStr = errorStr + $g("请选择户籍所在乡")+"!<br>"; }
+			if (RegRoad=="") { errorStr = errorStr + $g("请填写户籍所在街道")+"!<br>"; }
+			if ((CurrProvinceID=="")||(CurrProvince=="")) { errorStr = errorStr + $g("请选择现住省")+"!<br>"; }
+			if ((CurrCityID=="")||(CurrCity=="")) { errorStr = errorStr + $g("请选择现住市")+"!<br>"; }
+			if ((CurrCountyID=="")||(CurrCounty=="")) { errorStr = errorStr + $g("请选择现住县")+"!<br>"; }
+			if ((CurrVillageID=="")||(CurrVillage=="")) { errorStr = errorStr + $g("请选择现住乡")+"!<br>"; }
+			if (CurrRoad=="") { errorStr = errorStr + $g("请填写现住街道")+"!<br>"; }
+			if (DisCateID=="") { errorStr = errorStr + $g("请选择疾病分类")+"!<br>"; }
+			if (DiseaseID=="") { errorStr = errorStr + $g("请选择疾病名称")+"!<br>"; }
+			if (SickDate=="") { errorStr = errorStr + $g("请填写发病日期")+"!<br>"; }
+			if (SickTime=="") { errorStr = errorStr + $g("请填写发病时间")+"!<br>"; }
+			if (AdmitDate=="") { errorStr = errorStr + $g("请填写就诊日期")+"!<br>"; }
+			if (AdmitTime=="") { errorStr = errorStr + $g("请填写就诊时间")+"!<br>"; }
+			if (PreDiagnosDrs=="") { errorStr = errorStr + $g("请填写初步诊断")+"!<br>"; }
+			if (SusAbCauseDrs=="") { errorStr = errorStr + $g("请填写可疑病因")+"!<br>"; }
+			if (LurkTime=="") { errorStr = errorStr + $g("请填写潜伏时间")+"!<br>"; }
+			if (ReasonID=="") { errorStr = errorStr + $g("请填写上报原因")+"!<br>"; }
+			if (MainSym=="") { errorStr = errorStr + $g("请填写主要症状")+"!<br>"; }
+			if (OtherSym=="") { errorStr = errorStr + $g("请填写其他症状")+"!<br>";}
+			if (MainSign=="") { errorStr = errorStr + $g("请填写主要体征")+"!<br>"; }
+			if (SusAbFood=="") { errorStr = errorStr + $g("请填写可疑食品名称")+"!<br>"; }
+			if (TestResult=="") { errorStr = errorStr + $g("请填写实验室检查结果")+"!<br>"; }
+			if (TestAssist=="") { errorStr = errorStr + $g("请填写辅助检查结果")+"!<br>"; }
+			if ($("input[name='chkPreDiagnosDrs'][label='其他']").is(':checked')) { 
+				if (PreDiagnos==""){
+					errorStr = errorStr + $g("请填写其他初步诊断！"); 
+				}
+			}
+			var OtherInfo = $g("其他");
+			if ($("input[name='chkSusAbCauseDrs'][label="+OtherInfo+"]").is(':checked')) { 
+				if (SusAbCause==""){
+					errorStr = errorStr + $g("请填写其他可疑发病原因！"); 
+				}
+			}
 			// 身份证格式验证
-			if(CardType == "身份证")	{
+			if(CardType == $g("身份证"))	{
 				if ($.trim(Identify) != ""){
 					if (!(/(^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{2}$)/.test(Identify))) {
-					errorStr += '<P>输入的身份证号格式不符合规定！请重新输入!';
+					errorStr += '<P>'+$g('输入的身份证号格式不符合规定！请重新输入!');
 				}
 			}
 			}
@@ -1014,33 +1063,33 @@
 			var thisNowDate = Common_GetDate(new Date());
 			var thisNowTime = Common_GetTime(new Date());
 			if ((Common_CompareDate(AdmitDate,thisNowDate)>0)||((AdmitDate == thisNowDate)&&(AdmitTime >thisNowTime)))  {
-				$.messager.alert("提示","抱歉，就诊时间不能大于当前日期!", 'info');
+				$.messager.alert($g("提示"),$g("抱歉，就诊时间不能大于当前日期!"), 'info');
 				return false;
 			}
 			if ((Common_CompareDate(SickDate,AdmitDate)>0)||((SickDate == thisNowDate)&&(SickTime >AdmitTime)))  {
-				$.messager.alert("提示","抱歉，发病时间不能大于就诊时间!", 'info');
+				$.messager.alert($g("提示"),$g("抱歉，发病时间不能大于就诊时间!"), 'info');
 				return false;
 			}
 			if ((Common_CompareDate(SickDate,thisNowDate)>0)||((SickDate == thisNowDate)&&(SickTime >thisNowTime)))  {
-				$.messager.alert("提示","抱歉，发病时间不能大于当前日期!", 'info');
+				$.messager.alert($g("提示"),$g("抱歉，发病时间不能大于当前日期!"), 'info');
 				return false;
 			}
 			if (errorStr!="") {
-				$.messager.alert("提示", errorStr, 'info');
-				return false;
+				$.messager.alert("提示",'<div style="min-height:20px;max-height:480px;overflow:auto">' + errorStr + '</div>', 'info');
+				return;	
 			}
 		}
 		if (statusCode==6) {
 			var errorStr = "";
-			if (DisCateID=="") { errorStr = errorStr + "请选择疾病分类!"; }
-			if (DiseaseID=="") { errorStr = errorStr + "请选择疾病名称!"; }
-			if (SickDate=="") { errorStr = errorStr + "请填写发病日期!"; }
-			if (SickTime=="") { errorStr = errorStr + "请填写发病时间!"; }
-			if (AdmitDate=="") { errorStr = errorStr + "请填写就诊日期!"; }
-			if (AdmitTime=="") { errorStr = errorStr + "请填写就诊时间!"; }
+			if (DisCateID=="") { errorStr = errorStr + $g("请选择疾病分类")+"!<br>"; }
+			if (DiseaseID=="") { errorStr = errorStr + $g("请选择疾病名称")+"!<br>"; }
+			if (SickDate=="") { errorStr = errorStr + $g("请填写发病日期")+"!<br>"; }
+			if (SickTime=="") { errorStr = errorStr + $g("请填写发病时间")+"!<br>"; }
+			if (AdmitDate=="") { errorStr = errorStr + $g("请填写就诊日期")+"!<br>"; }
+			if (AdmitTime=="") { errorStr = errorStr + $g("请填写就诊时间")+"!<br>"; }
 			if (errorStr!="") {
-				$.messager.alert("提示", errorStr, 'info');
-				return "";
+				$.messager.alert("提示",'<div style="min-height:20px;max-height:480px;overflow:auto">' + errorStr + '</div>', 'info');
+				return;	
 			}
 		}
 

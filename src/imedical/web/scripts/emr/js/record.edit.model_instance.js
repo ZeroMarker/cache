@@ -98,10 +98,7 @@ function init() {   ///iEditor/iGridEditor
 		return;
 	});
 	//建立数据连接
-	cmdDoExecute({
-		action : "SET_NET_CONNECT",
-		args : argConnect
-	});
+	setNetConnoect();
 	//设置工作环境  "Template"     Single
 	cmdDoExecute({
 		"action" : "SET_WORKSPACE_CONTEXT",
@@ -128,6 +125,51 @@ function init() {   ///iEditor/iGridEditor
 			"args" : "Single"
 		});
 	}
+}
+
+function setNetConnoect() {
+    var netConnect="";
+    var port = window.location.port;
+    var protocol = window.location.protocol.split(":")[0];
+
+    if (protocol == "http")
+    {
+        port = port==""?"80":port;
+    }
+    else if (protocol == "https")
+    {
+        port = port==""?"443":port;
+    }
+    $.ajax({
+        type: 'Post',
+        dataType: 'text',
+        url: '../EMRservice.Ajax.common.cls',
+        async: false,
+        cache: false,
+        data: {
+            "OutputType":"String",
+            "Class":"EMRservice.BL.BLSysOption",
+            "Method":"GetNetConnectJson",
+            "p1":window.location.hostname,
+            "p2":port,
+            "p3":protocol
+        },
+        success: function (ret) {
+            netConnect = eval("("+ret+")");
+        
+        },
+        error: function (ret) {
+                alert('get err');
+            if (!onError) {}
+            else {
+                onError(ret);
+            }
+        }
+    });
+    cmdDoExecute({
+		action : "SET_NET_CONNECT",
+		args : netConnect
+	});
 }
 
 //加载知识库
@@ -780,7 +822,12 @@ function eventSaveDocument(commandJson) {
 				alert('保存失败');
 			}
 		}
-	} else if (commandJson.args.result == "NONE") {
+	} 
+	else if (commandJson.args.result  == "INVALID")
+    {
+		alert('病历存在非法字符，不能保存。'); 
+    }
+	else if (commandJson.args.result == "NONE") {
 		if (flag == "1") {
 			alert('保存成功');
 		} else {

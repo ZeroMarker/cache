@@ -22,9 +22,17 @@ function PageHandle(){
 	//分诊区
 	LoadTZoon();
 	FindCheckinStatus();
+	if (HISUIStyleCode=="lite"){
+		var DocHeight=PageLogicObj.dh-613
+		$($("#acc ul")[2]).css("height",DocHeight)	
+		$($("#acc ul")[2]).css("background-color","#EDEBE9")	
+	}else{
+	var DocHeight=PageLogicObj.dh-609
+	$($("#acc ul")[2]).css("height",DocHeight)
+	}
 }
 function InitEvent(){
-	$("#BFindPatQue").click(function(){LoadPatQueue("")});
+	$("#BFindPatQue").click(LoadPatQueue);
 	$("#CardNo").keydown(CardNoKeydown);
 	$("#T_RegNo").keydown(RegNoKeydown);
 	$("#BClear").click(BClearClick);
@@ -33,12 +41,14 @@ function InitEvent(){
         onChecked:function(e,value){
 	        var id=e.target.id;
 	        $(".hisui-checkbox").not("#"+id).checkbox('setValue',false);
-	        setTimeout(function(){LoadPatQueue("");});
+	        setTimeout(function(){LoadPatQueue();});
         }
     });
     document.onkeydown = DocumentOnKeyDown;
     $('#CancleMuni_toolbar').appendTo('#CancleMuni');
     $('#CancleMuni').find("span").eq(0).css("display","none");
+    $('#SpecLocDiag_toolbar').appendTo('#SpecLocDiag');
+    $('#SpecLocDiag').find("span").eq(0).css("display","none");
     $("#CancleQueCheckin").click(CancleQueCheckinclick)
     $("#CancleQueAgain").click(CancleQueAgainclick)
     $("#CanclePrior").click(CanclePriorclick)
@@ -91,34 +101,14 @@ function InitAllocListTabDataGrid(){
         handler: function() {AdjConfirmclick();}
     },{
         id:"CancleMuni"
-    }
-    ,'-',{
+    },{
+        id:"SpecLocDiag"
+    },'-',{
         text: '等候人数',
         iconCls: 'icon-sum',
         handler: function() {B_SumOnclick();}
     }];
-	var Columns=[[ 
-		{field:'TQueID',hidden:true,title:''},
-		{field:'RoomName',title:'诊室',width:140,sortable:true},
-		{field:'MarkName',title:'号别',width:140,sortable:true},
-		{field:'CardNo',title:'卡号',width:120,sortable:true},
-		{field:'PatName',title:'姓名',width:100,sortable:true},
-		{field:'RSex',title:'性别',width:50,sortable:true},
-		{field:'RBirth',title:'年龄',width:50,sortable:true},
-		{field:'DocName',title:'医生',width:100,sortable:true},
-		{field:'status',title:'状态',width:50,sortable:true},
-		{field:'Prior',title:'优先级',width:60,sortable:true},
-		{field:'TFirstReson',title:'优先原因',width:100,sortable:true},
-		{field:'TSeqNo',title:'排队号',width:60,sortable:true},
-		//{field:'Tbl_ComputerIP',title:'工作站名称',width:100},
-		{field:'DeptDesc',title:'科室',width:140,sortable:true},
-		{field:'AdmDate',title:'就诊日期',width:100,sortable:true},
-		{field:'AdmWeek',title:'就诊星期',width:100,sortable:true},
-		//{field:'ConsultatFlage',title:'会诊',width:50},
-		{field:'PatientID',title:'',hidden:true},
-		{field:'EpisodeID',title:'',hidden:true},
-		{field:'mradm',title:'',hidden:true}
-    ]]
+	
 	var AllocListTabDataGrid=$("#AllocListTab").datagrid({
 		fit : true,
 		border : false,
@@ -129,9 +119,91 @@ function InitAllocListTabDataGrid(){
 		rownumbers:false,
 		pagination : false,  
 		idField:'TQueID',
-		columns :Columns,
 		toolbar:toobar,
 		remoteSort:false,
+		className:"web.DHCAlloc",
+		queryName:"QueryFindPatQueue",
+		onColumnsLoad:function(cm){
+			for (var i=0;i<cm.length;i++){
+				switch (cm[i]['field']) {
+					case "RoomName":
+					case "MarkName":
+					case "CardNo":
+					case "PatientNo":
+					case "RSex":
+					case "DocName":
+					case "Prior":
+					case "TFirstReson":
+					case "TSeqNo":
+					case "DeptDesc":
+					case "AsStatusDesc":
+					case "RegFeeDateTime":
+					case "AdmDate":
+					case "AdmWeek":
+					case "AdivseAdmTime":
+						$.extend(cm[i],{sortable:true});
+						break;
+					case "PatName":	
+						$.extend(cm[i],{
+							sortable:true,
+							styler: function(value,row,index){
+								if (value.indexOf("优") > -1){
+									return 'background-color:#ffee00;color:red;font-weight: bold;';
+								}
+							}
+						});
+						break;
+					case "status":
+						$.extend(cm[i],{
+							sortable:true,
+							formatter:function(value,rec){ 
+								var btn =""; 
+								btn = '<a class="editcls" onclick="OpenOrderView(\'' + rec.EpisodeID + '\')">'+value+'</a>';
+								return btn;
+							}
+						});
+						break;
+					case "PAAdmReMark":
+						$.extend(cm[i],{
+							sortable:true,
+							formatter:function(value,rec){  
+								if ((value)&&(value!="")&&(value!=" ")){
+									var btn = '<a href="#" id ="Remark'+rec.EpisodeID +'"title="'+value+'" class="hisui-tooltip" onmouseover="PAAdmReMarkonmouse(\'' + rec.EpisodeID+ '\') " onclick="PAAdmReMarkShow(\'' + rec.EpisodeID + '\',\''+rec.PatName+'\')">'+value+'</a>';
+								}else{
+									var btn = '<a href="#"  class="editcls" onclick="PAAdmReMarkShow(\'' + rec.EpisodeID + '\',\''+rec.PatName+'\')"><img src="../scripts/dhcdoc/dhcapp/images/adv_sel_11.png" title="医生便签" border="0"></a>';
+								}
+								return btn;
+							}
+						});
+						break;
+					default:
+						break;
+				}
+				if ((typeof cm[i].width == "undefined") || (cm[i].width == "")){
+					if(cm[i]['field']=="RoomName"){$.extend(cm[i],{width:140})}
+					else if(cm[i]['field']=="MarkName"){$.extend(cm[i],{width:140})}
+					else if(cm[i]['field']=="CardNo"){$.extend(cm[i],{width:120})}
+					else if(cm[i]['field']=="PatientNo"){$.extend(cm[i],{width:100})}
+					else if(cm[i]['field']=="PatName"){$.extend(cm[i],{width:100})}
+					else if(cm[i]['field']=="RSex"){$.extend(cm[i],{width:50})}
+					else if(cm[i]['field']=="RBirth"){$.extend(cm[i],{width:50})}
+					else if(cm[i]['field']=="DocName"){$.extend(cm[i],{width:100})}
+					else if(cm[i]['field']=="status"){$.extend(cm[i],{width:50})}
+					else if(cm[i]['field']=="Prior"){$.extend(cm[i],{width:60})}
+					else if(cm[i]['field']=="TFirstReson"){$.extend(cm[i],{width:100})}
+					else if(cm[i]['field']=="TSeqNo"){$.extend(cm[i],{width:60})}
+					else if(cm[i]['field']=="Tbl_ComputerIP"){$.extend(cm[i],{width:100})}
+					else if(cm[i]['field']=="DeptDesc"){$.extend(cm[i],{width:140})}
+					else if(cm[i]['field']=="AsStatusDesc"){$.extend(cm[i],{width:140})}
+					else if(cm[i]['field']=="RegFeeDateTime"){$.extend(cm[i],{width:160})}
+					else if(cm[i]['field']=="AdmDate"){$.extend(cm[i],{width:100})}
+					else if(cm[i]['field']=="AdmWeek"){$.extend(cm[i],{width:100})}
+					else if(cm[i]['field']=="AdivseAdmTime"){$.extend(cm[i],{width:200})}
+					else if(cm[i]['field']=="PAAdmReMark"){$.extend(cm[i],{width:100})}
+					else if(cm[i]['field']=="ConsultatFlage"){$.extend(cm[i],{width:50})}
+				}
+			}
+		},
 		onLoadSuccess:function(data){
 			var CardNo=$('#CardNo').val();
 			var RegNo=$("#T_RegNo").val();
@@ -154,6 +226,7 @@ function InitAllocListTabDataGrid(){
 		
 		onClickRow:function(index, row){
 			LoadDocList(row["TQueID"]);
+			LoadSpecLocCat(row['DeptDr']);
 			var QueCheckinFlag=$.cm({
 				ClassName:"web.DHCAlloc", 
 				MethodName:"CheckForQueCheckin",
@@ -166,11 +239,34 @@ function InitAllocListTabDataGrid(){
 				QueID:row["TQueID"],
 				dataType:"text"
 			},false)
-			if ((row["StatusPerName"]=="等候")&&(QueCheckinFlag=="1")&&(QueCalledFlag!="Y")){ChangeMenuDisable("CancleQueCheckin",false);}else{ChangeMenuDisable("CancleQueCheckin",true);}
-			if (row["StatusPerName"]!="复诊"){ChangeMenuDisable("CancleQueAgain",true);}else{ChangeMenuDisable("CancleQueAgain",false);}
-			if (row["Prior"]!="优先"){ChangeMenuDisable("CanclePrior",true);}else{ChangeMenuDisable("CanclePrior",false);}
+			var ASNoLimitLoadFlag=row["ASNoLimitLoadFlag"];
+			if ((row["StatusPerName"]=="等候")
+			&&(QueCheckinFlag=="1")&&(QueCalledFlag!="Y")
+			&&((ASNoLimitLoadFlag=="Y")||(row["TSeqNo"]!=""))){
+				ChangeMenuDisable("CancleQueCheckin",false);
+			}else{
+				ChangeMenuDisable("CancleQueCheckin",true);
+			}
+			if (row["StatusPerName"]!="复诊"){
+				ChangeMenuDisable("CancleQueAgain",true);
+			}else if((row["StatusPerName"]=="复诊")&&(row["PAADMAdmDocCodeDR"]!=row["QueDocDr"])){ //复诊患者重新指定了医生的不允许取消复诊
+				ChangeMenuDisable("CancleQueAgain",true);
+			}else{
+				ChangeMenuDisable("CancleQueAgain",false);
+			}
+			if (row["Prior"]!="优先"){
+				ChangeMenuDisable("CanclePrior",true);
+			}else{
+				ChangeMenuDisable("CanclePrior",false);
+			}
 			//(row["status"]=="等候")&&
-			if ((row["DocName"]!="")&&(row["StatusPerName"]!="到达")&&(row["StatusPerName"]!="复诊")&&(QueCalledFlag!="Y")){ChangeMenuDisable("CancleAdjConfirm",false);}else{ChangeMenuDisable("CancleAdjConfirm",true);}
+			if ((row["DocName"]!="")&&(row["StatusPerName"]!="到达")&&(row["StatusPerName"]!="复诊")&&(QueCalledFlag!="Y")){
+				ChangeMenuDisable("CancleAdjConfirm",false);
+			}else if ((row["StatusPerName"]=="复诊")&&(row["PAADMAdmDocCodeDR"]!=row["QueDocDr"])){ //复诊患者重新指定了医生，允许去掉指定
+				ChangeMenuDisable("CancleAdjConfirm",false);
+			}else{
+				ChangeMenuDisable("CancleAdjConfirm",true);
+			}
 		}
 	}); 
 	return AllocListTabDataGrid;
@@ -218,12 +314,16 @@ function LoadTZoon(){
 			onSelect:function(rec){
 				//清空医生列表
 				$($("#acc ul")[2]).empty();
-				LoadPatQueue("");
+				$(".room-select").removeClass("room-select");
+				$(".mark-select").removeClass("mark-select");
+				LoadPatQueue();
 				//诊室
 				LoadTZoom();
 				//号别
 				LoadCarePrv();
-				$("#allocroomview").attr("src","dhcdocallocroomview.csp?BorUserId="+rec["HIDDEN"]);
+				var src="dhcdocallocroomview.csp?BorUserId="+rec["HIDDEN"];
+				if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
+				$("#allocroomview").attr("src",src);
 				$.m({
 					ClassName:"web.DHCAlloc", 
 					MethodName:"SaveLastSelectZone",
@@ -278,11 +378,19 @@ function LoadDocList(QueID){
 		for (var i=0;i<data.length;i++){
 			var id=data[i]["id"];
 			var name=data[i]["text"];
-			$($("#acc ul")[2]).append("<li><a onClick='ZMarkDocClick("+id+")' id='"+id+"'>"+name+"</a></li>");
+			var WaitNum=data[i]["WaitNum"];
+			var showInfo=name+" <font color='red'>"+WaitNum+"人</font>"
+			$($("#acc ul")[2]).append('<li><a onClick="ZMarkDocClick(\''+id+'\')" id="MarkDoc_'+id+'">'+showInfo+'</a></li>');
 		}
 	})
 }
 function LoadPatQueue(MarkID){
+	var DocLogonInfo="";
+	if ($("#allocroomview")[0].contentWindow.GetSelDivLogonInfo) {
+		DocLogonInfo=$("#allocroomview")[0].contentWindow.GetSelDivLogonInfo();
+		MarkID=""
+	}
+	if (!MarkID) MarkID="";
 	var checkedId=$("input[type='checkbox']:checked")[0]["id"];
 	var QueryST=$("#"+checkedId)[0]["attributes"]["label"].value;
 	var UserCode=session['LOGON.USERCODE']
@@ -297,20 +405,25 @@ function LoadPatQueue(MarkID){
 	var MarkDr="";
 	if (MarkID!=""){
 		MarkDr=MarkID
-		}else{
+	}else{
 		if ($(".mark-select").length>0){
 			MarkDr=$(".mark-select")[0].id;
 		}
 	}
 	var StartDate=$("#StartDate").datebox("getValue")
 	var EndDate=$("#EndDate").datebox("getValue")
+	var PatName=$("#PatName").val();
+	var PatPhone=$("#PatPhone").val();
+	var QueueNo=$("#QueueNo").val();
 	 $.cm({
 		ClassName:"web.DHCAlloc", 
 		QueryName:"QueryFindPatQueue",
 		UserCode:UserCode, CompName:CompName,
 	    QueryST:QueryST, RoomDr:RoomDr, MarkDr:MarkDr,
 	    PatID:PatID, PapmiNo:PapmiNo, Zone:Zone,
-	    StartDate:StartDate,EndDate:EndDate,
+	    StartDate:StartDate,EndDate:EndDate,TPatName:PatName,PatPhone:PatPhone,
+		QueueNo:QueueNo,
+		DocLogonInfo:DocLogonInfo,
 	    rows:999999
 	},function(GridData){
 		PageLogicObj.m_AllocListTabDataGrid.datagrid('unselectAll').datagrid('loadData',GridData);
@@ -326,7 +439,7 @@ function ZRoomClick(id){
 	if (selRoomDr!=id){
 		$("#"+id).addClass("room-select");
 	}
-	LoadPatQueue("");
+	LoadPatQueue();
 }
 function ZCarePrvClick(id){
 	var selMarkDr="";
@@ -337,11 +450,11 @@ function ZCarePrvClick(id){
 	if (selMarkDr!=id){
 		$("#"+id).addClass("mark-select");
 	}
-	LoadPatQueue("");
+	LoadPatQueue();
 }
 function ZMarkDocClick(id){
 	$(".markdoc-select").removeClass("markdoc-select");
-	$("#"+id).addClass("markdoc-select");
+	$("#MarkDoc_"+id).addClass("markdoc-select");
 }
 function FindCheckinStatus()
 {
@@ -385,7 +498,7 @@ function CardNoKeyDownCallBack(myrtn){
 			var CardNo=myary[1]
 			$('#CardNo').val(CardNo);
 			$("#T_RegNo").val(myary[5]);
-			LoadPatQueue("");
+			LoadPatQueue();
 			PageLogicObj.AutoReportFlag=1
 			break;
 	}
@@ -404,7 +517,7 @@ function RegNoKeydown(e){
 		}
 		$("#T_RegNo").val(RegNo);
 		PageLogicObj.AutoReportFlag=1
-		LoadPatQueue("");
+		LoadPatQueue();
 	}
 }
 function QueCheckinclick(){
@@ -422,13 +535,14 @@ function QueCheckinclick(){
 		ClassName:"web.DHCAlloc", 
 		MethodName:"PatArrive",
 		dataType:"text",
-		itmjs:"PatArriveToHUI", itmjsex:"", QueID:QueID,UserID:session['LOGON.USERID']
+		itmjs:"PatArriveToHUI", itmjsex:"", QueID:QueID,UserID:session['LOGON.USERID'],GroupID:session['LOGON.GROUPID']
 	},function(rtn){
 		if (rtn!=0){
 			$.messager.alert("提示","报到失败!"+rtn);
 			return false;
 		}
-		LoadPatQueue("");
+		LoadPatQueue();
+		LoadDocList(QueID);
 	})
 }
 function QueAgainclick(){
@@ -454,7 +568,8 @@ function QueAgainclick(){
 					$.messager.alert("提示","复诊失败!"+rtn);
 					return false;
 				}
-				LoadPatQueue("");
+				LoadPatQueue();
+				LoadDocList(QueID);
 			})
 		}
 	});
@@ -466,43 +581,71 @@ function AdjConfirmclick(){
 		return false;
 	}
 	var QueID=row["TQueID"];
-	var SelDocDr="";
+	var SelDocDr="",SelDoc="";
 	if ($(".markdoc-select").length>0){
-		SelDocDr=$(".markdoc-select")[0].id;
+		SelDocDr=$(".markdoc-select")[0].id.split("_")[1];
+		SelDoc=$(".markdoc-select")[0].innerHTML;
 	}
-	if (row["RoomName"]!="") {
+	if ((row["QueCompDr"]!="")&&(row["StatusPerName"]!="复诊")) {
 		$.messager.alert("提示","已有医师呼叫的病人不能再指定其他医师!");
 		return false;
 	}
-	if ((row["StatusPerName"]=="到达")||(row["StatusPerName"]=="复诊")){
+	if ((row["StatusPerName"]=="到达")||((row["StatusPerName"]=="复诊")&&(ServerObj.AllowOPQueAgainAdjDoc==0))){
 		$.messager.alert("提示","已就诊记录不能指定医生!");
+		return false;
+	}
+	if ((row["StatusPerName"]=="退号")){
+		$.messager.alert("提示","已退号记录不能指定医生!");
 		return false;
 	}
     if (SelDocDr=="") {
         $.messager.alert("提示","请选择需要指定医生!");
 		return false;
 	}
-	$.messager.confirm('确认对话框', '该病人需要调整医生吗?', function(r){
-		if (r){
-		    $.cm({
-				ClassName:"web.DHCAlloc", 
-				MethodName:"PatAdjDoc",
-				dataType:"text",
-				itmjs:"PatAdjDocToHUI", itmjsex:"", QueID:QueID,AdjDocDr:SelDocDr,Usercode:session['LOGON.USERID']
-			},function(rtn){
-				if (rtn!=0){
-					$.messager.alert("提示","指定医生失败!"+rtn);
-					return false;
+	//医生站设置-允许门急诊复诊可重新指定医生
+	if ((ServerObj.AllowOPQueAgainAdjDoc==1)&&(row["StatusPerName"]=="复诊")){
+		var oldDocName=row["DocName"];
+		if (SelDoc==oldDocName) {
+			$.messager.alert("提示","指定医生不能和已就诊医生相同!");
+			return false;
+		}else{
+			$.messager.confirm('确认对话框', '该患者已有 <font color=red>'+oldDocName+' </font>医生看诊过，是否患者指定到 <font color=red>'+SelDoc+' </font>医生？', function(r){
+				if (r){
+				    PatAdjDoc();
 				}
-				LoadPatQueue("");
-			})
+			});
 		}
-	});
+	}else{
+		$.messager.confirm('确认对话框', '该患者需要调整医生吗?', function(r){
+			if (r){
+			    PatAdjDoc();
+			}
+		});
+	}
+	function PatAdjDoc(){
+		$.cm({
+			ClassName:"web.DHCAlloc", 
+			MethodName:"PatAdjDoc",
+			dataType:"text",
+			itmjs:"PatAdjDocToHUI", itmjsex:"", QueID:QueID,AdjDocDr:SelDocDr,Usercode:session['LOGON.USERID'],GroupID:session['LOGON.GROUPID']
+		},function(rtn){
+			if (rtn!=0){
+				$.messager.alert("提示","指定医生失败！错误代码："+rtn);
+				return false;
+			}
+			LoadPatQueue();
+			LoadDocList(QueID);
+		})
+	}
 }
 function Priorclick(){
 	var row = PageLogicObj.m_AllocListTabDataGrid.datagrid('getSelected');  
 	if (row.length==0){
 		$.messager.alert("提示","请选择需要优先的记录!");
+		return false;
+	}
+	if ((row["StatusPerName"]=="退号")||(row["StatusPerName"]=="到达")){
+		$.messager.alert("提示","已退号/到达记录不能优先!");
 		return false;
 	}
 	var QueID=row["TQueID"];
@@ -516,13 +659,15 @@ function Priorclick(){
 					ClassName:"web.DHCAlloc", 
 					MethodName:"PatPrior",
 					dataType:"text",
-					itmjs:"PatPriorToHUI", itmjsex:"", QueID:QueID,QueFirstReason:""
+					itmjs:"PatPriorToHUI", itmjsex:"", QueID:QueID,QueFirstReason:"",
+					UserID:session['LOGON.USERID'],GroupID:session['LOGON.GROUPID']
 				},function(rtn){
 					if (rtn!=0){
 						$.messager.alert("提示","置优先失败!"+rtn);
 						return false;
 					}
-					LoadPatQueue("");
+					LoadPatQueue();
+					LoadDocList(QueID);
 				})
 			}
 		});
@@ -546,28 +691,33 @@ function BSaveFristclick(){
 		ClassName:"web.DHCAlloc", 
 		MethodName:"PatPrior",
 		dataType:"text",
-		itmjs:"PatPriorToHUI", itmjsex:"", QueID:QueID,QueFirstReason:FirsReson
+		itmjs:"PatPriorToHUI", itmjsex:"", QueID:QueID,QueFirstReason:FirsReson,
+		UserID:session['LOGON.USERID'],GroupID:session['LOGON.GROUPID']
 	},function(rtn){
 		if (rtn!=0){
 			$.messager.alert("提示","置优先失败!"+rtn);
 			return false;
 		}
-		LoadPatQueue("");
+		LoadPatQueue();
 	})
 	$("#FristReson-dialog").dialog("close");
-	}
+}
 function B_SumOnclick(){
 	var T_RegNo=$("#T_RegNo").val();
-	if(T_RegNo==""){
-		$.messager.alert("提示","请输入登记号后进行查询!","info",function(){
+	var row = PageLogicObj.m_AllocListTabDataGrid.datagrid('getSelected');  
+	if((T_RegNo=="")&&(row.length==0)){
+		$.messager.alert("提示","请输入登记号或者选择记录进行查询!","info",function(){
 			$("#T_RegNo").focus();
 		})	
 	}else{
+		var QueID="";
+		if (row) QueID=row["TQueID"];
 		var rtn=$.cm({
 			ClassName:"web.DHCAlloc", 
 			MethodName:"GetDHCPerStateFlag",
 			dataType:"text",
-			PersonId:T_RegNo
+			PersonId:T_RegNo,
+			QueueID:QueID
 		},false);
 		var rtnCode=rtn.split("^")[0];
 		var ErrMsg=rtn.split("^")[1];
@@ -580,6 +730,7 @@ function B_SumOnclick(){
 			MethodName:"GetPatSum",
 			dataType:"text",
 			PersonId:T_RegNo,
+			QueueID:QueID,
 			Zone:$("#T_Zone").combobox('getValue')
 		},false);
 		var PatSumArr=PatSum.split("^")
@@ -641,7 +792,7 @@ function CancleQueCheckinclick(){
 			$.messager.alert("提示","取消报到失败!"+rtn);
 			return false;
 		}
-		LoadPatQueue("");
+		LoadPatQueue();
 	})
 }
 function CancleQueAgainclick(){
@@ -668,7 +819,7 @@ function CancleQueAgainclick(){
 			$.messager.alert("提示","取消复诊失败!"+rtn);
 			return false;
 		}
-		LoadPatQueue("");
+		LoadPatQueue();
 	})}
 function CanclePriorclick(){
 	if ($("#CanclePrior").hasClass("menu-item-disabled")) {
@@ -694,7 +845,7 @@ function CanclePriorclick(){
 			$.messager.alert("提示","取消优先失败!"+rtn);
 			return false;
 		}
-		LoadPatQueue("");
+		LoadPatQueue();
 	})}
 function CancleAdjConfirmclick(){
 	if ($("#CancleAdjConfirm").hasClass("menu-item-disabled")) {
@@ -720,7 +871,7 @@ function CancleAdjConfirmclick(){
 			$.messager.alert("提示","取消指定医生失败!"+rtn);
 			return false;
 		}
-		LoadPatQueue("");
+		LoadPatQueue();
 	})}
 //自动报到
 function AutoQueCheckin(){
@@ -744,14 +895,14 @@ function AutoQueCheckin(){
 							ClassName:"web.DHCAlloc", 
 							MethodName:"PatArrive",
 							dataType:"text",
-							itmjs:"PatArriveToHUI", itmjsex:"", QueID:QueID,UserID:session['LOGON.USERID']
+							itmjs:"PatArriveToHUI", itmjsex:"", QueID:QueID,UserID:session['LOGON.USERID'],GroupID:session['LOGON.GROUPID']
 						},function(rtn){
 							if (rtn!=0){
 								$.messager.alert("提示","报到失败!"+rtn);
 								return false;
 							}
 						})
-						LoadPatQueue("");
+						LoadPatQueue();
 					}
 				}
 			});
@@ -761,14 +912,14 @@ function AutoQueCheckin(){
 				ClassName:"web.DHCAlloc", 
 				MethodName:"PatArrive",
 				dataType:"text",
-				itmjs:"PatArriveToHUI", itmjsex:"", QueID:QueID,UserID:session['LOGON.USERID']
+				itmjs:"PatArriveToHUI", itmjsex:"", QueID:QueID,UserID:session['LOGON.USERID'],GroupID:session['LOGON.GROUPID']
 			},function(rtn){
 				if (rtn!=0){
 					$.messager.alert("提示","报到失败!"+rtn);
 					return false;
 				}
 			})
-			LoadPatQueue("");
+			LoadPatQueue();
 		}
 	}
 }
@@ -799,4 +950,92 @@ function myparser(s){
 	} else {
 		return new Date();
 	}
+}
+function toggleExecInfo(ele){
+	if ($(ele).hasClass('expanded')){  //已经展开 隐藏
+		$(ele).removeClass('expanded');
+		$("#BMore")[0].innerText=$g("更多");
+    	$("#more").hide();
+    	setHeight("-43");
+	}else{
+		$(ele).addClass('expanded');
+		$("#BMore")[0].innerText=$g("隐藏");
+		$("#more").show();
+    	setHeight('43');
+	}
+	function setHeight(num){
+        var c=$("#Search-div");
+        var p=c.layout('panel', 'north');
+        var Height=parseInt(p.outerHeight())+parseInt(num)-2;
+        p.panel('resize',{height:Height}); 
+        
+		var p = c.layout('panel','center');	// get the center panel
+		var Height = parseInt(p.outerHeight())-parseInt(num);
+		p.panel('resize', {height:Height})
+		if (+num>0) p.panel('resize',{top:133});
+		else p.panel('resize',{top:90});
+    }
+}
+function LoadSpecLocCat(LocID)
+{
+	$('#mSpecDiagCat').empty().height(0).next('.menu-shadow').height(1);  
+	$.cm({
+        ClassName:'DHCDoc.Diagnos.SpecLocTemp',
+        QueryName:'QueryCat',
+        LocID:LocID
+    },function(data){
+        var rows=data.rows;
+        for(var i=0;i<rows.length;i++){
+			(function(row){
+				if(row.Active!='Y') return;
+				$('#mSpecDiagCat').menu('appendItem', {
+					text: row.Name,
+					iconCls: 'icon-ok',
+					onclick: function(){
+						SpecLocDiagOpen(row);
+					}
+				});
+			})(rows[i]);
+		}
+	});
+}
+function SpecLocDiagOpen(opt)
+{
+	var row = PageLogicObj.m_AllocListTabDataGrid.datagrid('getSelected');  
+	if(!row||(row.length==0)){
+		$.messager.popover({msg: '请选择需要填写的病人!',type:'alert'});
+		return false;
+	}    
+	if ((row["StatusPerName"]=="退号")){
+		$.messager.alert("提示","已退号记录不能填写专科表单!");
+		return false;
+	}
+	websys_showModal({
+		iconCls:'icon-w-edit',
+		url:'opdoc.specloc.diag.csp?SpecLocDiagCatCode='+opt.Code+'&EpisodeID='+row.EpisodeID+'&PatientID='+row.PatientID,
+		title:opt.Name+' 填写',
+		width:opt.Code=='KQMB'?1200:400,
+		height:700
+	});
+}
+function PAAdmReMarkShow(EpsiodeID,PAPMIName){
+	 websys_showModal({
+			url:"dhcdocadmremark.csp?EpisodeID="+EpsiodeID,
+			title:PAPMIName+':'+$g('医生便签'),
+			iconCls:'icon-w-edit',
+			width:300,height:220,
+			ChangePAAdmReMark:ChangePAAdmReMark
+	});
+}
+function ChangePAAdmReMark(Text){
+	LoadPatQueue();
+}
+function OpenOrderView(EpsiodeID){
+	
+	websys_showModal({
+		url:"dhc.episodeview.csp?EpisodeID=" + EpsiodeID,
+		title:'就诊流程查看',
+		iconCls:'icon-w-list',
+		width:screen.availWidth-200,height:screen.availHeight-200
+	});
 }

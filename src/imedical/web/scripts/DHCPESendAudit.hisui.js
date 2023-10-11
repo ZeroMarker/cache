@@ -56,7 +56,7 @@ function InitCombobox()
 {
 	// VIP等级	
 	var VIPObj = $HUI.combobox("#VIPLevel",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindVIP&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindVIP&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
 		valueField:'id',
 		textField:'desc'
 		
@@ -124,21 +124,31 @@ function InitSendAuditDataGrid(){
 		},
 		frozenColumns:[[
 		{field:'TPAADM',hidden:true,title:'就诊id'},
-			{field:'str',title:'粘贴操作',width:'80',
-			formatter:function(value,rowData,rowIndex){
+			{field:'str',title:'操作',width:'80',align: 'center',
+				formatter:function(value,rowData,rowIndex){
 				if(rowData.TPAADM!=""){
-					return '<a><img style="padding:0 10px 0px 0px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/cancel_order.png"  title="取消粘贴" border="0" onclick="CacleSendAudit('+rowData.TPAADM+')"></a>\
-					<a><img style="cursor:pointer" src="../scripts_lib/hisui-0.1.0/dist/css/icons/check_reg.png" title="粘贴"  border="0" onclick="SendAudit('+rowData.TPAADM+')"></a>';
-			
+					var flag = tkMakeServerCall("web.DHCPE.FetchReport","IsExistSendAudit",rowData.TPAADM)
+					if(flag==1){
+						return "<span style='cursor:pointer;padding:0 20px 0px 20px;' class='icon-copy' title='取消粘贴' onclick='CacleSendAudit("+rowData.TPAADM+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";
+						//return '<a><img style="padding:0 10px 0px 20px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/cancel_order.png" title="取消粘贴" border="0" onclick="CacleSendAudit('+rowData.TPAADM+')"></a>'
+					}else if(flag==0){
+						return "<span style='cursor:pointer;padding:0 20px 0px 20px;' class='icon-paste' title='粘贴' onclick='SendAudit("+rowData.TPAADM+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";
+						//return '<a><img style="padding:0 10px 0px 20px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/check_reg.png" title="粘贴" border="0" onclick="SendAudit('+rowData.TPAADM+')"></a>'; 
+					}
 				}
-				}},
-			{field:'TResult',title:'体检结果',width:'120',
+			}},
+
+			{field:'TResult',title:'体检结果',width:'120',align: 'center',
 			formatter:function(value,rowData,rowIndex){
 				if(rowData.TPAADM!=""){
+					return "<span style='cursor:pointer;padding-left:15px;' class='icon-search' title='查看结果' onclick='ResultView("+rowData.TPAADM+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>\
+					<span style='cursor:pointer;padding-left:15px;' class='icon-paper' title='报告预览' onclick='ReportView("+rowData.TPAADM+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>\
+					<span style='cursor:pointer;padding-left:15px;' class='icon-compare' title='结果对比' onclick='openContrastWin("+rowData.TPAADM+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";
+					/*
 					return '<a><img style="padding:0 10px 0px 0px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/apply_check.png" title="查看结果" border="0" onclick="ResultView('+rowData.TPAADM+')"></a>\
 					<a><img style="cursor:pointer" src="../scripts_lib/hisui-0.1.0/dist/css/icons/paper.png" title="报告预览" border="0" onclick="ReportView('+rowData.TPAADM+')"></a>\
 					<a><img style="padding:0 0px 0px 10px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/lt_rt_55.png" title="结果对比" border="0" onclick="openContrastWin('+rowData.TPAADM+')"></a>';
-			
+			      */
 				}
 				}},
 					
@@ -449,14 +459,15 @@ function ReportView(PAADM)
 	var nwin='toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=yes,copyhistory=yesheight='
 			+'height='+wheight+',width='+wwidth+',left='+xposition+',top='+yposition
 			;
-	var cwin=window.open(repUrl,"_blank",nwin)
+	var cwin=window.open(PEURLAddToken(repUrl),"_blank",nwin)
 	}
 }
 
 //结果预览 
 function ResultView(PAADM)
 {
-		var wwidth=1200;
+	/*
+	var wwidth=1200;
 	var wheight=500;
 	var xposition = (screen.width - wwidth) / 2;
 	var yposition = (screen.height - wheight) / 2;
@@ -465,7 +476,22 @@ function ResultView(PAADM)
 			+'height='+wheight+',width='+wwidth+',left='+xposition+',top='+yposition
 			;
 	
-	var cwin=window.open(url,"_blank",nwin)
+	var cwin=window.open(PEURLAddToken(url),"_blank",nwin)
+	*/
+var lnk="dhcperesultview.hisui.csp?EpisodeID="+PAADM;
+	$HUI.window("#ResultViewWin", {
+        title: "体检结果预览",
+        iconCls: "icon-w-edit",
+        collapsible: false,
+        minimizable: false,
+        maximizable: false,
+        resizable: false,
+        closable: true,
+        modal: true,
+        width: 1400,
+        height: 750,
+        content: '<iframe src="' + PEURLAddToken(lnk) + '" width="100%" height="100%" frameborder="0"></iframe>'
+    });
 }
 
 //结果对比
@@ -473,15 +499,22 @@ var openContrastWin = function(PAADM){
 	
 	$HUI.window("#ContrastWin",{
 		title:"结果对比",
-		minimizable:false,
 		collapsible:false,
+		minimizable:false,
+		maximizable:false,
+		closable:true,
+		resizable:false,
 		modal:true,
-		width:970,
-		height:400
+		width:1080,
+		height:500
 	});
 	
 	var QryLisObj = $HUI.datagrid("#QryContrastWin",{
 		url:$URL,
+		pagination:true,
+		displayMsg:"",
+		pageSize:20,
+		fit:true,
 		queryParams:{
 			ClassName:"web.DHCPE.ResultContrast",
 			QueryName:"ContrastWithLast",
@@ -494,11 +527,7 @@ var openContrastWin = function(PAADM){
 			{field:'TLastTime',width:'240',title:'上次'},
 			{field:'TCurrentTime',width:'240',title:'本次'},
 			{field:'TLastTime2',width:'240',title:'上上次'},
-		]],
-		pagination:true,
-		displayMsg:"",
-		pageSize:20,
-		fit:true
+		]]
 	
 		})
 	
@@ -544,6 +573,7 @@ function Bclear_click()
 	$("#AutoSend").checkbox('setValue',true);
 	$("#StartDate").datebox('setValue',"");
 	$("#EndDate").datebox('setValue',"");
+	BFind_click();
 
 
 }

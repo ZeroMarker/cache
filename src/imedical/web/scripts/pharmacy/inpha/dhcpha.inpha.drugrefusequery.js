@@ -4,6 +4,7 @@
  * createdate:2016-12-13
  * creator:xueshuaiyi
  */
+
 var SessionWard = session['LOGON.WARDID'] || '';
 $(function () {
     /* 初始化插件 start*/
@@ -19,7 +20,7 @@ $(function () {
         }
     });
     InitPhaLoc();
-    InitWard();
+    InitWard(DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID);
     InitDocLoc();
     InitRefuseList();
     //登记号回车事件
@@ -70,27 +71,33 @@ function InitPhaLoc() {
     var selectoption = {
         url: DHCPHA_CONSTANT.URL.COMMON_INPHA_URL + '?action=GetStockPhlocDs&style=select2&groupId=' + DHCPHA_CONSTANT.SESSION.GROUP_ROWID,
         allowClear: true,
-        placeholder: '药房...'
+        placeholder: $g('药房')+'...'
     };
     $('#sel-phaloc').dhcphaSelect(selectoption);
     if (DHCPHA_CONSTANT.DEFAULT.LOC.type == 'D') {
         var select2option = '<option value=' + "'" + DHCPHA_CONSTANT.DEFAULT.LOC.id + "'" + 'selected>' + DHCPHA_CONSTANT.DEFAULT.LOC.text + '</option>';
         $('#sel-phaloc').append(select2option);
     }
+    $('#sel-phaloc').on('select2:select', function (event) {
+        $("#sel-ward").val("");
+        InitWard($(this).val());
+    });
 }
 //初始化病区
-function InitWard() {
+function InitWard(locid) {
     var selectoption = {
-        url: DHCPHA_CONSTANT.URL.COMMON_INPHA_URL + '?action=GetWardLocDs&style=select2',
+        url: DHCPHA_CONSTANT.URL.COMMON_INPHA_URL + '?action=GetWardLocDsByRecLoc&style=select2'+"&reclocId="+ locid,
         allowClear: true,
         width: 200,
-        placeholder: '病区...'
+        placeholder: $g('病区')+'...',
+        disable: true
     };
     $('#sel-ward').dhcphaSelect(selectoption);
     if (DHCPHA_CONSTANT.DEFAULT.LOC.type == 'W') {
         if (SessionWard != '') {
             var select2option = '<option value=' + "'" + SessionWard + "'" + 'selected>' + DHCPHA_CONSTANT.DEFAULT.LOC.text + '</option>';
             $('#sel-ward').append(select2option);
+            $('#sel-ward').prop('disabled', true);
         }
     }
 }
@@ -99,7 +106,7 @@ function InitDocLoc() {
     var selectoption = {
         url: DHCPHA_CONSTANT.URL.COMMON_PHA_URL + '?action=GetCtLocDs&style=select2&custtype=DocLoc',
         allowClear: true,
-        placeholder: '医生科室...'
+        placeholder: $g('医生科室')+'...'
     };
     $('#sel-docloc').dhcphaSelect(selectoption);
     $('#sel-docloc').on('select2:select', function (event) {
@@ -305,7 +312,7 @@ function InitRefuseList() {
             },
             {
                 field: 'TManf',
-                title: '厂家',
+                title: '生产企业',
                 width: 80,
                 align: 'left',
                 sortable: true,
@@ -329,7 +336,7 @@ function InitRefuseList() {
             },
             {
                 field: 'TOrdStatusCode',
-                title: 'TOrdStatusCode',
+                title: '医嘱状态代码',
                 width: 80,
                 align: 'left',
                 sortable: true,
@@ -337,7 +344,7 @@ function InitRefuseList() {
             },
             {
                 field: 'Toedis',
-                title: 'Toedis',
+                title: '打包ID',
                 width: 80,
                 align: 'left',
                 sortable: true,
@@ -345,7 +352,7 @@ function InitRefuseList() {
             },
             {
                 field: 'TRecLocId',
-                title: 'TRecLocId',
+                title: '发药科室ID',
                 width: 180,
                 align: 'left',
                 sortable: true,
@@ -359,8 +366,14 @@ function InitRefuseList() {
         columns: columns,
         fitColumns: false,
         singleSelect: false,
-        datatype: 'local'
+        datatype: 'local',
+        pagination:false,
+        pageSize: 99999,
+        pageList: [99999],
     };
+    if (SessionWard !== '') {
+        dataGridOption.onRowContextMenu = function (e, rowIndex, rowData) {};
+    }
     //定义datagrid
     $('#grid-disprefuse').dhcphaEasyUIGrid(dataGridOption);
 }
@@ -373,7 +386,7 @@ function Query() {
         phaloc = '';
     }
     if (SessionWard == '' && phaloc == '') {
-        dhcphaMsgBox.alert('请先选择药房');
+        dhcphaMsgBox.alert($g('请先选择药房'));
         return;
     }
     var ward = $('#sel-ward').val() || '';
@@ -388,6 +401,7 @@ function Query() {
         queryParams: {
             ClassName: 'web.DHCSTDRUGREFUSE',
             QueryName: 'DrugRefuse',
+            rows:99999,
             Params: params //此处params参数分隔,最后从拆分个数以及顺序同对应query
         }
     });
@@ -396,10 +410,10 @@ function Query() {
 function BCancelRefuseHandler() {
     var gridChecked = $('#grid-disprefuse').datagrid('getChecked');
     if (gridChecked == '') {
-        dhcphaMsgBox.alert('请先选择记录');
+        dhcphaMsgBox.alert($g('请先选择记录'));
         return;
     }
-    dhcphaMsgBox.confirm('是否取消拒绝发药?', function (retValue) {
+    dhcphaMsgBox.confirm($g('是否取消拒绝发药?'), function (retValue) {
         if (retValue == true) {
             var cLen = gridChecked.length;
             for (var cI = 0; cI < cLen; cI++) {
@@ -421,13 +435,13 @@ function BCancelRefuseHandler() {
 function deleteRefuse(oedis) {
     var cancelRet = tkMakeServerCall('web.DHCSTDRUGREFUSE', 'DeleteRefuse', '', '', oedis, DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID);
     if (cancelRet == '-2') {
-        dhcphaMsgBox.alert('该记录已经撤销执行或停止执行，不能取消拒绝！');
+        dhcphaMsgBox.alert($g('该记录已经撤销执行或停止执行，不能取消拒绝'));
         return false;
     } else if (cancelRet == '-3') {
-        dhcphaMsgBox.alert('您无法撤销拒绝,请联系拒绝发药的药房!');
+        dhcphaMsgBox.alert($g('您无法撤销拒绝,请联系拒绝发药的药房'));
         return false;
     } else if (cancelRet < 0) {
-        dhcphaMsgBox.alert('取消拒绝失败!');
+        dhcphaMsgBox.alert($g('取消拒绝失败'));
         return false;
     } else {
     }

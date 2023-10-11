@@ -151,6 +151,11 @@ function ChangeColumnData(MonthDay,paraval){
 		}
 		return false;
 	}
+	$.messager.progress({
+		title: $g("提示"),
+		msg: $g('正在加载数据'),
+		text: $g('加载中....')
+	});
    	var SelDateArr=SelDate.split('-')
 	SelDate=SelDateArr[0]+"-"+SelDateArr[1]; 
 	var MonthDay=getDaysInMonth(SelDateArr[0],SelDateArr[1]);
@@ -158,27 +163,39 @@ function ChangeColumnData(MonthDay,paraval){
 	var EndDate=SelDate+"-"+MonthDay;
 	var UserID=session['LOGON.USERID'];
 	var HospDr=Util_GetSelUserHospID();	 //workreport.inititem.js
-		
-	_DataCount = cspRunServerMethod(ServerObj.MonthAppReportMethod,StartDate,EndDate,GroupDr,UserID,HospDr);
-	//行数
-	for(var i=1;i<=_DataCount;i++){
-	    var timeRet = cspRunServerMethod(ServerObj.GetMonthAppTimeInfoMethod,i,UserID);
-	    var rowTemplate = '<tr align="left" class="tr_'+i+'"><td>'+timeRet+'</td>';
-	    for(var j=1;j<=MonthDay;j++){ //列
-		    var ret = cspRunServerMethod(ServerObj.GetMonthAppInfoMethod,j,i,UserID);
-		    var Time="";
-		    var Count="-";
-		    if(ret!=""){
-				 Time=ret.split("^")[0];
-				 Count =ret.split("^")[1];
+	
+	$.cm({
+		ClassName:"DHCDoc.DHCDocCure.WordReport",
+		MethodName:"MonthAppReport",
+		StartDate:StartDate,
+		EndDate:EndDate,
+		queryGroup:GroupDr,
+		USERID:UserID,
+		HospID:HospDr
+	},function(count){
+		_DataCount=count;
+		//行数
+		for(var i=1;i<=_DataCount;i++){
+			var timeRet = cspRunServerMethod(ServerObj.GetMonthAppTimeInfoMethod,i,UserID);
+			var rowTemplate = '<tr align="left" class="tr_'+i+'"><td>'+timeRet+'</td>';
+			for(var j=1;j<=MonthDay;j++){ //列
+				var ret = cspRunServerMethod(ServerObj.GetMonthAppInfoMethod,j,i,UserID);
+				var Time="";
+				var Count="-";
+				if(ret!=""){
+					Time=ret.split("^")[0];
+					Count =ret.split("^")[1];
+				}
+				rowTemplate = rowTemplate+'<td align="left">'+Count+'</td>';
 			}
-			rowTemplate = rowTemplate+'<td align="left">'+Count+'</td>';
-	    }
-	    rowTemplate = rowTemplate+'</tr>';
-	    var tableHtml = $("#tabRecordReportList tbody").html();
-	    tableHtml += rowTemplate;
-	    $("#tabRecordReportList tbody").html(tableHtml);
-    }
+			rowTemplate = rowTemplate+'</tr>';
+			var tableHtml = $("#tabRecordReportList tbody").html();
+			tableHtml += rowTemplate;
+			$("#tabRecordReportList tbody").html(tableHtml);
+		}
+		$.messager.progress("close");
+	})
+	//_DataCount = cspRunServerMethod(ServerObj.MonthAppReportMethod,StartDate,EndDate,GroupDr,UserID,HospDr);
 }
 
 function PrintReport(){
@@ -198,12 +215,12 @@ function PrintReport(){
 		SelDate=SelDateArr[0]+"-"+SelDateArr[1]; 
 		var MonthDay=getDaysInMonth(SelDateArr[0],SelDateArr[1]);
 		var GroupDesc=$('#ResGroup').combobox('getText');
-		var Title=SelDate+"月"+GroupDesc+"预约表";
+		var Title=SelDate+$g("月")+GroupDesc+$g("预约表");
 		var TaskName=Title; //打印任务名称
 		var UserID=session['LOGON.USERID'];
 		//明细信息展示
 		var Cols=[
-			{field:"0",title:"时段",width:60,align:"center"}
+			{field:"0",title:$g("时段"),width:60,align:"center"}
 		];
 		for(var j=1;j<=MonthDay;j++){
 			Cols.push({field:j,title:j,width:"10%",align:"center"});
@@ -221,72 +238,7 @@ function PrintReport(){
 		PrintDocument(PrintNum,IndirPrint,TaskName,Title,Cols,DataArr);
 		PrintDocument(PrintNum,"Y",TaskName,Title,Cols,DataArr)
 		return;
-		
-		/*var SelDate=$('#Month').datebox('getText');
-	   	if(SelDate==""){
-		   	$.messager.alert("提示","选择查询月份");
-			return false;
-		}
-		var GroupDr=$('#ResGroup').combobox('getValue');
-		var GroupDr=CheckComboxSelData("ResGroup",GroupDr);
-		if(GroupDr==""){
-		   	$.messager.alert("提示","选择服务组");
-			return false;
-		}
-		var GroupDesc=$('#ResGroup').combobox('getText');
-		var Title=GroupDesc+"预约表";	
-	   	var SelDateArr=SelDate.split('-')
-		SelDate=SelDateArr[0]+"-"+SelDateArr[1]; 
-		var MonthDay=getDaysInMonth(SelDateArr[0],SelDateArr[1]);
-		var StartDate=SelDate+"-"+1;
-		var EndDate=SelDate+"-"+MonthDay;
-		var UserID=session['LOGON.USERID'];
-		
-		//var _DataCount=tkMakeServerCall("DHCDoc.DHCDocCure.WordReport","MonthAppReport",StartDate,EndDate,GroupDr,UserID);
-		if(_DataCount==0){
-			$.messager.alert("提示","未获取到导出数据");
-			return false;
-		}
-		var xlApp,xlsheet,xlBook;
-		var TemplatePath=ServerObj.PrintBath+"DHCDocCureMonthAppReport.xlsx";
-		xlApp = new ActiveXObject("Excel.Application");
-		xlBook = xlApp.Workbooks.Add(TemplatePath);
-	    xlsheet = xlBook.ActiveSheet;
-	    xlsheet.PageSetup.LeftMargin=0;  //lgl+
-	    xlsheet.PageSetup.RightMargin=0;
-    	xlsheet.cells(1,1)=Title;
-
-    	xlsheet.cells(2,2)=SelDate+" 月";
-
-    	var xlsrow=3;
-    	
-	    for(var i=1;i<=_DataCount;i++){
-		    xlsrow=xlsrow+1;
-		    var ret = cspRunServerMethod(ServerObj.GetMonthAppTimeInfoMethod,i,UserID);
-		    xlsheet.cells(xlsrow,1)=ret;
-		    for(var j=1;j<=MonthDay;j++){ //列
-	    		xlsheet.cells(3,j+1)=j;
-			    var ret = cspRunServerMethod(ServerObj.GetMonthAppInfoMethod,j,i,UserID);
-			    var Time="";
-			    var Count="-";
-			    if(ret!=""){
-					 Time=ret.split("^")[0];
-					 Count =ret.split("^")[1];
-				}
-			   
-			    xlsheet.cells(xlsrow,j+1)=Count;
-		    }
-	    }
-	    //xlsheet.printout;
-	    gridlist(xlsheet,4,xlsrow,1,32)
-		xlsheet.printout;
-		//xlApp.ActiveWorkBook.Saved = false;
-		xlBook.Close (savechanges=true);
-		//xlApp.Visible=false;
-		xlApp.Quit();
-		xlApp=null;
-		xlsheet=null;*/
 	}catch(e){
-		alert(e.message);	
+		$.messager.alert("提示",e.message,"error");
 	}
 }

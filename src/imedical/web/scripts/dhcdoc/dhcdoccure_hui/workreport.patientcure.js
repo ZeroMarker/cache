@@ -1,36 +1,78 @@
-Ôªøvar PageLogic={
+var PageCurePatObj={
 	m_PatientCureTabDataGrid:"",
-	m_CureDetailDataGrid:""
+	m_CureDetailDataGrid:"",
+	m_SelectArcimID:"",
+	PatCondition:[{id:"PatNo",desc:$g("µ«º«∫≈")},{id:"PatMedNo",desc:$g("◊°‘∫∫≈")},{id:"PatName",desc:$g("ªº’ﬂ–’√˚")}]
 }
+
 $(document).ready(function(){
-	Init();
-	InitEvent();
-	var hospComp = GenUserHospComp();
+	var HospIdTdWidth=$("#HospIdTd").width()
+	var opt={width:HospIdTdWidth}
+	var hospComp = GenUserHospComp(opt);
 	hospComp.jdata.options.onSelect = function(e,t){
 		var HospID=t.HOSPRowId;
+		InitArcimDesc();
+		InitOrderLoc();
 		PatientCureTabDataGridLoad();	
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){
-		PatientCureTabDataGridLoad();	
+		//PatientCureTabDataGridLoad();
+		Init();
 	}	
+	InitEvent();
 });
 
 function Init(){
-	//InitCardType();
 	InitDate();
-  	PageLogic.m_PatientCureTabDataGrid=InitPatientCureTabDataGrid();	
+	InitOrderLoc();	
+	InitOrderDoc();
+	InitArcimDesc();
+	InitPatCondition();
+	InitOthChkCondition();
+  	PageCurePatObj.m_PatientCureTabDataGrid=InitPatientCureTabDataGrid();	
 }
 
 function InitEvent(){
 	$('#btnFind').click(PatientCureTabDataGridLoad);
-    $('#btnExport').click(ExportCureReport);
     $('#btnClear').click(ClearHandle);
 	$('#ApplyNo').bind('keydown', function(event){
 		if(event.keyCode==13){
 			PatientCureTabDataGridLoad();
 		}
 	});
-    InitPatNoEvent(PatientCureTabDataGridLoad);
+	$('#PatConditionVal').bind('keydown', function(event){
+		if(event.keyCode==13)
+		{
+			var PatCondition=$("#PatCondition").combobox("getValue");
+			if(PatCondition=="PatNo"){
+				PatNoHandle(PatientCureTabDataGridLoad,this.id);	
+				if ($(this).val()==""){
+					$("#PatientID").val("");
+				}
+			}else{
+				PatientCureTabDataGridLoad();
+			}
+		}
+	});
+	$('#PatConditionVal').bind('change', function(){
+		var PatCondition=$("#PatCondition").combobox("getValue");
+		if(PatCondition=="PatNo"){
+			if ($(this).val()==""){
+				$("#PatientID").val("");
+			}
+		}
+    });
+	$HUI.radio("[name='SortType']",{
+        onChecked:function(e,value){
+            setTimeout("PatientCureTabDataGridLoad();",10)
+        }
+    });
+    $HUI.checkbox("#showByPat",{
+		onCheckChange:function(e,value){
+			setTimeout("PatientCureTabDataGridLoad();",10)
+		}
+	})
+    //InitPatNoEvent(PatientCureTabDataGridLoad);
 	InitCardNoEvent(PatientCureTabDataGridLoad);
 }
 
@@ -38,14 +80,14 @@ function InitPatientCureTabDataGrid()
 {
 	var PatientCureToolBar = [{
 		id:'BtnDetailView',
-			text:'Áî≥ËØ∑ÂçïÊµèËßà', 
-			iconCls:'icon-funnel-eye',  
+			text:'…Í«Îµ•‰Ø¿¿', 
+			iconCls:'icon-eye',  
 			handler:function(){
 				OpenApplyDetailDiag();
 			}
 		},"-",{
 			id:'BtnAssessment',
-			text:'Ê≤ªÁñóËØÑ‰º∞', 
+			text:'÷Œ¡∆∆¿π¿', 
 			iconCls:'icon-paper-table',  
 			handler:function(){
 				UpdateAssessment();
@@ -53,88 +95,114 @@ function InitPatientCureTabDataGrid()
 		}
 	];
 	var PatientCureColumn=[[ 
-		{field:'ApplyNo',title:'Áî≥ËØ∑ÂçïÂè∑',width:120,align:'left', resizable: true},  
-		{field:'PatNo',title:'ÁôªËÆ∞Âè∑',width:100,align:'left', resizable: true},   
-		{field:'PatName',title:'ÂßìÂêç',width:60,align:'left', resizable: true
-		},   
-		{field:'PatOther',title:'ÊÇ£ËÄÖÂÖ∂‰ªñ‰ø°ÊÅØ',width:200,align:'left', resizable: true},
-		{field:'ArcimDesc',title:'Ê≤ªÁñóÈ°πÁõÆ',width:200,align:'left', resizable: true},
-		{field:'OrdOtherInfo',title:'ÂåªÂò±ÂÖ∂‰ªñ‰ø°ÊÅØ',width:150,align:'left', resizable: true}, 
-		{field:'OrdAddLoc',title:'ÂºÄÂçïÁßëÂÆ§',width:100,align:'left', resizable: true},  
-		{field:'OrdUnitPrice',title:'Âçï‰ª∑',width:50,align:'left', resizable: true}, 
-		{field:'OrdQty',title:'Êï∞Èáè',width:50,align:'left', resizable: true}, 
-		{field:'OrdBillUOM',title:'Âçï‰Ωç',width:50,align:'left', resizable: true}, 
-		{field:'OrdPrice',title:'ÊÄªÈáëÈ¢ù',width:60,align:'left', resizable: true}, 
-		{field:'ApplyAppedTimes',title:'Â∑≤È¢ÑÁ∫¶Ê¨°Êï∞',width:80,align:'left', resizable: true,hidden:((ServerObj.myTriage=="Y")||(ServerObj.DocCureUseBase=="1"))?true:false},
-		{field:'ApplyNoAppTimes',title:'Êú™È¢ÑÁ∫¶Ê¨°Êï∞',width:80,align:'left', resizable: true,hidden:((ServerObj.myTriage=="Y")||(ServerObj.DocCureUseBase=="1"))?true:false},
-		{field:'ApplyFinishTimes',title:'Â∑≤Ê≤ªÁñóÊ¨°Êï∞',width:80,align:'left', resizable: true,hidden:((ServerObj.myTriage=="Y")||(ServerObj.DocCureUseBase=="1"))?true:false,
+		{field:'ApplyNo',title:'…Í«Îµ•∫≈',width:120,align:'left'},  
+		{field:'ArcimDesc',title:'÷Œ¡∆œÓƒø',width:180,align:'left',
+			formatter: function (value, rowData, rowIndex) {
+				var retStr=value;
+				if(value!=""){
+					retStr = "<a href='#' title='"+$g("“Ω÷ˆº∞∞Û∂®–≈œ¢")+"'  onclick='com_openwin.applyAppenditemShow(\""+rowData.OrderId+"\")'>"+value+"</a>"
+				}
+				return retStr;
+			}
+		},
+		{field:'OrdOtherInfo',title:'“Ω÷ˆ∆‰À˚–≈œ¢',width:160,align:'left',
+			formatter: function (value, rowData, rowIndex) {
+				if(value==""){
+					if(rowData.ArcimDesc==""){
+						return "";	
+					}else{
+						value = $g("“Ω÷ˆ√˜œ∏–≈œ¢");
+					}
+				}
+				return "<a href='javascript:void(0)' title='"+$g("“Ω÷ˆ√˜œ∏–≈œ¢")+"'  onclick='com_openwin.ordDetailInfoShow(\""+rowData.OrderId+"\")'>"+value+"</a>";
+			}
+		}, 
+		{field:'OrdAddLoc',title:'ø™µ•ø∆ “',width:120,align:'left'},  
+		{field:'OrdUnitPrice',title:'µ•º€',width:80,align:'left'}, 
+		{field:'OrdQty',title:' ˝¡ø',width:50,align:'left'}, 
+		{field:'OrdBillUOM',title:'µ•Œª',width:80,align:'left'}, 
+		{field:'OrdPrice',title:'◊‹Ω∂Ó',width:80,align:'left'}, 
+		{field:'ApplyExec', title:' «∑Òø…‘§‘º', width: 120, align: 'left',
 			formatter:function(value,row,index){
-					return '<a href="###" id= "'+row["TIndex"]+'"'+' onmouseover=ShowCureEexcDetail(this);'+' ondblclick=ShowCureDetail('+row.TIndex+','+row.DCARowId+');>'+row.ApplyFinishTimes+"</a>"
-				},
-				styler:function(value,row){
-					return "color:blue;text-decoration: underline;"
-				}
-		},
-		{field:'ApplyNoFinishTimes',title:'Êú™Ê≤ªÁñóÊ¨°Êï∞',width:80,align:'left', resizable: true,hidden:((ServerObj.myTriage=="Y")||(ServerObj.DocCureUseBase=="1"))?true:false},
-		{field:'OrdBilled',title:'ÊòØÂê¶Áº¥Ë¥π',width:70,align:'left', resizable: true,
-			styler: function(value,row,index){
-				if (value == "Âê¶"){
-					return 'background-color:#ffee00;color:red;';
+				if (row.ApplyExecFlag=="Y"){
+					return "<span class='fillspan-exec'>"+value+"</span>";
+				}else if (row.ApplyExecFlag==""){
+					return value;
+				}else {
+					return "<span class='fillspan-app'>"+value+"</span>";
 				}
 			}
 		},
-		{field:'OrdReLoc',title:'Êé•Êî∂ÁßëÂÆ§',width:100,align:'left', resizable: true},   
-		{field:'ServiceGroup',title:'ÊúçÂä°ÁªÑ',width:80,align:'left', resizable: true}, 
-		{ field: 'ApplyExec', title: 'ÊòØÂê¶ÂèØÈ¢ÑÁ∫¶', width: 80, align: 'left',resizable: true,hidden:(ServerObj.myTriage=="Y")?true:false
-			,styler: function(value,row,index){
-				if (value.indexOf("Áõ¥Êé•ÊâßË°å")>=0){
-					return 'color:#FF6347;';
+		{field:'ApplyExecFlag', title:' «∑Òø…‘§‘º', width: 80, align: 'left',hidden: true},
+		{field:'ApplyStatus',title:'…Í«Î◊¥Ã¨',width:80,align:'left'},
+		{field:'ApplyAppedTimes',title:'“—‘§‘º ˝¡ø',width:80,align:'left', resizable: true,hidden:((ServerObj.myTriage=="Y")||(ServerObj.DocCureUseBase=="1"))?true:false},
+		{field:'ApplyNoAppTimes',title:'Œ¥‘§‘º ˝¡ø',width:80,align:'left', resizable: true,hidden:((ServerObj.myTriage=="Y")||(ServerObj.DocCureUseBase=="1"))?true:false},
+		{field:'ApplyFinishTimes',title:'“—÷Œ¡∆ ˝¡ø',width:80,align:'left', resizable: true,hidden:((ServerObj.myTriage=="Y")||(ServerObj.DocCureUseBase=="1"))?true:false,
+			formatter:function(value,row,index){
+				if(value==""){
+					return "";	
+				}else{
+					return '<a href="###" id= "'+row["TIndex"]+'"'+' onmouseover=ShowCureEexcDetail(this);'+' onclick=ShowCureDetail('+row.TIndex+','+row.DCARowId+');>'+"<span class='fillspan-nosave'>"+value+"</span>"+"</a>"
+				}
+			},
+			styler:function(value,row){
+				return "color:blue;text-decoration: underline;"
+			}
+		},
+		{field:'ApplyNoFinishTimes',title:'Œ¥÷Œ¡∆ ˝¡ø',width:80,align:'left',hidden:((ServerObj.myTriage=="Y")||(ServerObj.DocCureUseBase=="1"))?true:false},
+		{field:'OrdBilled',title:' «∑ÒΩ…∑—',width:70,align:'left',
+			formatter:function(value,row,index){
+				if (value == $g("∑Ò")){
+					return "<span class='fillspan-nobilled'>"+value+"</span>";
+				}else{
+					return "<span class='fillspan'>"+value+"</span>";
 				}
 			}
 		},
-		{field:'ApplyStatus',title:'Áî≥ËØ∑Áä∂ÊÄÅ',width:80,align:'left', resizable: true},
-		{field:'ApplyUser',title:'Áî≥ËØ∑ÂåªÁîü',width:80,align:'left', resizable: true},
-		{field:'ApplyDateTime',title:'Áî≥ËØ∑Êó∂Èó¥',width:80,align:'left', resizable: true},
-		{field:'ApplyStatusCode',title:'ApplyStatusCode',width:80,align:'left', resizable: true,hidden:true},
-		{field:'DCARowId',title:'DCARowId',width:30,hidden:true}  	
-			   
+		{field:'OrdReLoc',title:'Ω” ’ø∆ “',width:150,align:'left'},   
+		{field:'ServiceGroup',title:'∑˛ŒÒ◊È',width:100,align:'left'}, 
+		{field:'ApplyUser',title:'…Í«Î“Ω…˙',width:80,align:'left'},
+		{field:'ApplyDateTime',title:'…Í«Î ±º‰',width:100,align:'left'},
+		{field:'ApplyStatusCode',title:'ApplyStatusCode',width:80,hidden: true},
+		{field:'CureCfgLimit',title:'CureCfgLimit',width:80,hidden: true}
 	 ]]
-	var fitColumnVal=false;
-	if(ServerObj.DocCureUseBase==1){
-		fitColumnVal=true;
-	}
+
 	var PatientCureTabDataGrid=$('#PatientCureTab').datagrid({  
 		fit : true,
 		width : 'auto',
 		border : false,
 		striped : true,
 		singleSelect : true,
-		fitColumns : fitColumnVal,
+		fitColumns : false,
 		autoRowHeight : false,
 		nowrap: false,
 		collapsible:false,
-		url : '',
-		loadMsg : 'Âä†ËΩΩ‰∏≠..',  
+		url : $URL+'?ClassName=DHCDoc.DHCDocCure.Apply&QueryName=FindAllCureApplyListHUI&rows=99999',
+		loadMsg : 'º”‘ÿ÷–..',  
 		pagination : true,
 		rownumbers : true,
 		idField:"DCARowId",
-		pageSize : 20,
+		pageSize : 50,
 		pageList : [20,50,100],
+		frozenColumns : [
+			[
+				{field:'PatNo',title:'µ«º«∫≈',width:100,align:'left'},   
+				{field:'PatName',title:'–’√˚',width:80,align:'left'},   
+				{field:'PatOther',title:'ªº’ﬂ∆‰À˚–≈œ¢',width:200,align:'left'},
+				{field:'DCARowId',title:'DCARowId',width:30,hidden:true},	
+				{field:'DCAAdmID',title:'DCAAdmID',width:50,hidden:true},
+				{field:'PatientID',title:'PatientID',width:50,hidden:true}
+			]
+		],
 		columns : PatientCureColumn,
 		toolbar : PatientCureToolBar,
 		onSelect:function(index, row){
 			var frm=dhcsys_getmenuform();
 			if (frm){
-				var DCARowId=row["DCARowId"];
-				var Info=$.cm({
-					ClassName:"DHCDoc.DHCDocCure.Common",
-					MethodName:"GetPatAdmIDByDCA",
-					DCARowId:DCARowId,
-					dataType:"text"
-				},false); 
-				if(Info!=""){
-					var PatientID=Info.split("^")[1];
-					var EpisodeID=Info.split("^")[0]
+				var DCARowId=row.DCARowId;
+				var EpisodeID=row.DCAAdmID;
+				var PatientID=row.PatientID;
+				if(EpisodeID!=""){
 					frm.PatientID.value=PatientID;
 					frm.EpisodeID.value=EpisodeID;
 				}
@@ -152,124 +220,81 @@ function InitPatientCureTabDataGrid()
 				}
 				return false;
 			}
+		},
+		onBeforeLoad:function(param){
+			var StartDate=$("#StartDate").datebox("getValue");
+			var EndDate=$("#EndDate").datebox("getValue");
+			var PatientID=$("#PatientID").val();
+			var ApplyNo=$("#ApplyNo").val();
+			var queryOrderLoc=$HUI.combobox("#ComboOrderLoc").getValue();
+			queryOrderLoc=CheckComboxSelData("ComboOrderLoc",queryOrderLoc);
+			var queryOrderDoc=$HUI.combobox("#ComboOrderDoc").getValue();
+			queryOrderDoc=CheckComboxSelData("ComboOrderDoc",queryOrderDoc);
+			var gtext=$HUI.lookup("#ComboArcim").getText();
+			if (gtext=="")PageSizeItemObj.m_SelectArcimID="";
+			var queryArcim=PageSizeItemObj.m_SelectArcimID;
+			var PatName="",PatMedNo=""; 
+			var PatCondition=$("#PatCondition").combobox("getValue");
+			var PatConditionVal=$("#PatConditionVal").val();
+			if(PatCondition=="PatName"){
+				PatName=PatConditionVal;
+			}else if(PatCondition=="PatMedNo"){
+				PatMedNo=PatConditionVal;
+			}
+			var SortType="A"; //ƒ¨»œ ±º‰’˝–Ú
+			var chkRadioJObj = $("input[name='SortType']:checked");
+			if(chkRadioJObj.length>0){SortType=chkRadioJObj.val();}
+			var CheckAdmType="",ChkCurrLocFlag="";
+			if($("#ComboOtherChk").length>0){
+				var OtherChkAry=$("#ComboOtherChk").combobox("getValues");
+				if($.hisui.indexOfArray(OtherChkAry,"OPCheck")>-1){CheckAdmType="O"}
+				if($.hisui.indexOfArray(OtherChkAry,"IPCheck")>-1){CheckAdmType="I"}
+				if($.hisui.indexOfArray(OtherChkAry,"ChkCurrLoc")>-1){ChkCurrLocFlag="Y"}
+				if($.hisui.indexOfArray(OtherChkAry,"OPCheck")>-1 && $.hisui.indexOfArray(OtherChkAry,"IPCheck")>-1){CheckAdmType=""}
+			}
+			var showByPatFlag=$HUI.checkbox("#showByPat").getValue()?"Y":"N";
+			var QueryExpStr=Util_GetSelUserHospID()+"^"+ChkCurrLocFlag+"^"+queryOrderDoc+"^"+PatMedNo+"^"+SortType+"^"+"doccure.workreport.patientcure.hui.csp";
+				QueryExpStr=QueryExpStr+"^^^^"+showByPatFlag
+			$.extend(param,{PatientID:PatientID,StartDate:StartDate,EndDate:EndDate,PatName:PatName,
+			TriageFlag:"ALL",LogLocID:session['LOGON.CTLOCID'],LogUserID:session['LOGON.USERID'],
+			ApplyNo:ApplyNo,CheckAdmType:CheckAdmType,queryArcim:queryArcim,queryOrderLoc:queryOrderLoc,queryExpStr:QueryExpStr});
+		},
+		onLoadSuccess:function(data){
+			if($HUI.checkbox("#showByPat").getValue()){
+				PageCurePatObj.m_PatientCureTabDataGrid.datagrid("autoMergeCells",['PatNo','PatName','PatOther']);    //∫œ≤¢œ‡Õ¨¡–
+				PageCurePatObj.m_PatientCureTabDataGrid.datagrid("getPanel").find(".datagrid-view1 tr.datagrid-row[datagrid-row-index]").css({"color": "inherit", "background-color": "inherit"}); //»√∂≥Ω·¡–«∞æ∞…´∫Õ±≥æ∞…´¥”∏∏‘™ÀÿºÃ≥–
+			}
+			$(this).datagrid("clearSelections");
 		}
 	});
 	return PatientCureTabDataGrid
 }
 function PatientCureTabDataGridLoad()
 {
-	var StartDate=$("#StartDate").datebox("getValue");
-	var EndDate=$("#EndDate").datebox("getValue");
-	var PatientID=$("#PatientID").val();
-	var patName=$("#patName").val();
-	var ApplyNo=$("#ApplyNo").val()
-	$.cm({
-		ClassName:"DHCDoc.DHCDocCure.Apply",
-		QueryName:"FindAllCureApplyListHUI",
-		'PatientID':PatientID,
-		'StartDate':StartDate,
-		'EndDate':EndDate,
-		'outCancel':"",
-		'FinishDis':"",
-		'PatName':patName,
-		'TriageFlag':"ALL",
-		'LogLocID':session['LOGON.CTLOCID'],
-		'LogUserID':session['LOGON.USERID'],
-		'ApplyNo':ApplyNo,
-		HospID:Util_GetSelUserHospID(),
-		Pagerows:PageLogic.m_PatientCureTabDataGrid.datagrid("options").pageSize,
-		rows:99999
-	},function(GridData){
-		PageLogic.m_PatientCureTabDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData); 
-		PageLogic.m_PatientCureTabDataGrid.datagrid("clearSelections");
-		PageLogic.m_PatientCureTabDataGrid.datagrid("clearChecked");	
-	})
-}
-
-function ExportCureReport(){
-	try{
-		var UserID=session['LOGON.USERID'];
-		var RowIDs=CureReportDataGrid.datagrid('getRows');
-		//if(RowIDs.length)
-		var RowNum=RowIDs.length;
-		if(RowNum==0){
-			$.messager.alert("ÊèêÁ§∫","Êú™ÊúâÈúÄË¶ÅÂØºÂá∫ÁöÑÊï∞ÊçÆ");
-			return false;
-		}
-		CureReportDataGrid.datagrid('selectRow',0);
-		var ProcessNo=""
-		var row = CureReportDataGrid.datagrid('getSelected');
-		if (row){
-			ProcessNo=row.Job
-		}
-
-		if(ProcessNo==""){
-			$.messager.alert("ÊèêÁ§∫","Ëé∑ÂèñËøõÁ®ãÂè∑ÈîôËØØ");
-			return false;
-		}
-		var datacount=tkMakeServerCall(PageSizeItemObj.PUBLIC_WORKREPORT_CLASSNAME,"GetQryWorkReportForNum",ProcessNo,UserID);
-		if(datacount==0){
-			$.messager.alert("ÊèêÁ§∫","Ëé∑ÂèñÂØºÂá∫Êï∞ÊçÆÈîôËØØ");
-			return false;
-		}
-	
-		var xlApp,xlsheet,xlBook;
-		var TemplatePath=ServerObj.PrintBath+"DHCDocCureWorkReportUser.xlsx";
-		xlApp = new ActiveXObject("Excel.Application");
-		xlBook = xlApp.Workbooks.Add(TemplatePath);
-	    
-	    xlsheet = xlBook.ActiveSheet;
-	    xlsheet.PageSetup.LeftMargin=0;  //lgl+
-	    xlsheet.PageSetup.RightMargin=0;
-    	
-    	var StartDate=$("#StartDate").datebox("getValue");
-		var EndDate=$("#EndDate").datebox("getValue");
-    	var DateStr=StartDate+"Ëá≥"+EndDate
-    	xlsheet.cells(2,2)=DateStr;
-		var myret=tkMakeServerCall(PageSizeItemObj.PUBLIC_WORKREPORT_CLASSNAME,"GetLocDesc",session['LOGON.CTLOCID']);
-		var Title=myret+"‰∏™‰∫∫Ê≤ªÁñóÂ∑•‰ΩúÈáèÁªüËÆ°"
-    	var xlsrow=3;
-		xlsheet.cells(1,1)=Title;
-	    for(var i=1;i<=datacount;i++){
-			var ret=tkMakeServerCall(PageSizeItemObj.PUBLIC_WORKREPORT_CLASSNAME,"GetQryWorkReportForInfo",ProcessNo,i,UserID);
-			if(ret=="") return ;
-			var arr=ret.split("^");
-			xlsrow=xlsrow+1;
-			var FinishUser=arr[6]
-			var ArcimDesc=arr[1]
-			var UnitPrice=arr[2]
-			var OrderQty=arr[3]
-			var OrdBillUOM=arr[4]
-			var OrdPrice=arr[5]
-			if(OrdBillUOM!="")OrdBillUOM="/"+OrdBillUOM;
-			xlsheet.cells(xlsrow,1)=FinishUser;
-			xlsheet.cells(xlsrow,2)=ArcimDesc;
-			xlsheet.cells(xlsrow,3)=UnitPrice+"ÂÖÉ";;
-		    xlsheet.cells(xlsrow,4)=OrderQty+OrdBillUOM;
-		    xlsheet.cells(xlsrow,5)=OrdPrice+"ÂÖÉ";;		    
-	    }
-	    xlsheet.printout;
-	    gridlist(xlsheet,4,xlsrow,1,5)
-		xlBook.Close (savechanges=true);
-		xlApp.Quit();
-		xlApp=null;
-		xlsheet=null;
-	}catch(e){
-		alert(e.message);	
-	}
+	PageCurePatObj.m_PatientCureTabDataGrid.datagrid("reload");
 }
 
 function ClearHandle(){
-	InitCardType();
-	$("#CardTypeNew,#CardNo,#patNo,#patName,#PatientID,#ApplyNo").val("");
+	//InitCardType();
+	$('.search-table input[class*="cure-box"]').val("");
+	$('input[type=checkbox]').checkbox('uncheck');
+	$("#ComboOrderLoc,#ComboOrderDoc,#PatCondition").combobox("setValue","");
+	PageSizeItemObj.m_SelectArcimID=""; 
+	$("#ComboArcim").lookup('setText','');
+	$("#ComboOtherChk").combobox('setValues','');
+	$HUI.radio('.search-table input[value="A"]').setValue(true);
 	InitDate();	
 }
 
 function ShowCureDetail(inde,id){
-	var dhwid=window.screen.availWidth-200;
-	var dhhei=window.screen.availHeight-300;
-	var wid=200/2;
-	$('#add-dialog').window('open').window('resize',{width:dhwid,height:dhhei,top: 50,left:wid});
+	var dhwid=window.screen.availWidth-60;
+	var dhhei=window.screen.availHeight-100;
+	$('#add-dialog').window('open').window('resize',{
+		width:dhwid,
+		height:dhhei,
+		top: ($(window).height() - dhhei) * 0.5,
+		left:($(window).width() - dhwid) * 0.5
+	});
 	var CureDetailDataGrid=$('#tabCureDetail').datagrid({  
 		fit : true,
 		width : 'auto',
@@ -282,57 +307,61 @@ function ShowCureDetail(inde,id){
 		nowrap: false,
 		collapsible:false,
 		singleSelect:false,    
-		url : '',
-		loadMsg : 'Âä†ËΩΩ‰∏≠..',  
-		pagination : true,  //
-		rownumbers : true,  //
+		url : $URL+"?ClassName=DHCDoc.DHCDocCure.ExecApply&QueryName=FindCureExecList&DCARowId="+id+"&OnlyExcute=Y&rows=9999",
+		loadMsg : 'º”‘ÿ÷–..',  
+		pagination : true, 
+		rownumbers : true,
 		idField:"OEORERowID",
-		//pageNumber:0,
 		pageSize : 20,
 		pageList : [20,50,100],
 		columns :[[ 
-        			{field:'DCARowId',title:'',width:1,hidden:true}, 
-        			{field:'PapmiNo',title:'ÁôªËÆ∞Âè∑',width:100},   
-        			{field:'PatientName',title:'ÂßìÂêç',width:100},
-        			{field:'ArcimDesc',title:'Ê≤ªÁñóÈ°πÁõÆ',width:220,align:'left'},  
-        			//{field:'OEOREExStDate',title:'Ë¶ÅÊ±ÇÊâßË°åÊó∂Èó¥',width:130,align:'left'},
-        			{field:'DCRContent',title:'Ê≤ªÁñóËÆ∞ÂΩï',width:220,align:'left'} ,
-        			{field:'OEOREQty',title:'ÊâßË°åÊï∞Èáè',width:80,align:'left'} ,
-        			{field:'OEOREStatus',title:'ÊâßË°åÁä∂ÊÄÅ',width:80,align:'left'},
-        			{field:'OEOREUpUser',title:'ÊâßË°å‰∫∫',width:60,align:'left'},
-        			{field:'DCRCureDate',title:'Ê≤ªÁñóÊó∂Èó¥',width:160,align:'left'} ,
-        			{field:'DCRResponse',title:'Ê≤ªÁñóÂèçÂ∫î',width:220,align:'left'} ,
-        			{field:'DCREffect',title:'Ê≤ªÁñóÊïàÊûú',width:220,align:'left'} ,
-        			{field:'OEOREExDate',title:'Êìç‰ΩúÊó∂Èó¥',width:160,align:'left'} ,
-        			{field:'OEOREType',title:'ÂåªÂò±Á±ªÂûã',width:100,align:'left'} ,
-        			{field:'OEORERowID',ExecID:'ID',width:50,align:'left',hidden:true}  
-			 ]]
+			{field:'DCARowId',title:'',width:1,hidden:true}, 
+			{field:'PapmiNo',title:'µ«º«∫≈',width:100},   
+			{field:'PatientName',title:'–’√˚',width:100},
+			{field:'ArcimDesc',title:'÷Œ¡∆œÓƒø',width:220,align:'left'},  
+			//{field:'OEOREExStDate',title:'“™«Û÷¥–– ±º‰',width:130,align:'left'},
+			{field:'DCRContent',title:'÷Œ¡∆º«¬º',width:220,align:'left'} ,
+			{field:'OEOREQty',title:'÷¥–– ˝¡ø',width:80,align:'left'} ,
+			{field:'OEOREStatus',title:'÷¥––◊¥Ã¨',width:80,align:'left'},
+			{field:'OEOREUpUser',title:'÷¥––»À',width:60,align:'left'},
+			{field:'DCRIsPicture',title:' «∑Ò”–Õº∆¨',width:80,
+    			formatter:function(value,row,index){
+	    			if(value=="Y"){
+						return '<a href="###" id= "'+row["OEORERowID"]+'"'+' onmouseover=workList_RecordListObj.ShowCurePopover(this);'+' onclick=ShowCureRecordPic(\''+row.DCRRowId+'\');>'+$g("≤Èø¥Õº∆¨")+"</a>"
+	    			}else{
+		    			return "";	
+		    		}
+				},
+				styler:function(value,row){
+					return "color:blue;text-decoration: underline;"
+			}},
+			{field:'DCRCureDate',title:'÷Œ¡∆ ±º‰',width:160,align:'left'} ,
+			{field:'DCRResponse',title:'÷Œ¡∆∑¥”¶',width:220,align:'left'} ,
+			{field:'DCREffect',title:'÷Œ¡∆–ßπ˚',width:220,align:'left'} ,
+			{field:'OEOREExDate',title:'≤Ÿ◊˜ ±º‰',width:160,align:'left'} ,
+			{field:'OEORETransType',title:'“Ω÷ˆ¿‡–Õ',width:100,align:'left'} ,
+			{field:'DCRRowId',title:'DCRRowId',width:100,align:'left',hidden:true} ,
+			{field:'OEORERowID',ExecID:'ID',width:50,align:'left',hidden:true}  
+	 	]],
+	 	onLoadSuccess: function(){
+		    PageCurePatObj.m_CureDetailDataGrid.datagrid("clearSelections");
+        }
 	});
-	PageLogic.m_CureDetailDataGrid=CureDetailDataGrid;
-	CureDetailDataGridLoad(id);
-	return CureDetailDataGrid	
+	PageCurePatObj.m_CureDetailDataGrid=CureDetailDataGrid;
+	return CureDetailDataGrid;
 }
 
-function CureDetailDataGridLoad(id)
-{
-	var CheckOnlyNoExcute="";
-	$.cm({
-		ClassName:"DHCDoc.DHCDocCure.ExecApply",
-		QueryName:"FindCureExecList",
-		'DCARowId':id,
-		'OnlyNoExcute':CheckOnlyNoExcute,
-		'OnlyExcute':"Y",
-		Pagerows:PageLogic.m_CureDetailDataGrid.datagrid("options").pageSize,
-		rows:99999
-	},function(GridData){
-		PageLogic.m_CureDetailDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData); 
-	})
-	PageLogic.m_CureDetailDataGrid.datagrid("clearChecked");
-	PageLogic.m_CureDetailDataGrid.datagrid("clearSelections");
+function CureDetailDataGridLoad(){
+	PageCurePatObj.m_CureDetailDataGrid.datagrid("reload");
 }
+
+function ShowCureRecordPic(DCRRowId){
+	workList_RecordListObj.ShowCureRecordPic(DCRRowId,CureDetailDataGridLoad);	
+}
+	
 function ShowCureEexcDetail(that){
 	var title=""
-	var content="ÂèåÂáªÊµèËßàÊòéÁªÜ‰ø°ÊÅØ"
+	var content="µ„ª˜‰Ø¿¿√˜œ∏–≈œ¢"
 	$(that).webuiPopover({
 		title:title,
 		content:content,
@@ -344,72 +373,84 @@ function ShowCureEexcDetail(that){
 }
 function OpenApplyDetailDiag()
 {
-	var rows = PageLogic.m_PatientCureTabDataGrid.datagrid("getSelections");
-	if (rows.length==0) {
-		$.messager.alert("ÊèêÁ§∫","ËØ∑ÈÄâÊã©‰∏Ä‰∏™Áî≥ËØ∑Âçï");
-		return;
-	}else if (rows.length>1){
-		$.messager.alert("ÈîôËØØ","ÊÇ®ÈÄâÊã©‰∫ÜÂ§ö‰∏™Áî≥ËØ∑ÂçïÔºÅ",'err')
-		return;
-    }
-	var DCARowId="";
-	for(var i=0;i<rows.length;i++){
-		var DCARowId=rows[i].DCARowId;
-		if(DCARowId!=""){
-			break;	
+	var row = PageCurePatObj.m_PatientCureTabDataGrid.datagrid("getSelected");
+	if (row) {
+		var DCARowId=row.DCARowId;
+		if(DCARowId==""){
+			$.messager.alert('Ã· æ','ªÒ»°…Í«Îµ•–≈œ¢¥ÌŒÛ!',"warning");
+			return false;
 		}
-	}
-	if(DCARowId==""){
-		$.messager.alert('Warning','ËØ∑ÈÄâÊã©‰∏ÄÊù°Áî≥ËØ∑Âçï');
+		com_openwin.ShowApplyDetail(DCARowId,ServerObj.DHCDocCureLinkPage,PatientCureTabDataGridLoad);
+	}else{
+		$.messager.alert('Ã· æ','«Î—°‘Ò“ªÃı…Í«Îµ•!',"warning");
 		return false;
 	}
-	var href="doccure.apply.update.hui.csp?DCARowId="+DCARowId;
-	/*var ReturnValue=window.showModalDialog(href,"","dialogwidth:1200px;dialogheight:35em;status:no;center:1;resizable:yes");
-	if (ReturnValue !== "" && ReturnValue !== undefined) 
-    {
-		if(ReturnValue){
-			PatientCureTabDataGridLoad();	
-		}
-    }*/
-	websys_showModal({
-		url:href,
-		title:'Áî≥ËØ∑ÂçïÊµèËßà',
-		width:'90%',
-		height:window.screen.availHeight-100,
-		PatientCureTabDataGridLoad:PatientCureTabDataGridLoad
-	});
+	
 }
 function UpdateAssessment(){
-	var rows = PageLogic.m_PatientCureTabDataGrid.datagrid("getSelections");
-	if (rows.length==0) 
-	{
-		$.messager.alert("ÊèêÁ§∫","ËØ∑ÈÄâÊã©‰∏Ä‰∏™Áî≥ËØ∑Âçï","warning");
+	var row = PageCurePatObj.m_PatientCureTabDataGrid.datagrid("getSelected");
+	if (row) {
+		var DCARowId=row.DCARowId;
+		var OrdBilled=row.OrdBilled;
+		var ApplyStatusCode=row.ApplyStatusCode;
+		var CureCfgLimit=row.CureCfgLimit;
+		if(DCARowId==""){
+			$.messager.alert('Ã· æ','ªÒ»°…Í«Îµ•–≈œ¢¥ÌŒÛ!',"warning");
+			return false;
+		}
+		if((OrdBilled==$g("∑Ò"))||(ApplyStatusCode=="C")){
+			$.messager.alert('Ã· æ','Œ¥”–ø…Ω¯––∆¿π¿µƒ÷Œ¡∆…Í«Î,«Î»∑»œ…Í«Î «∑Ò“—Ω…∑—ªÚ «∑Ò“—≥∑œ˚!',"warning");
+			return false;	
+		}
+		var myTitle=$g('÷Œ¡∆∆¿π¿');
+		if(CureCfgLimit=="0"){
+			var PageShowFromWay="ShowFromEmrList";
+			var myTitle=$g('÷Œ¡∆∆¿π¿')+'<span style="color:red">('+$g('Ωˆ”–‰Ø¿¿»®œﬁ')+')</span>';
+		}else{
+			var PageShowFromWay="";	
+		}
+		var href="doccure.cureassessmentlist.csp?OperateType=&DCARowIdStr="+DCARowId+"&PageShowFromWay="+PageShowFromWay;
+	    websys_showModal({
+			url:href,
+			iconCls:"icon-w-paper",
+			title:myTitle,
+			width:"80%",height:"80%"
+		});
+	} else {
+		$.messager.alert("Ã· æ","«Î—°‘Ò“ª∏ˆ…Í«Îµ•!","warning");
 		return false;
 	}
-	var DCARowIdStr=""
-	for(var i=0;i<rows.length;i++){
-		var DCARowIds=rows[i].DCARowId;
-		var OrdBilled=rows[i].OrdBilled;
-		var ApplyExec=rows[i].ApplyExec;
-		var ApplyStatusCode=rows[i].ApplyStatusCode;
-		var rowIndex = PageLogic.m_PatientCureTabDataGrid.datagrid("getRowIndex", rows[i]);
-		if((OrdBilled!="Âê¶")&&(ApplyStatusCode!="C")){
-			if(DCARowIdStr==""){
-				DCARowIdStr=DCARowIds;
-			}else{
-				DCARowIdStr=DCARowIdStr+"!"+DCARowIds;
-			}
-		}
-	}	
-	if(DCARowIdStr==""){
-		$.messager.alert('ÊèêÁ§∫','Êú™ÊúâÂèØËøõË°åËØÑ‰º∞ÁöÑÊ≤ªÁñóÁî≥ËØ∑,ËØ∑Á°ÆËÆ§Áî≥ËØ∑ÊòØÂê¶Â∑≤Áº¥Ë¥πÊàñÊòØÂê¶Â∑≤Êí§Ê∂à!',"warning");
-		return false;	
-	}
-	var OperateType="";
-	var href="doccure.cureassessmentlist.csp?OperateType="+OperateType+"&DCARowIdStr="+DCARowIdStr;
-    websys_showModal({
-		url:href,
-		title:'Ê≤ªÁñóËØÑ‰º∞',
-		width:screen.availWidth-200,height:screen.availHeight-200
+}
+
+function InitOrderLoc(){
+	var obj=com_withLocDocFun.InitComboDoc("ComboOrderDoc");
+	com_withLocDocFun.InitComboLoc("ComboOrderLoc",obj);
+}
+function InitOrderDoc(LocID){
+}
+
+function InitPatCondition(){
+	$HUI.combobox("#PatCondition", {
+		valueField: 'id',
+		textField: 'desc', 
+		editable:false,
+		data: PageCurePatObj.PatCondition,
+		onSelect:function(){
+	    	$("#PatConditionVal").val("");
+	    	$("#PatientID").val("");
+	    }
+	});
+}
+function InitOthChkCondition(){
+	var OthChkConditionAry=[{id:"OPCheck",desc:$g("ªº’ﬂ¿‡–Õ-√≈º±’Ô")},{id:"IPCheck",desc:$g("ªº’ﬂ¿‡–Õ-◊°‘∫")},{id:"ChkCurrLoc",desc:$g("±æø∆æÕ’Ôªº’ﬂ")}]
+	$HUI.combobox("#ComboOtherChk", {
+		valueField: 'id',
+		textField: 'desc', 
+		editable:false,
+		multiple:true,
+		rowStyle:'checkbox',
+		selectOnNavigation:false,
+		panelHeight:"auto",
+		data: OthChkConditionAry
 	});
 }

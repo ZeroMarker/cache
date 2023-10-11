@@ -1,15 +1,9 @@
 ﻿/**
  * FileName: dhcbill.conf.group.prttasklist.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-10-23
  * Description: 单据打印列表
  */
-
-var GV = {
-	GroupId: getParam("GroupId"),
-	HospId: getParam("HospId"),
-	EditRowIndex: undefined
-};
 
 $(function () {
 	$HUI.linkbutton("#btn-add", {
@@ -49,7 +43,6 @@ $(function () {
 			rownumbers: false,
 			pagination: true,
 			pageSize: 20,
-			pageList: [20, 30, 40, 50],
 			loadMsg: '',
 			toolbar: '#tl-tb',
 			columns: [[{title: 'GSPTRowID', field: 'GSPTRowID', hidden: true},
@@ -58,6 +51,7 @@ $(function () {
 							type: 'combobox',
 							options: {
 								method: 'get',
+								required: true,
 								url: $URL + '?ClassName=web.DHCXMLPConfig&QueryName=XMLPConfigQuery&ResultSetType=array',
 								mode: 'remote',
 								valueField: '模板名称',
@@ -69,7 +63,7 @@ $(function () {
 									$(this).next("span").find("input").focus();
 								},
 								onChange: function(newValue, oldValue) {
-									setValueById("XmlTemplateName", newValue || "");
+									setValueById("XmlTemplateName", (newValue || ""));
 								}
 							}
 						}
@@ -79,6 +73,7 @@ $(function () {
 							type: 'combobox',
 							options: {
 								method: 'get',
+								required: true,
 								delay: 500,
 								url: $URL + '?ClassName=websys.Conversions&QueryName=LookUpClassName&ResultSetType=array',
 								mode: 'remote',
@@ -102,7 +97,7 @@ $(function () {
 											$(ed.target).combobox("clear");
 										}
 									}
-									setValueById("ClassName", newValue || "");
+									setValueById("ClassName", (newValue || ""));
 								}
 							}
 						}
@@ -112,11 +107,12 @@ $(function () {
 							type: 'combobox',
 							options: {
 								method: 'get',
+								required: true,
 								valueField: 'ClassName',
 								textField: 'ClassName',
-								defaultFilter: 4,
+								defaultFilter: 5,
 								onChange: function(newValue, oldValue) {
-									setValueById("MethodName", newValue || "");
+									setValueById("MethodName", (newValue || ""));
 								}
 							}
 						}
@@ -127,11 +123,12 @@ $(function () {
 							options: {
 								panelHeight: 'auto',
 								method: 'get',
-								url: $URL + "?ClassName=BILL.CFG.COM.GroupAuth&QueryName=InitListObjectValue&ResultSetType=array&ClsName=User.DHCOPGSPrintTask&PropName=PTPrintMode",
+								required: true,
+								url: $URL + '?ClassName=BILL.CFG.COM.GroupAuth&QueryName=InitListObjectValue&ResultSetType=array&ClsName=User.DHCOPGSPrintTask&PropName=PTPrintMode',
 								valueField: 'ValueList',
 								textField: 'DisplayValue',
 								onChange: function(newValue, oldValue) {
-									setValueById("PrintMode", newValue || "");
+									setValueById("PrintMode", (newValue || ""));
 								}
 							}
 						}
@@ -143,7 +140,7 @@ $(function () {
 							options: {
 								panelHeight: 150,
 								method: 'get',
-								url: $URL + "?ClassName=User.DHCCardHardComManager&QueryName=SelectByHardGroupType&ResultSetType=array&GrpType=BC",
+								url: $URL + '?ClassName=User.DHCCardHardComManager&QueryName=SelectByHardGroupType&ResultSetType=array&GrpType=BC',
 								mode: 'remote',
 								valueField: 'CCM_RowID',
 								textField: 'CCM_Desc',
@@ -152,7 +149,7 @@ $(function () {
 									return true;
 								},
 								onChange: function(newValue, oldValue) {
-									setValueById("HardEquipDR", newValue || "");
+									setValueById("HardEquipDR", (newValue || ""));
 								}
 							}
 						}
@@ -163,8 +160,8 @@ $(function () {
 			queryParams: {
 				ClassName: "BILL.CFG.COM.GroupAuth",
 				QueryName: "ReadGSPrtList",
-				groupId: GV.GroupId,
-				hospId: GV.HospId,
+				groupId: CV.GroupId,
+				hospId: CV.HospId,
 				taskType: getValueById("TaskType")
 			},
 			onLoadSuccess: function(data) {
@@ -207,22 +204,26 @@ function deleteClick() {
 		$.messager.popover({msg: "请选择需要删除的行", type: "info"});
 		return;
 	}
-	var rowId = row.GSPTRowID;
+	if (!row.GSPTRowID) {
+		return;
+	}
 	$.messager.confirm("确认", "确认删除？", function(r) {
-		if (r) {
-			$.m({
-				ClassName: "BILL.CFG.COM.GroupAuth",
-				MethodName: "DelGSPT",
-				rowId: rowId
-			}, function(rtn) {
-				if (rtn == "0") {
-					$.messager.popover({msg: "删除成功", type: "success"});
-					GV.TaskList.reload();
-				}else {
-					$.messager.popover({msg: "删除失败：" + rtn, type: "error"});
-				}
-			});
+		if (!r) {
+			return;
 		}
+		$.m({
+			ClassName: "BILL.CFG.COM.GroupAuth",
+			MethodName: "DelGSPT",
+			rowId: row.GSPTRowID
+		}, function(rtn) {
+			var myAry = rtn.split("^");
+			if (myAry[0] == 0) {
+				$.messager.popover({msg: "删除成功", type: "success"});
+				GV.TaskList.reload();
+				return;
+			}
+			$.messager.popover({msg: "删除失败：" + (myAry[1] || myAry[0]), type: "error"});
+		});
 	});
 }
 
@@ -254,26 +255,35 @@ function beginEditRow(index, row) {
 * 保存
 */
 function saveClick() {
-	GV.TaskList.acceptChanges();
-	var encmeth = getValueById("InitGSPrintTaskEncrypt");
-	var xmlData = getEntityClassInfoToXML(encmeth);
+	var row = GV.TaskList.getRows()[GV.EditRowIndex];
+	if (!row) {
+		return;
+	}
+	if (!endEditing()) {
+		return;
+	}
 	$.messager.confirm("确认", "确认保存？", function(r) {
-		if (r) {
-			$.m({
-				ClassName: "BILL.CFG.COM.GroupAuth",
-				MethodName: "UpdateGSPT",
-				groupId: GV.GroupId,
-				hospId: GV.HospId,
-				xmlData: xmlData
-			}, function(rtn) {
-				if (rtn == "0") {
-					$.messager.popover({msg: "保存成功", type: "success"});
-					GV.TaskList.reload();
-				}else {
-					$.messager.popover({msg: "保存失败：" + rtn, type: "error"});
-				}
-			});
+		if (!r) {
+			return;
 		}
+		GV.TaskList.acceptChanges();
+		var encmeth = getValueById("InitGSPrintTaskEncrypt");
+		var xmlData = getEntityClassInfoToXML(encmeth);
+		$.m({
+			ClassName: "BILL.CFG.COM.GroupAuth",
+			MethodName: "UpdateGSPT",
+			groupId: CV.GroupId,
+			hospId: CV.HospId,
+			xmlData: xmlData
+		}, function(rtn) {
+			var myAry = rtn.split("^");
+			if (myAry[0] == 0) {
+				$.messager.popover({msg: "保存成功", type: "success"});
+				GV.TaskList.reload();
+				return;
+			}
+			$.messager.popover({msg: "保存失败：" + (myAry[1] || myAry[0]), type: "error"});
+		});
 	});
 }
 
@@ -283,4 +293,23 @@ function saveClick() {
 function rejectClick() {
 	GV.TaskList.rejectChanges();
 	GV.EditRowIndex = undefined;
+	
+	setValueById("GSPTRowID", "");
+	setValueById("XmlTemplateName", "");
+	setValueById("ClassName", "");
+	setValueById("MethodName", "");
+	setValueById("PrintMode", "");
+	setValueById("HardEquipDR", "");
+}
+
+function endEditing() {
+	if (GV.EditRowIndex == undefined) {
+		return true;
+	}
+	if (GV.TaskList.validateRow(GV.EditRowIndex)) {
+		GV.TaskList.endEdit(GV.EditRowIndex);
+		GV.EditRowIndex = undefined;
+		return true;
+	}
+	return false;
 }

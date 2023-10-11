@@ -5,6 +5,8 @@ var SelectedRow = -1 ;  //hisui-改造 modified by kdf 2018-03-01
 
 function BodyLoadHandler() 
 {
+	//modified by cjt 20230203 需求号3220218 UI页面改造
+	initPanelHeaderStyle();
 	//document.body.scroll="no";	
 	InitUserInfo();	
 	$("#tDHCEQCMasterItemList").datagrid({showRefresh:false,showPageList:false,afterPageText:'',beforePageText:''});   //add by lmm 2018-09-26 hisui改造：隐藏翻页条内容

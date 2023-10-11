@@ -26,7 +26,7 @@ function InitButton(){
 }
 function SaveMedReport(flag){
 	if($('#PatName').val()==""){
-		$.messager.alert("提示:","患者姓名为空，请输入登记号/病案号回车选择记录录入患者信息！");	
+		$.messager.alert($g("提示")+":",$g("患者姓名为空")+"，"+$g("请输入登记号/病案号回车选择记录录入患者信息")+"！");
 		return false;
 	}
 	///保存前,对页面必填项进行检查
@@ -39,6 +39,8 @@ function SaveMedReport(flag){
 //表单控制
 function reportControl(){
 	
+	// 发现日期控制
+	chkdate("FindDate");
 	// 死亡时间控制
 	chkdate("MedNewEventResult-97739-97915");
 	
@@ -95,6 +97,12 @@ function InitCheckRadio(){
 }
 function checkother()
 {
+	var FindDate=$("#FindDate").datebox('getValue');
+	var OccurDate=$("#OccurDate").datebox('getValue');
+	if(!compareSelTowTime(FindDate,OccurDate)){
+		$.messager.alert($g("提示")+":",$g("【日期】发生日期不能小于发现日期")+"！");
+		return false;
+	}
 	var deadflag=0
 	$("input[type=radio][id^='MedNewEventResult-']").each(function(){
 		if ($(this).is(':checked')){
@@ -106,7 +114,7 @@ function checkother()
 	})
 	if(deadflag=="-1")
 	{
-		$.messager.alert('提示',"请选择死亡时间！")
+		$.messager.alert($g("提示")+":",$g("请选择死亡时间")+"！");
 		return false;
 	}
 	
@@ -114,16 +122,16 @@ function checkother()
 	var proDate=$("#MedAllDate-97762").datebox('getValue');
 	var stopdate=$("#MedAllDate-97763").datebox('getValue');
 	var impDate=$("#MedAllDate-97764").datebox('getValue');
-	if(DateTimecontrast(proDate,impDate)==0){
-		$.messager.alert("提示:","【日期】植入日期不能小于生产日期！");
+	if(!compareSelTowTime(proDate,impDate)){
+		$.messager.alert($g("提示")+":",$g("【日期】植入日期不能小于生产日期")+"！");
 		return false;
 	}
-	if(DateTimecontrast(impDate,stopdate)==0){
-		$.messager.alert("提示:","【日期】停用日期不能小于植入日期！");
+	if(!compareSelTowTime(impDate,stopdate)){
+		$.messager.alert($g("提示")+":",$g("【日期】停用日期不能小于植入日期")+"！");
 		return false;
 	}
-	if(DateTimecontrast(proDate,effDate)==0){
-		$.messager.alert("提示:","【日期】有效期至不能小于生产日期！");
+	if(!compareSelTowTime(proDate,effDate)){
+		$.messager.alert($g("提示")+":",$g("【日期】有效期至不能小于生产日期")+"！");
 		return false;
 	}
 	return true;

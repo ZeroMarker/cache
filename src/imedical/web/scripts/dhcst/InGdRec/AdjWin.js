@@ -32,14 +32,14 @@ function SetAdjPrice(data,Fn1,Fn2,i,j){
 		    }
 
 		var InciCode = new Ext.form.TextField({
-					fieldLabel : '代码',
+					fieldLabel : $g('代码'),
 					id : 'InciCode',
 					name : 'InciCode',
 					anchor : '90%',
 					disabled : true
 				});
 		var InciDesc = new Ext.form.TextField({
-					fieldLabel : '名称',
+					fieldLabel : $g('名称'),
 					id : 'InciDesc',
 					name : 'InciDesc',
 					anchor : '90%',
@@ -47,7 +47,7 @@ function SetAdjPrice(data,Fn1,Fn2,i,j){
 				});
 		// 单位
 		var CTUom = new Ext.form.ComboBox({
-					fieldLabel : '基本单位',
+					fieldLabel : $g('基本单位'),
 					id : 'CTUom',
 					name : 'CTUom',
 					anchor : '90%',
@@ -57,7 +57,7 @@ function SetAdjPrice(data,Fn1,Fn2,i,j){
 					displayField : 'Description',
 					allowBlank : false,
 					triggerAction : 'all',
-					emptyText : '单位...',
+					emptyText : $g('单位...'),
 					selectOnFocus : true,
 					forceSelection : true,
 					minChars : 1,
@@ -66,7 +66,7 @@ function SetAdjPrice(data,Fn1,Fn2,i,j){
 					valueNotFoundText : ''
 				});
 		var ADJUom = new Ext.form.ComboBox({
-					fieldLabel : '调价单位',
+					fieldLabel : $g('调价单位'),
 					id : 'ADJUom',
 					name : 'ADJUom',
 					anchor : '90%',
@@ -76,7 +76,7 @@ function SetAdjPrice(data,Fn1,Fn2,i,j){
 					displayField : 'Description',
 					allowBlank : false,
 					triggerAction : 'all',
-					emptyText : '单位...',
+					emptyText : $g('单位...'),
 					selectOnFocus : true,
 					forceSelection : true,
 					//minChars : 1,
@@ -86,28 +86,28 @@ function SetAdjPrice(data,Fn1,Fn2,i,j){
 					disabled : true
 				});
 		var PriorRP = new Ext.form.TextField({
-					fieldLabel : '调前进价',
+					fieldLabel : $g('调前进价'),
 					id : 'PriorRP',
 					name : 'PriorRP',
 					anchor : '90%',
 					disabled : true
 				});
 		var PriorSP = new Ext.form.TextField({
-					fieldLabel : '调前售价',
+					fieldLabel : $g('调前售价'),
 					id : 'PriorSP',
 					name : 'PriorSP',
 					anchor : '90%',
 					disabled : true
 				});
 		var ResultSP = new Ext.form.TextField({
-					fieldLabel : '调后售价',
+					fieldLabel : $g('调后售价'),
 					id : 'ResultSP',
 					name : 'ResultSP',
 					anchor : '90%',
 					disabled : true
 				});
 		var ResultRP = new Ext.form.TextField({
-					fieldLabel : '调后进价',
+					fieldLabel : $g('调后进价'),
 					id : 'ResultRP',
 					name : 'ResultRP',
 					anchor : '90%',
@@ -116,8 +116,8 @@ function SetAdjPrice(data,Fn1,Fn2,i,j){
 		// 确定按钮
 		var ConfirmBT = new Ext.Toolbar.Button({
 					id : "ConfirmBT",
-					text : '确定',
-					tooltip : '确定',
+					text : $g('确定'),
+					tooltip : $g('确定'),
 					width : 70,
 					height : 30,
 					iconCls : 'page_save',
@@ -131,8 +131,8 @@ function SetAdjPrice(data,Fn1,Fn2,i,j){
 		// 关闭按钮
 		var CloseBT = new Ext.Toolbar.Button({
 					id : "CloseBT",
-					text : '关闭',
-					tooltip : '关闭',
+					text : $g('关闭'),
+					tooltip : $g('关闭'),
 					width : 70,
 					height : 30,
 					iconCls : 'page_close',
@@ -154,7 +154,7 @@ function SetAdjPrice(data,Fn1,Fn2,i,j){
 		
 
 	    var window = new Ext.Window({
-				title : '调价信息',
+				title : $g('调价信息'),
 				width : 800,
 				height : 300,
 				closable:true,
@@ -163,7 +163,7 @@ function SetAdjPrice(data,Fn1,Fn2,i,j){
 			    modal:true,
 				items:[{
 				xtype:'fieldset',
-				title:'调前信息',
+				title:$g('调前信息'),
 				//style:'padding:1px 0px 0px 10px',
 				layout: 'column',    // Specifies that the items will now be arranged in columns
 				defaults: {border:false}, 
@@ -183,7 +183,7 @@ function SetAdjPrice(data,Fn1,Fn2,i,j){
 				}]
 			},{
 			    xtype:'fieldset',
-				title:'调后信息',
+				title:$g('调后信息'),
 				//style:'padding:1px 0px 0px 10px',
 				layout: 'column',    // Specifies that the items will now be arranged in columns
 				defaults: {border:false}, 

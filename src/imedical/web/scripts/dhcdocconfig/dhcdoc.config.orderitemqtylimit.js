@@ -10,10 +10,18 @@ function InitHospList()
 	var hospComp = GenHospComp("DHC_PAADMPrescType");
 	hospComp.jdata.options.onSelect = function(e,t){
 		editRow = undefined;
-		InitOrderItemQtyLimit();
+		$('#tabOrderItemQtyLimit').datagrid('reload');
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){
 		InitOrderItemQtyLimit();
+		InitCache();
+	}
+}
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
 	}
 }
 function InitOrderItemQtyLimit()
@@ -168,12 +176,15 @@ function InitOrderItemQtyLimit()
 					  editor :{  
 							type:'combobox',  
 							options:{
-								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.OrderItemQtyLimit&QueryName=FindBillTypeConfig&value=&HospId="+$HUI.combogrid('#_HospList').getValue(),
+								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.OrderItemQtyLimit&QueryName=FindBillTypeConfig&value="+"&rows=9999",
 								valueField:'BillTypeRowid',
 								textField:'BillTypeDesc',
 								required:true,
 								loadFilter: function(data){
 									return data['rows'];
+								},
+								onBeforeLoad:function(param){
+									$.extend(param,{HospId:$HUI.combogrid('#_HospList').getValue()});
 								}
 							  }
      					},
@@ -207,12 +218,15 @@ function InitOrderItemQtyLimit()
 					  editor :{  
 							type:'combobox',  
 							options:{
-								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.PrescriptType&QueryName=GetPrescriptTypeList&HospId="+$HUI.combogrid('#_HospList').getValue(),
+								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.PrescriptType&QueryName=GetPrescriptTypeList"+"&rows=9999",
 								valueField:'PTRowid',
 								textField:'PTDescription',
 								required:true,
 								loadFilter: function(data){
 									return data['rows'];
+								},
+								onBeforeLoad:function(param){
+									$.extend(param,{HospId:$HUI.combogrid('#_HospList').getValue()});
 								}
 							  }
      					  },
@@ -242,7 +256,7 @@ function InitOrderItemQtyLimit()
 		singleSelect : true,
 		fitColumns : true,
 		autoRowHeight : false,
-		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.OrderItemQtyLimit&QueryName=GetPAADMPrescTypeList&HospId="+$HUI.combogrid('#_HospList').getValue(),
+		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.OrderItemQtyLimit&QueryName=GetPAADMPrescTypeList",
 		loadMsg : '加载中..',  
 		pagination : true,  //是否分页
 		rownumbers : true,  //
@@ -266,6 +280,10 @@ function InitOrderItemQtyLimit()
        onLoadSuccess:function(data){
 	       editRow = undefined;
 	       RowBillType="";
+	   },
+	   onBeforeLoad:function(param){
+		   $('#tabOrderItemQtyLimit').datagrid('unselectAll');
+		   param = $.extend(param,{HospId:$HUI.combogrid('#_HospList').getValue()});
 	   }
 	});
 }

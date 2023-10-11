@@ -94,7 +94,7 @@ function InitReport(recordId)
 function SaveReport(flag)
 {
 	if($('#PatName').val()==""){
-		$.messager.alert("提示:","患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！");	
+		$.messager.alert($g("提示:"),$g("患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！"));	
 		return false;
 	}
 	var falltype=0;
@@ -104,7 +104,7 @@ function SaveReport(flag)
 		}
 	})
 	if(falltype==""){
-		$.messager.alert("提示:","【发生类型】不能为空！");	
+		$.messager.alert($g("提示:"),$g("【发生类型】不能为空！"));	
 		return false;
 	}
 	///保存前,对页面必填项进行检查
@@ -138,7 +138,7 @@ function checkother(){
 			}
 		})
 		if (PatReasonList==""){
-			$.messager.alert("提示:","【发生原因(可多选)】勾选'患者因素'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),$g("【发生原因(可多选)】勾选'患者因素'，请勾选相应内容！"));	
 			return false;
 		}
 	}
@@ -151,7 +151,7 @@ function checkother(){
 		}
 	})
 	if(PatReasonoth==-1){
-		$.messager.alert("提示:","【发生原因(可多选)】勾选'患者因素  其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【发生原因(可多选)】勾选'患者因素  其他'，请填写内容！"));	
 		return false;
 	}
 
@@ -169,7 +169,7 @@ function checkother(){
 			}
 		})
 		if (DrugReasonList==""){
-			$.messager.alert("提示:","【发生原因(可多选)】勾选'药物因素'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),$g("【发生原因(可多选)】勾选'药物因素'，请勾选相应内容！"));	
 			return false;
 		}
 	}
@@ -182,7 +182,7 @@ function checkother(){
 		}
 	})
 	if(DrugReasonoth==-1){
-		$.messager.alert("提示:","【发生原因(可多选)】勾选'药物因素  其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【发生原因(可多选)】勾选'药物因素  其他'，请填写内容！"));	
 		return false;
 	}
 
@@ -200,7 +200,7 @@ function checkother(){
 			}
 		})
 		if (ManageReasonList==""){
-			$.messager.alert("提示:","【发生原因(可多选)】勾选'管理因素'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),$g("【发生原因(可多选)】勾选'管理因素'，请勾选相应内容！"));	
 			return false;
 		}
 	}
@@ -213,7 +213,7 @@ function checkother(){
 		}
 	})
 	if(ManageReasonoth==-1){
-		$.messager.alert("提示:","【发生原因(可多选)】勾选'管理因素  其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【发生原因(可多选)】勾选'管理因素  其他'，请填写内容！"));	
 		return false;
 	}
 	//发生原因(可多选)  其他因素  
@@ -226,7 +226,7 @@ function checkother(){
 		}
 	})
 	if(OccurReasonoth==-1){
-		$.messager.alert("提示:","【发生原因(可多选)】勾选'其他因素'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【发生原因(可多选)】勾选'其他因素'，请填写内容！"));	
 		return false;
 	}
 	
@@ -240,7 +240,7 @@ function checkother(){
 		}
 	})
 	if(DiscoverManoth==-1){
-		$.messager.alert("提示:","【发现人】勾选'其他人员'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【发现人】勾选'其他人员'，请填写内容！"));	
 		return false;
 	}
 	
@@ -258,7 +258,7 @@ function checkother(){
 			}
 		})
 		if (FDResultList==""){
-			$.messager.alert("提示:","【跌倒/坠床事件造成的结果】勾选'患者住院天数'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),$g("【跌倒/坠床事件造成的结果】勾选'患者住院天数'，请勾选相应内容！"));	
 			return false;
 		}
 	}
@@ -272,7 +272,7 @@ function checkother(){
 		}
 	})
 	if(FDResultoth==-1){
-		$.messager.alert("提示:","【跌倒/坠床事件造成的结果】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【跌倒/坠床事件造成的结果】勾选'其他'，请填写内容！"));	
 		return false;
 	}
 	
@@ -290,7 +290,7 @@ function checkother(){
 			}
 		})
 		if (PatEventProList==""){
-			$.messager.alert("提示:","【患者意外事件处理经过】勾选'立即通知'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),$g("【患者意外事件处理经过】勾选'立即通知'，请勾选相应内容！"));	
 			return false;
 		}
 	}
@@ -310,11 +310,11 @@ function checkother(){
 		}
 	})
 	if(PatEventProoth==-1){
-		$.messager.alert("提示:","【患者意外事件处理经过】勾选'医疗或护理措施'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【患者意外事件处理经过】勾选'医疗或护理措施'，请填写内容！"));	
 		return false;
 	}
 	if(PatEventProoth==-2){
-		$.messager.alert("提示:","【患者意外事件处理经过】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【患者意外事件处理经过】勾选'其他'，请填写内容！"));	
 		return false;
 	}
 	
@@ -408,23 +408,7 @@ function InitCheckRadio(){
 }
 //时间 数字校验
 function CheckTimeorNum(){
-	//入院时ADL得分
-	chknum("PatAdmADLScore",1,0,100);
-	$('#PatAdmADLScore').live("keyup",function(){
-		RepSetRead("PatSelfCareAbility-","radio",0);  //自我照顾能力
-		if((this.value>100)||(this.value=="")){
-			$("input[type=radio][id^='PatSelfCareAbility-']").removeAttr("checked");
-		}else if((this.value>40)||(this.value<100)){
-			$("input[type=radio][id^='PatSelfCareAbility-94346']").click();	
-		}
-		if(((this.value>0)||(this.value==0))&&((this.value<40)||(this.value==40))&&(this.value!="")){
-			$("input[type=radio][id^='PatSelfCareAbility-94347']").click();	
-		}
-		if(this.value==100){
-			$("input[type=radio][id^='PatSelfCareAbility-94345']").click();	
-		}
-		RepSetRead("PatSelfCareAbility-","radio",1);  //自我照顾能力
-	})
+	
 }
 
 //根据科室1查询科室2   2018-01-15

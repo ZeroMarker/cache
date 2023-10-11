@@ -54,7 +54,8 @@ function InitviewScreenEvent(obj){
 			width:1320,
 			height:'95%',
 			onBeforeClose:function(){
-				window.location.reload();  //刷新当前界面
+				//window.location.reload();  //刷新当前界面
+				obj.InvQueryLoad();
 			} 
 		});
 	}
@@ -73,7 +74,8 @@ function InitviewScreenEvent(obj){
 			width:1320,
 			height:'95%',
 			onBeforeClose:function(){
-				window.location.reload();  //刷新当前界面
+				//window.location.reload();  //刷新当前界面
+				obj.InvQueryLoad();
 			} 
 		});
 	}

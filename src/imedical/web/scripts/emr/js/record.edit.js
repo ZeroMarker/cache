@@ -22,8 +22,8 @@ function resizeWset()
 	$('#layout').layout('resize');	
 }
 
-//关闭病历页面事件
-function savePrompt(instanceID)
+//关闭病历页面事件,saveType为保存操作类型(同步或异步),默认异步
+function savePrompt(instanceID, saveType)
 {
 	var returnValues = "";
 	///退出保存检查
@@ -47,7 +47,7 @@ function savePrompt(instanceID)
 			}
 			if (returnValues == "save")
 			{
-				saveDocument();
+				saveDocument(saveType);
 			}
 			else if (returnValues == "cancel")
 			{

@@ -7,10 +7,20 @@ var PageLogicObj={
 	m_PreCardLeaving:"",
 	m_DepId:"",
 	m_searchDetpt:"",
-	dw:$(window).width()-200,
+	dw:$(window).width()-100,
 	dh:$(window).height()-100,
-	m_DeptStr:""
+	m_TrShowFlag: 1,			// 1 显示所有时段；0 显示可用时段
+	m_DeptStr:"",
+	m_MouseoverId: "",			// 当前 show popover 的 mouseover id
+	m_PopoverId: "",				// 当前 show popover 的 id
+	m_MarkPopoverTrigger:"click"			//分时段浮动窗口展示模式,click:点击弹出，hover:鼠标移入时弹出（使用效果不太好）
 };
+if (websys_isIE==true) {
+	 var script = document.createElement('script');
+	 script.type = 'text/javaScript';
+	 script.src = '../scripts/dhcdoc/tools/bluebird.min.js';  // bluebird 文件地址
+	 document.getElementsByTagName('head')[0].appendChild(script);
+}
 $(function(){
 	//页面元素初始化
 	PageHandle();
@@ -20,7 +30,15 @@ $(function(){
 	InitEvent();
 });
 function Init(){
-	$("#DeptList").css('height',$(window).height()-355);
+	if (HISUIStyleCode=="blue"){
+		$("#DeptList").css('height',$(window).height()-395);
+		}else{
+	$("#DeptList").css('height',$(window).height()-415);
+		$("#timerangeclass").removeClass('timerange-div');
+		$("#timerangeclass").addClass('timerange-div-lite');
+		$("#MarkListShowModeclass").css('margin',"14px");
+		$(".locinfo-div").css('margin',"14px");
+	}
 	PageLogicObj.m_selectedMarkListDataGrid=InitselectedMarkListDataGrid();
 	PageLogicObj.m_curDayRegListDataGrid=curDayRegListDataGrid();
 	//PageLogicObj.m_MarkListDataGrid=MarkListDataGrid();
@@ -109,6 +127,7 @@ function BodykeydownHandler(e){
 	if (keyCode==37){
 		//左
 		var nextIndex=parseInt(selCardIndex)-1;
+		if (isNaN(nextIndex)||(nextIndex<0)) return true
 		if (nextIndex<0) return true
 		if (selCardIndex!=""){
 			$(".markcard-select").removeClass("markcard-select");
@@ -120,6 +139,7 @@ function BodykeydownHandler(e){
 		var width=$("#MarkListPanel").width();
 		var RowNumber=Math.floor(width/200);
 		var nextIndex=parseInt(selCardIndex)-parseInt(RowNumber);
+		if (isNaN(nextIndex)||(nextIndex<0)) return true
 		if (nextIndex<0) return true;
 		$(".markcard-select").removeClass("markcard-select");
 		$("#"+nextIndex+"-marklist-card").addClass("markcard-select");
@@ -127,6 +147,7 @@ function BodykeydownHandler(e){
 	}else if(keyCode==39){
 		//右
 		var nextIndex=parseInt(selCardIndex)+1;
+		if (isNaN(nextIndex)||(nextIndex<0)) return true
 		if (nextIndex>=($(".marklist-card").length)-1) return true;
 		$(".markcard-select").removeClass("markcard-select");
 		$("#"+nextIndex+"-marklist-card").addClass("markcard-select");
@@ -137,6 +158,7 @@ function BodykeydownHandler(e){
 		var width=$("#MarkListPanel").width();
 		var RowNumber=Math.floor(width/200);
 		var nextIndex=parseInt(selCardIndex)+parseInt(RowNumber);
+		if (isNaN(nextIndex)||(nextIndex<0)) return true
 		if (nextIndex>=($(".marklist-card").length)-1) return true;
 		$(".markcard-select").removeClass("markcard-select");
 		$("#"+nextIndex+"-marklist-card").addClass("markcard-select");
@@ -183,10 +205,16 @@ function InitselectedMarkListDataGrid(){
 		},
 		{field:'TabASRowId',hidden:true,title:''},
 		{field:'TabDeptDesc',title:'科室',width:140},
-		{field:'TabMarkDesc',title:'医生',width:140},
+		{field:'TabMarkDesc',title:'医生',width:140,formatter: function(value,row,index){
+				var btn = value
+				if ((row.TabClinicGroupDesc!="")&&(row.TabClinicGroupDr!="")&&(btn.indexOf(row.TabClinicGroupDesc)<0)) btn=btn+"<span style='color:red'>("+row.TabClinicGroupDesc+")</span>"
+				return btn;
+			}},
 		{field:'TabSeqNo',title:'诊号',width:50},
 		{field:'TabPrice',title:'价格',width:50},
 		{field:'TabAppDate',title:'就诊日期',width:100},
+		{field:'TabClinicGroupDesc',title:'专业组',width:80},
+		{field:'TabClinicGroupDr',title:'ClinicGroupDr',width:80,hidden:true},
 		{field:'TabDeptRowId',title:'',hidden:true},
 		{field:'TabPCLRowID',title:'',hidden:true},
 		{field:'TAPPTRowID',title:'',hidden:true},
@@ -195,7 +223,10 @@ function InitselectedMarkListDataGrid(){
 		{field:'TabReAdmFeeFlag',title:'',hidden:true},
 		{field:'TabHoliFee',title:'',hidden:true},
 		{field:'TabAppFee',title:'',hidden:true},
-		{field:'TabExamFee',title:'',hidden:true}
+		{field:'TabExamFee',title:'',hidden:true},
+		{field:'TabTimeRange',title:'时段',width:100,styler:function(value,row,index){
+			return "font-weight:bold;"
+		}},
     ]]
 	var selectedMarkListDataGrid=$("#selectedMarkList").datagrid({
 		fit : true,
@@ -225,7 +256,9 @@ function curDayRegListDataGrid(){
 		{field:'AdmId',hidden:true,title:''},
 		{field:'Dept',title:'科室',width:140},
 		{field:'Doctor',title:'号别',width:100},
-		{field:'Tph',title:'诊号',width:80}
+		{field:'Tph',title:'诊号',width:80},
+		{field:'RegfeeDate',title:'挂号日期',width:120},
+		{field:'UserName',title:'操作员',width:80}
     ]]
 	var curDayRegListDataGrid=$("#curDayRegList").datagrid({
 		fit : true,
@@ -248,8 +281,13 @@ function LoadTimeRange(){
 		dataType:"text",
 		Flag:1
 	},function(Data){
+		if (HISUIStyleCode=="blue"){
 	    var templ=$("#timerange-tmp");
 	    var panel=$(".timerange-div");
+		}else{
+		var templ=$("#timerange-tmp");
+	    var panel=$(".timerange-div-lite");	
+			}
 	    var tool=templ.clone();
 		 tool.removeAttr("style");
 		 tool.removeAttr("id");
@@ -266,7 +304,7 @@ function LoadTimeRange(){
 			 var onedata=Data.split("^")[i];
 			 var id=onedata.split(String.fromCharCode(1))[0];
 			 id=id+"-TimeRange"
-			 var text=onedata.split(String.fromCharCode(1))[1].split("-")[0];
+			 var text=onedata.split(String.fromCharCode(1))[1].split(String.fromCharCode(2))[0];
 			 var tool=templ.clone();
 			 tool.removeAttr("style");
 			 tool.removeAttr("id");
@@ -283,7 +321,7 @@ function LoadPayMode(){
 		QueryName:"ReadGSINSPMList",
 		GPRowID:session['LOGON.GROUPID'],
 		HospID:session['LOGON.HOSPID'],
-		TypeFlag:"",
+		TypeFlag:"REG",
 		rows:9999
 	},function(Data){
 		var cbox = $HUI.combobox("#PayMode", {
@@ -301,27 +339,42 @@ function SetDefaultTimeRange(){
 		MethodName:"GetCurrentTimeRange",
 		dataType:"text"
 	},false);*/
-	$(".seltimerange").removeClass("seltimerange");
-	$("#"+defaultTimeRange+"-TimeRange").addClass("seltimerange");
+	if (HISUIStyleCode=="blue"){
+		$(".seltimerange").removeClass("seltimerange");
+		$("#"+defaultTimeRange+"-TimeRange").addClass("seltimerange");
+	}else{
+		$(".seltimerange-lite").removeClass("seltimerange-lite");
+		$("#"+defaultTimeRange+"-TimeRange").addClass("seltimerange-lite");
+		}
 	$("a[id$='TimeRange']").click(TimeRangeChange);
 }
 function TimeRangeChange(e){
+	if (HISUIStyleCode=="blue"){
 	$(".seltimerange").removeClass("seltimerange");
 	var id=e.currentTarget.id;
 	$("#"+id).addClass("seltimerange");
+	}else{
+	$(".seltimerange-lite").removeClass("seltimerange-lite");
+	var id=e.currentTarget.id;
+	$("#"+id).addClass("seltimerange-lite");	
+		}
 	LoadMarkList();
 }
 function LoadMarkList(){
 	var DepRowId=PageLogicObj.m_DepId;
 	var AppDate="";
 	var PatientID=$("#PatientID").val();
-	var TimeRangeRowId=$(".seltimerange")[0].id.split("-")[0];
+	if (HISUIStyleCode=="blue"){
+		var TimeRangeRowId=$(".seltimerange")[0].id.split("-")[0];
+	}else{
+		var TimeRangeRowId=$(".seltimerange-lite")[0].id.split("-")[0];
+		}
 	if (TimeRangeRowId=="ALL") TimeRangeRowId="";
 	var DocRowId="";
 	var ClinicGroupRowId=""; //亚专业
 	var ShowStopScheFlag=""; //包含已停诊
 	var RegConDisId="";
-	var p1=DepRowId+"^"+session['LOGON.USERID']+"^"+AppDate+"^"+PatientID+"^"+TimeRangeRowId+"^"+DocRowId+"^"+session['LOGON.GROUPID']+"^^^"+TimeRangeRowId+"^"+ClinicGroupRowId+"^"+ShowStopScheFlag+"^"+RegConDisId;
+	var p1=DepRowId+"^"+session['LOGON.USERID']+"^"+AppDate+"^"+PatientID+"^"+TimeRangeRowId+"^"+DocRowId+"^"+session['LOGON.GROUPID']+"^^^"+TimeRangeRowId+"^"+ClinicGroupRowId+"^"+ShowStopScheFlag+"^"+RegConDisId+"^"+session['LOGON.HOSPID'];
 	$.cm({
 		ClassName:"web.DHCOPAdmReg", 
 		QueryName:"OPDocList",
@@ -329,6 +382,7 @@ function LoadMarkList(){
 		rows:99999
 	},function(GridData){
 		$("#MarkListPanel").removeClass('marklist-card-panel');
+		DestoryPannelPopover();
 		var $btntext=$("#MarkListShowMode .l-btn-text")[0];
 		var text=$btntext.innerText;
 		if (text.indexOf("视图")>=0){
@@ -373,17 +427,27 @@ function LoadMarkListCardData(GridData){
 		 $($(tool).find("span")[0]).addClass("timerange-span-solid-"+colorIndex);
 		 $($(tool).find("span")[1]).html(oneData["TimeRange"]).addClass("timerange-span-dotted-"+colorIndex);
 		 if (i==0){
-			 $("#"+id).addClass("markcard-select");
-			 setTimeout(function(){
-				 SetMarkCardFocus(id);
-			 });
+			(function (id) {
+				$("#"+id).addClass("markcard-select");
+				setTimeout(function(){
+					SetMarkCardFocus(id);
+				});
+			})(id);
 		 }
+		
 		var className="marklist-card";
+		if(oneData["NoLimitLoadFlag"]=="Y"){
+			className="marklist-card-fastsche";
+			if ((+oneData["AvailSeqNoStr"]==0)&&(+oneData["AvailAddSeqNoStr"]==0)&&(ServerObj.SeqNoMode=='')){
+				className="marklist-card-invalid";
+			}
+		}else{
+			if ((+oneData["AvailSeqNoStr"]==0)&&(+oneData["AvailAddSeqNoStr"]==0)&&(ServerObj.SeqNoMode=='')){
+				className="marklist-card-invalid";
+			}
+		}
 		if (oneData["ScheduleStatus"]=="停诊"){
 			className="marklist-card-stop";
-		}
-		if ((oneData["AvailSeqNoStr"]=="")&&(oneData["AvailAddSeqNoStr"]=="")&&(ServerObj.SeqNoMode=='')){
-			className="marklist-card-invalid";
 		}
 		var valbox = $HUI.panel("#"+id,{
 			width:200,
@@ -397,28 +461,12 @@ function LoadMarkListCardData(GridData){
 		var id=e.currentTarget.id;
 		$(".markcard-hover").removeClass("markcard-hover");
 		$("#"+id).addClass("markcard-hover");
-		//20180702
-		//浮动内容
-		var dataStr=$($("#"+id).find("div")[8]).html();
-			var jsonData=JSON.parse(dataStr);
-			var HTML=GetPannelHTML(jsonData,id);
-			if (HTML.innerHTML==""){return;}
-			$("#"+id).popover({
-				width:HTML.width,
-				height:HTML.height,
-				title:HTML.Title,
-				content:HTML.innerHTML,
-				closeable:HTML.closeable,
-				trigger:'hover',
-				placement:'auto', //bottom-left
-				onShow:function(){
-						if (typeof HTML.CallFunction == "function"){
-							HTML.CallFunction.call();
-						}
-				}
-			});
-			$("#"+id).popover('show');
-		//20180702
+		if (PageLogicObj.m_MarkPopoverTrigger=="hover"){
+			DestoryPannelPopover();
+			try{
+				InitMarkListRowPopover({rowIndex:"",markCardID:id,Show:true})
+			}catch(e){}
+		}
 	}).mouseleave(function(e){
 		$(".markcard-hover").removeClass("markcard-hover");
 	}).dblclick(function(e){
@@ -429,7 +477,16 @@ function LoadMarkListCardData(GridData){
 		var dataStr=$($("#"+id).find("div")[8]).html();
 		var jsonData=JSON.parse(dataStr);
 		MarkListDBClick(jsonData);
+	}).click(function(e){
+		var id=e.currentTarget.id;
+		$(".markcard-select").removeClass("markcard-select");
+		$("#"+id).addClass("markcard-select");
+		SetMarkCardFocus(id);
 	})
+	if (PageLogicObj.m_MouseoverId != "") {
+		// 切换 popover switch 按钮时，手动触发 mouseover
+		$("#" + PageLogicObj.m_MouseoverId).mouseover()
+	}
 }
 ///获取动态写入的HTML代码
 /*function GetPannelHTML(jsonData,LinkID){
@@ -477,25 +534,34 @@ function LoadMarkListCardData(GridData){
 		"height":height
 	}
 }
-function mouserover(){
-}
-function mouserout(){
-}
-function tdclick(){
+*/
+function SetMarkCardFocus(id){
+	//$("#"+id).panel().focus();
+	DestoryPannelPopover();
+	$("#"+id).parent().focus();
+	InitMarkListRowPopover({rowIndex:"",markCardID:id,Show:true});
 }
 function dbtdclick(obj){
 	var id=obj.id;
+	var $btntext=$("#MarkListShowMode .l-btn-text")[0];
 	var MarkCardID=id.split("_table_")[0];
-	var SeqNo=id.split("_table_")[1];
-	var dataStr=$($("#"+MarkCardID).find("div")[8]).html();
-	var jsonData=JSON.parse(dataStr);
-	jsonData['SeqNo']=SeqNo;
+	var text=$btntext.innerText;
+	if (text.indexOf("视图")>=0){
+		var tabTRId=id.split("_table_")[0];
+		var index=tabTRId.split("-")[tabTRId.split("-").length-1];
+		var jsonData=$.extend({},$("#MarkList").datagrid('getRows')[index]);
+		var Time=id.split("_table_")[1];
+		jsonData['TimeRange']=Time;
+	}else{
+		//var SeqNo=id.split("_table_")[1];
+		var dataStr=$($("#"+MarkCardID).find("div")[8]).html();
+		var jsonData=JSON.parse(dataStr);
+		var Time=id.split("_table_")[1];
+		jsonData['TimeRange']=Time;
+	}
+	//jsonData['SeqNo']=SeqNo;
 	MarkListDBClick(jsonData);
-	$("#"+MarkCardID).webuiPopover('hide');
-}*/
-function SetMarkCardFocus(id){
-	//$("#"+id).panel().focus();
-	$("#"+id).parent().focus();
+	$("#"+MarkCardID).popover('hide');
 }
 function LoadMarkListTabData(GridData){
 	PageLogicObj.m_MarkListDataGrid.datagrid('uncheckAll');
@@ -506,6 +572,8 @@ function LoadMarkListTabData(GridData){
 	}
 }
 function MarkListShowModeClickHandle(e){
+	DestoryPannelPopover();
+	$("#MarkListShowMode").blur();
 	//切换视图模式时html会清空，需重现初始化表格
 	PageLogicObj.m_MarkListDataGrid="";
 	var $btntext=$("#MarkListShowMode .l-btn-text")[0];
@@ -631,12 +699,20 @@ function MarkListDataGrid(){
 	var Columns=[[ 
 		{field:'ASRowId',hidden:true,title:''},
 		{field:'MarkDesc',title:'医生',width:120,
+			formatter: function(value,row,index){
+				var btn = value
+				if ((row.ClinicGroupDr!="")&&(row.ClinicGroupDesc!="")) btn=btn+"<span style='color:red'>("+row.ClinicGroupDesc+")</span>"
+				return btn;
+			},
 			styler: function(value,row,index){
-				if ((row["AvailSeqNoStr"]=="")&&(row["AvailAddSeqNoStr"]=="")&&(ServerObj.SeqNoMode=='')){
+				if ((+row["AvailSeqNoStr"]==0)&&(+row["AvailAddSeqNoStr"]==0)&&(ServerObj.SeqNoMode=='')){
 					return 'color: red;';
+				}else if(row["NoLimitLoadFlag"]=="Y"){
+					return 'color: green;';
 				}
 			}
 		},
+		{field:'NoLimitLoadFlag',title:'便捷排班标识',hidden:true},
 		{field:'DepDesc',title:'科室',width:120},
 		{field:'SessionTypeDesc',title:'挂号职称',width:80},
 		{field:'AvailSeqNoStr',title:'剩号',width:80},
@@ -654,16 +730,20 @@ function MarkListDataGrid(){
 		{field:'AppFee',title:'预约费',width:70},
 		{field:'AvailAddSeqNoStr',title:'加号',width:80},
 		{field:'AvailNorSeqNoStr',title:'现场剩号',width:80},
-		{field:'ClinicGroupDesc',title:'亚专业',width:80},
+		{field:'ClinicGroupDesc',title:'专业组',width:80},
 		{field:'HoliFee',title:'假日费',width:70},
 		{field:'AppFeeDr',title:'其他费',width:70}, //OtherFee原先取的字段是AppFeeDr？
+		{field:'ReCheckFee',title:'复诊费',width:70},
 		{field:'BorghAlertInfo',title:'提示信息',width:80,showTip:true},
 		{field:'RoomDesc',title:'诊室',width:80},
 		{field:'ScheduleDateWeek',title:'星期',width:80},
 		{field:'ScheduleStatus',title:'排班状态',width:80},
+		{field:'AdmWaitSum',title:'当前待诊人数',width:95},
+		{field:'NoLimitLoadFlag',title:'便捷排班标识',hidden:true},
 		{field:'DepDr',hidden:true,title:''},
 		{field:'MarkDr',hidden:true,title:''},
-		{field:'RegFeeDr',hidden:true,title:''}
+		{field:'RegFeeDr',hidden:true,title:''},
+		{field:'ClinicGroupDr',hidden:true,title:''}
     ]]
 	var MarkListDataGrid=$("#MarkList").datagrid({
 		fit : true,
@@ -673,21 +753,33 @@ function MarkListDataGrid(){
 		fitColumns : false,
 		autoRowHeight : false,
 		pagination : false,  
-		idField:'ASRowId',
+		idField:'ID',
 		columns :Columns,
 		rowStyler: function(index,row){
 			if (row["ScheduleStatus"]=="停诊"){
 				return 'background-color:red;'
 			}
-			if ((row["AvailSeqNoStr"]=="")&&(row["AvailAddSeqNoStr"]=="")&&(ServerObj.SeqNoMode=='')){
+			var AvailSeqNoStr=+row["AvailSeqNoStr"];
+			var AvailAddSeqNoStr=+row["AvailAddSeqNoStr"];
+			var AvailNorSeqNoStr=+row["AvailNorSeqNoStr"]
+			if ((AvailSeqNoStr==0)&&(AvailAddSeqNoStr==0)&&(ServerObj.SeqNoMode=='')){
 				return 'font-style: italic;';
 			}
-			if ((row["AvailNorSeqNoStr"]=="")&&(ServerObj.SeqNoMode=='1')){
+			if ((AvailNorSeqNoStr==0)&&(ServerObj.SeqNoMode=='1')){
 				return 'font-style: italic;';
 			}
 		},
 		onDblClickRow:function(index, row){
 			MarkListDBClick(row);
+		},
+		onSelect:function(index, row){
+			if (PageLogicObj.m_MarkPopoverTrigger=="click"){
+				DestoryPannelPopover();
+				try{
+					InitMarkListRowPopover({rowIndex:index,markCardID:"",Show:true})
+				}catch(e){}
+			}
+			
 		},
 		onLoadSuccess:function(data){
 			if(data["rows"].length>0){
@@ -696,51 +788,126 @@ function MarkListDataGrid(){
 				//设置焦点,否则在选中第一行后监听不到上下键事件
 				$("#MarkList").datagrid('getPanel').panel('panel').focus();
 			}
-			/*$(".datagrid-row").mouseover(function(value){
-	            //获取当前行的唯一标识field
-	            var uniqueRow = $(this).children("td").eq(0).text();
-	            var loadData = PageLogicObj.m_MarkListDataGrid.datagrid("getData").rows;
-	            var index = 0;
-	            var currentRowData = null,currentRowIndex=null;
-	            //获取选中行绑定的数据以及index
-	            for(index; index < loadData.length; index++){
-	                currentRowData = loadData[index];
-	                if(currentRowData.ASRowId == uniqueRow){
-		                currentRowIndex=index;
-	                    break;
-	                }
-	            }
-	            //判断是否为选中行的数据
-	            if(currentRowData.ASRowId != uniqueRow){
-	                return;
-	            }
-	            //进行针对该行数据的其他处理
-	            var HTML=GetPannelHTML(currentRowData,this.id);
-				if (HTML.innerHTML==""){return;}
-				$("#"+this.id).webuiPopover({
-					width:HTML.width,
-					height:HTML.height,
-					title:HTML.Title,
-					content:HTML.innerHTML,
-					closeable:true,
-					trigger:'hover',
-					placement:'bottom-right',
-					onShow:function(){
-						if (typeof HTML.CallFunction == "function"){
-							HTML.CallFunction.call();
-						}
-					}
-				});
-				$("#"+this.id).webuiPopover('show');
-	        });
-	        $(".datagrid-row").mouseout(function(value){
-	            //对鼠标所在行数据的获取与mouseover的实现类似
-	            //$(this).webuiPopover('hide');
-	        });*/
+			if (PageLogicObj.m_MarkPopoverTrigger=="hover"){
+				//鼠标滑动触发浮动窗
+				InitMarkListRowMouseHandle();
+			}
+			
 		}
 	}).datagrid("keyCtr"); 
 	return MarkListDataGrid;
 }
+// 初始化行的鼠标浮动事件，用于展示分时段或挂号详情信息
+function InitMarkListRowMouseHandle() {
+	if ((ServerObj.ParaRegType!="APP")&&(ServerObj.OPRegistShowTimeRange!="1")){
+		return false;
+	}
+	
+	var _datagridRow=$("#MarkList").datagrid("options").finder.getTr($("#MarkList")[0],"","allbody",2)
+	_datagridRow.mouseover(function(e,value){
+		DestoryPannelPopover();
+		var _rowIndex=parseInt($(this).attr("datagrid-row-index"));
+		InitMarkListRowPopover({rowIndex:_rowIndex,markCardID:"",Show:true});
+	}).mouseout(function(value){
+		//对鼠标所在行数据的获取与mouseover的实现类似
+		//$(this).popover('hide');
+	});
+	if (PageLogicObj.m_MouseoverId != "") {
+		// 切换 popover switch 按钮时，手动触发 mouseover
+		$("#" + PageLogicObj.m_MouseoverId).mouseover()
+	}
+	
+}
+/// 销毁列表\卡片模式浮动出来的所有弹窗
+function DestoryPannelPopover(){
+	try{$("#switch-btn").tooltip("destroy");}catch(e){}
+	//列表模式下的弹窗
+	try{
+		var _datagridRow=$("#MarkList").datagrid("options").finder.getTr($("#MarkList")[0],"","allbody",2);
+		_datagridRow.each(function(index,obj){
+			var popoverID=$(obj).attr("id");
+			try{
+				//$("#"+popoverID).popover("hide");
+				$("#"+popoverID).popover("destroy");
+			}catch(e){}
+		})
+	}catch(e){}
+	try{
+		$("[id$=-marklist-card]").each(function(index,obj){
+			var popoverID=$(obj).attr("id");
+			try{
+				//$("#"+popoverID).popover("hide");
+				$("#"+popoverID).popover("destroy");
+			}catch(e){}
+		})
+	}catch(e){}
+}
+// 初始化列表\卡片模式的浮动窗
+function InitMarkListRowPopover(param) {
+	var rowIndex=param.rowIndex;
+	var markCardID=param.markCardID;
+	var Show=param.Show;		//立即显示
+	if ((rowIndex!=="")){
+		//列表模式
+		var popoverID=$("#MarkList").datagrid("options").finder.getTr($("#MarkList")[0],rowIndex,"body",2).attr("id");
+		
+		var jsonData=$("#MarkList").datagrid("options").finder.getRow($("#MarkList")[0], rowIndex);
+		if (!jsonData){ return false; }
+		var MarkListShowMode="列表";
+		$("#MarkList").datagrid('getPanel').panel('panel').focus();	//防止丢失表格焦点
+	}else if (markCardID!=""){
+		//卡片模式
+		var popoverID=markCardID;
+		var dataStr=$($("#"+markCardID).find("div")[8]).html();
+		var jsonData=JSON.parse(dataStr);
+		var MarkListShowMode="视图";
+		$("#"+markCardID).parent().focus();
+	}else{
+		return false;
+	}
+	//进行针对该行数据的其他处理
+	var HTML=GetPannelHTML(jsonData,popoverID);
+	if (HTML.innerHTML==""){return;}
+	$("#"+popoverID).popover({
+		width:HTML.width,
+		height:HTML.height,
+		title:HTML.Title,
+		content:HTML.innerHTML,
+		closeable:HTML.closeable,
+		trigger:'manual',
+		placement:'auto', 
+		container:MarkListShowMode=="视图"?$("body"):$("#MarkInfoPanel"),
+		cache:false,
+		onShow:function(){
+			if (MarkListShowMode=="列表"){
+				if (HTML.closeable) {
+					$(".webui-popover").css({
+						'left':'250px'
+					});
+				}else{
+					$(".webui-popover").css({
+						//'left':'700px'
+						'left':'470px'
+					});
+				}
+			}
+			if (typeof HTML.CallFunction == "function"){
+				HTML.CallFunction.call();
+			}
+			var curPopoverId = $("#"+this.id).attr("data-target")
+			$.parser.parse($("#switch-btn").parent())
+			PageLogicObj.m_PopoverId = curPopoverId
+			PageLogicObj.m_MouseoverId = this.id
+		},
+		onHide: function(e, value) {
+			PageLogicObj.m_MouseoverId = ""
+		}
+	});
+	if (Show){
+		$("#"+popoverID).popover("show");
+	}
+}
+
 function CardNoKeydownHandler(e){
 	var key=websys_getKey(e);
 	if (key==13) {
@@ -844,40 +1011,94 @@ function SetPatientInfo(PatientNo,CardNo){
 function SetPatient_Sel(value){
 	try {  
 		var Patdetail=value.split("^");
+		var NeedAddPatInfo=Patdetail[32]
+		if (NeedAddPatInfo!=""){
+			$.messager.alert("提示","患者<font style='color:red'>"+NeedAddPatInfo+"</font>不能为空，需完善！","info",function(){
+				var CardNo=$("#CardNo").val();
+				var lnk = "doc.patientinfoupdate.hui.csp?CardNo="+CardNo;
+				if(typeof websys_writeMWToken=='function') lnk=websys_writeMWToken(lnk);
+				var $code ="<iframe width='99%' height='99%' scrolling='auto' frameborder='0' src='"+lnk+"'></iframe>" ;
+				createModalDialog("Project","修改患者信息", PageLogicObj.dw+150, PageLogicObj.dh,"icon-write-order","",$code,"");
+				$('#CardNo').focus();
+				Clear_click();
+			})
+			return false;
+		}
 		$("#Name").val(Patdetail[0]);
 		$("#Age").val(Patdetail[1]);
 		$("#Sex").val(Patdetail[2]);
 		//门诊病历号和住院病历号
 		$("#OPMRN").val(Patdetail[3]);
 		$("#IPMRN").val(Patdetail[4]);
+		$("#PatCat").val(Patdetail[5]);
+		$("#PatientID").val(Patdetail[6]);
+		$("#IDCardNo").val(Patdetail[7]);
+		$("#PatientNo").val(Patdetail[9]);
+		$("#AppBreakCount").val(Patdetail[10]);
 		//医保号
 		$("#PatYBCode").val(Patdetail[11]);
 		$("#TelH").val(Patdetail[21]);
 		$("#PAPERCountry").val(Patdetail[22]);
 		$("#Address").val(Patdetail[23]);
-		var PatCat=Patdetail[5];
-		$("#PatCat").val(PatCat);
-		if (PatCat==""){
-			$.messager.alert("提示","请补录病人类别!","info",function(){
-				var CardNo=$("#CardNo").val();
-				BClearHandle();
-				var lnk = "doc.patientinfoupdate.hui.csp?CardNo="+CardNo;
-				var $code ="<iframe width='100%' height='99%' scrolling='auto' frameborder='0' src='"+lnk+"'></iframe>" ;
-				createModalDialog("Project","修改患者信息", PageLogicObj.dw, PageLogicObj.dh,"icon-write-order","",$code,"");
-				$('#CardNo').focus();
-				return false();
+		var PatInIPAdmission=Patdetail[26];
+		var IsDeceased=Patdetail[27];
+		if (IsDeceased =="Y") {
+			$.messager.alert("提示","患者已故!","info",function(){
+				ClearPatInfo();
+				$("#CardNo").focus();
 			})
+			return false;
 		}
-		$("#PatientID").val(Patdetail[6]);
-		$("#IDCardNo").val(Patdetail[7]);
-		$("#PatientNo").val(Patdetail[9]);
-		$("#AppBreakCount").val(Patdetail[10]);
-		if (PageLogicObj.m_PreCardNo==""){
+		
+		var AgeLimitInfo=Patdetail[28];
+		var CheckObj={"TelNo":Patdetail[21],"IDTypeID":Patdetail[30],"IDCardNo":Patdetail[25]};
+		var RetObj=DHCWeb_IsTelOrMobile(CheckObj);
+		if ((AgeLimitInfo!="")||(RetObj.Flag!="0")){
+			AgeLimitInfo=AgeLimitInfo||RetObj.Desc;
+			$.messager.alert("提示",AgeLimitInfo,"info",function(){
+				var CardNo=$("#CardNo").val();
+				var lnk = "doc.patientinfoupdate.hui.csp?CardNo="+CardNo;
+				if(typeof websys_writeMWToken=='function') lnk=websys_writeMWToken(lnk);
+				var $code ="<iframe width='99%' height='99%' scrolling='auto' frameborder='0' src='"+lnk+"'></iframe>" ;
+				createModalDialog("Project","修改患者信息", PageLogicObj.dw+150, PageLogicObj.dh,"icon-write-order","",$code,"");
+				$('#CardNo').focus();
+				Clear_click();
+			})
+			return false;
+		}
+		if (PatInIPAdmission==1){
+			$.messager.alert("提示","患者正在住院!");
+			}
+		if ((PageLogicObj.m_PreCardNo=="")||(PageLogicObj.m_PreCardNo!=$("#CardNo").val())){
 			PageLogicObj.m_PreCardNo=$("#CardNo").val();
 			PageLogicObj.m_PreCardType=$("#CardTypeNew").val();
 			PageLogicObj.m_PreCardLeaving=$("#CardLeaving").val();
 		}
 		var PatientID=Patdetail[6];
+		var BillTypeData=$.cm({
+			ClassName:"web.DHCOPAdmReg",
+			MethodName:"GetBillTypeListBroker",
+			dataType:"text",
+			JSFunName:"GetBillTypeToHUIJson",
+			ListName:"",
+			PatientID:PatientID
+		},false);
+		var cbox = $HUI.combobox("#BillType", {
+				valueField: 'id',
+				textField: 'text', 
+				editable:true,
+				data: JSON.parse(BillTypeData),
+				onSelect:function(record){
+					//LoadRegConDisList();
+					$("#selectedMarkList").datagrid("uncheckAll");
+					var Data=$("#selectedMarkList").datagrid("getRows");
+					for (var i=Data.length-1;i>=0;i--){
+						$("#selectedMarkList").datagrid("selectRow",i);
+						DelSelMarkListRow();
+					}
+					LoadMarkList();
+				}
+		 });
 		//预约增加
 		var AppSerialNo=$("#AppSerialNo").val();
 		if (AppSerialNo==undefined) AppSerialNo="";
@@ -947,10 +1168,29 @@ function CheckPatientNo(){
     },false);
     var CardNo=CardNoStr.split("^")[0]
 	if (CardNo=="") {
-		$.messager.alert("提示","该登记号无对应卡号信息，请建卡！","info",function(){
-			$("#PatientNo").val(PatientNo);
-			$("#CardNo,#Name,#Sex,#Age").val(""); 
-		});
+		var PatientID=CardNoStr.split("^")[3];
+		if (PatientID=="") {
+			$.messager.alert("提示",PatientNo+" 该登记号无对应患者!","info",function(){
+				$("#PatientNo").val("").focus();
+			})
+		}else{
+			var UnitRegNo=$.cm({
+			    ClassName : "web.DHCOPAdmReg",
+			    MethodName : "GetUnitedRegNo",
+			    dataType:"text",
+			    PatientID:PatientID,
+		    },false);
+			if (UnitRegNo!=""){
+				$.messager.alert("提示",PatientNo+" 该登记号已被合并，保留登记号为<font style='color:red'>"+UnitRegNo+"</font>!","info",function(){
+					$("#PatientNo").val("").focus();
+				})
+				return false;
+			}
+			$.messager.alert("提示","该登记号无对应卡号信息，请建卡！","info",function(){
+				$("#PatientNo").val(PatientNo);
+				$("#CardNo,#Name,#Sex,#Age").val(""); 
+			});
+		}
 		return false;
 	}
 	$("#CardNo").val(CardNo);
@@ -1101,6 +1341,7 @@ function FindDeptChange(value,name){
 			matchLocArr.push({"value":DepID,"text":DepDesc});
 		}
 	}
+	DestoryPannelPopover();
 	if ((matchIndexArr.length==0)||(matchIndexArr.length>1)){
 		Obj.selectedIndex=-1;
 		PageLogicObj.m_DepId="";
@@ -1146,10 +1387,14 @@ function MarkListDBClick(row){
 		RegFee:row["RegFee"],
 		AppFee:row["AppFee"],
 		OtherFee:row["AppFeeDr"],
-		ReCheckFee:"",
+		ReCheckFee:row["ReCheckFee"],
 		TabFreeRegFlag:"",
 		TabFreeCheckFlag:"",
-		TabReAdmFeeFlag:""
+		TabReAdmFeeFlag:"",
+		StopRegFlag:row["StopRegFlag"],
+		TabTimeRange:row["TimeRange"],
+		TabClinicGroupDesc:row["ClinicGroupDesc"],
+		TabClinicGroupDr:row["ClinicGroupDr"]
 	}
 	if (AddBeforeUpdate(dataObj)==false) return false;
 	AddToSelectedMarkList(dataObj,true);
@@ -1176,7 +1421,10 @@ function AddToSelectedMarkList(dataObj,alertFlag){
 		TabReAdmFeeFlag: dataObj["TabReAdmFeeFlag"],
 		TabHoliFee: dataObj["HoliFee"],
 		TabAppFee: dataObj["AppFee"],
-		TabExamFee: dataObj["ExamFee"]
+		TabExamFee: dataObj["ExamFee"],
+		TabTimeRange:dataObj["TabTimeRange"],
+		TabClinicGroupDesc:dataObj["TabClinicGroupDesc"],
+		TabClinicGroupDr:dataObj["TabClinicGroupDr"]
 	});
 	if (alertFlag) {
 		$.messager.popover({msg: '已添加到号别列表!',type:'success',timeout: 2000});
@@ -1191,6 +1439,10 @@ function AddBeforeUpdate(dataObj){
 			$('#CardNo').focus();
 		});
 	   	return false;
+	}
+	if ((dataObj["StopRegFlag"]=="Y")&&(ServerObj.ParaRegType!="APP")) {
+		$.messager.alert("提示","该号别已停止挂号！");       				
+		return false;
 	}
 	if (!AddBeforeUpdateByASRowId(ASRowId)) return false;
 	if (ServerObj.ParaRegType!="APP"){
@@ -1208,13 +1460,22 @@ function AddBeforeUpdate(dataObj){
 		$.messager.alert("提示","所挂号重复,请重新选择!");
 		return false;
 	}
+	var ASRowIDStr=ASRowId
+	var Data=PageLogicObj.m_selectedMarkListDataGrid.datagrid("getData");
+	for (var j=0;j<Data["rows"].length;j++) {
+		var TabASRowId=Data["rows"][j]["TabASRowId"]; 
+		var TAPPTRowID=Data["rows"][j]["TAPPTRowID"];
+		if (TAPPTRowID==""){
+			ASRowIDStr=ASRowIDStr+"^"+TabASRowId
+		} 
+	}
 	//添加到行记录前进行检测
 	var Rtn=$.cm({
 		ClassName:"web.DHCOPAdmReg",
 		MethodName:"CheckBeforeReg",
 		dataType:"text",
 		ResRowId:ASRowId, PatientID:PatientID, APPTRowId:"",
-		CardTypeDr:$("#CardTypeRowID").val(),CardNo:$("#CardNo").val()
+		CardTypeDr:$("#CardTypeRowID").val(),CardNo:$("#CardNo").val(),ASRowIdStr:ASRowIDStr
 	},false);
 	var RtnArry=Rtn.split("^")
 	if (RtnArry[0]!=0){
@@ -1224,7 +1485,7 @@ function AddBeforeUpdate(dataObj){
 	//判断是否为复诊,如果是复诊价格可能会不同
 	var ReAdmFeeFlag=GetReAdmFeeFlag(PatientID,ASRowId);
 	dataObj["TabReAdmFeeFlag"]=ReAdmFeeFlag;
-	if ((ReAdmFeeFlag==1)&&((dataObj["ReCheckFee"]!="")&&(dataObj["ReCheckFee"]!=0))){dataObj["ExamFee"]=ReCheckFee}
+	if ((ReAdmFeeFlag==1)&&((dataObj["ReCheckFee"]!="")&&(dataObj["ReCheckFee"]!=0))){dataObj["ExamFee"]=dataObj["ReCheckFee"]}
 	var MRNoteFee=0;CardFee=0;
 	//是否是免挂号费或者诊查诊 界面checkbox选择?自动改变诊金金额 
 	var o=$HUI.checkbox('FreeCheck');
@@ -1361,6 +1622,7 @@ function Clear_click(){
 	ClearAllTableData("selectedMarkList");
 	var $btntext=$("#MarkListShowMode .l-btn-text")[0];
 	var text=$btntext.innerText;
+	DestoryPannelPopover();
 	if (text.indexOf("视图")>=0){
 		ClearAllTableData("MarkList");	
 	}else{
@@ -1399,182 +1661,425 @@ function UpdateClickHandler(){
 	var Data=PageLogicObj.m_selectedMarkListDataGrid.datagrid("getData");
 	if (Data["rows"].length==0){
 		$.messager.alert("提示","没有选择挂号信息!");
-			return false;
+		return false;
 	}
 	var BillAmount=$('#BillAmount').val(); 
+	var CardTypeRowID=$("#CardTypeRowID").val();
 	var CardNo=$('#CardNo').val(); 
 	//帐户RowId
 	var AccRowId=""; 
 	var PayModeCode=GetPayModeCode();
-	if (PayModeCode=="CPP") {
-		var CardTypeRowID=$("#CardTypeRowID").val();
-		if (CardTypeRowID!=""){
-			var myoptval=$.cm({
-				ClassName:"web.UDHCOPOtherLB",
-				MethodName:"ReadCardTypeDefineListBroker1",
-				dataType:"text",
-				myTypeID:CardTypeRowID
-			},false);
-			m_ReadCardMode=myoptval.split("^")[16];
-			m_CCMRowID=myoptval.split("^")[14];
-		}
-		var ren=DHCACC_CheckMCFPay(BillAmount,CardNo,"",CardTypeRowID);
-		var myary=ren.split("^");
-		if (myary[0]!='0'){
-			if (myary[0]=='-204'){$.messager.alert("提示","此用户的账户被冻结,不能办理支付,请找管理员处理!")}
-			if (myary[0]=='-205'){$.messager.alert("提示","帐户余额不足!")}
-			if (myary[0]=='-206'){$.messager.alert("提示","卡号码不一致,请使用原卡!")}
-			return false;
-		}else{
-			var AccRowId=myary[1];
-			var AccAmount=$('#AccAmount').val();
-			if ((AccRowId!="")&&(AccAmount=="")){
-				var AccmLeftBalance=$.cm({
-					ClassName:"web.DHCOPAdmReg",
-					MethodName:"GetAccmLeftBalance",
-					dataType:"text",
-					AccRowId:AccRowId
-				},false);
-				$('#AccAmount').val(AccmLeftBalance);
-			}
-		}
-	}	
+	if (PayModeCode =="") {
+		$.messager.alert("提示","请选择支付方式！");
+		return false;
+	}
 	//办理预约是否要预先分配号,取号的处理在同一界面吗
-	var AdmReason="";
+	var AdmReason=$('#BillType').combobox('getValue');
 	var UserID=session['LOGON.USERID'];
 	var GroupID=session['LOGON.GROUPID'];
 	var LocID=session['LOGON.CTLOCID'];
-	var AdmReason=$('#BillType').combobox('getValue');
 	var AdmType="" //DHCC_GetElementData('AdmType');
 	var RegConDisId="";
 	var DiagnosCatRowId="";
-	var RemoveRows=""
-  try {
-	for (var j=0;j<Data["rows"].length;j++) {
-		var TabPrice=Data["rows"][j]["TabPrice"]; 
-		var TabASRowId=Data["rows"][j]["TabASRowId"]; 
-		//此时的诊查费可能是复诊诊查费
-		var TabExamFee=Data["rows"][j]["TabExamFee"]; 
-		var TabHoliFee=Data["rows"][j]["TabHoliFee"]; 
-		var TabAppFee=Data["rows"][j]["TabAppFee"]; 
-		var TabQueueNo=Data["rows"][j]["TabSeqNo"];
-		if (TabQueueNo==undefined) TabQueueNo="";
-		var AppDate=Data["rows"][j]["TabAppDate"]; 
-		var TabReAdmFeeFlag=Data["rows"][j]["TabReAdmFeeFlag"]; 
-		//界面上传过来的免挂号费和免诊查费标记
-		var TabFreeRegFlag=Data["rows"][j]["TabFreeRegFlag"]; 
-		var TabFreeCheckFlag=Data["rows"][j]["TabFreeCheckFlag"]; 
-		//预约ID
-		var TAPPTRowID=Data["rows"][j]["TAPPTRowID"]; 
-		//急诊分级表
-		var TabPCLRowID=Data["rows"][j]["TabPCLRowID"];  
-		//是否传病历号
-		var TabMRFee="0";var TabCardFee="0"
-		//病历本费置收取1份
-		var o=$HUI.checkbox('#MedicalBook');
-		if ((o.getValue())&&(j==0)){TabMRFee="1"}
-		var o=$HUI.checkbox('#NeedCardFee');
-		if (o.getValue()){TabCardFee="1"}
-		//如果为复诊,且有诊查费,则重新设置穿入参数值
-		var TabReCheckFee=0;
-		if ((TabReAdmFeeFlag==1)&&((TabExamFee!="")&&(TabExamFee!=0))){		
-			TabReCheckFee=TabExamFee;
-			TabExamFee=0;
-		}
-	    var BLNo=0;     //是否传病历号标志?0不传病历号?1传病历号
-		var FeeStr=TabPrice+"||"+TabExamFee+"||"+TabHoliFee+"||"+TabAppFee+"||"+TabMRFee+"||"+TabReCheckFee+"||"+TabCardFee;
-		var ret=$.cm({
-			ClassName:"web.DHCOPAdmReg",
-			MethodName:"OPRegistBroker",
-			dataType:"text",
-			PatientID:PatientID, ASRowId:TabASRowId, AdmReason:AdmReason, QueueNo:TabQueueNo, FeeStr:FeeStr,
-			PayModeCode:PayModeCode, AccRowId:AccRowId, user:UserID, group:GroupID,
-			AdmType:AdmType, DiagnosCatRowId:DiagnosCatRowId, 
-			FreeRegFlag:TabFreeRegFlag,FreeCheckFlag:TabFreeCheckFlag,RegfeeRowId:"", InsuJoinStr:"",
-			DiscountFactor:"", TAPPTRowID:TAPPTRowID, 
-			UnBillFlag:"", TabPCLRowID:TabPCLRowID, ApptMethodCode:"", SourceType:"", RegConDisId:RegConDisId
-		},false);
-		var retarr=ret.split("$");	
-		if (retarr[0]=="0"){
-			//调病案接口函数,地坛医院只判断门诊病历号  此处走配置,是否调用病案接口?各地医保接口不一致?此处外接接口需要分离  090312
-			var PrintArr=retarr[1].split("^");
-			var EpisodeID=PrintArr[0];
-			var TabASRowId=PrintArr[22];
-			var RegfeeRowID=PrintArr[42];
-			var MedCodeArr=$.cm({
-				ClassName:"web.DHCOPAdmChang",
-				MethodName:"GetPatMedCode",
-				dataType:"text",
-				EpisodeID:EpisodeID
-			},false);
-			var MedCodeStr=MedCodeArr.split("^");
-			var DYOPMRN=MedCodeStr[0];
-			var DYIPMRN=MedCodeStr[1];
-			var SGMedicareCode1=MedCodeStr[2];
-			var SGMedicareCode2=MedCodeStr[3];
-			var PatientID=MedCodeStr[4];
-			//票据合计增加 
-			var ReceiptCount=$('#ReceiptCount').val();
-			ReceiptCount=parseInt(ReceiptCount)+1;
-			$('#ReceiptCount').val(ReceiptCount);
-			//打印挂号小条
-			PrintOut(j,retarr[1]);
-			NeedDelIndexArr.push(j);
-			$.messager.alert("提示","挂号成功!","info",function(){
-				Clear_click();
-				SetDefaultTimeRange();
-			});
-		}else{
-			var errmsg="";
-			if (retarr[0]=="-201")  errmsg="生成就诊记录失败!";
-			if (retarr[0]=="-202")  errmsg="取号不成功!";
-			if (retarr[0]=="-2121")  errmsg="更新预约状态失败!";
-			if (retarr[0]=="-2122")  errmsg="系统忙,请稍后重试!";
-			if (retarr[0]=="-206")  errmsg="插入挂号费医嘱失败!";
-			if (retarr[0]=="-207")  errmsg="插入诊查费医嘱失败!";
-			if (retarr[0]=="-208")  errmsg="插入假日费医嘱失败!";
-			if (retarr[0]=="-209")  errmsg="插入预约费医嘱失败!";
-			if (retarr[0]=="-210")  errmsg="计费失败!";
-			if (retarr[0]=="-211")  errmsg="插入挂号记录失败!";
-			if (retarr[0]=="-212")  errmsg="插入叫号队列失败!";
-			if (retarr[0]=="-301")  errmsg="超过每人每天可挂限额,不能再挂号或预约!";
-			if (retarr[0]=="-302")  errmsg="超过每人每天可挂相同号的限额!";
-			if (retarr[0]=="-303")  errmsg="超过每人每天可挂相同科室号的限额!";
-			if (retarr[0]=="-304")  errmsg="超过每人每天同时段同科室同医生限额!";
-			if (retarr[0]=="-401")  errmsg="还没有到挂号时间!";
-			if (retarr[0]=="-402")  errmsg="还未到预约时间!";
-			if (retarr[0]=="-403")  errmsg="还未到加号时间!";
-			if (retarr[0]=="-404")  errmsg="已经过了此排班记录出诊时间点!";
-			if (retarr[0]=="-2010") errmsg="更新医保挂号信息失败!";
-			if(errmsg=="") errmsg=retarr
-			var TabDepDesc=Data["rows"][j]["TabDeptDesc"];
-			var TabMarkDesc=Data["rows"][j]["TabMarkDesc"];
-			var ErrInfo="挂号记录科室:【"+TabDepDesc+"】,号别:【"+TabMarkDesc+"】,就诊日期:【"+AppDate+"】,序号:【"+TabQueueNo+"】"
-			$.messager.alert("提示",ErrInfo+"挂号失败!"+","+errmsg,"info",function(){
-				NeedDelIndexArr.push(j);
-				if (NeedDelIndexArr.length>0){
-					for (var m=NeedDelIndexArr.length-1;m>=0;m--){
-						PageLogicObj.m_selectedMarkListDataGrid.datagrid('deleteRow',NeedDelIndexArr[m]);
-					}
+	var RemoveRows="";
+	var UseInsuFlag="N",InsuReadCardInfo="";
+	var LoopDataObj={};
+	var ETPRowID="";
+	var RegExpStr=CardTypeRowID+"^"+CardNo;
+	try{
+		new Promise(function(resolve,rejected){
+			if (PayModeCode=="CPP") {
+				var CardTypeRowID=$("#CardTypeRowID").val();
+				if (CardTypeRowID!=""){
+					var myoptval=$.cm({
+						ClassName:"web.UDHCOPOtherLB",
+						MethodName:"ReadCardTypeDefineListBroker1",
+						dataType:"text",
+						myTypeID:CardTypeRowID
+					},false);
+					m_ReadCardMode=myoptval.split("^")[16];
+					m_CCMRowID=myoptval.split("^")[14];
 				}
-				$('#CardNo').focus();
-				return false;
+				(function(callBackFun){
+					new Promise(function(resolve,rejected){
+						DHCACC_CheckMCFPay(BillAmount,CardNo,"",CardTypeRowID,"",resolve);
+					}).then(function(ren){
+						var myary=ren.split("^");
+						if (myary[0]!='0'){
+							if (myary[0]=='-204'){$.messager.alert("提示","此用户的账户被冻结,不能办理支付,请找管理员处理!")}
+							if (myary[0]=='-205'){$.messager.alert("提示","帐户余额不足!")}
+							if (myary[0]=='-206'){$.messager.alert("提示","卡号码不一致,请使用原卡!")}
+							return false;
+						}else{
+							AccRowId=myary[1];
+							var AccAmount=$('#AccAmount').val();
+							if ((AccRowId!="")&&(AccAmount=="")){
+								var AccmLeftBalance=$.cm({
+									ClassName:"web.DHCOPAdmReg",
+									MethodName:"GetAccmLeftBalance",
+									dataType:"text",
+									AccRowId:AccRowId
+								},false);
+								$('#AccAmount').val(AccmLeftBalance);
+							}
+						}
+						callBackFun();
+					})
+				})(resolve);
+			}else{
+				resolve();
+			}
+		}).then(function(){
+			return new Promise(function(resolve,rejected){
+				(function(callBackFun){
+					function loop(j){
+						new Promise(function(resolve,rejected){
+							var TabPrice=Data["rows"][j]["TabPrice"];
+							var TabExamFee=Data["rows"][j]["TabExamFee"]; 
+							var TabHoliFee=Data["rows"][j]["TabHoliFee"]; 
+							var TabAppFee=Data["rows"][j]["TabAppFee"];  
+							var TabQueueNo=Data["rows"][j]["TabSeqNo"];
+							if (!TabQueueNo) TabQueueNo="";
+							var TabReAdmFeeFlag=Data["rows"][j]["TabReAdmFeeFlag"];
+							RegExpStr=CardTypeRowID+"^"+CardNo+"^"+Data["rows"][j]["TabClinicGroupDr"]
+							//是否传病历号
+							var TabMRFee="0";
+							//病历本费置收取1份
+							var o=$HUI.checkbox('#MedicalBook');
+							if ((o.getValue())&&(j==0)){TabMRFee="1"}
+							var TabCardFee=$("#NeedCardFee").checkbox('getValue')?1:0;
+							//如果为复诊,且有诊查费,则重新设置穿入参数值
+							var TabReCheckFee=0;
+							if ((TabReAdmFeeFlag==1)&&((TabExamFee!="")&&(TabExamFee!=0))){		
+								TabReCheckFee=TabExamFee;
+								TabExamFee=0;
+							}
+							var TimeRangeStr=Data["rows"][j]["TabTimeRange"];
+							LoopDataObj={
+								TabPrice:TabPrice,
+								TabASRowId:Data["rows"][j]["TabASRowId"], 
+								//此时的诊查费可能是复诊诊查费
+								TabExamFee:TabExamFee,
+								TabHoliFee:TabHoliFee,
+								TabAppFee:TabAppFee, 
+								TabQueueNo:TabQueueNo,
+								AppDate:Data["rows"][j]["TabAppDate"],
+								TabReAdmFeeFlag:Data["rows"][j]["TabReAdmFeeFlag"],
+								//界面上传过来的免挂号费和免诊查费标记
+								TabFreeRegFlag:Data["rows"][j]["TabFreeRegFlag"],
+								TabFreeCheckFlag:Data["rows"][j]["TabFreeCheckFlag"],
+								//预约ID
+								TAPPTRowID:Data["rows"][j]["TAPPTRowID"],
+								//急诊分级表
+								TabPCLRowID:Data["rows"][j]["TabPCLRowID"],
+								TabMRFee:TabMRFee,
+								TabCardFee:TabCardFee,
+							    BLNo:0,     //是否传病历号标志?0不传病历号?1传病历号
+								FeeStr:TabPrice+"||"+TabExamFee+"||"+TabHoliFee+"||"+TabAppFee+"||"+TabMRFee+"||"+TabReCheckFee+"||"+TabCardFee,
+								TimeRangeStr:TimeRangeStr
+							}
+							//医保实时结算
+							var InsuJoinStr="";
+							var InsuAdmInfoDr="",InsuDivDr="";
+							var InsuPayFeeStr="";
+							var UseInsuFlag="N",UPatientName="",RegType="",FreeRegFeeFlag="",InsuReadCardInfo="",RetInsuGSInfo="";
+							$.extend(LoopDataObj, { InsuJoinStr: InsuJoinStr,InsuAdmInfoDr:InsuAdmInfoDr});
+							//开始挂号前进行锁号操作，暂不判断是否存在异常订单
+							//锁号
+							var PatientNo=$('#PatientNo').val();
+							var OPRegLockInfo=LoopDataObj.TabASRowId+"^"+LoopDataObj.TabQueueNo+"^"+UserID+"^"+"Y"+"^"+PatientNo;
+							/*var CTLSRowId=$.cm({
+								ClassName:"web.DHCOPAdmReg",
+								MethodName:"OPRegLockSepNo",
+								dataType:"text",
+								LockSepNoInfo:OPRegLockInfo
+							},false);
+							if (CTLSRowId<0){
+								$.messager.alert("提示","锁号失败!");
+								return false;
+							}*/
+							var EnableInsuBillFlag=IsEnableInsuBill(PatientID,LoopDataObj.TabASRowId,UseInsuFlag,AdmReason,InsuReadCardInfo)
+							if (EnableInsuBillFlag==true) {
+								var InsuBillParamsObj={};
+								InsuBillParamsObj.PatientID=PatientID;
+								InsuBillParamsObj.UPatientName=UPatientName;
+								InsuBillParamsObj.UserID=UserID;
+								InsuBillParamsObj.ASRowId=LoopDataObj.TabASRowId;
+								InsuBillParamsObj.AdmReasonId=AdmReason;
+								//[可选]挂号组织的费用串，默认为"1||1||||||||"
+								InsuBillParamsObj.FeeStr=LoopDataObj.FeeStr;
+								//[可选]挂号类别，默认为空
+								InsuBillParamsObj.RegType=RegType;
+								//[可选]挂号费免费标识，默认为空
+								InsuBillParamsObj.FreeRegFeeFlag=LoopDataObj.FreeRegFeeFlag;
+								//[可选]读医保卡返回信息，默认为空
+								InsuBillParamsObj.InsuReadCardInfo=InsuReadCardInfo;
+								//[可选]工商医保信息，默认为空
+								InsuBillParamsObj.RetInsuGSInfo=RetInsuGSInfo;
+								//账户ID
+								InsuBillParamsObj.AccRowId=AccRowId;
+								//个人自付支付方式代码
+								InsuBillParamsObj.PayModeCode=PayModeCode;
+								InsuJoinStr=CallInsuBill(InsuBillParamsObj);
+								$.extend(LoopDataObj, { InsuJoinStr: InsuJoinStr});
+								if (InsuJoinStr!="") {
+									var myAry=InsuJoinStr.split("^");
+									var ConFlag=myAry[0];
+									if (ConFlag==0){
+										InsuAdmInfoDr=myAry[1];
+										InsuDivDr=myAry[2];
+										InsuPayFeeStr=InsuJoinStr.split("!")[1];
+										$.extend(LoopDataObj, { InsuAdmInfoDr: InsuAdmInfoDr});
+									}else{
+										//医保挂号失败解锁
+										/*var ret=$.cm({
+											ClassName:"web.DHCOPAdmReg",
+											MethodName:"OPRegUnLockSepNo",
+											dataType:"text",
+											CTLSRowId:CTLSRowId
+										},false);*/
+										var row=PageLogicObj.m_selectedMarkListDataGrid.datagrid('getRows')[j];
+										var delTabPrice=row["TabPrice"];
+										PageLogicObj.m_selectedMarkListDataGrid.datagrid('deleteRow',j);
+										// 删除后重新计算合计金额
+										var BillAmount=$("#BillAmount").val();
+										BillAmount=parseFloat(BillAmount)-parseFloat(delTabPrice);
+										BillAmount=BillAmount.toFixed(2);
+										$("#BillAmount").val(BillAmount);
+										ReCalculateAmount();
+										return false;
+									}
+						
+									if (InsuPayFeeStr!=""){
+										var TotalAmount=0;
+										var CashFee=0;
+										for (var k=0;k<InsuPayFeeStr.split(String.fromCharCode(2)).length;k++) {
+											var InsuPayModeStr=InsuPayFeeStr.split(String.fromCharCode(2))[k];
+											var InsuPayModeAry=InsuPayModeStr.split('^');
+											var InsuPayModeId=InsuPayModeAry[0];
+											var InsuPayModeAmount=InsuPayModeAry[1];
+											if ((ServerObj.CashPayModeID!="")&&(ServerObj.CashPayModeID==InsuPayModeId)) {
+												CashFee=parseFloat(CashFee)+parseFloat(InsuPayModeAmount);
+											}
+											TotalAmount=parseFloat(TotalAmount)+parseFloat(InsuPayModeAmount);
+										}
+										if(parseFloat(TotalAmount)!=parseFloat(TabPrice)){
+											//$.messager.alert("提示","当前价格与实时结算上传总价格不一致?请确认医嘱价格!");
+											//return false;
+										}
+									}
+								}
+							}
+							//第三方交易接口部署
+							RegPayObj.RegPay(TabPrice,PatientID,"",LoopDataObj.InsuJoinStr,"","","","","","","OP",resolve)
+						}).then(function(rtnPay){
+							return new Promise(function(resolve,rejected){
+								PayModeCode=RegPayObj.PayModeCode;
+								if (!rtnPay){
+									//交易失败如果是医保的需要回退
+									 if (LoopDataObj.InsuAdmInfoDr!=""){
+										var InsuRetValue=InsuOPRegStrike(0,UserID,LoopDataObj.InsuAdmInfoDr,"",AdmReason,"");
+										if(InsuRetValue.split("^")[0]!="0"){
+											//增加异常订单
+											//挂号科室和医生ID根据排班ID获取
+											//信息串：病人ID^就诊ID^医保指针^操作人^订单状态^排班ID^是否挂号
+											var OPRegINABInfo=PatientID+"^"+""+"^"+LoopDataObj.InsuAdmInfoDr+"^"+UserID+"^"+"N"+"^"+LoopDataObj.TabASRowId+"^"+"Y"+"^"+AdmReason;
+											var ret=$.cm({
+												ClassName:"web.DHCOPAdmReg",
+												MethodName:"SaveDHCOPAdmINAB",
+												dataType:"text",
+												InfoStr:OPRegINABInfo
+											},false);
+											$.messager.alert("提示","回滚医保数据失败!");
+										}
+									}
+									return false;
+								}
+								if ((typeof RegPayObj.PayRtnJsonObj!="undefined")&&(typeof RegPayObj.PayRtnJsonObj.ETPRowID!="undefined")&&(RegPayObj.PayRtnJsonObj.ETPRowID!="")) {
+									ETPRowID=RegPayObj.PayRtnJsonObj.ETPRowID;
+								}
+								resolve();
+							})
+						}).then(function(){
+							return new Promise(function(resolve,rejected){
+								var ret=$.cm({
+									ClassName:"web.DHCOPAdmReg",
+									MethodName:"OPRegistBroker",
+									dataType:"text",
+									PatientID:PatientID, ASRowId:LoopDataObj.TabASRowId, AdmReason:AdmReason, QueueNo:LoopDataObj.TabQueueNo, FeeStr:LoopDataObj.FeeStr,
+									PayModeCode:PayModeCode, AccRowId:AccRowId, user:UserID, group:GroupID,
+									AdmType:AdmType, DiagnosCatRowId:DiagnosCatRowId, 
+									FreeRegFlag:LoopDataObj.TabFreeRegFlag,FreeCheckFlag:LoopDataObj.TabFreeCheckFlag,RegfeeRowId:"", InsuJoinStr:LoopDataObj.InsuJoinStr,
+									DiscountFactor:"", TAPPTRowID:LoopDataObj.TAPPTRowID, 
+									UnBillFlag:"", TabPCLRowID:LoopDataObj.TabPCLRowID, ApptMethodCode:"", SourceType:"", RegConDisId:RegConDisId,
+									ETPRowID:ETPRowID,TimeRangeStr:LoopDataObj.TimeRangeStr,RegSource:"AllocReg",RegExpStr:RegExpStr
+								},false);
+								var retarr=ret.split("$");	
+								if (retarr[0]=="0"){
+									var PrintArr=retarr[1].split("^");
+									var EpisodeID="";
+									var TabASRowId="";
+									var RegfeeRowID="";
+									var PrintDataArySum=eval(retarr[1])
+									var PrintDataAry=PrintDataArySum[0]
+									for (Element in PrintDataAry){
+										if (Element=="AdmNo"){EpisodeID=PrintDataAry[Element]}
+										if (Element=="RBASDr"){TabASRowId=PrintDataAry[Element]}
+										if (Element=="RegfeeRowId"){RegfeeRowID=PrintDataAry[Element]}								
+									}
+									//lxz 第三方交易接口信息关联
+									RegPayObj.Relation(RegfeeRowID);
+									//票据合计增加 
+									var ReceiptCount=+$('#ReceiptCount').val();
+									ReceiptCount=parseInt(ReceiptCount)+1;
+									$('#ReceiptCount').val(ReceiptCount);
+									//打印挂号小条
+									PrintOut(j,retarr[1]);
+									//打印发票 --如果存在医保需要判断是调用医保接口打印发票还是调用HIS打印发票-医保修改按照项目上线自行修改
+									//PrintInv(RegfeeRowID)
+									//日志保存 原方法方法不存在,暂时隐藏
+									//SavePrescEventLog(EpisodeID);
+									NeedDelIndexArr.push(j);
+									//调用回调函数
+									resolve();
+								}else{
+									//HIS挂号失败解锁
+									/*var ret=$.cm({
+										ClassName:"web.DHCOPAdmReg",
+										MethodName:"OPRegUnLockSepNo",
+										dataType:"text",
+										CTLSRowId:CTLSRowId
+									},false);*/
+									//撤销医保挂号结算,如果失败则进入异常订单
+									if (LoopDataObj.InsuAdmInfoDr!=""){
+										var InsuRetValue=InsuOPRegStrike(0,UserID,LoopDataObj.InsuAdmInfoDr,"",AdmReason,"");
+										if(InsuRetValue.split("^")[0]!="0"){
+											//增加异常订单
+											//挂号科室和医生ID根据排班ID获取
+											//信息串：病人ID^就诊ID^医保指针^操作人^订单状态^排班ID^是否挂号
+											var OPRegINABInfo=PatientID+"^"+""+"^"+LoopDataObj.InsuAdmInfoDr+"^"+UserID+"^"+"N"+"^"+LoopDataObj.TabASRowId+"^"+"Y"+"^"+AdmReason;
+											var ret=$.cm({
+												ClassName:"web.DHCOPAdmReg",
+												MethodName:"SaveDHCOPAdmINAB",
+												dataType:"text",
+												InfoStr:OPRegINABInfo
+											},false);
+											$.messager.alert("提示","回滚医保数据失败!");
+										}
+									}
+									//lxz 第三方支付交易接口退回
+									RegPayObj.ErrReg();
+									var errmsg=GetErrMsg(retarr[0]);
+									if(errmsg=="") errmsg=retarr;
+									var TabDepDesc=Data["rows"][j]["TabDeptDesc"];
+									var TabMarkDesc=Data["rows"][j]["TabMarkDesc"];
+									var ErrInfo="挂号记录科室:【"+TabDepDesc+"】,号别:【"+TabMarkDesc+"】,就诊日期:【"+LoopDataObj.AppDate+"】,序号:【"+LoopDataObj.TabQueueNo+"】"
+									$.messager.alert("提示",ErrInfo+"挂号失败！"+","+errmsg,"info",function(){
+										NeedDelIndexArr.push(j);
+										if (NeedDelIndexArr.length>0){
+											for (var m=NeedDelIndexArr.length-1;m>=0;m--){
+												var row=PageLogicObj.m_selectedMarkListDataGrid.datagrid('getRows')[NeedDelIndexArr[m]];
+												var delTabPrice=row["TabPrice"];
+												PageLogicObj.m_selectedMarkListDataGrid.datagrid('deleteRow',NeedDelIndexArr[m]);
+												// 删除后重新计算合计金额
+												var BillAmount=$("#BillAmount").val();
+												BillAmount=parseFloat(BillAmount)-parseFloat(delTabPrice);
+												BillAmount=BillAmount.toFixed(2);
+												$("#BillAmount").val(BillAmount);
+												ReCalculateAmount();
+											}
+										}
+										$('#CardNo').focus();
+									})
+									return false;
+								}
+							})
+						}).then(function(){
+							j++;
+							if ( j < Data["rows"].length ) {
+								 loop(j);
+							}else{
+								callBackFun();
+							}
+						})
+					}
+					loop(0)
+				})(resolve);
 			})
-		}
+		}).then(function(){
+			if (NeedDelIndexArr.length>0){
+				for (var m=NeedDelIndexArr.length-1;m>=0;m--){
+					PageLogicObj.m_selectedMarkListDataGrid.datagrid('deleteRow',NeedDelIndexArr[m]);
+				}
+			}
+			$.messager.popover({msg: '挂号成功!',type:'success',timeout: 1000});		
+			Clear_click();
+		})
+	}catch(e){
+		$.messager.alert("提示",e.message+","+e.name);
 	}
-	if (NeedDelIndexArr.length>0){
-		for (var m=NeedDelIndexArr.length-1;m>=0;m--){
-			PageLogicObj.m_selectedMarkListDataGrid.datagrid('deleteRow',NeedDelIndexArr[m]);
-		}
-	}
-	var ReceiptSum=$('#ReceiptSum').val();
-	ReceiptSum=parseFloat(ReceiptSum)+parseFloat(TabPrice);
-	$('#ReceiptSum').val(ReceiptSum);		
-  }catch(e){$.messager.alert("提示",e.message+","+e.name)}
 }
 function PrintOut(RegTblRow,PrintData) {
 	//修改 同时挂多个号时，加载的xml模板会变成发票模板
 	DHCP_GetXMLConfig("InvPrintEncrypt","DHCOPAdmRegPrint");
+	try {
+		var GridData=PageLogicObj.m_selectedMarkListDataGrid.datagrid("getData");
+		var ASRowId=GridData["rows"][RegTblRow]["TabASRowId"];
+		if (ASRowId==''){
+			$.messager.alert("提示","没有选择挂号信息!");
+			return false;
+		}
+		var PrintDataArySum=eval(PrintData)
+		var PrintDataAry=PrintDataArySum[0]
+		var MyPara = "" + String.fromCharCode(2);
+		var PersonPay="",Regitems="";
+		for (Element in PrintDataAry){
+			if (Element=="PersonPay"){
+				PersonPay=PrintDataAry[Element];
+				if (PersonPay!="") {
+					PersonPay=PersonPay.replace("元","");
+				}
+			}
+			if (Element=="AppFee"){
+				if (PrintDataAry[Element]!=0){PrintDataAry[Element]="预约费:"+PrintDataAry[Element]+"元"}else{PrintDataAry[Element]=""}
+			}
+			if (Element=="OtherFee"){
+				if (PrintDataAry[Element]!=0) {PrintDataAry[Element]=PrintDataAry[Element]+"元"}else{PrintDataAry[Element]=""}
+			}
+			if (Element=="RegFee"){
+				if (PrintDataAry[Element]!=0){PrintDataAry[Element]=PrintDataAry[Element]+"元"}else{PrintDataAry[Element]=""}
+			}
+			MyPara=MyPara +"^"+ Element + String.fromCharCode(2) + PrintDataAry[Element];
+		}
+		var o=$HUI.checkbox('#NeedCardFee');
+		if (o.getValue()){
+			var CardFee="工本费 "+parseFloat(ServerObj.CardFee)+"元";
+		}else{
+			var CardFee="";
+		}
+		AccAmount=$('#CardLeaving').val();
+		if (GetPayModeCode()=="CPP"){
+			var AccTotal=parseFloat(AccAmount)- parseFloat((+PersonPay)) //parseFloat(Total);
+		}else {
+			var AccTotal=parseFloat(AccAmount);
+		}
+		$('#CardLeaving').val(AccTotal);
+		//消费后金额
+		AccTotal=SaveNumbleFaxed(AccTotal);
+		//消费前金额
+		AccAmount=AccAmount; //SaveNumbleFaxed(AccAmount);
+		var DYOPMRN=$('#OPMRN').val(); //门诊病案号
+		var DYIPMRN=$('#IPMRN').val(); //住院病案号
+		MyPara=MyPara +"^"+ "CardFee" + String.fromCharCode(2) +CardFee;
+		MyPara=MyPara +"^"+ "CardFee" + String.fromCharCode(2) +CardFee;
+		MyPara=MyPara +"^"+ "AccAmount" + String.fromCharCode(2) +AccAmount;
+		MyPara=MyPara +"^"+ "AccTotal" + String.fromCharCode(2) +AccTotal;
+		MyPara=MyPara +"^"+ "DYOPMRN" + String.fromCharCode(2) +DYOPMRN;
+		MyPara=MyPara +"^"+ "DYIPMRN" + String.fromCharCode(2) +DYIPMRN;
+		DHC_PrintByLodop(getLodop(),MyPara,"","","");
+	} catch(e) {alert(e.message)};
+	//修改 同时挂多个号时，加载的xml模板会变成发票模板
+	/*DHCP_GetXMLConfig("InvPrintEncrypt","DHCOPAdmRegPrint");
 	try {
 		if (PrintData=="") return;
 		var PrintArr=PrintData.split("^");
@@ -1708,7 +2213,7 @@ function PrintOut(RegTblRow,PrintData) {
 		//PrintFun(myobj,MyPara,"");
 		DHC_PrintByLodop(getLodop(),MyPara,"","","");
 		$('#AccAmount').val(AccTotal);	
-	} catch(e) {alert(e.message)};
+	} catch(e) {alert(e.message)};*/
 }
 //DHCPrtComm.js
 function PrintFun(PObj,inpara,inlist){
@@ -1774,7 +2279,8 @@ function DeptListChange(){
 }
 function BCacelRegHandle(EpisodeID){
 	if (typeof EpisodeID =="undefined"){EpisodeID="";}
-	var src="opadm.return.hui.csp?EpisodeID="+EpisodeID+"&PageFrom=Reg";;
+	var src="opadm.return.hui.csp?EpisodeID="+EpisodeID+"&PageFrom=Reg";
+	if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
 	var $code ="<iframe width='99%' height='99%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
 	createModalDialog("Project","退号", PageLogicObj.dw, PageLogicObj.dh,"icon-exe-order","",$code,"");
 }
@@ -1823,72 +2329,126 @@ function CheckTemporaryCard(CardNo, CardTypeDr) {
 ///获取动态写入的HTML代码
 function GetPannelHTML(jsonData,LinkID){
 	var Len=0;
-	if (ServerObj.ParaRegType=="APP"){
+	if ((ServerObj.ParaRegType=="APP")||(ServerObj.OPRegistShowTimeRange=="1")){
 		var ASRowId=jsonData["ASRowId"];
-		var innerHTML="<table border='1' class='diytable' cellspacing='1' cellpadding='0'>";
+		var ClinicGroupDr=jsonData["ClinicGroupDr"];
+		var width=628,height=250;
 		var CallFunction={};
-		var Title=jsonData["MarkDesc"]+"("+jsonData['SessionTypeDesc']+") "+jsonData["ScheduleDate"];
-		Title=Title+" 挂号数: "+jsonData['RegedCount']+" 预约数: "+jsonData['AppedCount']+" 取号数: "+jsonData['AppedArriveCount']+" 加号数: "+jsonData['AddedCount'];
-		var width=740,height=250;
+		var innerHTML="<table border='1' class='diytable' cellspacing='1' cellpadding='0'>";
+		var Title = "<font style='font-weight:bold'>" + jsonData["MarkDesc"] + "(" + jsonData['SessionTypeDesc'] + ") " + jsonData["TimeRange"] + "</font>"
+		Title = Title + "<font style='margin-left:10px;'>挂号: " + jsonData['RegedCount'] + "</font><font style='margin-left:10px;'>预约: " + jsonData['AppedCount'] + "</font><font style='margin-left:10px;'>取号: " + jsonData['AppedArriveCount'] + "</font><font style='margin-left:10px;'>加号: " + jsonData['AddedCount'] + "</font>"
+		var RegType="APP"
+		if (ServerObj.ParaRegType != "APP") { RegType="NOR" }
+		var curtDate = new Date()
+		var schdDate = new Date(jsonData["ScheduleDate"])
+		if (schdDate > curtDate) { RegType = "APP" }
+		if (RegType=="APP") {
+			Title = Title + "<font style='margin-left:10px;'>可预约: " + jsonData["AvailSeqNoStr"] + "</font>"
+		} else {
+			Title = Title + "<font style='margin-left:10px;'>剩号: " + jsonData["AvailSeqNoStr"] + "</font>"
+		}
+		//预约挂号界面都显示当前待诊人数
+		Title = Title + "<font style='margin-left:10px;'>当前待诊: " + jsonData['AdmWaitSum'] + "</font>"
 		var warning = $.cm({
 			ClassName:"web.DHCOPAdmReg",
 			MethodName:"GetTimeRangeStrApp",
 		    ASRowid:ASRowId,
 		    AppMedthod:"WIN",
+		    RegType :RegType,
+			TRShowFlag: PageLogicObj.m_TrShowFlag,
+			ClinicGroupDr:ClinicGroupDr,
 			dataType:"text"
 		},false);
 		warning=eval('(' + warning + ')');
-		var MaxLen=7;MaxCol=0;
-		Len=warning['row'].length;
-		for (var i=0;i<Len;i++){
-			//控制每行号段为8个,多余8个自动换行，第一列根据时段号数自动合并行
-			var TimeRange=warning['row'][i]['TimeRange'];
-			var col=warning['row'][i]['col'];
-			var rowspan=Math.ceil(col.length/MaxLen+1); 
-			innerHTML=innerHTML+"<tr>";
-			innerHTML=innerHTML+"<td class='td-timerange' rowspan='"+rowspan+"'>"+TimeRange+"</td>";
-			var colNum=0
-			for (var j=0;j<col.length;j++){
-	            if (j%MaxLen==0) {
-		            innerHTML=innerHTML+"<tr>";
-		        }
-				var SeqNo=col[j]['SeqNo'];
-				var Time=col[j]['Time'];
-				var Status=col[j]['Status'];
-				if(Status==2){
-					innerHTML=innerHTML+"<td class='td-seqno-invalid'>"+"<span class='td-seqno'>"+SeqNo+"</span><br><span class='td-time'>"+Time+"</span></td>";
-				}else{
-					innerHTML=innerHTML+"<td onmouseover=mouserover(this) onmouseout=mouserout(this) onclick=tdclick(this) ondblclick=dbtdclick(this) id='"+LinkID+"_table_"+SeqNo+"'>"+"<span class='td-seqno'>"+SeqNo+"</span><br><span class='td-time'>"+Time+"</span></td>";
-				}
-				innerHTML=innerHTML+"</td>";
-				colNum=colNum+1;
-				if (colNum==MaxLen) {
-					innerHTML=innerHTML+"</tr>";
-					colNum=0;
-				}
-				if (col.length>MaxCol) MaxCol=col.length;
+		// 最大5列适配现有宽度
+		var MaxRow = 5; MaxCol = 5; colNum = 0; colCnt = 0;
+		Len = warning['row'].length;
+		if (Math.ceil(Len / MaxRow) > MaxCol) {
+			colCnt = Math.ceil(Len / MaxRow)
+		} else {
+			colCnt = MaxCol
+		}
+		var col = warning['row']
+		for (var j = 0; j < Len; j++) {
+			if (j % colCnt == 0) {
+				innerHTML = innerHTML + "<tr>";
 			}
-			innerHTML=innerHTML+"</tr>";
+			var SeqNo = col[j]['SeqNo'];
+			var Time = col[j]['Time'];
+			var Status = col[j]['Status'];
+			if (Status == 0) {
+				innerHTML = innerHTML + "<td class='td-seqno-invalid'>" + "<span class='td-seqno'>可用:无" + "</span><br><span class='td-time'>" + Time + "</span></td>";
+			} else {
+				innerHTML = innerHTML + "<td onmouseover=mouserover(this) onmouseout=mouserout(this) onclick=tdclick(this) ondblclick=dbtdclick(this) id='" + LinkID + "_table_" + Time + "'>" + "<span class='td-seqno'>可用:有" + "</span><br><span class='td-time'>" + Time + "</span></td>";
+			}
+			innerHTML = innerHTML + "</td>";
+			colNum = colNum + 1;
+			if (colNum == colCnt) {
+				innerHTML = innerHTML + "</tr>";
+				colNum = 0;
+			}
 		}
-		innerHTML=innerHTML+"</table>";
-		if (Len==0){
-			innerHTML="";
+		if (colNum != 0) innerHTML = innerHTML + "</tr>";
+		innerHTML = innerHTML + "</table>";
+		if (Len == 0) {
+			innerHTML = "";
 		}
-		if (MaxCol<MaxLen){
-			width=(85*MaxCol)+115;
+		// 超过5列调整宽度
+		if (colCnt > MaxCol) {
+			width = width + ((colCnt - MaxCol) * 121)
 		}
 		var closeable=true
 	}
-	if ((Len==0)||(ServerObj.ParaRegType!="APP")){
+	if ((Len==0)||((ServerObj.ParaRegType!="APP")&&(ServerObj.OPRegistShowTimeRange!="1"))){
 		var Title="";
 		var innerHTML="<table border='1' class='diytable' cellspacing='1' cellpadding='0'>";
-		innerHTML=innerHTML+"<tr><td style='width:60px'>挂号数</td><td style='width:50px'>"+jsonData['RegedCount']+"</td></tr>";
+		innerHTML=innerHTML+"<tr><td style='width:70px'>挂号数</td><td style='width:55px'>"+jsonData['RegedCount']+"</td></tr>";
 		innerHTML=innerHTML+"<tr><td>预约数</td><td>"+jsonData['AppedCount']+"</td></tr>";
 		innerHTML=innerHTML+"<tr><td>取号数</td><td>"+jsonData['AppedArriveCount']+"</td></tr>";
 		innerHTML=innerHTML+"<tr><td>加号数</td><td>"+jsonData['AddedCount']+"</td></tr>";	
-		var width=150,height=121;
+		innerHTML=innerHTML+"<tr><td>当前待诊人数</td><td>"+jsonData['AdmWaitSum']+"</td></tr>";	
+		var width=180,height=151;
 		var CallFunction="";
 		var closeable=false;
+	}
+	// 创建 switchbox
+	if (Title != "") {
+		Title = "<span>" + Title + "</span>"
+		Title += "<div id=\"switch-btn\" class=\"hisui-switchbox hisui-tooltip\""
+		Title += 		"style=\"float:right;margin-left:5px;margin-right:5px;padding:0.5px 0px;\""
+		Title += 		"title=\"可用不显示无号时段\""
+		Title += 		"data-options=\"onText:'全部',offText:'可用',size:'mini',animated:true,"
+		if (PageLogicObj.m_TrShowFlag == 1) {
+			Title += "checked:true,"
+		} else {
+			Title += "checked:false,"
+		}
+		Title += 			"onClass:'primary',offClass:'success',position:'right',"
+		//Title +=			"onSwitchChange:function(event,obj){ if (obj.value) { PageLogicObj.m_TrShowFlag = 1 } else { PageLogicObj.m_TrShowFlag = 0 } LoadMarkList() }\">"
+		var RowIndex="",markCardID="";
+		var text=$("#MarkListShowMode .l-btn-text")[0].innerText;
+		if (text.indexOf("视图")>=0){
+			RowIndex=PageLogicObj.m_MarkListDataGrid.datagrid('getRowIndex',jsonData);
+		}else{
+			markCardID=LinkID;
+		}
+		Title +=			"onSwitchChange:(function(param){"
+		Title +=			"	return function(event,obj){"
+		Title +=			"		if (obj.value) {"
+		Title +=			"			PageLogicObj.m_TrShowFlag = 1;"
+		Title +=			"		} else {"
+		Title +=			"			PageLogicObj.m_TrShowFlag = 0;"
+		Title +=			"		}"
+		Title +=			"		DestoryPannelPopover();"
+		Title +=			"		InitMarkListRowPopover(param);"
+		Title +=			"	}"
+		Title +=			"})({rowIndex:'"+RowIndex+"',markCardID:'"+markCardID+"',Show:true})"
+		Title +=			"\">"
+		Title += "</div>"
+		Title += "<div style=\"clear:both;\"></div>"
+		
+		Title += "</div>"
+		Title += "<div style=\"clear:both;\"></div>"
 	}
 	return {
 		"innerHTML":innerHTML,
@@ -1899,7 +2459,35 @@ function GetPannelHTML(jsonData,LinkID){
 		"closeable":closeable
 	}
 }
+function mouserover(){
+}
+function mouserout(){
+}
+function tdclick(){
+}
+function dbtdclick(obj){
+	var id=obj.id;
+	var $btntext=$("#MarkListShowMode .l-btn-text")[0];
+	var MarkCardID=id.split("_table_")[0];
+	var text=$btntext.innerText;
+	if (text.indexOf("视图")>=0){
+		var tabTRId=id.split("_table_")[0];
+		var index=tabTRId.split("-")[tabTRId.split("-").length-1];
+		var jsonData=$.extend({},$("#MarkList").datagrid('getRows')[index]);
+		var Time=id.split("_table_")[1];
+		jsonData['TimeRange']=Time;
+	}else{
+		//var SeqNo=id.split("_table_")[1];
+		var dataStr=$($("#"+MarkCardID).find("div")[8]).html();
+		var jsonData=JSON.parse(dataStr);
+		var Time=id.split("_table_")[1];
+		jsonData['TimeRange']=Time;
+	}
+	//jsonData['SeqNo']=SeqNo;
+	MarkListDBClick(jsonData);
+	$("#"+MarkCardID).popover('hide');
 
+}
 function SearchAppNoClickHandler(){
 	setTimeout(function(){SearchAppNoChange();});
 }
@@ -1932,7 +2520,7 @@ function GetApptInfo(PatientID){
 		}
 		//取病人的预约信息
 		$("#BillAmount").val("0.00")
-		var AdmReason=""; //$('#BillType').combobox('getValue');
+		var AdmReason=$('#BillType').combobox('getValue');
 		var GetAppFlag=1;
 		var rtn="";
 		ClearAllTableData("selectedMarkList");
@@ -2028,6 +2616,8 @@ function AddRegToTable(val) {
 		if (valueAry.length>=16){
 			PCLRowID=valueAry[15];
 		}
+		var TabClinicGroupDesc=valueAry[16];
+		var TabClinicGroupDr=valueAry[17];
 		var dataObj=new Object();
 		dataObj={
 			TabASRowId:TabASRowId,
@@ -2050,7 +2640,9 @@ function AddRegToTable(val) {
 			TabFreeRegFlag:TabFreeRegFlag,
 			TabFreeCheckFlag:TabFreeCheckFlag,
 			TabReAdmFeeFlag:TabReAdmFeeFlag,
-			TabTimeRange:TabTimeRange
+			TabTimeRange:TabTimeRange,
+			TabClinicGroupDesc:TabClinicGroupDesc,
+			TabClinicGroupDr:TabClinicGroupDr
 		}
 		AddToSelectedMarkList(dataObj,false);
 	} catch(e) {$.messager.alert("提示",e.message)};
@@ -2070,4 +2662,99 @@ function CheckRowDataRepeat(CellName,ChecKValue) {
 		}
 	}
 	return RepeatFlag;
+}
+//是否启用挂号医保实时结算
+/*params*
+*PatientID:患者ID
+*ASRowId:出诊记录ID
+*UseInsuFlag:界面医保标识(Y/N)【可选】
+*[AdmReasonId]:费别ID【可选】
+*[InsuReadCardInfo]:读医保卡的返回信息【可选】
+*/
+function IsEnableInsuBill(PatientID,ASRowId,UseInsuFlag,AdmReasonId,InsuReadCardInfo) {
+	var IsEnableInsuBillFlag=false;
+	// 【挂号设置】->启用分诊台医保挂号
+	if (ServerObj.AllocInsuBill !=1) return IsEnableInsuBillFlag;
+	// 【挂号设置】->【科室扩展设定】->医保挂号不能实时结算
+	var CFLocInsuNotRealTime=$.cm({
+		ClassName:"web.DHCOPAdmReg",
+		MethodName:"GetCFLocInsuNotRealTime",
+		dataType:"text",
+		ASRowId:ASRowId
+	},false);
+	if (CFLocInsuNotRealTime=="1") return IsEnableInsuBillFlag;
+	var InsurFlag=$.cm({
+		ClassName:"web.DHCDocOrderCommon",
+		MethodName:"GetInsurFlag",
+		dataType:"text",
+		BillType:AdmReasonId, PAAdmType:"O"
+	},false);
+	//1.按费别优先
+	if (ServerObj.CFEnableInsuBill==1) {
+		if (InsurFlag==1){IsEnableInsuBillFlag=true}else{IsEnableInsuBillFlag=false}
+	}
+	//2.按界面传入参数优先
+	if (ServerObj.CFEnableInsuBill==2) {
+		if (UseInsuFlag=='Y') {
+			if (InsurFlag==1){IsEnableInsuBillFlag=true}else{IsEnableInsuBillFlag=false}
+		}else{
+			IsEnableInsuBillFlag=false;
+		}
+	}
+	return IsEnableInsuBillFlag;
+}
+function CallInsuBill(InsuBillParamsObj) {
+	var GHLY="01";// 挂号来源 01窗口
+	try {
+		var myrtn=$.cm({
+			ClassName:"web.DHCOPAdm",
+			MethodName:"GetInsuBillPara",
+			dataType:"text",
+			LocDr:"", DocDr:"", PatId:InsuBillParamsObj.PatientID, UPatientName:InsuBillParamsObj.UPatientName, //1-4
+			UserId:InsuBillParamsObj.UserID, ASRowId:InsuBillParamsObj.ASRowId, //5-6
+			AdmReason:InsuBillParamsObj.AdmReasonId, FeeStr:InsuBillParamsObj.FeeStr, //7-8
+			RegType:InsuBillParamsObj.RegType, InsuJoinType:"", FreeRegFeeFlag:InsuBillParamsObj.FreeRegFeeFlag, //9-11 
+			InsuReadCardInfo:InsuBillParamsObj.InsuReadCardInfo, RetInsuGSInfo:InsuBillParamsObj.RetInsuGSInfo, //12-13
+			ExpStr:InsuBillParamsObj.AccRowId+"^"+InsuBillParamsObj.PayModeCode+"^"+session['LOGON.GROUPID']+"^"+GHLY+"^"+""
+			//AccRowId:InsuBillParamsObj.AccRowId,PayModeCode:InsuBillParamsObj.PayModeCode //14-15
+		},false);
+		myrtn=InsuOPReg(0,InsuBillParamsObj.UserID,"","",InsuBillParamsObj.AdmReasonId,myrtn);
+		return myrtn;
+	}catch(e) {
+		$.messager.alert("提示","医保接口封装函数程序异常,Err:"+e.message)
+		return "";
+	}
+}
+function GetErrMsg(ErrCode){
+	var errmsg="";
+	if (ErrCode=="-201")  errmsg="生成就诊记录失败!";
+	if (ErrCode=="-202")  errmsg="取号不成功!";
+	if (ErrCode=="-2121") errmsg="更新预约状态失败!";
+	if (ErrCode=="-2122") errmsg="系统忙,请稍后重试!";
+	if (ErrCode=="-206")  errmsg="插入挂号费医嘱失败!";
+	if (ErrCode=="-207")  errmsg="插入诊查费医嘱失败!";
+	if (ErrCode=="-208")  errmsg="插入假日费医嘱失败!";
+	if (ErrCode=="-209")  errmsg="插入预约费医嘱失败!";
+	if (ErrCode=="-210")  errmsg="计费失败!";
+	if (ErrCode=="-211")  errmsg="插入挂号记录失败!";
+	if (ErrCode=="-212")  errmsg="插入叫号队列失败!";
+	if (ErrCode=="-301")  errmsg="超过每人每天可挂限额,不能再挂号或预约!";
+	if (ErrCode=="-302")  errmsg="超过每人每天可挂相同号的限额!";
+	if (ErrCode=="-303")  errmsg="超过每人每天可挂相同科室号的限额!";
+	if (ErrCode=="-401")  errmsg="还没有到挂号时间!";
+	if (ErrCode=="-402")  errmsg="还未到预约时间!";
+	if (ErrCode=="-403")  errmsg="还未到加号时间!";
+	if (ErrCode=="-404")  errmsg="已经过了此排班记录出诊时间点!";
+	if (ErrCode=="-2010") errmsg="更新医保挂号信息失败!";
+	if (ErrCode=="-304")  errmsg="超过每人每天相同时段同科室同医生限额!";
+	if (ErrCode=="-405")  errmsg="请去挂号设置界面维护免费医嘱!";
+	if (ErrCode=="-406")  errmsg="已过挂号结束时间!";
+	if (ErrCode=="-213")  errmsg="已经开启停止挂号,不予许挂号及取号";
+	return errmsg;
+}
+function SetPassCardNo(CardNo,CardType){
+	$("#CardNo").val(CardNo);
+	$("#CardTypeNew").val(CardType);
+	//combo_CardType.setComboValue(CardType);
+	CheckCardNo();
 }

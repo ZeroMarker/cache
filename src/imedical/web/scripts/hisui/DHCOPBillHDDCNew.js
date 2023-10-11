@@ -7,25 +7,25 @@ $(function () {
 	
 	$HUI.linkbutton("#ADD", {
 		onClick: function () {
-			ADD_Click();
+			addClick();
 		}
 	});
 	
 	$HUI.linkbutton("#Modfiy", {
 		onClick: function () {
-			Modfiy_Click();
+			updateClick();
 		}
 	});
 	
 	$HUI.linkbutton("#delete", {
 		onClick: function () {
-			delete_Click();
+			deleteClick();
 		}
 	});
 	
 	$HUI.linkbutton("#Clear", {
 		onClick: function () {
-			Clear_OnClick();
+			clearClick();
 		}
 	});
 	
@@ -51,14 +51,18 @@ $(function () {
 		onChange: function(newValue, oldValue) {
 			setValueById("HospId", newValue);
 			
+			$(".combobox-f:not(#Hospital)").combobox("clear").combobox("enable");
+			$(".checkbox-f").checkbox("uncheck");
+			setValueById("BloodDis", "");
+
 			var url = $URL + "?ClassName=web.DHCOPBillHDDC&QueryName=OrderType&ResultSetType=array";
-			$("#OrdType").combobox("clear").combobox("reload", url);
+			$("#OrdType").combobox("reload", url);
 			
 			url = $URL + "?ClassName=web.DHCOPBillHDDC&QueryName=FindCTLocNew2&ResultSetType=array";
-			$("#ORDReLoc, #ReCTLOC").combobox("clear").combobox("reload", url);
+			$("#ORDReLoc, #ReCTLOC").combobox("reload", url);
 			
 			var url = $URL + "?ClassName=web.DHCOPBillHDDC&QueryName=FindCTLocNew&ResultSetType=array";
-			$("#CTLOC").combobox("clear").combobox("reload", url);
+			$("#CTLOC").combobox("reload", url);
 			
 			$('#Find').click();
 		}
@@ -80,13 +84,8 @@ $(function () {
 	$('#Locgroupflag').combobox({
 		valueField: 'id',
 		textField: 'text',
-		data: [{
-				"id": 'L',
-				"text": "科室"
-			}, {
-				"id": 'G',
-				"text": "科室组"
-			}
+		data: [{id: 'L', text: '科室'},
+			   {id: 'G', text: '科室组'}
 		],
 		onSelect: function (rec) {
 			//根据类别加载科室
@@ -96,10 +95,10 @@ $(function () {
 	});
 	
 	//接收科室(导诊使用)
-	$HUI.combobox("#ORDReLoc", {		
+	$HUI.combobox("#ORDReLoc", {
 		valueField: "HIDDEN",
 		textField: "Desc",
-		defaultFilter: 4,
+		defaultFilter: 5,
 		onBeforeLoad: function (param) {
 			$.extend(param, {
 						HospId: getValueById("Hospital"),
@@ -117,7 +116,7 @@ $(function () {
 		url: $URL,
 		valueField: "HIDDEN",
 		textField: "Desc",
-		defaultFilter: 4,
+		defaultFilter: 5,
 		onBeforeLoad: function (param) {
 			$.extend(param, {
 						CTLOC: "",
@@ -135,7 +134,7 @@ $(function () {
 	$HUI.combobox("#ReCTLOC", {
 		valueField: "HIDDEN",
 		textField: "Desc",
-		defaultFilter: 4,
+		defaultFilter: 5,
 		onBeforeLoad: function (param) {
 			$.extend(param, {
 						HospId: getValueById("Hospital"),
@@ -149,124 +148,129 @@ $(function () {
 	});
 });
 
-function ADD_Click() {
+function addClick() {
 	var OrdType = getValueById('OrdType');
 	if (OrdType == "") {
-		DHCWeb_HISUIalert("请选择标本");
+		$.messager.popover({msg: "请选择标本", type: "info"});
 		return;
 	}
 	var Locgroupflag = getValueById('Locgroupflag');
 	if (Locgroupflag == "") {
-		DHCWeb_HISUIalert("请选择科室类别");
+		$.messager.popover({msg: "请选择科室类别", type: "info"});
 		return;
 	}
 	var LOCDR = getValueById('LOCDR');
 	if (LOCDR == "") {
-		DHCWeb_HISUIalert("请选择科室");
+		$.messager.popover({msg: "请选择科室", type: "info"});
 		return;
 	}
 
 	var BloodDis = getValueById('BloodDis');
 	if (BloodDis == "") {
-		DHCWeb_HISUIalert("采血地点必填");
+		$.messager.popover({msg: "采血地点必填", type: "info"});
 		return;
 	}
 	
 	$.messager.confirm("提示", "是否确认添加?", function (r) {
-		if (r) {
-			var ReCTLOCID = getValueById('ReCTLOCID');
-			var ORDReLocID = getValueById('ORDReLocID');
-			var CheckFlag = getValueById("CheckMR") ? 1: 0;
-			var HospId = getValueById("Hospital");
-			var rtnstr = tkMakeServerCall("web.DHCOPBillHDDC", "CheckLOCBloodDis", OrdType, LOCDR, CheckFlag, ORDReLocID, "", HospId);
-			if (rtnstr == 1) {
-				DHCWeb_HISUIalert("已存在默认值");
-				return;
-			}
-			var myrtn = tkMakeServerCall("web.DHCOPBillHDDC", "AddHDDCDetailNew", LOCDR, OrdType, BloodDis, ReCTLOCID, CheckFlag, Locgroupflag, ORDReLocID, HospId);
-			var rtn = myrtn.split("^")[0];
-			if (rtn == 0) {
-				setValueById("LOCDR", "");
-				setValueById("BloodDis", "");
-				$.messager.alert('提示', '添加成功', 'info', function () {
-					$("#tDHCOPBillHDDCNew").datagrid("reload");
-				});
-			} else if (rtn == "-1005") {
-				DHCWeb_HISUIalert("该科室分类已维护采血地点");
-				return;
-			} else {
-				DHCWeb_HISUIalert("添加失败");
-			}
+		if (!r) {
+			return;
 		}
+		var ReCTLOCID = getValueById('ReCTLOCID');
+		var ORDReLocID = getValueById('ORDReLocID');
+		var CheckFlag = getValueById("CheckMR") ? 1: 0;
+		var HospId = getValueById("Hospital");
+		var rtnstr = tkMakeServerCall("web.DHCOPBillHDDC", "CheckLOCBloodDis", OrdType, LOCDR, CheckFlag, ORDReLocID, "", HospId);
+		if (rtnstr == 1) {
+			$.messager.popover({msg: "已存在默认值", type: "info"});
+			return;
+		}
+		var myrtn = tkMakeServerCall("web.DHCOPBillHDDC", "AddHDDCDetailNew", LOCDR, OrdType, BloodDis, ReCTLOCID, CheckFlag, Locgroupflag, ORDReLocID, HospId);
+		var rtn = myrtn.split("^")[0];
+		if (rtn == 0) {
+			setValueById("LOCDR", "");
+			setValueById("BloodDis", "");
+			$.messager.alert('提示', '添加成功', 'success', function () {
+				$("#tDHCOPBillHDDCNew").datagrid("reload");
+			});
+			return;
+		} 
+		if (rtn == -1005) {
+			$.messager.popover({msg: "该科室分类已维护采血地点", type: "info"});
+			return;
+		}
+		$.messager.popover({msg: "添加失败", type: "error"});
 	});
 }
 
-function Modfiy_Click() {
+function updateClick() {
 	var row = $("#tDHCOPBillHDDCNew").datagrid("getSelected");
 	if (!row || !row.RowID) {
-		DHCWeb_HISUIalert("请选择需要修改的行");
+		$.messager.popover({msg: "请选择需要修改的行", type: "info"});
 		return;
 	}
 	var id = row.RowID;
 	var OrdType = getValueById('OrdType');
 	if (OrdType == "") {
-		DHCWeb_HISUIalert("请选择标本");
+		$.messager.popover({msg: "请选择标本", type: "info"});
 		return;
 	}
 	var Locgroupflag = getValueById('Locgroupflag');
 	if (Locgroupflag == "") {
-		DHCWeb_HISUIalert("请选择科室类别");
+		$.messager.popover({msg: "请选择科室类别", type: "info"});
 		return;
 	}
 	var LOCDR = getValueById("LOCDR");
 	if (LOCDR == "") {
-		DHCWeb_HISUIalert("请选择科室");
+		$.messager.popover({msg: "请选择科室", type: "info"});
 		return;
 	}
 	var place = getValueById("BloodDis");
 	if (place == "") {
-		DHCWeb_HISUIalert("采血地点必填");
+		$.messager.popover({msg: "采血地点必填", type: "info"});
 		return;
 	}
 	$.messager.confirm("提示", "是否确认修改?", function (r) {
-		if (r) {
-			var ReCTLOCID = getValueById("ReCTLOCID");
-			var ORDReLocID = getValueById("ORDReLocID");
-			var CheckFlag = getValueById("CheckMR") ? 1 : 0;
-			var rtnstr = tkMakeServerCall("web.DHCOPBillHDDC", "CheckLOCBloodDis", OrdType, LOCDR, CheckFlag, ORDReLocID, id, getValueById("Hospital"));
-			if (rtnstr == 1) {
-				DHCWeb_HISUIalert("已存在默认值");
-				return;
-			}
-			var rtn = tkMakeServerCall("web.DHCOPBillHDDC", "ModFiyHDDCDetailNew", LOCDR, OrdType, place, id, ReCTLOCID, CheckFlag, ORDReLocID);
-			if (rtn == 0) {
-				$.messager.alert('提示', '修改成功', 'info', function () {
-					$("#tDHCOPBillHDDCNew").datagrid("reload");
-				});
-			} else {
-				DHCWeb_HISUIalert("修改失败");
-			}
+		if (!r) {
+			return;
 		}
+		var ReCTLOCID = getValueById("ReCTLOCID");
+		var ORDReLocID = getValueById("ORDReLocID");
+		var CheckFlag = getValueById("CheckMR") ? 1 : 0;
+		var rtnstr = tkMakeServerCall("web.DHCOPBillHDDC", "CheckLOCBloodDis", OrdType, LOCDR, CheckFlag, ORDReLocID, id, getValueById("Hospital"));
+		if (rtnstr == 1) {
+			$.messager.popover({msg: "已存在默认值", type: "info"});
+			return;
+		}
+		var rtn = tkMakeServerCall("web.DHCOPBillHDDC", "ModFiyHDDCDetailNew", LOCDR, OrdType, place, id, ReCTLOCID, CheckFlag, ORDReLocID);
+		if (rtn == 0) {
+			$.messager.alert('提示', '修改成功', 'success', function () {
+				$("#tDHCOPBillHDDCNew").datagrid("reload");
+			});
+			return;
+		}
+		$.messager.popover({msg: "修改失败", type: "error"});
 	});
 }
 
-function delete_Click() {
+function deleteClick() {
 	var row = $("#tDHCOPBillHDDCNew").datagrid("getSelected");
 	if (!row || !row.RowID) {
-		DHCWeb_HISUIalert("没有选择需要删除的行");
+		$.messager.popover({msg: "没有选择需要删除的行", type: "info"});
 		return;
 	}
 	var id = row.RowID;
 	$.messager.confirm("确认", "是否确认删除？", function (r) {
-		if (r) {
-			var rtn = tkMakeServerCall("web.DHCOPBillHDDC", "DelHDDCDetail", id);
-			if (rtn == 0) {
-				DHCWeb_HISUIalert("删除成功");
-				$("#tDHCOPBillHDDCNew").datagrid("reload");
-			} else {
-				DHCWeb_HISUIalert("删除失败");
-			}
+		if (!r) {
+			return;
 		}
+		var rtn = tkMakeServerCall("web.DHCOPBillHDDC", "DelHDDCDetail", id);
+		if (rtn == 0) {
+			$.messager.alert('提示', '删除成功', 'success', function () {
+				$("#tDHCOPBillHDDCNew").datagrid("reload");
+			});
+			return;
+		}
+		$.messager.popover({msg: "删除失败", type: "error"});
 	});
 }
 
@@ -291,13 +295,13 @@ function SelectRowHandler(index, rowData) {
 
 		setValueById("OrdType", rowData.myOrderType);
 
-		setValueById("CheckMR", (rowData.TCheckFlag == "1"));
+		setValueById("CheckMR", (rowData.TCheckFlag == 1));
 		m_SelectedRow = index;
 
 	} else {
 		$("#tDHCOPBillHDDCNew").datagrid("unselectRow", index);
 		m_SelectedRow = undefined;
-		$('.combobox-f:not(#Hospital)').combobox('clear').combobox('enable');
+		$(".combobox-f:not(#Hospital)").combobox("clear").combobox("enable");
 		$('#CTLOC').combobox('loadData', []);
 		
 		setValueById("LOCDR", "");
@@ -310,8 +314,8 @@ function SelectRowHandler(index, rowData) {
 	}
 }
 
-function Clear_OnClick() {
-	$('.combobox-f:not(#Hospital)').combobox('clear').combobox('enable');
+function clearClick() {
+	$(".combobox-f:not(#Hospital)").combobox("clear").combobox("enable");
 	$("#CTLOC").combobox("loadData", []);
 	setValueById("CTLOC", "");
 	setValueById("LOCDR", "");

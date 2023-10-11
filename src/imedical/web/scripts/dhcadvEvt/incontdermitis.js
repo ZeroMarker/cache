@@ -81,7 +81,7 @@ function InitReport(recordId)
 function SaveReport(flag)
 {
 	if($('#PatName').val()==""){
-		$.messager.alert("提示:","患者姓名为空，请输登记号或病案号回车选择记录录入患者信息！");	
+		$.messager.alert($g("提示:"),$g("患者姓名为空，请输登记号或病案号回车选择记录录入患者信息！"));	
 		return false;
 	}
 	///保存前,对页面必填项进行检查

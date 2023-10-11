@@ -49,6 +49,35 @@ function isExistVar(variableName) {
     return false;
 }
 
+// 提示消息
+function showEditorMsg(obj) {
+    if (isExistVar(obj.msg)) {
+        var msgTimeOut = 3000;
+        if (isExistVar(sysOption.messageScheme[obj.type])) {
+            if (sysOption.messageScheme[obj.type] != "") {
+                msgTimeOut = sysOption.messageScheme[obj.type];
+            }
+        }
+        var msgStyle = {};
+        if (isExistVar(sysOption.messageScheme.style)) {
+            if (sysOption.messageScheme.style != "") {
+                msgStyle = sysOption.messageScheme.style;
+                if (isExistVar(sysOption.messageScheme.style.left)) {
+                    if (sysOption.messageScheme.style.left == "center") {
+                        msgStyle.left = document.documentElement.clientWidth/2; // 居中显示
+                    }
+                }
+            }
+        }
+        $.messager.popover({
+            msg: obj.msg,
+            type: obj.type,
+            timeout: msgTimeOut,
+            style: msgStyle
+        });
+    }   
+}
+
 /* 获取鼠标在页面上的位置
  * @param ev  触发的事件
  * @return  x:鼠标在页面上的横向位置, y:鼠标在页面上的纵向位置
@@ -113,6 +142,13 @@ function getClientInfo()
 		}
 	});	
 	return clientInfo;
+}
+
+function judgeIsIE() { //判断是否IE
+	if (!!window.ActiveXObject || "ActiveXObject" in window)
+		return true;
+	else
+		return false;
 }
 
 function NewSearchBoxOnTree() {
@@ -268,7 +304,7 @@ function ajaxGET(data, onSuccess, onError) {
         },
         error: function (ret) {
             //$.messager.alert('发生错误', 'get err', 'error');
-            alert('get err');
+            //alert('get err');
             if (!onError) {}
             else {
                 onError(ret);
@@ -315,7 +351,7 @@ function ajaxPOST(data, onSuccess, onError) {
             }
         },
         error: function (ret) {
-            alert('post err');
+            //alert('post err');
             if (!onError) {}
             else {
                 onError(ret);
@@ -372,6 +408,12 @@ function replaceLinkParams(lnk) {
     ret = ret.replace(/@ssgroupID/g, patInfo.SsgroupID);
     ret = ret.replace(/@userLocID/g, patInfo.UserLocID);
     ret = ret.replace(/@userCode/g, patInfo.UserCode);
+    
+    if (ret.indexOf('?') != -1) {
+        ret = ret + '&MWToken='+getMWToken(); 
+    } else {
+        ret = ret + '?MWToken='+getMWToken();
+    }
     return ret;
 }
 
@@ -437,6 +479,7 @@ function createModalDialog(dialogId, dialogTitle, width, height, iframeId, ifram
             if(document.getElementById("emrEditor"))
     			document.getElementById("emrEditor").style.visibility="visible"; //隐藏插件
 			$("#"+dialogId).dialog('destroy');
+			selectedToothObj = "";//关闭dialog框时，将牙位图使用的全局变量清空；此全局变量，在双击牙位图图片打开编辑页面时，将牙位图中的牙位牙面信息传给dialog框 add by niucaicai
         }
     });
 }
@@ -568,12 +611,12 @@ function createWindow(id, title, url, width, height, iTop, iLeft, icon) {
         /*,
         onBeforeClose: function(){
             
-        },
+        }*/,
         onClose: function(){
-            /*$("#"+id).window('destroy');
+            $("#"+id).window('destroy');
             //移除存在的window
             $("body").remove("#"+id);
-        }*/
+        }
     });
 }
 
@@ -583,7 +626,11 @@ var common = {
         var result = '';
         var data = ajaxDATA('String', 'EMRservice.BL.BLEMRSign', 'GetUserInfo', patInfo.UserCode, '', patInfo.UserLocID);
         ajaxGETSync(data, function (ret) {
-            result = $.parseJSON(ret.replace(/\'/g, "\""));
+            if (ret == ""){
+                $.messager.alert('发生错误', '获取当前医师级别等信息为空，请检查基础信息维护！', 'info');
+            }else{
+                result = $.parseJSON(ret.replace(/\'/g, "\""));
+            }
         }, function (ret) {
             //$.messager.alert('发生错误', 'GetUserInfo error:' + ret, 'error');
             alert('GetUserInfo error:' + ret);
@@ -781,6 +828,16 @@ var common = {
         });        
         return result;
     },
+    isRecSignUser: function (insID) {
+        var result = "";
+        var data = ajaxDATA('String', 'EMRservice.BOPrivAssist', 'IsRecSignUser', insID, patInfo.UserID);
+        ajaxGETSync(data, function (ret) {
+            result = ret;
+        }, function (ret) {
+            alert('isRecSignUser error:' + ret);
+        });        
+        return result;
+    },
     getSignUnitPath: function (insID) {
         //获取模板维护的对应签名单元路径
         var result = '';
@@ -812,7 +869,112 @@ var common = {
             alert('GetRecodeParamByInsID error:' + ret);
         });
     },
-    foo: function () {}
+    IsAllowOEPCreateConfig: function (emrDocIds) {
+        var result = '1';
+        var data = ajaxDATA('String', 'EMRservice.BL.opInterface', 'IsAllowCreateByConfig', patInfo.PatientID, patInfo.UserLocID, emrDocIds);
+        ajaxGETSync(data, function (ret) {
+            result = ret;
+        }, function (ret) {
+            alert('IsAllowCreateByConfig error:' + ret);
+        });
+        return result; 
+    },
+    GetAdmByInstanceID: function (insID, func) {
+        var data = ajaxDATA('String', 'EMRservice.Ajax.opInterface', 'getAdmByInstanceID', insID);
+        ajaxGETSync(data, function (ret) {
+            func($.parseJSON(ret));
+        }, function (ret) {
+            alert('getAdmByInstanceID error:' + ret);
+        });
+    },
+    GetSavedFirstMultiRecord: function (episodeID, insID, func) {
+        var data = ajaxDATA('String', 'EMRservice.BL.opInterface', 'getSavedFirstMultiRecord', episodeID, insID);
+        ajaxGET(data, function (ret) {
+            func($.parseJSON(ret));
+        }, function (ret) {
+            alert('GetRecodeParamByInsID error:' + ret);
+        });
+    },
+    GetSyncSavedFirstMultiRecord: function (episodeID, insID, func) {
+        var data = ajaxDATA('String', 'EMRservice.BL.opInterface', 'getSavedFirstMultiRecord', episodeID, insID);
+        ajaxGETSync(data, function (ret) {
+            func($.parseJSON(ret));
+        }, function (ret) {
+            alert('GetSyncRecodeParamByInsID error:' + ret);
+        });
+    },
+    isTitleUniqueCreate:function(titleCode)
+	{
+		var result = "";
+		var data = ajaxDATA('String', 'EMRservice.BL.BLClientCategory', 'IsTitleUniqueCreate', titleCode, patInfo.EpisodeID);
+		ajaxGETSync(data, function (ret) {
+            result = ret;
+        }, function (ret) {
+            alert('GetCreatorMessage error:' + ret);
+        });
+		return result;	
+	},
+    //获取当前病历创建者code和name
+    getCreatorMessage:function(instanceId)
+	{
+		var result = "";
+		var data = ajaxDATA('String', 'EMRservice.BL.BLEMRLogs', 'GetCreatorMessage', instanceId);
+		ajaxGETSync(data, function (ret) {
+            if (ret !== ""){
+                result = $.parseJSON(ret.replace(/\'/g, "\""));
+            }
+        }, function (ret) {
+            alert('GetCreatorMessage error:' + ret);
+        });
+		return result;	
+	},
+    addUserConfigData: function (type, config){
+        var data = ajaxDATA("String", "EMRservice.BL.BLUserConfig", "AddData", patInfo.UserID, patInfo.UserLocID, type, config);
+        ajaxGETSync(data, function (ret){}, function (ret){
+            alert('addUserConfigData error:' + ret);
+        });
+    },
+    getUserConfigData: function (type){
+        var config = "";
+        var data = ajaxDATA("String", "EMRservice.BL.BLUserConfig", "GetConfig", patInfo.UserID, patInfo.UserLocID, type);
+        ajaxGETSync(data, function (ret){
+            if (ret != ""){
+                config = ret;
+            }
+        }, function (ret){
+            alert('getUserConfigData error:' + ret);
+        });
+        return config;
+    },
+    // 2021/11/2 Zhangxy 设置用户配置的缩放
+  	setOPScaling: function (opScale) {
+    	var data = ajaxDATA(
+      		"String",
+      		"EMRservice.BL.BLUserPageConfig",
+      		"SetOPScaling",
+      		patInfo.UserID,
+      		patInfo.UserLocID,
+      		"" + opScale
+    	);
+    	ajaxGET(
+      		data,
+      		function (ret) {},
+      		function (ret) {
+        		alert("SetOPScale error:" + ret);
+      		}
+    	);
+  	},
+    foo: function () {},
+    isHasValidSign: function (instanceId) {
+        var result = "0";
+        var data = ajaxDATA('String', 'EMRservice.BOPrivAssist', 'HasValidSign', instanceId);
+        ajaxGETSync(data, function (ret) {
+            result = ret;
+        }, function (ret) {
+            alert('HasValidSign error:' + ret);
+        });
+        return result;
+    }
 };
 
 //国际化改造获取翻译

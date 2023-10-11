@@ -7,6 +7,10 @@ var rowid=0;
 //装载页面  函数名称固定
 function BodyLoadHandler()
 {
+	hidePanelTitle(); //added by LMH 20230211 UI 极简组件界面弹框面板标题隐藏
+	initPanelHeaderStyle(); //added by LMH 20230211 UI 极简组件界面标题格式
+	showBtnIcon('BAdd^BUpdate^BDelete',false); //modified by LMH 20230211 动态设置是否极简显示按钮图标
+	initButtonColor(); //added by LMH 20230211 UI 初始化按钮颜色
 	initButtonWidth();///Add By QW 2018-08-31 HISUI改造:修改按钮长度
 	setButtonText();///Add By QW 2018-09-29 HISUI改造:按钮文字规范
 	InitUserInfo();

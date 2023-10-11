@@ -1,4 +1,4 @@
-var PageLogicObj={
+ï»¿var PageLogicObj={
 	m_RBAppointmentQueryTabDataGrid:"",
 	m_deptRowId:"",
 	m_DocRowId:"",
@@ -6,13 +6,13 @@ var PageLogicObj={
 	m_TimeRangeRowId:""
 };
 $(function(){
-	//³õÊ¼»¯
+	//åˆå§‹åŒ–
 	Init();
-	//ÊÂ¼ş³õÊ¼»¯
+	//äº‹ä»¶åˆå§‹åŒ–
 	InitEvent();
-	//Ò³ÃæÔªËØ³õÊ¼»¯
+	//é¡µé¢å…ƒç´ åˆå§‹åŒ–
 	PageHandle();
-	//±í¸ñÊı¾İ³õÊ¼»¯
+	//è¡¨æ ¼æ•°æ®åˆå§‹åŒ–
 	RBAppointmentQueryTabDataGridLoad();
 });
 function Init(){
@@ -20,20 +20,36 @@ function Init(){
 }
 function InitRBAppointmentQueryTabDataGrid(){
 	var Columns=[[ 
-		{field:'TLoc',title:'¿ÆÊÒ',width:120},
-		{field:'TDoc',title:'Ò½Éú',width:100},
-		{field:'TTimeRange',title:'Ê±¼ä¶Î',width:140},
-		{field:'TPatientName',title:'»¼ÕßĞÕÃû',width:150},
-		{field:'TAppNum',title:'Ô¤Ô¼',width:90},
-		{field:'TRegNum',title:'È¡ºÅ',width:90},
-		{field:'TCancelNum',title:'È¡Ïû',width:90},
-		{field:'THYNum',title:'Ë¬Ô¼',width:100},
-		{field:'TAppTDateAndTime',title:'Ô¤Ô¼ÈÕÆÚ',width:150},
-		{field:'TAppTLastStatusDateAndTime',title:'È¡ºÅÈÕÆÚ',width:150},
-		{field:'TAppTSeqNo',title:'Ô¤Ô¼ĞòºÅ',width:90},
-		{field:'TPoliticalLevel',title:'»¼Õß¼¶±ğ',width:90},
-		{field:'TSecretLevel',title:'»¼ÕßÃÜ¼¶',width:90},
-		{field:'TTel',title:'ÁªÏµµç»°',width:90}
+		{field:'TLoc',title:'ç§‘å®¤',width:120},
+		{field:'TDoc',title:'åŒ»ç”Ÿ',width:100},
+		{field:'TTimeRange',title:'æ—¶é—´æ®µ',width:140},
+		{field:'TPatNo',title:'ç™»è®°å·',width:150},
+		{field:'TPatientName',title:'æ‚£è€…å§“å',width:150},
+		{field:'TAppNum',title:'é¢„çº¦',width:90},
+		{field:'TRegNum',title:'å–å·',width:90},
+		{field:'TCancelNum',title:'å–æ¶ˆ',width:90},
+		{field:'THYNum',title:'çˆ½çº¦',width:100},
+		{field:'TAppTDateAndTime',title:'é¢„çº¦æ—¥æœŸ',width:150},
+		{field:'TAPPTStatusDesc',title:'çŠ¶æ€',width:48,
+			styler: function(value,row,index){
+				if (value == "å–æ¶ˆ"){
+					return 'background-color:#BFBFBF;color:white;';
+				} else if (value == "å–å·") {
+					return 'background-color:#33CC66;color:white;';
+				} else if (value == "çˆ½çº¦") {
+					return 'background-color:red;color:white;';
+				}
+			}
+		},
+		{field:'TAppTLastStatusDateAndTime',title:'å–å·/å–æ¶ˆé¢„çº¦æ—¥æœŸ',width:150},
+		{field:'TAPPTLastStatusUserDesc',title:'å–å·/å–æ¶ˆé¢„çº¦æ“ä½œå‘˜',width:70},
+		{field:'TAppTSeqNo',title:'é¢„çº¦åºå·',width:90},
+		{field:'TAdmDate',title:'å°±è¯Šæ—¥æœŸ',width:90},
+		{field:'TAppUserDesc',title:'é¢„çº¦æ“ä½œå‘˜',width:90},
+		{field:'TPrice',title:'ä»·æ ¼',width:90},
+		{field:'TPoliticalLevel',title:'æ‚£è€…çº§åˆ«',width:90},
+		{field:'TSecretLevel',title:'æ‚£è€…å¯†çº§',width:90},
+		{field:'TTel',title:'è”ç³»ç”µè¯',width:110}
     ]]
 	var RBAppointmentQueryTabDataGrid=$("#RBAppointmentQueryTab").datagrid({
 		fit : true,
@@ -115,7 +131,7 @@ function InitTimeRange(){
         textField:'Desc',
         columns:[[  
             {field:'HIDDEN',title:'',hidden:true},
-			{field:'Desc',title:'Ãû³Æ',width:350}
+			{field:'Desc',title:'åç§°',width:350}
         ]], 
         pagination:true,
         panelWidth:400,
@@ -145,7 +161,7 @@ function InitLoc(){
         textField:'OPLocdesc',
         columns:[[  
             {field:'rowid',title:'',hidden:true},
-			{field:'OPLocdesc',title:'¿ÆÊÒÃû³Æ',width:350}
+			{field:'OPLocdesc',title:'ç§‘å®¤åç§°',width:350}
         ]], 
         pagination:true,
         panelWidth:400,
@@ -177,7 +193,7 @@ function InitDoc(){
         textField:'OPLocdesc',
         columns:[[  
             {field:'rowid',title:'',hidden:true},
-			{field:'OPLocdesc',title:'Ãû³Æ',width:350}
+			{field:'OPLocdesc',title:'åç§°',width:350}
         ]], 
         pagination:true,
         panelWidth:400,
@@ -210,7 +226,7 @@ function InitSessionType(){
         textField:'Desc',
         columns:[[  
             {field:'HIDDEN',title:'',hidden:true},
-			{field:'Desc',title:'Ãû³Æ',width:350}
+			{field:'Desc',title:'åç§°',width:350}
         ]], 
         pagination:true,
         panelWidth:400,
@@ -259,13 +275,18 @@ function myparser(s){
 	}
 }
 function ExportRQ_Change() {
+	var Data=PageLogicObj.m_RBAppointmentQueryTabDataGrid.datagrid("getRows");
+	if (Data.length==0){
+		$.messager.alert("æç¤º","è¯·æŸ¥è¯¢å‡ºæ•°æ®åå¯¼å‡º!");
+		return false;
+	}
 	var StartDate=$("#StDate").datebox('getValue')
 	var EndDate=$("#EndDate").datebox('getValue')
 	var LocDesc=$("#LocDesc").lookup('getText');
 	var DocDesc=$("#DocDesc").lookup('getText');
 	var TimeRange=$("#TimeRange").lookup('getText');
 	var SessionType=$("#SessionType").lookup('getText');
-	var FileName=StartDate+"ÖÁ"+EndDate+LocDesc+DocDesc+SessionType+TimeRange+"RBQuery";
+	var FileName=StartDate+"è‡³"+EndDate+LocDesc+DocDesc+SessionType+TimeRange+"RBQuery";
 	if ($("#LocDesc").lookup('getText')==""){
 		PageLogicObj.m_deptRowId="";
 	}
@@ -281,7 +302,7 @@ function ExportRQ_Change() {
 	var rtn = $cm({
 		dataType:'text',
 		ResultSetType:'Excel',
-		ExcelName:'Ô¤Ô¼ĞÅÏ¢Ò»ÀÀ±í',
+		ExcelName:'é¢„çº¦ä¿¡æ¯ä¸€è§ˆè¡¨',
 		ClassName:"web.DHCRBAppointmentQuery",
 		QueryName:"AppointmentNumQueryExport",
 		StartDate:$("#StDate").datebox('getValue'), 
@@ -296,13 +317,22 @@ function ExportRQ_Change() {
 	location.href = rtn;
 }
 function ExportPrintCom(ResultSetTypeDo){
+	var Data=PageLogicObj.m_RBAppointmentQueryTabDataGrid.datagrid("getRows");
+	if (Data.length==0){
+		if (ResultSetTypeDo=="Export"){
+			$.messager.alert("æç¤º","è¯·æŸ¥è¯¢å‡ºæ•°æ®åå¯¼å‡º!");
+		}else{
+			$.messager.alert("æç¤º","è¯·æŸ¥è¯¢å‡ºæ•°æ®åæ‰“å°!");	
+		}
+		return false;
+	}
 	var StartDate=$("#StDate").datebox('getValue')
 	var EndDate=$("#EndDate").datebox('getValue')
 	var LocDesc=$("#LocDesc").lookup('getText');
 	var DocDesc=$("#DocDesc").lookup('getText');
 	var TimeRange=$("#TimeRange").lookup('getText');
 	var SessionType=$("#SessionType").lookup('getText');
-	var FileName=StartDate+"ÖÁ"+EndDate+LocDesc+DocDesc+SessionType+TimeRange+"RBQuery";
+	var FileName=StartDate+"è‡³"+EndDate+LocDesc+DocDesc+SessionType+TimeRange+"RBQuery";
 	if ($("#LocDesc").lookup('getText')==""){
 		PageLogicObj.m_deptRowId="";
 	}
@@ -317,9 +347,9 @@ function ExportPrintCom(ResultSetTypeDo){
 	}
 	$.cm({
 		 ResultSetTypeDo:ResultSetTypeDo,
-	     ExcelName:"Ô¤Ô¼ĞÅÏ¢Ò»ÀÀ±í",
+	     ExcelName:"é¢„çº¦ä¿¡æ¯ä¸€è§ˆè¡¨",
 	     ResultSetType:"ExcelPlugin",
-	     localDir:ResultSetTypeDo=="Export"?"Self":"",//ÓÃ»§Ñ¡ÔñÂ·¾¶
+	     localDir:ResultSetTypeDo=="Export"?"Self":"",//ç”¨æˆ·é€‰æ‹©è·¯å¾„
 	     ClassName : "web.DHCRBAppointmentQuery",
 	     QueryName : "AppointmentNumQueryExport",
 	     StartDate:$("#StDate").datebox('getValue'), 

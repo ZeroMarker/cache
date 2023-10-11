@@ -1,230 +1,316 @@
-﻿var NormOrdPriorLimitColumns;
-$(function(){
-	InitHospList();
-	$("#BSave").click(SaveInfo);
-	$("#List_NormOrdItemCat").css('height',$(window).height()-155);
-})
-function InitHospList()
-{
+﻿$(function(){
+    $('body').layout('panel','west').panel('resize',{width:$('body').innerWidth()/2-5});
+	$('body').layout('resize');
 	var hospComp = GenHospComp("Doc_BaseConfig_OrdPriorLimit");
 	hospComp.jdata.options.onSelect = function(e,t){
-		InitList("List_NormOrdItemCat","OnlyNORMItemCat")
-		InittabNormOrdPriorLimit();
+		$('#tabCatPriorLimit,#tabOrdPriorLimit').datagrid('unselectAll').datagrid('reload');
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){
-		InitList("List_NormOrdItemCat","OnlyNORMItemCat")
-		InittabNormOrdPriorLimit();
-	}
-}
-function InitList(param1,param2)
-{
-	$("#"+param1+"").find("option").remove()
-	var objScope=$.cm({
-		 ClassName:"DHCDoc.DHCDocConfig.ItemPrior",
-		 QueryName:"FindCatListPrior",
-		 PriorCode:"NORM",
-		 value:param2,
-		 HospId:$HUI.combogrid('#_HospList').getValue()
-	},false);
-	var vlist = ""; 
-	var selectlist="";
-	jQuery.each(objScope.rows, function(i, n) { 
-		    selectlist=selectlist+"^"+n.selected
-	        vlist += "<option value=" + n.ARCICRowId + ">" + n.ARCICDesc + "</option>"; 
-	});
-	$("#"+param1+"").append(vlist); 
-	for (var j=1;j<=selectlist.split("^").length;j++){
-			if(selectlist.split("^")[j]=="true"){
-				$("#"+param1+"").get(0).options[j-1].selected = true;
+		InitCatLimitList()
+		InitOrdLimitList();
+		$("#Radio_OnlyShortPriority,#Radio_OnlyLongPriority").radio({
+			requiredSel:true,
+			onChecked:function(e,value){
+				UpdatePanelTitle(e.target.id);
+				$('#tabCatPriorLimit,#tabOrdPriorLimit').datagrid('unselectAll').datagrid('reload');
 			}
+		});
+		$('#BSave').click(SaveExceptPrior);
 	}
-}
-function InittabNormOrdPriorLimit(){
-	var NormOrdPriorLimitToolBar = [{
-            text: '增加',
-            iconCls: 'icon-add',
-            handler: function() { 
-				editRow = undefined;
-				NormOrdPriorLimitDataGrid.datagrid("rejectChanges");
-				NormOrdPriorLimitDataGrid.datagrid('unselectAll');
-                if (editRow != undefined) {
-                    return;
-                }else{
-                    NormOrdPriorLimitDataGrid.datagrid("insertRow", {
-                        index: 0,
-                        row: {}
-                    });
-                    NormOrdPriorLimitDataGrid.datagrid("beginEdit", 0);
-                    editRow = 0;
-                }
-              
-            }
-        },{
-            text: '删除',
-            iconCls: 'icon-cancel',
-            handler: function() {
-                var rows = NormOrdPriorLimitDataGrid.datagrid("getSelections");
-                if (rows.length > 0) {
-                    $.messager.confirm("提示", "你确定要删除吗?",
-                    function(r) {
-                        if (r) {
-							var ids = [];
-                            for (var i = 0; i < rows.length; i++) {
-                                ids.push(rows[i].Index);
-                            }
-                            var IndexS=ids.join(',');
-                            if (IndexS==""){
-	                            editRow = undefined;
-				                NormOrdPriorLimitDataGrid.datagrid("rejectChanges");
-				                NormOrdPriorLimitDataGrid.datagrid("unselectAll");
-				                return;
-	                        }
-	                        var value=$.m({
-								 ClassName:"DHCDoc.DHCDocConfig.ItemPrior",
-								 MethodName:"DelPriorLimit",
-								 Value:"OnlyNORMItemCat",
-								 PriorCode:"NORM",
-								 IndexS:IndexS,
-								 HospId:$HUI.combogrid('#_HospList').getValue()
-							},false);
-					        if(value=="0"){
-						       NormOrdPriorLimitDataGrid.datagrid('load');
-       					       NormOrdPriorLimitDataGrid.datagrid('unselectAll');
-       					       $.messager.show({title:"提示",msg:"删除成功"});
-					        }else{
-						       $.messager.alert('提示',"删除失败:"+value);
-							   return false;
-					        }
-					        editRow = undefined;
-                        }
-                    });
-                } else {
-                    $.messager.alert("提示", "请选择要删除的行", "error");
-                }
-            }
-        },{
-            text: '取消编辑',
-            iconCls: 'icon-redo',
-            handler: function() {
-                //取消当前编辑行把当前编辑行罢undefined回滚改变的数据,取消选择的行
-                editRow = undefined;
-                NormOrdPriorLimitDataGrid.datagrid("rejectChanges");
-                NormOrdPriorLimitDataGrid.datagrid("unselectAll");
-            }
-        },{
-			text: '保存',
+});
+function InitCatLimitList()
+{
+	$('#tabCatPriorLimit').datagrid({
+		idField:'id',
+		singleSelect:false,
+		rownumbers:false,
+		bodyCls:'panel-body-gray',
+		columns:[[
+			{field:'checkbox',checkbox:true},
+			{field:'id',hidden:true},
+            {field:'text',title:'子类',width:200},
+			{field:'exceptPrior',title:'例外医嘱类型',width:200,align:'center',
+				formatter:function(value,rec){  
+					if(!value) value='增加';
+					return '<a href="#" onclick="ExceptPriorShow(\'Cat\',\''+rec.id+'\')">'+value+'</a>';
+				}
+			}
+		]],
+		toolbar:[{
+			text:'保存',
 			iconCls: 'icon-save',
-			handler: function() {
-				var editors = NormOrdPriorLimitDataGrid.datagrid('getEditors', editRow);
-				var arcrowid = editors[0].target.combobox('getValue');
-				if(arcrowid==""){
-					$.messager.alert('提示',"请选择医嘱项目");
+			handler: function(){
+				var PriorCode= GetPriorCode();
+				if (!PriorCode) {
+					$.messager.alert("提示","请选择限制医嘱类型!");
 					return false;
 				}
-				var SaveInfo=arcrowid;
+				var SelCatIDArr=new Array();
+				var CheckRows=$('#tabCatPriorLimit').datagrid('getSelections');
+				$.each(CheckRows,function(index,row){
+					SelCatIDArr.push(row.id);
+				});
 				var value=$.m({
-					 ClassName:"DHCDoc.DHCDocConfig.ItemPrior",
-					 MethodName:"SaveOrdPriorLimit",
-					 Value:"OnlyNORMItemCat",
-					 PriorCode:"NORM",
-					 Info:arcrowid,
-					 HospId:$HUI.combogrid('#_HospList').getValue()
+					ClassName:"DHCDoc.DHCDocConfig.ItemPrior",
+					MethodName:"SavePriorLimitConfig",
+					Value:GetNodeValue(),
+					PriorCode:PriorCode,
+					ItemCatS:SelCatIDArr.join('^'),
+					HospId:$('#_HospList').getValue()
 				},false);
-		        if(value=="0"){
-			       NormOrdPriorLimitDataGrid.datagrid('load');
-			       NormOrdPriorLimitDataGrid.datagrid('unselectAll');
-			       $.messager.popover({msg:"保存成功!",type:'success'});
-		        }else if(value=="-1"){
-					$.messager.alert('提示',"该记录已存在");
-					return false;
-				}else if(value=="-2"){
-					$.messager.alert('提示',"请在下拉框中选择有效的医嘱项!");
-					return false;
+				if (value ==0) {
+					$.messager.popover({msg:"保存成功!",type:'success'});
 				}else{
-			       $.messager.alert('提示',"保存失败:"+value);
-				   return false;
-		        }
-		        editRow = undefined;
+					$.messager.alert("提示",value);
+				}
 			}
-		}];
-	NormOrdPriorLimitColumns=[[    
-                    { field: 'ArcimDr', title: 'ID', width: 1,hidden:true
-					},
-					{ field: 'Index', title: 'ID', width: 1,hidden:true
-					},
-        			{ field: 'ArcimDesc', title: '名称', width: 80,
-        			  editor:{
-		                         type:'combogrid',
-		                         options:{
-		                             required: true,
-		                             panelWidth:450,
-									 panelHeight:350,
-		                             idField:'ArcimRowID',
-		                             textField:'ArcimDesc',
-		                            value:'',//缺省值 
-		                            mode:'remote',
-									pagination : true,//是否分页   
-									rownumbers:true,//序号   
-									collapsible:false,//是否可折叠的   
-									fit: true,//自动大小   
-									pageSize: 10,//每页显示的记录条数，默认为10   
-									pageList: [10],//可以设置每页记录条数的列表  
-		                            url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
-		                            columns:[[
-		                                {field:'ArcimDesc',title:'名称',width:400,sortable:true},
-					                    {field:'ArcimRowID',title:'ID',width:120,sortable:true},
-					                    {field:'selected',title:'ID',width:120,sortable:true,hidden:true}
-		                             ]],
-		                             onBeforeLoad:function(param){
-						                 var desc=param['q'];
-						                 param = $.extend(param,{Alias:param["q"],HospId:$HUI.combogrid('#_HospList').getValue()});
-						             }
-                        		}
-		        		}
-					}
-    			 ]];
-	NormOrdPriorLimitDataGrid=$('#tabNormOrdPriorLimit').datagrid({  
-		fit : true,
-		width : 'auto',
-		border : false,
-		striped : true,
-		singleSelect : true,
-		fitColumns : true,
-		autoRowHeight : false,
-		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ItemPrior&QueryName=FindOrdPriorLimit&PriorCode=NORM&Value=OnlyNORMItemCat&HospId="+$HUI.combogrid('#_HospList').getValue(),
-		loadMsg : '加载中..',  
-		pagination : true,  //是否分页
-		rownumbers : true,  //
-		idField:"Index",
-		pageSize:15,
-		pageList:[15,50,100,200],
-		columns :NormOrdPriorLimitColumns,
-		toolbar :NormOrdPriorLimitToolBar,
+		}],
+		onBeforeLoad:function(param){
+			param.ClassName='DHCDoc.DHCDocConfig.ItemPrior';
+			param.QueryName='FindCatListPrior';
+			param.PriorCode=GetPriorCode();
+			param.value=GetNodeValue();
+			param.HospId=$('#_HospList').getValue();
+		},
 		onLoadSuccess:function(data){
-			editRow = undefined;
-			/*editRow = undefined;
-			NormOrdPriorLimitDataGrid.datagrid("rejectChanges");
-		    NormOrdPriorLimitDataGrid.datagrid("unselectAll");*/
+			$.each(data.rows,function(index,row){
+				if(row.selected){
+					$('#tabCatPriorLimit').datagrid('selectRow',index);
+				}
+			});
 		}
 	});
-};
-function SaveInfo(){
-	var NormOrdItemCatStr=""
-	var size = $("#List_NormOrdItemCat" + " option").size();
-	if(size>0){
-		$.each($("#List_NormOrdItemCat"+" option:selected"), function(i,own){
-			var svalue = $(own).val();
-			if (NormOrdItemCatStr=="") NormOrdItemCatStr=svalue
-			else NormOrdItemCatStr=NormOrdItemCatStr+"^"+svalue
-		})
-	} 
-	var value=$.m({
-		 ClassName:"DHCDoc.DHCDocConfig.ItemPrior",
-		 MethodName:"SavePriorLimitConfig",
-		 Value:"OnlyNORMItemCat",
-		 PriorCode:"NORM",
-		 ItemCatS:NormOrdItemCatStr,
-		 HospId:$HUI.combogrid('#_HospList').getValue()
+}
+function InitOrdLimitList(){
+	$('#tabOrdPriorLimit').datagrid({
+		singleSelect:false,
+		rownumbers:false,
+		bodyCls:'panel-body-gray',
+		columns:[[
+			{field:'checkbox',checkbox:true},
+			{field:'Index',hidden:true},
+			{field:'ArcimDr',hidden:true},
+            {field:'ArcimDesc',title:'医嘱项',width:200,valueField:'ArcimDr',
+				editor:{
+					type:'lookup',
+					options:{
+						url:$URL,
+						mode:'remote',
+						method:"Get",
+						idField:'ArcimRowID',
+						textField:'ARCIMDesc',
+						columns:[[  
+							{field:'ARCIMDesc',title:'名称',width:320,sortable:true},
+							{field:'ArcimRowID',title:'ID',width:70,sortable:true}
+						]],
+						pagination:true,
+						panelWidth:400,
+						panelHeight:400,
+						isCombo:true,
+						minQueryLen:2,
+						delay:'500',
+						queryOnSameQueryString:true,
+						queryParams:{ClassName: 'web.DHCARCOrdSets',QueryName: 'LookUpItem'},
+						onBeforeLoad:function(param){
+							param = $.extend(param,{Item:param['q'],GroupID:'',OrderPrescType:"Other",HospID:$('#_HospList').getValue()});
+						}
+					}
+				}
+			},
+			{field:'exceptPrior',title:'例外医嘱类型',width:200,align:'center',
+				formatter:function(value,rec){  
+					if(!rec.Index) return '';
+					if(!value) value='增加';
+					return '<a href="#" onclick="ExceptPriorShow(\'Item\',\''+rec.Index+'\')">'+value+'</a>';
+				}
+			}
+		]],
+		toolbar:[{
+			text:'增加',
+			iconCls: 'icon-add',
+			handler: function(){
+				var row={};
+				$('#tabOrdPriorLimit').datagrid('appendRow',row);
+				var rows= $('#tabOrdPriorLimit').datagrid('getRows');
+				$('#tabOrdPriorLimit').datagrid('beginEdit',rows.length-1).datagrid('scrollTo',rows.length-1);
+			}
+		},'-',{
+			text:'修改',
+			iconCls: 'icon-edit',
+			handler: function(){
+				var Selected= $('#tabOrdPriorLimit').datagrid('getSelected');
+				if(!Selected){
+					$.messager.popover({msg:"请选择需要修改项目",type:'alert'});
+					return;
+				}
+				var index= $('#tabOrdPriorLimit').datagrid('getRowIndex',Selected);
+				$('#tabOrdPriorLimit').datagrid('beginEdit',index);
+			}
+		},'-',{
+			text:'保存',
+			iconCls: 'icon-save',
+			handler: function(){
+				var PriorCode= GetPriorCode();
+				if (!PriorCode) {
+					$.messager.alert("提示","请选择限制医嘱类型!");
+					return false;
+				}
+				var SaveRows=$('#tabOrdPriorLimit').datagrid('getEditRows');
+				if(!SaveRows.length){
+					$.messager.popover({msg:"没有需要保存的数据",type:'alert'});
+					return;
+				}
+				var ArcimArr=new Array();
+				$.each(SaveRows,function(index,row){
+					ArcimArr.push(row.ArcimDr);
+				});
+				var value=$.m({
+					ClassName:"DHCDoc.DHCDocConfig.ItemPrior",
+					MethodName:"SaveOrdPriorLimit",
+					Value:GetNodeValue(),
+					PriorCode:PriorCode,
+					Info:ArcimArr.join('^'),
+					HospId:$('#_HospList').getValue()
+				},false);
+				if (value==0) {
+					$.messager.popover({msg:"保存成功!",type:'success'});
+					$('#tabOrdPriorLimit').datagrid('reload');
+				}else{
+					$.messager.alert("提示",value);
+				}
+			}
+		},'-',{
+			text:'删除',
+			iconCls: 'icon-remove',
+			handler: function(){
+				var CheckRows=$('#tabOrdPriorLimit').datagrid('getSelections');
+				if(!CheckRows.length){
+					$.messager.popover({msg:"请选择需要删除项目",type:'alert'});
+					return;
+				}
+				var delIndex=new Array();
+				$.each(CheckRows,function(index,row){
+					if(row.Index){
+						delIndex.push(row.Index);
+					}else{
+						var rowIndex=$('#tabOrdPriorLimit').datagrid('getRowIndex',row);
+						$('#tabOrdPriorLimit').datagrid('deleteRow',rowIndex);
+					}
+				});
+				if(delIndex.length){
+					$.messager.confirm('提示','确定删除所选医嘱',function(r){
+						if(r){
+							var value=$.m({
+								ClassName:"DHCDoc.DHCDocConfig.ItemPrior",
+								MethodName:"DelPriorLimit",
+								Value:GetNodeValue(),
+								PriorCode:GetPriorCode(),
+								IndexS:delIndex.join('^'),
+								HospId:$('#_HospList').getValue()
+						   },false);
+						   if(value=="0"){
+								$('#tabOrdPriorLimit').datagrid('unselectAll').datagrid('reload');
+								$.messager.popover({msg:"删除成功!",type:'success'});
+						   }else{
+							  $.messager.alert('提示',"删除失败:"+value);
+							  return false;
+						   }
+						}
+					});
+				}
+			}
+		}],
+		onDblClickRow:function(index, row){
+			$(this).datagrid('beginEdit',index);
+		},
+		onBeforeLoad:function(param){
+			param.ClassName='DHCDoc.DHCDocConfig.ItemPrior';
+			param.QueryName='FindOrdPriorLimit';
+			param.PriorCode=GetPriorCode();
+			param.Value=GetNodeValue();
+			param.HospId=$('#_HospList').getValue();
+		}
+	});
+}
+function GetPriorCode(){
+	var PriorCode="";
+	if ($("#Radio_OnlyShortPriority").radio('getValue')) {
+		var PriorCode="NORM";
+	}else if ($("#Radio_OnlyLongPriority").radio('getValue')){
+		var PriorCode="S";
+	}
+	return PriorCode;
+}
+function GetNodeValue(){
+	if ($("#Radio_OnlyShortPriority").radio('getValue')) {
+		var NodeValue="OnlyNORMItemCat";
+	}else if ($("#Radio_OnlyLongPriority").radio('getValue')){
+		var NodeValue="OnlyLongItemCat"
+	}
+	return NodeValue;
+}
+function UpdatePanelTitle(id){
+	if (id =="Radio_OnlyShortPriority") {
+		$("#westPanel").panel('setTitle','仅可开临时的医嘱子类')
+		$("#eastPanel").panel('setTitle','仅可开临时的医嘱项目')
+	}else if(id =="Radio_OnlyLongPriority"){
+		$("#westPanel").panel('setTitle','仅可开长期的医嘱子类')
+		$("#eastPanel").panel('setTitle','仅可开长期的医嘱项目')
+	}
+}
+function ExceptPriorShow(ItemType,ItemValue)
+{
+	var PriorCode= GetPriorCode();
+	if (!PriorCode) {
+		$.messager.alert("提示","请选择限制医嘱类型!");
+		return websys_cancel();
+	}
+	$('#dialog-prior').dialog('options').ItemType=ItemType;
+	$('#dialog-prior').dialog('options').ItemValue=ItemValue;
+	$('#dialog-prior').dialog('open');
+	$('#PriorList').empty();
+	$.cm({
+		ClassName:'DHCDoc.DHCDocConfig.ItemPrior',
+		QueryName:'QueryPrior',
+		ItemType:ItemType,
+		ItemValue:ItemValue,
+		Value:GetNodeValue(),
+		PriorCode:GetPriorCode(),
+		HospId:$('#_HospList').getValue()
+	},function(data){
+		$.each(data.rows,function(index,row){
+			var $option=$("<option value='"+row.id+"'>"+row.text+"</option>");
+			if(row.selected) $option.attr('selected',true);
+			$('#PriorList').append($option);
+		});
+	});
+	return websys_cancel();
+}
+function SaveExceptPrior()
+{
+	var PriorStr="";
+	$('#PriorList option:selected').each(function(){
+		if(PriorStr=='') PriorStr=$(this).val();
+		else PriorStr+='^'+$(this).val();
+	});
+	var ItemType=$('#dialog-prior').dialog('options').ItemType;
+	var ItemValue=$('#dialog-prior').dialog('options').ItemValue;
+	var ret=$.m({
+		ClassName:'DHCDoc.DHCDocConfig.ItemPrior',
+		MethodName:'SaveExceptPrior',
+		ItemType:ItemType,
+		ItemValue:ItemValue,
+		Value:GetNodeValue(),
+		PriorCode:GetPriorCode(),
+		PriorStr:PriorStr,
+		HospId:$('#_HospList').getValue()
 	},false);
-	$.messager.popover({msg:"保存成功!",type:'success'});
+	if(ret=="0"){
+		$('#dialog-prior').dialog('close');
+		$('#tabCatPriorLimit,#tabOrdPriorLimit').datagrid('reload');
+		$.messager.popover({msg:"保存成功!",type:'success'});
+   }else{
+	  $.messager.alert('提示',"保存失败:"+ret);
+	  return false;
+   }
 }

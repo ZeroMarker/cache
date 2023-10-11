@@ -11,16 +11,31 @@ Ext.onReady(function() {
 	var gUserId=session['LOGON.USERID']
 	var gLocId=session['LOGON.CTLOCID']
 	var PhaLoc = new Ext.ux.LocComboBox({
-				fieldLabel : '科室',
+				fieldLabel : $g('科室'),
 				id : 'PhaLoc',
 				name : 'PhaLoc',
 				groupId:gGroupId,
 				anchor : '90%',
-				width : 140
+				width : 140,
+				listeners : {
+	            'select' : function(e) {
+	                 	SetDefaultSCG();
+					}
+				}
 				});
+	function SetDefaultSCG()
+	{
+		 var SelLocId=Ext.getCmp('PhaLoc').getValue();//add wyx 根据选择的科室动态加载类组
+         StkGrpType.getStore().removeAll();
+         StkGrpType.getStore().setBaseParam("locId",SelLocId)
+         StkGrpType.getStore().setBaseParam("userId",gUserId)
+         StkGrpType.getStore().setBaseParam("type",App_StkTypeCode)
+         StkGrpType.getStore().load();
+         Ext.getCmp("DHCStkCatGroup").setValue("");
+	}
 	
 	var DateTime = new Ext.ux.DateField({
-				fieldLabel : '截止效期',
+				fieldLabel : $g('截止效期'),
 				id : 'DateTime',
 				name : 'DateTime',
 				anchor : '90%',
@@ -29,22 +44,21 @@ Ext.onReady(function() {
 			});
 		
 		var StkGrpType=new Ext.ux.StkGrpComboBox({ 
-			fieldLabel : '类组',
+			fieldLabel : $g('类组'),
 			id : 'StkGrpType',
 			name : 'StkGrpType',
 			StkType:App_StkTypeCode,//标识类组类型
 			anchor : '90%',
 			LocId:gLocId,
-			UserId:gUserId,
-			listeners:{
-				change:function(field,newValue,oldValue){
-					Ext.getCmp('DHCStkCatGroup').setValue('');
-				}
-			}
+			UserId:gUserId
 		}); 
 		
+		StkGrpType.on('select',function(){
+			Ext.getCmp("DHCStkCatGroup").setValue("");
+		});
+		
 		var DHCStkCatGroup = new Ext.ux.ComboBox({
-					fieldLabel : '库存分类',
+					fieldLabel : $g('库存分类'),
 					id : 'DHCStkCatGroup',
 					name : 'DHCStkCatGroup',
 					anchor : '90%',
@@ -56,7 +70,7 @@ Ext.onReady(function() {
 				});
 
 		var ZeroFlag = new Ext.form.Checkbox({
-					fieldLabel : '包括零批次',
+					fieldLabel : $g('包括零批次'),
 					id : 'ZeroFlag',
 					name : 'ZeroFlag',
 					anchor : '90%',
@@ -66,7 +80,7 @@ Ext.onReady(function() {
 				});
 
 		var NotUseFlag = new Ext.form.Checkbox({
-					fieldLabel : '排除不可用项',
+					fieldLabel : $g('排除不可用项'),
 					id : 'NotUseFlag',
 					name : 'NotUseFlag',
 					anchor : '90%',
@@ -75,101 +89,101 @@ Ext.onReady(function() {
 					checked : false
 				});
 		var zeroTag=new Ext.form.Label({
-			html:'<div class="classYellow" style="color:black;padding-left:0px">过期<div>'
+			html:'<div class="classYellow" style="color:black;padding-left:0px">'+$g('过期')+'<div>'
 		})
 		var ZeroMonth = new Ext.form.Checkbox({
-			fieldLabel : '过期',
+			fieldLabel : $g('过期'),
 			id : 'ZeroMonth',
 			name : 'ZeroMonth',
 			ctCls:'classRed',
 			checked : false
 		});
 		var OneMonth = new Ext.form.Checkbox({
-			fieldLabel : '1月',
+			fieldLabel : $g('1月'),
 			id : 'OneMonth',
 			name : 'OneMonth',
 			ctCls:'classBlue',
 			checked : false
 		});
 		var TwoMonth = new Ext.form.Checkbox({
-			fieldLabel : '2月',
+			fieldLabel : $g('2月'),
 			id : 'TwoMonth',
 			name : 'TwoMonth',
 			ctCls:'classYellow',			
 			checked : false
 		});		
 		var ThreeMonth = new Ext.form.Checkbox({
-			fieldLabel : '3月',
+			fieldLabel : $g('3月'),
 			id : 'ThreeMonth',
 			name : 'ThreeMonth',
 			ctCls:'classGrassGreen',			
 			checked : false
 		});	
 		var FourMonth = new Ext.form.Checkbox({
-			fieldLabel : '4月',
+			fieldLabel : $g('4月'),
 			id : 'FourMonth',
 			name : 'FourMonth',
 			ctCls:'classCyan',	
 			checked : false
 		});	
 		var FiveMonth = new Ext.form.Checkbox({
-			fieldLabel : '5月',
+			fieldLabel : $g('5月'),
 			id : 'FiveMonth',
 			name : 'FiveMonth',
 			ctCls:'classOrange',	
 			checked : false
 		});	
 		var SixMonth = new Ext.form.Checkbox({
-			fieldLabel : '6月',
+			fieldLabel : $g('6月'),
 			id : 'SixMonth',
 			name : 'SixMonth',
 			ctCls:'classPink',	
 			checked : false
 		});	
 		var SevenMonth = new Ext.form.Checkbox({
-			fieldLabel : '7月',
+			fieldLabel : $g('7月'),
 			id : 'SevenMonth',
 			name : 'SevenMonth',
 			ctCls:'classPurple',	
 			checked : false
 		});	
 		var EightMonth = new Ext.form.Checkbox({
-			fieldLabel : '8月',
+			fieldLabel : $g('8月'),
 			id : 'EightMonth',
 			name : 'EightMonth',
 			ctCls:'classLightBlue',	
 			checked : false
 		});	
 		var NineMonth = new Ext.form.Checkbox({
-			fieldLabel : '9月',
+			fieldLabel : $g('9月'),
 			id : 'NineMonth',
 			name : 'NineMonth',
 			ctCls:'classLightSeaGreen',	
 			checked : false
 		});	
 		var TenMonth = new Ext.form.Checkbox({
-			fieldLabel : '10月',
+			fieldLabel : $g('10月'),
 			id : 'TenMonth',
 			name : 'TenMonth',
 			ctCls:'classLime',	
 			checked : false
 		});	
 		var ElevenMonth = new Ext.form.Checkbox({
-			fieldLabel : '11月',
+			fieldLabel : $g('11月'),
 			id : 'ElevenMonth',
 			name : 'ElevenMonth',
 			ctCls:'classLightGoldenYellow',	
 			checked : false
 		});	
 		var TwelveMonth = new Ext.form.Checkbox({
-			fieldLabel : '12月',
+			fieldLabel : $g('12月'),
 			id : 'TwelveMonth',
 			name : 'TwelveMonth',
 			ctCls:'classDeepSkyBlue',	
 			checked : false
 		});	
 		var Normal = new Ext.form.Checkbox({
-			fieldLabel : '正常',
+			fieldLabel : $g('正常'),
 			id : 'Normal',
 			name : 'Normal',
 			ctCls:"classWhite",
@@ -177,8 +191,8 @@ Ext.onReady(function() {
 		});	
 		// 另存按钮
 		var SaveAsBT = new Ext.Toolbar.Button({
-					text : '另存',
-					tooltip : '另存为Excel',
+					text : $g('另存'),
+					tooltip : $g('另存为Excel'),
 					iconCls : 'page_export',
 					width : 70,
 					height : 30,
@@ -189,14 +203,14 @@ Ext.onReady(function() {
 				});
 			var PrintBT = new Ext.Toolbar.Button({
 				id : "PrintBT",
-				text : '打印',
+				text : $g('打印'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_print',
 				handler : function() {
 					var rowCount=StockQtyStore.getCount();
 					if (rowCount ==0) {
-						Msg.info("warning", "无可用打印数据!");
+						Msg.info("warning", $g("无可用打印数据!"));
 						return;
 					}
 					var tmpParam = StockQtyStore.lastOptions; 
@@ -229,8 +243,8 @@ Ext.onReady(function() {
 			});
 		// 查询按钮
 		var SearchBT = new Ext.Toolbar.Button({
-					text : '查询',
-					tooltip : '点击查询',
+					text : $g('查询'),
+					tooltip : $g('点击查询'),
 					iconCls : 'page_find',
 					width : 70,
 					height : 30,
@@ -252,7 +266,7 @@ Ext.onReady(function() {
 			StockQtyStore.load({params:{start:0,limit:pageSize},
 				callback : function(o,response,success) { 
 					if (success == false){  
-						Ext.MessageBox.alert("查询错误",StockQtyStore.reader.jsonData.Error);  
+						Ext.MessageBox.alert($g("查询错误"),StockQtyStore.reader.jsonData.Error);  
 					}
 				}
 			});
@@ -265,25 +279,25 @@ Ext.onReady(function() {
 			// 必选条件
 			var PhaLocDesc = Ext.getCmp("PhaLoc").getRawValue();
 			if (PhaLocDesc ==""||PhaLocDesc == null || PhaLocDesc.length <= 0) {
-				Msg.info("warning", "科室不能为空！");
+				Msg.info("warning", $g("科室不能为空！"));
 				Ext.getCmp("PhaLoc").focus();
 				return gStrParam;
 			}
 			var phaLoc = Ext.getCmp("PhaLoc").getValue();
 			if (phaLoc == null || phaLoc.length <= 0) {
-				Msg.info("warning", "科室不能为空！");
+				Msg.info("warning",$g("科室不能为空！"));
 				Ext.getCmp("PhaLoc").focus();
 				return gStrParam;
 			}
 			var DateTimetmp = Ext.getCmp("DateTime").getValue()
 			if (DateTimetmp=="") {
-			    Msg.info("warning", "日期不能为空！");
+			    Msg.info("warning", $g("日期不能为空！"));
 			    Ext.getCmp("DateTime").focus();
 			    return gStrParam;
 			}
 			var date = Ext.getCmp("DateTime").getValue().format(App_StkDateFormat).toString();
 			if (date == null || date.length <= 0) {
-				Msg.info("warning", "日期不能为空！");
+				Msg.info("warning",$g( "日期不能为空！"));
 				Ext.getCmp("DateTime").focus();
 				return gStrParam;
 			}
@@ -391,7 +405,7 @@ Ext.onReady(function() {
 					RestMon=RestMon+','+13;
 				}
 			}
-			if(RestMon==null){Msg.info("warning", "请选择报警期限时间!");
+			if(RestMon==null){Msg.info("warning", $g("请选择报警期限时间!"));
 				return gStrParam;}
 			gStrParam=phaLoc+"^"+date+"^"+RestMon+"^"+ZeroDrug+"^"+DHCStkCatGroup
 			+"^"+UseFlag+"^"+StkGrpRowId;
@@ -400,8 +414,8 @@ Ext.onReady(function() {
 		}		
 		// 清空按钮
 		var RefreshBT = new Ext.Toolbar.Button({
-					text : '清屏',
-					tooltip : '点击清屏',
+					text : $g('清屏'),
+					tooltip : $g('点击清屏'),
 					iconCls : 'page_clearscreen',
 					width : 70,
 					height : 30,
@@ -416,9 +430,11 @@ Ext.onReady(function() {
 		function clearData() {
 			gStrParam='';
 			Ext.getCmp("DateTime").setValue(new Date());
-			SetLogInDept(PhaDeptStore, "PhaLoc");
-			Ext.getCmp("DHCStkCatGroup").setValue('');
-			Ext.getCmp("StkGrpType").setValue('');
+			SetLogInDept(PhaLoc.getStore(), "PhaLoc");
+			SetDefaultSCG();
+			//Ext.getCmp("DHCStkCatGroup").setValue('');
+			//Ext.getCmp("StkGrpType").setValue('');
+			
 			Ext.getCmp("Normal").setValue(false);
 			Ext.getCmp("ZeroFlag").setValue(false);
 			Ext.getCmp("ZeroMonth").setValue(false);
@@ -439,12 +455,13 @@ Ext.onReady(function() {
 			StockQtyGrid.store.load({params:{start:0,limit:0}});
 			StockQtyGrid.getView().refresh();
 		}
+		
 		function MonthColorRenderer(val,meta){
 			var monthcolor=""
 			switch(parseInt(val)){
 				case 0:
 					monthcolor='classRed';
-					val="过期"
+					val=$g("过期")
 					break;
 				case 1:
 					monthcolor= 'classBlue';
@@ -484,17 +501,17 @@ Ext.onReady(function() {
 					break;
 				default:
 					monthcolor="";
-					val="正常"
+					val=$g("正常")
 					break;
 			}  
 			if (monthcolor!=""){
 				meta.css=monthcolor;
 			}
-			if ((val!="过期")&&(val!="正常")&&(val!="")){
+			if ((val!=$g("过期"))&&(val!=$g("正常"))&&(val!="")){
 				if(val<10){
-					val="0"+val+"月";
+					val="0"+val+$g("月");
 				}else{
-					val=val+"月";
+					val=val+$g("月");
 				}
 			}
 			return val;  
@@ -509,80 +526,80 @@ Ext.onReady(function() {
 					sortable : true,
 					hidden : true
 				}, {
-					header : '状态',
+					header : $g('状态'),
 					dataIndex : 'month',
 					width : 80,
 					align : 'center',
 					sortable : true,
 					renderer:MonthColorRenderer
 				}, {
-					header : '代码',
+					header : $g('代码'),
 					dataIndex : 'code',
 					width : 80,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "名称",
+					header : $g("名称"),
 					dataIndex : 'desc',
 					width : 200,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "规格",
+					header : $g("规格"),
 					dataIndex : 'spec',
 					width : 90,
 					align : 'left',
 					sortable : true
 				}, {
-					header : '批号',
+					header : $g('批号'),
 					dataIndex : 'batNo',
 					width : 100,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "效期",
+					header : $g("效期"),
 					dataIndex : 'expDate',
 					width : 80,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "库存",
+					header : $g("库存"),
 					dataIndex : 'stkQty',
 					width : 100,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "单位",
+					header : $g("单位"),
 					dataIndex : 'stkUom',
 					width : 80,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "厂商",
+					header : $g("生产企业"),
 					dataIndex : 'manf',
 					width : 100,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "库存分类",
+					header :$g( "库存分类"),
 					dataIndex : 'incscDesc',
 					width : 100,
 					align : 'left',
 					sortable : true
 				}, {
-					header : '货位',
+					header : $g('货位'),
 					dataIndex : 'sbDesc',
 					width : 50,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "最后一次入库供应商",
+					header : $g("最后一次入库经营企业"),
 					dataIndex : 'lastvendorName',
 					width : 150,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "失效天数",
+					header :$g( "失效天数"),
 					dataIndex : 'warnDays',
 					width : 80,
 					align : 'left',
@@ -619,16 +636,16 @@ Ext.onReady(function() {
 					store : StockQtyStore,
 					pageSize : PageSize,
 					displayInfo : true,
-					displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
+					displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
 					emptyMsg : "No results to display",
-					prevText : "上一页",
-					nextText : "下一页",
-					refreshText : "刷新",
-					lastText : "最后页",
-					firstText : "第一页",
-					beforePageText : "当前页",
-					afterPageText : "共{0}页",
-					emptyMsg : "没有数据"
+					prevText : $g("上一页"),
+					nextText : $g("下一页"),
+					refreshText : $g("刷新"),
+					lastText :$g( "最后页"),
+					firstText : $g("第一页"),
+					beforePageText : $g("当前页"),
+					afterPageText : $g("共{0}页"),
+					emptyMsg : $g("没有数据")
 					
 				});
 
@@ -704,7 +721,7 @@ Ext.onReady(function() {
 				defaults:{border:false},	
 				xtype:'fieldset',
 				frame:false,
-				title:"查询条件",
+				title:$g("查询条件"),
 				labelAlign : 'right',
 				items : [{					
 					defaults:{border:false},
@@ -719,7 +736,7 @@ Ext.onReady(function() {
 				xtype:'fieldset',
 				labelAlign : 'right',
 				labelWidth:70,	
-				title:"报警期限时间",
+				title:$g("报警期限时间"),
 				items : [{
 					columnWidth : .5,
 					xtype:'fieldset',	
@@ -749,13 +766,13 @@ Ext.onReady(function() {
                 			minSize: 200,
                 			maxSize: 350,
                 			collapsible: true,
-			                title: '效期报警',
+			                title: $g('效期报警'),
 			                layout: 'fit', // specify layout manager for items
 			                items: HisListTab       
 			               
 			            }, {
 			                region: 'center',
-			                title: '明细',			               
+			                title: $g('明细'),			               
 			                layout: 'fit', // specify layout manager for items
 			                items: StockQtyGrid       
 			               
@@ -763,5 +780,20 @@ Ext.onReady(function() {
 	       			],
 					renderTo : 'mainPanel'
 				});
+	//获取默认月份
+	var ParamProp=tkMakeServerCall("web.DHCST.LocItmExpDate","GetParamProp",gGroupId , gLocId , gUserId)
+	var DefaultMonStr=ParamProp.split("^")[0]
+	if(DefaultMonStr!=""){
+		var MonCheckArr=["ZeroMonth","OneMonth","TwoMonth","ThreeMonth","FourMonth","FiveMonth","SixMonth","SevenMonth","EightMonth","NineMonth","TenMonth","ElevenMonth","TwelveMonth","Normal"]
+		DefaultMonArr=DefaultMonStr.split(",")
+		var len=DefaultMonArr.length
+		for (i=0;i<len;i++){
+			var Mon=DefaultMonArr[i]
+			Mon=parseInt(Mon)
+			if(Mon>13) Mon=13 
+			Ext.getCmp(MonCheckArr[Mon]).setValue(true);
+		}
+		setTimeout(function(){searchData();},500)  //延迟调用查询的方法，等默认条件加载完成
+	}
 	
 })

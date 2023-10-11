@@ -1,16 +1,15 @@
-//出库单密码确认
-function VerifyPassWord(VerifyObj, Fn){
+// 出库单密码确认
+function VerifyPassWord(VerifyObj, Fn) {
 	var VerifyLocId = VerifyObj['LocId'];
 	var VerifyUserId = VerifyObj['UserId'];
 	var VerifyUserCode = VerifyObj['UserCode'];
-	var gVerifyUserId = '';		//确认人id
-
+	var gVerifyUserId = '';		// 确认人id
 	$.extend($.fn.validatebox.defaults.rules, {
 		ValidUser: {
-			validator: function(value, param){
+			validator: function(value, param) {
 				var VerifyLocId = param[0];
-				gVerifyUserId = tkMakeServerCall('web.DHCSTMHUI.Common.UtilCommon','GetDeptUserId', VerifyLocId, value);
-				return isEmpty(gVerifyUserId)? false : true;
+				gVerifyUserId = tkMakeServerCall('web.DHCSTMHUI.Common.UtilCommon', 'GetDeptUserId', VerifyLocId, value);
+				return isEmpty(gVerifyUserId) ? false : true;
 			},
 			message: '非本科室人员!'
 		}
@@ -19,31 +18,31 @@ function VerifyPassWord(VerifyObj, Fn){
 	var VerifyUser = $HUI.validatebox('#VerifyUser', {
 		validType: 'ValidUser[' + VerifyLocId + ']'
 	});
-	$('#VerifyUser').bind('blur',function(){
+	$('#VerifyUser').bind('blur', function() {
 		$('#VerifyUser').validatebox('isValid');
-	}).bind('keydown', function(event){
-		if(event.keyCode == 13){
+	}).bind('keydown', function(event) {
+		if (event.keyCode == 13) {
 			$('#VerifyPassWord').focus();
 		}
 	});
-	
-	$('#VerifyPassWord').bind('keyup', function(){
-		if(gVerifyUserId == ''){
-			$UI.msg('alert', '用户名称有误!')
+	$('#VerifyPassWord').bind('keyup', function() {
+		var valiteValue = $('#VerifyUser').validatebox('isValid');
+		if (!valiteValue) {
+			$UI.msg('alert', '用户名称有误!');
 			return false;
 		}
 		var PassWord = $(this).val();
-		var IsOK = tkMakeServerCall('web.DHCSTMHUI.Common.UtilCommon','CheckPassword',gVerifyUserId,PassWord);
-		if(IsOK == '1'){
+		var IsOK = tkMakeServerCall('web.DHCSTMHUI.Common.UtilCommon', 'CheckPassword', gVerifyUserId, PassWord);
+		if (IsOK == '1') {
 			$('#VerifyYes').linkbutton('enable');
 			$('#VerifyUser').attr('readonly', true);
-		}else{
+		} else {
 			$('#VerifyYes').linkbutton('disable');
 			$('#VerifyUser').attr('readonly', false);
 		}
-	}).bind('keydown', function(event){
-		if(event.keyCode == 13){
-			if(!$('#VerifyYes').linkbutton('options').disabled){
+	}).bind('keydown', function(event) {
+		if (event.keyCode == 13) {
+			if (!$('#VerifyYes').linkbutton('options').disabled) {
 				VerifyYes.handler();
 			}
 		}
@@ -54,8 +53,8 @@ function VerifyPassWord(VerifyObj, Fn){
 		iconCls: 'icon-w-stamp',
 		text: '确认',
 		disabled: true,
-		handler: function(){
-			if(gVerifyUserId == ''){
+		handler: function() {
+			if (gVerifyUserId == '') {
 				$UI.msg('error', '签名信息有误!');
 				return false;
 			}
@@ -66,8 +65,8 @@ function VerifyPassWord(VerifyObj, Fn){
 	
 	var VerifyClear = {
 		iconCls: 'icon-w-clean',
-		text : '清空',
-		handler : function() {
+		text: '清空',
+		handler: function() {
 			gVerifyUserId = '';
 			$('#VerifyUser').val('');
 			$('#VerifyPassWord').val('');
@@ -75,14 +74,13 @@ function VerifyPassWord(VerifyObj, Fn){
 		}
 	};
 	
-	
 	$HUI.dialog('#VerifyPassWordWin', {
-		width: 300,
-		height: 200,
+		width: 220,
+		height: 175,
 		buttons: [VerifyYes, VerifyClear],
-		onOpen: function(){
+		onOpen: function() {
 			VerifyClear.handler();
-			if(!isEmpty(VerifyUserId) && !isEmpty(VerifyUserCode)){
+			if (!isEmpty(VerifyUserId) && !isEmpty(VerifyUserCode)) {
 				$('#VerifyUser').val(VerifyUserCode);
 				gVerifyUserId = VerifyUserId;
 			}

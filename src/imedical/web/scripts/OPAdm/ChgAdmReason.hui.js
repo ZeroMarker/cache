@@ -12,7 +12,7 @@ $(function(){
 	$("#InsuranceNo").focus();
 })
 function InitEvent(){
-	$("#Confirm").click(ConfirmClickHandle);
+	$("#Confirm").click(ConfirmClickHandleNew);
 	$("#Quit").click(function(){window.parent.destroyDialog("ChgAdmReason")});
 }
 function Init(){
@@ -21,7 +21,7 @@ function Init(){
 function InitAdmReasonListTabDataGrid(){
 	var Columns=[[ 
 		{field:'SSRowId',hidden:true,title:''},
-		{field:'SSDesc',title:'费别',width:590}
+		{field:'SSDesc',title:'费别',width:630}
     ]]
 	var AdmReasonListTabDataGrid=$("#AdmReasonListTab").datagrid({
 		fit : true,
@@ -78,6 +78,53 @@ function PageHandle(){
 		$("#AdmInfo").val(AdmInformStr);
 	});
 }
+
+function ConfirmClickHandleNew() {
+	var row=PageLogicObj.m_AdmReasonListTabDataGrid.datagrid("getSelected");
+	if (!row){
+		$.messager.alert("提示","请选择费别!");
+		return false;
+	}
+	var PatTypeRowid=row["SSRowId"];
+	var PatOtherInfoOld=$.cm({
+	    ClassName : "web.DHCOPChgAdmreason",
+	    MethodName : "GetPatOtherInfo", 
+	    dataType:"text",
+	    PapmiNo:ServerObj.RegNo
+	},false);
+    var EmployeeNoFlag=CheckEmployeeNo();
+    if (!EmployeeNoFlag) return false;
+	var YBFlag=checkPatYBCode();
+	if (!YBFlag) return false;
+	var Rtn=CheckMedNo();
+    if (!Rtn){return false;} 
+    var UpAdm=$("#UpAdm").checkbox("getValue")?"Y":"N";
+    var UpPat=$("#UpPat").checkbox("getValue")?"Y":"N";
+    var UpOrd=$("#UpOrd").checkbox("getValue")?"Y":"N";
+    var EmployeeNo=$("#EmployeeNo").val();
+    var ExpStr=UpAdm+"^"+UpPat+"^"+UpOrd+"^"+EmployeeNo
+    var InsuranceNo=$("#InsuranceNo").val();
+    $.cm({
+	    ClassName:"web.DHCOPChgAdmreason",
+	    MethodName:"UpdatePAOInfo",
+	    AdmId:ServerObj.EpisodeID,
+	    PatTypeRowid:PatTypeRowid,
+	    InsuranceNo:InsuranceNo,
+	    UserId:session['LOGON.USERID'],
+	    ExpStr:ExpStr,
+    },function(ret) {
+	    if (ret == "0") {
+		    $.messager.alert("提示", "修改成功!", "success", function() {
+			    window.parent.destroyDialog("ChgAdmReason");
+		    });
+	    }else {
+				var ErrText=ret
+				if (ret=="-107") ErrText="患者类型对应的费别没有对照，请先对照！"
+		    $.messager.alert("提示", "修改失败!ErrCode="+ErrText, "error");
+	    }
+    })
+}
+
 function ConfirmClickHandle(){
 	var row=PageLogicObj.m_AdmReasonListTabDataGrid.datagrid("getSelected");
 	if (!row){
@@ -226,4 +273,7 @@ function CheckMedNo()
 		}
 	}
 	return true
+}
+function ShowWarning() {
+	$.messager.alert("警告", "请慎重选择，医嘱录入时的规则限制未按改变后的费别限制!", "warning");
 }

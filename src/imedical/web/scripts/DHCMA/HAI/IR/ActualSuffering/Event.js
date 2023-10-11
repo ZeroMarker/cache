@@ -10,7 +10,12 @@ function InitActualSufferingWinEvent(obj){
 		
 		//导出
 		$('#btnExport').on('click', function(){
-			$('#ActualSuffering').datagrid('toExcel', Common_GetDate(new Date())+'实时现患列表.xls');
+			var rows = obj.gridActualSuffering.datagrid('getRows');//返回当前页的所有行
+	        if(rows.length==0){
+		        $.messager.alert("错误","当前界面没有数据，无法导出!");
+				return;
+		    }
+			$('#ActualSuffering').datagrid('toExcel', $('#DateFrom').datebox('getValue')+'实时现患列表.xls');
      	});
 	}
 
@@ -50,23 +55,19 @@ function InitActualSufferingWinEvent(obj){
 	obj.reloadgridActualSuffering = function(){
 		var HospIDs	    = $('#cboHospital').combobox('getValue');
 		var DateFrom	= $('#DateFrom').datebox('getValue');
-		var DateTo 		= $('#DateTo').datebox('getValue');
-		var Loc 		= $("#cboLoc").combobox('getValue');
-		
+		//var Loc 		= $("#cboLoc").combobox('getValue');
+		var SubLocArr   = $('#cboLoc').combobox('getValues');
+		var Loc = SubLocArr.join();
 		var ErrorStr="";
 		if (HospIDs=="") {
 			ErrorStr += '请选择院区!<br/>';
 		}
+		/*if (Loc=="") {
+			ErrorStr += '请选择科室!<br/>';
+		}*/
 		if (DateFrom=="") {
-			ErrorStr += '请选择调查开始日期!<br/>';
+			ErrorStr += '请选择调查日期!<br/>';
 		}
-		if (DateTo == "") {
-			ErrorStr += '请选择调查结束日期!<br/>';
-		}
-		if (DateFrom > DateTo) {
-			ErrorStr += '调查开始日期不能大于调查结束日期!<br/>';
-		}
-		
 		if (ErrorStr != '') {
 			$.messager.alert("错误提示",ErrorStr, 'info');
 			return;
@@ -74,14 +75,14 @@ function InitActualSufferingWinEvent(obj){
 			$("#ActualSuffering").datagrid("loading");
 			$cm ({
 				ClassName:"DHCHAI.IRS.INFCSSSHSrv",
-				QueryName:"QryAdms",
+				QueryName:"QrySHAdm",
 				ResultSetType:"array",
-				aHospIDs:HospIDs,
-		        aDateFrom:DateFrom,
-		        aDateTo:DateTo,
-		        aLoc:Loc,
+                aIntputs:HospIDs+"^"+DateFrom+"^"+DateFrom+"^"+Loc+"^"+($HUI.radio("#chkHCSSFlag").getValue()?1:0)+"^"+obj.LocType,
+				//aHospIDs:HospIDs,
+		        //aDateFrom:DateFrom,
+		       // aLoc:Loc,
 				page:1,
-				rows:200
+				rows:9999
 			},function(rs){
 				$('#ActualSuffering').datagrid({loadFilter:pagerFilter}).datagrid('loadData', rs);				
 			});

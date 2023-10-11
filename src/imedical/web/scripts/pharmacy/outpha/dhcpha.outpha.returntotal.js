@@ -50,23 +50,23 @@ function InitReturnTotalList() {
 	//定义columns
 	var columns = [[{
 				field: 'TPhDesc',
-				title: '药品名称',
+				title: ("药品名称"),
 				width: 300,
 				align: 'left'
 			}, {
 				field: 'TPhUom',
-				title: '单位',
+				title: ("单位"),
 				width: 150,
 				align: 'center'
 			}, {
 				field: 'TRetQty',
-				title: '退药数量',
+				title: ("退药数量"),
 				width: 150,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'TRetMoney',
-				title: '退药金额',
+				title: ("退药金额"),
 				width: 150,
 				align: 'right',
 				sortable: true
@@ -120,7 +120,7 @@ function ClearConditions() {
 function BPrintHandler() {
 	//获取当面界面数据行数
 	if ($('#returntotaldg').datagrid('getData').rows.length == 0) {
-		dhcphaMsgBox.alert("页面没有数据,无法打印!");
+		dhcphaMsgBox.alert($g("页面没有数据,无法打印!"));
 		return ;
 	}
 	var startdate=$("#date-start").val();

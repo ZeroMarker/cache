@@ -6,10 +6,12 @@
 PHA_COM.App.Csp = "pha.prc.v2.config.control.csp";
 PHA_COM.App.Name = "PRC.ConFig.Control";
 PHA_COM.App.Load = "";
+var hospId = PHA_COM.Session.HOSPID;
 $(function () {
 	InitGridPoison();
     InitGridControl();
     InitEvents();
+    InitHospCombo();
 });
 
 function InitEvents(){
@@ -31,7 +33,8 @@ function InitGridPoison() {
         url: $URL,
         queryParams: {
             ClassName: 'PHA.PRC.ConFig.Control',
-            QueryName: 'SelectPoison'
+            QueryName: 'SelectPoison',
+            hospID: hospId
         },
         columns: columns,
         pagination: false,
@@ -60,7 +63,8 @@ function InitGridControl() {
         url: $URL,
         queryParams: {
             ClassName: 'PHA.PRC.ConFig.Control',
-            QueryName: 'SelectControl'
+            QueryName: 'SelectControl',
+            hospID: hospId
         },
         columns: columns,
         pagination: false,
@@ -95,7 +99,7 @@ function AddControlByBat(){
 	    
     }
 
-    var saveBatRet = tkMakeServerCall("PHA.PRC.ConFig.Control", "SaveControlByBat", poisonIdStr);
+    var saveBatRet = tkMakeServerCall("PHA.PRC.ConFig.Control", "SaveControlByBat", poisonIdStr, hospId);
     var saveBatArr = saveBatRet.split("^");
     var saveBatVal = saveBatArr[0];
     var saveBatInfo = saveBatArr[1];
@@ -103,15 +107,13 @@ function AddControlByBat(){
         $.messager.alert("提示", saveBatInfo, "warning");
     }
     else{
-	    $.messager.alert("提示", "增加成功", "info");
+	    PHA.Popover({msg: "增加成功", type: "success"});
 	}
-	$('#gridPoison').datagrid("reload");
-    $('#gridControl').datagrid("reload");
-	
+	ReloadData();
 }
 	
 function AddControl(ctrlId,poisonId) {
-    var saveRet = tkMakeServerCall("PHA.PRC.ConFig.Control", "SaveComControl", ctrlId, poisonId);
+    var saveRet = tkMakeServerCall("PHA.PRC.ConFig.Control", "SaveComControl", ctrlId, poisonId, hospId);
     var saveArr = saveRet.split("^");
     var saveVal = saveArr[0];
     var saveInfo = saveArr[1];
@@ -119,9 +121,9 @@ function AddControl(ctrlId,poisonId) {
         $.messager.alert("提示", saveInfo, "warning");
     }
     else{
-	    $.messager.alert("提示", "增加成功", "info");
+	    PHA.Popover({msg: "增加成功", type: "success"});
 	}
-    $('#gridControl').datagrid("reload");
+    ReloadData();
 }
 
 
@@ -145,7 +147,7 @@ function DelControlBtBat(){
 		    
 	    }
 
-	    var delBatRet = tkMakeServerCall("PHA.PRC.ConFig.Control", "DelControlByBat", ctrlIdStr);
+	    var delBatRet = tkMakeServerCall("PHA.PRC.ConFig.Control", "DelControlByBat", ctrlIdStr, hospId);
 	    var delBatArr = delBatRet.split("^");
 	    var delBatVal = delBatArr[0];
 	    var delBatInfo = delBatArr[1];
@@ -153,15 +155,15 @@ function DelControlBtBat(){
 	        $.messager.alert("提示", delBatInfo, "warning");
 	    }
 	    else{
-		    $.messager.alert("提示", "删除成功", "info");
+		    PHA.Popover({msg: "删除成功", type: "success"});
 		}
-	    $('#gridControl').datagrid("reload");
+	    ReloadData();
     })
 }
 
 
 function DeleteControl(ctrlId) {
-    var deleteRet = tkMakeServerCall("PHA.PRC.ConFig.Control", "DelComControl", ctrlId);
+    var deleteRet = tkMakeServerCall("PHA.PRC.ConFig.Control", "DelComControl", ctrlId, hospId);
     var deleteArr = deleteRet.split("^");
     var deleteVal = deleteArr[0];
     var deleteInfo = deleteArr[1];
@@ -169,11 +171,26 @@ function DeleteControl(ctrlId) {
         $.messager.alert("提示", deleteInfo, "warning");
     }
     else{
-	    $.messager.alert("提示", "删除成功", "info");
+	    PHA.Popover({msg: "删除成功", type: "success"});
 	}
-    $('#gridControl').datagrid("reload");
+    ReloadData();
 }
 
+function ReloadData(){
+	$('#gridControl').datagrid('query', {hospID: hospId}); 	
+    $('#gridPoison').datagrid('query', {hospID: hospId}); 	
+}
+
+function InitHospCombo() {
+	var genHospObj = PRC_STORE.AddHospCom({tableName: "DHC_PHCNTSCONTROL"});
+	if (typeof genHospObj ==='object'){
+        genHospObj.options().onSelect =  function(index, record) {	
+        	hospId = record.HOSPRowId;
+            ReloadData();
+        }
+        hospId = genHospObj.getValue();
+    }
+}
 
 
 

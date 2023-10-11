@@ -9,7 +9,7 @@ Ext.onReady(function() {
     var url = DictUrl + 'instktkaction.csp';
     var inciRowid = "";
     var LocManaGrp = new Ext.form.ComboBox({
-        fieldLabel: '管理组',
+        fieldLabel: $g('管理组'),
         id: 'LocManaGrp',
         name: 'LocManaGrp',
         anchor: '90%',
@@ -19,7 +19,7 @@ Ext.onReady(function() {
         displayField: 'Description',
         allowBlank: true,
         triggerAction: 'all',
-        emptyText: '管理组...',
+        emptyText: $g('管理组...'),
         selectOnFocus: true,
         forceSelection: true,
         minChars: 1,
@@ -36,14 +36,14 @@ Ext.onReady(function() {
     });
 
     var PhaWindow = new Ext.form.ComboBox({
-        fieldLabel: '实盘窗口',
+        fieldLabel: $g('实盘窗口'),
         id: 'PhaWindow',
         name: 'PhaWindow',
         anchor: '90%',
         store: INStkTkWindowStore,
         valueField: 'RowId',
         displayField: 'Description',
-        emptyText: '实盘窗口...',
+        emptyText: $g('实盘窗口...'),
         disabled: true,
         listeners: {
             'beforequery': function(e) {
@@ -73,7 +73,7 @@ Ext.onReady(function() {
     });
 
     var DHCStkCatGroup = new Ext.ux.ComboBox({
-        fieldLabel: '库存分类',
+        fieldLabel: $g('库存分类'),
         id: 'DHCStkCatGroup',
         name: 'DHCStkCatGroup',
         store: StkCatStore,
@@ -83,7 +83,7 @@ Ext.onReady(function() {
     });
 
     var StkBin = new Ext.form.ComboBox({
-        fieldLabel: '货位',
+        fieldLabel: $g('货位'),
         id: 'StkBin',
         name: 'StkBin',
         anchor: '90%',
@@ -110,7 +110,7 @@ Ext.onReady(function() {
         }
     });
     var label = new Ext.form.TextField({
-        fieldLabel: '条码',
+        fieldLabel: $g('条码'),
         id: 'label',
         name: 'label',
         anchor: '90%'
@@ -118,7 +118,7 @@ Ext.onReady(function() {
     var InstNo = new Ext.form.TextField({
         id: 'InstNo',
         name: 'InstNo',
-        fieldLabel: '盘点单号',
+        fieldLabel: $g('盘点单号'),
         anchor: '90%',
         width: 140,
         disabled: true
@@ -126,8 +126,8 @@ Ext.onReady(function() {
 
     // 录入按钮
     var AddBT = new Ext.Toolbar.Button({
-        text: '录入',
-        tooltip: '点击录入',
+        text: $g('录入'),
+        tooltip: $g('点击录入'),
         iconCls: 'page_add',
         width: 70,
         height: 30,
@@ -189,8 +189,8 @@ Ext.onReady(function() {
 
     // 查询按钮
     var SearchBT = new Ext.Toolbar.Button({
-        text: '查询',
-        tooltip: '点击查询',
+        text: $g('查询'),
+        tooltip: $g('点击查询'),
         iconCls: 'page_find',
         width: 70,
         height: 30,
@@ -201,8 +201,8 @@ Ext.onReady(function() {
 
     // 清空按钮
     var RefreshBT = new Ext.Toolbar.Button({
-        text: '清屏',
-        tooltip: '点击清屏',
+        text: $g('清屏'),
+        tooltip: $g('点击清屏'),
         iconCls: 'page_clearscreen',
         width: 70,
         height: 30,
@@ -221,15 +221,17 @@ Ext.onReady(function() {
         Ext.getCmp("StkGrpType").setValue('');
         Ext.getCmp("PhaWindow").setValue('');
         Ext.getCmp("LocManaGrp").setValue('');
+        Ext.getCmp("M_InciDesc").setValue('');
+        inciRowid = '';
         Select();
         InstDetailGrid.store.removeAll();
         InstDetailGrid.getView().refresh();
     }
     var M_InciDesc = new Ext.form.TextField({
-        fieldLabel: '药品名称',
+        fieldLabel: $g('药品名称'),
         id: 'M_InciDesc',
         name: 'M_InciDesc',
-        emptyText: '药品名称...',
+        emptyText:$g( '药品名称...'),
         width: 300,
         listeners: {
             specialkey: function(field, e) {
@@ -264,8 +266,8 @@ Ext.onReady(function() {
     }
 
     var SaveBT = new Ext.Toolbar.Button({
-        text: '保存',
-        tooltip: '点击保存',
+        text: $g('保存'),
+        tooltip: $g('点击保存'),
         iconCls: 'page_save',
         width: 70,
         height: 30,
@@ -294,7 +296,7 @@ Ext.onReady(function() {
                 var CountQty = rowData.get('countQty');
                 
                  if (CountQty < 0 ) {
-	                    Msg.info('warning', inciDesc+' 录入的实盘数量不能小于零!');
+	                    Msg.info('warning', inciDesc+$g(' 录入的实盘数量不能小于零!'));
 	                    return;
 	                }
                 if (CountQty == '') {
@@ -315,30 +317,30 @@ Ext.onReady(function() {
             }
         }
         if (ListDetail == '') {
-            Msg.info('Warning', '没有需要保存的数据!');
+            Msg.info('Warning',$g( '没有需要保存的数据!'));
             return;
         }
-        var mask = ShowLoadMask(Ext.getBody(), "处理中请稍候...");
+        var mask = ShowLoadMask(Ext.getBody(), $g("处理中请稍候..."));
         Ext.Ajax.request({
             url: url,
             params: { actiontype: 'SaveTkItmWdByWay2', Params: ListDetail },
             method: 'post',
-            waitMsg: '处理中...',
+            waitMsg: $g('处理中...'),
             success: function(response, opt) {
                 var jsonData = Ext.util.JSON.decode(response.responseText);
                 mask.hide();
                 if (jsonData.success == 'true') {
-                    Msg.info('success', '保存成功!');
+                    Msg.info('success', $g('保存成功!'));
                     InstDetailStore.reload();
                     //QueryDetail();
                 } else {
                     var ret = jsonData.info;
                     if (ret == '-1') {
-                        Msg.info('warning', '没有需要保存的数据!');
+                        Msg.info('warning', $g('没有需要保存的数据!'));
                     } else if (ret == '-2') {
-                        Msg.info('error', '保存失败!');
+                        Msg.info('error', $g('保存失败!'));
                     } else {
-                        Msg.info('error', '部分数据保存失败:' + ret);
+                        Msg.info('error', $g('部分数据保存失败:') + ret);
                     }
                 }
             }
@@ -371,7 +373,7 @@ Ext.onReady(function() {
         if (gRowid == null || gRowid == "") {
             return;
         }
-        var mask = ShowLoadMask(Ext.getBody(), "处理中请稍候...");
+        var mask = ShowLoadMask(Ext.getBody(), $g("处理中请稍候..."));
         Ext.Ajax.request({
             url: url,
             params: { actiontype: 'Select', Rowid: gRowid },
@@ -422,7 +424,7 @@ Ext.onReady(function() {
 
     // 单位
     var CTUom = new Ext.form.ComboBox({
-        fieldLabel: '单位',
+        fieldLabel: $g('单位'),
         id: 'CTUom',
         name: 'CTUom',
         anchor: '90%',
@@ -432,7 +434,7 @@ Ext.onReady(function() {
         displayField: 'Description',
         allowBlank: false,
         triggerAction: 'all',
-        emptyText: '单位...',
+        emptyText: $g('单位...'),
         selectOnFocus: true,
         forceSelection: true,
         minChars: 1,
@@ -454,7 +456,7 @@ Ext.onReady(function() {
 
     //批次效期
     var BatExp = new Ext.form.ComboBox({
-        fieldLabel: '批次效期',
+        fieldLabel: $g('批次效期'),
         id: 'BatExp',
         name: 'BatExp',
         anchor: '90%',
@@ -464,7 +466,7 @@ Ext.onReady(function() {
         displayField: 'Description',
         allowBlank: false,
         triggerAction: 'all',
-        emptyText: '批次效期...',
+        emptyText: $g('批次效期...'),
         selectOnFocus: true,
         forceSelection: true,
         minChars: 1,
@@ -501,7 +503,7 @@ Ext.onReady(function() {
                 var count = r.length;
                 //录入的药不在本盘点单
                 if (count < 1) {
-                    Msg.info("warning", "该药品不在本盘点单范围，不能录入!")
+                    Msg.info("warning", $g("该药品不在本盘点单范围，不能录入!"))
                     return;
                 }
                 var cell = InstDetailGrid.getSelectionModel().getSelectedCell();
@@ -556,13 +558,13 @@ Ext.onReady(function() {
         sortable: true,
         hidden: true
     }, {
-        header: '代码',
+        header: $g('代码'),
         dataIndex: 'code',
         width: 100,
         align: 'left',
         sortable: true
     }, {
-        header: "名称",
+        header: $g("名称"),
         dataIndex: 'desc',
         width: 250,
         align: 'left',
@@ -583,13 +585,13 @@ Ext.onReady(function() {
             }
         })
     }, {
-        header: "规格",
+        header: $g("规格"),
         dataIndex: 'spec',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: '批次~效期',
+        header: $g('批次~效期'),
         dataIndex: 'batexpid',
         width: 200,
         align: 'left',
@@ -608,7 +610,7 @@ Ext.onReady(function() {
             }
         }
     }, {
-        header: "单位",
+        header: $g("单位"),
         dataIndex: 'uom',
         width: 60,
         align: 'left',
@@ -617,7 +619,7 @@ Ext.onReady(function() {
         renderer: Ext.util.Format.comboRenderer2(CTUom, 'uom', 'uomDesc')
 
     }, {
-        header: '实盘数量',
+        header: $g('实盘数量'),
         dataIndex: 'countQty',
         width: 80,
         align: 'right',
@@ -635,7 +637,7 @@ Ext.onReady(function() {
                     if (keyCode == Ext.EventObject.ENTER) {
                         var qty = field.getValue();
                         if (qty < 0) {
-                            Msg.info('warning', '实盘数量不能小于零!');
+                            Msg.info('warning', $g('实盘数量不能小于零!'));
                             return;
                         }
                         AddNewRow();
@@ -656,31 +658,31 @@ Ext.onReady(function() {
             }
         })
     }, {
-        header: "厂商",
+        header: $g("生产企业"),
         dataIndex: 'manf',
         width: 150,
         align: 'left',
         sortable: true
     }, {
-        header: '实盘日期',
+        header: $g('实盘日期'),
         dataIndex: 'countDate',
         width: 100,
         align: 'left',
         sortable: true
     }, {
-        header: "实盘时间",
+        header: $g("实盘时间"),
         dataIndex: 'countTime',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: '实盘人',
+        header: $g('实盘人'),
         dataIndex: 'userName',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: '货位',
+        header: $g('货位'),
         dataIndex: 'stkbin',
         width: 100,
         align: 'left',
@@ -711,16 +713,16 @@ Ext.onReady(function() {
         store: InstDetailStore,
         pageSize: PageSize,
         displayInfo: true,
-        displayMsg: '当前记录 {0} -- {1} 条 共 {2} 条记录',
+        displayMsg: $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
         emptyMsg: "No results to display",
-        prevText: "上一页",
-        nextText: "下一页",
-        refreshText: "刷新",
-        lastText: "最后页",
-        firstText: "第一页",
-        beforePageText: "当前页",
-        afterPageText: "共{0}页",
-        emptyMsg: "没有数据"
+        prevText: $g("上一页"),
+        nextText: $g("下一页"),
+        refreshText: $g("刷新"),
+        lastText:$g( "最后页"),
+        firstText: $g("第一页"),
+        beforePageText: $g("当前页"),
+        afterPageText: $g("共{0}页"),
+        emptyMsg: $g("没有数据")
     });
 
     StatuTabPagingToolbar.addListener('beforechange', function(toolbar, params) {
@@ -729,7 +731,7 @@ Ext.onReady(function() {
         }
         var records = InstDetailStore.getModifiedRecords();
         if (records.length > 0) {
-            Msg.info("warning", "本页数据发生变化，请先保存！");
+            Msg.info("warning",$g( "本页数据发生变化，请先保存！"));
             return false;
         }
     });
@@ -798,7 +800,7 @@ Ext.onReady(function() {
             }]
         }, {
             xtype: 'fieldset',
-            title: '扫描条码录入',
+            title: $g('扫描条码录入'),
             layout: 'column',
             bodyStyle: 'padding:0 0 0 0;',
             style: 'padding:5px 0 5 0;',
@@ -822,7 +824,7 @@ Ext.onReady(function() {
         items: [{
             region: 'north',
             height: 220,
-            title: '实盘:录入方式二(按库存批次)',
+            title: $g('实盘:录入方式二(按库存批次)'),
             layout: 'fit',
             items: [form]
         }, {

@@ -4,7 +4,7 @@
  */
 var ListCombobox = function(id, url, data, option){
 	this.id = id;
-	this.url= url;
+	this.url= (typeof websys_writeMWToken=='function')?websys_writeMWToken(url):url;
 	this.data = data;
 	this.option = option;
 	}
@@ -28,7 +28,7 @@ ListCombobox.prototype.init = function(){
  */
 var ListComponent = function(id, columns, url, option){
  	this.id = id;
-	this.url = url;
+	this.url = (typeof websys_writeMWToken=='function')?websys_writeMWToken(url):url;
 	this.option = option;
 	this.columns = columns;
 }
@@ -64,18 +64,23 @@ ListComponent.prototype.Init = function(){
  *  option 自定义window参数设置
  */
  
- var WindowUX = function(title, id, width, height, option){
+ var WindowUX = function(title, id, width, height, option,top, left){
  	this.title = title;
  	this.id = id;
  	this.width = width;
  	this.height = height;
  	this.option = option;
+ 	this.top = top;
+ 	this.left = left;
  }
  
  WindowUX.prototype.Init = function(){
 	var option = {
 		//closable : false,
-		modal : true,
+		iconCls:'icon-w-paper',
+		top : this.top,
+		left : this.left,
+		modal : false,
 		inline : false,
 		border : false,
 		title : this.title,
@@ -128,7 +133,7 @@ ListComponent.prototype.Init = function(){
  
  var CusTreeUX = function(id, url, option){
  	 this.id = id;
- 	 this.url = url;
+ 	 this.url = (typeof websys_writeMWToken=='function')?websys_writeMWToken(url):url;
  	 this.option = option;
  }
  
@@ -171,7 +176,7 @@ ListComponent.prototype.Init = function(){
  */
 var ListTreeGrid = function(id, columns, url, option){
  	this.id = id;
-	this.url = url;
+	this.url = (typeof websys_writeMWToken=='function')?websys_writeMWToken(url):url;
 	this.option = option;
 	this.columns = columns;
 }

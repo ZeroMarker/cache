@@ -23,11 +23,15 @@
    	}
 
    	obj.LoadRep = function(){
-		var aHospID = $('#cboHospital').combobox('getValue');
+		var aHospID = $('#cboHospital').combobox('getValues').join('|');
 		var DateFrom = $('#dtDateFrom').datebox('getValue');
 		var DateTo= $('#dtDateTo').datebox('getValue');
 		var Statunit = Common_CheckboxValue('chkStatunit');
 		var Qrycon = $('#aQryCon').combobox('getValue');
+		var OperCat = $('#cboOperCat').combobox('getValues').toString();
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');
+		
 		ReportFrame = document.getElementById("ReportFrame");
 		if(Qrycon==""){
 			$.messager.alert("提示","请选择筛选条件！", 'info');
@@ -41,7 +45,7 @@
 			$.messager.alert("提示","请选择开始日期、结束日期！", 'info');
 			return;
 		}
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S291AIncAntPre.raq&aHospIDs='+aHospID +'&aDateFrom=' + DateFrom +'&aDateTo='+ DateTo +'&aStaType='+ Statunit +'&aQryCon='+ Qrycon;	
+		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S291AIncAntPre.raq&aHospIDs='+aHospID +'&aDateFrom=' + DateFrom +'&aDateTo='+ DateTo +'&aStaType='+ Statunit +'&aQryCon='+ Qrycon+'&aOperCat='+OperCat+'&aStatDimens='+aStatDimens+'&aLocIDs='+aLocIDs+'&aPath='+cspPath;	
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
@@ -122,7 +126,7 @@
 					type: 'value',
 					name: '抗菌药物的给药时间在术\n前0.5-2小时的手术例次数',
 					min: 0,
-					interval:1,
+					interval:10,
 					axisLabel: {
 						formatter: '{value} '
 					}
@@ -131,7 +135,7 @@
 					type: 'value',
 					name: '术前0.5-2小时给药率(%)',
 					min: 0,
-					interval:1,
+					interval:10,
 					axisLabel: {
 						formatter: '{value} %'
 					}
@@ -161,51 +165,99 @@
 		obj.myChart.setOption(option1,true);
 		
 		 //当月科室感染率图表
-		var HospID = $('#cboHospital').combobox('getValue');
+		var HospID = $('#cboHospital').combobox('getValues').join('|');
 		var DateFrom = $('#dtDateFrom').datebox('getValue');
 		var DateTo= $('#dtDateTo').datebox('getValue');
 		var StaType = Common_CheckboxValue('chkStatunit');
 		var Qrycon = $('#aQryCon').combobox('getValue');
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S291AIncAntPre' + "&QueryName=" + 'S291AIncAntPre' + "&Arg1=" + HospID + "&Arg2=" + DateFrom + "&Arg3=" + DateTo+ "&Arg4=" + StaType+ "&Arg5=" + Qrycon+"&ArgCnt=" + 5;
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 30000, //30秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
+		var OperCat = $('#cboOperCat').combobox('getValue');
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');
+		obj.myChart.showLoading();
+		$cm({
+			ClassName:'DHCHAI.STATV2.S291AIncAntPre',
+			QueryName:'S291AIncAntPre',
+			aHospIDs:HospID,
+			aDateFrom:DateFrom,
+			aDateTo:DateTo,
+			aStaType:StaType,
+			aQryCon:Qrycon,
+			aOperCat:OperCat,
+			aStatDimens:aStatDimens,
+			aLocIDs:aLocIDs,
+			page:1,
+			rows:999
+		},function(rs){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			obj.echartLocInfRatio(rs);
+			obj.sortName="术前0.5-2小时给药率"; //初始化排序指标
+			obj.myChart.off('legendselectchanged'); //取消事件，避免事件绑定重复导致多次触发
+			obj.myChart.on('legendselectchanged', function(legObj){
+				//处理排序问题 
+				//如果是重复点击认为是需要执行隐藏处理,不想隐藏就不用判断了	
+				if(obj.sortName!=legObj.name)
+				{
+					obj.sortName=legObj.name;
+					obj.echartLocInfRatio(rs);
+				}
+				else
+				{
+					obj.sortName="";  //初始化
+				}
+				
+			});
 		});
-		
+//		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S292AIncAntPre' + "&QueryName=" + 'S291AIncAntPre' + "&Arg1=" + HospID + "&Arg2=" + DateFrom + "&Arg3=" + DateTo+ "&Arg4=" + StaType+ "&Arg5=" + Qrycon+"&Arg6=" + OperCat+"&Arg7=" + aStatDimens+"&Arg8=" + aLocIDs+"&ArgCnt=" + 8;
+//		$.ajax({
+//			url: "./dhchai.query.csp",
+//			type: "post",
+//			timeout: 30000, //30秒超时
+//			async: true,   //异步
+//			beforeSend:function(){
+//				obj.myChart.showLoading();	
+//			},
+//			data: dataInput,
+//			success: function(data, textStatus){
+//				obj.myChart.hideLoading();    //隐藏加载动画
+//				var retval = (new Function("return " + data))();
+//				obj.echartLocInfRatio(retval);
+//			},
+//			error: function(XMLHttpRequest, textStatus, errorThrown){
+//				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
+//				obj.myChart.hideLoading();    //隐藏加载动画
+//			}
+//		});
+	obj.up=function(x,y){
+        if(obj.sortName=="抗菌药物的给药时间在术前0.5-2小时的手术例次数")
+		{
+			return y.UseOperPreCount-x.UseOperPreCount;
+		}
+		else
+		{
+			return y.UseOperPreRatio-x.UseOperPreRatio;
+		}
+    }	
 	   obj.echartLocInfRatio = function(runQuery){
 			if (!runQuery) return;
 			var arrViewLoc = new Array();
 			var arrInfRatio = new Array();
 			var arrInfCount = new Array();
 			obj.arrLocG= new Array();
-			var arrRecord = runQuery.record;
-			
+			var arrRecord = runQuery.rows;
+			var arrlength=0
 			for (var indRd = 0; indRd < arrRecord.length; indRd++){
 				var rd = arrRecord[indRd];
 				//去掉全院、医院、科室组
 				if ((rd["DimensKey"].indexOf('-A-')>-1)||(rd["DimensKey"].indexOf('-H-')>-1)||(rd["DimensKey"].indexOf('-G-')>-1)) {
+					arrlength=arrlength+1
 					delete arrRecord[indRd];
 					continue;
 				}
 				rd["DimensDesc"] = $.trim(rd["DimensDesc"]); //去掉空格
-				rd["UseOperPreCount"] = parseFloat(parseFloat(rd["UseOperPreCount"].replace('%','').replace('‰','')).toFixed(2));
+				rd["UseOperPreRatio"] = parseFloat(rd["UseOperPreRatio"].replace('%','').replace('‰','')).toFixed(2);
 			}
-			arrRecord = arrRecord.sort(Common_GetSortFun('desc','UseOperPreCount'));  //排序
+			arrRecord=arrRecord.sort(obj.up);
+			arrRecord.length=arrRecord.length-arrlength
 			if(obj.numbers=="ALL"){
 				obj.numbers = arrRecord.length;
 			}else{

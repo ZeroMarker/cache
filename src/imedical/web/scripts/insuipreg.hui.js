@@ -2,19 +2,23 @@
  * 医保住院登记JS
  * FileName:insuipreg.hui.js
  * DingSH 2019-04-22
- * 版本：V1.0
+ * 版本：V1.0 
  * hisui版本:0.1.0
  */
  var AdmReasonDr="",AdmReasonNationalCode=""
  var HospDr=session['LOGON.HOSPID'];
  var GUser=session['LOGON.USERID'];
- var InsuType=""
- var AdmDr="" 
+ var InsuType="";
+ var AdmDr="";
+ var InsuCurCardNo=""; //当前医保卡号
+ var MedTypeDicRelationFlag=""; // 20220829 医疗类别关联字典标志
+ var InsuRegRepFlag="Y"; // 20230525 医保重复登记标志
  $(function()
  {
-	$(document).keydown(function (e) {
+    $(document).keydown(function (e) {
 	             banBackSpace(e);
-	         }); 	 
+	         }); 	       
+	         
 	//#1 初始化医保类型	
 	InitInsuTypeCmb();
 	
@@ -40,27 +44,94 @@
 	//#8 隐藏元素
 	$('#InAdmDlg').hide();
 	 
-	//#9 住院登记界面调转本界面处理
-    RegLinkIni();
+    //#9 医保配置控制
+    InitPROConfg();
+    
+    //#0 住院登记界面调转本界面处理
+    RegLinkIni();        
+	
+	//st add 20220919 HanZH
+	//#11 初始化病种
+	InitDiseNameCmbGd();
+	
+	//#12 初始化手术操作
+	InitOprnOprtNameCmbGd();
+	//ed
 });
 
+
+//医保配置控制,医保配置在这里增加
+function InitPROConfg()
+{
+	$.m({
+		ClassName: "web.INSUDicDataCom",
+		MethodName: "GetSys",
+		type: "GET",
+		itmjs: "",
+		itmjsex: "",
+		InString: "HISPROPerty"+InsuType,
+		HospDr: HospDr
+	}, function (rtn) {
+        if (typeof rtn != "string")
+         {
+	       return ;
+	     }
+	     var DicAry = rtn.split("!")
+	     for(var i =1,len=DicAry.length;i<len;i++)
+	     {
+		     var DataAry = DicAry[i].split("^");
+		     var DicCode = DataAry[2];
+		     var DicVal = DataAry[3];
+		     switch (DicCode)
+		     { 
+		              /*医保配置在这里增加*/
+	             case "AdmDateIsEdit" :
+	                    var RdFlag='enable'
+	                    //if (DicVal == 0){
+	    	              // RdFlag='disable'
+	                     //}
+	                     //$("#AdmDate").datebox(RdFlag);
+	                     //$("#AdmTime").timespinner(RdFlag);   //-注释掉 DingSH 20220919
+	                      enableById('AdmDate')  // 修改 DingSH 20220919 
+	                      enableById('AdmTime')
+	                      if (DicVal == 0){
+	    	                disableById('AdmDate')
+	                        disableById('AdmTime')
+	                     }
+	                    
+	    	          break;
+	    	     
+	             default :
+	    	          break;
+	           }
+		 }
+		
+	});
+
+}
 //初始化医保类型
 function InitInsuTypeCmb()
 {
     var options = {
 		   hospDr:HospDr,
-		   defaultFlag:"N"
+		   defaultFlag:"Y"
 		}
 	INSULoadDicData("InsuType","DLLType",options); // dhcinsu/common/dhcinsu.common.js
 	$HUI.combobox("#InsuType",{
 	    	onSelect:function(rec)
 	    	{
 		    	InsuType=rec.cCode;
-		    	InitYLLBCmb();         //医疗类别
-		    	InitInsuDiagCmbGd(); //诊断
+		    	InitYLLBCmb();           //医疗类别
+		    	InitInsuDiagCmbGd();     //诊断
 		    	//QryInsuDiag();         //诊断
-		    	InitBCFSCmb();       //治疗方式
-		    	InitZLFSCmb();       //补偿方式
+		    	InitZLFSCmb();           //治疗方式
+		    	InitBCFSCmb();           //补偿方式
+		    	InitMdtrtCertTypeCmb();  //就医凭据类型
+		    	InitPROConfg();          //医保配置控制
+		    	//add 20220919 HanZH
+				InitDiseNameCmbGd();	 //病种
+				InitOprnOprtNameCmbGd(); //手术操作
+				InitadmdvsCmbGd();		 //医保区划  +20230330 HanZH
 		    }
 		});
 }
@@ -70,7 +141,10 @@ function InitBtnClick(){
 	//登记号回车事件
 	$("#PapmiNo").keydown(function(e) 
 	  { 
-	     PapmiNo_onkeydown(e);
+	    if (e.keyCode==13)
+	    {
+	      PapmiNo_onkeydown();
+	    }
 	   });  
 	//住院号回车事件
 	$("#MedicareNo").keydown(function(e) 
@@ -82,24 +156,24 @@ function InitBtnClick(){
 	     setValueById('NewCardNo',CardNo)
      });
 	
-    $("#CardNo").bind('click onmouseenter',
+   /* $("#CardNo").bind('click onmouseenter',
       function(e){
 	     var CardNo=getValueById('CardNo');
 	     setValueById('OldCardNo',CardNo)
-	    }); 
+	    }); */
 	}	
 	
 	
 //登记号回车函数	
-function PapmiNo_onkeydown(e){	
-	if (e.keyCode==13)
-	{
+function PapmiNo_onkeydown(){	
+	//if (e.keyCode==13)
+	//{
 		AdmDr=""
 		AdmReasonDr=""
 		AdmReasonNationalCode=""
 		Clear(0);
 		GetPatInfo(); 
-    }		
+    //}		
 }
 
 //住院号回车函数	
@@ -121,85 +195,198 @@ function MedicareNo_onkeydown(e){
 		
      }		
 }
-
-
 //医保登记函数		        
-function InsuIPReg_onclick(){	
-	var TempString="",InsuAdmType="",CardInfo="",InsuNo=""
-	var StDate="",EndDate=""
-	var obj=$('#btnReg').linkbutton("options")
-	if (obj.disabled==true){return ;}
-	
-	//医保类型
-	var InsuType=$('#InsuType').combobox('getValue');
-    if (InsuType==""){
-	    $.messager.alert("提示","请选择医保类型!", 'info');
-		return ;
-    }
-    
-    //医疗类别
-    InsuAdmType=$('#InsuAdmType').combobox('getValue');
-    if (InsuAdmType==""){
-	    $.messager.alert("提示","请选择医疗类别!", 'info');
-		return ;
-    }
-    
-    //医保号/医疗证号
-	InsuNo=getValueById('InsuNo');
-	
-	//医保入院诊断编码
-    var InsuInDiagCode=getValueById('InsuInDiagCode');  
-                
-	//医保入院诊断名称
-    var InsuInDiagDesc=$('#InsuInDiagDesc').combogrid('getValue') 
-    
-	//就诊日期
-	var AdmDate=getValueById('AdmDate'); 
-	
-	 //就诊时间
-	var AdmTime=getValueById('AdmTime');
-	
-	//治疗方式
-	var ZLFSStr=$('#ZLFS').combobox('getValue');	
-	
-	//补偿方式
-	var BCFSStr=$('#BCFS').combobox('getValue')	
+function InsuIPReg_onclick(){
 
-	TempString=InsuAdmType+"^"+InsuInDiagCode+"^"+InsuInDiagDesc+"^"+InsuNo+"^"+AdmDate+"^"+AdmTime+"^"+ZLFSStr+"^"+BCFSStr+"^"+InsuType
-	
-	//医保登记
-	var flag=InsuIPReg(0,GUser,AdmDr,AdmReasonNationalCode, AdmReasonDr,TempString)//DHCInsuPort.js
-	if (flag!="0") 
-	 {
-		$.messager.alert("提示","医保登记失败!rtn="+flag, 'error');
-		return ;
+	//校验是否医保登记
+	var _validReg = function(){
+	       return new Promise(function(resolve,reject){
+		       var obj=$('#btnReg').linkbutton("options")
+	           if (obj.disabled==true){return reject();}
+		       	//医保类型
+	           var InsuType=$('#InsuType').combobox('getValue');
+               if (InsuType ==""){
+	             $.messager.alert("提示","请选择医保类型!", 'info');
+		         return reject();
+                }
+              //医疗类别
+               InsuAdmType=$('#InsuAdmType').combobox('getValue');
+              if (InsuAdmType==""){
+	           $.messager.alert("提示","请选择医疗类别!", 'info');
+		        return reject();
+               }
+		       resolve();
+		       });
+	 }
+	 
+	//生育患者 弹窗护理组更新生育信息界面
+   	var _MantRegFlag=function(){
+	       return new Promise(function(resolve,reject){
+		      //+ WangXQ 20220829 生育类别患者弹窗
+             if(MedTypeDicRelationFlag=="1"){
+	             var url = "nur.hisui.medfertilityinfo.csp?EpisodeID="+AdmDr;
+	 	         websys_showModal({
+		         url: url,
+		         title: "生育信息填写",
+		         iconCls: "icon-w-edit",
+		         width: "855",
+		         height: "400",
+		         onClose: function () {
+			          MedTypeDicRelationFlag="";
+	  			}
+		        })
+               }
+                resolve();
+               });
+		 
 	}
-	$.messager.alert("提示","医保登记成功!", 'info');
-	UpdatePatAdmReason(AdmDr,"",GUser)
-    GetPatInfo();
 	
-}
+ //医保登记函数	
+ var _InsuReg=function(){
+   return new Promise(function(resolve,reject){
+	   	     var TempString="",InsuType="",InsuAdmType="",CardInfo="",InsuNo=""
+	         var StDate="",EndDate=""
+	         //获取医保类型
+	         var InsuType=$('#InsuType').combobox('getValue');
+	         
+	         //获取就诊类别
+	         InsuAdmType=$('#InsuAdmType').combobox('getValue');
+	         
+			//医保号/医疗证号
+			InsuNo=getValueById('InsuNo');
+			
+			//医保入院诊断编码
+		    var InsuInDiagCode=getValueById('InsuInDiagCode');  
+		                
+			//医保入院诊断名称
+		    var InsuInDiagDesc=$('#InsuInDiagDesc').combogrid('getText');
+		    
+			//就诊日期
+			var AdmDate=getValueById('AdmDate'); 
+			
+			 //就诊时间
+			var AdmTime=getValueById('AdmTime');
+			
+			//治疗方式
+			var ZLFSStr=$('#ZLFS').combobox('getValue');	
+			
+			//补偿方式
+			var BCFSStr=$('#BCFS').combobox('getValue')	
 
+			//就诊凭证类型
+			var mdtrtCertType=getValueById('mdtrt_cert_type');	
+			
+			//就诊凭证编号
+			var mdtrtCertNo=getValueById('mdtrt_cert_no')	
+			
+			//参保地医保区划
+			//var insuplcAdmdvs=getValueById('insuplc_admdvs')
+			//upt HanZH 20230410
+			var insuplcAdmdvs=$('#insuplc_admdvs').combogrid('getValue')
+		
+			//add 20220919 HanZH
+			//病种编码
+			var diseCodg=getValueById('diseCodg');
+			//病种名称
+			var diseName=getValueById('diseName');
+			//手术操作代码
+			var oprnOprtCode=getValueById('oprnOprtCode');
+			//手术操作名称
+			var oprnOprtName=getValueById('oprnOprtName');
+			//upt 20230328 HanZH 界面选择病种为空时再判断是否允许不选病种进行医保登记的医疗类别的配置
+			if (diseCodg=="") {
+				//增加配置 允许不选病种进行医保登记的医疗类别	20220920 HanZH
+				var RegFlag=""
+				var RegFlagStr=tkMakeServerCall("web.INSUDicDataCom","GetDicByCodeAndInd","HISPROPerty"+InsuType,"AlwNoDiseSelRegOfMedType",4,HospDr);
+				if (RegFlagStr!=""){
+					if(RegFlagStr.indexOf("|"+InsuAdmType+"|")!=-1){
+						RegFlag="Y";
+					}
+				}
+				if(RegFlag!="Y"){
+					$.messager.alert("提示","请选择医疗类别="+InsuAdmType+"的病种信息!", 'info');
+					return ;
+				}
+			}
+			var JSSSLB="",psnCardType="",psnCardno="";
+			//TempString=InsuAdmType+"^"+InsuInDiagCode+"^"+InsuInDiagDesc+"^"+InsuNo+"^"+AdmDate+"^"+AdmTime+"^"+ZLFSStr+"^"+BCFSStr+"^"+InsuType+"^"+""+"^"+mdtrtCertType+"^^"+JSSSLB+"^"+mdtrtCertNo+"^"+psnCardType+"^"+psnCardno+"^"+insuplcAdmdvs
+			TempString=InsuAdmType+"^"+InsuInDiagCode+"^"+InsuInDiagDesc+"^"+InsuNo+"^"+AdmDate+"^"+AdmTime+"^"+ZLFSStr+"^"+BCFSStr+"^"+InsuType+"^"+""+"^"+mdtrtCertType+"^^"+JSSSLB+"^"+mdtrtCertNo+"^"+psnCardType+"^"+psnCardno+"^"+insuplcAdmdvs+"^"+diseCodg+"^"+diseName+"^"+oprnOprtCode+"^"+oprnOprtName
+			
+			//医保登记
+			var flag=InsuIPReg(0,GUser,AdmDr,AdmReasonNationalCode, AdmReasonDr,TempString)//DHCInsuPort.js
+			InsuRegRepFlag="N";
+			if (flag == 0) 
+			{
+				$.messager.alert("提示","医保登记成功!", 'info');
+			}
+			else	
+			 {
+				$.messager.alert("提示","医保登记失败!rtn="+flag, 'error');
+				return reject() ;
+			}
+			 UpdatePatAdmReason(AdmDr,"",GUser);
+			//GetPatInfo();
+			 PapmiNo_onkeydown();
+	         resolve();
+	  });
+	}
+   var promise = Promise.resolve();
+	promise
+		.then(_validReg)
+		.then(_MantRegFlag)
+		.then(_InsuReg, function () {
+			//reject()
+		});
+   
+}
 //取消医保登记
 function InsuIPRegCancel_onclick(){
-
-    var obj=$('#btnRegCancle').linkbutton("options")
+	var obj=$('#btnRegCancle').linkbutton("options")
 	if (obj.disabled==true){return ;}
 	if(""==AdmDr)
 	{	
 	 $.messager.alert("提示","请选择病人及就诊信息!", 'info');
 	 return;
 	}
-	//登记取消
-	var ExpStr="^^^"
-	var flag=InsuIPRegStrike(0,GUser,AdmDr, AdmReasonNationalCode, AdmReasonDr,ExpStr) //DHCInsuPort.js
-	if (+flag<0) {
-		 $.messager.alert("提示","取消登记失败!"+flag, 'error');
-		 return;
-		}
-	 $.messager.alert("提示","取消登记成功!", 'info');
-	 //InitAdmCmbGd();
-	 GetPatInfo();
+	//就诊凭证类型	电子凭证医保登记数据取消医保登记让操作员选择确认	20220916 HanZH
+	var mdtrtCertType=getValueById('mdtrt_cert_type');
+	if (mdtrtCertType=="01"){
+		var oldOk = $.messager.defaults.ok;
+		var oldCancel = $.messager.defaults.cancel;
+		$.messager.defaults.ok = "确定";
+		$.messager.defaults.cancel = "取消";
+		$.messager.confirm("取消医保登记", "电子凭证医保登记数据，是否确定取消医保登记", function (r) {
+			if (r) {
+				//登记取消
+				var ExpStr="^^^"
+				var flag=InsuIPRegStrike(0,GUser,AdmDr, AdmReasonNationalCode, AdmReasonDr,ExpStr) //DHCInsuPort.js
+				if (+flag<0) {
+					 $.messager.alert("提示","取消登记失败!"+flag, 'error');
+					 return;
+					}
+				 $.messager.alert("提示","取消登记成功!", 'info');
+				 //InitAdmCmbGd();
+				 GetPatInfo();
+			}else{
+				$.messager.popover({ msg: "操作取消" });
+				return;
+			}
+		});
+		$.messager.defaults.ok = oldOk;
+		$.messager.defaults.cancel = oldCancel; 
+	}else
+	{
+		//登记取消
+		var ExpStr="^^^"
+		var flag=InsuIPRegStrike(0,GUser,AdmDr, AdmReasonNationalCode, AdmReasonDr,ExpStr) //DHCInsuPort.js
+		if (+flag<0) {
+			 $.messager.alert("提示","取消登记失败!"+flag, 'error');
+			 return;
+			}
+		 $.messager.alert("提示","取消登记成功!", 'info');
+		 //InitAdmCmbGd();
+		 GetPatInfo();
+	}
 }
 
 //医保登记函数
@@ -250,23 +437,22 @@ function InsuReadCard_onclick() {
   	  	$.messager.alert("提示","修改的医保卡号为空，请填写!", 'info');
    	 	return;   
 	 }
-	 var OldCardNo=getValueById('OldCardNo');
-	 if (NewCardNo==OldCardNo){		   
+	 //var OldCardNo=getValueById('OldCardNo');
+	 if (NewCardNo==InsuCurCardNo){		   
   	  	$.messager.alert("提示","修改的医保卡号没变化，请重新填写!", 'info');
    	 	return;   
 	 }
-  
-	var flag=tkMakeServerCall("web.INSUAdmInfoCtlCom","UpdateINSUCardNo",AdmDr,OldCardNo+"_"+NewCardNo);
+	var flag=tkMakeServerCall("web.INSUAdmInfoCtlCom","UpdateINSUCardNo",AdmDr,InsuCurCardNo+"_"+NewCardNo);
 	if(flag=="0")
 	{
 	  setValueById('CardNo',NewCardNo);
-	  setValueById('OldCardNo',OldCardNo);
-	  OldCardNo=NewCardNo; //更新成功后，新的卡号变成就卡号了
+	  setValueById('OldCardNo',InsuCurCardNo);
+	  //OldCardNo=NewCardNo; //更新成功后，新的卡号变成就卡号了
+	  GetPatInfo();
 	  $.messager.alert("提示","更新医保卡号信息成功!", 'info');
 	}
 	else
 	{
-		
 	  $.messager.alert("提示","更新医保卡号信息失败!", 'error');
 		
 	}
@@ -297,10 +483,10 @@ function GetPatInfo(){
 	    return ;
 	}
    if (rtn.split("!")[0]!="1") {
-	 	 $.messager.alert('提示','取基本信息失败,请输入正确的登记号!','error' ,function(){
-		 	  return ;
-		 	 });
- 	}else
+	 	 setTimeout(function(){$.messager.alert('提示','取基本信息失败,请输入正确的登记号!','error')},200);
+		 return ;
+ 	}
+ 	else
  	{
 	 	aData=rtn.split("^");
 	 	setValueById('Name',aData[2]);             //姓名
@@ -310,7 +496,7 @@ function GetPatInfo(){
 	 	setValueById('CTProvinceName',aData[16]);  //省
 	 	setValueById('CTCityName',aData[18]);      //市
 	 	setValueById('CTAreaName',aData[20]);      //区
-	 	setValueById('BDDT',aData[9]);             //出生日期
+	 	//setValueById('BDDT',aData[9]);             //出生日期
 	 	setValueById('MedicareNo',aData[14]);       //住院号
 	    //CTProvinceCode=aData[15];
         //CTCityCode=aData[17];
@@ -319,9 +505,8 @@ function GetPatInfo(){
          //InitAdmDiagCmbGd();
          QryAdmLst();
          QryDiagLst();
-	 	return ;
+		setValueById('BDDT',GetInsuDateFormat(aData[9],3))	//出生日期	upt HanZH 20220805
 	 }
-	return ;
 }	
 
 //初始化就诊记录函数
@@ -347,7 +532,7 @@ function InitAdmLst()
 			  var AdmLstVal=rowData.AdmNo+"-"+rowData.DepDesc+"-"+rowData.AdmDate+" "+rowData.AdmTime+"-"+rowData.VisitStatus+"-"+rowData.AdmReasonDesc
 		      $('#AdmLst').combogrid("setValue",AdmLstVal)
 			  setValueById('DepDesc',rowData.DepDesc)
-			  setValueById('AdmDate',rowData.AdmDate)
+			  //setValueById('AdmDate',rowData.AdmDate)
 			  setValueById('AdmTime',rowData.AdmTime)
 			  setValueById('InDiagCode',rowData.InDiagCode)
 			  setValueById('InDiagDesc',rowData.InDiagDesc)
@@ -359,43 +544,68 @@ function InitAdmLst()
 			  QryDiagLst();
 			  GetInsuAdmInfo()
 			  QryInAdmInfo()
+
+			  AdmDate=GetInsuDateFormat(rowData.AdmDate,3)
+			  setValueById('AdmDate',AdmDate)	//入院日期	upt HanZH 20220805
 		},
 		
 		onLoadSuccess:function(data)
 		{
-	
+	        if (data.total<0) 
+	        {
+		        disableById("btnReg");        //+ 20220831
+		        disableById("btnRegCancle");  
+		        disableById("btnAppyReg");  //+ upt 20230314 Jins1010
+		        return ;
+	        }
 			if (data.total==0)
 			{
+				disableById("btnReg");        //+ 20220831 
+		        disableById("btnRegCancle");  
+		        disableById("btnAppyReg");  //+ upt 20230314 Jins1010
 				$.messager.alert("提示", "没有查询到病人就诊记录,请先确认患者是否护士分床!", 'info');
 				return ;
-				
 			}
-			var indexed=-1
-			var Flag=0
-			for(var i in data.rows)
+			else 
 			{
-				if(data.rows[i].VisitStatus=="在院")
-				{
-					indexed=i;
-					Flag=1
+			  var indexed=-1
+			  var Flag=0
+			  for(var i in data.rows)
+			  {
+				if( data.rows.hasOwnProperty(i)){
+					if(AdmDr==data.rows[i].AdmDr)
+					{
+						indexed=i;
+						 Flag=1;
+						 break;
+					}
+					if((data.rows[i].VisitStatus=="在院")&&(AdmDr==""))
+					  {
+						indexed=i;
+						 Flag=1;
+						 break;
+					  }
 				}
-				if (Flag==0)
-				{
-					indexed=i;
-					
-				}
-				if(AdmDr==data.rows[i].AdmDr)
-				{
-					indexed=i;
-				}
-		    }
+				// if (Flag==0)
+				//   {
+				// 	indexed=i;
+				//  	break;
+				//   }
+				// if(AdmDr==data.rows[i].AdmDr)
+				// {
+				// 	indexed=i;
+				//  	break;
+				// }
+				indexed=0;
+		      }
 		    
-		    if (indexed>=0)
-		    {
+		      if (indexed>=0)
+		       {
 			    var rowData=data.rows[indexed]
 					$('#AdmLst').combogrid("setValue",rowData.AdmNo+"-"+rowData.DepDesc+"-"+rowData.AdmDate+" "+rowData.AdmTime+"-"+rowData.VisitStatus+"-"+rowData.AdmReasonDesc)
 				    setValueById('DepDesc',rowData.DepDesc)
-			        setValueById('AdmDate',rowData.AdmDate)
+			        //setValueById('AdmDate',rowData.AdmDate)
+			  		
 			        setValueById('AdmTime',rowData.AdmTime)
 			        setValueById('InDiagCode',rowData.InDiagCode)
 			        setValueById('InDiagDesc',rowData.InDiagDesc)
@@ -404,12 +614,15 @@ function InitAdmLst()
 				    AdmReasonDr=rowData.AdmReasonDr
 			        AdmReasonNationalCode=rowData.ReaNationalCode
 			        //InitAdmDiagCmbGd();
-			        QryDiagLst();
+			       
 			        GetInsuAdmInfo();
-			        QryInAdmInfo()
-			}
-		    
-		    
+			        QryInAdmInfo();
+			        QryDiagLst();
+			        
+					AdmDate=GetInsuDateFormat(rowData.AdmDate,3)
+					setValueById('AdmDate',AdmDate)	//入院日期	upt HanZH 20220805
+			 }
+		    }
 		    
 		}
        
@@ -435,11 +648,18 @@ function InitDiagLst()
 	    idField:'DiagnosICDCode',  
 	    textField:'DiagnosDesc' ,  
 	    columns:[[    
-	        {field:'DiagnosICDCode',title:'诊断编码',width:100},    
+	        {field:'DiagnosICDCode',title:'诊断编码',width:100},   
+	        {field:'DiagnosPrefix',title:'诊断前缀',width:80},  
 	        {field:'DiagnosDesc',title:'诊断名称',width:160}, 
-	        {field:'DiagnosMRDesc',title:'诊断注释',width:80},   
-	        {field:'DiagnosType',title:'诊断类型',width:80},   
-	        {field:'DiagStat',title:'诊断状态',width:80},   
+	        {field:'DiagnosMRDesc',title:'诊断注释',width:80},  
+	         {field:'MainDiagFlag',title:'主诊断',width:60,align:'center',
+	            formatter: function(value,row,index)
+	                {
+			              return  value=="Y" ? "是":"否" 
+			        }
+			   },    
+	        {field:'DiagnosType',title:'诊断类型',width:80,align:'center'},   
+	        {field:'DiagStat',title:'诊断状态',width:80,align:'center'},   
 	        {field:'InsuDiagCode',title:'医保诊断编码',width:110},  
 	        {field:'InsuDiagDesc',title:'医保诊断描述',width:150}      
 	    ]] ,
@@ -456,9 +676,11 @@ function InitDiagLst()
 }
 ///查询就诊诊断记录函数
 function QryDiagLst()
-{
-	var tURL=$URL+"?ClassName="+'web.DHCINSUPortUse'+"&MethodName="+"GetPatAllDiagsByADM"+"&PAADM="+AdmDr+"&DiagType="+""+"&ExpStr="+("^"+InsuType+"^HUIToJson")
-    $('#DiagLst').combogrid({url:tURL});
+{   if (!!AdmDr)
+    {
+	 var tURL=$URL+"?ClassName="+'web.DHCINSUPortUse'+"&MethodName="+"GetPatAllDiagsByADM"+"&PAADM="+AdmDr+"&DiagType="+""+"&ExpStr="+("^"+InsuType+"^HUIToJson")
+     $('#DiagLst').combogrid({url:tURL});
+    }
    
 }
 
@@ -482,53 +704,114 @@ function GetInsuAdmInfo()
 		if (rtn.split("!")[0] != "1") {
 			enableById("btnReg");
 			enableById("btnRegCancle");
+			enableById("btnAppyReg"); //+20230314 JinS1010
+			if (rtn=="-100"){
+				ClearInsuAdmInfo();	//+20221125 HanZH
+				//初始化医保类型 +20230317 HanZH		
+				InitInsuTypeCmb();
+				InitYLLBCmb();
+			}
 		} else {
 			var myAry = rtn.split("!")[1].split("^");
-			var actDesc = "";
-			if (myAry[11] == "A") {
-				actDesc = "在院";
-			   disableById("btnReg");
-				enableById("btnRegCancle");
+			if (((myAry[11] == "A") || (myAry[11] == "O")) && (InsuRegRepFlag=="Y")){
+				var oldOk = $.messager.defaults.ok;
+				var oldNo = $.messager.defaults.no;
+				$.messager.defaults.ok = " 是 ";
+				$.messager.defaults.no = " 否 ";
+				var btcnfm = $.messager.confirm("温馨提醒", "已存在有效登记信息，是否再次登记?", function (r) {
+					if (r) {
+				        InitInsuTypeCmb();
+				        InitYLLBCmb();
+				        enableById("btnReg");
+						enableById("btnRegCancle");
+						enableById("btnAppyReg"); //+20230314 JinS1010
+						return;
+					} else {
+						_loadInsuAdmInfo(myAry);
+					}
+					/*要写在回调方法内,否则在旧版下可能不能回调方法*/
+					$.messager.defaults.ok = oldOk;
+					$.messager.defaults.no = oldNo;
+				}).children("div.messager-button");
+				btcnfm.children("a:eq(1)").focus();
+				btcnfm.children("a:eq(0)").addClass('green'); 
+			}else{
+				InsuRegRepFlag="Y";
+				_loadInsuAdmInfo(myAry);
 			}
-			if (myAry[11] == "O") {
-				actDesc = "出院";
-				disableById("btnReg");
-				disableById("btnRegCancle");
-			}
-			if (myAry[11] == "S") {
-				actDesc = "取消登记";
-				enableById("btnReg");
-				disableById("btnRegCancle");
-			}
-			setValueById("InsuActiveFlag", actDesc);           //医保登记状态
-			setValueById("InsuNo", myAry[2]);               //医保号
-			setValueById("CardNo", myAry[3]);               //医保卡号
-			setValueById("NewCardNo", myAry[3]);            //新医保卡号
-			setValueById("OldCardNo", myAry[39]);           //旧医保卡号
-			InsuType=myAry[18];			
-			setValueById("InsuType",myAry[18])
-			InitYLLBCmb(myAry[14]);                          //医疗类别
-		    InitBCFSCmb();                                  //治疗方式
-		    InitZLFSCmb();                                   //补偿方式
-			setValueById("InsuPatType", myAry[4]);          //人员类别
-			$("#InsuInDiagDesc").combogrid("grid").datagrid("loadData", {
-				total: 1,
-				rows: [{"Code": myAry[26], "Desc": myAry[27]}]
-			});
-			$("#InsuInDiagDesc").combogrid("setValue", myAry[26]);   //医保诊断
 			
-			setValueById("insuTreatType", myAry[36]);        //待遇类别
-			setValueById("insuAdmSeriNo", myAry[10]);        //医保就诊号
-			setValueById("xzlx",myAry[37])                   //险种类型
-	        setValueById("dylb",myAry[36])                   //待遇类别
-	        setValueById("AdmDate",myAry[12])                //入院日期
-	        setValueById("AdmTime",myAry[13])                //入院时间
-            setValueById("InsuAdmSeriNo",myAry[10])          //医保就诊号
-            setValueById("InsuCenter",myAry[8])              //医保统筹区
-			//setValueById("ZLFS", myAry[38]);               //治疗方式
-			//setValueById("BCFS", myAry[39]);               //补偿方式
 		}
 	});
+    //加载医保登记信息 + 20230411 DingSH
+	function _loadInsuAdmInfo (myAry) {
+
+		var actDesc = "";
+		if (myAry[11] == "A") {
+			actDesc = "在院";
+			disableById("btnReg");
+			enableById("btnRegCancle");
+			disableById("btnAppyReg"); //+20230314 JinS1010
+		}
+		if (myAry[11] == "O") {
+			actDesc = "出院";
+			disableById("btnReg");
+			disableById("btnRegCancle");
+			disableById("btnAppyReg"); //+20230314 JinS1010
+		}
+		if (myAry[11] == "S") {
+			actDesc = "取消登记";
+			enableById("btnReg");
+			disableById("btnRegCancle");
+			enableById("btnAppyReg"); //+20230314 JinS1010
+		}
+		setValueById("InsuActiveFlag", actDesc);        //医保登记状态
+		setValueById("InsuNo", myAry[2]);               //医保号
+		setValueById("CardNo", myAry[3]);               //医保卡号
+		//setValueById("NewCardNo", myAry[3]);          //新医保卡号
+		InsuCurCardNo= myAry[3];                         
+		setValueById("OldCardNo", myAry[39]);           //旧医保卡号
+		InsuType=myAry[18];			
+		setValueById("InsuType",myAry[18])
+		InitYLLBCmb(myAry[14]);                          //医疗类别
+		InitBCFSCmb();                                  //治疗方式
+		InitZLFSCmb();                                   //补偿方式
+		setValueById("InsuPatType", myAry[4]);          //人员类别
+		$("#InsuInDiagDesc").combogrid("grid").datagrid("loadData", {
+			total: 1,
+			rows: [{"Code": myAry[26], "Desc": myAry[27]}]
+		});
+		$("#InsuInDiagDesc").combogrid("setValue", myAry[26]);   //医保诊断
+		setValueById("insuTreatType", myAry[36]);        //待遇类别
+		setValueById("insuAdmSeriNo", myAry[10]);        //医保就诊号
+		//setValueById("xzlx",myAry[37])                   //险种类型
+		//setValueById("dylb",myAry[36])                   //待遇类别
+		setValueById("xzlx",myAry[36])                   //险种类型	upt HanZH 20220929
+		setValueById("dylb",myAry[37])                   //待遇类别	upt HanZH 20220929
+		//setValueById("AdmDate",myAry[12])                //入院日期
+		setValueById("AdmTime",myAry[13])                //入院时间
+		setValueById("InsuAdmSeriNo",myAry[10])          //医保就诊号
+		setValueById("InsuCenter",myAry[8])              //医保统筹区
+		//setValueById("ZLFS", myAry[38]);               //治疗方式
+		//setValueById("BCFS", myAry[39]);               //补偿方式
+		InitMdtrtCertTypeCmb(myAry[42]);                 //就诊凭据类型
+		setValueById("mdtrt_cert_no",myAry[43])          //就诊凭据编号
+		InitPROConfg();                                  //医保配置控制
+		AdmDate=GetInsuDateFormat(myAry[12],3)           //日期格式化
+		setValueById('AdmDate',AdmDate)	                 //入院日期	upt HanZH 20220805
+		
+		var disOper=myAry[38].split("|")
+		setValueById('diseCodg',disOper[0]); //upt HanZH 20220929
+		setValueById('diseName',disOper[1]); //upt HanZH 20220929
+		if(disOper.length=4){
+			setValueById('oprnOprtName',disOper[2]); //upt HanZH 20220929
+			setValueById('oprnOprtCode',disOper[3]); //upt HanZH 20220929
+		}
+		//医保统筹区	add HanZH 20230410
+		$('#insuplc_admdvs').combogrid("setValue",myAry[8]);
+		$('#insuplc_admdvs').combogrid("setText",myAry[54]);
+
+
+	}
 	
 }
 
@@ -563,16 +846,20 @@ $("#InsuInDiagDesc").combogrid({
 		],
 		onBeforeLoad: function(param) {
 			if (typeof param.q == "undefined"){
-				return ;
+				return false;
 				}
-			if (getValueById("InsuType") && ($.trim(param.q).length > 1)) {
+			if (getValueById("InsuType") && ($.trim(param.q).length >= 1)) {
 				$("#InsuInDiagDesc").combogrid("grid").datagrid("options").url = $URL;
 				param.ClassName = "web.DHCINSUIPReg";
 				param.QueryName = "GetInsuDiagnosis";
 				param.InsuInDiagDesc = param.q;
 				param.InsuType = getValueById("InsuType");
 				param.HospDr=HospDr;
-			}
+			}else{
+				$('#InsuInDiagDesc').combogrid('grid').datagrid("loadData",{total:0,rows:[]});
+				return false;
+				 
+				}
 		},
 		onSelect: function(rowIndex, rowData) {
 			setValueById("InsuInDiagCode", rowData.Code);
@@ -583,49 +870,6 @@ $("#InsuInDiagDesc").combogrid({
 			}
 		}
 	});
-}
-
-//加载医保诊断(支持检索)
-function InitInsuDiag(){
-$("#InsuInDiagDesc").combogrid({
-		panelWidth: 420,
-		validType: ['checkInsuInfo'],
-		delay: 300,
-		mode: 'remote',
-		method: 'GET',
-		fitColumns: true,
-		pagination: true,
-		idField: 'Code',
-		textField: 'Desc',
-		data: [],
-		columns: [
-			[{field: 'Rowid', title: 'Rowid', hidden: true},
-			 {field: 'Code', title: '医保诊断编码', width: 120},
-			 {field: 'Desc', title: '医保诊断名称', width: 230}]
-		],
-		onBeforeLoad: function(param) {
-			if (typeof param.q == "undefined"){
-				return ;
-				}
-			if (getValueById("InsuType") && ($.trim(param.q).length > 1)) {
-				$("#InsuInDiagDesc").combogrid("grid").datagrid("options").url = $URL;
-				param.ClassName = "web.DHCINSUIPReg";
-				param.QueryName = "GetInsuDiagnosis";
-				param.InsuInDiagDesc = param.q;
-				param.InsuType = getValueById("InsuType");
-				param.HospDr=HospDr;
-			}
-		},
-		onSelect: function(rowIndex, rowData) {
-			setValueById("InsuInDiagCode", rowData.Code);
-		},
-		onChange: function(newValue, oldValue) {
-			if (!newValue) {
-				setValueById("InsuInDiagCode", "");
-			}
-		}
-	});
-
 }
 function  QryInsuDiag()
 {
@@ -655,8 +899,8 @@ function initInAdmDlFrm(rowIndex){
 	 FillInAdmDl(rowData);
 	 $HUI.dialog("#InAdmDlg",{
 			title:"医保就诊信息",
-			height:560,
-			width:985,
+			height:528,
+			width:948,
 		    iconCls:'icon-w-paper',
 			modal:true
 			
@@ -670,51 +914,12 @@ function initInAdmDlFrm(rowIndex){
 function FillInAdmDl(Data)
 {
 	
-	setValueById('FXString6',Data.TXString6);     //姓名
-	setValueById('FXString5',Data.TXString5);     //身份证号
-	setValueById('FXString7',Data.TXString7);     //性别
-	setValueById('FInsuId',Data.TInsuId);       //医保个人编号
-	setValueById('FCardNo',Data.TCardNo);       //医保卡号
-	setValueById('FCardStatus',Data.TCardStatus);   //医保卡状态
-	setValueById('FAdmType',Data.TAdmType);      //就诊类型
-	setValueById('FPatType',Data.TPatType);      //人员类型
-	setValueById('FAdmSeriNo',Data.TAdmSeriNo);    //医保就诊号
-	setValueById('FActiveFlag',Data.TActiveFlag);    //登记状态
-	setValueById('AdmDate',Data.TAdmDate);      //入院日期
-	setValueById('FAdmTime',Data.TAdmTime);      //入院时间
-	setValueById('FInsuUser',Data.TInsuUser);     //入院操作员
-	setValueById('FFunDate',Data.TFunDate);      //登记发生日期
-	setValueById('FFunTime',Data.TFunTime);      //登记发生时间
-	setValueById('FXString7',Data.TXString7);     //待遇类型
-	setValueById('FOutUser',Data.TOutUser);      //出院操作员
-	setValueById('FOutDate',Data.TOutDate);      //出院日期
-	setValueById('FOutTime',Data.TOutTime);      //出院时间
-	setValueById('FDeptDesc',Data.TDeptDesc);     //就诊科室
-	setValueById('FCompany',Data.TCompany);      //单位名称
-	setValueById('FStates',Data.TStates);       //地区
-	setValueById('FCenter',Data.TCenter);       //统筹区
-	setValueById('FXString1',Data.TXString1);     //医保入院诊断编码
-	setValueById('FXString2',Data.TXString2);     //医保入院诊断名称
-	setValueById('FIpTimes',Data.TIpTimes);      //住院次数
-	setValueById('FAdmCancelNo',Data.TAdmCancelNo);  //冲销流水号
-	setValueById('FXString3',Data.TXString3);     //医保出院诊断编码
-	setValueById('FXString4',Data.TXString4);     //医保出院诊断描述
-	setValueById('FXString9',Data.TXString9);     //预留9
-	setValueById('FXString10',Data.TXString10);    //预留10
-	setValueById('FXFloat1',Data.TXFloat1);      //预留1
-	setValueById('FXFloat2',Data.TXFloat2);      //预留2
-	setValueById('FXFloat3',Data.TXFloat3);      //预留3
-	setValueById('XFloat4',Data.TXFloat4);       //预留4
-	setValueById('FXString11',Data.TXString11);    //预留11
-	setValueById('FXString12',Data.TXString12);    //预留12
-	setValueById('FXString13',Data.TXString13);    //预留13
-	setValueById('FXString14',Data.TXString14);    //预留14
-	setValueById('FXString15',Data.TXString15);    //预留15
-	setValueById('FXString16',Data.TXString16);    //预留16
-	setValueById('FXString17',Data.TXString17);    //预留17
-	setValueById('FXString18',Data.TXString18);    //预留18
-	setValueById('FXString19',Data.TXString19);    //预留19
-	setValueById('FXString20',Data.TXString20);    //预留20
+	for (var key in Data) {
+     if (Data.hasOwnProperty.call(Data, key)) {
+         setValueById('F'+key.substr(1),Data[key]);
+         
+     }
+    }
 
 	
 }		
@@ -723,113 +928,55 @@ function FillInAdmDl(Data)
 function ClearInAdmDl()
 {
 	
-	getValueById('FXString7',"");     //姓名
-	getValueById('FXString5',"");     //身份证号
-	getValueById('FXString6',"");     //性别
-	getValueById('FInsuId',"");       //医保个人编号
-	getValueById('FCardNo',"");       //医保卡号
-	getValueById('FCardStatus',"");   //医保卡状态
-	getValueById('FAdmType',"");      //就诊类型
-	getValueById('FPatType',"");      //人员类型
-	getValueById('FAdmSeriNo',"");    //医保就诊号
-	getValueById('FActiveFlag',"");    //登记状态
-	getValueById('FAdmDate',"");      //入院日期
-	getValueById('FAdmTime',"");      //入院时间
-	getValueById('FInsuUser',"");     //入院操作员
-	getValueById('FFunDate',"");      //登记发生日期
-	getValueById('FFunTime',"");      //登记发生时间
-	getValueById('FXString7',"");     //待遇类型
-	getValueById('FOutUser',"");      //出院操作员
-	getValueById('FOutDate',"");      //出院日期
-	getValueById('FOutTime',"");      //出院时间
-	getValueById('FDeptDesc',"");     //就诊科室
-	getValueById('FCompany',"");      //单位名称
-	getValueById('FStates',"");       //地区
-	getValueById('FCenter',"");       //统筹区
-	getValueById('FXString1',"");     //医保入院诊断编码
-	getValueById('FXString2',"");     //医保入院诊断名称
-	getValueById('FIpTimes',"");      //住院次数
-	getValueById('FAdmCancelNo',"");  //冲销流水号
-	getValueById('FXString3',"");     //医保出院诊断编码
-	getValueById('FXString4',"");     //医保出院诊断描述
-	getValueById('FXString9',"");     //预留9
-	getValueById('FXString10',"");    //预留10
-	getValueById('FXFloat1',"");      //预留1
-	getValueById('FXFloat2',"");      //预留2
-	getValueById('FXFloat3',"");      //预留3
-	getValueById('XFloat4',"");       //预留4
-	getValueById('FXString11',"");    //预留11
-	getValueById('FXString12',"");    //预留12
-	getValueById('FXString13',"");    //预留13
-	getValueById('FXString14',"");    //预留14
-	getValueById('FXString15',"");    //预留15
-	getValueById('FXString16',"");    //预留16
-	getValueById('FXString17',"");    //预留17
-	getValueById('FXString18',"");    //预留18
-	getValueById('FXString19',"");    //预留19
-	getValueById('FXString20',"");    //预留20
+	$('#InAdmDl').form('clear');
 }	
 
-function InitDiagsQry()
-{
-	$("#InsuInDiagDesc").searchbox({
-		prompt: '请输入关键字',
-        searcher: function (value, name) {
-                initDiagFrm(value);
-            } 
-	});
-}
 
-function InitDiagDg(KeyWords){
-	
-     //alert("KeyWords="+KeyWords+"InsuType="+InsuType)
-	 //初始化datagrid
-	$HUI.datagrid("#indiagdg",{
-		rownumbers:true,
-	    width:445,
-	    height:260,
-		//striped:true,
-		//fitColumns:true,
-		singleSelect: true,
-		//autoRowHeight:false,
-		data: [],
-		columns:[[
-		
-			{field:'Rowid',title:'Rowid',width:60},
-			{field:'Code',title:'医保诊断编码',width:120},
-			{field:'Desc',title:'医保诊断名称',width:230}
-			//{field:'TStDate',title:'生效日期',width:140},
-			//{field:'TEndDate',title:'截止日期',width:140}	
-		]],
-		url:$URL+"?ClassName=web.DHCINSUIPReg&QueryName=GetInsuDiagnosis&InsuInDiagDesc="+encodeURI(KeyWords)+"&InsuType="+InsuType+"&HospDr="+HospDr,
-		pageSize: 5,
-		pageList:[5,10],
-		pagination:true,
-        onClickRow : function(rowIndex, rowData) {
-	    
-            
-        },
-        onDblClickRow:function(rowIndex, rowData){
-	       
-	        $('#InsuInDiagDesc').searchbox('setValue', rowData.Desc);
-	        setValueById('InsuInDiagCode',rowData.Code)
-	        $('#DiagDlBd').window('close');  
-	        },
-        onUnselect: function(rowIndex, rowData) {
-        }
-	});
-	 
-}
+
+
 		
 //初始化医疗类别
 function InitYLLBCmb()
-{
+{   
+    MedTypeDicRelationFlag=""  //20220829  医疗类别关联字典标识
 	var options = {
 		   hospDr:HospDr,
 		   defaultFlag:"Y",
 		   DicOPIPFlag:"IP"
 		}
-	INSULoadDicData("InsuAdmType",("AKA130"+InsuType),options); // dhcinsu/common/dhcinsu.common.js
+	//INSULoadDicData("InsuAdmType",("AKA130"+InsuType),options); // dhcinsu/common/dhcinsu.common.js
+	INSULoadDicData("InsuAdmType",("med_type"+InsuType),options); // dhcinsu/common/dhcinsu.common.js	20220106
+	if(arguments.length ==1)
+	{
+		var InsuAdmType=arguments[0] || "";
+		$HUI.combobox("#InsuAdmType",{
+			onLoadSuccess:function(data){
+				if (InsuAdmType!="")
+				{
+					setValueById('InsuAdmType',InsuAdmType);
+				}
+			},
+			onSelect:function(data){
+				MedTypeDicRelationFlag=data.DicRelationFlag
+			}
+		});
+	}
+	
+	
+}
+
+//初始化入院原因 +20200916 DingSH
+function InitInsuIPRsCmb()
+{
+	var options = {
+		   hospDr:HospDr,
+		   defaultFlag:"Y",
+		   DicOPIPFlag:"IP"
+		  
+		}
+	//INSULoadDicData("InsuIPRs",("AKA130"+InsuType),options); // dhcinsu/common/dhcinsu.common.js
+	INSULoadDicData("InsuIPRs",("med_type"+InsuType),options); // dhcinsu/common/dhcinsu.common.js	upt 20220106
+	
 	if(arguments.length ==1)
 	{
 	var InsuAdmType=arguments[0];
@@ -842,7 +989,6 @@ function InitYLLBCmb()
 }
 
 
-
 //初始化治疗方式
 function InitZLFSCmb()
 {
@@ -853,7 +999,7 @@ function InitZLFSCmb()
 	INSULoadDicData("ZLFS",("ZLFS"+InsuType),options); // dhcinsu/common/dhcinsu.common.js
 }
 
-//初始化不放方式
+//初始化补偿方式
 function InitBCFSCmb()
 {
 	var options = {
@@ -872,6 +1018,7 @@ function InitInAdmDg()
 		border:false,	
 		toolbar:[],
 		data: [],
+		fitColumns: false,
 		rownumbers:true,
 		singleSelect: true,
 		frozenColumns:[[
@@ -880,7 +1027,9 @@ function InitInAdmDg()
 		    width:40,
 		    title:'操作',
 		    formatter: function (value, row, index) {
-							return "<img class='myTooltip' style='width:60' title='详细信息' onclick=\"InAdmFrmClick('" + index+"')\" src='../scripts_lib/hisui-0.1.0/dist/css/icons/pat_info.png' style='border:0px;cursor:pointer'>";
+						//return "<img class='myTooltip' style='width:60' title='详细信息' onclick=\"InAdmFrmClick('" + index+"')\" src='../scripts_lib/hisui-0.1.0/dist/css/icons/pat_info.png' style='border:0px;cursor:pointer'>";
+						//return "<span class='myTooltip' style='color:#339EFF' onclick='InAdmFrmClick(" + row.TrnsLogDr + "," + row.Infno + ")'>详情</span>";
+						return "<a class='myTooltip' style='color:#339EFF' onclick=\"InAdmFrmClick('" + index+"')\" style='border:0px;cursor:pointer'>详情</a>";
 					}
 		  }
 		
@@ -894,12 +1043,12 @@ function InitInAdmDg()
 		    {field:'TAdmType',title:'就诊类型',width:80},
 			{field:'TDeptDesc',title:'就诊科室',width:120},
 			{field:'TActiveFlag',title:'登记状态',width:80},
-			{field:'TAdmDate',title:'入院日期',width:100},
-			{field:'TAdmTime',title:'入院时间',width:80},
-			{field:'TInsuUser',title:'入院登记人',width:100},
-			{field:'TFunDate',title:'入院登记日期',width:120},
-			{field:'TFunTime',title:'入院登记时间',width:120},
-			{field:'TOutUser',title:'出院登记人',width:140},
+			{field:'TAdmDate',title:'入院日期',width:100,align:'center'},
+			{field:'TAdmTime',title:'入院时间',width:80,align:'center'},
+			{field:'TInsuUser',title:'经办人',width:100},
+			{field:'TFunDate',title:'经办日期',width:120,align:'center'},
+			{field:'TFunTime',title:'经办时间',width:120,align:'center'},
+			{field:'TOutUser',title:'出院经办人',width:140},
 			{field:'TStates',title:'参保地区',width:100},
 			{field:'TCenter',title:'分中心',width:80},
 			{field:'TAccount',title:'医保账户',width:80},
@@ -939,11 +1088,10 @@ function UpdatePatAdmReason(AdmDr,ReadId,ExpStr)
 		},
 	function(rtn)
 	{
-		if(rtn!=0){$.messager.alert("提示","医保登记成功,但是更新费别失败,rtn="+rtn, 'info')}
+		if(rtn.split("^")[0]!=0){$.messager.alert("提示","医保登记成功,但是更新费别失败,rtn="+rtn, 'info')}
 	});
 	
  }	
- 
  
  function Clear(AFlag){
 	ClearPatInfo(AFlag);
@@ -968,6 +1116,7 @@ function ClearPatInfo(AFlag) {
 	setValueById('CTAreaName',"");
 	}
 function ClearPaadmInfo(AFlag) {
+	AdmDr="";
 	setValueById('AdmDate',"");
 	setValueById('AdmTime',"");
 	setValueById('DepDesc',"");
@@ -976,10 +1125,11 @@ function ClearPaadmInfo(AFlag) {
 	setValueById('AdmReasonDesc',"");
 	//$('#AdmLst').combogrid('setValue',"")
 	//$('#DiagLst').combogrid('setValue', "")
-    $('#AdmLst').combogrid('clear');
-    $('#DiagLst').combogrid('clear');
-    setValueById('AdmLst','');
-    setValueById('DiagLst','');
+    //$('#AdmLst').combogrid('clear');
+    //$('#DiagLst').combogrid('clear');
+    
+    $HUI.combogrid("#AdmLst").clear();
+    $HUI.combogrid("#DiagLst").clear();
     $('#AdmLst').combogrid('grid').datagrid("loadData",{total:-1,rows:[]});
     $('#DiagLst').combogrid('grid').datagrid("loadData",{total:-1,rows:[]});
    
@@ -987,7 +1137,7 @@ function ClearPaadmInfo(AFlag) {
 function ClearInsuAdmInfo() {
 	$('#InsuType').combobox('setValue',"");
     $('#InsuAdmType').combobox('setValue',"");
-	$('#InsuInDiagDesc').combogrid('setValue',"");
+	$('#InsuInDiagDesc').combogrid('clear');
 	$('#InsuInDiagDesc').combogrid('grid').datagrid("loadData",{total:0,rows:[]});
 	setValueById('InsuInDiagCode',"");
 	setValueById('InsuPatType',"");
@@ -1003,6 +1153,16 @@ function ClearInsuAdmInfo() {
 	$('#ZLFS').combobox('setValue',"");
     $('#BCFS').combobox('setValue',"");
 	$("#inadmdg").datagrid("loadData",{total:0,rows:[]}); //20191028
+	setValueById('mdtrt_cert_type',"");	//20220106
+	setValueById('mdtrt_cert_no',""); //20220106
+	
+	setValueById('diseName',""); //20220929
+	setValueById('diseCodg',""); //20220929
+	setValueById('oprnOprtName',""); //20220929
+	setValueById('oprnOprtCode',""); //20220929
+
+	setValueById('insuplc_admdvs',""); //20230331
+	
 	}
 	
 	
@@ -1021,4 +1181,209 @@ function RegLinkIni() {
 	}
 	
 }	
+//初始化就诊凭证类型
+function InitMdtrtCertTypeCmb()
+{
+	var options = {
+		   hospDr:HospDr,
+		   defaultFlag:"Y",
+		}
+	INSULoadDicData("mdtrt_cert_type",("mdtrt_cert_type"+InsuType),options); // dhcinsu/common/dhcinsu.common.js
+	if(arguments.length ==1)
+	{
+	var selVal=arguments[0];
+	$HUI.combobox("#mdtrt_cert_type",{
+	      onLoadSuccess:function(data){
+				       setValueById('mdtrt_cert_type',selVal);
+				     }
+				});
+	}
+}	
+//加载病种(支持检索)
+function InitDiseNameCmbGd(){
+$("#diseName").combogrid({
+		panelWidth: 420,
+		validType: ['checkInsuInfo'],
+		delay: 300,
+		mode: 'remote',
+		method: 'GET',
+		fitColumns: true,
+		pagination: true,
+		idField: 'Code',
+		textField: 'Desc',
+		data: [],
+		columns: [
+			[{field: 'Rowid', title: 'Rowid', hidden: true},
+			 {field: 'Code', title: '病种编码', width: 120},
+			 {field: 'Desc', title: '病种名称', width: 230}]
+		],
+		onBeforeLoad: function(param) {
+			if (typeof param.q == "undefined"){
+				return false;
+				}
+			if (getValueById("InsuType") && ($.trim(param.q).length >= 1)) {
+				$("#diseName").combogrid("grid").datagrid("options").url = $URL;
+				param.ClassName = "web.DHCINSUIPReg";
+				param.QueryName = "GetInsuDise";
+				param.InsuInDiagDesc = param.q;
+				param.InsuType = getValueById("InsuType");
+				param.MedType = getValueById("InsuAdmType");
+				param.HospDr=HospDr
+			}else{
+				$('#diseName').combogrid('grid').datagrid("loadData",{total:0,rows:[]});
+				return false;
+				 
+				}
+		},
+		onSelect: function(rowIndex, rowData) {
+			setValueById("diseCodg", rowData.Code);
+		},
+		onChange: function(newValue, oldValue) {
+			if (!newValue) {
+				setValueById("diseCodg", "");
+			}
+		}
+	});
+}
+
+function InitOprnOprtNameCmbGd(){
+$("#oprnOprtName").combogrid({
+		panelWidth: 420,
+		validType: ['checkInsuInfo'],
+		delay: 300,
+		mode: 'remote',
+		method: 'GET',
+		fitColumns: true,
+		pagination: true,
+		idField: 'OprnOprtCode',
+		textField: 'OprnOprtName',
+		data: [],
+		columns: [
+			[{field: 'Rowid', title: 'Rowid', hidden: true},
+			 {field: 'OprnOprtCode', title: '手术操作代码', width: 120},
+			 {field: 'OprnOprtName', title: '手术操作名称', width: 230}]
+		],
+		onBeforeLoad: function(param) {
+			if (typeof param.q == "undefined"){
+				return false;
+				}
+			if (getValueById("InsuType") && ($.trim(param.q).length >= 1)) {
+				$("#oprnOprtName").combogrid("grid").datagrid("options").url = $URL;
+				param.ClassName = "web.DHCINSUIPReg";
+				param.QueryName = "QueryOPRNOPRTLISTNEW";
+				param.QryType="";
+				param.StDate="";
+				param.EndDate="";
+				param.Code="";
+				param.Desc = param.q;
+				param.HospId=HospDr;
+				param.HiType = getValueById("InsuType");
+				param.StDate="";
+				param.EndDate="";
+				param.Code="";
+				param.HisBatch="";
+				param.Ver=""
+			}else{
+				$('#oprnOprtName').combogrid('grid').datagrid("loadData",{total:0,rows:[]});
+				return false;
+				 
+				}
+		},
+		onSelect: function(rowIndex, rowData) {
+			setValueById("oprnOprtCode", rowData.OprnOprtCode);
+		},
+		onChange: function(newValue, oldValue) {
+			if (!newValue) {
+				setValueById("oprnOprtCode", "");
+			}
+		}
+	});
+}
+//2023/03/01 JinS1010 医保住院审批申请弹窗
+function btnAppyReg_onclick()  
+{
+	 
+	var obj=$('#btnAppyReg').linkbutton("options")
+	if (obj.disabled==true){return ;}
+	if(""==AdmDr)
+	{	
+	 $.messager.alert("提示","请选择病人及就诊信息!", 'info');
+	 return;
+	}
 	
+	var url = "dhcinsu.regappy.csp?&AdmDr="+AdmDr
+    websys_showModal({
+		url: url,   
+		title: "医保住院审批申请",
+		iconCls: "icon-w-add",		
+		top:"108px", 
+		left:"152px",
+		onClose: function () {
+			
+		}
+	});
+	
+}
+//医保扩展信息测试
+function btnInsuAdmExt_onclick()
+{
+	
+	if(AdmDr==""){
+	
+		$.messager.alert("提示","请选择就诊信息！", 'info')
+
+		return ;
+		}
+	var url = "dhcinsu.admext.csp?&AdmDr="+AdmDr	
+    websys_showModal({
+		url: url,
+		title: "医保扩展信息",
+		iconCls: "icon-add",	
+		width: "500",
+		height: "550",	
+		onClose: function () {
+			
+		}
+	});
+}
+
+//初始化医保区划 +20230330
+function InitadmdvsCmbGd(){
+	$("#insuplc_admdvs").combogrid({
+		panelWidth: 420,
+		validType: ['checkInsuInfo'],
+		delay: 300,
+		mode: 'remote',
+		method: 'GET',
+		fitColumns: true,
+		pagination: true,
+		idField: 'Code',
+		textField: 'Desc',
+		data: [],
+		columns: [
+			[{field: 'Rowid', title: 'Rowid', hidden: true},
+				{field: 'Code', title: '区划代码', width: 120},
+				{field: 'Desc', title: '区划名称', width: 230}]
+		],
+		onBeforeLoad: function(param) {
+			if (typeof param.q == "undefined"){
+				return false;
+				}
+			if (getValueById("InsuType") && ($.trim(param.q).length >= 1)) {
+				$("#insuplc_admdvs").combogrid("grid").datagrid("options").url = $URL;
+				param.ClassName = "web.DHCINSUIPReg";
+				param.QueryName = "GetAdmdvs";
+				param.Admdvs = param.q;
+				param.InsuType = getValueById("InsuType");
+				param.HospDr=HospDr
+			}else{
+				$('#insuplc_admdvs').combogrid('grid').datagrid("loadData",{total:0,rows:[]});
+					return false;
+			}
+		},
+		onClickRow:function(rowIndex, rowData)
+		{
+			  admdvs=rowData.Code;
+		},
+	});
+}

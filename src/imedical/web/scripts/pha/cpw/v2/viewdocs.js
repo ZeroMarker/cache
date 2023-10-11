@@ -38,6 +38,11 @@ function InitDocList(){
 		},
 		fit: true,
 		rownumbers: true,
+		toolbar:'#docListToolbar',
+		headerCls: 'panel-header-gray',
+		iconCls:'icon-book-green',
+		border:true,
+		title:'文献阅读',
 		columns: [[
 			{field:"rowId",			title:'rowId',		hidden:true},
 			{field:'title',			title:'主题',		width:200},
@@ -160,50 +165,15 @@ function saveData(){
  * 打开会话窗
  */
 function openNewWin(code){
-	var buttons = [{
-		text:'关闭',
-		iconCls:'icon-cancel',
-		handler:function(){
-			closeNewWin();  
-		}
-	}];
-	if(code != "V"){	//如果是浏览，隐藏保存按钮
-		buttons.unshift({
-			text:'保存',
-			iconCls:'icon-save',
-			handler:function(){
-				var dataStr = getParams();
-				if(!dataStr){
-					return;	
-				}
-				if(UpLoadFLAG === true){
-					$.messager.progress({
-						title: "提示",
-						msg: '正在上传',
-						text: '上传中....'
-					});
-					UPLOADER.options.formData = {
-						sessionLocId: session['LOGON.CTLOCID'],
-						uploadType: "Ftp"
-					}
-					if(RetryFile !== null){
-						UPLOADER.retry(RetryFile);	
-					}
-					UPLOADER.upload();
-				}else{
-					saveData();
-				}
-			}
-		})
-	}
 	var opts = {
 		title: code == "N"? "新建【文献阅读】" : "【文献阅读】",
 		collapsible: false,
 		border: false,
+		modal: true,
+		iconCls:'icon-w-paper',
 		closed: "true",
-		width: $(window).width() * 0.8,
-		height: $(window).height() * 0.73,	
-		buttons: buttons,
+		//width: 1190,
+		//height: $(window).height() * 0.73,	
 		onOpen: function(){
 			if(code != "V"){
 			    $("#winAdd input").attr("disabled",false);
@@ -287,14 +257,15 @@ function seeDocInfo(code){
 	}else{
 		icon = "icon-no";	
 	}
-	for(var i in docsArr){
-		var listStr = '<div class="pha-col" style="margin:10px;">'
-			+ '<a class="hisui-linkbutton" data-options="plain:true,iconCls:\''+ icon +'\'" id='+ docsIdArr[i] +' name="dowFile"/></a>'
-			+ docsArr[i]
-			+ "</div>"
-		$("#tdUPLOAD").append(listStr);
+	for(var i = 0; i < docsArr.length; i++){
+		var $listStr = $('<div class="pha-col"></div>');
+		var downA = '<a class="hisui-linkbutton" data-options="plain:true,iconCls:\''+ icon +'\'" id='+ docsIdArr[i] +' name="dowFile"/></a>';
+		$downA = $(downA).linkbutton({
+			text: docsArr[i] 
+		}); 
+		$listStr.append($downA);
+		$("#tdUPLOAD").append($listStr);
 	}
-	$("a[name='dowFile']").linkbutton();
 	$("a[name='dowFile']").on('click', function(e){
 		if(code == "V"){
 			downloadDoc(this.id)
@@ -371,7 +342,7 @@ function downloadDocRec(){
 		return;	
 	}
 	var itmIdArr = itmIdstr.split(",");
-	for(var i in itmIdArr){
+	for(var i = 0; i < itmIdArr.length; i++){
 		downloadDoc(itmIdArr[i]);
 	}
 }
@@ -387,8 +358,16 @@ function downloadDoc(drItmId){
 		dataType: "text"
 	},function(ret) {
 		if(ret != ""){
-			//window.open( "//"+ret, '_blank');
-			websys_createWindow( "//"+ret, '_blank');
+			var httpHref = window.location.href;
+			var httpPre = 'http://'
+			if (httpHref.indexOf('https')>=0){
+				httpPre = 'https://'
+			}
+			var modelA = document.createElement('a');
+			modelA.id = "docList";
+			modelA.href = httpPre + ret;
+			modelA.click();
+			//websys_createWindow( httpPre + ret, '_blank');
 		}else{
 			PHA.Popover({
 				showType: "show",
@@ -398,6 +377,7 @@ function downloadDoc(drItmId){
 		}
 	});	
 }
+
 /**
  * 删除文件
  */
@@ -461,7 +441,7 @@ function loadUploader(){
 	    server: "pha.com.v1.upload.csp",
 		pick: {
 			id: "#PHA_UPLOAD_BtnAdd",
-			innerHTML: '<a id="UPLOAD_BtnAdd" class="hisui-linkbutton" data-options="iconCls:\'icon-w-file\'" style="margin-left: -15px;">添加文件</a>',
+			innerHTML: '<a id="UPLOAD_BtnAdd" class="hisui-linkbutton" data-options="iconCls:\'icon-w-file\'" style="margin-left: -15px;">'+$g("添加文件")+'</a>',
 			multiple: true 
 		},
 		accept: {
@@ -475,10 +455,12 @@ function loadUploader(){
 	});
 	$("#UPLOAD_BtnAdd").linkbutton();
 	UPLOADER.on('fileQueued', function (file) {
-		var $listStr = $('<div class="pha-col" style="margin:10px;">' + file.name + "</div>");
+		var $listStr = $('<div class="pha-col"></div>');
 		var $a = $('<a class="hisui-linkbutton" data-options="plain:true,iconCls:\'icon-no\'" fileid='+ file.id +' name="btnDelFile"/></a>');
 		$a.prependTo($listStr)
-			.linkbutton()
+			.linkbutton({
+				text: file.name
+			})
 			.on('click', function(e){
 				$(e.target).closest("div").remove();
 				UPLOADER.removeFile(file);
@@ -496,9 +478,6 @@ function loadUploader(){
 			fileStr = fileStr==""? tmpStr : fileStr +"$"+ tmpStr;
 			UPLOADER.removeFile(file);		//防止重复上传
 			UpLoadFLAG = false;
-			if(file.id === RetryFile.id){
-				RetryFile = null;
-			}
 		}else if(res._raw.split("^")[0] < 0){
 			$.messager.alert("提示", res._raw.split("^")[1], "error");	//此处如报错等待时间较长所以用此种提示
 			RetryFile = file;
@@ -519,4 +498,28 @@ function loadUploader(){
 			type: 'error'
 		});
 	});	
+}
+
+function SaveDataBtn(){
+	var dataStr = getParams();
+	if(!dataStr){
+		return;	
+	}
+	if(UpLoadFLAG === true){
+		$.messager.progress({
+			title: "提示",
+			msg: '正在上传',
+			text: '上传中....'
+		});
+		UPLOADER.options.formData = {
+			sessionLocId: session['LOGON.CTLOCID'],
+			uploadType: "Ftp"
+		}
+		if(RetryFile !== null){
+			UPLOADER.retry(RetryFile);	
+		}
+		UPLOADER.upload();
+	}else{
+		saveData();
+	}
 }

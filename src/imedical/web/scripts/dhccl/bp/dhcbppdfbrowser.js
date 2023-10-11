@@ -1,4 +1,4 @@
-var EpisodeID,
+ï»¿var EpisodeID,
     PatientID,
     mradm;
 $(function(){
@@ -11,7 +11,7 @@ $(function(){
     initDelegates();
 })
 
-//»ñÈ¡Ñ¡ÔñµÄÍ¸Îö²¡ÈË¾ÍÕïºÅ
+//è·å–é€‰æ‹©çš„é€æç—…äººå°±è¯Šå·
 function getEpisodeID(){
 	EpisodeID=dhccl.getUrlParam("EpisodeID");
     /*
@@ -41,7 +41,7 @@ function getEpisodeID(){
     }
     */
 }
-//³õÊ¼»¯Í¸Îö²¡ÈËĞÅÏ¢ÁĞ±í
+//åˆå§‹åŒ–é€æç—…äººä¿¡æ¯åˆ—è¡¨
 function initOperationGrid(){
     var selectRowIndex=-1,preRowIndex=-1;
     var bpArrangeBox=$HUI.datagrid("#BPArrangeBox",{
@@ -63,20 +63,27 @@ function initOperationGrid(){
         },
         columns:[
             [                
-                { field: "bpaDate", title: "Í¸ÎöÈÕÆÚ", width: 100, sortable: true  },
-                { field: "bpaBPCBPModeDesc", title: "Í¸Îö·½Ê½", width: 120 },
-                { field: "bpaBPCBedDesc", title: "´²Î»", width: 100},
-                { field: "bpaDaySeqNo", title: "°à´Î", width: 80},
-                { field: "admDept", title: "¿ÆÊÒ", width: 120 },
-                { field: "patName", title: "ĞÕÃû", width: 100 },
-                { field: "patSex", title: "ĞÔ±ğ", width: 80 },
-                { field: "patAge", title: "ÄêÁä", width: 80 },
-                { field: "bpPatType", title: "ÀàĞÍ", width: 80 },
-                { field: "bpaStatus", title: "×´Ì¬", width: 80 },                
-				{ field: "regNo", title: "µÇ¼ÇºÅ", width: 80 },
-                { field: "EpisodeID", title: "¾ÍÕïºÅ", width: 80 },
-                { field: "medCareNo", title: "²¡°¸ºÅ", width: 80 },
-                { field: "bpaEquipDesc", title: "Éè±¸", width: 80 ,hidden:true},
+                { field: "bpaDate", title: "é€ææ—¥æœŸ", width: 100, sortable: true  },
+                { field: "bpaBPCBPModeDesc", title: "é€ææ–¹å¼", width: 120,
+                  formatter: function(value, row, index){
+	                  var result = "",
+	                  title = row.bpaBPCBPModeDesc;
+	                  result = "<a href='#' style='color:#339EFF' onclick='ShowOrderView(\"" + row.bpaId + "\",\"" + index + "\")'>" + title + "</a>";
+                      return result;
+                  }
+                },
+                { field: "bpaBPCBedDesc", title: "åºŠä½", width: 100},
+                { field: "bpaDaySeqNo", title: "ç­æ¬¡", width: 80},
+                { field: "admDept", title: "ç§‘å®¤", width: 120 },
+                { field: "patName", title: "å§“å", width: 100 },
+                { field: "patSex", title: "æ€§åˆ«", width: 80 },
+                { field: "patAge", title: "å¹´é¾„", width: 80 },
+                { field: "bpPatType", title: "ç±»å‹", width: 80 },
+                { field: "bpaStatus", title: "çŠ¶æ€", width: 80 },                
+				{ field: "regNo", title: "ç™»è®°å·", width: 80 },
+                { field: "EpisodeID", title: "å°±è¯Šå·", width: 80 },
+                { field: "medCareNo", title: "ç—…æ¡ˆå·", width: 80 },
+                { field: "bpaEquipDesc", title: "è®¾å¤‡", width: 80 ,hidden:true},
                 { field: "bpaId", title: "bpaId", width: 50 ,hidden:true },
                 { field: "PatientID", title: "PatientID", width: 100 ,hidden:true},
                 { field: "PAADMMainMRADMDR", title: "PAADMMainMRADMDR", width: 100 ,hidden:true},
@@ -134,7 +141,7 @@ function initOperationGrid(){
     })
 }
 
-//³õÊ¼»¯ÊÂ¼şĞÅÏ¢
+//åˆå§‹åŒ–äº‹ä»¶ä¿¡æ¯
 function initDelegates(){
     $("#btnView").click(function(){
             var selectRow=$("#BPArrangeBox").datagrid('getSelected');
@@ -144,7 +151,7 @@ function initDelegates(){
 
                 if(FTPType=="")
                 {
-                    $.messager.alert("ÌáÊ¾","ÇëÑ¡Ôñ²é¿´ÎÄ¼şÀàĞÍ","info");
+                    $.messager.alert("æç¤º","è¯·é€‰æ‹©æŸ¥çœ‹æ–‡ä»¶ç±»å‹","info");
                     return;
                 }
                 var bpaId=selectRow.bpaId;
@@ -168,29 +175,41 @@ function initDelegates(){
                     },false);
                     if(PDFUrl=="")
                     {
-                        $.messager.alert("ÌáÊ¾","FTP·şÎñÆ÷ĞÅÏ¢Î´Î¬»¤£¡","info");
+                        $.messager.alert("æç¤º","FTPæœåŠ¡å™¨ä¿¡æ¯æœªç»´æŠ¤ï¼","info");
                         return;
                     }
                     else
                     {
                         var nwin='width='+1060+',height='+660+ ',top='+30+',left='+30+',toolbar=no, menubar=no, scrollbars=yes, resizable=no,location=no, status=no';
  						window.open(PDFUrl,'_blank',nwin);
- 						//window.open(PDFUrl); //²»¼æÈİÒ½Îªä¯ÀÀÆ÷49
+ 						//window.open(PDFUrl); //ä¸å…¼å®¹åŒ»ä¸ºæµè§ˆå™¨49
                     }
                 }
                 else if(existsFlag==0)
                 {
-                    $.messager.alert("ÌáÊ¾","·şÎñÆ÷²»´æÔÚ´ËÎÄ¼ş,ÇëÖØĞÂÑ¡Ôñ","info");
+                    $.messager.alert("æç¤º","æœåŠ¡å™¨ä¸å­˜åœ¨æ­¤æ–‡ä»¶,è¯·é‡æ–°é€‰æ‹©","info");
                     return;
                 }
                 else
                 {
-                   $.messager.alert("ÌáÊ¾",existsFlag,"info");
+                   $.messager.alert("æç¤º",existsFlag,"info");
                     return;
                 }
             }else{
-                $.messager.alert("ÌáÊ¾","ÇëÑ¡ÔñÒ»ĞĞÍ¸Îö£¡","info");
+                $.messager.alert("æç¤º","è¯·é€‰æ‹©ä¸€è¡Œé€æï¼","info");
                 return;
             }
     });
+}
+function ShowOrderView(ord,rowIndex){
+	lnk="dhc.orderview.csp?"+"&ordViewBizId="+ord+"&ordViewType=BP";
+    //var nwin="dialogWidth:860px;dialogHeight:760px;status:no;menubar:no;resizable:no;"
+	var iTop = (window.screen.height-30-760)/2; //è·å¾—çª—å£çš„å‚ç›´ä½ç½®;
+	var iLeft = (window.screen.width-10-1060)/2; //è·å¾—çª—å£çš„æ°´å¹³ä½ç½®;
+	var nwin='width='+1060+',height='+760+ ',top='+iTop+',left='+iLeft+',toolbar=no,menubar=no,scrollbars=auto,resizeable=no,location=no,status=no';
+	if ("undefined"!==typeof websys_getMWToken){
+        lnk += "&MWToken="+websys_getMWToken()
+      }
+    window.open(lnk,'_blank',nwin);
+	$("#BPArrangeBox").datagrid('reload');
 }

@@ -12,6 +12,7 @@ function InitExpReportWinEvent(obj){
 	$.form.CheckBoxRender();
 	$.form.iCheckRender();
 	CheckSpecificKey();
+	InitFloatWin();
     $.form.DateTimeRender1("ExpDateTime","")
     $.form.SetValue("txtRegUser",$.LOGON.USERDESC);
     $.form.SetValue("txtRegLoc",$.LOGON.LOCDESC); 
@@ -685,14 +686,19 @@ function InitExpReportWinEvent(obj){
     	};
     	
 	});
-	
+	/**
 	// 导出
 	$('#btnExport').click(function(e){  
 	   var url="dhccpmrunqianreport.csp?reportName=OccExpReg.raq&aRepID="+ReportID;
        websys_createWindow(url,1,"width=710,height=610,top=0,left=20,toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes");
 
 	})
-	
+	**/
+	//修改为预览导出
+	$('#btnExport').click(function(e){
+		var fileName="OccExpReg.raq&aRepID="+ReportID+"&aUserID="+session['LOGON.USERID']+"&aLocID="+session['LOGON.CTLOCID'];
+		DHCCPM_RQPrint(fileName);
+	});
 	
 	// 数据完整性验证
 	obj.CheckInputData = function (StatusCode){

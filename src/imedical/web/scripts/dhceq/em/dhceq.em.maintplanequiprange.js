@@ -11,7 +11,7 @@ function initDocument()
 	    url:$URL, 
 		idField:'TRowID', //Ö÷¼ü   //add by lmm 2018-10-23  767099
 	    border : false,
-		striped : true,
+		//striped : true,
 	    cache: false,
 	    fit:true,
 	    singleSelect:false,

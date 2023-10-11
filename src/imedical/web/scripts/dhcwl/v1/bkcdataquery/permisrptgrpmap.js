@@ -98,7 +98,7 @@ var init=function() {
 								searchV:"",
 								wantreturnval:0
 						});
-			$('#grpGrid').datagrid('loadData',{rows:[]})			
+			//$('#grpGrid').datagrid('loadData',{rows:[]})			
 						
 		}
 
@@ -170,7 +170,7 @@ var addRptGrpMapCfg=function(){
 					$.messager.alert("提示","未选择组！请选择组。");
 					return;	
 				}
-				for(x in rows){
+				for(var x=0;x<rows.length;x++){
 					aryIDs.push(rows[x].ID);	
 				};
 				

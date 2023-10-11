@@ -26,11 +26,13 @@ $(function() {
 			ReadMagCard_Click();
 		}
 	});
-	$("#RActAccount").linkbutton('disable');
+	
+	$("#RActAccount").linkbutton("disable");
 	
 	$("#ReceipNO").keydown(function (e) {
 		ReceipNO_OnKeyPress(e);
 	});
+	
 	$("#CardNo").keydown(function (e) {
 		CardNo_OnKeyPress(e);
 	});
@@ -41,6 +43,9 @@ $(function() {
 		editable: false,
 		valueField: 'value',
 		textField: 'caption',
+		onBeforeLoad: function(param) {
+			param.SessionStr = ClientIPAddress + "^" + session['LOGON.USERID'] + "^" + session['LOGON.CTLOCID'] + "^" + session['LOGON.GROUPID'] + "^" + session['LOGON.HOSPID'] + "^" + session['LOGON.SITECODE']
+		},
 		onChange: function(newVal, oldVal){
 			CardTypeDefine_OnChange();
 		}
@@ -51,7 +56,7 @@ $(function() {
 		disabled: true,
 		url: $URL + '?ClassName=web.UDHCOPOtherLB&QueryName=ReadCTPayMode&ResultSetType=array',
 		valueField: 'CTPM_RowId',
-		textField: 'CTPM_Desc',
+		textField: 'CTPM_Desc'
 	});
 	
 	focusById("ReceipNO");
@@ -60,12 +65,12 @@ $(function() {
 function RActAccount_OnClick() {
 	var myCardNo = getValueById("CardNo");
 	if (myCardNo == "") {
-		DHCWeb_HISUIalert(t["ReadCTip"]);
+		$.messager.alert("提示", "请先读卡", "info");
 		return;
 	}
 	var myAccRowID = getValueById("AccRowID");
 	if (myAccRowID == "") {
-		DHCWeb_HISUIalert(t["SelAccINfo"]);
+		$.messager.alert("提示", "请选择需要激活的账户", "info");
 		return;
 	}
 	var mySecrityNo = "";
@@ -74,26 +79,26 @@ function RActAccount_OnClick() {
 		//Wrt Card
 		var myrtn = WrtCard();
 		var myary = myrtn.split("^");
-		if (myary[0] != "0") {
+		if (myary[0] != 0) {
 			return;
 		}
 		var mySecrityNo = myary[1];
 	}
 	var myAccRowID = getValueById("AccRowID");
-	var myUserDR = session['LOGON.USERID'];
+	var myUserDR = session["LOGON.USERID"];
 	var myCardInfo = BuildCardInfo(mySecrityNo);
 	var myExpStr = myCardRowID + "^" + m_SelectCardTypeRowID;
 	var myEncrypt = getValueById("SaveAccBackEncrypt");
 	if (myEncrypt != "") {
 		var myrtn = cspRunServerMethod(myEncrypt, myAccRowID, myUserDR, myCardInfo, ClientIPAddress, myExpStr);
 		var myary = myrtn.split(String.fromCharCode(2));
-		if (myary[0] == "0") {
-			$("#RActAccount").linkbutton('disable');
-			DHCWeb_HISUIalert(t["AccBackSucc"]);
-		} else {
-			$("#RActAccount").linkbutton('disable');
-			DHCWeb_HISUIalert(t["AccBackFail"] + myary[0]);
+		if (myary[0] == 0) {
+			$("#RActAccount").linkbutton("disable");
+			$.messager.alert("提示", "账户复原成功，可以办理退费了", "info");
+			return;
 		}
+		$("#RActAccount").linkbutton("disable");
+		$.messager.alert("提示", (t["AccBackFail"] + myary[0]), "info");
 	}
 }
 
@@ -118,9 +123,9 @@ function BuildCardInfo(SecrityNo) {
 	return mystr;
 }
 
+/// Read Secrity
+/// ReadSecEnvrypt
 function WrtCard() {
-	//Read Secrity
-	//ReadSecEnvrypt
 	if (m_OverWriteFlag != "Y") {
 		return "0^";
 	}
@@ -131,7 +136,7 @@ function WrtCard() {
 		var myPAPMINo = getValueById("PatientID");
 		mySecrityNo = cspRunServerMethod(myencmeth, myPAPMINo);
 	} else {
-		DHCWeb_HISUIalert("Read Err!");
+		$.messager.alert("提示", "读卡错误", "info");
 		return "-1^";
 	}
 	//Write Card First
@@ -139,8 +144,8 @@ function WrtCard() {
 		var myCardNo = getValueById("CardNo");
 		var rtn = DHCACC_WrtMagCard("23", myCardNo, mySecrityNo, m_CCMRowID);
 		window.status = "";
-		if (rtn != "0") {
-			DHCWeb_HISUIalert(t[2014]);
+		if (rtn != 0) {
+			$.messager.alert("提示", "写卡错误", "info");
 			return "-1^";
 		}
 	} else {
@@ -154,27 +159,26 @@ function ReadMagCard_Click() {
 	if (myVersion == "12") {
 		M1Card_InitPassWord();
 	}
-	window.status = t[2007];
+	window.status = "读卡，请刷卡...";
 	var rtn = DHCACC_ReadMagCard(m_CCMRowID);
 	var myary = rtn.split("^");
-	if (myary[0] == '-5') {
-		window.status = t[2008];
+	if (myary[0] == -5) {
+		window.status = "用户取消读卡";
 		return;
 	}
 	window.status = "";
-	if (myary[0] == "0") {
+	if (myary[0] == 0) {
 		//Add Check Card No DHCACC_GetPAPMINo
 		var myVersion = getValueById("DHCVersion");
-		if (myVersion == "12") {
+		if (myVersion == 12) {
 			var myCardStat = DHCACC_GetAccInfoFNoCard(myary[1], myary[2]);
 			var myStatAry = myCardStat.split("^");
-			if (myStatAry[0] == "0") {
-				DHCWeb_HISUIalert(t["EntCardtip"]);
-				DHCWeb_DisBtnA("RActAccount");
+			if (myStatAry[0] == 0) {
+				$.messager.alert("提示", "此卡已经发出，不能重复发卡", "info");
+				$("#RActAccount").linkbutton("disable");
 				return;
-			} else {
-				$("#RActAccount").linkbutton('enable');
 			}
+			$("#RActAccount").linkbutton("enable");
 		}
 		setValueById("CardNo", myary[1]);
 		setValueById("SecurityNo", myary[2]);
@@ -182,7 +186,7 @@ function ReadMagCard_Click() {
 }
 
 function Clear_OnClick() {
-	$(":text:not(.pagination-num)").val("");
+	$(":text:not(.pagination-num,.combo-text)").val("");
 	$(".numberbox-f").numberbox("clear");
 	$("#RefundPayMode").combobox("clear");
 	$("#CardTypeDefine").combobox("reload");
@@ -196,15 +200,14 @@ function ReceipNO_OnKeyPress(e) {
 			var encmeth = getValueById("ReadINVByNoEncrypt");
 			var myrtn = cspRunServerMethod(encmeth, myReceipNO, session['LOGON.USERID'], session['LOGON.HOSPID']);
 			var rtn = myrtn.split("^")[0];
-			if (rtn != "0") {
-				DHCWeb_HISUIalert(t['06']);
-				focusById('ReceipNO');
-				return websys_cancel();
-			} else {
-				WrtRefundMain(myrtn);
-				var myAPIRowID = getValueById("OldAccPayINVRowID");
+			if (rtn != 0) {
+				$.messager.alert("提示", "此发票号不存在，请重新输入", "info");
+				focusById("ReceipNO");
 				return websys_cancel();
 			}
+			WrtRefundMain(myrtn);
+			var myAPIRowID = getValueById("OldAccPayINVRowID");
+			return websys_cancel();
 		}
 	}
 }
@@ -228,46 +231,51 @@ function WrtRefundMain(AccINVInfo) {
 	setValueById("PatSelfPay", myary[16]);
 	setValueById("INSDivDR", myary[17]);
 	setValueById("PAPMIRowID", myary[19]);
-	$("#RActAccount").linkbutton('disable');
+	$("#RActAccount").linkbutton("disable");
 	if (myary[15] != "N") {
-		DHCWeb_HISUIalert(t[myary[15] + "01"]);
+		$.messager.alert("提示", t[myary[15] + "01"], "info");
+		return;
+	}
+	// +gongxin 判断是否找到账户
+	if (myary[9] == "") {
+		$("#RActAccount").linkbutton("disable");
+		$.messager.alert("提示", "未找到账户", "info");
 		return;
 	}
 	//Check Account Status
 	if (myary[10] != "F") {
-		$("#RActAccount").linkbutton('disable');
-		DHCWeb_HISUIalert(t["AccNoFootTip"]);
+		$("#RActAccount").linkbutton("disable");
+		$.messager.alert("提示", "账户没有结算，不用办理账户复原", "info");
 		return;
 	}
 	//check
 	if (myary[18] == "N") {
-		$("#RActAccount").linkbutton('disable');
-		DHCWeb_HISUIalert(t["AccConfTip"]);
+		$("#RActAccount").linkbutton("disable");
+		$.messager.alert("提示", "患者存在正常账户，不能办理原账户的复原", "info");
 		return;
 	}
 	var myoptval = getValueById("CardTypeDefine");
 	var myCardTypeary = myoptval.split("^");
 	var myReadCardMode = myCardTypeary[16];
 	if (myary[20] == "Y") {
-		var data = $("#CardTypeDefine").combobox("getData");
-		for (i in data) {
-		    if (data[i].value.split("^")[0] == myary[21]) {
-				myReadCardMode = data[i].value.split("^")[16];
-			    setValueById("CardTypeDefine", data[i].value);
-			    break;
+		$("#CardTypeDefine").combobox("getData").forEach(function (item) {
+		    if (item.value.split("^")[0] == myary[21]) {
+				myReadCardMode = item.value.split("^")[16];
+			    setValueById("CardTypeDefine", item.value);
+			    return false;
 			}
-		}
+		});
 		setValueById("CardRowID", myary[22]);
 		setValueById("CardNo", myary[23]);
-		DHCWeb_HISUIalert("患者有卡,直接办理帐户激活,不用重新分配卡,如果卡丢失请办理补卡后,再激活账户");
+		$.messager.alert("提示", "患者有卡，直接办理账户激活，不用重新分配卡，如果卡丢失请办理补卡后，再激活账户", "info");
 	} else {
 		if (myReadCardMode == "Handle") {
 			focusById("CardNo");
 		} else {
-			$("#ReadCard").linkbutton('enable');
+			$("#ReadCard").linkbutton("enable");
 		}
 	}
-	$("#RActAccount").linkbutton('enable');
+	$("#RActAccount").linkbutton("enable");
 }
 
 function M1Card_InitPassWord() {
@@ -302,21 +310,20 @@ function CardNo_OnKeyPress(e) {
 			focusById("RActAccount");
 			break;
 		case "-200":
-			DHCWeb_HISUIalert(t["-200"]);
+			$.messager.alert("提示", "卡无效", "info");
 			break;
 		case "-201":
-			DHCWeb_HISUIalert(t["-201"]);
+			$.messager.alert("提示", "账户无效", "info");
 			break;
 		default:
-			//DHCWeb_HISUIalert("");
 		}
 	}
 }
 
 ///格式化卡号
 function SetCardNOLength() {
-	var obj = document.getElementById('CardNo');
-	if (obj.value != '') {
+	var obj = document.getElementById("CardNo");
+	if (obj.value != "") {
 		if ((obj.value.length < m_CardNoLength) && (m_CardNoLength != 0)) {
 			for (var i = (m_CardNoLength - obj.value.length - 1); i >= 0; i--) {
 				obj.value = "0" + obj.value;
@@ -340,19 +347,19 @@ function CardTypeDefine_OnChange() {
 
 	//Read Card Mode
 	if (myary[16] == "Handle") {
-		$("#CardNo").attr('readOnly', false);
-		$("#ReadCard").linkbutton('disable');
+		$("#CardNo").attr("readOnly", false);
+		$("#ReadCard").linkbutton("disable");
 		focusById("CardNo");
 	} else {
-		setValueById("CardNo", '');
-		$("#CardNo").attr('readOnly', true);
-		$("#ReadCard").linkbutton('enable');
+		setValueById("CardNo", "");
+		$("#CardNo").attr("readOnly", true);
+		$("#ReadCard").linkbutton("enable");
 		focusById("ReadCard");
 	}
 	m_CardNoLength = myary[17];
 }
 
 function ini_LayoutStyle() {
-	$('td.i-tableborder>table').css("border-spacing", "0px 8px");
-	$('td.i-tableborder').css("margin-bottom", "10px");
+	$("td.i-tableborder>table").css("border-spacing", "0px 8px");
+	$("td.i-tableborder").css("margin-bottom", "10px");
 }

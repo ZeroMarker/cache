@@ -1,5 +1,6 @@
 var PageEMRAppListAllObj={
 	m_SelectArcimID:"",
+	m_CureApplistDataGrid:"",
 	CureApplyDataGrid:"",
 	m_CureDetailDataGrid:""
 }
@@ -15,8 +16,8 @@ function Init(){
 	InitOrderLoc();
 	InitArcimDesc();
 	PageEMRAppListAllObj.CureApplyDataGrid=InitCureApplyDataGrid();
-	$("#StartDate").datebox('setValue',ServerObj.PerDate);	
-	$("#EndDate").datebox('setValue',ServerObj.CurrDate);		
+	//$("#StartDate").datebox('setValue',ServerObj.PerDate);	
+	//$("#EndDate").datebox('setValue',ServerObj.CurrDate);		
 }
 
 function InitEvent(){
@@ -77,8 +78,7 @@ function InitCureApplyDataGrid()
 	var cureApplyColumn=[[ 
 		{field:'ApplyNo',title:'申请单号',width:110,align:'left', resizable: true},  
 		{field:'PatNo',title:'登记号',width:100,align:'left', resizable: true},   
-		{field:'PatName',title:'姓名',width:60,align:'left', resizable: true
-		},   
+		{field:'PatName',title:'姓名',width:60,align:'left', resizable: true},   
 		{field:'PatOther',title:'患者其他信息',width:200,align:'left', resizable: true},
 		{field:'ArcimDesc',title:'治疗项目',width:200,align:'left', resizable: true},
 		{field:'OrdOtherInfo',title:'医嘱其他信息',width:120,align:'left', resizable: true},
@@ -86,7 +86,16 @@ function InitCureApplyDataGrid()
 		{field:'OrdBillUOM',title:'单位',width:50,align:'left', resizable: true}, 
 		{field:'OrdUnitPrice',title:'单价',width:50,align:'left', resizable: true}, 
 		{field:'OrdPrice',title:'总金额',width:60,align:'left', resizable: true}, 
-		{field:'ApplyAppedTimes',title:'已预约次数',width:80,align:'left', resizable: true},
+		{field:'ApplyAppedTimes',title:'已预约次数',width:80,align:'left', resizable: true
+			,formatter:function(value,row,index){
+				var NumVal=Number(value);
+				if ((NumVal == 0 ||typeof NumVal != 'number' || isNaN(NumVal))) {
+					return "<span>"+value+"</span>";
+				}else {
+					var Type="'Applist'";
+					return '<a href="###" id= "'+row["DCARowId"]+'"'+' onclick=ShowCureDetail('+Type+','+row.DCARowId+');>'+"<span class='fillspan-nosave'>"+value+"</span>"+"</a>"
+				}
+			}},
 		{field:'ApplyNoAppTimes',title:'未预约次数',width:80,align:'left', resizable: true},
 		{field:'ApplyFinishTimes',title:'已治疗次数',width:80,align:'left', resizable: true},
 		{field:'ApplyNoFinishTimes',title:'未治疗次数',width:80,align:'left', resizable: true},
@@ -106,30 +115,30 @@ function InitCureApplyDataGrid()
 		{field:'ApplyPlan',title:'治疗方案',width:80,align:'left',
 			formatter:function(value,row,index){
 				if (value == "") {
-					return "<span class='fillspan'>未填写</span>";
+					return "<span class='fillspan'>"+$g("未填写")+"</span>";
 				}else {
 					var Type="'Plan'";
-					return '<a href="###" id= "'+row["DCARowId"]+'"'+' onclick=ShowCureDetail('+Type+','+row.DCARowId+');>'+"<span class='fillspan-nosave'>单击查看</span>"+"</a>"
+					return '<a href="###" id= "'+row["DCARowId"]+'"'+' onclick=ShowCureDetail('+Type+','+row.DCARowId+');>'+"<span class='fillspan-nosave'>"+$g("单击查看")+"</span>"+"</a>"
 				}
 			}
 		},
 		{field:'ApplyAssessment',title:'治疗评估',width:80,align:'left',
 			formatter:function(value,row,index){
 				if (value == "") {
-					return "<span class='fillspan'>未填写</span>";
+					return "<span class='fillspan'>"+$g("未填写")+"</span>";
 				}else {
 					var Type="'Ass'";
-					return '<a href="###" id= "'+row["DCARowId"]+'"'+' onclick=ShowCureDetail('+Type+','+row.DCARowId+');>'+"<span class='fillspan-nosave'>单击查看</span>"+"</a>"
+					return '<a href="###" id= "'+row["DCARowId"]+'"'+' onclick=ShowCureDetail('+Type+','+row.DCARowId+');>'+"<span class='fillspan-nosave'>"+$g("单击查看")+"</span>"+"</a>"
 				}
 			}
 		},
 		{field:'DCRecord',title:'治疗记录',width:80,align:'left',
 			formatter:function(value,row,index){
 				if (value == "") {
-					return "<span class='fillspan'>未填写</span>";
+					return "<span class='fillspan'>"+$g("未填写")+"</span>";
 				}else {
 					var Type="'Record'";
-					return '<a href="###" id= "'+row["TIndex"]+'"'+' onclick=ShowCureDetail('+Type+','+row.DCARowId+');>'+"<span class='fillspan-nosave'>单击查看</span>"+"</a>"
+					return '<a href="###" id= "'+row["TIndex"]+'"'+' onclick=ShowCureDetail('+Type+','+row.DCARowId+');>'+"<span class='fillspan-nosave'>"+$g("单击查看")+"</span>"+"</a>"
 				}
 			}
 		},
@@ -205,7 +214,8 @@ function OpenApplyDetailDiag()
 	var href="doccure.apply.hui.csp?DCARowId="+DCARowId;
     websys_showModal({
 		url:href,
-		title:'申请单浏览',
+		iconCls:"icon-w-paper",
+		title:$g('申请单浏览'),
 		width:"1200px",height:"600px",
 		//onBeforeClose:function(){CureApplyDataGridLoad();},
 		CureApplyDataGridLoad:CureApplyDataGridLoad
@@ -257,26 +267,7 @@ function InitArcimDesc()
     });  
 };
 function InitOrderLoc(){
-	$HUI.combobox("#ComboOrderLoc", {})
-    $.cm({
-		ClassName:"DHCDoc.DHCDocCure.Config",
-		QueryName:"FindLoc",
-		'Loc':"",
-		'CureFlag':"",
-		'Hospital':session['LOGON.HOSPID'],
-		dataType:"json",
-		rows:99999
-	},function(Data){
-		var cbox = $HUI.combobox("#ComboOrderLoc", {
-				valueField: 'LocRowID',
-				textField: 'LocDesc', 
-				editable:true,
-				data: Data["rows"],
-				filter: function(q, row){
-					return (row["LocDesc"].toUpperCase().indexOf(q.toUpperCase()) >= 0)||(row["LocContactName"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
-				}
-		 });
-	});
+	com_withLocDocFun.InitComboLoc("ComboOrderLoc");
 }
 function CheckComboxSelData(id,selId){
 	var Find=0;
@@ -303,6 +294,18 @@ function CheckComboxSelData(id,selId){
 }
 
 function ShowCureDetail(Type,RowID){
+	if(Type=="Record"){
+		ShowCureRecordDetail(RowID);
+		return;
+	}else if(Type=="Ass"){
+		ShowCureAssListDetail(RowID);
+		return;
+	}else if(Type=="Applist"){
+		ShowCureApplistDetail(RowID);
+		return;
+	}else{
+		var title=$g("治疗方案");	
+	}
 	var content=$.cm({
 		ClassName:"DHCDoc.DHCDocCure.Apply",
 		MethodName:"GetCurePlanAndAss",
@@ -310,29 +313,31 @@ function ShowCureDetail(Type,RowID){
 		DCARowId:RowID,
 		dataType:"text"
 	},false)
-	if(Type=="Plan"){
-		var title="治疗方案";	
-	}else if(Type=="Record"){
-		ShowCureRecordDetail(RowID);
-		return;
-	}else{
-		var title="治疗评估";		
-	}
 	if(content==""){
-		content="暂无内容";
+		content=$g("暂无内容");
 	}else{
 		content=content.replace(/\\n/g,"<br/>");
 		content=content.replace(/\\r/g,"<br/>");
 	}
+	content="<div style='height:100%;width:100%;padding:10px'><div class='hisui-panel panel-header-gray' data-options='border:true,fit:true'>"+content+"</div></div>";
+	websys_showModal({
+		content:content,
+		title:$g(title),
+		iconCls:'icon-w-paper',
+		width:'60%',height:'60%'
+	});
+	/*	
 	var dhwid=($(document.body).width()-800)/2;
 	var dhhei=($(document.body).height()-500)/2;
 	content="<div style='float:left;'>"+content+"</div>";
 	$("#detail-panel").append(content)
 	$('#detail-dialog').window({
 		title:title,
+		iconCls:"icon-w-paper",
 		onClose:function(){$("#detail-panel").empty()}
 	})
 	$('#detail-dialog').window('open').window('resize',{width:800,height:500,top: dhhei,left:dhwid});
+	*/
 }
 
 function GetSelectRow(){
@@ -354,67 +359,72 @@ function GetSelectRow(){
 	return DCARowId;
 }
 
+function ShowCureAssListDetail(id){
+	var OperateType="";
+	var href="doccure.cureassessmentlist.csp?OperateType="+OperateType+"&DCARowIdStr="+id+"&PageShowFromWay="+ServerObj.PageShowFromWay;
+    websys_showModal({
+		url:href,
+		iconCls:'icon-w-list',
+		title:$g('治疗评估'),
+		width:'90%',height:'80%'
+	});
+}
+
 function ShowCureRecordDetail(id){
-	var dhwid=$(document.body).width()-200;
+	var href="doccure.workreport.execview.hui.csp?OperateType=&DCARowId="+id+"&PageShowFromWay="+ServerObj.PageShowFromWay;
+    websys_showModal({
+		url:href,
+		title:$g('治疗记录明细'),
+		iconCls:'icon-w-list',
+		width:'90%',height:'80%'
+	});
+}
+
+function ShowCureApplistDetail(id){
+	var dhwid=$(document.body).width()-50;
 	var dhhei=$(document.body).height()-200;
-	$('#add-dialog').window('open').window('resize',{width:dhwid,height:dhhei,top: 50,left:100});
-	var CureDetailDataGrid=$('#tabCureDetail').datagrid({  
+	$('#applist-dialog').window('open').window('resize',{width:dhwid,height:dhhei,top: 50,left:20});
+	var CureApplistDataGrid=$('#tabCureApplist').datagrid({  
 		fit : true,
 		width : 'auto',
 		border : false,
 		striped : true,
-		singleSelect : true,
+		singleSelect : false,
 		checkOnSelect:false,
-		fitColumns : true,
+		fitColumns : false,
 		autoRowHeight : false,
 		nowrap: false,
 		collapsible:false,
-		singleSelect:false,    
-		url : '',
+		url : $URL+"?ClassName=DHCDoc.DHCDocCure.Appointment&QueryName=FindAppointmentListHUI&QueryState=&Type=&DCARowId="+id,
 		loadMsg : '加载中..',  
-		pagination : true,  //
-		rownumbers : true,  //
-		idField:"OEORERowID",
-		//pageNumber:0,
+		pagination : true,
+		rownumbers : true,
+		idField:"Rowid",
 		pageSize : 20,
 		pageList : [20,50,100],
-		columns :[[ 
-        			{field:'DCARowId',title:'',width:1,hidden:true}, 
-        			//{field:'PapmiNo',title:'登记号',width:100},   
-        			//{field:'PatientName',title:'姓名',width:80},
-        			{field:'ArcimDesc',title:'治疗项目',width:250,align:'left'},  
-        			//{field:'OEOREExStDate',title:'要求执行时间',width:130,align:'left'},
-        			{field:'DCRContent',title:'治疗记录',width:300,align:'left'} ,
-        			{field:'OEOREQty',title:'执行数量',width:80,align:'left'} ,
-        			{field:'OEOREStatus',title:'执行状态',width:100,align:'left'},
-        			{field:'DCRCureDate',title:'治疗时间',width:100,align:'left'} ,
-        			{field:'DCRResponse',title:'治疗反应',width:200,align:'left'} ,
-        			{field:'DCREffect',title:'治疗效果',width:200,align:'left'} ,
-        			{field:'OEOREUpUser',title:'执行人',width:100,align:'left'},
-        			{field:'OEOREExDate',title:'操作时间',width:130,align:'left'} ,
-        			{field:'OEOREType',title:'医嘱类型',width:100,align:'left'} ,
-        			{field:'OEORERowID',ExecID:'ID',width:50,align:'left',hidden:true}  
-			 ]]
+		columns :[[     
+				{field: 'Rowid', title: 'ID', width: 1, align: 'left', sortable: true,hidden:true}, 
+				{field:'PatientNo',title:'登记号',width:100,align:'left'},   
+				{field:'PatientName',title:'姓名',width:80,align:'left'},  
+				{field:'ArcimDesc',title:'治疗项目',width:150,align:'left'},
+				{field: 'DDCRSDate', title:'日期', width: 100, align: 'left', sortable: true, resizable: true},
+				{field:'DCASeqNo',title:'排队序号',width:80,align:'left'},
+				{field: 'LocDesc', title:'科室', width: 150, align: 'left', sortable: true, resizable: true},
+				{field: 'ResourceDesc', title: '资源', width: 100, align: 'left', resizable: true},
+				{field: 'TimeDesc', title: '时段', width: 100, align: 'left', resizable: true},
+				{field: 'StartTime', title: '开始时间', width: 80, align: 'left',resizable: true},
+				{field: 'EndTime', title: '结束时间', width: 80, align: 'left',resizable: true},
+				{field: 'ServiceGroupDesc', title: '服务组', width: 80, align: 'left',resizable: true},
+				{field: 'DDCRSStatus', title: '排班状态', width: 80, align: 'left',resizable: true},
+				{field: 'DCAAStatus', title: '预约状态', width: 80, align: 'left',resizable: true},
+				{field: 'ReqUser', title: '预约操作人', width: 80, align: 'left',resizable: true},
+				{field: 'ReqDate', title: '预约操作时间', width: 120, align: 'left',resizable: true},
+				{field: 'LastUpdateUser', title: '更新人', width: 80, align: 'left',resizable: true},
+				{field: 'LastUpdateDate', title: '更新时间', width: 120, align: 'left',resizable: true}   
+		]],
+		onBeforeLoad:function(row,param){
+			$(this).datagrid("clearChecked").datagrid("clearSelections");
+		}
 	});
-	PageEMRAppListAllObj.m_CureDetailDataGrid=CureDetailDataGrid;
-	CureDetailDataGridLoad(id);
-	return CureDetailDataGrid	
-}
-
-function CureDetailDataGridLoad(id)
-{
-	var CheckOnlyNoExcute="";
-	$.cm({
-		ClassName:"DHCDoc.DHCDocCure.ExecApply",
-		QueryName:"FindCureExecList",
-		'DCARowId':id,
-		'OnlyNoExcute':CheckOnlyNoExcute,
-		'OnlyExcute':"Y",
-		Pagerows:PageEMRAppListAllObj.m_CureDetailDataGrid.datagrid("options").pageSize,
-		rows:99999
-	},function(GridData){
-		PageEMRAppListAllObj.m_CureDetailDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData); 
-	})
-	PageEMRAppListAllObj.m_CureDetailDataGrid.datagrid("clearChecked");
-	PageEMRAppListAllObj.m_CureDetailDataGrid.datagrid("clearSelections");
+	return CureApplistDataGrid;
 }

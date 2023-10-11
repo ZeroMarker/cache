@@ -54,12 +54,12 @@ function save(){
 	saveByDataGrid("web.DHCAppArcLinkPos","save","#datagrid",function(data){
 			if(data==0){
 				$("#datagrid").datagrid('reload')
-			}else if(data==1){
+			}else if(data==-1){
 				$.messager.alert('提示','不可重复保存:'+data)
 				$("#datagrid").datagrid('reload')
 			}else{
 				$.messager.alert('提示','保存失败！'+data)
-				}
+			}
 		});	
 }
 

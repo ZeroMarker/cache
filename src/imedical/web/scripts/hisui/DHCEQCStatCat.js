@@ -3,11 +3,15 @@ var SelectedRow = -1;  //hisui改造：修改开始行号  add by wy 2018-09-01
 var rowid=0;
 function BodyLoadHandler() 
 {
+	//modified by cjt 20230212 需求号3221872 UI页面改造
+	initPanelHeaderStyle();
+	initButtonColor();
 	$("body").parent().css("overflow-y","hidden");  //add by kdf 2018-09-28 hiui-改造 去掉y轴 滚动条
 	//$("#tDHCEQCStatCat").datagrid({showRefresh:false,showPageList:false,afterPageText:'',beforePageText:''}); //需求号：717395 modified by kdf 2018-10-23
     InitUserInfo(); //系统参数
 	InitEvent();
-	initButtonWidth();  //hisui改造 add by wy 2018-09-01	
+	//modified by cjt 20230327 UI页面改造
+	//initButtonWidth();  //hisui改造 add by wy 2018-09-01	
 	disabled(true);//灰化
 	
 	//document.documentElement.style.overflowY = 'hidden';
@@ -60,6 +64,9 @@ function CombinData()
 }
 function BUpdate_Click() 
 {
+	///add by ZY0304 20220616
+	if (!charLegalCheck("Code^Desc")) return true;
+	
 	if (condition()) return;
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="") return;

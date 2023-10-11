@@ -12,12 +12,12 @@ Ext.onReady(function () {
 
     function ChartInfoAddFun() {
         var PhaLoc = new Ext.ux.LocComboBox({
-            fieldLabel: '入库部门',
+            fieldLabel: $g('入库部门'),
             id: 'PhaLoc',
             name: 'PhaLoc',
             anchor: '90%',
             width: 120,
-            emptyText: '入库部门...',
+            emptyText: $g('入库部门...'),
             groupId: gGroupId,
             listeners: {
                 'select': function (e) {
@@ -38,7 +38,7 @@ Ext.onReady(function () {
         });
         // 入库日期
         var IngrDate = new Ext.ux.DateField({
-            fieldLabel: '入库日期',
+            fieldLabel: $g('入库日期'),
             id: 'IngrDate',
             name: 'IngrDate',
             anchor: '90%',
@@ -48,7 +48,7 @@ Ext.onReady(function () {
         });
         // 入库单号
         var InGrNo = new Ext.form.TextField({
-            fieldLabel: '入库单号',
+            fieldLabel: $g('入库单号'),
             id: 'InGrNo',
             name: 'InGrNo',
             anchor: '90%',
@@ -64,7 +64,7 @@ Ext.onReady(function () {
             anchor: '90%'
         });
         var M_InciDesc = new Ext.form.TextField({
-            fieldLabel: '药品名称',
+            fieldLabel: $g('药品名称'),
             id: 'M_InciDesc',
             name: 'M_InciDesc',
             anchor: '90%',
@@ -79,7 +79,7 @@ Ext.onReady(function () {
             }
         });
         var M_InciCode = new Ext.form.TextField({
-            fieldLabel: '药品代码',
+            fieldLabel: $g('药品代码'),
             id: 'M_InciCode',
             name: 'M_InciCode',
             anchor: '90%',
@@ -89,8 +89,8 @@ Ext.onReady(function () {
         // 查询按钮
         var SearchBT = new Ext.Toolbar.Button({
             id: "SearchBT",
-            text: '查询批次',
-            tooltip: '点击查询批次',
+            text: $g('查询批次'),
+            tooltip: $g('点击查询批次'),
             width: 70,
             height: 30,
             iconCls: 'page_find',
@@ -101,8 +101,8 @@ Ext.onReady(function () {
         // 清空按钮
         var ClearBT = new Ext.Toolbar.Button({
             id: 'ClearBT',
-            text: '清屏',
-            tooltip: '点击清屏',
+            text: $g('清屏'),
+            tooltip: $g('点击清屏'),
             width: 70,
             height: 30,
             iconCls: 'page_clearscreen',
@@ -113,8 +113,8 @@ Ext.onReady(function () {
         // 保存按钮
         var SaveBT = new Ext.Toolbar.Button({
             id: 'SaveBT',
-            text: '保存',
-            tooltip: '点击保存',
+            text:$g( '保存'),
+            tooltip: $g('点击保存'),
             width: 70,
             height: 30,
             iconCls: 'page_save',
@@ -126,8 +126,8 @@ Ext.onReady(function () {
         // 加入列表按钮
         var AddBT = new Ext.Toolbar.Button({
             id: 'AddBT',
-            text: '加入',
-            tooltip: '点击加入入库列表',
+            text: $g('加入'),
+            tooltip: $g('点击加入入库列表'),
             width: 70,
             height: 30,
             iconCls: 'page_add',
@@ -160,7 +160,7 @@ Ext.onReady(function () {
             var Locid = Ext.getCmp("PhaLoc").getValue();
             var Venid = Ext.getCmp("Vendor").getValue();
             if (Venid == "") {
-                Msg.info("warning", "请选择供应商!");
+                Msg.info("warning", $g("请选择经营企业!"));
                 return;
             }
             var Stkgrptype = Ext.getCmp("M_StkGrpType").getValue();
@@ -192,12 +192,12 @@ Ext.onReady(function () {
 
             }
             if (ListDetail == "") {
-                Msg.info("warning", "没有需要保存的数据");
+                Msg.info("warning", $g("没有需要保存的数据"));
                 return;
             }
             var url = DictUrl +
                 "virtualimpaction.csp?actiontype=Save";
-            var loadMask = ShowLoadMask(Ext.getBody(), "处理中...");
+            var loadMask = ShowLoadMask(Ext.getBody(), $g("处理中..."));
             Ext.Ajax.request({
                 url: url,
                 method: 'POST',
@@ -205,29 +205,29 @@ Ext.onReady(function () {
                     MainInfo: MainInfo,
                     ListDetail: ListDetail
                 },
-                waitMsg: '处理中...',
+                waitMsg: $g('处理中...'),
                 success: function (result, request) {
                     var jsonData = Ext.util.JSON
                         .decode(result.responseText);
                     if (jsonData.success == 'true') {
                         // 刷新界面
                         var IngrRowid = jsonData.info;
-                        Msg.info("success", "保存成功!");
+                        Msg.info("success", $g("保存成功!"));
                         Ext.getCmp("InGrNo").setValue(jsonData.ingdrecNo);
                     } else {
                         var ret = jsonData.info;
                         if (ret == -99) {
-                            Msg.info("error", "加锁失败,不能保存!");
+                            Msg.info("error", $g("加锁失败,不能保存!"));
                         } else if (ret == -2) {
-                            Msg.info("error", "生成入库单号失败,不能保存!");
+                            Msg.info("error", $g("生成入库单号失败,不能保存!"));
                         } else if (ret == -3) {
-                            Msg.info("error", "保存入库单明细失败!");
+                            Msg.info("error", $g("保存入库单明细失败!"));
                         } else if (ret == -4) {
-                            Msg.info("error", "保存入库单失败!");
+                            Msg.info("error", $g("保存入库单失败!"));
                         } else if (ret == -5) {
-                            Msg.info("error", "保存入库单失败!");
+                            Msg.info("error", $g("保存入库单失败!"));
                         } else {
-                            Msg.info("error", "部分明细保存不成功：" + ret);
+                            Msg.info("error", $g("部分明细保存不成功：" )+ ret);
                         }
                     }
                 },
@@ -239,7 +239,7 @@ Ext.onReady(function () {
         function Add() {
             var rowData = BatGrid.getSelectionModel().getSelected();
             if (rowData == null) {
-                Msg.info("warning", "没有选中行!");
+                Msg.info("warning", $g("没有选中行!"));
                 return;
             }
             var inclb = rowData.get("Inclb");
@@ -255,22 +255,22 @@ Ext.onReady(function () {
             var manfid = rowData.get("ManfId");
             var manfdesc = rowData.get("Manf");
             if ((rp == null || rp <= 0 || rp == "") || (sp == null || sp <= 0 || sp == "")) {
-                Msg.info("warning", "请输入正确价格!");
+                Msg.info("warning", $g("请输入正确价格!"));
                 return;
             }
             if (parseFloat(rp) > parseFloat(sp)) {
-                Msg.info("warning", "进价大于售价!");
+                Msg.info("warning",$g( "进价大于售价!"));
                 return;
             }
             if (recqty == null || recqty.length <= 0) {
-                Msg.info("warning", "入库数量不能为空!");
+                Msg.info("warning", $g("入库数量不能为空!"));
                 return;
             } else if (recqty <= 0) {
-                Msg.info("warning", "入库数量不能小于或等于0!");
+                Msg.info("warning", $g("入库数量不能小于或等于0!"));
                 return;
             } else {
                 if (recqty > stkqty) {
-                    Msg.info("warning", "入库数量不能大于库存数!");
+                    Msg.info("warning", $g("入库数量不能大于库存数!"));
                     return;
                 }
             }
@@ -339,7 +339,7 @@ Ext.onReady(function () {
             var incicode = Ext.getCmp("M_InciCode").getValue();
             var parref = phaloc + '^' + incicode
             if (incicode == "") {
-                Msg.info("warning", "请输入库存项目!");
+                Msg.info("warning", $g("请输入库存项目!"));
                 return;
             }
             MasterStore.setBaseParam('Parref', parref);
@@ -351,7 +351,7 @@ Ext.onReady(function () {
                 },
                 callback: function (r, options, success) {
                     if (success == false) {
-                        Ext.MessageBox.alert("查询错误", MasterStore.reader.jsonData.Error);
+                        Ext.MessageBox.alert($g("查询错误"), MasterStore.reader.jsonData.Error);
                     } else {
                         if (r.length > 0) {
                             BatGrid.getSelectionModel().selectFirstRow();
@@ -385,18 +385,18 @@ Ext.onReady(function () {
             Query();
         }
         var Manf = new Ext.ux.ComboBox({
-            fieldLabel: '厂商',
+            fieldLabel:$g( '生产企业'),
             id: 'Manf',
             name: 'Manf',
             store: PhManufacturerStore,
             valueField: 'RowId',
             displayField: 'Description',
-            emptyText: '厂商...',
+            emptyText: $g('生产企业...'),
             filterName: 'PHMNFName'
         });
         // 单位
         var CTUom = new Ext.form.ComboBox({
-            fieldLabel: '单位',
+            fieldLabel: $g('单位'),
             id: 'CTUom',
             name: 'CTUom',
             anchor: '90%',
@@ -406,7 +406,7 @@ Ext.onReady(function () {
             displayField: 'Description',
             allowBlank: false,
             triggerAction: 'all',
-            emptyText: '单位...',
+            emptyText: $g('单位...'),
             selectOnFocus: true,
             forceSelection: true,
             minChars: 1,
@@ -471,31 +471,31 @@ Ext.onReady(function () {
             sortable: true,
             hidden: true
         }, {
-            header: "代码",
+            header: $g("代码"),
             dataIndex: 'Incicode',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: '名称',
+            header: $g('名称'),
             dataIndex: 'Incidesc',
             width: 220,
             align: 'left',
             sortable: true
         }, {
-            header: '批号',
+            header: $g('批号'),
             dataIndex: 'Batno',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: "效期",
+            header: $g("效期"),
             dataIndex: 'Expdate',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: "厂商",
+            header: $g("生产企业"),
             dataIndex: 'ManfId',
             id: 'ManfId',
             width: 200,
@@ -504,7 +504,7 @@ Ext.onReady(function () {
             editor: new Ext.grid.GridEditor(Manf),
             renderer: Ext.util.Format.comboRenderer2(Manf, "ManfId", "Manf")
         }, {
-            header: "单位",
+            header: $g("单位"),
             dataIndex: 'Uom',
             width: 90,
             align: 'left',
@@ -513,7 +513,7 @@ Ext.onReady(function () {
             editor: new Ext.grid.GridEditor(CTUom)
 
         }, {
-            header: "进价",
+            header: $g("进价"),
             dataIndex: 'Rp',
             width: 70,
             align: 'right',
@@ -532,7 +532,7 @@ Ext.onReady(function () {
                 }
             })
         }, {
-            header: "售价",
+            header: $g("售价"),
             dataIndex: 'Sp',
             width: 60,
             align: 'right',
@@ -551,13 +551,13 @@ Ext.onReady(function () {
                 }
             })
         }, {
-            header: '库存',
+            header: $g('库存'),
             dataIndex: 'StkQty',
             width: 80,
             align: 'right',
             sortable: true
         }, {
-            header: "入库数",
+            header: $g("入库数"),
             dataIndex: 'RecQty',
             width: 110,
             align: 'right',
@@ -578,8 +578,8 @@ Ext.onReady(function () {
             store: MasterStore,
             pageSize: PageSize,
             displayInfo: true,
-            displayMsg: '第 {0} 条到 {1}条',
-            emptyMsg: "没有记录"
+            displayMsg: $g('第 {0} 条到 {1}条'),
+            emptyMsg: $g("没有记录")
         });
 
         var BatGrid = new Ext.grid.EditorGridPanel({
@@ -608,15 +608,15 @@ Ext.onReady(function () {
             if (e.field == "RecQty") {
                 var recQty = e.value;
                 if (recQty == null || recQty.length <= 0) {
-                    Msg.info("warning", "入库数量不能为空!");
+                    Msg.info("warning", $g("入库数量不能为空!"));
                     validFlag = 1;
                 } else if (recQty <= 0) {
-                    Msg.info("warning", "入库数量不能小于或等于0!");
+                    Msg.info("warning", $g("入库数量不能小于或等于0!"));
                     validFlag = 1;
                 } else {
                     var curQty = e.record.get("StkQty");
                     if (recQty > curQty) {
-                        Msg.info("warning", "入库数量不能大于库存数!");
+                        Msg.info("warning", $g("入库数量不能大于库存数!"));
                         validFlag = 1;
                     }
                 }
@@ -659,68 +659,68 @@ Ext.onReady(function () {
             sortable: true,
             hidden: true
         }, {
-            header: "代码",
+            header: $g("代码"),
             dataIndex: 'Incicode',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: '名称',
+            header: $g('名称'),
             dataIndex: 'Incidesc',
             width: 220,
             align: 'left',
             sortable: true
         }, {
-            header: '批号',
+            header: $g('批号'),
             dataIndex: 'Batno',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: "效期",
+            header: $g("效期"),
             dataIndex: 'Expdate',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: "厂商",
+            header:$g( "生产企业"),
             dataIndex: 'Manf',
             width: 200,
             align: 'left',
             sortable: true
         }, {
-            header: "厂商ID",
+            header: $g("生产企业ID"),
             dataIndex: 'ManfId',
             width: 80,
             align: 'left',
             sortable: true,
             hidden: true
         }, {
-            header: "单位",
+            header: $g("单位"),
             dataIndex: 'Uom',
             width: 90,
             align: 'left',
             sortable: true
         }, {
-            header: "进价",
+            header: $g("进价"),
             dataIndex: 'Rp',
             width: 70,
             align: 'right',
             sortable: true
         }, {
-            header: "售价",
+            header: $g("售价"),
             dataIndex: 'Sp',
             width: 60,
             align: 'right',
             sortable: true
         }, {
-            header: '库存',
+            header: $g('库存'),
             dataIndex: 'StkQty',
             width: 80,
             align: 'right',
             sortable: true
         }, {
-            header: "入库数",
+            header: $g("入库数"),
             dataIndex: 'RecQty',
             width: 110,
             align: 'right',
@@ -732,8 +732,8 @@ Ext.onReady(function () {
             store: DetailStore,
             pageSize: PageSize,
             displayInfo: true,
-            displayMsg: '第 {0} 条到 {1}条',
-            emptyMsg: "没有记录"
+            displayMsg: $g('第 {0} 条到 {1}条'),
+            emptyMsg: $g("没有记录")
         });
 
         var DetailGrid = new Ext.grid.EditorGridPanel({
@@ -755,14 +755,14 @@ Ext.onReady(function () {
             labelWidth: 60,
             labelAlign: 'right',
             frame: true,
-            title: '虚拟入库',
+            title: $g('虚拟入库'),
             autoScroll: false,
             autoHeight: true,
             //bodyStyle : 'padding:0px 0px 0px 0px;',					
             tbar: [SearchBT, '-', ClearBT, '-', AddBT, '-', SaveBT],
             items: [{
                 xtype: 'fieldset',
-                title: '入库信息',
+                title: $g('入库信息'),
                 layout: 'column',
                 style: DHCSTFormStyle.FrmPaddingV,
                 items: [{
@@ -815,7 +815,7 @@ Ext.onReady(function () {
                 items: HisListTab
             }, {
                 region: 'center',
-                title: '库存批次',
+                title: $g('库存批次'),
                 layout: 'fit',
                 items: BatGrid
             }, {
@@ -825,7 +825,7 @@ Ext.onReady(function () {
                 minSize: 200,
                 maxSize: 350,
                 collapsible: true,
-                title: '虚拟入库明细列表',
+                title: $g('虚拟入库明细列表'),
                 layout: 'fit',
                 items: DetailGrid
             }],

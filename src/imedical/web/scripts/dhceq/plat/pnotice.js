@@ -24,6 +24,22 @@ function initDocument()
 	//add by lmm 2020-04-20 增加查阅范围
 	initSourceTypeData();   
 	changeCombobox();
+	//add by cjc 20230213 判断是否为极简，为极简则重写宽度
+	if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+		$("#Title")[0].style.width="268%";
+		$("#Source")[0].style.width="268%";
+		$("#SourceID")[0].style.width="140px";
+		$("#PublishUser")[0].style.width="140px";
+		$("#BAppendFile")[0].style.marginLeft="-28px";
+		$("#SubTitle")[0].style.width="438%";
+		$("#Abstract")[0].style.width="438%";
+		$("#Content")[0].style.width="438%";
+		$("#Remark")[0].style.width="438%";
+		$("#eqTable")[0].style.paddingLeft="30px";
+		}
+		else{
+			$("#BAppendFile")[0].style.marginLeft="-6px"
+		}
 };
 
 
@@ -76,8 +92,12 @@ function BSave_Clicked()
 	//modify by lmm 2020-04-14 1270027
 	if (Data<0) {messageShow("alert","error","错误提示","操作失败!");return;}
 	messageShow("alert","success","提示","操作成功！");
-	var RowID=Data
-	window.setTimeout(function(){window.location.href= "dhceq.plat.pnotice.csp?&RowID="+RowID;},50);
+	var RowID=Data;
+	var url="dhceq.plat.pnotice.csp?&RowID="+RowID;
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.setTimeout(function(){window.location.href= url;},50);
 	
 }
 
@@ -148,8 +168,12 @@ function fillData()
 	setElement("SourceType",NoticeInfo[23]);
 	setElement("SourceIDDR",NoticeInfo[24]);
 	setElement("SourceID",NoticeInfo[28]);
-	
-	
+	// MZY0141	3032819		2022-11-02
+	if (NoticeInfo[23]==1)
+	{
+		setRequiredElements("SourceID",0);
+		setElement("SourceID","");
+	}
 }
 function BSubmit_Clicked()
 {
@@ -171,8 +195,12 @@ function BSubmit_Clicked()
 	var Data=tkMakeServerCall("web.DHCEQ.Plat.LIBPNotice","SubmitData",RowID);
 	if (Data<0) {messageShow("alert","error","错误提示",Data);return;}
 	messageShow("alert","success","提示","修改成功！");
-	var RowID=Data
-	window.setTimeout(function(){window.location.href= "dhceq.plat.pnotice.csp?&RowID="+RowID;},50);
+	var RowID=Data;
+	var url= "dhceq.plat.pnotice.csp?&RowID="+RowID;
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.setTimeout(function(){window.location.href= url;},50);
 	
 }
 function BDelete_Clicked()
@@ -181,9 +209,12 @@ function BDelete_Clicked()
 	var Data=tkMakeServerCall("web.DHCEQ.Plat.LIBPNotice","DeleteData",RowID);
 	if (Data<0) {messageShow("alert","error","错误提示",Data);return;}
 	messageShow("alert","success","提示","修改成功！");
-	var RowID=Data
-	//modify by lmm 2020-04-14 1270042
-	window.setTimeout(function(){window.location.href= "dhceq.plat.pnotice.csp?&RowID=";},50);
+	var RowID=Data;
+	var url= "dhceq.plat.pnotice.csp?&RowID=";
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.setTimeout(function(){window.location.href= url;},50);
 }
 function BAudit_Clicked()
 {
@@ -191,8 +222,12 @@ function BAudit_Clicked()
 	var Data=tkMakeServerCall("web.DHCEQ.Plat.LIBPNotice","AuditData",RowID);
 	if (Data<0) {messageShow("alert","error","错误提示",Data);return;}
 	messageShow("alert","success","提示","修改成功！");
-	var RowID=Data
-	window.setTimeout(function(){window.location.href= "dhceq.plat.pnotice.csp?&RowID="+RowID;},50);
+	var RowID=Data;
+	var url= "dhceq.plat.pnotice.csp?&RowID=";
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.setTimeout(function(){window.location.href= url;},50);
 }
 function initCombobox()
 {
@@ -334,37 +369,37 @@ function changeCombobox()
 			if($("#SourceType").combobox("getValue")==1)
 			{
 	    		disableElement("SourceID",true)
-	    		setElement("SourceID","0")
-	    		setElement("SourceIDDR","0")
-	
+	    		setElement("SourceID","")
+	    		setElement("SourceIDDR","")
+				setRequiredElements("SourceID",0);	// MZY0141	3032819		2022-11-02
 			}
 			else if($("#SourceType").combobox("getValue")==2)
 			{
 	    		disableElement("SourceID",false)
 	    		setElement("SourceID","")
 				singlelookup("SourceID","PLAT.L.Group","",setGroupValue)
-				
+				setRequiredElements("SourceID",1);	// MZY0141	3032819		2022-11-02
 			}
 			else if($("#SourceType").combobox("getValue")==3)
 			{
 	    		disableElement("SourceID",false)
 	    		setElement("SourceID","")
 				singlelookup("SourceID","PLAT.L.Loc","","")
-				
+				setRequiredElements("SourceID",1);	// MZY0141	3032819		2022-11-02
 			}
 			else if($("#SourceType").combobox("getValue")==4)
 			{
 	    		disableElement("SourceID",false)
 	    		setElement("SourceID","")
 				singlelookup("SourceID","PLAT.L.Role","","")
-	
+				setRequiredElements("SourceID",1);	// MZY0141	3032819		2022-11-02
 			}
 			else if($("#SourceType").combobox("getValue")==5)
 			{
 	    		disableElement("SourceID",false)
 	    		setElement("SourceID","")
 				singlelookup("SourceID","PLAT.L.EQUser","","")
-	
+				setRequiredElements("SourceID",1);	// MZY0141	3032819		2022-11-02
 			}
 		}
 	});

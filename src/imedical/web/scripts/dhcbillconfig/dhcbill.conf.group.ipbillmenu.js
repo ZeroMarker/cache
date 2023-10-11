@@ -1,6 +1,6 @@
 ﻿/**
  * FileName: dhcbill.conf.group.ipbillmenu.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-03-18
  * Description: 住院收费菜单配置
  */
@@ -65,8 +65,8 @@ $(function () {
 			ClassName: "BILL.CFG.COM.GroupAuth",
 			QueryName: "GetMenuList",
 			code: "IPBILLTool",
-			groupId: GV.GroupId,
-			hospId: GV.HospId,
+			groupId: CV.GroupId,
+			hospId: CV.HospId,
 			rows: 99999999
 		},
 		onLoadSuccess: function (data) {
@@ -121,8 +121,8 @@ $(function () {
 			ClassName: "BILL.CFG.COM.GroupAuth",
 			QueryName: "GetMenuList",
 			code: "IPBILLRighty",
-			groupId: GV.GroupId,
-			hospId: GV.HospId,
+			groupId: CV.GroupId,
+			hospId: CV.HospId,
 			rows: 99999999
 		},
 		onLoadSuccess: function (data) {
@@ -145,7 +145,6 @@ $(function () {
 * 保存
 */
 function saveHandler(code, row) {
-	$("#menuDlg").show();
 	var rowId = "";
 	var menuCode = "";
 	var menuDesc = "";
@@ -177,40 +176,7 @@ function saveHandler(code, row) {
 		dlgTitle = "修改" + ((code == "IPBILLTool") ? "<span style='margin-left:10px;'>工具菜单</span>" : "<span style='margin-left:10px;'>右键菜单</span>");
 	}
 
-	setValueById("menuCode", menuCode);
-	setValueById("menuDesc", menuDesc);
-	setValueById("menuIcon", menuIcon);
-	setValueById("menuHandler", menuHandler);
-	setValueById("menuSequenceNo", sequence);
-	$("#menuActive").switchbox("setValue", ((!menuActive) || (menuActive == "Y")) ? true : false);
-	
-	$.extend($.fn.validatebox.defaults.rules, {
-		checkCodeExist: {    //校验代码是否存在
-		    validator: function(value) {
-			    return $.m({ClassName: "BILL.CFG.COM.GroupAuth", MethodName: "CheckCodeExist", id: rowId, code: $.trim(value)}, false) == 0;
-			},
-			message: "菜单代码已存在"
-		},
-		checkSequenceNoExist: {    //校验顺序号是否存在
-		    validator: function(value) {
-			    if (sequence == value) {
-				    return true;
-				}else {
-				    var gridObj = (code == "IPBILLTool") ? GV.ToolMenuList : GV.RightMenuList;
-				    var sequenceNoAry = [];
-				    var rows = gridObj.getRows();
-				    $.each(rows, function (index, row) {
-					    if (row.JBMSequence) {
-						    sequenceNoAry.push(row.JBMSequence);
-						}
-					});
-					return (sequenceNoAry.indexOf(value) == -1) ? true : false;
-				}
-			},
-			message: "顺序号已存在"
-		}
-	});
-	
+	$("#menuDlg").show();
 	var menuDlgObj = $HUI.dialog("#menuDlg", {
 			iconCls: dlgIconCls,
 			title: dlgTitle,
@@ -223,7 +189,7 @@ function saveHandler(code, row) {
 						var bool = true;
 						$(".validatebox-text").each(function(index, item) {
 							if (!$(this).validatebox("isValid")) {
-								$.messager.popover({msg: "<font color=red>" + $(this).parent().prev().text() + "</font>" + "验证不通过", type: "info"});
+								$.messager.popover({msg: "<font color='red'>" + $(this).parent().prev().text() + "</font>" + "验证不通过", type: "info"});
 								bool = false;
 								return false;
 							}
@@ -232,28 +198,30 @@ function saveHandler(code, row) {
 							return;
 						}
 						$.messager.confirm("确认", "确认保存？", function(r) {
-							if (r) {
-								var menuInfo = rowId + "^" + getValueById("menuCode") + "^" + getValueById("menuDesc") + "^" + ($("#menuActive").switchbox("getValue") ? "Y" : "N");
-								menuInfo += "^" + parref + "^" + nodeLevel + "^" + page + "^" + target + "^" + getValueById("menuSequenceNo");
-								menuInfo += "^" + getValueById("menuIcon") + "^" + getValueById("menuHandler");
-								$.m({
-									ClassName: "BILL.CFG.COM.GroupAuth",
-									MethodName: "SaveMenu",
-									menuInfo: menuInfo
-								}, function (rtn) {
-									if (rtn == 0) {
-										$.messager.popover({msg: "保存成功", type: "success"});
-										menuDlgObj.close();
-										if (code == "IPBILLTool") {
-											GV.ToolMenuList.reload();
-										}else {
-											GV.RightMenuList.reload();
-										}
-									} else {
-										$.messager.popover({msg: "保存失败：" + rtn, type: "error"});
-									}
-								});
+							if (!r) {
+								return;
 							}
+							var menuInfo = rowId + "^" + getValueById("menuCode") + "^" + getValueById("menuDesc") + "^" + ($("#menuActive").switchbox("getValue") ? "Y" : "N");
+							menuInfo += "^" + parref + "^" + nodeLevel + "^" + page + "^" + target + "^" + getValueById("menuSequenceNo");
+							menuInfo += "^" + getValueById("menuIcon") + "^" + getValueById("menuHandler");
+							$.m({
+								ClassName: "BILL.CFG.COM.GroupAuth",
+								MethodName: "SaveMenu",
+								menuInfo: menuInfo
+							}, function (rtn) {
+								var myAry = rtn.split("^");
+								if (myAry[0] == 0) {
+									$.messager.popover({msg: "保存成功", type: "success"});
+									menuDlgObj.close();
+									if (code == "IPBILLTool") {
+										GV.ToolMenuList.reload();
+									}else {
+										GV.RightMenuList.reload();
+									}
+									return;
+								}
+								$.messager.popover({msg: "保存失败：" + (myAry[1] || myAry[0]), type: "error"});
+							});
 						});
 					}
 				}, {
@@ -262,7 +230,41 @@ function saveHandler(code, row) {
 						menuDlgObj.close();
 					}
 				}
-			]
+			],
+			onBeforeOpen: function() {
+				setValueById("menuCode", menuCode);
+				setValueById("menuDesc", menuDesc);
+				setValueById("menuIcon", menuIcon);
+				setValueById("menuHandler", menuHandler);
+				setValueById("menuSequenceNo", sequence);
+				$("#menuActive").switchbox("setValue", ((!menuActive) || (menuActive == "Y")));
+
+				$.extend($.fn.validatebox.defaults.rules, {
+					checkCodeExist: {    //校验代码是否存在
+					    validator: function(value) {
+						    return $.m({ClassName: "BILL.CFG.COM.GroupAuth", MethodName: "CheckCodeExist", id: rowId, code: $.trim(value)}, false) == 0;
+						},
+						message: "菜单代码已存在"
+					},
+					checkSequenceNoExist: {    //校验顺序号是否存在
+					    validator: function(value) {
+						    if (sequence == value) {
+							    return true;
+							}
+							var bool = true;
+						    var gridObj = (code == "IPBILLTool") ? GV.ToolMenuList : GV.RightMenuList;
+						    $.each(gridObj.getRows(), function (index, row) {
+							    if (row.JBMSequence && (row.JBMSequence == value)) {
+								    bool = false;
+								    return false;
+								}
+							});
+							return bool;
+						},
+						message: "顺序号已存在"
+					}
+				});
+			}
 		});
 }
 
@@ -272,14 +274,12 @@ function saveHandler(code, row) {
 function saveClick() {
 	var menuAry = [];
 	//工具菜单
-	var rows = GV.ToolMenuList.getChecked();
-	$.each(rows, function (index, row) {
+	$.each(GV.ToolMenuList.getChecked(), function (index, row) {
 		menuAry.push(row.rowId);
 	});
 	
 	//右键菜单
-	var rows = GV.RightMenuList.getChecked();
-	$.each(rows, function (index, row) {
+	$.each(GV.RightMenuList.getChecked(), function (index, row) {
 		menuAry.push(row.rowId);
 	});
 	if (menuAry.length == 0) {
@@ -288,22 +288,24 @@ function saveClick() {
 	}
 	var menuStr = menuAry.join("^");
 	$.messager.confirm("确认", "确认保存？", function(r) {
-		if (r) {
-			$.m({
-				ClassName: "BILL.CFG.COM.GroupAuth",
-				MethodName: "GrantMenu",
-				groupId: GV.GroupId,
-				hospId: GV.HospId,
-				menuStr: menuStr
-			}, function (rtn) {
-				if (rtn == 0) {
-					$.messager.popover({msg: "保存成功", type: "success"});
-					GV.ToolMenuList.reload();
-					GV.RightMenuList.reload();
-				} else {
-					$.messager.popover({msg: "保存失败：" + rtn, type: "error"});
-				}
-			});
+		if (!r) {
+			return;
 		}
+		$.m({
+			ClassName: "BILL.CFG.COM.GroupAuth",
+			MethodName: "GrantMenu",
+			groupId: CV.GroupId,
+			hospId: CV.HospId,
+			menuStr: menuStr
+		}, function (rtn) {
+			var myAry = rtn.split("^");
+			if (myAry[0] == 0) {
+				$.messager.popover({msg: "保存成功", type: "success"});
+				GV.ToolMenuList.reload();
+				GV.RightMenuList.reload();
+				return;
+			}
+			$.messager.popover({msg: "保存失败：" + (myAry[1] || myAry[0]), type: "error"});
+		});
 	});
 }

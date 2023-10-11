@@ -13,14 +13,15 @@ var editIndex = undefined;
 if(!(typeof $.cm=="function")){
 	runClassMethod=function (className,methodName,datas,successHandler,datatype,sync){
 		var _options = {
-			url : LINK_CSP,
+			url : url,
 			async : true,
 			dataType : "json", // text,html,script,json
 			type : "POST",
 			data : {
-					'ClassName':className,
-					'MethodName':methodName
-				   }
+				'ClassName':className,
+				'MethodName':methodName,
+				'MWToken':(typeof websys_getMWToken=='function')?websys_getMWToken():""
+			}
 		};
 		$.extend(_options.data, datas);
 		var option={dataType:typeof(datatype) == "undefined"?"json":datatype,async:typeof(sync) == "undefined"?_options.async:sync};

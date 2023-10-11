@@ -28,11 +28,10 @@ function InitHospUser(){
 function CheckDocCureUseBase(){
 	var UserHospID=Util_GetSelHospID();
 	var DocCureUseBase=$.m({
-		ClassName:"web.DHCDocConfig",
-		MethodName:"GetConfigNode",
-		Node: "DocCureUseBase",
-		HospId:UserHospID,
-		dataType:"text",
+		ClassName:"DHCDoc.DHCDocCure.VersionControl",
+		MethodName:"UseBaseControl",
+		HospitalId:UserHospID,
+		dataType:"text"
 	},false);
 	if (DocCureUseBase=="1"){
 		$(".window-mask.alldom").show();
@@ -47,14 +46,45 @@ function Init(){
 	//资源列表
 	var CureResourceObj=$HUI.combobox('#Resource',{      
 		valueField:'TRowid',   
-		textField:'TResDesc'   
+		textField:'TResDesc',
+		onSelect:function(){
+			LoadCureRBCResPlanDataGrid();		
+		}
 	});
 	//科室列表
-	$HUI.combobox("#LocName", {});
 	InitLoc("LocName",CureResourceObj);
 	
 	InitCureRBCResPlan();	
 	InitWinComb();
+}
+
+function InitEvent(){
+	$('#btnSave').bind('click', function(){
+		if(!SaveFormData())return false;
+	});
+	$('#btnImport').click(ImportTemplate);
+	$('#btnFind').bind('click', function(){
+		var LocName=$('#LocName').combobox('getValue');
+		var Resource=$('#Resource').combobox('getValue');
+		if (LocName==""){
+			$.messager.alert("提示", "请选择科室!", 'warning')
+			return false;	
+		}
+		LoadCureRBCResPlanDataGrid();
+	});
+	$('#btnGenByLoc').click(function(){
+		CreateResApptSchuldeByLoc();
+	});	
+	$('#btnGen').click(function(){
+		CreateResApptSchulde();
+	});	
+}
+
+function ImportTemplate(){
+	var src="doccure.rbcresplan.import.hui.csp";
+	if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
+	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
+	createModalDialog("importDiag","导入", 850, 545,"icon-w-import","",$code,"");
 }
 
 function InitLoc(parame,Obj){
@@ -77,28 +107,11 @@ function InitLoc(parame,Obj){
 					var locId=record.LocId;
 					var url = $URL+"?ClassName=DHCDoc.DHCDocCure.Config&QueryName=QueryResource&LocID="+locId+"&ResultSetType=array";
 					Obj.clear();
-					Obj.reload(url);			
+					Obj.reload(url);
+					LoadCureRBCResPlanDataGrid();				
 				}  
 		 });
 	});
-}
-
-function InitEvent(){
-	$('#btnSave').bind('click', function(){
-		if(!SaveFormData())return false;
-	});
-	$('#btnFind').bind('click', function(){
-		var LocName=$('#LocName').combobox('getValue');
-		var Resource=$('#Resource').combobox('getValue');
-		if (LocName==""){
-			$.messager.alert("提示", "请选择科室", 'error')
-			return false;	
-		}
-		LoadCureRBCResPlanDataGrid();
-	});
-	$('#btnGen').bind('click', function(){
-		CreateResApptSchulde();
-	});	
 }
 
 function InitWinComb(){
@@ -109,7 +122,6 @@ function InitWinComb(){
 		textField:'TResDesc'   
 	});
 	//科室列表
-	var CureLocListObj=$HUI.combobox('#LocList',{});
 	InitLoc("LocList",CureResourceListObj);
 	
 	//星期列表
@@ -166,63 +178,63 @@ function CheckData(){
 	var LocId=CheckComboxSelData("LocList",LocId);
 	if(LocId=="")
 	{
-		 $.messager.alert("错误", "请选择科室", 'error')
+		 $.messager.alert("提示", "请选择科室", 'warning')
         return false;
 	}
 	var ResourceId=$('#ResourceList').combobox('getValue');
 	var ResourceId=CheckComboxSelData("ResourceList",ResourceId);
 	if(ResourceId=="")
 	{
-		 $.messager.alert("错误", "请选择资源", 'error')
+		 $.messager.alert("提示", "请选择资源", 'warning')
         return false;
 	}
 	var Week=$('#Week').combobox('getValue');
 	var Week=CheckComboxSelData("Week",Week);
 	if(Week=="")
 	{
-		$.messager.alert('Warning','请选择星期');   
+		$.messager.alert('提示','请选择星期', 'warning');   
         return false;
 	}
 	var TimeDesc=$('#TimeDesc').combobox('getValue');
 	var TimeDesc=CheckComboxSelData("TimeDesc",TimeDesc);
 	if(TimeDesc=="")
 	{
-		$.messager.alert('Warning','请选择时段');   
+		$.messager.alert('提示','请选择时段', 'warning');   
         return false;
 	}
 	var ServiceGroup=$('#ServiceGroup').combobox('getValue');
 	var ServiceGroup=CheckComboxSelData("ServiceGroup",ServiceGroup);
 	if(ServiceGroup=="")
 	{
-		$.messager.alert('Warning','请选择服务组');   
+		$.messager.alert('提示','请选择服务组',"warning");   
         return false;
 	}
 	var StartTime=$("#StartTime").val();
 	if(StartTime=="")
 	{
-		$.messager.alert('Warning','请填写开始时间');   
+		$.messager.alert('提示','请填写开始时间',"warning");   
         return false;
 	}
 	var EndTime=$("#EndTime").val();
 	if(EndTime=="")
 	{
-		$.messager.alert('Warning','请填写结束时间');   
+		$.messager.alert('提示','请填写结束时间',"warning");   
         return false;
 	}
 	var Max=$("#Max").val();
 	if(Max=="")
 	{
-		$.messager.alert('Warning','请填写最大预约数');   
+		$.messager.alert('提示','请填写最大预约数',"warning");   
         return false;
 	}
 	var Max=parseFloat(Max);
 	if(Max<=0){
-		$.messager.alert("提示","预约数请填写大于0整数");
+		$.messager.alert("提示","预约数请填写大于0整数","warning");
 		return false;		
 	}
 	var AutoNumber=""; //$("#AutoNumber").val();
 	if ((+AutoNumber!=0)&&(parseInt(AutoNumber)>parseInt(Max))){
-		$.messager.alert('Warning','自动预约数不能大于最大预约数');   
+		$.messager.alert('提示','自动预约数不能大于最大预约数',"warning");   
         return false;
 	}
 	return true;
@@ -245,29 +257,36 @@ function SaveFormData(){
 	$.m({
 		ClassName:"DHCDoc.DHCDocCure.RBCResPlan",
 		MethodName:"SaveCureRBCResPlan",
-		'value':InputPara,
+		'value':InputPara
 	},function testget(value){
 		if(value=="0"){
-			$.messager.show("提示","保存成功")	
-			$("#add-dialog").dialog( "close" );
-			LoadCureRBCResPlanDataGrid(true)
+			$.messager.popover({msg: '保存成功!',type:'success',timeout: 3000})
+			LoadCureRBCResPlanDataGrid(true);
+			if(Rowid==""){
+				$.messager.confirm("提示", "是否继续新增?",function(r){
+					if(r){
+					}else{
+						$("#add-dialog").dialog( "close" );
+					}
+				})
+			}
 			return true;							
 		}else{
 			var errmsg="";
 			if (value==100)errmsg=",必填数据不能为空或者不合法";
 			else if (value==101)errmsg=",已经存在同时段的模板,不能重复添加";
 			else errmsg=value;
-			$.messager.alert("错误","保存失败"+errmsg)
+			$.messager.alert("错误","保存失败"+errmsg,"error")
 			return false;
 		}
 	});
 }
 ///修改表格函数
-function UpdateGridData(){
+function UpdateGridData(Type){
 	var rows = CureRBCResPlanDataGrid.datagrid('getSelections');
 	if (rows.length ==1) {
 		//$("#add-dialog").dialog("open");
-		$('#add-dialog').window('open').window('resize',{width:300,height:420,top: 10,left:400});
+		$('#add-dialog').window('open');
 		//清空表单数据
 		$('#add-form').form("clear")
 		$('#LocList').combobox('setValue',rows[0].LocId)
@@ -283,21 +302,34 @@ function UpdateGridData(){
 		$('#Week').combobox('setValue',rows[0].TWeekNum)
 		$('#TimeDesc').combobox('setValue',rows[0].TTimePeriodCode)
 		$('#ServiceGroup').combobox('setValue',rows[0].TSerivceGourpId)
-		$('#add-form').form("load",{
-			Rowid:rows[0].TRowid,
-			StartTime:rows[0].TStartTime,
-			EndTime:rows[0].TEndTime,
-			Max:rows[0].TMax,
-			AutoNumber:rows[0].TAutoNumber,
-			ChargTime:rows[0].TChargTime	 	 
-		})
-		$('#btnSave').val("修改")    
+		
+		if(Type=="Copy"){
+			var formObj={
+				StartTime:rows[0].TStartTime,
+				EndTime:rows[0].TEndTime,
+				Max:rows[0].TMax,
+				AutoNumber:rows[0].TAutoNumber,
+				ChargTime:rows[0].TChargTime	 	 
+			}
+			$('#btnSave').linkbutton({ text:'复制' ,iconCls:"icon-w-copy"});  	
+		}else{
+			var formObj={
+				Rowid:rows[0].TRowid,
+				StartTime:rows[0].TStartTime,
+				EndTime:rows[0].TEndTime,
+				Max:rows[0].TMax,
+				AutoNumber:rows[0].TAutoNumber,
+				ChargTime:rows[0].TChargTime	 	 
+			}
+			$('#btnSave').linkbutton({ text:'修改' ,iconCls:"icon-w-update"});  	
+		}
+		$('#add-form').form("load",formObj)
+		 
 	}else if (rows.length>1){
-		$.messager.alert("错误","您选择了多行！",'err')
+		$.messager.alert("提示","您选择了多行！","warning")
 	}else{
-		$.messager.alert("错误","请选择一行！",'err')
+		$.messager.alert("提示","请选择一行！","warning")
 	}
-
 }
 
 function DeleteGridData(){
@@ -321,8 +353,7 @@ function DeleteGridData(){
 				       //CureRBCResPlanDataGrid.datagrid('load');
 				       LoadCureRBCResPlanDataGrid();
 				       CureRBCResPlanDataGrid.datagrid('unselectAll');
-				       //$.messager.show({title:"提示",msg:"删除成功"});
-				       $.messager.alert('提示',"删除成功");
+				       $.messager.popover({msg: '删除成功',type:'success',timeout: 3000})
 			        }else{
 				       $.messager.alert('提示',"删除失败:"+value);
 			        }
@@ -331,18 +362,20 @@ function DeleteGridData(){
             }
         });
     } else {
-        $.messager.alert("提示", "请选择要删除的行", "error");
+        $.messager.alert("提示", "请选择要删除的行","warning");
     }	
 }
+
 function InitCureRBCResPlan()
 {
 	var CureRBCResPlanToolBar = [{
             text: '增加',
             iconCls: 'icon-add',
             handler: function() { 
-              	$('#add-dialog').window('open').window('resize',{width:300,height:420,top: 10,left:400});
+              	$('#add-dialog').window('open');
 	 			//清空表单数据
-	 		  	$('#add-form').form("clear") 
+	 		  	$('#add-form').form("clear");
+	 		  	$('#btnSave').linkbutton({ text:'保存' ,iconCls:"icon-w-save"});   
             }
         },
        {
@@ -356,6 +389,12 @@ function InitCureRBCResPlan()
 			iconCls: 'icon-edit',
 			handler: function() {
 				UpdateGridData();
+			}
+		},{
+			text: '复制',
+			iconCls: 'icon-copy',
+			handler: function() {
+				UpdateGridData("Copy");
 			}
 		}];
 	var CureRBCResPlanColumns=[[    
@@ -424,7 +463,7 @@ function LoadCureRBCResPlanDataGrid(init)
 	var CureLocName=$('#LocName').combobox('getValue');
 	var CureResource=$('#Resource').combobox('getValue');
 	if((CureLocName=="")&&(!init)){
-		$.messager.alert('提示','请选择科室');   
+		$.messager.alert('提示','请选择科室',"warning");   
         return false;	
 	}
 	$.cm({
@@ -465,7 +504,7 @@ function CheckComboxSelData(id,selId){
 	return "";
 }
 ///生成资源排班
-function CreateResApptSchulde()
+function CreateResApptSchuldeByLoc()
 {
 	var LocId=$('#LocName').combobox('getValue');
 	var StartDate=$('#StartDate').combobox('getValue');
@@ -475,7 +514,7 @@ function CreateResApptSchulde()
 	var ResourceId=CheckComboxSelData("Resource",ResourceId);
 	if(LocId=="")
 	{
-		$.messager.alert("错误", "请选择科室", 'error')
+		$.messager.alert("提示", "请选择科室","warning")
         return false;
 	}
 	var Info=LocId+"^"+StartDate+"^"+EndDate+"^"+ResourceId;
@@ -487,12 +526,72 @@ function CreateResApptSchulde()
 		'hisui':"1",
 	},function testget(value){
 		if(value=="0"){
-			$.messager.show({title:"提示",msg:"生成资源计划成功!"});
+			$.messager.popover({msg: "生成资源计划成功!",type:'success',timeout: 3000})
 		}else{
 			var err=""
 			if(value=="1000") err="请检查排班模板数据是否存在问题"
-			$.messager.alert('提示',"生成资源计划失败!"+err);
+			$.messager.alert('提示',"生成资源计划失败!"+err,"error");
 		}
 						  
 	});
+}
+
+function CreateResApptSchulde()
+{
+	var StartDate=$('#StartDate').combobox('getValue');
+	var EndDate=$('#EndDate').combobox('getValue');
+	var HospDr=Util_GetSelHospID();
+	if((StartDate=="")||(EndDate=="")){
+		$.messager.alert("提示", "开始日期或结束日期不能为空!","warning")
+        return false;
+	}
+	$.m({
+		ClassName:"DHCDoc.DHCDocCure.RBCResSchdule",
+		MethodName:"GenCreateResApptSchulde",
+		'StartDate':StartDate,
+		'EndDate':EndDate,
+		'UserID':session['LOGON.USERID'],
+		HospDr:HospDr
+	},function testget(value){
+		if(value=="0"){
+			$.messager.popover({msg: "生成资源计划成功!",type:'success',timeout: 3000})
+		}else{
+			var err=""
+			if(value=="1000") err="请检查排班模板数据是否存在问题"
+			$.messager.alert('提示',"生成资源计划失败!"+err,"error");
+		}
+						  
+	});
+}
+
+function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,_event){
+    $("body").append("<div id='"+id+"' style='overflow:hidden;' class='hisui-dialog'></div>");
+    if (_width == null)
+        _width = 800;
+    if (_height == null)
+        _height = 500;
+    $("#"+id).dialog({
+        title: _title,
+        width: _width,
+        height: _height,
+        cache: false,
+        iconCls: _icon,
+        //href: _url,
+        collapsible: false,
+        minimizable:false,
+        maximizable: false,
+        resizable: false,
+        modal: true,
+        closed: false,
+        closable: true,
+        content:_content,
+        onClose:function(){
+	        destroyDialog(id);
+	    }
+    });
+}
+
+function destroyDialog(id){
+   $("body").remove("#"+id); 
+   $("#"+id).dialog('destroy');
 }

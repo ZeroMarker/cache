@@ -70,7 +70,11 @@ function InitLocGroupWinEvent(obj){
 			function(){ 
 				var flg = $.Tool.RunServerMethod("DHCHAI.BT.LocGroup","DeleteById",ID);
 				if (parseInt(flg)<0){
-					layer.msg('删除失败!',{icon: 2});
+					if (parseInt(flg)=='-777') {
+						layer.msg('-777：当前无删除权限，请启用删除权限后再删除记录!',{icon: 2});
+					}else {
+						layer.msg('删除失败!',{icon: 2});
+					}
 				} else {
 					obj.gridLocGroup.rows({selected:true}).remove().draw(false);
 					layer.msg('删除成功!',{icon: 1});
@@ -85,9 +89,11 @@ function InitLocGroupWinEvent(obj){
 		if (rd){
 			$.form.SetValue("txtLGCode",rd["Code"]);
 			$.form.SetValue("txtLGDesc",rd["Desc"]);
+			$.form.SetValue("txtLGIndNo",rd["IndNo"]);
 		} else {
 			$.form.SetValue("txtLGCode",'');
 			$.form.SetValue("txtLGDesc",'');
+			$.form.SetValue("txtLGIndNo",'');
 		}
 		
 		layer.config({  
@@ -127,6 +133,7 @@ function InitLocGroupWinEvent(obj){
 		
 		var LGCode = $.form.GetValue("txtLGCode");
 		var LGDesc = $.form.GetValue("txtLGDesc");
+		var LGIndNo = $.form.GetValue("txtLGIndNo");
 		
 		if (LGCode == '') {
 			layer.alert("科室分组代码不允许为空",{icon: 0});
@@ -140,6 +147,7 @@ function InitLocGroupWinEvent(obj){
 		var InputStr = ID;
 		InputStr += "^" + LGCode;
 		InputStr += "^" + LGDesc;
+		InputStr += "^" + LGIndNo;
 		var retval = $.Tool.RunServerMethod("DHCHAI.BT.LocGroup","Update",InputStr);
 		if (parseInt(retval)>0){
 			obj.gridLocGroup.ajax.reload(function(){
@@ -168,6 +176,7 @@ function InitLocGroupWinEvent(obj){
 		
 		var LGCode = $.form.GetValue("txtLGCode");
 		var LGDesc = $.form.GetValue("txtLGDesc");
+		var LGIndNo = $.form.GetValue("txtLGIndNo");
 		
 		if (LGCode == '') {
 			layer.alert("科室分组代码不允许为空",{icon: 0});
@@ -181,6 +190,7 @@ function InitLocGroupWinEvent(obj){
 		var InputStr = ID;
 		InputStr += "^" + LGCode;
 		InputStr += "^" + LGDesc;
+		InputStr += "^" + LGIndNo;
 		var retval = $.Tool.RunServerMethod("DHCHAI.BT.LocGroup","Update",InputStr);
 		if (parseInt(retval)>0){
 			obj.gridLocGroup.ajax.reload(function(){

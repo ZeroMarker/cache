@@ -1,10 +1,15 @@
-var SelectedRow = 0;
+var SelectedRow = -1;	//hisui改造：修改开始行号  Add By DJ 2018-10-12
 var rowid=0;
 function BodyLoadHandler() 
 {	
-    InitUserInfo(); //系统参数
-	InitEvent();	
+    $("body").parent().css("overflow-y","hidden");  //Add By DJ 2018-10-12 hiui-改造 去掉y轴 滚动条
+	$("#tDHCEQMCDealMethod").datagrid({showRefresh:false,showPageList:false,afterPageText:'',beforePageText:''});   //Add By DJ 2018-10-12 hisui改造：隐藏翻页条内容
+	InitUserInfo(); //系统参数
+	InitEvent();
+	initButtonWidth();	//hisui改造 Add By DJ 2018-10-12
+	initPanelHeaderStyle();//hisui改造 add by zyq 2023-01-31
 	disabled(true);//灰化
+	
 	//InitPageNumInfo("DHCEQMCDealMethod.DealMethod","DHCEQMCDealMethod");
 	
 }
@@ -30,14 +35,16 @@ function BAdd_Click() //增加
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="") return;
 	var plist=CombinData(); //函数调用
-	//alertShow("plist:"+plist);
 	var result=cspRunServerMethod(encmeth,plist,'2');
 	result=result.replace(/\\n/g,"\n")
-	//alertShow("result"+result)
-	//alertShow(result);
-	if(result=="")
+	//modified by csj 20190601
+	if(result<0)
 	{
-		alertShow(t[-3001])
+		if(result=='-3003'){
+			messageShow("","","","有重复数据!")
+			return
+		}
+		messageShow("","","",t[-3001])
 		return
 	}
 	else
@@ -63,11 +70,15 @@ function BUpdate_Click()
 	var plist=CombinData(); //函数调用
 	var result=cspRunServerMethod(encmeth,plist,'2');
 	result=result.replace(/\\n/g,"\n")
-	//alertShow("result"+result)
-	if(result=="") 
+	//modified by csj 20190601
+	if(result<0)
 	{
-	alertShow(t[-3001]);
-	return
+		if(result=='-3003'){
+			messageShow("","","","有重复数据!")
+			return
+		}
+		messageShow("","","",t[-3001])
+		return
 	}
 	else 
 	{
@@ -83,8 +94,8 @@ function BDelete_Click()
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="") 
 	{
-	alertShow(t[-3001])
-	return;
+		messageShow("","","",t[-3001])
+		return;
 	}
 	var result=cspRunServerMethod(encmeth,rowid,'1');
 	result=result.replace(/\\n/g,"\n");
@@ -94,33 +105,19 @@ function BDelete_Click()
 		location.reload();	
 	}
 }
-///选择表格行触发此方法
-function SelectRowHandler()
-	{
-	var eSrc=window.event.srcElement;
-	var objtbl=document.getElementById('tDHCEQMCDealMethod');//+组件名 就是你的组件显示 Query 结果的部分
-	var rows=objtbl.rows.length;
-	
-	var lastrowindex=rows - 1;
-	
-	var rowObj=getRow(eSrc);
-	
-	var selectrow=rowObj.rowIndex;
-	//alertShow("selectrow"+selectrow)
-	if (!selectrow)	 return;
-	if (SelectedRow==selectrow)	{
+///hisui改造： Add By DJ 2018-10-12
+function SelectRowHandler(index,rowdata){
+	if (index==SelectedRow){
 		Clear();
-		disabled(true);//灰化	
-		SelectedRow=0;
-		rowid=0;
-		SetElement("RowID","");
+		SelectedRow= -1;
+		disabled(true); 
+		$('#tDHCEQMCDealMethod').datagrid('unselectAll'); 
+		return;
 		}
-	else{
-		SelectedRow=selectrow;
-		rowid=GetElementValue("TRowIDz"+SelectedRow);
-		SetData(rowid);//调用函数
-		disabled(false);//反灰化
-		}
+		
+	SetData(rowdata.TRowID); 
+	disabled(false)  
+    SelectedRow = index;
 }
 function Clear()
 {
@@ -131,12 +128,10 @@ function Clear()
 	}
 function SetData(rowid)
 {
-	//alertShow("rowid::::"+rowid)
 	var encmeth=GetElementValue("GetData");
 	if (encmeth=="") return;
 	var gbldata=cspRunServerMethod(encmeth,'','',rowid);
 	var list=gbldata.split("^");
-	//alertShow("list"+list);
 	SetElement("RowID",list[0]); //rowid
 	SetElement("Code",list[1]); //
 	SetElement("Desc",list[2]); //

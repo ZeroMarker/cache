@@ -28,40 +28,79 @@ $(function () {
     if (LoadIfDoctor != 'Y') {
         $('#layoutNorth').panel('close');
         $('#layoutCenter').panel('maximize');
-        $('#layoutCenter').panel('setTitle', '用药审核不通过');
+        $('#layoutCenter').panel('setTitle', $g("用药审核不通过"));
         setTimeout(Query, 300);
     } else {
         setTimeout(Query, 300);
     }
-});
 
+    DHCPHA_HUI_COM.ComboBox.Init(
+        {
+            Id: 'cmbStat',
+            data: {
+                data: [
+                    {
+                        RowId: 0,
+                        Description: $g("未处理")
+                    },
+                    {
+                        RowId: 1,
+                        Description: $g("已申诉")
+                    },
+                    {
+                        RowId: 2,
+                        Description: $g("已接受")
+                    }
+                ]
+            }
+        },
+        {
+            editable: false,
+            panelHeight: 'auto',
+            onSelect: function () {
+                Query();
+            }
+        }
+    );
+    $('#cmbStat').combobox('setValue', 0);
+    InitParams()
+});
+function InitParams(){
+	var retVal=tkMakeServerCall("PHA.COM.Method","GetOrdItmInfoForTipMess",LoadOrdItmId);
+    if(retVal!="{}"){
+	    var retJson=JSON.parse(retVal);
+		var ordDate=retJson.ordDate;
+		$('#dateStart').datebox('setValue', ordDate);
+	}
+
+}
 // 医嘱审核明细列表
 function InitGridPhaOrd() {
     var columns = [
         [
-            { field: 'phaOrdId', title: '审核Id', width: 100, hidden: true },
-            { field: 'patNo', title: '登记号', width: 100 },
-            { field: 'patName', title: '姓名', width: 80 },
-            { field: 'incDesc', title: '药品', width: 250 },
-            { field: 'dosage', title: '剂量', width: 75 },
-            { field: 'freqDesc', title: '频次', width: 75 },
-            { field: 'instrucDesc', title: '用法', width: 75 },
-            { field: 'qtyDesc', title: '数量', width: 100, halign: 'left', align: 'left' },
-            { field: 'reasonDesc', title: '拒绝原因', width: 200 },
+            { field: 'phaOrdId', title:("审核Id"), width: 100, hidden: true },
+            { field: 'patNo', title:("登记号"), width: 100 },
+            { field: 'patName', title:("姓名"), width: 80 },
+            { field: 'incDesc', title: ("药品"), width: 250 },
+            { field: 'dosage', title: ("剂量"), width: 75 },
+            { field: 'freqDesc', title: ("频次"), width: 75 },
+            { field: 'instrucDesc', title: ("用法"), width: 75 },
+            { field: 'qtyDesc', title: ("数量"), width: 100, halign: 'left', align: 'left' },
+            { field: 'reasonDesc', title: ("拒绝原因"), width: 200 },
             {
                 field: 'phNotes',
-                title: '药师备注',
+                title: ("药师备注"),
                 width: 200,
                 formatter: function (value, row, index) {
                     return '<div style="width=200px;word-break:break-all;word-wrap:break-word;white-space:pre-wrap;">' + value + '</div>';
                 }
             },
-            { field: 'userName', title: '审核人', width: 80 },
-            { field: 'opDateTime', title: '审核时间', width: 100 },
-            { field: 'passWay', title: '审核方式', width: 85 },
-            { field: 'doseDate', title: '用药日期', width: 100, halign: 'left', hidden: true },
-            { field: 'doctorName', title: '医生', width: 80, hidden: true },
-            { field: 'orderStoped', title: '医嘱全部作废', width: 80, hidden: false }
+            { field: 'userName', title: ("审核人"), width: 80 },
+            { field: 'opDateTime', title: ("审核时间"), width: 100 },
+            { field: 'passWay', title: ("审核方式"), width: 85 },
+            { field: 'doseDate', title: ("用药日期"), width: 100, halign: 'left', hidden: true },
+            { field: 'doctorName', title: ("医生"), width: 80, hidden: false },
+            { field: 'orderStoped', title: ("医嘱全部作废"), width: 80, hidden: false }
         ]
     ];
     var dataGridOption = {
@@ -108,8 +147,8 @@ function InitGridPhaOrd() {
 function InitGridReason() {
     var columns = [
         [
-            { field: 'incDesc', title: '药品', width: 250, halign: 'center' },
-            { field: 'reasonDesc', title: '审核原因', width: 250, halign: 'center' }
+            { field: 'incDesc', title: ("药品"), width: 250, halign: 'left' },
+            { field: 'reasonDesc', title: ("审核原因"), width: 250, halign: 'left' }
         ]
     ];
     var dataGridOption = {
@@ -137,7 +176,8 @@ function QueryParams() {
     if (patNo != '') {
         admId = '';
     }
-    return stDate + '^' + edDate + '^' + recLocId + '^' + patNo + '^' + doctorId + '^' + admId;
+    var stat = $('#cmbStat').combobox('getValue');
+    return stDate + '^' + edDate + '^' + recLocId + '^' + patNo + '^' + doctorId + '^' + admId + '^' + stat;
 }
 // 查询
 function Query() {
@@ -152,7 +192,7 @@ function Query() {
 function GetGridSelected() {
     var gridSelected = $('#gridPhaOrd').datagrid('getSelected');
     if (gridSelected == null) {
-        $.messager.alert('提示', '请选择记录', 'warning');
+        $.messager.alert($g("提示"), $g("请选择记录"), 'warning');
         return '';
     }
     return gridSelected.phaOrdId;
@@ -163,11 +203,17 @@ function Agree() {
     if (phaOrdId == '') {
         return;
     }
+
+    if ($('#cmbStat').combobox('getValue') !== '0') {
+        $.messager.alert($g("提示"), $g("已处理的数据不能再次处理"), 'warning');
+        return;
+    }
+
     // 已发药不能操作
     var agreeRet = tkMakeServerCall('web.DHCOUTPHA.DocMonitor', 'Agree', phaOrdId, SessionUser, SessionLoc);
     var agreeArr = agreeRet.split('^');
     if (agreeArr[0] < 0) {
-        $.messager.alert('提示', retArr[1], 'warning');
+        $.messager.alert($g("提示"), retArr[1], 'warning');
         return;
     } else {
         if (top && top.HideExecMsgWin) {
@@ -181,15 +227,19 @@ function Appeal() {
     var gridSelections = $('#gridPhaOrd').datagrid('getSelections');
     var selLen = gridSelections.length;
     if (selLen == 0) {
-        $.messager.alert('提示', '请选择记录', 'warning');
+        $.messager.alert($g("提示"), $g("请选择记录"), 'warning');
         return '';
+    }
+    if ($('#cmbStat').combobox('getValue') !== '0') {
+        $.messager.alert($g("提示"), $g("已处理的数据不能再次处理"), 'warning');
+        return;
     }
     var reasonArr = [];
     var phNotes = '';
     for (var selI = 0; selI < selLen; selI++) {
         var selData = gridSelections[selI];
         if (selData.orderStoped === 'Y') {
-            $.messager.alert('提示', '医嘱已全部作废或取消,无法申诉', 'warning');
+            $.messager.alert($g("提示"), $g("医嘱已全部作废或取消,无法申诉"), 'warning');
             return;
         }
         var incDesc = selData.incDesc;
@@ -203,6 +253,8 @@ function Appeal() {
     $('#appealWin').dialog('open');
     $('#txtAppeal').val('');
     $('#txtAppeal').focus();
+    $('#appealWin').find('.panel-body').eq(3).css('border-radius', '4px');
+    $('#appealWin').find('.dialog-button').css('padding-top', window.HISUIStyleCode == 'lite' ? '1px' : '0px');
 }
 
 function SaveAppeal() {
@@ -212,14 +264,14 @@ function SaveAppeal() {
     }
     var appealText = $('#txtAppeal').val();
     if (appealText == '') {
-        $.messager.alert('提示', '请填写申诉内容', 'warning');
+        $.messager.alert($g("提示"), $g("请填写申诉内容"), 'warning');
         return;
     }
     $('#appealWin').dialog('close');
     var appealRet = tkMakeServerCall('web.DHCOUTPHA.DocMonitor', 'Appeal', phaOrdId, appealText, SessionUser, SessionLoc);
     var appealArr = appealRet.split('^');
     if (appealArr[0] < 0) {
-        $.messager.alert('提示', appealArr[1], 'warning');
+        $.messager.alert($g("提示"), appealArr[1], 'warning');
         return;
     } else {
         if (top && top.HideExecMsgWin) {

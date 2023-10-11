@@ -16,7 +16,13 @@ window.onload = function(){
 			$("#"+EmgId).prop('checked',true);
 		}
 	}
+	$(window).resize(function() {
+		setTimeout(function() { 
+        	$(".hisui-panel").panel('resize',{width:'100%'});
+        }, 250);
+	})
 } 
+
 $(function(){
 	
 	//初始化
@@ -35,9 +41,9 @@ $(function(){
 	//tPanel.Init()
 	if (ServerObj.BLInit=="Y"){
 		Init()
-		if (PisNo!=""){$("#PisNo").text(PisNo)}
-		if (oeori!=""){$("#Oeori").text(oeori)}
-		if (Oeori!=""){$("#Oeori").text(Oeori)}
+		if (PisNo!=""){$("#PisNo").text(PisNo);}
+		if (oeori!=""){$("#Oeori").text(oeori);}
+		if (ARCIM!=""){$("#TesItemID").val(ARCIM);}
 	}
 	//加载已经保存的申请单数据
 	LoaditemReqJsonStr()
@@ -67,7 +73,10 @@ function TransLate(){
 		var arrayObj = new Array(
 	      new Array(".textbox"),
 		  new Array(".hisui-datetimebox"),
-		  new Array(".hisui-checkbox")
+		  new Array(".hisui-checkbox"),
+		  new Array(".checkbox"),
+		  new Array(".hisui-validatebox"),
+		  new Array(".tanslate")
 		);
 		for( var j=0;j<arrayObj.length;j++) {
 		var domSelector=arrayObj[j][0]
@@ -150,8 +159,21 @@ function addclsRequired(){
 		var CheckAry=CheckStr.split("^")
 		for (var i=0;i<CheckAry.length;i++) {
 			var OneCheckStr=CheckAry[i]
-			var ID=OneCheckStr.split(String.fromCharCode(1))[0]
-			if ($("#"+ID).length > 0){
+			var ID=OneCheckStr.split(String.fromCharCode(1))[0];
+			var TiTle=OneCheckStr.split(String.fromCharCode(1))[1]
+			if (($("#"+ID).hasClass('datagrid-f'))){
+				$("div[for="+ID+"]").parent().find(".panel-title").addClass("clsRequired")
+			}else if (($("#"+ID).prop('tagName')=="TABLE")){
+				//普通的自定义table
+				$("#"+ID).find("TD:contains('"+TiTle+"')").each(function(index, item){
+					$(item).addClass("clsRequired");
+				})
+				//设置了panel的table
+				$("#"+ID).parent().parent().find(".panel-title:contains("+TiTle+")").each(function(index, item){
+					$(item).addClass("clsRequired");
+				})
+				
+			}else if ($("#"+ID).length > 0){
 				$("label[for="+ID+"]").addClass("clsRequired");
 			}
 		}
@@ -201,58 +223,7 @@ function ConTroClick(){
 			}
 		}
 	}
-	/*$('a:contains("取消申请")').linkbutton('enable');
-	$('a:contains("取消申请")').addClass('btn-lightred');
-	$('a:contains("发送")').linkbutton('enable');
-	$('a:contains("发送")').addClass('btn-lightgreen');
-	$('a:contains("保存")').linkbutton('enable');
-	$('a:contains("保存")').addClass('btn-lightgreen');
-	$('a:contains("打印")').linkbutton('enable');
-	if (itemReqJsonStr==""){
-		$('a:contains("取消申请")').linkbutton('disable');
-		$('a:contains("取消申请")').removeClass('btn-lightred');
-		$('a:contains("发送")').linkbutton('disable');
-		$('a:contains("发送")').removeClass('btn-lightgreen');
-		$('a:contains("打印")').linkbutton('disable');	
-	}else if (itemReqJsonStr!=""){
-		if (PisStatus=="N"){
-			$('a:contains("打印")').linkbutton('disable');	
-		}else{
-			if (PisStatus=="I") {
-				if (PracticeFlag==1) {
-					$('a:contains("发送")').linkbutton('disable');
-					$('a:contains("发送")').removeClass('btn-lightgreen');
-				}else{
-					$('a:contains("发送")').linkbutton('enable');
-				}
-				$('a:contains("取消申请")').linkbutton('enable');
-				$('a:contains("取消申请")').addClass('btn-lightred');
-				$('a:contains("保存")').linkbutton('enable');
-				$('a:contains("打印")').linkbutton('disable');
-			}else{
-				$('a:contains("发送")').linkbutton('disable');
-				$('a:contains("发送")').removeClass('btn-lightgreen');
-				$('a:contains("保存")').linkbutton('disable');
-				$('a:contains("保存")').removeClass('btn-lightgreen');
-				if ((PisStatusSign=="BC")||(PisStatusSign=="SC")||(PisStatusSign=="RP")||(PisStatus=="D")){
-					$('a:contains("取消申请")').linkbutton('disable');
-					$('a:contains("取消申请")').removeClass('btn-lightred');
-				}
-				if (PisStatus=="D") {
-					$('a:contains("打印条码")').linkbutton('disable');
-					$('a:contains("打印")').linkbutton('disable');
-				}
-				$('textbox').attr("disabled", true);
-				$('.textbox').attr("disabled", true); 
-				$('.checkbox').attr("disabled", true); 
-				$HUI.combobox(".textbox combobox-f combo-f").disable();   
-				$('.combo').attr("disabled", true);  
-				$('input[type="checkbox"]').attr("disabled",true);
-				$('textarea').attr("disabled", true);  /// 文本框
-				$('input[type="text"]').attr("disabled", true);
-			}
-		}
-	}*/
+
 }
 /// 页面兼容配置
 function InitVersionMain(){
@@ -306,6 +277,12 @@ function InitVersionMain(){
 					});
 					return;
 				}
+				var LimitMsg = GetItmLimitMsg(itmmastid)
+				if (LimitMsg != ""){
+					$.messager.alert("提示","项目【" +TesItemDesc+ "】被限制使用：" + LimitMsg);
+					$("#"+tempckid).prop("checked",false)
+					return;	
+				}
 				if (ServerObj.BLItemMast=="Y"){
 					if ((typeof(TakOrdMsg)!="undefined")&&(TakOrdMsg!="")) {
 						$.messager.alert("提示",TakOrdMsg,"info",function(){
@@ -327,15 +304,33 @@ function InitVersionMain(){
 						}else{
 							resolve();
 						}
+					}).then(function(){
+						return new Promise(function(resolve,rejected){
+							/// CDSS阻断预警
+							if (typeof CDSSObj=='object'){
+								CDSSObj.CheckOrder(EpisodeID,itmmastid.replace("_","||"),function(ret){
+									if(ret) resolve();
+								});
+							}else{
+								resolve()
+							}
+						});
 					}).then(function(rtn){
 						return new Promise(function(resolve,rejected){
-							if (GetMRDiagnoseCount() == 0){
-								$.messager.alert("提示","病人没有诊断,请先录入！","",function(){
+							if (GetMRDiagnoseCount(itmmastid) == 0){
+								var OrdNeedMMDiag=0;
+								var ItemCatRowid=tkMakeServerCall("web.DHCDocOrderCommon", "GetOrderSubCat", itmmastid);
+								if (OrdNeedMMDiagCat.indexOf("^"+ItemCatRowid+"^") >=0) {
+									OrdNeedMMDiag=1;
+								}
+								if (OrdNeedMMDiag ==1) var NoDiagnosMsg="没有西医诊断,请先录入!";
+								else  var NoDiagnosMsg="没有诊断,请先录入！"
+								$.messager.alert("提示",NoDiagnosMsg,"info",function(){
 									(function(callBackFun){
 										new Promise(function(resolve,rejected){
 											DiagPopWinNew(resolve);
 										}).then(function(){
-											if (GetMRDiagnoseCount()>0) {
+											if (GetMRDiagnoseCount(itmmastid)>0) {
 												callBackFun();
 											}else{
 												$("#"+tempckid).prop("checked",false);
@@ -377,8 +372,8 @@ function InitVersionMain(){
 /// 加载检查方法列表
 function LoadCheckItemList(){
 	/// 初始化检查方法区域
-	$("#itemList").html('<tr style="height:0px;" ><td style="width:20px;"></td><td></td><td style="width:20px;"></td><td></td></tr>');
-	runClassMethod("web.DHCAPPExaReportQuery","JsonGetTraItmByCodeNew",{"Code":MapDesc,"LgHospID":LgHospID},function(jsonString){
+	$("#itemList").html('<tr style="height:2px;border:0px solid #ccc;"><td style="width:30px;border:0px solid #ccc;"></td><td style="border:0px solid #ccc;"></td><td style="width:30px;border:0px solid #ccc;"></td><td style="border:0px solid #ccc;"></td></tr>');
+	runClassMethod("web.DHCAPPExaReportQuery","JsonGetTraItmByCodeNew",{"Code":MapDesc,"LgHospID":LgHospID, "LocID":session['LOGON.CTLOCID']},function(jsonString){
 		if (jsonString != ""){
 			var jsonObjArr = jsonString;
 			for (var i=0; i<jsonObjArr.length; i++){
@@ -398,14 +393,17 @@ function InitCheckItemRegion(itemobj){
 	var itemArr = itemobj.items;
 	var itemhtmlArr = []; itemhtmlstr = "";
 	for (var j=1; j<=itemArr.length; j++){
-		itemhtmlArr.push('<td style="width:30px;"><input id="'+ itemArr[j-1].value +'" name="item" type="checkbox" data-defsensitive="'+ itemArr[j-1].defSensitive +'"></input></td><td>'+ itemArr[j-1].text +'</td>');
+		
 		if (j % 2 == 0){
+			itemhtmlArr.push('<td style="width:30px;"><input id="'+ itemArr[j-1].value +'" name="item" type="checkbox"  class="checkbox" data-defsensitive="'+ itemArr[j-1].defSensitive +'"></input></td><td style="border-right:none;" >'+ itemArr[j-1].text +'</td>');
 			itemhtmlstr = itemhtmlstr + '<tr>' + itemhtmlArr.join("") + '</tr>';
 			itemhtmlArr = [];
-		}
+		}else{
+			itemhtmlArr.push('<td style="width:30px;"><input id="'+ itemArr[j-1].value +'" name="item" type="checkbox"  class="checkbox" data-defsensitive="'+ itemArr[j-1].defSensitive +'"></input></td><td>'+ itemArr[j-1].text +'</td>');
+			}
 	}
 	if ((j-1) % 2 != 0){
-		itemhtmlstr = itemhtmlstr + '<tr>' + itemhtmlArr.join("") + '<td style="width:30px"></td><td></td></tr>';
+		itemhtmlstr = itemhtmlstr + '<tr>' + itemhtmlArr.join("") + '<td style="width:30px"></td><td style="border-right:none;"></td></tr>';
 		itemhtmlArr = [];
 	}
 	$("#itemList").append(htmlstr+itemhtmlstr)
@@ -480,30 +478,78 @@ function CheckforUpdate(){
 	if (CheckStr!=""){
 		var CheckAry=CheckStr.split("^")
 		for (var i=0;i<CheckAry.length;i++) {
+			var val="";
 			var OneCheckStr=CheckAry[i]
-			var ID=OneCheckStr.split(String.fromCharCode(1))[0]
-			if ($("#"+ID).length > 0){
-				if ($("#"+ID).hasClass('combobox-f')){
-					var val = $HUI.combobox("#"+ID).getValue(); 
-				}else if ($("#"+ID).hasClass('hisui-checkbox')){
-					var  val=$("#"+ID).prop("checked");
-				}else if ($("#"+ID).hasClass('hisui-datetimebox')){
-					var val = $HUI.datetimebox("#"+ID).getValue(); 		
-				}else if ($("#"+ID).hasClass('hisui-datebox')){
-					var val = $HUI.datebox("#"+ID).getValue();
-						//$HUI.datebox("#"+ID).setValue(Val);  		
-				}else{
-					var val=$("#"+ID).val()
+			var ID=OneCheckStr.split(String.fromCharCode(1))[0];
+			var Desc=OneCheckStr.split(String.fromCharCode(1))[1];
+			var BLID=OneCheckStr.split(String.fromCharCode(1))[2];
+			var ItemXType=OneCheckStr.split(String.fromCharCode(1))[3];
+			var ItemXID=OneCheckStr.split(String.fromCharCode(1))[4];
+			if ((ItemXType!="")&&(ItemXID!="")){
+				val="默认有值";
+				if (ItemXType=="checkbox"){
+					var CheckObj = CheckCheckBox(ItemXID,ID,Desc);
+					if (!CheckObj.CheckFlag){
+						Desc=CheckObj.text;
+						val="";
 					}
-				if (val==""){
-					$.messager.alert("提示",OneCheckStr.split(String.fromCharCode(1))[1]+"不能为空!");
-					return false;
-					}
-				
 				}
-			
+				if (ItemXType=="datagrid"){
+					var CheckObj=CheckDataGrid(ItemXID,ID,Desc);
+					if (!CheckObj.CheckFlag){
+						Desc=CheckObj.text;
+						val="";
+					}
+				}
+			}else{
+				if ($("#"+ID).length > 0){
+					if ($("#"+ID).hasClass('combobox-f')){
+						var val = $HUI.combobox("#"+ID).getValue(); 
+					}else if ($("#"+ID).hasClass('hisui-checkbox')){
+						var  val=$("#"+ID).prop("checked");
+					}else if ($("#"+ID).hasClass('hisui-datetimebox')){
+						var val = $HUI.datetimebox("#"+ID).getValue(); 		
+					}else if ($("#"+ID).hasClass('hisui-datebox')){
+						var val = $HUI.datebox("#"+ID).getValue();
+							//$HUI.datebox("#"+ID).setValue(Val);  	
+						
+					}else if ($("#"+ID).hasClass('datagrid-f')){
+						if (BLID!=""){
+							var PageObj=eval(BLID);
+							PageObj.OtherInfo();	//内部可能有一些界面处理
+							var RtnObj=CheckRequiredData(ID);
+							if (RtnObj.CheckFlag==false){
+								$.messager.alert("提示",Desc+"相关的"+RtnObj.NullTitle+"不能为空!");
+								return false;
+							}
+							continue
+						}else{
+							continue
+						}
+					}else if ($("#"+ID).prop("tagName")=="TABLE"){
+						if (BLID!=""){
+							var PageObj=eval(BLID);
+							if (typeof PageObj.OtherInfo =="function"){
+								var OtherInfo=PageObj.OtherInfo();
+								for (x in OtherInfo){  
+									if (OtherInfo[x]=="[]"){
+										continue
+									}
+									val=val + OtherInfo[x];  
+								} 
+							}
+						}
+					}else{
+						var val=$("#"+ID).val()
+					}
+				}
+			}
+			if (val==""){
+				$.messager.alert("提示",Desc+"不能为空!");
+				return false;
 			}
 		}
+	}
 	var CheckStrLenght=tkMakeServerCall("web.DHCDocAPPBL","GetAcquireLength",MapID);
 	if (CheckStrLenght!=""){
 		var CheckAry=CheckStrLenght.split("^")
@@ -528,6 +574,52 @@ function CheckforUpdate(){
 		}
 	}
 	return true;
+}
+function CheckRequiredData(TableName){
+	var rowDatas = $('#'+TableName).datagrid('getRows');
+	var Options= $('#'+TableName).datagrid('options');
+	var columns=Options.columns[0];
+	if (rowDatas.length==0){
+		return {CheckFlag:false,NullTitle:""};
+	}
+	var CheckFlag=true;
+	var NullTitle="";
+	//只要有一行完整的必填项就行
+	$.each(rowDatas, function(index, item){
+		CheckFlag=true;
+		var AllDataisEmpty=true;
+		NullTitle="";
+		$.each(columns, function(ColIndex, ColItem){
+			if (typeof ColItem.Required =="undefined"){
+				return true;
+			}
+			if (ColItem.Required===true){
+				var val=item[ColItem.field];
+				val=trim(val);
+				if ((typeof val=="undefined")||(val=="")){
+					CheckFlag=false;
+					var title=ColItem.title;
+					if (title==""){
+						title=ColItem.field;
+					}
+					if (NullTitle==""){
+						NullTitle=title
+					}else{
+						NullTitle=NullTitle+"、"+title
+					}
+				}else{
+					AllDataisEmpty=false;
+				}
+			}
+		})
+		if ((CheckFlag==true)){
+			return false;
+		}
+		if ((AllDataisEmpty==false)&&(NullTitle!="")){
+			return false;
+		}
+	})
+	return {CheckFlag:CheckFlag,NullTitle:NullTitle};
 }
 function Save(){
 	var itmmastid = $("#TesItemID").val();  			   /// 医嘱项ID
@@ -635,38 +727,54 @@ function Save(){
 		$.messager.alert("提示:","病理检查项目的接收科室不能为空！");
 		return;
 	}
-	var OEOrdStr=itmmastid+"^"+recLocID+"^"
-	if (Oeori!="") {OEOrdStr=OEOrdStr+Oeori}
-	var BillTypeID = "";
-	if (typeof window.parent.frames.BillTypeID != "undefined"){
-		BillTypeID = window.parent.frames.BillTypeID;  ///费别ID
-	}
-	var ChronicDiagCode=""
-	if ((window.parent.frames)&&(window.parent.frames.GetChronicDiagCode)) {
-		ChronicDiagCode=window.parent.frames.GetChronicDiagCode();
-	}
-	var rtn=$.cm({
-	    ClassName : "web.DHCDocAPPBL",
-	    MethodName : "InsertNewBLInformation",
-	    dataType:"text",
-	    "EpisodeID":EpisodeID,
-	    "DocID":session['LOGON.USERID'],
-	    "LocID":session['LOGON.CTLOCID'],
-	    "Type":MapCode,
-	    "OEOrdStr":OEOrdStr, "JsonStr":JsonStr, "PisID":PisID,"BillTypeID":BillTypeID,"ChronicDiagCode":ChronicDiagCode
-    },false);
-    if (rtn.split("^")[0]==0){
-	    PisID = rtn.split("^")[1];
-	    GetPisNoObj(PisID);
-		$.messager.alert("提示:","保存成功！");
-		/// 调用父框架函数
-	    window.parent.frames.reLoadEmPatList();
-	    if (ServerObj.PrintSet=="saveprint"){
-		    Print()
+	CPWCheck(itmmastid,function(SuccessFlag){
+		if (SuccessFlag == false) {
+		    	return ;
 		    }
-	}else{
-		$.messager.alert("提示:","病理申请单保存失败，失败原因:"+rtn);  
-    }
+		var OEOrdStr=itmmastid+"^"+recLocID+"^"
+		if (Oeori!="") {OEOrdStr=OEOrdStr+Oeori}
+		var BillTypeID = "";
+		if (typeof window.parent.frames.BillTypeID != "undefined"){
+			BillTypeID = window.parent.frames.BillTypeID;  ///费别ID
+		}
+		var ChronicDiagCode=""
+		if ((window.parent.frames)&&(window.parent.frames.GetChronicDiagCode)) {
+			ChronicDiagCode=window.parent.frames.GetChronicDiagCode();
+		}
+		var rtn=$.cm({
+		    ClassName : "web.DHCDocAPPBL",
+		    MethodName : "InsertNewBLInformation",
+		    dataType:"text",
+		    "EpisodeID":EpisodeID,
+		    "DocID":session['LOGON.USERID'],
+		    "LocID":session['LOGON.CTLOCID'],
+		    "Type":MapCode,
+		    "OEOrdStr":OEOrdStr, "JsonStr":JsonStr, "PisID":PisID,"BillTypeID":BillTypeID,"ChronicDiagCode":ChronicDiagCode,
+		    "EmConsultItm":EmConsultItm
+	    },false);
+	    if (rtn.split("^")[0]==0){
+		    PisID = rtn.split("^")[1];
+		    GetPisNoObj(PisID);
+			websys_getTop().$.messager.alert("提示","保存成功！");
+			/// 调用父框架函数
+		    window.parent.frames.reLoadEmPatList();
+		    if (ServerObj.PrintSet=="saveprint"){
+			    Print()
+			}
+		}else{
+			var ErrMsg=rtn.split("^")[1];
+			if (ErrMsg=="") ErrMsg=rtn;
+			websys_getTop().$.messager.alert("提示","病理申请单保存失败，失败原因:"+ErrMsg);  
+	    }
+    })
+}
+//临床路径检查，路径外医嘱填写变异
+function CPWCheck(ArcimIDs,callBackFun) {
+	new Promise(function(resolve,rejected){
+		checkOrdItemToVar(EpisodeID,ArcimIDs,resolve);
+	}).then(function(SuccessFlag){
+		callBackFun(SuccessFlag);
+	})
 }
 function InsertDoc(){
 	var rtn=CheckforUpdate()
@@ -730,6 +838,10 @@ function InsertDoc(){
 		Val:otherinfo,
 		Class:"Data"
 	};
+	if (rtnObj.PisReqSpec==""){
+		var ConfirmPisSpec = dhcsys_confirm($g("该申请单未填写标本，是否发送?"));
+	    if (ConfirmPisSpec == false) return;
+	}
 	//打印特殊信息维护
 	var PrintInfo=""
 	var rtnObj = {}
@@ -797,7 +909,7 @@ function Send(){
 	    "PisID":PisID,
     },false);
 	if (CheckForPisSpec=="0"){
-		var ConfirmPisSpec = dhcsys_confirm("该申请单未填写标本，是否发送?");
+		var ConfirmPisSpec = dhcsys_confirm($g("该申请单未填写标本，是否发送?"));
 	    if (ConfirmPisSpec == false) return;
 	}
 	var BillTypeID = "";
@@ -806,24 +918,51 @@ function Send(){
 	}
 	var InsurFlag=parent.$HUI.checkbox("#InsurFlag").getValue()?"Y":"N";
 	/// 保存
-	runClassMethod("web.DHCDocAPPBL","InsSendFlag",{"PisID":PisID,"UserID":session['LOGON.USERID'],"BillTypeID":BillTypeID,"InsurFlag":InsurFlag},function(jsonString){
-		
-		if (jsonString == -1){
-			$.messager.alert("提示:","病理申请单已发送无需再次发送!");
-		}else if (jsonString < 0){
-			$.messager.alert("提示:","病理申请单发送失败，失败原因:"+jsonString);
-		}else{
-			GetPisNoObj(PisID);
-			$.messager.alert("提示:","发送成功！");
-			/// 调用父框架函数
-		    window.parent.frames.reLoadEmPatList();
-			/// 电子病历框架函数
-			window.parent.frames.InvEmrFrameFun();
-			if (ServerObj.PrintSet=="sentprint"){
-		    Print()
-		    }
-		}
-	},'',false)
+	var UpdateObj={}
+	new Promise(function(resolve,rejected){
+			   	if (window.parent.frames.CASignObj){
+			   	//电子签名
+				window.parent.frames.CASignObj.CASignLogin(resolve,"OrderSave",false)
+				}else{
+					resolve(true);	
+				}
+	}).then(function(CAObj){
+				return new Promise(function(resolve,rejected){
+		    	if (CAObj == false) {
+		    		return websys_cancel();
+		    	} else{
+		    	$.extend(UpdateObj, CAObj);
+		    	resolve(true);
+		    	}
+			})
+	}).then(function(){
+		runClassMethod("web.DHCDocAPPBL","InsSendFlag",{"PisID":PisID,"UserID":session['LOGON.USERID'],"BillTypeID":BillTypeID,"InsurFlag":InsurFlag},function(jsonString){
+			var ErrCode=jsonString.split("^")[0];
+			if (ErrCode == -1){
+				$.messager.alert("提示:","病理申请单已发送无需再次发送!");
+			}else if (ErrCode < 0){
+				var ErrMsg=jsonString.split("^")[1];
+				if (ErrMsg=="") ErrMsg=rtn;
+				$.messager.alert("提示:","病理申请单发送失败，失败原因:"+ErrMsg);
+			}else{
+				GetPisNoObj(PisID);
+				$.messager.alert("提示:","发送成功！");
+				/// 调用父框架函数
+			    window.parent.frames.reLoadEmPatList();
+				/// 电子病历框架函数
+				window.parent.frames.InvEmrFrameFun();
+				/// 数字签名调用
+				window.parent.frames.TakeDigSign(PisID, "P",UpdateObj);
+				/// CDSS同步
+				if(typeof CDSSObj=='object'){
+					CDSSObj.SynReqOrder(EpisodeID,PisID,"P");
+				}
+				if (ServerObj.PrintSet=="sentprint"){
+			    Print()
+			    }
+			}
+		},'',false)
+	})
 }
 
 function Cancle(){
@@ -863,7 +1002,7 @@ function Print(){
 	    PisID:PisID
     },false);
     if (GetPrintTime!=""){
-	    var ConfirmPrintAll = dhcsys_confirm("申请单已经打印过,是否再次打印?");
+	    var ConfirmPrintAll = dhcsys_confirm($g("申请单已经打印过,是否再次打印?"));
 	    if (ConfirmPrintAll==false) return;
 	}
 	   
@@ -871,6 +1010,7 @@ function Print(){
 	    ClassName : "web.DHCDocAPPBL",
 	    MethodName : "GetPisPrintCon",
 	    dataType:"text",
+	    PrintUserID:session['LOGON.USERID'],
 	    PisID:PisID
     },false);
     var MyList=$.cm({
@@ -905,7 +1045,8 @@ function Print(){
 	    ClassName : "web.DHCDocAPPBL",
 	    MethodName : "RecordPrintTime",
 	    dataType:"text",
-	    PisID:PisID
+	    PisID:PisID,
+	    UserID:session['LOGON.USERID'],
     },false);
 }
 /// 打印条码
@@ -974,7 +1115,7 @@ function LoadCheckItemListDoc(){
 	var recLoc=arcItemList.split("^")[1];
 	$HUI.combobox("#recLoc").setValue(recLoc);
 	/// 初始化检查方法区域
-	$("#itemList").html('<tr style="height:0px;" ><td style="width:20px;"></td><td></td><td></td><td style="width:20px;"></td><td></td><td></td></tr>');
+	$("#itemList").html('<tr style="height:2px;" ><td style="width:30px;"></td><td></td><td></td><td style="width:30px;"></td><td></td><td></td></tr>');
 	runClassMethod("web.DHCAppPisMasterQuery","jsonExaItemListDoc",{"arcItemList":arcItemList},function(jsonString){
 		if (jsonString != ""){
 			var jsonObjArr = jsonString
@@ -990,23 +1131,23 @@ function InitCheckItemRegionDoc(itemArr){
 		$HUI.combobox("#recLoc").setText(itemArr[i-1].desc);
 		itemhtmlArr.push('<td style="width:30px;">'+ i +'</td><td>'+ itemArr[i-1].text +'</td><td>'+ itemArr[i-1].desc +'</td>');
 		if (i % 2 == 0){
-			itemhtmlstr = itemhtmlstr + '<tr>' + itemhtmlArr.join("") + '</tr>';
+			itemhtmlstr = itemhtmlstr + '<tr style="height:30px;">' + itemhtmlArr.join("") + '</tr>';
 			itemhtmlArr = [];
 		}
 	}
  	if ((i-1) % 2 != 0){
-		itemhtmlstr = itemhtmlstr + '<tr>' + itemhtmlArr.join("") + '<td style="width:30px"></td><td></td><td></td><td></td></tr>';
+		itemhtmlstr = itemhtmlstr + '<tr style="height:30px;">' + itemhtmlArr.join("") + '<td style="width:30px"></td><td></td><td></td><td style="border-right:none;"></td></tr>';
 		itemhtmlArr = [];
 	}
 	$("#itemList").append(itemhtmlstr);
 
 }
 /// 获取病人的诊断记录数
-function GetMRDiagnoseCount(){
+function GetMRDiagnoseCount(itmmastid){
 
 	var Count = 0;
 	/// 调用医生站的判断
-	runClassMethod("web.DHCAPPExaReport","GetMRDCount",{"EpisodeID":EpisodeID},function(jsonString){
+	runClassMethod("web.DHCAPPExaReport","GetMRDCount",{"EpisodeID":EpisodeID,"ARCIMRowId":itmmastid},function(jsonString){
 		
 		if (jsonString != ""){
 			Count = jsonString;
@@ -1105,4 +1246,131 @@ function GetPatArrManage(){
 	},'',false)
 
 	return PatArrManMsg;
+}
+/// 医嘱的性别/年龄限制
+function GetItmLimitMsg(itmmastid){
+	
+	var LimitMsg = 0;
+	/// 医嘱的性别/年龄限制
+	runClassMethod("web.DHCAPPExaReport","GetItmLimitMsg",{"EpisodeID":EpisodeID, "itmmastid":itmmastid},function(jsonString){
+
+		LimitMsg = jsonString;
+	},'',false)
+	
+	return LimitMsg;
+}
+
+//作为基本的申请单信息，供子面板调用
+function ItemMastOn_Map(itmmastid,TesItemDesc,arDefEmg){
+	$("#TesItemID").val(itmmastid);
+	$("#TesItemDesc").val(TesItemDesc);
+	var LocID = ""; var LocDesc = "";
+	var OpenForAllHosp=0,LogLoc="";
+	var OrderOpenForAllHosp=parent.$HUI.checkbox("#OrderOpenForAllHosp").getValue();
+	var FindByLogDep=parent.$HUI.checkbox("#FindByLogDep").getValue();
+	if (OrderOpenForAllHosp==true){OpenForAllHosp=1}
+	if (FindByLogDep==true){LogLoc=session['LOGON.CTLOCID']}
+	runClassMethod("web.DHCAPPExaReportQuery","jsonItmDefaultRecLoc",{"EpisodeID":EpisodeID, "ItmmastID":itmmastid,"OrderDepRowId":LogLoc,"OpenForAllHosp":OpenForAllHosp},function(jsonString){
+		
+		if (jsonString != ""){
+			var jsonObjArr = jsonString;
+			LocID = jsonObjArr[0].value;
+			LocDesc = jsonObjArr[0].text;
+		}
+	},'json',false)
+
+	$("#recLoc").combobox("setValue",LocID);
+	$("#recLoc").combobox("setText",LocDesc);
+}
+function ItemMastOff_Map(itmmast){
+	$("#TesItemID").val("");
+	$("#TesItemDesc").val("");
+	$("#recLoc").combobox("setValue","");
+	$("#recLoc").combobox("setText","");
+}
+/// 是否允许填写申请单---供子面板调用
+function GetIsWritePisFlag_Map(){
+	$.cm({
+	    ClassName : "web.DHCAppPisMasterQuery",
+	    MethodName : "GetIsWritePisFlag",
+	    dataType:"text",
+	    "LgGroupID":session['LOGON.GROUPID'],
+	    "LgUserID":session['LOGON.USERID'],
+	    "LgLocID":session['LOGON.CTLOCID'],
+	    "EpisodeID":EpisodeID,
+	    "EmConsultItm":EmConsultItm
+    },function(TakOrdMsg){
+		if(TakOrdMsg != ""){
+			$.messager.alert("提示:",TakOrdMsg);
+		} 
+	});
+}
+
+/// 获取checkbox是否有选择(""/1:无/有)
+function CheckCheckBox(TabID,ItemID,Desc){
+	var CheckFlag=false;
+	var CheckArr = $("input[name="+ItemID+"]");
+    for (var j=0; j < CheckArr.length; j++){
+	    if($('#'+CheckArr[j].id).is(':checked')){
+		    CheckFlag=true;
+		    break;
+	    }
+    }
+    return {CheckFlag:CheckFlag,text:Desc};
+}
+
+/// 获取datagrid是否符合必填元素判断,返回对象
+function CheckDataGrid(TabID,IDStr,DescStr){
+	var SubIDArr=IDStr.split("*");
+	var DescArr=DescStr.split("*");
+	var Options= $('#'+TabID).datagrid('options');
+	var Columns=Options.columns[0];
+	var Rows = $('#'+TabID).datagrid('getRows');
+	if (Rows.length==0){
+		//没有表格列，直接退出
+		return {CheckFlag:false,text:DescArr[0]};
+	}
+	
+	//所有行都为空标识
+	var AllNull=true;	
+	for (var i=0; i < Rows.length; i++){
+		$('#'+TabID).datagrid('endEdit', i); 
+		var ExitData=false;
+		$.each(Columns, function(ColIndex, ColItem){
+			if (typeof ColItem.editor =="undefined"){
+				return true;
+			}
+			var field=ColItem.field;
+			var Val=Rows[i][field];
+			if (Val!=""){
+				//如果行上编辑元素有输入，则该行必须有必填元素
+				ExitData=true;
+			}
+		})
+		if (!ExitData) continue;		
+		for (var j=0; j < SubIDArr.length; j++){
+			var SubID=SubIDArr[j];
+			var Val=Rows[i][SubID];
+			if (Val==""){
+				return {CheckFlag:false,text:DescArr[j]};
+			}
+			AllNull=false;
+		}
+	}
+	if (AllNull) return {CheckFlag:false,text:DescArr[0]}
+	return {CheckFlag:true,text:""};
+}
+
+window.onbeforeunload = function(event) { 
+	if (PisID != ""){
+		var RtnFlag="1"
+		runClassMethod("web.DHCAppPisMaster","InsCheckSend",{"Pid":PisID},function(jsonString){
+			RtnFlag=jsonString;
+		},'json',false)
+		if (RtnFlag == "0"){
+				return "还未发送申请单，是否离开此界面"
+			}else{
+				return;	
+		}
+	}else{ return;}
 }

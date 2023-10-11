@@ -68,13 +68,13 @@ function Reg_No_keydown(e)
 
 function btnQuery_Click()
 { 
-
+	var CTLocID=session['LOGON.CTLOCID'];
 	var itxtPatName=getValueById("txtPatName");
 	var itxtGroupId=getValueById("txtGroupId");
 	var itxtAdmDate=getValueById("txtAdmDate");
 	var itxtAdmNo=getValueById("txtAdmNo");
-	var RegNoLength=tkMakeServerCall("web.DHCPE.DHCPECommon","GetRegNoLength");
-	if (itxtAdmNo.length<RegNoLength&&itxtAdmNo.length>0) { itxtAdmNo=RegNoMask(itxtAdmNo);}
+	var RegNoLength=tkMakeServerCall("web.DHCPE.DHCPECommon","GetRegNoLength",CTLocID);
+	if (itxtAdmNo.length<RegNoLength&&itxtAdmNo.length>0) { itxtAdmNo=RegNoMask(itxtAdmNo,CTLocID);}
 	var itxtItemId=getValueById("txtItemId");
 	var iEndDate=getValueById("EndDate");
 	var iHadAllowed=getValueById("HadAllowed");

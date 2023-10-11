@@ -33,7 +33,7 @@ function InitviewScreenEvent(obj){
 			aHospID:session['DHCMA.HOSPID']
 			});
 		editIndex=undefined;
-		obj.AntiItemDr=rd["BTID"]
+		obj.AntiItemDr=rd["BTID"];
 		$("#btnAdd").linkbutton('enable');
 		$("#btnSave").linkbutton('enable');
 		$("#btnDelete").linkbutton('enable');
@@ -42,9 +42,14 @@ function InitviewScreenEvent(obj){
 	obj.btnSave_click = function(flg){
 		obj.endEditing();  //保存时先结束编辑
 		editIndex=undefined;
-		var Err = "";
+		var Err = "",RecCount=0;
 		///获取更新字典信息
 		var rows=$('#gridAntiItemDicMatch').datagrid('getChanges')
+		if(!rows.length){
+			$.messager.alert("错误提示", "没有需保存数据", 'info');
+			obj.gridAntiItemDicMatch.clearSelections();
+			return
+			}
 		for (var i=0;i<rows.length;i++) {
 				var tmprow=rows[i]
 				var AntiItemDr=tmprow.AntiItemDr
@@ -62,25 +67,33 @@ function InitviewScreenEvent(obj){
 					},function(flg){
 						if (flg<0) {
 							Err=Err+"第"+(i+1)+"行数据保存错误.<br>"
-							}
-					}
-					)
-		}	
-		if (Err!="") {
-				$.messager.alert("错误提示", "数据保存错误!Error=" + Err, 'info');
-		}else{
-				$.messager.popover({msg: '提交成功！',type:'success',timeout: 1000})
-				obj.gridAntiItemDicMatch.reload();
-				
-			}	
+						}else{
+							RecCount=RecCount+1	
+						}
+					})		
+		}
+		setTimeout(function() {
+			if (RecCount<1) {
+				$.messager.alert("错误提示", "没有要保存的数据！", 'info');
+			}else if (Err!="") {
+					$.messager.alert("错误提示", "数据保存错误!Error=" + Err, 'info');
+			}else{
+					$.messager.popover({msg: '提交成功！',type:'success',timeout: 1000})	
+				}
+			obj.gridAntiItemDicMatch.reload();	
+			obj.gridAntiItemDicMatch.clearSelections();
+			},300)
+			
 	}
 	//删除对照内容
 	obj.btnDelete_click = function(){
 		var rowData = obj.gridAntiItemDicMatch.getSelected();
 		var index=editIndex
 		editIndex=undefined;
-		if (index==""){
+		if (index==undefined){
 			$.messager.alert("提示", "选中数据记录,再点击删除!", 'info');
+			return
+			
 		}
 		$.messager.confirm("删除", "是否删除选中数据记录?", function (r) {	
 			if (r) {			
@@ -91,7 +104,7 @@ function InitviewScreenEvent(obj){
 							aId:rowData.RowID
 						},false);
 						if (parseInt(flg) < 0) {
-							$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');	
+							$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
 						} else {
 							$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 						}

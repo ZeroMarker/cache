@@ -5,6 +5,7 @@ opl.view=(function(){
 	var pIdData="";
 	function Init(){
 		InitHospList();
+		InitCache();
 	}
 	function InitHospList()
 	{
@@ -472,6 +473,13 @@ opl.view=(function(){
 		var end = start + parseInt(opts.pageSize);
 		data.rows = (data.originalRows.slice(start, end));
 		return data;
+	}
+	function InitCache(){
+		var hasCache = $.DHCDoc.ConfigHasCache();
+		if (hasCache!=1) {
+			$.DHCDoc.CacheConfigPage();
+			$.DHCDoc.storageConfigPageCache();
+		}
 	}
 	return {
 		"Init":Init

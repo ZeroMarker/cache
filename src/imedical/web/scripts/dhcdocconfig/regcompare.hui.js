@@ -28,7 +28,15 @@ $(function(){
 	Init();
 	//事件初始化
 	InitEvent();
+	InitCache();
 })
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function Init(){
 	var hospComp = GenHospComp("DHCMarkDoc");
 	hospComp.jdata.options.onSelect = function(e,t){
@@ -81,13 +89,17 @@ function InitCombox() {
 			return mCode||mValue;  
 		},
 		onSelect: function (record) {
-			PageLogicObj.m_Reg.setValue("");
-			PageLogicObj.m_Doc.setValue("");
-			var locid = PageLogicObj.m_Loc.getValue();
-			var url = $URL+"?ClassName=web.DHCExaBorough&QueryName=Findloc&depid=" + locid + "&ResultSetType=array";
-			var url2 = $URL+"?ClassName=web.DHCExaBorough&QueryName=FindDoc&depid=" + locid + "&ResultSetType=array";
-			PageLogicObj.m_Reg.reload(url);
-			PageLogicObj.m_Doc.reload(url2);
+			if (record) {
+				var HospID=$HUI.combogrid('#_HospList').getValue();
+				PageLogicObj.m_Reg.setValue("");
+				PageLogicObj.m_Doc.setValue("");
+				var locid = record.id;//PageLogicObj.m_Loc.getValue();
+				var url = $URL+"?ClassName=web.DHCExaBorough&QueryName=Findloc&depid=" + locid + "&ResultSetType=array";
+				var url2 = $URL+"?ClassName=web.DHCExaBorough&QueryName=FindDoc&depid=" + locid + "&ResultSetType=array&HospID="+HospID;
+				PageLogicObj.m_Reg.reload(url);
+				PageLogicObj.m_Doc.reload(url2);
+				
+			}
 		},
 		onChange:function(newValue, oldValue){
 			if (newValue==""){
@@ -96,10 +108,14 @@ function InitCombox() {
 				PageLogicObj.m_Loc.setValue("");
 				var locid = PageLogicObj.m_Loc.getValue();
 				var url = $URL+"?ClassName=web.DHCExaBorough&QueryName=Findloc&depid=" + locid + "&ResultSetType=array";
-				var url2 = $URL+"?ClassName=web.DHCExaBorough&QueryName=FindDoc&depid=" + locid + "&ResultSetType=array";
+				var url2 = $URL+"?ClassName=web.DHCExaBorough&QueryName=FindDoc&depid=" + locid + "&ResultSetType=array&HospID="+HospID;
 				PageLogicObj.m_Reg.reload(url);
 				PageLogicObj.m_Doc.reload(url2);
+				findConfig();
 			}
+		},
+		onHidePanel:function(){
+			findConfig();
 		}
 	});
 	PageLogicObj.m_Reg = $HUI.combobox("#i-reg", {
@@ -115,6 +131,13 @@ function InitCombox() {
 			}
 			var mValue = row[ops.textField].indexOf(q) >= 0;
 			return mCode||mValue;  
+		},onSelect: function (record) {
+			if (record) {
+				//findConfig();
+			}
+		},
+		onHidePanel:function(){
+			findConfig();
 		}
 		
 	});
@@ -131,10 +154,15 @@ function InitCombox() {
 			}
 			var mValue = row[ops.textField].indexOf(q) >= 0;
 			return mCode||mValue;  
+		},onSelect: function (record) {
+			if (record) {
+				//findConfig();
+			}
+		},
+		onHidePanel:function(){
+			findConfig();
 		}
-		
 	});
-
 }
 
 function InitDgCombox(selectLocid) {
@@ -153,15 +181,17 @@ function InitDgCombox(selectLocid) {
 			return mCode||mValue;  
 		},
 		onSelect: function (record) {
+			var HospID=$HUI.combogrid('#_HospList').getValue();
 			PageLogicObj.m_DG_Reg.setValue("");
 			PageLogicObj.m_DG_Doc.setValue("");
 			var locid = PageLogicObj.m_DG_Loc.getValue();
 			var url = $URL+"?ClassName=web.DHCExaBorough&QueryName=Findloc&depid=" + locid + "&ResultSetType=array";
-			var url2 = $URL+"?ClassName=web.DHCExaBorough&QueryName=FindDoc&depid=" + locid + "&ResultSetType=array";
+			var url2 = $URL+"?ClassName=web.DHCExaBorough&QueryName=FindDoc&depid=" + locid + "&ResultSetType=array&HospID="+HospID;
 			PageLogicObj.m_DG_Reg.reload(url);
 			PageLogicObj.m_DG_Doc.reload(url2);
 		}
 	});
+	var HospID=$HUI.combogrid('#_HospList').getValue();
 	PageLogicObj.m_DG_Reg = $HUI.combobox("#dg-reg", {
 		url:$URL+"?ClassName=web.DHCExaBorough&QueryName=Findloc&depid=" + selectLocid + "&ResultSetType=array",
 		valueField:'RowID',
@@ -179,7 +209,7 @@ function InitDgCombox(selectLocid) {
 		
 	});
 	PageLogicObj.m_DG_Doc = $HUI.combobox("#dg-doc", {
-		url:$URL+"?ClassName=web.DHCExaBorough&QueryName=FindDoc&depid=" + selectLocid + "&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCExaBorough&QueryName=FindDoc&depid=" + selectLocid + "&ResultSetType=array&HospID="+HospID,
 		valueField:'RowID',
 		textField:'Desc',
 		mode: "local",
@@ -691,12 +721,13 @@ function InitDocListTabDataGrid(){
 		columns :Columns,
 		url:$URL+"?ClassName=web.DHCExaBorough&QueryName=FindDoc&depid=&docname=",
 		onBeforeLoad:function(param){
+			var HospID=$HUI.combogrid('#_HospList').getValue();
 			$("#DocListTab").datagrid("uncheckAll");
 			var desc=$("#FindDoc").searchbox('getValue'); 
 			var selrow=PageLogicObj.m_LocListTabDataGrid.datagrid("getSelected")
 			if (selrow) LocId=selrow.id;
 			else  LocId="";
-			param = $.extend(param,{depid:LocId,docname:desc});
+			param = $.extend(param,{depid:LocId,docname:desc,HospID:HospID});
 		},
 		onSelect:function(){
 			if (PageLogicObj.m_MarkListTabDataGrid=="") {
@@ -725,8 +756,10 @@ function InitMarkListTabDataGrid(){
 		singleSelect : false,
 		fitColumns : false,
 		autoRowHeight : false,
-		pagination : false,  
-		rownumbers : false,  
+		pagination : true,  
+		rownumbers : false,
+		pageSize: 999,
+		pageList : [999], 
 		idField:'RowID',
 		columns :Columns,
 		url:$URL+"?ClassName=web.DHCExaBorough&QueryName=FindMarkDoc&depid=&docname=&DocId=",
@@ -829,9 +862,10 @@ function InitMarkListTab1DataGrid(){
 		columns :Columns,
 		url:$URL+"?ClassName=web.DHCExaBorough&QueryName=FindDoc&depid=&docname=&Type=MarkToDoc",
 		onBeforeLoad:function(param){
+			var HospID=$HUI.combogrid('#_HospList').getValue();
 			$("#MarkListTab1").datagrid("uncheckAll");
 			var desc=$("#FindMark1").searchbox('getValue'); 
-			param = $.extend(param,{depid:GetSelLocId(),docname:desc});
+			param = $.extend(param,{depid:GetSelLocId(),docname:desc,HospID:HospID});
 		},
 		onSelect:function(){
 			if (PageLogicObj.m_DocListTab1DataGrid=="") {
@@ -860,8 +894,10 @@ function InitDocListTab1DataGrid(){
 		singleSelect : false,
 		fitColumns : false,
 		autoRowHeight : false,
-		pagination : false,  
+		pagination : true,   
 		rownumbers : false,  
+		pageSize: 999,
+		pageList : [999], 
 		idField:'RowID',
 		columns :Columns,
 		url:$URL+"?ClassName=web.DHCExaBorough&QueryName=FindMarkDoc&depid=&docname=&DocId=",

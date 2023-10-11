@@ -500,4 +500,36 @@ function EnableField(fldName) {
 	}
 } */
 
+function delete1_click() {
+	if (recordLocked=='1'){return false;}
+	if (evtTimer) {
+		setTimeout('delete1_click();',200)
+	} else {
+		websys_setfocus('delete1');
+		// 注意，会删除此页面下的所有图标的关联！单个删除请点击每行的删除。全部删除是否继续？
+		var r = window.confirm("\u6ce8\u610f\uff0c\u4f1a\u5220\u9664\u6b64\u9875\u9762\u4e0b\u7684\u6240\u6709\u56fe\u6807\u7684\u5173\u8054\uff01\u5355\u4e2a\u5220\u9664\u8bf7\u70b9\u51fb\u6bcf\u884c\u7684\u5220\u9664\u3002\u5168\u90e8\u5220\u9664\u662f\u5426\u7ee7\u7eed\uff1f");
+		if (!r) {return ;}
+		var frm=document.fepr_CTIconProfile_Edit;
+		websys_isInUpdate=true;
+		if (fepr_CTIconProfile_Edit_submit()) {
+			var obj=document.getElementById('delete1');
+			if (obj) {obj.disabled=true;obj.onclick=function() {return false};}
+			frm.TEVENT.value='d1513idelete1';
+			frm.submit();
+		}
+		return false;
+	}
+}
 
+try {
+	var obj=document.getElementById('delete1');
+    if (obj){
+        if (recordLocked=='1'){
+            obj.setAttribute("disabled",true);
+            obj.removeAttribute('href');
+            obj.style.color="gray";
+            obj.onclick=function(event){return false;};
+        }else{
+            obj.onclick=delete1_click;
+        }    }
+} catch(e) { alert(e.number + ' ' + e.description) };

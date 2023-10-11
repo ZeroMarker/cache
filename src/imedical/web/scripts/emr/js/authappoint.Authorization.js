@@ -741,7 +741,7 @@ var store = new Ext.data.JsonStore({
         name: 'AppointDetailData'
     },{
 		name: 'RequestNumber'    
-	}]
+    }]
 	//此处不做自动排序，如果自动排序，用户会觉得全部数据的排序被打乱，全部数据整体而言没有进行排序；
 	/*	,
     sortInfo: {
@@ -1189,7 +1189,46 @@ var gridTB1 = new Ext.Toolbar({
         pressed: false,
         handler: withdrawAppoint
     }, '->',    //add by niucaicai 添加导出数据功能按钮  ------------------------ start
-    {
+	{
+        xtype: 'label',
+        text: '导出选项'
+    }, {
+        id: 'exportDataType',
+        name: 'exportDataType',
+        xtype: 'combo',
+        width: 100,
+        store: new Ext.data.SimpleStore({
+            fields: ['value', 'text'],
+            data: [[1, '当前页'], [2, '当前页+明细'], [3, '全部'], [4, '全部+明细']]
+        }),
+        valueField: 'value',
+        displayField: 'text',
+        typeAhead: true,
+        triggerAction: 'all',
+        mode: 'local',
+        editable: false,
+        selectOnFocus: true,
+        value: 1
+	}, '-',
+	{
+        id: 'btnExport',
+        name: 'btnExport',
+        text: '导出',
+        cls: 'x-btn-text-icon',
+        icon: '../scripts/epr/Pics/xls.gif',
+        pressed: false,
+        handler: function(){
+            var grid = Ext.getCmp('dgResultGrid');
+			var flag = Ext.getCmp('exportDataType').value;
+			doExport(grid, flag)
+        }
+	}
+    , '-'    //add by niucaicai 添加导出数据功能按钮  ------------------------ end
+    ]
+});
+
+/*
+{
         id: 'btnExport',
         name: 'btnExport',
         text: '导出该页数据到Excel',
@@ -1211,9 +1250,8 @@ var gridTB1 = new Ext.Toolbar({
             var grid = Ext.getCmp('dgResultGrid');
             doExport(grid, 2)
         }
-    }, '-'    //add by niucaicai 添加导出数据功能按钮  ------------------------ end
-    ]
-});
+    }
+*/
 
 var gridTB2 = new Ext.Toolbar({
     border: false,

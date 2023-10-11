@@ -310,7 +310,7 @@ function InitReport(recordId)
 function SaveReport(flag)
 {
 	if($('#PatName').val()==""){
-		$.messager.alert("提示:","患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！");	
+		$.messager.alert($g("提示:"),$g("患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！"));	
 		return false;
 	}
 	///保存前,对页面必填项进行检查
@@ -343,15 +343,15 @@ function checkother(){
 		}
 	})
 	if(DrugExosPuncExos==-1){
-		$.messager.alert("提示:","【穿刺部位药物外渗情况-红肿】勾选'有'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【穿刺部位药物外渗情况-红肿】勾选'有'，请填写内容！"));	
 		return false;
 	}
 	if(DrugExosPuncExos==-2){
-		$.messager.alert("提示:","【穿刺部位药物外渗情况-疼痛】勾选'有'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【穿刺部位药物外渗情况-疼痛】勾选'有'，请填写内容！"));	
 		return false;
 	}
 	if(DrugExosPuncExos==-3){
-		$.messager.alert("提示:","【穿刺部位药物外渗情况-溃疡】勾选'有'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【穿刺部位药物外渗情况-溃疡】勾选'有'，请填写内容！"));	
 		return false;
 	}
 	
@@ -369,7 +369,7 @@ function checkother(){
 			}
 		})
 		if (DrugExosTMList==""){
-			$.messager.alert("提示:","【处理措施】勾选'根据药物性质给予'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),$g("【处理措施】勾选'根据药物性质给予'，请勾选相应内容！"));	
 			return false;
 		}
 	}
@@ -387,7 +387,7 @@ function checkother(){
 			}
 		})
 		if (DrugExosTMsfList==""){
-			$.messager.alert("提示:","【处理措施】勾选'根据药物性质给予-湿敷'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),$g("【处理措施】勾选'根据药物性质给予-湿敷'，请勾选相应内容！"));	
 			return false;
 		}
 	}
@@ -406,7 +406,7 @@ function checkother(){
 			}
 		}) 
 		if (DrugExosTMwlzlList==""){
-			$.messager.alert("提示:","【处理措施】勾选'根据药物性质给予-物理治疗'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),$g("【处理措施】勾选'根据药物性质给予-物理治疗'，请勾选相应内容！"));	
 			return false;
 		}
 	}
@@ -424,7 +424,7 @@ function checkother(){
 			}
 		})
 		if (DrugExosTMHZList==""){
-			$.messager.alert("提示:","【处理措施】勾选'请会诊'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),$g("【处理措施】勾选'请会诊'，请勾选相应内容！"));	
 			return false;
 		}
 	}
@@ -434,36 +434,7 @@ function checkother(){
 //时间 数字校验
 function CheckTimeorNum(){	
 	//数字输入校验  
-	//入院时ADL得分
-	chknum("PatAdmADLScore",1,0,100);
-	$('#PatAdmADLScore').live("keyup",function(){
-		if((this.value>100)||(this.value=="")){
-			$("input[type=radio][id^='PatSelfCareAbility-']").removeAttr("checked");
-		}else if((this.value>40)||(this.value<100)){
-			$("input[type=radio][id^='PatSelfCareAbility-94346']").click();	
-		}
-		if(((this.value>0)||(this.value==0))&&((this.value<40)||(this.value==40))&&(this.value!="")){
-			$("input[type=radio][id^='PatSelfCareAbility-94347']").click();	
-		}
-		if(this.value==100){
-			$("input[type=radio][id^='PatSelfCareAbility-94345']").click();	
-		}
-	})
-	//发生前ADL得分
-	chknum("OccurADLScore",1,0,100);
-	$('#OccurADLScore').live("keyup",function(){
-		if((this.value>100)||(this.value=="")){
-			$("input[type=radio][id^='OccurPatSelfCareAbility-']").removeAttr("checked");
-		}else if((this.value>40)||(this.value<100)){
-			$("input[type=radio][id^='OccurPatSelfCareAbility-94240']").click();	
-		}
-		if(((this.value>0)||(this.value==0))&&((this.value<40)||(this.value==40))&&(this.value!="")){
-			$("input[type=radio][id^='OccurPatSelfCareAbility-94241']").click();	
-		}
-		if(this.value==100){
-			$("input[type=radio][id^='OccurPatSelfCareAbility-94239']").click();	
-		}
-	})
+	
 	///控制穿刺部位药物外渗情况
 	chknum("DrugExosPuncExos",1,1,100);
 }

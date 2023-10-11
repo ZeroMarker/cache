@@ -8,7 +8,60 @@ if (winHeight>1000) {
 }else {
      var Height = winHeight-80;
 }
-
+//结核病提示接口方法
+function CheckEPDTB(IDCardPatient,resolveMethod){
+	if (IDCardPatient=='') return;
+	var obj=document.getElementById('EpisodeID');
+	if (obj){var EpisodeID=obj.value};
+	var obj=document.getElementById('PatientID');
+	if (obj){var PatientID=obj.value};
+	if (EpisodeID=='') return;
+	if (PatientID=='') return;
+	//如果是8.3以下版本，可能用此写法
+	var TBInfo=tkMakeServerCall("DHCMA.EPD.TBS.InterfaceSrv","CheckTBFVReg",IDCardPatient);
+	if (TBInfo){
+		var tmpList=TBInfo.split("^");
+		if (tmpList.length>=1){
+			if ((tmpList[0]=='0')||(tmpList[0]=="")){ //结核门诊科室未做过初诊登记
+				/*/提示报卡
+				$.messager.confirm("提示","患者未做结核初诊登记，请填写初诊登记卡！", function (r) {
+					if (r){
+						var strUrl = "./dhcma.epd.tb.firstvisitreg.csp?" + "PatientID=" + PatientID +"&EpisodeID=" + EpisodeID +"&LocFlag=0" ;
+						websys_showModal({
+							url:strUrl,
+							modal:true,
+							title:'初诊登记卡',
+							iconCls:'icon-w-epr',  
+					        originWindow:window,
+					        closable:false,
+							width:1340, 
+							height:Height,
+							onBeforeClose:function(){
+								
+							} 
+						}); 
+					}
+				});*/
+				//强制报卡
+				$.messager.alert("提示", "患者未做结核初诊登记，请填写初诊登记卡！", 'info',function() {
+					var strUrl = "./dhcma.epd.tb.firstvisitreg.csp?" + "PatientID=" + PatientID +"&EpisodeID=" + EpisodeID +"&LocFlag=0" ;
+					websys_showModal({
+						url:strUrl,
+						modal:true,
+						title:'传染病报告',
+						iconCls:'icon-w-epr', 
+						closable:false,						
+						width:1340,
+						height:Height, 
+						onBeforeClose:function(){
+							if (resolveMethod!="") eval(resolveMethod);
+						} 
+					}); 
+				});
+			}
+		}
+	}
+}
 //传染病提示/强制报卡接口方法
 function CheckDisease(MRDiagnosRowid){
 	var obj=document.getElementById('EpisodeID');

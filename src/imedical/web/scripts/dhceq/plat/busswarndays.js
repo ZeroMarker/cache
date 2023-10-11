@@ -1,11 +1,12 @@
 
 $(function(){
+	setElement("BWDWarnDay", GetCurrentDate());	// MZY0095	2021-09-15
 	initUserInfo();
 	initMessage("BussWarnDays"); 	//获取业务消息
 	defindTitleStyle();
 	//initLookUp("");
 	initButton(); //按钮初始化
-	initButtonWidth();
+	//initButtonWidth();
 	setRequiredElements("BWDWarnDay^BWDWarnDaysNum");
 	fillData();
 });
@@ -23,10 +24,10 @@ function fillData()
 	setElementByJson(jsonData.Data);
 	if (jsonData.Data=="")
 	{
-		setElement("BWDSourceType_Desc", "采购合同到货");
-		setElement("BWDSubType_Desc", "采购合同明细");
-		jQuery('#BWDWarnDay').datebox('setValue', getElementValue("pWarnDay"));
-		//jQuery('#BWDWarnDaysNum').val("30");
+		// MZY0095	2021-09-15
+		setElement("BWDSourceType_Desc", tkMakeServerCall("web.DHCEQFind","GetBussTypeDesc",getElementValue("BWDSourceType")));
+		setElement("BWDSubType_Desc", tkMakeServerCall("web.DHCEQFind","GetBussTypeDesc",getElementValue("BWDSubType")));
+		if (getElementValue("pWarnDay")!="") jQuery('#BWDWarnDay').datebox('setValue', getElementValue("pWarnDay"));
 	}
 	setElement("Name", getElementValue("pName"));
 	if (getElementValue("ReadOnly")==1)
@@ -77,6 +78,9 @@ function BSave_Clicked()
 	{
 	    //window.location.reload()
 		var url='dhceq.plat.busswarndays.csp?SourceType='+getElementValue("BWDSourceType")+'&SubType='+getElementValue("BWDSubType")+'&SourceID='+getElementValue("BWDBussID")+"&ReadOnly="+getElementValue("ReadOnly")+"&Name="+getElementValue("pName");
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 		messageShow("popover","","","操作成功!");	//默认延迟2秒
 		setTimeout(function(){window.location.href=url}, 2000);
 	}

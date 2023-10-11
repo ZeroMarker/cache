@@ -4,14 +4,6 @@
  * Date: 2019-06-24
  * Description: 门诊收费医嘱套录入弹窗
  */
- 
-var GV = {
-	EpisodeID: getParam("EpisodeID"),
-	PatientID: getParam("PatientID"),
-	InsTypeID: getParam("InsTypeID"),
-	OrderSetID: getParam("OrderSetID"),
-	HiddenDelete: getParam("HiddenDelete")
-}
 
 $(function () {
 	$(document).keydown(function (e) {
@@ -20,10 +12,13 @@ $(function () {
 	initArcositemList();
 });
 
+$(window).load(function () {
+	$(".layout-panel-center>.panel-body").focus();
+});
+
 function initArcositemList() {
 	var toobar = [{
         text: '增加(F4)',
-        id: 'btn-add',
         iconCls: 'icon-add',
         handler: function() {
 	        addClick();
@@ -37,7 +32,7 @@ function initArcositemList() {
 		singleSelect: true,
 		checkOnSelect: false,   //如果为false, 当用户仅在点击该复选框的时候才会被选中或取消
 		selectOnCheck: false,
-		rownumbers: false,
+		rownumbers: true,
 		pageSize: 999999999,
 		toolbar: toobar,
 		columns: [[{title: 'ck', field: 'ck', checkbox: true},
@@ -76,7 +71,7 @@ function initArcositemList() {
 								row.OPOrdItemRecLoc = rec.RecLocDesc;
 							},
 							onChange: function(newValue, oldValue) {
-								if (newValue == "") {
+								if (!newValue) {
 									var index = $(this).parents("tr").eq(1).attr("datagrid-row-index");
 									var row = GV.ARCOSItemList.getRows()[index];
 									row.OPOrdItemRecLocRID = "";
@@ -103,17 +98,15 @@ function initArcositemList() {
 		queryParams: {
 			ClassName: "web.OEOrdItem",
 			QueryName: "OSItemList",
-			itemtext: "",
-			ORDERSETID: GV.OrderSetID,
-			HiddenDelete: GV.HiddenDelete,
-			PatientID: GV.PatientID,
-			EpisodeID: GV.EpisodeID,
+			ORDERSETID: CV.OrderSetID,
+			HiddenDelete: CV.HiddenDelete,
+			PatientID: CV.PatientID,
+			EpisodeID: CV.EpisodeID,
 			GroupID: PUBLIC_CONSTANT.SESSION.GROUPID,
 			formulary: "",
 			rows: 999999999
 		},
 		onLoadSuccess: function (data) {
-			focusById("btn-add");
 			if (data.total = 0) {
 				return;
 			}
@@ -129,12 +122,12 @@ function beginEditing(index, row) {
 	GV.ARCOSItemList.beginEdit(index);
 	var ed = GV.ARCOSItemList.getEditor({index: index, field: "OPOrdItemRecLoc"});
 	if (ed) {
-		var url = $URL + "?ClassName=web.DHCOPItemMast&QueryName=AIMRecLoc&ResultSetType=array&PAADMRowID=" + GV.EpisodeID + "&ARCIMRID=" + row.ItemRowid + "&LocRowID=" + PUBLIC_CONSTANT.SESSION.CTLOCID;
+		var url = $URL + "?ClassName=web.DHCOPItemMast&QueryName=AIMRecLoc&ResultSetType=array&PAADMRowID=" + CV.EpisodeID + "&ARCIMRID=" + row.ItemRowid + "&LocRowID=" + PUBLIC_CONSTANT.SESSION.CTLOCID;
 		ed.target.combobox("reload", url);
 	}
 	var encmeth = getValueById("OPOSOEInfoEncrypt");
 	var qty = row.Quantity || 1;
-	var itmInfo = cspRunServerMethod(encmeth, GV.EpisodeID, row.ItemRowid, "", GV.InsTypeID, "", "ARCIM", qty, PUBLIC_CONSTANT.SESSION.CTLOCID, PUBLIC_CONSTANT.SESSION.HOSPID);
+	var itmInfo = cspRunServerMethod(encmeth, CV.EpisodeID, row.ItemRowid, "", CV.InsTypeID, "", "ARCIM", qty, PUBLIC_CONSTANT.SESSION.CTLOCID, PUBLIC_CONSTANT.SESSION.HOSPID);
 	var myAry = itmInfo.split("^");
 	
 	setGridCellValue(index, "UOM", myAry[4]);
@@ -157,7 +150,7 @@ function beginEditing(index, row) {
 	setGridCellValue(index, "OPOrdBillSum", myAry[18]);
 	row.OPOrdBillSum = myAry[18];
 	
-	row.OPOrdInsRowId = GV.InsTypeID;
+	row.OPOrdInsRowId = CV.InsTypeID;
 }
 
 function setGridCellValue(rowIndex, fieldName, value) {
@@ -188,7 +181,7 @@ function addClick() {
 		myJson["OPOrdItemDesc"] = row.desc;
 		myJson["OPOrdUnit"] = row.UOM;
 		myJson["OPOrdPrice"] = row.OPOrdPrice;
-		myJson["OPOrdQty"] = row.Quantity;
+		myJson["OPOrdQty"] = +row.Quantity;
 		myJson["OPOrdBillSum"] = row.OPOrdBillSum;
 		myJson["OPOrdItemRecLoc"] = row.OPOrdItemRecLoc;
 		myJson["TOrdSubCat"] = row.itmCatid;
@@ -199,8 +192,8 @@ function addClick() {
 		myJson["OPOrdType"] = row.OrderTypeCode;
 		myJson["OPOrdInsRowId"] = row.OPOrdInsRowId;
 		myJson["OPOrdItemRowID"] = row.ItemRowid;
-		websys_showModal("options").originWindow.addCopyItemToList(myJson);
+		websys_showModal("options").callbackFuns[0](myJson);
 	});
-	websys_showModal("options").originWindow.appendEditRow();
+	websys_showModal("options").callbackFuns[1]();
 	websys_showModal("close");
 }

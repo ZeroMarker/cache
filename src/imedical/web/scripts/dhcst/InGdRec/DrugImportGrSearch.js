@@ -10,35 +10,35 @@ function DrugImportGrSearch(dataStore, Fn) {
     Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
     // 入库单号
     var InGrNoS = new Ext.form.TextField({
-        fieldLabel: '入库单号',
+        fieldLabel: $g('入库单号'),
         id: 'InGrNoS',
         name: 'InGrNoS',
         anchor: '90%',
         width: 120
     });
 
-    // 供应商
+    // 经营企业
     var VendorS = new Ext.ux.VendorComboBox({
-        fieldLabel: '供应商',
+        fieldLabel: $g('经营企业'),
         id: 'VendorS',
         name: 'VendorS',
         anchor: '90%',
-        emptyText: '供应商...'
+        emptyText: $g('经营企业...')
     });
 
     // 入库部门
     var PhaLocS = new Ext.ux.LocComboBox({
-        fieldLabel: '入库部门',
+        fieldLabel: $g('入库部门'),
         id: 'PhaLocS',
         name: 'PhaLocS',
         anchor: '90%',
-        emptyText: '入库部门...',
+        emptyText: $g('入库部门...'),
         groupId: session['LOGON.GROUPID']
     });
 
     // 起始日期
     var StartDateS = new Ext.ux.DateField({
-        fieldLabel: '起始日期',
+        fieldLabel: $g('起始日期'),
         id: 'StartDateS',
         name: 'StartDateS',
         anchor: '90%',
@@ -47,7 +47,7 @@ function DrugImportGrSearch(dataStore, Fn) {
 
     // 结束日期
     var EndDateS = new Ext.ux.DateField({
-        fieldLabel: '结束日期',
+        fieldLabel: $g('结束日期'),
         id: 'EndDateS',
         name: 'EndDateS',
         anchor: '90%',
@@ -56,8 +56,8 @@ function DrugImportGrSearch(dataStore, Fn) {
 
     // 检索按钮
     var searchBT = new Ext.Toolbar.Button({
-        text: '查询',
-        tooltip: '点击查询入库单信息',
+        text: $g('查询'),
+        tooltip: $g('点击查询入库单信息'),
         iconCls: 'page_find',
         height: 30,
         width: 70,
@@ -79,12 +79,12 @@ function DrugImportGrSearch(dataStore, Fn) {
         var Vendor = Ext.getCmp("VendorS").getValue();
         var PhaLoc = Ext.getCmp("PhaLocS").getValue();
         if (PhaLoc == "") {
-            Msg.info("warning", "请选择入库部门!");
+            Msg.info("warning", $g("请选择入库部门!"));
             return;
         }
 
         if (StartDate == "" || EndDate == "") {
-            Msg.info("warning", "请选择开始日期和截止日期!");
+            Msg.info("warning", $g("请选择开始日期和截止日期!"));
             return;
         }
         var ListParam = StartDate + '^' + EndDate + '^' + InGrNo + '^' + Vendor + '^' + PhaLoc + '^^^N';
@@ -97,7 +97,7 @@ function DrugImportGrSearch(dataStore, Fn) {
             params: { start: 0, limit: Page },
             callback: function(r, options, success) {
                 if (success == false) {
-                    Msg.info("error", "查询错误，请查看日志!");
+                    Msg.info("error", $g("查询错误，请查看日志!"));
                 } else {
                     if (r.length > 0) {
                         GrMasterInfoGrid.getSelectionModel().selectFirstRow();
@@ -111,8 +111,8 @@ function DrugImportGrSearch(dataStore, Fn) {
 
     // 选取按钮
     var returnBT = new Ext.Toolbar.Button({
-        text: '选取',
-        tooltip: '点击选取',
+        text: $g('选取'),
+        tooltip: $g('点击选取'),
         iconCls: 'page_goto',
         height: 30,
         width: 70,
@@ -124,8 +124,8 @@ function DrugImportGrSearch(dataStore, Fn) {
 
     // 清空按钮
     var clearBT = new Ext.Toolbar.Button({
-        text: '清屏',
-        tooltip: '点击清屏',
+        text: $g('清屏'),
+        tooltip: $g('点击清屏'),
         iconCls: 'page_clearscreen',
         height: 30,
         width: 70,
@@ -148,8 +148,8 @@ function DrugImportGrSearch(dataStore, Fn) {
 
     // 3关闭按钮
     var closeBT = new Ext.Toolbar.Button({
-        text: '关闭',
-        tooltip: '关闭界面',
+        text: $g('关闭'),
+        tooltip: $g('关闭界面'),
         iconCls: 'page_close',
         height: 30,
         width: 70,
@@ -162,8 +162,8 @@ function DrugImportGrSearch(dataStore, Fn) {
     // 删除按钮
     var DeleteBT = new Ext.Toolbar.Button({
         id: "DeleteBT",
-        text: '删除',
-        tooltip: '点击删除',
+        text:$g( '删除'),
+        tooltip: $g('点击删除'),
         width: 70,
         height: 30,
         iconCls: 'page_delete',
@@ -176,8 +176,8 @@ function DrugImportGrSearch(dataStore, Fn) {
         var selectRows = GrMasterInfoGrid.getSelectionModel().getSelections();
         if (selectRows.length == 0) {
             Ext.Msg.show({
-                title: '错误',
-                msg: '请选择要删除的入库单信息！',
+                title: $g('错误'),
+                msg: $g('请选择要删除的入库单信息！'),
                 buttons: Ext.Msg.OK,
                 icon: Ext.MessageBox.ERROR
             });
@@ -185,8 +185,8 @@ function DrugImportGrSearch(dataStore, Fn) {
             var InGrRowId = selectRows[0].get("IngrId");
             deleteingdr = InGrRowId;
             Ext.MessageBox.show({
-                title: '提示',
-                msg: '是否确定删除整张入库单',
+                title: $g('提示'),
+                msg: $g('是否确定删除整张入库单'),
                 buttons: Ext.MessageBox.YESNO,
                 fn: showDeleteGr,
                 icon: Ext.MessageBox.QUESTION
@@ -203,25 +203,25 @@ function DrugImportGrSearch(dataStore, Fn) {
             Ext.Ajax.request({
                 url: url,
                 method: 'POST',
-                waitMsg: '处理中...',
+                waitMsg: $g('处理中...'),
                 success: function(result, request) {
                     var jsonData = Ext.util.JSON
                         .decode(result.responseText);
                     if (jsonData.success == 'true') {
                         // 删除单据
-                        Msg.info("success", "入库单删除成功!");
+                        Msg.info("success", $g("入库单删除成功!"));
                         deleteingdr = "";
                         searchDurgData();
                     } else {
                         var ret = jsonData.info;
                         if (ret == -1) {
-                            Msg.info("error", "入库单已经完成，不能删除!");
+                            Msg.info("error", $g("入库单已经完成，不能删除!"));
                         } else if (ret == -2) {
-                            Msg.info("error", "入库单已经审核，不能删除!");
+                            Msg.info("error", $g("入库单已经审核，不能删除!"));
                         } else if (ret == -3) {
-                            Msg.info("error", "入库单部分明细已经审核，不能删除!");
+                            Msg.info("error", $g("入库单部分明细已经审核，不能删除!"));
                         } else {
-                            Msg.info("error", "删除失败,请查看错误日志!");
+                            Msg.info("error", $g("删除失败,请查看错误日志!"));
                         }
                     }
                 },
@@ -269,61 +269,61 @@ function DrugImportGrSearch(dataStore, Fn) {
         hidden: true,
         hideable: false
     }, {
-        header: "入库单号",
+        header: $g("入库单号"),
         dataIndex: 'IngrNo',
         width: 120,
         align: 'left',
         sortable: true
     }, {
-        header: "供应商",
+        header: $g("经营企业"),
         dataIndex: 'Vendor',
         width: 200,
         align: 'left',
         sortable: true
     }, {
-        header: '订购科室',
+        header: $g('订购科室'),
         dataIndex: 'RecLoc',
         width: 150,
         align: 'left',
         sortable: true
     }, {
-        header: '创建人',
+        header: $g('创建人'),
         dataIndex: 'CreateUser',
         width: 70,
         align: 'left',
         sortable: true
     }, {
-        header: '创建日期',
+        header:$g( '创建日期'),
         dataIndex: 'CreateDate',
         width: 90,
         align: 'left',
         sortable: true
     }, {
-        header: '采购员',
+        header: $g('采购员'),
         dataIndex: 'PurchUser',
         width: 70,
         align: 'left',
         sortable: true
     }, {
-        header: "入库类型",
+        header: $g("入库类型"),
         dataIndex: 'IngrType',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: "完成标志",
+        header: $g("完成标志"),
         dataIndex: 'Complete',
         width: 70,
         align: 'left',
         sortable: true
     }, {
-        header: "进价金额",
+        header: $g("进价金额"),
         dataIndex: 'RpAmt',
         width: 100,
         align: 'right',
         sortable: true
     }, {
-        header: "售价金额",
+        header: $g("售价金额"),
         dataIndex: 'SpAmt',
         width: 100,
         align: 'right',
@@ -335,8 +335,8 @@ function DrugImportGrSearch(dataStore, Fn) {
         store: GrMasterInfoStore,
         pageSize: PageSize,
         displayInfo: true,
-        displayMsg: '第 {0} 条到 {1}条 ，一共 {2} 条',
-        emptyMsg: "没有记录"
+        displayMsg: $g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+        emptyMsg: $g("没有记录")
     });
 
     var GrMasterInfoGrid = new Ext.grid.GridPanel({
@@ -407,82 +407,82 @@ function DrugImportGrSearch(dataStore, Fn) {
         hidden: true,
         hideable: false
     }, {
-        header: '药品代码',
+        header: $g('药品代码'),
         dataIndex: 'IncCode',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: '药品名称',
+        header: $g('药品名称'),
         dataIndex: 'IncDesc',
         width: 230,
         align: 'left',
         sortable: true
     }, {
-        header: "厂商",
+        header: $g("生产企业"),
         dataIndex: 'Manf',
         width: 180,
         align: 'left',
         sortable: true
     }, {
-        header: "批号",
+        header: $g("批号"),
         dataIndex: 'BatchNo',
         width: 90,
         align: 'left',
         sortable: true
     }, {
-        header: "有效期",
+        header: $g("有效期"),
         dataIndex: 'ExpDate',
         width: 100,
         align: 'left',
         sortable: true
     }, {
-        header: "单位",
+        header: $g("单位"),
         dataIndex: 'IngrUom',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: "数量",
+        header: $g("数量"),
         dataIndex: 'RecQty',
         width: 80,
         align: 'right',
         sortable: true
     }, {
-        header: "进价",
+        header: $g("进价"),
         dataIndex: 'Rp',
         width: 60,
         align: 'right',
 
         sortable: true
     }, {
-        header: "售价",
+        header: $g("售价"),
         dataIndex: 'Sp',
         width: 60,
         align: 'right',
 
         sortable: true
     }, {
-        header: "发票号",
+        header: $g("发票号"),
         dataIndex: 'InvNo',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: "发票日期",
+        header: $g("发票日期"),
         dataIndex: 'InvDate',
         width: 100,
         align: 'left',
         sortable: true
     }, {
-        header: "进价金额",
+        header:$g( "进价金额"),
         dataIndex: 'RpAmt',
         width: 100,
         align: 'left',
 
         sortable: true
     }, {
-        header: "售价金额",
+        header: $g("售价金额"),
         dataIndex: 'SpAmt',
         width: 100,
         align: 'left',
@@ -493,8 +493,8 @@ function DrugImportGrSearch(dataStore, Fn) {
         store: GrDetailInfoStore,
         pageSize: PageSize,
         displayInfo: true,
-        displayMsg: '第 {0} 条到 {1}条 ，一共 {2} 条',
-        emptyMsg: "没有记录"
+        displayMsg: $g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+        emptyMsg: $g("没有记录")
     });
     var GrDetailInfoGrid = new Ext.grid.GridPanel({
         title: '',
@@ -528,7 +528,7 @@ function DrugImportGrSearch(dataStore, Fn) {
         items: [{
             layout: 'column',
             xtype: 'fieldset',
-            title: '查询条件',
+            title: $g('查询条件'),
             style: DHCSTFormStyle.FrmPaddingV,
             defaults: { border: false },
             items: [{
@@ -559,7 +559,7 @@ function DrugImportGrSearch(dataStore, Fn) {
         layout: 'border',
         items: [{
             region: 'west',
-            title: '入库单',
+            title: $g('入库单'),
             collapsible: true,
             split: true,
             width: 225,
@@ -571,7 +571,7 @@ function DrugImportGrSearch(dataStore, Fn) {
 
         }, {
             region: 'center',
-            title: '入库单明细',
+            title: $g('入库单明细'),
             layout: 'fit',
             items: GrDetailInfoGrid
 
@@ -579,7 +579,7 @@ function DrugImportGrSearch(dataStore, Fn) {
     });
 
     var window = new Ext.Window({
-        title: '入库单查询',
+        title: $g('入库单查询'),
         width: document.body.clientWidth * 0.9,
         height: document.body.clientHeight * 0.9,
         minWidth: 600,
@@ -607,8 +607,8 @@ function DrugImportGrSearch(dataStore, Fn) {
         var selectRows = GrMasterInfoGrid.getSelectionModel().getSelections();
         if (selectRows.length == 0) {
             Ext.Msg.show({
-                title: '错误',
-                msg: '请选择要返回的入库单信息！',
+                title: $g('错误'),
+                msg: $g('请选择要返回的入库单信息！'),
                 buttons: Ext.Msg.OK,
                 icon: Ext.MessageBox.ERROR
             });

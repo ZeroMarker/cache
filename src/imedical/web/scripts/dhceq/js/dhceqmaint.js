@@ -398,6 +398,9 @@ function BPicture_Click()
 	if (getJQValue($("#EquipDR"))=="") {alertShow("请选择设备");return}
 	var Status=getJQValue($("#Status"))
 	var str='dhceq.process.picturemenu.csp?&CurrentSourceType=32&CurrentSourceID='+getJQValue($("#RowID"))+'&EquipDR='+getJQValue($("#EquipDR"))+"&Status="+Status;
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		str += "&MWToken="+websys_getMWToken()
+	}
 	window.open(str,'_blank','left='+ (screen.availWidth - 1150)/2 +',top='+ ((screen.availHeight>750)?(screen.availHeight-750)/2:0) +',width=1150,height=750,toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes')
 	
 }
@@ -413,6 +416,9 @@ function BPMReport_Click()
 	var ReadOnly=getJQValue($("#ReadOnly"))
 	var str='dhceq.process.pmreport.csp?&MaintDR='+getJQValue($("#RowID"))+"&ReadOnly="+ReadOnly;
 	//window.open(str,'_blank','left=0,top=0,width='+ (screen.availWidth - 10) +',height='+ (screen.availHeight-50) +',toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes')
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		str += "&MWToken="+websys_getMWToken()
+	}
 	window.open(str,'_blank','left='+ (screen.availWidth - 1150)/2 +',top='+ ((screen.availHeight>750)?(screen.availHeight-750)/2:0) +',width=1150,height=750,toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes')
 	
 	

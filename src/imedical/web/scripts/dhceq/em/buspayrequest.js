@@ -19,6 +19,9 @@ function initDocument()
 	initPRSourceType();
 	initPRPayMode();
     initButton(); //按钮初始化
+	initPanelHeaderStyle();   //add by mwz 20230427 mwz0070
+	initApproveButtonNew();
+	initButtonColor();
 	jQuery("#BCancelSubmit").linkbutton({iconCls: 'icon-w-submit'});
 	jQuery("#BCancelSubmit").on("click", BCancelSubmit_Clicked);
     fillData(); //数据填充
@@ -212,6 +215,7 @@ function payRecordReload()
 	var PRProviderDR=getElementValue("PRProviderDR")
 	var PRStatus=getElementValue("PRStatus")
 	var Type=getElementValue("Type")
+	var PRLocDR=getElementValue("PRLocDR")
 	$HUI.datagrid("#DHCEQPayRecord",{
 		url:$URL,
 		queryParams:{
@@ -219,7 +223,8 @@ function payRecordReload()
 	        	QueryName:"GetPayRecord",
 				vPayRequestDR:PRRowID,
 				vSourceType:PRSourceType,
-				vProviderDR:PRProviderDR
+				vProviderDR:PRProviderDR,
+				vLocDR:PRLocDR
 		},
 		rownumbers: true,  //如果为true，则显示一个行号列。
 		singleSelect:false,
@@ -230,10 +235,10 @@ function payRecordReload()
 		pageSize:25,
 		pageNumber:1,
 		pageList:[25,50,75,100],
-//		toolbar:[
-//				{iconCls: 'icon-add',text:'新增',id:'add',handler: function(){insertRow();}},
-//				{iconCls: 'icon-cancel',text:'删除',id:'delete',handler: function(){deleteRow();}}
-//				],
+        toolbar:[
+              {iconCls: 'icon-add',text:'新增',id:'add',handler: function(){insertRow();}},
+              {iconCls: 'icon-cancel',text:'删除',id:'delete',handler: function(){deleteRow();}}
+              ],
 	    onClickRow: function (rowIndex,rowData) {//单击选择行编辑
 	    	if (((PRStatus=="")||(PRStatus==0))&&(Type==0))
 	    	{
@@ -253,13 +258,30 @@ function payRecordReload()
 }
 function toolbarenable()
 {
-	disableElement("add",true);
-	disableElement("delete",true);
-	if ((getElementValue("PRPayFromType")==9)&&((getElementValue("PRStatus")==0)||(getElementValue("PRStatus")==""))&&(getElementValue("Type")==0))
-	{
-		disableElement("add",false);
-		disableElement("delete",false);
-	}
+    ///modified by ZY20230307 bug:3261903
+    var rows = $('#DHCEQPayRecord').datagrid('getRows');
+    var totalQuantityNum = 0;
+    var totalTotalFee = 0;
+    for (var i = 0; i < rows.length; i++)
+    {
+        var colValue=rows[i]["PRQuantity"];
+        if (colValue=="") colValue=0;
+        totalQuantityNum += parseFloat(colValue);
+        colValue=rows[i]["TAllAmount"];
+        if (colValue=="") colValue=0;
+        totalTotalFee += parseFloat(colValue);
+    }
+    var lable_innerText='总数量:'+totalQuantityNum+'&nbsp;&nbsp;&nbsp;总金额:'+totalTotalFee.toFixed(2);
+    $("#sumTotal").html(lable_innerText);
+    
+    
+    disableElement("add",true);
+    disableElement("delete",true);
+    if ((getElementValue("PRPayFromType")==9)&&((getElementValue("PRStatus")==0)||(getElementValue("PRStatus")==""))&&(getElementValue("Type")==0))
+    {
+        disableElement("add",false);
+        disableElement("delete",false);
+    }
 }
 function insertRow()
 {
@@ -424,7 +446,7 @@ function changeColumnOption()
 							totlefeeChange()
 						}
 						jQuery("#DHCEQPayRecord").datagrid('endEdit', editFlag);
-						jQuery("#DHCEQPayRecord").datagrid('beginEdit', editFlag);
+						//jQuery("#DHCEQPayRecord").datagrid('beginEdit', editFlag);	// MZY0123	2665275		2022-05-12
 					}
 		}};
 }
@@ -450,6 +472,7 @@ function setEnabled()
 		disableElement("BCancelSubmit",true)
 		disableElement("BDelete",true)
 		disableElement("BAudit",true)
+		disableElement("BPicture",true); // add By QW20210422 BUG:QW0099 增加图片上传
 	}
 	if (PRStatus=="0")
 	{
@@ -577,8 +600,21 @@ function reloadPage(rowID)
 	var WaitAD=getElementValue("WaitAD"); 
 	var QXType=getElementValue("QXType");
 	var Type=getElementValue("Type");
-	if (rowID=="") Type="";
+	//if (rowID=="") Type="";
 	var val="&PRRowID="+rowID+"&WaitAD="+WaitAD+"&QXType="+QXType+"&Type="+Type;
 	url="dhceq.em.payrequest.csp?"+val
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
     window.location.href= url;
+}
+ // add By QW20210422 BUG:QW0099 增加图片上传
+function BPicture_Clicked()
+{
+	var ReadOnly=getElementValue("ReadOnly")
+	var PicQXType=getElementValue("QXType") 
+	var Status=getElementValue("PRStatus");
+	if (Status!=0) {ReadOnly=1}
+	var str='dhceq.plat.picturemenu.csp?&CurrentSourceType=76&CurrentSourceID='+getElementValue("PRRowID")+'&Status='+Status+'&ReadOnly='+ReadOnly+'&PicQXType='+PicQXType;
+	showWindow(str,"图片信息","","","icon-w-paper","modal","","","large");
 }

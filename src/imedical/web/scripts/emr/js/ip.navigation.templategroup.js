@@ -133,49 +133,90 @@ function setListTemplate(data)
 	    loadMsg:'数据装载中......',
 	    autoRowHeight:true,
 	    data:data,
-	    singleSelect:true,
+	    singleSelect:false,
 	    idField:'id',
-	    sortName:'text',
-	    sortOrder:'desc',
 	    remoteSort:false,
 	    nowrap:true,
 	    striped:true,
 	    fit:true,
 	    overflow:'auto',
 	    columns:[[
-	    	{field:'id',title:'id',hidden:true},
-	        {field:'text',title:'名称',width:200,sortable:true},
-			{field:'quotation',hidden:true},
-			{field:'documentType',hidden:true},{field:'chartItemType',hidden:true},
-			{field:'categoryId',hidden:true},{field:'templateId',hidden:true},
-			{field:'isLeadframe',hidden:true},{field:'isMutex',hidden:true},
-			{field:'JaneSpell',hidden:true},{field:'FullFight',hidden:true},
-			{field:'groupCode',hidden:true}
-		]],
-		onLoadSuccess:function(data){
-			$.each(data.rows,function(idx,val){
-				temparam[idx] ={
-					"id":"",
-					"text":val.text,
-					"pluginType":val.documentType,
-					"chartItemType":val.chartItemType,
-					"characteristic":val.characteristic,
-					"emrDocId":val.id,
-					"templateId":val.templateId,
-					"isLeadframe":val.isLeadframe,
-					"isMutex":val.isMutex,
-					"categoryId":val.categoryId,
-					"actionType":"CREATE",
-					"status":"NORMAL",
-					"closable":true,
-					"flag":"List",
-					"args":{
-						"spreading":{"action":"GroupCreation","groupCode":val.groupCode}
-					}					
-			 	};
-			});
-		}
-	});
+            {field:'ck',checkbox:true},
+            {field:'id',title:'id',hidden:true},
+            {field:'text',title:'名称',width:200,sortable:true},
+            {field:'quotation',hidden:true},
+            {field:'documentType',hidden:true},{field:'chartItemType',hidden:true},
+            {field:'categoryId',hidden:true},{field:'templateId',hidden:true},
+            {field:'isLeadframe',hidden:true},{field:'isMutex',hidden:true},
+            {field:'JaneSpell',hidden:true},{field:'FullFight',hidden:true},
+            {field:'groupCode',hidden:true}
+        ]],
+        onCheck:function(rowIndex,rowData){
+            var length = temparam.length;
+            var temp = {
+                "id":"",
+                "text":rowData.text,
+                "pluginType":rowData.documentType,
+                "chartItemType":rowData.chartItemType,
+                "characteristic":rowData.characteristic,
+                "emrDocId":rowData.id,
+                "templateId":rowData.templateId,
+                "isLeadframe":rowData.isLeadframe,
+                "isMutex":rowData.isMutex,
+                "categoryId":rowData.categoryId,
+                "actionType":"CREATE",
+                "status":"NORMAL",
+                "closable":true,
+                "flag":"List",
+                "args":{
+                    "spreading":{"action":"GroupCreation","groupCode":rowData.groupCode}
+                }
+            };
+            if (rowData.userTemplateCode){ temp.userTemplateCode = rowData.userTemplateCode}
+            if (rowData.titleCode){ temp.titleCode = rowData.titleCode}
+            temparam.splice(length,0,temp);
+        },
+        onUncheck:function(rowIndex,rowData){
+            $.each(temparam, function(index,item){
+                if (item.emrDocId == rowData.id){
+                    temparam.splice(index,1);
+                    return  false;
+                }
+            });
+        },
+        onCheckAll:function(rows){
+            temparam = [];
+            $.each(rows,function(idx,val){
+                temparam[idx] ={
+                    "id":"",
+                    "text":val.text,
+                    "pluginType":val.documentType,
+                    "chartItemType":val.chartItemType,
+                    "characteristic":val.characteristic,
+                    "emrDocId":val.id,
+                    "templateId":val.templateId,
+                    "isLeadframe":val.isLeadframe,
+                    "isMutex":val.isMutex,
+                    "categoryId":val.categoryId,
+                    "actionType":"CREATE",
+                    "status":"NORMAL",
+                    "closable":true,
+                    "flag":"List",
+                    "args":{
+                        "spreading":{"action":"GroupCreation","groupCode":val.groupCode}
+                    }
+                };
+                if (val.userTemplateCode){ temparam[idx].userTemplateCode = val.userTemplateCode}
+                if (val.titleCode){ temparam[idx].titleCode = val.titleCode}
+            });
+        },
+        onUncheckAll:function(rows){
+            temparam = [];
+        },
+        onLoadSuccess:function(data){
+            $('#listtemplate').datagrid('checkAll');
+        }
+    });
 }
 //新建操作
 function CreateOperate(val,row,index)

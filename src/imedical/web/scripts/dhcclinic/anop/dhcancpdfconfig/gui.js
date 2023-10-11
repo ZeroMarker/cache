@@ -1,15 +1,15 @@
-function InitViewScreen()
+Ôªøfunction InitViewScreen()
 { 
 	var obj = new Object();
 	obj.FTPSrvIP = new Ext.form.TextField({
 		id : 'FTPSrvIP'
-		,fieldLabel : '∑˛ŒÒ∆˜IP'
+		,fieldLabel : 'ÊúçÂä°Âô®IP'
 		,labelSeparator: ''
 		,anchor : '95%'
 	});
 	obj.FTPSrvPortNo = new Ext.form.TextField({
 		id : 'FTPSrvPortNo'
-		,fieldLabel : '∂Àø⁄∫≈'
+		,fieldLabel : 'Á´ØÂè£Âè∑'
 		,labelSeparator: ''
 		,anchor : '95%'
 	});
@@ -17,7 +17,7 @@ function InitViewScreen()
 		id : 'Panel1'
 		,buttonAlign : 'center'
 		,labelAlign : 'right'
-		,columnWidth : .2
+		,columnWidth : .15
 		,labelWidth : 60
 		,layout : 'form'
 		,items:[
@@ -27,13 +27,13 @@ function InitViewScreen()
 	});
 	obj.FTPSrvUserName = new Ext.form.TextField({
 		id : 'FTPSrvUserName'
-		,fieldLabel : '”√ªß√˚'
+		,fieldLabel : 'Áî®Êà∑Âêç'
 		,labelSeparator: ''
 		,anchor : '95%'
 	});
 	obj.FTPSrvUserCode = new Ext.form.TextField({
 		id : 'FTPSrvUserCode'
-		,fieldLabel : '√‹¬Î'
+		,fieldLabel : 'ÂØÜÁ†Å'
 		,labelSeparator: ''
 		,anchor : '95%'
 	});
@@ -41,7 +41,7 @@ function InitViewScreen()
 		id : 'Panel2'
 		,buttonAlign : 'center'
 		,labelAlign : 'right'
-		,columnWidth : .2
+		,columnWidth : .15
 		,labelWidth : 60
 		,layout : 'form'
 		,items:[
@@ -49,29 +49,68 @@ function InitViewScreen()
 			,obj.FTPSrvUserCode
 		]
 	});
-	var data=[
-		['I','DHCICU']
-	]
-	obj.FTPFolderNameStoreProxy=data;
-	obj.FTPFolderNameStore = new Ext.data.Store({
-		proxy: new Ext.data.MemoryProxy(data),
-		reader: new Ext.data.ArrayReader({}, 
-		[
-			{name: 'code'}
-			,{name: 'desc'}
-		])
-	});
-	obj.FTPFolderName = new Ext.form.ComboBox({
+	obj.FTPFolderName = new Ext.form.TextField({
 		id : 'FTPFolderName'
-		,minChars : 1
-		,fieldLabel : 'Œƒº˛º–√˚'
+		,fieldLabel : 'Êñá‰ª∂Â§πÂêç'
 		,labelSeparator: ''
-		,triggerAction : 'all'
-		,store : obj.FTPFolderNameStore
-		,displayField : 'desc'
-		,valueField : 'code'
-		,editable:false
 		,anchor : '95%'
+	});
+	obj.FTPType = new Ext.form.TextField({
+		id : 'FTPType'
+		,fieldLabel : 'Êñá‰ª∂Á±ªÂûã'
+		,labelSeparator: ''
+		,anchor : '95%'
+	});
+	obj.Panel3 = new Ext.Panel({
+		id : 'Panel3'
+		,buttonAlign : 'center'
+		,labelAlign : 'right'
+		,columnWidth : .15
+		,labelWidth : 60
+		,layout : 'form'
+		,items:[
+			obj.FTPFolderName
+			,obj.FTPType
+		]
+	});
+	obj.FTPHttpsPortNo = new Ext.form.TextField({
+		id : 'FTPHttpsPortNo'
+		,fieldLabel : 'È¢ÑËßàË∑ØÂæÑ'
+		,labelSeparator: ''
+		,anchor : '95%'
+	});
+	obj.Panel4 = new Ext.Panel({
+		id : 'Panel4'
+		,buttonAlign : 'center'
+		,labelAlign : 'right'
+		,columnWidth : .15
+		,labelWidth : 60
+		,layout : 'form'
+		,items:[
+		    obj.FTPHttpsPortNo
+		]
+	});
+	obj.SaveButton = new Ext.Button({
+		id : 'SaveButton'
+		,width:86
+		,text : '‰øùÂ≠ò'
+		,iconCls : 'icon-save'
+	});
+	obj.DeleteButton = new Ext.Button({
+		id : 'DeleteButton'
+		,width:86
+		,text : 'Âà†Èô§'
+		,iconCls : 'icon-delete'
+	});
+	obj.ButtonPanel = new Ext.Panel({
+		id : 'ButtonPanel'
+		,buttonAlign : 'right'
+		,columnWidth : .2
+		,layout : 'form'
+		,items:[
+		    obj.SaveButton,
+		    obj.DeleteButton
+		]
 	});
 	obj.FTPRowId = new Ext.form.TextField({
 		id : 'FTPRowId'
@@ -80,55 +119,13 @@ function InitViewScreen()
 		,hidden : true
 		,anchor : '95%'
 	});
-	obj.Panel3 = new Ext.Panel({
-		id : 'Panel3'
-		,buttonAlign : 'center'
-		,labelAlign : 'right'
-		,columnWidth : .2
-		,labelWidth : 60
-		,layout : 'form'
-		,items:[
-			obj.FTPFolderName
-			,obj.FTPRowId
-		]
-	});
-	obj.SaveButton = new Ext.Button({
-		id : 'SaveButton'
-		,width:86
-		,text : '±£¥Ê'
-		,iconCls : 'icon-save'
-	});
-	obj.SaveButtonPanel = new Ext.Panel({
-		id : 'SaveButtonPanel'
-		,buttonAlign : 'right'
-		,columnWidth : .25
-		,layout : 'form'
-		,items:[
-		    obj.SaveButton
-		]
-	});
-	obj.DeleteButton = new Ext.Button({
-		id : 'DeleteButton'
-		,width:86
-		,text : '…æ≥˝'
-		,iconCls : 'icon-delete'
-	});
-	obj.DeleteButtonPanel = new Ext.Panel({
-		id : 'DeleteButtonPanel'
-		,buttonAlign : 'right'
-		,columnWidth : .25
-		,layout : 'form'
-		,items:[
-		    obj.DeleteButton
-		]
-	});
 	obj.fPanel = new Ext.Panel({
 		id : 'fPanel'
 		,buttonAlign : 'center'
 		,region : 'north'
 		,layout : 'column'
 		,iconCls:'icon-result'
-		,title : 'FTP∑˛ŒÒ∆˜≈‰÷√'
+		,title : 'FTPÊúçÂä°Âô®ÈÖçÁΩÆ'
 		,height:90
 		,frame : true
 		,collapsible:true
@@ -137,8 +134,9 @@ function InitViewScreen()
 			obj.Panel1
 			,obj.Panel2
 			,obj.Panel3
-			,obj.SaveButtonPanel
-			,obj.DeleteButtonPanel
+			,obj.Panel4
+			,obj.ButtonPanel
+			,obj.FTPRowId
 		]
 	});
 	obj.retGridPanelStoreProxy = new Ext.data.HttpProxy(new Ext.data.Connection({
@@ -159,6 +157,7 @@ function InitViewScreen()
 			,{name: 'FTPSrvUserCode', mapping : 'FTPSrvUserCode'}
 			,{name: 'FTPFolderName', mapping: 'FTPFolderName'}
 			,{name: 'FTPType', mapping: 'FTPType'}
+			,{name: 'FTPHttpsPortNo', mapping: 'FTPHttpsPortNo'}
 		])
 	});
 
@@ -172,20 +171,21 @@ function InitViewScreen()
 		,buttonAlign : 'center'
 		,columns:[
 		new Ext.grid.RowNumberer()
-		,{header: 'œµÕ≥∫≈', width: 50, dataIndex: 'Id', sortable: true}
-		,{header: '∑˛ŒÒ∆˜IP', width: 200, dataIndex: 'FTPSrvIP', sortable: true}
-		,{header: '∂Àø⁄∫≈', width: 100, dataIndex: 'FTPSrvPortNo', sortable: true}
-		,{header: '”√ªß√˚', width: 100, dataIndex: 'FTPSrvUserName', sortable: true}
-		,{header: '√‹¬Î', width: 100, dataIndex: 'FTPSrvUserCode', sortable: true}
-		,{header: 'Œƒº˛º–√˚', width: 100, dataIndex: 'FTPFolderName', sortable: true}
-		,{header: 'Œƒº˛¿‡–Õ', width:100, dataIndex: 'FTPType', sortable: true}
+		,{header: 'Á≥ªÁªüÂè∑', width: 50, dataIndex: 'Id', sortable: true}
+		,{header: 'ÊúçÂä°Âô®IP', width: 200, dataIndex: 'FTPSrvIP', sortable: true}
+		,{header: 'Á´ØÂè£Âè∑', width: 100, dataIndex: 'FTPSrvPortNo', sortable: true}
+		,{header: 'Áî®Êà∑Âêç', width: 100, dataIndex: 'FTPSrvUserName', sortable: true}
+		,{header: 'ÂØÜÁ†Å', width: 100, dataIndex: 'FTPSrvUserCode', sortable: true}
+		,{header: 'Êñá‰ª∂Â§πÂêç', width: 100, dataIndex: 'FTPFolderName', sortable: true}
+		,{header: 'Êñá‰ª∂Á±ªÂûã', width:100, dataIndex: 'FTPType', sortable: true}
+		,{header: 'Êñá‰ª∂È¢ÑËßàË∑ØÂæÑ', width:250, dataIndex: 'FTPHttpsPortNo', sortable: true}
 		]
 		,bbar: new Ext.PagingToolbar({
 			pageSize : 200,
 			store : obj.retGridPanelStore,
-		    displayMsg: 'œ‘ æº«¬º£∫ {0} - {1} ∫œº∆£∫ {2}',
+		    displayMsg: 'ÊòæÁ§∫ËÆ∞ÂΩïÔºö {0} - {1} ÂêàËÆ°Ôºö {2}',
 			displayInfo: true,
-		    emptyMsg: '√ª”–º«¬º'
+		    emptyMsg: 'Ê≤°ÊúâËÆ∞ÂΩï'
 		})
 	});
 

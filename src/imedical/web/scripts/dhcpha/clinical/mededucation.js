@@ -4,10 +4,12 @@
 * pengzhikun
 */
 var url="dhcpha.clinical.action.csp";
-var titleNote='<span style="font-weight:bold;">医嘱用药列表</span>';
-var titleNotes='<span style="font-weight:bold;">出院带药列表</span>';
+if ("undefined"!==typeof(websys_getMWToken)){
+	url += "?MWToken="+websys_getMWToken()
+	}
+var titleNote='<span style="font-weight:bold;">'+$g("医嘱用药列表")+'</span>';
+var titleNotes='<span style="font-weight:bold;">'+$g("出院带药列表")+'</span>';
 var EpisodeID="";
-var choseFlag=""; 				 /// 出院患者加载出院带药标志 qunianpeng 2018/3/12
 
 $(document).ready(function(){
 	
@@ -15,8 +17,8 @@ $(document).ready(function(){
 	InitGuiScopeTableEDUI();	/// 初始化住院指导范围 add  by yuliping
 	
 	EpisodeID=getParam("EpisodeID")		/// 默认打开新入院患者界面 qunianpeng 2018/3/12
- 	choseMenu("新入院患者");
-	$('.easyui-accordion ul li a:contains("新入院患者")').css({"background":"#87CEFA"});		
+ 	choseMenu($g("新入院患者"));
+	$('.easyui-accordion ul li a:contains('+$g("新入院患者")+')').css({"background":"#87CEFA"});		
 
 	//根据点击明细显示窗口panel
 	$('.easyui-accordion ul li a').click(function(){
@@ -28,11 +30,27 @@ $(document).ready(function(){
 	});	
 	pageBasicControll();
 	initDataDG();	
+	
+	$("input[name='GuidObject']").on('click', function(e){
+	  	if($(this).val()=='12'){
+			$('#otherObject').show();
+		}else{
+			$('#otherObject').hide();	
+		}
+	});
+	$("input[name='InGuidObject']").on('click', function(e){
+	  	if($(this).val()=='12'){
+			$('#inOtherObject').show();
+		}else{
+			$('#inOtherObject').hide();	
+		}
+	});
+	
 })
 
 function choseMenu(item){
 	switch(item){
-		case "新入院患者":
+		case $g("新入院患者"):
 			//防止重复点击，而此时Flag=1，导致不执行创建界面
 			if(Flag1==0){
 				//隐藏mainpanel的所有子节点
@@ -42,13 +60,13 @@ function choseMenu(item){
 				//设置mainPanel可见
 				$('#mainPanel').css("display","block"); 
 				$('#mainPanel').panel({
-					title:item+"<span style='color:red;'>[红色*号标注的为必填项]</span>"
+					title:item+"<span style='color:red;'>"+$g('[红色*号标注的为必填项]')+"</span>"
 				});
+				$('input[name="ordFiter"][value=""]').attr("checked", true);
 			}
-			
 			break;
 			
-		case "住院期间患者":
+		case $g("住院期间患者"):
 			if(Flag2==0){
 				//隐藏mainpanel的所有子节点
 				$("#mainPanel").children().css("display","none")
@@ -56,25 +74,21 @@ function choseMenu(item){
 				createInHopPanel();
 				$('#mainPanel').css("display","block"); 
 				$('#mainPanel').panel({
-					title:item+"<span style='color:red;'>[红色*号标注的为必填项]</span>"
+					title:item+"<span style='color:red;'>"+$g('[红色*号标注的为必填项]')+"</span>"
 				});
-				//加载数据
-				//loadData();
+				$('input[name="ordFiter"][value=""]').attr("checked", true);
 			}
 			break;
 			
-		case "出院患者":
+		case $g("出院患者"):
 			if(Flag3==0){
-				//隐藏mainpanel的所有子节点
 				$("#mainPanel").children().css("display","none")
-				//动态创建一个"住院期间患者"的panel
 				createOutHopPanel();
 				$('#mainPanel').css("display","block");
 				$('#mainPanel').panel({
-					title:item+"<span style='color:red;'>[红色*号标注的为必填项]</span>"
+					title:item+"<span style='color:red;'>"+$g('[红色*号标注的为必填项]')+"</span>"
 				});
-				//加载数据
-				//loadData();
+				$('input[name="ordFiter"][value="OUT"]').attr("checked", true);
 			}
 			break;
 			
@@ -111,7 +125,7 @@ function InitPatientInfo(EpisodeID)
    
    var medEduRid="";
    var medEduInfo=tkMakeServerCall("web.DHCPHMEDEDUCATION","getMedEducation",EpisodeID,"New");
-   if(medEduInfo==""){
+   if(medEduInfo=="-999"){
        InitNewPagePatInfo(EpisodeID);
        return;
    }
@@ -150,6 +164,10 @@ function LoadNewPagePatInfo(EpisodeID,medEduInfo)
 			$(this).attr("checked",true);
 		}
 	});
+	if(GuidObject === "12"){
+		$('#otherObject').show();
+		$('#otherObject').val(listMain[20]);	
+	}
   
   	//设置勾选框的选中状态
   	var checkList=tmps[1].substring(0,tmps[1].length-1).split("^");
@@ -242,7 +260,6 @@ function createOutHopPanel(){
 			printMedEducation();
 		}) */
 		InitOutPatientInfo(EpisodeID);		
-		choseFlag = "OUT";								/// 选中tab设置标志(出院患者医嘱界面要默认加载出院带药) qunianpeng 2018/3/12
 	}	
 }
 
@@ -284,7 +301,8 @@ function InitOutPatientInfo(EpisodeID)
    	   data: "action=getMedEducation&AdmDr="+EpisodeID+"&Status="+"Out",
        //dataType: "json",
        success: function(val){
-	      if(val!=-999){
+		  var val= val.replace(/\s/g,"");
+	      if(val!="-999"){
 		  	var tmps=val.split("!");
 		  	var listMain=tmps[0].split("^");	/// 主信息
 		  	$('#OutRowId').val(listMain[18]);	/// 表ID
@@ -339,13 +357,13 @@ function pageBasicControll(){
 	
 	$('#OutPatLoc').val(LocDesc);    				/// 科室
 	$('#OutPatGuidCont').focus(function(){
-		if($(this).text()=="编辑内容.."){
+		if($(this).text()==$g("编辑内容..")){
 			$(this).text("");
 		}
 	})
 	$('#OutPatGuidCont').blur(function(){
 		if($(this).text().trim()==""){
-			$(this).text("编辑内容..");
+			$(this).text($g("编辑内容.."));
 		}
 	})
 }
@@ -372,14 +390,14 @@ function initDataDG(){
 	//定义columns
 	var columns=[[
 		{field:"orditm",title:'orditm',width:100,hidden:true},
-	    {field:'incidesc',title:'名称',width:330,align:'left'},
+	    {field:'incidesc',title:$g('名称'),width:330,align:'left'},
 		//{field:'genenic',title:'通用名',width:240,align:'left'},
 		//{field:'manf',title:'生产企业',width:240,align:'left'},
-		{field:'dosage',title:'剂量',width:40,align:'left'},		/// 增加剂量-是否执行 qunianpeng 2018/3/12
-		{field:'instru',title:'用法',width:40,align:'left'},
-		{field:'freq',title:'频次',width:60,align:'left'},
-		{field:'duration',title:'疗程',width:40,align:'left'},
-		{field:'execStat',title:'是否执行',width:50,align:'left',hidden:true},
+		{field:'dosage',title:$g('剂量'),width:40,align:'left'},		/// 增加剂量-是否执行 qunianpeng 2018/3/12
+		{field:'instru',title:$g('用法'),width:40,align:'left'},
+		{field:'freq',title:$g('频次'),width:60,align:'left'},
+		{field:'duration',title:$g('疗程'),width:40,align:'left'},
+		{field:'execStat',title:$g('是否执行'),width:50,align:'left',hidden:true},
 	    {field:'dgID',title:'dgID',width:100,hidden:true},
 		{field:'operation',title:'<a href="#" onclick="patOeInfoWindow()"><img style="margin-left:3px;" src="../scripts/dhcpha/jQuery/themes/icons/edit_add.png" border=0/></a>',
 		    width:30,
@@ -399,7 +417,7 @@ function initDataDG(){
 	    rownumbers:true,						/// 行号 
 	    remoteSort:false,						/// 界面排序
 		fitColumns:true,    					/// duwensheng 2016-09-12 自适应大小，防止横向滑动		
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 	    onDblClickRow: function (rowIndex, rowData) {//双击选择行编辑
             //if (editRow != "") { 
               //  $("#susdrgdg").datagrid('endEdit', editRow); 
@@ -420,7 +438,7 @@ function initDataDG(){
 	    rownumbers:true,				/// 行号 
 	    remoteSort:false,				/// 界面排序
 		fitColumns:true,    			/// duwensheng 2016-09-12 自适应大小，防止横向滑动
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 	    onDblClickRow: function (rowIndex, rowData) {//双击选择行编辑
             //if (editRow != "") { 
               //  $("#susdrgdg").datagrid('endEdit', editRow); 
@@ -512,7 +530,7 @@ function delRow(datagID,rowIndex)
 function patOeInfoWindow()
 {
 	$('#mwin').window({
-		title:'病人用药列表',
+		title:$g('病人用药列表'),
 		collapsible:true,
 		border:false,
 		closed:"true",
@@ -536,34 +554,35 @@ function InitPatMedGrid()
 		{field:"moeori",title:'moeori',width:90,hidden:true},
 		{field:"orditm",title:'orditm',width:90,hidden:true},
 		{field:'phcdf',title:'phcdf',width:80,hidden:true},
-		{field:'priorty',title:'优先级',width:80},
-		{field:'StartDate',title:'开始日期',width:80},
-		{field:'EndDate',title:'结束日期',width:80},
-		{field:'incidesc',title:'名称',width:280},
-		{field:'genenic',title:'处方通用名',width:160},
+		{field:'priorty',title:$g('优先级'),width:80},
+		{field:'StartDate',title:$g('开始日期'),width:80},
+		{field:'EndDate',title:$g('结束日期'),width:80},
+		{field:'incidesc',title:$g('名称'),width:280},
+		{field:'genenic',title:$g('处方通用名'),width:160},
 		{field:'genenicdr',title:'genenicdr',width:80,hidden:true},
-		{field:'dosage',title:'剂量',width:60},
+		{field:'dosage',title:$g('剂量'),width:60},
 		{field:'dosuomID',title:'dosuomID',width:80,hidden:true},
-		{field:'instru',title:'用法',width:80},
+		{field:'instru',title:$g('用法'),width:80},
 		{field:'instrudr',title:'instrudr',width:80,hidden:true},
-		{field:'freq',title:'频次',width:40},
+		{field:'freq',title:$g('频次'),width:40},
 		{field:'freqdr',title:'freqdr',width:80,hidden:true},
-		{field:'duration',title:'疗程',width:40},
+		{field:'duration',title:$g('疗程'),width:40},
 		{field:'durId',title:'durId',width:80,hidden:true},
-		{field:'form',title:'剂型',width:80},
+		{field:'form',title:$g('剂型'),width:80},
 		{field:'formdr',title:'formdr',width:80,hidden:true},
-		{field:'doctor',title:'医生',width:80},
-		{field:'execStat',title:'是否执行',width:80},		/// 增加执行和发药 qunianpeng 2018/3/12
-		{field:'sendStat',title:'是否发药',width:80},
-		{field:'apprdocu',title:'批准文号',width:80},
-		{field:'manf',title:'厂家',width:80}, 
+		{field:'doctor',title:$g('医生'),width:80},
+		{field:'execStat',title:$g('是否执行'),width:80},		/// 增加执行/发药 qunianpeng 2018/3/12
+		{field:'sendStat',title:$g('是否发药'),width:80},
+		{field:'apprdocu',title:$g('批准文号'),width:80},
+		{field:'manf',title:$g('厂家'),width:80},
 		{field:'manfdr',title:'manfdr',width:80,hidden:true}
 
 	]];
+
 	
 	//定义datagrid
  	$('#medInfo').datagrid({
-		url:url+'?action=GetPatOEInfo',	
+		url:url+'&action=GetPatOEInfo',	
 		fit:true,
 		border:false,
 		rownumbers:true,
@@ -571,13 +590,14 @@ function InitPatMedGrid()
 		pageSize:15,  			/// 每页显示的记录条数
 		pageList:[15,30,45],    /// 可以设置每页记录条数的列表
 	    singleSelect:false,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		rowStyler:function(index,row){
 			if ((row.OeFlag=="D")||(row.OeFlag=="C")){
 				return 'background-color:pink;';
 			}
-		},onClickRow:function(rowIndex, rowData){
+		},
+		onClickRow:function(rowIndex, rowData){
 			var flag=0;
 			///获取当前行是否选中
 			if($('tr[datagrid-row-index='+rowIndex+']').hasClass('datagrid-row-checked')){
@@ -598,7 +618,26 @@ function InitPatMedGrid()
 		},
 		queryParams:{
 			params:EpisodeID,
-			PriCode:choseFlag}
+			PriCode: $('input[name="ordFiter"]:checked').val()
+		},
+		onLoadSuccess: function(data){
+			if(Flag1 == 1){
+				var selectedRows = $('#drugdg').datagrid('getRows');
+			}else if(Flag2 == 1){
+				var selectedRows = $('#drugdg').datagrid('getRows');
+			}else if(Flag3 == 1){
+				var selectedRows = $('#outdrugdg').datagrid('getRows');	
+			}else{
+				return;	
+			}
+			$.each(data.rows, function (i, v) {
+				for(var index in selectedRows){
+					if(selectedRows[index].incidesc === v.incidesc){
+						$('#medInfo').datagrid('selectRow', i);	
+					}
+				}
+            });	
+		}
 	});		
 	$('#medInfo').datagrid('loadData', {total:0,rows:[]});	
 }
@@ -714,7 +753,7 @@ function cancelWin()
 function LoadPatMedInfo(priCode)
 {
 	$('#medInfo').datagrid({
-		url:url+'?action=GetPatOEInfo',	
+		url:url+'&action=GetPatOEInfo',	
 		queryParams:{
 			params:EpisodeID,
 			PriCode:priCode}
@@ -738,11 +777,15 @@ function saveNewPatEduInf(){
 	})
 	
 	var GuidObject="";  						/// 指导对象
+	var GuidObjectOther=""						// 指导对象(其他)
 	$('input[type=radio][name=GuidObject]').each(function(){
 		if ($(this).attr("checked")){
 			GuidObject=$(this).val();
 		}
 	})
+	if(GuidObject === "12"){
+		GuidObjectOther = $('#otherObject').val();	
+	}
 	var GuiContentList=""; 						/// 患者用药指导内容
 	$('input[type=checkbox][name=GuiContent]').each(function(){
 		if ($(this).attr("checked")){
@@ -764,7 +807,8 @@ function saveNewPatEduInf(){
 	//记录人
 	var UserDr=session['LOGON.USERID'];
 
-	var medEduMasDataList=EpisodeID+"^"+CurStatus+"^"+BadHabits+"^"+ConDisAndTre+"^"+GrantFlag+"^"+GuidObject+"^"+NewPatGuidCont+"^"+UserDr+"^"+Icd+"^"+modPhone+"^"+address;
+	var medEduMasDataList=EpisodeID+"^"+CurStatus+"^"+BadHabits+"^"+ConDisAndTre+"^"+GrantFlag
+		+"^"+GuidObject+"^"+NewPatGuidCont+"^"+UserDr+"^"+Icd+"^"+modPhone+"^"+address+"^"+GuidObjectOther;
 	
 	var rowid=$('#NewRowId').val()
 	var medEduDrgItmList="";				 /// 用药情况
@@ -773,7 +817,7 @@ function saveNewPatEduInf(){
 
 	$.ajax({  
 		type: 'POST',						 /// 提交方式 post 或者get  
-		url: url+'?action=SaveMedEduInf',	 /// 提交到那里    sufan 2016/09/18
+		url: url+'&action=SaveMedEduInf',	 /// 提交到那里    sufan 2016/09/18
 		data: "rowid="+rowid+"&"+"input="+input,/// 提交的参数  
 		success:function(msg){ 
 			if(msg!=0){
@@ -803,6 +847,10 @@ function saveInPatEduInf(){
 			GuidObject=$(this).val();
 		}
 	})
+	var otherObject = "";
+	if(GuidObject === "12"){
+		otherObject = $('#inOtherObject').val();
+	}
 	var GuiContentList=""; 				/// 患者用药指导内容
 	$('input[type=checkbox][name=InGuiContent]').each(function(){
 		if ($(this).attr("checked")){
@@ -822,7 +870,7 @@ function saveInPatEduInf(){
 	//记录人
 	var UserDr=session['LOGON.USERID'];
 
-	var medEduMasDataList=EpisodeID+"^"+CurStatus+"^"+BadHabits+"^"+ConDisAndTre+"^"+GrantFlag+"^"+GuidObject+"^"+InPatGuidCont+"^"+UserDr+"^"+Icd;
+	var medEduMasDataList=EpisodeID+"^"+CurStatus+"^"+BadHabits+"^"+ConDisAndTre+"^"+GrantFlag+"^"+GuidObject+"^"+InPatGuidCont+"^"+UserDr+"^"+Icd+"^^^"+otherObject;
 	
 	var rowid=$('#InPatEduRid').val();
 	
@@ -843,7 +891,7 @@ function saveInPatEduInf(){
 	
 	$.ajax({  
 		type: 'POST',							/// 提交方式 post 或者get   
-		url: url+'?action=SaveMedEduInf',		/// 提交到那里    sufan 2016/09/18 
+		url: url+'&action=SaveMedEduInf',		/// 提交到那里    sufan 2016/09/18 
 		data: "rowid="+rowid+"&"+"input="+input,/// 提交的参数  
 		success:function(msg){ 
 			if(msg!=0){
@@ -874,7 +922,7 @@ function saveOutPatEduInf(){
 	var GuiContentList="";				/// 患者用药指导内容
 	
 	var InPatGuidCont=$('#OutPatGuidCont').val();			  /// 备注(具体指导明细)
-	if ((InPatGuidCont=="")||(InPatGuidCont=="编辑内容..")){  /// sufan 2016/09/13
+	if ((InPatGuidCont=="")||(InPatGuidCont==$g("编辑内容.."))){  /// sufan 2016/09/13
 		$.messager.alert("提示","记录不完整，请重新输入！");
 		return;
 		}
@@ -899,7 +947,7 @@ function saveOutPatEduInf(){
 	
 	$.ajax({  
 		type: 'POST',						/// 提交方式 post 或者get  
-		url: url+'?action=SaveMedEduInf',	/// 提交到那里    sufan 2016/09/18
+		url: url+'&action=SaveMedEduInf',	/// 提交到那里    sufan 2016/09/18
 		data: "rowid="+medEduOutID+"&"+"input="+input,//提交的参数  
 		success:function(msg){ 
 			if(msg!=0){
@@ -922,7 +970,7 @@ function clearData(){
 
 function query(){
 	 $('#recordWin').window({
-		title:'用药教育记录',	/// by qunianpeng 2017/1/05
+		title:$g('用药教育记录'),	/// by qunianpeng 2017/1/05
 		collapsible:true,
 		border:false,
 		closed:"true",
@@ -951,8 +999,8 @@ function find_medEduGrid(stDate,endDate)
 	//定义columns
 	var columns=[[
 		{field:"medEduID",title:'RowID',width:100},
-		{field:'EDDate',title:'记录日期',width:200},
-		{field:'EDUser',title:'记录人',width:200}
+		{field:'EDDate',title:$g('记录日期'),width:200},
+		{field:'EDUser',title:$g('记录人'),width:200}
 	]];
 	
 	//定义datagrid
@@ -965,7 +1013,7 @@ function find_medEduGrid(stDate,endDate)
 		pageSize:15,  			/// 每页显示的记录条数
 		pageList:[15,30,45],    /// 可以设置每页记录条数的列表
 	    singleSelect:false,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		onClickRow:function() { /// 双击事件改为点击事件 by qnp 2017/1/5
     		var selected = $('#MedEduRecord').datagrid('getSelected'); 
@@ -983,7 +1031,10 @@ function find_medEduGrid(stDate,endDate)
 						$(this).attr("checked",true);
 					}
 			    });
-				
+				if(GuidObject === "12"){
+					$('#inOtherObject').show();
+					$('#inOtherObject').val(selected.OtherObject);	
+				}
 				
 				//获取查房记录ID，如果id不存在，即无查房记录，则不加载药品信息列表
 		  		var EduRid=$('#InPatEduRid').val();
@@ -1029,7 +1080,7 @@ function find_medEduGrid(stDate,endDate)
 	});
 
 	$('#MedEduRecord').datagrid({		
-		url:url+'?action=getMedEduRecord',	
+		url:url+'&action=getMedEduRecord',	
 		queryParams:{
 			AdmDr:EpisodeID,
 			Status:"In",
@@ -1106,7 +1157,7 @@ function InitGuiScopeTableEDU(){
 	var htmlStr=""
 	if(rtn==""){
 		//父节点为空，提示信息
-		 htmlStr= htmlStr+"<tr style='padding:2px;height:30px;'><td style='margin-left:10px;color:red'>请维护字典!</td>"
+		 htmlStr= htmlStr+"<tr style='padding:2px;height:30px;'><td style='margin-left:10px;color:red'>"+$g('请维护字典!')+"</td>"
 		}else{
 		htmlStr= htmlStr+"<tr style='margin:4px;height:30px;'>";
 		var flag=0;
@@ -1140,7 +1191,7 @@ function InitGuiScopeTableEDUI(){
 	var htmlStr=""
 	if(rtn==""){
 		//父节点为空，提示信息
-		 htmlStr= htmlStr+"<tr style='padding:2px;height:30px;'><td style='margin-left:10px;color:red'>请维护字典!</td>"
+		 htmlStr= htmlStr+"<tr style='padding:2px;height:30px;'><td style='margin-left:10px;color:red'>"+$g('请维护字典!')+"</td>"
 		}else{
 		htmlStr= htmlStr+"<tr style='margin:4px;height:30px;'>";
 		var flag=0;

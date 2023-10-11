@@ -126,15 +126,12 @@ function initDatagrid()
 	{
 		initPatform();
 		initPatList();
-	}else if(LgGroupID=="230")
-	{
-		initPatform();
-		initPatList();
 	}else{
 		initform(); //初始化表单录入框
 		inittable(); //初始化table 患者列表
 		$HUI.checkbox("#Adm").disable();
 		$HUI.combobox("#VisLoc").setValue(LgCtLocID);
+		$HUI.combobox("#VisLoc").disable()
 		}
 }
 //初始化combobox
@@ -578,8 +575,10 @@ function save(){
 	var jobId=$('#jobId').val();
 	var RecLoc=$('#RecLoc').combobox('getValue');
 	var Date=$('#StartDate').datebox('getValue');
+	
 	var DateFlag=serverCall("web.DHCDISRequest","JudgeDate",{"Date":Date})
 	var TimePoint=$('#Time').combobox('getText');
+
 	var TimeValue=$('#Time').combobox('getValue');
 	var TimeFlag=serverCall("web.DHCDISRequest","JudgeTime",{"Date":Date,"Time":TimePoint})
 	//var TimePoint=$('#TimePart').combobox('getText');
@@ -1335,6 +1334,7 @@ function SureRequestCopy(){
 	CopyReqNote = CopyReqNote.replace(/\^/g,'');
 	var CopyNum=1
 	CopyDate=CopyReqDate+" "+CopyReqTime+" "+CopyReqTimePoint;
+
 	var DateFlag=serverCall("web.DHCDISRequest","JudgeDate",{"Date":CopyReqDate})
 	var TimeFlag=serverCall("web.DHCDISRequest","JudgeTime",{"Date":CopyReqDate,"Time":CopyReqTimePoint})
 	var ReqTypeText=$('#CopyReqType').combobox('getText');
@@ -1347,7 +1347,7 @@ function SureRequestCopy(){
 		return false;
 	}
 	if((DateFlag==0)&&(LocDesc.indexOf("陪送中心") ==-1)){
-		alert("陪送日期小于当前日期!");
+		$.messager.alert("提示:","陪送日期小于当前日期!");
 		return false;
 	}
 	if(CopyReqTimePoint=="")
@@ -1361,7 +1361,7 @@ function SureRequestCopy(){
 		return false;
 	}
 	if((TimeFlag==0)&&(LocDesc.indexOf("陪送中心") =="-1")){
-		alert("陪送时间小于当前时间!");
+	$.messager.alert("提示:","陪送时间小于当前时间!");
 		return false;
 	}
 	if((CopyReqWay=="")||(ReqWayText==""))

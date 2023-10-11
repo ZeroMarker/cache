@@ -164,7 +164,7 @@ function doMultiplyCreate(tempParam)
 			setDocTempalte(tempParam.emrDocId,isMutex,isGuideBox); //设置引导框	
 			if (tempParam.actionType == "CREATE")
 			{
-				var defaultLoadId = getDefaultLoadId(tempParam.emrDocId,userLocID);
+				var defaultLoadId = getDefaultLoadId(tempParam.emrDocId,userLocID,tempParam.templateId);
 				if (defaultLoadId == "")
 				{
 					focusDocument("GuideDocument","","First");
@@ -187,7 +187,7 @@ function doMultiplyCreate(tempParam)
 }
 
 //获取多文档加载未创建时默认加载的titleCode
-function getDefaultLoadId(templateCategoryId,locID)
+function getDefaultLoadId(templateCategoryId,locID,templateID)
 {
 	var defaultLoadId = "";
 	jQuery.ajax({
@@ -200,7 +200,9 @@ function getDefaultLoadId(templateCategoryId,locID)
 					"Class":"EMRservice.BL.BLTitleConfig",
 					"Method":"GetDefaultLoadTitleCode",			
 					"p1":templateCategoryId,
-					"p2":locID
+					"p2":locID,
+					"p3":"",
+					"p4":templateID
 				},
 			success : function(d) {
 	           		defaultLoadId = d;
@@ -417,6 +419,20 @@ function cmdSyncExecute(argJson){
 //建立数据库连接
 function setConnect(){
 	var netConnect = "";
+	
+	var port = window.location.port;
+	var protocol = window.location.protocol.split(":")[0];
+	
+	if (protocol == "http")
+	{
+		port = port==""?"80":port;
+	}
+	else if (protocol == "https")
+	{
+		port = port==""?"443":port;
+	}
+	
+	
 	$.ajax({
 		type: 'Post',
 		dataType: 'text',
@@ -426,7 +442,10 @@ function setConnect(){
 		data: {
 			"OutputType":"String",
 			"Class":"EMRservice.BL.BLSysOption",
-			"Method":"GetNetConnectJson"
+			"Method":"GetNetConnectJson",
+			"p1":window.location.hostname,
+			"p2":port,
+			"p3":protocol
 		},
 		success: function (ret) {
 
@@ -1242,7 +1261,7 @@ function caSign(signProperty,userInfo,instanceId)
 
 	//开始签名
 	var cert = parent.GetSignCert(parent.strKey);
-    var UsrCertCode = parent.GetUniqueID(cert);
+    var UsrCertCode = parent.GetUniqueID(cert,parent.strKey);
     if (!UsrCertCode || '' == UsrCertCode) return '用户唯一标示为空！';
     
 	var signlevel = signProperty.SignatureLevel;
@@ -2084,6 +2103,10 @@ function eventSaveDocument(commandJson)
 	{
 	    setMessage('保存失败','warning');
 	}
+	else if (commandJson["args"]["result"] == "INVALID")
+    {
+		setMessage('病历存在非法字符，不能保存。','warning'); 
+    }
 	else if (commandJson["args"]["result"] != "NONE")
 	{
 		setMessage('文档没有发生改变','warning');

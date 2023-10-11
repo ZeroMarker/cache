@@ -2,11 +2,17 @@
 /// 创建:ZY  2010-08-03   BugNo.:ZY0027
 /// 描述:编辑字段
 /// --------------------------------
-var SelectedRow = 0;
+var SelectedRow = -1; ///Modify By QW 2018-08-31 HISUI改造
 var rowid=0;
 //装载页面  函数名称固定
 function BodyLoadHandler()
 {
+	hidePanelTitle(); //added by LMH 20230211 UI 极简组件界面弹框面板标题隐藏
+	initPanelHeaderStyle(); //added by LMH 20230211 UI 极简组件界面标题格式
+	showBtnIcon('BAdd^BUpdate^BDelete^BFind',false); //modified by LMH 20230211 动态设置是否极简显示按钮图标
+	initButtonWidth();///Add By QW 2018-08-31 HISUI改造:修改按钮长度
+	initButtonColor(); //added by LMH 20230211 UI 初始化按钮颜色
+	setButtonText();///Add By QW 2018-09-29 HISUI改造:按钮文字规范
 	InitUserInfo();
 	InitEvent();	//初始化
 	disabled(true);//灰化
@@ -18,12 +24,35 @@ function InitEvent() //初始化
 {
 	var obj=document.getElementById("BAdd");
 	if (obj) obj.onclick=BAdd_Click;
+	var obj=document.getElementById("BFind");
+	if (obj) obj.onclick=BFind_Click;
 	var obj=document.getElementById("BUpdate");
 	if (obj) obj.onclick=BUpdate_Click;
 	var obj=document.getElementById("BDelete");
 	if (obj) obj.onclick=BDelete_Click;
 }
-
+//add by cjt 需求号2782419 2022-08-17
+function BFind_Click()
+{
+	var url="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCRoleReqFields&ApproveFlowDR="+GetElementValue("ApproveFlowDR")+"&vData="+GetVData();
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.location.href=url;
+}
+//add by cjt 需求号2782419 2022-08-17 拼接查询参数
+function GetVData()
+{
+	var val="^vField="+GetElementValue("Field");
+	val=val+"^vType="+GetElementValue("Type");
+	val=val+"^vPosition="+GetElementValue("Position");
+	val=val+"^vHold1="+GetElementValue("Hold1");
+	val=val+"^vTableName="+GetElementValue("TableName");
+	val=val+"^vSort="+GetElementValue("Sort");
+	val=val+"^vHold2="+GetElementValue("Hold2");
+	val=val+"^vMustFlag="+GetElementValue("MustFlag");
+	return val;
+}
 function BAdd_Click()
 {
 	if (condition()) return;
@@ -34,7 +63,7 @@ function BAdd_Click()
 	result=result.replace(/\\n/g,"\n")
 	if(result!=0)
 	{
-		alertShow(t[-1000])
+		messageShow("","","",t[-1000])
 		return
 	}
 	if (result==0)location.reload();
@@ -48,10 +77,10 @@ function BUpdate_Click()
 	var plist=CombinData(); //函数调用
 	var result=cspRunServerMethod(encmeth,plist,'2');
 	result=result.replace(/\\n/g,"\n")
-	//alertShow(result)
+	//messageShow("","","",result)
 	if(result!=0)
 	{
-		alertShow(t[-1000])
+		messageShow("","","",t[-1000])
 		return
 	}
 	if (result==0)location.reload();	
@@ -68,35 +97,30 @@ function BDelete_Click()
 	result=result.replace(/\\n/g,"\n")
 	if(result!=0)
 	{
-		alertShow(t[-1000])
+		messageShow("","","",t[-1000])
 		return
 	}
 	if (result==0)location.reload();			
 }
 
 ///选择表格行触发此方法
-function SelectRowHandler()
+///Modify By QW 2018-08-31 HISUI改造：点击选择行后，界面无法正常填充数据
+///解决方法传入index,rowdata两个参数，并修改判断逻辑
+function SelectRowHandler(index,rowdata)
 {
-	var eSrc=window.event.srcElement;
-	var objtbl=document.getElementById('tDHCEQCRoleReqFields');
-	var rows=objtbl.rows.length;	
-	var lastrowindex=rows - 1;	
-	var rowObj=getRow(eSrc);	
-	var selectrow=rowObj.rowIndex;
-	if (!selectrow)	 return;
-	if (SelectedRow==selectrow)	{
+	if(index==SelectedRow)
+    {
 		Clear();
 		disabled(true)//灰化	
-		SelectedRow=0;
+		SelectedRow=-1;
 		rowid=0;
 		SetElement("RowID","");
-		}
-	else{
-		SelectedRow=selectrow;
-		rowid=GetElementValue("TRowIDz"+SelectedRow);
-		SetData(rowid);//调用函数
-		disabled(false)//反灰化
-		}
+		$('#tDHCEQCRoleReqFields').datagrid('unselectAll');
+		return;
+	 }
+	SelectedRow = index
+	SetData(rowdata.TRowID);//调用函数
+	disabled(false)//反灰化
 }
 
 function SetData(rowid)

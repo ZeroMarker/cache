@@ -1,4 +1,4 @@
-ï»¿function BodyLoadHandler() {
+function BodyLoadHandler() {
 	
 	
 	//alert(document.getElementById("FindByDoc").value);
@@ -17,7 +17,7 @@
 	var objLoc=document.getElementById("LocQuery")
 	var obj=document.getElementById("RLocID")
 	if (obj&&objLoc&&objLoc.value=="") obj.value="";
-	// /æ·»åŠ ä¸‹æ‹‰èœå•î“‰
+	// /Ìí¼ÓÏÂÀ­²Ëµ¥?
 	var obj=document.getElementById("SearchConditions");
     if (obj){
 	     obj.size=1;
@@ -26,11 +26,11 @@
 	}	
     var varItem = new Option("","");
     obj.options.add(varItem);
-    var varItem = new Option("ç—…äººå§“å","1");
+    var varItem = new Option("²¡ÈËĞÕÃû","1");
     obj.options.add(varItem);
-    var varItem = new Option("ç—…äººID","2");
+    var varItem = new Option("²¡ÈËID","2");
     obj.options.add(varItem);
-    var varItem = new Option("ç—…æ¡ˆå·","3");
+    var varItem = new Option("²¡°¸ºÅ","3");
     obj.options.add(varItem);
 	var obj=document.getElementById("Gsearchmessage");
 	if (obj) obj.onkeydown=GsearchmessageKeydownHandler;
@@ -83,7 +83,7 @@ function GsearchmessageKeydownHandler(e){
 		document.getElementById("Gsearchmessage").value=PatientNo;
 	}
 }
-// /ä¸‹æ‹‰èœå•ç›¸å…³æ–¹æ³•î“‰
+// /ÏÂÀ­²Ëµ¥Ïà¹Ø·½·¨?
 function balance_OnChange()
 {
 	var obj=document.getElementById("SearchConditions");
@@ -98,7 +98,7 @@ function BAount_Click()
 	var objtbl=document.getElementById("tDHCOPDOCLog");
 	var Rows=objtbl.rows.length;
 	if(Rows<2){
-		alert("è¯·å…ˆæŸ¥è¯¢å‡ºæ•°æ®,ä»¥ä¾¿ç»Ÿè®¡.");
+		alert("ÇëÏÈ²éÑ¯³öÊı¾İ,ÒÔ±ãÍ³¼Æ.");
 		return;
 		}
 	var GetInfectStrObj=document.getElementById("GetInfectStr");
@@ -110,6 +110,7 @@ function BAount_Click()
 	//if(obj)obj.value=GetInfectStrObj.value;
 	//if(obj)var InfectStr=obj.value;
 	var lnk = "websys.default.csp?WEBSYS.TCOMPONENT=DHCOPDOCLogAount&InfectStr="+InfectStr;
+	if(typeof websys_writeMWToken=='function') lnk=websys_writeMWToken(lnk);
 	win=open(lnk,"BAount","status=1,top=150,left=150,width=1000,height=600,scrollbars=Yes")
 }
 function gridlist(objSheet,row1,row2,c1,c2)
@@ -128,7 +129,7 @@ function deplook(str) {
 }
 function PrintClickHandlerHZRep(){
 	
-	//alert("ç”±äºæ˜¯å¦10ç½‘æ®µè®¾ç½®åŸå› ,å¦‚æœæ‰“å°æŒ‰é’®æ‰“å°ä¸å‡ºæ¥,è¯·ç”¨æ‰“å°2æŒ‰é’®å†æ“ä½œ");
+	//alert("ÓÉÓÚÊÇ·ñ10Íø¶ÎÉèÖÃÔ­Òò,Èç¹û´òÓ¡°´Å¥´òÓ¡²»³öÀ´,ÇëÓÃ´òÓ¡2°´Å¥ÔÙ²Ù×÷");
 	///AHSLYY  Hospital  INV State
 	var TemplatePath
 	var getpath=document.getElementById('printpath');
@@ -158,12 +159,12 @@ function PrintClickHandlerHZRep(){
 	    if (obj){
 		    var UserName=obj.innerText;
 	    }
-	    //å¾—åˆ°åŒ»ç”ŸèŒç§° start
+	    //µÃµ½Ò½ÉúÖ°³Æ start
 	    var UserID=session['LOGON.USERID'];
 	    var GetUserTPObj=document.getElementById('GetUserTP');
 	    if (GetUserTPObj) {var encmeth=GetUserTPObj.value} else {var encmeth=''};
 	    var UserTPDesc=cspRunServerMethod(encmeth,UserID);
-	    //å¾—åˆ°æ—¥æœŸ
+	    //µÃµ½ÈÕÆÚ
 	    var StartDate=document.getElementById('OpDate');
 	    var EndDate=document.getElementById('OpDate2');
 	    //guorongyong end
@@ -207,21 +208,21 @@ function PrintClickHandlerHZRep(){
 		var xlsCurcol=1;
 		var myRows=Rows;
 		var HospName=document.getElementById("HospName").value
-		if (HospName!="") xlsheet.cells(1,5)=HospName+"é—¨è¯Šç—…äººç»Ÿè®¡è¡¨"
+		if (HospName!="") xlsheet.cells(1,5)=HospName+"ÃÅÕï²¡ÈËÍ³¼Æ±í"
 		var ks=document.getElementById("DocDepartment");
-	    xlsheet.cells(3,1)="æ‰“å°å°±è¯Šæ—¥æœŸ:"   //"ç§‘å®¤:"+ks.value;
+	    xlsheet.cells(3,1)="´òÓ¡¾ÍÕïÈÕÆÚ:"   //"¿ÆÊÒ:"+ks.value;
 		var OpDate=document.getElementById("OpDate");
 		var OpDate2=document.getElementById("OpDate2");
 		
 		if (OpDate==OpDate2){
 			cxsj=OpDate.value;			
 		}else{
-			cxsj=OpDate.value+"è‡³"+OpDate2.value;
+			cxsj=OpDate.value+"ÖÁ"+OpDate2.value;
 		}
 				  
 	  xlsheet.cells(3,5)=cxsj;
-	  //xlsheet.cells(3,6)="åŒ»ç”Ÿ:"+UserName;  
-	  //xlsheet.cells(3,7)="èŒç§°:"+UserTPDesc; 
+	  //xlsheet.cells(3,6)="Ò½Éú:"+UserName;  
+	  //xlsheet.cells(3,7)="Ö°³Æ:"+UserTPDesc; 
 
 	
     		
@@ -287,15 +288,15 @@ function PrintClickHandlerHZRep(){
 			var listobj=document.getElementById("DocFirstVisitSignz"+Row);
 			if (listobj){
 				var myval=DHCWebD_GetCellValue(listobj);
-				if(myval==true)myval="æ˜¯";
-				else myval="å¦";
+				if(myval==true)myval="ÊÇ";
+				else myval="·ñ";
 				xlsheet.cells(xlsrow,xlsCurcol+7)=myval;
 			}
 			var listobj=document.getElementById("DocFurConsultSignz"+Row);
 			if (listobj){
 				var myval=DHCWebD_GetCellValue(listobj);
-				if(myval==true)myval="æ˜¯";
-				else myval="å¦";
+				if(myval==true)myval="ÊÇ";
+				else myval="·ñ";
 				xlsheet.cells(xlsrow,xlsCurcol+8)=myval;
 			}
             var listobj=document.getElementById("CTLOCDescz"+Row);
@@ -380,7 +381,7 @@ function PrintClickHandlerHZRep(){
 
 function PrintClickHandlerHZRep2(){
 	
-	//alert("ç”±äºæ˜¯å¦10ç½‘æ®µè®¾ç½®åŸå› ,å¦‚æœæ‰“å°2æŒ‰é’®æ‰“å°ä¸å‡ºæ¥,è¯·ç”¨æ‰“å°æŒ‰é’®å†æ“ä½œ");
+	//alert("ÓÉÓÚÊÇ·ñ10Íø¶ÎÉèÖÃÔ­Òò,Èç¹û´òÓ¡2°´Å¥´òÓ¡²»³öÀ´,ÇëÓÃ´òÓ¡°´Å¥ÔÙ²Ù×÷");
 	///AHSLYY  Hospital  INV State
 	//Set Config=##Class(websys.Configuration).%OpenId(1)
 	//Config.PathToReports
@@ -441,7 +442,7 @@ function PrintClickHandlerHZRep2(){
 	    xlsheet.Columns("H:H").ColumnWidth=9;
 	    xlsheet.Columns("I:I").ColumnWidth=9;*/
 	    
-	    xlsheet.cells(1,1)=BeginDate+"è‡³"+EndDate+"æœŸé—´é—¨è¯Šæ—¥å¿—";
+	    xlsheet.cells(1,1)=BeginDate+"ÖÁ"+EndDate+"ÆÚ¼äÃÅÕïÈÕÖ¾";
 	    //xlsheet.cells(4,8)=session["LOGON.USERNAME"];
 		//xlsheet.cells(4,10)=Depart;//BeginDate+"--" +EndDate;	
 		///xlsheet.cells(6,3)=EndDate;
@@ -540,11 +541,11 @@ function PrintClickHandlerHZRep2(){
 			if (listobj){
 				var myval=""
 			var listobjval=DHCWebD_GetCellValue(listobj);
-			if (listobjval==true){var myval="åˆè¯Š"}
+			if (listobjval==true){var myval="³õÕï"}
 			var dfcobj=document.getElementById("DocFurConsultSignz"+Row);
 			if (dfcobj){
 				var DocFurConsultSign=DHCWebD_GetCellValue(dfcobj);
-				if(DocFurConsultSign==true){var myval="å¤è¯Š"}
+				if(DocFurConsultSign==true){var myval="¸´Õï"}
 			}
 			xlsheet.cells(xlsrow,xlsCurcol+15)=myval;
 			}
@@ -573,10 +574,10 @@ function PrintClickHandlerHZRep2(){
 		var m=d.getMinutes();
 		var s=d.getSeconds()
 
-	    //alert("C:\\é—¨è¯ŠåŒ»ç”Ÿæ—¥å¿—"+h+m+s+".xls")
+	    //alert("C:\\ÃÅÕïÒ½ÉúÈÕÖ¾"+h+m+s+".xls")
 	    //xlsheet.save   //printout
-	    alert("æ–‡ä»¶å°†ä¿å­˜åœ¨æ‚¨çš„Eç›˜æ ¹ç›®å½•ä¸‹");
-	    xlBook.SaveAs("E:\\é—¨è¯ŠåŒ»ç”Ÿæ—¥å¿—"+h+m+s+".xls");   //lgl+
+	    alert("ÎÄ¼ş½«±£´æÔÚÄúµÄEÅÌ¸ùÄ¿Â¼ÏÂ");
+	    xlBook.SaveAs("E:\\ÃÅÕïÒ½ÉúÈÕÖ¾"+h+m+s+".xls");   //lgl+
 	    xlBook.Close (savechanges=false);
 	    
 	    xlApp=null;
@@ -676,7 +677,7 @@ function loadCardType(){
 	}
 }
 function CardNoKeydownHandler(e) {
-	//è¿™è¾¹è¦ä¸å¡å¤„ç†ä¸€è‡´
+	//Õâ±ßÒªÓë¿¨´¦ÀíÒ»ÖÂ
 	if (evtName=='CardNo') {
 		window.clearTimeout(evtTimer);
 		evtTimer='';
@@ -697,8 +698,8 @@ function CardNoKeydown(){
 	var rtn=myary[0];
     //alert(CardInform)
     switch (rtn){
-		case "-200": //å¡æ— æ•ˆ
-			alert("å¡æ— æ•ˆ");
+		case "-200": //¿¨ÎŞĞ§
+			alert("¿¨ÎŞĞ§");
 			PatientIDObj=document.getElementById("PatientID");
 			PatientIDObj.value="";
 			document.getElementById("CardNo").value="";
@@ -724,7 +725,7 @@ function CardNoKeydown(){
 }
 function GetCardNoLength(){
 	var CardNoLength="";
-	var CardTypeValue=DHCC_GetElementData("CardTypeDefine"); //BY guorongyong å–æ‰€é€‰å¡ç±»å‹ä¼ å‡ºå­—ç¬¦ä¸² 2008-02-27
+	var CardTypeValue=DHCC_GetElementData("CardTypeDefine"); //BY guorongyong È¡ËùÑ¡¿¨ÀàĞÍ´«³ö×Ö·û´® 2008-02-27
     //var CardTypeValue=tempclear
 	if (CardTypeValue!=""){
 		var CardTypeArr=CardTypeValue.split("^");
@@ -740,7 +741,7 @@ function ReadCardHandle()
 	var CardTypeRowId=myary[0];
 	//var myEquipDR=DHCWeb_GetListBoxValue("CardTypeDefine");
 	//var myEquipDR=combo_CardType.getActualValue();
-	//è¯»å¡çš„æ—¶å€™æ²¡æœ‰å¿…è¦éè¦æŸ¥æ‰¾è´¦æˆ·ä¿¡æ¯
+	//¶Á¿¨µÄÊ±ºòÃ»ÓĞ±ØÒª·ÇÒª²éÕÒÕË»§ĞÅÏ¢
     //var CardInform=DHCACC_GetAccInfo(m_SelectCardTypeDR,myEquipDR)
     //var CardInform=DHCACC_ReadMagCard(myEquipDR.split("^")[0])
     var myrtn=DHCACC_GetAccInfo(CardTypeRowId,myoptval);
@@ -750,7 +751,7 @@ function ReadCardHandle()
 	//var ret=CheckIfUnite(CardNo,"");
     //alert(CardInform)
     switch (rtn){
-	        case "0": //å¡æœ‰æ•ˆ
+	        case "0": //¿¨ÓĞĞ§
 	            document.getElementById('CardNo').value=CardNo
 				CardNoKeydown();
 				break;
@@ -758,8 +759,8 @@ function ReadCardHandle()
 	            document.getElementById('CardNo').value=CardNo
 				CardNoKeydown();
 				break;
-			case "-200": //å¡æ— æ•ˆ
-				alert("å¡æ— æ•ˆ");
+			case "-200": //¿¨ÎŞĞ§
+				alert("¿¨ÎŞĞ§");
 				document.getElementById('PatientID').value="";
 				break;
 			default:

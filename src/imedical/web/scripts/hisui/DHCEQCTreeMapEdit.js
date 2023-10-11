@@ -10,7 +10,6 @@ function BodyLoadHandler()
 	KeyUp("ParTree^CurTree");	//清空选择	
 	Muilt_LookUp("ParTree^CurTree");
 	ChangeStatus(false);
-	
 }
 
 function InitPage()
@@ -152,8 +151,9 @@ function ChangeStatus(Value)
 		DisableElement("CurTree",true);
 		DisableBElement("BUpdate",true);
 		DisableBElement("BDelete",true);
-		document.getElementById("ld"+GetElementValue("GetComponentID")+"iParTree").style.visibility="hidden"
-		document.getElementById("ld"+GetElementValue("GetComponentID")+"iCurTree").style.visibility="hidden"
+		// MZY0116	2489721		2022-03-14
+		//document.getElementById("ld"+GetElementValue("GetComponentID")+"iParTree").style.visibility="hidden"
+		//document.getElementById("ld"+GetElementValue("GetComponentID")+"iCurTree").style.visibility="hidden"
 	}
 	else
 	{
@@ -164,8 +164,9 @@ function ChangeStatus(Value)
 		result=result.replace(/\\n/g,"\n")
 		SetElement("ParTree",result);
 		DisableBElement("BDelete",!Value);
-		document.getElementById("ld"+GetElementValue("GetComponentID")+"iParTree").style.visibility=""
-		document.getElementById("ld"+GetElementValue("GetComponentID")+"iCurTree").style.visibility=""
+		// MZY0116	2489721		2022-03-14
+		//document.getElementById("ld"+GetElementValue("GetComponentID")+"iParTree").style.visibility=""
+		//document.getElementById("ld"+GetElementValue("GetComponentID")+"iCurTree").style.visibility=""
 	}
 }
 
@@ -200,6 +201,8 @@ function ChangeTreeInfo()
 	}
 }
 
+//modified by csj 2020-09-15 注释 避免弹出旧组件lookup窗口
+/*
 function Tree_Click()
 {
 	var Type=GetElementValue("Type");
@@ -207,7 +210,7 @@ function Tree_Click()
 	{
 		LookUpCTLoc("GetTree","'',CurTree");
 	}
-}
+}*/
 
 //定义页面加载方法
 document.body.onload = BodyLoadHandler;

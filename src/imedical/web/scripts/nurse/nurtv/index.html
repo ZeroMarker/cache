@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>电子白板系统</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    <link rel="shortcut icon" href="./favicon.ico" />
+    <link href="./common/css/mui.min.css" rel="stylesheet" />
+    <link href="./common/css/iconfont.css" rel="stylesheet" />
+    <link href="./common/css/iziToast.min.css" rel="stylesheet" />
+    <link href="./common/css/clock.css" rel="stylesheet" />
+    <link href="./common/css/tabs.css" rel="stylesheet" />
+	<link href="./common/css/mui.picker.min.css" rel="stylesheet" />
+    <link href="./Index/index.css" rel="stylesheet" />
+	<link href="./common/css/downloader.css" rel="stylesheet" />
+	<link href="./common/css/public.css" rel="stylesheet" />
+    <style type="text/css">
+        #tab2,
+        #tab3,
+        #tab4,
+        #tab5,
+        #tab6,#tab7,#tab8 {
+            width: calc(100% - 30px);
+            transition: width 0.2s linear;
+        }
+        
+        .open #tab2,
+        .open #tab3,
+        .open #tab4,
+        .open #tab5,
+        .open #tab6,.open #tab7 {
+            width: calc(87.5% - 30px);
+        }
+        
+        .notification {
+            left: 100%;
+            right: calc(12.5%);
+            transition: left 0.2s ease, right 0.2s ease;
+        }
+        
+        .open .notification {
+            left: calc(87.5%);
+            right: 0px;
+            transition: left 0.2s ease, right 0.2s ease;
+        }
+        
+        .switch {
+            right: 0px;
+            left: calc(100% - 30px);
+            transition: left 0.2s ease, right 0.2s ease;
+			overflow: hidden;
+			/* background-image: linear-gradient(177deg, #fff 0%, #a1c4fd 50%, #fff 100%); */
+        }
+        
+        .open .switch {
+            left: calc(87.5% - 30px);
+            right: 0px;
+            transition: left 0.2s ease, right 0.2s ease;
+        }
+		#hospName{
+			position: absolute;
+			left: 90px;
+			width: auto;
+			line-height: 60px;
+			font-size: 15px;
+			height: 100%;
+			z-index: 10;
+			color: #fff;
+		}
+    </style>
+</head>
+
+<body class="">
+    <header class="mui-bar mui-bar-nav YaHei">
+        <div class="mui-pull-left dhc"></div>
+		<div id="version" class="version"></div>
+		<div id="hospName" class="hospName"></div>
+		<div class="midArea">
+			<h1 id="scrollArea" class="scrollArea"><marquee></marquee></h1>
+			<div id="jieqi" class="jieqi"></div>
+			<div id="wardSeg" class="ward mui-scroll-wrapper mui-slider-indicator mui-segmented-control mui-segmented-control-inverted">
+				<div id="wardScroll" class="mui-scroll"></div>
+			</div>
+		</div>
+		<div id="hideBar" class="mui-pull-right hideBar iconfont iconzoom1"></div>
+    </header>
+	
+    <div id="tabbar" class="mui-bar mui-bar-tab YaHei">
+        <div id="tabbar1" class="mui-tab-item mui-active" href="#tab1" data-l="" data-r="tabbar2">
+			<div class="tabContent">
+				<span class="mui-icon iconfont iconbed"></span>
+				<span class="mui-tab-label">床位图</span>
+			</div>
+        </div>
+        <div id="tabbar2" class="mui-tab-item" href="#tab2" data-l="tabbar1" data-r="tabbar3">
+			<div class="tabContent">
+				<span class="mui-icon iconfont iconzezu"></span>
+				<span class="mui-tab-label">护理任务</span>
+			</div>
+        </div>
+        <div id="tabbar3" class="mui-tab-item" href="#tab3" data-l="tabbar2" data-r="tabbar4">
+			<div class="tabContent">
+				<span class="mui-icon iconfont iconjiaoban"></span>
+				<span class="mui-tab-label">护理交班</span>
+			</div>
+        </div>
+        <div id="tabbar4" class="mui-tab-item" href="#tab4" data-l="tabbar3" data-r="tabbar7">
+			<div class="tabContent">
+				<span class="mui-icon iconfont iconshoushu"></span>
+				<span class="mui-tab-label">术检排程</span>
+			</div>
+        </div>
+        <!-- <div class="mui-tab-item" href="#tab5">
+		<div class="tabContent">
+			<span class="mui-icon iconfont iconxuanjiao"></span>
+			<span class="mui-tab-label">健康宣教</span>
+		</div>
+			</div> -->
+        <div id="tabbar7" class="mui-tab-item" href="#tab7" data-l="tabbar4" data-r="tabbar6">
+			<div class="tabContent">
+				<span class="mui-icon iconfont icondanger"></span>
+				<span class="mui-tab-label">危急值</span>
+			</div>
+        </div>
+        <div id="tabbar6" class="mui-tab-item" href="#tab6" data-l="tabbar7" data-r="tabbar8">
+			<div class="tabContent">
+				<span class="mui-icon iconfont iconnurSchedule"></span>
+				<span class="mui-tab-label">护理排班</span>
+			</div>
+        </div>
+    </div>
+    <div id="container" class="mui-content mui-fullscreen YaHei">
+        <div id="tab1" class="mui-control-content iframeBox mui-active">
+            <iframe id="BedMap" src="BedMap/bedMap.html" width="100%" height="100%" frameborder="0" allowfullscreen="true"></iframe>
+        </div>
+        <div id="tab2" class="mui-control-content iframeBox">
+            <iframe id="ResponsibileTask" src="ResponsibileTask/responsibileTask.html" width="100%" height="100%" frameborder="0" allowfullscreen="true"></iframe>
+        </div>
+        <div id="tab3" class="mui-control-content iframeBox">
+            <iframe id="ShiftWork" src="ShiftWork/shiftWork.html" width="100%" height="100%" frameborder="0" allowfullscreen="true"></iframe>
+        </div>
+        <div id="tab4" class="mui-control-content iframeBox">
+            <iframe id="OperationPlan" src="OperationPlan/op.html" width="100%" height="100%" frameborder="0" allowfullscreen="true"></iframe>
+        </div>
+        <!-- <div id="tab5" class="mui-control-content iframeBox">
+				<iframe id="HealthyPublicity" src="HealthyPublicity/healthyPublicity.html" width="100%" height="100%" frameborder="0"></iframe>
+			</div> -->
+        <div id="tab7" class="mui-control-content iframeBox">
+            <iframe id="CriticalValue" src="CriticalValue/criticalValue.html" width="100%" height="100%" frameborder="0" allowfullscreen="true"></iframe>
+        </div>
+        <div id="tab6" class="mui-control-content iframeBox">
+            <iframe id="NurSchedule" src="NurSchedule/nurSchedule.html" width="100%" height="100%" frameborder="0" allowfullscreen="true"></iframe>
+        </div>
+    </div>
+    <div class="switch" data-l="tabbar6" data-r="">
+		<div id="exitBtn" class="iconfont iconexit"></div>
+		<div id="settingBtn" class="iconfont iconsetting"></div>
+		<div id="msgBtn" class="iconfont iconmsgs"><span class="mui-badge mui-badge-danger msgNum">…</span></div>
+		<div id="voiceBtn" class="iconfont iconmute"></div>
+		<div id="editBtn" class="editBtn iconfont iconedit"></div>
+		<div id="refreshBtn" class="iconfont iconrefresh"></div>
+		<div id="switch" class="iconfont iconshow"></div>
+	</div>
+    <div id="notification" class="notification YaHei">
+        <div id="clock" class="light">
+            <div class="display">
+                <div class="date"></div>
+                <div class="week"></div>
+                <div class="digits"></div>
+            </div>
+        </div>
+        <div id="withoutClock" class="withoutClock">
+            <div id="topSlider" class="mui-slider topSlider">
+                <div id="topSegControl" class="mui-slider-indicator mui-segmented-control mui-segmented-control-inverted">
+                    <div class="mui-control-item mui-active" href="#item1mobile">
+						<div class="label">新医嘱</div>
+					</div>
+                    <div class="mui-control-item" href="#item3mobile">
+						<div class="label">周计划</div>
+					</div>
+                </div>
+                <div id="sliderGroup" class="mui-slider-group">
+                    <div id="item1mobile" class="mui-slider-item mui-control-content mui-active">
+                        <div id="scroll1" class="mui-scroll-wrapper">
+                            <div id="newsScroll" class="mui-scroll">
+                                <ul class="mui-table-view">
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                   
+                    <div id="item3mobile" class="mui-slider-item mui-control-content">
+                        <div id="scroll3" class="mui-scroll-wrapper">
+                            <div class="mui-scroll">
+                                <div class="mui-loading">
+                                    <div class="weekPlan"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="botSlider" class="mui-slider botSlider">
+                <div id="botSegControl" class="mui-slider-indicator mui-segmented-control mui-segmented-control-inverted">
+                    <div class="mui-control-item mui-active" href="#item1">
+						<div class="label">留言板</div>
+					</div>
+                    <div class="mui-control-item" href="#item2">
+						<div class="label">值班医生</div>
+					</div>
+                </div>
+                <div class="mui-slider-group">
+					<div id="item1" class="mui-slider-item mui-control-content mui-active">
+					    <div id="wrapper1" class="mui-scroll-wrapper">
+					        <div class="mui-scroll mui-scroll-iPhone">
+					            <div class="mui-loading">
+					                <div class="liuyanban"></div>
+					            </div>
+					        </div>
+						</div>
+					</div>
+                    <div id="item2" class="mui-slider-item mui-control-content">
+                        <div id="wrapper2" class="mui-scroll-wrapper">
+                           <div class="mui-scroll mui-scroll-iPhone">
+                               <div class="mui-loading">
+                                   <div class="docInfo"></div>
+                               </div>
+                           </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+			<div id="scaleBtn" class="scaleBtn iconfont iconzoom1"></div>
+        </div>
+    </div>
+    <div id="setPopover" class="mui-popover setPopover YaHei" data-disable-auto-close="false">
+        <div class="headTip iconfont iconsetting">设置
+            <div id="closeBtn" class="iconfont iconerror1"></div>
+        </div>
+        <ul id="setCard" class="mui-card mui-table-view">
+			<div class="mui-input-row">
+			    <label>新医嘱查询：</label>
+			    <div id="newOrder" class="mui-switch">
+			        <div class="mui-switch-handle"></div>
+			    </div>
+			</div>
+            <div class="mui-input-row">
+                <label>浮动窗口提示：</label>
+                <div id="msgWindow" class="mui-switch">
+                    <div class="mui-switch-handle"></div>
+                </div>
+            </div>
+            <div class="mui-input-row">
+                <label>患者隐私脱敏：</label>
+                <div id="namePrivate" class="mui-switch">
+                    <div class="mui-switch-handle"></div>
+                </div>
+            </div>
+			<div class="mui-input-row">
+			    <label>手术信息优先：</label>
+			    <div id="opFirst" class="mui-switch">
+			        <div class="mui-switch-handle"></div>
+			    </div>
+			</div>
+            <div class="mui-input-row">
+                <label>夜间模式：</label>
+                <div id="nightMode" class="mui-switch">
+                    <div class="mui-switch-handle"></div>
+                </div>
+				<div id="selfBtn" class="selfBtn">自定义</div>
+            </div>
+        </ul>
+        <div class="buttonC">
+            <button id="commitBtn" type="button">保存</button>
+            <button id="cancelBtn" type="button">取消</button>
+        </div>
+    </div>
+	<div id="timePopover" class="mui-popover timePopo YaHei" data-disable-auto-close="false">
+		<div class="mui-input-row">
+			<div class="timeTip">切换为日间模式</div>
+			<div id="dayTime" class="iconfont">08:00</div>
+		</div>
+		<div class="mui-input-row">
+			<div class="timeTip">切换为夜间模式</div>
+			<div id="nightTime" class="iconfont">20:00</div>
+		</div>
+		<div class="mui-input-row">
+			<div class="timeTip">启用自动切换</div>
+			<div id="timeTurn" class="mui-switch">
+			    <div class="mui-switch-handle"></div>
+			</div>
+		</div>
+	</div>
+    <div id="msgPopover" class="mui-popover msgPopover YaHei" data-disable-auto-close="false">
+        <div class="headTip iconfont iconedit">展示信息
+            <div id="editClose" class="iconfont iconerror1"></div>
+        </div>
+		<div id="tabs" class="tabs">
+		    <ul class="horizontal">
+				<li rel="tab-1" class="selectActive" style="width: 33%;">留言板</li>
+		        <li rel="tab-2" style="width: 33%;">值班医生</li>
+				<li rel="tab-3" style="width: 34%;">滚动字幕</li>
+		    </ul>
+			<div rel="tab-1"><textarea id="liuyanInput"></textarea></div>
+			<div rel="tab-2"><textarea id="docInput"></textarea></div>
+			<div rel="tab-3"><textarea id="scrollInput"></textarea></div>
+		</div>
+        <div class="buttonC">
+            <button id="editCommit" type="button">保存</button>
+            <button id="editCancle" type="button">取消</button>
+        </div>
+    </div>
+
+	<audio id="audio" height="100" width="100" style="display: none;">
+		<source src="common/audio/audio.mp3" type="audio/mp3" />
+	</audio>
+	<div id="dhcBackdrop" class="dhc-backdrop"></div>
+	<script src="./common/js/mui.js"></script>
+	<script src="./common/js/mui.pullToRefresh.js"></script>
+	<script src="./common/js/mui.pullToRefresh.material.js"></script>
+	<script src="./common/js/mui.picker.min.js"></script>
+    <script src="./common/js/jquery-3.4.1.js"></script>
+	<!-- <script src="./common/js/keyevent.util.js"></script> -->
+    <script src="./common/js/iziToast.js"></script>
+    <script src="./common/js/tabs.js"></script>
+	<script src="./common/js/DHCTools.js"></script>
+	<script src="./configJS/globalSet.js"></script>
+    <script src="./common/js/DHCWebService.js"></script>
+	<script src="./common/js/moment.js"></script>
+	<script src="./common/js/localFileMethod.js"></script>
+	<script src="./common/js/downloader.js"></script>
+    <script src="./Index/index.js"></script>
+	<script src="./common/js/clock.js"></script>
+</body>
+
+</html>

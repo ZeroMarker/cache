@@ -1,5 +1,6 @@
-var idobj,ipobj,dateFromobj,dateToobj,activeobj;
+var idobj,ipobj,dateFromobj,dateToobj,activeobj,ipDescObj;
 var addobj,updateobj,deleteobj,clearobj;
+var admTypeoObj,admTypeeObj,admTypeiObj;
 document.body.onload=function(){
 	idobj=document.getElementById("RowId");
 	ipobj=document.getElementById("Ip");
@@ -8,11 +9,15 @@ document.body.onload=function(){
 	hospobj=document.getElementById("HospDesc");
 	activeobj=document.getElementById("Active");
 	activeobj.checked=true;
-	
+	ipDescObj=document.getElementById("IpDesc");
 	addobj=document.getElementById("Add");
 	updateobj=document.getElementById("Update");
 	deleteobj=document.getElementById("Delete");
 	clearobj=document.getElementById("Clear");
+	
+	admTypeoObj=document.getElementById("AdmTypeO");
+	admTypeeObj=document.getElementById("AdmTypeE");
+	admTypeiObj=document.getElementById("AdmTypeI");
 	
 	if (addobj) addobj.onclick=add_click;
 	if (updateobj) updateobj.onclick=update_click;
@@ -25,7 +30,7 @@ document.body.onload=function(){
 		var obj = document.getElementById("SingleHospId");
 		if (obj){
 			obj.value = row["HOSPRowId"];
-			Find_click();
+			clear_click();
 		}
 	}
 }
@@ -43,9 +48,14 @@ function add_click(){
 	if(activeobj.checked){
 		act="Y";
 	}
+	var admType="";
+	if(admTypeoObj.checked) admType +="O";
+	if(admTypeeObj.checked) admType +="E";
+	if(admTypeiObj.checked) admType +="I";
+	var ipDesc = ipDescObj.value;
 	var encobj=document.getElementById("SaveEnc");
 	var enc=encobj.value;
-	var rtn = cspHttpServerMethod(enc,id,ip,DateFrom,DateTo,act,hospDesc);
+	var rtn = cspHttpServerMethod(enc,id,ip,DateFrom,DateTo,act,hospDesc,ipDesc,admType);
 	if (parseFloat(rtn)>0){
 		alert("增加成功");
 		Find_click();
@@ -63,10 +73,16 @@ function update_click(){
 	if(activeobj.checked){
 		act="Y";
 	}
+	var admType="";
+	if(admTypeoObj.checked) admType +="O";
+	if(admTypeeObj.checked) admType +="E";
+	if(admTypeiObj.checked) admType +="I";
+
 	var hospDesc = hospobj.value;
+	var ipDesc = ipDescObj.value;
 	var encobj=document.getElementById("SaveEnc");
 	var enc=encobj.value;
-	var rtn = cspHttpServerMethod(enc,id,ip,DateFrom,DateTo,act,hospDesc);
+	var rtn = cspHttpServerMethod(enc,id,ip,DateFrom,DateTo,act,hospDesc,ipDesc,admType);
 	if (parseFloat(rtn)>0){
 		alert("更新成功");
 		Find_click();
@@ -74,12 +90,19 @@ function update_click(){
 		alert("失败\n"+rtn.split("^")[1]);
 	}
 }
-function clear_click(){
+function reset(){
 	ipobj.value="";
 	dateFromobj.value="";
 	dateToobj.value="";
 	activeobj.checked=true;
 	idobj.value="";
+	ipDescObj.value="";
+	admTypeoObj.checked=false;
+	admTypeeObj.checked=false;
+	admTypeiObj.checked=false;
+}
+function clear_click(){
+	reset();	
 	Find_click();
 }
 function delete_click(){
@@ -104,6 +127,8 @@ var SelectRowHandler = function(){
 		var act = document.getElementById("TActivez"+selectedRowObj.rowIndex).innerText;
 		var hospDesc = document.getElementById("THospz"+selectedRowObj.rowIndex).innerText;
 		var id = document.getElementById("TRowIdz"+selectedRowObj.rowIndex).value;
+		var ipDesc = document.getElementById("TIpDescz"+selectedRowObj.rowIndex).innerText;
+		var admType = document.getElementById("TAdmTypez"+selectedRowObj.rowIndex).innerText;
 		if(tIp.charCodeAt()==160||tIp==" ") tIp="";
 		ipobj.value= tIp;
 		if(tDateFrom.charCodeAt()==160||tDateFrom==" ") tDateFrom="";
@@ -117,15 +142,15 @@ var SelectRowHandler = function(){
 		}else{
 			activeobj.checked=false;
 		}
+		if (admType.indexOf("O")>-1){admTypeoObj.checked=true;}else{admTypeoObj.checked=false;}
+		if (admType.indexOf("E")>-1){admTypeeObj.checked=true;}else{admTypeeObj.checked=false;}
+		if (admType.indexOf("I")>-1){admTypeiObj.checked=true;}else{admTypeiObj.checked=false;}
 		idobj.value=id;
 		hospobj.value=hospDesc.trim();
+		if(ipDesc.charCodeAt()==160||ipDesc==" ") ipDesc="";
+		ipDescObj.value = ipDesc;
 	}else{
-		ipobj.value="";
-		dateFromobj.value="";
-		dateToobj.value="";
-		activeobj.checked=true;
-		idobj.value="";
-		hospobj.value="";
+		reset();
 	}
 	
 }

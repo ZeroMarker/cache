@@ -2,10 +2,15 @@
 ///creator: lvpeng
 ///病人状态查询和状态变更明细
 $(function(){
+	InitParams();
 	GetPatcurdetail();//当前明细信息
 	initCirCle();	//初始化panel圆形
 	initnodeCirCle(); //初始化节点圆形
 })
+
+function InitParams(){
+	//PatientID==""?EpisodeID="":""; //hxy 2022-10-17 注释
+}
 
 
 //初始化圆
@@ -32,29 +37,32 @@ function initnodeCirCle(){
 
 // 显示状态明细
 function GetPatcurdetail(){
-		runClassMethod("web.DHCEMPatCurStatus","FindAdmstatusTotal",{'EpisodeID':EpisodeID},
-		function(data){
-				var list=data.split("$$"); 
-				var listlen=list.length;
-				var singlelist=list[listlen-2].split("^")
-				$('.show-status').append('<li style="padding-left:30px;" id="current-time">'+singlelist[0]+'&nbsp;&nbsp;&nbsp;'+singlelist[1]+'</li>')
-				var singlelen=singlelist.length;
-				$('#current-status').html(singlelist[2]);
+	if(EpisodeID==""){
+		return;	
+	}
+	runClassMethod("web.DHCEMPatCurStatus","FindAdmstatusTotal",{'EpisodeID':EpisodeID},
+	function(data){
+			var list=data.split("$$"); 
+			var listlen=list.length;
+			var singlelist=list[listlen-2].split("^")
+			$('.show-status').append('<li style="padding-left:30px;" id="current-time">'+singlelist[0]+'&nbsp;&nbsp;&nbsp;'+singlelist[1]+'</li>')
+			var singlelen=singlelist.length;
+			$('#current-status').html(singlelist[2]);
+			
+			
+			for(var i=0;i<list.length-1;i++){
+				$(".status-list").append('<li>'+
+					 '<div class="circle"></div>'+
+					 '<span class="inittxt">'+list[i].split("^")[2]+'</span>'+
+					 '<span class="time">'+list[i].split("^")[0]+'&nbsp;&nbsp;&nbsp;'+list[i].split("^")[1]+'</span>'+
+					 '<span class="txt">'+list[i].split("^")[3]+'&nbsp;&nbsp;&nbsp;'+$g("操作人")+":"+list[i].split("^")[4]+'</span>'+
+					 '</li>')
+			}
+			
+				$(".status-list li:last-child > div").removeClass("circle");
+				$(".status-list li:last-child > div").addClass("playcircle")
 				
-				
-				for(var i=0;i<list.length-1;i++){
-					$(".status-list").append('<li>'+
-  						 '<div class="circle"></div>'+
-  						 '<span class="inittxt">'+list[i].split("^")[2]+'</span>'+
-						 '<span class="time">'+list[i].split("^")[0]+'&nbsp;&nbsp;&nbsp;'+list[i].split("^")[1]+'</span>'+
-						 '<span class="txt">'+list[i].split("^")[3]+'&nbsp;&nbsp;&nbsp;'+"操作人:"+list[i].split("^")[4]+'</span>'+
-						 '</li>')
-				}
-				
-					$(".status-list li:last-child > div").removeClass("circle");
-					$(".status-list li:last-child > div").addClass("playcircle")
-					
-		},"text",false);
+	},"text",false);
 }
 
 

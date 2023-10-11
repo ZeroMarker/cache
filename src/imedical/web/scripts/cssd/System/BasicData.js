@@ -1,668 +1,1645 @@
-var init = function() {
-	var NotUseFlagData = [{ "RowId":"Y", "Description":"ÊÇ"},{ "RowId":"N", "Description":"·ñ"}]
-	var NotUseFlagCombox = {
-		type: 'combobox',
-		options: {
-			data: NotUseFlagData,
-			valueField: 'RowId',
-			textField: 'Description'
+ï»¿var init = function() {
+	var HospId = gHospId;
+	var TableName = 'CSSD_CleanType';
+	var TableType = '';
+	function InitHosp() {
+		var hospComp = InitHospCombo(TableName, gSessionStr);
+		if (typeof hospComp === 'object') {
+			HospId = $HUI.combogrid('#_HospList').getValue();
+			$('#_HospList').combogrid('options').onSelect = function(index, record) {
+				HospId = record.HOSPRowId;
+				Query();
+			};
 		}
+		Query();
 	}
-	var IsSterData = [{ "RowId":"Y", "Description":"ÊÇ"},{ "RowId":"N", "Description":"·ñ"}]
-	var IsSterCombox = {
-		type: 'combobox',
-		options: {
-			data: IsSterData,
-			valueField: 'RowId',
-			textField: 'Description'
-		}
-	}
-    //ÇåÏ´·½Ê½----------------
-	function CleanTypeSyn(){
-        $.cm({
-            ClassName: 'web.CSSDHUI.System.CleanType',
-            MethodName: 'CleanTypeSyn'
-        },function(jsonData){
-            if(jsonData.success==0){
-                $UI.msg('success','²Î¿¼ÖµÍ¬²½³É¹¦£¡');
-                CleanModeGrid.reload();
-            }else{
-                $UI.msg('error',jsonData.msg);
-            }
-        });
-    };
-    var CleanModeGrid = $UI.datagrid('#CleanModeGrid',{
-            queryParams: {
-                ClassName: 'web.CSSDHUI.System.CleanType',
-                QueryName: 'SelectAllCleanType'             
-            },
-  			beforeDelFn:function(){
- 				var rowMain =  $('#CleanModeGrid').datagrid('getSelected');
- 				if(!isEmpty(rowMain)){
- 					var ID = rowMain.RowId
- 				}
- 				if(!isEmpty(rowMain)&&!isEmpty(ID)){
- 					$UI.msg('alert','ÒÑÎ¬»¤ÇåÏ´·½Ê½Ö»ÄÜÍ£ÓÃ,²»ÄÜÉ¾³ı');
- 				}
-			},
-            /*deleteRowParams:{
-                ClassName:'web.CSSDHUI.System.CleanType',
-                MethodName:'jsDeleteCleanType'
-            },*/
-            //toolbar:[{
-            //    text: '±£´æ',
-            //    iconCls: 'icon-save',
-            //    handler: function () {
-            //        SaveCleanMode();
-            //}}],
-            toolbar:[{
-	            text: '²Î¿¼Öµ',
-	            iconCls: 'icon-reload',
-	            handler: function () {
-	                CleanTypeSyn();
-        		}}
-        	],
-            saveDataFn:function SaveCleanMode(){
-                var Rows=CleanModeGrid.getChangesData();
-                if(isEmpty(Rows)){
-                    //$UI.msg('alert','Ã»ÓĞĞèÒª±£´æµÄĞÅÏ¢!');
-                    return;
-                }
-                $.cm({
-                    ClassName: 'web.CSSDHUI.System.CleanType',
-                    MethodName: 'SaveCleanType',
-                    Params: JSON.stringify(Rows)
-                },function(jsonData){
-                if(jsonData.success==0){
-                    $UI.msg('success','±£´æ³É¹¦£¡');
-                    CleanModeGrid.reload();
-                }else{
-                    $UI.msg('error',jsonData.msg);
-                }
-            });
-            },
-            columns: [[{
-                    title: 'RowId',
-                    field: 'RowId',
-                    width:150,
-                    hidden: true
-                }, {
-                    title: 'ÇåÏ´±àÂë',
-                    align:'left',
-                    field: 'Code',
-                    width:100,
-                    editor:{type:'validatebox',options:{required:true}}
-                }, {
-                    title: 'ÇåÏ´·½Ê½',
-                    field: 'Description',
-                    width:150,
-                    editor:{type:'validatebox',options:{required:true}}
-				},{
-					title:'ÊÇ·ñÆôÓÃ',
-					align:'center',
-					field:'IsUsed',
-					width:100,
-					formatter: CommonFormatter(NotUseFlagCombox,'IsUsed','IsUsedDesc'),
-					editor:NotUseFlagCombox
-				}
-            ]],
-            lazy:false,
-            showAddSaveDelItems:true,
-            pagination:false,
-            onClickCell: function(index, filed ,value){
-                CleanModeGrid.commonClickCell(index,filed)
-                }
-        });
-    //ÇåÏ´³ÌĞò--------------------------
-    
-    var CleanSystemGrid = $UI.datagrid('#CleanSystemGrid',{
-            queryParams: {
-                ClassName: 'web.CSSDHUI.System.CleanProcedures',
-                QueryName: 'SelectAllCleanProcedures'               
-            },
-			beforeDelFn:function(){
- 				var rowMain =  $('#CleanSystemGrid').datagrid('getSelected');
- 				if(!isEmpty(rowMain)){
- 					var ID = rowMain.RowId
- 				}
- 				if(!isEmpty(rowMain)&&!isEmpty(ID)){
- 					$UI.msg('alert','ÒÑÎ¬»¤ÇåÏ´³ÌĞòÖ»ÄÜÍ£ÓÃ,²»ÄÜÉ¾³ı');
- 				}
-			},
-            /*deleteRowParams:{
-                ClassName:'web.CSSDHUI.System.CleanProcedures',
-                MethodName:'jsDeleteCleanProcedures'
-            },*/
-            saveDataFn:function SaveCleanSystem(){
-				var Rows=CleanSystemGrid.getChangesData();
-				if(isEmpty(Rows)){
-					//$UI.msg('alert','Ã»ÓĞĞèÒª±£´æµÄĞÅÏ¢!');
-					return;
-				}
-				$.cm({
+	function Query() {
+		var Params = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+		if (TableName == 'CSSD_CleanType') {
+			CleanModeGrid.load({
+				ClassName: 'web.CSSDHUI.System.CleanType',
+				QueryName: 'SelectAllCleanType',
+				Params: Params,
+				rows: 99999
+			});
+		} else if (TableName == 'CSSD_SterType') {
+			SterModeGrid.load({
+				ClassName: 'web.CSSDHUI.System.SterType',
+				QueryName: 'SelectAllSterType',
+				Params: Params,
+				rows: 99999
+			});
+		} else if (TableName == 'CSSD_BaseCode') {
+			if (TableType == 'CleanProcess') {
+				CleanSystemGrid.load({
 					ClassName: 'web.CSSDHUI.System.CleanProcedures',
-					MethodName: 'SaveCleanProcedures',
-					Params: JSON.stringify(Rows)
-				},function(jsonData){
-					if(jsonData.success==0){
-						$UI.msg('success','±£´æ³É¹¦£¡');
-						CleanSystemGrid.reload();
-					}else{
-						$UI.msg('error',jsonData.msg);
-					}
+					QueryName: 'SelectAllCleanProcedures',
+					Params: Params,
+					rows: 99999
 				});
-	},
-            columns: [[{
-                    title: 'RowId',
-                    field: 'RowId',
-                    hidden: true
-                }, {
-                    title: 'ÇåÏ´´úÂë',
-                    align:'left',
-                    field: 'Code',
-                    width:100,
-                    editor:{type:'validatebox',options:{required:true}}
-                }, {
-                    title: 'ÇåÏ´³ÌĞòÃèÊö',
-                    field: 'Description',
-                    width:100,
-                    editor:{type:'validatebox',options:{required:true}}
-                },
-                {
-                    title: 'ÌõĞÎÂë',
-                    align:'left',
-                    field: 'BegLabel',
-                    width:100,
-                    editor:{type:'validatebox',options:{required:true}}
-                },{
-					title:'ÊÇ·ñÆôÓÃ',
-					align:'center',
-					field:'NotUseFlag',
-					width:100,
-					formatter: CommonFormatter(NotUseFlagCombox,'NotUseFlag','NotUseFlagDesc'),
-					editor:NotUseFlagCombox
-				}
-            ]],
-            lazy:false,
-            showAddSaveDelItems:true,
-            pagination:false,
-            onClickCell: function(index, filed ,value){
-                CleanSystemGrid.commonClickCell(index,filed)
-            }
-        }); 
-        
-    //Ãğ¾ú·½Ê½----------------
-    var SterModeGrid = $UI.datagrid('#SterModeGrid',{
-            queryParams: {
-                ClassName: 'web.CSSDHUI.System.SterType',
-                QueryName: 'SelectAllSterType'             
-            },
-  			beforeDelFn:function(){
- 				var rowMain =  $('#SterModeGrid').datagrid('getSelected');
- 				if(!isEmpty(rowMain)){
- 					var ID = rowMain.RowId
- 				}
- 				if(!isEmpty(rowMain)&&!isEmpty(ID)){
- 					$UI.msg('alert','ÒÑÎ¬»¤Ãğ¾ú·½Ê½Ö»ÄÜÍ£ÓÃ,²»ÄÜÉ¾³ı');
- 				}
-			},
-            saveDataFn:function SaveSterMode(){
-                var Rows=SterModeGrid.getChangesData();
-                if(isEmpty(Rows)){
-                    //$UI.msg('alert','Ã»ÓĞĞèÒª±£´æµÄĞÅÏ¢!');
-                    return;
-                }
-                $.cm({
-                    ClassName: 'web.CSSDHUI.System.SterType',
-                    MethodName: 'SaveSterType',
-                    Params: JSON.stringify(Rows)
-                },function(jsonData){
-                if(jsonData.success==0){
-                    $UI.msg('success','±£´æ³É¹¦£¡');
-                    SterModeGrid.reload();
-                }else{
-                    $UI.msg('error',jsonData.msg);
-                }
-            });
-            },
-            columns: [[{
-                    title: 'RowId',
-                    field: 'RowId',
-                    width:150,
-                    hidden: true
-                }, {
-                    title: 'Ãğ¾ú±àÂë',
-                    align:'left',
-                    field: 'Code',
-                    width:100,
-                    editor:{type:'validatebox',options:{required:true}}
-                }, {
-                    title: 'Ãğ¾ú·½Ê½',
-                    field: 'Description',
-                    width:150,
-                    editor:{type:'validatebox',options:{required:true}}
-				},{
-					title:'ÊÇ·ñÆôÓÃ',
-					align:'center',
-					field:'IsUsed',
-					width:100,
-					formatter: CommonFormatter(NotUseFlagCombox,'IsUsed','IsUsedDesc'),
-					editor:NotUseFlagCombox
-				},{
-					title: 'ÊÇ·ñĞèÒªÃğ¾ú',
-                    field: 'IsSter',
-					width:120,
-                    formatter: CommonFormatter(IsSterCombox,'IsSter','IsSterDesc'),
-					editor:IsSterCombox
-				},{
-					title: 'ÊÇ·ñµÍÎÂÃğ¾ú',
-					field: 'IsLowerTemp',
-					width:120,
-					formatter: CommonFormatter(IsSterCombox,'IsLowerTemp','IsLowerTempDesc'),
-					editor:IsSterCombox
-				}
-            ]],
-            lazy:false,
-            showAddSaveDelItems:true,
-            pagination:false,
-            onClickCell: function(index, filed ,value){
-				SterModeGrid.commonClickCell(index,filed)
+			} else if (TableType == 'SterProcess') {
+				SterilizationSysGrid.load({
+					ClassName: 'web.CSSDHUI.System.SterilizationSys',
+					QueryName: 'SelectAllSterilizationSys',
+					Params: Params,
+					rows: 99999
+				});
 			}
-        });    
-        
-    //Ãğ¾ú³ÌĞò--------------------------
-	///Ãğ¾ú·½Ê½ÏÂÀ­Êı¾İ
-	var TempTypeCombox = {
+		} else if (TableName == 'CSSD_SteCheckReason') {
+			ReasonForSteriFailGrid.load({
+				ClassName: 'web.CSSDHUI.System.ReasonForSteriFail',
+				QueryName: 'SelectAllReasonForSteriFail',
+				Params: Params,
+				rows: 99999
+			});
+		} else if (TableName == 'CSSD_CleanItmReason') {
+			ReasonForCleanFailGrid.load({
+				ClassName: 'web.CSSDHUI.System.ReasonForCleanFail',
+				QueryName: 'SelectAllReasonForCleanFail',
+				Params: Params,
+				rows: 99999
+			});
+		} else if (TableName == 'CSSD_MachineConsumeReason') {
+			ReasonForConsumeGrid.load({
+				ClassName: 'web.CSSDHUI.System.ReasonForConsume',
+				QueryName: 'SelectAllReasonForConsume',
+				Params: Params,
+				rows: 99999
+			});
+		} else if (TableName == 'CSSD_RecallReason') {
+			ReasonForRecallGrid.load({
+				ClassName: 'web.CSSDHUI.System.ReasonForRecall',
+				QueryName: 'SelectAllReasonForRecall',
+				Params: Params,
+				rows: 99999
+			});
+		} else if (TableName == 'CSSD_Material') {
+			MaterialInfoGrid.load({
+				ClassName: 'web.CSSDHUI.PackageInfo.PackageMatCompare',
+				QueryName: 'SelectMaterialInfo',
+				Params: Params,
+				rows: 99999
+			});
+		} else if (TableName == 'CT_STER_CSSD.PackageSpec') {
+			PackageSpecGrid.load({
+				ClassName: 'web.CSSDHUI.System.PackageSpec',
+				QueryName: 'SelectAllPackageSpec',
+				Params: Params,
+				rows: 99999
+			});
+		} else if (TableName == 'CT_STER_CSSD.Satisfaction') {
+			SatisfactionGrid.load({
+				ClassName: 'web.CSSDHUI.System.Satisfaction',
+				QueryName: 'SelectAllSatisfaction',
+				Params: Params,
+				rows: 99999
+			});
+		} else if (TableName == 'CSSD_DeptCenter') {
+			SupplyCenterGrid.load({
+				ClassName: 'web.CSSDHUI.System.SupplyCenter',
+				QueryName: 'SelectAllSupplyCenter',
+				Params: Params,
+				rows: 99999
+			});
+		} else if (TableName == 'CSSD_BindLoc') {
+			BindLocGrid.load({
+				ClassName: 'web.CSSDHUI.System.BindLoc',
+				QueryName: 'SelectAllBindLoc',
+				Params: Params,
+				rows: 99999
+			});
+		} else if (TableName == 'CT_STER_CSSD.PrintRules') {
+			PrintRulesGrid.load({
+				ClassName: 'web.CSSDHUI.System.PrintRules',
+				QueryName: 'SelectAllPrintRules',
+				rows: 99999
+			});
+		} else if (TableName == 'CF_STER_CSSD.LocHospPrintRules') {
+			LocPrintRulesGrid.load({
+				ClassName: 'web.CSSDHUI.System.LocPrintRules',
+				QueryName: 'SelectAllLocPrintRules',
+				row: 99999
+			});
+		}
+	}
+
+	$HUI.tabs('#DetailTabs', {
+		onSelect: function(title, index) {
+			TableName = '';
+			TableType = '';
+			if (title == 'æ¸…æ´—æ–¹å¼') {
+				TableName = 'CSSD_CleanType';
+			} else if (title == 'ç­èŒæ–¹å¼') {
+				TableName = 'CSSD_SterType';
+			} else if (title == 'æ¸…æ´—ç¨‹åº') {
+				TableName = 'CSSD_BaseCode';
+				TableType = 'CleanProcess';
+			} else if (title == 'ç­èŒç¨‹åº') {
+				TableName = 'CSSD_BaseCode';
+				TableType = 'SterProcess';
+			} else if (title == 'ç­èŒä¸åˆæ ¼åŸå› ') {
+				TableName = 'CSSD_SteCheckReason';
+			} else if (title == 'æ¸…æ´—ä¸åˆæ ¼åŸå› ') {
+				TableName = 'CSSD_CleanItmReason';
+			} else if (title == 'å™¨æ¢°æŠ¥æŸåŸå› ') {
+				TableName = 'CSSD_MachineConsumeReason';
+			} else if (title == 'æ¶ˆæ¯’åŒ…å¬å›åŸå› ') {
+				TableName = 'CSSD_RecallReason';
+			} else if (title == 'åŒ…è£…ææ–™') {
+				TableName = 'CSSD_Material';
+			} else if (title == 'æ¶ˆæ¯’åŒ…è§„æ ¼') {
+				TableName = 'CT_STER_CSSD.PackageSpec';
+			} else if (title == 'æ»¡æ„åº¦è°ƒæŸ¥é¡¹ç›®') {
+				TableName = 'CT_STER_CSSD.Satisfaction';
+			} else if (title == 'ä¾›åº”ä¸­å¿ƒ') {
+				TableName = 'CSSD_DeptCenter';
+			} else if (title == 'ç§‘å®¤ç±»å‹') {
+				TableName = 'CSSD_BindLoc';
+			} else if (title == 'æ‰“å°è§„åˆ™') {
+				TableName = 'CT_STER_CSSD.PrintRules';
+			} else if (title == 'åŒ»é™¢ç§‘å®¤æ‰“å°è§„åˆ™') {
+				TableName = 'CF_STER_CSSD.LocHospPrintRules';
+			}
+			InitHosp();
+		}
+	});
+
+	// æ¸…æ´—æ–¹å¼
+	function PrintCleanType() {
+		var rowMain = $('#CleanModeGrid').datagrid('getSelected');
+		if (isEmpty(rowMain)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©è¦æ‰“å°çš„æ•°æ®!');
+			return;
+		}
+		printCodeDict(rowMain.CleanTypeCode, rowMain.CleanTypeDesc);
+	}
+	var CleanModeGrid = $UI.datagrid('#CleanModeGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.CleanType',
+			QueryName: 'SelectAllCleanType',
+			rows: 99999
+		},
+		fitColumns: true,
+		toolbar: [{
+			text: 'æ‰“å°',
+			iconCls: 'icon-print',
+			handler: function() {
+				PrintCleanType();
+			}
+		}],
+
+		beforeAddFn: function() {
+			var DefaultData = { UseFlag: 'Y' };
+			return DefaultData;
+		},
+		beforeDelFn: function() {
+			var rowMain = $('#CleanModeGrid').datagrid('getSelected');
+			if (!isEmpty(rowMain)) {
+				var ID = rowMain.RowId;
+			}
+			if (!isEmpty(rowMain) && !isEmpty(ID)) {
+				$UI.msg('alert', 'å·²ç»´æŠ¤æ¸…æ´—æ–¹å¼åªèƒ½åœç”¨,ä¸èƒ½åˆ é™¤');
+				return false;
+			}
+		},
+		saveDataFn: function() {
+			var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			var Rows = CleanModeGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows == false) {
+				$UI.msg('alert', 'å­˜åœ¨æœªå¡«å†™çš„å¿…å¡«é¡¹ï¼Œä¸èƒ½ä¿å­˜!');
+				return;
+			}
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.CleanType',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows),
+				Others: Others
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', 'ä¿å­˜æˆåŠŸï¼');
+					CleanModeGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		columns: [[
+			{
+				title: 'RowId',
+				align: 'right',
+				field: 'RowId',
+				width: 150,
+				hidden: true
+			}, {
+				title: 'ä»£ç ',
+				align: 'left',
+				field: 'CleanTypeCode',
+				width: 100,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æè¿°',
+				align: 'left',
+				field: 'CleanTypeDesc',
+				width: 150,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æ˜¯å¦æ‰‹å·¥æ¸…æ´—',
+				align: 'center',
+				field: 'ManualFlag',
+				width: 100,
+				editor: { type: 'checkbox', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}, {
+				title: 'æ˜¯å¦å¯ç”¨',
+				align: 'center',
+				field: 'UseFlag',
+				width: 70,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}
+		]],
+		showAddSaveDelItems: true,
+		pagination: false,
+		remoteSort: false,
+		checkField: 'CleanTypeCode',
+		onClickRow: function(index, row) {
+			CleanModeGrid.commonClickRow(index, row);
+		}
+	});
+
+	// ç­èŒæ–¹å¼
+	function PrintSterType() {
+		var rowMain = $('#SterModeGrid').datagrid('getSelected');
+		if (isEmpty(rowMain)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©è¦æ‰“å°çš„æ•°æ®!');
+			return;
+		}
+		printCodeDict(rowMain.SterTypeCode, rowMain.SterTypeDesc);
+	}
+	var SterModeGrid = $UI.datagrid('#SterModeGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.SterType',
+			QueryName: 'SelectAllSterType',
+			rows: 99999
+		},
+		toolbar: [{
+			text: 'æ‰“å°',
+			iconCls: 'icon-print',
+			handler: function() {
+				PrintSterType();
+			}
+		}],
+		beforeAddFn: function() {
+			var DefaultData = { UseFlag: 'Y' };
+			return DefaultData;
+		},
+		beforeDelFn: function() {
+			var rowMain = $('#SterModeGrid').datagrid('getSelected');
+			if (!isEmpty(rowMain)) {
+				var ID = rowMain.RowId;
+			}
+			if (!isEmpty(rowMain) && !isEmpty(ID)) {
+				$UI.msg('alert', 'å·²ç»´æŠ¤ç­èŒæ–¹å¼åªèƒ½åœç”¨,ä¸èƒ½åˆ é™¤');
+				return false;
+			}
+		},
+		saveDataFn: function() {
+			var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			var Rows = SterModeGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows == false) {
+				$UI.msg('alert', 'å­˜åœ¨æœªå¡«å†™çš„å¿…å¡«é¡¹ï¼Œä¸èƒ½ä¿å­˜!');
+				return;
+			}
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.SterType',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows),
+				Others: Others
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', 'ä¿å­˜æˆåŠŸï¼');
+					SterModeGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		columns: [[
+			{
+				title: 'RowId',
+				align: 'right',
+				field: 'RowId',
+				width: 150,
+				hidden: true
+			}, {
+				title: 'ä»£ç ',
+				align: 'left',
+				field: 'SterTypeCode',
+				width: 100,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æè¿°',
+				align: 'left',
+				field: 'SterTypeDesc',
+				width: 150,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'ç­èŒå±•ç¤ºé¢œè‰²',
+				field: 'DisplayColor',
+				width: 100,
+				editor: { type: 'colorpicker' },
+				styler: function(value, row, index) {
+					if (!isEmpty(value)) {
+						return 'background-color:' + value + ';' + 'color:' + GetFontColor(value);
+					}
+				},
+				align: 'center'
+			}, {
+				title: 'æ˜¯å¦ä½¿ç”¨ç­èŒå™¨',
+				align: 'center',
+				field: 'SterFlag',
+				width: 120,
+				editor: { type: 'checkbox', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}, {
+				title: 'æ˜¯å¦ä½æ¸©ç­èŒ',
+				align: 'center',
+				field: 'LowerTempFlag',
+				width: 120,
+				editor: { type: 'checkbox', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}, {
+				title: 'æ˜¯å¦å¯ç”¨',
+				align: 'center',
+				field: 'UseFlag',
+				width: 70,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}
+		]],
+		pagination: false,
+		showAddSaveDelItems: true,
+		checkField: 'SterTypeCode',
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			SterModeGrid.commonClickRow(index, row);
+		}
+	});
+
+	// æ¸…æ´—ç¨‹åº
+	function PrintCleanProce() {
+		var rowMain = $('#CleanSystemGrid').datagrid('getSelected');
+		if (isEmpty(rowMain)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©è¦æ‰“å°çš„æ•°æ®!');
+			return;
+		}
+		printCodeDict(rowMain.CleanProCode, rowMain.CleanProDesc);
+	}
+	var CleanSystemGrid = $UI.datagrid('#CleanSystemGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.CleanProcedures',
+			QueryName: 'SelectAllCleanProcedures',
+			rows: 99999
+		},
+		toolbar: [{
+			text: 'æ‰“å°',
+			iconCls: 'icon-print',
+			handler: function() {
+				PrintCleanProce();
+			}
+		}],
+		beforeAddFn: function() {
+			var DefaultData = { UseFlag: 'Y' };
+			return DefaultData;
+		},
+		beforeDelFn: function() {
+			var rowMain = $('#CleanSystemGrid').datagrid('getSelected');
+			if (!isEmpty(rowMain)) {
+				var ID = rowMain.RowId;
+			}
+			if (!isEmpty(rowMain) && !isEmpty(ID)) {
+				$UI.msg('alert', 'å·²ç»´æŠ¤æ¸…æ´—ç¨‹åºåªèƒ½åœç”¨,ä¸èƒ½åˆ é™¤');
+				return false;
+			}
+		},
+		saveDataFn: function() {
+			var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			var Rows = CleanSystemGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows == false) {
+				$UI.msg('alert', 'å­˜åœ¨æœªå¡«å†™çš„å¿…å¡«é¡¹ï¼Œä¸èƒ½ä¿å­˜!');
+				return;
+			}
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.CleanProcedures',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows),
+				Others: Others
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', 'ä¿å­˜æˆåŠŸï¼');
+					CleanSystemGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		columns: [[
+			{
+				title: 'RowId',
+				align: 'right',
+				field: 'RowId',
+				width: 100,
+				hidden: true
+			}, {
+				title: 'ä»£ç ',
+				align: 'left',
+				field: 'CleanProCode',
+				width: 100,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æè¿°',
+				align: 'left',
+				field: 'CleanProDesc',
+				width: 100,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'éªŒæ”¶æ—¶é•¿(åˆ†é’Ÿ)',
+				field: 'Interval',
+				align: 'right',
+				width: 120,
+				editor: {
+					type: 'numberbox',
+					options: {
+						min: 0
+					}
+				}
+			}, {
+				title: 'æ˜¯å¦å¯ç”¨',
+				align: 'center',
+				field: 'UseFlag',
+				width: 70,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}
+		]],
+		showAddSaveDelItems: true,
+		pagination: false,
+		remoteSort: false,
+		checkField: 'CleanProCode',
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			CleanSystemGrid.commonClickRow(index, row);
+		}
+	});
+
+	// ç­èŒç¨‹åº
+	function PrintSteProce() {
+		var rowMain = $('#SterilizationSysGrid').datagrid('getSelected');
+		if (isEmpty(rowMain)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©è¦æ‰“å°çš„æ•°æ®!');
+			return;
+		}
+		printCodeDict(rowMain.SterProCode, rowMain.SterProDesc);
+	}
+	// ç­èŒæ–¹å¼ä¸‹æ‹‰æ•°æ®
+	var SterTypeCombox = {
 		type: 'combobox',
 		options: {
 			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetSterType&ResultSetType=array&isSter=Y',
 			valueField: 'RowId',
 			textField: 'Description',
-			onSelect: function (record) {
+			required: true,
+			onSelect: function(record) {
 				var rows = SterilizationSysGrid.getRows();
 				var row = rows[SterilizationSysGrid.editIndex];
-				row.SterWayDesc = record.Description;
+				row.SterTypeDesc = record.Description;
+			},
+			onBeforeLoad: function(param) {
+				param.Params = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
 			}
 		}
 	};
-    
-    var SterilizationSysGrid = $UI.datagrid('#SterilizationSysGrid',{
-            queryParams: {
-                ClassName: 'web.CSSDHUI.System.SterilizationSys',
-                QueryName: 'SelectAllSterilizationSys'              
-            },
-            saveDataFn:function SaveSterilizationSys(){
-        var Rows=SterilizationSysGrid.getChangesData();
-        if(isEmpty(Rows)){
-            //$UI.msg('alert','Ã»ÓĞĞèÒª±£´æµÄĞÅÏ¢!');
-            return;
-        }
-        $.cm({
-            ClassName: 'web.CSSDHUI.System.SterilizationSys',
-            MethodName: 'SaveSterilizationSys',
-            Params: JSON.stringify(Rows)
-        },function(jsonData){
-            if(jsonData.success==0){
-                $UI.msg('success','±£´æ³É¹¦£¡');
-                SterilizationSysGrid.reload();
-            }else{
-                $UI.msg('error',jsonData.msg);
-            }
-        });
-    },
-            columns: [[{
-                    title: 'RowId',
-                    field: 'RowId',
-                    hidden: true
-                }, {
-                    title: 'Ãğ¾ú´úÂë',
-                    align:'left',
-                    field: 'Code',
-                    width:100,
-                    editor:{type:'validatebox',options:{required:true}}
-                },
-                 {
-                    title: 'Ãğ¾ú³ÌĞòÃû³Æ',
-                    field: 'Description',
-                    width:100,
-                    editor:{type:'validatebox',options:{required:true}}
-                }, {
-                    title: 'ÌõĞÎÂë',
-                    align:'left',
-                    field: 'BegLabel',
-                    width:100,
-                    editor:{type:'validatebox',options:{required:true}}
-                }, {
-                    title: 'Ãğ¾ú·½Ê½',
-                    align:'left',
-                    field: 'SterWay',
-                    width:100,
-                    formatter: CommonFormatter(TempTypeCombox, 'SterWay', 'SterWayDesc'),
-					editor: TempTypeCombox
-                }, {
-	                title: 'ÊÇ·ñÆôÓÃ',
-	                field: 'NotUseFlag',
-	                width:100,
-	                align: 'center',
-	                formatter: CommonFormatter(NotUseFlagCombox, 'NotUseFlag', 'NotUseFlagDesc'),
-	                editor: NotUseFlagCombox
-            	}
-            ]],
-            lazy:false,
-            showAddSaveDelItems:true,
-            pagination:false,
-            beforeDelFn:function(){
-	        	var rowMain = $('#SterilizationSysGrid').datagrid('getSelected');
-	        	if(!isEmpty(rowMain)){
-	        		var Id = rowMain.RowId
-	        	}
-	        	if(!isEmpty(rowMain)&&!isEmpty(Id)){
-	        		$UI.msg('alert','ÒÑÎ¬»¤Ãğ¾ú³ÌĞòÖ»ÄÜÍ£ÓÃ,²»ÄÜÉ¾³ı');
-	        	}
-        	},
-            onClickCell: function(index, filed ,value){
-                SterilizationSysGrid.commonClickCell(index,filed)
-            }
-        });
-        //Ãğ¾ú²»ºÏ¸ñÔ­Òò----------------
-    function ReasonForSteriFailSyn(){
-        $.cm({
-            ClassName: 'web.CSSDHUI.System.ReasonForSteriFail',
-            MethodName: 'ReasonForSteriFailSyn'
-        },function(jsonData){
-            if(jsonData.success==0){
-                $UI.msg('success','²Î¿¼ÖµÍ¬²½³É¹¦£¡');
-                ReasonForSteriFailGrid.reload();
-            }else{
-                $UI.msg('error',jsonData.msg);
-            }
-        });
-    };
-    var ReasonForSteriFailGrid = $UI.datagrid('#ReasonForSteriFailGrid',{
-        queryParams: {
-            ClassName: 'web.CSSDHUI.System.ReasonForSteriFail',
-            QueryName: 'SelectAllReasonForSteriFail'                
-        },
-        toolbar:[{
-            text: '²Î¿¼Öµ',
-            iconCls: 'icon-reload',
-            handler: function () {
-                ReasonForSteriFailSyn();
-        }}],
-        saveDataFn:function SaveReasonForSteriFail(){
-        var Rows=ReasonForSteriFailGrid.getChangesData();
-        if(isEmpty(Rows)){
-            //$UI.msg('alert','Ã»ÓĞĞèÒª±£´æµÄĞÅÏ¢!');
-            return;
-        }
-        $.cm({
-            ClassName: 'web.CSSDHUI.System.ReasonForSteriFail',
-            MethodName: 'SaveReasonForSteriFail',
-            Params: JSON.stringify(Rows)
-        },function(jsonData){
-            if(jsonData.success==0){
-                $UI.msg('success','±£´æ³É¹¦£¡');
-                ReasonForSteriFailGrid.reload();
-            }else{
-                $UI.msg('error',jsonData.msg);
-            }
-        });
-    },
-        columns: [[{
-                title: 'RowId',
-                field: 'RowId',
-                width:100,
-                hidden:true
-            }, {
-                title: 'Ãğ¾ú²»ºÏ¸ñ´úÂë',
-                align:'left',
-                field: 'Code',
-                width:120,
-                editor:{type:'validatebox',options:{required:true}}
-            }, {
-                title: 'Ãğ¾ú²»ºÏ¸ñÔ­Òò',
-                field: 'Description',
-                width:200,
-                editor:{type:'validatebox',options:{required:true}}
-            }, {
-                title: 'ÊÇ·ñÆôÓÃ',
-                field: 'NotUseFlag',
-                width:100,
-                align: 'center',
-                formatter: CommonFormatter(NotUseFlagCombox, 'NotUseFlag', 'NotUseFlagDesc'),
-                editor: NotUseFlagCombox
-            }
-        ]],
-        lazy:false,
-        showAddSaveDelItems:true,
-        pagination:false,
-        beforeDelFn:function(){
-        	var rowMain = $('#ReasonForSteriFailGrid').datagrid('getSelected');
-        	if(!isEmpty(rowMain)){
-        		var Id = rowMain.RowId
-        	}
-        	if(!isEmpty(rowMain)&&!isEmpty(Id)){
-        		$UI.msg('alert','ÒÑÎ¬»¤Ãğ¾ú²»ºÏ¸ñÔ­ÒòÖ»ÄÜÍ£ÓÃ,²»ÄÜÉ¾³ı');
-        	}
-        },
-        onClickCell: function(index, filed ,value){
-            ReasonForSteriFailGrid.commonClickCell(index,filed)
-        }
-    });
-            //ÇåÏ´²»ºÏ¸ñÔ­ÒòÔ­Òò----------------
-    
-    var ReasonForCleanFailGrid = $UI.datagrid('#ReasonForCleanFailGrid',{
-        queryParams: {
-            ClassName: 'web.CSSDHUI.System.ReasonForCleanFail',
-            QueryName: 'SelectAllReasonForCleanFail'                
-        },
-        beforeDelFn:function(){
- 				var rowMain =  $('#ReasonForCleanFailGrid').datagrid('getSelected');
- 				if(!isEmpty(rowMain)){
- 					var ID = rowMain.RowId
- 				}
- 				if(!isEmpty(rowMain)&&!isEmpty(ID)){
- 					$UI.msg('alert','ÒÑÎ¬»¤ÇåÏ´²»ºÏ¸ñÔ­ÒòÖ»ÄÜÍ£ÓÃ,²»ÄÜÉ¾³ı');
- 				}
+	var SterilizationSysGrid = $UI.datagrid('#SterilizationSysGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.SterilizationSys',
+			QueryName: 'SelectAllSterilizationSys',
+			rows: 99999
 		},
-        /*deleteRowParams:{
-            ClassName:'web.CSSDHUI.System.ReasonForCleanFail',
-            MethodName:'jsDeleteReasonForCleanFail'
-        },*/
-        saveDataFn:function SaveReasonForCleanFail(){
-        var Rows=ReasonForCleanFailGrid.getChangesData();
-        if(isEmpty(Rows)){
-            //$UI.msg('alert','Ã»ÓĞĞèÒª±£´æµÄĞÅÏ¢!');
-            return;
-        }
-        $.cm({
-            ClassName: 'web.CSSDHUI.System.ReasonForCleanFail',
-            MethodName: 'SaveReasonForCleanFail',
-            Params: JSON.stringify(Rows)
-        },function(jsonData){
-            if(jsonData.success==0){
-                $UI.msg('success','±£´æ³É¹¦£¡');
-                ReasonForCleanFailGrid.reload();
-            }else{
-                $UI.msg('error',jsonData.msg);
-            }
-        });
-    },
-        columns: [[{
-                title: 'RowId',
-                field: 'RowId',
-                width:100,
-                hidden:true
-            },{
-                title: 'ÇåÏ´²»ºÏ¸ñ´úÂë',
-                align:'left',
-                field: 'Code',
-                width:120,
-                editor:{type:'validatebox',options:{required:true}}
-            }, {
-                title: 'ÇåÏ´²»ºÏ¸ñÔ­Òò',
-                field: 'Description',
-                width:150,
-                editor:{type:'validatebox',options:{required:true}}
-            },{
-				title:'ÊÇ·ñÆôÓÃ',
-				align:'center',
-				field:'NotUseFlag',
-				width:100,
-				formatter: CommonFormatter(NotUseFlagCombox,'NotUseFlag','NotUseFlagDesc'),
-				editor:NotUseFlagCombox
+		toolbar: [
+			{
+				text: 'æ‰“å°',
+				iconCls: 'icon-print',
+				handler: function() {
+					PrintSteProce();
 				}
-        ]],
-        lazy:false,
-        showAddSaveDelItems:true,
-        pagination:false,
-        onClickCell: function(index, filed ,value){
-            ReasonForCleanFailGrid.commonClickCell(index,filed)
-        }
-    });
-    
-    //Æ÷ĞµÈ±Ê§Ô­Òò----------------
-    
-    var ReasonForConsumeGrid = $UI.datagrid('#ReasonForConsumeGrid',{
-        queryParams: {
-            ClassName: 'web.CSSDHUI.System.ReasonForConsume',
-            QueryName: 'SelectAllReasonForConsume'                
-        },
-        saveDataFn:function SaveReasonForConsume(){
-        var Rows=ReasonForConsumeGrid.getChangesData();
-        if(isEmpty(Rows)){
-            //$UI.msg('alert','Ã»ÓĞĞèÒª±£´æµÄĞÅÏ¢!');
-            return;
-        }
-        $.cm({
-            ClassName: 'web.CSSDHUI.System.ReasonForConsume',
-            MethodName: 'SaveReasonForConsume',
-            Params: JSON.stringify(Rows)
-        },function(jsonData){
-            if(jsonData.success==0){
-                $UI.msg('success','±£´æ³É¹¦£¡');
-                ReasonForConsumeGrid.reload();
-            }else{
-                $UI.msg('error',jsonData.msg);
-            }
-        });
-    },
-        columns: [[{
-                title: 'RowId',
-                field: 'RowId',
-                width:100,
-                hidden:true
-            },{
-                title: 'È±Ê§Ô­Òò´úÂë',
-                align:'left',
-                field: 'Code',
-                width:120,
-                editor:{type:'validatebox',options:{required:true}}
-            }, {
-                title: 'È±Ê§Ô­Òò',
-                field: 'Description',
-                width:150,
-                editor:{type:'validatebox',options:{required:true}}
-            }, {
-                title: 'ÊÇ·ñÆôÓÃ',
-                field: 'NotUseFlag',
-                width:100,
-                align: 'center',
-                formatter: CommonFormatter(NotUseFlagCombox, 'NotUseFlag', 'NotUseFlagDesc'),
-                editor: NotUseFlagCombox
-            }
-        ]],
-        lazy:false,
-        showAddSaveDelItems:true,
-        pagination:false,
-        beforeDelFn:function(){
-        	var rowMain = $('#ReasonForConsumeGrid').datagrid('getSelected');
-        	if(!isEmpty(rowMain)){
-        		var Id = rowMain.RowId
-        	}
-        	if(!isEmpty(rowMain)&&!isEmpty(Id)){
-        		$UI.msg('alert','ÒÑÎ¬»¤È±Ê§Ô­ÒòÖ»ÄÜÍ£ÓÃ,²»ÄÜÉ¾³ı');
-        	}
-        },
-        onClickCell: function(index, filed ,value){
-            ReasonForConsumeGrid.commonClickCell(index,filed)
-        }
-    });
-    
-            //¹©Ó¦ÖĞĞÄ----------------
-    //¿ÆÊÒ
-    var CtLocData = $.cm({
-        ClassName: 'web.CSSDHUI.Common.Dicts',
-        QueryName: 'GetCTLoc',
-        ResultSetType: 'array'
-    },false);
-    var CtLocBox = {
-        type: 'combobox',
-        options: {
-            data: CtLocData,
-            valueField: 'RowId',
-            textField: 'Description',
-            onSelect: function(record){
-        }
-        }
-    } 
-    
-    var SupplyCenterGrid = $UI.datagrid('#SupplyCenterGrid',{
-            queryParams: {
-                ClassName: 'web.CSSDHUI.System.SupplyCenter',
-                QueryName: 'SelectAllSupplyCenter'              
-            },
-            deleteRowParams:{
-                ClassName:'web.CSSDHUI.System.SupplyCenter',
-                MethodName:'jsDeleteSupplyCenter'
-            },
-            saveDataFn:function SaveSupplyCenter(){
-                var Rows=SupplyCenterGrid.getChangesData();
-                $.cm({
-                    ClassName: 'web.CSSDHUI.System.SupplyCenter',
-                    MethodName: 'SaveSupplyCenter',
-                    Params: JSON.stringify(Rows)
-                },function(jsonData){
-                if(jsonData.success==0){
-					if(isEmpty(Rows)){
-						//$UI.msg('alert','Ã»ÓĞĞèÒª±£´æµÄĞÅÏ¢!');
-						return;
+			}
+		],
+		beforeAddFn: function() {
+			var DefaultData = { UseFlag: 'Y' };
+			return DefaultData;
+		},
+		beforeDelFn: function() {
+			var rowMain = $('#SterilizationSysGrid').datagrid('getSelected');
+			if (!isEmpty(rowMain)) {
+				var Id = rowMain.RowId;
+			}
+			if (!isEmpty(rowMain) && !isEmpty(Id)) {
+				$UI.msg('alert', 'å·²ç»´æŠ¤ç­èŒç¨‹åºåªèƒ½åœç”¨,ä¸èƒ½åˆ é™¤');
+				return false;
+			}
+		},
+		saveDataFn: function() {
+			var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			var Rows = SterilizationSysGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows == false) {
+				$UI.msg('alert', 'å­˜åœ¨æœªå¡«å†™çš„å¿…å¡«é¡¹ï¼Œä¸èƒ½ä¿å­˜!');
+				return;
+			}
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.SterilizationSys',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows),
+				Others: Others
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', 'ä¿å­˜æˆåŠŸï¼');
+					SterilizationSysGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		columns: [[
+			{
+				title: 'RowId',
+				align: 'right',
+				field: 'RowId',
+				width: 100,
+				hidden: true
+			}, {
+				title: 'ä»£ç ',
+				align: 'left',
+				field: 'SterProCode',
+				width: 100,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æè¿°',
+				align: 'left',
+				field: 'SterProDesc',
+				width: 100,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'ç­èŒæ–¹å¼',
+				align: 'left',
+				field: 'SterType',
+				width: 100,
+				formatter: CommonFormatter(SterTypeCombox, 'SterType', 'SterTypeDesc'),
+				editor: SterTypeCombox
+			}, {
+				title: 'éªŒæ”¶æ—¶é•¿(åˆ†é’Ÿ)',
+				align: 'right',
+				field: 'Interval',
+				width: 120,
+				editor: {
+					type: 'numberbox',
+					options: {
+						min: 0
 					}
-                    $UI.msg('success','±£´æ³É¹¦£¡');
-                    SupplyCenterGrid.reload();
-                }else{
-                    $UI.msg('error',jsonData.msg);
-                }
-            });
-            },
-            columns: [[
-                {
-                    title: 'RowId',
-                    field: 'RowId',
-                    width:100,
-                    saveCol: true,
-                    hidden:true
-                },{
-                    title: '¿ÆÊÒ´úÂë',
-                    field: 'Code',
-                    width:100,
-                    editorable:false
-                }, {
-                    title: '¿ÆÊÒÃèÊö',
-                    field: 'LocId',
-                    width:150,
-                    saveCol: true,
-                    formatter: CommonFormatter(CtLocBox,'LocId','Description'),
-                    editor:CtLocBox
-                }
-            ]],
-            singleSelect: false,
-            lazy:false,
-            showAddSaveDelItems:true,
-            pagination:false,
-            onClickCell: function(index, filed ,value){
-                SupplyCenterGrid.commonClickCell(index,filed)
-            }
-        });
-}
-$(init)
+				}
+			}, {
+				title: 'æ˜¯å¦å¯ç”¨',
+				align: 'center',
+				field: 'UseFlag',
+				width: 70,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}
+		]],
+		showAddSaveDelItems: true,
+		pagination: false,
+		remoteSort: false,
+		checkField: 'SterProCode',
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			SterilizationSysGrid.commonClickRow(index, row);
+		}
+	});
+
+	// ç­èŒä¸åˆæ ¼åŸå› 
+	var ReasonForSteriFailGrid = $UI.datagrid('#ReasonForSteriFailGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.ReasonForSteriFail',
+			QueryName: 'SelectAllReasonForSteriFail',
+			rows: 99999
+		},
+		beforeAddFn: function() {
+			var DefaultData = { UseFlag: 'Y' };
+			return DefaultData;
+		},
+		beforeDelFn: function() {
+			var rowMain = $('#ReasonForSteriFailGrid').datagrid('getSelected');
+			if (!isEmpty(rowMain)) {
+				var Id = rowMain.RowId;
+			}
+			if (!isEmpty(rowMain) && !isEmpty(Id)) {
+				$UI.msg('alert', 'å·²ç»´æŠ¤ç­èŒä¸åˆæ ¼åŸå› åªèƒ½åœç”¨,ä¸èƒ½åˆ é™¤');
+				return false;
+			}
+		},
+		saveDataFn: function() {
+			var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			var Rows = ReasonForSteriFailGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows == false) {
+				$UI.msg('alert', 'å­˜åœ¨æœªå¡«å†™çš„å¿…å¡«é¡¹ï¼Œä¸èƒ½ä¿å­˜!');
+				return;
+			}
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.ReasonForSteriFail',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows),
+				Others: Others
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', 'ä¿å­˜æˆåŠŸï¼');
+					ReasonForSteriFailGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		columns: [[
+			{
+				title: 'RowId',
+				align: 'right',
+				field: 'RowId',
+				width: 100,
+				hidden: true
+			}, {
+				title: 'ä»£ç ',
+				align: 'left',
+				field: 'SteReasonCode',
+				width: 100,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æè¿°',
+				align: 'left',
+				field: 'SteReasonDesc',
+				width: 200,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æ˜¯å¦å¯ç”¨',
+				align: 'center',
+				field: 'UseFlag',
+				width: 70,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}
+		]],
+		showAddSaveDelItems: true,
+		pagination: false,
+		remoteSort: false,
+		checkField: 'SteReasonCode',
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			ReasonForSteriFailGrid.commonClickRow(index, row);
+		}
+	});
+
+	// æ¸…æ´—ä¸åˆæ ¼åŸå› 
+	var ReasonForCleanFailGrid = $UI.datagrid('#ReasonForCleanFailGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.ReasonForCleanFail',
+			QueryName: 'SelectAllReasonForCleanFail',
+			rows: 99999
+		},
+		beforeAddFn: function() {
+			var DefaultData = { UseFlag: 'Y' };
+			return DefaultData;
+		},
+		beforeDelFn: function() {
+			var rowMain = $('#ReasonForCleanFailGrid').datagrid('getSelected');
+			if (!isEmpty(rowMain)) {
+				var ID = rowMain.RowId;
+			}
+			if (!isEmpty(rowMain) && !isEmpty(ID)) {
+				$UI.msg('alert', 'å·²ç»´æŠ¤æ¸…æ´—ä¸åˆæ ¼åŸå› åªèƒ½åœç”¨,ä¸èƒ½åˆ é™¤');
+				return false;
+			}
+		},
+		saveDataFn: function() {
+			var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			var Rows = ReasonForCleanFailGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows == false) {
+				$UI.msg('alert', 'å­˜åœ¨æœªå¡«å†™çš„å¿…å¡«é¡¹ï¼Œä¸èƒ½ä¿å­˜!');
+				return;
+			}
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.ReasonForCleanFail',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows),
+				Others: Others
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', 'ä¿å­˜æˆåŠŸï¼');
+					ReasonForCleanFailGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		columns: [[
+			{
+				title: 'RowId',
+				align: 'right',
+				field: 'RowId',
+				width: 100,
+				hidden: true
+			}, {
+				title: 'ä»£ç ',
+				align: 'left',
+				field: 'CleanReasonCode',
+				width: 100,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æè¿°',
+				align: 'left',
+				field: 'CleanReasonDesc',
+				width: 150,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æ˜¯å¦å¯ç”¨',
+				align: 'center',
+				field: 'UseFlag',
+				width: 70,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}
+		]],
+		showAddSaveDelItems: true,
+		pagination: false,
+		remoteSort: false,
+		checkField: 'CleanReasonCode',
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			ReasonForCleanFailGrid.commonClickRow(index, row);
+		}
+	});
+
+	// å™¨ææŠ¥æŸåŸå› 
+	var ReasonForConsumeGrid = $UI.datagrid('#ReasonForConsumeGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.ReasonForConsume',
+			QueryName: 'SelectAllReasonForConsume',
+			rows: 99999
+		},
+		beforeAddFn: function() {
+			var DefaultData = { UseFlag: 'Y' };
+			return DefaultData;
+		},
+		beforeDelFn: function() {
+			var rowMain = $('#ReasonForConsumeGrid').datagrid('getSelected');
+			if (!isEmpty(rowMain)) {
+				var Id = rowMain.RowId;
+			}
+			if (!isEmpty(rowMain) && !isEmpty(Id)) {
+				$UI.msg('alert', 'å·²ç»´æŠ¤æŠ¥æŸåŸå› åªèƒ½åœç”¨,ä¸èƒ½åˆ é™¤');
+				return false;
+			}
+		},
+		saveDataFn: function() {
+			var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			var Rows = ReasonForConsumeGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows == false) {
+				$UI.msg('alert', 'å­˜åœ¨æœªå¡«å†™çš„å¿…å¡«é¡¹ï¼Œä¸èƒ½ä¿å­˜!');
+				return;
+			}
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.ReasonForConsume',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows),
+				Others: Others
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', 'ä¿å­˜æˆåŠŸï¼');
+					ReasonForConsumeGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		columns: [[
+			{
+				title: 'RowId',
+				align: 'right',
+				field: 'RowId',
+				width: 100,
+				hidden: true
+			}, {
+				title: 'ä»£ç ',
+				align: 'left',
+				field: 'ConsumeReasonCode',
+				width: 100,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æè¿°',
+				align: 'left',
+				field: 'ConsumeReasonDesc',
+				width: 150,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æ˜¯å¦å¯ç”¨',
+				align: 'center',
+				field: 'UseFlag',
+				width: 70,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}
+		]],
+		showAddSaveDelItems: true,
+		pagination: false,
+		remoteSort: false,
+		checkField: 'ConsumeReasonCode',
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			ReasonForConsumeGrid.commonClickRow(index, row);
+		}
+	});
+
+	// æ¶ˆæ¯’åŒ…å¬å›åŸå› 
+	var ReasonForRecallGrid = $UI.datagrid('#ReasonForRecallGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.ReasonForRecall',
+			QueryName: 'SelectAllReasonForRecall',
+			rows: 99999
+		},
+		beforeAddFn: function() {
+			var DefaultData = { UseFlag: 'Y' };
+			return DefaultData;
+		},
+		beforeDelFn: function() {
+			var rowMain = $('#ReasonForRecallGrid').datagrid('getSelected');
+			if (!isEmpty(rowMain)) {
+				var Id = rowMain.RowId;
+			}
+			if (!isEmpty(rowMain) && !isEmpty(Id)) {
+				$UI.msg('alert', 'å·²ç»´æŠ¤å¬å›åŸå› åªèƒ½åœç”¨,ä¸èƒ½åˆ é™¤');
+				return false;
+			}
+		},
+		saveDataFn: function() {
+			var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			var Rows = ReasonForRecallGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows == false) {
+				$UI.msg('alert', 'å­˜åœ¨æœªå¡«å†™çš„å¿…å¡«é¡¹ï¼Œä¸èƒ½ä¿å­˜!');
+				return;
+			}
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.ReasonForRecall',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows),
+				Others: Others
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', 'ä¿å­˜æˆåŠŸï¼');
+					ReasonForRecallGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		columns: [[
+			{
+				title: 'RowId',
+				align: 'right',
+				field: 'RowId',
+				width: 100,
+				hidden: true
+			}, {
+				title: 'ä»£ç ',
+				align: 'left',
+				field: 'RecallReasonCode',
+				width: 100,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æè¿°',
+				align: 'left',
+				field: 'RecallReasonDesc',
+				width: 150,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æ˜¯å¦å¯ç”¨',
+				align: 'center',
+				field: 'UseFlag',
+				width: 70,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}
+		]],
+		showAddSaveDelItems: true,
+		pagination: false,
+		remoteSort: false,
+		checkField: 'RecallReasonCode',
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			ReasonForRecallGrid.commonClickRow(index, row);
+		}
+	});
+
+	// åŒ…è£…ææ–™
+	var MaterialInfoGrid = $UI.datagrid('#MaterialInfoGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.PackageInfo.PackageMatCompare',
+			QueryName: 'SelectMaterialInfo',
+			rows: 99999
+		},
+		beforeAddFn: function() {
+			var DefaultData = { UseFlag: 'Y' };
+			return DefaultData;
+		},
+		beforeDelFn: function() {
+			var rowMain = $('#MaterialInfoGrid').datagrid('getSelected');
+			if (!isEmpty(rowMain)) {
+				var Id = rowMain.RowId;
+			}
+			if (!isEmpty(rowMain) && !isEmpty(Id)) {
+				$UI.msg('alert', 'å·²ç»´æŠ¤åŒ…è£…ææ–™åªèƒ½åœç”¨,ä¸èƒ½åˆ é™¤');
+				return false;
+			}
+		},
+		saveDataFn: function() {
+			var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			var Rows = MaterialInfoGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows == false) {
+				$UI.msg('alert', 'å­˜åœ¨æœªå¡«å†™çš„å¿…å¡«é¡¹ï¼Œä¸èƒ½ä¿å­˜!');
+				return;
+			}
+			$.cm({
+				ClassName: 'web.CSSDHUI.PackageInfo.PackageMatCompare',
+				MethodName: 'jsSaveMaterialInfo',
+				Params: JSON.stringify(Rows),
+				Others: Others
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', 'ä¿å­˜æˆåŠŸï¼');
+					MaterialInfoGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		columns: [[
+			{
+				title: 'RowId',
+				align: 'right',
+				field: 'RowId',
+				width: 100,
+				hidden: true
+			}, {
+				title: 'ä»£ç ',
+				align: 'left',
+				field: 'MaterialCode',
+				width: 100,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æè¿°',
+				align: 'left',
+				field: 'MaterialDesc',
+				width: 150,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æœ‰æ•ˆæœŸå¤©æ•°',
+				align: 'right',
+				field: 'ExpLength',
+				width: 100,
+				editor: { type: 'numberbox', options: { required: false, min: 1 }}
+			}, {
+				title: 'æ˜¯å¦å¯ç”¨',
+				align: 'center',
+				field: 'UseFlag',
+				width: 70,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}
+		]],
+		showAddSaveDelItems: true,
+		pagination: false,
+		remoteSort: false,
+		checkField: 'MaterialCode',
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			MaterialInfoGrid.commonClickRow(index, row);
+		}
+	});
+
+	// æ¶ˆæ¯’åŒ…è§„æ ¼
+	var PackageSpecGrid = $UI.datagrid('#PackageSpecGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.PackageSpec',
+			QueryName: 'SelectAllPackageSpec',
+			rows: 99999
+		},
+		beforeAddFn: function() {
+			var DefaultData = { UseFlag: 'Y' };
+			return DefaultData;
+		},
+		beforeDelFn: function() {
+			var rowMain = $('#PackageSpecGrid').datagrid('getSelected');
+			if (!isEmpty(rowMain)) {
+				var Id = rowMain.RowId;
+			}
+			if (!isEmpty(rowMain) && !isEmpty(Id)) {
+				$UI.msg('alert', 'å·²ç»´æŠ¤è§„æ ¼åªèƒ½åœç”¨,ä¸èƒ½åˆ é™¤');
+				return false;
+			}
+		},
+		saveDataFn: function() {
+			var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			var Rows = PackageSpecGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows == false) {
+				$UI.msg('alert', 'å­˜åœ¨æœªå¡«å†™çš„å¿…å¡«é¡¹ï¼Œä¸èƒ½ä¿å­˜!');
+				return;
+			}
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.PackageSpec',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows),
+				Others: Others
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', 'ä¿å­˜æˆåŠŸï¼');
+					PackageSpecGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		columns: [[
+			{
+				title: 'RowId',
+				align: 'right',
+				field: 'RowId',
+				width: 100,
+				hidden: true
+			}, {
+				title: 'ä»£ç ',
+				align: 'left',
+				field: 'SpecCode',
+				width: 100,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æè¿°',
+				align: 'left',
+				field: 'SpecDesc',
+				width: 150,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æ˜¯å¦å¯ç”¨',
+				align: 'center',
+				field: 'UseFlag',
+				width: 70,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}
+		]],
+		showAddSaveDelItems: true,
+		pagination: false,
+		remoteSort: false,
+		checkField: 'SpecCode',
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			PackageSpecGrid.commonClickRow(index, row);
+		}
+	});
+
+	// æ»¡æ„åº¦è°ƒæŸ¥é¡¹ç›®
+	var TypeData = [{ 'SatisfactionType': 'I', 'SatisfactionTypeDesc': 'è¾“å…¥æ¡†' }, { 'SatisfactionType': 'R', 'SatisfactionTypeDesc': 'å‹¾é€‰æ¡†' }];
+	var TypeCombox = {
+		type: 'combobox',
+		options: {
+			data: TypeData,
+			valueField: 'SatisfactionType',
+			textField: 'SatisfactionTypeDesc',
+			required: true
+		}
+	};
+	var SatisfactionGrid = $UI.datagrid('#SatisfactionGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.Satisfaction',
+			QueryName: 'SelectAllSatisfaction',
+			rows: 99999
+		},
+		beforeAddFn: function() {
+			var DefaultData = { UseFlag: 'Y' };
+			return DefaultData;
+		},
+		beforeDelFn: function() {
+			var rowMain = $('#SatisfactionGrid').datagrid('getSelected');
+			if (!isEmpty(rowMain)) {
+				var Id = rowMain.RowId;
+			}
+			if (!isEmpty(rowMain) && !isEmpty(Id)) {
+				$UI.msg('alert', 'å·²ç»´æŠ¤æ»¡æ„åº¦é¡¹ç›®åªèƒ½åœç”¨,ä¸èƒ½åˆ é™¤');
+				return false;
+			}
+		},
+		saveDataFn: function() {
+			var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			var Rows = SatisfactionGrid.getChangesData();
+			if (isEmpty(Rows)) return;
+			if (Rows == false) {
+				$UI.msg('alert', 'å­˜åœ¨æœªå¡«å†™çš„å¿…å¡«é¡¹ï¼Œä¸èƒ½ä¿å­˜!');
+				return;
+			}
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.Satisfaction',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows),
+				Others: Others
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', 'ä¿å­˜æˆåŠŸï¼');
+					SatisfactionGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		columns: [[
+			{
+				title: 'RowId',
+				align: 'right',
+				field: 'RowId',
+				width:	150,
+				hidden: true
+			}, {
+				title: 'ä»£ç ',
+				align: 'left',
+				field: 'SatisfactionCode',
+				width:	100,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'æè¿°',
+				align: 'left',
+				field: 'SatisfactionDesc',
+				width:	300,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'ç±»å‹',
+				align: 'left',
+				field: 'SatisfactionType',
+				width: 80,
+				formatter: CommonFormatter(TypeCombox, 'SatisfactionType', 'SatisfactionTypeDesc'),
+				editor: TypeCombox
+			}, {
+				title: 'æ˜¯å¦å¯ç”¨',
+				align: 'center',
+				field: 'UseFlag',
+				width:	70,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}
+		]],
+		showAddSaveDelItems: true,
+		pagination: false,
+		remoteSort: false,
+		checkField: 'SatisfactionCode',
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			SatisfactionGrid.commonClickRow(index, row);
+		}
+	});
+
+	// ä¾›åº”ä¸­å¿ƒç»´æŠ¤
+	var SupLocBox = {
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + JSON.stringify(addSessionParams({ BDPHospital: HospId })),
+			valueField: 'RowId',
+			textField: 'Description',
+			required: true,
+			onSelect: function(record) {
+				var rows = SupplyCenterGrid.getRows();
+				var row = rows[SupplyCenterGrid.editIndex];
+				row.SupLocDesc = record.Description;
+			}
+		}
+	};
+	var SupplyCenterGrid = $UI.datagrid('#SupplyCenterGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.SupplyCenter',
+			QueryName: 'SelectAllSupplyCenter',
+			rows: 99999
+		},
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.System.SupplyCenter',
+			MethodName: 'jsDelete'
+		},
+		saveDataFn: function() {
+			var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			var Rows = SupplyCenterGrid.getChangesData();
+			if (isEmpty(Rows)) return;
+			if (Rows == false) {
+				$UI.msg('alert', 'å­˜åœ¨æœªå¡«å†™çš„å¿…å¡«é¡¹ï¼Œä¸èƒ½ä¿å­˜!');
+				return;
+			}
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.SupplyCenter',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows),
+				Others: Others
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', 'ä¿å­˜æˆåŠŸï¼');
+					SupplyCenterGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		columns: [[
+			{
+				title: 'RowId',
+				align: 'right',
+				field: 'RowId',
+				width: 100,
+				saveCol: true,
+				hidden: true
+			}, {
+				title: 'ç§‘å®¤',
+				align: 'left',
+				field: 'SupLocId',
+				width: 200,
+				saveCol: true,
+				formatter: CommonFormatter(SupLocBox, 'SupLocId', 'SupLocDesc'),
+				editor: SupLocBox
+			}, {
+				title: 'åŒ»é™¢',
+				align: 'left',
+				field: 'HospDesc',
+				width: 200
+			}
+		]],
+		singleSelect: false,
+		showAddSaveDelItems: true,
+		pagination: false,
+		remoteSort: false,
+		checkField: 'SupLocId',
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			SupplyCenterGrid.commonClickRow(index, row);
+		}
+	});
+
+	var SupLocCombox = {
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + JSON.stringify(addSessionParams({ Type: 'SupLoc' })),
+			valueField: 'RowId',
+			textField: 'Description',
+			required: true,
+			onSelect: function(record) {
+				var rows = BindLocGrid.getRows();
+				var row = rows[BindLocGrid.editIndex];
+				row.SupLocDesc = record.Description;
+			}
+		}
+	};
+	var LocComBox = {
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + JSON.stringify(addSessionParams({ BDPHospital: HospId })),
+			valueField: 'RowId',
+			textField: 'Description',
+			required: true,
+			onSelect: function(record) {
+				var rows = BindLocGrid.getRows();
+				var row = rows[BindLocGrid.editIndex];
+				row.LocDesc = record.Description;
+			}
+		}
+	};
+	var BindLocGrid = $UI.datagrid('#BindLocGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.BindLoc',
+			QueryName: 'SelectAllBindLoc',
+			rows: 99999
+		},
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.System.BindLoc',
+			MethodName: 'jsDelete'
+		},
+		beforeAddFn: function() {
+			var DefaultData = { UseFlag: 'Y' };
+			return DefaultData;
+		},
+		saveDataFn: function() {
+			BindLocGrid.endEditing();
+			var RowData = BindLocGrid.getRows();
+			var Len = RowData.length;
+			var RecCount = 0;
+			for (var i = 0; i < Len; i++) {
+				var row = RowData[i];
+				if (row['DefaultFlag'] == 'Y') {
+					RecCount = RecCount + 1;
+				}
+			}
+			if (RecCount > 1) {
+				$UI.msg('alert', 'åªèƒ½è®¾ç½®ä¸€ä¸ªé»˜è®¤å€¼!');
+				return;
+			}
+			var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			var Rows = BindLocGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows == false) {
+				$UI.msg('alert', 'å­˜åœ¨æœªå¡«å†™çš„å¿…å¡«é¡¹ï¼Œä¸èƒ½ä¿å­˜!');
+				return;
+			}
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.BindLoc',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows),
+				Others: Others
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', 'ä¿å­˜æˆåŠŸï¼');
+					BindLocGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		columns: [[
+			{
+				title: 'RowId',
+				align: 'right',
+				field: 'RowId',
+				width: 100,
+				hidden: true
+			}, {
+				title: 'ä¾›åº”ç§‘å®¤',
+				align: 'left',
+				field: 'SupLocId',
+				width: 150,
+				formatter: CommonFormatter(SupLocCombox, 'SupLocId', 'SupLocDesc'),
+				editor: SupLocCombox
+			}, {
+				title: 'ç±»å‹',
+				align: 'left',
+				field: 'TypeCode',
+				width: 100,
+				hidden: true
+			}, {
+				title: 'ç§‘å®¤',
+				align: 'left',
+				field: 'LocId',
+				width: 150,
+				formatter: CommonFormatter(LocComBox, 'LocId', 'LocDesc'),
+				editor: LocComBox
+			}, {
+				title: 'æ˜¯å¦å¯ç”¨',
+				align: 'center',
+				field: 'UseFlag',
+				width: 70,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}, {
+				title: 'æ˜¯å¦é»˜è®¤',
+				align: 'center',
+				field: 'DefaultFlag',
+				width: 70,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}
+		]],
+		showAddSaveDelItems: true,
+		pagination: false,
+		remoteSort: false,
+		fitColumns: true,
+		onClickCell: function(index, field, value) {
+			BindLocGrid.commonClickCell(index, field, value);
+		}
+	});
+
+	// æ‰“å°è§„åˆ™ç»´æŠ¤
+	var PrintRulesGrid = $UI.datagrid('#PrintRulesGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.PrintRules',
+			QueryName: 'SelectAllPrintRules',
+			rows: 99999
+		},
+		saveDataFn: function() {
+			var Rows = PrintRulesGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows == false) {
+				$UI.msg('alert', 'å­˜åœ¨æœªå¡«å†™çš„å¿…å¡«é¡¹ï¼Œä¸èƒ½ä¿å­˜!');
+				return;
+			}
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.PrintRules',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows)
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', 'ä¿å­˜æˆåŠŸï¼');
+					PrintRulesGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		columns: [[
+			{
+				title: 'RowId',
+				align: 'right',
+				field: 'RowId',
+				width: 100,
+				hidden: true
+			}, {
+				title: 'ä»£ç ',
+				align: 'left',
+				field: 'PrintRulesCode',
+				width: 120
+			}, {
+				title: 'æè¿°',
+				align: 'left',
+				field: 'PrintRulesDesc',
+				width: 150,
+				editor: { type: 'validatebox', options: { required: true }}
+			}
+		]],
+		showSaveItems: true,
+		pagination: false,
+		remoteSort: false,
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			PrintRulesGrid.commonClickRow(index, row);
+		}
+	});
+
+	// åŒ»é™¢ç§‘å®¤æ‰“å°è§„åˆ™ç»´æŠ¤
+	var PHospId;
+	var HospitalBox = {
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetHosp&ResultSetType=array&Params=' + JSON.stringify(addSessionParams({ BDPHospital: HospId })),
+			valueField: 'RowId',
+			textField: 'Description',
+			required: true,
+			onSelect: function(record) {
+				PHospId = record.RowId;
+				var LocEditor = $('#LocPrintRulesGrid').datagrid('getEditor', { index: LocPrintRulesGrid.editIndex, field: 'LocId' });
+				LocEditor.target.combobox('setValue', '');
+				record['LocId'] = '', record['LocDesc'] = '';
+				var rows = LocPrintRulesGrid.getRows();
+				var row = rows[LocPrintRulesGrid.editIndex];
+				row.HospDesc = record.Description;
+			}
+		}
+	};
+
+	var LocParams = JSON.stringify(addSessionParams({ HospFlag: 1 }));
+	var LocBox = {
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + LocParams,
+			valueField: 'RowId',
+			textField: 'Description',
+			onShowPanel: function() {
+				var Params = JSON.stringify(addSessionParams({ BDPHospital: PHospId, HospFlag: 2 }));
+				var url = $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + Params;
+				$(this).combobox('reload', url);
+			},
+			onSelect: function(record) {
+				var rows = LocPrintRulesGrid.getRows();
+				var row = rows[LocPrintRulesGrid.editIndex];
+				row.LocDesc = record.Description;
+			}
+		}
+	};
+	var PrintModeData = $.cm({
+		ClassName: 'web.CSSDHUI.Common.Dicts',
+		QueryName: 'GetPrintRules',
+		ResultSetType: 'array'
+	}, false);
+	var PrintModeBox = {
+		type: 'combobox',
+		options: {
+			data: PrintModeData,
+			valueField: 'RowId',
+			textField: 'Code',
+			required: true
+		}
+	};
+	var LocPrintRulesGrid = $UI.datagrid('#LocPrintRulesGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.LocPrintRules',
+			QueryName: 'SelectAllLocPrintRules',
+			rows: 99999
+		},
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.System.LocPrintRules',
+			MethodName: 'jsDelete'
+		},
+		saveDataFn: function() {
+			var Rows = LocPrintRulesGrid.getChangesData();
+			if (isEmpty(Rows)) return;
+			if (Rows == false) {
+				$UI.msg('alert', 'å­˜åœ¨æœªå¡«å†™çš„å¿…å¡«é¡¹ï¼Œä¸èƒ½ä¿å­˜!');
+				return;
+			}
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.LocPrintRules',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows)
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', 'ä¿å­˜æˆåŠŸï¼');
+					LocPrintRulesGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		columns: [[
+			{
+				title: 'RowId',
+				align: 'right',
+				field: 'RowId',
+				width: 100,
+				hidden: true
+			}, {
+				title: 'åŒ»é™¢',
+				align: 'left',
+				field: 'HospId',
+				width: 200,
+				formatter: CommonFormatter(HospitalBox, 'HospId', 'HospDesc'),
+				editor: HospitalBox
+			}, {
+				title: 'ç§‘å®¤',
+				align: 'left',
+				field: 'LocId',
+				width: 150,
+				formatter: CommonFormatter(LocBox, 'LocId', 'LocDesc'),
+				editor: LocBox
+			}, {
+				title: 'æ‰“å°è§„åˆ™',
+				align: 'center',
+				field: 'PrintMode',
+				width: 120,
+				formatter: CommonFormatter(PrintModeBox, 'RowId', 'PrintMode'),
+				editor: PrintModeBox
+			}, {
+				title: 'æ‰“å°è§„åˆ™æè¿°',
+				align: 'left',
+				field: 'PrintRulesDesc',
+				width: 120
+			}
+		]],
+		showAddSaveDelItems: true,
+		pagination: false,
+		remoteSort: false,
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			if (!isEmpty(row.HospId)) {
+				PHospId = row.HospId;
+			}
+			LocPrintRulesGrid.commonClickRow(index, row);
+		}
+	});
+	InitHosp();
+};
+$(init);

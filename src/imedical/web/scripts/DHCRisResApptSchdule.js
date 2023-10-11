@@ -110,8 +110,13 @@ function Modi_click()
 	var LocId=document.getElementById("LocId").value;
 	
 	var ResourceId=document.getElementById("ResourceId").value;
+	var SelRowid=document.getElementById("SelRowid").value;
 	
-	
+	if (SelRowid=="")
+	{
+		alert("请选择一条记录!");
+		return;
+	}
 	var BookMaxNumber=document.getElementById("MaxNumber").value;
 	BookMaxNumber=cTrim(BookMaxNumber,0);
 	BookMaxNumber=Number(BookMaxNumber);
@@ -138,7 +143,7 @@ function Modi_click()
 		return ;
 	}
 	
-	var SelRowid=document.getElementById("SelRowid").value;
+	
 	
 	//var Info=SelRowid+"^"+BookMaxNumber+"^"+BookAutoNumber+"^"+remainTime;
 	var availPatTypeCode=document.getElementById("patTypeCode").value;

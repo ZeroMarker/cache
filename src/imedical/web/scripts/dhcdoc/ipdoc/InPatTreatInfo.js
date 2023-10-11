@@ -3,12 +3,11 @@ opl.view=(function(){
 	var PopoverList;
 	function InitPatAdmInfoJson(){
 		InitPatAdmInfo();
-		PopoverList="#TendOrd,#Diet,#Drainage,#OrderKind,#BloodPressure,#Temperature,#Pulse,#Exam,#Lab,#CVReport,#EkgOrd";
+		PopoverList="#TendOrd,#Diet,#Drainage,#OrderKind,#TPRData,#BloodPressure,#Temperature,#Pulse,#Exam,#Lab,#CVReport,#EkgOrd,#DocCureApp";
 		setTimeout(function(){
 			///懒加载
 			execScript("/imedical/web/scripts_lib/echarts3.6.2/echarts.min.js");
-			InitPannelEvent();
-		},3000);
+		});
 		$("#AddEMRRecord").click(AddEMRRecordClickHandle);
 	}
 	function AddEMRRecordClickHandle(){
@@ -18,32 +17,40 @@ opl.view=(function(){
 	}
 	/// 初始化界面的显示信息
 	function InitPatAdmInfo(){
-		var PatAdmInfoJson=eval("("+ServerObj.PatAdmInfoJson+")");
-		var id,value,valueArr,text,color;
-		/*
-		for (var i=0;i<PatAdmInfoJson.length;i++){
-			id=PatAdmInfoJson[i].id;
-			value=PatAdmInfoJson[i].Value+"";
-			$("#"+id+"").html(value);
-		}
-		*/
-		var old=document.getElementById('PatTreat-div');
-		var clone=old.cloneNode(true);
-		for (var i=0;i<PatAdmInfoJson.length;i++){
-			id=PatAdmInfoJson[i].id;
-			value=PatAdmInfoJson[i].Value+"";
-			var _$id=$(clone).find("#"+id+"");
-			if (_$id.length>0){
-				//$(clone).find("#"+id+"")[0].text=value;
-				_$id.html(value);
+		$('#PatTreat-div').showMask();
+		$.cm({
+			ClassName:'web.DHCDocInPatPortalCommon',
+			MethodName:'GetAdmInfoJson',
+			EpisodeID:ServerObj.EpisodeID,
+			UserCode:session['LOGON.USERCODE']
+		},function(PatAdmInfoJson){
+			var id,value,valueArr,text,color;
+			var old=document.getElementById('PatTreat-div');
+			var clone=old.cloneNode(true);
+			for (var i=0;i<PatAdmInfoJson.length;i++){
+				id=PatAdmInfoJson[i].id;
+				value=PatAdmInfoJson[i].Value+"";
+				var _$id=$(clone).find("#"+id+"");
+				if (_$id.length>0){
+					//$(clone).find("#"+id+"")[0].text=value;
+					_$id.html(value);
+				}
 			}
-		}
-		old.parentNode.replaceChild(clone,old)
+			old.parentNode.replaceChild(clone,old)
+			$('#PatTreat-div').hideMask();
+			setTimeout(function(){
+				InitPannelEvent();
+			},1000);
+			$("#AddEMRRecord").click(AddEMRRecordClickHandle);
+		});
 	}
 	//初始化页面浮动
 	function InitPannelEvent(){
 		$(PopoverList).each(function(){
 			var that=$(this);
+			if (that.length==0){
+				return true;
+			}
 			var ID=that.attr('id');
 			that.parent().on({
 				mouseenter:function(){
@@ -51,22 +58,21 @@ opl.view=(function(){
 						//浮动内容
 						var HTML=GetPannelHTML(that.attr('id'));
 						if (HTML.innerHTML==""){return;}
-						that.webuiPopover({
+						that.popover({
 							width:HTML.width,
 							height:HTML.height,
 							title:HTML.Title,
 							content:HTML.innerHTML,
 							trigger:'hover',
-							placement:'bottom-left',
+							placement:'auto',
 							onShow:function(){
 								if (LoadPopover("Show",that.attr('id'))){
 									if (typeof HTML.CallFunction == "function"){
-										HTML.CallFunction.call();
+										setTimeout(function(){HTML.CallFunction.call();},50);
 									}
 								}
 							}
-						});
-						that.webuiPopover('show');
+						}).popover('show');
 					}
 				}
 			});
@@ -183,7 +189,8 @@ opl.view=(function(){
 			///护理级别、饮食、引流
 			if (LinkID=="TendOrd"){
 				Title=$g("护理级别选择");
-				width=150 //,height=120;
+				//width=150 //,height=120;
+				width='auto' //,height='auto';
 			}else if (LinkID=="Diet"){
 				Title=$g("饮食医嘱");
 				width=200
@@ -198,7 +205,7 @@ opl.view=(function(){
 			if (JsonData.length>0){
 				for (var i=0,length=JsonData.length;i<length;i++) {
 					var Desc=JsonData[i].Desc;
-					var DescLen=Desc.length*15;
+					var DescLen=Desc.length*16;
 					if(DescLen>width){
 						width=DescLen;	
 					}
@@ -219,17 +226,22 @@ opl.view=(function(){
 					}
 					innerHTML+='</li>'
 				}
+			}else{
+				return {"innerHTML":""};
 			}
 			innerHTML+='</ul>'; 
-			if (ServerObj.VisitStatus!="P") {
-				innerHTML+='<div style="text-align:center;"><a id="'+LinkID+'_Btn" CurrOrdItem="'+OrdItem+'" CurrArcimDR="'+CurrArcimDR+'" onclick="ipdoc.pattreatinfo.view.ChangeOrdHandle(this,\''+LinkID+'\')" class="hisui-linkbutton" href="#">保存</a></div>'
+			if ((ServerObj.VisitStatus!="P")&&(ServerObj.LoginAdmLocFlag=="Y")) {
+				innerHTML+='<div style="text-align:center;margin-top: 10px;"><a id="'+LinkID+'_Btn" CurrOrdItem="'+OrdItem+'" CurrArcimDR="'+CurrArcimDR+'" onclick="ipdoc.pattreatinfo.view.ChangeOrdHandle(this,\''+LinkID+'\')" class="hisui-linkbutton" href="#">保存</a></div>'
 			}
 			CallFunction=function(){
 				$HUI.radio("input.ord-radio",{});
 				//$HUI.linkbutton(".hisui-linkbutton",{});
 				$HUI.linkbutton($("a[id$='_Btn']"),{});
 			};
-			height=(JsonData.length)*40;
+			//height=(JsonData.length)*40;
+			//炫彩与极简按钮高度不一致
+			height=(JsonData.length)*22+40+(HISUIStyleCode != "lite"?2:0);
+			if (JsonData.length==0){height=0;}
 		}else if (LinkID=="OrderKind"){
 			//特殊护理
 			if ($("#OrderKind").text()!=$g("无")){
@@ -237,9 +249,9 @@ opl.view=(function(){
 				CallFunction=LoadOrdKindGrid;
 				width=500,height=300;
 			}
-		}else if ((LinkID=="Temperature")||(LinkID=="BloodPressure")||(LinkID=="Pulse")){
+		}else if ((LinkID=="Temperature")||(LinkID=="BloodPressure")||(LinkID=="Pulse")||(LinkID=="TPRData")){
 			///体温、脉搏、血压
-			innerHTML+='<div id="NursingCharts'+LinkID+'" style="width: 700px;height:300px;"></div>'
+			innerHTML+='<div id="NursingCharts'+LinkID+'" style="width: 760px;height:300px;"></div>'
 			CallFunction=function(){
 				LoadNursingCharts("NursingCharts"+LinkID);
 			};
@@ -272,6 +284,13 @@ opl.view=(function(){
 				innerHTML+='<table id="CVReportGrid"></table>';
 				CallFunction=LoadCVReportGrid;
 				width=550,height=300
+			}
+		}else if (LinkID=="DocCureApp"){
+			//治疗申请
+			if ($("#DocCureApp").text()>0){
+				innerHTML+='<table id="DocCureAppGrid"></table>';
+				CallFunction=LoadDocCureAppGrid;
+				width=850,height=300
 			}
 		}
 		return {
@@ -405,26 +424,24 @@ opl.view=(function(){
                 }
 			}
 	    ]];
-	   
-		$.m({
-		    ClassName:"web.DHCDocInPatPortalCommon",
-		    MethodName:"GetLabGridData",
-		    EpisodeID:ServerObj.EpisodeID
-		},function(val){
-			var GridData=eval('(' + val + ')'); 
-			//$HUI.treegrid('#LabOrdGrid',{
-			$('#LabOrdGrid').treegrid({
-			    data:GridData,
-			    title:$g('检验列表'),
-			    headerCls:'panel-header-gray',
-			    idField:'Index',
-			    treeField:'Title',
-			    fit : false,
-			    width:700,
-			    height:300,
-			    border: false,
-			    columns:LabOrdColumns
-			});
+		$('#LabOrdGrid').treegrid({
+			url:$URL,
+			title:$g('检验列表'),
+			headerCls:'panel-header-gray',
+			idField:'Index',
+			treeField:'Title',
+			fit : false,
+			width:740,
+			height:300,
+			border: true,
+			toolbar:[],
+			columns:LabOrdColumns,
+			onBeforeLoad:function(node,param){
+				param.ClassName="web.DHCDocInPatPortalCommon";
+				param.MethodName="GetLabGridData";
+				param.EpisodeID=ServerObj.EpisodeID;
+				param.UserId=session['LOGON.USERID'];
+			}
 		});
 	}
     ///检查医嘱分类树状列表
@@ -453,29 +470,25 @@ opl.view=(function(){
                 }
 			}
 	    ]];
-		$.m({
-		    ClassName:"web.DHCDocInPatPortalCommon",
-		    //ClassName:"DHCDoc.DHCDocConfig.OrderClassify",
-		    MethodName:"GetExamGridData",
-		    EpisodeID:ServerObj.EpisodeID,
-		    UserCode:session['LOGON.USERCODE']
-		},function(val){
-			var GridData=eval('(' + val + ')'); 
-			$HUI.treegrid('#ExamOrdGrid',{
-			//$('#ExamOrdGrid').treegrid({
-			    data:GridData,
-			    title:$g('检查列表'),
-			    headerCls:'panel-header-gray',
-			    idField:'Index',    
-			    treeField:'Title',
-			    fit : false,
-			    width:800,
-			    height:300,
-			    border: false,   
-			    columns:ExamOrdColumns
-			});
+		$HUI.treegrid('#ExamOrdGrid',{
+			url:$URL,
+			title:$g('检查列表'),
+			headerCls:'panel-header-gray',
+			idField:'Index',    
+			treeField:'Title',
+			fit : false,
+			width:830,
+			height:300,
+			border: true,   
+			toolbar:[],
+			columns:ExamOrdColumns,
+			onBeforeLoad:function(node,param){
+				param.ClassName="web.DHCDocInPatPortalCommon";
+				param.MethodName="GetExamGridData";
+				param.EpisodeID=ServerObj.EpisodeID;
+				param.UserCode=session['LOGON.USERCODE'];
+			}
 		});
-		
 	}
 	
 	function LoadEkgOrdGrid(){
@@ -509,31 +522,29 @@ opl.view=(function(){
                 }
  			}
 	    ]];
-		$.q({
-		    ClassName:"web.DHCDocInPatPortalCommon",
-		    QueryName:"QueryEkgOrdList",
-		    EpisodeID:ServerObj.EpisodeID,
-		    UserID:session['LOGON.USERID']
-		},function(GridData){
-			$HUI.datagrid('#EkgOrdGrid',{
-			    data:GridData,
-			    title:$g('心电监测'),
-			    headerCls:'panel-header-gray',
-			    idField:'Index',
-			    fit : false,
-			    width:820,
-			    height:300,
-			    border: false,
-			    columns:EkgOrdColumns
-			});
+		$HUI.datagrid('#EkgOrdGrid',{
+			url:$URL,
+			title:$g('心电监测'),
+			headerCls:'panel-header-gray',
+			idField:'Index',
+			fit : false,
+			width:820,
+			height:300,
+			border: false,
+			columns:EkgOrdColumns,
+			onBeforeLoad:function(param){
+				param.ClassName="web.DHCDocInPatPortalCommon";
+				param.QueryName="QueryEkgOrdList";
+				param.EpisodeID=ServerObj.EpisodeID;
+				param.UserID=session['LOGON.USERID'];
+			}
 		});  
 	}
-	
     function LoadCVReportGrid(){
 		var CVReportColumns=[[    
 			{field:'Index', hidden:true},
 			{title:'报告ID',field:'ReportId', hidden:true},
-	        {title:'医嘱名称',field:'TSName',width:200},
+	        {title:'医嘱名称',field:'TSName',width:233},
 	        {title:'危急值类型名称',field:'ReportType',width:120},
 	        {title:'危急值类型代码',field:'DPRPType', hidden:true},
 	        {title:'警示提示',field:'DPRPAlert',width:120},
@@ -551,48 +562,148 @@ opl.view=(function(){
                 }
  			},
 	    ]];
-	    
-		$.q({
-		    //ClassName:"web.DHCDocInPatPortalCommon",
-		    ClassName:"web.DHCCVCommon",
-		    QueryName:"CVReportFromAdm",
-		    EpisodeId:ServerObj.EpisodeID,
-		    TransStatus:"C"
-		},function(GridData){
-			$HUI.datagrid('#CVReportGrid',{
-			    data:GridData,
-			    title:$g('危急值'),
-			    headerCls:'panel-header-gray',
-			    idField:'Index',
-			    treeField:'Title',
-			    fit : false,
-			    width:500,
-			    height:300,
-			    border: false,
-			    columns:CVReportColumns
-			});
+		$HUI.datagrid('#CVReportGrid',{
+			url:$URL,
+			title:$g('危急值'),
+			headerCls:'panel-header-gray',
+			idField:'Index',
+			treeField:'Title',
+			fit : false,
+			width:530,
+			height:300,
+			border: true,
+			toolbar:[],
+			columns:CVReportColumns,
+			onBeforeLoad:function(param){
+				param.ClassName="web.DHCCVCommon";
+				param.QueryName="CVReportFromAdm";
+				param.EpisodeId=ServerObj.EpisodeID;
+				param.TransStatus="C";
+			}
+		});
+	}
+	function LoadDocCureAppGrid(){
+		var DocCureColumns=[[ 
+			{field:'Index',title:'Index',width:30,hidden:true},
+			{field:'DCARowId',title:'DCARowId',width:30,hidden:true},
+			{field:'ApplyStatus',title:'申请状态',width:100,align:'left', resizable: true},
+			{field:'ApplyNo',title:'申请单号',width:110,align:'left', resizable: true},  
+			{field:'ArcimDesc',title:'治疗项目',width:200,align:'left', resizable: true},
+			{field:'OrdOtherInfo',title:'医嘱其他信息',width:120,align:'left', resizable: true},
+			{field:'ApplyPlan',title:'治疗方案',width:80,align:'left',
+				formatter:function(value,row,index){
+					if(row.DCARowId==""){
+						return "";
+					}else{
+						if (value == "") {
+							return "<span style='background:#29B66A;color:#fff;padding:2px 4px;border-radius:4px;display:inline-block;'>"+$g("未填写")+"</span>";
+						}else {
+							var Type="'Plan'";
+							return '<a href="###" id= ApplyPlan"'+row["DCARowId"]+'"'+' onclick=DHCDocCure_InpatTreat_Service.ShowCureDetail('+Type+','+row.DCARowId+');>'+"<span style='background:#40A2DE;color:#fff;padding:2px 4px;border-radius:4px;display:inline-block;'>"+$g("单击查看")+"</span>"+"</a>"
+						}
+					}
+				}
+			},
+			{field:'ApplyAssessment',title:'治疗评估',width:80,align:'left',
+				formatter:function(value,row,index){
+					if(row.DCARowId==""){
+						return "";
+					}else{
+						if (value == "") {
+							return "<span style='background:#29B66A;color:#fff;padding:2px 4px;border-radius:4px;display:inline-block;'>"+$g("未填写")+"</span>";
+						}else {
+							var Type="'Ass'";
+							return '<a href="###" id= ApplyAssessment"'+row["DCARowId"]+'"'+' onclick=DHCDocCure_InpatTreat_Service.ShowCureDetail('+Type+','+row.DCARowId+');>'+"<span style='background:#40A2DE;color:#fff;padding:2px 4px;border-radius:4px;display:inline-block;'>"+$g("单击查看")+"</span>"+"</a>"
+						}
+					}
+				}
+			},
+			{field:'DCRecord',title:'治疗记录',width:80,align:'left',
+				formatter:function(value,row,index){
+					if(row.DCARowId==""){
+						return "";
+					}else{
+						if (value == "") {
+							return "<span style='background:#29B66A;color:#fff;padding:2px 4px;border-radius:4px;display:inline-block;'>"+$g("未填写")+"</span>";
+						}else {
+							var Type="'Record'";
+							return '<a href="###" id= DCRecord"'+row["TIndex"]+'"'+' onclick=DHCDocCure_InpatTreat_Service.ShowCureDetail('+Type+','+row.DCARowId+');>'+"<span style='background:#40A2DE;color:#fff;padding:2px 4px;border-radius:4px;display:inline-block;'>"+$g("单击查看")+"</span>"+"</a>"
+						}
+					}
+				}
+			},
+			{field:'OrdQty',title:'数量',width:50,align:'left', resizable: true}, 
+			{field:'OrdBillUOM',title:'单位',width:50,align:'left', resizable: true}, 
+			{field:'OrdUnitPrice',title:'单价',width:50,align:'left', resizable: true}, 
+			{field:'OrdPrice',title:'总金额',width:60,align:'left', resizable: true}, 
+			{field:'ApplyAppedTimes',title:'已预约次数',width:80,align:'left', resizable: true},
+			{field:'ApplyNoAppTimes',title:'未预约次数',width:80,align:'left', resizable: true},
+			{field:'ApplyFinishTimes',title:'已治疗次数',width:80,align:'left', resizable: true},
+			{field:'ApplyNoFinishTimes',title:'未治疗次数',width:80,align:'left', resizable: true},
+			{field:'OrdBilled',title:'是否缴费',width:70,align:'left', resizable: true,
+				styler: function(value,row,index){
+					if (value == "否"){
+						return 'background-color:#ffee00;color:red;';
+					}
+				}
+			},
+			{field:'OrdReLoc',title:'接收科室',width:80,align:'left', resizable: true},   
+			{field:'ServiceGroup',title:'服务组',width:80,align:'left', resizable: true}, 
+			//{field: 'ApplyExec', title: '是否可预约', width: 80, align: 'left',resizable: true},
+			{field:'ApplyUser',title:'申请医生',width:80,align:'left', resizable: true},
+			{field:'ApplyDateTime',title:'申请时间',width:160,align:'left', resizable: true}
+		]]
+		$HUI.treegrid('#DocCureAppGrid',{
+			url:$URL,
+			title:'治疗申请',
+			headerCls:'panel-header-gray',
+			idField:'Index',
+			treeField:'ApplyStatus',
+			fit : false,
+			width:820,
+			height:300,
+			border: true,
+			toolbar:[],
+			columns:DocCureColumns,
+			onBeforeLoad:function(node,param){
+				param.ClassName="DHCDoc.DHCDocCure.Service";
+				param.MethodName="GetCureAppGridData";
+				param.EpisodeID=ServerObj.EpisodeID;
+			}
 		});
 	}
     
     function formatBloodPressure(params, MsgType){
         var BloodPressure=params.value;
-
         if (BloodPressure==""){
             return "";
         }
         var SysLength=(BloodPressure+"").substr(5,1);
         var SysPressure=(BloodPressure+"").substr(6,SysLength);
+        var Sysdecimal=(SysPressure+"").substr(SysLength-1,1);
+        	SysPressure=(SysPressure+"").substr(0,SysLength-1);
+        if (Sysdecimal>0) {
+	        SysPressure=insertDecimal(SysPressure,Sysdecimal-1,"."); //insert_flg(SysPressure,".",Sysdecimal-1);
+	    }
         var DiaLength=(BloodPressure+"").substr(6+parseFloat(SysLength),1);
         var DiaPressure=(BloodPressure+"").substr(6+parseFloat(SysLength)+1,DiaLength);
+        var Diadecimal=(DiaPressure+"").substr(DiaLength-1,1);
+            DiaPressure=(DiaPressure+"").substr(0,DiaLength-1);
+        if (Diadecimal>0) {
+	        DiaPressure=insertDecimal(DiaPressure,Diadecimal-1,".");
+	    }
         var CruuDate=params.name;
         var Msg="";
         if (MsgType=="Lable"){
-            Msg=SysPressure+"/"+DiaPressure;
+            Msg=SysPressure+"\n/\n"+DiaPressure;
 
         }else if (MsgType=="tip"){
             Msg=$g("日期:")+CruuDate+"</br>"+$g("血压:")+SysPressure+"/"+DiaPressure
         }
         return Msg;
+        function insertDecimal(soure, start, newStr){
+			return soure.slice(0, start) + newStr + soure.slice(start);
+		}
     };
     function CVReportBtnClickHandler(ReportId,DPRPType){
 	    //var Url="criticalvalue.trans.csp?ReportId="+ReportId+"&RepType="+DPRPType;
@@ -600,6 +711,7 @@ opl.view=(function(){
 		//window.open(Url, "", "status=1,scrollbars=1,top=100,left=100,width=860,height=560");
 		websys_showModal({
 			url:Url,
+			iconCls:'icon-w-paper',  
 			title:'危急值处理',
 			width:'90%',height:'90%'
 		})
@@ -642,12 +754,12 @@ opl.view=(function(){
             grid: [{
                     left: 50,
                     right: 50,
-                    height: '35%'
+                    height: '45%'
                 },{
                     left: 50,
                     right: 50,
-                    top: '55%',
-                    height: '10%'
+                    top: '65%',
+                    height: '27%'
                 }
             ],
             calculable : true,
@@ -769,8 +881,8 @@ opl.view=(function(){
                     label: {
                         normal: {
                             show: true,
-                            position: 'inside',
-                            fontSize:10,
+                            position: 'insideTop',
+                            fontSize:5,
                             color:'#333333',
                             formatter:function (params, ticket, callback){
                                 return ipdoc.pattreatinfo.view.formatBloodPressure(params,"Lable");
@@ -829,13 +941,38 @@ opl.view=(function(){
 	function OpenLabReport(OrderId){
 		//alert(OrderId)
 		if (typeof parent.switchTabByEMR =="function"){
-			parent.switchTabByEMR("dhc_side_find_lablist",{"oneTimeValueExp":"OEORIID="+OrderId});
+			parent.switchTabByEMR("dhcapp_seepatlis_IP",{"oneTimeValueExp":"OEORIID="+OrderId});
 		}
 	}
 	//打开检查报告
 	function OpenExamReport(OrderId){
 		if (typeof parent.switchTabByEMR =="function"){
-			parent.switchTabByEMR("dhcem.inspectrs",{"oneTimeValueExp":"OEORIID="+OrderId}); //dhc_side_find_rislist
+			parent.switchTabByEMR("dhcem_inspectrs",{"oneTimeValueExp":"OEORIID="+OrderId}); //dhc_side_find_rislist
+		}
+	}
+	//临床路径图标点击事件
+	function ClinicalIconClick(Type){
+		//1:打开临床路径菜单；2:打开医嘱录入菜单
+		if (typeof parent.switchTabByEMR !="function"){
+			return;
+		}
+		if (Type=="1"){
+			parent.switchTabByEMR($g("临床路径"));
+		}else if ((Type=="2")||(Type=="3")){
+			if (Type=="2"){
+				var tabName=$g("医嘱录入");
+			}else if (Type=="3"){
+				var tabName=$g("中草药录入");
+			}
+			parent.switchTabByEMR(tabName);
+			var intervalTime=0
+			var intervalId = setInterval(function() {
+				intervalTime=intervalTime+1;
+				var rtn=parent.invokeChartFun(tabName,"AddCPWOrdClickHandler");
+				if ((rtn>=0)||(intervalTime>6)){		//6秒或调用成功后，清空定时器
+					clearInterval(intervalId);
+				}
+			}, 1000);
 		}
 	}
 	function ReLoadPatAdmInfoJson(){
@@ -853,7 +990,7 @@ opl.view=(function(){
 				$("#"+id+"").html(value);
 			}
 		});
-		LoadPopover("","");
+		LoadPopover("Clear");
 	}
 	
     function execScript(e) {
@@ -873,12 +1010,10 @@ opl.view=(function(){
 		LoadPopover("Clear");
 		//$(".webui-popover").remove();
 		$(PopoverList).each(function(){
-			$(this).webuiPopover('destroy');
+			$(this).popover('destroy');
 		});
+		///ServerObj.PatAdmInfoJson在InfoOrder.js->InitPatOrderViewGlobal统一刷新，减少请求
 		InitPatAdmInfo();
-		setTimeout(function(){
-			InitPannelEvent();
-		},1000);
 		$("#AddEMRRecord").click(AddEMRRecordClickHandle);
 	}
 	///得到菜单参数
@@ -900,8 +1035,8 @@ opl.view=(function(){
 		"EkgReportBtnClickHandler":EkgReportBtnClickHandler,
 		"OpenLabReport":OpenLabReport,
 		"OpenExamReport":OpenExamReport,
+		"ClinicalIconClick":ClinicalIconClick,
 		"ReLoadPatAdmInfoJson":ReLoadPatAdmInfoJson,
 		"xhrRefresh":xhrRefresh
 	}
 })();
-﻿

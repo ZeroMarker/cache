@@ -14,9 +14,15 @@
 	           "background-image","url(../scripts/emr/image/icon/up.png)"
 	       );
 	   }
-	});		
+	});
+	if(!judgeIsIE()) 
+	{
+		var ContentDom = document.getElementById('browseContent')
+		ContentDom.style.height = (parseInt(ContentDom.style.height.replace(/[^0-9]/ig,""))-20)+"px";
+		var navDom = document.getElementsByClassName('hisui-panel navcategory')[0];
+		navDom.style.height = (parseInt(navDom.style.height.replace(/[^0-9]/ig,""))-20)+"px";		
+	}		
 });
-
 //取病历目录
 function getCategory()
 {
@@ -24,7 +30,11 @@ function getCategory()
 		"OutputType":"Stream",
 		"Class":"EMRservice.BL.BLClientCategory",
 		"Method":"GetBrowseCategory",
-		"p1":episodeID
+		"p1":episodeID,
+		"p2":"",
+		"p3":docIDs,
+		"p4":userLocID,
+		"p5":"browse"
 	};
 	jQuery.ajax({
 		type: "GET",
@@ -55,6 +65,9 @@ function setCategory(data)
 			{
 				var tmpli = setContent(data[i].children[j]);
 				$(childul).append(tmpli);
+                if ((historyDefaultSelectDocID !== "")&&(historyDefaultSelectDocID == data[i].children[j].emrDocId)){
+                    firstId = data[i].children[j].id;
+                }
 			}
 			$(li).append(childul);
 			$('#ulcategory').append(li);	
@@ -63,6 +76,9 @@ function setCategory(data)
 		{
 			var li = setContent(data[i]);
 			$('#ulcategory').append(li);
+            if ((historyDefaultSelectDocID !== "")&&(historyDefaultSelectDocID == data[i].emrDocId)){
+                firstId = data[i].id;
+            }
 		}
 
 		if (i == 0)
@@ -100,7 +116,8 @@ function setContent(data)
 	$(li).attr("emrDocId",data.emrDocId);
 	$(li).attr("type",data.type);
 	$(li).attr("characteristic",data.characteristic);
-	var link = $('<a href="#"></a>');
+	$(li).attr("pdfDocType",data.pdfDocType);
+	var link = $('<a href="javascript:void(0)"></a>');
 	$(link).append($('<div></div>').append('<div class="title">'+$.trim(data.text)+'</div><div class="log"></div>'));
 	var print = "";
 	if (data.printstatus != "") print = "已打印";
@@ -109,6 +126,8 @@ function setContent(data)
     return li;
 }
 
+//病历浏览界面点击操作日志不加载对应病历
+var clickFlag = true;
 //显示病历操作记录明细
 $(document).on("click",".navcategory li .log",function()
 {
@@ -125,18 +144,24 @@ $(document).on("click",".navcategory li .log",function()
 	}
 	else
 	{
-		var logUrl = "emr.instancelog.csp?EpisodeID="+episodeID+"&EMRDocId="+docId+"&EMRNum="+Num;
+		clickFlag = false;
+		var logUrl = "emr.instancelog.csp?EpisodeID="+episodeID+"&EMRDocId="+docId+"&EMRNum="+Num+"&MWToken="+getMWToken();
 		$('#logiframe').attr('src',logUrl);
 		$HUI.dialog('#logdialog').open();
+		setTimeout(function(){
+			clickFlag = true;
+		}, 2000);
 	}
 });
 
 //目录点击事件
 $(document).on("click",".categorytree .folderTwo",function()
 {
-	//选中文档目录
-	selectListRecord($(this).attr("id"));
-	loadRecords(this);
+	if (clickFlag){
+		//选中文档目录
+		selectListRecord($(this).attr("id"));
+		loadRecords(this);
+	}
 });
 
 //查询
@@ -172,7 +197,8 @@ function setTempParam(obj)
     var pluginType = $(obj).attr("pluginType");
     var emrDocId = $(obj).attr("emrDocId");
     var characteristic = $(obj).attr("characteristic");
-	var tempParam = {"id":id,"text":text,"chartItemType":chartItemType,"pluginType":pluginType,"emrDocId":emrDocId,"characteristic":characteristic,"status":"BROWSE"};
+    var pdfDocType = $(obj).attr("pdfDocType");
+	var tempParam = {"id":id,"text":text,"chartItemType":chartItemType,"pluginType":pluginType,"emrDocId":emrDocId,"characteristic":characteristic,"status":"BROWSE","pdfDocType":pdfDocType,"viewType":viewType};
 	return tempParam;
 }
 
@@ -182,13 +208,14 @@ function initRecord(obj)
 	var tempParam = setTempParam(obj);
 	if (tempParam == "") 
 	{
-		$("#browseContent").append('<img  src="../scripts/emr/image/icon/norecords.png"  alt="此患者无病历" />');
+		$("#browseContent").append('<center style="margin-top: 20%"><img  src="../scripts/emr/image/icon/norecordsNew.png"  alt="此患者无病历" /></center>');
 		return;
 	}
 	
 	var src = "emr.record.browse.browsform.editor.csp?id="+tempParam.id+"&text="+tempParam.text+"&chartItemType="+tempParam.chartItemType
-        + "&pluginType="+tempParam.pluginType+"&emrDocId="+tempParam.emrDocId+"&characteristic="+tempParam.characteristic
-        + "&characteristic=1" + "&status=BROWSE" + "&episodeId=" + episodeID + "&patientId=" + patientID + "&Action=" + action;	
+        + "&pluginType="+tempParam.pluginType+"&emrDocId="+tempParam.emrDocId+"&characteristic="+tempParam.characteristic+"&pdfDocType="+tempParam.pdfDocType
+        + "&characteristic=1" + "&status=BROWSE" + "&episodeId=" + episodeID + "&patientId=" + patientID + "&Action=" + action+ "&MWToken="+getMWToken();	
+		+ "&viewType=" + viewType
 	var content = "<iframe id='frameBrowseContent' src='" + src + "' scrolling='no' width='100%' height='100%' frameborder='0'></iframe>";
 	$('#browseContent').append(content);
 }
@@ -230,4 +257,20 @@ function getRefInsID()
 {
     var insID = $('.categorytree').find('li').filter('[class="file folderTwo select"]').attr("id") || "";
     return insID;
+}
+
+//医务管理组调用关闭病历页签
+function onBeforeCloseTab()
+{
+    if (document.getElementById("frameBrowseContent").contentWindow){
+        document.getElementById("frameBrowseContent").contentWindow.onBeforeCloseTab();
+    }
+}
+
+//质控加载病历
+function qualityLoadRecord(instanceID)
+{
+	selectListRecord(instanceID);
+	var obj = $('.categorytree').find('li').filter('[id="'+instanceID+'"]');
+	loadRecords(obj);
 }

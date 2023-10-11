@@ -3,7 +3,7 @@ $(function(){
 	//初始化复选框
 	initRadio();
 	//初始化上传工具
-  	initLoadify();
+  	//initLoadify();
   	
   	initDatagrid();
   	
@@ -12,14 +12,58 @@ $(function(){
 
 	///初始化图片显示工具
 	initShowImg();
+	
+	//初始化上传图片
+  	initFile();
+
 }) 
 
+//文件上传
+function initFile(){
+	if(PCLRowID==""){
+		$.messager.alert("提示","分诊ID不能为空,请选择分诊记录后重试！","error",function(){
+			parent.websys_showModal('close');
+		});
+		return;
+	}
+	var fileTypeDesc = getTypeDesc();
+	var myInput  = document.getElementById("myFile");
+	myInput.onchange = function(){
+    var file = this.files[0];
+        if(!!file){
+            var reader = new FileReader();
+            //reader.readAsArrayBuffer(file);
+            reader.readAsDataURL(file)
+            reader.onload = function(){
+                var binary = this.result;
+                var PicName=$('#myFile').val();
+                PicNameLen=PicName.split("\\").length;
+                PicName=PicName.split("\\")[PicNameLen-1];
+                //alert(binary) 
+                var params = PCLRowID+"^"+PicName+"^"+fileTypeDesc+"^"+UserId+"^"+binary;
+				runClassMethod("web.DHCEMFile","saveUrl",{'Params':params},function(ret){
+					if(ret==0){
+						//alert("成功！");
+						reloadImg();
+						loadDatagrid();
+					}	
+				},'text')  
+	        }
+	    }
+	}
+	
+}
+
+function uploadPic(){
+	 $('#myFile').click();
+}
 
 function initRadio(){
 	
 	$HUI.radio("[name='uploadType']",{
         onChecked:function(e,value){
-            initLoadify();
+	        initFile();
+            //initLoadify();
 			reloadImg();
 			loadDatagrid();
         }
@@ -52,7 +96,7 @@ function initDatagrid(){
 		pageSize:20,  
 		pageList:[20,35,50], 
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		rowStyler:function(index,rowData){
 			
@@ -90,7 +134,7 @@ function initLoadify(){
 	FTPFOLDERNAME==""?"":dirname="\\"+FTPFOLDERNAME+dirname
 	$("#uploadify").uploadify({
 		buttonClass:"uploadify-button-a",
-		buttonText:"上传文件",
+		buttonText:$g("上传文件"),
 		fileObjName:"FileStream",
 		formData:{"CSPSESSIONID":SessionID,"PatCheckLevID":PCLRowID,"fileName":fileName,"fileNamePress":fileNamePress,"LgHospID":LgHospID}, //hxy 2020-04-21
 		removeCompleted:true,
@@ -170,11 +214,15 @@ function deleteImg(){
 	}
 	$.messager.confirm("提示","确定删除选中数据吗?",function(r){
 		if(!r) return;
+		
+		$("#Loading").fadeIn("fast");
+		
 		$m({
 			ClassName:"web.DHCEMFile",
 			MethodName:"deleteUrl",
 			ID:rowData[0].PCDID
 		},function(ret){
+			$("#Loading").fadeOut("fast");
 			var tp=(ret==0?"删除成功!":"失败!"+ret)
 			$.messager.alert("提示",tp);
 			reloadImg();

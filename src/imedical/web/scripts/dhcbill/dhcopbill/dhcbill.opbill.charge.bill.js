@@ -1,25 +1,20 @@
-/**
+ï»¿/**
  * FileName: dhcbill.opbill.charge.bill.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-06-03
- * Description: ÃÅÕïÊÕ·Ñ
+ * Description: é—¨è¯Šæ”¶è´¹
  */
 
-function initChargePanel() {
-	//ÅäÖÃ²»ÔÊĞíÊ¹ÓÃ¶àÖÖÖ§¸¶Ê±£¬Òş²Ø¶àÖÖÖ§¸¶·½Ê½ĞĞ
-	//if (GV.AllowPayMent != "Y") {
-		$("#payMentFlag").parents("tr").hide();
-	//}
+$(function () {
 	initChargeMenu();
-}
+});
 
 function initChargeMenu() {
-	//Êµ¸¶
-	$("#actualMoney").keydown(function (e) {
-		actualMoneyKeydown(e);
-	});
+	if (CV.ChargeFlag == "N") {
+		$.messager.popover({msg: "è¯¥å®‰å…¨ç»„æ²¡æœ‰æ”¶è´¹æƒé™", type: "info"});
+	}
 	
-	//¹«·Ñµ¥Î»
+	//å…¬è´¹å•ä½
 	$HUI.combobox("#healthCareProvider", {
 		panelHeight: 150,
 		method: 'GET',
@@ -28,175 +23,75 @@ function initChargeMenu() {
 		textField: 'text'
 	});
 	
-	getCFByGRowID();
-	
-	setValueById("billByAdmSelected", GV.BillByAdmSelected);
-	
-	/*
-	//Ö§¸¶·½Ê½
-	$HUI.combobox("#paymode", {
-		panelHeight: 150,
-		url: $URL + "?ClassName=web.UDHCOPGSConfig&QueryName=ReadGSINSPMList&ResultSetType=array",
-		method: 'GET',
-		editable: false,
-		valueField: "CTPMRowID",
-		textField: "CTPMDesc",
-		onBeforeLoad: function(param) {
-			param.GPRowID = PUBLIC_CONSTANT.SESSION.GROUPID;
-			param.HospID = PUBLIC_CONSTANT.SESSION.HOSPID;
-			param.TypeFlag = "FEE";
-		},
-		onLoadSuccess: function(data) {
-			if (data.length == 0) {
-				return;
+	//ç»“ç®—è´¹åˆ«
+	if ($("#chargeInsType").length > 0) {
+		$HUI.combobox("#chargeInsType", {
+			panelHeight: 150,
+			method: 'GET',
+			editable: false,
+			valueField: 'insTypeId',
+			textField: 'insType',
+			onSelect: function(rec) {
+				loadInsuCombo();
 			}
-			var defPayMId = $(this).combobox("getValue");
-			if (defPayMId) {
-				$(this).combobox("clear");   //ÉèÖÃÄ¬ÈÏÖ§¸¶·½Ê½(queryÖĞselected=trueÊ±²»´¥·¢onSelectÊÂ¼ş)
-			}
-			if (+getValueById("accMLeft") > 0) {
-				$.each(data, function (index, item) {
-					if (item.CTPMCode == "CPP") {
-						defPayMId = item.CTPMRowID;
-						return false;
-					}
-				});
-			}
-			$(this).combobox("select", defPayMId);
-		},
-		onSelect: function(rec) {
-			selectPayMode(rec);
-		}
-	});
-	*/
+		});
+	}
 	
-	//Ò½ÁÆÀà±ğ
+	//åŒ»ç–—ç±»åˆ«
 	$HUI.combobox("#insuAdmType", {
 		panelHeight: 150,
 		method: 'GET',
-		valueField: "cCode",
-		textField: "cDesc",
+		valueField: 'cCode',
+		textField: 'cDesc',
 		blurValidValue: true,
-		defaultFilter: 4
+		defaultFilter: 5
 	});
 	
-	//²¡ÖÖ
+	//ç—…ç§
 	$HUI.combobox("#insuDic", {
 		panelHeight: 150,
 		method: 'GET',
-		valueField: "DiagCode",
-		textField: "DiagDesc",
+		valueField: 'DiagCode',
+		textField: 'DiagDesc',
 		blurValidValue: true,
-		defaultFilter: 4
+		defaultFilter: 5,
+		onChange: function(newValue, oldValue) {
+			if (CV.IsChkOrdByChronicCode) {
+				//æŒ‰é€‰æ‹©çš„ç—…ç§è‡ªåŠ¨å‹¾é€‰å¯¹åº”åŒ»å˜±
+				checkOrdByChronicCode(newValue || "");
+			}
+		}
 	});
 	
-	getReceiptNo();
-	
-	//½áËã
+	//ç»“ç®—
 	$HUI.linkbutton("#btn-charge", {
 		onClick: function () {
 			chargeClick();
 		}
 	});
 	
-	//¼ÆËãÆ÷
+	//è®¡ç®—å™¨
 	$HUI.linkbutton("#btn-patCal", {
 		onClick: function () {
 			patCalClick();
 		}
 	});
 	
-	//¹ÒºÅ
-	$HUI.linkbutton("#btn-reg", {
-		onClick: function () {
-			regClick();
-		}
-	});
-	
-	//ÌøºÅ
+	//è·³å·
 	$HUI.linkbutton("#btn-skipNo", {
 		onClick: function () {
 			skipNoClick();
 		}
 	});
 	
-	//¾ÍÕïµÇ¼Ç
+	//å°±è¯Šç™»è®°
 	$HUI.linkbutton("#btn-rapidReg", {
 		onClick: function () {
 			rapidRegClick();
 		}
 	});
-}
-
-function getCFByGRowID() {
-	var grpCfgAry = GV.OPGroupCfgStr.split("^");
-	if (grpCfgAry[2] == "0") {
-		GV.DisableChargeBtn = true;
-		disableById("btn-charge");
-		$.messager.popover({msg: "¸Ã°²È«×éÃ»ÓĞÊÕ·ÑÈ¨ÏŞ", type: "info"});
-	}
-	GV.RequiredInvFlag = (grpCfgAry[4] == "1") ? "Y" : "N";
-	GV.INVXMLName = grpCfgAry[10];
-}
-
-function selectPayMode(rec) {
-	setValueById("requiredFlag", rec.RPFlag);
-	var paymCode = rec.CTPMCode;
 	
-	setValueById("paymCode", paymCode);
-	switch(paymCode) {
-	case "CASH":
-		setValueById("billByAdmSelected", GV.BillByAdmSelected);
-		$("#payMentFlag").checkbox("enable");
-		break;
-	case "CPP":
-		setValueById("billByAdmSelected", GV.BillByAdmSelected);
-		$("#payMentFlag").checkbox("disable").checkbox("setValue", false);
-		break;
-	case "QF":
-		setValueById("billByAdmSelected", "1");
-		$("#payMentFlag").checkbox("disable").checkbox("setValue", false);
-		GV.RequiredInvFlag = "N";   //Ç··Ñ½áËã²»´òÓ¡·¢Æ±
-		break;
-	default:
-		setValueById("billByAdmSelected", GV.BillByAdmSelected);
-		$("#payMentFlag").checkbox("enable");
-	}
-
-	setValueById("curDeptRoundShare", getRoundAmt(getValueById("curDeptShare")));
-	setValueById("patRoundSum", getRoundAmt(getValueById("patShareSum")));
-	
-	if(isShowCheckOut(paymCode)) {
-		$("#actualMoney").parents("tr").hide();
-		$("#change").parents("tr").hide();
-		$("#paymode").parents("tr").hide();
-	}else {
-		$("#actualMoney").parents("tr").hide();
-		$("#change").parents("tr").hide();
-		$("#paymode").parents("tr").show();
-	}
-}
-
-function actualMoneyKeydown(e) {
-	var key = websys_getKey(e);
-	if (key == 13) {
-		if (!$(e.target).val()) {
-			return;
-		}
-		setValueById("actualMoney", $(e.target).val());  //numberbox ÔÚÊ§È¥½¹µãÊ±ºò²ÅÄÜ»ñÈ¡µ½Öµ£¬ËùÒÔÕâÀï¸øÆä¸³ÖµÒÔ±ãÄÜÈ¡µ½
-		var actualMoney = getValueById("actualMoney");
-		var change = numCompute(actualMoney, getPatPaySum(), "-");
-		if (+change < 0) {
-			$.messager.popover({msg: "Êµ¸¶½ğ¶îÊäÈë´íÎó", type: "info"});
-			$(e.target).focus().select();
-			return;
-		}else {
-			setValueById("change", change);
-			setTimeout(function() {
-				focusById("btn-charge");
-			}, 100);
-		}
-	}
+	getReceiptNo();
 }
 
 function getReceiptNo() {
@@ -206,11 +101,10 @@ function getReceiptNo() {
 	var expStr = PUBLIC_CONSTANT.SESSION.USERID + "^" + prtInvFlag + "^" + PUBLIC_CONSTANT.SESSION.GROUPID + "^" + fairType + "^" + insType + "^" + PUBLIC_CONSTANT.SESSION.HOSPID;
 	var encmeth = getValueById("GetOPReceiptNoEncrypt");
 	var rtn = cspRunServerMethod(encmeth, "setReceiptNo", "", expStr);
-	if (rtn != "0") {
-		GV.DisableChargeBtn = true;
+	if (rtn != 0) {
 		disableById("btn-charge");
 		disableById("btn-skipNo");
-		$.messager.popover({msg: "Ã»ÓĞ¿ÉÓÃ·¢Æ±£¬ÇëÏÈÁìÈ¡", type: "info"});
+		$.messager.popover({msg: "æ²¡æœ‰å¯ç”¨å‘ç¥¨ï¼Œè¯·å…ˆé¢†å–", type: "info"});
 	}
 }
 
@@ -229,830 +123,544 @@ function setReceiptNo(rtn) {
 		if ($("#receiptNo").hasClass("newClsInvalid")) {
 			$("#receiptNo").removeClass("newClsInvalid");
 		}
-		if (tipFlag == "1") {
+		if (tipFlag == 1) {
 			color = "red";
 			$("#receiptNo").addClass("newClsInvalid");
 		}
-		var content = "¸ÃºÅ¶Î¿ÉÓÃÆ±¾İÊ£Óà <font style='font-weight: bold;color: " + color + ";'>" + leftNum + "</font> ÕÅ";
+		var content = $g("è¯¥å·æ®µå¯ç”¨ç¥¨æ®å‰©ä½™") + " <font style='font-weight: bold;color: " + color + ";'>" + leftNum + "</font> " + $g("å¼ ");
 		$("#btn-tip").show().popover({placement: 'bottom-left', cache: false, trigger: 'hover', content: content});
 	}
 }
 
 /**
-* Í¨¹ıÒ½±£ÀàĞÍ´úÂë¼ÓÔØÒ½ÁÆÀà±ğ¡¢²¡ÖÖ
+* åŠ è½½åŒ»ç–—ç±»åˆ«ã€ç—…ç§
 */
-function loadInsuCombo(insTypeId) {
-	//»ñÈ¡Ò½±£ÀàĞÍ´úÂë
-	$.m({
-		ClassName: "web.INSUDicDataCom",
-		MethodName: "GetDicByCodeAndInd",
-		SysType: "AdmReasonDrToDLLType",
-		Code: insTypeId,
-		Ind: 6,
-		HospDr: PUBLIC_CONSTANT.SESSION.HOSPID
-	}, function(insuTypeCode) {
-		//Ò½ÁÆÀà±ğ
-		$("#insuAdmType").combobox("options").url = $URL + "?ClassName=web.INSUDicDataCom&QueryName=QueryDic1&ResultSetType=array&Code=&OPIPFlag=OP&Type=AKA130" + insuTypeCode + "&HospDr=" + PUBLIC_CONSTANT.SESSION.HOSPID;  
-		$("#insuAdmType").combobox("clear").combobox("reload");
-	});
+function loadInsuCombo() {
+	var adm = getValueById("episodeId");
+	var curInsTypeId = getSelectedInsType();
+	var chgInsTypeId = getValueById("chargeInsType");
+	var insTypeId = chgInsTypeId || curInsTypeId;
 	
-	//²¡ÖÖ
+	var CPPFlag = "N";
+	var strikeFlag = "";
+	var insuDivId = "";
+	var expStr = "OP" + "^" + CPPFlag + "^" + strikeFlag + "^" + insuDivId;
+	//åŒ»ç–—ç±»åˆ«
+	var url = $URL + "?ClassName=web.INSUDicDataCom&QueryName=QueryMedType&ResultSetType=array&AdmDr=" + adm + "&AdmReadId=" + insTypeId + "&HospDr=" + PUBLIC_CONSTANT.SESSION.HOSPID + "&ExpStr=" + expStr;  
+	$("#insuAdmType").combobox("clear").combobox("reload", url);
+
+	//ç—…ç§
 	if ($("#insuDic").length > 0) {
-		var papmi = getValueById("papmi");
-		$("#insuDic").combobox("options").url = $URL + "?ClassName=web.DHCOPAdmFind&QueryName=GetChronicList&ResultSetType=array&papmi=" + papmi + "&insuNo=&admReaId=" + insTypeId + "&hospId=" + PUBLIC_CONSTANT.SESSION.HOSPID;
-		$("#insuDic").combobox("clear").combobox("reload");
+		var patientId = getValueById("patientId");
+		var url = $URL + "?ClassName=web.INSUDicDataCom&QueryName=QueryChronic&ResultSetType=array&AdmDr=" + adm + "&AdmReadId=" + insTypeId + "&PapmiDr=" + patientId + "&HospDr=" + PUBLIC_CONSTANT.SESSION.HOSPID + "&ExpStr=" + expStr;
+		$("#insuDic").combobox("clear").combobox("reload", url);
+		//+2023-04-17 LUANZH æ…¢ç—…æ‚£è€…æ—¶æç¤º
+		$("#insuDic").parents("td").prev().find("label").popover("destroy").removeClass("pseudo-hyper");
+		if (isChronicAdm(adm)) {
+			$("#insuDic").parents("td").prev().find("label").popover({placement: 'bottom-left', autoHide: 2000, content: $g("è¯¥æ‚£è€…ä¸ºæ…¢ç—…æ‚£è€…")}).popover("show").addClass("pseudo-hyper");
+		}
 	}
 }
 
 function chargeClick() {
-	if ($("#btn-charge").hasClass("l-btn-disabled")) {
-		return;
-	}
-	var rtn = checkSaveOrder();   //ÅĞ¶ÏÒ½ÖöÊÇ·ñÒÑ±£´æ
-	if (!rtn) {
-		$.messager.popover({msg: "ÇëÏÈ±£´æÒ½Öö", type: "info"});
-		return;
-	}
-	var rtn = checkBill();
-	if (!rtn) {
-		return;
-	}
-	$.messager.confirm("È·ÈÏ", "ÊÇ·ñÈ·ÈÏ½áËã?", function (r) {
-		if (r) {
+	/**
+	* æ ¡éªŒèƒ½å¦ç»“ç®—
+	*/
+	var _validate = function() {
+		return new Promise(function (resolve, reject) {
 			/*
 			if (!endEditing()) {
-				return;
+				return reject();
 			}
 			var rtn = saveOrdToServer();
 			if (!rtn) {
-				return;
+				return reject();
 			}
 			*/
-			charge();
-		}
-	});
-}
-
-function charge() {
-	var myAdmStr = getBillAdmStr();
-	if (!myAdmStr) {
-		$.messager.popover({msg: "Ã»ÓĞĞèÒª½áËãµÄÒ½Öö", type: "info"});
-		return;
-	}
-	var myPayInfo = "";  //Lid 20200601 È·ÈÏÍê³ÉÊ±ÔÙ²åÈëÖ§¸¶·½Ê½
-	/*
-	var myPayInfo = buildPayStr();
-	if (!myPayInfo) {
-		return;
-	}
-	*/
-	var unBillOrderStr = getUnBillOrderStr();
-	var myBillFlag = true;
-	var curInsType = getSelectedInsType();
-	var encmeth = getValueById("CheckOrdApprovedEncrypt");
-	var checkRtn = cspRunServerMethod(encmeth, myAdmStr, unBillOrderStr, curInsType, "");
-	if (checkRtn && (checkRtn != "0")) {
-		var myAry = checkRtn.split(PUBLIC_CONSTANT.SEPARATOR.CH2);
-		var toInsType = myAry[1];
-		var toInsTypeDesc = myAry[2];
-		var str = "Ò½ÖöĞèÒªÉóÅú²ÅÄÜ°´ÕÕµ±Ç°ÊÕ·ÑÀà±ğ½áËã£¬²»ÉóÅú¿ÉÒÔ°´ÕÕ<font color='red'>" + toInsTypeDesc + "</font>µÄÊÕ·ÑÀà±ğ½áËã£¬µ¥»÷[È·¶¨]°´ÕÕ" + toInsTypeDesc + "ÊÕ·ÑÀà±ğ½áËã£¬µ¥»÷[È¡Ïû]È¡Ïûµ±Ç°½áËã²Ù×÷";
-		if (dhcsys_confirm(str, "YES", "14", "È·¶¨|È¡Ïû")) {
-			if (curInsType != toInsType) {
-				var changeRtn = tkMakeServerCall("web.UDHCOPOrdApproved", "ChangeOrdInstype", checkRtn, toInsType, PUBLIC_CONSTANT.SESSION.USERID, "");
-				if (changeRtn == "0") {
-					$.messager.popover({msg: "Ò½ÖöÊÕ·ÑÀà±ğ·¢ÉúÁË¸Ä±ä£¬Çëµ¥»÷[È·¶¨]ºóÖØĞÂ½áËã", type: "info"});
-					clearDocWin(myAdmStr, "");
-					return;
-				} else {
-					myBillFlag = false;
-				}
+			var rtn = checkSaveOrder();
+			if (!rtn) {
+				$.messager.popover({msg: "è¯·å…ˆä¿å­˜åŒ»å˜±", type: "info"});
+				return reject();
 			}
-		}
-	}
-	if (!myBillFlag) {
-		return;
-	}
+			if (!admStr) {
+				$.messager.popover({msg: "æ²¡æœ‰éœ€è¦ç»“ç®—çš„å°±è¯Š", type: "info"});
+				return reject();
+			}
+			if (CV.BillByAdmSelected && !GV.OEItmList.getChecked().length) {
+	            $.messager.popover({msg: "æ²¡æœ‰éœ€è¦ç»“ç®—çš„åŒ»å˜±", type: "info"});
+	            return reject();
+	        }
+	        if (!getValueById("receiptNo") && (CV.RequiredInvFlag == "Y")) {
+	            $.messager.popover({msg: "æ²¡æœ‰ç¥¨æ®ï¼Œè¯·å…ˆé¢†å–å‘ç¥¨", type: "info"});
+	            return reject();
+	        }
+	        if ((reloadFlag != "") && (!(footUserId > 0))) {
+				$.messager.alert("æç¤º", "è¯¥å®‰å…¨ç»„æœªå¯¹ç…§ç»“ç®—æ“ä½œå‘˜ï¼Œä¸èƒ½ç»“ç®—ï¼Œè¯·è”ç³»ä¿¡æ¯ä¸­å¿ƒç»´æŠ¤å¯¹ç…§", "info");
+				return reject();
+		    }
+	        //2023-02-22 ZhYW æ ¡éªŒæ”¯ä»˜é‡‘é¢
+	        var paySum = $.m({ClassName: "web.DHCOPCashier", MethodName: "GetPatOrdPaySum", admStr: admStr, insTypeId: curInsTypeId, unBillStr: unBillOrderStr, sessionStr: getSessionStr()}, false);
+	        if (+paySum != +myPatSum) {
+		        $.messager.popover({msg: "æ‚£è€…åŒ»å˜±æœ‰å˜åŒ–ï¼Œè¯·å†æ¬¡è¯»å¡ä»¥é‡æ–°è·å–åŒ»å˜±ä¿¡æ¯", type: "info"});
+		        return reject();
+		    }
+	        var isLock = lockAdm(admStr, true);   //2023-02-22 ZhYW å¯¹å½“å‰ç»“ç®—å°±è¯ŠåŠ é”
+	        if (isLock) {
+		        return reject();
+		    }
+	        resolve();
+		});
+	};
 	
-	var myAutoOrdInfo = autoAddNewOrder(myAdmStr, unBillOrderStr, curInsType, 0);
-	
-	var myPatSum = getPatSum();
-	
-	//³ªÊÕ³ª¸¶
-	var mySoundService = "TotalFee";
-	var myValAry = myPatSum + "^";
-	var mySessionStr = getSessionPara();
-	var myCFExpStr = "";
-	var encmeth = getValueById("ReadSoundServiceEncrypt");
-	var myCFRtn = cspRunServerMethod(encmeth, "DHCWCOM_SoundPriceService", mySoundService, myValAry, mySessionStr, myCFExpStr);
-	//
-	var accMRowId = getValueById("accMRowId");
-	var roundErr = numCompute(getValueById("patShareSum"), getValueById("patRoundSum"), "-");
-	var chargeInsType = getValueById("chargeInsType");
-	var myExpStr = getBillExpStr();
-	var oldINVRID = "";
-	$.m({
-		ClassName: "web.DHCOPINVCons",
-		MethodName: "OPBillCharge",
-		Paadminfo: myAdmStr,
-		Userid: PUBLIC_CONSTANT.SESSION.USERID,
-		UnBillOrdStr: unBillOrderStr,
-		Instype: curInsType,
-		PatPaySum: myPatSum,
-		Payinfo: myPayInfo,
-		gloc: PUBLIC_CONSTANT.SESSION.GROUPID,
-		SFlag: 0,
-		OldINVRID: oldINVRID,
-		InsPayCtl: 0,
-		ExpStr: myExpStr
-	}, function(chargeRtn) {
-		var myConAry = chargeRtn.split(PUBLIC_CONSTANT.SEPARATOR.CH2);
-		var billAry = myConAry[0].split("^");
-		if (billAry[0] == "0") {
-			var myPrtIdAry = [];
-			$.each(billAry, function (index, item) {
-				if (+item > 0) {
-					myPrtIdAry.push(item);
-				}
+	var _cfr = function() {
+		return new Promise(function (resolve, reject) {
+			var rtn = isStockEnoughAdmOrd(admStr, unBillOrderStr);
+	        var myAry = rtn.split("^");
+	        var msg = $g("æ˜¯å¦ç¡®è®¤ç»“ç®—ï¼Ÿ");
+	        if (myAry[0] != 0) {
+		        msg = (myAry[1] || myAry[0]) + "ï¼Œ" + msg;
+		    }
+		    if (typeof(GV.CfgPoint) == "undefined") GV.CfgPoint = {};	// å¦‚æœæ²¡æœ‰é…ç½®ç‚¹çš„èŠ‚ç‚¹ï¼Œåˆ™ç”Ÿæˆ
+			if (typeof(GV.CfgPoint.CheckJsTk) == "undefined"){   //å¦‚æœæ²¡æœ‰è¯¥é…ç½®ç‚¹åˆ™è·å–ï¼Œå¦‚æœæœ‰åˆ™åˆ¤æ–­
+				//é€‚ç”¨é…ç½®ã€‚åªæœ‰å½“è¿”å›æ˜¯1æ—¶ï¼Œæ‰ä¼šç¦ç”¨å¼¹æ¡†
+				var cfgData = $.cm({ClassName: "BILL.CFG.COM.GeneralCfg", MethodName: "GetResultByRelaCode", RelaCode: "OPCHRG.OPChrg.JSBDKDAQZ", SourceData: "", TgtData: PUBLIC_CONSTANT.SESSION.GROUPID, HospId: PUBLIC_CONSTANT.SESSION.HOSPID}, false);
+				GV.CfgPoint.CheckJsTk = cfgData.success;
+			}
+			if(GV.CfgPoint.CheckJsTk) {
+				return resolve();
+			}
+			$.messager.confirm("ç¡®è®¤", msg, function (r) {
+				return r ? resolve() : reject();
 			});
-			var myPRTStr = myPrtIdAry.join("^");
-			var admSource = getValueById("admSource");
-			if ((!getValueById("reloadFlag")) && (GV.INVYBConFlag == 1) && (+admSource > 0) && (getValueById("paymCode") != "QF")) {
-				var myYBHand = "";
-				var myCPPFlag = "";
-				var myLeftAmt = getAccMBalance();
-				if (getValueById("paymCode") != "CPP") {
-					myLeftAmt = "";
-					myCPPFlag = "NotCPPFlag";
-				}
-				//StrikeFlag^°²È«×éDr^InsuNo^CardType^YLLB^DicCode^DicDesc^ÕË»§Óà¶î^½áËãÀ´Ô´^Êı¾İ¿âÁ¬½Ó´®^´ıÓöÀàĞÍ^ÕË»§ID^ÔºÇøDR^×Ô·ÑÖ§¸¶·½Ê½DR£¡Money^MoneyType
-				var myStrikeFlag = "N";
-				var myInsuNo = "";
-				var myCardType = "";
-				var myYLLB = getValueById("insuAdmType");
-				var myDicCode = "";
-				var myDicDesc = "";
-				if ($("#insuDic").length > 0) {
-					var myDicCode = getValueById("insuDic");
-					var myDicDesc = $("#insuDic").combobox("getText");
-				}
-				var myDYLB = "";
-				var myChargeSource = "01";
-				var myDBConStr = "";       //Êı¾İ¿âÁ¬½Ó´®
-				var myMoneyType = "";
-				var myYBExpStr = myStrikeFlag + "^" + PUBLIC_CONSTANT.SESSION.GROUPID + "^" + myInsuNo + "^" + myCardType + "^" + myYLLB + "^" + myDicCode + "^" + myDicDesc;
-				myYBExpStr += "^" + myLeftAmt + "^" + myChargeSource + "^" + myDBConStr + "^" + myDYLB + "^" + accMRowId + "^" + PUBLIC_CONSTANT.SESSION.HOSPID + "^" + getValueById("paymode") + "!" + myLeftAmt + "^" + myMoneyType;
-				var myCurrInsType = curInsType;
-				if (chargeInsType && (chargeInsType != curInsType)) {
-					myCurrInsType = chargeInsType;  //°´ĞÂ·Ñ±ğµ÷ÓÃÒ½±£½Ó¿Ú
-				}
-				var myYBRtn = DHCWebOPYB_DataUpdate(myYBHand, PUBLIC_CONSTANT.SESSION.USERID, myPRTStr, admSource, myCurrInsType, myYBExpStr, myCPPFlag);
-				var myYBAry = myYBRtn.split("^");
-				if (myYBAry[0] == "YBCancle") {
-					clearDocWin(myAdmStr, "");
-					return;
-				}
-				if (myYBAry[0] == "HisCancleFailed") {
-					clearDocWin(myAdmStr, "");
-					$.messager.alert("ÌáÊ¾", "Ò½±£È¡Ïû½áËã³É¹¦£¬µ«HISÏµÍ³È¡Ïû½áËãÊ§°Ü", "error");
-					return;
-				}
-			}
-			myPRTStr = $.m({ClassName: "web.DHCBillCons12", MethodName: "ValidatePrtRowID", prtRowidStr: myPRTStr}, false);
-			if (getValueById("payMentFlag")) {
-				updatePayment(myPRTStr);
-			}else {
-				buildPayMList(myPRTStr, myAdmStr);
-			}
-		} else {
-			var myAry = chargeRtn.split(PUBLIC_CONSTANT.SEPARATOR.CH3);
-			var errCode = myAry[0];
-			var job = (myAry.length > 1) ? myAry[1] : "";
-			chargeErrorTip("preChargeFail", errCode, job);
-		}
-	});
-}
-
-/**
-* ¶àÖÖÖ§¸¶·½Ê½µ¯´°
-*/
-function updatePayment(prtRowIdStr) {
-	var url = "dhcbill.opbill.charge.paym.csp?&prtRowIdStr=" + prtRowIdStr;
-	websys_showModal({
-		url: url,
-		title: '¶àÖÖÖ§¸¶',
-		iconCls: 'icon-w-paid',
-		closable: false,
-		height: 400,
-		width: 650,
-		callbackFunc: function(rtnValue) {
-			if (rtnValue == "0") {
-				var payMList = "";
-				completeCharge(prtRowIdStr, payMList);
-			}else {
-				validPrtRowIDStr(prtRowIdStr);
-			}
-		}
-	});
-}
-
-/**
-* Éú³ÉÖ§¸¶·½Ê½ÁĞ±í
-* Èç¹ûÓĞµÚÈı·½Ö§¸¶Ò²ÔÚ´Ë·½·¨ÖĞÍê³É
-*/
-function buildPayMList(prtRowIdStr, episodeIdStr) {
-	var curInsType = getSelectedInsType();
-	var chargeInsType = getValueById("chargeInsType");
-	if (chargeInsType != "") {
-		curInsType = chargeInsType;
+		});
+	};
+	
+	/**
+	* å–åç«¯ç»“ç®—æ–¹æ³•éœ€è¦çš„æ‰©å±•å‚æ•°
+	*/
+	var _getBillExpStr = function () {
+		var fairType = "F"; 
+		var actualMoney = "";     //å®ä»˜ã€æ‰¾é›¶ åœ¨å¼€å‘æ”¶é“¶å°åä¸åœ¨è¿™é‡Œä½¿ç”¨ï¼Œä¼ ç©ºå ä½å³å¯
+		var changeAmt = "";       //æ‰¾é›¶
+		var roundErr = 0;
+		var stayFlag = "";        //ç•™è§‚æ ‡è¯†
+		var checkOutMode = "";    //ç§‘å®¤å¡æ¶ˆè´¹ä¸å¼¹ç•Œé¢æ ‡è¯†
+		var myAry = [];
+		myAry.push(PUBLIC_CONSTANT.SESSION.GROUPID);    //1
+		myAry.push(PUBLIC_CONSTANT.SESSION.CTLOCID);    //2
+		myAry.push(accMRowId);                          //3
+		myAry.push(CV.RequiredInvFlag);                 //4
+		myAry.push(fairType);                           //5
+		myAry.push(actualMoney);                        //6
+		myAry.push(changeAmt);                          //7
+		myAry.push(roundErr);                           //8
+		myAry.push(chgInsTypeId);                       //9
+		myAry.push(ClientIPAddress);                    //10
+		myAry.push(stayFlag);                           //11
+		myAry.push(checkOutMode);                       //12
+		myAry.push(insuDicCode);                        //13
+		myAry.push(footUserId);                         //14
+		return myAry.join("^");
 	}
-	var reloadFlag = getValueById("reloadFlag");
-	var payMCode = getValueById("paymCode");
-	var patientId = getValueById("papmi");
-	var cardNo = getValueById("cardNo");
-	var cardTypeId = getValueById("cardType").split("^")[0];
-	if (isShowCheckOut(payMCode)) {
-		var url = "dhcbill.opbill.checkout.csp?allowPayMent=" + GV.AllowPayMent + "&insTypeId=" + curInsType
-		url += "&typeFlag=FEE" + "&prtRowIdStr=" + prtRowIdStr;
-		url += "&accMRowId=" + getValueById("accMRowId") + "&episodeIdStr=" + episodeIdStr;
-		url += "&patientId=" + patientId + "&cardNo=" + cardNo;
-		url += "&cardTypeId=" + cardTypeId + "&reloadFlag=" + reloadFlag;
-		websys_showModal({
-			url: url,
-			title: 'ÊÕÒøÌ¨-ÃÅÕïÊÕ·Ñ',
-			iconCls: 'icon-w-card',
-			height: 650,
-			width: 1000,
-			closable: false,
-			callbackFunc: function(returnVal) {
-				var code = returnVal.code;
-				var message = returnVal.message;
-				var accMRowId = returnVal.accMRowId;
-				setValueById("accMRowId", accMRowId);    //½â¾öÖ÷½çÃæÎ´¶Á¿¨£¬µ«ÔÚÊÕÒøÌ¨ÓÃÁË¿¨Ö§¸¶
-				if (code) {
-					var payMList = message;
-					completeCharge(prtRowIdStr, payMList);
-				}else {
-					validPrtRowIDStr(prtRowIdStr);
+	
+	/**
+	* HISé¢„ç»“ç®—
+	*/
+	var _preChg = function() {
+		return new Promise(function (resolve, reject) {
+			$.m({
+				ClassName: "web.DHCOPINVCons",
+				MethodName: "OPBillCharge",
+				Paadminfo: admStr,
+				Userid: PUBLIC_CONSTANT.SESSION.USERID,
+				UnBillOrdStr: unBillOrderStr,
+				Instype: curInsTypeId,
+				PatPaySum: myPatSum,
+				Payinfo: myPayInfo,
+				gloc: PUBLIC_CONSTANT.SESSION.GROUPID,
+				SFlag: 0,
+				OldINVRID: oldINVRID,
+				InsPayCtl: 0,
+				ExpStr: billExpStr
+			}, function(rtn) {
+				var myAry = rtn.split("^");
+				if (myAry[0] != 0) {
+					//é¢„ç»“ç®—å¤±è´¥
+					chargeErrorTip("preChargeError", rtn);
+					return reject();
+				}
+				//é¢„ç»“ç®—æˆåŠŸ
+				prtRowIdStr = myAry.filter(function (item) {
+			        return (item > 0);
+			    }).join("^");
+				resolve();
+			});
+		});
+	};
+	
+	/**
+	* åŒ»ä¿ç»“ç®—
+	*/
+	var _insuDiv = function() {
+		return new Promise(function (resolve, reject) {
+			if (reloadFlag) {
+				return resolve();
+			}
+			if (CV.INVYBConFlag != 1) {
+				return resolve();
+			}
+			if (!(admSource > 0)) {
+				return resolve();
+			}
+			if ((myPatSum == 0) && (CV.ZeroAmtUseYBFlag != 1)) {
+				return resolve();
+			}
+			var myYBHand = "";
+			var myLeftAmt = "";
+			var myCPPFlag = "NotCPPFlag";
+			//StrikeFlag^å®‰å…¨ç»„Dr^InsuNo^CardType^YLLB^DicCode^DicDesc^è´¦æˆ·ä½™é¢^ç»“ç®—æ¥æº^æ•°æ®åº“è¿æ¥ä¸²^å¾…é‡ç±»å‹^è´¦æˆ·ID^é™¢åŒºDR^è‡ªè´¹æ”¯ä»˜æ–¹å¼DRï¼Money^MoneyType
+			var myStrikeFlag = "N";
+			var myInsuNo = "";
+			var myCardType = "";
+			var myYLLB = getValueById("insuAdmType");
+			var myDYLB = "";
+			var myChargeSource = "01";
+			var myDBConStr = "";       //æ•°æ®åº“è¿æ¥ä¸²
+			var myMoneyType = "";
+			var selPaymId = "";
+			var myYBExpStr = myStrikeFlag + "^" + PUBLIC_CONSTANT.SESSION.GROUPID + "^" + myInsuNo + "^" + myCardType + "^" + myYLLB + "^" + insuDicCode + "^" + insuDicDesc;
+			myYBExpStr += "^" + myLeftAmt + "^" + myChargeSource + "^" + myDBConStr + "^" + myDYLB + "^" + accMRowId + "^" + PUBLIC_CONSTANT.SESSION.HOSPID + "^" + selPaymId + "!" + myLeftAmt + "^" + myMoneyType;
+			var rtn = DHCWebOPYB_DataUpdate(myYBHand, PUBLIC_CONSTANT.SESSION.USERID, prtRowIdStr, admSource, insTypeId, myYBExpStr, myCPPFlag);
+			var myAry = rtn.split("^");
+			if (myAry[0] == "YBCancle") {
+				clearDocWin();
+				return reject();
+			}
+			if (myAry[0] == "HisCancleFailed") {
+				$.messager.alert("æç¤º", "åŒ»ä¿å–æ¶ˆç»“ç®—æˆåŠŸï¼Œä½†HISç³»ç»Ÿå–æ¶ˆç»“ç®—å¤±è´¥", "error", function() {
+					clearDocWin();
+				});
+				return reject();
+			};
+			resolve();
+		});
+	};
+	
+	/**
+	* ç”Ÿæˆæ”¯ä»˜æ–¹å¼åˆ—è¡¨
+	* å¦‚æœæœ‰ç¬¬ä¸‰æ–¹æ”¯ä»˜ä¹Ÿåœ¨æ­¤æ–¹æ³•ä¸­å®Œæˆ
+	*/
+	var _buildPayMList = function() {
+		return new Promise(function (resolve, reject) {
+			prtRowIdStr = getSuccPrtRowIdStr(prtRowIdStr);
+			var invAmtInfo = getInvAmtInfo(prtRowIdStr);
+			var aryAmt = invAmtInfo.split("^");
+		    var totalAmt = aryAmt[0];
+		    var discAmt = aryAmt[1];
+		    var payorAmt = aryAmt[2];
+		    var patShareAmt = aryAmt[3];
+		    var insuAmt = aryAmt[4];
+		    var payAmt = Number(patShareAmt).sub(insuAmt).toFixed(2); //è‡ªè´¹æ”¯ä»˜é¢
+		    if (payAmt == 0) {
+		        return resolve();     //æ— éœ€è‡ªè´¹æ”¯ä»˜æ—¶ï¼Œç›´æ¥ç¡®è®¤å®Œæˆ
+		    }
+		    var accMLeft = getAccMLeft();
+		    var argumentObj = {
+		        title: "æ”¶é“¶å°-é—¨è¯Šæ”¶è´¹",
+		        cardNo: cardNo,
+		        cardTypeId: cardTypeId,
+		        accMRowId: accMRowId,
+		        accMLeft: accMLeft,
+		        patientId: patientId,
+		        episodeIdStr: admStr,
+		        allowPayMent: CV.AllowPayMent,
+		        insTypeId: insTypeId,
+		        typeFlag: "FEE",
+		        prtRowIdStr: prtRowIdStr,
+		        totalAmt: totalAmt,
+		        discAmt: discAmt,
+		        payorAmt: payorAmt,
+		        patShareAmt: patShareAmt,
+		        insuAmt: insuAmt,
+		        payAmt: payAmt,
+		        reloadFlag: reloadFlag,
+		        bizType: "OP"
+		    };
+		    BILL_INF.showCheckout(argumentObj).then(function (payMList) {
+			    myPayInfo = payMList;
+		        resolve();
+		    }, function () {
+		        reject();
+		    });
+		});
+	};
+	
+	/**
+	* HISç¡®è®¤å®Œæˆ
+	*/
+	var _complete = function() {
+		return new Promise(function (resolve, reject) {
+			var rtn = $.m({
+				ClassName: "web.DHCBillConsIF",
+				MethodName: "CompleteCharge",
+				CallFlag: 3,
+				Guser: PUBLIC_CONSTANT.SESSION.USERID,
+				InsTypeDR: curInsTypeId,
+				PrtRowIDStr: prtRowIdStr,
+				SFlag: 0,
+				OldPrtInvDR: oldINVRID,
+				ExpStr: billExpStr,
+				PayInfo: myPayInfo
+			}, false);
+			var myAry = rtn.split("^");
+			if (myAry[0] == 0) {
+				return resolve();
+			}
+			chargeErrorTip("completeError", rtn);
+			return reject();
+		});
+	};
+	
+	/**
+	* æ‰“å°å‘ç¥¨
+	*/
+	var _printInv = function() {
+		showChangeTip(prtRowIdStr);      //æ˜¾ç¤ºæ‰¾é›¶ä¿¡æ¯
+		//screenDisplayPrice(prtRowIdStr);    //+2022-07-18 ZhYW å¤–æ¥å±æ˜¾ç¤ºæ”¶è´¹ä¿¡æ¯
+		billPrintTask(prtRowIdStr);         //æ‰“å°
+		var msg = $g("ç»“ç®—æˆåŠŸ");
+		if (reloadFlag) {
+			msg += "ï¼Œ" + $g("æœ¬æ¬¡æ¶ˆè´¹") + "ï¼š<font color=\"red\">" + myPatSum + "</font> " + $g("å…ƒ") + "ï¼Œ" + $g("ä½™é¢") + "ï¼š<font color='red'>" + getAccMLeft() + "</font> " + $g("å…ƒ");
+			$.messager.alert("æç¤º", msg, "success", function() {
+				if (getValueById("medDeptFlag")) {
+					clearDocWin();
+					return;
+				}
+				websys_showModal("close");
+			});
+			return;
+		}
+		var prtRowIdAry = prtRowIdStr.split("^");
+		var printInvFlag = getPropValById("DHC_INVPRT", prtRowIdAry[0], "PRT_INVPrintFlag");
+		if (printInvFlag == "P") {
+			msg += "ï¼Œ" + $g("å…±æ‰“å°") + " <font color='red'>" + prtRowIdAry.length + "</font> " + $g("å¼ å‘ç¥¨");
+		}
+		$.messager.alert("æç¤º", msg, "success", function() {
+			clearDocWin();
+		});
+	};
+	
+	/**
+	* æ’¤é”€ç¬¬ä¸‰æ–¹äº¤æ˜“
+	*/
+	var _cancelPaySrv = function() {
+		var expStr = PUBLIC_CONSTANT.SESSION.CTLOCID + "^" + PUBLIC_CONSTANT.SESSION.GROUPID + "^" + PUBLIC_CONSTANT.SESSION.HOSPID + "^" + PUBLIC_CONSTANT.SESSION.USERID;
+		$.each(myPayInfo.split(PUBLIC_CONSTANT.SEPARATOR.CH2), function(index, item) {
+			if (item) {
+				var myPayMAry = item.split("^");
+				var myETPRowID = myPayMAry[11];
+				if (myETPRowID) {
+					var rtnValue = CancelPayService(myETPRowID, expStr);
+					if (rtnValue.ResultCode != 0) {
+						$.messager.popover({msg: "ç¬¬ä¸‰æ–¹æ”¯ä»˜æ’¤é”€å¤±è´¥ï¼Œè¯·è”ç³»å·¥ç¨‹å¸ˆå¤„ç†", type: "error"});
+					}
 				}
 			}
 		});
-	}else {
-		var payMList = buildPayStr(prtRowIdStr);
-		var payMDr = payMList.split("^")[0];
-		var payMAmt = payMList.split("^")[8];
-		//µÚÈı·½Ö§¸¶½Ó¿Ú start DHCBillPayService.js
-		var myExpStr = PUBLIC_CONSTANT.SESSION.CTLOCID + "^" + PUBLIC_CONSTANT.SESSION.GROUPID + "^" + PUBLIC_CONSTANT.SESSION.HOSPID;
-		myExpStr += "^" + PUBLIC_CONSTANT.SESSION.USERID + "^" + getValueById("papmi") + "^";
-		myExpStr += "^" + prtRowIdStr.replace(/\^/g, "!") + "^^C";
-		var payServRtn = PayService("OP", payMDr, payMAmt, myExpStr);
-		if (payServRtn.ResultCode != "00") {
-			$.messager.alert("ÌáÊ¾", "Ö§¸¶Ê§°Ü£º" + payServRtn.ResultMsg, "error");
-			return;
-		}
-		
-		completeCharge(prtRowIdStr, payMList);
+	};
+	
+	if ($("#btn-charge").linkbutton("options").disabled) {
+		return;
 	}
-}
-
-/**
-* ÃÅÕïÊÕ·ÑÈ·ÈÏÍê³É
-*/
-function completeCharge(prtRowIdStr, payMList) {
-	var myPayInfo= payMList;
-	var myAdmStr = getBillAdmStr();
-	var curInsType = getSelectedInsType();
+	$("#btn-charge").linkbutton("disable");
+	
+	var patientId = getValueById("patientId");
+	var cardNo = getValueById("CardNo");
+	var cardTypeId = getValueById("CardTypeRowId");
+	var reloadFlag = getValueById("reloadFlag");
+	var footUserId = PUBLIC_CONSTANT.SESSION.USERID;   //+2023-03-17 ZhYW 
+	if (reloadFlag != "") {
+		footUserId = getGrupContFootUser();   //å–å®‰å…¨ç»„ä¸ç»“ç®—ç”¨æˆ·å¯¹ç…§çš„é…ç½®å€¼
+	}
+	var admStr = getBillAdmStr();
+	var unBillOrderStr = getUnBillOrderStr();
+	var curInsTypeId = getSelectedInsType();
+	var chgInsTypeId = getValueById("chargeInsType");
+	var insTypeId = chgInsTypeId || curInsTypeId;
+	var admSource = getPropValById("PAC_AdmReason", insTypeId, "REA_AdmSource");
+	var accMRowId = getValueById("accMRowId");
+	
+	var insuDicCode = "";    //ç—…ç§ç¼–ç 
+	var insuDicDesc = "";    //ç—…ç§æè¿°
+	if ($("#insuDic").length > 0) {
+		insuDicCode = getValueById("insuDic");
+		insuDicDesc = $("#insuDic").combobox("getText");
+	}
+	var billExpStr = _getBillExpStr();
+	var prtRowIdStr = "";
+	var myPayInfo = "";
 	var oldINVRID = "";
-	var myExpStr = getBillExpStr();
-	$.m({
-		ClassName: "web.DHCBillConsIF",
-		MethodName: "CompleteCharge",
-		CallFlag: 3,
-		Guser: PUBLIC_CONSTANT.SESSION.USERID,
-		InsTypeDR: curInsType,
-		PrtRowIDStr: prtRowIdStr,
-		SFlag: 0,
-		OldPrtInvDR: oldINVRID,
-		ExpStr: myExpStr,
-		PayInfo: myPayInfo
-	}, function(rtn) {
-		if (rtn == "0") {
-			
-			//validPrtRowIDStr(prtRowIdStr);    //ÑéÖ¤½áËã¼ÇÂ¼£¬Ê§°ÜµÄ»Ø¹ö
-			
-			billPrintTask(prtRowIdStr);   //´òÓ¡
-			
-			var msg = "½áËã³É¹¦";
-			if (getValueById("reloadFlag")) {
-				msg += "£¬±¾´ÎÏû·Ñ£º<font color='red'>" + getPatSum()+ "</font> Ôª£¬Óà¶î£º<font color='red'>" + getAccMBalance() + "</font> Ôª";
-				$.messager.alert("ÌáÊ¾", msg, "success", function() {
-					if (getValueById("medDeptFlag")) {
-						clearDocWin(myAdmStr, "");
-					}else {
-						websys_showModal("close");
-					}
-				});
-			}else {
-				var prtRowIdAry = prtRowIdStr.split("^");
-				var printInvFlag = getINVPRTJsonObj(prtRowIdAry[0]).PRTINVPrintFlag;
-				if (printInvFlag == "P") {
-					msg += "£¬¹²´òÓ¡ <font color='red'>" + prtRowIdAry.length + "</font> ÕÅ·¢Æ±";
-				}
-				$.messager.alert("ÌáÊ¾", msg, "success", function() {
-					clearDocWin(myAdmStr, "");
-				});
-			}
-		}else {
-			chargeErrorTip("completeError", rtn);
-			return;
-		}
-	});
-}
-
-function getAccMBalance() {
-	var accMLeft = "";
-	var accMRowId = getValueById("accMRowId");
-	if (accMRowId) {
-		accMLeft = $.m({ClassName: "web.UDHCAccManageCLS", MethodName: "getAccBalance", Accid: accMRowId}, false);
-	}
-	setValueById("accMLeft", accMLeft);
-	return accMLeft;
-}
-
-function getBillExpStr() {
-	var accMRowId = getValueById("accMRowId");
-	var roundErr = numCompute(getValueById("patShareSum"), getValueById("patRoundSum"), "-");
-	var chargeInsType = getValueById("chargeInsType");
-	var localIPAddress = "";  //¿Í»§¶ËIPµØÖ·
-	var stayFlag = "";        //Áô¹Û±êÊ¶
-	var checkOutMode = "";    //¿ÆÊÒ¿¨Ïû·Ñ²»µ¯½çÃæ±êÊ¶
-	var insuDicCode = ($("#insuDic").length > 0) ? getValueById("insuDic") : "";   //²¡ÖÖ±àÂë
-
-	var myExpStr = PUBLIC_CONSTANT.SESSION.GROUPID;
-	myExpStr += "^" + PUBLIC_CONSTANT.SESSION.CTLOCID;
-	myExpStr += "^" + getValueById("accMRowId");
-	myExpStr += "^" + GV.RequiredInvFlag;
-	myExpStr += "^" + "F";
-	myExpStr += "^" + getValueById("actualMoney");
-	myExpStr += "^" + getValueById("change");
-	myExpStr += "^" + roundErr;
-	myExpStr += "^" + chargeInsType;
-	myExpStr += "^" + localIPAddress;
-	myExpStr += "^" + stayFlag;
-	myExpStr += "^" + checkOutMode;
-	myExpStr += "^" + insuDicCode;
 	
-	return myExpStr;
-}
-
-function checkBill() {
-	if ((getValueById("billByAdmSelected") == "1") && !GV.OEItmList.getChecked().length) {
-		$.messager.popover({msg: "Ã»ÓĞ½áËãµÄÒ½Öö", type: "info"});
-		return false;
-	}
-	if (!getValueById("receiptNo") && (GV.RequiredInvFlag == "Y")) {
-		$.messager.popover({msg: "Ã»ÓĞÆ±¾İ£¬ÇëÏÈÁìÈ¡·¢Æ±", type: "info"});
-		return false;
-	}
+	//å¢åŠ åŒ»å˜±
+	var myAutoOrdInfo = autoAddNewOrder(admStr, unBillOrderStr, curInsTypeId, 0);
 	
-	//2020-06-19 Èç¹ûÊÇ¿ÆÊÒ¿Û·Ñ£¬ÏÈ¶ÁÒ»ÏÂÕË»§£¬ÒÔ±ã´«ÕË»§¸øÊÕÒøÌ¨
-	if (getValueById("reloadFlag")) {
-		var myPatSum = getPatSum();
-		var myAdmStr = getValueById("admStr");
-		var myCardNo = getValueById("cardNo");
-		var myCardTypeId = getValueById("cardType").split("^")[0];
-		var myRtn = DHCACC_CheckMCFPay(myPatSum, myCardNo, myAdmStr, myCardTypeId);
-		var myAry = myRtn.split("^");
-		setValueById("accMRowId", myAry[1]);
-	}
-	
-	return true;
-	
-	/*
-	var paymode = getValueById("paymode");
-	if (!paymode) {
-		$.messager.popover({msg: "ÇëÑ¡ÔñÖ§¸¶·½Ê½", type: "info"});
-		return false;
-	}
-	if (getValueById("reloadFlag") && (getValueById("paymCode") != "CPP")) {
-		$.messager.popover({msg: "Ö»ÄÜÑ¡Ôñ <font color='red'>Ô¤½»½ğ</font> Ö§¸¶", type: "info"});
-		return false;
-	}
-	$("#appendDlg").form("clear");   //ĞèÒªÏÈÇå³ı¶Ô»°¿òÖĞ±íµ¥Öµ
-	if (getValueById("requiredFlag") == "Y") {
-		openAppendDlg();             //µ¯³öÆäËû±ØÌîÏî¶Ô»°¿ò
-		return false;
-	}
 	var myPatSum = getPatSum();
-	var actualMoney = getValueById("actualMoney");
-	if (actualMoney && (+actualMoney < +myPatSum)) {
-		$.messager.popover({msg: "ÊµÊÕ½ğ¶îĞ¡ÓÚÓ¦¸¶½ğ¶î", type: "info"});
-		return false;
-	}
-	var rtn = true;
-	var myAdmStr = getValueById("admStr");
-	switch (getValueById("paymCode")) {
-	case "CPP":
-		var myCardNo = getValueById("cardNo");
-		var myCardTypeId = getValueById("cardType").split("^")[0];
-		var myRtn = DHCACC_CheckMCFPay(myPatSum, myCardNo, myAdmStr, myCardTypeId);
-		var myAry = myRtn.split("^");
-		//Ò½±£²¡ÈËÏÈÔËĞĞÍ¸Ö§£¬ÕË»§Óà¶î´óÓÚµÈÓÚ0Ê±²ÅÔËĞĞÍ¸Ö§
-		var admSource = getValueById("admSource");
-		if (+admSource > 0) {
-			if (!getValueById("reloadFlag") && (myAry[0] == "-205") && (numCompute(myPatSum, myAry[4], "-") >= 0)) {
-				myAry[0] = "0";
-			}
-		}
-		setValueById("accMRowId", myAry[1]);
-		if (myAry[0] != "0") {
-			rtn = false;
-			switch(myAry[0]) {
-			case "-200":
-				$.messager.popover({msg: "¿¨ÎŞĞ§", type: "info"});
-				break;
-			case "-201":
-				$.messager.popover({msg: "¸Ã»¼Õß²»´æÔÚÓĞĞ§µÄÕË»§£¬²»ÄÜÓÃÀ´Ö§¸¶»òÍË¿î", type: "info"});
-				break;
-			case "-205":
-				if (+myAry[4] != 0) {
-					var msg = "Óà¶î²»×ã£¬ÇëÏÈ³äÖµ <font color='red'>" + (+myAry[4]).toFixed(2) + "</font> Ôª";
-					if (getValueById("reloadFlag")) {
-						$.messager.popover({msg: msg, type: "info"});
-					}else {
-						$.messager.alert("ÌáÊ¾", msg, "info", function() {
-							accPayDeposit();
-						});
-					}
-				}
-				break;
-			case "-206":
-				$.messager.popover({msg: "¿¨ºÅÂë²»Ò»ÖÂ£¬ÇëÊ¹ÓÃÔ­¿¨", type: "info"});
-				break;
-			case "-210":
-				$.messager.popover({msg: "¿¨ºÅÑéÖ¤Ê§°Ü", type: "info"});
-				break;
-			default: 
-				$.messager.popover({msg: "Î´Öª´íÎó", type: "info"});
-			}
-		}
-		break;
-	case "QF":
-		var myRtn = $.m({ClassName: "web.DHCOPQFPat", MethodName: "CheckWarBal", admStr: getValueById("episodeId"), payAmt: myPatSum, sFlag: 0}, false);
-		if (myRtn != "0") {
-			rtn = false;
-			switch(myRtn) {
-			case "-1":
-				$.messager.popover({msg: "»¼ÕßÃ»ÓĞÓĞĞ§µÄµ£±£ĞÅÏ¢£¬²»ÄÜÇ··Ñ½áËã", type: "info"});
-				break;
-			case "-2":
-				$.messager.popover({msg: "»¼Õßµ£±£½ğ¶î²»×ã£¬²»ÄÜÇ··Ñ½áËã", type: "info"});
-				break;
-			}
-		}
-		break;
-	case "CCP":
-		if (!getValueById("healthCareProvider")) {
-			rtn = false;
-			$.messager.popover({msg: "¸Ã»¼Õß²»ÊÇ¹«·Ñµ¥Î»µÄ£¬²»ÄÜÓÃ´ËÖ§¸¶·½Ê½", type: "info"});
-		}
-		break;
-	default:
-	}
 	
-	return rtn;
+	//å”±æ”¶å”±ä»˜
+	soundPrice(myPatSum);
 	
-	*/
+	var promise = Promise.resolve();
+	promise
+		.then(_validate)
+		.then(_cfr)
+		.then(_preChg)
+		.then(_insuDiv)
+		.then(_buildPayMList)
+		.then(_complete)
+		.then(function() {
+			_printInv();
+			lockAdm(admStr, false);   //2023-02-22 ZhYW å¯¹å½“å‰ç»“ç®—å°±è¯Šè§£é”
+			$("#btn-charge").linkbutton("enable");
+		}, function () {
+			_cancelPaySrv();
+			validPrtRowIDStr(prtRowIdStr);
+			lockAdm(admStr, false);   //2023-02-22 ZhYW å¯¹å½“å‰ç»“ç®—å°±è¯Šè§£é”
+			$("#btn-charge").linkbutton("enable");
+		});
 }
 
 /**
-* ±ØÌîÏî¶Ô»°¿ò
+* è¿”å›é‡ç»„å‘ç¥¨rowIdä¸²(è¿‡æ»¤å›æ»šçš„å‘ç¥¨rowId)
 */
-function openAppendDlg() {
-	$("#appendDlg").show();
-	var dlgObj = $HUI.dialog("#appendDlg", {
-		title: '¸½¼ÓÏî',
-		iconCls: 'icon-w-plus',
-		draggable: false,
-		resizable: false,
-		cache: false,
-		modal: true,
-		onBeforeOpen: function() {
-			$("#appendDlg").form("clear");
-			setValueById("chequeDate", getDefStDate(0));   //Ö§Æ±ÈÕÆÚ
-			//ÒøĞĞ
-			$HUI.combobox("#bank", {
-				panelHeight: 150,
-				url: $URL + "?ClassName=web.UDHCOPOtherLB&MethodName=ReadBankListBroker&ResultSetType=array&JSFunName=GetBankToHUIJson",
-				method: 'GET',
-				valueField: 'id',
-				textField: 'text',
-				blurValidValue: true,
-				defaultFilter: 4
-			});
-		},
-		onOpen: function() {
-			focusById("checkNo");
-			var id = "";
-			$("#appendDlg").find("input[id]").each(function(index, item) {
-				if ($(this).is(":hidden")) {
-					$(this).next("span").find("input").keydown(function(e) {
-						id = $(this).parents("td").find("input")[0].id;
-						var key = websys_getKey(e);
-						if (key == 13) {
-							_setNextFocus(id);
-						}
-					});
-				}else {
-					$(this).keydown(function(e) {
-						var key = websys_getKey(e);
-						if (key == 13) {
-							_setNextFocus(this.id);
-						}
-					});
-				}
-			});
-			
-			function _setNextFocus(id) {
-				var myIdx = -1;
-				var inputAry = $("#appendDlg").find("input[id]"); 
-				inputAry.each(function(index, item) {
-					if (this.id == id) {
-						myIdx = index;
-						return false;
-					}
-				});
-				if (myIdx < 0) {
-					return;
-				}
-				var id = "";
-				var $obj = "";
-				var nextId = "";
-				for (var i = (myIdx + 1); i < inputAry.length; i++) {
-					id = inputAry[i].id;
-					$obj = $("#" + id);
-					if ($obj.parents("tr").is(":hidden")) {
-						continue;
-					}
-					if ($obj.is(":hidden")) {
-						if ($obj.next("span").find("input").attr("readonly") == "readonly") {
-							continue;
-						}
-						if ($obj.next("span").find("input").attr("disabled") == "disabled") {
-							continue;
-						}
-					}else {
-						if ($obj.attr("disabled") == "disabled") {
-							continue;
-						}
-					}
-					nextId = id;
-					break;
-				}
-				if (nextId) {
-					focusById(nextId);
-					return;
-				}else {
-					setTimeout("focusById('btn-ok')", 20);
-					return;
-				}
-			}
-		},
-		buttons: [{
-					text: 'È·ÈÏ',
-					id: 'btn-ok',
-					handler: function () {
-						var bool = true;
-						var id = "";
-						$("#appendDlg label.clsRequired").each(function(index, item) {
-							id = $($(this).parent().next().find("input"))[0].id;
-							if (!id) {
-								return true;
-							}
-							if (!getValueById(id)) {
-								bool = false;
-								focusById(id);
-								$.messager.popover({msg: "ÇëÊäÈë<font color=red>" + $(this).text() + "</font>", type: "info"});
-								return false;
-							}
-						});
-						if (!bool) {
-							return;
-						}
-						charge();
-						dlgObj.close();
-					}
-				}, {
-					text: '¹Ø±Õ',
-					handler: function () {
-						dlgObj.close();
-					}
-				}
-			]
-	});
+function getSuccPrtRowIdStr(prtRowIdStr) {
+	return $.m({ClassName: "web.DHCBillCons12", MethodName: "ValidatePrtRowID", prtRowIdStr: prtRowIdStr}, false);
 }
 
-function accPayDeposit() {
+/**
+* è·å–ç»“ç®—å‘ç¥¨ä¿¡æ¯
+*/
+function getInvAmtInfo(prtRowIdStr) {
+	return $.m({ClassName: "web.DHCBillConsIF", MethodName: "GetInvAmtData", prtRowIdStr: prtRowIdStr}, false);
+}
+
+function getAccMLeft() {
 	var accMRowId = getValueById("accMRowId");
-	var cardNo = getValueById("cardNo");
-	var papmi = getValueById("papmi");
-	var patOrdSum = getPatPaySum();
-	var url = "dhcbill.opbill.accdep.pay.csp?winfrom=opcharge&AccMRowID=" + accMRowId;
-	url += "&CardNo=" + cardNo + "&PatientID=" + papmi + "&PatFactPaySum=" + patOrdSum;
-	websys_showModal({
-		url: url,
-		title: '³äÖµ',
-		iconCls: 'icon-w-inv',
-		width: '85%',
-		height: '85%',
-		callbackFunc: charge
-	});
+	return (accMRowId > 0) ? $.m({ClassName: "web.UDHCAccManageCLS", MethodName: "getAccBalance", Accid: accMRowId}, false) : "";
 }
 
-function buildPayStrOld() {
-	var payStr = "";
-	var paymode = getValueById("paymode");
-	if (!paymode) {
-		$.messager.popover({msg: "ÇëÑ¡ÔñÖ§¸¶·½Ê½", type: "info"});
-		return payStr;
-	}
-	var patUnit = (getValueById("paymCode") == "CCP") ? getValueById("healthCareProvider") : "";
-	var myBankDR = getValueById("bank");
-	var myCheckNo = getValueById("checkNo");
-	var myChequeDate = getValueById("chequeDate");
-	var myPayAccNo = getValueById("payAccNo");
-	var myPayMAmt = getValueById("payAccNo");
-	if (getValueById("paymCode") == "CASH"){
-		
-	}
-	
-	payStr = paymode + "^" + myBankDR + "^" + myCheckNo + "^^" + patUnit + "^" + myChequeDate + "^" + myPayAccNo;
-	payStr = payStr.replace(/undefined/g, "");   //Ìæ»»ËùÓĞµÄundefined
-
-	return payStr;
-}
-
-///20200530
-///Lid
-///»ñÈ¡»¼Õß×Ô·Ñ½ğ¶î
-function GetPatSelfPayAmt(prtRowIdStr){
-	var patSelfPayAmt = tkMakeServerCall("web.DHCBillConsIF", "GetPatSelfPayAmt", prtRowIdStr);
-	return patSelfPayAmt;
-}
-
-///20200530
-///Lid
-///¼ÆËã·Ö±ÒÎó²î
-function CalcInvPayMAmtRound(prtRowIdStr,payAmt){
-	var invRoundInfo = tkMakeServerCall("web.DHCBillConsIF", "GetManyInvRoundErrAmt", prtRowIdStr, payAmt);
-	return invRoundInfo;
-}
-
-function buildPayStr(prtRowIdStr) {
-	var payStr = "";
-	var paymode = getValueById("paymode");
-	if (!paymode) {
-		$.messager.popover({msg: "ÇëÑ¡ÔñÖ§¸¶·½Ê½", type: "info"});
-		return payStr;
-	}
-	var myPayCard=getValueById("accMRowId");  
-	var patUnit = (getValueById("paymCode") == "CCP") ? getValueById("healthCareProvider") : "";
-	var myBankDR = getValueById("bank");
-	var myCheckNo = getValueById("checkNo");
-	var myChequeDate = getValueById("chequeDate");
-	var myPayAccNo = getValueById("payAccNo");
-	var myPayMAmt = getValueById("payAccNo");
-	
-	var mySelfPayAmt = GetPatSelfPayAmt(prtRowIdStr);
-	var myInvRoundErrDetails=""; //·¢Æ±·Ö±ÒÎó²îÃ÷Ï¸
-	var actualMoney = ""; //ÊµÊÕ
-	var backChange = ""; //ÕÒÁã
-	if (getValueById("paymCode") == "CASH"){
-		var myRoundErrInfo = CalcInvPayMAmtRound(prtRowIdStr,mySelfPayAmt); 
-		//·Ö±ÒÎó²îºóµÄÊÕÏÖ½ğ½ğ¶î^·¢Æ±rowid|Îó²î½ğ¶î|ÉáÈëÇ°½ğ¶î|ÉáÈëºó½ğ¶î!·¢Æ±rowid|Îó²î½ğ¶î|ÉáÈëÇ°½ğ¶î|ÉáÈëºó½ğ¶î
-		mySelfPayAmt=myRoundErrInfo.split("^")[0];
-		myInvRoundErrDetails=myRoundErrInfo.split("^")[1];
-		var actualMoney = getValueById("actualMoney"); //ÊµÊÕ
-		var backChange = getValueById("change"); //ÕÒÁã
-	}
-	payStr = paymode + "^" + myBankDR + "^" + myCheckNo + "^" + myPayCard + "^" + patUnit + "^" + myChequeDate + "^" + myPayAccNo + "^" + mySelfPayAmt + "^" + myInvRoundErrDetails + "^" + actualMoney + "^" + backChange ;
-	
-	payStr = payStr.replace(/undefined/g, "");   //Ìæ»»ËùÓĞµÄundefined
-
-	return payStr;
-}
-
-function clearDocWin(admStr, unBillOrderStr) {
-	//ÇåÆÁ¾ÍÕï¼ÇÂ¼½âËø
-	$.m({
-		ClassName: "web.DHCBillLockAdm",
-		MethodName: "UnLockOPAdm",
-		admStr: admStr,
-		lockType: "User.OEOrder"
-	});
+function clearDocWin() {
+	var admStr = getValueById("admStr");
 	var myExpStr = PUBLIC_CONSTANT.SESSION.GROUPID + "^" + PUBLIC_CONSTANT.SESSION.CTLOCID;
 	$.m({
 		ClassName: "web.udhcOPBillIF",
 		MethodName: "GetnobilledCount",
 		PAADMStr: admStr,
-		unBillStr: unBillOrderStr,
+		unBillStr: "",
 		ExpStr: myExpStr
 	}, function(rtn) {
 		if (rtn == 0) {
 			initFeeAll();
-		}else {
-			initFeeDoc();
+			return;
 		}
+		initFeeDoc();
 	});
 }
 
 function initFeeAll() {
 	if (!getValueById("reloadFlag") || getValueById("medDeptFlag")) {
-	  	$(".PatInfoItem").html("");
+	  	clearBanner();
 	}else {
-		refreshBar(getValueById("papmi"), getValueById("episodeId"));   //Ë¢ĞÂ»¼ÕßĞÅÏ¢banner
+		var patientId = getValueById("patientId");
+		var episodeId = getValueById("episodeId"); 
+		refreshBar(patientId, episodeId);   //åˆ·æ–°æ‚£è€…ä¿¡æ¯banner
 	}
 	$(":text:not(.pagination-num)").val("");
-	$("#cardType").combobox("reload");
-	var url = $URL + "?ClassName=web.UDHCOPGSConfig&QueryName=ReadGSINSPMList&ResultSetType=array";
-	$("#paymode").combobox("reload", url);
-	$(".combobox-f:not(#paymode,#cardType)").combobox("clear").combobox("loadData", []);
-  	getCFByGRowID();
-	
-  	setValueById("papmi", "");
-  	setValueById("admStr", "");
+
+  	setValueById("patientId", "");
   	setValueById("accMRowId", "");
-  	setValueById("accMLeft", "");
+  	focusById("CardNo");
   	getReceiptNo();
   	
- 	$(".datagrid-f:not(#admList)").datagrid("loadData", {   //´¦·½·Ñ±ğ¼ÓÔØ³É¹¦ºó¼´¼ÓÔØ¾ÍÕïÁĞ±í£¬¹ÊÕâÀï²»ÔÙ¼ÓÔØ¾ÍÕïÁĞ±í
-		total: 0,
-		rows: []
-	});
-
-  	$.m({ClassName: "web.DHCBillCons", MethodName: "KCalTMP", sUser: PUBLIC_CONSTANT.SESSION.USERID});
+	clearAdmsRela();
 }
 
 function initFeeDoc() {
-	refreshBar(getValueById("papmi"), getValueById("episodeId")); //Ë¢ĞÂ»¼ÕßĞÅÏ¢banner
-	getCFByGRowID();
+	var patientId = getValueById("patientId");
+	var episodeId = getValueById("episodeId");
+	refreshBar(patientId, episodeId);  //åˆ·æ–°æ‚£è€…ä¿¡æ¯banner
+	
+	GV.UnBillOrdObj[episodeId] = [];
+	setToPayInsTypeSelected();   //2022-10-17 ZhYW
+	
 	getReceiptNo();
-	reloadOrdItmList();
-}
-
-function getPatPaySum() {
-	return (getValueById("billByAdmSelected") == "1") ? getValueById("curDeptRoundShare") : getValueById("patRoundSum");
 }
 
 function getPatSum() {
-	return (getValueById("billByAdmSelected") == "1") ? getValueById("curDeptShare") : getValueById("patShareSum");
+	return CV.BillByAdmSelected ? getValueById("curDeptShare") : getValueById("patShareSum");
 }
 
-function autoAddNewOrder(admStr, unBillOrderStr, insTypeId, sFlag) {
+/**
+* æ’å…¥è¯•ç®¡ç­‰åŒ»å˜±
+*/
+function autoAddNewOrder(admStr, unBillOrdStr, insTypeId, sFlag) {
 	var mySessionStr = getSessionPara();
 	var myExpStr = "";
 	var encmeth = getValueById("AutoAddNewOrdEncrypt");
-	var myNOrdInfo = cspRunServerMethod(encmeth, admStr, unBillOrderStr, insTypeId, sFlag, mySessionStr, myExpStr);
-	var myOrdAry = myNOrdInfo.split(PUBLIC_CONSTANT.SEPARATOR.CH1);
-	if (myOrdAry[0] == "0") {
-		var myFeeAry = myOrdAry[2].split("^");
+	var rtn = cspRunServerMethod(encmeth, admStr, unBillOrdStr, insTypeId, sFlag, mySessionStr, myExpStr);
+	var myAry = rtn.split(PUBLIC_CONSTANT.SEPARATOR.CH1);
+	if (myAry[0] == 0) {
+		var myFeeAry = myAry[2].split("^");
 		var myAddPatSum = myFeeAry[3];
-		setValueById("patShareSum", numCompute(getValueById("patShareSum"), myAddPatSum, "+"));
-		setValueById("patRoundSum", numCompute(getValueById("patRoundSum"), myAddPatSum, "+"));
+		var patShareSum = getValueById("patShareSum");
+		setValueById("patShareSum", Number(patShareSum).add(myAddPatSum));
 	}
-	return myNOrdInfo;
+	return rtn;
+}
+
+/**
+* å”±æ”¶å”±ä»˜
+*/
+function soundPrice(patSum) {
+	var mySoundService = "TotalFee";
+	var myValAry = patSum + "^";
+	var mySessionStr = getSessionPara();
+	var myCFExpStr = "";
+	var encmeth = getValueById("ReadSoundServiceEncrypt");
+	var myCFRtn = cspRunServerMethod(encmeth, "DHCWCOM_SoundPriceService", mySoundService, myValAry, mySessionStr, myCFExpStr);
 }
 
 function billPrintTask(prtInvIdStr) {
-	var myOldXmlName = GV.INVXMLName;
-	$.m({
+	GV.INVXMLName = CV.INVXMLName;
+	var rtn = $.m({
 		ClassName: "web.UDHCOPGSPTEdit",
-		MethodName: "IGetPrtGuideFlag",
+		MethodName: "GetPrtListByGRowID",
 		GPRowID: PUBLIC_CONSTANT.SESSION.GROUPID,
 		HospId: PUBLIC_CONSTANT.SESSION.HOSPID,
 		PrtType: "CP"
-	}, function(rtn) {
-		var myAry = rtn.split(PUBLIC_CONSTANT.SEPARATOR.CH1);
-		if (myAry[0] == "Y") {
-			billPrintList(myAry[1], prtInvIdStr);
-			GV.INVXMLName = myOldXmlName;
-			getXMLConfig(GV.INVXMLName);
-		} else {
-			invPrint(prtInvIdStr);
-			//ÊÕ·Ñ´¦´òÓ¡µ¼Õïµ¥
-			if (!getValueById("reloadFlag")) {
-				$.m({
-					ClassName: "web.DHCBillInterface", 
-					MethodName: "IGetPrtGuideFlag",
-					hospId: PUBLIC_CONSTANT.SESSION.HOSPID
-				}, function(rtn) {
-					if (rtn == "F") {
-						directPrint(prtInvIdStr);
-					}
-				});
-			}
-		}
-		GV.INVXMLName = myOldXmlName;
-	});
+	}, false);
+	var myAry = rtn.split(PUBLIC_CONSTANT.SEPARATOR.CH1);
+	if (myAry[0] == "Y") {
+		billPrintList(myAry[1], prtInvIdStr);
+		getXMLConfig(GV.INVXMLName);
+		return;
+	}
+	invPrint(prtInvIdStr);
+	//æ”¶è´¹å¤„æ‰“å°å¯¼è¯Šå•
+	var rtn = isPrintDirect();
+	if (rtn) {
+		directPrint(prtInvIdStr);
+	}
+}
+
+/**
+* æ˜¯å¦æ‰“å°å¯¼è¯Šå•
+* true: æ˜¯, false: å¦
+*/
+function isPrintDirect() {
+	if (getValueById("reloadFlag")) {
+		return false;
+	}
+	return ($.m({ClassName: "web.DHCBillInterface", MethodName: "IGetPrtGuideFlag", hospId: PUBLIC_CONSTANT.SESSION.HOSPID}, false) == "F");
 }
 
 function billPrintList(prtTaskStr, prtInvIdStr) {
@@ -1078,7 +686,7 @@ function commBillPrint(prtInvIdStr, className, methodName) {
 	var myAry = prtInvIdStr.split("^");
 	$.each(myAry, function(index, id) {
 		if (id) {
-			var paymDesc = $("#paymode").combobox("getText");
+			var paymDesc = "";
 			var myExpStr = "^^" + PUBLIC_CONSTANT.SESSION.GROUPID;
 			var encmeth = getValueById("ReadCommOPDataEncrypt");
 			var prtInfo = cspRunServerMethod(encmeth, "xmlPrintFun", className, methodName, GV.INVXMLName, id, PUBLIC_CONSTANT.SESSION.USERID, paymDesc, myExpStr);
@@ -1093,9 +701,9 @@ function invPrint(prtInvIdStr) {
 	var myAry = prtInvIdStr.split("^");
 	$.each(myAry, function(index, id) {
 		if (id) {
-			//¸ù¾İÊµ¼Ê·¢Æ±µÄÊÕ·ÑÀà±ğ²éÕÒÄ£°åÃû³Æ
+			//æ ¹æ®å®é™…å‘ç¥¨çš„æ”¶è´¹ç±»åˆ«æŸ¥æ‰¾æ¨¡æ¿åç§°
 			var tmpPrtXMLName = $.m({ClassName: "web.UDHCJFBaseCommon", MethodName: "GetPrtXMLName", prtRowID: id, patType: "O", defaultXMLName: GV.INVXMLName}, false);
-			getXMLConfig(tmpPrtXMLName);    //´Ë´¦Ö»ĞŞ¸Äµ÷ÓÃÄ£°å, ²»ĞèÒªĞŞ¸ÄPrtXMLName
+			getXMLConfig(tmpPrtXMLName);    //æ­¤å¤„åªä¿®æ”¹è°ƒç”¨æ¨¡æ¿, ä¸éœ€è¦ä¿®æ”¹PrtXMLName
 			var paymDesc = "";
 			var myExpStr = "^^" + PUBLIC_CONSTANT.SESSION.GROUPID;
 			var encmeth = getValueById("ReadOPDataEncrypt");
@@ -1105,10 +713,17 @@ function invPrint(prtInvIdStr) {
 }
 
 /**
-* ÑéÖ¤½áËã¼ÇÂ¼£¬Ê§°ÜµÄ»Ø¹ö
+* éªŒè¯ç»“ç®—è®°å½•ï¼Œå¤±è´¥çš„å€’åºæ’¤é”€
 */
 function validPrtRowIDStr(prtRowIdStr) {
 	var bool = true;
+	if (!prtRowIdStr) {
+		return bool;
+	}
+	//å€’åº
+	prtRowIdStr = prtRowIdStr.split("^").sort(function(a, b) {
+		return b - a;
+	}).join("^");
 	var inValidStr = $.m({ClassName: "web.DHCOPCashierIF", MethodName: "GetInvalidPrtIDStr", prtRowIdStr: prtRowIdStr}, false);
 	if (inValidStr != "") {
 		var inValidAry = inValidStr.split(PUBLIC_CONSTANT.SEPARATOR.CH2);
@@ -1118,9 +733,8 @@ function validPrtRowIDStr(prtRowIdStr) {
 			var insTypeId = singleAry[1];
 			var admSource = singleAry[2];
 			var insuDivId = singleAry[3];
-			var rtn = chargeRollback(prtRowId, insTypeId, admSource, insuDivId);
-			if (rtn != "0") {
-				bool = false;
+			bool = chgRollback(prtRowId, insTypeId, admSource, insuDivId);
+			if (!bool) {
 				return false;
 			}
 		});
@@ -1129,11 +743,11 @@ function validPrtRowIDStr(prtRowIdStr) {
 }
 
 /**
-* HIS³·Ïú½áËã
+* HISæ’¤é”€ç»“ç®—
 */
-function chargeRollback(prtRowId, insTypeId, admSource, insuDivId) {
-	if (insuDivId != "") {
-		//³·ÏúÒ½±£½áËã
+function chgRollback(prtRowId, insTypeId, admSource, insuDivId) {
+	if (insuDivId > 0) {
+		//æ’¤é”€åŒ»ä¿ç»“ç®—
 		var myYBHand = "";
 		var myCPPFlag = "";
 		var myStrikeFlag = "S";
@@ -1143,94 +757,149 @@ function chargeRollback(prtRowId, insTypeId, admSource, insuDivId) {
 		var myDicCode = "";
 		var myDYLB = "";
 		var myLeftAmt = "";
-		var myMoneyType = "";  //¿¨ÀàĞÍ
+		var myMoneyType = "";  //å¡ç±»å‹
 		var myLeftAmtStr = myLeftAmt + "!" + myLeftAmt + "^" + myMoneyType;
 		var myExpStr = myStrikeFlag + "^" + PUBLIC_CONSTANT.SESSION.GROUPID + "^" + myInsuNo + "^" + myCardType + "^" + myYLLB + "^" + myDicCode + "^" + myDYLB + "^" + myLeftAmtStr;
 		var rtn = DHCWebOPYB_ParkINVFYB(myYBHand, PUBLIC_CONSTANT.SESSION.USERID, insuDivId, admSource, insTypeId, myExpStr, myCPPFlag);
-		if (rtn != "0") {
-			$.messager.alert("ÌáÊ¾", "Ò½±£·¢Æ±³åÆ±´íÎó", "error");
-			return rtn;
+		if (rtn != 0) {
+			$.messager.alert("æç¤º", "åŒ»ä¿å‘ç¥¨å†²ç¥¨é”™è¯¯", "error");
+			return false;
 		}
 	}
 	
-	//HISÊı¾İ»Ø¹ö
+	//HISæ•°æ®å›æ»š
 	var rtn = DHCWebOPYB_DeleteHISData(prtRowId, "");
-	if (rtn != "0") {
-		$.messager.alert("ÌáÊ¾", "HIS»Ø¹öÊ§°Ü", "error");
+	var myAry = rtn.split("^");
+	if (myAry[0] != 0) {
+		$.messager.alert("æç¤º", "HISå›æ»šå¤±è´¥ï¼š" + (myAry[1] || myAry[0]), "error");
+		return false;
 	}
-	
-	return rtn;
+	return true;
 }
 
+/**
+* é”å®š/è§£é”å°±è¯Šè®°å½•
+* admStr: éœ€åŠ é”/è§£é”çš„å°±è¯ŠId
+* isLockï¼štrue:åŠ é”, false:è§£é”
+* è¿”å›å€¼ï¼štrue:æœ‰é”å®šadm, false:æ— é”å®šadm
+*/
+function lockAdm(admStr, isLock) {
+	if (!CV.LockAdm) {
+		return false;
+	}
+	if (!admStr) {
+		return false;
+	}
+	if (isLock) {
+		//åŠ é”
+		var rtn = $.m({ClassName: "web.DHCBillLockAdm", MethodName: "LockAdm", admStr: admStr}, false);
+		if (rtn != "") {
+			rtn = rtn.replace(/\^/g, "\n");
+			$.messager.popover({msg: rtn, type: "info"});
+			return true;
+		}
+		return false;
+	}
+	//è§£é”
+	$.m({ClassName: "web.DHCBillLockAdm", MethodName: "UnLockAdm", wantreturnval: 0, admStr: admStr}, false);
+	return false;
+}
 
 function patCalClick() {
-	var url = "dhcbill.opbill.billcashcalc.csp?&receiptNo=" + getValueById("receiptNo");
+	var url = "dhcbill.opbill.billcashcalc.csp?receiptNo=" + getValueById("receiptNo");
 	websys_showModal({
 		url: url,
-		title: '¼ÆËãÆ÷',
+		title: $g('è®¡ç®—å™¨'),
 		iconCls: 'icon-w-calc',
 		width: 525,
 		height: 450
 	});
 }
 
-function regClick() {
-	if ($("#btn-reg").hasClass("l-btn-disabled")) {
-		return;
-	}
-	var url = "opadm.reg.hui.csp?&ParaRegType=Reg";
-	websys_showModal({
-		url: url,
-		title: '¹ÒºÅ',
-		iconCls: 'icon-w-edit',
-		width: '95%',
-		height: '85%'
-	});
-}
-
+/**
+* è·³å·
+*/
 function skipNoClick() {
-	var receiptType = "OP";
-	var url = "websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCBillSkipInvoice&CurrentInsType=" + getSelectedInsType();
-	url += "&receiptType=" + receiptType + "&GroupID=" + PUBLIC_CONSTANT.SESSION.GROUPID;
-	websys_showModal({
-		url: url,
-		title: 'ÃÅÕï·¢Æ±ÌøºÅ',
-		iconCls: 'icon-skip-no',
-		width: 520,
-		height: 227,
-		onClose: function() {
-			getReceiptNo();
-		}
-	});
+	var insTypeId = getSelectedInsType();
+	var argumentObj = {
+		receiptType: "OP",
+		insTypeId: insTypeId
+	};
+	BILL_INF.showSkipInv(argumentObj).then(getReceiptNo);
 }
 
 function rapidRegClick() {
 	var url = "opdoc.rapidregist.hui.csp?winfrom=opcharge";
 	websys_showModal({
 		url: url,
-		title: '¾ÍÕïµÇ¼Ç',
+		title: $g('å°±è¯Šç™»è®°'),
 		iconCls: 'icon-w-edit',
-		callbackFunc: setPatInfoByCard,
 		width: 600,
-		height: 327
+		height: 327,
+		callbackFunc: setPatInfoByCard
 	});
 }
 
 /**
-* Lid
-* 2020-05-30
-* ÊÇ·ñÏÔÊ¾ÊÕÒøÌ¨½çÃæ
-* (false:²»ÏÔÊ¾£¬true:ÏÔÊ¾)
-*  payMCode²»´«Ê±£¬È¡Ä¬ÈÏÏµÍ³ÅäÖÃ£¬²»Îª¿ÕÊ±È¡¸ÃÖ§¸¶·½Ê½ÊÇ·ñĞèÒªÏÔÊ¾ÊÕÒøÌ¨½çÃæÅäÖÃ¡£
+* æ˜¾ç¤ºæ‰¾é›¶ä¿¡æ¯
 */
-function isShowCheckOut(payMCode) {
-	//Ô¤½»½ğ¡¢Ç··Ñ¡¢¼ÇÕËµÈÖ§¸¶·½Ê½²»ÓÃµ¯³öÊÕÒøÌ¨½çÃæ
-	//ÏÈĞ´ËÀ£¬ÒÔºó×öÅäÖÃ
-	return true;  //ÏÈĞ´ËÀ£¬¶¼µ¯³öÊÕÒøÌ¨½çÃæ
-	
-	return ["CPP", "QF", "CCP"].indexOf(payMCode) == -1;
+function showChangeTip(prtRowIdStr) {
+    var jsonStr = $.m({ClassName: "web.DHCOPCashier", MethodName: "GetChgedChangeInfo", prtRowIdStr: prtRowIdStr}, false);
+    var json = JSON.parse(jsonStr);
+    if ($.isEmptyObject(json)) {
+        return;
+    }
+    var _html = "<table>";
+    $.each(Object.keys(json), function (index, prop) {
+        _html += "<tr>"
+         + "<td class=\"change-desc\">"
+         + $g(prop) + "ï¼š"
+         + "</td>"
+         + "<td class=\"change-amt\">"
+         + json[prop]
+         + "</td>"
+         + "</tr>";
+    });
+    _html += "</table>";
+    $(".change-content").html(_html);
 }
 
-function getINVPRTJsonObj(prtRowId) {
-	return $.cm({ClassName: "web.DHCBillCommon", MethodName: "GetClsPropValById", clsName: "User.DHCINVPRT", id: prtRowId}, false);
+/**
+* 2022-07-18
+* ZhYW
+* å¤–æ¥å±æ˜¾ç¤ºæ”¶è´¹ä¿¡æ¯
+*/
+function screenDisplayPrice(prtRowIdStr) {
+    var url = "dhcbill.scrdisplayprice.csp?prtRowIdStr=" + prtRowIdStr;
+	var w = 1024;
+	var h = 768;
+	var features = "toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,top=0,width=" + w + ",height=" + h + ",left=" + screen.width + ",screenindex=1,singlescreendisable=1";
+	websys_createWindow(url, "SecondScreenPage", features);
+}
+
+/**
+* 2023-02-20
+* ZhYW
+* åˆ¤æ–­éœ€ç»“ç®—åŒ»å˜±å½“å‰åº“å­˜æ˜¯å¦è¶³å¤Ÿ
+*/
+function isStockEnoughAdmOrd(admStr, unBillOrdStr) {
+   return $.m({ClassName: "web.DHCOPCashier", MethodName: "IsStockEnoughAdmOrd", admStr: admStr, unBillOrdStr: unBillOrdStr, hospId: PUBLIC_CONSTANT.SESSION.HOSPID}, false);
+}
+
+/**
+* 2023-03-17
+* ZhYW
+* å–å®‰å…¨ç»„ä¸ç»“ç®—ç”¨æˆ·å¯¹ç…§çš„é…ç½®å€¼
+*/
+function getGrupContFootUser() {
+   return $.m({ClassName: "web.DHCOPCashier", MethodName: "GetGrupContFootUser", groupId: PUBLIC_CONSTANT.SESSION.GROUPID, hospId: PUBLIC_CONSTANT.SESSION.HOSPID}, false);
+}
+
+/**
+ * 2023-04-17
+ * LUANZH
+ * å–æ˜¯å¦æ…¢ç—…
+ */
+function isChronicAdm(adm) {
+	return ($.m({ClassName: "BILL.Interface.Inside.Invoke", MethodName: "IsChronicAdm", adm: adm}, false) == "Y");
 }

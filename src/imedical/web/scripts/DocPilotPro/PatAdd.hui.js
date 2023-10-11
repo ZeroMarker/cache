@@ -52,6 +52,7 @@ function SetPatInfo(PatNo){
 function InitEvent(){
 	$("#BFind").click(FindClick);
 	$("#BSave").click(SaveClick);
+	$("#BEdit").click(EditClick);
 	$("#FindPilotPro").keydown(FindPilotProKeydown);
 	$("#FindPilotPro").change(FindPilotProChange);
 }
@@ -97,7 +98,7 @@ function InitPilotProListTabDataGrid(){
 		{field:'PPRowId',hidden:true,title:''},
 		{field:'PPRName',title:'项目名称',width:407,
 			styler: function(value,row,index){
-					return 'border-right:0;';
+					//return 'border-right:0;';
 			}
 
 		}
@@ -139,12 +140,13 @@ function InitPilotProPatListTabDataGrid(){
 	var Columns=[[ 
 		//{field:'Check',title:'选择',checkbox:'true'},
 		{field:'PatDr',hidden:true,title:'',},
+		{field:'PPPID',title:'PPPID',width:100},
 		{field:'PatName',title:'患者姓名',width:200},
 		{field:'PPPAgreementDate',title:'签署知情同意书日期',width:200},
 		{field:'PPPReMark',title:'备注',width:200},
 		{field:'PPPScreenNo',title:'筛选号',width:200,
 			styler: function(value,row,index){
-					return 'border-right:0;';
+					//return 'border-right:0;';
 			}
 		}
     ]]
@@ -153,7 +155,7 @@ function InitPilotProPatListTabDataGrid(){
 		border : false,
 		striped : true,
 		singleSelect : true,
-		fitColumns : false,
+		fitColumns : true,
 		autoRowHeight : false,
 		rownumbers:true,
 		pagination : false,  
@@ -232,6 +234,8 @@ function PilotProListTabDataGridLoad(){
 	var myArray=$.cm({
 		ClassName:"web.PilotProject.DHCDocPilotProject",
 		MethodName:"GetProjectStrSelf",
+		InHosp:session['LOGON.HOSPID'],
+		UserID:session['LOGON.USERID'],
 		dataType:"text"
 	},false);
 	for (var i=0;i<myArray.split("^").length;i++){
@@ -300,6 +304,7 @@ function PilotProPatListTabDataGridLoad(PPRowId){
 				PatName: rtnArrayTemp[1],
 				PPPScreenNo:PPPScreenNo,
 				PPPReMark:PPPReMark,
+				PPPID:rtnArrayTemp[2],
 				PPPAgreementDate:PPPAgreementDate,
 				Check:""
 			});
@@ -314,6 +319,47 @@ function ClearPilotProPatListTab(){
         PageLogicObj.m_PilotProPatListTabDataGrid.datagrid('deleteRow',index);
     }
 }
+function EditClick() {
+	var row=PageLogicObj.m_PilotProPatListTabDataGrid.datagrid("getSelected");
+	if ((!row)||(row.length==0)){
+		$.messager.alert("提示","请选择患者!","warning");
+		return false;
+	}
+	if (row.PPPID=="") {
+		$.messager.alert("提示","请选择患者!","warning");
+		return false;
+	}
+	var PPRowId = row.PPPID.split("||")[0];
+	var myrtn=CheckBeforeSave();
+	if (myrtn==false) return;
+	
+	var AgreementDate=$("#AgreementDate").datebox("getValue");
+	var ScreenNo = $.trim($("#ScreenNo").val());
+	var PPPReMark = $.trim($("#PPPReMark").val())
+	var InPara=ScreenNo+String.fromCharCode(1)+AgreementDate+String.fromCharCode(1)+PPPReMark
+	$.cm({
+		ClassName:"web.PilotProject.Extend.PatAdd",
+		MethodName:"UpdatePat",
+		dataType:"text",
+		PPPID:row.PPPID,
+		InPara:InPara
+	},function(rtn){
+		var myArray=rtn.split("^");
+		if (myArray[0]=='0'){
+			$.messager.alert("提示","保存成功!","info",function(){
+				PilotProPatListTabDataGridLoad(PPRowId);
+				$("#AgreementDate").datebox("setValue","");
+				$("#PPPReMark").val("");
+				$("#ScreenNo").val("");
+			});
+		}else{
+			$.messager.alert("提示","错误: "+myArray[1]);
+		}
+	}); 
+		
+	
+}
+
 function SaveClick(){
 	var row=PageLogicObj.m_PilotProListTabDataGrid.datagrid("getSelected");
 	if ((!row)||(row.length==0)){
@@ -366,7 +412,8 @@ function SaveDataToServer(PPRowId){
 			myProPatInfo:myProPatInfo,
 			PPRowId:PPRowId,
 			USERID:session['LOGON.USERID'],
-			PPPAPPPADr:""
+			PPPAPPPADr:"",
+			InHosp:session['LOGON.HOSPID']
 		},function(rtn){
 			var myArray=rtn.split("^");
 			if (myArray[0]=='0'){

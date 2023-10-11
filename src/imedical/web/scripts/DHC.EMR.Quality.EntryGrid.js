@@ -1,3 +1,5 @@
+﻿var StructID=""
+var SelectDec=""
 $(function(){
 	
 	InitEntryDataList();
@@ -5,7 +7,36 @@ $(function(){
 	InitQualityScore();
 	getQualityResult();
 	getQualiytStruct();
+	// '病案编目'调用此页面时,不使用'自动缺陷查看'和'确认本次环节质控无缺陷'按钮
+	if (action=="BSF")
+	{
+		$('#btnProblem').hide()
+		$('#btnSureZeroError').hide()
+	}
+
+	if(action=="O"){
+		$('#btnProblem').hide()
+	}
+	
+	var btnText={
+		O:"确认本次门诊质控无缺陷",
+		A:"确认本次环节质控无缺陷",
+		D:"确认本次终末质控无缺陷"
+	}
+	
+	$('#btnSureZeroError').linkbutton({text:btnText[action]})
+	$('#entryGridLayout').layout('panel', 'center').panel({
+		onResize: function () { 
+			 $.parser.parse('#entryGridLayout');
+		}
+	});
 });
+//var locName=''
+//var DocName=''
+var sumPoints=0
+var KSsumPoints=0
+var recordGrade=''
+var KSrecordGrade=''
 var eprPatient= new Object();
 eprPatient.admStatus = "";
 eprPatient.startDate = "";
@@ -23,11 +54,15 @@ eprPatient.specialAdm = "";
 				
 				var ed = $('#dgStructEntry').datagrid('getEditor', {index:editIndex,field:'LocID'});
 				var LocName = $(ed.target).combobox('getText');
+				var LocID = $(ed.target).combobox('getValue');
 				$('#dgStructEntry').datagrid('getRows')[editIndex]['LocName'] = LocName;
+				$('#dgStructEntry').datagrid('getRows')[editIndex]['LocID'] = LocID;
 				
 				var ef = $('#dgStructEntry').datagrid('getEditor', {index:editIndex,field:'EmployeeID'});
 				var EmployeeName = $(ef.target).combobox('getText');
+				var EmployeeID = $(ef.target).combobox('getValue');
 				$('#dgStructEntry').datagrid('getRows')[editIndex]['EmployeeName'] = EmployeeName;
+				$('#dgStructEntry').datagrid('getRows')[editIndex]['EmployeeID'] = EmployeeID;
 			
 				$('#dgStructEntry').datagrid('endEdit', editIndex);
 				
@@ -40,6 +75,7 @@ eprPatient.specialAdm = "";
 		}
 		
 function onClickRow(index){
+		nowIndex = index;
 		if (editIndex!=index) {
 			if (endEditing()){
 				$('#dgStructEntry').datagrid('selectRow', index).datagrid('beginEdit', index);
@@ -55,7 +91,7 @@ function InitCurQualityResult()
 	$('#dgCurQualityResult').datagrid({
 			toolbar:[{
 				iconCls: 'icon-cancel ',
-				text:'ɾ��',
+				text:'删除',
 				handler:function(){
 					deleteQualityResult();
 				}
@@ -63,39 +99,43 @@ function InitCurQualityResult()
 			
 		})
 }
-//��ȡ�ʿؽṹ���ʿ���Ŀ
+//获取质控结构下质控条目
 //hky 2018-08-17
 function InitEntryDataList()
 {
+	var SelectDec="";
 	$('#dgStructEntry').datagrid({ 
 			fitColumns: true,
 			method: 'post',
-            loadMsg: '������......',
+            loadMsg: '加载中......',
 			autoRowHeight: true,
 			url:'../EPRservice.Quality.Ajax.GetEntryGrid.cls',
 			queryParams: {
             	RuleID:RuleID,
             	EpisodeID:EpisodeID,
-            	StructID:""
+            	StructID:"",
+            	Action:action,
+				SelectDec:SelectDec
             },
             bbar: [{
 				iconCls: 'icon-edit',
-				handler: function(){alert('�༭��ť')}
+				handler: function(){alert('编辑按钮')}
 				},'-',{
 				iconCls: 'icon-help',
-				handler: function(){alert('������ť')}
+				handler: function(){alert('帮助按钮')}
 			}],
 			onClickRow: onClickRow,
 			//singleSelect:true,
 			//idField:'rowID', 
 			//rownumbers:true,
+			nowrap:false,
 			fit:true,
 			columns:[[
 				{ field: 'ck', checkbox: true },
-				{field:'EntryDesc',title:'������Ŀ',width:170,align:'center'},
-				{field:'EntryScore',title:'�۷�',width:50,align:'center'},
-				{field:'Number',title:'ȱ����',width:60,align:'center', editor:{type:'numberbox'}},
-				{field:'LocID',title:'���ο���',width:110,align:'center', 
+				{field:'EntryDesc',title:'评估条目',width:170,align:'left'},
+				{field:'EntryScore',title:'扣分',width:50,align:'left'},
+				{field:'Number',title:'缺陷数',width:60,align:'left', editor:{type:'numberbox'}},
+				{field:'LocID',title:'责任科室',width:110,align:'left', 
 					formatter:function(v,r){
 						return r.LocName
 					},
@@ -105,12 +145,18 @@ function InitEntryDataList()
 							valueField:'LocID',
 							textField:'LocName',
 							method:'get',
-							url:'../web.eprajax.usercopypastepower.cls?Action=GetTransCTLocID&EpisodeID='+EpisodeID
+							url:'../web.eprajax.usercopypastepower.cls?Action=GetTransCTLocID&EpisodeID='+EpisodeID,
+							onChange: function(nowLocID,befLocID)
+							{
+								var objEmployee = $('#dgStructEntry').datagrid('getEditor', {index:nowIndex,field:'EmployeeID'});
+								$(objEmployee.target).combobox('setValue',"");
+								$(objEmployee.target).combobox('reload','../web.eprajax.usercopypastepower.cls?Action=GetTransEmployee&EpisodeID='+EpisodeID+'&LocId='+nowLocID)	
+							}
 							
 						}
 					}
 				},
-				{field:'EmployeeID',title:'����ҽʦ',width:90,align:'center', 
+				{field:'EmployeeID',title:'责任医师',width:90,align:'left', 
 					formatter:function(v,r){
 						return r.EmployeeName
 					},
@@ -120,21 +166,42 @@ function InitEntryDataList()
 							valueField:'EmployeeID',
 							textField:'EmployeeName',
 							method:'get',
-							url:'../web.eprajax.usercopypastepower.cls?Action=GetTransEmployee&EpisodeID='+EpisodeID
+							url:'../web.eprajax.usercopypastepower.cls?Action=GetTransEmployee&EpisodeID='+EpisodeID+'&LocId='+PaLocID
 							
 						}
 					}
 				},
-				{field:'Remark',title:'��ע',width:80,editor:'text',align:'center'},
-				{field:'btnsave',title:'����',width:100,align:'center',editor:{type:'linkbutton',options:{iconCls:'icon-save',handler:function(){endEditing();}}}}	
+				{field:'Remark',title:'备注',width:80,editor:'text',align:'left'},
+				//{field:'btnsave',title:'保存',width:100,align:'left',editor:{type:'linkbutton',options:{iconCls:'icon-save',handler:function(){endEditing();}}}}	
 				
 				
-			]]
+			]],
+			rowStyler:function(rowIndex, rowData){   
+       			if (rowData.QualityFlag == "1"){   
+           			if(HISUIStyleCode!== 'lite'){
+	       				return 'background-color:#FFF2E9;color:#FF793E'; 
+	       			}else{
+		       			return 'background-color:#FFFAE8;color:#FFA200';
+		       		}    
+       			}   
+   			},
 	  }); 
+	  
 	  $.parser.parse('#dgStructEntry');
 
 }
-//��ȡ�ʿؽṹ
+$('#selectDec').searchbox({
+    searcher:function(value,name){
+    	var SelectDec=value;
+        var StructID = $("#comboQualiytStruct").combobox('getValue');
+        endEditing();		
+        $('#dgStructEntry').datagrid('options').queryParams = { RuleID:RuleID,EpisodeID:EpisodeID,StructID:StructID,SelectDec:SelectDec}
+		$('#dgStructEntry').datagrid('reload');	
+		
+    },
+   
+});
+//获取质控结构
 //hky 2018-08-17
 function getQualiytStruct()
 {
@@ -142,26 +209,28 @@ function getQualiytStruct()
 	({
 		valueField:'StructID',  
 	    textField:'StructName',
-		url:'../EPRservice.Quality.Ajax.GetStructResult.cls?Action=action',
+		url:'../EPRservice.Quality.Ajax.GetStructResult.cls?Action='+action,
 		onSelect: function() {
-			var StructID = $("#comboQualiytStruct").combobox('getValue');
-            $('#dgStructEntry').datagrid('options').queryParams = { RuleID:RuleID,EpisodeID:EpisodeID,StructID:StructID}
+			StructID = $("#comboQualiytStruct").combobox('getValue');
+			var SelectDec="";
+            $('#dgStructEntry').datagrid('options').queryParams = { RuleID:RuleID,EpisodeID:EpisodeID,StructID:StructID,SelectDec:SelectDec,Action:action}
 			$('#dgStructEntry').datagrid('reload');	
-			//���¼������ݺ��ٴγ�ʼ���༭dg������
+			//重新加载数据后，再次初始化编辑dg行数据
             editIndex=undefined;
         }
     });
 }
 
-//��ȡ�����ʿؽ���б�����
+//获取病历质控结果列表数据
 //hky 2018-08-17
 function getQualityResult()
 {
-	
+	if(action=="A")
+	{
 	$('#dgCurQualityResult').datagrid({ 
-			fitColumns: true,
+			fitColumns: false,
 			method: 'post',
-            loadMsg: '������......',
+            loadMsg: '加载中......',
 			autoRowHeight: true,
 			url:'../EPRservice.Quality.Ajax.GetQualityResult.cls',
 			queryParams: {
@@ -172,34 +241,138 @@ function getQualityResult()
                 Action:action
             },
 			fit:true,
+			nowrap:false,
 			columns:[[
 				{field: 'ck', checkbox: true },
-				{field:'EntryName',title:'������Ŀ',width:100,align:'center'},
-				{field:'ResumeText',title:'��ע',width:100,align:'center'},
-				{field:'SignUserName',title:'�ʿ�Ա',width:100,align:'center'},
-				{field:'ReportDate',title:'�ʿ�����',width:100,align:'center'},
-				{field:'CtLocName',title:'���ο���',width:100,align:'center'},
-				{field:'EmployeeName',title:'������',width:100,align:'center'}
+				{field:'EntryName',title:'评估项目',width:100,align:'left',showTip:true,tipWidth:200,tipTrackMouse:true,tipPosition:'right'},
+				{field:'ResumeText',title:'备注',width:100,align:'left',showTip:true,tipWidth:200,tipTrackMouse:true,tipPosition:'right'},
+				{field:'SignUserName',title:'质控员',width:100,align:'left'},
+				{field:'ExamCount',title:'缺陷数',width:60,align:'left'},
+				{field:'ReportDate',title:'质控日期',width:100,align:'left'},
+				{field:'CtLocName',title:'责任科室',width:100,align:'left'},
+				{field:'EmployeeName',title:'责任人',width:100,align:'left'},
+				{field:'MessageFlag',title:'消息状态',width:100,align:'left',
+				styler:function(value,row,index){
+						if(HISUIStyleCode!=='lite'){
+							if (row.MessageFlag == "未处理"){
+								return 'background-color:#FFE1E1;color:#FF5252';
+							}
+							else if (row.MessageFlag == "已修复"){
+								return 'background-color:#E0FBEB;color:#2AB66A';
+							}
+							else if (row.MessageFlag == "已处理"){
+								return 'background-color:#E0FBEB;color:#2AB66A';
+							}
+							else{
+								return 'background-color:#E2F2FF;color:#449BE2';
+     						}
+						}else{
+							if (row.MessageFlag == "未处理"){
+								return 'background-color:#FFE2E2;color:#BB0000';
+							}
+							else if (row.MessageFlag == "已修复"){
+								return 'background-color:#E9FFE3;color:#58CF00';
+							}
+							else if (row.MessageFlag == "已处理"){
+								return 'background-color:#E9FFE3;color:#58CF00';
+							}
+							else{
+         						return 'background-color:#EFF9FF;color:#339EFF';
+     						}
+						}
+				},
+				formatter:function(value){
+					return $g(value)
+				}
+				},		
+				{field:'EntryScore',title:'扣分标准',width:100,align:'left',hidden:true},
+				{field:'EntryScore',title:'科室扣分',width:100,align:'left',hidden:true},
+				{field:'BYSScore',title:'病案室扣分',width:100,align:'left',hidden:true},
+				{field:'YWKScore',title:'医务科扣分',width:100,align:'left',hidden:true},
+				{field:'Confirm',title:'消息撤回',width:120,align:'left',
+				formatter:function(value,row,index){  
+					var MessageFlag  = row.MessageFlag;
+ 					var MessageID = row.MessageID;
+   					if(MessageFlag == "未处理" ){
+     					return '<div title="撤回消息" onClick="Recall('+MessageID+')"><span class="icon-undo">&nbsp;&nbsp;&nbsp;&nbsp;</span></div>'
+     				}else{
+     					return '<div title="撤回消息"><span class="icon-arrow-le-bo-gray">&nbsp;&nbsp;&nbsp;&nbsp;</span></div>'
+	     			}
+ 				}},
 				
-			]]
+			]],
+			onLoadSuccess:function(r)
+			{
+				//locName=r.rows[0].CtLocName
+				//DocName=r.rows[0].EmployeeName
+				$("a[name='recall']").linkbutton({text:'撤回消息',plain:true}); 
+			}
 	  }); 
+	}
+	else
+	{
+	 $('#dgCurQualityResult').datagrid({ 
+			fitColumns: false,
+			method: 'post',
+            loadMsg: '加载中......',
+			autoRowHeight: true,
+			url:'../EPRservice.Quality.Ajax.GetQualityResult.cls',
+			queryParams: {
+            	RuleID:RuleID,
+                EpisodeID:EpisodeID,
+                SSGroupID:SSGroupID,
+                CTLocatID:CTLocatID,
+                Action:action
+            },
+			fit:true,
+			nowrap:false,
+			columns:[[
+				{field: 'ck', checkbox: true },
+				{field:'EntryName',title:'评估项目',width:100,align:'left',showTip:true,tipWidth:300,tipTrackMouse:true,tipPosition:'right'},
+				{field:'ResumeText',title:'备注',width:100,align:'left',showTip:true,tipWidth:300,tipTrackMouse:true,tipPosition:'right'},
+				{field:'ExamCount',title:'缺陷数',width:60,align:'left'},
+				{field:'SignUserName',title:'质控员',width:100,align:'left'},
+				{field:'ReportDate',title:'质控日期',width:100,align:'left'},
+				{field:'CtLocName',title:'责任科室',width:100,align:'left'},
+				{field:'EmployeeName',title:'责任人',width:100,align:'left'},		
+				{field:'EntryScore',title:'扣分标准',width:100,align:'left',hidden:true},
+				{field:'EntryScore',title:'科室扣分',width:100,align:'left',hidden:true},
+				{field:'BYSScore',title:'病案室扣分',width:100,align:'left',hidden:true},
+				{field:'YWKScore',title:'医务科扣分',width:100,align:'left',hidden:true}
+				
+				
+			]],
+
+			onLoadSuccess:function(r)
+			{
+				console.log(r.rows)
+				//locName=r.rows[0].CtLocName
+				//DocName=r.rows[0].EmployeeName
+			
+			}
+	  }); 	
+	}
 }
 
 
 function CommitEntryItems()
 {
+	endEditing();
 	var EntryScores = 0
 	var ChangeData = ""
-	
+	var SelectData = ""
 	//var EntryItemRows = $('#dgStructEntry').datagrid('getChecked'); 
 	var EntryItemRows = $('#dgStructEntry').datagrid('getSelections');
-	
 	if (EntryItemRows.length == 0) 
 	{	
-			$.messager.alert("��ʾ","��ѡ�������");
+			$.messager.alert("提示","请选择评分项！");
 			return;
 	}
-	$('#dgStructEntry').datagrid('clearChecked'); 
+	if (EntryItemRows[0].EmployeeName=="")
+	{
+		$.messager.alert("提示","患者入院后尚未分配主管医生，暂不能评价！");
+			return;
+	}
 	for(var i=0; i<EntryItemRows.length; i++){
     	var EntryID = EntryItemRows[i].EntryID;
     	var EmployeeName = EntryItemRows[i].EmployeeName;
@@ -210,6 +383,7 @@ function CommitEntryItems()
     	var EntryScore = EntryItemRows[i].EntryScore;
     	var Action = action
 		var EmrDocId = emrDocId
+		
 		if (ChangeData == "")
 		{
 			var ChangeData=EpisodeID + "^" + RuleID + "^" + EntryID + "^" + LocID + "^" + EmployeeID + "^" + SignUserID + "^" + Number + "^" + TriggerDate + "^" + Remark + "^" +  Action + "^" + InstanceId + "^" + EmrDocId;
@@ -219,40 +393,87 @@ function CommitEntryItems()
 			var ChangeData=ChangeData+'&'+EpisodeID + "^" + RuleID + "^" + EntryID + "^" + LocID + "^" + EmployeeID + "^" + SignUserID + "^" + Number + "^" + TriggerDate + "^" + Remark + "^" +  Action + "^" + InstanceId + "^" + EmrDocId;
 		}
 		var EntryScores = EntryScores*1+EntryScore*1
-    	
+		if (SelectData == "")
+		{
+			var SelectData=EntryID + "^"+Remark
+		}
+		else
+		{
+			var SelectData=SelectData+'&'+EntryID + "^"+Remark
+		}
+		
 	}
+	var unhasEntryInfo = CompareEntryExists(SelectData);
+	endEditing();		
+	if (unhasEntryInfo==true)
+	{
+		jQuery.ajax({
+			type: "get",
+			dataType: "text",
+			url: "../EPRservice.Quality.SaveManualResult.cls",
+			async: true,
+			data: {
+				"ChangeData":ChangeData,
+			},
+			success: function(d) {
+				$.messager.alert("提示","评分成功！");
+
+				if (Action =="D")
+				{
+					SetDisManualFlag();
+				}
+				if (Action =="A")
+				{
+					SetAdmManualFlag();
+				}
+
+				if (Action=="CQC"||Action=="IA"||Action=="AO")
+				{
+					SetCrossManualFlag(Action)
+				}
+
+				$('#dgCurQualityResult').datagrid('reload');
+				InitQualityScore();
+				//parent.patientListTableReload();
+				
+			},
+			error : function(d) { 
+				$.messager.alert("提示","评分失败！");
+			}
+		});
+		$('#dgStructEntry').datagrid('options').queryParams = { RuleID:RuleID,EpisodeID:EpisodeID,StructID:StructID,SelectDec:SelectDec,Action:action}
+	    $('#dgStructEntry').datagrid('reload');	
+		$('#dgStructEntry').datagrid('clearChecked'); 
+	}
+	 
 	
+}
+
+function SetCrossManualFlag(Status){
 	jQuery.ajax({
 		type: "get",
 		dataType: "text",
-		url: "../EPRservice.Quality.SaveManualResult.cls",
+		url: "../web.eprajax.EPRSetManualFlag.cls",
 		async: true,
 		data: {
-			"ChangeData":ChangeData,
+			EpisodeID:EpisodeID,
+			SignUserID:SignUserID,
+			Action:"Set",
+			Status:Status,
+			"SSGroupID":SSGroupID
 		},
-		success: function(d) {
-			$.messager.alert("��ʾ","���ֳɹ���");
-			var Scoretext = $("#score").html();
-			var newScoretext =Scoretext - EntryScores;
-			$('#score').html(newScoretext);
-			if (Action =="D")
+		success: function(response) {
+			var ret = response.responseText;
+			if (ret ==1 )
 			{
-				SetDisManualFlag();
+				$.messager.alert("提示","确认成功！");
+				window.parent.parent.doSearch();
+				return;
 			}
-			if (Action =="A")
-			{
-				SetAdmManualFlag();
-			}
-			$('#dgCurQualityResult').datagrid('reload');
-			//parent.patientListTableReload();
-		},
-		error : function(d) { 
-			$.messager.alert("��ʾ","����ʧ�ܣ�");
 		}
 	});
-	
-	
 }
+
 
 
 function SetDisManualFlag() {
@@ -272,7 +493,7 @@ function SetDisManualFlag() {
 			var ret = response.responseText;
 			if (ret ==1 )
 			{
-				$.messager.alert("��ʾ","ȷ�ϳɹ���");
+				$.messager.alert("提示","确认成功！");
 				window.parent.parent.doSearch();
 				return;
 			}
@@ -299,7 +520,7 @@ function SetOutManualFlag() {
 			var ret = response.responseText;
 			if (ret ==1 )
 			{
-				$.messager.alert("��ʾ","ȷ�ϳɹ���");
+				$.messager.alert("提示","确认成功！");
 				window.parent.parent.doSearch();
 				return;
 			}
@@ -307,7 +528,7 @@ function SetOutManualFlag() {
 	});
 			
 }
-//����ѡ���ʿ���Ŀ��Ϣ
+//发送选中质控条目消息
 //hky 20180817
 function SendMsg()
 {
@@ -316,7 +537,7 @@ function SendMsg()
 	
 	if (QualityResultItemRows.length == 0) 
 	{	
-			$.messager.alert("��ʾ","��ѡ������Ŀ��");
+			$.messager.alert("提示","请选择发送条目！");
 			return;
 	}
 	
@@ -337,46 +558,47 @@ function SendMsg()
 		var EntryID = QualityResultItemRows[i].EntryID;
 		var ExamCount = QualityResultItemRows[i].ExamCount;
 		var ResultDetailID = QualityResultItemRows[i].ResultDetailID;
-		
-		
+		var Path = QualityResultItemRows[i].Path;
+		var CtLocDR = QualityResultItemRows[i].LocID;
 		if (SendDatas == "")
 		{
 			
-			var SendDatas = EntryName +  "^" + EpisodeID + "^" + EmployeeID + "^" + "" + "^" + SignUserID + "^" + InstanceId + "^" + EmrDocId + "^" + EntryScore + "^" + ExamCount + "^" + EntryID + "^" + ResumeText + "^" + ResultDetailID;
+			var SendDatas = EntryName +  "^" + EpisodeID + "^" + EmployeeID + "^" + "" + "^" + SignUserID + "^" + InstanceId + "^" + EmrDocId + "^" + EntryScore + "^" + ExamCount + "^" + EntryID + "^" + ResumeText + "^" + ResultDetailID+ "^" +Path+"^"+CtLocDR;
 		}
 		else
 		{
 			
-			var SendDatas = SendDatas + "&" + EntryName + "^" + EpisodeID + "^" + EmployeeID + "^" + "" + "^" + SignUserID + "^" + InstanceId + "^" + EmrDocId + "^" + EntryScore + "^" + ExamCount + "^" + EntryID + "^" + ResumeText + "^" + ResultDetailID;
+			var SendDatas = SendDatas + "&" + EntryName + "^" + EpisodeID + "^" + EmployeeID + "^" + "" + "^" + SignUserID + "^" + InstanceId + "^" + EmrDocId + "^" + EntryScore + "^" + ExamCount + "^" + EntryID + "^" + ResumeText + "^" + ResultDetailID+ "^" +Path+"^"+CtLocDR;
 		}
     	
 	}
 	
 	jQuery.ajax({
-		type: "get",
+		type: "post",
 		dataType: "text",
 		url: "../EPRservice.Quality.SaveManualResult.cls",
 		async: true,
 		data: {
 			"SendDatas":SendDatas,
+			"Action":Action
 		},
 		success: function(d) {
 			if (d == 0 )
 			{
-				$.messager.alert("��ʾ","����ʧ�ܣ�");
+				$.messager.alert("提示","质控消息已发送过不能重复发送！");
 				return;
 			}
 			else if (d == 1)
 			{
 				$('#dgCurQualityResult').datagrid('reload');
-				$.messager.alert("��ʾ","���ͳɹ���");
+				$.messager.alert("提示","发送成功！");
 				//Ext.getCmp('MessageGrid1').store.reload();
 			}
 		}
 	});
 		
 }
-//ȷ���ʿ���ȱ��
+//确认质控无缺陷
 //hky 20180817
 function SureZeroError()
 {
@@ -397,7 +619,7 @@ function SureZeroError()
 			
 			if (d ==1 )
 			{
-				$.messager.alert("��ʾ","ȷ�ϳɹ���");
+				$.messager.alert("提示","确认成功！");
 			}
 		}
 	});
@@ -425,7 +647,7 @@ function SetAdmManualFlag() {
 			
 			if (d ==1 )
 			{
-				$.messager.alert("��ʾ","ȷ�ϳɹ���");
+				$.messager.alert("提示","确认成功！");
 			}
 		}
 	});		
@@ -441,7 +663,7 @@ function deleteQualityResult()
 	
 	if (QualityResultItemRows.length == 0) 
 	{	
-			$.messager.alert("��ʾ","��ѡ��ɾ���");
+			$.messager.alert("提示","请选择删除项！");
 			return;
 	}
 	
@@ -454,8 +676,21 @@ function deleteQualityResult()
 		var UserID = QualityResultItemRows[i].UserID;
 		if ((SignUserID!=UserID)&&(SSGroupID==KSSGroup))
 		{
-			$.messager.alert("��ʾ","��Ȩɾ�������ʿ�ҽ����Ŀ��");
+			$.messager.alert("提示","无权删除其他质控医生条目！");
 			return;
+		}
+		if ((QualityResultItemRows[i].MessageFlag!="未发送消息")&&(QualityResultItemRows[i].MessageFlag!="已撤回"))
+		{
+			if (QualityResultItemRows[i].MessageFlag=="未处理")
+			{
+				$.messager.alert("提示","已发送消息的质控条目不允许删除，请先撤回消息！");
+				return;
+			}
+			else
+			{
+				$.messager.alert("提示","质控条目医生已读，不允许删除！");
+				return;
+			}
 		}
 		var ResultID = QualityResultItemRows[i].ResultID;
 		var DetailID = QualityResultItemRows[i].DetailID;
@@ -470,7 +705,7 @@ function deleteQualityResult()
 		}
 		var EntryScores = EntryScores*1+EntryScore*1
 	}
-
+	endEditing();		
    jQuery.ajax({
 		type: "get",
 		dataType: "text",
@@ -482,21 +717,18 @@ function deleteQualityResult()
 		success: function(d) {
 			if (d == 0 )
 			{
-				$.messager.alert("��ʾ","ɾ��ʧ�ܣ�");
+				$.messager.alert("提示","删除失败！");
 				return;
 			}
 			else if (d == 1)
 			{
-				$.messager.alert("��ʾ","ɾ���ɹ���");
-				var Scoretext = $("#score").html();
-			    var newScoretext =Scoretext*1+EntryScores*1;
-			    if (newScoretext > 100) 
-			    {	
-			    	newScoretext=100;
-			    }
-			    
-			    $('#score').html(newScoretext);
+				$.messager.alert("提示","删除成功！");
+				InitQualityScore();
+			
 				$('#dgCurQualityResult').datagrid('reload');
+				$('#dgStructEntry').datagrid('options').queryParams = { RuleID:RuleID,EpisodeID:EpisodeID,StructID:StructID,SelectDec:SelectDec,Action:action}
+	            $('#dgStructEntry').datagrid('reload');	
+				//$('#dgStructEntry').datagrid('reload');
 			}
 		}
 	});
@@ -507,11 +739,12 @@ function InitQualityScore()
 	jQuery.ajax({
 		type: "get",
 		dataType: "text",
-		url: "../EPRservice.Quality.Ajax.GetQualityResult.cls",
+		url: "../EPRservice.Quality.Ajax.GetQualityScore.cls",
 		async: true,
 		data: {
 			"EpisodeID":EpisodeID,
-			"Action":"GetScore"
+			"Action":action,
+			"ARuleIDs":RuleID
 		},
 		success: function(d) {
 			var newScoretext =d;
@@ -523,33 +756,63 @@ function InitQualityScore()
 
 function GetProblemList()
 {
-	console.log("action:"+action);
 	var Action = action
-	
+	var url='dhc.emr.quality.qualityresult.csp?EpisodeID=' + EpisodeID + "&RuleID=2" +"&CTLocatID="+CTLocatID+"&userID="+SignUserID+"&Action=GetQualityResult&pageType=KESY"
+	if('undefined' != typeof websys_getMWToken)
+    {
+		url += "&MWToken="+websys_getMWToken()
+	}
+	var content='<iframe id="iframeResultList" frameborder="0" scrolling="no" src='+url+' style="width:1180px; height:440px; display:block;padding:10px;"></iframe>'
 	if (Action=="A")
 	{
-		parent.createModalDialog("QualityResultDialogA","�Զ��ʿ��б���Ժ","600","800","iframeQualityResultA","<iframe id='iframeQualityResultA' scrolling='auto' frameborder='0' src='dhc.emr.quality.qualityresult.csp?EpisodeID=" + EpisodeID + "&ARuleID=2" +"' style='width:600px; height:800px; display:block;'></iframe>","","")
+		var title='';
+		if(HISUIStyleCode!=='lite'){
+			title='<div class="icon-w-paper" style="width:16px;height:16px;display:inline-block;vertical-align: middle;margin-right:5px;"></div>自动质控列表在院'	
+		}else{
+			title='自动质控列表在院'	
+		}
+
+		//websys_showModal({url:url,title:'自动质控列表在院',width:1200,height:700});
+		if (pilotView>=0)
+		{
+			//websys_showModal({url:url,title:'自动质控列表在院',width:1200,height:700});
+			parent.parent.createModalDialog("resultList",title,"1200","500","iframeResultList",content,"","")
+		}else{
+			parent.createModalDialog("resultList",title,"1200","500","iframeResultList",content,"","")
+		}
 	}
-	else if (Action=="D")
+	else if (Action=="D"||Action=="CQC")
 	{
-		parent.createModalDialog("QualityResultDialogD","�Զ��ʿ��б���Ժ","600","800","iframeQualityResultD","<iframe id='iframeQualityResultD' scrolling='auto' frameborder='0' src='dhc.emr.quality.qualityresult.csp?EpisodeID=" + EpisodeID + "&ARuleID=2" +"' style='width:600px; height:800px; display:block;'></iframe>","","")
-	
+		//websys_showModal({url:url,title:'自动质控列表出院',width:1200,height:700});
+		var title='';
+		if(HISUIStyleCode!=='lite'){
+			title='<div class="icon-w-paper" style="width:16px;height:16px;display:inline-block;vertical-align: middle;margin-right:5px;"></div>自动质控列表出院'	
+		}else{
+			title='自动质控列表出院'	
+		}
+
+		if (pilotView>=0)
+		{
+			parent.parent.createModalDialog("resultList",title,"1200","500","iframeResultList",content,"","")
+		}else{
+			parent.createModalDialog("resultList",title,"1200","500","iframeResultList",content,"","")
+		}
 	}
-		
+			
 }
 
 function setRevision(status)
 {
 	/*
-	������õĲ������������emr.record.fullquality.csp
-	��Ҫ�ѿ�������ҳǩiframe��id�ĳ�"frameBrowsepageoutPat" 
-	�������������
+	如果调用的病历浏览界面是emr.record.fullquality.csp
+	需要把看病历的页签iframe的id改成"frameBrowsepageoutPat" 
+	用下面这个代码
 	if (window.parent.Left.frames["frameBrowsepageoutPat"].frames["frameBrowsepage"].frames["frameBrowseEPRorEMR"].frames["frameBrowseContent"])
 	{
 		window.parent.Left.frames["frameBrowsepageoutPat"].frames["frameBrowsepage"].frames["frameBrowseEPRorEMR"].frames["frameBrowseContent"].setViewRevision(status);
 	}
 	*/
-	//������õĲ������������emr.record.quality.csp�������
+	//如果调用的病历浏览界面是emr.record.quality.csp用下面的
 	/*if (window.frames["frameBrowsepage"].frames["frameBrowseEPRorEMR"].frames["frameBrowseContent"])
 	{
 		window.frames["frameBrowsepage"].frames["frameBrowseEPRorEMR"].frames["frameBrowseContent"].setViewRevision(status);
@@ -557,22 +820,198 @@ function setRevision(status)
 		
 	}*/
 	
-	parent.setViewRevisionFlag(status)
+	if (pilotView>=0)
+	{
+		parent.parent.setViewRevisionFlag(status)
+	}else{
+		parent.setViewRevisionFlag(status)
+	}
 }
 
 function changeRevisionStatus()
 {
- 	if (document.getElementById("revision").innerText == "��ʾ����")
+ 	if (document.getElementById("revision").innerText == $g("显示留痕"))
  	{
-	 	document.getElementById("revision").innerText = "�ر�����";
+	 	document.getElementById("revision").innerText = $g("关闭留痕");
 	 	setRevision("true");
 	}
 	else
 	{
-		document.getElementById("revision").innerText = "��ʾ����";
+		document.getElementById("revision").innerText = $g("显示留痕");
 		setRevision("false");
 	}
 	document.getElementById("revision").style.height="30px"
 	document.getElementById("revision").font="30px"
 	document.getElementById("revision").style.lineHeight="30px"
+}
+var tableData=""
+// strPrintName 打印任务名
+// printDatagrid 要打印的datagrid
+function CreateFormPage(strPrintName, printDatagrid) {
+    var tableString = '<table cellspacing="0" class="pb">';
+    //var frozenColumns = printDatagrid.datagrid("options").frozenColumns;  // 得到frozenColumns对象
+    
+    
+    var columns = printDatagrid.datagrid("options").columns;   // 得到columns对象
+    var nameList = '';
+    // 载入title
+    if (typeof columns != 'undefined' && columns != '') {
+        $(columns).each(function (index) {
+            tableString += '<tr>';
+         
+            for (var i = 0; i < columns[index].length; ++i) {
+	            
+                if (columns[index][i].hidden) {
+                    tableString += '<th width="' + columns[index][i].width + '"';
+                    //alert(columns[index][i].width)
+                    if (typeof columns[index][i].rowspan != 'undefined' && columns[index][i].rowspan > 1) {
+                        tableString += ' rowspan="' + columns[index][i].rowspan + '"';
+                    }
+                    if (typeof columns[index][i].colspan != 'undefined' && columns[index][i].colspan > 1) {
+                        tableString += ' colspan="' + columns[index][i].colspan + '"';
+                    }
+                    if (typeof columns[index][i].field != 'undefined') {
+                        nameList += ',{"f":"' + columns[index][i].field + '", "a":"' + columns[index][i].align + '"}';
+                    }
+                    tableString += '>' + columns[index][i].title + '</th>';
+       
+                }
+            }
+            tableString += '</tr>';
+        });
+    }
+    // 载入内容
+    var rows = printDatagrid.datagrid("getRows"); // 这段代码是获取当前页的所有行
+    var nl = eval('([' + nameList.substring(1) + '])');
+    for (var i = 0; i < rows.length; ++i) {
+        tableString += '<tr>';
+        $(nl).each(function (j) {
+            var e = nl[j].f.lastIndexOf('_0');
+            tableString += '<td';
+            if (nl[j].a != 'undefined' && nl[j].a != '') {
+                tableString += ' style="text-align:' + nl[j].a + ';"';
+            }
+            tableString += '>';
+            if (e + 2 == nl[j].f.length) {
+                tableString += rows[i][nl[j].f.substring(0, e)];
+            }
+            else{
+	            //医务科、病案室未设置评分
+	            if (typeof rows[i][nl[j].f]=='undefined')
+	            {
+		            rows[i][nl[j].f]=''
+		        }
+		        
+	            tableString += rows[i][nl[j].f];
+            }
+            if (j==2)
+            {
+	            if(rows[i][nl[j].f]!="")
+	            {
+		            sumPoints=sumPoints+parseInt(rows[i][nl[j].f])
+		        }   
+	        }
+	        
+	        if (j==1)
+            {
+	            if(rows[i][nl[j].f]!="")
+	            {
+		            KSsumPoints=sumPoints+parseInt(rows[i][nl[j].f])
+		        }   
+	        }
+            tableString += '</td>';
+        });
+        tableString += '</tr>';
+    }
+    
+    if (sumPoints<=10){
+		recordGrade='甲级'
+	}
+	if (sumPoints>=11&&sumPoints<=25)
+	{
+		recordGrade='乙级'
+	}
+	if (sumPoints>25){
+		recordGrade='丙级'
+	}
+	
+	if (KSsumPoints<=10){
+		KSrecordGrade='甲级'
+	}
+	if (KSsumPoints>=11&&KSsumPoints<=25)
+	{
+		KSrecordGrade='乙级'
+	}
+	if (KSsumPoints>25){
+		KSrecordGrade='丙级'
+	}
+    
+	tableString+='<tr style="text-align:center">'+ '\n<td>合计得分'+ '</td>'+'<td>'+(100-KSsumPoints)+ '</td>'+'<td>'+(100-sumPoints)+'</td>'+'<td>'+ '</td></tr>' 
+	tableString+='<tr style="text-align:center">'+ '\n<td>病历等级'+ '</td>'+'<td>'+KSrecordGrade+ '</td>'+'<td>'+ recordGrade+'</td>'+'<td>'+ '</td></tr>' 
+	tableString+='<tr style="text-align:center">'+ '\n<td>病历检查者签名'+ '</td>'+'<td>'+ '</td>'+'<td>'+ '</td>'+'<td>'+ '</td></tr>' 
+	tableString+='<tr style="text-align:center">'+ '\n<td>优缺点'+ '</td>'+'<td>'+ '</td>'+'<td>'+ '</td>'+'<td>'+ '</td></tr>' 
+	
+    tableString += '</table>';
+   	tableData=tableString
+    window.open(
+    "../csp/dhc.emr.quality.preprint.csp?patientName="+patientName+'&MedicareNo='+MedicareNo+'&BedNo='+BedNo+'&DocName='+EmployeeDocName+'&locName='+EmployeeLocName,
+    "预览","width="+window.screen.width*0.6+",height="+window.screen.height*0.6);
+}
+
+function getTableData(){
+	if (tableData==""){
+		return "表格加载失败!"
+	}
+	return tableData
+}
+
+function CompareEntryExists(SelectData)
+{
+	var ret=false;
+	jQuery.ajax({
+		type: "get",
+		dataType: "text",
+		url: "../EPRservice.Quality.CompareEntryExistsFlag.cls",
+		async: false,
+		data: {
+			    "RuleID":RuleID,
+                "EpisodeID":EpisodeID,
+                "SSGroupID":SSGroupID,
+                "CTLocatID":CTLocatID,
+                "Action":action,
+			    "SelectData":SelectData,
+			
+		},
+		success: function(d) {
+			if (d == 0 )
+			{
+				ret = true;
+			}
+			else 
+			{
+				$.messager.alert("提示","【"+d+"】已评价,"+"\r\n如需多次评价请修改备注内容!");
+				
+			}
+		}
+	});
+	
+	return ret;
+	
+}
+
+function Recall(MessageID) {
+	    var ret = ""
+	    var obj = $.ajax({
+	        url: "../web.eprajax.AjaxEPRMessage.cls?Action=recallmmessage&MessageIDS=" + MessageID + "&UserID=" + SignUserID,
+	        type: 'post',
+	        async: false
+	    });
+	    var ret = obj.responseText;
+	    if ((ret != "" || (ret != null)) && (ret != "-1")) {
+		    $.messager.alert("提示","撤回成功！");
+	        $('#dgCurQualityResult').datagrid('reload');
+	    }
+	    else {
+	        $.messager.alert('错误', '撤回失败！', 'error');
+	    }	
 }

@@ -2,10 +2,12 @@
 //不良事件报表设计
 //zhouxin
 //2019-07-15
+var ClassArr = [{ "value": "web.DHCADVModelFun", "text": "web.DHCADVModelFun" }];
 $(function(){ 
 	
 	initTree();
 	initDataGrid();
+	initCombobox();
 	document.onkeydown = function(e){ 
     var ev = document.all ? window.event : e;
     	if(ev.keyCode==13) {
@@ -29,7 +31,13 @@ function initTree(){
 						if(radioFlag==1){
 							$HUI.radio("input[name='"+key+"'][type=radio][value='"+data[key]+"']").setValue(true);
 						}else{
-							$("#"+key).val(data[key])
+							if(key=="class"){
+								$("#class").combobox('setValue',data[key]);
+							}else if(key=="func"){
+								$("#func").combobox('setValue',data[key]);
+							}else{
+								$("#"+key).val(data[key]);
+							}
 						}
 					}
 					$("#attrKeyWord").html("<li style='list-style: none'><a>"+node.text+"</a></li>")
@@ -74,12 +82,21 @@ function initDataGrid(){
 		rownumbers:true
 	});	
 }
-
-
-
-
-
-
+/// 2021-05-14 cy 绑定数据源
+function initCombobox(){
+	// 函数类名称
+	$('#class').combobox({
+		data:ClassArr,
+		onSelect: function(rec){  
+			var classname=rec.value; 
+			// 函数方法名称
+		    $('#func').combobox({
+				url:'dhcapp.broker.csp?ClassName=web.DHCADVModel&MethodName=QueryMethodCombo&ClsName='+classname
+			});   
+		} 	  
+	}); 
+	
+}
 
 function checkIsRadio(key){
 	var radioFlag=0
@@ -135,7 +152,18 @@ function saveModelAttr(){
 			var val=$(this).val();
 			par.push(id+String.fromCharCode(1)+val);
 	})
-	
+	var classname= $("#class").combobox('getValue');
+	if(classname==undefined){
+		$.messager.alert("提示","请选择函数类名称！");
+		return false;
+	}
+	par.push("class"+String.fromCharCode(1)+classname);
+	var funcname= $("#func").combobox('getValue');
+	if(funcname==undefined){
+		$.messager.alert("提示","请选择函数方法名称！");
+		return false;
+	}
+	par.push("func"+String.fromCharCode(1)+funcname);
 	var displayRate= $("input[name='displayRate']:checked").val();
 	if(displayRate==undefined){
 		$.messager.alert("提示","请选择显示比率！");

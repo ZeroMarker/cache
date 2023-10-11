@@ -4,9 +4,33 @@ function InitPathVariatListWin(){
 	obj.RecRowID = "";
     $.parser.parse(); // 解析整个页面 
 	
+	//增加院区配置 add by yankai20210803
+	var DefHospOID = $cm({ClassName:"DHCMA.Util.IO.MultiHospInterface",MethodName:"GetDefaultHosp",aTableName:"DHCMA_CPW_BT.PathVariat",aHospID:session['LOGON.HOSPID'],dataType:'text'},false);
+	var SessionStr=session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
+	obj.cboSSHosp = Common_ComboToSSHosp3("cboSSHosp","","","DHCMA_CPW_BT.PathVariat",SessionStr,"");
+	$('#cboSSHosp').combobox({
+  		onSelect: function(title,index){
+	  		obj.gridPathVariat.load({
+				ClassName:"DHCMA.CPW.BTS.PathVariatSrv",
+				QueryName:"QryPathVariat",
+				aHospID: $("#cboSSHosp").combobox('getValue')
+			});
+	  	}
+	 })
+	var retMultiHospCfg = $m({
+		ClassName:"DHCMA.Util.BT.Config",
+		MethodName:"GetValueByCode",
+		aCode:"SYSIsOpenMultiHospMode",
+		aHospID:session['DHCMA.HOSPID']
+	},false);
+	if(retMultiHospCfg!="Y" && retMultiHospCfg!="1"){
+		$("#divHosp").hide();
+		$("#btnAuthHosp").hide();	
+	}
+	
 	obj.gridPathVariat = $HUI.datagrid("#gridPathVariat",{
 		fit: true,
-		title: "变异字典维护",
+		//title: "变异字典维护",
 		iconCls:"icon-resort",
 		headerCls:'panel-header-gray',
 		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
@@ -19,7 +43,8 @@ function InitPathVariatListWin(){
 	    url:$URL,
 	    queryParams:{
 		    ClassName:"DHCMA.CPW.BTS.PathVariatSrv",
-			QueryName:"QryPathVariat"
+			QueryName:"QryPathVariat",
+			aHospID: $("#cboSSHosp").combobox('getValue')
 	    },
 		columns:[[
 			{field:'BTID',title:'ID',width:'50'},
@@ -48,6 +73,7 @@ function InitPathVariatListWin(){
 			$("#btnAdd").linkbutton("enable");
 			$("#btnEdit").linkbutton("disable");
 			$("#btnDelete").linkbutton("disable");
+			$("#btnAuthHosp").linkbutton("disable");
 		}
 	});
 	
@@ -62,8 +88,13 @@ function InitPathVariatListWin(){
 		onBeforeLoad: function (param) {
 			param.ClassName = 'DHCMA.CPW.BTS.PathVarCatSrv';
 			param.QueryName = 'QryPathVarCat';
-			param.ResultSetType = 'array'
+			param.aHospID = $("#cboSSHosp").combobox('getValue');
+			param.ResultSetType = 'array';
+		},
+		onShowPanel:function(){
+			$(this).combobox('reload');	
 		}
+		
 	});
 	//变异原因类型
 	obj.cboKind= $HUI.combobox('#cboTypeDr', {              
@@ -77,7 +108,11 @@ function InitPathVariatListWin(){
 			param.ClassName = 'DHCMA.Util.BTS.DictionarySrv';
 			param.QueryName = 'QryDictByType';
 			param.ResultSetType = 'array';
-			param.aTypeCode = 'CPWVariatType'
+			param.aTypeCode = 'CPWVariatType';
+			param.aHospID = $("#cboSSHosp").combobox('getValue');
+		},
+		onShowPanel:function(){
+			$(this).combobox('reload');	
 		}
 	});
 	obj.AdmType = $HUI.combobox('#cboAdmType', {

@@ -119,6 +119,7 @@ function SelectRowHandler()	{
 		var SubmitLink='Submitz'+selectrow;				
 		if (eSrc.id==SubmitLink)	{
 			var lnk = "websys.default.csp?WEBSYS.TCOMPONENT=DHCDocOrderBBExt&OrderID="+OEItemID+"&ArcimDesc="+ArcimDesc
+			if(typeof websys_writeMWToken=='function') lnk=websys_writeMWToken(lnk);
 	        win=open(lnk,"DHCDocOrderMedLeft","status=1,scrollbars=1,top=150,left=400,width=700,height=400");
 			return false;
 			}

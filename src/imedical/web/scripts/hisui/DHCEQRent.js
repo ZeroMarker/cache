@@ -51,8 +51,7 @@ function hideButton(status)
 		hiddenObj("BAudit",1);
 		hiddenObj("BSubmit",1); 
 		hiddenObj("BUpdate",1);
-		hiddenObj("BDelete",1);	
-		
+		hiddenObj("BDelete",1);
 	}
 	
 }
@@ -939,12 +938,16 @@ function BAddAffix_Change()
 //modify by wl 2019-11-23 WL0040 PrintFlag 已被用,改为ERPrintFlag
 function BEquipRentPrint_Clicked()
 {
-	var RowID=GetElementValue("RowID");
+	// MZY0106	2168796		2021-12-15
+	BEquipRentPrint_Chrome();
+	
+	/*var RowID=GetElementValue("RowID");
 	if (RowID=="") return;
 	var ERPrintFlag = GetElementValue("ERPrintFlag");	 //打印方式标志位 excel：0  润乾:1   
 	var PreviewRptFlag = GetElementValue("PreviewRptFlag"); //润乾预览标志 不预览 :0  预览 :1
 	var HOSPDESC = GetElementValue("GetHospitalDesc");
 	var filename = ""
+	
 	//Excel打印方式
 	if(ERPrintFlag==0)  
 	{
@@ -958,7 +961,7 @@ function BEquipRentPrint_Clicked()
 		    fileName="{DHCEQEquipRentPrint.raq(RowID="+RowID
 		    +";HOSPDESC="+HOSPDESC
 		    +";USERNAME="+curUserName
-		    +")}";	
+		    +")}";
 	        DHCCPM_RQDirectPrint(fileName);		
 		}
 		
@@ -969,20 +972,23 @@ function BEquipRentPrint_Clicked()
 		    +"&USERNAME="+curUserName	   
 			DHCCPM_RQPrint(fileName);	
 		}
-	}	
+	}*/
 }
 //add by zx 2016-07-04 
 //接收设备记录打印
 //modify by wl 2019-12-18 WL0040增加润乾打印方式
 function BRentPrint_Clicked()
-{ 
-	var RowID=GetElementValue("RowID");
+{
+	// MZY0106	2168796		2021-12-15
+	BRentPrint_Chrome();
+	
+	/*var RowID=GetElementValue("RowID");
 	if (RowID=="") return;
 	var ERPrintFlag = GetElementValue("ERPrintFlag");	 //打印方式标志位 excel：0  润乾:1   
 	var PreviewRptFlag = GetElementValue("PreviewRptFlag"); //润乾预览标志 不预览 :0  预览 :1
 	var HOSPDESC = GetElementValue("GetHospitalDesc");
 	var fileName = "";
-		//Excel打印方式
+	//Excel打印方式
 	if(ERPrintFlag==0)  
 	{
 		BRentPrint(RowID);
@@ -1006,8 +1012,7 @@ function BRentPrint_Clicked()
 		    +"&USERNAME="+curUserName	   
 			DHCCPM_RQPrint(fileName);	
 		}
-	}	
-	
+	}*/
 }
 function BRentPrint()
 {
@@ -1114,6 +1119,113 @@ function strToDate(str) {
 	}
 	var date = year+"年"+month+"月"+day+"日"+hour+"时"
 	return date;
+}
+// MZY0106	2168796		2021-12-15
+function BEquipRentPrint_Chrome()
+{
+	var RowID=GetElementValue("RowID");
+	if (RowID=="") return;
+	
+	var encmeth=GetElementValue("GetRepPath");
+	if (encmeth=="") return;
+	var	TemplatePath=cspRunServerMethod(encmeth);
+	var encmeth=GetElementValue("fillData");
+	if (encmeth=="") return;
+	var RentData=cspRunServerMethod(encmeth,RowID);
+	RentData=RentData.replace(/\\n/g,"\n");
+	
+	// Chrome兼容性处理
+	var Str ="(function test(x){"
+	Str +="var xlApp,xlsheet,xlBook;"
+	Str +="var Template='"+TemplatePath+"DHCEQEquipRent.xls';"
+	Str +="xlApp = new ActiveXObject('Excel.Application');"
+	Str +="xlBook = xlApp.Workbooks.Add(Template);"
+	Str +="xlsheet = xlBook.ActiveSheet;"
+	Str +="xlsheet.PageSetup.TopMargin=0;"
+	Str +="xlsheet.cells.replace('[Hospital]','"+GetElementValue("GetHospitalDesc")+"');"	// MZY0128	2581529		2022-06-23
+
+	Str +="var ListallStr='"+RentData+"';"
+	Str +="var InfoList=ListallStr.split('^');"
+	Str +="xlsheet.cells(2,3)=InfoList[0];"
+	Str +="xlsheet.cells(3,3)=InfoList[50];"
+	Str +="xlsheet.cells(3,7)=InfoList[98];"
+	Str +="xlsheet.cells(4,3)=InfoList[57];"
+	Str +="xlsheet.cells(4,5)=InfoList[96];"
+	Str +="xlsheet.cells(4,7)=InfoList[97];"
+	Str +="xlsheet.cells(14,3)=InfoList[58];"	//'"+strToDate("list[58]+' '+list[59])")+"';"	 MZY0124	2581529		2022-05-23
+	Str +="xlsheet.cells(15,3)=InfoList[70];"	//'"+strToDate("list[70]+' '+list[71])")+"';"	 MZY0124	2581529		2022-05-23
+	//Str +="if (InfoList[13]=='Y') xlsheet.cells(3,14)='Y';"
+	//var obj = new ActiveXObject("PaperSet.GetPrintInfo");
+	//var size=obj.GetPaperInfo("letter");
+	//if (0!=size) xlsheet.PageSetup.PaperSize = size;
+	Str +="xlsheet.printout;"
+	//Str +="xlBook.SaveAs('"+NewFileName+"');"
+	Str +="xlBook.Close (savechanges=false);"
+	Str +="xlApp.Quit();"
+	Str +="xlApp=null;"
+	Str +="xlsheet.Quit;"
+	Str +="xlsheet=null;"
+	Str +="return 1;}());";
+	//以上为拼接Excel打印代码为字符串
+	CmdShell.notReturn = 0;
+	var rtn = CmdShell.EvalJs(Str);
+	if (rtn.rtn==1)
+	{
+	    alert("导出完成!");
+	}
+}
+function BRentPrint_Chrome()
+{
+	var RowID=GetElementValue("RowID");
+	if (RowID=="") return;
+	
+	var encmeth=GetElementValue("GetRepPath");
+	if (encmeth=="") return;
+	var	TemplatePath=cspRunServerMethod(encmeth);
+	var encmeth=GetElementValue("fillData");
+	if (encmeth=="") return;
+	var RentData=cspRunServerMethod(encmeth,RowID);
+	RentData=RentData.replace(/\\n/g,"\n");
+	
+	// Chrome兼容性处理
+	var Str ="(function test(x){"
+	Str +="var xlApp,xlsheet,xlBook;"
+	Str +="var Template='"+TemplatePath+"DHCEQRent.xls';"
+	Str +="xlApp = new ActiveXObject('Excel.Application');"
+	Str +="xlBook = xlApp.Workbooks.Add(Template);"
+	Str +="xlsheet = xlBook.ActiveSheet;"
+	Str +="xlsheet.PageSetup.TopMargin=0;"
+	Str +="xlsheet.cells.replace('[Hospital]','"+GetElementValue("GetHospitalDesc")+"');"	// MZY0128	2581529		2022-06-23
+	Str +="var ListallStr='"+RentData+"';"
+	Str +="var InfoList=ListallStr.split('^');"
+	Str +="xlsheet.cells(2,9)='№ '+InfoList[0];"
+	Str +="xlsheet.cells(3,4)=InfoList[50];"
+	Str +="xlsheet.cells(3,10)=InfoList[46];"
+	Str +="xlsheet.cells(4,10)=InfoList[58];"	// MZY0124	2581529		2022-05-23
+	Str +="xlsheet.cells(5,4)=InfoList[57];"
+	Str +="xlsheet.cells(5,10)=InfoList[56];"
+	Str +="xlsheet.cells(6,10)=InfoList[80];"
+	Str +="xlsheet.cells(16,5)=InfoList[57];"
+	Str +="xlsheet.cells(16,9)=InfoList[80];"
+	Str +="xlsheet.cells(19,10)='№ '+InfoList[0];"
+	//var obj = new ActiveXObject("PaperSet.GetPrintInfo");
+	//var size=obj.GetPaperInfo("letter");
+	//if (0!=size) xlsheet.PageSetup.PaperSize = size;
+	Str +="xlsheet.printout;"
+	//Str +="xlBook.SaveAs('"+NewFileName+"');"
+	Str +="xlBook.Close (savechanges=false);"
+	Str +="xlApp.Quit();"
+	Str +="xlApp=null;"
+	Str +="xlsheet.Quit;"
+	Str +="xlsheet=null;"
+	Str +="return 1;}());";
+	//以上为拼接Excel打印代码为字符串
+	CmdShell.notReturn = 0;
+	var rtn = CmdShell.EvalJs(Str);
+	if (rtn.rtn==1)
+	{
+	    alert("导出完成!");
+	}
 }
 //定义页面加载方法
 document.body.onload = BodyLoadHandler;

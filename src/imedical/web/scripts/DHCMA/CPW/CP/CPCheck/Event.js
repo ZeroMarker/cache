@@ -47,23 +47,21 @@ function InitCheckQueryWinEvent(obj){
 			}
 		});
 		
-		$('#GridCheckQuery').datagrid({
+		/* $('#GridCheckQuery').datagrid({
 			onDblClickRow: function(index,row){
-				var strUrl = "websys.csp?1=1&PatientListPanel=emr.browse.episodelist.csp&PatientListPage=emr.browse.patientlist.csp&SwitchSysPat=N&TMENU=54653&PatientID="+row['PatientID']+"&EpisodeID="+row['PaadmID'];
-				//"./emr.record.browse.patient.csp?1=1" + 
-						//	+"&PatientID=" + row['PatientID'] + "&EpisodeID=" + row['PaadmID'];
-					 websys_showModal({
-						url:strUrl,
-						title:'浏览病历',
-						iconCls:'icon-w-edit',  
-						//onBeforeClose:function(){alert('close')},
-						//dataRow:{ParamRow:obj.ItemRowData},   //？
-						originWindow:window,
-						width:1300,
-						height:600
-					});
+				var strUrl = cspUrl+"&PatientID="+row['PatientID']+"&EpisodeID="+row['PaadmID']+"&2=2";	 
+				 websys_showModal({
+					url:strUrl,
+					title:'浏览病历',
+					iconCls:'icon-w-edit',  
+					//onBeforeClose:function(){alert('close')},
+					//dataRow:{ParamRow:obj.ItemRowData},   //？
+					originWindow:window,
+					width:1300,
+					height:600
+				});
 			}
-		});
+		}); */
 
 	}
 	$('#btnExport').on('click',function(){
@@ -85,7 +83,7 @@ function InitCheckQueryWinEvent(obj){
 		
 			if (rows>0) {
 		   		//ExportCPWGridByCls(obj.GridCheckQuery,'临床路径审核表');
-		   		$('#GridCheckQuery').datagrid('toExcel','临床路径审核表.xls');
+		   		$('#GridCheckQuery').datagrid('toExcel','不入径/出径查询.xls');
 			}else {
 				$.messager.alert("确认", "无数据记录,不允许导出", 'info');
 			}
@@ -122,9 +120,9 @@ function InitCheckQueryWinEvent(obj){
 			aStatus: Common_GetValue('chkStatus'),
 			aLocID:Common_GetValue('cboLoc'),
 			aHospID:Common_GetValue('cboSSHosp'),
-			aNotIn:$("#NotInPath").checkbox('getValue')? '1':'',
-			page:1,
-			rows:999
+			aNotIn:$("#NotInPath").checkbox('getValue')? '1':''
+			//page:1,
+			//rows:999
 		},function(rs){
 			$('#GridCheckQuery').datagrid({loadFilter:pagerFilter}).datagrid('loadData', rs);				
 		});	

@@ -8,13 +8,13 @@ Ext.onReady(function(){
 	
 	var code=new Ext.form.TextField({
 		id:'code',
-		fieldLabel:'代码',
+		fieldLabel:$g('代码'),
 		anchor:'90%'
 	});
 
 	var desc=new Ext.form.TextField({
 		id:'desc',
-		fieldLabel:'名称',
+		fieldLabel:$g('名称'),
 		anchor:'90%'
 	});
 	
@@ -22,12 +22,12 @@ Ext.onReady(function(){
 		id:'activeStore',
 		autoDestroy: true,
 		fields:['rowid','description'],
-		data:[['Y','已激活'],['N','未激活']]
+		data:[['Y',$g('已激活')],['N',$g('未激活')]]
 	})
 	
 	var active=new Ext.form.ComboBox({
 		id:'active',
-		fieldLabel:'激活标志',
+		fieldLabel:$g('激活标志'),
 		anchor:'90%',
 		store:activeStore,
 		mode:'local',
@@ -38,7 +38,7 @@ Ext.onReady(function(){
 	
 	var SearchBT=new Ext.Toolbar.Button({
 		id:'SearchBT',
-		text:'查询',
+		text:$g('查询'),
 		height:30,
 		width:70,
 		iconCls:'page_find',
@@ -49,7 +49,7 @@ Ext.onReady(function(){
 	
 	var SaveBT=new Ext.Toolbar.Button({
 		id:'SaveBT',
-		text:'保存',
+		text:$g('保存'),
 		height:30,
 		width:70,
 		iconCls:'page_save',
@@ -60,7 +60,7 @@ Ext.onReady(function(){
 
 	var DeleteBT=new Ext.Toolbar.Button({
 		id:'DeleteBT',
-		text:'删除',
+		text:$g('删除'),
 		height:30,
 		width:70,
 		iconCls:'page_delete',
@@ -71,7 +71,7 @@ Ext.onReady(function(){
 	
 	var AddBT=new Ext.Toolbar.Button({
 		id:'AddBT',
-		text:'新建',
+		text:$g('新建'),
 		height:30,
 		width:70,
 		iconCls:'page_add',
@@ -96,7 +96,7 @@ Ext.onReady(function(){
 	function Save(){
 		var count=gridItemGrp.getStore().getCount();
 		if(count<=0){
-			Msg.info("warning","没有需要保存的记录!");
+			Msg.info("warning",$g("没有需要保存的记录!"));
 			return;
 		}
 		
@@ -104,11 +104,11 @@ Ext.onReady(function(){
 		for(var i=0;i<count;i++){
 			var record=gridItemGrp.getStore().getAt(i);
 			if (record.get("Code")==""){
-				Msg.info("warning", "第"+(i+1)+"行代码为空!");
+				Msg.info("warning", $g("第")+(i+1)+$g("行代码为空!"));
 				return;
 			}
 			if (record.get("Desc")==""){
-				Msg.info("warning", "第"+(i+1)+"行名称为空!");
+				Msg.info("warning", $g("第")+(i+1)+$g("行名称为空!"));
 				return;
 			}
 			if(record.data.newRecord||record.dirty){
@@ -121,10 +121,10 @@ Ext.onReady(function(){
 		
 		}
 		if(listData==""){
-			Msg.info("warning","没有需要保存的记录");
+			Msg.info("warning",$g("没有需要保存的记录"));
 			return;
 		}
-		var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+		var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 		Ext.Ajax.request({
 			url:DictUrl+"locitemgrpaction.csp?actiontype=save",
 			method:'POST',
@@ -133,10 +133,10 @@ Ext.onReady(function(){
 				var jsonData=Ext.util.JSON.decode(response.responseText);
 				 mask.hide();
 				if(jsonData.success=='true'){
-					Msg.info("success","保存成功!");
+					Msg.info("success",$g("保存成功!"));
 					Query();
 				}else{
-					Msg.info("error", "保存失败,请检查记录" +jsonData.info+"代码和名称是否重复!");
+					Msg.info("error", $g("保存失败,请检查记录") +jsonData.info+$g("代码和名称是否重复!"));
 				}
 			}
 		});
@@ -146,16 +146,16 @@ Ext.onReady(function(){
 	function Delete(){
 		var cell=gridItemGrp.getSelectionModel().getSelectedCell();
 		if(cell==null){
-			Msg.info("warning","请选择需要删除的记录!");
+			Msg.info("warning",$g("请选择需要删除的记录!"));
 			return;
 		}
 		var record=gridItemGrp.getStore().getAt(cell[0]);
 		var rowid=record.get("RowId");
 		if (rowid!=""){
-			Ext.MessageBox.confirm('提示','确定要删除选定的行?',
+			Ext.MessageBox.confirm($g('提示'),$g('确定要删除选定的行?'),
 				function(btn){
 					if(btn=="yes"){
-						var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+						var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 						Ext.Ajax.request({
 							url:DictUrl+"locitemgrpaction.csp?actiontype=delete",
 							method:'POST',
@@ -164,12 +164,12 @@ Ext.onReady(function(){
 								var jsonData=Ext.util.JSON.decode(response.responseText);
 								 mask.hide();
 								if(jsonData.success=='true'){
-									Msg.info("success","删除成功!");
+									Msg.info("success",$g("删除成功!"));
 									gridStore.remove(record);
 									gridItemGrp.getView().refresh();
 									gridStore.reload();
 								}else{
-									Msg.info("error", "删除失败!" +jsonData.info);
+									Msg.info("error", $g("删除失败!") +jsonData.info);
 								}
 							}
 						});	
@@ -194,7 +194,7 @@ Ext.onReady(function(){
 	});
 	
 	var activeCheckColumn=new Ext.grid.CheckColumn({
-		       header: '激活',
+		       header: $g('激活'),
 		       dataIndex: 'Active',
 		       align:"center",
 		       width: 55
@@ -208,7 +208,7 @@ Ext.onReady(function(){
 				dataIndex:'RowId',
 				hidden:true
 			},{
-				header:'代码',
+				header:$g('代码'),
 				dataIndex:'Code',
 				width:150,
 				sortable:true,
@@ -218,7 +218,7 @@ Ext.onReady(function(){
 						'specialkey':function(field,e){
 							if(e.getKey()==Ext.EventObject.ENTER){
 								if(field.getValue()==null || field.getValue()==""){
-									Msg.info("warning", "代码不能为空!");
+									Msg.info("warning", $g("代码不能为空!"));
 									e.cancel=true;
 									return;
 								}
@@ -232,7 +232,7 @@ Ext.onReady(function(){
 					}
 				})
 			},{
-				header:'名称',
+				header:$g('名称'),
 				dataIndex:'Desc',
 				width:200,
 				sortable:true,
@@ -242,7 +242,7 @@ Ext.onReady(function(){
 						'specialkey':function(field,e){
 							if(e.getKey()==Ext.EventObject.ENTER){
 								if(field.getValue()==null || field.getValue()==""){
-									Msg.info("warning","名称不能为空!");
+									Msg.info("warning",$g("名称不能为空!"));
 									
 									e.cancel=true;
 									return;
@@ -254,7 +254,7 @@ Ext.onReady(function(){
 					}
 				})
 			},{
-				header:'备注',
+				header:$g('备注'),
 				dataIndex:'Remark',
 				width:150,
 				sortable:true,
@@ -276,14 +276,14 @@ Ext.onReady(function(){
 	var pageToolBar=new Ext.PagingToolbar({
 		id:'pageToolBar',
 		store:gridStore,
-		firstText:'第一页',
-		lastText:'最后一页',
-		nextText:'下一页',
-		prevText:'上一页',
-		refreshText:'刷新',
+		firstText:$g('第一页'),
+		lastText:$g('最后一页'),
+		nextText:$g('下一页'),
+		prevText:$g('上一页'),
+		refreshText:$g('刷新'),
 		displayInfo:true,
-		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录",
+		displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+		emptyMsg:$g("没有记录"),
 		pageSize:PageSize
 	});
 	var gridItemGrp=new Ext.grid.EditorGridPanel({
@@ -323,7 +323,7 @@ Ext.onReady(function(){
 	});
 	
 	var formPanel=new Ext.form.FormPanel({
-		title:'科室项目组维护',
+		title:$g('科室项目组维护'),
 		labelWidth:60,
 		labelAlign:'right',
 		frame:true,
@@ -332,7 +332,7 @@ Ext.onReady(function(){
 		items:[{
 			xtype:'fieldset',
 			layout:'column',
-			title:'查询条件',
+			title:$g('查询条件'),
 			defaults:{border:false},
 			style:DHCSTFormStyle.FrmPaddingV,
 			items:[{

@@ -1,101 +1,115 @@
 ﻿
-function OutReq(Fn){
-	$HUI.dialog('#OutReqWin').open();
-	$HUI.combobox('#SelReqRecLoc',{
+function OutReq(Fn) {
+	$HUI.dialog('#OutReqWin', {
+		height: gWinHeight,
+		width: gWinWidth
+	}).open();
+	$HUI.combobox('#SelReqRecLoc', {
 		url: $URL
 			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
-			+ JSON.stringify(addSessionParams({Type:'All'})),
+			+ JSON.stringify(addSessionParams({ Type: 'All' })),
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-	var SelReqHandlerParams = function(){
+	var SelReqHandlerParams = function() {
 		var ToLoc = $('#SelReqRecLoc').combobox('getValue');
-		var Obj = {StkGrpType: 'M', ToLoc: ToLoc};
+		var Obj = { StkGrpType: 'M', ToLoc: ToLoc };
 		return Obj;
-	}
+	};
 	$UI.linkbutton('#OutReqQueryBT', {
-		onClick: function(){
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#OutReqConditions');
+			ParamsObj.Status = 31;
+			ParamsObj.ToReturnFlag = 'Y';
 			var Params = JSON.stringify(ParamsObj);
-			$UI.setUrl(OutReqMasterGrid)
 			$UI.clear(OutReqMasterGrid);
+			$UI.clear(OutReqDetailGrid);
 			OutReqMasterGrid.load({
-			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
-			QueryName: 'DHCINIsTrfM',
-			Params: Params
-		});	
+				ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
+				QueryName: 'DHCINIsTrfM',
+				query2JsonStrict: 1,
+				Params: Params
+			});
 		}
 	});
-		var FrLoc = $HUI.combobox('#FrLoc',{
+	var FrLoc = $HUI.combobox('#FrLoc', {
 		url: $URL
 			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
-			+ JSON.stringify(addSessionParams({Type:'Login'})),
+			+ JSON.stringify(addSessionParams({ Type: 'Login', Element: 'FrLoc' })),
 		valueField: 'RowId',
 		textField: 'Description',
-		onSelect: function(record){
+		onSelect: function(record) {
 			var LocId = record['RowId'];
-			$('#CreateUser').combobox('clear');  
+			$('#CreateUser').combobox('clear');
 			$('#CreateUser').combobox('reload', $URL
 				+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetDeptUser&ResultSetType=Array&Params='
-				+ JSON.stringify({LocDr:LocId})
+				+ JSON.stringify({ LocDr: LocId })
 			);
 		}
 	});
 	$('#FrLoc').combobox('setValue', session['LOGON.CTLOCID']);
 	
-	var ToLoc = $HUI.combobox('#ToLoc',{
+	var ToLoc = $HUI.combobox('#ToLoc', {
 		url: $URL
 			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
-			+ JSON.stringify(addSessionParams({Type:'All'})),
+			+ JSON.stringify(addSessionParams({ Type: 'All', Element: 'ToLoc' })),
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-	//清屏
+	// 清屏
 	$UI.linkbutton('#OClearBT', {
-		onClick: function(){
+		onClick: function() {
 			$UI.clearBlock('OutReqConditions');
 			$UI.clear(OutReqMasterGrid);
 			$UI.clear(OutReqDetailGrid);
 			OutReqDefa();
-		
 		}
 	});
-	//选取
-	$UI.linkbutton('#OComBT',{
-		onClick:function(){
-			var Row=OutReqMasterGrid.getSelected()
-			if(isEmpty(Row)){
-				$UI.msg("alert",'请选择要返回的出库单!');
+	// 选取
+	$UI.linkbutton('#OComBT', {
+		onClick: function() {
+			var Row = OutReqMasterGrid.getSelected();
+			var DetailObj = OutReqDetailGrid.getSelections();
+			if (isEmpty(Row)) {
+				$UI.msg('alert', '请选择要返回的出库单!');
 				return;
 			}
-			var Params=JSON.stringify(addSessionParams({Init:Row.RowId}));
+			var DetailNewObj = [];
+			var DetailId = '';
+			for (var i = 0; i < DetailObj.length; i++) {
+				if (DetailId == '') {
+					DetailId = DetailObj[i].RowId;
+				} else {
+					DetailId = DetailId + '^' + DetailObj[i].RowId;
+				}
+			}
+			var Params = JSON.stringify(addSessionParams({ Init: Row.RowId, DetailId: DetailId }));
 			$.cm({
 				ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 				MethodName: 'jsCreateInIsTrf',
 				Params: Params
-			},function(jsonData){
-				if(jsonData.success === 0){
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
 					$UI.msg('success', jsonData.msg);
 					Fn(jsonData.rowid);
-				}else{
+				} else {
 					$UI.msg('error', jsonData.msg);
 				}
 			});
 			$UI.clear(OutReqMasterGrid);
 			$UI.clear(OutReqDetailGrid);
-			//Fn(Row.RowId)
+			// Fn(Row.RowId)
 			$HUI.dialog('#OutReqWin').close();
 		}
 	});
-	
 
-	//默认的时间
-	function OutReqDefa(){
-		var Dafult = {
-			StartDate: DateFormatter(DateAdd(new Date(),'d',-7)),
+	// 默认的时间
+	function OutReqDefa() {
+		var DefaultData = {
+			StartDate: DateFormatter(DateAdd(new Date(), 'd', -7)),
 			EndDate: DateFormatter(new Date())
 		};
-		$UI.fillBlock('#OutReqConditions', Dafult)
+		$UI.fillBlock('#OutReqConditions', DefaultData);
 	}
 
 	var OutReqMasterCm = [[
@@ -173,31 +187,34 @@ function OutReq(Fn){
 		}
 	]];
 	var OutReqMasterGrid = $UI.datagrid('#OutReqMasterGrid', {
-		url: '',
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
-			QueryName: 'DHCINIsTrfD'
+			QueryName: 'DHCINIsTrfM',
+			query2JsonStrict: 1
 		},
 		columns: OutReqMasterCm,
-		onSelect: function(index, row){
+		onSelect: function(index, row) {
 			var Init = row['RowId'];
-			var ParamsObj = {Init:Init, InitType:'T'};
+			var ParamsObj = { Init: Init, InitType: 'T', ToReturnFlag: 'Y' };
 			$UI.clear(OutReqDetailGrid);
-			$UI.setUrl(OutReqDetailGrid)
 			OutReqDetailGrid.load({
 				ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
 				QueryName: 'DHCINIsTrfD',
+				query2JsonStrict: 1,
 				Params: JSON.stringify(ParamsObj)
 			});
 		},
-		onLoadSuccess: function(data){
-			if(data.rows.length > 0){
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
 				OutReqMasterGrid.selectRow(0);
 			}
 		}
 	});
 	var OutReqDetailCm = [[
 		{
+			field: 'ck',
+			checkbox: true
+		}, {
 			title: 'RowId',
 			field: 'RowId',
 			width: 80,
@@ -223,7 +240,7 @@ function OutReq(Fn){
 			field: 'BatExp',
 			width: 200
 		}, {
-			title: '厂商',
+			title: '生产厂家',
 			field: 'ManfDesc',
 			width: 160
 		}, {
@@ -290,11 +307,12 @@ function OutReq(Fn){
 	var OutReqDetailGrid = $UI.datagrid('#OutReqDetailGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
-			QueryName: 'DHCINIsTrfD'
+			QueryName: 'DHCINIsTrfD',
+			query2JsonStrict: 1
 		},
-		columns: OutReqDetailCm
+		columns: OutReqDetailCm,
+		singleSelect: false
 	});
 	OutReqDefa();
-}﻿
-
-
+	$('#OutReqQueryBT').click();
+}

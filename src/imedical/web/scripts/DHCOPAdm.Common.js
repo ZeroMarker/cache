@@ -630,9 +630,9 @@ value£º×Ö·û´®
 function DHCC_IsTelOrMobile(telephone){ 
 	//var teleReg = /^((0\d{2,3})-)(\d{7,8})$/;
 	var teleReg1 = /^((0\d{2,3})-)(\d{7,8})$/;
-	var teleReg2 = /^((0\d{2,3}))(\d{7,8})$/;  
+	var teleReg2 = /^((0\d{2,3}) )(\d{7,8})$/;  
 	var mobileReg =/^1[3|4|5|6|7|8|9][0-9]{9}$/;
-	if (!teleReg1.test(telephone)&& !teleReg2.test(telephone) && !mobileReg.test(telephone)){  
+	if ((!teleReg1.test(telephone))&&(!teleReg2.test(telephone))&&(!mobileReg.test(telephone))){  
 		return false;  
 	}else{  
 		return true;  

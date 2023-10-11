@@ -13,7 +13,7 @@ var gGroupId=session['LOGON.GROUPID'];
 var locField = new Ext.ux.LocComboBox({
 	id:'locField',
 	name:'locField',
-	fieldLabel:'采购科室',
+	fieldLabel:$g('采购科室'),
 	//width:210,
 	listWidth:210,
 	groupId:gGroupId,
@@ -22,7 +22,7 @@ var locField = new Ext.ux.LocComboBox({
 });
 
 var INVNo = new Ext.form.TextField({
-	fieldLabel : '发票号',
+	fieldLabel : $g('发票号'),
 	id : 'INVNo',
 	name : 'INVNo',
 	anchor : '90%'
@@ -31,7 +31,7 @@ var INVNo = new Ext.form.TextField({
 });
 
 var SXNo = new Ext.form.TextField({
-	fieldLabel : '随行单号',
+	fieldLabel : $g('随行单号'),
 	id : 'SXNo',
 	name : 'SXNo',
 	anchor : '90%'
@@ -40,16 +40,16 @@ var SXNo = new Ext.form.TextField({
 });
 
 var Vendor = new Ext.ux.VendorComboBox({
-	fieldLabel : '供应商',
+	fieldLabel : $g('供应商'),
 	id : 'Vendor',
 	name : 'Vendor',
 	anchor : '90%',
-	emptyText : '供应商...'
+	emptyText : $g('供应商...')
 });
 	
 // 起始日期
 var StartDate = new Ext.ux.DateField({
-	fieldLabel : '起始日期',
+	fieldLabel : $g('起始日期'),
 	id : 'StartDate',
 	name : 'StartDate',
 	anchor : '90%',
@@ -59,7 +59,7 @@ var StartDate = new Ext.ux.DateField({
 
 // 截止日期
 var EndDate = new Ext.ux.DateField({
-	fieldLabel : '截止日期',
+	fieldLabel : $g('截止日期'),
 	id : 'EndDate',
 	name : 'EndDate',
 	anchor : '90%',
@@ -68,7 +68,7 @@ var EndDate = new Ext.ux.DateField({
 });
 
 var InciDesc = new Ext.form.TextField({
-	fieldLabel : '药品名称',
+	fieldLabel : $g('药品名称'),
 	id : 'InciDesc',
 	name : 'InciDesc',
 	anchor : '90%',
@@ -109,8 +109,8 @@ function getDrugList(record) {
 
 // 查询按钮
 var SearchBT = new Ext.Toolbar.Button({
-	text : '查询',
-	tooltip : '点击查询',
+	text : $g('查询'),
+	tooltip : $g('点击查询'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_find',
@@ -121,8 +121,8 @@ var SearchBT = new Ext.Toolbar.Button({
 
 // 清空按钮
 var ClearBT = new Ext.Toolbar.Button({
-	text : '清屏',
-	tooltip : '点击清屏',
+	text : $g('清屏'),
+	tooltip : $g('点击清屏'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_clearscreen',
@@ -133,8 +133,8 @@ var ClearBT = new Ext.Toolbar.Button({
 // 保存按钮
 var SaveBT = new Ext.Toolbar.Button({
 	id : "SaveBT",
-	text : '保存',
-	tooltip : '点击保存',
+	text : $g('保存'),
+	tooltip : $g('点击保存'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_save',
@@ -149,7 +149,7 @@ var SaveBT = new Ext.Toolbar.Button({
 function Query() {
 	var phaLoc = Ext.getCmp("locField").getValue();
 	if (phaLoc == null || phaLoc.length <= 0) {
-		Msg.info("warning", "请选择采购科室!");
+		Msg.info("warning", $g("请选择采购科室!"));
 		return;
 	}
 	MasterStore.load();
@@ -171,7 +171,10 @@ function Query() {
  * 清空方法
  */
 function clearData() {
-	Ext.getCmp("locField").setValue("");
+	//Ext.getCmp("locField").setValue("");
+	SetLogInDept(PhaDeptStore, "locField");
+	Ext.getCmp("StartDate").setValue(new Date().add(Date.DAY, - 30));
+    Ext.getCmp("EndDate").setValue(new Date());
 	Ext.getCmp("Vendor").setValue("");
 	Ext.getCmp("INVNo").setValue("");
 	Ext.getCmp("SXNo").setValue("");
@@ -197,7 +200,7 @@ function clearData() {
 function Save() {
 	var k=0
 	var rowCount = DetailGrid.getStore().getCount();
-	if(rowCount==0){Msg.info("warning","无可用保存数据!");return;}
+	if(rowCount==0){Msg.info("warning",$g("无可用保存数据!"));return;}
 	for (var i = 0; i < rowCount; i++) {
 		//alert(12)
 		var rowData = DetailStore.getAt(i);	
@@ -214,9 +217,9 @@ function Save() {
 			Ext.Ajax.request({
 				url: invURL+'?actiontype=updInv&InGrId='+ingri+'&invNo='+invNo+'&invAmt='+invAmt+'&invDate='+invDate+"&sxNo="+sxNo,
 				method : 'POST',
-				waitMsg : '处理中...',
+				waitMsg : $g('处理中...'),
 				failure: function(result,request) {
-					Msg.info("error","请检查网络连接!");
+					Msg.info("error",$g("请检查网络连接!"));
 				},
 				success: function(result,request) {
 					var jsonData = Ext.util.JSON.decode( result.responseText );
@@ -226,7 +229,7 @@ function Save() {
 					}
 					//======
 					if(k==1)
-					{Msg.info("success","保存成功!");}
+					{Msg.info("success",$g("保存成功!"));}
 					//========
 				},
 				scope: this
@@ -238,10 +241,10 @@ function Save() {
 }
 		
 function rendorPoFlag(value){
-    return value=='Y'? '是': '否';
+    return value=='Y'? $g('是'): $g('否');
 }
 function rendorCmpFlag(value){
-    return value=='Y'? '完成': '未完成';
+    return value=='Y'? $g('完成'): $g('未完成');
 }
 
 
@@ -315,37 +318,37 @@ var MasterCm = new Ext.grid.ColumnModel([new Ext.grid.RowNumberer(),
 		sortable : true,
 		hidden : true
 	},{
-		header : "供应商",
+		header : $g("供应商"),
 		dataIndex : 'vendorName',
 		width : 240,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "采购科室",
+		header : $g("采购科室"),
 		dataIndex : 'phaLoc',
 		width : 120,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "入库单号",
+		header : $g("入库单号"),
 		dataIndex : 'IngrNo',
 		width : 120,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "制单日期",
+		header : $g("制单日期"),
 		dataIndex : 'CreateDate',
 		width : 90,
 		align : 'center',
 		sortable : true
 	}, {
-		header : "制单人",
+		header : $g("制单人"),
 		dataIndex : 'CreateUser',
 		width : 50,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "审核日期",
+		header : $g("审核日期"),
 		dataIndex : 'AuditDate',
 		width : 100,
 		align : 'left',
@@ -353,7 +356,7 @@ var MasterCm = new Ext.grid.ColumnModel([new Ext.grid.RowNumberer(),
 		//,
 		//renderer:rendorPoFlag
 	}, {
-		header : "审核人",
+		header : $g("审核人"),
 		dataIndex : 'AuditUser',
 		width : 100,
 		align : 'left',
@@ -361,19 +364,19 @@ var MasterCm = new Ext.grid.ColumnModel([new Ext.grid.RowNumberer(),
 		//,
 		//renderer:rendorCmpFlag
 	}, {
-		header : "进价金额",
+		header : $g("进价金额"),
 		dataIndex : 'rpAmt',
 		width : 100,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "已付金额",
+		header : $g("已付金额"),
 		dataIndex : 'payedAmt',
 		width : 100,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "结清标志",
+		header : $g("结清标志"),
 		dataIndex : 'PayedFlag',
 		width : 100,
 		align : 'left',
@@ -385,8 +388,8 @@ var GridPagingToolbar = new Ext.PagingToolbar({
 	store:MasterStore,
 	pageSize:PageSize,
 	displayInfo:true,
-	displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-	emptyMsg:"没有记录"
+	displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+	emptyMsg:$g("没有记录")
 });
 
 var MasterGrid = new Ext.grid.GridPanel({
@@ -446,90 +449,90 @@ var DetailCm = new Ext.grid.ColumnModel([new Ext.grid.RowNumberer(),
 		sortable : true,
 		hidden : true
 	}, {
-		header : "药品Id",
+		header : $g("药品Id"),
 		dataIndex : 'IncId',
 		width : 80,
 		align : 'left',
 		sortable : true,
 		hidden : true
 	}, {
-		header : '药品代码',
+		header : $g('药品代码'),
 		dataIndex : 'IncCode',
 		width : 80,
 		align : 'left',
 		sortable : true
 	}, {
-		header : '药品名称',
+		header : $g('药品名称'),
 		dataIndex : 'IncDesc',
 		width : 180,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "规格",
+		header : $g("规格"),
 		dataIndex : 'Spec',
 		width : 80,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "厂商",
+		header : $g("厂商"),
 		dataIndex : 'Manf',
 		width : 150,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "批号",
+		header : $g("批号"),
 		dataIndex : 'BatchNo',
 		width : 100,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "效期",
+		header : $g("效期"),
 		dataIndex : 'ExpDate',
 		width : 100,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "入库数量",
+		header : $g("入库数量"),
 		dataIndex : 'Qty',
 		width : 80,
 		align : 'right',
 		sortable : true
 	}, {
-		header : "单位",
+		header : $g("单位"),
 		dataIndex : 'Uom',
 		width : 80,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "进价",
+		header : $g("进价"),
 		dataIndex : 'Rp',
 		width : 60,
 		align : 'right',
 		
 		sortable : true
 	}, {
-		header : "售价",
+		header : $g("售价"),
 		dataIndex : 'Sp',
 		width : 60,
 		align : 'right',
 		
 		sortable : true
 	}, {
-		header : "进价金额",
+		header : $g("进价金额"),
 		dataIndex : 'RpAmt',
 		width : 100,
 		align : 'right',
 		
 		sortable : true
 	}, {
-		header : "售价金额",
+		header : $g("售价金额"),
 		dataIndex : 'SpAmt',
 		width : 100,
 		align : 'right',
 		
 		sortable : true
 	}, {
-		header : "发票号",
+		header : $g("发票号"),
 		dataIndex : 'InvNo',
 		width : 80,
 		align : 'center',
@@ -543,7 +546,7 @@ var DetailCm = new Ext.grid.ColumnModel([new Ext.grid.RowNumberer(),
 					var Ingr=IngrRecord.get('RowId');
 					var flag=InvNoValidator(invNo,Ingr);
 					if(flag==false){
-						Msg.info("warning","发票号"+invNo+"存在于其他入库单中!");
+						Msg.info("warning",$g("发票号")+invNo+$g("存在于其他入库单中!"));
 						field.setValue("");
 					}
 				}
@@ -551,7 +554,7 @@ var DetailCm = new Ext.grid.ColumnModel([new Ext.grid.RowNumberer(),
 			}
 		})
 	}, {
-		header : "发票日期",
+		header : $g("发票日期"),
 		dataIndex : 'InvDate',
 		width : 100,
 		align : 'center',
@@ -562,7 +565,7 @@ var DetailCm = new Ext.grid.ColumnModel([new Ext.grid.RowNumberer(),
 		})
 		
 	}, {
-		header : "发票金额",
+		header : $g("发票金额"),
 		dataIndex : 'InvAmt',
 		width : 100,
 		align : 'right',
@@ -571,7 +574,7 @@ var DetailCm = new Ext.grid.ColumnModel([new Ext.grid.RowNumberer(),
 		editor:new Ext.form.NumberField({
 		})
 	}, {
-		header : "随行单号",
+		header : $g("随行单号"),
 		dataIndex : 'SxNo',
 		width : 80,
 		align : 'center',
@@ -584,12 +587,12 @@ var GridDetailPagingToolbar = new Ext.PagingToolbar({
 	store:DetailStore,
 	pageSize:PageSize,
 	displayInfo:true,
-	displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-	emptyMsg:"没有记录"
+	displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+	emptyMsg:$g("没有记录")
 });
 
 var DetailGrid = new Ext.grid.EditorGridPanel({
-	title : '入库单明细',
+	title : $g('入库单明细'),
 	height : 200,
 	cm : DetailCm,
 	clicksToEdit:1,
@@ -610,7 +613,7 @@ var HisListTab = new Ext.form.FormPanel({
 	tbar : [SearchBT, '-', ClearBT, '-', SaveBT],
 	items:[{
 		xtype:'fieldset',
-		title:'查询条件',
+		title:$g('查询条件'),
 		layout:'column',
 		autoHeight:true,
 		style:DHCSTFormStyle.FrmPaddingV,
@@ -655,14 +658,14 @@ Ext.onReady(function() {
 		layout : 'border',
 		items : [            // create instance immediately
             {
-                title:'发票管理',
+                title:$g('发票管理'),
                 region: 'north',
                 height: DHCSTFormStyle.FrmHeight(2), // give north and south regions a height
                 layout: 'fit', // specify layout manager for items
                 items:HisListTab
             }, {
                 region: 'center',
-                title: '入库单',			               
+                title: $g('入库单'),			               
                 layout: 'fit', // specify layout manager for items
                 items: MasterGrid       
                

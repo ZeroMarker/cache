@@ -1,19 +1,19 @@
 var INDispReqParamObj = GetAppPropValue('DHCINDISPREQM');
 
-function DefaultStDate(){
+function DefaultStDate() {
 	var Today = new Date();
 	var DefaStartDate = INDispReqParamObj.DefaStartDate;
-	if(isEmpty(DefaStartDate)){
+	if (isEmpty(DefaStartDate)) {
 		return DateFormatter(Today);
 	}
 	var StDate = DateAdd(Today, 'd', parseInt(DefaStartDate));
 	return DateFormatter(StDate);
 }
 
-function DefaultEdDate(){
+function DefaultEdDate() {
 	var Today = new Date();
 	var DefaEndDate = INDispReqParamObj.DefaEndDate;
-	if(isEmpty(DefaEndDate)){
+	if (isEmpty(DefaEndDate)) {
 		return DateFormatter(Today);
 	}
 	var EdDate = DateAdd(Today, 'd', parseInt(DefaEndDate));

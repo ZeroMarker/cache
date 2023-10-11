@@ -23,7 +23,8 @@ function InitCtlResultWin(){
 	$.form.SelectRender("cboLocation");  //渲染下拉框	
 	$("#cboWard").data("param",$.form.GetValue("cboHospital")+"^^I|E^W^1");
 	$.form.SelectRender("cboWard");  //渲染下拉框
-	$.form.SelectRender('cboInfType');	
+	$.form.SelectRender('cboInfType');
+	$.form.SelectRender('cboMakeInfType');		
 	//$.form.SelectRender('cboBacteria');	
 	$.form.SelectRender('cboMRBBact');	
    
@@ -84,6 +85,15 @@ function InitCtlResultWin(){
 					}
 				}
 			},
+			{"data": "MakeInfType", 
+				render: function ( data, type, row ) {
+					if (data!=""){
+						return '<a href="#" class="btnEdit">'+data+'</a>';
+					}else{
+						return '<a href="#" class="btnEdit">标记</a>';
+					}
+				}
+			},
 			{"data": null, 
 				render: function ( data, type, row ) {
 					return '<a href="#" class="btnLabSen">药敏结果</a>';
@@ -135,12 +145,18 @@ function InitCtlResultWin(){
 					var editHtml = data+"&nbsp&nbsp&nbsp";
 					return editHtml; 
 				}
-			}		
+			}	
+			
 		],
+		"createdRow": function ( row, data, index ) {
+			if ( data.IsByHand=="1") {
+				$('td', row).eq(6).css('background-color','#FFB5C5');
+			}
+		},
 		"columnDefs": [
 			{ 
 				"type": "date-euro", 
-				targets: [4,13,15,16,19] 	//适配日/月/年类型日期时的排序
+				targets: [4,14,16,17,20] 	//适配日/月/年类型日期时的排序
 			}
         ]
 		,"fnDrawCallback": function (oSettings) {

@@ -10,8 +10,8 @@ DHCPHA_CONSTANT.DEFAULT.PHUSER = "";
 DHCPHA_CONSTANT.DEFAULT.CYFLAG = "";
 DHCPHA_CONSTANT.URL.THIS_URL = ChangeCspPathToAll("dhcpha.outpha.outmonitor.save.csp");
 DHCPHA_CONSTANT.DEFAULT.APPTYPE = "OA";
-
-var str=tkMakeServerCall("web.DHCOutPhCommon", "GetPassProp", DHCPHA_CONSTANT.SESSION.GROUP_ROWID, DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID, DHCPHA_CONSTANT.SESSION.GUSER_ROWID);
+DHCPHA_CONSTANT.VAR.TIMER="";
+var str=tkMakeServerCall("PHA.OP.COM.Method", "GetPassProp", DHCPHA_CONSTANT.SESSION.GROUP_ROWID, DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID, DHCPHA_CONSTANT.SESSION.GUSER_ROWID);
 var strArr=str.split("^");
 DHCPHA_CONSTANT.DEFAULT.PASS =strArr[0];
 var RePassNeedCancle=strArr[1];
@@ -34,6 +34,7 @@ $(function () {
 	$("#date-end").dhcphaDateRange(daterangeoptions);
     
     InitPhaLoc();
+    InitAuditWay();
 
     InitPrescModalTab();
     InitGridPresc();
@@ -66,6 +67,13 @@ $(function () {
             return false;
         }
     })
+    $("#chk-audit").on("ifChanged",function(event){
+		var checked=$("#chk-audit").is(':checked');
+		if(checked==false){
+			$("#sel-auditway").select2('val','0')
+		}
+	});
+
     /* 表单元素事件 end*/
 
     /* 绑定按钮事件 start*/
@@ -76,88 +84,147 @@ $(function () {
     $("#btn-refuse").on("click", RefusePresc);
     $("#btn-analysis").on("click", PrescAnalyse) //处方分析
     $("#btn-readcard").on("click", BtnReadCardHandler); //读卡
+    $("#btn-autopresc").on("click", AutoAuditPresc);
     /* 绑定按钮事件 end*/
     ;
 })
+function InitAuditWay(){
+	var data = [
+		{ id: 0, text: $g("全部") },
+		{ id: 2, text: $g("人工审核") },
+		{ id: 1, text: $g("自动审核") }
+	 ];
+	var selectoption={
+	  data: data,
+      width:'8em',
+      allowClear:false,
+      minimumResultsForSearch: Infinity
+	};
+	$("#sel-auditway").dhcphaSelect(selectoption);
+	$('#sel-auditway').on('select2:select', function (event) { 
+		var auditWay=$('#sel-auditway').val();
+		if(auditWay!="0"){
+			$("#chk-audit").iCheck('check');
+		}
+	})
+		
+}
+function AutoAuditPresc(){
+ 	if ($("#chk-audit").is(':checked')){
+		dhcphaMsgBox.alert($g("自动审核，请去掉已审核勾选"));
+		return;
+	}
+	var timeStep=$('#txt-second').val();
+	var autoPrescTitle=$("#btn-autopresc")[0].textContent;
+	var htmlStr = $("#btn-autopresc" ).html();
+	if(autoPrescTitle.indexOf("自动审核")>-1){
+		$("#btn-autopresc")[0].innerHTML = htmlStr.replace("自动审核", "刷新审核中");
+		$('#chk-audit').attr('disabled','disabled');
+		$('#txt-second').attr('disabled','disabled');
+		timeStep=timeStep*1000;
+		DHCPHA_CONSTANT.VAR.TIMER = setInterval("QueryGridPresc();",timeStep);
+	}else{
+		$("#btn-autopresc")[0].innerHTML = htmlStr.replace("刷新审核中", "自动审核");
+		$("#chk-audit").removeAttr("disabled")
+		$('#txt-second').removeAttr('disabled');
+		clearTimeout(DHCPHA_CONSTANT.VAR.TIMER);
+	}
+	
+}
 window.onload = function () {
     if (LoadPatNo != "") {
         $('#txt-patno').val(LoadPatNo);
-    }
-    QueryGridPresc();
+        QueryGridPresc();
+    }else if(LoadOrdItmId!=""){
+		InitParams();
+		QueryGridPresc();
+	}else if (gDateRange!="") {
+	    setTimeout("QueryByDate()",500);
+     } 
+    
 }
+function InitParams(){
+	var retVal=tkMakeServerCall("PHA.COM.Method","GetOrdItmInfoForTipMess",LoadOrdItmId);
+    if(retVal!="{}"){
+	    var retJson=JSON.parse(retVal)
+		var ordDate=retJson.ordDate;
+		$("#date-start").data('daterangepicker').setStartDate(ordDate);
+		$("#date-start").data('daterangepicker').setEndDate(ordDate);
+	}
 
+}
 //初始化table
 function InitGridPresc() {
     var columns = [{
-            header: '合理用药',
+            header: ('合理用药'),
             index: 'druguse',
             name: 'druguse',
             width: 50,
             formatter: druguseFormatter
         },
         {
-            header: '注意项目',
+            header: ('注意项目'),
             index: 'warningmsg',
             name: 'warningmsg',
             width: 50
         },
         {
-            header: '结果',
+            header: ('结果'),
             index: 'result',
             name: 'result',
             width: 50,
             cellattr: addPassStatCellAttr
         },
         {
-            header: '登记号',
+            header: ('登记号'),
             index: 'patid',
             name: 'patid',
             width: 150
         },
         {
-            header: '姓名',
+            header: ('姓名'),
             index: 'patname',
             name: 'patname',
             width: 100
         },
         {
-            header: '性别',
+            header: ('性别'),
             index: 'patsex',
             name: 'patsex',
             width: 40
         },
         {
-            header: '年龄',
+            header: ('年龄'),
             index: 'patage',
             name: 'patage',
             width: 40
         },
         {
-            header: '身高',
+            header: ('身高'),
             index: 'path',
             name: 'path',
             width: 50
         },
         {
-            header: '体重',
+            header: ('体重'),
             index: 'patw',
             name: 'patw',
             width: 50
         },
         {
-            header: '费别',
+            header: ('费别'),
             index: 'billtype',
             name: 'billtype',
             width: 100
         },
         {
-            header: '处方号',
+            header: ('处方号'),
             index: 'prescno',
             name: 'prescno',
             width: 125
         },
         {
-            header: '诊断',
+            header: ('诊断'),
             index: 'diag',
             name: 'diag',
             width: 200,
@@ -218,6 +285,13 @@ function InitGridPresc() {
             name: 'analyseResult',
             width: 100,
             hidden: true
+        },
+        {
+            header: '前置审核结果',
+            index: 'preAdtResult',
+            name: 'preAdtResult',
+            width: 100,
+            hidden: true
         }
     ];
     var input = GetQueryParams();
@@ -253,6 +327,7 @@ function InitGridPresc() {
             PatientInfo.prescno = selrowdata.prescno;
             PatientInfo.zcyflag = selrowdata.zcyflag;
             PatientInfo.patientID = selrowdata.papmi;
+            InitErpMenu(prescno);
         },
         loadComplete: function () {
             var grid_records = $(this).getGridParam('records');
@@ -279,14 +354,14 @@ function InitGridPresc() {
 function InitGirdPrescDetail() {
     //var prescdetailWidth=$(".div_content").width();
     var columns = [{
-            header: '状态',
+            header: ('状态'),
             index: 'ordstat',
             name: 'ordstat',
             width: 100,
             cellattr: addStatCellAttr
         },
         {
-            header: '药品名称',
+            header: ('药品名称'),
             index: 'incidesc',
             name: 'incidesc',
             width: 200,
@@ -300,88 +375,88 @@ function InitGirdPrescDetail() {
             }
         },
         {
-            header: '数量',
+            header: ('数量'),
             index: 'qty',
             name: 'qty',
             width: 40
         },
         {
-            header: '单位',
+            header: ('单位'),
             index: 'uomdesc',
             name: 'uomdesc',
             width: 60
         },
         {
-            header: '剂量',
+            header: ('剂量'),
             index: 'dosage',
             name: 'dosage',
             width: 60
         },
         {
-            header: '频次',
+            header: ('频次'),
             index: 'freq',
             name: 'freq',
             width: 60
         },
         {
-            header: '规格',
+            header: ('规格'),
             index: 'spec',
             name: 'spec',
             width: 80,
             hidden: true
         },
         {
-            header: '用法',
+            header: ('用法'),
             index: 'instruc',
             name: 'instruc',
             width: 80
         },
         {
-            header: '用药疗程',
+            header: ('用药疗程'),
             index: 'dura',
             name: 'dura',
             width: 80
         },
         {
-            header: '实用疗程',
+            header: ('实用疗程'),
             index: 'realdura',
             name: 'realdura',
             width: 80,
             hidden: true
         },
         {
-            header: '剂型',
+            header: ('剂型'),
             index: 'form',
             name: 'form',
             width: 80
         },
         {
-            header: '基本药物',
+            header: ('基本药物'),
             index: 'basflag',
             name: 'basflag',
             width: 80
         },
         {
-            header: '医生',
+            header: ('医生'),
             index: 'doctor',
             name: 'doctor',
             width: 60
         },
         {
-            header: '医嘱开单日期',
+            header: ('医嘱开单日期'),
             index: 'orddate',
             name: 'orddate',
             width: 120
         },
         {
-            header: '医嘱备注',
+            header: ('医嘱备注'),
             index: 'remark',
             name: 'remark',
             width: 70,
             align: 'left'
         },
         {
-            header: '厂商',
+            header: ('厂商'),
             index: 'manf',
             name: 'manf',
             width: 150,
@@ -425,7 +500,9 @@ function InitPhaLoc() {
 }
 //查询未审核处方
 function QueryGridPresc() {
+	ClearErpMenu();
     var params = GetQueryParams();
+    console.log(params);
     $("#grid-presc").setGridParam({
         page: 1,
         datatype: 'json',
@@ -447,19 +524,24 @@ function GetQueryParams() {
         audit = true;
     }
     var patno = $("#txt-patno").val();
-    var params = daterange + "^" + phaloc + "^" + patno + "^" + audit;
+    var autoPrescTitle=$("#btn-autopresc")[0].textContent;
+    var autoAudit="N";
+    if(autoPrescTitle.indexOf("刷新审核中")>-1){
+		var autoAudit="Y";
+	}
+    var params = daterange + "^" + phaloc + "^" + patno + "^" + audit+ "^" +""+ "^" +autoAudit;
     return params;
 }
 //处方审核扩展信息modal
 function ViewPrescAddInfo() {
     var grid_records = $("#grid-presc").getGridParam('records');
     if (grid_records == 0) {
-        dhcphaMsgBox.alert("当前界面无数据!");
+        dhcphaMsgBox.alert($g("当前界面无数据!"));
         return;
     }
     var selectid = $("#grid-presc").jqGrid('getGridParam', 'selrow');
     if (selectid == null) {
-        dhcphaMsgBox.alert("请先选中需要查看的处方记录!");
+        dhcphaMsgBox.alert($g("请先选中需要查看的处方记录!"));
         return;
     }
     //$("#modal-prescinfo").find(".modal-dialog").css({height:"200px"});
@@ -469,12 +551,12 @@ function ViewPrescAddInfo() {
 function ViewPrescMonitorLog() {
     var grid_records = $("#grid-presc").getGridParam('records');
     if (grid_records == 0) {
-        dhcphaMsgBox.alert("当前界面无数据!");
+        dhcphaMsgBox.alert($g("当前界面无数据")+"!");
         return;
     }
     var selectid = $("#grid-presc").jqGrid('getGridParam', 'selrow');
     if (selectid == null) {
-        dhcphaMsgBox.alert("请先选中需要查看的处方记录!");
+        dhcphaMsgBox.alert($g("请先选中需要查看的处方记录")+"!");
         return;
     }
     var selectdata = $('#grid-presc').jqGrid('getRowData', selectid);
@@ -505,7 +587,9 @@ function InitPrescModalTab() {
             $('iframe').attr('src', ChangeCspPathToAll('dhcapp.seepatlis.csp' + '?PatientID=' + patientID + '&EpisodeID=' + adm + '&NoReaded=' + '1'));
         }
         if (tabId == "tab-eprquery") {
-            $('iframe').attr('src', ChangeCspPathToAll('emr.interface.browse.episode.csp' + '?PatientID=' + patientID + '&EpisodeID=' + adm + '&EpisodeLocID=' + session['LOGON.CTLOCID']));
+	        
+	        $('iframe').attr('src', ChangeCspPathToAll('emr.browse.manage.csp' + '?PatientID=' + patientID + '&EpisodeID=' + adm + '&EpisodeLocID=' + session['LOGON.CTLOCID']));
+            //$('iframe').attr('src', ChangeCspPathToAll('emr.interface.browse.episode.csp' + '?PatientID=' + patientID + '&EpisodeID=' + adm + '&EpisodeLocID=' + session['LOGON.CTLOCID']));
         }
         if (tabId == "tab-orderquery") {
             $('iframe').attr('src', ChangeCspPathToAll('oeorder.opbillinfo.csp' + '?EpisodeID=' + adm));
@@ -548,7 +632,7 @@ function InitPrescModalTab() {
 function PassPresc() {
     var selectids = $("#grid-presc").jqGrid('getGridParam', 'selarrrow');
     if (selectids == "") {
-        dhcphaMsgBox.alert("请先选中需要审核的记录");
+        dhcphaMsgBox.alert($g("请先选中需要审核的记录"));
         return;
     }
     var canpass = 0;
@@ -574,15 +658,15 @@ function PassPresc() {
     })
     if(RePassNeedCancle=="Y"){
 	    if (canpass == 1) {
-	        dhcphaMsgBox.alert("您选择的第" + canpassi + "条已通过,不能再次审核通过 !");
+	        dhcphaMsgBox.alert($g("您选择的第") + canpassi + $g("条已通过,不能再次审核通过")+" !");
 	        return;
 	    } else if (canpass == 2) {
-	        dhcphaMsgBox.alert("您选择的第" + canpassi + "条已拒绝,不能直接审核通过 !");
+	        dhcphaMsgBox.alert($g("您选择的第") + canpassi + $g("条已拒绝,不能直接审核通过")+" !");
 	        return;
 	    } 
     }
     if(canpass == 3) {
-        dhcphaMsgBox.alert("您选择的第" + canpassi + "条不合理并且控制等级为管制,不能直接审核通过 !");
+        dhcphaMsgBox.alert($g("您选择的第") + canpassi + $g("条不合理并且控制等级为管制,不能直接审核通过")+" !");
         return;
     }
     var orditem = "";
@@ -607,34 +691,34 @@ function PassPresc() {
 function RefusePresc() {
     var grid_records = $("#grid-prescdetail").getGridParam('records');
     if (grid_records == 0) {
-        dhcphaMsgBox.alert("处方无明细数据!");
+        dhcphaMsgBox.alert($g("处方无明细数据")+"!");
         return;
     }
     var firstrowdata = $("#grid-prescdetail").jqGrid("getRowData", 1); //获取第一行数据
     var orditm = firstrowdata.orditm;
     if (orditm == "") {
-        dhcphaMsgBox.alert("医嘱数据为空!");
+        dhcphaMsgBox.alert($g("医嘱数据为空")+"!");
         return;
     }
     var selectid = $("#grid-presc").jqGrid('getGridParam', 'selrow');
     if (selectid == "") {
-        dhcphaMsgBox.alert("请先选择需要拒绝的记录!");
+        dhcphaMsgBox.alert($g("请先选择需要拒绝的记录")+"!");
         return;
     }
     var selectdata = $('#grid-presc').jqGrid('getRowData', selectid);
     var dspstatus = selectdata.dspstatus;
     if (dspstatus.indexOf("已") >= 0) {
-        dhcphaMsgBox.alert("您选择的记录状态为:" + dspstatus + ",无法拒绝!");
+        dhcphaMsgBox.alert($g("您选择的记录状态为")+":" + dspstatus + ","+$g("无法拒绝")+"!");
         return;
     }
     var oaresult = selectdata.result;
     if(RePassNeedCancle=="Y"){
-	    if (oaresult.indexOf("拒绝") != "-1") {
-	        dhcphaMsgBox.alert("您选择的记录已经拒绝!");
+	    if (oaresult.indexOf($g("拒绝")) != "-1") {
+	        dhcphaMsgBox.alert($g("您选择的记录已经拒绝")+"!");
 	        return;
 	    }
 	    if (oaresult == "通过") {
-	        dhcphaMsgBox.alert("您选择的记录已经通过!");
+	        dhcphaMsgBox.alert($g("您选择的记录已经通过")+"!");
 	        return;
 	    }
     }
@@ -687,7 +771,7 @@ function SaveCommontResult(reasondr, input) {
 function PrescAnalyse() {
     var passType = DHCPHA_CONSTANT.DEFAULT.PASS;
     if (passType == "") {
-        dhcphaMsgBox.alert("未设置处方分析接口，请在参数设置-门诊药房-合理用药厂商中添加相应厂商");
+        dhcphaMsgBox.alert($g("未设置处方分析接口，请在参数设置-门诊药房-合理用药企业中添加相应企业"));
         return;
     }
     if (passType == "DHC") {
@@ -727,16 +811,16 @@ function CheckPermission() {
             var permissionmsg = "",
                 permissioninfo = "";
             if (retdata.phloc == "") {
-                permissionmsg = "药房科室:" + defaultLocDesc;
-                permissioninfo = "尚未在门诊药房人员代码维护!"
+                permissionmsg = $g("药房科室")+":" + defaultLocDesc;
+                permissioninfo = $g("尚未在门诊药房科室配置的人员权限页签中维护")+"!"
             } else {
-                permissionmsg = "工号:" + DHCPHA_CONSTANT.SESSION.GUSER_CODE + "　　姓名:" + DHCPHA_CONSTANT.SESSION.GUSER_NAME;
+                permissionmsg = $g("工号")+":" + DHCPHA_CONSTANT.SESSION.GUSER_CODE + "　　"+$g("姓名")+":" + DHCPHA_CONSTANT.SESSION.GUSER_NAME;
                 if (retdata.phuser == "") {
-                    permissioninfo = "尚未在门诊药房人员代码维护!"
+                    permissioninfo = $g("尚未在门诊药房科室配置的人员权限页签中维护")+"!"
                 } else if (retdata.phnouse == "Y") {
-                    permissioninfo = "门诊药房人员代码维护中已设置为无效!"
+                    permissioninfo = $g("门诊药房科室配置的人员权限页签中已设置为无效")+"!"
                 } else if (retdata.phaudit != "Y") {
-                    permissioninfo = "门诊药房人员代码维护中未设置审核权限!"
+                    permissioninfo = $g("门诊药房科室配置的人员权限页签中未设置审核权限")+"!"
                 }
             }
             if (permissioninfo != "") {
@@ -754,6 +838,19 @@ function CheckPermission() {
                 DHCPHA_CONSTANT.DEFAULT.PHLOC = retdata.phloc;
                 DHCPHA_CONSTANT.DEFAULT.PHUSER = retdata.phuser;
                 DHCPHA_CONSTANT.DEFAULT.CYFLAG = retdata.phcy;
+                if(retdata.autoAudit=="Y"){
+                	
+                	$("#txt-second").val(retdata.waitAuditTime);
+                }else{
+	                $("#divauditway").css("display","none");
+	                
+	                $("#divwaittime").css("display","none");
+	                $("#btn-autopresc").hide();
+	            	$("#txt-second").val("");
+	            	
+	            	
+	            }
+                
             }
         },
         error: function () {}
@@ -761,11 +858,11 @@ function CheckPermission() {
 }
 
 function addPassStatCellAttr(rowId, val, rawObject, cm, rdata) {
-    if (val == "通过") {
+    if (val == $g("通过")) {
         return "class=dhcpha-record-passed";
-    } else if ((val == "拒绝") || ((val == "拒绝发药"))) {
+    } else if ((val == $g("拒绝")) || ((val == $g("拒绝发药")))) {
         return "class=dhcpha-record-refused";
-    } else if (val == "申诉") {
+    } else if (val == $g("申诉")) {
         return "class=dhcpha-record-appeal";
     } else {
         return "";
@@ -789,7 +886,7 @@ function ReadCardReturn() {
 function DrugTips() {
     var passType = DHCPHA_CONSTANT.DEFAULT.PASS;
     if (passType == "") {
-        dhcphaMsgBox.alert("未设置药典接口，请在参数设置-门诊药房-合理用药厂商中添加相应厂商");
+        dhcphaMsgBox.alert($g("未设置药典接口，请在参数设置-门诊药房-合理用药厂商中添加相应厂商"));
         return;
     }
     var $td = $(event.target).closest("td");
@@ -810,7 +907,7 @@ function DrugTips() {
         // 美康
         MKPrescTips(orditm); 
     } else if (passType == "YY") {
-		dhcphaMsgBox.alert("接口尚未开放")
+		dhcphaMsgBox.alert($g("接口尚未开放"))
 	}
 }
 //格式化列
@@ -818,6 +915,8 @@ function druguseFormatter(cellvalue, options, rowdata) {
     if (cellvalue == undefined) {
         cellvalue = "";
     }
+    var preAdtResult=rowdata.preAdtResult;
+    if((cellvalue==="")&&(preAdtResult!="")){cellvalue=preAdtResult;}
     var imageid = "";
     if (cellvalue == "0") {
         imageid = "warning0.gif";
@@ -839,7 +938,7 @@ function druguseFormatter(cellvalue, options, rowdata) {
 }
 
 function addStatCellAttr(rowId, val, rawObject, cm, rdata) {
-    if ((val.indexOf("作废") >= 0) || (val.indexOf("停止") >= 0)) {
+    if ((val.indexOf($g("作废")) >= 0) || (val.indexOf($g("停止")) >= 0)) {
         return "class=dhcpha-record-ordstop";
     } else {
         return "";
@@ -851,7 +950,7 @@ function MKPrescAnalyse() {
 
     var mainrows = $("#grid-presc").getGridParam('records');
     if (mainrows == 0) {
-        dhcphaMsgBox.alert("没有明细记录!");
+        dhcphaMsgBox.alert($g("没有明细记录!"));
         return;
     }
 
@@ -1029,7 +1128,7 @@ function HisScreenData1(prescno) {
 // 美康药典提示
 function MKPrescTips(orditm){
 	if((orditm=="")||(orditm==null)){
-	  	dhcphaMsgBox.alert("请先选择需要查看的记录!");
+	  	dhcphaMsgBox.alert($g("请先选择需要查看的记录")+"!");
 		return;
 	}
 	var ordInfoStr = tkMakeServerCall("web.DHCSTPIVADaTongInterface","GetOrderMainInfo",oeori)
@@ -1058,3 +1157,15 @@ function HisQueryData(inciCode,inciDesc) {
 } 
 
 /***********************美康相关 end  ****************************/
+
+///  链接展示时，按照日期查询
+function QueryByDate(){
+	// 消息进入
+     var stDate=gDateRange.split(",")[0];
+     stDate = FormatDateT(stDate);
+     var endDate=gDateRange.split(",")[1];
+     endDate = FormatDateT(endDate);
+     $("#date-start").data('daterangepicker').setStartDate(stDate);
+	 $("#date-start").data('daterangepicker').setEndDate(endDate);
+	 QueryGridPresc();
+}

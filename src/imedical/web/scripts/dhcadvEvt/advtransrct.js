@@ -127,13 +127,13 @@ function InitCheckRadio(){
 //初始化液体配制窗口
 function initMedModal(id){
     if(EpisodeID==""){
-	   $.messager.alert('Warning','请先选择患者就诊记录！');
+	   $.messager.alert('Warning',$g('请先选择患者就诊记录！'));
 	   return;
 	}
 	var gridTotalId=$('#TransRctDrugInfo').next().attr("id");
 	var $tr=$("#"+gridTotalId).find("ul > li >div >table >tbody").children("tr");
 	if($tr.length==0){
-	   $.messager.alert('Warning','请先点击【药品信息】里【增加】按钮添加一行！');
+	   $.messager.alert('Warning',$g('请先点击【药品信息】里【增加】按钮添加一行！'));
 	   return;	
 	}
 	GetGridMedWin(id);	 //"admnogridMed"
@@ -144,25 +144,25 @@ function GetGridMedWin(id){
 	var mycols=[[
 		{field:"orditm",title:'orditm',width:90,hidden:false},
 		{field:'phcdf',title:'phcdf',width:80,hidden:true},
-		{field:'incidesc',title:'名称',width:140},
-		{field:'genenic',title:'通用名',width:140},
-	    {field:'batno',title:'生产批号',width:70,hidden:false},
-	    {field:'staDate',title:'开始日期',width:60,hidden:true},
-	    {field:'endDate',title:'结束日期',width:60,hidden:false},
+		{field:'incidesc',title:$g('名称'),width:140},
+		{field:'genenic',title:$g('通用名'),width:140},
+	    {field:'batno',title:$g('生产批号'),width:70,hidden:false},
+	    {field:'staDate',title:$g('开始日期'),width:60,hidden:true},
+	    {field:'endDate',title:$g('结束日期'),width:60,hidden:false},
 		{field:'genenicdr',title:'genenicdr',width:80,hidden:true},
-		{field:'dosage',title:'剂量',width:60},
+		{field:'dosage',title:$g('剂量'),width:60},
 		{field:'dosuomID',title:'dosuomID',width:80,hidden:true},
-		{field:'instru',title:'用法',width:80},
+		{field:'instru',title:$g('用法'),width:80},
 		{field:'instrudr',title:'instrudr',width:80,hidden:true},
-		{field:'freq',title:'频次',width:40},//priorty
-		{field:'priorty',title:'优先级',width:60},//priorty
+		{field:'freq',title:$g('频次'),width:40},//priorty
+		{field:'priorty',title:$g('优先级'),width:60},//priorty
 		{field:'freqdr',title:'freqdr',width:80,hidden:true},
-		{field:'duration',title:'疗程',width:40},
+		{field:'duration',title:$g('疗程'),width:40},
 		{field:'durId',title:'durId',width:80,hidden:true},
-		{field:'apprdocu',title:'批准文号',width:140},
-		{field:'manf',title:'厂家',width:140},
+		{field:'apprdocu',title:$g('批准文号'),width:140},
+		{field:'manf',title:$g('厂家'),width:140},
 		{field:'manfdr',title:'manfdr',width:80,hidden:true},
-		{field:'form',title:'剂型',width:80},
+		{field:'form',title:$g('剂型'),width:80},
 		{field:'formdr',title:'formdr',width:80,hidden:true}
 	]];
 	var mydgs = {
@@ -255,7 +255,7 @@ function InitReport(recordId)
 function SaveReport(flag)
 {
 	if($('#PatName').val()==""){
-		$.messager.alert("提示:","患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！");	
+		$.messager.alert($g("提示:"),$g("患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！"));	
 		return false;
 	}
 	///保存前,对页面必填项进行检查
@@ -325,7 +325,7 @@ function checkTableRequired(){
 	
 	})
 	if(errMsg!=""){
-		$.messager.alert("提示:",errMsg);
+		$.messager.alert($g("提示:"),errMsg);
 	}
 	return errMsg;
 }

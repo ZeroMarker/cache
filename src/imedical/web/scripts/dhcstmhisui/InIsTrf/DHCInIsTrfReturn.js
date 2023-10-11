@@ -1,104 +1,120 @@
-
-var init = function(){
-	
+ï»¿var ScgTipFlag = '';
+var init = function() {
 	$UI.linkbutton('#SearchBT', {
-		onClick: function(){
+		onClick: function() {
 			FindWin(Select);
 		}
 	});
 	
-	function Select(RowId){
+	function Select(RowId) {
 		$UI.clearBlock('#Conditions');
 		$UI.clear(DetailGrid);
 		$.cm({
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 			MethodName: 'Select',
 			Init: RowId
-		}, function(jsonData){
-			$UI.fillBlock('#Conditions',jsonData);
+		}, function(jsonData) {
+			$UI.fillBlock('#Conditions', jsonData);
+			$('#InitFrLoc').combobox('setValue', jsonData.InitFrLoc.RowId);
 			SetEditDisable();
 			var InitComp = jsonData['InitComp'];
 			var InitState = jsonData['InitState'];
-			if(InitComp == "Y"){
-				if(InitState == '21'){
-					var BtnEnaleObj = {'#SaveBT':false, '#DeleteBT':false, '#CompleteBT':false, '#CancelCompBT':false};
-				}else if(InitState == '31'){
-					var BtnEnaleObj = {'#SaveBT':false, '#DeleteBT':false, '#CompleteBT':false, '#CancelCompBT':false};
-				}else{
-					var BtnEnaleObj = {'#SaveBT':false, '#DeleteBT':false, '#CompleteBT':false, '#CancelCompBT':true};
+			if (InitComp == 'Y') {
+				if (InitState == '21') {
+					var BtnEnaleObj = { '#SaveBT': false, '#DeleteBT': false, '#CompleteBT': false, '#CancelCompBT': false };
+				} else if (InitState == '31') {
+					var BtnEnaleObj = { '#SaveBT': false, '#DeleteBT': false, '#CompleteBT': false, '#CancelCompBT': false };
+				} else {
+					var BtnEnaleObj = { '#SaveBT': false, '#DeleteBT': false, '#CompleteBT': false, '#CancelCompBT': true };
 				}
-			}else{
-				var BtnEnaleObj = {'#SaveBT':true, '#DeleteBT':true, '#CompleteBT':true, '#CancelCompBT':false};
+			} else {
+				var BtnEnaleObj = { '#SaveBT': true, '#DeleteBT': true, '#CompleteBT': true, '#CancelCompBT': false };
 			}
 			ChangeButtonEnable(BtnEnaleObj);
 		});
 		
-		var ParamsObj = {Init: RowId};
+		var ParamsObj = { Init: RowId };
 		var Params = JSON.stringify(ParamsObj);
 		DetailGrid.load({
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
 			QueryName: 'DHCINIsTrfD',
+			query2JsonStrict: 1,
 			Params: Params,
-			rows:99999
+			rows: 99999,
+			totalFooter: '"InciCode":"åˆè®¡"',
+			totalFields: 'RpAmt,SpAmt'
 		});
 	}
 	
 	$UI.linkbutton('#SaveBT', {
-		onClick: function(){
+		onClick: function() {
 			var MainObj = $UI.loopBlock('#Conditions');
-			if(MainObj['InitComp'] == 'Y'){
-				$UI.msg('alert', '¸Ãµ¥¾İÒÑ¾­Íê³É,²»¿ÉÖØ¸´±£´æ!');
+			if (MainObj['InitComp'] == 'Y') {
+				$UI.msg('alert', 'è¯¥å•æ®å·²ç»å®Œæˆ,ä¸å¯é‡å¤ä¿å­˜!');
 				return;
 			}
-			if(isEmpty(MainObj['InitFrLoc'])){
-				$UI.msg('alert', '³ö¿â¿ÆÊÒ²»¿ÉÎª¿Õ!')
+			if (isEmpty(MainObj['InitFrLoc'])) {
+				$UI.msg('alert', 'å‡ºåº“ç§‘å®¤ä¸å¯ä¸ºç©º!');
 				return;
 			}
-			if(isEmpty(MainObj['InitToLoc'])){
-				$UI.msg('alert', '½ÓÊÕ¿ÆÊÒ²»¿ÉÎª¿Õ!')
+			if (isEmpty(MainObj['InitToLoc'])) {
+				$UI.msg('alert', 'æ¥æ”¶ç§‘å®¤ä¸å¯ä¸ºç©º!');
 				return;
 			}
 			MainObj['InitState'] = '10';
 			var Main = JSON.stringify(MainObj);
 			var Detail = DetailGrid.getChangesData('Inclb');
-			//ÅĞ¶Ï
-			var ifChangeMain=$UI.isChangeBlock('#Conditions');
-			if (Detail === false){	//Î´Íê³É±à¼­»òÃ÷Ï¸Îª¿Õ
+			// åˆ¤æ–­
+			var ifChangeMain = $UI.isChangeBlock('#Conditions');
+			if (Detail === false) {	// æœªå®Œæˆç¼–è¾‘æˆ–æ˜ç»†ä¸ºç©º
 				return;
 			}
-			if (!ifChangeMain && (isEmpty(Detail))){	//Ö÷µ¥ºÍÃ÷Ï¸²»±ä
-				$UI.msg("alert", "Ã»ÓĞĞèÒª±£´æµÄĞÅÏ¢!");
+			if (!ifChangeMain && (isEmpty(Detail))) {	// ä¸»å•å’Œæ˜ç»†ä¸å˜
+				$UI.msg('alert', 'æ²¡æœ‰éœ€è¦ä¿å­˜çš„ä¿¡æ¯!');
 				return;
+			}
+			var InStkTkParamObj = GetAppPropValue('DHCSTINSTKTKM');
+			if (InStkTkParamObj.AllowBusiness != 'Y') {
+				var IfFrLocExistInStkTk = tkMakeServerCall('web.DHCSTMHUI.INStkTk', 'CheckInStkTkByLoc', MainObj['InitFrLoc']);
+				if (IfFrLocExistInStkTk == 'Y') {
+					$UI.msg('alert', 'é€€åº“ç§‘å®¤å­˜åœ¨æœªå®Œæˆçš„ç›˜ç‚¹å•ä¸å…è®¸ä¿å­˜!');
+					return false;
+				}
+				var IfToLocExistInStkTk = tkMakeServerCall('web.DHCSTMHUI.INStkTk', 'CheckInStkTkByLoc', MainObj['InitToLoc']);
+				if (IfToLocExistInStkTk == 'Y') {
+					$UI.msg('alert', 'åº“æˆ¿å­˜åœ¨æœªå®Œæˆçš„ç›˜ç‚¹å•ä¸å…è®¸ä¿å­˜!');
+					return false;
+				}
 			}
 			$.cm({
 				ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 				MethodName: 'jsSave',
 				Main: Main,
 				Detail: JSON.stringify(Detail)
-			},function(jsonData){
-				if(jsonData.success === 0){
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
 					$UI.msg('success', jsonData.msg);
 					var InitId = jsonData.rowid;
 					Select(InitId);
-					if(InitParamObj['AutoPrintAfterSave'] == 'Y'){
+					if (InitParamObj['AutoPrintAfterSave'] == 'Y') {
 						PrintInIsTrfReturn(InitId, 'Y');
 					}
-				}else{
+				} else {
 					$UI.msg('error', jsonData.msg);
 				}
 			});
 		}
 	});
 	$UI.linkbutton('#CompleteBT', {
-		onClick: function(){
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			var InitId = ParamsObj['RowId'];
-			if(isEmpty(InitId)){
+			if (isEmpty(InitId)) {
 				return;
 			}
 			var InitComp = ParamsObj['InitComp'];
-			if(InitComp == 'Y'){
-				$UI.msg('alert', '¸Ãµ¥¾İÒÑÍê³É,²»¿ÉÖØ¸´²Ù×÷!');
+			if (InitComp == 'Y') {
+				$UI.msg('alert', 'è¯¥å•æ®å·²å®Œæˆ,ä¸å¯é‡å¤æ“ä½œ!');
 				return;
 			}
 			var Params = JSON.stringify(ParamsObj);
@@ -106,34 +122,34 @@ var init = function(){
 				ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 				MethodName: 'jsSetCompleted',
 				Params: Params
-			},function(jsonData){
-				if(jsonData.success === 0){
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
 					$UI.msg('success', jsonData.msg);
 					var InitId = jsonData.rowid;
-					//Select(InitId);
+					// Select(InitId);
 					$('#InitComp').checkbox('setValue', true);
-					var BtnEnaleObj = {'#SaveBT':false, '#DeleteBT':false, '#CompleteBT':false, '#CancelCompBT':true};
+					var BtnEnaleObj = { '#SaveBT': false, '#DeleteBT': false, '#CompleteBT': false, '#CancelCompBT': true };
 					ChangeButtonEnable(BtnEnaleObj);
-					//Íê³Éºó×Ô¶¯´òÓ¡ »ò Íê³Éºó×Ô¶¯³ö¿âÉóºË£¬³ö¿âÉóºËºó×Ô¶¯´òÓ¡
-					if((InitParamObj.AutoPrintAfterComp=='Y') || (InitParamObj.AutoAckOutAfterCompleted=='Y' && InitParamObj.AutoPrintAfterAckOut=='Y')){
+					// å®Œæˆåè‡ªåŠ¨æ‰“å° æˆ– å®Œæˆåè‡ªåŠ¨å‡ºåº“å®¡æ ¸ï¼Œå‡ºåº“å®¡æ ¸åè‡ªåŠ¨æ‰“å°
+					if ((InitParamObj.AutoPrintAfterComp == 'Y') || (InitParamObj.AutoAckOutAfterCompleted == 'Y' && InitParamObj.AutoPrintAfterAckOut == 'Y')) {
 						PrintInIsTrfReturn(InitId, 'Y');
 					}
-				}else{
+				} else {
 					$UI.msg('error', jsonData.msg);
 				}
 			});
 		}
 	});
 	$UI.linkbutton('#CancelCompBT', {
-		onClick: function(){
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			var InitId = ParamsObj['RowId'];
-			if(isEmpty(InitId)){
+			if (isEmpty(InitId)) {
 				return;
 			}
 			var InitComp = ParamsObj['InitComp'];
-			if(InitComp != 'Y'){
-				$UI.msg('alert', '¸Ãµ¥¾İ²»ÊÇÍê³É×´Ì¬,²»¿É²Ù×÷!');
+			if (InitComp != 'Y') {
+				$UI.msg('alert', 'è¯¥å•æ®ä¸æ˜¯å®ŒæˆçŠ¶æ€,ä¸å¯æ“ä½œ!');
 				return;
 			}
 			var Params = JSON.stringify(ParamsObj);
@@ -141,126 +157,181 @@ var init = function(){
 				ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 				MethodName: 'jsCancelComplete',
 				Params: Params
-			},function(jsonData){
-				if(jsonData.success === 0){
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
 					$UI.msg('success', jsonData.msg);
 					var InitId = jsonData.rowid;
-					//Select(InitId);
+					// Select(InitId);
 					$('#InitComp').checkbox('setValue', false);
-					var BtnEnaleObj = {'#SaveBT':true, '#DeleteBT':true, '#CompleteBT':true, '#CancelCompBT':false};
+					var BtnEnaleObj = { '#SaveBT': true, '#DeleteBT': true, '#CompleteBT': true, '#CancelCompBT': false };
 					ChangeButtonEnable(BtnEnaleObj);
-				}else{
+				} else {
 					$UI.msg('error', jsonData.msg);
 				}
 			});
 		}
 	});
 	$UI.linkbutton('#DeleteBT', {
-		onClick: function(){
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			var InitId = ParamsObj['RowId'];
-			if(isEmpty(InitId)){
+			if (isEmpty(InitId)) {
 				return;
 			}
 			var InitComp = ParamsObj['InitComp'];
-			if(InitComp == 'Y'){
-				$UI.msg('alert', '¸Ãµ¥¾İÒÑ¾­Íê³É,²»¿ÉÉ¾³ı!');
+			if (InitComp == 'Y') {
+				$UI.msg('alert', 'è¯¥å•æ®å·²ç»å®Œæˆ,ä¸å¯åˆ é™¤!');
 				return;
 			}
-			$UI.confirm('Äú½«ÒªÉ¾³ıµ¥¾İ,ÊÇ·ñ¼ÌĞø?', '', '', Delete);
+			$UI.confirm('æ‚¨å°†è¦åˆ é™¤å•æ®,æ˜¯å¦ç»§ç»­?', '', '', Delete);
 		}
 	});
-	function Delete(){
+	function Delete() {
 		var ParamsObj = $UI.loopBlock('#Conditions');
 		var Params = JSON.stringify(ParamsObj);
 		$.cm({
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 			MethodName: 'jsDelete',
 			Params: Params
-		},function(jsonData){
-			if(jsonData.success === 0){
+		}, function(jsonData) {
+			if (jsonData.success === 0) {
 				$UI.msg('success', jsonData.msg);
 				$UI.clearBlock('#Conditions');
 				$UI.clear(DetailGrid);
 				Clear();
-			}else{
+			} else {
 				$UI.msg('error', jsonData.msg);
 			}
 		});
 	}
 	
 	$UI.linkbutton('#ClearBT', {
-		onClick: function(){
+		onClick: function() {
 			Clear();
 		}
 	});
-	function Clear(){
+	function Clear() {
 		$UI.clearBlock('#Conditions');
 		$UI.clear(DetailGrid);
 		SetDefaValues();
-		var BtnEnaleObj = {'#SaveBT':false, '#DeleteBT':false, '#CompleteBT':false, '#CancelCompBT':false};
+		ScgTipFlag = '';
+		var BtnEnaleObj = { '#SaveBT': false, '#DeleteBT': false, '#CompleteBT': false, '#CancelCompBT': false };
 		ChangeButtonEnable(BtnEnaleObj);
 		SetEditEnable();
 	}
-	function SetEditDisable(){
+	function SetEditDisable() {
 		$HUI.combobox('#InitFrLoc').disable();
 		$HUI.combobox('#InitToLoc').disable();
 		$HUI.combobox('#InitScg').disable();
 	}
-	function SetEditEnable(){
+	function SetEditEnable() {
 		$HUI.combobox('#InitFrLoc').enable();
 		$HUI.combobox('#InitToLoc').enable();
 		$HUI.combobox('#InitScg').enable();
 	}
 	
 	$UI.linkbutton('#PrintBT', {
-		onClick: function(){
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			var InitId = ParamsObj['RowId'];
-			if(isEmpty(InitId)){
-				$UI.msg('alert', 'ÇëÑ¡ÔñĞèÒª´òÓ¡µÄµ¥¾İ!');
+			if (isEmpty(InitId)) {
+				$UI.msg('alert', 'è¯·é€‰æ‹©éœ€è¦æ‰“å°çš„å•æ®!');
 				return;
 			}
-			if(InitParamObj['PrintNoComplete']=="N" && $('#InitComp').checkbox('getValue') == false){
-				Msg.info('warning','²»ÔÊĞí´òÓ¡Î´Íê³ÉµÄ×ªÒÆµ¥!');
+			if (InitParamObj['PrintNoComplete'] == 'N' && $('#InitComp').checkbox('getValue') == false) {
+				$UI.msg('warning', 'ä¸å…è®¸æ‰“å°æœªå®Œæˆçš„è½¬ç§»å•!');
 				return;
 			}
 			PrintInIsTrfReturn(InitId);
 		}
 	});
 	$UI.linkbutton('#SelOutBT', {
-		onClick: function(){
+		onClick: function() {
 			OutReq(Select);
 		}
 	});
-	
-	var InitToLoc = $HUI.combobox('#InitToLoc',{
+
+	var InitFrLocParams, InitToLocParams;
+	if (InitParamObj['DefaReturnLoc'] == '0') {		// åº“æˆ¿ä½¿ç”¨
+		InitFrLocParams = JSON.stringify(addSessionParams({
+			Type: 'Trans',
+			Element: 'InitFrLoc'
+		}));
+		InitToLocParams = JSON.stringify(addSessionParams({
+			Type: 'Login',
+			Element: 'InitToLoc'
+		}));
+	} else {	// ä¸´åºŠä½¿ç”¨
+		InitFrLocParams = JSON.stringify(addSessionParams({
+			Type: 'Login',
+			Element: 'InitFrLoc',
+			LoginLocType: 2
+		}));
+		InitToLocParams = JSON.stringify(addSessionParams({
+			Type: 'Trans',
+			Element: 'InitToLoc'
+		}));
+	}
+	var InitToLoc = $HUI.combobox('#InitToLoc', {
 		url: $URL
 			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
-			+ JSON.stringify(addSessionParams({Type:'Login'})),
+			+ InitToLocParams,
 		valueField: 'RowId',
-		textField: 'Description'
+		textField: 'Description',
+		onSelect: function(record) {
+			if (InitParamObj['DefaReturnLoc'] == '0') {
+				var ToLocId = record['RowId'];
+				$('#InitFrLoc').combobox('clear');
+				$('#InitFrLoc').combobox('reload', $URL
+				+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
+				+ JSON.stringify(addSessionParams({
+					Type: 'Trans',
+					LocId: ToLocId,
+					TransLocType: 'T'
+				})));
+			}
+			var ToLoc = record['RowId'];
+			var FrLoc = $('#InitFrLoc').combobox('getValue');
+			$HUI.combotree('#InitScg').setFilterByLoc(FrLoc, ToLoc);
+		}
 	});
-	$('#InitToLoc').combobox('setValue', session['LOGON.CTLOCID']);
-	
-	var InitFrLoc = $HUI.combobox('#InitFrLoc',{
+	var InitFrLoc = $HUI.combobox('#InitFrLoc', {
 		url: $URL
-			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
-			+ JSON.stringify(addSessionParams({Type:'All'})),
+			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params=' + InitFrLocParams,
 		valueField: 'RowId',
-		textField: 'Description'
+		textField: 'Description',
+		onSelect: function(record) {
+			if (InitParamObj['DefaReturnLoc'] == '1') {
+				var FrLocId = record['RowId'];
+				$('#InitToLoc').combobox('clear');
+				$('#InitToLoc').combobox('reload', $URL
+				+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
+				+ JSON.stringify(addSessionParams({
+					Type: 'Trans',
+					LocId: FrLocId,
+					TransLocType: 'F',
+					Element: 'InitToLoc'
+				})));
+				var DefaInfo = tkMakeServerCall('web.DHCSTMHUI.DHCTransferLocConf', 'GetDefLoc', FrLocId, gGroupId);
+				var ToLocId = DefaInfo.split('^')[0], ToLocDesc = DefaInfo.split('^')[1];
+				if (ToLocId && ToLocDesc) {
+					AddComboData($('#InitToLoc'), ToLocId, ToLocDesc);
+					$('#InitToLoc').combobox('setValue', ToLocId);
+				}
+			}
+			var FrLoc = record['RowId'];
+			var ToLoc = $('#InitToLoc').combobox('getValue');
+			$HUI.combotree('#InitScg').setFilterByLoc(FrLoc, ToLoc);
+		}
 	});
 	
-	var OperateType = $HUI.combobox('#OperateType',{
-		url : $URL
+	var OperateType = $HUI.combobox('#OperateType', {
+		url: $URL
 			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetOperateType&ResultSetType=Array&Params='
-			+ JSON.stringify(addSessionParams({Type: 'OM'})),
+			+ JSON.stringify(addSessionParams({ Type: 'OM' })),
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-	
-	
-	
 	
 	var UomCombox = {
 		type: 'combobox',
@@ -268,28 +339,88 @@ var init = function(){
 			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetInciUom&ResultSetType=array',
 			valueField: 'RowId',
 			textField: 'Description',
-			required:true,
-			mode:'remote',
-			onBeforeLoad:function(param){
-				var Select = DetailGrid.getSelected();
-				if(!isEmpty(Select)){
-					param.Inci =Select.Inci;
+			required: true,
+			mode: 'remote',
+			editable: false,
+			onBeforeLoad: function(param) {
+				var Select = DetailGrid.getRows()[DetailGrid.editIndex];
+				if (!isEmpty(Select)) {
+					var Inci = Select.Inclb.split('||')[0];
+					param.Inci = Inci;
 				}
+			},
+			onSelect: function(record) {
+				var rows = DetailGrid.getRows();
+				var row = rows[DetailGrid.editIndex];
+				row.UomDesc = record.Description;
+				var NewUomid = record.RowId;
+				var OldUomid = row.UomId;
+				if (isEmpty(NewUomid) || (NewUomid == OldUomid)) {
+					return false;
+				}
+				var BUomId = row.BUomId;
+				
+				var Rp = row.Rp;
+				var InclbQty = row.InclbQty;
+				var Qty = row.Qty;
+				var Sp = row.Sp;
+				var RpAmt = row.RpAmt;
+				var SpAmt = row.SpAmt;
+				var ReqQty = row.ReqQty;
+				var InclbDirtyQty = row.InclbDirtyQty;
+				var DirtyQty = row.DirtyQty;
+				var InclbAvaQty = row.InclbAvaQty;
+				var confac = row.ConFac;
+				if (NewUomid == BUomId) { // å…¥åº“å•ä½è½¬æ¢ä¸ºåŸºæœ¬å•ä½
+					row.Rp = Number(Rp).div(confac);
+					row.Sp = Number(Sp).div(confac);
+					if (InclbQty != '') {
+						row.InclbQty = Number(InclbQty).mul(confac);
+					}
+					if (Qty != '') {
+						row.Qty = Number(Qty).mul(confac);
+					}
+					if (InclbDirtyQty != '') {
+						row.InclbDirtyQty = Number(InclbDirtyQty).mul(confac);
+					}
+					if ((DirtyQty != '') && (DirtyQty != undefined)) {
+						row.DirtyQty = Number(DirtyQty).mul(confac);
+					}
+					if (InclbAvaQty != '') {
+						row.InclbAvaQty = Number(InclbAvaQty).mul(confac);
+					}
+				} else { // åŸºæœ¬å•ä½è½¬æ¢ä¸ºå…¥åº“å•ä½
+					row.Rp = Number(Rp).mul(confac);
+					row.Sp = Number(Sp).mul(confac);
+					if (InclbQty != '') {
+						row.InclbQty = Number(InclbQty).div(confac);
+					}
+					if (Qty != '') {
+						row.Qty = Number(Qty).div(confac);
+					}
+					if (InclbDirtyQty != '') {
+						row.InclbDirtyQty = Number(InclbDirtyQty).div(confac);
+					}
+					if (DirtyQty != '') {
+						row.DirtyQty = Number(DirtyQty).div(confac);
+					}
+					if (InclbAvaQty != '') {
+						row.InclbAvaQty = Number(InclbAvaQty).div(confac);
+					}
+				}
+				row.UomId = NewUomid;
+				setTimeout(function() {
+					DetailGrid.refreshRow();
+				}, 0);
+			},
+			onShowPanel: function() {
+				$(this).combobox('reload');
 			}
-//			,
-//			onSelect:function(record){
-//				var rows =InRequestGrid.getRows();
-//				var row = rows[InRequestGrid.editIndex];
-//				row.UomDesc=record.Description;
-//				
-//			},
-//			onShowPanel:function(){
-//				$(this).combobox('reload');
-//			}
 		}
 	};
 	
-	var DetailCm = [[{
+	var DetailCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
 			saveCol: true,
@@ -301,22 +432,23 @@ var init = function(){
 			width: 80,
 			hidden: true
 		}, {
-			title: 'Îï×Ê´úÂë',
+			title: 'ç‰©èµ„ä»£ç ',
 			field: 'InciCode',
 			width: 120
 		}, {
-			title: 'Îï×ÊÃû³Æ',
+			title: 'ç‰©èµ„åç§°',
 			field: 'InciDesc',
-			jump:false,
+			jump: false,
 			editor: {
 				type: 'validatebox',
 				options: {
-					required: true
+					required: true,
+					tipPosition: 'bottom'
 				}
 			},
 			width: 180
 		}, {
-			title: '¹æ¸ñ',
+			title: 'è§„æ ¼',
 			field: 'Spec',
 			width: 80
 		}, {
@@ -326,81 +458,118 @@ var init = function(){
 			width: 80,
 			hidden: true
 		}, {
-			title: 'ÅúºÅ~Ğ§ÆÚ',
+			title: 'æ‰¹å·~æ•ˆæœŸ',
 			field: 'BatExp',
 			width: 200
 		}, {
-			title: '³§ÉÌ',
+			title: 'ç”Ÿäº§å‚å®¶',
 			field: 'ManfDesc',
 			width: 160
 		}, {
-			title: 'Åú´Î¿â´æ',
+			title: 'æ‰¹æ¬¡åº“å­˜',
 			field: 'InclbQty',
 			align: 'right',
 			width: 80
 		}, {
-			title: '³ö¿âÊıÁ¿',
+			title: 'å‡ºåº“æ•°é‡',
 			field: 'Qty',
 			saveCol: true,
 			editor: {
 				type: 'numberbox',
 				options: {
-					precision: 2
+					required: true,
+					tipPosition: 'bottom',
+					min: 0,
+					precision: GetFmtNum('FmtQTY')
 				}
 			},
 			align: 'right',
 			width: 80
 		}, {
-			title: 'µ¥Î»',
+			title: 'å•ä½',
 			field: 'UomId',
 			saveCol: true,
-			formatter: CommonFormatter(UomCombox, 'UomId','UomDesc'),
+			formatter: CommonFormatter(UomCombox, 'UomId', 'UomDesc'),
 			editor: UomCombox,
 			width: 50
 		}, {
-			title: '½ø¼Û',
+			title: 'è¿›ä»·',
 			field: 'Rp',
 			align: 'right',
 			width: 80
 		}, {
-			title: 'ÊÛ¼Û',
+			title: 'å”®ä»·',
 			field: 'Sp',
 			align: 'right',
 			width: 80
 		}, {
-			title: '½ø¼Û½ğ¶î',
+			title: 'è¿›ä»·é‡‘é¢',
 			field: 'RpAmt',
 			align: 'right',
 			width: 80
 		}, {
-			title: 'ÊÛ¼Û½ğ¶î',
+			title: 'å”®ä»·é‡‘é¢',
 			field: 'SpAmt',
 			align: 'right',
 			width: 80
 		}, {
-			title: 'Ãğ¾úÅúºÅ',
+			title: 'å›½å®¶åŒ»ä¿ç¼–ç ',
+			field: 'MatInsuCode',
+			width: 160
+		}, {
+			title: 'å›½å®¶åŒ»ä¿åç§°',
+			field: 'MatInsuDesc',
+			width: 160
+		}, {
+			title: 'ç­èŒæ‰¹å·',
 			field: 'SterilizedBat',
 			width: 160
 		}, {
-			title: 'ÇëÇóÊıÁ¿',
+			title: 'è¯·æ±‚æ•°é‡',
 			field: 'ReqQty',
 			align: 'right',
 			width: 80
 		}, {
-			title: 'ÇëÇó·½¿â´æ',
+			title: 'è¯·æ±‚æ–¹åº“å­˜',
 			field: 'ReqLocStkQty',
 			align: 'right',
 			width: 100
 		}, {
-			title: 'Õ¼ÓÃÊıÁ¿',
+			title: 'å ç”¨æ•°é‡',
 			field: 'InclbDirtyQty',
 			align: 'right',
 			width: 100
 		}, {
-			title: '¿ÉÓÃÊıÁ¿',
+			title: 'å¯ç”¨æ•°é‡',
 			field: 'InclbAvaQty',
 			align: 'right',
 			width: 100
+		}, {
+			title: 'è½¬æ¢ç³»æ•°',
+			field: 'ConFac',
+			align: 'right',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'BUomId',
+			field: 'BUomId',
+			align: 'right',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'InitiDR',
+			field: 'InitiDR',
+			align: 'InitiDR',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'å¤‡æ³¨',
+			field: 'Remark',
+			saveCol: true,
+			width: 100,
+			editor: {
+				type: 'text'
+			}
 		}
 	]];
 	
@@ -408,73 +577,105 @@ var init = function(){
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
 			QueryName: 'DHCINIsTrfD',
-			rows:99999
+			query2JsonStrict: 1,
+			rows: 99999,
+			totalFooter: '"InciCode":"åˆè®¡"',
+			totalFields: 'RpAmt,SpAmt'
 		},
 		deleteRowParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
 			MethodName: 'jsDelete'
 		},
 		columns: DetailCm,
+		checkField: 'Inclb',
 		remoteSort: false,
 		showBar: true,
+		showFooter: true,
 		showAddDelItems: true,
 		pagination: false,
-		beforeAddFn: function(){
-			if($HUI.checkbox('#InitComp').getValue()){
-				$UI.msg('alert', 'µ¥¾İÒÑÍê³É, ²»¿ÉÔö¼Ó');
+		beforeAddFn: function() {
+			if ($HUI.checkbox('#InitComp').getValue()) {
+				$UI.msg('alert', 'å•æ®å·²å®Œæˆ, ä¸å¯å¢åŠ ');
 				return false;
 			}
-			if(isEmpty($HUI.combobox('#InitFrLoc').getValue())){
-				$UI.msg('alert', 'ÍË¿â¿ÆÊÒ²»¿ÉÎª¿Õ!');
+			if (isEmpty($HUI.combobox('#InitFrLoc').getValue())) {
+				$UI.msg('alert', 'é€€åº“ç§‘å®¤ä¸å¯ä¸ºç©º!');
 				return false;
 			}
 			var OperateType = $HUI.combobox('#OperateType').getValue();
 			if (InitParamObj.OutTypeNotNull == 'Y' && isEmpty(OperateType)) {
-				$UI.msg('alert', 'ÇëÑ¡Ôñ³ö¿âÀàĞÍ!');
+				$UI.msg('alert', 'è¯·é€‰æ‹©å‡ºåº“ç±»å‹!');
 				return false;
 			}
-			if(isEmpty($HUI.combotree('#InitScg').getValue())){
-				$UI.msg('alert', 'Àà×éÎ´Ñ¡Ôñ,Çë½÷É÷ºËÊµÊı¾İ!');
+			if (isEmpty($HUI.combotree('#InitScg').getValue()) && isEmpty(ScgTipFlag)) {
+				$UI.msg('alert', 'ç±»ç»„æœªé€‰æ‹©,è¯·è°¨æ…æ ¸å®æ•°æ®!');
+				ScgTipFlag = 'Y';
 			}
 			return true;
 		},
-		afterAddFn: function(){
+		afterAddFn: function() {
 			SetEditDisable();
-			var BtnEnaleObj = {'#SaveBT':true, '#DeleteBT':false, '#CompleteBT':true, '#CancelCompBT':false};
+			var BtnEnaleObj = { '#SaveBT': true, '#DeleteBT': false, '#CompleteBT': true, '#CancelCompBT': false };
 			ChangeButtonEnable(BtnEnaleObj);
 		},
-		onClickCell: function(index, field ,value){
-			DetailGrid.commonClickCell(index, field);
+		onClickRow: function(index, row) {
+			DetailGrid.commonClickRow(index, row);
 		},
-		onBeginEdit: function(index, row){
-			//Ôö¼ÓÍê³ÉÇé¿ö×ÖÊıÊäÈëÏŞÖÆ
+		onBeginEdit: function(index, row) {
+			// å¢åŠ å®Œæˆæƒ…å†µå­—æ•°è¾“å…¥é™åˆ¶
 			$('#DetailGrid').datagrid('beginEdit', index);
 			var ed = $('#DetailGrid').datagrid('getEditors', index);
-			for (var i = 0; i < ed.length; i++){
+			for (var i = 0; i < ed.length; i++) {
 				var e = ed[i];
-				if(e.field == "InciDesc"){
-					$(e.target).bind("keydown", function(event){
-						if(event.keyCode == 13){
+				if (e.field == 'InciDesc') {
+					$(e.target).bind('keydown', function(event) {
+						if (event.keyCode == 13) {
 							var Input = $(this).val();
-							var InitScg = $("#InitScg").combotree('getValue');
-							var InitFrLoc = $("#InitFrLoc").combobox('getValue');
-							var InitToLoc = $("#InitToLoc").combobox('getValue');
-							var HV = 'N'; 
-							var ParamsObj = {StkGrpRowId:InitScg, StkGrpType:'M', Locdr:InitFrLoc, NotUseFlag:'N', QtyFlag:'Y',
-								ToLoc:InitToLoc, HV:HV};
+							if (isEmpty(Input)) {
+								return;
+							}
+							var InitScg = $('#InitScg').combotree('getValue');
+							var InitFrLoc = $('#InitFrLoc').combobox('getValue');
+							var InitToLoc = $('#InitToLoc').combobox('getValue');
+							var HV = 'N';
+							var ParamsObj = { StkGrpRowId: InitScg, StkGrpType: 'M', Locdr: InitFrLoc, NotUseFlag: 'N', QtyFlag: 'Y',
+								ToLoc: InitToLoc, HV: HV };
 							IncItmBatWindow(Input, ParamsObj, ReturnInfoFunc);
 						}
 					});
 				}
 			}
+		},
+		onEndEdit: function(index, row, changes) {
+			var Editors = $(this).datagrid('getEditors', index);
+			for (var i = 0; i < Editors.length; i++) {
+				var Editor = Editors[i];
+				if (Editor.field == 'Qty') {
+					var Qty = row.Qty;
+					var UomId = row.UomId;
+					var ConFac = row.ConFac;
+					var BUomId = row.BUomId;
+					if (UomId == BUomId) {
+						if (!CheckFmtQty(ConFac, 'BUom', Qty)) {
+							DetailGrid.checked = false;
+							return false;
+						}
+					} else {
+						if (!CheckFmtQty(ConFac, 'PUom', Qty)) {
+							DetailGrid.checked = false;
+							return false;
+						}
+					}
+				}
+			}
 		}
 	});
 	
-	function ReturnInfoFunc(rows){
+	function ReturnInfoFunc(rows) {
 		rows = [].concat(rows);
-		$.each(rows, function(index, row){
+		$.each(rows, function(index, row) {
 			var RowIndex = DetailGrid.getRowIndex(DetailGrid.getSelected());
-			var ed = $('#DetailGrid').datagrid('getEditor', {index:RowIndex,field:'UomId'});
+			var ed = $('#DetailGrid').datagrid('getEditor', { index: RowIndex, field: 'UomId' });
 			AddComboData(ed.target, row.PurUomId, row.PurUomDesc);
 			DetailGrid.updateRow({
 				index: RowIndex,
@@ -484,6 +685,7 @@ var init = function(){
 					InciDesc: row.InciDesc,
 					Spec: row.Spec,
 					Inclb: row.Inclb,
+					InclbQty: row.InclbQty,
 					BatExp: row.BatExp,
 					Qty: row.OperQty,
 					UomId: row.PurUomId,
@@ -493,24 +695,39 @@ var init = function(){
 					RpAmt: accMul(row.OperQty, row.Rp),
 					SpAmt: accMul(row.OperQty, row.Sp),
 					inclbDirtyQty: row.DirtyQty,
-					inclbAvaQty: row.AvaQty
+					inclbAvaQty: row.AvaQty,
+					BUomId: row.BUomId,
+					ConFac: row.ConFac,
+					MatInsuCode: row.MatInsuCode,
+					MatInsuDesc: row.MatInsuDesc
 				}
 			});
 			$('#DetailGrid').datagrid('refreshRow', RowIndex);
-			//var ed = $('#DetailGrid').datagrid('getEditor', {index: RowIndex, field: 'Qty'});
-			//$(ed.target).focus();
-			if(index< rows.length){
+			// var ed = $('#DetailGrid').datagrid('getEditor', {index: RowIndex, field: 'Qty'});
+			// $(ed.target).focus();
+			if (index < rows.length) {
 				DetailGrid.commonAddRow();
 			}
 		});
 	}
 	
-		//ÉèÖÃÈ±Ê¡Öµ
-	function SetDefaValues(){
-		$('#InitToLoc').combobox('setValue', session['LOGON.CTLOCID']);
+	// è®¾ç½®ç¼ºçœå€¼
+	function SetDefaValues() {
+		var OperateTypeInfo = GetInitTypeDefa();
+		var OperateTypeId = OperateTypeInfo.split('^')[0];
+		var DefaultData = {
+			InitDate: DateFormatter(new Date())
+		};
+		if (InitParamObj['DefaReturnLoc'] == '0') {
+			DefaultData.InitToLoc = gLocObj;
+		} else {
+			DefaultData.InitFrLoc = gLocObj;
+		}
+		$UI.fillBlock('#Conditions', DefaultData);
+		$HUI.combobox('#OperateType').setValue(OperateTypeId);
 	}
 	SetDefaValues();
-	var BtnEnaleObj = {'#SaveBT':false, '#DeleteBT':false, '#CompleteBT':false, '#CancelCompBT':false};
+	var BtnEnaleObj = { '#SaveBT': false, '#DeleteBT': false, '#CompleteBT': false, '#CancelCompBT': false };
 	ChangeButtonEnable(BtnEnaleObj);
-}
+};
 $(init);

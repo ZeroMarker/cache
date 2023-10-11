@@ -39,13 +39,21 @@ function InitArcimTabDataGrid(){
 		},
 		{field:'DrgGdesc',title:'处方通用名',width:180},
 		{field:'ordcode',title:'代码',width:150},
+		{field:'ArcItmLimitInfo',title:'关注信息',width:120,
+			formatter: function(value,row,index){
+				if (value!=""){
+					return  '<span style="color:white">'+value+'</span>';
+				}
+				
+			}
+		},
 		{field:'ordExternalCode',title:'外部代码',width:120},
 		{field:'ordExternalDesc',title:'外部名称',width:120}
     ]]
 	var ArcimTabDataGrid=$("#ArcimTab").datagrid({
 		fit : true,
 		border : false,
-		striped : true,
+		striped : false,
 		singleSelect : true,
 		fitColumns : false,
 		autoRowHeight : false,
@@ -61,6 +69,12 @@ function InitArcimTabDataGrid(){
 		columns :Columns,
 		onDblClickRow:function(index, row){
 			onDblClickRow(row);
+		},
+		rowStyler:function(index,row){   
+			if (row.ArcItmLimitInfo != ""){
+				return 'background-color:#FF3D3D;color:#ffffff'; 
+			}
+			
 		}
 	});
 	ArcimTabDataGrid.datagrid('loadData', {"total":0,"rows":[]});
@@ -135,7 +149,7 @@ function InitCategory(){
 	    minQueryLen:2,
 	    delay:'500',
 	    queryOnSameQueryString:false,
-	    queryParams:{ClassName: 'web.UDHCJFIntBill',QueryName: 'ordcatlookup'},
+	    queryParams:{ClassName: 'web.DHCARCOrdSets',QueryName: 'ordcatlookup'},
 	    onBeforeLoad:function(param){
 	        var desc=param['q'];
 			param = $.extend(param,{desc:desc});
@@ -144,6 +158,12 @@ function InitCategory(){
 		    PageLogicObj.m_selCatRowId=rec['id'];
 		    PageLogicObj.m_selSubCatRowId="";
 		    $("#SubCategory").lookup('setText','');
+		}
+	});
+	$("#Category").keyup(function(){
+		if ($(this).val()==""){
+			$(this).lookup("setValue","").lookup("setText","");
+			PageLogicObj.m_selCatRowId="";
 		}
 	});
 }
@@ -165,7 +185,7 @@ function InitSubCategory(){
 	    minQueryLen:2,
 	    delay:'500',
 	    queryOnSameQueryString:true,
-	    queryParams:{ClassName: 'web.UDHCJFIntBill',QueryName: 'ordsubcatlookup'},
+	    queryParams:{ClassName: 'web.DHCARCOrdSets',QueryName: 'ordsubcatlookup'},
 	    onBeforeLoad:function(param){
 	        var desc=param['q']; 
 	        var catDesc=$("#Category").lookup('getText');
@@ -176,19 +196,27 @@ function InitSubCategory(){
 		    PageLogicObj.m_selSubCatRowId=rec['id'];
 		}
 	});
+	$("#SubCategory").keyup(function(){
+		if ($(this).val()==""){
+			$(this).lookup("setValue","").lookup("setText","");
+			PageLogicObj.m_selCatRowId=""
+		}
+	});
 }
 function InitOrderStatus(){
 	$HUI.combobox("#OrderStatus", {
 		valueField: 'id',
 		textField: 'text', 
 		editable:false,
-		data: [{"id":"0","text":"全部",'selected':true},{"id":"1","text":"可用"},{"id":"2","text":"不可用"}],
+		data: [{"id":"0","text":$g("全部"),'selected':true},{"id":"1","text":$g("可用")},{"id":"2","text":$g("不可用")}],
 		onSelect:function(rec){
 			
 		}
 	 });
 }
 function ArcimTabDataGridLoad(){
+	var SessionStr=GetSessionStr();
+	//session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
 	var type="";
 	if ($("#ARCOS").checkbox('getValue')){
 		type="ARCOS";
@@ -199,18 +227,30 @@ function ArcimTabDataGridLoad(){
 	if(($("#ARCOS").checkbox('getValue'))&&($("#ARCIM").checkbox('getValue'))){
 		type="All";
 	}
+    var PHCCatDesc = $('#PHCCatID').triggerbox("getValue");
+    var PHCCatID = $('#PHCCatID').triggerbox('options').ValueId || "";
+    if (PHCCatDesc == "") PHCCatID = "";
+	
+	$('body').showMask();
+	var Cat=$("#Category").lookup('getValue');
+	if($("#Category").lookup('getText')=='') Cat="";
+	var SubCat=$("#SubCategory").lookup('getValue');
+	if($("#SubCategory").lookup('getText')=='') SubCat="";
 	$.q({
-	    ClassName : "web.UDHCJFOrdPriceSearch1",
+	    ClassName : "web.DHCARCOrdSets",
 	    QueryName : "FindOrdForHUI",
-	    Cat:$("#Category").lookup('getText'),
-	    SubCat:$("#SubCategory").lookup('getText'),
+	    Cat:Cat,
+	    SubCat:SubCat,
 	    OrderStatus:$("#OrderStatus").combobox('getValue'),
 	    Alias:$("#Alias").val(),
 	    Desc:$("#Desc").val(),
 	    type:type,
+		SessionStr:SessionStr,
+        ExptStr:PHCCatID,
 	    Pagerows:PageLogicObj.m_ArcimTabDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
 		PageLogicObj.m_ArcimTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+		$('body').hideMask();
 	}); 
 }
 function AddAliasClickHandle(){
@@ -320,11 +360,19 @@ function PrintClickHandle(){
      }	       
 }
 function PriceDetail(ARCIMRowId){
-	var $code='<div style="border:1px solid #ccc;margin:10px;border-radius:4px;"><table id="OrderPriceGrid"></table></div>'
-	createModalDialog("Grid","收费明细", 1005, 520,"icon-w-list","",$code,"LoadOrderPriceGrid('"+ARCIMRowId+"')");
+	websys_showModal({
+		url:"dhcdoc.arcimlinktar.hui.csp?ARCIMRowId=" + ARCIMRowId,
+		title:'收费明细',
+        iconCls:"icon-w-list",
+		width:1005,height:520
+	});
 }
 function ARCOSDetail(ARCOSRowId){
-	var $code='<div style="border:1px solid #ccc;margin:10px;border-radius:4px;"><table id="ARCOSDetailGrid"></table></div>'
+	var Border_Color="#ccc"
+	if (HISUIStyleCode=="lite"){
+		Border_Color="#e2e2e2"
+	}
+	var $code='<div style="border:1px solid '+Border_Color+';margin:10px;border-radius:4px;"><table id="ARCOSDetailGrid"></table></div>'
 	createModalDialog("Grid","医嘱套明细", 1005, 520,"icon-w-list","",$code,"LoadARCOSDetailGrid('"+ARCOSRowId+"')")
 }
 function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,_event){
@@ -451,7 +499,138 @@ function onDblClickRow(row){
 		websys_showModal('options').OSItemListOpen(id, "", "YES", "", "");
 	}*/
 	websys_showModal("hide");
-	websys_showModal('options').PACSArcimFun(id);
+	websys_showModal('options').PACSArcimFun(id+String.fromCharCode(1)+row['ordname2']);
 	//websys_showModal("close");
 	return false;
+}
+(function($){
+    $.fn.showMask=function(loadMsg){
+        if(this.children("div.datagrid-mask").size()) return;
+        if(!loadMsg) loadMsg='加载中...';
+        this.append("<div class=\"datagrid-mask\" style=\"display:block\"></div>");
+        var msg=$("<div class=\"datagrid-mask-msg\" style=\"display:block;left:50%\"></div>").html(loadMsg).appendTo(this);
+        msg._outerHeight(40).css({marginLeft:(-msg.outerWidth()/2),lineHeight:(msg.height()+"px")});
+    }
+    $.fn.hideMask=function(){
+        this.find('div.datagrid-mask-msg,div.datagrid-mask').remove();
+    }
+})(jQuery);
+
+function ShowPHCCatTree(){
+    PHA_UX.DHCPHCCat("PHCCatID",{},function(data){
+        $('#PHCCatID').triggerbox('setValue', data.phcCatDescAll);
+        $('#PHCCatID').triggerbox('options').ValueId=data.phcCatId;
+    })
+}
+
+//拷贝药房组药学分类弹框
+var PHA_UX = {
+    DHCPHCCat: function (_id, _opts, _callBack) {
+        var _winDivId = _id + '_PHA_UX_DHCPHCCat';
+        var _tgId = _id + '_PHA_UX_DHCPHCCat_TG';
+        var _winToolBarId = _id + '_PHA_UX_DHCPHCCat_TG_BAR';
+        var _barAliasId = _id + '_bar';
+        if ($('#' + _winDivId).text() == '') {
+            var _winDiv =
+                '<div id=' +
+                _winDivId +
+                ' style="padding:10px;overflow:hidden;">' +
+                '<div class="hisui-layout" fit="true"><div data-options="region:\'north\',border:false,split:true,height:50">' +
+                '<div id=' +
+                _winToolBarId +
+                ' style="padding-bottom:10px;border-bottom:none;"><input id=' +
+                _barAliasId +
+                ' /></div></div>' +
+                '<div data-options="region:\'center\',split:true" style="height:400px;border:1px solid black;border-radius:4px;border-color:#CCC ">' +
+                '<div id=' +
+                _tgId +
+                ' style="padding-left:10px;">ee</div></div></div></div>';
+            var _winToolBarDiv = ''; // '<div id=' + _winToolBarId + ' style="padding:10px;border-bottom:none;"><input id=' + _barAliasId + '></div>';
+            $('body').append(_winDiv);
+            //$('body').append(_winToolBarDiv);
+            var _treeColumns = [
+                [{
+                        field: 'phcCatDesc',
+                        title: '药学分类',
+                        width: 300
+                    }, {
+                        field: 'phcCatDescAll',
+                        title: '药学分类全称',
+                        width: 300,
+                        hidden: true
+                    }, {
+                        field: 'phcCatId',
+                        title: 'phcCatId',
+                        hidden: true
+                    }, {
+                        field: '_parentId',
+                        title: 'parentId',
+                        hidden: true
+                    }
+                ]
+            ];
+            $('#' + _tgId).treegrid({
+                animate: true,
+                border: false,
+                fit: true,
+                nowrap: true,
+                fitColumns: true,
+                singleSelect: true,
+                idField: 'phcCatId',
+                treeField: 'phcCatDesc',
+                rownumbers: false, // 行号
+                columns: _treeColumns,
+                showHeader: false,
+                url: $URL,
+                queryParams: {
+                    ClassName: 'PHA.STORE.Drug',
+                    QueryName: 'DHCPHCCat',
+                    page: 1,
+                    rows: 9999
+                },
+                // toolbar:'', // '#' + _winToolBarId,
+                onDblClickRow: function (rowIndex, rowData) {
+                    $('#' + _winDivId).window('close');
+                    _callBack(rowData);
+                }
+            });
+        }
+        $('#' + _winDivId)
+        .window({
+            title: '药学分类',
+            collapsible: false,
+            iconCls: 'icon-w-list',
+            maximizable: false,
+            minimizable: false,
+            border: false,
+            closed: true,
+            modal: true,
+            width: 600,
+            height: 500,
+            onBeforeClose: function () {
+                // $("#UpdateBatNoWindowDiv").remove()
+            }
+        })
+        .window('open');
+        $('#' + _barAliasId).searchbox({
+            width: $('#' + _winToolBarId).width(),
+            searcher: function (text) {
+                $('#' + _tgId).treegrid('options').queryParams.InputStr = text;
+                $('#' + _tgId).treegrid('reload');
+                $('#' + _barAliasId).searchbox('clear');
+                $('#' + _barAliasId)
+                .next()
+                .children()
+                .focus();
+            }
+        });
+        $('#' + _barAliasId)
+        .next()
+        .find('.searchbox-text')
+        .attr('placeholder', $g("请输入别名回车查询")+'...');
+        $('#' + _tgId)
+        .prev()
+        .find('.datagrid-header')
+        .css('border', 0);
+    }
 }

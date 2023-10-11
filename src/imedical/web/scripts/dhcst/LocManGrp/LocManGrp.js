@@ -12,8 +12,8 @@ Ext.onReady(function () {
 
     // 查询按钮
     var SearchBT = new Ext.Toolbar.Button({
-        text: '查询',
-        tooltip: '点击查询',
+        text: $g('查询'),
+        tooltip: $g('点击查询'),
         iconCls: 'page_find',
         width: 70,
         height: 30,
@@ -37,8 +37,8 @@ Ext.onReady(function () {
 
     // 清空按钮
     var RefreshBT = new Ext.Toolbar.Button({
-        text: '清空',
-        tooltip: '点击清空',
+        text: $g('清空'),
+        tooltip: $g('点击清空'),
         iconCls: 'page_clearscreen',
         width: 70,
         height: 30,
@@ -53,7 +53,7 @@ Ext.onReady(function () {
     function clearData() {
         gStrParam = '';
         gLocManId = '';
-        gLoc = '';
+        gLocId = '';
         Ext.getCmp('LocCode').setValue('');
         Ext.getCmp('LocDesc').setValue('');
         LocGrid.store.removeAll();
@@ -66,14 +66,14 @@ Ext.onReady(function () {
     //新建
     var AddBT = new Ext.Toolbar.Button({
         id: 'AddBT',
-        text: '新增',
-        tooltip: '点击增加管理组',
+        text: $g('新增'),
+        tooltip: $g('点击增加管理组'),
         width: 70,
         height: 30,
         iconCls: 'page_add',
         handler: function () {
             if (gLocId == null || gLocId.length < 1) {
-                Msg.info('warning', '请先选择科室!');
+                Msg.info('warning', $g('请先选择科室!'));
                 return;
             }
 
@@ -96,8 +96,8 @@ Ext.onReady(function () {
     // 保存按钮
     var SaveBT = new Ext.Toolbar.Button({
         id: 'SaveBT',
-        text: '保存',
-        tooltip: '点击保存管理组',
+        text: $g('保存'),
+        tooltip: $g('点击保存管理组'),
         width: 70,
         height: 30,
         iconCls: 'page_save',
@@ -108,7 +108,7 @@ Ext.onReady(function () {
     });
     function save() {
         if (gLocId == null || gLocId.length < 1) {
-            Msg.info('warning', '科室不能为空!');
+            Msg.info('warning', $g('科室不能为空!'));
             return;
         }
         var ListDetail = '';
@@ -121,11 +121,11 @@ Ext.onReady(function () {
                 var Code = rowData.get('Code').trim();
                 var Desc = rowData.get('Desc').trim();
                 if (Code == '') {
-                    Msg.info('warning', '第' + (i + 1) + '行代码为空!');
+                    Msg.info('warning', $g('第') + (i + 1) + $g('行代码为空!'));
                     return;
                 }
                 if (Desc == '') {
-                    Msg.info('warning', '第' + (i + 1) + '行名称为空!');
+                    Msg.info('warning', $g('第') + (i + 1) + $g('行名称为空!'));
                     return;
                 }
                 if (Code != '' && Desc != '') {
@@ -139,33 +139,33 @@ Ext.onReady(function () {
             }
         }
         if (ListDetail == '') {
-            Msg.info('warning', '没有修改或添加新数据!');
+            Msg.info('warning', $g('没有修改或添加新数据!'));
             return false;
         }
         var url = DictUrl + 'locmangrpaction.csp?actiontype=Save';
-        var mask = ShowLoadMask(Ext.getBody(), '处理中请稍候...');
+        var mask = ShowLoadMask(Ext.getBody(), $g('处理中请稍候...'));
         Ext.Ajax.request({
             url: url,
             params: { LocId: gLocId, Detail: ListDetail },
             method: 'POST',
-            waitMsg: '处理中...',
+            waitMsg: $g('处理中...'),
             success: function (result, request) {
                 var jsonData = Ext.util.JSON.decode(result.responseText);
                 mask.hide();
                 if (jsonData.success == 'true') {
-                    Msg.info('success', '保存成功!');
+                    Msg.info('success', $g('保存成功!'));
                     // 刷新界面
                     LocManGrpStore.load({ params: { LocId: gLocId } });
                 } else {
                     var ret = jsonData.info;
                     if (ret == -5) {
-                        Msg.info('warning', '代码重复!');
+                        Msg.info('warning', $g('代码重复!'));
                     } else if (ret == -6) {
-                        Msg.info('warning', '名称重复!');
+                        Msg.info('warning', $g('名称重复!'));
                     } else if (ret == -1) {
-                        Msg.info('error', '没有需要保存的数据!');
+                        Msg.info('error', $g('没有需要保存的数据!'));
                     } else {
-                        Msg.info('error', '保存失败！');
+                        Msg.info('error', $g('保存失败！'));
                     }
                     LocManGrpStore.load({ params: { LocId: gLocId } });
                 }
@@ -176,10 +176,10 @@ Ext.onReady(function () {
 
     var DeleteBT = new Ext.Toolbar.Button({
         id: 'DeleteBT',
-        text: '删除',
+        text: $g('删除'),
         width: '70',
         height: '30',
-        tooltip: '点击删除管理组',
+        tooltip: $g('点击删除管理组'),
         iconCls: 'page_delete',
         handler: function () {
             Delete();
@@ -189,7 +189,7 @@ Ext.onReady(function () {
     function Delete() {
         var cell = LocManGrpGrid.getSelectionModel().getSelectedCell();
         if (cell == null) {
-            Msg.info('warning', '请选择要删除的记录！');
+            Msg.info('warning', $g('请选择要删除的记录！'));
             return;
         }
         var row = cell[0];
@@ -201,8 +201,8 @@ Ext.onReady(function () {
             return;
         } else {
             Ext.MessageBox.show({
-                title: '提示',
-                msg: '是否确定删除该管理组信息',
+                title: $g('提示'),
+                msg: $g('是否确定删除该管理组信息'),
                 buttons: Ext.MessageBox.YESNO,
                 fn: showResult,
                 icon: Ext.MessageBox.QUESTION
@@ -212,21 +212,21 @@ Ext.onReady(function () {
         function showResult(btn) {
             if (btn == 'yes') {
                 var url = DictUrl + 'locmangrpaction.csp?actiontype=Delete';
-                var mask = ShowLoadMask(Ext.getBody(), '处理中请稍候...');
+                var mask = ShowLoadMask(Ext.getBody(), $g('处理中请稍候...'));
                 Ext.Ajax.request({
                     url: url,
                     method: 'post',
-                    waitMsg: '处理中...',
+                    waitMsg: $g('处理中...'),
                     params: { Rowid: rowid },
                     success: function (response, opts) {
                         var jsonData = Ext.util.JSON.decode(response.responseText);
                         mask.hide();
                         if (jsonData.success == 'true') {
-                            Msg.info('success', '删除成功!');
+                            Msg.info('success', $g('删除成功!'));
                             LocManGrpStore.load({ params: { LocId: gLocId } });
                             QueryLocUserManGrp();
                         } else {
-                            Msg.info('error', '删除失败!');
+                            Msg.info('error', $g('删除失败!'));
                         }
                     }
                 });
@@ -252,14 +252,14 @@ Ext.onReady(function () {
     var LocGridCm = new Ext.grid.ColumnModel([
         new Ext.grid.RowNumberer(),
         {
-            header: '代码',
+            header: $g('代码'),
             dataIndex: 'Code',
             width: 200,
             align: 'left',
             sortable: true
         },
         {
-            header: '名称',
+            header: $g('名称'),
             dataIndex: 'Desc',
             width: 200,
             align: 'left',
@@ -272,8 +272,8 @@ Ext.onReady(function () {
         store: LocStore,
         pageSize: PageSize,
         displayInfo: true,
-        displayMsg: '第 {0} 条到 {1}条 ，一共 {2} 条',
-        emptyMsg: '没有记录',
+        displayMsg: $g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+        emptyMsg: $g('没有记录'),
         doLoad: function (C) {
             var B = {},
                 A = this.getParams();
@@ -305,7 +305,7 @@ Ext.onReady(function () {
     LocGrid = new Ext.grid.GridPanel({
         id: 'LocGrid',
         region: 'west',
-        title: '科室管理组',
+        title: $g('科室管理组'),
         store: LocStore,
         cm: LocGridCm,
         trackMouseOver: true,
@@ -315,7 +315,7 @@ Ext.onReady(function () {
         sm: new Ext.grid.RowSelectionModel({ singleSelect: true }),
         loadMask: true,
         bbar: LocPagingToolbar,
-        tbar: ['代码', LocCode, '名称', LocDesc, '-', SearchBT, '-', RefreshBT]
+        tbar: [$g('代码'), LocCode, $g('名称'), LocDesc, '-', SearchBT, '-', RefreshBT]
     });
 
     LocGrid.addListener('rowclick', function (grid, rowindex, e) {
@@ -340,7 +340,7 @@ Ext.onReady(function () {
             hidden: true
         },
         {
-            header: '代码',
+            header: $g('代码'),
             dataIndex: 'Code',
             width: 80,
             align: 'left',
@@ -361,7 +361,7 @@ Ext.onReady(function () {
             })
         },
         {
-            header: '描述',
+            header: $g('描述'),
             dataIndex: 'Desc',
             width: 200,
             align: 'left',
@@ -404,7 +404,7 @@ Ext.onReady(function () {
     var LocManGrpGrid = new Ext.grid.EditorGridPanel({
         id: 'LocManGrpGrid',
         region: 'center',
-        title: '管理组',
+        title: $g('管理组'),
         id: 'LocManGrpGrid',
         cm: LocManGrpCm,
         store: LocManGrpStore,
@@ -425,7 +425,7 @@ Ext.onReady(function () {
 
     //启用编辑列
     var ActiveField = new Ext.grid.CheckColumn({
-        header: '是否有效',
+        header: $g('是否有效'),
         dataIndex: 'Active',
         width: 100,
         sortable: true,
@@ -437,8 +437,8 @@ Ext.onReady(function () {
 
     //新增
     var AddLocUserManGrp = new Ext.Toolbar.Button({
-        text: '新增',
-        tooltip: '新增管理组人员',
+        text: $g('新增'),
+        tooltip: $g('新增管理组人员'),
         iconCls: 'page_add',
         width: 70,
         height: 30,
@@ -448,8 +448,8 @@ Ext.onReady(function () {
     }); //保存人员
 
     var SaveLocUserManGrp = new Ext.Toolbar.Button({
-        text: '保存',
-        tooltip: '保存管理组人员',
+        text: $g('保存'),
+        tooltip: $g('保存管理组人员'),
         width: 70,
         height: 30,
         iconCls: 'page_save',
@@ -460,10 +460,10 @@ Ext.onReady(function () {
     //删除人员
     var DeleteLocUserBT = new Ext.Toolbar.Button({
         id: 'DeleteLocUserBT',
-        text: '删除',
+        text: $g('删除'),
         width: '70',
         height: '30',
-        tooltip: '点击删除',
+        tooltip: $g('点击删除'),
         iconCls: 'page_delete',
         handler: function () {
             deleteLocUserMan();
@@ -484,7 +484,7 @@ Ext.onReady(function () {
     });
 
     var UCG = new Ext.form.ComboBox({
-        fieldLabel: '名称',
+        fieldLabel: $g('名称'),
         id: 'UCG',
         name: 'UCG',
         anchor: '90%',
@@ -494,7 +494,7 @@ Ext.onReady(function () {
         displayField: 'Description',
         allowBlank: false,
         triggerAction: 'all',
-        emptyText: '名称...',
+        emptyText: $g('名称...'),
         selectOnFocus: true,
         forceSelection: true,
         minChars: 1,
@@ -546,14 +546,14 @@ Ext.onReady(function () {
             hidden: true
         },
         {
-            header: '代码',
+            header: $g('代码'),
             dataIndex: 'Code',
             width: 200,
             align: 'left',
             sortable: true
         },
         {
-            header: '名称',
+            header: $g('名称'),
             dataIndex: 'UserId',
             width: 200,
             align: 'left',
@@ -571,8 +571,8 @@ Ext.onReady(function () {
         store: LocUserManGrpGridDs,
         pageSize: 30,
         displayInfo: true,
-        displayMsg: '第 {0} 条到 {1}条 ，一共 {2} 条',
-        emptyMsg: '没有记录',
+        displayMsg: $g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+        emptyMsg: $g('没有记录'),
         doLoad: function (C) {
             var B = {},
                 A = this.getParams();
@@ -618,7 +618,7 @@ Ext.onReady(function () {
         id: 'LocUserManGroupPanel',
         region: 'south',
         deferredRender: true,
-        title: '人员维护',
+        title: $g('人员维护'),
         activeTab: 0,
         height: 300,
         layout: 'fit',
@@ -641,12 +641,12 @@ Ext.onReady(function () {
     //新增行
     function AddLocUserNewRow() {
         if (gLocId == null || gLocId.length < 1) {
-            Msg.info('warning', '请先选择科室!');
+            Msg.info('warning', $g('请先选择科室!'));
             return;
         }
 
         if (gLocManId == null || gLocManId.length < 1) {
-            Msg.info('warning', '请先选择管理组!');
+            Msg.info('warning', $g('请先选择管理组!'));
             return;
         }
 
@@ -718,7 +718,7 @@ Ext.onReady(function () {
         }
 
         if (nameflag == '') {
-            Msg.info('warning', '没有需要保存的数据!');
+            Msg.info('warning', $g('没有需要保存的数据!'));
             return false;
         }
 
@@ -727,13 +727,13 @@ Ext.onReady(function () {
                 url: DictUrl + 'locmangrpaction.csp?actiontype=SaveLocUserMan',
                 params: { Detail: data, locGrpId: gLocManId },
                 failure: function (result, request) {
-                    Msg.info('error', '请检查网络连接!');
+                    Msg.info('error', $g('请检查网络连接!'));
                 },
                 success: function (result, request) {
                     data = '';
                     var jsonData = Ext.util.JSON.decode(result.responseText);
                     if (jsonData.success == 'true') {
-                        Msg.info('success', '保存成功!');
+                        Msg.info('success',$g( '保存成功!'));
                         QueryLocUserManGrp();
                     } else {
                         var info = jsonData.info;
@@ -741,9 +741,9 @@ Ext.onReady(function () {
                         var infovalue = infoarr[0];
                         var infodesc = infoarr[1];
                         if (infovalue == -99) {
-                            Msg.info('warning', '人员不能重复增加!' + infodesc);
+                            Msg.info('warning', $g('人员不能重复增加!') + infodesc);
                         } else {
-                            Msg.info('error', '保存失败' + infodesc);
+                            Msg.info('error', $g('保存失败') + infodesc);
                         }
                     }
                 },
@@ -754,28 +754,28 @@ Ext.onReady(function () {
     function deleteLocUserMan() {
         var cell = LocUserManGrpGrid.getSelectionModel().getSelectedCell();
         if (cell == null) {
-            Msg.info('warning', '请选择数据!');
+            Msg.info('warning', $g('请选择数据!'));
             return false;
         } else {
             var record = LocUserManGrpGrid.getStore().getAt(cell[0]);
             var RowId = record.get('Rowid');
             if (RowId != '') {
-                Ext.MessageBox.confirm('提示', '确定要删除选定的行?', function (btn) {
+                Ext.MessageBox.confirm('提示', $g('确定要删除选定的行?'), function (btn) {
                     if (btn == 'yes') {
                         Ext.Ajax.request({
                             url: DictUrl + 'locmangrpaction.csp?actiontype=deleteUser',
-                            waitMsg: '删除中...',
+                            waitMsg: $g('删除中...'),
                             params: { RowId: RowId },
                             failure: function (result, request) {
-                                Msg.info('error', '请检查网络连接!');
+                                Msg.info('error', $g('请检查网络连接!'));
                             },
                             success: function (result, request) {
                                 var jsonData = Ext.util.JSON.decode(result.responseText);
                                 if (jsonData.success == 'true') {
-                                    Msg.info('success', '删除成功!');
+                                    Msg.info('success', $g('删除成功!'));
                                     QueryLocUserManGrp();
                                 } else {
-                                    Msg.info('error', '删除失败!');
+                                    Msg.info('error', $g('删除失败!'));
                                 }
                             },
                             scope: this

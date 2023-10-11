@@ -5,7 +5,7 @@ var nowDate=formatDate(0); //系统的当前日期
 var EvaRecordId="",LinkRecordId="",WinCode=""; //AuditList="",CancelAuditList="",StaFistAuditUser="",StsusGrant="",RepStaus="";
 var userName="";
 $(document).ready(function(){
-	
+	$.messager.defaults = { ok: $g("确定"),cancel: $g("取消")};
 	EvaRecordId=getParam("recordId");  //表单类型id
 	LinkRecordId=getParam("LinkRecordId");  //关联表单记录ID
 	//AuditList=getParam("AuditList");  //审核串
@@ -58,6 +58,7 @@ function SaveAsse(flag)
 				window.parent.closeDeptConWindow();
 
 			}else{
+				$.messager.alert($g("提示:"),$g("保存失败"));
 				return;
 			}
 		},"text")
@@ -70,7 +71,11 @@ function add_event(){
 
 //获取当前登录用户和日期
 function getInfo(flag){
-
+	// 获取登录人 信息
+	runClassMethod("web.DHCADVCOMMONPART","GetRepUserInfo",{'UserID':LgUserID,'LocID':LgCtLocID,'HospID':LgHospID,'GroupID':LgGroupID},
+	function(Data){ 
+		LgUserName=Data.User;
+	},"json",false);
 	if(EvaRecordId!="")	{
 		//现场工作评价  不可编辑
 		$("[id^='DeptContent-3979-']").each(function(){
@@ -80,7 +85,7 @@ function getInfo(flag){
 				$("[id^='"+rowid+"'][id$='"+rownum+"']").attr("readonly",'readonly');
 				$("input[id^='DeptContent-3979-3986']").datebox({"disabled":true});
 				if(flag==0){
-					$('a:contains("删除")').parent().hide();
+					$('a:contains('+$g("删除")+')').parent().hide();
 				}
 			}
 		})		
@@ -99,19 +104,26 @@ function getInfo(flag){
 }
 
 function checkTableRequired(){
-	var errMsg=""
+	var errMsg="",lenflag="";
 	
 	$("#DeptContent").next().find("tbody tr").each(function(i){
-			var rowMsg=""
+		if(lenflag==""){
+							
+			var rowMsg="";
 			// 追踪内容
-			var str1=$(this).children('td').eq(0).find("textarea").val()
+			var str1=$(this).children('td').eq(0).find("textarea").val();
 			if(str1.length==0){
-				rowMsg=rowMsg+"持续追踪内容,"
+				rowMsg=rowMsg+$g("持续追踪内容")+",";
+			}
+			if(str1.length>2000){
+				lenflag="-1";
+				$.messager.alert($g("提示:"),$g("追踪内容过多，保存失败"));
+				return;
 			}
 			// 追踪人
-			var str2=$(this).children('td').eq(1).find("input").val()
+			var str2=$(this).children('td').eq(1).find("input").val();
 			if(str2.length==0){
-				rowMsg=rowMsg+"追踪人,"
+				rowMsg=rowMsg+$g("追踪人")+",";
 			}
 			//追踪日期
 			//var str3=$(this).children('td').eq(2).find("datebox").getValue() //getValue() //("datebox").val()
@@ -121,12 +133,18 @@ function checkTableRequired(){
 			
 			
 			if(rowMsg!=""){
-				errMsg=errMsg+"\n"+rowMsg+"不能为空."
-			}	
+				errMsg=errMsg+"\n"+rowMsg+$g("不能为空")+".";
+			}
+		}
+			
+				
 	})
 	if(errMsg!=""){
 		$("html,body").stop(true);$("html,body").animate({scrollTop: $("#DeptContent").offset().top}, 0);
-		$.messager.alert("提示:",errMsg);
+		$.messager.alert($g("提示:"),errMsg);
+	}
+	if(lenflag!=""){
+		errMsg=lenflag;
 	}
 	return errMsg;
 }

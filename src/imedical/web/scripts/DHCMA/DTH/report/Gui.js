@@ -39,10 +39,10 @@ function InitReportWin(){
 	obj.cboOccupation = Common_ComboToDic("cboOccupation","DTHCareer","",HospitalID);       // 职业
 	obj.cboWorkType   = Common_ComboToDic("cboWorkType","DMJOBTYPE","",HospitalID);         // 工作类型
 	//户籍地址
-	obj.cboRegProvince = Common_ComboToArea2("cboRegProvince","1");            // 省
-	obj.cboRegCity = Common_ComboToArea2("cboRegCity","cboRegProvince");       // 市
-	obj.cboRegCounty = Common_ComboToArea2("cboRegCounty","cboRegCity");       // 县
-	obj.cboRegVillage = Common_ComboToArea2("cboRegVillage","cboRegCounty");   // 乡
+	obj.cboRegProvince = Common_ComboToArea2("cboRegProvince","1","1");            // 省
+	obj.cboRegCity = Common_ComboToArea2("cboRegCity","cboRegProvince","2");       // 市
+	obj.cboRegCounty = Common_ComboToArea2("cboRegCounty","cboRegCity","3");       // 县
+	obj.cboRegVillage = Common_ComboToArea2("cboRegVillage","cboRegCounty","4");   // 乡
 	obj.RegCity = $HUI.combobox('#cboRegProvince', {
 		onChange:function(newValue,oldValue){
 			$('#cboRegCity').combobox('clear');
@@ -73,10 +73,10 @@ function InitReportWin(){
 		}
 	});
 	//常住地址
-	obj.cboCurrProvince = Common_ComboToArea2("cboCurrProvince","1");                   // 省
-	obj.cboCurrCity = Common_ComboToArea2("cboCurrCity","cboCurrProvince");             // 市
-	obj.cboCurrCounty = Common_ComboToArea2("cboCurrCounty","cboCurrCity");             // 县
-	obj.cboCurrVillage = Common_ComboToArea2("cboCurrVillage","cboCurrCounty");         // 乡
+	obj.cboCurrProvince = Common_ComboToArea2("cboCurrProvince","1","1");                   // 省
+	obj.cboCurrCity = Common_ComboToArea2("cboCurrCity","cboCurrProvince","2");             // 市
+	obj.cboCurrCounty = Common_ComboToArea2("cboCurrCounty","cboCurrCity","3");             // 县
+	obj.cboCurrVillage = Common_ComboToArea2("cboCurrVillage","cboCurrCounty","4");         // 乡
 	obj.CurrCity = $HUI.combobox('#cboCurrProvince', {
 		onChange:function(newValue,oldValue){
 			$('#cboCurrCity').combobox('clear');

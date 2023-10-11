@@ -12,7 +12,7 @@ Ext.onReady(function(){
     
     // 调价单号
     var AspNo= new Ext.form.TextField({
-                fieldLabel : '调价单号',
+                fieldLabel : $g('调价单号'),
                 id : 'AspNo',
                 name : 'AspNo',
                 anchor:'90%',
@@ -21,7 +21,7 @@ Ext.onReady(function(){
 
     // 起始日期
     var StartDate = new Ext.ux.DateField({
-                fieldLabel : '起始日期',
+                fieldLabel : $g('起始日期'),
                 id : 'StartDate',
                 name : 'StartDate',
                 anchor:'90%',
@@ -31,7 +31,7 @@ Ext.onReady(function(){
 
     // 结束日期
     var EndDate = new Ext.ux.DateField({
-                fieldLabel : '结束日期',
+                fieldLabel : $g('结束日期'),
                 id : 'EndDate',
                 name : 'EndDate',
                 anchor:'90%',
@@ -43,7 +43,7 @@ Ext.onReady(function(){
     var StkGrpType=new Ext.ux.StkGrpComboBox({ 
         id : 'StkGrpType',
         name : 'StkGrpType',
-        fieldLabel:'<font color=blue>类     组</font>',
+        fieldLabel:'<font color=blue>'+$g('类     组')+'</font>',
         StkType:App_StkTypeCode,     //标识类组类型
         LocId:gLocId,
         UserId:gUserId,
@@ -60,7 +60,7 @@ Ext.onReady(function(){
     var IncDesc=new Ext.form.TextField({
         id:'IncDesc',
         name:'IncDesc',
-        fieldLabel:'药品名称',
+        fieldLabel:$g('药品名称'),
         width:150,
         anchor:'90%',
         listeners:{
@@ -91,11 +91,11 @@ Ext.onReady(function(){
     
     var TypeStore = new Ext.data.SimpleStore({
                     fields : ['RowId', 'Description'],
-                    data : [['No', '未审核'], ['Audit', '已审核未生效'],
-                            ['Yes', '已生效']]
+                    data : [['No', $g('未审核')], ['Audit', $g('已审核未生效')],
+                            ['Yes', $g('已生效')]]
                 });
     var Type = new Ext.form.ComboBox({
-                fieldLabel : '调价单状态',
+                fieldLabel : $g('调价单状态'),
                 id : 'Type',
                 name : 'Type',
                 width : 100,
@@ -114,8 +114,8 @@ Ext.onReady(function(){
                 valueNotFoundText : ''
             });
          var PrintBT = new Ext.Toolbar.Button({
-                text : '打印',
-                tooltip : '点击打印',
+                text : $g('打印'),
+                tooltip : $g('点击打印'),
                 iconCls : 'page_print',
                 height:30,
                 width:70,
@@ -127,8 +127,8 @@ Ext.onReady(function(){
             });   
     // 检索按钮
     var searchBT = new Ext.Toolbar.Button({
-                text : '查询',
-                tooltip : '点击查询调价信息',
+                text : $g('查询'),
+                tooltip : $g('点击查询调价信息'),
                 iconCls : 'page_find',
                 height:30,
                 width:70,
@@ -144,7 +144,7 @@ Ext.onReady(function(){
         	StartDate=StartDate.format(App_StkDateFormat);
         }
         if(StartDate==null||StartDate.length <= 0) {
-            Msg.info("warning", "开始日期不能为空！");
+            Msg.info("warning", $g("开始日期不能为空！"));
             return;
         }
         var EndDate = Ext.getCmp("EndDate").getValue();
@@ -152,7 +152,7 @@ Ext.onReady(function(){
         	EndDate=EndDate.format(App_StkDateFormat);
         }
         if(EndDate==null||EndDate.length <= 0) {
-            Msg.info("warning", "截止日期不能为空！");
+            Msg.info("warning", $g("截止日期不能为空！"));
             return;
         }
 
@@ -176,7 +176,7 @@ Ext.onReady(function(){
         	params:{start:0,limit:PageSize},
         	callback:function(r,options,success){
         		if(success==false){
-        			Msg.info("error","查询错误，请查看日志!");
+        			Msg.info("error",$g("查询错误，请查看日志!"));
         		}else{
         			if(r.length>0){
         				MasterInfoGrid.getSelectionModel().selectFirstRow();
@@ -211,8 +211,8 @@ Ext.onReady(function(){
     }*/
 		// 另存按钮
 	var SaveAsBT = new Ext.Toolbar.Button({
-				text : '另存',
-				tooltip : '另存为Excel',
+				text : $g('另存'),
+				tooltip : $g('另存为Excel'),
 				iconCls : 'page_excel',
 				width : 70,
 				height : 30,
@@ -224,8 +224,8 @@ Ext.onReady(function(){
     
     // 清空按钮
     var clearBT = new Ext.Toolbar.Button({
-                text : '清屏',
-                tooltip : '点击清屏',
+                text : $g('清屏'),
+                tooltip : $g('点击清屏'),
                 iconCls : 'page_clearscreen',
                 height:30,
                 width:70,
@@ -288,19 +288,19 @@ Ext.onReady(function(){
             });
     var nm = new Ext.grid.RowNumberer();
     var MasterInfoCm = new Ext.grid.ColumnModel([nm, {
-                header : "调价单号",
+                header : $g("调价单号"),
                 dataIndex : 'AspNo',
                 width : 120,
                 align : 'left',
                 sortable : true
             }, {
-                header : "最后更新日期",
+                header : $g("最后更新日期"),
                 dataIndex : 'AspDate',
                 width : 100,
                 align : 'left',
                 sortable : true
             }, {
-                header : '操作人',
+                header : $g('操作人'),
                 dataIndex : 'AspUser',
                 width : 100,
                 align : 'left',
@@ -311,12 +311,12 @@ Ext.onReady(function(){
         store:MasterInfoStore,
         pageSize:PageSize,
         displayInfo:true,
-        displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-        emptyMsg:'没有记录',
-        firstText:'第一页',
-        lastText:'最后一页',
-        nextText:'下一页',
-        prevText:'上一页'      
+        displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+        emptyMsg:$g('没有记录'),
+        firstText:$g('第一页'),
+        lastText:$g('最后一页'),
+        nextText:$g('下一页'),
+        prevText:$g('上一页' )     
     });
     var MasterInfoGrid = new Ext.grid.GridPanel({
         id : 'MasterInfoGrid',
@@ -387,90 +387,90 @@ Ext.onReady(function(){
                 sortable : true,
                 hidden : true
             }, {
-                header : "状态",
+                header : $g("状态"),
                 dataIndex : 'Status',
                 width : 80,
                 align : 'left',
                 sortable : true
             }, {
-                header : "库存分类",
+                header : $g("库存分类"),
                 dataIndex : 'StkCatDesc',
                 width : 80,
                 align : 'left',
                 sortable : true
             }, {
-                header : '药品名称',
+                header : $g('药品名称'),
                 dataIndex : 'InciDesc',
                 width : 180,
                 align : 'left',
                 sortable : true
             }, {
-                header : "调价单位",
+                header : $g("调价单位"),
                 dataIndex : 'AspUomDesc',
                 width : 80,
                 align : 'left',
                 sortable : true
             }, {
-                header : "调前售价",
+                header : $g("调前售价"),
                 dataIndex : 'PriorSpUom',
                 width : 80,
                 align : 'right',
                 sortable : true
             }, {
-                header : "调后售价",
+                header : $g("调后售价"),
                 dataIndex : 'ResultSpUom',
                 width : 80,
                 align : 'right'
             }, {
-                header : "差价(售价)",
+                header : $g("差价(售价"),
                 dataIndex : 'DiffSpUom',
                 width : 80,
                 align : 'right',
                 sortable : true
             }, {
-                header : "调前进价",
+                header : $g("调前进价"),
                 dataIndex : 'PriorRpUom',
                 width : 80,
                 align : 'right',
                 sortable : true
             }, {
-                header : "调后进价",
+                header : $g("调后进价"),
                 dataIndex : 'ResultRpUom',
                 width : 80,
                 align : 'right',
                 sortable : true
             }, {
-                header : "差价(进价)",
+                header : $g("差价(进价)"),
                 dataIndex : 'DiffRpUom',
                 width : 80,
                 align : 'right',
                 sortable : true
             }, {
-                header : "调价原因",
+                header : $g("调价原因"),
                 dataIndex : 'AdjReasonDesc',
                 width : 80,
                 align : 'left',
                 sortable : true
             }, {
-                header : "物价文件号",
+                header : $g("物价文件号"),
                 dataIndex : 'WarrentNo',
                 width : 80,
                 align : 'left',
                 sortable : true
             }, {
-                header : "物价文件日期",
+                header : $g("物价文件日期"),
                 dataIndex : 'WnoDate',
                 width : 100,
                 align : 'left',
                 sortable : true
             }, {
-                header : "建单人",
+                header :$g( "建单人"),
                 dataIndex : 'CreatUserName',
                 width : 100,
                 align : 'left',
                 sortable : true
             }, {
-                header : "审核人",
+                header : $g("审核人"),
                 dataIndex : 'AuditUserName',
                 width : 100,
                 align : 'left',
@@ -481,15 +481,15 @@ Ext.onReady(function(){
         store:DetailInfoStore,
         pageSize:PageSize,
         displayInfo:true,
-        displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-        emptyMsg:'没有记录',
-        firstText:'第一页',
-        lastText:'最后一页',
-        nextText:'下一页',
-        prevText:'上一页'      
+        displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+        emptyMsg:$g('没有记录'),
+        firstText:$g('第一页'),
+        lastText:$g('最后一页'),
+        nextText:$g('下一页'),
+        prevText:$g('上一页' )     
     });
     var DetailInfoGrid = new Ext.grid.GridPanel({
-                title : '调价单明细',
+                title : $g('调价单明细'),
                 cm : DetailInfoCm,
                 sm : new Ext.grid.RowSelectionModel({
                             singleSelect : true
@@ -509,14 +509,14 @@ Ext.onReady(function(){
     var InfoForm= new Ext.form.FormPanel({
         frame : true,
         labelWidth: 80, 
-        title:'调价单查询',
+        title:$g('调价单查询'),
         labelAlign : 'right',
         id : "InfoForm",
         autoHeight:true,
         tbar : [searchBT,'-', clearBT,'-',SaveAsBT, '-',PrintBT],        
         items : [{
                     xtype : 'fieldset',
-                    title : '查询条件',
+                    title : $g('查询条件'),
                     autoHeight : true,
                     style: DHCSTFormStyle.FrmPaddingV,
                     defaults: {border:false},    // Default config options for child items
@@ -548,7 +548,7 @@ Ext.onReady(function(){
             height:DHCSTFormStyle.FrmHeight(2),
             layout:'fit',
             items:InfoForm
-        },{ title : '调价单信息',
+        },{ title : $g('调价单信息'),
             region:'west',
             width:document.body.clientWidth*0.25,
             split:true,

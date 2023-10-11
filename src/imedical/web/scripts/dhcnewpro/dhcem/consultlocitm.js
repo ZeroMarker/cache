@@ -75,7 +75,8 @@ function InitMainList(){
 			},onShowPanel:function(){
 				var HospID = $HUI.combogrid("#_HospList").getValue();	 /// 院区
 				var ed=$("#main").datagrid('getEditor',{index:editRow,field:'LocDesc'});
-				var unitUrl = $URL + "?ClassName=web.DHCEMConsultCom&MethodName=JsonLoc&HospID="+HospID;
+				//var unitUrl = $URL + "?ClassName=web.DHCEMConsultCom&MethodName=JsonLoc&HospID="+HospID;
+				var unitUrl = $URL + "?ClassName=web.DHCEMConsultCom&MethodName=JsonLocList&HospID="+HospID+"&LType=CONSULT"; //hxy 2020-09-22
 				$(ed.target).combobox('reload',unitUrl);
 			}	   
 		}
@@ -183,6 +184,14 @@ function saveRow(){
 			$.messager.alert("提示","科室不能为空!"); 
 			return false;
 		}
+		if(rowsData[i].MarID == ""){
+			$.messager.alert("提示","亚专业不能为空!"); 
+			return false;
+		}
+		if(rowsData[i].ItmID == ""){
+			$.messager.alert("提示","指针不能为空!"); 
+			return false;
+		}
 		var tmp=rowsData[i].ID +"^"+ rowsData[i].LocID +"^"+ rowsData[i].MarID +"^"+ rowsData[i].ItmID;
 		dataList.push(tmp);
 	}
@@ -193,10 +202,10 @@ function saveRow(){
 	runClassMethod("web.DHCEMConsLocItem","save",{"mParam":mListData},function(jsonString){
 
 		if ((jsonString == "-1")||((jsonString == "-3"))){
-			$.messager.alert('提示','代码重复,请核实后再试！','warning');
+			$.messager.alert('提示','数据重复,请核实后再试！','warning');
 			return;	
 		}else if ((jsonString == "-2")||((jsonString == "-4"))){
-			$.messager.alert('提示','描述重复,请核实后再试！','warning');
+			$.messager.alert('提示','数据重复,请核实后再试！','warning');
 			return;
 		}
 		$('#main').datagrid('reload'); //重新加载
@@ -213,9 +222,10 @@ function insertRow(){
 	/// 检查第一行是否为空行
 	var rowsData = $("#main").datagrid('getRows');
 	if (rowsData.length != 0){
-		if (rowsData[0].LocID == ""){
+		if ((rowsData[0].LocID == "")||(rowsData[0].MarID=="")||(rowsData[0].ItmID=="")){
 			$('#main').datagrid('selectRow',0);
 			$("#main").datagrid('beginEdit',0);//开启编辑并传入要编辑的行
+			$.messager.alert('提示','请编辑必填数据！','warning');
 			return;
 		}
 	}

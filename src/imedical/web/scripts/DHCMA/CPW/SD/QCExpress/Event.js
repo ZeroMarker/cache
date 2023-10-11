@@ -40,11 +40,18 @@ function InitWinEvent(obj){
 		var ExpressParam = $('#BTExpressParam').val();
 		var ExpressTxt = $('#BTExpressTxt').val();
 		var Level = $('#BTLevel').combobox('getValue');
+		
 		if (!Code) {
-			errinfo = errinfo + "代码为空!<br>";
+			errinfo = errinfo + "代码不能为空!<br>";
 		}
 		if (!Desc) {
-			errinfo = errinfo + "名称为空!<br>";
+			errinfo = errinfo + "描述不能为空!<br>";
+		}
+		if (!Type) {
+			errinfo = errinfo + "类型不能为空!<br>";
+		}
+		if (!Express) {
+			errinfo = errinfo + "表达式不能为空!<br>";
 		}	
 		if (errinfo) {
 			$.messager.alert("错误提示", errinfo, 'info');
@@ -92,7 +99,11 @@ function InitWinEvent(obj){
 					aId:rowID
 				},false);
 				if (parseInt(flg) < 0) {
-					$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');	
+					if (parseInt(flg)==-777) {
+						$.messager.alert("错误提示","系统参数配置不允许删除！", 'info');
+					} else {
+						$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					}
 				} else {
 					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 					obj.clearForm();

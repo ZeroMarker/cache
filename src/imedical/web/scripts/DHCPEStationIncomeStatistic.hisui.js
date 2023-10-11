@@ -4,22 +4,20 @@
 //创建人  yp
 
 $(function(){
-			
 	InitCombobox();
 	
-     
     //查询
 	$("#BFind").click(function() {	
 		BFind_click();		
-        });
-      
+    });
+    
     //清屏
 	$("#BClear").click(function() {	
 		BClear_click();		
-        });
-    
-})
+    });
 
+    ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEStationIncomeStatistic.raq");
+});
 
 //清屏
 function BClear_click(){
@@ -30,7 +28,6 @@ function BClear_click(){
 	InitCombobox();
 	BFind_click();
 }
-
 
 //查询
 function BFind_click(){
@@ -60,7 +57,8 @@ function BFind_click(){
 			+ "&CTLOCID=" + CurLoc
 			;
 	
-	document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=DHCPEStationIncomeStatistic.raq" + src;
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEStationIncomeStatistic.raq" + src);
+	// document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=DHCPEStationIncomeStatistic.raq" + src;
 }
 
 function InitCombobox(){
@@ -89,5 +87,5 @@ function InitCombobox(){
 			{field:'TGStatus',title:'状态',width:100},
 			{field:'TAdmDate',title:'日期',width:100}		
 		]]
-	})
+	});
 }

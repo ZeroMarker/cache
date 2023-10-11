@@ -4,12 +4,46 @@ $(function () {
         width: (screen.availWidth) * 0.382
     });
     $('body').layout('resize');
-
-    initPatTable();
+	
+	var dataTemp = [];
+    initPatTable(dataTemp);
     $('#patientListData').datagrid('loadData', {total:0,rows:[]});
 
     $('.easyui-searchbox').searchbox({
         searcher: function (value, name) {
+	        /*var CardTypeValue = $(this).combobox('getValue');
+	        if (CardTypeValue != "") {	//扫电子健康码（动态码）
+				var CardTypeArr = CardTypeValue.split("^");
+				var CardTypeRowId = CardTypeArr[0];
+				if (CardTypeRowId == "20")
+				{
+					var CardNo = $("#cardNoSearch").searchbox('getValue');	//动态码值
+					var Rtn=DHCACC_DisabledCardType("CardType",CardNo);
+					if (Rtn == "")
+					{
+						alert("卡无效!");
+						return;
+					}
+					var myrtn=DHCACC_GetAccInfo(CardTypeRowId,CardNo,"","PatInfo");
+					var myary=myrtn.split("^");
+			        var rtn=myary[0];
+			        switch (rtn){
+			            case "0": //卡有效有帐户
+			                var CardNo=myary[1];
+			                $("#cardNoSearch").searchbox('setValue', CardNo);	//通过动态码值取到静态值设置到就诊卡号里
+			                break;
+			            case "-200": //卡无效
+			                alert("卡无效-200");
+			                return;
+			            case "-201": //卡有效无帐户
+			                //alert(t['21']);
+			               	alert("无账户-201");
+			                return;
+			                default:
+			        }
+					
+				}
+			}*/
             setQuery();
         },
         prompt: '请输入',
@@ -23,7 +57,10 @@ $(function () {
     //禁止后退键
     document.onkeypress = forbidBackSpace;
     document.onkeydown = forbidBackSpace;
-
+	
+	//初始化卡类型
+	//initCardType();
+	
     //审核日志
     if (!hisLog) {
         hisLog = new HisLogEx(sysOption.IsSetToLog, patInfo);
@@ -46,14 +83,15 @@ function initEditor() {
     }
 }
 
-function initPatTable() {
+function initPatTable(data) {
     $('#patientListData').datagrid({
-        width: '100%',
-        height: '100%',
-        //pageSize:20,
-        //pageList:[10,20,30,50,80,100],
+        
+        pageSize:10,
+        pageList:[10,20,30,40,50],
         //fitColumns: true,
         striped: true,
+        pagination:true,
+        data:data.slice(0,10),
         loadMsg: '数据装载中......',
         //autoSizeColumn: true,
         autoRowHeight: true,
@@ -89,19 +127,34 @@ function initPatTable() {
                     width: 70,
                     sortable: true
                 }, {
-                    field: 'PAPMIName',
+                    field: 'Title',
+                    title: '病历名称',
+                    width: 90,
+                    sortable: true
+                }, {
+                    field: 'PAPMIName',	
                     title: '姓名',
                     width: 60,
                     sortable: true
                 }, {
+                    field: 'PAPMIRegno',
+                    title: '登记号',
+                    width: 80,
+                    sortable: true
+                }, {
+                    field: 'PAPMIIDCard',
+                    title: '身份证号',
+                    width: 80,
+                    sortable: true
+                }, {
                     field: 'PAAdmDate',
                     title: '就诊日期',
-                    width: 80,
+                    width: 90,
                     sortable: true
                 }, {
                     field: 'PAAdmTime',
                     title: '就诊时间',
-                    width: 80,
+                    width: 70,
                     sortable: true
                 }, {
                     field: 'PAAdmLoc',
@@ -128,6 +181,8 @@ function initPatTable() {
         onDblClickRow: function (rowIndex, rowData) {
             //alert('onDblClickRow');
             switchEMRContent(rowData);
+            $('#btnBrowse').linkbutton('enable');
+            $('#btnBrowse').removeAttr("disabled");
         }
     });
 }
@@ -166,8 +221,15 @@ function switchEMRContent(rowData) {
     patInfo.EpisodeID = rowData.EpisodeID;
     patInfo.MRadm = rowData.mradm;
     emrEditor.cleanDoc();
+    $('#btnOpOfficeAudit').linkbutton('disable');
+    $('#btnAuditAndPrint').linkbutton('disable');
+    $('#btnPrint').linkbutton('disable');
+    $('#btnRefuse').linkbutton('disable');
     $('#btnOpOfficeAudit').attr({"disabled":"disabled"});
-    if ((rowData.InstanceID == "")||(rowData.Status == "未完成")) return alert("本次就诊无电子病历记录！");
+    $('#btnAuditAndPrint').attr({"disabled":"disabled"});
+    $('#btnPrint').attr({"disabled":"disabled"});
+    $('#btnRefuse').attr({"disabled":"disabled"});
+    if ((rowData.InstanceID == "")||(rowData.Status == "未保存")) return alert("本次就诊无电子病历记录！");
 
     common.GetRecodeParamByInsIDSync(rowData.InstanceID, function (tempParam) {
         envVar.savedRecords = tempParam;
@@ -188,7 +250,21 @@ function switchEMRContent(rowData) {
                 setSysMenuDoingSth();
                 alert(err.message || err);
             }
-            if (rowData.Status == "完成") $('#btnOpOfficeAudit').removeAttr("disabled");
+            if (rowData.Status == "已签名") 
+            {
+	            //刷新病历后解锁按钮
+                $('#btnOpOfficeAudit').linkbutton('enable');
+                $('#btnAuditAndPrint').linkbutton('enable');
+                $('#btnOpOfficeAudit').removeAttr("disabled");
+                $('#btnAuditAndPrint').removeAttr("disabled");
+            	//$('#btnOpOfficePDFPrev').linkbutton('enable');
+            	if (rowData.AuditStatus == "已审核")
+            	$('#btnPrint').linkbutton('enable');
+            	$('#btnPrint').removeAttr("disabled");
+            	if (rowData.AuditStatus == "未审核")
+            	$('#btnRefuse').linkbutton('enable');
+            	$('#btnRefuse').removeAttr("disabled");
+            }
         }
     });
 }
@@ -239,42 +315,78 @@ function setQuery() {
         if (sysOption.PatientNoLength != "N") {
             tregNo = setregNoLength(tregNo,sysOption.PatientNoLength);
         }
-        var patStatus = setSearchOptions(tregNo, tname, tcardNo);
+        /* var patStatus = setSearchOptions(tregNo, tname, tcardNo);
         if (patStatus != "") {
-            return showEditorMsg(patStatus, 'alert');
+            return alert(patStatus);
         }else {
             tregNo = $("#regNoSearch").searchbox('getValue');
             tname = $("#nameSearch").searchbox('getValue');
             tcardNo = $("#cardNoSearch").searchbox('getValue');
-        }
+        } */
     }
-
+	tregNo = $("#regNoSearch").searchbox('getValue');
+    tname = $("#nameSearch").searchbox('getValue');
+    tcardNo = $("#cardNoSearch").searchbox('getValue');
+	
     var expectedLocId = $('#cbxLoc').combobox('getValue');
     var startDate = $('#startDate').datebox('getText');
     var endDate = $('#endDate').datebox('getText');
+    var auditStatus = $("#auditStatus").combobox('getValue');
+    var startDate1 = startDate.replace(new RegExp(/-/g), "/");
+    var endDate1 = endDate.replace(new RegExp(/-/g), "/");
+    var date1 = new Date(startDate1);
+    var date2 = new Date(endDate1);
+    var date3 = date2.getTime()-date1.getTime();
+    var days = Math.floor(date3/(24*3600*1000));
+    if (days >= 7)
+    {
+		alert('查询时间范围要在7天之内');
+		return;
+	}
     //IE11中，利用下拉框中的“叉号”去掉下拉框内容时，实际上下拉框的值没有去掉，所以查询时需要手动根据下拉框的文本内容判断一下下拉框的值是否应该为空；
     var expectedLocText = $('#cbxLoc').combobox('getText');
     if (expectedLocText == "" || expectedLocText == "undefinded") {
         expectedLocId = "";
     }
-
-    var data = ajaxDATA('Stream', 'EMRservice.BL.opInterface', 'GetOPPatList', tregNo, tname, tcardNo, expectedLocId, startDate, endDate);
+	$.messager.progress({
+       title: '提示',
+       msg: '数据查询中，请稍候……',
+       text: ''
+   });
+    var data = ajaxDATA('Stream', 'EMRservice.BL.opInterface', 'GetOPPatList', tregNo, tname, tcardNo, expectedLocId, startDate, endDate, auditStatus);
     ajaxGET(data, function (ret) {
         if ('' != ret) {
             var patData = $.parseJSON(ret);
-            $('#patientListData').datagrid('loadData', patData);
+            initPatTable(patData.rows);
+            var pager = $("#patientListData").datagrid("getPager");
+            pager.pagination('refresh', {  
+                total:patData.total,  
+                pageNumber:1  
+            }); 
+			pager.pagination({ 
+			    total:patData.total, 
+			    onSelectPage:function (pageNo, pageSize) { 
+					var start = (pageNo - 1) * pageSize; 
+					var end = start + pageSize; 
+					$("#patientListData").datagrid("loadData", patData.rows.slice(start, end)); 
+					pager.pagination('refresh', { 
+						total:patData.total, 
+						pageNumber:pageNo 
+					}); 
+			    }
+			}); 
+            
+            //$("#patientListData").datagrid("loadData", patData.rows.slice(0, 10));
+            $.messager.progress('close');
         }else {
             $('#patientListData').datagrid('loadData', {total:0,rows:[]});
+            $.messager.progress('close');
         }
     }, function (err) {
         alert('GetOPPatList error:' + err);
     });
 }
 
-// 查询
-$("#PatientListQuery").click(function () {
-    setQuery();
-});
 
 function setSysMenuDoingSth(sthmsg) {
     if ('undefined' != typeof dhcsys_getmenuform) {
@@ -343,3 +455,90 @@ function Dateparser(s)
         return new Date();
     }
 }
+
+/*
+function initCardType()
+{
+	jQuery.ajax({
+		type: "get",
+		dataType: "text",
+		url: "../EMRservice.Ajax.common.cls",
+		async: true,
+		data: {
+			"OutputType":"String",
+			"Class":"web.DHCEMPatCheckLevCom",
+			"Method":"CardTypeDefineListBroker"
+		},
+		success: function(d) {
+			if (d == "") return;
+			var data = eval("("+d+")");
+			$('#cardType').combobox({
+				panelHeight: 'auto',
+				editable: false,
+				valueField: 'value',
+				textField: 'text',
+				data:data,
+				onLoadSuccess: function () {
+					$("#cardType").combobox("setValue",data[1].value);
+				},
+				onSelect: function (record) {
+					var cardType = record.value;
+				}
+			})
+		},
+		error : function(d) { 
+			alert("initDoctorInfo error");
+		}
+	});	
+}
+
+//读卡
+function readCardEvent()
+{
+	/// 卡类型ID
+	var CardTypeRowId = "";
+	var CardTypeValue = $("#cardType").combobox("getValue");
+	if (CardTypeValue != "") {
+		var CardTypeArr = CardTypeValue.split("^");
+		CardTypeRowId = CardTypeArr[0];
+	}
+	
+	var myrtn = DHCACC_GetAccInfo(CardTypeRowId, CardTypeValue);
+	if (myrtn==-200){ //卡无效
+		$.messager.alert("提示","卡无效-1!");
+		return;
+	}
+	
+	var myary = myrtn.split("^");
+	var rtn = myary[0];
+	
+	switch (rtn) {
+		case "0":
+	        //setSearchOptions('','',myary[1]);
+	        $("#cardNoSearch").searchbox('setValue',myary[1]);
+            setQuery('','',myary[1]);
+			break;
+		case "-200":
+			alert("卡无效");
+			break;
+		default:
+			alert("读卡失败");
+	}
+}
+
+//读医保卡
+function readHealthCardEvent()
+{
+	var ret = "";
+	ret = InsuReadCard("",patInfo.UserID,"","NBA");
+	if ((ret == "-1") || (ret == "")) {
+		alert("卡无效！");
+		return;
+	}
+	var InsuCardNo=ret.split("^")[1];
+	var DQNoStr=ret.split("^")[19];
+	var DQNo=DQNoStr.split("|")[0];
+	var CardNo=DQNo+InsuCardNo;	//就诊卡号
+	$("#cardNoSearch").searchbox('setValue',CardNo);
+	setQuery('','',CardNo);
+}*/

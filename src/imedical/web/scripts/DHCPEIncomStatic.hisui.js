@@ -4,7 +4,6 @@
 //创建人  yp
 
 $(function(){
-			
 	InitCombobox();
 	
     //查询
@@ -16,6 +15,7 @@ $(function(){
 	$("#BClear").click(function() {	
 		BClear_click();		
     });
+    ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEIncomeStatistic.raq");
 })
 
 
@@ -65,8 +65,9 @@ function BFind_click(){
 			+ "&ShowFlag=" + ShowFlag
 			+ "&CTLOCID=" + CurLoc
 			;
-			
-	document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=" + reportName + src;
+		
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=" + reportName + src);	
+	// document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=" + reportName + src;
 }
 
 function InitCombobox(){
@@ -104,8 +105,8 @@ function InitCombobox(){
 		panelHeight:"auto",
 		editable:false,
 		data:[
-			{id:'GADM',text:'按名称查询',selected:true},
-			{id:'TarAC',text:'按会计分类查询'}
+			{id:'GADM',text:$g('按名称查询'),selected:true},
+			{id:'TarAC',text:$g('按会计分类查询')}
 		]
 	});
 }

@@ -7,7 +7,7 @@ var init = function(){
 	
 	var Info=tkMakeServerCall("web.DHCPE.AdmRecordManager","GetBaseInfo",PAADM);
 	var Message=tkMakeServerCall("web.DHCPE.SendMessage","GetContent",PAADM,OrderItemID);
-	$("#TContent").val(Message)
+	$("#Content").val(Message)
 	
 	$("#RegNo").val(Info.split("^")[4])
 	$("#Name").val(Info.split("^")[0])
@@ -16,7 +16,7 @@ var init = function(){
 	
 	
 	var HighRiskObj = $HUI.combobox("#HighRisk",{
-		url:$URL+"?ClassName=web.DHCPE.SendMessage&QueryName=FindAdviceByOrder&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindAdviceByOrder&ResultSetType=array",
 		valueField:'AdviceInfo',
 		textField:'AdviceInfo',
 		onBeforeLoad:function(param){
@@ -25,17 +25,21 @@ var init = function(){
 		}
 	});
 	
-	$("#BSave").click(function() {
-			
-			Save();	
-			
-        });
-        
-    $("#BSend").click(function() {
-			
-			Send();	
-			
-        }); 
+	//保存
+	$("#BSave").click(function() {	
+		Save();		
+      });
+      
+     //保存并发送  
+    $("#BSend").click(function() {		
+		Send();			
+      });
+         
+    //清屏
+    $("#BClear").click(function() {	
+		BClear();		
+      });
+
     InitGWListDataGrid();  
 			
 }
@@ -67,6 +71,7 @@ function InitGWListDataGrid()
 			{field:'TItem',title:'项目',hidden:true},
 			{field:'TDetail',title:'高危描述',width:400},
 			{field:'TOrderItemID',hidden:true},
+			{field:'Tcontent',hidden:true},
 			{field:'TSendFlag',title:'发送短信',width:250},
 			{field:'TSendDate',title:'发送日期',width:100},
 			{field:'TCRMFlag',width:70,align:'center',title:'随访',
@@ -87,6 +92,7 @@ function InitGWListDataGrid()
 			
 			setValueById("ID",rowData.TID)
 			setValueById("HighRisk",rowData.TDetail)
+			$("#Content").val(rowData.Tcontent)
 			if(rowData.TCRMFlag=="Y"){
 					$("#CRMFlag").checkbox('setValue',true);
 				}else{
@@ -97,6 +103,17 @@ function InitGWListDataGrid()
 	
 		})
 }
+
+
+function BClear()
+{
+	$("#ID").val("");
+    $("#Content").val(""); 
+    $(".hisui-checkbox").checkbox('setValue',false);
+    $(".hisui-combobox").combobox('select','');
+    InitGWListDataGrid();
+}
+
 
 function Save(AlertFlag)
 {	
@@ -113,15 +130,19 @@ function Save(AlertFlag)
 	if(CRMFlag) {iCRMFlag="Y";}
 	
 	var Str=PAADM+"^"+OrderItemID+"^"+Detail+"^"+iCRMFlag;
-	var ID=getValueById("ID")
+	var ID=$("#ID").val();
+	
 	var ret=tkMakeServerCall("web.DHCPE.HighRiskNew","SaveHighRisk",ID,Str);
+	
 	if (ret>0){
-		obj=document.getElementById("ID");
-		if (obj) obj.value=ID;
-		if (AlertFlag!=0){
-		    InitGWListDataGrid();
+		
+		//$("#ID").val(ret)
+		if(AlertFlag!="0"){
+			BClear();
+		   // InitGWListDataGrid();
 		}
 	}else{
+		
 		alert(ret)
 	}
 	return ret;
@@ -130,15 +151,16 @@ function Save(AlertFlag)
 }
 function Send()
 {
-	var ID=Save(0);
-	
 	var RegNo=getValueById("RegNo");
 	var TTel=getValueById("Tel");
-	var MessageTemplate=$("#TContent").val();
+	var MessageTemplate=$("#Content").val();
 	if(MessageTemplate==""){
-			$.messager.alert("提示","短信内容不能为空！","info"); 
-			return false;
+		$.messager.alert("提示","短信内容不能为空！","info"); 
+		return false;
        }
+	
+	var ID=Save(0); //保存
+	
 	var Arr=MessageTemplate.split("[");
 	if (Arr.length>1){
 		var Info1=Arr[0]
@@ -162,7 +184,7 @@ function Send()
 		var ret=tkMakeServerCall("web.DHCPE.HighRiskNew","SaveOtherRecord",AllID,UserID);
 	
 	}
-
+     BClear();
 	 InitGWListDataGrid();
 	
 }	

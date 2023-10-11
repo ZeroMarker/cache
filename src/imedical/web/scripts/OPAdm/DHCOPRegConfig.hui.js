@@ -1,5 +1,6 @@
 var PageLogicObj={
-	m_DayTimeReglesDataGrid:""
+	m_DayTimeReglesDataGrid:"",
+    m_AuthFlag:tkMakeServerCall("DHCDoc.Interface.Inside.InvokeAuth","GetSwitch")        //权力系统启用
 };
 $(function(){
 	//初始化医院
@@ -17,11 +18,18 @@ $(function(){
 		//页面元素初始化
 		PageHandle();
 		Init();
+		InitCache();
 	}
 	//事件初始化
 	InitEvent();
 });
-
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function PageHandle()
 {
 	//费用子类初始化
@@ -119,20 +127,36 @@ function LoadFeeCatList()
 				}
 			}
 	 });
+	 
+	 var cbox = $HUI.combobox("#TimeRangeInclude", {
+			valueField: 'ID',
+			textField: 'Text', 
+			editable:false,
+			data:[{"ID":"1","Text":"仅包含当前时间段"},{"ID":"2","Text":"包含当前及以后时间段"}] ,
+			filter: function(q, row){
+			},onChange:function(newValue,OldValue){
+			}
+	 });
 }
 
 function LoadOrderList()
 {
+	var RegServiceGroup= $m({
+	    ClassName : "web.DHCOPRegConfig",
+	    MethodName : "GetSpecConfigNode",
+	    NodeName : "RegServiceGroup",
+	    HospId:$HUI.combogrid('#_HospList').getValue(),
+	},false);
 	//病历本医嘱
 	$("#order").lookup({
         url:$URL,
         mode:'remote',
         method:"Get",
-        idField:'orderid',
-        textField:'order',
+        idField:'ID',
+        textField:'Desc',
         columns:[[  
-            {field:'orderid',title:'ID'},
-			{field:'order',title:'名称',width:350}
+            {field:'ID',title:'ID'},
+			{field:'Desc',title:'名称',width:350}
         ]], 
         pagination:true,
         panelWidth:400,
@@ -140,15 +164,16 @@ function LoadOrderList()
         //minQueryLen:2,
         delay:'500',
         queryOnSameQueryString:true,
-        queryParams:{ClassName: 'web.DHCOEOrdItemQuery',QueryName: 'orderlookup'},
+        queryParams:{ClassName: 'web.DHCBL.BaseReg.BaseDataQuery',QueryName: 'SeviceQueryAll'},
         onBeforeLoad:function(param){
 	        var desc=param['q'];
-	        param = $.extend(param,{desc:desc,HospID:$HUI.combogrid('#_HospList').getValue()});
+	        var RegServiceGroup=$("#RBCServiceGroup").combobox("getValue");
+	        param = $.extend(param,{RegServiceGroupRowId : RegServiceGroup,HospID:$HUI.combogrid('#_HospList').getValue()});
 	    },
 	    onSelect:function(index, rec){
 		    setTimeout(function(){
 				if (rec!=undefined){
-					$("#getorderid").val(rec["orderid"])
+					$("#getorderid").val(rec["ID"])
 					$("#order").blur();
 				}
 			});
@@ -272,6 +297,7 @@ function LoadInsuBill()
 
 function Init()
 {
+    LoadAuthHtml();
 	var HospID=$HUI.combogrid('#_HospList').getValue();
 	$.cm({
 		ClassName:"web.DHCOPRegConfig",
@@ -281,10 +307,10 @@ function Init()
 	},function(rtnStr){
 		var rtnArr=rtnStr.split(String.fromCharCode(1))
 		//初始化文本项目
-		$("#AppQtyDefault").val(rtnArr[0]);
-		$("#AppStartNoDefault").val(rtnArr[1]);
-		$("#AdmTimeRangeCount").val(rtnArr[2]);
-		$("#AppBreakLimit").val(rtnArr[3]);
+		//$("#AppQtyDefault").val(rtnArr[0]);
+		//$("#AppStartNoDefault").val(rtnArr[1]);
+		//$("#AdmTimeRangeCount").val(rtnArr[2]);
+		//$("#AppBreakLimit").val(rtnArr[3]);
 		$("#AppDaysLimit").val(rtnArr[4]);
 		$("#SchedulePeriod").val(rtnArr[5]);
 		$("#RegStartTime").timespinner('setValue',rtnArr[6]);
@@ -303,24 +329,34 @@ function Init()
 		if (MRArcimInfo!=""){
 			$("#getorderid").val(MRArcimInfo.split("@")[0])
 			$("#order").val(MRArcimInfo.split("@")[1])
+		}else{
+			$("#getorderid").val("")
+			$("#order").val("")
 		}
 		if (NeedBillCardFeeOrderInfo!=""){
 			$("#NeedBillCardFeeOrderID").val(NeedBillCardFeeOrderInfo.split("@")[0])
 			$("#NeedBillCardFeeOrder").val(NeedBillCardFeeOrderInfo.split("@")[1])
+		}else{
+			$("#NeedBillCardFeeOrderID").val("")
+			$("#NeedBillCardFeeOrder").val("")
 		}
 		if (FreeOrderInfo!=""){
 			$("#FreeOrderID").val(FreeOrderInfo.split("@")[0])
 			$("#FreeOrder").val(FreeOrderInfo.split("@")[1])
+		}else{
+			$("#FreeOrderID").val("")
+			$("#FreeOrder").val("")
 		}
-		
-		//初始化子类设置
-		$("#RegFeeBillSub").combobox("setValue",rtnArr[16]);
-		$("#CheckFeeBillSub").combobox("setValue",rtnArr[17]);
-		$("#AppFeeBillSub").combobox("setValue",rtnArr[18]);
-		$("#HoliFeeBillSub").combobox("setValue",rtnArr[19]);
-		$("#ReCheckFeeBillSub").combobox("setValue",rtnArr[20]);
-		$("#RBCServiceGroup").combobox("setValue",rtnArr[21]);
-		$("#EnableInsuBill").combobox("setValue",rtnArr[22]);
+		setTimeout(function() { 
+        	//初始化子类设置
+			$("#RegFeeBillSub").combobox("setValue",rtnArr[16]);
+			$("#CheckFeeBillSub").combobox("setValue",rtnArr[17]);
+			$("#AppFeeBillSub").combobox("setValue",rtnArr[18]);
+			$("#HoliFeeBillSub").combobox("setValue",rtnArr[19]);
+			$("#ReCheckFeeBillSub").combobox("setValue",rtnArr[20]);
+			$("#RBCServiceGroup").combobox("setValue",rtnArr[21]);
+			$("#EnableInsuBill").combobox("setValue",rtnArr[22]);
+        });
 		//初始化勾选项目
 		if (rtnArr[23]==1){
 			$("#IFScreenStart").switchbox('setValue',true);
@@ -364,11 +400,11 @@ function Init()
 			$("#NotNeedNotFeeBill").switchbox('setValue',false);
 		}
 		
-		if (rtnArr[30]==1){
+		/*if (rtnArr[30]==1){
 			$("#RegTreeQuery").switchbox('setValue',true);
 		}else{
 			$("#RegTreeQuery").switchbox('setValue',false);
-		}
+		}*/
 		
 		if (rtnArr[31]==1){
 			$("#HolidayNotCreateSche").switchbox('setValue',true);
@@ -413,6 +449,52 @@ function Init()
 		}else{
 			$("#QryScheduleByClinicGroup").switchbox('setValue',false);
 		}
+		if (rtnArr[41]==1){
+			$("#OPReturnReason").switchbox('setValue',true);
+		}else{
+			$("#OPReturnReason").switchbox('setValue',false);
+		}
+		if (rtnArr[42]==1){
+			$("#AllocInsuBill").switchbox('setValue',true);
+		}else{
+			$("#AllocInsuBill").switchbox('setValue',false);
+		}
+		$("#TimeRangeInclude").combobox("setValue",rtnArr[43]);
+		if (rtnArr[44]==1){
+			$("#DocOPRegistBill").switchbox('setValue',true);
+		}else{
+			$("#DocOPRegistBill").switchbox('setValue',false);
+		}
+		if (rtnArr[45]==1){
+			$("#InPatNotAllowOPRegist").switchbox('setValue',true);
+		}else{
+			$("#InPatNotAllowOPRegist").switchbox('setValue',false);
+		}
+		if (rtnArr[46]==1){
+			$("#DocOPRegistInsu").switchbox('setValue',true);
+		}else{
+			$("#DocOPRegistInsu").switchbox('setValue',false);
+		}
+		if (rtnArr[47]==1){
+			$("#OPRegistShowTimeRange").switchbox('setValue',true);
+		}else{
+			$("#OPRegistShowTimeRange").switchbox('setValue',false);
+		}
+		if (rtnArr[48]==1){
+			$("#SeqNoOverRangeTime").switchbox('setValue',true);
+		}else{
+			$("#SeqNoOverRangeTime").switchbox('setValue',false);
+		}
+		if (rtnArr[49]==1){
+			$("#SeqNoOverRangeTimeAdd").switchbox('setValue',true);
+		}else{
+			$("#SeqNoOverRangeTimeAdd").switchbox('setValue',false);
+		}
+		if (rtnArr[50]==1){
+			$("#ResoduSeqNoAnyTime").switchbox('setValue',true);
+		}else{
+			$("#ResoduSeqNoAnyTime").switchbox('setValue',false);
+		}
 	});
 }
 
@@ -425,8 +507,12 @@ function InitEvent()
 	$("#BSaveCongfid").click(BSaveCongfidHandle);
 	$("#PowerConfig").click(PowerConfigHandle);
 	$("#LocSortConfig").click(LocSortConfigClick);
+	$("#RegArcimConfig").click(RegArcimConfigHandle);
 	$("#SaveConfig").click(SaveConfigClick);
+	$("#SaveRegSort").click(SaveRegSortClick);
 	$('#BBlackType').click(BBlackTypeConfig);
+	$('#ReSortQueueNo').click(ReSortQueueNoConfigHandle);
+	$('#SaveResortQueueNoConfig').click(SaveReSortQueueNoConfig);
 }
 
 function SaveClickHandle()
@@ -488,11 +574,11 @@ function BuildStr(){
 	myary[2]="AppReturnTime"+"!"+DHCWebD_GetObjValue("AppReturnTime");
 	myary[3]="AppDaysLimit"+"!"+DHCWebD_GetObjValue("AppDaysLimit");
 	myary[4]="DayAppCountLimit"+"!"+DHCWebD_GetObjValue("DayAppCountLimit");
-	myary[5]="AppQtyDefault"+"!"+DHCWebD_GetObjValue("AppQtyDefault");
-	myary[6]="AppStartNoDefault"+"!"+DHCWebD_GetObjValue("AppStartNoDefault");
-	myary[7]="AdmTimeRangeCount"+"!"+DHCWebD_GetObjValue("AdmTimeRangeCount");
+	myary[5]="AppQtyDefault"+"!"+"" //DHCWebD_GetObjValue("AppQtyDefault");
+	myary[6]="AppStartNoDefault"+"!"+"" //DHCWebD_GetObjValue("AppStartNoDefault");
+	myary[7]="AdmTimeRangeCount"+"!"+"" //DHCWebD_GetObjValue("AdmTimeRangeCount");
 	myary[8]="SchedulePeriod"+"!"+DHCWebD_GetObjValue("SchedulePeriod");
-	myary[9]="AppBreakLimit"+"!"+DHCWebD_GetObjValue("AppBreakLimit");
+	myary[9]="AppBreakLimit"+"!"+"" //DHCWebD_GetObjValue("AppBreakLimit");
 	myary[10]="RegFeeBillSub"+"!"+RegFeeBillSub;
 	myary[11]="CheckFeeBillSub"+"!"+CheckFeeBillSub;
 	myary[12]="AppFeeBillSub"+"!"+AppFeeBillSub;
@@ -530,7 +616,7 @@ function BuildStr(){
 	myary[31]="HolidayNotCreateSche"+"!"+(eval($("#HolidayNotCreateSche").switchbox("getValue"))==true?1:0);
 	myary[32]="MedifyPatTypeSynAdmRea"+"!"+(eval($("#MedifyPatTypeSynAdmRea").switchbox("getValue"))==true?1:0);
 	//增加门诊挂号树状查询 20130425
-	myary[33]="RegTreeQuery"+"!"+(eval($("#RegTreeQuery").switchbox("getValue"))==true?1:0);
+	myary[33]="RegTreeQuery"+"!"+"" //(eval($("#RegTreeQuery").switchbox("getValue"))==true?1:0);
 	//提前取预约号
 	myary[34]="AdvanceAppAdm"+"!"+(eval($("#AdvanceAppAdm").switchbox("getValue"))==true?1:0);
 	//每人每天挂相同科室限额
@@ -560,6 +646,17 @@ function BuildStr(){
 	myary[43]="TempCardRegCountLimit"+"!"+$("#TempCardRegCountLimit").val();
 	myary[44]="CancelRegNeedINVPrt"+"!"+(eval($("#CancelRegNeedINVPrt").switchbox("getValue"))==true?1:0);
 	myary[45]="QryScheduleByClinicGroup"+"!"+(eval($("#QryScheduleByClinicGroup").switchbox("getValue"))==true?1:0);
+	myary[46]="OPReturnReason"+"!"+(eval($("#OPReturnReason").switchbox("getValue"))==true?1:0);
+	myary[47]="AllocInsuBill"+"!"+(eval($("#AllocInsuBill").switchbox("getValue"))==true?1:0);
+	var TimeRangeInclude=$("#TimeRangeInclude").combobox("getValue");
+	myary[48]="TimeRangeInclude"+"!"+TimeRangeInclude;
+	myary[49]="DocOPRegistBill"+"!"+(eval($("#DocOPRegistBill").switchbox("getValue"))==true?1:0);
+	myary[50]="InPatNotAllowOPRegist"+"!"+(eval($("#InPatNotAllowOPRegist").switchbox("getValue"))==true?1:0);
+	myary[51]="DocOPRegistInsu"+"!"+(eval($("#DocOPRegistInsu").switchbox("getValue"))==true?1:0);
+	myary[52]="OPRegistShowTimeRange"+"!"+(eval($("#OPRegistShowTimeRange").switchbox("getValue"))==true?1:0);
+	myary[53]="SeqNoOverRangeTime"+"!"+(eval($("#SeqNoOverRangeTime").switchbox("getValue"))==true?1:0);
+	myary[54]="SeqNoOverRangeTimeAdd"+"!"+(eval($("#SeqNoOverRangeTimeAdd").switchbox("getValue"))==true?1:0);
+	myary[55]="ResoduSeqNoAnyTime"+"!"+(eval($("#ResoduSeqNoAnyTime").switchbox("getValue"))==true?1:0);
 	var myInfo=myary.join("^");
 	return myInfo;
 }
@@ -568,6 +665,7 @@ function ForceCancelRegHandle()
 {
 	var HospID=$HUI.combogrid('#_HospList').getValue();
 	var src="dhcopforcecancelreg.hui.csp?HospID="+HospID;
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
 	var $code ="<iframe width='100%' height='99%' scrolling='no' frameborder='0' src='"+src+"'></iframe>" ;
 	createModalDialog("dhcopregconfig","强制退号安全组设置", '800', '500',"icon-w-add","",$code,"");
 }
@@ -577,6 +675,7 @@ function DepExpandHandle()
 	var HospID=$HUI.combogrid('#_HospList').getValue();
 	var HospDesc=$HUI.combogrid('#_HospList').getText();
 	var src="dhcopregdepexpand.hui.csp?HospID="+HospID;
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
 	var $code ="<iframe width='100%' height='99%' scrolling='no' frameborder='0' src='"+src+"'></iframe>" ;
 	createModalDialog("dhcopregconfig","科室扩展设置:  "+HospDesc, '800', '500',"icon-w-add","",$code,"");
 }
@@ -606,6 +705,10 @@ function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,
 	        destroyDialog(id);
 	    }
     });
+}
+function destroyDialog(id){
+   $("body").remove("#"+id); //移除存在的Dialog
+   $("#"+id).dialog('destroy');
 }
 function DayTimeReglessHandle(){
 	$("#Alite-dialog").dialog("open");
@@ -643,17 +746,10 @@ function DayTimeReglesDataGrid(){
 		idField:'Tid',
 		columns :Columns,
 		toolbar:toobar,
-		onClickCell:function(rowIndex, field, value){
-			},
-		onCheck:function(index, row){
-		},
-		onUnselect:function(index, row){
-		},
-		onBeforeSelect:function(index, row){
-
-		},onLoadSuccess:function(data){
+		onBeforeLoad:function(data){
+			$("#DayTimeReglessTab").datagrid('uncheckAll');
 		}
-	}); 
+	}).datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}); 
 	return DayTimeReglessTabDataGrid;
 }
 
@@ -664,10 +760,9 @@ function threechecklistDataDataGridLoad(){
 	    HospRowId : $HUI.combogrid('#_HospList').getValue(),
 	    Pagerows:PageLogicObj.m_DayTimeReglesDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
-		PageLogicObj.m_DayTimeReglesDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+		PageLogicObj.m_DayTimeReglesDataGrid.datagrid('uncheckAll').datagrid('loadData',GridData);
 	}); 
 }
-
 function DayTimeRegAddClickHandle(){
 	$("#Aliteadd-dialog").dialog("open");
 	initDayTimeReg();
@@ -688,7 +783,7 @@ function DayTimeRegDelClickHandle(){
 		dataType:"text",
 	},function(data){
 		if (data==0){
-			$.messager.alert("提示","删除成功","info");
+			$.messager.popover({msg: '删除成功！',type:'success'});
 			threechecklistDataDataGridLoad();
 		}
 	})
@@ -722,9 +817,11 @@ function BSaveCongfidHandle(){
 		dataType:"text",
 	},function(data){
 		if (data==0){
-			$.messager.alert("提示","增加成功","info");
+			$.messager.popover({msg: '增加成功！',type:'success'});
 			$("#Aliteadd-dialog").dialog("close");
 			threechecklistDataDataGridLoad();
+		}else if(data=="repeat"){
+			$.messager.alert("提示","增加失败！记录重复！");
 		}
 	})
 }
@@ -796,7 +893,7 @@ function LoadDoc(DepRowId){
 		ClassName:"web.DHCRBResSession",
 		QueryName:"FindResDoc",
 		DepID:DepRowId,
-		HospID:$HUI.combogrid('#_HospList').getValue()
+		HospID:$HUI.combogrid('#_HospList').getValue(),rows:99999
 	},function(Data){
 		var cbox = $HUI.combobox("#MarkList", {
 				valueField: 'Hidden1',
@@ -824,9 +921,22 @@ function PowerConfigHandle(){
 
 function LocSortConfigClick() {
 	SetDefConfig("RegistLocSort","RegistSort")
-	SetDefConfig("OutsideLocSort","OutsideSort")
-	$("#LocSortWin").window("open")
+	//SetDefConfig("OutsideLocSort","OutsideSort")
+	SetDefConfig("SessionTypeSort","SessionTypeSort")
+	SetDefCheckbox("SessionTypeSortCheck","SessionTypeSortCheck")
+	SetDefCheckbox("LastQueueNoSortCheck","LastQueueNoSortCheck")
+	$("#LocSortWin").dialog("open")
 }
+
+function RegArcimConfigHandle(){
+	var HospId=$HUI.combogrid('#_HospList').getValue()
+	websys_showModal({
+		url:"opadm.regarcimconfigconfig.hui.csp?HospId="+HospId,
+		title:'挂号附加医嘱设置',
+		width:'95%',height:'95%',
+	});
+}
+
 function SetDefConfig(Node1, TypeId) {
 	var HospId=$HUI.combogrid('#_HospList').getValue()
 	$.cm({
@@ -836,11 +946,29 @@ function SetDefConfig(Node1, TypeId) {
 		HospId:HospId,
 		dataType:"text"
 	},function(rtn) {
-		$("#"+TypeId).combobox("setText",rtn)
+		if ($.hisui.indexOfArray($("#"+TypeId).combobox('getData'),"SortType",rtn) >=0) {
+			$("#"+TypeId).combobox("setText",rtn);
+		}else{
+			$("#"+TypeId).combobox("setText","");
+		}
+	})
+	
+}
+function SetDefCheckbox(Node1, TypeId) {
+	var HospId=$HUI.combogrid('#_HospList').getValue()
+	$.cm({
+		ClassName:"web.DHCOPRegConfig",
+		MethodName:"GetSpecConfigNode",
+		NodeName:Node1,
+		HospId:HospId,
+		dataType:"text"
+	},function(rtn) {
+		$("#"+TypeId).checkbox('setValue',rtn=="1"?true:false);
 	})
 	
 }
 var SortTypeData="";
+var SortSessionTypeData=""
 function InitSortType() {
 	$.q({
 		ClassName:"web.DHCBL.BDP.BDPSort",
@@ -850,7 +978,26 @@ function InitSortType() {
 		dataType:"json"
 	},function(Data){
 		SortTypeData=Data.rows;
-		$("#RegistSort,#OutsideSort,#MarkDocSort").combobox({
+		$("#RegistSort,#MarkDocSort").combobox({
+			textField:"SortType",
+			valueField:"ID",
+			data:Data.rows,
+			OnChange:function(newValue,OldValue){
+				if (!newValue) {
+					$(this).combobox('setValue',"");
+				}
+			}
+		})
+	})
+	$.q({
+		ClassName:"web.DHCBL.BDP.BDPSort",
+		QueryName:"GetDataForCmb1",
+		rowid:"",desc:"",
+		tableName:"User.RBCSessionType",hospid:$HUI.combogrid('#_HospList').getValue(),
+		dataType:"json"
+	},function(Data){
+		SortSessionTypeData=Data.rows;
+		$("#SessionTypeSort").combobox({
 			textField:"SortType",
 			valueField:"ID",
 			data:Data.rows,
@@ -870,28 +1017,63 @@ function SaveConfigClick() {
 		});
 		return false;
 	}
-	var OutsideSort=$("#OutsideSort").combobox("getText");
+	/*var OutsideSort=$("#OutsideSort").combobox("getText");
 	if (($.hisui.indexOfArray(SortTypeData,"SortType",OutsideSort)<0)&&(OutsideSort!="")) {
 		$.messager.alert("提示","请选择对外接口科室列表排序！","info",function(){
 			$("#OutsideSort").next('span').find('input').focus();
 		});
 		return false;
-	}
-	var SortConfig="RegistLocSort"+"!"+RegistSort+"^"+"OutsideLocSort"+"!"+OutsideSort
+	}*/
+	var SortConfig="RegistLocSort"+"!"+RegistSort //+"^"+"OutsideLocSort"+"!"+OutsideSort
 	SaveConfig(SortConfig)
 	
 	$.messager.show({title:"提示",msg:"保存成功"});
-	$("#LocSortWin").window("close")
+	//$("#LocSortWin").dialog("close")
 }
-function SaveConfig(SortConfig) {
+function SaveConfig(SortConfig,NodeFlag) {
 	var HospId=$HUI.combogrid('#_HospList').getValue()
-	$.cm({
-		ClassName:"web.DHCOPRegConfig",
-		MethodName:"SaveConfigHosp",
-		Coninfo:SortConfig,
-		HospID:HospId
-	},false)
+    var NodeFlag=NodeFlag||"";
+    if ((PageLogicObj.m_AuthFlag==1)&&(NodeFlag=="ReSortQueueNo")){
+        var Rtn=$.cm({
+            ClassName:"DHCDoc.Interface.Inside.InvokeAuth",
+            MethodName:"InvokeReSortQueueNoAuth",
+            Coninfo:SortConfig,
+            HospID:HospId,
+            dataType:"text"
+        },false)
+        var Arr=Rtn.split("^");
+        $.messager.alert("提示",Arr[1],"info");
+        LoadAuthHtml();
+    }else{
+        $.cm({
+            ClassName:"web.DHCOPRegConfig",
+            MethodName:"SaveConfigHosp",
+            Coninfo:SortConfig,
+            HospID:HospId
+        },false)
+    }	
 }
+function SaveRegSortClick(){
+	var SessionTypeSortCheck=$("#SessionTypeSortCheck").checkbox('getValue')?"1":"0";
+	var SessionTypeSort=$("#SessionTypeSort").combobox("getText");
+	if (($.hisui.indexOfArray(SortSessionTypeData,"SortType",SessionTypeSort)<0)&&(SessionTypeSort!="")&&(SessionTypeSortCheck=="1")) {
+		$.messager.alert("提示","请选择挂号职称列表排序！","info",function(){
+			$("#SessionTypeSort").next('span').find('input').focus();
+		});
+		return false;
+	}
+	if ((SessionTypeSort=="")&&(SessionTypeSortCheck=="1")){
+		$.messager.alert("提示","请选择挂号职称列表排序！","info",function(){
+			$("#SessionTypeSort").next('span').find('input').focus();
+		});
+		return false;
+		}
+	var LastQueueNoSortCheck=$("#LastQueueNoSortCheck").checkbox('getValue')?"1":"0";
+	var SortConfig="SessionTypeSortCheck"+"!"+SessionTypeSortCheck+"^"+"SessionTypeSort"+"!"+SessionTypeSort+"^"+"LastQueueNoSortCheck"+"!"+LastQueueNoSortCheck
+	SaveConfig(SortConfig)
+	
+	$.messager.show({title:"提示",msg:"保存成功"});
+	}
 function BBlackTypeConfig()
 {
 	var HospId=$HUI.combogrid('#_HospList').getValue()
@@ -900,4 +1082,88 @@ function BBlackTypeConfig()
 		title:'黑名单类型设置',
 		width:'60%',height:'60%',
 	});
+}
+function ReSortQueueNoConfigHandle(){
+	InitReSortQueueNoConfig()
+	$("#ReSortQueueNo-dialog").dialog("open")
+	}
+function InitReSortQueueNoConfig(){
+	SetDefRiodeBox("BeforeDateCancelApp")
+	SetDefRiodeBox("BeforeDateReturn")
+	SetDefRiodeBox("DateUnSplitCancelApp")
+	SetDefRiodeBox("DateUnSplitReturn")
+	SetDefRiodeBox("DateSplitBeforeCancelApp")
+	SetDefRiodeBox("DateSplitBeforeReturn")
+	SetDefRiodeBox("DateSplitAfterCancelApp")
+	SetDefRiodeBox("DateSplitAfterReturn")
+	}
+function SetDefRiodeBox(Node1) {
+	var HospId=$HUI.combogrid('#_HospList').getValue()
+	$.cm({
+		ClassName:"web.DHCOPRegConfig",
+		MethodName:"GetSpecConfigNode",
+		NodeName:Node1,
+		HospId:HospId,
+		dataType:"text"
+	},function(rtn) {
+		if (rtn!=0){
+			 $HUI.radio("#"+Node1+rtn).setValue(true);
+		}else{
+			$HUI.radio("#"+Node1+"1").setValue(true);	
+		}
+	})
+}
+function SaveReSortQueueNoConfig(){
+	var BeforeDateCancelApp=$("input[name='BeforeDateCancelApp']:checked").val();
+	var BeforeDateReturn=$("input[name='BeforeDateReturn']:checked").val();
+	var DateUnSplitCancelApp=$("input[name='DateUnSplitCancelApp']:checked").val();
+	var DateUnSplitReturn=$("input[name='DateUnSplitReturn']:checked").val();
+	var DateSplitBeforeCancelApp=$("input[name='DateSplitBeforeCancelApp']:checked").val();
+	var DateSplitBeforeReturn=$("input[name='DateSplitBeforeReturn']:checked").val();
+	var DateSplitAfterCancelApp=$("input[name='DateSplitAfterCancelApp']:checked").val();
+	var DateSplitAfterReturn=$("input[name='DateSplitAfterReturn']:checked").val();
+	var SortConfig="BeforeDateCancelApp"+"!"+BeforeDateCancelApp+"^"+"BeforeDateReturn"+"!"+BeforeDateReturn+"^"+"DateUnSplitCancelApp"+"!"+DateUnSplitCancelApp;
+	SortConfig=SortConfig+"^"+"DateUnSplitReturn"+"!"+DateUnSplitReturn+"^"+"DateSplitBeforeCancelApp"+"!"+DateSplitBeforeCancelApp
+	SortConfig=SortConfig+"^"+"DateSplitBeforeReturn"+"!"+DateSplitBeforeReturn+"^"+"DateSplitAfterCancelApp"+"!"+DateSplitAfterCancelApp
+	SortConfig=SortConfig+"^"+"DateSplitAfterReturn"+"!"+DateSplitAfterReturn
+	SaveConfig(SortConfig,"ReSortQueueNo")
+	$.messager.show({title:"提示",msg:"保存成功"});
+}
+
+function DocOPRegistChangeHandler(event,data){
+	var Obj=event.target;
+	var value=data.value
+	var ID=Obj.id;
+	if ((ID=="DocOPRegistBill")&&(value===false)){
+		$("#DocOPRegistInsu").switchbox('setValue',false);
+	}else if((ID=="DocOPRegistInsu")&&(value===true)){
+		$("#DocOPRegistBill").switchbox('setValue',true);
+	}
+}
+function DocOPRegistInsuChangeHandler(){
+	
+}
+function SeqNoOverRangeChangeHandler(event,data){
+	var Obj=event.target;
+	var value=data.value
+	var ID=Obj.id;
+	if ((ID=="SeqNoOverRangeTime")&&(value==true)){
+		$("#SeqNoOverRangeTimeAdd").switchbox('setValue',false);
+	}else if((ID=="SeqNoOverRangeTimeAdd")&&(value==true)){
+		$("#SeqNoOverRangeTime").switchbox('setValue',false);
+	}
+}
+
+function LoadAuthHtml() {
+    $m({
+        ClassName: "BSP.SYS.SRV.AuthItemApply",
+        MethodName: "GetStatusHtml",
+        AuthCode: "HIS-DOC-REG-RESORTQUEUENO"
+    }, function (rtn) {
+        if (rtn != "") {
+            $(rtn).insertAfter('#SaveResortQueueNoConfig');
+            $(rtn).insertAfter('#ReSortQueueNo');
+        }
+    })
+    return;
 }

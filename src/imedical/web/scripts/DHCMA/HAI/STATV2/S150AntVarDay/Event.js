@@ -21,11 +21,28 @@
 		});
    	}
    	obj.LoadRep = function(){
-		var aHospID 	= $('#cboHospital').combobox('getValue');
+	   	var NoMapCount = $cm ({									
+			ClassName:"DHCHAI.DPS.NoMapCountSrv",
+			MethodName:"NoOEItmMastMap"
+		},false);
+	
+	   	if (NoMapCount>0) {
+		   	$.messager.defaults.ok ="跳转";
+		   	$.messager.confirm("提示", "当前存在<span style='color:red;font-size:16px;'>"+NoMapCount+"</span>条抗菌药物未对照标准名称的记录，不完成数据对照影响抗菌药物品种数判断，是否跳转至抗菌药物对照界面？", function(r){
+				if (r){
+					OpenMenu('DHCHAIBaseDP-LabInfTestSet','抗菌药物对照','dhcma.hai.dp.oeantimastmap.csp');
+				}
+		   	})
+		   	$.messager.defaults.ok="确认";
+	   	}
+
+		var aHospID 	= $('#cboHospital').combobox('getValues').join('|');
 		var aDateFrom 	= $('#dtDateFrom').datebox('getValue');
 		var aDateTo		= $('#dtDateTo').datebox('getValue');
 		var aLocType 	= Common_CheckboxValue('chkStatunit');
 		var aQryCon 	= $('#cboQryCon').combobox('getValue');
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
 		ReportFrame = document.getElementById("ReportFrame");
 		if(aDateFrom > aDateTo){
 			$.messager.alert("提示","开始日期应小于或等于结束日期！", 'info');
@@ -35,7 +52,12 @@
 			$.messager.alert("提示","请选择开始日期、结束日期！", 'info');
 			return;
 		}
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S150AntVarDay.raq&aHospIDs='+aHospID +'&aDateFrom=' + aDateFrom +'&aDateTo='+ aDateTo+'&aLocType='+aLocType+'&aQryCon='+aQryCon;	
+		if ((aStatDimens=="")){
+			$.messager.alert("提示","请选择展示维度！", 'info');
+			return;
+		}
+		
+		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S150AntVarDay.raq&aHospIDs='+aHospID +'&aDateFrom=' + aDateFrom +'&aDateTo='+ aDateTo+'&aLocType='+aLocType+'&aQryCon='+aQryCon+'&aStatDimens='+aStatDimens+'&aLocIDs='+aLocIDs+'&aPath='+cspPath;			
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
@@ -43,8 +65,34 @@
 		} 
 		
 	}
+	
+	// 菜单跳转
+	function OpenMenu(menuCode,menuDesc,menuUrl) {
+		var strUrl = '../csp/'+menuUrl+'?+&1=1';
+		//主菜单
+		var data = [{
+			"menuId": "",
+			"menuCode": menuCode,
+			"menuDesc": menuDesc,
+			"menuResource": menuUrl,
+			"menuOrder": "1",
+			"menuIcon": "icon"
+		}];
+		if( typeof window.parent.showNavTab === 'function' ){   //bootstrap 版本
+			window.parent.showNavTab(data[0]['menuCode'], data[0]['menuDesc'], data[0]['menuResource'], data[0]['menuCode'], data[0]['menuIcon'], false);
+		}else{ //HISUI 版本
+			window.parent.addTab({
+				url:menuUrl,
+				title:menuDesc
+			});
+		}
+	}
 	obj.up=function(x,y){
-        return y.AvgCount-x.AvgCount	//根据人均使用抗菌药物品种数排序
+		 if(obj.sortName=="人均使用抗菌药物天数"){
+			return y.AvgDays-x.AvgDays;
+		}else {
+			return y.AvgCount-x.AvgCount	//根据人均使用抗菌药物品种数排序
+		}	        
     }
 	obj.option1 = function(arrViewLoc,arrAvgCount,arrAvgDays,endnumber){
 		var option1 = {
@@ -64,7 +112,7 @@
 				containLabel:true
 			},
 			tooltip: {
-				trigger: 'axis',
+				trigger: 'axis'
 			},
 			toolbox: {
 				feature: {
@@ -91,23 +139,23 @@
 					type: 'category',
 					data: arrViewLoc,
 					axisLabel: {
-								margin:8,
-								rotate:45,
-								interval:0,
-								// 使用函数模板，函数参数分别为刻度数值（类目），刻度的索引
-								formatter: function (value, index) {
-									//处理标签，过长折行和省略
-									if(value.length>6 && value.length<11){
-										return value.substr(0,5)+'\n'+value.substr(5,5);
-									}else if(value.length>10&&value.length<16){
-										return value.substr(0,5)+'\n'+value.substr(5,5)+'\n'+value.substr(10,5);
-									}else if(value.length>15&&value.length<21){
-										return value.substr(0,5)+'\n'+value.substr(5,5)+'\n'+value.substr(10,5)+'\n'+value.substr(15,5);
-									}else{
-										return value;
-									}
-								}
+						margin:8,
+						rotate:45,
+						interval:0,
+						// 使用函数模板，函数参数分别为刻度数值（类目），刻度的索引
+						formatter: function (value, index) {
+							//处理标签，过长折行和省略
+							if(value.length>6 && value.length<11){
+								return value.substr(0,5)+'\n'+value.substr(5,5);
+							}else if(value.length>10&&value.length<16){
+								return value.substr(0,5)+'\n'+value.substr(5,5)+'\n'+value.substr(10,5);
+							}else if(value.length>15&&value.length<21){
+								return value.substr(0,5)+'\n'+value.substr(5,5)+'\n'+value.substr(10,5)+'\n'+value.substr(15,5);
+							}else{
+								return value;
 							}
+						}
+					}
 				}
 			],
 			yAxis: [
@@ -154,17 +202,17 @@
 	
     obj.echartLocInfRatio = function(runQuery){
 		if (!runQuery) return;
-		
+		var aStatDimens = $('#cboShowType').combobox('getValue');  //展示维度
 		var arrViewLoc 		= new Array();
 		var arrAvgCount 	= new Array();		
 		var arrAvgDays 		= new Array();
-		arrRecord 		= runQuery.record;
+		arrRecord 		= runQuery.rows;
 		
 		var arrlength		= 0;
 		for (var indRd = 0; indRd < arrRecord.length; indRd++){
 			var rd = arrRecord[indRd];
-			//去掉全院、医院、科室组
-			if ((rd["xDimensKey"].indexOf('-A-')>-1)||(rd["xDimensKey"].indexOf('-H-')>-1)||(rd["xDimensKey"].indexOf('-G-')>-1)) {
+			//去掉全院、医院、科室组、科室合计
+			if ((rd["xDimensKey"].indexOf('-A-')>-1)||((aStatDimens!="H")&&(rd["xDimensKey"].indexOf('-H-')>-1))||((aStatDimens!="G")&&(aStatDimens!="HG")&&(rd["xDimensKey"].indexOf('-G-')>-1))||(!rd["xDimensKey"])) {
 				delete arrRecord[indRd];
 				arrlength = arrlength + 1;
 				continue;
@@ -187,35 +235,58 @@
 		obj.myChart.setOption(obj.option1(arrViewLoc,arrAvgCount,arrAvgDays,endnumber),true);
 	}
    	obj.ShowEChaert1 = function(){
-		obj.myChart.clear()
+		obj.myChart.clear();
+		var NoMapCount = $cm ({									
+			ClassName:"DHCHAI.DPS.NoMapCountSrv",
+			MethodName:"NoOEItmMastMap"
+		},false);
+	
+	   	if (NoMapCount>0) {
+		   	$.messager.defaults.ok ="跳转";
+		   	$.messager.confirm("提示", "当前存在<span style='color:red;font-size:16px;'>"+NoMapCount+"</span>条抗菌药物未对照标准名称的记录，不完成数据对照影响药品品种数判断，是否跳转至抗菌药物对照界面？", function(r){
+				if (r){
+					OpenMenu('DHCHAIBaseDP-LabInfTestSet','抗菌药物对照','dhcma.hai.dp.oeantimastmap.csp');
+				}
+		   	})
+		   	$.messager.defaults.ok="确认";
+	   	}
 		 //当月科室感染率图表
-		var aHospID 	= $('#cboHospital').combobox('getValue');
+		var aHospID 	= $('#cboHospital').combobox('getValues').join('|');
 		var aDateFrom 	= $('#dtDateFrom').datebox('getValue');
 		var aDateTo		= $('#dtDateTo').datebox('getValue');
 		var aLocType 	= Common_CheckboxValue('chkStatunit');
 		var aQryCon 	= $('#cboQryCon').combobox('getValue');
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S150AntVarDay' + "&QueryName=" + 'QryAntVarDay' + "&Arg1=" + aHospID + "&Arg2=" + aDateFrom + "&Arg3=" + aDateTo +"&Arg4="+aLocType+"&Arg5="+aQryCon+"&ArgCnt=" + 5;
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
+		obj.myChart.showLoading();	//隐藏加载动画
+		$cm({
+			ClassName:"DHCHAI.STATV2.S150AntVarDay",
+			QueryName:"QryAntVarDay",
+			aHospIDs:aHospID, 
+			aDateFrom:aDateFrom, 
+			aDateTo:aDateTo, 
+			aLocType:aLocType, 
+			aQryCon:aQryCon, 
+			aStatDimens:aStatDimens, 
+			aLocIDs:aLocIDs, 
+			page: 1,
+			rows: 999
+		},function(rs){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			obj.echartLocInfRatio(rs);
+			obj.sortName="人均使用抗菌药物品种数"; //初始化排序指标
+			obj.myChart.off('legendselectchanged'); //取消事件，避免事件绑定重复导致多次触发
+			obj.myChart.on('legendselectchanged', function(legObj){
+				//处理排序问题 
+				//如果是重复点击认为是需要执行隐藏处理,不想隐藏就不用判断了	
+				if(obj.sortName!=legObj.name){
+					obj.sortName=legObj.name;
+					obj.echartLocInfRatio(rs);
+				}else {
+					obj.sortName="";  //初始化
+				}
+			});
 
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 30000, //30秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				var tkclass="DHCHAI.STATV2.S150AntVarDay";
-				var tkQuery="QryAntVarDay";
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
 		});
 	}
 	

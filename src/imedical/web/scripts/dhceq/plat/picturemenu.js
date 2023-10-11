@@ -30,19 +30,50 @@ function initPicType()
 	}
 	$("#tPicType").tree('append', {data:[{"id":"PicType_0","text":"图片类型","children":childdata}]});
 	//默认选中
+	defaultnode="0"		//默认选中图片类型 czf 2022-05-11 begin
 	if (defaultnode!="")
 	{
 		var node = $('#tPicType').tree('find', "PicType_"+defaultnode);
 		$('#tPicType').tree('select', node.target);
+		var PicTypeID=node.id
+		var PicType=PicTypeID.split("_")
+		jQuery("#tPicList").empty();
+		initPicList(getElementValue("CurrentSourceType"),getElementValue("CurrentSourceID"),PicType[1])	//默认选中图片类型 czf 2022-05-11 end
 	}
 	//监听事件
 	$('#tPicType').tree({
+		///modified by ZY20230216 bug:3256164
+		/*
 		onClick:function(node)
 		{
 			var PicTypeID=node.id
 			var PicType=PicTypeID.split("_")
 			jQuery("#tPicList").empty();
 			initPicList(getElementValue("CurrentSourceType"),getElementValue("CurrentSourceID"),PicType[1])
+		},
+		*/
+		onCheck:function(node,checked)
+		{
+			var PicTypeIDs=""
+			var nodes = $('#tPicType').tree('getChecked');
+			for (let index = 0; index < nodes.length; index++) {
+				var PicTypeID=nodes[index].id
+				var PicType=PicTypeID.split("_")
+				if (PicTypeIDs=="")
+				{
+					PicTypeIDs=PicType[1]
+				}
+				else{
+					PicTypeIDs=PicTypeIDs+","+PicType[1]
+				}
+			}
+			if (PicTypeIDs=="")
+			{
+				messageShow("","","","图片类型不能为空！")
+				return
+			}
+			jQuery("#tPicList").empty();
+			initPicList(getElementValue("CurrentSourceType"),getElementValue("CurrentSourceID"),PicTypeIDs)
 		}
 	})
 }
@@ -61,10 +92,13 @@ function initPicList(SourceType,SourceID,PicTypeDR)
 		var id=OntPictureInfo["id"]
 		var picpath=OntPictureInfo["path"]
 		var picname=OntPictureInfo["name"]
+		var picunm=OntPictureInfo["picunm"]  //Add by zc0125 2022-12-8 添加数量显示
 		PicList=""
 		PicList=PicList+"<div style=\""+"height:230px;width:229px;border:1px dashed #DCDCDC;padding:10px 10px 10px 10px;float:left;text-align:center\">"
 		PicList=PicList+"<div style=\""+"width:100%;height:95%;\"><img id=\"PT_+id+\" src=\""+picpath+"\" onclick=\"PicClick("+id+")\" style=\"width:100%;height:100%;\"/></div>"
-		PicList=PicList+"<div><span>"+picname+"</span></div>"
+		PicList=PicList+"<div><span>"+picname+"("+picunm+"张)</span></div>"  //Add by zc0125 2022-12-8 添加数量显示
+		PicList=PicList+'<a href="#\" onclick="javascript:PrintPic('+id+')" style="padding:10px 15px;background:url(../images/uiimages/printBedCard.png) no-repeat center;"></a>'
+		PicList=PicList+"</div>"
 		PicList=PicList+"</div>"
 		jQuery("#tPicList").append(PicList)
 	}
@@ -133,5 +167,63 @@ function PicClick(vID)
 	{
 		var str='../csp/dhceq.plat.pictureview.csp?&PTRowID='+vID+'&SourceType='+getElementValue("CurrentSourceType")+'&SourceID='+getElementValue("CurrentSourceID")+'&ReadOnly='+getElementValue("ReadOnly")
 		showWindow(str,"上传图片","","","icon-w-paper","modal","","","middle");	//modify by czf 2019-03-04
+	}
+}
+
+
+//czf 2022-05-12
+//打印图片
+function PrintPic(vID)
+{
+	if (vID=="")
+	{
+		return;
+	}
+	else
+	{
+		var PTRowID=vID;
+		var SourceType=getElementValue("CurrentSourceType");
+		var SourceID=getElementValue("CurrentSourceID");
+		//window.print();	//打印当前页面
+		var PicListJson=tkMakeServerCall("web.DHCEQ.Plat.LIBPicture","GetPictureList",PTRowID)
+		var PictureInfoObj=jQuery.parseJSON(PicListJson)
+		if (PictureInfoObj.SQLCODE<0) return
+		
+		var iframe = document.createElement('IFRAME');
+		var doc = null;
+		iframe.setAttribute('style','position:absolute;width:0px;height:0px;left:-500px;top:-500px;');
+		document.body.appendChild(iframe);
+		doc = iframe.contentWindow.document;
+		
+		var iframehtml='<div><ul style="width:100%;display:block;list-style:none;">';
+		
+		for (var key in PictureInfoObj.Data)
+		{
+			//var Imgid="PLRowID_"+key;
+			//var ImgObj = document.getElementById(Imgid);
+			var id="PLRowID_"+key;
+			var picpath=PictureInfoObj.Data[key];
+			if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+				picpath += "&MWToken="+websys_getMWToken()
+			}
+			iframehtml+='<li style="width:100%;padding-bottom:10px;">';
+			iframehtml+='<img id="'+id+ '" src="' + picpath + '" style="display:inline-block; max-width:100%; max-height:100%;">'
+			iframehtml+='</li>';
+		}
+		iframehtml+='</ul></div>';
+		doc.write(iframehtml);
+		doc.close();
+		
+		var img = $(doc).find("img");
+		for(var i = 0; i < img.length; i++) {
+		    img.eq(i).css("margin", "0 auto");
+		}
+		$(doc).find("img").load(function () { //modify by zyq 2022-12-21 等待图片加载完了再加载打印预览页面
+			iframe.contentWindow.focus();
+ 			iframe.contentWindow.print();
+		});
+		if(navigator.userAgent.indexOf("MSIE") > 0) {
+		    document.body.removeChild(iframe);
+		}
 	}
 }

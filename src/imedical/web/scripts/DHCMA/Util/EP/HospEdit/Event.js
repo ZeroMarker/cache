@@ -28,6 +28,9 @@ function InitHISUIWinEvent(obj){
 		$("#delIcon").on('click',function(){
 			obj.btnDelete_click();
 		});
+		$("#syncIcon").on('click',function(){
+			obj.btnSync_click();	
+		})
 	};	
 	//双击编辑事件
 	obj.gridProduct_onDbselect = function(rd){
@@ -100,6 +103,7 @@ function InitHISUIWinEvent(obj){
 		}else {
 			$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
 			obj.RecRowID = flg;
+			$HUI.dialog('#winProEdit').close();
 			obj.dictList.reload() ;//刷新当前页
 		}
 	}
@@ -135,7 +139,7 @@ function InitHISUIWinEvent(obj){
 			var Code = rd["Code"];
 			var Desc = rd["Desc"];
 			var Desc2 = rd["Desc2"];
-			var GroupDesc = rd["GroupDesc"];
+			var GroupID = rd["GroupID"];
 			var RangeID = rd["RangeID"];
 			var IsActive = rd["IsActive"];
 			
@@ -143,7 +147,7 @@ function InitHISUIWinEvent(obj){
 			$("#txtCode").val(Code);
 			$("#txtDesc").val(Desc);	
 			$("#txtDesc2").val(Desc2);
-			$("#txtGroupDr").val(GroupDesc);
+			$("#txtGroupDr").combobox('setValue',GroupID);
 			$("#RangeID").val(RangeID);
 			$('#chkIsActive').checkbox('setValue',(IsActive=='1' ? true : false));
 		}else{
@@ -152,11 +156,28 @@ function InitHISUIWinEvent(obj){
 			$("#txtCode").val('');
 			$("#txtDesc").val('');
 			$("#txtDesc2").val('');
-			$("#txtGroupDr").val('');
+			$("#txtGroupDr").combobox('setValue','');
 			$("#RangeID").val('');
 			$('#chkIsActive').checkbox('setValue',false);
 		}
 		$HUI.dialog('#winProEdit').open();
+	}
+	
+	//同步医院信息将同时同步医院组信息
+	obj.btnSync_click = function(){
+		var ret = $m({
+			ClassName:"DHCMA.Util.EPS.HospitalSrv",
+			MethodName:"SyncHospAndGroupInfo",
+			aSysCode:"HIS01"
+		},false);
+		
+		if(parseInt(ret)>0){
+			$.messager.alert("提示", "同步医院信息成功!", 'info');
+			return;	
+		}else{
+			$.messager.alert("提示", "同步医院信息失败，请重试!", 'error');
+			return;	
+		}	
 	}
 }
 

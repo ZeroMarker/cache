@@ -19,7 +19,7 @@ var PageLogicObj={
 	m_CardSecrityNo:"",
 	m_RLCredTypeID:"", //挂失人证件类型代码
 	m_CredNo:"", //挂失人证件号码
-	m_Computername:GetComputerName()
+	m_Computername:ClientIPAddress //GetComputerName()
 }
 $(function(){
 	//事件初始化
@@ -122,6 +122,7 @@ function SetPatInfoByCardID(){
 			$("#IDCardNo").val(val[3])
 			$("#RLCredNo").val(val[12]);
 			$("#CardNo").val(val[4]);
+            ModifyCredData(val[23]);
 			var Data=$("#RLCredTypeList").combobox("getData");
 			for (var i=0;i<Data.length;i++){
 				var id=Data[i]["id"];
@@ -430,6 +431,36 @@ function ExchangeOnClickHandle(){
 		}
 	})
 }
+function CheckTelOrMobile(telephone,Name,Type){
+	if (telephone.length==8) return true;
+	if (DHCC_IsTelOrMobile(telephone)) return true;
+	if (telephone.substring(0,1)==0){
+		if (telephone.indexOf('-')>=0){
+			$.messager.alert("提示",Type+"固定电话长度错误,固定电话区号长度为【3】或【4】位,固定电话号码长度为【7】或【8】位,并以连接符【-】连接,请核实!","info",function(){
+				$("#"+Name).focus();
+			})
+	        return false;
+		}else{
+			$.messager.alert("提示",Type+"固定电话长度错误,固定电话区号长度为【3】或【4】位,固定电话号码长度为【7】或【8】位,请核实!","info",function(){
+				$("#"+Name).focus();
+			})
+	        return false;
+		}
+	}else{
+		if(telephone.length!=11){
+			$.messager.alert("提示",Type+"电话长度应为【11】位,请核实!","info",function(){
+				$("#"+Name).focus();
+			})
+	        return false;
+		}else{
+			$.messager.alert("提示",Type+"不存在该号段的手机号,请核实!","info",function(){
+				$("#"+Name).focus();
+			})
+	        return false;
+		}
+	}
+	return true;
+}
 function CheckExChange(){
 	var CardStatus=$("#Flag").val();
     if (CardStatus!="正常"){
@@ -494,44 +525,45 @@ function CheckExChange(){
 	}	
 	var RLName=$("#RLName").val();
 	if (RLName==""){
-		$.messager.alert("提示","申请人姓名不能为空!","info",function(){
+		$.messager.alert("提示","换卡人姓名不能为空!","info",function(){
 			$("#RLName").focus();
 		});
 		return false;
 	}
 	var CredType=$("#RLCredTypeList").combobox("getValue");
 	if (CredType==""){
-		$.messager.alert("提示","申请人证件类型不能为空!");
+		$.messager.alert("提示","换卡人证件类型不能为空!");
 		return false;
 	}
 	var RLAddress=$("#RLAddress").val();
 	if (RLAddress==""){
-		$.messager.alert("提示","申请人地址不能为空!","info",function(){
+		$.messager.alert("提示","换卡人地址不能为空!","info",function(){
 			$("#RLAddress").focus();
 		});
 		return false;
 	}
 	var RLAddress=$("#RLPhoneNo").val();
 	if (RLAddress==""){
-		$.messager.alert("提示","申请人联系电话不能为空!","info",function(){
+		$.messager.alert("提示","换卡人联系电话不能为空!","info",function(){
 			$("#RLPhoneNo").focus();
 		});
 		return false;
 	}
+	if (!CheckTelOrMobile(RLAddress,"RLPhoneNo","换卡人联系电话")) return false;
 	var myIDNo=$("#RLCredNo").val();
 	if(myIDNo!=""){
 		var myIDrtn=IsCredTypeID();
 		if (myIDrtn){
 			var myIsID=DHCWeb_IsIdCardNo(myIDNo);
 			if (!myIsID){
-				$.messager.alert("提示","身份证号码错误!","info",function(){
+				$.messager.alert("提示","换卡人身份证号码错误!","info",function(){
 					$("#RLCredNo").focus();
 				});
 				return false;
 			}
 		}
 	}else{
-		/*$.messager.alert("提示","申请人证件号码不能为空!","info",function(){
+		/*$.messager.alert("提示","换卡人证件号码不能为空!","info",function(){
 			$("#RLCredNo").focus();
 		});
 		return false;*/
@@ -560,7 +592,7 @@ function CheckExChange(){
 		if (CredNoRequired=="Y"){
 			if ((AgeAllow!="")&(parseFloat(Age)<=parseFloat(AgeAllow))){}
 			else{
-				$.messager.alert("提示","申请人证件号码不能为空!","info",function(){
+				$.messager.alert("提示","换卡人证件号码不能为空!","info",function(){
 					$('#RLCredNo').focus();
 				});
 				return false;
@@ -639,4 +671,17 @@ function GetComputerName(){
 		var ComputerName=WshNetwork.ComputerName;
 	}
 	return ComputerName;
+}
+
+function ModifyCredData(CardTypeID){
+    var CardTypeID=CardTypeID||"";
+    var CardCreadType=$.cm({
+        ClassName:"web.UDHCOPOtherLB",
+        MethodName:"ReadCredTypeExp",
+        JSFunName:"GetCredTypeToHUIJson",
+        ListName:"",
+        HospId:session["LOGON.HOSPID"], 
+        CardTypeID:CardTypeID
+    },false);
+    $("#RLCredTypeList").combobox("loadData",CardCreadType);
 }

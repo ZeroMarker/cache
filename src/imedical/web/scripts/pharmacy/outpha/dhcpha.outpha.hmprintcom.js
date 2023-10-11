@@ -95,7 +95,7 @@ function PrintDispSheet (phd,ReprintFlag)
 	var Presc=Factor+PrescCount+" "+Instruc;
 	var PrescNameConfig=PrescName+" "+PreConfig
 	var DottedLine="- ！！ - ！！ - ！！ - ！！ - ！！ - ！！ - ！！ - ！！ - ！！ "
-	var Line="！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！"
+	var Line="！！！！！！！！！！！！！！！！！！！！！！！"
 	var prtJson={}
 	prtJson.Para = {
 		"OrdInfo":OrdInfo,

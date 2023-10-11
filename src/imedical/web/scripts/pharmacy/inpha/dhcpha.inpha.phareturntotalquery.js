@@ -19,7 +19,7 @@ $(function () {
     })
     InitThisLocInci(DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID);
     InitPhaLoc();
-    InitWardList();
+    InitWardList(DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID);
     InitReturnTotalList();
     /* 绑定按钮事件 start*/
     $("#btn-find").on("click", Query);
@@ -51,13 +51,14 @@ function InitPhaLoc() {
     $("#sel-phaloc").append(select2option);
     $('#sel-phaloc').on('select2:select', function (event) {
         InitThisLocInci($(this).val());
+        InitWardList($(this).val());
     });
 }
 //初始化病区
-function InitWardList() {
+function InitWardList(locid) {
     var selectoption = {
         url: DHCPHA_CONSTANT.URL.COMMON_INPHA_URL +
-            "?action=GetWardLocDs&style=select2",
+            "?action=GetWardLocDsByRecLoc&style=select2"+"&reclocId="+ locid,
         allowClear: true,
         width: '15em',
         placeholder: "病区..."

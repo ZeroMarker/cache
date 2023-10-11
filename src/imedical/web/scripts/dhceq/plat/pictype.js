@@ -63,13 +63,15 @@ $(document).ready(function () {
     pageList:[15,30,45,60,75]    
 });
 	setEnabled();
+	setRequiredElements("Code^Desc") //add by sjh 2020-08-31 BUG0032 增加必填项
+
 });
 
 
 function SavegridData()
 {
 	
-	if(($("#Code").val()=="")||($("#Desc").val()=="")) {$.messager.alert('图片类型代码与描述不能为空！',"图片类型代码与描述不能为空！", 'warning');return}   // Modified by kdf 2018-01-24 需求号：537582
+	if(($("#Code").val()=="")||($("#Desc").val()=="")) {$.messager.alert('提示',"图片类型代码与描述不能为空！", 'warning');return}   //add by mwz 20210415 MWZ0046 
 	var PTData="^"+$("#Code").val()+"^"+$("#Desc").val()+"^^N"
 	$.ajax({
 		url :"dhceq.jquery.method.csp",

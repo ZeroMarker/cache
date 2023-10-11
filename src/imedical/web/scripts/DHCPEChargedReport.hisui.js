@@ -4,9 +4,11 @@
 $(function() {
 	InitCombobox();
 	
-	$("#BSearch").click(function() {  
-		BSearch_click();
+	$("#BFind").click(function() {  
+		BFind_click();
     });
+	
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEChargedReport.raq");
 });
 
 function InitCombobox() {
@@ -21,13 +23,18 @@ function InitCombobox() {
 		onSelect:function(record){
 		},
 		onChange:function(newValue, oldValue) {
+		},
+		onBeforeLoad: function (param) {
+			param.Type="F";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID'];		
 		}
 		
 	});
 }
 
 // 分析查询
-function BSearch_click(){
+function BFind_click(){
 	//var BeginDate = "", EndDate = "", UserCode = ""
 	var BeginDate = $("#BeginDate").datebox('getValue');
 	if (BeginDate == "") {
@@ -53,8 +60,26 @@ function BSearch_click(){
 			+ "&UserCode=" + UserCode
 			+ "&CurLoc=" + CurLoc
 			;
-	//alert(src);
 	
-	$("#ReportFile").attr("src", "dhccpmrunqianreport.csp?reportName=DHCPEChargedReport.raq" + src);
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEChargedReport.raq" + src);
+	//$("#ReportFile").attr("src", "dhccpmrunqianreport.csp?reportName=DHCPEChargedReport.raq" + src);
 	
+}
+// 解决iframe中 润乾csp 跳动问题
+function ShowRunQianUrl(iframeId, url) {
+    var iframeObj = document.getElementById(iframeId)
+    if (iframeObj) {
+	    iframeObj.src=url;
+	    //debugger;
+	    $(iframeObj).hide();
+	    if (iframeObj.attachEvent) {
+		    iframeObj.attachEvent("onload", function(){
+		        $(this).show();
+		    });
+	    } else {
+		    iframeObj.onload = function(){
+		        $(this).show();
+		    };
+	    }
+    }
 }

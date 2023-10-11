@@ -492,6 +492,11 @@ function eventSaveDocument(commandJson)
 	    alert('保存失败');
 	    closeWindow();
 	}
+	else if (commandJson["args"]["result"] == "INVALID")
+    {
+		alert('病历存在非法字符，不能保存。'); 
+		closeWindow();
+    }
 }
 
 function closeWindow()

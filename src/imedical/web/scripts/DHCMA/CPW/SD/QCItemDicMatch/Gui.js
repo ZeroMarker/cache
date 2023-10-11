@@ -63,8 +63,8 @@ function InitviewScreen(){
 			onClick:function(node){	
 				obj.gridQCItemDic.load({
 					ClassName:"DHCMA.CPW.SDS.DictionarySrv",
-					QueryName:"QryDictByType",
-					aTypeCode:node.code
+					QueryName:"QryDicByTypeID",
+					aTypeDr:node.id
 					});
 				$('#gridQCItemDicMatch').datagrid("loadData", { total: 0, rows: [] }); 
 				$("#btnAdd").linkbutton('disable');
@@ -82,7 +82,7 @@ function InitviewScreen(){
 	});
 	$('#AntiChecked').checkbox({
 		onCheckChange:function(){
-			obj.LoadAntiTree($('#AntiKey').val(),$('#AntiChecked').checkbox('getValue'))
+			obj.LoadAntiTree($('#AntiKey').searchbox('getValue'),$('#AntiChecked').checkbox('getValue'))
 			}
 		})
 	obj.gridQCItemDic = $HUI.datagrid("#gridQCItemDic",{
@@ -99,9 +99,9 @@ function InitviewScreen(){
 		loadMsg:'数据加载中...',
 	    url:$URL,
 	    queryParams:{
-		    ClassName:"DHCMA.CPW.SDS.QCItemOptionsSrv",
-			QueryName:"QryQCItemOptions",
-			aItemDr:""
+		    ClassName:"DHCMA.CPW.SDS.DictionarySrv",
+			QueryName:"QryDicByTypeID",
+			aTypeDr:""
 	    },
 		columns:[[	
 			{field:'BTCode',title:'代码',width:'100',sortable:true},
@@ -209,10 +209,11 @@ function InitviewScreen(){
 										Input=Input.split('(')[0]
 									}
 				                 	if (Input.length<2) return;				                 	
-									param.ClassName = 'DHCMA.CPW.BTS.LinkArcimSrv';
+									param.ClassName = 'DHCMA.CPW.SDMatchSrv.AntiItemMatchSrv';
 									param.QueryName = 'QryArcimByAlias';
 									param.ResultSetType = 'array';
 									param.q = Input;
+									param.aHospID = session['DHCMA.HOSPID'];
 								}
 							}
 						}

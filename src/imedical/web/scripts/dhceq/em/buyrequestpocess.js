@@ -96,6 +96,8 @@ function initLifeInfo(BussType,BussID,LatestBussName,BussStatus)
         $.messager.progress('close');
         	if(data)
 			{
+				data=data.replace(/\r\n/g," ");	//czf 2021-07-26
+				data=data.replace(/\n/g," ")
 				data=JSON.parse(data);
         		createLifeInfo(data,BussStatus);
 			}
@@ -115,14 +117,14 @@ function createLifeInfo(jsonData,BussStatus)
 		var ApproveDate=jsonData.rows[i].TApproveDate; //审批日期
 		var ApproveTime=jsonData.rows[i].TApproveTime; //审批时间
 		var ApproveUser=jsonData.rows[i].TApproveUser; //审批人
-		var Opinion=jsonData.rows[i].TOpinion; //审批人
+		var Opinion=jsonData.rows[i].TOpinion; //审批意见
 		var Year=jsonData.rows[i].TYear; 
 		var ApproveRole=jsonData.rows[i].TApproveRole; //审批角色
 		var Action=jsonData.rows[i].TAction; //审批动作
 		///Modified BY ZY0204  把审批的所有操作都记录下来
 		var OperateType=jsonData.rows[i].TOperateType; //操作类型
 		var keyInfo=ApproveUser+" "+Action+"，审批意见："+Opinion
-		if (OperateType==1) keyInfo=ApproveUser+" "+Action+"，拒绝，拒绝原因："+Opinion
+		if (OperateType==1) keyInfo=ApproveUser+" "+Action+"，拒绝原因："+Opinion		//czf 1790015 2021-03-05
 		if (ApproveRole!="") keyInfo=ApproveRole+" "+keyInfo
 		var section="";
 		var flag="";
@@ -146,7 +148,8 @@ function createLifeInfo(jsonData,BussStatus)
 			section:section,
 			item:'^^'+'%^^'+ApproveInfo,
 			lastFlag:flag,
-			onOrOff:statusFlag
+			onOrOff:statusFlag,
+			operatetype:OperateType		//add by czf 20200918 1525716
 		}
 		
 		createTimeLine(opt);
@@ -154,9 +157,14 @@ function createLifeInfo(jsonData,BussStatus)
 	if(BussStatus==2)		//modified by czf 2019-12-16 CZF0050
 	{
 		var CurHtml=$("#ApproveInfoView").html();
-		var html='<li class="eq-times-ul-li-noneborder2"><b class="eq-times-point"></b>';
+		var html='<li class="eq-times-ul-li"><b class="eq-times-point"></b>';		//czf 2021-03-05 begin 1790015
 		html=html+'<div>'+"完成"+'</div>'+'</li>';
 		$("#ApproveInfoView").append(html);
+		
+		var lastLiHeight=$("#ApproveInfoView"+" li:last-child").innerHeight(); //获取最后一个节点高度
+		var paddingValue=lastLiHeight/2; //遮罩元素的内边距处理
+		var marginTopValue=-lastLiHeight+20; //遮罩元素上移距离
+		$("#ApproveInfoView").append('<li class="eq-times-ul-li-last" style="padding:'+paddingValue+'px 0px;margin-top:'+marginTopValue+'px;"></li>')		//czf 2021-03-05 end 1790015
 	}
 }
 

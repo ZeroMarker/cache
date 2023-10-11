@@ -143,6 +143,7 @@ if (EditARCOSRowid==""){
 	   return false;
    }
    var src="udhcfavitem.edit.newedit.csp?&ARCOSItemRowid="+ARCOSItemRowid+"&ARCOSRowid="+EditARCOSRowid+"&ARCIMRowid="+ARCIMRowid;   
+   if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
    var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
    createModalDialog("ARCOSEdit","医嘱套明细维护",490 , 560,"icon-w-edit","",$code,"");
 }
@@ -279,7 +280,7 @@ function AddClickHandler(SaveType)
 		}
   }
   $.messager.popover({msg: '保存成功！',type:'success'});
-  CloseWindow(ARCOSRowidGet);
+  CloseWindow(ARCOSRowidGet,ARCOSSubCatID,SaveType=="SaveToUser"?"":"A");
   
   LoadUDHCFavOrderSetsEditDataGrid();	
 }
@@ -349,6 +350,14 @@ function UpdateClickHandler()
 	}
 	if((CNMedItemCatStr.indexOf("^"+ARCOSSubCatID+"^")>=0)&&(CelerType=="Y")){
 		$.messager.alert('提示','草药医嘱套暂不支持快速录入！'); 
+		return;
+	}
+	if ((CMFlag=="Y")&&(CNMedItemCatStr.indexOf("^"+ARCOSSubCatID+"^")<0)) {
+		$.messager.alert('提示','请选择草药相关的医嘱套子类!'); 
+		return;
+	}
+	if ((CMFlag=="N")&&(CNMedItemCatStr.indexOf("^"+ARCOSSubCatID+"^")>=0)) {
+		$.messager.alert('提示','请选择西药相关的医嘱套子类!'); 
 		return;
 	}
 	if (FavRowid==""){
@@ -422,8 +431,13 @@ function UpdateClickHandler()
 	}else if (Err=='-2') {
 		$.messager.alert('提示','您可能填写了已经使用的代码');
 		return;
-	}
-	else{
+	}else if (Err=='-3') {
+		$.messager.alert('提示','原医嘱套已维护处方剂型或已维护明细数据不能修改为非草药医嘱套!');
+		return;
+	}else if (Err=='-4') {
+		$.messager.alert('提示','原医嘱套已维护明细数据不能修改为草药医嘱套!');
+		return;
+	}else{
 		$.messager.popover({msg: '更新成功!',type:'success'});
 		CloseWindow(ARCOSRowid);
 		
@@ -675,7 +689,24 @@ function LoadDataForFav(){
 					}
 				})
             }
-        }/*,
+        },'-',{
+	        text: '保存到医嘱模板',
+            iconCls: 'icon-save',
+            handler: function() {
+	            if (!ARCOSRowid) {
+		            $.messager.alert("提示","请选择需要保存到医嘱模板的医嘱套！");
+		            return false;
+		        }
+		        var Type="西药";
+		        var index = $('#UDHCFavOrderSetsEdit').datagrid('getRowIndex', ARCOSRowid);
+		        var rows = $('#UDHCFavOrderSetsEdit').datagrid('getRows');
+				var ARCOSOrdSubCatDR=rows[index].ARCOSOrdSubCatDR;
+				if(CNMedItemCatStr.indexOf("^"+ARCOSOrdSubCatDR+"^")>-1){	//是中草药医嘱套
+					Type="草药";
+				}
+				OpenOrdTemplateWin(Type,ARCOSRowid);
+            }
+	    }/*,
         '-', {
             text: '保存到个人医嘱模板',
             iconCls: 'icon-save',
@@ -693,7 +724,7 @@ function LoadDataForFav(){
 		singleSelect : true,
 		fitColumns : true,
 		autoRowHeight : true,
-		url : '',
+		url:$URL+"?ClassName=web.DHCUserFavItems&QueryName=FindUserOrderSet",
 		loadMsg : '加载中..',  
 		pagination : true,  //
 		rownumbers : true,  //
@@ -703,73 +734,121 @@ function LoadDataForFav(){
 		toolbar :ARCOSToolBar,
 		//frozenColumns : FrozenCateColumns,
 		columns :[[
-					{field:'CheckArcos',title:'选择',hidden:true},
-					{field:'ARCOSOrdCat',title:'大类',width:100,align:'left'},
-        			{field:'ARCOSOrdSubCat',title:'子类',width:100},
-					{field:'ARCOSCode',title:'代码',width:100},   
-        			{field:'ARCOSDesc',title:'名称',width:150},   
-        			{field:'ARCOSAlias',title:'别名',width:100},
-        			{field:'CelerType',title:'快速',width:50},
-        			{field:'FavUserDesc',title:'用户',width:100},
-        			{field:'FavDepDesc',title:'使用科室',width:100},
-        			{field:'MedUnitDesc',title:'组名',width:100,hidden:true},
-        			
-        			{field:'ARCOSRowid',title:'ARCOSRowid',width:100,hidden:true},   
-        			{field:'ARCOSOrdSubCatDR',title:'ARCOSOrdSubCatDR',width:100,hidden:true}, 
-        			{field:'ARCOSEffDateFrom',title:'生效日期',width:100,hidden:true}, 
-        			{field:'FavRowid',title:'FavRowid',width:100,hidden:true}, 
-        			{field:'ARCOSOrdCatDR',title:'ARCOSOrdCatDR',width:100,hidden:true}, 
-        			{field:'FavUserDr',title:'用户ID',width:100,hidden:true}, 
-        			{field:'FavDepDr',title:'科室ID',width:100,hidden:true}, 
-        			{field:'MedUnit',title:'组',width:100,hidden:true},
-        			{field:'PrescTypeCode',hidden:true},
-			        {field:'DuratId',hidden:true},
-			        {field:'FreqId',hidden:true},
-			        {field:'InstrId',hidden:true},
-			        {field:'DosageId',hidden:true},
-			        {field:'Notes',hidden:true}
-    			 ]],
-    		onSelect:function(rowid,RowData){
-	    		//选择医嘱套赋值
-				if (SelectRow1==rowid){
-					SelectRow1="-1"
-					ARCOSRowid=""
-					$(this).datagrid('unselectRow', rowid); 
-					ModifyHospArcosFlag=1;
-					/*UDHCFavOrderSetsEditDataGrid.datagrid({toolbar:ARCOSToolBar});
-			        UDHCARCOrderSetItemEditDataGrid.datagrid({toolbar:ARCOSItemToolBar});*/
-			        $(".datagrid-toolbar").show();
-					ControlPanel();
-				}else{
-					ARCOSRowid=RowData.ARCOSRowid;
-					SelectRow1=rowid;
-					if (HospARCOSAuthority=="1"){
-						if ((RowData.FavUserDr==session['LOGON.USERID'])||(RowData.FavDepDr==session['LOGON.CTLOCID'])||(RowData.FavUserDr=="" && RowData.FavDepDr=="")){
-							ModifyHospArcosFlag=1;
-							$(".datagrid-toolbar").show();
-						}else{
-							ModifyHospArcosFlag=0;
-							$(".datagrid-toolbar").hide();
-						}
-					}else{
-						if (((RowData.FavUserDr=="")&&(RowData.FavDepDr=="")&&(RowData.MedUnit==""))&&(HospARCOSAuthority!="1")) {
-							ModifyHospArcosFlag=0;
-							$(".datagrid-toolbar").hide();
-							/*UDHCFavOrderSetsEditDataGrid.datagrid({toolbar:[]});
-							UDHCARCOrderSetItemEditDataGrid.datagrid({toolbar:[]});*/
-						}else{
-							ModifyHospArcosFlag=1;
-							$(".datagrid-toolbar").show();
-							/*UDHCFavOrderSetsEditDataGrid.datagrid({toolbar:ARCOSToolBar});
-					        UDHCARCOrderSetItemEditDataGrid.datagrid({toolbar:ARCOSItemToolBar});*/
-						}
-					}
-					ControlPanel(rowid, RowData);
+			{field:'CheckArcos',title:'选择',hidden:true},
+			{field:'ARCOSOrdCat',title:'大类',width:80,align:'left'},
+			{field:'ARCOSOrdSubCat',title:'子类',width:100,sortable:true,
+				sorter:function(a,b){  
+					debugger;
 				}
-				SelectARCOSDataFromRow()
-				LoadUDHCARCOrderSetItemEditDataGrid();
+			},
+			{field:'ARCOSCode',title:'代码',width:100,sortable:true},   
+			{field:'ARCOSDesc',title:'名称',width:150,sortable:true},   
+			{field:'ARCOSAlias',title:'别名',width:100,sortable:true},
+			{field:'CelerType',title:'快速',width:50,sortable:true},
+			{field:'FavUserDesc',title:'用户',width:80,sortable:true},
+			{field:'FavDepDesc',title:'使用科室',width:100,sortable:true},
+			{field:'ARCOSAddUser',title:'创建人',width:80,sortable:true},
+			{field:'ARCOSAddDate',title:'创建时间',width:115,sortable:true},
+			{field:'MedUnitDesc',title:'组名',width:100,hidden:true},
+			
+			{field:'ARCOSRowid',title:'ARCOSRowid',width:100,hidden:true},   
+			{field:'ARCOSOrdSubCatDR',title:'ARCOSOrdSubCatDR',width:100,hidden:true}, 
+			{field:'ARCOSEffDateFrom',title:'生效日期',width:100,hidden:true}, 
+			{field:'FavRowid',title:'FavRowid',width:100,hidden:true}, 
+			{field:'ARCOSOrdCatDR',title:'ARCOSOrdCatDR',width:100,hidden:true}, 
+			{field:'FavUserDr',title:'用户ID',width:100,hidden:true}, 
+			{field:'FavDepDr',title:'科室ID',width:100,hidden:true}, 
+			{field:'MedUnit',title:'组',width:100,hidden:true},
+			{field:'PrescTypeCode',hidden:true},
+	        {field:'DuratId',hidden:true},
+	        {field:'FreqId',hidden:true},
+	        {field:'InstrId',hidden:true},
+	        {field:'DosageId',hidden:true},
+	        {field:'Notes',hidden:true}
+		 ]],
+		onSelect:function(rowid,RowData){
+    		//选择医嘱套赋值
+			if (SelectRow1==rowid){
+				SelectRow1="-1"
+				ARCOSRowid=""
+				$(this).datagrid('unselectRow', rowid); 
+				ModifyHospArcosFlag=1;
+				/*UDHCFavOrderSetsEditDataGrid.datagrid({toolbar:ARCOSToolBar});
+		        UDHCARCOrderSetItemEditDataGrid.datagrid({toolbar:ARCOSItemToolBar});*/
+		        $(".datagrid-toolbar").show();
+				ControlPanel();
+			}else{
+				ARCOSRowid=RowData.ARCOSRowid;
+				SelectRow1=rowid;
+				if (HospARCOSAuthority=="1"){
+					if ((RowData.FavUserDr==session['LOGON.USERID'])||(RowData.FavDepDr==session['LOGON.CTLOCID'])||(RowData.FavUserDr=="" && RowData.FavDepDr=="")){
+						ModifyHospArcosFlag=1;
+						$(".datagrid-toolbar").show();
+					}else{
+						ModifyHospArcosFlag=0;
+						$(".datagrid-toolbar").hide();
+					}
+				}else{
+					if (((RowData.FavUserDr=="")&&(RowData.FavDepDr=="")&&(RowData.MedUnit==""))&&(HospARCOSAuthority!="1")) {
+						ModifyHospArcosFlag=0;
+						$(".datagrid-toolbar").hide();
+						/*UDHCFavOrderSetsEditDataGrid.datagrid({toolbar:[]});
+						UDHCARCOrderSetItemEditDataGrid.datagrid({toolbar:[]});*/
+					}else{
+						ModifyHospArcosFlag=1;
+						$(".datagrid-toolbar").show();
+						/*UDHCFavOrderSetsEditDataGrid.datagrid({toolbar:ARCOSToolBar});
+				        UDHCARCOrderSetItemEditDataGrid.datagrid({toolbar:ARCOSItemToolBar});*/
+					}
+				}
+				ControlPanel(rowid, RowData);
 			}
-	});	
+			SelectARCOSDataFromRow()
+			LoadUDHCARCOrderSetItemEditDataGrid();
+		},
+		onBeforeLoad:function(param){
+			$('#UDHCFavOrderSetsEdit').datagrid("uncheckAll");
+			//加载之前清空选中信息
+			ARCOSRowid=""; //医嘱套ID
+			SelectRow1="-1"; //选中医嘱套行 -1表示未选中
+			var data=$('#Conditiones').combobox('getData');
+			if (data.length==0) return false;
+			var Contions=$('#Conditiones').combobox('getValue');
+			if (Contions==undefined) Contions="";
+			var ARCOSCode=$("#Code").val().replace(/(^\s*)|(\s*$)/g,'');
+			var ARCOSSubCatID=$('#SubCategory').combobox('getValue');
+			var ARCOSCode=$("#Code").val().replace(/(^\s*)|(\s*$)/g,'');
+			var ARCOSDesc=$("#Desc").val().replace(/(^\s*)|(\s*$)/g,'');
+			var ARCOSAlias=$("#Alias").val().replace(/(^\s*)|(\s*$)/g,'');
+			var ARCOSCatID=$('#Category').combobox('getValue');
+			var ARCOSSubCatID=$('#SubCategory').combobox('getValue')
+			var ARCOSEffDateFrom=NowDate
+			var FavDepList=session['LOGON.CTLOCID'];
+			var DocMedUnit=""
+			if ((Contions=="")&&(ARCOSDesc=="")&&(ARCOSAlias=="")&&(HospARCOSAuthority==0)){
+				$.messager.alert("提示","条件为空时,描述和别名不能同时为空!","info",function(){
+					$("#Desc").focus();
+				})
+				return false;
+			}
+			var CelerType=$("#CelerType").checkbox('getValue')?"Y":"N";
+			$.extend(param,{
+				UserID:session['LOGON.USERID'],
+				QueryFlag:"",ForQueryUserID:"",ForQueryLocID:"",status:"",
+				Conditiones:Contions,
+				DocMedUnit:"",
+				subCatID:ARCOSSubCatID, Code:ARCOSCode, 
+				Desc:ARCOSDesc, Alias:ARCOSAlias,
+				LogonHospID:session['LOGON.HOSPID'],
+				HospARCOSAuthority:HospARCOSAuthority,
+			    paraCelerType:CelerType
+			});
+		},
+		onLoadSuccess:function(data){
+			LoadUDHCARCOrderSetItemEditDataGrid();
+			ControlPanel();
+		}
+	})//.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter});	
 	ARCOSItemToolBar = [{
             text: '新增',
             iconCls: 'icon-add',
@@ -825,53 +904,52 @@ function LoadDataForFav(){
 		},
 		//frozenColumns : FrozenCateColumns,
 		columns :[[
-					{field:'NO',title:'序号',width:50},
-					{field:'ARCIMDesc',title:'名称',width:300,align:'left'}, 
-					{field:'ARCOSItemDoseQty',title:'剂量',width:100},
-        			{field:'ARCOSItemUOM',title:'剂量单位',width:100},
-        			{field:'ARCOSItemFrequence',title:'频次',width:100},
-        			{field:'ARCOSItemInstruction',title:'用法',width:100},
-        			{field:'ARCOSItemDuration',title:'疗程',width:50},  
-        			{field:'ARCOSItemQty',title:'数量',width:60},   
-        			{field:'ARCOSItemBillUOM',title:'单位',width:50},
-        			{field:'ARCOSItmLinkDoctor',title:'关联',width:50},
-        			{field:'Tremark',title:'备注',width:150},
-        			{field:'ARCOSDHCDocOrderType',title:'医嘱类型',width:100},
-        			{field:'SampleDesc',title:'标本',width:100},
-        			{field:'OrderPriorRemarks',title:'附加说明',width:100},
-        			{field:'DHCDocOrdRecLoc',title:'接收科室',width:200},
-        			{field:'DHCDocOrdStage',title:'医嘱阶段',width:150},
-        			{field:'DHCMustEnter',title:'必开项',width:80},
-        			{field:'SpeedFlowRate',title:'输液流速',width:80},
-        			{field:'FlowRateUnit',title:'流速单位',width:85},
-        			{field:'ARCOSItemRowid',title:'ARCOSItemRowid',width:100,hidden:true},   
-        			{field:'ARCIMRowid',title:'ARCIMRowid',width:100,hidden:true}, 
-        			{field:'ARCOSItemUOMDR',title:'ARCOSItemUOMDR',width:100,hidden:true}, 
-        			{field:'ARCOSItemFrequenceDR',title:'ARCOSItemFrequenceDR',width:100,hidden:true}, 
-        			{field:'ARCOSItemDurationDR',title:'ARCOSItemDurationDR',width:100,hidden:true}, 
-        			{field:'ARCOSItemInstructionDR',title:'ARCOSItemInstructionDR',width:100,hidden:true}, 
-        			{field:'ARCOSDHCDocOrderTypeDR',title:'ARCOSDHCDocOrderTypeDR',width:100,hidden:true}, 
-        			{field:'SampleID',title:'SampleID',width:100,hidden:true}, 
-        			{field:'ITMSerialNo',title:'ITMSerialNo',width:100,hidden:true}, 
-        			{field:'OrderPriorRemarksDR',title:'OrderPriorRemarksDR',width:100,hidden:true}
-        		
-    			 ]],
+			{field:'NO',title:'序号',width:50},
+			{field:'ARCIMDesc',title:'名称',width:300,align:'left'}, 
+			{field:'ARCOSItemDoseQty',title:'剂量',width:100},
+			{field:'ARCOSItemUOM',title:'剂量单位',width:100},
+			{field:'ARCOSItemFrequence',title:'频次',width:100},
+			{field:'ARCOSItemInstruction',title:'用法',width:100},
+			{field:'ARCOSItemDuration',title:'疗程',width:50},  
+			{field:'ARCOSItemQty',title:'数量',width:60},   
+			{field:'ARCOSItemBillUOM',title:'单位',width:50},
+			{field:'ARCOSItmLinkDoctor',title:'关联',width:50},
+			{field:'Tremark',title:'备注',width:150},
+			{field:'ARCOSDHCDocOrderType',title:'医嘱类型',width:100},
+			{field:'SampleDesc',title:'标本',width:100},
+			{field:'OrderPriorRemarks',title:'附加说明',width:100},
+			{field:'DHCDocOrdRecLoc',title:'接收科室',width:200},
+			{field:'DHCDocOrdStage',title:'医嘱阶段',width:150},
+			{field:'DHCMustEnter',title:'必开项',width:80},
+			{field:'SpeedFlowRate',title:'输液流速',width:80},
+			{field:'FlowRateUnit',title:'流速单位',width:85},
+			{field:'ARCOSItemRowid',title:'ARCOSItemRowid',width:100,hidden:true},   
+			{field:'ARCIMRowid',title:'ARCIMRowid',width:100,hidden:true}, 
+			{field:'ARCOSItemUOMDR',title:'ARCOSItemUOMDR',width:100,hidden:true}, 
+			{field:'ARCOSItemFrequenceDR',title:'ARCOSItemFrequenceDR',width:100,hidden:true}, 
+			{field:'ARCOSItemDurationDR',title:'ARCOSItemDurationDR',width:100,hidden:true}, 
+			{field:'ARCOSItemInstructionDR',title:'ARCOSItemInstructionDR',width:100,hidden:true}, 
+			{field:'ARCOSDHCDocOrderTypeDR',title:'ARCOSDHCDocOrderTypeDR',width:100,hidden:true}, 
+			{field:'SampleID',title:'SampleID',width:100,hidden:true}, 
+			{field:'ITMSerialNo',title:'ITMSerialNo',width:100,hidden:true}, 
+			{field:'OrderPriorRemarksDR',title:'OrderPriorRemarksDR',width:100,hidden:true}
+		
+		 ]],
     	onDblClickRow:function(rowid,RowData){
-	    	    if (ModifyHospArcosFlag=="0") return false;
-	    		//定义双击编辑事件
-	    		var EARCOSItemRowid=RowData.ARCOSItemRowid;
-	    		if (EARCOSItemRowid!=""){
-		    		var ARCIMRowid=RowData.ARCIMRowid;
-					OpenArcosEditWindow(ARCOSRowid,EARCOSItemRowid,ARCIMRowid);
-	    		}
+    	    if (ModifyHospArcosFlag=="0") return false;
+    		//定义双击编辑事件
+    		var EARCOSItemRowid=RowData.ARCOSItemRowid;
+    		if (EARCOSItemRowid!=""){
+	    		var ARCIMRowid=RowData.ARCIMRowid;
+				OpenArcosEditWindow(ARCOSRowid,EARCOSItemRowid,ARCIMRowid);
+    		}
 		}
 	});	
-	
 }
-
-
 //加载医嘱套Data
 function LoadUDHCFavOrderSetsEditDataGrid(){
+	$('#UDHCFavOrderSetsEdit').datagrid("reload");
+	return;
 	//加载之前清空选中信息
 	ARCOSRowid=""; //医嘱套ID
 	SelectRow1="-1"; //选中医嘱套行 -1表示未选中
@@ -895,12 +973,7 @@ function LoadUDHCFavOrderSetsEditDataGrid(){
 		})
 		return false;
 	}
-	UDHCFavOrderSetsEditDataGrid.datagrid("uncheckAll");
-	if ($("#CelerType").checkbox('getValue')){
-		var CelerType="Y";
-	}else{
-		var CelerType="N";
-	}
+	var CelerType=$("#CelerType").checkbox('getValue')?"Y":"N";
 	$.cm({
 	    ClassName : "web.DHCUserFavItems",
 	    QueryName : "FindUserOrderSet",
@@ -911,7 +984,7 @@ function LoadUDHCFavOrderSetsEditDataGrid(){
 	    paraCelerType:CelerType,
 	    Pagerows:UDHCFavOrderSetsEditDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
-		UDHCFavOrderSetsEditDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+		UDHCFavOrderSetsEditDataGrid.datagrid("uncheckAll").datagrid('loadData',GridData);
 		LoadUDHCARCOrderSetItemEditDataGrid();
 		ControlPanel();
 	})
@@ -1081,6 +1154,7 @@ function OrdSetPriceClickHandler() {
 	if ((rowdata)&&(rowdata.length!=0)){
 		ARCOSRowid=rowdata[0].ARCOSRowid;
 		var src="doc.favitemprice.hui.csp?ARCOSRowid="+ARCOSRowid;   
+		if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
 		var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
 		createModalDialog("ARCOSEdit","包装价格维护", 1130, 500,"icon-w-inv","",$code,"")
 	}else{
@@ -1407,6 +1481,7 @@ function OtherARCAlias()
 	if ((rowdata)&&(rowdata.length!=0)){
 		ARCOSRowid=rowdata[0].ARCOSRowid;
 		var src="dhcdoc.arcosoteralias.hui.csp?ARCOSRowid="+ARCOSRowid;   
+		if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
 		var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
 		createModalDialog("ARCOSEdit","医嘱套别名维护", 500, 500,"icon-w-inv","",$code,"")
 	}else{
@@ -1508,21 +1583,13 @@ function FindDeptChange(value){
 	}
 }
 
-function CloseWindow(ARCOSRowidGet){
+function CloseWindow(ARCOSRowidGet,ARCOSSubCatID,SaveType){
 	if(window){
 	  var obj =window.dialogArguments
 	  if(obj){
 		  window.returnValue=ARCOSRowidGet;
 		  window.close();
 	  } 
-	  /*if ((window.parent)&&(window.parent.SaveItemToARCOS)){
-		  window.parent.SaveItemToARCOS(ARCOSRowidGet);
-      }*/
-      /*if ((websys_showModal('options'))&&(websys_showModal('options').SaveItemToARCOS)){
-      	 websys_showModal("hide");
-		 websys_showModal('options').SaveItemToARCOS(ARCOSRowidGet);
-		 websys_showModal("close");
-	  }*/
       if (websys_showModal('options')) {
 	      websys_showModal("hide");
 	      if (websys_showModal('options').SaveItemToARCOS) {
@@ -1533,5 +1600,27 @@ function CloseWindow(ARCOSRowidGet){
 		  }
 	      websys_showModal("close");
 	  }
-  }
+	}
+	if((SaveType=="A")&&(ARCOSRowidGet)&&(!websys_showModal('options'))){
+		$.messager.confirm("确认对话框", "是否将医嘱套【"+$("#Desc").val()+"】保存到医嘱模板？", function (r) {
+			if (r) {
+				var Type="西药";
+			    var index = $('#UDHCFavOrderSetsEdit').datagrid('getRowIndex', ARCOSRowid);
+			    var rows = $('#UDHCFavOrderSetsEdit').datagrid('getRows');
+				if(CNMedItemCatStr.indexOf("^"+ARCOSSubCatID+"^")>-1){	//是中草药医嘱套
+					Type="草药";
+				}
+			    OpenOrdTemplateWin(Type,ARCOSRowidGet);
+			}
+		});
+	 }
+}
+function OpenOrdTemplateWin(Type,ARCOSRowid)
+{
+	websys_showModal({
+		url:"doc.arcossavetotemplate.hui.csp?Type="+Type,
+		title:'保存到医嘱模板',
+		paraObj:{name:ARCOSRowid},
+		width:'500px',height:'420px'
+	})
 }

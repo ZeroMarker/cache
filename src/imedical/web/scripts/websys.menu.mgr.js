@@ -211,6 +211,9 @@ var initTabMenu=function(){
 		pageSize:30,
 		columns:[[
 			{field:'Caption',title:'描述',width:200,formatter:function(value,row,index){
+				if (row["CaptionTrans"]!=value){
+					value = value+'-译成>'+row["CaptionTrans"];
+				}
 				return "<a href='javascript:void(0);' onclick='GV.showMenuEditWin("+row.ID+",\"datagrid\")'>"+value+"</a>";
 			}},
 			{field:'Name',title:'代码',width:200},
@@ -219,8 +222,11 @@ var initTabMenu=function(){
 			}},
 			{field:'Workflow',title:'工作流',width:200},
 			{field:'ID',title:'ID',hidden:true},
-			{field:'Security',title:'允许通过',formatter:function(value,row,index){
+			{field:'Security',title:'允许安全组通过',formatter:function(value,row,index){
 				return "<span onclick='GV.showMenuSecurityWin("+row.ID+",\""+row.Name+"\",\""+row.Caption+"\")' class='icon-security'>&nbsp;</span>";
+			}},
+			{field:'UserSecurity',title:'允许个人通过',formatter:function(value,row,index){
+				return "<span onclick='websys_lu(\"websys.default.hisui.csp?WEBSYS.TCOMPONENT=websys.Menu.EditUserSecurity&MenuID="+row.ID+"\",\"\",\"hisui=true,title=授权给个人,resizable=true,iconcls=icon-w-key,width=430,height=600\")' class='icon-security'>&nbsp;</span>";
 			}},
 			{field:'HospsDesc',title:'可见医院',width:200}
 			,{field:'OpExport',title:'导出',width:50,formatter:function(value,row,index){
@@ -386,7 +392,9 @@ var initInitHospGrant=function(){
 			})	
 		}
 	}
-	$('#menu-more-btn').parent().append('<a id="menu-hosp-grant" style="margin-left:20px;" href="javascript:void(0);">菜单医院授权</a>');
+	var ml = $("#menu-search").offset().left-237;
+	//$('#menu-more-btn').parent().append('<a id="menu-hosp-grant" style="margin-left:20px;" href="javascript:void(0);">菜单医院授权</a>');
+	$('#menu-more-div').append('<a id="menu-hosp-grant" style="margin-left:'+ml+'px;" href="javascript:void(0);">菜单医院授权</a>');
 	$('#menu-hosp-grant').linkbutton({
 		onClick:function(){
 			if ($('#menu-hosp-grant-win').length==0){
@@ -466,7 +474,32 @@ var initMenuEditWin=function(){
 	$('#Caption').validatebox({
 		required:true
 	})
-	
+	$('#ShortcutKey').on('blur',function(){
+		var _t = $(this);
+		var v = _t.val();
+		if (v!=""){
+			_t.val(v.toUpperCase());
+			var parentMenuCode = $('#SubMenuOf').combogrid('getValue');
+			if (parentMenuCode!=""){
+				$cm({
+					ClassName:"websys.Menu",
+					MethodName:"GetSameShortKeyMenu",
+					MenuCode:$("#Name").val(),
+					ParentMenuCode:parentMenuCode,
+					IsContainSelf:0,
+					dataType:"text",
+					ShortKey:_t.val()
+				},function(rtn){
+					if(rtn!=""){
+						_t.parent().next().html("与<span style='color:red'>"+rtn.slice(1)+"</span>快捷键相同。A~Z,F1~F12。如值为Q，表示Alt+Q跳转，F3表示F3跳转");
+					}else{
+						_t.parent().next().text("A~Z,F1~F12。如值为Q，表示Alt+Q跳转，F3表示F3跳转");
+					}
+				});
+			}
+		}
+		
+	});
 	//组件 Name:%String,ClassName:%String,QueryName:%String,HIDDEN
 	$('#LinkComponent').combogrid({
 		panelWidth:540,
@@ -647,7 +680,7 @@ var initMenuEditWin=function(){
 					 "LinkComponent","LinkComponentText","SubMenuOf","SubMenuOfText",  //16-17-18-19
 					 "WorkFlow","WorkFlowText","Worklist","WorklistText",  //20-21-22-23
 					 "Chart","ChartText","ChartBook","ChartBookText"  //24-25-26-27
-					 ,"MenuGroup","MenuGroupText","IsXhrRefresh"  //28-29-30
+					 ,"MenuGroup","MenuGroupText","IsXhrRefresh","ModifyDocDateTime"  //28-29-30-31
 					]
 		$.each(infoarr,function(i,v){
 			infoarr[i]=typeof temp[v]=="undefined"?"":temp[v];
@@ -882,7 +915,7 @@ var initMenuEditWin=function(){
 //====授权弹出============================================================================
 var initMenuSecurityWin=function(){
 	var winH=GV.maxHeight-100;
-	var winW=430;
+	var winW=460;
 	$('#menu-security-win').dialog({
 		height:winH,
 		width:winW,
@@ -1096,7 +1129,7 @@ var initMenuExport=function(){
 								
 							})
 						}else{
-							$.messager.popover({msg:'请选择要导出的菜单',type:'alert'});	
+							$.messager.popover({msg:'请选择要导入的菜单',type:'alert'});	
 						}
 					}	
 				},{
@@ -1514,7 +1547,7 @@ var initTabSecurity=function(){
 	});
 	var loadsecurity=debounce(function(groupid){
 		if (!groupid) {$('#security-iframe').attr('src','about:blank');return;}
-		$('#security-iframe').attr('src','websys.menu.security.csp?GroupDR='+groupid
+		$('#security-iframe').attr('src','websys.menu.security.csp?MWToken='+websys_getMWToken()+'&GroupDR='+groupid
 								+'&HospId='+GV.getSelectHospId() //add 当前选择院区 2020-06-13
 								);
 		/*$.messager.show({

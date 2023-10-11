@@ -4,6 +4,8 @@ eprMessageTab.readFlag = "";
 eprMessageTab.executeFlag = "";
 eprMessageTab.createDateStart = "";
 eprMessageTab.createDateEnd = "";
+var targetpos="";
+var changePage=false;
 
 (function($) {
     $(function() {
@@ -13,7 +15,7 @@ eprMessageTab.createDateEnd = "";
             queryParams: {
                 UserID: userId,
 				UserType: 'RECEIVE',
-				ReadFlag: 'U',
+				ReadFlag: '',
 				ExecuteFlag: 'U',
 				ConfirmFlag:'U',
 				EffectiveFlag: 'E',
@@ -25,6 +27,7 @@ eprMessageTab.createDateEnd = "";
             multiple:true,
             toolbar: toolbar,
             showHeader: true,
+            scrollbarSize:10,
             columns: [[
                 { field: 'ck', checkbox: true },
                 { field: 'Name', title: '患者姓名', width: 80},
@@ -51,27 +54,119 @@ eprMessageTab.createDateEnd = "";
                 { field: 'MessagePrioriry', title: 'MessagePrioriry', width: 80, hidden: true },
 				{ field: 'EpisodeID', title: 'EpisodeID', width: 80, hidden: true },
 				{ field: 'PatientID', title: 'PatientID', width: 80, hidden: true },
+				{ field: 'Path', title: 'Path', width: 80, hidden: true },
                 { field: 'ACKID', title: 'ACKID', width: 80, hidden: true }
+
             ]],
             pagination: true,
             pageSize: 20,
             pageList: [10, 20, 50],
             pagePosition: 'bottom',
+            onLoadSuccess:function(data){
+	        	if(MessageID)
+	        	{
+		        	for(i=0;i<data.rows.length;i++)
+		        	{
+			        	if(data.rows[i].MessageID==MessageID)
+			        	{
+				        	$('#messageListTable').datagrid("selectRow",i)
+				        	break
+				        }
+			        }
+		        }
+	        },
             toolbar: '#messageListTableTBar',
 			onDblClickRow: function(rowIndex, rowData){
 				var episodeID = rowData.EpisodeID;
 				var patientID = rowData.PatientID;
 				var instanceId = rowData.InstanceId;
 				var emrDocId = rowData.EmrDocId;
-				if ((episodeID == "") || (episodeID == null)) {
+				var Path = rowData.Path;
+				var MessageTitle=rowData.MessageTitle;
+				if ((episodeID == "") || (episodeID == null)||(MessageTitle=="分配消息")) {
 					return;
 				}
 				else {
-					var url = "emr.interface.ip.main.csp?&EpisodeID="+episodeID+"&PatientID="+patientID+"&DocID="+emrDocId+"&InstanceID="+instanceId;
-					window.open (url,'newwindow','height=800,width=1280,top=0,left=0,toolbar=no,menubar=no,scrollbars=no, resizable=yes,location=no, status=no') 
-					//alert(episodeID);
+					//var url = "emr.record.interface.csp?&EpisodeID="+episodeID+"&PatientID="+patientID+"&DocID="+emrDocId+"&InstanceID="+instanceId+"&Path="+Path;
+					if ((instanceId!="")&&(typeof instanceId!="undefind"))
+					{
+						var url = "emr.interface.ip.main.csp?&EpisodeID="+episodeID+"&PatientID="+patientID+"&DocID="+emrDocId+"&InstanceID="+instanceId+"&Path="+Path;  
+					}
+					else
+					{
+						var url="websys.menugroup.csp?EpisodeID="+episodeID+"&MenuGroupID=56&PersonBanner=dhcdoc.patinfo.banner.csp&homeTab=ipdoc.patinfoview.csp&PatientListPage=inpatientlist.csp"
+					}
+					if('undefined' != typeof websys_getMWToken)
+					{
+						url += "&MWToken="+websys_getMWToken()
+					}
+					window.open (url,'newwindow','width='+ window.screen.width +',height='+ window.screen.height +',top=-33,left=3,toolbar=no,menubar=no,scrollbars=no, resizable=yes,location=no, status=no') 
+					
+					//alert(episodeID);           
 				}
-			}
+			},
+			loadFilter:function(data)
+		   {
+			   
+			if ((MessageID)&&(changePage==false))
+	        	{
+		        	for(i=0;i<data.rows.length;i++)
+		        	{
+			        	if(data.rows[i].MessageID==MessageID)
+			        	{
+				        	targetpos=i;
+				        	
+				        }
+			        }
+		        }
+		        
+			  if(typeof data.length == 'number' && typeof data.splice == 'function'){
+				  data={total: data.length,rows: data}
+			  }
+    		  var dg=$(this);
+    		  var opts=dg.datagrid('options');
+              var pager=dg.datagrid('getPager');
+              
+              pager.pagination({
+    	      	onSelectPage:function(pageNum, pageSize){
+	    	      	
+	    	      	targetpos="";
+	    	      	opts.pageNumber=pageNum;
+        	 	  	opts.pageSize=pageSize;
+        	     	pager.pagination('refresh',{pageNumber:pageNum,pageSize:pageSize});
+        	     	changePage=true;
+        	     	dg.datagrid('loadData',data);
+        	     	
+	              
+        	    }
+              });
+    		  if(!data.originalRows){
+	    		  data.originalRows = (data.rows);
+              }
+              
+              if (targetpos!="")
+              {
+	              var targetPageNum = parseInt(targetpos / opts.pageSize) + 1;
+	              targetpos="";
+	              opts.pageNumber = targetPageNum
+	          	  var start = (opts.pageNumber-1)*parseInt(opts.pageSize);
+	              var end = start + parseInt(opts.pageSize);
+	              data.rows = (data.originalRows.slice(start, end));
+	              
+	              pager.pagination('refresh',{pageNumber:opts.pageNumber,pageSize:opts.pageSize});
+	              
+	                 
+	          }
+              else
+              {
+	              
+	   		 	  var start = (opts.pageNumber-1)*parseInt(opts.pageSize);
+	              var end = start + parseInt(opts.pageSize);
+	              data.rows = (data.originalRows.slice(start, end));
+	              
+              }
+              return data;
+          }
         });
        
         //已读按钮事件
@@ -162,7 +257,7 @@ eprMessageTab.createDateEnd = "";
        
 				$("#content").dialog({
 					width:300,    
-				    height:230,    
+				    height:186,    
 				    modal:true ,
 				    title:'申诉',
 				});
@@ -226,17 +321,17 @@ eprMessageTab.createDateEnd = "";
             textField: 'text',
             data: [{
                 id: '1',
-                text: '未读未处理',
-                readFlag: 'U',
+                text: $g('未处理'),
+                readFlag: '',
 				executeFlag: 'U'
             },/* {
                 id: '2',
-                text: '已读',
+                text: $g('已读'),
                 readFlag: 'R',
 				executeFlag: 'U'
             }, */{
                 id: '3',
-                text: '已处理',
+                text: $g('已处理'),
                 readFlag: 'R',
 				executeFlag: 'E'
 			}],

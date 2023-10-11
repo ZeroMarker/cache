@@ -1,172 +1,165 @@
-var init = function () {
-	var PhaLocParams=JSON.stringify(addSessionParams({Type:"All"}));
-	var PhaLocBox = $HUI.combobox('#PhaLoc', {
-			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+PhaLocParams,
-			valueField: 'RowId',
-			textField: 'Description'
+Ôªø// Ê∂àÊØíÂåÖÂü∫Êï∞Áª¥Êä§JS
+var init = function() {
+	var LocParams = JSON.stringify(addSessionParams({ Type: 'All', BDPHospital: gHospId }));
+	$HUI.combobox('#PhaLoc', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + LocParams,
+		valueField: 'RowId',
+		textField: 'Description'
 	});
-	var PackageBox = $HUI.combobox('#Package', {
-			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPackage&ResultSetType=array&typeDetial=2',
-			valueField: 'RowId',
-			textField: 'Description'
+	var PkgParams = JSON.stringify(addSessionParams({ BDPHospital: gHospId, TypeDetail: '1,2,7' }));
+	$HUI.combobox('#Package', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPkg&ResultSetType=array&Params=' + PkgParams,
+		valueField: 'RowId',
+		textField: 'Description'
 	});
-	var LocParams=JSON.stringify(addSessionParams({Type:"All"}));
-	var LocCombox = {
-		type:'combobox',
-		options:{
-			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+LocParams,
-			valueField: 'RowId',
-			textField: 'Description',
-			required:true,
-			onSelect:function(record){
-				var rows =PackageStoreGrid.getRows();
-				var row = rows[PackageStoreGrid.editIndex];
-				row.LocDesc=record.Description;
-			},
-			onShowPanel:function(){
-				$(this).combobox('reload')
-			}
-		}
-	};
-	var PackageCombox = {
-		type:'combobox',
-		options:{
-			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPackage&ResultSetType=array&typeDetial=2',
-			valueField: 'RowId',
-			textField: 'Description',
-			required:true,
-			onSelect:function(record){
-				var rows =PackageStoreGrid.getRows();
-				var row = rows[PackageStoreGrid.editIndex];
-				row.PackageDesc=record.Description;
-			},
-			onShowPanel:function(){
-				$(this).combobox('reload')
-			}
-		}
-	};
-	$UI.linkbutton('#QueryBT',{ 
-		onClick:function(){
-			var Params = JSON.stringify($UI.loopBlock('PackageTB'));
-			PackageStoreGrid.load({
-				ClassName: 'web.CSSDHUI.System.LocPackageStock',
-				QueryName: 'GetLocPackageStock',
-				Params: Params
-			});
+	
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
+			Query();
 		}
 	});
-	$UI.linkbutton('#ClearBT',{ 
-		onClick:function(){
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
 			$UI.clearBlock('PackageTB');
 			$UI.clear(PackageStoreGrid);
 		}
 	});
-	$UI.linkbutton('#AddBT',{ 
-		onClick:function(){
-			PackageStoreGrid.commonAddRow();
-		}
-	});
-	$UI.linkbutton('#SaveBT',{ 
-		onClick:function(){
-			var Rows=PackageStoreGrid.getChangesData();
-			if(isEmpty(Rows)){
-				//$UI.msg('alert','√ª”––Ë“™±£¥Êµƒ–≈œ¢!');
-				return;
-			}
-			$.cm({
-				ClassName: 'web.CSSDHUI.System.LocPackageStock',
-				MethodName: 'Save',
-				Params: JSON.stringify(Rows)
-			},function(jsonData){
-				if(jsonData.success==0){
-					$UI.msg('success',jsonData.msg);
-					PackageStoreGrid.reload();
-				}else{
-					$UI.msg('error',jsonData.msg);
-				 }
-			});
-		}
-	});
-	$UI.linkbutton('#DeleteBT',{ 
-		onClick:function(){
-			PackageStoreGrid.commonDeleteRow();
-			Delete();
-		}
-	});
-	function Delete(){
-		var Rows=PackageStoreGrid.getSelectedData()
-		if(isEmpty(Rows)){
-			//$UI.msg('alert','√ª”–—°÷–µƒ–≈œ¢!')
-			return;
-		}
-		$.messager.confirm("≤Ÿ◊˜Ã· æ","ƒ˙»∑∂®“™÷¥––…æ≥˝≤Ÿ◊˜¬£ø",function(data){
-			if(data){
-				$.cm({
-					ClassName: 'web.CSSDHUI.System.LocPackageStock',
-					MethodName: 'Delete',
-					Params: JSON.stringify(Rows)
-					},function(jsonData){
-						if(jsonData.success==0){
-							$UI.msg('success',jsonData.msg);
-							PackageStoreGrid.reload()
-						}else{
-						 	$UI.msg('error',jsonData.msg);
-						}
-					});
-			}
+	
+	function Query() {
+		$UI.clear(PackageStoreGrid);
+		var Params = JSON.stringify($UI.loopBlock('PackageTB'));
+		PackageStoreGrid.load({
+			ClassName: 'web.CSSDHUI.System.LocPackageStock',
+			QueryName: 'GetLocPackageStock',
+			Params: Params,
+			rows: 999999999
 		});
 	}
 	
-		
-	
-	var PackageStoreGridCm = [[{
+	// ‰∏ãÊãâÁßëÂÆ§ÂêçÁß∞Âõ∫ÂÆö‰ΩçÂΩìÂâçÁôªÂΩïÁßëÂÆ§
+	var LocCombox = {
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + LocParams,
+			valueField: 'RowId',
+			textField: 'Description',
+			required: true,
+			onSelect: function(record) {
+				var rows = PackageStoreGrid.getRows();
+				var row = rows[PackageStoreGrid.editIndex];
+				row.LocDesc = record.Description;
+			}
+		}
+	};
+	var PackageCombox = {
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPkg&ResultSetType=array&Params=' + PkgParams,
+			valueField: 'RowId',
+			textField: 'Description',
+			required: true,
+			onSelect: function(record) {
+				var rows = PackageStoreGrid.getRows();
+				var row = rows[PackageStoreGrid.editIndex];
+				row.PkgDesc = record.Description;
+			}
+		}
+	};
+
+	var PackageStoreGridCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
 			width: 50,
 			hidden: true
-		},{
-			title: 'ø∆ “√˚≥∆',
+		}, {
+			title: 'ÁßëÂÆ§ÂêçÁß∞',
 			field: 'LocId',
 			width: 200,
-			formatter: CommonFormatter(LocCombox,'LocId','LocDesc'),
-			editor:LocCombox
+			formatter: CommonFormatter(LocCombox, 'LocId', 'LocDesc'),
+			editor: LocCombox
 		}, {
-			title: 'œ˚∂æ∞¸√˚≥∆',
-			field: 'PackageId',
+			title: 'Ê∂àÊØíÂåÖ',
+			field: 'PkgId',
 			width: 250,
-			formatter: CommonFormatter(PackageCombox, 'PackageId','PackageDesc'),
-			editor: PackageCombox	
+			formatter: CommonFormatter(PackageCombox, 'PkgId', 'PkgDesc'),
+			editor: PackageCombox
 		}, {
-			title: '∂®∂Ó',
-			align:'right',
+			title: 'ÊØèÊó•ËØ∑È¢ÜÈáè',
+			align: 'right',
 			field: 'NormQty',
-			width: 100,
-			editor:{type:'numberbox',options:{required:true,min:1}}
+			width: 120,
+			editor: { type: 'numberbox', options: { min: 0 }}
 		}, {
-			title: 'œ÷”–ø‚¥Ê',
-			align:'right',
+			title: 'Áé∞ÊúâÂ∫ìÂ≠ò',
+			align: 'right',
 			field: 'CurQty',
 			width: 100,
-			editor:{type:'numberbox',options:{required:true,min:1}}
+			editor: { type: 'numberbox', options: { min: 0 }}
 		}
 	]];
+	
 	var PackageStoreGrid = $UI.datagrid('#PackageStoreGrid', {
-		lazy:false,
 		queryParams: {
 			ClassName: 'web.CSSDHUI.System.LocPackageStock',
 			QueryName: 'GetLocPackageStock'
 		},
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.System.LocPackageStock',
+			MethodName: 'jsDelete'
+		},
+		checkField: 'PkgId',
 		columns: PackageStoreGridCm,
-		//deleteRowParams: {
-			//ClassName: 'web.CSSDHUI.System.LocPackageStock',
-			//MethodName: 'Delete'
-		//},
-		toolbar: '#PackageTB',
-		//sortName: 'RowId',
-		//sortOrder: 'Desc',
-		onClickCell: function (index, filed, value) {
-			PackageStoreGrid.commonClickCell(index, filed);
+		showAddSaveItems: true,
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			PackageStoreGrid.commonClickRow(index, row);
+		},
+		beforeAddFn: function() {
+			var DefLocId = $('#PhaLoc').combobox('getValue');
+			var DefLocDesc = $('#PhaLoc').combobox('getText');
+			if (isEmpty(DefLocId)) { return; }
+			var DefaultData = { LocId: DefLocId, LocDesc: DefLocDesc };
+			return DefaultData;
+		},
+		saveDataFn: function() {
+			var Rows = PackageStoreGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows === false) {
+				$UI.msg('alert', 'Â≠òÂú®Êú™Â°´ÂÜôÁöÑÂøÖÂ°´È°πÔºå‰∏çËÉΩ‰øùÂ≠ò!');
+				return;
+			}
+			var Len = Rows.length;
+			for (var i = 0; i < Len; i++) {
+				var RowData = Rows[i];
+				var NormQty = RowData['NormQty'];
+				var CurQty = RowData['CurQty'];
+				if (isEmpty(NormQty) && isEmpty(CurQty)) {
+					$UI.msg('alert', 'ÊØèÊó•ËØ∑È¢ÜÈáè‰∏éÂ∫ìÂ≠ò‰∏çËÉΩÂêåÊó∂‰∏∫Á©∫!');
+					return;
+				} else if ((Number(NormQty) < 0) || (Number(NormQty) < 0)) {
+					$UI.msg('alert', 'ÊØèÊó•ËØ∑È¢ÜÈáè‰∏éÂ∫ìÂ≠ò‰∏çËÉΩÂ∞è‰∫éÈõ∂!');
+					return;
+				}
+			}
+			showMask();
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.LocPackageStock',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows)
+			}, function(jsonData) {
+				hideMask();
+				if (jsonData.success === 0) {
+					$UI.msg('success', jsonData.msg);
+					PackageStoreGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
 		}
 	});
-}
+	Query();
+};
 $(init);

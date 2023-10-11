@@ -3,32 +3,32 @@
 //创建 
 //创建人 jinlei
 
-var init=function(){
+$(function(){
 	
+	InitCombobox();
 	
-	$("#RegNo").focus();	
+	$("#RegNo").focus();
+		
 	$("#RegNo").change(function(){
   			RegNoOnChange();
 		});
 		
 	
-	$("#RegNo").keydown(function(e) {
-			
-			if(e.keyCode==13){
-				RegNoOnChange();
-				
-			}
-			
-        });
+	$("#RegNo").keydown(function(e) {	
+		if(e.keyCode==13){
+			RegNoOnChange();	
+		}	
+       });
+        
 	$("#Query").click(function(){
-  			Query();
-  			
+  			Query();	
 		});
-	$("#ViewQuery").click(function(){
-  			ViewQuery();
-		});
-	$HUI.checkbox(("#HGTemplate"),{
-        onChecked:function(e,value)
+	
+});
+
+function modifyTemplate_change()
+{
+	if ($("#HGTemplate").switchbox("getValue"))
         {
 	        $("#RegNo").val("");
 	        $("#PatientID").val("");
@@ -46,91 +46,25 @@ var init=function(){
             ShowDiagnosisPanel(TPAADM,TPatientID)
             
             
-        },
-        onUnchecked:function(e,value)
+        }
+    else
         {
+			 $("#PatientID").val("");
+			$('#patName').text("");
+			$('#sexName').text("");
+			$('#Age').text("");
+			$('#PatNo').text("");
+
             closeAllTabs('DiagnosisTab');
-        } 
-    });
-	//全部就诊记录 Type All 选中记录之前 BSel
-	var CanDiagnosisListObj = $HUI.datagrid("#CanDiagnosisList",{
-		fit: true,
-		border: false,
-		striped: true, //是否显示斑马线效果
-		singleSelect: true,
-		selectOnCheck: false,
-		autoRowHeight: false,
-		showFooter: true,
-		url: $URL,
-		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
-		rownumbers: true, //如果为true, 则显示一个行号列
-		pageSize: 15,
-		pageList: [15, 20, 25, 30],
-		
-		queryParams:{
-			ClassName:"web.DHCPE.HealthGuide",
-			QueryName:"FindNeedHMPatInfo",
-			PatientID:"",
-			CurPAADM:"",
-			BDate:"",
-			EDate:""
-		},
-		columns:[[
-		    {field:'PaadmID',hidden:true},
-		    {field:'AdmDate',title:'体检日期',width:100},
-			{field:'VIPLevel',title:'VIP',hidden:true},
-			{field:'VIPDesc',title:'VIP等级',width:100}
-		]],
-		onClickRow:function(rowIndex, rowData){
-			var PatientID=getValueById("PatientID")
-			$("#CurPAADM").val(rowData.PaadmID)
-			$("#ViewEDate").val(rowData.AdmDate)
-			ShowDiagnosisPanel(rowData.PaadmID,PatientID);	
-			ViewQuery();    
-	    }   
-	});
-	//选中的就诊记录之前的就诊记录
-	var ViewDiagnosisListObj = $HUI.datagrid("#ViewDiagnosisList",{
-		fit: true,
-		border: false,
-		striped: true, //是否显示斑马线效果
-		singleSelect: true,
-		selectOnCheck: false,
-		autoRowHeight: false,
-		showFooter: true,
-		url: $URL,
-		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
-		rownumbers: true, //如果为true, 则显示一个行号列
-		pageSize: 15,
-		pageList: [15, 20, 25, 30],
-		
-		queryParams:{
-			ClassName:"web.DHCPE.HealthGuide",
-			QueryName:"FindNeedHMPatInfo",
-			PatientID:"",
-			CurPAADM:"",
-			BDate:"",
-			EDate:""
-		},
-		columns:[[
-		    {field:'PaadmID',hidden:true},
-		    {field:'AdmDate',title:'体检日期',width:100},
-			{field:'VIPLevel',title:'VIP',hidden:true},
-			{field:'VIPDesc',title:'VIP等级',width:100}
-		]],
-		onClickRow:function(rowIndex, rowData){
-			var PatientID=getValueById("PatientID")
-			ShowHistoryHGPage(rowData.PaadmID,PatientID);
-	    } 
-	});
-	
-	
-};
+        }
+}
+
 function RegNoOnChange()
 {
-	var RegNo=getValueById("RegNo")
+	var LocID=session['LOGON.CTLOCID'];
+	var RegNo=getValueById("RegNo");
 	if(RegNo!="") {
-		var RegNo=tkMakeServerCall("web.DHCPE.DHCPECommon","RegNoMask",RegNo);
+		var RegNo=tkMakeServerCall("web.DHCPE.DHCPECommon","RegNoMask",RegNo,LocID);
 		$("#RegNo").val(RegNo)
 	}
 	if (RegNo=="") return ;
@@ -141,15 +75,26 @@ function RegNoOnChange()
 	$("#PatientID").val(PatArr[0]);
 	$('#patName').text(PatArr[1]);
 	$('#sexName').text(PatArr[2]);
+	//blue：炫彩 lite：极简
+	var HISUIStyleCode=tkMakeServerCall("websys.StandardTypeItem","GetIdFromCodeOrDescription","websys","HISUIDefVersion");
 	if (PatArr[2] == '男') {
-		$('#sex').removeClass('woman').addClass('man');
+		if (HISUIStyleCode== 'blue') {
+			$('#sex').removeClass('woman').addClass('man');
+		}else{
+			$('#sex').removeClass('woman_lite').addClass('man_lite');
+		}
 	} else {
-		$('#sex').removeClass('man').addClass('woman');
+		if (HISUIStyleCode== 'blue') {
+		   $('#sex').removeClass('man').addClass('woman');
+		}else{
+			$('#sex').removeClass('man_lite').addClass('woman_lite');
+		}
 	}
 	$('#Age').text(PatArr[3]);
 	$('#PatNo').text(PatArr[4]);
 	Clear();
 	Query();
+	ViewQuery();
 	//ViewQuery();
 	ShowDiagnosisPanel("",PatArr[0]);
 	
@@ -166,27 +111,30 @@ function Clear()
 
 function Query()
 {
+	var LocID=session['LOGON.CTLOCID'];
 	var BDate=$("#BDate").datebox('getValue');
 	var EDate=$("#EDate").datebox('getValue');
-	var PatientID=getValueById("PatientID")
-	var CurPAADM=""
-	$("#CanDiagnosisList").datagrid('load',{ClassName:"web.DHCPE.HealthGuide",QueryName:"FindNeedHMPatInfo",PatientID:PatientID,CurPAADM:CurPAADM,BDate:BDate,EDate:EDate}); 
+	var PatientID=getValueById("PatientID");
+	var CurPAADM="";
+	$("#CanDiagnosisList").datagrid('load',{ClassName:"web.DHCPE.HealthGuide",QueryName:"FindNeedHMPatInfo",PatientID:PatientID,CurPAADM:CurPAADM,BDate:BDate,EDate:EDate,LocID:LocID}); 
 }
+
 function ViewQuery()
 {
-	var BDate=$("#ViewBDate").datebox('getValue');
-	var EDate=$("#ViewEDate").datebox('getValue');
-	var PatientID=getValueById("PatientID")
-	var CurPAADM=$("#CurPAADM").val()
-	$("#ViewDiagnosisList").datagrid('load',{ClassName:"web.DHCPE.HealthGuide",QueryName:"FindNeedHMPatInfo",PatientID:PatientID,CurPAADM:CurPAADM,BDate:BDate,EDate:EDate}); 
+	var LocID=session['LOGON.CTLOCID'];
+	var PatientID=getValueById("PatientID");
+	var CurPAADM=$("#CurPAADM").val();
+	
+	$("#ViewDiagnosisList").datagrid('load',{ClassName:"web.DHCPE.HealthGuide",QueryName:"FindNeedHMPatInfo",PatientID:PatientID,CurPAADM:CurPAADM,BDate:"",EDate:"",LocID:LocID}); 
 }
+
 function ShowDiagnosisPanel(PAADM,PatientID)
 {
 	closeAllTabs('DiagnosisTab');
 	var Type;
 	Type="HP"
 	var url="dhcpe.healthguide.edit.csp?PatientID="+PatientID+"&Type="+Type ;
-	var content = '<iframe id="tabframediagnosis" scrolling="auto" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>';
+	var content = '<iframe id="tabframediagnosis" scrolling="auto" frameborder="0"  src="'+PEURLAddToken(url)+'" style="width:100%;height:100%;"></iframe>';
 	
 	$('#DiagnosisTab').tabs('add', {
           selected:true,
@@ -196,11 +144,12 @@ function ShowDiagnosisPanel(PAADM,PatientID)
 	if (PAADM=="") return ;
 	
 	//var url="websys.default.csp?WEBSYS.TCOMPONENT=DHCPENewDiagnosis&MainDoctor="+"N"+"&OnlyRead="+"Y"+"&EpisodeID="+PAADM;
-	if (PAADM!=="Template")
+	if (PAADM!="Template")
 	{
 		var RegNo=$("#RegNo").val();
-		var url="dhcpenewdiagnosis.diagnosis.hisui.csp?MainDoctor="+"&OnlyRead="+"Y"+"&EpisodeID="+PAADM+"&HMRegNo="+RegNo;
-		var content = '<iframe id="tabframehistory" scrolling="auto" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>';
+		//var url="dhcpenewdiagnosis.diagnosis.hisui.csp?MainDoctor="+"&OnlyRead="+"Y"+"&EpisodeID="+PAADM+"&HMRegNo="+RegNo;
+		var url="dhcperesultview.hisui.csp?EpisodeID="+PAADM;
+		var content = '<iframe id="tabframehistory" scrolling="auto" frameborder="0"  src="'+PEURLAddToken(url)+'" style="fit:true;width:100%;height:90%;"></iframe>';
 
 		$('#DiagnosisTab').tabs('add', {
 	          selected:false,
@@ -213,7 +162,7 @@ function ShowDiagnosisPanel(PAADM,PatientID)
 	//data analysis 数据分析
 	Type="DAS"
 	var url="dhcpe.healthguide.edit.csp?PatientID="+PatientID+"&PAADM="+PAADM+"&Type="+Type;
-	var content = '<iframe id="tabframediagnosis" scrolling="auto" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>';
+	var content = '<iframe id="tabframediagnosis" scrolling="auto" frameborder="0"  src="'+PEURLAddToken(url)+'" style="width:100%;height:100%;"></iframe>';
 
 	$('#DiagnosisTab').tabs('add', {
           selected:false,
@@ -224,7 +173,7 @@ function ShowDiagnosisPanel(PAADM,PatientID)
 	//risk assessment 风险评估
 	Type="Risk"
 	var url="dhcpe.healthguide.edit.csp?PatientID="+PatientID+"&PAADM="+PAADM+"&Type="+Type;
-	var content = '<iframe id="tabframediagnosis" scrolling="auto" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>';
+	var content = '<iframe id="tabframediagnosis" scrolling="auto" frameborder="0"  src="'+PEURLAddToken(url)+'" style="width:100%;height:100%;"></iframe>';
 
 	$('#DiagnosisTab').tabs('add', {
           selected:false,
@@ -235,7 +184,7 @@ function ShowDiagnosisPanel(PAADM,PatientID)
 	//Plan Making 方案指定
 	Type="Plan"
 	var url="dhcpe.healthguide.edit.csp?PatientID="+PatientID+"&PAADM="+PAADM+"&Type="+Type;
-	var content = '<iframe id="tabframediagnosis" scrolling="auto" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>';
+	var content = '<iframe id="tabframediagnosis" scrolling="auto" frameborder="0"  src="'+PEURLAddToken(url)+'" style="width:100%;height:100%;"></iframe>';
 
 	$('#DiagnosisTab').tabs('add', {
           selected:false,
@@ -246,7 +195,7 @@ function ShowDiagnosisPanel(PAADM,PatientID)
 	//CRM Records 随访记录
 	Type="CRM"
 	var url="dhcpe.healthguide.edit.csp?PatientID="+PatientID+"&PAADM="+PAADM+"&Type="+Type;
-	var content = '<iframe id="tabframediagnosis" scrolling="auto" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>';
+	var content = '<iframe id="tabframediagnosis" scrolling="auto" frameborder="0"  src="'+PEURLAddToken(url)+'" style="width:100%;height:100%;"></iframe>';
 
 	$('#DiagnosisTab').tabs('add', {
           selected:false,
@@ -257,7 +206,7 @@ function ShowDiagnosisPanel(PAADM,PatientID)
 	//effect evaluation  疗效评估
 	Type="Effect"
 	var url="dhcpe.healthguide.edit.csp?PatientID="+PatientID+"&PAADM="+PAADM+"&Type="+Type;
-	var content = '<iframe id="tabframediagnosis" scrolling="auto" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>';
+	var content = '<iframe id="tabframediagnosis" scrolling="auto" frameborder="0"  src="'+PEURLAddToken(url)+'" style="width:100%;height:100%;"></iframe>';
 
 	$('#DiagnosisTab').tabs('add', {
           selected:false,
@@ -268,7 +217,7 @@ function ShowDiagnosisPanel(PAADM,PatientID)
 	//Remark 需求备注
 	Type="Remark "
 	var url="dhcpe.healthguide.edit.csp?PatientID="+PatientID+"&PAADM="+PAADM+"&Type="+Type;
-	var content = '<iframe id="tabframediagnosis" scrolling="auto" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>';
+	var content = '<iframe id="tabframediagnosis" scrolling="auto" frameborder="0"  src="'+PEURLAddToken(url)+'" style="width:100%;height:100%;"></iframe>';
 	$('#DiagnosisTab').tabs('add', {
           selected:false,
     	  title:"需求备注",
@@ -311,7 +260,7 @@ function ShowHistoryTabs(PAADM,PatientID)
 
 	Type="DAS"
 	var url="dhcpe.healthguide.print.csp?PatientID="+PatientID+"&PAADM="+PAADM+"&Type="+Type;
-	var content = '<iframe id="tabframediagnosis" scrolling="auto" frameborder="0"  src="'+url+'" style="width:100%;height:"550px";"></iframe>';
+	var content = '<iframe id="tabframediagnosis" scrolling="auto" frameborder="0"  src="'+PEURLAddToken(url)+'" style="width:100%;height:"550px";"></iframe>';
 
 	$('#ViewDiagnosisTab').tabs('add', {
           selected:false,
@@ -382,14 +331,10 @@ function ShowHistoryTabs(PAADM,PatientID)
 }
 function openHistoryWin(PAADM,PatientID)
 {
-	
+	/*
 	var o=$("#HGMain").offset();
 	var top=o.top-35
 	var left=o.left+200
-	//var DT=$("#HGMain",window.document)
-	//var width=DT.width()*7/10
-	//southPanel
-	//var height=document.body.clientHeight-200   ;DT.height()*7/10
 	var width=800
 	var height=600
 	var lnkpara=
@@ -405,9 +350,9 @@ function openHistoryWin(PAADM,PatientID)
 			hisui=true
 	var url="dhcpe.healthguide.edit.history.csp?PAADM="+PAADM+"&PatientID="+PatientID;
 	websys_lu(url,false,lnkpara);
-	
-	/*
-	var myWin = $HUI.window("#HGHistory",{
+	*/
+	var lnk="dhcpe.healthguide.edit.history.csp?PAADM="+PAADM+"&PatientID="+PatientID;
+	var myWin = $HUI.window("#HGHistoryWin",{
 			//iconCls:'icon-w-list',
 			resizable:true,
 			title:'健康分析指导历史记录',
@@ -417,17 +362,13 @@ function openHistoryWin(PAADM,PatientID)
 			minimizable:false,
 			maximizable:false,
 			closable:true,
-			//top:top,
-			//left:left,
-			width:"800", //width,
-			height:"600", //height+"px",
-			//content:'<iframe src="dhcpe.healthguide.edit.history.csp?PAADM='+PAADM+'&PatientID='+PatientID+'" width="100%" height="100%" frameborder="0"></iframe>'
-			//content:'<div id="ViewDiagnosisTab" class="hisui-tabs" data-options="region:\"center\",border:false" style="position:relative"></div>'
-			content:'<div id="ViewDiagnosisTab" class="hisui-tabs" data-options="border:false" style="position:relative,width:"800px",height:"550px"></div>',
+			width:"800", 
+			height:"600",
+			content: '<iframe src="' + PEURLAddToken(lnk) + '" width="100%" height="100%" frameborder="0"></iframe>'
+			//content:'<div id="ViewDiagnosisTab" class="hisui-tabs" data-options="border:false" style="position:relative,width:"800px",height:"550px"></div>',
 			
 			
 		});
-	*/
 }
 function clearAll()
 {
@@ -436,4 +377,81 @@ function clearAll()
 	$('#Age').text("");
 	$('#PatNo').text("");
 }
-$(init);
+
+function InitCombobox(){
+	//全部就诊记录 Type All 选中记录之前 BSel
+	var CanDiagnosisListObj = $HUI.datagrid("#CanDiagnosisList",{
+		fit: true,
+		border: false,
+		striped: true, //是否显示斑马线效果
+		singleSelect: true,
+		selectOnCheck: false,
+		autoRowHeight: false,
+		//showFooter: true,
+		url: $URL,
+		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
+		rownumbers: true, //如果为true, 则显示一个行号列
+		pageSize: 25,
+		//pageList: [15, 20, 25, 30],
+		showPageList:false,
+		displayMsg:"",
+		queryParams:{
+			ClassName:"web.DHCPE.HealthGuide",
+			QueryName:"FindNeedHMPatInfo",
+			PatientID:"",
+			CurPAADM:"",
+			BDate:"",
+			EDate:"",
+			LocID:session['LOGON.CTLOCID']
+		},
+		columns:[[
+		    {field:'PaadmID',hidden:true},
+		    {field:'AdmDate',title:'体检日期',width:100},
+			{field:'VIPLevel',title:'VIP',hidden:true},
+			{field:'VIPDesc',title:'VIP等级',width:100}
+		]],
+		onClickRow:function(rowIndex, rowData){
+			var PatientID=getValueById("PatientID")
+			$("#CurPAADM").val(rowData.PaadmID)
+			$("#ViewEDate").val(rowData.AdmDate)
+			ShowDiagnosisPanel(rowData.PaadmID,PatientID);	
+			ViewQuery();    
+	    }   
+	});
+	//选中的就诊记录之前的就诊记录
+	var ViewDiagnosisListObj = $HUI.datagrid("#ViewDiagnosisList",{
+		fit: true,
+		border: false,
+		striped: true, //是否显示斑马线效果
+		singleSelect: true,
+		selectOnCheck: false,
+		autoRowHeight: false,
+		//showFooter: true,
+		url: $URL,
+		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
+		rownumbers: true, //如果为true, 则显示一个行号列
+		pageSize: 25,
+		//pageList: [15, 20, 25, 30],
+		showPageList:false,
+		displayMsg:"",
+		queryParams:{
+			ClassName:"web.DHCPE.HealthGuide",
+			QueryName:"FindNeedHMPatInfo",
+			PatientID:"",
+			CurPAADM:"",
+			BDate:"",
+			EDate:"",
+			LocID:session['LOGON.CTLOCID']
+		},
+		columns:[[
+		    {field:'PaadmID',hidden:true},
+		    {field:'AdmDate',title:'体检日期',width:100},
+			{field:'VIPLevel',title:'VIP',hidden:true},
+			{field:'VIPDesc',title:'VIP等级',width:100}
+		]],
+		onClickRow:function(rowIndex, rowData){
+			var PatientID=getValueById("PatientID")
+			ShowHistoryHGPage(rowData.PaadmID,PatientID);
+	    } 
+	});
+}

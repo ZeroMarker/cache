@@ -67,7 +67,7 @@ function InitDetList(){
 		options: {
 			valueField: "value", 
 			textField: "text",
-			url:$URL+"?ClassName=web.DHCMDTCom&MethodName=GetHospDs",
+			url:$URL+"?ClassName=web.DHCMDTCom&MethodName=GetHospDs"+"&MWToken="+websys_getMWToken(),
 			//required:true,
 			panelHeight:"auto",  //设置容器高度自动增长
 			onSelect:function(option){
@@ -89,7 +89,7 @@ function InitDetList(){
 			mode:'remote',
 			textField:'text',
 			required:true,
-			url:$URL+"?ClassName=web.DHCMDTCom&MethodName=QryEmConsLoc",
+			url:$URL+"?ClassName=web.DHCMDTCom&MethodName=QryEmConsLoc"+"&MWToken="+websys_getMWToken(),
 			required:true,
 			editable:false,
 			onSelect: function () {
@@ -108,7 +108,7 @@ function InitDetList(){
 			valueField:'value',
 			mode:'remote',
 			textField:'text',
-			url:$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonPrvTp",
+			url:$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonPrvTp"+"&MWToken="+websys_getMWToken(),
 			required:true,
 			editable:false,
 			onSelect: function () {
@@ -148,7 +148,7 @@ function InitDetList(){
         }
 	};
 	
-	var uniturl = $URL+"?ClassName=web.DHCMDTReqJurisdiction&MethodName=QryList";
+	var uniturl = $URL+"?ClassName=web.DHCMDTReqJurisdiction&MethodName=QryList"+"&MWToken="+websys_getMWToken();
 	var dgMainListComponent = new ListComponent('dgMainList', columns, uniturl, option);
 	dgMainListComponent.Init();
 

@@ -556,6 +556,7 @@ function createLookupBodyDiv(){
 	dhcc.icare.lookupconfig.lookupDiv.id = dhcc.icare.lookupconfig.lookupDivId ;
 	dhcc.icare.lookupconfig.lookupDiv.style.display = "none";
 	dhcc.icare.lookupconfig.lookupDiv.style.zIndex = 12000;	
+	dhcc.icare.lookupconfig.lookupDiv.style.overflow = "auto";	 // 3074166
 	dhcc.icare.lookupconfig.lookupDiv.style.position = "absolute";
 	dhcc.icare.lookupconfig.lookupDiv.style.borderStyle = 'outset';
 	dhcc.icare.lookupconfig.lookupDiv.style.borderWidth = '2px';
@@ -890,7 +891,7 @@ dhcc.icare.Lookup = Ext.extend(Ext.grid.GridPanel, {
 	    }
 		this.id = this.lookupName+"zlookup";
 		this.title = "";				
-		this.width= this.width || (((displayFieldCmCount*140) > document.body.clientWidth) ? document.body.clientWidth : displayFieldCmCount*140);
+		this.width= this.width || (displayFieldCmCount*140) // (((displayFieldCmCount*140) > document.body.clientWidth) ? document.body.clientWidth : displayFieldCmCount*140);
 		if(this.width<420) this.width=420;		
 		this.height = this.defaultHeight;
 		if (this.rowNumber) cms.splice(0,0,new Ext.grid.RowNumberer());
@@ -976,6 +977,11 @@ dhcc.icare.Lookup = Ext.extend(Ext.grid.GridPanel, {
 		if (((bodyHeight-tmpTop) < height) && ( (xy[1]-xy[3]) > height )){					//下面不能显示,但上面能显示
 			tmpTop = xy[1]  - xy[3] - height - 3;
 		}
+		if ( (bodyWidth-tmpLeft) <width && (tmpLeft+xy[2]) <width) {  // width二边显示不下时,取最大width, 且能横向滚动 3074166
+			width = Math.max(bodyWidth-tmpLeft, tmpLeft+xy[2]) ;
+			dhcc.icare.lookupconfig.lookupDiv.style.width = width+"px";
+		}
+		
 		if ( ((bodyWidth-tmpLeft)<width) && ((xy[0]+xy[2])>width) ){	//右边不能显示,但左边能显示			
 			tmpLeft = bodyWidth - width - (bodyWidth-xy[0]-xy[2]);		//减放大镜的宽度,再减文本框右边空白宽度
 		}
@@ -1101,6 +1107,18 @@ dhcc.icare.Lookup = Ext.extend(Ext.grid.GridPanel, {
 		}
     }, 
     resizeColumnFun : function(s,rs,obj){
+	    var _getStrWidth = function(str){
+	    	var w = 0;
+	    	for (var s=0;s<str.length;s++){
+		    	var chr = str.charAt(s);		    	
+		    	if (chr.charCodeAt(0)>127 || chr.charCodeAt(0)==9){
+			    	w +=14; continue;
+		    	}else{
+			    	w +=9; continue;
+		    	}		    	
+	    	}
+	    	return w;
+	    }
 	    if (rs.length==0){ return ;} //没数据
 		var pagesize,cm,objWidth = {};
 		if(this.resizeColumn && this.colModel){
@@ -1110,11 +1128,12 @@ dhcc.icare.Lookup = Ext.extend(Ext.grid.GridPanel, {
 				if (cm.config[cm_i].hidden) continue;
 				
 				objWidth.key = cm.config[cm_i].dataIndex;
-				if (objWidth.key=="") continue;				
+				if (objWidth.key=="") continue;		
+				cm.config[cm_i].width = 50;		
 				objWidth.val = cm.config[cm_i].width;				
 				//objWidth.val = 60 ;
 				for(var rs_i=0;rs_i<rs.length;rs_i++){
-					var len = rs[rs_i].get(objWidth.key).trim().replace(/[^\x00-\xff]/g,"**").length * 7 + 15; //wanghc 10px
+					var len = _getStrWidth(rs[rs_i].get(objWidth.key).trim())*1+15; // rs[rs_i].get(objWidth.key).trim().replace(/[^\x00-\xff]/g,"**").length * 7 + 15; //wanghc 10px
 					if (len > objWidth.val){
 						objWidth.val = len ;
 					}

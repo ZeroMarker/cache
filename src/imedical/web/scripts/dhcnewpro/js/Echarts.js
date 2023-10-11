@@ -16,11 +16,10 @@ var ECharts={
             var categories = [];
             var datas = [];
             for (var i = 0; i < data.length; i++) {  
-				categories.push(data[i].name || "");  
-				   datas.push({ name: data[i].name, value: data[i].value || 0 });
+				categories.push(data[i].name || "");   
+				   datas.push({ name: data[i].name, value: data[i].value || 0 ,itemStyle:data[i].itemStyle||{}});
 				}
-			var colors = ['#327eb2', '#fda632', '#f3723b', '#449be2', '#6abfef', '#7dba56', '#afd17e','#39c6c8', '#21be97', '#f4d44f', '#ec90da', '#bc80dc'];
-	        return { category: categories, data: datas , color: colors };
+	         return { category: categories, data: datas };
         },  
         FormateGroupData: function (data, type, is_stack) {
   			//data的格式如上的Result2，type为要渲染的图表类型：可以为line，bar，is_stack表示为是否是堆积图，这种格式的数据多用于展示多条折线图、分组的柱图  
@@ -29,13 +28,16 @@ var ECharts={
             	chart_type = type || 'line';
                 }
       
-	            var xAxis = [];  
+				var xAxis = []; 
+	            var xAxisnext = [];   
 	            var group = [];
 	            var series = [];  
+	            var bltrate = [];
 	            for (var i = 0; i < data.length; i++) {
 	                for (var j = 0; j < xAxis.length && xAxis[j] != data[i].name; j++);  
 	                if (j == xAxis.length)  
 	                    xAxis.push(data[i].name);  
+	                    xAxisnext.push("");
 	  
 	                for (var k = 0; k < group.length && group[k] != data[i].group; k++);  
 	                if (k == group.length)
@@ -44,43 +46,58 @@ var ECharts={
  
                 for (var i = 0; i < group.length; i++) {
                     var temp = [];
+                    var sum = 0 ;
                     for (var j = 0; j < data.length; j++) {
                         if (group[i] == data[j].group) {
                             if (type == "map"){  
-                            	temp.push({ name: data[j].name, value: parseFloat(data[i].value) });
+                            	temp.push({ name: data[j].name, value: data[i].value });
                     		}else{
-                            	temp.push(parseFloat(data[j].value));
+                            	temp.push(data[j].value);
+                            	sum = sum+data[j].value;
                     		}
                         }
                    }
-                   
+			     if (sum==0) bltrate = [];
+				 var numall=0;
+				 var numsFlag= 0;
+			     for (var m=0;m<temp.length;m++){
+				 	numall = numall+temp[m];
+					var nums = numall/sum;
+				  	nums = nums *100;
+				 	nums = Math.ceil(nums);
+				 	bltrate.push(nums);
+			    }
+                 	
                     var markPoint_data=[
 						{type : 'max', name: '最大值'},
 						{type : 'min', name: '最小值'}
 					];
 					
+			
                     var markLine_data=[
-                    	{type : 'average', name: '平均值'}
+                    	//{type : 'average', name: '平均值'}
                     ];
                     
 	                switch (type) {
 	                    case 'bar':  
-	                        var series_temp = { name: group[i], data: temp, type: chart_type , markPoint : { data : markPoint_data} , markLine : { data : markLine_data}}; 
+	                        var series_temp = { name: group[i], data: temp, type: chart_type , markPoint : { data : markPoint_data} , markLine : { data : markLine_data},itemStyle: {
+	                                normal: { color:'#5ABCFE'},
+	                                emphasis: { label: { show: true} }
+	                            }}; 
 	                        if (is_stack)  
 	                            series_temp = $.extend({}, { stack: 'stack' }, series_temp);
 	                        break;
-	                    /*
-	                    case 'map':  
-	                        var series_temp = {
-	                            name: group[i], type: chart_type, mapType: 'china', selectedMode: 'single',
-	                            itemStyle: {
-	                                normal: { label: { show: true} },
-	                                emphasis: { label: { show: true} }
-	                            },
-	                            data: temp
-	                        };
-	                        break;  
-	  					*/
+	                    case 'blt':  
+	                   
+	                        var series_temp = { xAxisnext:xAxisnext,bltrate:bltrate,name: group[i], data: temp, type: chart_type , markPoint : { data : markPoint_data} , markLine : { data : markLine_data},itemStyle: {
+	                                normal: { color:'#5ABCFE'},
+	                                emphasis: { label: { show: true} },
+	                                
+	                            }}; 
+	                        if (is_stack)  
+	                            series_temp = $.extend({}, { stack: 'stack' }, series_temp);
+	                        break;
+	                    
 	                    case 'line':
 	                        var series_temp = { name: group[i], data: temp, type: chart_type , markLine : { data : markLine_data}};
 	                        if (is_stack)
@@ -91,8 +108,7 @@ var ECharts={
 	                }
 	                series.push(series_temp);
             	}
-            return { category: group, xAxis: xAxis, series: series };
-        }
+            return { category: group, xAxis: xAxis, series: series };        }
 	},
 	///图表类型的配置初始化
 	ChartOptionTemplates:{
@@ -101,7 +117,8 @@ var ECharts={
                 trigger: 'axis'//tooltip触发方式:axis以X轴线触发,item以每一个数据项触发
             },
             toolbox: {
-                show: false, //是否显示工具栏
+	   	showTitle:false, //hxy 2023-01-03
+                show: true, //是否显示工具栏
                 feature: {
                 	mark : { show: true }, //画线
                     //dataView: { show: true, readOnly: false }, //数据预览
@@ -115,7 +132,8 @@ var ECharts={
                 trigger: 'axis'
             },
             toolbox: {
-                show: false,
+	    	showTitle:false, //hxy 2023-01-03
+                show: true,
                 feature: {
                 	mark : { show: true }, //画线
                     //dataView: { show: true, readOnly: false }, //数据预览
@@ -125,46 +143,38 @@ var ECharts={
                 }
             }
         },
-        Pie: function (data, name) {//data:数据格式：{name：xxx,value:xxx}... ///饼状图
+        Pie: function (data, name,extObs) {//data:数据格式：{name：xxx,value:xxx}... ///饼状图
+        	extObs = (extObs==undefined?{}:extObs);
             var pie_datas = ECharts.ChartDataFormate.FormateNOGroupData(data);
             var option = {
                 tooltip: {
                     //trigger: 'item',
-                    formatter: '{b} : {c} ({d}/%)',
+                    formatter: '{b} : {c} ({d}%)',
                     show: true
                 },
+                toolbox: extObs.toolbox,
+                color: extObs.color,
                 legend: {
                     orient: 'vertical',
                     x: 'left',
                     data: pie_datas.category
                 },
                 calculable : true,
-                color: pie_datas.color,
                 series: [
                 {
                     name: name || "",
-	                type:'pie',
-	                radius : ['50%', '70%'],
+                    type: 'pie',
+                    radius: '65%',
+                    center: ['50%', '50%'],
                     data: pie_datas.data,
             		itemStyle:{
             			normal:{
-		                    label : {
-		                        show : false
-		                    },
-		                    labelLine : {
-		                        show : false
-		                    }
-                		},
-		                emphasis : {
-		                    label : {
-		                        show : true,
-		                        position : 'center',
-		                        textStyle : {
-		                            fontSize : '30',
-		                            fontWeight : 'bold'
-		                        }
-		                    }
-		                }
+                  			label:{
+                    			show: true,
+                   			 	formatter: '{b}({d}%)'
+                  			},
+                  			labelLine :{show:true}
+                		}
             		}
                  }
                 ]
@@ -178,15 +188,6 @@ var ECharts={
                 legend: {
                     data: stackline_datas.category
                 },
-                grid: {
-			        x: 40,
-			        y: 42,
-			        x2: 40,
-			        y2: 42,
-			        backgroundColor: 'rgba(0,0,0,0)',
-			        borderWidth: 1,
-			        borderColor: '#ccc'
-			    },
                 xAxis: [{
                     type: 'category', //X轴均为category，Y轴均为value
                     data: stackline_datas.xAxis //,
@@ -201,30 +202,49 @@ var ECharts={
             };
             return $.extend({}, ECharts.ChartOptionTemplates.CommonLineOption, option);
         },
-		Bars: function (data, name, is_stack) {//data:数据格式：{name：xxx,group:xxx,value:xxx}... ///柱状图
+        //qqa 2018-12-18 扩展一个对象，用于以后界面需要单独改变的情况
+		Bars: function (data, name,is_stack,extObs) {//data:数据格式：{name：xxx,group:xxx,value:xxx}... ///柱状图
+           	extObs = (extObs==undefined?{}:extObs);
+            var defExtObs={
+	        	grid:{},  	//设置图像前后边距  
+	        }
+	        extObs = $.extend(defExtObs,extObs)
             var bars_dates = ECharts.ChartDataFormate.FormateGroupData(data, 'bar', is_stack);
-			
+            var defGrid={ // 控制图的大小，调整下面这些值就可以，
+         		x: 50, //前面距离 //hxy 2020-03-31 原：30
+         		x2:30, //后面距离
+         		y: 20,
+         		y2:80// y2可以控制 X轴跟Zoom控件之间的间隔，避免以为倾斜后造成 label重叠到zoom上  下面距离
+     		}
+            var grid = $.extend(defGrid,extObs.grid);
+            
             var option = {
                 legend: {
                     data: bars_dates.category
                 },
-			    grid: {
-			        x: 40,
-			        y: 22,
-			        x2: 40,
-			        y2: 32,
-			        backgroundColor: 'rgba(0,0,0,0)',
-			        borderWidth: 1,
-			        borderColor: '#ccc'
-			    },
+                 tooltip: {
+                    //trigger: 'item',
+                    formatter: '{b} : {c}',
+                    show: true
+                },
+                 toolbox: extObs.toolbox,
+                grid:grid,
                 xAxis: [{
                     type: 'category',
                     data: bars_dates.xAxis,
                     axisLabel: {
                         show: true,
                         interval: 0,
-                        rotate: 15,
-                        margion: 8
+                        //rotate: 15,
+                        margion: 8,
+                        formatter:function(params){
+	                        if(is_stack=="#"){
+	                       		var newParamsName= GetParamsName(params,4);
+	                        	return newParamsName.split("").join("\n");//竖列显示
+	                        }else{
+		                        return params;
+		                    }
+	                    }
                     }
                 }],
                 yAxis: [{
@@ -263,3 +283,38 @@ var ECharts={
 	   }
 	} 	
 }  
+// Bar类型的 x轴文字显示换行
+function GetParamsName(params,provideNumber){
+    var newParamsName = "";// 最终拼接成的字符串
+    var paramsNameNumber = params.length;// 实际标签的个数
+	if((provideNumber=="")||(provideNumber==undefined)){
+		provideNumber=4;
+	}//  provideNumber 每行能显示的字的个数
+    var rowNumber = Math.ceil(paramsNameNumber / provideNumber);// 换行的话，需要显示几行，向上取整
+    
+    // 判断标签的个数是否大于规定的个数， 如果大于，则进行换行处理 如果不大于，即等于或小于，就返回原标签
+    // 条件等同于rowNumber>1
+    if (paramsNameNumber > provideNumber) {
+       // 循环每一行,p表示行 
+        for (var p = 0; p < 1; p++) {
+            var tempStr = "";// 表示每一次截取的字符串
+            var start = p * provideNumber;// 开始截取的位置
+            var end = start + provideNumber;// 结束截取的位置
+            // 此处特殊处理最后一行的索引值
+            if (p == rowNumber - 1) {
+                // 最后一次不换行
+                tempStr = params.substring(start, paramsNameNumber);
+            } else {
+                // 每一次拼接字符串并换行
+                tempStr = params.substring(start, end); //+ "\n";
+            }
+            newParamsName += tempStr;// 最终拼成的字符串
+        }
+
+    } else {
+        // 将旧标签的值赋给新标签
+        newParamsName = params;
+    }
+    //将最终的字符串返回
+    return newParamsName+"#"
+}

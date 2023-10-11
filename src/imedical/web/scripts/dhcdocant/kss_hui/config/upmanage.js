@@ -23,8 +23,15 @@ $(function() {
 	
 	//页面元素初始化
 	//PageHandle();
+	InitCache();
 })
-
+function InitCache () {
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 
 function Init(){
 	PageLogicObj.m_HospGrid = InitHospGrid();

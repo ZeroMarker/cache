@@ -58,7 +58,10 @@ var init = function (){
 				//dom 一定更新了 ,第一次绘
 				console.log("nextTick-------");
 				this.diskParam=this.mTypeList[0].mparam;
-				console.log(this.diskParam);
+				this.licenseParam=this.mTypeList[9].mparam;
+				this.openTransactionsParam=this.mTypeList[10].mparam;				
+				this.telNumList=this.mTypeList[8].mparam;
+				// console.log(this.diskParam);
 			});
 		},
 		methods:{
@@ -82,9 +85,47 @@ var init = function (){
 					});
 				}
 			},
-			getServerUrl:function(item){
-				if (item.serverIP){
-					var url = "http://"+item.serverIP+":"+item.webServerPort+item.serverWebPath+"/dhcservice.Interface.cls?wsdl=1";
+			licenseParamFocus:function(){
+				this.licenseParam=this.mTypeList[9].mparam;
+			},
+			licenseParamBlur:function(){
+				var t = this;
+				if (this.licenseParam!=this.mTypeList[9].mparam){
+					$.m({ClassName:"websys.MonitorType",MethodName:"saveTypeParam",TypeId:10,Params:this.licenseParam},function(rtn){
+						if (rtn==1){
+							t.mTypeList[9].mparam = t.licenseParam;
+							t.success = true;
+							t.msg="修改成功"
+							setTimeout(function(){t.msg=''},3000);
+						}else{
+							t.success = false;
+							t.msg = "修改失败";
+						}
+					});
+				}
+			},			
+			openTransactionsParamFocus:function(){
+				this.openTransactionsParam=this.mTypeList[10].mparam;
+			},
+			openTransactionsParamBlur:function(){
+				var t = this;
+				if (this.openTransactionsParam!=this.mTypeList[10].mparam){
+					$.m({ClassName:"websys.MonitorType",MethodName:"saveTypeParam",TypeId:11,Params:this.openTransactionsParam},function(rtn){
+						if (rtn==1){
+							t.mTypeList[10].mparam = t.openTransactionsParam;
+							t.success = true;
+							t.msg="修改成功"
+							setTimeout(function(){t.msg=''},3000);
+						}else{
+							t.success = false;
+							t.msg = "修改失败";
+						}
+					});
+				}
+			},
+			getServerUrl: function (item) {
+				if (item.serverIP) {
+					var url = item.servicesProtocol + "://" + item.serverIP + ":" + item.webServerPort + item.serverWebPath + "/dhcservice.Interface.cls?wsdl=1";
 					return url;
 				}else{
 					return "";
@@ -102,6 +143,10 @@ var init = function (){
 				item.webServerPort="80";
 				item.serverWebPath="/imedical/web"; // "/dthealth/web";
 				item.serverType = "E"; 
+				item.servicesProtocol = "HTTP";
+				item.sslConfig = "";
+				item.connectUser = "";
+				item.connectPwd = "";
 				// 手动监听curServerItem对象
 				this.$set(this,"curServerItem",item);
 				$("#serverFormWin").modal();
@@ -148,6 +193,29 @@ var init = function (){
 					t.msg = "服务器名只能以字母开头";
 					return false;
 				}
+				if (/\W/.test(serverItem.serverName)){
+					t.success = false;
+					t.msg = "服务器名不能包含特殊字符";
+					return false;
+				}
+				if (serverItem.servicesProtocol=="HTTPS" && serverItem.sslConfig==""){
+					t.success = false;
+					t.msg = "HTTPS服务必须填写SSLConfig.至System > Security Management > SSL/TLS Configurations > Edit SSL/TLS Configuration  - (security settings) 配置";
+					return false;
+				}
+				if (!!serverItem.connectUser){
+					if (!!serverItem.connectPwd) {
+						if(serverItem.connectPwd.length%32>0){ //加过密不再加
+							//alert("srcPwd " + serverItem.connectPwd);
+							serverItem.connectPwd = e7(serverItem.connectPwd, CONNECT_PWD_KEY);						
+							//alert("encPwd " + serverItem.connectPwd);
+						}
+					} else {
+						t.success = false;
+						t.msg = "密码不能为空";
+						return false;
+					}
+				}
 				$("#saveServerItemSure").html("导入服务中...")
 				$("#saveServerItemSure").prop("disabled",true);
 				$("#saveServerItemCancel").prop("disabled",true);
@@ -158,13 +226,17 @@ var init = function (){
 					ServerIP:serverItem.serverIP,
 					WebServerPort:serverItem.webServerPort,
 					WebPath:serverItem.serverWebPath,
-					Type:serverItem.serverType
+					Type:serverItem.serverType,
+					ServicesProtocol:serverItem.servicesProtocol,
+					SSLConfig:serverItem.sslConfig
+					,ConnectUser:serverItem.connectUser
+					,ConnectPwd:serverItem.connectPwd
 				},function(rtn){
 					$("#saveServerItemSure").html("确定")
 					$("#saveServerItemSure").prop("disabled",false);
 					$("#saveServerItemCancel").prop("disabled",false);
 
-					if (rtn>1){
+					if (rtn>0){
 						$("#serverFormWin").modal("hide");
 						//d ##class(ext.util.JsonObject).ClassQuery2Json("websys.ServerConfigMgr","Find")
 						$.cm({ClassName:"websys.ServerConfigMgr",QueryName:"Find"},function(rtn){
@@ -233,10 +305,64 @@ var init = function (){
 				console.log(curTypeItem.mparam);
 			},
 			returnPage:function(){
-				window.open("websys.monitor.csp","_self");
+				if ("undefined" == typeof websys_getMWToken) {
+					window.open("websys.monitor.csp","_self");					
+				} else {
+					window.open("websys.monitor.csp" + "?MWToken=" + websys_getMWToken(),"_self");
+				}				
 			}
 		}
 	});
+
+	var UserData = [];
+	$q({
+		ClassName: "web.SSUser",
+		QueryName: "ListAll",
+		rows: 20000
+	}, function (Data) {
+		var rowData = Data.rows;
+		for (var i = 0; i < rowData.length; i++) {
+			var json = {};
+			json.id = rowData[i].SSUSRRowId; // HIDDEN
+			json.text = rowData[i].SSUSRInitials + "-" + rowData[i].SSUSRName;
+			UserData.push(json)
+		}
+		$("#userListPhone").combobox({
+			valueField: 'id',
+			textField: 'text',
+			multiple: true,
+			rowStyle: 'checkbox', //显示成勾选行形式
+			panelHeight: "150",
+			editable: true,
+			defaultFilter: 6,
+			data: UserData
+			, onShowPanel: function () {
+				var vals = monitorJson.mTypeList[8].mparam;
+				vals = vals.split(",");
+				$("#userListPhone").combobox("setValues", vals);
+			}
+			, onHidePanel: function () {
+				var vals = $("#userListPhone").combobox("getValues");
+				vals = vals.join(",");
+				if (monitorJson.mTypeList[8].mparam != vals) {
+					$.m({ ClassName: "websys.MonitorType", MethodName: "saveTypeParam", TypeId: 9, Params: vals }, function (rtn) {
+						var t = tabsVm;
+						if (rtn == 1) {
+							t.mTypeList[8].mparam = vals;
+							t.success = true;
+							t.msg = "修改成功"
+							setTimeout(function () { t.msg = '' }, 3000);
+						} else {
+							t.success = false;
+							t.msg = "修改失败";
+						}
+					});
+				}
+			}
+		});
+		var vals = monitorJson.mTypeList[8].mparam;
+		vals = vals.split(",");
+		$("#userListPhone").combobox("setValues", vals);
+	});
 }
 $(init);
-

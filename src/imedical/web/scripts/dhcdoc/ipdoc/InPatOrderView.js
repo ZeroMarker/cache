@@ -2,11 +2,16 @@ var opl=ipdoc.lib.ns("ipdoc.patord");
 opl.view=(function(){
    function InitInPatOrd(){
 	   InittabInPatOrd();
+	   InitOrdCopyMenu();
+	   InitOrdSaveMenu();
 	   InitPageItemEvent();
 	   if (ServerObj.PageShowFromWay=="ShowFromEmr"){
 		   OrdReSubCatList();
 		   $("#MessageMarquee").html(ServerObj.MessageMarquee);
+		   //打开医疗待办界面
+		   //OpenDocToDoListView();
 	   }
+	   if (ServerObj.IPDefDisplayMoreContions =='Y') $("#moreBtn").click();
    }
    var InPatOrdDataGridLoadSuccCallBack=$.Callbacks("unique");
 	if (ServerObj.DateFormat=="4"){
@@ -35,7 +40,7 @@ opl.view=(function(){
 	        "Arg1":ServerObj.PatientID,"Arg2":ServerObj.EpisodeID,"Arg3":$g("全部")
 	        ,"Arg4":DefaultScopeDesc,"Arg5":DefaultLocDesc,"Arg6":DefaultNurderBill,"Arg7":""
 	        ,"Arg8":PriorType,"Arg9":"S","Arg10":DefaultOrderSort
-	        ,"Arg11":"","ClassName":"web.DHCDocInPatPortalCommon","QueryName":"FindInPatOrder"
+	        ,"Arg11":"","Arg12":"","Arg13":"","Arg14":"","Arg15":"","ClassName":"web.DHCDocInPatPortalCommon","QueryName":"FindInPatOrder"
 		}
 		var OrdExecGridParams={
 			"Arg1":"","Arg2":"","Arg3":""
@@ -76,17 +81,23 @@ opl.view=(function(){
 			trigger:'hover',
 			placement:placement,
 			style:'inverse',
-			height:MaxHeight
+			height:MaxHeight,
+			width:"450px",
 			
 		});
 		$(that).webuiPopover('show');
 	}
 	var selRowIndex="";
 	function InittabInPatOrd(){
-		if (ServerObj.OrdrightKeyMenuHidden=="true"){
-			var OrdToolBar="";
-		}else{
+		/*if ((ServerObj.OrdrightKeyMenuHidden==1)&&(ServerObj.PageShowFromWay!="ShowFromOrdCopy")){
+			if(ServerObj.PageShowFromWay=="ShowFromEmrList"){
+				var OrdToolBar=[];
+			}else{
+				var OrdToolBar="";
+			}
+		}else{*/
 			var OrdToolBar=[{
+				id:"OrdEnrty_Toolbar",
 	            text: '开医嘱',
 	            iconCls: 'icon-write-order',
 	            handler: function() {
@@ -96,74 +107,75 @@ opl.view=(function(){
 					}
 		        }
 	        },'-',{
+		        id:"OrdCopy_Toolbar",
 	            text: '复制',
 	            iconCls: 'icon-copy',
 	            handler: function() {copyOrderHandler(""); }
-	        },{
-	            text: '复制为临时',
-	            iconCls: 'icon-copy-sos',
-	            handler: function() {copyOrderHandler("NORM"); }
-	        },{
-	            text: '复制为长期',
-	            iconCls: 'icon-copy-prn',
-	            handler: function() {copyOrderHandler("S");}
-	        },{
-	            text: '复制为出院带药',
-	            iconCls: 'icon-copy-drug',
-	            handler: function() { copyOrderHandler("OUT");}
-	        },{
-	            text: '复制为虚拟长期',
-	            iconCls: 'icon-copy-prn',
-	            handler: function() { copyOrderHandler("VirLong");}
 	        },'-', {
+		        id:"OrdStop_Toolbar",
 	            text: '停医嘱',
 	            iconCls: 'icon-stop-order',
 	            handler: function() {ShowStopMulOrdWin();}
 	        },{
+		        id:"OrdCancel_Toolbar",
 	            text: '撤销',
 	            iconCls: 'icon-cancel-order',
 	            handler: function() {ShowCancelMulOrdWin();}
 	        },{
+		        id:"OrdUnUse_Toolbar",
 	            text: '作废',
 	            iconCls: 'icon-abort-order',
 	            handler: function() {ShowUnUseMulOrdWin();}
+	        },'-', {
+		        id:"OrdRefresh_Toolbar",
+	            text: '刷新',
+	            iconCls: 'icon-reload',
+	            handler: function() {LoadPatOrdDataGrid();}
+	        },'-', {
+		        id:"OrdSave_Toolbar",
+	            text: '另存为',
+	            iconCls: 'icon-copy'
 	        }];
-		}
+		//}
 		/*if (ServerObj.isNurseLogin=="1"){
 			OrdToolBar.push({text:'处理医嘱',iconCls: 'icon-abort-order',handler: function() {ShowSeeOrderWin();}});
 			OrdToolBar.push({text:'撤销处理',iconCls: 'icon-abort-order',handler: function() {ShowCancelSeeOrderWin();}})
 		}*/
 		var reg1=/<[^<>]+>/g;
 		var reg2=/&nbsp/g;
-		var OrdColumns=[[ 
-		 			{field:'CheckOrd',title:'选择',checkbox:'true',align:'center',width:70,auto:false},
-		 			{field:'TItemStatCode',hidden:true,title:''},
+		/*var OrdColumns=[[ 
+					{field:'TItemStatCode',hidden:true,title:''},
 		 			{field:'TOeoriOeori',hidden:true,title:''},
 		 			{field:'PHFreqDesc1',hidden:true,title:''},
 		 			{field:'TPermission',hidden:true,title:''},
 		 			{field:'TItemStatCode',hidden:true,title:''},
-		 			{field:'TStDate',title:'医嘱开始时间',align:'center',width:140,auto:false},
-		 			{field:'TOrderDesc',title:'医嘱',align:'left',width:450,auto:false,
-		 				formatter: function(value,row,index){
-			 				var inparaOrderDesc=$("#orderDesc").val();
-			 				if (inparaOrderDesc!=""){
-				 				var tmpvalue=value.replace(/\&nbsp;/g,"").replace(/\&nbsp/g,"");
-								tmpvalue = tmpvalue.replace(inparaOrderDesc,"<font color=red>"+inparaOrderDesc+"</font>");
-							}else{
-								var tmpvalue=value;
-							}
-							var ordtitle=tmpvalue //.replace(reg1,'').replace(reg2,' ');
-							var PopoverHtml=row['PopoverHtml'];
-							return '<a class="editcls-TOrderDesc" id= "' + row["OrderId"] + '"onmouseover="ipdoc.patord.view.ShowOrderDescDetail(this)">'+ordtitle+'</a>';
-							//return "<span title='" + ordtitle + "' class='hisui-tooltip'>" + value + "</span>";
-		 				}
+		 			{field:'InsuNationCode',title:'国家医保编码',align:'center',width:180,auto:false,
+		 				formatter:function(value,rec){  
+		 				   var btn=""
+		 				   if (value!=""){
+		                   var btn = '<a class="editcls" onclick="ipdoc.patord.view.InsuNationShow(\'' + rec.OrderId + '\')">'+value+'</a>';
+					       
+		 				   }
+		 				   return btn;
+                        }
+		 			},
+		 			{field:'InsuNationName',title:'国家医保名称',align:'center',width:180,auto:false,
+		 				formatter:function(value,rec){  
+		 				   var btn=""
+		 				   if (value!=""){
+		                   var btn = '<a class="editcls" onclick="ipdoc.patord.view.InsuNationShow(\'' + rec.OrderId + '\')">'+value+'</a>';
+					       
+		 				   }
+		 				   return btn;
+                        }
 		 			},
 		 			{field:'TDoctor',title:'开医嘱人',align:'center',width:80,auto:false},
 		 			{field:'TStopDate',title:'停止时间',align:'center',width:140,auto:false,
 		 				styler: function(value,row,index){
 			 				if ((value!="")&&(value!=" ")){
 				 				var stopDate=value.split(" ")[0];
-				 				if (stopDate>ServerObj.CurrentDate){
+				 				if (CompareDate(stopDate,ServerObj.CurrentDate)){
+				 				//if (stopDate>ServerObj.CurrentDate){
 					 				return 'background-color:yellow';
 					 			}
 				 			}
@@ -174,6 +186,7 @@ opl.view=(function(){
 		 			{field:'TItemStatDesc',title:'状态',align:'center',width:80,auto:false,
 		 				formatter:function(value,rec){ 
 			 				var btn =""; 
+							
 			 				if (rec.OrderViewFlag=="Y"){
 			                	btn = '<a class="editcls" onclick="ipdoc.patord.view.OpenOrderView(\'' + rec.OrderId + '\')">'+value+'</a>';
 			 				}else{
@@ -210,47 +223,163 @@ opl.view=(function(){
 		 			{field:'AddNotePermission',hidden:true},
 		 			{field:'OrderViewFlag',hidden:true},
 		 			{field:'ZSQUrl',hidden:true}
-		 			
-		 			
-		 			
-		 	]]
+		 	]]*/
 		var InPatOrdProperty={
 			fit : true,
 			width:1500,
 			border : false,
-			striped : true,
+			striped : false,
 			singleSelect : false,
 			fitColumns : false,
 			autoRowHeight : false,
 			autoSizeColumn : false,
 			rownumbers:true,
 			idField:'OrderId',
-			columns :OrdColumns,
-			toolbar :OrdToolBar
+			//columns :OrdColumns,
+			className:"web.DHCDocInPatPortalCommon",
+			queryName:"FindInPatOrder",
+			toolbar :OrdToolBar,
+			onColumnsLoad:function(cm){
+				var colWidthObj={
+					InsuNationCode:180,
+					InsuNationName:180,
+					TDoctor:80,
+					TStopDate:140,
+					TStopDoctor:80,
+					TStopNurse:90,
+					TdeptDesc:120,
+					TRecDepDesc:120,
+					Priority:80,
+					OrderType:60,
+					TBillUom:80,
+					GroupSign:30,
+					TOeoriRowid:120,
+					TOEORIAddDate:145,
+					TOEORISeeInfo:145,
+					TItemStatDesc:80
+				};
+				for (var i=cm.length-1;i>=0;i--){
+					var field=cm[i]['field'];
+					if(["TStDate","TOrderDesc"].indexOf(field)>-1){
+						cm.splice(i,1);
+						continue;
+					}
+					if(typeof colWidthObj[field]!='undefined'){
+						cm[i].width=colWidthObj[field];
+					}
+					switch(field){
+						case 'InsuNationCode':
+							cm[i].formatter = function(value,rec){
+								var btn=""
+								if (value!=""){
+								var btn = '<a class="editcls" onclick="ipdoc.patord.view.InsuNationShow(\'' + rec.OrderId + '\')">'+value+'</a>';
+								
+								}
+								return btn;
+							}
+							break;
+						case 'InsuNationName':
+							cm[i].formatter = function(value,rec){
+								var btn=""
+								if (value!=""){
+								var btn = '<a class="editcls" onclick="ipdoc.patord.view.InsuNationShow(\'' + rec.OrderId + '\')">'+value+'</a>';
+								
+								}
+								return btn;
+							}
+							break;
+						case 'TStopDate':
+							cm[i].styler=function(value,row,index){
+								if ((value!="")&&(value!=" ")){
+									var stopDate=value.split(" ")[0];
+									if (CompareDate(stopDate,ServerObj.CurrentDate)){
+									//if (stopDate>ServerObj.CurrentDate){
+										return 'background-color:yellow';
+									}
+								}
+							}
+							break;
+						case 'TItemStatDesc':
+							cm[i].formatter=function(value,rec){
+								var btn =""; 
+								if (rec.OrderViewFlag=="Y"){
+									btn = '<a class="editcls" onclick="ipdoc.patord.view.OpenOrderView(\'' + rec.OrderId + '\')">'+value+'</a>';
+								}else{
+									btn=value;
+								}
+								return btn;
+							}
+							break;
+						case 'GroupSign':
+							cm[i].styler=function(value,row,index){
+								return 'color:red;';
+							}
+							break;
+						case 'TOeoriRowid':
+							cm[i].formatter = function(value,rec){
+								var btn = '<a class="editcls" onclick="ipdoc.patord.view.ordDetailInfoShow(\'' + rec.OrderId + '\')">'+value+'</a>';
+								return btn;
+							}
+							break;
+						default:break;
+					}
+				}
+			},
+			frozenColumns:[[
+				{field:'CheckOrd',title:'选择',checkbox:'true',align:'center',width:70,auto:false},
+	 			{field:'TStDate',title:'医嘱开始时间',align:'center',width:140,auto:false},
+	 			{field:'TOrderDesc',title:'医嘱',align:'left',width:450,auto:false,
+	 				formatter: function(value,row,index){
+		 				var inparaOrderDesc=$("#orderDesc").val();
+		 				if (inparaOrderDesc!=""){
+			 				//var tmpvalue=value.replace(/\&nbsp;/g,"").replace(/\&nbsp/g,"");
+			 				var  OriginaName=row["OriginaName"]
+			 				OriginaName=OriginaName.replace(inparaOrderDesc,"<font color=red>"+inparaOrderDesc+"</font>");
+							var tmpvalue=value;
+							tmpvalue = tmpvalue.replace(row["OriginaName"],OriginaName);
+							
+						}else{
+							var tmpvalue=value;
+						}
+						var ordtitle=tmpvalue //.replace(reg1,'').replace(reg2,' ');
+						var PopoverHtml=row['PopoverHtml'];
+						if(row.SignFlag=='1'){
+							ordtitle='<img src="../skin/default/images/ca_icon_green.png"/>'+ordtitle;
+						}
+						return '<a class="editcls-TOrderDesc" id= "' + row["OrderId"] + '"onmouseover="ipdoc.patord.view.ShowOrderDescDetail(this)">'+ordtitle+'</a>';
+						//return "<span title='" + ordtitle + "' class='hisui-tooltip'>" + value + "</span>";
+	 				}
+	 			}
+			]]
 		};
 		if (ServerObj.OrderViewScrollView=="1"){
 			$.extend(InPatOrdProperty,{
 				pagination : false,
 				view:scrollview,
-				pageSize:20,	//每次初始化的条数
+				pageSize:(ServerObj.ViewIPDocPatInfoLayOut=="2"?20:30),	//每次初始化的条数
 				ScrollView:1	//后台query接收，是否分页
 			});
 		}else{
 			$.extend(InPatOrdProperty,{
 				pagination : true,
-				pageSize: 10,
-				pageList : [10,100,200],
+				pageSize: (ServerObj.ViewIPDocPatInfoLayOut=="2"?10:15),
+				pageList : (ServerObj.ViewIPDocPatInfoLayOut=="2"?[10,100,200]:[15,100,200]),
 				ScrollView:0
 			});
 		}
 		$.extend(InPatOrdProperty,{
 			onClickRow:function(rowIndex, rowData){
+                                var OrderId=rowData.OrderId;
+				if (OrderId.indexOf("||")<0) return false;
+				if (websys_getAppScreenIndex()==0){
+					websys_emit("onSelectOrdInDoc",{OrderId:OrderId});
+				}
 			},
 			rowStyler:function(rowIndex, rowData){
 	 			if (rowData.ColorFlag=="1"){
 		 			return 'color:#788080;';
 		 		}else if((rowData.TOeoriOeori=="")&&(rowData.GroupSign!="")&&(rowData.NurseLinkOrderRowId=="")){
-			 		return 'background-color:#60F807;';
+			 		return 'background-color:#B8E5AA;';
 			 	}
 			},
 			onClickCell:function(index, field, value){
@@ -379,59 +508,76 @@ opl.view=(function(){
 				SetVerifiedOrder(false);
 			},onLoadSuccess:function(data){
 				if (ServerObj.PageShowFromWay=="ShowFromOrdEntry"){
-					$('div.datagrid-toolbar a').eq(0).hide();
-					$('div.datagrid-toolbar div').eq(0).hide();
+					$("#OrdEnrty_Toolbar").hide();
+					$("#OrdEnrty_Toolbar").parent().next().hide();
 					var startNum=4;
+					if (ServerObj.EmConsultItm!=""){
+						$('#OrdEnrty_Toolbar,#OrdEnrty_Toolbar,#OrdCopy_Toolbar,#OrdCopyToNorm_Toolbar,#OrdCopyToLong_Toolbar,#OrdCopyToOut_Toolbar').hide();
+						$("#OrdEnrty_Toolbar,#OrdCopyToOut_Toolbar").parent().next().hide();
+						$("#changeBigBtn").hide(); 
+						}
 				}else if(ServerObj.PageShowFromWay=="ShowFromOrdCopy"){
-					$('div.datagrid-toolbar a').eq(0).hide();
-					$('div.datagrid-toolbar div').eq(0).hide();
-					$('div.datagrid-toolbar div').eq(1).hide();
+					$("#OrdEnrty_Toolbar").hide();
+					$("#OrdEnrty_Toolbar").parent().next().hide();
+					//$('div.datagrid-toolbar div').eq(1).hide();
 					//登录门诊访问住院的医嘱数据
 					if ((ServerObj.LogonLocAdmTypeLimit=="N")&&(ServerObj.PAAdmType=="I")){
-						$('div.datagrid-toolbar a').eq(1).hide();	//复制
-						$('div.datagrid-toolbar a').eq(3).hide();	//复制为长期
-						$('div.datagrid-toolbar a').eq(4).hide();	//复制为出院带药
+						$("#OrdCopyToLong_Toolbar,#OrdCopyToOut_Toolbar").hide(); //隐藏复制、复制为长期 复制为出院带药	//#OrdCopy_Toolbar
 					}
-					$('div.datagrid-toolbar a').eq(6).hide();		//停止
-					$('div.datagrid-toolbar a').eq(7).hide();		//撤销
-					$('div.datagrid-toolbar a').eq(8).hide();		//作废
+					$("#OrdStop_Toolbar,#OrdCancel_Toolbar,#OrdUnUse_Toolbar").hide(); //隐藏停止 撤销 作废
+					$("#OrdUnUse_Toolbar").parent().next().hide();
 					var startNum=5;
 					
 				}else if(ServerObj.PageShowFromWay=="ShowFromEmrList"){
 					$('div.datagrid-toolbar a').hide();
-					$('.datagrid-toolbar').css('height', "1px");
-					$('.datagrid-toolbar').css('padding', "0 2px");
+					$('.datagrid-toolbar').css({
+						height:"1px",
+						padding:"0 2px"
+					});
 					var startNum=5;
-					$('.fixedh2-div').css('border-bottom', "0px dashed #ccc");
+					$('.fixedh2-div').css({
+						"border-bottom":"0px dashed #ccc",
+						"border-top":"1px dashed #ccc"
+					})
 					$('.fixedh3-div').css('border-bottom', "0px dashed #ccc");
-					$('.fixedh2-div ').css('border-top', "1px dashed #ccc");
+					InPatOrdDataGrid.datagrid("resize");
+				}else if(ServerObj.PageShowFromWay=="ShowFromDocToDo"){
+					$('#OrdEnrty_Toolbar,#OrdEnrty_Toolbar,#OrdCopy_Toolbar,#OrdCopyToNorm_Toolbar,#OrdCopyToLong_Toolbar,#OrdCopyToOut_Toolbar').hide();
+					$("#OrdEnrty_Toolbar,#OrdCopyToOut_Toolbar,#OrdCopy_Toolbar").parent().next().hide();
+					var startNum=6;
+				}else if ((ServerObj.OrdrightKeyMenuHidden==1)&&(ServerObj.PageShowFromWay!="ShowFromOrdCopy")){
+						$(".datagrid-toolbar").hide();
 				}else{
-					$('div.datagrid-toolbar a').eq(6).hide();
+					$(".datagrid-toolbar").show();
+					//$("#OrdStop_Toolbar").hide();
 				}
-				
 				var MenuAdm="";
 				var frm = dhcsys_getmenuform();
 			    if (frm) {
 			    	MenuAdm = frm.EpisodeID.value;
 			    }
 			    //有可能是检索的其他就诊记录的医嘱进行的复制，按照menu上的就诊进行判断是否展示虚拟长期按钮
-				if (MenuAdm!=ServerObj.EpisodeID){
+				if ((MenuAdm!="")&&(MenuAdm!=ServerObj.EpisodeID)){
 					var UserEMVirtualtLong=$.cm({
 					    ClassName : "web.DHCDocOrderVirtualLong",
 					    MethodName : "GetUserEMVirtualtLong",
 					    EpisodeID : MenuAdm
 					},false);
 					if (UserEMVirtualtLong=="0"){
-						$('div.datagrid-toolbar a').eq(5).hide();
+						$("#OrdCopyToVirLong_Toolbar").hide();
 					}
 				}else if (ServerObj.UserEMVirtualtLong=="0"){
-					$('div.datagrid-toolbar a').eq(5).hide();		//复制为虚拟长期
+					$("#OrdCopyToVirLong_Toolbar").hide();
 				}
 				if (ServerObj.patData.patFlag==0){
 					for (var i=startNum;i<parseInt(startNum)+3;i++){
 						$('div.datagrid-toolbar a').eq(i).hide();
 						$('div.datagrid-toolbar div').eq(i).hide();
 					}
+				}
+				var EpisPatObj=eval("("+EpisPatInfo+")");
+				if (EpisPatObj.VisitStatus =="P") {
+					$("#OrdCopyToLong_Toolbar,#OrdCopyToOut_Toolbar,#OrdCopyToVirLong_Toolbar").hide();
 				}
 				if (ServerObj.PageShowFromWay=="ShowFromEmr"){
 					InPatOrdDataGrid.datagrid('getPanel').panel('panel').focus();
@@ -443,9 +589,15 @@ opl.view=(function(){
 					InPatOrdDataGridLoadSuccCallBack.CallBackFunc();
 				}
 				*/
+			},
+			onChangePageSize:function(pageSize){
+				//医嘱列表中强制【成组医嘱】一页显示时，为了防止有空行，需要在请求一次数据，把空行去掉
+				if ((ServerObj.OrderViewScrollView!="1")&&(ServerObj.GroupOrderOnePage=="Y")){
+					LoadPatOrdDataGrid("",pageSize,"OnlyLoadData")
+				}
 			}
 		});
-		$.extend(InPatOrdProperty,{loadFilter:pagerFilter});
+		$.extend(InPatOrdProperty,{loadFilter:DocToolsHUI.lib.pagerFilter});
 		InPatOrdDataGrid=$("#tabInPatOrd").datagrid(InPatOrdProperty);
 		$.extend($.fn.datagrid.methods,{
 			keyCtr : function (jq) {
@@ -572,15 +724,43 @@ opl.view=(function(){
 		InPatOrdDataGrid.datagrid("keyCtr");
 		
    }
-   	function LoadPatOrdDataGrid(SelOrdRowIDNext){
+   function BClearDateClick(){
+		$('#OrdStartSDate').datebox('setValue', '');
+		$('#OrdStartEDate').datebox('setValue', '');
+		$('#OrdStopSDate').datebox('setValue', '');
+		$('#OrdStopEDate').datebox('setValue', '');
+   }
+	function BFindDateBtnClick(){
+		var OrdStartSDate=$HUI.datebox("#OrdStartSDate").getValue();
+		var OrdStartEDate=$HUI.datebox("#OrdStartEDate").getValue();
+		var OrdStartDateStr=OrdStartSDate+"^"+OrdStartEDate
+		var OrdStopSDate=$HUI.datebox("#OrdStopSDate").getValue();
+		var OrdStopEDate=$HUI.datebox("#OrdStopEDate").getValue();
+		var OrdStopDateStr=OrdStopSDate+"^"+OrdStopEDate
+		GridParams.Arg14=OrdStartDateStr
+		GridParams.Arg15=OrdStopDateStr
+		LoadPatOrdDataGrid();
+		$("#Datedialog").dialog("close");
+	}
+	function DatescopeBtnClick(){
+		$("#Datedialog").dialog("open");
+		BClearDateClick();
+	}
+   	function LoadPatOrdDataGrid(SelOrdRowIDNext,pageSize,ActionCode){
    		if (typeof SelOrdRowIDNext =="undefined"){SelOrdRowIDNext="";}
+		if (typeof ActionCode =="undefined"){ActionCode="";}
 	   	//var myDate = new Date();
     	//var DateTime = myDate.toLocaleString() + '.' + myDate.getMilliseconds();
     	if (ServerObj.OrderViewScrollView=="1"){
 	    	var pageSize=99999;
+		}else if (typeof pageSize !="undefiend" && pageSize>0){
+			//onChangePageSize触发时，Opt中的options尚未赋值，按照传入的值处理
 	    }else{
     		var pageSize=InPatOrdDataGrid.datagrid("options").pageSize;
 	    }
+		if(typeof $('#OrdSearch-div').showMask=='function'){
+			$('#OrdSearch-div').showMask();
+		}
 	    DocToolsHUI.MessageQueue.FireAjax("patord.LoadPatOrdDataGrid");
 	   	DocToolsHUI.MessageQueue.Add("patord.LoadPatOrdDataGrid",$.q({
 		    ClassName : GridParams.ClassName,
@@ -590,12 +770,19 @@ opl.view=(function(){
 		    stloc : GridParams.Arg5,nursebill : GridParams.Arg6,
 		    inputOrderDesc : GridParams.Arg7,PriorType : GridParams.Arg8,
 		    CatType : GridParams.Arg9,SortType : GridParams.Arg10,
-		    OrderPriorType : GridParams.Arg11,
+		    OrderPriorType : GridParams.Arg11,InstrID: GridParams.Arg12,
+		    FreqID:GridParams.Arg13,
+			OrderStartDate:GridParams.Arg14,
+			OrderEndDate:GridParams.Arg15,
+		    focusOrdList : ServerObj.DefaultOrdList,
 		    Pagerows:pageSize,
 		    ScrollView:InPatOrdDataGrid.datagrid("options").ScrollView,
 		    rows:99999
 		},function(GridData){
 			InPatOrdDataGrid.datagrid('unselectAll').datagrid('uncheckAll').datagrid('loadData',GridData);
+			if(typeof $('#OrdSearch-div').hideMask=='function'){
+				$('#OrdSearch-div').hideMask();
+			}
 			if (SelOrdRowIDNext!=""){
 				SelNextDocOrd(SelOrdRowIDNext);
 			}
@@ -605,61 +792,13 @@ opl.view=(function(){
 				}else{
 					toggleExecInfo("#moreBtn");
 				}
-		    }
+		    }else{
+			    if (ServerObj.PageShowFromWay=="ShowFromEmr"){
+			    }
+			}
 		}));
 
 		
-	}
-	function pagerFilter(data){
-		if (typeof data.length == 'number' && typeof data.splice == 'function'){	// is array
-			data = {
-				total: data.length,
-				rows: data
-			}
-		}
-		var dg = $(this);
-		var opts = dg.datagrid('options');
-		var pager = dg.datagrid('getPager');
-		pager.pagination({
-			showRefresh:false,
-			onSelectPage:function(pageNum, pageSize){
-				opts.pageNumber = pageNum;
-				opts.pageSize = pageSize;
-				pager.pagination('refresh',{
-					pageNumber:pageNum,
-					pageSize:pageSize
-				});
-				dg.datagrid('loadData',data);
-				dg.datagrid('scrollTo',0); //滚动到指定的行        
-				/*
-				刷新当前页的选中行,源码里面做了延迟，要保证堆栈执行顺序，
-				这里也要加
-				*/
-				if (dg[0].id=="tabInPatOrd"){
-					setTimeout(function() {
-						SetVerifiedOrder(true);
-					}, 0);
-				}
-			}
-		});
-		if (!data.originalRows){
-			data.originalRows = (data.rows);
-		}
-		if ((opts.pagination)&&(data.originalRows.length>0)){
-			var start = (opts.pageNumber-1)*parseInt(opts.pageSize);
-			/*
-			目前发现删除最后一页所有数据之后，页码还是定位到最后一页，但是页码数已经被置到了前一页
-			*/
-			if ((start+1)>data.originalRows.length){
-				//取现有行数最近的整页起始值
-				start=Math.floor((data.originalRows.length-1)/opts.pageSize)*opts.pageSize;
-				//opts.pageNumber=opts.pageNumber-1;
-				opts.pageNumber=(start/opts.pageSize)+1;
-			}
-			var end = start + parseInt(opts.pageSize);
-			data.rows = (data.originalRows.slice(start, end));
-		}
-		return data;
 	}
 	
 	function BubbleKeyDown(e){
@@ -778,6 +917,7 @@ opl.view=(function(){
 		}
    }
    function LoadOrdExec(rowData,type){
+	if(!$('#Ordlayout_main').layout('panel', 'east').size()) return;
 	   if (type===""){
 			//双击医嘱,展示执行记录信息
 			var collapsed = $('#Ordlayout_main').layout('panel', 'east').panel('options').collapsed;
@@ -805,7 +945,7 @@ opl.view=(function(){
 		if (typeof InPatOrdExecDataGrid === 'object'){
 			setTimeout(function() {
 				LoadInPatOrdExecDataGrid();
-			})
+			},500)
 		}else{
 			InitOrdExecGrid();
 		}
@@ -830,7 +970,7 @@ opl.view=(function(){
 		 			{field:'THourExEnTime',title:'小时医嘱结束时间',width:130},
 		 			{field:'OrdExecBillQty',title:'计费数量',width:80},
 		 			{field:'TExecRes',title:'执行原因',width:100},
-		 			{field:'TExecFreeRes',title:'免费原因',width:100},
+		 			{field:'TExecFreeRes',title:'免费原因',width:100,hidden:true},
 		 			{field:'TExecUser',title:'处理人',width:80},
 		 			{field:'TExecLoc',title:'处理科室',width:80},
 		 			{field:'ExecPart',title:'检查部位',width:80},
@@ -840,7 +980,7 @@ opl.view=(function(){
 					       return btn;
                         }
 		 			},
-		 			{field:'TExecFreeChargeFlag',title:'免费状态',width:100},
+		 			{field:'TExecFreeChargeFlag',title:'免费状态',width:100,hidden:true},
 		 			
 		 			{field:'TgiveDrugQty',title:'发药数量',width:80},
 		 			{field:'TcancelDrugQty',title:'退药数量',hidden:true,width:80},
@@ -857,7 +997,7 @@ opl.view=(function(){
 			fit : true,
 			width:1500,
 			border : false,
-			striped : true,
+			striped : false,
 			singleSelect : false,
 			fitColumns : false,
 			autoRowHeight : false,
@@ -885,7 +1025,7 @@ opl.view=(function(){
 		    Pagerows:InPatOrdExecDataGrid.datagrid("options").pageSize,rows:99999
 		},function(GridData){
 			InPatOrdExecDataGrid.datagrid("uncheckAll");
-			InPatOrdExecDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData); 
+			InPatOrdExecDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData); 
 		});
    }
    function ShowGridRightMenu(e,rowIndex, rowData,type){
@@ -896,7 +1036,7 @@ opl.view=(function(){
           selRowIndex=rowIndex; //保证右键时只选中这一行,对成组也是如此
           InPatOrdDataGrid.datagrid("checkRow", rowIndex);
           selRowIndex="";
-          if (ServerObj.OrdrightKeyMenuHidden=="true") return false;
+          if (ServerObj.OrdrightKeyMenuHidden==1) return false;
 	      if ((rowData.TPriorityCode=="S")||(rowData.TPriorityCode=="OMST")||(rowData.TPriorityCode=="OMCQZT")){
 	         var RightMenu=eval("("+ServerObj.orderRightMenuJson+")");
 	      }else{
@@ -906,7 +1046,7 @@ opl.view=(function(){
 	   }else if(type="OrdExec"){
 		  InPatOrdExecDataGrid.datagrid("clearSelections"); 
 	      InPatOrdExecDataGrid.datagrid("selectRow", rowIndex); 
-	      if (ServerObj.ExecrightKeyMenuHidden=="true") return false;
+	      if (ServerObj.ExecrightKeyMenuHidden==1) return false;
 	      if ((rowData.TPriorityCode=="S")||(rowData.TPriorityCode=="OMST")||(rowData.TPriorityCode=="OMCQZT")){
 		   		var RightMenu=eval("("+ServerObj.execMenuJson+")");
 		  }else{
@@ -942,12 +1082,16 @@ opl.view=(function(){
 	   
    }
    function InitPageItemEvent(){
+	   $("#Datescope").click(DatescopeBtnClick);	
+	   $("#BFindDate").click(BFindDateBtnClick);
+	   $("#BClearDate").click(BClearDateClick);
+	   BClearDateClick()
 	   //开医嘱人
 	   var cbox = $HUI.combobox("#doctorList", {
 			valueField: 'id',
 			textField: 'text', 
 			editable:false,
-			data: eval("("+ServerObj.OrdDoctorList+")"),
+			data: ServerObj.OrdDoctorList,
 			onSelect: function (rec) {
 				GridParams.Arg3=rec.id;
 				LoadPatOrdDataGrid();
@@ -1018,6 +1162,28 @@ opl.view=(function(){
 				LoadPatOrdDataGrid();
 			}
 	   });
+	   //用法
+	   var cbox = $HUI.combobox("#InstrDesc", {
+			valueField: 'id',
+			textField: 'text',
+			editable:false, 
+			data:ServerObj.ViewInstrJson,
+			onSelect: function (rec) {
+				GridParams.Arg12=rec.id;
+				LoadPatOrdDataGrid();
+			}
+	   });
+	   //频次
+	var cbox = $HUI.combobox("#SFreq", {
+			valueField: 'id',
+			textField: 'text',
+			editable:false, 
+			data:ServerObj.ViewFreqJson,
+			onSelect: function (rec) {
+				GridParams.Arg13=rec.id;
+				LoadPatOrdDataGrid();
+			}
+	   });
 	   $('#execBarExecStDate').datebox({
 		    onChange: function(newValue, oldValue){
 			    if (typeof InPatOrdExecDataGrid === 'object'){
@@ -1052,27 +1218,79 @@ opl.view=(function(){
             }
         });
         $('#Ordlayout_main').layout('panel', 'east').panel({
-	        onCollapse: function() {
+	      onCollapse: function() {
 		        var _width=$('#Ordlayout_main').layout('panel', 'center').panel('options').width;
-		        $('#Ordlayout_main').layout('panel', 'center').panel('resize',{width:_width})
+				$('#Ordlayout_main').layout('panel', 'center').panel('resize',{width:_width});
+				//$('#Ordlayout_main').layout('panel', 'center').panel('options').width=_width;
+				//$('#Ordlayout_main').layout('resize');
 		        InPatOrdDataGrid.datagrid("resize");
-	        }/*,
+
+				setTimeout(function() {
+					if (($("#moreBtn")[0].innerText==$g("隐藏"))&&(ServerObj.PageShowFromWay!="ShowFromEmrList")){
+						// var p = $("#OrdSearch")
+						// if ((p.height()<=84)&&((ServerObj.PageShowFromWay=="ShowFromEmr"))){
+						// 	OrderViewsetHeight(1)
+						// }else if ((p.height()<82)&&((ServerObj.PageShowFromWay!="ShowFromEmr"))){
+						// 	OrderViewsetHeight(1)
+						// }
+						OrderViewsetHeight(0);
+					}
+				},1500)
+	        },
 	        onExpand: function() {
-		        var _width=$('#Ordlayout_main').layout('panel', 'center').panel('options').width;
-		        $('#Ordlayout_main').layout('panel', 'center').panel('resize',{width:(_width-413)})
-		        InPatOrdDataGrid.datagrid("resize");
-	        }*/,
-	        onResize: function() {
-		        var eastWidth=$('#Ordlayout_main').layout('panel', 'east').panel('options').width;
-		        var width=$(window).width()-eastWidth;
+		        var _eastWidth=$('#Ordlayout_main').layout('panel', 'east').panel('options').width;
+				//$('#Ordlayout_main').layout('panel', 'center').panel('resize',{width:_eastWidth});
+				$('#Ordlayout_main').layout('panel', 'center').panel('options').width=_eastWidth;
+				$('#Ordlayout_main').layout('resize');
 		        //病历浏览加载住院医嘱列表，页面左侧两侧不存在空白区域不需要减去20
-		        if (ServerObj.PageShowFromWay!="ShowFromEmrList"){
-			        width=width-20;
-			    }
-		        $('#Ordlayout_main').layout('panel', 'center').panel('resize',{width:width})
+		        // if (ServerObj.PageShowFromWay!="ShowFromEmrList"){
+			    //     width=width-20;
+			    // }
 		        InPatOrdDataGrid.datagrid("resize");
+		        setTimeout(function() {
+					if (($("#moreBtn")[0].innerText==$g("隐藏"))&&(ServerObj.PageShowFromWay!="ShowFromEmrList")){
+						// var p = $("#OrdSearch")
+						// if ((p.height()<=84)&&((ServerObj.PageShowFromWay=="ShowFromEmr"))){
+						// 	OrderViewsetHeight(1)
+						// }else if ((p.height()<82)&&((ServerObj.PageShowFromWay!="ShowFromEmr"))){
+						// 	OrderViewsetHeight(1)
+						// }
+						OrderViewsetHeight(0);
+					}
+				},1500)
+	        },
+	        onResize: function() {
+
+		       var _width=$('#Ordlayout_main').layout('panel', 'center').panel('options').width;
+		       if (ServerObj.PageShowFromWay!="ShowFromEmr"){
+				    $('#Ordlayout_main').layout('panel', 'center').panel('resize',{width:_width})
+		        	InPatOrdDataGrid.datagrid("resize");
+		        }else{
+			    	//InPatOrdDataGridHeigth=$("#Ordlayout_main").find("div[class='datagrid-body']").height()
+					//InPatOrdDataGridHeigth=parseInt(InPatOrdDataGridHeigth)-parseInt(num);
+					//$("#Ordlayout_main").find("div[class='datagrid-body']").height(InPatOrdDataGridHeigth)    
+			    }
 	        }
        });
+       $(window).resize(function() {
+	       $('#Ordlayout_main').layout('resize',{width:'100%',height:'100%'})
+		    InPatOrdDataGrid.datagrid("resize");
+	    	setTimeout(function() {
+	    		if (($("#moreBtn")[0].innerText==$g("隐藏"))&&(ServerObj.PageShowFromWay!="ShowFromEmrList")){
+		    		var p = $("#OrdSearch")
+		    		if ((p.height()<=84)&&((ServerObj.PageShowFromWay=="ShowFromEmr"))){
+						OrderViewsetHeight(1)
+		    		}else if ((p.height()<82)&&((ServerObj.PageShowFromWay!="ShowFromEmr"))){
+			    		OrderViewsetHeight(1)
+			    		}
+				}
+				//WQY resize时频闭调用父页面的Changebiggrid 20210512
+				/*var par_win=GetOrdPatWin();
+				var Changeflag=0
+				if (flagbig==1){Changeflag=0}else{Changeflag=1}
+				if (par_win)par_win.Changebiggrid(Changeflag);*/
+			},1500)
+	    });
 	   $(document.body).bind("keydown",BodykeydownHandler)
    }
    function BodykeydownHandler(e) {
@@ -1101,10 +1319,35 @@ opl.view=(function(){
 	        e.preventDefault();   
 	    } 
 	    if(e.keyCode==13){
+		    if ($("#OrdDiag").length>0) {
+			    if ((SrcObj.id !="winPinNum")&&(!$(SrcObj).hasClass("validatebox-invalid"))){
+				    var _$OrdDiagInput=$("#OrdDiag input");
+				    var index = _$OrdDiagInput.index($(SrcObj));
+				    var newIndex = index + 1;
+				    DiagOrdFocusJump(newIndex);
+				}
+			}
 		    return false;   
 	    }
 	}
+   function DiagOrdFocusJump(Index){
+	   var _$OrdDiagInput=$("#OrdDiag input");
+	    if(_$OrdDiagInput.length != Index){
+		    var isReadOnly=$("#OrdDiag input:eq(" + Index + ")").is('[readonly]')
+		    var isHidden=$("#OrdDiag input:eq(" + Index + ")").is(":hidden")
+		    if ((!isHidden)&&(!isReadOnly)) {
+		    	$("#OrdDiag input:eq(" + Index + ")").focus();
+		    }else{
+			    Index = Index + 1;
+			    DiagOrdFocusJump(Index);
+			}
+		}
+   }
    function OrdReSubCatList(){
+	   var OrdReSubCatListJson=ServerObj.OrdReSubCatListJson;
+	   OrdReSubCatListJson=OrdReSubCatListJson.slice(0, OrdReSubCatListJson.length-1) + ",{\"id\":\"DocToDoList\",\"text\":\""+$g("医疗待办")+"\"}" + OrdReSubCatListJson.slice(OrdReSubCatListJson.length-1);
+	   ServerObj.OrdReSubCatListJson=OrdReSubCatListJson;
+
 	   var ListJson=eval("("+ServerObj.OrdReSubCatListJson+")");
 	   for (var i=0;i<ListJson.length;i++){
 		   var id=ListJson[i].id;
@@ -1121,13 +1364,45 @@ opl.view=(function(){
 	   $('#OrdReSubCatList').tabs({
 		  isBrandTabs:true,
 		  onSelect: function(title,index){
+			var _$ExecPanel=$('#Ordlayout_main').layout('panel', 'east').parent();
+			_$ExecPanel.show();
 			var ListJson=eval("("+ServerObj.OrdReSubCatListJson+")");
-			GridParams.Arg9=ListJson[index-1].id;
-			if ((ListJson[index-1].text==$g("检查"))||(ListJson[index-1].text==$g("检验"))){
-				$HUI.radio("#OrderTypeOM").setValue(true);
-				GridParams.Arg8="OM"
+			var TabsId=ListJson[index-1].id;
+			if (TabsId=="DocToDoList"){
+				_$ExecPanel.hide();
+				if ($("#DocToDoListView").length>0){
+					$("#DocToDoListView").show();
+					RefreshDocToDoListView();
+					return true;
 				}
-		    LoadPatOrdDataGrid();
+				var TabsHeight=$('#OrdReSubCatList').css("height");
+				var OrdViewsHeight=$('#OrdSearch-div').css("height");
+				//创建一个容器
+				var DIVObj=document.createElement("div");
+				$(DIVObj).attr("id","DocToDoListView")
+				.css("height", OrdViewsHeight).css("height", "-="+TabsHeight).css("height", "+="+2)
+				.css("width","100%")
+				.css("top", TabsHeight).css("left", "0px")
+				.css("background-color", "#CCC");
+				$("#Ordlayout_main").append($(DIVObj).prop("outerHTML"));
+				
+				//打开医疗待办列表 
+				var src="ipdoc.doctodolistview.hui.csp?EpisodeID=" +ServerObj.EpisodeID;
+				if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
+				$("#DocToDoListView").append("<iframe id='DocToDoListViewFrame' width='100%' height='100%' src='" + src + "' frameborder='0' border='0' marginwidth='0' marginheight='0' scrolling='no'/>");			}else{
+				$("#DocToDoListView").hide(); //css("display","none");
+				GridParams.Arg9=ListJson[index-1].id;
+				if ((ListJson[index-1].text==$g("检查"))||(ListJson[index-1].text==$g("检验"))){
+					GridParams.Arg8="OM";
+					if ($("#OrderTypeOM").radio('getValue')) {
+						LoadPatOrdDataGrid();
+					}else{
+						$HUI.radio("#OrderTypeOM").setValue(true);
+					}
+				}else{
+		    		LoadPatOrdDataGrid();
+		    	}
+			}
 		  }
 	   });
    }
@@ -1232,6 +1507,7 @@ opl.view=(function(){
 	   var title=$g("停医嘱");
 	   var SelOrdRowStr=GetSelOrdRowStr();
 	   if (!CheckOrdDealPermission(SelOrdRowStr,"S")) return false;
+	   var SelOrdRowArr=SelOrdRowStr.split("^");
 	   var OnlyOneGroupFlag=GetOnlyOneGroupFlag(SelOrdRowStr);
 	   if (OnlyOneGroupFlag==1){
 		   var ordRowid=SelOrdRowStr.split(String.fromCharCode(1))[0];
@@ -1246,9 +1522,10 @@ opl.view=(function(){
 			title=title+" "+val;
 	   }
 	   var Content=initDiagDivHtml("S");
-	   var iconCls="icon-w-edit";
-	   createModalDialog("OrdDiag",title, 380, 280,iconCls,$g("停止"),Content,"MulOrdDealWithCom('S')");
+	   var iconCls="icon-w-stop";	//"icon-w-clock";
+	   createModalDialog("OrdDiag",title, 380, 315,iconCls,$g("停止"),Content,"MulOrdDealWithCom('S')");
 	   InitStopMulOrdWin(SelOrdRowStr,OnlyOneGroupFlag);
+	   $("#DiagWin_Info").html($g("已选中")+SelOrdRowArr.length+$g("条医嘱"));
 	   $("#winPinNum").focus();
    }
    function ShowCancelMulOrdWin(){
@@ -1256,6 +1533,7 @@ opl.view=(function(){
 	   //var FindLongOrd=0;
 	   var SelOrdRowStr=GetSelOrdRowStr();
 	   if (!CheckOrdDealPermission(SelOrdRowStr,"C")) return false;
+	   var SelOrdRowArr=SelOrdRowStr.split("^");
 	   /*var SelOrdRowArr=InPatOrdDataGrid.datagrid('getChecked');
 	   $.each(SelOrdRowArr,function(Index,RowData){
 		   if (RowData["Priority"].indexOf("长期")>=0){
@@ -1270,9 +1548,10 @@ opl.view=(function(){
 	   var title=$g("撤销(DC)医嘱");
 	   destroyDialog("OrdDiag");
 	   var Content=initDiagDivHtml("C");
-	   var iconCls="icon-w-edit";
-	   createModalDialog("OrdDiag",title, 380, 171,iconCls,$g("撤销(DC)"),Content,"MulOrdDealWithCom('C')");
+	   var iconCls="icon-w-back";
+	   createModalDialog("OrdDiag",title, 380, 195,iconCls,$g("撤销(DC)"),Content,"MulOrdDealWithCom('C')");
 	   InitOECStatusChReason();
+	   $("#DiagWin_Info").html($g("已选中")+SelOrdRowArr.length+$g("条医嘱"));
 	   $('#OECStatusChReason').next('span').find('input').focus();
 	   //$("#winPinNum").focus();
    }
@@ -1280,12 +1559,14 @@ opl.view=(function(){
 	   if (!CheckIsCheckOrd()) return false;
 	   var SelOrdRowStr=GetSelOrdRowStr();
 	   if (!CheckOrdDealPermission(SelOrdRowStr,"U")) return false;
+	   var SelOrdRowArr=SelOrdRowStr.split("^");
 	   var title=$g("作废医嘱");
 	   destroyDialog("OrdDiag");
 	   var Content=initDiagDivHtml("U")
 	   var iconCls="icon-w-edit";
-	   createModalDialog("OrdDiag",title, 380, 171,iconCls,$g("作废"),Content,"MulOrdDealWithCom('U')");
+	   createModalDialog("OrdDiag",title, 380, 195,iconCls,$g("作废"),Content,"MulOrdDealWithCom('U')");
 	   InitOECStatusChReason();
+	   $("#DiagWin_Info").html($g("已选中")+SelOrdRowArr.length+$g("条医嘱"));
 	   $('#OECStatusChReason').next('span').find('input').focus();
 	   //$("#winPinNum").focus();
    }
@@ -1296,7 +1577,7 @@ opl.view=(function(){
 	   destroyDialog("OrdDiag");
 	   var Content=initDiagDivHtml("NurSeeOrd")
 	   var iconCls="icon-w-edit";
-	   createModalDialog("OrdDiag",title, 380, 230,iconCls,$g("确认"),Content,"MulOrdDealWithCom('NurSeeOrd')");
+	   createModalDialog("OrdDiag",title, 380, 255,iconCls,$g("确认"),Content,"MulOrdDealWithCom('NurSeeOrd')");
 	   //类型
 	   var cbox = $HUI.combobox("#SeeOrdType", {
 		    editable: false,
@@ -1358,22 +1639,44 @@ opl.view=(function(){
 	   if (type=="S"){
 		   var date = $('#winStopOrderDate').datebox('getValue');
 		   if (date==""){
-			   $.messager.alert("提示","停止日期不能为空!");
-			   $('#winStopOrderDate').next('span').find('input').focus();
+			   $.messager.alert("提示","停止日期不能为空!","info",function(){
+				   $('#winStopOrderDate').next('span').find('input').focus();
+			   });
 			   return false;
 		   }
 		   if(!DATE_FORMAT.test(date)){
-			   $.messager.alert("提示","停止日期格式不正确!");
+			   $.messager.alert("提示","停止日期格式不正确!","info",function(){
+				   $('#winStopOrderDate').next('span').find('input').focus();
+			   });
 			   return false;
+		   }
+		   if ($("#isExpStopOrderCB").checkbox('getValue')) {
+			   if (ServerObj.DateFormat=="4"){
+				    var tmpdate=date.split("/")[2]+"-"+date.split("/")[1]+"-"+date.split("/")[0]
+				    var tmpdate = new Date(tmpdate.replace("-", "/").replace("-", "/"));
+				}else{
+					var tmpdate = new Date(date.replace("-", "/").replace("-", "/"));
+				}
+				var CurDate=new Date();
+				var end=new Date(CurDate.getFullYear()+"/"+(CurDate.getMonth()+1)+'/'+ CurDate.getDate());
+				if(tmpdate <= end){
+					$.messager.alert('提示',"预停时停止日期应大于当天："+myformatter(end)+"！","info",function(){
+					     $('#winStopOrderDate').next('span').find('input').focus();
+					 });
+					 return false;
+				}
 		   }
 		   var time=$('#winStopOrderTime').timespinner('getValue'); //$('#winStopOrderTime').combobox('getText');
 		   if (time==""){
-			   $.messager.alert("提示","停止时间不能为空!");
-			   $('#winStopOrderTime').next('span').find('input').focus();
+			   $.messager.alert("提示","停止时间不能为空!","info",function(){
+				   $('#winStopOrderTime').focus();
+			   });
 			   return false;
 		   }
 		   if (!IsValidTime(time)){
-			   $.messager.alert("提示","停止时间格式不正确! 时:分:秒,如11:05:01");
+			   $.messager.alert("提示","停止时间格式不正确! 时:分:秒,如11:05:01","info",function(){
+				   $('#winStopOrderTime').focus();
+			   });
 			   return false;
 		   }
 	   }else if(type=="Addexec"){
@@ -1389,12 +1692,15 @@ opl.view=(function(){
 		   }
 		   var time=$('#winRunOrderTime').combobox('getText');
 		   if (time==""){
-			   $.messager.alert("提示","要求执行时间不能为空!");
-			   $('#winRunOrderTime').next('span').find('input').focus();
+			   $.messager.alert("提示","要求执行时间不能为空!","info",function(){
+				   $('#winRunOrderTime').focus();
+			   });
 			   return false;
 		   }
 		   if (!IsValidTime(time)){
-			   $.messager.$.messager.alert("提示","要求执行时间格式不正确! 时:分:秒,如11:05:01");
+			   $.messager.$.messager.alert("提示","要求执行时间格式不正确! 时:分:秒,如11:05:01","info",function(){
+				   $('#winRunOrderTime').focus();
+			   });
 			   return false;
 		   }
 	   }else if (type=="A"){
@@ -1429,11 +1735,11 @@ opl.view=(function(){
 				return false;
 		   }
 	   }
-	   if ((type=="S")||(type=="C")||(type=="U")){
+	   /*if ((type=="S")||(type=="C")||(type=="U")){
 			if (ExeCASigin("")==false){
 				return false;
 			} 
-	   }
+	   }*/
 	   ExpStr=ExpStr+"^"+ReasonId+"^"+Reasoncomment;
 	   //if (type!="Addexec"){
 	   if ($("#winPinNum").length>0){
@@ -1478,6 +1784,28 @@ opl.view=(function(){
 		   ExpStr=ExpStr+"^"+SeeOrdType+"^"+SeeOrdDate+"^"+SeeOrdTime+"^"+SeeOrdNotes;
 	   }
 	   //CancelPreStopOrd
+	   var UpdateObj={}
+		new Promise(function(resolve,rejected){
+		   	//电子签名
+		   	var callType=""
+		   	if (type=="S"){
+			   	callType="OrderStop"
+			}else if (type=="C"){
+				 callType="OrderCancel"  	
+			}else if (type=="U"){
+				 callType="OrderUnUse"  	
+			}
+			CASignObj.CASignLogin(resolve,callType,false)
+		}).then(function(CAObj){
+			return new Promise(function(resolve,rejected){
+		    	if (CAObj == false) {
+		    		return websys_cancel();
+		    	} else{
+		    	$.extend(UpdateObj, CAObj);
+		    	resolve(true);
+		    	}
+			})
+		}).then(function(){
 	   var SelOrdRowStr=GetSelOrdRowStr();
 	   $.m({
 		    ClassName:"web.DHCDocInPatPortalCommon",
@@ -1491,32 +1819,37 @@ opl.view=(function(){
 		},function(val){
 			var DischargeOEORI="";
 			var alertCode=val.split("^")[0];
-			if ((type=="U")&&(alertCode=="-901")){
+			if ((type=="U")&&(alertCode=="-100050")){ //-901
 				$.messager.alert("提示",val.split("^")[1]);
 				val="0";
 				DischargeOEORI=val.split("^")[2];
 			}
 			if (alertCode=="0"){
 				if ((type=="S")||(type=="C")||(type=="U")){             //2018-9-4 fxn ca签名
-					ExeCASigin(SelOrdRowStr);  
-				}
-				if (type=="Addexec"){
-					//增加执行医嘱后,需自动双击该医嘱
-					/*if (ServerObj.isNurseLogin=="1"){
-						var rowData=InPatOrdDataGrid.datagrid("getSelected");
-						var rowIndex=InPatOrdDataGrid.datagrid("getRowIndex",rowData);
-						OrdDataGridDbClick(rowIndex, rowData,0) 
-					}*/
-				}else{
-					if (ServerObj.PageShowFromWay){
-						InPatOrdDataGrid.datagrid("clearSelections");
-		            	InPatOrdDataGrid.datagrid("clearChecked");
-						LoadPatOrdDataGrid();
-						SetVerifiedOrder(false);
-					}else{
-						InPatOrdDataGrid.datagrid('reload');
+					var CASignOrdStr="";
+				    var TempIDs=SelOrdRowStr.split("^");
+					var IDsLen=TempIDs.length;
+					for (var k=0;k<IDsLen;k++) {
+						var TempNewOrdDR=TempIDs[k].split(String.fromCharCode(1));
+						if (TempNewOrdDR.length <=0) continue;
+						var newOrdIdDR=TempNewOrdDR[0];
+						if (newOrdIdDR.indexOf("!")>0){
+							newOrdIdDR=newOrdIdDR.split("!")[0];
+						}
+						if(CASignOrdStr=="")CASignOrdStr=newOrdIdDR;
+						else CASignOrdStr=CASignOrdStr+"^"+newOrdIdDR;			
 					}
-			    }
+					if (UpdateObj.caIsPass==1) CASignObj.SaveCASign(UpdateObj.CAObj, CASignOrdStr, "S");
+					if(CDSSObj) CDSSObj.SynOrder(ServerObj.EpisodeID,CASignOrdStr);
+				}
+				if (ServerObj.PageShowFromWay){
+					InPatOrdDataGrid.datagrid("clearSelections");
+	            	InPatOrdDataGrid.datagrid("clearChecked");
+					LoadPatOrdDataGrid();
+					SetVerifiedOrder(false);
+				}else{
+					InPatOrdDataGrid.datagrid('reload');
+				}
 				destroyDialog("OrdDiag");
 				if ((ipdoc.pattreatinfo)&&((type=="S")||(type=="C")||(type=="U"))){
 					ipdoc.pattreatinfo.view.ReLoadPatAdmInfoJson();
@@ -1532,10 +1865,15 @@ opl.view=(function(){
 					}
 				}
 			}else{
-				$.messager.alert("提示",alertCode);
+				$.messager.alert("提示",alertCode,"info",function(){
+					if (alertCode.indexOf("成功")>=0) {
+						destroyDialog("OrdDiag");
+					}
+				});
 				return false;
 			}
 		});
+		})
    }
    function IsValidDate(DateStr){ 
       //todo 验证日期有效性
@@ -1622,54 +1960,23 @@ opl.view=(function(){
 	   }
 	   
 	   LoadwinStopOrderTimes(FirstOrdRowid,ServerObj.CurrentDate);
-	   /*$.q({
-		    ClassName : "web.DHCDocInPatPortalCommon",
-		    QueryName : "GetPHFreqInfoList",
-		    oeori : SelOrdRowStr.split("^")[0].split(String.fromCharCode(1))[0]
-		},function(GridData){
-			var cbox = $HUI.combobox("#winStopOrderTimes", {
-				editable: false,
-				multiple:false,
-				mode:"local",
-				method: "GET",
-				selectOnNavigation:true,
-			  	valueField:'id',
-			  	textField:'text',
-			  	data:GridData.rows,
-				onSelect: function (record) {
-					var sbox = $HUI.timespinner("#winStopOrderTime");
-					//sbox.setValue(record.id+":10");
-					sbox.setValue(record.seltext);
-					$("#winPinNum").focus();
-			    }
-			});
-		});*/
-	    /*var cbox = $HUI.combobox("#winStopOrderTime", {
-			editable: true,
-			multiple:false,
-			mode:"local",
-			method: "GET",
-			selectOnNavigation:true,
-		  	valueField:'id',
-		  	textField:'text',
-		  	data:eval("("+ServerObj.IntervalTimeListJson+")")
-		});
-	   cbox.setValue(GetCurTime());*/
 	   $("#winStopOrderTime").timespinner('setValue',GetCurTime());
 	   $HUI.checkbox("#isExpStopOrderCB",{
 		   onChecked:function(event,value){
-			    $("#winStopOrderDate").datebox({ disabled:false});
+			    $("#winStopOrderDate").datebox({ disabled:false,minDate:ServerObj.NextDate});
 				$("#winStopOrderDate").datebox("setValue",ServerObj.NextDate);
 				//$("#winStopOrderTimes").combobox({ disabled:false});
 				LoadwinStopOrderTimes(FirstOrdRowid,ServerObj.NextDate);
 				$("#winStopOrderTime").timespinner('setValue',GetCurTime());
+				$("#winStopOrderDate").next('span').find('input').focus();
 	   		},
 	   		onUnchecked:function(){
-			    $("#winStopOrderDate").datebox({ disabled:true})
+			    $("#winStopOrderDate").datebox({ disabled:true,minDate:null})
 			   	$("#winStopOrderDate").datebox("setValue",ServerObj.CurrentDate);
 			   	//$("#winStopOrderTimes").combobox({ disabled:true})
 			   	LoadwinStopOrderTimes(FirstOrdRowid,ServerObj.CurrentDate);
 			   	$("#winStopOrderTime").timespinner('setValue',GetCurTime());
+			   	$("#winStopOrderTime").focus();
 	   		}
 	   });
    }
@@ -1716,245 +2023,30 @@ opl.view=(function(){
          }
       }
    }
-   function initDiagDivHtml(type){
-	   if (type=="S"){
-		   var html="<div id='DiagWin' style=''>"
-			   html +="	<table class='search-table' style='margin:0 auto;border:none;'>"
-			       html +="	 <tr>"
-			       	html +="	 <td class='r-label'>"
-			       		html +="	 "+$g("是否预停")
-			       	html +="	 </td>"
-			       	html +="	 <td>"
-			       		html +="	 <input class='hisui-checkbox' type='checkbox' id='isExpStopOrderCB'/>"
-			       	html +="	 </td>"
-			       html +="	 </tr>"
-			       
-			       html +="	 <tr>"
-			       	html +="	 <td class='r-label'>"
-			       		html +="	 "+$g("停止日期")
-			       	html +="	 </td>"
-			       	html +="	 <td>"
-			       		html +="	 <input id='winStopOrderDate' disabled='false' class='hisui-datebox textbox' required='required'></input>"
-			       	html +="	 </td>"
-			       html +="	 </tr>"
-			       
-			       
-			       html +="	 <tr>"
-			       	html +="	 <td class='r-label'>"
-			       		html +="	 "+$g("停止时间")
-			       	html +="	 </td>"
-			       	html +="	 <td>"
-			       		html +="	 <input id='winStopOrderTime' class='hisui-timespinner textbox' data-options='showSeconds:true'/> "
-			       	html +="	 </td>"
-			       html +="	 </tr>"
-			       
-			       html +="	 <tr>"
-			       	html +="	 <td class='r-label'>"
-			       		html +="	 "+$g("执行次数")
-			       	html +="	 </td>"
-			       	html +="	 <td>"
-			       		html +="	 <input id='winStopOrderTimes'  editable='false' class='textbox'></input>" //disabled='false'
-			       	html +="	 </td>"
-			       html +="	 </tr>"
-			       
-			       html +="	 <tr>"
-			       	html +="	 <td class='r-label'>"
-			       		html +="	 "+$g("密码")
-			       	html +="	 </td>"
-			       	html +="	 <td>"
-			       		html +="	 <input type='password' id='winPinNum' style='' class='hisui-validatebox textbox' data-options='required:true' onkeydown='ipdoc.patord.view.DiagDivKeyDownHandle(\"Confirm\",\""+type+"\")' /> "
-			       	html +="	 </td>"
-			       html +="	 </tr>"
-			       
-			   html +="	</table>"
-		   html += "</div>"
-	   }else if((type=="C")||(type=="U")){
-		   var html="<div id='DiagWin' style='margin-top: 5px;'>"
-			   html +="	<table class='search-table' style='margin:0 auto;border:none;'>"
-			   		html +="	 <tr>"
-				       	html +="	 <td class='r-label'>"
-				       		html +="	 "+$g("作废/撤销原因")
-				       	html +="	 </td>"
-				       	html +="	 <td>"
-				       		html +="	 <input id='OECStatusChReason' class='textbox'></input>"
-				       	html +="	 </td>"
-			        html +="	 </tr>"
-			       
-			   		html +="	 <tr>"
-			       		html +="	 <td class='r-label'>"
-			       			html +="	 "+$g("密码")
-			       		html +="	 </td>"
-			       		html +="	 <td>"
-			       			html +="	 <input type='password' id='winPinNum' class='hisui-validatebox textbox' data-options='required:true' onkeydown='ipdoc.patord.view.DiagDivKeyDownHandle(\"Confirm\",\""+type+"\")' />"
-			       		html +="	 </td>"
-			       	html +="	 </tr>"
-			       	
-			   html +="	</table>"
-		   html += "</div>"
-	   }else if(type=="A"){
-		   var html="<div id='DiagWin' style='margin-top: 5px;'>"
-			   html +="	 <div style='margin:0 auto;border:none;'>" 
-			   		html += "  <textarea style='width:364px;height:128px;margin:5px;' class='' data-options='required:true' id='OrderNotes'></textarea>"
-			   html += " </div>"
-		   html += "</div>"
-	   }else if(type=="NurA"){
-		   var html="<div id='DiagWin' style='margin-top: 5px;'>"
-			   html +="	 <div style='margin:0 auto;border:none;'>" 
-			   		html += "  <textarea rows=7 style='width:96%;margin:5px;' data-options='required:true' id='OrderExecNotes'></textarea>"
-			   html += " </div>"
-		   html += "</div>"
-	   }else if((type=="NurC")||(type=="NurS")){
-		   var html="<div id='DiagWin' style=''>"
-			   html +="	<table class='search-table' style='margin:0 auto;border:none;'>"
-			       html +="	 <tr>"
-			       	html +="	 <td class='r-label'>"
-			       		html +="	 "+$g("作废/撤销原因")
-			       	html +="	 </td>"
-			       	html +="	 <td>"
-			       		html +="	 <input id='OECStatusChReason' class='textbox'></input>"
-			       	html +="	 </td>"
-			       html +="	 </tr>"
-			   html +="	</table>"
-		   html += "</div>"
-	   }else if((type=="NurR")||(type=="AddExec")){
-		   var label1=$g("执行日期:"),label2=$g("执行时间")
-		   if (type=="AddExec") {
-			   label1=$g("要求")+label1;
-			   label2=$g("要求")+label2;
-		   }
-		   var html="<div id='DiagWin' style=''>"
-			   html +="	<table class='search-table' style='margin:0 auto;border:none;'>"
-			       
-			       html +="	 <tr>"
-			       	html +="	 <td class='r-label'>"
-			       		html +="	 "+$g(label1)
-			       	html +="	 </td>"
-			       	html +="	 <td>"
-			       		html +="	 <input id='winRunOrderDate' type='text' class='hisui-datebox' required='required'></input>"
-			       	html +="	 </td>"
-			       html +="	 </tr>"
-			       
-			       
-			       html +="	 <tr>"
-			       	html +="	 <td class='r-label'>"
-			       		html +="	 "+$g(label2)
-			       	html +="	 </td>"
-			       	html +="	 <td>"
-			       		html +="	 <input id='winRunOrderTime' class='hisui-combobox'/> "
-			       	html +="	 </td>"
-			       html +="	 </tr>"
-			       
-			       html +="	 </tr>"
-			       
-			   html +="	</table>"
-		   html += "</div>"
-	   }else if(type=="NurUpdateEndTime"){
-		   var html="<div id='DiagWin' style=''>"
-			   html +="	<table class='search-table' style='margin:0 auto;border:none;'>"
-			       
-			       html +="	 <tr>"
-			       	html +="	 <td class='r-label'>"
-			       		html +="	 "+$g("结束时间")
-			       	html +="	 </td>"
-			       	html +="	 <td>"
-			       		html +="	 <input id='winHourEndTime' class='hisui-combobox'/> "
-			       	html +="	 </td>"
-			       html +="	 </tr>"
-			       
-			       html +="	 </tr>"
-			       
-			   html +="	</table>"
-		   html += "</div>"
-	   }else if (type=="NurSeeOrd"){
-		   var html="<div id='DiagWin' style=''>"
-			   html +="	<table class='search-table' style='margin:0 auto;border:none;'>"
-			       
-			       html +="	 <tr>"
-			       	html +="	 <td class='r-label'>"
-			       		html +="	 "+$g("类型")
-			       	html +="	 </td>"
-			       	html +="	 <td>"
-			       		html +="	 <input id='SeeOrdType' class='textbox'/> "
-			       	html +="	 </td>"
-			       html +="	 </tr>"
-			       
-			       html +="	 <tr>"
-			       	html +="	 <td class='r-label'>"
-			       		html +="	 "+$g("日期")
-			       	html +="	 </td>"
-			       	html +="	 <td class='r-label' class='r-label'>"
-			       		html +="	 <input id='SeeOrdDate' class='hisui-datebox textbox'/> "
-			       	html +="	 </td>"
-			       html +="	 </tr>"
-			       
-			       html +="	 <tr>"
-			       	html +="	 <td class='r-label'>"
-			       		html +="	 "+$g("时间")
-			       	html +="	 </td>"
-			       	html +="	 <td>"
-			       		html +="	 <input id='SeeOrdTime' class='hisui-timespinner textbox' data-options='showSeconds:true'/> "
-			       	html +="	 </td>"
-			       html +="	 </tr>"
-			       
-			       html +="	 <tr>"
-			       	html +="	 <td class='r-label'>"
-			       		html +="	 "+$g("备注")
-			       	html +="	 </td>"
-			       	html +="	 <td>"
-			       		html +="	 <input id='SeeOrdNotes' class='textbox'/> "
-			       	html +="	 </td>"
-			       html +="	 </tr>"
-			       
-			   html +="	</table>"
-		   html += "</div>"
-	   }else if (type=="NurCancelSeeOrd"){
-		   var html="<div id='DiagWin' style=''>"
-			   html +="	<table class='search-table' style='margin:0 auto;border:none;'>"
-			     html +="	 <tr>"
-			       	html +="	 <td class='r-label'>"
-			       		html +="	 "+$g("日期")
-			       	html +="	 </td>"
-			       	html +="	 <td>"
-			       		html +="	 <input id='SeeOrdDate' class='hisui-datebox textbox'/> "
-			       	html +="	 </td>"
-			       html +="	 </tr>"
-			       
-			       html +="	 <tr>"
-			       	html +="	 <td class='r-label'>"
-			       		html +="	 "+$g("时间")
-			       	html +="	 </td>"
-			       	html +="	 <td>"
-			       		html +="	 <input id='SeeOrdTime' class='textbox'/> "
-			       	html +="	 </td>"
-			       html +="	 </tr>"
-			       
-			       html +="	 <tr>"
-			       	html +="	 <td class='r-label'>"
-			       		html +="	 "+$g("备注")
-			       	html +="	 </td>"
-			       	html +="	 <td>"
-			       		html +="	 <input id='SeeOrdNotes' class='textbox'/> "
-			       	html +="	 </td>"
-			       html +="	 </tr>"  
-			   html +="	</table>"
-		   html += "</div>"
-	   }else if(type=="CancelPreStopOrd"){
-		   var html="<div id='DiagWin' style='margin-top: 5px;'>"
-			   html +="	<table class='search-table' style='margin:0 auto;border:none;'>"
-			   		html +="	 <tr>"
-			       		html +="	 <td class='r-label'>"
-			       			html +="	 "+$g("密码")
-			       		html +="	 </td>"
-			       		html +="	 <td>"
-			       			html +="	 <input type='password' id='winPinNum' class='hisui-validatebox textbox' data-options='required:true' onkeydown='ipdoc.patord.view.DiagDivKeyDownHandle(\"Confirm\",\""+type+"\")'/>"
-			       		html +="	 </td>"
-			       	html +="	 </tr>"
-			       	
-			   html +="	</table>"
-		   html += "</div>"
-	   }
-	   return html;
+   function StopTimeFocusJump(index){
+	   if (window.event.keyCode=="13"){
+	        DiagOrdFocusJump(index);
+	        return false;
+         }
    }
+	function initDiagDivHtml(type){
+		var obj={"Type":type};
+		if(typeof websys_getMWToken=='function') obj["MWToken"]=websys_getMWToken();
+		var html="";
+	   	$.ajax("dhcdoc.orderinterface.csp",{
+			type : "POST",
+			dataType:"html",
+			async: false, 
+			data:obj,
+			success:function(data) {
+				html=data.replace(/\r\n/g,"");
+			},
+			"error" : function(XMLHttpRequest, textStatus, errorThrown) {
+				console.log(textStatus);
+			}
+		})
+		return html
+	}
    /**
 	 * 创建一个模态 Dialog
 	 * @param id divId
@@ -1980,7 +2072,7 @@ opl.view=(function(){
 	   //如果去掉关闭按钮，当用户点击窗体右上角X关闭时，窗体无法回调界面销毁事件，需要基础平台协助处理
 	   buttons.push({
 		   text:$g('关闭'),
-			iconCls:'icon-w-close',
+			iconCls:_icon==""?"":'icon-w-close',
 			handler:function(){
    				destroyDialog(id);
 			}
@@ -2007,6 +2099,15 @@ opl.view=(function(){
 	        content:_content,
 	        buttons:buttons
 	    });
+	    //翻译
+	    var $nodes=$("#"+id).find("td.r-label")
+		for (var i=0; i< $nodes.length; i++){
+			var _$label = $($("#"+id).find("td.r-label")[i]);
+			if (_$label.length > 0){
+				domName = _$label[0].innerHTML;
+				_$label[0].innerHTML=$g(domName);
+			}
+			}
    }
    function myformatter(date){
 		var y = date.getFullYear();
@@ -2014,10 +2115,9 @@ opl.view=(function(){
 		var d = date.getDate();
 		if (ServerObj.DateFormat==3){
 			return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
-		}else if(DateFormat==4){
+		}else if(ServerObj.DateFormat==4){
 			return (d<10?('0'+d):d)+"/"+(m<10?('0'+m):m)+"/"+y
 		}
-			
 	}
 	function myparser(s){
 		if (!s) return new Date();
@@ -2113,7 +2213,7 @@ opl.view=(function(){
 	    destroyDialog("OrdDiag");
 	    var Content=initDiagDivHtml("A");
 	    var iconCls="icon-w-add";
-	    createModalDialog("OrdDiag","增加备注", 380, 240,iconCls,"增加备注",Content,"MulOrdDealWithCom('A')");
+	    createModalDialog("OrdDiag","增加备注", 380, 250,iconCls,"增加备注",Content,"MulOrdDealWithCom('A')");
 	    //获取医嘱已有备注
 	    var rowrecord = InPatOrdDataGrid.datagrid('getSelected');
 	    $.m({
@@ -2172,7 +2272,7 @@ opl.view=(function(){
 	}
 	function consultationShowHandler(){
 		var title="";
-		var patDataObj=eval("("+ServerObj.patData+")");
+		var patDataObj=ServerObj.patData //eval("("+ServerObj.patData+")");
 		if (patDataObj.patFlag>0){
 			title=$g("病人已")+patDataObj.flagDesc+"!";
 		}
@@ -2181,7 +2281,8 @@ opl.view=(function(){
 	function surgeryApplyHandler(){ //dhcclinic.anop.app.csp
 		//window.showModalDialog("dhcanoperapplication.csp?opaId=&appType=ward&EpisodeID="+ServerObj.EpisodeID,{window:window},"dialogHeight:800px;dialogWidth:1250px;resizable:yes");	
 		websys_showModal({
-			url:"dhcanoperapplication.csp?opaId=&appType=ward&EpisodeID="+ServerObj.EpisodeID,
+			//url:"dhcanoperapplication.csp?opaId=&appType=ward&EpisodeID="+ServerObj.EpisodeID,
+			url:"CIS.AN.OperApplication.New.csp?opsId=&EpisodeID="+ServerObj.EpisodeID,
 			title:'手术申请',
 			width:'90%',height:'90%',
 			CallBackFunc:function(CallBackData){
@@ -2191,7 +2292,7 @@ opl.view=(function(){
 	}
 	function surgeryApplyShowHandler(){
 		var title="";
-		var patDataObj=eval("("+ServerObj.patData+")");
+		var patDataObj=ServerObj.patData //eval("("+ServerObj.patData+")");
 		if (patDataObj.patFlag>0){
 			title=$g("病人已")+patDataObj.flagDesc+"!";
 		}
@@ -2212,6 +2313,43 @@ opl.view=(function(){
 	function addFeeExecOrderHandler(){}
 	function addFeeExecOrderShowHandler(){return "";}
 	
+	/**
+	Modify 20230207
+	药品说明书使用新产品组合理用药，检查检验等将使用基础数据平台
+	*/
+	function OrderYDTSShowHandler(rowIndex,record){
+		var title="";
+		if (record.YDTSUrl==""){
+			title=$g("没有有效的说明书信息");
+		}
+		return title;
+		
+	}
+	function OrderYDTSHandler(){
+		var record = InPatOrdDataGrid.datagrid('getSelected');
+		if (!record){
+			return;
+		}
+		var ItmMastDR = record.ItmMastDR;
+		if(ItmMastDR==""){
+			$.messager.alert("警告", "无效的医嘱,无法查看说明书","warning");
+			return;
+		}
+		var OrderType = record.OrderType;
+		//只有药品才走合理用药
+		if((HLYYConfigObj.HLYYInterface==1)&&(OrderType=='R')){
+			Common_ControlObj.Interface("YDTS",{
+				ARCIMRowid:ItmMastDR
+			});
+		}else{
+			$.messager.alert("提示", "未启用或未维护相应说明书","warning");	
+		}
+	}
+	/**
+	Modify 20230207
+	旧版知识库，停用
+	使用新版说明书
+	*/
 	function OrderZSQShowHandler(rowIndex,record){
 		var title="";
 		if (record.ZSQUrl==""){
@@ -2232,7 +2370,9 @@ opl.view=(function(){
 		websys_showModal({
 			url:ZSQUrl,
 			title:'说明书',
-			width:screen.availWidth-200,height:screen.availHeight-200
+			iconCls:'icon-w-paper',
+			//width:screen.availWidth-200,height:screen.availHeight-200
+            width:"85%",height:screen.availHeight-200
 		});
 	}
 	function ChangeOrderDoseQtyShowHandler(rowIndex,record){
@@ -2255,7 +2395,7 @@ opl.view=(function(){
 		    OEORIRowid : record.OrderId,
 		    dataType:"text"
 		},false);
-		return title;
+		return $g(title);
 	}
 	function ChangeOrderDoseQtyHandler(){
 		
@@ -2278,7 +2418,8 @@ opl.view=(function(){
 	    //ShowHISUIWindow("修改医嘱单次剂量",src,"icon-edit",900,500);
 		websys_showModal({
 			url:src,
-			title:'修改不规则医嘱单次剂量',
+			iconCls: 'icon-w-edit',
+			title:$g('修改不规则医嘱单次剂量'),
 			width:900,height:550,
 			CallBackFunc:function(rtnValue){
 				websys_showModal("close");
@@ -2289,7 +2430,7 @@ opl.view=(function(){
 		destroyDialog("OrdDiag");
 	    var Content=initDiagDivHtml("A");
 	    var iconCls="icon-w-add";
-	    createModalDialog("OrdDiag","增加备注", 380, 240,iconCls,"增加备注",Content,"MulOrdDealWithCom('A')");
+	    createModalDialog("OrdDiag","增加备注", 380, 245,iconCls,"增加备注",Content,"MulOrdDealWithCom('A')");
 	    //获取医嘱已有备注
 	    var rowrecord = InPatOrdDataGrid.datagrid('getSelected');
 	    $.m({
@@ -2562,7 +2703,10 @@ opl.view=(function(){
 			selectOnNavigation:true,
 		  	valueField:'id',
 		  	textField:'text',
-		  	data:eval("("+ServerObj.OECStatusChReasonJson+")")
+		  	data:eval("("+ServerObj.OECStatusChReasonJson+")"),
+		  	onSelect:function(){
+			  	$("#winPinNum").focus();
+			}
 		});
 	}
 	function UpdateHourOrderEndTimeShowHandler(rowIndex,record){
@@ -2717,7 +2861,7 @@ opl.view=(function(){
 		InPatExecFeeDataGrid=$("#tabExecFee").datagrid({  
 			fit : true,
 			border : false,
-			striped : true,
+			striped : false,
 			singleSelect : false,
 			fitColumns : false,
 			autoRowHeight : false,
@@ -2735,13 +2879,14 @@ opl.view=(function(){
 		    orderId : execRowId,
 		    Pagerows:InPatExecFeeDataGrid.datagrid("options").pageSize,rows:99999
 		},function(GridData){
-			InPatExecFeeDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData);
+			InPatExecFeeDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
 		});
 	}
 	function ordDetailInfoShow(OrdRowID){
 		websys_showModal({
 			url:"dhc.orderdetailview.csp?ord=" + OrdRowID,
 			title:'医嘱明细',
+			iconCls:'icon-w-trigger-box',
 			width:400,height:screen.availHeight-200
 		});
 	}
@@ -2750,16 +2895,29 @@ opl.view=(function(){
 		websys_showModal({
 			url:"dhc.orderview.csp?ord=" + OEItemID,
 			title:'医嘱查看',
-			width:screen.availWidth-200,height:screen.availHeight-200
+			iconCls:'icon-w-list',
+			//width:screen.availWidth-200,height:screen.availHeight-200
+            width:"96%",height:screen.availHeight-200
 		});
 		
 	}
+	function InsuNationShow(OEItemID){
+		websys_showModal({
+			url:"dhc.orderinsudetail.csp?OrderId=" + OEItemID+"&EpisodeID="+ServerObj.EpisodeID,
+			title:$g('国家医保查看'),
+			iconCls:'icon-w-list',
+			width:640,height:250
+		});
+		}
 	/**********end***************/
 	function ReLoadGridDataFromOrdEntry(OrderPrior,SelOrdRowIDNext){
 		InPatOrdDataGrid.datagrid("resize");
-		if ((OrderPrior == "ShortOrderPrior") || (OrderPrior == "OutOrderPrior"))  {
+		if (OrderPrior == "ShortOrderPrior")  {
 			var o=$HUI.radio("#OrderTypeOM");
 			GridParams.Arg8="OM";
+		}else if (OrderPrior == "OutOrderPrior"){
+			var o=$HUI.radio("#OrderTypeOUT");
+			GridParams.Arg8="OUT";
 		}else {
 			var o=$HUI.radio("#OrderTypeS");
 			GridParams.Arg8="S";
@@ -2777,14 +2935,14 @@ opl.view=(function(){
 			$(o.jqselector)[0].checked=false;
 		}
 		o.setValue(true);
-		if (OrderPrior=="OutOrderPrior"){
+		/*if (OrderPrior=="OutOrderPrior"){
 			GridParams.Arg11=OrderPrior;
 		}else{
 			GridParams.Arg11="";
-		}
+		}*/
 		o.jdata.options.onChecked=o.jdata.options.stateonChecked;
 		LoadPatOrdDataGrid(SelOrdRowIDNext);
-		GridParams.Arg11=""; //控制只有医嘱录入界面点击“出院带药”时，临时医嘱单只显示“出院带药”，否则显示临时医嘱+出院带药
+		//GridParams.Arg11=""; //控制只有医嘱录入界面点击“出院带药”时，临时医嘱单只显示“出院带药”，否则显示临时医嘱+出院带药
 	}
 	function SelNextDocOrdBak(){
 		//自动选中下一条医嘱
@@ -2868,30 +3026,43 @@ opl.view=(function(){
 		},300);*/
 	}
 	function toggleExecInfo(ele){
+		var LineNum=0;
 		if ($(ele).hasClass('expanded')){  //已经展开 隐藏
 			$(ele).removeClass('expanded');
 			$("#moreBtn")[0].innerText=$g("更多");
-	    	$("#more").hide(); //#dashline
-	    	setHeight("-39");
+	    	//$("div[id^='more']").hide();
+			$("div[id^='more']").each(function(index,obj){
+				if ($(obj).css("display")!="none"){
+					$(obj).hide();
+					LineNum-=1;
+				}
+			})
+	    	OrderViewsetHeight(LineNum);
 		}else{
 			$(ele).addClass('expanded');
 			$("#moreBtn")[0].innerText=$g("隐藏");
-	    	$("#more").show(); //#dashline
-	    	setHeight('39');
+	    	//$("div[id^='more']").show(); //#dashline
+			$("div[id^='more']").each(function(index,obj){
+				if ($(obj).css("display")=="none"){
+					$(obj).show();
+					LineNum+=1;
+				}
+			})
+	    	OrderViewsetHeight(LineNum);
 		}
-		function setHeight(num){
+		/*function setHeight(num){
 			var p=$("#OrdSearch-div > .layout-panel-north:first");
 			var Height=parseInt(p.outerHeight())+parseInt(num);
 			p.css({height:Height});
-			
+			$("#OrdSearch").css({height:Height});
 			//怎么有效防止强制同步布局
 			var p = $("#OrdSearch-div > .layout-panel-center:first");	// get the center panel
 			var Height = parseInt(p.outerHeight())-parseInt(num);
 			if (ServerObj.PageShowFromWay=="ShowFromEmr"){
-				if (+num>0) p.css({top:124,height:Height});
-				else p.css({top:84,height:Height});
+				if (+num>0) p.css({top:120,height:Height});
+				else p.css({top:80,height:Height});
 			}else{
-				if (+num>0) p.css({top:84,height:Height});
+				if (+num>0) p.css({top:81,height:Height});
 				else p.css({top:44,height:Height});
 			}
 			InPatOrdDataGrid.datagrid("resize");
@@ -2912,7 +3083,7 @@ opl.view=(function(){
 				if (+num>0) p.panel('resize',{top:84});
 				else p.panel('resize',{top:44});
 			}
-	    }
+	    }*/
 	}
 	function GetArrayDefaultData(Arr){
 		var DefaultData="";
@@ -3100,21 +3271,24 @@ opl.view=(function(){
 		}
 		//.replace(/\//g,"\\")
 		//.replace(/\\{2,}/g,"\\")
-		EpisPatObj.PatAdmInfoJson=EpisPatObj.PatAdmInfoJson?EpisPatObj.PatAdmInfoJson.replace(/\\{2,}/g,"\\"):"";
-		EpisPatObj.OrdDoctorList=EpisPatObj.OrdDoctorList?EpisPatObj.OrdDoctorList.replace(/\\{2,}/g,"\\"):"";
-		EpisPatObj.patData=EpisPatObj.patData?EpisPatObj.patData.replace(/\\{2,}/g,"\\"):"";
-		EpisPatObj.EmrQualityQtyJson=EpisPatObj.EmrQualityQtyJson?EpisPatObj.EmrQualityQtyJson.replace(/\\{2,}/g,"\\"):"";
-		EpisPatObj.MessageMarquee=EpisPatObj.MessageMarquee?EpisPatObj.MessageMarquee.replace(/\\{2,}/g,"\\"):"";
+		//EpisPatObj.PatAdmInfoJson=EpisPatObj.PatAdmInfoJson	//?EpisPatObj.PatAdmInfoJson.replace(/\\{2,}/g,"\\"):"";
+		EpisPatObj.OrdDoctorList=EpisPatObj.OrdDoctorList	//?EpisPatObj.OrdDoctorList.replace(/\\{2,}/g,"\\"):"";
+		EpisPatObj.patData=EpisPatObj.patData	//?EpisPatObj.patData.replace(/\\{2,}/g,"\\"):"";
+		EpisPatObj.EmrQualityQtyJson=EpisPatObj.EmrQualityQtyJson	//?EpisPatObj.EmrQualityQtyJson.replace(/\\{2,}/g,"\\"):"";
+		EpisPatObj.MessageMarquee=EpisPatObj.MessageMarquee		//?EpisPatObj.MessageMarquee.replace(/\\{2,}/g,"\\"):"";
 		
 		$.extend(ServerObj,EpisPatObj);
 		
-		var doctorListData=eval("("+ServerObj.OrdDoctorList+")");
+		var doctorListData=ServerObj.OrdDoctorList;
 		$.extend(GridParams,{
 			"Arg1":ServerObj.PatientID,
 			"Arg2":ServerObj.EpisodeID,
 			"Arg3":doctorListData[0].id
 		});
-		
+		$.extend(ServerObj,{
+			ViewInstrJson:eval(EpisPatObj.ViewInstrJson),
+			ViewFreqJson:eval(EpisPatObj.ViewFreqJson)
+		});
 		return;
 	}
 	function GetEpisPatInfo(adm){
@@ -3129,25 +3303,45 @@ opl.view=(function(){
 		return EpisPatInfo;
 	}
 	function xhrRefresh(adm,CallBackFunc){
-		
 		var EpisPatInfo=GetEpisPatInfo(adm);
 		InitPatOrderViewGlobal(EpisPatInfo);
-		var doctorListData=eval("("+ServerObj.OrdDoctorList+")")
+		var doctorListData=ServerObj.OrdDoctorList
 		$HUI.combobox("#doctorList", {
 			data: doctorListData,
 		});
+		$HUI.combobox("#InstrDesc", {
+			data:ServerObj.ViewInstrJson
+		});
+		GridParams.Arg12="";
+		$HUI.combobox("#SFreq", {
+			data:ServerObj.ViewFreqJson
+		});
+		GridParams.Arg13="";
+		$("#orderDesc").val("");
+		GridParams.Arg7="";
 		$("#MessageMarquee").html(ServerObj.MessageMarquee);
-		
+		OrdExecGridParams.Arg1="";
 		if (InPatOrdDataGrid){InPatOrdDataGrid.datagrid('unselectAll').datagrid('uncheckAll');}
 		if (typeof InPatOrdExecDataGrid !="undefined"){
 			InPatOrdExecDataGrid.datagrid("unselectAll").datagrid('loadData',[]);
 			$('#Ordlayout_main').layout('panel', 'east').panel('setTitle',"");
 		}
+		if (ServerObj.PageShowFromWay!="ShowFromOrdCopy"){
+			$("#OrdReSubCatList .tabs").css('width', "100%");
+			$('#OrdSearch-div').layout('resize');
+			$('#OrdReSubCatList').tabs('resize');
+			$("#OrdReSubCatList .tabs-wrap").css('width', "100%");
+		}
 		//防止部分浏览器局部刷新时页面显示空白
 		ForceRefreshLayout();
 		//关闭所有的dialog,window,message
 		$(".panel-body.window-body").each(function(index,element){
-			$(element).window("destroy");
+			// 治疗记录/治疗方案弹框不能调用destroy方法，会导致局部刷新后再次点击按钮不会弹出框
+			if (($(element)[0].id =="cure-record-dialog") ||($(element)[0].id =="cure-detail-dialog")||($(element)[0].id =="Datedialog")) {
+				$(element).window("close");
+			}else{
+				$(element).window("destroy");
+			}
 		});
 		InPatOrdDataGridLoadSuccCallBack.add(CallBackFunc);
 		/*
@@ -3156,8 +3350,71 @@ opl.view=(function(){
 			InPatOrdDataGridLoadSuccCallBack.CallBackFunc=CallBackFunc();
 		}
 		*/
-		LoadPatOrdDataGrid("");
+		//InittabInPatOrd();
+		RefreshDocToDoListView();
+		setTimeout(function() {
+			if (($("#moreBtn")[0].innerText==$g("隐藏"))&&(ServerObj.PageShowFromWay!="ShowFromEmrList")){
+	    		var p = $("#OrdSearch")
+	    		if ((p.height()<=84)&&((ServerObj.PageShowFromWay=="ShowFromEmr"))){
+					OrderViewsetHeight(1)
+	    		}else if ((p.height()<82)&&((ServerObj.PageShowFromWay!="ShowFromEmr"))){
+		    		OrderViewsetHeight(1)
+		    		}
+		    	LoadPatOrdDataGrid("");
+			}else{
+				LoadPatOrdDataGrid("");
+				}
+		},1000)
 	}
+	/**
+	 * 设置检索区的高度，并根据其高度计算医嘱浏览表格的top值与高度自动适配
+	 * @param {int} num 查询条件对应的增删行数，1：增加一行，-1：减少一行
+	 */
+	function OrderViewsetHeight(num){
+		var p=$("#OrdSearch-div > .layout-panel-north:first");	//北部区域
+		//如果more出现滚动条，则把more拆分成more和more2
+		if ($("#more").prop("scrollWidth")>$("#more").prop("clientWidth")){	//宽度过小，为防止自动折行，把多余的元素全部迁移到新行上
+			var more2=$("<div id='more2' class='fixedh2-div'></div>")
+			for (var i = 10; i < $("#more").children().length; i++) {
+				more2.append($($("#more").children()[i]).detach());
+				i=i-1;
+			}
+			$("#OrdSearch").append(more2);
+			num=num+1;		//增加一行
+		}else{
+			if ($("#more2").length===1){
+				for (var i = 0; i < $("#more2").children().length; i++) {
+					$("#more").append($($("#more2").children()[i]).detach());
+					i=i-1;
+				}
+				if ($("#more2").css("display")!="none"){
+					num=num-1;		//删除一行
+				}
+				$("#more2").remove();
+			}
+		}
+		//console.log("num:"+num)
+		if (num==0){return}
+		num=parseInt(num);
+		var lineHeight=41;
+		var Height=parseInt(p.outerHeight())+(lineHeight*num);
+		p.css({height:Height});
+		//设置检索区域的高度
+		$('#OrdSearch-div').layout('panel', 'north').panel('options').height=Height;
+		$('#OrdSearch-div').layout('resize');
+		if (ServerObj.PageShowFromWay!="ShowFromEmr"){
+			InPatOrdDataGrid.datagrid("resize");
+		}
+		// setTimeout(function(){
+		// 	$('#pInPatOrd').parent().height($('#pInPatOrd').parent().parent().height()-$('#pInPatOrd').parent().prev().height());
+		// 	$('#pInPatOrd').width($('#pInPatOrd').parent().width());
+		// 	$('#pInPatOrd').height($('#pInPatOrd').parent().height());
+		// 	if ((ServerObj.PageShowFromWay!="ShowFromEmr")){
+		// 		InPatOrdDataGrid.datagrid("resize");
+		// 	}
+		// },500);
+	}
+
    function getRefData(){
 	   var rtnObj= {data:"",toTitle:"",msg:"",success:true};
 	   var SelRowListRowData=InPatOrdDataGrid.datagrid('getSelections');
@@ -3221,7 +3478,307 @@ opl.view=(function(){
 		$("#OrdSearch-div > .layout-panel-center:first > div").css('width','100%')
 		InPatOrdDataGrid.datagrid("resize");
 	}
-   return {
+	function RefreshDocToDoListView(){
+		if ($("#DocToDoListView").length>0){
+			var frm=$("#DocToDoListViewFrame").get(0).contentWindow;
+			frm.xhrRefresh({
+				adm:ServerObj.EpisodeID,
+	        	papmi:ServerObj.PatientID
+			});
+			return true;
+		}
+		ServerObj.DefaultOrdList="";
+	}
+	
+	function OpenDocToDoListView(){
+		websys_showModal({
+			url:"ipdoc.doctodolistview.hui.csp?PatientID="+ServerObj.PatientID+"&EpisodeID="+ServerObj.EpisodeID,
+			title:'医疗待办',
+			width:'75%',height:'80%',
+			left:200,top:100
+		})
+	}
+	function ShowExamInfo(OrdID,OrderName)
+	{
+		var src='ipdoc.order.detail.csp?OEORIRowid='+OrdID;
+		if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
+		$(window.event.target).webuiPopover({
+			width:450,
+			height:140,
+			title:OrderName,
+			content:"<iframe width='99.5%' height='99%' frameborder='0' src='"+src+"'></iframe>",
+			trigger:'hover'
+		}).webuiPopover('show');
+	}
+	//复制下拉菜单
+	function InitOrdCopyMenu(){
+		$('#OrderCopyMenu').menu({
+			onShow:function(){
+			},
+			onClick:function(item){
+				var type=$(item.target).attr('key');
+				copyOrderHandler(type);
+			}
+		});
+		$('#OrdCopy_Toolbar').empty().splitbutton({  
+			text:'复制',
+			iconCls: 'icon-copy',
+			menu: '#OrderCopyMenu'
+		}).addClass('menubutton-toolbar');
+	}
+	//医嘱保存为医嘱套、医嘱模板、用户常用
+	function InitOrdSaveMenu(){
+		$('#OrderSaveMenu').menu({
+			onShow:function(){
+				InitOrdFavSaveMenu();
+			},
+			onClick:function(item){
+				if(item.text==$g('医嘱套')){
+					OrdSaveToARCOS();
+				}else if(item.text==$g('用户常用')){
+					OrdSaveToUserDef();
+				}
+			}
+		});
+		$('#OrdSave_Toolbar').empty().menubutton({  
+			text:'另存为', 
+			iconCls: 'icon-redo',   
+			menu: '#OrderSaveMenu'
+		}).addClass('menubutton-toolbar');
+	}
+	function GetOrdSaveData(SaveType){
+		var CNMedFlag=false;
+		var OrdItemIDArr=new Array();
+		var OrdItemRows=new Array();
+		var SelOrdRowArr=InPatOrdDataGrid.datagrid('getChecked');
+		for (var i=0;i<SelOrdRowArr.length;i++){
+			if (SelOrdRowArr[i].OrderId=="") continue;
+			var OrdCNMedFlag=(SelOrdRowArr[i].IsCNMedItem=='1');
+			if(OrdItemIDArr.length&&CNMedFlag!=OrdCNMedFlag){
+				return {code:-1,msg:'不能同时保存草药与非草药医嘱'};
+			}
+			if(SaveType=='UserDef'){
+				if(OrdCNMedFlag||(SelOrdRowArr[i].OrderType!='R')){
+					continue;
+				}
+			}
+			CNMedFlag=OrdCNMedFlag;
+			OrdItemIDArr.push(SelOrdRowArr[i].OrderId);
+			OrdItemRows.push(SelOrdRowArr[i]);
+		}
+		if(!OrdItemIDArr.length){
+			if(SaveType=='UserDef') return {code:-1,msg:'未选择有效的西药医嘱'};
+			return {code:-1,msg:'未选择有效医嘱'};
+		}
+		return {code:0,CNMedFlag:CNMedFlag,OrdItemIDArr:OrdItemIDArr,OrdItemRows:OrdItemRows};
+	}
+	function InitOrdFavSaveMenu(){
+		var OrdSaveData=GetOrdSaveData();
+		var CONTEXT=OrdSaveData.CNMedFlag?'W50007':'WNewOrderEntry';
+		$('div[name="menucopy"]').each(function(){
+			$('#OrderSaveMenu').menu('removeSubMenu',this);
+			if(OrdSaveData.code!=0) return true;
+			var target=this;
+			var key=$(target).attr('key');
+			$.cm({ 
+				ClassName:"DHCDoc.Order.Fav",
+				MethodName:"GetFavData", 
+				Type:key,
+				CONTEXT:CONTEXT, 
+				LocID:session['LOGON.CTLOCID'],
+				UserID:session['LOGON.USERID'],
+				OnlyCatNode:1
+			},function(data){
+				$.each(data,function(index, value){
+					if (value .children.length==0){
+						$('#OrderSaveMenu').menu('appendItem', {
+							parent:target,
+							text:value.text,
+							onclick:function(){
+								$.messager.alert('提示','不能保存到'+value.text);
+							}
+						});
+					}else{
+						$('#OrderSaveMenu').menu('appendItem',{
+							parent:target,
+							text:value.text
+						});
+					}
+					var submenu=$('#OrderSaveMenu').menu('getSubMenu',target);
+					var subTarget=submenu.children("div.menu-item:last")[0];
+					$.each(value.children,function(index, value){
+						$('#OrderSaveMenu').menu('appendItem', {
+							parent:subTarget,
+							text:value.text,
+							onclick:function(){
+								var OrdSaveData=GetOrdSaveData();
+								if(OrdSaveData.code!=0){
+									$.messager.popover({msg:OrdSaveData.msg,type:'alert'});
+									$(this).menu('hide');
+									return;
+								}
+								var ret=$.cm({ 
+									ClassName:"DHCDoc.Order.Fav",
+									MethodName:"InsertByOrdItems", 
+									OrdItemIDStr:JSON.stringify(OrdSaveData.OrdItemIDArr),
+									SubCatID:value.id,
+									UserID:session['LOGON.USERID'],
+									LogonHospID:session['LOGON.HOSPID'],
+									dataType:'text'
+								},false);
+								if(ret=='0'){
+									$.messager.popover({msg:"保存成功",type:'success'});
+									if(parent.refreshTemplate) parent.refreshTemplate();
+								}else{
+									$.messager.alert('提示','保存失败:'+ret);
+								}
+							}
+						});
+					});
+				});
+			});	
+		});
+	}
+	function OrdSaveToARCOS(){
+		var OrdSaveData=GetOrdSaveData();
+		if(OrdSaveData.code!=0){
+			$.messager.popover({msg:OrdSaveData.msg,type:'alert'});
+			return;
+		}
+		new Promise(function(parResolve,rejected){
+			var loopRow=function(index){
+				if(index<0){
+					parResolve();
+					return;
+				}
+				var row=OrdSaveData.OrdItemRows[index];
+				new Promise(function(resolve,rejected){
+					if(row.BindSourceDesc!=''){
+						$.messager.confirm('提示','【'+row.OriginaName+'】为['+row.BindSourceDesc+'],是否仍然保存到医嘱套?',function(r){
+							if(!r){
+								OrdSaveData.OrdItemIDArr.splice(index,1);
+							}
+							resolve()
+						});
+					}else{
+						resolve()
+					}
+				}).then(function(){
+					loopRow(--index);
+				})
+			}
+			loopRow(OrdSaveData.OrdItemRows.length-1);
+		}).then(function(){
+			if(!OrdSaveData.OrdItemIDArr.length){
+				return;
+			}
+			var CMFlag=OrdSaveData.CNMedFlag?'Y':'N';
+			var PreCMPrescTypeCode='';
+			if(CMFlag=='Y'){
+				PreCMPrescTypeCode=$.cm({
+					ClassName:'web.UDHCPrescript',
+					MethodName:'GetOrdCMPrescTypeCode',
+					OrdItemID:OrdSaveData.OrdItemIDArr[0],
+					dataType:'text'
+				},false);
+			}
+			var lnk = "udhcfavitem.edit.hui.csp?TDis=1&CMFlag="+CMFlag+'&PreCMPrescTypeCode='+PreCMPrescTypeCode;  //&CMFlag=N&HospARCOSAuthority=1"; //udhcfavitem.edit.new.csp
+			websys_showModal({
+				url:lnk,
+				title:$g('医嘱套维护 ')+"<span style='color:"+(HISUIStyleCode=="lite"?"#FF9933":"#FFB746")+"'>"+$g('提示：需新增医嘱套请右键点击【新增】;需保存到已存在的医嘱套中,请双击对应行')+'</span>',
+				width:760,height:(top.screen.height - 300),
+				CallBackFunc:function(rtn){
+					var ArcosRowid = rtn.split("^")[0];
+					if (ArcosRowid) { 
+						var ret=$cm({
+							ClassName:'web.DHCARCOrdSets',
+							MethodName:'InsertByOrdItems',
+							ARCOSRowid:ArcosRowid,
+							OrdItemIDStr:JSON.stringify(OrdSaveData.OrdItemIDArr), 
+							UserID:session['LOGON.USERID'],
+							LogonHospID:session['LOGON.HOSPID'],
+							dataType:'text'
+						},false);
+						if(ret=='0'){
+							$.messager.popover({msg:"保存成功",type:'success'});
+						}else{
+							$.messager.alert('提示','保存失败:'+ret);
+						}
+					}else{ 
+						$.messager.alert("警告", "保存失败!"); 
+						return websys_cancel(); 
+					}
+				}
+			});
+		})
+	}
+	function OrdSaveToUserDef(){
+		var OrdSaveData=GetOrdSaveData("UserDef");
+		if(OrdSaveData.code!=0){
+			$.messager.popover({msg:OrdSaveData.msg,type:'alert'});
+			return;
+		}
+		var ret=$cm({
+			ClassName:'web.DHCDocItemDefault',
+			MethodName:'InsertByOrdItems',
+			OrdItemIDStr:JSON.stringify(OrdSaveData.OrdItemIDArr), 
+			UserID:session['LOGON.USERID'],
+			PAAdmType:"I",
+			LogonHospID:session['LOGON.HOSPID'],
+			dataType:'text'
+		},false);
+		if(ret=='0'){
+			$.messager.popover({msg:"保存成功",type:'success'});
+		}else{
+			$.messager.alert('提示','保存失败:'+ret);
+		}
+	}
+	function OrderSpecLocDiagShowHandler(rowIndex,record){
+	    var title="";
+		if (record.OrdSpecLocDiagCatCode==""){
+			title=$g("未关联有效的专科表单!");
+		}
+		return title;
+	}
+	function OrderSpecLocDiagHandler(){
+		var OrdSerialNum="",OrdSpecDiagnosForm="",OrdSpecLocDiagCatCode=""
+		var SelOrdRowArr=InPatOrdDataGrid.datagrid('getChecked');
+		for (var i=0;i<SelOrdRowArr.length;i++){
+			if (SelOrdRowArr[i].OrderId==""){
+				 continue;  
+			}
+			OrdSerialNum=SelOrdRowArr[i].OrdSerialNum;
+			OrdSpecDiagnosForm=SelOrdRowArr[i].OrdSpecDiagnosForm;
+			OrdSpecLocDiagCatCode=SelOrdRowArr[i].OrdSpecLocDiagCatCode;
+		}
+		
+		var url="opdoc.specloc.diag.csp?EpisodeID="+ServerObj.EpisodeID+"&PatientID="+ServerObj.PatientID+"&SpecLocDiagCatCode="+OrdSpecLocDiagCatCode+"&SerialNum=ord|"+OrdSerialNum;
+		websys_showModal({
+			iconCls:'icon-w-edit',
+			url:url,
+			title:OrdSpecDiagnosForm+$g(' 填写'),
+			width:OrdSpecLocDiagCatCode=='KQMB'?"95%":400,
+			height:700,
+			closable:true,
+			callBackRetVal:"",
+			onBeforeClose:function(){
+				// if (parseInt(websys_showModal("options").callBackRetVal)>0) {
+				// 	ReturnObj.SuccessFlag=true;
+				// }else{
+				// 	$.messager.alert("提示", $g("未填写转科表单"),"info",function(){
+				// 		ReturnObj.SuccessFlag=false;
+				// 	});
+				// }
+			},
+			CallBackFunc:function(retval){
+				if (typeof retval=="undefined") retval="";
+				websys_showModal("options").callBackRetVal=retval;
+				websys_showModal("close");
+			}
+		})
+		
+	}
+   	return {
 	   "InitInPatOrd":InitInPatOrd,
 	   "myformatter":myformatter,
 	   "myparser":myparser,
@@ -3270,7 +3827,9 @@ opl.view=(function(){
 	   "UpdateHourOrderEndTimeHandler":UpdateHourOrderEndTimeHandler,
 	   "UpdateHourOrderEndTimeShowHandler":UpdateHourOrderEndTimeShowHandler,
 	   "NuraddOrderNotesHandler":NuraddOrderNotesHandler,
-	   
+	   "OrderSpecLocDiagHandler":OrderSpecLocDiagHandler,
+	   "OrderSpecLocDiagShowHandler":OrderSpecLocDiagShowHandler,
+
 	   "execFeeDataShow":execFeeDataShow,
 	   "ordDetailInfoShow":ordDetailInfoShow,
 	   "OpenOrderView":OpenOrderView,
@@ -3285,6 +3844,9 @@ opl.view=(function(){
 	   "GetEpisPatInfo":GetEpisPatInfo,
 	   "xhrRefresh":xhrRefresh,
 	   "OrdListResize":OrdListResize,
-	   "getRefData":getRefData
+	   "getRefData":getRefData,
+	   "StopTimeFocusJump":StopTimeFocusJump,
+	   "ShowExamInfo":ShowExamInfo,
+	   "InsuNationShow":InsuNationShow
    }
 })();

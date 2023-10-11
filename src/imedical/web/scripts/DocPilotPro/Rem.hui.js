@@ -17,16 +17,27 @@ function PageHandle(){
 	LoadStartUser();
 }
 function LoadStartUser(){
-	var Data=$.cm({
+	
+	/*var Data=$.cm({
 		ClassName:"web.PilotProject.DHCDocPilotProject",
 		QueryName:"Finduse",
 		dataType:"json",
 		Desc:"",
 		rows:99999
+	},false); */
+	
+	var Data=$.cm({
+		ClassName:"web.PilotProject.DHCDocPilotProject",
+		QueryName:"FindStartUser",
+		dataType:"json",
+		PPStartUser:"",
+		InHosp:ServerObj.InHosp,
+		rows:99999
 	},false); 
+	
 	var cbox = $HUI.combobox("#PPRReceiver", {
-			valueField: 'SSUSR_RowId',
-			textField: 'SSUSR_Name', 
+			valueField: 'Hidden',
+			textField: 'Desc', 
 			editable:true,
 			data: Data["rows"],
 			onChange:function(newValue,OldValue){
@@ -39,10 +50,14 @@ function LoadStartUser(){
 				$(this).combobox("select",session['LOGON.USERID']);
 			}
 	 });
+	
+	
 }
 function InitEvent(){
 	$("#BSave").click(SaveClickHander);
+	$("#BVerify").click(VerifyClickHander);
 	$('input:text:first').focus(); 
+	$("#PPRBalance").val(ServerObj.PilotBalance);
 	var $inp = $('input:text'); 
 	$inp.bind('keydown', function (e) { 
 		var key = e.which; 
@@ -54,6 +69,43 @@ function InitEvent(){
 			}
 			$(":input:text:eq(" + nxtIdx + ")").focus(); 
 		} 
+	});
+}
+function VerifyClickHander() {
+	var selected = $("#PilotProRemListTab").datagrid("getSelected");
+	if (!selected) {
+		$.messager.alert("提示","请选择一条记录！","info");
+		return false;
+	}
+	if (selected.PPRState=="到账") {
+		$.messager.alert("提示","该记录已被审核！","warning");
+		return false;
+	}
+	if (parseInt(selected.PPRRemAmount)+parseInt(ServerObj.PilotBalance)<0){
+		$.messager.alert("提示","退款金额已超过余额，请核实到账退款金额!","info",function(){
+			//$("#PPRRemAmount").focus();
+		});
+		return false;
+	}
+	$.messager.confirm('确认', '是否审核该条汇款记录？', function(r){
+		if (r){
+			$.cm({
+				ClassName:"web.PilotProject.CFG.FindGCP",
+				MethodName:"VerifyRem",
+				dataType:"text",
+				PPRemId:selected.PPRRowId
+			},function(rtn){
+				if (rtn=='0'){
+					$.messager.alert("提示","审核成功!","info");
+					PilotProRemListTabDataGridLoad();
+					ClearData();
+					$("#PilotProRemListTab").datagrid("clearSelections")
+					location.reload();
+				}else{
+					$.messager.alert("提示","错误: "+rtn);
+				}
+			});
+		}
 	});
 }
 function SaveClickHander(){
@@ -96,6 +148,11 @@ function DeleteClickHander () {
 		$.messager.alert("提示","请选择一条记录！","info");
 		return false;
 	}
+	if (selected.PPRState=="到账") {
+		$.messager.alert("提示","到账记录不能删除！","warning");
+		return false;
+	}
+	
 	$.messager.confirm('确认', '是否删除该条汇款记录？', function(r){
 		if (r){
 			$.cm({
@@ -119,7 +176,8 @@ function DeleteClickHander () {
 }
 function ClearData(){
 	$("#PPRDate").datebox("setValue","");
-	$("#PPRRemAmount").val("");
+	//$("#PPRRemAmount").val("");
+	$("#PPRRemAmount").numberbox("clear");
 	$("#PPRRemitter").val("");
 	$("#PPRRemark").val("");
 	$("#PPRReceiver").combobox("select",session['LOGON.USERID']);
@@ -181,9 +239,22 @@ function GetEntityClassInfoToXML(ParseInfo)
 function CheckBeforeSave(){
 	var PPRDate=$("#PPRDate").datebox("getValue");
 	PPRDate=PPRDate.replace(/(^\s*)|(\s*$)/g,'');
+	var PPRRemAmount = $.trim($("#PPRRemAmount").val())
 	if (PPRDate==""){
 		$.messager.alert("提示","请选择到账日期!","info",function(){
 			$("#PPRDate").focus();
+		});
+		return false;
+	}
+	if (PPRRemAmount==""){
+		$.messager.alert("提示","请输入到账金额!","info",function(){
+			$("#PPRRemAmount").focus();
+		});
+		return false;
+	}
+	if (parseInt(PPRRemAmount)+parseInt(ServerObj.PilotBalance)<0){
+		$.messager.alert("提示","退款金额已超过余额!","info",function(){
+			$("#PPRRemAmount").focus();
 		});
 		return false;
 	}
@@ -203,6 +274,7 @@ function CheckBeforeSave(){
 	}
 	var PPRReceiverLook=$("#PPRReceiver").combobox("getValue"); 
 	var PPRReceiverLook=CheckComboxSelData("PPRReceiver",PPRReceiverLook); 
+	
 	if (PPRReceiverLook==""){
 		$.messager.alert("提示","请选择接收用户!","info",function (){
 			$('#PPRReceiver').next('span').find('input').focus();
@@ -215,8 +287,8 @@ function CheckComboxSelData(id,selId){
 	var Find=0;
 	 var Data=$("#"+id).combobox('getData');
 	 for(var i=0;i<Data.length;i++){
-		  var CombValue=Data[i].SSUSR_RowId  
-		  var CombDesc=Data[i].SSUSR_Name
+		  var CombValue=Data[i].Hidden  
+		  var CombDesc=Data[i].Desc
 		  if(selId==CombValue){
 			  selId=CombValue;
 			  Find=1;
@@ -242,6 +314,7 @@ function InitPilotProRemListTabDataGrid(){
 		{field:'PPRDateAdd',title:'操作日期',width:100},
 		{field:'PPRTimeAdd',title:'操作时间',width:100},
 		{field:'PPRRemUser',title:'操作人',width:100},
+		{field:'PPRState',title:'状态',hidden:false},
 		{field:'PPRRemark',title:'备注',width:200},
 		{field:'PPDesc',title:'',hidden:true},		
 		{field:'Account',title:'',hidden:true},
@@ -253,7 +326,7 @@ function InitPilotProRemListTabDataGrid(){
 		{field:'count',title:'',hidden:true},
 		{field:'Job',title:'',hidden:true},
 		{field:'PayContract',title:'',hidden:true},
-		{field:'PPRState',title:'',hidden:true}
+		
     ]]
 	var PilotProListTabDataGrid=$("#PilotProRemListTab").datagrid({
 		fit : true,

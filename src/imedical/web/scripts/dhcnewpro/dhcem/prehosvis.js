@@ -96,11 +96,12 @@ function SaveHosVis(){
 		}else{
 			VisID=jsonString
 			$.messager.alert("提示:","保存成功！","info",function(){
+				window.parent.frames["TRAK_main"].QryDisAmbMan();  ///刷新列表
 				window.location.reload();
+				CancelHosVis() //关闭
 				if (window.opener){
-					window.opener.QryDisAmbMan()
-					CancelHosVis() //关闭
-				}	
+					window.opener.QryDisAmbMan();
+				}
 			});
 		}
 	},'',false)
@@ -188,7 +189,8 @@ function SetEmPcsTime(id){
 
 //取消
 function CancelHosVis(){
-	window.close();
+	websys_showModal("close");
+	return;
 }
 /// 内容为 undefined 显示空
 function txtUtil(txt){

@@ -1,54 +1,56 @@
-var init = function () {
+Ôªøvar init = function() {
 	var UomCombox = {
-		type:'combobox',
-		options:{
+		type: 'combobox',
+		options: {
 			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetInciUom&ResultSetType=array',
 			valueField: 'RowId',
 			textField: 'Description',
-			required:true,
-			mode:'remote',
-			onBeforeLoad:function(param){
-				var Select=DetailGrid.getSelected();
-				if(!isEmpty(Select)){
-					param.Inci =Select.Inci;	
+			required: true,
+			mode: 'remote',
+			editable: false,
+			onBeforeLoad: function(param) {
+				var Select = DetailGrid.getSelected();
+				if (!isEmpty(Select)) {
+					param.Inci = Select.Inci;
 				}
-				
 			},
-			onSelect:function(record){
-				var rows =DetailGrid.getRows();  
+			onSelect: function(record) {
+				var rows = DetailGrid.getRows();
 				var row = rows[DetailGrid.editIndex];
-				row.AspUomDesc=record.Description;
-				//row.AspUomId=record.RowId;
-				//µ•Œª«–ªª¥¶¿Ì
+				row.AspUomDesc = record.Description;
+				// row.AspUomId=record.RowId;
+				// Âçï‰ΩçÂàáÊç¢Â§ÑÁêÜ
 				
-				var NewUomid=record.RowId;
-				var OldUomid=row.AspUomId;
-				if(isEmpty(NewUomid)||(NewUomid==OldUomid)){return false;}
-				var BUomId=row.BUomId;
-				var PriorRpUom=row.PriorRpUom;
-				var PriorSpUom=row.PriorSpUom;
-				var ResultRpUom=row.ResultRpUom;
-				var ResultSpUom=row.ResultSpUom;
-                var confac=row.ConFacPur;
-                if (NewUomid==BUomId){ //»Îø‚µ•Œª◊™ªªŒ™ª˘±æµ•Œª
-                	row.PriorRpUom=Number(PriorRpUom).div(confac);
-					row.PriorSpUom=Number(PriorSpUom).div(confac);
-					row.ResultRpUom=Number(ResultRpUom).div(confac);
-					row.ResultSpUom=Number(ResultSpUom).div(confac);
-				}else{ //ª˘±æµ•Œª◊™ªªŒ™»Îø‚µ•Œª
-					row.PriorRpUom=Number(PriorRpUom).mul(confac);
-					row.PriorSpUom=Number(PriorSpUom).mul(confac);
-					row.ResultRpUom=Number(ResultRpUom).mul(confac);
-					row.ResultSpUom=Number(ResultSpUom).mul(confac);
+				var NewUomid = record.RowId;
+				var OldUomid = row.AspUomId;
+				if (isEmpty(NewUomid) || (NewUomid == OldUomid)) { return false; }
+				var BUomId = row.BUomId;
+				var PriorRpUom = row.PriorRpUom;
+				var PriorSpUom = row.PriorSpUom;
+				var ResultRpUom = row.ResultRpUom;
+				var ResultSpUom = row.ResultSpUom;
+				var confac = row.ConFacPur;
+				if (NewUomid == BUomId) { // ÂÖ•Â∫ìÂçï‰ΩçËΩ¨Êç¢‰∏∫Âü∫Êú¨Âçï‰Ωç
+					row.PriorRpUom = Number(PriorRpUom).div(confac);
+					row.PriorSpUom = Number(PriorSpUom).div(confac);
+					row.ResultRpUom = Number(ResultRpUom).div(confac);
+					row.ResultSpUom = Number(ResultSpUom).div(confac);
+				} else { // Âü∫Êú¨Âçï‰ΩçËΩ¨Êç¢‰∏∫ÂÖ•Â∫ìÂçï‰Ωç
+					row.PriorRpUom = Number(PriorRpUom).mul(confac);
+					row.PriorSpUom = Number(PriorSpUom).mul(confac);
+					row.ResultRpUom = Number(ResultRpUom).mul(confac);
+					row.ResultSpUom = Number(ResultSpUom).mul(confac);
 				}
 				
-				row.DiffRpUom = accSub(row.ResultRpUom, row.PriorRpUom)
-				row.DiffSpUom = accSub(row.ResultSpUom, row.PriorSpUom)
-				row.AspUomId=NewUomid;
-				//DetailGrid.refreshRow()	
-				
+				row.DiffRpUom = accSub(row.ResultRpUom, row.PriorRpUom);
+				row.DiffSpUom = accSub(row.ResultSpUom, row.PriorSpUom);
+				row.AspUomId = NewUomid;
+				setTimeout(function() {
+					DetailGrid.refreshRow();
+				}, 0);
+				// DetailGrid.refreshRow()	
 			},
-			onShowPanel:function(){
+			onShowPanel: function() {
 				$(this).combobox('reload');
 			}
 		}
@@ -57,394 +59,455 @@ var init = function () {
 		ClassName: 'web.DHCSTMHUI.Common.Dicts',
 		QueryName: 'GetAdjPriceReason',
 		ResultSetType: 'array'
-	},false);
+	}, false);
 	var AdjReasonCombox = {
 		type: 'combobox',
 		options: {
 			data: AdjReasonComData,
 			valueField: 'RowId',
 			textField: 'Description',
-			required:'Y'
+			editable: false,
+			required: 'Y'
 		}
 	};
-	var InciHandlerParams = function () {
-		var Scg = $("#ScgId").combotree('getValue');
+	var InciHandlerParams = function() {
+		var Scg = $('#ScgId').combotree('getValue');
 		var Obj = {
 			StkGrpRowId: Scg,
-			StkGrpType: "M",
-			BDPHospital:gHospId
+			StkGrpType: 'M',
+			BDPHospital: gHospId
 		};
 		return Obj;
 	};
-	$("#InciDesc").lookup(InciLookUpOp(InciHandlerParams, '#InciDesc', '#Inci'));
-	$UI.linkbutton('#QueryBT',{ 
-		onClick:function(){
-			Query()
+	$('#InciDesc').lookup(InciLookUpOp(InciHandlerParams, '#InciDesc', '#Inci'));
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
+			Query();
 		}
 	});
-	function Query(){
-		var ParamsObj=$UI.loopBlock('Conditions');
-		ParamsObj=jQuery.extend(true,ParamsObj,{Status:"N"});
-		if(isEmpty(ParamsObj.StartDate)){
-				$UI.msg('alert','ø™ º»’∆⁄≤ªƒ‹Œ™ø’!');
-				return;
-			}
-		if(isEmpty(ParamsObj.EndDate)){
-				$UI.msg('alert','Ωÿ÷π»’∆⁄≤ªƒ‹Œ™ø’!')
-				return;
-			}	
+	function Query(AspIdStr) {
+		if (AspIdStr == undefined) {
+			AspIdStr = '';
+		}
+		var ParamsObj = $UI.loopBlock('Conditions');
+		ParamsObj = jQuery.extend(true, ParamsObj, {
+			Status: 'N',
+			AspIdStr: AspIdStr
+		});
+		var StartDate = ParamsObj.StartDate;
+		var EndDate = ParamsObj.EndDate;
+		if (isEmpty(StartDate)) {
+			$UI.msg('alert', 'ÂºÄÂßãÊó•Êúü‰∏çËÉΩ‰∏∫Á©∫!');
+			return;
+		}
+		if (isEmpty(EndDate)) {
+			$UI.msg('alert', 'Êà™Ê≠¢Êó•Êúü‰∏çËÉΩ‰∏∫Á©∫!');
+			return;
+		}
+		if (compareDate(StartDate, EndDate)) {
+			$UI.msg('alert', 'Êà™Ê≠¢Êó•Êúü‰∏çËÉΩÂ∞è‰∫éÂºÄÂßãÊó•Êúü!');
+			return;
+		}
 		var Params = JSON.stringify(ParamsObj);
 		DetailGrid.load({
 			ClassName: 'web.DHCSTMHUI.INAdjPriceBatch',
 			QueryName: 'QueryAspBatInfo',
+			query2JsonStrict: 1,
 			Params: Params,
-			rows:99999
-		});		
+			rows: 99999
+		});
 	}
-	$UI.linkbutton('#ClearBT',{
-		onClick:function(){
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
 			ClearMain();
 		}
 	});
-	var ClearMain=function(){
+	var ClearMain = function() {
 		$UI.clearBlock('#Conditions');
 		$UI.clear(DetailGrid);
-		var Dafult={
-			StartDate:DateFormatter(new Date()),
-			EndDate:DateFormatter(new Date())
-			}
-		$UI.fillBlock('#Conditions',Dafult);
+		var DefaultData = {
+			StartDate: DateFormatter(new Date()),
+			EndDate: DateFormatter(new Date())
+		};
+		$UI.fillBlock('#Conditions', DefaultData);
 		$('#ScgId').combotree('options')['setDefaultFun']();
-		
+	};
+	
+	$UI.linkbutton('#SaveBT', {
+		onClick: function() {
+			if (CheckBeforeSave()) {
+				Save();
+			}
+		}
+	});
+	function CheckBeforeSave() {
+		if (!DetailGrid.endEditing()) {
+			return false;
+		}
+		var RowsData = DetailGrid.getRows();
+		for (var i = 0; i < RowsData.length; i++) {
+			var ResultSp = parseFloat(RowsData[i].ResultSpUom);
+			var ResultRp = parseFloat(RowsData[i].ResultRpUom);
+			var PreExecuteDate = RowsData[i].PreExecuteDate;
+			var InciDesc = RowsData[i].InciDesc;
+			var AdjReasonId = RowsData[i].AdjReasonId;
+			var Incib = RowsData[i].Incib;
+			var row = i + 1;
+			if (ResultSp == null || ResultSp < 0) {
+				$UI.msg('alert', 'Á¨¨' + row + 'Ë°å' + InciDesc + 'Ë∞ÉÂêéÂîÆ‰ª∑‰∏çËÉΩÂ∞è‰∫é0!');
+				return false;
+			}
+			if (isEmpty(PreExecuteDate)) {
+				$UI.msg('alert', 'Á¨¨' + row + 'Ë°å' + InciDesc + 'ËÆ°ÂàíÁîüÊïàÊó•Êúü‰∏çËÉΩ‰∏∫Á©∫!');
+				return false;
+			}
+			if (Number(ResultSp) < Number(ResultRp)) {
+				$UI.msg('alert', 'Á¨¨' + row + 'Ë°å' + InciDesc + 'Ë∞ÉÂêéÂîÆ‰ª∑‰∏çËÉΩÂ∞è‰∫éË∞ÉÂêéËøõ‰ª∑');
+				return false;
+			}
+			var Today = DateFormatter(new Date());
+			if (PreExecuteDate < Today) {
+				$UI.msg('alert', 'Á¨¨' + row + 'Ë°å' + InciDesc + 'ËÆ°ÂàíÁîüÊïàÊó•Êúü‰∏çËÉΩÂ∞è‰∫éÂΩìÂâçÊó•Êúü!');
+				return false;
+			}
+			var TodayAdjFlag = tkMakeServerCall('web.DHCSTMHUI.INAdjPriceBatch', 'CheckItmAspBatToday', Incib);
+			if (TodayAdjFlag == 1) {
+				if (!confirm('Á¨¨' + row + 'Ë°å' + InciDesc + 'Â≠òÂú®ÂΩìÂ§©Â∑≤ÁîüÊïàË∞É‰ª∑Âçï,ÊòØÂê¶ÁªßÁª≠?')) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
-	var Save=function(){
-	    var MainObj=$UI.loopBlock('#Conditions')
-		var Main=JSON.stringify(MainObj)
-		var Detail=DetailGrid.getChangesData('Incib');
-		if(Detail===false){return}; //—È÷§Œ¥Õ®π˝  ≤ªƒ‹±£¥Ê
+	var Save = function() {
+		var MainObj = $UI.loopBlock('#Conditions');
+		var Main = JSON.stringify(MainObj);
+		var Detail = DetailGrid.getChangesData('Incib');
+		if (Detail === false) { return; } // È™åËØÅÊú™ÈÄöËøá  ‰∏çËÉΩ‰øùÂ≠ò
 		if (isEmpty(Detail)) {
-			$UI.msg('alert','√ª”––Ë“™±£¥Êµƒµ˜º€–≈œ¢!');
-			return
+			$UI.msg('alert', 'Ê≤°ÊúâÈúÄË¶Å‰øùÂ≠òÁöÑË∞É‰ª∑‰ø°ÊÅØ!');
+			return;
 		}
 		$.cm({
 			ClassName: 'web.DHCSTMHUI.INAdjPriceBatch',
 			MethodName: 'JsSave',
 			Main: Main,
 			Detail: JSON.stringify(Detail)
-		},function(jsonData){
-			if(jsonData.success==0){
-				$UI.msg('success',jsonData.msg);
-				var AdpNo=$("#AdjspNo").val()
-				if (AdpNo==""){
-                 $("#AdjspNo").val(jsonData.rowid); 
-				}
-				Query()
-			}else{
-					 $UI.msg('error',jsonData.msg);
-				 }
-		});	
-		
-	}
-	var DetailCm = [[{
+		}, function(jsonData) {
+			if (jsonData.success == 0) {
+				$UI.msg('success', jsonData.msg);
+				var AspIdStr = jsonData.rowid;
+				Query(AspIdStr);
+			} else {
+				$UI.msg('error', jsonData.msg);
+			}
+		});
+	};
+	var DetailCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
 			saveCol: true,
-			hidden: true
+			hidden: true,
+			width: 60
 		}, {
-			title : "µ˜º€µ•∫≈",
-			field : 'AspNo',
+			title: 'Ë∞É‰ª∑ÂçïÂè∑',
+			field: 'AspNo',
 			saveCol: true,
-			width : 180
+			width: 150
 		}, {
 			title: 'Incib',
 			field: 'Incib',
 			saveCol: true,
-			hidden: true			
+			hidden: true,
+			width: 60
 		}, {
-			title: 'ŒÔ◊ RowId',
+			title: 'Áâ©ËµÑRowId',
 			field: 'Inci',
 			saveCol: true,
-			hidden: true			
+			hidden: true,
+			width: 60
 		}, {
-			title: 'ŒÔ◊ ¥˙¬Î',
+			title: 'Áâ©ËµÑ‰ª£Á†Å',
 			field: 'InciCode',
-			width:100
+			width: 100
 		}, {
-			title: 'ŒÔ◊ √˚≥∆',
+			title: 'Áâ©ËµÑÂêçÁß∞',
 			field: 'InciDesc',
-			editor: {type: 'validatebox',options: {required: true}},
-			width: 180
+			editor: { type: 'validatebox', options: { required: true }},
+			width: 150
 		}, {
-        	title: "πÊ∏Ò",
-       		field:'Spec',
-        	width:100
-    	}, {
-        	title: "≈˙¥Œ/–ß∆⁄",
-       		field:'BatExp',
-        	width:100
-    	}, {
-	        title:"µ˜º€µ•Œª",
-	        field:'AspUomId',
-	        width:100,
-	        align:'right',
-	        saveCol: true,
-	        formatter: CommonFormatter(UomCombox,'AspUomId','AspUomDesc'),
-	    	editor:UomCombox
-	    },{
-			title : "BUomId",
-			field : 'BUomId',
-			width : 100,
+			title: 'ËßÑÊ†º',
+			field: 'Spec',
+			width: 100
+		}, {
+			title: 'ÊâπÊ¨°/ÊïàÊúü',
+			field: 'BatExp',
+			width: 120
+		}, {
+			title: 'Ë∞É‰ª∑Âçï‰Ωç',
+			field: 'AspUomId',
+			width: 80,
+			saveCol: true,
+			formatter: CommonFormatter(UomCombox, 'AspUomId', 'AspUomDesc'),
+			editor: UomCombox
+		}, {
+			title: 'Ë∞É‰ª∑ÂéüÂõ†',
+			field: 'AdjReasonId',
+			width: 120,
+			align: 'left',
+			saveCol: true,
+			formatter: CommonFormatter(AdjReasonCombox, 'AdjReasonId', 'AdjReason'),
+			editor: AdjReasonCombox
+		}, {
+			title: 'BUomId',
+			field: 'BUomId',
+			width: 100,
 			hidden: true
-		},{
-			title : "ConFacPur",
-			field : 'ConFacPur',
-			width : 100,
-			hidden : true
 		}, {
-	        title:"µ˜«∞ €º€",
-	        field:'PriorSpUom',
-	        saveCol: true,
-	        width:100,
-	        align:'right'
-	    }, {
-	        title:"µ˜«∞Ω¯º€",
-	        field:'PriorRpUom',
-	        saveCol: true,
-	        width:100,
-	        align:'right'
+			title: 'ConFacPur',
+			field: 'ConFacPur',
+			width: 100,
+			hidden: true
 		}, {
-	        title:"µ˜∫ÛΩ¯º€",
-	        field:'ResultRpUom',
-	        width:100,
-	        align:'right',
-	        saveCol: true,
-	        editor: {
-					type: 'numberbox',
-					options: {
-						required: true,
-						min:0,
-						precision:GetFmtNum('FmtPA')
-					    }
-				    }
-	    }, {
-	        title:"µ˜∫Û €º€",
-	        field:'ResultSpUom',
-	        width:100,
-	        align:'right',
-	        saveCol: true,
-	        editor: {
-					type: 'numberbox',
-					options: {
-						required: true,
-						min:0,
-						precision:GetFmtNum('FmtPA')
-					    }
-				    }
-	    },{
-	        title:"≤Óº€( €º€)",
-	        field:'DiffSpUom',
-	        width:100,
-	        align:'right'
-	    },{
-	        title:"≤Óº€(Ω¯º€)",
-	        field:'DiffRpUom',
-	        width:100,
-	        align:'right'
-	    },{
-	        title:"◊Ó∏ﬂ €º€",
-	        field:'MaxSp',
-	        width:100,
-	        align:'right'
-	    },{
-	        title:"º∆ªÆ…˙–ß»’∆⁄",
-	        field:'PreExecuteDate',
-	        width:120,
-	        align:'left',
-	        saveCol: true,
-			editor:{type:'datebox',options:{}}
-	    },{
-	        title:"÷∆µ•»’∆⁄",
-	        field:'AdjDate',
-	        width:120,
-	        align:'left'
-	    },{
-	        title:" µº …˙–ß»’∆⁄",
-	        field:'ExecuteDate',
-	        width:120,
-	        align:'left'
-	    },{
-	        title:"∂®º€¿‡–Õ",
-	        field:'MarkTypeDesc',
-	        width:120,
-	        align:'left'
-	    },{
-	        title:"ŒÔº€Œƒº˛∫≈",
-	        field:'WarrentNo',
-	        width:120,
-	        align:'left',
-	        saveCol: true,
-	        editor:{type:'text',options:{}}
-	    },{
-	        title:"ŒÔº€Œƒº˛»’∆⁄",
-	        field:'WnoDate',
-	        width:120,
-	        align:'left',
-	        saveCol: true,
-	        editor:{type:'datebox',options:{}}
-	    },{
-	        title:"µ˜º€‘≠“Ú",
-	        field:'AdjReasonId',
-	        width:120,
-	        align:'left',
-	        saveCol: true,
-			formatter: CommonFormatter(AdjReasonCombox,'AdjReasonId','AdjReason'),
-	    	editor:AdjReasonCombox
-	    },{
-	        title:"µ˜º€»À",
-	        field:'AdjUserName',
-	        width:100,
-	        align:'left'
-	    },{
-	        title:"ø‚¥Ê∑÷¿‡",
-	        field:'StkCatDesc',
-	        width:100,
-	        align:'left'	  
-	    },{
-	    	title : "µ˜º€¿‡–Õ",
-		field : 'AdjSPCat',
-	        saveCol: true,
-		width : 100 //,hidden: true
-	    }
+			title: 'Ë∞ÉÂâçÂîÆ‰ª∑',
+			field: 'PriorSpUom',
+			saveCol: true,
+			width: 80,
+			align: 'right'
+		}, {
+			title: 'Ë∞ÉÂâçËøõ‰ª∑',
+			field: 'PriorRpUom',
+			saveCol: true,
+			width: 80,
+			align: 'right'
+		}, {
+			title: 'Ë∞ÉÂêéËøõ‰ª∑',
+			field: 'ResultRpUom',
+			width: 80,
+			align: 'right',
+			saveCol: true,
+			editor: {
+				type: 'numberbox',
+				options: {
+					required: true,
+					tipPosition: 'bottom',
+					min: 0,
+					precision: GetFmtNum('FmtPA')
+				}
+			}
+		}, {
+			title: 'Ë∞ÉÂêéÂîÆ‰ª∑',
+			field: 'ResultSpUom',
+			width: 80,
+			align: 'right',
+			saveCol: true,
+			editor: {
+				type: 'numberbox',
+				options: {
+					required: true,
+					tipPosition: 'bottom',
+					min: 0,
+					precision: GetFmtNum('FmtPA')
+				}
+			}
+		}, {
+			title: 'Â∑Æ‰ª∑(ÂîÆ‰ª∑)',
+			field: 'DiffSpUom',
+			width: 80,
+			align: 'right'
+		}, {
+			title: 'Â∑Æ‰ª∑(Ëøõ‰ª∑)',
+			field: 'DiffRpUom',
+			width: 80,
+			align: 'right'
+		}, {
+			title: 'ËÆ°ÂàíÁîüÊïàÊó•Êúü',
+			field: 'PreExecuteDate',
+			width: 120,
+			align: 'left',
+			saveCol: true,
+			editor: { type: 'datebox', options: {}}
+		}, {
+			title: 'Âà∂ÂçïÊó•Êúü',
+			field: 'AdjDate',
+			width: 120,
+			align: 'left'
+		}, {
+			title: 'ÂÆûÈôÖÁîüÊïàÊó•Êúü',
+			field: 'ExecuteDate',
+			width: 100,
+			align: 'left'
+		}, {
+			title: 'ÂÆö‰ª∑Á±ªÂûã',
+			field: 'MarkTypeDesc',
+			width: 120,
+			align: 'left'
+		}, {
+			title: 'Áâ©‰ª∑Êñá‰ª∂Âè∑',
+			field: 'WarrentNo',
+			width: 120,
+			align: 'left',
+			saveCol: true,
+			editor: { type: 'text', options: {}}
+		}, {
+			title: 'Áâ©‰ª∑Êñá‰ª∂Êó•Êúü',
+			field: 'WnoDate',
+			width: 120,
+			align: 'left',
+			saveCol: true,
+			editor: { type: 'datebox', options: {}}
+		}, {
+			title: 'Ë∞É‰ª∑‰∫∫',
+			field: 'AdjUserName',
+			width: 100,
+			align: 'left'
+		}, {
+			title: 'Â∫ìÂ≠òÂàÜÁ±ª',
+			field: 'StkCatDesc',
+			width: 100,
+			align: 'left'
+		}, {
+			title: 'Ë∞É‰ª∑Á±ªÂûã',
+			field: 'AdjSPCat',
+			saveCol: true,
+			width: 100 //, hidden: true
+		}
 	]];
 	var DetailGrid = $UI.datagrid('#DetailGrid', {
-		url:$URL,
+		url: $URL,
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.INAdjPriceBatch',
 			QueryName: 'QueryAspBatInfo',
-			rows:99999
+			query2JsonStrict: 1,
+			rows: 99999
 		},
-		deleteRowParams:{
-			ClassName:'web.DHCSTMHUI.INAdjPriceBatch',
-			MethodName:'jsDelete'
+		deleteRowParams: {
+			ClassName: 'web.DHCSTMHUI.INAdjPriceBatch',
+			MethodName: 'jsDelete'
 		},
 		columns: DetailCm,
-		sortName: 'RowId',  
-		sortOrder: 'Desc',  
-		showBar:true,
+		checkField: 'Incib',
+		sortName: 'RowId',
+		sortOrder: 'Desc',
+		showBar: true,
+		remoteSort: false,
 		pagination: false,
-		showAddDelItems:true,
-		toolbar:[{
-				text: '±£¥Ê',
-				iconCls: 'icon-save',
-				handler: function () {
-					Save();
-				}}],
-		onClickCell: function(index, filed ,value){	
-			DetailGrid.commonClickCell(index,filed,value);
+		showAddDelItems: true,
+		onClickRow: function(index, row) {
+			DetailGrid.commonClickRow(index, row);
 		},
-		onEndEdit:function(index, row, changes){
+		onEndEdit: function(index, row, changes) {
 			var Editors = $(this).datagrid('getEditors', index);
-		    for(var i=0;i<Editors.length;i++){
+			for (var i = 0; i < Editors.length; i++) {
 				var Editor = Editors[i];
-				if(Editor.field=='ResultRpUom'){
-					var ResultRpUom = row.ResultRpUom
+				if (Editor.field == 'ResultRpUom') {
+					var ResultRpUom = row.ResultRpUom;
 					if (isEmpty(ResultRpUom)) {
-						$UI.msg('alert','Ω¯º€≤ªƒ‹Œ™ø’!');
-						DetailGrid.checked=false;
+						$UI.msg('alert', 'Ëøõ‰ª∑‰∏çËÉΩ‰∏∫Á©∫!');
+						DetailGrid.checked = false;
 						return false;
-					}else if (ResultRpUom < 0) {
-						$UI.msg('alert','Ω¯º€≤ªƒ‹–°”⁄0!');
-						DetailGrid.checked=false;
+					} else if (ResultRpUom < 0) {
+						$UI.msg('alert', 'Ëøõ‰ª∑‰∏çËÉΩÂ∞è‰∫é0!');
+						DetailGrid.checked = false;
 						return false;
 					}
 
-					if (AdjSpBatchParamObj.CalSpByMarkType==1){
-						var Inci = row.Inci
-						var AspUomId = row.AspUomId
-						var Sp = tkMakeServerCall("web.DHCSTMHUI.Common.PriceCommon","GetMtSp",Inci,AspUomId,ResultRpUom)
-						if (Sp==0){
-							$UI.msg('alert','µ˜∫Û €º€Œ™0£¨«ÎºÏ≤È∏√ŒÔ◊ ∂®º€¿‡–Õ «∑Ò’˝»∑!');
-							DetailGrid.checked=false;
+					if (AdjSpBatchParamObj.CalSpByMarkType == 1) {
+						var Inci = row.Inci;
+						var AspUomId = row.AspUomId;
+						var Sp = tkMakeServerCall('web.DHCSTMHUI.Common.PriceCommon', 'GetMtSp', Inci, AspUomId, ResultRpUom);
+						if (Sp == 0) {
+							$UI.msg('alert', 'Ë∞ÉÂêéÂîÆ‰ª∑‰∏∫0ÔºåËØ∑Ê£ÄÊü•ËØ•Áâ©ËµÑÂÆö‰ª∑Á±ªÂûãÊòØÂê¶Ê≠£Á°Æ!');
+							DetailGrid.checked = false;
 							return false;
 						}
-						row.ResultSpUom = Sp
+						row.ResultSpUom = Sp;
 					}
-					var ResultSpUom = row.ResultSpUom
-					var PriorRpUom = row.PriorRpUom
-					row.DiffRpUom = accSub(ResultRpUom, PriorRpUom)
-					
-					
-				}else if(Editor.field=='ResultSpUom'){
-					var ResultSpUom = row.ResultSpUom
-					var ResultRpUom = row.ResultRpUom
-					var PriorSpUom = row.PriorSpUom
+					var ResultSpUom = row.ResultSpUom;
+					var PriorRpUom = row.PriorRpUom;
+					row.DiffRpUom = accSub(ResultRpUom, PriorRpUom);
+				} else if (Editor.field == 'ResultSpUom') {
+					var ResultSpUom = row.ResultSpUom;
+					var ResultRpUom = row.ResultRpUom;
+					var PriorSpUom = row.PriorSpUom;
 					if (ResultSpUom < 0) {
-						$UI.msg('alert',' €º€≤ªƒ‹–°”⁄0!');
-						DetailGrid.checked=false;
+						$UI.msg('alert', 'ÂîÆ‰ª∑‰∏çËÉΩÂ∞è‰∫é0!');
+						DetailGrid.checked = false;
 						return false;
 					}
-					var PriorRpUom = row.PriorRpUom
-					row.DiffSpUom = accSub(ResultSpUom, PriorSpUom)
-					
-					
+					var PriorRpUom = row.PriorRpUom;
+					row.DiffSpUom = accSub(ResultSpUom, PriorSpUom);
+				} else if (Editor.field == 'InciDesc') {
+					var Incib = row.Incib;
+					var InpurRows = DetailGrid.getRows();
+					$.each(InpurRows, function(tindex, trow) {
+						var tmpIncib = trow['Incib'];
+						if ((tmpIncib == Incib) && (index != tindex)) {
+							$UI.msg('alert', 'ÈáçÂ§çÂΩïÂÖ•');
+							DetailGrid.checked = false;
+							return false;
+						}
+					});
 				}
-				
-		    }
-		},
-		onBeginEdit: function(index, row){
-			if(row.AspNo!=""){
-			 $("#AdjspNo").val(row.AspNo); 
 			}
-			
+		},
+		onBeginEdit: function(index, row) {
 			$('#DetailGrid').datagrid('beginEdit', index);
 			var ed = $('#DetailGrid').datagrid('getEditors', index);
-			for (var i = 0; i < ed.length; i++){
+			for (var i = 0; i < ed.length; i++) {
 				var e = ed[i];
-				if(e.field == "InciDesc"){
-					$(e.target).bind("keydown", function(event){
-						if(event.keyCode == 13){
+				if (e.field == 'InciDesc') {
+					$(e.target).bind('keydown', function(event) {
+						if (event.keyCode == 13) {
 							var Input = $(this).val();
-							var ScgId = $("#ScgId").combotree('getValue');
-							var Locdr = gLocId
-							var ParamsObj={StkGrpRowId:ScgId,StkGrpType:"M",Locdr:Locdr,NotUseFlag:"",QtyFlag:"Y",
-		                    ToLoc:'',ReqModeLimited:"",NoLocReq:"",HV:"",RequestNoStock:"Y"};	
+							if (isEmpty(Input)) {
+								return;
+							}
+							var Condition = $UI.loopBlock('Conditions');
+							var ScgId =Condition.ScgId;
+							var FilterZeroQty = Condition.FilterZeroQty;
+							var Locdr = gLocId;
+							var ParamsObj = { StkGrpRowId: ScgId, StkGrpType: 'M', Locdr: Locdr, NotUseFlag: '', QtyFlag: 'Y',
+								ToLoc: '', ReqModeLimited: '', NoLocReq: '', HV: '', RequestNoStock: 'Y',FilterZeroQty:FilterZeroQty };
 							IncItmBatWindowAll(Input, ParamsObj, ReturnInfoFunc);
 						}
 					});
-				}	
+				}
 			}
 		},
-		beforeAddFn:function(){
+		beforeAddFn: function() {
 			/*
 			if(isEmpty($HUI.combobox("#ScgId").getValue())){
-				$UI.msg('alert','¿‡◊È≤ªƒ‹Œ™ø’!');
+				$UI.msg('alert','Á±ªÁªÑ‰∏çËÉΩ‰∏∫Á©∫!');
 				return false;
-			};	*/	
+			};	*/
 		}
-	})
+	});
 	
-	function ReturnInfoFunc(rows){
+	function ReturnInfoFunc(rows) {
 		rows = [].concat(rows);
-		var length=rows.length
-		$.each(rows, function(index, row){
+		var length = rows.length;
+		$.each(rows, function(index, row) {
 			var RowData = DetailGrid.getSelected();
 			RowData.Incib = row.Incib;
 			RowData.Inci = row.InciDr;
 			RowData.InciCode = row.InciCode;
-			RowData.InciDesc = row.InciDesc
+			RowData.InciDesc = row.InciDesc;
 			RowData.Spec = row.Spec;
 			RowData.BatExp = row.BatExp;
-			RowData.AspUomId=row.PurUomId   
-            RowData.AspUomDesc=row.PurUomDesc
-            RowData.PriorSpUom=row.Sp
-            RowData.PriorRpUom=row.Rp
-			RowData.ResultRpUom=row.ResultRp
-            RowData.ResultSpUom=row.ResultBatSp
-            RowData.AdjReasonId=row.AdjReasonId
-            RowData.AdjSPCat=" ÷∂Øµ˜º€";
-            var ParamsObj=$UI.loopBlock('Conditions');
-            var Params = JSON.stringify(ParamsObj);
-            /*$.cm({
+			RowData.AspUomId = row.PurUomId;
+			RowData.AspUomDesc = row.PurUomDesc;
+			RowData.PriorSpUom = row.Sp;
+			RowData.PriorRpUom = row.Rp;
+			RowData.ResultRpUom = row.ResultRp;
+			RowData.ResultSpUom = row.ResultBatSp;
+			RowData.AdjReasonId = row.AdjReasonId;
+			RowData.BUomId = row.BUomId;
+			RowData.AdjSPCat = 'ÊâãÂä®Ë∞É‰ª∑';
+			var ParamsObj = $UI.loopBlock('Conditions');
+			var Params = JSON.stringify(ParamsObj);
+			/* $.cm({
 			    ClassName: 'web.DHCSTMHUI.INAdjSalePrice',
 			    MethodName: 'GetItmInfo',
 			    Inci: row.InciDr,
@@ -458,7 +521,6 @@ var init = function () {
 				SelectRow.MarginNow=margin.toFixed(3);
 	        }
 			
-            RowData.MaxSp=jsonData.MaxSp
             RowData.MarkTypeDesc=jsonData.MarkTypeDesc
             RowData.StkCatDesc=jsonData.StkCatDesc
             RowData.WarrentNo=jsonData.WarrentNo
@@ -469,30 +531,28 @@ var init = function () {
 		    RowData.PreExecuteDate=Tomorrow
 			DetailGrid.refreshRow()
 		    }); */
-            var jsonData=$.cm({
-	 			ClassName: 'web.DHCSTMHUI.INAdjSalePrice',
-			    MethodName: 'GetItmInfo',
-			    Inci: row.InciDr,
-				Params:Params	
-	 		},false)
-	 		RowData.ConFacPur=jsonData.ConFacPur
-	 		RowData.MaxSp=jsonData.MaxSp
-            RowData.MarkTypeDesc=jsonData.MarkTypeDesc
-            RowData.StkCatDesc=jsonData.StkCatDesc
-            RowData.WarrentNo=jsonData.WarrentNo
-            RowData.WnoDate=jsonData.WnoDate     
-            var Today = DateFormatter(new Date())
-            var Tomorrow = DateFormatter(DateAdd(new Date(), 'd', 1))
-		    RowData.AdjDate=Today
-		    RowData.PreExecuteDate=Tomorrow
-			DetailGrid.refreshRow()
-			if(length>(index+1)){
-				DetailGrid.commonAddRow()
+			var jsonData = $.cm({
+				ClassName: 'web.DHCSTMHUI.INAdjSalePrice',
+				MethodName: 'GetItmInfo',
+				Inci: row.InciDr,
+				Params: Params
+			}, false);
+			RowData.ConFacPur = jsonData.ConFacPur;
+			RowData.MarkTypeDesc = jsonData.MarkTypeDesc;
+			RowData.StkCatDesc = jsonData.StkCatDesc;
+			RowData.WarrentNo = jsonData.WarrentNo;
+			RowData.WnoDate = jsonData.WnoDate;
+			var Today = DateFormatter(new Date());
+			var Tomorrow = DateFormatter(DateAdd(new Date(), 'd', 1));
+			RowData.AdjDate = Today;
+			RowData.PreExecuteDate = Tomorrow;
+			DetailGrid.refreshRow();
+			if (length > (index + 1)) {
+				DetailGrid.commonAddRow();
 			}
-			
 		});
 	}
-	//…Ë÷√»± °÷µ
+	// ËÆæÁΩÆÁº∫ÁúÅÂÄº
 	ClearMain();
-}
+};
 $(init);

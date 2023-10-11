@@ -1,148 +1,172 @@
-///Í³¼ÆÃğ¾ú¹¤×÷Á¿
+ï»¿// ç»Ÿè®¡ç­èŒå·¥ä½œé‡
 var init = function() {
-	var packageClassDr="";
-	var typeDetial="";
-	var ReqLocBox = $HUI.combobox('#PackName',{
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPackage&ResultSetType=array&typeDetial=1,2,7&packageClassDr='+packageClassDr,
-		valueField: 'RowId',
-		textField: 'Description'
-	});
-	function getPakcageData(packageClassDr){
-		$("#PackName").combobox('clear');
-		$("#PackName").combobox('reload',
-		$URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPackage&ResultSetType=array&typeDetial='+typeDetial+'&packageClassDr='+packageClassDr);
-		
-	}
-	   //Ïû¶¾°ü·ÖÀà
-	var ReqLocBox = $HUI.combobox('#PackageClass', {
+	$HUI.combobox('#PackageClass', {
 		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPackageClass&ResultSetType=array',
 		valueField: 'RowId',
 		textField: 'Description',
-		onSelect:function(record){
-			var packageClassDr= record['RowId'];
-			getPakcageData(packageClassDr);
+		onSelect: function(record) {
+			var packageClassDr = record['RowId'];
+			$('#PackageDr').combobox('clear');
+			var PkgParams = JSON.stringify(addSessionParams({ BDPHospital: gHospId, TypeDetail: '1,2,7', PkgClassId: packageClassDr }));
+			$('#PackageDr').combobox('reload', $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPkg&ResultSetType=array&Params=' + PkgParams);
 		}
 	});
-	//Ãğ¾ú·½Ê½
-	var ReqLocBox = $HUI.combobox('#SterType', {
+
+	var SpecParams = JSON.stringify(addSessionParams({ BDPHospital: gHospId }));
+	$HUI.combobox('#PkgSpec', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPackageSpec&ResultSetType=array&Params=' + SpecParams,
+		valueField: 'RowId',
+		textField: 'Description'
+	});
+
+	$HUI.combobox('#SterType', {
 		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetSterType&ResultSetType=array',
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-	var ReqLocBox = $HUI.combobox('#SterHum',{
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetUser&ResultSetType=array',
+
+	var SterUserParams = JSON.stringify(addSessionParams({ BDPHospital: gHospId }));
+	$HUI.combobox('#SterUserId', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetAllUser&ResultSetType=array&Params=' + SterUserParams,
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-		var ReqLocBox = $HUI.combobox('#MachineNum',{
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetMachineNoComBo&type=sterilizer&ResultSetType=array',
-		valueField: 'RowId',
-		 textField: 'Description'
-	});
-	/*--°´Å¥ÊÂ¼ş--*/
-	$UI.linkbutton('#QueryBT',{
-		onClick:function(){
-			var ParamsObj=$UI.loopBlock('#Conditions')
-			if(isEmpty(ParamsObj.StartDate)){
-				$UI.msg('alert','ÆğÊ¼ÈÕÆÚ²»ÄÜÎª¿Õ!');
-				return;
-			}
-			if(isEmpty(ParamsObj.EndDate)){
-				$UI.msg('alert','½ØÖ¹ÈÕÆÚ²»ÄÜÎª¿Õ!');
-				return;
-			}
-			
-			var Params=JSON.stringify(ParamsObj);
-			Params=encodeUrlStr(Params)
-			var CheckedRadioObj = $("input[name='ReportType']:checked");
-			var CheckedValue=CheckedRadioObj.val();
-			var CheckedTitle=CheckedRadioObj.attr("label")
-			var Conditions=GetConditions(ParamsObj)
-			var Url=CheckedUrl(CheckedValue,Params,Conditions)
-			AddTab(CheckedTitle,Url);
+
+	$HUI.datebox('#StartDate', {
+		onSelect: function(record) {
+			IsClearDataType();
 		}
 	});
-	///Æ´½Óurl
-	function CheckedUrl(Checked,Params,Conditions){
-		//Ãğ¾ú¹¤×÷Á¿Í³¼Æ(°´ÈË)
-		if('FlagStatSterWorkLoadByPeople'==Checked){
-			p_URL = PmRunQianUrl+'?reportName=CSSD_HUI_StatSterWorkLoadByPeople.raq&Params='+Params+'&Conditions='+Conditions;
-		}else if('FlagStatSterWorkLoadDetail'==Checked){//Ãğ¾ú¹¤×÷Á¿Í³¼ÆÏêÇé
-			p_URL = PmRunQianUrl+'?reportName=CSSD_HUI_StatSterWorkLoadDetail.raq&Params='+Params+'&Conditions='+Conditions;
+	$HUI.datebox('#EndDate', {
+		onSelect: function(record) {
+			IsClearDataType();
 		}
-		
-		return p_URL;
+	});
+	function IsClearDataType() {
+		var StartDate = $('#StartDate').datebox('getValue');
+		var EndDate = $('#EndDate').datebox('getValue');
+		var DateType = $('#DateType').combobox('getValue');
+		var Today = DateFormatter(new Date());
+		if (DateType === '1' && StartDate !== EndDate) {
+			$('#DateType').combobox('clear');
+		} else if (DateType === '2' && (StartDate !== getWeekStartDate() || EndDate !== Today)) {
+			$('#DateType').combobox('clear');
+		} else if (DateType === '3' && (StartDate !== getMonthStartDate() || EndDate !== Today)) {
+			$('#DateType').combobox('clear');
+		} else if (DateType === '4' && (StartDate !== getQuarterStartDate() || EndDate !== Today)) {
+			$('#DateType').combobox('clear');
+		} else if (DateType === '5' && (StartDate !== getYearStartDate() || EndDate !== Today)) {
+			$('#DateType').combobox('clear');
+		}
 	}
-	//×éÖ¯²éÑ¯Ìõ¼ş
-	function GetConditions(ParamsObj){
-		//»ñÈ¡²éÑ¯Ìõ¼şÁĞ±í
-		var Conditions=""
-		if(ParamsObj.StartDate!=""){
-			Conditions=" Í³¼ÆÊ±¼ä: "+ParamsObj.StartDate+" "+ParamsObj.StartTime;
+	
+	$HUI.combobox('#DateType', {
+		valueField: 'RowId',
+		textField: 'Description',
+		data: DateTypeData,
+		onSelect: function(record) {
+			var SelectTypeVal = record.RowId;
+			var startDate = '';
+			var endDate = DateFormatter(new Date());
+			if (SelectTypeVal === '1') {
+				startDate = DateFormatter(new Date());
+			} else if (SelectTypeVal === '2') {
+				startDate = getWeekStartDate();
+			} else if (SelectTypeVal === '3') {
+				startDate = getMonthStartDate();
+			} else if (SelectTypeVal === '4') {
+				startDate = getQuarterStartDate();
+			} else if (SelectTypeVal === '5') {
+				startDate = getYearStartDate();
+			}
+			$('#StartDate').datebox('setValue', startDate);
+			$('#EndDate').datebox('setValue', endDate);
 		}
-		if(ParamsObj.EndDate!=""){
-			Conditions=Conditions+" ½ØÖ¹Ê±¼ä£º"+ParamsObj.EndDate+" "+ParamsObj.EndTime
+	});
+
+	var MachineParams = JSON.stringify(addSessionParams({ BDPHospital: gHospId }));
+	$HUI.combobox('#SterMachineDr', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetMachineNoComBo&type=sterilizer&ResultSetType=array&Params=' + MachineParams,
+		valueField: 'RowId',
+		textField: 'Description'
+	});
+
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
+			var ParamsObj = $UI.loopBlock('#Conditions');
+			if (isEmpty(ParamsObj.StartDate)) {
+				$UI.msg('alert', 'èµ·å§‹æ—¥æœŸä¸èƒ½ä¸ºç©º!');
+				return;
+			}
+			if (isEmpty(ParamsObj.EndDate)) {
+				$UI.msg('alert', 'æˆªæ­¢æ—¥æœŸä¸èƒ½ä¸ºç©º!');
+				return;
+			}
+			var Params = JSON.stringify(ParamsObj);
+			Params = encodeUrlStr(Params);
+			var CheckedRadioObj = $("input[name='ReportType']:checked");
+			var CheckedValue = CheckedRadioObj.val();
+			var CheckedTitle = CheckedRadioObj.attr('label');
+			var Conditions = encodeUrlStr(GetConditions(ParamsObj));
+			var Url = CheckedUrl(CheckedValue, Params, Conditions);
+			AddStatTab(CheckedTitle, Url, '#tabs');
+		}
+	});
+
+	// /æ‹¼æ¥url
+	function CheckedUrl(Checked, Params, Conditions) {
+		// ç­èŒå·¥ä½œé‡ç»Ÿè®¡
+		var ReportUrl = '';
+		if ('FlagStatSterWorkLoadByPeople' === Checked) { // äººå‘˜æ±‡æ€»
+			ReportUrl = PmRunQianUrl + '?reportName=CSSD_HUI_StatSterWorkLoadByUser.raq&Params=' + Params + '&Conditions=' + Conditions;
+		} else if ('FlagStatSterMachine' === Checked) { // æœºå™¨æ±‡æ€»
+			ReportUrl = PmRunQianUrl + '?reportName=CSSD_HUI_StatSterMachine.raq&Params=' + Params + '&Conditions=' + Conditions;
+		} else if ('FlagStatSterWorkLoadDetail' === Checked) { // ç­èŒå·¥ä½œé‡ç»Ÿè®¡è¯¦æƒ…
+			ReportUrl = PmRunQianUrl + '?reportName=CSSD_HUI_StatSterWorkLoadDetail.raq&Params=' + Params + '&Conditions=' + Conditions;
+		}
+		return ReportUrl;
+	}
+
+	// ç»„ç»‡æŸ¥è¯¢æ¡ä»¶
+	function GetConditions(ParamsObj) {
+		// è·å–æŸ¥è¯¢æ¡ä»¶åˆ—è¡¨
+		var Conditions = '';
+		if (ParamsObj.StartDate !== '') {
+			Conditions = Conditions + ' ç»Ÿè®¡æ—¥æœŸ: ' + ParamsObj.StartDate;
+			if (ParamsObj.StartTime !== '') {
+				Conditions = Conditions + ' ' + ParamsObj.StartTime;
+			}
+		}
+		if (ParamsObj.EndDate !== '') {
+			Conditions = Conditions + ' ~ ' + ParamsObj.EndDate;
+			if (ParamsObj.EndTime !== '') {
+				Conditions = Conditions + ' ' + ParamsObj.EndTime;
+			}
+		}
+		if (ParamsObj.PackageClass !== '') {
+			Conditions = Conditions + ' åŒ…åˆ†ç±»: ' + $('#PackageClass').combobox('getText');
 		}
 		return Conditions;
 	}
-	function AddTab(title, url) {
-		if ($('#tabs').tabs('exists', title)) {
-			$('#tabs').tabs('select', title); //Ñ¡ÖĞ²¢Ë¢ĞÂ
-			var currTab = $('#tabs').tabs('getSelected');
-			if (url != undefined && currTab.panel('options').title != '±¨±í') {
-				$('#tabs').tabs('update', {
-					tab: currTab,
-					options: {
-						content: createFrame(url)
-					}
-				})
-			}
-		} else {
-			var content = createFrame(url);
-			$('#tabs').tabs('add', {
-				title: title,
-				content: content,
-				closable: true
-			});
-		}
-	}
-	function createFrame(url) {
-		var s = '<iframe scrolling="auto" frameborder="0" src="' + url + '" style="width:100%;height:98%;"></iframe>';
-		return s;
-	}
-	
-	$UI.linkbutton('#ClearBT',{
-		onClick:function(){
+
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
 			Default();
 		}
 	});
-	
-	/*--°ó¶¨¿Ø¼ş--*/
-	
-	/*--ÉèÖÃ³õÊ¼Öµ--*/
-	var Default=function(){
+
+	/* --è®¾ç½®åˆå§‹å€¼--*/
+	var Default = function() {
 		$UI.clearBlock('#Conditions');
 		$UI.clearBlock('#ReportConditions');
-		var DefaultValue={
-			StartDate:DateFormatter(new Date()),
-			EndDate:DateFormatter(new Date())
-			}
-		$UI.fillBlock('#Conditions',DefaultValue)
-		var Tabs=$('#tabs').tabs('tabs')
-		var Tiles = new Array();
-		var Len = Tabs.length;
-		if(Len>0){
-			for(var j=0;j<Len;j++){
-				var Title = Tabs[j].panel('options').title;
-				if(Title!='±¨±í'){
-					Tiles.push(Title);
-				}
-			}
-			for(var i=0;i<Tiles.length;i++){
-				$('#tabs').tabs('close', Tiles[i]);
-			}
-		}
+		var DefaultValue = {
+			StartDate: DateFormatter(new Date()),
+			EndDate: DateFormatter(new Date())
+		};
+		$UI.fillBlock('#Conditions', DefaultValue);
+		CloseStatTab('#tabs');
+		GetReportStyle('#Report');
 	};
-	Default()
-}
+	Default();
+};
 $(init);

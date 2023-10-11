@@ -43,7 +43,7 @@ function Getsex(psidno){
     var tempid=sexno%2;
     if(tempid==0){
         sex='2'
-    }else{
+    }else if(tempid==1) {
         sex='1'
     }else{
 		sex='9'

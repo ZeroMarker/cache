@@ -124,7 +124,9 @@ function ComManagerListGridLoad(){
 }
 function LoadComManagerWin(WinType){
 	if(typeof $("#ComManagerWin")[0]=="undefined"){
-			$.ajax("reg.cardhardcommanager.win.csp", {
+            var url="reg.cardhardcommanager.win.csp";
+            url=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(url):url;
+			$.ajax(url, {
 			"type" : "GET",
 			"dataType" : "html",
 			"success" : function(data, textStatus) {

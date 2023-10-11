@@ -31,8 +31,15 @@ function addDomMethod(){
 		tempckid=this.id;
 		if($("#"+tempckid).is(':checked')){
 			$("input[type='checkbox'][id^='hospDrugFlow']").each(function(){
-				if((this.id!=tempckid)&&($("#"+this.id).is(':checked'))&&(tempckid.indexOf(this.id)<0)){
-					$("#"+this.id).removeAttr("checked");
+				if($("#"+this.id).is(':checked')&&(tempckid.indexOf(this.id)<0)){
+					if((tempckid.split("-").length==2)&&(this.id!=tempckid)){
+						$("#"+this.id).removeAttr("checked");
+						$("#hospDrugFlow-94830-94837").nextAll(".lable-input").val("");
+						$("#hospDrugFlow-94830-94837").nextAll(".lable-input").hide();
+					}
+					if((tempckid.split("-").length==3)&&(this.id.split("-").length!=3)){
+						$("#"+this.id).removeAttr("checked");
+					}
 				}
 			})
 		}
@@ -81,7 +88,7 @@ function InitReport(recordId)
 
 function SaveReport(flag,status){
 	if(($('#PatName').val()=="")&&($("#PatName").is(":visible"))){
-		$.messager.alert("提示:","患者姓名为空，请输入登记号回车选择记录录入患者信息！");	
+		$.messager.alert($g("提示:"),$g("患者姓名为空，请输入登记号回车选择记录录入患者信息！"));	
 		return false;
 	}
 	///保存前,对页面必填项进行检查

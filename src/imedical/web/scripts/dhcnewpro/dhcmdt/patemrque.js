@@ -28,7 +28,7 @@ function initFrameSrc(){
 //		PatientID = frm.PatientID.value;
 //		EpisodeID = frm.EpisodeID.value;
 //	}
-	var link ="dhcmdt.quote.csp?PatientID="+ PatientID +"&EpisodeID="+ EpisodeID +"&Type=2";
+	var link ="dhcmdt.quote.csp?PatientID="+ PatientID +"&EpisodeID="+ EpisodeID +"&Type=2"+"&MWToken="+websys_getMWToken();
 	$("#QuoteFrame").attr("src",link);
 }
 

@@ -9,17 +9,17 @@ Ext.onReady(function() {
 	var gGroupId=session["LOGON.GROUPID"];
 	var url=DictUrl+'instktkaction.csp';
 	var PhaLoc = new Ext.ux.LocComboBox({
-				fieldLabel : '科室',
+				fieldLabel : $g('科室'),
 				id : 'PhaLoc',
 				name : 'PhaLoc',
 				width : 140,
-				emptyText : '科室...',
+				emptyText : $g('科室...'),
 				groupId:gGroupId
 			});
 	
 	// 起始日期
 	var StartDate = new Ext.ux.DateField({
-				fieldLabel : '起始日期',
+				fieldLabel : $g('起始日期'),
 				id : 'StartDate',
 				name : 'StartDate',
 				anchor : '90%',
@@ -29,7 +29,7 @@ Ext.onReady(function() {
 
 	// 结束日期
 	var EndDate = new Ext.ux.DateField({
-				fieldLabel : '结束日期',
+				fieldLabel : $g('结束日期'),
 				id : 'EndDate',
 				name : 'EndDate',
 				anchor : '90%',
@@ -39,8 +39,8 @@ Ext.onReady(function() {
 	
 	// 查询按钮
 	var QueryBT = new Ext.Toolbar.Button({
-				text : '查询',
-				tooltip : '点击查询',
+				text :$g( '查询'),
+				tooltip : $g('点击查询'),
 				iconCls : 'page_find',
 				width : 70,
 				height : 30,
@@ -57,11 +57,11 @@ Ext.onReady(function() {
 		var EndDate = Ext.getCmp("EndDate").getValue().format(App_StkDateFormat).toString();
 		var PhaLoc = Ext.getCmp("PhaLoc").getValue();	
 		if(PhaLoc==""){
-			Msg.info("warning", "请选择盘点科室!");
+			Msg.info("warning", $g("请选择盘点科室!"));
 			return;
 		}
 		if(StartDate==""||EndDate==""){
-			Msg.info("warning", "请选择开始日期和截止日期!");
+			Msg.info("warning", $g("请选择开始日期和截止日期!"));
 			return;
 		}
 		var CompFlag='Y';
@@ -81,8 +81,8 @@ Ext.onReady(function() {
 
 
 	var SelectBT=new Ext.Toolbar.Button({
-		text:'选取',
-		tooltip:'点击选取',
+		text:$g('选取'),
+		tooltip:$g('点击选取'),
 		iconCls:'page_goto',
 		width:70,
 		height:30,
@@ -94,7 +94,7 @@ Ext.onReady(function() {
 	function SelectHandler(){
 		var selectRow=MasterInfoGrid.getSelectionModel().getSelected();
 		if(selectRow==null){
-			Msg.info("warning","请选择盘点单!");
+			Msg.info("warning",$g("请选择盘点单!"));
 			return;
 		}
 		var InstId=selectRow.get('inst');
@@ -102,7 +102,7 @@ Ext.onReady(function() {
 		if(InstId!=null){
 			SelectModel(inputType,select);
 		}else{
-			Msg.info('warning','请选择盘点单!')
+			Msg.info('warning',$g('请选择盘点单!'))
 			return;
 		}
 	}
@@ -113,7 +113,7 @@ Ext.onReady(function() {
 		var InstId=selectRow.get('inst');
 		var PhaLoc = Ext.getCmp("PhaLoc").getValue();	
 		if(PhaLoc==null || PhaLoc==""){
-			Msg.info('warning','请选择科室!');
+			Msg.info('warning',$g('请选择科室!'));
 			return;
 		}
 
@@ -127,6 +127,35 @@ Ext.onReady(function() {
 		}
 		else if(selectModel==4){
 			window.location.href='dhcst.instktkitmwd4.csp?Rowid='+InstId+'&LocId='+PhaLoc+'&InstwWin='+instwWin;
+		}
+		else if(selectModel==5||selectModel==6){
+			// pda端录入方式仅更新盘点主表的盘点录入方式字段
+			var ret=tkMakeServerCall("web.DHCST.INStkTk","UpdateInInStkInputType",InstId,selectModel)
+			if(ret==0)
+			{
+				Msg.info("success", $g("保存移动端盘点方式成功"));
+	            Query();
+			}
+			else if(ret==-1)
+			{
+				 Msg.info('error',$g("请选择一张盘点单！"));
+				 return;
+			}
+			else if(ret==-2)
+			{
+				 Msg.info('error',$g("请选择一种移动端盘点录入方式！"));
+				 return;
+			}
+			else if(ret==-3)
+			{
+				 Msg.info('error',$g("该盘点单已保存过盘点录入方式！"));
+				 Query();
+			}
+			else 
+			{
+				 Msg.info('error',$g("更新盘点录入方式失败"));
+				 return;
+			}
 		}
 	}
 	
@@ -154,23 +183,23 @@ Ext.onReady(function() {
 	
 	function renderCompFlag(value){
 		if(value=='Y'){
-			return '完成';
+			return $g('完成');
 		}else{
-			return '未完成'
+			return $g('未完成')
 		}	
 	}
 	function renderManaFlag(value){
 		if(value=='Y'){
-			return '管理药';
+			return $g('管理药');
 		}else{
-			return '非管理药'
+			return $g('非管理药')
 		}	
 	}
 	function renderYesNo(value){
 		if(value=='Y'){
-			return '是';
+			return $g('是');
 		}else{
-			return '否'
+			return $g('否')
 		}	
 	}
 	var nm = new Ext.grid.RowNumberer();
@@ -183,105 +212,109 @@ Ext.onReady(function() {
 				hidden : true,
 				hideable : false
 			}, {
-				header : "盘点单号",
+				header : $g("盘点单号"),
 				dataIndex : 'instNo',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "盘点日期",
+				header : $g("盘点日期"),
 				dataIndex : 'date',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '盘点时间',
+				header : $g('盘点时间'),
 				dataIndex : 'time',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '盘点人',
+				header : $g('盘点人'),
 				dataIndex : 'userName',
 				width : 70,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '账盘完成标志',
+				header : $g('账盘完成标志'),
 				dataIndex : 'comp',
 				width : 50,
 				align : 'center',
 				renderer:renderCompFlag,
 				sortable : true
 			}, {
-				header : '管理药标志',
+				header : $g('管理药标志'),
 				dataIndex : 'manFlag',
 				width : 50,
 				align : 'left',
 				renderer:renderManaFlag,
 				sortable : true
 			}, {
-				header : "实盘默认单位",
+				header : $g("实盘默认单位"),
 				dataIndex : 'freezeUom',
 				width : 80,
 				align : 'left',
 				renderer:function(value){
 					if(value==1){
-						return '入库单位';
+						return $g('入库单位');
 					}else{
-						return '基本单位';
+						return $g('基本单位');
 					}
 				},
 				sortable : true
 			}, {
-				header : "包含不可用",
+				header : $g("包含不可用"),
 				dataIndex : 'includeNotUse',
 				width : 50,
 				align : 'center',
 				renderer:renderYesNo,
 				sortable : true
 			}, {
-				header : "仅不可用",
+				header : $g("仅不可用"),
 				dataIndex : 'onlyNotUse',
 				renderer:renderYesNo,
 				width : 50,
 				align : 'center',
 				sortable : true
 			}, {
-				header : "类组",
+				header : $g("类组"),
 				dataIndex : 'scgDesc',
 				width : 100,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "库存分类",
+				header : $g("库存分类"),
 				dataIndex : 'scDesc',
 				width : 100,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "开始货位",
+				header : $g("开始货位"),
 				dataIndex : 'frSb',
 				width : 100,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "截止货位",
+				header : $g("截止货位"),
 				dataIndex : 'toSb',
 				width : 100,
 				align : 'right',
 				sortable : true
 			},{
-				header : "实盘类型",
+				header : $g("实盘类型"),
 				dataIndex : 'InputType',
 				width : 100,
 				align : 'right',
 				sortable : true,
 				renderer:function(value){
 					if(value==1){
-						return "分批次";
+						return $g("分批次");
 					}else if(value==2){
-						return "按品种";
+						return $g("按品种");
+					}else if(value==5){
+						return $g("<font color=blue>移动端:</font>按品种");
+					}else if(value==6){
+						return $g("<font color=blue>移动端:</font>按批次");
 					}else{
 						return "";
 					}					
@@ -292,16 +325,16 @@ Ext.onReady(function() {
 					store : MasterInfoStore,
 					pageSize : PageSize,
 					displayInfo : true,
-					displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
+					displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
 					emptyMsg : "No results to display",
-					prevText : "上一页",
-					nextText : "下一页",
-					refreshText : "刷新",
-					lastText : "最后页",
-					firstText : "第一页",
-					beforePageText : "当前页",
-					afterPageText : "共{0}页",
-					emptyMsg : "没有数据"
+					prevText : $g("上一页"),
+					nextText : $g("下一页"),
+					refreshText : $g("刷新"),
+					lastText : $g("最后页"),
+					firstText : $g("第一页"),
+					beforePageText :$g( "当前页"),
+					afterPageText : $g("共{0}页"),
+					emptyMsg : $g("没有数据")
 				});
 	var MasterInfoGrid = new Ext.grid.GridPanel({
 				id : 'MasterInfoGrid',
@@ -329,7 +362,7 @@ Ext.onReady(function() {
 			width : 400,
 			labelAlign : 'right',
 			frame : true,
-			title:'选择盘点单',
+			title:$g('选择盘点单'),
 			autoScroll : false,
 			bodyStyle : 'padding:5px 0px 0px 0px;',
 			tbar:[QueryBT,'-',SelectBT],

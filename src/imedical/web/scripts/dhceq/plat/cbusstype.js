@@ -22,7 +22,7 @@ function initTopPanel()
 {
 	initButton(); //按钮初始化 add by wy 2019-4-22
     initButtonWidth();
-	jQuery('#BAdd').on("click", BAdd_Clicked);
+	//jQuery('#BAdd').on("click", BAdd_Clicked);    // MZY0154	3257806		2023-03-03  不能重复定义
 	setRequiredElements("Code^Desc^ModuleType")
 	initMessage("");
 	defindTitleStyle(); 

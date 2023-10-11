@@ -1,89 +1,139 @@
+
 //名称	DHCPERoomRecordDetail.hisui.js
 //功能  诊室调整等候名单
 //创建	2018.09.19
 //创建人  xy
 
-var Height="470"
+
 $(function(){
-	
-	//分辨率
-    var userAgent = navigator.userAgent;
-	var isChrome =  navigator.userAgent.indexOf('Chrome') > -1
-	
-	if(isChrome){
-     	if((screen.width=="1440")&&(screen.height=="900"))
-     	{
-	     	Height="610";
-     	}
-	}else{
-		if((screen.width=="1440")&&(screen.height=="900"))
-     	{
-	     	Height="565";
-     	}
-	}
 
+	InitCombobox();
 
-
-		InitRoomRecordDetailDataGrid();
+	InitRoomRecordDetailDataGrid();
+		
+		//刷新
+	$("#BReload").click(function() {	
+		Reflesh();		
+        });
+        
+        
+        //诊室信息调整
+	$("#BModifyRoom").click(function() {	
+		BModifyRoom_Click();		
+        });
+			
+	//修改
+     $("#BModify").click(function() {	
+		BModify_click();		
+        });
 	
 })
-
 
 function InitRoomRecordDetailDataGrid(){
 	
 	$HUI.datagrid("#dhcperoomrecorddetail",{
-		height:Height,
-		striped: true, //是否显示斑马线效果
+		url: $URL,
+		fit : true,
+		border : false,
+		striped : false,//是否显示斑马线效果
+		fitColumns : false,
+		autoRowHeight : false,
+		rownumbers : true, //如果为true, 则显示一个行号列 
+		pagination : true, //如果为true, 则在DataGrid控件底部显示分页工具栏 
+		pageSize: 10,
+		pageList : [10,20,30],
 		singleSelect: true,
 		selectOnCheck: false,
 		autoRowHeight: false,
-		showFooter: true,
-		nowrap:false,
-		url: $URL,
-		loadMsg: 'Loading...',
-		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
-		rownumbers: true, //如果为true, 则显示一个行号列
-		pageSize: 10,
-		pageList: [10, 20, 40, 40],
 		queryParams:{
 			ClassName:"web.DHCPE.RoomManager",
 			QueryName:"FindRoomPersonDetail", 
 			RoomID:RoomID,
 			
 		},
-		toolbar:[{
-		id:"BReload",
-		text: '刷新',
-		iconCls: 'icon-reload',
-		handler: function(){Reflesh();}
-		},{
-		id:"BModifyRoom",
-		text: '诊室信息调整',
-		iconCls: 'icon-edit',
-		handler: function(){BModifyRoom_Click();}
-		}],
+		frozenColumns:[[
+			{field:'TIND',width:'40',title:'序号'},
+			{field:'TRegNo',width:'120',title:'登记号'}
+		]],
 		columns:[[
-			{field:'TIND',width:'60',title:'序号'},
-			{field:'TRegNo',width:'120',title:'登记号'},
+			{field:'TStatus',title:'状态',hidden:true},
+			{field:'TRecordID',title:'RecordID',hidden:true},
 			{field:'TName',width:'120',title:'姓名'},
-			{field:'TSex',width:'60',title:'性别'},
-			{field:'TBirth',width:'120',title:'出生日期'},
-			{field:'TTel',width:'120',title:'联系电话'},
-			{field:'TRecordID',title:'排队操作',width:'180',
-			formatter:function(value,row,index){
-				if(value!=""){
-			
-					return '<a><img style="padding:0 10px 0px 0px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/stamp.png" title="重新排队" border="0" onclick="NewCurRoom('+value+')"></a>\
-					<a><img style="cursor:pointer" src="../scripts_lib/hisui-0.1.0/dist/css/icons/stamp_cancel.png" title="取消排队" border="0" onclick="StopCurRoom('+value+')"></a>';
-			
+			{field:'TSex',width:'50',title:'性别'},
+			{field:'TBirth',width:'100',title:'出生日期'},
+			{field:'TTel',width:'100',title:'联系电话'},
+			{field:'TRoomList',title:'排队操作',width:'130',
+				formatter:function(value,rowData,index){
+				if(rowData.TRecordID!=""){
+					
+					
+					if (("undefined"==typeof HISUIStyleCode)||(HISUIStyleCode==null)){
+						return "<span style='cursor:pointer;' class='icon-init' title='重新排队' onclick='NewCurRoom("+rowData.TRecordID+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;"+
+						"<span style='cursor:pointer;' class='icon-cancel' title='取消排队' onclick='StopCurRoom("+rowData.TRecordID+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";
+					
+					}else{
+						if(HISUIStyleCode=="lite") {
+							return "<span style='cursor:pointer;' class='icon-init' title='重新排队' onclick='NewCurRoom("+rowData.TRecordID+")'></span>"+
+							"<span style='padding-left:10px;cursor:pointer;' class='icon-cancel' title='取消排队' onclick='StopCurRoom("+rowData.TRecordID+")'></span>";
+					
+						}else{
+							return "<span style='cursor:pointer;' class='icon-init' title='重新排队' onclick='NewCurRoom("+rowData.TRecordID+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;"+
+							"<span style='cursor:pointer;' class='icon-cancel' title='取消排队' onclick='StopCurRoom("+rowData.TRecordID+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";
+					
+						}
+					}
+					
+					
+					
+					/*
+					return '<a><img style="padding:0 10px 0px 0px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/stamp.png" title="重新排队" border="0" onclick="NewCurRoom('+rowData.TRecordID+')"></a>\
+					<a><img style="cursor:pointer" src="../scripts_lib/hisui-0.1.0/dist/css/icons/stamp_cancel.png" title="取消排队" border="0" onclick="StopCurRoom('+rowData.TRecordID+')"></a>';
+					*/
 					}
 				}},
-			{field:'TStatus',title:'叫号操作',width:'180',
-			formatter:function(value,rowData,rowIndex){
-				if(value!=""){
-					return '<a><img style="padding:0 10px 0px 0px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/stamp.png" title="叫号" border="0" onclick="CallCurRoom('+rowData.TRecordID+"^"+rowData.TStatus+"^"+rowData.TRegNo+')"></a>\
+			{field:'TCallList',title:'叫号操作',width:'150',
+				formatter:function(value,rowData,rowIndex){
+				if((rowData.TRecordID!="")&&(rowData.TStatus=="N")){
+					
+					if (("undefined"==typeof HISUIStyleCode)||(HISUIStyleCode==null)){
+							return "<span style='cursor:pointer;' class='icon-stamp' title='叫号' onclick='CallCurRoom("+rowIndex+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;"+
+							"<span style='cursor:pointer;' class='icon-stamp-pass' title='顺延' onclick='DelayCurRoom("+rowData.TRecordID+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;"+
+							"<span style='cursor:pointer;' class='icon-stamp-cancel' title='过号' onclick='StopCurRoom("+rowData.TRecordID+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";
+					
+					
+					}else{
+						if(HISUIStyleCode=="lite") {
+								return "<span style='cursor:pointer;' class='icon-stamp' title='叫号' onclick='CallCurRoom("+rowIndex+")'></span>"+
+								"<span style='padding-left:10px;cursor:pointer;' class='icon-stamp-pass' title='顺延' onclick='DelayCurRoom("+rowData.TRecordID+")'></span>"+
+								"<span style='padding-left:10px;cursor:pointer;' class='icon-stamp-cancel' title='过号' onclick='StopCurRoom("+rowData.TRecordID+")'></span>";
+					
+						}else{
+							return "<span style='cursor:pointer;' class='icon-stamp' title='叫号' onclick='CallCurRoom("+rowIndex+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;"+
+							"<span style='cursor:pointer;' class='icon-stamp-pass' title='顺延' onclick='DelayCurRoom("+rowData.TRecordID+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;"+
+							"<span style='cursor:pointer;' class='icon-stamp-cancel' title='过号' onclick='StopCurRoom("+rowData.TRecordID+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";
+					
+					
+						}
+					}
+					
+					
+					
+					
+				
+					/*
+					return '<a><img style="padding:0 10px 0px 0px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/stamp.png" title="叫号" border="0" onclick="CallCurRoom('+rowIndex+')"></a>\
 					<a><img style="padding:0 10px 0px 0px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/stamp_cancel.png" title="顺延" border="0" onclick="DelayCurRoom('+rowData.TRecordID+')"></a>\
 					<a><img style="cursor:pointer" src="../scripts_lib/hisui-0.1.0/dist/css/icons/stamp_pass.png" title="过号" border="0" onclick="PassCurRoom('+rowData.TRecordID+')"></a>'
+					
+					;
+					*/
+			
+				}
+				if((rowData.TRecordID!="")&&(rowData.TStatus=="P")){
+					
+					return '<a><img style="padding:0 10px 0px 0px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/stamp.png" title="叫号" border="0" onclick="CallCurRoom('+rowIndex+')"></a>\
+					<a><img style="padding:0 10px 0px 0px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/stamp_cancel.png" title="顺延" border="0" onclick="DelayCurRoom('+rowData.TRecordID+')"></a>\
+					<a><img style="cursor:pointer" src="../scripts_lib/hisui-0.1.0/dist/css/icons/stamp_pass.png" title="过号启用" border="0" onclick="RePassCurRoom('+rowData.TRecordID+')"></a>'
 					
 					;
 			
@@ -99,33 +149,35 @@ function InitRoomRecordDetailDataGrid(){
 //重新排队
 function NewCurRoom(RecordID)
 {
+
 	var ID=RecordID;
 	
 	if (ID==""){
 		$.messager.alert("提示","原诊室不存在,不能调整");
 		return false;
 	}
-	var rtn=$.m({
-			"ClassName":"web.DHCPE.RoomManager",
-			"MethodName":"ReSetCurRoomInfoNew",
-			"CurRoomID":ID
+	
+	$.messager.confirm("操作提示", "是否确认重新排队", function (data) {
+            		if (data) {
+	          
+	             		var rtn=tkMakeServerCall("web.DHCPE.RoomManager","ReSetCurRoomInfoNew",ID);
+						var Arr=rtn.split("^");
+	
+						if (Arr[0]!="0"){
+								$.messager.alert('提示',Arr[1],"info");
+						}else if (Arr[0]=="0"){
+								$.messager.alert('提示',Arr[1],"info");
+						}
+						Reflesh();
 
-		}, false);
-	
-    // alert(rtn)
-	var Arr=rtn.split("^");
-	
-	if (Arr[0]!="0"){
-		$.messager.alert('提示',Arr[1],"info");
-		//alert(Arr[1]);
-	}else if (Arr[0]=="0"){
-		$.messager.alert('提示',Arr[1],"info");
+	        		}
+            		else {
+	            		return false;	
+                		
+            		}
+        	});	
 
-		//alert(Arr[1]);
-	}
-	window.location.reload();
-	
-	
+
 }
 //取消排队
 function StopCurRoom(RecordID)
@@ -135,44 +187,48 @@ function StopCurRoom(RecordID)
 		$.messager.alert("提示","原诊室不存在,不能调整","info");
 		return false;
 	}
-	var rtn=$.m({
-			"ClassName":"web.DHCPE.RoomManager",
-			"MethodName":"StopCurRoomInfo",
-			"CurRoomID":ID
+	
+	
+	$.messager.confirm("操作提示", "是否确认取消排队", function (data) {
+    	if (data) {
+	          
+	    	var rtn=tkMakeServerCall("web.DHCPE.RoomManager","StopCurRoomInfo",ID);
+			var Arr=rtn.split("^");
+			if (Arr[0]!="0"){
+					$.messager.alert('提示',Arr[1],"info");
+			}else if (Arr[0]=="0"){
+					$.messager.alert('提示',Arr[1],"info");
+			}
+			Reflesh();
+			if (opener){
+				if (opener.document.getElementById("SpecNo"))
+				{
+					opener.vRoomRecordID="";
+				}else{
+				opener.parent.vRoomRecordID="";
+			
+				}
+			}
 
-		}, false);
+	      }else {
+		      return false;	
+      	}
+     })	
+        	
 	
-	
-	var Arr=rtn.split("^");
-	if (Arr[0]!="0"){
-		$.messager.alert('提示',Arr[1],"info");
-		//alert(Arr[1]);
-	}else if (Arr[0]=="0"){
-		$.messager.alert('提示',Arr[1],"info");
-		//alert(Arr[1]);
-	}
-	window.location.reload();
-	if (opener){
-		if (opener.document.getElementById("SpecNo"))
-		{
-			opener.vRoomRecordID="";
-			
-		
-		}else{
-			opener.parent.vRoomRecordID="";
-			
-		}
-	}
 }
 
 
 //叫号  调用接口  ARR_StatusDetail更新为C
-function CallCurRoom(ID)
+function CallCurRoom(rowIndex)
 {
-	var Arr=ID.split("^");
-	var Status=Arr[1];
-	var RegNo=Arr[2];
-	var RecordID=Arr[0];
+	var rows=$("#dhcperoomrecorddetail").datagrid('getRows');
+	var rowData = rows[rowIndex];
+	var Status=rowData.TStatus;
+	var RegNo=rowData.TRegNo;
+	var RecordID=rowData.TRecordID;
+	
+	
 	if (RecordID==""){
 		$.messager.alert("提示","原诊室不存在,不能调整","info");
 		return false;
@@ -196,20 +252,13 @@ function CallCurRoom(ID)
 			}
 		}
 	}
-	var rtn=$.m({
-			"ClassName":"web.DHCPE.RoomManager",
-			"MethodName":"CallCurRoom",
-			"CurRoomID":RecordID
-
-		}, false);
-		var Arr=rtn.split("^");
 	
+	var rtn=tkMakeServerCall("web.DHCPE.RoomManager","CallCurRoom",RecordID);
+	var Arr=rtn.split("^");
 	if (Arr[0]!="0"){
 		$.messager.alert('提示',Arr[1],"info");
-		//alert(Arr[1]);
 	}else if (Arr[0]=="0"){
 		$.messager.alert('提示',Arr[1],"info");
-		//alert(Arr[1]);
 	}
 	
 	if (opener){
@@ -229,25 +278,18 @@ function CallCurRoom(ID)
 function DelayCurRoom(RecordID)
 {
 	var ID=RecordID;
-	
 	if (ID==""){
 		$.messager.alert("提示","原诊室不存在,不能调整","info");
 		return false;
 	}
-	var rtn=$.m({
-			"ClassName":"web.DHCPE.RoomManager",
-			"MethodName":"DelayCurRoomInfo",
-			"CurRoomID":ID
-
-		}, false);
 	
-    // alert(rtn)
+   var rtn=tkMakeServerCall("web.DHCPE.RoomManager","DelayCurRoomInfo",ID);
 	var Arr=rtn.split("^");
 	if (Arr[0]!="0"){
 		$.messager.alert('提示',Arr[1],"info");
 	}else if (Arr[0]=="0"){
 		$.messager.alert('提示',Arr[1],"info");
-		//alert(Arr[1]);
+	
 	}
 	if (opener){
 		if (opener.document.getElementById("SpecNo"))
@@ -260,6 +302,44 @@ function DelayCurRoom(RecordID)
 			
 		}
 	}
+}
+
+
+//过号启用
+function RePassCurRoom(RecordID)
+{
+	var ID=RecordID;
+	
+	if (ID==""){
+		$.messager.alert("提示","原诊室不存在,不能过号启用","info");
+		return false;
+	}
+	$.messager.confirm("操作提示", "是否确认过号启用", function (data) {
+    	if (data) {
+	          
+	    	var rtn=tkMakeServerCall("web.DHCPE.RoomManager","ReStartCurRoomInfo",ID);
+			var Arr=rtn.split("^");
+			if (Arr[0]!="0"){
+				$.messager.alert('提示',Arr[1],"info");
+			}else if (Arr[0]=="0"){
+				$.messager.alert('提示',Arr[1],"info");
+			}
+			Reflesh();
+	
+			if (opener){
+				if (opener.document.getElementById("SpecNo"))
+				{
+					opener.vRoomRecordID="";
+				}else{
+					opener.parent.vRoomRecordID="";
+		
+				}
+			}
+
+	      }else {
+		      return false;	
+      	}
+     })	
 }
 
 //过号  设置为过号状态
@@ -268,45 +348,50 @@ function PassCurRoom(RecordID)
 	var ID=RecordID;
 	
 	if (ID==""){
-		$.messager.alert("提示","原诊室不存在,不能调整","info");
+		$.messager.alert("提示","原诊室不存在,不能过号","info");
 		return false;
 	}
-	var rtn=$.m({
-			"ClassName":"web.DHCPE.RoomManager",
-			"MethodName":"PassCurRoomInfo",
-			"CurRoomID":ID
-
-		}, false);
 	
-    // alert(rtn)
-	var Arr=rtn.split("^");
-	if (Arr[0]!="0"){
-		$.messager.alert('提示',Arr[1],"info");
-		//alert(Arr[1]);
-	}else if (Arr[0]=="0"){
-		$.messager.alert('提示',Arr[1],"info");
-		//alert(Arr[1]);
-	}
-	window.location.reload();
+	$.messager.confirm("操作提示", "是否确认过号", function (data) {
+    	if (data) {
+	          
+	    	var rtn=tkMakeServerCall("web.DHCPE.RoomManager","PassCurRoomInfo",ID);
+			var Arr=rtn.split("^");
+			if (Arr[0]!="0"){
+				$.messager.alert('提示',Arr[1],"info");
+			}else if (Arr[0]=="0"){
+				$.messager.alert('提示',Arr[1],"info");
+			}
+			Reflesh();
 	
-	if (opener){
-		if (opener.document.getElementById("SpecNo"))
-		{
-			opener.vRoomRecordID="";
-			
-			
-		}else{
-			opener.parent.vRoomRecordID="";
+			if (opener){
+				if (opener.document.getElementById("SpecNo"))
+				{
+					opener.vRoomRecordID="";
+				}else{
+					opener.parent.vRoomRecordID="";
 		
-		}
-	}
+				}
+			}
+
+	      }else {
+		      return false;	
+      	}
+     })	
+	
+    
 }
 
 function Reflesh(){
-	window.location.reload();
-	
-}
+	$("#dhcperoomrecorddetail").datagrid('load', {
+			ClassName:"web.DHCPE.RoomManager",
+			QueryName:"FindRoomPersonDetail", 
+			RoomID:RoomID,
+		
+	});
 
+}
+/*
 function BModifyRoom_Click()
 {
 
@@ -321,4 +406,77 @@ function BModifyRoom_Click()
 			;
 	var cwin=window.open(str,"_blank",nwin) 
 	
+}
+*/
+function InitCombobox(){
+
+	 //性别   
+	var SexObj = $HUI.combobox("#Sex",{
+		valueField:'id',
+		textField:'text',
+		panelHeight:'100',
+		data:[
+            {id:'N',text:'不限'},
+            {id:'M',text:'男'},
+            {id:'F',text:'女'},
+           
+        ]
+
+	});
+	
+	
+}
+
+
+//诊室信息调整
+function BModifyRoom_Click()
+{
+	
+ 
+  $("#RoomModifyWin").show();
+  
+   $HUI.window("#RoomModifyWin", {
+        title: "诊室信息调整",
+        iconCls: "icon-w-edit",
+        collapsible: false,
+        minimizable: false,
+        maximizable: false,
+        modal: true,
+        width: 240,
+        height: 256,
+       
+    });
+    
+    var ret=tkMakeServerCall("web.DHCPE.RoomManager","GetOneRoomInfo",RoomID);
+ 	 var sex=ret.split("^")[3];
+  	var Minute=ret.split("^")[12];
+  	var ActiveFlag=ret.split("^")[15];
+    $("#RoomDesc").val(RoomDesc);
+    $("#Sex").combobox('setValue',sex); 
+    $("#RMinute").val(Minute);
+    if(ActiveFlag=="Y"){
+    	$("#RActiveFlag").checkbox('setValue',true);
+    }else{
+	    $("#RActiveFlag").checkbox('setValue',false);
+    }
+	
+}
+
+//修改
+function BModify_click(){
+	
+	var RMinute=$("#RMinute").val();
+	var Sex=$("#Sex").combobox('getValue');
+	var RActiveFlag="Y";
+	var RActiveFlag=$("#RActiveFlag").checkbox('getValue');
+	if(RActiveFlag) {RActiveFlag="Y";}
+	var Str=Sex+"^"+RMinute+"^"+RActiveFlag;
+	//alert(Str)
+	var rtn=tkMakeServerCall("web.DHCPE.RoomManager","ModifyRoom",RoomID,Str);
+	if (rtn.split("^")[0]=="-1"){
+		$.messager.alert("提示","更新失败"+rtn.split("^")[1],"error");
+	}else{
+		$.messager.alert("提示","更新成功","success");
+		$('#RoomModifyWin').window('close'); 
+	}
 }

@@ -12,7 +12,7 @@ Ext.onReady(function() {
 	
 	//统计科室
 	var PhaLoc = new Ext.ux.LocComboBox({
-			fieldLabel : '科室',
+			fieldLabel : $g('科室'),
 			id : 'PhaLoc',
 			name : 'PhaLoc',
 			anchor:'90%',
@@ -31,6 +31,7 @@ Ext.onReady(function() {
 			StkGrpType.getStore().setBaseParam("userId",UserId)
 			StkGrpType.getStore().setBaseParam("type",App_StkTypeCode)
 			StkGrpType.getStore().load();
+			Ext.getCmp('DHCStkCatGroup').setValue('');
 		}	
 		
 		var StkGrpType=new Ext.ux.StkGrpComboBox({ 
@@ -42,14 +43,14 @@ Ext.onReady(function() {
 			LocId:gLocId,
 			UserId:gUserId,
 			listeners:{
-				change:function(field,newValue,oldValue){
+				select:function(field,newValue,oldValue){
 					Ext.getCmp('DHCStkCatGroup').setValue('');
 				}
 			}
 		}); 
 		
 		var DHCStkCatGroup = new Ext.ux.ComboBox({
-					fieldLabel : '库存分类',
+					fieldLabel : $g('库存分类'),
 					id : 'DHCStkCatGroup',
 					name : 'DHCStkCatGroup',
 					anchor : '90%',
@@ -61,7 +62,7 @@ Ext.onReady(function() {
 				});
 
 		var UseFlag = new Ext.form.Checkbox({
-					fieldLabel : '仅在用品种',
+					fieldLabel : $g('仅在用品种'),
 					id : 'UseFlag',
 					name : 'UseFlag',
 					anchor : '90%',
@@ -71,7 +72,7 @@ Ext.onReady(function() {
 				});
 
 		var StkBin = new Ext.ux.ComboBox({
-					fieldLabel : '货位码',
+					fieldLabel : $g('货位码'),
 					id : 'StkBin',
 					name : 'StkBin',
 					anchor : '90%',
@@ -85,10 +86,10 @@ Ext.onReady(function() {
 				});
 		var LimitFlagStore = new Ext.data.SimpleStore({
 					fields : ['RowId', 'Description'],
-					data : [['0', '全部'], ['1', '库存量高于上限'], ['2', '库存量低于下限']]
+					data : [['0', $g('全部')], ['1', $g('库存量高于上限')], ['2', $g('库存量低于下限')]]
 				});
 		var LimitFlag = new Ext.form.ComboBox({
-					fieldLabel : '报警状态',
+					fieldLabel : $g('报警状态'),
 					id : 'LimitFlag',
 					name : 'LimitFlag',
 					anchor:'90%',
@@ -110,8 +111,8 @@ Ext.onReady(function() {
 				
 		// 查询按钮
 		var SearchBT = new Ext.Toolbar.Button({
-					text : '查询',
-					tooltip : '点击查询',
+					text : $g('查询'),
+					tooltip : $g('点击查询'),
 					iconCls : 'page_find',
 					width : 70,
 					height : 30,
@@ -127,7 +128,7 @@ Ext.onReady(function() {
 			// 必选条件
 			var phaLoc = Ext.getCmp("PhaLoc").getValue();
 			if (phaLoc == null || phaLoc.length <= 0) {
-				Msg.info("warning", "科室不能为空！");
+				Msg.info("warning", $g("科室不能为空！"));
 				Ext.getCmp("PhaLoc").focus();
 				return;
 			}
@@ -145,24 +146,24 @@ Ext.onReady(function() {
 			StockQtyStore.load({params:{start:0,limit:pageSize,Params:gStrParam},
 				callback : function(o,response,success) { 
 					if (success == false){  
-						Ext.MessageBox.alert("查询错误",StockQtyStore.reader.jsonData.Error);  
+						Ext.MessageBox.alert($g("查询错误"),StockQtyStore.reader.jsonData.Error);  
 					}
 				}
 			});
 
 		}
 		function StkStatColorRenderer(val,meta,record){	
-			if(val=="高于上限"){
+			if(val==$g("高于上限")){
 				meta.css='classRed';
-			}else if(val=="低于下限"){
+			}else if(val==$g("低于下限")){
 				meta.css='classGrassGreen';
 			}
 			return val;	
 		}		
 		// 清空按钮
 		var RefreshBT = new Ext.Toolbar.Button({
-					text : '清屏',
-					tooltip : '点击清屏',
+					text : $g('清屏'),
+					tooltip : $g('点击清屏'),
 					iconCls : 'page_clearscreen',
 					width : 70,
 					height : 30,
@@ -187,8 +188,8 @@ Ext.onReady(function() {
 		}
 		// 另存按钮
 		var SaveAsBT = new Ext.Toolbar.Button({
-					text : '另存',
-					tooltip : '另存为Excel',
+					text : $g('另存'),
+					tooltip : $g('另存为Excel'),
 					iconCls : 'page_export',
 					width : 70,
 					height : 30,
@@ -198,14 +199,14 @@ Ext.onReady(function() {
 				});	
 		var PrintBT = new Ext.Toolbar.Button({
 				id : "PrintBT",
-				text : '打印',
+				text : $g('打印'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_print',
 				handler : function() {
 					var rowCount=StockQtyStore.getCount();
 					if (rowCount ==0) {
-						Msg.info("warning", "无可用打印数据!");
+						Msg.info("warning", $g("无可用打印数据!"));
 						return;
 					}
 					var tmpParam = StockQtyStore.lastOptions; 
@@ -243,68 +244,68 @@ Ext.onReady(function() {
 					sortable : true,
 					hidden : true
 				}, {
-					header : '报警状态',
+					header : $g('报警状态'),
 					dataIndex : 'stkStat',
 					width : 75,
 					align : 'center',
 					sortable : true,
 					renderer:StkStatColorRenderer
 				}, {
-					header : '代码',
+					header : $g('代码'),
 					dataIndex : 'code',
 					width : 80,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "名称",
+					header : $g("名称"),
 					dataIndex : 'desc',
 					width : 200,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "规格",
+					header : $g("规格"),
 					dataIndex : 'spec',
 					width : 90,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "单位",
+					header : $g("单位"),
 					dataIndex : 'stkUom',
 					width : 80,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "库存量",
+					header : $g("库存量"),
 					dataIndex : 'avaQty',
 					width : 100,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "库存上限",
+					header : $g("库存上限"),
 					dataIndex : 'maxQty',
 					width : 100,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "库存下限",
+					header : $g("库存下限"),
 					dataIndex : 'minQty',
 					width : 100,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "标准库存",
+					header : $g("标准库存"),
 					dataIndex : 'repQty',
 					width : 100,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "厂商",
+					header : $g("生产企业"),
 					dataIndex : 'manf',
 					width : 150,
 					align : 'left',
 					sortable : true
 				}, {
-					header : '库存分类',
+					header : $g('库存分类'),
 					dataIndex : 'incscDesc',
 					width : 150,
 					align : 'left',
@@ -341,16 +342,16 @@ Ext.onReady(function() {
 					store : StockQtyStore,
 					pageSize : PageSize,
 					displayInfo : true,
-					displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
+					displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
 					emptyMsg : "No results to display",
-					prevText : "上一页",
-					nextText : "下一页",
-					refreshText : "刷新",
-					lastText : "最后页",
-					firstText : "第一页",
-					beforePageText : "当前页",
-					afterPageText : "共{0}页",
-					emptyMsg : "没有数据",
+					prevText : $g("上一页"),
+					nextText : $g("下一页"),
+					refreshText : $g("刷新"),
+					lastText : $g("最后页"),
+					firstText : $g("第一页"),
+					beforePageText : $g("当前页"),
+					afterPageText : $g("共{0}页"),
+					emptyMsg : $g("没有数据"),
 					doLoad:function(C){
 						var B={},
 						A=this.getParams();
@@ -392,7 +393,7 @@ Ext.onReady(function() {
 	var HisListTab = new Ext.form.FormPanel({
 			labelWidth : 60,
 			region : 'north',
-			title:"库存报警-按上下限",
+			title:$g("库存报警-按上下限"),
 			autoHeight : true,
 			labelAlign : 'right',
 			frame : true,
@@ -400,7 +401,7 @@ Ext.onReady(function() {
 			tbar : [SearchBT, '-', RefreshBT,'-',PrintBT,'-',SaveAsBT],		
 		    items:[{
 				layout : 'column',	
-				title:'查询条件',	
+				title:$g('查询条件'),	
 				xtype: 'fieldset',
 				defaults: { border:false},
 				style:DHCSTFormStyle.FrmPaddingV,
@@ -424,11 +425,11 @@ Ext.onReady(function() {
 							defaultType: 'textfield',
 							defaults: {width: 80, border:false},    // Default config options for child items
 							items : [{
-								fieldLabel:'库存量高于上限',
+								fieldLabel:$g('库存量高于上限'),
 								disabled:true,
 								cls: 'my-background-Red'
 							},{
-								fieldLabel:'库存量低于下限',
+								fieldLabel:$g('库存量低于下限'),
 								disabled:true,							
 								cls: 'my-background-GrassGreen'
 							}]
@@ -447,12 +448,20 @@ Ext.onReady(function() {
 							items:HisListTab       			               
 						}, {
 			                region: 'center',
-			                title: '明细',			               
+			                title: $g('明细'),			               
 			                layout: 'fit', // specify layout manager for items
 			                items: StockQtyGrid       			               
 			            }
 	       			],
 					renderTo : 'mainPanel'
 				});
-	
+				
+		if ((QueryParamsStr)&&(QueryParamsStr = "Min")){
+			Ext.getCmp("StkGrpType").setValue('');
+			Ext.getCmp("LimitFlag").setValue(2);
+			setTimeout(function(){
+					searchData();
+				},200)
+			
+		}
 })

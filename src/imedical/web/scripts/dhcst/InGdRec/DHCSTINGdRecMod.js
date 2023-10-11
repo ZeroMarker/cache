@@ -15,11 +15,11 @@ Ext.onReady(function() {
 		GetParam();  //加载入库配置参数
 	}
 	var PhaLoc=new Ext.ux.LocComboBox({
-		fieldLabel : '入库部门',
+		fieldLabel : $g('入库部门'),
 		id : 'PhaLoc',
 		name : 'PhaLoc',
 		width : 200,
-		emptyText : '入库部门...',
+		emptyText : $g('入库部门...'),
 		groupId:gGroupId
 	});
 	
@@ -31,7 +31,7 @@ Ext.onReady(function() {
 	
 	// 入库单号
 	var InGrNo = new Ext.form.TextField({
-				fieldLabel : '入库单号',
+				fieldLabel : $g('入库单号'),
 				id : 'InGrNo',
 				name : 'InGrNo',
 				anchor : '90%',
@@ -41,7 +41,7 @@ Ext.onReady(function() {
 
 	// 发票号
 	var InvNo = new Ext.form.TextField({
-				fieldLabel : '发票号',
+				fieldLabel : $g('发票号'),
 				id : 'InvNo',
 				name : 'InvNo',
 				anchor : '90%',
@@ -51,7 +51,7 @@ Ext.onReady(function() {
 	
 	// 起始日期
 	var StartDate= new Ext.ux.DateField({
-				fieldLabel : '起始日期',
+				fieldLabel : $g('起始日期'),
 				id : 'StartDate',
 				name : 'StartDate',
 				anchor : '80%',
@@ -61,7 +61,7 @@ Ext.onReady(function() {
 
 	// 结束日期
 	var EndDate= new Ext.ux.DateField({
-				fieldLabel : '结束日期',
+				fieldLabel : $g('结束日期'),
 				id : 'EndDate',
 				name : 'EndDate',
 				anchor : '80%',
@@ -71,8 +71,8 @@ Ext.onReady(function() {
 
 // 检索按钮
 var searchBT = new Ext.Toolbar.Button({
-			text : '查询',
-			tooltip : '点击查询入库单信息',
+			text : $g('查询'),
+			tooltip :$g('点击查询入库单信息'),
 			height:30,
 			width:70,
 			iconCls : 'page_find',
@@ -86,21 +86,21 @@ function searchDurgData() {
 	if(StartDate!=null && StartDate!=""){
 		StartDate=StartDate.format(App_StkDateFormat);
 	}else{
-		Msg.info("warning","请选择开始日期!");
+		Msg.info("warning",$g("请选择开始日期!"));
 		return;
 	}
 	var EndDate = Ext.getCmp("EndDate").getValue();
 	if(EndDate!=null && EndDate!=""){
 		EndDate=EndDate.format(App_StkDateFormat);
 	}else{
-		Msg.info("warning","请选择截止日期!");
+		Msg.info("warning",$g("请选择截止日期!"));
 		return;
 	}
 	var InGrNo = Ext.getCmp("InGrNo").getValue();
 	var Vendor = Ext.getCmp("Vendor").getValue();
 	var PhaLoc = Ext.getCmp("PhaLoc").getValue();	
 	if(PhaLoc==""){
-		Msg.info("warning", "请选择入库部门!");
+		Msg.info("warning", $g("请选择入库部门!"));
 		return;
 	}
 	var AuditFlag="Y";
@@ -114,7 +114,7 @@ function searchDurgData() {
 		params:{start:0, limit:Page},
 		callback:function(r,options, success) {
 			if(success==false){
-     			Msg.info("error", "查询错误，请查看日志!");
+     			Msg.info("error", $g("查询错误，请查看日志!"));
      		}else{
      			if(r.length>=1){
      				GrMasterInfoGrid.getSelectionModel().selectFirstRow();
@@ -128,8 +128,8 @@ function searchDurgData() {
 
 // 选取按钮
 var acceptBT = new Ext.Toolbar.Button({
-			text : '保存',
-			tooltip : '点击保存',
+			text : $g('保存'),
+			tooltip : $g('点击保存'),
 			height:30,
 			width:70,
 			iconCls : 'page_save',
@@ -139,13 +139,13 @@ var acceptBT = new Ext.Toolbar.Button({
 				var newVendorId=Ext.getCmp("Vendor").getValue();
 				var selectRec=GrMasterInfoGrid.getSelectionModel().getSelected();
 				if(selectRec==null){
-					Msg.info("warning","请选择要修改的入库单!");
+					Msg.info("warning",$g("请选择要修改的入库单!"));
 					return;
 				}
 				var oldVendor=selectRec.get("Vendor");
 				//更新明细
 				var retinfo=Update();  //ajax异步获取数据返回值是不可以的
-				UpdateVendor();  //更新供应商
+				UpdateVendor();  //更新经营企业
 			}
 		});
 		
@@ -154,12 +154,12 @@ var acceptBT = new Ext.Toolbar.Button({
 		var newVendorId=Ext.getCmp("Vendor").getValue();	
 		var selectRec=GrMasterInfoGrid.getSelectionModel().getSelected();
 		var oldVendor=selectRec.get("Vendor");
-		if(newVendor==oldVendor){
+		if(!newVendorId || (newVendor==oldVendor)){
 			return;
 		}
 		Ext.Msg.show({
-			title:'提示',
-			msg:'是否确定修改供应商？',
+			title:$g('提示'),
+			msg:$g('是否确定修改经营企业？'),
 			buttons:Ext.Msg.YESNO,
 			icon:Ext.Msg.QUESTION,
 			fn:function(buttonId,text,opt){
@@ -171,20 +171,20 @@ var acceptBT = new Ext.Toolbar.Button({
 						success:function(response,opt){
 							var jsonData=Ext.util.JSON.decode(response.responseText);
 							if(jsonData.success=='true'){
-								Msg.info('success',"更新供应商成功!");
+								Msg.info('success',$g("更新经营企业成功!"));
 								GrMasterInfoGrid.store.reload();
 								//selectRec.set("Vendor",newVendor);
 							}else{
 								var ret=jsonData.info;
 								switch(ret){
 									case '-11':
-										Msg.info("warning","入库单存在明细已退货制单,不能修改供应商");
+										Msg.info("warning",$g("入库单存在明细已退货制单,不能修改经营企业"));
 										break;
 									case '-12':
-										Msg.info("warning","入库单存在明细已付款制单,不能修改供应商");
+										Msg.info("warning",$g("入库单存在明细已付款制单,不能修改经营企业"));
 										break
 									default:
-										Msg.info('error',"更新供应商失败"+ret);
+										Msg.info('error',$g("更新经营企业失败")+ret);
 										break;
 								}
 							}
@@ -204,7 +204,7 @@ var acceptBT = new Ext.Toolbar.Button({
 		}
 		var ListDetail="";
 		var rowCount = GrDetailInfoGrid.getStore().getCount();
-		//明细id^厂商id^批号^效期^随行单号^发票号^发票日期^发票金额^进价
+		//明细id^生产企业id^批号^效期^随行单号^发票号^发票日期^发票金额^进价
 		for (var i = 0; i < rowCount; i++) {
 			var rowData = GrDetailInfoStore.getAt(i);	
 			//新增或数据发生变化时执行下述操作
@@ -241,7 +241,7 @@ var acceptBT = new Ext.Toolbar.Button({
 			return -1;  //没有需要更新的明细
 		}
 		var ret=0;  //更新成功
-		var mask=ShowLoadMask(Ext.getBody(),"处理中...");
+		var mask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 		var url = DictUrl+ "ingdrecaction.csp?actiontype=UpdateRecInfo";
 		Ext.Ajax.request({
 			url : url,
@@ -252,24 +252,24 @@ var acceptBT = new Ext.Toolbar.Button({
 				if (jsonData.success == 'false') {
 					ret=jsonData.info;	
 					if (ret=="-111"){
-						Msg.info("warning","除本次业务外,已存在相同批次信息,不予许修改!");
+						Msg.info("warning",$g("除本次业务外,已存在相同批次信息,不予许修改!"));
 					}else if (ret=="-61"){
-						Msg.info("warning","已发生转移业务,不允许修改进价!");
+						Msg.info("warning",$g("已发生转移业务,不允许修改进价!"));
 					}else if (ret=="-62"){
-						Msg.info("warning","已生成月报,不允许修改进价!");
+						Msg.info("warning",$g("已生成月报,不允许修改进价!"));
 					}else if (ret=="-63"){
-						Msg.info("warning","已发生退货业务,不允许修改进价!");
+						Msg.info("warning",$g("已发生退货业务,不允许修改进价!"));
 					}else if (ret=="-64"){
-						Msg.info("warning","已发生付款业务,不允许修改进价!");
+						Msg.info("warning",$g("已发生付款业务,不允许修改进价!"));
 					}else if (ret=="-52"){
-						Msg.info("warning","已发生付款业务,不允许修改发票信息!");
+						Msg.info("warning",$g("已发生付款业务,不允许修改发票信息!"));
 					}else{
-						Msg.info("error","更新某条明细失败!"+ret);
+						Msg.info("error",$g("更新某条明细失败!")+ret);
 					}
 									
 				}
 				else{
-					Msg.info("success","明细更新成功!");
+					Msg.info("success",$g("明细更新成功!"));
 					Query(gIngrRowid)
 				}
 				mask.hide();
@@ -281,8 +281,8 @@ var acceptBT = new Ext.Toolbar.Button({
 	}
 // 清空按钮
 var clearBT = new Ext.Toolbar.Button({
-			text : '清屏',
-			tooltip : '点击清屏',
+			text : $g('清屏'),
+			tooltip : $g('点击清屏'),
 			height:30,
 			width:70,
 			iconCls : 'page_clearscreen',
@@ -306,8 +306,8 @@ function clearData() {
 
 // 3关闭按钮
 var closeBT = new Ext.Toolbar.Button({
-			text : '关闭',
-			tooltip : '关闭界面',
+			text : $g('关闭'),
+			tooltip : $g('关闭界面'),
 			iconCls : 'page_close',
 			handler : function() {
 				window.close();
@@ -315,8 +315,8 @@ var closeBT = new Ext.Toolbar.Button({
 		});
 		
 var cancelBT=new Ext.Toolbar.Button({
-	text : '取消审核',
-	tooltip : '点击取消审核',
+	text : $g('取消审核'),
+	tooltip : $g('点击取消审核'),
 	height:30,
 	width:70,
 	iconCls : 'page_gear',
@@ -327,11 +327,11 @@ var cancelBT=new Ext.Toolbar.Button({
 
 function CancelAudit(){
 	if(gIngrRowid==""){
-		Msg.info("warning", "请选择需要取消审核的入库单!");
+		Msg.info("warning", $g("请选择需要取消审核的入库单!"));
 		return;
 	}
 	
-	var mask=ShowLoadMask(Ext.getBody(),"处理中...");
+	var mask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 	var url = DictUrl+ "ingdrecaction.csp?actiontype=CancelAudit";
 	Ext.Ajax.request({
 		url : url,
@@ -341,22 +341,28 @@ function CancelAudit(){
 			var jsonData = Ext.util.JSON.decode(result.responseText);
 			if (jsonData.success == 'true') {
 				// 刷新界面
-				Msg.info("success", "取消审核成功!");
+				Msg.info("success", $g("取消审核成功!"));
 				searchDurgData();
 			} else {
 				var ret=jsonData.info;
 				if(ret==-7){
-					Msg.info("error","该入库单已发生库存转移业务!");
+					Msg.info("error",$g("该入库单已发生库存转移业务!"));
 				}else if(ret==-4){
-					Msg.info("error", "该入库单已经生成月报!");
+					Msg.info("error", $g("该入库单已经生成月报!"));
 				}else if(ret==-8){
-					Msg.info("error", "该入库单有明细已退货制单!");
+					Msg.info("error", $g("该入库单有明细已退货制单!"));
 				}else if(ret==-9){
-					Msg.info("error", "该入库单已经生成付款单!");
+					Msg.info("error", $g("该入库单已经生成付款单!"));
 				}else if(ret==-11){
-					Msg.info("error", "该入库单有药品处理库存失败，请核实是否已发药!");
+					Msg.info("error", $g("该入库单有药品处理库存失败，请核实是否已发药!"));
+				}else if(ret==-12){
+					Msg.info("error", $g("该入库单已在医共体主院入账，不允许取消审核!"));
+				}else if(ret==-101){
+					Msg.info("error", $g("该临购药品入库单已经使用授权，不允许取消审核!"));
+				}else if(ret==-102){
+					Msg.info("error", $g("更新临购申请单状态失败!"));
 				}else{	
-					Msg.info("error", "取消审核失败："+ret);
+					Msg.info("error", $g("取消审核失败：")+ret);
 				}							
 			}
 			mask.hide();
@@ -364,6 +370,79 @@ function CancelAudit(){
 		scope : this
 	});
 }
+
+/* 列设置按钮 */
+var GridColSetBT = new Ext.Toolbar.Button({
+	text:$g('列设置'),
+	tooltip:$g('列设置'),
+	iconCls:'page_gear',
+	handler:function(){
+		GridSelectWin.show();
+	}
+});
+
+// 确定按钮
+var returnColSetBT = new Ext.Toolbar.Button({
+	text : $g('确定'),
+	tooltip : $g('点击确定'),
+	iconCls : 'page_goto',
+	handler : function() {
+		var selectradio = Ext.getCmp('GridSelectModel').getValue();
+		if(selectradio){
+			var selectModel =selectradio.inputValue;	
+			if (selectModel=='1') {
+				GridColSet(GrMasterInfoGrid,"DHCSTIMPORT");	
+			}
+			else {
+				GridColSet(GrDetailInfoGrid,"DHCSTIMPORT");   							
+			}						
+		}
+		GridSelectWin.hide();
+	}
+});
+
+// 取消按钮
+var cancelColSetBT = new Ext.Toolbar.Button({
+		text : $g('取消'),
+		tooltip : $g('点击取消'),
+		iconCls : 'page_delete',
+		handler : function() {
+			GridSelectWin.hide();
+		}
+	});
+
+//选择按钮
+var GridSelectWin=new Ext.Window({
+	title:$g('选择'),
+	width : 210,
+	height : 110,
+	labelWidth:100,
+	closeAction:'hide' ,
+	plain:true,
+	modal:true,
+	items:[{
+		xtype:'radiogroup',
+		id:'GridSelectModel',
+		anchor: '95%',
+		columns: 2,
+		style: 'padding:10px 10px 10px 10px;',
+		items : [{
+				checked: true,				             
+					boxLabel: $g('入库单'),
+					id: 'GridSelectModel1',
+					name:'GridSelectModel',
+					inputValue: '1' 							
+				},{
+				checked: false,				             
+					boxLabel: $g('入库单明细'),
+					id: 'GridSelectModel2',
+					name:'GridSelectModel',
+					inputValue: '2' 							
+				}]
+			}],
+	
+	buttons:[returnColSetBT,cancelColSetBT]
+   })	
 
 // 访问路径
 var MasterInfoUrl = DictUrl	+ 'ingdrecaction.csp?actiontype=Query';
@@ -399,55 +478,55 @@ var GrMasterInfoCm = new Ext.grid.ColumnModel([nm, {
 			hidden : true,
 			hideable : false
 		}, {
-			header : "入库单号",
+			header : $g("入库单号"),
 			dataIndex : 'IngrNo',
 			width : 120,
 			align : 'left',
 			sortable : true
 		}, {
-			header : "供货厂商",
+			header : $g("经营企业"),
 			dataIndex : 'Vendor',
 			width : 200,
 			align : 'left',
 			sortable : true
 		}, {
-			header : '验收人',
+			header : $g('验收人'),
 			dataIndex : 'AcceptUser',
 			width : 70,
 			align : 'left',
 			sortable : true
 		}, {
-			header : '制单日期',
+			header : $g('制单日期'),
 			dataIndex : 'CreateDate',
 			width : 90,
 			align : 'center',
 			sortable : true
 		}, {
-			header : '审核日期',
+			header : $g('审核日期'),
 			dataIndex : 'AuditDate',
 			width : 90,
 			align : 'center',
 			sortable : true
 			}, {
-			header : '采购员',
+			header : $g('采购员'),
 			dataIndex : 'PurchUser',
 			width : 70,
 			align : 'left',
 			sortable : true
 		}, {
-			header : "完成标志",
+			header : $g("完成标志"),
 			dataIndex : 'Complete',
 			width : 70,
 			align : 'left',
 			sortable : true
 		}, {
-			header : '进价金额',
+			header : $g('进价金额'),
 			dataIndex : 'RpAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '售价金额',
+			header : $g('售价金额'),
 			dataIndex : 'SpAmt',
 			width : 100,
 			align : 'right',
@@ -458,8 +537,8 @@ var GridPagingToolbar = new Ext.PagingToolbar({
 	store:GrMasterInfoStore,
 	pageSize:PageSize,
 	displayInfo:true,
-	displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-	emptyMsg:"没有记录"
+	displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+	emptyMsg:$g("没有记录")
 });
 var GrMasterInfoGrid = new Ext.grid.GridPanel({
 			id : 'GrMasterInfoGrid',
@@ -488,9 +567,9 @@ GrMasterInfoGrid.getSelectionModel().on('rowselect', function(sm, rowIndex, rec)
 	
 });
 
-// 生产厂商
+// 生产生产企业
 var Phmnf = new Ext.form.ComboBox({
-			fieldLabel : '生产厂商',
+			fieldLabel : $g('生产生产企业'),
 			id : 'Phmnf',
 			name : 'Phmnf',
 			anchor : '90%',
@@ -500,7 +579,7 @@ var Phmnf = new Ext.form.ComboBox({
 			displayField : 'Description',
 			//allowBlank : false,
 			triggerAction : 'all',
-			emptyText : '生产厂商...',
+			emptyText : $g('生产生产企业...'),
 			selectOnFocus : false,
 			forceSelection : true,
 			//editable:true,
@@ -519,7 +598,7 @@ var Phmnf = new Ext.form.ComboBox({
 		});
 
 function Query(Parref){
-	GrDetailInfoStore.load({params:{start:0,limit:999,sort:'Rowid',dir:'Desc',Parref:Parref}});
+	GrDetailInfoStore.load({params:{start:0,limit:9999,sort:'Rowid',dir:'Desc',Parref:Parref}});
 }
 
 // 访问路径
@@ -564,19 +643,19 @@ var GrDetailInfoCm = new Ext.grid.ColumnModel([nm, {
 			hidden : true,
 			hideable : false
 		}, {
-			header : '药品代码',
+			header :$g( '药品代码'),
 			dataIndex : 'IncCode',
 			width : 80,
 			align : 'left',
 			sortable : true
 		}, {
-			header : '药品名称',
+			header : $g('药品名称'),
 			dataIndex : 'IncDesc',
 			width : 230,
 			align : 'left',
 			sortable : true
 		}, {
-			header : "厂商",
+			header :$g( "生产企业"),
 			dataIndex : 'ManfId',
 			width : 180,
 			align : 'left',
@@ -584,7 +663,7 @@ var GrDetailInfoCm = new Ext.grid.ColumnModel([nm, {
 			editor : Phmnf,
 			renderer :Ext.util.Format.comboRenderer2(Phmnf,"ManfId","Manf")	
 		}, {
-			header : "批号",
+			header : $g("批号"),
 			dataIndex : 'BatchNo',
 			width : 90,
 			align : 'left',
@@ -598,7 +677,7 @@ var GrDetailInfoCm = new Ext.grid.ColumnModel([nm, {
 							var cell = GrDetailInfoGrid.getSelectionModel().getSelectedCell();
 							var colIndex=GetColIndex(GrDetailInfoGrid,"BatchNo");
 							if (newValue == null || newValue.length <= 0) {
-								Msg.info("warning", "批号不能为空!");
+								Msg.info("warning", $g("批号不能为空!"));
 								field.setValue("");
 								//GrDetailInfoGrid.startEditing(cell[0], colIndex);
 								return;
@@ -609,7 +688,7 @@ var GrDetailInfoCm = new Ext.grid.ColumnModel([nm, {
 				}
 			})
 		}, {
-			header : "有效期",
+			header : $g("有效期"),
 			dataIndex : 'ExpDate',
 			width : 100,
 			align : 'left',
@@ -624,7 +703,7 @@ var GrDetailInfoCm = new Ext.grid.ColumnModel([nm, {
 						var flag=ExpDateValidator(expDate);		
 						
 					    if(flag==false){
-					    	Msg.info('Warning','效期不符,距离失效期不能少于'+gParam[2]+'天!');	
+					    	Msg.info('Warning',$g('效期不符,距离失效期不能少于')+gParam[2]+$g('天!'));	
 					    	field.setValue('');
 					    	GrDetailInfoGrid.startEditing(cell[0], col);
 					    	return;
@@ -635,19 +714,19 @@ var GrDetailInfoCm = new Ext.grid.ColumnModel([nm, {
 				}
 			})
 		}, {
-			header : "单位",
+			header : $g("单位"),
 			dataIndex : 'IngrUom',
 			width : 80,
 			align : 'left',
 			sortable : true
 		}, {
-			header : "数量",
+			header : $g("数量"),
 			dataIndex : 'RecQty',
 			width : 80,
 			align : 'right',
 			sortable : true
 		}, {
-			header : "进价",
+			header : $g("进价"),
 			dataIndex : 'Rp',
 			width : 60,
 			align : 'right',
@@ -658,17 +737,17 @@ var GrDetailInfoCm = new Ext.grid.ColumnModel([nm, {
 				allowNegative:false
 			})
 		}, {
-			header : "售价",
+			header : $g("售价"),
 			dataIndex : 'Sp',
 			width : 60,
 			align : 'right',
 			sortable : true
 		}, {
-			header : "发票号",
+			header : $g("发票号"),
 			dataIndex : 'InvNo',
 			width : 80,
 			align : 'left',
-			sortable : true,
+			sortable : true/*,
 			editor:new Ext.form.TextField({
 				selectOnFocus:true,
 				listeners:{
@@ -678,7 +757,7 @@ var GrDetailInfoCm = new Ext.grid.ColumnModel([nm, {
 						
 						var flag=InvNoValidator(newValue,gIngrRowid);					
 						if(flag==false){
-							Msg.info("Warning","该发票号已存在于别的入库单");
+							Msg.info("Warning",$g("该发票号已存在于别的入库单"));
 							field.setValue('');					
 							GrDetailInfoGrid.startEditing(cell[0], col);
 							return;
@@ -691,14 +770,14 @@ var GrDetailInfoCm = new Ext.grid.ColumnModel([nm, {
 					}
 				}
 			
-			})
+			})*/
 		}, {
-			header : "发票日期",
+			header : $g("发票日期"),
 			dataIndex : 'InvDate',
 			width : 100,
 			align : 'left',
 			sortable : true,
-			renderer:Ext.util.Format.dateRenderer(App_StkDateFormat),
+			renderer:Ext.util.Format.dateRenderer(App_StkDateFormat)/*,
 			editor:new Ext.ux.DateField({
 				listeners:{
 					specialkey:function(field,e){
@@ -709,9 +788,9 @@ var GrDetailInfoCm = new Ext.grid.ColumnModel([nm, {
 						}
 					}				
 				}
-			})
+			})*/
 		}, {
-			header : "发票金额",
+			header : $g("发票金额"),
 			dataIndex : 'InvMoney',
 			width : 100,
 			align : 'left',
@@ -720,19 +799,19 @@ var GrDetailInfoCm = new Ext.grid.ColumnModel([nm, {
 			
 			})
 		}, {
-			header : "进价金额",
+			header : $g("进价金额"),
 			dataIndex : 'RpAmt',
 			width : 100,
 			align : 'left',
 			sortable : true
 		}, {
-			header : "售价金额",
+			header :$g( "售价金额"),
 			dataIndex : 'SpAmt',
 			width : 100,
 			align : 'left',
 			sortable : true
 		},{			
-			header : "随行单号",
+			header : $g("随行单号"),
 			dataIndex : 'SxNo',
 			width : 80,
 			align : 'left',
@@ -750,7 +829,7 @@ var GrDetailInfoCm = new Ext.grid.ColumnModel([nm, {
 				}
 			})
 		}, {
-			header : "规格",
+			header : $g("规格"),
 			dataIndex : 'Spec',
 			width : 100,
 			align : 'left',
@@ -777,7 +856,7 @@ var GrDetailInfoGrid = new Ext.grid.EditorGridPanel({
 				afteredit:function(e){
 					if(e.field=="Rp"){
 						if(e.value==0){
-							Msg.info("warning",	"进价不能等于0!");
+							Msg.info("warning",	$g("进价不能等于0!"));
 							e.record.set('Rp',e.originalValue);
 							GrDetailInfoGrid.startEditing(e.row,e.column);
 							return;
@@ -787,7 +866,7 @@ var GrDetailInfoGrid = new Ext.grid.EditorGridPanel({
 						var margin=sp/e.value;
 						
 						if(margin>gParam[5] || margin<1){
-							Msg.info("warning",	"加成率超出限定范围!");
+							Msg.info("warning",	$g("加成率超出限定范围!"));
 							e.record.set('Rp',e.originalValue);
 							GrDetailInfoGrid.startEditing(e.row,e.column);
 							return;
@@ -800,13 +879,13 @@ var GrDetailInfoGrid = new Ext.grid.EditorGridPanel({
 	var InfoForm= new Ext.form.FormPanel({
 			frame : true,
 			labelWidth: 60,	
-			title : '已审核入库单查询与修改',
+			title : $g('已审核入库单查询与修改'),
 			labelAlign : 'right',
 			id : "InfoForm",			
-			tbar : [searchBT, '-', acceptBT, '-', cancelBT,'-',clearBT],
+			tbar : [searchBT, '-', acceptBT, '-', cancelBT,'-',clearBT,'-',GridColSetBT],
 			items : [{
 				xtype:'fieldset',
-				title:'查询条件',
+				title:$g('查询条件'),
 				style:DHCSTFormStyle.FrmPaddingV,
 				defaults: {border:false},    // Default config options for child items
 				layout: 'column',    // Specifies that the items will now be arranged in columns
@@ -840,7 +919,7 @@ var GrDetailInfoGrid = new Ext.grid.EditorGridPanel({
 	                items:InfoForm
 	            }, {
 	                region: 'west',
-	                title: '入库单',
+	                title: $g('入库单'),
 	                collapsible: true,
 	                split: true,
 	                width: document.body.clientWidth*0.3,
@@ -852,7 +931,7 @@ var GrDetailInfoGrid = new Ext.grid.EditorGridPanel({
 	               
 	            }, {
 	                region: 'center',
-	                title: '入库单明细',
+	                title: $g('入库单明细'),
 	                layout: 'fit', 
 	                items: GrDetailInfoGrid       
 	               

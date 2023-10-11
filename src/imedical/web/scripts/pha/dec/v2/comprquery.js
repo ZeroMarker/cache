@@ -120,6 +120,11 @@ function InitGridQueryDetail() {
 				align: 'left',
 				width: 120
 			}, {
+				field: 'soakEquiDesc',
+				title: '浸泡设备',
+				align: 'left',
+				width: 80
+			}, {
 				field: 'firWaterQua',
 				title: '首煎加水量(ml)',
 				align: 'left',
@@ -154,6 +159,11 @@ function InitGridQueryDetail() {
 				title: '标签数',
 				align: 'left',
 				width: 60
+			}, {
+				field: 'boxNum',
+				title: '已装箱袋数',
+				align: 'left',
+				width: 120
 			}
 		]];
 	var dataGridOption = {
@@ -168,11 +178,16 @@ function InitGridQueryDetail() {
 		},
 		onClickCell: function (rowIndex, field, value) {
 			var RowId = $(this).datagrid("getRows")[rowIndex].RowId;
-			PHADECTIMELINE.Init({
-				Params: RowId,
-				Field: 'prescno',
-				ClickField: field
-			})
+			if (field == "prescno") {
+				PHADEC_UX.TimeLine(
+					{
+						modal: true,
+						top: null,
+						modalable: true
+					},
+					{ phpmId: RowId }
+				);
+			}	
 		}
 	};
 	PHA.Grid("gridQueryDetail", dataGridOption);
@@ -241,4 +256,8 @@ function ClearConditions() {
 		total: 0,
 		rows: []
 	});
+}
+
+window.onload=function(){
+	setTimeout("queryDecInfo()",200);
 }

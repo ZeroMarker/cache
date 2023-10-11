@@ -26,8 +26,8 @@ function InitSpecimenWin(){
 			{field:'BTDesc',title:'标本名称',width:300},
 			{field:'IsActDesc',title:'是否有效',width:80},
 			{field:'ActDate',title:'处置日期',width:100},
-			{field:'ActTime',title:'处置时间',width:80},
-			{field:'UserDesc',title:'处置人',width:100}
+			{field:'ActTime',title:'处置时间',width:80}
+			//,{field:'UserDesc',title:'处置人',width:100}
 		]]
 	});
 

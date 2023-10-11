@@ -1181,9 +1181,10 @@ function RegPrint_click()
 			}
 			
 			var myobj=document.getElementById("ClsBillPrint");
-			DHCP_PrintFunHDLP("",MyPara,"");	
-		   		
-					
+			//DHCP_PrintFunHDLP("",MyPara,"");	
+		   //	DHCP_PrintFun("",MyPara,"");
+			var LODOP = getLodop();
+           DHC_PrintByLodop(LODOP,MyPara, '','',"gPrintTemplate");		
         }
 
 	}

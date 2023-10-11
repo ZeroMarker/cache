@@ -35,8 +35,27 @@ $(function(){
 	
 	//默认体检卡类型为"预缴金"
 	$("#CardType").combobox('setValue',"R"); 
-    
-})
+    ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPECardReport2.raq");
+});
+
+// 解决iframe中 润乾csp 跳动问题
+function ShowRunQianUrl(iframeId, url) {
+    var iframeObj = document.getElementById(iframeId)
+    if (iframeObj) {
+	    iframeObj.src=url;
+	    //debugger;
+	    $(iframeObj).hide();
+	    if (iframeObj.attachEvent) {
+		    iframeObj.attachEvent("onload", function(){
+		        $(this).show();
+		    });
+	    } else {
+		    iframeObj.onload = function(){
+		        $(this).show();
+		    };
+	    }
+    }
+}
 
 
 //清屏
@@ -75,7 +94,7 @@ function ElementEnble()
 }
 //查询
 function BFind_click(){
-	var RegNo="",Name="",Status="",BeginDate="",EndDate="";
+	var RegNo="",Name="",Status="",BeginDate="",EndDate="",reportName="";
 	var CardType=$("#CardType").combobox('getValue');	
 	var RegNoLength=tkMakeServerCall("web.DHCPE.DHCPECommon","GetRegNoLength");
 	iRegNo=$("#RegNo").val();
@@ -104,19 +123,26 @@ function BFind_click(){
 			+ "&CardType=" + CardType
 			+ "&CTLOCID=" + CTLOCID
 			;
-	document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=" + reportName + lnk;
+	
+    ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=" + reportName + lnk);
+	//document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=" + reportName + lnk;
 
 }
 
 function InitCombobox(){
 	
-	// 体检卡
+	
+	//体检卡
 	var CardTypeObj = $HUI.combobox("#CardType",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindTJCardType&ResultSetType=array",
 		valueField:'id',
-		textField:'desc'
-		
-		})
+		textField:'text',
+		panelHeight:'140',
+		data:[
+            {id:'R',text:$g('预缴金')},
+            {id:'C',text:$g('代金卡')}
+        ]
+
+	});
 	
 	//状态
 	var StatusObj = $HUI.combobox("#Status",{
@@ -124,10 +150,10 @@ function InitCombobox(){
 		textField:'text',
 		panelHeight:'140',
 		data:[
-            {id:'N',text:'正常'},
-            {id:'A',text:'作废'},
-            {id:'L',text:'挂失'},
-            {id:'F',text:'冻结'},
+            {id:'N',text:$g('正常')},
+            {id:'A',text:$g('作废')},
+            {id:'L',text:$g('挂失')},
+            {id:'F',text:$g('冻结')},
   
         ]
 

@@ -4,14 +4,46 @@
 //设备机型
 var SelectedRow = -1;
 var rowid=0;
+var HospFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","990051")
+
 ///modify by jyp 2018-08-16 Hisui改造：添加initButtonWidth()方法控制按钮长度
 function BodyLoadHandler() 
-{	
-    InitUserInfo(); //系统参数
+{
+	initPanelHeaderStyle();
+	initButtonColor();
+	InitUserInfo(); //系统参数
 	InitPage();	    ///modify by jyp 2018-08-16 Hisui改造：HisUI改造-界面调整后，datagrid行选择事件的参数发生变化、界面数据不能正常填充
 	disabled(true);//灰化
-	initButtonWidth()  ///add by jyp 2018-08-16 Hisui改造：添加initButtonWidth()方法控制按钮长度
+	//modified by cjt 20230324 需求号3221868 注释initButtonWidth
+	//initButtonWidth()  ///add by jyp 2018-08-16 Hisui改造：添加initButtonWidth()方法控制按钮长度
+	initBDPHospComponent("DHC_EQCEquipType");	//CZF0138 多院区改造
 }
+
+//CZF0138 平台医院组件选择事件
+function onBDPHospSelectHandler()
+{
+	BClear_Click();
+	initEquipTypeGrid();
+}
+
+//CZF0138
+function initEquipTypeGrid()
+{
+	var HospDR=GetBDPHospValue("_HospList");
+	$("#tDHCEQCEquipType").datagrid( {
+		url:$URL,
+		queryParams:{
+			ComponentID:GetElementValue("GetComponentID"),
+			gHospId:curSSHospitalID,
+			BDPHospId:HospDR
+		},
+		showRefresh:false,
+		showPageList:false,
+		afterPageText:'',
+		beforePageText:''
+	})
+}
+
 ///modify by jyp 2018-08-16 Hisui改造：HisUI改造-界面调整后，datagrid行选择事件的参数发生变化、界面数据不能正常填充
 function InitPage()
 {
@@ -50,11 +82,16 @@ function CombinData()
 }
 function BUpdate_Click() 
 {
+	///add by ZY0304 20220616
+	if (!charLegalCheck("Code^Desc")) return true;
+	
 	if (condition()) return;
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="") return;
 	var plist=CombinData(); //函数调用
-	var result=cspRunServerMethod(encmeth,plist,"");
+	var gHospId=curSSHospitalID;
+	var BDPHospId=GetBDPHospValue("_HospList");
+	var result=cspRunServerMethod(encmeth,plist,"",gHospId,BDPHospId);
 	if(result<0) 
 	{
 		messageShow("","","",t[result]);
@@ -63,7 +100,10 @@ function BUpdate_Click()
 	if (result>0)
 	{
 		alertShow("操作成功!")
-		location.reload();
+		//location.reload();
+		$('#tDHCEQCEquipType').datagrid('reload');		//czf 2176487
+		Clear();
+		disabled(true);
 	}	
 }
 function BDelete_Click() 
@@ -77,12 +117,15 @@ function BDelete_Click()
 		messageShow("","","",t[-3001])
 		return;
 	}
-	var result=cspRunServerMethod(encmeth,rowid,'1');
+	var result=cspRunServerMethod(encmeth,rowid,'1',curSSHospitalID,GetBDPHospValue("_HospList"));
 	result=result.replace(/\\n/g,"\n")
 	if (result>0)
 	{
 		alertShow("删除成功!")
-		location.reload();
+		//location.reload();
+		$('#tDHCEQCEquipType').datagrid('reload');	//czf 2176487
+		Clear();
+		disabled(true);
 	}	
 }
 ///选择表格行触发此方法

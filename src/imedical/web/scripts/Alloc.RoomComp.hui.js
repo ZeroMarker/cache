@@ -10,6 +10,8 @@ function InitHospList(){
 	var hospComp = GenHospComp("DHCRoomComp");
 	hospComp.jdata.options.onSelect = function(e,t){
 		//页面元素初始化
+		$("#room").combobox('select',"");
+		$("#code,#name,#IP").val("");
 		PageHandle();
 		RoomCompTabDataGridLoad();
 	}

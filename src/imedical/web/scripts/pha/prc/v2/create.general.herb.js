@@ -101,8 +101,10 @@ function InitDict() {
 		rowStyle: 'checkbox', //显示成勾选行形式,不要勾选框就注释
 		url: PHA_STORE.PHCForm().url
 	});
-	var opts=$.extend({},{width:160},PHA_STORE.ArcItmMast());
-	PHA.LookUp("conMultiArcDesc", opts);
+	var opts=$.extend({},PHA_STORE.ArcItmMast());
+	opts.width = 160;
+	opts.panelWidth = 450;
+	PHA.ComboGrid("conMultiArcDesc", opts);
 	
 	PHA.ComboBox("conMultiPhaLoc", {
 		multiple: true,
@@ -259,7 +261,13 @@ function ImportHandler() {
 
 //下载导入模板
 function DownLoadModel(){
-	window.open("../scripts/pha/prc/v2/草药处方点评导入模板.xlsx", "_blank");	
+	var modelA = document.getElementById('downloadModel');
+	if(!modelA){
+		modelA = document.createElement('a');
+		modelA.id = "downloadModel";
+	}
+	modelA.href = "../scripts/pha/prc/v2/草药处方点评导入模板.xlsx";
+	modelA.click();
 }
 
 function ComfirmQuery(){
@@ -278,17 +286,28 @@ function Query(){
 	var saveParStr = GetSaveParStr() ;
 	PHA.Loading("Show") 
 	var pid = tkMakeServerCall("PHA.PRC.Create.IPHerb", "JobGetIPHerbPrescNum", queryParStr, saveParStr, logonLocId);
-	// 调后台,5s一次
-	var jobInterval = setInterval(function() {
-		var jobRet = tkMakeServerCall("PHA.PRC.Com.Util", "JobRecieve", pid);
-		if (jobRet != "") {
-			clearInterval(jobInterval);
+	// 调后台,3s一次
+	setTimeout('JobRecieve('+pid+')', 3000);
+}
+
+function JobRecieve(pid) {
+	$cm({
+		ClassName: "PHA.PRC.Com.Util",
+		MethodName: "JobRecieve",
+		pid: pid,
+		dataType: 'text'
+	}, function(jobRet){
+		if (jobRet == "-1"){
+			setTimeout(function(){
+				JobRecieve(pid);
+			}, 2000);
+		} else {
 			PHA.Loading("Hide")
 			var jobRetArr = jobRet.split("^");
 			var jobRetSucc = jobRetArr[0];
 			var jobRetVal = jobRetArr[1];
 			if (jobRetSucc < 0) {
-				PHA.Alert('提示', "查询失败，错误代码："+jobRetVal, 'warning');
+				PHA.Alert('提示', "查询失败，错误代码："+ jobRetVal, 'warning');
 			} else {
 				if (jobRetVal == 0) {
 					var msgInfo = "没有符合条件的处方,请更换查询条件后再试!";
@@ -298,8 +317,7 @@ function Query(){
 				}
 			}
 		}
-	},5000);
-	
+	})
 }
 
 function ComfirmClear(){
@@ -321,7 +339,7 @@ function Clear(){
 	$("#conAgeMin").val(''); 					
 	$("#conMultiPosion").combobox("setValue",'');		
 	//$("#conDrugCatTree").combobox("setValues",'');		
-	$("#conMultiArcDesc").val('');			
+	$("#conMultiArcDesc").combogrid('setValue','');			
 	$("#conMultiForm").combobox("setValue",'');			
 	$("#conAgeMax").val(''); 					
 	$("#conDoctor").combobox("setValue",'');			
@@ -401,7 +419,7 @@ function GetQueryParStr(){
 	var poisonStr = $("#conMultiPosion").combobox('getValues')||'';		//管制分类
 	//var stkCatId = $("#conDrugCatTree").combobox('getValue')||'';		//药学分类
 	var stkCatId = $("#genePHCCat").triggerbox("getValueId")||'' ;
-	var arcimId = $("#conMultiArcDesc").lookup('getValue')||'';			//医嘱名称
+	var arcimId = $("#conMultiArcDesc").combogrid('getValue')||'';			//医嘱名称
 	var formStr = $("#conMultiForm").combobox('getValues')||'';			//剂型
 	var ageMax = $.trim($("#conAgeMax").val())||''; 					//年龄上限
 	var doctorId = $("#conDoctor").combobox('getValue')||'';			//医生
@@ -581,7 +599,5 @@ function GetSpaceQty()
 	}
 
 }
-
-
 
 

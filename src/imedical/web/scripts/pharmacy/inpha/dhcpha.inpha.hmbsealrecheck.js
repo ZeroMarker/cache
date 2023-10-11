@@ -81,7 +81,7 @@ function QueryBSealPre()
     var enddate = $('#date-end').val();
 	var wardloc=$('#sel-phaward').val();
 	if (wardloc==null){wardloc=""};
-	var params=startdate+"^"+enddate+"^"+wardloc;
+	var params=startdate+"^"+enddate+"^"+wardloc+"^"+DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID;
 	$("#grid-bsealchprelist").setGridParam({
 		postData:{
 			'params':params

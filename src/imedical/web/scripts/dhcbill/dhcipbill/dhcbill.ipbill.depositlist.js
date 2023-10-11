@@ -1,6 +1,6 @@
 ﻿/**
  * FileName: dhcbill.ipbill.depositlist.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-03-23
  * Description: 住院押金明细
  */
@@ -14,7 +14,7 @@ function initQueryMenu() {
 	//押金类型
 	$HUI.combobox("#depositType", {
 		panelHeight: 'auto',
-		url: $URL + '?ClassName=web.DHCIPBillDeposit&QueryName=FindGrpDepType&ResultSetType=array',
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryGrpDepType&ResultSetType=array',
 		method: 'GET',
 		editable: false,
 		valueField: 'id',
@@ -25,14 +25,8 @@ function initQueryMenu() {
 		},
 		onLoadSuccess: function(data) {
 			$(this).combobox("clear");
-			var defDeType = getParam("DepositType");
-			if (defDeType) {
-				$.each(data, function (index, item) {
-					if (item.id == defDeType) {
-						$("#depositType").combobox("select", defDeType);
-						return false;
-					}
-				});
+			if (CV.DepositType && $.hisui.getArrayItem(data, "id", CV.DepositType)) {
+				$("#depositType").combobox("select", CV.DepositType);
 			}
 		},
 		onSelect: function(rec) {
@@ -44,49 +38,84 @@ function initQueryMenu() {
 function initDepositList() {
 	$HUI.datagrid("#depositList", {
 		fit: true,
+		border: false,
 		striped: true,
-		bodyCls: 'panel-header-gray',
-		fitColumns: true,
 		singleSelect: true,
 		rownumbers: true,
 		pagination: true,
 		pageSize: 20,
-		toolbar: '#toolbar',
-		columns:[[{title: '收款时间', field: 'Tprtdate', width: 150,
-					formatter: function (value, row, index) {
-						if (value) {
-							return value + " " + row.Tprttime;
+		className: "web.DHCIPBillDeposit",
+		queryName: "FindDeposit",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["TPrtDate", "Tbbackdate", "TDepositTypeDR", "TDepositTypeCode", "TAutoFlag", "TReRcptNo", "TLostRegDate"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if ($.inArray(cm[i].field, ["TDepRowId", "TPaymodeDR", "TPrtStatus", "TUserDR", "TFootId", "TInitPrtRowId", "TStrikeInvPrtId", "TLostRegistDR"]) != -1) {
+					cm[i].hidden = true;
+					continue;
+				}
+				if (cm[i].field == "TPrtTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.TPrtDate + " " + value;
+					};
+				}
+				if (cm[i].field == "TStatus") {
+					cm[i].styler = function(value, row, index) {
+						if ([1, 4].indexOf(+row.TPrtStatus) == -1) {
+							return "color: #FF0000;";
 						}
-					}
-				  },
-				  {title: '金额', field: 'Tpayamt', align: 'right', width: 100},
-				  {title: 'TPaymodeDR', field: 'TPaymodeDR', hidden: true},
-				  {title: '支付方式', field: 'Tpaymode', width: 80},
-				  {title: '状态', field: 'Tprtstatus', hidden: true},
-				  {title: '收据状态', field: 'TStatus', width: 100,
-				   	styler: function(value, row, index) {
-						if (("^1^4^").indexOf("^" + row.Tprtstatus + "^") == -1) {
-							return 'color: #FF0000;';
+					};
+				}
+				if (cm[i].field == "TFootFlag") {
+					cm[i].formatter = function (value, row, index) {
+					   	if (value) {
+						   	var color = (value == "Y") ? "#21ba45" : "#f16e57";
+							return "<font color=\"" + color + "\">" + ((value == "Y") ? $g("是") : $g("否")) + "</font>";
 						}
-					}
-				   },
-				  {title: 'TArrcpId', field: 'TArrcpId', hidden: true},
-				  {title: '收据号', field: 'Trcptno', width: 120},
-				  {title: '收款员', field: 'Tadduser', width: 100},
-				  {title: '支票号', field: 'Tcardno', width: 70},
-				  {title: '单位', field: 'Tcompany', width: 70},
-				  {title: '银行', field: 'Tbank', width: 70},
-				  {title: 'TjkDR', field: 'TjkDR', hidden: true},
-				  {title: '是否结账', field: 'Tjkflag', width: 80,
-					formatter: function (value, row, index) {
-						if (value) {
-							return (value == "Y") ? "<font color='#21ba45'>是</font>" : "<font color='#f16e57'>否</font>";
+					};
+				}
+				if (cm[i].field == "TPayedFlag") {
+					cm[i].formatter = function (value, row, index) {
+					   	if (value) {
+							return (value == "Y") ? $g("已结") : $g("未结");
 						}
+					};
+				}
+				if (cm[i].field == "Tbbackflag") {
+					cm[i].formatter = function (value, row, index) {
+					   	if (value) {
+						   	var color = (value == "Y") ? "#21ba45" : "#f16e57";
+							return "<font color=\"" + color + "\">" + ((value == "Y") ? $g("是") : $g("否")) + "</font>";
+						}
+					};
+				}
+				if (cm[i].field == "Tbbacktime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.Tbbackdate + " " + value;
+					};
+				}
+				if (cm[i].field == "TIsLostReg") {
+					cm[i].formatter = function (value, row, index) {
+					    if (row.TDepRowId) {
+							return (row.TLostRegistDR > 0) ? $g("是") : $g("否");
+						}
+					};
+				}
+				if (cm[i].field == "TLostRegTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.TLostRegDate + " " + value;
+					};
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if ($.inArray(cm[i].field, ["TPrtTime", "Tbbacktime", "TLostRegTime"]) != -1) {
+						cm[i].width = 155;
 					}
-				  },
-				  {title: '押金类型', field: 'TDepositType', width: 100},
-				  {title: '结算状态', field: 'Tpaystatus', width: 80}
-			]]
+				}
+			}
+		}
 	});
 }
 

@@ -1,9 +1,18 @@
-ï»¿//é¡µé¢Gui
+//Ò³ÃæGui
 var objScreen = new Object();
 function InitviewScreen(){
 	var obj = objScreen;
-    $.parser.parse(); // è§£ææ•´ä¸ªé¡µé¢ 
+    $.parser.parse(); // ½âÎöÕû¸öÒ³Ãæ 
     var HospID=session['DHCMA.HOSPID']
+	obj.HospID=HospID
+	$('#winConfirmInfo').dialog({
+		title: 'Èëµ¥²¡ÖÖ¹ÜÀí¡¾ĞÅÏ¢Â¼Èë¡¿',
+		iconCls:"icon-w-edit",
+		closed: true,
+		modal: true,
+		isTopZindex:true,	
+		height: 400
+	})
     $HUI.combobox('#Hospital',
 	    {
 			url:$URL+'?ClassName=DHCMA.Util.EPS.HospitalSrv&QueryName=QryHospInfo&ResultSetType=Array&aHospID='+HospID,
@@ -11,7 +20,7 @@ function InitviewScreen(){
 			textField:'Desc',
 	    	onSelect:function(rd){
 		    	HospID=rd.OID;
-		    	var url =$URL+'?ClassName=DHCMA.Util.EPS.LocationSrv&QueryName=QryLocInfo&ResultSetType=Array&aHospID='+HospID;
+		    	var url =$URL+'?ClassName=DHCMA.Util.EPS.LocationSrv&QueryName=QryLocInfo&ResultSetType=Array&aHospID='+HospID+'&aType=E&aAdmType=I';
         		$('#DishLoc').combobox('setValue','');
         		$('#DishLoc').combobox('reload', url);
 		   },
@@ -21,7 +30,7 @@ function InitviewScreen(){
 	    } )	
     $HUI.combobox('#DishLoc',
 	    {
-			url:$URL+'?ClassName=DHCMA.Util.EPS.LocationSrv&QueryName=QryLocInfo&ResultSetType=Array&aHospID='+HospID,
+			url:$URL+'?ClassName=DHCMA.Util.EPS.LocationSrv&QueryName=QryLocInfo&ResultSetType=Array&aHospID='+HospID+'&aType=E&aAdmType=I',
 			valueField:'OID',
 			textField:'Desc'		    
 	    })	
@@ -36,22 +45,14 @@ function InitviewScreen(){
 			var InLocID=session['LOGON.CTLOCID']
 		}else{
 			var InLocID=session['DHCMA.CTLOCID']
-		}
-	$('#winConfirmInfo').dialog({
-		title: '',
-		iconCls:"icon-w-edit",
-		closed: true,
-		modal: true,
-		isTopZindex:true	
-	});	
+	}	
 	obj.gridQCMrList = $HUI.datagrid("#gridQCMrList",{
-		pagination: true, //å¦‚æœä¸ºtrue, åˆ™åœ¨DataGridæ§ä»¶åº•éƒ¨æ˜¾ç¤ºåˆ†é¡µå·¥å…·æ 
+		pagination: true, //Èç¹ûÎªtrue, ÔòÔÚDataGrid¿Ø¼şµ×²¿ÏÔÊ¾·ÖÒ³¹¤¾ßÀ¸
 		singleSelect: true,
-		//å®šä¹‰æ˜¯å¦è®¾ç½®åŸºäºè¯¥è¡Œå†…å®¹çš„è¡Œé«˜åº¦ã€‚è®¾ç½®ä¸º falseï¼Œåˆ™å¯ä»¥æé«˜åŠ è½½æ€§èƒ½
+		//¶¨ÒåÊÇ·ñÉèÖÃ»ùÓÚ¸ÃĞĞÄÚÈİµÄĞĞ¸ß¶È¡£ÉèÖÃÎª false£¬Ôò¿ÉÒÔÌá¸ß¼ÓÔØĞÔÄÜ
 		autoRowHeight: false,
 		striped:true,
 		rownumbers:true, 
-		loadMsg:'æ•°æ®åŠ è½½ä¸­...',
 		pageSize: 10,
 		pageList : [10,50],
 	    url:$URL,
@@ -61,31 +62,37 @@ function InitviewScreen(){
 			QueryName:"QryPatientByDate"	
 	    },
 		columns:[[
-			{field:'AdmLocDesc',title:'ç§‘å®¤',width:'120',align:'center'},
-			{field:'MrNo',title:'ç—…æ¡ˆå·',width:'90',align:'center'},
-			{field:'PatName',title:'æ‚£è€…å§“å',width:'100',sortable:false,align:'center'},
-			{field:'DisDate',title:'å‡ºé™¢æ—¥æœŸ',width:'120',sortable:true,align:'center'},
-			{field:'DisDiag',title:'ä¸»è¦è¯Šæ–­',width:'150',sortable:true,align:'center'},
-			{field:'EpisodeID',title:'ä½é™¢ç—…å†',width:'90',align:'center',sortable:true,
+			{field:'AdmLocDesc',title:'¿ÆÊÒ',width:120,align:'left'},
+			{field:'MrNo',title:'²¡°¸ºÅ',width:80,align:'left'},
+			{field:'PatName',title:'»¼ÕßĞÕÃû',width:80,sortable:false,align:'left'},
+			{field:'AdmDate',title:'ÈëÔºÈÕÆÚ',width:100,sortable:true,align:'left'},
+			{field:'DisDate',title:'³öÔºÈÕÆÚ',width:100,sortable:true,align:'left'},		
+			{field:'EpisodeID',title:'×¡Ôº²¡Àú',width:90,align:'left',sortable:true,
 				formatter: function(value,rd,index){
 						var paadm=rd.EpisodeID.split('!!')[0]
 						var patientID=rd.PatientID
-						
-						return " <a href='#' class='hisui-linkbutton hover-dark' style='cursor:pointer' onclick='objScreen.DisplayEPRView(\"" + paadm + "\",\"" + patientID + "\");'>ç—…å†æµè§ˆ</a>";
+						return " <a href='#' class='hisui-linkbutton hover-dark' style='cursor:pointer' onclick='objScreen.DisplayEPRView(\"" + paadm + "\",\"" + patientID + "\");'>"+$g('²¡Àúä¯ÀÀ')+"</a>";
 				}
 			},
-			{field:'MrListID',title:'è¡¨å•çŠ¶æ€',width:'150',sortable:true,align:'center',
+			{field:'MrListID',title:'±íµ¥×´Ì¬',width:100,sortable:true,align:'left',
 				formatter: function(value,rd,index){
 					if (rd.MrListID) {
 						var rdModal=JSON.stringify(rd)
-						return '<a style="cursor:pointer" class="hisui-linkbutton" onclick=objScreen.layer('+rdModal+')>'+rd.QCCurrStatus+'</a>';
+						if (rd.QCCurrStatus.indexOf("ÅÅ³ı")<0) {
+							return '<a style="cursor:pointer" class="hisui-linkbutton" onclick=objScreen.layer('+index+')>'+$g(rd.QCCurrStatus)+'</a>';
+						}else{
+							return '<a style="cursor:pointer" class="hisui-linkbutton" onclick=objScreen.InSDManager('+index+')>'+$g("ÅÅ³ıÔÙÈë×é")+'</a>';	
+						}
 					}else{
 						var rdModal=JSON.stringify(rd)
-						return '<a style="cursor:pointer" class="hisui-linkbutton" onclick=objScreen.InSDManager('+rdModal+')>å…¥ç»„å•ç—…ç§</a>';
+						return '<a style="cursor:pointer" class="hisui-linkbutton" onclick=objScreen.InSDManager('+index+')>'+$g("Èë×éµ¥²¡ÖÖ")+'</a>';
 						}
 				}			
 			
-			}
+			},
+			{field:'FPMDiag',title:'±àÄ¿Ö÷Õï¶Ï',width:'150',sortable:true,align:'left'}
+			,
+			{field:'ClinMDiag',title:'ÁÙ´²Ö÷Õï¶Ï',width:'150',sortable:true,align:'left'}
 		]]
 	});
 	

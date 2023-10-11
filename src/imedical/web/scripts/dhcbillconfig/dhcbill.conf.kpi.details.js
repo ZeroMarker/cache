@@ -18,13 +18,7 @@ $(function () {
 		}
 	});
 	
-	initWinCombo();
-
-	GetBillKPIDetails();
-});
-
-function initWinCombo(){
-	$('#winKPIType').combobox({
+	$("#winKPIType").combobox({
 		panelHeight: 'auto',
 		editable: false,
 		valueField: 'value',
@@ -35,7 +29,7 @@ function initWinCombo(){
 		]
 	});
 	
-	$('#winKPITaskType').combobox({
+	$("#winKPITaskType").combobox({
 		panelHeight: 'auto',
 		url: $URL + '?ClassName=BILL.CFG.COM.HospAuth&QueryName=FindKPITaskType&ResultSetType=array',
 		valueField: 'id',
@@ -43,7 +37,7 @@ function initWinCombo(){
 		editable: false
 	});
 	
-	$('#winDataStore').combobox({
+	$("#winDataStore").combobox({
 		panelHeight: 'auto',
 		valueField: 'value',
 		textField: 'text',
@@ -52,8 +46,8 @@ function initWinCombo(){
 			{value:'G', text:'Global存储'}
 		],
 		editable: false,
-		onSelect: function(rec) {
-			if (rec.value == "T") {
+		onChange: function(newValue, oldValue) {
+			if (newValue == "T") {
 				setValueById("winKPIDataNode", "");
 				setValueById("winKPIDataDimen", "");
 				disableById("winKPIDataNode");
@@ -68,22 +62,21 @@ function initWinCombo(){
 		}
 	});
 	
-	$('#winKPIActive').combobox({
+	$("#winKPIActive").combobox({
 		panelHeight: 'auto',
-		multiple: false,
 		valueField: 'value',
 		textField: 'text',
 		data: [
 			{value:'Y', text:'启用'},
 			{value:'N', text:'停用'}
 		],
-		editable: false,
-		disabled: false,
-		readonly: false
+		editable: false
 	});
-}
 
-function saveBillKPI(){
+	setBillKPIDetails();
+});
+
+function saveBillKPI() {
 	var KPICode = getValueById("winKPICode");
 	if (!$.trim(KPICode)) {
 		$('#winKPICode').attr('placeholder', '请输入指标编码');
@@ -122,12 +115,12 @@ function saveBillKPI(){
 	var KPITableName = getValueById("winKPITableName");
 	var KPIDataNode = getValueById("winKPIDataNode");
 	if (KPIDataStore == 'T') {
-		if (!$.trim(KPITableName)){
+		if (!$.trim(KPITableName)) {
 			$('#winKPITableName').attr('placeholder', '请输入表名');
 			return;
 		}
 	}else {
-		if (!$.trim(KPIDataNode)){
+		if (!$.trim(KPIDataNode)) {
 			$('#winKPIDataNode').attr('placeholder', '请输入节点名');
 			return;
 		}
@@ -141,8 +134,6 @@ function saveBillKPI(){
 	var KPICreator = getValueById("winKPICreator");
 	var KPIReMark = getValueById("winKPIReMark");
 	var KPIOrder = "";
-	var KPICreatDate = "";
-	var KPICreatTime = "";
 	
 	var KPIAry = [];
 	KPIAry.push(GV.KPIID);
@@ -161,11 +152,9 @@ function saveBillKPI(){
 	
 	KPIAry.push(KPIActive);
 	KPIAry.push(KPICreator);
-	KPIAry.push(KPICreatDate);
-	KPIAry.push(KPICreatTime);
 	KPIAry.push(KPIReMark);
 	
-	var KPIStr = KPIAry.join('^');
+	var KPIStr = KPIAry.join("^");
 
 	$.m({
 		ClassName: "BILL.CFG.COM.HospAuth",
@@ -187,25 +176,18 @@ function closeWin() {
 	websys_showModal("close");
 }
 
-function GetBillKPIDetails() {
-	$.cm({
-		ClassName: "web.DHCBillCommon",
-		MethodName: "GetClsPropValById",
-		clsName: "User.DHCBillKPISetting",
-		id: GV.KPIID
-	}, function (jsonObj) {
-		setValueById("winKPITaskType", jsonObj.KPITaskType);
-		setValueById("winKPIType", jsonObj.KPIType);
-		setValueById("winKPICode", jsonObj.KPICode);
-		setValueById("winKPIName", jsonObj.KPIName);
-		setValueById("winKPIClassName", jsonObj.KPIClass);
-		setValueById("winKPIMethodName", jsonObj.KPIMethod);
-		setValueById("winDataStore", jsonObj.KPIStorageType);
-		setValueById("winKPITableName", jsonObj.KPITableName);
-		setValueById("winKPIDataNode", jsonObj.KPIDataNode);
-		setValueById("winKPIDataDimen", jsonObj.KPIDataDimen);
-		setValueById("winKPIActive", jsonObj.KPIActive);
-		setValueById("winKPICreator", jsonObj.KPICreator);
-		setValueById("winKPIReMark", jsonObj.KPIReMark);
-	});
+function setBillKPIDetails() {
+	setValueById("winKPITaskType", GV.KPIJsonData.KPITaskType);
+	setValueById("winKPIType", GV.KPIJsonData.KPIType);
+	setValueById("winKPICode", GV.KPIJsonData.KPICode);
+	setValueById("winKPIName", GV.KPIJsonData.KPIName);
+	setValueById("winKPIClassName", GV.KPIJsonData.KPIClass);
+	setValueById("winKPIMethodName", GV.KPIJsonData.KPIMethod);
+	setValueById("winDataStore", GV.KPIJsonData.KPIStorageType);
+	setValueById("winKPITableName", GV.KPIJsonData.KPITableName);
+	setValueById("winKPIDataNode", GV.KPIJsonData.KPIDataNode);
+	setValueById("winKPIDataDimen", GV.KPIJsonData.KPIDataDimen);
+	setValueById("winKPIActive", GV.KPIJsonData.KPIActive);
+	setValueById("winKPICreator", GV.KPIJsonData.KPICreator);
+	setValueById("winKPIReMark", GV.KPIJsonData.KPIReMark);
 }

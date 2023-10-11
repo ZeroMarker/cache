@@ -29,7 +29,15 @@ $(function(){
 	InitHospList();	
 	//页面元素初始化
 	//PageHandle();
+	InitCache();
 })
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function InitHospList()
 {
 	var hospComp = GenHospComp("DHC_Doc_OrdLinked");
@@ -264,21 +272,25 @@ function deConfig () {
 		$.messager.alert("提示","请选择一条记录！","info")
 		return false;
 	}
-	$.m({
-			ClassName:"web.DHCDocOrdLinkContr",
-			MethodName:"LinkOrdDel",
-			arcim: selected.TarcimID,
-			linkarcim:selected.TlinkArcimID,
-			LRowid:selected.LRowid
-		},function (responseText){
-			if(responseText == 0) {
-				$.messager.alert('提示','删除成功！',"info");
-				PageLogicObj.m_DurDataGrid.reload();
-			} else {
-				$.messager.alert('提示','修改失败,错误代码: '+ responseText , "info");
-				return false;
-			}	
-		})
+	$.messager.confirm("提示", "确认删除吗？", function(r) {
+		if (r){
+			$.m({
+					ClassName:"web.DHCDocOrdLinkContr",
+					MethodName:"LinkOrdDel",
+					arcim: selected.TarcimID,
+					linkarcim:selected.TlinkArcimID,
+					LRowid:selected.LRowid
+				},function (responseText){
+					if(responseText == 0) {
+						$.messager.alert('提示','删除成功！',"info");
+						PageLogicObj.m_DurDataGrid.reload();
+					} else {
+						$.messager.alert('提示','修改失败,错误代码: '+ responseText , "info");
+						return false;
+					}	
+				})
+		}
+	})
 }
 
 
@@ -304,6 +316,10 @@ function saveCfg() {
 	}
 	if (sDate == "") {
 		$.messager.alert('提示','开始时间不能为空!',"info");
+		return false;
+	}
+	if (arcim == needarcim) {
+		$.messager.alert('提示','需开医嘱项和医嘱项目不能相同!',"info");
 		return false;
 	}
 	//LinkOrdInsert,LinkOrdUpdate,LinkOrdDel

@@ -9,7 +9,7 @@ function InitFloatWin(){
 	//HelpTip.style.left = parseInt(Math.random() * (document.body.offsetWidth - HelpTipW)) + 'px';
 	//HelpTip.style.top = parseInt(Math.random() * (document.body.offsetHeight - HelpTipH)) + 'px';
 	//初始固定位置
-    HelpTip.style.left = parseInt(document.body.offsetWidth - HelpTipW +15) + 'px';
+    HelpTip.style.left = parseInt(document.body.offsetWidth - HelpTipW) + 'px';
 	HelpTip.style.top = '50px';
 	
 	function move(obj, w, h) {
@@ -96,7 +96,7 @@ function InitFloatWin(){
     HelpTip.onclick = function() {
 		websys_showModal({
 			url:'../scripts/DHCMA/HAI/Document/HelpWord.pdf',
-			title:'帮助文档',
+			title:$g('帮助文档'),
 			iconCls:'icon-w-paper',     
 			width:1200,
 			height:window.screen.availHeight-80

@@ -1,11 +1,29 @@
 
-var SelectedRow = 0;
+var SelectedRow = -1;
 var rowid=0;
 function BodyLoadHandler() 
-{	
-    InitUserInfo(); //系统参数
+{
+	//modified by cjt 20230212 需求号3221967 UI页面改造
+	initPanelHeaderStyle();
+	initButtonColor();
+	InitUserInfo(); //系统参数
 	InitEvent();
 	disabled(true);//灰化
+	initButtonWidth();	//modified by czf 20180827 HISUI改造
+	initFirmType();		//add by CZF0093 2020-03-17 begin
+	var FirmTypeDR=GetElementValue("FirmTypeDR");
+	if (FirmTypeDR.indexOf(",")>-1)
+	{
+		FirmTypeDR=FirmTypeDR.split(",")
+	}
+	$("#FirmType").combobox("setValues",FirmTypeDR);
+    ///add by ZY 2926611  20220915
+    if (FirmTypeDR!="")
+    {
+        //hiddenObj("FirmType",true)
+        disableElement("FirmType",true)
+    }
+	setRequiredElements("FirmType")		//add by CZF0093 2020-03-17 end
 }
 function InitEvent()
 {
@@ -25,7 +43,11 @@ function BFind_Click()
 	val=val+"&ConPerson="+GetElementValue("ConPerson")
 	val=val+"&Tel="+GetElementValue("Tel")
 	val=val+"&ShName="+GetElementValue("ShName")
-	window.location.href="websys.default.csp?WEBSYS.TCOMPONENT=DHCEQCVendor"+val;
+	val=val+"&FirmTypeDR="+($("#FirmType").combobox("getValues"))		//add by CZF0093 2020-03-17
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		val += "&MWToken="+websys_getMWToken()
+	}
+	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCVendor"+val;
 }
 function BClear_Click() 
 {
@@ -55,16 +77,18 @@ function CombinData()
   	combindata=combindata+"^"+GetElementValue("BankNo") ;
   	combindata=combindata+"^"+GetElementValue("RegistrationNo") ;
   	combindata=combindata+"^"+GetElementValue("Remark") ;
-  	combindata=combindata+"^"+GetElementValue("Hold1") ; 
-  	combindata=combindata+"^"+GetElementValue("Hold2") ; 
+  	combindata=combindata+"^"+GetElementValue("Hold1") ; 	//经营许可证号
+  	combindata=combindata+"^"+GetElementValue("Hold2") ; 	//电子邮件
   	combindata=combindata+"^"+GetElementValue("Hold3") ; 
   	combindata=combindata+"^"+GetElementValue("Hold4") ; 
   	combindata=combindata+"^"+GetElementValue("Hold5") ; 
   	combindata=combindata+"^"+GetElementValue("ExDesc") ;	// Mozy0055	2011-7-7
+	combindata=combindata+"^"+($("#FirmType").combobox("getValues")) 	//add by CZF0093 2020-03-17 公司类型
   	return combindata;
 }
 function BUpdate_Click() 
 {
+	SetElement("FirmTypeDR",$("#FirmType").combobox("getValues"));		//modified by czf 2020-04-01 1254647 新增数据全选时FirmTypeDRI未赋值
 	if (condition()) return;
 	if((GetElementValue("EMail")!="")&&( GetElementValue("EMail").indexOf("@") <= -1 )) //2011-10-27 DJ DJ0097
 	{
@@ -85,15 +109,15 @@ function BUpdate_Click()
 	var plist=CombinData(); //函数调用
 	var result=cspRunServerMethod(encmeth,plist,"");
 	result=result.replace(/\\n/g,"\n")
-	if(result=="") 
-	{
-		alertShow(t[-3001]);
-		return
-	}
-	else
+	if(result>0)		//modified by czf 20200404 
 	{
 		alertShow("保存成功!");
 		location.reload();
+	}
+	else
+	{
+		messageShow("","","",t[-3001]);
+		return
 	}
 }
 function BDelete_Click() 
@@ -104,42 +128,29 @@ function BDelete_Click()
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="") 
 	{
-	alertShow(t[-3001])
+	messageShow("","","",t[-3001])
 	return;
 	}
 	var result=cspRunServerMethod(encmeth,rowid,'1');
 	result=result.replace(/\\n/g,"\n")
 	if (result>0) location.reload();	
 }
-///选择表格行触发此方法
-function SelectRowHandler()
-{
-	var eSrc=window.event.srcElement;
-	var objtbl=document.getElementById('tDHCEQCVendor');//+组件名 就是你的组件显示 Query 结果的部分
-	var rows=objtbl.rows.length;
-	
-	var lastrowindex=rows - 1;
-	
-	var rowObj=getRow(eSrc);
-	
-	var selectrow=rowObj.rowIndex;
-	
-	if (!selectrow)	 return;
-	if (SelectedRow==selectrow)	{
+
+//modified by czf 20180827 HISUI改造
+function SelectRowHandler(index,rowdata)	{
+	if (index==SelectedRow){
 		Clear();
-		disabled(true)//灰化		
-		SelectedRow=0;
-		rowid=0;
-		SetElement("RowID","");
+		SelectedRow= -1;
+		disabled(true)//灰化
+		$('#tDHCEQCVendor').datagrid('unselectAll'); 
+		return;
 		}
-	else{
-		SelectedRow=selectrow;
-		rowid=GetElementValue("TRowIDz"+SelectedRow);
 		
-		SetData(rowid);//调用函数
-		disabled(false)//反灰化
-		}
+	SetData(rowdata.TRowID); 
+	disabled(false)//反灰化  
+    SelectedRow = index;
 }
+
 function Clear()
 {
 	SetElement("RowID","");
@@ -165,6 +176,8 @@ function Clear()
 	SetElement("Hold4","");
 	SetElement("Hold5","");
 	SetElement("ExDesc","");	// Mozy0055	2011-7-7
+	$("#FirmType").combobox("setValues","")//czf 1247304 2020-03-30
+	SetElement("FirmTypeDR","")
 }
 function SetData(rowid)
 {
@@ -191,9 +204,24 @@ function SetData(rowid)
 	SetElement("Remark",list[15]);	
 	SetElement("Hold1",list[19]);
 	SetElement("Hold2",list[20]);
-	SetElement("Hold3",list[21]);
+	var Hold3=list[21];
+	if (Hold3.indexOf(",")>-1)			//modified by czf 20200404
+	{
+		Hold3=Hold3.split(",")
+	}	
+	$("#FirmType").combobox("setValues",Hold3);	//Hold3 modified by CZF0093 2020-03-17  
+	SetElement("FirmTypeDR",Hold3);
 	SetElement("Hold4",list[22]);
-	SetElement("Hold5",list[23]);
+	///modified by ZY
+	if (list[23]=="Y") 
+	{
+		SetChkElement("Hold5",1);
+	}
+	else
+	{
+		SetChkElement("Hold5",0);
+	}
+	
 	SetElement("ExDesc",list[17]);	// Mozy0055	2011-7-7
 }
 function disabled(value)//灰化
@@ -207,4 +235,22 @@ function condition()//条件
 	return false;
 }
 
+function initFirmType()
+{
+	var FirmType = $HUI.combobox("#FirmType",{
+		valueField:'id',
+		textField:'text',
+		multiple:true,
+		rowStyle:'checkbox', //显示成勾选行形式
+		selectOnNavigation:false,
+		panelHeight:"auto",
+		editable:false,
+		data:[
+			{id:'2',text:'供应商'},{id:'3',text:'生产厂商'},{id:'4',text:'服务商'}
+		],
+		onSelect:function(e){
+			SetElement("FirmTypeDR",$(this).combobox("getValues"));
+		}
+	});	
+}
 document.body.onload = BodyLoadHandler;

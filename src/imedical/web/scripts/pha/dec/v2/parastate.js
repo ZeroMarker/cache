@@ -3,6 +3,12 @@
  * @编写日期: 2019-06-04
  * @编写人:   pushuangcai
  */
+var HospId = session['LOGON.HOSPID'];
+PHA_COM.App.ProCode = "DEC"
+PHA_COM.App.ProDesc = "煎药室"
+PHA_COM.App.Csp = "pha.dec.v2.parastate.csp"
+PHA_COM.App.Name = "煎药流程定制维护"
+
 $(function () {
 	InitDict();
 	InitGridParaState();
@@ -23,20 +29,23 @@ function InitDict() {
 		width: 100,
 		data: [{
 				"RowId": "",
-				"Description": "全部"
+				"Description": $g("全部")
 			}, {
 				"RowId": "I",
-				"Description": "住院"
+				"Description": $g("住院")
 			}, {
 				"RowId": "O",
-				"Description": "门诊"
+				"Description": $g("门急诊")
 			}
 		],
 		onSelect: function (selData) {
 			queryData();
 		}
 	});
+	InitHospCombo();
 }
+
+
 /**
  * 初始化流程表格
  * @method InitGridParaState
@@ -70,7 +79,7 @@ function InitGridParaState() {
 				title: '类型',
 				align: 'left',
 				width: 100,
-				editor: {
+				/*editor: {
 					type: 'combobox',
 					options: {
 						valueField: 'id',
@@ -86,12 +95,12 @@ function InitGridParaState() {
 							}
 						]
 					}
-				},
+				},*/
 				formatter: function (value, row, index) {
 					if (value == "I") {
-						return "住院";
+						return $g("住院");
 					} else if (value == "O") {
-						return "门诊";
+						return $g("门急诊");
 					}else{
 						return value;
 					}
@@ -189,7 +198,12 @@ function InitGridParaState() {
 				title: '顺序号',
 				align: 'left',
 				hidden: false
-			}, 
+			}, {
+				field: 'nextProSysFlag',
+				title: '下一流程是否为系统流程',
+				align: 'left',
+				hidden: true
+			} 
 		]];
 	var dataGridOption = {
 		toolbar: "#toolBarState",
@@ -198,7 +212,9 @@ function InitGridParaState() {
 		queryParams: {
 			ClassName: "PHA.DEC.CfProSto.Query",
 			QueryName: "QueryParaState",
-			userId: gUserID
+			inputStr:'',
+			userId: gUserID,
+			HospId: HospId
 		},
 		onDblClickRow: function (rowIndex) {
 			editRow();
@@ -225,6 +241,7 @@ function InitGridParaState() {
                     msg: saveInfo,
                     type: 'alert'
                 });
+                $('#gridParaState').datagrid('query');
             }
             else{
 	            $('#gridParaState').datagrid('query');
@@ -235,6 +252,15 @@ function InitGridParaState() {
         },
         onRowContextMenu: function(){
 			return false;	
+		},
+		onBeginEdit: function (rowIndex, rowData){
+			if (rowData.nextProSysFlag === 'Y') {
+			    var autoExe = $('#gridParaState').datagrid('getEditor', {
+			        index: rowIndex,
+			        field: 'sExeNextFlag'
+			    });
+			    $(autoExe.target).checkbox('disable');
+			}
 		}
 	};
 	PHA.Grid("gridParaState", dataGridOption);
@@ -252,13 +278,21 @@ function addNewRow() {
 		});
 		return;
 	}
+	var decType = $("#cmbType").combobox("getValue");
+	if (decType == "") {
+		PHA.Popover({
+			msg: "新增时类型不能为全部，请先选类型",
+			type: 'alert'
+		});
+		return;
+	}
 	$("#gridParaState").datagrid('addNewRow', {
 		editField: 'sType',
 		defaultRow: {
 			sLocId: $("#cmbDecLoc").combobox("getValue"),
 			sLocDesc: $("#cmbDecLoc").combobox("getText"),
 			sType: $("#cmbType").combobox("getValue"),
-			sActiveFlag: 'N',
+			sActiveFlag: 'Y',
 			sExeNextFlag: 'N'
 		}
 	});
@@ -281,6 +315,8 @@ function editRow() {
 	$('#gridParaState').datagrid('beginEditRow', {
 		rowIndex: rowIndex,
 	});
+	
+
 }
 /**
  * 保存数据
@@ -312,7 +348,8 @@ function saveParaState() {
 	$cm({
 		ClassName: "PHA.DEC.CfProSto.OperTab",
 		MethodName: "saveParaState",
-		params: inputStr
+		params: inputStr,
+		HospId: HospId
 	},
 		function (jsonData) {
 		if (typeof(jsonData) == "String") {
@@ -327,7 +364,8 @@ function saveParaState() {
 		} else {
 			PHA.Popover({
 				msg: "保存失败！" + jsonData.errCode,
-				type: 'alert'
+				type: 'alert',
+				timeout:5000
 			});
 		}
 	});
@@ -341,6 +379,42 @@ function queryData(){
 	var locId = $("#cmbDecLoc").combobox("getValue");
 	$('#gridParaState').datagrid('query', {
 		inputStr: locId + "^" + type,
-		userId: gUserID
+		userId: gUserID,
+		HospId: HospId
 	});	
+}
+
+function InitHospCombo() {
+	var genHospObj=DEC.AddHospCom({tableName:'PHA_DECProSto'});
+	if (typeof genHospObj ==='object'){
+        genHospObj.options().onSelect =  function(index, record) {	
+            var newHospId = record.HOSPRowId;
+            if (newHospId != HospId) {
+                HospId = newHospId;
+                //$('#cmbDecLoc').combobox('loadData', {});
+                $("#cmbDecLoc").combobox("setValue",'');
+                $('#cmbDecLoc').combobox('options').url = $URL + "?ResultSetType=Array&" + "ClassName=PHA.DEC.Com.Store&QueryName=DecLoc&HospId="+HospId+"&UserId=" + gUserID
+				$('#cmbDecLoc').combobox('reload');
+                $('#gridParaState').datagrid('options').queryParams.HospId =  HospId;
+                $('#gridParaState').datagrid('options').queryParams.inputStr =  '';
+                $('#gridParaState').datagrid('load');
+            }
+        }
+    }
+    
+    var defHosp = $cm(
+        {
+            dataType: 'text',
+            ClassName: 'web.DHCBL.BDP.BDPMappingHOSP',
+            MethodName: 'GetDefHospIdByTableName',
+            tableName: 'PHA_DECProSto',
+            HospID: HospId
+        },
+        false
+    );
+    HospId = defHosp;
+    $("#cmbDecLoc").combobox("setValue",'');
+    $('#cmbDecLoc').combobox('options').url = $URL + "?ResultSetType=Array&" + "ClassName=PHA.DEC.Com.Store&QueryName=DecLoc&HospId="+HospId+"&UserId=" + gUserID
+	$('#cmbDecLoc').combobox('reload');
+    
 }

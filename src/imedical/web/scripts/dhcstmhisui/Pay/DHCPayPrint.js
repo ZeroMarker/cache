@@ -1,9 +1,9 @@
-//¸¶¿îµ¥´òÓ¡
+ï»¿// ä»˜æ¬¾å•æ‰“å°
 function PrintPay(Pay) {
 	if (Pay == null || Pay == '') {
 		return;
 	}
-	var RaqName = "DHCSTM_HUI_Pay_Common.raq";
+	var RaqName = 'DHCSTM_HUI_Pay_Common.raq';
 	var DirectPrintStr = '{' + RaqName + '(Pay=' + Pay + ')}';
 	var RQPrintStr = TranslateRQStr(DirectPrintStr);
 	if (PayParamObj.IndirPrint != 'N') {

@@ -1,20 +1,18 @@
-ï»¿/**
+/**
  * FileName: dhcbill.capitalflow.js
- * Anchor: ZQB
+ * Author: ZQB
  * Date: 2018-10-13
- * Description: å¾€æ¥å€Ÿæ¬¾ç®¡ç†é¡µé¢
+ * Description: ÍùÀ´½è¿î¹ÜÀíÒ³Ãæ
  */
 
 $.extend($.fn.validatebox.defaults.rules, {
-	checkMaxAmt: {    //æ ¡éªŒæœ€å¤§å€¼
+	checkMaxAmt: {    //Ğ£Ñé×î´óÖµ
 	    validator: function(value) {
 		    return value < 1000000000;
 		},
-		message: "é‡‘é¢è¾“å…¥è¿‡å¤§"
+		message: $g("½ğ¶îÊäÈë¹ı´ó")
 	}
 });
-
-var GV = {}
 
 $(function () {
 	initQueryMenu();
@@ -22,9 +20,7 @@ $(function () {
 });
 
 function initQueryMenu() {
-	var today = getDefStDate(0);
-	setValueById("StDate", today);
-	setValueById("EndDate", today);
+	$(".datebox-f").datebox("setValue", CV.DefDate);
 	
 	$HUI.linkbutton("#btn-find", {
 		onClick: function () {
@@ -32,21 +28,21 @@ function initQueryMenu() {
 		}
 	});
 	
-	//æ–°å¢
+	//ĞÂÔö
 	$HUI.linkbutton("#btn-add", {
 		onClick: function () {
 			addClick();
 		}
 	});
 	
-	//åˆ é™¤
+	//É¾³ı
 	$HUI.linkbutton("#btn-delete", {
 		onClick: function () {
 			deleteClick();
 		}
 	});
 	
-	//æ¥æ”¶
+	//½ÓÊÕ
 	$HUI.linkbutton("#btn-receive", {
 		onClick: function () {
 			receiveClick();
@@ -56,13 +52,8 @@ function initQueryMenu() {
 	$HUI.combobox("#CapType", {
 		panelHeight: 'auto',
 		editable: false,
-		data: [{
-				id: 'I',
-				text: 'ä½é™¢'
-			}, {
-				id: 'O',
-				text: 'é—¨è¯Š'
-			}
+		data: [{id: 'I', text: $g('×¡Ôº')},
+		       {id: 'O', text: $g('ÃÅÕï')}
 		],
 		valueField: 'id',
 		textField: 'text',
@@ -100,17 +91,16 @@ function initQueryMenu() {
 		}
 	});
 	
-	//å€Ÿæ–¹æ”¶è´¹å‘˜
+	//½è·½ÊÕ·ÑÔ±
 	$('#BorrowUser').combobox({
 		panelHeight: 150,
-		url: $URL + '?ClassName=web.DHCBillCapitalFlowLogic&QueryName=FindCashier&ResultSetType=array',
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryInvUser&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
 		method: "GET",
 		valueField: 'id',
 		textField: 'text',
-		defaultFilter: 4,
+		defaultFilter: 5,
 		onBeforeLoad: function (param) {
-			param.type = getValueById("CapType");
-			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
+			param.invType = getValueById("CapType");
 		}
 	});
 
@@ -119,14 +109,8 @@ function initQueryMenu() {
 		editable: true,
 		valueField: 'id',
 		textField: 'text',
-		data: [{
-				id: 'OUT',
-				text: 'å€Ÿå‡º',
-				selected: true
-			}, {
-				id: 'IN',
-				text: 'å€Ÿå…¥'
-			}
+		data: [{id: 'OUT', text: $g('½è³ö'), selected: true},
+			   {id: 'IN', text: $g('½èÈë')}
 		]
 	});
 }
@@ -137,42 +121,50 @@ function initTransList() {
 		border: false,
 		striped: true,
 		singleSelect: true,
-		selectOnCheck: false,
-		checkOnSelect: false,
 		fitColumns: true,
 		pagination: true,
 		rownumbers: true,
 		pageSize: 20,
-		columns: [[{title: 'äº¤è½¬é‡‘é¢', field: 'CapAcount', align: 'right', width: 100},
-				   {title: 'è½¬äº¤æ—¥æœŸ', field: 'CapDate', width: 120}, 
-				   {title: 'è½¬äº¤æ—¶é—´', field: 'CapTime', width: 100},
-				   {title: 'æ“ä½œå‘˜', field: 'CapUsrName', width: 100},
-				   {title: 'äº¤è½¬ç±»åˆ«', field: 'CapFlag', width: 100},
-				   {title: 'CapObjUsr', field: 'CapObjUsr', hidden: true},
-				   {title: 'æ¥æ”¶ç”¨æˆ·', field: 'CapObjUsrName', width: 120},
-				   {title: 'èµ„é‡‘ç±»å‹', field: 'CapPayModeDesc', width: 100},
-				   {title: 'æè¿°', field: 'OptionDesc', width: 400}, 
-				   {title: 'é—¨è¯Š/ä½é™¢', field: 'CapTypeDesc', width: 140},  
-			       {title: 'è¡¨ID', field: 'RowID', hidden: true}, 
-				   {title: 'CapinitCapDR', field: 'CapinitCapDR', hidden: true},
-				   {title: 'CapJkdr', field: 'CapJkdr', hidden: true},
-				   {title: 'CapComFlag', field: 'CapComFlag', hidden: true}
-			]],
+		className: "web.DHCBillCapitalFlowLogic",
+		queryName: "FindTransList",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["CapDate"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if ($.inArray(cm[i].field, ["CapRowId", "CapFlag", "CapObjUsrDR", "CapinitCapDR", "CapJkDR", "CapComFlag", "CapInitCapDR"]) != -1) {
+					cm[i].hidden = true;
+					continue;
+				}
+				if (cm[i].field == "CapTime") {
+					cm[i].formatter = function(value, row, index) {
+					   	return row.CapDate + " " + value;
+					};
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if (cm[i].field == "CapTime") {
+						cm[i].width = 160;
+					}
+				}
+			}
+		},
 		url: $URL,
 		queryParams:  {
 			ClassName: "web.DHCBillCapitalFlowLogic",
 			QueryName: "FindTransList",
 			StDate: getValueById("StDate"),
 			EndDate: getValueById("EndDate"),
-			CapType: getValueById("CapType"),     //O:é—¨è¯Š, I:ä½é™¢
+			CapType: getValueById("CapType"),        //O:ÃÅÕï, I:×¡Ôº
 			CapPayMode:  getValueById("CapPayMode"),
 			BorrowUser: getValueById("BorrowUser"),
-			OptionType: getValueById("OptionType"), //æ“ä½œç±»å‹ å€Ÿå…¥è½¬å‡º
+			OptionType: getValueById("OptionType"), //²Ù×÷ÀàĞÍ ½èÈë×ª³ö
 			HospId: PUBLIC_CONSTANT.SESSION.HOSPID
 		},
 		rowStyler: function (index, row) {
 			if (row.CapComFlag == "N") {			
-				return 'color: #FF0000;';    //æœªç¡®è®¤æ¥æ”¶
+				return 'color: #FF0000;';    //Î´È·ÈÏ½ÓÊÕ
 			}
 		}
 	});
@@ -184,17 +176,17 @@ function loadTransList() {
 		QueryName: "FindTransList",
 		StDate: getValueById("StDate"),
 		EndDate: getValueById("EndDate"),
-		CapType: getValueById("CapType") ,    //O:é—¨è¯Š, I:ä½é™¢
+		CapType: getValueById("CapType") ,    //O:ÃÅÕï, I:×¡Ôº
 		CapPayMode:  getValueById("CapPayMode"),
 		BorrowUser: getValueById("BorrowUser"),
-		OptionType: getValueById("OptionType"), //æ“ä½œç±»å‹ å€Ÿå…¥è½¬å‡º
+		OptionType: getValueById("OptionType"), //²Ù×÷ÀàĞÍ ½èÈë×ª³ö
 		HospId: PUBLIC_CONSTANT.SESSION.HOSPID
 	}
 	loadDataGridStore("tTransList", queryParams);
 }
 
 /**
-* æ·»åŠ 
+* Ìí¼Ó
 */
 function addClick() {
 	if (!checkData()) {
@@ -202,46 +194,48 @@ function addClick() {
 	}
 	var BorrowUser = getValueById("BorrowUser");
 	if (!BorrowUser) {
-		$.messager.popover({msg: "å€Ÿæ–¹ç”¨æˆ·ä¸èƒ½ä¸ºç©º", type: "info"});
+		$.messager.popover({msg: "½è·½ÓÃ»§²»ÄÜÎª¿Õ", type: "info"});
 		return;
 	}
 	if (BorrowUser == PUBLIC_CONSTANT.SESSION.USERID) {
-		$.messager.popover({msg: "å½“å‰ç”¨æˆ·ä¸èƒ½å’Œå€Ÿæ–¹ç”¨æˆ·ä¸€è‡´", type: "info"});
+		$.messager.popover({msg: "µ±Ç°ÓÃ»§²»ÄÜºÍ½è·½ÓÃ»§Ò»ÖÂ", type: "info"});
 		return;
 	}
 	var OptionType = getValueById("OptionType");
 	if (OptionType == "IN") {
-		$.messager.popover({msg: "ç›®å‰ä¸èƒ½è¿ç”¨å€Ÿå…¥ç±»åˆ«ï¼Œè¯·æŸ¥è¯¢é€‰æ‹©ç›¸åº”è®°å½•[ç¡®è®¤æ¥æ”¶]", type: "info"});
+		$.messager.popover({msg: "Ä¿Ç°²»ÄÜÔËÓÃ½èÈëÀà±ğ£¬Çë²éÑ¯Ñ¡ÔñÏàÓ¦¼ÇÂ¼[È·ÈÏ½ÓÊÕ]", type: "info"});
 		return;
 	}
 	var Acount = getValueById("Acount");
-	if (!(+Acount > 0)) {
-		$.messager.popover({msg: "é‡‘é¢è¾“å…¥é”™è¯¯", type: "info"});
+	if (!(Acount > 0)) {
+		$.messager.popover({msg: "½ğ¶îÊäÈë´íÎó", type: "info"});
 		return;
 	}
 	var PayMode = getValueById("CapPayMode");
 	if (!PayMode) {
-		$.messager.popover({msg: "è½¬å€Ÿæ–¹å¼ä¸èƒ½ä¸ºç©º", type: "info"});
+		$.messager.popover({msg: "×ª½è·½Ê½²»ÄÜÎª¿Õ", type: "info"});
 		return;
 	}
-	var msg = "æ˜¯å¦ç¡®è®¤" + $("#OptionType").combobox("getText") + "<font style='color:red'>" + Acount + "</font>" + "å…ƒï¼Ÿ";
-	$.messager.confirm("ç¡®è®¤", msg, function (r) {
-		if (r) {
-			var CapType = getValueById("CapType");    //ç›®å‰åŒ»é™¢åªç”¨äºä½é™¢ï¼Œå…ˆå…¥å‚å†™æ­»
-			var insertInfo = PUBLIC_CONSTANT.SESSION.USERID + "^" + BorrowUser + "^" + OptionType + "^" + Acount + "^" + PayMode + "^" + CapType + "^" + PUBLIC_CONSTANT.SESSION.HOSPID;
-			$.m({
-				ClassName: "web.DHCBillCapitalFlowLogic",
-				MethodName: "InsertCapitalFlow",
-				InsertInfo: insertInfo
-			}, function(rtn) {
-				if (rtn == "0") {
-					$.messager.popover({msg: "è½¬å€ŸæˆåŠŸ", type: "success"});
-					loadTransList();
-				}else {
-					$.messager.popover({msg: "è½¬å€Ÿå¤±è´¥ï¼š" + rtn, type: "error"});
-				}
-			});
+	var msg = $g("ÊÇ·ñÈ·ÈÏ") + $("#OptionType").combobox("getText") + "<font style=\"color:red;\">" + Acount + "</font>" + $g("Ôª") + "£¿";
+	$.messager.confirm("È·ÈÏ", msg, function (r) {
+		if (!r) {
+			return;
 		}
+		var CapType = getValueById("CapType");    //Ä¿Ç°Ò½ÔºÖ»ÓÃÓÚ×¡Ôº£¬ÏÈÈë²ÎĞ´ËÀ
+		var insertInfo = PUBLIC_CONSTANT.SESSION.USERID + "^" + BorrowUser + "^" + OptionType + "^" + Acount + "^" + PayMode + "^" + CapType + "^" + PUBLIC_CONSTANT.SESSION.HOSPID;
+		$.m({
+			ClassName: "web.DHCBillCapitalFlowLogic",
+			MethodName: "InsertCapitalFlow",
+			InsertInfo: insertInfo
+		}, function(rtn) {
+			var myAry = rtn.split("^");
+			if (myAry[0] == 0) {
+				$.messager.popover({msg: "×ª½è³É¹¦", type: "success"});
+				loadTransList();
+				return;
+			}
+			$.messager.popover({msg: "×ª½èÊ§°Ü£º" + (myAry[1] || myAry[0]), type: "error"});
+		});
 	});
 }
 
@@ -257,63 +251,65 @@ function checkData() {
 }
 
 /**
-* åˆ é™¤
+* É¾³ı
 */
 function deleteClick() {
 	var row = GV.TransList.getSelected();
-	if (!row || !row.RowID) {
-		$.messager.popover({msg: "è¯·é€‰æ‹©éœ€è¦åˆ é™¤çš„è®°å½•", type: "info"});
+	if (!row || !row.CapRowId) {
+		$.messager.popover({msg: "ÇëÑ¡ÔñĞèÒªÉ¾³ıµÄ¼ÇÂ¼", type: "info"});
 		return;
 	}
-	$.messager.confirm("ç¡®è®¤", "æ˜¯å¦ç¡®è®¤åˆ é™¤ï¼Ÿ", function (r) {
-		if (r) {
-			$.m({
-				ClassName: "web.DHCBillCapitalFlowLogic",
-				MethodName: "DeleteCapitalFlow",
-				CapRowId: row.RowID,
-				UserId: PUBLIC_CONSTANT.SESSION.USERID
-			}, function(rtn) {
-				var myAry = rtn.split("^");
-				if (myAry[0] == "0") {
-					$.messager.popover({msg: "åˆ é™¤æˆåŠŸ", type: "success"});
-					loadTransList();
-				}else {
-					$.messager.popover({msg: "åˆ é™¤å¤±è´¥ï¼Œé”™è¯¯ä»£ç ï¼š" + myAry[1], type: "error"});
-				}
-			});
+	$.messager.confirm("È·ÈÏ", "ÊÇ·ñÈ·ÈÏÉ¾³ı£¿", function (r) {
+		if (!r) {
+			return;
 		}
+		$.m({
+			ClassName: "web.DHCBillCapitalFlowLogic",
+			MethodName: "DeleteCapitalFlow",
+			CapRowId: row.CapRowId,
+			UserId: PUBLIC_CONSTANT.SESSION.USERID
+		}, function(rtn) {
+			var myAry = rtn.split("^");
+			if (myAry[0] == 0) {
+				$.messager.popover({msg: "É¾³ı³É¹¦", type: "success"});
+				loadTransList();
+				return;
+			}
+			$.messager.popover({msg: "É¾³ıÊ§°Ü£¬´íÎó´úÂë£º" + (myAry[1] || myAry[0]), type: "error"});
+		});
 	});
 }
 
 /**
-* ç¡®è®¤æ¥æ”¶
+* È·ÈÏ½ÓÊÕ
 */
 function receiveClick() {
 	var row = GV.TransList.getSelected();
-	if (!row || !row.RowID) {
-		$.messager.popover({msg: "è¯·é€‰æ‹©éœ€è¦æ¥æ”¶çš„è®°å½•", type: "info"});
+	if (!row || !row.CapRowId) {
+		$.messager.popover({msg: "ÇëÑ¡ÔñĞèÒª½ÓÊÕµÄ¼ÇÂ¼", type: "info"});
 		return;
 	}
-	if ((row.CapFlag == "å€Ÿå‡º") && (PUBLIC_CONSTANT.SESSION.USERID != row.CapObjUsr)) {
-		$.messager.popover({msg: "åªèƒ½ç”±<font style='color:red'>" + row.CapObjUsrName +"</font>æ¥æ”¶", type: "info"});
+	if ((row.CapFlag == "OUT") && (PUBLIC_CONSTANT.SESSION.USERID != row.CapObjUsrDR)) {
+		$.messager.popover({msg: "Ö»ÄÜÓÉ<font style=\"color:red;\">" + row.CapObjUsrName +"</font>½ÓÊÕ", type: "info"});
 		return;
 	}
-	$.messager.confirm('ç¡®è®¤', 'æ˜¯å¦ç¡®è®¤æ¥æ”¶ï¼Ÿ', function (r) {
-		if (r) {
-			$.m({
-				ClassName: "web.DHCBillCapitalFlowLogic",
-				MethodName: "ComfirmCapitalFlow",
-				CapRowId: row.RowID,
-				UserId: PUBLIC_CONSTANT.SESSION.USERID
-			}, function(rtn) {
-				var myAry = rtn.split("^");
-				if (myAry[0] == "0") {
-					$.messager.popover({msg: "ç¡®è®¤æˆåŠŸ", type: "success"});
-					loadTransList();
-				}else {
-					$.messager.popover({msg: "ç¡®è®¤å¤±è´¥ï¼š" + myAry[1], type: "error"});
-				}
-			});
+	$.messager.confirm('È·ÈÏ', 'ÊÇ·ñÈ·ÈÏ½ÓÊÕ£¿', function (r) {
+		if (!r) {
+			return;
 		}
+		$.m({
+			ClassName: "web.DHCBillCapitalFlowLogic",
+			MethodName: "ComfirmCapitalFlow",
+			CapRowId: row.CapRowId,
+			UserId: PUBLIC_CONSTANT.SESSION.USERID
+		}, function(rtn) {
+			var myAry = rtn.split("^");
+			if (myAry[0] == 0) {
+				$.messager.popover({msg: "È·ÈÏ³É¹¦", type: "success"});
+				loadTransList();
+				return;
+			}
+			$.messager.popover({msg: "È·ÈÏÊ§°Ü£º" + (myAry[1] || myAry[0]), type: "error"});
+		});
 	});
 }

@@ -200,7 +200,7 @@ function ajaxLogin(key, operate) {
 		cert = GetSignCert(key);
 		UserSignedData = SignedData(strServerRan, key);
 	}
-	var UsrCertCode = GetUniqueID(cert);
+	var UsrCertCode = GetUniqueID(cert,key);
 	var certificateNo = GetCertNo(key);
 
 	$.ajax({
@@ -263,7 +263,7 @@ function signContent(key, usrInfo, InstanceID) {
 		return SignID;
 
 	var signValue = SignedData(contentHash, key);
-	var UsrCertCode = GetUniqueID(GetSignCert(key));
+	var UsrCertCode = GetUniqueID(GetSignCert(key),key);
 	$.ajax({
 		type : 'POST',
 		dataType : 'json',

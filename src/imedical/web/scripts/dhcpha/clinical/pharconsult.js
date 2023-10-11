@@ -12,10 +12,10 @@ $(function(){
 	
 	$("#startDate").datebox("setValue", formatDate(-2));  //Init起始日期
 	$("#endDate").datebox("setValue", formatDate(0));     //Init结束日期
-	
-	$("a:contains('新建')").bind("click",newCreateConWin);
-	$("a:contains('查询')").bind("click",queryConsultDetail);
-	$("a:contains('删除')").bind("click",delConsultDetail);
+	$("a:contains("+$g('新建')+")").bind("click",newCreateConWin);
+	$("a:contains("+$g('查询')+")").bind("click",queryConsultDetail);
+	$("a:contains("+$g('删除')+")").bind("click",delConsultDetail);
+
 	$("#consPatMedNo").bind('keypress',function(event){
         if(event.keyCode == "13"){
 	        SetPatNoLength();
@@ -23,6 +23,11 @@ $(function(){
         }
     });
 	
+	$("#consPatCardNo").bind('keypress',function(event){
+        if(event.keyCode == "13"){
+            GetPatEssInfoByCardNo(); //调用查询
+        }
+    });
 	/**
 	 * 性别
 	 */
@@ -93,6 +98,7 @@ $(function(){
 function InitConsultDefault(){
 
 	$("#consPatientID").val(''); 				//病人ID
+	$("#consPatCardNo").val(''); 				//卡号
 	$('#consPatName').val('');  				//患者姓名	
 	$('#consPatMedNo').val('');    				//病历号
 	$('#consPatSex').combobox('setValue','');   //性别
@@ -124,24 +130,24 @@ function InitConsultList()
 	 */
 	var columns=[[
 		{field:'consultID',title:'consultID',width:80,hidden:true},
-		{field:'finiFlag',title:'完成',width:50,align:'center',formatter:SetCellColor},
-		{field:'consDate',title:'咨询日期',width:100},
-		{field:'consTime',title:'咨询时间',width:90},
-		{field:'consQusTypeDesc',title:'问题类型',width:120},
-		{field:'consIdenDesc',title:'咨询身份',width:100},
-		{field:'consPatName',title:'患者姓名',width:100},
-		{field:'consName',title:'记录人',width:100},
-		{field:'consContact',title:'联系方式',width:100},
-		{field:'consQusDesc',title:'问题描述',width:500},
-		{field:'consDet',title:'明细',width:100,align:'center',formatter:SetCellUrl},
-		{field:'LkDetial',title:'操作',width:100,align:'center',formatter:SetCellOpUrl}
+		{field:'finiFlag',title:$g('完成'),width:50,align:'center',formatter:SetCellColor},
+		{field:'consDate',title:$g('咨询日期'),width:100},
+		{field:'consTime',title:$g('咨询时间'),width:90},
+		{field:'consQusTypeDesc',title:$g('问题类型'),width:120},
+		{field:'consIdenDesc',title:$g('咨询身份'),width:100},
+		{field:'consPatName',title:$g('患者姓名'),width:100},
+		{field:'consName',title:$g('记录人'),width:100},
+		{field:'consContact',title:$g('联系方式'),width:100},
+		{field:'consQusDesc',title:$g('问题描述'),width:500},
+		{field:'consDet',title:$g('明细'),width:100,align:'center',formatter:SetCellUrl},
+		{field:'LkDetial',title:$g('操作'),width:100,align:'center',formatter:SetCellOpUrl}
 	]];
 	
 	/**
 	 * 定义datagrid
 	 */
 	var option = {
-		title:'咨询明细',
+		title:$g('咨询明细'),
 		//nowrap:false,
 		singleSelect : true,
 		remoteSort:false,
@@ -174,13 +180,13 @@ function InitConsDrugItem(){
 
 	//定义columns
 	var columns=[[
-	    {field:'consDesc',title:'药品名称',width:260,editor:texteditor},
-	    {field:'consSpec',title:'规格',width:100,editor:texteditor},
-		{field:'consForm',title:'剂型',width:100,editor:texteditor},
-		{field:'consManf',title:'厂商',width:100,editor:texteditor},
-		{field:'consInstruc',title:'用法',width:100,editor:texteditor},
-		{field:'consDosage',title:'剂量',width:100,editor:texteditor},
-		{field:'consDuration',title:'疗程',width:100,editor:texteditor},
+	    {field:'consDesc',title:$g('药品名称'),width:260,editor:texteditor},
+	    {field:'consSpec',title:$g('规格'),width:100,editor:texteditor},
+		{field:'consForm',title:$g('剂型'),width:100,editor:texteditor},
+		{field:'consManf',title:$g('厂商'),width:100,editor:texteditor},
+		{field:'consInstruc',title:$g('用法'),width:100,editor:texteditor},
+		{field:'consDosage',title:$g('剂量'),width:100,editor:texteditor},
+		{field:'consDuration',title:$g('疗程'),width:100,editor:texteditor},
 		{field:'operation',title:'<a href="#" onclick="appendRow()"><img style="margin:5px 0px 0px 0px;" src="../scripts/dhcpha/jQuery/themes/icons/edit_add.png" border=0/></a>',width:30,align:'center',
 			formatter:SetCellImgBtn}
 	]];
@@ -191,7 +197,7 @@ function InitConsDrugItem(){
 	var option = {
 		fit:'',
 		//title:'药品明细',
-		width:935,
+		width:970,
 		singleSelect : true,
 		pagination : false,
 	    onDblClickRow: function (rowIndex, rowData) {//双击选择行编辑
@@ -290,13 +296,13 @@ function newCreateConsult(){
 function newCreateConsultWin(){
 	var option = {
 			buttons:[{
-				text:'保存',
+				text:$g('保存'),
 				iconCls:'icon-save',
 				handler:function(){
 					saveConsultDetail();
 					}
 			},{
-				text:'关闭',
+				text:$g('关闭'),
 				iconCls:'icon-cancel',
 				handler:function(){
 					$('#newConWin').dialog('close');
@@ -305,10 +311,10 @@ function newCreateConsultWin(){
 			}]			
 		};
 	if(flag==1){
-		var newConDialogUX = new DialogUX('修改药学咨询', 'newConWin', '970', '585', option);
+		var newConDialogUX = new DialogUX($g('修改药学咨询'), 'newConWin', '1000', '585', option);
 	}
 	else{
-	    var newConDialogUX = new DialogUX('新建药学咨询', 'newConWin', '970', '585', option);
+	    var newConDialogUX = new DialogUX($g('新建药学咨询'), 'newConWin', '1000', '585', option);
 	}
 	newConDialogUX.Init();
 	
@@ -447,7 +453,7 @@ function saveConsultDetail(){
 	
 	var consDataList = consPatientID +"^"+ consPatName +"^"+ consPatSex +"^"+ consPatAge +"^"+ consContact +"^"+ consSpeCrowd +"^"+ consType +"^"+ consDiagDesc;
 		consDataList = consDataList +"^"+ consWays +"^"+ consRefMat +"^"+ consDuration +"^"+ consQusDesc +"^"+ consAnsDesc +"^"+ "";
-		consDataList = consDataList +"^"+ "" +"^"+ "" +"^"+ "" +"^"+ "" +"^"+ "" +"^"+ LgUserID +"^"+ consIden +"^"+ consDept+"^"+ "PHC";
+		consDataList = consDataList +"^"+ "" +"^"+ "" +"^"+ "" +"^"+ "" +"^"+ "" +"^"+ LgUserID +"^"+ consIden +"^"+ consDept+"^"+ "PHC"+"^"+LgHospID;
 
 	/// 咨询药品列表
 	var itemListData = drugListData();
@@ -506,7 +512,7 @@ function addConsultDrug(){
 //链接设置formatter="SetCellUrl"
 function SetCellUrl(value, rowData, rowIndex)
 {
-	return "<a href='#' onclick='showModifyWin("+rowIndex+")'>修改明细</a>";
+	return "<a href='#' onclick='showModifyWin("+rowIndex+")'>"+$g('修改明细')+"</a>";
 	
 }
 
@@ -515,7 +521,7 @@ function SetCellColor(value, rowData, rowIndex)
 {
 	var html = "";
 	if (value == "Y"){
-		html = "<span style='margin:0px 5px;font-weight:bold;color:red;'>完成</span>";		
+		html = "<span style='margin:0px 5px;font-weight:bold;color:red;'>"+$g('完成')+"</span>";		
 	}else{
 		html = "<span style='margin:0px 5px;font-weight:bold;color:green;'>No</span>";
 		}
@@ -527,9 +533,9 @@ function SetCellOpUrl(value, rowData, rowIndex)
 {
 	var html = "";
 	if (rowData.finiFlag != "Y"){
-		html = "<a href='#' onclick='setConsultComplete("+"\""+rowData.consultID+"\""+","+"\"Y\""+")'>设置完成</a>";
+		html = "<a href='#' onclick='setConsultComplete("+"\""+rowData.consultID+"\""+","+"\"Y\""+")'>"+$g('设置完成')+"</a>";
 	}else{
-		html = "<a href='#' onclick='setConsultComplete("+"\""+rowData.consultID+"\""+","+"\"N\""+")'>取消完成</a>";
+		html = "<a href='#' onclick='setConsultComplete("+"\""+rowData.consultID+"\""+","+"\"N\""+")'>"+$g('取消完成')+"</a>";
 	}
     return html;
 }
@@ -562,6 +568,7 @@ function showModifyWin(index){
 	newCreateConsult();  //新建填写窗口
 	
 	$("#consPatientID").val(rowData.consPatientID); 	        //病人ID
+	$("#consPatCardNo").val(rowData.CardNo);
 	$('#consPatName').val(rowData.consPatName);  				//患者姓名	
 	$('#consPatMedNo').val(rowData.consPatNo);	    			//病历号
 	$('#consPatSex').combobox('setValue',rowData.consPatSex);   //性别
@@ -586,26 +593,58 @@ function showModifyWin(index){
 function GetPatEssInfoByPatNo(){
 
 	var PatientNo=$('#consPatMedNo').val();    //登记号
+	if(PatientNo==""){
+	   $.messager.alert("提示:","请录入登记号");
+	   return;
+	}
 	var patFlag=tkMakeServerCall("web.DHCSTPHCMCOMMON", "checkpatFlag",PatientNo,LgHospID)
-    if(patFlag==1){
+    if(patFlag==""){
 	    InitConsultDefault()
 	    $.messager.alert("提示:","该患者不是本院区的患者");
-	       return;
+	       return;                                      
     }
-	//保存数据
-	$.post(url+'?action=GetPatEssInfoByPatNo',{"PatientNo":PatientNo},function(jsonString){
-		var jsonConsObj = jQuery.parseJSON(jsonString);
-		if (typeof jsonConsObj.PatientID != "undefined"){
-			$("#consPatientID").val(jsonConsObj.PatientID); 	        //病人ID
-			$('#consPatName').val(jsonConsObj.patname);  			    //患者姓名	
-			$('#consPatMedNo').val(jsonConsObj.patno);    			    //病历号
-			$('#consPatSex').combobox('setValue',jsonConsObj.sexId);    //性别
-			$('#consPatAge').val(jsonConsObj.patage);    			    //年龄
-			$('#consDiagDesc').val(jsonConsObj.patdiag);    			//诊断  nisijia 2016-09-29
-		}
-	});
-}
+ $.ajax({type: "POST", url: url, data: "action=GetPatInfoByPatNo&PatientNo="+PatientNo+"&hospId="+LgHospID, 
+	   success: function(val){
+			tmp=val.split("^");
+			$("#consPatientID").val(tmp[0]); 	        //病人ID
+			$('#consPatName').val(tmp[2]);  			    //患者姓名	
+			$('#consPatCardNo').val(tmp[1]);    			    //卡号
+			$('#consPatSex').combobox('setValue',tmp[3]);    //性别
+			$('#consPatAge').val(tmp[4]);    			    //年龄
+			$('#consDiagDesc').val(tmp[5]); 
+			$('#consPatMedNo').val(tmp[6]); 
+			
+	   }
+   });
 
+}
+function GetPatEssInfoByCardNo(){
+
+	 var PatCardNo=$('#consPatCardNo').val();    //卡号
+	 if(PatCardNo==""){
+		$.messager.alert("提示:","请录入卡号");
+	    return;
+	}
+	 $.ajax({type: "POST", url: url, data: "action=GetPatInfoByCardNo&PatCardNo="+PatCardNo+"&hospId="+LgHospID, 
+	 success: function(val){
+			tmp=val.split("^");
+			var patFlag=tkMakeServerCall("web.DHCSTPHCMCOMMON", "checkpatFlag",tmp[6],LgHospID)
+		    if(patFlag==""){
+			    InitConsultDefault()
+			    $.messager.alert("提示:","该患者不是本院区的患者");
+			       return;
+		    }
+			$("#consPatientID").val(tmp[0]); 	        //病人ID
+			$('#consPatName').val(tmp[2]);  			    //患者姓名	
+			$('#consPatCardNo').val(tmp[1]);    			    //卡号
+			$('#consPatSex').combobox('setValue',tmp[3]);    //性别
+			$('#consPatAge').val(tmp[4]);    			    //年龄
+			$('#consDiagDesc').val(tmp[5]); 
+			$('#consPatMedNo').val(tmp[6]); 
+			
+	   }
+   })
+}
 /// 消息提示窗口
 function showMsgAlert(ErrMsg , ErrDesc){
 	$.messager.alert("提示:","<font >" + ErrMsg + "</font><font style='color:red;'>" + ErrDesc + "</font>");

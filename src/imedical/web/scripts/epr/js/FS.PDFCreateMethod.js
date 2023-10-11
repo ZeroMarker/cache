@@ -1,34 +1,26 @@
-//Óë.net½»»¥½Ó¿Ú
-var WEBBROWSER = function () { 
-	///<summary> 
-	///µ÷ÓÃWebBrowser·½·¨·â×°Àà 
-	///</summary> 
-	this.CreateStart = function (msg,episodeID,  patientID,aDetails) { 
-		///<summary> 
-		///Éú³ÉÍê³É 
-		///</summary> 
-		///<param name="msg">ÏûÏ¢</param> 
-		window.external.CreateStart(msg,episodeID,  patientID,aDetails); 
+ï»¿//ä¸.netäº¤äº’æ¥å£
+var WEBBROWSER = function () {
+	///<summary>
+	///è°ƒç”¨WebBrowseræ–¹æ³•å°è£…ç±»
+	///</summary>
+	this.CreateStart = function (msg, episodeID, patientID, aDetails) {
+		window.external.CreateStart(msg, episodeID, patientID, aDetails);
 	};
-	this.CreateFinish = function (msg) { 
-		///<summary> 
-		///Éú³ÉÍê³É 
-		///</summary> 
-		///<param name="msg">ÏûÏ¢</param> 
-		window.external.CreateFinish(msg); 
+	this.CreateFinish = function (msg) {
+		window.external.CreateFinish(msg);
 	};
-	this.ItemCreateStart = function ( message, episodeID,  patientID,  categoryID,  categoryDetail,  mrItemID,  invokeMethod) {
-		
-		window.external.ItemCreateStart(message, episodeID,  patientID,  categoryID,  categoryDetail,  mrItemID,  invokeMethod);
+	this.CreateNoItemFinish = function (msg) {
+		window.external.CreateNoItemFinish(msg);
 	};
-	this.ItemCreateFinish = function (message,episodeID,  patientID,mrItemID ) {
-		
-		window.external.ItemCreateFinish(message,episodeID,  patientID,mrItemID);
-	}; 
+	this.ItemCreateStart = function (message, episodeID, patientID, categoryID, categoryDetail, mrItemID, invokeMethod) {
+		window.external.ItemCreateStart(message, episodeID, patientID, categoryID, categoryDetail, mrItemID, invokeMethod);
+	};
+	this.ItemCreateFinish = function (message, episodeID, patientID, mrItemID ) {
+		window.external.ItemCreateFinish(message, episodeID, patientID, mrItemID);
+	};
 	this.CheckPDFExist = function (msg) {
-		
 		window.external.CheckPDFExist(msg);
-	}; 
+	};
 	this.SetupDHCCPDFCreator = function () {
 		window.external.SetupDHCCPDFCreator();
 	};
@@ -41,11 +33,11 @@ var WEBBROWSER = function () {
 	this.FTPOp = function (param, schemeType, versionTypeCode) {
 		window.external.FTPOp(param, schemeType, versionTypeCode);
 	};
-	this.SpecialFTPOp = function (param, schemeType, versionTypeCode,specialFlag,specialParam) {
-		window.external.SpecialFTPOp(param, schemeType, versionTypeCode,specialFlag,specialParam);
+	this.SpecialFTPOp = function (param, schemeType, versionTypeCode, specialFlag, specialParam) {
+		window.external.SpecialFTPOp(param, schemeType, versionTypeCode, specialFlag, specialParam);
 	};
-	this.ClearRedundantItem = function (episodeID,versionNum,correctMRItemList,schemeID) {
-		window.external.ClearRedundantItem(episodeID,versionNum,correctMRItemList,schemeID);
+	this.ClearRedundantItem = function (episodeID, versionNum, correctMRItemList, schemeID) {
+		window.external.ClearRedundantItem(episodeID, versionNum, correctMRItemList, schemeID);
 	};
 	this.AllFinishedOp = function () {
 		window.external.AllFinishedOp();
@@ -59,47 +51,65 @@ var WEBBROWSER = function () {
 	this.IsFileCreated = function (fileName) {
 		return window.external.IsFileCreated(fileName);
 	};
-	this.ThirdPartyDownload = function (episodeID, patientID, typeCode) {
-		return window.external.ThirdPartyDownload(episodeID, patientID, typeCode);
+	this.PlatformDownload = function (episodeID, patientID, typeCode, subFlag) {
+		return window.external.PlatformDownload(episodeID, patientID, typeCode, subFlag);
+	};
+	this.ThirdPartyDownload = function (episodeID, patientID, typeCode, categoryDetail) {
+		return window.external.ThirdPartyDownload(episodeID, patientID, typeCode, categoryDetail);
 	};
 	this.CMDPrint = function (episodeID, patientID, typeCode) {
 		return window.external.CMDPrint(episodeID, patientID, typeCode);
 	};
-	this.EPRPrint = function (episodeID, patientID, categoryDetail,pageInfoID,privacylevel,fileName) {
-		return window.external.EPRPrint(episodeID, patientID, categoryDetail,pageInfoID,privacylevel,fileName);
+	this.EPRPrint = function (episodeID, patientID, categoryDetail, pageInfoID, privacylevel, fileName) {
+		return window.external.EPRPrint(episodeID, patientID, categoryDetail, pageInfoID, privacylevel, fileName);
 	};
-	this.EMRPrint = function (episodeID, patientID, categoryDetail,fileName) {
-		return window.external.EMRPrint(episodeID, patientID, categoryDetail,fileName);
+	this.EMRPrint = function (episodeID, patientID, categoryDetail, fileName) {
+		return window.external.EMRPrint(episodeID, patientID, categoryDetail, fileName);
 	};
 	this.LocalFile = function (episodeID, patientID, typeCode) {
 		return window.external.LocalFile(episodeID, patientID, typeCode);
 	};
+	this.WriteLog = function (logMessage) {
+		window.external.WriteLog(logMessage);
+	};
+	this.MediaDownload = function (episodeID, patientID, typeCode, categoryDetail) {
+		window.external.MediaDownload(episodeID, patientID, typeCode, categoryDetail);
+	};
+	this.NURSEPrint = function (episodeID, patientID, typeCode, categoryDetail, pageInfoID) {
+		window.external.NURSEPrint(episodeID, patientID, typeCode, categoryDetail, pageInfoID);
+	};
+	this.DLLPrint = function (episodeID, patientID, typeCode) {
+		return window.external.DLLPrint(episodeID, patientID, typeCode);
+	};
+	//this.CreateTimeOut = function (message) {
+		//return window.external.CreateTimeOut(message);
+	//};
 };
 
-Ext.QuickTips.init();
-
 /*
-01.		¼ì²é±¨¸æ    
-02.		¼ìÑé±¨¸æ
-04.		ÌåÎÂµ¥
-05.		×¡ÔºÖ¤
-06.		»¤Àí²¡Àú
-07.		²¡ÀúÎÄÊé
-08.		Âé×í¼ÇÂ¼
-09.		²¡Àí
-10.		ĞÄµçÍ¼
-11.		·ÑÓÃÇåµ¥
-12.		ÁÙ´²Â·¾¶
-13.		ÊäÑªÉêÇëµ¥
-14.		»áÕï¼ÇÂ¼
-15.		ÊÖÊõÇåµãµ¥
-17.		²¡Àí£¨FTP£©
-31.		³¤ÆÚÒ½Ööµ¥
-32.		ÁÙÊ±Ò½Ööµ¥
+01.		æ£€æŸ¥æŠ¥å‘Š    
+02.		æ£€éªŒæŠ¥å‘Š
+04.		ä½“æ¸©å•
+05.		ä½é™¢è¯
+06.		æŠ¤ç†ç—…å†
+06A              æ–°ç‰ˆæŠ¤ç†ç—…å†åˆå¹¶æ‰“å°
+06B              æ–°ç‰ˆæŠ¤ç†ç—…å†åˆ†é¡¹æ‰“å°
+07.		ç—…å†æ–‡ä¹¦
+08.		éº»é†‰è®°å½•
+09.		ç—…ç†
+10.		å¿ƒç”µå›¾
+11.		è´¹ç”¨æ¸…å•
+12.		ä¸´åºŠè·¯å¾„
+13.		è¾“è¡€ç”³è¯·å•
+14.		ä¼šè¯Šè®°å½•
+15.		æ‰‹æœ¯æ¸…ç‚¹å•
+17.		ç—…ç†ï¼ˆFTPï¼‰
+31.		é•¿æœŸåŒ»å˜±å•
+32.		ä¸´æ—¶åŒ»å˜±å•
 */
 
-//È«¾Ö±äÁ¿
-//µİ¹é¼ÆÊı
+//å…¨å±€å˜é‡
+//é€’å½’è®¡æ•°
 var count = 0;
 var globalArr = new Array();
 var globalArrCount = 0;
@@ -117,219 +127,227 @@ var itemPrintJobCount = 0;
 
 var openWindow = null;
 
-//Ìá½»´òÓ¡******************************************
+//æäº¤æ‰“å°******************************************
 function beginPDFCreate(){
 	//debugger;
 	globalPrintItems = "";
 	globalMRItemIDList = "";
-	//±£´æµ±Ç°Ä¬ÈÏ´òÓ¡»úÃû³Æ£¬²¢°ÑÄ¬ÈÏ´òÓ¡»úÖ¸ÏòĞéÄâ´òÓ¡»ú
+	//ä¿å­˜å½“å‰é»˜è®¤æ‰“å°æœºåç§°ï¼Œå¹¶æŠŠé»˜è®¤æ‰“å°æœºæŒ‡å‘è™šæ‹Ÿæ‰“å°æœº
 	defaultPrinterNameGlobal = getDefPrinter();
-	//¼ì²éÊÇ·ñ°²×°ĞéÄâ´òÓ¡»ú
+	//æ£€æŸ¥æ˜¯å¦å®‰è£…è™šæ‹Ÿæ‰“å°æœº
 	if (!checkPrinter(virtualPrinterName)){
-		var myBrowser = new WEBBROWSER(); 
+		var myBrowser = new WEBBROWSER();
 		myBrowser.SetupDHCCPDFCreator();
 	}
-    setDefPrinter(virtualPrinterName);
+	setDefPrinter(virtualPrinterName);
 	
-	var store = new Ext.data.JsonStore({
-		url: "../DHCEPRFS.web.eprajax.GetPDFCreateScheme.cls?EpisodeID=" + episodeID + "&PatientID=" + patientID + "&UserID=" + userID + "&SchemeID=" + schemeID + "&SpecialFlag=" + specialFlag + "&SpecialParam=" + specialParam,
-		root: 'Data',
-		totalProperty: 'TotalCount',
-		fields: [
-			{name: 'id'},
-			{name: 'text'},
-			{name: 'cspPath'},
-			{name: 'detailInfo'},
-			{name: 'detailAttachType'},
-			{name: 'mrItemID'},
-			{name: 'order',type:'int'}
-		],
-		sortInfo: {field: 'order', direction: "ASC" }
-	});
-
-	store.on('load', function(){
-		var arr = new Array();
-		var arrAfterSort = new Array();
-		if (store.getCount() == 0) {
-			//alert("Éú³É·½°¸Ã»ÓĞÉèÖÃÈÎºÎÏîÄ¿£¬ÇëÏÈÉèÖÃÉú³É·½°¸");
-			var myBrowser = new WEBBROWSER(); 
-			myBrowser.CreateFinish("");
-		}
-		else {
-			var aDetails="";
-			store.each(function(record){
-				var id = record.get('id');
-				var cgID = id.substring(0, 4);
-				var cdInfo = record.get('detailInfo');
-				var cdAttachType = record.get('detailAttachType');
-				var mrItemID = record.get('mrItemID');
-				var order = record.get('order')
-				var text = record.get('text');
-				var cspPath = record.get('cspPath');
-				//Ôö¼ÓMRItemIDÈëÊı×éÖĞ 2017.1.12
-				var arrString = id + "|||" + cgID + "|||" + cdInfo + "|||" + order + "|||" + text + "|||" + cdAttachType + "|||" + cspPath+"|||"+mrItemID;
-				var arrAfterSort = new Array();
-				if (cdInfo != "") {
-					arr.push(arrString)
-				}
-
-				if (globalMRItemIDList == "") {
-					globalMRItemIDList = mrItemID;
-				}
-				else {
-					globalMRItemIDList = globalMRItemIDList + "^" + mrItemID; 
-				}
-				if (aDetails==""){
-					aDetails=order + "^" + mrItemID + "^" + cgID
-				}
-				else{
-					aDetails=aDetails + "|||" + order + "^" + mrItemID + "^" + cgID
-				}
-			});
-			var myBrowser = new WEBBROWSER();
-			//alert("CreateStart::"+aDetails);
-			myBrowser.CreateStart("",episodeID,patientID,aDetails);
-			//»ñÈ¡ÊÇ·ñĞèÒªÒ³Âë´óÅÅ¶Ó
-			if (needPageQueue == "Y") {
-				printPageQueue(arr, true);
+	$.ajax({
+		url: '../DHCEPRFS.web.eprajax.GetPDFCreateScheme.cls',
+		data: {
+			EpisodeID: episodeID,
+			PatientID: patientID,
+			UserID: userID,
+			SchemeID: schemeID,
+			SpecialFlag: specialFlag,
+			SpecialParam: specialParam,
+			SelectItemID: selectItemID
+		},
+		type: 'post',
+		async: false,
+		dataType: 'json',
+		timeout: 120000,
+		success: function(data) {
+			var arr = new Array();
+			var arrAfterSort = new Array();
+			if (data.TotalCount == 0) {
+				alert("ç”Ÿæˆæ–¹æ¡ˆæ²¡æœ‰è®¾ç½®ä»»ä½•é¡¹ç›®ï¼Œè¯·å…ˆè®¾ç½®ç”Ÿæˆæ–¹æ¡ˆ");
+				//var myBrowser = new WEBBROWSER(); 
+				//myBrowser.CreateTimeOut("ç”Ÿæˆæ–¹æ¡ˆæ²¡æœ‰è®¾ç½®ä»»ä½•é¡¹ç›®");
 			}
 			else {
-				printPageQueue(arr, false);
-			}
-		}
-	});  
-
-	//Êı¾İ¼ÓÔØÒì³£
-	store.on('loadexception', function (proxy, options, response, e) {
-		alert(response.responseText);
-	});
-	store.load();	
-}
-
-//µ¥Ïî³¬Ê±ºóÌø¹ı´íÎóÏîºÍÍê³ÉÏî£¬Éú³ÉºóÃæµÄÏîÄ¿
-function timeOut(itemID){
-	var store = new Ext.data.JsonStore({
-		url: "../DHCEPRFS.web.eprajax.GetPDFCreateScheme.cls?EpisodeID=" + episodeID + "&PatientID=" + patientID + "&UserID=" + userID + "&SchemeID=" + schemeID + "&SpecialFlag=" + specialFlag + "&SpecialParam=" + specialParam,
-		root: 'Data',
-		totalProperty: 'TotalCount',
-		fields: [
-			{name: 'id'},
-			{name: 'text'},
-			{name: 'cspPath'},
-			{name: 'detailInfo'},
-			{name: 'detailAttachType'},
-			{name: 'mrItemID'},
-			{name: 'order',type:'int'}
-		],
-		sortInfo: {field: 'order', direction: "ASC" }
-	});
-
-	store.on('load', function(){
-		var arr = new Array();
-		var arrAfterSort = new Array();
-		
-		if (store.getCount() == 0) {
-			alert("Éú³É·½°¸Ã»ÓĞÉèÖÃÈÎºÎÏîÄ¿£¬ÇëÏÈÉèÖÃÉú³É·½°¸");
-		}
-		else {
-			var current = false;
-			var printedItems = ""; 
-			for (var i=0;i<store.getCount();i++){
-				var id = store.getAt(i).data['id'];
-				var cgID = id.substring(0, 4);
-				var cdInfo = store.getAt(i).data['detailInfo'];
-				var cdAttachType = store.getAt(i).data['detailAttachType'];
-				var order = store.getAt(i).data['order'];
-				var cspPath = record.get('cspPath');
-				var mrItemID = record.get('mrItemID');
-				//Ôö¼ÓMRItemIDÈëÊı×éÖĞ 2017.1.12
-				if (current) {
-					var arrString = id + "|||" + cgID + "|||" + cdInfo + "|||" + order + "|||" + text + "|||" + cdAttachType + "|||" + cspPath+"|||"+mrItemID;
+				var aDetails = "";
+				for (var i=0;i<data.Data.length;i++) {
+					var record = data.Data[i];
+					var id = record['id'];
+					//var cgID = id.substring(0, 4);
+					var cgID = id;
+					var createType = record['createType'];
+					var cdInfo = record['detailInfo'];
+					var cdAttachType = record['detailAttachType'];
+					var mrItemID = record['mrItemID'];
+					var order = record['order'];
+					var text = record['text'];
+					var cspPath = record['cspPath'];
+					var subFlag = record['subFlag'];
+					
+					var arrString = id + "|||" + cgID + "|||" + cdInfo + "|||" + order + "|||" + text + "|||" + cdAttachType + "|||" + cspPath + "|||" + mrItemID + "|||" + createType + "|||" + subFlag;
 					var arrAfterSort = new Array();
 					if (cdInfo != "") {
-						arr.push(arrString)
+						arr.push(arrString);
+					}
+					
+					if (globalMRItemIDList == "") {
+						globalMRItemIDList = mrItemID;
+					}
+					else {
+						globalMRItemIDList = globalMRItemIDList + "^" + mrItemID; 
+					}
+					if (aDetails=="") {
+						aDetails = order + "^" + mrItemID + "^" + cgID;
+					}
+					else {
+						aDetails = aDetails + "|||" + order + "^" + mrItemID + "^" + cgID;
 					}
 				}
-				else{
-					if (printedItems == ""){
-						printedItems = id;
-					} 
-					else{
-						printedItems = printedItems + "^" + id; 
-					}
-				}
-			
-				if (itemID == id){
-					current = true;
-				}
-			}
-
-			if (arr.length == 0) {
-				return;
-			}
-			else {
-				//»ñÈ¡ÊÇ·ñĞèÒªÒ³Âë´óÅÅ¶Ó
-				var isPageQueue = true;
-				
-				if (isPageQueue) {
+				var myBrowser = new WEBBROWSER();
+				//alert("CreateStart::"+aDetails);
+				myBrowser.CreateStart("",episodeID,patientID,aDetails);
+				//è·å–æ˜¯å¦éœ€è¦é¡µç å¤§æ’é˜Ÿ
+				if (needPageQueue == "Y") {
 					printPageQueue(arr, true);
 				}
 				else {
 					printPageQueue(arr, false);
 				}
 			}
+		},
+		error: function(jqXHR,textStatus) {
+			var myBrowser = new WEBBROWSER();
+			myBrowser.WriteLog(textStatus);
+			alert(textStatus);
 		}
-		
-	});  
-	//Êı¾İ¼ÓÔØÒì³£
-	store.on('loadexception', function (proxy, options, response, e) {
-		alert(response.responseText);
 	});
-	store.load();	
 }
 
-//°´Ò³ÂëÏÔÊ¾Ë³ĞòÅÅĞò£¬·ñÔò»á°´ÕÕÓÃ»§Ñ¡ÔñµÄÏÈºóË³Ğò¶ø²»ÊÇÒ³ÃæÏÔÊ¾µÄÏÈºóË³Ğò´òÓ¡ºÍÅÅĞòÒ³Âë¡£
-function swapArr(arr,firstIndex, secondIndex) {
+//å•é¡¹è¶…æ—¶åè·³è¿‡é”™è¯¯é¡¹å’Œå®Œæˆé¡¹ï¼Œç”Ÿæˆåé¢çš„é¡¹ç›®
+function timeOut(itemID){
+	$.ajax({
+		url: '../DHCEPRFS.web.eprajax.GetPDFCreateScheme.cls',
+		data: {
+			EpisodeID: episodeID,
+			PatientID: patientID,
+			UserID: userID,
+			SchemeID: schemeID,
+			SpecialFlag: specialFlag,
+			SpecialParam: specialParam,
+			SelectItemID: selectItemID
+		},
+		type: 'post',
+		async: false,
+		dataType: 'json',
+		timeout: 120000,
+		success: function(data) {
+			var arr = new Array();
+			var arrAfterSort = new Array();
+			
+			if (data.TotalCount == 0) {
+				var myBrowser = new WEBBROWSER();
+				myBrowser.WriteLog("ç”Ÿæˆæ–¹æ¡ˆæ²¡æœ‰è®¾ç½®ä»»ä½•é¡¹ç›®ï¼Œè¯·å…ˆè®¾ç½®ç”Ÿæˆæ–¹æ¡ˆ");
+				alert("ç”Ÿæˆæ–¹æ¡ˆæ²¡æœ‰è®¾ç½®ä»»ä½•é¡¹ç›®ï¼Œè¯·å…ˆè®¾ç½®ç”Ÿæˆæ–¹æ¡ˆ");
+			}
+			else {
+				var current = false;
+				var printedItems = "";
+				for (var i=0;i<data.Data.length;i++) {
+					var record = data.Data[i];
+					var id = record['id'];
+					//var cgID = id.substring(0, 4);
+					var cgID = id;
+					var createType = record['createType'];
+					var cdInfo = record['detailInfo'];
+					var cdAttachType = record['detailAttachType'];
+					var mrItemID = record['mrItemID'];
+					var order = record['order'];
+					var text = record['text'];
+					var cspPath = record['cspPath'];
+					var subFlag = record['subFlag'];
+					
+					if (current) {
+						var arrString = id + "|||" + cgID + "|||" + cdInfo + "|||" + order + "|||" + text + "|||" + cdAttachType + "|||" + cspPath+"|||" + mrItemID + "|||" + createType + "|||" + subFlag;
+						var arrAfterSort = new Array();
+						if (cdInfo != "") {
+							arr.push(arrString)
+						}
+					}
+					else {
+						if (printedItems == "") {
+							printedItems = id;
+						}
+						else {
+							printedItems = printedItems + "^" + id; 
+						}
+					}
+					
+					if (itemID == id) {
+						current = true;
+					}
+				}
+				
+				if (arr.length == 0) {
+					return;
+				}
+				else {
+					//è·å–æ˜¯å¦éœ€è¦é¡µç å¤§æ’é˜Ÿ
+					var isPageQueue = true;
+					
+					if (isPageQueue) {
+						printPageQueue(arr, true);
+					}
+					else {
+						printPageQueue(arr, false);
+					}
+				}
+			}
+		},
+		error: function(jqXHR,textStatus) {
+			var myBrowser = new WEBBROWSER();
+			myBrowser.WriteLog(textStatus);
+			alert(textStatus);
+		}
+	});
+}
+
+//æŒ‰é¡µç æ˜¾ç¤ºé¡ºåºæ’åºï¼Œå¦åˆ™ä¼šæŒ‰ç…§ç”¨æˆ·é€‰æ‹©çš„å…ˆåé¡ºåºè€Œä¸æ˜¯é¡µé¢æ˜¾ç¤ºçš„å…ˆåé¡ºåºæ‰“å°å’Œæ’åºé¡µç ã€‚
+function swapArr(arr,firstIndex,secondIndex) {
 	var temp = arr[firstIndex];
 	arr[firstIndex] = arr[secondIndex];
 	arr[secondIndex] = temp;
 }
 
-function splitString(arrString){
+function splitString(arrString) {
 	var strs = new Array();
 	strs = arrString.split("|||");
-	
 	return parseInt(strs[3]);
 }
 
-function sortArr(arr){
+function sortArr(arr) {
 	var len = arr.length, min, i, j;
 
 	for (i=0; i<len; i=i+1) {
 		min = i;
-		// ±È½Ï×îĞ¡ÏîÄ¿ºÍµÚiÏîÖ®ºóµÄÊ£ÓàÊı×éÏî, ÒÔÑ°ÕÒ¸üĞ¡Ïî
+		// æ¯”è¾ƒæœ€å°é¡¹ç›®å’Œç¬¬ié¡¹ä¹‹åçš„å‰©ä½™æ•°ç»„é¡¹, ä»¥å¯»æ‰¾æ›´å°é¡¹
 		for (j=i+1; j<len; j=j+1) {
 			if (splitString(arr[min]) > splitString(arr[j])) {
 				 min = j; 
 			}
 		}
-		// ±È½Ï³õÊ¼×îĞ¡ÏîºÍµ±Ç°×îĞ¡Ïî, Èç¹û²»ÏëµÈ, Ôò½»»»Á½ÕßÎ»ÖÃ
+		// æ¯”è¾ƒåˆå§‹æœ€å°é¡¹å’Œå½“å‰æœ€å°é¡¹, å¦‚æœä¸æƒ³ç­‰, åˆ™äº¤æ¢ä¸¤è€…ä½ç½®
 		if (i !== min) { 
 			swapArr(arr,i, min); 
 		}
 	}
-	// ·µ»Ø¾­¹ıÅÅĞòµÄÊı×é
+	// è¿”å›ç»è¿‡æ’åºçš„æ•°ç»„
 	return arr;
 }
 
-//ÉèÖÃÎÄ¼şÃû
+//è®¾ç½®æ–‡ä»¶å
 function getFileName(categoryID,text,categoryAttachType)
 {
 	var fileNameStr = "";
 
-	if (categoryID == "CG07")	//07.²¡ÀúÎÄÊé
+	if (categoryID == "CG07")	//07.ç—…å†æ–‡ä¹¦
 	{
-		//07.²¡ÀúÎÄÊé
+		//07.ç—…å†æ–‡ä¹¦
 		var fileNameStr = categoryID;
 		var allStr = new Array();
 		allStr = text.split('!');
@@ -345,7 +363,7 @@ function getFileName(categoryID,text,categoryAttachType)
 			}
 		}
 		else {
-			strsAL = allStr[0];			
+			strsAL = allStr[0];
 		}
 		var strs = strsAL.split('^');
 		var printType = strs[0];
@@ -358,161 +376,187 @@ function getFileName(categoryID,text,categoryAttachType)
 		fileNameStr = fileNameStr + "_" + printType + "_" + aPatientID + "_" + aEpisodeID + "_" + printTemplateID + "_" + aPrintTemplateDocID;
 		return fileNameStr;
 	}
-	else if (categoryID == "CG71")	//71.Èı°æ²¡ÀúÎÄÊé
+	else if (categoryID == "CG71")	//71.ä¸‰ç‰ˆç—…å†æ–‡ä¹¦
+	{
+		fileNameStr = categoryID + "_" +"Single" + "_" + patientID + "_" + episodeID + "_" + text + "_" + text;
+		return fileNameStr;
+	}
+	else if (categoryID == "CG36")	//36.é¾™å²©äºŒé™¢ä½é™¢ç—…æ¡ˆé¦–é¡µ(ç¼–ç›®)
 	{
 		fileNameStr = categoryID + "_" +"Single" + "_" + patientID + "_" + episodeID + "_" + text + "_" + text;
 		return fileNameStr;
 	}
 	else if (categoryID == "CG15")
 	{
-		//ÊÖÂéÏµÍ³µÄÂé×í¼ÇÂ¼µ¥ºÍÊÖÊõÇåµãµ¥ĞèÒªÇø·Ö£¬ÊÖÊõÇåµãµ¥TypeParamsÎª2
+		//æ‰‹éº»ç³»ç»Ÿçš„éº»é†‰è®°å½•å•å’Œæ‰‹æœ¯æ¸…ç‚¹å•éœ€è¦åŒºåˆ†ï¼Œæ‰‹æœ¯æ¸…ç‚¹å•TypeParamsä¸º2
 		fileNameStr = categoryID + "_" +"Single" + "_" + patientID + "_" + episodeID + "_1_2";
+		return fileNameStr;
+	}
+	else if (categoryID == "CGPI")
+	{
+		//è¿™ä¸ªç±»å‹æ˜¯æŒ‡éœ€è¦å½’æ¡£çš„å›¾ç‰‡ï¼Œæ¯”å¦‚pngã€jpegã€tiffç­‰ï¼Œè¿™é‡Œçš„textå°±æ˜¯typeParams
+		fileNameStr = categoryID + "_" +"Single" + "_" + patientID + "_" + episodeID + "_" + text + "_" + text;
+		return fileNameStr;
+	}
+	else if (categoryID == "CG37")
+	{
+		fileNameStr = categoryID + "_" +"Single" + "_" + patientID + "_" + episodeID + "_" + text + "_" + text;
+		return fileNameStr;
+	}
+	else if (categoryID == "CG06B")
+	{
+		//æ–°ç‰ˆæŠ¤ç†åˆ†é¡¹æ‰“å°ï¼Œç¡®ä¿ç”Ÿæˆçš„æ–‡ä»¶åä¸é‡å¤
+		fileNameStr = categoryID + "_" +"Single" + "_" + patientID + "_" + episodeID + "_" + text + "_" + text;
 		return fileNameStr;
 	}
 	else
 	{
-		//³ı²¡ÀúÎÄÊéÍâÆäËû
+		//é™¤ç—…å†æ–‡ä¹¦å¤–å…¶ä»–
 		fileNameStr = categoryID + "_" +"Single" + "_" + patientID + "_" + episodeID + "_1_1";
 		return fileNameStr;
 	}
 }
 
-//Âß¼­ÎÄ¼şÃû
+//é€»è¾‘æ–‡ä»¶å
 function getLogicPath()
 {
 	var logicPathStr = "/" + patientID + "/" + episodeID + "/epr/" + fileNameGlobal + ".pdf";
 	return logicPathStr;
 }
 
-//Éú³ÉÇ°ÉèÖÃĞéÄâ´òÓ¡»úµÄÊä³öÎÄ¼şÃû
+//ç”Ÿæˆå‰è®¾ç½®è™šæ‹Ÿæ‰“å°æœºçš„è¾“å‡ºæ–‡ä»¶å
 function startPrint(fileName)
 {
-	var myBrowser = new WEBBROWSER(); 
+	//alert("00");
+	var myBrowser = new WEBBROWSER();
 	myBrowser.SetOutputFileName(fileName);
 	fileNameGlobal = fileName;
 	myBrowser.StartOp();
 }
 
-//ÔÚÒ»¸ö¹éµµÏîÄ¿ÄÚ¿ªÊ¼ÏÂÒ»¸ö´òÓ¡×÷ÒµÇ°ÉèÖÃÊä³öÎÄ¼şÃû
+//åœ¨ä¸€ä¸ªå½’æ¡£é¡¹ç›®å†…å¼€å§‹ä¸‹ä¸€ä¸ªæ‰“å°ä½œä¸šå‰è®¾ç½®è¾“å‡ºæ–‡ä»¶å
 function startPrintJob(fileName)
 {
-	var myBrowser = new WEBBROWSER(); 
+	var myBrowser = new WEBBROWSER();
 	myBrowser.SetOutputFileName(fileName);
 	//fileNameGlobal = fileName;
 	myBrowser.StartOp();
 }
 
-//Éú³Éµ¥Ïî½áÊøºó½«Éú³ÉÏîÄ¿µÄÃû³Æ¼Óµ½È«¾Ö±äÁ¿ÖĞ
+//ç”Ÿæˆå•é¡¹ç»“æŸåå°†ç”Ÿæˆé¡¹ç›®çš„åç§°åŠ åˆ°å…¨å±€å˜é‡ä¸­
 function finishPrint()
 {
 	var fileLogicPath = getLogicPath();
 	if (globalPrintItems == ""){
-		globalPrintItems = fileNameGlobal + "|" + fileLogicPath;	
+		globalPrintItems = fileNameGlobal + "|" + fileLogicPath;
 	}
 	else{
-		globalPrintItems = globalPrintItems + "#" + fileNameGlobal + "|" + fileLogicPath;		
+		globalPrintItems = globalPrintItems + "#" + fileNameGlobal + "|" + fileLogicPath;
 	}
 }
 
-//Éú³ÉÈ«²¿Íê³ÉºóµÄ×¢²á£¬ÉÏ´«²Ù×÷
+//ç”Ÿæˆå…¨éƒ¨å®Œæˆåçš„æ³¨å†Œï¼Œä¸Šä¼ æ“ä½œ
 function upLoadFTP()
 {
-	var myBrowser = new WEBBROWSER(); 
+	var myBrowser = new WEBBROWSER();
 	if (specialFlag == "")
 	{
 		myBrowser.FTPOp(globalPrintItems, schemeType, versionTypeCode);
 	}
 	else
 	{
-		myBrowser.SpecialFTPOp(globalPrintItems, schemeType, versionTypeCode, specialFlag, specialParam);	
+		myBrowser.SpecialFTPOp(globalPrintItems, schemeType, versionTypeCode, specialFlag, specialParam);
 	}
 }
 
-//Éú³ÉÈ«²¿Íê³ÉºóÇå¿Õ¶àÓàµÄPDFÎÄ¼ş
+//ç”Ÿæˆå…¨éƒ¨å®Œæˆåæ¸…ç©ºå¤šä½™çš„PDFæ–‡ä»¶
 function clearRedundantItem()
 {
-	var myBrowser = new WEBBROWSER(); 
+	var myBrowser = new WEBBROWSER();
 	myBrowser.ClearRedundantItem(episodeID,schemeType,globalMRItemIDList,schemeID);
 }
 
 function appendLocalFile(episodeID,patientID)
 {
 	setDefPrinter(virtualPrinterName);
-	var myBrowser = new WEBBROWSER(); 
+	var myBrowser = new WEBBROWSER();
 	myBrowser.LocalFile(episodeID, patientID, "CG08");
 }
 
-//´òÓ¡********************************************
+//æ‰“å°********************************************
 function printPageQueue(arr,isPageQueue) {
-	//alert("01");
 	var arrCount = arr.length;
     if (arrCount < 1) return;
 	globalArr = arr;
 	globalArrCount = arrCount;
 	globalIsPageQueue = isPageQueue;
-
-	//³õÊ¼»¯Ò³ÂëĞÅÏ¢
-	Ext.Ajax.request({
+	
+	//åˆå§‹åŒ–é¡µç ä¿¡æ¯
+	$.ajax({
 		url: '../DHCEPRFS.web.eprajax.GetPDFCreateScheme.cls',
-		timeout: 5000,
-		params: {
-			Action: "initpageinfo",
+		data: {
+			Action: 'initpageinfo',
 			IsPageQueue: isPageQueue
 		},
-		success: function(response, opts){
-			if (response.responseText != "-1") {
-				//³É¹¦
-				var pageInfoID = parseInt(response.responseText);	
+		type: 'post',
+		async: false,
+		timeout: 5000,
+		success: function(data) {
+			if (data != '-1') {
+				//æˆåŠŸ
+				var pageInfoID = parseInt(data);
 				globalPageInfoID = pageInfoID;
-				//µİ¹é´òÓ¡ËùÓĞÏîÄ¿
+				//é€’å½’æ‰“å°æ‰€æœ‰é¡¹ç›®
 				printItem(arr,arrCount,isPageQueue,pageInfoID);
 			}
 		},
-		failure: function(response, opts){
-			Ext.MessageBox.alert("ÌáÊ¾", response.responseText);
+		error: function(jqXHR,textStatus) {
+			var myBrowser = new WEBBROWSER();
+			myBrowser.WriteLog(textStatus);
+			alert(textStatus);
 		}
-	});	
+	});
 }
 
-//µİ¹é´òÓ¡ËùÓĞÏîÄ¿
+//é€’å½’æ‰“å°æ‰€æœ‰é¡¹ç›®
 function printItem(arr, arrCount, isPageQueue, pageInfoID){
-	//alert("02");
 	var myBrowser = new WEBBROWSER(); 
 	//myBrowser.ItemCreateStart(arr[count]);
 	var strs = new Array();
 	strs = arr[count].split("|||");
-
+	
 	var categoryID = strs[1];
 	var categoryDetail =strs[2];
 	var id = strs[0];
 	var categoryAttachType = strs[5];
 	var cspPath = strs[6];
 	var mrItemID= strs[7];
+	var createType = strs[8];
+	var subFlag = strs[9];
 	
 	globalID = id;
-	var para = {EpisodeID: episodeID, PatientID: patientID, CategoryDetail: categoryDetail, PageInfoID: pageInfoID, CategoryID:categoryID,MRItemID:mrItemID};
+	var para = {EpisodeID: episodeID, PatientID: patientID, CategoryDetail: categoryDetail, PageInfoID: pageInfoID, CategoryID: categoryID, MRItemID: mrItemID};
 	
 	itemPrintJobCount = 0;
-
-	//½ø¶ÈÌõĞÅÏ¢
+	
+	//è¿›åº¦æ¡ä¿¡æ¯
 	var curnum = (count+1)/arrCount;
-	var bartext = "ÕıÔÚÉú³É¡¶"+strs[4]+"¡·£¬µÚ"+(count+1)+"Ïî£¬¹²"+arrCount+"Ïî";
-	Ext.getCmp("pbar").updateProgress(curnum,bartext);	
-	//»ñÈ¡Éú³ÉµÄÎÄ¼şÃû
+	var bartext = "æ­£åœ¨ç”Ÿæˆã€Š"+strs[4]+"ã€‹ï¼Œç¬¬"+(count+1)+"é¡¹ï¼Œå…±"+arrCount+"é¡¹";
+	$('#progressText').text(bartext);
+	//è·å–ç”Ÿæˆçš„æ–‡ä»¶å
 	fileName = getFileName(categoryID, categoryDetail, categoryAttachType);
-	//ÉèÖÃĞéÄâ´òÓ¡»úµÄÊä³öÎÄ¼şÃû
+	//è®¾ç½®è™šæ‹Ÿæ‰“å°æœºçš„è¾“å‡ºæ–‡ä»¶å
 	startPrint(fileName);
 	if (categoryID == "PS"){
 		printScan(para);
 	}
 	else{
-		printCategory(para,categoryID,cspPath);
+		printCategory(para,categoryID,cspPath,createType,subFlag);
 	}
 }
 
-//½Ó¿Ú£¬´òÓ¡ÏÂÒ»Ïî
+//æ¥å£ï¼Œæ‰“å°ä¸‹ä¸€é¡¹
 function printNext(){
-
 	if (openWindow != null)
 	{
 		openWindow.close();
@@ -523,44 +567,48 @@ function printNext(){
 	var pageInfoID = globalPageInfoID;
 	var id = globalID;
 	
-	//ajax ´òÓ¡Íê¼ÇÂ¼´òÓ¡Ïî½áÊøÒ³Âë
-	Ext.Ajax.request({
+	//ajax æ‰“å°å®Œè®°å½•æ‰“å°é¡¹ç»“æŸé¡µç 
+	$.ajax({
 		url: '../DHCEPRFS.web.eprajax.GetPDFCreateScheme.cls',
-		timeout: 6000000,
-		params: {
-			Action: "setpageinfo",
+		data: {
+			Action: 'setpageinfo',
 			IsPageQueue: isPageQueue,
 			PageInfoID: pageInfoID,
 			AID: id
 		},
-		success: function(response, opts){
-			if (response.responseText != "-1") {
-				//³É¹¦£¬µİ¹é´òÓ¡ÏÂÒ»¸öÑ¡ÖĞ´òÓ¡Ïî£¬²¢Ë¢ĞÂ´òÓ¡Ïî±í¸ñÏÔÊ¾Ò³ÂëĞÅÏ¢
-				var myBrowser = new WEBBROWSER(); 
+		type: 'post',
+		async: false,
+		timeout: 6000000,
+		success: function(data) {
+			if (data != '-1') {
+				//æˆåŠŸï¼Œé€’å½’æ‰“å°ä¸‹ä¸€ä¸ªé€‰ä¸­æ‰“å°é¡¹ï¼Œå¹¶åˆ·æ–°æ‰“å°é¡¹è¡¨æ ¼æ˜¾ç¤ºé¡µç ä¿¡æ¯
+				var myBrowser = new WEBBROWSER();
 				var strs = new Array();
-				strs=arr[count].split("|||");
+				strs = arr[count].split("|||");
 				var aMRItemID = strs[7];
 				myBrowser.ItemCreateFinish(arr[count],episodeID,patientID,aMRItemID);
-				var myBrowser = new WEBBROWSER(); 
+				var myBrowser = new WEBBROWSER();
 				myBrowser.CheckPDFExist(globalPrintItems);
 				count = count + 1;
 				if (count < arrCount) {
 					finishPrint();
 					printItem(arr, arrCount, isPageQueue, pageInfoID);
 				}
-				//µİ¹é×îºóÒ»Ïî£¬´òÓ¡Íê³ÉºóË¢ĞÂ´òÓ¡Ïî±í¸ñ£¬²¢½«countÖÃ0
+				//é€’å½’æœ€åä¸€é¡¹ï¼Œæ‰“å°å®Œæˆååˆ·æ–°æ‰“å°é¡¹è¡¨æ ¼ï¼Œå¹¶å°†countç½®0
 				else {
 					if (count = arrCount) {
 						finishPrint();
 						count = 0;
-						//ÇåÀí£¬´òÓ¡¼ÇÂ¼£¬»¹Ô­´òÓ¡»úÉèÖÃ
+						//æ¸…ç†ï¼Œæ‰“å°è®°å½•ï¼Œè¿˜åŸæ‰“å°æœºè®¾ç½®
 						afterPrint(arr, pageInfoID);
 					}
 				}
 			}
 		},
-		failure: function(response, opts){
-			Ext.MessageBox.alert("ÌáÊ¾", response.responseText);
+		error: function(jqXHR,textStatus) {
+			var myBrowser = new WEBBROWSER();
+			myBrowser.WriteLog(textStatus);
+			alert(textStatus);
 		}
 	});
 }
@@ -568,7 +616,7 @@ function printNext(){
 var categoryDetail;
 function getUrl(cspUrl,para){
 	detail = para.CategoryDetail;
-	//±ÜÃâget·½·¨×Ö·û´®³¬³¤
+	//é¿å…getæ–¹æ³•å­—ç¬¦ä¸²è¶…é•¿
 	if (detail.length > 1000)
 	{
 		categoryDetail = detail;
@@ -584,13 +632,16 @@ function getUrl(cspUrl,para){
 	var url = "";
 	if (cspUrl.indexOf("?") > 0)
 	{
-		//º¬ÓĞ?ÔòºóÃæÊ¹ÓÃ&×·¼Ó
+		//å«æœ‰?åˆ™åé¢ä½¿ç”¨&è¿½åŠ 
 		url = cspUrl + "&EpisodeID=" + para.EpisodeID + "&PatientID=" + para.PatientID + "&CategoryDetail=" + detail + "&PageInfoID=" + para.PageInfoID + "&Privacylevel=" + privacyLevel + "&SpecialFlag=" + specialFlag + "&SpecialParam=" + specialParam + "&userID=" + userID;
 	}
 	else
 	{
-		//²»º¬?ÔòµÚÒ»¸ö²ÎÊıÊ¹ÓÃ?
+		//ä¸å«?åˆ™ç¬¬ä¸€ä¸ªå‚æ•°ä½¿ç”¨?
 		url = cspUrl + "?EpisodeID=" + para.EpisodeID + "&PatientID=" + para.PatientID + "&CategoryDetail=" + detail + "&PageInfoID=" + para.PageInfoID + "&Privacylevel=" + privacyLevel + "&SpecialFlag=" + specialFlag + "&SpecialParam=" + specialParam + "&userID=" + userID;
+	}
+	if (para.CategoryID == 'CG06B') {
+		url = url + '&Type=' + detail;
 	}
 	return url;
 }
@@ -600,156 +651,219 @@ function getCategoryDetail()
 	return categoryDetail;
 }
 
-//¸÷×é´òÓ¡½Ó¿Ú********************************************
-function printCategory(para,categoryID,cspPath)
+//å„ç»„æ‰“å°æ¥å£********************************************
+function printCategory(para,categoryID,cspPath,createType,subFlag)
 {
-    if ((categoryID == "CG24") || (categoryID == "CG25") || (categoryID == "CG01") || (categoryID == "CG10") || (categoryID == "CG08") || (categoryID == "CG18") || (categoryID == "CG81") || (categoryID == "CG17"))
+	if (createType == "CREATETYPEFTP")
 	{
-		//ĞÄµçÍ¼£¬±¾ÉíÊÇPDF£¬ÎŞĞè´òÓ¡£¬Ö±½ÓÏÂÔØ
-		var myBrowser = new WEBBROWSER(); 
-		myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,"")
+		//å¿ƒç”µå›¾ï¼Œæœ¬èº«æ˜¯PDFï¼Œæ— éœ€æ‰“å°ï¼Œç›´æ¥ä¸‹è½½
+		var myBrowser = new WEBBROWSER();
+		myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,"");
 		myBrowser.LocalFile(para.EpisodeID, para.PatientID, categoryID);
 		printNext();
 	}
-	else if ((categoryID == "CG659") || (categoryID == "CG60") || (categoryID == "CG66") || (categoryID == "CG67") || (categoryID == "CG69") || (categoryID == "CG68") || (categoryID == "CG80") || (categoryID == "CG79") || (categoryID == "CG78") || (categoryID == "CG77") || (categoryID == "CG76") || (categoryID == "CG75") || (categoryID == "CG74") || (categoryID == "CG73") || (categoryID == "CG72") || (categoryID == "CG70") || (categoryID == "CG69") || (categoryID == "CG84") || (categoryID == "CG86") || (categoryID == "CG87") || (categoryID == "CG88") || (categoryID == "CG89") || (categoryID == "CG90") || (categoryID == "CG91") || (categoryID == "CG92")|| (categoryID == "CG93")|| (categoryID == "CG94")|| (categoryID == "CG95")|| (categoryID == "CG96")|| (categoryID == "CG97")|| (categoryID == "CG98")|| (categoryID == "CG99"))
+	else if (createType == "CREATETYPEPLATFORMFTP")
 	{
-		var myBrowser = new WEBBROWSER(); 
-		myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,"")
-		myBrowser.ThirdPartyDownload(para.EpisodeID, para.PatientID, categoryID);
+		var myBrowser = new WEBBROWSER();
+		myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,"");
+		myBrowser.PlatformDownload(para.EpisodeID, para.PatientID, categoryID, subFlag);
 		printNext();
 	}
-	else if ((categoryID == "CG21") || (categoryID == "CG22"))
+	else if (createType == "CREATETYPETHIRDPARTYFTP")
 	{
-		//¸¾²úcs¼ìÑé£¬ÉòÑôÒ½´ócsÊäÑªµ¥
-		var myBrowser = new WEBBROWSER(); 
-		myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,"")
+		var myBrowser = new WEBBROWSER();
+		myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,"");
+		myBrowser.ThirdPartyDownload(para.EpisodeID, para.PatientID, categoryID, para.CategoryDetail);
+		printNext();
+	}
+	else if (createType == "CREATETYPEEXE")
+	{
+		//å¦‡äº§csæ£€éªŒï¼Œæ²ˆé˜³åŒ»å¤§csè¾“è¡€å•
+		var myBrowser = new WEBBROWSER();
+		myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,"");
 		myBrowser.CMDPrint(para.EpisodeID, para.PatientID, categoryID);
 		printNext();
 	}
-	else if (categoryID == "CG71")
+	else if (createType == "CREATETYPEEMR3")
 	{
 		try {
-			var myBrowser = new WEBBROWSER(); 
-			myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,"")
-			myBrowser.EMRPrint(para.EpisodeID, para.PatientID, para.CategoryDetail,fileNameGlobal);
+			var myBrowser = new WEBBROWSER();
+			myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,"");
+			myBrowser.EMRPrint(para.EpisodeID, para.PatientID, para.CategoryDetail, fileNameGlobal);
 			//openWindow = window.showModalDialog(iframeUrl,"","dialogHeight:300px;dialogLeft:200px;dialogTop:200px;dialogWidth:500px;center:no;dialogHide:no;edge:sunken;help:yes;resizable:no;scroll:no;status:no;unadorned:no;");
 			printNext();
 		} catch (e) {
+			var myBrowser = new WEBBROWSER();
+			myBrowser.WriteLog(e.message);
 			alert(e.message);
 		}
 	}
-	else if (categoryID == "CG07")
+	else if (createType == "CREATETYPEEPR2")
 	{
-
 		try {
 			var privatelevel = ""
 			if (schemeType != "")
 			{
 				privatelevel = schemeType.substring(schemeType.length-2,schemeType.length);
 			}
-
-			var myBrowser = new WEBBROWSER(); 
-			myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,"")
-			myBrowser.EPRPrint(para.EpisodeID, para.PatientID, para.CategoryDetail,para.PageInfoID,privatelevel,fileNameGlobal);
-			printNext();	
+			var myBrowser = new WEBBROWSER();
+			myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,"");
+			myBrowser.EPRPrint(para.EpisodeID, para.PatientID, para.CategoryDetail, para.PageInfoID, privatelevel, fileNameGlobal);
+			printNext();
 		} catch (e) {
+			var myBrowser = new WEBBROWSER();
+			myBrowser.WriteLog(e.message);
 			alert(e.message);
-		}	
+		}
 	}
-	else if (categoryID == "CG83")
+	else if (createType == "CREATETYPETHIRDPARTYURL")
 	{
-		//Ğ­ºÍÕã½­ÁªÖÚ¼ìÑé±¨¸æ£¬²ÉÓÃieµ¯´°´òÓ¡·½Ê½
+		//åå’Œæµ™æ±Ÿè”ä¼—æ£€éªŒæŠ¥å‘Šï¼Œé‡‡ç”¨ieå¼¹çª—æ‰“å°æ–¹å¼
 		try {
 			var episodeID = para.EpisodeID;
-			Ext.Ajax.request({
+			$.ajax({
 				url: '../DHCEPRFS.web.eprajax.AjaxThirdParty.cls',
-				timeout: 5000,
-				params: {
-					Action: "geturl",
-					EpisodeID:episodeID
+				data: {
+					Action: 'geturl',
+					EpisodeID: episodeID
 				},
-				success: function(response, opts){
-					if (response.responseText != "-1") {
-						//³É¹¦
-						var result = response.responseText;
-						var myBrowser = new WEBBROWSER(); 
-						myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,result)
+				type: 'post',
+				async: false,
+				timeout: 5000,
+				success: function(data) {
+					if (data != '-1') {
+						//æˆåŠŸ
+						var result = data;
+						var myBrowser = new WEBBROWSER();
+						myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,result);
 						if (result != "0")
 						{
-							//0±íÊ¾Ã»ÓĞ²¡°¸ºÅ£¬±íÊ¾ĞÂÉú¶ù£¬¶øĞÂÉú¶ù²»ĞèÒªÉú³É»¯Ñéµ¥
+							//0è¡¨ç¤ºæ²¡æœ‰ç—…æ¡ˆå·ï¼Œè¡¨ç¤ºæ–°ç”Ÿå„¿ï¼Œè€Œæ–°ç”Ÿå„¿ä¸éœ€è¦ç”ŸæˆåŒ–éªŒå•
 							var url = result;
-							openWindow = window.showModalDialog(url,"","dialogHeight:300px;dialogLeft:200px;dialogTop:200px;dialogWidth:500px;center:no;dialogHide:no;edge:sunken;help:yes;resizable:no;scroll:no;status:no;unadorned:no;");							
+							openWindow = window.showModalDialog(url,"","dialogHeight:300px;dialogLeft:200px;dialogTop:200px;dialogWidth:500px;center:no;dialogHide:no;edge:sunken;help:yes;resizable:no;scroll:no;status:no;unadorned:no;");
 						}
 						printNext();
 					}
 				},
-				failure: function(response, opts){
-					Ext.MessageBox.alert("ÌáÊ¾", response.responseText);
+				error: function(jqXHR,textStatus) {
+					alert(textStatus);
 				}
-			});		
-
+			});
 		} catch (e) {
+			var myBrowser = new WEBBROWSER();
+			myBrowser.WriteLog(e.message);
 			alert(e.message);
-		}	
+		}
+	}
+	else if (createType == "CREATETYPEEMR3FP")
+	{
+		try {
+			var iframeUrl = getUrl(cspPath,para);
+			var myBrowser = new WEBBROWSER();
+			myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,iframeUrl);
+			openWindow = window.showModalDialog(iframeUrl,"","dialogHeight:300px;dialogLeft:200px;dialogTop:200px;dialogWidth:500px;center:no;dialogHide:no;edge:sunken;help:yes;resizable:no;scroll:no;status:no;unadorned:no;");
+			printNext();
+		} catch (e) {
+			var myBrowser = new WEBBROWSER();
+			myBrowser.WriteLog(e.message);
+			alert(e.message);
+		}
+	}
+	else if (createType == "CREATETYPEMEDIA")
+	{
+		//åª’ä½“ä¸‹è½½ï¼Œç›®å‰åªæ”¯æŒå›¾ç‰‡
+		var myBrowser = new WEBBROWSER();
+		myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,"");
+		myBrowser.MediaDownload(para.EpisodeID, para.PatientID, categoryID, para.CategoryDetail);
+		printNext();
+	}
+	else if (createType =="CREATETYPENURSE")
+	{
+		try {
+			var myBrowser = new WEBBROWSER();
+			myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,"");
+			myBrowser.NURSEPrint(para.EpisodeID, para.PatientID, categoryID, para.CategoryDetail, para.PageInfoID);
+			printNext();
+		} catch (e) {
+			var myBrowser = new WEBBROWSER();
+			myBrowser.WriteLog(e.message);
+			alert(e.message);
+		}
+	}
+	else if (createType == "CREATETYPEDLL")
+	{
+		//æ£€éªŒæŠ¥å‘Šï¼Œç›´æ¥å¼•ç”¨dll
+		var myBrowser = new WEBBROWSER();
+		myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,"");
+		myBrowser.DLLPrint(para.EpisodeID, para.PatientID, categoryID);
+		printNext();
 	}
 	else
 	{
 		try {
 			var iframeUrl = getUrl(cspPath,para);
-			var myBrowser = new WEBBROWSER(); 
-			myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,iframeUrl)
-			var i_div = document.getElementById("i_frame_div"); 
-			i_div.innerHTML='<IFrame id="i_frame" name="i_frame" width="1px" height="1px" style="display:none" src="'+ iframeUrl +'"></IFrame>';	
+			var myBrowser = new WEBBROWSER();
+			myBrowser.ItemCreateStart(globalArr[count],para.EpisodeID,para.PatientID,categoryID,para.CategoryDetail,para.MRItemID,iframeUrl);
+			var i_div = document.getElementById("i_frame_div");
+			i_div.innerHTML='<IFrame id="i_frame" name="i_frame" width="1px" height="1px" style="display:none" src="'+ iframeUrl +'"></IFrame>';
 		} catch (e) {
+			var myBrowser = new WEBBROWSER();
+			myBrowser.WriteLog(e.message);
 			alert(e.message);
 		}
 	}
 }
 
-//³õÊ¼»¯Ò³ÂëĞÅÏ¢********************************************
+//åˆå§‹åŒ–é¡µç ä¿¡æ¯********************************************
 function initPageInfo(isPageQueue){
 	//ajax
-	Ext.Ajax.request({
+	$.ajax({
 		url: '../DHCEPRFS.web.eprajax.GetPDFCreateScheme.cls',
-		timeout: 5000,
-		params: {
-			Action: "initpageinfo",
-			IsPageQueue:isPageQueue
+		data: {
+			Action: 'initpageinfo',
+			IsPageQueue: isPageQueue
 		},
-		success: function(response, opts){
-			if (response.responseText != "-1") {
-				//³É¹¦
-				;
+		type: 'post',
+		async: false,
+		timeout: 5000,
+		success: function(data) {
+			if (data != '-1') {
+				//æˆåŠŸ
 			}
 		},
-		failure: function(response, opts){
-			Ext.MessageBox.alert("ÌáÊ¾", response.responseText);
+		error: function(jqXHR,textStatus) {
+			var myBrowser = new WEBBROWSER();
+			myBrowser.WriteLog(textStatus);
+			alert(textStatus);
 		}
-	});		
+	});
 }
 
-//´òÓ¡È«²¿½áÊøºóÇåÀí********************************************
+//æ‰“å°å…¨éƒ¨ç»“æŸåæ¸…ç†********************************************
 function afterPrint(arr,pageInfoID){
-	//½«Ä¬ÈÏ´òÓ¡»úÉè¶¨»ØÔ­À´µÄÄ¬ÈÏ´òÓ¡»ú
+	//å°†é»˜è®¤æ‰“å°æœºè®¾å®šå›åŸæ¥çš„é»˜è®¤æ‰“å°æœº
 	setDefPrinter(defaultPrinterNameGlobal);
 	
-	//¸üĞÂ½ø¶ÈÌõĞÅÏ¢
+	//æ›´æ–°è¿›åº¦æ¡ä¿¡æ¯
 	var curnum = arr.length/arr.length;
-	var bartext = "×¢²áÉÏ´«PDFÎÄ¼ş";
-	Ext.getCmp("pbar").updateProgress(curnum,bartext);
+	var bartext = "æ³¨å†Œä¸Šä¼ PDFæ–‡ä»¶";
+	$('#progressText').text(bartext);
 	
-	//ÉÏ´«
+	//ä¸Šä¼ 
 	upLoadFTP();
 
-	//¸üĞÂ½ø¶ÈÌõĞÅÏ¢
+	//æ›´æ–°è¿›åº¦æ¡ä¿¡æ¯
 	var curnum = arr.length/arr.length;
-	var bartext = "Çå¿Õ¶àÓàPDFÎÄ¼ş";
-	Ext.getCmp("pbar").updateProgress(curnum,bartext);
+	var bartext = "æ¸…ç©ºå¤šä½™PDFæ–‡ä»¶";
+	$('#progressText').text(bartext);
 	
-	//Çå¿Õ¶àÓàµÄPDFÎÄ¼ş
-	clearRedundantItem();
+	//æ¸…ç©ºå¤šä½™çš„PDFæ–‡ä»¶
+	if (selectItemID =="")
+	{
+		clearRedundantItem();
+	}
 
-	//ÇåÀí²Ù×÷ºÍ¼ÇÂ¼´òÓ¡¼ÇÂ¼
+	//æ¸…ç†æ“ä½œå’Œè®°å½•æ‰“å°è®°å½•
 	var printItemsID = "";
 	for (i=0;i<arr.length;i++){
 		var strs = new Array();
@@ -763,32 +877,36 @@ function afterPrint(arr,pageInfoID){
 		}
 	}
 	//ajax
-	Ext.Ajax.request({
+	$.ajax({
 		url: '../DHCEPRFS.web.eprajax.GetPDFCreateScheme.cls',
-		timeout: 5000,
-		params: {
-			Action: "afterprint",
+		data: {
+			Action: 'afterprint',
 			PageInfoID: pageInfoID
 		},
-		success: function(response, opts){
-			if (response.responseText != "-1") {
-				//³É¹¦
-				var myBrowser = new WEBBROWSER(); 
+		type: 'post',
+		async: false,
+		timeout: 5000,
+		success: function(data) {
+			if (data != '-1') {
+				//æˆåŠŸ
+				var myBrowser = new WEBBROWSER();
 				myBrowser.AllFinishedOp();
-				myBrowser.CreateFinish(episodeID +"|"+patientID+"|"+patName+"|"+userID+"|"+ctlocid+"|"+ssgroupid+"|"+printItemsID);
-				//¸üĞÂ½ø¶ÈÌõĞÅÏ¢
+				myBrowser.CreateFinish(episodeID+"|"+patientID+"|"+patName+"|"+userID+"|"+ctlocid+"|"+ssgroupid+"|"+printItemsID);
+				//æ›´æ–°è¿›åº¦æ¡ä¿¡æ¯
 				var curnum = arr.length/arr.length;
-				var bartext = "Éú³ÉÍê³É";
-				Ext.getCmp("pbar").updateProgress(curnum,bartext);
+				var bartext = "ç”Ÿæˆå®Œæˆ";
+				$('#progressText').text(bartext);
 			}
 		},
-		failure: function(response, opts){
-			Ext.MessageBox.alert("ÌáÊ¾", response.responseText);
+		error: function(jqXHR,textStatus) {
+			var myBrowser = new WEBBROWSER();
+			myBrowser.WriteLog(textStatus);
+			alert(textStatus);
 		}
 	});
 }
 
-//´òÓ¡»ú¹ÜÀí********************************************
+//æ‰“å°æœºç®¡ç†********************************************
  function PrinterManager(){
 	this.localtor=null;
 	try{
@@ -796,10 +914,12 @@ function afterPrint(arr,pageInfoID){
 			this.localtor = new ActiveXObject("WbemScripting.SWbemLocator");
 		}
 	}catch(e){
+		var myBrowser = new WEBBROWSER();
+		myBrowser.WriteLog(e.message);
 		alert(e.message);
 	}
 	var _this = this;
-  
+	
 	this.getItems = function(){
 		if(!_this.e){
 			var service = _this.localtor.ConnectServer(".");
@@ -808,7 +928,7 @@ function afterPrint(arr,pageInfoID){
 		}
 		return _this.e;
 	};
-  
+	
 	this.getDefPrinterName = function(){
 		if(!_this.defPrintName){
 			var service = _this.localtor.ConnectServer(".");
@@ -822,7 +942,7 @@ function afterPrint(arr,pageInfoID){
 		}
 		return _this.defPrintName;
 	};
-  
+	
 	this.setDefPrinter = function(printName){
 		if(printName){
 			var e = _this.getItems();
@@ -835,85 +955,85 @@ function afterPrint(arr,pageInfoID){
 			}
 		}
 	};
-  
+	
 	this.distory = function(){
 		this.localtor=null;
 	};
 }
 
-//»ñÈ¡ÏµÍ³Ä¬ÈÏ´òÓ¡»ú 
+//è·å–ç³»ç»Ÿé»˜è®¤æ‰“å°æœº 
 function getDefPrinter(){
 	var printMger = new PrinterManager();
 	var defPrinter = printMger.getDefPrinterName();
-  	printMger.distory();
+	printMger.distory();
 	if (defPrinter == null) return "";
 	return defPrinter.name;
 }
 
-//ÉèÖÃÏµÍ³Ä¬ÈÏ´òÓ¡»ú 
+//è®¾ç½®ç³»ç»Ÿé»˜è®¤æ‰“å°æœº 
 function setDefPrinter(printName){
 	var printMger = new PrinterManager();
 	printMger.setDefPrinter(printName);
 	printMger.distory();
 }
 
-//¼ì²éÏµÍ³ÖĞÊÇ·ñ°²×°ÓĞ´Ë´òÓ¡»ú
+//æ£€æŸ¥ç³»ç»Ÿä¸­æ˜¯å¦å®‰è£…æœ‰æ­¤æ‰“å°æœº
 function checkPrinter(printName){
 	var hasThisPrinter = false;
 	var printMger = new PrinterManager();
-  	var printers = printMger.getItems();
+	var printers = printMger.getItems();
 	while (!printers.atEnd()) {
 		var printer = printers.item();
 		if (printName == printer.name) {
 			hasThisPrinter = true;
 		}
-	printers.moveNext();
+		printers.moveNext();
 	}
 	printMger.distory();
 	return hasThisPrinter;
 }
 
-// ¸½¼ÓPDF²Ù×÷
+// é™„åŠ PDFæ“ä½œ
 function appendPDF(origFile, appendFile){
-	var myBrowser = new WEBBROWSER(); 
-	myBrowser.CheckPDFExist(globalPrintItems);			
+	var myBrowser = new WEBBROWSER();
+	myBrowser.CheckPDFExist(globalPrintItems);
 	myBrowser.AppendPDF(origFile, appendFile);
 }
 
-// ¼ì²éPDFÎÄ¼şÊÇ·ñÒÑ¾­ÊÍ·Å
+// æ£€æŸ¥PDFæ–‡ä»¶æ˜¯å¦å·²ç»é‡Šæ”¾
 function checkPDFReleased(fileName){
-	var myBrowser = new WEBBROWSER(); 
+	var myBrowser = new WEBBROWSER();
 	var isReleased = myBrowser.IsFileReleased(fileName);
 	return isReleased;
 }
 
-// ¼ì²éPDFÎÄ¼şÊÇ·ñÒÑ¾­´´½¨
+// æ£€æŸ¥PDFæ–‡ä»¶æ˜¯å¦å·²ç»åˆ›å»º
 function checkPDFCreated(fileName){
-	var myBrowser = new WEBBROWSER(); 
+	var myBrowser = new WEBBROWSER();
 	var isFileCreated = myBrowser.IsFileCreated(fileName);
 	return isFileCreated;
 }
 
-// Ã¿¸ö¼¯³ÉÏîÄ¿ÄÚ²¿ÓĞ¶à¸ö´òÓ¡×÷Òµ,µ±Ö´ĞĞÍêÒ»¸ö´òÓ¡×÷ÒµÊ±µ÷ÓÃ´Ë·½·¨,Íê³ÉÏÂÁĞ¹¤×÷:
-// ´òÓ¡×÷ÒµÊÇ·ñÍê³ÉµÄ¼ì²é\PDFÎÄ¼şÊÇ·ñÉú³ÉµÄ¼ì²é\ĞŞ¸ÄÏÂÒ»¸ö´òÓ¡×÷ÒµµÄÊä³öÎÄ¼şÃû³Æ
+// æ¯ä¸ªé›†æˆé¡¹ç›®å†…éƒ¨æœ‰å¤šä¸ªæ‰“å°ä½œä¸š,å½“æ‰§è¡Œå®Œä¸€ä¸ªæ‰“å°ä½œä¸šæ—¶è°ƒç”¨æ­¤æ–¹æ³•,å®Œæˆä¸‹åˆ—å·¥ä½œ:
+// æ‰“å°ä½œä¸šæ˜¯å¦å®Œæˆçš„æ£€æŸ¥\PDFæ–‡ä»¶æ˜¯å¦ç”Ÿæˆçš„æ£€æŸ¥\ä¿®æ”¹ä¸‹ä¸€ä¸ªæ‰“å°ä½œä¸šçš„è¾“å‡ºæ–‡ä»¶åç§°
 function finishOneItemJob(){
 	//debugger;
-  	try {
+	try {
 		itemPrintJobCount = itemPrintJobCount + 1;
 		
-		//¼ì²épdf×÷ÒµÊÇ·ñÍê³É
-		var myBrowser = new WEBBROWSER(); 
+		//æ£€æŸ¥pdfä½œä¸šæ˜¯å¦å®Œæˆ
+		var myBrowser = new WEBBROWSER();
 		myBrowser.CheckPDFExist(globalPrintItems);
 		
 		if (itemPrintJobCount == 1)
 		{
 			var strs = new Array();
 			strs = globalArr[count].split("|||");
-	
+			
 			var categoryID = strs[1];
 			var categoryDetail =strs[2];
-			var id = strs[0];	
-		
+			var id = strs[0];
+			
 			var file1 = getFileName(categoryID, categoryDetail, "0");
 			var file2 = file1 + "_append" + itemPrintJobCount;
 			checkPDFReleased(file1);
@@ -923,21 +1043,23 @@ function finishOneItemJob(){
 		{
 			var strs = new Array();
 			strs = globalArr[count].split("|||");
-	
+			
 			var categoryID = strs[1];
 			var categoryDetail =strs[2];
-			var id = strs[0];	
-		
+			var id = strs[0];
+			
 			var file1 = getFileName(categoryID, categoryDetail, "0");
 			var file2 = file1 + "_append" + (itemPrintJobCount - 1);
 			appendPDF(file1, file2);
 			
 			var fileName = file1 + "_append" + itemPrintJobCount;
 			startPrintJob(fileName);
-		}		
-  	} catch (e) {
-        alert("finishOneItemJob:" +¡¡e.message);    
-  	}
+		}
+	} catch (e) {
+		var myBrowser = new WEBBROWSER();
+		myBrowser.WriteLog(e.message);
+		alert("finishOneItemJob:" +ã€€e.message);
+	}
 }
 
 function finishOneItemJobAsyn(){
@@ -946,7 +1068,7 @@ function finishOneItemJobAsyn(){
 	
 	var categoryID = strs[1];
 	var categoryDetail =strs[2];
-	var id = strs[0];	
+	var id = strs[0];
 	var file1 = getFileName(categoryID, categoryDetail, "0");
 	
 	if (itemPrintJobCount == 0)

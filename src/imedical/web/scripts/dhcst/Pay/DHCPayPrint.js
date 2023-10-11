@@ -1,12 +1,12 @@
-// /åç§°: ä»˜æ¬¾å•æ‰“å°
-// /æè¿°: ä»˜æ¬¾å•æ‰“å°
-// /ç¼–å†™è€…ï¼šzhangxiao
-// /ç¼–å†™æ—¥æœŸ: 2013.6.15
+// /Ãû³Æ: ¸¶¿îµ¥´òÓ¡
+// /ÃèÊö: ¸¶¿îµ¥´òÓ¡
+// /±àĞ´Õß£ºzhangxiao
+// /±àĞ´ÈÕÆÚ: 2013.6.15
 
 /*
  * creator:zhangxiao,2013-06-15
- * description:æ‰“å°å•ä¸ªä»˜æ¬¾å•ï¼ˆæ¶¦ä¹¾ï¼‰
- * params: ingr:ä»˜æ¬¾å•ä¸»è¡¨id
+ * description:´òÓ¡µ¥¸ö¸¶¿îµ¥£¨ÈóÇ¬£©
+ * params: ingr:¸¶¿îµ¥Ö÷±íid
  * return:*/
 
  
@@ -25,16 +25,16 @@ function PrintPay(pay){
     var payTime=mainArr[5]
     var payLoc=mainArr[2]
     var userName=mainArr[3]
-    var ack1UserName=mainArr[14]  //é‡‡è´­ç¡®è®¤
-    var ack2UserName=mainArr[15]   //ä¼šè®¡ç¡®è®¤
-    //ç›´æ¥æ‰“å°
+    var ack1UserName=mainArr[14]  //²É¹ºÈ·ÈÏ
+    var ack2UserName=mainArr[15]   //»á¼ÆÈ·ÈÏ
+    //Ö±½Ó´òÓ¡
     var RQDTFormat=App_StkRQDateFormat;  //+" "+App_StkRQTimeFormat;
     //fileName="{DHCST_Pay_Common.raq(pay="+pay+";Vendor="+Vendor+";payNo="+payNo+";payDate="+payDate+";payTime="+payTime+";payLoc="+payLoc+";userName="+userName+";ack1UserName="+ack1UserName+";ack2UserName="+ack2UserName+";HospDesc="+App_LogonHospDesc+";RQDTFormat="+RQDTFormat+")}";
 	fileName="{DHCST_Pay_Common.raq(pay="+pay+";RQDTFormat="+RQDTFormat+")}";  //";Vendor="+Vendor+";payNo="+payNo+";payDate="+payDate+";payTime="+payTime+";payLoc="+payLoc+";userName="+userName+";ack1UserName="+ack1UserName+";ack2UserName="+ack2UserName+";HospDesc="+App_LogonHospDesc+";RQDTFormat="+RQDTFormat+")}";
 
 	
 	DHCCPM_RQDirectPrint(fileName);
-	//é¢„è§ˆæ‰“å°
+	//Ô¤ÀÀ´òÓ¡
 	//fileName="DHCST_Pay_Common.raq&pay="+pay+"&Vendor="+Vendor+"&payNo="+payNo+"&payDate="+payDate+"&payTime="+payTime+"&payLoc="+payLoc+"&userName="+userName+"&ack1UserName="+ack1UserName+"&ack2UserName="+ack2UserName+"&HospDesc="+App_LogonHospDesc+"&RQDTFormat="+RQDTFormat;
 	//DHCCPM_RQPrint(fileName)
 	
@@ -42,8 +42,8 @@ function PrintPay(pay){
 	
 	/*
  * creator:zhangxiao,2013-06-15
- * description:å–ä»˜æ¬¾ä¸»è¡¨ä¿¡æ¯
- * params: ingr:ä»˜æ¬¾ä¸»è¡¨id
+ * description:È¡¸¶¿îÖ÷±íĞÅÏ¢
+ * params: ingr:¸¶¿îÖ÷±íid
  * return:
  * */
 function GetMainData(pay){

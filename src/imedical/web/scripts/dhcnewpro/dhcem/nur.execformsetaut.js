@@ -33,7 +33,7 @@ function initPageDefault(){
 ///多院区设置
 function MoreHospSetting(tableName){
 	hospComp = GenHospComp(tableName);
-	hospComp.options().onSelect = ReloadMainTable;
+	hospComp.options().onSelect = ReloadMainTableAndCombo;
 }
 
 function InitPageDom(){
@@ -112,11 +112,14 @@ function LoadColumnsList(){
 
 
 function InitCombobox(){
-	
+	var HospID = $HUI.combogrid("#_HospList").getValue();
+	var checkedRadioJObj = $("input[name='FSAType']:checked");
+    var thisType = checkedRadioJObj.val();
 	$HUI.combobox("#autGroup",{
-		url:$URL+"?ClassName=web.DHCEMNurExecFormSetAut&MethodName=GetGroupJsonListCombo",
+		url:$URL+"?ClassName=web.DHCEMNurExecFormSetAut&MethodName=GetGroupJsonListCombo&Type="+thisType+"&HospID="+HospID,
 		valueField: "value", 
-			textField: "text",
+		textField: "text",
+		mode:"remote",
 		onSelect:function(option){
 	       
 	    }	
@@ -140,6 +143,13 @@ function InitMethod(){
 			$(this).toggleClass("checkTwo");
 		}
 	})
+	
+	$('#autGroupInp').on('keypress', function(e){   
+		if((e||event).keyCode=="13"){
+			$("#queryBTN").click();
+		}
+	});
+	
 }
 
 
@@ -151,7 +161,7 @@ function InitMainList(){
 	 */
 	var columns=[[
 		{field:'ID',title:'ID',width:50,align:'center'},
-		{field:'Name',title:'安全组',width:200,align:'center'}
+		{field:'Name',title:'描述',width:200,align:'center'}
 	]];
 	
 	/**
@@ -179,7 +189,10 @@ function InitMainList(){
 	};
 	var autGroup = $HUI.combobox("#autGroup").getValue();
 	var HospID = $HUI.combogrid("#_HospList").getValue();
-	params = autGroup+"^"+HospID;
+	var checkedRadioJObj = $("input[name='FSAType']:checked");
+    var thisType = checkedRadioJObj.val();	///Group/Loc
+	params = autGroup+"^"+HospID+"^"+thisType;
+	
 	var uniturl = $URL+"?ClassName=web.DHCEMNurExecFormSetAut&MethodName=GetGroupJsonListTable&Params="+params;
 	new ListComponent('main', columns, uniturl, option).Init();
 
@@ -197,11 +210,15 @@ function LoadExecFormList(){
 
 function LoadList(methodName,areaId,groupID){
 	var InHospID = $HUI.combogrid("#_HospList").getValue();
+	var checkedRadioJObj = $("input[name='FSAType']:checked");
+    var thisType = checkedRadioJObj.val();	///Group/Loc
+
 	$cm({
 		ClassName:"web.DHCEMNurExecFormSetAut",
 		MethodName:methodName,
 		GroupID:groupID,
-		InHospID:InHospID
+		InHospID:InHospID,
+		ThisType:thisType
 	},function(jsonData){
 		if($("#"+areaId).find(".listLiItmTwo").length){
 			$("#"+areaId).find(".listLiItmTwo").remove();
@@ -303,13 +320,16 @@ function formSaveDefault(){
 	
 	var groupID = rowsData.ID;
 	var inHospID = $HUI.combogrid("#_HospList").getValue();
+	var checkedRadioJObj = $("input[name='FSAType']:checked");
+    var thisType = checkedRadioJObj.val();	///Group/Loc
 	$cm({
 		ClassName:"web.DHCEMNurExecFormSetAut",
 		MethodName:"SaveItmDefExecForm",
 		dataType:"text",
 		GroupID:groupID,
 		InHospID:inHospID,
-		DefExecFormDr:defExecFormDr
+		DefExecFormDr:defExecFormDr,
+		ThisType:thisType
 	},function(ret){
 		if(ret==0){
 			LoadExecFormList();	
@@ -330,13 +350,17 @@ function formClearnDefault(){
 	
 	var groupID = rowsData.ID;
 	var inHospID = $HUI.combogrid("#_HospList").getValue();
+	
+	var checkedRadioJObj = $("input[name='FSAType']:checked");
+    var thisType = checkedRadioJObj.val();	///Group/Loc	
 	$cm({
 		ClassName:"web.DHCEMNurExecFormSetAut",
 		MethodName:"SaveItmDefExecForm",
 		dataType:"text",
 		GroupID:groupID,
 		InHospID:inHospID,
-		DefExecFormDr:""
+		DefExecFormDr:"",
+		ThisType:thisType
 	},function(ret){
 		if(ret==0){
 			LoadExecFormList();	
@@ -389,6 +413,8 @@ function formOp(mode){
 	}
 	var groupID = rowsData.ID;
 	var inHospID = $HUI.combogrid("#_HospList").getValue();
+	var checkedRadioJObj = $("input[name='FSAType']:checked");
+    var thisType = checkedRadioJObj.val();	///Group/Loc
 	$cm({
 		ClassName:"web.DHCEMNurExecFormSetAut",
 		MethodName:"SaveItm",
@@ -396,7 +422,8 @@ function formOp(mode){
 		GroupID:groupID,
 		Params:mParams,
 		InHospID:inHospID,
-		UpdFlag:updFlag
+		UpdFlag:updFlag,
+		ThisType:thisType
 	},function(ret){
 		if(ret==0){
 			LoadExecFormList();	
@@ -408,16 +435,60 @@ function formOp(mode){
 	});	
 }
 
+function ReloadMainTableAndCombo(){
+	var checkedRadioJObj = $("input[name='FSAType']:checked");
+    var thisType = checkedRadioJObj.val();
+	ReloadGroupCombo(thisType);
+	ReloadMainTable();
+	return;
+}
+
 function ReloadMainTable(){
 	var autGroup = $HUI.combobox("#autGroup").getValue();
 	var HospID = $HUI.combogrid("#_HospList").getValue();
-	params = autGroup+"^"+HospID;
+ 	var checkedRadioJObj = $("input[name='FSAType']:checked");
+    var thisType = checkedRadioJObj.val();	///Group/Loc
+    var autGroupInp = $("#autGroupInp").val();
+	params = autGroup+"^"+HospID+"^"+thisType+"^"+autGroupInp;
 	
 	
 	$HUI.datagrid('#main').load({
 		Params:params
 	})
 	return ;
+}
+
+function ToggleType(){
+	 var checkedRadioJObj = $("input[name='FSAType']:checked");
+     var thisType = checkedRadioJObj.val();
+     if(thisType==="Group"){
+	 	$("#PointLabel").html("安全组");    
+	 	$("#PointLabel").css("margin-left","10px");
+	 }else{
+		$("#PointLabel").html("科室");    		 
+		$("#PointLabel").css("margin-left","24px");
+	 }
+	 
+	 ReloadGroupCombo(thisType);
+	 ReloadMainTable();
+     return;
+}
+
+function ReloadGroupCombo(thisType){
+	var HospID = $HUI.combogrid("#_HospList").getValue();
+	$HUI.combobox("#autGroup").setValue("");
+	$("#autGroupInp").val("");
+	var url=$URL+"?ClassName=web.DHCEMNurExecFormSetAut&MethodName=GetGroupJsonListCombo&Type="+thisType+"&HospID="+HospID;
+	$("#autGroup").combobox('reload',url);	
+}
+
+function changeFindType(e,value){
+	if(value){
+		$("#autGroup").combobox('setValue',"");	
+	}else{
+		$("#autGroupInp").val("");
+	}
+	$('.findItm').toggle();
 }
 
 

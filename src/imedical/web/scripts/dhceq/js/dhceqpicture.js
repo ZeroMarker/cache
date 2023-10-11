@@ -227,7 +227,11 @@ PictureGrid = new Ext.grid.EditorGridPanel({
 if(window.parent.PicType!=-1) PictureGridDs.load({params:{start:0,limit:PicturePagingToolbar.pageSize,Arg1:CurrentSourceType,Arg2:CurrentSourceID,Arg3:"^^^^^"+window.parent.PicType,ArgCnt:3,page:1,rows:PicturePagingToolbar.pageSize}});
 //============================图片明细数据源===============================
 //var PicListGridProxy= new Ext.data.HttpProxy({url:PictureGridUrl+'?actiontype=GetPictureList',method:'POST'});
-var PicListGridProxy= new Ext.data.HttpProxy({url:'dhceq.jquery.csp?ClassName=web.DHCEQ.Process.DHCEQPictureList&QueryName=GetPictureList',method:'POST'});
+var url='dhceq.jquery.csp?ClassName=web.DHCEQ.Process.DHCEQPictureList&QueryName=GetPictureList';
+if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+	url += "&MWToken="+websys_getMWToken()
+}
+var PicListGridProxy= new Ext.data.HttpProxy({url:url,method:'POST'});
 var PicListGridDs = new Ext.data.Store({
 	proxy:PicListGridProxy,
     reader:new Ext.data.JsonReader({
@@ -351,6 +355,9 @@ PicListGrid = new Ext.grid.EditorGridPanel({
 						return
 					}
 					var str='../csp/dhceq.process.picbatchupload.csp?PTRowID='+PTRowID.TRowID
+					if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+						str += "&MWToken="+websys_getMWToken()
+					}
 					window.open(str,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0')
 	            }
 	            else

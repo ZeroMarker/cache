@@ -1,122 +1,125 @@
-///Õ≥º∆¥Ú∞¸π§◊˜¡ø
+Ôªø// ÁªüËÆ°ÊâìÂåÖÂ∑•‰ΩúÈáè
 var init = function() {
-	
-    var SupLocParams=JSON.stringify(addSessionParams({Type:"SupLoc"}));
-	var SupLocBox = $HUI.combobox('#LocDr', {
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+SupLocParams,
+	var SupLocParams = JSON.stringify(addSessionParams({ Type: 'SupLoc', BDPHospital: gHospId }));
+	var Params = JSON.stringify(addSessionParams({ BDPHospital: gHospId }));
+	$HUI.combobox('#PackLoc', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + SupLocParams,
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-	
-	var PackageClassBox = $HUI.combobox('#PkgClass',{
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPackageClass&ResultSetType=array',
+	$HUI.combobox('#PkgClass', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPackageClass&ResultSetType=array&Params=' + Params,
+		valueField: 'RowId',
+		textField: 'Description',
+		onSelect: function(record) {
+			$('#PackName').combobox('clear');
+		}
+	});
+	$HUI.combobox('#PackName', {
+		onShowPanel: function() {
+			var PkgClassId = $('#PkgClass').combobox('getValue');
+			var PkgParams = JSON.stringify(addSessionParams({ BDPHospital: gHospId, TypeDetail: '1,2,7', PkgClassId: PkgClassId }));
+			$(this).combobox('reload', $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPkg&ResultSetType=array&Params=' + PkgParams);
+		}
+	});
+	$HUI.combobox('#PkgSpec', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPackageSpec&ResultSetType=array&Params=' + Params,
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-	/*--∞¥≈• ¬º˛--*/
-	$UI.linkbutton('#QueryBT',{
-		onClick:function(){
-			var ParamsObj=$UI.loopBlock('#Conditions')
-			if(isEmpty(ParamsObj.StartDate)){
-				$UI.msg('alert','∆ º»’∆⁄≤ªƒ‹Œ™ø’!');
+	$HUI.combobox('#DateType', {
+		valueField: 'RowId',
+		textField: 'Description',
+		data: DateTypeData,
+		onSelect: function(record) {
+			var SelectTypeVal = record.RowId;
+			var startDate = '', endDate = '';
+			if (SelectTypeVal === '1') {
+				startDate = DateFormatter(new Date());
+			} else if (SelectTypeVal === '2') {
+				startDate = getWeekStartDate();
+			} else if (SelectTypeVal === '3') {
+				startDate = getMonthStartDate();
+			} else if (SelectTypeVal === '4') {
+				startDate = getQuarterStartDate();
+			} else if (SelectTypeVal === '5') {
+				startDate = getYearStartDate();
+			}
+			endDate = DateFormatter(new Date());
+			$('#StartTime').timespinner('setValue', '');
+			$('#EndTime').timespinner('setValue', '');
+			$('#StartDate').datebox('setValue', startDate);
+			$('#EndDate').datebox('setValue', endDate);
+		}
+	});
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
+			var ParamsObj = $UI.loopBlock('#Conditions');
+			if (isEmpty(ParamsObj.StartDate)) {
+				$UI.msg('alert', 'Ëµ∑ÂßãÊó•Êúü‰∏çËÉΩ‰∏∫Á©∫!');
 				return;
 			}
-			if(isEmpty(ParamsObj.EndDate)){
-				$UI.msg('alert','Ωÿ÷π»’∆⁄≤ªƒ‹Œ™ø’!');
+			if (isEmpty(ParamsObj.EndDate)) {
+				$UI.msg('alert', 'Êà™Ê≠¢Êó•Êúü‰∏çËÉΩ‰∏∫Á©∫!');
 				return;
 			}
-			
-			var Params=JSON.stringify(ParamsObj);
-			Params=encodeUrlStr(Params)
+			var FrameParams = JSON.stringify(ParamsObj);
+			FrameParams = encodeUrlStr(FrameParams);
 			var CheckedRadioObj = $("input[name='ReportType']:checked");
-			var CheckedValue=CheckedRadioObj.val();
-			var CheckedTitle=CheckedRadioObj.attr("label")
-			var Conditions=GetConditions(ParamsObj)
-			var Url=CheckedUrl(CheckedValue,Params,Conditions)
-			AddTab(CheckedTitle,Url);
+			var CheckedValue = CheckedRadioObj.val();
+			var CheckedTitle = CheckedRadioObj.attr('label');
+			var Conditions = encodeUrlStr(GetConditions(ParamsObj));
+			var Url = CheckedUrl(CheckedValue, FrameParams, Conditions);
+			AddStatTab(CheckedTitle, Url, '#tabs');
 		}
 	});
-	///∆¥Ω”url
-	function CheckedUrl(Checked,Params,Conditions){
-		//»Îø‚µ•¡–±Ì
-		if('FlagPackSt'==Checked){
-			p_URL = PmRunQianUrl+'?reportName=CSSD_HUI_PackSt.raq&Params='+Params+'&Conditions='+Conditions;
-		}else if('FlagPackageProcessTrans'==Checked){
-			p_URL = PmRunQianUrl+'?reportName=CSSD_HUI_StatSterWorkLoadDetail.raq&Params='+Params+'&Conditions='+Conditions;
+	// ÊãºÊé•url
+	function CheckedUrl(Checked, FrameParams, Conditions) {
+		var FrameUrl = '';
+		if ('FlagPackSt' === Checked) {
+			FrameUrl = PmRunQianUrl + '?reportName=CSSD_HUI_PackSt.raq&Params=' + FrameParams + '&Conditions=' + Conditions;
 		}
-		
-		return p_URL;
+		return FrameUrl;
 	}
-	//◊È÷Ø≤È—ØÃıº˛
-	function GetConditions(ParamsObj){
-		//ªÒ»°≤È—ØÃıº˛¡–±Ì
-		var Conditions=""
-		if(ParamsObj.StartDate!=""){
-			Conditions=" Õ≥º∆ ±º‰: "+ParamsObj.StartDate+" "+ParamsObj.StartTime;
+	// ÁªÑÁªáÊü•ËØ¢Êù°‰ª∂
+	function GetConditions(ParamsObj) {
+		// Ëé∑ÂèñÊü•ËØ¢Êù°‰ª∂ÂàóË°®
+		var Conditions = '';
+		if (ParamsObj.StartDate !== '') {
+			Conditions = Conditions + 'ÁªüËÆ°Êó∂Èó¥:' + ParamsObj.StartDate;
+			if (ParamsObj.StartTime !== '') {
+				Conditions = Conditions + ' ' + ParamsObj.StartTime;
+			}
 		}
-		if(ParamsObj.EndDate!=""){
-			Conditions=Conditions+"~"+ParamsObj.EndDate+" "+ParamsObj.EndTime
+		if (ParamsObj.EndDate !== '') {
+			Conditions = Conditions + ' ~ ' + ParamsObj.EndDate;
+			if (ParamsObj.EndTime !== '') {
+				Conditions = Conditions + ' ' + ParamsObj.EndTime;
+			}
+		}
+		if (ParamsObj.PkgClass !== '') {
+			Conditions = Conditions + ' ÂåÖÂàÜÁ±ª:' + $('#PkgClass').combobox('getText');
+		}
+		if (ParamsObj.PkgSpec !== '') {
+			Conditions = Conditions + ' ËßÑÊ†º:' + $('#PkgSpec').combobox('getText');
 		}
 		return Conditions;
 	}
-	function AddTab(title, url) {
-		if ($('#tabs').tabs('exists', title)) {
-			$('#tabs').tabs('select', title); //—°÷–≤¢À¢–¬
-			var currTab = $('#tabs').tabs('getSelected');
-			if (url != undefined && currTab.panel('options').title != '±®±Ì') {
-				$('#tabs').tabs('update', {
-					tab: currTab,
-					options: {
-						content: createFrame(url)
-					}
-				})
-			}
-		} else {
-			var content = createFrame(url);
-			$('#tabs').tabs('add', {
-				title: title,
-				content: content,
-				closable: true
-			});
-		}
-	}
-	function createFrame(url) {
-		var s = '<iframe scrolling="auto" frameborder="0" src="' + url + '" style="width:100%;height:98%;"></iframe>';
-		return s;
-	}
-	
-	$UI.linkbutton('#ClearBT',{
-		onClick:function(){
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
 			Default();
 		}
 	});
-	
-	/*--∞Û∂®øÿº˛--*/
-	
-	/*--…Ë÷√≥ı º÷µ--*/
-	var Default=function(){
+	var Default = function() {
 		$UI.clearBlock('#Conditions');
 		$UI.clearBlock('#ReportConditions');
-		var DefaultValue={
-			StartDate:DateFormatter(new Date()),
-			EndDate:DateFormatter(new Date())
-			}
-		$UI.fillBlock('#Conditions',DefaultValue)
-		var Tabs=$('#tabs').tabs('tabs')
-		var Tiles = new Array();
-		var Len = Tabs.length;
-		if(Len>0){
-			for(var j=0;j<Len;j++){
-				var Title = Tabs[j].panel('options').title;
-				if(Title!='±®±Ì'){
-					Tiles.push(Title);
-				}
-			}
-			for(var i=0;i<Tiles.length;i++){
-				$('#tabs').tabs('close', Tiles[i]);
-			}
-		}
+		var DefaultValue = {
+			DateType: 1
+		};
+		$UI.fillBlock('#Conditions', DefaultValue);
+		CloseStatTab('#tabs');
+		GetReportStyle('#Report');
 	};
-	Default()
-}
+	Default();
+};
 $(init);

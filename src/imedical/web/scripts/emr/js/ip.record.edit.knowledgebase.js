@@ -62,7 +62,13 @@ function init()
 	pluginAdd();
 	plugin().initWindow("iEditor");
 	//建立数据连接
-    setConnect();
+    var nectresult = setConnect();
+    nectresult = typeof nectresult=="object"?nectresult:$.parseJSON(nectresult.replace(/\'/g, "\""));
+    if (nectresult != "" && nectresult.result != "OK")
+    {
+        alert('设置链接失败！');
+        return;
+    } 
 	//设置工作环境
 	strJson = {"action":"SET_WORKSPACE_CONTEXT","args": "Composite"};
 	cmdDoExecute(strJson);
@@ -79,6 +85,19 @@ function init()
 //建立数据库连接
 function setConnect(){
 	var netConnect = "";
+	
+	var port = window.location.port;
+	var protocol = window.location.protocol.split(":")[0];
+	
+	if (protocol == "http")
+	{
+		port = port==""?"80":port;
+	}
+	else if (protocol == "https")
+	{
+		port = port==""?"443":port;
+	}
+	
 	$.ajax({
 		type: 'Post',
 		dataType: 'text',
@@ -88,7 +107,10 @@ function setConnect(){
 		data: {
 			"OutputType":"String",
 			"Class":"EMRservice.BL.BLSysOption",
-			"Method":"GetNetConnectJson"
+			"Method":"GetNetConnectJson",
+			"p1":window.location.hostname,
+			"p2":port,
+			"p3":protocol
 		},
 		success: function (ret) {
 
@@ -149,13 +171,13 @@ function convertToTreeJson(dataList,treeJson,path)
 		 if (dataList[i].items != undefined) 
 		 {
 			 
-			tempJson = {"id":tempPath,"text":dataList[i].DisplayName,"attributes":{"path":tempPath,"type":dataList[i].Type},"children":[]};
+			tempJson = {"id":tempPath,"text":emrTrans(dataList[i].DisplayName),"attributes":{"path":tempPath,"type":dataList[i].Type},"children":[]};
 			convertToTreeJson(dataList[i].items,tempJson.children,tempPath);
 			treeJson.push(tempJson);
 		 }
 		 else
 		 {
-			tempJson = {"id":tempPath,"text":dataList[i].DisplayName,"attributes":{"path":tempPath,"type":dataList[i].Type}};
+			tempJson = {"id":tempPath,"text":emrTrans(dataList[i].DisplayName),"attributes":{"path":tempPath,"type":dataList[i].Type}};
 			treeJson.push(tempJson);
 			setMaxElementObj(dataList[i].Code);
 		 }
@@ -276,11 +298,27 @@ $(function(){
         cmdDoExecute(strJosn);
     });
     
+     //单选单元(平铺)
+    $('#MIMonoChoiceCheck').bind('click', function(){  
+        maxElementObj.MIMonoChoice = getNewCode(+maxElementObj.MIMonoChoice);
+        var strJosn = {action:"APPEND_ELEMENT",args:{"ElemType":"MIMonoChoice","Code":"O"+maxElementObj.MIMonoChoice,
+            "DisplayName":emrTrans("新建单选单元")+(+maxElementObj.MIMonoChoice),"Choices":[{"Code":"1","DisplayName":"新建单选框"}],"ShowType":"CheckBox"}};
+        cmdDoExecute(strJosn);
+    });
+     
      //多选单元
     $('#MIMultiChoice').bind('click', function(){  
         maxElementObj.MIMultiChoice = getNewCode(+maxElementObj.MIMultiChoice);
         var strJosn = {action:"APPEND_ELEMENT",args:{"ElemType":"MIMultiChoice","Code":"M"+maxElementObj.MIMultiChoice,
             "DisplayName":emrTrans("新建多选单元")+(+maxElementObj.MIMultiChoice)}};
+        cmdDoExecute(strJosn);
+    });
+    
+     //多选单元(平铺)
+    $('#MIMultiChoiceCheck').bind('click', function(){  
+        maxElementObj.MIMultiChoice = getNewCode(+maxElementObj.MIMultiChoice);
+        var strJosn = {action:"APPEND_ELEMENT",args:{"ElemType":"MIMultiChoice","Code":"M"+maxElementObj.MIMultiChoice,
+            "DisplayName":emrTrans("新建多选单元")+(+maxElementObj.MIMultiChoice),"Choices":[{"Code":"1","DisplayName":"新建多选框"}],"ShowType":"CheckBox"}};
         cmdDoExecute(strJosn);
     });
     
@@ -373,6 +411,7 @@ function setFontSizeData()
 			  {"value":"10.5pt","name":"10.5"},
 	          {"value":"11pt","name":"11"}
 	         ]
+	var oldValue = "";
 	$('#fontSize').combobox({
 		textField:'name',
 		valueField:'value',
@@ -381,11 +420,22 @@ function setFontSizeData()
 			$('#fontSize').combobox('setValue',defaultFontStyle.fontSize)
 			},
 		onSelect:function(){
+			oldValue = "";
 			var strJson = {action:"FONT_SIZE",args:$('#fontSize').combobox('getValue')};
 			document.getElementById('fontSizeText').value = $('#fontSize').combobox('getValue');
 			cmdDoExecute(strJson);
+			},
+	    onShowPanel:function(){
+	    	//不支持onclick方法，2023-03-15,下拉时清除值，未做改变时还原值
+		    oldValue = $(this).combobox("getValue");	
+		    $(this).combobox("setValue","")
+		    },
+		onHidePanel:function(){
+			if(oldValue!==""){
+				$(this).combobox("setValue",oldValue)
+				}
 			}
-		})
+		});
 		
 	document.getElementById('fontSizeText').value = defaultFontStyle.fontSize.replace('pt','');
 }
@@ -503,8 +553,11 @@ function eventGetMetaDataTree(commandJson)
 		$('#elementTree').tree({
 			data: treeJson,
 			onClick: function(node){
-			focusElement(node.id);  
-		}
+				focusElement(node.id);  
+			},
+			onContextMenu: function(e, node){
+				treeRightClick(e,node);
+			}			
 	})
 }
 //元素改变事件
@@ -575,29 +628,34 @@ function eventSaveDocument(commandJson)
 	{
 		if (commandJson.args.params.result != "OK")
 		{
-			alert(emrTrans('保存失败'));
+			top.parent.parent.$.messager.alert('提示',emrTrans('保存失败'));
 		}
 		else
 		{
 			if (flag == "1")
 			{
-				alert(emrTrans('保存成功'));
+				top.parent.parent.$.messager.alert('提示',emrTrans('保存成功'));
 			}
 			else
 			{
-				alert(emrTrans('保存失败'));
+				top.parent.parent.$.messager.alert('提示',emrTrans('保存失败'));
 			}
 		}
 	}
+	else if (commandJson.args.result == "INVALID")
+    {
+	    top.parent.parent.$.messager.alert("提示", emrTrans("病历存在非法字符，不能保存"), 'info');
+	     
+    }
 	else if (commandJson.args.result == "NONE")
 	{
 		if (flag == "1")
 		{
-			alert(emrTrans('保存成功'));
+			top.parent.parent.$.messager.alert('提示',emrTrans('保存成功'));
 		}
 		else
 		{
-			alert(emrTrans('保存失败'));
+			top.parent.parent.$.messager.alert('提示',emrTrans('保存失败'));
 		}
 	}
 }
@@ -683,7 +741,8 @@ function getBasePropty()
 	obj.TabIndex = $("#TabIndex").val();
 	obj.Visible = $("#Visible")[0].status;
 	obj.AllowNull = $("#AllowNull")[0].status;
-	obj.ReadOnly = $("#ReadOnly")[0].status;
+	//obj.ReadOnly = $("#ReadOnly")[0].status;
+	obj.ReadOnly = $("#ReadOnly")[0].checked;
     obj.Code = $("#Code").val();
 	obj.DisplayName = $("#DisplayName").val();	
 	obj.Description = $("#Description").val();
@@ -742,6 +801,7 @@ function setMIMonoChoice(obj)
 	if (!obj || obj == "") return;
 	var strPropty = initBasePropty()
 	 +'<div>'+initChoices()+'</div>'
+	 +'<div id="choiceCheckDiv"></div>'
 	 +'<div>'+initSave()+'</div>'
 	
 	$("#property")[0].innerHTML = strPropty;
@@ -749,7 +809,31 @@ function setMIMonoChoice(obj)
 	
 	setBasePropty(obj);
 	setChoices(obj.Props.Choices);
+	//平铺额外显示备选项
+	if (obj.Props.ShowType == "CheckBox")
+	{
+		setCheckBoxChoices(obj,"1");
+	}
+	
 	initSaveOnclick();
+}
+
+//插入平铺选项：单元Code，选项描述，选项code，单选1|多选2
+function inSertChoice(groupCode,name,code,type)
+{
+	var strJson = {action:"INSERT_CHOICE_FIELD",args:{"ChoiceType":type,"Value":"0","Context":name,"Code":code,"Groupid":groupCode}}
+		cmdDoExecute(strJson);
+}
+
+function setCheckBoxChoices(obj,type)
+{
+	var html = "<table>";
+	html += "<tr><td>备选项(双击选项带入到编辑器中)：</td></tr>"
+	for (var i =0;i < obj.Props.Choices.length; i++){
+		html += '<tr><td style="color:black" ondblclick="inSertChoice(\''+obj.Props.Code+'\',\''+obj.Props.Choices[i].DisplayName+'\',\''+obj.Props.Choices[i].Code+'\',\''+type+'\')">'+ obj.Props.Choices[i].DisplayName+'</td></tr>';
+	}
+	html += "</table>";
+	$("#choiceCheckDiv").append(html);
 }
 
 //多选单元
@@ -759,6 +843,7 @@ function setMIMultiChoice(obj)
 	var strPropty = initBasePropty() 
 	 +'<div>'+initSeparator()+initWrapChoice()+'</div>'
 	 +'<div>'+initChoices()+'</div>'
+	 +'<div id="choiceCheckDiv"></div>'
 	 +'<div>'+initSave()+'</div>'
 	
 	$("#property")[0].innerHTML = strPropty;
@@ -768,6 +853,11 @@ function setMIMultiChoice(obj)
 	setSeparator(obj.Props.Separator);
 	setWrapChoice(obj.Props.WrapChoice);
 	setChoices(obj.Props.Choices);
+	//平铺额外显示备选项
+	if (obj.Props.ShowType == "CheckBox")
+	{
+		setCheckBoxChoices(obj,"2");
+	}
 	initSaveOnclick();
 }
 
@@ -842,12 +932,12 @@ function getMINumber()
 {
 	var obj =  getBasePropty();
 	obj.ElemType = "MINumber";
-	obj.HasMinVal = $("#HasMinVal")[0].status;
+	obj.HasMinVal = $("#HasMinVal").is(':checked');
 	obj.MinVal = $("#MinVal").val();
-	obj.IncludeMin = $("#IncludeMin")[0].status;
-	obj.HasMaxVal = $("#HasMaxVal")[0].status;
+	obj.IncludeMin = $("#IncludeMin").is(':checked');
+	obj.HasMaxVal = $("#HasMaxVal").is(':checked');
 	obj.MaxVal = $("#MaxVal").val();
-	obj.IncludeMax = $("#IncludeMax")[0].status;
+	obj.IncludeMax = $("#IncludeMax").is(':checked');
 	obj.DecimalPlace = $("#DecimalPlace").val();
 	return obj;
 }
@@ -889,8 +979,8 @@ function getMIDateTime()
 {
 	var obj =  getBasePropty();
 	obj.ElemType = "MIDateTime";
-	obj.IncludeDate = $("#IncludeDate")[0].status;
-	obj.IncludeTime = $("#IncludeTime")[0].status;
+	obj.IncludeDate = $("#IncludeDate")[0].checked;
+	obj.IncludeTime = $("#IncludeTime")[0].checked;
 	obj.DateFormat = $("#DateFormat").find("option:selected").text();
 	obj.TimeFormat = $("#TimeFormat").find("option:selected").text();
 	return obj;
@@ -974,8 +1064,14 @@ function initDataBind()
 	var str ='<span>'+emrTrans("数据绑定")+'</span>'
 	 	 +'<span><input id="BindCode" type="text" disabled="true" style="width:140px;"></input></span>'
 	 	 +'<span><input id="BindType" type="text" style="display:none;"></input></span>'
-	 	 +'<span><input id="clearBind" type="button" value="-"></input></span>'
+	 	 +'<span><input id="clearBind"  onclick="clearBind()" type="button" value="-"></input></span>'
 	return str;
+}
+
+//清空选择的单元的绑定数据
+function clearBind()
+{
+	$("#BindCode").val("");
 }
 //同步
 function initSynch()
@@ -1060,13 +1156,13 @@ function initMaxVal()
 //设置最小值
 function initHasMinVal()
 {
-	var str = '<span><input id="HasMinVal" type="checkbox" name="HasMinVal"></input></span>'
+	var str = '<span><input id="HasMinVal" onclick="checkHasMinVal()" type="checkbox" name="HasMinVal"></input></span>'
 	return str;
 }
 //设置最大值
 function initHasMaxVal()
 {
-	var str = '<span><input id="HasMaxVal" type="checkbox" name="HasMaxVal"></input></span>'
+	var str = '<span><input id="HasMaxVal" onclick="checkHasMaxVal()" type="checkbox" name="HasMaxVal"></input></span>'
 	return str;	
 }
 //是否是小于等于
@@ -1354,7 +1450,7 @@ function setHasMaxVal(value)
 	{
 		$("#HasMaxVal").attr("checked",false);
 		$("#MaxVal").attr("disabled",true);
-		$("#IncludeMin").attr("disabled",true);	
+		$("#IncludeMax").attr("disabled",true);	
 	}
 }
 //是否是小于等于
@@ -1447,19 +1543,20 @@ function setDateFormat(value)
 	var json = [{value:"1",name:"yyyy-MM-dd"},{value:"2",name:emrTrans("yyyy年MM月dd日")}]
 	for (var i=0;i<json.length;i++)  
 	{       
-    	$('#DateFormat').append("<option value='" + json[i].value + "'>" + json[i].name + "</option>");
 		if (json[i].name == value)
 		{
 			if ($.browser.version == '6.0')
 			{
 				setTimeout(function() { 
-					$("#DateFormat option[text='"+value+"']").attr("selected", true);
+					$("#DateFormat").append("<option value='" + json[i].value + "' selected>" + json[i].name + "</option>");
 				}, 1);
 			}
 			else
 			{
-				$("#DateFormat option[text='"+value+"']").attr("selected", true);
+				$("#DateFormat").append("<option value='" + json[i].value + "' selected>" + json[i].name + "</option>");
 			}
+		}else {
+			$('#DateFormat').append("<option value='" + json[i].value + "'>" + json[i].name + "</option>");
 		}
 	}	
 }
@@ -1469,19 +1566,20 @@ function setTimeFormat(value)
 	var json = [{value:"1",name:"HH:mm"},{value:"2",name:"HH:mm:ss"}]
 	for (var i=0;i<json.length;i++)  
 	{       
-    	$('#TimeFormat').append("<option value='" + json[i].value + "'>" + json[i].name + "</option>");
 		if (json[i].name == value)
 		{
 			if ($.browser.version == '6.0')
 			{
 				setTimeout(function() {
-					$("#TimeFormat option[text='"+value+"']").attr("selected", true);
+					$('#TimeFormat').append("<option value='" + json[i].value + "' selected>" + json[i].name + "</option>");
 				}, 1);
 			}
 			else
 			{
-				$("#TimeFormat option[text='"+value+"']").attr("selected", true);
+				$('#TimeFormat').append("<option value='" + json[i].value + "' selected>" + json[i].name + "</option>");
 			}
+		}else{
+			$('#TimeFormat').append("<option value='" + json[i].value + "'>" + json[i].name + "</option>");
 		}
 	}	
 }
@@ -1574,22 +1672,35 @@ function setLinkDisplayType(value)
 		if (json[i].value == value){$("#LinkDisplayType").val(value);}
 	}	
 }
-
-$(function(){
-	//最小值是不否有效
-	$("#HasMinVal").on("change",function(){
+//最小值是否有效 
+function checkHasMinVal(){
 		var flag = true;
-		if ($("#HasMinVal").attr("checked")) flag = false;	
+		if (document.getElementById('HasMinVal').checked) flag = false;	
 		$("#MinVal").attr("disabled",flag);
 		$("#IncludeMax").attr("disabled",flag);	
-	});
-	//最大值是不否有效
-	$("#HasMaxVal").on("change",function(){
+	}
+//最大值是否有效 
+function checkHasMaxVal(){
 		var flag = true;
-		if ($("#HasMaxVal").attr("checked")) flag = false;	
+		if (document.getElementById('HasMaxVal').checked) flag = false;	
 		$("#MaxVal").attr("disabled",flag);
 		$("#IncludeMin").attr("disabled",flag);	
-	});
+	}
+$(function(){
+	//最小值是不否有效
+	//$("#HasMinVal").on("change",function(){
+	//	var flag = true;
+	//	if ($("#HasMinVal").attr("checked")) flag = false;	
+	//	$("#MinVal").attr("disabled",flag);
+	//	$("#IncludeMax").attr("disabled",flag);	
+	//});
+	//最大值是不否有效
+	//$("#HasMaxVal").on("change",function(){
+	//	var flag = true;
+	//	if ($("#HasMaxVal").attr("checked")) flag = false;	
+	//	$("#MaxVal").attr("disabled",flag);
+	//	$("#IncludeMin").attr("disabled",flag);	
+	//});
 	//是否包含日期
 	$("#IncludeDate").on("change",function(){
 		var flag = true;
@@ -1617,7 +1728,11 @@ $(function(){
 			 $("#CustDicClassName").attr("disabled",false);
 		 }
 	});
-
+	document.getElementById("deleteElement").onclick = function(){ 
+		var node = $('#elementTree').tree('getSelected');
+		$('#elementTree').tree('remove', node.target);
+		deleteElement(node.id);
+	}
 });
 ///后台交互///////////////////////////////////////////////////////////////
 
@@ -1670,6 +1785,7 @@ function saveNodePropty()
 	            var nodeText = $("#nodeText").val();
 	            returnValues.NodeText = nodeText;
 	            returnValues.TextData = TextData;
+	            returnValues.isEmpty = "N";
 	            window.returnValue = returnValues;
 	            result = 1;
 				node.attributes.isEmpty = "N";
@@ -1794,4 +1910,21 @@ function initSaveOnclick()
 		var strJson = {action:"UPDATE_ELEMENT",args:{"Path":currentPath,"Props":getElementPropty(type)}}
 		cmdDoExecute(strJson);
 	};
+}
+
+//右键菜单
+function treeRightClick(e,node)
+{
+	if ((node.attributes.type == "Section")||(node.attributes.type == "Composite")) return;
+	e.preventDefault();
+	$('#elementTree').tree('select', node.target);
+	focusElement(node.id);
+	$('#mm').menu('show', {left: e.pageX-80, top: e.pageY});
+}
+
+//删除元素
+function deleteElement(path)
+{
+	var strJson = { action: "DELETE_ELEMENT", args: {"Path":path}};
+	cmdDoExecute(strJson);
 }

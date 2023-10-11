@@ -10,14 +10,14 @@ function ExportAllToExcel(exportGrid) {
 		return;
 	}
 	if ($('#' + exportGrid).datagrid("getRows").length <= 0) {
-		dhcphaMsgBox.alert("没有数据!");
+		dhcphaMsgBox.alert($g("没有数据!"));
 		return;
 	}
 	ExportAllToExcelHandler(exportGrid);
 }
 
 function ExportAllToExcelHandler(exportGrid, exportway) {
-	var _fileName = "数据导出_" + new Date().getTime() + ".xlsx";
+	var _fileName = $g("数据导出")+"_" + new Date().getTime() + ".xlsx";
 	var exportGridOption = $('#' + exportGrid).datagrid("options")
 	var exportGridUrl = exportGridOption.url;
 	var ajaxURL = "";
@@ -58,9 +58,9 @@ function ExportAllToExcelHandler(exportGrid, exportway) {
 		titleObj[colIModal.field] = colIModal.title;
 	}
 	$.messager.progress({
-		title: '请等待',
-		msg: '处理数据中...',
-		text: '加载中.......'
+		title: $g('请等待'),
+		msg: $g('处理数据中...'),
+		text: $g('加载中.......')
 	});
 	$.ajax({
 		type: "GET",

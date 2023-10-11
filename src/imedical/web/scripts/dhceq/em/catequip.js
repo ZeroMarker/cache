@@ -18,6 +18,7 @@ var GlobalObj = {
 
 function initDocument()
 {
+	initUserInfo(); //Modified By QW20210422 bug:QW0100 初始化
 	GlobalObj.Job=getElementValue("Job");	//add by csj 2020-02-24
 	defindTitleStyle();
 	initDHCEQEquipList();			//初始化表格	
@@ -27,7 +28,14 @@ function initDocument()
 //modified by csj 2020-02-24
 function initTree()
 {
-	var EquipeCatTree =tkMakeServerCall("web.DHCEQ.Plat.LIBTree","GetEquipeCatTreeStr")
+	//modified by czf 2021-02-25 begin 1959169
+	//var EquipeCatTree =tkMakeServerCall("web.DHCEQ.Plat.LIBTree","GetEquipeCatTreeStr")
+	var EquipeCatTree=$.m({
+	    ClassName:"web.DHCEQ.Plat.LIBTree",
+	    MethodName:"GetEquipeCatTreeStr",
+	},false);
+	//modified by czf 2021-02-25 end 1959169
+	
 	$('#tDHCEQCEquipCatTree').tree({
 		data:JSON.parse(EquipeCatTree),
 		onClick: function (node) {
@@ -43,12 +51,12 @@ function initDHCEQEquipList()
 	    queryParams:{
 	        ClassName:"web.DHCEQ.EM.BUSEquip",   //Modefied by zc0044 2018-11-22 修改query名称
 	        QueryName:"GetEquipList",
-	        Data:"^IsDisused=N^IsOut=N^IncludeFlag=1",
+	        Data:"^IsDisused=N^IsOut=N^IncludeFlag=1"+"^HospitalDR="+curHospitalID, //Modified By QW20210422 bug:QW0100 增加院区
 	        ReadOnly:1,
 	        Ejob:GlobalObj.Job	//add by csj 2020-02-22 需求号：1190963
 	    },
 	    border:false,
-		striped:true,
+		//striped:true,
 	    cache:false,
 	    //singleSelect:true,
 		//fitColumns:true,
@@ -65,7 +73,7 @@ function initDHCEQEquipList()
                 text:'导出',
                 handler: function(){
                      BSaveExcel_Click();
-                }},'----------',
+                }},
                 {
                 iconCls: 'icon-set-col',
                 text:'导出列设置',
@@ -77,7 +85,7 @@ function initDHCEQEquipList()
 			if (rowData.TRowID!=""){
 				var str="dhceq.em.equip.csp?&RowID="+rowData.TRowID+"&ReadOnly=1";
 				//Modefied by zc 2018-12-21  zc0047 修改弹窗显示过小
-				showWindow(str,"台账详细界面","","","icon-w-paper","","","","large")    //Modefidy by lmm 2020-06-04 UI
+				showWindow(str,"台账详细界面","","","icon-w-paper","","","","verylarge");    //MZY0119	2568613		2022-04-07
 				//Modefidy by zc0046 修改弹窗在不同分辨率弹窗覆盖问题
 			}
 		},
@@ -87,7 +95,8 @@ function initDHCEQEquipList()
 });
 }
 function InitToolbarForAmountInfo() {
-	var Data = tkMakeServerCall("web.DHCEQEquipSave","GetEquipSumInfo",'',GlobalObj.Job);	//modified by csj 2020-02-22 需求号：1190963
+	var Data = tkMakeServerCall("web.DHCEQ.Plat.LIBCommon","GetTempGlobalTotalInfo",'EquipList','',GlobalObj.Job,''); 	// MZY0144	3074976,3076574,3077489,3079473		2022-11-24
+	//var Data = tkMakeServerCall("web.DHCEQEquipSave","GetEquipSumInfo",'',GlobalObj.Job);	//modified by csj 2020-02-22 需求号：1190963
 	$("#sumTotal").html(Data);
 	//var gridToolbar = $("#tDHCEQEquipListDiv .datagrid-toolbar table tr td:nth-child(4)  ");
 	//gridToolbar.empty();
@@ -95,10 +104,30 @@ function InitToolbarForAmountInfo() {
 }
 function BSaveExcel_Click() //导出
 {	
-	var vData="^IsDisused=N^IsOut=N^EquipCatDR="+GlobalObj.ID+"^IncludeFlag=1"  //add by lmm 2019-09-01 988161
-	var Job=document.getElementById("Job");
-	PrintDHCEQEquipNew("Equip",1,"",vData,"",100);
-	return
+	//Modefied by zc0109 2021-12-02 begin 分类台账导出
+	var PrintFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo",'990062');
+	if (PrintFlag=="1")
+	{
+		var Rows = $('#tDHCEQEquipList').datagrid('getRows');
+		var RowCount=Rows.length;
+		if(RowCount<=0){
+			messageShow("","","","没有数据!")
+			return;
+		}
+		var url="dhccpmrunqianreport.csp?reportName=DHCEQEquipExport.raq&CurTableName=Equip&CurUserID="+session['LOGON.USERID']+"&CurGroupID="+session['LOGON.GROUPID']+"&Job="+getElementValue("Job")
+    	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
+    	window.open(url,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0');   //
+	}
+	else
+	{
+		var vData="^IsDisused=N^IsOut=N^EquipCatDR="+GlobalObj.ID+"^IncludeFlag=1"+"^HospitalDR="+curHospitalID  //Modified By QW20210422 bug:QW0100 增加院区
+		var Job=document.getElementById("Job");
+		PrintDHCEQEquipNew("Equip",1,Job,vData,"",100);
+		return
+	}
+	//Modefied by zc0109 2021-12-02 end 分类台账导出
 }
 function BColSet_Click() //导出数据列设置
 {
@@ -122,7 +151,7 @@ function NodeClickHandler(nod)
 	    queryParams:{
 	        ClassName:"web.DHCEQ.EM.BUSEquip",		//Modefied by zc0044 2018-11-22 修改query名称
 	        QueryName:"GetEquipList",
-	        Data:"^IsDisused=N^IsOut=N^EquipCatDR="+nod.id+"^IncludeFlag=1", //modified by csj 2020-02-24
+	        Data:"^IsDisused=N^IsOut=N^EquipCatDR="+nod.id+"^IncludeFlag=1"+"^HospitalDR="+curHospitalID, //Modified By QW20210422 bug:QW0100 增加院区
 	        ReadOnly:1,
 	        Ejob:GlobalObj.Job	//add by csj 2020-02-22 需求号：1190963
 	    }, 

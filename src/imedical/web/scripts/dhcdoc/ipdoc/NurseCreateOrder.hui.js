@@ -16,6 +16,7 @@ function Init(){
 		},false);
 		ServerObj.PatientNo=rtn.split("^")[1];
 		$("#PatientNo").val(ServerObj.PatientNo);
+		$("#PatName").val(rtn.split("^")[2]);
 	}else{
 		$(".CreateByWard-tr").hide();
 	}

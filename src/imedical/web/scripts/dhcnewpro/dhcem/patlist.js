@@ -3,7 +3,7 @@
 // 编写日期:   2017-11-24
 // 描述:	   急诊病人列表
 //===========================================================================================
-
+var Flag=0;
 var PatientID = "";  /// 病人ID
 var EpisodeID = "";  /// 病人就诊ID
 var defaultCardTypeDr;  /// 默认卡类型
@@ -13,8 +13,15 @@ var tabSelectFlag = 0;
 var PatListType = "Per"; /// 病人列表
 var EmWardID = "";	     /// 抢救病区ID
 var PatArrFlag = "N";
-var PatType = "E"; var LgCtLocID=session['LOGON.CTLOCID']; var LgUserID=session['LOGON.USERID']; var LgHospID=session['LOGON.HOSPID'];//hxy 2018-06-22
-
+var Compted = "" ;
+var DisHospPat = "";
+var PatType = "E"; 
+var LgCtLocID=session['LOGON.CTLOCID']; 
+var LgUserID=session['LOGON.USERID']; 
+var LgHospID=session['LOGON.HOSPID'];
+var LgGroupID=session['LOGON.GROUPID'];
+var LgParams = LgHospID+"^"+LgCtLocID+"^"+LgGroupID+"^"+LgUserID
+var HOSOPEN = ""; //2023-03-07 用户大会
 /// 页面初始化函数
 function initPageDefault(){
 	
@@ -24,13 +31,14 @@ function initPageDefault(){
 	/// 初始化日期
 	InitDateBox();
 	
+	/// 初始化下拉框
+	///InitCombobox();
+	
 	/// 初始化加载病人列表
 	InitPatList();
 	
 	InitPatInfoPanel()
 	 
-	/// 初始化页面卡类型定义
-	InitCardTypeDefine();
 	
 	InitDomAndVal();
 }
@@ -45,6 +53,10 @@ function InitPatEpisodeID(){
 	)	
 	
 	//EpisodeID = getParam("EpisodeID");
+	
+	///是否HOSOPEN 2023-03-07 用户大会
+	HOSOPEN = getParam("hosOpen");
+	HOSWINDOWID = getParam("windowId");
 }
 
 function InitDateBox(){
@@ -58,28 +70,24 @@ function InitDateBox(){
 	}
 }
 
+function InitCombobox(){
+	$HUI.combobox("#preDiag",{
+		valueField:'id',
+		textField:'text',
+		data:[    {'id':'CP','text':'胸痛中心'},
+				  {'id':'SC','text':'卒中中心'},
+				  {'id':'TR','text':'创伤中心'}
+			  ],
+		onSelect:function(option){
+	    }	
+	})	
+	
+	
+}
+
 /// 初始化病人基本信息
 function InitPatInfoPanel(){
 	
-	var uniturl = LINK_CSP+"?ClassName=web.DHCEMPatCheckLevCom&MethodName=";
-	/// 卡类型  卡类型的combobox的onSelect事件。
-	var option = {
-		panelHeight:"auto",
-		onSelect:function(option){
-	        var CardTypeDefArr = option.value.split("^");
-	        m_CardNoLength = CardTypeDefArr[17];
-	        m_CCMRowID = CardTypeDefArr[14];
-	        
-	        if (CardTypeDefArr[16] == "Handle"){
-		    	$('#EmCardNo').attr("readOnly",false);
-		    }else{
-				$('#EmCardNo').attr("readOnly",true);
-			}
-			$('#EmCardNo').val("");  /// 清空内容
-	    }
-	};
-	var url = uniturl+"CardTypeDefineListBroker";
-	new ListCombobox("EmCardType",url,'',option).init();
 	
 	//主管医生
 	$HUI.combobox("#concDoc",{
@@ -114,11 +122,11 @@ function InitPatInfoPanel(){
 	$(".pf-sider ul li").bind('click',SetLabelColor);
 	
 	/// 默认给待诊病人增加选中效果
-	$("li:contains('待诊患者')").addClass("btn-gray"); //hxy 2018-09-17 病人 2018-10-18 btn-success
+	$("li:contains('"+$g("待诊患者")+"')").addClass("btn-gray"); //hxy 2018-09-17 病人 2018-10-18 btn-success
 	
 	//号别  hxy 2018-06-22
 	$HUI.combobox("#Care",{
-		url:LINK_CSP+"?ClassName=web.DHCEMRegister&MethodName=getEmeNumInfo&hosp="+LgHospID,
+		url:LINK_CSP+"?ClassName=web.DHCEMRegister&MethodName=getEmeNumInfo&hosp="+LgHospID+"&LocID="+LgCtLocID,
 		valueField:'id',
 		textField:'text',
 		onSelect:function(option){
@@ -134,25 +142,6 @@ function InitPatInfoPanel(){
 	/// 更多
 	$("#more").bind('click',MoreCondition);
 	
-}
-
-/// 初始化页面卡类型定义
-function InitCardTypeDefine(){
-	
-	/// 获取默认卡类型
-	runClassMethod("web.DHCEMPatCheckLevCom","GetDefaultCardType",{},function(jsonString){
-		
-		defaultCardTypeDr = jsonString;
-		var CardTypeDefArr = defaultCardTypeDr.split("^");
-        m_CardNoLength = CardTypeDefArr[17];   /// 卡号长度
-        m_CCMRowID = CardTypeDefArr[14];
-        if (CardTypeDefArr[16] == "Handle"){
-	    	$('#EmCardNo').attr("readOnly",false);
-	    }else{
-			$('#EmCardNo').attr("readOnly",true);
-		}
-		$("#EmCardType").combobox("setValue",defaultCardTypeDr);
-	},'',false)
 }
 
 function InitDomAndVal(){
@@ -175,7 +164,8 @@ function InitPatList(){
 		{field:'PatLevel',title:'预检分级',width:70,align:'center',formatter:setCellLevLabel},
 		{field:'LocSeqNo',title:'顺序号',width:60,align:'center'},
 		{field:'CalledDesc',title:'呼叫状态',width:70,align:'center'},
-		{field:'PatName',title:'姓名',width:100},
+		{field:'PatName',title:'姓名',width:100,styler:patNameStyler},
+		///{field:'PatName',title:'姓名',width:100,styler:patNameStyler,formatter:function(value, rowData, rowIndex){return "*"+rowData.PatName.substring(1,9);}},
 		{field:'PatAge',title:'年龄',width:80,align:'center'},
 		{field:'Arrived',title:'到达',width:60,align:'center',formatter:setCellSymbol},
 		{field:'PatNo',title:'登记号',width:120},
@@ -193,6 +183,8 @@ function InitPatList(){
 		{field:'PatEmrUrl',title:'电子病历',width:70,align:'center',formatter:setCellEmrUrl},
 		//{field:'Called',title:'叫号',width:40,align:'center'},
 		{field:'PatGreFlag',title:'绿色通道',width:70,align:'center',formatter:setCellGreenLabel},
+		///{field:'DisType',title:'亚绿色通道',width:90,align:'center',formatter:setCellDisType},
+		{field:'EmChkWaitYx',title:'分诊优先',width:70,align:'center'},
 		{field:'ItmUnObr',title:'图标菜单',width:80,
 			formatter: function(value,row,index){
 				return reservedToHtml(value);
@@ -215,13 +207,37 @@ function InitPatList(){
 		onLoadSuccess:function(data){
 			///  设置分诊区域
             if (typeof data.EmPatLevWait == "undefined"){return;}
-        	$("#EmPatLevWait").text(data.EmPatLevWait);
-			$("#EmPatLevUnWait").text(data.EmPatLevUnWait);
-			$("a:contains('红区')").html("红区(" + data.EmPatLevCnt1 +")");
-			$("a:contains('橙区')").html("橙区(" + data.EmPatLevCnt2 +")"); //hxy 2020-02-21 st
-			$("a:contains('黄区')").html("黄区(" + data.EmPatLevCnt3 +")"); //原：EmPatLevCnt2
-			$("a:contains('绿区')").html("绿区(" + data.EmPatLevCnt4 +")"); //原：EmPatLevCnt3 ed 
+            if(EmWardID==""){
+        		$("#EmPatLevWait").text(data.EmPatLevWait);
+				$("#EmPatLevUnWait").text(data.EmPatLevUnWait);
+				$("#EmPatLevComp").text(data.EmPatLevComp);
+            }
+            // 登记号/姓名 查询时 自动跳转至查询到病人的列表页签（Flag为1时 查询，Flag为0时不查询）
+            // 登记号/姓名不为空，进行回车事件或者点击查询按钮时自动跳转，点击页签时不进行跳转
+            if((CROSSLISTSEARCH==1)&&($("#TmpCondition").val()!="")){
+				if(Flag==1){
+		            if((data.EmPatLevWait>0)&&(PatArrFlag!="N")){
+						/// 默认给待诊病人增加选中效果
+			            $(".pf-sider ul li")[0].firstChild.onclick();
+			            $(".pf-sider").find("li:eq(0)").addClass("btn-gray").siblings().removeClass("btn-gray"); //hxy 2018-10-18 原：btn-success
+			        }
+			        if((data.EmPatLevUnWait>0)&&(PatArrFlag!="Y")){
+			            $(".pf-sider ul li")[1].firstChild.onclick();
+			            $(".pf-sider").find("li:eq(1)").addClass("btn-gray").siblings().removeClass("btn-gray"); //hxy 2018-10-18 原：btn-success
+			        }
+			        if((data.EmPatLevComp>0)&&(Compted!="Y")){
+			            $(".pf-sider ul li")[2].firstChild.onclick();
+			            $(".pf-sider").find("li:eq(2)").addClass("btn-gray").siblings().removeClass("btn-gray"); //hxy 2018-10-18 原：btn-success
+			        }
+			        Flag=0;
+			 	}
+	        }
+			$("a:contains('"+$g("红区")+"')").html($g("红区")+"(" + data.EmPatLevCnt1 +")");
+			$("a:contains('"+$g("橙区")+"')").html($g("橙区")+"(" + data.EmPatLevCnt2 +")"); //hxy 2020-02-21 st
+			$("a:contains('"+$g("黄区")+"')").html($g("黄区")+"(" + data.EmPatLevCnt3 +")"); //原：EmPatLevCnt2
+			$("a:contains('"+$g("绿区")+"')").html($g("绿区")+"(" + data.EmPatLevCnt4 +")"); //原：EmPatLevCnt3 ed 
 			setObsPatNumInfo(data.ObsPatInfo);   /// 设置留观室人数信息
+			$("#EmPatLevLeaveHosp").text(data.EmPatDisHosp);	///设置离院人数
 			tabSelectFlag = 1;
 		},
 		rowStyler:function(index,rowData){   
@@ -230,11 +246,23 @@ function InitPatList(){
 			}
 	    },
 	    rowStyler:function(index,rowData){  
-			if ((rowData.CalledDesc.indexOf("正在叫号")>-1)){   //hxy 2020-03-09 st
-	            return 'background-color:#4b991b;';  //029c87 //018674
-	        }//ed 	 
+			if ((rowData.CalledDesc.indexOf($g("正在叫号"))>-1)){   //hxy 2020-03-09 st
+	            return 'background-color:#B8E5AA;';  // #4b991b //029c87 //018674
+	        }//ed 	  
 	    },
 	    onDblClickRow: function (rowIndex, rowData) {
+		    sendMessage(rowData); //用户大会 2023-03-07 st
+		    ///hos弹出的患者列表,这里选择后关闭窗口
+		    ///HOSOPEN?hosCloseWindow(HOSWINDOWID):'';
+		    
+		    if(HOSOPEN){
+			    if(window.opener){
+				   var nowUrl = window.opener.location.href;
+				   window.opener.location.href = changeURLArgs(nowUrl,{EpisodeID:rowData.EpisodeID,PatientID:rowData.PatientID});
+				}
+				window.close();
+			} //ed
+			
 			if(window.parent.frames && window.parent.frames.switchPatient){
 				//双击选择行编辑
 				window.parent.frames.switchPatient(rowData.PatientID,rowData.EpisodeID,rowData.mradm);
@@ -258,13 +286,77 @@ function InitPatList(){
 	/// 结束日期
 	var EndDate = $HUI.datebox("#EndDate").getValue();
 
-	var param = "^^^"+ PatType +"^^"+StartDate+"^"+EndDate+"^"+ PatArrFlag +"^^^^^"+LgCtLocID +"^"+ LgUserID +"^^^^^"+ PatListType;
+	var param = "^^^"+ PatType +"^^"+StartDate+"^"+EndDate+"^"+ PatArrFlag +"^^^^^"+LgCtLocID +"^"+ LgUserID +"^^^^^"+ 
+		PatListType+"^^^^^^^^"+LgHospID;
+		
 	var uniturl = LINK_CSP+"?ClassName=web.DHCEMDocMainOutPat&MethodName=JSonQryEmDocMainPatList&params="+param;
 	new ListComponent('PatList', columns, uniturl, option).Init();
 	$('#PatList').datagrid('hideColumn','PAAdmBed');	///待诊列表床号不需显示
 }
 
+/// 病种路径连接 bianshuai 2018-07-18
+function setCellDisType(value, rowData, rowIndex){
+	var style=""; //hxy 2019-11-22 st
+	if(rowData.EmCenterIfEnd=="1"){style="style='color:gray'"} //ed
+	var htmlstr = "";
+	if ((value == "CP")||(value == "SC")||(value == "TR")) {
+		if (value == "CP") {
+			value = "胸痛";
+		}
+		if (value == "SC") {
+			value = "卒中";
+		}
+		if (value == "TR") {
+			value = "创伤";
+		}
+		htmlstr = '<a href="javascript:void(0);" '+style+' onclick="OpenDisTypeWin(\''+ rowData.EpisodeID +'\',\''+ rowData.DisType +'\')">'+ value +'</a>';
+	}
+	return htmlstr;
+}
+/// 打开病种路径页面
+function OpenDisTypeWin(EpisodeID, DisType){
+	
+	var Link = "";
+	if (DisType == "CP"){
+		Link = "dhcemc.chestdiseasestation.csp?EpisodeID="+ EpisodeID +"&PosNode=ChestEmergency";
+	}
+	if (DisType == "SC"){
+		Link = "dhcemc.strokecenter.csp?EpisodeID="+ EpisodeID +"&PosNode=StrokeEMWithinHosp";
+	}
+	if (DisType == "TR"){
+		Link = "dhcemc.traumacenter.csp?EpisodeID="+ EpisodeID +"&PosNode=dhcemc.patchecklev.csp";
+	}
+	if ('undefined'!==typeof websys_getMWToken){
+      Link += "&MWToken="+websys_getMWToken()
+    }
+	// window.parent.frames.window.location.href = Link ;
+	window.open(Link, 'newWin', 'height='+ (window.screen.availHeight-100) +', width='+ (window.screen.availWidth-100) +', top=20, left=30, toolbar=no, menubar=no, scrollbars=no, resizable=yes, location=no, status=no');
+}
+
+function sendMessage(rowData) {
+    //  定义需要发送给门户的数据对象
+    //  type: 'postFromProd'    固定值，必传，
+    //  message用来存放需要传递的缓存数据
+    var obj = {
+        type: 'postFromProd',
+        messageList: 
+        [
+            {
+                key: 'EpisodeID',
+                value: rowData.EpisodeID
+            },{
+                key: 'PatientID',
+                value: rowData.PatientID
+            }
+        ]
+    }
+    
+    var _w = HOSOPEN?window.opener.top:window.top;
+    _w.postMessage(obj, "*")
+  }
+
 function setObsPatNumInfo(data){
+	$(".wardclass").find("span").text("0");/// 2022-09-30 动态加载病区的人数个数 赋值前先清0
 	var infoArr = data.split("^");
 	for(var i=0;i<infoArr.length;i++){
 		var itmInfo = infoArr[i];
@@ -288,26 +380,34 @@ function setCellLevLabel(value, rowData, rowIndex){
 	/*if ((value == "1级")||(value == "2级")){ fontColor = "#F16E57";} //hxy 2020-02-21 st
 	if (value == "3级"){ fontColor = "#FFB746";}
 	if (value == "4级"){ fontColor = "#2AB66A";}*/
-	if (value == "1级"){ fontColor = "#F16E57";}
-	if (value == "2级"){ fontColor = "orange";}
-	if (value == "3级"){ fontColor = "#FFB746";}
-	if ((value == "4级")||(value == "5级")){ fontColor = "#2AB66A";} //ed
+	if (value == $g("1级")){ fontColor = "#F16E57";}
+	if (value == $g("2级")){ fontColor = "orange";}
+	if (value == $g("3级")){ fontColor = "#FFB746";}
+	if ((value == $g("4级"))||(value == $g("5级"))){ fontColor = "#2AB66A";} //ed
 	return "<font color='" + fontColor + "'>"+setCell(value)+"</font>"; //hxy 2020-02-21
+}
+
+function patNameStyler(value, rowData, rowIndex){
+
+	if(rowData.WalkStatus=="复诊"){
+		return "color:blue";
+	}
+	return ""
 }
 
 function setCellPAAdmPriority(value, rowData, rowIndex){
 	var fontColor = "";
-	if (value == "1级"){ fontColor = "#F16E57";}
-	if (value == "2级"){ fontColor = "orange";}
-	if (value == "3级"){ fontColor = "#FFB746";}
-	if ((value == "4级")||(value == "5级")){ fontColor = "#2AB66A";}
+	if (value == $g("1级")){ fontColor = "#F16E57";}
+	if (value == $g("2级")){ fontColor = "orange";}
+	if (value == $g("3级")){ fontColor = "#FFB746";}
+	if ((value == $g("4级"))||(value == $g("5级"))){ fontColor = "#2AB66A";}
 	return "<font color='" + fontColor + "'>"+setCell(value)+"</font>";	//hxy 2020-02-21
 }
 
 /// 电子病历
 function setCellEmrUrl(value, rowData, rowIndex){
 
-	return "<a href='#' onclick='OpenPatEmr("+rowData.PatientID +","+rowData.EpisodeID +","+rowData.mradm +")'>查看</a>";
+	return "<a href='#' onclick='OpenPatEmr("+rowData.PatientID +","+rowData.EpisodeID +","+rowData.mradm +")'>"+$g("查看")+"</a>";
 }
 
 /// 病历查看
@@ -321,7 +421,11 @@ function OpenPatEmr(PatientID, EpisodeID, mradm){
 	/// window.open("emr.record.browse.patient.csp?PatientID="+PatientID+"&EpisodeID="+EpisodeID, 'newWin', 'height='+ (window.screen.availHeight-200) +', width='+ (window.screen.availWidth-200) +', top=100, left=100, toolbar=no, menubar=no, scrollbars=no, resizable=yes, location=no, status=no');
 	
 	/// 新版病历
-	var link = "websys.chartbook.hisui.csp?&PatientListPanel=emr.browse.episodelist.csp&PatientListPage=emr.browse.patientlist.csp&SwitchSysPat=N&ChartBookID=70&PatientID="+ PatientID +"&EpisodeID="+ EpisodeID +"&mradm="+ mradm +"&WardID=";
+	var link="websys.chartbook.hisui.csp?";
+	if ('undefined'!==typeof websys_getMWToken){
+		link += "&MWToken="+websys_getMWToken()
+	}
+	link += "&PatientListPanel=emr.browse.episodelist.csp&PatientListPage=emr.browse.patientlist.csp&SwitchSysPat=N&ChartBookID=70&PatientID="+ PatientID +"&EpisodeID="+ EpisodeID +"&mradm="+ mradm +"&WardID=";
 	window.open(link, 'newWin', 'height='+ (window.screen.availHeight-100) +', width='+ (window.screen.availWidth-100) +', top=50, left=50, toolbar=no, menubar=no, scrollbars=no, resizable=yes, location=no, status=no');
 }
 
@@ -338,25 +442,28 @@ function setCellGreenLabel(value, rowData, rowIndex){
 function showGreenRec(adm){
 	var option = {
 		minimizable:false,
-		iconCls:'icon-save',
+		iconCls:'icon-w-paper',
 		onClose:function(){QryEmPatList()}
 	}
 	new WindowUX("绿色通道","PatLabWin", 700, 420 , option).Init();
 	
-	var LinkUrl ='dhcem.green.rec.csp?EpisodeID='+adm
+	var LinkUrl ='dhcem.green.rec.csp?EpisodeID='+adm;
+	if ('undefined'!==typeof websys_getMWToken){
+		LinkUrl += "&MWToken="+websys_getMWToken()
+	}
 	var content = '<iframe class="page-iframe" src="'+ LinkUrl +'" frameborder="no" border="no" height="98%" width="100%" scrolling="no"></iframe>';
 	$("#PatLabWin").html(content);
 	return;		
 }
 /// 去向
 function setCellAreaLabel(value, row, index){
-	if (value == "红区"){
+	if (value == $g("红区")){
 		return 'background-color:#F16E57;color:white';
-	}else if (value == "橙区"){ //hxy 2020-02-21 st
+	}else if (value == $g("橙区")){ //hxy 2020-02-21 st
 		return 'background-color:orange;color:white'; //ed
-	}else if (value == "黄区"){
+	}else if (value == $g("黄区")){
 		return 'background-color:#FFB746;color:white';
-	}else if (value == "绿区"){
+	}else if (value == $g("绿区")){
 		return 'background-color:#2AB66A;color:white';
 	}else{
 		return '';
@@ -365,13 +472,13 @@ function setCellAreaLabel(value, row, index){
 
 /// 护理级别
 function setCellCareLevelLabel(value, row, index){
-	if (value == "特级"){
+	if (value == $g("特级")){
 		return 'background-color:red;color:black';
-	}else if (value == "一级"){
+	}else if (value == $g("一级")){
 		return 'background-color:#FD99CB;color:black';
-	}else if (value == "二级"){
+	}else if (value == $g("二级")){
 		return 'background-color:#02B0EF;color:black';
-	}else if (value == "三级"){
+	}else if (value == $g("三级")){
 		return 'color:black';
 	}else{
 		return '';
@@ -440,6 +547,7 @@ function TmpCon_KeyPress(e){
 			///  登记号补0
 			TmpCondition = GetWholePatNo(TmpCondition);
 			$("#TmpCondition").val(TmpCondition);
+			Flag=1;
 		}
 		QryEmPatList();  /// 查询
 	}
@@ -456,7 +564,19 @@ function QryEmPatList(){
 	/// 红黄绿区
 	var TypeCode="";
 	if(arguments.length!=0){
-		TypeCode=arguments[0];
+		if(arguments[0]!=1){
+			TypeCode=arguments[0];
+		}
+		// 为了控制 登记号/姓名查询时，是否自动跳转至有此病人的列表页签
+		if(arguments[0]==1){
+			Flag=1;
+		}
+	}
+	/// 全病区
+	var AllWard="";
+	if(TypeCode=="全病区"){
+		AllWard="Y";
+		TypeCode="";
 	}
 	
 	/// 卡号
@@ -465,40 +585,42 @@ function QryEmPatList(){
     var CareDesc=$("#Care").combobox("getText");
     var ConcDoc= $("#concDoc").combobox("getValue");
     var SeatNo = $("#roomSeatCode").val();
+    ///var preDiag=$("#preDiag").combobox("getValue");
+    
 	var params = "^^^"+ PatType +"^"+ CardNo +"^"+ StartDate +"^"+ EndDate ;
 	params=params+"^"+ PatArrFlag +"^^^^^"+LgCtLocID +"^"+ LgUserID +"^^"+ TmpCondition ;
 	params=params+"^"+ "" +"^"+TypeCode+"^"+ PatListType +"^"+ EmWardID+"^^"+ CareDesc;
-	params=params+"^"+ ConcDoc + "^" +SeatNo;
+	params=params+"^"+ ConcDoc + "^" + SeatNo +"^"+ Compted +"^"+ DisHospPat +"^"+ LgHospID+"^"+AllWard;
+	///params=params+"^"+ ConcDoc + "^" + SeatNo +"^"+ Compted +"^"+ DisHospPat +"^"+ LgHospID+"^"+AllWard+"^"+preDiag;
 	$("#PatList").datagrid("load",{"params":params}); 
 }
-
+/// 读卡 新
+function ReadCard() {
+	DHCACC_GetAccInfo7(ReadCardCallback);
+}
 /// 读卡
-function ReadCard(){
-
-	runClassMethod("web.DHCOPConfig","GetVersion",{},function(myVersion){
-		
-		var CardTypeRowId = "";
-		var CardTypeValue = $("#EmCardType").combobox("getValue");
-		var m_CCMRowID=""
-		if (CardTypeValue != "") {
-			var CardTypeArr = CardTypeValue.split("^");
-			m_CCMRowID = CardTypeArr[14];
-			CardTypeRowId=CardTypeArr[0];
-		}
-		//var rtn=DHCACC_ReadMagCard(m_CCMRowID,"R", "2");  //QQA
-		var rtn=DHCACC_GetAccInfo(CardTypeRowId,CardTypeValue);
-		var myary=rtn.split("^");
-		if (myary[0]!="0"){
-   			$.messager.alert("提示","卡无效!");
-   		}
-		
-		if ((myary[0]=="0")&&(myary[1]!="undefined")){
-			//$("#EmPatNo").val(myDataArr[2]);      /// 登记号;
-			//$("#PatientID").val(myDataArr[3]);  /// 病人ID
-			$('#EmCardNo').val(myary[1]);
-			QryEmPatList();   /// 查询
-		}			
-	},"text",false)
+function ReadCardCallback(rtnValue){
+	var patientId = "";
+	var myAry = rtnValue.split("^");
+	switch (myAry[0]) {
+	case '0':
+		$("#EmCardNo").val(myAry[1]);
+		patientId = myAry[4];
+		break;
+	case '-200':
+		$.messager.alert("提示", "卡无效", "info", function() {
+			$("#EmCardNo").focus();
+		});
+		break;
+	case '-201':
+		$("#EmCardNo").val(myAry[1]);
+		patientId = myAry[4];
+		break;
+	default:
+	}
+	if (patientId != "") {
+		QryEmPatList();
+	}
 }
 
 function M1Card_InitPassWord(){
@@ -514,21 +636,26 @@ function M1Card_InitPassWord(){
 function LoadEmPatByCurType(TypeCode){
 	
 	PatArrFlag = "N";
-	/// 卡号
-	var CardNo = $("#EmCardNo").val();
-	var TmpCondition = $("#TmpCondition").val();
-	var StayInWard = "";
+	Compted="N";
+	if(TypeCode == "C"){		///完成患者等同已诊患者处理，Compted：标识是否完成就诊
+		TypeCode = "H" ;
+		Compted = "Y" ;	
+	}
 	if (TypeCode == "D"){ PatArrFlag = "N"; }  /// 待诊病人
 	if (TypeCode == "H"){ PatArrFlag = "Y"; } 
-	/*
-	if (TypeCode == "E"){ StayInWard = "E"; }  /// 急诊留观
-	if (TypeCode == "R"){ StayInWard = "R"; }  /// 抢救留观
-	*/
-	EmWardID = (TypeCode == (TypeCode == "D"?"D":"H")?"":TypeCode);
-
 	
+	
+	EmWardID = parseInt(TypeCode)==TypeCode?TypeCode:"";	///病区ID
+	DisHospPat = TypeCode=="B"?"Y":"";						///离院患者
+	if(EmWardID){
+		$("#AllWard").css("display","inline");
+	}else{
+		$("#AllWard").css("display","none");
+	}
+		
 	if ((TypeCode != "D")&(TypeCode != "H")){
 		$('#PatPanel').layout('hidden','north');
+		$('#histb').css("margin-top","0px");
 		$('#bt_call').hide();    /// 叫号
 		$('#bt_recall').hide();  /// 重复叫号
 		$('#bt_cross').hide();   /// 过号
@@ -539,7 +666,6 @@ function LoadEmPatByCurType(TypeCode){
 		$HUI.datebox("#EndDate").disable();
 		$("#TmpCondition").attr("disabled", true);
 		$("#EmCardNo").attr("disabled", true);
-		$HUI.combobox("#EmCardType").disable();
 		$HUI.linkbutton("#ReadCard").disable();
 		$("#roomSeatCode").attr("disabled", false);
 		$HUI.combobox("#concDoc").enable();
@@ -553,6 +679,7 @@ function LoadEmPatByCurType(TypeCode){
 		
 	}else{
 		$('#PatPanel').layout('show','north');
+		$('#histb').css("margin-top","-4px");
 		$('#bt_call').show();    /// 叫号
 		$('#bt_recall').show();  /// 重复叫号
 		$('#bt_cross').show();   /// 过号
@@ -560,10 +687,11 @@ function LoadEmPatByCurType(TypeCode){
 		$('#bt_outcall').show();  /// 过号重排
 		$HUI.datebox("#StartDate").enable();
 		$HUI.datebox("#EndDate").enable();
-		InitDateBox();      ///初始化默认时间
+		if($HUI.datebox("#StartDate").getValue()==""){
+			InitDateBox();      ///初始化默认时间
+		}
 		$("#TmpCondition").attr("disabled", false);
 		$("#EmCardNo").attr("disabled", false);
-		$HUI.combobox("#EmCardType").enable();
 		$HUI.linkbutton("#ReadCard").enable();
 		$("#roomSeatCode").attr("disabled", true);
 		$HUI.combobox("#concDoc").disable();
@@ -576,7 +704,7 @@ function LoadEmPatByCurType(TypeCode){
 			$('#bt_cross').hide();   /// 过号
 			$('#bt_calsel').hide();   /// 选择呼叫
 			$('#bt_outcall').hide();  /// 过号重排
-			$('#bt_endadm').hide();   /// 完成就诊
+			Compted!="Y"?$('#bt_endadm').show():$('#bt_endadm').hide();   /// 完成就诊
 		}else{
 			$('#bt_endadm').show();   /// 完成就诊
 		}
@@ -587,20 +715,28 @@ function LoadEmPatByCurType(TypeCode){
 		
 	var StartDate = $HUI.datebox("#StartDate").getValue(); /// 开始日
 	var EndDate = $HUI.datebox("#EndDate").getValue();     /// 结束日期
-	var params = "^^^"+ PatType +"^"+ CardNo +"^"+ StartDate +"^"+ EndDate +"^"+ PatArrFlag +"^^^^^"+LgCtLocID +"^"+ LgUserID +"^^"+ TmpCondition +"^"+ StayInWard +"^^"+ PatListType +"^"+ EmWardID+"^^"+CareDesc;
-	$("#PatList").datagrid("load",{"params":params}); 
+	//var params = "^^^"+ PatType +"^"+ CardNo +"^"+ StartDate +"^"+ EndDate +"^"+ PatArrFlag +"^^^^^"+LgCtLocID +"^"+
+	//	LgUserID +"^^"+ TmpCondition +"^"+ StayInWard +"^^"+ PatListType +"^"+ EmWardID+"^^"+CareDesc+"^"+Compted;
+	
+	//$("#PatList").datagrid("load",{"params":params}); 
+	
+	QryEmPatList();
 }
 
 /// 加载病人列表
 function LoadEmPatByLoc(title){
 	
-	if (title == "本人患者"){ //hxy 2018-09-17 病人
+	if ($g(title) == $g("本人患者")){ //hxy 2018-09-17 病人
 		PatListType = "Per";
-	}else if (title == "本科室患者"){
+	}else if ($g(title) == $g("本科室患者")){
 		PatListType = "Loc";
 	}else{
 		PatListType = "Grp";
 	}
+	
+	QryEmPatList();
+	return;
+	
 	var StartDate = $HUI.datebox("#StartDate").getValue(); /// 开始日
 	var EndDate = $HUI.datebox("#EndDate").getValue();     /// 结束日期
 	var params = "^^^"+ PatType +"^^"+ StartDate +"^"+ EndDate +"^"+ PatArrFlag +"^^^^^"+LgCtLocID +"^"+ LgUserID +"^^^^^"+ PatListType;
@@ -616,27 +752,10 @@ function SeatNo_KeyPress(e){
 
 ///  卡号回车
 function EmCardNo_KeyPress(e){
-
 	if(e.keyCode == 13){
 		var CardNo = $("#EmCardNo").val();
 		if (CardNo == "") return;
-		var CardTypeID = GetPatCardType(CardNo); /// 根据卡号取病人的卡类型定义
-		if (CardTypeID == ""){
-			var CardNoLen = CardNo.length;
-			if (m_CardNoLength < CardNoLen){
-				$.messager.alert("提示:","卡号输入错误,请重新录入！");
-				return;
-			}
-
-			/// 卡号不足位数时补0
-			for (var k=1;k<=m_CardNoLength-CardNoLen;k++){
-				CardNo="0"+CardNo;  
-			}
-		}else{
-			GetEmPatCardTypeDefine(CardTypeID);  ///  设置卡类型
-		}
-		$("#EmCardNo").val(CardNo);
-		QryEmPatList();
+		DHCACC_GetAccInfo("", CardNo, "", "", ReadCardCallback);
 	}
 }
 
@@ -681,7 +800,7 @@ function setCellSymbol(value, rowData, rowIndex){
 function PatArrived(PatientID,EpisodeID,mradm){
 
 	///设置病人状态
-	runClassMethod("web.DHCEMDocMainOutPat","SetArrivedStatus",{"EpisodeID":EpisodeID, "LocID":LgCtLocID,"UserID":LgUserID},function(jsonString){
+	runClassMethod("web.DHCEMDocMainOutPat","SetArrivedStatus",{"Adm":EpisodeID, "LocId":LgCtLocID,"UserId":LgUserID},function(jsonString){
 		
 		if (jsonString != "1"){
 			$.messager.alert("提示","病人状态更新失败！");
@@ -765,6 +884,11 @@ function CallPatient(){
 
 /// 重复叫号
 function ReCallPatient(){
+	var rowData=$("#PatList").datagrid('getRows');
+	if(rowData.length == 0){
+		$.messager.alert("提示","待诊列表为空，无法进行重复呼叫！");
+		return;
+	}
 	var IPAddress=GetComputerIp();
 	var ret=tkMakeServerCall("web.DHCVISQueueManage","RecallButtonNewProEm","","",IPAddress);
 	$.messager.alert("提示",ret.split("^")[1]);
@@ -824,7 +948,7 @@ function OutCallQueue(){
 			$.messager.alert("提示","没有呼叫的病人不能过号！");
 			return;
 		}
-		$.messager.confirm("对话框","登记号: "+rowData.PatNo+" 姓名: "+PatName + "是否需要过号?",function(res){
+		$.messager.confirm("对话框",$g("登记号")+":"+rowData.PatNo+$g("姓名")+": "+PatName + $g("是否需要过号")+"?",function(res){
 			if (res){
 				var EpisodeID = rowData.EpisodeID; /// 就诊ID
 				
@@ -850,7 +974,7 @@ function OutCallQueueCP(){
 		$.messager.alert("提示","请选中病人后，再进行过号重排操作！");
 		return;
 	}
-	if(rowData.CalledDesc.indexOf("过号")==-1){
+	if(rowData.CalledDesc.indexOf($g("过号"))==-1){
 		$.messager.alert("提示","非过号病人不能使用过号重排功能！");
 		return;
 	}
@@ -928,26 +1052,6 @@ function GetPatCardType(CardNo){
 	return CardTypeID;
 }
 
-/// 获取病人对应卡类型数据
-function GetEmPatCardTypeDefine(CardTypeID){
-
-	runClassMethod("web.DHCEMPatCheckLevCom","GetEmPatCardTypeDefine",{"CardTypeID":CardTypeID},function(jsonString){
-		
-		if (jsonString != null){
-			var CardTypeDefine = jsonString;
-			var CardTypeDefArr = CardTypeDefine.split("^");
-			if (CardTypeDefArr[16] == "Handle"){
-				$('#EmCardNo').attr("readOnly",false);
-			}else{
-				$('#EmCardNo').attr("readOnly",true);
-			}
-			m_CardNoLength = CardTypeDefArr[17];   /// 卡号长度
-			m_CCMRowID = CardTypeDefArr[14];
-			$("#EmCardType").combobox("setValue",CardTypeDefine);
-		}
-	},'',false)
-}
-
 function ComplateAdm(){
 	var rowData = $("#PatList").datagrid('getSelected');
 	debugger;
@@ -960,13 +1064,13 @@ function ComplateAdm(){
 		return;
 	}
 	$.m({
-		ClassName:"web.DHCDocOutPatientList",
+		ClassName:"web.DHCEMDocMainOutPat",
 		MethodName:"SetComplate",
 		Adm:Adm,
-		LocId:session['LOGON.CTLOCID'],
-		UserId:session['LOGON.USERID']
+		LgParams:LgParams
 	},function(rtn){
-		if (rtn!="0"){
+		var err = rtn.split("^")[0];
+		if (err!="0"){
 			$.messager.alert("提示",rtn.split("^")[1]);
 			return false;
 		}else{
@@ -979,11 +1083,11 @@ function ComplateAdm(){
 
 //hxy 2020-02-21
 function setCell(value){
-	if(value=="1级"){value="Ⅰ级";}
-	if(value=="2级"){value="Ⅱ级";}
-	if(value=="3级"){value="Ⅲ级";}
-	if(value=="4级"){value="Ⅳa级";}
-	if(value=="5级"){value="Ⅳb级";}
+	if(value==$g("1级")){value=$g("Ⅰ级");}
+	if(value==$g("2级")){value=$g("Ⅱ级");}
+	if(value==$g("3级")){value=$g("Ⅲ级");}
+	if(value==$g("4级")){value=$g("Ⅳa级");}
+	if(value==$g("5级")){value=$g("Ⅳb级");}
 	return value;
 }
 

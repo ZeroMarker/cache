@@ -1,59 +1,73 @@
-// pushuangcai
-// 2019-10-29
+
 function createRisWin(callBack){
 	try{
-		if($('#RisWin').is(":visible")){return;}  //çª—ä½“å¤„åœ¨æ‰“å¼€çŠ¶æ€,é€€å‡º
+		if($('#RisWin').is(":visible")){return;}  //´°Ìå´¦ÔÚ´ò¿ª×´Ì¬,ÍË³ö
 		$('body').append('<div id="RisWin"></div>');
 		$('#RisWin').append('<div id="Ris"></div>');
 		$('#Ris').datagrid({
-		    url:'DHCST.QUERY.BROKER.csp',
+		    url:'dhcapp.broker.csp',
 		    fit:true,
 			rownumbers:true,
-			pageSize:40,        // æ¯é¡µæ˜¾ç¤ºçš„è®°å½•æ¡æ•°
-			pageList:[40,80],   // å¯ä»¥è®¾ç½®æ¯é¡µè®°å½•æ¡æ•°çš„åˆ—è¡¨
-			loadMsg: 'æ­£åœ¨åŠ è½½ä¿¡æ¯...',
+			pageSize:100,        // Ã¿Ò³ÏÔÊ¾µÄ¼ÇÂ¼ÌõÊı
+			pageList:[100,200],   // ¿ÉÒÔÉèÖÃÃ¿Ò³¼ÇÂ¼ÌõÊıµÄÁĞ±í
+			loadMsg: $g('ÕıÔÚ¼ÓÔØĞÅÏ¢...'),
 			pagination:true,
 			nowrap:false,
+			queryParams:{
+	     		ClassName: 'PHA.CPW.Com.OutInterfance',
+	     		MethodName: 'GetRisReport',
+				EpisodeID: AdmDr
+			},
 			toolbar: [{
-				text: 'å¼•ç”¨',
-				iconCls: 'icon-edit',
+				text: $g('ÒıÓÃ'),
+				iconCls: 'icon-ok',
 				handler: function(){
 					var dataArr = $('#Ris').datagrid("getChecked");
 					var text = "";
 					$.each(dataArr, function(key, val){
-						text = text + val.checkname +":"+ val.resultDescEx +";    ";
+						text = text + val.StrOrderName +":"+ val.ResultDescEx +";  ";
 					})
+					if(text!=""){
 					callBack(text);
+					}
 					$('#RisWin').window('close');
 				}
 			},'-',{
-				text: 'å…³é—­',
+				text:$g('¹Ø±Õ'),
 				iconCls: 'icon-cancel',
 				handler: function(){$('#RisWin').window('close');}
 			}],
 		    columns:[[
 		    	{field:'check',checkbox:true},	
-				{field:'checkname',title:'æ£€æŸ¥é¡¹ç›®',width:100},
-				{field:'audittime',title:'å®¡æ ¸æ—¶é—´',width:80},
-				{field:'resultDescEx',title:'æ£€æŸ¥ç»“æœ',width:200},
-				{field:'examDescEx',title:'æ£€æŸ¥æè¿°',width:400},
-				{field:'checkNO',title:'æŠ¥å‘Šå•å·',width:150},
-				{field:'ordStartDate',title:'åŒ»å˜±æ—¥æœŸ',width:100},
-				{field:'ordItemId',title:'ordItemId',width:100}
-		    ]],
+		    	{ field: 'DepLocDesc',align: 'center', title: $g('¾ÍÕï¿ÆÊÒ')},
+    	        { field: 'No',align: 'center', title: $g('ÉêÇëµ¥ºÅ')},
+				{ field: 'StudyNo',align: 'center', title: $g('¼ì²éºÅ')},
+				{ field: 'StrOrderName',align: 'center', title: $g('¼ì²éÃû³Æ')},
+				{ field: 'strOrderDateDesc',align: 'center', title: $g('ÉêÇëÈÕÆÚ')},
+				{ field: 'ItemStatus',align: 'center', title: $g('¼ì²é×´Ì¬')},
+				{ field: 'RecLocName',align: 'center', title: $g('¼ì²é¿ÆÊÒ')},
+				{ field: 'ExamDescEx',align: 'center', title: $g('¼ì²éÃèÊö')},
+				{ field: 'ResultDescEx',align: 'center', title: $g('¼ì²é½á¹û')},
+				{ field: 'IsCVR',align: 'center', title: $g('Î£¼±Öµ±¨¸æ')},
+				{ field: 'IsIll',align: 'center', title: $g('ÊÇ·ñÑôĞÔ'),
+					formatter:function(value,row,index){ 
+						if (value=='Y'){return $g("ÊÇ");} 
+						else {return $g("·ñ");}
+					}}, 
+		    
+				    ]],
 		    onDblClickRow: function(rowIndex, rowData){
-			    var text = rowData.checkname +":"+ rowData.resultDescEx
+			    var text = rowData.StrOrderName +":"+ rowData.ResultDescEx
 			    callBack(text);
-			    //$('#RisWin').window('close');
 			}
 		    
 		});
 		$('#RisWin').window({
-			title:'æ£€æŸ¥åˆ—è¡¨',    
+			title:$g('¼ì²éÁĞ±í'),    
 			collapsible:true,
 			border:true,
 			closed:"true",
-			width:900,
+			width:1050,
 			height:500,
 			minimizable:false,						
 			onClose:function(){
@@ -61,14 +75,7 @@ function createRisWin(callBack){
 			}
 		}); 
 		$('#RisWin').window('open');
-		$('#Ris').datagrid({
-     		queryParams:{
-	     		ClassName: 'web.DHCSTPHCMPHARCAREMAIN',
-	     		QueryName: 'GetRisReportList',
-	     		DataType: "Array",
-				admId: EpisodeID
-			}
-		});
+
 	}catch(e){
 		alert(e.message)
 		}

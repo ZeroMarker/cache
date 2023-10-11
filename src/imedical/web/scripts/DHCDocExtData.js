@@ -222,5 +222,6 @@ function SetSelectType(val)
 function AddCTExtDataType()
 {
 	var url="websys.default.csp?WEBSYS.TCOMPONENT=DHCDocCTExtDataType";
+	if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
 	window.open(url,"DHCDocCTExtDataType","top=0,left=0,width=800,height=600,alwaysLowered=yes");
 }

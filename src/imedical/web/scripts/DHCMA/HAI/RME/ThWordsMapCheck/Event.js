@@ -32,6 +32,7 @@ function InitThWordsMapCheckWinEvent(obj){
 		
 		$('#searchThWordsMap').searchbox({ 
 			searcher:function(value,name){	
+				obj.gridThWordsMap.uncheckAll();
 				obj.gridThWordsMap.load({
 					ClassName:"DHCHAI.RMES.ThWordsMapSrv",
 					QueryName:"QryThWordsMap",
@@ -45,7 +46,10 @@ function InitThWordsMapCheckWinEvent(obj){
 	
 	//自动同步
 	obj.btnAutoMap_click = function(){
-		if (obj.RecRowID1 == '') return;
+		if (obj.RecRowID1 == '') {
+			$.messager.alert("错误提示","请先选择关键词！", 'info');
+			return;
+		}
 		$.messager.confirm("执行", "是否自动同步关键词对照记录?", function (r) {				
 			if (r) {
 				var flg = $m({
@@ -184,7 +188,7 @@ function InitThWordsMapCheckWinEvent(obj){
 				var options = $('#gridThemeWords').datagrid("getPager").data("pagination").options;
 				currPage = options.pageNumber; 
 			}		
-			obj.gridThemeWords.reload(); //刷新“主题词库”数据表格
+			/*obj.gridThemeWords.reload(); //刷新“主题词库”数据表格
 		
 			$('#gridThemeWords').datagrid({
 				pageNumber:currPage
@@ -204,6 +208,7 @@ function InitThWordsMapCheckWinEvent(obj){
 					}
 				}
 			});
+			*/
 		}
 	}
 }

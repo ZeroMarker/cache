@@ -178,19 +178,23 @@ function setTreeData(data,instanceId)
             if (node.children){
                 return node.text;
             }else{
+				if (typeof(node.attributes.isHasPrinted) == "undefined") node.attributes.isHasPrinted = IsHasPrinted(node.id);
                 var print = "<span class='treeleft'><span class='printed'></span>";
                 if (node.attributes.printstatus != "")
                 {
                     print = "<span class='treeleft'><span class='printed'>"+emrTrans(node.attributes.printstatus)+"</span>";
                 }
-                else if (IsHasPrinted(node.id) != "0")
+                else if (node.attributes.isHasPrinted != "0")
                 {
-                    print = "<span class='treeleft' style='width:90px;'><span class='printed'>"+emrTrans("打印后修改")+"</span>";
+                    print = "<span class='treeleft'><span class='printed'>"+emrTrans("打印后修改")+"</span>";
                 }
-                return "<div data-id='"+node.id+"'>"
-                    +print+"<span type='image' class='treelog' onclick='showTreeLog("+'"'+node.id+'","#InstanceTree")'+"'/></span>"
-                    +"<div class='treedate'>"+node.attributes.happendate+" "+node.attributes.happentime+"</div>"
-                    +"<div class='treetitle'>"+node.attributes.specialtext+"</div>"
+                var statusClass = "treestatus green";
+                if (node.attributes.statusCode != "finished") statusClass = "treestatus blue";
+                return "<div data-id='"+node.id+"' class='treeitem'>"
+                    +"<div class='treenode'><span class='treetitle'>"+node.attributes.text+"</span>"
+                    +print+"<span type='image' class='treelog' onclick='showTreeLog("+'"'+node.id+'","#InstanceTree")'+"'/></span></div>"
+                    +"<div class='treenode'><span class='treedate'>"+node.attributes.happendate+"</span><span>"+node.attributes.happentime+"</span><span>"+node.attributes.creator+"</span></div>"
+                    +"<div class='treenode'><span class='treeoperator'>"+node.attributes.operator+"</span><span class='"+statusClass+"'>"+node.attributes.status+"</span></div>"
                     +"</div>";
                 return string
             }
@@ -281,8 +285,10 @@ function modifyZTreeRecord(commandJson)
         return;
     }	
     var creator = commandJson.status.Creator;
+    var operator = commandJson.status.Operator;
     var happendate = commandJson.status.HappenDate;
     var happentime = commandJson.status.HappenTime;
+    var statusCode = commandJson.status.curStatus;
     var status = commandJson.status.curStatusDesc;
     var name = commandJson["Title"]["NewDisplayName"];
     var node = $('#InstanceTree').tree('find',instanceId);
@@ -296,7 +302,10 @@ function modifyZTreeRecord(commandJson)
     if (node != null) 
     {
         var attributes = node.attributes;
-        //更新病历状态显示内容specialtext,其他的不做更新，时间日期用户名均为创建时的
+        attributes.text = text;
+        attributes.creator = creator;
+        attributes.operator = operator;
+        attributes.statusCode = statusCode;
         attributes.status = status;
 		attributes.specialtext = specialtext;
         attributes.printstatus = "";
@@ -312,6 +321,7 @@ function modifyZTreeRecord(commandJson)
             "id":instanceId,
             "text":text,
             "attributes":{
+                "text":text,
                 "chartItemType":param.chartItemType,
                 "documentType":param.pluginType,
                 "specialtext":specialtext,
@@ -324,6 +334,10 @@ function modifyZTreeRecord(commandJson)
                 "happendate":formatHappenDate,
                 "happentime":formatHappenTime,
 				"characteristic":param.characteristic,
+                "creator":creator,
+                "operator":operator,
+                "statusCode":statusCode,
+                "status":status,
 				"printstatus":""
             }
         }
@@ -436,7 +450,6 @@ function setListPrinted(ids)
     var printArray = ids.split(",");
     $.each(printArray,function(idx, id){
         var li = $("#InstanceTree li[id='"+id+"']");
-        $(li).find(".fleft").css({width:67});
         $(li).find(".fleft .printed").html(emrTrans("医生打印"));
     });
 }
@@ -447,8 +460,7 @@ function setTreePrinted(ids)
     $.each(printArray,function(idx, id){
         var node = $("#InstanceTree").tree('find',id);
         var attributes = node.attributes;
-        attributes.printstatus = "print";
-        $(node.target).find(".treeleft").css({width:66});
+        attributes.printstatus = "医生打印";
         $('#InstanceTree').tree('update', {
                 target: node.target,
                 "attributes":attributes
@@ -588,19 +600,23 @@ function setDeleteTree(data)
             if (node.children){
                 return node.text;
             }else{
+				if (typeof(node.attributes.isHasPrinted) == "undefined") node.attributes.isHasPrinted = IsHasPrinted(node.id);
                 var print = "<span class='treeleft'><span class='printed'></span>";
                 if (node.attributes.printstatus != "")
                 {
                     print = "<span class='treeleft'><span class='printed'>"+emrTrans(node.attributes.printstatus)+"</span>";
                 }
-                else if (IsHasPrinted(node.id) != "0")
+                else if (node.attributes.isHasPrinted != "0")
                 {
-                    print = "<span class='treeleft' style='width:90px;'><span class='printed'>"+emrTrans("打印后修改")+"</span>";
+                    print = "<span class='treeleft'><span class='printed'>"+emrTrans("打印后修改")+"</span>";
                 }
-                return "<div data-id='"+node.id+"'>"
-                    +print+"<span type='image' class='treelog' onclick='showTreeLog("+'"'+node.id+'","#deleteTree")'+"'/></span>"
-                    +"<div class='treedate'>"+node.attributes.happendate+" "+node.attributes.happentime+"</div>"
-                    +"<div class='treetitle'>"+node.attributes.specialtext+"</div>"
+                var statusClass = "treestatus green";
+                if (node.attributes.statusCode != "finished") statusClass = "treestatus blue";
+                return "<div data-id='"+node.id+"' class='treeitem'>"
+                    +"<div class='treenode'><span class='treetitle'>"+node.attributes.text+"</span>"
+                    +print+"<span type='image' class='treelog' onclick='showTreeLog("+'"'+node.id+'","#deleteTree")'+"'/></span></div>"
+                    +"<div class='treenode'><span class='treedate'>"+node.attributes.happendate+"</span><span>"+node.attributes.happentime+"</span><span>"+node.attributes.creator+"</span></div>"
+                    +"<div class='treenode'><span class='treeoperator'>"+node.attributes.operator+"</span><span class='"+statusClass+"'>"+node.attributes.status+"</span></div>"
                     +"</div>";
                 return string
             }
@@ -625,20 +641,22 @@ function setlistdata(data)
     $(li).attr({"emrDocId":data.emrDocId,"isMutex":data.isMutex,"categoryId":data.categoryId});			       
     $(li).attr({"templateId":data.templateId,"characteristic":data.characteristic,"emrNum":data.emrNum});
     $(li).attr({"itemTitle":data.itemTitle});
+	$(li).attr({"pdfDocType":data.pdfDocType});
     $(li).append('<div id="dot" class="left"></div>')
     var right = $('<a href="#" class="right"></a>');
     var first = $('<div class="first"></div>');
     $(first).append('<div class="title">'+data.text+'</div>');
     var fleft = $('<div class="fleft"></div>');
+	if (typeof(data.isHasPrinted) == "undefined") data.isHasPrinted = IsHasPrinted(data.id);
     var print = "";
     if (data.printstatus != "")
     {
         print = emrTrans(data.printstatus);
     }
-    else if (IsHasPrinted(data.id) != "0")
+    else if (data.isHasPrinted != "0")
     {
         print = emrTrans("打印后修改");
-        fleft = $('<div class="fleft" style="width:94px;"></div>');
+        fleft = $('<div class="fleft"></div>');
     }
     $(fleft).append('<span class="printed">'+print+'</span>');
     $(fleft).append('<span type="image" class="log" onclick="showListLog(this)"></div>');
@@ -662,7 +680,7 @@ function IsHasPrinted(instanceId)
         type: "get",
         dataType: "text",
         url: "../EMRservice.Ajax.common.cls",
-        async: false,
+        async: true,
         data: {
             "OutputType":"String",
             "Class":"EMRservice.BL.BLEMRLogs",
@@ -689,20 +707,30 @@ function opendDocument(obj,status,type)
     var title = "";
     if (type == "Tree")
     {
-        tempParam = {
-            "id":obj.id,
-            "text":obj.attributes.text,
-            "pluginType":obj.attributes.documentType,
-            "chartItemType":obj.attributes.chartItemType,
-            "emrDocId":obj.attributes.emrDocId,
-            "templateId":obj.attributes.templateId,
-            "isLeadframe":obj.attributes.isLeadframe,
-            "characteristic":obj.attributes.characteristic,
-            "isMutex":obj.attributes.isMutex,
-            "categoryId":obj.attributes.categoryId,
-            "actionType":"LOAD",
-            "status":status
-        };	
+        if (typeof(obj.attributes) == "undefined")
+        {
+	        parent.changeCurrentTitle(obj.text,obj.id);
+	        parent.gotoNav();
+	        return;
+        }
+        else
+        {
+			tempParam = {
+				"id":obj.id,
+				"text":obj.attributes.text,
+				"pluginType":obj.attributes.documentType,
+				"chartItemType":obj.attributes.chartItemType,
+				"emrDocId":obj.attributes.emrDocId,
+				"templateId":obj.attributes.templateId,
+				"isLeadframe":obj.attributes.isLeadframe,
+				"characteristic":obj.attributes.characteristic,
+				"isMutex":obj.attributes.isMutex,
+				"categoryId":obj.attributes.categoryId,
+				"pdfDocType":obj.attributes.pdfDocType,
+				"actionType":"LOAD",
+				"status":status
+			};	
+		}
     }
     else
     {
@@ -717,6 +745,7 @@ function opendDocument(obj,status,type)
             "characteristic":obj.attr("characteristic"),
             "isMutex":obj.attr("isMutex"),
             "categoryId":obj.attr("categoryId"),
+			"pdfDocType":obj.attr("pdfDocType"),
             "actionType":"LOAD",
             "status":status
         };
@@ -744,7 +773,11 @@ function opendDocument(obj,status,type)
 function changeDocument(tempParam)
 {
 	var breakState = canBreake();
-    if (breakState == "false") return;
+    if (breakState == "false") 
+    {
+	    changeFlag = false;
+	    return;
+    }
     InitDocument(tempParam);
     //自动记录病例操作日志
     openDocumentLog(tempParam,"EMR.Record.RecordNav.RecordDirectory.Open");
@@ -779,7 +812,7 @@ function showLog(docId,num)
 {
     var xpwidth =980;
 	var xpheight = 500;
-	var tempFrame = "<iframe id='iframeInstanceLog' scrolling='auto' frameborder='0' src='emr.instancelog.csp?EpisodeID="+episodeID+"&EMRDocId="+docId+"&EMRNum="+num+"' style='width:"+xpwidth+"px; height:"+xpheight+"px; display:block;'></iframe>";
+	var tempFrame = "<iframe id='iframeInstanceLog' scrolling='auto' frameborder='0' src='emr.instancelog.csp?EpisodeID="+episodeID+"&EMRDocId="+docId+"&EMRNum="+num+"&MWToken="+getMWToken()+"' style='width:"+xpwidth+"px; height:"+xpheight+"px; display:block;'></iframe>";
 	createModalDialog("dialogInstanceLog","操作日志",xpwidth+4,xpheight+40,"iframeInstanceLog",tempFrame,"","");
 
 }
@@ -847,4 +880,97 @@ function GetRecordTypeValue()
 {
     var value = $("input[name='NavType']:checked").val();
     return value
+}
+
+
+//新增或修改病历目录列表的pdfDocTyppe属性
+function modifyInstanceTreePDF(instanceId,pdfDocType)
+{
+	var checked = $("input[name='NavType']:checked");
+	if (checked.val()== "Tree")
+	{
+		modifyZTreeRecordPDF(instanceId,pdfDocType);
+	}
+	else
+	{
+		modifyListRecordPDF(instanceId,pdfDocType);
+	}	
+}
+
+///增加或修改病历列表导航条数据的pdfDocTyppe属性
+function modifyListRecordPDF(instanceId,pdfDocType)
+{
+	if (instanceId == "GuideDocument") return;
+	var data = document.getElementById(instanceId);
+	if(data)
+	{
+		data.setAttribute("pdfDocType",pdfDocType);
+	}	
+}
+
+///增加或修改目录分类数据的pdfDocTyppe属性
+function modifyZTreeRecordPDF(instanceId,pdfDocType)
+{
+	//修改病历目录分类列表
+	if (instanceId == "GuideDocument") return;
+	var node = $('#InstanceTree').tree('find',instanceId);
+	if (node != null) 
+	{
+		var attributes = node.attributes;
+        attributes.pdfDocType = pdfDocType
+		$('#InstanceTree').tree('update', {
+			target: node.target,
+			"attributes":attributes
+		});	
+	}
+}
+
+//切换病历
+function loadInstanceByID(instanceID)
+{
+	if (instanceID == "") return;
+	var tempParam = GetRecodeParamByInsID(instanceID);
+	if (tempParam == "") return;
+	if(changeFlag) return;
+	changeFlag = true;
+    if(pluginType !== tempParam.pluginType)
+    {
+		if(isIE())	//不同类型文档切换，在chrome49需要延时处理
+		{
+			changeDocument(tempParam);
+		}
+		else
+		{
+			setTimeout(function(){
+			    changeDocument(tempParam);
+		    },2000);
+		}
+    }
+	else
+	{
+		changeDocument(tempParam);		
+	}
+}
+
+/*根据实例ID获取实例详细信息*/
+function GetRecodeParamByInsID(insID) {
+    var result = "";
+	jQuery.ajax({
+			type : "GET", 
+			dataType : "text",
+			url : "../EMRservice.Ajax.common.cls",
+			async : false,
+			data : {
+					"OutputType":"String",
+					"Class":"EMRservice.BL.BLClientCategory",
+					"Method":"GetRecodeParamByInsID",			
+					"p1":insID
+				},
+			success : function(d) {
+	           		if (d == "") return;
+	           		result =eval("("+d+")");
+			},
+			error : function(d) { alert("GetRecodeParamByInsID error");}
+		});	
+	return result;
 }

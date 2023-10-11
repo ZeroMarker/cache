@@ -7,21 +7,37 @@ var parCheckInfo="" // 病人分诊信息
 var GlobalObj={};
 $(function(){
 	initPanelHeight();
+	initPage();
 	getPatInfo(EpisodeID);	//病人基本信息
 	GetPatcurdetail();//当前明细信息
 	getPatCheckInfo();//病人分诊信息
+	initMethod();
+	LoadMoreScr(); //2023-03-07
 })
+
+function initMethod(){
+	window.onresize=function(){
+		$HUI.panel(".bootPanel").resize({});
+		$HUI.datagrid(".hisui-datagrid").resize({});
+		initPanelHeight();
+	}
+}
 
 function initPanelHeight(){
 
 	var pannelHeight=$(window).height()/2;
 	$(".topPanel").css({"height":pannelHeight-15});
-	$(".bottomPanel").css({"height":pannelHeight-20});
+	$(".bottomPanel").css({"height":pannelHeight-20,"margin-top":"10px"});
 	$(".body-height").each(function(){
 		$(this).css({"height":$(this).parent().height()-30});
 	})
 }
 
+function initPage(){
+	if(ENABKEUPDLOC==1){
+		$("#changeLoc").show();	
+	}	
+}
 	
 /// 通过病人Id查找病人信息
 function getPatInfo(){
@@ -36,59 +52,81 @@ function getPatInfo(){
 		
 		var htmStr=""
 		htmStr=htmStr+"<table class='table' id='patInfoTable'><tr>"
-		htmStr=htmStr+"<td class='tdWidth'>姓名：<span>"+parInfoArr[7]+"</span></td>";
-		htmStr=htmStr+"<td class='tdWidth'>性别：<span>"+parInfoArr[9]+"</span></td>";
+		htmStr=htmStr+"<td class='tdWidth'>"+$g("姓名")+"：<span>"+parInfoArr[7]+"</span></td>";
+		htmStr=htmStr+"<td class='tdWidth'>"+$g("性别")+"：<span>"+parInfoArr[9]+"</span></td>";
 		htmStr=htmStr+"<td class='tdWidth'>ID：<span>"+parInfoArr[6]+"</span></td>";
-		htmStr=htmStr+"<td class='tdWidth'>年龄：<span>"+parInfoArr[11]+"</span></td>";
+		htmStr=htmStr+"<td class='tdWidth'>"+$g("年龄")+"：<span>"+parInfoArr[11]+"</span></td>";
 		htmStr=htmStr+"</tr>";
 		
 		htmStr=htmStr+"<tr>"
-		htmStr=htmStr+"<td class='tdWidth'>民族：<span>"+parInfoArr[12]+"</span></td>";
-		htmStr=htmStr+"<td class='tdWidth'>费别：<span>"+parInfoArr[18]+"</span></td>";
-		htmStr=htmStr+"<td class='tdWidth' colspan='2'>保密级别：<span>"+parInfoArr[22]+"</span></td>";
+		htmStr=htmStr+"<td class='tdWidth'>"+$g("民族")+"：<span>"+parInfoArr[12]+"</span></td>";
+		htmStr=htmStr+"<td class='tdWidth'>"+$g("费别")+"：<span>"+parInfoArr[18]+"</span></td>";
+		htmStr=htmStr+"<td class='tdWidth' colspan='2'>"+$g("保密级别")+"：<span>"+parInfoArr[22]+"</span></td>";
 		htmStr=htmStr+"</tr>";
 
 		htmStr=htmStr+"<tr>";
-		htmStr=htmStr+"<td class='tdWidth' colspan='2'>电话：<span>"+parInfoArr[16]+"</span></td>";
-		htmStr=htmStr+"<td class='tdWidth'>体重(KG)：<span>"+parInfoArr[35]+"</span></td>";
+		htmStr=htmStr+"<td class='tdWidth' colspan='2'>"+$g("电话")+"：<span>"+parInfoArr[16]+"</span></td>";
+		htmStr=htmStr+"<td class='tdWidth'>"+$g("体重")+"(KG)：<span>"+parInfoArr[35]+"</span></td>";
 		htmStr=htmStr+"</tr>";
 		
 		htmStr=htmStr+"<tr>";	
-		htmStr=htmStr+"<td class='tdWidth' colspan='3'>家庭地址：<span>"+parInfoArr[17]+"</span></td></tr> </table>";
-				htmStr=htmStr+"<div style='width:100%;border-bottom:2px dotted #D1D1D1'></div>"
+		htmStr=htmStr+"<td class='tdWidth' colspan='3'>"+$g("家庭地址")+"：<span>"+parInfoArr[17]+"</span></td></tr> </table>";
+				htmStr=htmStr+"<div style='width:100%;border-bottom:1px dashed #E2E2E2'></div>"
 		
 		htmStr=htmStr+"<table class='table' style='margin:5px;' ><tr>"
-		
-		htmStr=htmStr+"<td>检验：";
-		htmStr=htmStr+"<span id='Lab'>"
-		htmStr=htmStr+"<img  style='margin-bottom:-3px;' src='../scripts/dhcnewpro/images/sandglasst.png'/><span id='Lab_1' class='checkSpan'>"+parInfoArr[29]+"</span>"
-		htmStr=htmStr+"<img style='margin-bottom:-4px;'  src='../scripts/dhcnewpro/images/sandglassf.png'/><span id='Lab_2' class='checkSpan'>"+parInfoArr[30]+"</span>";
-		htmStr=htmStr+"<img style='margin-bottom:-3px;' src='../scripts/dhcnewpro/images/sandglassp.png'/><span id='Lab_3' class='checkSpan'>"+parInfoArr[31]+"</span>";
-		htmStr=htmStr+"</span>";
-		htmStr=htmStr+"</td>";
-		
-		
-		htmStr=htmStr+"<td>检查："
-		htmStr=htmStr+"<span id='Exam'>"
-		htmStr=htmStr+"<img style='margin-bottom:-3px;'  src='../scripts/dhcnewpro/images/sandglasst.png'/><span id='Exam_1' class='checkSpan'>"+parInfoArr[32]+"</span>";
-		htmStr=htmStr+"<img style='margin-bottom:-4px;' src='../scripts/dhcnewpro/images/sandglassf.png'/><span id='Exam_2' class='checkSpan'>"+parInfoArr[33]+"</span>";
-		htmStr=htmStr+"<img style='margin-bottom:-3px;' src='../scripts/dhcnewpro/images/sandglassp.png'/><span id='Exam_3' class='checkSpan'>"+parInfoArr[34]+"</span>";
-		htmStr=htmStr+"</span>";
-		
-		htmStr=htmStr+"<td style='width:150px;'>危急值：<span id='CVR' class='checkSpan'>"+parInfoArr[26]+"</span></td></tr>";
+		if(HISUIStyleCode==="lite"){
+			htmStr=htmStr+"<td>"+$g("检验")+"：";
+			htmStr=htmStr+"<span id='Lab'>"
+			htmStr=htmStr+"<span id='Lab_01' class='icon-funnel-empty'></span><span id='Lab_1' class='checkSpan'>"+parInfoArr[29]+"</span>";
+			htmStr=htmStr+"<span id='Lab_02' class='icon-funnel-half'></span><span id='Lab_2' class='checkSpan'>"+parInfoArr[30]+"</span>";
+			htmStr=htmStr+"<span id='Lab_03' class='icon-funnel-eye'></span><span id='Lab_3' class='checkSpan'>"+parInfoArr[31]+"</span>";
+			htmStr=htmStr+"</span>";
+			htmStr=htmStr+"</td>";
+			
+			
+			htmStr=htmStr+"<td>"+$g("检查")+"："
+			htmStr=htmStr+"<span id='Exam'>"
+			htmStr=htmStr+"<span id='Exam_01' class='icon-funnel-empty'></span><span id='Exam_1' class='checkSpan'>"+parInfoArr[32]+"</span>";
+			htmStr=htmStr+"<span id='Exam_02' class='icon-funnel-half'></span><span id='Exam_2' class='checkSpan'>"+parInfoArr[33]+"</span>";
+			htmStr=htmStr+"<span id='Exam_03' class='icon-funnel-eye'></span><span id='Exam_3' class='checkSpan'>"+parInfoArr[34]+"</span>";
+			htmStr=htmStr+"</span>";
+		}else{
+			
+			htmStr=htmStr+"<td>"+$g("检验")+"：";
+			htmStr=htmStr+"<span id='Lab'>"
+			htmStr=htmStr+"<span id='Lab_01' style='padding-left: 20px;' class='icon-funnel-empty'></span><span id='Lab_1' class='checkSpan'>"+parInfoArr[29]+"</span>";
+			htmStr=htmStr+"<span id='Lab_02' style='padding-left: 20px;' class='icon-funnel-half'></span><span id='Lab_2' class='checkSpan'>"+parInfoArr[30]+"</span>";
+			htmStr=htmStr+"<span id='Lab_03' style='padding-left: 20px;' class='icon-funnel-eye'></span><span id='Lab_3' class='checkSpan'>"+parInfoArr[31]+"</span>";
+			htmStr=htmStr+"</span>";
+			htmStr=htmStr+"</td>";
+			
+			
+			htmStr=htmStr+"<td>"+$g("检查")+"："
+			htmStr=htmStr+"<span id='Exam'>"
+			htmStr=htmStr+"<span id='Exam_01' style='padding-left: 20px;' class='icon-funnel-empty'></span><span id='Exam_1' class='checkSpan'>"+parInfoArr[32]+"</span>";
+			htmStr=htmStr+"<span id='Exam_02' style='padding-left: 20px;' class='icon-funnel-half'></span><span id='Exam_2' class='checkSpan'>"+parInfoArr[33]+"</span>";
+			htmStr=htmStr+"<span id='Exam_03' style='padding-left: 20px;' class='icon-funnel-eye'></span><span id='Exam_3' class='checkSpan'>"+parInfoArr[34]+"</span>";
+			htmStr=htmStr+"</span>";
+		}
+
+		htmStr=htmStr+"<td style='width:150px;'>"+$g("危急值")+"：<span id='CVR' class='checkSpan'>"+parInfoArr[26]+"</span></td></tr>";
 		
 		htmStr=htmStr+"<tr>"
 		htmStr=htmStr+"</tr>";
 		htmStr=htmStr+"</table>"
-		htmStr=htmStr+"<div style='width:100%;border-bottom:2px dotted #D1D1D1'></div>"
+		htmStr=htmStr+"<div style='width:100%;border-bottom:1px dashed #E2E2E2'></div>"
 		/*htmStr=htmStr+"<tr><td colspan='4'></td></tr>";
 		htmStr=htmStr+"<tr>";*/
-		htmStr=htmStr+"<table class='table' style='margin:5px;'><td class='tdWidth'>医生：<span>"+parInfoArr[23]+"</span></td>";
-		htmStr=htmStr+"<td class='tdWidth'>主管护士：<span>"+parInfoArr[24]+"</span></td>";
-		htmStr=htmStr+"<td style='display:none' class='tdWidth'>护理级别：<span>"+parInfoArr[25]+"</span></td>";
-		htmStr=htmStr+"<td style='display:none' class='tdWidth'>特殊护理：<span>"+parInfoArr[27]+"</span></td>";
-		htmStr=htmStr+"<td class='tdWidth'>留观滞留时间："+parInfoArr[28]+"</td>";
-		htmStr=htmStr+"</tr></table>";
+		htmStr=htmStr+"<table class='table' style='margin:5px;'><td class='tdWidth'>"+$g("医生")+"：<span>"+parInfoArr[23]+"</span></td>";
+		htmStr=htmStr+"<td class='tdWidth'>"+$g("主管护士")+"：<span>"+parInfoArr[24]+"</span></td>";
+		htmStr=htmStr+"<td style='display:none' class='tdWidth'>"+$g("护理级别")+"：<span>"+parInfoArr[25]+"</span></td>";
+		htmStr=htmStr+"<td style='display:none' class='tdWidth'>"+$g("特殊护理")+"：<span>"+parInfoArr[27]+"</span></td>";
+		htmStr=htmStr+"<td class='tdWidth'>"+$g("留观滞留时间")+"："+parInfoArr[28]+"</td>";
+		htmStr=htmStr+"</tr>";
+		htmStr=htmStr+"<tr>";
+		htmStr=htmStr+"<td colspan=5>"+$g("抢救时间")+"：<span>"+parInfoArr[36]+"</span></td>";
+		htmStr=htmStr+"</tr>";
+		htmStr=htmStr+"</table>";
 	
         $("#patInfo").append(htmStr);
        	//EmPCLvID=parInfoArr[19]
@@ -112,8 +150,8 @@ function getPatCheckInfo(){
 		parCheckInfo = jsonString.split("^");
 		
 		var htmlStr="";// 分诊信息
-		htmStr="<tr><td class='tdWidth'>分诊时间：</td><td class='tdFontWeight' style='width:200px;'>";
-		htmStr=htmStr+parCheckInfo[1]+" "+parCheckInfo[2]+"</td><td class='tdWidth'>护士分级：</td><td class='tdFontWeight'><a ";
+		htmStr="<tr><td class='tdWidth'>"+$g("分诊时间")+"：</td><td class='tdFontWeight' style='width:200px;'>";
+		htmStr=htmStr+parCheckInfo[1]+" "+parCheckInfo[2]+"</td><td class='tdWidth'>"+$g("护士分级")+"：</td><td class='tdFontWeight'><a ";
 		/*if((parCheckInfo[0]==1)||(parCheckInfo[0]==2)){ //hxy 2020-02-21 st
 			htmStr=htmStr+"style='color:red;";
 			htmStr=htmStr+"'>"+parCheckInfo[0]+"级</a></td></tr>";
@@ -125,43 +163,43 @@ function getPatCheckInfo(){
 				htmStr=htmStr+"'>"+parCheckInfo[0]+"级</a></td></tr>";*/
 		if(parCheckInfo[0]==1){
 			htmStr=htmStr+"style='color:red;";
-			htmStr=htmStr+"'>"+setCell(parCheckInfo[0])+"级</a></td></tr>";
+			htmStr=htmStr+"'>"+$g(setCell(parCheckInfo[0])+"级")+"</a></td></tr>";
 		}else if(parCheckInfo[0]==2){
 			htmStr=htmStr+"style='color:orange;";
-			htmStr=htmStr+"'>"+setCell(parCheckInfo[0])+"级</a></td></tr>";
+			htmStr=htmStr+"'>"+$g(setCell(parCheckInfo[0])+"级")+"</a></td></tr>";
 		}else if(parCheckInfo[0]==3){
 			htmStr=htmStr+"style='color:#ffcc00;";
-			htmStr=htmStr+"'>"+setCell(parCheckInfo[0])+"级</a></td></tr>";
+			htmStr=htmStr+"'>"+$g(setCell(parCheckInfo[0])+"级")+"</a></td></tr>";
 		}else if(parCheckInfo[0]==4){
 			htmStr=htmStr+"style='color:green;";
-			htmStr=htmStr+"'>"+setCell(parCheckInfo[0])+"级</a></td></tr>";
+			htmStr=htmStr+"'>"+$g(setCell(parCheckInfo[0])+"级")+"</a></td></tr>";
 		}else if(parCheckInfo[0]==5){
 			htmStr=htmStr+"style='color:green;";
-			htmStr=htmStr+"'>"+setCell(parCheckInfo[0])+"级</a></td></tr>"; //ed		
+			htmStr=htmStr+"'>"+$g(setCell(parCheckInfo[0])+"级")+"</a></td></tr>"; //ed		
 		}else{
 			htmStr=htmStr+"style='";
 			htmStr=htmStr+"'>"+"</a></td></tr>";
 			}
 		
-		htmStr=htmStr+"<tr><td class='tdWidth'>病人去向：</td><td class='tdFontWeight'>";
+		htmStr=htmStr+"<tr><td class='tdWidth'>"+$g("病人去向")+"：</td><td class='tdFontWeight'>";
 		
-		if(parCheckInfo[23]=="红区"){
+		if(parCheckInfo[23]==$g("红区")){
 			htmStr=htmStr+"<span class='redSpan'>"
-			}else if(parCheckInfo[23]=="橙区"){ //hxy 2020-02-21 st
+			}else if(parCheckInfo[23]==$g("橙区")){ //hxy 2020-02-21 st
 				htmStr=htmStr+"<span class='orangeSpan'>" //ed
-				}else if(parCheckInfo[23]=="黄区"){
+				}else if(parCheckInfo[23]==$g("黄区")){
 					htmStr=htmStr+"<span class='yellowSpan'>"
-					}else if(parCheckInfo[23]=="绿区"){
+					}else if(parCheckInfo[23]==$g("绿区")){
 						htmStr=htmStr+"<span class='greenSpan'>"
 						}else{
 							htmStr=htmStr+"<span>"
 							}
 		
-		htmStr=htmStr+parCheckInfo[23]+"</span><span style='margin-left:20px;color:#000000;'>"+parCheckInfo[28]+"</span></td><td class='tdWidth'>分诊护士：</td><td class='tdFontWeight'>";
+		htmStr=htmStr+parCheckInfo[23]+"</span><span style='margin-left:20px;color:#000000;'>"+parCheckInfo[28]+"</span></td><td class='tdWidth'>"+$g("分诊护士")+"：</td><td class='tdFontWeight'>";
 		htmStr=htmStr+parCheckInfo[24]+"</td></tr>";
 		
-		htmStr=htmStr+"<tr><td class='tdWidth'>绿色通道：</td><td class='tdFontWeight'>";
-		htmStr=htmStr+parCheckInfo[25]+"</td><td class='tdWidth'>三无病人：</td><td class='tdFontWeight'>";
+		htmStr=htmStr+"<tr><td class='tdWidth'>"+$g("绿色通道")+"：</td><td class='tdFontWeight'>";
+		htmStr=htmStr+parCheckInfo[25]+"</td><td class='tdWidth'>"+$g("三无病人")+"：</td><td class='tdFontWeight'>";
 		htmStr=htmStr+parCheckInfo[26]+"</td></tr>";
 		
 		
@@ -177,7 +215,7 @@ function getPatCheckInfo(){
 		
 		var sstr=str[0].split("/")
 		htmPCBStr=htmPCBStr+"<td>"+sstr[0]+"</td><td>"+sstr[1]+"</td><td>"+str[1]+"</td><td>"+parCheckInfo[14]+"</td></tr>";	
-		htmPCBStr=htmPCBStr+"<tr class='trCenter'> <td style='border-left:1px solid #FFFFFF;'>℃</td><td>次/分</td><td>次/分</td><td>mmHg</td><td>mmHg</td><td>次/分</td><td>%</td></tr>"
+		htmPCBStr=htmPCBStr+"<tr class='trCenter'> <td style='border-left:1px solid #FFFFFF;'>℃</td><td>"+$g("次/分")+"</td><td>"+$g("次/分")+"</td><td>mmHg</td><td>mmHg</td><td>"+$g("次/分")+"</td><td>%</td></tr>"
 		var htmScoStr=parCheckInfo[29];
 		showScoreTable(htmScoStr);
 		$("#patChcekLevInfo").append(htmStr);
@@ -283,7 +321,7 @@ function GetPatcurdetail(){
   						 '<div class="circle"></div>'+
   						 '<span class="inittxt">'+list[i].split("^")[2]+'</span>'+
 						 '<span class="time">'+list[i].split("^")[0]+'&nbsp;&nbsp;&nbsp;'+list[i].split("^")[1]+'</span>'+
-						 '<span class="txt">'+list[i].split("^")[3]+'&nbsp;&nbsp;&nbsp;'+"操作人:"+list[i].split("^")[4]+'</span>'+
+						 '<span class="txt">'+list[i].split("^")[3]+'&nbsp;&nbsp;&nbsp;'+$g("操作人")+":"+list[i].split("^")[4]+'</span>'+
 						 '</li>')
 					}
 					//$(".status-list li:last-child .circle").css("background-position","0 -72px")
@@ -304,50 +342,50 @@ function initPatCheInfo(){
 		parCheckInfo = jsonString.split("^");
 		
 		var htmlStr="";// 分诊信息
-		htmStr="<tr><td >分诊时间：</td><td class='tdWidthl'>";
-		htmStr=htmStr+parCheckInfo[1]+"</td><td class='tdWidth' >护士分级：</td><td>";
+		htmStr="<tr><td >"+$g("分诊时间")+"：</td><td class='tdWidthl'>";
+		htmStr=htmStr+parCheckInfo[1]+"</td><td class='tdWidth' >"+$g("护士分级")+"：</td><td>";
 		htmStr=htmStr+parCheckInfo[0]+"</td>";
 		
-		htmStr=htmStr+"<td class='tdWidth'>病人去向：</td><td>";
-		htmStr=htmStr+parCheckInfo[23]+"</td></tr><tr><td >分诊护士：</td><td class='tdWidthl'>";
+		htmStr=htmStr+"<td class='tdWidth'>"+$g("病人去向")+"：</td><td>";
+		htmStr=htmStr+parCheckInfo[23]+"</td></tr><tr><td >"+$g("分诊护士")+"：</td><td class='tdWidthl'>";
 		htmStr=htmStr+parCheckInfo[24]+"</td>";
 		
-		htmStr=htmStr+"<td class='tdWidth'>绿色通道：</td><td>";
-		htmStr=htmStr+parCheckInfo[25]+"</td><td class='tdWidth'>三无病人：</td><td>";
+		htmStr=htmStr+"<td class='tdWidth'>"+$g("绿色通道")+"：</td><td>";
+		htmStr=htmStr+parCheckInfo[25]+"</td><td class='tdWidth'>"+$g("三无病人")+"：</td><td>";
 		htmStr=htmStr+parCheckInfo[26]+"</td></tr>";
 		
 		
-		htmStr=htmStr+"<tr><td >来诊方式：</td><td class='tdWidthl'>";
-		htmStr=htmStr+parCheckInfo[6]+"</td><td class='tdWidth' >意识状态：</td><td>";
+		htmStr=htmStr+"<tr><td >"+$g("来诊方式")+"：</td><td class='tdWidthl'>";
+		htmStr=htmStr+parCheckInfo[6]+"</td><td class='tdWidth' >"+$g("意识状态")+"：</td><td>";
 		htmStr=htmStr+parCheckInfo[8]+"</td>";
 	
-		htmStr=htmStr+"<td class='tdWidth'>特殊人群：</td><td>";
+		htmStr=htmStr+"<td class='tdWidth'>"+$g("特殊人群")+"：</td><td>";
 		htmStr=htmStr+parCheckInfo[27]+"</td></tr>"
-		htmStr=htmStr+"<tr><td class='tdWidth'>既往史：</td><td colspan='5'>";
+		htmStr=htmStr+"<tr><td class='tdWidth'>"+$g("既往史")+"：</td><td colspan='5'>";
 		htmStr=htmStr+parCheckInfo[19]+"</td></tr>";
 
-		htmStr=htmStr+"<tr><td class='tdWidth'>症状：</td><td colspan='5'>";
+		htmStr=htmStr+"<tr><td class='tdWidth'>"+$g("症状")+"：</td><td colspan='5'>";
 		htmStr=htmStr+parCheckInfo[3]+"</td></tr>";
 		
 		htmStr=htmStr+"<tr><td colspan='6' style='border-bottom:1px solid #333333'></td></tr>"
-		htmStr=htmStr+"<tr><td class='tdWidth'>创伤评分：</td><td colspan='5'>";
+		htmStr=htmStr+"<tr><td class='tdWidth'>"+$g("创伤评分")+"：</td><td colspan='5'>";
 		htmStr=htmStr+parCheckInfo[20]+"</td></tr>";
-		htmStr=htmStr+"<tr><td class='tdWidth'>格拉斯哥：</td><td colspan='5'>";
+		htmStr=htmStr+"<tr><td class='tdWidth'>"+$g("格拉斯哥")+"：</td><td colspan='5'>";
 		htmStr=htmStr+parCheckInfo[22]+"</td></tr>";
-		htmStr=htmStr+"<tr><td class='tdWidth'>疼痛评分：</td><td colspan='5'>";
+		htmStr=htmStr+"<tr><td class='tdWidth'>"+$g("疼痛评分")+"：</td><td colspan='5'>";
 		htmStr=htmStr+parCheckInfo[21]+"</td></tr>";
 		
 		var htmPCBStr=""
 		htmPCBStr="<tr><th>体温(T)</th><th>心率(HR)</th><th>脉搏(R)</th><th>血压(BP)收缩压</th><th>呼吸频率(R)</th><th>血氧饱和度(SPO2)</th></tr>";		// 生命体征
-		htmPCBStr=htmPCBStr+"<tr><td>"+parCheckInfo[10]+"℃</td><td>"+parCheckInfo[11]+"(次/分)</td><td>"+parCheckInfo[12]+"(次/分)</td>"
+		htmPCBStr=htmPCBStr+"<tr><td>"+parCheckInfo[10]+"℃</td><td>"+parCheckInfo[11]+"("+$g("次/分")+")</td><td>"+parCheckInfo[12]+"("+$g("次/分")+")</td>"
 		var str=parCheckInfo[13].split(":");
-		htmPCBStr=htmPCBStr+"<td>"+str[0]+"(mmHg)</td><td>"+str[1]+"(次/分)</td><td>"+parCheckInfo[14]+"(%)</td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>";	
+		htmPCBStr=htmPCBStr+"<td>"+str[0]+"(mmHg)</td><td>"+str[1]+"("+$g("次/分")+")</td><td>"+parCheckInfo[14]+"(%)</td></tr><tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>";	
 		var htmScoStr="";
-		htmScoStr=htmScoStr+"<tr><td>创伤评分</td><td>格拉斯哥评分</td><td>疼痛评分</td></tr>";	
+		htmScoStr=htmScoStr+"<tr><td>"+$g("创伤评分")+"</td><td>"+$g("格拉斯哥评分")+"</td><td>"+$g("疼痛评分")+"</td></tr>";	
 		htmScoStr=htmScoStr+"<tr><td>"+parCheckInfo[20]+"</td><td>"+parCheckInfo[22]+"</td><td>"+parCheckInfo[21]+"</td></tr>";	
 		
 		$("#detailDivT").append(htmStr);
-		$("#detTitleT").append("病人分诊信息");
+		$("#detTitleT").append($g("病人分诊信息"));
 		
 			},"","false");
 	}
@@ -372,8 +410,10 @@ function linkToCsp(){
 		blankWidth = $(window.parent).width();
 		blankHeight = $(window.parent).height();
 	}
-	
-	window.open(lnk,"_blank","top=100,left=0,width="+(blankWidth-20)+"px,height="+(blankHeight-60)+"px,menubar=yes,scrollbars=yes,toolbar=no,status=no");
+	if ('undefined'!==typeof websys_getMWToken){
+		lnk += "&MWToken="+websys_getMWToken();
+	}
+	window.open(lnk,"_blank","top=100,left=0,width="+(blankWidth-20)+"px,height="+(blankHeight-180)+"px,menubar=yes,scrollbars=yes,toolbar=no,status=no");
 	//window.open(lnk, "_blank", "dialogHeight: " + (top.screen.height - 530) + "px; dialogWidth: " + (top.screen.width - 100) + "px");
 	}
 
@@ -383,6 +423,7 @@ function InitPannelEvent(){
 
 	$('#Lab,#Exam,#CVR').each(function(){
 		var that = $(this)
+		var thatwidth="710px ";
 		that.parent().on({
 			mouseenter:function(){
 				if(that.attr("id")=="Lab"){/*hxy 2018-07-06 都为0时，不泡芙*/
@@ -396,18 +437,19 @@ function InitPannelEvent(){
 				if(that.attr("id")=="CVR"){
 					var num=$("#CVR").text();
 					if(num=="0"){return;}
+					thatwidth="520px";
 				}/*hxy ed*/
 
 				if (LoadPopover("Load",that.attr("id"))){
 					var HTML=GetPannelHTML(that.attr("id"));
 					if (HTML.innerHTML==""){return;}
-					that.webuiPopover({
+					that.popover({
 						title:HTML.Title,
 						content:HTML.innerHTML,
 						trigger:'hover',
 						placement:'bottom-right',
-						width:710,
-						height:280,
+						width:thatwidth,
+						delay:{show: null,hide:500},
 						onShow:function(){
 							//alert(that.attr("id"))
 							if (LoadPopover("Show",that.attr("id"))){
@@ -417,7 +459,7 @@ function InitPannelEvent(){
 							}
 						}
 					});
-					that.webuiPopover('show');
+					that.popover('show');
 				}
 			}
 		});
@@ -462,7 +504,8 @@ function GetPannelHTML(LinkID){
 	if (LinkID.indexOf("Lab") != "-1"){
 		//检验
 		//if ($("#LabCount").text()>0){
-			innerHTML+='<div style="background:#F7F7F7;width:700px;height:29px;border:none;padding:6px 0 0 10px"><b>检验列表</b></div><div style="padding:10px;"><table id="LabOrdGrid"></table></div>';<!--hxy 2018-07-06-->
+			Title=$g("检验列表");
+			innerHTML+='<table id="LabOrdGrid"></table>'; /// hxy 2018-07-06
 			CallFunction=LoadLabOrdGrid;
 		//}
 	}
@@ -470,7 +513,8 @@ function GetPannelHTML(LinkID){
 		//检查
 		//if ($("#ExamCount").text()>0){
 			//innerHTML+='<table id="ExamOrdGrid"></table>';
-			innerHTML+='<div style="background:#F7F7F7;width:700px;height:29px;border:none;padding:6px 0 0 10px"><b>检查列表</b></div><div style="padding:10px;"><table id="ExamOrdGrid"></table></div>';<!--hxy 2018-07-06-->
+			Title=$g("检查列表");
+			innerHTML+='<table id="ExamOrdGrid"></table>'; /// hxy 2018-07-06 
 			CallFunction=LoadExamOrdGrid;
 		//}
 	}
@@ -478,7 +522,8 @@ function GetPannelHTML(LinkID){
 		//危急值 yuliping 2018-03-23
 		//if ($("#ExamCount").text()>0){
 			//innerHTML+='<table id="CVReportGrid"></table>';
-			innerHTML+='<div style="background:#F7F7F7;width:700px;height:29px;border:none;padding:6px 0 0 10px"><b>危急值</b></div><div style="padding:10px;"><table id="CVReportGrid"></table></div>';<!--hxy 2018-07-06-->
+			Title=$g("危急值");
+			innerHTML+='<table id="CVReportGrid"></table>'; ///  hxy 2018-07-06
 			CallFunction=LoadCVReportGrid;
 		//}
 	}
@@ -497,7 +542,7 @@ function LoadLabOrdGrid(){
 			if(rec.ARCIMDesc!=""){
 				return "";
 			}else{
-				return value;
+				return $g(value);
 			}
 		}},
 		{title:'医嘱名称',field:'ARCIMDesc',width:90},
@@ -518,7 +563,7 @@ function LoadLabOrdGrid(){
  				if (rec.Status!="3"){
 	 				return BtnHTML;
 	 			}else{
-		 			var BtnHTML = '<a href="#" class="editcls" onclick="switchTabByEMR(\'' + rec.OrderId + '\')">操作</a>'; //'<a class="editcls" onclick="ipdoc.pattreatinfo.view.OpenLabReport(\'' + rec.ReportId + '\')">操作</a>';
+		 			var BtnHTML = '<a href="#" class="editcls" onclick="switchTabByEMR(\'' + rec.OrderId + '\')">'+$g("操作")+'</a>'; //'<a class="editcls" onclick="ipdoc.pattreatinfo.view.OpenLabReport(\'' + rec.ReportId + '\')">操作</a>';
 		 		}
 		       return BtnHTML;
             }
@@ -536,12 +581,13 @@ function LoadLabOrdGrid(){
 		    data:GridData,
 		    title:'', //检验列表 hxy
 		    headerCls:'panel-header-gray',
+		    bodyCls:'panel-header-gray',  //hxy 2023-02-02
 		    idField:'Index',
 		    treeField:'Title',
 		    fit : false,
-		    width:680,
-		    height:200, //280 hxy
-		    border: false,
+		    width:690,
+		    height:225, //280 hxy
+		    border: true, //false
 		    columns:LabOrdColumns
 		});
 	});
@@ -549,11 +595,11 @@ function LoadLabOrdGrid(){
 
 function switchTabByEMR(OrderId){
 	//parent.switchTabByEMR("检验结果");
-	parent.switchTabByEMR("检验结果",{"oneTimeValueExp":"OEORIID="+OrderId});	
+	parent.switchTabByEMR($g("检验结果"),{"oneTimeValueExp":"OEORIID="+OrderId});	
 }
 function switchInspectTab(OrderId){
 	//parent.switchTabByEMR("检查报告");
-	parent.switchTabByEMR("检查报告",{"oneTimeValueExp":"OEORIID="+OrderId});	
+	parent.switchTabByEMR($g("检查报告"),{"oneTimeValueExp":"OEORIID="+OrderId});	
 }
 
 ///检查医嘱分类树状列表
@@ -572,7 +618,7 @@ function LoadExamOrdGrid(){
  				///已申请 A ，（"登记"、"预约"） ，已报告 C
 		
 		 		if((rec.ItemLabel)&&(rec._parentId=="报告")){
-			 		var BtnHTML = '<a href="#" class="editcls" onclick="switchInspectTab(\'' + rec.Oeori + '\')">操作</a>';     // '<a class="editcls" onclick="ipdoc.pattreatinfo.view.OpenExamReport(\'' + rec.StudyNo + '\')">操作</a>';	
+			 		var BtnHTML = '<a href="#" class="editcls" onclick="switchInspectTab(\'' + rec.Oeori + '\')">'+$g("操作")+'</a>';     // '<a class="editcls" onclick="ipdoc.pattreatinfo.view.OpenExamReport(\'' + rec.StudyNo + '\')">操作</a>';	
 			 	}
 				return BtnHTML;
             }
@@ -592,12 +638,13 @@ function LoadExamOrdGrid(){
 		    data:GridData,
 		    title:'', //检查列表 hxy
 		    headerCls:'panel-header-gray',
+		    bodyCls:'panel-header-gray', //hxy 2023-02-02
 		    idField:'Index',    
 		    treeField:'Title',
 		    fit : false,
-		    width:680,
-		    height:200, //280
-		    border: false,   
+		    width:690, //680
+		    height:225, //280 //200
+		    border: true, //false  
 		    columns:ExamOrdColumns
 		});
 	});
@@ -644,7 +691,7 @@ function LoadCVReportGrid(){
 	        {title:'标本',field:'Specimen', hidden:true},
 	        {title:'操作',field:'CVReportBtn',
  				formatter:function(value,rec){
-                   var btn = '<a class="editcls" style="cursor: pointer;" onclick="CVReportBtnClickHandler(\'' + rec.ReportId + '\',\'' + rec.DPRPType + '\')">操作</a>';
+                   var btn = '<a class="editcls" style="cursor: pointer;" onclick="CVReportBtnClickHandler(\'' + rec.ReportId + '\',\'' + rec.DPRPType + '\')">'+$g("操作")+'</a>';
 			       return btn;
                 }
  			},
@@ -661,12 +708,13 @@ function LoadCVReportGrid(){
 			    data:GridData,
 			    title:'',//危急值 hxy
 			    headerCls:'panel-header-gray',
+			    bodyCls:'panel-header-gray', //hxy 2023-02-02
 			    idField:'Index',
 			    treeField:'Title',
 			    fit : false,
-			    width:680, //500
-			    height:200, //300
-			    border: false,
+			    width:500, //500
+			    height:225, //300
+			    border: true, //false
 			    columns:CVReportColumns
 			});
 		});
@@ -675,7 +723,8 @@ function LoadCVReportGrid(){
 	 var lnk="criticalvalue.trans.hisui.csp?ReportId="+ReportId+"&RepType="+DPRPType;
 	 websys_showModal({
 		url:lnk,
-		title:'危急值操作',
+		iconCls:"icon-w-paper",
+		title:$g('危急值操作'),
 		width:760,
 		height:500,
 		onClose: function() {
@@ -684,6 +733,9 @@ function LoadCVReportGrid(){
 	});
 	}
 	
+function changeLoc(){
+	_showChangeAdmLocPanel(EpisodeID);
+}
 
 //使用局部刷新,这样除第一次渲染较慢重复使用较快
 function xhrRefresh(papmi,adm,madm){
@@ -725,4 +777,14 @@ function setCell(value){
 	if(value==4){value="Ⅳa";}
 	if(value==5){value="Ⅳb";}
 	return value;
+}
+
+/// 病历查看:超融合
+function LoadMoreScr(){
+
+	var Obj={
+		EpisodeID:EpisodeID
+	}
+	
+	websys_emit("onPatOverViews",Obj);
 }

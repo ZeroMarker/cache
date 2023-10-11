@@ -13,6 +13,11 @@ var LgUserID = session['LOGON.USERID'];  /// 用户ID
 var LgLocID = session['LOGON.CTLOCID'];  /// 科室ID
 var LgHospID = session['LOGON.HOSPID'];  /// 医院ID
 
+// 页面编辑数据
+var inputsData;
+var textareasData;
+var selectsData;
+
 /// 页面初始化函数
 function initPageDefault(){
 
@@ -33,7 +38,11 @@ function InitParams(){
 
 /// 初始化界面组件
 function InitComponents(){
-	
+	var IsOpenMoreScreen = isOpenMoreScreen();	///是否多屏幕 //true; //2023-03-06 HOS
+	if (IsOpenMoreScreen){
+		$("#bt_recview").hide();
+		websys_emit("onNurBedShiftWrite",{"PatientID":PatientID, "EpisodeID":EpisodeID, "mradm":mradm});
+	}
 
 }
 
@@ -63,6 +72,7 @@ function LoadPatBsContent(){
 			InsBsPanel(jsonString);
 		}
 	},'json',false)
+	initFileds();	 /// 记录表单中的原始值
 }
 
 /// 更新页面交班内容
@@ -78,30 +88,63 @@ function InsBsPanel(itemObj){
 	$("#bs_patno").val(itemObj.PatNo);     /// 登记号
 	$("#bs_chklev").val(itemObj.Priority); /// 级别
 	$("#bs_type").val(itemObj.Type);       /// 类型
-	$("#bs_diag").val(itemObj.PatDiag);    /// 诊断
+	$("#bs_diag").val(formatHtmlToValue(itemObj.PatDiag));    /// 诊断
 	$("#bs_ObsTime").val(itemObj.ObsTime); /// 滞留时间
 	
-	$("#bs_background").html(itemObj.Background);  /// 背景
-	$("#bs_assessment").html(itemObj.Assessment);  /// 评估
+	//$("#bs_background").html(itemObj.Background);  /// 背景
+	//$("#bs_assessment").html(itemObj.Assessment);  /// 评估
+	$("#bs_background").val(itemObj.Background);  /// 背景
+	$("#bs_assessment").val(itemObj.Assessment);  /// 评估
 	
 	/// 编辑框赋值
 	CKEDITOR.instances.bs_suggest.setData(itemObj.Suggest); /// 建议
 	
 	SwitchButton(itemObj.SwitchFlag);  /// 交班项目切换按钮控制
 }
-
 /// 上一例
 function prev_click(){
-	
-	switchPat(-1);  /// 切换交班填写病人
+	if(checkModification()){
+		mess_confirm(-1); /// 提示是否保存数据，进行数据保存和交班病人切换
+	}else{
+		switchPat(-1);  /// 切换交班填写病人	
+	}	
 }
-
 /// 下一例
 function next_click(){
-	
-	switchPat(1);  /// 切换交班填写病人
+	if(checkModification()){
+		mess_confirm(1); /// 提示是否保存数据，进行数据保存和交班病人切换	
+	}else{
+		switchPat(1);  /// 切换交班填写病人	
+	}
 }
-
+/// 提示是否保存数据，进行数据保存和交班病人切换
+function mess_confirm(direc){
+	var oldOk = $.messager.defaults.ok;
+	var oldCancel = $.messager.defaults.cancel;
+	$.messager.defaults.ok = "是";
+	$.messager.defaults.cancel = "否";
+	$.messager.confirm("保存", "数据内容已经改变，是否保存?", function (r) {
+		if (r) {		
+			/*要写在回调方法内,否则在旧版下可能不能回调方法*/
+			$.messager.defaults.ok = oldOk;
+			$.messager.defaults.cancel = oldCancel;
+			save_click(1);	
+			var bs_background = $("#bs_background").val();  /// 背景
+			var bs_assessmen = $("#bs_assessment").val();   /// 评估
+			var bs_suggest = ckEditor.getData();  /// 建议 编辑框取值
+			if ((trim(bs_assessmen) == "")&(trim(bs_suggest) == "")){
+				return;
+			}
+			//switchPat(direc);  /// 切换交班填写病人	
+			setTimeout(function(){ switchPat(direc);}, 100);
+		}else{
+			/*要写在回调方法内,否则在旧版下可能不能回调方法*/
+			$.messager.defaults.ok = oldOk;
+			$.messager.defaults.cancel = oldCancel;				
+			switchPat(direc);  /// 切换交班填写病人	
+		}		
+	})	
+}
 /// 病历浏览
 function docemr_click(){
 	openPatEmr(PatientID, EpisodeID, mradm);
@@ -109,13 +152,28 @@ function docemr_click(){
 
 /// 护理病历
 function nuremr_click(){
-	$.messager.alert("提示","需提供链接！","info");
+	
+	if (EpisodeID == ""){
+		$.messager.alert("提示","请先选择病人！","warning");
+		return;
+	}
+	
+	/// 新版
+	var link = "nur.hisui.nursingrecords.csp?PatientID="+ PatientID +"&EpisodeID="+ EpisodeID +"&mradm="+ mradm +"&WardID=";
+	if ('undefined'!==typeof websys_getMWToken){
+		link += "&MWToken="+websys_getMWToken();
+	}
+	window.open(link, 'newWin', 'height='+ (window.screen.availHeight-100) +', width='+ (window.screen.availWidth-100) +', top=50, left=50, toolbar=no, menubar=no, scrollbars=no, resizable=yes, location=no, status=no');
+
 }
 
 /// 引用:无法兼容谷歌浏览器
 function quote_click(){
 	
 	var Link="dhcem.patemrque.csp?EpisodeID="+EpisodeID+"&PatientID="+PatientID;
+	if ('undefined'!==typeof websys_getMWToken){
+		Link += "&MWToken="+websys_getMWToken();
+	}
 	window.parent.commonShowWin({
 		url: Link,
 		title: "引用",
@@ -141,7 +199,7 @@ function temp_click(){
 }
 
 /// 保存
-function save_click(){
+function save_click(flag){
 	
 	var bs_background = $("#bs_background").val();  /// 背景
 	var bs_assessmen = $("#bs_assessment").val();   /// 评估
@@ -152,13 +210,16 @@ function save_click(){
 	}
 	var mListData = bs_background +"^"+ bs_assessmen +"^"+ bs_suggest +"^"+ EpisodeID;
 	
-	runClassMethod("web.DHCEMBedSideShift","saveBsItem",{"BsID": BsID, "BsItmID": bsItemID, "mListData": mListData},function(jsonString){
+	runClassMethod("web.DHCEMBedSideShift","saveBsItem",{"_headers":{"X_ACCEPT_TAG":1}, "BsID": BsID, "BsItmID": bsItemID, "mListData": mListData},function(jsonString){
 		
 		if (jsonString < 0){
 			$.messager.alert("提示","保存失败，失败原因:"+jsonString,"warning");
 		}else{
 			bsItemID = jsonString;
-			$.messager.alert("提示","保存成功！","info");
+			if(flag!=1){
+				$.messager.alert("提示","保存成功！","info");
+			}
+			
 			LoadPatBsContent(); /// 重新加载数据
 			window.parent.parent.refresh();
 		}
@@ -224,7 +285,41 @@ function openPatEmr(PatientID, EpisodeID, mradm){
 	
 	/// 新版病历
 	var link = "websys.chartbook.hisui.csp?&PatientListPanel=emr.browse.episodelist.csp&PatientListPage=emr.browse.patientlist.csp&SwitchSysPat=N&ChartBookID=70&PatientID="+ PatientID +"&EpisodeID="+ EpisodeID +"&mradm="+ mradm +"&WardID=";
+	if ('undefined'!==typeof websys_getMWToken){
+		link += "&MWToken="+websys_getMWToken();
+	}
 	window.open(link, 'newWin', 'height='+ (window.screen.availHeight-100) +', width='+ (window.screen.availWidth-100) +', top=50, left=50, toolbar=no, menubar=no, scrollbars=no, resizable=yes, location=no, status=no');
+}
+
+function formatHtmlToValue(text){
+	text = text.replace(new RegExp('&nbsp;',"g"),' '); //text.replaceAll("&nbsp;"," ");
+	text = text.replace(new RegExp('&nbsp',"g"),' '); //text.replaceAll("&nbsp"," ");
+	return text;
+}
+// 记录表单中的原始值
+function initFileds() {
+	var textareas = document.getElementsByTagName("textarea");
+	textareasData = new Array(textareas.length);
+	for (var i=0;i<textareas.length;i++) {
+		textareasData[i] = textareas[i].value;
+	}
+	textareasData[textareas.length]=ckEditor.getData();
+}
+// 判断表单中值是否被修改了
+function checkModification() {
+	var textareas = document.getElementsByTagName("textarea");
+	var hasBeenChanged = false;
+	
+	for (var i=0;i<textareas.length;i++) {
+		if (textareasData[i]!=textareas[i].value) {
+			hasBeenChanged = true;
+			//textareasData[i]=textareas[i].value;
+		}
+	}
+	if(textareasData[textareas.length]!=ckEditor.getData()){
+		hasBeenChanged = true;
+	}
+	return hasBeenChanged;
 }
 
 /// 自动设置页面布局
@@ -234,8 +329,6 @@ function onresize_handler(){
 
 /// 页面全部加载完成之后调用(EasyUI解析完之后)
 function onload_handler() {
-
-	
 	/// 自动设置页面布局
 	onresize_handler();
 }

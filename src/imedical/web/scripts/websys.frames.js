@@ -32,7 +32,7 @@ function SetKeepOpen(url,newwin) {
 function websysChangeMenu(){
 	top.IsSideMenu = false;
 	top.initHeadMenu();
-	self.window.location='epr.default.csp?IsSideMenu=false';
+	self.window.location = websys_writeMWToken('epr.default.csp?IsSideMenu=false');
 }
 function OpenMenuItem(menuId,href,target,blankOpt){
 	var menuName = $('#'+menuId).text();
@@ -89,6 +89,7 @@ function fitMyTabContentHeight(){
 	var h=calHeight();
 	if ($('#myTabContent').height()!=h){
 			$('#myTabContent').height(h);
+			if (typeof window.cefbound != "undefined" || websys_isIE) $(".tab-pane.active").height(h);
 	}
 }
 /*
@@ -120,7 +121,7 @@ function showNavTab(menuItemObj) {
     if ($.isEmptyObject(nav)) {//检查是否已经存在打开的菜单
         $("#myTab").append($.tmpl("tabItemTpl",menuItemObj));
         $("#myTabContent").append($.tmpl("contentItemTpl",menuItemObj));
-		$('#iframe_'+menuItemObj.menuId).attr('src',menuItemObj.menuHref);
+		$('#iframe_'+menuItemObj.menuId).attr('src',websys_writeMWToken(menuItemObj.menuHref));
         navTabStyle(rowid);
     }
     displayNavTab(rowid);
@@ -245,13 +246,56 @@ $(function(){
 	fitMyTabContentHeight();
 	$(window).on('resize',fitMyTabContentHeight);
 	navTabStyle("home");
+	$("#searchBox").on('keypress',function(ev){
+		if(ev.keyCode==13){
+          ev.stopPropagation();
+          ev.preventDefault()
+          searchHandle();
+     	}
+	})
+	$("#searchBtn").on('click', function(){
+          searchHandle();
+	});
 	window.onunload = unlockonunload;
 })
-
-
-
-
-
-
-
-
+function searchHandle(){
+	var searchVal = document.getElementById("searchBox").value;
+	var html = $("#navmenu").html();
+	$("#navmenu i.menu-icon").each(function(ind,itm){
+		var _t = $(this);
+		var _li = _t.closest('li');
+		var _tx = "";
+		if (_t[0].nextSibling.nodeType==3){
+			_tx = _t[0].nextSibling.nodeValue || _t[0].nextSibling.innerText;
+		}else if(_t[0].nextSibling.nodeType==1){
+			_tx = _t[0].nextSibling.innerText; 
+		}
+		if (typeof _t.data('originText')=="undefined"){
+			_t.data('originText', _tx);
+		}else{
+			_tx = _t.data('originText');
+		}
+		_t[0].nextSibling.innerHTML = _tx;
+		if (_tx.indexOf(searchVal)==-1){
+			_li.hide();
+			return ;
+		}else{
+			// show parent menu
+			_li.show();
+			if (searchVal!=""){
+				var _parentLi = _li.parent().closest('li');
+				while(_parentLi.length>0 && _parentLi.closest('#navmenu').length>0 ){
+					_parentLi.show();
+					_parentLi = _parentLi.parent().closest('li');
+				}
+				_yellowtx = _tx.replace(searchVal, function(word){
+					return "<b style='background-color:yellow;'>"+word+"</b>"
+				});
+				$(_t[0].nextSibling).remove();
+				$("<span>"+_yellowtx+"</span>").insertAfter(_t);
+				//$("<span>"+_yellowtx+"</span>").replaceWith(_t[0].nextSibling);
+			}
+		}
+	});
+	return ;
+}

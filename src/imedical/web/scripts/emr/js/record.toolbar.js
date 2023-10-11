@@ -13,6 +13,9 @@
 	setToolBarStatus("disable");
 	//setRecordtransfer();
 	initConfirmRecord();
+    if ((loadDocMode.TitleCode != "")||(loadDocMode.RecordConfig != "")){
+        $('#loadRecord').css('display','block');
+    }
 });
 
 //设置字体数据源
@@ -151,6 +154,7 @@ function setSaveStatus(flag)
 	$('#deleteRow').linkbutton(flag);
 	$('#deleteCol').linkbutton(flag);
 	$('#splitCells').linkbutton(flag);
+	$('#loadRecord').linkbutton(flag);
 }
 ///Desc:是否可打印
 function setPrintStatus(flag)
@@ -189,7 +193,7 @@ function setViewRevision(flag)
 	}
 }
 
-///Desc:是否可送病案室
+///Desc:是否可提交病历
 function setCommitStatus(flag)
 {
 	$('#confirmRecordCompleted').linkbutton(flag);
@@ -619,10 +623,9 @@ function setToolBarFontView(disableFont)
 	} 
 }
 
-//初始化送病案室状态
+//初始化提交病历状态
 function initConfirmRecord()
 {
-	$("#confirmRecordCompleted").attr("flag",true);
 	jQuery.ajax({
 			type : "GET", 
 			dataType : "text",
@@ -637,17 +640,16 @@ function initConfirmRecord()
 			success: function (data){
 				if (data == "1")
 				{ 
-					$("#confirmRecordCompleted").attr("flag",false);
 					if (isEnableRevokeComplete == "N")
 					{
-						$("#confirmRecordCompleted").attr("title","已送病案室");
-						$("#confirmRecordCompleted").text("已送病案室");
+						$("#confirmRecordCompleted").attr("title","已提交病历");
+						$("#confirmRecordCompleted").text("已提交病历");
 						$("#confirmRecordCompleted").css("width","65px");
 					}
 					else
 					{
-						$("#confirmRecordCompleted").attr("title","撤销送病案室");
-						$("#confirmRecordCompleted").text("撤销送病案室");
+						$("#confirmRecordCompleted").attr("title","撤销提交病历");
+						$("#confirmRecordCompleted").text("撤销提交病历");
 						$("#confirmRecordCompleted").css("width","75px");
 					}
 					$("#confirmRecordCompleted").css("padding-top","22px");
@@ -657,18 +659,18 @@ function initConfirmRecord()
 		});	
 }
 
-//送病案室点击事件
+//提交病历点击事件
 function changeRecordFinishedStatus()
 {
-	if ($("#confirmRecordCompleted").attr("flag") && $("#confirmRecordCompleted").attr("flag")=="false")	
-	{
-		if (isEnableRevokeComplete == "N") return;
-		revokeConfirmRecord();
-	}
-	else
+	var returnValue = window.showModalDialog("emr.confirmadmrecord.csp?EpisodeID="+episodeID,"","dialogHeight:340px;dialogWidth:1000px;resizable:no;status:no");
+	if (returnValue == "confirm")
 	{
 		confirmRecordFinished();
-	}	
+	}
+	else if(returnValue == "revoke")
+	{
+		revokeConfirmRecord();
+	}
 }
 
 //确认病历全部完成
@@ -684,7 +686,7 @@ function confirmRecordFinished()
 	var qualityResult = qualityConfirmDocument();
 	if (qualityResult) return; 
 	
-	var tipMsg = "确认病历全部完成后将无法修改病历，是否确认提交?";
+	var tipMsg = "提交病历后将无法修改病历，是否确认提交?";
 	if (window.confirm(tipMsg)){
 
 		if (checkOutCorrelation() == true)
@@ -696,22 +698,22 @@ function confirmRecordFinished()
 		else
 		{
 			submitRemarks();
-			//获取确认病历全部完成是否成功
+			//获取提交病历是否成功
 			var completeResult = getCompleteResult();
 			if (completeResult == true)
 			{
-				alert("确认病历全部完成成功");
-				setToolbarPrivilege();
+				alert("提交病历成功");
+				window.location.reload();
 			}
 			else 
 			{
-				alert("确认病历全部完成失败");
+				alert("提交病历失败");
 			}
 		}
 	} 
 }
 
-//确认病历全部完成
+//提交病历
 function getCompleteResult()
 {
 	var result = false;
@@ -725,23 +727,25 @@ function getCompleteResult()
 					"Class":"EMRservice.BL.BLAdmRecordStatus",
 					"Method":"ConfirmRecordFinished",			
 					"p1":episodeID,
-					"p2":userID
+					"p2":userID,
+					"p3":getIpAddress(),
+					"p4":"EMR",
+					"p5":""
 				},
 			success: function (data){
 				if (data == "1") 
 				{
 					result = true;
-					$("#confirmRecordCompleted").attr("flag",false);
 					if (isEnableRevokeComplete == "N")
 					{
-						$("#confirmRecordCompleted").attr("title","已送病案室");
-						$("#confirmRecordCompleted").text("已送病案室");
+						$("#confirmRecordCompleted").attr("title","已提交病历");
+						$("#confirmRecordCompleted").text("已提交病历");
 						$("#confirmRecordCompleted").css("width","65px");
 					}
 					else
 					{
-						$("#confirmRecordCompleted").attr("title","撤销送病案室");
-						$("#confirmRecordCompleted").text("撤销送病案室");
+						$("#confirmRecordCompleted").attr("title","撤销提交病历");
+						$("#confirmRecordCompleted").text("撤销提交病历");
 						$("#confirmRecordCompleted").css("width","75px");
 					}
 					$("#confirmRecordCompleted").css("padding-top","22px");
@@ -752,7 +756,7 @@ function getCompleteResult()
 	return result;
 }
 
-//撤销病历送病案室状态
+//撤销提交病历
 function revokeConfirmRecord()
 {
 	jQuery.ajax({
@@ -765,18 +769,22 @@ function revokeConfirmRecord()
 					"Class":"EMRservice.BL.BLAdmRecordStatus",
 					"Method":"RevokeConfirmRecord",			
 					"p1":episodeID,
-					"p2":userID
+					"p2":userID,
+					"p3":getIpAddress(),
+					"p4":"EMR",
+					"p5":"",
+					"p6":"Revoke"
 				},
 			success: function (data){
 				if (data == "1") 
 				{
-					$("#confirmRecordCompleted").attr("flag",true);
-					$("#confirmRecordCompleted").attr("title","确认病历全部完成");
-					$("#confirmRecordCompleted").text("送病案室");
+					$("#confirmRecordCompleted").attr("title","提交病历");
+					$("#confirmRecordCompleted").text("提交病历");
 					$("#confirmRecordCompleted").css("width","60px");
 					$("#confirmRecordCompleted").css("padding-top","22px");
 					$("#confirmRecordCompleted").css("text-align","center");
-					alert("撤销送病案室成功");
+					alert("撤销提交病历成功");
+					window.location.reload();
 				}
 			}
 		});	
@@ -793,7 +801,7 @@ function checkOutCorrelation()
 			async : false,
 			data : {
 					"OutputType":"String",
-					"Class":"EMRservice.BL.BLAdmRecordStatus",
+					"Class":"EMRservice.HISInterface.AdmRecordStatus",
 					"Method":"CheckOutCorrelation",
 					"p1":userLocID			
 				},
@@ -926,7 +934,8 @@ function qualityCheck(episodeId,instanceId,templateId,eventType)
 					"p1":episodeId,
 					"p2":eventType,
 					"p3":templateId,
-					"p4":instanceId
+					"p4":instanceId,
+					"p5":"EASYUI"
 				},
 			success: function(d) {
 					result = d;
@@ -1068,4 +1077,17 @@ function submitRemarks()
 	var url = '../csp/dhc.epr.fs.submitremarks.csp?EpisodeID=' + episodeID;
 	var returnValue = window.showModalDialog(url,self,'dialogHeight=' + iHeight + 'px;dialogWidth=' + iWidth + 'px;dialogTop=' + iTop + 'px;dialogLeft=' + iLeft + 'px;center=no;help=no;resizable=no;scroll=no;status=no;edge=sunken');
 
+}
+
+//加载全部病程
+function loadAllRecord()
+{
+    if ((window.frames["framRecord"].param != "")&&(window.frames["framRecord"].checkLoadDocMode()))
+    {
+        var returnValues = window.frames["framRecord"].savePrompt(window.frames["framRecord"].param.id,"sync");
+        if ((returnValues == "unsave")||(!returnValues))
+        {
+            window.frames["framRecord"].reloadAllRecord();
+        }
+    }
 }

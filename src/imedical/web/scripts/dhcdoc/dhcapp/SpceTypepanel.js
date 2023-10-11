@@ -4,7 +4,7 @@
 		LoadOtherInfo();
 	}
 	function LoadTestItemList(){
-		$("#SpceType").html('<tr style="height:0px;" ><td style="width:20px;"></td><td style="width:20px;"></td><td></td><td style="width:20px;"></td><td></td><td style="width:20px;"></td><td></td><td style="width:20px;"></td><td></td></tr>');
+		$("#SpceType").html('<tr style="height:0px;" ><td style="width:30px;"></td><td></td><td style="width:30px;"></td><td></td><td style="width:30px;"></td><td></td><td style="width:30px;"></td><td></td></tr>');
 		runClassMethod("web.DHCAppPisMasterQuery","JsonBaseItemList",{"Title":"标本类型", "Name":"SpceTypelist", "Type":MapCode,"HospID":LgHospID},function(jsonString){
 
 			if (jsonString != ""){
@@ -23,12 +23,15 @@
 		},function(data){
 			if ((data!="")&&(PisID=="")){
 				$('#'+data).attr("checked",true);
+				if ($('#'+data).parent().next().text() == "其他"){
+						$("#SpceType"+ data).show();
+				}
 			}
 		})
 	}
 	function InsTesItemRegion(itemobj){
 		var htmlstr = '';
-		htmlstr = '<tr style="height:30px"><td colspan="9" class=" tb_td_required" style="border:0px solid #ccc;font-weight:bold;">'+ itemobj.text +'</td></tr>';
+		//htmlstr = '<tr style="height:30px"><td colspan="9" class=" tb_td_required" style="border:0px solid #ccc;font-weight:bold;">'+ itemobj.text +'</td></tr>';
 		var itemArr = itemobj.items;
 		var itemhtmlArr = []; itemhtmlstr = "";
 		for (var j=1; j<=itemArr.length; j++){
@@ -36,14 +39,16 @@
 			if (itemArr[j-1].text == "其他"){
 			   InputHtml = '<input type="text" class="name-input-80" id="SpceType'+ itemArr[j-1].value +'"></input>';
 			}
-			itemhtmlArr.push('<td style="width:30px;"><input id="'+ itemArr[j-1].value +'" name="'+ itemArr[j-1].name +'" type="checkbox" value="'+ itemArr[j-1].value +'"></input></td><td>'+ itemArr[j-1].text +InputHtml+'</td>');
 			if (j % 4 == 0){
-				itemhtmlstr = itemhtmlstr + '<tr><td></td>' + itemhtmlArr.join("") + '</tr>';
+				itemhtmlArr.push('<td style="width:30px;"><input id="'+ itemArr[j-1].value +'" name="'+ itemArr[j-1].name +'" type="checkbox" class="checkbox" value="'+ itemArr[j-1].value +'"></input></td><td style="border-right:none;">'+ itemArr[j-1].text +InputHtml+'</td>');
+				itemhtmlstr = itemhtmlstr + '<tr>' + itemhtmlArr.join("") + '</tr>';
 				itemhtmlArr = [];
-			}
+			}else{
+				itemhtmlArr.push('<td style="width:30px;"><input id="'+ itemArr[j-1].value +'" name="'+ itemArr[j-1].name +'" type="checkbox" class="checkbox" value="'+ itemArr[j-1].value +'"></input></td><td>'+ itemArr[j-1].text +InputHtml+'</td>');
+				}
 		}
 		if ((j-1) % 4 != 0){
-			itemhtmlstr = itemhtmlstr + '<tr><td></td>' + itemhtmlArr.join("") + '<td style="width:30px"></td><td></td></tr>';
+			itemhtmlstr = itemhtmlstr + '<tr>' + itemhtmlArr.join("") + '<td style="width:30px"></td><td style="border-right:none;"></td></tr>';
 			itemhtmlArr = [];
 		}
 		$("#SpceType").append(htmlstr+itemhtmlstr)

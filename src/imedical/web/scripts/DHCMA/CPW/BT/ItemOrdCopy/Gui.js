@@ -91,6 +91,18 @@
 		]]
 	});
 	
+	//根据配置获取tab展示信息
+	$m({ClassName:"DHCMA.Util.BT.Config",MethodName:"GetValueByCode",aCode:"CPWShowCPWTypeTab",aHospID:session['DHCMA.HOSPID']},function(ret){
+		if(ret=="I"){
+			$("#cpwTypeTab").tabs("getTab","门诊路径").panel("options").tab.hide();
+			$("#OutCPW").hide();
+		}else if(ret=="O"){							
+			$("#cpwTypeTab").tabs("getTab","住院路径").panel("options").tab.hide();
+			$("#InCPW").hide();
+			$("#cpwTypeTab").tabs("select","门诊路径");
+		}else{
+			}
+	});
 	
 	InitHISUIWinEvent(obj);
 	obj.LoadEvents(arguments);

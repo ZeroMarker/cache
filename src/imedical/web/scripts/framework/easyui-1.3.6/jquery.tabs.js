@@ -272,7 +272,12 @@
 			var li = $(e.target).closest('li');
 			if (li.hasClass('tabs-disabled')){return;}
 			if (li.length){
-				opts.onContextMenu.call(container, e, li.find('span.tabs-title').html(), getLiIndex(li));
+                var liIndex= getLiIndex(li);
+                var liTitle= getTab(container,liIndex).panel('options').title;
+                //opts.onContextMenu.call(container, e, li.find("span.tabs-title").html(), getLiIndex(li));
+                var liIndex= getLiIndex(li);
+                var liTitle= getTab(container,liIndex).panel('options').title;
+                opts.onContextMenu.call(container, e, liTitle,liIndex); //opts上的title不翻译 元素显示上的是翻译过后的
 			}
 		});
 		
@@ -346,7 +351,12 @@
 		
 		var tabs = $(container).children('div.tabs-header').find('ul.tabs');
 		
-		opts.tab = $('<li></li>').appendTo(tabs);	// set the tab object in panel options
+		        //cryze 2018-3-15  add class 'tab-brand' to first tab of BrandTabs
+        if (!!state.options.isBrandTabs && tabs.children('li').length==0) {
+            opts.tab = $("<li class='tabs-brand'></li>").appendTo(tabs);
+        }else{
+            opts.tab = $("<li></li>").appendTo(tabs);
+        }
 		opts.tab.append(
 				'<a href="javascript:void(0)" class="tabs-inner">' +
 				'<span class="tabs-title"></span>' +
@@ -425,7 +435,7 @@
 		
 		var s_title = tab.find('span.tabs-title');
 		var s_icon = tab.find('span.tabs-icon');
-		s_title.html(opts.title);
+		s_title.html($.hisui.getTrans(opts.title));
 		s_icon.attr('class', 'tabs-icon');
 		
 		tab.find('a.tabs-close').remove();
@@ -617,12 +627,14 @@
 	function doFirstSelect(container){
 		var state = $.data(container, 'tabs')
 		var tabs = state.tabs;
+        var isBrandTabs=!!state.options.isBrandTabs;  //cryze 2018-3-15
 		for(var i=0; i<tabs.length; i++){
-			if (tabs[i].panel('options').selected){
+			if (tabs[i].panel('options').selected && !(isBrandTabs && i==0)){ //cryze 2018-3-15
 				selectTab(container, i);
 				return;
 			}
 		}
+		if(isBrandTabs && state.options.selected==0) state.options.selected=1;   //cryze 2018-3-15
 //		if (tabs.length){
 //			selectTab(container, 0);
 //		}
@@ -847,7 +859,7 @@
 		height: 'auto',
 		headerWidth: 150,	// the tab header width, it is valid only when tabPosition set to 'left' or 'right' 
 		tabWidth: 'auto',	// the tab width
-		tabHeight: 35,		// the tab height
+		tabHeight: 36,		// the tab height
 		selected: 0,		// the initialized selected tab index
 		showHeader: true,
 		plain: false,

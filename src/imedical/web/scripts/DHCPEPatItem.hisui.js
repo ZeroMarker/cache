@@ -22,7 +22,11 @@ $(function(){
 	$("#BAdd").click(function() {	
 		BAdd_click();		
         });  
-     
+    
+    //查询
+    $('#BFindL').click(function(e){
+    	BFind_click();
+    });
         
     //删除(导诊单类别设置)
 	$("#BDelete").click(function() {	
@@ -63,7 +67,18 @@ function BAdd_click()
 	 Update("2");
 }
  
+//查询
+function BFind_click() {
+	
+	$("#PatItemlistTab").datagrid('load', {
+		ClassName:"web.DHCPE.SetPatItem",
+		QueryName:"SetPatItemListNew",
+		PatItemName:$("#PatItemName").combobox('getValue'),		
+		ARCIMDesc:$("#ARCIMDesc").combogrid('getValue'),
+		hospId:session['LOGON.HOSPID'] 
 
+	});
+}
 
 //删除
 function Delete_Click()
@@ -311,6 +326,7 @@ function BClearL_click()
 		ClassName: 'web.DHCPE.SetPatItem',
 		QueryName: 'SetPatItemListNew',
 		PatItemName: PatItem,
+		hospId:session['LOGON.HOSPID'] 
 		
 	});
 	
@@ -351,6 +367,8 @@ function InitCombobox()
 		onBeforeLoad:function(param){
 			param.ParRef = $("#Station").combobox('getValue');
 			param.ARCIMDesc = param.q;
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID'];
 		},
 		onShowPanel:function()
 		{
@@ -437,6 +455,7 @@ function loadPatItemlist(row) {
 		ClassName: 'web.DHCPE.SetPatItem',
 		QueryName: 'SetPatItemListNew',
 		PatItemName: row.TID,
+		hospId:session['LOGON.HOSPID'] 
 		
 	});
 	
@@ -467,6 +486,7 @@ function InitPatItemlistDataGrid()
 		queryParams:{
 			ClassName: 'web.DHCPE.SetPatItem',
 			QueryName: 'SetPatItemListNew',
+			hospId:session['LOGON.HOSPID'] 
 		},
 		columns:[[
 	

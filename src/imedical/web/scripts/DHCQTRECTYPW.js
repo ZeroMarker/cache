@@ -96,9 +96,17 @@ function BADD_click() {
 	CONST_HOSPID=getHospID();
 	var obj = document.getElementById('InsertTyp')
 	if (obj) var encmeth = obj.value;
-	if (cspRunServerMethod(encmeth, TYPCODE, TYPDESC,TYPTYPET,TYPTYPECODET,CONST_HOSPID) != '0') {
-		alert(t['04']);
-		return;
+	var addRet=cspRunServerMethod(encmeth, TYPCODE, TYPDESC,TYPTYPET,TYPTYPECODET,CONST_HOSPID)
+	if ( addRet!= '0') {
+		if(addRet==-119)
+		{
+			alert("事件代码不允许重复!");
+			return;
+		}
+		else{
+			alert(t['04']);
+			return;
+		}
 	}
 	try {
 		alert(t['03']);

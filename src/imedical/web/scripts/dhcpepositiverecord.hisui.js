@@ -90,7 +90,9 @@ $(function(){
 		$("#Update").click(function() {	
 		Update_click();		
         });
-		
+		$("#BFind").click(function() {	
+		BFind_click();		
+        });
 		
 		var NDiagnosisLevelObj = $HUI.combobox("#NDiagnosisLevel",{
 		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=DiagnosisLevel&ResultSetType=array",
@@ -519,7 +521,15 @@ function Update_click()
 				}
 	
 }
-
+function BFind_click()
+{
+	//debugger;	
+	var iCode=$("#Code").val();
+	var iName=$("#Name").val();
+	var iMSeq=$("#MSeq").val();
+	var iFSeq=$("#FSeq").val();
+	$("#ExpertDiagnosisGrid").datagrid("load",{ClassName:"web.DHCPE.PositiveRecord",QueryName:"FindPositiveRecord",Type:"",iCode:iCode,iDesc:iName,iMSeq:iMSeq,iFSeq:iFSeq}); 
+}
 function Add_click()
 {
 	
@@ -737,7 +747,7 @@ function NSave_click()
 	         $.messager.alert("ÌבÊ¾","Update error.ErrNo="+flag,"info");
      	}
      }
-	
+	  
 	
 }
 

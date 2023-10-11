@@ -143,7 +143,12 @@ function InitYLLBCmb(OPIPFlag)
 	    	param.ClassName="web.INSUDicDataCom";
 	    	param.QueryName="QueryDic";
 	    	param.ResultSetType="array";
-	    	param.Type=("AKA130"+getValueById('cbInsuType'));
+	        if($("#cbInsuType").combobox("getText").indexOf("¹ú¼Ò")!="-1"){
+				param.Type=("med_type"+getValueById('cbInsuType'));
+			}else{
+				param.Type=("AKA130"+getValueById('cbInsuType'));
+			} ;
+	    	
 	    	param.HospDr=INSURPT_CONSTANT.SESSION.HOSP_ROWID;
 	    	param.Code="";
 	    },

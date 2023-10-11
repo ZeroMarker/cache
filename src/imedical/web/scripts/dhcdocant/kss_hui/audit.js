@@ -53,7 +53,7 @@ $(function(){
 	});
 	
 	$('#i-audit-condition-ksslevel').localcombobox({
-		data: [{id: '', text: '全部'},{id: 'KSS1', text: '非限制级'}, {id: 'KSS2',text: '限制级'}, {id: 'KSS3',text: '特殊级'}],
+		data: [{id: '', text: $g('全部')},{id: 'KSS1', text: $g('非限制级')}, {id: 'KSS2',text: $g('限制级')}, {id: 'KSS3',text: $g('特殊级')}],
 		onUnselect: function () {
 			$(this).simplecombobox('setValue', '');
 		}
@@ -77,7 +77,8 @@ $(function(){
 		toolbar:[{
 						text:'审核',
 						id:'i-audit-condition-btn-audit',
-						iconCls: 'icon-audit',
+						//iconCls: 'icon-audit',
+						iconCls: 'icon-stamp',
 						handler: function(){
 						}
 				}/*,'-',{
@@ -87,8 +88,15 @@ $(function(){
 				},'-'*/,{
 						text:'拒绝',
 						id:'i-audit-condition-btn-refuse',
-						iconCls: 'icon-antrefuse'
+						//iconCls: 'icon-antrefuse',
+						iconCls: 'icon-audit-x'
 		}],
+        onClickRow: function(rowIndex, rowData){
+			if (websys_getAppScreenIndex()==0){
+				var Obj={EpisodeID:"",ApplyId:rowData.id,PageShowFromWay:"ListEntry"};
+				websys_emit("onOpenKSSInterface",Obj);
+			}
+		},
 		onDblClickRow: function(rowIndex, rowData) {
 			findApplyInfo(rowData);
 			return false;
@@ -231,7 +239,8 @@ $(function(){
 		var lastAudit = $("#i-audit-condition-lastaudit").is(':checked')? 1 : 0;
 		
 		if (hasAudit) {
-			layer.alert("已经完成审核的申请记录，不能审核！", {title:'提示',icon: 0}); 
+			//layer.alert($g("已经完成审核的申请记录，不能审核！"), {title:$g("提示"),icon: 0,btn: [$g('确定')]}); 
+			$.messager.alert("提示","已经完成审核的申请记录，不能审核！","warning")
 			return false;
 		};
 		
@@ -264,7 +273,8 @@ $(function(){
 			aaRwoid.push(auditSelectedRows[i].id);
 		};
 		if (aaRwoid.length == 0) {
-			layer.alert("请选择一条记录！", {title:'提示',icon: 0}); 
+			//layer.alert($g("请选择一条记录！"), {title:$g("提示"),icon: 0,btn: [$g('确定')]}); 
+			$.messager.alert("提示","请选择一条记录！","warning")
 			return false;
 		};
 		var type="KSF";	//默认为科室预审
@@ -274,9 +284,11 @@ $(function(){
 		if (lastAudit == "1") type = "LAST";
 		var result = $.InvokeMethod("DHCAnt.KSS.MainBusiness","VerifyApply",aaRwoid.join('^'),type,'SH');
 		if (result == 0) {
-			layer.alert("审核成功...", {title:'提示',icon: 6}); 
+			//layer.alert($g("审核成功！"), {title:$g("提示"),icon: 6}); 
+			$.messager.alert("提示","审核成功！","warning")
 		} else {
-			layer.alert("审核失败...", {title:'提示',icon: 5}); 
+			//layer.alert($g("审核失败！"), {title:$g("提示"),icon: 5}); 
+			$.messager.alert("提示","审核失败！","warning")
 		};
 		reloadGrid();
 	})
@@ -288,7 +300,7 @@ $(function(){
 		var ksAudit = $("#i-audit-condition-ksaudit").is(':checked') ? 1 : 0;
 		var lastAudit = $("#i-audit-condition-lastaudit").is(':checked')? 1 : 0;
 		if (!hasAudit) {
-			layer.alert("请选择已审核过的申请进行撤销！", {title:'提示',icon: 0}); 
+			layer.alert($g("请选择已审核过的申请进行撤销！"), {title:$g("提示"),icon: 0,btn: [$g('确定')]}); 
 			return false;
 		};
 		
@@ -327,7 +339,7 @@ $(function(){
 			aaRwoid.push(auditSelectedRows[i].id);
 		};
 		if (aaRwoid.length == 0) {
-			layer.alert("请选择一条记录！", {title:'提示',icon: 0}); 
+			layer.alert($g("请选择一条记录！"), {title:$g("提示"),icon: 0}); 
 			return false;
 		};
 		
@@ -338,7 +350,8 @@ $(function(){
 		var ksAudit = $("#i-audit-condition-ksaudit").is(':checked') ? 1 : 0;
 		var lastAudit = $("#i-audit-condition-lastaudit").is(':checked')? 1 : 0;
 		if (hasAudit) {
-			layer.alert("已经完成审核的申请记录，不能拒绝！", {title:'提示',icon: 0}); 
+			//layer.alert($g("已经完成审核的申请记录，不能拒绝！"), {title:$g("提示"),icon: 0,btn: [$g('确定')]}); 
+			$.messager.alert("提示","已经完成审核的申请记录，不能拒绝！","warning")
 			return false;
 		};
 		
@@ -371,7 +384,8 @@ $(function(){
 			aaRwoid.push(auditSelectedRows[i].id);
 		};
 		if (aaRwoid.length == 0) {
-			layer.alert("请选择一条记录！", {title:'提示',icon: 0}); 
+			//layer.alert($g("请选择一条记录！"), {title:$g("提示"),icon: 0}); 
+			$.messager.alert("提示","请选择一条记录！","warning")
 			return false;
 		};
 		
@@ -380,9 +394,11 @@ $(function(){
 		if (lastAudit == "1") type = "LAST";
 		var result = $.InvokeMethod("DHCAnt.KSS.MainBusiness","VerifyApply",aaRwoid.join('^'),type,'RU');
 		if (result == 0) {
-			layer.alert("拒绝成功！", {title:'提示',icon: 6}); 
+			//layer.alert($g("拒绝成功！"), {title:$g("提示"),icon: 6}); 
+			$.messager.alert("提示","拒绝成功！","warning")
 		} else {
-			layer.alert("拒绝失败！", {title:'提示',icon: 5}); 
+			//layer.alert($g("拒绝失败！"), {title:'提示',icon: 5}); 
+			$.messager.alert("提示","拒绝失败！","warning")
 		};
 		reloadGrid();
 	})
@@ -473,12 +489,12 @@ $(function(){
 			pF = (applyProcess.indexOf("F") >= 0 ),
 			pA = (applyProcess.indexOf("A") >= 0 ),
 			acName = "审核",
-			resultObj = {title:"提示", value:0, msg:"", icon:"info"};	//默认不给出提示	
+			resultObj = {title:$g("提示"), value:0, msg:"", icon:"info"};	//默认不给出提示	
 		if ( action == "RU") acName = "拒绝";
 		if ( applyType == "KSF" ) {
 			if (applyStatus != "A") {
 				resultObj.value = 1;
-				resultObj.msg = "您好！状态不为申请的记录，科室预审不能进行！"
+				resultObj.msg = $g("您好！状态不为申请的记录，科室预审不能进行！")
 			};
 			return resultObj;
 		};
@@ -555,7 +571,13 @@ $(function(){
 		var lastAudit = $("#i-audit-condition-lastaudit").is(':checked')? 1 : 0;
 		var hasAudit = $("#i-audit-condition-hasaudit").is(':checked')? 1 : 0;
 		if (!stDate||!endDate) {
-			layer.alert("请输入开始日期和结束日期！", {title:"提示".title,icon: 0}); 
+			//layer.alert($g("请输入开始日期和结束日期！"), {title:$g("提示").title,icon: 0}); 
+			$.messager.alert("提示","请输入开始日期和结束日期！","warning")
+			return false;
+		};
+		if ((preAudit==0)&&(ksAudit==0)&&(lastAudit==0)) {
+			//layer.alert($g("请输选择一种审核类型！"), {title:"提示".title,icon: 0}); 
+			$.messager.alert("提示","请输选择一种审核类型！","warning")
 			return false;
 		};
 		var processTypeStr=preAudit + "," + ksAudit + "," + lastAudit + "," + hasAudit;	
@@ -589,8 +611,11 @@ function findApplyInfo(rowData) {
 	var EmerFlag = "";
 	
 	var src="dhcant.kss.business.findapply.csp?ShowTabStr="+ShowTabStr+"&PAADMRowid="+PAADMRowid+"&ArcimRowid="+ArcimRowid+"&OrderPoisonCode="+OrderPoisonCode+"&PAAdmType="+PAAdmType+"&OrderAntibApplyRowid="+OrderAntibApplyRowid;
+    if ('undefined'!==typeof websys_getMWToken){
+        src += "&MWToken="+websys_getMWToken();
+    }
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
-	createModalDialog("findapply","抗菌药物申请单信息信息", 1200, 600,"icon-w-edit","",$code,"");
+	createModalDialog("findapply",$g("抗菌药物申请单信息"), 1200, 600,"icon-w-edit","",$code,"");
 }
 
 function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,_event){

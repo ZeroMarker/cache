@@ -1,135 +1,103 @@
-//Ãû³Æ: µ÷¼ÛËðÒæÍ³¼Æ(Åú´Î)
+ï»¿// åç§°: è°ƒä»·æŸç›Šç»Ÿè®¡(æ‰¹æ¬¡)
 var init = function() {
-	var Clear=function(){
+	var Clear = function() {
 		$UI.clearBlock('#Conditions');
-		var Dafult={
-			StartDate:DateFormatter(new Date()),
-			EndDate:DateFormatter(new Date()),
-			Loc:gLocObj,
-			OptType:"1"
-			}
-		$UI.fillBlock('#Conditions',Dafult)
-		var Tabs=$('#tabs').tabs('tabs')
-  		var Tiles = new Array();      
-        var Len =  Tabs.length;           
-        if(Len>0){  
-            for(var j=0;j<Len;j++){  
-                var Title = Tabs[j].panel('options').title;
-                if(Title!='±¨±í'){
-                	Tiles.push(Title);
-                }
-            }  
-            for(var i=0;i<Tiles.length;i++){               
-                $('#tabs').tabs('close', Tiles[i]);  
-            }  
-          } 
+		var DefaultData = {
+			StartDate: DateFormatter(new Date()),
+			EndDate: DateFormatter(new Date()),
+			Loc: gLocObj,
+			OptType: '1'
+		};
+		$UI.fillBlock('#Conditions', DefaultData);
+		CloseStatTab('#tabs');
 	};
-	var LocParams=JSON.stringify(addSessionParams({Type:'All'}));
+	var LocParams = JSON.stringify(addSessionParams({ Type: 'All' }));
 	var LocBox = $HUI.combobox('#Loc', {
-		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+LocParams,
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + LocParams,
 		valueField: 'RowId',
-		textField: 'Description'
-	});	
+		textField: 'Description',
+		onSelect: function(record) {
+			var LocId = record['RowId'];
+			if (CommParObj.ApcScg == 'L') {
+				VendorBox.clear();
+				var Params = JSON.stringify(addSessionParams({ APCType: 'M', LocId: LocId }));
+				var url = $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetVendor&ResultSetType=array&Params=' + Params;
+				VendorBox.reload(url);
+			}
+		}
+	});
 	
 	var OptTypeBox = $HUI.combobox('#OptType', {
-		data:[{'RowId':'1','Description':'È«²¿'},{'RowId':'2','Description':'²î¶îÎªÕý'},{'RowId':'3','Description':'²î¶îÎª¸º'}],
+		data: [{ 'RowId': '1', 'Description': 'å…¨éƒ¨' }, { 'RowId': '2', 'Description': 'å·®é¢ä¸ºæ­£' }, { 'RowId': '3', 'Description': 'å·®é¢ä¸ºè´Ÿ' }],
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-	var VendorParams=JSON.stringify(addSessionParams({APCType:"M",RcFlag:"Y"}));
+	var VendorParams = JSON.stringify(addSessionParams({ APCType: 'M' }));
 	var VendorBox = $HUI.combobox('#Vendor', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetVendor&ResultSetType=array&Params='+VendorParams,
-			valueField: 'RowId',
-			textField: 'Description'
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetVendor&ResultSetType=array&Params=' + VendorParams,
+		valueField: 'RowId',
+		textField: 'Description'
 	});
-	var HandlerParams=function(){
-		var Loc=$("#Loc").combo('getValue');
-		var Obj={StkGrpType:"M",Locdr:Loc};
-		return Obj
-	}
-	$("#InciDesc").lookup(InciLookUpOp(HandlerParams,'#InciDesc','#Inci'));
-	$UI.linkbutton('#QueryBT',{
-		onClick:function(){
-			var ParamsObj=$UI.loopBlock('#Conditions')
-			if(isEmpty(ParamsObj.StartDate)){
-				$UI.msg('alert','¿ªÊ¼ÈÕÆÚ²»ÄÜÎª¿Õ!');
+	var HandlerParams = function() {
+		var Loc = $('#Loc').combo('getValue');
+		var Obj = { StkGrpType: 'M', Locdr: Loc };
+		return Obj;
+	};
+	$('#InciDesc').lookup(InciLookUpOp(HandlerParams, '#InciDesc', '#Inci'));
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
+			var ParamsObj = $UI.loopBlock('#Conditions');
+			var StartDate = ParamsObj.StartDate;
+			var EndDate = ParamsObj.EndDate;
+			if (isEmpty(StartDate)) {
+				$UI.msg('alert', 'å¼€å§‹æ—¥æœŸä¸èƒ½ä¸ºç©º!');
 				return;
 			}
-			if(isEmpty(ParamsObj.EndDate)){
-				$UI.msg('alert','½ØÖ¹ÈÕÆÚ²»ÄÜÎª¿Õ!');
+			if (isEmpty(EndDate)) {
+				$UI.msg('alert', 'æˆªæ­¢æ—¥æœŸä¸èƒ½ä¸ºç©º!');
 				return;
 			}
-			if(isEmpty(ParamsObj.Loc)){
-				$UI.msg('alert','¿ÆÊÒ²»ÄÜÎª¿Õ!');
+			if (compareDate(StartDate, EndDate)) {
+				$UI.msg('alert', 'æˆªæ­¢æ—¥æœŸä¸èƒ½å°äºŽå¼€å§‹æ—¥æœŸ!');
 				return;
 			}
-			var Params=JSON.stringify(ParamsObj);
-			Params=encodeUrlStr(Params)	
+			if (isEmpty(ParamsObj.Loc)) {
+				$UI.msg('alert', 'ç§‘å®¤ä¸èƒ½ä¸ºç©º!');
+				return;
+			}
+			var Params = JSON.stringify(ParamsObj);
+			Params = encodeUrlStr(Params);
 			var CheckedRadioObj = $("input[name='ReportType']:checked");
-			var CheckedValue=CheckedRadioObj.val();
-			var CheckedTitle=CheckedRadioObj.attr("label")
-			var Url=CheckedUrl(CheckedValue,Params)
-			AddTab(CheckedTitle,Url);
-
-		}	
-	});	
+			var CheckedValue = CheckedRadioObj.val();
+			var CheckedTitle = CheckedRadioObj.attr('label');
+			var Url = CheckedUrl(CheckedValue, Params);
+			AddStatTab(CheckedTitle, Url, '#tabs');
+		}
+	});
 	
-	function CheckedUrl(Checked,Params){
-		//µ÷¼ÛËðÒæµ¥Æ·»ã×Ü
-		if('FlagDetailStat'==Checked){
-			p_URL = PmRunQianUrl+'?reportName=DHCSTM_HUI_aspamountstat-incbatch.raq&Params='+Params;
+	function CheckedUrl(Checked, Params) {
+		if ('FlagDetailStat' == Checked) {
+			// è°ƒä»·æŸç›Šå•å“æ±‡æ€»
+			p_URL = PmRunQianUrl + '?reportName=DHCSTM_HUI_aspamountstat-incbatch.raq&Params=' + Params;
+		} else if ('FlagItmLocStat' == Checked) {
+			// è°ƒä»·æŸç›Šå•å“ç§‘å®¤æ±‡æ€»
+			p_URL = PmRunQianUrl + '?reportName=DHCSTM_HUI_aspamountstat-inclocbatch.raq&Params=' + Params;
+		} else if ('FlagVendorStat' == Checked) {
+			// è°ƒä»·æŸç›Šä¾›åº”å•†æ±‡æ€»
+			p_URL = PmRunQianUrl + '?reportName=DHCSTM_HUI_aspamountstat-vendorbatch.raq&Params=' + Params;
+		} else {
+			// è°ƒä»·æŸç›Šå•å“æ±‡æ€»
+			p_URL = PmRunQianUrl + '?reportName=DHCSTM_HUI_aspamountstat-incbatch.raq&Params=' + Params;
 		}
-		//µ÷¼ÛËðÒæµ¥Æ·¿ÆÊÒ»ã×Ü
-		else if('FlagItmLocStat'==Checked){
-			
-			p_URL = PmRunQianUrl+'?reportName=DHCSTM_HUI_aspamountstat-inclocbatch.raq&Params='+Params;
-		}
-		//µ÷¼ÛËðÒæ¹©Ó¦ÉÌ»ã×Ü
-		else if('FlagVendorStat'==Checked){
-			
-			p_URL = PmRunQianUrl+'?reportName=DHCSTM_HUI_aspamountstat-vendorbatch.raq&Params='+Params;
-		}
-		//µ÷¼ÛËðÒæµ¥Æ·»ã×Ü
-		else{
-			
-			p_URL = PmRunQianUrl+'?reportName=DHCSTM_HUI_aspamountstat-incbatch.raq&Params='+Params;
-		}	
 		
 		return p_URL;
 	}
 	
-	
-	
-	function AddTab(title, url) {
-		if ($('#tabs').tabs('exists', title)) {
-			$('#tabs').tabs('select', title); //Ñ¡ÖÐ²¢Ë¢ÐÂ
-			var currTab = $('#tabs').tabs('getSelected');
-			if (url != undefined && currTab.panel('options').title != '±¨±í') {
-				$('#tabs').tabs('update', {
-					tab: currTab,
-					options: {
-						content: createFrame(url)
-					}
-				})
-			}
-		} else {
-			var content = createFrame(url);
-			$('#tabs').tabs('add', {
-				title: title,
-				content: content,
-				closable: true
-			});
-		}
-	}
-	function createFrame(url) {
-		var s = '<iframe scrolling="auto" frameborder="0"  src="' + url + '" style="width:100%;height:100%;"></iframe>';
-		return s;
-	}	
-	$UI.linkbutton('#ClearBT',{
-		onClick:function(){
-			Clear()
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
+			Clear();
 		}
 	});
-	Clear()	
-}
+	Clear();
+};
 $(init);

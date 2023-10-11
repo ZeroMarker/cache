@@ -191,11 +191,13 @@ function Clear()
 	
 function SetData(rowid)
 {
+	if (rowid=="") return; //modified by ZY0248 2020-12-21
 	var encmeth=GetElementValue("GetData");
 	if (encmeth=="") return;
 	var gbldata=cspRunServerMethod(encmeth,'','',rowid);
 	gbldata=gbldata.replace(/\\n/g,"\n"); //"\n"转换为回车符
 	var list=gbldata.split("^");
+
 	SetElement("RowID",list[0]); //rowid
 	SetElement("Desc",list[1]);
 	SetElement("Code",list[2]);
@@ -204,7 +206,7 @@ function SetData(rowid)
 	SetElement("ExTypeDR",list[5]);
 	SetElement("ExID",list[6]);
 	SetElement("ExDesc",list[8]);
-	SetElement("Unit",list[13]);
+	SetElement("Unit",list[21]); //modified by sjh SJH0031 2020-08-03
 	SetElement("ExType",list[5]);
 	SetElement("PayPrice",list[9]);
 	//add by sjh 2020-01-20 start

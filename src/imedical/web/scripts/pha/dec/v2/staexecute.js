@@ -8,10 +8,12 @@ var Number = 0;
 var pageTbNum = 15;
 var NowTAB=""; 			//记录当前页签的tab
 var ComPropData;		//公共参数
+var ExeJsonData;		//界面配置
 var NowRowId;			//批量执行时记录当前正在编辑的行
+PHA_COM.ResizePhaColParam.auto = false;
 $(function () {
 	InitDict();
-	InitSetDefVal();
+	InitSetDefVal("");
 	InitGridScanPresc();
 	InitGridBatPresc();
 	InitGridExePresc();
@@ -29,13 +31,13 @@ $(function () {
 	$('#txtBarCode').on('keypress', function (event) {
 		if (event.keyCode == "13") {
 			var tabTitle = $('#tabsExecute').tabs('getSelected').panel('options').title;
-			if (tabTitle != "扫码执行") {
+			if (tabTitle != $g("扫码执行")) {
 				$("#tabsExecute").tabs("select", 0);
 			}
 			var decPstId = $("#cmbDecState").combobox('getValue');
 			if (decPstId == "") {
 				PHA.Popover({
-					msg: "请先选择煎药流程！",
+					msg: $g("请先选择煎药流程"),
 					type: 'alert'
 				});
 				$('#txtBarCode').val("");
@@ -43,7 +45,7 @@ $(function () {
 			};
 			if (this.value.trim() == "") {
 				PHA.Popover({
-					msg: "处方号为空！",
+					msg: $g("处方号为空"),
 					type: 'alert'
 				});
 				$('#txtBarCode').val("");
@@ -71,7 +73,8 @@ $(function () {
 			});
 
 			PHA.ComboBox("cmbEquiDesc", {
-				url: PHA_DEC_STORE.DecEqui(decLocId).url
+				url: PHA_DEC_STORE.DecEqui(decLocId).url,
+				width: 155
 			});
 			$HUI.combobox("#cmbEquiDesc").disable();
 		}
@@ -112,6 +115,15 @@ function InitDict() {
 		LocId: gLocId,
 		SsaCode: "DEC.COMMON",
 	}, false);
+	//界面配置
+	ExeJsonData = $.cm({
+		ClassName: "PHA.DEC.Com.Method",
+		MethodName: "GetAppProp",
+		UserId: gUserID,
+		LocId: gLocId,
+		SsaCode: "DEC.STATUSEXE"
+	}, false) 
+	
 	PHA.ComboBox("cmbDecLoc", {
 		editable: false,
 		url: PHA_DEC_STORE.DecLoc().url,
@@ -120,10 +132,7 @@ function InitDict() {
 		}
 	});
 	PHA.ComboBox("cmbPhaLoc", {
-		url: PHA_DEC_STORE.Pharmacy("").url,
-		onLoadSuccess: function () {
-			$("#cmbPhaLoc").combobox("setValue", ComPropData.DefaultPhaLoc);
-		}
+		url: PHA_DEC_STORE.Pharmacy("").url
 	});
 	PHA.ComboBox("cmbDocLoc", {
 		url: PHA_DEC_STORE.DocLoc().url
@@ -150,37 +159,36 @@ function InitDict() {
  * 给控件赋初始值
  * @method InitSetDefVal
  */
-function InitSetDefVal() {
+function InitSetDefVal(clearFlag) {
 	$("#cmbDecLoc").combobox("setValue", ComPropData.DefaultDecLoc);
-	$("#cmbPhaLoc").combobox("setValue", ComPropData.DefaultPhaLoc);
 	if(parseInt(ComPropData.ScanPageTbNum)>0){
 		pageTbNum=parseInt(ComPropData.ScanPageTbNum);
 	}
-	$("#tabsExecute").tabs("select", parseInt(ComPropData.OperateModel));
-	if (parseInt(ComPropData.OperateModel) == "0") {
-		$('#txtBarCode').focus();
+	if (clearFlag == ""){
+		$("#tabsExecute").tabs("select", parseInt(ComPropData.OperateModel));
+		if (parseInt(ComPropData.OperateModel) == "0") {
+			$('#txtBarCode').focus();
+		}
 	}
 	$HUI.radio("input[value='O']").check();
 	var tabId= $('#tabsExecute').tabs('getSelected').attr("id");
 	NowTAB=tabId;
-	//界面配置
-	$.cm({
-		ClassName: "PHA.DEC.Com.Method",
-		MethodName: "GetAppProp",
-		UserId: gUserID,
-		LocId: gLocId,
-		SsaCode: "DEC.STATUSEXE"
-	}, function (jsonData) {
-		$("#dateStart").datebox("setValue", jsonData.ExeStartDate);
-		$("#dateEnd").datebox("setValue", jsonData.ExeEndDate);
-		$('#timeStart').timespinner('setValue', "00:00:00");
-		$('#timeEnd').timespinner('setValue', "23:59:59");
-		$('#txtWaterQua').val("").prop('disabled', true);
-		$('#txtInput').val("").prop('disabled', true);
-		$("#txtPatNo").val("");
-		$('#txtBarCode').val("");
-	});
+	if (NowTAB !== "tabScanPresc"){
+		$("#cmbPhaLoc").combobox("setValue", ComPropData.DefaultPhaLoc);
+	}
+	
+	
+	$('#txtWaterQua').val("").prop('disabled', true);
+	$('#txtInput').val("").prop('disabled', true);
+	$("#txtPatNo").val("");
+	$('#txtBarCode').val("");
+		
 	if (NowTAB=="tabScanPresc"){
+		$("#dateStart").datebox("setValue", "");
+		$("#dateEnd").datebox("setValue", "");
+		$('#timeStart').timespinner('setValue', "");
+		$('#timeEnd').timespinner('setValue', "");
+		$("#cmbPhaLoc").combobox("setValue", "");
 		$HUI.datebox("#dateStart").disable();
 		$HUI.datebox("#dateEnd").disable();
 		$HUI.timespinner("#timeStart").disable();
@@ -189,6 +197,11 @@ function InitSetDefVal() {
 		$HUI.combobox("#cmbPhaLoc").disable();
 		$('#txtPatNo').val("").prop('disabled', true);
 	} else {
+		$("#dateStart").datebox("setValue", ExeJsonData.ExeStartDate);
+		$("#dateEnd").datebox("setValue", ExeJsonData.ExeEndDate);
+		$('#timeStart').timespinner('setValue', "00:00:00");
+		$('#timeEnd').timespinner('setValue', "23:59:59");
+		$("#cmbPhaLoc").combobox("setValue", ComPropData.DefaultPhaLoc);
 		$HUI.datebox("#dateStart").enable();
 		$HUI.datebox("#dateEnd").enable();
 		$HUI.timespinner("#timeStart").enable();
@@ -196,6 +209,7 @@ function InitSetDefVal() {
 		$HUI.combobox("#cmbDocLoc").enable();
 		$HUI.combobox("#cmbPhaLoc").enable();
 		$('#txtPatNo').val("").prop('disabled', false);	
+		//setTimeout("Query()",1000);
 	}
 }
 
@@ -212,6 +226,11 @@ function ChangeTabs() {
 	var tabTitle = $('#tabsExecute').tabs('getSelected').panel('options').title;
 	if (tabTitle == "扫码执行") {
 		$('#txtBarCode').focus();
+		$("#dateStart").datebox("setValue", "");
+		$("#dateEnd").datebox("setValue", "");
+		$('#timeStart').timespinner('setValue', "");
+		$('#timeEnd').timespinner('setValue', "");
+		$("#cmbPhaLoc").combobox("setValue", "");
 		$HUI.datebox("#dateStart").disable();
 		$HUI.datebox("#dateEnd").disable();
 		$HUI.timespinner("#timeStart").disable();
@@ -221,6 +240,11 @@ function ChangeTabs() {
 		$('#txtPatNo').val("").prop('disabled', true);
 	}
 	else{
+		$("#dateStart").datebox("setValue", ExeJsonData.ExeStartDate);
+		$("#dateEnd").datebox("setValue", ExeJsonData.ExeEndDate);
+		$('#timeStart').timespinner('setValue', "00:00:00");
+		$('#timeEnd').timespinner('setValue', "23:59:59");
+		$("#cmbPhaLoc").combobox("setValue", ComPropData.DefaultPhaLoc);
 		$HUI.datebox("#dateStart").enable();
 		$HUI.datebox("#dateEnd").enable();
 		$HUI.timespinner("#timeStart").enable();
@@ -230,7 +254,8 @@ function ChangeTabs() {
 		$('#txtPatNo').val("").prop('disabled', false);	
 	}
 	if((ComPropData.ViewDecInfo)&&(ComPropData.ViewDecInfo=="Y")) {DEC_PRINT.VIEW(ComPropData.decInfoId, {});}
-	Query();
+	
+	setTimeout("Query()",500);
 }
 
 /**
@@ -244,21 +269,21 @@ function InitGridScanPresc() {
 				align: 'left',
 				width: 80,
 				styler: function (value, row, index) {
-					if (row.TPstDesc == "收方") {
+					if (row.TPstDesc == $g("收方")) {
                         return 'background-color:#f1c516;color:white;';
-                    } else if (row.TPstDesc == "浸泡") {
+                    } else if (row.TPstDesc == $g("浸泡")) {
                         return 'background-color:#f58800;color:white;'; 
-                    } else if (row.TPstDesc == "首煎") {
+                    } else if (row.TPstDesc == $g("首煎")) {
                         return 'background-color:#a4c703;color:white;';
-                    } else if (row.TPstDesc == "二煎") {
+                    } else if (row.TPstDesc == $g("二煎")) {
                         return 'background-color:#51b80c;color:white;';
-                    } else if (row.TPstDesc == "制膏") {
+                    } else if (row.TPstDesc == $g("制膏")) {
                         return 'background-color:#4b991b;color:white;';
-                    } else if (row.TPstDesc == "打签") {
+                    } else if (row.TPstDesc == $g("打签")) {
                         return 'background-color:#a849cb;color:white;';
-                    } else if (row.TPstDesc == "发放") {
+                    } else if (row.TPstDesc == $g("发放")) {
                         return 'background-color:#6557d3;color:white;';
-                    } else if (row.TPstDesc == "送药") {
+                    } else if (row.TPstDesc == $g("送药")) {
                         return 'background-color:#1044c8;color:white;';
                     } else{
 					return 'background-color:#d773b0;color:white;';
@@ -344,15 +369,16 @@ function InitGridScanPresc() {
 		singleSelect: true,
 		onSelect: function (rowIndex, rowData) {
 			if (rowData.TPstCode == "JP") {
-				$("label[for='labelText']").html("浸泡时长(分钟)");
+				$("label[for='labelText']").html($g("浸泡时长(分钟)"));
 				$('#txtInput').prop('disabled', false);
 				$("#txtInput").val(rowData.TInterval).validatebox("validate");
-				$HUI.combobox("#cmbEquiDesc").disable();
+				$HUI.combobox("#cmbEquiDesc").enable();
+				$("#cmbEquiDesc").combobox("setValue", rowData.TDecEquiId);
 				$('#txtWaterQua').prop('disabled', true);
 			} else if (rowData.TPstCode == "SJ") {
-				$("label[for='labelEqui']").html("首煎设备");
-				$("label[for='labelWaterQua']").html("首煎水量(ml)");
-				$("label[for='labelText']").html("首煎时长(分钟)");
+				$("label[for='labelEqui']").html($g("首煎设备"));
+				$("label[for='labelWaterQua']").html($g("首煎水量(ml)"));
+				$("label[for='labelText']").html($g("首煎时长(分钟)"));
 				$HUI.combobox("#cmbEquiDesc").enable();
 				$('#txtWaterQua').prop('disabled', false);
 				$('#txtInput').prop('disabled', false);
@@ -360,14 +386,30 @@ function InitGridScanPresc() {
 				$("#txtWaterQua").val(rowData.TWaterQua).validatebox("validate");
 				$("#cmbEquiDesc").combobox("setValue", rowData.TDecEquiId);
 			} else if (rowData.TPstCode == "EJ") {
-				$("label[for='labelEqui']").html("二煎设备");
-				$("label[for='labelWaterQua']").html("二煎水量(ml)");
-				$("label[for='labelText']").html("二煎时长(分钟)");
+				$("label[for='labelEqui']").html($g("二煎设备"));
+				$("label[for='labelWaterQua']").html($g("二煎水量(ml)"));
+				$("label[for='labelText']").html($g("二煎时长(分钟)"));
 				$HUI.combobox("#cmbEquiDesc").enable();
 				$('#txtWaterQua').prop('disabled', false);
 				$('#txtInput').prop('disabled', false);
 				$("#txtInput").val(rowData.TInterval).validatebox("validate");
 				$("#txtWaterQua").val(rowData.TWaterQua).validatebox("validate");
+				$("#cmbEquiDesc").combobox("setValue", rowData.TDecEquiId);
+			} else if (rowData.TPstCode == "ZG") {
+				$("label[for='labelEqui']").html($g("制膏设备"));
+				$("label[for='labelWaterQua']").html($g("煎药水量(ml)"));
+				$("label[for='labelText']").html($g("煎药时长(分钟)"));
+				$HUI.combobox("#cmbEquiDesc").enable();
+				$('#txtWaterQua').prop('disabled', true);
+				$('#txtInput').prop('disabled', true);
+				$("#cmbEquiDesc").combobox("setValue", rowData.TDecEquiId);
+			} else if (rowData.TPstCode == "JG") {
+				$("label[for='labelEqui']").html($g("加工设备"));
+				$("label[for='labelWaterQua']").html($g("煎药水量(ml)"));
+				$("label[for='labelText']").html($g("煎药时长(分钟)"));
+				$HUI.combobox("#cmbEquiDesc").enable();
+				$('#txtWaterQua').prop('disabled', true);
+				$('#txtInput').prop('disabled', true);
 				$("#cmbEquiDesc").combobox("setValue", rowData.TDecEquiId);
 			}else{
 				$('#txtInput').prop('disabled', true);
@@ -409,21 +451,21 @@ function InitGridBatPresc() {
 				align: 'left',
 				width: 80,
 				styler: function (value, row, index) {
-					if (row.TPstDesc == "收方") {
+					if (row.TPstDesc == $g("收方")) {
                         return 'background-color:#f1c516;color:white;';
-                    } else if (row.TPstDesc == "浸泡") {
+                    } else if (row.TPstDesc == $g("浸泡")) {
                         return 'background-color:#f58800;color:white;'; 
-                    } else if (row.TPstDesc == "首煎") {
+                    } else if (row.TPstDesc == $g("首煎")) {
                         return 'background-color:#a4c703;color:white;';
-                    } else if (row.TPstDesc == "二煎") {
+                    } else if (row.TPstDesc == $g("二煎")) {
                         return 'background-color:#51b80c;color:white;';
-                    } else if (row.TPstDesc == "制膏") {
+                    } else if (row.TPstDesc == $g("制膏")) {
                         return 'background-color:#4b991b;color:white;';
-                    } else if (row.TPstDesc == "打签") {
+                    } else if (row.TPstDesc == $g("打签")) {
                         return 'background-color:#a849cb;color:white;';
-                    } else if (row.TPstDesc == "发放") {
+                    } else if (row.TPstDesc == $g("发放")) {
                         return 'background-color:#6557d3;color:white;';
-                    } else if (row.TPstDesc == "送药") {
+                    } else if (row.TPstDesc == $g("送药")) {
                         return 'background-color:#1044c8;color:white;';
                     } else{
 					return 'background-color:#d773b0;color:white;';
@@ -444,7 +486,7 @@ function InitGridBatPresc() {
 					type: 'numberbox',
 					options: {
 						isKeyupChange: false,
-						suffix: "分钟"
+						suffix: $g("分钟")
 					}
 				},
 				formatter: function (value, row, index) {
@@ -462,7 +504,7 @@ function InitGridBatPresc() {
 					type: 'numberbox',
 					options: {
 						isKeyupChange: false,
-						suffix: "分钟"
+						suffix: $g("分钟")
 					}
 				},
 				formatter: function (value, row, index) {
@@ -615,9 +657,10 @@ function InitGridBatPresc() {
 		queryParams: {
 			ClassName: "PHA.DEC.ProExe.Query",
 			QueryName: "BatExePre",
+			HospId: gHospID
 		},
 		onLoadSuccess: function (data) {
-			console.log(data)
+			//console.log(data)
 			$('#gridBatPresc').datagrid('uncheckAll');
 			var decPstDesc = $("#cmbDecState").combobox('getText');
 			if (decPstDesc == "首煎") {
@@ -626,9 +669,9 @@ function InitGridBatPresc() {
 				$(this).datagrid('showColumn', 'TDecEqui');
 				$(this).datagrid('hideColumn', 'TSoakInterval');
 				$(this).datagrid('setColumnTitle', {
-					'TDecInterval': '首煎时长',
-					'TWaterQua': '首煎加水量',
-					'TDecEqui': '首煎设备'
+					'TDecInterval': $g('首煎时长'),
+					'TWaterQua': $g('首煎加水量'),
+					'TDecEqui': $g('首煎设备')
 				});
 			} else if (decPstDesc == "二煎") {
 				$(this).datagrid('showColumn', 'TDecInterval');
@@ -636,15 +679,36 @@ function InitGridBatPresc() {
 				$(this).datagrid('showColumn', 'TDecEqui');
 				$(this).datagrid('hideColumn', 'TSoakInterval');
 				$(this).datagrid('setColumnTitle', {
-					'TDecInterval': '二煎时长',
-					'TWaterQua': '二煎加水量',
-					'TDecEqui': '二煎设备'
+					'TDecInterval': $g('二煎时长'),
+					'TWaterQua': $g('二煎加水量'),
+					'TDecEqui': $g('二煎设备')
 				});
-			} else if (decPstDesc == "浸泡") {
+			} else if (decPstDesc == $g("浸泡")) {
 				$(this).datagrid('hideColumn', 'TDecInterval');
 				$(this).datagrid('hideColumn', 'TWaterQua');
-				$(this).datagrid('hideColumn', 'TDecEqui');
+				$(this).datagrid('showColumn', 'TDecEqui');
 				$(this).datagrid('showColumn', 'TSoakInterval');
+				$(this).datagrid('setColumnTitle', {
+					'TSoakInterval': $g('浸泡时长'),
+					'TDecEqui': '浸泡设备'
+				});
+			}else if (decPstDesc == $g("制膏")) {
+				$(this).datagrid('showColumn', 'TDecInterval');
+				$(this).datagrid('hideColumn', 'TWaterQua');
+				$(this).datagrid('showColumn', 'TDecEqui');
+				$(this).datagrid('hideColumn', 'TSoakInterval');
+				$(this).datagrid('setColumnTitle', {
+					'TDecInterval': $g('制膏时长'),
+					'TDecEqui': '制膏设备'
+				});
+			}else if (decPstDesc == $g("加工")) {
+				$(this).datagrid('hideColumn', 'TDecInterval');
+				$(this).datagrid('hideColumn', 'TWaterQua');
+				$(this).datagrid('showColumn', 'TDecEqui');
+				$(this).datagrid('hideColumn', 'TSoakInterval');
+				$(this).datagrid('setColumnTitle', {
+					'TDecEqui': $g('加工设备')
+				});
 			} else {
 				$(this).datagrid('hideColumn', 'TDecInterval');
 				$(this).datagrid('hideColumn', 'TWaterQua');
@@ -663,7 +727,7 @@ function InitGridBatPresc() {
 		onClickCell: function (rowIndex, field, value) {
 			NowRowId = rowIndex;
 			var decPstDesc = $("#cmbDecState").combobox('getText');
-			if ((decPstDesc != "浸泡") && (decPstDesc != "首煎") && (decPstDesc != "二煎")) {
+			if ((decPstDesc != $g("浸泡")) && (decPstDesc != $g("首煎")) && (decPstDesc != $g("二煎"))&& (decPstDesc != $g("制膏")) && (decPstDesc != $g("加工"))) {
 				return false;
 			}
 			if (field == "TSoakInterval") {
@@ -696,21 +760,21 @@ function InitGridExePresc() {
 				align: 'left',
 				width: 80,
 				styler: function (value, row, index) {
-					if (row.TPstDesc == "收方") {
+					if (row.TPstDesc == $g("收方")) {
                         return 'background-color:#f1c516;color:white;';
-                    } else if (row.TPstDesc == "浸泡") {
+                    } else if (row.TPstDesc == $g("浸泡")) {
                         return 'background-color:#f58800;color:white;'; 
-                    } else if (row.TPstDesc == "首煎") {
+                    } else if (row.TPstDesc == $g("首煎")) {
                         return 'background-color:#a4c703;color:white;';
-                    } else if (row.TPstDesc == "二煎") {
+                    } else if (row.TPstDesc == $g("二煎")) {
                         return 'background-color:#51b80c;color:white;';
-                    } else if (row.TPstDesc == "制膏") {
+                    } else if (row.TPstDesc == $g("制膏")) {
                         return 'background-color:#4b991b;color:white;';
-                    } else if (row.TPstDesc == "打签") {
+                    } else if (row.TPstDesc == $g("打签")) {
                         return 'background-color:#a849cb;color:white;';
-                    } else if (row.TPstDesc == "发放") {
+                    } else if (row.TPstDesc == $g("发放")) {
                         return 'background-color:#6557d3;color:white;';
-                    } else if (row.TPstDesc == "送药") {
+                    } else if (row.TPstDesc == $g("送药")) {
                         return 'background-color:#1044c8;color:white;';
                     } else{
 					return 'background-color:#d773b0;color:white;';
@@ -732,21 +796,21 @@ function InitGridExePresc() {
 				align: 'left',
 				width: 80,
 				styler: function (value, row, index) {
-					if (row.TAdvDictDesc == "收方") {
+					if (row.TAdvDictDesc == $g("收方")) {
                         return 'background-color:#f1c516;color:white;';
-                    } else if (row.TAdvDictDesc == "浸泡") {
+                    } else if (row.TAdvDictDesc == $g("浸泡")) {
                         return 'background-color:#f58800;color:white;'; 
-                    } else if (row.TAdvDictDesc == "首煎") {
+                    } else if (row.TAdvDictDesc == $g("首煎")) {
                         return 'background-color:#a4c703;color:white;';
-                    } else if (row.TAdvDictDesc == "二煎") {
+                    } else if (row.TAdvDictDesc == $g("二煎")) {
                         return 'background-color:#51b80c;color:white;';
-                    } else if (row.TAdvDictDesc == "制膏") {
+                    } else if (row.TAdvDictDesc == $g("制膏")) {
                         return 'background-color:#4b991b;color:white;';
-                    } else if (row.TAdvDictDesc == "打签") {
+                    } else if (row.TAdvDictDesc == $g("打签")) {
                         return 'background-color:#a849cb;color:white;';
-                    } else if (row.TAdvDictDesc == "发放") {
+                    } else if (row.TAdvDictDesc == $g("发放")) {
                         return 'background-color:#6557d3;color:white;';
-                    } else if (row.TAdvDictDesc == "送药") {
+                    } else if (row.TAdvDictDesc == $g("送药")) {
                         return 'background-color:#1044c8;color:white;';
                     } else{
 					return 'background-color:#d773b0;color:white;';
@@ -808,7 +872,18 @@ function InitGridExePresc() {
 				width: 80,
 				align: 'left'
 			}, {
-				field: 'TPdpmId:',
+				field: 'TDecEquiId',
+				title: '加工设备Id',
+				width: 80,
+				align: 'left',
+				hidden: true
+			}, {
+				field: 'TDecEqui',
+				title: '加工设备',
+				width: 100,
+				align: 'left'
+			}, {
+				field: 'TPdpmId',
 				title: '煎药ID',
 				align: 'left',
 				width: 30,
@@ -818,6 +893,7 @@ function InitGridExePresc() {
 	];
 	var dataGridOption = {
 		fit: true,
+		gridSave: false,
 		rownumbers: true,
 		columns: columns,
 		pageSize: 50,
@@ -830,6 +906,7 @@ function InitGridExePresc() {
 		queryParams: {
 			ClassName: "PHA.DEC.ProExe.Query",
 			QueryName: "AlrExePre",
+			HospId: gHospID
 		},
 		onSelect: function (rowIndex, rowData) {
 			if((ComPropData.ViewDecInfo)&&(ComPropData.ViewDecInfo=="Y")) {
@@ -852,16 +929,20 @@ function Query() {
 	if (params == "") {
 		return;
 	}
+	if((ComPropData.ViewDecInfo)&&(ComPropData.ViewDecInfo=="Y")) {
+		DEC_PRINT.VIEW(ComPropData.decInfoId, {});
+	}
 	var tabTitle = $('#tabsExecute').tabs('getSelected').panel('options').title;
 	if (tabTitle == "批量执行") {
 		$('#gridBatPresc').datagrid('query', {
-			ParamStr: params
+			ParamStr: params ,
+			HospId: gHospID
 		});
 	} else if (tabTitle == "已执行查询") {
 		var decLocId = $('#cmbDecLoc').combobox("getValue") || "";
 		if (decLocId == "") {
 			PHA.Popover({
-				msg: "请先选择需要查询的煎药室！",
+				msg: $g("请先选择需要查询的煎药室"),
 				type: 'alert'
 			});
 			return;
@@ -870,17 +951,64 @@ function Query() {
 		var decPstId = $("#cmbDecState").combobox('getValue');
 		if (decPstId == "") {
 			PHA.Popover({
-				msg: "请先选择煎药流程！",
+				msg: $g("请先选择煎药流程"),
 				type: 'alert'
 			});
 			return;
 		};
 		$('#gridPrescExe').datagrid('query', {
-			ParamStr: params
+			ParamStr: params ,
+			HospId: gHospID
 		});
 	} else {
 		return;
 	}
+}
+
+/**
+ * 打印煎药信息
+ * @method Print
+ */
+ function Print() {
+	var tabTitle = $('#tabsExecute').tabs('getSelected').panel('options').title;
+	if (tabTitle == "批量执行") {
+		// var selectRow = $('#gridBatPresc').datagrid('getSelected');
+		var gridBatPrescChecked = $('#gridBatPresc').datagrid('getChecked');
+		if (gridBatPrescChecked.length == 0){
+			PHA.Popover({msg: $g("请先选择需要打印的处方"),type: 'alert'});
+			return;	
+		}
+		for (var i = 0; i < gridBatPrescChecked.length; i++) {
+			var checkedData = gridBatPrescChecked[i];
+			var prescNo = checkedData.TPrescNo;
+			DEC_PRINT.PRINT.DecInfoPrint({
+				PrescNo: prescNo,
+				Num: 1
+			});
+		}
+		
+	} 
+	else {
+		if (tabTitle == "已执行查询") {
+			var selectRow = $('#gridPrescExe').datagrid('getSelected');
+		}
+		else if (tabTitle == "扫码执行") {
+			var selectRow = $('#gridScanPresc').datagrid('getSelected');
+		}
+		if (!selectRow){
+			PHA.Popover({msg: $g("请先选择需要打印的处方"),type: 'alert'});
+			return;	
+		}
+		var prescNo = selectRow.TPrescNo;
+		DEC_PRINT.PRINT.DecInfoPrint({
+			PrescNo: prescNo,
+			Num: 1
+		});
+		
+	}
+	
+	return ;
+	
 }
 
 /*
@@ -894,7 +1022,10 @@ function Clear() {
 	$('#gridBatPresc').datagrid('clear');
 	$('#gridPrescExe').datagrid('clear');
 	if((ComPropData.ViewDecInfo)&&(ComPropData.ViewDecInfo=="Y")) {DEC_PRINT.VIEW(ComPropData.decInfoId, {});}
-	InitSetDefVal();
+	InitSetDefVal("Y");
+
+	$("label[for='labelWaterQua']").html($g("煎药水量(ml)")); 
+	$("label[for='labelText']").html($g("浸泡时长(分钟)"));
 }
 
 /**
@@ -913,7 +1044,7 @@ function GetParams() {
 	//alert("decPstId:"+decPstId)
 	if (decPstId == "") {
 		PHA.Popover({
-			msg: "请先选择煎药流程！",
+			msg: $g("请先选择煎药流程"),
 			type: 'alert'
 		});
 		return;
@@ -933,10 +1064,11 @@ function ScanExecute(barCode) {
 	var decPstId = $("#cmbDecState").combobox('getValue');
 	var decLocId = $('#cmbDecLoc').combobox("getValue") || "";
 	var type = ($("input[name='busType']:checked").val() || "O").trim();
+	var decEquId = $("#cmbEquiDesc").combobox('getValue');
 	if((barCode.indexOf("E")<0)&&(barCode.indexOf(type)<0)){
-		var busType = type=="I"?"住院":"门诊";
+		var busType = type=="I"?$g("住院"):$g("门诊");
 		PHA.Popover({
-			msg: "此处方与当前选择的类型不一致！当前类型为"+busType,
+			msg: $g("此处方与当前选择的类型不一致！当前类型为")+busType,
 			type: 'alert'
 		});
 		return;
@@ -947,6 +1079,7 @@ function ScanExecute(barCode) {
 			MethodName: "GetBarCodeInfo",
 			BarCode: barCode,
 			InputStr: inputStr,
+			HospId: gHospID,
 			dataType: 'json'
 		}, false);
 	var retCode = jsonData.retCode;
@@ -962,14 +1095,15 @@ function ScanExecute(barCode) {
 			MethodName: "Execute",
 			PMId: jsonData.TPMId,
 			PstId: decPstId,
+			DecEquId : decEquId,
 			UserId: gUserID
 		}, function (retData) {
 			var retCode = retData.retCode;
 			if (retCode < 0) {
-				$.messager.alert('提示', retData.retMessage, 'warning');
+				$.messager.alert($g('提示'), $g(retData.retMessage), 'warning');
 			} else {
 				PHA.Popover({
-					msg: "执行成功！",
+					msg: $g("执行成功"),
 					type: 'success'
 				})
 				var jsonData = $.cm({
@@ -1002,11 +1136,11 @@ function ScanExecute(barCode) {
  * 批量保存执行记录
  * @method SaveBat
  */
-function SaveBat() {
+function SaveBat() {	
 	var pdpmIdStr = GetCheckedPdIdArr();
 	if (pdpmIdStr == "") {
 		PHA.Popover({
-			msg: "请勾选需要执行的处方！",
+			msg: $g("请勾选需要执行的处方"),
 			type: 'alert'
 		});
 		return;
@@ -1015,27 +1149,49 @@ function SaveBat() {
 	var decPstId = $("#cmbDecState").combobox('getValue');
 	if (decPstId == "") {
 		PHA.Popover({
-			msg: "请先选择煎药流程！",
+			msg: $g("请先选择煎药流程"),
 			type: 'alert'
 		});
 		return;
 	};
+	if (ComPropData.EditExeDateFlag == "Y"){
+		ShowExeDateTimeWin("SelExeStartDate", DoSaveBat);
+		return;	
+	}
+	else {
+		DoSaveBat("")
+	}
+}
 
+// 执行 确认执行动作
+function DoSaveBat(ExeDateJaon){
+	var exeDateTime = ""
+	if (ExeDateJaon != ""){
+		var startExeDate = ExeDateJaon.startExeDate;
+		var startExeTime = ExeDateJaon.startExeTime;
+		var exeDateTime = startExeDate +"^"+ startExeTime;
+	}
+	var pdpmIdStr = GetCheckedPdIdArr();
+	var decPstId = $("#cmbDecState").combobox('getValue');
 	$.cm({
 		ClassName: "PHA.DEC.ProExe.OperTab",
 		MethodName: "SaveBatch",
 		MultiDataStr: pdpmIdStr,
 		PstId: decPstId,
-		UserId: gUserID
+		UserId: gUserID,
+		exeDateTime: exeDateTime
 	}, function (retData) {
 		var retCode = retData.retCode;
 		if (retCode < 0) {
-			$.messager.alert('提示', retData.retMessage, 'warning');
+			$.messager.alert($g('提示'), $g(retData.retMessage), 'warning');
 		} else {
 			PHA.Popover({
-				msg: "执行成功！",
+				msg: $g("执行成功"),
 				type: 'success'
 			});
+			if((ComPropData.ViewDecInfo)&&(ComPropData.ViewDecInfo=="Y")) {
+				DEC_PRINT.VIEW(ComPropData.decInfoId, {});
+			}
 			Query();
 		}
 	});
@@ -1051,7 +1207,8 @@ function GetCheckedPdIdArr() {
 	for (var i = 0; i < gridBatPrescChecked.length; i++) {
 		var checkedData = gridBatPrescChecked[i];
 		var pdpmId = checkedData.TPdpmId;
-		var dataStr = pdpmId;
+		var equiId = checkedData.TEquiId;
+		var dataStr = pdpmId +"^"+ equiId;
 		if (batPdIdArr.indexOf(dataStr) < 0) {
 			batPdIdArr.push(dataStr);
 		}
@@ -1066,13 +1223,13 @@ function GetCheckedPdIdArr() {
 function SacnUpdate() {
 	var row = $('#gridScanPresc').datagrid('getSelected');
 	if ((row == null) || (row == "")) {
-		$.messager.alert("提示", "请先选择需要更新的煎药记录！", "warning");
+		$.messager.alert($g("提示"), $g("请先选择需要更新的煎药记录"), "warning");
 		return;
 	}
 	var pstDesc = row.TPstDesc		//流程代码
 	var pdPmId = row.TPMId;
 	if ((pdPmId == null) || (pdPmId == "")) {
-		$.messager.alert("提示", "选择的煎药记录还未收方！", "warning");
+		$.messager.alert($g("提示"), $g("选择的煎药记录还未收方"), "warning");
 		return;
 	}
 	
@@ -1081,7 +1238,7 @@ function SacnUpdate() {
 	var waterQua = $('#txtWaterQua').val().trim();
 	var stateInt = $('#txtInput').val().trim();
 	if ((stateInt == null) || (stateInt == "")) {
-		$.messager.alert("提示", "更新数据不允许为空！", "warning");
+		$.messager.alert($g("提示"), $g("更新数据不允许为空"), "warning");
 		return;
 	}
 	var upDataStr = pdPmId + "^" + stateInt + "^" + waterQua + "^" + decEquId + "^" + pstDesc;
@@ -1092,10 +1249,10 @@ function SacnUpdate() {
 	}, function (retData) {
 		var retCode = retData.retCode;
 		if (retCode < 0) {
-			$.messager.alert('提示', retData.retMessage, 'warning');
+			$.messager.alert($g('提示'), $g(retData.retMessage), 'warning');
 		} else {
 			PHA.Popover({
-				msg: "更新成功！",
+				msg: $g("更新成功"),
 				type: 'success'
 			});
 			$('#gridScanPresc').datagrid('updateRow',{
@@ -1120,7 +1277,7 @@ function UpdateBat() {
 	var gridChanges = $('#gridBatPresc').datagrid('getChanges');
 	var gridChangeLen = gridChanges.length;
 	if (gridChangeLen == 0) {
-		$.messager.alert("提示", "没有需要保存的数据", "info");
+		$.messager.alert($g("提示"), $g("没有需要保存的数据"), "info");
 		return "";
 	}
 	var decPstDesc = $("#cmbDecState").combobox('getText');
@@ -1140,7 +1297,7 @@ function UpdateBat() {
 			}
 		}
 		if (updatastr == "") {
-			$.messager.alert("提示", "没有需要保存的数据", "info");
+			$.messager.alert($g("提示"), $g("没有需要保存的数据"), "info");
 			return "";
 		}
 		$m({
@@ -1150,11 +1307,11 @@ function UpdateBat() {
 		}, function (retData) {
 			var retArr = retData.split("^");
 			if (retArr[0] < 0) {
-				$.messager.alert('提示', retArr[1], 'warning');
+				$.messager.alert($g('提示'), $g(retArr[1]), 'warning');
 				return;
 			} else {
 				PHA.Popover({
-					msg: "更新成功！",
+					msg: $g("更新成功"),
 					type: 'success'
 				})
 				$('#gridBatPresc').datagrid('reload')

@@ -5,10 +5,13 @@ var URL="dhcst.payaction.csp";
 var ApprovalFlag;
 var gParam;
 var gGroupId=session['LOGON.GROUPID'];
+var APPName="DHCSTPURPLANAUDIT"
+var PurPlanParam=PHA_COM.ParamProp(APPName)
+
 //付款单号
 var payNoField = new Ext.form.TextField({
 	id:"payNoField",
-	fieldLabel:"付款单号",
+	fieldLabel:$g("付款单号"),
 	allowBlank:true,
 	width:120,
 	readOnly :true,
@@ -21,8 +24,8 @@ var payNoField = new Ext.form.TextField({
 // 打印付款单按钮
 var PrintBT = new Ext.Toolbar.Button({
 	id : "PrintBT",
-	text : '打印',
-	tooltip : '点击打印付款单',
+	text : $g('打印'),
+	tooltip : $g('点击打印付款单'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_print',
@@ -33,17 +36,17 @@ var PrintBT = new Ext.Toolbar.Button({
 
 var payDetailCM=new Ext.grid.ColumnModel([
   {
-	  header:'付款明细RowId',
+	  header:$g('付款明细RowId'),
 	  dataIndex:"payi",
 	  hidden:true
   },
   {
-	  header:"入库(退货)RowId",
+	  header:$g("入库(退货)RowId"),
 	  dataIndex:"pointer",
 	  hidden:true
   },
   {
-	  header:"类型(入库/退货)",
+	  header:$g("类型(入库/退货)"),
 	  dataIndex:"TransType",
 	  width:100,
 	  align:"left"
@@ -56,122 +59,122 @@ var payDetailCM=new Ext.grid.ColumnModel([
 	  hidden:true
   },
   {
-	  header:"药品RowId",
+	  header:$g("药品RowId"),
 	  dataIndex:"INCI",
 	  hidden:true
   },
   {
-	  header:"药品代码",
+	  header:$g("药品代码"),
 	  dataIndex:"inciCode",
 	  width:120,
 	  align:"left"
   },
   {
-	  header:"药品名称",
+	  header:$g("药品名称"),
 	  dataIndex:"inciDesc",
 	  width:250,
 	  align:"left"
   },
   {
-	  header:"规格",
+	  header:$g("规格"),
 	  dataIndex:"spec",
 	  width:100,
 	  align:"left"
   },
   {
-	  header:"厂商",
+	  header:$g("生产企业"),
 	  dataIndex:"manf",
 	  width:160,
 	  align:"left"
   },
   {
-	  header:"数量",
+	  header:$g("数量"),
 	  dataIndex:"qty",
 	  width:100,
 	  align:"right"
   },		  
   {
-	  header:"单位",
+	  header:$g("单位"),
 	  dataIndex:"uomDesc",
 	  width:100,
 	  align:"left"
   },
     {
-	  header:"入库金额",
+	  header:$g("入库金额"),
 	  dataIndex:"recAmt",
 	  width:100,
 	  align:"right"
   },	
  {
-	  header:"付款金额",
+	  header:$g("付款金额"),
 	  dataIndex:"payAmt",
 	  width:100,
 	  align:"right"
   },	 
  {
-	  header:"付款累计金额",
+	  header:$g("付款累计金额"),
 	  dataIndex:"sumPayAmt",
 	  width:100,
 	  align:"right"
   },	   
   {
-	  header:"进价",
+	  header:$g("进价"),
 	  dataIndex:"rp",
 	  width:100,
 	  align:"right"
   },
   {
-	  header:"进价金额",
+	  header:$g("进价金额"),
 	  dataIndex:"rpAmt",
 	  width:100,
 	  align:"right"
   },
   
     {
-	  header:"售价",
+	  header:$g("售价"),
 	  dataIndex:"sp",
 	  width:100,
 	  align:"right"
   },
     {
-	  header:"售价金额",
+	  header:$g("售价金额"),
 	  dataIndex:"spAmt",
 	  width:100,
 	  align:"right"
   },  
   {
-	  header:"发票号",
+	  header:$g("发票号"),
 	  dataIndex:"invNo",
 	  width:100,
 	  align:"center"
   },
   {
-	  header:"发票日期",
+	  header:$g("发票日期"),
 	  dataIndex:"invDate",
 	  type:"number",
 	  width:100,
 	  align:"center"
   },
 {
-	  header:"单号(入库/退货)",
+	  header:$g("单号(入库/退货)"),
 	  dataIndex:"grNo",
 	  width:120,
 	  align:"left"
   },
   {
-	  header:"随行单号",
+	  header:$g("随行单号"),
 	  dataIndex:"insxNo",
 	  width:100,
 	  align:"left"
   },
   {
-	  header:"批号",
+	  header:$g("批号"),
 	  dataIndex:"batNo",
 	  width:100,
 	  align:"left"
   },
   {
-	  header:"效期",
+	  header:$g("效期"),
 	  dataIndex:"expDate",
 	  width:100,
 	  align:"left"
@@ -180,7 +183,7 @@ var payDetailCM=new Ext.grid.ColumnModel([
 
 // 采购科室
 var PhaLoc = new Ext.ux.LocComboBox({
-	fieldLabel : '采购科室',
+	fieldLabel : $g('采购科室'),
 	id : 'PhaLoc',
 	name : 'PhaLoc',
 	anchor : '90%',
@@ -196,7 +199,7 @@ var Vendor = new Ext.ux.VendorComboBox({
 			
 //毒麻标志
 var PoisonFlag = new Ext.form.Checkbox({
-	fieldLabel : '毒麻标志',
+	fieldLabel : $g('毒麻标志'),
 	id : 'PoisonFlag',
 	name : 'PoisonFlag',
 	anchor : '90%',
@@ -206,7 +209,7 @@ var PoisonFlag = new Ext.form.Checkbox({
 
 //完成标志
 var completedFlag = new Ext.form.Checkbox({
-	fieldLabel : '完成标志',
+	fieldLabel : $g('完成标志'),
 	id : 'completedFlag',
 	name : 'completedFlag',
 	anchor : '90%',
@@ -222,7 +225,7 @@ var completedFlag = new Ext.form.Checkbox({
 
 //制单人
 var CreatUsr =new Ext.form.TextField({
-	fieldLabel : '制单人',
+	fieldLabel : $g('制单人'),
 	id : 'CreatUsr',
 	disabled :true,
 	name : 'CreatUsr',
@@ -231,7 +234,7 @@ var CreatUsr =new Ext.form.TextField({
 
 //制单日期
 var CreatDate =new Ext.form.TextField ({
-	fieldLabel : '制单日期',
+	fieldLabel : $g('制单日期'),
 	id : 'CreatDate',
 	name : 'CreatDate',
 	disabled :true,
@@ -240,7 +243,7 @@ var CreatDate =new Ext.form.TextField ({
 
 //制单时间
 var CreatTim =new Ext.form.TextField({
-	fieldLabel : '制单时间',
+	fieldLabel : $g('制单时间'),
 	id : 'CreatTim',
 	name : 'CreatTim',
 	anchor : '90%',
@@ -249,7 +252,7 @@ var CreatTim =new Ext.form.TextField({
 
 //采购确认标志
 var ack1lag = new Ext.form.Checkbox({
-	fieldLabel : '采购确认',
+	fieldLabel : $g('采购确认'),
 	id : 'ack1lag',
 	name : 'ack1lag',
 	anchor : '90%',
@@ -258,7 +261,7 @@ var ack1lag = new Ext.form.Checkbox({
 });
 //采购确认人
 var Ack1Usr =new Ext.form.TextField({
-	fieldLabel : '采购确认人',
+	fieldLabel : $g('采购确认人'),
 	id : 'Ack1Usr',
 	name : 'Ack1Usr',
 	disabled:true,
@@ -267,7 +270,7 @@ var Ack1Usr =new Ext.form.TextField({
 
 //采购确认日期
 var Ack1Date =new Ext.ux.DateField({
-	fieldLabel : '采购确认日期',
+	fieldLabel : $g('采购确认日期'),
 	id : 'Ack1Date',
 	name : 'Ack1Date',
 	disabled:true,
@@ -276,7 +279,7 @@ var Ack1Date =new Ext.ux.DateField({
 
 //会计确认日期
 var Ack2Date =new Ext.ux.DateField({
-	fieldLabel : '会计确认日期',
+	fieldLabel : $g('会计确认日期'),
 	id : 'Ack2Date',
 	name : 'Ack2Date',
 	disabled:true,
@@ -287,7 +290,7 @@ var Ack2Date =new Ext.ux.DateField({
 
 //会计确认标志
 var ack2lag = new Ext.form.Checkbox({
-	fieldLabel : '会计确认',
+	fieldLabel : $g('会计确认'),
 	id : 'ack2lag',
 	name : 'ack2lag',
 	anchor : '90%',
@@ -297,7 +300,7 @@ var ack2lag = new Ext.form.Checkbox({
 
 //会计确认人
 var Ack2Usr =new Ext.form.TextField({
-	fieldLabel : '会计确认人',
+	fieldLabel : $g('会计确认人'),
 	id : 'Ack2Usr',
 	name : 'Ack2Usr',
 	anchor : '90%',
@@ -309,8 +312,8 @@ var Ack2Usr =new Ext.form.TextField({
 
 // 查询按钮- 查找付款单
 var createFromRec = new Ext.Toolbar.Button({
-	text : '入库/退货单付款',
-	tooltip : '入库/退货单付款',
+	text : $g('入库/退货单付款'),
+	tooltip : $g('入库/退货单付款'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_find',
@@ -323,8 +326,8 @@ var createFromRec = new Ext.Toolbar.Button({
 
 // 查询按钮- 查找付款单
 var SearchBT = new Ext.Toolbar.Button({
-	text : '查询',
-	tooltip : '点击查询',
+	text : $g('查询'),
+	tooltip : $g('点击查询'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_find',
@@ -335,8 +338,8 @@ var SearchBT = new Ext.Toolbar.Button({
 
 // 清空按钮
 var ClearBT = new Ext.Toolbar.Button({
-	text : '清屏',
-	tooltip : '点击清屏',
+	text : $g('清屏'),
+	tooltip : $g('点击清屏'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_clearscreen',
@@ -349,8 +352,8 @@ var ClearBT = new Ext.Toolbar.Button({
 // 取消完成按钮(需要获得授权)
 var CancleCompleteBT = new Ext.Toolbar.Button({
 	id : "CancleCompleteBT",
-	text : '取消完成',
-	tooltip : '点击取消完成',
+	text : $g('取消完成'),
+	tooltip : $g('点击取消完成'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_gear',
@@ -363,7 +366,7 @@ var CancleCompleteBT = new Ext.Toolbar.Button({
 // 删除明细按钮(需要获得授权)
 var DeletePayItmBT = new Ext.Toolbar.Button({
 	id : "DeletePayItmBT",
-	text : '删除一条明细记录',
+	text : $g('删除一条明细记录'),
 	tooltip : '',
 	width : 70,
 	height : 30,
@@ -374,7 +377,7 @@ var DeletePayItmBT = new Ext.Toolbar.Button({
 });
 var DeletePayBT = new Ext.Toolbar.Button({
 	id : "DeletePayBT",
-	text : '删除',
+	text : $g('删除'),
 	tooltip : '',
 	width : 70,
 	height : 30,
@@ -386,7 +389,7 @@ var DeletePayBT = new Ext.Toolbar.Button({
 // 保存
 var SetCompleteBT = new Ext.Toolbar.Button({
 	id : "SavePay",
-	text : '付款单完成',
+	text : $g('付款单完成'),
 	tooltip : '',
 	width : 70,
 	height : 30,
@@ -499,8 +502,8 @@ var payDetailGridPagingToolbar = new Ext.PagingToolbar({
 	store:payDetailStore,
 	pageSize:PageSize,
 	displayInfo:true,
-	displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-	emptyMsg:"没有记录"
+	displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+	emptyMsg:$g("没有记录")
 });
 
 //付款单明细 Grid
@@ -541,7 +544,7 @@ Ext.onReady(function(){
 		layout : 'border',  // create instance immediately
 		items : [{
 	            region: 'north',
-	            title:'付款单制单',
+	            title:$g('付款单制单'),
 				frame : true,
 				//autoScroll : true,	            
  	            tbar : [SearchBT, '-', ClearBT,'-', SetCompleteBT,'-',CancleCompleteBT,'-',createFromRec,'-',PrintBT,'-',DeletePayBT],
@@ -550,7 +553,7 @@ Ext.onReady(function(){
 	           // bodyStyle : 'padding:5px;',
 	            items:{
 	            	xtype : 'fieldset',
-	            	title:'付款主信息', 
+	            	title:$g('付款主信息'), 
 	            	autoHeight:true,
 	            	layout:'column',
             		items:[{
@@ -576,7 +579,7 @@ Ext.onReady(function(){
 							border: false,
 	            	        labelWidth:60,
 							labelAlign:'right',
-							items: [CreatDate,CreatTim]		
+							items: [CreatDate,CreatTim,BudgetProComb]		
 						},{ 				
 							columnWidth: 0.1,
 							xtype : 'fieldset',
@@ -600,7 +603,7 @@ Ext.onReady(function(){
 	        }
 	        , {
 	            region: 'center',
-	            title: '付款明细',			               
+	            title: $g('付款明细'),			               
 	            layout: 'fit', // specify layout manager for items
 	            items: PayDetailGrid,
 	            tbar:[DeletePayItmBT]
@@ -609,6 +612,7 @@ Ext.onReady(function(){
 		renderTo:"mainPanel"
 		
 	});
+	SetBudgetPro(Ext.getCmp("PhaLoc").getValue(),"PAY",[1,2],"SavePay") //加载HRP预算项目
 	
 });
 
@@ -621,7 +625,7 @@ function GetParam(){
 	Ext.Ajax.request({
 					url : url,
 					method : 'POST',
-	waitMsg : '更新中...',
+	waitMsg : $g('更新中...'),
 	success : function(result, request) {
 		var s=result.responseText;
 		s=s.replace(/\r/g,"")
@@ -639,7 +643,7 @@ function CreateFromRec()
 {
  	var phaLoc = Ext.getCmp("PhaLoc").getValue();
 	if (phaLoc == null || phaLoc.length <= 0) {
-		Msg.info("warning", "请选择采购科室!");
+		Msg.info("warning", $g("请选择采购科室!"));
 		return;
 	}
 	PayFromRec(setPayInfo);
@@ -714,7 +718,7 @@ function setPayInfo(xpayRowId)
 				PayDetailGrid.store.load();
 			}
 	    },
-	    failure: function(){Msg.info("error","失败!");}
+	    failure: function(){Msg.info("error",$g("失败!"));}
 
 	});
 
@@ -725,7 +729,7 @@ function setPayInfo(xpayRowId)
 function Query() {	
 	var phaLoc = Ext.getCmp("PhaLoc").getValue();
 	if (phaLoc == null || phaLoc.length <= 0) {
-		Msg.info("warning", "请选择采购科室!");
+		Msg.info("warning", $g("请选择采购科室!"));
 		return;
 	}
 	var completed="N"; //未完成的
@@ -736,32 +740,45 @@ function Query() {
  * 完成付款单
  */
 
-function SetComplete() {	
+function SetComplete() {
+
+	var rowCount =payDetailStore.getCount();
+		if(rowCount==0) 
+		{
+			Msg.info('warning',$g('明细数据为空，请核对明细!'))
+			return;
+		}	
+		
 	if (payRowId== null || payRowId.length <= 0) {
-		Msg.info("warning", "没有需要完成的付款单!");
+		Msg.info("warning", $g("没有需要完成的付款单!"));
 		return;
 	}
+	
+	/// 检查预算项目
+    var ret = SendBusiData(payRowId,"PAY","COMP");
+    if(!ret) return;
+
 	var url = URL+ "?actiontype=SetComp&payid="+ payRowId ;
 	Ext.Ajax.request({
 		url : url,
 		method : 'POST',
-		waitMsg : '更新中...',
+		waitMsg : $g('更新中...'),
 		success : function(result, request) {
 			var jsonData = Ext.util.JSON
 					.decode(result.responseText);
 			if (jsonData.success == 'true') {
 				// 完成单据
-				Msg.info("success", "成功!");								
+				Msg.info("success", $g("成功!"));								
 				setPayInfo(payRowId);
 
 			} else {
 				var Ret=jsonData.info;
 				if(Ret==-1){
-					Msg.info("error", "操作失败,付款单Id为空或付款单不存在!");
+					Msg.info("error", $g("操作失败,付款单Id为空或付款单不存在!"));
 				}else if(Ret==-2){
-					Msg.info("error", "付款单已经完成!");
+					Msg.info("error", $g("付款单已经完成!"));
 				}else {
-					Msg.info("error", "操作失败!");
+					Msg.info("error", $g("操作失败!"));
 				}
 				
 			}
@@ -783,7 +800,7 @@ function CancleComplete() {
 	//}
 	//alert(payRowId);
 	if (payRowId== null || payRowId.length <= 0) {
-		Msg.info("warning", "没有需要取消完成的付款单!");
+		Msg.info("warning", $g("没有需要取消完成的付款单!"));
 		return;
 	}
 	var url = URL+ "?actiontype=CnlComp&payid="+ payRowId ;
@@ -792,29 +809,29 @@ function CancleComplete() {
 	Ext.Ajax.request({
 		url : url,
 		method : 'POST',
-		waitMsg : '更新中...',
+		waitMsg : $g('更新中...'),
 		success : function(result, request) {
 			//alert(result.responseText);
 			var jsonData = Ext.util.JSON.decode(result.responseText);
 			//alert(jsonData.info);
 			if (jsonData.success == 'true') {
 				// 完成单据
-				Msg.info("success", "成功!");			
+				Msg.info("success", $g("成功!"));			
 				setPayInfo(payRowId);
 			} else {
 				var Ret=jsonData.info;
 				if(Ret==-1){
-					Msg.info("error", "操作失败,付款单Id为空或付款单不存在!");
+					Msg.info("error", $g("操作失败,付款单Id为空或付款单不存在!"));
 				}else if(Ret==-2){
-					Msg.info("error", "付款单已经确认!");
+					Msg.info("error", $g("付款单已经确认!"));
 				}else {
-					Msg.info("error", "操作失败!");
+					Msg.info("error", $g("操作失败!"));
 				}
 				
 			}
 		},
 		failure:function()
-		{Msg.info("error","失败!");},
+		{Msg.info("error",$g("失败!"));},
 		
 		scope : this
 	});
@@ -830,23 +847,23 @@ function DeletePayItm()
 	if (payi=="") return;
 	var compFlag=Ext.getCmp("completedFlag").getValue();
 	if(compFlag==true){
-		Msg.info("warning","付款单已经完成,不能删除明细!");
+		Msg.info("warning",$g("付款单已经完成,不能删除明细!"));
 		return;
 	}
 	var ack1Flag=Ext.getCmp("ack1lag").getValue();
 	if(ack1Flag==true){
-		Msg.info("warning","付款单已采购确认,不能删除明细!");
+		Msg.info("warning",$g("付款单已采购确认,不能删除明细!"));
 		return;
 	}
 	var ack2Flag=Ext.getCmp("ack2lag").getValue();
 	if(ack2Flag==true){
-		Msg.info("warning","付款单已会计确认,不能删除明细!");
+		Msg.info("warning",$g("付款单已会计确认,不能删除明细!"));
 		return;
 	}
 	
 	Ext.Msg.show({
-		title:'提示',
-		msg:'是否确定删除？',
+		title:$g('提示'),
+		msg:$g('是否确定删除？'),
 		buttons:Ext.Msg.YESNO,
 		icon: Ext.MessageBox.QUESTION,
 		fn:function(b,txt){
@@ -860,13 +877,13 @@ function DeletePayItm()
 						var jsonData = Ext.util.JSON.decode(result.responseText);
 						if (jsonData.success=='true')
 						{		
-							Msg.info("success", "删除成功!");
+							Msg.info("success",$g( "删除成功!"));
 							this.PayDetailGrid.store.reload();	
 						}else if (jsonData.success=='false')
 						{
-							if (jsonData.info=='-99') 	Msg.info("error","加锁失败！")
+							if (jsonData.info=='-99') 	Msg.info("error",$g("加锁失败！"))
 							
-						    if (jsonData.info=='-100') 	Msg.info("error","不允许删除！")
+						    if (jsonData.info=='-100') 	Msg.info("error",$g("不允许删除！"))
 						}
 					}
 				
@@ -884,31 +901,31 @@ function DeletePay(){
 	if (payRowId=="") return;
 	var compFlag=Ext.getCmp("completedFlag").getValue();
 	if(compFlag==true){
-		Msg.info("warning","付款单已经完成,不能删除!");
+		Msg.info("warning",$g("付款单已经完成,不能删除!"));
 		return;
 	}
 	var ack1Flag=Ext.getCmp("ack1lag").getValue();
 	if(ack1Flag==true){
-		Msg.info("warning","付款单已采购确认,不能删除!");
+		Msg.info("warning",$g("付款单已采购确认,不能删除!"));
 		return;
 	}
 	var ack2Flag=Ext.getCmp("ack2lag").getValue();
 	if(ack2Flag==true){
-		Msg.info("warning","付款单已会计确认,不能删除!");
+		Msg.info("warning",$g("付款单已会计确认,不能删除!"));
 		return;
 	}
 	
 	Ext.Msg.show({
-		title:'提示',
-		msg:'是否确定删除？',
+		title:$g('提示'),
+		msg:$g('是否确定删除？'),
 		buttons:Ext.Msg.YESNO,
 		icon: Ext.MessageBox.QUESTION,
 		fn:function(b,txt){
 			if (b=='no') {return;}
 			else {
-				var mytrn=tkMakeServerCall("web.DHCSTM.DHCPay","Delete",payRowId);
-				if(mytrn==0){Msg.info("sucess","删除成功!");clearData();}
-				else{Msg.info("error","删除失败!");}
+				var mytrn=tkMakeServerCall("web.DHCST.DHCPay","Delete",payRowId);
+				if(mytrn==0){Msg.info("sucess",$g("删除成功!"));clearData();}
+				else{Msg.info("error",$g("删除失败!"));}
 			}
 		}
 	});
@@ -942,11 +959,11 @@ function clearData() {
 	PayDetailGrid.getView().refresh();	
 }		
 function rendorPoFlag(value){
-    return value=='Y'? '是': '否';
+    return value=='Y'? $g('是'): $g('否');
 }
 
 function rendorCmpFlag(value){
-    return value=='Y'? '完成': '未完成';
+    return value=='Y'? $g('完成'): $g('未完成');
 }
 
 

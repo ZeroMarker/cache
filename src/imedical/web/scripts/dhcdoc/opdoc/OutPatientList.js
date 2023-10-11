@@ -265,29 +265,33 @@ function InitOutPatientDataGrid(){
 	})
 }
 function doSwitch(PatientID,EpisodeID,mradm,WalkStatus,autoClose) {
-	//tanjishan 2020.05.20为防止上一位患者的电子病历尚未加载完毕，在切换之前，判断下上一位患者是否在电子病历组件中处理完毕
-	///  切换病人前，判断是不是正在切换中
-	var frm = dhcsys_getmenuform();
-	if (frm){
-	    if (frm.DoingSth.value!="") {
-	        $.messager.alert("提示",frm.DoingSth.value+"请稍后再试");
-	        return false; //不能切换病人
-	    }
-	}
+	try {
+        //tanjishan 2020.05.20为防止上一位患者的电子病历尚未加载完毕，在切换之前，判断下上一位患者是否在电子病历组件中处理完毕
+		/// 切换病人前，判断是不是正在切换中
+		var frm = dhcsys_getmenuform();
+		if (frm){
+		    if (frm.DoingSth.value!="") {
+		        $.messager.alert("提示",frm.DoingSth.value+"请稍后再试");
+		        return false; //不能切换病人
+		    }
+		}
 
 
-	if(top.frames[0] && top.frames[0].switchPatient){
-		top.frames[0].switchPatient(PatientID,EpisodeID,mradm,WalkStatus);
-		if (autoClose){
-			top.frames[0].hidePatListWin();
+		if(top.frames[0] && top.frames[0].switchPatient){
+			top.frames[0].switchPatient(PatientID,EpisodeID,mradm,WalkStatus);
+			if (autoClose){
+				top.frames[0].hidePatListWin();
+			}
+		}else{
+			parent.switchPatient(PatientID,EpisodeID,mradm,WalkStatus);
+			if (autoClose){
+				parent.hidePatListWin();
+			}
 		}
-	}else{
-		parent.switchPatient(PatientID,EpisodeID,mradm,WalkStatus);
-		if (autoClose){
-			parent.hidePatListWin();
-		}
-	}
-	return ;
+		return ;
+    } catch (e) {
+	    $.messager.alert("提示", "切换患者失败！"+e.message);
+    }
 }
 function LoadOutPatientDataGrid(){
 	$.m({
@@ -306,6 +310,7 @@ function LoadOutPatientDataGrid(){
 	    Consultation:"",
 	    MarkID:$("#MarkDocList").combobox('getValue'),
 	    CheckName:$(".a-oplist-selected")[0].id,
+	    PatSeqNo: $("#PatSeqNo").val(),
 	    page:1,
 	    rows:99999
 	},function(GridData){
@@ -421,7 +426,12 @@ function CardNoKeydownHandler(e){
 		}else if (RegNo!=""){
 			$("#RegNo").val("");
 			LoadOutPatientDataGrid();
-		}
+		}else if (CardNo==""){
+			$("#RegNo").val("");
+			$("#PatName").val("");
+			$("#PatSeqNo").val("");
+			LoadOutPatientDataGrid();
+			}
 		return false;
    }
 }
@@ -763,10 +773,10 @@ function skipCallPatientHandler(event){
 		$.messager.$.messager.alert("提示",t['AdmDateOver']);
 		return false;
 	 }
-	 if (row.PAAdmPriority=="优先"){
+	 /*if (row.PAAdmPriority=="优先"){
 		 $.messager.alert("提示","优先的患者不能过号!");
 		return false;
-	 }
+	 }*/
 	 $.messager.confirm('确认对话框', t['SkipNumberMsg'], function(r){
 		if (r){
 		    patientMap["recall"][row.EpisodeID]="row-oplist-recalled";
@@ -1078,7 +1088,7 @@ function PatArrive(){
 		ClassName:"web.DHCAlloc", 
 		MethodName:"PatArrive",
 		dataType:"text",
-		itmjs:"PatArriveToHUI", itmjsex:"", QueID:QueRowId,UserID:session['LOGON.USERID']
+		itmjs:"PatArriveToHUI", itmjsex:"", QueID:QueRowId,UserID:session['LOGON.USERID'],GroupID:session['LOGON.GROUPID']
 	},function(rtn){
 		if (rtn!=0){
 			$.messager.alert("提示","报到失败!"+rtn);

@@ -43,7 +43,7 @@ $(function(){
 //患者列表
 function initPatientList()
 {
-    var patientList= '<iframe id="framePatientList" src="dhcpha.clinical.patientlist.csp" width="100%" height="100%"'+
+    var patientList= '<iframe id="framePatientList" src="dhcpha.clinical.patientlist.csp?MWToken='+websys_getMWToken()+'" width="100%" height="100%"'+
                      'marginheight="0" marginwidth="0" scrolling="no" align="middle"></iframe>'	
     $('#patientList').append(patientList);                
 }
@@ -80,18 +80,18 @@ function doSwitch(PatientID,EpisodeID,mradm) {
 	getPatinentInfo(); //加载加载患者信息
 	if(tabNums==2){
 		if(flag==0){
-			updateLead='<iframe id = "framCategory" frameborder="0" src="dhcpha.clinical.record.library.category.csp?PatientID='+patientID+'&EpisodeID='+episodeID+'" style="width:100%; height:100%;scrolling:no;"></iframe>';
+			updateLead='<iframe id = "framCategory" frameborder="0" src="dhcpha.clinical.record.library.category.csp?MWToken='+websys_getMWToken()+'&PatientID='+patientID+'&EpisodeID='+episodeID+'" style="width:100%; height:100%;scrolling:no;"></iframe>';
 		}
 	
 		if(flag==1)
 		{
-			updateLead='<iframe id = "framSummary" frameborder="0" src="dhcpha.clinical.record.library.summary.csp?PatientID='+patientID+'&EpisodeID='+episodeID+'&UserLocID='+userLocID+'" style="width:100%; height:100%;scrolling:no;"></iframe>';
+			updateLead='<iframe id = "framSummary" frameborder="0" src="dhcpha.clinical.record.library.summary.csp?MWToken='+websys_getMWToken()+'&PatientID='+patientID+'&EpisodeID='+episodeID+'&UserLocID='+userLocID+'" style="width:100%; height:100%;scrolling:no;"></iframe>';
 		}
 		updateLeadMethod(updateLead); //刷新药学服务导航页面
 	}
 	if(tabNums==3){
 		$('#library').tabs("close","药学服务填写"); //关闭药学服务填写页面
-		updateLead='<iframe id = "framCategory" frameborder="0" src="dhcpha.clinical.record.library.category.csp?PatientID='+patientID+'&EpisodeID='+episodeID+'" style="width:100%; height:100%;scrolling:no;"></iframe>';
+		updateLead='<iframe id = "framCategory" frameborder="0" src="dhcpha.clinical.record.library.category.csp?MWToken='+websys_getMWToken()+'&PatientID='+patientID+'&EpisodeID='+episodeID+'" style="width:100%; height:100%;scrolling:no;"></iframe>';
 		updateLeadMethods(updateLead);
 		//window.location.reload();//刷新当前页面.
 	}
@@ -102,7 +102,7 @@ function doSwitch(PatientID,EpisodeID,mradm) {
 //加载药学服务填写页签
 function loadRecordEidtPage()
 {
-	var content = '<iframe id = "framRecord" scrolling="no" frameborder="0" src="dhcpha.clinical.record.edit.csp" style="width:100%;height:100%;"></iframe>';	    
+	var content = '<iframe id = "framRecord" scrolling="no" frameborder="0" src="dhcpha.clinical.record.edit.csp?MWToken='+websys_getMWToken()+'" style="width:100%;height:100%;"></iframe>';	    
 	addTabs("tabRecord","药学服务填写",content,true,true);
 	tabNums=3;
  }
@@ -142,18 +142,18 @@ function SetPatientInfo(patientInfo) {
 	htmlStr += '<span class="spancolorleft">床号:</span><span class="spancolor">'
 			+ patientInfo[0].disBed + '</span>';
 
-	if (HasPatEncryptLevel == "Y")
+	/*if (HasPatEncryptLevel == "Y")
 	{
 		SecCode = PatientInfo[0].SecCode;
 
 		htmlStr += splitor
 			+ '<span class="spancolorleft">病人密级:</span> <span class="spancolor">'
-			+ patientInfo[0].SecAlias + '</span>';
+			+ patientInfo[0].SecDesc + '</span>';
 
 		htmlStr += splitor
 			+ '<span class="spancolorleft">病人级别:</span> <span class="spancolor">'
 			+ patientInfo[0].EmployeeFunction + '</span>';
-	}
+	}*/
 		
 	htmlStr += splitor
 			+ '<span class="spancolorleft">姓名:</span> <span class="spancolor">'
@@ -251,7 +251,7 @@ function openInterfaceRecord(Id,Name,src)
 		src = src.replace(/\[ctLocID\]/g, userLocID);
 		src = src.replace(/\[ctLocCode\]/g, userLocCode);
 		src = src.replace(/\[ssGroupID\]/g, ssgroupID);
-		var content = '<iframe id ="iframe'+Id+'" frameborder="0" src="'+src+'" style="width:100%;height:100%;"></iframe>'
+		var content = '<iframe id ="iframe'+Id+'" frameborder="0" src="'+src+'&MWToken='+websys_getMWToken()+'" style="width:100%;height:100%;"></iframe>'
 		addTab("library",tabId,Name,content,true);
 	}
 	else
@@ -279,7 +279,7 @@ $(function(){
 			//关闭药学服务填写,按钮不可用
 			if(index==2){
 				btnCanNot("disable");
-				var updateLead2='<iframe id = "framCategory" frameborder="0" src="dhcpha.clinical.record.library.category.csp?PatientID='+patientID+'&EpisodeID='+episodeID+'" style="width:100%; height:100%;scrolling:no;"></iframe>';
+				var updateLead2='<iframe id = "framCategory" frameborder="0" src="dhcpha.clinical.record.library.category.csp?MWToken='+websys_getMWToken()+'&PatientID='+patientID+'&EpisodeID='+episodeID+'" style="width:100%; height:100%;scrolling:no;"></iframe>';
 				updateLeadMethods(updateLead2); //关闭药学服务填写页面后刷新药学导航页面
 				tabNums=2;
 			}
@@ -322,11 +322,11 @@ $(function(){
 //初始化资源区
 function initResource()
 {
-	var kbTree = "<iframe id='framKBTree' frameborder='0' src='dhcpha.clinical.kbtree.csp' style='width:100%; height:100%;scrolling:no;margin:0px;'></iframe>"				
+	var kbTree = '<iframe id="framKBTree" frameborder="0" src="dhcpha.clinical.kbtree.csp?MWToken='+websys_getMWToken()+'" style="width:100%; height:100%;scrolling:no;margin:0px;"></iframe>'
 	addTab("resources","tabKBTree","知识库",kbTree,false,true);
 	resourceScheme = getResourceScheme();
 	for(i=0;i<resourceScheme.length;i++ ){
-		var content = "<iframe id='fram" + resourceScheme[i].id + "' frameborder='0' src='' style='width:100%; height:100%;scrolling:no;margin:0px;'></iframe>"	
+		var content = "<iframe id='fram" + resourceScheme[i].id + "' frameborder='0' src='' style='width:100%; height:100%;scrolling:no;margin:0px;'></iframe>"
 		addTab("resources","tab"+resourceScheme[i].id,resourceScheme[i].title,content,false,false);
 	}	
 }
@@ -338,7 +338,7 @@ function getResourceScheme()
     $(strXml).find("resource>item").each(function(){
 	    var id = $(this).find("id").text();
 	    var title = $(this).find("title").text();
-	    var source = $(this).find("source").text();
+	    var source = $(this).find("source").text();	//+"?MWToken="+websys_getMWToken();
 	    var width = $(this).find("width").text();
 	    objResourceScheme.push({id:id,title:title,source:source,width:width})
     });
@@ -374,7 +374,7 @@ $(function(){
 					var tbIframe = $("#"+tab[0].id+" iframe:first-child");
 					if (tbIframe.attr("src") == "")
 					{
-						tbIframe.attr("src",resourceScheme[index-1].source);
+						tbIframe.attr("src",resourceScheme[index-1].source +"?MWToken="+websys_getMWToken());
 					}
 				}
 			}
@@ -595,7 +595,7 @@ function getEvent()
 $("#event marquee span").live("click",function(){
 	var eventType = $(this)[0].id;
 	var returnValues = "";
-	returnValues = window.showModalDialog("emr.event.csp?EpisodeID="+episodeID+"&EventType="+eventType,window,"dialogHeight:500px;dialogWidth:700px;resizable:no;status:no");
+	returnValues = window.showModalDialog("emr.event.csp?MWToken="+websys_getMWToken()+"&EpisodeID="+episodeID+"&EventType="+eventType,window,"dialogHeight:500px;dialogWidth:700px;resizable:no;status:no");
 	if ((returnValues == "")||(returnValues == undefined)) return;
 	operateRecord(returnValues);
 });
@@ -623,9 +623,9 @@ function setDataToEventLog()
 
 function loadContent()
 {
-    var templateRecord = '<iframe id = "framCategory" frameborder="0" src="dhcpha.clinical.record.library.category.csp?PatientID='+patientID+'&EpisodeID='+episodeID+'" style="width:100%; height:100%;scrolling:no;"></iframe>';
+    var templateRecord = '<iframe id = "framCategory" frameborder="0" src="dhcpha.clinical.record.library.category.csp?MWToken='+websys_getMWToken()+'&PatientID='+patientID+'&EpisodeID='+episodeID+'" style="width:100%; height:100%;scrolling:no;"></iframe>';
     addTabs("tabCategory","药学项目导航",templateRecord,false,true);
-	var welCome = '<iframe id = "framSummary" frameborder="0" src="dhcpha.clinical.record.library.summary.csp?PatientID="'+patientID+'&EpisodeID='+episodeID+'" '+'style="width:100%; height:100%;scrolling:no;"></iframe>';
+	var welCome = '<iframe id = "framSummary" frameborder="0" src="dhcpha.clinical.record.library.summary.csp?MWToken='+websys_getMWToken()+'&PatientID='+patientID+'&EpisodeID='+episodeID+'" style="width:100%; height:100%;scrolling:no;"></iframe>';
 	addTabs("tabSummary","药学服务时间轴",welCome,false,false);	
 }
 
@@ -680,7 +680,7 @@ $(function(){
 			var tab = $('#library').tabs('getTab',index);
 			if (tab[0].id == "tabSummary")
 			{
-				$('#framSummary').attr("src","dhcpha.clinical.record.library.summary.csp?PatientID="+patientID+"&EpisodeID="+episodeID+"&UserLocID="+userLocID);
+				$('#framSummary').attr("src","dhcpha.clinical.record.library.summary.csp?MWToken="+websys_getMWToken()+"&PatientID="+patientID+"&EpisodeID="+episodeID+"&UserLocID="+userLocID);
 				flag=1;
 			}
 			if (tab[0].id == "tabCategory")
@@ -802,4 +802,18 @@ function btnSaveCanNot(){
 function btnPrintCanNot(){
 	$('#print').linkbutton("disable");
 	$('#PDF').linkbutton("disable");
+}
+
+function Emrreference(){
+	var url= "emr.ip.tool.reference.csp?EpisodeID="+episodeID+"&MWToken="+websys_getMWToken();
+		if ($('#tabs-util').tabs('exists', "病历参考")){
+		$('#tabs-util').tabs('select', "病历参考");
+	} else {
+		$('#tabs-util').tabs('add', {
+			title: '病历参考',
+			selected: true,
+			closable: true,
+			content: "<iframe id='framReference'  frameborder='0' src='"+url+"' style='width:100%; height:99.5%;padding:0px;scrolling:no;margin:0px;border:0;'></iframe>"
+		})
+	}
 }

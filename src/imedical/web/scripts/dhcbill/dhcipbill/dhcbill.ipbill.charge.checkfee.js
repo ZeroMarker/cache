@@ -1,17 +1,15 @@
 ﻿/**
  *FileName:	dhcbill.ipbill.charge.checkfee.js
- *Anchor: ZhYW
+ *Author: ZhYW
  *Date:	2019-03-11
- *Description:	住院收费费用监控检查
+ *Description: 住院收费费用监控检查
 */
 
 function checkFee() {
-	var rtnValue = $.m({ClassName: "web.DHCIPBillCheckAdmCost", MethodName: "AdmSettlementCheck", episodeId: getGlobalValue("EpisodeID"), billId: getGlobalValue("BillID")}, false);
-	var myAry = rtnValue.split(String.fromCharCode(2));
-	var errCode = myAry[0];
-	if (+errCode != 0) {
-		var errMsg = myAry[1];
-		$.messager.popover({msg: errMsg, type: "info"});
+	var rtnValue = $.m({ClassName: "web.DHCIPBillCheckAdmCost", MethodName: "AdmSettlementCheck", episodeId: GV.EpisodeID, billId: GV.BillID}, false);
+	var myAry = rtnValue.split(PUBLIC_CONSTANT.SEPARATOR.CH2);
+	if (myAry[0] != 0) {
+		$.messager.popover({msg: (myAry[1] || myAry[0]), type: "info"});
 		return false;
 	}
 	return true;

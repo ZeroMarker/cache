@@ -87,6 +87,7 @@ function CureTriageNumClick(index){
 	var DCARowIdStr=$('#DCARowIdStr').val();
 	//var OperateType=$('#OperateType').val();
 	var href="dhcdoc.cure.curetriagelist.csp?DCARowId="+DCARowIdStr+"&DDCTRIRowID="+DDCTRROWID;
+	if(typeof websys_writeMWToken=='function') href=websys_writeMWToken(href);
 	var ReturnValue=window.open(href,"","dialogwidth:60em;dialogheight:30em;status:no;center:1;resizable:yes");
 	
 }

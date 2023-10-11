@@ -11,13 +11,7 @@ $(function(){
 	PageHandle();
 })
 function Init(){
-	$.m({ClassName:"web.DHCDoc.OP.AjaxInterface",MethodName:"GetOPInfoBar",CONTEXT:"",EpisodeID:"",PatientID:ServerObj.PatientID},function(html){
-			if (html!=""){
-				$(".PatInfoItem").html(reservedToHtml(html));
-			}else{
-				$(".PatInfoItem").html("获取病人信息失败。请检查【患者信息展示】配置。");
-			}
-		});
+	InitPatInfoBanner("",ServerObj.PatientID);
 	PageLogicObj.m_PatEpiosdeListDataGrid=InitPatEpiosdeListDataGrid();
 	$HUI.datebox("#StartDate").setValue(ServerObj.StartDate);
 	$HUI.datebox("#EndDate").setValue(ServerObj.EndDate);	
@@ -31,15 +25,25 @@ function PageHandle(){
 	CardToSaveTabDataGridLoad();
 	}
 function InitPatEpiosdeListDataGrid(){
-	var Columns=[[ 
-		{field:'EpisodeID',hidden:true,title:''},
-		{field:'Date',title:'就诊日期',width:100},
-		{field:'LocID',title:'就诊科室',width:100},
-		{field:'DocID',title:'主管/就诊医生',width:100},
-		{field:'Arcim',title:'项目',width:280},
-		{field:'ODate',title:'医嘱日期',width:80},
-		{field:'Amount',title:'单价',width:100}
-    ]]
+	if (ServerObj.Code==""){
+		var Columns=[[ 
+			{field:'EpisodeID',hidden:true,title:''},
+			{field:'Date',title:'就诊日期',width:110},
+			{field:'LocID',title:'就诊科室',width:150},
+			{field:'DocID',title:'主管/就诊医生',width:150},
+			{field:'Arcim',title:'项目',width:405},
+			{field:'ODate',title:'医嘱日期',width:110},
+			{field:'Amount',title:'单价',width:100}
+	    ]]
+	}else{
+		var Columns=[[ 
+			{field:'EpisodeID',hidden:true,title:''},
+			{field:'Date',title:'就诊日期',width:120},
+			{field:'LocID',title:'就诊科室',width:460},
+			{field:'DocID',title:'主管/就诊医生',width:465}
+			
+	    ]]
+	}
 	var PatCardListTabDataGrid=$("#PatEpiosdeListTab").datagrid({
 		fit : true,
 		border : false,
@@ -73,6 +77,7 @@ function CardToSaveTabDataGridLoad(){
 	$.q({
 	    ClassName : "web.DHCPATCardUnite",
 	    QueryName : "QueryFeeNew",
+	    Code : ServerObj.Code,
 	    PatientID : ServerObj.PatientID,
 	    StartDate:StartDate,
 	    EndDate:EndDate,
@@ -81,11 +86,4 @@ function CardToSaveTabDataGridLoad(){
 	},function(GridData){
 		PageLogicObj.m_PatEpiosdeListDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
 	}); 
-	}
-function reservedToHtml(str){	
-	var replacements = {"&lt;":"<", "&#60;":"<", "&gt;":">", "&#62;":">", "&quot;":"\"", "&#34;":"\"", "&apos;":"'",
-	"&#39;":"'", "&amp;":"&", "&#38;":"&"};
-	return str.replace(/(&lt;)|(&gt;)|(&quot;)|(&apos;)|(&amp;)|(&#60;)|(&#62;)|(&#34;)|(&#39;)|(&#38;)/g,function(v){
-		return replacements[v];		
-	});
 }

@@ -2,17 +2,30 @@
 var editPage = document.getElementById("framRecord").contentWindow; //window.frames["framRecord"];
 
 $(function(){
-	initNavPage();
-	initEditor();
+    initNavPage();
+    initEditor();
 });
 
 ///切换目录/////////////////////////////////////////////////
 function xhrRefresh(tempParam)
 {
-	if (setting.categoryId != tempParam.CategoryID || setting.episodeId != tempParam.adm)
+    var flag = false;
+    if (typeof tempParam.TabParam != "undefined"){
+        tempParam.TabParam = JSON.parse(unescape(utf8to16(base64decode(tempParam.TabParam))));
+        if (tempParam.actionType == "LOAD"){
+            if (setting.tabParam.id != tempParam.TabParam.id){
+                flag = true;
+            }
+        }else{
+            flag = true;
+        }
+    }
+    
+    if (setting.categoryId != tempParam.CategoryID || setting.episodeId != tempParam.adm || flag)
 	{
 		if (editPage)
 		{
+			if (typeof editPage.savePrompt !== "function") return;
 			var editFlag = editPage.savePrompt("");
 			if (editFlag == "cancel") 
 			{
@@ -20,26 +33,60 @@ function xhrRefresh(tempParam)
 			}
 			else if (editFlag == "unsave")
 			{
-				editPage.resetModifyState("","false");
+				resetModifyState();
 			} 
 			var breakState = editPage.canBreake();
 			if (breakState == "false") return;
+			editPage.unLockDocumnet();
 		}
 		//$("#nav").css("display","block");
 		$("#editor").css("display","block");
 		setting.patientId = tempParam.papmi;
 		setting.episodeId = tempParam.adm;
 		setting.categoryId = tempParam.CategoryID;
-		navPage.xhrRefresh(tempParam.papmi,tempParam.adm,tempParam.CategoryID);
-		initEditor();
-		$("#nav").css("display","block");
+		setting.tabParam = tempParam.TabParam || "";
+		if (setting.tabParam != "")
+		{
+			$("#nav").css("display","none");
+			if (editPage.switchRecord)
+			{
+				editPage.switchRecord();
+			}else{
+				initEditor();
+			}
+			navPage.xhrRefresh(tempParam.papmi,tempParam.adm,tempParam.CategoryID);
+		}else{
+			$("#nav").css("display","block");
+			navPage.xhrRefresh(tempParam.papmi,tempParam.adm,tempParam.CategoryID);
+			initEditor();
+		}
 		//$("#editor").css("display","none");
 	}
 }
 
+function resetModifyState()
+{
+	var flag = false;
+	var modifyStatus = editPage.getModifyStatus();
+	if ((typeof(modifyStatus.Modified) != "undefined")&&(modifyStatus.Modified == "True"))
+	{
+		if ((typeof(modifyStatus.InstanceID) != "undefined")&&(modifyStatus.InstanceID.length>0))
+		{
+			for (i=0;i<modifyStatus.InstanceID.length;i++ )
+			{
+				editPage.resetModifyState(modifyStatus.InstanceID[i],"false");
+				flag = true;
+			}
+		}
+	}	
+	
+	if (!flag)
+		editPage.resetModifyState("","false");
+}
+
 function initNavPage()
 {
-	$("#frameNav").attr("src","emr.ip.navigation.csp?EpisodeID="+setting.episodeId +"&CategoryID="+setting.categoryId);	
+	$("#frameNav").attr("src","emr.ip.navigation.csp?EpisodeID="+setting.episodeId +"&CategoryID="+setting.categoryId +"&MWToken="+getMWToken());	
 }
 
 ///编辑器///////////////////////////////////////////////////
@@ -50,11 +97,11 @@ function initEditor()
 	if (rtn != "") url = rtn.ItemURL;
 	if (url == "emr.ip.navigation.templategroup.csp") 
 	{
-		$("#framRecord").attr("src","emr.ip.group.edit.csp?EpisodeID="+setting.episodeId);
+		$("#framRecord").attr("src","emr.ip.group.edit.csp?EpisodeID="+setting.episodeId+"&MWToken="+getMWToken());
 	}
 	else
 	{
-		$("#framRecord").attr("src","emr.ip.edit.csp?EpisodeID="+setting.episodeId +"&CTlocID="+setting.userLocId +"&UserID="+setting.userId);
+		$("#framRecord").attr("src","emr.ip.edit.csp?EpisodeID="+setting.episodeId +"&CTlocID="+setting.userLocId +"&UserID="+setting.userId+"&MWToken="+getMWToken());
 	}
 }
 
@@ -90,7 +137,9 @@ function operateRecord(param)
 	$("#nav").css("display","none");
 	$("#editor").css("display","block");
 	if (editPage)
-	editPage.InitDocument(param);
+	{
+		editPage.InitDocument(param);
+	}
 }
 
 
@@ -113,18 +162,17 @@ function gotoNav()
 	if (editPage && editPage.length >0)
 	{
 		if (editPage.param != "") {
-			var result = editPage.savePrompt("");
-			if (result == "cancel") {
+			var result = editPage.IsSavePrompt("");
+			if (result != "") {
 				return;
-			}
-			else if(result == "unsave")
-			{
-				editPage.resetModifyState(editPage.param.id,"false");
 			}
 		}
 		var breakState = editPage.canBreake();
 		if (breakState == "false") return;
 	}
+    showNav();
+}
+function showNav(){
 	$("#nav").css("display","block");
 	$("#editor").css("display","none");
 	navPage.setButtonStatus();
@@ -137,6 +185,7 @@ function gotoNav()
 	else
 	{
 		navPage.init();
+		navPage.initToolbar();
 		var searchKey = navPage.$('#searchRecord').searchbox('getValue');
 		if (searchKey != "")
 		{
@@ -150,10 +199,11 @@ function gotoEdit()
 {
 	$("#nav").css("display","none");
 	$("#editor").css("display","block");
-	editPage.toolbar.setOtherButtonPrivilege();
+	editPage.setOtherButtonPrivilege();
 }
 
 ///关闭时有修改提示是否保存
+/*
 window.onbeforeunload = function()
 {
     if ((editPage)&&(editPage.savePrompt("") == "cancel"))
@@ -164,10 +214,14 @@ window.onbeforeunload = function()
 	editPage.unLockDocumnet();
 	window.onbeforeunload=null;
 }
+*/
 
 ///关闭时设置用户习惯
 window.onunload = function()
 {
+	//优先完成解锁操作
+	editPage.unLockDocumnet();
+	
 	//设置卡片视图或者列表视图
 	var type = navPage.getNavType();
 	if ((type != undefined)&&(type != ""))
@@ -180,37 +234,121 @@ window.onunload = function()
 	{
 		addUserConfigData(setting.userId,setting.userLocId,"NAVRECORDSEQ",sequence);
 	}
-	var recordTypeValue = editPage.GetRecordTypeValue();
-	if ((recordTypeValue != undefined)&&(recordTypeValue != ""))
-	{
-		//病历导航显示样式[List 列表显示,Tree 树分类显示]
-		addUserConfigData(setting.userId,setting.userLocId,"RecordType",recordTypeValue);
-	}
     //记录资源区宽度
 	var resouceWidth = editPage.getResourceWidth();
 	if ((resouceWidth != undefined)&&(resouceWidth != ""))
 	{
 		addUserConfigData(setting.userId,setting.userLocId,"RESOURCEWIDTH",resouceWidth);
 	}
-		editPage.unLockDocumnet();
 }
 
 ///修改标题名称
 function changeCurrentTitle(title,categoryId)
 {
 	parent.setCurrentTitle(title);
+    //修改病历Tab签的valueExp值，否则会出现如下问题
+    //住院病历病历导航目录，打开病历时若切换到非同一Categoryid下的病历，点击HIS诊断界面再切换回病历界面时会跳到第一次打开病历所对应的导航界面。
+    setCurrentValue(categoryId);
 	setting.categoryId = categoryId;
 }
+
+///修改Tab签valueExp值，注意不要用update，平台会重画tab
+function setCurrentValue(newValue){
+	var curTab = parent.$('#tabsReg').tabs('getSelected');
+	var oldValue = curTab.panel("options").valueExp||"";
+	if (oldValue.split("=")[1] == newValue)
+    {
+		return;
+	}
+	if ((oldValue).indexOf('CategoryID') >= "0")
+	{
+		value = oldValue.split("=")[0]+"="+newValue;
+        curTab.panel("options").valueExp = value;
+	}
+	return;
+}
+
 //关闭病历页签(若阻止关闭，则return false)
 function onBeforeCloseTab()
 {
-	if ((editPage)&&(editPage.savePrompt("") == "cancel"))
-	{
-		return false;
+	//平台组关闭 页签方法存在
+	if(parent&&parent.closeCurrentChart){	
+		if ((editPage)&&(typeof editPage.closeTabSavePrompt == "function"))
+		{
+			var text = editPage.closeTabSavePrompt("");
+			if(text!==false){
+	            var dialogID = "SavePromptTab";
+	            var tempFrame = "<iframe id='iframeSavePrompt' scrolling='auto' frameborder='0' src='emr.ip.prompt.csp?DialogID="+dialogID+"&PromptText="+text+"&MWToken="+getMWToken()+"' style='width:100%;height:100%;display:block;'></iframe>"
+	            createModalDialog(dialogID,"保存提示","350","150","iframeSavePrompt",tempFrame,doPrompt);	
+				return false;
+				}else{
+					//切换成侧菜单形态
+					if (parent.EPRCATE85.isEprCategory()){
+						parent.switchToolHandler();
+					}
+					return true;	
+				}	
+		}
+	}else{	
+		if ((editPage)&&(typeof editPage.savePrompt == "function"))
+		{
+			var editFlag = editPage.savePrompt("");
+			if (editFlag == "cancel")
+			{
+				return false;
+			}
+			else if (editFlag == "unsave")
+			{
+				editPage.resetModifyState("","false");
+			}
+		}	
+	}
+	//切换成侧菜单形态
+	if (parent.EPRCATE85.isEprCategory()){
+		parent.switchToolHandler();
 	}
 	return true;
+	/*
+	if ((editPage)&&(typeof editPage.savePrompt == "function"))
+	{
+		var editFlag = editPage.savePrompt("");
+		if (editFlag == "cancel")
+		{
+			return false;
+		}
+		else if (editFlag == "unsave")
+		{
+			editPage.resetModifyState("","false");
+		}
+	}
+	return true;
+	*/
 }
-
+function doPrompt(result){
+    if (result == "save")
+    {
+	    setSysMenuDoingSth("");
+        editPage.saveDocument();
+        parent.closeCurrentChart();
+		//切换成侧菜单形态
+		if (parent.EPRCATE85.isEprCategory()){
+			parent.switchToolHandler();
+		}
+    }else if(result == "unsave")
+    {
+	    setSysMenuDoingSth("");
+        editPage.resetModifyState("","false");
+        parent.closeCurrentChart();
+		//切换成侧菜单形态
+		if (parent.EPRCATE85.isEprCategory()){
+			parent.switchToolHandler();
+		}
+    }else
+    {
+	    setSysMenuDoingSth(emrTrans('请先保存病历！'));
+        return;
+    }
+}
 function showDiaglog(title,width,height,content)
 {
 	$HUI.dialog('#dialog',{  
@@ -230,7 +368,7 @@ function setPrintInfo(flag)
 {
 	if (flag == "true")
 	{
-		$.messager.progress({
+		top.$.messager.progress({
 			title: "提示",
 			msg: '正在打印病历',
 			text: '打印中....'
@@ -238,14 +376,17 @@ function setPrintInfo(flag)
 	}
 	else
 	{
-		$.messager.progress("close");
+		top.$.messager.progress("close");
 	}
 }
 
 //平台使用 如果返回false,不切换Chart页签
 function chartOnBlur(){
+    return true;
+    /*8.5以后切换页签不再提示病历是否保存
     if (editPage && editPage.length >0)
     {
+		if (typeof editPage.savePrompt !== "function") return;
         var editFlag = editPage.savePrompt("");
         if (editFlag == "cancel") 
         {
@@ -259,7 +400,7 @@ function chartOnBlur(){
     else
     {
         return false;
-    }
+    }*/
 }
 
 function setSysMenuDoingSth(sthmsg) {
@@ -277,12 +418,31 @@ $(document).ready(function(e){
 	var iframe = document.getElementById("framRecord");
 	if (iframe.attachEvent){
 	    iframe.attachEvent("onload", function(){
-	        $("#editor").css("display","none");
+            setDisplay();
 	    });
 	} else {
 	    iframe.onload = function(){
-	        $("#editor").css("display","none");
+            setDisplay();
 	    };
 	}
 })
+//设置页面隐藏属性
+function setDisplay(){
+    if (setting.tabParam != "")
+    {
+        $("#nav").css("display","none");
+    }else{
+        $("#editor").css("display","none");
+    }
+}
 
+//质控调用，切换病历
+function switchRecordByID(instanceID)
+{
+    if (instanceID == "") return;
+    if (editPage && editPage.length >0)
+    {
+		if (typeof editPage.loadInstanceByID !== "function") return;
+        editPage.loadInstanceByID(instanceID);
+    }
+}

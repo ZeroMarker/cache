@@ -1,19 +1,18 @@
 
 ///Creator:    bianshuai
 ///CreateDate: 2016-01-28
-///Descript:   药学类咨询
+///Descript:   教师信息列表
 var flag=0;
 var url="dhcpha.clinical.action.csp";
-var bmTEduArr = [{"value":"1","text":'博士研究生'}, {"value":"2","text":'硕士研究生'}, {"value":"3","text":'专科/本科'}, {"value":"4","text":'中职/高中'}];
-var GuiCarArr = [{"value":"1","text":'博士研究生'}, {"value":"2","text":'硕士研究生'}, {"value":"3","text":'专科/本科'}, {"value":"4","text":'中职/高中'}];
+var bmTEduArr = [{"value":"1","text":$g('博士及以上')}, {"value":"2","text":$g('硕士')}, {"value":"3","text":$g('本科')}, {"value":"4","text":$g('大专')}];
 $(function(){
 	
 	$("#startDate").datebox("setValue", formatDate(-2));  //Init起始日期
 	$("#endDate").datebox("setValue", formatDate(0));     //Init结束日期
 	
-	$("a:contains('新增')").bind("click",newCreateWriteWin);
-	$("a:contains('查询')").bind("click",querybmTeacherDet);
-	$("a:contains('删除')").bind("click",delTeacherDetail);
+	$("a:contains("+$g('新增')+")").bind("click",newCreateWriteWin);
+	$("a:contains("+$g('查询')+")").bind("click",querybmTeacherDet);
+	$("a:contains("+$g('删除')+")").bind("click",delTeacherDetail);
     $('#TeacherCode').bind('keypress',function(event){
         if(event.keyCode == "13"){
 	        findUserInfo();}
@@ -78,61 +77,40 @@ $(function(){
 //初始化列表
 function InitCliTeaList()
 {
-
-	/**
-	 * 定义columns
-	 */
-	 /*
-	var columns=[[
-		{field:'bmTeaID',title:'bmTeaID',width:80,hidden:true},
-		{field:'bmTCareer',title:'带教专业Code',width:100,hidden:true},
-		{field:'bmTCareerDesc',title:'带教专业',width:100},
-		{field:'bmTUserID',title:'用户ID',width:100,hidden:true},
-		{field:'bmTUserCode',title:'工号',width:80},
-		{field:'bmTUserName',title:'姓名',width:80},
-		{field:'bmTSexID',title:'性别ID',width:60,hidden:true},
-		{field:'bmTSex',title:'性别',width:60},
-		{field:'bmTEduca',title:'学历Code',width:100,hidden:true},
-		{field:'bmTEducaDesc',title:'学历',width:100},
-		{field:'bmTCarePrvID',title:'职称ID',width:100,hidden:true},
-		{field:'bmTCarePrvTP',title:'职称',width:100},
-		{field:'bmTLocID',title:'科室ID',width:160,hidden:true},
-		{field:'bmTLoc',title:'科室',width:160},
-		{field:'bmTRemark',title:'备注',width:200},
-		{field:'bmTDate',title:'日期',width:100},
-		{field:'bmTTime',title:'时间',width:90},
-		{field:'LinkModify',title:'修改信息',width:100,align:'center',formatter:SetCellOpUrl}
-	]];
-	*/
 	
 	var columns=[[
 		{field:'bmTeaID',title:'bmTeaID',width:80,hidden:true,rowspan:2},
-		{field:'bmTCareer',title:'带教专业Code',width:100,hidden:true,rowspan:2},
-		{field:'bmTCareerDesc',title:'带教专业',width:100,rowspan:2},
-		{title:'<span style="font-weight:bold">带教老师情况</span>',align:'center',colspan:9}
+		{field:'bmTCareer',title:$g('带教专业Code'),width:100,hidden:true,rowspan:2},
+		{field:'bmTCareerDesc',title:$g('带教专业'),width:100,rowspan:2},
+		{title:'<span style="font-weight:bold">'+$g("带教老师情况")+'</span>',align:'center',colspan:9}
 	],[
-		{field:'bmTUserID',title:'用户ID',width:100,hidden:true},
-		{field:'bmTUserCode',title:'工号',width:80},
-		{field:'bmTUserName',title:'姓名',width:80},
-		{field:'bmTSexID',title:'性别ID',width:60,hidden:true},
-		{field:'bmTSex',title:'性别',width:60},
-		{field:'bmTEduca',title:'学历Code',width:100,hidden:true},
-		{field:'bmTEducaDesc',title:'学历',width:120},
-		{field:'bmTCarePrvID',title:'职称ID',width:100,hidden:true},
-		{field:'bmTCarePrvTP',title:'职称',width:100},
-		{field:'bmTLocID',title:'科室ID',width:160,hidden:true},
-		{field:'bmTLoc',title:'科室',width:200},
-		{field:'bmTDate',title:'日期',width:100},
-		{field:'bmTTime',title:'时间',width:90,hidden:true},
-		{field:'LinkModify',title:'修改信息',width:100,align:'center',formatter:SetCellOpUrl},
-		{field:'bmTRemark',title:'备注',width:200}
+		{field:'bmTUserID',title:$g('用户ID'),width:100,hidden:true},
+		{field:'bmTUserCode',title:$g('工号'),width:80},
+		{field:'bmTUserName',title:$g('姓名'),width:80},
+		{field:'bmTSexID',title:$g('性别ID'),width:60,hidden:true},
+		{field:'bmTSex',title:$g('性别'),width:60},
+		{field:'bmTAge',title:$g('年龄'),width:60},
+		{field:'bmTEduca',title:$g('学历Code'),width:100,hidden:true},
+		{field:'bmTEducaDesc',title:$g('学历'),width:120},
+		{field:'bmTCarePrvID',title:$g('职称ID'),width:100,hidden:true},
+		{field:'bmTCarePrvTP',title:$g('职称'),width:100},
+		{field:'bmTLocID',title:$g('科室ID'),width:160,hidden:true},
+		{field:'bmTLoc',title:$g('科室'),width:200},
+		{field:'bmTDate',title:$g('日期'),width:100},
+		{field:'bmTTime',title:$g('时间'),width:90,hidden:true},
+		{field:'bmTClinicalDate',title:$g('临床药师证书时间'),width:150},
+		{field:'bmTTeacherDate',title:$g('临床药师师资证书时间'),width:150},
+		{field:'bmSNameStr',title:$g('带教学员'),width:150},
+		{field:'bmTRemark',title:$g('备注'),width:200},
+		{field:'LinkModify',title:$g('修改信息'),width:100,align:'center',formatter:SetCellOpUrl},
+
 	]];
 	
 	/**
 	 * 定义datagrid
 	 */
 	var option = {
-		title:'带教老师明细',
+		title:$g('带教老师明细'),
 		//nowrap:false,
 		singleSelect : true ,
 		onDblClickRow:function(rowIndex, rowData){
@@ -190,13 +168,13 @@ function newCreateWriteWin(){
 function newCreateWrOrEdWin(){
 	var option = {
 			buttons:[{
-				text:'保存',
+				text:$g('保存'),
 				iconCls:'icon-save',
 				handler:function(){
 					saveTeaDetail();
 					}
 			},{
-				text:'关闭',
+				text:$g('关闭'),
 				iconCls:'icon-cancel',
 				handler:function(){
 					$('#newWrWin').dialog('close');
@@ -204,10 +182,10 @@ function newCreateWrOrEdWin(){
 			}]
 		};
 	if(flag==1){
-		var newWrDialogUX = new DialogUX('修改带教教师信息', 'newWrWin', '730', '350', option); //lbb 2019-03-12
+		var newWrDialogUX = new DialogUX($g('修改带教教师信息'), 'newWrWin', '730', '400', option); //lbb 2019-03-12
 	}
 	else{
-	    var newWrDialogUX = new DialogUX('增加带教教师信息', 'newWrWin', '730', '350', option)
+	    var newWrDialogUX = new DialogUX($g('增加带教教师信息'), 'newWrWin', '730', '400', option)
 	}
 	newWrDialogUX.Init();
 	flag=0;
@@ -253,13 +231,26 @@ function saveTeaDetail(){
 		showMsgAlert("错误提示:","带教专业不能为空！");
 		return;
 	}
-
+	var teacherAge=$('#TeacherAge').val();    //年龄
+	if (teacherAge == ""){
+		showMsgAlert("错误提示:","年龄不能为空！");
+		return;
+	}
+	var ClinicalDate=$('#ClinicalDate').datebox('getValue')
+    if (ClinicalDate == ""){
+		showMsgAlert("错误提示:","取得临床药师证书时间不能为空！");
+		return;
+	}
+	var TeacherDate=$('#TeacherDate').datebox('getValue')
+    if (TeacherDate == ""){
+		showMsgAlert("错误提示:","取得临床药师师资证书时间不能为空！");
+		return;
+	}
     var teacherDesc = $("#TeacherDesc").val();   //描述信息
 
 	var bmTeacherID = $("#TeacherID").val();
 	
-	
-	var bmTDataList = teaUserID +"^"+ teacherSex +"^"+ teacherEdu +"^"+ teacherLoc +"^"+ teacherCar +"^"+ teacherTit +"^"+ teacherDesc;
+	var bmTDataList = teaUserID +"^"+ teacherSex +"^"+ teacherEdu +"^"+ teacherLoc +"^"+ teacherCar +"^"+ teacherTit +"^"+ teacherDesc+"^"+teacherAge+"^"+ClinicalDate+"^"+TeacherDate;
 
 	//保存数据
 	$.post(url+'?action=SaveBasManTeacher',{"bmTeacherID":bmTeacherID,"bmTDataList":bmTDataList},function(jsonString){
@@ -289,9 +280,8 @@ function querybmTeacherDet(){
 	var endDate=$('#endDate').datebox('getValue');       //截止日期
 
 	var userCode=$('#userCode').val();    //工号
-	
-	var params=startDate +"^"+ endDate +"^"+ userCode+"^"+LgHospID;
-
+	var userName=$('#userName').val();
+	var params=startDate +"^"+ endDate +"^"+ userCode+"^"+LgHospID+"^"+userName;
 	$('#bmTDetList').datagrid({
 		url:url + "?action=QuerybmTeaList",	
 		queryParams:{
@@ -331,6 +321,9 @@ function showModifyWin(index){
 	$("#TeacherLoc").combobox('setValue',rowData.bmTLocID);     //科室
 	$("#TeacherLoc").combobox('setText',rowData.bmTLoc);     //科室
 	$("#TeacherCar").combobox('setValue',rowData.bmTCareer);    //带教专业
+	$("#TeacherAge").val(rowData.bmTAge); //年龄
+	$("#ClinicalDate").datebox("setValue",rowData.bmTClinicalDate)
+	$("#TeacherDate").datebox("setValue",rowData.bmTTeacherDate)
 	$("#TeacherDesc").val(rowData.bmTRemark);   //备注
 }
 
@@ -346,6 +339,9 @@ function initbmTWrOrEdWin(){
 	$("#TeacherLoc").combobox('setValue',"");     //科室
 	$("#TeacherCar").combobox('setValue',"");     //带教专业
 	$("#TeacherDesc").val("");   //备注
+	$("#ClinicalDate").datebox("setValue","")
+	$("#TeacherDate").datebox("setValue","")
+	$("#TeacherAge").val("");
 }
 
 /// 根据用户工号查询用户信息
@@ -363,6 +359,13 @@ function findUserInfo(){
 			showMsgAlert("错误原因:" , "'工号'错误，请重试！");
 			return;
 		}
+		/* if (resobj.bmTUserGroup != LgGroupID){
+			showMsgAlert("错误原因:" , "不是登录的安全组人员工号");
+			$("#TeaUserID").val("")
+			$("#TeacherCode").val("");    //工号
+		    $("#TeacherName").val("");
+			return;
+		} */
 		$("#TeaUserID").val(resobj.bmTUserID);    //用户ID
 		$("#TeacherCode").val(resobj.bmTUserCode);    //工号
 		$("#TeacherName").val(resobj.bmTUserName);    //姓名

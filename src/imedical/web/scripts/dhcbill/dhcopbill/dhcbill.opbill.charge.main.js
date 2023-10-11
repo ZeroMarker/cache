@@ -1,80 +1,61 @@
-ï»¿/**
+/**
  * FileName: dhcbill.opbill.charge.main.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-06-03
- * Description: é—¨è¯Šæ”¶è´¹
+ * Description: ÃÅÕïÊÕ·Ñ
  */
 
 $(function () {
 	$(document).keydown(function (e) {
-		banBackSpace(e);
 		frameEnterKeyCode(e);
 	});
-	initPatInfoPanel();
-	initOEListPanel();
-	initChargePanel();
 });
 
 $(window).load(function() {
-	var reloadFlag = getValueById("reloadFlag");
-	if (reloadFlag) {
-		setValueById("cardNo", getParam("CardNo"));
-		var selectPatRowId = getParam("SelectPatRowId");
-		var selectAdmRowId = getParam("SelectAdmRowId");
-		if ((selectPatRowId != "") && (selectAdmRowId != "")) {
-			setPatientDetail(selectPatRowId, selectAdmRowId);
-		}
-		disableById("btn-readCard");
-		disableById("cardNo");
-		disableById("btn-clear");
-	}
-	
-	//åŒ»æŠ€ç§‘å®¤å•ç‹¬æŒ‚çš„æ”¶è´¹ç•Œé¢æ—¶ï¼Œä¹Ÿä¸èƒ½è°ƒç”¨åŒ»ä¿ï¼Œåªèƒ½å¡æ¶ˆè´¹
-	var medDeptFlag = getValueById("medDeptFlag");
-	if (medDeptFlag) {
-		setValueById("reloadFlag", medDeptFlag);
-	}
-	if (getValueById("reloadFlag")) {
-		disableById("patientNo");
-		disableById("paymode");
-		disableById("chargeInsType");
+	var selectPatRowId = getValueById("selectPatRowId");
+	var selectAdmRowId = getValueById("selectAdmRowId");
+	var cardNo = getValueById("CardNo");
+    var cardTypeId = getValueById("CardTypeRowId");
+	if (selectPatRowId != "") {
+		if ((cardNo != "") && (cardTypeId != "")) {
+	    	var accMRowId = getPatAccMRowId(cardNo, cardTypeId, selectPatRowId);
+			setValueById("accMRowId", accMRowId);
+    	}
+		setPatientDetail(selectPatRowId, selectAdmRowId);
 	}
 });
 
 /**
-* é€šè¿‡å°±è¯Šå¡å›è°ƒè·å–æ‚£è€…ä¿¡æ¯
+* Í¨¹ı¾ÍÕï¿¨»Øµ÷»ñÈ¡»¼ÕßĞÅÏ¢
 */
-function setPatInfoByCard(cardNo, cardTypeRowId, patientId) {
-	setValueById("cardNo", cardNo);
-	$.each($("#cardType").combobox("getData"), function(index, item) {
-		var id = item.value.split("^")[0];
-		if (id == cardTypeRowId) {
-			$("#cardType").combobox("select", item.value);
-			return false;
-		}
-	});
+function setPatInfoByCard(cardNo, cardTypeId, patientId) {
+	setValueById("CardNo", cardNo);
+	setValueById("CardTypeRowId", cardTypeId);
+	setValueById("CardTypeNew", getPropValById("DHC_CardTypeDef", cardTypeId, "CTD_Desc"));
+	setValueById("accMRowId", "");    //+2023-02-03 ZhYW
 	setPatientDetail(patientId, "");
 }
 
 /**
- * å¿«æ·é”®
+ * ¿ì½İ¼ü
  */
 function frameEnterKeyCode(e) {
 	var key = websys_getKey(e);
 	switch (key) {
 	case 115: //F4
+		e.preventDefault();
 		readHFMagCardClick();
 		break;
-	case 117: //F6
-		regClick();
-		break;
 	case 118: //F7
+		e.preventDefault();
 		clearClick();
 		break;
 	case 120: //F9
+		e.preventDefault();
 		chargeClick();
 		break;
 	case 121: //F10
+		e.preventDefault();
 		saveClick();
 		break;
 	default:
@@ -82,18 +63,23 @@ function frameEnterKeyCode(e) {
 }
 
 /**
- * æ‚£è€…åˆ—è¡¨ä¸­é€‰æ‹©æ‚£è€…åˆ‡æ¢
+ * »¼ÕßÁĞ±íÖĞÑ¡Ôñ»¼ÕßÇĞ»»
  */
 function switchPatient(patientId, episodeId) {
-	$("#InpatListDiv").data("AutoOpen", 0);
 	clearMenu();
 	setPatientDetail(patientId, episodeId);
 }
 
 function clearMenu() {
-	$(":text:not(.pagination-num)").val("");
-	$("#cardType").combobox("reload");
-	$(".combobox-f:not(#paymode,#cardType)").combobox("clear").combobox("loadData", []);
+	$(":text:not(.pagination-num,.numberbox-f)").val("");
+	$(".combobox-f").combobox("clear").combobox("loadData", []);
   	setValueById("accMRowId", "");
-  	setValueById("accMLeft", "");
+}
+
+function closeTipWin() {
+	$("#exceptlist").panel("close");
+}
+
+function openTipWin() {
+	$("#exceptlist").panel("open");
 }

@@ -26,7 +26,7 @@ $(function () {
             dialogHtml += '</tr>';
             dialogHtml += '<tr>';
             dialogHtml += '<td align="right">密码 </td>';
-            dialogHtml += '<td><input id="password" type="password" name="password" class="hisui-validatebox textbox"/></td>';
+            dialogHtml += '<td><input id="password" type="password" name="password" class="hisui-validatebox textbox validatebox-text"/></td>';
             dialogHtml += '</tr>';
             dialogHtml += '</table>';
             dialogHtml += '</form>';
@@ -127,7 +127,7 @@ $(function () {
 
             } catch (err) {}
 
-            var UsrCertCode = GetUniqueID(cert);
+            var UsrCertCode = GetUniqueID(cert,key);
             var certificateNo = GetCertNo(key);
 
             var loginInfo;
@@ -157,7 +157,6 @@ $(function () {
 
         function showLoginDialog(onConfirm, onCancel) {
             $('#password').val('');
-            document.getElementById('password').focus();
             loginDialog.show().dialog({
                 isTopZindex: true,
                 closable: false,
@@ -195,6 +194,7 @@ $(function () {
                     }
                 ]
             });
+            document.getElementById('password').focus();
         }
 
         function getSignContent(usrInfo, insID, checkresult, signProperty) {
@@ -212,6 +212,7 @@ $(function () {
                     Name: usrInfo.Name,
                     Image: usrInfo.Image,
                     Description: usrInfo.LevelDesc,
+                    Path: signProperty.Path || '',
                     isSync: true
                 });
             if (signInfo && signInfo.result == 'OK') {
@@ -223,7 +224,7 @@ $(function () {
         /// 提交服务器，验签名，返回signID
         function serverSign(signValue, contentHash) {
             var result;
-            var UsrCertCode = GetUniqueID(GetSignCert(strKey)) || '';
+            var UsrCertCode = GetUniqueID(GetSignCert(strKey),strKey) || '';
             if ('' === UsrCertCode) {
                 //$.messager.alert('提示', '用户唯一标示为空！', 'info');
                 alert('用户唯一标示为空！');
@@ -264,80 +265,103 @@ $(function () {
             }
 
             var doSign = function (loginInfo) {
-                //权限检查
-                var checkresult = privilege.checkSign(loginInfo, signProperty);
-                if (!checkresult.flag) {
-                    return;
-                }
-                // 获取原文(编辑器已经hash压缩)签名,服务器验证,通知编辑器保存SignID签名记录号
-                var fnSign = function () {
-                    try {
-                        //文档签名
-                        var signInfo = getSignContent(loginInfo, insID, checkresult, signProperty);
-                        var contentHash = signInfo.Digest || '';
-                        if ('' === contentHash) {
-                            //$.messager.alert('提示', '签名原文为空！', 'info');
-                            alert('签名原文为空！');
-                            return;
-                        }
-                        //CA接口
-                        var signValue = SignedData(contentHash, strKey) || '';
-                        if ('' === signValue) {
-                            //$.messager.alert('提示', '签名数据为空！', 'info');
-                            alert('签名数据为空！');
-                            return;
-                        }
-                        var signID = serverSign(signValue, contentHash) || '';
-                        if ('' === signID) {
-                            //$.messager.alert('提示', 'SignID为空！', 'info');
-                            alert('SignID为空！');
-                            return;
-                        }
+                var checkSignCallBack = function (checkresult,arr) {
+					var insID = arr.insID;
+					var signProperty = arr.signProperty;
+					var loginInfo = arr.loginInfo;
+					
+					//权限检查
+					if (!checkresult.flag) {
+		                return;
+		            }
+	                
+	                // 获取原文(编辑器已经hash压缩)签名,服务器验证,通知编辑器保存SignID签名记录号
+	                var fnSign = function () {
+	                    try {
+                            //如果是三级医师审核时，传入签名级别为医师级别
+                            var signlevel = signProperty.OriSignatureLevel;
+                            if (signProperty.OriSignatureLevel === 'Check') {
+                                signlevel = loginInfo.Level;
+                            }
+                            
+                            if ('' === signlevel) {
+                                alert('用户签名级别为空，请检查系统配置！');
+                                return;
+                            }
+                            
+	                        //文档签名
+	                        var signInfo = getSignContent(loginInfo, insID, checkresult, signProperty);
+	                        var contentHash = signInfo.Digest || '';
+	                        if ('' === contentHash) {
+	                            //$.messager.alert('提示', '签名原文为空！', 'info');
+	                            alert('签名原文为空！');
+	                            return;
+	                        }
+	                        //CA接口
+	                        var signValue = SignedData(contentHash, strKey) || '';
+	                        if ('' === signValue) {
+	                            //$.messager.alert('提示', '签名数据为空！', 'info');
+	                            alert('签名数据为空！');
+	                            return;
+	                        }
+	                        var signID = serverSign(signValue, contentHash) || '';
+	                        if ('' === signID) {
+	                            //$.messager.alert('提示', 'SignID为空！', 'info');
+	                            alert('SignID为空！');
+	                            return;
+	                        }
 
-                        var signlevel = signProperty.OriSignatureLevel;
-                        if (signProperty.OriSignatureLevel === 'Check')
-                            signlevel = loginInfo.Level;
-                        var saveRet = iEmrPlugin.SAVE_SIGNED_DOCUMENT({
-                                SignUserID: loginInfo.UserID,
-                                SignID: signID,
-                                SignLevel: signlevel,
-                                Digest: contentHash,
-                                Type: 'CA',
-                                Path: signInfo.Path,
-                                ActionType: checkresult.ationtype,
-                                InstanceID: insID,
-                                isSync: true
-                            });
-                        if (saveRet && 'OK' === saveRet.params.result) {
-                            $.messager.popover({msg:'数据签名成功!',type:'success',style:{top:10,right:5}});
-                            //showEditorMsg('数据签名成功!');
-                            var documentContext = emrEditor.getDocContext(saveRet.params.InstanceID);
-                            privilege.setRevsion(documentContext);
-                            privilege.setViewRevise(documentContext, function () {
-                                var txt = $('#btnRevisionVisible').find("span").eq(1).text();
-                                return txt === '隐藏痕迹';
-                            });
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    } catch (ex) {
-                        //$.messager.alert('发生错误', ex.message || ex, 'error');
-                        alert(ex.message || ex);
-                        return false;
-                    }
+	                        var saveRet = iEmrPlugin.SAVE_SIGNED_DOCUMENT({
+	                                SignUserID: loginInfo.UserID,
+	                                SignID: signID,
+	                                SignLevel: signlevel,
+	                                Digest: contentHash,
+	                                Type: 'CA',
+	                                Path: signInfo.Path,
+	                                ActionType: checkresult.ationtype,
+	                                InstanceID: insID,
+	                                isSync: true
+	                            });
+	                        if (saveRet && 'OK' === saveRet.params.result) {
+	                            showEditorMsg({msg:'数据签名成功!',type:'success'});
+	                            var documentContext = emrEditor.getDocContext(saveRet.params.InstanceID);
+	                            privilege.setRevsion(documentContext);
+	                            privilege.setViewRevise(documentContext, function () {
+	                                var txt = $('#btnRevisionVisible').find("span").eq(1).text();
+	                                return txt === '隐藏痕迹';
+	                            });
+	                            return true;
+	                        } else {
+	                            return false;
+	                        }
+	                    } catch (ex) {
+	                        //$.messager.alert('发生错误', ex.message || ex, 'error');
+	                        alert(ex.message || ex);
+	                        return false;
+	                    }
 
-                }
+	                }
 
-                var retSign = fnSign() || false;
-                if (!retSign) {
-                    var ret = iEmrPlugin.UNSIGN_DOCUMENT({
-                            isSync: true
-                        });
-                    if ('ERROR' === ret.result)
-                        alert('撤销最后一次签名失败！');
-                    //$.messager.alert('发生错误', '撤销最后一次签名失败！', 'error');
+	                var retSign = fnSign() || false;
+	                if (!retSign) {
+	                    var ret = iEmrPlugin.UNSIGN_DOCUMENT({
+	                            isSync: true
+	                        });
+	                    if ('ERROR' === ret.result)
+	                        alert('撤销最后一次签名失败！');
+	                    //$.messager.alert('发生错误', '撤销最后一次签名失败！', 'error');
+	                }
                 }
+                
+                var arr = {
+					insID: insID, 
+					signProperty: signProperty,
+					loginInfo:loginInfo
+				}
+				
+				//权限检查
+                var documentContext = emrEditor.getDocContext();
+			    privilege.checkSign(loginInfo, signProperty, documentContext, checkSignCallBack, arr);
             }
 
             var loginInfo = serverLogin(strKey, operate, userID) || '';

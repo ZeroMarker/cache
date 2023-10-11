@@ -148,7 +148,8 @@ var initEvent = function(){
 					}
 				}
 			}
-			CompObj["del"].bind("click",delClick).linkbutton('enable');
+			//先unbind事件 否则多事件
+			CompObj["del"].unbind('click',delClick).bind("click",delClick).linkbutton('enable');
 		}
 	}
 	//on before load --> getValue--combobox

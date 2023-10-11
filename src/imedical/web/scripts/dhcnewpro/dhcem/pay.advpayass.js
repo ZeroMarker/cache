@@ -1,7 +1,7 @@
 ﻿///CreatDate:  2019-03-16
 ///Author:     yangyongtao
 /// pay.advoayass.js 
-var PayFlag=""
+var PayFlag="";
 $(function(){
 	initCombox();
 	initBtn();
@@ -15,6 +15,9 @@ $(function(){
 
 
 function initCombox(){
+	
+	hosNoPatOpenUrl = getParam("hosNoPatOpenUrl"); //hxy 2011-10-24 st
+	hosNoPatOpenUrl?hosOpenPatList(hosNoPatOpenUrl):''; //ed
 	
 	//评估科室
 	$HUI.combobox("#payLoc",{
@@ -31,16 +34,25 @@ function initCombox(){
 		textField:'text',
 		mode:'remote',
 	})
-		
+	
+	/// 评估日期
+	$('#payAssDatetime').datebox().datebox('calendar').calendar({
+		validator: function(date){
+			var now = new Date();
+			return date<=now;
+		}
+	});	
 }
 
 /// 取登录信息
 function GetLgContent(){
 
-	runClassMethod("web.DHCEMAdvPayass","GetLgContent",{"LgLocID":LgCtLocID},function(jsonObject){
+	runClassMethod("web.DHCEMAdvPayass","GetLgContent",{"LgLocID":LgCtLocID,"LgUserID":LgUserID},function(jsonObject){
 		
 		if (jsonObject != null){
 			$('#payCurward').val(jsonObject.LocDesc);  /// 申请科室
+			$('#payUser').val(jsonObject.User);  /// 评估人
+			LgUserName=jsonObject.User;
 		}
 	},'json',false)
 }
@@ -77,7 +89,7 @@ function addAction(type){
     var payobsWard=$('#payobsWard').combobox('getValue')
 	var advpayAmt=$('#advpayAmt').val()
 	
-	if(parseInt(advpayAmt)==0){
+	if(parseFloat(advpayAmt) <= 0){
 		$.messager.alert("提示:","评估预交金不能为0");
 		return;
 	}
@@ -115,8 +127,11 @@ function addAction(type){
 				$('#advpayassId').val(""); /// 保存或修改成功后清空
 				$("#payUser").val(LgUserName);
 				$.messager.alert("提示",PayMessage+"成功！","",function(){
-					if(PayFlag=="1"){  
-					  window.close();
+					if(PayFlag=="1"){ 
+						window.close();
+						if(typeof websys_showModal=="function"){
+							websys_showModal("close");
+						}
 					}
 				});	
 			}
@@ -197,7 +212,7 @@ function getInfoBYAdm(adm){
 				$("#NotAmount").val(data.NotAmount);///未记账金额 
 				$("#AllCharge").val(data.AllCharge);
 				if(data.StayFlag!="Y"){
-					$("#ChargeLabel").html("预交金");	
+					$("#ChargeLabel").html($g("预交金"));	
 				}
 		     }
 		 });	
@@ -209,6 +224,10 @@ function searchAction(){
 }
 
 function getAdm(){
+	adm=getParam("EpisodeID"); //hxy 2022-10-24 st
+	if(adm!=""){
+		return adm
+	} //ed
 	try{
 		adm="";
 		var frm=window.parent.document.forms["fEPRMENU"];
@@ -267,42 +286,39 @@ function printAction(){
 		 $.messager.alert('警告','请选择要操作的记录');
 		 return;	
 	}
-	try {
-		var ret=serverCall("web.DHCEMAdvPayass","getPrintInfo",{pay:pay}).split("^")
-		DHCP_GetXMLConfig("InvPrintEncrypt","DHCEM_AdvPayAss");
-		var PatName=ret[0];           //姓名
-		var Company=ret[1]            //单位 
-		var Phone=ret[2]              //电话 
-		var Address=ret[3]            //地址 
-		var Diagnosis=ret[4]          //诊断
-		var HospName=ret[5]           //医院名称
-		var payCurward=ret[6]         //当前病区
-		var payobsDays=ret[7]         //评估留观天数
-		var payobsWard=ret[8]         //评估留观病区
-		var advpayAmt=ret[9]          //评估预交金
-		var payLoc=ret[10]            //评估科室
-		var User=ret[11]              //评估人
-		var payAssDateTime=ret[12]    //评估日期
-		var payNote=ret[13]           //备注
+	
+	LODOP = getLodop();
+	LODOP.PRINT_INIT("CST PRINT");
+	DHCP_GetXMLConfig("InvPrintEncrypt","DHCEMAdvPayEval");
+	var ret=serverCall("web.DHCEMAdvPayass","GetPrintData",{ID:pay}).split("^");
+	var PatName=ret[2];           //姓名
+	var PatAge=ret[4];			  //年龄
+	var PatSex=ret[3];			  //性别
+	var PayMoney=ret[5];		  //金额
+	var Loc=ret[9];				  //性别
+	var RegNo=ret[1];			  //登记号
+	var MedInType=ret[15];		  //费别
+	var AdmDate=ret[7]+" "+ret[8];//就诊时间
+	var FirstDiag=ret[14];
+	var OrderDoc=ret[6];		  	  //就诊医师
+	var PrintDate=ret[11]+" "+ret[12] //打印日期和打印时间
+	var HospName=ret[13]              //医院名称
 		
-		 
-		var MyPara="HospName"+String.fromCharCode(2)+HospName
-		var MyPara=MyPara+"^PatName"+String.fromCharCode(2)+PatName
-		var MyPara=MyPara+"^Company"+String.fromCharCode(2)+Company
-		var MyPara=MyPara+"^Phone"+String.fromCharCode(2)+Phone
-		var MyPara=MyPara+"^Address"+String.fromCharCode(2)+Address
-		var MyPara=MyPara+"^Diagnosis"+String.fromCharCode(2)+Diagnosis
-		var MyPara=MyPara+"^payCurward"+String.fromCharCode(2)+payCurward
-		var MyPara=MyPara+"^payobsDays"+String.fromCharCode(2)+payobsDays
-		var MyPara=MyPara+"^payobsWard"+String.fromCharCode(2)+payobsWard
-		var MyPara=MyPara+"^advpayAmt"+String.fromCharCode(2)+advpayAmt
-		var MyPara=MyPara+"^payLoc"+String.fromCharCode(2)+payLoc
-		var MyPara=MyPara+"^User"+String.fromCharCode(2)+User
-		var MyPara=MyPara+"^payAssDateTime"+String.fromCharCode(2)+payAssDateTime
-		var MyPara=MyPara+"^payNote"+String.fromCharCode(2)+payNote
-		var myobj=document.getElementById("ClsBillPrint");
-		DHCP_PrintFun(myobj,MyPara,"");
-	} catch(e) {alert(e.message)};
+	var MyPara="HospName"+String.fromCharCode(2)+HospName;
+	MyPara=MyPara+"^PatName"+String.fromCharCode(2)+PatName;
+	MyPara=MyPara+"^PatSex"+String.fromCharCode(2)+PatSex;
+	MyPara=MyPara+"^PatAge"+String.fromCharCode(2)+PatAge;
+	MyPara=MyPara+"^Loc"+String.fromCharCode(2)+Loc;
+	MyPara=MyPara+"^RegNo"+String.fromCharCode(2)+RegNo;
+	MyPara=MyPara+"^MedInType"+String.fromCharCode(2)+MedInType;
+	MyPara=MyPara+"^AdmDate"+String.fromCharCode(2)+AdmDate;
+	MyPara=MyPara+"^FirstDiag"+String.fromCharCode(2)+FirstDiag;
+	MyPara=MyPara+"^OrderDoc"+String.fromCharCode(2)+OrderDoc;
+	MyPara=MyPara+"^PrintDate"+String.fromCharCode(2)+PrintDate;
+	MyPara=MyPara+"^PayMoney"+String.fromCharCode(2)+PayMoney;
+	DHC_CreateByXML(LODOP,MyPara,"",[],"PRINT-CST-NT");  //MyPara 为xml打印要求的格式
+	var printRet = LODOP.PRINT();
+	return printRet;
 }	
 
 //获取当前日期

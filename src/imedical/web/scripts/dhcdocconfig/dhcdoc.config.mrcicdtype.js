@@ -14,6 +14,7 @@ function InitEvent() {
     });
     $("#BFind").click(LoadDiagTypeListDataGrid);
     $("#BSave").click(Save);
+    InitCache();
 }
 function InputStrKeydownHandle(e) {
 	try { keycode = websys_getKey(e); } catch (e) { keycode = websys_getKey(); }
@@ -23,6 +24,13 @@ function InputStrKeydownHandle(e) {
 }
 function CheckBoxClickHandler(e) {
 	$("#Text_InputStr").val("");
+}
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
 }
 function Save(){
 	if(ICDTYPERowId!=""){

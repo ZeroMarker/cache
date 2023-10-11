@@ -1,0 +1,276 @@
+<html>
+<head>
+<!-- Put your page Title here -->
+<title>手术申请</title>
+<CSP:CONTENT CHARSET="UTF-8">
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/easyui.css" />
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/icon.css" />
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/formtable.css" />
+<link rel="stylesheet" type="text/css" href="../service/dhcanop/css/operation.css" />
+<script type="text/javascript" src="../service/dhcanop/js/jquery.min.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="../service/dhcanop/js/easyui-lang-zh_cn.js"></script>
+</head>
+<body>
+	<form id="dataForm" method="post">
+        <input type="hidden" id="RowId" name="RowId">
+        <input type="hidden" id="EpisodeID" name="EpisodeID">
+        <input type="hidden" id="PatDeptID" name="PatDeptID">
+        <input type="hidden" id="PatWardID" name="PatWardID">
+        <input type="hidden" id="PatBedID" name="PatBedID">
+        <table class="form-table">
+            <tr>
+                <td>姓名</td>
+                <td><input type="text" id="PatName" name="PatName" class="easyui-textbox" data-options="disabled:true" /></td>
+                <td>登记号</td>
+                <td><input type="text" id="RegNo" name="RegNo" class="easyui-textbox" data-options="disabled:true" /></td>
+            </tr>
+            <tr>
+                <td>性别</td>
+                <td><input type="text" id="PatGender" name="PatGender" class="easyui-textbox" data-options="disabled:true"/></td>
+                <td>年龄</td>
+                <td><input type="text" id="PatAge" name="PatAge" class="easyui-textbox" data-options="disabled:true" /></td>
+            </tr>
+            <tr>
+                <td>科室</td>
+                <td><input type="text" id="PatDept" name="PatDept" class="easyui-textbox" data-options="disabled:true" /></td>
+                <td>病区</td>
+                <td><input type="text" id="PatWard" name="PatWard" class="easyui-textbox" data-options="disabled:true" /></td>
+            </tr>
+            <tr>
+                <td>床位</td>
+                <td><input type="text" id="PatBed" name="PatBed" class="easyui-textbox" data-options="disabled:true" /></td>
+                <td>费别</td>
+                <td><input type="text" id="AdmReason" name="AdmReason" class="easyui-textbox" data-options="disabled:true" /></td>
+            </tr>
+            <tr>
+                <td>病人涉密</td>
+                <td><input type="text" id="PatSecretCode" name="PatSecretCode" class="easyui-textbox" data-options="disabled:true" /></td>
+                <td>病人密级</td>
+                <td><input type="text" id="PatSecretLevel" name="PatSecretLevel" class="easyui-textbox" data-options="disabled:true" /></td>
+            </tr>
+            <tr>
+                <td>手术室</td>
+                <td><select id="OperDept" name="OperDept" class="easyui-combobox"></select></td>
+                <td>申请科室</td>
+                <td><select id="AppDept" name="AppDept" class="easyui-combobox"></select></td>
+                
+            </tr>
+            <tr>
+                <td>手术类型</td>
+                <td>
+                    <select id="SourceType" name="SourceType" class="easyui-combobox">
+                        <option value="B">择期</option>
+                        <option value="E">急诊</option>
+                    </select>
+                </td>
+                <td>手术日期</td>
+                <td><input type="text" id="OperDate" name="OperDate" class="easyui-datebox" /></td>
+            </tr>
+            <tr>
+                <td>开始时间</td>
+                <td><input type="text" id="OperTime" name="OperTime" class="easyui-timespinner" /></td>
+                <td>预计时长</td>
+                <td><input type="text" id="OperDuration" name="OperDuration" class="easyui-numberbox" /></td>
+            </tr>
+            <tr>
+                <td>是否麻醉</td>
+                <td>
+                    <select id="IsAnaest" name="IsAnaest" class="easyui-combobox">
+                        <option value=""></option>
+                        <option value="Y">是</option>
+                        <option value="N">否</option>
+                    </select>
+                </td>
+                <td>拟施麻醉</td>
+                <td>
+                    <select id="AnaMethod" name="AnaMethod" class="easyui-combobox">
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>是否重返手术</td>
+                <td>
+                    <select id="ReturnOperation" name="ReturnOperation" class="easyui-combobox">
+                        <option value=""></option>
+                        <option value="Y">是</option>
+                        <option value="N">否</option>
+                    </select>
+                </td>
+                <td>非计划手术</td>
+                <td>
+                    <select id="PlanOperation" name="PlanOperation" class="easyui-combobox">
+                        <option value=""></option>
+                        <option value="Y">是</option>
+                        <option value="N">否</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>术前诊断</td>
+                <td colspan="3">
+                    <table id="preopDiagBox" class="easyui-datagrid"></table>
+                    <div id="preopDiagTool">
+                        诊断<select id="diagnosis" class="easyui-combobox"></select>
+                        <a id="btnAddDiag" class="easyui-linkbutton" data-options="iconCls:'icon-add'">添加</a>
+                        <a id="btnDelDiag" class="easyui-linkbutton" data-options="iconCls:'icon-remove'">删除</a>
+                    </div>
+                    <input type="hidden" name="PreopDiagnosis" id="PreopDiagnosis">
+                </td>
+            </tr>
+            <tr>
+                <td>手术列表</td>
+                <td colspan="3">
+                    <table id="operationBox" class="easyui-datagrid"></table>
+                    <div id="operationTool">
+                        <a id="btnAddOperation" class="easyui-linkbutton" data-options="iconCls:'icon-add'">添加</a>
+                        <a id="btnEditOperation" class="easyui-linkbutton" data-options="iconCls:'icon-add'">修改</a>
+                        <a id="btnDelOperation" class="easyui-linkbutton" data-options="iconCls:'icon-remove'">删除</a>
+                    </div>
+                    <input type="hidden" name="PreopDiagnosis" id="PreopDiagnosis">
+                </td>
+            </tr>
+            <tr>
+                <td>手术要求</td>
+                <td colspan="3">
+                    <span class="oper-input">隔离手术<input type="checkbox" id="Isolation" name="Isolation" value="N"></span>
+                    <span class="oper-input">体外循环<input type="checkbox" id="ECC" name="ECC" value="N"></span>
+                    <span class="oper-input">自体血回输<input type="checkbox" id="TransAutoblood" name="Autoblood" value="N"></span>
+                    <span class="oper-input">是否备血<input type="checkbox" id="PrepareBlood" name="PrepareBlood" value="N"></span>
+                </td>
+            </tr>
+            <tr>
+                <td>其他要求</td>
+                <td colspan="3">
+                    <textarea id="OperRequirement" name="OperRequirement"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td>检验信息</td>
+                <td colspan="3">
+                    <span class="oper-input">血型
+                        <select id="BloodType" name="BloodType" class="easyui-combobox">
+                            <option value="化验中">化验中</option>
+                            <option value="A型">A型</option>
+                            <option value="B型">B型</option>
+                            <option value="AB型">AB型</option>
+                            <option value="O型">O型</option>
+                            <option value="未知">未知</option>
+                        </select>
+                    </span>
+                    <span class="oper-input">RH血型
+                        <select id="RHBloodType" name="RHBloodType" class="easyui-combobox">
+                            <option value="化验中">化验中</option>
+                            <option value="阴性">阴性</option>
+                            <option value="阳性">阳性</option>
+                            <option value="未知">未知</option>
+                        </select>
+                    </span>
+                    <span class="oper-input">HbsAg
+                        <select id="HbsAg" name="HbsAg" class="easyui-combobox">
+                            <option value="化验中">化验中</option>
+                            <option value="阴性">阴性</option>
+                            <option value="阳性">阳性</option>
+                            <option value="未知">未知</option>
+                        </select>
+                    </span>
+                    <span class="oper-input">HcvAb
+                        <select id="HcvAb" name="HcvAb" class="easyui-combobox">
+                            <option value="化验中">化验中</option>
+                            <option value="阴性">阴性</option>
+                            <option value="阳性">阳性</option>
+                            <option value="未知">未知</option>
+                        </select>
+                    </span>
+                    <span class="oper-input">HivAb
+                        <select id="HivAb" name="HivAb" class="easyui-combobox">
+                            <option value="化验中">化验中</option>
+                            <option value="阴性">阴性</option>
+                            <option value="阳性">阳性</option>
+                            <option value="未知">未知</option>
+                        </select>
+                    </span>
+                    <span class="oper-input">Syphilis
+                        <select id="Syphilis" name="Syphilis" class="easyui-combobox">
+                            <option value="化验中">化验中</option>
+                            <option value="阴性">阴性</option>
+                            <option value="阳性">阳性</option>
+                            <option value="未知">未知</option>
+                        </select>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td>其他检验信息</td>
+                <td colspan="3">
+                    <textarea id="LabTest" name="LabTest"></textarea>
+                </td>
+            </tr>
+        <table>
+	</form>
+    <div id="operDialog" class="easyui-dialog" data-options="closed:true,width:800,height:500,modal:true">
+        <form id="operationForm">
+            <table class="form-table">
+                <tr>
+                    <td>手术名称</td>
+                    <td colspan="3"><select id="Operation" name="Operation" class="easyui-combobox"></select></td>
+                </tr>
+                <tr>
+                    <td>手术分级</td>
+                    <td><select id="OperClass" name="OperClass" class="easyui-combobox"></select></td>
+                    <td>切口类型</td>
+                    <td><select id="BladeType" name="BladeType" class="easyui-combobox"></select></td>
+                </tr>
+                <tr>
+                    <td>手术部位</td>
+                    <td><select id="BodySite" name="BodySite" class="easyui-combobox"></select></td>
+                    <td>手术体位</td>
+                    <td><select id="OperPosition" name="OperPosition" class="easyui-combobox"></select></td>
+                </tr>
+                <tr>
+                    <td>术者科室</td>
+                    <td><select id="SurgeonDept" name="SurgeonDept" class="easyui-combobox"></select></td>
+                    <td>手术医生</td>
+                    <td><select id="Surgeon" name="Surgeon" class="easyui-combobox"></select></td>
+                </tr>
+                <tr>
+                    <td>术者科室</td>
+                    <td><select id="SurgeonDept" name="SurgeonDept" class="easyui-combobox"></select></td>
+                    <td>手术医生</td>
+                    <td><select id="Surgeon" name="Surgeon" class="easyui-combobox"></select></td>
+                </tr>
+                <tr>
+                    <td>手术一助</td>
+                    <td><select class="SurgeonAss easyui-combobox"></select></td>
+                    <td>手术二助</td>
+                    <td><select class="SurgeonAss easyui-combobox"></select></td>
+                </tr>
+                <tr>
+                    <td>手术三助</td>
+                    <td><select class="SurgeonAss easyui-combobox"></select></td>
+                    <td>手术四助</td>
+                    <td><select class="SurgeonAss easyui-combobox"></select></td>
+                </tr>
+                <tr>
+                    <td>手术五助</td>
+                    <td><select class="SurgeonAss easyui-combobox"></select></td>
+                    <td>手术六助</td>
+                    <td><select class="SurgeonAss easyui-combobox"></select></td>
+                </tr>
+                <tr>
+                    <td>进修实习</td>
+                    <td colspan="3"><input type="text" id="AddtionalStaff" name="AddtionalStaff" class="easyui-textbox"></td>
+                </tr>
+                <tr>
+                    <td>手术说明</td>
+                    <td colspan="3"><textarea id="Note" name="Note"></textarea></td>
+                </tr>
+            </table>
+            <input type="hidden" name="AnaOperID" id="AnaOperID">
+            <input type="hidden" name="Assistant" id="Assistant">
+        </form>
+    </div>
+	<script type="text/javascript" src="../service/dhcanop/js/dhcclinic.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/operapplication.js"></script>
+</body>
+</html>

@@ -1,7 +1,9 @@
 ///qqa
 ///2017-11-28
 ///HISUI检查查看
-
+var PageLogicObj={
+	MainSreenFlag:websys_getAppScreenIndex()				//双屏标识
+}
 $(function (){
 
 	initParam();
@@ -17,6 +19,10 @@ $(function (){
 	initDatagridNew();
 	
 	initShowThisAdmCheck(); 
+
+    if ((PageLogicObj.MainSreenFlag==0)&&(EpisodeID!="")){
+		websys_emit("onSelectIPPatient",{PatientID:PatientID,EpisodeID:EpisodeID,mradm:""});
+	}
 })
 
 function initCombobox(){
@@ -59,7 +65,10 @@ function initParam(){
 	showType=0;
 	pacsOrdRowData="";
 	thisAdm="Y";        ///默认查询当前就诊
-	
+	if (PAAdmType!="I"){
+		thisAdm="N";
+		$('#thisAdm').checkbox('setValue',false);
+		}
 	var params =  LgCtLocID+"^"+PatientID+"^"+OEORIID
 	runClassMethod("web.DHCAPPSeePatPacs","GetParam",{"Params":params},function (data){
 		var dataArray =data.split("#");
@@ -123,7 +132,7 @@ function searchLisOrdNew(){
 function initDateBox(){
 		$HUI.datebox("#sel-stDate",{});
 		$HUI.datebox("#sel-edDate",{});
-		$HUI.datebox("#sel-stDate").setValue((ordStDate==""?formatDate(-30):ordStDate));
+		$HUI.datebox("#sel-stDate").setValue((ordStDate==""?formatDate(-180):ordStDate));
 		$HUI.datebox("#sel-edDate").setValue(formatDate(0));
 }
 
@@ -131,39 +140,40 @@ function initDatagridNew(){
 	var Params=""
 	var stDate = $HUI.datebox("#sel-stDate").getValue();
 	var edDate = $HUI.datebox("#sel-edDate").getValue();
-	Params= EpisodeID+"^"+PatientID+"^"+stDate+"^"+edDate+"^"+LgUserID+"^"+""+"^"+""+"^"+ReqNo+"^"+OEORIID;  //##
+	Params= (thisAdm==="Y"?EpisodeID:"")+"^"+PatientID+"^"+stDate+"^"+edDate+"^"+LgUserID+"^"+""+"^"+""+"^"+ReqNo+"^"+OEORIID;  //##
 	ReqNo = "",OEORIID="";
 	var columns=[[
-		{ field: 'lx',align: 'center', title: '类型',formatter:formatterlx},
-    	{ field: 'AdmLoc',align: 'center', title: '就诊科室'},
-    	{ field: 'ReqNo',align: 'center', title: '申请单号'},
-    	{ field: 'StudyNo',align: 'center', title: '检查号'},
-    	{ field: 'strOrderName',align: 'center', title: '检查名称',formatter:orderviewArci},
-    	{ field: 'strOrderDate',align: 'center', title: '申请日期'},
-    	{ field: 'ItemStatus',align: 'center', title: '检查状态'},
-    	{ field: 'recLocName',align: 'center', title: '检查科室'},
-    	{ field: 'IsCVR',align: 'center', title: '危急值报告'},
-    	{ field: 'IsIll',align: 'center', title: '是否阳性',
+		{ field: 'lx',align: '', title: '类型',formatter:formatterlx},
+    	{ field: 'AdmLoc',align: '', title: '就诊科室'},
+    	{ field: 'ReqNo',align: '', title: '申请单号'},
+    	{ field: 'StudyNo',align: '', title: '检查号'},
+    	{ field: 'strOrderName',align: '', title: '检查名称',formatter:orderviewArci},
+    	{ field: 'strOrderDate',align: '', title: '申请日期',sortable:true,sorter:mySort},
+    	{ field: 'ItemStatus',align: '', title: '检查状态'},
+    	{ field: 'recLocName',align: '', title: '检查科室'},
+    	{ field: 'IsCVR',align: '', title: '危急值报告'},
+    	{ field: 'IsIll',align: '', title: '是否阳性',
     		formatter:function(value,row,index){ //hxy 2018-10-30
 				if (value=='Y'){return $g('是');} 
 				else {return $g('否');}
 			}}, 
-    	{ field: 'IshasImg',align: 'center', title: '是否有图像',
+    	{ field: 'IshasImg',align: '', title: '是否有图像',
     		formatter:function(value,row,index){ //hxy 2018-10-30
 				if (value=='Y'){return $g('是');} 
 				else {return $g('否');}
     		}},
-    	{ field: 'Bookingtime',align: 'center', title: '预约时间'},
-    	{ field: 'Image',align: 'center', title: '图像',formatter:formatterImg},
-    	{ field: 'Report',align: 'center', title: '报告',formatter:formatterPort},
-    	{ field: 'BlMorePort',align: 'center', title: '病理多份报告',formatter:formatterBlMorePort},
-    	{ field: 'Grade',align: 'center', title: '评级',hidden:true},
-    	{ field: 'IsReaded',align: 'center', title: '阅读',formatter:formatterIsReaded},
-    	{ field: 'AffirmReaded',align: 'center', title: '确认阅读',formatter:formatterAffirmReaded},
-    	{ field: 'InsureList',align: 'center', title: '说明书',formatter:formatterInsureList},
-    	{ field: 'OEORIId',align: 'center', title: '医嘱ID'},
-    	{ field: 'ARCIMId',align: 'center', title: 'ARCIMId',hidden:'true'},
-    	{ field: 'PortUrl',align: 'center', title: 'PortUrl',hidden:'true'}
+    	{ field: 'Bookingtime',align: '', title: '预约时间'},
+    	{ field: 'Image',align: '', title: '图像',formatter:formatterImg},
+    	{ field: 'Report',align: '', title: '报告',formatter:formatterPort},
+    	{ field: 'BlMorePort',align: '', title: '病理多份报告',formatter:formatterBlMorePort,hidden:'true'},
+    	{ field: 'Grade',align: '', title: '评级',hidden:true},
+    	{ field: 'IsReaded',align: '', title: '阅读',formatter:formatterIsReaded},
+    	{ field: 'AffirmReaded',align: '', title: '确认阅读',formatter:formatterAffirmReaded},
+    	//旧版知识库的链接，标版停用,等待新版接口{ field: 'InsureList',align: '', title: '说明书',formatter:formatterInsureList},
+    	{ field: 'OEORIId',align: '', title: '医嘱ID'},
+    	{ field: 'ARCIMId',align: '', title: 'ARCIMId',hidden:'true'},
+    	{ field: 'PartID',align: '', title: 'PartID',hidden:'true'},
+    	{ field: 'PortUrl',align: '', title: 'PortUrl',hidden:'true'}
  
  	]]; 
 
@@ -176,15 +186,31 @@ function initDatagridNew(){
 		pageSize:10,  
 		pageList:[10,15,20], 
 	    singleSelect:true,
+	    remoteSort: false,
 		loadMsg: '正在加载信息...',
 		pagination:true,
-		border:false,//hxy 2018-10-22
+		border:true,//hxy 2018-10-22
 		rowStyler: function(index,row){
 			
 		},
 		onLoadSuccess:function(data){
 			if((data.rows.length=="1")&&(ReqNo!="")){
 				isShowPort(data.rows[0]);	
+			}
+		},
+		onSelect:function(rowIndex, rowData){
+			var PortUrl=rowData.PortUrl||"";
+			var Report=rowData.Report||"";
+			if (PageLogicObj.MainSreenFlag==0){
+				if ((PortUrl=="")||(Report=="")){
+					websys_emit("onSelectIPPatient",{PatientID:rowData.PatientID,EpisodeID:rowData.EpisodeID,mradm:""});
+					return false;
+				}
+				//因为不能传递url参数以及对象Json链接参数
+				//websys_emit("onOpenDHCDoc",{title:"检查报告",frameurl:PortUrl,MWToken:websys_getMWToken()});
+				var frameurl=PortUrl.replace(/&/g,"!@")
+				//websys_emit("onOpenSpectReport",{title:"检查报告",patid:"0000000022",AccNum:"CJCH725"})
+				websys_emit("onOpenDHCDoc",{title:"检查报告",frameurl:frameurl})
 			}
 		}
 	});	
@@ -201,7 +227,7 @@ function formatterlx(value,rowData){
 }
 
 function formatterImg(value,rowData){	
-	retStr = "<a href='#' title='' onclick='showImg(\""+rowData.ImgUrl+"\")'>"+value+"</span></a>"
+	retStr = "<a href='#' title='' onclick='showImg(\""+rowData.ImgUrl+"\");return false;'>"+value+"</span></a>"
 	return retStr;	
 }
 
@@ -213,7 +239,7 @@ function formatterPort(value,rowData){
 	if(rowData.PortUrl===""){
 		url="";
 	}
-	retStr = "<a href='#' title='' onclick='showReport(\""+url+"\")'>"+$g(value)+"</span></a>"
+	retStr = "<a href='#' title='' onclick='showReport(\""+url+"\");return false;'>"+$g(value)+"</span></a>"
 	return retStr;	
 }
 
@@ -229,30 +255,32 @@ function isShowPort(rowData){
 	if(rowData.PortUrl===""){
 		url="";
 	}
-	showReport(url);
+	params = rowData.recLocDr+"^"+LgCtLocID+"^"+rowData.RegNo+"^"+rowData.StudyNo+"^"+LgUserID+"^"+rowData.OEORIId+"^"+rowData.PartID
+	showReport(url,params,rowData.Num);
 	return;
 }
 
 function formatterBlMorePort(value,rowData){
 	var url = rowData.PortUrl;
 	url = url.replace("Rpt=1","Rpt=");  //病理查看多份报告
-	retStr = "<a href='#' title='' onclick='showReport(\""+url+"\")'>"+$g(value)+"</span></a>"
+	params = rowData.recLocDr+"^"+LgCtLocID+"^"+rowData.RegNo+"^"+rowData.StudyNo+"^"+LgUserID+"^"+rowData.OEORIId+"^"+rowData.PartID
+	retStr = "<a href='#' title='' onclick='showReport(\""+url+"\",\""+params+"\",\""+rowData.Num+"\");return false;'>"+$g(value)+"</span></a>"
 	return retStr;	
 }
 
 ///查看阅读明细
 function formatterIsReaded(value,rowData){
 	var params = rowData.OEORIId+"^"+rowData.StudyNo;
-	retStr = "<a href='#' title='' onclick='showReadDetail(\""+params+"\")'>"+$g(value)+"</span></a>"
+	retStr = "<a href='#' title='' onclick='showReadDetail(\""+params+"\");return false;'>"+$g(value)+"</span></a>"
 	return retStr;	
 }
 
 ///确认阅读
 function formatterAffirmReaded(value,rowData){
 	var retStr="";
-	params = rowData.recLocDr+"^"+LgCtLocID+"^"+rowData.RegNo+"^"+rowData.StudyNo+"^"+LgUserID+"^"+rowData.OEORIId
+	params = rowData.recLocDr+"^"+LgCtLocID+"^"+rowData.RegNo+"^"+rowData.StudyNo+"^"+LgUserID+"^"+rowData.OEORIId+"^"+rowData.PartID
 	if((rowData.Report!="")){
-		retStr = "<a href='#' title='' onclick='affirmReaded(\""+params+"\",\""+rowData.Num+"\")'>"+$g("确认阅读")+"</span></a>"	
+		retStr = "<a href='#' title='' onclick='affirmReaded(\""+params+"\",\""+rowData.Num+"\");return false;'>"+$g("确认阅读")+"</span></a>"	
 	}
 	return retStr;
 }
@@ -275,20 +303,35 @@ function showImg(url){
 		$.messager.alert("提示","RIS报告平台没有配置图像阅读路径");	
 		return false;
 	}
-
+	if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
 	window.open (url, "newwindow", "height=550, width=950, toolbar =no,top=100,left=300,menubar=no, scrollbars=no, resizable=yes, location=no,status=no");
 	return false;	
 }
 
 ///阅读报告
-function showReport(url){
+function showReport(url,params,rowIndex){
 	if(url===""){
 		$.messager.alert("提示","RIS报告平台没有配置图像阅读路径");	
 		return false;
 	}
-	
+	if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
 	//打开报告
 	window.open (url, "newwindow", "height=550, width=950, toolbar =no,top=100,left=300,menubar=no, scrollbars=yes, resizable=yes, location=no,status=no");
+		
+	runClassMethod("web.DHCAPPSeePatPacs","ClinicRecordSet",
+		{
+			Model:"R",
+		 	Params:params
+		},function(ret){
+		},"text"
+	)	
+
+	$HUI.datagrid('#inspectDetail').updateRow({
+        index: rowIndex,
+        row: {
+            IsReaded: $g("已阅读")
+        },
+    });	
 	return false;
 }
 
@@ -303,8 +346,8 @@ function showReadDetail(params){
 	
 	var columns=[[
 		{field:'ReadDoctorName',title:'阅读人',width:110},
-		{field:'ReadDate',title:'阅读日期',width:110},
-		{field:'ReadTime',title:'阅读时间',width:110}
+		{field:'ReadDate',title:'阅读日期',width:122},
+		{field:'ReadTime',title:'阅读时间',width:122}
 	]];
 
 	$HUI.datagrid('#readDetailTable',{
@@ -333,9 +376,8 @@ function setReadFlag(model,params){
 			if(ret!=0){
 				$.messager.alert("提示","保存阅读记录异常！");
 			}else{
-				$.messager.alert("提示","阅读成功！","info",function(){
-					searchLisOrdNew();	
-				});	
+				$.messager.popover({msg:"阅读成功！",type:'success'});
+				searchLisOrdNew();
 			}	
 		},"text"
 	)	
@@ -422,7 +464,7 @@ function orderviewArci(value, rowData, rowIndex){
 	return "<a style='text-decoration:none;color:#017bce;' href='javascript:void(showOrderview(\"" + rowData.OEORIId + "\"))';>"+value+"</a>";;
 }
 function formatterInsureList(value, rowData, rowIndex){
-	return "<a style='text-decoration:none;color:#017bce;' href='javascript:void(showInsureListview(\"" + rowData.ARCIMId + "\"))';>"+$g("说明书")+"</a>";;
+	return "<a style='text-decoration:none;color:#017bce;' href='javascript:void(showInsureListview(\"" + rowData.ARCIMId + "\",\""+ rowData.PartID +"\"))';>"+$g("说明书")+"</a>";;
 }
 function showOrderview(ord){
 	var obj={
@@ -431,16 +473,23 @@ function showOrderview(ord){
 	$.orderview.show(ord,obj);
 	return;
 }
-function showInsureListview(ARCIMId){
-	var itemHtml = GetItemInstr(ARCIMId, "");
+
+/// Modify  20230322
+/// 旧版知识库的链接，标版停用。药品说明书使用新产品组合理用药，检查检验等将使用基础数据平台
+function showInsureListview(ARCIMId,PartID){
+	var itemHtml = "";
+	if(Common_ControlObj.LibPhaFunc.ZSKOpenFlag=="Y"){
+		itemHtml = GetItemInstr(ARCIMId, PartID);
+	}
 	if (itemHtml == "") {
-		$.messager.alert("提示","该医嘱未维护说明书!");
+		$.messager.alert("提示","未启用或未维护相应说明书!","warning");
 		return;
 	}
 	$("#itro_content").html(itemHtml); 
 	$HUI.window("#readInter").open();
 }
 /// 提取检查项目说明书
+/// 此方法需与医嘱录入统一。待新版检查检验知识库说明书
 function GetItemInstr(itmmastid, itemPartID){
 	var html = '';
 	// 获取显示数据
@@ -469,4 +518,53 @@ function initMedIntrTip(itmArr){
 
    return htmlstr;
 }
+//tanjishan
+//2020-09-22
+//考虑到目前该界面的应用场景，只做了界面数据刷新，并未实现切换患者的功能
+function xhrRefresh(refreshArgs){
+	$("#search").click()
+    if ((PageLogicObj.MainSreenFlag==0)&&(EpisodeID!="")){
+		websys_emit("onSelectIPPatient",{PatientID:PatientID,EpisodeID:EpisodeID,mradm:""});
+	}
+}
 
+function mySort(a,b) {
+	if ((a.indexOf("/")>=0)||(a.indexOf("/")>=0)){
+	a = a.split('/');
+	b = b.split('/');
+	if (a[2] == b[2]){
+		if (a[0] == b[0]){
+			a[1] = parseFloat(a[1]);
+			b[1] = parseFloat(b[1]);
+			return (a[1]>b[1]?1:-1);
+		} else {
+			a[0] = parseFloat(a[0]);
+			b[0] = parseFloat(b[0]);
+			return (a[0]>b[0]?1:-1);
+		}
+	} else {
+		a[2] = parseFloat(a[2]);
+		b[2] = parseFloat(b[2]);
+		return (a[2]>b[2]?1:-1);
+	}
+	}else{
+	a = a.split('-');
+	b = b.split('-');
+	if (a[0] == b[0]){
+		if (a[1] == b[1]){
+			a[2] = parseFloat(a[2]);
+			b[2] = parseFloat(b[2]);
+			return (a[2]>b[2]?1:-1);
+		} else {
+			a[1] = parseFloat(a[1]);
+			b[1] = parseFloat(b[1]);
+			return (a[1]>b[1]?1:-1);
+		}
+	} else {
+		a[0] = parseFloat(a[0]);
+		b[0] = parseFloat(b[0]);
+		return (a[0]>b[0]?1:-1);
+	}
+	
+	}
+}

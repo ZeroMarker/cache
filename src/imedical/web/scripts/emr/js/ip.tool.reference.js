@@ -22,8 +22,8 @@ $(function(){
 	}); 	
 	//就诊列表
 	$("#episodeList").combogrid({  
-	    panelWidth:560,
-        panelHeight:180,
+	    panelWidth:390,
+        panelHeight:150,
 	    loadMsg:'数据装载中......',
 	    url:'../EMRservice.Ajax.hisData.cls?Action=GetEpisodeList&PatientID='+patientID,
 	    singleSelect:true,
@@ -43,15 +43,16 @@ $(function(){
 	        {field:'EpisodeDeptID',title:'科室ID',width:30,hidden:true}
 	    ]],
 	    onSelect:function(rowIndex,rowData){
-		   initCategory(rowData.EpisodeID);
+		   episodeID = rowData.EpisodeID;
+		   initCategory();
 	    },
 	    onDblClickRow:function(rowIndex,rowData){
-		   initCategory(rowData.EpisodeID);
 		   episodeID = rowData.EpisodeID;
+		   initCategory();
 
 	    }
   	});
-  	initCategory(episodeID);	
+  	initCategory();	
 });
 
 //初始化打开病历
@@ -62,18 +63,18 @@ function initRecord()
 	   var src = "emr.record.browse.browsform.editor.csp?";
        src = src + "id="+param.id+"&text="+param.text+"&chartItemType="+param.chartItemType;
        src = src + "&pluginType="+param.pluginType+"&episodeId="+episodeID+"&patientId="+patientID
-       src = src + "&characteristic"+param.characteristic+"&status=NORMAL"+"&Action=reference";
+       src = src + "&characteristic"+param.characteristic+"&status=NORMAL"+"&Action=reference&MWToken="+getMWToken();
        $('#framebrowse').attr("src",src);
 	}
     else
     {
-	    var src = "emr.record.browse.browsform.editor.csp?";
+	    var src = "emr.record.browse.browsform.editor.csp?MWToken="+getMWToken();
         $('#framebrowse').attr("src",src);
     }
 	
 }
 
-function initCategory(episodeID)
+function initCategory()
 {
 	jQuery.ajax({
 		type: "get",
@@ -119,7 +120,8 @@ function ztOnClick(node)
 		"chartItemType":node.chartItemType,
 		"emrDocId":node.emrDocId,
 		"characteristic":node.characteristic,
-		"status":"NORMAL"
+		"status":"NORMAL",
+        "episodeId":episodeID
 	};
 	if (document.getElementById("framebrowse"))
 	{
@@ -150,7 +152,7 @@ function eidtEventLoadDocument(obj)
 //复制剪切
 function eventSendCopyCutData(commandJson)
 {
-    parent.eventSendCopyCutData(commandJson);
+    parent.eventDispatch(commandJson);
 }
 
 function setReferenceToEventLog(node)
@@ -206,4 +208,24 @@ function formatColor(val,row)
 	{
 		return '<span style="color:green;">'+val+'</span>';
 	}	
+}
+//刷新病历目录
+function refreshTreeData()
+{
+    initCategory();
+}
+
+function copyData(){
+	var returnvalue = "";
+	if (document.getElementById("framebrowse"))
+	{
+		returnvalue = document.getElementById("framebrowse").contentWindow.selectedContent();
+	}
+	if (returnvalue){
+		if (window.opener){
+			window.opener.insertText(returnvalue);
+		}else{
+			parent.eventDispatch({"action":"insertText","text":returnvalue});
+		}
+	}
 }

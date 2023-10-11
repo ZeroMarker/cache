@@ -24,8 +24,13 @@ function InitAdmListTabDataGrid(){
 		{field:'IconProfile',title:'图标菜单',width:110},
 		{field:'Ord',title:'医嘱',width:70,align:'center',
 			formatter: function(value,row,index){
-				var btn = '<a class="editcls" onclick="BAdmOrdInfo(\'' + row["Ord"] + '\')"><img src="../images/websys/update.gif"></a>';
-				return btn;
+				if (HISUIStyleCode=="blue"){
+					var btn = '<span class="icon-write-order" style="padding-left: 20px;" onclick="BAdmOrdInfo(\'' + row["Ord"] + '\')"></span>';
+					return btn;
+				}else{
+					var btn = '<span class="icon-write-order" onclick="BAdmOrdInfo(\'' + row["Ord"] + '\')"></span>';
+					return btn;
+				}
 			}
 		},
 		{field:'PAAdmDepCodeDR',title:'就诊科室',width:120},
@@ -102,6 +107,8 @@ function InitAdmListTabDataGrid(){
 					LoadingIconRow(StartRow);
 				}, 0);
 			}
+		},onClickRow:function(rowIndex, rowData){
+			ShowSecondeWin("onOpenDHCEMRbrowse",rowData)
 		}
 	});
 	return AdmListTabDataGrid;
@@ -119,7 +126,11 @@ function AdmListTabDataGridLoad(){
 	});
 }
 function BAdmOrdInfo(Ord){
-	var $code='<div style="border:1px solid #ccc;margin:10px;border-radius:4px;"><table id="OrderListGrid"></table></div>'
+	if (HISUIStyleCode=="lite"){
+		var $code='<div style="border:1px solid #E3E3E3;margin:10px;border-radius:4px;"><table id="OrderListGrid"></table></div>'
+	}else{
+		var $code='<div style="border:1px solid #ccc;margin:10px;border-radius:4px;"><table id="OrderListGrid"></table></div>'
+	}
 	createModalDialog("Grid","医嘱明细", 1100, 520,"icon-w-list","",$code,"LoadOrderListGrid('"+Ord+"')");
 }
 function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,_event){
@@ -248,4 +259,27 @@ function LoadOrderListGrid(Ord){
 			}
 		});
 	});
+}
+
+/// 展示第二副屏
+function ShowSecondeWin(Flag,rowData){
+	//展示信息总览
+    if (websys_getAppScreenIndex()==0){
+	    var currentChartTitle=(rowData.PAAdmType!="住院")?"医嘱浏览":"";
+	    var Obj={PatientID:rowData.PatientID,EpisodeID:rowData.EpisodeID,mradm:rowData.mradm,patListCollapse:1,currentChartTitle:currentChartTitle};
+	    if (Flag=="onOpenIPTab"){
+		    //信息总览
+		}
+		if (Flag=="onOpenDHCEMRbrowse"){
+			var JsonStr=$.m({
+				ClassName:"DHCDoc.Util.Base",
+				MethodName:"GetMenuInfoByName",
+				MenuCode:"DHC.Seconde.DHCEMRbrowse"		//使用最新统一维护的菜单
+			},false)
+			if (JsonStr=="{}") return false;
+			var JsonObj=JSON.parse(JsonStr);
+			$.extend(Obj,JsonObj);
+		}
+		websys_emit(Flag,Obj);
+	}
 }

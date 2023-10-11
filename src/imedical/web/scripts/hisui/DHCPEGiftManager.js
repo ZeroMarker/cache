@@ -126,14 +126,15 @@ function Update(Type,TPEADMID)
 }
 function BFind_click()
 {
+	var CTLocID=session['LOGON.CTLOCID'];
 	var BeginDate="",EndDate="",GroupID="",RegNo="",GiftFlag="0",GiftName="";
 	var BeginDate=getValueById("BeginDate")
 	var EndDate=getValueById("EndDate")	
 	var GroupID=getValueById("GroupID")
 	var RegNo=getValueById("RegNo")
-	var RegNoLength=tkMakeServerCall("web.DHCPE.DHCPECommon","GetRegNoLength");
+	var RegNoLength=tkMakeServerCall("web.DHCPE.DHCPECommon","GetRegNoLength",CTLocID);
 	if (RegNo.length<RegNoLength&&RegNo.length>0) {
-		RegNo=RegNoMask(RegNo);
+		RegNo=RegNoMask(RegNo,CTLocID);
 		$("#RegNo").val(RegNo)
 		}
 	var GiftName=getValueById("GiftName")

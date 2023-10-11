@@ -20,8 +20,8 @@ function InitDiseaseCom(locId){
 	
 	
 	$("#selDiseaseSpecies").combogrid({  
-		panelWidth:278,
-		panelHeight:200,
+		panelWidth:280,
+		panelHeight:150,
 		url: "../EMRservice.Ajax.common.cls?OutputType=Stream&Class=EMRservice.BL.BLUserTemplate&Method=getDiseaseByDiagnos&p1="+DiagnosInfo+"&p2="+locId,		
 	    idField:'Code',  
 	    textField:'Name',
@@ -120,11 +120,11 @@ function InitDiseaseCom(locId){
 			var diseaseCode = ""
 			diseaseCode = getPatDisease(episodeId);
 			
-			if (diseaseCode!="" && _flagInit)
+			if (diseaseCode!=""&&diseaseCode!="{}" && _flagInit)
 			{
 				objDisease = eval("["+diseaseCode+"]")[0];
 				$("#selDiseaseSpecies").combogrid("setValue",objDisease.Name);
-				$("#spDiseaseName")[0].innerText = (objDisease.Name==undefined||objDisease.Name=="")?"未关联病种":objDisease.Name;
+				$("#spDiseaseName")[0].innerText = (objDisease.Name==undefined||objDisease.Name=="")?emrTrans("未关联病种"):objDisease.Name;
 	
 				var rows = $('#selDiseaseSpecies').combogrid('grid').datagrid('getRows');
 				_diseaseCount=rows.length;	
@@ -245,7 +245,7 @@ function removeData(episodeId,userId)
 		success: function(d) {
 			if(d == 1)
 			{
-				$("#spDiseaseName")[0].innerText = "未关联病种";
+				$("#spDiseaseName")[0].innerText = emrTrans("未关联病种");
 				$('#selDiseaseSpecies').combogrid('setValue','');
 			}
 		},

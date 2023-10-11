@@ -122,6 +122,7 @@ function OrderLinkClick()
 		alert("非预住院状态不能开医嘱")
 		return false
 	}
+	if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
 	var winName="IPBookOrderWrite"; 
 	var awidth=screen.availWidth/6*5; 
 	var aheight=screen.availHeight/5*4; 
@@ -137,6 +138,7 @@ function OrderLinkClick()
 function CreatNew()
 {
 	var url="websys.default.csp?WEBSYS.TCOMPONENT=DHCExamPatList"
+	if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
 	var winName="BookCreat"; 
 	var awidth=screen.availWidth; 
 	var aheight=screen.availHeight; 
@@ -1463,6 +1465,7 @@ function OpenOpertion(OpeType)
 		return
 		
 	}
+	if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
 	//日间手术申请固定宽度
 	var winName="OpenOpertion"; 
 	var awidth=1260 //screen.availWidth/6*5; 

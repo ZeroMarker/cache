@@ -18,39 +18,39 @@
 	 }
 	 LoadPatMonList();
  	 InitUI();
- 	 $('a:contains("保存")').bind("click",save);  //提交
+ 	 $('a:contains('+$g("保存")+')').bind("click",save);  //提交
  })
  
  function InitUI(){
 	$('#ImpMonItems').bind("focus",function(){
-		if(this.value=="编辑内容..."){
+		if(this.value==$g("编辑内容...")){
 			$('#ImpMonItems').val("");
 		}
 	});
 	
 	$('#ImpMonItems').bind("blur",function(){
 		if(this.value==""){
-			$('#ImpMonItems').val("编辑内容...");
+			$('#ImpMonItems').val($g("编辑内容..."));
 		}
 	});
 	
 	$('#ImpMonContent').bind("focus",function(){
-		if(this.value=="编辑内容..."){
+		if(this.value==$g("编辑内容...")){
 			$('#ImpMonContent').val("");
 		}
 	});
 	
 	$('#ImpMonContent').bind("blur",function(){
 		if(this.value==""){
-			$('#ImpMonContent').val("编辑内容...");
+			$('#ImpMonContent').val($g("编辑内容..."));
 		}
 	});
  }
 
  /// 设置监护符合注释
  function setMonItem(note){
-     note = "[符合一项即为"+ note +"]";
-	 $('span.ui-font12:contains("符合")').html(note);	 
+     note = "["+$g("符合一项即为")+""+ note +"]";
+	 $('span.ui-font12:contains('+$g("符合")+')').html(note);	 
  }
  /// 加载监护范围
  function LoadMonScope(){
@@ -167,7 +167,7 @@ function LoadPatMonList(){
 	    url: url+'?action=getPatMonList&monLevId='+monLevId+'&AdmDr='+monAdmID,
 	    columns:[[    
 	        {title:'id',field:'id',width:80,hidden:true},    
-	        {field:'text',title:'监护级别',width:250},
+	        {field:'text',title:$g('监护级别'),width:250},
 	        {field:'monLevId',title:'monLevId',hidden:true},
 	        {field:'monId',title:'monId',hidden:true},
 	        {field:'_parentId',title:'parentId',hidden:true}
@@ -265,7 +265,7 @@ function save(){
 	});
 	LevScopeList=LevScopeArr.join("||");
 	if(LevScopeList == ""){
-		$.messager.alert('提示','<font style="color:red;font-weight:bold;">请填写相关纳入指标！</font>','warning');
+		$.messager.alert('提示','<font style="color:red;font-weight:bold;">'+$g("请填写相关纳入指标！")+'</font>','warning');
 		return;
 	}
 
@@ -278,18 +278,18 @@ function save(){
 	});
 	LevItemList=LevItemArr.join("||");
 	if(LevItemList == ""){
-		$.messager.alert('提示','<font style="color:red;font-weight:bold;">请填写病人生命体征！</font>','warning');
+		$.messager.alert('提示','<font style="color:red;font-weight:bold;">'+$g("请填写病人生命体征！")+'</font>','warning');
 		return;
 	}
 
 	var ImpMonItems=$("#ImpMonItems").val();       ///重要化验结果
-	if((ImpMonItems=="编辑内容...")||(ImpMonItems=="")){
-		$.messager.alert('提示','<font style="color:red;font-weight:bold;">请填写病人相关化验结果！</font>','warning');
+	if((ImpMonItems==$g("编辑内容..."))||(ImpMonItems=="")){
+		$.messager.alert('提示','<font style="color:red;font-weight:bold;">'+$g("请填写病人相关化验结果！")+'</font>','warning');
 		return;
 		}
 	var ImpMonContent=$("#ImpMonContent").val();   ///病情转归情况
-	if((ImpMonContent=="编辑内容...")||(ImpMonContent=="")){
-		$.messager.alert('提示','<font style="color:red;font-weight:bold;">请填写病人病情转归情况！</font>','warning');
+	if((ImpMonContent==$g("编辑内容..."))||(ImpMonContent=="")){
+		$.messager.alert('提示','<font style="color:red;font-weight:bold;">'+$g("请填写病人病情转归情况！")+'</font>','warning');
 		return;
 		}
 	

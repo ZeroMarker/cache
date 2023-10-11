@@ -118,9 +118,10 @@ function InitViewScreen(){
 		,anchor : '95%'
 	}); 
 
-	obj.itemviewcatstoreProxy = new Ext.data.HttpProxy(new Ext.data.Connection({
+	/*obj.itemviewcatstoreProxy = new Ext.data.HttpProxy(new Ext.data.Connection({
 		url : ExtToolSetting.RunQueryPageURL
 	}));
+	
 	obj.itemviewcatstore = new Ext.data.Store({
 		proxy: obj.itemviewcatstoreProxy,
 		reader: new Ext.data.JsonReader({
@@ -132,8 +133,8 @@ function InitViewScreen(){
 		     {name: 'ICUCRIVCId', mapping: 'ICUCRIVCId'}
 			,{name: 'ICUCRIVCDesc', mapping: 'ICUCRIVCDesc'}
 		])
-	});	
-	obj.itemviewcat = new Ext.form.ComboBox({
+	});	*/
+	/*obj.itemviewcat = new Ext.form.ComboBox({
 		id : 'itemviewcat'
 		,store:obj.itemviewcatstore
 		,minChars:1	
@@ -146,7 +147,7 @@ function InitViewScreen(){
 		,selectOnFocus : true
 		,labelSeparator: ''
 		,mode: 'local'
-	}); 	
+	}); 	*/
 	
 	obj.IcucioiDrDescstoreProxy = new Ext.data.HttpProxy(new Ext.data.Connection({
 		url : ExtToolSetting.RunQueryPageURL
@@ -196,7 +197,7 @@ function InitViewScreen(){
 		,layout : 'form'
 		,items:[
 			obj.itemname
-			,obj.itemviewcat
+			//,obj.itemviewcat
 			,obj.IcucioiDrDesc
 			//,obj.viewsupcat
 		]
@@ -434,7 +435,14 @@ function InitViewScreen(){
 		,width:76
 		,text : '查询'
 	});
-
+ obj.labelNote=new Ext.form.Label(
+	{
+		id:'labelNote'
+		,text:'代码、名称、科室、是否可用、显示分类为查询项'
+		,style:'color:red;font-size:14'
+		,width:200
+		,height:20
+	})	
 	obj.btn1 = new Ext.Panel({
 		id : 'btn1'
 		,buttonAlign : 'center'
@@ -444,6 +452,7 @@ function InitViewScreen(){
         ,items:[
             obj.findbutton
             ,obj.addbutton
+            ,obj.labelNote
        ]
 	});
 obj.keypanel2 = new Ext.Panel({
@@ -602,7 +611,7 @@ obj.keypanel2 = new Ext.Panel({
 		    }
 		})
 	});
-
+ 
 	obj.Panel23 = new Ext.Panel({
 		id : 'Panel23'
 		,hidden:true
@@ -652,13 +661,14 @@ obj.keypanel2 = new Ext.Panel({
 	});
 	obj.itemtypestore.load({});
 	
-	obj.itemviewcatstoreProxy.on('beforeload', function(objProxy, param){
+	/*obj.itemviewcatstoreProxy.on('beforeload', function(objProxy, param){
 		param.ClassName = 'web.DHCICUCRecordItem';
 		param.QueryName = 'FindICUCRIViewCat';
 		param.Arg1='Y';
 		param.ArgCnt = 1;
 	});
-	obj.itemviewcatstore.load({});
+	*/
+	//obj.itemviewcatstore.load({});
 	
 	obj.itemctlocstoreProxy.on('beforeload', function(objProxy, param){
 		param.ClassName = 'web.DHCClinicCom';
@@ -672,7 +682,7 @@ obj.keypanel2 = new Ext.Panel({
 	obj.itemcomorderstoreProxy.on('beforeload', function(objProxy, param){
 		param.ClassName = 'web.DHCICUPara';
 		param.QueryName = 'FindANCComOrd';
-		param.Arg1=obj.itemviewcat.getValue();
+		param.Arg1="";
 		param.Arg2=obj.itemcomorder.getRawValue();
 		param.Arg3='Y';
 		param.ArgCnt = 3;
@@ -687,8 +697,10 @@ obj.keypanel2 = new Ext.Panel({
 		
 		param.Arg1 = obj.itemname.getValue();
 		param.Arg2 = obj.itemctloc.getValue();
-		param.Arg3 = obj.itemviewcat.getValue();
-		param.ArgCnt = 3;
+		param.Arg3 = "";
+		param.Arg4 = obj.itemcode.getValue();
+		param.Arg5 =obj.itemynuse.getValue();
+		param.ArgCnt = 5;
 	});
 	obj.retGridPanelStore.load({
 	    params : {

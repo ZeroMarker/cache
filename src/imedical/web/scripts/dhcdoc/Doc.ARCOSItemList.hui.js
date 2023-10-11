@@ -7,7 +7,7 @@ $(function(){
 	Init();
 	//表格数据初始化
 	ARCOSItemListTabDataGridLoad();
-	$(".datagrid-toolbar tbody tr").append("<td><span>总价</span><span id='Sum'></span><span>元</span></td>");
+	$(".datagrid-toolbar tbody tr").append("<td><span>"+$g("总价")+"</span><span id='Sum'></span><span>"+$g("元")+"</span></td>");
 	document.onkeydown=Doc_OnKeyDown;
 });
 function Init(){
@@ -15,7 +15,7 @@ function Init(){
 }
 function InitARCOSItemListTabDataGrid(){
 	var toobar=[{
-        text: '增加(F4)',
+        text: '新增(F4)',
         iconCls: 'icon-add',
         handler: function() {AddClickHandle(); }
     }];
@@ -25,6 +25,7 @@ function InitARCOSItemListTabDataGrid(){
 		{field:'ItemQty',title:'数量',width:50,
 			//editor:{type : 'text'}
 			formatter: function(value,row,index){
+				if(row.LongPriorFlag=='1') return "";
 				var CNMedItemFlag=row['CNMedItemFlag'];
 				if (CNMedItemFlag==0) {
 					return '<input class="datagrid-editable-input" id="ItemQty_'+index+'" value="'+value+'" style="padding:0 0 0 5px;width:43px;height:28px;">';
@@ -78,6 +79,7 @@ function InitARCOSItemListTabDataGrid(){
 		fitColumns : false,
 		autoRowHeight : false,
 		rownumbers:false,
+		checkOnSelect:false,
 		pagination : false,  
 		pageSize: 20,
 		pageList : [20,100,200],
@@ -85,11 +87,11 @@ function InitARCOSItemListTabDataGrid(){
 		columns :Columns,
 		toolbar:toobar,
 		rowStyler: function(index,row){
-			if ((row['ItemStatus']=="停用")||(row['ItemStatus']=="无权限")) {
+			if ((row['ItemStatus']==$g("停用"))||(row['ItemStatus']==$g("无权限"))) {
 				return "background:yellow;";
 			}
 			var ReclocDescStr=row['ReclocDescStr'];
-			if(ReclocDescStr==""){
+			if((ReclocDescStr=="")&&(ServerObj.EpisodeID!="")){
 				return "background:red;";
 			}
 		},
@@ -104,17 +106,22 @@ function InitARCOSItemListTabDataGrid(){
 				var OrderMustEnter=row['OrderMustEnter'];
 				var SeqNo=row['ItemSeqNo'];
 		    	var arry1=SeqNo.split(".");
+		    	var SelectFun=$(this).datagrid('options').onCheck;
+            	$(this).datagrid('options').onCheck=function(){};
 		    	if ((arry1.length>=1)&&(+arry1[0]!=0)) {
 			    	var MasterSeqNo=arry1[0];
 			    	ChangelLinkItemSelect(MasterSeqNo,true,OrderMustEnter);
 			    }
 		   		GetSum();
+		   		$(this).datagrid('options').onCheck=SelectFun;
 		   	}
 		},
-		onUnselect:function(index, row){
+		onUncheck:function(index, row){
 			var OrderMustEnter=row['OrderMustEnter'];
 			var SeqNo=row['ItemSeqNo'];
 	    	var arry1=SeqNo.split(".");
+	    	var SelectFun=$(this).datagrid('options').onUncheck;
+            $(this).datagrid('options').onUncheck=function(){};
 	    	if ((arry1.length>=1)&&(+arry1[0]!=0)) {
 		    	var MasterSeqNo=arry1[0];
 		    	ChangelLinkItemSelect(MasterSeqNo,false,OrderMustEnter);
@@ -122,10 +129,11 @@ function InitARCOSItemListTabDataGrid(){
 		    if (PageLogicObj.m_loadedFlag=="1"){
 		    	GetSum();
 		    }
+		    $(this).datagrid('options').onUncheck=SelectFun;
 		},
 		onBeforeSelect:function(index, row){
 			var ItemStatus=row['ItemStatus'];
-			if ((ItemStatus=="停用")||(ItemStatus=="无权限")) {
+			if ((ItemStatus==$g("停用"))||(ItemStatus==$g("无权限"))) {
 				return false;
 			}
 		},onBeforeUnselect:function(index, row){
@@ -146,14 +154,14 @@ function InitARCOSItemListTabDataGrid(){
 						//$(_$ItemRowid[i]).prop("checked", false);
 					}
 					var ItemStatus=data['rows'][i]['ItemStatus'];
-					if ((ItemStatus=="停用")||(ItemStatus=="无权限")) {
+					if ((ItemStatus==$g("停用"))||(ItemStatus==$g("无权限"))) {
 						$(_$ItemRowid[i]).attr('disabled','disabled');
 						$(_$ItemRowid[i]).prop("checked", false);
 					}
 					var OrderMustEnter=data['rows'][i]['OrderMustEnter'];
 					if(OrderMustEnter=="Y"){
 						$(_$ItemRowid[i]).attr('disabled','disabled');
-					}else if ((ItemStatus!="停用")&&(ItemStatus!="无权限")){
+					}else if ((ItemStatus!=$g("停用"))&&(ItemStatus!=$g("无权限"))){
 						var SeqNo=data['rows'][i]['ItemSeqNo'];
 						var OrderMustEnter=data['rows'][i]['OrderMustEnter'];
 						if ((+SeqNo!=0)&&(OrderMustEnter!="Y")){
@@ -267,10 +275,10 @@ function AddClickHandle(){
 		if (CNMedItemFlag=="1"){
 			var ItemDoseQty=$("#ItemDoseQty_"+i).val();
 		}else{
-			var ItemQty=$("#ItemQty_"+i).val();
+			if($("#ItemQty_"+i).size()) ItemQty=$("#ItemQty_"+i).val();
 		}
 		if ((ItemQty.indexOf(".")>=0)&&(!CheckPackQty_Update(i))) {
-			$.messager.alert("提示",data[i]["Item"]+"没有录入整数！")
+			$.messager.alert("提示",data[i]["Item"]+$g("没有录入整数！"))
 			return false;
 		}
 		if (data[i]["Sensitive"]=="Y") {
@@ -338,12 +346,12 @@ function ChangelLinkItemSelect(MasterSeqNo,checkflag,OrderMustEnter){
 				if (checkflag){
 					if (!$($("input[name='ItemRowid']")[k]).is(":checked")){
 					//if (!$($("input[type='checkbox']")[k+1]).is(":checked")){
-						PageLogicObj.m_ARCOSItemListTabDataGrid.datagrid('selectRow',k);
+						PageLogicObj.m_ARCOSItemListTabDataGrid.datagrid('checkRow',k);
 					}
 				}else{
 					//if ($($("input[type='checkbox']")[k+1]).is(":checked")){
 					if ($($("input[name='ItemRowid']")[k]).is(":checked")){
-						PageLogicObj.m_ARCOSItemListTabDataGrid.datagrid('unselectRow',k);
+						PageLogicObj.m_ARCOSItemListTabDataGrid.datagrid('uncheckRow',k);
 					}
 				}
 				if (OrderMustEnter=="Y"){
@@ -436,14 +444,14 @@ function UnSelectAll(rows){
 			//成组医嘱,判断是否有必填标志
 			if (CheckLinkMustEnter(rows[i])) OrderMustEnter="Y";
 			var ItemStatus=rows['ItemStatus'];
-			if ((ItemStatus=="停用")||(ItemStatus=="无权限")) {
+			if ((ItemStatus==$g("停用"))||(ItemStatus==$g("无权限"))) {
 				OrderMustEnter="N";
 			}
 		}
 		if(OrderMustEnter=="Y"){
-			PageLogicObj.m_ARCOSItemListTabDataGrid.datagrid('selectRow',i);
+			PageLogicObj.m_ARCOSItemListTabDataGrid.datagrid('checkRow',i);
 		}else{
-		    PageLogicObj.m_ARCOSItemListTabDataGrid.datagrid('unselectRow',i);
+		    PageLogicObj.m_ARCOSItemListTabDataGrid.datagrid('uncheckRow',i);
 	    }
 	}
 	GetSum();
@@ -476,7 +484,7 @@ function SelectAll(rows){
 		//if (!$("input[type='checkbox']")[i+1].disabled) {
 			PageLogicObj.m_ARCOSItemListTabDataGrid.datagrid('selectRow',i);
 		}else{
-			if ((rows[i]['ItemStatus']=="停用")||(rows[i]['ItemStatus']=="无权限")) {
+			if ((rows[i]['ItemStatus']==$g("停用"))||(rows[i]['ItemStatus']==$g("无权限"))) {
 				PageLogicObj.m_ARCOSItemListTabDataGrid.datagrid('unselectRow',i);
 				debugger;
 				$($("input[name='ItemRowid']")[i]).prop("checked", false);
@@ -545,18 +553,23 @@ function GridBindEnterEvent(index){
 	})
 }
 function ItemKeydown(e){
-	if(e.keyCode==13){
+	if((e.keyCode==13)||(e.keyCode==38)||(e.keyCode==40)){
 		var id=e.target.id;
 		var indArr=id.split("_");
 		var ItemId=indArr[0];
 		var index=parseInt(indArr[1]);
 		var input = $("#"+id).val();
-		if (input == ""){return;}
-		var $nextItem=$("#"+ItemId+"_"+(index+1));
+		//if (input == ""){return;}
+		var NewIndex=(e.keyCode==38)?(index-1):(index+1)
+		var $nextItem=$("#"+ItemId+"_"+NewIndex);
 		if ($nextItem.length>0) {
-			$nextItem.focus().select();
+			setTimeout(function(){
+				PageLogicObj.m_ARCOSItemListTabDataGrid.datagrid('unselectAll').datagrid('selectRow',NewIndex);
+				$nextItem.focus().select();
+			},50)
 		}else{
-			$("#"+ItemId+"_0").focus().select();
+			//不用回到第一行
+			//$("#"+ItemId+"_0").focus().select();
 		}
 	}
 }

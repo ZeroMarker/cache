@@ -13,6 +13,8 @@
 		var aHospID = $('#cboHospital').combobox('getValue');
 		var DateFrom = $('#dtDateFrom').datebox('getValue');
 		var DateTo= $('#dtDateTo').datebox('getValue');
+		var DateType= $('#cboDateType').combobox('getValue');
+		var OperCat  = $('#cboOperCat').combobox('getValue');
 		
 		ReportFrame = document.getElementById("ReportFrame");
 		if(DateFrom > DateTo){
@@ -24,7 +26,7 @@
 			return;
 		}
 		
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCHAI.Sta.InfOpr01.raq&aHospIDs='+aHospID +'&aDateFrom=' + DateFrom +'&aDateTo='+ DateTo ;	
+		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCHAI.Sta.InfOpr01.raq&aHospIDs='+aHospID +'&aDateFrom=' + DateFrom +'&aDateTo='+ DateTo+'&aDateType='+DateType+'&aOperCat='+OperCat;	
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{

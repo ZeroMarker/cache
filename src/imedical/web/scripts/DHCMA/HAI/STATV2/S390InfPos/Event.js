@@ -24,20 +24,28 @@
    	}
 
    	obj.LoadRep = function(){
-		var aHospID = $('#cboHospital').combobox('getValue');
-		var DateFrom = $('#dtDateFrom').datebox('getValue');
-		var DateTo= $('#dtDateTo').datebox('getValue');
-		var Statunit = Common_CheckboxValue('chkStatunit');
+		var aHospID 	= $('#cboHospital').combobox('getValues').join('|');
+		var aDateFrom 	= $('#dtDateFrom').datebox('getValue');
+		var aDateTo		= $('#dtDateTo').datebox('getValue');
+		var aLocType 	= Common_CheckboxValue('chkStatunit');
+		var aQrycon 	= $('#cboQryCon').combobox('getValue');
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
+		
 		ReportFrame = document.getElementById("ReportFrame");
-		if(DateFrom > DateTo){
+		if(aDateFrom > aDateTo){
 			$.messager.alert("提示","开始日期应小于或等于结束日期！", 'info');
 			return;
 		}
-		if ((DateFrom=="")||(DateTo=="")){
+		if ((aDateFrom=="")||(aDateTo=="")){
 			$.messager.alert("提示","请选择开始日期、结束日期！", 'info');
 			return;
 		}
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S390InfPos.raq&aDateFrom=' + DateFrom + '&aDateTo=' + DateTo + '&aHospIDs=' + aHospID + '&aLocType=' + Statunit;
+		if ((aStatDimens=="")){
+			$.messager.alert("提示","请选择展示维度！", 'info');
+			return;
+		}
+		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S390InfPos.raq&aHospIDs='+aHospID +'&aDateFrom=' + aDateFrom +'&aDateTo='+ aDateTo+'&aLocType='+aLocType+'&aQryCon='+aQrycon+'&aStatDimens='+aStatDimens+'&aLocIDs='+aLocIDs+'&aPath='+cspPath;	
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
@@ -47,53 +55,54 @@
 		
 	obj.echartLocInfRatio = function(runQuery){
 		if (!runQuery) return;
-		var arrInfDiagDesc = new Array();	//感染部位
-		var arrInfDiagCnt  = new Array();   //感染部位例数
-		var arrPosDesc	   = new Array();	//感染部位
-		arrRecord 		= runQuery.record;
+		var aHospID = $('#cboHospital').combobox('getValue');
+	    var QryCon="-H-";	//默认统计医院
+	    if (aHospID.indexOf('|')>-1) QryCon="-A-";	//多院区时统计全院
+		var aLocIDs = $('#cboLoc').combobox('getValues').join(',');	
+		var arrInfDiagDesc = new Array();	//感染诊断
+		var arrInfDiagCnt  = new Array();   //感染诊断例数
+		var arrPosDesc		= new Array();	//感染部位(临时)
+		var arrInfPosDesc	= new Array();	//感染部位
+		var arrInfPosCnt  	= new Array();  //感染部位例数
+		arrRecord 		= runQuery.rows;
 		for (var indRd = 0; indRd < arrRecord.length; indRd++){
 			var rd = arrRecord[indRd];
-			if ((rd["DimensKey"].indexOf('-A-')>-1)) {
-				arrInfDiagDesc.push(rd["InfDiagDesc"]);
-				arrInfDiagCnt.push(rd["InfDiagCnt"]);
-				arrPosDesc.push(rd["PosDesc"]);
-			}
-		}
-       var arrInfPosDesc= new Array();     //定义一个临时数组 
-       for(var i = 0; i < arrPosDesc.length; i++){    //循环遍历当前数组 
-           //判断当前数组下标为i的元素是否已经保存到临时数组 
-           //如果已保存，则跳过，否则将此元素保存到临时数组中 
-           if(arrInfPosDesc.indexOf(arrPosDesc[i]) == -1){ 
-               arrInfPosDesc.push(arrPosDesc[i]); 
-           } 
-       } 
-       var arrnum =new Array(arrInfPosDesc.length);
-       for(var index = 0;index < arrnum.length;index++){
-	       arrnum[index] = 0;
-	     }
-		for(var i = 0; i < arrInfPosDesc.length; i++){
-			for(var j = 0; j < arrPosDesc.length; j++){
-				if(arrPosDesc[j]==arrInfPosDesc[i]){
-					arrnum[i]=Number(arrnum[i])+Number(arrInfDiagCnt[j]);	
-				} 
-			}
-		}
-		var arrDiagDesc = new Array();
-		var arrDiagCnt = new Array();
-		for(var i = 0; i < arrInfPosDesc.length; i++){
-			for(var j = 0; j < arrPosDesc.length; j++){
-				if(arrInfPosDesc[i]==arrPosDesc[j]){
-					arrDiagDesc.push(arrInfDiagDesc[j]);
-					arrDiagCnt.push(arrInfDiagCnt[j]);
+			if ((rd["DimensKey"].indexOf(QryCon)>-1)||((aLocIDs!="")&&(rd["DimensDesc"]=="全部"))) {
+				arrInfDiagDesc.push(rd["PosDesc"]);		//加载诊断
+				arrInfDiagCnt.push(rd["InfDiagCnt"]);	//加载诊断数据
+				arrPosDesc.push(rd["InfDiagDesc"]);		//加载感染部位-临时
+				
+				var IsRespect=0;			//是否重复
+				for(var indPos = 0; indPos < arrInfPosDesc.length; indPos++){
+					if(rd["InfDiagDesc"]==arrInfPosDesc[indPos]){
+						IsRespect=1;
+						arrInfPosCnt[indPos]=parseInt(rd["InfDiagCnt"])+parseInt(arrInfPosCnt[indPos]);
+						/*//感染诊断按感染部位重组
+						var x=rd["PosDesc"];	
+						var y=rd["InfDiagCnt"];
+						for(var i=indRd;i>0;i--){
+							arrInfDiagDesc[i]=arrInfDiagDesc[i-1];
+							arrInfDiagCnt[i]=arrInfDiagCnt[i-1];
+							if(rd["InfDiagDesc"]==arrPosDesc[i]){
+								arrInfDiagDesc[i-1]=x;
+								arrInfDiagCnt[i-1]=y;
+								break;
+							}
+						}*/
+						break;
+					}
+				}
+				if(IsRespect!=1){
+					arrInfPosDesc.push(rd["InfDiagDesc"]);
+					arrInfPosCnt.push(rd["InfDiagCnt"]);
 				}
 			}
-			
 		}
-		var arrLegend = arrInfDiagDesc;
-		arrLegend=arrInfDiagDesc.concat(arrPosDesc);
+		var arrLegend = arrInfPosDesc;
+		arrLegend=arrInfPosDesc.concat(arrInfDiagDesc);
 		option = {
 			title : {
-			        text: '入院患者医院感染部位分布图',
+			        text: '住院患者医院感染部位分布图',
 			        textStyle:{
 						fontSize:28
 					},
@@ -103,6 +112,14 @@
 		        trigger: 'item',
 		        formatter: '{a} <br/>{b}: {c} ({d}%)'
 		    },
+			toolbox: {
+				feature: {
+					dataView: {show: false, readOnly: false},
+					magicType: {show: false},
+					restore: {show: true},
+					saveAsImage: {show: true}
+				}
+			},
 		    legend: {
 		        orient: 'vertical',
 		        left: 10,
@@ -110,27 +127,26 @@
 		    },
 		    series: [
 		        {
-		            name: '感染部位',
+		            name: '感染诊断',
 		            type: 'pie',
 		            selectedMode: 'single',
 		            radius: [0, '45%'],
-
 		            label: {
 		                position: 'inner'
 		            },
 		            labelLine: {
 		                show: false
 		            },
-		            data:(function(){
-				            var arrNum1=[];
-				        	for (var i = 0; i < arrInfPosDesc.length; i++) {	
- 								arrNum1.push({"value": arrnum[i],"name":arrInfPosDesc[i]});
-							}
-							return arrNum1;  
-				        })(),
+		            data: (function(){
+				        var arr=[];
+				       	for (var i = 0; i < arrInfDiagDesc.length; i++) {	
+ 							arr.push({"value": arrInfDiagCnt[i],"name":arrInfDiagDesc[i]});
+						}
+						return arr;  
+				     })(),
 		        },
 		        {
-		            name: '感染诊断',
+			        name: '感染部位',
 		            type: 'pie',
 		            radius: ['60%', '75%'],
 		            label: {
@@ -141,13 +157,11 @@
 		                    borderWidth: 1,
 		                    borderRadius: 4,
 		                    rich: {
-			                    
 		                        a: {
 		                            color: '#999',
 		                            lineHeight: 22,
 		                            align: 'center'
 		                        },
-		                        
 		                        hr: {
 		                            borderColor: '#aaa',
 		                            width: '100%',
@@ -168,13 +182,13 @@
 		                    }
 		                }
 		            },
-		            data: (function(){
-				            var arr=[];
-				        	for (var i = 0; i < arrInfDiagDesc.length; i++) {	
- 								arr.push({"value": arrDiagCnt[i],"name":arrDiagDesc[i]});
-							}
-							return arr;  
-				        })(),
+		             data:(function(){
+				        var arrNum1=[];
+				        for (var i = 0; i < arrInfPosDesc.length; i++) {	
+ 							arrNum1.push({"value": arrInfPosCnt[i],"name":arrInfPosDesc[i]});
+						}
+						return arrNum1;  
+				    })(),
 		        }
 		    ]
 		};
@@ -182,36 +196,31 @@
 		obj.myChart.setOption(option,true);
 	}
    	obj.ShowEChaert1 = function(){
-		obj.myChart.clear()
-		var HospID = $('#cboHospital').combobox('getValue');
-		var DateFrom = $('#dtDateFrom').datebox('getValue');
-		var DateTo= $('#dtDateTo').datebox('getValue');
-		var StaType = Common_CheckboxValue('chkStatunit');
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S390InfPos' + "&QueryName=" + 'QryInfPos' + "&Arg1=" + HospID + "&Arg2=" + DateFrom + "&Arg3=" + DateTo + "&Arg4=" + StaType + "&ArgCnt=" + 4;
-
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 30000, //30秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-				if(data=='{record:[],total : 0}'){
-					$('#EchartDiv').addClass('no-result');
-				}
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				var tkclass="DHCHAI.STATV2.S390InfPos";
-				var tkQuery="QryInfPosCSS";
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
+		obj.myChart.clear();
+		var aHospID 	= $('#cboHospital').combobox('getValues').join('|');
+		var aDateFrom = $('#dtDateFrom').datebox('getValue');
+		var aDateTo= $('#dtDateTo').datebox('getValue');
+		var aLocType = Common_CheckboxValue('chkStatunit');
+		var aQryCon =  $('#cboQryCon').combobox('getValue');
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
+		
+		obj.myChart.showLoading();
+		$cm({
+			ClassName:'DHCHAI.STATV2.S390InfPos',
+			QueryName:'QryInfPos',
+			aHospIDs:aHospID,
+			aDateFrom:aDateFrom,
+			aDateTo:aDateTo,
+			aLocType:aLocType,
+			aQryCon:aQryCon,
+			aStatDimens:aStatDimens,
+			aLocIDs:aLocIDs,
+			page:1,    //可选项，页码，默认1
+			rows:999   //可选项，获取多少条数据，默认50
+		},function(rs){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			obj.echartLocInfRatio(rs);
 		});
 	}
 }

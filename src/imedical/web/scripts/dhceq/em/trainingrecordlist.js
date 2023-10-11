@@ -21,25 +21,26 @@ function initPanel()
 }
 //初始化查询头面板
 function initTopPanel()
-{ 	
+{
 	initLookUp();
 	initMessage();
-	initButtonWidth();
-	initButton(); //按钮初始化
-	//jQuery('#BFind').on("click", BFind_Clicked);
+	//initButtonWidth();
+	initButton();//按钮初始化
+	//jQuery('#BFind').on("click",BFind_Clicked);
 	//initStatusData();
 	defindTitleStyle();
 	//initTrainingScoreList();
 	fillData();
-	initTrainingUser();	
+	initTrainingUser();
 	setEnabled();
-    setRequiredElements("COName^COSourceTypeDesc^COSource")
-    disableElement("SelectCourse",!getElementValue("NewCourceFlag"))
-    $("#NewCourceFlag").checkbox({
+	setRequiredElements("COName^COSourceTypeDesc^COSource");
+	disableElement("SelectCourse",!getElementValue("NewCourceFlag"));
+	$("#NewCourceFlag").checkbox({
 		onCheckChange:function(e,v){
-			disableElement("SelectCourse",!v)
+			disableElement("SelectCourse",!v);
+			$("#SelectCourse").removeClass("disabled");
 		}
-	})
+	});
 }
 /*
 function OpenDetail(value,row)  //查看使用培训记录
@@ -62,7 +63,6 @@ function fillData()
 {
 	TRRRowID=getElementValue("TRRRowID");
 	if (TRRRowID=="") return;
-//	$("#NewCourceFlag").disable()
 	$("#NewCourceFlag").checkbox("options").disabled=true
 	jsonData=tkMakeServerCall("web.DHCEQ.EM.BUSTraining","GetOneTrainingRecord",TRRRowID)
 	jsonData=jQuery.parseJSON(jsonData);
@@ -140,27 +140,27 @@ function initTrainingUser()
 		pageList:[12,24,36,48],
 		toolbar:[{
     				iconCls: 'icon-add',
-        			text:'添加',
+        			text:'新增',	//modify by fx 2022-11-29 	2613004
         			id:'add',
         			handler: function(){
         			BAdd_Clicked();
-    			}},'----------',
+    			}},
     			{
         			iconCls: 'icon-cancel',
         			text:'删除',
         			id:'delete',
         			handler: function(){
        				BDeleteuser_Click();
-    			}},'----------',
+    			}},
     			{
-        			iconCls: 'icon-cancel',
-        			text:'添加考核记录',
+        			iconCls: 'icon-add-item',   //modify by lmm 2021-03-09 1788483
+        			text:'新增考核记录',	//modify by fx 2023-02-22 	2613004
         			id:'AddScoreList',
         			handler: function(){
        				BAddScoreList_Click();
-    			}},'----------',
+    			}},
     			{
-        			iconCls: 'icon-cancel',
+        			iconCls: 'icon-paper',   //modify by lmm 2021-03-09 1788483
         			text:'历史考核记录',
         			id:'ScoreList',
         			handler: function(){
@@ -198,6 +198,7 @@ function initTrainingUser()
 }
 function BSave_Clicked()
 {
+	if(getElementValue("COModel")=="") setElement("COModelDR","");
 	if(checkMustItemNull()){return;}
 	//add by csj 2020-05-27 
 	if(getElementValue("COSourceType")=="")
@@ -213,7 +214,10 @@ function BSave_Clicked()
 	if (jsonData.SQLCODE==0)
 	{
 		var val="&RowID="+jsonData.Data;
-		url="dhceq.em.trainingrecordlist.csp?"+val
+		url="dhceq.em.trainingrecordlist.csp?"+val;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.location.href= url;
 
 	}
@@ -255,7 +259,10 @@ function BDelete_Clicked()
 	    }
 	    else
 	    {
-		    url="dhceq.em.trainingrecordlist.csp"
+		    url="dhceq.em.trainingrecordlist.csp";
+		    if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+				url += "?MWToken="+websys_getMWToken()
+			}
 	    	window.location.href= url;
 		}
 
@@ -280,7 +287,10 @@ function BAdd_Clicked()
 	if (jsonData.SQLCODE==0)
 	{
 		var val="&RowID="+getElementValue("TRRRowID");
-		url="dhceq.em.trainingrecordlist.csp?"+val
+		url="dhceq.em.trainingrecordlist.csp?"+val;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.location.href= url;
 	}
 	else
@@ -309,17 +319,17 @@ function GetSourceType(item)
 }
 function GetMasterItem(item)
 {
-	setElement("COSourceID",item.TRowID);	
+	setElement("COModel","");
+	setElement("COSourceID",item.TRowID);
 	setElement("COItem",item.TName);
-	setElement("COItemDR",item.TRowID);	
-	var SourceType=getElementValue("COItemDR")
-	var Params=[{name:'ItemDR',type:4,value:'COItemDR'},{name:'Name',type:4,value:'COModel'}]
-	singlelookup("COModel","PLAT.L.Model",Params,GetModel)
-	
+	setElement("COItemDR",item.TRowID);
+	var SourceType=getElementValue("COItemDR");
+	var Params=[{name:'ItemDR',type:4,value:'COItemDR'},{name:'Name',type:4,value:'COModel'}];
+	singlelookup("COModel","PLAT.L.Model",Params,GetModel);
 }
 function GetModel(item)
-{			
-	setElement("COModelDR",item.TRowID); 			
+{
+	setElement("COModelDR",item.TRowID);
 }
 
 function GetEquip(item)
@@ -411,7 +421,10 @@ function BDeleteuser_Click()
 		if (jsonData.SQLCODE==0)
 		{
 			var val="&RowID="+getElementValue("TRRRowID");
-			url="dhceq.em.trainingrecordlist.csp?"+val
+			url="dhceq.em.trainingrecordlist.csp?"+val;
+			if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+				url += "&MWToken="+websys_getMWToken()
+			}
 		    window.location.href= url;
 		}
 		else
@@ -420,4 +433,10 @@ function BDeleteuser_Click()
 			return
 	    }
 	}
+}
+// MZY0121	2585224		2022-04-15
+//元素参数重新获取值
+function getParam(ID)
+{
+	if (ID=="EquipTypeDR"){return getElementValue("EquipTypeDR")}
 }

@@ -33,6 +33,10 @@ $(function(){
 			return row[opts.textField];
 			//return row[opts.valueField]+"||"+row[opts.textField];
 		},
+		onBeforeLoad:function(param)
+        {
+            	param.hospId=session['LOGON.HOSPID'];
+        },
 		onHidePanel: function () {
         	OnHidePanel("#BedGroup");
         }, 			
@@ -50,6 +54,19 @@ $(function(){
         	OnHidePanel("#BPCBStatus");
         }, 			
 	})
+	$HUI.combobox("#BPCBIsFiltration",{
+		url:$URL+"?ClassName=web.DHCBPCBed&QueryName=FindBPCBIsFiltration&ResultSetType=array",
+		textField:"Desc",
+		valueField:"Id",
+		panelHeight:"auto",
+		formatter:function(row){				
+			var opts = $(this).combobox('options');
+			return row[opts.textField];
+		},
+		onHidePanel: function () {
+        	OnHidePanel("#BPCBIsFiltration");
+        }, 			
+	})
 	function setDialogValue()
 	{	
 		$("#BedCode").val("");
@@ -57,6 +74,7 @@ $(function(){
 		$("#BedGroup").combobox('setValue',"")		
 		$("#BPCBStatus").combobox('setValue',"")
 		$("#BPCBType").val("");
+		$("#BPCBIsFiltration").combobox('setValue',"")
 	}		
 	var InsertHandler=function(){
 		$("#BPCBedUIDlg").show();
@@ -92,7 +110,9 @@ $(function(){
 								Desc:$("#BedDesc").val(),
 								BPCBedGroup:$('#BedGroup').combobox('getValue'),
 								Status:$('#BPCBStatus').combobox('getValue'),
-								Type:$("#BPCBType").val()
+								Type:$("#BPCBType").val(),
+								IsFiltration:$('#BPCBIsFiltration').combobox('getValue'),
+								hospId:session['LOGON.HOSPID']
 							},function(success){
 								if(success==0)
 								{
@@ -118,7 +138,7 @@ $(function(){
 		})
 	}
 	
-	var UpdateHandler=function(tRowId,tBPCBCode,tBPCBDesc,tBPCBBPCBedGroupDr,tBPCBStatus,tBPCBType)
+	var UpdateHandler=function(tRowId,tBPCBCode,tBPCBDesc,tBPCBBPCBedGroupDr,tBPCBStatus,tBPCBType,tBPCBIsFiltrationDr)
 	{
 		///alert(tRowId+"-"+tBPCBCode+"-"+tBPCBDesc+"-"+tBPCBBPCBedGroupDr+"-"+tBPCBStatus+"-"+tBPCBType);
 		$("#RowId").val(tRowId);
@@ -126,8 +146,9 @@ $(function(){
 		$("#BedDesc").val(tBPCBDesc);
 		//alert(tBPCBBPCBedGroupDr);
 		$('#BedGroup').combobox('setValue',tBPCBBPCBedGroupDr);
-		$('#BPCBStatus').combobox('setValue',tBPCBStatus);
+		$('#BPCBStatus').combobox('setValue',tBPCBStatus);		
 		$("#BPCBType").val(tBPCBType);
+		$('#BPCBIsFiltration').combobox('setValue',tBPCBIsFiltrationDr);
 		$("#BPCBedUIDlg").show();
 		var BPCBedUIDlgObj=$HUI.dialog("#BPCBedUIDlg",{
 			iconCls:'icon-w-edit',
@@ -161,8 +182,9 @@ $(function(){
 						Desc:$("#BedDesc").val(),
 						BPCBedGroup:$('#BedGroup').combobox('getValue'),
 						Status:$('#BPCBStatus').combobox('getValue'),
-						Type:$("#BPCBType").val()
-						
+						Type:$("#BPCBType").val(),
+						IsFiltration:$('#BPCBIsFiltration').combobox('getValue'),
+						hospId:session['LOGON.HOSPID']
 					},function(success){
 						if(success==0)
 						{
@@ -191,17 +213,20 @@ $(function(){
 		queryParams:{
 			ClassName:"web.DHCBPCBed",
 			QueryName:"FindBPCBed",
-			bb:''
+			bb:'',
+			hospId:session['LOGON.HOSPID']
 		},
         columns:[[
 			{ field: "tRowId", title: "编号", width: 60 },
             { field: "tBPCBCode", title: "代码", width: 100 },
-            { field: "tBPCBDesc", title: "名称", width: 100 },
+            { field: "tBPCBDesc", title: "名称", width: 150 },
             { field: "tBPCBBPCBedGroupDr", title: "床位组ID", width: 80 , hidden:true},
             { field: "tBPCBBPCBedGroup", title: "床位组", width: 80 },
             { field: "tBPCBStatus", title: "状态Code", width: 100 , hidden:true},
-            { field: "tBPCBStatusD", title: "状态", width: 100 },
-            { field: "tBPCBType", title: "类型", width: 100 }
+            { field: "tBPCBStatusD", title: "状态", width: 80 },
+            { field: "tBPCBType", title: "类型", width: 80 },
+            { field: "tBPCBIsFiltrationDr", title: "tBPCBIsFiltrationDr", width: 100 , hidden:true},
+            { field: "tBPCBIsFiltration", title: "支持血滤", width: 80 },
         ]],
 		//pagination:true,
 		//page:1,    //可选项，页码，默认1
@@ -237,7 +262,7 @@ $(function(){
 				var row=BPCBedUIObj.getSelected();
 				if(row)
 				{
-					UpdateHandler(row.tRowId,row.tBPCBCode,row.tBPCBDesc,row.tBPCBBPCBedGroupDr,row.tBPCBStatus,row.tBPCBType);
+					UpdateHandler(row.tRowId,row.tBPCBCode,row.tBPCBDesc,row.tBPCBBPCBedGroupDr,row.tBPCBStatus,row.tBPCBType,row.tBPCBIsFiltrationDr);
 				}
 			}
         },{

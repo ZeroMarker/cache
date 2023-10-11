@@ -16,6 +16,7 @@ function InitMdlRoleListWin(){
 		onBeforeLoad: function (param) {
 			param.ClassName = 'DHCMA.Util.BTS.ProductSrv';
 			param.QueryName = 'QryProduct';
+			param.aActive = "1";
 			param.ResultSetType = 'array'
 		},
 		onSelect:function(record){

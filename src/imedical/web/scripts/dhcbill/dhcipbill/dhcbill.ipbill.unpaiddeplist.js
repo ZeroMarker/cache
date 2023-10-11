@@ -1,11 +1,9 @@
 ﻿/**
  * FileName: dhcbill.ipbill.unpaiddeplist.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-12-05
  * Description: 全院未结算预交金查询
  */
-
-var GV = {};
 
 $(function () {
 	initQueryMenu();
@@ -28,13 +26,19 @@ function initQueryMenu() {
 	//病区
 	$HUI.combobox("#ward", {
 		panelHeight: 150,
-		url: $URL + '?ClassName=web.UDHCJFDepositSearch&QueryName=FindWard&ResultSetType=array&desc=',
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryWard&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
 		valueField: 'id',
 		textField: 'text',
-		defaultFilter: 4,
-		onBeforeLoad: function (param) {
-			param.desc = "";
-			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
+		blurValidValue: true,
+		defaultFilter: 5,
+		filter: function(q, row) {
+			var opts = $(this).combobox("options");
+			var mCode = false;
+			if (row.contactName) {
+				mCode = row.contactName.toUpperCase().indexOf(q.toUpperCase()) >= 0
+			}
+			var mValue = row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0;
+			return mCode || mValue;
 		}
 	});
 }
@@ -42,28 +46,35 @@ function initQueryMenu() {
 function initUnPaidDepList() {
 	$HUI.datagrid("#unPaidDepList", {
 		fit: true,
-		striped: true,
 		border: false,
 		singleSelect: true,
 		rownumbers: true,
 		pagination: true,
 		pageSize: 20,
-		columns:[[{title: '姓名', field: 'Tpatname', width: 100},
-				  {title: '登记号', field: 'Tregno', width: 100},
-				  {title: '收据号', field: 'Trcptno', width: 100},
-				  {title: '金额', field: 'Tpayamt', align: 'right', width: 140},
-				  {title: '支付方式', field: 'Tpaymode', width: 150},
-				  {title: '收据状态', field: 'Tstatus', width: 100},
-				  {title: '打印时间', field: 'Tprtdate', width: 150,
-					formatter: function (value, row, index) {
-						return value + " " + row.Tprttime;
+		className: "web.UDHCJFDepositSearch",
+		queryName: "FindUnPaidDeposit",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["Tprtdate"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if (cm[i].field == "Trowid") {
+					cm[i].hidden = true;
+				}
+				if (cm[i].field == "Tprttime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.Tprtdate + " " + value;
 					}
-				  },
-				  {title: '收款员', field: 'Tuser', width: 100},
-				  {title: 'Trowid', field: 'Trowid', hidden: true},
-				  {title: '就诊科室', field: 'Tadmloc', width: 120},
-				  {title: '支票号', field: 'Tchequeno', width: 100}
-			]],
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if (cm[i].field == "Tprttime") {
+						cm[i].width = 160;
+					}
+				}
+			}
+		},
 		url: $URL,
 		queryParams: {
 			ClassName: "web.UDHCJFDepositSearch",
@@ -72,7 +83,7 @@ function initUnPaidDepList() {
 			wardId: getValueById("ward") || ""
 		},
 		rowStyler: function (index, row) {
-			if (row.Tpatname.indexOf("合计") != -1) {
+			if (row.Trowid == "") {
 				return 'font-weight: bold';
 			}
 		}
@@ -95,7 +106,7 @@ function loadUnPaidDepList() {
 function exportClick() {
 	var fileName = "DHCBILL-IPBILL-QYWJSDEP.rpx" + "&hospId=" + PUBLIC_CONSTANT.SESSION.HOSPID;
 	fileName += "&wardId=" + (getValueById("ward") || "");
-	var maxHeight = ($(window).height() || 550) * 0.8;
-	var maxWidth = ($(window).width() || 1366) * 0.8;
+	var maxHeight = $(window).height() * 0.8;
+	var maxWidth = $(window).width() * 0.8;
 	DHCCPM_RQPrint(fileName, maxWidth, maxHeight);
 }

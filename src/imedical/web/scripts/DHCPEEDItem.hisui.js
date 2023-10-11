@@ -193,6 +193,7 @@ function BClear_click(){
 			ClassName:"web.DHCPE.Endanger",
 			QueryName:"SearchEDItem",
 			Parref:$.trim(selectrow),
+			hospId:session['LOGON.HOSPID']
 		});	
 }
 
@@ -209,6 +210,9 @@ function InitCombobox(){
 		textField:'STORD_ARCIM_Desc',
 		onBeforeLoad:function(param){
 			param.Item = param.q;
+			param.LocID=session["LOGON.CTLOCID"];
+			param.hospId=session['LOGON.HOSPID'];
+
 		},
 		columns:[[
 		    {field:'STORD_ARCIM_DR',title:'ID',hidden: true},
@@ -233,6 +237,8 @@ function InitCombobox(){
 		onBeforeLoad:function(param){
 			param.Set = param.q;
 			param.Type = "ItemSet";
+			param.LocID=session["LOGON.CTLOCID"];
+			param.hospId=session['LOGON.HOSPID'];
 		},
 		columns:[[
 		    {field:'OrderSetId',title:'ID',hidden: true},
@@ -283,6 +289,7 @@ function InitEDItemGrid(){
 			ClassName:"web.DHCPE.Endanger",
 			QueryName:"SearchEDItem",
 			Parref:$.trim(selectrow),
+			hospId:session['LOGON.HOSPID']
 		},
 		columns:[[
 	
@@ -290,7 +297,7 @@ function InitEDItemGrid(){
 		    {field:'TArcimID',title:'ArcimID',hidden: true},
 			{field:'TArcimCode',width:120,title:'项目编码'},
 			{field:'TArcimDesc',width:200,title:'项目描述'},
-			{field:'TNeedFlag',width:60,title:'必填'},
+			{field:'TNeedFlag',width:60,title:'必选'},
 			{field:'TSetsFlag',width:80,title:'是否套餐'},
 			{field:'TOMEType',width:150,title:'检查种类'},
 			{field:'TActive',width:60,title:'激活'},
@@ -434,6 +441,23 @@ function InitEDItemDetailGrid(){
 
 	 var selectrow = $("#EDItemDetailGrid").datagrid("getChecked");//获取的是数组，多行数据
 	   var rows = $("#EDItemDetailGrid").datagrid("getRows");
+
+	   for(var i=0;i<rows.length;i++){
+		  	var Active="Y",ExpInfo="",Remark="";
+			var ID=rows[i].EDItemDetailID;
+				
+			
+			var Active=getColumnValue(i,"Select","EDItemDetailGrid")
+			if(Active=="1"){Active="Y";}
+			else{Active="N";} 
+		
+			var DetailID=rows[i].ODR_OD_DR;
+			var Str=ParRef+"^"+DetailID+"^"+Active+"^"+ExpInfo+"^"+Remark;
+			
+			var rtn=tkMakeServerCall("web.DHCPE.Endanger","EDItemDetailSave",ID,Str);
+	}
+
+	   /*
 	for(var i=0;i<selectrow.length;i++){
 		  	var Active="Y",ExpInfo="",Remark="";
 			var ID=rows[i].EDItemDetailID;
@@ -446,7 +470,7 @@ function InitEDItemDetailGrid(){
 			//alert(Str)
 			var rtn=tkMakeServerCall("web.DHCPE.Endanger","EDItemDetailSave",ID,Str);
 	}
- 
+ */
 	if (rtn.split("^")[0]=="-1"){
 		$.messager.alert("提示","保存失败","error");
 

@@ -5,32 +5,72 @@ var m_BuyRowID = "";
 $(function () {
 	init_Layout();
 	
+	$HUI.linkbutton('#Add', {
+		onClick: function () {
+			addClick();
+		}
+	});
+	
+	$HUI.linkbutton('#Delete', {
+		onClick: function () {
+			deleteClick();
+		}
+	});
+	
+	$HUI.linkbutton('#SelReceiptsNum', {
+		onClick: function () {
+			selReceiptsNumClick();
+		}
+	});
+	
+	$HUI.numberbox('#number', {
+		min: 1,
+		isKeyupChange: true,
+		onChange: function (newValue, oldValue) {
+			celendno();
+		}
+	});
+	
+	$("#stno").attr("readOnly", true);
+	
 	$('#grantflag').combobox({
+		panelHeight: 'auto',
 		valueField: 'id',
 		textField: 'text',
+		editable: false,
 		data:[{id: '', text: '全部', selected: true},
-			  {id: t['13'], text: t['13']},
-			  {id: t['14'], text: t['14']},
-			  {id: t['15'], text: t['15']},
-			  {id: t['16'], text: t['16']}]
+			  {id: '可用', text: '可用'},
+			  {id: '已用完', text: '已用完'},
+			  {id: '待用', text: '待用'},
+			  {id: '转交', text: '转交'}]
 	});
-	var obj = document.getElementById("Add");
-	if (obj) {
-		obj.onclick = Add_click;
-	}
-	var obj = document.getElementById("Delete");
-	if (obj) {
-		obj.onclick = Delete_click;
-	}
-	$("#stno").attr("readOnly", true);
-	var numobj = document.getElementById('number');
-	if (numobj) {
-		numobj.onkeyup = celendno;
-	}
-	var obj = websys_$("SelReceiptsNum");
-	if (obj) {
-		obj.onclick = selReceiptsNum_Click;
-	}
+	
+	//领取人
+    $("#lquser").combobox({
+		panelHeight: 150,
+		valueField: 'id',
+		textField: 'text',
+		defaultFilter: 5,
+		selectOnNavigation: false,
+		onChange: function(newValue, oldValue) {
+			setValueById("lquserid", (newValue || ""));
+		}
+	});
+	
+	//类型
+    $("#type").combobox({
+        panelHeight: 'auto',
+		valueField: 'id',
+		textField: 'text',
+		editable: false,
+		data:[{id: 'I', text: '住院押金', selected: true}],
+		onChange: function(newValue, oldValue) {
+			var url = $URL + "?ClassName=web.UDHCJFReceipt&QueryName=FindCashier&ResultSetType=array&type=" + (newValue || "") + "&hospId=" + session['LOGON.HOSPID'];
+			$("#lquser").combobox("clear").combobox("reload", url);
+			
+			StartNo();
+		}
+    });
 });
 
 function StartNo() {
@@ -48,113 +88,118 @@ function StartNo() {
 		setValueById('stno', myAry[0]);
 		setValueById('endno', myAry[1]);
 		setValueById('kyendno', myAry[1]);
+		setValueById('title', myAry[2]);
 		m_BuyRowID = myAry[3];
 	});
 }
 
-function Add_click() {
+function addClick() {
 	var stno = getValueById('stno');
 	if (stno == "") {
-		DHCWeb_HISUIalert(t['01'])
+		$.messager.popover({msg: '开始号码不能为空', type: 'info'});
 		return;
 	}
 	var endno = getValueById('endno');
 	if (endno == "") {
-		DHCWeb_HISUIalert(t['02']);
+		$.messager.popover({msg: '结束号码不能为空', type: 'info'});
 		return;
 	}
 	if (stno.length != endno.length) {
-		DHCWeb_HISUIalert(t['03']);
+		$.messager.popover({msg: '开始号码和结束号码位数不同', type: 'info'});
 		return;
 	}
 	var kyendno = getValueById('kyendno');
 	if (endno > kyendno) {
-		DHCWeb_HISUIalert(t['04']);
+		$.messager.popover({msg: '发放的结束号码不能大于可用结束号码', type: 'info'});
 		return;
 	}
 	if (parseInt(endno, 10) < parseInt(stno, 10)) {
-		DHCWeb_HISUIalert(t['11']);
+		$.messager.popover({msg: '结束号码不能小于开始号码', type: 'info'});
 		return;
 	}
 	var lquserid = getValueById('lquserid');
 	if (lquserid == "") {
-		DHCWeb_HISUIalert(t['05']);
+		$.messager.popover({msg: '领取人不能为空', type: 'info'});
+		focusById('lquser');
 		return;
 	}
 	var title = getValueById('title');
 	var type = getValueById('type');
 	if (m_BuyRowID == "") {
-		DHCWeb_HISUIalert("选择发票错误");
+		$.messager.popover({msg: '选择发票错误', type: 'info'});
 		return;
 	}
 	var str = stno + '^' + endno + '^' + kyendno + '^' + session['LOGON.USERID'] + '^' + lquserid + '^' + title + '^' + type;
 	$.messager.confirm("提示", "确认发放从[<font color='red'>" + title + stno + "</font>]到[<font color='red'>" + title + endno + "</font>]的收据?",function(r) {
-		if (r) {
-			$.m({
-				ClassName: "web.UDHCJFReceipt",
-				MethodName: "InsertGrant",
-				str: str,
-				buyRowID: m_BuyRowID,
-				hospId: session['LOGON.HOSPID']
-			}, function(rtn) {
-				switch(rtn) {
-				case "0":
-					$.messager.alert("提示", "发放成功", "success", function() {
-						$("#Find").click();
-					});
-					break;
-				case "-507":
-					DHCWeb_HISUIalert("开始号码错误");
-					break;
-				case "-508":
-					DHCWeb_HISUIalert("结束号码错误");
-					break;
-				default:
-					DHCWeb_HISUIalert("发放失败：" + rtn);
-				}
-			});
+		if (!r) {
+			return;
 		}
+		$.m({
+			ClassName: "web.UDHCJFReceipt",
+			MethodName: "InsertGrant",
+			str: str,
+			buyRowID: m_BuyRowID,
+			hospId: session['LOGON.HOSPID']
+		}, function(rtn) {
+			var myAry = rtn.split("^");
+			if (myAry[0] == 0) {
+				$.messager.alert("提示", "发放成功", "success", function() {
+					reloadMenuPanel();
+				});
+				return;
+			}
+			$.messager.popover({msg: "发放失败：" + (myAry[1] || rtn), type: "error"});
+		});
 	});
 }
 
-function Delete_click() {
+/**
+* 购入成功后重新获取新的发票号段
+*/
+function reloadMenuPanel() {
+	$('#number').numberbox('clear');
+	StartNo();            //购入成功后重新获取新的发票号段
+	$('#Find').click();
+}
+
+function deleteClick() {
 	var row = $HUI.datagrid("#tUDHCJFRcptBuy").getSelected();
 	if (!row || !row.Tgrantrowid) {
-		DHCWeb_HISUIalert(t['06']);
+		$.messager.popover({msg: '请选择要删除的记录', type: 'info'});
         return;
 	}
 	var grantRowId = row.Tgrantrowid;
-	var rtn = $.m({ClassName: "web.UDHCJFReceipt", MetodName: "GetMaxGrantRowId"}, false);
+	var rtn = $.m({ClassName: "web.UDHCJFReceipt", MetodName: "GetMaxGrantRowId", hospId: session['LOGON.HOSPID']}, false);
 	var myAry = rtn.split("^");
 	var maxRowId = myAry[0];
 	var stNo = myAry[1];
 	var curno = myAry[2];
 	if (grantRowId != maxRowId) {
-		DHCWeb_HISUIalert(t['07']);
+		$.messager.popover({msg: '该记录不是最后一条记录，不能删除', type: 'info'});
 		return;
 	}
-	if ((grantRowId = maxRowId) && (stno != curno)) {
-		DHCWeb_HISUIalert(t['08']);
+	if (stNo != curno) {
+		$.messager.popover({msg: '选中记录已经使用，不能删除', type: 'info'});
 		return;
 	}
 	$.messager.confirm("提示", "确认删除？",function(r) {
-		if (r) {
-			$.m({
-			    ClassName: "web.UDHCJFReceipt",
-		    	MethodName: "DeleteGrant",
-		    	grantId: grantRowId
-		    }, function(rtn) {
-			    switch(rtn) {
-				case "0":
-					$.messager.alert("提示", "删除成功", "success", function() {
-						$("#Find").click();
-					});
-					break;
-				default:
-					$.messager.alert("提示", "删除失败：" + rtn, "error");
-				}
-			});
+		if (!r) {
+			return;
 		}
+		$.m({
+		    ClassName: "web.UDHCJFReceipt",
+	    	MethodName: "DeleteGrant",
+	    	grantId: grantRowId,
+	    	hospId: session['LOGON.HOSPID']
+	    }, function(rtn) {
+		    if (rtn == 0) {
+			    $.messager.alert("提示", "删除成功", "success", function() {
+					$("#Find").click();
+				});
+			    return;
+			}
+		    $.messager.popover({msg: "删除失败：" + rtn, type: "error"});
+		});
 	});
 }
 
@@ -165,7 +210,7 @@ function celendno() {
 	var ssno1;
 	var slen;
 	var sslen;
-	if (num == "" || (parseInt(num, 10) == 0)) {
+	if ((num == "") || (parseInt(num, 10) == 0)) {
 		return;
 	}
 	if (checkno(num) && (sno != "") && checkno(sno)) {
@@ -196,10 +241,10 @@ function checkno(inputtext) {
  * Creator: ZhYW
  * CreatDate: 2017-09-30
  */
-function selReceiptsNum_Click() {
+function selReceiptsNumClick() {
 	var type = getValueById('type');
 	if (type == "") {
-		DHCWeb_HISUIalert('请先选择票据类型');
+		$.messager.popover({msg: '请先选择票据类型', type: 'info'});
 		return;
 	}
 	var flag = "RCPT";
@@ -208,7 +253,7 @@ function selReceiptsNum_Click() {
 			iconCls: 'icon-w-list',
 			title: '购入号段列表',	
 			height: 370,
-			width: 610,		
+			width: 610,
 			url: url,
 			callbackFunc: function(rtn) {
 				var myAry = rtn.split('^');
@@ -230,44 +275,7 @@ function selReceiptsNum_Click() {
 	});
 }
 
-function Find_click() {
-	var type=getValueById("type");
-	var tmpFlag=getValueById("grantflag");
-	var lnk = "websys.default.hisui.csp?WEBSYS.TCOMPONENT=UDHCJFRcptGrant&grantflag=" + tmpFlag+"&type="+type;
-	window.location.href = lnk;
-}
-
 function init_Layout(){
 	DHCWeb_ComponentLayout()
 	$('#cstno').parent().parent().css("width", "71px");
-	
-	//类型
-    $("#type").combobox({
-        panelHeight: 'auto',
-		url: $URL + '?ClassName=web.UDHCJFReceipt&QueryName=FindRcptType&ResultSetType=array',
-		valueField: 'code',
-		textField: 'text',
-		editable: false,
-		onChange: function(newValue, oldValue) {
-			$("#lquser").combobox("clear").combobox("reload");
-			StartNo();
-		}
-    });
-    
-    //领取人
-    $("#lquser").combobox({
-		panelHeight: 150,
-		url: $URL + '?ClassName=web.UDHCJFReceipt&QueryName=FindCashier&ResultSetType=array',
-		valueField: 'id',
-		textField: 'text',
-		defaultFilter: 4,
-		selectOnNavigation: false,
-		onBeforeLoad: function (param) {
-			param.type = getValueById("type");
-			param.hospId = session['LOGON.HOSPID'];
-		},
-		onChange: function(newValue, oldValue) {
-			setValueById("lquserid", (newValue || ""));
-		}
-	});
 }

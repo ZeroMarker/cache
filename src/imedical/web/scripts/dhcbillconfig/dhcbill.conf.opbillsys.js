@@ -1,13 +1,9 @@
 ﻿/**
  * FileName: dhcbill.conf.opbillsys.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-10-21
  * Description: 门诊系统参数配置
  */
-
-var GV = {
-	CfgJsonObj: {}
-};
 
 $(function () {
 	initMenu();
@@ -33,7 +29,9 @@ function initMenu() {
 			saveAuditClick();
 		}
 	});
-		
+	//+2023-03-07 ZhYW 把权力项申请按钮显示到界面上
+	BILL_INF.getStatusHtml("HIS-OPBILL-REFAUTHCFG", "btn-saveAudit");
+	
 	$HUI.linkbutton("#btn-saveOther", {
 		onClick: function() {
 			saveOtherClick();
@@ -85,6 +83,9 @@ function setDocVal() {
 	setValueById("guidePrtMode", GV.CfgJsonObj.OPFCPrtGuideFlag);              //导诊单打印模式
 	setValueById("skcFootMode", GV.CfgJsonObj.OPFCSKCFootFlag);                //是否选择病种结算
 	setValueById("newAdmReaFootMode", GV.CfgJsonObj.OPFCNewAdmReaFootFlag);    //是否选择新费别结算
+	setValueById("intervalMin", GV.CfgJsonObj.OPFCIntervalMin);                //异常收费提醒间隔时间
+	setValueById("zeroPriceChargeMode", GV.CfgJsonObj.OPFCZeroPriceChargeFlag);        //价格为零的医嘱结算是否进账单
+	setValueById("zeroAmtUseYB", GV.CfgJsonObj.OPFCZeroAmtUseYBFlag);	   //零费用结算是否调用调用医保
 	
 	//门诊集中打印发票
 	setValueById("accPayConInsu", GV.CfgJsonObj.OPFCYBConFlag);                //集中打印发票连接医保
@@ -92,6 +93,7 @@ function setDocVal() {
 	//门诊退费审核
 	setValueById("auditingMode", GV.CfgJsonObj.OPFCAppFlag);                   //审核模式
 	setValueById("auditSpaceTime", GV.CfgJsonObj.OPFCAuditSpaceTime);          //需要审批的间隔时间
+	setValueById("treatItmReqMode", GV.CfgJsonObj.OPFCTreatItmReqMode);        //检查、治疗医嘱审核模式
 		
 	//其他配置
 	setValueById("accPreToDep", GV.CfgJsonObj.OPFCOPTransferFlag);              //门诊预交金转住院押金
@@ -188,6 +190,9 @@ function saveChargeClick() {
 	jsonObj.OPFCPrtGuideFlag = getValueById("guidePrtMode");                //导诊单打印模式
 	jsonObj.OPFCSKCFootFlag = getValueById("skcFootMode");                  //是否选择病种结算
 	jsonObj.OPFCNewAdmReaFootFlag = getValueById("newAdmReaFootMode");      //是否选择新费别结算
+	jsonObj.OPFCIntervalMin = getValueById("intervalMin");                  //异常收费提醒间隔时间
+	jsonObj.OPFCZeroPriceChargeFlag = getValueById("zeroPriceChargeMode");                  //价格为零的医嘱结算是否进账单
+	jsonObj.OPFCZeroAmtUseYBFlag = getValueById("zeroAmtUseYB"); 	//零费用结算是否调用调用医保
 	saveData(jsonObj);
 }
 
@@ -215,14 +220,16 @@ function saveAuditClick() {
 	
 	jsonObj.OPFCAuditSpaceTime = getValueById("auditSpaceTime");                    //需要审核的间隔时间
 	
+	jsonObj.OPFCTreatItmReqMode = getValueById("treatItmReqMode");                  //检查、治疗医嘱审核模式
+	
 	var superAuditLocAry = [];
 	$.each(GV.SuperAuditLocList.getChecked(), function(index, row) {
 		superAuditLocAry.push(row.id);
 	});
 	var superAuditLocStr = superAuditLocAry.join(PUBLIC_CONSTANT.SEPARATOR.CH2);
 	jsonObj.OPFCSuperAuthLoc = superAuditLocStr;                                     //审核超级权限科室
-		
-	saveData(jsonObj);
+	
+	saveOPRefAuthData(jsonObj);
 }
 
 /**
@@ -238,21 +245,48 @@ function saveOtherClick() {
 function saveData(jsonObj) {
 	jsonObj.OPFCHospDR = getValueById("hospital");       //医院
 	$.messager.confirm("确认", "确认保存？", function(r) {
-		if (r) {
-			$.m({
-				ClassName: "web.DHCOPConfig",
-				MethodName: "SaveSOPFCfg",
-				jsonStr: JSON.stringify(jsonObj),
-				expStr: ""
-			}, function(rtn) {
-				if(rtn == "0") {
-					$.messager.popover({msg: "保存成功", type: "success"});
-					getSOPFCfgJson();
-				}else {
-					$.messager.popover({msg: "保存失败：" + rtn, type: "error"});
-				}
-			});
+		if (!r) {
+			return;
 		}
+		$.m({
+			ClassName: "web.DHCOPConfig",
+			MethodName: "SaveSOPFCfg",
+			jsonStr: JSON.stringify(jsonObj)
+		}, function(rtn) {
+			var myAry = rtn.split("^");
+			var iconCls = (myAry[0] == 0) ? "success" : "error";
+			var msg = (myAry[0] == 0) ? "保存成功" : ("保存失败：" + (myAry[1] || myAry[0]));
+			$.messager.popover({msg: msg, type: iconCls});
+		});
+	});
+}
+
+/**
+* 保存门诊退费审核配置数据
+*/
+function saveOPRefAuthData(jsonObj) {
+	jsonObj.OPFCHospDR = getValueById("hospital");       //医院
+	$.messager.confirm("确认", "确认保存？", function(r) {
+		if (!r) {
+			return;
+		}
+		$.m({
+			ClassName: "web.DHCOPConfig",
+			MethodName: "SaveOPRefAuthCfg",
+			jsonStr: JSON.stringify(jsonObj)
+		}, function(rtn) {
+			var myAry = rtn.split("^");
+			var iconCls = (myAry[0] == 0) ? "success" : "error";
+			if (CV.EnablePMASystem != 0) {
+				$.messager.popover({msg: (myAry[1] || myAry[0]), type: iconCls});
+				//把权力项申请按钮显示到界面上
+				BILL_INF.getStatusHtml("HIS-OPBILL-REFAUTHCFG", "btn-saveAudit");
+			}else {
+				//未启用权力系统
+				var msg = (myAry[0] == 0) ? "保存成功" : ("保存失败：" + (myAry[1] || myAry[0]));
+				$.messager.popover({msg: msg, type: iconCls});
+			}
+		});
 	});
 }
 

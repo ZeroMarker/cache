@@ -4,7 +4,18 @@ var row = new Object();
 editIndex=undefined;
 function InitviewScreen(){
 	var obj = objScreen;
-    $.parser.parse(); // 解析整个页面  
+	//前台获取病种+版本信息
+	$m({
+		ClassName:'DHCMA.CPW.SDS.QCMrListSrv',
+		MethodName:'GetQCInfoByMrListID',
+		aMrListID:MrListID	
+	},function(data){
+		obj.QCID=data.split('^')[0];
+		obj.VerID=data.split('^')[1];
+	})
+	if (parseInt(Version)>0) obj.VerID=parseInt(Version)
+    $.parser.parse(); // 解析整个页面
+    ScoreArr=new Array(); //临时存储评分表内容 
 	//表单编辑↓
 	obj.endEditing=function (){
 		if (editIndex == undefined){return true}	
@@ -26,7 +37,9 @@ function InitviewScreen(){
 			var LinkCodeStr=$m({
 				ClassName:"DHCMA.CPW.SDS.QCEntityItemSrv",
 				MethodName:"GetValiItemCode",
-				aCode:rd.BTCode
+				aCode:rd.BTCode,
+				aQCID:obj.QCID,
+				aVerID:obj.VerID
 			},false);
 			var WarningInfo="",stopFlg=0
 			if (LinkCodeStr!=""){
@@ -35,7 +48,7 @@ function InitviewScreen(){
 					var LinkCode=LinkCodeArr[t]
 					var tIndex=$('#gridQCFormShow').datagrid('getRowIndex',LinkCode);
 					var row=$('#gridQCFormShow').datagrid('getRows')[tIndex]
-					var WarningInfo=ValiItem(row)
+					var WarningInfo=obj.ValiItem(row)
 					if (WarningInfo.indexOf('stop')>-1) {stopFlg=1}
 					$("#gridQCFormShow").datagrid("updateRow",{  
             	       index:tIndex, //行索引  
@@ -63,15 +76,17 @@ function InitviewScreen(){
 		//定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
 		autoRowHeight: false,
 		rownumbers:true, 
-		loadMsg:'数据加载中...',
+		loadMsg:$g('数据加载中')+'...',
 	    url:$URL,
 	    nowrap:false,
 	    bodyCls:'no-border',
 	    queryParams:{
 		    ClassName:"DHCMA.CPW.SDS.QCItemExecSrv",
 			QueryName:"QryQCItemExec",
-			  MrListID:MrListID,	
-		   		  rows:10000
+			  MrListID:MrListID,
+			  aQCEntityID:obj.QCID,
+			  aVerID:obj.VerID,	
+		   	   rows:10000
 	    },
 		idField:'BTCode',
 		columns:[[
@@ -81,13 +96,13 @@ function InitviewScreen(){
 				}
 			},
 			{field:'BTItemCatDesc',title:'项目分类',width:'150',hidden:true},
-			{field:'ExecResult',title:'结果值<span style="color:red">(选中行录入项目结果)<span>',width:'350',sortable:false,
+			{field:'ExecResult',title:'结果值',width:'350',sortable:false,
 				styler: function(value,row,index){
 					return "text-align:left;border:1px solid #E3E3E3"
 				},
 				formatter: function(value,row,index){
 					if(value==""){
-						return '';
+						return '<span style="color:#AEA6A8;">'+row.Resume+'</span>';
 					}else {
 						if (row.BTTypeDesc.indexOf('字典')>-1){
 							return '<span style="color:#1474AF;">'+row.ExecResultText+'</span>';
@@ -99,8 +114,8 @@ function InitviewScreen(){
 			},
 			{field:'ExecWarning',title:'提示信息',width:'230',
 				formatter: function(value,row,index){
-					if ((row.ExecResult=="")&&(row.BTIsNeeded=="是")){
-						return '<span style="text-align:right;color:red;">必填项不能为空!</span>';
+					if (((row.ExecResult=="")||(row.ExecResult=="def"))&&(row.BTIsNeeded=="是")){
+						return '<span style="text-align:right;color:red;">'+$g('必填项不能为空')+'</span>';
 					}else{
 						valueArr=value.split('&')
 						retValue=""
@@ -160,7 +175,9 @@ function InitviewScreen(){
 			 $m({
 					ClassName:"DHCMA.CPW.SDS.QCEntityItemSrv",
 					MethodName:"getItemTypeDescByCode",
-					ItemCode:row.BTCode
+					ItemCode:row.BTCode,
+					aQCID:obj.QCID,
+					aVerID:obj.VerID
 				},function(EditType){
 					$("#gridQCFormShow").datagrid('removeEditor','ExecResult');
 					if (EditType.indexOf('字典')>-1) {
@@ -169,113 +186,125 @@ function InitviewScreen(){
 							var multi=true
 							var rowStyle='checkbox'
 						}
-						//通过是否必填和是否多选，判断项目是否添加空白项
-						var AddNewItem=0
-						if ((row.BTIsNeeded=="否")&&(multi==false)) AddNewItem=1;
+						var ItemDicData=$cm({
+								ClassName:'DHCMA.CPW.SDS.DictionarySrv',
+								QueryName:'QryDictByType',
+								ResultSetType:'Array',
+								aTypeCode:row.BTCode,
+								aQCID:obj.QCID,
+								aVersion:obj.VerID,
+								aIsActive:1	
+							},false)
+						var orgCount=ItemDicData.length
+						var editFlg=false;
+						if (orgCount>10) editFlg=true;
 						$("#gridQCFormShow").datagrid('addEditor',[ //添加ExecResult列editor
-			            {field:'ExecResult',editor:{
-			                type:'combobox',
-							options:{
-								valueField:'BTCode',
-								textField:'BTDesc',
-								multiple:multi,
-								rowStyle:rowStyle, //显示成勾选行形式
-								selectOnNavigation:false,
-								editable:false,
-								method:'get',
-								url:$URL+"?ClassName=DHCMA.CPW.SDS.DictionarySrv&QueryName=QryDictByType&ResultSetType=Array&aTypeCode="+row.BTCode+"&aAddItem="+AddNewItem,							
-								onSelect:function(){
-									var Value=$(this).combobox('getValues');
-									Value=Value.join(',');
-									obj.ChangeRowEditor(Value,row.BTCode)
-								}
-								,onAllSelectClick:function(e){
-									var Value=$(this).combobox('getValues');
-									Value=Value.join(',');
-									obj.ChangeRowEditor(Value,row.BTCode)
-								}
-								,onUnselect:function(){
-									var Value=$(this).combobox('getValues');
-									Value=Value.join(',');
-									obj.ChangeRowEditor(Value,row.BTCode)
-								},
-								//加载成功后给变量赋值，记录数据数目
-							    onLoadSuccess: function(data){  
-							        orgCount = data.length; 
-							    },
-							    //面板展开时触发
-							    onShowPanel: function () {
-							        // 动态调整高度 
-							        if (orgCount < 10) {  
-							            $(this).combobox('panel').height("auto");  
-							        }else{
-							            //$(this).combobox('panel').height(200); 
-							        }
-							    }
-							}
-			            }
-			        }])
-					}else if(EditType=="数值") {
-						$("#gridQCFormShow").datagrid('addEditor',[ //添加BTCode列editor
-			            {field:'ExecResult',editor:{
-			                	type:'numberbox',
-			                	options:{
-				                	precision:2,
-				                	onChange:function(){
-										var Value=$(this).numberbox('getValue');
+				            {field:'ExecResult',editor:{
+				                type:'combobox',
+								options:{
+									data:ItemDicData,
+									valueField:'BTCode',
+									textField:'BTDesc',
+									multiple:multi,
+									rowStyle:rowStyle, //显示成勾选行形式
+									selectOnNavigation:false,
+									defaultFilter:4,
+									allowNull: true,
+									editable:editFlg,
+									onSelect:function(){
+										var Value=$(this).combobox('getValues');
+										Value=Value.join(',');
 										obj.ChangeRowEditor(Value,row.BTCode)
 									}
-			                	}
-			            	}
-			            }
+									,onAllSelectClick:function(e){
+										var Value=$(this).combobox('getValues');
+										Value=Value.join(',');
+										obj.ChangeRowEditor(Value,row.BTCode)
+									}
+									,onUnselect:function(){
+										var Value=$(this).combobox('getValues');
+										Value=Value.join(',');
+										obj.ChangeRowEditor(Value,row.BTCode)
+									},onHidePanel:function(){
+										//在处理相关项目显示隐藏前先校验所选值合法性
+										obj.endEditing();	
+									}
+								}
+				            }
+				        }])
+					}else if(EditType=="数值") {
+						$("#gridQCFormShow").datagrid('addEditor',[ //添加BTCode列editor
+				            {field:'ExecResult',editor:{
+				                	type:'numberbox',
+				                	options:{
+					                	precision:2,
+					                	onChange:function(){
+											var Value=$(this).numberbox('getValue');
+											obj.ChangeRowEditor(Value,row.BTCode)
+										}
+				                	}
+				            	}
+				            }
 			        	])
 					}else if(EditType=="整型") {
 						$("#gridQCFormShow").datagrid('addEditor',[ //添加BTCode列editor
-			            {field:'ExecResult',editor:{
-			                	type:'numberbox',
-			                	options:{
-				                	min:0,
-				                	precision:0,
-				                	onChange:function(){
-										var Value=$(this).numberbox('getValue');
-										obj.ChangeRowEditor(Value,row.BTCode)
-									}
-			                	}
-			            	}
-			            }
+				            {field:'ExecResult',editor:{
+				                	type:'numberbox',
+				                	options:{
+					                	min:0,
+					                	precision:0,
+					                	onChange:function(){
+											var Value=$(this).numberbox('getValue');
+											obj.ChangeRowEditor(Value,row.BTCode)
+										}
+				                	}
+				            	}
+				            }
 			        	])
-					}else if(EditType=="日期时间") {
+					}else if(EditType.indexOf("日期时间")>-1) {
+						var ashowSeconds=false
+						if (EditType.indexOf("秒")>-1) ashowSeconds=true;
 						$("#gridQCFormShow").datagrid('addEditor',[ //添加BTCode列editor
-			            {field:'ExecResult',editor:{
-			                	type:'datetimebox',
-			                	options:{
-				                	onChange:function(){
-										var Value=$(this).datetimebox('getValue');
-										obj.ChangeRowEditor(Value,row.BTCode)
-									}
-			                	}
-			            	}
-			            }
+				            {field:'ExecResult',editor:{
+				                	type:'datetimebox',
+				                	options:{
+					                	editable:false,
+					                	showSeconds:ashowSeconds,
+					                	onChange:function(){
+											var Value=$(this).datetimebox('getValue');
+											obj.ChangeRowEditor(Value,row.BTCode)
+										},onHidePanel:function(){
+											//在处理相关项目显示隐藏前先校验所选值合法性
+											debugger
+											obj.endEditing();	
+										}
+				                	}
+				            	}
+				            }
 			        	])
 					}else if(EditType=="日期") {
 						$("#gridQCFormShow").datagrid('addEditor',[ 
-			            {field:'ExecResult',editor:{
-			                	type:'datebox',
-			                	options:{
-				                	onChange:function(){
-										var Value=$(this).datetimebox('getValue');
-										obj.ChangeRowEditor(Value,row.BTCode)
-									}
-			                	}
-			            	}
-			            }
+				            {field:'ExecResult',editor:{
+				                	type:'datebox',
+				                	options:{
+					                	editable:false,
+					                	onChange:function(){
+											var Value=$(this).datetimebox('getValue');
+											obj.ChangeRowEditor(Value,row.BTCode)
+										},onHidePanel:function(){
+											//在处理相关项目显示隐藏前先校验所选值合法性
+											obj.endEditing();	
+										}
+				                	}
+				            	}
+				            }
 			        	])
-					}else{
+					}else if(EditType=="文本"){
 						$("#gridQCFormShow").datagrid('addEditor',[ 
-			            {field:'ExecResult',editor:{
-				            	type:'text'
-			            	}
-			            }
+				            {field:'ExecResult',editor:{
+					            	type:'text'
+				            	}
+				            }
 			        	])
 					}
 					if (editIndex!=index) {
@@ -308,11 +337,16 @@ function InitviewScreen(){
 												ClassName:"DHCMA.CPW.SDS.DictionarySrv",
 												MethodName:"GetDicsByTypeCode",
 												aTypeCode:DicType,
+												aMrListID:MrListID,
+												aQCID:obj.QCID,
+												aVerID:obj.VerID
 											},false);
+											if (strDicList=="") continue;
 											var strDicList= Unhtml(strDicList,'<','&lt;')
 											var strDicList= Unhtml(strDicList,'>','&gt;')	
 											var dicList = strDicList.split(String.fromCharCode(1));
-											var len =dicList.length;		
+											var len =dicList.length;
+											if (len<2)	continue;	//如果该评分字典小于2则返回:错误信息len为1，而有效字典不会少于2。
 											var count = parseInt(len/columns)+1;
 											var per = Math.round((1/columns) * 100) + '%';  //每列所在百分比，等比分布
 											listHtml+="<div style='clear:both'><h3 style='text-align:left;display:block;'>"+ItemDesc+"</h3>"
@@ -320,20 +354,27 @@ function InitviewScreen(){
 											var tmpGroup=""
 											for (var index =0; index< count; index++) {
 												var chklen=(((index+1)*columns)<len) ? (index+1)*columns : len;
+												var DicMaxLen=0
 												for (var dicIndex = index*columns; dicIndex < chklen; dicIndex++) {	
+													var checked="";
 													var dicSubList = dicList[dicIndex].split(String.fromCharCode(2));
 													var dicGroup = dicSubList[3]
+													var DicLabel=dicSubList[1]
+													if (ScoreArr[editIndex]) {
+														if ((ScoreArr[editIndex][ItemCode])&&(ScoreArr[editIndex][ItemCode].indexOf(dicSubList[4])>-1)) {
+															checked="checked";
+														}
+													}else if (dicSubList[5]==1) checked="checked";
+													//处理太长的描述折行显示后重叠的问题
+													if (DicLabel.length>20) DicMaxLen=1
 													if (dicGroup){
-														if ((tmpGroup!=dicGroup)&&(tmpGroup!="")) listHtml +='<HR style="border:0.2px dashed">'
-														listHtml += " <div style='float:left;font-size:16px;width:"+per+"'><input id="+ItemCode+dicSubList[0]+" type='radio' name='"+editIndex+dicGroup+"' radiogroup='"+dicGroup+"' value="+dicSubList[2]+" class='hisui-radio dic-radio' label='"+dicSubList[1]+"'></div>";  
-														
+														listHtml += " <div style='overflow: auto;float:left;font-size:16px;width:"+per+"'><input id="+ItemCode+"-"+dicSubList[4]+" type='radio' name='"+editIndex+dicGroup+"' radiogroup='"+dicGroup+"' value="+dicSubList[2]+" "+checked+" class='hisui-radio' label='"+DicLabel+"'></div>";  
 														var tmpGroup=dicGroup
 													}else{
-														listHtml += " <div style='float:left;font-size:16px;width:"+per+"'><input id="+ItemCode+dicSubList[0]+" type='checkbox' name='"+editIndex+"' value="+dicSubList[2]+" class='hisui-checkbox dic-check' label='"+dicSubList[1]+"'></div>";  
+														listHtml += " <div style='overflow: auto;float:left;font-size:16px;width:"+per+"'><input id="+ItemCode+"-"+dicSubList[4]+" type='checkbox' name='"+editIndex+"' value="+dicSubList[2]+" "+checked+" class='hisui-checkbox' label='"+DicLabel+"'></div>";  
 													}
 												} 
-												
-												
+												if (DicMaxLen==1) listHtml += '<div style="height:45px"></div>'
 											}
 											listHtml +="</div></div>"
 								     	}

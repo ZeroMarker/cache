@@ -1,7 +1,5 @@
 /// UDHCAccCol.PDDetail.js
 
-var m_SelectCardTypeDR;
-
 $(function () {
 	ini_LayoutStyle();   // tangzf 2019-5-2
 	
@@ -9,19 +7,8 @@ $(function () {
 		panelHeight: 'auto',
 		valueField: 'id',
 		textField: 'text',
-		data:[{id: "P", text: "收"},
-			  {id: "R", text: "退"}]
-	});
-	
-	$("#CardTypeDefine").combobox({
-		panelHeight: 'auto',
-		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QCardTypeDefineList&ResultSetType=array',
-		editable: false,
-		valueField: 'value',
-		textField: 'caption',
-		onChange: function(newValue, oldValue) {
-			CardTypeDefine_OnChange();
-		}
+		data:[{id: "P", text: $g("收")},
+			  {id: "R", text: $g("退")}]
 	});
 
 	$("#UserCode").combobox({
@@ -33,9 +20,28 @@ $(function () {
 		onBeforeLoad: function(param) {
 			param.hospId = session['LOGON.HOSPID'];
 			param.desc = "";
+			param.langId = session['LOGON.LANGID']
 		},
 		onChange: function(newValue, oldValue) {
 			setValueById("UserId", (newValue || ""));
+		}
+	});
+	
+	//押金类型
+	$HUI.combobox("#DepositType", {
+		panelHeight: 150,
+		url: $URL + '?ClassName=web.DHCIPBillDeposit&QueryName=FindGrpDepType&ResultSetType=array',
+		method: 'GET',
+		editable: false,
+		valueField: 'id',
+		textField: 'text',
+		onBeforeLoad: function(param) {
+			param.groupId = session['LOGON.GROUPID'];
+			param.hospId = session['LOGON.HOSPID'];
+			param.langId = session['LOGON.LANGID'];
+		},
+		onChange: function(newValue, oldValue) {
+			setValueById("DepTypeId", (newValue || ""));
 		}
 	});
 	
@@ -55,61 +61,48 @@ $(function () {
 		PatientNoKeydown(e);
 	});
 	
-	$("#AccCardNO").keydown(function(e) {
+	$("#AccCardNO").focus().keydown(function(e) {
 		AccCardNOKeydown(e);
 	});
 });
 
 function ReadHFMagCard_Click() {
-	var myCardTypeValue = getValueById("CardTypeDefine");
-	if (m_SelectCardTypeDR == "") {
-		var myrtn = DHCACC_GetAccInfo();
-	} else {
-		var myrtn = DHCACC_GetAccInfo(m_SelectCardTypeDR, myCardTypeValue);
-	}
-	var myAry = myrtn.split("^");
-	var rtn = myAry[0];
-	switch (rtn) {
-	case "0":
-		//rtn +"^"+myCardNo+"^" + myCheckNo +"^"+myLeftM+"^"+myPAPMI+"^"+myPAPMNo;
-		setValueById("AccCardNO", myAry[1]);
-		setValueById("PAPMNo", myAry[5]);
-		//setValueById("AccRowID", myAry[7]);
-		Query_click();
-		break;
-	case "-200":
-		setTimeout(function () {
-			$.messager.alert("提示", "卡无效", "info", function () {
-				focusById("ReadCard");
-			});
-		}, 300);
-		break;
-	case "-201":
-		setTimeout(function () {
-			$.messager.alert("提示", "账户无效", "info", function () {
-				focusById("ReadCard");
-			});
-		}, 300);
-		break;
-	default:
+	DHCACC_GetAccInfo7(magCardCallback);
+}
+
+function AccCardNOKeydown(e) {
+	var key = websys_getKey(e);
+	if (key == 13) {
+		var CardNo = getValueById("AccCardNO");
+		if (CardNo == "") {
+			return;
+		}
+		DHCACC_GetAccInfo("", CardNo, "", "", magCardCallback);
 	}
 }
 
-function Query_click() {
-	$("#tUDHCAccCol_PDDetail").datagrid("load", {
-			queryParams: {
-				ClassName: "web.UDHCAccAddDeposit",
-				QueryName: "ReadPDDetails",
-				AccCardNO: getValueById("AccCardNO"),
-				PAPMNo: getValueById("PAPMNo"),
-				StDate: getValueById("StDate"),
-				EndDate: getValueById("EndDate"),
-				UserId: getValueById("UserId"),
-				PDDFlag: getValueById("PDDFlag"),
-				HospId: getValueById("HospId")
-			}
-		}
-	);
+function magCardCallback(rtnValue) {
+	var myAry = rtnValue.split("^");
+	switch (myAry[0]) {
+	case "0":
+		setValueById("AccCardNO", myAry[1]);
+		setValueById("PAPMNo", myAry[5]);
+		//setValueById("AccRowID", myAry[7]);
+		setValueById("CardTypeRowId", myAry[8]);
+		$("#Query").click();
+		break;
+	case "-200":
+		$.messager.alert("提示", "卡无效", "info", function () {
+			focusById("AccCardNO");
+		});
+		break;
+	case "-201":
+		$.messager.alert("提示", "账户无效", "info", function () {
+			focusById("AccCardNO");
+		});
+		break;
+	default:
+	}
 }
 
 function PDPrint_Click() {
@@ -119,35 +112,16 @@ function PDPrint_Click() {
 	var myEndDate = getValueById("EndDate");
 	var myUserId = getValueById("UserId");
 	var myPDDFlag = getValueById("PDDFlag");
-	var fileName = "DHCBILL-OPBILL-PDDetail.rpx&AccCardNO=" + myAccCardNO + "&PAPMNo=" + myPAPMNo + "&StDate=" + myStDate + "&EndDate=" + myEndDate;
-	fileName += "&UserId=" + myUserId + "&PDDFlag=" + myPDDFlag + "&HospId=" + getValueById("HospId");
+	var myDepTypeId = getValueById("DepTypeId");
+	var fileName = "DHCBILL-OPBILL-PDDetail.rpx&AccCardNO=" + myAccCardNO + "&PAPMNo=" + myPAPMNo + "&StDate=" + myStDate;
+	fileName += "&EndDate=" + myEndDate + "&UserId=" + myUserId + "&PDDFlag=" + myPDDFlag + "&HospId=" + getValueById("HospId");
+	fileName += "&DepTypeId=" + myDepTypeId;
 	DHCCPM_RQPrint(fileName, 1200, 750);
-}
-
-function CardTypeDefine_OnChange() {
-	var myCardTypeValue = getValueById("CardTypeDefine")
-	var myAry = myCardTypeValue.split("^");
-	var myCardTypeDR = myAry[0];
-	m_SelectCardTypeDR = myCardTypeDR;
-	if (myCardTypeDR == "") {
-		return;
-	}
-	//Read Card Mode
-	if (myAry[16] == "Handle") {
-		$("#AccCardNO").attr("readOnly", false);
-		$("#ReadCard").linkbutton("disable");
-		focusById("AccCardNO");
-	} else {
-		$("#AccCardNO").attr("readOnly", true);
-		$("#ReadCard").linkbutton("enable");
-		focusById("ReadCard");
-	}
 }
 
 function PatientNoKeydown(e) {
 	var key = websys_getKey(e);
 	if (key == 13) {
-		var PAPMNo = getValueById("PAPMNo");
 		$.m({
 			ClassName: "web.UDHCJFBaseCommon",
 			MethodName: "regnocon",
@@ -156,44 +130,6 @@ function PatientNoKeydown(e) {
 			setValueById("PAPMNo", rtn);
 		});
 	}
-}
-
-function AccCardNOKeydown(e){
-	var key = websys_getKey(e);
-	if (key == 13) {
-		var myCardNo = getValueById("AccCardNO");
-		if (myCardNo == "") {
-			return;
-		}
-		var myCardTypeValue = getValueById("CardTypeDefine");
-		myCardNo = formatCardNo(myCardTypeValue, myCardNo);
-		var mySecurityNo = "";
-		var myrtn = DHCACC_GetAccInfo(m_SelectCardTypeDR, myCardNo, mySecurityNo, "");
-		var myAry = myrtn.split("^");
-		var rtn = myAry[0];
-		switch (rtn) {
-			case "0":
-				setValueById("AccCardNO", myAry[1]);
-				setValueById("PAPMNo", myAry[5]);
-				Query_click();
-				break;
-			case "-200":
-				setTimeout(function () {
-					$.messager.alert("提示", "卡无效", "info", function () {
-						focusById("AccCardNO");
-					});
-				}, 300);
-				break;
-			case "-201":
-				setTimeout(function () {
-					$.messager.alert("提示", "账户无效", "info", function () {
-						focusById("AccCardNO");
-					});
-				}, 300);
-				break;
-			default:
-		}
-	}		
 }
 
 function ini_LayoutStyle() {

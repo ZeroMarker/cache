@@ -18,7 +18,6 @@
 * Copyright (c) 2015 Lixilin personal All rights reserved.
 */
 (function () {
-
     $.util.namespace("$.fn.datagrid.extensions");
 
     function onNavigatePaginate(paginateType, data) {
@@ -197,9 +196,10 @@
         var t = $(target),
             state = $.data(target, "datagrid"),
             opts = state.options;
-
-        initKeyNavigatingEvent(t, opts);
-        if (opts.navigatingWithKey) { t.datagrid("getPanel").panel("panel").focus(); }
+        if (opts.navigatingWithKey) {
+            initKeyNavigatingEvent(t, opts);
+            t.datagrid("getPanel").panel("panel").focus();
+        }
     }
 
     var _datagrid = $.fn.datagrid;
@@ -238,7 +238,8 @@
         //      Left 键：上一页，仅在有上一页时有效
         //      Right 键：下一页，仅在有下一页时有效
         //      Enter 键：触发 datagrid onDblClickRow 事件，仅在有 selected 数据行时有效
-        navigatingWithKey: true,
+    	//  2021-08-02: 缺省设置为false, 需要时datagrid中赋值true即可(true会触发相应初始化,获取焦点,进而使其他内容失去焦点);
+        navigatingWithKey: false,
 
         //  扩展 easyui-datagrid 的自定义事件；表示通过按键导航进行翻页后触发的事件；该事件回调函数提供如下参数：
         //      paginateType:  表示翻页类型，其值可以是 prev、next，分别表示上一页、下一页；

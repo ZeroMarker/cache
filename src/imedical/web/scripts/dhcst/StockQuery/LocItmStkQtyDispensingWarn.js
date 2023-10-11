@@ -10,7 +10,7 @@ Ext.onReady(function() {
 	var gGroupId=session['LOGON.GROUPID'];
 		//统计科室
 		var PhaLoc = new Ext.ux.LocComboBox({
-			fieldLabel : '科室',
+			fieldLabel : $g('科室'),
 			id : 'PhaLoc',
 			name : 'PhaLoc',
 			anchor:'90%',
@@ -18,7 +18,7 @@ Ext.onReady(function() {
 		});
 
 		var NotUseFlag = new Ext.form.Checkbox({
-					boxLabel : '包含不可用品种',
+					boxLabel : $g('包含不可用品种'),
 					id : 'NotUseFlag',
 					name : 'NotUseFlag',
 					//anchor : '90%',
@@ -30,7 +30,7 @@ Ext.onReady(function() {
 
 			// 起始日期
 		var StartDate = new Ext.ux.DateField({
-					fieldLabel : '开始日期',
+					fieldLabel : $g('开始日期'),
 					id : 'StartDate',
 					name : 'StartDate',
 					width : 120,
@@ -39,7 +39,7 @@ Ext.onReady(function() {
 				});
 		// 截止日期
 		var EndDate = new Ext.ux.DateField({
-					fieldLabel : '结束日期',
+					fieldLabel : $g('结束日期'),
 					id : 'EndDate',
 					name : 'EndDate',
 					width : 120,
@@ -50,14 +50,14 @@ Ext.onReady(function() {
 					id : 'UseDays',
 					name : 'UseDays',
 					anchor : '90%',
-					fieldLabel:'用药天数',
+					fieldLabel:$g('用药天数'),
 					value:30
 		});
 				
 		// 查询按钮
 		var SearchBT = new Ext.Toolbar.Button({
-					text : '查询',
-					tooltip : '点击查询',
+					text : $g('查询'),
+					tooltip : $g('点击查询'),
 					iconCls : 'page_find',
 					width : 70,
 					height : 30,
@@ -73,7 +73,7 @@ Ext.onReady(function() {
 			// 必选条件
 			var phaLoc = Ext.getCmp("PhaLoc").getValue();
 			if (phaLoc == null || phaLoc.length <= 0) {
-				Msg.info("warning", "科室不能为空！");
+				Msg.info("warning", $g("科室不能为空！"));
 				Ext.getCmp("PhaLoc").focus();
 				return;
 			}
@@ -81,15 +81,15 @@ Ext.onReady(function() {
 			var endDate = Ext.getCmp("EndDate").getRawValue();
 			var UseDays = Ext.getCmp("UseDays").getValue();
 			if (startDate == undefined || startDate.length <= 0) {
-				Msg.info("warning", "请选择开始日期!");
+				Msg.info("warning", $g("请选择开始日期!"));
 				return;
 			}
 			if (endDate == undefined || endDate.length <= 0) {
-				Msg.info("warning", "请选择截止日期!");
+				Msg.info("warning", $g("请选择截止日期!"));
 				return;
 			}
 			if (UseDays == undefined || UseDays.length <= 0) {
-				Msg.info("warning", "请填写用药天数!");
+				Msg.info("warning", $g("请填写用药天数!"));
 				return;
 			}
 			// 可选条件
@@ -104,7 +104,7 @@ Ext.onReady(function() {
 			StockQtyStore.load({params:{start:0,limit:pageSize,sort:''},
 			callback : function(o,response,success) { 
 					if (success == false){  
-						Ext.MessageBox.alert("查询错误",StockQtyStore.reader.jsonData.Error);  
+						Ext.MessageBox.alert($g("查询错误"),StockQtyStore.reader.jsonData.Error);  
 					}
 				}
 			});
@@ -112,8 +112,8 @@ Ext.onReady(function() {
 		}
 		// 另存按钮
 		var SaveAsBT = new Ext.Toolbar.Button({
-					text : '另存',
-					tooltip : '另存为Excel',
+					text : $g('另存'),
+					tooltip : $g('另存为Excel'),
 					iconCls : 'page_export',
 					width : 70,
 					height : 30,
@@ -123,8 +123,8 @@ Ext.onReady(function() {
 				});		
 		// 清空按钮
 		var RefreshBT = new Ext.Toolbar.Button({
-					text : '清屏',
-					tooltip : '点击清屏',
+					text : $g('清屏'),
+					tooltip : $g('点击清屏'),
 					iconCls : 'page_clearscreen',
 					width : 70,
 					height : 30,
@@ -134,14 +134,14 @@ Ext.onReady(function() {
 				});
 		var PrintBT = new Ext.Toolbar.Button({
 				id : "PrintBT",
-				text : '打印',
+				text : $g('打印'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_print',
 				handler : function() {
 					var rowCount=StockQtyStore.getCount();
 					if (rowCount ==0) {
-						Msg.info("warning", "无可用打印数据!");
+						Msg.info("warning", $g("无可用打印数据!"));
 						return;
 					}
 					var tmpParam = StockQtyStore.lastOptions; 
@@ -194,49 +194,49 @@ Ext.onReady(function() {
 					sortable : true,
 					hidden : true
 				}, {
-					header : '代码',
+					header : $g('代码'),
 					dataIndex : 'code',
 					width : 80,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "名称",
+					header : $g("名称"),
 					dataIndex : 'desc',
 					width : 225,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "规格",
+					header : $g("规格"),
 					dataIndex : 'spec',
 					width : 120,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "单位",
+					header : $g("单位"),
 					dataIndex : 'stkUom',
 					width : 80,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "可用库存",
+					header : $g("可用库存"),
 					dataIndex : 'avaQty',
 					width : 100,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "日消耗量",
+					header : $g("日消耗量"),
 					dataIndex : 'oneDspQty',
 					width : 100,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "需求量",
+					header : $g("需求量"),
 					dataIndex : 'reqQty',
 					width : 100,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "厂商",
+					header : $g("生产企业"),
 					dataIndex : 'manf',
 					width : 175,
 					align : 'left',
@@ -276,16 +276,16 @@ Ext.onReady(function() {
 					store : StockQtyStore,
 					pageSize : PageSize,
 					displayInfo : true,
-					displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
+					displayMsg :$g( '当前记录 {0} -- {1} 条 共 {2} 条记录'),
 					emptyMsg : "No results to display",
-					prevText : "上一页",
-					nextText : "下一页",
-					refreshText : "刷新",
-					lastText : "最后页",
-					firstText : "第一页",
-					beforePageText : "当前页",
-					afterPageText : "共{0}页",
-					emptyMsg : "没有数据"//,
+					prevText : $g("上一页"),
+					nextText : $g("下一页"),
+					refreshText : $g("刷新"),
+					lastText : $g("最后页"),
+					firstText : $g("第一页"),
+					beforePageText : $g("当前页"),
+					afterPageText : $g("共{0}页"),
+					emptyMsg : $g("没有数据")//,
 					//doLoad:function(C){
 					//	var B={},
 					//	A=this.getParams();
@@ -327,7 +327,7 @@ Ext.onReady(function() {
 	var HisListTab = new Ext.form.FormPanel({
 			labelWidth : 60,
 			region : 'north',
-			title:"库存报警-按消耗量",
+			title:$g("库存报警-按消耗量"),
 			autoHeight:true,
 			labelAlign : 'right',
 			frame : true,
@@ -336,7 +336,7 @@ Ext.onReady(function() {
 			items:[{
 				layout : 'column',
 				defaults: { border:false},	
-				title:'查询条件',
+				title:$g('查询条件'),
 				style:DHCSTFormStyle.FrmPaddingV,
 				xtype: 'fieldset',
 				items:[{
@@ -378,7 +378,7 @@ Ext.onReady(function() {
 			               
 			            , {
 			                region: 'center',
-			                title: '明细',			               
+			                title: $g('明细'),			               
 			                layout: 'fit', // specify layout manager for items
 			                items: StockQtyGrid       
 			               

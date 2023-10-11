@@ -1,18 +1,31 @@
 var GV={}  ;//存放全局变量
 var editRow = ""; var arcColumns=""; var PartColumns=""; var nodeArr=[]; var count = 0; var partEditRow="";
 var ItemTypeArr = [{"value":"E","text":'检查'}, {"value":"L","text":'检验'}, {"value":"P","text":'病理'}];;
-
+var expFlag=0
+//页面全局变量
+var PageLogicObj = {
+	m_InDepLen: "",m_selectLen:""
+}
 /// 页面初始化函数
 function InitHosp(){
 	var hospStr=session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
-	var hospComp = GenHospComp("Doc_APP_Exacattreeadd",hospStr);
+	var hospComp = GenHospComp("DHC_AppTreeAdd",hospStr);
 	hospComp.jdata.options.onSelect= function(){
+		$("#jzul").html("")
 		initPageDefault()
+		InitSelecLoc();
+		$("#itemlist").datagrid("load",{"params":"^^^"});
 	} 
 	initPageDefault();
 	initBlButton();      /// 页面 Button 绑定事件
+	InitSelecLoc();
 }
 function initPageDefault(){
+	var HospID=$HUI.combogrid('#_HospList').getValue();
+    TreeTypeBody=tkMakeServerCall("DHCDoc.DHCApp.BasicConfig","GetConfigNode","TreeTypeBody",HospID)
+    if (TreeTypeBody=="TreeTypeBody"){version=0}else{version=1}
+    Opentree=tkMakeServerCall("DHCDoc.DHCApp.BasicConfig","GetConfigNode","Opentree",HospID)
+    if (Opentree=="notopen"){expFlag=0}else{expFlag=1}
 	GV.maxHeight=$(window).height()||550;
 	GV.maxWidth=$(window).width()||1366;
 	
@@ -25,6 +38,7 @@ function initPageDefault(){
     initPartDataGrid();  /// 页面DataGrid初始定义
     initCombobox();      /// 页面Combobox初始定义
     initMenuSecurityWin();
+    
     <!-- 新旧版本兼容配置 -->
     if (version != 1){
 	    /// 旧版时,隐藏部位列表窗口
@@ -33,6 +47,12 @@ function initPageDefault(){
 		$("div[onclick='newCreatePart()']").attr("style","");
 		///旧版时,改变右键面板的高度
 		$("#right").attr("style","height:200px;");
+		$('#mainpanel').layout('resize');
+	}else{
+		//显示部位列表窗口
+		$('#mainpanel').layout('show','east');
+		//隐藏增加部位选项菜单
+		$("div[onclick='newCreatePart()']").attr("style","display:none;");
 	}
 }
 /// 初始化datagrid列表
@@ -64,10 +84,26 @@ function LoadPageBaseInfo(){
 function initSymLevTree(){
 	var HospID=$HUI.combogrid('#_HospList').getValue();
 	<!-- 新旧版本兼容配置 -->
-	var uniturl = LINK_CSP+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCatByNodeID&id=0&HospID='+HospID;
+	/*var uniturl = LINK_CSP+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCatByNodeID&id=0&HospID='+HospID;
 	if (version == 1){
 		uniturl = LINK_CSP+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCatByNodeIDNew&id=0&HospID='+HospID;
-	}
+	}*/
+	 if (version != 1){
+			/// 旧版
+			if (expFlag==1) {
+				//TODO
+				var uniturl = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCatOld&HospID='+HospID;
+			}else{
+				var uniturl = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCatByNodeID&id=0&HospID='+HospID+'&PyType='+"";
+			}
+		}else{
+			/// 新版
+			if (expFlag==1) {
+				var uniturl = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCat&HospID='+HospID;
+			}else{
+				var uniturl = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCatByNodeIDNew&id=0&HospID='+HospID+'&PyType='+"";
+			}
+		}
 	var option = {
 		multiple:true,
 		lines:true,
@@ -77,7 +113,7 @@ function initSymLevTree(){
 	        var isLeaf = $("#itemCat").tree('isLeaf',node.target);   /// 是否是叶子节点
 	        if (isLeaf){
 		        var itemCatID = node.id; 		/// 检查分类ID
-				var params = itemCatID;
+				var params = itemCatID+"^^"+$('#desc').val();
 				$("#itemlist").datagrid("load",{"params":params});
 				$("#partlist").datagrid("loadData",{"total":0,"rows":[]});
 	        }else{
@@ -159,7 +195,25 @@ function initDataGrid(){
 				}		   
 			}
 		}
-		
+	///牙位图
+	var Toothflag={  //设置其为可编辑
+		//类别
+		type: 'combobox',//设置编辑格式
+		options: {
+			valueField: "value", 
+			textField: "text",
+			data:[{"value":"Y","text":"是"},{"value":"N","text":"否"}],
+			panelHeight:"auto",  //设置容器高度自动增长
+			onSelect:function(option){
+				///设置类型值
+				var ed=$("#itemlist").datagrid('getEditor',{index:editRow,field:'ItemToothFlag'});
+				$(ed.target).combobox('setValue', option.text);
+				var ed=$("#itemlist").datagrid('getEditor',{index:editRow,field:'ItemToothFlagCode'});
+				$(ed.target).val(option.value); 
+			} 
+			
+		}
+	}	
 	///  定义columns
 	var columns=[[
 		{field:'ItemCode',title:'代码',width:100,editor:textEditor},
@@ -169,6 +223,8 @@ function initDataGrid(){
 		{field:'TraID',title:'TraID',width:100,hidden:true},
 		{field:'TraItmID',title:'TraItmID',width:100,hidden:true},
 		{field:'ItemPriority',title:'优先级',width:160,align:'center',formatter:SetCellUrl},
+		{field:'ItemToothFlag',title:'牙位图',width:160,editor:Toothflag},
+		{field:'ItemToothFlagCode',width:80,align:'center',editor:textEditor,hidden:true},
 		{field:'ItemOrdNum',title:'顺序号',width:100,hidden:true}
 	]];
 	
@@ -233,6 +289,18 @@ function moveDown(index){
 /// 移动
 function move(isUp,index) {
 
+	var queryParams=$("#itemlist").datagrid("options").queryParams;
+	if (typeof queryParams!="undefined"){
+		if (!$.isEmptyObject(queryParams)){
+			var params=queryParams.params;
+			var paramsArr=params.split("^");
+			var ExaItmCode=paramsArr[2]?paramsArr[2]:"";
+			if (ExaItmCode!=""){
+				$.messager.alert("提示","请删除检索项重新检索后再调整顺序!"); 
+				return;
+			}
+		}
+	}
 	var newrow = "";
 	if(isUp){
 		var newrow=parseInt(index)-1;  /// 上移
@@ -358,7 +426,9 @@ function initBlButton(){
 	$('#arctb a:contains("删除")').bind("click",deleteRow);
 	
 	///  安全组授权
-	$('#arctb a:contains("授权")').bind("click",openAuth);
+	$('#arctb a:contains("科室授权")').bind("click",function(){
+		LocSelectShow("TreeLink")
+		});
 	
 	///  增加检查项目,部位
 	$('#parttb a:contains("新增")').bind("click",insPartRow);
@@ -377,7 +447,19 @@ function initBlButton(){
 			findExaItmTree(PyCode);
 		}
 	});
-	
+	$('#desc').searchbox({
+		searcher : function (value, name) {
+			var queryParams=$("#itemlist").datagrid("options").queryParams;
+			if (typeof queryParams=="undefined"){return}
+			if ($.isEmptyObject(queryParams)){return}
+			var params=queryParams.params;
+			var paramsArr=params.split("^");
+			paramsArr.length=4
+			paramsArr[2]=$.trim(value);
+			params=paramsArr.join("^");
+			$("#itemlist").datagrid("load",{"params":params});
+		}
+	});
 	///  保存
 	$('#icw_bt a:contains("保存")').bind("click",saveCat);
 	
@@ -429,8 +511,22 @@ function initBlButton(){
 			new ListComponentWin($('#ItmmastDesc'), "", "600px", "" , unitUrl, arcColumns, setArcCurrEditRowCellVal).init();
 		}
 	});
-}
+	/*$('#desc').bind('keypress',function(event){
+		if(event.keyCode == "13"){
+			var queryParams=$("#itemlist").datagrid("options").queryParams;
+			if (typeof queryParams=="undefined"){return}
+			if ($.isEmptyObject(queryParams)){return}
+			var params=queryParams.params;
+			var paramsArr=params.split("^");
+			paramsArr.length=4
+			paramsArr[2]=$('#desc').val();
+			params=paramsArr.join("^");
+			$("#itemlist").datagrid("load",{"params":params});
+		}
+	});*/
+	
 
+}
 /// 查找检查项目树
 function findExaItmTree(PyCode){
 	var HospID=$HUI.combogrid('#_HospList').getValue();
@@ -484,7 +580,7 @@ function insertRow(){
 	}
 	$("#itemlist").datagrid('insertRow', {
 		index: 0, // 行数从0开始计算
-		row: {ItemPartID:PartID, TraID:TraID, TraItmID:""}
+		row: {ItemPartID:PartID, TraID:TraID, TraItmID:"",ItemToothFlag:"N",ItemToothFlagCode:"N"}
 	});
 	$("#itemlist").datagrid('beginEdit', 0);//开启编辑并传入要编辑的行
 	editRow=0;
@@ -621,7 +717,23 @@ function saveRow(){
 			$.messager.alert("提示","检查项目不能为空！"); 
 			return false;
 		}
-		var tmp=rowsData[i].TraID+"^"+rowsData[i].ItemID+"^"+rowsData[i].ItemPartID+"^"+rowsData[i].TraItmID;
+		if(typeof rowsData[i].ItemID=="undefined") {
+			$.messager.alert("提示","检查项目不能为空！"); 
+			return false;
+        }
+		if ((rowsData[i].ItemToothFlagCode=="Y")){
+	        var ItemToothFlagpart=$.cm({
+				ClassName:'web.DHCAPPTreeAdd',
+				MethodName:'isExistSubPartSame',
+				version:1,
+				mListData:rowsData[i].TraID+"^"+rowsData[i].ItemID+"^"+rowsData[i].ItemPartID+"^"+rowsData[i].TraItmID+"^"+rowsData[i].ItemToothFlagCode
+			},false);
+			if (ItemToothFlagpart=="-2"){
+		        $.messager.alert("提示","部位和牙位图请任选一个！"); 
+				return false;
+			}
+	        }
+		var tmp=rowsData[i].TraID+"^"+rowsData[i].ItemID+"^"+rowsData[i].ItemPartID+"^"+rowsData[i].TraItmID+"^"+rowsData[i].ItemToothFlagCode;
 		dataList.push(tmp);
 	} 
 	var params=dataList.join("&&");
@@ -786,10 +898,10 @@ function newCreatePart(){
         return;
 	}
 	
-	/*if (!isAllowPart(node.id)){
+	if (!isAllowPart(node.id)){
 		$.messager.alert("提示","下级分类类型不一致,'非部位分类'!"); 
         return;
-	}*/
+	}
 	
 	newCreatePartWin(); 	// 新建咨询窗口
 	InitItmPartDefault();   // 初始化界面默认信息
@@ -1153,7 +1265,12 @@ function insPartRow(){
 	}
 	var TraID = rowData.TraID;   /// 分类表ID
 	var ItemID = rowData.ItemID; /// 医嘱项ID
-
+	var node = $("#itemCat").tree('getSelected');
+	var ItemType = GetNodeType(node.id);
+	if ((ItemType=="L")||(ItemType=="P")){
+		$.messager.alert("提示","非检查项目，不能维护部位”");
+		return;
+		}
 	if(partEditRow>="0"){
 		$("#partlist").datagrid('endEdit', partEditRow);//结束编辑，传入之前编辑的行
 	}
@@ -1302,7 +1419,7 @@ $(function(){
 /// 获取检查分类树别名
 function GetTreeAlise(TraID){
 
-	var Tra = "";
+	var TreeAlise = "";
 	runClassMethod("web.DHCAPPTreeAdd","GetTreeAlise",{"TraID":TraID},function(val){
 		if (val != ""){
 			TreeAlise = val;
@@ -1417,6 +1534,132 @@ function moveTree(mListData){
 		}
  	},'json',false)
  	return InsFlag;
+}
+function ranslateword(){
+	var node = $("#itemCat").tree('getSelected');
+	CreatTranLate("User.DHCAppTreeAdd","TRADesc",node.text)
+	}
+var SelectRowID=""
+var SelectType=""
+function LocSelectShow(Type){
+	if (Type=="TreeLink"){
+		var rowsData = $("#itemlist").datagrid('getSelected'); /// 选中要删除的行
+		if (rowsData != null) {
+			//var TarID = rowsData.TraID;	
+			SelectRowID=rowsData.TraItmID;	
+		}else{
+			$.messager.alert("提示","当前一条数据进行授权!"); 
+	        return;
+			}
+	}else{
+		var node = $("#itemCat").tree('getSelected');
+		if (node.id.indexOf("^") != "-1"){
+			$.messager.alert("提示","当前节点为部位节点,不能使用更新!"); 
+	        return;
+		}
+		SelectRowID=node.id
+	}
+	SelectType=Type
+	var HospID=$HUI.combogrid('#_HospList').getValue();
+	$('#dialog-LocSelect').window('open');
+	var cfgLoc = tkMakeServerCall("web.DHCAPPTreeAdd","ShowTreeconfigloc", SelectType,SelectRowID,HospID);
+	var defaultLoc=""
+	if (cfgLoc != "" ) {
+		PageLogicObj.m_selectLen = cfgLoc.split("^").length;
+		cfgLoc = "^" + cfgLoc + "^";
+	} else {
+		PageLogicObj.m_selectLen = 0;
+		/*$("#jzul-set>li").each(function () {
+			if ($(this).text() == "默认") {
+				$(this).text("设置为默认").removeClass("default");
+			}
+		});*/
+	}
+	$("#jzul>li").each(function () {
+		var curCid = $(this).attr("value");
+		cid = "^" + curCid + "^";
+		if (cfgLoc.indexOf(cid) >= 0) {
+			if (!$(this).hasClass('active')) {
+				$(this).addClass('active');
+			}
+			if (cid == ("^" + defaultLoc + "^")) {
+				$(this).addClass('selected');
+				//$("#i-" + curCid).html("默认");
+				//$("#i-" + curCid).addClass("default");
+			} else {
+				$(this).removeClass('selected');
+				//$("#i-" + curCid).html("设置为默认");
+				//$("#i-" + curCid).removeClass("default");
+			}
+		} else {
+			$(this).removeClass('active');
+			$(this).removeClass('selected');
+			//if ($("#i-" + curCid).text() == "默认") {
+				//$("#i-" + curCid).text("设置为默认").removeClass("default");
+			//}
+		}
+	});
+}
+function InitSelecLoc(){
+	var HospID=$HUI.combogrid('#_HospList').getValue();
+	$.m({
+			ClassName:"web.DHCDocIPBookNew",
+			MethodName:"GetLocByType",
+			TypeList:"I^O^E^H",
+			HospId:HospID
+		},function (responseText){
+			var dataArr = responseText.split("!");
+			PageLogicObj.m_InDepLen = dataArr.length;
+			for(var i=0; i< dataArr.length; i++) {
+				var curRecord = dataArr[i].split("^");
+				$("#jzul").append("<li id='in-"+ curRecord[1] + "' value="+curRecord[1]+">" + curRecord[0]+"</li>");
+				//$("#jzul-set").append("<li id=i-"+curRecord[1]+">" + "设置为默认"+"</li>");
+			}
+			
+			$("#jzul>li,#zydateul>li,#prelocul>li").on('click', function(){
+				//var id = $(this).attr("value");
+				if ($(this).hasClass('active')) {
+					$(this).removeClass('active');
+				} else {
+					$(this).addClass('active');
+				}
+			});
+			
+		})
+	$("#i-config").click(SaveSelecconfig);
+	$("#i-select").checkbox({
+		onChecked: function () {
+			$("#jzul>li").each(function () {
+				if (!$(this).hasClass('active')) {
+					$(this).addClass('active');
+				}
+				var curCid = $(this).attr("value");
+
+			});
+		},
+		onUnchecked: function () {
+			$("#jzul>li").each(function () {
+				if ($(this).hasClass('active')) {
+					$(this).removeClass('active');
+					$(this).removeClass('selected');
+				}
+			});
+			
+		}
+	});
+	}
+function SaveSelecconfig(){
+	var ipLoc=""
+	var HospID=$HUI.combogrid('#_HospList').getValue();
+	$("#jzul>li.active").each(function () {
+		if (ipLoc == "") {
+			ipLoc = $(this).attr("value");
+		} else {
+			ipLoc = ipLoc + "^" + $(this).attr("value");
+		}
+	})
+	var rtn = tkMakeServerCall("web.DHCAPPTreeAdd","SaveTreeconfigloc", SelectType,SelectRowID, ipLoc,HospID);
+	$('#dialog-LocSelect').window('close');
 }
 /// JQuery 初始化页面
 $(function(){ InitHosp(); })

@@ -31,7 +31,7 @@
 				continue;
 			}
 		
-			if ((col.field == 'expander')||(col.field == 'link')) {  //链接
+			if ((col.field == 'expander')||(col.field == 'link')||(col.field.indexOf('link')>=0)||(col.field.indexOf('expander')>=0)) {  //链接
 				arrayCol[arrayCol.length] = i;
 				continue;
 			}	
@@ -63,6 +63,11 @@
 				if ((value)&&(!isNaN(value))) { //判断字符串是否为纯数字
 				  	tdStyle1 =";mso-number-format:'\@'";  //解决纯数字列导出没有0或变成科学style="mso-number-format:'\@';"   
 				} 
+				// 判断是否为日期格式，解决导出日期格式转变问题
+				var DateType=value.match(/^(\d{1,4})(-|\/)(\d{1,2})\2(\d{1,2})$/);
+				if ((value)&&(DateType)){
+					tdStyle1 =";mso-number-format:'yyyy\-mm\-dd'";
+				}
                 data.push(
                     '<td style="'+tdStyle0+tdStyle1+'">'+value+'</td>'
                 );
@@ -92,7 +97,7 @@
 				continue;
 			}
 		
-			if ((col.field == 'expander')||(col.field == 'link')) {  //链接
+			if ((col.field == 'expander')||(col.field == 'link')||(col.field.indexOf('link')>=0)||(col.field.indexOf('expander')>=0)) {  //链接
 				arrayCol[arrayCol.length] = i;
 				continue;
 			}	
@@ -246,7 +251,7 @@
 				continue;
 			}
 		
-			if ((col.field == 'expander')||(col.field == 'link')) {  //链接
+			if ((col.field == 'expander')||(col.field == 'link')||(col.field.indexOf('link')>=0)||(col.field.indexOf('expander')>=0)) {  //链接
 				arrayCol[arrayCol.length] = i;
 				continue;
 			}	

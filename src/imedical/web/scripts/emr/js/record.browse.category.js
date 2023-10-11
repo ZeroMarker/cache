@@ -61,6 +61,7 @@ function setTreeData(data)
 	$('.navcategory').empty();
 	if (data[0].length != 0)
 	{
+		$("#noRecordMes").css("display","none");
 		$("#InstanceTree").attr("class","ztree chats_ztree");
 		$.fn.zTree.init($('#InstanceTree'), ztSetting, data[0]);
 		var treeObj = $.fn.zTree.getZTreeObj('InstanceTree');
@@ -78,7 +79,7 @@ function setTreeData(data)
 	}
     else
     {
-        $('#BrowseCategory').append('<p style="text-align:center"><font face="arial" size="6" color="blue">患者本次就诊未写病历</font></p>');
+        $("#noRecordMes").css("display","block");
     }
 }
 
@@ -136,7 +137,9 @@ function ztOnClick(event, treeId, treeNode)
 	};
 	if (window.frames["frameBrowseCategory"])
 	{
-	 	window.frames["frameBrowseCategory"].loadDocument(tempParam);
+	 	//window.frames["frameBrowseCategory"].loadDocument(tempParam);
+	 	//医为浏览器切换病历时，上面方式loadDocument未定义，但是ie没问题；改成下面方式后，医为浏览器、ie都没问题；
+	 	document.getElementById("frameBrowseCategory").contentWindow.loadDocument(tempParam);
 	}
 }
 //如果返回 false，zTree 将不会选中节点，也无法触发 onClick 事件回调函数
@@ -174,6 +177,7 @@ function setCategory(data)
 	if (data.length > 0)
     {
 		$('#InstanceTree').empty();
+		$("#noRecordMes").css("display","none");
 		for (var i=0;i<data.length;i++)
 		{
 			var li = $('<li></li>');
@@ -291,10 +295,10 @@ function setCategory(data)
 			}
 		  }
         }
-	    else
-	    {
-	        $('#BrowseCategory').append('<p style="text-align:center"><font face="arial" size="6" color="blue">患者本次就诊未写病历</font></p>');
-	    }
+        else
+        {
+	        $("#noRecordMes").css("display","block");
+        }
 }
 
 //显示病历操作记录明细
@@ -374,7 +378,9 @@ function loadRecords(obj)
 	}
 	if ($("#frameBrowseCategory").attr("src")!="")
 	{
-	 	window.frames["frameBrowseCategory"].loadDocument(param);
+	 	//window.frames["frameBrowseCategory"].loadDocument(param);
+	 	//医为浏览器切换病历时，上面方式loadDocument未定义，但是ie没问题；改成下面方式后，医为浏览器、ie都没问题；
+	 	document.getElementById("frameBrowseCategory").contentWindow.loadDocument(param);
 	}
 	else
 	{

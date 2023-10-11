@@ -1,8 +1,8 @@
-Ôªø/**
+/**
  * FileName: dhcbill.conf.tabsmaintain.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2018-03-28
- * Description: ËÆ°Ë¥πÈ°µÁ≠æÁª¥Êä§
+ * Description: º∆∑—“≥«©Œ¨ª§
  */
 
 $(function () {
@@ -11,37 +11,17 @@ $(function () {
 });
 
 var initQueryMenu = function () {
-	$HUI.combobox('#menu-type', {
+	$HUI.combobox("#menu-type", {
 		panelHeight: 'auto',
-		multiple: false,
-		data: [{
-				value: '',
-				text: 'ÂÖ®ÈÉ®'
-			}, {
-				value: 'OPD',
-				text: 'Èó®ËØäÊó•Áªì'
-			}, {
-				value: 'OPC',
-				text: 'Èó®ËØäÊó•ÁªìÊ±áÊÄª'
-			}, {
-				value: 'IPD',
-				text: '‰ΩèÈô¢Êó•Áªì'
-			}, {
-				value: 'IPC',
-				text: '‰ΩèÈô¢Êó•ÁªìÊ±áÊÄª'
-			}, {
-				value: 'BOA',
-				text: 'Á¨¨‰∏âÊñπÂØπË¥¶Âπ≥Âè∞'
-			}
-		],
-		editable: false,
+		url: $URL + '?ClassName=web.DHCBillTabs&QueryName=QryBizTypes&ResultSetType=array',
 		valueField: 'value',
 		textField: 'text',
-		onSelect: function (record) {
-			$('#tabsList').datagrid('load', {
+		selectOnNavigation: false,
+		onChange: function (newValue, oldValue) {
+			$("#tabsList").datagrid("load", {
 				ClassName: "web.DHCBillTabs",
-				QueryName: "FindBillTabs",
-				type: record.value
+				QueryName: "QryBillTabs",
+				type: newValue || ""
 			});
 		}
 	});
@@ -59,13 +39,13 @@ var initListGrid = function () {
 			pageSize: 20,
 			toolbar: [{
 					iconCls: 'icon-add',
-					text: 'Êñ∞Â¢û',
+					text: '–¬‘ˆ',
 					handler: function () {
 						saveHandler("");
 					}
 				}, {
 					iconCls: 'icon-write-order',
-					text: '‰øÆÊîπ',
+					text: '–ﬁ∏ƒ',
 					disabled: true,
 					id: 'editTab',
 					handler: function () {
@@ -80,21 +60,22 @@ var initListGrid = function () {
 					   {title: 'id', field: 'id', width: 150},
 					   {title: 'title', field: 'title', width: 150},
 					   {title: 'href', field: 'href', width: 350},
-					   {title: 'ÂêØÁî®', field: 'active', width: 50,
+					   {title: ' «∑Ò∆Ù”√', field: 'active', width: 50,
 						formatter: function (value, row, index) {
-							return (value == 'Y') ? '<font color="#21ba45">ÊòØ</font>' : '<font color="#f16e57">Âê¶</font>';
+							var color = (value == "Y") ? "#21ba45" : "#f16e57";
+							return "<font color=\"" + color + "\">" + ((value == "Y") ? $g(" «") : $g("∑Ò")) + "</font>";
 						}
 					   },
-					   {title: '‰∏öÂä°Á±ªÂûã', field: 'typeDesc', width: 150},
+					   {title: '“µŒÒ¿‡–Õ', field: 'typeDesc', width: 150},
 					   {title: 'type', field: 'type', hidden: true}
 				]],
 			queryParams: {
 				ClassName: "web.DHCBillTabs",
-				QueryName: "FindBillTabs",
+				QueryName: "QryBillTabs",
 				type: ""
 			},
 			onLoadSuccess: function (data) {
-				tabsListObj.autoMergeCells(['typeDesc']);
+				tabsListObj.autoMergeCells(["typeDesc"]);
 			},
 			onSelect: function (rowIndex, rowData) {
 				tabsListObj.getPanel().find("#editTab").linkbutton("enable");
@@ -106,15 +87,14 @@ var initListGrid = function () {
 }
 
 var saveHandler = function (row) {
-	$('#tabDlg').show();
-	var rowId = '';
-	var id = '';
-	var title = '';
-	var href = '';
-	var active = '';
-	var type = '';
-	var dlgIconCls = 'icon-w-add';
-	var dlgTitle = 'Êñ∞Â¢û';
+	var rowId = "";
+	var id = "";
+	var title = "";
+	var href = "";
+	var active = "";
+	var type = "";
+	var dlgIconCls = "icon-w-add";
+	var dlgTitle = "–¬‘ˆ";
 	if (row) {
 		rowId = row.rowId;
 		id = row.id;
@@ -122,93 +102,95 @@ var saveHandler = function (row) {
 		href = row.href;
 		active = row.active;
 		type = row.type;
-		dlgIconCls = 'icon-w-edit';
-		dlgTitle = '‰øÆÊîπ';
+		dlgIconCls = "icon-w-edit";
+		dlgTitle = "–ﬁ∏ƒ";
 	}
-	$('#edit-id').val(id).validatebox('validate');
-	$('#edit-title').val(title).validatebox('validate');
-	$('#edit-href').val(href);
-	$('#edit-active').val(active);
-	$('#edit-type').val(type);
-
-	$HUI.combobox('#edit-active', {
-		panelHeight: 'auto',
-		data: [{
-				value: 'Y',
-				text: 'ÂêØÁî®'
-			}, {
-				value: 'N',
-				text: '‰∏çÂêØÁî®'
-			}
-		],
-		editable: false,
-		valueField: 'value',
-		textField: 'text',
-		required: true,
-		onLoadSuccess: function () {
-			$(this).combobox('setValue', active);
-		}
-	});
-	$HUI.combobox('#edit-type', {
-		panelHeight: 'auto',
-		data: [{
-				value: 'OPD',
-				text: 'Èó®ËØäÊó•Áªì'
-			}, {
-				value: 'OPC',
-				text: 'Èó®ËØäÊó•ÁªìÊ±áÊÄª'
-			}, {
-				value: 'IPD',
-				text: '‰ΩèÈô¢Êó•Áªì'
-			}, {
-				value: 'IPC',
-				text: '‰ΩèÈô¢Êó•ÁªìÊ±áÊÄª'
-			}, {
-				value: 'BOA',
-				text: 'Á¨¨‰∏âÊñπÂØπË¥¶Âπ≥Âè∞'
-			}
-		],
-		editable: false,
-		valueField: 'value',
-		textField: 'text',
-		required: true,
-		onLoadSuccess: function () {
-			$(this).combobox('setValue', type);
-		}
-	});
-
-	var tabDlgObj = $HUI.dialog('#tabDlg', {
+	$("#tabDlg").show();
+	var tabDlgObj = $HUI.dialog("#tabDlg", {
 			iconCls: dlgIconCls,
 			title: dlgTitle,
 			draggable: false,
 			resizable: true,
 			modal: true,
 			buttons: [{
-					text: '‰øùÂ≠ò',
+					text: '±£¥Ê',
 					handler: function () {
-						var tabInfo = $('#edit-id').val() + String.fromCharCode(3) + $('#edit-title').val() + String.fromCharCode(3);
-						tabInfo += $('#edit-href').val() + String.fromCharCode(3) + $('#edit-active').combobox('getValue');
-						tabInfo += String.fromCharCode(3) + $('#edit-type').combobox('getValue');
-						$.cm({
-							ClassName: "web.DHCBillTabs",
-							MethodName: "SaveTabs",
-							rowId: rowId,
-							tabInfo: tabInfo
-						}, function (jsonData) {
-							if (jsonData.success == 0) {
-								tabDlgObj.close();
-								$('#tabsList').datagrid('load');
-							} else {
-								$.messager.alert('ÊèêÁ§∫', jsonData.msg, 'info');
+						var bool = true;
+						$(".validatebox-text").each(function(index, item) {
+							if (!$(this).validatebox("isValid")) {
+								$.messager.popover({msg: "<font color=red>" + $(this).parent().prev().text() + "</font>" + "—È÷§≤ªÕ®π˝", type: "info"});
+								bool = false;
+								return false;
 							}
+						});
+						if (!bool) {
+							return;
+						}
+						$.messager.confirm("»∑»œ", "»∑»œ±£¥Ê£ø", function(r) {
+							if (!r) {
+								return;
+							}
+							var CH3 = PUBLIC_CONSTANT.SEPARATOR.CH3;
+							var tabInfo = getValueById("edit-id") + CH3 + getValueById("edit-title");
+							tabInfo += CH3 + getValueById("edit-href") + CH3 + getValueById("edit-active");
+							tabInfo += CH3 + getValueById("edit-type");
+							$.m({
+								ClassName: "web.DHCBillTabs",
+								MethodName: "SaveTabs",
+								rowId: rowId,
+								tabInfo: tabInfo
+							}, function (rtn) {
+								var myAry = rtn.split("^");
+								if (myAry[0] == 0) {
+									$.messager.popover({msg: "±£¥Ê≥…π¶", type: "success"});
+									tabDlgObj.close();
+									$("#tabsList").datagrid("load");
+									return;
+								}
+								$.messager.popover({msg: "±£¥Ê ß∞‹£∫" + (myAry[1] || myAry[0]), type: "error"});
+							});
 						});
 					}
 				}, {
-					text: 'ÂÖ≥Èó≠',
+					text: 'πÿ±’',
 					handler: function () {
 						tabDlgObj.close();
 					}
 				}
-			]
+			],
+			onBeforeOpen: function() {
+				setValueById("edit-id", id);
+				setValueById("edit-title", title);
+				setValueById("edit-href", href);
+				setValueById("edit-active", active);
+				setValueById("edit-type", type);
+				$("#tabDlg .validatebox-text").each(function(index, ele) {
+					$(this).validatebox("validate");
+				});
+				$HUI.combobox("#edit-active", {
+					panelHeight: 'auto',
+					editable: false,
+					valueField: 'value',
+					textField: 'text',
+					required: true,
+					data: [{value: 'Y', text: '∆Ù”√'},
+					       {value: 'N', text: '≤ª∆Ù”√'}
+						  ],
+					onLoadSuccess: function () {
+						$(this).combobox('setValue', active);
+					}
+				});
+				$HUI.combobox("#edit-type", {
+					panelHeight: 'auto',
+					editable: false,
+					url: $URL + '?ClassName=web.DHCBillTabs&QueryName=QryBizTypes&ResultSetType=array',
+					valueField: 'value',
+					textField: 'text',
+					required: true,
+					onLoadSuccess: function () {
+						$(this).combobox("setValue", type);
+					}
+				});
+			}
 		});
 }

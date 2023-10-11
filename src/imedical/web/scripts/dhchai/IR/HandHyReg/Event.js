@@ -21,11 +21,15 @@ function InitHandHyRegWinEvent(obj){
 	$("#ObsDate").change(function(){
 		refreshHandHyReg();
 	});
+	$("#cboObsType").change(function(){
+		refreshHandHyReg();
+	});
 	
 	$("#btnEdit").on('click', function(){
 		
 		var HospitalDr = $.form.GetValue("cboHospital");
 		var ObsLocDr   = $.form.GetValue("cboObsLoc");
+		var ObsMethod  = $.form.GetValue("cboObsType");
 		var ObsPage    = $.form.GetValue("cboObsPage");
 		var ObsDate    = $.form.GetValue("ObsDate");
 		var ObsUser    = $.form.GetValue("txtObsUser");
@@ -36,6 +40,9 @@ function InitHandHyRegWinEvent(obj){
 		var ErrorStr = "";
 		if (ObsLocDr == '') {
 			ErrorStr += '调查病区不允许为空!<br/>';
+		}
+		if (ObsMethod == '') {
+			ErrorStr += '调查方式不允许为空!<br/>';
 		}
 		if (ObsPage == '') {
 			ErrorStr += '调查页不允许为空!<br/>';
@@ -196,6 +203,7 @@ function InitHandHyRegWinEvent(obj){
 		var HandHyRegCnt = "A,"+ObsNumber1+"#B,"+ObsNumber2+"#C,"+ObsNumber3+"#D,"+ObsNumber4;
 		var InputStr = obj.HandRegID;
 		InputStr += "^" + ObsLocDr;        // 调查科室病区
+		InputStr += "^" + ObsMethod;       // 调查类型（自查/督察）
 		InputStr += "^" + ObsPage;         // 调查第几页
 		InputStr += "^" + ObsDate;         // 调查月份
 		InputStr += "^" + ObsUser;         // 调查人
@@ -256,7 +264,8 @@ function InitHandHyRegWinEvent(obj){
 			var ObsLocDr   = $.form.GetValue("cboObsLoc");
 			var ObsPage    = $.form.GetValue("cboObsPage");
 			var ObsDate    = $.form.GetValue("ObsDate");
-			var flg=$.Tool.RunServerMethod("DHCHAI.IR.HandHyReg","GetIDByLocDate",ObsLocDr,ObsDate,ObsPage);
+			var ObsType    = $.form.GetValue("cboObsType");
+			var flg=$.Tool.RunServerMethod("DHCHAI.IR.HandHyReg","GetIDByLocDate",ObsLocDr,ObsDate,ObsPage,ObsType);
 			if (parseInt(flg)>0){
 				obj.HandRegID=parseInt(flg);
 				$("#btnDelete").removeClass('disabled');

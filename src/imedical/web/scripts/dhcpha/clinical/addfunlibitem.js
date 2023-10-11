@@ -389,7 +389,7 @@ function createArtWin(){
 		closed:"true"
 	};
 	new WindowUX('添加项目', 'newItmWin', '950', '550', option).Init();
-	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.funlibitmart.csp?funLibItmID='+curfunitmrowid+'&funLibItmType='+type+'"></iframe>'; //wanguejian   2016-09-21  传递参数
+	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.funlibitmart.csp?funLibItmID='+curfunitmrowid+'&funLibItmType='+type+'&MWToken='+websys_getMWToken()+'"></iframe>'; //wanguejian   2016-09-21  传递参数
 	$("#newItmWin").html(iframe);
 }
 /// 添加检验指标
@@ -402,8 +402,7 @@ function createLabWin(){
 		closed:"true"
 	};
 	new WindowUX('添加项目', 'newItmWin', '950', '550', option).Init();
-	
-	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.funlibitmlabart.csp?funLibItmID='+curfunitmrowid+'&funLibItmType='+type+'"></iframe>';
+	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.funlibitmlabart.csp?funLibItmID='+curfunitmrowid+'&funLibItmType='+type+'&MWToken='+websys_getMWToken()+'"></iframe>';
 	$("#newItmWin").html(iframe);
 }
 function ClearFunLib(){

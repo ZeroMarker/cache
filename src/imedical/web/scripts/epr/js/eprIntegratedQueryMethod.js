@@ -754,7 +754,8 @@ function getDic(txtValueID,dicNum){
 
 //Desc: 获取高级查询条件
 //edit by Candyxu
-function getAdvancedConditions() {
+var taskConditions="";
+function getAdvancedConditions(action) {
     //debugger;
     var success = true;
     var errMessage = "";
@@ -781,13 +782,17 @@ function getAdvancedConditions() {
                 var iEnd = parseInt(gap/SelectGap);
                 var TempfromDate = "";
                 var i = 0;
-                while(i<iEnd-1){
-                   tempfromDate = fromDate;
-                   fromDate = StringDateAdd(fromDate,SelectGap-1);
-                   ResulstContion[2][i] = Getcondition(table,tempfromDate,fromDate,length);
-                   fromDate = StringDateAdd(fromDate,1);
-                   i = i + 1;
-                }
+                taskConditions = "大于"+fromDate+"并且小于"+toDate;
+                if (action !== "addTask")
+			    {
+	                while(i<iEnd-1){
+	                   tempfromDate = fromDate;
+	                   fromDate = StringDateAdd(fromDate,SelectGap-1);
+	                   ResulstContion[2][i] = Getcondition(table,tempfromDate,fromDate,length);
+	                   fromDate = StringDateAdd(fromDate,1);
+	                   i = i + 1;
+	                }
+			    }
                 ResulstContion[2][i] = Getcondition(table,fromDate,toDate,length);
 			}
        }
@@ -861,7 +866,13 @@ function Getcondition(table,TfromDate,TtoDate,length){
 			opCode = document.getElementById("op" + i).getAttribute("code");
 		}else if ( i > 1 ){
 			relationCode = Ext.get("relation" + i).getValue();
+			var select = Ext.get("relation" + i).dom;
+			var index = select.selectedIndex;
+			var relationDesc = select.options[index].text;
 			opCode = Ext.get("op" + i).getValue();
+			var selectOp = Ext.get("op" + i).dom;
+			var indexOp = selectOp.selectedIndex;
+			var opCodeDesc = selectOp.options[indexOp].text;
 		}
        itemCode = document.getElementById("column" + i).getAttribute("code");
 
@@ -872,6 +883,7 @@ function Getcondition(table,TfromDate,TtoDate,length){
          } else if (i == 1) {
             strCondition = strCondition + relationCode + itemCode + "$" + opCode + "$" + txtValue;
          } else {
+	        taskConditions = taskConditions+relationDesc+document.getElementById("column"+i).innerText+opCodeDesc+txtValue;
             strCondition = strCondition + relationCode + itemCode + "$" + opCode + "$" + txtValue;
          }
      }
@@ -1044,6 +1056,18 @@ function GetFind(msgBox,arrAdvancedCondition){
 				*/
 				// modify by niucaicai 2010-08-07
 				QuerydataToTempGlobal(queryType,k,TempGUID,arrAdvancedCondition,advancedResultCols,ReslutLength,advancedFields,advancedColModel,msgBox,msgtext,curnum);
+				//记录日志
+				var resultColumnArr = advancedResultCols.split("&");
+				var resColDesc = "";
+				$.each(resultColumnArr,function(i,item)
+				{
+					var itemArr = item.split("^");
+					resColDesc = resColDesc+"/"+itemArr[3];
+				});	//获取结果列
+				var url = "../web.eprajax.query.medicalquerytask.cls";
+				if (queryType == "DischDate"){taskConditions = "出院日期"+taskConditions;}else{taskConditions = "入院日期"+taskConditions;}
+				setQueryLog(url,"EMR.Query.Task.Create",queryType,taskConditions,resColDesc);
+
 			}
 		}
 	})
@@ -1139,7 +1163,7 @@ function getResultCMAndFields(obj) {
 
             fields = fields + "{name:'" + itemName + "'}";
             columnModel = columnModel + "{header:'" + itemTitle + "',dataIndex:'" + itemName + "',width: 80,sortable:true}";
-            resultColumns = resultColumns + catCode + "^" + itemName + "^" + itemCode + "^" + itemTypeCode;
+            resultColumns = resultColumns + catCode + "^" + itemName + "^" + itemCode + "^" + itemTitle + "^" + itemTypeCode;
 
             count = count + 1;
         }
@@ -2136,6 +2160,7 @@ function SimpleCommit()
 			submitValues["MedicareNo"] = '';
 			submitValues["txtEpisodeNo"] = '';
 			submitValues["txtDiagnose"] = '';
+			submitValues["txtDiagnote"] = '';
 			submitValues["dtAdmBeginDate"] = '';
 			submitValues["dtAdmEndDate"] = '';
 			submitValues["dtDisBeginDate"] = '';
@@ -2282,13 +2307,34 @@ function isIE(){
 	function uaMatch(ua){ 
 		var match = rMsie.exec(ua); 
 		if(match != null){ 
- 			return { browser : "IE", version : match[2] || "0" }; 
+			return { browser : "IE", version : match[2] || "0" }; 
 		}
 	} 
 	var browserMatch = uaMatch(userAgent.toLowerCase()); 
 	if (browserMatch.browser){ 
- 		browser = browserMatch.browser; 
- 		version = browserMatch.version; 
+		browser = browserMatch.browser; 
+		version = browserMatch.version; 
 	} 
 	return(browser+version);
+}
+
+//获取客户端IP地址
+function getIpAddress()
+{
+	try
+	{
+		var locator = new ActiveXObject ("WbemScripting.SWbemLocator");
+		var service = locator.ConnectServer(".");
+		var properties = service.ExecQuery("Select * from Win32_NetworkAdapterConfiguration Where IPEnabled =True");
+		var e = new Enumerator (properties);
+		{
+		    var p = e.item();
+		    var ip = p.IPAddress(0);
+		    return ip
+		}
+	}
+	catch(err)
+	{
+		return "";
+	}
 }

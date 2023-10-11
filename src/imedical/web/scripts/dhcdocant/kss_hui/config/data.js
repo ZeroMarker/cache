@@ -44,6 +44,10 @@ $(function(){
 			if(this.tabBasedata.tabs("exists",pTitle)){
 				this.tabBasedata.tabs("select", pTitle);
 			}else{
+                if ('undefined'!==typeof websys_getMWToken){
+                    if (pUrl.indexOf("?")==-1) pUrl += "?a=1"
+                    pUrl += "&MWToken="+websys_getMWToken();
+                }
 				this.tabBasedata.tabs("add",{
 					title:pTitle,
 					closable:true,
@@ -59,7 +63,10 @@ $(function(){
 	
 	var Tab = new TabControl();
 	Tab.init();
-	var baseDataHomeUrl = "dhcant.kss.config.basedata.home.csp";
+	var baseDataHomeUrl = "dhcant.kss.config.basedata.home.csp?a=1";
+    if ('undefined'!==typeof websys_getMWToken){
+        baseDataHomeUrl += "&MWToken="+websys_getMWToken();
+    }
 	Tab.tabBasedata.tabs("add",{
 		title:"ึ๗าณ",
 		content:'<iframe scrolling="no" frameborder="no"  src="' + baseDataHomeUrl + '" style="width:100%;height:100%"></iframe>',
@@ -109,6 +116,10 @@ function showRightMenu(tabPanel,pTitle,pUrl,pId,pIcon) {
 }	
 
 function setPageContent(url) {
+    if ('undefined'!==typeof websys_getMWToken){
+        if (url.indexOf("?")==-1) url += "?a=1"
+        url += "&MWToken="+websys_getMWToken();
+    }
 	var s = '<iframe scrolling="auto" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>';
 	return s;
 }

@@ -16,6 +16,8 @@ $(function() {
     $('#menuAddItm').on('click', function() {
         MainTainItm("A");
     });
+    $('.dhcpha-win-mask').remove();
+
     //setTimeout(Query, 100);
 });
 
@@ -115,7 +117,7 @@ function InitGridSchedul() {
         toolbar: "#gridSchedulBar",
         border: false,
         pagination: false,
-        
+        gridSave:false,
         onClickRow: function(rowIndex, rowData) {
 			
         },
@@ -145,7 +147,7 @@ function InitGridSchedul() {
         },
 	 	rowStyler: function(index,row){
 			if ((row.dutyDesc)%2==0) {
-				return 'background-color:#E6E6E6;color:black;';
+				return 'background-color:#f8f8f8;color:black;';
 			}else{
 				return '';
 			}

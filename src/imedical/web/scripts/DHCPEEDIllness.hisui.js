@@ -134,7 +134,7 @@ function BDel_click(){
 
 function BClear_click(){
 	$("#ENIllID,#ExpInfo,#Remark,#IllnessID").val("");
-	$(".hisui-checkbox").checkbox('setValue',false);
+	$("#Active").checkbox('setValue',true);
 	$(".hisui-combogrid").combogrid('setValue',"");
 
 	var valbox = $HUI.combogrid("#OMEType,#Illness", {

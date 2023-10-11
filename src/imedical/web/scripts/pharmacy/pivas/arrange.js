@@ -19,10 +19,12 @@ var PIVAS_ARRANGE = {
 };
 
 $(function () {
-    $('.newScroll').mCustomScrollbar({
-        theme: 'inset-2-dark',
-        scrollInertia: 100
-    });
+    // $('.newScroll').mCustomScrollbar({
+    //     theme: 'inset-2-dark',
+    //     scrollInertia: 100
+    // });
+    $('#btnFind').parent().parent().css('box-shadow', 'rgb(238, 238, 238) 0px -5px 10px');
+
     PIVAS.Session.More(session['LOGON.CTLOCID']);
     InitDict();
     InitGridInc();
@@ -53,11 +55,18 @@ $(function () {
         }
     });
     InitPivasSettings();
-    $('.dhcpha-win-mask').remove();
+    setTimeout(function () {
+        var scrollWidth = PIVAS.GetScrollBarWidth();
+        $('.js-pha-layout-fit')
+            .layout('panel', 'west')
+            .panel('resize', { width: $('.pha-con-table').outerWidth() + 12 + scrollWidth }); // 10(split宽度) + 2(border宽度和)
+        $('.js-pha-layout-fit').layout('resize');
+        $('.dhcpha-win-mask').hide();
+    }, 100);
 });
 
 function InitDict() {
-    var comboWidth = 214;
+    var comboWidth = 220;
     // 配液中心
     PIVAS.ComboBox.Init(
         { Id: 'cmbPivaLoc', Type: 'PivaLoc' },
@@ -137,7 +146,7 @@ function InitGridInc() {
         [
             { field: 'incDesc', title: '药品名称', width: 300 },
             { field: 'incSpec', title: '规格', width: 100 },
-            { field: 'phManfDesc', title: '厂家', width: 130 },
+            { field: 'phManfDesc', title: '生产企业', width: 130 },
             { field: 'qty', title: '数量', width: 50 },
             { field: 'bUomDesc', title: '单位', width: 50 },
             { field: 'stkBin', title: '货位', width: 100 },
@@ -151,6 +160,7 @@ function InitGridInc() {
             ClassName: 'web.DHCSTPIVAS.Arrange',
             QueryName: 'QueryArrange'
         },
+        fitColumns: true,
         rownumbers: false,
         columns: columns,
         singleSelect: true,
@@ -240,22 +250,22 @@ function GetParams() {
 function Print() {
     var gridRows = $('#gridInc').datagrid('getRows');
     if (gridRows == '') {
-        $.messager.alert('提示', '无明细数据', 'warning');
+        $.messager.alert($g('提示'), $g('无明细数据'), 'warning');
         return;
     }
     var pid = gridRows[0].pid;
     if (pid == '') {
-        $.messager.alert('提示', '获取不到进程Id', 'warning');
+        $.messager.alert($g('提示'), $g('获取不到进程Id'), 'warning');
         return;
     }
-    $.messager.confirm('确认对话框', '确定打印吗？', function (r) {
+    $.messager.confirm($g('确认对话框'), $g('确定打印吗？'), function (r) {
         if (r) {
             var pivaLocId = $('#cmbPivaLoc').combobox('getValue');
             var arranged = $('#cmbArranged').combobox('getValue');
             var saveRet = tkMakeServerCall('web.DHCSTPIVAS.Arrange', 'SaveData', pid, SessionUser, pivaLocId, arranged);
             var saveArr = saveRet.split('^');
             if (saveArr[0] < 0) {
-                $.messager.alert('提示', saveArr[1], 'warning');
+                $.messager.alert($g('提示'), saveArr[1], 'warning');
                 return;
             }
             var prtPid = saveRet;
@@ -267,15 +277,22 @@ function Print() {
 function GeneQR() {
     var gridRows = $('#gridInc').datagrid('getRows');
     if (gridRows == '') {
-        $.messager.alert('提示', '无明细数据', 'warning');
+        $.messager.alert($g('提示'), $g('无明细数据'), 'warning');
         return;
     }
     var pid = gridRows[0].pid;
     if (pid == '') {
-        $.messager.alert('提示', '获取不到进程Id', 'warning');
+        $.messager.alert($g('提示'), $g('获取不到进程Id'), 'warning');
         return;
     }
-    PIVAS.GeneQRCodeWindow({ barCode: pid });
+    // 不能在用临时Global, 需暂存到非临时数据, pda和pc可能连不同的ecp
+    tkMakeServerCall('web.DHCSTPIVAS.Arrange', 'SetTmpData4Mob', pid);
+    PIVAS.GeneQRCodeWindow({
+        barCode: pid,
+        onClose: function () {
+            tkMakeServerCall('web.DHCSTPIVAS.Arrange', 'KillTmpData4Mob', pid);
+        }
+    });
 }
 // 初始化默认条件
 function InitPivasSettings() {

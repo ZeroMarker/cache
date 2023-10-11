@@ -4,7 +4,8 @@
 
 var editRow = ""; editDRow = "";
 $(function(){
-
+	init(); //ylp 初始化医院 //20230222
+	
 	//初始化界面默认信息
 	InitDefault();
 	
@@ -14,7 +15,18 @@ $(function(){
 	//初始化界面按钮事件
 	InitWidListener();
 })
+function init(){
+	
+	hospComp = GenHospComp("DHC_MDTOpiTemp");  //hxy 2020-05-27 st //2020-05-31 add
+	hospComp.options().onSelect = function(){///选中事件
+		$("#dgMainList").datagrid('reload',{params:hospComp.getValue()});
+	}
 
+	$('#queryBTN').on('click',function(){
+		$("#dgMainList").datagrid('reload',{params:hospComp.getValue()});
+	 })
+		
+}
 ///初始化界面默认信息
 function InitDefault(){
 
@@ -46,7 +58,8 @@ function InitDetList(){
 		{field:'Pointer',title:'mID',width:100,hidden:true},
 		{field:'Title',title:'标题',width:200,editor:textEditor},
 		{field:'Text',title:'标题内容',width:820,editor:textEditor},
-		
+		{field:'HospID',title:'医院ID',width:820,editor:textEditor,hidden:true},
+	
 	]];
 	/**
 	 * 定义datagrid
@@ -65,7 +78,7 @@ function InitDetList(){
         }
 	};
 	
-	var uniturl = $URL+"?ClassName=web.DHCMDTCommonTemp&MethodName=QryOpiTemp&mID=0";
+	var uniturl = $URL+"?ClassName=web.DHCMDTCommonTemp&MethodName=QryOpiTemp&mID=0"+"&params="+hospComp.getValue()+"&MWToken="+websys_getMWToken();
 	var dgMainListComponent = new ListComponent('dgMainList', columns, uniturl, option);
 	dgMainListComponent.Init();
 
@@ -94,7 +107,7 @@ function saveRow(){
 //			$.messager.alert("提示","医院不能为空!",'warning'); 
 //			return false;
 //		}
-		var tmp=rowsData[i].ID +"^"+ rowsData[i].Title +"^"+ rowsData[i].Text;
+		var tmp=rowsData[i].ID +"^"+ rowsData[i].Title +"^"+ rowsData[i].Text+"^"+ rowsData[i].HospID;
 		dataList.push(tmp);
 	}
 	
@@ -133,7 +146,7 @@ function insertRow(){
 	
 	$("#dgMainList").datagrid('insertRow', {
 		index: 0, // 行数从0开始计算
-		row: {ID:'', Title:'', Text:''}
+		row: {ID:'', Title:'', Text:'',HospID:hospComp.getValue()}
 	});
 	$("#dgMainList").datagrid('beginEdit', 0);//开启编辑并传入要编辑的行
 	editRow=0;

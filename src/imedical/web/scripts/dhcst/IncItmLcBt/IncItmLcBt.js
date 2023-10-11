@@ -11,7 +11,7 @@ Ext.onReady(function() {
     var gUserId=session['LOGON.USERID'];
     
     var PhaLoc = new Ext.ux.LocComboBox({
-        fieldLabel : '科室',
+        fieldLabel : $g('科室'),
         id : 'PhaLoc',
         name : 'PhaLoc',
         anchor : '90%',
@@ -32,7 +32,7 @@ Ext.onReady(function() {
     
     // 药品类组
     var StkGrpType=new Ext.ux.StkGrpComboBox({ 
-    	fieldLabel : '类组',
+    	fieldLabel : $g('类组'),
         id : 'StkGrpType',
         name : 'StkGrpType',
         StkType:App_StkTypeCode,     //标识类组类型
@@ -42,7 +42,7 @@ Ext.onReady(function() {
     }); 
     
     var InciDesc = new Ext.form.TextField({
-                fieldLabel : '药品名称',
+                fieldLabel : $g('药品名称'),
                 id : 'InciDesc',
                 name : 'InciDesc',
                 anchor : '90%',
@@ -79,8 +79,8 @@ Ext.onReady(function() {
     
     // 查询按钮
     var SearchBT = new Ext.Toolbar.Button({
-                text : '查询',
-                tooltip : '点击查询',
+                text : $g('查询'),
+                tooltip : $g('点击查询'),
                 iconCls : 'page_find',
                 width : 70,
                 height : 30,
@@ -98,7 +98,7 @@ Ext.onReady(function() {
         // 必选条件
         var phaLoc = Ext.getCmp("PhaLoc").getValue();
         if (phaLoc == null || phaLoc.length <= 0) {
-            Msg.info("warning", "科室不能为空！");
+            Msg.info("warning", $g("科室不能为空！"));
             Ext.getCmp("PhaLoc").focus();
             return;
         }
@@ -120,8 +120,8 @@ Ext.onReady(function() {
     
     // 清空按钮
     var RefreshBT = new Ext.Toolbar.Button({
-                text : '清屏',
-                tooltip : '点击清屏',
+                text : $g('清屏'),
+                tooltip : $g('点击清屏'),
                 iconCls : 'page_clearscreen',
                 width : 70,
                 height : 30,
@@ -139,6 +139,7 @@ Ext.onReady(function() {
         SetLogInDept(GetGroupDeptStore,'PhaLoc');
         Ext.getCmp('BatchLockType').setValue('0');
         Ext.getCmp("StockType").setValue('');
+        Ext.getCmp('StkLockType').setValue('0');
         Ext.getCmp("InciDesc").setValue('');
         StkGrpType.getStore().setBaseParam("locId",gLocId)
 		StkGrpType.getStore().setBaseParam("userId",gUserId)
@@ -154,8 +155,8 @@ Ext.onReady(function() {
     // 保存按钮
     var SaveBT = new Ext.Toolbar.Button({
                 id : "SaveBT",
-                text : '保存',
-                tooltip : '点击保存',
+                text : $g('保存'),
+                tooltip : $g('点击保存'),
                 width : 70,
                 height : 30,
                 iconCls : 'page_save',
@@ -196,21 +197,21 @@ Ext.onReady(function() {
                     url : url,
                     params:{Detail:ListDetail},
                     method : 'POST',
-                    waitMsg : '处理中...',
+                    waitMsg : $g('处理中...'),
                     success : function(result, request) {
                         var jsonData = Ext.util.JSON
                                 .decode(result.responseText);
                         if (jsonData.success == 'true') {
-                            Msg.info("success", "保存成功!");
+                            Msg.info("success", $g("保存成功!"));
                             // 刷新界面
                             //Query();
                             ItmLocBatStore.reload();
                         } else {
                             var ret=jsonData.info;
                             if(ret==-1){
-                                Msg.info("error", "没有需要保存的数据!");
+                                Msg.info("error", $g("没有需要保存的数据!"));
                             }else {
-                                Msg.info("error", "部分明细保存不成功："+ret);
+                                Msg.info("error", $g("部分明细保存不成功：")+ret);
                             }
                         }
                     },
@@ -220,10 +221,10 @@ Ext.onReady(function() {
     
     var StockTypeStore=new Ext.data.SimpleStore({
         fields : ['RowId', 'Description'],
-        data : [['-1', '负库存'], ['0', '零库存'], ['1', '正库存']]
+        data : [['-1', $g('负库存')], ['0', $g('零库存')], ['1', $g('正库存')]]
     });
     var StockType=new Ext.form.ComboBox({
-        fieldLabel : '库存类型',
+        fieldLabel : $g('库存类型'),
         id : 'StockType',
         name : 'StockType',
         anchor : '90%',
@@ -247,10 +248,10 @@ Ext.onReady(function() {
     
     var BatchLockStore=new Ext.data.SimpleStore({
         fields : ['RowId', 'Description'],
-        data : [['0', '全部'], ['1', '仅禁用'], ['2', '仅可用']]
+        data : [['0', $g('全部')], ['1', $g('仅禁用')], ['2', $g('仅可用')]]
     });
     var BatchLockType=new Ext.form.ComboBox({
-        fieldLabel : '医嘱可用',
+        fieldLabel : $g('医嘱可用'),
         id : 'BatchLockType',
         name : 'BatchLockType',
         anchor : '90%',
@@ -273,11 +274,11 @@ Ext.onReady(function() {
     
     var StkLockStore=new Ext.data.SimpleStore({
         fields : ['RowId', 'Description'],
-        data : [['0', '全部'], ['1', '仅禁用'], ['2', '仅可用']]
+        data : [['0', $g('全部')], ['1', $g('仅禁用')], ['2', $g('仅可用')]]
     });
     
     var StkLockType=new Ext.form.ComboBox({
-        fieldLabel : '库存可用',
+        fieldLabel : $g('库存可用'),
         id : 'StkLockType',
         name : 'StkLockType',
         anchor : '90%',
@@ -357,13 +358,13 @@ Ext.onReady(function() {
 	});
 	*/
     var ChkLockFlag=new Ext.grid.CheckColumn({
-       header: '<font color=blue>医嘱批次禁用</font>',
+       header: '<font color=blue>'+$g('医嘱批次禁用')+'</font>',
        dataIndex: 'lockFlag',
        width: 100
     });
     
     var ChkStkLockFlag=new Ext.grid.CheckColumn({
-       header: '<font color=blue>库存批次禁用</font>',
+       header: '<font color=blue>'+$g('库存批次禁用')+'</font>',
        dataIndex: 'stkFlag',
        width: 100
     });
@@ -377,74 +378,74 @@ Ext.onReady(function() {
                 sortable : true,
                 hidden : true
             },ChkLockFlag,ChkStkLockFlag, {
-                header : '代码',
+                header : $g('代码'),
                 dataIndex : 'code',
                 width : 60,
                 align : 'left',
                 sortable : true,
                 hidden : false
             }, {
-                header : "名称",
+                header : $g("名称"),
                 dataIndex : 'desc',
                 width : 170,
                 align : 'left',
                 sortable : true
             },{
-                header : "规格",
+                header : $g("规格"),
                 dataIndex : 'spec',
                 width : 80,
                 align : 'left',
                 sortable : true
             },{
-                header : "厂商",
+                header : $g("生产企业"),
                 dataIndex : 'manf',
                 width : 110,
                 align : 'left',
                 sortable : true
             },{
-                header : "批号",
+                header : $g("批号"),
                 dataIndex : 'batchNo',
                 width : 80,
                 align : 'left',
                 sortable : true
             },{
-                header : "效期",
+                header : $g("效期"),
                 dataIndex : 'batchExp',
                 width : 80,
                 align : 'left',
                 sortable : true
             },{
-                header : "基本单位",
+                header : $g("基本单位"),
                 dataIndex : 'bUomDesc',
                 width : 80,
                 align : 'left',
                 sortable : true
             },{
-                header : "包装单位",
+                header : $g("包装单位"),
                 dataIndex : 'pUomDesc',
                 width : 80,
                 align : 'left',
                 sortable : true
             },{
-                header:"库存",
+                header:$g("库存"),
                 dataIndex:"stkQty",
                 width : 80,
                 align : 'left',
                 sortable : true
             },{
-                header:"可用库存",
+                header:$g("可用库存"),
                 dataIndex:"avaQty",
                 width : 80,
                 align : 'left',
                 sortable : true
             },{
-                header:"进价",
+                header:$g("进价"),
                 dataIndex:"Rp",
                 width : 80,
                 align : 'left',
                 sortable : true
             },{
-                header:"售价",
+                header:$g("售价"),
                 dataIndex:"Sp",
                 width : 80,
                 align : 'left',
@@ -480,16 +481,16 @@ Ext.onReady(function() {
         store : ItmLocBatStore,
         pageSize : PageSize,
         displayInfo : true,
-        displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
+        displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
         emptyMsg : "No results to display",
-        prevText : "上一页",
-        nextText : "下一页",
-        refreshText : "刷新",
-        lastText : "最后页",
-        firstText : "第一页",
-        beforePageText : "当前页",
-        afterPageText : "共{0}页",
-        emptyMsg : "没有数据"
+        prevText : $g("上一页"),
+        nextText : $g("下一页"),
+        refreshText : $g("刷新"),
+        lastText : $g("最后页"),
+        firstText : $g("第一页"),
+        beforePageText : $g("当前页"),
+        afterPageText : $g("共{0}页"),
+        emptyMsg : $g("没有数据")
     });
     var ItmLocBatGrid = new Ext.grid.EditorGridPanel({
                 id:'ItmLocBatGrid',
@@ -506,7 +507,7 @@ Ext.onReady(function() {
             });
 
 var HisListTab = new Ext.form.FormPanel({
-        title:'科室库存批次信息',
+        title:$g('科室库存批次信息'),
         labelWidth : 60,
         height : DHCSTFormStyle.FrmHeight(2),
         labelAlign : 'right',
@@ -515,7 +516,7 @@ var HisListTab = new Ext.form.FormPanel({
         tbar : [SearchBT,'-',RefreshBT, '-',SaveBT],            
         items : [{
                     layout:'column',
-                    title:'查询条件',
+                    title:$g('查询条件'),
                     xtype:'fieldset',
                     style:DHCSTFormStyle.FrmPaddingV,
                     defaults: {border:false}, 
@@ -544,7 +545,7 @@ var HisListTab = new Ext.form.FormPanel({
                 items : [  HisListTab,
                     {
                          region: 'center',                                      
-                         title: '科室库存项---<font color=blue>蓝色显示的列为可编辑列</font>',
+                         title: $g('科室库存项---<font color=blue>蓝色显示的列为可编辑列</font>'),
                          layout: 'fit', // specify layout manager for items
                          items: ItmLocBatGrid                             
                     }

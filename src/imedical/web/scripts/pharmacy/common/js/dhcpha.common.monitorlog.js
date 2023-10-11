@@ -139,7 +139,7 @@ function InitOutMonitorLog(_options){
 	$("#btn-undo").on("click",function(){
 		var grid_records = $("#grid-monitorlog").getGridParam('records');
 		if (grid_records==0){
-			dhcphaMsgBox.alert("当前界面无数据!");
+			dhcphaMsgBox.alert($g("当前界面无数据!"));
 			return;
 		}
 		var firstrowdata = $("#grid-monitorlog").jqGrid("getRowData", 1); //获取第一行数据
@@ -158,23 +158,23 @@ function InitOutMonitorLog(_options){
 						}	
 					}).trigger("reloadGrid");
 				}else if (retvalue==-99){
-					dhcphaMsgBox.alert("不能重复撤消!");
+					dhcphaMsgBox.alert($g("不能重复撤消!"));
 				}else if (retvalue==-98){
-					dhcphaMsgBox.alert("不是最后一次,不能撤消!");
+					dhcphaMsgBox.alert($g("不是最后一次,不能撤消!"));
 				}else if (retvalue==-16){
-					dhcphaMsgBox.alert("已配药,不能撤消!");
+					dhcphaMsgBox.alert($g("已配药,不能撤消!"));
 				}else if (retvalue==-17){
-					dhcphaMsgBox.alert("已配药确认,不能撤消!");
+					dhcphaMsgBox.alert($g("已配药确认,不能撤消!"));
 				}else if (retvalue==-18){
-					dhcphaMsgBox.alert("已门诊发药,不能撤消!");
+					dhcphaMsgBox.alert($g("已门诊发药,不能撤消!"));
 				}else if (retvalue==-19){
-					dhcphaMsgBox.alert("当前为申诉状态,不能撤消!");
+					dhcphaMsgBox.alert($g("当前为申诉状态,不能撤消!"));
 				}else if (retvalue==-20){
-					dhcphaMsgBox.alert("已住院发药,不能撤消!");
+					dhcphaMsgBox.alert($g("已住院发药,不能撤消!"));
 				}else if (retvalue==-21){
-					dhcphaMsgBox.alert("已拒绝(接受),不能撤消!");
+					dhcphaMsgBox.alert($g("已拒绝(接受),不能撤消!"));
 				}else{
-					dhcphaMsgBox.alert("撤消失败,错误代码:"+retjson[0].retinfo+"!");
+					dhcphaMsgBox.alert($g("撤消失败,错误代码")+":"+retjson[0].retinfo+"!");
 				}0
 			},  
 			error:function(){}  

@@ -5,7 +5,8 @@ var RhasStudyNoArray=[{"value":"Y","text":'是'}, {"value":"N","text":'否'}];
 var RhasOtherArray=[{"value":"Y","text":'是'}, {"value":"N","text":'否'}];
 var IhasRegArray=[{"value":"Y","text":'是'}, {"value":"N","text":'否'}];  
 var IhasStudyNoArray=[{"value":"Y","text":'是'}, {"value":"N","text":'否'}];  
-var IhasOtherArray=[{"value":"Y","text":'是'}, {"value":"N","text":'否'}];  
+var IhasOtherArray=[{"value":"Y","text":'是'}, {"value":"N","text":'否'}];
+var OpenMethodArray=[{"value":"医为","text":'医为'}, {"value":"IE","text":'IE'}, {"value":"谷歌","text":'谷歌'}];    
 function initPageDefault()
 {
 	var hospStr=session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
@@ -15,6 +16,7 @@ function initPageDefault()
 		initLocItemList(); 
 		initMethod();
 		initBlButton(); 
+		$HUI.combobox("#locList").setValue("");
 		reloadTable()
 		HospID=$HUI.combogrid('#_HospList').getValue();
 	}
@@ -45,12 +47,38 @@ function initMethod(){
 ///初始化科室表
 function initLocItemList(){
 	var HospID=$HUI.combogrid('#_HospList').getValue();
-	$HUI.combobox("#locList",{
+	/*$HUI.combobox("#locList",{
 		url:'dhcapp.broker.csp?ClassName=web.DHCAPPLocLinkClinicSet&MethodName=JsonLocList&HospID='+HospID,
 		valueField:'value',
 		textField:'text',
 		mode:'remote'
-	})
+	})*/
+	$.q({
+	    ClassName : "DHCDoc.DHCDocConfig.LocExt",
+	    QueryName : "GetLocExtConfigNew",
+	    LocId:"",
+	    HospId:$HUI.combogrid('#_HospList').getValue(),
+	    rows:99999
+	},function(GridData){
+		$("#locList").combobox({   
+			valueField:'LocRowID',   
+    		textField:'LocDesc',
+    		data:GridData['rows'],
+    		filter: function(q, row){
+				if (q=="") return true;
+				if (row["LocDesc"].indexOf(q.toUpperCase())>=0) return true;
+				var find=0;
+				for (var i=0;i<row["LocAlias"].split("^").length;i++){
+					if ((row["LocAlias"].split("^")[i].toUpperCase()).indexOf(q.toUpperCase()) >= 0){
+						find=1;
+						break;
+					}
+				}
+				if (find==1) return true;
+				return false;
+			}
+		})
+	});
 }
 
 

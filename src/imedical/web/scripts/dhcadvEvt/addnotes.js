@@ -32,20 +32,21 @@ function bandButtons(){
 function saveNotes(){
 	var addNotes=$.trim($('#addNotes').val());
 	if(addNotes==""){
-		$.messager.alert("提示","批注内容不能为空！");
+		$.messager.alert($g("提示"),$g("批注内容不能为空")+"！");
 		return ;
 	}
 	if(addNotes.length>1500){
-		$.messager.alert("提示","批注内容超长！");
+		$.messager.alert($g("提示"),$g("批注内容超长")+"！");
 		return ;
 	}
+	addNotes = $_TrsSymbolToTxt(addNotes); /// 处理特殊符号	
 	var params=recordId+"^"+RepTypeDr+"^"+formid+"^"+addNotes+"^"+UserId;
 	runClassMethod("web.DHCADVReportNote","saveRepNotes",{"ListData":params,"NoteId":NoteId},function(rtn){
 		if(rtn > 0){
-			$.messager.alert("提示","批注已保存！");
+			$.messager.alert($g("提示"),$g("批注已保存")+"！");
 			reloadNoteTable();
 			}else{
-				$.messager.alert("提示","保存失败！"+rtn);
+				$.messager.alert($g("提示"),$g("保存失败")+"！"+rtn);
 			}
 	},"text",false)
 }
@@ -53,11 +54,11 @@ function saveNotes(){
 ///初始化批注列表
 function getNotesTable(){
 	var columns=[[
-		{field:'Notes',title:'审批内容',width:100,align:'center',hidden:true},
-		{field:'userName',title:'批注人',width:100,align:'center'},
+		{field:'Notes',title:$g('审批内容'),width:100,align:'center',hidden:true},
+		{field:'userName',title:$g('批注人'),width:100,align:'center'},
 		{field:'NoteId',title:'ID',width:100,align:'center',hidden:true},
-		{field:'AuditDate',title:'批注时间',width:260,align:'center'},
-		{field:'DicField',title:'元素',width:100,align:'center',hidden:true}
+		{field:'AuditDate',title:$g('批注时间'),width:260,align:'center'},
+		{field:'DicField',title:$g('元素'),width:100,align:'center',hidden:true}
 	]];
 	$HUI.datagrid("#notesTable",{
 		url:$URL+"?ClassName=web.DHCADVReportNote&MethodName=jsonNotes",
@@ -75,10 +76,10 @@ function getNotesTable(){
 		pageSize:20,  
 		pageList:[20,35,50], 
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		onSelect:function(rowIndex,rowData){
-				$("#addNotes").val(rowData.Notes);
+				$("#addNotes").val($_TrsTxtToSymbol(rowData.Notes));
 				NoteId=rowData.NoteId;
 		},
 		onLoadSuccess:function(data){
@@ -103,14 +104,14 @@ function reloadNoteTable(){
 function deleteNotes(){
 	var rows = $("#notesTable").datagrid('getSelections'); //选中要删除的行
 	if (rows.length > 0) {
-		$.messager.confirm("提示", "您确定要删除吗？", function (res) {//提示是否删除
+		$.messager.confirm($g("提示"),$g("您确定要删除吗")+"？", function (res) {//提示是否删除
 			if (res) {
 				runClassMethod("web.DHCADVReportNote","deleteNotes",{"NoteId":NoteId}, function(rtn){
 					if(rtn == 0){
-						$.messager.alert("提示","删除成功！");
+						$.messager.alert($g("提示"),$g("删除成功")+"！");
 						reloadNoteTable();
 					}else{
-						$.messager.alert("提示","删除失败！" + rtn);
+						$.messager.alert($g("提示"),$g("删除失败")+"！" + rtn);
 					}
 				},"text",false)
 			}

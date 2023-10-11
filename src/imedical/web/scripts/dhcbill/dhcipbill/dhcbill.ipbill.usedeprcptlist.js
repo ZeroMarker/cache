@@ -1,11 +1,9 @@
 ﻿/**
  * FileName: dhcbill.ipbill.usedeprcptlist.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-12-06
  * Description: 收费员已使用押金收据查询
  */
-
-var GV = {};
 
 $(function () {
 	initQueryMenu();
@@ -13,8 +11,7 @@ $(function () {
 });
 
 function initQueryMenu() {
-	var today = getDefStDate(0);
-	$(".datebox-f").datebox("setValue", today);
+	$(".datebox-f").datebox("setValue", CV.DefDate);
 	
 	$HUI.linkbutton("#btn-find", {
 		onClick: function () {
@@ -38,15 +35,18 @@ function initDepRcptList() {
 		rownumbers: true,
 		pagination: true,
 		pageSize: 20,
-		columns:[[{title: '收费员', field: 'TCashier', width: 100},
-				  {title: '工号', field: 'TCasherNo', width: 100},
-				  {title: '票据号段', field: 'TrcptNo', width: 260},
-				  {title: '张数', field: 'TrcptNum', width: 100},
-				  {title: '金额总计', field: 'Trcptsum', align: 'right', width: 120},
-				  {title: '作废票据', field: 'Trcptnozf', width: 280},
-				  {title: '作废张数', field: 'Trcptnumzf', width: 100},
-				  {title: '当前票号', field: 'Tcurrno', width: 100}
-			]],
+		className: "web.UDHCJFReceipt",
+		queryName: "Findrcptsum",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["TrcptNo", "Trcptnozf"]) != -1) {
+					cm[i].showTip = true;
+				}
+				if (!cm[i].width) {
+					cm[i].width = 130;
+				}
+			}
+		},
 		url: $URL,
 		queryParams: {
 			ClassName: "web.UDHCJFReceipt",
@@ -57,8 +57,8 @@ function initDepRcptList() {
 			enddate: getValueById("endDate"),
 			stnum: getValueById("stNo"),
 			endnum: getValueById("endNo"),
-			hospId:PUBLIC_CONSTANT.SESSION.HOSPID,
-			title:getValueById("invTitle")
+			title: getValueById("title"),
+			hospId: PUBLIC_CONSTANT.SESSION.HOSPID
 		},
 		rowStyler: function (index, row) {
 			if (row.TCashier.indexOf("合计") != -1) {
@@ -78,8 +78,8 @@ function loadDepRcptList() {
 		enddate: getValueById("endDate"),
 		stnum: getValueById("stNo"),
 		endnum: getValueById("endNo"),
-		hospId: PUBLIC_CONSTANT.SESSION.HOSPID,
-		title:getValueById("invTitle")
+		title: getValueById("title"),
+		hospId: PUBLIC_CONSTANT.SESSION.HOSPID
 	};
 	loadDataGridStore("depRcptList", queryParams);
 }
@@ -88,10 +88,10 @@ function loadDepRcptList() {
 * 导出
 */
 function exportClick() {
-	var fileName = "DHCBILL-IPBILL-收费员已使用押金收据明细.rpx" + "&grp=3" + "&type=I";
+	var fileName = "DHCBILL-IPBILL-YSYYJSJMX.rpx" + "&grp=3" + "&type=I";
 	fileName += "&stdate=" + getValueById("stDate") + "&enddate=" + getValueById("endDate");
 	fileName += "&stnum=" + getValueById("stNo") + "&endnum=" + getValueById("endNo");
-	fileName += "&hospId=" + PUBLIC_CONSTANT.SESSION.HOSPID + "&title=" + getValueById("invTitle")  ;
+	fileName += "&title=" + getValueById("title") + "&hospId=" + PUBLIC_CONSTANT.SESSION.HOSPID;
 	var maxHeight = ($(window).height() || 550) * 0.8;
 	var maxWidth = ($(window).width() || 1366) * 0.8;
 	DHCCPM_RQPrint(fileName, maxWidth, maxHeight);

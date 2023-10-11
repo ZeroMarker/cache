@@ -277,7 +277,7 @@ function DiviStrikeForInsu_onclick(){
     var obj=document.getElementById("ExpStr") //扩展串
     if(obj){ExpStr=obj.value;}
     if(""==insutype){DHCWeb_HISUIalert("请选择医保类型");return;}
-   TAdmReason=tkMakeServerCall("web.INSUDicDataCom","GetDicBybillAndInd","AdmReasonDrToTariType",insutype,3,HospDr);
+   TAdmReason=tkMakeServerCall("web.INSUDicDataCom","GetDicBybillAndInd","AdmReasonDrToDLLType",insutype,3,HospDr);
    var Flag=InsuIPDivideCancleForInsu("0",session['LOGON.USERID'],djlsh0,"",TAdmReason,ExpStr) //DHCINSUPort.js
 	if (Flag!=0){
 			    DHCWeb_HISUIalert("医保中心退费失败")
@@ -300,7 +300,7 @@ function DiviStrikeForHis_onclick(){
 		var insutype="";
 		insutype=getValueById('InsuDllType') //document.getElementById("InsuDllType").value;
 		if(""==insutype){DHCWeb_HISUIalert("请选择医保类型");return;}
-		TAdmReason=tkMakeServerCall("web.INSUDicDataCom","GetDicBybillAndInd","AdmReasonDrToTariType",insutype,3,HospDr);
+		TAdmReason=tkMakeServerCall("web.INSUDicDataCom","GetDicBybillAndInd","AdmReasonDrToDLLType",insutype,3,HospDr);
 	}
 
 	//var obj=document.getElementById("BillDr")

@@ -8,9 +8,8 @@
 			//新建报告页面数据加载
 			obj.InitRepByEpisodeID();
 		}
-		//控制是否允许修改病人基本信息 0：允许  1：不允许 
-		if (obj.IsUpdatePatientInfo != 0) {  //不允许修改
-			//重新加载病人基本信息
+		//控制是否允许修改病人基本信息 0：不允许  1： 允许
+		if (obj.IsUpdatePatientInfo == 0) {  //不允许修改
 			obj.UpdatePatientInfo();
 		}else {
 			$('#txtPatName').bind('change', function (e) {  //鼠标移动之后事件
@@ -50,12 +49,37 @@
 		} 
 		// 密级
 		$('#txtPatLevel').val(obj.PatEncryptLevel.split('^')[1]);
-		$('#txtEncryptLevel').val(obj.PatEncryptLevel.split('^')[0]);
+		$('#txtEncryptLevel').val(obj.PatEncryptLevel.split('^')[3]);
 		
 		obj.InitRepPowerByStatus();
 		 // 按钮监听事件
 		obj.RelationToEvents (); 
-	
+		/// 根本死因根据dcba联动   add by chenr 2022-08-31
+		$("#cboDReason,#cboCReason,#cboBReason,#cboAReason").bind('change', function (e) {
+			setTimeout(function(){
+					var TAReason = $.trim($('#cboAReason').lookup('getText'));
+					var TBReason = $.trim($('#cboBReason').lookup('getText'));
+					var TCReason = $.trim($('#cboCReason').lookup('getText'));
+					var TDReason = $.trim($('#cboDReason').lookup('getText'));
+					var TAReasonICD = $.trim($('#txtAReasonICD').val());
+					var TBReasonICD = $.trim($('#txtBReasonICD').val()); 
+					var TCReasonICD = $.trim($('#txtCReasonICD').val()); 
+					var TDReasonICD = $.trim($('#txtDReasonICD').val()); 
+					if(TDReason!="") {
+						$('#cboBaseReason').lookup('setText',TDReason);
+						$('#txtBaseReasonICD').val(TDReasonICD);
+					}else if(TCReason!="") {
+						$('#cboBaseReason').lookup('setText',TCReason);
+						$('#txtBaseReasonICD').val(TCReasonICD);
+					}else if(TBReason!="") {
+						$('#cboBaseReason').lookup('setText',TBReason);
+						$('#txtBaseReasonICD').val(TBReasonICD);
+					}else if(TAReason!="") {
+						$('#cboBaseReason').lookup('setText',TAReason);
+						$('#txtBaseReasonICD').val(TAReasonICD);
+					}
+	            },500);
+		})
 	}	
 	
     //新建报告页面初始化
@@ -168,24 +192,23 @@
 			$('#txtRegAddress').val(arrPatInfo[20]);                   //户籍地址
 			$('#txtCurrAddress').val(arrPatInfo[20]);                  //生前地址
 			$('#txtFamName').val(arrPatInfo[18]);                      //联系人姓名
-			$('#cboFamRelation').combobox('setValue',arrPatInfo[16]);  //关系
+			// 获取关系对应的ID
+			var RelationID = $m({                  
+				ClassName:"DHCMed.SSService.DictionarySrv",
+				MethodName:"GetIDByTypeDesc",
+				argHosID:"",
+				argTypeCode:"DTHFamilyRelation",
+				argDesc:arrPatInfo[16]
+			},false);
+			$('#cboFamRelation').combobox('setValue',RelationID);  //关系
+			$('#cboFamRelation').combobox('setText',arrPatInfo[16]);  //关系
 			$('#txtFamTel').val(arrPatInfo[19]);                       //电话
 			$('#txtDeathDate').datebox('setValue',arrPatInfo[25]);
 			$('#txtDeathTime').timespinner('setValue',arrPatInfo[26]);
 			
 			var ret = tkMakeServerCall("DHCMed.SSService.AreaDicSrv","GetAddress",arrPatInfo[20])
 		    if (ret!=""){
-			    var Addressret=ret.split("^")
-			    $('#cboRegProvince').combobox('setValue',Addressret[0]);
-			    $('#cboRegProvince').combobox('setText',Addressret[1]);
-			    $('#cboRegCity').combobox('setValue',Addressret[2]);
-			    $('#cboRegCity').combobox('setText',Addressret[3]);
-			    $('#cboRegCounty').combobox('setValue',Addressret[4]);
-			    $('#cboRegCounty').combobox('setText',Addressret[5]);
-			    $('#cboRegVillage').combobox('setValue',Addressret[6]);
-			    $('#cboRegVillage').combobox('setText',Addressret[7]);
-			    $('#txtRegRoad').val(Addressret[8])
-			    
+			    var Addressret=ret.split("^");
 			    $('#cboCurrProvince').combobox('setValue',Addressret[0]);
 			    $('#cboCurrProvince').combobox('setText',Addressret[1]);
 			    $('#cboCurrCity').combobox('setValue',Addressret[2]);
@@ -196,7 +219,19 @@
 			    $('#cboCurrVillage').combobox('setText',Addressret[7]);
 			    $('#txtCurrRoad').val(Addressret[8])
 		    }
-		    
+		    var Regret = tkMakeServerCall("DHCMed.SSService.AreaDicSrv","GetAddress",ServerObj.RegAdress)
+		    if (Regret!=""){
+			    var RegAddressret=Regret.split("^");
+			    $('#cboRegProvince').combobox('setValue',RegAddressret[0]);
+			    $('#cboRegProvince').combobox('setText',RegAddressret[1]);
+			    $('#cboRegCity').combobox('setValue',RegAddressret[2]);
+			    $('#cboRegCity').combobox('setText',RegAddressret[3]);
+			    $('#cboRegCounty').combobox('setValue',RegAddressret[4]);
+			    $('#cboRegCounty').combobox('setText',RegAddressret[5]);
+			    $('#cboRegVillage').combobox('setValue',RegAddressret[6]);
+			    $('#cboRegVillage').combobox('setText',RegAddressret[7]);
+			    $('#txtRegRoad').val(RegAddressret[8])
+		    }
 			//诊断单位 默认显示三级医院
 			if (obj.DiagnoseUnit) {			
 				$('#cboDiagnoseUnit').combobox('setValue',obj.DiagnoseUnit.split("^")[0]);
@@ -386,6 +421,7 @@
 		$('#cboDiagnoseBasis').combobox('setText',arrValue[40].split(CHR_1)[1]);
 		
 		$('#txtResume').val(arrValue[41]);
+		var ExamMedical = arrValue[42].replace(/\s/g,"\n"); // 替换所有的空格为 换行字符"\n"
 		$('#txtExamMedical').val(arrValue[42]);
 		$('#txtExamName').val(arrValue[43]);
 		$('#cboExamRelation').combobox('setValue',arrValue[44].split(CHR_1)[0]);
@@ -445,7 +481,9 @@
 		}
 		$('#txtRegRoad').val(arrValue[84]);
 		$('#txtCurrRoad').val(arrValue[85]);
-		
+		$('#txtRegAddress').val($('#cboRegProvince').combobox('getText')+$('#cboRegCity').combobox('getText')+$('#cboRegCounty').combobox('getText')+$('#cboRegVillage').combobox('getText')+$('#txtRegRoad').val());
+		$('#txtCurrAddress').val($('#cboCurrProvince').combobox('getText')+$('#cboCurrCity').combobox('getText')+$('#cboCurrCounty').combobox('getText')+$('#cboCurrVillage').combobox('getText')+$('#txtCurrRoad').val());
+
 		if (obj.IsChild == '1') {       //儿童
 			$('#ChindInfoDiv').removeAttr('style');
 			$.parser.parse('#ChindInfoDiv'); 
@@ -599,7 +637,8 @@
 		
 		var objMenDic = strFields[51].split(CHR_2);
 		if (objMenDic[0]) {
-			$HUI.radio('#radLastMenList'+objMenDic[0]).setValue(true);               // 末次月经类型
+			Common_SetRadioValue("radLastMenList",objMenDic[0])		  // 末次月经类型
+			//$HUI.radio('#radLastMenList'+objMenDic[0]).setValue(true);               // 末次月经类型
 			$('#dtLastMenDate').datebox('disable');
 		}
 		if (strFields[26]) {
@@ -608,8 +647,10 @@
 		}
 		var objDeliDic = strFields[52].split(CHR_2);
 		if (objDeliDic[0])  {
-			$HUI.radio('#radDeliDateList'+objDeliDic[0]).setValue(true);         // 分娩时间分类
+			Common_SetRadioValue("radDeliDateList",objDeliDic[0])		  // 分娩时间分类
+			//$HUI.radio('#radDeliDateList'+objDeliDic[0]).setValue(true);         // 分娩时间分类
 			$('#dtDeliveryDate').datebox('disable');
+			$('#txtDeliveryTime').numberspinner('disable');
 		}
 		if(strFields[27]) {
 			$('#dtDeliveryDate').datebox('setValue',strFields[27]);      // 分娩日期
@@ -620,11 +661,14 @@
 		$('#txtMDeathTime').val(strFields[30]);                       // 死亡时间
 	
 		var objDic = strFields[31].split(CHR_2);
-		if (objDic[0]) $HUI.radio('#radDeliveryPosList'+objDic[0]).setValue(true);  // 分娩地点
+		Common_SetRadioValue("radDeliveryPosList",objDic[0])		  // 分娩地点
+		//if (objDic[0]) $HUI.radio('#radDeliveryPosList'+objDic[0]).setValue(true);  // 分娩地点
 		var objDic = strFields[32].split(CHR_2);
-		if (objDic[0]) $HUI.radio('#radDeathPosList'+objDic[0]).setValue(true);     // 死亡地点
+		Common_SetRadioValue("radDeathPosList",objDic[0])		  // 死亡地点
+		//if (objDic[0]) $HUI.radio('#radDeathPosList'+objDic[0]).setValue(true);     // 死亡地点
 		var objDic = strFields[33].split(CHR_2);
-		if (objDic[0]) $HUI.radio('#radDeliveryWayList'+objDic[0]).setValue(true);  //分娩方式
+		Common_SetRadioValue("radDeliveryWayList",objDic[0])		  // 分娩方式
+		//if (objDic[0]) $HUI.radio('#radDeliveryWayList'+objDic[0]).setValue(true);  //分娩方式
 		var objDic = strFields[34].split(CHR_2);
 		$('#cboIsNewWay').combobox('setValue', objDic[0]);           // 新法接生
 		$('#cboIsNewWay').combobox('setText', objDic[2]);            // 新法接生
@@ -642,15 +686,24 @@
 		$('#cboMDiagnoseBasis').combobox('setText', objDic[2]);      //死因诊断依据
 		var objDic = strFields[53].split(CHR_2);                     
 		$('#cboMCategory').combobox('setValue', objDic[0]);          //死因分类
-	    $('#cboMCategory').combobox('setText', objDic[2]);           //死因分类
+		if (strFields[29]){
+			var MCategoryId =  objDic[2].split(CHR_1)[0];
+		}else{
+			var MCategoryId =  objDic[2];
+		}
+	    $('#cboMCategory').combobox('setText', MCategoryId);           //死因分类
 		var objDic = strFields[40].split(CHR_2);
-		if (objDic[0]) $HUI.radio('#radProResultList'+objDic[0]).setValue(true);    //省级医疗保健机构评审结果
+		Common_SetRadioValue("radProResultList",objDic[0])		  // 省级医疗保健机构评审结果
+		//if (objDic[0]) $HUI.radio('#radProResultList'+objDic[0]).setValue(true);    //省级医疗保健机构评审结果
 		var objDic = strFields[41].split(CHR_2);                     
-		if (objDic[0]) $HUI.radio('#radProReasonList'+objDic[0]).setValue(true);    // 省级 影响死亡的主要因素
+		//if (objDic[0]) $HUI.radio('#radProReasonList'+objDic[0]).setValue(true);    // 省级 影响死亡的主要因素
+		Common_SetRadioValue("radProReasonList",objDic[0])		  // 省级 影响死亡的主要因素
 		var objDic = strFields[42].split(CHR_2);                     
-		if (objDic[0]) $HUI.radio('#radConResultList'+objDic[0]).setValue(true);  	 //国家级评审结果
+		//if (objDic[0]) $HUI.radio('#radConResultList'+objDic[0]).setValue(true);  	 //国家级评审结果
+		Common_SetRadioValue("radConResultList",objDic[0])		  // 国家级评审结果
 		var objDic = strFields[43].split(CHR_2);
-        if (objDic[0]) $HUI.radio('#radConReasonList'+objDic[0]).setValue(true); 	 // 国家 影响死亡的主要因素  		
+        //if (objDic[0]) $HUI.radio('#radConReasonList'+objDic[0]).setValue(true); 	 // 国家 影响死亡的主要因素  
+		Common_SetRadioValue("radConReasonList",objDic[0])		  // 国家 影响死亡的主要因素  		
 	}
 	
 	//显示按钮操作权限 根据报告状态与操作权限控制
@@ -659,6 +712,7 @@
 		$('#btnReport').hide();
 		$('#btnCheckOne').hide();
 		$('#btnCheckTwo').hide();
+		$('#btnUnCheck').hide();
 		$('#btnPrintOne').hide();
 		$('#btnGrantOne').hide();
 		$('#btnPrintThree').hide();
@@ -677,7 +731,13 @@
 	   
 	    //加载报告状态
 	    objStatus = obj.DicManage('DTHRunningState',obj.RepStatusCode);
-	    $('#RepStatus').text(objStatus.Description);
+		
+		obj.RepStatusDesc = $m({                  
+			ClassName:"DHCMed.DTHService.ReportSrv",
+			MethodName:"GetReportStatusDesc",
+			reportId:ReportID
+		},false);
+	    $('#RepStatus').text(obj.RepStatusDesc);
 		
 		switch (obj.RepStatusCode) {
 			case "" : // 无报告 只能暂存、上报
@@ -724,6 +784,7 @@
 				 $('#btnGrantOne').show();
 				 $('#btnPrintChild').show();
 				 $('#btnPrintMaternal').show();
+				 $('#btnUnCheck').show();
 				break;
 			case "9" : // 退回
 				 $('#btnReport').linkbutton({text:'修改报卡'});
@@ -738,7 +799,15 @@
 			case "5" : // 作废
 				break;
 		}
-		
+		//已打印次数
+		var inputStr=ReportID + CHR_1 + 2;
+		var retPrintNumValue = obj.GetPrintNum(inputStr,CHR_1);
+		if (retPrintNumValue=="") retPrintNumValue=0;
+		// 执行过打印之后，不可以取消审核 add by chenrui 20230418
+		if (retPrintNumValue>=1){
+			$('#btnUnCheck').hide();
+			$('#btnReturn').hide();
+		}
 		if (tDHCMedMenuOper['Report']!=1) {
 			 $('#btnReport').hide();
 			 $('#btnSaveTmp').hide();
@@ -748,6 +817,9 @@
 		}
 		if (tDHCMedMenuOper['CheckTwo']!=1) {
 			 $('#btnCheckTwo').hide();
+		}
+		if (tDHCMedMenuOper['CheckTwo']!=1) {	// 没有审核权限，隐藏取消审核按钮
+			 $('#btnUnCheck').hide();
 		}
 		if (tDHCMedMenuOper['PrintOne']!=1) {
 			 $('#btnPrintOne').hide();
@@ -866,12 +938,12 @@
 				var PatName  = $.trim($('#txtPatName').val());
 				if (basePatName != '') {
 					if (basePatName != PatName){
-						 errInfo ="建卡处病人姓名【" + basePatName + "】与死亡证中病人姓名【"+PatName+"】不一致，请核实!<br>";
+						 errInfo =$g("建卡处病人姓名【") + basePatName + $g("】与死亡证中病人姓名【")+PatName+$g("】不一致，请核实!")+"<br>";
 					}
 				}
 				if ((baseCardType.indexOf('身份证')>-1)&&((baseCardType.indexOf('身份证')>-1)||(baseCardType.indexOf('户口簿')>-1))) {
 					if(baseIdentify!=Identify){
-						errInfo +="建卡处病人身份证号【"+baseIdentify+"】与报告中病人身份证号【"+Identify+"】不一致，请核实!";
+						errInfo +=$g("建卡处病人身份证号【")+baseIdentify+$g("】与报告中病人身份证号【")+Identify+$g("】不一致，请核实!");
 					}
 				}
 			}
@@ -893,86 +965,92 @@
 				 return
 			}
 		}
-		
 		var PatName = $.trim($('#txtPatName').val());
-		if (PatName=="") errInfo += '姓名不允许为空!<br>';
+		if (PatName=="") errInfo += $g("姓名不允许为空!")+"<br>";
+		if (PatName.indexOf('无名氏')>-1) {
+			errInfo=obj.CheckDeathDate();	//无名氏验证死亡日期、时间	
+			return errInfo;
+		} else {
+			errInfo +=obj.CheckDeathDate();//验证死亡日期、时间	
+		}
 		var Sex = $.trim($('#txtSex').val());
-		if (Sex=="") errInfo += '性别不允许为空!<br>';
+		if (Sex=="") errInfo += $g("性别不允许为空!")+"<br>";
 		var Age = $.trim($('#txtAge').val());
-		if (Age=="") errInfo += '年龄不允许为空!<br>';
+		if (Age=="") errInfo += $g("年龄不允许为空!")+"<br>";
 		var Birthday = $('#txtBirthday').datebox('getValue');
-		if (Birthday=="") errInfo += '出生日期不允许为空!<br>';
+		if (Birthday=="") errInfo += $g("出生日期不允许为空!")+"<br>";
 		var Country = $.trim($('#txtCountry').val());
-		if (Country=="") errInfo += '国家或地区不允许为空!<br>';
+		if (Country=="") errInfo += $g("国家或地区不允许为空!")+"<br>";
 		var Nation = $.trim($('#txtNation').val());
-		if (Nation=="") errInfo += '民族不允许为空!<br>';
+		if (Nation=="") errInfo += $g("民族不允许为空!")+"<br>";
 		var CardType = $.trim($('#cboCardType').combobox('getValue'));
-		if (CardType=="") errInfo += '证件类型不允许为空!<br>';
+		if (CardType=="") errInfo += $g("证件类型不允许为空!")+"<br>";
 		var Identify = $.trim($('#txtIdentify').val());
-		if (Identify=="") errInfo += '证件号码不允许为空!<br>';
+		if (Identify=="") errInfo += $g("证件号码不允许为空!")+"<br>";
 		var Marital = $.trim($('#cboMarital').combobox('getValue'));
-		if (Marital=="") errInfo += '请选择婚姻状况!<br>';
+		if (Marital=="") errInfo += $g("请选择婚姻状况!")+"<br>";
 		var Education = $.trim($('#cboEducation').combobox('getValue'));
-		if (Education=="") errInfo += '请选择文化程度!<br>';
+		if (Education=="") errInfo += $g("请选择文化程度!")+"<br>";
 		var Occupation = $.trim($('#cboOccupation').combobox('getValue'));
-		if (Occupation=="") errInfo += '请选择职业!<br>';
+		if (Occupation=="") errInfo += $g("请选择职业!")+"<br>";
 		var Company = $.trim($('#txtCompany').val());
-		if (Company=="") errInfo += '工作单位不允许为空!<br>';
-		var RegProvince = $.trim($('#cboRegProvince').combobox('getValue'));
-		if (RegProvince=="") errInfo += "请选择户籍地址省<br>";
-		var RegCity = $.trim($('#cboRegCity').combobox('getValue'));
-		if (RegCity=="") errInfo += "请选择户籍地址市<br>";
-		var RegCounty = $.trim($('#cboRegCounty').combobox('getValue'));
-		if (RegCounty=="") errInfo += "请选择户籍地址县<br>";
-		var RegVillage = $.trim($('#cboRegVillage').combobox('getValue'));
-		if (RegVillage=="") errInfo += "请选择户籍地址乡(街道)<br>";
-		var RegAddress = $.trim($('#txtRegRoad').val());
-		if (RegAddress=="") errInfo += "户籍地址村(小区)不允许为空<br>";
-		var CurrProvince = $.trim($('#cboCurrProvince').combobox('getValue'));
-		if (CurrProvince=="") errInfo += "请选择生前住址省<br>";
-		var CurrCity = $.trim($('#cboCurrCity').combobox('getValue'));
-		if (CurrCity=="") errInfo += "请选择生前住址市<br>";
-		var CurrCounty = $.trim($('#cboCurrCounty').combobox('getValue'));
-		if (CurrCounty=="") errInfo += "请选择生前住址县<br>";
-		var CurrVillage = $.trim($('#cboCurrVillage').combobox('getValue'));
-		if (CurrVillage=="") errInfo += "请选择生前住址乡(街道)<br>";
-		var CurrAddress = $.trim($('#txtCurrRoad').val());
-		if (CurrAddress=="") errInfo += "生前住址村(小区)不允许为空<br>";		
+		if (Company=="") errInfo += $g("工作单位不允许为空!")+"<br>";
+
+		var CardTypeDesc = $.trim($('#cboCardType').combobox('getText'));
+		if ((CardTypeDesc=="港澳通行证")||(CardTypeDesc=="台湾通行证")){
+			var RegAddress = $.trim($('#txtRegRoad').val());
+			if (RegAddress=="") errInfo += $g("证件类型为港澳通行证或台湾通行证，请填写详细地址到户籍地址村(小区)")+"<br>";
+			var CurrAddress = $.trim($('#txtCurrRoad').val());
+			if (CurrAddress=="") errInfo += $g("证件类型为港澳通行证或台湾通行证，请填写详细地址到生前住址村(小区)")+"<br>";	
+		}else{
+			var RegProvince = $.trim($('#cboRegProvince').combobox('getValue'));
+			if (RegProvince=="") errInfo += $g("请选择户籍地址省")+"<br>";
+			var RegCity = $.trim($('#cboRegCity').combobox('getValue'));
+			if (RegCity=="") errInfo += $g("请选择户籍地址市")+"<br>";
+			var RegCounty = $.trim($('#cboRegCounty').combobox('getValue'));
+			if (RegCounty=="") errInfo += $g("请选择户籍地址县")+"<br>";
+			var RegVillage = $.trim($('#cboRegVillage').combobox('getValue'));
+			if (RegVillage=="") errInfo += $g("请选择户籍地址乡(街道)")+"<br>";
+			var RegAddress = $.trim($('#txtRegRoad').val());
+			if (RegAddress=="") errInfo += $g("户籍地址村(小区)不允许为空")+"<br>";
+			var CurrProvince = $.trim($('#cboCurrProvince').combobox('getValue'));
+			if (CurrProvince=="") errInfo += $g("请选择生前住址省")+"<br>";
+			var CurrCity = $.trim($('#cboCurrCity').combobox('getValue'));
+			if (CurrCity=="") errInfo += $g("请选择生前住址市")+"<br>";
+			var CurrCounty = $.trim($('#cboCurrCounty').combobox('getValue'));
+			if (CurrCounty=="") errInfo += $g("请选择生前住址县")+"<br>";
+			var CurrVillage = $.trim($('#cboCurrVillage').combobox('getValue'));
+			if (CurrVillage=="") errInfo += $g("请选择生前住址乡(街道)")+"<br>";
+			var CurrAddress = $.trim($('#txtCurrRoad').val());
+			if (CurrAddress=="") errInfo += $g("生前住址村(小区)不允许为空")+"<br>";	
+		}		
 		
 		//手工录入死亡编号，则死亡编号不许为空!
 		var DeathNo = $.trim($('#txtDeathNo').val());
-		if((DeathNoType == 0) && (DeathNo.trim() == "")) errInfo = errInfo + '死亡证明书编号不允许为空!<br>';
-		var thisNowDate = Common_GetDate(new Date());
-		var thisNowTime = Common_GetTime(new Date());
-		var DeathDate = $('#txtDeathDate').datebox('getValue');
-		if (DeathDate=="") errInfo += '死亡日期不允许为空!<br>';
-		var DeathTime = $('#txtDeathTime').timespinner('getValue');
-		if (DeathTime=="") errInfo += '死亡时间不允许为空!<br>';
-		//死亡日期不能大于当前日期
-		if ((DeathDate!="")&&(Common_CompareDate(DeathDate,thisNowDate)>0)) {
-			errInfo += '死亡日期不允许大于当前日期!<br>';
-		}
-        if ((DeathDate == thisNowDate)&&(DeathTime >thisNowTime)) {
-			errInfo += '死亡时间不允许大于当前时间!<br>';
-		}
+		if((DeathNoType == 0) && (DeathNo.trim() == "")) errInfo = errInfo + $g("死亡证明书编号不允许为空!")+"<br>";
 		
 		if(Sex=="女") {
 			var Pregnancies = $.trim($('#cboPregnancies').combobox('getValue'));
-			if (Pregnancies=="") errInfo += '妊娠期或终止妊娠42天内不允许为空!<br>';
+			if (Pregnancies=="") errInfo += $g("妊娠期或终止妊娠42天内不允许为空!")+"<br>";
 		}
 		var FamName = $.trim($('#txtFamName').val());
-		if (FamName=="") errInfo += '家属姓名不允许为空!<br>';
+		if (FamName=="") errInfo += $g("家属姓名不允许为空!")+"<br>";
 		var FamTel = $.trim($('#txtFamTel').val());
-		if (FamTel=="") errInfo += '联系电话不允许为空!<br>';
+		if (FamTel=="") errInfo += $g("联系电话不允许为空!")+"<br>";
+		if ($.trim($('#txtFamTel').val()) != ""){
+			if (!(/^1[3456789]\d{9}$/.test($.trim($('#txtFamTel').val())))) {
+				errInfo += $g("输入的联系电话格式不符合规定！请重新输入!")+"<br>";
+			}
+		}
 		var FamRelation = $.trim($('#cboFamRelation').combobox('getValue'));
-		if (FamRelation=="") errInfo += '与死者关系不允许为空!<br>';
+		if (FamRelation=="") errInfo += $g("与死者关系不允许为空!")+"<br>";
 		var FamAddr = $.trim($('#txtFamAddress').val());
-		if (FamAddr=="") errInfo += '家属住址或工作单位不允许为空!<br>';
+		if (FamAddr=="") errInfo += $g("家属住址或工作单位不允许为空!")+"<br>";
 		if (SSHospCode=='11-BJZYY') {
 			var FamCardType = $.trim($('#cboFamCardType').combobox('getValue'));
-			if (FamCardType=="") errInfo += '家属证件类型不允许为空!<br>';
+			if (FamCardType=="") errInfo += $g("家属证件类型不允许为空!")+"<br>";
 			var FamIdentify = $.trim($('#txtFamIdentify').val());
-			if (FamIdentify=="") errInfo += '家属证件号码不允许为空!<br>';
+			if (FamIdentify=="") errInfo += $g("家属证件号码不允许为空!")+"<br>";
 		}
 		var AReason = $.trim($('#cboAReason').lookup('getText'));
 		var BReason = $.trim($('#cboBReason').lookup('getText'));
@@ -983,96 +1061,96 @@
 		var CReasonICD = $.trim($('#txtCReasonICD').val()); 
 		var DReasonICD = $.trim($('#txtDReasonICD').val()); 
 		if ((AReason=="")&&(BReason=="")&&(CReason=="")&&(DReason=="")){
-			errInfo += '至少填写（a）直接导致死亡的疾病或情况!<br>';
+			errInfo += $g("至少填写(a)直接导致死亡的疾病或情况!")+"<br>";
 		} 
 		if ((AReason!='')&&(AReasonICD=='')) {
-			errInfo += '(a)直接导致死亡的疾病或情况请录入标准诊断!<br>';
+			errInfo += '(a)'+$g("直接导致死亡的疾病或情况请录入标准诊断!")+"<br>";
 		}
 		if ((BReason!='')&&(BReasonICD=='')) {
-			errInfo += '(b)直接导致死亡的疾病或情况请录入标准诊断!<br>';
+			errInfo += '(b)'+$g("直接导致死亡的疾病或情况请录入标准诊断!")+"<br>";
 		}
 		if ((CReason!='')&&(CReasonICD=='')) {
-			errInfo += '(c)直接导致死亡的疾病或情况请录入标准诊断!<br>';
+			errInfo += '(c)'+$g("直接导致死亡的疾病或情况请录入标准诊断!")+"<br>";
 		}
 		if ((DReason!='')&&(DReasonICD=='')) {
-			errInfo += '(d)直接导致死亡的疾病或情况请录入标准诊断!<br>';
+			errInfo += '(d)'+$g("直接导致死亡的疾病或情况请录入标准诊断!")+"<br>";
 		}
 		if ((AReason=="")&&((BReason!="")||(CReason!="")||(DReason!=""))) {
-			errInfo += '(a)直接导致死亡的疾病或情况不允许为空!<br>';
+			errInfo += '(a)'+$g("直接导致死亡的疾病或情况不允许为空!")+"<br>";
 		}
 		if ((BReason=="")&&((CReason!="")||(DReason!=""))) {
-			errInfo += '(b)引起(a)的疾病或情况不允许为空!<br>';
+			errInfo += '(b)'+$g("引起(a)的疾病或情况不允许为空!")+"<br>";
 		}
 		if ((CReason=="")&&(DReason!="")) {
-			errInfo += '(c)引起(b)的疾病或情况不允许为空!<br>';
+			errInfo += '(c)'+$g("引起(b)的疾病或情况不允许为空!")+"<br>";
 		}
 		if (AReason!=""){
 			var AInterval = $.trim($('#txtAInterval').val());
 			var ATime = $.trim($('#cboATime').combobox('getValue'));
 			if(AInterval==""){
-				errInfo += 'A诊断时间间隔不允许为空!<br>';
+				errInfo += '(a)'+$g("诊断时间间隔不允许为空!")+"<br>";
 			}
 			if(ATime==""){
-				errInfo += 'A诊断时间单位不允许为空!<br>';
+				errInfo += '(a)'+$g("诊断时间单位不允许为空!")+"<br>";
 			}
 		}
 		if (BReason!=""){
 			var BInterval = $.trim($('#txtBInterval').val());
 			var BTime = $.trim($('#cboBTime').combobox('getValue'));
 			if(BInterval==""){
-				errInfo += 'B诊断时间间隔不允许为空!<br>';
+				errInfo += '(b)'+$g("诊断时间间隔不允许为空!")+"<br>";
 			}
 			if(BTime==""){
-				errInfo += 'B诊断时间单位不允许为空!<br>';
+				errInfo += '(b)'+$g("诊断时间单位不允许为空!")+"<br>";
 			}
 		}
 		if (CReason!=""){
 			var CInterval = $.trim($('#txtCInterval').val());
 			var CTime = $.trim($('#cboCTime').combobox('getValue'));
 			if(CInterval==""){
-				errInfo += 'C诊断时间间隔不允许为空!<br>';
+				errInfo += '(c)'+$g("诊断时间间隔不允许为空!")+"<br>";
 			}
 			if(CTime==""){
-				errInfo += 'C诊断时间单位不允许为空!<br>';
+				errInfo += '(c)'+$g("诊断时间单位不允许为空!")+"<br>";
 			}
 		}
 		if (DReason!=""){
 			var DInterval = $.trim($('#txtDInterval').val());
 			var DTime = $.trim($('#cboDTime').combobox('getValue'));;
 			if(DInterval==""){
-				errInfo += 'D诊断时间间隔不允许为空!<br>';
+				errInfo += '(d)'+$g("诊断时间间隔不允许为空!")+"<br>";
 			}
 			if(DTime==""){
-				errInfo += 'D诊断时间单位不允许为空!<br>';
+				errInfo += '(d)'+$g("诊断时间单位不允许为空!")+"<br>";
 			}
 		}
 		var DamageDiagnose = $.trim($('#cboDamageDiagnose').lookup('getText'));           //损伤中毒诊断
 		var DamageDiagnoseICD = $.trim($('#txtDamageDiagnoseICD').val());  
 		if ((DamageDiagnose!='')&&(DamageDiagnoseICD=='')) {
-			errInfo += '损伤中毒诊断请录入标准诊断!<br>';
+			errInfo += $g("损伤中毒诊断请录入标准诊断!")+"<br>";
 		}
 		var OtherDiagnose = $.trim($('#cboOtherDiagnose').lookup('getText'));
         var OtherDiagnoseICD = $.trim($('#txtOtherDiagnoseICD').val());
 		if ((OtherDiagnose!='')&&(OtherDiagnoseICD=='')) {
-			errInfo += '其他诊断请录入标准诊断!<br>';
+			errInfo += $g("其他诊断请录入标准诊断!")+"<br>";
 		}
 		if (OtherDiagnose!=""){
 			var OtherDiagnoseInterval = $.trim($('#txtOtherDiagnoseInterval').val());
 			var OtherDiagnoseTime = $.trim($('#cboOtherDiagnoseTime').combobox('getValue'));
 			if(OtherDiagnoseInterval==""){
-				errInfo += '其他诊断时间间隔不允许为空!<br>';
+				errInfo += $g("其他诊断时间间隔不允许为空!")+"<br>";
 			}
 			if(OtherDiagnoseTime==""){
-				errInfo += '其他诊断时间单位不允许为空!<br>';
+				errInfo += $g("其他诊断时间单位不允许为空!")+"<br>";
 			}
 		}
 		var DiagnoseUnit = $.trim($('#cboDiagnoseUnit').combobox('getValue'));
-		if (DiagnoseUnit=="") errInfo += '诊断单位不允许为空!<br>';
+		if (DiagnoseUnit=="") errInfo += $g("诊断单位不允许为空!")+"<br>";
 		var DiagnoseBasis = $.trim($('#cboDiagnoseBasis').combobox('getValue'));
-		if (DiagnoseBasis=="") errInfo += '诊断依据不允许为空!<br>';
+		if (DiagnoseBasis=="") errInfo += $g("诊断依据不允许为空!")+"<br>";
 		var cboDeathPlace = $.trim($('#cboDeathPlace').combobox('getValue'));
 		if (cboDeathPlace==""){
-			errInfo += '死亡地点不允许为空!<br>';
+			errInfo += $g("死亡地点不允许为空!")+"<br>";
 		} else {
 			var DeathPlaceDesc = $.trim($('#cboDeathPlace').combobox('getText'));    //死亡地点
 			var ExamMedical = $.trim($('#txtExamMedical').val());          //死者生前病史及症状体征
@@ -1083,28 +1161,37 @@
 			var ExamAddress = $.trim($('#txtExamAddress').val()); //联系地址
 			var ExamUser = $.trim($('#txtExamUser').val()); //调查者
 			var ExamDate = $('#txtExamDate').datebox('getValue'); //调查日期
-			
+			if (ExamTel != ""){
+				if (!(/^1[3456789]\d{9}$/.test(ExamTel))) {
+					errInfo += $g("调查记录中输入的联系电话格式不符合规定！请重新输入!")+"<br>";
+				}
+			}
 			if ((DeathPlaceDesc!="医疗卫生机构(急诊)")&&(DeathPlaceDesc!="医疗卫生机构(病房)")){
 				if((ExamMedical=="")||(ExamDeathReason=="")){
-				   errInfo += '死亡地点不在医疗卫生机构的患者，死者生前病史及症状体征和死因推断不允许为空!<br>';
+				   errInfo += $g("死亡地点不在医疗卫生机构的患者，死者生前病史及症状体征和死因推断不允许为空!")+"<br>";
 				}
 				if (ExamName == "") {
-					errInfo += '死亡地点不在医疗卫生机构的患者，被调查者不允许为空!<br>';
+					errInfo += $g("死亡地点不在医疗卫生机构的患者，被调查者不允许为空!")+"<br>";
 				}
 				if (ExamRelation == "") {
-					errInfo += '死亡地点不在医疗卫生机构的患者，与死者关系不允许为空!<br>';
+					errInfo += $g("死亡地点不在医疗卫生机构的患者，与死者关系不允许为空!")+"<br>";
 				}
 				if (ExamTel == "") {
-					errInfo += '死亡地点不在医疗卫生机构的患者，联系电话不允许为空!<br>';
+					errInfo += $g("死亡地点不在医疗卫生机构的患者，联系电话不允许为空!")+"<br>";
 				}
+				if (ExamTel != "") {
+					if (!(/^1[3456789]\d{9}$/.test($.trim(ExamTel)))) {
+						errInfo += $g("死亡地点不在医疗卫生机构的患者，联系电话格式不符合规定！请重新输入!")+"<br>";
+					}
+				} 
 				if (ExamAddress == "") {
-					errInfo += '死亡地点不在医疗卫生机构的患者，联系地址不允许为空!<br>';
+					errInfo += $g("死亡地点不在医疗卫生机构的患者，联系地址不允许为空!")+"<br>";
 				}
 				if (ExamUser == "") {
-					errInfo += '死亡地点不在医疗卫生机构的患者，调查者不允许为空!<br>';
+					errInfo += $g("死亡地点不在医疗卫生机构的患者，调查者不允许为空!")+"<br>";
 				}
 				if (ExamDate == "") {
-					errInfo += '死亡地点不在医疗卫生机构的患者，调查日期不允许为空!<br>';
+					errInfo += $g("死亡地点不在医疗卫生机构的患者，调查日期不允许为空!")+"<br>";
 				}
 			}
 		}
@@ -1170,11 +1257,13 @@
 		var occupationArray = obj.OccupationList.split("~");		
 		var OccupationValue = $.trim($('#cboOccupation').combobox('getText'));
 		var Company = $.trim($('#txtCompany').val());
-		for (var i = 0; i < occupationArray.length; i ++) {
-			var occupation = occupationArray[i] ;
-			if (OccupationValue == occupation) {
-				if ((Company=="") || (Company == "无")) {
-					errInfo += '工作单位不允许为空或者"无"!';
+		if((occupationArray!="")&&(OccupationValue!="")){
+			for (var i = 0; i < occupationArray.length; i ++) {
+				var occupation = occupationArray[i] ;
+				if (OccupationValue == occupation) {
+					if ((Company=="") || (Company == "无")) {
+						errInfo += $g("职业为:")+OccupationValue+$g(',工作单位不允许为空或者"无"!');
+					}
 				}
 			}
 		}
@@ -1184,194 +1273,229 @@
 			var ConCounty     = $.trim($('#cboConCounty').combobox('getValue'));
 			var ConVillage    = $.trim($('#cboConVillage').combobox('getValue'));
 			if ((ConProvince=="")||(ConCity=="")||(ConCounty=="")||(ConVillage=="")) {
-				errInfo += '常住地省市县乡(街道)不允许为空!<br>';
+				errInfo += $g("常住地省市县乡(街道)不允许为空!")+"<br>";
 			}
 			var TempProvince  = $.trim($('#cboTempProvince').combobox('getValue'));
 			var TempCity      = $.trim($('#cboTempCity').combobox('getValue'));
 			var TempCounty    = $.trim($('#cboTempCounty').combobox('getValue'));
 			var TempVillage   = $.trim($('#cboTempVillage').combobox('getValue'));
 			if ((TempProvince=="")||(TempCity=="")||(TempCounty=="")||(TempVillage=="")) {
-				errInfo += '现住地省市县乡(街道)不允许为空!<br>';
+				errInfo += $g("现住地省市县乡(街道)不允许为空!")+"<br>";
 			}
 			var MRegType      = $.trim($('#cboMRegType').combobox('getValue'));
 			if (MRegType=="") {
-				errInfo += '户口不允许为空!<br>';
+				errInfo += $g("户口不允许为空!")+"<br>";
 			}
 			var IsPlan        = $.trim($('#cboIsPlan').combobox('getValue'));
 			if (IsPlan=="") {
-				errInfo += '计划内外不允许为空!<br>';
+				errInfo += $g("计划内外不允许为空!")+"<br>";
 			}
 			var Nation        = $.trim($('#cboNation').combobox('getValue'));
 			if (Nation=="") {
-				errInfo += '孕产妇死亡副卡民族不允许为空!<br>';
+				errInfo += $g("孕产妇死亡副卡民族不允许为空!")+"<br>";
 			}
 			var Education     = $.trim($('#cboMEducation').combobox('getValue'));
 			if (Education=="") {
-				errInfo += '孕产妇死亡副卡文化程度不允许为空!<br>';
+				errInfo += $g("孕产妇死亡副卡文化程度不允许为空!")+"<br>";
 			}
 			var FamilIncome   = $.trim($('#cboFamilIncome').combobox('getValue'));
 			if (FamilIncome=="") {
-				errInfo += '家庭人均收入不允许为空!<br>';
+				errInfo += $g("家庭人均收入不允许为空!")+"<br>";
 			}
 			var ConType       = $.trim($('#cboConType').combobox('getValue'));
 			if (ConType=="") {
-				errInfo += '居住地区不允许为空!<br>';
+				errInfo += $g("居住地区不允许为空!")+"<br>";
 			}
 			var PreTimes      = $.trim($('#txtPreTimes').val());
 			var ProTimes      = $.trim($('#txtProTimes').val());
 			var LaborTimes    = $.trim($('#txtLaborTimes').val());
 			if ((PreTimes=="")||(ProTimes=="")||(LaborTimes=="")) {
-				errInfo += '产次，产次，人工流产、引产次不允许为空!<br>';
+				errInfo += $g("产次，产次，人工流产、引产次不允许为空!")+"<br>";
 			}
 			var DeliPosition  = Common_CheckboxValue('radDeliveryPosList');
 			if (DeliPosition=="") {
-				errInfo += '分娩地点不允许为空!<br>';
+				errInfo += $g("分娩地点不允许为空!")+"<br>";
 			}
 			var DeathPosition = Common_CheckboxValue('radDeathPosList');
 			if (DeathPosition=="") {
-				errInfo += '死亡地点不允许为空!<br>';
+				errInfo += $g("死亡地点不允许为空!")+"<br>";
 			}
 			var DeliveryWay   = Common_CheckboxValue('radDeliveryWayList');
 			if (DeliveryWay=="") {
-				errInfo += '分娩方式不允许为空!<br>';
+				errInfo += $g("分娩方式不允许为空!")+"<br>";
 			}
 			var IsNewWay      = $.trim($('#cboIsNewWay').combobox('getValue'));
 			if (IsNewWay=="") {
-				errInfo += '是否新法接生不允许为空!<br>';
+				errInfo += $g("是否新法接生不允许为空!")+"<br>";
 			}
 			var Deliveryer    = $.trim($('#cboDeliveryer').combobox('getValue'));
 			if (Deliveryer=="") {
-				errInfo += '接生者不允许为空!<br>';
+				errInfo += $g("接生者不允许为空!")+"<br>";
 			}
 			var IsPreCheck    = $.trim($('#cboIsPreCheck').combobox('getValue'));
 			if (IsPreCheck=="") {
-				errInfo += '是否产前检查不允许为空!<br>';
+				errInfo += $g("是否产前检查不允许为空!")+"<br>";
 			} 
 			if ($('#cboIsPreCheck').combobox('getText')=='有'){
 				var PregWeek      = $.trim($('#txtPregWeek').val());
 				var PregCheckTime = $.trim($('#txtPregCheckTime').val());
 				if ((PregWeek=="")||(PregCheckTime=="")) {
-					errInfo += '产前检查初检孕周、产检次数不允许为空!<br>';
+					errInfo += $g("产前检查初检孕周、产检次数不允许为空!")+"<br>";
 				}
 			}
 			var MDiagnoseBasis = $.trim($('#cboMDiagnoseBasis').combobox('getValue'));
 			if (MDiagnoseBasis=="") {
-				errInfo += '死因诊断依据不允许为空!<br>';
+				errInfo += $g("死因诊断依据不允许为空!")+"<br>";
 			}
 			var MCategory     = $.trim($('#cboMCategory').combobox('getValue'));
 			if (MCategory=="") {
-				errInfo += '死因分类不允许为空!<br>';
+				errInfo += $g("死因分类不允许为空!")+"<br>";
 			}
 			var LastMenList   = Common_CheckboxValue('radLastMenList');
 			var LastMenDate   = $('#dtLastMenDate').datebox('getValue');
 			if ((LastMenList=="")&&(LastMenDate=="")) {
-				errInfo += '末次月经时间不允许为空!<br>';	
+				errInfo += $g("末次月经时间不允许为空!")+"<br>";	
 			}
 			var DeliDateList   = Common_CheckboxValue('radDeliDateList');
 			var DeliveryDate  = $('#dtDeliveryDate').datebox('getValue'); 
 			var DeliveryTime  = $.trim($('#txtDeliveryTime').val());
 			if (((DeliDateList=="")&&(DeliveryDate==""))||((DeliveryDate!="")&&(DeliveryTime==""))) {
-				errInfo += '分娩时间不允许为空!<br>';	
+				errInfo += $g("分娩时间不允许为空!")+"<br>";	
 			}
 			
 			if((DeliveryTime>23)||(DeliveryTime<0)){
-				errInfo += '分娩时间范围为0~23时,请填写正确数值!<br>';
+				errInfo += $g("分娩时间范围为0~23时,请填写正确数值!")+"<br>";
 			}
 			var DeathDate     = $('#dtMDeathDate').datebox('getValue'); 
 			var NowDate = Common_GetDate(new Date());
 			if ((LastMenDate!="")&&(Common_CompareDate(LastMenDate,NowDate)>0)) {
-				errInfo += '末次月经不允许大于当前日期!<br>';
+				errInfo += $g("末次月经不允许大于当前日期!")+"<br>";
 			}
 			if ((LastMenDate!="")&&(Common_CompareDate(LastMenDate,DeathDate)>0)) {
-				errInfo += '末次月经不允许大于死亡日期!<br>';
+				errInfo += $g("末次月经不允许大于死亡日期!")+"<br>";
 			}
 			if ((DeliveryDate!="")&&(Common_CompareDate(DeliveryDate,NowDate)>0)) {
-				errInfo += '分娩日期不允许大于当前日期!<br>';
+				errInfo += $g("分娩日期不允许大于当前日期!")+"<br>";
 			}
 			if ((DeliveryDate!="")&&(Common_CompareDate(DeliveryDate,DeathDate)>0)) {
-				errInfo += '分娩日期不允许大于死亡日期!<br>';
+				errInfo += $g("分娩日期不允许大于死亡日期!")+"<br>";
 			}
 			
 			var DeathTime     = $.trim($('#txtMDeathTime').val());
 			if((DeathTime>23)||(DeathTime<0)){
-				errInfo += '死亡时间范围为0~23时,请填写正确数值!<br>';
+				errInfo += $g("死亡时间范围为0~23时,请填写正确数值!")+"<br>";
 			}
 		}
 		
-		if (PatName.indexOf('无名氏')>-1) {
-			errInfo='';	//无名氏信息不做验证
-		}
-  	
-		if (Age.indexOf('岁')>-1) {
+		if (Age.indexOf($g('岁'))>-1) {
 			//var CurrAge = Age.replace("岁", ""); 
-			var arrCurrAge = Age.split("岁"); 
+			var arrCurrAge = Age.split($g("岁")); 
 			var CurrAge = arrCurrAge[0]; 
-			if (CurrAge > 5) {
+			if (CurrAge >= 5) {
 				return errInfo;
 			}
 		}
 	    var FatherName = $.trim($('#txtFatherName').val());
-		if (FatherName =="") errInfo += "5岁以下儿童父亲姓名不允许为空<br>";
+		if (FatherName =="") errInfo += $g("5岁以下儿童父亲姓名不允许为空")+"<br>";
 		var MotherName = $.trim($('#txtMotherName').val());
-		if (MotherName =="") errInfo += "5岁以下儿童母亲姓名不允许为空<br>";
+		if (MotherName =="") errInfo += $g("5岁以下儿童母亲姓名不允许为空")+"<br>";
 		var ChSex = $.trim($('#cboSex').combobox('getValue'));
-		if (ChSex =="") errInfo += "5岁以下儿童性别不允许为空<br>";
+		if (ChSex =="") errInfo += $g("5岁以下儿童性别不允许为空")+"<br>";
 		var DeathAgeYear = $.trim($('#txtDeathAgeYear').val());
 		var DeathAgeMonth = $.trim($('#txtDeathAgeMonth').val());
 		var DeathAgeDay = $.trim($('#txtDeathAgeDay').val());
 		var DeathAgeHour = $.trim($('#txtDeathAgeHour').val());
 	    
 		if(DeathAgeMonth > 12){
-			errInfo += '死亡时年龄的月数不能大于"12"，请准确填写年数和月数！<br>';
+			errInfo += $g("死亡时年龄的月数不能大于'12'，请准确填写年数和月数！")+"<br>";
 		}
 		if(DeathAgeDay > 31){
-			errInfo += '死亡时年龄的天数不能大于"31"，请准确填写月数和天数！<br>';
+			errInfo += $g("死亡时年龄的天数不能大于'31'，请准确填写月数和天数！")+"<br>";
 		}
 		if(DeathAgeHour > 24){
-			errInfo += '死亡时年龄的小时数不能大于"23"，请准确填写天数数和小时数！<br>';	
+			errInfo += $g("死亡时年龄的小时数不能大于'23'，请准确填写天数数和小时数！")+"<br>";	
 		}
 		if (((DeathAgeYear == "") || (DeathAgeYear == 0)) &&
 			((DeathAgeMonth == "") || (DeathAgeMonth == 0)) &&
 			((DeathAgeDay == "") || (DeathAgeDay == 0)) &&
 			((DeathAgeHour == "") || (DeathAgeHour == 0))){
-			errInfo += "请填写患儿的死亡年龄，如果不足一周岁的，请填写具体年龄！<br>";
+			errInfo += $g("请填写患儿的死亡年龄，如果不足一周岁的，请填写具体年龄！")+"<br>";
 		}
 		
 		var Weight = $.trim($('#txtWeight').val());
-		if (Weight =="") errInfo += "5岁以下儿童出生体重不允许为空<br>";
+		if (Weight =="") errInfo += $g("5岁以下儿童出生体重不允许为空")+"<br>";
 		var WeightType = $.trim($('#cboWeightType').combobox('getValue'));
-		if (WeightType =="") errInfo += "5岁以下儿童体重类别不允许为空<br>";
+		if (WeightType =="") errInfo += $g("5岁以下儿童体重类别不允许为空")+"<br>";
 		var PregnancyWeek = $.trim($('#txtPregnancyWeek').val());
-		if (PregnancyWeek =="") errInfo += "5岁以下儿童孕周不允许为空<br>";
+		if (PregnancyWeek =="") errInfo += $g("5岁以下儿童孕周不允许为空")+"<br>";
 		var BirthdayPlace = $.trim($('#cboBirthdayPlace').combobox('getValue'));
-		if (BirthdayPlace =="") errInfo += "5岁以下儿童出生地点不允许为空<br>";
+		if (BirthdayPlace =="") errInfo += $g("5岁以下儿童出生地点不允许为空")+"<br>";
 		var RegType = $.trim($('#cboRegType').combobox('getValue'));
-		if (RegType =="") errInfo += "5岁以下儿童户籍类型不允许为空<br>";
+		if (RegType =="") errInfo += $g("5岁以下儿童户籍类型不允许为空")+"<br>";
 		var DeathPosition = $.trim($('#cboDeathPosition').combobox('getValue'));
-		if (DeathPosition =="") errInfo += "5岁以下儿童死亡地点不允许为空<br>";
+		if (DeathPosition =="") errInfo += $g("5岁以下儿童死亡地点不允许为空")+"<br>";
 		var DiagnoseLv = $.trim($('#cboDiagnoseLv').combobox('getValue'));
-		if (DiagnoseLv =="") errInfo += "5岁以下儿童诊断级别不允许为空<br>";
+		if (DiagnoseLv =="") errInfo += $g("5岁以下儿童诊断级别不允许为空")+"<br>";
 		var Category = $.trim($('#cboCategory').combobox('getValue'));
-		if (Category =="") errInfo += "5岁以下儿童疾病分类编号不允许为空<br>";
+		if (Category =="") errInfo += $g("5岁以下儿童疾病分类编号不允许为空")+"<br>";
 		var ChildDiagBasis = $.trim($('#cboChildDiagBasis').combobox('getValue'));
-		if (ChildDiagBasis =="") errInfo += "5岁以下儿童最高诊断依据不允许为空<br>";
+		if (ChildDiagBasis =="") errInfo += $g("5岁以下儿童最高诊断依据不允许为空")+"<br>";
 		var CareBeforeDeath = $.trim($('#cboCareBeforeDeath').combobox('getValue'));
-		if (CareBeforeDeath =="") errInfo += "5岁以下儿童死亡前治疗不允许为空<br>";
+		if (CareBeforeDeath =="") errInfo += $g("5岁以下儿童死亡前治疗不允许为空")+"<br>";
 		var CareDeath =  $.trim($('#cboCareBeforeDeath').combobox('getText'));
 		var NotCareReason = $.trim($('#cboNotCareReason').combobox('getValue'));
 		if (CareDeath.indexOf('未治疗')>-1) {
-			if (NotCareReason =="") errInfo += "5岁以下儿童死亡前未治疗原因不允许为空<br>";
+			if (NotCareReason =="") errInfo += $g("5岁以下儿童死亡前未治疗原因不允许为空")+"<br>";
 		}
 		var CareReason = $.trim($('#cboNotCareReason').combobox('getText'));
 		var NotCareReasonTxt = $.trim($('#txtNotCareReasonTxt').val());
 		if (CareReason.indexOf('其他')>-1) {
-			if (NotCareReasonTxt =="") errInfo += "5岁以下儿童未治疗其他原因不允许为空<br>";
+			if (NotCareReasonTxt =="") errInfo += $g("5岁以下儿童未治疗其他原因不允许为空")+"<br>";
 		}
 		return errInfo;
 	}
-	//保存死亡证方法
-	obj.SaveData = function(RepStatus){	
-		var separate="^";
+	obj.CheckDeathDate = function(){
+		var errInfo='';
+		var thisNowDate = Common_GetDate(new Date());
+		var thisNowTime = Common_GetTime(new Date());
+		var DeathDate = $('#txtDeathDate').datebox('getValue');
+		if (DeathDate=="") errInfo += $g("死亡日期不允许为空!")+"<br>";
+		var DeathTime = $('#txtDeathTime').timespinner('getValue');
+		if (DeathTime=="") errInfo += $g("死亡时间不允许为空!")+"<br>";
+		/*var AdmDate ="";AdmTime=""
+		//死亡日期不能早于就诊日期
+		var strAdmInfo = $m({                  
+			ClassName:"DHCMed.SSIO.FromAdmSrv",
+			MethodName:"GetAdmDateTime",
+			aEpisodeID:EpisodeID
+		},false);
+		if (strAdmInfo) {
+			AdmDate = strAdmInfo.split("^")[0];
+			AdmTime = strAdmInfo.split("^")[1];
+		}
+		if ((DeathDate!="")&&(Common_CompareDate(AdmDate,DeathDate)>0)) {
+			errInfo += '死亡日期不允许早于就诊日期!<br>';
+		}
+		if ((DeathDate == AdmDate)&&(AdmTime >DeathTime)) {
+			errInfo += '死亡日期不允许早于就诊日期!<br>';
+		}*/
+		var Birthday = $('#txtBirthday').datebox('getValue');
+		if ((DeathDate!="")&&(Birthday!="")&&(Common_CompareDate(Birthday,DeathDate)>0)) {
+			errInfo += $g("死亡日期不允许早于出生日期!")+"<br>";
+		}
+		//死亡日期不能大于当前日期
+		if ((DeathDate!="")&&(Common_CompareDate(DeathDate,thisNowDate)>0)) {
+			errInfo += $g("死亡日期不允许大于当前日期!")+"<br>";
+		}
+		if ((DeathDate == thisNowDate)&&(DeathTime >thisNowTime)) {
+			errInfo += $g("死亡时间不允许大于当前时间!")+"<br>";
+		}
+		return errInfo;
+	}
+	
+	// 获取上报的主卡字符串
+	obj.SaveToString = function(RepStatus, separate) {
+		if (!separate) separate="^";
 		var MrNo = $.trim($('#txtMrNo').val());                                 //病案号
 		var Name = $.trim($('#txtPatName').val());                              //患者姓名
 		var Sex = $.trim($('#txtSex').val());                                   //性别
@@ -1426,6 +1550,7 @@
 		                                                                        
 		var ExamMedical = $.trim($('#txtExamMedical').val());                           //死者生前病史及症状体征
 		ExamMedical =ExamMedical.replace(/["^,\\]/g, " ");                      
+		ExamMedical = ExamMedical.replace(/\n/g," ");		// 替换所有的\n为空格符，便于保存时去掉“\n”
 		var ExamDeathReason = $.trim($('#txtExamDeathReason').val());                   //死亡推断
 		var DeathPlace = $.trim($('#cboDeathPlace').combobox('getValue'));              //死亡地点
 		var AReason = $.trim($('#cboAReason').lookup('getText'));                       //A诊断
@@ -1487,7 +1612,6 @@
 		var ExamRelation = $.trim($('#cboExamRelation').combobox('getValue'));            //被调查者与死者关系
 		var ExamAddress = $.trim($('#txtExamAddress').val());                             //被调查者地址
 		var ExamTel = $.trim($('#txtExamTel').val());                                     //被调查者电话
-		var ExamDeathReason = $.trim($('#txtExamDeathReason').val());                     //调查死因推断
 		
 		//死因推断为空，调查日期置为空
 		if (ExamDeathReason==""){
@@ -1596,6 +1720,14 @@
 		inStr = inStr + separate + OtherDiagnoseInterval;      //其他诊断时间间隔 93
 		inStr = inStr + separate + OtherDiagnoseTime;          //其他诊断时间单位 94
 		inStr = inStr + separate + IsNewBorn;          //新生儿 95
+		
+		return inStr;
+	}
+	
+	//保存死亡证方法
+	obj.SaveData = function(RepStatus){
+		var separate="^";
+		var inStr = obj.SaveToString(RepStatus, separate);		// 主卡字符串
 	
 		var retValue = $m({                  
 			ClassName:"DHCMed.DTH.Report",
@@ -1603,9 +1735,12 @@
 			instr:inStr, 
 			separate:separate
 		},false);
-		
 		if (retValue>0){
-			ReportID=retValue;		
+			ReportID=retValue;
+			var Age = inStr.split(separate)[7];
+			var RepUsrDR = inStr.split(separate)[4];
+			var ReportLoc = inStr.split(separate)[53];
+			
 			//新建报告保存成功后不关闭窗口直接刷新时，界面显示空白问题处理
 			if (typeof(history.pushState) === 'function') {
 			  	var Url=window.location.href;
@@ -1628,7 +1763,7 @@
 				// 死亡证明书编号
 				strArg += '' +separate;  //5
 				// 姓名
-				strArg += Name + separate;
+				strArg += $.trim($('#txtName').val()) + separate;
 				// 常住址 省
 				strArg +=$.trim($('#cboConProvince').combobox('getValue')) + separate;
 				// 常住址 市
@@ -1722,28 +1857,28 @@
 					aInput:strArg, 
 					aSeparate:separate
 				},false);
-				
 				if (ret>0 ) {
 					$.messager.alert("提示","报告"+(RepStatus==1?"上报":"保存")+"成功!", 'info');
 					obj.InitRepPowerByStatus();
 					obj.InitRepByReportID();
 					obj.InitMRepByReportID();
-					return ;
+					return ReportID;
 				}else {
 					$.messager.alert("提示", "孕产妇死亡副卡信息保存失败！", 'info');
 					return ;
 				}
 			}
 			
-			if (Age.indexOf('岁')>-1) {
+			if ((Age.indexOf($g('岁'))>-1)||(Age.indexOf($g('未知'))>-1)) {
 				//var CurrAge = Age.replace("岁", "");
-				var arrCurrAge = Age.split("岁"); 
-				var CurrAge = arrCurrAge[0];  
-				if (CurrAge > 5) {
-					$.messager.alert("提示","报告"+(RepStatus==1?"上报":"保存")+"成功!", 'info');
+				var arrCurrAge = Age.split($g("岁")); 
+				var CurrAge = arrCurrAge[0];
+				debugger;  
+				if ((CurrAge >= 5)||(Age.indexOf($g('未知'))>-1)) {
+					$.messager.alert($g("提示"),$g("报告")+(RepStatus==1?"上报":"保存")+"成功!", 'info');
 					obj.InitRepPowerByStatus();  //不可以使用obj.LoadEvent(); 否则界面上反复操作时，会多次插入数据和弹出提示 
 					obj.InitRepByReportID();
-					return;
+					return ReportID;
 				}
 			}
 			
@@ -1828,7 +1963,7 @@
 				obj.InitRepPowerByStatus();
 				obj.InitRepByReportID();
 				obj.InitChRepByReportID();
-				return;
+				return ReportID;
 			}else {
 				$.messager.alert("提示", "5岁以下儿童死亡信息保存失败！", 'info');
 				return;
@@ -1848,7 +1983,7 @@
 			obj.btnReport_Click(); 
 		});
 		$('#btnPrintPatInfo').on("click", function(){
-			obj.btnPrintPatInfo_Click(); 
+			obj.btnPrintPatInfo_Click();
 		});
 		$('#btnSaveTmp').on("click", function(){
 			obj.btnSaveTmp_Click(); 
@@ -1857,10 +1992,20 @@
 			obj.btnCheckOne_Click(); 
 		});
 		$('#btnPrintOne').on("click", function(){
-			obj.btnPrintOne_Click(); 
+			//obj.btnPrintOne_Click();
+			//CA签名验证
+			CASignLogonModal('DTH','PrintDHTReport',{
+				// 不保存签名数据
+				signSave: false
+			},obj.btnPrintOne_Click);
 		});
 		$('#btnPrintThree').on("click", function(){
-			obj.btnPrintThree_Click(); 
+			//obj.btnPrintThree_Click(); 
+			//CA签名验证
+			CASignLogonModal('DTH','PrintDHTReport',{
+				// 不保存签名数据
+				signSave: false
+			},obj.btnPrintThree_Click);
 		});
 		$('#btnCancle').on("click", function(){
 			obj.btnCancle_Click(); 
@@ -1873,6 +2018,9 @@
 		});
 		$('#btnCheckTwo').on("click", function(){
 			obj.btnCheckTwo_Click(); 
+		});
+		$('#btnUnCheck').on("click", function(){
+			obj.btnUnCheck_Click(); 
 		});
 		$('#btnDel').on("click", function(){
 			obj.btnDel_Click(); 
@@ -1948,34 +2096,29 @@
 	
 	// 加载孕产妇副卡事件
 	obj.LoadMaternalEvent = function () {
-		var value = "";
-	    $('#radLastMenList label.radio').on('click', function(event,v){
-		     var CheckValue = Common_CheckboxValue('radLastMenList');
-			if(value == CheckValue) {
-				$('#dtLastMenDate').datebox('enable');
-				$HUI.radio('input[type=radio][name=radLastMenList]').uncheck();
-				value = "";
-			}else {
-				$('#dtLastMenDate').datebox('clear');
-				$('#dtLastMenDate').datebox('disable');
-				value = CheckValue;
+		$HUI.radio("[name='radLastMenList']",{  
+			onCheckChange:function(e,value){
+				var LastMenList = Common_RadioLabel("radLastMenList");   //当前选中的值
+				if (LastMenList) {	
+					$('#dtLastMenDate').datebox('clear');
+					$('#dtLastMenDate').datebox('disable');
+				}else{
+					$('#dtLastMenDate').datebox('enable');	
+				}
 			}
-	    });
-	    
-		var Item ="";
-		$('#radDeliDateList label.radio').on('click', function(event){
-			var CheckValue = Common_CheckboxValue('radDeliDateList');
-			if(Item == CheckValue) {
-				$('#dtDeliveryDate').datebox('enable');
-				$('#txtDeliveryTime').numberspinner('enable');
-				$HUI.radio('input[type=radio][name=radDeliDateList]').uncheck();
-				Item = "";
-			}else {
-				$('#dtDeliveryDate').datebox('clear');
-				$('#dtDeliveryDate').datebox('disable');
-				$('#txtDeliveryTime').numberspinner('clear');
-				$('#txtDeliveryTime').numberspinner('disable');
-				Item = CheckValue;
+		});
+	   	$HUI.radio("[name='radDeliDateList']",{  
+			onCheckChange:function(e,value){
+				var DeliDateList = Common_RadioLabel("radDeliDateList");   //当前选中的值
+				if (DeliDateList) {	
+					$('#dtDeliveryDate').datebox('clear');
+					$('#dtDeliveryDate').datebox('disable');
+					$('#txtDeliveryTime').numberspinner('clear');
+					$('#txtDeliveryTime').numberspinner('disable');
+				}else{
+					$('#dtDeliveryDate').datebox('enable');
+					$('#txtDeliveryTime').numberspinner('enable');	
+				}
 			}
 		});
 		
@@ -2152,28 +2295,72 @@
 	
 	//打印核对信息按钮触发事件
 	obj.btnPrintPatInfo_Click = function(){	
-		try {
+		if (ReportID==""){
+			$.messager.alert("提示","打印失败！找不到这份报告" , 'info');
+			return
+		}
+		var LODOP=getLodop();
+		LODOP.PRINT_INIT("PrintDTHBaseInfo");		//打印任务的名称
+		LODOP.ADD_PRINT_HTM(1,600,300,100,"<span tdata='pageNO'>第##页</span>/<span tdata='pageCount'>共##页</span>");
+		LODOP.SET_PRINT_STYLEA(0,"ItemType",1);			//每页都打印页码
+		LODOP.SET_PRINT_MODE("DOUBLE_SIDED_PRINT", 0);	//人工双面打印(打印机不支持双面打印时，0为单面打印，1为不双面打印，2为双面打印)
+		LODOP.SET_PRINT_MODE("PRINT_DUPLEX", 0);		//自动双面打印(打印机支持双面打印时，0为单面打印，1为不双面打印，2为双面打印)
+		LodopPrintURL(LODOP,"dhcma.dth.lodopbaseinfo.csp?ReportID="+ReportID);
+		LODOP.PRINT();			//直接打印
+	
+		/*try {
 			ExportBaseDataToExcel("","","",ReportID);
+			window.location.reload();
 		} catch(e) {
 			$.messager.alert("错误提示","打印核对信息出错!Error：" + e.message, 'info');
-		}
+		}*/
 	}
 	//5岁以下儿童死亡报告打印按钮触发事件
-	obj.btnPrintChild_Click = function(){	
-		try {
+	obj.btnPrintChild_Click = function(){
+		
+		if (ReportID==""){
+			$.messager.alert("提示","打印失败！找不到这份报告" , 'info');
+			return
+		}
+		var LODOP=getLodop();
+		LODOP.PRINT_INIT("PrintDTHChildInfo");		//打印任务的名称
+		LODOP.ADD_PRINT_HTM(1,600,300,100,"<span tdata='pageNO'>第##页</span>/<span tdata='pageCount'>共##页</span>");
+		LODOP.SET_PRINT_STYLEA(0,"ItemType",1);			//每页都打印页码
+		LODOP.SET_PRINT_MODE("DOUBLE_SIDED_PRINT", 0);	//人工双面打印(打印机不支持双面打印时，0为单面打印，1为不双面打印，2为双面打印)
+		LODOP.SET_PRINT_MODE("PRINT_DUPLEX", 0);		//自动双面打印(打印机支持双面打印时，0为单面打印，1为不双面打印，2为双面打印)
+		LodopPrintURL(LODOP,"dhcma.dth.lodopchild.csp?ReportID="+ReportID);
+		LODOP.PRINT();			//直接打印
+		
+	
+		/*try {
 			ExportChildDataToExcel(ReportID);
+			window.location.reload();
 		} catch(e) {
 			$.messager.alert("错误提示","打印5岁以下儿童死亡报告信息出错!Error：" + e.message, 'info');
-		}
+		}*/
 	}
 	
 	//孕产妇死亡副卡打印打印按钮触发事件
-	obj.btnPrintMaternal_Click = function(){	
+	obj.btnPrintMaternal_Click = function(){
+		if (ReportID==""){
+			$.messager.alert("提示","打印失败！找不到这份报告" , 'info');
+			return
+		}
+		var LODOP=getLodop();
+		LODOP.PRINT_INIT("PrintDTHMomInfo");		//打印任务的名称
+		LODOP.ADD_PRINT_HTM(1,600,300,100,"<span tdata='pageNO'>第##页</span>/<span tdata='pageCount'>共##页</span>");
+		LODOP.SET_PRINT_STYLEA(0,"ItemType",1);			//每页都打印页码
+		LODOP.SET_PRINT_MODE("DOUBLE_SIDED_PRINT", 0);	//人工双面打印(打印机不支持双面打印时，0为单面打印，1为不双面打印，2为双面打印)
+		LODOP.SET_PRINT_MODE("PRINT_DUPLEX", 0);		//自动双面打印(打印机支持双面打印时，0为单面打印，1为不双面打印，2为双面打印)
+		LodopPrintURL(LODOP,"dhcma.dth.lodopmother.csp?ReportID="+ReportID);
+		LODOP.PRINT();			//直接打印
+		/*	
 		try {
 			ExportMaDataToExcel(ReportID);
+			window.location.reload();
 		} catch(e) {
 			$.messager.alert("错误提示","打印孕产妇死亡副卡信息出错!Error：" + e.message, 'info');
-		}
+		}*/
 	}
 	
 	//上报按钮单击事件
@@ -2187,12 +2374,23 @@
 		if (($('#chkJohnDoe').checkbox('getValue')=='')&&($('#chkNewBorn').checkbox('getValue')=='')) {
 			var ret=obj.CheckRepData();
 			if(ret!=""){
-				$.messager.alert("提示",ret, 'info');
+				$.messager.alert("提示",'<div style="min-height:20px;max-height:400px;overflow:auto">' + ret + '</div>', 'info');
+				return;	
+			}
+		}else {
+			var ret=obj.CheckDeathDate();
+			if(ret!=""){
+				$.messager.alert("提示",'<div style="min-height:20px;max-height:400px;overflow:auto">' + ret + '</div>', 'info');
 				return;	
 			}
 		}
 		//保存死亡证
-		obj.SaveData(1);
+		//obj.SaveData(1);
+		//CA签名验证
+		CASignLogonModal('DTH','SaveDHTReport',{
+			// 签名数据
+			signData: obj.SaveToString()
+		},obj.SaveData,1);
 	}
 	//二审按钮触发事件
 	obj.btnCheckTwo_Click = function(){
@@ -2201,6 +2399,16 @@
 		var retValue = ChangeDMRepStatus(status,resumeText)
 		if ((retValue>-1)){
 			$.messager.popover({msg: '审核成功',type:'success',timeout: 2000});
+			obj.InitRepPowerByStatus();
+		}
+	}
+	//取消审核按钮触发事件
+	obj.btnUnCheck_Click = function(){
+		var status = 2;
+		var resumeText = '';
+		var retValue = ChangeDMRepStatus(status,resumeText)
+		if ((retValue>-1)){
+			$.messager.popover({msg: '取消审核成功',type:'success',timeout: 2000});
 			obj.InitRepPowerByStatus();
 		}
 	}
@@ -2213,6 +2421,8 @@
 				var retValue = ChangeDMRepStatus(status,resumeText);
 				if ((retValue>-1)){
 					$.messager.popover({msg: '作废成功！',type:'success',timeout: 2000});
+					var RecycleInfo = ""+"^"+ReportID+"^"+$("#txtDeathNo").val()+"^"+"";
+					obj.CodeRecycle(RecycleInfo,"^");
 					obj.InitRepPowerByStatus();
 				}else {
 					$.messager.alert("提示","作废失败!", 'info');
@@ -2233,14 +2443,17 @@
 				} else {
 					$.messager.alert("提示","退回失败!", 'info');
 				}
-			}		
+			}else if(r==""){
+				$.messager.alert("提示","请填写退回原因", 'info');
+			}			
 		});
 	}
 	//帮助文档按钮触发事件
 	obj.btnHelpWord_Click=function(){
+		var repTitile = $g('帮助文档-死亡证明书管理系统用户操作手册');
 		websys_showModal({
 			url:'../scripts/DHCMA/DTH/Document/死亡证明书管理系统用户操作手册.pdf',
-			title:'帮助文档-死亡证明书管理系统用户操作手册',
+			title:repTitile,
 			iconCls:'icon-w-paper',     
 			width:1200,
 			height:window.screen.availHeight-80
@@ -2486,14 +2699,43 @@
 				var LogonUserID = session['LOGON.USERID'];
 				var PrintNum ="",TPrintNum = retPrintNumValue;
 				var retValue = ChangeDMRepPrint(LogonLocID,LogonUserID,RepStatus,PrintNum,TPrintNum);
-				try {
+				if (ReportID==""){
+					$.messager.alert("提示","打印失败！找不到这份报告" , 'info');
+					return
+				}
+				
+				var backImgUrlBase64 = $m({                  
+					ClassName:"DHCMA.Util.IO.CommonSrv",
+					MethodName:"Img2Base64",
+					Path: "/scripts/DHCMA/img/image-3.jpg", 
+					IsWholePath: "0"
+				},false);
+				
+				var LODOP=getLodop();
+				LODOP.PRINT_INIT("PrintDTHFirstInfo");		//打印任务的名称
+				LODOP.ADD_PRINT_HTM(1,600,300,100,"<span tdata='pageNO'>第##页</span>/<span tdata='pageCount'>共##页</span>");
+				LODOP.SET_PRINT_STYLEA(0,"ItemType",1);			//每页都打印页码
+				LODOP.SET_PRINT_MODE("DOUBLE_SIDED_PRINT", 0);	//人工双面打印(打印机不支持双面打印时，0为单面打印，1为不双面打印，2为双面打印)
+				LODOP.SET_PRINT_MODE("PRINT_DUPLEX", 0);		//自动双面打印(打印机支持双面打印时，0为单面打印，1为不双面打印，2为双面打印)
+				LODOP. ADD_PRINT_SETUP_BKIMG("<img border='0' src='data:image/png;base64,"+ backImgUrlBase64 +"' style='z-index:-1;'/>");
+				LODOP.SET_SHOW_MODE("BKIMG_IN_PREVIEW",1);
+				LODOP.SET_SHOW_MODE("BKIMG_PRINT",1);
+				LODOP.SET_SHOW_MODE("BKIMG_LEFT",150);
+				LODOP.SET_SHOW_MODE("BKIMG_TOP",100);
+				LodopPrintURL(LODOP,"dhcma.dth.lodopone.csp?ReportID="+ReportID);
+				LODOP.PRINT();			//直接打印
+				obj.InitRepPowerByStatus(); //首联打印后刷新
+				window.location.reload();
+				/*try {
 					if (obj.TemplateVersion==1) {
 						ExportTwoDataToExcelNew("","","",ReportID,returnFlagIdS);
 						obj.InitRepPowerByStatus(); //首联打印后刷新
+						window.location.reload();
 					} else {
 						ExportTwoDataToExcel("","","",ReportID);
+						window.location.reload();
 					}
-				}catch(e){}
+				}catch(e){}*/
 	  		}
 		})
 	}
@@ -2516,7 +2758,9 @@
 				}else {
 					$.messager.alert("提示","死亡证再次打印申请已提交!", 'info');
 				}
-			} 
+			}else if(r==""){
+				$.messager.alert("提示","请输入重复打印的原因!", 'info');
+			}
 		});
 	}
 	
@@ -2642,14 +2886,43 @@
 				var LogonUserID = session['LOGON.USERID'];
 				TPrintNum="",PrintNum = retPrintNumValue;
 				var retValue = ChangeDMRepPrint(LogonLocID,LogonUserID,RepStatus,PrintNum,TPrintNum);
-				try {
+				if (ReportID==""){
+					$.messager.alert("提示","打印失败！找不到这份报告" , 'info');
+					return
+				}
+				
+				var backImgUrlBase64 = $m({                  
+					ClassName:"DHCMA.Util.IO.CommonSrv",
+					MethodName:"Img2Base64",
+					Path: "/scripts/DHCMA/img/image-4.jpg", 
+					IsWholePath: "0"
+				},false);
+				
+				var LODOP=getLodop();
+				LODOP.PRINT_INIT("PrintDTHThreeInfo");		//打印任务的名称
+				LODOP.ADD_PRINT_HTM(1,600,300,100,"<span tdata='pageNO'>第##页</span>/<span tdata='pageCount'>共##页</span>");
+				LODOP.SET_PRINT_STYLEA(0,"ItemType",1);			//每页都打印页码
+				LODOP.SET_PRINT_MODE("DOUBLE_SIDED_PRINT", 0);	//人工双面打印(打印机不支持双面打印时，0为单面打印，1为不双面打印，2为双面打印)
+				LODOP.SET_PRINT_MODE("PRINT_DUPLEX", 0);		//自动双面打印(打印机支持双面打印时，0为单面打印，1为不双面打印，2为双面打印)
+				LODOP. ADD_PRINT_SETUP_BKIMG("<img border='0' src='data:image/png;base64,"+ backImgUrlBase64 +"' style='z-index:-1;width:894px;height:1263px;'/>");
+				LODOP.SET_SHOW_MODE("BKIMG_IN_PREVIEW",1);
+				LODOP.SET_SHOW_MODE("BKIMG_PRINT",1);
+				LODOP.SET_SHOW_MODE("BKIMG_LEFT",10);
+				LODOP.SET_SHOW_MODE("BKIMG_TOP",10);
+				LodopPrintURL(LODOP,"dhcma.dth.lodopthree.csp?ReportID="+ReportID);
+				LODOP.PRINT();			//直接打印
+				obj.InitRepPowerByStatus(); //三联打印后刷新
+				window.location.reload();
+				/*try {
 					if(obj.TemplateVersion==1) {
-						ExportDataToExcelNew("","","",ReportID,returnIdS,returnFlagIdS);
+						//ExportDataToExcelNew("","","",ReportID,returnIdS,returnFlagIdS);
 						obj.InitRepPowerByStatus(); //三联打印后刷新
+						window.location.reload();
 					} else {
 						ExportDataToExcel("","","",ReportID);
+						window.location.reload();
 					}
-				}catch(e){}
+				}catch(e){}*/
 			}
 		});
 	}
@@ -2670,16 +2943,22 @@
 		var PrintItem  = $.trim($('#PrintItem').val());
 		var errInfo =""
 		if (ReasonTxt=="") {
-			errInfo += "补打原因不能为空!"	
+			errInfo += $g("补打原因不能为空!")+"<br>"	
 		}
 		if (FamilyName=="") {
-			errInfo += "家属姓名不能为空!"
+			errInfo += $g("家属姓名不能为空!")+"<br>"
 		}
 		if (FamilyID=="") {
-			errInfo += "家属身份证号不能为空!"
+			errInfo += $g("家属身份证号不能为空!")+"<br>"
+		}
+		// 身份证格式验证	
+		if ($.trim(FamilyID) != ""){
+			if (!(/(^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{2}$)/.test(FamilyID))) {
+				errInfo += "<P>"+$g("输入的家属身份证号格式不符合规定！请重新输入!")+"<br>";
+			}
 		}
 		if (PrintItem=="") {
-			errInfo += "补打项目不能为空!"
+			errInfo += $g("补打项目不能为空!")+"<br>"
 		}
 		if (errInfo) {
 			$.messager.alert("提示",errInfo, 'info');
@@ -2992,6 +3271,16 @@
 			separate:aSeparate
 		},false);
 		
+		return retValue;
+	}
+	// 作废报告之后更新作废编码表
+	obj.CodeRecycle = function(aInstr,aSeparate) {
+		var retValue = $m({                  
+			ClassName:"DHCMed.DTH.CodeRecycle",
+			MethodName:"Update",
+			aInputStr:aInstr,
+			aSeparete:aSeparate
+		},false);
 		return retValue;
 	}
 	//*******************************************调用方法 ↑↑↑ 

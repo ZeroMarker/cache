@@ -23,7 +23,11 @@ $(function(){
 	$("#BPrint").click(function() {	
 		BPrint_click();		
         });
-    
+		
+	//延期
+    $("#BYQAll").click(function() {
+			YQAll_click();	
+		});
          
     //收表
 	$("#BRecpaper").click(function() {	
@@ -70,7 +74,47 @@ $(function(){
         }); 
 
 })
+function YQAll_click()
+{
+	var UserID=session['LOGON.USERID'];
+	var today = getDefStDate(0);
+	var PAADM=$("#PAADM").val();
+	if(PAADM==""){
+		$.messager.alert("提示","请选择待延期的人员","info"); 
+		return false;
+	}
 
+	var YQDate=$("#YQDate").datebox('getValue')
+	if(YQDate==""){
+		$.messager.alert("提示","请选择延期日期","info");	
+		return false;
+	}
+
+	var todayLogical=tkMakeServerCall("websys.Conversions","DateHtmlToLogical",today);
+	var YQDateLogical=tkMakeServerCall("websys.Conversions","DateHtmlToLogical",YQDate);
+	if(YQDateLogical<=todayLogical){
+		$.messager.alert("提示","延期日期应大于今天","info");	
+		return false;
+	}
+
+	var IfComplateAll=$("#IfComplateAll").combobox('getValue');
+	if(IfComplateAll==""){
+		$.messager.alert("提示","请选择是否做完出总检","info");	
+		return false;
+	}
+
+	var ret=tkMakeServerCall("web.DHCPE.OrderPostPoned","DelayRecord",$("#PAADM").val(),YQDate,IfComplateAll,"",UserID)
+	if((ret>0)||(ret==0)){
+		$.messager.alert("提示","延期成功","success");	
+	}else{
+		$.messager.alert("提示","延期失败","error");	
+		return false;
+	}
+	var RefuseItemYQ=tkMakeServerCall("web.DHCPE.OrderPostPoned","GetHadDelayItems",PAADM);
+	
+	$("#RefuseItemInfoYQ").text(RefuseItemYQ);
+	KeyWordsLoadYQ();
+}
 
 function BRecpaper_click()
 {	
@@ -247,16 +291,15 @@ function BRecpaper_click()
 function BClear()
 {
 	$("#PAADM").val("");
-	//$("#ReportDate").datebox('setValue',"")
-	//$("#SendMethod").combobox("setValue",""); 
 	$("#NoSummitStationInfo").text("");
 	$("#RefuseItemInfo").text("");
 	$("#Remark").val("");
+
 	//默认报告约期
 	DefaultReportDate();
-	//默认送达方式
-	$("#SendMethod").combobox('setValue',"ZQ");
+
 	 KeyWordsLoad();
+	 KeyWordsLoadYQ();
 }
 
 function ConfirmRecPaper_KeyDown()
@@ -317,7 +360,14 @@ function ConfirmRecPaper_KeyDown()
 	            $("#RefuseItemInfo").text(RefuseItem)
 	            //谢绝检查关键字列表动态显示
 	            $("#PAADM").val(PAADM);
-				KeyWordsLoad();
+				var RefuseItemYQ=tkMakeServerCall("web.DHCPE.OrderPostPoned","GetHadDelayItems",PAADM);
+	            	
+	            $("#RefuseItemInfoYQ").text(RefuseItemYQ)
+	            
+	            //谢绝检查关键字列表动态显示
+	            $("#PAADM").val(PAADM);
+	            KeyWordsLoad();
+				KeyWordsLoadYQ();
 				
 	       
        		}
@@ -388,13 +438,24 @@ function InitPIADMRecordDataGrid()
 				//谢绝检查项目
 	            var RefuseItem=tkMakeServerCall("web.DHCPE.ResultEdit","GetRefuseItems",PAADM);
 	            $("#RefuseItemInfo").text(RefuseItem)
+	             //延期检查项目
+	            var RefuseItemYQ=tkMakeServerCall("web.DHCPE.OrderPostPoned","GetHadDelayItems",PAADM);
+	            $("#RefuseItemInfoYQ").text(RefuseItemYQ)
 	            //谢绝检查关键字列表动态显示
 				KeyWordsLoad();
-				
+				//可延期未检项目关键字列表动态显示
+				KeyWordsLoadYQ();
+				$('#YQDate').datebox('setValue','');
+				$("#Remark").val("");
+				DefaultReportDate();
+			
+		},
+		onLoadSuccess: function (data) {
+	        
+	        $("#PIADMRecordQueryTab").datagrid("selectRow",0); //默认选中第一行 
 			
 		}
-		
-			
+	
 	})
 }
 
@@ -412,6 +473,8 @@ function loadPIADMRecord(PIADMs) {
 //谢绝检查关键字列表动态显示
 function KeyWordsLoad()
 {	
+	var UserID=session['LOGON.USERID'];
+
 		$.cm({	
 			ClassName: 'web.DHCPE.ResultEdit',
 			MethodName: 'GetUnAppedItemsHisui',
@@ -428,7 +491,7 @@ function KeyWordsLoad()
 					if (r){
 						var OEID=v.id;
 						var OEID=OEID.replace('-', '||');
-						var ret=tkMakeServerCall("web.DHCPE.ResultEdit","RefuseCheck",OEID);
+						var ret=tkMakeServerCall("web.DHCPE.ResultEdit","RefuseCheck",OEID,"",UserID);
 						 var RefuseItem=tkMakeServerCall("web.DHCPE.ResultEdit","GetRefuseItems",$("#PAADM").val());
 	            		$("#RefuseItemInfo").text(RefuseItem);
 						 //未提交站点
@@ -440,6 +503,10 @@ function KeyWordsLoad()
 								$("#NoSummitStationInfo").text(NoSummitStation);
 						}
 	            		KeyWordsLoad();
+	            		var RefuseItemYQ=tkMakeServerCall("web.DHCPE.OrderPostPoned","GetHadDelayItems",$("#PAADM").val());
+						//debugger; ///  
+						$("#RefuseItemInfoYQ").text(RefuseItemYQ);
+						KeyWordsLoadYQ();
 			
 					
 						}
@@ -451,13 +518,64 @@ function KeyWordsLoad()
 		
 		
 }
+//延期检查关键字列表动态显示
+function KeyWordsLoadYQ()
+{	
 
+		$.cm({	
+			ClassName: 'web.DHCPE.OrderPostPoned',
+			MethodName: 'GetDelayItems',
+			PAADM:$("#PAADM").val()	
+		},function(data){
+	
+			$('#keywordsYQ').keywords({
+				
+    				items:data,
+   				 	onSelect:function(v){
+	   			
+						var OEID=v.id;
+						var OEID=OEID.replace('-', '||');
+						var YQDate=$("#YQDate").datebox('getValue')
+						if(YQDate==""){
+							$.messager.alert("提示","请选择延期日期","info");	
+							return false;
+						}
+						var today = getDefStDate(0);
+						var todayLogical=tkMakeServerCall("websys.Conversions","DateHtmlToLogical",today);
+						var YQDateLogical=tkMakeServerCall("websys.Conversions","DateHtmlToLogical",YQDate);
+						if(YQDateLogical<=todayLogical){
+							$.messager.alert("提示","延期日期应大于今天！","info");	
+							return false;
+						}
+						
+						var IfComplateAll=$("#IfComplateAll").combobox('getValue');
+						if(IfComplateAll==""){
+							$.messager.alert("提示","请选择是否做完出总检！","info");	
+							return false;
+						}
+						var UserID=session['LOGON.USERID'];
+						var ret=tkMakeServerCall("web.DHCPE.OrderPostPoned","DelayRecord",$("#PAADM").val(),YQDate,IfComplateAll,OEID,UserID);
+						
+						 var RefuseItemYQ=tkMakeServerCall("web.DHCPE.OrderPostPoned","GetHadDelayItems",$("#PAADM").val());
+						
+	            		$("#RefuseItemInfoYQ").text(RefuseItemYQ);
+	            		
+	            		KeyWordsLoadYQ();
+			
+				
+	   				 	
+   				 	}	 
+			});
+		});
+		
+		
+}
 
 function CancelPaper(PIADM)
 {
 	
 	if (PIADM=="")	{
-		$.messager.alert("提示","请选择待取消收表的客户","info");
+		$.messager.alert("提示","请选择待取消收表的客户！","info");
 		return false
 	} 
 	else{ 
@@ -466,7 +584,7 @@ function CancelPaper(PIADM)
 			
 			$.m({ ClassName:"web.DHCPE.DHCPEIAdm", MethodName:"CancelRecPaper",PIADM:PIADM},function(ReturnValue){
 				if (ReturnValue!='0') {
-					$.messager.alert("提示","取消收表失败"+flag,"error");  
+					$.messager.alert("提示","取消收表失败！"+flag,"error");  
 				}else{
 					$.messager.popover({msg: '取消收表成功！',type:'success',timeout: 1000});
 					BFind_click();
@@ -494,7 +612,8 @@ function BFind_click(){
 		}, false);
 		
 			$("#RegNo").val(iRegNo)
-		}	
+		}
+	 var HospID=session['LOGON.HOSPID'];
 	$("#RecPaperQueryTab").datagrid('load',{
 			ClassName:"web.DHCPE.DHCPEIAdm",
 			QueryName:"SearchGPaperByRecDate",
@@ -505,13 +624,14 @@ function BFind_click(){
 			VIPLevel:$("#VIPLevel").combobox('getValue'),
 			ALLGroup:$HUI.checkbox('#ALLGroup').getValue() ? "on" : "",
 			ALLPerson:$HUI.checkbox('#ALLPerson').getValue() ? "on" : "",
+			HospID:HospID
 			})
 	
 }
 
 function InitRecPaperDataGrid()
 {
-	
+	var HospID=session['LOGON.HOSPID'];
 	$HUI.datagrid("#RecPaperQueryTab",{
 		url:$URL,
 		fit : true,
@@ -536,6 +656,7 @@ function InitRecPaperDataGrid()
 			VIPLevel:$("#VIPLevel").combobox('getValue'),
 			ALLGroup:$HUI.checkbox('#ALLGroup').getValue() ? "on" : "",
 			ALLPerson:$HUI.checkbox('#ALLPerson').getValue() ? "on" : "",
+			HospID:HospID
 		},
 		frozenColumns:[[
 			{field:'CancelPaper',title:'取消收表',width:'80',align:'center',
@@ -581,10 +702,24 @@ function InitCombobox()
 {
 	  // VIP等级	
 	var VIPObj = $HUI.combobox("#VIPLevel",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindVIP&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindVIP&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
 		valueField:'id',
 		textField:'desc'
 	})
+	
+	// 是否做完出总检
+	var IfComplateAll = $HUI.combobox("#IfComplateAll",{
+		valueField:'id',
+		textField:'text',
+		panelHeight:'140',
+		data:[
+            {id:'Y',text:$g('是')},
+            {id:'N',text:$g('否')}
+            
+           
+        ]
+
+	});
 	
 	//送达方式
 	var SendMethodObj = $HUI.combobox("#SendMethod",{
@@ -592,10 +727,11 @@ function InitCombobox()
 		textField:'text',
 		panelHeight:'140',
 		data:[
-            {id:'ZQ',text:'自取'},
-            {id:'TQ',text:'统取'},
-            {id:'KD',text:'快递'},
-            {id:'DZB',text:'电子版'},
+            {id:'ZQ',text:$g('自取')},
+            {id:'TQ',text:$g('统取')},
+            {id:'KD',text:$g('快递')},
+            {id:'DY',text:$g('电邮')},
+            {id:'DZB',text:$g('电子版')}
            
         ]
 
@@ -613,7 +749,11 @@ function DefaultReportDate()
 	var CurDate=mydate.getFullYear()+"-"+CurMonth+"-"+ mydate.getDate(); 
 	var CurDate=tkMakeServerCall("websys.Conversions","DateHtmlToLogical",CurDate);
 	var CurDate=tkMakeServerCall("websys.Conversions","DateLogicalToHtml",parseInt(CurDate)+7);
-   	$("#ReportDate").datebox('setValue',CurDate) 
+   	$("#ReportDate").datebox('setValue',CurDate);
+	 //默认送达方式
+	$("#SendMethod").combobox('setValue',"DZB");
+	//默认全部做完再总检
+	$("#IfComplateAll").combobox('setValue',"Y");
 }
 
 //设置默认时间为当天

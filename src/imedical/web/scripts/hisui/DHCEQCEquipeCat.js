@@ -5,6 +5,9 @@
 //---------------------------------------------------------------------------------------
 //装载页面  函数名称固定
 function BodyLoadHandler() {
+	//modified by cjt 20230212 需求号3221875 UI页面改造
+	initPanelHeaderStyle();
+	initButtonColor();
 	InitPage();
 	ChangeStatus(false);
 	InitUserInfo();
@@ -12,7 +15,8 @@ function BodyLoadHandler() {
 	Muilt_LookUp("ParCat^SpecialType^DepreMethod"); //2009-08-12 党军 DJ0025
 	SetElement("YearsNum",GetElementValue("ParYeasNum"));
 	SetElement("Remark",GetElementValue("ParRemark"));
-	initButtonWidth()  //hisui改造 add by lmm 2018-08-20
+	//modified by cjt 20230327 UI页面改造
+	//initButtonWidth()  //hisui改造 add by lmm 2018-08-20
 }
 function InitPage(){
 	var BAobj=document.getElementById("BAdd");

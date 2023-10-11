@@ -1,5 +1,6 @@
 /**
  * 医保诊断对照JS
+ * scripts/insudiagscon.js
  * Zhan 201409
  * 版本：V1.0
  * easyui版本:1.3.2
@@ -7,16 +8,19 @@
 var grid;
 var ConGrid;
 var ArgSpl="@"
+var Global = {
+	Operator:''	 
+}
 $(function(){
 
 	//GetjsonQueryUrl();
 	//回车事件
 	init_Keyup();
-	//医保目录对照(HIS)下拉列表
+	//医保诊断对照(HIS)下拉列表
 	init_INSUTarcSearchPanel();
 	//初始化对照的grid west
 	init_dg();
-	//医保目录(医保中心) east
+	//医保诊断(医保中心) east
 	init_wdg();
 	//对照明细历史 south
 	init_ContraHistory();
@@ -26,14 +30,12 @@ $(function(){
 	
 	$('#dd').datebox('setValue', GetConDateByConfig());
 
-	
 });
-
 
 //查询诊断对照数据
 function Query(){
 	// tangzf 2020-6-19 改为HISUI接口加载数据
-	var tmpARGUS=$('#insuType').combobox('getValue') + ArgSpl + ($('#KeyWords').val())+ArgSpl+$('#QClase').combobox('getValue')+ArgSpl+$('#ConType').combobox('getValue')+ArgSpl + PUBLIC_CONSTANT.SESSION.HOSPID;
+	var tmpARGUS=$('#insuType').combobox('getValue') + ArgSpl + ($('#KeyWords').val())+ArgSpl+$('#QClase').combobox('getValue')+ArgSpl+$('#ConType').combobox('getValue')+ArgSpl + PUBLIC_CONSTANT.SESSION.HOSPID+ArgSpl + $('#Valid').combobox('getValue')+ArgSpl+ $('#DateAct').datebox('getValue')+ArgSpl+$('#HisVer').combobox('getValue');
 	var queryParams = {
 		ClassName : 'web.INSUDiagnosis',
 		QueryName : 'QueryDiagnosInfo',
@@ -58,7 +60,8 @@ function QueryINSUInfoNew(){
 		QueryName : 'QueryDiagnosis',
 		QType : $('#insuType').combobox('getValue'),
 		QKWords : getValueById('right-QClase') + "@" + getValueById('right-KeyWords'),
-		HospDr : PUBLIC_CONSTANT.SESSION.HOSPID	
+		HospDr : PUBLIC_CONSTANT.SESSION.HOSPID,
+		QHisVer : $('#InsuVer').combobox('getValue')
 	}
 	loadDataGridStore('wdg',queryParams);	
 }
@@ -70,7 +73,8 @@ function ConGridQuery(rowIndex,rowData){
 		ClassName : 'web.INSUDiagnosis',
 		QueryName : 'QueryDiagnosCon',
 		ExpStr : $('#insuType').combobox('getValue') + '@' + rowData.Rowid,
-		HospDr : PUBLIC_CONSTANT.SESSION.HOSPID	
+		HospDr : PUBLIC_CONSTANT.SESSION.HOSPID,
+		HisVer : $('#HisVer').combobox('getValue')	
 	}
 	loadDataGridStore('coninfo',queryParams);	
 }
@@ -81,24 +85,33 @@ function SaveCon(rowIndex){
 	}
 	var selInsuData = $('#wdg').datagrid('getSelected');
 	var selHisData = $('#dg').datagrid('getSelected');
-	
 	if(!selHisData || !selInsuData){
 		$.messager.alert('提示','请选择一条记录才能对照!','info');	
 		return;		
 	}
 	var sconActDate = getValueById('dd');
 	var userID = session['LOGON.USERID'];
+	var valNote = $HUI.validatebox("#HisNotecon")
+	if (!valNote.isValid()){
+		$.messager.alert('提示','备注字段不在合法范围内','info',function(){	focusById('HisNotecon',100);});	
+		return;
+		}
 	var hisNote = getValueById('HisNotecon');
-
 	$.messager.confirm('提示','你确认要把 '+selHisData.HisICDDesc+' 对照成 '+selInsuData.bzmc+' 吗?',function(r){
 		if(r){
 			//如果有乱码就用JS的cspEscape()函数加密
-			var UpdateStr="^"+selHisData.Rowid+"^"+selHisData.HisICDCode+"^"+selHisData.HisICDDesc+"^"+selInsuData.INDISRowid+"^"+selInsuData.bzbm+"^"+selInsuData.bzmc+"^"+$('#insuType').combobox('getValue')+"^"+sconActDate+"^"+userID+"^^^^^"+hisNote+"^^^^^";
+			//var UpdateStr="^"+selHisData.Rowid+"^"+selHisData.HisICDCode+"^"+selHisData.HisICDDesc+"^"+selInsuData.INDISRowid+"^"+selInsuData.bzbm+"^"+selInsuData.bzmc+"^"+$('#insuType').combobox('getValue')+"^"+sconActDate+"^"+userID+"^^^^^"+hisNote+"^^^^^";
+			var UpdateStr="^"+selHisData.Rowid+"^"+selHisData.HisICDCode+"^"+selHisData.HisICDDesc+"^"+selInsuData.INDISRowid+"^"+selInsuData.bzbm+"^"+selInsuData.bzmc+"^"+$('#insuType').combobox('getValue')+"^"+sconActDate+"^"+userID+"^^^^^"+hisNote+"^^^^^^"+selHisData.HisVer+"^"+selInsuData.HisVer;	//+新增院内版本号用于判断同步到病案 20230210
 			var savecode=tkMakeServerCall("web.INSUDiagnosis","SaveCont",UpdateStr)
 			if(savecode==null || savecode==undefined) savecode=-1
-			if(eval(savecode)>=0){
+			//if(eval(savecode)>=0){
+			if(eval(savecode.split("!")[0])>=0){
 				//$.messager.alert('提示','保存成功!');
-				MSNShow('提示','对照成功！',2000)
+				//MSNShow('提示','对照成功！',2000)
+				//upt HanZH 20230215
+				if (savecode.split("!").length>1){
+					MSNShow('提示',savecode.split("!")[1],2000)
+				}else{MSNShow('提示','对照成功！',2000)}
 				//grid.datagrid('selectRow', EditIndex + 1);  
 				var dgselected=""
 				var dgselectedobj = grid.datagrid('getSelected');	//->dgselected
@@ -107,11 +120,20 @@ function SaveCon(rowIndex){
 				}
 				if (dgselected>=0) {
 					//var dgindex = grid.datagrid('getRowIndex', dgselected);
-					grid.datagrid('updateRow',{index: dgselected,row: {ConID:eval(savecode),INSUDigCode:selInsuData.bzbm,INSUDigDesc:selInsuData.bzmc,ConActDate:sconActDate,ConUser:session['LOGON.USERNAME']}});
+					//grid.datagrid('updateRow',{index: dgselected,row: {ConId:eval(savecode),INSUDigCode:selInsuData.bzbm,INSUDigDesc:selInsuData.bzmc,ConActDate:sconActDate,ConUser:session['LOGON.USERNAME']}});
+					if (savecode.split("!").length>1){
+						if(eval(savecode.split(":")[1])>=0){
+							grid.datagrid('updateRow',{index: dgselected,row: {ConId:eval(savecode),INSUDigCode:selInsuData.bzbm,INSUDigDesc:selInsuData.bzmc,ConActDate:sconActDate,ConUser:session['LOGON.USERNAME']}});
+						}else{
+							setTimeout("grid.datagrid('updateRow',{index: dgselected,row: {ConID:eval(savecode),INSUDigCode:selInsuData.bzbm,INSUDigDesc:selInsuData.bzmc,ConActDate:sconActDate,ConUser:session['LOGON.USERNAME']}})","1000")
+						}
+					}else{
+						grid.datagrid('updateRow',{index: dgselected,row: {ConId:eval(savecode),INSUDigCode:selInsuData.bzbm,INSUDigDesc:selInsuData.bzmc,ConActDate:sconActDate,ConUser:session['LOGON.USERNAME']}});
+					}
 				}
 				movenext(grid)
 			}else{
-				$.messager.alert('提示','保存失败!','info');   
+				$.messager.alert('提示','保存失败!'+savecode,'info');   
 			}
 		}
 	})
@@ -146,12 +168,23 @@ function DelCon(rowIndex){
 	$.messager.confirm('请确认','你确认要删除这条记录吗?',function(fb){
 		if(fb){
 			var savecode=tkMakeServerCall("web.INSUDiagnosis","DelCont",tmpdelid)
-			if(eval(savecode)>=0){
+			//if(eval(savecode)>=0){
+			if(eval(savecode.split("!")[0])>=0){
 				//$.messager.alert('提示','删除成功!'); 
-				MSNShow('提示','删除成功！',2000);
-				movenext(grid)  
+				//MSNShow('提示','删除成功！',2000);
+				//upt HanZH 20230216
+				if (savecode.split("!").length>1){
+					MSNShow('提示',savecode.split("!")[1],2000)
+				}else{MSNShow('提示','删除成功！',2000)}
+				//movenext(grid)  
+				var ICDSelected = $('#dg').datagrid('getSelected');
+                if (ICDSelected){ConGridQuery(-1,ICDSelected)}
+                var dgindex = $('#dg').datagrid('getRowIndex', ICDSelected);
+				//$('#dg').datagrid('updateRow',{index: dgindex,row: {ConId:'',INSUdigDr:'',INSUDigCode:'',INSUDigDesc:'',ConUser:'',AutoConFlag:'',ConActDate:'',ConExpDate:''}});
+				$('#dg').datagrid('updateRow',{index: dgindex,row: {ConId:"",INSUdigDr:"",INSUDigCode:"",INSUDigDesc:"",ConUser:"",AutoConFlag:"",ConActDate:"",ConExpDate:""}});	//upt 20230302 HanZH
 			}else{
-				$.messager.alert('提示','删除失败!','info');   
+				//$.messager.alert('提示','删除失败!','info');   
+				$.messager.alert('提示',savecode,'info');  
 			}
 		}else{
 			return;	
@@ -250,6 +283,23 @@ function init_layout(){
 		$('#searchTablePanel').css('overflow','scroll');
 		
 	}
+	// 切换页签时（各个界面）IE兼容性问题，
+	var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+	var SouthObj = $('.layout-panel-south')[0]; //document.getElementById("box1");;  
+    var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type == "attributes") {
+	            if(Global.Operator){
+                	resizeLayout(Global.Operator);
+	            }
+                
+            }
+        });
+    });
+    observer.observe(SouthObj, {
+        attributes: true, //configure it to listen to attribute changes,
+        attributeFilter: ['style']
+    });	
 }
 /*
  * 对照明细自适应
@@ -264,6 +314,7 @@ function resizeLayout(type){
 		$('.layout-panel-south').css('top',top);
 		$('#dg').datagrid('resize');
 		$('#wdg').datagrid('resize');
+		Global.Operator = 'Collapse';
 	}else  if(type == 'Expand'){
 		height = window.document.body.offsetHeight - 164  - 205 - 35 + 'px'; // page - north - south(Expand) - tabs = dg height
 		top =   window.document.body.offsetHeight   - 205 - 35  + 10 +'px'; // dg height + padding10px + north
@@ -271,6 +322,7 @@ function resizeLayout(type){
 		$('.layout-panel-south').css('top',top);
 		$('#dg').datagrid('resize');
 		$('#wdg').datagrid('resize');
+		Global.Operator = 'Expand';
 	}		
 }
 /**
@@ -279,7 +331,7 @@ function resizeLayout(type){
  * Description: 查询面板回车事件
  */
 function init_Keyup() {
-	//医保目录对照
+	//医保诊断对照
 	$('#KeyWords').keyup(function(){
 		if(event.keyCode==13){
 			Query();
@@ -292,45 +344,59 @@ function init_Keyup() {
 	});
 }
 function init_dg(){
-		border:false,
 		grid=$('#dg').datagrid({
+		border:false,
 		//idField:'dgid',
 		iconCls: 'icon-save',
-		rownumbers:true,
-		data:[],
+		//rownumbers:true,
+		//data:[],
 		//width: '100%',
 		//height: 350,
+		pageSize: 20,
+		pageList: [20, 30, 40, 50],
 		fit:true,
-		striped:true,
+		//striped:true,
 		//fitColumns: true,
 		singleSelect: true,
+		toolbar:'#dgTB',
+		pagination:true,
 		frozenColumns:[[
 
 		]],
 		columns:[[
 			{field:'Rowid',title:'Rowid',width:60,hidden:true},
 			{field:'HisdigCode',title:'医院诊断码',width:80,hidden:true},
-			{field:'HisICDCode',title:'医院ICD码',width:80},
+			{field:'HisICDCode',title:'医院ICD码',width:120},
 			{field:'HisICDDesc',title:'医院ICD名称',width:200},
 			{field:'ConId',title:'ConID',width:80,hidden:true},
 			{field:'INSUdigDr',title:'医保诊断Dr',width:65,hidden:true},
 			{field:'INSUDigCode',title:'医保诊断代码',width:100},
 			{field:'INSUDigDesc',title:'医保诊断名称',width:250},
-			{field:'ConActDate',title:'生效日期',width:70},
-			{field:'ConExpDate',title:'失效日期',width:70},
-			{field:'ConUser',title:'对照人',width:60},
+			{field:'ConActDate',title:'生效日期',width:100},
+			{field:'HisVer',title:'院内版本',width:120,hidden:true},
+			{field:'InsuVer',title:'医保版本',width:120,hidden:true},
+			{field:'tHisVerDesc',title:'院内版本',width:130},
+			{field:'tInsuVerDesc',title:'医保版本',width:130},
+			{field:'ConExpDate',title:'失效日期',width:100},
+			{field:'ConUser',title:'对照人',width:120},
 			{field:'AutoConFlag',title:'系统对照标识',width:100},
 			{field:'ReCheckFlag',title:'审核状态',width:80},
 			{field:'ReCheckUser',title:'审核人',width:80},
-			{field:'ReCheckDate',title:'审核日期',width:80},
-			{field:'HisNote',title:'备注',width:100}
+			{field:'ReCheckDate',title:'审核日期',width:100},
+			{field:'HisNote',title:'备注',width:120}
 		]],
-
-		pageSize: 10,
-		pagination:true,
         onSelect : function(rowIndex, rowData) {
             ConGridQuery(rowIndex,rowData);
-            setValueById('right-KeyWords',rowData.HisICDCode);	
+            var QCase = getValueById('right-QClase');
+            if(QCase=="1"){ 
+            	var PY = tkMakeServerCall("web.DHCINSUPort","GetCNCODE",rowData.HisICDDesc,4,'');
+	        	setValueById('right-KeyWords', PY);	
+	        }else if (QCase=="2") { // 代码
+		        setValueById('right-KeyWords',rowData.HisICDCode);	
+		    }else if (QCase=="3") // 名称
+		   {		   
+				setValueById('right-KeyWords',rowData.HisICDDesc);	
+			}
             if(!getValueById('csconflg')){
 				return;	
 			}
@@ -430,19 +496,76 @@ function init_INSUTarcSearchPanel() {
 			Desc: '按名称'
 		}]
 	}); 
+	$('#Valid').combobox({   
+	 	panelHeight:100, 
+	    valueField:'Code',   
+	    textField:'Desc',
+	    data: [{
+			Code: '',
+			Desc: '全部',
+		   selected:true
+		},{
+			Code: 'Y',
+			Desc: '有效',
+		
+		},{
+			Code: 'N',
+			Desc: '无效'
+		}],
+	}); 
+
+	//院内版本  20230209  HanZH
+	$('#HisVer').combobox({
+		valueField: 'VersionCode',
+		textField: 'VersionName',
+		url:$URL,
+		mode:'remote',
+		onBeforeLoad:function(param){
+			console.log(param)
+	      	param.ClassName = 'web.DHCINSUPortUse';
+	      	param.QueryName = 'GetBDVersionDic';
+	      	param.rowid = '';
+	      	param.code = '';
+	      	param.desc = '';
+	      	param.type='User.MRCICDDx';
+	      	param.IsInsuFlag='N';
+	      	param.ResultSetType = 'array';
+	      	return true;
+		}
+	});	
+	//医保版本  20230209  HanZH
+	$('#InsuVer').combobox({
+		valueField: 'VersionCode',
+		textField: 'VersionName',
+		url:$URL,
+		mode:'remote',
+		onBeforeLoad:function(param){
+			console.log(param)
+	      	param.ClassName = 'web.DHCINSUPortUse';
+	      	param.QueryName = 'GetBDVersionDic';
+	      	param.rowid = '';
+	      	param.code = '';
+	      	param.desc = '';
+	      	param.type='User.MRCICDDx';
+	      	param.IsInsuFlag='Y';
+	      	param.ResultSetType = 'array';
+	      	return true;
+		}	
+	});	
 }
 function init_wdg() { 
 	var querycol= [[   
 			{field:'INDISRowid',title:'INDISRowid',width:60,hidden:true},
-			{field:'bzbm',title:'病种编码',width:55},
-			{field:'bzmc',title:'病种名称',width:55}
+			{field:'bzbm',title:'诊断编码',width:55},
+			{field:'bzmc',title:'诊断名称',width:55},
+			{field:'HisVer',title:'版本',width:55}
 		]]
 
 	var divgrid=$('#wdg').datagrid({  
 		//idField:'dgid',
-		data:[],
+		border:false,
 		rownumbers:true,
-		striped:true,
+		striped:false,
 		fixRowNumber:true,
 		fit:true,
 		fitColumns: true,
@@ -501,6 +624,10 @@ function init_ContraHistory() {
 			{field:'HisICDDesc',title:'医院ICD名称',width:180},
 			{field:'INSUDigCode',title:'医保诊断代码',width:120},
 			{field:'INSUDigDesc',title:'医保诊断名称'},
+			{field:'tHisVer',title:'院内版本',width:120,hidden:true},
+			{field:'tInsuVer',title:'医保版本',width:120,hidden:true},
+			{field:'tHisVerDesc',title:'院内版本',width:130},
+			{field:'tInsuVerDesc',title:'医保版本',width:130},
 			{field:'ConActDate',title:'生效日期',width:100},
 			{field:'ConExpDate',title:'失效日期',width:100},
 			{field:'ConUser',title:'对照人',width:80},
@@ -539,9 +666,11 @@ function GetConDateByConfig()
  function curDate() {
        return getDefStDate(0);
 }
+
 function GetDicStr(dicCode,CodeVal,index){
 	return tkMakeServerCall("web.INSUDicDataCom","GetDicByCodeAndInd",dicCode,CodeVal,index,PUBLIC_CONSTANT.SESSION.HOSPID);
 }
+
 function MSNShow(title,msg,time){
 	$.messager.popover({
 		msg:msg,
@@ -552,3 +681,153 @@ function MSNShow(title,msg,time){
 function selectHospCombHandle(){
 	$('#insuType').combogrid('grid').datagrid('reload');
 }
+
+//医保诊断对照导出
+function Export()
+{
+   try
+   {
+		var tmpARGUS=$('#insuType').combobox('getValue') + ArgSpl + ($('#KeyWords').val())+ArgSpl+$('#QClase').combobox('getValue')+ArgSpl+$('#ConType').combobox('getValue')+ArgSpl + PUBLIC_CONSTANT.SESSION.HOSPID+ArgSpl + $('#Valid').combobox('getValue')+ArgSpl+ $('#DateAct').datebox('getValue');
+		
+		window.open("websys.query.customisecolumn.csp?CONTEXT=Kweb.INSUDiagnosis:QueryDiagnosInfo&PAGENAME=QueryDiagnosInfo&ExpStr="+tmpARGUS);
+		$.messager.progress({
+	         title: "提示",
+			 msg: '正在导出医保诊断对照数据',
+			 text: '导出中....'
+			   });
+		$cm({
+			ResultSetType:"ExcelPlugin",  
+			ExcelName:"医保诊断对照",		  
+			PageName:"QueryDiagnosInfo",      
+			ClassName:"web.INSUDiagnosis",
+			QueryName:"QueryDiagnosInfo",
+			ExpStr:tmpARGUS
+		},function(){
+			  setTimeout('$.messager.progress("close");', 3 * 1000);	
+		});
+		
+   } catch(e) {
+	   $.messager.alert("警告",e.message);
+	   $.messager.progress('close');
+   }; 
+}
+//医保诊断对照导入
+function Import()
+{
+	var filePath=""
+	var exec= '(function tst(){ var xlApp  = new ActiveXObject("Excel.Application");'
+	           +'var fName=xlApp.GetOpenFilename("Excel xlsx (*.xlsx), *.xlsx,Excel xls (*.xls), *.xls");'
+	           +'if (!fName){fName="";}'
+	           +'xlApp.Quit();'
+               +'xlSheet=null;'
+               +'xlApp=null;'
+	           +'return fName;}());'
+	  CmdShell.notReturn = 0;
+      var rs=CmdShell.EvalJs(exec);
+      if(rs.msg == 'success'){
+        filePath = rs.rtn;
+        importItm(filePath);
+      }else{
+         $.messager.alert('提示', '打开文件错误！'+rs.msg,'error');
+      }				   
+}
+
+function importItm(filePath)
+{
+    if (filePath == "") {
+        $.messager.alert('提示', '请选择文件！','info')
+        return ;
+    }
+   $.messager.progress({
+         title: "提示",
+         msg: '医保诊断对照导入中',
+         text: '数据读取中...'
+        }); 
+   $.ajax({
+	async : true,
+	complete : function () {
+    ReadItmExcel(filePath);
+	}
+	});
+  
+}
+//读取Excel数据
+function ReadItmExcel(filePath)
+{
+	
+   //读取excel
+   var arr;
+   try 
+   {
+	 arr= websys_ReadExcel(filePath);
+	 $.messager.progress("close");
+	}
+   catch(ex)
+   {
+	  $.messager.progress("close");
+	  $.messager.alert('提示', '调用websys_ReadExcel异常：'+ex.message,'error')
+	  return ;
+	}
+	 var rowCnt=arr.length
+	 $.messager.progress({
+            title: "提示",
+            msg: '医保诊断对照导入',
+            text: '导入中，共：'+(rowCnt-1)+'条'
+        }); 
+	$.ajax({
+	   async : true,
+	   complete : function () {
+       ItmArrSave(arr);
+	}
+	});
+}
+//医保诊断对照数据保存
+function ItmArrSave(arr)
+{
+	
+	//读取保存数据
+	var ErrMsg = "";     //错误数据
+    var errRowNums = 0;  //错误行数
+    var sucRowNums = 0;  //导入成功的行数
+	var rowCnt=arr.length
+	 try{
+		 for (i = 1; i < rowCnt; i++) 
+		 {
+			 var rowArr=arr[i]
+			 var UpdateStr="^"+rowArr.join("^")
+			 var savecode = tkMakeServerCall("web.INSUDiagnosis", "SaveInContNew", UpdateStr)
+                    if (savecode == null || savecode == undefined) savecode = -1
+                    
+                    if (savecode >= 0) {
+                        sucRowNums = sucRowNums + 1;
+                    } else {
+                        errRowNums = errRowNums + 1;
+                        if (ErrMsg == "") {
+                            ErrMsg = i+":"+savecode;
+                        } else {
+                            ErrMsg = ErrMsg + "<br>" + i+":"+savecode;
+                        }
+                    }
+		 }
+		 
+		 if (ErrMsg == "") {
+                    $.messager.progress("close");
+                    $.messager.alert('提示', '数据正确导入完成');
+                } else {
+                   $.messager.progress("close");
+                     var tmpErrMsg = "导入成功："+sucRowNums +"条，失败："+errRowNums+"条。";
+                     tmpErrMsg = tmpErrMsg + "<br>失败数据行号：<br>"+ ErrMsg;
+                    $.messager.alert('提示', tmpErrMsg,'info');
+                }
+		      return ;
+		 }
+		 catch(ex)
+		 {
+			  $.messager.progress("close");
+			  $.messager.alert('提示', '保存医保诊断对照数据异常：'+ex.message,'error')
+	          return ;
+	      }
+  return ;
+	
+}
+

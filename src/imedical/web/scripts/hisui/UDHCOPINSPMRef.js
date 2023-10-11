@@ -5,27 +5,29 @@ $(function () {
 
 	$HUI.linkbutton("#Add", {
 		onClick: function () {
-			Add_OnClick();
+			addClick();
 		}
 	});
 
 	$HUI.linkbutton("#BDelete", {
 		onClick: function () {
-			Del_OnClick();
+			deleteClick();
 		}
 	});
 
 	$HUI.combobox("#INSType", {
-		valueField: "id",
-		textField: "text",
-		defaultFilter: 4
+		panelHeight: 180,
+		valueField: 'id',
+		textField: 'text',
+		defaultFilter: 5
 	});
 
 	$HUI.combobox("#PMDesc", {
-		url: $URL + "?ClassName=web.UDHCOPOtherLB&QueryName=ReadCTPayMode&ResultSetType=array",
-		valueField: "CTPM_RowId",
-		textField: "CTPM_Desc",
-		defaultFilter: 4
+		panelHeight: 180,
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryPayMode&ResultSetType=array',
+		valueField: 'id',
+		textField: 'text',
+		defaultFilter: 5
 	});
 	
 	var tableName = "Bill_OP_AdmReaPayMode";
@@ -49,7 +51,7 @@ $(function () {
 		},
 		onChange: function (newValue, oldValue) {
 			setValueById("HospId", newValue);
-			var url = $URL + "?ClassName=web.UDHCOPPACCONPayModeEdit&QueryName=ReadAdmReason&ResultSetType=array&HospId=" + newValue;
+			var url = $URL + "?ClassName=web.DHCBillOtherLB&QueryName=QryAdmReason&ResultSetType=array&hospId=" + newValue;
 			$("#INSType").combobox("clear").combobox("reload", url);
 			ReLoadH();
 		}
@@ -67,7 +69,7 @@ function SelectRowHandler(index, rowData) {
 	setValueById("PMDesc", myTPMRowID);
 }
 
-function Del_OnClick() {
+function deleteClick() {
 	var row = $("#tUDHCOPINSPMRef").datagrid("getSelected");
 	if (!row || !row.TRowID) {
 		$.messager.popover({msg: "请选择需要删除的记录", type: "info"});
@@ -76,22 +78,23 @@ function Del_OnClick() {
 	var encmeth = getValueById("DelEncrypt");
 	if (encmeth != "") {
 		$.messager.confirm('提示', "确认删除?", function (r) {
-			if (r) {
-				var myrtn = cspRunServerMethod(encmeth, row.TRowID);
-				var myary = myrtn.split("^");
-				if (myary[0] == "0") {
-					$.messager.alert("提示", "删除成功", "success", function () {
-						ReLoadH();
-					});
-				} else {
-					$.messager.alert("提示", "删除失败", "error");
-				}
+			if (!r) {
+				return;
 			}
+			var myrtn = cspRunServerMethod(encmeth, row.TRowID);
+			var myary = myrtn.split("^");
+			if (myary[0] == 0) {
+				$.messager.alert("提示", "删除成功", "success", function () {
+					ReLoadH();
+				});
+				return;
+			}
+			$.messager.alert("提示", "删除失败", "error");
 		});
 	}
 }
 
-function Add_OnClick() {
+function addClick() {
 	var myINSType = getValueById("INSType");
 	if (!myINSType) {
 		$.messager.popover({msg: "请选择费别", type: "info"});
@@ -107,17 +110,18 @@ function Add_OnClick() {
 	var encmeth = getValueById("AddEncrypt");
 	if (encmeth != "") {
 		$.messager.confirm('提示', "确认保存?", function (r) {
-			if (r) {
-				var myrtn = cspRunServerMethod(encmeth, myINSType, myPMRowID, myHospID);
-				var myary = myrtn.split("^");
-				if (myary[0] == "0") {
-					$.messager.alert("提示", "保存成功", "success", function () {
-						ReLoadH();
-					});
-				} else {
-					$.messager.alert("提示", "保存失败", "error");
-				}
+			if (!r) {
+				return;
 			}
+			var myrtn = cspRunServerMethod(encmeth, myINSType, myPMRowID, myHospID);
+			var myary = myrtn.split("^");
+			if (myary[0] == 0) {
+				$.messager.alert("提示", "保存成功", "success", function () {
+					ReLoadH();
+				});
+				return;
+			}
+			$.messager.alert("提示", "保存失败", "error");
 		});
 	}
 }

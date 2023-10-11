@@ -6,7 +6,7 @@ function InitPatScreeningWin(){
 	obj.PatInfo=$cm ({
 		ClassName:'DHCHAI.IRS.CCScreeningSrv',
 		QueryName:'QrySuRulePatList',
-		aTypeFlag:1,
+		aTypeFlag:"",
 		aPatInfo:"^^^^"+EpisodeDr
 	},false);
 	

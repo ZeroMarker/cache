@@ -8,15 +8,18 @@ function PrintLisRequestBD()
 {
 	PrintLisRequestOld("Y");
 }
+
 //excel¥Ú”°…Í«Îµ•
-function PrintRisRequest()
+function PrintRisRequestByExcel()
 {  
 	PrintRisRequestOld("N");
 }
+
 function PrintRisRequestBD()
 {
 	PrintRisRequestOld("Y");
 }
+
 function PrintLisRequestOld(Type)
 {   
 	var Data=GetSelectId("TAdmId^TDeitFlag^");

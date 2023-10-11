@@ -41,7 +41,7 @@ function InitActionUser()
 {
 	$('#User').combogrid({  
 		delay: 500,
-		panelWidth:308,
+		panelWidth:430,
 		panelHeight:463,
 		width:200,
 		mode: 'remote',
@@ -148,7 +148,7 @@ function GetEMRNameData()
 		dataType : "text",
 		url : "../EMRservice.Ajax.ActionsLogs.getTemplateInfo.cls",
 		async : true,
-		data : {"EpisodeID":episodeID,"CTLocID":CTLocID,"UserID":UserID},
+		data : {"EpisodeID":episodeID,"CTLocID":CTLocID,"UserID":UserID,"SSgroupID":SSgroupID},
 		success : function(d) {
 			$('#EMRName').combotree('loadData',eval(d));
 		},
@@ -161,7 +161,15 @@ function GetEMRNameData()
 
 function InitActionLogsList()
 {
-	var Conditions = '{"episodeID":"'+ episodeID +'"}';
+	//默认当前日期
+	var now = new Date();
+	var opt = $("#StDate").datebox('options');
+	
+	$("#StDate").datebox('setValue', opt.formatter(now));
+	$("#EndDate").datebox('setValue', opt.formatter(now));
+	
+	var Conditions = '{"episodeID":"'+ episodeID +'"}'
+	
 	$('#actionLogsListData').datagrid({
 		height:606,
 		pagination:true,
@@ -169,29 +177,30 @@ function InitActionLogsList()
 		pageList:[10,20,30], 
 		loadMsg:'数据装载中......',
 		autoRowHeight: true,
-		url:'../EMRservice.Ajax.getActionsLogsForBrowser.cls?Conditions='+Conditions,
+		url:'../EMRservice.Ajax.getActionsLogsForBrowser.cls?Conditions='+Conditions+'&StartDate='+$('#StDate').datebox('getValue')+'&EndDate='+$('#EndDate').datebox('getValue'),
 		idField:'EventLogRowID', 
 		rownumbers:true,
 		singleSelect:true,
-		//fitColumns: true,
+		fitColumns: true,
 		fit:true,
+		border:false,
 		columns:[[  
 			{field:'EventLogRowID',title:'EventLogRowID',width:80,hidden: true},
 			{field:'LogModelDr',title:'LogModelDr',width:80,hidden: true},
-            {field:'PatName',title:'患者姓名',width:60},
-            {field:'PapmiNo',title:'登记号',width:80},
-            {field:'MedicareNo',title:'病案号',width:60},
+            {field:'PatName',title:'患者姓名',width:80},
+            {field:'PapmiNo',title:'登记号',width:100},
+            {field:'MedicareNo',title:'病案号',width:80},
 			{field:'LogModelDesc',title:'操作名称',width:200},
 			{field:'LogModelCode',title:'LogModelCode',width:80,hidden: true},
-			{field:'DetDate',title:'日期',width:70},
-			{field:'DetTime',title:'时间',width:38},
+			{field:'DetDate',title:'日期',width:100},
+			{field:'DetTime',title:'时间',width:60},
 			{field:'DetUserDr',title:'DetUserDr',width:40,hidden: true},
-			{field:'DetUserName',title:'操作者',width:58},
+			{field:'DetUserName',title:'操作者',width:80},
 			{field:'DetLocDr',title:'DetLocDr',width:80,hidden: true},
 			{field:'DetLocDesc',title:'科室',width:160},
 			{field:'DetGroupDr',title:'DetGroupDr',width:85,hidden: true},
-			{field:'DetGroupDesc',title:'安全组',width:60},
-			{field:'DetComputerIP',title:'IP地址',width:90},
+			{field:'DetGroupDesc',title:'安全组',width:80},
+			{field:'DetComputerIP',title:'IP地址',width:120},
 			{field:'DetComputerMac',title:'MAC地址',width:110,hidden: true},
 			{field:'DetComputerName',title:'计算机名',width:115,hidden: true},
 			{field:'DetConditions',title:'详情',width:43,hidden: true}
@@ -207,7 +216,12 @@ function InitActionLogsList()
 				title:"操作明细",
 				striped:true,
 				singleSelect:true,
-				columns:[[{field:'key',title:'关键字',width:300},{field:'value',title:'值',width:300}]]
+				columns:[[{field:'key',title:'关键字',width:300},{field:'value',title:'值',width:300}]],
+				onLoadSuccess:function(){
+					setTimeout(function(){
+						$('#actionLogsListData').datagrid('fixDetailRowHeight',index);
+					});
+				}
 			}),
 			InitDatagridDetail(index,row)
 		}
@@ -224,7 +238,7 @@ function InitDatagridDetail(index,row)
 		}catch(e){}
 	}
 	for (var p in DetailJson){
-		DetailData.rows.push({"key":p,"value":DetailJson[p]});
+		DetailData.rows.push({"key":p,"value":DetailJson[p]=="undefined"?"":DetailJson[p]});
 		DetailData.total++;
 	}
 	$('#DatagridDetail' + index).datagrid("loadData",DetailData);

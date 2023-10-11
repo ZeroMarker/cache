@@ -30,26 +30,23 @@ $(document).ready(function() {
 });
 
 function Add(){
-	
-	    
-		var url="websys.default.csp?WEBSYS.TCOMPONENT=UDHCCardReportLoss&CardID="+CardID
+	var url="websys.default.csp?WEBSYS.TCOMPONENT=UDHCCardReportLoss&CardID="+CardID
+	if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
 	$('#tt').tabs('add',{ 
-                    title:'π“ ß/∆Ù”√/≤πø®', 
-                    content: '<iframe width="100%" height="100%" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>' 
-                }); 
-               
-        
+        title:'π“ ß/∆Ù”√/≤πø®', 
+        content: '<iframe width="100%" height="100%" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>' 
+    }); 
 	var url="websys.default.csp?WEBSYS.TCOMPONENT=UDHCCardExchange&CardID="+CardID
+	if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
     $('#tt').tabs('add',{ 
-                    title:'ªªø®', 
-                    content: '<iframe width="100%" height="100%" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>'
-                });
+        title:'ªªø®', 
+        content: '<iframe width="100%" height="100%" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>'
+    });
      var url="websys.default.csp?WEBSYS.TCOMPONENT=UDHCCardCancel&CardID="+CardID
+     if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
      $('#tt').tabs('add',{ 
-                    title:'ÕÀø®', 
-                    content: '<iframe width="100%" height="100%" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>' 
-                }); 
-               
-	
+        title:'ÕÀø®', 
+        content: '<iframe width="100%" height="100%" frameborder="0"  src="'+url+'" style="width:100%;height:100%;"></iframe>' 
+    }); 
 	$('#tt').tabs("select","π“ ß/∆Ù”√/≤πø®")
-	}
+}

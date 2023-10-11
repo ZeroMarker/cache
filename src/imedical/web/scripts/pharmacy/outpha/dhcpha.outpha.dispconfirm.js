@@ -38,7 +38,7 @@ $(function () {
 		placement: 'bottom',
 		trigger: 'hover',
 		html: true,
-		content: '<div style="width:300px;">*温馨提示*</br>请先扫描处方号,再扫描工号哦~</div>' //
+		content: '<div style="width:300px;">*'+$g("温馨提示")+'*</br>'+$g("请先扫描处方号,再扫描工号哦~")+'</div>' //
 	});
 	$("#btn-sure").on("click", ExecuteSure);
 	$("#todayrank").on("click", QueryRankOfConfirm);
@@ -52,104 +52,110 @@ $(function () {
 //初始化明细table
 function InitGridDispConfirm() {
 	var columns = [{
-			header: '登记号',
+			header: ("登记号"),
 			index: 'patNo',
 			name: 'patNo',
 			width: 100
 		}, {
-			header: '姓名',
+			header: ("姓名"),
 			index: 'patName',
 			name: 'patName',
 			width: 100,
 			align: "left"
 		}, {
-			header: '药品名称',
+			header: ("发药窗口"),
+			index: 'phwDesc',
+			name: 'phwDesc',
+			width: 120,
+			align: "left"
+		}, {
+			header: ("药品名称"),
 			index: 'incDesc',
 			name: 'incDesc',
 			align: "left",
 			width: 200
 		}, {
-			header: '数量',
+			header: ("数量"),
 			index: 'qty',
 			name: 'qty',
 			width: 60,
 			align: "right"
 		}, {
-			header: '单位',
+			header: ("单位"),
 			index: 'uomDesc',
 			name: 'uomDesc',
 			width: 60,
 			align: "left"
 		}, {
-			header: '单价',
+			header: ("单价"),
 			index: 'sp',
 			name: 'sp',
 			width: 100,
 			align: "right"
 		}, {
-			header: '金额',
+			header: ("金额"),
 			index: 'spAmt',
 			name: 'spAmt',
 			width: 100,
 			align: "right"
 		}, {
-			header: '剂量',
+			header: ("剂量"),
 			index: 'dosage',
 			name: 'dosage',
 			width: 100,
 			align: "left"
 		}, {
-			header: '频次',
+			header: ("频次"),
 			index: 'freqDesc',
 			name: 'freqDesc',
 			width: 100,
 			align: "left"
 		}, {
-			header: '用法',
+			header: ("用法"),
 			index: 'instrucDesc',
 			name: 'instrucDesc',
 			width: 100,
 			align: "left"
 		}, {
-			header: '疗程',
+			header: ("疗程"),
 			index: 'duraDesc',
 			name: 'duraDesc',
 			width: 100,
 			align: "left"
 		}, {
-			header: '医生',
+			header: ("医生"),
 			index: 'docName',
 			name: 'docName',
 			width: 100,
 			align: "left"
 		}, {
-			header: '医嘱状态',
+			header: ("医嘱状态"),
 			index: 'oeoriStat',
 			name: 'oeoriStat',
 			width: 75,
 			align: "left"
 		}, {
-			header: '病人密级',
+			header: ("病人密级"),
 			index: 'encryptLevel',
 			name: 'encryptLevel',
 			width: 70,
 			align: "left",
 			hidden: true
 		}, {
-			header: '病人级别',
+			header: ("病人级别"),
 			index: 'patLevel',
 			name: 'patLevel',
 			width: 70,
 			align: "left",
 			hidden: true
 		}, {
-			header: '发药表Id',
+			header: ("发药表Id"),
 			index: 'phdId',
 			name: 'phdId',
 			width: 30,
 			hidden: true
 		}, {
-			header: '处方号',
+			header: ("处方号"),
 			index: 'prescNo',
 			name: 'prescNo',
 			width: 30,
@@ -178,7 +184,7 @@ function QueryPrescDetail() {
 	if (prescno != '') {
 		var retValue = tkMakeServerCall("PHA.OP.PyConfirm.Query", "GetPhdByPrescNo", prescno);
 		if (retValue == 0) {
-			dhcphaMsgBox.alert("该处方不存在或该处方已确认,请核实!");
+			dhcphaMsgBox.alert($g("该处方不存在或该处方已确认,请核实!"));
 		} else {
 			$("#grid-dispconfirm").setGridParam({
 				datatype: 'json',
@@ -191,7 +197,7 @@ function QueryPrescDetail() {
 			}
 		}
 	} else {
-		dhcphaMsgBox.alert("处方号为空,请核实!");
+		dhcphaMsgBox.alert($g("处方号为空,请核实!"));
 	}
 	$("#txt-prescno").val("");
 }
@@ -201,13 +207,13 @@ function ExecuteSure() {
 	var usercode = $.trim($("#txt-usercode").val());
 	var grid_records = $("#grid-dispconfirm").getGridParam('records');
 	if (grid_records == 0) {
-		dhcphaMsgBox.alert("当前界面无明细数据,请先扫描处方号！");
+		dhcphaMsgBox.alert($g("当前界面无明细数据,请先扫描处方号！"));
 		$("#txt-usercode").val("");
 		$("#txt-prescno").val("");
 		return;
 	}
 	if (usercode == "") {
-		dhcphaMsgBox.alert("工号不能为空!");
+		dhcphaMsgBox.alert($g("工号不能为空!"));
 		$("#txt-usercode").val("");
 		$("#txt-prescno").val("");
 		return;
@@ -216,7 +222,7 @@ function ExecuteSure() {
 	var retCode = retValue.split("^")[0];
 	var retMessage = retValue.split("^")[1];
 	if (retCode < 1) {
-		dhcphaMsgBox.alert("工号对应的配药人没有定义,请在药房人员代码维护中核实!");
+		dhcphaMsgBox.alert($g("工号对应的配药人没有定义,请在门诊药房科室配置的人员权限页签中核实!"));
 		$("#txt-usercode").val("");
 		return;
 	} else {
@@ -224,7 +230,7 @@ function ExecuteSure() {
 		var phdrow = firstrowdata.phdId;
 		var prescno = firstrowdata.prescNo || "";
 		if ((phdrow == "") || (phdrow == undefined)) {
-			dhcphaMsgBox.alert("请联系工程师验证程序是否存在问题!");
+			dhcphaMsgBox.alert($g("请联系工程师验证程序是否存在问题!"));
 			return;
 		}
 		var pydr = retCode;

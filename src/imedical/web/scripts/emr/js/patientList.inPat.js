@@ -60,7 +60,21 @@ function InitInPatientList()
 				{field:'PAAdmTime',title:'就诊时间',width:90,sortable:true},
 				{field:'MedicareNo',title:'病案号',width:70,sortable:true},
 				{field:'InTimes',title:'入院次数',width:65,sortable:true},
-				{field:'ResidentDays',title:'住院天数',width:65,sortable:true},
+				{field:'ResidentDays',title:'住院天数',width:65,sortable:true,
+					sorter:function(a,b){  
+					a = a.split('/');  
+					b = b.split('/');  
+					if (a[2] == b[2]){  
+						if (a[0] == b[0]){  
+							return (parseFloat(a[1])>parseFloat(b[1])?1:-1);  
+						} else {  
+							return (parseFloat(a[0])>parseFloat(b[0])?1:-1);  
+						}  
+					} else {  
+						return (parseFloat(a[2])>parseFloat(b[2])?1:-1);  
+					}  
+				  }  
+				},
 				{field:'PAAdmDocCodeDR',title:'主管医师',width:65,sortable:true},
 				{field:'HeadUniteDoc',title:'带组医师',width:65,sortable:true},
 				{field:'ChiefDoc',title:'主任医师',width:65,sortable:true},
@@ -107,7 +121,21 @@ function InitInPatientList()
 				{field:'PAAdmTime',title:'就诊时间',width:90,sortable:true},
 				{field:'MedicareNo',title:'病案号',width:70,sortable:true},
 				{field:'InTimes',title:'入院次数',width:80,sortable:true},
-				{field:'ResidentDays',title:'住院天数',width:70,sortable:true},
+				{field:'ResidentDays',title:'住院天数',width:70,sortable:true,
+					sorter:function(a,b){  
+					a = a.split('/');  
+					b = b.split('/');  
+					if (a[2] == b[2]){  
+						if (a[0] == b[0]){  
+							return (parseFloat(a[1])>parseFloat(b[1])?1:-1);  
+						} else {  
+							return (parseFloat(a[0])>parseFloat(b[0])?1:-1);  
+						}  
+					} else {  
+						return (parseFloat(a[2])>parseFloat(b[2])?1:-1);  
+					}  
+				  }  
+				},
 				{field:'PAAdmDocCodeDR',title:'主管医师',width:80,sortable:true},
 				{field:'HeadUniteDoc',title:'带组医师',width:80,sortable:true},
 				{field:'ChiefDoc',title:'主任医师',width:75,sortable:true},

@@ -1,11 +1,9 @@
 ﻿﻿/**
  * FileName: dhcbill.ipbill.billselect.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-05-22
  * Description: 选择患者账单
  */
- 
-var GV = {};
 
 $(function () {
 	var toolbar = [{
@@ -23,7 +21,7 @@ $(function () {
 					return;
 				}
 				websys_showModal({
-					url: "dhcbill.ipbill.billdtl.csp?&EpisodeID=" + getParam("EpisodeID") + "&BillRowId=" + billId,
+					url: "dhcbill.ipbill.billdtl.csp?EpisodeID=" + CV.EpisodeID + "&BillID=" + billId,
 					title: '费用明细',
 					iconCls: 'icon-w-list',
 					width: '85%'
@@ -44,7 +42,7 @@ $(function () {
 					return;
 				}
 				websys_showModal({
-					url: "dhcbill.ipbill.billorder.csp?EpisodeID=" + getParam("EpisodeID") + "&BillRowId=" + billId,
+					url: "dhcbill.ipbill.billorder.csp?EpisodeID=" + CV.EpisodeID + "&BillID=" + billId,
 					title: '费用核对',
 					iconCls: 'icon-w-stamp',
 					width: '90%'
@@ -56,7 +54,7 @@ $(function () {
 	GV.BillList = $HUI.datagrid("#billList", {
 		fit: true,
 		striped: true,
-		bodyCls: 'panel-body-gray',
+		border: false,
 		singleSelect: true,
 		pageSize: 999999999,
 		toolbar: toolbar,
@@ -72,7 +70,7 @@ $(function () {
 		queryParams: {
 			ClassName: "web.UDHCJFORDCHK",
 			QueryName: "getpatbill",
-			Adm: getParam("EpisodeID")
+			adm: CV.EpisodeID
 		}
 	});
 });

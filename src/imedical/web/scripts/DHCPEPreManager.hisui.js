@@ -92,6 +92,14 @@ function BCreate_click()
 		return false;
 	}
 	UserID=session['LOGON.USERID'];
+	//alert(OldDate+"^"+NewDate+"^"+UserID)
+	LocID=session['LOGON.CTLOCID'];
+	var flag=tkMakeServerCall("web.DHCPE.PreManager","IsExsistPreManager",OldDate,UserID,LocID);
+    if(flag=="1"){
+	    $.messager.alert("提示",OldDate+"有预约限额数据,不能直接复制;先替换为空,再复制！","info");
+	    return false;
+    }
+
 	var ret=tkMakeServerCall("web.DHCPE.PreManager","Create",OldDate,NewDate,UserID);
 	if(ret=="0"){
 		$.messager.alert("提示","复制成功","success");
@@ -114,7 +122,7 @@ function BReplace_click()
 		$.messager.alert("提示","替换日期不能为空","info");
 		return false;
 	}
-	
+		//alert(OldDate+"^"+NewDate)
 	var ret=tkMakeServerCall("web.DHCPE.PreManager","Replace",OldDate,NewDate);
 	
 	if((ret=="0")||(ret="100")){
@@ -129,7 +137,7 @@ function BReplace_click()
 
 function BUpdate_click()
 {
-	
+	 endEditing();
 	var objtbl = $("#dhcpepremanagerQueryTab").datagrid('getRows');
     var rows=objtbl.length;
     
@@ -143,7 +151,8 @@ function BUpdate_click()
 		//alert(ID+"^"+Num+"^"+GADMDesc)
 	    var ret=tkMakeServerCall("web.DHCPE.PreManager","UpdatePreManager",ID,Num,GADMDesc);
 	}
-	window.location.reload();
+	$("#dhcpepremanagerQueryTab").datagrid("reload");
+	//window.location.reload();
 	
 }
 function InitPreManagerDataGrid(){

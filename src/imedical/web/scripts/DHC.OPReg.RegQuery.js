@@ -113,7 +113,7 @@ function Export_click()
 		oSheet=null;
 	}
 	catch(e) {
-		alert( "要打印该表您必须安装Excel电子表格软件,同时浏览器须使用'ActiveX 控件',您的浏览器须允许执行控件 请点击帮助了解浏览器设置方法");
+		alert( "要打印该表?A您必须安装Excel电子表格软件,同时浏览器须使用'ActiveX 控件',您的浏览器须允许执行控件?C 请点击?i帮助?j了解浏览器设置方法?I");
 		return "";
 	}
 	
@@ -302,6 +302,7 @@ function ShowTotal()
 
 function Clear_click(){
 	var lnk="websys.default.csp?WEBSYS.TCOMPONENT=DHC.OPReg.RegQuery";
+	if(typeof websys_writeMWToken=='function') lnk=websys_writeMWToken(lnk);
 	window.location.href=lnk;
 }
 

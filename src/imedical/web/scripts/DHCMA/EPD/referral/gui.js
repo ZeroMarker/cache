@@ -29,8 +29,9 @@ function InitReportWin()
 	//初始化
 	obj.cboReferralReason = Common_ComboToDic("cboReferralReason","ReferralReason","1");//第三个参数控制先（后）加载
 	obj.txtReferralDate = $("#txtReferralDate").datebox("setValue",Common_GetDate(new Date()));
-	obj.txtReferralDoc = $("#txtReferralDoc").val(session['LOGON.USERNAME']);
+	obj.txtReferralDoc = $("#txtReferralDoc").val(DocName);
 	obj.txtReferralHosp = $("#txtReferralHosp").val(HospDesc);
+	obj.cboPatReferralHosp = Common_ComboToDic("cboPatReferralHosp","ReferWhereToGo","1");	// 请病人到
 	
 	InitReportWinEvent(obj);
 	obj.LoadEvent(arguments);

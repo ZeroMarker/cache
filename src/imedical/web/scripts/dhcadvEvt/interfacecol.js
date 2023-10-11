@@ -2,13 +2,24 @@
 /// date:       2020-02-20
 /// descript:   不良事件表单元素对照界面JS
 
-var editRow = "";
+var editRow = "",HospDr="";
 $(function(){
-	
+    InitHosp(); 	//初始化医院 多院区改造 cy 2021-04-09
 	InitdgMainList();		//初始化对照关系列表
 	
 	initBlButton();			//初始化界面按钮事件
 })
+// 初始化医院 多院区改造 cy 2021-04-09
+function InitHosp(){
+	hospComp = GenHospComp("DHC_AdvInterfaceCol"); 
+	HospDr=hospComp.getValue(); 
+	//$HUI.combogrid('#_HospList',{value:"11"})
+	hospComp.options().onSelect = function(){///选中事件
+		HospDr=hospComp.getValue();
+		search(); 
+	}
+}
+
 /// 界面元素监听事件
 function initBlButton()
 {
@@ -47,6 +58,7 @@ function InitdgMainList(){
 	 * 定义columns
 	 */
 	var columns=[[
+		{field:"HospDr",title:'医院id',width:90,align:'center',hidden:true},
 		{field:'ID',title:'ID',width:100,hidden:true},
 		{field:'Code',title:'代码',width:180,editor:textEditor},
 		{field:'Desc',title:'描述',width:200,editor:textEditor},
@@ -70,7 +82,7 @@ function InitdgMainList(){
 	      
 	    }
 	};
-	var uniturl = $URL+"?ClassName=web.DHCADVInterfaceCol&MethodName=QueryIntCol&param=";
+	var uniturl = $URL+"?ClassName=web.DHCADVInterfaceCol&MethodName=QueryIntCol&param="+"&HospDr="+HospDr;
 	new ListComponent('dgMainList', columns, uniturl, option).Init(); 
 }
 
@@ -98,9 +110,7 @@ function saveRow(){
 			$.messager.alert("提示","描述不能为空!"); 
 			return false;
 		}
-		
-		
-		var tmp=rowsData[i].ID +"^"+ rowsData[i].Code +"^"+ rowsData[i].Desc;
+		var tmp=rowsData[i].ID +"^"+ rowsData[i].Code +"^"+ rowsData[i].Desc+"^"+rowsData[i].HospDr;
 		dataList.push(tmp);
 	}
 	
@@ -138,7 +148,7 @@ function insertRow(){
 	
 	$("#dgMainList").datagrid('insertRow', {
 		index: 0, // 行数从0开始计算
-		row: {ID:'', Code:'', Desc:''}
+		row: {ID:'', Code:'', Desc:'',HospDr:HospDr}
 	});
 	$("#dgMainList").datagrid('beginEdit', 0);//开启编辑并传入要编辑的行
 	editRow=0;
@@ -181,7 +191,7 @@ function search()
 	var code=$('#code').val();
 	var desc=$('#desc').val();
 	var param=code+"^"+desc;
-	$('#dgMainList').datagrid('load',{params:param}); 
+	$('#dgMainList').datagrid('load',{params:param,HospDr:HospDr}); 
 }
 
 ///重置
@@ -189,5 +199,5 @@ function reset()
 {
 	$('#code').val("");
 	$('#desc').val("");
-	$('#dgMainList').datagrid('load',{param:""});
+	$('#dgMainList').datagrid('load',{param:"",HospDr:HospDr});
 }

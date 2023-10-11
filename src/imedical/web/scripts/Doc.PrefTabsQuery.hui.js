@@ -22,23 +22,23 @@ function InitEvent(){
 }
 function InitPrefTabListDataGrid(){
 	var Columns=[[ 
-		{field:'Index',title:'序号',hidden:true},
-		{field:'valueDesc',title:'类型描述',width:100},
-		{field:'valueCode',title:'类型代码',width:100},
-		{field:'Type',title:'类型',width:100},
-		{field:'AppKey',title:'应用代码',width:200},
-		{field:'Tab',title:'表名',width:100},
-		{field:'Col',title:'列名',width:100},
-		{field:'ARCIMorARCOS',title:'医嘱或医嘱套',width:100},
-		{field:'Desc',title:'药品描述',width:300},
-		{field:'Code',title:'药品代码',width:120},
-		{field:'itemrowid',title:'医嘱或医嘱套Code',width:150},
-		{field:'websysPrefId',title:'模板表ID',width:100}
+		{field:'HospDesc',title:'院区',width:200},
+		{field:'FavCatType',title:'分类代码',width:250},
+		{field:'TypeValueDesc',title:'分类值描述',width:100},
+		{field:'TypeValueCode',title:'分类值代码',width:90},
+		{field:'Cat',title:'大类',width:100},
+		{field:'SubCat',title:'子分类',width:100},
+		{field:'ItemType',title:'医嘱或医嘱套',width:100},
+		{field:'ItemDesc',title:'项目描述',width:300},
+		{field:'itemNotes',title:'备注',width:100},
+		{field:'PartCodeInfo',title:'部位代码列表',width:150},
+		{field:'TypeValue',title:'分类值',width:60},
+		{field:'ItemID',title:'项目ID',width:100}
     ]]
 	var PrefTabListDataGrid=$("#PrefTabList").datagrid({
 		fit : true,
 		border : false,
-		striped : true,
+		striped : false,
 		singleSelect : true,
 		fitColumns : false,
 		autoRowHeight : false,
@@ -79,12 +79,12 @@ function BodykeydownHandler(e){
 }
 function FindClickHandle(){
 	var objvalue=$("#objvalue").combobox('getValue');
-	if (objvalue==""){
+	/*if (objvalue==""){
 		$.messager.alert("提示","请选择值!","info",function(){
 			$("#objvalue").next('span').find('input').focus();
 		});
 		return false;
-	}
+	}*/
 	PrefTabListDataGridLoad();
 }
 function PrefTabListDataGridLoad(){
@@ -93,6 +93,7 @@ function PrefTabListDataGridLoad(){
 	    QueryName : "FindPrefTabs",
 	    objtype:$("#objtype").combobox('getValue'),
 	    objvalue:$("#objvalue").combobox('getValue'),
+	    HospRowId:session['LOGON.HOSPID'],
 	    Pagerows:PageLogicObj.m_PrefTabListDataGrid.datagrid("options").pageSize,
 	    rows:99999
 	},function(GridData){
@@ -104,12 +105,12 @@ function LoadObjectType(){
 			valueField: 'id', 
 			textField: 'text', 
 			editable:false,
-			data: [{"id":"User.SSUser","text":"个人",'selected':true},
-				   {"id":"User.CTLoc","text":"科室"},
-				   {"id":"User.SSGroup","text":"安全组"},
-				   {"id":"User.PACTrust","text":"区域"},
-				   {"id":"User.CTHospital","text":"医院"},
-				   {"id":"SITE","text":"站点"}
+			data: [{"id":"User.SSUser","text":$g("个人"),'selected':true},
+				   {"id":"User.CTLoc","text":$g("科室")},
+				   //{"id":"User.SSGroup","text":"安全组"},
+				   //{"id":"User.PACTrust","text":"区域"},
+				   {"id":"User.CTHospital","text":$g("医院")},
+				   //{"id":"SITE","text":"站点"}
 		    ],
 			onSelect: function(rec){  
 				LoadObjectValue();
@@ -122,18 +123,14 @@ function LoadObjectType(){
 function LoadObjectValue(){
 	var Type=$("#objtype").combobox('getValue');
 	$("#objvalue").combobox({
-		url:$URL+"?ClassName=web.DHCDocPrefTabs&QueryName=FindObjValue",
-        mode:'remote',
+		url:"DHCDoc.Util.QueryToJSON.cls?JSONTYPE=Combo&ClassName=web.DHCDocPrefTabs&QueryName=FindObjValue&Type="+Type,
+        mode:'local',
         method:"Get",
 		valueField: 'objId', 
 		textField: 'objValue', 
 		editable:true,
-		onBeforeLoad:function(param){
-	        var desc=param['q'];
-			param = $.extend(param,{Type:Type,value:desc});
-	    },
-	    loadFilter:function(data){
-		    return data['rows'];
-		}
+		filter: function(q, row){
+	        return (row['objValue'].toUpperCase().indexOf(q.toUpperCase()) >= 0)||(row['objCode'].toUpperCase().indexOf(q.toUpperCase()) >= 0);
+	    }
 	 });
 }

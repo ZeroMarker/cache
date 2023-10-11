@@ -58,8 +58,9 @@ function InitCheckQueryWin(){
 		pageSize: 20,
 		pageList : [20,50,100,200],
 		nowrap:false,
+		/*
 		url:$URL,
-	   /* queryParams:{
+	    queryParams:{
 		    ClassName:"DHCMA.CPW.CPS.ApplySrv",
 			QueryName:"QryApplyInfo",	
 			aTypeID: Common_GetValue('cboApplyType'),
@@ -76,11 +77,11 @@ function InitCheckQueryWin(){
 			{field:'PatName',title:'患者姓名',width:'100'},
 			{field:'PatSex',title:'性别',width:'50'},
 			{field:'PatAge',title:'年龄',width:'50'},
-			{field:'LocDesc',title:'申请科室',width:'100'},
-			{field:'TypeDesc',title:'申请类型',width:'90'}, 
-			{field:'AppUserDesc',title:'申请医生',width:'80'},	
+			{field:'LocDesc',title:'提交科室',width:'100'},
+			{field:'TypeDesc',title:'类型',width:'90'}, 
+			{field:'AppUserDesc',title:'提交医生',width:'80'},	
 			{field:'MobilePhone',title:'医生电话',width:'100'},	
-			{field:'StatusDesc',title:'状态',width:'50',
+			/* {field:'StatusDesc',title:'状态',width:'50',
 				 styler: function(value,row,index){
 					var retStr = "", tmpStatusCode = row["StatusCode"];
 					if (tmpStatusCode==1) {
@@ -94,13 +95,18 @@ function InitCheckQueryWin(){
 					} 
 					return retStr;
 				}
-			}, 
+			},  */
 			{field:'PathStatus',title:'路径状态',width:'100'},
 			{field:'CPWDesc',title:'路径名称',width:'160'}, 
 			{field:'Reason',title:'原因类型',width:'220'},
 			{field:'ApplyTxt',title:'具体原因',width:'280'},
-			{field:'ApplyDate',title:'申请日期',width:'100'},	
-			{field:'VerNote',title:'拒绝原因',width:'200'}
+			{field:'ApplyDate',title:'提交日期',width:'100'},
+			{field:'ShowEMR',title:'住院病历',width:'150',align:'center',sortable:true,
+				formatter: function(value,row,index){
+						return '<a href="#" onclick=DisplayEPRView('+row['PaadmID']+","+row['PatientID']+')>病历浏览</a>';
+				}
+			}
+			/* {field:'VerNote',title:'拒绝原因',width:'200'} */
 		]],
 		onBeforeLoad: function (param) {
             var firstLoad = $(this).attr("firstLoad");
@@ -112,6 +118,21 @@ function InitCheckQueryWin(){
             return true;
 		}
 	});
+	
+	// 查看病历浏览
+	DisplayEPRView = function(EpisodeID,PatientID){
+		var strUrl = cspUrl+"&PatientID="+PatientID+"&EpisodeID="+EpisodeID+"&2=2";
+		websys_showModal({
+			url:strUrl,
+			title:'浏览病历',
+			iconCls:'icon-w-edit',  
+			//onBeforeClose:function(){alert('close')},
+			//dataRow:{ParamRow:obj.ItemRowData},   //？
+			originWindow:window,
+			width:1300,
+			height:600
+		});
+	};
 	
 	InitCheckQueryWinEvent(obj);
 	obj.LoadEvent(arguments);

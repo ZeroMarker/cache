@@ -17,7 +17,7 @@ var PageLogicObj={
 	m_CardSecrityNo:"",
 	m_RLCredTypeID:"", //挂失人证件类型代码
 	m_CredNo:"", //挂失人证件号码
-	m_Computername:GetComputerName()
+	m_Computername:ClientIPAddress //GetComputerName()
 }
 $(function(){
 	//事件初始化
@@ -58,6 +58,7 @@ function LoadRLCredTypeList(){
 			valueField: 'id',
 			textField: 'text', 
 			editable:false,
+			panelHeight:"150",
 			data: JSON.parse(Data),
 			onSelect:function(rec){
 				//CardTypeKeydownHandler();
@@ -120,6 +121,7 @@ function SetPatInfoByCardID(){
 			$("#IDCardNo").val(val[3])
 			$("#RLCredNo").val(val[12]);
 			$("#CardNo").val(val[4]);
+            ModifyCredData(val[23]);
 			var Data=$("#RLCredTypeList").combobox("getData");
 			for (var i=0;i<Data.length;i++){
 				var id=Data[i]["id"];
@@ -224,9 +226,10 @@ function ReportTheLossClickHandle(){
 		if(myrtn=='-355'){
 			$.messager.alert("提示","非正常卡不能挂失!");
 		}else if(myrtn==0){
-			$.messager.alert("提示","卡挂失成功!");
-			window.parent.RegReturnListTabDataGridLoad();
-			window.parent.destroyDialog("CardManager");
+			$.messager.alert("提示","卡挂失成功!","info",function (){
+				window.parent.RegReturnListTabDataGridLoad();
+				window.parent.destroyDialog("CardManager");
+			});
 		}else{
 			$.messager.alert("提示","卡挂失失败!");
 		}
@@ -408,6 +411,8 @@ function ExchangeOnClickHandle(){
 					window.parent.destroyDialog("CardManager");
 				});	
 			});	
+		}else if(ren[0]=='-371'){
+			$.messager.alert("提示","卡号前缀不一致");
 		}else{
 			$.messager.alert("提示","保存数据失败!错误号："+ren[0]);
 		}
@@ -755,4 +760,17 @@ function GetComputerName(){
 		var ComputerName=WshNetwork.ComputerName;
 	}
 	return ComputerName;
+}
+
+function ModifyCredData(CardTypeID){
+    var CardTypeID=CardTypeID||"";
+    var CardCreadType=$.cm({
+        ClassName:"web.UDHCOPOtherLB",
+        MethodName:"ReadCredTypeExp",
+        JSFunName:"GetCredTypeToHUIJson",
+        ListName:"",
+        HospId:session["LOGON.HOSPID"], 
+        CardTypeID:CardTypeID
+    },false);
+    $("#RLCredTypeList").combobox("loadData",CardCreadType);
 }

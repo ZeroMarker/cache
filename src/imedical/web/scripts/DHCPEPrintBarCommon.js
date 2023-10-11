@@ -1,4 +1,4 @@
-//// DHCPEPrintBarCommon.JS
+//// DHCPEPrintBarCommon.js
 ///DHCNurOPExecPrint.js
 ///DHCNurOPExceDll.js 
 //document.write("<object ID='PEPrnBar' CLASSID='CLSID:B98D3E39-A389-4118-9D41-B1831ED1361C' CODEBASE='../addins/client/PEPrintBar.CAB#version=2,0,0,0'>");
@@ -46,6 +46,36 @@ function PrintBarRis(value)
 		var OneInfo=PrintInfo+"^"+"RegNo"+Char_2+RegNo+"^"+"OrdName"+Char_2+OrdName+"^"+"RecLoc"+Char_2+RecLoc+"^"+"BarCode"+Char_2+BarCode
 		DHC_PrintByLodop(getLodop(),OneInfo,"","", "");
 	}
+}
+
+//基本信息条码打印
+function PrintBaseBar(value)
+{
+	if (value==""){return true;}
+	var Char_2=String.fromCharCode(2);
+	var PrintInfo="";
+	var BaseInfo=value.split("^");
+	
+	//登记号
+    var RegNo=BaseInfo[0];
+	// 姓名
+	var PatName=BaseInfo[1];
+	// 性别
+	var Sex=BaseInfo[2];
+	// 年龄
+	var Age=BaseInfo[3];
+	// 金额
+	var FactAmount=BaseInfo[4];
+	
+	var BarCode=BaseInfo[5];
+	
+	var PrintInfo="RegNo"+Char_2+RegNo+"^"+"Name"+Char_2+PatName+"^"+"Sex"+Char_2+Sex+"^"+"Age"+Char_2+Age+"^"+"FactAmount"+Char_2+FactAmount+"^"+"BarCode"+Char_2+BarCode;
+	
+	DHCP_GetXMLConfig("InvPrintEncrypt","PEBasePrint"); //PEBasePrint 基本信息条码xml
+	
+	DHC_PrintByLodop(getLodop(),PrintInfo,"","", "");
+	
+	
 }
 
 //病理条码打印

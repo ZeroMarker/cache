@@ -17,7 +17,8 @@ function PageHandle(){
 	//表格数据初始化
 	OffWorkTimesDataGridLoad();
 	tabHolidaysSetDataGridLoad();
-	LoadWeekend();
+    LoadCheckBoxConf("Weekend","WeekendAsHoliday");
+    LoadCheckBoxConf("StrictHolRecLoc","StrictHolRecLoc");
 }
 function InitEvent(){
 	//上下班时间设定
@@ -27,9 +28,12 @@ function InitEvent(){
 	$('#BWorkTimeRecSet').click(BWorkTimeRecSetClick);
 	$HUI.checkbox("#Weekend",{
         onCheckChange:function(e,value){
-	        var WeekendAsHoliday=0;
-	        if (value) WeekendAsHoliday=1;
-            SaveWeekendSet(WeekendAsHoliday);
+            SaveCheckBoxConf("Weekend","WeekendAsHoliday");
+        }
+    });
+	$HUI.checkbox("#StrictHolRecLoc",{
+        onCheckChange:function(e,value){
+            SaveCheckBoxConf("StrictHolRecLoc","StrictHolRecLoc");
         }
     });
     //节假日日期设定
@@ -75,18 +79,20 @@ function InittabHolidaysSetDataGrid(){
 					$.messager.alert("提示", "请先选择一条节假日记录!");
 					return false;
 				}else{
-					$("#List_OrderDept,#List_RecLoc").empty();
-					//开医嘱科室
-					LoadOrderDept("List_OrderDept");
-					//默认接收科室
-					LoadRecLoc("List_RecLoc","","","");
-					if ($("#RecSetWin").hasClass('window-body')){
-						$('#RecSetWin').window('open');
-					}else{
-						ShowHolidaysRecSetWin();
-					}
-					PageLogicObj.m_NodeRowid=rows[0]['HolidaySetRowId'];
-					PageLogicObj.m_NodeDesc="HolidaysRecStr";
+					// $("#List_OrderDept,#List_RecLoc").empty();
+					// //开医嘱科室
+					// LoadOrderDept("List_OrderDept");
+					// //默认接收科室
+					// LoadRecLoc("List_RecLoc","","","");
+					// if ($("#RecSetWin").hasClass('window-body')){
+					// 	$('#RecSetWin').window('open');
+					// }else{
+					// 	ShowHolidaysRecSetWin();
+					// }
+					// PageLogicObj.m_NodeRowid=rows[0]['HolidaySetRowId'];
+					// PageLogicObj.m_NodeDesc="HolidaysRecStr";
+
+					RecSetTableWinObj.Init("HolidaysRecStr",rows[0]['HolidaySetRowId'])
 				}
 	        }
 	   }
@@ -97,7 +103,7 @@ function InittabHolidaysSetDataGrid(){
 		{ field: 'RDHStartTime', title: '假日开始时间', width: 100, align: 'center'},
 		{ field: 'RDHEndDate', title: '假日结束日期', width: 110, align: 'center'},
 		{ field: 'RDHEndTime', title: '假日结束时间', width: 100, align: 'center'},
-		{ field: 'RDHIsActiveFlag',title: '可用标识', width: 80, align: 'center'},
+		{ field: 'RDHIsActiveFlag',title: '可用标识', hidden:true},
 		{ field: 'RDHCreateUser', title: '创建人', width: 100, align: 'center'},
 		{ field: 'RDHCreateDate', title: '创建日期', width: 100, align: 'center'},
 		{ field: 'RDHCreateTime',title: '创建时间', width: 100, align: 'center'}
@@ -308,42 +314,51 @@ function BtnWorkTimesSaveClick(){
 	}
 	var Data=OffWorkStartTime+"^"+OffWorkEndTime+"^"+Active;
 	$.cm({
-		ClassName:"web.DHCDocConfig",
-		MethodName:"SaveConfig3",
+		ClassName:"DHCDoc.DHCDocConfig.HolidaysRecLoc",
+		MethodName:"SaveOffWorkTimes",
 		dataType:"text",
-		Node:"OffWorkTimesSet",
+		
 		Node1:"",
 		NodeValue:Data,
 		HospId:$HUI.combogrid('#_HospList').getValue()
 	},function(rtn){
 		if (rtn==0){
 			$('#OffWorkTimeSetWin').window('close');
+		}else{
+			$.messager.alert("提示", rtn);
 		}
 	});
 }
-function SaveWeekendSet(WeekendAsHoliday){
-	$.cm({
+
+function LoadCheckBoxConf(ObjID,ObjKey){
+    var HospId=$HUI.combogrid('#_HospList').getValue();
+    $.cm({
+        ClassName:"web.DHCDocConfig",
+        MethodName:"GetConfigNode",
+        dataType:"text",
+        Node:ObjKey,
+        HospId:HospId
+    },function(rtn){
+        if (rtn==1){
+            $("#"+ObjID).checkbox('check');
+        }else{
+            $("#"+ObjID).checkbox('uncheck');
+        }
+    });
+
+}
+
+function SaveCheckBoxConf(ObjID,ObjKey){
+    var HospId=$HUI.combogrid('#_HospList').getValue();
+    var Value=$("#"+ObjID).checkbox('getValue')?"1":"0";
+    var Coninfo=ObjKey+String.fromCharCode(1)+Value;
+    $.cm({
 		ClassName:"web.DHCDocConfig",
 		MethodName:"SaveConfig",
 		dataType:"text",
-		Coninfo:"WeekendAsHoliday"+String.fromCharCode(1)+WeekendAsHoliday,
-		HospId:$HUI.combogrid('#_HospList').getValue()
+		Coninfo:Coninfo,
+		HospId:HospId
 	},function(rtn){
-	});
-}
-function LoadWeekend(){
-	$.cm({
-		ClassName:"web.DHCDocConfig",
-		MethodName:"GetConfigNode",
-		dataType:"text",
-		Node:"WeekendAsHoliday",
-		HospId:$HUI.combogrid('#_HospList').getValue()
-	},function(rtn){
-		if (rtn==1){
-			$("#Weekend").checkbox('check');
-		}else{
-			$("#Weekend").checkbox('uncheck');
-		}
 	});
 }
 function BtnHolidaySave(){
@@ -496,25 +511,23 @@ function LoadRecLoc(param1,LocId,NodeRowid,NodeDesc){
 	});
 }
 function BWorkTimeRecSetClick(){
-	/*var rows = PageLogicObj.m_OffWorkTimesDataGrid.datagrid("getSelections");
-    if (rows.length <= 0) {
-		$.messager.alert("提示", "请先选择一条上下班记录!");
-		return false;*/
-	//}else{
-		$("#List_OrderDept,#List_RecLoc").empty();
-		//开医嘱科室
-		LoadOrderDept("List_OrderDept");
-		//默认接收科室
-		LoadRecLoc("List_RecLoc","","","");
 
-		if ($("#RecSetWin").hasClass('window-body')){
-			$('#RecSetWin').window('open');
-		}else{
-			ShowHolidaysRecSetWin();
-		}
-		PageLogicObj.m_NodeRowid="OffWorkTimesRec";
-		PageLogicObj.m_NodeDesc="OffWorkTimesRecStr";
-	//}
+	RecSetTableWinObj.Init("OffWorkTimesRecStr","")
+
+
+	// $("#List_OrderDept,#List_RecLoc").empty();
+	// //开医嘱科室
+	// LoadOrderDept("List_OrderDept");
+	// //默认接收科室
+	// LoadRecLoc("List_RecLoc","","","");
+
+	// if ($("#RecSetWin").hasClass('window-body')){
+	// 	$('#RecSetWin').window('open');
+	// }else{
+	// 	ShowHolidaysRecSetWin();
+	// }
+	// PageLogicObj.m_NodeRowid="OffWorkTimesRec";
+	// PageLogicObj.m_NodeDesc="OffWorkTimesRecStr";
 }
 function ReLoadOrdDeptConfig(){
 	var obj=$("#List_OrderDept").find("option:selected");
@@ -578,10 +591,10 @@ function setCheckFlag(index){
 	var Active=$("#CK_ActiveFlag"+index).checkbox('getValue')?1:0;
 	var Data=OffWorkStartTime+"^"+OffWorkEndTime+"^"+Active;
 	$.cm({
-		ClassName:"web.DHCDocConfig",
-		MethodName:"SaveConfig3",
+		ClassName:"DHCDoc.DHCDocConfig.HolidaysRecLoc",
+		MethodName:"SaveOffWorkTimes",
 		dataType:"text",
-		Node:"OffWorkTimesSet",
+		
 		Node1:Node1,
 		NodeValue:Data,
 		HospId:$HUI.combogrid('#_HospList').getValue(),
@@ -614,3 +627,547 @@ function myparser(s){
 		return new Date();
 	}
 }
+
+///弹出的接收科室维护界面的方法及参数封装
+var RecSetTableWinObj=(function(){
+	var m_RecHolidayDr;		//""						HolidaySetRowId
+	var m_ConfigType;		//OffWorkTimesRecStr		HolidaysRecStr
+	var m_tabOrderDeptParam;
+	var m_tabRecLoc;
+	var OrderDeptEditRow;
+	var RecLocEditRow;
+	//初始化
+	var Init=function(ConfigType,RecHolidayDr){
+		if ($("#RecSetTableWin").hasClass('window-body')){
+			$('#RecSetTableWin').window('open');
+		}else{
+			ShowHolidaysRecSetTableWin();
+		}
+		m_RecHolidayDr=RecHolidayDr;
+		m_ConfigType=ConfigType;
+		if (m_ConfigType=="OffWorkTimesRecStr"){
+			$('#RecSetTableWin').window('setTitle','上下班接收科室设置');
+		}else{
+			$('#RecSetTableWin').window('setTitle','节假日接收科室设置');
+		}
+		OrderDeptEditRow=undefined;
+		m_tabOrderDeptParam=InittabOrderDeptParam();
+		m_tabRecLoc=InittabRecLoc();
+	}
+	function ShowHolidaysRecSetTableWin(){
+		$('#RecSetTableWin').window({
+			title: '1',
+			width:900,
+			height:510,
+			iconCls:'icon-w-edit',
+			inline:false,
+			minimizable: false,
+			maximizable: false,
+			collapsible: false,
+			closable:true,
+			onBeforeClose:function(){
+				m_RecHolidayDr=""
+				m_ConfigType=""
+				OrderDeptEditRow=undefined;
+				RecLocEditRow=undefined;
+				m_tabOrderDeptParam.datagrid("clearSelections")
+				m_tabRecLoc.datagrid("clearSelections")
+				tabHolidaysSetDataGridLoad();
+			}			
+		});
+	}
+	//初始化开医嘱科室及医嘱参数
+	function InittabOrderDeptParam(){
+		var OECPriirtyStr=$.cm({
+			ClassName:"DHCDoc.DHCDocConfig.HolidaysRecLoc",
+			MethodName:"GetOECPriirty"
+		},false).rows;
+		var OrderDeptParamToolBar = [{
+				text: '增加',
+				iconCls: 'icon-add',
+				handler: function() { 
+					OrderDeptEditRow = undefined;
+					m_tabOrderDeptParam.datagrid("rejectChanges").datagrid("unselectAll");
+					if (OrderDeptEditRow != undefined) {
+						m_tabOrderDeptParam.datagrid("endEdit", OrderDeptEditRow);
+						return;
+					}else{
+						 //添加时如果没有正在编辑的行，则在datagrid的第一行插入一行
+						m_tabOrderDeptParam.datagrid("insertRow", {
+							index: 0,
+							row: {}
+						});
+						m_tabOrderDeptParam.datagrid("beginEdit", 0);
+						OrderDeptEditRow = 0;
+						var editors = m_tabOrderDeptParam.datagrid('getEditors', OrderDeptEditRow);
+						editors[1].target.combobox('setValue',ServerObj.NormPriorID)
+						editors[2].target.combobox('setValue',"All")
+						$(editors[3].target).checkbox("check")
+					}
+				}
+        	},{
+				text: '保存',
+				iconCls: 'icon-save',
+				handler: function() {
+					if (OrderDeptEditRow == undefined){
+						$.messager.alert("提示","没有需要保存的数据!");
+						return false;
+					}
+					var editors = m_tabOrderDeptParam.datagrid('getEditors', OrderDeptEditRow);  
+					var SelRow=m_tabOrderDeptParam.datagrid("selectRow",OrderDeptEditRow).datagrid("getSelected"); 
+					var RowID=SelRow["RowID"];
+					var OrdLocDr=SelRow["OrdLocDr"];
+					if ((OrdLocDr=="")||(OrdLocDr==undefined)){
+						$.messager.alert("提示","请选择病人科室!");
+						return false;
+					}
+					//医嘱类型
+					var OrderPrior=editors[1].target.combobox('getValue');
+					//加急类型
+					var NotifyClinician=editors[2].target.combobox('getValue');
+					if ((NotifyClinician=="")){
+						$.messager.alert("提示","请选择加急类型!");
+						return false;
+					}
+					//启用
+					var IsActiveFlag=editors[3].target.is(":checked");
+					if (IsActiveFlag){IsActiveFlag="Y";}else{IsActiveFlag="N";}
+					
+					var Val=m_ConfigType+"^"+m_RecHolidayDr+"^"+OrdLocDr+"^"+"^"+IsActiveFlag+"^"+OrderPrior+"^"+NotifyClinician
+					
+					$.cm({
+						ClassName:"DHCDoc.DHCDocConfig.HolidaysRecLoc",
+						MethodName:"SaveRecConfig",
+						RowID:RowID,
+						HospId:$HUI.combogrid('#_HospList').getValue(),
+						Val:Val,
+						dataType:"text"
+					},function(value){
+						if(value=="0"){
+							m_tabOrderDeptParam.datagrid("endEdit",OrderDeptEditRow);
+							OrderDeptEditRow = undefined;
+							m_tabOrderDeptParam.datagrid("reload").datagrid("unselectAll");
+						}else{
+							$.messager.alert('提示',"保存失败:"+value);
+							return false;
+						}
+					});
+				}
+			},{
+				text: '删除',
+				iconCls: 'icon-remove',
+				handler: function() {
+					var rows = OrderDeptParamDataGrid.datagrid("getSelections");
+					if (rows.length <= 0) {
+						$.messager.alert("提示", "请先选择一条记录", "error");
+						return false;
+					}else{
+						$.messager.confirm("提示", "你确定要删除吗?",
+						function(r) {
+							if (r) {
+								var ids = [];
+								for (var i = 0; i < rows.length; i++) {
+									ids.push(rows[i].RowID);
+								}
+								var RowID=ids.join(',')
+
+								$.cm({
+									ClassName:"DHCDoc.DHCDocConfig.HolidaysRecLoc",
+									MethodName:"DeleteOffWorkTimesDetails",
+									OffWorkTimesSetRowId:RowID,
+									HospId:$HUI.combogrid('#_HospList').getValue(),
+									dataType:"text"
+								},function(value){
+									if(value=="0"){
+										OrderDeptEditRow = undefined;
+										m_tabOrderDeptParam.datagrid("reload").datagrid("unselectAll");
+										m_tabRecLoc.datagrid("reload");
+										$.messager.show({title:"提示",msg:"删除成功"});
+									}else{
+										$.messager.alert('提示',"删除失败:"+value);
+										return false;
+									}
+								});
+							}
+						})
+					}
+					
+				}
+			},"-",{
+				text: '关联子类',
+				iconCls: 'icon-edit',
+				handler: function() {
+					var rows = OrderDeptParamDataGrid.datagrid("getSelections");
+					if (rows.length <= 0) {
+						$.messager.alert("提示", "请先选择一条记录", "error");
+						return false;
+					}
+					var HospID=$HUI.combogrid('#_HospList').getValue();
+					var RowID=rows[0].RowID;
+					var ItemCatList=rows[0].ItemCatList;
+					ConectModel(HospID,RowID,ItemCatList)
+					function ConectModel(HospID,RowID,ItemCatList){
+					websys_showModal({
+						url:"dhcdoc.util.tablelist.csp?TableName=ARC_ItemCat&IDList="+ItemCatList+"&HospDr="+HospID,
+						title:' 子类选择',
+						width:400,height:610,
+						closable:false,
+						CallBackFunc:function(result){
+							websys_showModal("close");
+							if ((typeof result==="undefined")||(result===false)){
+								return;
+							}
+							if (result==""){
+								$.messager.alert('提示',"保存失败，未选中数据！");
+								return false;
+							}
+							var value =tkMakeServerCall("DHCDoc.DHCDocConfig.HolidaysRecLoc","UpdateItemCatList",RowID,result)
+							if(value=="0"){
+								OrderDeptEditRow = undefined;
+								m_tabOrderDeptParam.datagrid("reload").datagrid("unselectAll");
+								$.messager.show({title:"提示",msg:"更新成功"});
+							}else{
+								$.messager.alert('提示',"更新失败:"+value,'error',function (){ConectModel(HospID,RowID,ItemCatList)});
+								return false;
+							}
+						}
+					})
+					}
+				}
+			},"-",{
+				text: '例外的医嘱项',
+				iconCls: 'icon-edit',
+				handler: function() {
+					var rows = OrderDeptParamDataGrid.datagrid("getSelections");
+					if (rows.length <= 0) {
+						$.messager.alert("提示", "请先选择一条记录", "error");
+						return false;
+					}
+					var HospID=$HUI.combogrid('#_HospList').getValue();
+					var RowID=rows[0].RowID;
+					var ExceptionArcimList=rows[0].ExceptionArcimList;
+					showmodediag(HospID,RowID,ExceptionArcimList)
+					function showmodediag(HospID,RowID,ExceptionArcimList){
+						websys_showModal({
+							url:"dhcdoc.util.tablelist.csp?TableName=ARC_ItmMast&IDList="+ExceptionArcimList+"&HospDr="+HospID+"&DisplayType=Search",
+							title:' 例外的医嘱项选择',
+							width:400,height:610,
+							closable:false,
+							CallBackFunc:function(result){
+								websys_showModal("close");
+								if ((typeof result==="undefined")||(result===false)){
+									return;
+								}
+								// if (result==""){
+								// 	$.messager.alert('提示',"未选中数据");
+								// 	return false;
+								// }
+								var value =tkMakeServerCall("DHCDoc.DHCDocConfig.HolidaysRecLoc","UpdateArcimList",RowID,result)
+								if(value=="0"){
+									OrderDeptEditRow = undefined;
+									m_tabOrderDeptParam.datagrid("reload").datagrid("unselectAll");
+									$.messager.show({title:"提示",msg:"更新成功"});
+								}else{
+									$.messager.alert('提示',"更新失败:"+value,'error',function (){showmodediag(HospID,RowID,ExceptionArcimList)});
+									return false;
+								}
+							}
+						})
+					}
+				}
+			}];
+		var OrderDeptParamColumns=[[    
+			{ field: 'RowID', title: 'ID', width: 1, align: 'center',hidden:true},
+			{ field: 'OrdLocDr',hidden:true},
+			{ field: 'OrderDept', title: '病人科室', width: 300, align: 'center', 
+				editor:{
+					type:'combogrid',
+					options:{
+						required: true,
+						idField:'CTLOCRowID',
+						textField:'CTLOCDesc',
+						value:'',//缺省值 
+						mode:'remote',
+						//url:$URL+"?ClassName=DHCDoc.DHCDocConfig.LabBindRuleSetting&QueryName=LookUpAllLoc",
+						url:$URL+"?ClassName=web.DHCBL.CT.CTLoc&QueryName=GetDataForCmbGroup",
+						columns:[[
+							{field:'CTLOCDesc',title:'名称',width:300,sortable:true},
+							{field:'CTLOCRowID',title:'ID',width:120,sortable:true},
+						]],onSelect : function(rowIndex, rowData) {
+							var ArcimSelRow=m_tabOrderDeptParam.datagrid("selectRow",OrderDeptEditRow).datagrid("getSelected"); 
+							ArcimSelRow.OrdLocDr=rowData.CTLOCRowID;
+						},onLoadSuccess:function(data){
+							$(this).next('span').find('input').focus();
+						},onBeforeLoad:function(param){
+							var desc="";
+							if (param['q']) {
+								var desc=param['q'];
+							}
+							param = $.extend(param,{hospid:$HUI.combogrid('#_HospList').getValue(),tablename:"DHCExaBorough",desc:desc,start:0,limit:9999,rows:9999});
+						}
+					}
+				}
+			},
+			{ field: 'OrderPrior', title: '医嘱类型', width: 100, align: 'center',
+				editor : {
+					type:'combobox',
+					options:{
+						valueField:'OECPR_RowId',
+						textField:'OECPR_Desc',
+						required:false,
+						data:OECPriirtyStr,
+						onSelect:function(rec){}
+					}
+				}
+			},
+			{ field: 'NotifyClinician', title: '加急', width: 100, align: 'center',
+				editor : {
+					type:'combobox',
+					options:{
+						valueField:'code',
+						textField:'desc',
+						required:true,
+						data:[{"code":"All","desc":"全部"},{"code":"N","desc":"普通"},{"code":"Y","desc":"加急"}],
+						onSelect:function(rec){}
+					}
+				},formatter: function(value,row,index){
+					if (value=="All"){
+						return "全部";
+					}else if (value=="N"){
+						return "普通";
+					}else if (value=="Y"){
+						return "加急";
+					}
+				}
+			},{
+				field : 'IsActiveFlag',title : '启用',width:60,align:"center",
+				editor : {
+					type : 'icheckbox',
+					options : {
+						on : 'Y',
+						off : 'N'
+					}
+				}
+			},{ field: 'ItemCatList', title: '关联子类', hidden:true
+			},{ field: 'ExceptionArcimList', title: '例外的医嘱项', hidden:true}
+
+			
+		]];
+		OrderDeptParamDataGrid=$('#tabOrderDeptParam').datagrid({ 
+			fit : true,
+			border : false,
+			striped : true,
+			singleSelect : true,
+			fitColumns : false,
+			autoRowHeight : false,
+			pagination : false,  
+			idField:'RowID',
+			columns :OrderDeptParamColumns,
+			toolbar :OrderDeptParamToolBar,
+			url:$URL+"?ClassName=DHCDoc.DHCDocConfig.HolidaysRecLoc&QueryName=FindRecConfig&ConfigType="+m_ConfigType+"&HolidayDr="+m_RecHolidayDr+"&HospId="+$HUI.combogrid('#_HospList').getValue(),
+			onLoadSuccess:function(data){
+				for (var i=0;i<data.rows.length;i++){
+					PageLogicObj.m_OffWorkTimesDataGrid.datagrid('beginEdit',i);
+				}
+				$HUI.checkbox("input.active-checkbox",{});
+			},onDblClickRow:function(rowIndex, rowData){
+				if (OrderDeptEditRow != undefined) {
+					$.messager.alert("提示", "有正在编辑的行，请先点击保存", "error");
+					return false;
+				}
+				m_tabOrderDeptParam.datagrid("beginEdit", rowIndex);
+				OrderDeptEditRow=rowIndex;
+				var editors = m_tabOrderDeptParam.datagrid('getEditors', rowIndex);  
+				var OECPriorJson=editors[1].target.combobox('options').data;
+				var OECPRRowId="";
+				OECPriorJson.forEach(function(obj){
+					if (obj.OECPR_Desc==rowData.OrderPrior){
+						OECPRRowId=obj.OECPR_RowId;
+						return false;
+					}
+				});
+				//医嘱类型
+				editors[1].target.combobox('setValue',OECPRRowId);
+			},onClickRow:function(rowIndex, rowData){
+				m_tabRecLoc.datagrid("reload");
+			},onSelect:function(rowIndex, rowData){
+				RecLocEditRow = undefined;
+				m_tabRecLoc.datagrid("reload").datagrid("unselectAll");
+			}
+		});
+		return OrderDeptParamDataGrid;
+	}
+	function InittabRecLoc(){
+		var RecLocToolBar = [{
+			text: '增加',
+			iconCls: 'icon-add',
+			handler: function() { 
+				var OrderDeptRow = m_tabOrderDeptParam.datagrid('getSelected');  
+				if (OrderDeptRow == null){
+					$.messager.alert("提示","未选择病人科室信息!");
+					return false;
+				}
+				RecLocEditRow = undefined;
+				m_tabRecLoc.datagrid("rejectChanges").datagrid("unselectAll");
+				if (RecLocEditRow != undefined) {
+					m_tabRecLoc.datagrid("endEdit", RecLocEditRow);
+					return;
+				}else{
+					 //添加时如果没有正在编辑的行，则在datagrid的第一行插入一行
+					m_tabRecLoc.datagrid("insertRow", {
+						index: 0,
+						row: {}
+					});
+					m_tabRecLoc.datagrid("beginEdit", 0);
+					RecLocEditRow = 0;
+				}
+			}
+		},{
+			text: '保存',
+			iconCls: 'icon-save',
+			handler: function() {
+				if (RecLocEditRow == undefined){
+					$.messager.alert("提示","没有需要保存的数据!");
+					return false;
+				}
+				var OrderDeptRow = m_tabOrderDeptParam.datagrid('getSelected');  
+				if (OrderDeptRow == null){
+					$.messager.alert("提示","未选择病人科室信息!");
+					return false;
+				}
+				var OrderDeptRowID=OrderDeptRow["RowID"];
+
+				var editors = m_tabRecLoc.datagrid('getEditors', RecLocEditRow);  
+				var SelRow=m_tabRecLoc.datagrid("selectRow",RecLocEditRow).datagrid("getSelected"); 
+				var RecLocDr=SelRow["RecLocDr"];
+				if ((RecLocDr=="")||(RecLocDr==undefined)){
+					$.messager.alert("提示","请选择接收科室!");
+					return false;
+				}
+				$.cm({
+					ClassName:"DHCDoc.DHCDocConfig.HolidaysRecLoc",
+					MethodName:"UpdateRecLocInfo",
+					TYPE:"Add",
+					RowID:OrderDeptRowID,
+					RecLocDr:RecLocDr,
+					dataType:"text"
+				},function(value){
+					if(value=="0"){
+						RecLocEditRow = undefined;
+						m_tabRecLoc.datagrid("reload").datagrid("unselectAll");
+					}else{
+						$.messager.alert('提示',"保存失败:"+value);
+						return false;
+					}
+				});
+			}
+		},{
+			text: '删除',
+			iconCls: 'icon-remove',
+			handler: function() {
+				var OrderDeptRow = m_tabOrderDeptParam.datagrid('getSelected');  
+				if (OrderDeptRow == null){
+					$.messager.alert("提示","未选择病人科室信息!");
+					return false;
+				}
+				var OrderDeptRowID=OrderDeptRow["RowID"];
+
+				var row = RecLocDataGrid.datagrid("getSelected");
+				if (row == null) {
+					$.messager.alert("提示", "请先选择一条接收科室记录", "error");
+					return false;
+				}
+				$.messager.confirm("提示", "你确定要删除吗?",
+				function(r) {
+					if (r) {
+						var RecLocDr=row.ReclocDr
+						$.cm({
+							ClassName:"DHCDoc.DHCDocConfig.HolidaysRecLoc",
+							MethodName:"UpdateRecLocInfo",
+							TYPE:"Delete",
+							RowID:OrderDeptRowID,
+							RecLocDr:RecLocDr,
+							dataType:"text"
+						},function(value){
+							if(value=="0"){
+								m_tabOrderDeptParam.datagrid("endEdit",RecLocEditRow);
+								RecLocEditRow = undefined;
+								m_tabRecLoc.datagrid("reload").datagrid("unselectAll");
+							}else{
+								$.messager.alert('提示',"保存失败:"+value);
+								return false;
+							}
+						});
+					}
+				})
+				
+				
+			}
+		}];
+		var RecLocColumns=[[    
+			{ field: 'RecLocDr',hidden:true},
+			{ field: 'RecLoc', title: '接收科室', width: 240, align: 'center', 
+				editor:{
+					type:'combogrid',
+					options:{
+						required: true,
+						idField:'CTLOCRowID',
+						textField:'CTLOCDesc',
+						value:'',//缺省值 
+						mode:'remote',
+						//url:$URL+"?ClassName=DHCDoc.DHCDocConfig.HolidaysRecLoc&QueryName=LookUpAllLoc",
+						url:$URL+"?ClassName=web.DHCBL.CT.CTLoc&QueryName=GetDataForCmb1",
+						columns:[[
+							{field:'CTLOCDesc',title:'名称',width:300,sortable:true},
+							{field:'CTLOCRowID',title:'ID',width:120,sortable:true},
+						]],onSelect : function(rowIndex, rowData) {
+							var ArcimSelRow=m_tabRecLoc.datagrid("selectRow",RecLocEditRow).datagrid("getSelected"); 
+							ArcimSelRow.RecLocDr=rowData.CTLOCRowID;
+						},onLoadSuccess:function(data){
+							$(this).next('span').find('input').focus();
+						},onBeforeLoad:function(param){
+							var desc="";
+							if (param['q']) {
+								var desc=param['q'];
+							}
+							param = $.extend(param,{desc:desc,start:0,limit:9999,rows:9999});
+							///param = $.extend(param,{Desc:desc,rows:9999});
+						}
+					}
+				}
+			}
+		]];
+		RecLocDataGrid=$('#tabRecLoc').datagrid({ 
+			fit : true,
+			border : false,
+			striped : true,
+			singleSelect : true,
+			fitColumns : false,
+			autoRowHeight : false,
+			pagination : false,  
+			idField:'ReclocDr',
+			textField:'RecLoc',
+			columns :RecLocColumns,
+			toolbar :RecLocToolBar,
+			url:$URL+"?ClassName=DHCDoc.DHCDocConfig.HolidaysRecLoc&QueryName=FindRecDetails&RDHDr=",
+			onLoadSuccess:function(data){
+				for (var i=0;i<data.rows.length;i++){
+					PageLogicObj.m_OffWorkTimesDataGrid.datagrid('beginEdit',i);
+				}
+				$HUI.checkbox("input.active-checkbox",{});
+			},onBeforeLoad:function(param){
+				var rows = OrderDeptParamDataGrid.datagrid("getSelections");
+				if (rows.length <= 0) {
+					var RDHDr="";
+				}else{
+					var RDHDr=rows[0].RowID;
+				}
+				param = $.extend(param,{RDHDr:RDHDr});
+			}
+		});
+		return RecLocDataGrid;
+	}
+	return {
+		Init:Init
+	}
+})()

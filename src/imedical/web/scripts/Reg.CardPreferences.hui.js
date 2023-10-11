@@ -8,8 +8,14 @@ $(function(){
 	//事件初始化
 	InitEvent()
 	var xmlInfo=tkMakeServerCall("web.DHCBL.UDHCCommFunLibary","GetClassPropertyList","web.DHCEntity.Configure.PatEnroll")
-	
 })
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function Init(){
 	var hospComp = GenHospComp("Doc_Reg_CardRegDef");
 	hospComp.jdata.options.onSelect = function(e,t){
@@ -24,7 +30,8 @@ function Init(){
 		InitDataGrid()
 		InitLookup()
 		//注册配置加载数据
-		DataListLoad()
+		DataListLoad();
+		InitCache();
 	}
 }
 function InitEvent(){
@@ -103,7 +110,7 @@ function InitDataGrid(){
 		onSelect:function(index,rowData){
 			PageLogicObj.m_RowId=rowData["ID"]
 		}
-	});
+	}).datagrid({loadFilter:DocToolsHUI.lib.pagerFilter});
 	dataGrid.datagrid('loadData',{ 'total':'0',rows:[] });
 	return dataGrid;
 }
@@ -121,7 +128,8 @@ function DataListLoad(){
 		HospID:HospID,
 	    rows:99999
 	},function(GridData){
-		$("#DataList").datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+		PageLogicObj.m_RowId="";
+		$("#DataList").datagrid('uncheckAll').datagrid('loadData',GridData);
 		$("#DataList").datagrid("clearSelections")
 	});
 }
@@ -333,7 +341,7 @@ function InitLookup(){
 			},
             pagination:true,
             onSelect:function(index,rowData){
-                $("#DefaultCityDR").val(rowData["HIDDEN"])
+                $("#DefaultCityDR").val(rowData["HIDDEN"]);
             }
     });
 	//初始化 民族
@@ -345,7 +353,7 @@ function InitLookup(){
             textField:'Description',
             columns:[[  
                 {field:'Description',title:'民族',width:150}, 				
-                {field:'ID',title:'',width:50} 
+                {field:'ID',title:'',width:50,hidden:true} 
             ]],
 			pagination:true,
 			panelWidth:300,
@@ -467,18 +475,34 @@ function CheckData(){
 	var Province=$("#Province").lookup("getText")
 	if(Province==""){
 		$("#ProvinceId").val("")
+	}else{
+		if (Country=="") {
+			$.messager.alert("提示", "国家不能为空", 'info',function(){
+				$("#Country").focus();
+			});
+			return false
+		}
 	}
 	var City=$("#City").lookup("getText")
 	if(City==""){
 		$("#CityId").val("")
+	}else {
+		if (Province=="") {
+			$.messager.alert("提示", "省份不能为空", 'info',function(){
+				$("#Province").focus();
+			});
+			return false
+		}
+		if (Country=="") {
+			$.messager.alert("提示", "国家不能为空", 'info',function(){
+				$("#Country").focus();
+			});
+			return false
+		}
 	}
 	var Nation=$("#Nation").lookup("getText")
 	if(Nation==""){
 		$("#NationId").val("")
-	}
-	if(!Country&&Province){
-		$.messager.alert("提示", "国家不能为空", 'info');
-		return false
 	}
 	var ObjectData=$("#ObjectData").lookup("getText")
 	if(ObjectData==""){

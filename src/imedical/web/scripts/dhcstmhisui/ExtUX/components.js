@@ -1,121 +1,136 @@
-// Ãû³Æ: ³£ÓÃ×é¼şµÄ·â×°
-// ÃèÊö: ³£ÓÃ×é¼şµÄ·â×°
-// ±àĞ´Õß£ºXuChao
-// ±àĞ´ÈÕÆÚ: 2018.03.19
+ï»¿// åç§°: å¸¸ç”¨ç»„ä»¶çš„å°è£…
+// æè¿°: å¸¸ç”¨ç»„ä»¶çš„å°è£…
+// ç¼–å†™è€…ï¼šXuChao
+// ç¼–å†™æ—¥æœŸ: 2018.03.19
 
-//ÉèÖÃpanelÄ¬ÈÏiconCls
-//$.fn.panel.defaults.iconCls='icon-paper';
-//ÉèÖÃdialogÄ¬ÈÏiconCls
-$.fn.dialog.defaults.iconCls='icon-w-paper';
-//Àà×étree
-(function($){
-	$.parser.plugins.push("stkscgcombotree");//×¢²áÀ©Õ¹×é¼ş
-	$.fn.stkscgcombotree = function(options, param) {//¶¨ÒåÀ©Õ¹×é¼ş
-		//µ±optionsÎª×Ö·û´®Ê±£¬ËµÃ÷Ö´ĞĞµÄÊÇ¸Ã²å¼şµÄ·½·¨¡£
-		if (typeof options == "string") {
+// è®¾ç½®panelé»˜è®¤iconCls
+// $.fn.panel.defaults.iconCls='icon-paper';
+// è®¾ç½®dialogé»˜è®¤iconCls
+$.fn.dialog.defaults.iconCls = 'icon-w-paper';
+// ç±»ç»„tree
+(function($) {
+	$.parser.plugins.push('stkscgcombotree');// æ³¨å†Œæ‰©å±•ç»„ä»¶
+	$.fn.stkscgcombotree = function(options, param) { // å®šä¹‰æ‰©å±•ç»„ä»¶
+		// å½“optionsä¸ºå­—ç¬¦ä¸²æ—¶ï¼Œè¯´æ˜æ‰§è¡Œçš„æ˜¯è¯¥æ’ä»¶çš„æ–¹æ³•ã€‚
+		if (typeof options === 'string') {
 			return $.fn.combotree.apply(this, arguments);
 		}
 		options = options || {};
-		//µ±¸Ã×é¼şÔÚÒ»¸öÒ³Ãæ³öÏÖ¶à´ÎÊ±£¬thisÊÇÒ»¸ö¼¯ºÏ£¬¹ÊĞèÒªÍ¨¹ıeach±éÀú¡£
-		return this.each(function(){
+		// å½“è¯¥ç»„ä»¶åœ¨ä¸€ä¸ªé¡µé¢å‡ºç°å¤šæ¬¡æ—¶ï¼Œthisæ˜¯ä¸€ä¸ªé›†åˆï¼Œæ•…éœ€è¦é€šè¿‡eachéå†ã€‚
+		return this.each(function() {
 			var jq = $(this);
-			//$.fn.combotree.parseOptions(this)×÷ÓÃÊÇ»ñÈ¡Ò³ÃæÖĞµÄdata-optionsÖĞµÄÅäÖÃ
+			// $.fn.combotree.parseOptions(this)ä½œç”¨æ˜¯è·å–é¡µé¢ä¸­çš„data-optionsä¸­çš„é…ç½®
 			var opts = $.extend({
-				setDefaults: true,		//ÊÇ·ñÄ¬ÈÏÏÔÊ¾
-				onLoadSuccess: function(){
+				setDefaults: true,		// æ˜¯å¦é»˜è®¤æ˜¾ç¤º
+				onLoadSuccess: function() {
 					jq.combotree('options')['setDefaultFun']();
-					jq.combotree('textbox').bind("blur",function(){
-						if(isEmpty(jq.combotree('getText'))){
-							jq.combotree('setValue','')
+					jq.combotree('textbox').bind('blur', function() {
+						if (isEmpty(jq.combotree('getText'))) {
+							jq.combotree('setValue', '');
 						}
-					})
+					});
 				},
-				setDefaultFun: function(){
+				setDefaultFun: function() {
 					jq.stkscgcombotree('clear');
-					if(jq.stkscgcombotree('options')['setDefaults'] !== false){
+					if (jq.stkscgcombotree('options')['setDefaults'] !== false) {
 						var StrParam = jq.stkscgcombotree('options')['StrParam'];
 						var DefaInfo = tkMakeServerCall('web.DHCSTMHUI.MulStkCatGroup', 'GetDefaScg', StrParam);
 						var ScgId = DefaInfo.split('^')[0], ScgDesc = DefaInfo.split('^')[1];
-						if(ScgId && ScgDesc){
+						if (ScgId && ScgDesc) {
 							jq.stkscgcombotree('setValue', ScgId);
 						}
 					}
 				}
 			}, $.fn.combotree.parseOptions(this), options);
-			var StrParam = "^^^^"+gHospId+"^"+StkGrpHospid;
-			if ((StkGrpHospid!="")&&(gHospId!=StkGrpHospid)){
-				StrParam = "^^^^^"+StkGrpHospid;
-			}else{
-				StrParam = gLocId+"^"+gUserId+"^^^"+gHospId+"^"+StkGrpHospid;
+			var StrParam = '^^^^' + gHospId + '^' + StkGrpHospid;
+			if ((StkGrpHospid != '') && (gHospId != StkGrpHospid)) {
+				StrParam = '^^^^^' + StkGrpHospid;
+			} else {
+				StrParam = gLocId + '^' + gUserId + '^^^' + gHospId + '^' + StkGrpHospid;
 			}
 			var Data = $.cm({
-				ClassName:"web.DHCSTMHUI.Util.StkGrp",
-				MethodName:"GetScgChildNode",
-				NodeId:"AllSCG",
+				ClassName: 'web.DHCSTMHUI.Util.StkGrp',
+				MethodName: 'GetScgChildNode',
+				NodeId: 'AllSCG',
 				StrParam: StrParam,
-				Type:"M"
-			},false);
-			//°ÑÅäÖÃ¶ÔÏómyopts·Åµ½$.fn.combotreeÕâ¸öº¯ÊıÖĞÖ´ĞĞ¡£
+				Type: 'M'
+			}, false);
+			// æŠŠé…ç½®å¯¹è±¡myoptsæ”¾åˆ°$.fn.combotreeè¿™ä¸ªå‡½æ•°ä¸­æ‰§è¡Œã€‚
 			var myopts = $.extend(true, {
-				StrParam: StrParam,		//´Ë²ÎÊıÓÃÓÚÄ¬ÈÏÖµµÄÈ¡Öµ·½·¨
-				data:Data,
-				editable:true
+				StrParam: StrParam,		// æ­¤å‚æ•°ç”¨äºé»˜è®¤å€¼çš„å–å€¼æ–¹æ³•
+				data: Data,
+				editable: true,
+				panelWidth: 'auto',
+				onShowPanel: function() { // é¢æ¿è‡ªé€‚åº”
+					$(this).combobox('panel').width('auto');
+					var panelwidth = $(this).combobox('panel').width();
+					var width = Number($(this).css('width').split('px')[0]);
+					if (panelwidth < width) {
+						if (width == 148) { // å¼•ç”¨textboxçš„å®½åº¦
+							width = width + 5;
+						} else { // styleè®¾ç½®çš„å®½åº¦
+							width = width - 2;
+						}
+						$(this).combobox('panel').width(width);
+					} else { // è§£å†³åœ¨IEä¸‹å‡ºç°æ»šåŠ¨æ¡çš„é—®é¢˜
+						$(this).combobox('panel').width(panelwidth + 20);// ä¸‹æ‹‰é¢æ¿
+						$(this).combobox('panel').parent().width('auto');// é¢æ¿å¤–é¢è¿˜åŒ…è£¹äº†ä¸€å±‚çˆ¶èŠ‚ç‚¹
+					}
+				}
 			}, opts);
 			$.fn.combotree.call(jq, myopts);
 		});
-	}
-	//À©Õ¹setFilterByLoc·½·¨
+	};
+	// æ‰©å±•setFilterByLocæ–¹æ³•
 	$.extend($.fn.combotree.methods, {
-		setFilterByLoc: function (jq, LocId, xLocId,ScgSet){
-			if(isEmpty(xLocId)){xLocId=''};
-			if(isEmpty(ScgSet)){ScgSet=''};
-			var StrParam = LocId+"^"+gUserId+"^"+xLocId+"^"+ScgSet+"^"+gHospId+"^"+StkGrpHospid;
+		setFilterByLoc: function(jq, LocId, xLocId, ScgSet) {
+			if (isEmpty(xLocId)) { xLocId = ''; }
+			if (isEmpty(ScgSet)) { ScgSet = ''; }
+			var StrParam = LocId + '^' + gUserId + '^' + xLocId + '^' + ScgSet + '^' + gHospId + '^' + StkGrpHospid;
 			var Data = $.cm({
-				ClassName:"web.DHCSTMHUI.Util.StkGrp",
-				MethodName:"GetScgChildNode",
-				NodeId:"AllSCG",
-				StrParam:StrParam,
-				Type:"M"
-			},false);
+				ClassName: 'web.DHCSTMHUI.Util.StkGrp',
+				MethodName: 'GetScgChildNode',
+				NodeId: 'AllSCG',
+				StrParam: StrParam,
+				Type: 'M'
+			}, false);
 			$(jq).combotree('options')['StrParam'] = StrParam;
-			$(jq).combotree('loadData',Data);
+			$(jq).combotree('loadData', Data);
 			$(jq).combotree('options')['setDefaultFun']();
-		}
-	});
-	//À©Õ¹reload·½·¨
-	$.extend($.fn.combotree.methods, {
-		load: function (jq,StkGrpHospidm){
-			var StrParam = "^^^^"+gHospId+"^"+StkGrpHospidm;
-			if ((StkGrpHospidm!="")&&(StkGrpHospidm!=gHospId)){
-				StrParam = "^^^^^"+StkGrpHospidm;
-			}else{
-				StrParam = gLocId+"^"+gUserId+"^^^"+gHospId+"^"+StkGrpHospidm;
+		},
+		// æ‰©å±•reloadæ–¹æ³•--ps:è¿™ç§å†™æ³•ç›´æ¥æ‰©å±•ç»™combotreeäº†,ä¸æ˜¯ç‰¹åˆ«å¥½.
+		load: function(jq, StkGrpHospidm) {
+			var StrParam = '^^^^' + gHospId + '^' + StkGrpHospidm;
+			if ((StkGrpHospidm != '') && (StkGrpHospidm != gHospId)) {
+				StrParam = '^^^^^' + StkGrpHospidm;
+			} else {
+				StrParam = gLocId + '^' + gUserId + '^^^' + gHospId + '^' + StkGrpHospidm;
 			}
 			var Data = $.cm({
-				ClassName:"web.DHCSTMHUI.Util.StkGrp",
-				MethodName:"GetScgChildNode",
-				NodeId:"AllSCG",
-				StrParam:StrParam,
-				Type:"M"
-			},false);
+				ClassName: 'web.DHCSTMHUI.Util.StkGrp',
+				MethodName: 'GetScgChildNode',
+				NodeId: 'AllSCG',
+				StrParam: StrParam,
+				Type: 'M'
+			}, false);
 			$(jq).combotree('options')['StrParam'] = StrParam;
-			$(jq).combotree('loadData',Data);
+			$(jq).combotree('loadData', Data);
 			$(jq).combotree('options')['setDefaultFun']();
 		}
 	});
 	
 	/*
 	 * SimpleCombo
-	 * jsÖĞĞè¶¨Òådata: [{'RowId':***,'Description':***},...]
+	 * jsä¸­éœ€å®šä¹‰data: [{'RowId':***,'Description':***},...]
 	 */
 	$.parser.plugins.push('simplecombobox');
 	$.fn.simplecombobox = function(options, param) {
-		if (typeof options == 'string') {
+		if (typeof options === 'string') {
 			return $.fn.combobox.apply(this, arguments);
 		}
 		options = options || {};
-		var DefaData = [{'RowId':'', 'Description':'È«²¿'}, {'RowId':'Y', 'Description':'ÊÇ'}, {'RowId':'N', 'Description':'·ñ'}];
-		return this.each(function(){
+		var DefaData = [{ 'RowId': '', 'Description': 'å…¨éƒ¨' }, { 'RowId': 'Y', 'Description': 'æ˜¯' }, { 'RowId': 'N', 'Description': 'å¦' }];
+		return this.each(function() {
 			var jq = $(this);
 			var opts = $.extend({}, $.fn.combobox.parseOptions(this), options);
 			var Data = options.data || DefaData;
@@ -129,12 +144,12 @@ $.fn.dialog.defaults.iconCls='icon-w-paper';
 	};
 	
 	/*
-	 * combobox¹ıÂË·½Ê½, ¶¨ÒåÓÚjQuery.hisui.js
-	 * defaultFilterº¬ÒåËµÃ÷:
-	 * 	1:×óÆ¥Åä,²»Çø·Ö´óĞ¡Ğ´(hisuiÄ¬ÈÏ)
-	 * 	2:°üº¬,²»Çø·Ö´óĞ¡Ğ´
-	 * 	3:×óÆ¥Åä,»òÆ´ÒôÊ××ÖÄ¸×óÆ¥Åä
-	 * 	4:°üº¬,»òÆ´ÒôÊ××ÖÄ¸°üº¬,²»Çø·Ö´óĞ¡Ğ´
+	 * comboboxè¿‡æ»¤æ–¹å¼, å®šä¹‰äºjQuery.hisui.js
+	 * defaultFilterå«ä¹‰è¯´æ˜:
+	 * 	1:å·¦åŒ¹é…,ä¸åŒºåˆ†å¤§å°å†™(hisuié»˜è®¤)
+	 * 	2:åŒ…å«,ä¸åŒºåˆ†å¤§å°å†™
+	 * 	3:å·¦åŒ¹é…,æˆ–æ‹¼éŸ³é¦–å­—æ¯å·¦åŒ¹é…
+	 * 	4:åŒ…å«,æˆ–æ‹¼éŸ³é¦–å­—æ¯åŒ…å«,ä¸åŒºåˆ†å¤§å°å†™
 	 */
 	$.extend($.fn.combobox.defaults, {
 		valueField: 'RowId',
@@ -143,41 +158,41 @@ $.fn.dialog.defaults.iconCls='icon-w-paper';
 	});
 	$.extend($.fn.lookup.defaults, {
 		width: 'auto',
-		panelWidth: 145,
+		panelWidth: 200,
 		isCombo: true,
 		url: $URL,
 		mode: 'local',
-		filter: function(q, row){
+		filter: function(q, row) {
 			var v = row[$(this).lookup('options')['textField']];
 			return v.indexOf(q.toLowerCase()) > -1 || $.hisui.toChineseSpell(v).toLowerCase().indexOf(q.toLowerCase()) > -1;
 		},
 		idField: 'RowId',
 		textField: 'Description',
-		columnsLoader: function(){
-			return [[{field:'Description',title:'',width:100}]]
+		columnsLoader: function() {
+			return [[{ field: 'Description', title: '', width: 100 }]];
 		},
 		fitColumns: true,
 		pagination: false
 	});
 
-	//ĞŞÕıupdateRow getChanges »ñÈ¡²»µ½ÖµµÄÎÊÌâ
+	// ä¿®æ­£updateRow getChanges è·å–ä¸åˆ°å€¼çš„é—®é¢˜
 	$.extend($.fn.datagrid.methods, {
-		updateRow: function(jq, param){
-			return jq.each(function(){
+		updateRow: function(jq, param) {
+			return jq.each(function() {
 				var target = this;
 				var state = $.data(target, 'datagrid');
 				var opts = state.options;
 				var row = opts.finder.getRow(target, param.index);
 				var updated = false;
-				for(var field in param.row){
-					if (row[field] != param.row[field]){
+				for (var field in param.row) {
+					if (row[field] != param.row[field]) {
 						updated = true;
 						break;
 					}
 				}
-				if (updated){
-					if ($.inArray(row, state.insertedRows) == -1){
-						if ($.inArray(row, state.updatedRows) == -1){
+				if (updated) {
+					if ($.inArray(row, state.insertedRows) == -1) {
+						if ($.inArray(row, state.updatedRows) == -1) {
 							state.updatedRows.push(row);
 						}
 					}
@@ -186,17 +201,43 @@ $.fn.dialog.defaults.iconCls='icon-w-paper';
 				}
 			});
 		}
-	})
-})(jQuery);
-
-// ½çÃæ¼ÓÔØºó,×Ô¶¯µ÷ÓÃµÄÒ»Ğ©À©Õ¹
-/*
-//2019-12-01 hisui.jsÖĞ´æÔÚÏàÍ¬µÄ´¦Àí,ÕâÀï×¢ÊÍµô
-$(function(){
-	$('.hisui-combobox').next().children(':text').bind('paste', function(e){
-		var ComboElement = $(this).parent().prev();
-		var q = e.originalEvent.clipboardData.getData('text');
-		ComboElement.combobox('showPanel').combobox('options').keyHandler.query.call(ComboElement[0], q, e);
 	});
-});
-*/
+	
+	/*
+	 * numberboxæ§åˆ¶å°æ•°ä½æ•°
+	 */
+	$.extend($.fn.numberbox.defaults, {
+		isKeyupChange: false,
+		precision: GetFmtNum('FmtRP'),
+		fix: true,
+		min: ''
+	});
+	
+	/*
+	 * mulcomboboxå¤šé€‰
+	 */
+	$.parser.plugins.push('mulcombobox');
+	$.fn.mulcombobox = function(options, param) {
+		if (typeof options === 'string') {
+			return $.fn.combobox.apply(this, arguments);
+		}
+		options = options || {};
+		return this.each(function() {
+			var jq = $(this);
+			var opts = $.extend({}, $.fn.combobox.parseOptions(this), options);
+			var myopts = $.extend(true, {
+				valueField: 'RowId',
+				textField: 'Description',
+				multiple: true,
+				rowStyle: 'checkbox',
+				selectOnNavigation: false,
+				separator: ','	// é»˜è®¤ç”¨,åˆ†éš”
+			}, opts);
+			$.fn.combobox.call(jq, myopts);
+		});
+	};
+	
+	$.extend($.fn.radio.defaults, {
+		requiredSel: true
+	});
+})(jQuery);

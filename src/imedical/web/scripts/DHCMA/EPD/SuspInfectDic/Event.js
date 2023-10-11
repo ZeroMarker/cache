@@ -60,7 +60,7 @@ function InitSuspInfectDicWinEvent(obj){
 			errinfo = errinfo + "代码为空!<br>";
 		}
 		if (!Desc) {
-			errinfo = errinfo + "名称为空!<br>";
+			errinfo = errinfo + "描述为空!<br>";
 		}	
 		if (!KindID){
 			errinfo = errinfo + "传染病类别为空!<br>";
@@ -118,7 +118,12 @@ function InitSuspInfectDicWinEvent(obj){
 				},false);
 
 				if (parseInt(flg) < 0) {
-					$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					if (parseInt(flg)=='-777') {
+						$.messager.alert("错误提示","-777：当前无删除权限，请启用删除权限后再删除记录!",'info');
+					}else {
+						$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					}
+					return;
 				} else {
 					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 					obj.RecRowID = "";
@@ -164,24 +169,49 @@ function InitSuspInfectDicWinEvent(obj){
 			var Kind = rd["BTKind"];
 			var IndNo = rd["BTIndNo"];
 			var IsActive = rd["IsActive"];
+			var KindCode = rd["KindCode"];
 			$('#txtCode').val(Code).validatebox("validate");
 			$('#txtDesc').val(Desc).validatebox("validate");
+			var InfectData=$cm({
+				ClassName :'DHCMed.EPDService.InfectionSrv',
+				QueryName : 'QryIFList',
+				ResultSetType :'array',
+				aKind : KindCode
+			},false);
+			$('#cboInfect').combobox('clear');
+			obj.cboInfect = $HUI.combobox('#cboInfect', {
+				editable: true,
+				defaultFilter:4,     //text字段包含匹配或拼音首字母包含匹配 不区分大小写
+				valueField: 'RowID',
+				textField: 'MIFDisease',
+				data:InfectData
+			});
+			
+			//$('#cboInfect').combobox('loadData',InfectData);
 			$('#cboInfect').combobox('setValue',InfectID);
 			$('#cboInfect').combobox('setText',Infection);
 			$('#cboKind').combobox('setValue',KindID);
 			$('#cboKind').combobox('setText',Kind);
 			$('#txtIndNo').val(IndNo);
 			$('#chkIsActive').checkbox('setValue',(IsActive==1 ? true:false));
+			
 	
 		}else{
 			obj.RecRowID = "";
 			$('#txtCode').val('');
 			$('#txtDesc').val('');
 			$('#cboInfect').combobox('clear');
+			$('#cboInfect').combobox('loadData',[]);
 			$('#cboKind').combobox('clear');
 			$('#txtIndNo').val('');
 			$('#chkIsActive').checkbox('setValue','');
 		}
+		var KindDict=$m({
+			ClassName:"DHCMed.SS.Dictionary",
+			MethodName:"GetStringById",
+			id:$("#cboKind").combobox("getValue"),
+			separete:'^'
+		},false);
 		$HUI.dialog('#InfectDicEdit').open();
 	}
 }

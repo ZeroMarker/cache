@@ -1,6 +1,6 @@
 ﻿/**
  * FileName: dhcbillmenu.ageconfig.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-10-08
  * Description: 年龄配置
  */
@@ -43,7 +43,7 @@ function initMenu() {
 		valueField: 'ID',
 		textField: 'Desc',
 		blurValidValue: true,
-		defaultFilter: 4
+		defaultFilter: 5
 	});
 	
 	$.cm({
@@ -88,14 +88,14 @@ function getLastValStr() {
 		hospId: getValueById("hospital")
 	}, function(rtn) {
 		var myAry = rtn.split("^");
-		if (myAry[0] == "0") {
-			var stVal = myAry[1];
-			var stUomId = myAry[2];
-			setValueById("stVal", stVal);
-			setValueById("stUom", stUomId);
-		}else {
+		if (myAry[0] != 0) {
 			$.messager.popover({msg: "初始化失败：" + myAry[0], type: "error"});
+			return;
 		}
+		var stVal = myAry[1];
+		var stUomId = myAry[2];
+		setValueById("stVal", stVal);
+		setValueById("stUom", stUomId);
 	});
 }
 
@@ -123,7 +123,6 @@ function initConfigList() {
 				   {title: '语义', field: 'TSemantics', width: 280},
 				   {title: 'TrowId', field: 'TrowId', hidden: true}
 			]],
-		data: [],
 		onLoadSuccess: function(data) {
 			selectRowIndex = undefined;
 		},
@@ -182,29 +181,30 @@ function addClick() {
 		return;
 	}
 	$.messager.confirm("确认", "确认保存？", function(r) {
-		if (r) {
-			$.m({
-				ClassName: "web.UDHCJFAgeConfig",
-				MethodName: "INSERT",
-				stValStr: stValStrs,
-				endValStr: endValStrs,
-				dispStr: dispValStrs,
-				guser: PUBLIC_CONSTANT.SESSION.USERID,
-				hospId: getValueById("hospital")
-			}, function(rtn) {
-				switch(rtn) {
-				case "0":
-					$.messager.popover({msg: "保存成功", type: "success"});
-					reloadDoc();
-					break;
-				case "-104":
-					$.messager.popover({msg: "结束数值过大", type: "error"});
-					break;
-				default:
-					$.messager.popover({msg: "保存失败：" + rtn, type: "error"});
-				}
-			});
+		if (!r) {
+			return;
 		}
+		$.m({
+			ClassName: "web.UDHCJFAgeConfig",
+			MethodName: "INSERT",
+			stValStr: stValStrs,
+			endValStr: endValStrs,
+			dispStr: dispValStrs,
+			guser: PUBLIC_CONSTANT.SESSION.USERID,
+			hospId: getValueById("hospital")
+		}, function(rtn) {
+			switch(rtn) {
+			case "0":
+				$.messager.popover({msg: "保存成功", type: "success"});
+				reloadDoc();
+				break;
+			case "-104":
+				$.messager.popover({msg: "结束数值过大", type: "error"});
+				break;
+			default:
+				$.messager.popover({msg: "保存失败：" + rtn, type: "error"});
+			}
+		});
 	});
 }
 
@@ -225,14 +225,14 @@ function checkData() {
 	}
 	
 	var stVal = getValueById("stVal");
-	if (+stVal > 365) {
+	if (stVal > 365) {
 		$.messager.popover({msg: "开始值请输入有效数字", type: "info"});
 		focusById("stVal");
 		return false;
 	}
 	
 	var endVal = getValueById("endVal");
-	if (+endVal > 365) {
+	if (endVal > 365) {
 		$.messager.popover({msg: "结束值请输入有效数字", type: "info"});
 		focusById("endVal");
 		return false;
@@ -292,36 +292,37 @@ function updateClick() {
 		return;
 	}
 	$.messager.confirm("确认", "确认修改？", function(r) {
-		if (r) {
-			$.m({
-				ClassName: "web.UDHCJFAgeConfig",
-				MethodName: "UpdateConfig",
-				stValStr: stValStrs,
-				endValStr: endValStrs,
-				dispStr: dispValStrs,
-				rowId: rowId,
-				guser: PUBLIC_CONSTANT.SESSION.USERID,
-				hospId: getValueById("hospital")
-			}, function(rtn) {
-				switch(rtn) {
-				case "0":
-					$.messager.popover({msg: "修改成功", type: "success"});
-					reloadDoc();
-					break;
-				case "-104":
-					$.messager.popover({msg: "结束数值过大", type: "error"});
-					break;
-				case "-501":
-					$.messager.popover({msg: "ID不存在", type: "error"});
-					break;
-				case "-102":
-					$.messager.popover({msg: "结束值大于下一个结束值，修改失败", type: "error"});
-					break;
-				default:
-					$.messager.popover({msg: "修改失败：" + rtn, type: "error"});
-				}
-			});
+		if (!r) {
+			return;
 		}
+		$.m({
+			ClassName: "web.UDHCJFAgeConfig",
+			MethodName: "UpdateConfig",
+			stValStr: stValStrs,
+			endValStr: endValStrs,
+			dispStr: dispValStrs,
+			rowId: rowId,
+			guser: PUBLIC_CONSTANT.SESSION.USERID,
+			hospId: getValueById("hospital")
+		}, function(rtn) {
+			switch(rtn) {
+			case "0":
+				$.messager.popover({msg: "修改成功", type: "success"});
+				reloadDoc();
+				break;
+			case "-104":
+				$.messager.popover({msg: "结束数值过大", type: "error"});
+				break;
+			case "-501":
+				$.messager.popover({msg: "ID不存在", type: "error"});
+				break;
+			case "-102":
+				$.messager.popover({msg: "结束值大于下一个结束值，修改失败", type: "error"});
+				break;
+			default:
+				$.messager.popover({msg: "修改失败：" + rtn, type: "error"});
+			}
+		});
 	});
 }
 
@@ -348,33 +349,34 @@ function deleteClick() {
 		return;
 	}
 	$.messager.confirm("确认", "确认删除？", function(r) {
-		if (r) {
-			$.m({
-				ClassName: "web.UDHCJFAgeConfig",
-				MethodName: "DeleteConfig",
-				stValStr: stValStrs,
-				endValStr: endValStrs,
-				dispStr: dispValStrs,
-				rowId: rowId,
-				guser: PUBLIC_CONSTANT.SESSION.USERID,
-				hospId: getValueById("hospital")
-			}, function(rtn) {
-				switch(rtn) {
-				case "0":
-					$.messager.popover({msg: "删除成功", type: "success"});
-					reloadDoc();
-					break;
-				case "-104":
-					$.messager.popover({msg: "结束数值过大", type: "error"});
-					break;
-				case "-501":
-					$.messager.popover({msg: "ID不存在", type: "error"});
-					break;
-				default:
-					$.messager.popover({msg: "删除失败：" + rtn, type: "error"});
-				}
-			});
+		if (!r) {
+			return;
 		}
+		$.m({
+			ClassName: "web.UDHCJFAgeConfig",
+			MethodName: "DeleteConfig",
+			stValStr: stValStrs,
+			endValStr: endValStrs,
+			dispStr: dispValStrs,
+			rowId: rowId,
+			guser: PUBLIC_CONSTANT.SESSION.USERID,
+			hospId: getValueById("hospital")
+		}, function(rtn) {
+			switch(rtn) {
+			case "0":
+				$.messager.popover({msg: "删除成功", type: "success"});
+				reloadDoc();
+				break;
+			case "-104":
+				$.messager.popover({msg: "结束数值过大", type: "error"});
+				break;
+			case "-501":
+				$.messager.popover({msg: "ID不存在", type: "error"});
+				break;
+			default:
+				$.messager.popover({msg: "删除失败：" + rtn, type: "error"});
+			}
+		});
 	});
 }
 

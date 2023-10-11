@@ -16,8 +16,11 @@ if (document.all) {
 var SelectedRow = 0;
 var rowid=0;
 function BodyLoadHandler() 
-{	
-    InitUserInfo(); //系统参数
+{
+	//modified by cjt 20230212 需求号3221958 UI页面改造
+	initPanelHeaderStyle();
+	initButtonColor();
+	InitUserInfo(); //系统参数
 	InitEvent();	
 	KeyUp("Item");	//清空选择
 	Muilt_LookUp("Item");
@@ -49,6 +52,9 @@ function BFind_Click()
 	val=val+"&Remark="+GetElementValue("Remark")
 	val=val+"&Item="+GetElementValue("Item")
 	val=val+"&ItemDR="+GetElementValue("ItemDR")
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		val += "&MWToken="+websys_getMWToken()
+	}
 	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCModel"+val;
 }
 function BClear_Click() 
@@ -65,17 +71,17 @@ function BAdd_Click() //增加
 	//alertShow("plist:"+plist);
 	var result=cspRunServerMethod(encmeth,'','',plist,'2');
 	result=result.replace(/\\n/g,"\n")
-	//alertShow("result"+result)
-	if(result=="")
-	{
-		messageShow("","","",t[-3001])
-		return
-		}
 	if (result>0)
 	{
 		alertShow("操作成功!")
 		location.reload();
-	}	
+	}
+	else
+	{
+		if(result=="-3001") messageShow("","","",t[-3001])
+		else  alertShow("操作失败!错误代码:"+result)
+		return
+	}
 }	
 function CombinData()
 {
@@ -100,16 +106,16 @@ function BUpdate_Click()
 	var plist=CombinData(); //函数调用
 	var result=cspRunServerMethod(encmeth,'','',plist);
 	result=result.replace(/\\n/g,"\n")
-	//alertShow("result"+result)
-	if(result=="") 
-	{
-		messageShow("","","",t[-3001]);
-		return
-	}
 	if (result>0)
 	{
 		alertShow("操作成功!")
 		location.reload();
+	}
+	else
+	{
+		if(result=="-3001") messageShow("","","",t[-3001])
+		else  alertShow("操作失败!错误代码:"+result)
+		return
 	}	
 }
 function BDelete_Click() 
@@ -120,8 +126,8 @@ function BDelete_Click()
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="") 
 	{
-	messageShow("","","",t[-3001])
-	return;
+		messageShow("","","",t[-3001])
+		return;
 	}
 	var result=cspRunServerMethod(encmeth,'','',rowid,'1');
 	result=result.replace(/\\n/g,"\n")

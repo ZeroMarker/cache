@@ -5,7 +5,7 @@
 	}
 	function LoadTestItemList(){
 		/// 初始化检查方法区域
-		$("#TesItem").html('<tr style="height:0px;" ><td style="width:20px;"></td><td style="width:20px;"></td><td></td><td style="width:20px;"></td><td></td><td style="width:20px;"></td><td></td></tr>');
+		$("#TesItem").html('<tr style="height:0px;" ><td style="width:30px;"></td><td></td><td style="width:30px;"></td><td></td><td style="width:30px;"></td><td></td></tr>');
 		runClassMethod("web.DHCAppPisMasterQuery","JsonTestItemListNew",{"HospID":LgHospID},function(jsonString){
 
 			if (jsonString != ""){
@@ -20,23 +20,22 @@
 	function InsTesItemRegion(Subitemobj){	
 		/// 标题行
 		var htmlstr = '';
-			htmlstr = '<tr style="height:30px"><td colspan="7" class=" tb_td_required" style="border:0px solid #ccc;font-weight:bold;">'+ Subitemobj.text +'</td></tr>';
+			//htmlstr = '<tr style="height:30px"><td colspan="7" class=" tb_td_required" style="border:0px solid #ccc;font-weight:bold;">'+ Subitemobj.text +'</td></tr>';
 		 itemhtmlstr = "";
 		for (var jj=0; jj<Subitemobj.items.length; jj++){
 			var itemobj=Subitemobj.items[jj]
-			itemhtmlstr=itemhtmlstr+'<tr style="height:30px"><td colspan="7" class=" " style="border:0px solid #ccc;font-weight:bold;">'+ itemobj.text +'</td></tr>';
+			itemhtmlstr=itemhtmlstr+'<tr style="height:30px"><td style="border:0px solid #ccc;"></td><td colspan="5" class=" " style="border:0px solid #ccc;font-weight:bold;">'+ itemobj.text +'</td></tr>';
 			var itemArr = itemobj.items;
 			var itemhtmlArr = [];
 			for (var j=1; j<=itemArr.length; j++){
-				
-				itemhtmlArr.push('<td style="width:30px;"><input id="'+ itemArr[j-1].value +'" name="'+ itemArr[j-1].name +'" type="checkbox" value="'+ itemArr[j-1].value +'" inputtype="'+ itemobj.text +'"></input></td><td >'+ itemArr[j-1].text +'</td>');
+				itemhtmlArr.push('<td style="width:30px; border-top:1px solid #ddd"><input id="'+ itemArr[j-1].value +'" name="'+ itemArr[j-1].name +'" type="checkbox" class="checkbox" value="'+ itemArr[j-1].value +'" inputtype="'+ itemobj.text +'"></input></td ><td  style="border-top:1px solid #ddd">'+ itemArr[j-1].text +'</td>');
 				if (j % 3 == 0){
-					itemhtmlstr = itemhtmlstr + '<tr><td></td>' + itemhtmlArr.join("") + '</tr>';
+					itemhtmlstr = itemhtmlstr + '<tr>' + itemhtmlArr.join("") + '</tr>';
 					itemhtmlArr = [];
 				}
 			}
 			if ((j-1) % 3 != 0){
-				itemhtmlstr = itemhtmlstr + '<tr><td></td>' + itemhtmlArr.join("") + '<td style="width:30px"></td><td></td></tr>';
+				itemhtmlstr = itemhtmlstr + '<tr>' + itemhtmlArr.join("") + '<td style="width:30px;border-top:1px solid #ddd"></td><td style="border-top:1px solid #ddd"></td></tr>';
 				itemhtmlArr = [];
 			}
 		}

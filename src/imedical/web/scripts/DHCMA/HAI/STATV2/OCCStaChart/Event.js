@@ -26,6 +26,7 @@
 		toolbox: {
 			feature: {
 				dataView: {show: false, readOnly: false},
+				magicType: {show: false, type: ['line', 'bar']},
 				saveAsImage: {show: true, pixelRatio: 2}
 			}
 		},
@@ -42,6 +43,13 @@
 	            radius: '55%',
 	            center: ['50%', '50%'],
 	            data: [],
+	            label: {
+	            	normal: {
+                		show: true,
+                		position: 'left',
+                		formatter:'{b}'+'\n'+'{d}' + '%'
+            		}
+            	},
 	            emphasis: {
 	                itemStyle: {
 	                    shadowBlur: 10,
@@ -131,6 +139,7 @@
 	
    	obj.LoadRep = function(){
 		var aHospIDs 	= $('#cboHospital').combobox('getValue');
+		var aDateType 	= $('#cboDateType').combobox('getValue');
 		var aDateFrom 	= $('#dtDateFrom').datebox('getValue');
 		var aDateTo		= $('#dtDateTo').datebox('getValue');
 		var aDicType  	= $('#cboDicType').combobox('getValue');
@@ -149,25 +158,21 @@
 			return;
 		}
 		
-		var dataInput = "ClassName=" + 'DHCHAI.STA.OccRepStaSrv' + "&QueryName=" + 'QryOccCaseSata' + "&Arg1=" + aHospIDs + "&Arg2=" + aRepType + "&Arg3=" + aDateFrom + "&Arg4="+ aDateTo  + "&Arg5="+ aDicType +"&ArgCnt=" + 5;
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 30000, //30秒超时
-			async: true,   //异步
-			beforeSend: function() {
-				 myChart.showLoading();
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				myChart.hideLoading();    //隐藏加载动画
-				var retval = (new Function("return " + data))();
-				obj.echartRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				myChart.hideLoading();    //隐藏加载动画
-			}
+		myChart.showLoading();	//隐藏加载动画
+		$cm({
+			ClassName:"DHCHAI.STA.OccRepStaSrv",
+			QueryName:"QryOccCaseSata",
+			aHospIDs:aHospIDs, 
+			aRegType:aRepType,
+			aDateFrom:aDateFrom, 
+			aDateTo:aDateTo, 
+			aDicTypeCode:aDicType, 
+			aDateType:aDateType,
+			page: 1,
+			rows: 999
+		},function(rs){
+			myChart.hideLoading();    //隐藏加载动画
+			obj.echartRatio(rs);
 		});
 	}
 	obj.echartRatio = function(runQuery){
@@ -179,7 +184,7 @@
 		var arrxAxis = new Array();
 		var arrCount = new Array();
 		var arrCount02 = new Array();
-		var arrRecord = runQuery.record;
+		var arrRecord = runQuery.rows;
 		for (var indRd = 0; indRd < arrRecord.length; indRd++){
 			var rd = arrRecord[indRd];
 			var str= new Object();

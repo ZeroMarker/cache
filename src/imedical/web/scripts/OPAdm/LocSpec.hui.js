@@ -5,6 +5,7 @@ function InitHospList()
 {
 	var hospComp = GenHospComp("DHC_LocSpec");
 	hospComp.jdata.options.onSelect = function(e,t){
+		$("#Loc,#Clinic,#ClinicService").combobox('select',"");
 		Init();
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){
@@ -26,7 +27,8 @@ function Init(){
 		ClassName:"web.DHCOPAdmReg",	//"web.DHCRBResSession",
 		QueryName:"OPDeptList",			//"FindLoc",
 		UserId:session['LOGON.USERID'],
-		HospitalID:$HUI.combogrid('#_HospList').getValue()
+		HospitalID:$HUI.combogrid('#_HospList').getValue(),
+		rows:99999
 	},function(Data){
 		var cbox = $HUI.combobox("#Loc", {
 				valueField: 'CTCode',
@@ -64,7 +66,7 @@ function Init(){
 	//初始化服务组
 	$.cm({
 		ClassName:"web.DHCRBCClinicServiceGroup",
-		QueryName:"GetAllClinicServiceGroupNew",
+		QueryName:"GetAllClinicServiceGroupLocSpec",
 		dataType:"json",
 		CLSGRPCode:"",CLSGRPDesc:"",
 		HospID:$HUI.combogrid('#_HospList').getValue(),
@@ -87,11 +89,8 @@ function Init(){
 function PageHandle(){
 }
 function InitEvent(){
-	$('#Bfind').bind('click', function(){
-		LocSpecTabDataGridLoad();
-	});
+	$('#Bfind').click(LocSpecTabDataGridLoad);
 }
-
 function InitLocSpecTabDataGridLoad(){
 	var toobar=[{
         text: '增加',
@@ -146,7 +145,7 @@ function InitLocSpecTabDataGridLoad(){
 				}
 			}
 		}
-	}); 
+	}).datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}); 
 	return LocSpecTabDataGrid;
 }
 function SetSelRowData(row){
@@ -174,7 +173,7 @@ function LocSpecTabDataGridLoad(){
 		HospId:HospID,
 		Pagerows:PageLogicObj.m_LocSpecTabDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
-		PageLogicObj.m_LocSpecTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+		PageLogicObj.m_LocSpecTabDataGrid.datagrid('unselectAll').datagrid('loadData',GridData);
 	})
 }
 function AddClickHandle(){

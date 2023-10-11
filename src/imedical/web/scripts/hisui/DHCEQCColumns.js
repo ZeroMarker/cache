@@ -7,6 +7,9 @@ function BodyLoadHandler()
 	Muilt_LookUp("Table^Format","N");
     InitUserInfo(); //系统参数
 	InitPage();	
+	initPanelHeaderStyle(); //added by LMH 20230211 UI 极简组件界面标题格式
+	showBtnIcon('BAdd^BUpdate^BDelete^BClear^BFind',false); //modified by LMH 20230211 动态设置是否极简显示按钮图标
+	initButtonColor(); //added by LMH 20230211 UI 初始化按钮颜色
 	disabled(true);//灰化
 	initButtonWidth()  //hisui改造:按钮长度一致 add by lmm 2018-08-20
 }

@@ -261,7 +261,14 @@ function GetCSPURL(){
 }
 function GetjsonQueryUrl(){
 	GetCSPURL()
-	jsonQueryUrl=CSPURL+ 'insujsonbuilder.csp'+"?ARGUS="+ROOTID+SplCode
+	//jsonQueryUrl=CSPURL+ 'insujsonbuilder.csp'+"?ARGUS="+ROOTID+SplCode  
+    jsonQueryUrl=CSPURL+ 'insujsonbuilder.csp?'   
+    if ("undefined" !== typeof websys_getMWToken){ 
+        jsonQueryUrl += "MWToken="+websys_getMWToken()     //+增加 MWToken DingSH 20230209
+        jsonQueryUrl +="&"
+        } 
+    jsonQueryUrl+=("ARGUS="+ROOTID+SplCode)
+
 }
 /*不用了
 //json转CSV

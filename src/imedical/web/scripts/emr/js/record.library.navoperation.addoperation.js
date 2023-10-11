@@ -914,9 +914,17 @@ function getAllOperInfo()
 
 function windowClose()
 {
-	window.opener=null;
-	window.open('','_self');
-	window.close();	
+    if (openWay == "editor")
+	{
+		parent.closeDialog("addoperationDialog");
+	}
+	else
+	{
+		//兼容showModalDialog写法
+		window.opener=null;
+		window.open('','_self');
+		window.close();
+	}
 }
 
 

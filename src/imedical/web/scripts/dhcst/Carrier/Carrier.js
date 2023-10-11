@@ -4,21 +4,21 @@
 //=========================配送商类别=============================
 var conditionCodeField = new Ext.form.TextField({
     id:'conditionCodeField',
-    fieldLabel:'代码',
+    fieldLabel:$g('代码'),
     allowBlank:true,
     //width:180,
     listWidth:180,
-    emptyText:'代码...',
+    emptyText:$g('代码...'),
     anchor:'90%',
     selectOnFocus:true
 });
 var conditionDescField = new Ext.form.TextField({
     id:'conditionDescField',
-    fieldLabel:'名称',
+    fieldLabel:$g('名称'),
     allowBlank:true,
     //width:150,
     listWidth:150,
-    emptyText:'名称...',
+    emptyText:$g('名称...'),
     anchor:'90%',
     selectOnFocus:true
 });
@@ -72,7 +72,7 @@ var CarrierGridDs = new Ext.data.Store({
 var CarrierGridCm = new Ext.grid.ColumnModel([
      new Ext.grid.RowNumberer(),
      {
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'Code',
         width:180,
         align:'left',
@@ -89,7 +89,7 @@ var CarrierGridCm = new Ext.grid.ColumnModel([
             }
         })
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'Desc',
         width:300,
         align:'left',
@@ -112,8 +112,8 @@ var CarrierGridCm = new Ext.grid.ColumnModel([
 CarrierGridCm.defaultSortable = true;
 
 var findCarrier = new Ext.Toolbar.Button({
-    text:'查询',
-    tooltip:'查询',
+    text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
     width : 70,
     height : 30,
@@ -126,8 +126,8 @@ var findCarrier = new Ext.Toolbar.Button({
 });
 
 var addCarrier = new Ext.Toolbar.Button({
-    text:'新建',
-    tooltip:'新建',
+    text:$g('新建'),
+    tooltip:$g('新建'),
     iconCls:'page_add',
     width : 70,
     height : 30,
@@ -137,8 +137,8 @@ var addCarrier = new Ext.Toolbar.Button({
 });
 
 var saveCarrier = new Ext.Toolbar.Button({
-    text:'保存',
-    tooltip:'保存',
+    text:$g('保存'),
+    tooltip:$g('保存'),
     iconCls:'page_save',
     width : 70,
     height : 30,
@@ -161,7 +161,7 @@ var saveCarrier = new Ext.Toolbar.Button({
         }
         
         if(data==""){
-            Msg.info("error", "没有修改或添加新数据!");
+            Msg.info("error", $g("没有修改或添加新数据!"));
             return false;
         }
        
@@ -170,21 +170,21 @@ var saveCarrier = new Ext.Toolbar.Button({
                 url: CarrierGridUrl+'?actiontype=save',
                 params: {data:data},
                 failure: function(result, request) {
-                    Msg.info("error", "请检查网络连接!");
+                    Msg.info("error", $g("请检查网络连接!"));
                 },
                 success: function(result, request) {
                     var jsonData = Ext.util.JSON.decode( result.responseText );
                     if (jsonData.success=='true') {
-                        Msg.info("success", "保存成功!");
+                        Msg.info("success", $g("保存成功!"));
                         CarrierGridDs.load({params:{start:0,limit:CarrierPagingToolbar.pageSize,sort:'RowId',dir:'desc',conditionCode:Ext.getCmp('conditionCodeField').getValue(),conditionDesc:Ext.getCmp('conditionDescField').getValue(),conditionType:App_StkTypeCode}});
                     }else{	                    
 						var date=jsonData.info
 						if(date==-1){
-							Msg.info("error", "代码重复!");}
+							Msg.info("error", $g("代码重复!"));}
 						else if(date==-2){
-							Msg.info("error", "名称重复!" );}
+							Msg.info("error", $g("名称重复!" ));}
 						else {
-							Msg.info("error", "保存失败！" );
+							Msg.info("error", $g("保存失败！" ));
 						}                       
                         CarrierGridDs.load({params:{start:0,limit:CarrierPagingToolbar.pageSize,sort:'RowId',dir:'desc',conditionCode:Ext.getCmp('conditionCodeField').getValue(),conditionDesc:Ext.getCmp('conditionDescField').getValue(),conditionType:App_StkTypeCode}});
                     }
@@ -196,7 +196,7 @@ var saveCarrier = new Ext.Toolbar.Button({
 });
 
 var saveAsCarrier = new Ext.Toolbar.Button({
-	text:'另存',
+	text:$g('另存'),
 	iconCls:'page_excel',
 	handler:function(){
 		ExportAllToExcel(CarrierGrid);
@@ -206,39 +206,39 @@ var saveAsCarrier = new Ext.Toolbar.Button({
 
 
 var deleteCarrier = new Ext.Toolbar.Button({
-    text:'删除',
-    tooltip:'删除',
+    text:$g('删除'),
+    tooltip:$g('删除'),
     iconCls:'page_delete',
     width : 70,
     height : 30,
     handler:function(){
         var cell = CarrierGrid.getSelectionModel().getSelectedCell();
         if(cell==null){
-            Msg.info("error", "请选择数据!");
+            Msg.info("error", $g("请选择数据!"));
             return false;
         }else{
             var record = CarrierGrid.getStore().getAt(cell[0]);
             var RowId = record.get("RowId");
             if(RowId!=""){
-                Ext.MessageBox.confirm('提示','确定要删除选定的行?',
+                Ext.MessageBox.confirm($g('提示'),$g('确定要删除选定的行?'),
                     function(btn) {
                         if(btn == 'yes'){
                             Ext.Ajax.request({
                                 url:CarrierGridUrl+'?actiontype=delete&rowid='+RowId,
-                                waitMsg:'删除中...',
+                                waitMsg:$g('删除中...'),
                                 failure: function(result, request) {
-                                    Msg.info("error", "请检查网络连接!");
+                                    Msg.info("error", $g("请检查网络连接!"));
                                 },
                                 success: function(result, request) {
                                     var jsonData = Ext.util.JSON.decode( result.responseText );
                                     if (jsonData.success=='true') {
-                                        Msg.info("success", "删除成功!");
+                                        Msg.info("success", $g("删除成功!"));
                                         CarrierGridDs.load({params:{start:0,limit:CarrierPagingToolbar.pageSize,sort:'RowId',dir:'desc',conditionCode:Ext.getCmp('conditionCodeField').getValue(),conditionDesc:Ext.getCmp('conditionDescField').getValue(),conditionType:App_StkTypeCode}});
                                     }else{
                                         if(jsonData.info==-1){
-                                            Msg.info("error", "配送商在药品定义里使用过，不能删除!");
+                                            Msg.info("error", $g("配送商在药品定义里使用过，不能删除!"));
                                         }else{
-                                            Msg.info("error", "删除失败!");
+                                            Msg.info("error", $g("删除失败!"));
                                         }
                                     }
                                 },
@@ -248,7 +248,7 @@ var deleteCarrier = new Ext.Toolbar.Button({
                     }
                 )
             }else{
-                Msg.info("error", "数据有错,没有RowId!");
+                Msg.info("error", $g("数据有错,没有RowId!"));
             }
         }
     }
@@ -263,7 +263,7 @@ var formPanel = new Ext.form.FormPanel({
     tbar:[findCarrier,'-',addCarrier,'-',saveCarrier,'-',saveAsCarrier],		//,'-',deleteCarrier
     items : [{
         xtype : 'fieldset',
-        title : '查询条件',
+        title : $g('查询条件'),
         defaults: {border:false},
 		style:DHCSTFormStyle.FrmPaddingV,
         layout : 'column',
@@ -284,8 +284,8 @@ var CarrierPagingToolbar = new Ext.PagingToolbar({
     store:CarrierGridDs,
     pageSize:35,
     displayInfo:true,
-    displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-    emptyMsg:"没有记录",
+    displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+    emptyMsg:$g("没有记录"),
     doLoad:function(C){
         var B={},
         A=this.getParams();
@@ -305,7 +305,7 @@ var CarrierPagingToolbar = new Ext.PagingToolbar({
 //表格
 CarrierGrid = new Ext.grid.EditorGridPanel({
     store:CarrierGridDs,
-    title:'配送商明细',
+    title:$g('配送商明细'),
     cm:CarrierGridCm,
     trackMouseOver:true,
     region:'center',
@@ -332,7 +332,7 @@ Ext.onReady(function(){
     Ext.QuickTips.init();
     Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
      var panel = new Ext.Panel({
-        title:'配送商维护',
+        title:$g('配送商维护'),
         activeTab:0,
         region:'north',
         height:DHCSTFormStyle.FrmHeight(1),

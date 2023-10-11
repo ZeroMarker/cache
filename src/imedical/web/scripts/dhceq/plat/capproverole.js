@@ -94,6 +94,7 @@ function ClearElement()
 	setElement("Desc","")
 	setElement("LocFlag","")
 	setElement("Remark","")
+	setEnabled(); //Add By QW20210311 BUG:QW0095 ≤‚ ‘–Ë«Û1804780
 }	
 function BFind_Clicked(){
 	$HUI.datagrid("#tDHCEQCApproveRole",{   

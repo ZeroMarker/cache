@@ -394,5 +394,10 @@ function accMul(arg1,arg2)
   return Number(s1.replace(".",""))*Number(s2.replace(".",""))/Math.pow(10,m)
 }
 
+///add by ZY0301 20220523
+function getParam(ID)
+{
+	
+}
 //定义页面加载方法
 document.body.onload = BodyLoadHandler;

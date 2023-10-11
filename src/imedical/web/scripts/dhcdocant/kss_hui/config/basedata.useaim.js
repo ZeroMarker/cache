@@ -244,7 +244,7 @@ function save(){
 	var specialFlag = $("#i-config input[name='specialFlag']").val();	
 	var action = $("#i-config input[name='action']").val();
 	if (tableType == "") tableType = type;
-	if (tableName == "") tableName = $.InvokeMethod("DHCAnt.Base.MainConfigExcute","GetDescByMCGCode", type);
+	if (tableName == "") tableName = $.InvokeMethod("DHCAnt.Base.MainConfigExcute","GetOSDesc", type);
 	var paraStr = id + "^" + tableType + "^" + tableName + "^" + desc + "^" + code + "^" + active;
 	var paraStr = paraStr + "^" + parCode + "^" + aimItem + "^" + specialFlag + "^" + "";
 	if( $.trim(code) =="") {

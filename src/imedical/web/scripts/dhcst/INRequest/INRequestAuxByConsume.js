@@ -14,10 +14,10 @@ if(gParam.length<1){
 }
 var LocField = new Ext.ux.LocComboBox({
 	id:'LocField',
-	fieldLabel:'请求部门',
+	fieldLabel:$g('请求部门'),
 	width:210,
 	listWidth:210,
-	emptyText:'请求部门...',
+	emptyText:$g('请求部门...'),
 	groupId:gGroupId,
 	listeners : {
 		'select' : function(e) {
@@ -37,10 +37,10 @@ LocField.on('select', function(e) {
 });
 var supplyLocField = new Ext.ux.LocComboBox({
 	id:'supplyLocField',
-	fieldLabel:'供给部门',
+	fieldLabel:$g('供给部门'),
 	width:210,
 	listWidth:210,
-	emptyText:'供给部门...',
+	emptyText:$g('供给部门...'),
 	groupId:gGroupId,
 	defaultLoc:{},
 	relid:Ext.getCmp("LocField").getValue(),
@@ -58,7 +58,7 @@ var group = new Ext.ux.StkGrpComboBox({
 });
 // 库存分类
 var M_StkCat = new Ext.ux.ComboBox({
-	fieldLabel : '库存分类',
+	fieldLabel : $g('库存分类'),
 	id : 'M_StkCat',
 	name : 'M_StkCat',
 	width:200,
@@ -72,7 +72,7 @@ var startDateField = new Ext.ux.DateField({
 	width:150,
 	listWidth:150,
     allowBlank:true,
-	fieldLabel:'开始日期',
+	fieldLabel:$g('开始日期'),
 	anchor:'90%',
 	value:new Date()
 });
@@ -82,14 +82,14 @@ var endDateField = new Ext.ux.DateField({
 	width:150,
 	listWidth:150,
     allowBlank:true,
-	fieldLabel:'结束日期',
+	fieldLabel:$g('结束日期'),
 	anchor:'90%',
 	value:new Date()
 });
 
 var days = new Ext.form.NumberField({
 	id:'days',
-	fieldLabel:'参考天数',
+	fieldLabel:$g('参考天数'),
 	allowBlank:true,
 	emptyText:'',
 	anchor:'90%',
@@ -99,7 +99,7 @@ var days = new Ext.form.NumberField({
 //是否按标准补货控件暂时不用
 var isBZ = new Ext.form.Checkbox({
 	id: 'isBZ',
-	boxLabel:'是否按标准补货',
+	boxLabel:$g('是否按标准补货'),
 	allowBlank:true,    
 	listeners:{
 		'check':function(obj,ischecked){
@@ -115,20 +115,20 @@ var isBZ = new Ext.form.Checkbox({
 });
 var CheckRound = new Ext.form.Checkbox({
 	id: 'CheckRound',
-	boxLabel:'数量取整',
+	boxLabel:$g('数量取整'),
 	allowBlank:true,
 	checked:true    
 })
 
 var CheckReqStock = new Ext.form.Checkbox({
 	id: 'CheckReqStock',
-	boxLabel:'库存小于消耗',
+	boxLabel:$g('库存小于消耗'),
 	allowBlank:true,
 	checked:true 
 })
 var HelpBT = new Ext.Button({
 	　　　　id:'HelpBtn',
-			text : '帮助',
+			text : $g('帮助'),
 			width : 70,
 			height : 30,
 			renderTo: Ext.get("tipdiv"),
@@ -236,80 +236,80 @@ var INRequestAuxByConsumeGridDs = new Ext.data.Store({
 var INRequestAuxByConsumeGridCm = new Ext.grid.ColumnModel([
 	 new Ext.grid.RowNumberer(),
 	 {
-        header:"药品rowid",
+        header:$g("药品rowid"),
         dataIndex:'inci',
         width:80,
         align:'left',
         sortable:true,
 		hidden:true
     },{
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'code',
         width:80,
         align:'left',
         sortable:true
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'desc',
         width:200,
         align:'left',
         sortable:true
     },{
-        header:"库存分类",
+        header:$g("库存分类"),
         dataIndex:'stkCatDesc',
         width:200,
         align:'left',
         sortable:true
     },{
-        header:"单位",
+        header:$g("单位"),
         dataIndex:'uomDesc',
         width:80,
         align:'left',
         sortable:true
     },{
-        header:"规格",
+        header:$g("规格"),
         dataIndex:'spec',
         width:80,
         align:'left',
         sortable:true
     },{
-        header:"厂商",
+        header:$g("生产企业"),
         dataIndex:'manf',
         width:180,
         align:'left',
         sortable:true
     },{
-        header:"库存",
+        header:$g("库存"),
         dataIndex:'StkQty',
         width:70,
         align:'right',
         sortable:true
     },{
-        header:"供应方库存",
+        header:$g("供应方库存"),
         dataIndex:'prvoqty',
         width:70,
         align:'right',
         sortable:true
     },{
-        header:"可用开医嘱量",
+        header:$g("可用开医嘱量"),
         dataIndex:'avaQty',
         width:120,
         align:'right',
         sortable:true
     },{
-        header:"日发药量",
+        header:$g("日发药量"),
         dataIndex:'dailyDispQty',
         width:100,
         align:'right',
         sortable:true
     },{
-        header:"参考天数内需求量",
+        header:$g("参考天数内需求量"),
         dataIndex:'reqQtyAll',
         width:150,
         align:'right',
         sortable:true
     },{
-        header:"申请量",
+        header:$g("申请量"),
         dataIndex:'applyQty',
         width:100,
         align:'right',
@@ -317,16 +317,41 @@ var INRequestAuxByConsumeGridCm = new Ext.grid.ColumnModel([
 		editor:new Ext.form.NumberField({
 			id:'applyQtyField',
 			selectOnFocus:true,
-            allowBlank:false
+            allowBlank:false,
+            listeners: {
+                'specialkey': function(field, e) {
+                    var keyCode = e.getKey();
+                    var col = GetColIndex(INRequestAuxByConsumeGrid, 'applyQty');
+                    var cell = INRequestAuxByConsumeGrid.getSelectionModel().getSelectedCell();
+                    var rowCount = INRequestAuxByConsumeGrid.getStore().getCount();
+                  
+                    if (keyCode == Ext.EventObject.UP) {
+                        var row = cell[0] - 1;
+                        if (row >= 0) {
+	                       
+	                       debugger
+                            INRequestAuxByConsumeGrid.startEditing(row, col);
+                            return;
+                        }
+                    }
+                    if (keyCode == Ext.EventObject.DOWN) {
+                        var row = cell[0] + 1;
+                        if (row < rowCount) {
+                            INRequestAuxByConsumeGrid.startEditing(row, col);
+                            return;
+                        }
+                    }
+                }
+            }
         })
     },{
-        header:"建议申请量",
+        header:$g("建议申请量"),
         dataIndex:'proReqQty',
         width:100,
         align:'right',
         sortable:true
     },{
-        header:"日期范围内发药总量",
+        header:$g("日期范围内发药总量"),
         dataIndex:'dispQtyAll',
         width:150,
         align:'right',
@@ -335,8 +360,8 @@ var INRequestAuxByConsumeGridCm = new Ext.grid.ColumnModel([
 ]);
 
 var find = new Ext.Toolbar.Button({
-	text:'查询',
-    tooltip:'查询',
+	text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
 	width:70,
 	height:30,
@@ -344,13 +369,13 @@ var find = new Ext.Toolbar.Button({
 		//供给部门
 		var frLoc = Ext.getCmp('supplyLocField').getValue(); 
 		if((frLoc=="")||(frLoc==null)){
-			Msg.info("error", "请选择供给部门!");
+			Msg.info("error", $g("请选择供给部门!"));
 			return false;
 		}
 		//请求部门
 		var toLoc = Ext.getCmp('LocField').getValue(); 
 		if((toLoc=="")||(toLoc==null)){
-			Msg.info("error", "请选择请求部门!");
+			Msg.info("error", $g("请选择请求部门!"));
 			return false;
 		}
 		//开始日期
@@ -358,7 +383,7 @@ var find = new Ext.Toolbar.Button({
 		if((startDate!="")&&(startDate!=null)){
 			startDate = startDate.format(App_StkDateFormat);
 		}else{
-			Msg.info("error", "请选择开始日期!");
+			Msg.info("error", $g("请选择开始日期!"));
 			return false;
 		}
 		//结束日期
@@ -366,13 +391,13 @@ var find = new Ext.Toolbar.Button({
 		if((endDate!="")&&(endDate!=null)){
 			endDate = endDate.format(App_StkDateFormat);
 		}else{
-			Msg.info("error", "请选择结束日期!");
+			Msg.info("error", $g("请选择结束日期!"));
 			return false;
 		}
 		//参考天数
 		var day = Ext.getCmp('days').getValue();
 		if(day==""){
-			Msg.info("error", "请填写参考天数!");
+			Msg.info("error", $g("请填写参考天数!"));
 			return false;
 		}
 		//类组
@@ -391,8 +416,8 @@ var find = new Ext.Toolbar.Button({
 });
 
 var save = new Ext.Toolbar.Button({
-	text:'保存',
-    tooltip:'保存',
+	text:$g('保存'),
+    tooltip:$g('保存'),
     iconCls:'page_save',
 	width : 70,
 	height : 30,
@@ -401,27 +426,27 @@ var save = new Ext.Toolbar.Button({
 		var frLoc = Ext.getCmp('supplyLocField').getValue(); 
 		var frLocName = Ext.getCmp('supplyLocField').getRawValue();
 		if((frLoc=="")||(frLoc==null)){
-			Msg.info("error", "请选择供给部门!");
+			Msg.info("error", $g("请选择供给部门!"));
 			return false;
 		}
 		//请求部门
 		var toLoc = Ext.getCmp('LocField').getValue(); 
 		var toLocName = Ext.getCmp('LocField').getRawValue();
 		if((toLoc=="")||(toLoc==null)){
-			Msg.info("error", "请选择请求部门!");
+			Msg.info("error",$g( "请选择请求部门!"));
 			return false;
 		}
 		//类组
 		var scg = Ext.getCmp('group').getValue();
 		var scgName = Ext.getCmp('group').getRawValue();		
 		if((scg=="")||(scg==null)){
-			Msg.info("error", "请选择类组!");
+			Msg.info("error", $g("请选择类组!"));
 			return false;
 		}
 		
 		var count = INRequestAuxByConsumeGridDs.getCount();
 		if(count==0){
-			Msg.info("error","没有出库请求明细,禁止保存!");
+			Msg.info("error",$g("没有出库请求明细,禁止保存!"));
 			return false;
 		}else{
 			var str = "";
@@ -447,38 +472,38 @@ var save = new Ext.Toolbar.Button({
 					}
 				}
 			}
-			if(str==""){Msg.info("error", "没有内容需要保存!");return false;};
+			if(str==""){Msg.info("error", $g("没有内容需要保存!"));return false;};
 			var req = "";
 			var status = "";
-			var remark = "辅助请求(依据消耗及补货标准)";
+			var remark = $g("辅助请求(依据消耗及补货标准)");
 			var reqInfo = frLoc+"^"+toLoc+"^"+UserId+"^"+scg+"^"+status+"^"+remark;
 			
 			Ext.Ajax.request({
 				url : 'dhcst.inrequestaction.csp?actiontype=save',
 				params:{req:req,reqInfo:reqInfo,data:str},
 				method : 'POST',
-				waitMsg : '查询中...',
+				waitMsg : $g('查询中...'),
 				success : function(result, request) {
 					var jsonData = Ext.util.JSON.decode(result.responseText);
 					if (jsonData.success == 'true') {
-						Msg.info("success", "保存成功!");
+						Msg.info("success", $g("保存成功!"));
 						req = jsonData.info;
 						location.href="dhcst.inrequest.csp?reqByabConsume="+req;
 					}else{
 						if(jsonData.info==-1){
-							Msg.info("error", "主表保存失败!");
+							Msg.info("error", $g("主表保存失败!"));
 						}else if(jsonData.info==-99){
-							Msg.info("error", "主表加锁失败!");
+							Msg.info("error", $g("主表加锁失败!"));
 						}else if(jsonData.info==-2){
-							Msg.info("error", "主表解锁失败!");
+							Msg.info("error", $g("主表解锁失败!"));
 						}else if(jsonData.info==-5){
-							Msg.info("error", "明细保存失败!");
+							Msg.info("error", $g("明细保存失败!"));
 						}else if(jsonData.info==-4){
-							Msg.info("error", "主表单号设置失败!");
+							Msg.info("error", $g("主表单号设置失败!"));
 						}else if(jsonData.info==-3){
-							Msg.info("error", "主表保存失败!");
+							Msg.info("error", $g("主表保存失败!"));
 						}else{
-							Msg.info("error", "保存失败!"+jsonData.info);
+							Msg.info("error", $g("保存失败!")+jsonData.info);
 						}
 					}
 				},
@@ -489,8 +514,8 @@ var save = new Ext.Toolbar.Button({
 });
 
 var clear = new Ext.Toolbar.Button({
-	text:'清屏',
-    tooltip:'清屏',
+	text:$g('清屏'),
+    tooltip:$g('清屏'),
     iconCls:'page_clearscreen',
 	width : 70,
 	height : 30,
@@ -531,7 +556,7 @@ Ext.onReady(function(){
 	Ext.Ajax.timeout = 900000;
 	var formPanel = new Ext.form.FormPanel({
 		labelWidth : 60,
-		title:'辅助请求(依据<消耗及补货标准>)',
+		title:$g('辅助请求(依据<消耗及补货标准>)'),
 		region:'north',
 		labelAlign : 'right',
 		height: DHCSTFormStyle.FrmHeight(3),
@@ -541,7 +566,7 @@ Ext.onReady(function(){
 			
 				layout : 'column',		
 				xtype : 'fieldset',
-				title : '选项信息',
+				title : $g('选项信息'),
 				style:DHCSTFormStyle.FrmPaddingV,
 				defaults:{border:false},
 				items : [{					
@@ -586,9 +611,10 @@ Ext.onReady(function(){
         width: 500,
         anchorOffset: 50,
 		hideDelay : 90000,
-        html: "<font size=3><p>---建议申请量定义---</p></font><font size=2 color=blue><p>日期范围内的发药数量的平均数</p></font><font size=2 color=red><p>乘以</p></font><font size=2 color=blue><p>参考天数</p></font><font size=2 color=red><p>减去</p></font><font size=2 color=blue><p>可用开医嘱数量</p></font>"+
-        "<font size=3><p>---申请量取整数---</p></font><font size=2 color=blue><p>建议申请量计算出后为小数则舍去小数后加1</p></font>"+
-        "<font size=3><p>---库存小于消耗---</p></font><font size=2 color=blue><p>过滤掉建议申请量不大于0的数据</p></font>"
+        html: "<font size=3><p>---"+$g("建议申请量定义")+"---</p></font><font size=2 color=blue><p>"+$g("日期范围内的发药数量的平均数")+"</p></font><font size=2 color=red><p>"+$g("乘以")+"</p></font><font size=2 color=blue><p>"+$g("参考天数")+"</p></font><font size=2 color=red><p>"+$g("减去")+"</p></font><font size=2 color=blue><p>"+$g("可用开医嘱数量")+"</p></font>"+
+        "<font size=3><p>---"+$g("申请量取整数")+"---</p></font><font size=2 color=blue><p>"+$g("建议申请量计算出后为小数则舍去小数后加1")+"</p></font>"+
+        "<font size=3><p>---"+$g("库存小于消耗")+"---</p></font><font size=2 color=blue><p>"+$g("过滤掉建议申请量不大于0的数据")+"</p></font>"+
+        "<font size=3><p>---"+$g("上下键选中申请量")+"---</p></font><font size=2 color=blue><p>"+$g("使用上下键时先点击Enter键使单元格处于非编辑状态，移动到目标单元格在点击Enter开始编辑")+"</p></font>"
     });
     Ext.getCmp('HelpBtn').focus('',100); //初始化页面给某个元素设置焦点
 });

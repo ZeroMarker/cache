@@ -27,6 +27,9 @@ var BElement   //=new array;
 //Modified by JDL 修改样式表引用
 //document.styleSheets[0].addImport("DHCEQStyle.css",0);
 //document.write("<LINK REL='stylesheet' TYPE='text/css' HREF='../scripts/DHCEQStyle.css'></LINK>")
+//CZF0137 2021-05-18 引入eq.hisui.css，解决谷歌浏览器datagrid编辑状态列错位问题
+document.write('<link rel="stylesheet" type="text/css" href="../scripts/dhceq/css/eq.hisui.css">');
+
 ///modify by lmm 2018-08-01
 ///增加入参：vBuss 业务代码
 function InitUserInfo(vBuss)
@@ -43,7 +46,7 @@ function InitUserInfo(vBuss)
     InitMessage(vBuss);
     GetDisabledElement();
     //菜单名传递
-    
+    curSSHospitalID=session['LOGON.HOSPID'];		//czf 2021-04-22
     var obj=document.getElementById("GetMenuName");
     if (obj)
     {
@@ -118,6 +121,7 @@ function DisableBElement(vElementID,vValue)
 			//ibtncss="hisui-linkbutton l-btn l-btn-small l-btn-disabled"
 			//jQuery("#"+vElementID).attr("class",ibtncss)
 		}
+		initButtonColor();
 	}
 }
 
@@ -434,7 +438,7 @@ function PageInsertRows(ElementName,ValList)
 			Rows=Rows + 1;
 			var val=OneRecord[i].split(",");
 			tbl.rows[Row1].cells[0].innerHTML="<label id='cOpinion_"+val[1]+"_"+val[0]+"'  Style='HEIGHT: 24px'>"+val[2]+"</label>";
-			tbl.rows[Row1].cells[1].innerHTML="<textarea id='Opinion_"+val[1]+"_"+val[0]+"' name='Opinion_"+val[1]+"_"+val[0]+"' class='textareabox-text' style='WIDTH: 700px; '></textarea>";	//modified by czf 20181119
+			tbl.rows[Row1].cells[1].innerHTML="<textarea id='Opinion_"+val[1]+"_"+val[0]+"' name='Opinion_"+val[1]+"_"+val[0]+"' class='textareabox-text' style='HEIGHT: 50px;WIDTH: 765px; '></textarea>";	//modified by czf 20181119
 			DisableElement('Opinion_'+val[1]+"_"+val[0],true);
 		}
 		tbl.deleteRow(Row2)	//modified by czf 20181119 删除插入的多余的行
@@ -750,7 +754,20 @@ function GetManuFactoryRowID(type,i)
 	 	var ManuFactory=GetElementValue(ManuFactoryName);
 	 	if (ManuFactory=="") return "";
 	 	var FirmType=3
-	 	var val=GetPYCode(ManuFactory)+"^"+ManuFactory+"^^^"+FirmType;	//modified by CZF0093 2020-03-17
+	 	// MZY0070	1756493		2021-02-20
+	 	var MFHandler=""
+	 	var MFTel=""
+	 	var obj=document.getElementById("MFHandler");
+	 	if (obj)
+	 	{
+		 	MFHandler=GetElementValue("MFHandler");
+	 	}
+	 	var obj=document.getElementById("MFTel");
+	 	if (obj)
+	 	{
+		 	MFTel=GetElementValue("MFTel");
+	 	}
+	 	var val=GetPYCode(ManuFactory)+"^"+ManuFactory+"^"+MFHandler+"^"+MFTel+"^"+FirmType;
 	 	//var encmeth=GetElementValue("UpdManuFactory");
 	 	var encmeth=GetElementValue("UpdProvider");
 		var rtn=cspRunServerMethod(encmeth,val);
@@ -1638,6 +1655,7 @@ function ConnectionString(StringBefore,StringAfter,Separator)
 *lmm
 *设置下拉列表必填项
 **/
+// modified by sjh 2020-09-01 BUG0032 增加validatebox样式属性
 function SetComboboxRequired(Names)
 {
 	if ((Names!="")&&(Names!=undefined))		//modified by czf 20181101
@@ -1648,7 +1666,10 @@ function SetComboboxRequired(Names)
 			var Requireflag=$("#c"+name[i]).find("span").html()
 			if (Requireflag="*")
 			{
-				$("#"+name[i]).attr("data-required",true).attr("title","必填项");
+				 $("#"+name[i]).attr("data-required",true).attr("title","必填项");
+				 $("#"+name[i]).validatebox({
+    					required: true
+				 });
 			}
 		}
 	}
@@ -1660,7 +1681,11 @@ function SetComboboxRequired(Names)
 				var Requireflag=$("#c"+id).find("span").html()
 				if (Requireflag="*")
 				{
-					$("#"+id).attr("data-required",true).attr("title","必填项");
+					 $("#"+id).attr("data-required",true).attr("title","必填项");
+					 //Modify by zx 2020-09-24 ZX0112 未定义问题修复
+					 $("#"+id).validatebox({
+	    					required: true
+					 });
 				}
 			}
 			
@@ -2093,4 +2118,24 @@ function ColFormat(val,format)
 		return val
 	}
 	
+}
+
+///设置datagrid奇偶行颜色
+///czf 2021-01-26 1750648
+function SetOddColor(TableID)
+{
+	if (TableID=="") return
+	$HUI.datagrid("#"+TableID,{ 
+		striped : true,
+		rowStyler: function(index,row){
+			if ((index%2)==1)
+			{
+				return 'background-color:#FAFAFA';
+			}
+			else
+			{
+				return 'background-color:#fff';
+			}
+		},
+	});
 }

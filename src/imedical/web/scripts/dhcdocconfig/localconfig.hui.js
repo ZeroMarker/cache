@@ -7,7 +7,7 @@
  * 
  * 注解说明：
  */
- 
+document.write('<script type="text/javascript" src="../scripts/bdp/Framework/scripts/ChinesePY.js"> </script>');
 //页面全局变量
 var PageLogicObj = {
 	m_Grid : "",
@@ -27,7 +27,15 @@ $(function(){
 	
 	//页面元素初始化
 	//PageHandle();
+	InitCache();
 })
+function InitCache(){
+	var hasCache = $.DHCDoc.hasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function InitHospList()
 {
 	var hospComp = GenHospComp("Doc_Config_LocalConfig");
@@ -54,6 +62,14 @@ function InitEvent(){
             findConfig();
         }
     });
+	$("#btnGenCfgCode").click(generateConfigCode);
+    $HUI.checkbox("#chkAutoReplace", {
+	    onChecked: function() { 
+		    var cfgValue =  $("#dg-value").val()
+		    cfgValue = replaceSpecChar(cfgValue)
+		    $("#dg-value").val(cfgValue)
+	    }
+    })
 	$(document.body).bind("keydown",BodykeydownHandler)
 }
 
@@ -67,7 +83,7 @@ function InitGrid(){
 		{field:'cfgCode',title:'配置代码',width:100},
 		{field:'cfgName',title:'配置名称',width:150},
 		{field:'cfgValue',title:'配置数值',width:150},
-		{field:'cfgNote',title:'配置说明',width:200},
+		{field:'cfgNote',title:'配置说明',width:200,showTip:true,tipWidth:450},
 		{field:'cfgHospDesc',title:'院区',width:200}
     ]]
 	var DurDataGrid = $HUI.datagrid("#i-durGrid", {
@@ -89,6 +105,9 @@ function InitGrid(){
 			SearchContent: "",
 			HospId:$HUI.combogrid('#_HospList').getValue()
 		},
+		onDblClickRow: function() {
+			opDialog("edit")	
+		},
 		columns :columns,
 		toolbar:[{
 				text:'添加',
@@ -108,6 +127,10 @@ function InitGrid(){
 //编辑或新增
 function opDialog(action) {
 	var selected = PageLogicObj.m_Grid.getSelected();
+	var HospID=$HUI.combogrid('#_HospList').getValue();
+	if ((!HospID)||(HospID=="")) {
+		HospID=session['LOGON.HOSPID'];
+	}
 	var tempValue = "",tempValue2 = "";
 	var _title = "", _icon = "" ;
 	if (action == "add") {
@@ -138,9 +161,10 @@ function opDialog(action) {
 	PageLogicObj.m_DG_Pro = $HUI.combobox("#dg-pro", {
 		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.LocalConfig&QueryName=QryProductLine&ResultSetType=array",
 		valueField:'code',
-		textField:'name'
+		textField:'name',
+		required:true
 	});
-
+	var useMethodStr = "";
 	if (action == "add") {
 		$("#dg-procode").val("");
 		$("#dg-proname").val("");
@@ -148,6 +172,9 @@ function opDialog(action) {
 		$("#dg-name").val("");
 		$("#dg-value").val("");
 		$("#dg-note").val("");
+		useMethodStr = "获取配置数值：w ##class(DHCDoc.DHCDocConfig.LocalConfig).GetLocalConfigValue()";
+		useMethodStr += "\n判断配置存在：w ##class(DHCDoc.DHCDocConfig.LocalConfig).CheckExitLocalConfigValue()";
+		$("#txtaUserMth").val(useMethodStr)
 		//PageLogicObj.m_DG_Hosp.setValue("");
 	} else {
 		$("#dg-code").val(selected.cfgCode);
@@ -155,6 +182,11 @@ function opDialog(action) {
 		$("#dg-value").val(selected.cfgValue);
 		$("#dg-note").val(selected.cfgNote);
 		PageLogicObj.m_DG_Pro.setValue(selected.productCode);
+		var inputParam1 = '"' + selected.productCode + '","' + selected.cfgCode + '",' + HospID;
+		var inputParam2 = '"' + selected.productCode + '","' + selected.cfgCode + '","需检验值",' + HospID;
+		useMethodStr = "获取配置数值：w ##class(DHCDoc.DHCDocConfig.LocalConfig).GetLocalConfigValue(" + inputParam1 + ")";
+		useMethodStr += "\n判断配置存在：w ##class(DHCDoc.DHCDocConfig.LocalConfig).CheckExitLocalConfigValue(" + inputParam2 + ")";
+		$("#txtaUserMth").val(useMethodStr)
 		//PageLogicObj.m_DG_Hosp.setValue(selected.cfgHosp);
 	}
 	$("#dg-name").validatebox("validate");
@@ -351,4 +383,42 @@ function BodykeydownHandler(e){
     }   
 }
 
+// @desc:	生成默认的配置代码
+function generateConfigCode() {
+	var configText = $.trim($("#dg-name").val()).replace(/\s/g,"");
+	if (configText != "") {
+		var dftConfigCode = getChinesePY(configText);
+		$("#dg-code").val(dftConfigCode);
+		$("#dg-code").validatebox("validate");
+	} else {
+		$.messager.alert("温馨提示", "请先录入配置名称", "info");
+	}
+}
+
+// @desc:	替换特殊字符（空格、回车、换行）
+function replaceSpecChar(str) {
+	if ($("#chkAutoReplace").checkbox('getValue')) {
+		str = $.trim(str)
+		str = str.replace(/\s/g,"");
+		str = str.replace(/\r\n/g,"")
+		str = str.replace(/\n/g,"");
+		return str
+	} else {
+		return str
+	}
+}
+
+function getChinesePY(regStr) {
+	var result = "";
+	var strlh = regStr.length;
+	for(var i = 0;i < strlh; i++){
+		if ((i!=0)&&(i!=1)) {
+		  result += Pinyin.GetJPU(regStr.charAt(i).toString()) ;
+		} else {
+		  var oneQP = Pinyin.GetQP(regStr.charAt(i).toString());
+		  result += oneQP.replace(oneQP[0], oneQP[0].toUpperCase())
+		}
+	} 
+  	return result; 
+}
 

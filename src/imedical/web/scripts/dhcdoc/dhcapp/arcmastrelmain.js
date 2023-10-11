@@ -10,14 +10,19 @@ var tabsObjArr = [
 	{"tabTitle":"后处理方法","tabCsp":"dhcapp.arclinkdisp.csp"},
 	{"tabTitle":"体位","tabCsp":"dhcapp.arclinkpos.csp"},
 	{"tabTitle":"打折系数","tabCsp":"dhcapp.arcdiscnew.csp"},
-	{"tabTitle":"多部位及申请单","tabCsp":"dhcapp.arcadd.csp"},
+	//{"tabTitle":"多部位及申请单","tabCsp":"dhcapp.arcadd.csp"},
 	{"tabTitle":"医嘱部位关联","tabCsp":"dhcapp.arclinktarnew.csp"}
-	];
+ ];
 
 $(function(){
 	var hospStr=session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
 	var hospComp = GenHospComp("Doc_APP_Arcmastrelmain",hospStr);
 	hospComp.jdata.options.onSelect  = function(){
+		var HospID=$HUI.combogrid('#_HospList').getValue();
+		var uniturl = LINK_CSP+"?ClassName=web.DHCAPPCommonUtil&MethodName=jsonArcItemCat&HospID="+HospID;
+		var arcItemCatCombobox = new ListCombobox("arcitemcat",uniturl,'');
+		arcItemCatCombobox.init();
+		$("#arcitemdesc").val(""); 
 		queryArcItem();
 	} 
 	/// 初始化界面默认信息

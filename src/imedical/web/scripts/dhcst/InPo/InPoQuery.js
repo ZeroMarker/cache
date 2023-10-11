@@ -9,7 +9,7 @@ FindINPo=function(fn) {
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 	
 	var PhaLoc = new Ext.ux.LocComboBox({
-		fieldLabel : '科室',
+		fieldLabel : $g('科室'),
 		id : 'PhaLoc',
 		name : 'PhaLoc',
 		anchor : '90%',
@@ -20,7 +20,7 @@ FindINPo=function(fn) {
 	
 	// 起始日期
 	var StartDate = new Ext.ux.DateField({
-		fieldLabel : '起始日期',
+		fieldLabel : $g('起始日期'),
 		id : 'StartDate',
 		name : 'StartDate',
 		anchor : '90%',
@@ -29,7 +29,7 @@ FindINPo=function(fn) {
 	});
 	// 截止日期
 	var EndDate = new Ext.ux.DateField({
-		fieldLabel : '截止日期',
+		fieldLabel : $g('截止日期'),
 		id : 'EndDate',
 		name : 'EndDate',
 		anchor : '90%',
@@ -39,16 +39,16 @@ FindINPo=function(fn) {
 
 	var inpoNoField = new Ext.form.TextField({
 		id:'inpoNoField2',
-		fieldLabel:'订单号',
+		fieldLabel:$g('订单号'),
 		allowBlank:true,
-		emptyText:'订单号...',
+		emptyText:$g('订单号...'),
 		anchor:'90%',
 		selectOnFocus:true
 	});
 	
 	// 物资名称
 	var InciDesc = new Ext.form.TextField({
-		fieldLabel : '名称',
+		fieldLabel : $g('名称'),
 		id : 'InciDesc',
 		name : 'InciDesc',
 		anchor : '90%',
@@ -63,7 +63,7 @@ FindINPo=function(fn) {
 		}
 	});
 	var IncId = new Ext.form.TextField({
-		fieldLabel : '名称',
+		fieldLabel : $g('名称'),
 		id : 'IncId',
 		name : 'IncId',
 		hidden:true
@@ -89,19 +89,19 @@ FindINPo=function(fn) {
 		Ext.getCmp("InciDesc").setValue(InciDesc);
 		Ext.getCmp("IncId").setValue(inciDr);
 	}
-	// 供应商
+	// 经营企业
 	var apcVendorField = new Ext.ux.VendorComboBox({
-		fieldLabel : '供应商',
+		fieldLabel : $g('经营企业'),
 		id : 'apcVendorField',
 		name : 'apcVendorField',
 		anchor : '90%',
-		emptyText : '供应商...'
+		emptyText : $g('经营企业...')
 	});
 	
 	
 	var finishflag = new Ext.form.Checkbox({
 		id: 'finishflag',
-		fieldLabel:'完成',
+		fieldLabel:$g('完成'),
 		allowBlank:true,
 		anchor:'90%'
 	});
@@ -109,8 +109,8 @@ FindINPo=function(fn) {
 	// 查询订单按钮
 	var SearchBT = new Ext.Toolbar.Button({
 		id : "SearchBT",
-		text : '查询',
-		tooltip : '点击查询订单',
+		text : $g('查询'),
+		tooltip : $g('点击查询订单'),
 		width : 70,
 		height : 30,
 		iconCls : 'page_find',
@@ -123,8 +123,8 @@ FindINPo=function(fn) {
 	// 清空按钮
 	var ClearBT = new Ext.Toolbar.Button({
 		id : "ClearBT",
-		text : '清屏',
-		tooltip : '点击清屏',
+		text : $g('清屏'),
+		tooltip : $g('点击清屏'),
 		width : 70,
 		height : 30,
 		iconCls : 'page_clearscreen',
@@ -135,7 +135,7 @@ FindINPo=function(fn) {
 	
 	var cancelBt=new Ext.Toolbar.Button({
 		id : "cancelBT",
-		text : '取消',
+		text : $g('取消'),
 		iconCls:'page_delete',
 		width : 70,
 		height : 30,
@@ -170,7 +170,7 @@ FindINPo=function(fn) {
 	function Query() {
 		var phaLoc = Ext.getCmp("PhaLoc").getValue();
 		if (phaLoc =='' || phaLoc.length <= 0) {
-			Msg.info("warning", "请选择订购部门!");
+			Msg.info("warning", $g("请选择订购部门!"));
 			return;
 		}
 		var startDate = Ext.getCmp("StartDate").getRawValue();
@@ -190,7 +190,7 @@ FindINPo=function(fn) {
 			Ext.getCmp("IncId").setValue("");
 		}
 		var InciId=Ext.getCmp("IncId").getRawValue();
-		//开始日期^截止日期^订单号^供应商id^科室id^完成标志^审核标志^订单状态(未入库，部分入库，全部入库)^物资id
+		//开始日期^截止日期^订单号^经营企业id^科室id^完成标志^审核标志^订单状态(未入库，部分入库，全部入库)^物资id
 		var ListParam=startDate+'^'+endDate+'^'+PoNo+'^'+Vendor+'^'+phaLoc+'^'+Complete+'^N^'+Status+'^'+InciId;
 		//alert(ListParam);
 		var Page=GridPagingToolbar.pageSize;
@@ -218,11 +218,11 @@ FindINPo=function(fn) {
 	function renderPoStatus(value){
 		var PoStatus='';
 		if(value==0){
-			PoStatus='未入库';			
+			PoStatus=$g('未入库');			
 		}else if(value==1){
-			PoStatus='部分入库';
+			PoStatus=$g('部分入库');
 		}else if(value==2){
-			PoStatus='全部入库';
+			PoStatus=$g('全部入库');
 		}
 		return PoStatus;
 	}
@@ -270,39 +270,39 @@ FindINPo=function(fn) {
 		sortable : true,
 		hidden : true
 	}, {
-		header : "订单号",
+		header : $g("订单号"),
 		dataIndex : 'PoNo',
 		width : 120,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "订购科室",
+		header : $g("订购科室"),
 		dataIndex : 'PoLoc',
 		width : 120,
 		align : 'left',
 		sortable : true,
 		hidden:true
 	}, {
-		header : "供应商",
+		header : $g("经营企业"),
 		dataIndex : 'Vendor',
 		width : 120,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "订单状态",
+		header : $g("订单状态"),
 		dataIndex : 'PoStatus',
 		width : 90,
 		align : 'left',
 		sortable : true,
 		renderer:renderPoStatus
 	}, {
-		header : "订单日期",
+		header : $g("订单日期"),
 		dataIndex : 'PoDate',
 		width : 80,
 		align : 'right',
 		sortable : true
 	},{
-		header : "完成",
+		header : $g("完成"),
 		dataIndex : 'CmpFlag',
 		width : 60,
 		align : 'center',
@@ -319,8 +319,8 @@ FindINPo=function(fn) {
 		store:MasterStore,
 		pageSize:PageSize,
 		displayInfo:true,
-		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录"
+		displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+		emptyMsg:$g("没有记录")
 	});
 	var MasterGrid = new Ext.grid.GridPanel({
 		title : '',
@@ -391,13 +391,13 @@ FindINPo=function(fn) {
 		store:DetailStore,
 		pageSize:PageSize,
 		displayInfo:true,
-		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录"
+		displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+		emptyMsg:$g("没有记录")
 	});
 		
 	var nm = new Ext.grid.RowNumberer();
 	var DetailCm = new Ext.grid.ColumnModel([nm, {
-		header : "订单明细id",
+		header : $g("订单明细id"),
 		dataIndex : 'PoItmId',
 		width : 100,
 		align : 'left',
@@ -411,44 +411,44 @@ FindINPo=function(fn) {
 		sortable : true,
 		hidden : true
 	}, {
-		header : '代码',
+		header : $g('代码'),
 		dataIndex : 'IncCode',
 		width : 80,
 		align : 'left',
 		sortable : true
 	}, {
-		header : '名称',
+		header : $g('名称'),
 		dataIndex : 'IncDesc',
 		width : 230,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "单位",
+		header : $g("单位"),
 		dataIndex : 'PurUom',
 		width : 80,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "进价",
+		header :$g("进价"),
 		dataIndex : 'Rp',
 		width : 60,
 		align : 'right',
 		
 		sortable : true
 	}, {
-		header : "订购数量",
+		header : $g("订购数量"),
 		dataIndex : 'PurQty',
 		width : 80,
 		align : 'right',
 		sortable : true
 	}, {
-		header : "到货数量",
+		header : $g("到货数量"),
 		dataIndex : 'ImpQty',
 		width : 80,
 		align : 'right',
 		sortable : true
 	}, {
-		header : "未到货数量",
+		header : $g("未到货数量"),
 		dataIndex : 'NotImpQty',
 		width : 80,
 		align : 'right',
@@ -480,7 +480,7 @@ FindINPo=function(fn) {
 			layout:'fit',
 			items : [{
 				xtype : 'fieldset',
-				title : '查询信息',
+				title : $g('查询信息'),
 				layout : 'column',
 				style:DHCSTFormStyle.FrmPaddingV,				
 				items : [{
@@ -552,7 +552,7 @@ FindINPo=function(fn) {
 		layout:'border',
 		items : [{
 			region:'west',		
-			title:'订单',
+			title:$g('订单'),
 			activeTab:0,
 			height:410,
 			autoScroll:true,
@@ -566,7 +566,7 @@ FindINPo=function(fn) {
 		},{
 			region:'center',
 			layout:'fit',
-			title:'订单明细',
+			title:$g('订单明细'),
 			activeTab:0,
 			height:410,
 			deferredRender:true,
@@ -577,7 +577,7 @@ FindINPo=function(fn) {
 		//renderTo : 'mainPanel'
 	});
 	var win = new Ext.Window({
-		title:'查找订单',
+		title:$g('查找订单'),
 		width:document.body.clientWidth*0.9,
 		height:document.body.clientHeight*0.9,
 		minWidth:600, 

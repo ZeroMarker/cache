@@ -1,13 +1,12 @@
 /// udhcOPChargeYCCL.js
 
 var m_PrtXMLName = "";
-var m_YBConFlag = "0";
 var listobj = parent.frames["udhcOPRefundyccl_Order"];
 
 $(function() {
 	init_Layout();
-	
-	$("#ReceipNO").keydown(function(e) {
+
+	$("#ReceipNO").focus().keydown(function(e) {
 		ReceipNO_KeyDown(e);
 	});
 	
@@ -37,28 +36,13 @@ $(function() {
 	
 	$HUI.combobox("#RefundPayMode", {
 		disabled: true,
-		url: $URL + '?ClassName=web.UDHCOPGSConfig&QueryName=ReadGSINSPMList&ResultSetType=array',
-		method: 'GET',
+		url: $URL + '?ClassName=web.UDHCOPOtherLB&MethodName=ReadPayModeBroker&JSFunName=GetPayModeToHUIJson',
 		editable: false,
-		valueField: 'CTPMRowID',
-		textField: 'CTPMDesc',
-		onBeforeLoad: function(param) {
-			param.GPRowID = session['LOGON.GROUPID'];
-			param.HospID = session['LOGON.HOSPID'];
-			param.TypeFlag = "FEE";
-		}
+		valueField: 'id',
+		textField: 'text'
 	});
 	
 	IntDoc();
-	
-	var encmeth = getValueById("ReadOPBaseEncrypt");
-	if (encmeth != "") {
-		var myrtn = cspRunServerMethod(encmeth, session['LOGON.HOSPID']);
-		var myary = myrtn.split("^");
-		m_YBConFlag = myary[12];
-	}
-	
-	focusById("ReceipNO");
 });
 
 function IntDoc() {
@@ -122,11 +106,11 @@ function ReceipNO_KeyDown(e) {
 			return;
 		}
 		var encmeth = getValueById("getReceipID");
-		var rtn = cspRunServerMethod(encmeth, 'SetReceipID', '', ReceipNo, "", session['LOGON.HOSPID']);
+		var rtn = cspRunServerMethod(encmeth, "SetReceipID", "", ReceipNo, session['LOGON.HOSPID']);
 		var ReceipID = getValueById("ReceipID");
 		if (ReceipID != "") {
 			var encmeth = getValueById("getReceiptinfo");
-			if (cspRunServerMethod(encmeth, 'SetReceipInfo', '', ReceipID, session['LOGON.HOSPID']) == '0') {
+			if (cspRunServerMethod(encmeth, "SetReceipInfo", "", ReceipID, session['LOGON.HOSPID']) == '0') {
 				enableById("ReTrade");
 				parent.frames['udhcOPRefundyccl_Order'].location.href = "websys.default.hisui.csp?WEBSYS.TCOMPONENT=udhcOPRefundyccl.Order&ReceipRowid=" + ReceipID;
 			}
@@ -141,7 +125,7 @@ function ReceipNO_KeyDown(e) {
 
 function ReTrade_Click() {
 	var InsType = getValueById("InsType");
-	var ReceipRowid = InsType = getValueById("ReceipID");
+	var ReceipRowid = getValueById("ReceipID");
 	if (ReceipRowid != "") {
 		var encmeth = getValueById("GetOriginalTradeRowID");
 		if (encmeth) {
@@ -155,7 +139,7 @@ function ReTrade_Click() {
 		listobj.NoHideAlert("发票不存在!");
 		return;
 	}
-	//add tangtao 2011-11-06   软POS
+	//add tangtao 2011-11-06 软POS
 	var mystr = getValueById("RefundPayMode");
 	var myary1 = mystr.split("^");
 	var myPayModeDR = myary1[0];
@@ -190,7 +174,7 @@ function ReTrade_Click() {
 				if (BankCardNO == "-1") {
 					return;
 				}
-				//BankCardNO,ReloadFlag,YBConFlag,AdmSource,BankTradeType,ClientType,PrtRowIDStr
+				//BankCardNO,YBConFlag,AdmSource,BankTradeType,ClientType,PrtRowIDStr
 				//增加医保以后要考虑YBConFlag , AdmSource
 				var retn = BMCOPPay(BankCardNO, "", "", "", "C", "26", ReceipRowid);
 				if (retn == "DelHisSuccess") {
@@ -214,10 +198,10 @@ function BillPrintNew(INVstr) {
 	for (var invi = 1; invi < INVtmp.length; invi++) {
 		if (INVtmp[invi] != "") {
 			var encmeth = getValueById("getSendtoPrintinfo");
-			var PayMode = getValueById("PayMode");
+			var PayMode = "";
 			var Guser = session['LOGON.USERID'];
-			var sUserCode = session["LOGON.USERCODE"];
-			var Printinfo = cspRunServerMethod(encmeth, "InvPrintNew", m_PrtXMLName, INVtmp[invi], sUserCode, PayMode, "");
+			var UserCode = session["LOGON.USERCODE"];
+			var Printinfo = cspRunServerMethod(encmeth, "InvPrintNew", m_PrtXMLName, INVtmp[invi], UserCode, PayMode, "");
 		}
 	}
 }
@@ -296,7 +280,7 @@ function GetCardNo() {
 	}
 }
 
-function init_Layout(){
+function init_Layout() {
 	$('#cReceipNO').parent().parent().css("width", "57px");
 	DHCWeb_ComponentLayout();
 }

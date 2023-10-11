@@ -30,8 +30,10 @@ $(function(){
 	//住院号回车事件
 	$('#txt-pameno').on('keypress',function(event){
 		if(window.event.keyCode == "13"){
-			var patno=$.trim($("#txt-pameno").val());
+			var medicare = $.trim($("#txt-pameno").val());
+			var patno = tkMakeServerCall("PHA.COM.Method","GetPatNoByMedicare",medicare,"IP")
 			if (patno!=""){
+				$("#txt-patno").val(patno);
 				QueryInPhDispList();
 			}	
 		}
@@ -78,7 +80,8 @@ function InitGridPrescList(){
 	var jqOptions={
 	    colModel: columns, //列
 	    url: ChangeCspPathToAll(LINK_CSP)+'?ClassName=web.DHCINPHA.HMPresTrack.PresTrackQuery&MethodName=jsGetWardPatPresList', //查询后台	
-	    height: DhcphaJqGridHeight(2,1),
+	    //height: DhcphaJqGridHeight(2,1),
+	    height:100,
 	    fit:true,
 	    multiselect: false,
 	    shrinkToFit:false,
@@ -118,7 +121,7 @@ function InitGridAdm(){
 	var jqOptions={
 	    colModel: columns, //列
 	    url: ChangeCspPathToAll(LINK_CSP)+'?ClassName=web.DHCINPHA.HMTrialDrugDisp.TrialDrugDispQuery&MethodName=jsQueryDispAdmList', //查询后台
-	    height: DhcphaJqGridHeight(2,3)*0.4,
+	    height: (DhcphaJqGridHeight(2,3)-62)*0.5,
 	    multiselect: false,
 	    onSelectRow:function(id,status){
 			var id = $(this).jqGrid('getGridParam', 'selrow');
@@ -171,12 +174,12 @@ function InitGridAdmPrescList(){
 	var jqOptions={
 	    colModel: columns, //列
 	    url: ChangeCspPathToAll(LINK_CSP)+'?ClassName=web.DHCINPHA.HMPresTrack.PresTrackQuery&MethodName=jsGetWardPatPresList', //查询后台	
-	    height: DhcphaJqGridHeight(2,3)*0.52,
+	    height: (DhcphaJqGridHeight(2,3)-62)*0.5,
 	    fit:true,
 	    multiselect: false,
 	    shrinkToFit:false,
-	    datatype:"local",
 	    pager: "#jqGridPager1", 	//分页控件的id
+	    datatype:"local",
 	    onSelectRow:function(id,status){
 			QueryGridDispSub()
 		},
@@ -200,10 +203,11 @@ function ClearConditons(){
 function InitBodyStyle(){
 	$('#container').empty();
 	var wardtitleheight=$("#gview_grid-presclist .ui-jqgrid-hbox").height();
-	var wardheight=DhcphaJqGridHeight(1,2)-wardtitleheight-50;
-	var prescheight=DhcphaJqGridHeight(1,1)+60;
+	var wardheight=DhcphaJqGridHeight(1,2)-wardtitleheight-70;
+	var prescheight=DhcphaJqGridHeight(1,1)+70;
 	$("#grid-wardpatprelist").setGridHeight(wardheight);
 	$("#container").height(prescheight);
+	$('.dhcpha-tab-content').height($('body').height())
 }
 
 function InitTrialDispTab(){
@@ -287,7 +291,7 @@ function setSummary(data)
 		var content = $('<a href="#"></a>');
 		$(content).append(detial);
 		var tmpData ='<li class="green">'
-		               +'<h3>'+data[i].TExecuteDate+'<span>'+data[i].TExecuteTime+'</span></h3>'
+		               +'<h3>'+data[i].TExecuteDate+'<span style="padding-top:2px">'+data[i].TExecuteTime+'</span></h3>'
 		               	+ $(content)[0].outerHTML
 		            +'</li>';         
 		$('#container').append(tmpData);           

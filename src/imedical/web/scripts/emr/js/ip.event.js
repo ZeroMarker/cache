@@ -29,7 +29,23 @@ function setHtmlTitle()
 	else if (eventType == "Manipulate")
 	{
 		document.title = "操作记录";
-	} 		
+	} 
+	else if (eventType == "Consult")
+	{
+		document.title = "会诊";
+	} 	
+	else if (eventType == "MDTConsult")
+	{
+		document.title = "MDT会诊";
+	}
+	else if (eventType == "DischargeRecord")
+	{
+		document.title = "出院记录";
+	}
+	else if (eventType == "InformedConsent")
+	{
+		document.title = "特殊治疗知情同意书";
+	}	
 }
 
 //取危机值
@@ -40,7 +56,7 @@ function getData(data)
 		headerCls:'panel-header-gray',
 	    loadMsg:'数据装载中......',
 	    url:'../EMRservice.Ajax.eventData.cls?Action=GetData&EventType='+eventType+'&EpisodeID='+episodeId, 
-	    singleSelect:true,
+	    singleSelect:false,
 	    idField:'ID',
 	    fitColumns:false,
 	    checkOnSelect:true,
@@ -72,13 +88,27 @@ function getData(data)
 					}
 				}
 			}
-			if ((obj.rowIndex != undefined)&&!isNaN(obj.rowIndex))
+			if ((obj != undefined)&&(obj.rowIndex != undefined)&&!isNaN(obj.rowIndex))
 			{
 				$('#eventValues').datagrid("checkRow",obj.rowIndex);
 			} 
-		} 
+		},
+        onCheckAll: function(rows) {
+            var length = rows.length;
+            if (length == 0) return;
+            for (i = 0; i < length; i++) {
+                if (rows[i].IsActive != "提示") {
+	            	$('#eventValues').datagrid('unselectRow', i);
+	        	}
+            }
+        }  
 	});	
 	$(".datagrid-header-check").attr("disabled","disabled"); 
+	if (eventType == "Operation")
+	{
+		$('#eventValues').datagrid({singleSelect:true});
+		$('#eventValues').datagrid('hideColumn','ck');
+	}
 }
 
 //脚本权限
@@ -125,7 +155,7 @@ $("#new").click(function(){
 	var list = getRefScheme("reference>item");
 	var checkedItems = $('#eventValues').datagrid('getChecked');
 	if (checkedItems.length == 0) {
-        $.messager.popover({msg: "请选择手术",type:"info",timeout:"2000",style:{top:20,left:document.documentElement.clientWidth/2}});
+        $.messager.popover({msg: "请先选择数据",type:"info",timeout:"2000",style:{top:20,left:document.documentElement.clientWidth/2}});
         return;
     }
 	$.each(checkedItems, function(index, item){
@@ -133,11 +163,15 @@ $("#new").click(function(){
 		{
 			result = result + list[i].desc + item[list[i].code] + list[i].separate;
 		}
-		Ids = Ids + "," + item["ID"];
+		Ids = Ids + "@" + item["ID"];
 	})
 	Ids = Ids.substring(1);
 	var titlecode = $('#title').combobox('getValue');
 	var actiontype = (titlecode == "" || titlecode == undefined || titlecode == null )?"CREATE":"CREATEBYTITLE";
+	if ($("#path").val() == "")
+	{
+		result = "";
+	}
     var tabParam ={
 		"id":"",
 		"text":$("#title").find("option:selected").text()==""?$("#title").combobox('getText'):$("#title").find("option:selected").text(),
@@ -163,7 +197,9 @@ $("#new").click(function(){
 			"content":result,
 			"path":$("#path").val()
 		}
-	 }; 
+	 };
+	 var tmpDateTime = new Date().format("yyyy-MM-dd hh:mm:ss");
+	 if (!compareDateTimeByFisrtRecord(tmpDateTime,tabParam.emrDocId,tabParam.titleCode)) return;	 
 	 returnValue = JSON.stringify(tabParam);
 	 CloseWindow();
 });
@@ -173,7 +209,7 @@ $("#unActive").click(function(){
 	var Ids = "";
 	var checkedItems = $('#eventValues').datagrid('getChecked');
 	if (checkedItems.length == 0) {
-        $.messager.popover({msg: "请选择手术",type:"info",timeout:"2000",style:{top:20,left:document.documentElement.clientWidth/2}});
+        $.messager.popover({msg: "请先选择数据",type:"info",timeout:"2000",style:{top:20,left:document.documentElement.clientWidth/2}});
         return;
     }
 	$.each(checkedItems, function(index, item){
@@ -245,4 +281,36 @@ function getRefScheme(path)
 function CloseWindow()
 {
 	parent.closeDialog("dialogEvent");
+}
+
+//与首次病程日期比较
+function compareDateTimeByFisrtRecord(dateTime,docId,titleCode)
+{
+	var result = true;
+	jQuery.ajax({
+		type: "get",
+		dataType: "text",
+		url: "../EMRservice.Ajax.common.cls",
+		async: false,
+		data: {
+			"OutputType":"String",
+			"Class":"EMRservice.BL.BLTitleConfig",
+			"Method":"CanCreateTitle",
+			"p1":episodeId,
+			"p2":docId,
+			"p3":titleCode,
+			"p4":dateTime
+		},
+		success: function(d) {
+			if (d != "1")
+			{
+				result = false;
+				$.messager.alert("提示",d.substring(2));
+			}
+		},
+		error : function(d) { 
+			alert("compareDateTimeByFisrtRecord error");
+		}
+	});	
+	return result
 }

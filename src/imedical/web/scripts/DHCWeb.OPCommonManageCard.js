@@ -1,4 +1,4 @@
-/// DHCWeb.OPCommonManageCard.js
+ï»¿/// DHCWeb.OPCommonManageCard.js
 
 ///Read Card : obj.ReadMagCard("2");
 ///Write Card : obj.WriteMagCard("")
@@ -18,7 +18,17 @@ var m_CCMRowID = "";
 var m_ReadCardMode = "";
 var m_IsCardNoCheck = "";
 var m_Hospital_DR = session['LOGON.HOSPID'];
+if (typeof CardCommon_ControlObj != "undefined") {
+    var argObj={};
+    CardCommon_ControlObj.Init(argObj);
+}
 
+$(function(){
+	///	ç»™æ‰€æœ‰æ¶‰åŠå¡å·çš„ç•Œé¢å¢åŠ ä¸€ä¸ªäº‹ä»¶ç›‘å¬ï¼Œè‡ªåŠ¨åˆ‡æ¢è‹±æ–‡è¾“å…¥æ³•ï¼Œé˜²æ­¢åœ¨å¯¹æ¥ç”µå­äºŒç»´ç æ—¶å‡ºç°ä¸­æ–‡ä¹±ç çš„æƒ…å†µ
+	if (document.getElementById('CardNo')){
+		$("#CardNo").imedisabled();
+	}
+});
 function DHCACC_ReadMagCard()
 {
 	//Note:
@@ -44,7 +54,7 @@ function DHCACC_ReadMagCard()
 			
 			break;
 	}
-	//È¥³ı½ØÖ¹×Ö·û
+	//å»é™¤æˆªæ­¢å­—ç¬¦
 	myrtn=myrtn.replace(String.fromCharCode(0),"");
 	return myrtn;
 }
@@ -78,7 +88,14 @@ function DHCACC_ReadMagCard2(HardType, InPara1, InPara2, InPara3){
 	var myCheckNo="";
 	var rtn=-1;
 	//var rtn=DHCHardComm_RandomCardEquip(HardType,"R", InPara1, InPara2, InPara3)
-	var rtn=DHCHardComm_RandomCardEquip(HardType,"R", "23", "", "");
+	// var rtn=DHCHardComm_RandomCardEquip(HardType,"R", "23", "", "");
+    if (HardType!="" || typeof CardCommon_ControlObj == "undefined"){
+        var rtn=DHCHardComm_RandomCardEquip(HardType,"R", "23", "", "");
+    }else{
+        var argObj = { CardTypeDR: "", CardNo: "" };
+        var rtn = CardCommon_ControlObj.ReadQRCard(argObj);
+    }
+
 	var myary=rtn.split("^");
 	rtn=myary[0];
 		
@@ -86,7 +103,7 @@ function DHCACC_ReadMagCard2(HardType, InPara1, InPara2, InPara3){
 		rtn=0;
 		myCardNo=myary[1];
 		myCheckNo=myary[2];
-		//HardType ÊÇÉè±¸ÀàĞÍ
+		//HardType æ˜¯è®¾å¤‡ç±»å‹
 		var tmprtn=DHCACC_DisabledCardType("CardType",myCardNo,"");
 		if (tmprtn!=true) {
 			rtn=tmprtn;
@@ -106,7 +123,13 @@ function DHCACC_ReadMagCard3(HardType, InPara1, InPara2, InPara3){
 	var rtn=-1;
 
 	//var rtn=DHCHardComm_RandomCardEquip(HardType,"R", InPara1, InPara2, InPara3)
-	var rtn=DHCHardComm_RandomCardEquip(HardType,InPara1, InPara2, "", "");
+	// var rtn=DHCHardComm_RandomCardEquip(HardType,InPara1, InPara2, "", "");
+    if (HardType!="" || typeof CardCommon_ControlObj == "undefined"){
+        var rtn=DHCHardComm_RandomCardEquip(HardType,InPara1, InPara2, "", "");
+    }else{
+        var argObj = { CardTypeDR: "", CardNo: "" };
+        var rtn = CardCommon_ControlObj.ReadQRCard(argObj);
+    }
 
 	var myary=rtn.split("^");
 	rtn=myary[0];
@@ -259,8 +282,18 @@ function DHCACC_GetAccInfo()
 				break;
 			case 3:
 				var myCardTypeDR=arguments[0];
-				var myCardNo=arguments[1];
+				var myCardNo=arguments[1];                
 				var mySecurityNo=arguments[2];
+                if (typeof CardCommon_ControlObj != "undefined") {
+                    var argObj = { CardTypeDR: myCardTypeDR, CardNo: myCardNo };
+                    var rtn = CardCommon_ControlObj.ReadQRCard(argObj);
+                    rtnArr = rtn.split("^");
+                    if (rtnArr[0] != 0) {
+                        return ret;
+                    }
+                    myCardNo = rtnArr[1];
+                }
+
 				myrtn = DHCACC_GetAccInfo3(myCardTypeDR, myCardNo, mySecurityNo)
 				break;
 			case 4:
@@ -268,14 +301,34 @@ function DHCACC_GetAccInfo()
 				var myCardNo=arguments[1];
 				var mySecurityNo=arguments[2];
 				var myCheckSecrityFlag=arguments[3];
+                if (typeof CardCommon_ControlObj != "undefined") {
+                    var argObj = { CardTypeDR: myCardTypeDR, CardNo: myCardNo };
+                    var rtn = CardCommon_ControlObj.ReadQRCard(argObj);
+                    rtnArr = rtn.split("^");
+                    if (rtnArr[0] != 0) {
+                        return ret;
+                    }
+                    myCardNo = rtnArr[1];
+                }
+
 				myrtn = DHCACC_GetAccInfo4(myCardTypeDR, myCardNo, mySecurityNo, myCheckSecrityFlag);
 				break;
-			case 5: //HISUI°æ±¾ »ñÈ¡¿¨¶ÔÓ¦ĞÅÏ¢
+			case 5: //HISUIç‰ˆæœ¬ è·å–å¡å¯¹åº”ä¿¡æ¯
 				var myCardTypeDR=arguments[0];
 				var myCardNo=arguments[1];
 				var mySecurityNo=arguments[2];
 				var myCheckSecrityFlag=arguments[3];
 				var callBackFun=arguments[4];
+                if (typeof CardCommon_ControlObj != "undefined") {
+                    var argObj = { CardTypeDR: myCardTypeDR, CardNo: myCardNo };
+                    var rtn = CardCommon_ControlObj.ReadQRCard(argObj);
+                    rtnArr = rtn.split("^");
+                    if (rtnArr[0] != 0) {
+                        return ret;
+                    }
+                    myCardNo = rtnArr[1];
+                }
+
 				myrtn = DHCACC_GetAccInfo6(myCardTypeDR, myCardNo, mySecurityNo, myCheckSecrityFlag,callBackFun);
 				break;
 			default:
@@ -370,7 +423,7 @@ function DHCACC_GetAccInfo5(CardTypeDR, EquipDR)
 			var myPAPMI=myary[7];
 			var myPAPMNo=myary[8];
 			var myAccType=myary[10];
-			var myAccGrpLeftM=myary[17]  //¼¯ÍÅÕË»§Óà¶î  yyx 2010-07-07
+			var myAccGrpLeftM=myary[17]  //é›†å›¢è´¦æˆ·ä½™é¢  yyx 2010-07-07
 			if (myary.length>12){
 				myGetCardTypeDR=myary[12];
 			}
@@ -598,43 +651,77 @@ function DHCACC_CheckMCFPayFNoCard(PatSum,CardNo){
 ///DHCACC_CheckMCFPay(PatSum,CardNo,AdmStr, CardTypeDR, SecurityNo)    by Hand Input CardNo
 function DHCACC_CheckMCFPay()
 {
-	///arguments[0]	= PatSum
-	///arguments[1]	= CardNo   the Old Card No
-	///arguments[2]	= AdmStr
-	///arguments[3]	= CardTypeDR
-	///arguments[4]	= SecurityNo
-	
 	var myrtn="";
-	
 	var myCount=0;
 	for(var i=0;i <arguments.length;i++){
 		myCount++;
 	}
-	switch (myCount){
-		case 2:
-			var myPatSum = arguments[0];
-			var myCardNo = arguments[1];
-			myrtn = DHCACC_CheckMCFPay1(myPatSum, myCardNo);
-			break;
-		case 4:
-			var myPatSum = arguments[0];
-			var myCardNo = arguments[1];
-			var myAdmStr = arguments[2];
-			var myCardTypeDR=arguments[3];
-			
-			myrtn = DHCACC_CheckMCFPay2(myPatSum, myCardNo, myAdmStr, myCardTypeDR);
-			break;
-		case 5:
-			var myPatSum = arguments[0];
-			var myCardNo = arguments[1];
-			var myAdmStr = arguments[2];
-			var myCardTypeDR=arguments[3];
-			var mySecurityNo=arguments[4];
-			myrtn = DHCACC_CheckMCFPayByHand(myPatSum, myCardNo, myAdmStr, myCardTypeDR, mySecurityNo);			
-			break;
+	if (myCount ==6) {
+		var myPatSum = arguments[0];
+		var myCardNo = arguments[1];
+		var myAdmStr = arguments[2];
+		var myCardTypeDR = arguments[3];
+		var callback = arguments[5];		
+		if (typeof CardCommon_ControlObj != "undefined") {
+			var argObj = { CardTypeDR: myCardTypeDR, CardNo: myCardNo };
+			var rtn = CardCommon_ControlObj.ReadQRCard(argObj);
+			rtnArr = rtn.split("^");
+			if (rtnArr[0] != 0) {
+				return ret;
+			}
+			myCardNo = rtnArr[1];
+		}
+				
+		new Promise(function(resolve,rejected){
+			DHCACC_CheckMCFPay2(myPatSum, myCardNo, myAdmStr, myCardTypeDR, resolve);
+		}).then(function(rtnVal){
+			if (callback) callback(rtnVal);
+		});
+	}else{
+		switch (myCount){
+			case 2:
+				var myPatSum = arguments[0];
+				var myCardNo = arguments[1];
+                if (typeof CardCommon_ControlObj != "undefined") {
+                    var argObj = { CardTypeDR: "", CardNo: myCardNo };
+                    var rtn = CardCommon_ControlObj.ReadQRCard(argObj);
+                    rtnArr = rtn.split("^");
+                    if (rtnArr[0] != 0) {
+                        return ret;
+                    }
+                    myCardNo = rtnArr[1];
+                }
+
+				myrtn = DHCACC_CheckMCFPay1(myPatSum, myCardNo);
+				break;
+			/*case 4:
+				var myPatSum = arguments[0];
+				var myCardNo = arguments[1];
+				var myAdmStr = arguments[2];
+				var myCardTypeDR=arguments[3];
+				
+				myrtn = DHCACC_CheckMCFPay2(myPatSum, myCardNo, myAdmStr, myCardTypeDR);
+				break;*/
+			case 5:
+				var myPatSum = arguments[0];
+				var myCardNo = arguments[1];
+				var myAdmStr = arguments[2];
+				var myCardTypeDR=arguments[3];
+				var mySecurityNo=arguments[4];
+                if (typeof CardCommon_ControlObj != "undefined") {
+                    var argObj = { CardTypeDR: myCardTypeDR, CardNo: myCardNo };
+                    var rtn = CardCommon_ControlObj.ReadQRCard(argObj);
+                    rtnArr = rtn.split("^");
+                    if (rtnArr[0] != 0) {
+                        return ret;
+                    }
+                    myCardNo = rtnArr[1];
+                }
+				myrtn = DHCACC_CheckMCFPayByHand(myPatSum, myCardNo, myAdmStr, myCardTypeDR, mySecurityNo);			
+				break;
+		}
+		return myrtn;
 	}
-	
-	return myrtn;
 }
 
 function DHCACC_CheckMCFPay1(PatSum,CardNo){
@@ -649,7 +736,7 @@ function DHCACC_CheckMCFPay1(PatSum,CardNo){
 	var myFactLeftM=0;
 	
 	//alert(t["CardTip"]);
-	alert("Çë·Å¿¨!");
+	alert("è¯·æ”¾å¡!");
 	//var obj=document.getElementById("ClsHFCard");
 	//if (obj){
 	//	var myrtn=obj.ReadMagCard("23");	////Read 2 and 3
@@ -703,89 +790,78 @@ function DHCACC_CheckMCFPay1(PatSum,CardNo){
 	return rtn+"^"+myAccRowID+"^"+myCheckNo+"^"+myAccPWD+"^"+myBalance+"^"+myFactLeftM
 }
 
-function DHCACC_CheckMCFPay2(PatSum,CardNo,AdmStr, CardTypeDR)
+function DHCACC_CheckMCFPay2(PatSum,CardNo,AdmStr, CardTypeDR, callbackFun)
 {
-	///check the Mag Card Exp For Pay
-	///return 0  ;for pay  and AccManRID  Info
-	///return not 0  alert to user
-	///ExpStr=AdmStr_String.FromCode(2)_
-	///AdmStr=AdmRowID1^AdmRowID2^AdmRowID3
-	var rtn=0;
-	var myAccRowID="";
-	var myCheckNo="";
-	var myAccPWD="";
-	var myBalance=0;
-	var myFactLeftM=0;
-	var myHospitalDR="";
-	//var myrtn="0"+"^"+CardNo+"^"+"";  //DHCACC_ReadMagCard(23);     //modify by zhn 20141125
-	//alert('Çë²å¿¨!');
-	
 	DHCACC_GetCardTypeInfo(CardTypeDR);
-	if((m_ReadCardMode == "Handle") || (m_CCMRowID == "")) {
-		if(m_IsCardNoCheck == "Y") {
-			var myrtn = DHCACC_HandleMagCard();
-		}else{
-			var tmpCardNo = CardNo;
-			var tmpCheckNo = "";
-			var myrtn = 0 + "^" + tmpCardNo + "^" + tmpCheckNo;	
-		}
-	}else{
-		var myrtn = DHCACC_ReadMagCard(m_CCMRowID);	
-	}
-	var encmeth="";
-	var myary=myrtn.split("^");
-	if (myary[0]=="0"){
-		var myCardNo=myary[1];
-		var myCheckNo=myary[2];
-		if (myCardNo!=CardNo){
-			rtn=-206;
-		}
-		
-		var myHospitalDR=DHCACC_GetHospitalDR();
-		
-		var obj=document.getElementById("ReadAccExpEncrypt");
-		if (obj){var encmeth=obj.value;}
-		if (encmeth==""){rtn=-299;}
-		if ((rtn==0)){
-			var myExpStr=AdmStr+String.fromCharCode(2)+CardTypeDR;
-			myExpStr += String.fromCharCode(2) + "";
-			myExpStr += String.fromCharCode(2) + myHospitalDR;
-			var myrtn=cspRunServerMethod(encmeth,myCardNo, myCheckNo, myExpStr);
-			//alert(myrtn)
-			var myary=myrtn.split("^");
-			rtn=myary[0];
-			if (rtn==0){
-				var myAccRowID=myary[1];
-				var myLeftM=myary[3];			
-				var myAccPWD=myary[6];
-				//myExpstr=PWDCount^^^^myCheckNo
-				var myExpstr="0^^^^"+myCheckNo
-				var myFactLeftM=myary[5];
-				if (myAccPWD=="670B14728AD9902AECBA32E22FA4F6BD") {
-					//rtn=-208
-				}else{
-					var obj=document.getElementById("ClsPWD");
-					if (obj){
-						var rtn=obj.CheckPWD(myAccPWD, myExpstr);	//Read 2 and 3
-					}
-				}
-				if (isNaN(PatSum)){PatSum=0;}
-				if (isNaN(myLeftM)){myLeftM=0;}
-				if (isNaN(myFactLeftM)){myFactLeftM=0;}
-			
-				if (+PatSum>(eval(+myLeftM))){
-					myBalance=PatSum-myLeftM;
-					rtn=-205;
-				}
-				//myFactLeftM=myFactLeftM-PatSum;
-				//myFactLeftM=myFactLeftM.toFixed(2);
+	new Promise(function(resolve,rejected){
+		if((m_ReadCardMode == "Handle") || (m_CCMRowID == "")) {
+			if(m_IsCardNoCheck == "Y") {
+				DHCACC_HandleMagCard(resolve);
+			}else{
+				var tmpCardNo = CardNo;
+				var tmpCheckNo = "";
+				var myrtn = 0 + "^" + tmpCardNo + "^" + tmpCheckNo;
+				resolve(myrtn);
 			}
 		}else{
+			var myrtn = DHCACC_ReadMagCard(m_CCMRowID);
+			resolve(myrtn);	
 		}
-	}else{
-		rtn=myary[0];
-	}
-	return rtn+"^"+myAccRowID+"^"+myCheckNo+"^"+myAccPWD+"^"+myBalance+"^"+myFactLeftM
+	}).then(function(myrtn){
+		var rtn=0;
+		var myAccRowID="";
+		var myCheckNo="";
+		var myAccPWD="";
+		var myBalance=0;
+		var myFactLeftM=0;
+		var myHospitalDR="";
+		var encmeth="";
+		var myary=myrtn.split("^");
+		if (myary[0]=="0"){
+			var myCardNo=myary[1];
+			var myCheckNo=myary[2];
+			if (myCardNo!=CardNo){
+				rtn=-206;
+			}
+			var myHospitalDR=DHCACC_GetHospitalDR();
+			var obj=document.getElementById("ReadAccExpEncrypt");
+			if (obj){var encmeth=obj.value;}
+			if (encmeth==""){rtn=-299;}
+			if ((rtn==0)){
+				var myExpStr=AdmStr+String.fromCharCode(2)+CardTypeDR;
+				myExpStr += String.fromCharCode(2) + "";
+				myExpStr += String.fromCharCode(2) + myHospitalDR;
+				var myrtn=cspRunServerMethod(encmeth,myCardNo, myCheckNo, myExpStr);
+				var myary=myrtn.split("^");
+				rtn=myary[0];
+				if (rtn==0){
+					var myAccRowID=myary[1];
+					var myLeftM=myary[3];			
+					var myAccPWD=myary[6];
+					var myExpstr="0^^^^"+myCheckNo
+					var myFactLeftM=myary[5];
+					if (myAccPWD=="670B14728AD9902AECBA32E22FA4F6BD") {
+					}else{
+						var obj=document.getElementById("ClsPWD");
+						if (obj){
+							var rtn=obj.CheckPWD(myAccPWD, myExpstr);	//Read 2 and 3
+						}
+					}
+					if (isNaN(PatSum)){PatSum=0;}
+					if (isNaN(myLeftM)){myLeftM=0;}
+					if (isNaN(myFactLeftM)){myFactLeftM=0;}
+				
+					if (+PatSum>(eval(+myLeftM))){
+						myBalance=PatSum-myLeftM;
+						rtn=-205;
+					}
+				}
+			}
+		}else{
+			rtn=myary[0];
+		}
+		if (callbackFun) callbackFun(rtn+"^"+myAccRowID+"^"+myCheckNo+"^"+myAccPWD+"^"+myBalance+"^"+myFactLeftM);
+	})
 }
 
 function DHCACC_CheckMCFPayByHand(PatSum,CardNo,AdmStr, CardTypeDR, SecurityNo)
@@ -1045,62 +1121,52 @@ function GetAccLeftByPAPMI(PAPMI,TolSum){
 	return myrtn;
 }
 
-function DHCACC_CheckCardNoForDeposit(CardNo,CardTypeDR){
-	var myrtn=true;
-	//var myCardTypeData=tkMakeServerCall("web.UDHCJFBaseCommon","GetCardTypeDefineData",CardTypeDR);
-	//var tmpAry=myCardTypeData.split("^");
-	//var HardComDR=tmpAry[14];
-	//var ReadCardMode=tmpAry[16];
-	
+function DHCACC_CheckCardNoForDeposit(CardNo,CardTypeDR,callback){
 	DHCACC_GetCardTypeInfo(CardTypeDR);
-	
-	if((m_ReadCardMode=="Handle")||(m_CCMRowID=="")){
-		if(m_IsCardNoCheck=="Y"){
-			var myCardInfo =DHCACC_HandleMagCard();
+	new Promise(function(resolve,rejected){
+		if((m_ReadCardMode=="Handle")||(m_CCMRowID=="")){
+			if(m_IsCardNoCheck=="Y"){
+				DHCACC_HandleMagCard(resolve);
+			}else{
+				if (callback) callback(true);	//åˆ·å¡æ–¹å¼ï¼Œä¸éœ€è¦å†æ¬¡æ ¡éªŒ
+			}
 		}else{
-			return true;	//Ë¢¿¨·½Ê½£¬²»ĞèÒªÔÙ´ÎĞ£Ñé
+			var myCardInfo =DHCACC_ReadMagCard(m_CCMRowID);
+			resolve(myCardInfo);
 		}
-	}else{
-		var myCardInfo =DHCACC_ReadMagCard(m_CCMRowID);
-	}
-	var myLeftM=0;
-	var myPAPMI="";
-	var myPAPMNo=""
-	var myCardNo="";
-	var myCheckNo="";
-	
-	var myary=myCardInfo.split("^");
-	if (myary[0]=="0"){
-		rtn=myary[0];
-		myCardNo=myary[1];
-		myCheckNo=myary[2];
-		if (CardNo!=myCardNo){
+	}).then(function(myCardInfo){
+		var myrtn=true;
+		var myLeftM=0;
+		var myPAPMI="";
+		var myPAPMNo=""
+		var myCardNo="";
+		var myCheckNo="";
+		var myary=myCardInfo.split("^");
+		if (myary[0]=="0"){
+			rtn=myary[0];
+			myCardNo=myary[1];
+			myCheckNo=myary[2];
+			if (CardNo!=myCardNo){
+				myrtn=false;
+			}
+		}else{
 			myrtn=false;
 		}
-	}else{
-		myrtn=false;
-	}
-	
-	return myrtn;
+		if (callback) callback(myrtn);
+	})
 }
 
 function DHCACC_WrtMagCard2Old(WType,mystr2,mystr3)
 {
-	////write card 
-	//alert(WType);
-	//alert(mystr2);
-	//alert(mystr3);
 	var rtn=""
 	var obj=document.getElementById("ClsHFCard");
-	//alert(obj)
 	if (obj){
 		var rtn=obj.takeCard(WType,mystr2,mystr3);	////Read 2 and 3
 	}
-	
 	return rtn;
 }
 
-//add by guorongyong ¶Á¿¨ÓÅÏÈÄ£Ê½×Ô¶¯¹ØÁªÒ³Ãæ¿¨ÀàĞÍ
+//add by guorongyong è¯»å¡ä¼˜å…ˆæ¨¡å¼è‡ªåŠ¨å…³è”é¡µé¢å¡ç±»å‹
 function DHCACC_DisabledCardType(ElementName,CardNo,CardTypeRowId){
 	var rtn=true;
 	/*if (typeof CardTypeRowId=="undefined"){
@@ -1112,11 +1178,11 @@ function DHCACC_DisabledCardType(ElementName,CardNo,CardTypeRowId){
 	}*/
 	return rtn;
 }
-/*Í¨¹ı¿¨ºÅË¢ĞÂ¿¨ÀàĞÍ
-×¼±¸£¬½¨Á¢Ò»¸öÒş²Øitem(ÀıÈç"getcardtypeclassbycardno")£»ÉèÖÃvaluegetÖµÎªs val=##Class(%CSP.Page).Encrypt($lb("web.DHCBL.CARD.CardManager.getcardtypeinfoByCardNo"))
-µ÷ÓÃ¸ñÊ½£ºÔÚ¿¨ºÅ»Ø³µÊÂ¼şÀïµ÷ÓÃChangeCardTypeByCardNo(¿¨ºÅitemÃû£¬¿¨ÀàĞÍÏÂÀ­¿Ø¼ş¶ÔÏó£¬Òş²ØitemÃû)
-ÀıÈç£ºChangeCardTypeByCardNo('CardNo',combo_CardTypeDefine,'getcardtypeclassbycardno');
-*///¸üĞÂ2007-12-11
+/*é€šè¿‡å¡å·åˆ·æ–°å¡ç±»å‹
+å‡†å¤‡ï¼Œå»ºç«‹ä¸€ä¸ªéšè—item(ä¾‹å¦‚"getcardtypeclassbycardno")ï¼›è®¾ç½®valuegetå€¼ä¸ºs val=##Class(%CSP.Page).Encrypt($lb("web.DHCBL.CARD.CardManager.getcardtypeinfoByCardNo"))
+è°ƒç”¨æ ¼å¼ï¼šåœ¨å¡å·å›è½¦äº‹ä»¶é‡Œè°ƒç”¨ChangeCardTypeByCardNo(å¡å·itemåï¼Œå¡ç±»å‹ä¸‹æ‹‰æ§ä»¶å¯¹è±¡ï¼Œéšè—itemå)
+ä¾‹å¦‚ï¼šChangeCardTypeByCardNo('CardNo',combo_CardTypeDefine,'getcardtypeclassbycardno');
+*///æ›´æ–°2007-12-11
 function DHCACC_ChangeCardTypeByCardNo(CardNo,cardTypeObj,CardTypeRowId){
 	if (!cardTypeObj) return true;
 	if (CardNo=="")  return true;
@@ -1128,10 +1194,10 @@ function DHCACC_ChangeCardTypeByCardNo(CardNo,cardTypeObj,CardTypeRowId){
 	if (retValue==""){
 		return true;
 	}else if(retValue=="-1"){
-		$.messager.alert("ÌáÊ¾","¿¨ºÅÔÚ¶àÖÖ¿¨ÀàĞÍÖĞÖØ¸´,ÇëÑ¡Ôñ¿¨ÀàĞÍ!");
+		$.messager.alert("æç¤º","å¡å·åœ¨å¤šç§å¡ç±»å‹ä¸­é‡å¤,è¯·é€‰æ‹©å¡ç±»å‹!");
 		return retValue;
 	}else if (retValue=="-2"){
-		$.messager.alert("ÌáÊ¾","Ã»ÓĞÕÒµ½¿ÉÓÃµÄ¿¨¼ÇÂ¼!");
+		$.messager.alert("æç¤º","æ²¡æœ‰æ‰¾åˆ°å¯ç”¨çš„å¡è®°å½•!");
 		return retValue;
 	}
 	
@@ -1165,7 +1231,7 @@ function DHCACC_CheckMCFPay3(PatSum,PatientID){
 	var myFactLeftM=0;
 	var myHospitalDR="";
 	
-	//alert('Çë²å¿¨!');
+	//alert('è¯·æ’å¡!');
 	//DHCACC_ReadMagCard(CardTypeDR);
 	var myrtn=DHCACC_ReadMagCard(m_CCMRowID);
 	var encmeth="";
@@ -1194,7 +1260,7 @@ function DHCACC_CheckMCFPay3(PatSum,PatientID){
 				var myAccPWD=myary[6];
 				var myPapmi=myary[7];
 				if(myPapmi!=PatientID){
-					rtn=-207	//·ÇÍ¬Ò»¸ö²¡ÈË
+					rtn=-207	//éåŒä¸€ä¸ªç—…äºº
 					return rtn+"^"+myAccRowID+"^"+myCheckNo+"^"+myAccPWD+"^"+myBalance+"^"+myFactLeftM;
 				}
 				////myExpstr=PWDCount^^^^myCheckNo
@@ -1227,92 +1293,84 @@ function DHCACC_CheckMCFPay3(PatSum,PatientID){
 	}
 	return rtn+"^"+myAccRowID+"^"+myCheckNo+"^"+myAccPWD+"^"+myBalance+"^"+myFactLeftM
 }
-function DHCACC_CheckMCFPay4(PatSum,PatientID,AdmStr, CardTypeDR)
+function DHCACC_CheckMCFPay4(PatSum,PatientID,AdmStr, CardTypeDR,callback)
 {
-	var rtn=0;
-	var myAccRowID="";
-	var myCheckNo="";
-	var myAccPWD="";
-	var myBalance=0;
-	var myFactLeftM=0;
-	var myHospitalDR="";
-	
 	DHCACC_GetCardTypeInfo(CardTypeDR);
-	
-	if(m_ReadCardMode=="Handle"){
-		if(m_IsCardNoCheck=="Y"){
-			var myrtn=DHCACC_HandleMagCard();
-		}else{
-			//´Ëº¯ÊıÃ»ÓĞÈë²ÎÃ»ÓĞ¿¨ºÅ£¬´Ë´¦ÔİÊ±²»´¦Àí	
-		}
-	}else{
-		var myrtn=DHCACC_ReadMagCard(m_CCMRowID);
-	}
-	
-	var encmeth="";
-	var myary=myrtn.split("^");
-	if (myary[0]=="0"){
-		var myCardNo=myary[1];
-		var myCheckNo=myary[2];
-		
-		var myHospitalDR=DHCACC_GetHospitalDR();
-		
-		var obj=document.getElementById("ReadAccExpEncrypt");
-		if (obj){var encmeth=obj.value;}
-		///var encmeth=DHCWebD_GetObjValue("ReadAccExpEncrypt");
-		if (encmeth==""){rtn=-299;}
-		if ((rtn==0)){
-			var myExpStr=AdmStr+String.fromCharCode(2)+CardTypeDR;
-			myExpStr += String.fromCharCode(2) + "";
-			myExpStr += String.fromCharCode(2) + myHospitalDR;
-			var myrtn=cspRunServerMethod(encmeth,myCardNo, myCheckNo, myExpStr);
-			var myary=myrtn.split("^");
-			rtn=myary[0];
-			if (rtn==0){
-				var myAccRowID=myary[1];
-				var myLeftM=myary[3];			
-				var myAccPWD=myary[6];
-				var myPapmi=myary[7];
-				if(myPapmi!=PatientID){
-					rtn=-207	//·ÇÍ¬Ò»¸ö²¡ÈË
-					return rtn+"^"+myAccRowID+"^"+myCheckNo+"^"+myAccPWD+"^"+myBalance+"^"+myFactLeftM;
-				}
-				////myExpstr=PWDCount^^^^myCheckNo
-				var myExpstr="0^^^^"+myCheckNo
-				var myFactLeftM=myary[5];
-				if (myAccPWD=="670B14728AD9902AECBA32E22FA4F6BD")
-				{
-					//rtn=-208
-				}else{
-					var obj=document.getElementById("ClsPWD");
-					if (obj){
-						var rtn=obj.CheckPWD(myAccPWD, myExpstr);	////Read 2 and 3
-					}
-				}
-				if (isNaN(PatSum)){PatSum=0;}
-				if (isNaN(myLeftM)){myLeftM=0;}
-				if (isNaN(myFactLeftM)){myFactLeftM=0;}
-			
-				if (+PatSum>(eval(+myLeftM))){
-					myBalance=PatSum-myLeftM;
-					rtn=-205;
-				}
-				///myFactLeftM=myFactLeftM-PatSum;
-				///myFactLeftM=myFactLeftM.toFixed(2);
+	new Promise(function(resolve,rejected){
+		if(m_ReadCardMode=="Handle"){
+			if(m_IsCardNoCheck=="Y"){
+				DHCACC_HandleMagCard(resolve);
+			}else{
+				//æ­¤å‡½æ•°æ²¡æœ‰å…¥å‚æ²¡æœ‰å¡å·ï¼Œæ­¤å¤„æš‚æ—¶ä¸å¤„ç†
+				resolve("");	
 			}
 		}else{
+			var myrtn=DHCACC_ReadMagCard(m_CCMRowID);
+			resolve(myrtn);
 		}
-	}else{
-		rtn=myary[0];
-	}
-	//alert(rtn+"^"+myAccRowID+"^"+myCheckNo+"^"+myAccPWD+"^"+myBalance+"^"+myFactLeftM);
-	return rtn+"^"+myAccRowID+"^"+myCheckNo+"^"+myAccPWD+"^"+myBalance+"^"+myFactLeftM
+	}).then(function(myrtn){
+		var rtn=0;
+		var myAccRowID="";
+		var myCheckNo="";
+		var myAccPWD="";
+		var myBalance=0;
+		var myFactLeftM=0;
+		var myHospitalDR="";
+		var encmeth="";
+		var myary=myrtn.split("^");
+		if (myary[0]=="0"){
+			var myCardNo=myary[1];
+			var myCheckNo=myary[2];
+			var myHospitalDR=DHCACC_GetHospitalDR();
+			var obj=document.getElementById("ReadAccExpEncrypt");
+			if (obj){var encmeth=obj.value;}
+			if (encmeth==""){rtn=-299;}
+			if ((rtn==0)){
+				var myExpStr=AdmStr+String.fromCharCode(2)+CardTypeDR;
+				myExpStr += String.fromCharCode(2) + "";
+				myExpStr += String.fromCharCode(2) + myHospitalDR;
+				var myrtn=cspRunServerMethod(encmeth,myCardNo, myCheckNo, myExpStr);
+				var myary=myrtn.split("^");
+				rtn=myary[0];
+				if (rtn==0){
+					var myAccRowID=myary[1];
+					var myLeftM=myary[3];			
+					var myAccPWD=myary[6];
+					var myPapmi=myary[7];
+					if(myPapmi!=PatientID){
+						rtn=-207	//éåŒä¸€ä¸ªç—…äºº
+						return rtn+"^"+myAccRowID+"^"+myCheckNo+"^"+myAccPWD+"^"+myBalance+"^"+myFactLeftM;
+					}
+					var myExpstr="0^^^^"+myCheckNo
+					var myFactLeftM=myary[5];
+					if (myAccPWD=="670B14728AD9902AECBA32E22FA4F6BD"){
+					}else{
+						var obj=document.getElementById("ClsPWD");
+						if (obj){
+							var rtn=obj.CheckPWD(myAccPWD, myExpstr);	////Read 2 and 3
+						}
+					}
+					if (isNaN(PatSum)){PatSum=0;}
+					if (isNaN(myLeftM)){myLeftM=0;}
+					if (isNaN(myFactLeftM)){myFactLeftM=0;}
+				
+					if (+PatSum>(eval(+myLeftM))){
+						myBalance=PatSum-myLeftM;
+						rtn=-205;
+					}
+				}
+			}
+		}else{
+			rtn=myary[0];
+		}
+		callback(rtn+"^"+myAccRowID+"^"+myCheckNo+"^"+myAccPWD+"^"+myBalance+"^"+myFactLeftM);
+	})
 }
 ///Lid
 ///2016-06-29
-///È¡Ç°¶ËÔºÇøÖ¸Õë.
-///		ÏàÓ¦µÄµÄ×é¼şÉÏĞèÒª¼Ó¡°HospitalDR¡±ÔªËØ,¿ÉÒÔ²Î¿¼¡°ÕË»§¶Á¿¨²éÑ¯(UDHCACPatQ.AccPListQuery)¡±×é¼şµÄ¡°HospitalDR¡±ÔªËØ¡£
-///		Èç¹û×é¼şÉÏÃ»ÓĞ£¬Ä¬ÈÏÈ¡sessionµÄÔºÇø.
+///å–å‰ç«¯é™¢åŒºæŒ‡é’ˆ.
+///		ç›¸åº”çš„çš„ç»„ä»¶ä¸Šéœ€è¦åŠ â€œHospitalDRâ€å…ƒç´ ,å¯ä»¥å‚è€ƒâ€œè´¦æˆ·è¯»å¡æŸ¥è¯¢(UDHCACPatQ.AccPListQuery)â€ç»„ä»¶çš„â€œHospitalDRâ€å…ƒç´ ã€‚
+///		å¦‚æœç»„ä»¶ä¸Šæ²¡æœ‰ï¼Œé»˜è®¤å–sessionçš„é™¢åŒº.
 function DHCACC_GetHospitalDR(){
 	m_Hospital_DR=session['LOGON.HOSPID'];
 	var myHospitalDR="";
@@ -1320,29 +1378,42 @@ function DHCACC_GetHospitalDR(){
 	if(obj){
 		myHospitalDR=obj.value;
 	}else{
-		myHospitalDR=m_Hospital_DR;	//Ä¬ÈÏÈ¡sessionµÄÔºÇøÖ¸Õë
+		myHospitalDR=m_Hospital_DR;	//é»˜è®¤å–sessionçš„é™¢åŒºæŒ‡é’ˆ
 	}
 	return myHospitalDR;
 }
 
-///Ë¢ÌõÂë¿¨
-function DHCACC_HandleMagCard() {
+///åˆ·æ¡ç å¡
+function DHCACC_HandleMagCard(callback) {
+	websys_showModal({
+		url: "dhcbill.cardverification.csp",
+		title: 'åˆ·å¡',
+		iconCls: 'icon-w-card',
+		closable: false,
+		width: 320,
+		height: 150,
+		callbackFunc: function(rtnValue) {
+			callback(rtnValue);
+		}
+	});
+	/*
 	var url = "dhcopbillcardverification.csp";
-	var rtn = window.showModalDialog(url, "", 'dialogWidth:320px;dialogHeight:120px;center:yes');   //HTMLÑùÊ½µÄÄ£Ì¬¶Ô»°¿ò
+	var rtn = window.showModalDialog(url, "", 'dialogWidth:320px;dialogHeight:120px;center:yes');   //HTMLæ ·å¼çš„æ¨¡æ€å¯¹è¯æ¡†
 	if (!rtn) {
 		rtn = "-210^^";
 	}
 	return rtn;
+	*/
 }
 
-///¶ÁÈ¡¿¨ÀàĞÍĞÅÏ¢
+///è¯»å–å¡ç±»å‹ä¿¡æ¯
 function DHCACC_GetCardTypeInfo(cardTypeDr) {
 	var rtn = tkMakeServerCall("web.UDHCOPOtherLB","ReadCardTypeDefineListBroker1",cardTypeDr);
-	//ÔÚ´ËÉèÖÃÒ»Ğ©¿¨ÀàĞÍµÄÈ«¾Ö±äÁ¿
+	//åœ¨æ­¤è®¾ç½®ä¸€äº›å¡ç±»å‹çš„å…¨å±€å˜é‡
 	var myary = rtn.split("^");
 	m_CCMRowID = myary[14];
-	m_ReadCardMode = myary[16];	     //È«¾Ö±äÁ¿ -- ¶Á¿¨Ä£Ê½
-	m_IsCardNoCheck = myary[37];	 //Ö§¸¶ÊÇ·ñĞèÒªĞ£Ñé(Y:ĞèÒªË¢¿¨ÑéÖ¤£¬N:²»ĞèÒª)£¬Ö÷ÒªÒªÓµÓÚÌõÂë¿¨¿¨Ö§¸¶£¬ÏÈĞ´ËÀ£¬ÒÔºóÔÚ¡°¿¨ÀàĞÍÅäÖÃ¡±ÖĞÌí¼ÓÒ»¸öÅäÖÃÏî
+	m_ReadCardMode = myary[16];	     //å…¨å±€å˜é‡ -- è¯»å¡æ¨¡å¼
+	m_IsCardNoCheck = myary[37];	 //æ”¯ä»˜æ˜¯å¦éœ€è¦æ ¡éªŒ(Y:éœ€è¦åˆ·å¡éªŒè¯ï¼ŒN:ä¸éœ€è¦)ï¼Œä¸»è¦è¦æ‹¥äºæ¡ç å¡å¡æ”¯ä»˜ï¼Œå…ˆå†™æ­»ï¼Œä»¥ååœ¨â€œå¡ç±»å‹é…ç½®â€ä¸­æ·»åŠ ä¸€ä¸ªé…ç½®é¡¹
 	return rtn;
 }
 
@@ -1354,16 +1425,21 @@ function DHCACC_GetAccInfo6(CardTypeDR, CardNo, SecurityNo, CheckSecurityFlag, c
 	list=eval('(' + list + ')'); 
 	if ((!list)||(list.length==0)){
 		var rtn="-200^^^^^^^^";
-		var errMsg="Ã»ÓĞÕÒµ½¶ÔÓ¦µÄ¿¨¼ÇÂ¼!";
-		$('#CardNo').focus();
+		var errMsg="æ²¡æœ‰æ‰¾åˆ°å¯¹åº”çš„å¡è®°å½•!";
+		//$('#CardNo').focus();
 		eval('(' + callBackFun + ')')(rtn,errMsg);
 		return false;
 	}
 	if(list.length==1){
+		
 		var SelectedCardType=list[0]["cardTypeId"];
 		var SelectedCardNo=list[0]["checkdValue"];
 		var SecurityNo=list[0]["SecurityNo"];
-		$("#CardTypeNew").val(list[0]["cardDesc"]);
+		if (callBackFun=="TCardTypeCallBack"){
+			$("#TCardTypeNew").val(list[0]["cardDesc"]);
+		}else {
+			$("#CardTypeNew").val(list[0]["cardDesc"]);
+		}
 		var rtn=DHCACC_GetAccInfo4(SelectedCardType, SelectedCardNo, SecurityNo, CheckSecurityFlag);
 		eval('(' + callBackFun + ')')(rtn);
 		return rtn;
@@ -1381,9 +1457,10 @@ function DHCACC_GetAccInfo6(CardTypeDR, CardNo, SecurityNo, CheckSecurityFlag, c
 		else  tmplist=tmplist+"!"+CardTypeId+"^"+cardDesc+"^"+CardNo+"^"+papmiNo+"^"+SecurityNo;
 	}
 	var src='opdoc.cardtypelist.csp?CardTypeList='+tmplist;
+	if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
 	$("#"+id).dialog({
-		autoOpen : true,   // ÊÇ·ñ×Ô¶¯µ¯³ö´°¿Ú
-		title: "ÇëÑ¡Ôñ¿¨ÀàĞÍ",
+		autoOpen : true,   // æ˜¯å¦è‡ªåŠ¨å¼¹å‡ºçª—å£
+		title: "è¯·é€‰æ‹©å¡ç±»å‹",
         width: 400,
         height: 320,
         cache: false,
@@ -1401,7 +1478,7 @@ function DHCACC_GetAccInfo6(CardTypeDR, CardNo, SecurityNo, CheckSecurityFlag, c
 		    if (selCardInfo==""){
 			    return false;
 			}
-			var selCardInfoArr=selCardInfo.split("-"); //¿¨ÀàĞÍid-¿¨ºÅ-¿¨ÀàĞÍ
+			var selCardInfoArr=selCardInfo.split("-"); //å¡ç±»å‹id-å¡å·-å¡ç±»å‹
 		    var SelectedCardType=selCardInfoArr[0];
 			var SelectedCardNo=selCardInfoArr[1];
 			var SecurityNo=selCardInfoArr[3];
@@ -1415,13 +1492,13 @@ function DHCACC_GetAccInfo6(CardTypeDR, CardNo, SecurityNo, CheckSecurityFlag, c
 }
 function CloseCardTypeListDialog(){
 	$("#CardTypeDialog").dialog('close');
-	$("body").remove("#CardTypeDialog"); //ÒÆ³ı´æÔÚµÄDialog
+	$("body").remove("#CardTypeDialog"); //ç§»é™¤å­˜åœ¨çš„Dialog
 	$("#CardTypeDialog").dialog('destroy');
 }
 function setSelCardType(selCardInfo){
 	$("#selCardTypeInfo").val(selCardInfo);
 }
-//Ñ­»·¶Á¿¨
+//å¾ªç¯è¯»å¡
 function DHCACC_GetAccInfo7(callBackFun){
 	var obj=document.getElementById("ReadCardTypeEncrypt");
 	if (obj){var encmeth=obj.value;}
@@ -1437,22 +1514,140 @@ function DHCACC_GetAccInfo7(callBackFun){
 			var myary=Infortn.split("^");
 			var rtn=myary[0];
 			if ((rtn=="0")||(rtn=="-201")){
+				$("#CardTypeRowID").val(CardTypeRowId);
 				$("#CardTypeNew").val(myoptval.split("^")[2]);
 				eval('(' + callBackFun + ')')(Infortn);
 				break;
 			}else if(rtn=="-200"){
-				//ÒÑ¾­¶Á¿¨³É¹¦,µ«ÊÇ¿¨ÊÇÎŞĞ§µÄ
-				//$.messager.alert("ÌáÊ¾","¿¨ÎŞĞ§!");
+				//å·²ç»è¯»å¡æˆåŠŸ,ä½†æ˜¯å¡æ˜¯æ— æ•ˆçš„
+				//$.messager.alert("æç¤º","å¡æ— æ•ˆ!");
 				eval('(' + callBackFun + ')')(Infortn);
 				break;
 			}else if(rtn=="-1"){
-				//Ã»·Å¿¨
+				//æ²¡æ”¾å¡
+				continue;
 				eval('(' + callBackFun + ')')(Infortn);
 				break;
 			}
 		}
 	}else{
-		$.messager.alert("ÌáÊ¾","ÇëÏÈÌí¼ÓÒş²ØÔªËØReadCardTypeEncrypt");
+		$.messager.alert("æç¤º","è¯·å…ˆæ·»åŠ éšè—å…ƒç´ ReadCardTypeEncrypt");
 		return false;
 	}
+}
+///è·å–å¡æ¶ˆè´¹æ—¶ä¼ å…¥ç»™è®¡è´¹ç»„çš„é»˜è®¤å¡å·ã€å¡ç±»å‹ä¿¡æ¯
+function DHCACC_GetCardBillInfo(PatientID,CallBackFunc){
+    var ValidAccMNoCardNo = tkMakeServerCall("web.DHCOPAdmReg", "GetValidAccMNoCardNoJson", PatientID);
+    var ValidAccMNoCardNoObj=eval("("+ValidAccMNoCardNo+")");
+    var AccMNoNum=ValidAccMNoCardNoObj.length;
+    if (AccMNoNum=="0"){
+		CallBackFunc("^");
+		return   
+	}
+	//å¦‚æœä»…æœ‰ä¸€ä¸ªå¡å·ï¼Œç›´æ¥è¿”å›å³å¯
+	if ((AccMNoNum==1)&&(ValidAccMNoCardNoObj[0].CardInfo.length==1)){
+		var CardNo=ValidAccMNoCardNoObj[0].CardInfo[0].CardNo;
+		var CardType=ValidAccMNoCardNoObj[0].CardInfo[0].CardType;
+		CallBackFunc(CardNo+"^"+CardType);
+		return
+	}
+	var HaveSameReadCardMode="Y";	//æ˜¯å¦ä½¿ç”¨åŒä¸€ç§è¾“å…¥æ–¹å¼Handle Or Read
+	var HaveSameDevice="Y";	//æ˜¯å¦ä½¿ç”¨çš„åŒä¸€ç§è¯»å¡æ¨¡å¼
+	var FirstCCMRowID=ValidAccMNoCardNoObj[0].CardInfo[0].CardTypeConfig.split("^")[13];
+	var FirstReadCardMode=ValidAccMNoCardNoObj[0].CardInfo[0].CardTypeConfig.split("^")[15];
+	var OutPutInfo="";
+	var CardList=""
+	for (var i=0;i<AccMNoNum;i++){
+		var CardNum=ValidAccMNoCardNoObj[i].CardInfo.length;
+		for (var j=0;j<CardNum;j++){
+			var CardNo=ValidAccMNoCardNoObj[i].CardInfo[j].CardNo;
+			var CardType=ValidAccMNoCardNoObj[i].CardInfo[j].CardType;
+			var CardTypeConfig=ValidAccMNoCardNoObj[i].CardInfo[j].CardTypeConfig;
+			var CardTypeDesc = CardTypeConfig.split("^")[1];			//è®¾å¤‡ç±»å‹
+			var CCMRowID = CardTypeConfig.split("^")[13];			//è®¾å¤‡ç±»å‹
+			var ReadCardMode = CardTypeConfig.split("^")[15];	     //è¯»å¡æ¨¡å¼
+			var IsCardNoCheck = CardTypeConfig.split("^")[36];		///æ˜¯å¦æ ¡éªŒè´¦æˆ·
+			
+			//å¦‚æœåªæœ‰ä¸€ä¸ªè´¦æˆ·,åˆ¤æ–­å½“å‰å¡æ˜¯å¦éœ€è¦å¼¹å‡ºé€‰æ‹©å¡ç±»å‹ç•Œé¢
+			if (((ReadCardMode == "Handle") || (CCMRowID == ""))&&(AccMNoNum==1)) {
+				if(IsCardNoCheck == "N") {
+					//å¦‚æœæœ‰ä¸éœ€è¦éªŒè¯çš„å¡ç±»å‹ï¼Œç›´æ¥ä½¿ç”¨è¯¥å¡è¿›è¡Œæ¶ˆè´¹
+					CallBackFunc(CardNo+"^"+CardType);
+					return
+				}
+			}
+			if (CCMRowID!=FirstCCMRowID){
+				HaveSameDevice="N";
+			}
+			if (ReadCardMode!=FirstReadCardMode){
+				HaveSameReadCardMode="N";
+			}
+			var cardDesc=CardTypeDesc+":"+CardNo;
+			if (CardList=="") CardList=CardType+"^"+cardDesc+"^"+CardNo+"^"+"^111";
+			else  CardList=CardList+"!"+CardType+"^"+cardDesc+"^"+CardNo+"^"+"^111";
+			
+		}
+	}
+	//å¦‚æœæ˜¯ç›¸åŒçš„è¯»å¡æ¨¡å¼ã€è¾“å…¥æ–¹å¼ï¼Œåˆ™ç›´æ¥è°ƒç”¨è¯»å¡å™¨ï¼Œè®©ç”¨æˆ·åˆ·å¡ä»¥ç¡®å®šå½“å‰ä½¿ç”¨çš„å¡ç‰‡
+	if ((HaveSameDevice=="Y")&&(HaveSameReadCardMode=="Y")){
+		if((FirstReadCardMode == "Handle") || (FirstCCMRowID == "")) {
+			var myrtn = DHCACC_HandleMagCard();
+		}else{
+			var myrtn = DHCACC_ReadMagCard(FirstCCMRowID);	
+		}
+		
+		var myary=myrtn.split("^");
+		var CardNo="",CardType=""
+		if (myary[0]=="0"){
+			var CardNo=myary[1];
+			var CardType=myary[2];
+		}
+		CallBackFunc(CardNo+"^"+CardType);
+		return;
+	}else{
+		//å¦‚æœè¾“å…¥æ–¹å¼æœ‰å·®åˆ«ï¼Œè¿˜æ˜¯å¾—éœ€è¦ç”¨æˆ·è‡ªè¡Œéœ€è¦ä½¿ç”¨çš„å¡å·
+		SelectBillCard(CardList,CallBackFunc);
+	}
+	function SelectBillCard(CardList,CallBackFunc){
+		var id="CardTypeDialog";
+		$("body").append("<div id='"+id+"' class='hisui-dialog'></div><span id='selCardTypeInfo'></span>");
+		var src='opdoc.cardtypelist.csp?CardTypeList='+CardList;
+		if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
+		$("#"+id).dialog({
+			autoOpen : true,   // æ˜¯å¦è‡ªåŠ¨å¼¹å‡ºçª—å£
+			title: "è¯·é€‰æ‹©å¡ç±»å‹",
+	        width: 400,
+	        height: 320,
+	        cache: false,
+	        iconCls: "icon-add-note",
+	        collapsible: false,
+	        minimizable:false,
+	        maximizable: false,
+	        resizable: false,
+	        modal: true,
+	        closed: true,
+	        closable: true,
+	        content:"<iframe id='CardTypeFrame' width='100%' height='98.7%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>",
+		    onClose:function(){
+			    var selCardInfo=$("#selCardTypeInfo").val();
+			    if (selCardInfo==""){
+				    return false;
+				}
+				var selCardInfoArr=selCardInfo.split("-"); //å¡ç±»å‹id-å¡å·-å¡ç±»å‹
+			    var SelectedCardType=selCardInfoArr[0];
+				var SelectedCardNo=selCardInfoArr[1];
+				CallBackFunc(SelectedCardNo+"^"+SelectedCardType)
+				return true;
+			}
+		});
+		$("#"+id).dialog("open");
+	}
+}
+// æ‰“å°å¤–éƒ¨å¡äºŒç»´ç (æ¡ç )	
+function PrintQRCode(argObj){
+    var rtn=false;
+    if (typeof CardCommon_ControlObj != "undefined") {
+	    rtn=CardCommon_ControlObj.PrintQRCode(argObj); 
+    }
+	return rtn;
 }

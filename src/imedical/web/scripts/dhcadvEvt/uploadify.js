@@ -12,17 +12,13 @@ $(function(){
 	///初始化图片显示工具
 	initShowImg();
 }) 
-
-
-
-
 function initDatagrid(recordId){
 	var columns=[[
     	{ field: 'ATTRID',align: 'center', title: 'ID',width:50,hidden:true},
-    	{ field: 'ATTRDate',align: 'center', title: '上传日期',width:50},
-    	{ field: 'ATTRTime',align: 'center', title: '上传时间',width:50},
-    	{ field: 'ATTRUser',align: 'center', title: '上传人',width:50},
-    	{ field: 'ATTRFileName',align: 'center', title: '文件名称',width:100}
+    	{ field: 'ATTRDate',align: 'center', title: $g('上传日期'),width:50},
+    	{ field: 'ATTRTime',align: 'center', title: $g('上传时间'),width:50},
+    	{ field: 'ATTRUser',align: 'center', title: $g('上传人'),width:50},
+    	{ field: 'ATTRFileName',align: 'center', title: $g('文件名称'),width:100,formatter:ShowFile}
     
  	]]; 
  	$("#uploadTable").datagrid({
@@ -30,6 +26,7 @@ function initDatagrid(recordId){
 		toolbar:'#toolbar',
 		queryParams:{
 			RecordId:recordId,
+			LgHospID:LgHospID
 			
 		},
 		fit:true,
@@ -40,7 +37,7 @@ function initDatagrid(recordId){
 		pageSize:20,  
 		pageList:[20,35,50], 
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		rowStyler:function(index,rowData){
 			
@@ -50,10 +47,24 @@ function initDatagrid(recordId){
 		}
 	});		
 }
+//操作  文件
+function ShowFile(value, rowData, rowIndex)
+{   
+	var FileUrl=rowData.FileUrl;         // 文件url
+	var ATTRFileName=rowData.ATTRFileName; // 文件名
+	html = "<a href='#' onclick=\"LoadFile('"+FileUrl+"')\">"+ATTRFileName+"</a>";
+    return html;
+    
+}
+/// 文件 查看
+function LoadFile(FileUrl){
+	window.open(FileUrl)
+}
 
 function loadDatagrid(recordId){
 	$("#uploadTable").datagrid("load",{
 		RecordId:recordId,
+		LgHospID:LgHospID
 	})		
 }
 
@@ -69,13 +80,13 @@ function initLoadify(recordId){
 	//var fileTypeDesc ="123";
 	$("#uploadify").uploadify({
 		buttonClass:"uploadify-button-a",
-		buttonText:"上传图片",
+		buttonText:$g("上传文件"),
 		fileObjName:"FileStream",
 		formData:{"fileName":fileName},
 		removeCompleted:true,
 		'uploader': "dhcadv.upload.csp?dirname=\\dhcAdvEvt\\picture\\"+curdate+"\\", //'websys.file.utf8.csp',
 	    'swf': '../scripts/dhcadvEvt/jqueryplugins/uploadify/uploadify.swf',
-	    'fileTypeExts':'*.gif; *.jpg; *.png',
+	    'fileTypeExts':'*',  // '*.gif; *.jpg; *.png; *.jpeg; *.doc; *.docx; *.pdf', 不控制上传类型
 	    height:30,   
 	    width:100,
 	    auto:true,
@@ -88,7 +99,7 @@ function initLoadify(recordId){
 			var params = recordId+"^"+imgUrl+"^"+UserId;
 			runClassMethod("web.DHCADVFile","saveUrl",{'Params':params},function(ret){
 				if(ret==0){
-					$.messager.alert("提示","保存数据成功！");
+					$.messager.alert($g("提示"),$g("保存数据成功")+"！");
 					reloadImg(recordId);
 					loadDatagrid(recordId);
 				}	
@@ -111,7 +122,7 @@ function reloadImg(recordId){
 	}
 	//var fileTypeDesc = getTypeDesc();
 
-	runClassMethod("web.DHCADVFile","GetUrlByRedID",{"recordId":recordId},function(data){
+	runClassMethod("web.DHCADVFile","GetUrlByRedID",{"recordId":recordId,"LgHospID":LgHospID},function(data){
 		$("#imgDiv").empty();
 		dataArr=data.split("$");
 		for(var i=0;i<dataArr.length;i++){
@@ -126,18 +137,18 @@ function deleteImg(){
     var recordId =getParam("recordId");	
 	var rowData = $("#uploadTable").datagrid("getSelections");	
 	if(!rowData.length){
-		$.messager.alert("提示","未选中数据！");
+		$.messager.alert($g("提示"),$g("未选中数据")+"！");
 		return;
 	}
-	$.messager.confirm("提示","确定删除选中数据吗?",function(r){
+	$.messager.confirm($g("提示"),$g("确定删除选中数据吗")+"？",function(r){
 		if(!r) return;
 		$m({
 			ClassName:"web.DHCADVFile",
 			MethodName:"deleteUrl",
 			ID:rowData[0].ATTRID
 		},function(ret){
-			var tp=(ret==0?"删除成功!":"失败!"+ret)
-			$.messager.alert("提示",tp);
+			var tp=(ret==0?$g("删除成功"):$g("失败")+ret)
+			$.messager.alert($g("提示"),tp);
 			reloadImg(recordId);
 			loadDatagrid(recordId);
 			return;

@@ -22,6 +22,36 @@ function BodyLoadHandler()
 	SetEnabled();
 	KeyUp("LToLoc^LToEquipType^LToEquipType^LToOrigin","N");
 	Muilt_LookUp("LToLoc^LToEquipType^LToEquipType^LToOrigin","N");
+	//cjc UI改造begin 20230331
+	initButtonWidth();
+	initButtonColor();
+	initPanelHeaderStyle();
+	hidePanelTitle();
+	
+	var Type=$HUI.combobox('#Type',{
+		valueField:'id', 
+		textField:'text',
+		panelHeight:"auto",
+		data:[{
+				id: '1',
+				text: '调整数据',
+				"selected":true
+			},{
+				id: '2',
+				text: '新增数据'
+			},{
+				id: '3',
+				text: '删除数据'
+			},{
+				id: '4',
+				text: '取消报废'
+			}]
+		})
+	$(".panel-body-noheader").css("border-top","1px solid #e2e2e2");
+	$("#cDisplayFlag").css("margin-left","-8px");
+	$("#cReportFlag").css("margin-left","-8px");
+	$(".checkbox").css("padding-top","2px");
+		//cjc UI改造 end 20230331
 }
 function InitElementValue()
 {
@@ -50,6 +80,8 @@ function InitEvent()
 	if (obj) obj.onclick=BInvalid_Click;
 	var obj=document.getElementById("BImport")
 	if (obj) obj.onclick=BImport_Click;
+	var obj=document.getElementById("BPrint")	//czf 2021-01-24
+	if (obj) obj.onclick=BPrint_Click;
 }
 function SetEnabled()//灰化
 {
@@ -67,12 +99,14 @@ function SetEnabled()//灰化
 		DisableBElement("BDelete",true)
 		DisableBElement("BInvalid",true)
 		DisableBElement("BImport",true)
+		DisableBElement("BPrint",true)	//czf 2022-01-24
 	}
 	else if (Status=="0")
 	{
 		DisableBElement("BInvalid",true)
 		if (UserFlag=="true") DisableBElement("BImport",true)
 		if ((UserFlag!="true")&&(ImportFlag!="Yes")) DisableBElement("BExecute",true)
+		DisableBElement("BPrint",true)	//czf 2022-01-24
 	}
 	else if (Status=="1")
 	{
@@ -88,6 +122,7 @@ function SetEnabled()//灰化
 		DisableBElement("BExecute",true)
 		DisableBElement("BInvalid",true)
 		DisableBElement("BImport",true)
+		DisableBElement("BPrint",true)	//czf 2022-01-24
 	}
 	if (Type=="2")
 	{
@@ -174,7 +209,11 @@ function BUpdate_Click()
 					//add by HHM 20150910 HHM0013
 					//添加操作成功是否提示
 					ShowMessage("更新成功");
-					window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+Component+"&RowID="+GetElementValue("RowID")+"&UserFlag="+GetElementValue("UserFlag") ;
+					var url="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+Component+"&RowID="+GetElementValue("RowID")+"&UserFlag="+GetElementValue("UserFlag") ;
+					if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+						url += "&MWToken="+websys_getMWToken()
+					}
+					window.location.href=url;
 				}
 			}
 			else
@@ -182,7 +221,11 @@ function BUpdate_Click()
 				//add by HHM 20150910 HHM0013
 				//添加操作成功是否提示
 				ShowMessage("更新成功");
-				window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+Component+"&RowID="+GetElementValue("RowID")+"&UserFlag="+GetElementValue("UserFlag") ;
+				var url="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+Component+"&RowID="+GetElementValue("RowID")+"&UserFlag="+GetElementValue("UserFlag") ;
+				if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+					url += "&MWToken="+websys_getMWToken()
+				}
+				window.location.href=url;
 			}
 		}
 		else
@@ -190,7 +233,11 @@ function BUpdate_Click()
 			//add by HHM 20150910 HHM0013
 			//添加操作成功是否提示
 			ShowMessage("更新成功");
-			window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+Component+"&RowID="+GetElementValue("RowID")+"&UserFlag="+GetElementValue("UserFlag")+"&vType="+vType ;
+			var url="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+Component+"&RowID="+GetElementValue("RowID")+"&UserFlag="+GetElementValue("UserFlag")+"&vType="+vType ;
+			if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+				url += "&MWToken="+websys_getMWToken()
+			}
+			window.location.href=url
 		}
 	}
 	else
@@ -214,7 +261,11 @@ function BDelete_Click()
 	}
 	else
 	{
-		window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+Component+"&UserFlag="+GetElementValue("UserFlag")+"&vType="+vType ;
+		var url="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+Component+"&UserFlag="+GetElementValue("UserFlag")+"&vType="+vType ;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
+		window.location.href=url;
 	}
 }
 function BExecute_Click() 
@@ -244,7 +295,11 @@ function BExecute_Click()
 	}
 	else
 	{
-		window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+Component+"&UserFlag="+GetElementValue("UserFlag")+"&RowID="+GetElementValue("RowID")+"&vType="+vType ;
+		var url="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+Component+"&UserFlag="+GetElementValue("UserFlag")+"&RowID="+GetElementValue("RowID")+"&vType="+vType ;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
+		window.location.href=url;
 	}
 }
 function BInvalid_Click() 
@@ -275,7 +330,11 @@ function BInvalid_Click()
 	}
 	else
 	{
-		window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+Component+"&RowID="+GetElementValue("RowID")+"&UserFlag="+GetElementValue("UserFlag")+"&vType="+vType ;
+		var url="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+Component+"&RowID="+GetElementValue("RowID")+"&UserFlag="+GetElementValue("UserFlag")+"&vType="+vType ;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
+		window.location.href=url;
 	}
 }
 function Clear()
@@ -486,9 +545,357 @@ function GetLToEquipTypeID(value)
 {
 	GetLookUpID("LToEquipTypeDR",value)
 }
-
-
+///add by mwz 20211115 mwz0053 
+///增加chrome浏览器导入方法
 function BImport_Click()
+{
+	var ChromeFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo", "991109")
+	if (ChromeFlag==1)
+	{
+		BImportChrome_Click()
+	}
+	else
+	{
+		BImportIE_Click()
+	}
+}
+///add by mwz 20211115 mwz0053 
+///增加chrome浏览器导入方法
+function BImportChrome_Click()
+{
+	var RowInfos=EQReadExcel('','','调整数据');
+	var Error=""
+	var Type=GetElementValue("Type");
+	if (Type=="") return;
+	var RowInfo=RowInfos[0]   //取第一个页签的数组
+	if ((RowInfo=="")||(RowInfo.length<=1))		
+	{
+		alertShow("没有数据导入！")
+		return -1;
+	}
+	for (var Row=2;Row<=RowInfo.length;Row++)
+	{	
+	 	var Col=0;
+	    var Name=trim(RowInfo[Row-1][Col++]);
+	    if (Name==undefined) Name=""
+	    var No=trim(RowInfo[Row-1][Col++]);
+	    if (No==undefined) No=""
+	    var Status=trim(RowInfo[Row-1][Col++]);
+	    if (Status==undefined) Status=""
+	    var OriginalFee=trim(RowInfo[Row-1][Col++]);
+	    if (OriginalFee==undefined) OriginalFee=""
+	    var DepreTotal=trim(RowInfo[Row-1][Col++]);
+	    if (DepreTotal==undefined) DepreTotal=""
+	    var NetFee=trim(RowInfo[Row-1][Col++]);
+	    if (NetFee==undefined) NetFee=""
+	    
+	    var FromLoc=trim(RowInfo[Row-1][Col++]);
+	    if (FromLoc==undefined) FromLoc=""
+	    var FromLocDR=""
+	    var FromEquipType=trim(RowInfo[Row-1][Col++]);
+	    if (FromEquipType==undefined) FromEquipType=""
+	    var FromEquipTypeDR=""
+	    var FromStatCat=trim(RowInfo[Row-1][Col++]);
+	    if (FromStatCat==undefined) FromStatCat=""
+	    var FromStatCatDR="";
+	    var FromOrigin=trim(RowInfo[Row-1][Col++]); 
+	    if (FromOrigin==undefined) FromOrigin=""
+	    var FromOriginDR="";
+	    var ToLoc=trim(RowInfo[Row-1][Col++]);
+	    if (ToLoc==undefined) ToLoc=""
+	    var ToLocDR="";
+	    var ToEquipType=trim(RowInfo[Row-1][Col++]);
+	    if (ToEquipType==undefined) ToEquipType=""
+	    var ToEquipTypeDR=""
+	    var ToStatCat=trim(RowInfo[Row-1][Col++]);
+	    if (ToStatCat==undefined) ToStatCat=""
+	    var ToStatCatDR="";
+	    var ToOrigin=trim(RowInfo[Row-1][Col++]); 
+	    if (ToOrigin==undefined) ToOrigin=""
+	    var ToOriginDR="";
+	    if (Type==5)                                
+	    {
+		    var MainFlag=trim(RowInfo[Row-1][Col++]);
+		    if ((MainFlag=="是")||(MainFlag=="Y")) 
+		    {
+			    MainFlag="Y"
+			}
+		    else
+		    {
+			    MainFlag=""
+			}
+		    SetElement("LHold1",MainFlag);
+		    if (MainFlag=="Y")
+			{
+				count=count+1;
+			}
+		}                                          
+	    if (No=="")
+	    {
+		    alertShow("第"+Row+"行"+"设备编号为空!");
+		    return 1;
+	    }
+	    var encmeth=GetElementValue("GetEquipIDByNo");
+		var EquipID=cspRunServerMethod(encmeth,No);
+		if (EquipID=="")
+		{
+			alertShow("第"+Row+"行"+Name+"不存在!");
+		    return 1;
+		}
+		else
+		{
+			SetElement("LEquipDR",EquipID);
+		}
+	    var encmeth=GetElementValue("CheckEquipInfo");
+		if (OriginalFee!="")
+		{
+			result=cspRunServerMethod(encmeth,EquipID,"OriginalFee",OriginalFee);
+			if (result=="0")
+			{
+				alertShow("第"+Row+"行"+No+"原值信息不正确:"+OriginalFee);
+				return 1;
+			}
+		}
+		if (Status!="")
+		{
+			result=cspRunServerMethod(encmeth,EquipID,"Status",Status);
+			if (result=="0")
+			{
+				alertShow("第"+Row+"行"+No+"状态信息不正确:"+Status);
+				return 1;
+			}
+		}
+		if (DepreTotal!="")
+		{
+			result=cspRunServerMethod(encmeth,EquipID,"DepreTotal",DepreTotal);
+			if (result=="0")
+			{
+				alertShow("第"+Row+"行"+No+"累计折旧信息不正确:"+DepreTotal);
+				return 1;
+			}
+		}
+		if (NetFee!="")
+		{
+			result=cspRunServerMethod(encmeth,EquipID,"NetFee",NetFee);
+			if (result=="0")
+			{
+				alertShow("第"+Row+"行"+No+"净值信息不正确:"+NetFee);
+				return 0;
+			}
+		}
+		if (DepreTotal!="")
+		{
+			result=cspRunServerMethod(encmeth,EquipID,"DepreTotal",DepreTotal);
+			if (result=="0")
+			{
+				alertShow("第"+Row+"行"+No+"累计折旧信息不正确:"+DepreTotal);
+				return 1;
+			}
+		}
+		if ((Type=="1")||(Type=="3")||(Type=="4")||(Type=="5"))
+		{
+			if (FromLoc!="")
+			{
+				result=cspRunServerMethod(encmeth,EquipID,"StoreLoc",FromLoc);
+				if (result=="0")
+				{
+					alertShow("第"+Row+"行"+No+"原科室信息不正确:"+FromLoc);
+					return 1;
+				}
+			}
+			else
+			{
+				alertShow("第"+Row+"行"+No+"原科室信息为空!");
+				return 1;
+			}
+			if (FromEquipType!="")
+			{
+				result=cspRunServerMethod(encmeth,EquipID,"EquipType",FromEquipType);
+				if (result=="0")
+				{
+					alertShow("第"+Row+"行"+No+"原类组信息不正确:"+FromEquipType);
+					return 1;
+				}
+			}
+			else
+			{
+				alertShow("第"+Row+"行"+No+"原类组信息为空!");
+				return 1;
+			}
+			if (FromStatCat!="")
+			{
+				result=cspRunServerMethod(encmeth,EquipID,"StatCat",FromStatCat);
+				if (result=="0")
+				{
+					alertShow("第"+Row+"行"+No+"原类型信息不正确:"+FromStatCat);
+					return 1;
+				}
+			}
+			else
+			{
+				alertShow("第"+Row+"行"+No+"原类型信息为空!");
+				return 1;
+			}
+			if (FromOrigin!="")
+			{
+				result=cspRunServerMethod(encmeth,EquipID,"Origin",FromOrigin);
+				if (result=="0")
+				{
+					alertShow("第"+Row+"行"+No+"原来源信息不正确:"+FromOrigin);
+					return 1;
+				}
+			}
+			else
+			{
+				alertShow("第"+Row+"行"+No+"原来源信息为空!");
+				return 1;
+			}
+		}
+		if ((Type=="1")||(Type=="2")||(Type=="5"))
+		{
+			var encmeth=GetElementValue("GetIDByDesc");	
+			ToLoc=trim(ToLoc)
+			if (ToLoc!="")
+			{
+				ToLocDR=cspRunServerMethod(encmeth,"CTLoc",ToLoc);
+				if (ToLocDR=="")
+				{
+					alertShow("第"+Row+"行"+"到科室的信息不正确:"+ToLoc);
+					return 1;
+				}
+				else
+				{
+					SetElement("LToLocDR",ToLocDR);
+				}
+			}
+			else
+			{
+				alertShow("第"+Row+"行"+No+"到科室信息为空!");
+				return 1;
+			}
+			ToEquipType=trim(ToEquipType)
+			
+			if (ToEquipType!="")
+			{
+				ToEquipTypeDR=cspRunServerMethod(encmeth,"DHCEQCEquipType",ToEquipType);
+				if (ToEquipTypeDR=="")
+				{
+					alertShow("第"+Row+"行"+"到类组的信息不正确:"+ToEquipType);
+					return 1;
+				}
+				else
+				{
+					SetElement("LToEquipTypeDR",ToEquipTypeDR);
+				}
+			}
+			else
+			{
+				alertShow("第"+Row+"行"+No+"到类组信息为空!");
+				return 1;
+			}
+			ToStatCat=trim(ToStatCat)
+			if (ToStatCat!="")
+			{
+				ToStatCatDR=cspRunServerMethod(encmeth,"DHCEQCStatCat",ToStatCat);
+				if (ToStatCatDR=="")
+				{
+					alertShow("第"+Row+"行"+"到类型的信息不正确:"+ToStatCat);
+					return 1;
+				}
+				else
+				{
+					SetElement("LToStatCatDR",ToStatCatDR);
+				}
+			}
+			else
+			{
+				alertShow("第"+Row+"行"+No+"到类型息为空!");
+				return 1;
+			}
+
+			ToOrigin=trim(ToOrigin)
+			if (ToOrigin!="")
+			{
+				ToOriginDR=cspRunServerMethod(encmeth,"DHCEQCOrigin",ToOrigin);
+				if (ToOriginDR=="")
+				{
+					alertShow("第"+Row+"行"+"到来源的信息不正确:"+ToOrigin);
+					return 1;
+				}
+				else
+				{
+					SetElement("LToOriginDR",ToOriginDR);
+				}
+			}
+			else
+			{
+				alertShow("第"+Row+"行"+No+"到来源息为空!");
+				return 1;
+			}
+		}
+		var ADLlist=ADLCombinData();
+		var encmeth=GetElementValue("GetUpdateList");
+		if (encmeth=="") return;
+		var result=cspRunServerMethod(encmeth,"",ADLlist,"1");
+		//alertShow(result)
+		if (result!=0)
+		{
+			var encmeth=GetElementValue("KillTEMPEQ");
+			if (encmeth=="") return;
+			var Rtn=cspRunServerMethod(encmeth,"0","");
+			alertShow("第"+Row+"行写入失败!")
+			return result
+		}
+	}
+	if (Type==5)              
+	{
+		if (count==0) 
+		{
+			alertShow("未设置主设备");
+			return 1;
+		}
+		if (count>1) 
+		{
+			alertShow("主设备不唯一");
+			return 1;
+		}
+	}         
+	if (result!=0)
+	{
+		var encmeth=GetElementValue("KillTEMPEQ");
+		if (encmeth=="") return;
+		var result=cspRunServerMethod(encmeth,"0","");
+		return;
+	}	
+	
+	
+	var truthBeTold = window.confirm("信息无误,确定导入?");
+	if (truthBeTold)
+	{
+		var RowID=GetElementValue("RowID");
+		if (RowID=="") return;
+		var encmeth=GetElementValue("KillTEMPEQ");
+		if (encmeth=="") return;
+		var result=cspRunServerMethod(encmeth,"1",RowID);
+		var encmeth=GetElementValue("GetUpdateList");
+		if (encmeth=="") return;
+		var result=cspRunServerMethod(encmeth,"","","2");
+		if (result==0)
+		{
+			var url='websys.default.hisui.csp?WEBSYS.TCOMPONENT='+Component+"&UserFlag="+GetElementValue("UserFlag")+"&RowID="+GetElementValue("RowID") ;
+			if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+				url += "&MWToken="+websys_getMWToken()
+			}
+			window.location.href= url;
+		}
+	}
+	else
+	{
+		return;
+	}
+}
+
+function BImportIE_Click()
 {
 	var Result=ImportAdjustList();
 	if (Result!=0)
@@ -509,9 +916,13 @@ function BImport_Click()
 		var encmeth=GetElementValue("GetUpdateList");
 		if (encmeth=="") return;
 		var result=cspRunServerMethod(encmeth,"","","2");
-		if (Result==0)
+		if (result==0)
 		{
-			window.location.href= 'websys.default.hisui.csp?WEBSYS.TCOMPONENT='+Component+"&UserFlag="+GetElementValue("UserFlag")+"&RowID="+GetElementValue("RowID") ;
+			var url='websys.default.hisui.csp?WEBSYS.TCOMPONENT='+Component+"&UserFlag="+GetElementValue("UserFlag")+"&RowID="+GetElementValue("RowID") ;
+			if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+				url += "&MWToken="+websys_getMWToken()
+			}
+			window.location.href= url;
 		}
 	}
 	else
@@ -825,5 +1236,45 @@ function ImportAdjustList()
     xlsheet.Quit;
     xlsheet=null;
     return 0
+}
+
+function BPrint_Click()
+{
+	var RowID=GetElementValue("RowID");
+	var LRowID=GetElementValue("LRowID");
+	if ((LRowID=="")&&(RowID=="")) return
+	var encmeth=GetElementValue("GetData");
+	if (encmeth=="") return;
+	var gbldata=cspRunServerMethod(encmeth,RowID);
+	var list=gbldata.split("^");
+	var sort=24
+	
+	DHCP_GetXMLConfig("InvPrintEncrypt","DHCEQAdjustData");
+	var LODOP = getLodop();
+	var c2=String.fromCharCode(2);
+	//var Img="data:image/png;base64,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"
+	var curSSHospitalName=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","990003")
+	var inpara="EQTitle"+c2+curSSHospitalName+"数据调整单";
+	inpara+="^EQName"+c2+GetElementValue("LEquip");
+	inpara+="^EQNo"+c2+GetElementValue("LNo");
+	inpara+="^EQStatus"+c2+GetElementValue("LEQStatus");
+	inpara+="^OriginalFee"+c2+GetElementValue("LOriginalFee");
+	inpara+="^NetFee"+c2+GetElementValue("LNetFee");
+	inpara+="^DepreTotalFee"+c2+GetElementValue("LDepreTotal");
+	inpara+="^FromLoc"+c2+GetElementValue("LFromLoc");
+	inpara+="^FromEquipType"+c2+GetElementValue("LFromEquipType");
+	inpara+="^FromStatCat"+c2+GetElementValue("LFromStatCat");
+	inpara+="^ToLoc"+c2+GetElementValue("LToLoc");
+	inpara+="^ToEquipType"+c2+GetElementValue("LToEquipType");
+	inpara+="^ToStatCat"+c2+GetElementValue("LToStatCat");
+	inpara+="^FromOrigin"+c2+GetElementValue("LFromOrigin");
+	inpara+="^ToOrigin"+c2+GetElementValue("LToOrigin");
+	inpara+="^RequestUser"+c2+GetElementValue("RequestUser");
+	inpara+="^AdjustDate"+c2+list[2];
+	inpara+="^AdjustContent"+c2+GetElementValue("Content");
+	inpara+="^Remark"+c2+GetElementValue("Remark");
+	inpara+="^AdjustUser"+c2+list[sort+2];
+	inpara+="^PrintDate"+c2+GetCurrentDate(2);
+	DHC_PrintByLodop(LODOP,inpara,"","","",{printListByText:true});
 }
 document.body.onload = BodyLoadHandler;

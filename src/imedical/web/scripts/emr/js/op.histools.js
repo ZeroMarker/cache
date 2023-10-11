@@ -470,8 +470,9 @@ function initHisTools() {
 
                 var iHeight = screen.availHeight - 90;
                 var iWidth = (screen.availWidth - 70) * 0.618;
+                var insID = emrEditor.getInstanceID();
                 //var lnk = 'emr.op.print.csp?AutoPrint=N&EpisodeID=' + patInfo.EpisodeID + '&userID=' + patInfo.UserID;
-                var lnk = 'emr.op.print.csp?IsWithTemplate=Y&EpisodeID=' + patInfo.EpisodeID;
+                var lnk = 'emr.op.print.csp?IsWithTemplate=Y&EpisodeID=' + patInfo.EpisodeID + '&InstanceId=' + insID;
                 var returnValues = window.showModalDialog(lnk, window, 'dialogHeight:' + iHeight + 'px;dialogWidth:' + iWidth + 'px;resizable:no;status:no;');
             },
             inpatientNFYY: function() {
@@ -760,7 +761,7 @@ function updateEMRInstanceData(flag, content, callback, episodeID) {
 		if ((typeof(content.UpdateEMR)=="undefined")||(content.UpdateEMR != true)) return;
 		var queryAllergiesList = "";
 		if (typeof(content.QueryAllergiesList)!="undefined") queryAllergiesList = content.QueryAllergiesList;
-		var data = ajaxDATA('String', 'EMRservice.BL.opInterface', 'getAllergic', patInfo.PatientID, queryAllergiesList);
+		var data = ajaxDATA('String', 'EMRservice.BL.opInterface', 'getAllergic', patInfo.EpisodeID, queryAllergiesList);
 		ajaxGETSync(data, function (ret) {
 			content = ret;
 		}, function (ret) {

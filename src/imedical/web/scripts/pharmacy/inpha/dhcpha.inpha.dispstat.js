@@ -260,7 +260,7 @@ function InitDispStatList() {
             },
             {
                 field: 'TManf',
-                title: '厂商',
+                title: '生产企业',
                 width: 120
             },
             {

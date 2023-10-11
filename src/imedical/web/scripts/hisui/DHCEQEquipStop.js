@@ -5,7 +5,8 @@ function BodyLoadHandler()
 	InitPage();
 	disabled(false)
 	initButtonWidth()  //hisui改造 add by lmm 2018-08-20 修改界面按钮长度不一致
-	
+	initPanelHeaderStyle();	// MZY0151	2023-02-01
+	hidePanelTitle();
 }
 function InitPage()
 {

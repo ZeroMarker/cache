@@ -4,6 +4,16 @@ function BodyLoadHandler() {
 	InitEvent();	//初始化
 	KeyUp("LifeType^SourceType^Equip^Loc^EquipType");
 	Muilt_LookUp("LifeType^SourceType^Equip^Loc^EquipType");
+	initPanelHeaderStyle();		// MZY0151	2023-02-01
+	$('#tDHCEQLifeInfo').datagrid({
+		onClickRow:function(rowIndex, rowData){
+			if (rowData.TSourceTypeDR=="35")
+		    {
+			    alertShow("折旧没有详细信息!");
+			    websys_showModal("close");  
+		    }
+		}
+	})
 }
 
 function InitEvent() //初始化

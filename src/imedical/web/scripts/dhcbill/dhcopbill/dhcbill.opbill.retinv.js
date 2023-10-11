@@ -1,11 +1,9 @@
 ﻿/**
  * FileName: dhcbill.opbill.retinv.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-12-12
  * Description: 门诊退费收据查询
  */
-
-var GV = {};
 
 $(function () {
 	initQueryMenu();
@@ -13,8 +11,7 @@ $(function () {
 });
 
 function initQueryMenu() {
-	var today = getDefStDate(0);
-	$(".datebox-f").datebox("setValue", today);
+	$(".datebox-f").datebox("setValue", CV.DefDate);
 	
 	$HUI.linkbutton("#btn-find", {
 		onClick: function () {
@@ -23,19 +20,20 @@ function initQueryMenu() {
 	});
 	
 	//操作员
-	$HUI.combobox("#guser", {
+	$HUI.combobox("#user", {
 		panelHeight: 150,
-		url: $URL + '?ClassName=web.DHCOPCashReturnTicket&QueryName=FindOPCashier&ResultSetType=array',
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryInvUser&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
 		valueField: 'id',
 		textField: 'text',
-		defaultFilter: 4,onBeforeLoad: function (param) {
-			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
+		defaultFilter: 5,
+		onBeforeLoad: function (param) {
+			param.invType = "O";
 		}
 	});
 }
 
 function initRetInvList() {
-	$HUI.datagrid("#retInvList", {
+	$HUI.datagrid("#refInvList", {
 		fit: true,
 		striped: true,
 		border: false,
@@ -43,44 +41,57 @@ function initRetInvList() {
 		rownumbers: true,
 		pagination: true,
 		pageSize: 20,
-		data: [],
-		columns:[[{title: '导航号', field: 'prtRowId', width: 80,
-					formatter: function (value, row, index) {
-						if (value) {
+		className: "web.DHCOPCashReturnTicket",
+		queryName: "QryRefInvList",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["RefDate", "HandinDate", "RefAuditDate"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if (cm[i].field == "PrtRowId") {
+					cm[i].formatter = function(value, row, index) {
+				   		if (value) {
 							return "<a href='javascript:;' onclick=\"orderDetail(\'" + value + "\')\">" + value + "</a>";
 						}
 					}
-				  },
-				  {title: '退费总额', field: 'refAcount', align: 'right', width: 100},
-				  {title: '退费日期', field: 'date', width: 120},
-				  {title: '原票据号', field: 'initInvNo', width: 120},
-				  {title: '操作员', field: 'userName', width: 100},
-				  {title: '退费原因', field: 'refundReason', width: 150},
-				  {title: '结账时间', field: 'handinDate', width: 160,
-					formatter: function (value, row, index) {
-						if (value) {
-							return value + " " + row.handinTime;
-						}
+				}
+				if (cm[i].field == "RefTime") {
+					cm[i].formatter = function(value, row, index) {
+				   		return row.RefDate + " " + value;
 					}
-				  },
-				  {title: '登记号', field: 'ipNo', width: 110},
-				  {title: '患者姓名', field: 'papmiName', width: 110},
-				  {title: '审核人', field: 'refundUser', width: 100},
-				  {title: '审核日期', field: 'refundDate', width: 100}
-			]]
+				}
+				if (cm[i].field == "HandinTime") {
+					cm[i].formatter = function(value, row, index) {
+				   		return row.HandinDate + " " + value;
+					}
+				}
+				if (cm[i].field == "RefAuditTime") {
+					cm[i].formatter = function(value, row, index) {
+				   		return row.RefAuditDate + " " + value;
+					}
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if ($.inArray(cm[i].field, ["RefTime", "HandinTime", "RefAuditTime"]) != -1) {
+						cm[i].width = 150;
+					}
+				}
+			}
+		}
 	});
 }
 
 function loadRetInvList() {
 	var queryParams = {
 		ClassName: "web.DHCOPCashReturnTicket",
-		QueryName: "FindInfo",
-		startDate: getValueById("stDate"),
+		QueryName: "QryRefInvList",
+		stDate: getValueById("stDate"),
 		endDate: getValueById("endDate"),
-		guser: getValueById("guser") || "",
+		userId: getValueById("user") || "",
 		hospId: PUBLIC_CONSTANT.SESSION.HOSPID
 	};
-	loadDataGridStore("retInvList", queryParams);
+	loadDataGridStore("refInvList", queryParams);
 }
 
 /**
@@ -103,11 +114,30 @@ function orderDetail(prtRowId) {
 				rownumbers: true,
 				pagination: true,
 				pageSize: 10,
-				columns:[[{title: '医嘱名称', field: 'ArcimDesc', width: 220},
-						  {title: '操作员', field: 'RefUser', width: 120},
-						  {title: '退费日期', field: 'RefDate', width: 120},
-						  {title: '退费金额', field: 'RefOrdAmt', width: 100, align: 'right'}
-					]],
+				className: "web.DHCOPCashReturnTicket",
+				queryName: "FindDetail",
+				onColumnsLoad: function(cm) {
+					for (var i = (cm.length - 1); i >= 0; i--) {
+						if (cm[i].field == "RefDate") {
+							cm.splice(i, 1);
+							continue;
+						}
+						if (cm[i].field == "RefTime") {
+							cm[i].formatter = function(value, row, index) {
+						   		return row.RefDate + " " + value;
+							}
+						}
+						if (!cm[i].width) {
+							cm[i].width = 100;
+							if (cm[i].field == "ArcimDesc") {
+								cm[i].width = 200;
+							}
+							if (cm[i].field == "RefTime") {
+								cm[i].width = 150;
+							}
+						}
+					}
+				},
 				url: $URL,
 				queryParams: {
 					ClassName: "web.DHCOPCashReturnTicket",

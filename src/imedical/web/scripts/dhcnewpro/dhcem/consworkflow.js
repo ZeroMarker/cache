@@ -2,10 +2,11 @@
 /// CreateDate: 2019-12-09
 //  Descript: 会诊工作流定义
 
-var editRow=0;itmEditRow=0; itmAutEditRow=0,preEditRow=0; //当前编辑行号
+var editRow=0;itmEditRow=0; itmAutEditRow=0,preEditRow=0, editDRow=-1; //当前编辑行号
 var dataArrayNew = [{"value":"G","text":'安全组'}, {"value":"L","text":'科室'}, {"value":"U","text":'人员'}]; //hxy 2017-12-14
 var dataArray = [{"value":"1","text":'安全组'}, {"value":"2","text":'科室'}, {"value":"3","text":'人员'}]; //, {"value":"4","text":'全院'}
 var Active = [{"value":"Y","text":'是'}, {"value":"N","text":'否'}];
+var patTypeArray = [{"value":"O","text":'门诊'}, {"value":"E","text":'急诊'}, {"value":"I","text":'住院 '}]; //hxy 2021-01-21
 //var tabsid="";
 $(function(){
 	///多院区设置
@@ -15,6 +16,8 @@ $(function(){
 	
    	initMethod();
    	
+   	/// 表达式参数列表
+   	initFnParamDG();
 })
 
 ///多院区设置
@@ -73,7 +76,7 @@ function initDatagrid(){
 	
 	// 定义datagrid
 	$('#main').datagrid({
-		title:'会诊工作流配置-工作量定义',
+		title:'会诊工作流配置-工作流定义',
 		url:$URL+"?ClassName=web.DHCEMConsWorkFlow&MethodName=QryListMain&Params="+params,
 		fit:true,
 		rownumbers:true,
@@ -95,6 +98,7 @@ function initDatagrid(){
 			$('#mainItm').datagrid("load",{"Params":rowData.ID});
 			$('#consPre').datagrid("load",{"Params":rowData.ID});
 			$('#mainItmAut').datagrid("load",{"Params":""});
+			$("#btParamsList").datagrid('load',{"ID":""}); //hxy 2021-12-22
         }
 	});	
 	
@@ -107,7 +111,7 @@ function initDatagrid(){
 			textField: "text",
 			url:$URL+"?ClassName=web.DHCEMConsWorkFlow&MethodName=GetStatusList&HospID="+LgHospID,
 			//required:true,
-			panelHeight:"auto",  //设置容器高度自动增长
+			panelHeight:350,  //设置容器高度自动增长 //hxy 2020-08-11 "auto"->350
 			onSelect:function(option){
 				///设置类型值
 				var ed=$("#mainItm").datagrid('getEditor',{index:editRow,field:'Status'});
@@ -276,7 +280,7 @@ function initDatagrid(){
 	
 	// 定义datagrid
 	$('#consPre').datagrid({
-		title:'',
+		title:'前置条件表达式',
 		url:$URL+"?ClassName=web.DHCEMConsPreCon&MethodName=QryListPreCon",
 		fit:true,
 		rownumbers:true,
@@ -295,13 +299,86 @@ function initDatagrid(){
            preEditRow = rowIndex; 
         },
         onClickRow:function(rowIndex, rowData){
-	        
+	        /// 参数列表
+			$("#btParamsList").datagrid('reload',{ID:rowData.ID});
 	    },
 	  onLoadSuccess: function (data) {
 	        
         }
 	});
 	
+}
+
+/// 初始化表达式参数列表 bianshuai 2021-01-11
+function initFnParamDG(){
+	
+	/// 文本编辑格
+	var textEditor={
+		type: 'text',//设置编辑格式
+		options: {
+			required: true //设置编辑规则属性
+		}
+	}
+	
+	// 下拉框编辑
+	var DGEditor={  //设置其为可编辑
+		type: 'combobox',//设置编辑格式
+		options: {
+			valueField: "value", 
+			textField: "text",
+			url:$URL+"?ClassName=web.DHCEMConsultCom&MethodName=JsonPrvTp&Type=DOC^PHA",
+			//required:true,
+			panelHeight:"auto",  //设置容器高度自动增长
+			onShowPanel: function(){
+				var rowData = $("#consPre").datagrid("getSelected");
+				if(rowData.Fun=="病人类型"){
+					var ed=$("#btParamsList").datagrid('getEditor',{index:editDRow,field:'Desc'});
+					$(ed.target).combobox('clear');//清空类型值
+					$(ed.target).combobox('loadData',patTypeArray);
+				}else if(rowData.Fun!="医护类型"){
+					var ed=$("#btParamsList").datagrid('getEditor',{index:editDRow,field:'Desc'});
+					$(ed.target).combobox('clear');//清空类型值
+					$(ed.target).combobox('loadData',"[]");
+					$.messager.alert("提示","该表达式不必维护参数!"); 
+				}
+			},
+			onSelect:function(option){
+				var ed=$("#btParamsList").datagrid('getEditor',{index:editDRow,field:'Desc'});
+				$(ed.target).combobox('setValue', option.text);
+			} 
+		}
+	}
+
+		
+	///  定义columns
+	var columns=[[
+		//{field:'Desc',title:'名称',width:300,editor:textEditor},
+		{field:'Desc',title:'名称',width:300,editor:DGEditor},
+		{field:'ID',title:'id',width:80,hidden:true}
+	]];
+	
+	///  定义datagrid
+	var option = {
+		//showHeader:false,
+		title:'参数',
+		rownumbers : true,
+		singleSelect : true,
+		pagination: true,
+		pageSize : [100],
+		pageList : [100,200],
+		border : true,
+		onDblClickRow: function (rowIndex, rowData) {
+			if ((editDRow != "")||(editDRow == "0")) { 
+                $("#btParamsList").datagrid('endEdit', editDRow); 
+            } 
+            $("#btParamsList").datagrid('beginEdit', rowIndex); 
+            editDRow = rowIndex;
+        }
+	};
+	/// 就诊类型
+	var param = "";
+	var uniturl = $URL+"?ClassName=web.DHCEMConsPreCon&MethodName=ListExpParams";
+	new ListComponent('btParamsList', columns, uniturl, option).Init(); 
 }
 
 function initMethod(){
@@ -328,7 +405,7 @@ function initMethod(){
 // 插入新行
 function insertRow()
 {	
-	if(editRow>0){
+	if(editRow>=0){ //hxy 2020-08-11 =
 		$("#main").datagrid('endEdit', editRow);//结束编辑，传入之前编辑的行
 	}
 	var rows = $("#main").datagrid('getChanges');
@@ -400,7 +477,7 @@ function saveRow()
 	//保存数据
 	runClassMethod("web.DHCEMConsWorkFlow","save",{"mParam":rowstr},function(jsonString){
 
-		if ((jsonString == "-1")||((jsonString == "-3"))){
+		if ((jsonString == "1")||(jsonString == "-1")||((jsonString == "-3"))){
 			$.messager.alert('提示','代码重复,请核实后再试！','warning');
 			return;	
 		}else if ((jsonString == "-2")||((jsonString == "-4"))){
@@ -427,25 +504,25 @@ function itmInsertRow()
 {
 	var rowsData = $("#main").datagrid('getSelected'); //选中要删除的行
 	if (rowsData == null) {
-		$.messager.alert("提示","请选中左侧主记录！"); 
+		$.messager.alert("提示","请选中左侧主记录！",'warning'); 
 		return false;
 	}
 	
-	if(itmEditRow>0){
+	if(itmEditRow>=0){ //hxy 2020-08-11 =
 		
 		$("#mainItm").datagrid('endEdit', itmEditRow);//结束编辑，传入之前编辑的行
 	}
 	var rows = $("#mainItm").datagrid('getChanges');
 	for(var i=0;i<rows.length;i++)
 	{
-		if((rows[i].Code=="")||(rows[i].Desc=="")){
-			$.messager.alert("提示","有必填项未填写，请核实!"); 
+		if(rows[i].StatusDr==""){
+			$.messager.alert("提示","有必填项未填写，请核实!",'warning'); 
 			return false;
 		}
 	} 
 	$("#mainItm").datagrid('insertRow', {//在指定行添加数据，appendRow是在最后一行添加数据
 		index: 0, // 行数从0开始计算
-		row: {ID: '',Code:'',Desc: ''}
+		row: {ID: '',StatusDr:'',Status: ''}
 	});
 	
 	$("#mainItm").datagrid('beginEdit', 0);//开启编辑并传入要编辑的行
@@ -466,6 +543,7 @@ function itmDeletRow()
 						$.messager.alert('提示','删除失败！','warning');
 					}
 					$('#mainItm').datagrid('load',{Params:mID}); //重新加载
+					$('#mainItmAut').datagrid("load",{"Params":""}); //重新加载 hxy 2021-07-13
 				})
 			}
 		});
@@ -480,7 +558,7 @@ function itmSave()
 {
 	var rowsData = $("#main").datagrid('getSelected'); //选中要删除的行
 	if (rowsData == null) {
-		$.messager.alert("提示","请选中左侧主记录！"); 
+		$.messager.alert("提示","请选中左侧主记录！",'warning'); 
 		return false;
 	}
 	var mID = rowsData.ID;
@@ -490,17 +568,23 @@ function itmSave()
 	}
 	var rows = $("#mainItm").datagrid('getChanges');
 	if(rows.length<=0){
-		$.messager.alert("提示","没有待保存数据!");
+		$.messager.alert("提示","没有待保存数据!",'warning');
 		return;
 	}
 	var dataList = [];
 	for(var i=0;i<rows.length;i++)
 	{
 		if(mID==""){
-			$.messager.alert("提示","请选择一条主数据!"); 
+			$.messager.alert("提示","请选择一条主数据!",'warning'); 
 			return false;
 		}
-		var tmp=rows[i].ID+"^"+mID+"^"+rows[i].StatusDr;
+		
+		if(rows[i].StatusDr==""){
+			$.messager.alert("提示","状态不能为空！",'warning'); 
+			return false;
+		}
+		
+		var tmp=rows[i].ID+"^"+mID+"^"+rows[i].StatusDr+"^"+rows[i].Status; //hxy 2020-08-05 rows[i].Status
 		dataList.push(tmp);
 	} 
 	var rowstr=dataList.join("$$")
@@ -523,6 +607,11 @@ function itmSave()
 // 插入新行
 function itmAutInsertRow()
 {
+	var rowsData = $("#mainItm").datagrid('getSelected'); //选中要删除的行
+	if (rowsData == null) {
+		$.messager.alert("提示","请先选择工作流项目！",'warning'); 
+		return false;
+	}
 	
 	if(itmAutEditRow>="0"){
 		
@@ -532,7 +621,7 @@ function itmAutInsertRow()
 	for(var i=0;i<rows.length;i++)
 	{
 		if((rows[i].TypeID=="")||($.trim(rows[i].PointID)=="")){
-			$.messager.alert("提示","有必填项未填写，请核实!"); 
+			$.messager.alert("提示","有必填项未填写，请核实!",'warning'); 
 			return false;
 		}
 	} 
@@ -576,7 +665,7 @@ function itmAutSaveRow()
 	
 	var rowsData = $("#mainItm").datagrid('getSelected'); //选中要删除的行
 	if (rowsData == null) {
-		$.messager.alert("提示","请选中授权项目！"); 
+		$.messager.alert("提示","请选中授权项目！",'warning'); 
 		return false;
 	}
 	var mItmID = rowsData.ID;
@@ -587,7 +676,7 @@ function itmAutSaveRow()
 
 	var rows = $("#mainItmAut").datagrid('getChanges');
 	if(rows.length<=0){
-		$.messager.alert("提示","没有待保存数据!");
+		$.messager.alert("提示","没有待保存数据!",'warning');
 		return;
 	}
 	var dataList = [];
@@ -595,11 +684,11 @@ function itmAutSaveRow()
 	{
 		
 		if(mItmID==""){
-			$.messager.alert("提示","请选择需要授权的项目!"); 
+			$.messager.alert("提示","请选择需要授权的项目!",'warning'); 
 			return false;
 		}
 		if((rows[i].TypeID=="")||($.trim(rows[i].PointID)=="")){
-			$.messager.alert("提示","有必填项未填写，请核实!"); 
+			$.messager.alert("提示","有必填项未填写，请核实!",'warning'); 
 			return false;
 		}
 		
@@ -612,7 +701,7 @@ function itmAutSaveRow()
 	runClassMethod("web.DHCEMConsWorkFlow","saveAutItm",{"mParam":rowstr},function(jsonString){
 
 		if ((jsonString == "-1")||((jsonString == "-3"))){
-			$.messager.alert('提示','代码重复,请核实后再试！','warning');
+			$.messager.alert('提示','重复,请核实后再试！','warning');
 			return;	
 		}else if ((jsonString == "-2")||((jsonString == "-4"))){
 			$.messager.alert('提示','描述重复,请核实后再试！','warning');
@@ -641,15 +730,21 @@ function findMainTable(){
 
 // 插入新行
 function insertPreRow()
-{	
-	if(preEditRow>0){
+{
+	var rowsData = $("#main").datagrid('getSelected'); //选中要删除的行
+	if (rowsData == null) {
+		$.messager.alert("提示","请选中左侧主记录！",'warning'); 
+		return false;
+	}
+		
+	if(preEditRow>=0){ //hxy 2020-08-11 add 0
 		$("#consPre").datagrid('endEdit', preEditRow);//结束编辑，传入之前编辑的行
 	}
 	var rows = $("#consPre").datagrid('getChanges');
 	for(var i=0;i<rows.length;i++)
 	{
 		if((rows[i].Fun=="")||(rows[i].FunDr=="")){
-			$.messager.alert("提示","有必填项未填写，请核实!"); 
+			$.messager.alert("提示","有必填项未填写，请核实!",'warning'); 
 			return false;
 		}		
 	} 
@@ -718,7 +813,12 @@ function savePreRow()
 	
 	//保存数据
 	runClassMethod("web.DHCEMConsPreCon","save",{"mParam":rowstr},function(jsonString){
-
+		
+		if(jsonString=="-1"){ //hxy 2020-08-10
+			$.messager.alert('提示','该表达式已存在','warning');
+			return;	
+		}
+		
 		if ((jsonString == "-1")||((jsonString == "-3"))){
 			$.messager.alert('提示','代码重复,请核实后再试！','warning');
 			return;	
@@ -820,4 +920,111 @@ function formatLink(value,row,index){
 	}
 }
 
+/// 保存 bianshuai 2020-12-30
+function savePar(){
+	
+	if(editDRow >= 0){
+		$("#btParamsList").datagrid('endEdit', editDRow);
+	}
+
+	var rowData = $("#consPre").datagrid("getSelected");
+	if (rowData == null) {
+		$.messager.alert("提示","请先选择表达式!");
+		return;
+	}
+	var ID = rowData.ID;
+	
+	var rowsData = $("#btParamsList").datagrid('getChanges');
+	if(rowsData.length<=0){
+		$.messager.alert("提示","没有待保存数据!");
+		return;
+	}
+	
+	/// 获取行
+	var rowsData = $("#btParamsList").datagrid('getChanges'); //var rowsData = $("#btParamsList").datagrid('getRows');
+	var itemArr = []; 
+	var delArr = [];
+	for(var i=0;i<rowsData.length;i++){
+		
+		if(rowsData[i].Desc==""){
+			$.messager.alert("提示","参数不能为空!"); 
+			return false;
+		}
+		itemArr.push(rowsData[i].Desc);
+		if((rowsData[i].Desc!="")&&(rowsData[i].Desc!=rowsData[i].OldDesc)){
+			delArr.push(rowsData[i].OldDesc);
+		}
+	}
+	
+	var Params=itemArr.join(",");
+	var DelParams=delArr.join(",");
+
+	//保存数据
+	runClassMethod("web.DHCEMConsPreCon","InsExpParam",{"ID":ID, "Params":Params,"DelParams":DelParams},function(jsonString){
+
+		$('#btParamsList').datagrid('reload'); //重新加载
+	})
+}
+
+/// 删除 bianshuai 2020-12-30
+function cancelPar(){
+	
+	var rowsData = $("#btParamsList").datagrid('getSelected');
+	if (rowsData == null) {
+		$.messager.alert('提示','请选一个删除');
+		return;
+	}
+	
+	$.messager.confirm("提示", "您确定要删除这些数据吗？", function (res) {//hxy 2022-10-11 提示是否删除
+		if (res) {
+			var row =$("#btParamsList").datagrid('getSelected');     
+		 	runClassMethod("web.DHCEMConsPreCon","DelExpParam",{'ID':row.ID,"Desc":row.Desc},function(data){ $('#btParamsList').datagrid('load'); })
+		 	return;
+			// 获取被选中行的索引 index
+			var rowIndex = $("#btParamsList").datagrid('getRowIndex',rowsData);
+			
+			$('#btParamsList').datagrid('deleteRow',rowIndex);
+			
+			savePar(); /// 保存
+		}
+	})
+}
+
+/// 新增行 bianshuai 2020-12-30
+function addParRow(){
+	
+	if(editDRow >= "0"){
+		$("#btParamsList").datagrid('endEdit', editDRow);//结束编辑，传入之前编辑的行
+	}
+	
+	var rowData = $("#consPre").datagrid("getSelected");
+	if (rowData == null) {
+		$.messager.alert("提示","请先选择表达式!");
+		return;
+	}
+	if (rowData.FunExp.indexOf("get") == "-1") {
+		$.messager.alert("提示","该前置条件，不允许增加参数!","warning");
+		return;
+	}
+	
+	var ID = rowData.ID;           /// 主项目ID
+	
+	/// 检查第一行是否为空行
+	var rowsData = $("#btParamsList").datagrid('getRows');
+	if (rowsData.length != 0){
+		if (rowsData[0].Desc == ""){
+			$('#btParamsList').datagrid('selectRow',0);
+			$("#btParamsList").datagrid('beginEdit',0);//开启编辑并传入要编辑的行
+			return;
+		}
+	}
+	
+	$("#btParamsList").datagrid('insertRow', {
+		index: 0, // 行数从0开始计算
+		row: {ID:ID, Desc:''}
+	});
+	$("#btParamsList").datagrid('beginEdit', 0);//开启编辑并传入要编辑的行
+	editDRow=0;
+
+}
 

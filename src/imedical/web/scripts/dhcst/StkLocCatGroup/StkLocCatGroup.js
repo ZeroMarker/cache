@@ -40,13 +40,13 @@ var CTLocGridDs = new Ext.data.Store({
 var CTLocGridCm = new Ext.grid.ColumnModel([
 	 new Ext.grid.RowNumberer(),
 	 {
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'Code',
         width:200,
         align:'left',
         sortable:true
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'Desc',
         width:200,
         align:'left',
@@ -58,8 +58,8 @@ var CTLocGridCm = new Ext.grid.ColumnModel([
 CTLocGridCm.defaultSortable = true;
 
 var queryCTLoc = new Ext.Toolbar.Button({
-	text:'查询',
-    tooltip:'查询',
+	text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
 	width : 70,
 	height : 30,
@@ -73,8 +73,8 @@ var CTLocPagingToolbar = new Ext.PagingToolbar({
     store:CTLocGridDs,
 	pageSize:30,
     displayInfo:true,
-    displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-    emptyMsg:"没有记录",
+    displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+    emptyMsg:$g("没有记录"),
 	doLoad:function(C){
 		var B={},
 		A=this.getParams();
@@ -100,14 +100,14 @@ CTLocGrid = new Ext.grid.GridPanel({
 	stripeRows:true,
 	sm:new Ext.grid.RowSelectionModel({}),
 	loadMask:true,
-	tbar:['科室代码:',locCode,'科室名称:',locName,'-',queryCTLoc],
+	tbar:[$g('科室代码:'),locCode,$g('科室名称:'),locName,'-',queryCTLoc],
 	bbar:CTLocPagingToolbar
 });
 //=========================科室信息=================================
 
 //=========================科室类组设置=============================
 var defaultFlag = new Ext.grid.CheckColumn({
-	header:'缺省标志',
+	header:$g('缺省标志'),
 	dataIndex:'DefaultFlag',
 	width:100,
 	sortable:true,
@@ -119,7 +119,7 @@ var defaultFlag = new Ext.grid.CheckColumn({
 
 function addNewRow() {
 	if(CTLocId==null || CTLocId==""){
-		Msg.info("warning","请先选择科室！");
+		Msg.info("warning",$g("请先选择科室！"));
 		return;
 	}
 	var record = Ext.data.Record.create([
@@ -164,12 +164,12 @@ var ScStkGrpStore = new Ext.data.Store({
 });
 	
 var SCG = new Ext.ux.StkGrpComboBox ({
-	fieldLabel : '类组',
+	fieldLabel : $g('类组'),
 	id : 'SCG',
 	name : 'SCG',
 	anchor : '90%',
 	StkType:App_StkTypeCode,
-	emptyText : '类组...'
+	emptyText : $g('类组...')
 });		
 
 var StkLocCatGroupGrid="";
@@ -193,13 +193,13 @@ var StkLocCatGroupGridDs = new Ext.data.Store({
 //模型
 var StkLocCatGroupGridCm = new Ext.grid.ColumnModel([
 	new Ext.grid.RowNumberer(),{
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'GrpCode',
         width:180,
         align:'left',
         sortable:true
     },{
-        header:"描述",
+        header:$g("描述"),
         dataIndex:'GrpId',
         width:180,
         align:'left',
@@ -213,8 +213,8 @@ var StkLocCatGroupGridCm = new Ext.grid.ColumnModel([
 StkLocCatGroupGridCm.defaultSortable = true;
 
 var addStkLocCatGroup = new Ext.Toolbar.Button({
-	text:'新建',
-    tooltip:'新建',
+	text:$g('新建'),
+    tooltip:$g('新建'),
     iconCls:'page_add',
 	width : 70,
 	height : 30,
@@ -224,8 +224,8 @@ var addStkLocCatGroup = new Ext.Toolbar.Button({
 });
 
 var saveStkLocCatGroup = new Ext.Toolbar.Button({
-	text:'保存',
-    tooltip:'保存',
+	text:$g('保存'),
+    tooltip:$g('保存'),
 	width : 70,
 	height : 30,
     iconCls:'page_save',
@@ -263,25 +263,25 @@ var saveStkLocCatGroup = new Ext.Toolbar.Button({
 				}
 			}
 		}
-		if(grpStr!=""){ Msg.info("error","请选择类组后保存!");	return false;;}
+		if(grpStr!=""){ Msg.info("error",$g("请选择类组后保存!"));	return false;;}
 		if(data!=""){
 			Ext.Ajax.request({
 				url: gridUrl+'?actiontype=Save',
 				params: {data:data,locId:CTLocId},
 				failure: function(result, request) {
-					Msg.info("error", "请检查网络连接!");
+					Msg.info("error", $g("请检查网络连接!"));
 				},
 				success: function(result, request) {
 					var jsonData = Ext.util.JSON.decode( result.responseText );
 					if (jsonData.success=='true') {
-						Msg.info("success", "保存成功!");
+						Msg.info("success", $g("保存成功!"));
 						StkLocCatGroupGridDs.proxy = new Ext.data.HttpProxy({url:gridUrl+'?actiontype=Query&locId='+CTLocId,method:'GET'});
 						StkLocCatGroupGridDs.load();
 					}else{
 						if(jsonData.info==-1){
-							Msg.info("error","类组重复");
+							Msg.info("error",$g("类组重复"));
 						}else{
-							Msg.info("error", "保存失败!");
+							Msg.info("error", $g("保存失败! ")+ jsonData.info);
 						}
 					}
 				},
@@ -292,38 +292,38 @@ var saveStkLocCatGroup = new Ext.Toolbar.Button({
 });
 
 var deleteStkLocCatGroup = new Ext.Toolbar.Button({
-	text:'删除',
-    tooltip:'删除',
+	text:$g('删除'),
+    tooltip:$g('删除'),
     iconCls:'page_delete',
 	width : 70,
 	height : 30,
 	handler:function(){
 		var cell = StkLocCatGroupGrid.getSelectionModel().getSelectedCell();
 		if(cell==null){
-			Msg.info("error","请选择数据!");
+			Msg.info("error",$g("请选择数据!"));
 			return false;
 		}else{
 			var record = StkLocCatGroupGrid.getStore().getAt(cell[0]);
 			var RowId = record.get("Rowid");
 			if(RowId!=""){
-				Ext.MessageBox.confirm('提示','确定要删除选定的行?',
+				Ext.MessageBox.confirm($g('提示'),$g('确定要删除选定的行?'),
 					function(btn) {
 						if(btn == 'yes'){
 							Ext.Ajax.request({
 								url:gridUrl+'?actiontype=delete&rowid='+RowId,
-								waitMsg:'删除中...',
+								waitMsg:$g('删除中...'),
 								failure: function(result, request) {
-									Msg.info("error","请检查网络连接!");
+									Msg.info("error",$g("请检查网络连接!"));
 								},
 								success: function(result, request) {
 									var jsonData = Ext.util.JSON.decode( result.responseText );
 									if (jsonData.success=='true') {
-										Msg.info("success","删除成功!");
+										Msg.info("success",$g("删除成功!"));
 										StkLocCatGroupGridDs.proxy = new Ext.data.HttpProxy({url:gridUrl+'?actiontype=Query&locId='+CTLocId,method:'GET'});
 										StkLocCatGroupGridDs.load();
 										StkLocUserCatGroupGridDs.reload();
 									}else{
-										Msg.info("error","删除失败!");
+										Msg.info("error",$g("删除失败!"));
 									}
 								},
 								scope: this
@@ -332,7 +332,7 @@ var deleteStkLocCatGroup = new Ext.Toolbar.Button({
 					}
 				)
 			}else{
-				Msg.info("error","数据有错!");
+				Msg.info("error",$g("数据有错!"));
 			}
 		}
     }
@@ -362,7 +362,7 @@ Ext.util.Format.comboRenderer = function(combo){
 };
 
 var DefaultField = new Ext.grid.CheckColumn({
-	header:'是否默认',
+	header:$g('是否默认'),
 	dataIndex:'Default',
 	width:100,
 	sortable:true,
@@ -373,7 +373,7 @@ var DefaultField = new Ext.grid.CheckColumn({
 });
 
 var ActiveField = new Ext.grid.CheckColumn({
-	header:'是否有效',
+	header:$g('是否有效'),
 	dataIndex:'Active',
 	width:100,
 	sortable:true,
@@ -395,7 +395,7 @@ var UStore = new Ext.data.Store({
 });
 	
 var UCG = new Ext.form.ComboBox({
-	fieldLabel : '名称',
+	fieldLabel : $g('名称'),
 	id : 'UCG',
 	name : 'UCG',
 	anchor : '90%',
@@ -405,7 +405,7 @@ var UCG = new Ext.form.ComboBox({
 	displayField : 'Description',
 	allowBlank : false,
 	triggerAction : 'all',
-	emptyText : '名称...',
+	emptyText : $g('名称...'),
 	selectOnFocus : true,
 	forceSelection : true,
 	minChars : 1,
@@ -486,13 +486,13 @@ var StkLocUserCatGroupGridDs = new Ext.data.Store({
 //模型
 var StkLocUserCatGroupGridCm = new Ext.grid.ColumnModel([
 	new Ext.grid.RowNumberer(),{
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'Code',
         width:200,
         align:'left',
         sortable:true
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'UserId',
         width:200,
         align:'left',
@@ -508,8 +508,8 @@ var StkLocUserCatGroupGridCm = new Ext.grid.ColumnModel([
 StkLocUserCatGroupGridCm.defaultSortable = true;
 
 var addStkLocUserCatGroup = new Ext.Toolbar.Button({
-	text:'新建',
-    tooltip:'新建',
+	text:$g('新建'),
+    tooltip:$g('新建'),
     iconCls:'page_add',
 	width : 70,
 	height : 30,
@@ -517,14 +517,14 @@ var addStkLocUserCatGroup = new Ext.Toolbar.Button({
 		if(LocGrpId!=""){
 			addRow();
 		}else{
-			Msg.info("error", "请选择科室类组!");
+			Msg.info("error", $g("请选择科室类组!"));
 		}
 	}
 });
 
 var saveStkLocUserCatGroupGrid = new Ext.Toolbar.Button({
-	text:'保存',
-    tooltip:'保存',
+	text:$g('保存'),
+    tooltip:$g('保存'),
 	width : 70,
 	height : 30,
     iconCls:'page_save',
@@ -559,27 +559,27 @@ var saveStkLocUserCatGroupGrid = new Ext.Toolbar.Button({
 				}
 			}
 		}
-		if(nameflag==""){	Msg.info("error","没有需要保存的数据!");	return false;;}
+		if(nameflag==""){	Msg.info("error",$g("没有需要保存的数据!"));	return false;;}
 		
 		if(data!=""){
 			Ext.Ajax.request({
 				url: gridUrl+'?actiontype=SaveUser',
 				params: {data:data,locGrpId:LocGrpId},
 				failure: function(result, request) {
-					Msg.info("error", "请检查网络连接!");
+					Msg.info("error", $g("请检查网络连接!"));
 				},
 				success: function(result, request) {
 					data="";
 					var jsonData = Ext.util.JSON.decode( result.responseText );
 					if (jsonData.success=='true') {
-						Msg.info("success", "保存成功!");
+						Msg.info("success",$g( "保存成功!"));
 						StkLocUserCatGroupGridDs.proxy = new Ext.data.HttpProxy({url:gridUrl+'?actiontype=QueryUser',method:'GET'});
 						StkLocUserCatGroupGridDs.load({params:{start:0,limit:StkLocUserCatGroupGridPagingToolbar.pageSize,sort:'Rowid',dir:'desc',locGrpId:LocGrpId}});
 					}else{
 						if(jsonData.info==-1){
-							Msg.info("error","人员重复!");
+							Msg.info("error",$g("人员重复!"));
 						}else{
-							Msg.info("error", "保存失败"+jsonData.info);
+							Msg.info("error", $g("保存失败")+jsonData.info);
 						}
 					}
 				},
@@ -590,37 +590,37 @@ var saveStkLocUserCatGroupGrid = new Ext.Toolbar.Button({
 });
 
 var deleteStkLocUserCatGroupGrid = new Ext.Toolbar.Button({
-	text:'删除',
-    tooltip:'删除',
+	text:$g('删除'),
+    tooltip:$g('删除'),
     iconCls:'page_delete',
 	width : 70,
 	height : 30,
 	handler:function(){
 		var cell = StkLocUserCatGroupGrid.getSelectionModel().getSelectedCell();
 		if(cell==null){
-			Msg.info("error","请选择数据!");
+			Msg.info("error",$g("请选择数据!"));
 			return false;
 		}else{
 			var record = StkLocUserCatGroupGrid.getStore().getAt(cell[0]);
 			var RowId = record.get("Rowid");
 			if(RowId!=""){
-				Ext.MessageBox.confirm('提示','确定要删除选定的行?',
+				Ext.MessageBox.confirm($g('提示'),$g('确定要删除选定的行?'),
 					function(btn) {
 						if(btn == 'yes'){
 							Ext.Ajax.request({
 								url:gridUrl+'?actiontype=deleteUser&rowid='+RowId,
-								waitMsg:'删除中...',
+								waitMsg:$g('删除中...'),
 								failure: function(result, request) {
-									Msg.info("error","请检查网络连接!");
+									Msg.info("error",$g("请检查网络连接!"));
 								},
 								success: function(result, request) {
 									var jsonData = Ext.util.JSON.decode( result.responseText );
 									if (jsonData.success=='true') {
-										Msg.info("success","删除成功!");
+										Msg.info("success",$g("删除成功!"));
 										StkLocUserCatGroupGridDs.proxy = new Ext.data.HttpProxy({url:gridUrl+'?actiontype=QueryUser',method:'GET'});
 										StkLocUserCatGroupGridDs.load({params:{start:0,limit:StkLocUserCatGroupGridPagingToolbar.pageSize,sort:'Rowid',dir:'desc',locGrpId:LocGrpId}});
 									}else{
-										Msg.info("error","删除失败!");
+										Msg.info("error",$g("删除失败!"));
 									}
 								},
 								scope: this
@@ -629,7 +629,7 @@ var deleteStkLocUserCatGroupGrid = new Ext.Toolbar.Button({
 					}
 				)
 			}else{
-				Msg.info("error","数据有错!");
+				Msg.info("error",$g("数据有错!"));
 			}
 		}
     }
@@ -639,8 +639,8 @@ var StkLocUserCatGroupGridPagingToolbar = new Ext.PagingToolbar({
     store:StkLocUserCatGroupGridDs,
 	pageSize:30,
     displayInfo:true,
-    displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-    emptyMsg:"没有记录",
+    displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+    emptyMsg:$g("没有记录"),
 	doLoad:function(C){
 		var B={},
 		A=this.getParams();
@@ -700,29 +700,35 @@ StkLocCatGroupGrid.on('rowclick',function(grid,rowIndex,e){
 	StkLocUserCatGroupGridDs.load({params:{start:0,limit:StkLocUserCatGroupGridPagingToolbar.pageSize,sort:'Rowid',dir:'desc'}});
 	StkLocUserCatGroupGrid.store.removeAll();
 });
+
+
 //=============科室类组与人员维护二级联动===================
 var HospPanel = InitHospCombo('PHA-IN-LocStkCatGrp',function(combo, record, index){
+	
 	HospId = this.value; 
 	SCG.store.removeAll();
 	SCG.store.reload();
 	StkLocCatGroupGrid.store.removeAll();
-	StkLocCatGroupGrid.getView().refresh();
+	//StkLocCatGroupGrid.getView().refresh();
 	StkLocUserCatGroupGrid.store.removeAll();
-	StkLocUserCatGroupGrid.getView().refresh();	
+	//StkLocUserCatGroupGrid.getView().refresh();	
 	Ext.getCmp('locCode').setValue('');
 	Ext.getCmp('locName').setValue('');
 	queryCTLoc.handler();
+
 });
+	
+
 //===========模块主页面=================================================
 Ext.onReady(function(){
 	Ext.QuickTips.init();
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 	
-	
+
 	var CTLocPanel = new Ext.Panel({
 		id:"CTLocPanel",
 		deferredRender : true,
-		title:'科室信息',
+		title:$g('科室信息'),
 		activeTab: 0,
 		region:'west',
 		collapsible: true,
@@ -738,7 +744,7 @@ Ext.onReady(function(){
 	var StkLocCatGroupPanel = new Ext.Panel({
 		id:"StkLocCatGroupPanel",
 		deferredRender : true,
-		title:'科室类组',
+		title:$g('科室类组'),
 		activeTab: 0,
 		deferredRender : true,
 		region:'center',
@@ -751,7 +757,7 @@ Ext.onReady(function(){
 	var StkLocUserCatGroupPanel = new Ext.Panel({
 		id:"StkLocUserCatGroupPanel",
 		deferredRender : true,
-		title:'人员维护',
+		title:$g('人员维护'),
 		activeTab: 0,
 		region:'south',
 		height:300,
@@ -770,6 +776,7 @@ Ext.onReady(function(){
 	});
 
 	//Ext.fly("eewwee").setStyle('padding-top','30px');
-	queryCTLoc.handler();
+	//queryCTLoc.handler();
 });
+
 //===========模块主页面=================================================

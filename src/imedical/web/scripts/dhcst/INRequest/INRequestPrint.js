@@ -17,8 +17,8 @@ function PrintINRequest(inreq){
 	var INReqUser=mainArr[14];
 	var INReqRemark=mainArr[10];
 	var INReqType=mainArr[17];
-	var RQDTFormat=App_StkRQDateFormat+" "+App_StkRQTimeFormat;
-	var showTransfered=1;	//ÊòØÂê¶ÊòæÁ§∫Â∑≤ËΩ¨ÁßªÊï∞ÊçÆ
+	var RQDTFormat=App_StkRQDateFormat //+" "+App_StkRQTimeFormat;
+	var showTransfered=1;	// «∑Òœ‘ æ“—◊™“∆ ˝æ›
 	//fileName="{DHCST_INRequest_Common.raq(ShowTransfered="+showTransfered+";Parref="+inreq+";INReqNo="+INReqNo+";INReqDate="+INReqDate+";INRecLoc="+INRecLoc+";INReqLoc="+INReqLoc+";INReqScg="+INReqScg+";INReqUser="+INReqUser+";INReqRemark="+INReqRemark+";INReqType="+INReqType+";HospDesc="+App_LogonHospDesc+";RQDTFormat="+RQDTFormat+")}";
 	fileName="{DHCST_INRequest_Common.raq(ShowTransfered="+showTransfered+";Parref="+inreq+";INReqNo="+INReqNo+";INReqDate="+INReqDate+";RQDTFormat="+RQDTFormat+")}";
 	DHCCPM_RQDirectPrint(fileName);

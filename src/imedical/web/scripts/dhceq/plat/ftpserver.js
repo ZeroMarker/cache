@@ -20,7 +20,8 @@ function BSave_Clicked()
 	var ftpuser=getElementValue("FtpUser")
 	var ftppassword=getElementValue("FtpPassWord")
 	var ftpport=getElementValue("FtpPort")
-	var rtn=tkMakeServerCall("web.DHCEQCSysSet","UpdateFtpServer",ftpserver,ftpuser,ftppassword,ftpport)
+	var SSRowID=getElementValue("SSRowID")		//CZF0138 2021-05-24
+	var rtn=tkMakeServerCall("web.DHCEQCSysSet","UpdateFtpServer",ftpserver,ftpuser,ftppassword,ftpport,SSRowID)
 	if (rtn=="0")
 	{
 		messageShow("","","",t[0]);

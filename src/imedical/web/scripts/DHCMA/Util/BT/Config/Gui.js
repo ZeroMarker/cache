@@ -4,6 +4,35 @@ function InitProEditWin(){
 	obj.RecRowID = "";
     $.parser.parse(); // 解析整个页面 
 	
+	//增加院区配置 add by yankai20210803
+	var DefHospOID = $cm({ClassName:"DHCMA.Util.IO.MultiHospInterface",MethodName:"GetDefaultHosp",aTableName:"DHCMA_Util_BT.Config",aHospID:session['LOGON.HOSPID'],dataType:'text'},false);
+	var SessionStr=session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
+	obj.cboSSHosp = Common_ComboToSSHosp3("cboSSHosp","","","DHCMA_Util_BT.Config",SessionStr,"");
+	$('#cboSSHosp').combobox({
+  		onSelect: function(title,index){
+	  		obj.gridConfig.load({
+				ClassName:"DHCMA.Util.BTS.ConfigSrv",
+				QueryName:"QryByProduct",
+				aProductCode:ProductCode,
+				aKeyValue:$('#txtSearch').searchbox('getValue'),
+				aHospID:$("#cboSSHosp").combobox('getValue')
+			});
+	  	}
+	 })
+	 /*
+	var retMultiHospCfg = $m({
+		ClassName:"DHCMA.Util.BT.Config",
+		MethodName:"GetValueByCode",
+		aCode:"SYSIsOpenMultiHospMode",
+		aHospID:session['DHCMA.HOSPID']
+	},false);
+	if(retMultiHospCfg!="Y" && retMultiHospCfg!="1"){
+		$("#layout").layout('panel',"north").hide();
+		$("#layout").layout('panel',"center").panel({fit:true});		
+		$("#layout").layout('resize');
+		$("#layout").layout('panel',"center").parent().css({'top':'0'});	
+	}*/
+	
 	obj.gridConfig = $HUI.datagrid("#gridConfig",{
 		fit: true,
 		title: "系统参数配置",
@@ -21,7 +50,8 @@ function InitProEditWin(){
 		    ClassName:"DHCMA.Util.BTS.ConfigSrv",
 			QueryName:"QryByProduct",
 			aProductCode:ProductCode,
-			aHospID:session['DHCMA.HOSPID']
+			aHospID:session['DHCMA.HOSPID'],
+			aKeyValue:$('#txtSearch').searchbox('getValue')
 	    },
 		columns:[[
 			{field:'ind',title:'序号',width:'50'},
@@ -72,9 +102,25 @@ function InitProEditWin(){
 		onBeforeLoad: function (param) {
 			param.ClassName = 'DHCMA.Util.BTS.ProductSrv';
 			param.QueryName = 'QryProduct';
+			param.aActive = '1';
 			param.ResultSetType = 'array'
 		}
 	});
+	
+	//搜索框定义
+	$('#txtSearch').searchbox({ 
+		searcher:function(value,name){
+			obj.gridConfig.load({
+				ClassName:"DHCMA.Util.BTS.ConfigSrv",
+				QueryName:"QryByProduct",
+				aProductCode:ProductCode,
+				aKeyWords:value,
+				aHospID:session['DHCMA.HOSPID'],
+			});
+		}, 
+		prompt:'请输入代码/描述' 
+	});
+	
 	InitProEditWinEvent(obj);	
 	obj.LoadEvent(arguments);
 	return obj;

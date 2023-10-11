@@ -1,4 +1,4 @@
-﻿function InitS800cssposinfWinEvent(obj){
+function InitS800cssposinfWinEvent(obj){
    	obj.LoadEvent = function(args){
 		
 		$('#ReportFrame').css('display', 'block');
@@ -24,7 +24,14 @@
    	}
    	obj.LoadRep = function(){
 		var SurNumID 	= $('#cboSurNum').combobox('getValue');	
+		var aLocType 	= Common_CheckboxValue('chkStatunit');
+		
+		var aLocIDs = $('#cboLoc').combobox('getValues').join(',');	
+		ReportFrame = document.getElementById("ReportFrame");
 		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S800CssPosInf.raq&aSurNumID='+SurNumID +'&aInfType='+"1";
+		p_URL += '&aStaType=' + aLocType
+		p_URL += '&aLocIDs=' +aLocIDs;
+		p_URL += '&aPath=' + cspPath;	
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
@@ -36,11 +43,11 @@
 		if (!runQuery) return;
 		var arrCount	= new Array();
 		var arrPosDesc	= new Array();
-		arrRecord 		= runQuery.record;
+		arrRecord 		= runQuery.rows;
 		
 		for (var indRd = 0; indRd < arrRecord.length; indRd++){
 			var rd = arrRecord[indRd];
-			arrCount.push(rd["InfDiagCount"]);
+			arrCount.push(rd["InfPosCount"]);
 			arrPosDesc.push(rd["PosDesc"]);
 		}
 	   var arrInfPosDesc= new Array();     //定义一个临时数组 
@@ -74,6 +81,14 @@
 			        trigger: 'item',
 			        formatter: "{a} <br/>{b} : {c} ({d}%)"
 			    },
+				toolbox: {
+					feature: {
+						dataView: {show: false, readOnly: false},
+						magicType: {show: false, type: ['line', 'bar']},
+						restore: {show: true},
+						saveAsImage: {show: true}
+					}
+				},
 			    legend: {
 			        orient: 'vertical',
 			        left: 'left',
@@ -100,31 +115,35 @@
 		obj.myChart.setOption(option,true);
 	}
    	obj.ShowEChaert1 = function(){
-		obj.myChart.clear()
+		obj.myChart.clear();
 		var SurNumID 	= $('#cboSurNum').combobox('getValue');	
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S450CSSPosBac' + "&QueryName=" + 'QryCSSBacInfPos' + "&Arg1=" + SurNumID + "&Arg2=" + "1" + "&ArgCnt=" + 2;
+		var aLocType 	= Common_CheckboxValue('chkStatunit');
+		
+		var aLocIDs = $('#cboLoc').combobox('getValues').join(',');	
 
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 30000, //30秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				var tkclass="DHCHAI.STATV2.S450CSSPosBac";
-				var tkQuery="QryCSSBacInfPos";
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
-		});
+		obj.myChart.showLoading();  
+        var className="DHCHAI.STATV2.S800CssPosInf";
+        var queryName="QryCSSBacInfPos";
+        $cm({
+            ClassName: className,
+            QueryName: queryName,
+            aSurNumID: SurNumID,
+            aInfType: '1',
+            aPosDesc: aLocType,
+            aStaType: '',
+            aLocIDs: aLocIDs,
+            page:1,    //可选项，页码，默认1
+            rows:999   //可选项，获取多少条数据，默认50
+        },
+        function(data){
+            obj.myChart.hideLoading();    //隐藏加载动画
+            obj.echartLocInfRatio(data);
+
+        }
+        ,function(XMLHttpRequest, textStatus, errorThrown){
+            alert("类" + className + ":" + queryName+ "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
+            obj.myChart.hideLoading();    //隐藏加载动画
+        }); 
 	}
 	
 }

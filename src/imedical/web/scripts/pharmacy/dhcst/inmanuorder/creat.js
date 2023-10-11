@@ -98,7 +98,7 @@ function GetParam(){
     });
 }
 function InitLoc(){
-	 DHCST.ComboBox.Init({ Id: 'cmbLoc', Type: 'Loc' }, {placeholder: "制剂科室...",
+	 DHCST.ComboBox.Init({ Id: 'cmbLoc', Type: 'Loc' }, {
 	    editable: true,
 	    onLoadSuccess: function() {
 		    //if(LocFlag!=""){return}
@@ -117,7 +117,7 @@ function InitLoc(){
 	});
 	$("#txtManuDate").datebox("setValue",GetDate(0));  //
     $("#txtExpDate").datebox("setValue", "");  //GetDate(1000)
-    DHCST.ComboGrid.Init({ Id: 'cmbInRec',Type: 'InRec' }, {placeholder: "制剂...",
+    DHCST.ComboGrid.Init({ Id: 'cmbInRec',Type: 'InRec' }, {
     	onSelect: function(data) {
 	        var InRec=data.RowId
 	    	
@@ -152,8 +152,8 @@ function InitLoc(){
 	    }
     }); 
   	
-    DHCST.ComboBox.Init({ Id: 'cmbManuUser',Type: 'UserOfGrp'}, {placeholder: "制剂人..." });
-    DHCST.ComboBox.Init({ Id: 'cmbUom',Type: 'Uom',Inci:'' }, {placeholder: "制剂单位...",
+    DHCST.ComboBox.Init({ Id: 'cmbManuUser',Type: 'UserOfGrp'}, {});
+    DHCST.ComboBox.Init({ Id: 'cmbUom',Type: 'Uom',Inci:'' }, {
     	onBeforeLoad: function(param) {
             param.inputStr = $('#cmbInRec').combobox('getValue');
             param.filterText = param.q;
@@ -201,11 +201,11 @@ function InitLoc(){
     
     DHCST.ComboBox.Init({Id: 'cmbStatus',data: {
         data: [
-            { "RowId": "10", "Description": "保存" },
+            { "RowId": "10", "Description": $g("保存") },
             //{ "RowId": "15", "Description": "完成" },
-            { "RowId": "21", "Description": "已审核" }
+            { "RowId": "21", "Description": $g("已审核") }
         ]
-    }}, {placeholder: "制剂状态..."});
+    }}, {});
     
 }
 
@@ -471,7 +471,7 @@ function InitGridManuOrdBat() {
             { field: "PQty", title: '数量(入库单位)', width: 80 },
             { field: "PurUom", title: '入库单位', width: 60 },
             { field: "StkQTy", title: '库存数量', width: 80},
-            { field: "Manf", title: '厂商', width: 160 }
+            { field: "Manf", title: '生产企业', width: 160 }
         ]
     ];
     var dataGridOption = {

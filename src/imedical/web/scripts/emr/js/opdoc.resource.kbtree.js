@@ -9,10 +9,47 @@ $(function(){
     }
     */
     //$('.easyui-layout').layout('resize');
+	
+	if ($("#kbtreeLayout").layout("panel","center").panel('options').width<350)
+	{
+		$('#kbtreeNorth').panel('resize', {
+			height: 75
+		});
+		$('#searchBox').searchbox({     
+		   width:$("#kbtreeLayout").layout("panel","center").panel('options').width-10  
+	   });    
+	}
+	$('body').layout('resize');
+	
     $('#searchBox').searchbox({ 
         searcher:function(value,name){ 
             SearchBoxOnTree.Search($('#kbTree'), value, function (node, searchCon) {
-                return (node.text.indexOf(searchCon) >= 0);
+                //将字符转成拼音简拼
+				var easyName = pinyin.getCamelChars(node.text);
+				//获取全写拼音（小写）        
+		        var fullNameLower = pinyin.getFullChars(node.text).toLowerCase();
+		        //获取全写拼音（大写）        
+		        var fullNameUpper = pinyin.getFullChars(node.text).toUpperCase();
+				if (node.text.indexOf(searchCon) >= 0) 					// 判断汉字
+				{
+					return (node.text.indexOf(searchCon) >= 0);
+				}
+				else if(easyName.indexOf(searchCon) >= 0)               // 判断小写的简拼
+				{
+					return (easyName.indexOf(searchCon) >= 0);  
+				}
+				else if(easyName.indexOf(searchCon.toUpperCase()) >= 0) // 判断大写的简拼
+				{
+					return (easyName.indexOf(searchCon.toUpperCase()) >= 0);
+				}
+				else if(fullNameLower.indexOf(searchCon) >= 0)          // 判断小写的全拼
+				{
+					return (fullNameLower.indexOf(searchCon) >= 0);
+				}
+				else if(fullNameUpper.indexOf(searchCon) >= 0)          // 判断大写的全拼
+				{
+					return (fullNameUpper.indexOf(searchCon) >= 0);
+				}
             });
         },
         prompt : emrTrans('输入知识库名称搜索')
@@ -28,6 +65,7 @@ $(function(){
         },
         onDblClick: function(node){
             if(node.attributes.type == "KBNode"){
+                parent.document.getElementById('chartOnBlur').focus();
                 var param = {"action":"appendComposite","NodeID":node.id}
                 invoker.eventDispatch(param);
             } else {
@@ -131,12 +169,18 @@ $(function(){
     //替换知识库节点
     document.getElementById("replaceKBNode").onclick = function(){ 
         var tipMsg = "是否确定替换该知识库?";
-        if (window.confirm(tipMsg))
-        {
-            var node = $('#kbTree').tree('getSelected');
-            var param = {"action":"replaceComposite","NodeID":node.id}
-            invoker.eventDispatch(param);
-        }
+        top.$.messager.confirm("操作提示", tipMsg, function (data) {
+	    	if (!data)
+			{   
+				return ;
+			}
+			else 
+			{
+	            var node = $('#kbTree').tree('getSelected');
+	            var param = {"action":"replaceComposite","NodeID":node.id}
+	            invoker.eventDispatch(param);
+	        }
+	    });
     }
     
     //增加知识节点
@@ -197,22 +241,17 @@ $(function(){
     //编辑知识库内容
     document.getElementById("editKBNode").onclick = function(){
         var node = $('#kbTree').tree('getSelected');
-//        var array = new Array(2);
-//        array[0] = node;
-//        array[1] = invoker.argConnect;
-//        array[2] = visitType;
-        var xpwidth=window.screen.width-10;
-		var xpheight=window.screen.height-10;
-//        var returnValues = window.showModalDialog("emr.record.edit.knowledgebase.csp",array,"dialogHeight:"+xpheight+";dialogWidth:"+xpwidth+";resizable:yes;center:yes;minimize:yes;maximize:yes;");
-        
+        var xpwidth=window.screen.width-200;
+		var xpheight=window.screen.height-100;
+      
         //HISUI模态框
         var nodeStr = base64encode(utf16to8(escape(JSON.stringify(node))));
-        var argConnectStr = base64encode(utf16to8(escape(JSON.stringify(invoker.argConnect))));
         var visitTypeStr = base64encode(utf16to8(escape(JSON.stringify(visitType))));
-        var iframeContent = '<iframe id="Knowledgebase" scrolling="no" frameborder="0" src="emr.ip.record.edit.knowledgebase.csp?NodeStr='+nodeStr+'&ArgConnectStr='+argConnectStr+'&VisitTypeStr='+visitTypeStr+'" style="width:100%;height:99%;"></iframe>'
+        var iframeContent = '<iframe id="Knowledgebase" scrolling="no" frameborder="0" src="emr.ip.record.edit.knowledgebase.csp?NodeStr='+nodeStr+'&VisitTypeStr='+visitTypeStr+'&MWToken='+getMWToken()+'" style="width:100%;height:99%;"></iframe>'
         var callback = function(returnValues,arr){
 			if (returnValues && returnValues.NodeText)
 	        {
+	            if (returnValues.isEmpty == "N"){node.attributes.isEmpty = "N";}
 	            $('#kbTree').tree('update', {
 	                target: node.target,
 	                text: returnValues.NodeText
@@ -229,7 +268,7 @@ $(function(){
 	            if ( returnValues.NodeStatus == "N") $('#kbTree').tree('remove', node.target);
 	        }	    	
 	    }
-	    parent.createModalDialog("HisUIKnowledgebase", "知识库内容", 1300, 800, "Knowledgebase", iframeContent,callback,"")  
+	    parent.createModalDialog("HisUIKnowledgebase", "知识库内容", xpwidth-100, xpheight-200, "Knowledgebase", iframeContent,callback,"")  
     }
     //修改目录名称
     document.getElementById("editTreeName").onclick = function(){
@@ -404,18 +443,18 @@ $(function(){
 			   {
 					if(isApprove =="Y")
 					{
-						alert("申请共享个人知识库成功");
+						parent.$.messager.alert("提示","申请共享个人知识库成功");
 					}
 					else
 					{
-						alert("共享个人知识库成功");
+						parent.$.messager.alert("提示","共享个人知识库成功");
 					}
 					var type = "Loc";
 					GetKbnode(type);
 			   }
 			   else if( d == -1) 
 			   {
-				   alert("该知识库在本科室已分享过");
+				  parent.$.messager.alert("提示","该知识库在本科室已分享过");
 			   }
 			},
 			error : function(d) { alert("delete KBNode error");}
@@ -429,7 +468,7 @@ $(function(){
 		if ((typeof(node.attributes.shareUser)=="undefined")||(node.attributes.shareUser == "")) return;
 		if (node.attributes.shareUser != userID)
 		{
-			alert("只能取消本人分享的个人知识库");
+			parent.$.messager.alert("提示","只能取消本人分享的个人知识库");
 			return;
 		}
 		jQuery.ajax({
@@ -448,7 +487,7 @@ $(function(){
 			success : function(d) {
 	           if ( d == 1) 
 			   {
-					alert("取消共享个人知识库成功");
+					parent.$.messager.alert("提示","取消共享个人知识库成功");
 					$('#kbTree').tree('remove', node.target);
 					if ($('#kbTree').tree('getChildren',nodeparent.target).length<=0)
 				    {
@@ -462,6 +501,44 @@ $(function(){
 			error : function(d) { alert("cancelshareKBNode error");}
 		});	
 	}
+    
+    //将共享的个人知识库节点另存为个人模板
+    document.getElementById("toSaveKBTreeByShareKBNode").onclick = function(){
+        var node = $('#kbTree').tree('getSelected');
+        if (node.attributes.shareUser === userID) {
+            parent.$.messager.alert("提示","当前共享的个人知识库节点为当前用户的个人知识库节点，无需另存为当前用户个人知识库");
+            return;
+        }
+        var nodeId = node.id;
+        var parentShareNode = $('#kbTree').tree('getParent',node.target);
+        var parentNode = $('#kbTree').tree('getParent',parentShareNode.target);
+        var parentID = parentNode.id;
+        var personalKBTreeData = GetPersonalKBTreeByKBTreeID(parentID);
+        if (personalKBTreeData != ""){
+            personalKBTreeCatalog(personalKBTreeData);
+        }else{
+            SaveKBTreeByShareKBNode(parentNode,parentID,"",nodeId);
+        }
+        
+    }
+    $("#btnCancel").bind('click', function(){
+        $('#selKBTree').window('close');
+    });
+
+    $("#btnConfirm").bind('click', function(){
+        var personalKBTree = $('#personalKBTree').tree('getSelected')
+        if (!personalKBTree){
+            parent.$.messager.alert("提示","请选择要另存为个人知识库的目录位置");
+            return;
+        }
+        var personalKBTreeID = personalKBTree.id;
+        $('#selKBTree').window('close');
+        var parentNode = $('#kbTree').tree('find',personalKBTreeID);
+        var node = $('#kbTree').tree('getSelected');
+        var nodeId = node.id;
+        SaveKBTreeByShareKBNode(parentNode,"",personalKBTreeID,nodeId);
+    });
+
 });
 
 //根据kbNodeID查找该kbNode节点相关的知识库文本内容
@@ -512,7 +589,7 @@ function GetKBNodeByTreeID(kbParam){
         diseaseID = "";
     }
     
-    getBindKBNode(kbBseId,userLocID,diseaseID,episodeID,userID,titleCode,true);
+    getBindKBNode(kbBseId,userLocID,diseaseID,episodeID,userID,titleCode,false);
 
 }
 
@@ -601,11 +678,11 @@ function updateTree(treeId,treeName)
 		success : function(d) {
             if (d == 1)
             {
-                alert('修改目录名称成功');
+                parent.$.messager.alert("提示",'修改目录名称成功');
             }
             else
             {
-                alert('修改目录名称失败');
+                parent.$.messager.alert("提示",'修改目录名称失败');
             }
         },
         error : function(d) { alert("add kbTree error");}
@@ -714,6 +791,7 @@ function treeRightClick(e,node)
     $('#mm').menu('disableItem',$("#appendKBNode")[0]);
     $('#mm').menu('disableItem',$("#shareKBNode")[0]);
     $('#mm').menu('disableItem',$("#cancelshareKBNode")[0]);
+    $('#mm').menu('disableItem',$("#toSaveKBTreeByShareKBNode")[0]);
     if (node.attributes.type == "KBNode")
     {
         setReplaceKBNodeStatus();
@@ -730,6 +808,7 @@ function treeRightClick(e,node)
         else if(pType == "ShareKBTree")
 		{
 			$('#mm').menu('enableItem',$("#cancelshareKBNode")[0]);
+            $('#mm').menu('enableItem',$("#toSaveKBTreeByShareKBNode")[0]);
 		}
         else if(isCanEdit== "Y" && pType != "PersonalKBTree")
         {
@@ -849,3 +928,123 @@ function SwitchChange(event,value)
         GetKBNodeByTreeID(kbParam);
     }
 }
+
+//根据KBTreeID查找该目录下的个人知识库目录
+function GetPersonalKBTreeByKBTreeID(kbTreeID)
+{
+    var result = "";
+    if (typeof curKbParam === "undefined" || curKbParam === ""){
+        return result;
+    }
+    var kbBaseID = curKbParam["bindKBBaseID"];
+    if (kbBaseID == undefined){
+        kbBaseID = "";
+    }
+    var titleCode = curKbParam["titleCode"];
+    if (titleCode == undefined){
+        titleCode = "";
+    }
+    var diseaseID = curKbParam["diseaseID"];
+    if (diseaseID == undefined){
+        diseaseID = "";
+    };
+    
+    jQuery.ajax({
+        type: "get",
+        dataType: "text",
+        url: "../EMRservice.Ajax.common.cls",
+        async: false,
+        data: {
+            "OutputType":"Stream",
+            "Class":"EMRservice.BL.BLKBNode",
+            "Method":"GetTreeNodes",
+            "p1":kbBaseID,
+            "p2":kbTreeID,
+            "p3":userLocID,
+            "p4":titleCode,
+            "p5":diseaseID,
+            "p6":episodeID,
+            "p7":userID,
+            "p8":"PERSONALTREE"
+        },
+        success : function(data) {
+            if (data != ""){
+                result = eval("["+data+"]");
+            }
+        },
+        error : function(d) {
+            alert("获取个人知识库数据失败！");
+        }
+    });
+    return result;
+}
+
+//将共享的个人知识库节点另存为个人知识库
+function SaveKBTreeByShareKBNode(parentNode,parentID,kbTreeID,nodeId)
+{
+    var baseID = $('#kbTree').tree('getRoot').id;
+    jQuery.ajax({
+        type : "GET",
+        dataType : "text",
+        url : "../EMRservice.Ajax.kbTree.cls",
+        async : true,
+        data : {"ACTION":"CreateKBTreeNodeByKBNode","KnowledgeBaseID":baseID,"ParentID":parentID,"KBTreeID":kbTreeID,"KBNodeID":nodeId,"userID":userID,"userName":userName,"ipAddress":ipAddress,"actionType":"EMR.Knowledge.Create"},
+        success : function(d) {
+            if ( d != "") 
+            {
+                $('#kbTree').tree('append', {
+                    parent: (parentNode?parentNode.target:null),
+                    data: [eval("("+d+")")]
+                });
+                $('#kbTree').tree("collapse",parentNode.target);
+                $('#kbTree').tree("expand",parentNode.target);
+            }
+        },
+        error : function(d) { alert("toSaveKBTreeByShareKBNode error");}
+    });
+}
+
+//个人知识库目录窗口
+function personalKBTreeCatalog(personalKBTreeData){
+    $('#selKBTree').window({
+        title: emrTrans("个人知识库目录"),
+        width: 240,
+        height: 440,
+        modal: true,
+        minimizable: false,
+        maximizable: false,
+        collapsible: false,
+        closed: false,
+        onOpen: function(){
+            $('#personalKBTree').tree('loadData',personalKBTreeData);
+        },
+        onClose: function(){
+        }
+    });
+    $('#selKBTree').window('open');
+    $('#selKBTree').css("display","block");
+}
+
+$(window).resize(function() {
+    setTimeout(function(){ 
+    	if ($("#kbtreeLayout").layout("panel","center").panel('options').width<350)
+    	{
+    		$('#kbtreeNorth').panel('resize', {
+		        height: 75
+		    });
+		    $('#searchBox').searchbox({     
+		       width:$("#kbtreeLayout").layout("panel","center").panel('options').width-10  
+		   });    
+    	}
+    	else
+    	{
+	    	$('#kbtreeNorth').panel('resize', {
+		        height: 42
+		    });
+		    $('#searchBox').searchbox({     
+		       width:300  
+		   }); 
+    	}
+    	$('body').layout('resize');
+    }, 300);
+});

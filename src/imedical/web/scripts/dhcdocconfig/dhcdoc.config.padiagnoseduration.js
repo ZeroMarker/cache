@@ -11,7 +11,15 @@ $(function(){
 	    PADiagnoseDurationDataGrid.datagrid('reload');
      });
 	 InitCombo();
+	 InitCache()
 })
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function InitHospList()
 {
 	var hospComp = GenHospComp("DHCPADiagnoseDuration");
@@ -129,7 +137,7 @@ function InitPADiagnoseDurationGrid(){
 						 PDDRowid=rows.PDDRowid;		
 	                     for(var i=0; i<rows1.length; i++){
 						     if(rows1[i].PDDRowid!=rows.PDDRowid){
-							   if((PatientType==rows1[i].PatientType)&&(DurationRowid==rows1[i].DurationDR)){
+							   if((PatientType==rows1[i].PatientType)&&(DurationRowid==rows1[i].DurationDR)&&(MRCIDRowId==rows1[i].DiagnoseDR)){
 								   $.messager.alert('提示',"不能修改,该记录已存在!");
 								   return false;
 							   }
@@ -139,7 +147,7 @@ function InitPADiagnoseDurationGrid(){
 						var editRow1=0;
 						for(var i=0; i<rows1.length; i++){
 							if(rows1[i].PDDRowid!=undefined){
-							   if((PatientType==rows1[i].PatientType)&&(DurationRowid==rows1[i].DurationDR)){
+							   if((PatientType==rows1[i].PatientType)&&(DurationRowid==rows1[i].DurationDR)&&(MRCIDRowId==rows1[i].DiagnoseDR)){
 								   $.messager.alert('提示',"不能增加,该记录已存在!");
 								   return false;
 							   }
@@ -329,6 +337,7 @@ function InitPADiagnoseDurationGrid(){
 			editRow=rowIndex
 		},
 		onBeforeLoad:function(queryParams){
+			$("#tabPADiagnoseDuration").datagrid("unselectAll");
 			editRow=undefined;
 			var PatientType = $('#Combo_PatientType').combo('getValue'); 
 			var Diagnos = $('#Combo_Diagnos').combogrid('getValue'); 

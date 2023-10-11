@@ -14,6 +14,7 @@ function InitReportNWinEvent(obj){
 		var rd = obj.layerRep_rd;
 		var RepStatus = rd["RepStatus"];
 		var Paadm = rd["Paadm"];
+		var type = /(^[0-9]\d*$)/;　　//正整数+0
 		layer.config({extend:'layerskin/style.css'});
 		obj.layerIdxICURep = layer.open({
 				skin: 'btn-all-blue',
@@ -27,6 +28,11 @@ function InitReportNWinEvent(obj){
 				btnAlign: 'c',
 				yes: function(index, layero){
 				  	//保存
+				  	var APACHE = $.form.GetValue("FormVo.APACHEN");
+				  	if ((APACHE!="")&&((!type.test(APACHE))||(APACHE>71))){
+						layer.msg('APACHEⅡ评分数据错误，请录入不大于71的0-9的数字',{time: 2000,icon: 2});
+						return;
+					}
 					var ret = obj.RepSave("2","1");
 					if(parseInt(ret)>0)
 					{
@@ -43,6 +49,11 @@ function InitReportNWinEvent(obj){
 				},
 				btn2: function(index, layero){
 					//提交
+					var APACHE = $.form.GetValue("FormVo.APACHEN");
+				  	if ((APACHE!="")&&((!type.test(APACHE))||(APACHE>71))){
+						layer.msg('APACHEⅡ评分数据错误，请录入不大于71的0-9的数字',{time: 2000,icon: 2});
+						return;
+					}
 					var ret = obj.RepSave("2","2");
 				  	if(parseInt(ret)>0)
 					{
@@ -165,6 +176,7 @@ function InitReportNWinEvent(obj){
 					$.form.SetValue("FormVo.pDisDateN",rd["PADischDate"]);
 					$.form.SetValue("FormVo.pDisDateN",rd["PADischDate"]);
 					$.form.SetValue("FormVo.pPatWeight",rd["PatWeight"]);
+					$.form.SetValue("FormVo.APACHEN",rd["APACHEScore"]);
 					//选中事件
 					//位置错误，导致第一次打开且点击事件关闭后，不刷新界面，再次打开点击时多次弹出layer
 					/*

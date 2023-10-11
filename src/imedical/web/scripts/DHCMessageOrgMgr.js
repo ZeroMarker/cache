@@ -1,3 +1,18 @@
+;(function ($) {
+	$.fn.combogrid.methods.setRemoteValue=function (jq,param) {
+    	return jq.each(function(){
+	    	if (typeof param=="string"){
+		    	$(this).combogrid('setValue',param);
+		    }else{
+			    var val=param['value']||'';
+			    var text=param['text']||'';
+			    $(this).combogrid('options').keyHandler.query.call(this,text);
+				$(this).combogrid('setValue',val).combogrid('setText',text);
+			}
+	    });
+    };
+})(jQuery);
+
 var Acode="",Adesc="",oldpid="";
 var delItem = function(that){
 	var id=$(that).attr("orgid");
@@ -29,45 +44,9 @@ var delItem = function(that){
 	});		
 };
 $(function(){
-	/*$("body").delegate('a',"click",function(){
-		var id=$(this).attr("orgid");
-		var pid=$(this).attr("pid");
-		$.messager.confirm('提示信息' , '确认删除?'+id+","+pid , function(r){
-			if(r){
-				//return true;
-				$.ajaxRunServerMethod({
-					ClassName:"websys.DHCMessageOrgMgr",MethodName:"Delete",
-					Id:id
-					},
-					function(data,textStatus){
-						if(data>0){
-							$.messager.alert('成功','删除成功!');
-							if(pid==0){
-								$('#tDHCMessageOrgMgr').treegrid('reload');
-							}else{
-								$('#tDHCMessageOrgMgr').treegrid('reload' , pid);
-							}
-						}else{
-							$.messager.alert('成功','删除失败!');
-						}
-					}
-				);
-			} else {
-				return false;
-			}
-		});				
-	});	*/
-	var findTableHeight=parseInt($("#PageContent>table").css('height'));
-	var theight=500;var twidth=1140;
-	if (document.documentElement && document.documentElement.clientHeight && document.documentElement.clientWidth){
-		var winHeight = document.documentElement.clientHeight;
-		var winWidth = document.documentElement.clientWidth;
-		theight=winHeight-findTableHeight-5;
-		twidth=winWidth+10;
-	}
 	$('#tDHCMessageOrgMgr').treegrid({     //treegrid采用lazyload的方式加载数据
-		width:twidth,
-		height:theight,
+		bodyCls:'panel-body-gray',
+		fit:true,
 		pageSize:10,
 		rownumbers: true,
 		pagination: true,
@@ -76,7 +55,19 @@ $(function(){
 		url:'jquery.easyui.querydatatrans.csp?ClassName=websys.DHCMessageOrgMgr&QueryName=Find',		
 		idField:'OrgId',				//数据表格要有主键	
 		treeField:'ODesc',			//treegrid 树形结构主键 text
-		//fitColumns :true, 
+		toolbar:[{
+			iconCls:'icon-add',
+			text:'增加组织',
+			handler:function(){
+				addOrg();
+			}
+		},{
+			iconCls:'icon-add',
+			text:'增加成员',
+			handler:function(){
+				addMember();
+			}
+		}],
 		columns:[[
 			{field:'ODesc',title:'组织描述',width:250} ,
 			{field:'OCode',title:'组织代码',width:100} ,
@@ -106,17 +97,23 @@ $(function(){
 			{field:'crud',title:'操作',width:100,formatter: function(value,row,index){
 				//"<a href='#' name='add' orgid='"+row.OrgId+"' pid='"+row._parentId+"'>增加</a>&nbsp;&nbsp;"+
 				var str="<a href='#' name='update' orgid='"+row.OrgId+"' pid='"+row._parentId+"'>修改</a>&nbsp;&nbsp;"
-						+"<a href='#' onclick='delItem(this);' name='delete' orgid='"+row.OrgId+"' pid='"+row._parentId+"'>删除</a>"
+					+"<a href='#' onclick='delItem(this);' name='delete' orgid='"+row.OrgId+"' pid='"+row._parentId+"'>删除</a>";
 				return str;
 			}}
 		]],
 		onBeforeLoad:function(row, param){
 			if(row){
-				if(row.OrgId!=undefined){
+				if(row.OrgId!=undefined ){
 					param.page=1;
 					param.rows=999;
-					param.desc=Adesc;
-					param.code=Acode;
+					if (row.OnlyChildMatch==1) {
+						param.desc=Adesc;
+						param.code=Acode;
+					}else{
+						param.desc='';
+						param.code='';
+					}
+
 				}
 			}else{
 				param.id=0;
@@ -125,15 +122,7 @@ $(function(){
 		},
 
 		onLoadSuccess:function(param){
-			//delete $(this).treegrid('options').queryParams['id'];
-			/*$('a[name="add"]').click(function(){
-				$('#mydialog').dialog({
-					title:'新增' 
-				});
-				$('#myform').get(0).reset();
-				$('#oid').val("");
-				$('#mydialog').dialog('open');
-			});*/
+			
 			$('a[name="update"]').click(function(){
 				//alert("更新");
 				var  node  = $('#tDHCMessageOrgMgr').treegrid('find',$(this).attr("orgid"));
@@ -170,8 +159,10 @@ $(function(){
 				}
 
 			});		
-			//$('a[name="delete"]').click(function(){
-					
+			if (param===null) { //点击查询
+				$('#tDHCMessageOrgMgr').treegrid('clearSelections');
+			}
+			
 		}
 	});
 	$('#Find').click(function(){
@@ -183,21 +174,23 @@ $(function(){
 			url:'jquery.easyui.querydatatrans.csp?ClassName=websys.DHCMessageOrgMgr&QueryName=Find'
 			
 		});
-		//$('#tDHCMessageOrgMgr').treegrid('load');
-		//$('#test').treegrid({
-		//	url:'jquery.easyui.querydatatrans.csp?ClassName=websys.DHCMessageOrgMgr&QueryName=AllLoadFind&desc='+Adesc+'&code='+Acode
-		//	
-		//});
 	});
 	$('#Clear').click(function(){
 		$('#OrgCode').val("");
 		$('#OrgDesc').val("");
+		$('#tDHCMessageOrgMgr').treegrid('clearSelections');
 		$('#Find').click();
 	});	
 	
+	var clearSearchInputAndVars=function(){
+		$('#OrgCode').val("");
+		$('#OrgDesc').val("");
+		Acode='';
+		Adesc='';
+	}
 	
 	
-	$('#Add').click(function(){
+	var addMember=function(){
 		$('#mydialog').dialog({
 			title:'新增成员' 
 		});
@@ -220,13 +213,13 @@ $(function(){
 		}
 		$('#mydialog').dialog('open');
 		
-	});
-	$('#Add2').click(function(){
+	};
+	var addOrg=function(){
 		$('#mydialog2').dialog({
 			title:'新增组织' 
 		});
 		$('#mydialog2').dialog('open');
-	});
+	};
 	
 	
 
@@ -240,7 +233,7 @@ $(function(){
 		], 
 		valueField:'Code', 
 		textField:"Desc",
-		width:450,
+		width:300,
 		editable:false,
 		onSelect:function(){
 			$('#oobj').combogrid("clear");
@@ -250,34 +243,38 @@ $(function(){
 				case "H":
 					clsname="web.CTHospital";
 					QueryName="LookUp";
-					columns=[[{field:'Description',title:'医院',width:215},{field:'Code',title:'Code',align:'right',width:215},{field:'HIDDEN',title:'HIDDEN',align:'right',hidden:true,width:0}]];
+					columns=[[{field:'Description',title:'医院',width:215},{field:'Code',title:'代码',width:185},{field:'HIDDEN',title:'HIDDEN',align:'right',hidden:true,width:0}]];
 					break;
 				case "G":				
 					clsname="websys.DHCMessageOrgMgr";
 					QueryName="LookUpGroup";
-					columns=[[{field:'Description',title:'安全组',width:430},{field:'HIDDEN',title:'HIDDEN',align:'right',hidden:true,width:0}]];
+					columns=[[{field:'Description',title:'安全组',width:400},{field:'HIDDEN',title:'HIDDEN',hidden:true,width:0}]];
 					break;	
 				case "L":				
 					clsname="websys.DHCMessageOrgMgr";
 					QueryName="LookUpLoc";
-					columns=[[{field:'Description',title:'科室',width:215},{field:'Code',title:'Code',align:'right',width:215},{field:'HIDDEN',title:'HIDDEN',align:'right',hidden:true,width:0}]];
+					columns=[[{field:'Description',title:'科室',width:215},{field:'Code',title:'代码',width:185},{field:'HIDDEN',title:'HIDDEN',align:'right',hidden:true,width:0}]];
 					break;	
 				case "U":				
 					clsname="websys.DHCMessageOrgMgr";
 					QueryName="LookUpUser";
-					columns=[[{field:'Description',title:'姓名',width:215},{field:'Code',title:'Code',align:'right',width:215},{field:'HIDDEN',title:'HIDDEN',align:'right',hidden:true,width:0}]];
+					columns=[[{field:'Description',title:'姓名',width:215},{field:'Code',title:'代码',width:185},{field:'HIDDEN',title:'HIDDEN',align:'right',hidden:true,width:0}]];
 					break;	
 			}
 			$('#oobj').combogrid({
-				url: 'jquery.easyui.querydatatrans.csp?ClassName='+clsname+'&QueryName='+QueryName+'&desc=""',
+				url: 'jquery.easyui.querydatatrans.csp?ClassName='+clsname+'&QueryName='+QueryName+'&desc=',
 				columns:columns
-			});			
+				
+			});	
+			//$('#oobj').combogrid('setRemoteValue',{text:'',value:''});
+			
 		}
 	});
 
 	$('#oobj').combogrid({
 		required:true,
-		width:450,
+		rownumbers:true,
+		width:300,
 		disabled:false,		
 		delay: 500,
 		panelWidth:450,
@@ -290,13 +287,13 @@ $(function(){
 			param = $.extend(param,{desc:param.q});
 			return true;
 		},
-		columns: [[{field:'Description',title:'Desc',width:200},{field:'Code',title:'Code',align:'right',width:200},{field:'HIDDEN',title:'HIDDEN',align:'right',hidden:true,width:0}]],
+		columns: [[{field:'Description',title:'组织名称',width:215},{field:'Code',title:'组织代码',align:'right',width:185},{field:'HIDDEN',title:'HIDDEN',align:'right',hidden:true,width:0}]],
 		pagination: true , 
 		pageSize: 10 
 	});
 	$('#oorg').combogrid({
 		required:true,
-		width:450,
+		width:300,
 		disabled:false,		
 		delay: 500,
 		panelWidth:450,
@@ -310,11 +307,12 @@ $(function(){
 			param = $.extend(param,{desc:param.q});
 			return true;
 		},
-		columns: [[{field:'ODesc',title:'Desc',width:215},{field:'OCode',title:'Code',align:'right',width:215},{field:'OrgId',title:'HIDDEN',align:'right',hidden:true,width:0}]],
+		columns: [[{field:'ODesc',title:'Desc',width:215},{field:'OCode',title:'Code',width:185},{field:'OrgId',title:'HIDDEN',align:'right',hidden:true,width:0}]],
 		pagination: true , 
 		pageSize: 10 
 	});	
-	$('#ok1').click(function(){
+	$('#ocode,#odesc,#onote').outerWidth(300);
+	var saveMember=function(){
 		if($('#myform').form('validate')){
 			//var pid=$('#oorg').combogrid("getValue");
 			var row=$('#oorg').combogrid("grid").datagrid("getSelected");
@@ -343,15 +341,16 @@ $(function(){
 				},
 				function(data,textStatus){
 					if(data>0){
-						$.messager.alert('成功','操作成功!');
+						$.messager.popover({msg:'操作成功!',type:'success'});
 						if(oldpid!=""&&oldpid!=pid){
 							$('#tDHCMessageOrgMgr').treegrid('reload' , oldpid);
 							oldpid="";
 						}
+						clearSearchInputAndVars();
 						$('#tDHCMessageOrgMgr').treegrid('reload' , pid);
 						$('#mydialog').dialog('close');
 					}else{
-						$.messager.alert('失败','操作失败了!');
+						$.messager.alert('失败','操作失败了!','error');
 						$('#mydialog').dialog('close');
 						
 					}
@@ -359,8 +358,8 @@ $(function(){
 			);
 		}
 		
-	});
-	$('#ok2').click(function(){
+	};
+	var saveOrg=function(){
 		if($('#myform2').form('validate')){
 			$.ajaxRunServerMethod({
 				ClassName:"websys.DHCMessageOrgMgr",MethodName:"Save",
@@ -374,11 +373,11 @@ $(function(){
 				},
 				function(data,textStatus){
 					if(data>0){
-						$.messager.alert('成功','操作成功!');
-						$('#tDHCMessageOrgMgr').treegrid('reload');
+						$.messager.popover({msg:'保存成功',type:'success'});
+						$('#Clear').click();
 						$('#mydialog2').dialog('close');
 					}else{
-						$.messager.alert('失败','操作失败了!');
+						$.messager.alert('失败','操作失败了!','error');
 						$('#mydialog2').dialog('close');
 						
 					}
@@ -386,149 +385,61 @@ $(function(){
 			);
 		}
 		
-	});
+	};
 	
-	$('#cancle1').click(function(){        
+	var closeMember=function(){        
 		$('#mydialog').dialog('close');
 		oldpid="";
-	});	
-	$('#cancle2').click(function(){
+	};	
+	var closeOrg=function(){
 		$('#mydialog2').dialog('close');
-	});	
+	};	
 	
 	$('#mydialog').dialog({
+		buttons:[{
+			text:'保存',
+			handler:function(){
+				saveMember();
+			}
+		},{
+			text:'关闭',
+			handler:function(){
+				closeMember();
+			}
+		}],
+		iconCls:'icon-w-paper',
 		onClose:function(){
 			$('#myform').get(0).reset();
 			$('#oid').val("");
+			$('#otype').combobox("setValue",'');
+			$('#oobj').combogrid('setRemoteValue',{text:'',value:''});
+			$('#oorg').combogrid('setRemoteValue',{text:'',value:''});
+		},
+		onOpen:function(){
+			$('#myform').form('validate')	;
 		}
 	});
 	$('#mydialog2').dialog({
+		buttons:[{
+			text:'保存',
+			handler:function(){
+				saveOrg();
+			}
+		},{
+			text:'关闭',
+			handler:function(){
+				closeOrg();
+			}
+		}],
+		iconCls:'icon-w-paper',
 		onClose:function(){
 			$('#myform2').get(0).reset();
 			$('#oid2').val("");
 			$('#oorg').combogrid('grid').datagrid('load');
+		},
+		onOpen:function(){
+			$('#myform2').form('validate')	;
 		}
 	});	
-	
-	$('#ocode,#odesc,#onote').css({  
-		"width":"450px"
-	}) ;
-	$('#ocode2,#odesc2,#onote2').css({  
-		"width":"200px"
-	}) ;	
-	//采用全加载的方式加载treegrid的数据，修改和增加的reload还需要修改
-	/*
-	$('#test').treegrid({     //treegrid采用lazyload的方式加载数据
-		width:1140,
-		height:547,
-		pageSize:1000,
-		pagination: true,
-		pageList: [1000],
-		//queryParams: { ClassName:"websys.DHCMessageOrgMgr",QueryName:"Find"},
-		url:'jquery.easyui.querydatatrans.csp?ClassName=websys.DHCMessageOrgMgr&QueryName=AllLoadFind&desc='+Adesc+'&code='+Acode,		
-		idField:'OrgId',				//数据表格要有主键	
-		treeField:'ODesc',			//treegrid 树形结构主键 text
-		//fitColumns :true, 
-		columns:[[
-			{field:'ODesc',title:'组织描述',width:250} ,
-			{field:'OCode',title:'组织代码',width:100} ,
-			{field:'OrgId',title:'组织ID',hidden:true} ,
-			{field:'ONote',title:'组织说明',width:200} ,
-			{field:'OObjId',title:'成员id',hidden:true} ,
-			{field:'OObjType',title:'类型',width:100,hidden:false,formatter: function(value,row,index){
-				var str="无类型";
-				switch(value){
-					case "H":
-						str="医院web.CTHospital";
-						break;
-					case "G":				
-						str="安全组web.SSGroup";
-						break;
-					case "L":				
-						str="科室web.CTLoc";
-						break;
-					case "U":				
-						str="用户web.SSUser";
-						break;	
-				}
-				return str;
-			}} ,
-			{field:'OObjName',title:'人员对象',width:150} ,
-			{field:'_parentId',title:'上级id',hidden:true} ,
-			{field:'crud',title:'操作',width:100,formatter: function(value,row,index){
-				//"<a href='#' name='add' orgid='"+row.OrgId+"' pid='"+row._parentId+"'>增加</a>&nbsp;&nbsp;"+
-				var str="<a href='#' name='update' orgid='"+row.OrgId+"' pid='"+row._parentId+"'>修改</a>&nbsp;&nbsp;"
-						+"<a href='#' name='delete' orgid='"+row.OrgId+"' pid='"+row._parentId+"'>删除</a>"
-				return str;
-			}}
-		]],
-		onLoadSuccess:function(param){
-			delete $(this).treegrid('options').queryParams['id'];
-			$('a[name="update"]').click(function(){
-				//alert("更新");
-				var  node  = $('#test').treegrid('find',$(this).attr("orgid"));
-				$('#mydialog').dialog({
-					title:'修改' 
-				});
-				$('#myform').get(0).reset();
-				$('#oid').val(node.OrgId);
-				$('#odesc').val(node.ODesc);
-				$('#ocode').val(node.OCode);
-				$('#onote').val(node.ONote);
-				$('#otype').combobox("setValue",node.OObjType);
-				$('#oobj').combogrid("setValue",node.OObjId);
-				$('#oobj').combogrid("setText",node.OObjName);	
-				$('#oorg').combogrid("setValue",node._parentId);	
-				$('#mydialog').dialog('open');
-				if($('#otype').combobox("getValue")=="N"){     //当更新的是父级时，类型为无类型，对象和父级直接不能编辑，自己类型也不能编辑,在更新完成后将类型改为可编辑状态，
-					$("#otype").combobox({ 
-						disabled:true
-					});
-					$('#otype').combobox("setValue","N");
-					$('#otype').combobox("setText","无类型");
-					$('#oobj').combogrid({
-						disabled:true
-					});
-					$('#oobj').combogrid("setValue","0");
-					$('#oobj').combogrid("setText","无对象");	
-					$('#oorg').combogrid({
-						disabled:true
-					});
-					$('#oorg').combogrid("setValue","0");
-					$('#oorg').combogrid("setText","无上级");	
-				}
-				
-			});		
-			$('a[name="delete"]').click(function(){
-				var id=$(this).attr("orgid");
-				var pid=$(this).attr("pid");
-				$.messager.confirm('提示信息' , '确认删除?' , function(r){
-					if(r){
-						//return true;
-						$.ajaxRunServerMethod({
-							ClassName:"websys.DHCMessageOrgMgr",MethodName:"Delete",
-							Id:id
-							},
-							function(data,textStatus){
-								if(data>0){
-									$.messager.alert('成功','删除成功!');
-									$('#test').treegrid('reload');
-									
-								}else{
-									$.messager.alert('成功','删除失败!');
-								}
-							}
-						);
-					} else {
-						return false;
-					}
-				});				
-			});			
-		}
-
-	});
-	*/
 		
 });
-//{"OrgId":"14","OCode":"蒋荣猛","ODesc":"蒋荣猛","ONote":"发给蒋荣猛","OObjId":"600","OObjType":"用户","OObjName":"蒋荣猛","OOrgDr":"5"}
-// $('#cc').combogrid('grid').datagrid('reload'); 

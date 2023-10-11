@@ -3,6 +3,7 @@
 var RepDate=formatDate(0); //系统的当前日期
 var EpisodeID="";
 var drugid="";
+var drugnamelist="";
 $(function(){
 
 	InitButton(); 			// 绑定保存提交按钮 包医
@@ -26,7 +27,7 @@ function InitButton(){
 //保存
 function SaveReport(flag){
 	if($('#PatName').val()==""){
-		$.messager.alert("提示:","患者姓名为空，请输入登记号/病案号回车选择记录录入患者信息！");	
+		$.messager.alert($g("提示:"),$g("患者姓名为空，请输入登记号/病案号回车选择记录录入患者信息！"));	
 		return false;
 	}
 	
@@ -48,7 +49,7 @@ function ReportControl(){
 		});
 	});
 	
-	//入院时ADL得分
+	// 不良反应/事件的结果  有后遗症 表现
 	$('#EventNewResult-label-97002-97013').live("keyup",function(){
 		$("input[type=radio][id^='EventNewResult-label-']").removeAttr("checked");
 		$("input[type=radio][id='EventNewResult-label-97002']").click();	
@@ -114,7 +115,7 @@ function ReportControl(){
 		   drugname=$(this).attr("name");
 		   drugid="SuspectNewDrug";
 		  
-           showDrugList(this.id);
+           showDrugList(this.id,this.value);
         }
     });
     $("input[id^='BlendNewDrug-96675']").live('keydown',function(event){	
@@ -122,7 +123,7 @@ function ReportControl(){
 		 {
 		   drugname=$(this).attr("name");
 		   drugid="BlendNewDrug"; 
-           showDrugList(this.id);
+           showDrugList(this.id,this.value);
         }
     });
    TableControl(); 
@@ -165,38 +166,38 @@ function InitCheckRadio(){
 }
 
 //加载药品列表
-function showDrugList(id){
+function showDrugList(id,inpdesc){
 	if(EpisodeID==""){
-		$.messager.alert("提示:","请先选择患者就诊记录！");
+		$.messager.alert($g("提示:"),$g("请先选择患者就诊记录！"));
 		return;
 	}
 	var input=input+'&StkGrpRowId=&StkGrpType=G&Locdr=&NotUseFlag=N&QtyFlag=0&HospID=' ;
 	var mycols=[[
 		{field:"orditm",title:'orditm',width:90,hidden:true},
 		{field:'phcdf',title:'phcdf',width:80,hidden:true},
-		{field:'incidesc',title:'名称',width:140},
-		{field:'genenic',title:'通用名',width:140},
+		{field:'incidesc',title:$g('名称'),width:140},
+		{field:'genenic',title:$g('通用名'),width:140},
 	    {field:'batno',title:'生产批号',width:60,hidden:true}, //,hidden:true
 	    {field:'staDate',title:'开始日期',width:60,hidden:true},//,hidden:true
 	    {field:'endDate',title:'结束日期',width:60,hidden:true},  //
 		{field:'genenicdr',title:'genenicdr',width:80,hidden:true},
-		{field:'dosage',title:'剂量',width:60},
+		{field:'dosage',title:$g('剂量'),width:60},
 		{field:'dosuomID',title:'dosuomID',width:80,hidden:true},
-		{field:'instru',title:'用法',width:80},
+		{field:'instru',title:$g('用法'),width:80},
 		{field:'instrudr',title:'instrudr',width:80,hidden:true},
-		{field:'freq',title:'频次',width:40},//priorty
-		{field:'priorty',title:'优先级',width:60},//priorty
+		{field:'freq',title:$g('频次'),width:40},//priorty
+		{field:'priorty',title:$g('优先级'),width:60},//priorty
 		{field:'freqdr',title:'freqdr',width:80,hidden:true},
-		{field:'duration',title:'疗程',width:40},
+		{field:'duration',title:$g('疗程'),width:40},
 		{field:'durId',title:'durId',width:80,hidden:true},
-		{field:'apprdocu',title:'批准文号',width:140},
-		{field:'manf',title:'厂家',width:140},
+		{field:'apprdocu',title:$g('批准文号'),width:140},
+		{field:'manf',title:$g('厂家'),width:140},
 		{field:'manfdr',title:'manfdr',width:80,hidden:true},
-		{field:'form',title:'剂型',width:80},
+		{field:'form',title:$g('剂型'),width:80},
 		{field:'formdr',title:'formdr',width:80,hidden:true}
 	]];
 	var mydgs = {
-		url:'dhcadv.repaction.csp'+'?action=GetPatOEInfo'+'&params='+EpisodeID ,
+		url:'dhcadv.repaction.csp'+'?action=GetPatOEInfo'+'&params='+EpisodeID+'&inpdesc='+encodeURI(inpdesc) ,  //2021-01-26 新增检索药品功能，encodeURI() 处理文字乱码
 		columns: mycols,  //列信息
 		pagesize:10,  //一页显示记录数
 		table: '#admdsgridnew', //grid ID
@@ -229,6 +230,14 @@ function addDrgTest(rowData)
 		$td.eq(7).find(".combo-value").val(row.endDate);
 		$td.eq(7).find(".combo-text").val(row.endDate);
 		TableControl();
+		
+		/// 2021-02-09 cy 保存绑定医嘱id
+		if(OrdList!=""){ 
+			OrdList=OrdList+"$$"+row.orditm+"&&"+drugname;
+		}
+		if(OrdList==""){
+			OrdList=row.orditm+"&&"+drugname;
+		}
 	}
 }
 function checkSusAndBleIfRepApp(incidesc){
@@ -248,15 +257,15 @@ function checkSusAndBleIfRepApp(incidesc){
 		}
 	}) 
 	if((drugid=="BlendNewDrug")&&(flag==1)){
-		$.messager.alert("提示:","该药品已为怀疑药品,不可同时为并用药品！");
+		$.messager.alert($g("提示:"),$g("该药品已为怀疑药品,不可同时为并用药品！"));
 		return false;
 	}
 	if((drugid=="SuspectNewDrug")&&(flag==2)){
-		$.messager.alert("提示:","该药品已为并用药品,不可同时为怀疑药品！");
+		$.messager.alert($g("提示:"),$g("该药品已为并用药品,不可同时为怀疑药品！"));
 		return false;
 	}
 	if(flag!=0){
-		$.messager.alert("提示:","该药品已添加,不能重复添加！");
+		$.messager.alert($g("提示:"),$g("该药品已添加,不能重复添加！"));
 		return false;
 	}
 	return true;
@@ -341,29 +350,29 @@ function checkother(){
 	var EventNewResultFlag=0;
 	$("input[type=radio][id^='EventNewResult-label-']").each(function(){
 		if($(this).is(':checked')){
-			if ((this.value=="有后遗症")&&($("#EventNewResult-label-97002-97013").val()=="")){
+			if ((this.value==$g("有后遗症"))&&($("#EventNewResult-label-97002-97013").val()=="")){
 				EventNewResultFlag=-1;
 			}
-			if ((this.value=="死亡")&&(($("#EventNewResult-label-97014-97015").val()=="")||($("#EventNewResult-label-97014-97016").datebox('getValue')==""))){
+			if ((this.value==$g("死亡"))&&(($("#EventNewResult-label-97014-97015").val()=="")||($("#EventNewResult-label-97014-97016").datebox('getValue')==""))){
 				EventNewResultFlag=-2;
 			}
 		}
 	})
 	if(EventNewResultFlag==-1){
-		$.messager.alert("提示:","【不良反应/事件的结果】勾选'有后遗症'，请填写表现！");	
+		$.messager.alert($g("提示:"),$g("【不良反应/事件的结果】勾选'")+$g("有后遗症")+$g("'，请填写表现！"));	
 		return false;
 	}
 	if(EventNewResultFlag==-2){
-		$.messager.alert("提示:","【不良反应/事件的结果】勾选'死亡'，请填写直接死因与死亡时间！");	
+		$.messager.alert($g("提示:"),$g("【不良反应/事件的结果】勾选'")+$g("死亡")+$g("'，请填写直接死因与死亡时间！"));	
 		return false;
 	}
 	
 	///判断怀疑药品和并用药品不能同时为空
 	if(!(getDgData("SuspectNewDrug"))&&(!getDgData("BlendNewDrug"))){
 		if(MKIOrdFlag!="1"){
-			$.messager.alert("提示:","怀疑药品和并用药品不能同时为空（列表手动输入药品无效，需回车选择医嘱）！");
+			$.messager.alert($g("提示:"),$g("怀疑药品")+"和"+$g("并用药品")+"不能同时为空（列表手动输入药品无效，需回车选择医嘱）！");
 		}else{
-			$.messager.alert("提示:","怀疑药品和并用药品不能同时为空（列表输入药品信息少，需补充信息）！");
+			$.messager.alert($g("提示:"),$g("怀疑药品")+"和"+$g("并用药品")+"不能同时为空（列表输入药品信息少，需补充信息）！");
 		}
 		return false;
 	}
@@ -380,17 +389,17 @@ function getDgData(dgkey)
 		// 批准文号
 		var str=$(this).children('td').eq(0).find("input").val();
 		if(str.length==0){
-			rowMsg=rowMsg+"批准文号,"
+			rowMsg=rowMsg+$g("批准文号,")
 		}
 		// 商品名称
 		var str1=$(this).children('td').eq(1).find("input").val();
 		if(str1.length==0){
-			rowMsg=rowMsg+"商品名称,"
+			rowMsg=rowMsg+$g("商品名称,")
 		}
 		// 通用名称
 		var str2=$(this).children('td').eq(2).find("input").val();
 		if(str2.length==0){
-			rowMsg=rowMsg+"通用名称,"
+			rowMsg=rowMsg+$g("通用名称,")
 		}
 		
 		if(rowMsg!=""){
@@ -438,4 +447,26 @@ function TableControl(){
 			}
 		})
 		
+}
+function removeRow(obj){
+	/// 2021-02-09 cy 保存绑定医嘱id
+	$.messager.confirm("提示", "是否进行删除操作", function (res) {//提示是否删除
+		if (res) {
+			var delname=$(obj).parent().parent().children('td').eq(1).find("input").attr("name");
+			var tmpItmArr=[]
+			if(OrdList!=""){
+				var OrdListarr=OrdList.split("$$");
+				for (var i=0;i<OrdListarr.length;i++)
+				{
+					if(OrdListarr[i].indexOf(delname)<0){
+						tmpItmArr.push(OrdListarr[i]);
+					}
+				}
+				OrdList=tmpItmArr.join("$$");
+			}
+			$(obj).parent().parent().remove()	
+		}
+	})
+		
+	
 }

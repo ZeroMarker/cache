@@ -2,7 +2,15 @@
  * @模块:     煎药方案维护
  * @编写日期: 2019-08-07
  * @编写人:   hulihua
- */
+ */ 
+var HospId = session['LOGON.HOSPID'];
+
+PHA_COM.App.ProCode = "DEC"
+PHA_COM.App.ProDesc = "煎药室"
+PHA_COM.App.Csp = "pha.dec.v2.decscheme.csp"
+PHA_COM.App.Name = "煎药方案维护"
+//PHA_COM.ResizePhaColParam.auto = false
+
 $(function () {
 	InitDict();
 	InitGridDecScheme();
@@ -88,7 +96,50 @@ function InitDict() {
 			queryGrid();
 		}
 	});
+	
+	InitHospCombo();
 }
+
+
+function InitHospCombo() {
+	var genHospObj=DEC.AddHospCom({tableName:'PHA_DECProSche'});
+	if (typeof genHospObj ==='object'){
+        genHospObj.options().onSelect =  function(index, record) {	
+            var newHospId = record.HOSPRowId;
+            if (newHospId != HospId) {
+                HospId = newHospId;
+                $("#qCmbPresForm").combobox("setValue",'');
+                $('#qCmbPresForm').combobox('options').url = $URL + "?ResultSetType=Array&" + "ClassName=PHA.DEC.Com.Store&QueryName=GetPreForm&hospId="+HospId
+				$('#qCmbPresForm').combobox('reload');
+				$("#cmbPresForm").combobox("setValue",'');
+                $('#cmbPresForm').combobox('options').url = $URL + "?ResultSetType=Array&" + "ClassName=PHA.DEC.Com.Store&QueryName=GetPreForm&hospId="+HospId
+				$('#cmbPresForm').combobox('reload');
+                $('#gridDecScheme').datagrid('options').queryParams.HospId =  HospId;
+                $('#gridDecScheme').datagrid('options').queryParams.inputStr =  '';
+                $('#gridDecScheme').datagrid('load');
+            }
+        }
+    }
+    
+    var defHosp = $cm(
+        {
+            dataType: 'text',
+            ClassName: 'web.DHCBL.BDP.BDPMappingHOSP',
+            MethodName: 'GetDefHospIdByTableName',
+            tableName: 'PHA_DECProSche',
+            HospID: HospId
+        },
+        false
+    );
+    HospId = defHosp;
+    $("#qCmbPresForm").combobox("setValue",'');
+    $('#qCmbPresForm').combobox('options').url = $URL + "?ResultSetType=Array&" + "ClassName=PHA.DEC.Com.Store&QueryName=GetPreForm&hospId="+HospId
+	$('#qCmbPresForm').combobox('reload');
+	$("#cmbPresForm").combobox("setValue",'');
+    $('#cmbPresForm').combobox('options').url = $URL + "?ResultSetType=Array&" + "ClassName=PHA.DEC.Com.Store&QueryName=GetPreForm&hospId="+HospId
+	$('#cmbPresForm').combobox('reload');
+}
+
 /*
  * 初始化方案表格
  * @method InitGridDecScheme
@@ -202,6 +253,11 @@ function InitGridDecScheme() {
 				align: 'left',
 				width: 10,
 				hidden: true
+			}, {
+				field: 'TPasteInt',
+				title: '制膏时长(分)',
+				align: 'left',
+				width: 100
 			}
 		]
 	];
@@ -209,7 +265,9 @@ function InitGridDecScheme() {
 		url: $URL,
 		queryParams: {
 			ClassName: 'PHA.DEC.CfDecSche.Query',
-			QueryName: 'QueryProSche'
+			QueryName: 'QueryProSche',
+			inputStr: '',
+			HospId: HospId	
 		},
 		toolbar: "#gridDecSchemeBar",
 		columns: columns,
@@ -249,6 +307,7 @@ function MainTain(type) {
 		$('#txtSecWaterQua').val(gridSelect.TSecWaterQua);
 		$('#txtTemper').val(gridSelect.TTemper);
 		$("#cmbPaste").combobox('setValue', gridSelect.TPasteFlag);
+		$("#txtPasteInt").val(gridSelect.TPasteInt); 
     } else if (type = "A") {
         $('#txtScheCode').val("");
 		$('#txtScheDesc').val("");
@@ -264,9 +323,14 @@ function MainTain(type) {
 		$('#txtSecWaterQua').val("");
 		$('#txtTemper').val("");
 		$("#cmbPaste").combobox('clear');
+		$('#txtPasteInt').val(""); 
     }
     $('#gridDecSchemeWin').window({ 'title': "煎药方案" + ((type == "A") ? "新增" : "编辑") })
     $('#gridDecSchemeWin').window('open');
+    
+//    PHA_COM.ResizePhaCol({
+//	    id:'gridDecSchemeWin'
+//	});
 }
 
 /*
@@ -287,7 +351,8 @@ function SaveData(){
 	var secDecInt = $('#txtSecDecInt').val().trim(); 
 	var secWaterQua = $('#txtSecWaterQua').val().trim();
 	var temperature = $('#txtTemper').val().trim();
-	var pasteFlag = $("#cmbPaste").combobox('getValue');	//是否制膏
+	var pasteFlag = $("#cmbPaste").combobox('getValue');	// 是否制膏
+	var pasteInt = $('#txtPasteInt').val().trim(); 			// 制膏时长
 	var winTitle = $("#gridDecSchemeWin").panel('options').title;
 	var decScheId = "";
 	if (winTitle.indexOf("编辑") >= 0){
@@ -333,13 +398,15 @@ function SaveData(){
 	*/
 	var dataStr1=scheCode+"^"+scheDesc+"^"+activeFlag+"^"+prescForm+"^"+prescEffect
 	var dataStr2=pressure+"^"+soakInt+"^"+firDecInt+"^"+firWaterQua+"^"+secDecFlag
-	var dataStr3=secDecInt+"^"+secWaterQua+"^"+temperature+"^"+pasteFlag
+	var dataStr3=secDecInt+"^"+secWaterQua+"^"+temperature+"^"+pasteFlag+"^"+pasteInt
 	var dataStr=dataStr1+"^"+dataStr2+"^"+dataStr3;
+
 	$m({
 		ClassName:"PHA.DEC.CfDecSche.OperTab",
 		MethodName:"SavOrUpData",
-		ProScheId:decScheId,
-		SqlStr:dataStr
+		ProScheId: decScheId,
+		SqlStr: dataStr,
+		HospId: HospId
 	},function(txtData){
 		var retCode=txtData.split("^")[0];
 		if(retCode==0){
@@ -377,7 +444,8 @@ function getParam() {
  */
 function queryGrid(){
 	$('#gridDecScheme').datagrid('query',{
-		inputStr: getParam()	
+		inputStr: getParam(),
+		HospId: HospId	
 	});
 }
 /*

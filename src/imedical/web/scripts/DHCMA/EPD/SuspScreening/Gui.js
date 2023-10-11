@@ -9,23 +9,15 @@ function InitSuspScreeningWin(){
 		title:'传染病疑似筛查条件维护',
 		headerCls:'panel-header-gray',
 		iconCls:'icon-resort',
-		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
 		rownumbers: true, //如果为true, 则显示一个行号列
 		singleSelect: true,
 		idField:'RowId',           //关键字段来标识树节点，不能重复  
 		treeField:'RowDesc', //树节点字段，也就是树节点的名称
 		loadMsg:'数据加载中...',
-		pageSize: 20,
-		pageList : [20,50,100,200],
-		url:$URL,
-	    queryParams:{
-			ClassName:'DHCMed.EPDService.SuspScreeningSrv',
-			QueryName:'QryScreenInfo'
-	    },
 		columns:[[
 			{field:'RowDesc',title:'筛查条件',width:400},
 			{field:'TypeDesc',title:'筛查类型',width:80},
-			{field:'IncludeKey',title:'诊断关键词',width:100,
+			{field:'IncludeKey',title:'诊断关键词',width:200,
 				formatter: function(value,row,index){
 					if (!row.ExcludeKeys) {
 						return row.IncludeKey;
@@ -81,8 +73,11 @@ function InitSuspScreeningWin(){
 		textField:'Desc',  //K,I,L,R
 		data : [ {
 			Code:'K', 
-			Desc:'关键词',
+			Desc:'关键词(西医)',
 			"selected":true   
+		},{
+			Code:'KZ', 
+			Desc:'关键词(中医)'
 		},{
 			Code:'I', 
 			Desc:'ICD编码'

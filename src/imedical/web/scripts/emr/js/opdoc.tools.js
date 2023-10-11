@@ -1,4 +1,24 @@
-﻿﻿//日期转换
+﻿//将融合版日志控件的日期格式转换成标准格式
+function dateFormat(date){
+	var fmatdate = date;
+	if (date == "" || date == undefined) return fmatdate;
+	if (typeof(dtformat) != "undefined")
+	{
+		if (dtformat == "DMY")
+		{
+			var tmparr = date.split("/");
+			fmatdate = tmparr[2]+"-"+tmparr[1]+"-"+tmparr[0];
+		}
+		else if (dtformat == "MDY")
+		{
+			var tmparr = date.split("/");
+			fmatdate = tmparr[2]+"-"+tmparr[0]+"-"+tmparr[1];
+		}
+	}
+	return fmatdate
+}
+
+﻿//日期转换
 Date.prototype.format = function(format) 
 { 
     var o = { 
@@ -79,7 +99,7 @@ function getClientInfo()
 		async : false,
 		data : {
 			"OutputType":"String",
-			"Class":"EMRservice.HISInterface.PatientInfoAssist",
+			"Class":"EMRservice.HISInterface.BaseServiceTool",
 			"Method":"GetClientInfo"		
 		},
 		success : function(d) {
@@ -432,3 +452,78 @@ function getRefScheme(strXml,path)
     });
     return refScheme;
 }
+
+//封装基础平台websys_getMWToken()方法
+function getMWToken()
+{
+    try{
+        if (typeof(websys_getMWToken) != "undefined")
+            return websys_getMWToken();
+        return "";
+    }catch(e) {
+        return "";
+    }
+}
+
+/// 创建最外层HISUI-Dialog弹窗
+function createModalDialogTop(dialogId, dialogTitle, width, height, iframeId, iframeContent,callback,arr,maximi,minimi){
+    if (parent.parent.parent.$("#modalIframe").length<1)
+	{
+        parent.parent.parent.$("body").append('<iframe id="modalIframe" style="position: absolute; z-index: 1999; width: 100%; height: 100%; top: 0;left:0;scrolling:no;" frameborder="0"></iframe>');
+    }
+	else
+	{
+        parent.parent.parent.$("#modalIframe").css("display","block");
+    }
+    parent.parent.parent.$("body").append("<div id='"+dialogId+"'</div>");
+	if (isNaN(width)) width = 800;
+	if (isNaN(height)) height = 500;  
+    if(document.getElementById("editor")&&(judgeIsIE()==false))
+    	document.getElementById("editor").style.visibility="hidden"; //隐藏插件
+	if (maximi == undefined) maximi = false;
+    if (minimi == undefined) minimi = false;
+    var returnValue = "";
+    parent.parent.parent.$HUI.dialog('#'+dialogId,{ 
+        title: emrTrans(dialogTitle),
+        width: width,
+        height: height,
+        cache: false,
+        collapsible: false,
+        minimizable:minimi,
+        maximizable:maximi,
+        resizable: false,
+        modal: true,
+        closed: false,
+        closable: true,
+        isTopZindex: true,
+        content: iframeContent,
+        onBeforeClose:function(){
+            var tempFrame = parent.parent.parent.$('#'+iframeId)[0].contentWindow;
+			if (tempFrame.dialogBeforeClose)
+			{
+				tempFrame.dialogBeforeClose();
+			}
+            if (tempFrame && tempFrame.returnValue)
+			{
+				returnValue = tempFrame.returnValue;
+			    if ((returnValue !== "") &&(typeof(callback) === "function"))
+				{
+                    callback(returnValue,arr);
+                }
+			}
+        },
+        onClose:function(){
+            parent.parent.parent.$("#modalIframe").hide();
+            if(document.getElementById("editor"))
+    			document.getElementById("editor").style.visibility="visible"; //隐藏插件
+			//$("#"+dialogId).dialog('destroy'); 创建病程病历时，模态窗自动关闭，执行该方法，jquery-1.11.3.min.js报对象不支持此方法，注释即可
+			selectedToothObj = "";//关闭dialog框时，将牙位图使用的全局变量清空；此全局变量，在双击牙位图图片打开编辑页面时，将牙位图中的牙位牙面信息传给dialog框 add by niucaicai
+        }
+    });
+}
+//关闭dialog,子页面调用
+function closeDialogTop(dialogId)
+{
+	parent.parent.parent.$HUI.dialog('#'+dialogId).close();
+}
+

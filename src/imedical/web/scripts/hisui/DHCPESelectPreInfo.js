@@ -43,6 +43,12 @@ function BUpdate_click()
 		$.messager.alert("提示","请选择合并到的分组","info"); 
 		return false;
 	}
+	var Status=SelRow.TStatus;
+	if ((Status=="预约")||(Status=="取消体检")){
+		$.messager.alert("提示","请选取登记、到达的人员","info"); 
+		return false;
+	}
+
 	var RegNo=SelRow.TRegNo
 	
 	var flag=tkMakeServerCall("web.DHCPE.SelectPreInfo","GetRegNoByTeamID",TeamID,RegNo);

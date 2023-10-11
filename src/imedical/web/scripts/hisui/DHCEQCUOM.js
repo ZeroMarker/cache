@@ -2,8 +2,11 @@
 var SelectedRow = 0;
 var rowid=0;
 function BodyLoadHandler() 
-{	    
-    InitUserInfo();
+{
+	//modified by cjt 20230212 需求号3221885 UI页面改造
+	initPanelHeaderStyle();
+	initButtonColor();
+	InitUserInfo();
 	InitEvent();	
 	//KeyUp("Uom");	//清空选择
 	disabled(true);//灰化
@@ -20,7 +23,18 @@ function InitEvent()
 	if (obj) obj.onclick=BUpdate_Click;
 	var obj=document.getElementById("BDelete");
 	if (obj) obj.onclick=BDelete_Click;
+	var obj=document.getElementById("BFind"); // add by sjh SJH0042 2020-12-16 增加查询
+	if (obj) obj.onclick=BFind_Click; 
 }
+
+// add by sjh SJH0042 2020-12-16 增加查询
+function BFind_Click()
+{
+	if (!$(this).linkbutton('options').disabled){
+		$('#tDHCEQCUOM').datagrid('load',{ComponentID:getValueById("GetComponentID"),Uomtype:getValueById("Uomtype"),Desc:getValueById("Desc"),Code:getValueById("Code"),Remark:getValueById("Remark")});
+	}
+}
+ 
 function BDelete_Click() 
 {
 	rowid=GetElementValue("RowID");
@@ -37,9 +51,12 @@ function BDelete_Click()
 	if (result>0)
 	{
 		alertShow("删除成功!")
-		location.reload();
+		$('#tDHCEQCUOM').datagrid('reload'); 
+		Clear();
+		disabled(true);
 	}	
 }
+//medified by myl 2260706  20211109
 function BUpdate_Click() 
 {
 	if (condition()) return;
@@ -55,8 +72,10 @@ function BUpdate_Click()
 	}
 	if (result>0)
 	{
-		alertShow("操作成功!")
-		location.reload();
+		$('#tDHCEQCUOM').datagrid('reload'); 
+        $.messager.popover({msg:"保存成功",type:'success'});
+		Clear();
+		disabled(true)//反灰化
 	}	
 }
 function BAdd_Click() //增加
@@ -75,7 +94,9 @@ function BAdd_Click() //增加
 	if (result>0)
 	{
 		alertShow("操作成功!")
-		location.reload();
+		$('#tDHCEQCUOM').datagrid('reload'); 
+		Clear();
+		disabled(true);
 	}	
 }	
 function CombinData()

@@ -7,6 +7,9 @@ Ext.onReady(function() {
 	var gUserId = session['LOGON.USERID'];
 	var HospId=session['LOGON.HOSPID'];
 	var gGroupId=session['LOGON.GROUPID'];
+	var gParamNew = PHA_COM.ParamProp("DHCSTIMPORT")
+	var PoisonDoubleSignFlag = false
+	if (gParamNew.PoisonDoubleSign == "N" ) PoisonDoubleSignFlag = true
 	var gIngrRowid="";
 	Ext.QuickTips.init();
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
@@ -18,11 +21,11 @@ Ext.onReady(function() {
 
 	}
 	var PhaLoc=new Ext.ux.LocComboBox({
-		fieldLabel : '入库部门',
+		fieldLabel : $g('入库部门'),
 		id : 'PhaLoc',
 		name : 'PhaLoc',
 		width : 200,
-		emptyText : '入库部门...',
+		emptyText : $g('入库部门...'),
 		groupId:gGroupId
 	});
 	
@@ -34,7 +37,7 @@ Ext.onReady(function() {
 		
 	// 入库单号
 	var InGrNo = new Ext.form.TextField({
-		fieldLabel : '入库单号',
+		fieldLabel : $g('入库单号'),
 		id : 'InGrNo',
 		name : 'InGrNo',
 		anchor : '90%',
@@ -44,7 +47,7 @@ Ext.onReady(function() {
 
 	// 发票号
 	var InvNo = new Ext.form.TextField({
-				fieldLabel : '发票号',
+				fieldLabel : $g('发票号'),
 				id : 'InvNo',
 				name : 'InvNo',
 				anchor : '90%',
@@ -54,21 +57,21 @@ Ext.onReady(function() {
 	
 	// 起始日期
 	var StartDate= new Ext.ux.DateField({
-		fieldLabel : '起始日期',
+		fieldLabel : $g('起始日期'),
 		id : 'StartDate',
 		name : 'StartDate',
 		anchor : '90%',
-		width : 120,
+		width : 60,
 		value : new Date()
 	});
 
 	// 结束日期
 	var EndDate= new Ext.ux.DateField({
-		fieldLabel : '结束日期',
+		fieldLabel : $g('结束日期'),
 		id : 'EndDate',
 		name : 'EndDate',
 		anchor : '90%',
-		width : 120,
+		width : 60,
 		value : new Date()
 	});
 
@@ -76,7 +79,7 @@ Ext.onReady(function() {
 
 	// 审核标志
 	var AuditFlag = new Ext.form.Checkbox({
-		boxLabel : '已审核',
+		boxLabel : $g('已审核'),
 		id : 'AuditFlag',
 		name : 'AuditFlag',
 		anchor : '90%',
@@ -86,7 +89,7 @@ Ext.onReady(function() {
 	});
 	// 完成标志
 	var CompleteFlag = new Ext.form.Checkbox({
-		boxLabel : '已完成(未审核)',
+		boxLabel : $g('已完成(未审核)'),
 		id : 'CompleteFlag',
 		name : 'CompleteFlag',
 		anchor : '90%',
@@ -95,10 +98,23 @@ Ext.onReady(function() {
 		disabled:false
 	});
 	
+	// 完成标志
+	var PMZJYFlag = new Ext.form.Checkbox({
+		boxLabel : $g('麻醉精一'),
+		id : 'PMZJYFlag',
+		name : 'PMZJYFlag',
+		anchor : '90%',
+		width : 150,
+		checked : false,
+		disabled:false,
+		hidden:PoisonDoubleSignFlag
+		
+	});
+	
 	// 检索按钮
 	var searchBT = new Ext.Toolbar.Button({
-				text : '查询',
-				tooltip : '点击查询入库单信息',
+				text : $g('查询'),
+				tooltip : $g('点击查询入库单信息'),
 				iconCls : 'page_find',
 				height:30,
 				width:70,
@@ -114,11 +130,11 @@ Ext.onReady(function() {
 		var Vendor = Ext.getCmp("Vendor").getValue();
 		var PhaLoc = Ext.getCmp("PhaLoc").getValue();	
 		if(PhaLoc==""){
-			Msg.info("warning", "请选择入库部门!");
+			Msg.info("warning", $g("请选择入库部门!"));
 			return;
 		}
 		if(StartDate==""||EndDate==""){
-			Msg.info("warning", "请选择开始日期和截止日期!");
+			Msg.info("warning", $g("请选择开始日期和截止日期!"));
 			return;
 		}
 		var AuditFlag= Ext.getCmp("AuditFlag").getValue();
@@ -135,7 +151,9 @@ Ext.onReady(function() {
 		}
 		if (AuditFlag=="Y"){CompleteFlag=""}
 		var InvNo= Ext.getCmp("InvNo").getValue();
-		var ListParam=StartDate+'^'+EndDate+'^'+InGrNo+'^'+Vendor+'^'+PhaLoc+'^'+CompleteFlag+'^^'+AuditFlag+'^'+InvNo;
+		var MZJYFlag = Ext.getCmp("PMZJYFlag").getValue()  ? 'Y' : 'N';
+		
+		var ListParam = [StartDate, EndDate, InGrNo, Vendor, PhaLoc, CompleteFlag, "", AuditFlag, InvNo, MZJYFlag].join("^")
 		var Page=GridPagingToolbar.pageSize;
 		//GrMasterInfoStore.baseParams['ParamStr']=ListParam;
 		//GrMasterInfoStore.baseParams={ParamStr:ListParam};
@@ -147,8 +165,8 @@ Ext.onReady(function() {
 
 	// 选取按钮
 	var acceptBT = new Ext.Toolbar.Button({
-				text : '验收',
-				tooltip : '点击验收',
+				text : $g('验收'),
+				tooltip : $g('点击验收'),
 				iconCls : 'page_goto',
 				height:30,
 				width:70,
@@ -159,41 +177,165 @@ Ext.onReady(function() {
 	// 打印按钮
 		var PrintBT = new Ext.Toolbar.Button({
 					id:'PrintBT',
-					text : '打印',
-					tooltip : '点击打印',
+					text : $g('打印'),
+					tooltip : $g('点击打印'),
 					width : 70,
 					height : 30,
 					iconCls : 'page_print',
 					handler : function() {
 						var rowData=GrMasterInfoGrid.getSelectionModel().getSelected();
 						if (rowData ==null) {
-							Msg.info("warning", "请选择需要打印的入库单!");
+							Msg.info("warning", $g("请选择需要打印的入库单!"));
 							return;
 						}
 						var DhcIngr = rowData.get("IngrId");
 						PrintRecCheck(DhcIngr,gParam[13]);
 					}
 				});
+				
+		// 麻醉精一审核1
+		var MZJYAudit1 = new Ext.Toolbar.Button({
+					id:'MZJYAudit1',
+					text : $g('麻精审核1'),
+					tooltip : $g('点击审核'),
+					width : 70,
+					height : 30,
+					iconCls : 'page_gear',
+					hidden:PoisonDoubleSignFlag,
+					handler : function() {
+						MZJYDoubleSign("MZJY1")
+					}
+				});
+		// 麻醉精一审核2
+		var MZJYAudit2 = new Ext.Toolbar.Button({
+					id:'MZJYAudit2',
+					text : $g('麻精审核2'),
+					tooltip : $g('点击审核'),
+					width : 70,
+					height : 30,
+					iconCls : 'page_gear',
+					hidden:PoisonDoubleSignFlag,
+					handler : function() {
+						MZJYDoubleSign("MZJY2");
+					}
+				});
+	// 麻醉精一药品双签
+	function MZJYDoubleSign(Status){
+		var rowData=GrMasterInfoGrid.getSelectionModel().getSelected();
+		if (rowData ==null) {
+			Msg.info("warning", $g("请选择需要审核的入库单!"));
+			return;
+		}
+		var DhcIngr = rowData.get("IngrId");
+		var Table = "User.DHCINGdRec"
+		var Ret = tkMakeServerCall("web.DHCST.DHCINGdRec","SaveStatus",Table,DhcIngr,Status,gUserId,"","Y")
+		var RetArr = Ret.split("^")
+		if(RetArr[0]>0){
+			Msg.info("success", $g("审核成功!"));
+			Query(gIngrRowid);
+			GrMasterInfoStore.reload();
+			return;
+		}
+		else{
+			Msg.info("warning", $g("审核失败:") + RetArr[1]);
+			return;
+		}
+	}			
+	
+		
+		/* 列设置按钮 */
+		var GridColSetBT = new Ext.Toolbar.Button({
+			text:$g('列设置'),
+			tooltip:$g('列设置'),
+			iconCls:'page_gear',
+			handler:function(){
+				GridSelectWin.show();
+			}
+		});
+
+		// 确定按钮
+		var returnColSetBT = new Ext.Toolbar.Button({
+			text : $g('确定'),
+			tooltip : $g('点击确定'),
+			iconCls : 'page_goto',
+			handler : function() {
+				var selectradio = Ext.getCmp('GridSelectModel').getValue();
+				if(selectradio){
+					var selectModel =selectradio.inputValue;	
+					if (selectModel=='1') {
+						GridColSet(GrMasterInfoGrid,"DHCSTIMPORT");						
+					}
+					else {
+						GridColSet(GrDetailInfoGrid,"DHCSTIMPORT");   							
+					}						
+				}
+				GridSelectWin.hide();
+			}
+		});
+
+		// 取消按钮
+		var cancelColSetBT = new Ext.Toolbar.Button({
+				text : $g('取消'),
+				tooltip : $g('点击取消'),
+				iconCls : 'page_delete',
+				handler : function() {
+					GridSelectWin.hide();
+				}
+			});
+
+		//选择按钮
+		var GridSelectWin=new Ext.Window({
+			title:$g('选择'),
+			width : 210,
+			height : 110,
+			labelWidth:100,
+			closeAction:'hide' ,
+			plain:true,
+			modal:true,
+			items:[{
+				xtype:'radiogroup',
+				id:'GridSelectModel',
+				anchor: '95%',
+				columns: 2,
+				style: 'padding:10px 10px 10px 10px;',
+				items : [{
+						checked: true,				             
+							boxLabel: $g('入库单'),
+							id: 'GridSelectModel1',
+							name:'GridSelectModel',
+							inputValue: '1' 							
+						},{
+						checked: false,				             
+							boxLabel: $g('入库单明细'),
+							id: 'GridSelectModel2',
+							name:'GridSelectModel',
+							inputValue: '2' 							
+						}]
+					}],
+			
+			buttons:[returnColSetBT,cancelColSetBT]
+		})
+
 
 	/**
 	 * 保存验收信息
 	 */
 	function acceptData() {
 		if(gIngrRowid==""){
-			Msg.info("warning", "请选择入库单!");
+			Msg.info("warning", $g("请选择入库单!"));
 			return;
 		}
 		var ListDetail="";
 		var rowCount = GrDetailInfoGrid.getStore().getCount();
 		if(rowCount=="0"){
-			Msg.info("warning", "请选择入库单!");
+			Msg.info("warning", $g("请选择入库单!"));
 			return;
 		}
 		var rowData=GrMasterInfoGrid.getSelectionModel().getSelected();
 		var AcceptUser=rowData.get("AcceptUser");
 		var InGrFlag = (AcceptUser!=""?'Y':'N');
 		if (InGrFlag == "Y") {
-			Msg.info("warning", "入库单已验收!");
+			Msg.info("warning", $g("入库单已验收!"));
 			return;
 		}
 		for (var i = 0; i < rowCount; i++) {
@@ -225,20 +367,20 @@ Ext.onReady(function() {
 					url : url,
 					params:{IngrId:gIngrRowid,UserId:gUserId,ListDetail:ListDetail},
 					method : 'POST',
-					waitMsg : '处理中...',
+					waitMsg : $g('处理中...'),
 					success : function(result, request) {
 						var jsonData = Ext.util.JSON
 								.decode(result.responseText);
 						if (jsonData.success == 'true') {
 							// 刷新界面
-							Msg.info("success", "验收成功!");
+							Msg.info("success", $g("验收成功!"));
 							// 7.显示入库单数据
 							Query(gIngrRowid);
 							GrMasterInfoStore.reload();
 
 						} else {
 							var ret=jsonData.info;
-							Msg.info("error", "验收失败："+ret);								
+							Msg.info("error", $g("验收失败：")+ret);								
 						}
 					},
 					scope : this
@@ -247,8 +389,8 @@ Ext.onReady(function() {
 	}
 	// 清空按钮
 	var clearBT = new Ext.Toolbar.Button({
-				text : '清屏',
-				tooltip : '点击清屏',
+				text : $g('清屏'),
+				tooltip : $g('点击清屏'),
 				iconCls : 'page_clearscreen',
 				height:30,
 				width:70,
@@ -266,6 +408,8 @@ Ext.onReady(function() {
 		Ext.getCmp("InvNo").setValue("");
 		Ext.getCmp("StartDate").setValue(new Date());
 		Ext.getCmp("EndDate").setValue(new Date());
+		Ext.getCmp("PMZJYFlag").setValue("N");
+		
 		GrMasterInfoGrid.store.removeAll();
 		GrDetailInfoGrid.store.removeAll();
 		gIngrRowid="";
@@ -273,8 +417,8 @@ Ext.onReady(function() {
 
 	// 3关闭按钮
 	var closeBT = new Ext.Toolbar.Button({
-				text : '关闭',
-				tooltip : '关闭界面',
+				text : $g('关闭'),
+				tooltip : $g('关闭界面'),
 				iconCls : 'close',
 				handler : function() {
 					window.close();
@@ -292,7 +436,7 @@ Ext.onReady(function() {
 	// 指定列参数
 	var fields = ["IngrId","IngrNo", "Vendor", "RecLoc", "IngrType", "PurchUser",
 			"PoNo", "CreateUser", "CreateDate", "Complete", "ReqLoc",
-			"StkGrp","RpAmt","SpAmt","AcceptUser","AuditDate"];
+			"StkGrp","RpAmt","SpAmt","AcceptUser","AuditDate","MZJYAudit1","MZJYAudit2"];
 	// 支持分页显示的读取方式
 	var reader = new Ext.data.JsonReader({
 				root : 'rows',
@@ -316,55 +460,72 @@ Ext.onReady(function() {
 				hidden : true,
 				hideable : false
 			}, {
-				header : "入库单号",
+				header : $g("入库单号"),
 				dataIndex : 'IngrNo',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "供货厂商",
+				header : $g("经营企业"),
 				dataIndex : 'Vendor',
 				width : 200,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '验收人',
+				header : $g('验收人'),
 				dataIndex : 'AcceptUser',
 				width : 70,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '制单日期',
+				header : $g('制单日期'),
 				dataIndex : 'CreateDate',
 				width : 90,
 				align : 'center',
 				sortable : true
 			}, {
-				header : '审核日期',
+				header : $g('审核日期'),
 				dataIndex : 'AuditDate',
 				width : 90,
 				align : 'center',
 				sortable : true
 			}, {
-				header : '采购员',
+				header : $g('采购员'),
 				dataIndex : 'PurchUser',
 				width : 70,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "完成标志",
+				header : $g("完成标志"),
 				dataIndex : 'Complete',
 				width : 70,
 				align : 'left',
 				sortable : true
-			}]);
+			}, {
+				header : $g("麻精审核1"),
+				dataIndex : 'MZJYAudit1',
+				width : 90,
+				align : 'left',
+				sortable : true,
+				hidden:PoisonDoubleSignFlag
+			}, {
+				header : $g("麻精审核2"),
+				dataIndex : 'MZJYAudit2',
+				width : 90,
+				align : 'left',
+				sortable : true,
+				hidden:PoisonDoubleSignFlag
+			}
+			
+			
+			]);
 	GrMasterInfoCm.defaultSortable = true;
 	var GridPagingToolbar = new Ext.PagingToolbar({
 		store:GrMasterInfoStore,
 		pageSize:PageSize,
 		displayInfo:true,
-		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录"
+		displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+		emptyMsg:$g("没有记录")
 	});
 	var GrMasterInfoGrid = new Ext.grid.GridPanel({
 				id : 'GrMasterInfoGrid',
@@ -390,7 +551,7 @@ Ext.onReady(function() {
 	});
 
 	function Query(Parref){
-		GrDetailInfoStore.load({params:{start:0,limit:999,sort:'Rowid',dir:'Desc',Parref:Parref}});
+		GrDetailInfoStore.load({params:{start:0,limit:9999,sort:'Rowid',dir:'Desc',Parref:Parref}});
 	}
 	
 	// 访问路径
@@ -406,7 +567,7 @@ Ext.onReady(function() {
 			"Remarks", "IncCode", "IncDesc","InvNo", "Manf", "Rp", "RpAmt",
 			"Sp", "SpAmt", "InvDate","QualityNo", "SxNo","Remark","MtDesc","PubDesc",
 			"CheckPort","CheckRepNo",{name:'CheckRepDate',type:'date',dateFormat:App_StkDateFormat},"AdmNo",
-			{name:'AdmExpdate',type:'date',dateFormat:App_StkDateFormat},"CheckPack","Spec"];
+			{name:'AdmExpdate',type:'date',dateFormat:App_StkDateFormat},"CheckPack","Spec","InsuCode","InsuDesc"];
 	// 支持分页显示的读取方式
 	var reader = new Ext.data.JsonReader({
 				root : 'rows',
@@ -429,49 +590,49 @@ Ext.onReady(function() {
 				hidden : true,
 				hideable : false
 			}, {
-				header : '药品代码',
+				header : $g('药品代码'),
 				dataIndex : 'IncCode',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '药品名称',
+				header : $g('药品名称'),
 				dataIndex : 'IncDesc',
 				width : 230,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "生产厂商",
+				header : $g("生产企业"),
 				dataIndex : 'Manf',
 				width : 180,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "批号",
+				header : $g("批号"),
 				dataIndex : 'BatchNo',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "有效期",
+				header : $g("有效期"),
 				dataIndex : 'ExpDate',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "单位",
+				header : $g("单位"),
 				dataIndex : 'IngrUom',
 				width : 80,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "数量",
+				header : $g("数量"),
 				dataIndex : 'RecQty',
 				width : 80,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "检测口岸",
+				header : $g("检测口岸"),
 				dataIndex : 'CheckPort',
 				width : 90,
 				align : 'left',
@@ -493,7 +654,7 @@ Ext.onReady(function() {
 						}
 					})
 			}, {
-				header : "检测报告",
+				header : $g("检测报告"),
 				dataIndex : 'CheckRepNo',
 				width : 90,
 				align : 'left',
@@ -515,7 +676,7 @@ Ext.onReady(function() {
 						}
 					})
 			}, {
-					header : "报告日期",
+					header :$g( "报告日期"),
 					dataIndex : 'CheckRepDate',
 					width : 100,
 					align : 'center',
@@ -540,7 +701,7 @@ Ext.onReady(function() {
 					})
 					
 				}, {
-				header : "注册证号",
+				header : $g("注册证号"),
 				dataIndex : 'AdmNo',
 				width : 90,
 				align : 'left',
@@ -562,7 +723,7 @@ Ext.onReady(function() {
 						}
 					})
 			}, {
-					header : "注册证有效期",
+					header : $g("注册证有效期"),
 					dataIndex : 'AdmExpdate',
 					width : 100,
 					align : 'center',
@@ -587,58 +748,69 @@ Ext.onReady(function() {
 					})
 					
 				}, {
-				header : "摘要",
+				header : $g("摘要"),
 				dataIndex : 'Remark',
 				width : 90,
 				align : 'left',
 				sortable : true,
 				editor : new Ext.form.TextField()
 			}, {
-				header : "进价",
+				header : $g("进价"),
 				dataIndex : 'Rp',
 				width : 60,
 				align : 'right',
 			
 				sortable : true
 			}, {
-				header : "售价",
+				header : $g("售价"),
 				dataIndex : 'Sp',
 				width : 60,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "发票号",
+				header :$g( "发票号"),
 				dataIndex : 'InvNo',
 				width : 80,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "发票日期",
+				header : $g("发票日期"),
 				dataIndex : 'InvDate',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "进价金额",
+				header : $g("进价金额"),
 				dataIndex : 'RpAmt',
 				width : 100,
 				align : 'left',
 				
 				sortable : true
 			}, {
-				header : "售价金额",
+				header : $g("售价金额"),
 				dataIndex : 'SpAmt',
 				width : 100,
 				align : 'left',
 				
 				sortable : true
 			}, {
-				header : "规格",
+				header : $g("规格"),
 				dataIndex : 'Spec',
 				width : 100,
 				align : 'left',
-				
+				sortable : true
+			}, {
+				header : $g("国家医保编码"),
+				dataIndex : 'InsuCode',
+				width : 80,
+				align : 'left',
+				sortable : true
+			}, {
+				header : $g("国家医保名称"),
+				dataIndex : 'InsuDesc',
+				width : 80,
+				align : 'left',
 				sortable : true
 			}]);
 	GrDetailInfoCm.defaultSortable = true;
@@ -660,44 +832,53 @@ Ext.onReady(function() {
 				id : "InfoForm",
 				autoHeight:true,
 				labelWidth: 60,	
-				title:'入库单查询与验收',
-				tbar : [searchBT, '-', clearBT, '-', acceptBT,'-',PrintBT],	//, '-', closeBT
+				title:$g('入库单查询与验收'),
+				tbar : [searchBT, '-', clearBT, '-', acceptBT,'-',PrintBT,'-',GridColSetBT,'-',MZJYAudit1,'-',MZJYAudit2],	//, '-', closeBT
 				items:[{
 					xtype:'fieldset',
-					title:"查询条件",
+					title:$g("查询条件"),
 					layout:'column',
 					style:DHCSTFormStyle.FrmPaddingV,
 					items : [{ 				
-						columnWidth: 0.3,
+						columnWidth: 0.25,
 		            	xtype: 'fieldset',
 		            	border: false,
 		            	items: [PhaLoc,Vendor]
 					
 					},{ 				
-						columnWidth: 0.25,
+						columnWidth: 0.15,
 		            	xtype: 'fieldset',
 		            	border: false,
 		            	items: [StartDate,EndDate]
 					
 					},{ 				
-						columnWidth: 0.25,
+						columnWidth: 0.2,
 		            	xtype: 'fieldset',
 		            	border: false,
 		            	items: [InGrNo,InvNo]
 					
 					},{ 				
-						columnWidth: 0.2,
+						columnWidth: 0.15,
 		            	xtype: 'fieldset',
 		            	border: false,
 		            	items: [AuditFlag,CompleteFlag]
 					
-					}]
+					}
+					,{ 				
+						columnWidth: 0.15,
+		            	xtype: 'fieldset',
+		            	border: false,
+		            	items: [PMZJYFlag]
+					
+					}
+					
+					]
 				}]
 			});
 			
 		// 页面布局
 		var mainPanel = new Ext.Viewport({
-				title : '入库单验收',
+				title : $g('入库单验收'),
 				layout : 'border',
 				renderTo : 'mainPanel',
 				items : [            // create instance immediately
@@ -709,7 +890,7 @@ Ext.onReady(function() {
 		                items:InfoForm
 		            }, {
 		                region: 'west',
-		                title: '入库单',
+		                title: $g('入库单'),
 		                collapsible: true,
 		                split: true,
 		                width:document.body.clientWidth*0.3,
@@ -721,7 +902,7 @@ Ext.onReady(function() {
 		               
 		            }, {
 		                region: 'center',
-		                title: '入库单明细',
+		                title: $g('入库单明细'),
 		                layout: 'fit', // specify layout manager for items
 		                items: GrDetailInfoGrid       
 		               

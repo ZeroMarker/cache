@@ -1,242 +1,291 @@
-ï»¿var init = function() {
-
-	/*--æŒ‰é’®äº‹ä»¶--*/
+var init = function() {
+	/* --°´Å¥ÊÂ¼ş--*/
 	
-	$UI.linkbutton('#QueryBT',{
-		onClick:function(){
-			var ParamsObj=$UI.loopBlock('#MainConditions')
-			if(isEmpty(ParamsObj.StartDate)){
-				$UI.msg("alert","å¼€å§‹æ—¥æœŸä¸èƒ½ä¸ºç©º!");
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
+			$UI.clear(PurMainGrid);
+			$UI.clear(PurDetailGrid);
+			var ParamsObj = $UI.loopBlock('#MainConditions');
+			var StartDate = ParamsObj.StartDate;
+			var EndDate = ParamsObj.EndDate;
+			if (isEmpty(ParamsObj.PurLoc)) {
+				$UI.msg('alert', '²É¹º¿ÆÊÒ²»ÄÜÎª¿Õ!');
 				return;
 			}
-			if(isEmpty(ParamsObj.EndDate)){
-				$UI.msg("alert","æˆªæ­¢æ—¥æœŸä¸èƒ½ä¸ºç©º!");
+			if (isEmpty(StartDate)) {
+				$UI.msg('alert', '¿ªÊ¼ÈÕÆÚ²»ÄÜÎª¿Õ!');
 				return;
 			}
-			if(isEmpty(ParamsObj.PurLoc)){
-				$UI.msg("alert","é‡‡è´­ç§‘å®¤ä¸èƒ½ä¸ºç©º!");
+			if (isEmpty(EndDate)) {
+				$UI.msg('alert', '½ØÖ¹ÈÕÆÚ²»ÄÜÎª¿Õ!');
 				return;
 			}
-			ParamsObj.CompFlag="Y"
-			var Params=JSON.stringify(ParamsObj);
-			if(ParamsObj.AuditFlag!="N"){
+			if (compareDate(StartDate, EndDate)) {
+				$UI.msg('alert', '½ØÖ¹ÈÕÆÚ²»ÄÜĞ¡ÓÚ¿ªÊ¼ÈÕÆÚ!');
+				return;
+			}
+			ParamsObj.CompFlag = 'Y';
+			ParamsObj.Type = '1';
+			var Params = JSON.stringify(ParamsObj);
+			if (ParamsObj.AuditFlag == 'Y') {
 				setAudit();
-			}
-			else{
+			} else {
 				setUnAudit();
 			}
 			PurMainGrid.load({
 				ClassName: 'web.DHCSTMHUI.INPurPlan',
 				QueryName: 'Query',
-				Params:Params
+				query2JsonStrict: 1,
+				Params: Params
 			});
 		}
 	});
 	
-	//è®¾ç½®å¯ç¼–è¾‘ç»„ä»¶çš„disabledå±æ€§
-	function setUnAudit(){
-		ChangeButtonEnable({'#AduitBT':true,'#DenyBT':true});
+	// ÉèÖÃ¿É±à¼­×é¼şµÄdisabledÊôĞÔ
+	function setUnAudit() {
+		ChangeButtonEnable({ '#AduitBT': true, '#DenyBT': true });
 	}
-	function setAudit(){
-		ChangeButtonEnable({'#AduitBT':false,'#DenyBT':false});
+	function setAudit() {
+		ChangeButtonEnable({ '#AduitBT': false, '#DenyBT': false });
 	}
-	function DefaultClear(){
+	function DefaultClear() {
 		$UI.clearBlock('#MainConditions');
 		$UI.clear(PurMainGrid);
 		$UI.clear(PurDetailGrid);
-		$HUI.combobox("#PurLoc").enable()
-		ChangeButtonEnable({'#AduitBT':true,'#DenyBT':true});
+		$HUI.combobox('#PurLoc').enable();
+		ChangeButtonEnable({ '#AduitBT': true, '#DenyBT': true });
 		Default();
 	}
 	
-	$UI.linkbutton('#AduitBT',{
-		onClick:function(){
-			var Row=PurMainGrid.getSelected()
-			if(isEmpty(Row)){
-				$UI.msg("alert","è¯·é€‰æ‹©è¦å®¡æ ¸çš„é‡‡è´­è®¡åˆ’å•!");
+	$UI.linkbutton('#AduitBT', {
+		onClick: function() {
+			var Row = PurMainGrid.getSelected();
+			if (isEmpty(Row)) {
+				$UI.msg('alert', 'ÇëÑ¡ÔñÒªÉóºËµÄ²É¹º¼Æ»®µ¥!');
 				return;
 			}
-			var Params=JSON.stringify(addSessionParams({RowId:Row.RowId}));
+			var Params = JSON.stringify(addSessionParams({ RowId: Row.RowId }));
 			showMask();
 			$.cm({
 				ClassName: 'web.DHCSTMHUI.INPurPlan',
 				MethodName: 'jsAudit',
-				Params:Params
-			},function(jsonData){
+				Params: Params
+			}, function(jsonData) {
 				hideMask();
-				if(jsonData.success==0){
-					$UI.msg("success",jsonData.msg);
+				if (jsonData.success == 0) {
+					$UI.msg('success', jsonData.msg);
 					$UI.clear(PurMainGrid);
 					$UI.clear(PurDetailGrid);
 					PurMainGrid.commonReload();
-				}
-				else{
-					$UI.msg("error",jsonData.msg);
+				} else {
+					$UI.msg('error', jsonData.msg);
 				}
 			});
 		}
 	});
-	
-	$UI.linkbutton('#DenyBT',{
-		onClick:function(){
-			$UI.confirm("æ˜¯å¦æ‹’ç»å®¡æ ¸", "warning", "", Deny, "", "", "è­¦å‘Š", false)
+	$UI.linkbutton('#CancelAduitBT', {
+		onClick: function() {
+			var Row = PurMainGrid.getSelected();
+			if (isEmpty(Row)) {
+				$UI.msg('alert', 'ÇëÑ¡ÔñÒªÈ¡ÏûÉóºËµÄ²É¹º¼Æ»®µ¥!');
+				return;
+			}
+			var DHCPlanStatusDesc = Row.DHCPlanStatusDesc;
+			if (DHCPlanStatusDesc == '') {
+				$UI.msg('alert', 'Î´ÉóºËµ¥¾İ²»ÔÊĞíÈ¡ÏûÉóºË!');
+				return;
+			}
+			var Params = JSON.stringify(addSessionParams({ RowId: Row.RowId }));
+			showMask();
+			$.cm({
+				ClassName: 'web.DHCSTMHUI.INPurPlan',
+				MethodName: 'jsCancelAudit',
+				Params: Params
+			}, function(jsonData) {
+				hideMask();
+				if (jsonData.success == 0) {
+					$UI.msg('success', jsonData.msg);
+					$UI.clear(PurMainGrid);
+					$UI.clear(PurDetailGrid);
+					PurMainGrid.commonReload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		}
+	});
+	$UI.linkbutton('#DenyBT', {
+		onClick: function() {
+			if (!PurMainGrid.endEditing()) {
+				return;
+			}
+			var Row = PurMainGrid.getSelected();
+			if (isEmpty(Row)) {
+				$UI.msg('alert', 'ÇëÑ¡ÔñÒª¾Ü¾øµÄ²É¹º¼Æ»®µ¥!');
+				return;
+			}
+			if (isEmpty(Row.RefuseCase)) {
+				$UI.msg('alert', 'ÇëÌîĞ´¾Ü¾øÔ­Òò!');
+				return;
+			}
+			$UI.confirm('ÊÇ·ñ¾Ü¾øÉóºË?', 'warning', '', Deny, '', '', '¾¯¸æ', false);
 		}
 	});
 	
-	function Deny(){
-		var Row=PurMainGrid.getSelected()
-		var index=PurMainGrid.editIndex
-		PurMainGrid.endEdit(index)
-		if(isEmpty(Row)){
-			$UI.msg("alert","è¯·é€‰æ‹©è¦æ‹’ç»çš„é‡‡è´­è®¡åˆ’å•!");
-			return;
-		}
-		if(isEmpty(Row.RefuseCase)){
-			$UI.msg("alert","è¯·å¡«å†™æ‹’ç»åŸå› !");
-			return;
-		}
-		var Params=JSON.stringify(addSessionParams({RowId:Row.RowId,RefuseCase:Row.RefuseCase}));
+	function Deny() {
+		var Row = PurMainGrid.getSelected();
+		var Params = JSON.stringify(addSessionParams({ RowId: Row.RowId, RefuseCase: Row.RefuseCase }));
 		showMask();
 		$.cm({
 			ClassName: 'web.DHCSTMHUI.INPurPlan',
 			MethodName: 'jsDeny',
-			Params:Params
-		},function(jsonData){
+			Params: Params
+		}, function(jsonData) {
 			hideMask();
-			if(jsonData.success==0){
-				$UI.msg("success",jsonData.msg);
+			if (jsonData.success == 0) {
+				$UI.msg('success', jsonData.msg);
 				$UI.clear(PurMainGrid);
 				$UI.clear(PurDetailGrid);
 				PurMainGrid.commonReload();
-			}
-			else{
-				$UI.msg("error",jsonData.msg);
+			} else {
+				$UI.msg('error', jsonData.msg);
 			}
 		});
 	}
 	
-	$UI.linkbutton('#ClearBT',{
-		onClick:function(){
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
 			DefaultClear();
 		}
 	});
-	$UI.linkbutton('#PrintBT',{
-		onClick:function(){
-			var Row=PurMainGrid.getSelected()
-			if(isEmpty(Row)){
-				$UI.msg("alert","è¯·é€‰æ‹©è¦æ‰“å°çš„é‡‡è´­è®¡åˆ’å•!");
+	$UI.linkbutton('#PrintBT', {
+		onClick: function() {
+			var Row = PurMainGrid.getSelected();
+			if (isEmpty(Row)) {
+				$UI.msg('alert', 'ÇëÑ¡ÔñÒª´òÓ¡µÄ²É¹º¼Æ»®µ¥!');
 				return;
 			}
-			PrintInPurPlan(Row.RowId)
+			PrintInPurPlan(Row.RowId);
 		}
 	});
 
-	/*--ç»‘å®šæ§ä»¶--*/
+	/* --°ó¶¨¿Ø¼ş--*/
 	var PurLocBox = $HUI.combobox('#PurLoc', {
-		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+PurLocParams,
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + PurLocParams,
 		valueField: 'RowId',
-		textField: 'Description'
+		textField: 'Description',
+		onSelect: function(record) {
+			var LocId = record['RowId'];
+			if (CommParObj.ApcScg == 'L') {
+				VendorBox.clear();
+				var Params = JSON.stringify(addSessionParams({ APCType: 'M', LocId: LocId }));
+				var url = $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetVendor&ResultSetType=array&Params=' + Params;
+				VendorBox.reload(url);
+			}
+		}
 	});
 	
 	var VendorBox = $HUI.combobox('#Vendor', {
-		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetVendor&ResultSetType=array&Params='+VendorParams,
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetVendor&ResultSetType=array&Params=' + VendorParams,
 		valueField: 'RowId',
 		textField: 'Description'
 	});
 	
 	var AuditBox = $HUI.combobox('#AuditFlag', {
-		data:[{'RowId':'','Description':'å…¨éƒ¨'},{'RowId':'N','Description':'æœªå®¡æ ¸'},{'RowId':'Y','Description':'å·²å®¡æ ¸'}],
+		data: [{ 'RowId': '', 'Description': 'È«²¿' }, { 'RowId': 'N', 'Description': 'Î´ÉóºË' }, { 'RowId': 'Y', 'Description': 'ÒÑÉóºË' }],
 		valueField: 'RowId',
 		textField: 'Description'
 	});
 	
-	/*--Grid--*/
+	/* --Grid--*/
 	var PurDetailCm = [[
 		{
-			title:"RowId",
-			field:'RowId',
-			hidden:true
+			title: 'RowId',
+			field: 'RowId',
+			hidden: true,
+			width: 80
 		}, {
-			title:"ç‰©èµ„ID",
-			dataIndex : 'IncId',
-			width : 100,
-			hidden : true
-		},{
-			title:"ä»£ç ",
-			field:'InciCode',
-			width:100
-		},{
-			title:"åç§°",
-			field:'InciDesc',
-			width:100
+			title: 'Îï×ÊID',
+			field: 'IncId',
+			width: 100,
+			hidden: true
 		}, {
-			title:"è§„æ ¼",
-			field:'Spec',
-			width:100
+			title: '´úÂë',
+			field: 'InciCode',
+			width: 100
 		}, {
-			title:"å…·ä½“è§„æ ¼",
-			field:'SpecDesc',
-			width:100
+			title: 'Ãû³Æ',
+			field: 'InciDesc',
+			width: 100
 		}, {
-			title:"é‡‡è´­æ•°é‡",
-			field:'Qty',
-			width:80,
-			align:'right'
+			title: '¹æ¸ñ',
+			field: 'Spec',
+			width: 100
 		}, {
-			title:"å•ä½",
-			field:'UomDesc',
-			width:80
+			title: '¾ßÌå¹æ¸ñ',
+			field: 'SpecDesc',
+			width: 100,
+			hidden: CodeMainParamObj.UseSpecList == 'Y' ? false : true
 		}, {
-			title:"è¿›ä»·",
-			field:'Rp',
-			width:80,
-			align:'right'
+			title: '²É¹ºÊıÁ¿',
+			field: 'Qty',
+			width: 80,
+			align: 'right'
 		}, {
-			title:"å”®ä»·",
-			field:'Sp',
-			width:80,
-			align:'right'
+			title: 'µ¥Î»',
+			field: 'UomDesc',
+			width: 80
 		}, {
-			title:"è¿›ä»·é‡‘é¢",
-			field:'RpAmt',
-			width:80,
-			align:'right'
+			title: '½ø¼Û',
+			field: 'Rp',
+			width: 80,
+			align: 'right'
 		}, {
-			title:"å”®ä»·é‡‘é¢",
-			field:'SpAmt',
-			width:80,
-			align:'right'
+			title: 'ÊÛ¼Û',
+			field: 'Sp',
+			width: 80,
+			align: 'right'
 		}, {
-			title:"å‚å•†",
-			field:'ManfDesc',
-			width:100
+			title: '½ø¼Û½ğ¶î',
+			field: 'RpAmt',
+			width: 80,
+			align: 'right'
 		}, {
-			title:"ä¾›åº”å•†",
-			field:'VendorDesc',
-			width:100
+			title: 'ÊÛ¼Û½ğ¶î',
+			field: 'SpAmt',
+			width: 80,
+			align: 'right'
 		}, {
-			title:"é…é€å•†",
-			field:'CarrierDesc',
-			width:100
+			title: 'Éú²ú³§¼Ò',
+			field: 'ManfDesc',
+			width: 100
 		}, {
-			title:"è¯·æ±‚ç§‘å®¤",
-			field:'ReqLocDesc',
-			width:100
+			title: '¹©Ó¦ÉÌ',
+			field: 'VendorDesc',
+			width: 100
 		}, {
-			title:"è¯·æ±‚ç§‘å®¤åº“å­˜",
-			field:'StkQty',
-			width:80,
-			align:'right'
+			title: 'ÅäËÍÉÌ',
+			field: 'CarrierDesc',
+			width: 100
 		}, {
-			title:"åº“å­˜ä¸Šé™",
-			field:'MaxQty',
-			width:80,
-			align:'right'
+			title: 'ÇëÇó¿ÆÊÒ',
+			field: 'ReqLocDesc',
+			width: 100
 		}, {
-			title:"åº“å­˜ä¸‹é™",
-			field:'MinQty',
-			width:80,
-			align:'right'
+			title: 'ÇëÇó¿ÆÊÒ¿â´æ',
+			field: 'StkQty',
+			width: 80,
+			align: 'right'
+		}, {
+			title: '¿â´æÉÏÏŞ',
+			field: 'MaxQty',
+			width: 80,
+			align: 'right'
+		}, {
+			title: '¿â´æÏÂÏŞ',
+			field: 'MinQty',
+			width: 80,
+			align: 'right'
 		}
 	]];
 	
@@ -244,86 +293,88 @@
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.INPurPlanItm',
 			QueryName: 'Query',
+			query2JsonStrict: 1,
 			rows: 99999
 		},
-		pagination:false,
+		pagination: false,
 		columns: PurDetailCm,
-		sortName: 'RowId',
-		sortOrder: 'Desc'
-	})
+		showBar: true
+	});
 	
-	var PurMainCm = [[{
-			title:"RowId",
-			field:'RowId',
-			hidden:true
+	var PurMainCm = [[
+		{
+			title: 'RowId',
+			field: 'RowId',
+			hidden: true,
+			width: 60
 		}, {
-			title:"è®¡åˆ’å•å·",
-			field:'PurNo',
-			width:160
+			title: '¼Æ»®µ¥ºÅ',
+			field: 'PurNo',
+			width: 160
 		}, {
-			title:"é‡‡è´­ç§‘å®¤",
-			field:'PurLoc',
-			width:150
+			title: '²É¹º¿ÆÊÒ',
+			field: 'PurLoc',
+			width: 150
 		}, {
-			title : "ç±»ç»„",
-			field : 'StkScg',
-			width : 150
-		},{
-			title:"åˆ¶å•æ—¥æœŸ",
-			field:'CreateDate',
-			width:100
+			title: 'Àà×é',
+			field: 'StkScg',
+			width: 150
 		}, {
-			title:"åˆ¶å•äºº",
-			field:'CreateUser',
-			width:100
+			title: 'ÖÆµ¥ÈÕÆÚ',
+			field: 'CreateDate',
+			width: 100
 		}, {
-			title:"å®Œæˆæ ‡å¿—",
-			field:'CompFlag',
-			width:100,
-			formatter:function(value){
-				var status="";
-				if(value=="Y"){
-					status="å·²å®Œæˆ";
-				}else{
-					status="æœªå®Œæˆ";
+			title: 'ÖÆµ¥ÈË',
+			field: 'CreateUser',
+			width: 100
+		}, {
+			title: 'Íê³É±êÖ¾',
+			field: 'CompFlag',
+			width: 100,
+			formatter: function(value) {
+				var status = '';
+				if (value == 'Y') {
+					status = 'ÒÑÍê³É';
+				} else {
+					status = 'Î´Íê³É';
 				}
 				return status;
 			}
 		}, {
-			title:"å®¡æ ¸çŠ¶æ€",
-			field:'DHCPlanStatusDesc',
-			width:100,
-			formatter:function(value){
-				var status="";
-				if(value==""){
-					status="æœªå®¡æ ¸";
-				}else{
-					status=value;
+			title: 'ÉóºË×´Ì¬',
+			field: 'DHCPlanStatusDesc',
+			width: 100,
+			formatter: function(value) {
+				var status = '';
+				if (value == '') {
+					status = 'Î´ÉóºË';
+				} else {
+					status = value;
 				}
 				return status;
 			}
 		}, {
-			title:"æ˜¯å¦å·²ç”Ÿæˆè®¢å•",
-			field:'PoFlag',
-			width:120,
-			formatter:function(value){
-				var status="";
-				if(value=="Y"){
-					status="æ˜¯";
-				}else{
-					status="å¦";
+			title: 'ÊÇ·ñÒÑÉú³É¶©µ¥',
+			field: 'PoFlag',
+			width: 120,
+			formatter: function(value) {
+				var status = '';
+				if (value == 'Y') {
+					status = 'ÊÇ';
+				} else {
+					status = '·ñ';
 				}
 				return status;
 			}
 		}, {
-			title:"æ‹’ç»åŸå› ",
-			field:'RefuseCase',
-			width:100,
-			necessary:true,
-			editor:{
-				type:'text',
-				options:{
-					required:true
+			title: '¾Ü¾øÔ­Òò',
+			field: 'RefuseCase',
+			width: 100,
+			necessary: true,
+			editor: {
+				type: 'text',
+				options: {
+					required: true
 				}
 			}
 		}
@@ -332,37 +383,42 @@
 	var PurMainGrid = $UI.datagrid('#PurMainGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.INPurPlan',
-			QueryName: 'Query'
-		},
-		onClickCell: function(index, filed ,value){	
-			PurMainGrid.commonClickCell(index,filed,value)
+			QueryName: 'Query',
+			query2JsonStrict: 1
 		},
 		columns: PurMainCm,
-		onSelect:function(index, row){
+		fitColumns: true,
+		showBar: true,
+		onClickRow: function(index, row) {
+			PurMainGrid.commonClickRow(index, row);
+		},
+		onSelect: function(index, row) {
 			PurDetailGrid.load({
 				ClassName: 'web.DHCSTMHUI.INPurPlanItm',
 				QueryName: 'Query',
+				query2JsonStrict: 1,
 				PurId: row.RowId,
 				rows: 99999
 			});
 		},
-		onLoadSuccess: function(data){
-			if(data.rows.length > 0){
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
 				PurMainGrid.selectRow(0);
 			}
 		}
-	})
-	/*--è®¾ç½®åˆå§‹å€¼--*/
-	var Default=function(){
-		///è®¾ç½®åˆå§‹å€¼ è€ƒè™‘ä½¿ç”¨é…ç½®
-		var DefaultValue={
-			StartDate:DefaultStDate(),
-			EndDate:DefaultEdDate(),
-			PurLoc:gLocObj,
-			AuditFlag:'N'
-		}
-		$UI.fillBlock('#MainConditions',DefaultValue)
-	}
-	Default()
-}
+	});
+	/* --ÉèÖÃ³õÊ¼Öµ--*/
+	var Default = function() {
+		// /ÉèÖÃ³õÊ¼Öµ ¿¼ÂÇÊ¹ÓÃÅäÖÃ
+		var DefaultValue = {
+			StartDate: DefaultStDate(),
+			EndDate: DefaultEdDate(),
+			PurLoc: gLocObj,
+			AuditFlag: 'N'
+		};
+		$UI.fillBlock('#MainConditions', DefaultValue);
+	};
+	Default();
+	$('#QueryBT').click();
+};
 $(init);

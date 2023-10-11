@@ -4,21 +4,18 @@
 //创建人  ln
 
 $(function(){
-			
-     InitCombobox();
+    InitCombobox();
     //查询
 	$("#BFind").click(function() {	
 		BFind_click();		
-        });
+    });
       
     //清屏
 	$("#BClear").click(function() {	
 		BClear_click();		
-        });
-	
-    
-})
-
+    });
+    ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEFeeStatistic.raq");
+});
 
 //清屏
 function BClear_click(){
@@ -33,26 +30,29 @@ function BClear_click(){
 
 //查询
 function BFind_click(){
-		var BeginDate = "", EndDate = "", GroupDR = "", ShowFlag = "", reportName = "";
-		var BeginDate=$("#BeginDate").datebox('getValue');
-        var EndDate = $("#EndDate").datebox('getValue');
+	var BeginDate = "", EndDate = "", GroupDR = "", ShowFlag = "", reportName = "";
+	var BeginDate=$("#BeginDate").datebox('getValue');
+	var EndDate = $("#EndDate").datebox('getValue');
+
+	var GroupDR=$("#GroupName").combogrid("getValue");
+	if (GroupDR == "undefined" || GroupDR == undefined) {var GroupDR="";}
 	
-		var GroupDR=$("#GroupName").combogrid("getValue");
-		if (GroupDR == "undefined" || GroupDR == undefined) {var GroupDR="";}
-		
-		var ShowFlag = $("#ShowFlag").combogrid("getValue");
-		if (ShowFlag == "Item") reportName = "DHCPEFeeStatistic.raq";
-		else if (ShowFlag == "User") reportName = "DHCPEFeeStatistic1.raq";
-		else { alert("请选择查询类型！"); return false;}
-		
-		var lnk = "&BeginDate=" + BeginDate
-				+ "&EndDate=" + EndDate
-				+ "&GroupDR=" + GroupDR
-				+ "&ShowFlag=" + ShowFlag
-				;
-		
-		document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=" + reportName + lnk;
+	var ShowFlag = $("#ShowFlag").combogrid("getValue");
+	if (ShowFlag == "Item") reportName = "DHCPEFeeStatistic.raq";
+	else if (ShowFlag == "User") reportName = "DHCPEFeeStatistic1.raq";
+	else { alert("请选择查询类型！"); return false;}
 	
+	var CurLoc = session["LOGON.CTLOCID"];	
+	
+	var lnk = "&BeginDate=" + BeginDate
+			+ "&EndDate=" + EndDate
+			+ "&GroupDR=" + GroupDR
+			+ "&ShowFlag=" + ShowFlag
+			+ "&CurLoc=" + CurLoc
+			;
+	
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=" + reportName + lnk);
+	//document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=" + reportName + lnk;
 }
 function InitCombobox(){
 	
@@ -89,9 +89,8 @@ function InitCombobox(){
 		panelHeight:"auto",
 		editable:false,
 		data:[
-			{id:'Item',text:'按医嘱查询',selected:true},
-			{id:'User',text:'按人员查询'}
+			{id:'Item',text:$g('按医嘱查询'),selected:true},
+			{id:'User',text:$g('按人员查询')}
 		]
 	});
-
 }

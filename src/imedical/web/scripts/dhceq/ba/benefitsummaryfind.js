@@ -37,8 +37,9 @@ jQuery(document).ready(function()
 	}
 )
 
+///modified by ZY0247  2020-12-14
 function AddGridData()
 {
 	var url='dhceq.ba.benefitsummary.csp?';
-	showWindow(url,"医疗设备使用评价报告","","","icon-w-paper","modal","","","small");
+	showWindow(url,"医疗设备使用评价报告","","","icon-w-paper","modal","","","middle");
 }

@@ -56,8 +56,14 @@ function BSave_click(Type)
 		}
 	}
 	if(Type=="0"){
+		
+		if($("#ID").val()!=""){
+			$.messager.alert("提示","新增数据不能选中记录,请先清屏再新增","info");
+			return false;
+		}
 		var ID="";
 	}
+
 	var iActiveFlag="N";
 	var ActiveFlag=$("#ActiveFlag").checkbox('getValue');
 	if(ActiveFlag) iActiveFlag="Y";
@@ -119,6 +125,12 @@ function BClear_click()
 	var valbox = $HUI.validatebox("#Code,#Desc,#ExpStr", {
 		required: false,
 	  });
+	$('#QMTypeQueryTab').datagrid('load', {
+			ClassName:"web.DHCPE.QualityManager",
+			QueryName:"SearchQMType", 
+		
+		});
+
 	
 }
 

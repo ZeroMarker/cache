@@ -13,13 +13,13 @@ var InvNoDivWindow = function(tarobj, input, fn){
 InvNoDivWindow.prototype.init=function(){
 		var fn = this.fn;		
 		var columns=[
-			{index:'newInvNo',name:'newInvNo',header:'新收据',width:100},
-			{index:'patName',name:'patName',header:'姓名',width:100},
-		    {index:'invDate',name:'invDate',header:'日期',width:100},
+			{index:'newInvNo',name:'newInvNo',header:$g("新收据"),width:100},
+			{index:'patName',name:'patName',header:$g("姓名"),width:100},
+		    {index:'invDate',name:'invDate',header:$g("日期"),width:100},
 		    {index:'invId',name:'invId',header:'invId',width:100,hidden:true},
-		    {index:'prescNo',name:'prescNo',header:'处方号',width:100},
+		    {index:'prescNo',name:'prescNo',header:$g("处方号"),width:100},
 		    {index:'newInvId',name:'newInvId',header:'newInvId',width:100,hidden:true},
-		    {index:'invNo',name:'invNo',header:'原收据',width:100}
+		    {index:'invNo',name:'invNo',header:$g("原收据"),width:100}
 		];
 		/*jqgrid*/
 		var jqOptions={

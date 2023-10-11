@@ -194,10 +194,10 @@ function displsyElementById(id){
         obj.style.display="none";
     }
 }
-function RegNoMask(RegNo)
+function RegNoMask(RegNo,CTLocID)
 {
     if (RegNo=="") return RegNo;
-    var RegNo=tkMakeServerCall("web.DHCPE.DHCPECommon","RegNoMask",RegNo);
+    var RegNo=tkMakeServerCall("web.DHCPE.DHCPECommon","RegNoMask",RegNo,CTLocID);
     return RegNo;
 }
 function CardNoMask(CardNo)
@@ -345,18 +345,19 @@ function UploadFile(regno)
 
 document.write("<OBJECT ID='PEPhoto' CLASSID='CLSID:6939ADA2-0045-453B-946F-44F0D6424D8A' CODEBASE='../addins/client/PEPhoto.CAB#version=2,0,0,58'></OBJECT>");
 //var PEPhoto= new ActiveXObject("PhotoProject.Photo");
-var PhotoFtpInfo=tkMakeServerCall("web.DHCPE.DHCPECommon","GetPhotoFTP");
+var LocID = session['LOGON.CTLOCID'];
+var PhotoFtpInfo=tkMakeServerCall("web.DHCPE.DHCPECommon","GetPhotoFTP",LocID);
 //alert(PhotoFtpInfo)
 
 function PEShowPicByPatientID(PAPMINo,PicElementName)
 {   
     var BaseInfo=tkMakeServerCall("web.DHCPE.PreIBIUpdate","GetPhoto",PAPMINo,"PAPMIID");
-    
-    if (BaseInfo!=""){
-        
-        document.getElementById("imgPic").innerHTML='<img SRC=data:image/png;base64,'+BaseInfo+' BORDER="0" width=120 height=140>'
+    if (BaseInfo!=""){   
+        var imgObj = document.getElementById("imgPic")
+        if(imgObj) document.getElementById("imgPic").innerHTML='<img SRC="data:image/png;base64,'+BaseInfo.replace(/(\r\n)|(\n)|(\r)/g, '')+'" BORDER="0" width=120 height=140>'
         
     }else{
+	return
     var picType=".jpg"
     if (PhotoFtpInfo=="") return false;
     var FTPArr=PhotoFtpInfo.split("^");
@@ -376,9 +377,12 @@ function PEShowPicByPatientIDForDoc(PAPMINo,PicElementName)
     //alert("BaseInfo="+BaseInfo)
     if (BaseInfo!=""){
         
-        document.getElementById("sex").innerHTML='<img SRC=data:image/png;base64,'+BaseInfo+' BORDER="0" width=50 height=46>'
+        document.getElementById("sex").innerHTML='<img SRC="data:image/png;base64,'+BaseInfo.replace(/(\r\n)|(\n)|(\r)/g, '')+'" BORDER="0" width=50 height=46>'
         
     }else{
+	 var src="../images/uiimages/patdefault.png"; // //没有保存照片时显示的图片
+    document.getElementById("sex").innerHTML='<img SRC='+src+' BORDER="0" width=50 height=46>'
+	/*
     var picType=".jpg"
     if (PhotoFtpInfo=="") return false;
     var FTPArr=PhotoFtpInfo.split("^");
@@ -387,6 +391,7 @@ function PEShowPicByPatientIDForDoc(PAPMINo,PicElementName)
     var src=FTPSrc+PAPMINo+picType
     //alert(src)
     ShowPicBySrcForDoc(src,NoExistSrc,PicElementName);
+	*/
     }
 }
 function ShowPicBySrcForDoc(src,NoExistSrc,PicElementName)
@@ -405,7 +410,7 @@ function PEShowPicBySrc(src,PicElementName)
    
     var obj=document.getElementById(PicElementName);
     
-    if (obj) obj.innerHTML='<img SRC='+src+' BORDER="0" width=120 height=120 onerror=this.src="'+NoExistSrc+'">'
+    if (obj) obj.innerHTML='<img SRC="'+src+'" BORDER="0" width=120 height=120 onerror=this.src="'+NoExistSrc+'">'
 }
 
 /*
@@ -623,6 +628,11 @@ if (elem=="") return true;
       $.messager.alert("提示","电话号码格式不正确","info");
   return false;
  }
+}
+
+
+function PEURLAddToken(url) {
+    return 'function' === typeof websys_writeMWToken ? websys_writeMWToken(url) : url;
 }
 
 

@@ -1,6 +1,106 @@
 ﻿function InitDiag(obj){
+	var oldInfDate='';
 	// 感染诊断
 	obj.refreshINFDiagnos = function(){
+		var InfPosList=$cm({
+			ClassName:"DHCHAI.BTS.InfPosSrv",
+			MethodName:"GetInfPosTree"
+		},false);
+		
+		$('#cboInfPos').combotree('loadData',InfPosList);
+		$('#cboInfPos').combotree({
+			autoNodeHeight:true,
+			lines:true,
+			editable:true,
+			onChange: function(newValue, oldValue){	
+				if (newValue.indexOf("||")>0){
+					newValue = newValue.split("||")[0];
+				}
+				var InfPos = $m({
+					ClassName:"DHCHAI.BT.InfPos",
+					MethodName:"GetDescByID",		
+					aID: newValue
+				},false);
+				
+				var InfType  = Common_RadioValue("radInfType");
+				var InfDate = $('#txtInfDate').datebox('getValue');
+			    var AdmDate = obj.AdmInfo.rows[0].AdmDate;
+				if ((InfPos.indexOf("手术切口")>0||InfPos.indexOf("腔隙感染")>0)) {
+					$('#txtInfDate').datebox('setValue',Common_GetDate(new Date()));
+					$('#cboInfLoc').lookup('enable'); //感染科室可选
+					if(ReportID!=""){
+						if (oldValue!="") {
+							obj.LayerOpenINFOPS();
+						}
+					}else{
+						if ((DiagnosID)&&(oldValue!="")||(!DiagnosID)) {  //疑似筛查确诊的手术相关感染默认不弹窗，修改时可弹窗
+							obj.LayerOpenINFOPS();
+						}
+					}
+				} else {
+					$('#cboInfLoc').lookup('disable');
+					if ((InfType==1)&&(InfDate)) {
+						var TransInfo = $m({
+							ClassName:"DHCHAI.DPS.PAAdmTransSrv",
+							MethodName:"GetTransInfoByDate",		
+							aEpisodeDr: EpisodeID,
+							aDate:InfDate
+						},false);
+						var InfLoc =TransInfo.split("^")[0];
+						var objLoc = $cm({
+							ClassName:"DHCHAI.BT.Location",
+							MethodName:"GetObjById",		
+							aId: InfLoc
+						},false);
+						if (!objLoc) return;
+						if (!InfLoc)  {
+							$('#txtInfDate').datebox('clear');
+							$.messager.alert("提示", "根据感染日期无法找到感染归属科室，请检查填写是否有误!", 'info');
+							return;
+						} else {
+							$('#txtInfLoc').val(InfLoc);	
+							$('#cboInfLoc').lookup('setText',objLoc.BTDesc);	
+						}
+					} else {
+						$('#txtInfLoc').val('');	
+						$('#cboInfLoc').lookup('setText','');	
+					}
+				}
+				
+			},keyHandler: {
+           		query: function(q,e){
+		            var t = $(this).combotree('tree');  
+		            var nodes = t.tree('getChildren');  
+		            for(var i=0; i<nodes.length; i++){ 
+		                var node = nodes[i];  
+		                if (node.text.indexOf(q) >= 0){ 
+		                    if (node.text==q) {
+			                     $(this).combotree('setValue',node.id);
+		                    }
+		                    $(node.target).show();
+		                } else {  
+		                    $(node.target).hide();  
+		                }  
+		            }  
+		            var opts = $(this).combotree('options');  
+		            if (!opts.hasSetEvents){
+		                opts.hasSetEvents = true;  
+		                var onShowPanel = opts.onShowPanel;  
+		                opts.onShowPanel = function(){  
+		                    var nodes = t.tree('getChildren');  
+		                    for(var i=0; i<nodes.length; i++){  
+		                        $(nodes[i].target).show(); 
+		                    }  
+		                    onShowPanel.call(this);  
+		                };  
+		                $(this).combo('options').onShowPanel = opts.onShowPanel;  
+		            }
+		        }
+		     }
+		 });
+	
+	
+		/*
 		obj.cboInfPos = $HUI.combobox("#cboInfPos", {
 			editable: true,       
 			defaultFilter:4,     
@@ -68,6 +168,7 @@
 				$("#cboInfSub").combobox('reload',url);
 			}
 		});
+		*/
 		//感染转归字典
 		obj.cboInfEffect = Common_ComboDicID("cboInfEffect","InfDiseasePrognosis");
 		//与死亡关系字典
@@ -94,7 +195,23 @@
 				param = $.extend(param,{aAlias:desc}); //将参数q转换为类中的参数
 			},
 			onSelect:function(index,rowData){  
-				$('#txtInfoLoc').val(rowData['ID']);			
+				$('#txtInfLoc').val(rowData['ID']);			
+			}
+		});
+		//医院感染类型
+		$HUI.radio("[name='radInfType']",{  
+			onChecked:function(e,value){
+				var InfType = $(e.target).val();   //当前选中的值
+				if (InfType==1) {
+					if(oldInfDate) {	
+						$('#txtInfDate').datebox('setValue',oldInfDate);
+					}else {
+						$('#txtInfDate').datebox('clear');
+					}		
+				}else {
+					oldInfDate =$('#txtInfDate').datebox('getValue');
+					$('#txtInfDate').datebox('setValue',obj.AdmInfo.rows[0].AdmDate);
+				}
 			}
 		});
 		
@@ -103,42 +220,45 @@
 			onChange: function(newValue, oldValue){				
 				var InfDate = newValue;
 				var InfType  = Common_RadioValue("radInfType");
-				var InfPos = $('#cboInfPos').combobox('getText');
+				var InfPos = $('#cboInfPos').combotree('getText');
 				var AdmDate = obj.AdmInfo.rows[0].AdmDate;		
-				var Day = DateDiff(InfDate,AdmDate);
-				if ((InfPos.indexOf("手术切口")>0||InfPos.indexOf("或腔隙")>0)) {  //手术感染，感染日期在入院前三天
-					$('#cboInfLoc').lookup('enable'); //感染科室可选
-				} else {
-					$('#cboInfLoc').lookup('disable');
-					if(InfType==1) {
-						var TransInfo = $m({
-							ClassName:"DHCHAI.DPS.PAAdmTransSrv",
-							MethodName:"GetTransInfoByDate",		
-							aEpisodeDr: EpisodeID,
-							aDate:InfDate
-						},false);
-						var InfLoc =TransInfo.split("^")[0];
-						var objLoc = $cm({
-							ClassName:"DHCHAI.BT.Location",
-							MethodName:"GetObjById",		
-							aId: InfLoc
-						},false);
-						if (!objLoc) return;
-						if (!InfLoc)  {
-							$('#txtInfDate').datebox('clear');
-							$.messager.alert("提示", "根据感染日期无法找到感染归属科室，请检查填写是否有误!", 'info');
-							return;
-						} else {
-							$('#txtInfLoc').val(InfLoc);	
-							$('#cboInfLoc').lookup('setText',objLoc.BTDesc);	
-						}
-					} else {
-						$('#txtInfLoc').val('');	
-						$('#cboInfLoc').lookup('setText','');	
+				
+				$('#cboInfLoc').lookup('disable');
+				if(InfType==1) {
+					if (obj.InfOperDate) {
+						$('#cboInfLoc').lookup('enable');
+						 return;   //手术相关类型的感染科室根据手术日期判断，不按感染日期变化
 					}
+					var TransInfo = $m({
+						ClassName:"DHCHAI.DPS.PAAdmTransSrv",
+						MethodName:"GetTransInfoByDate",		
+						aEpisodeDr: EpisodeID,
+						aDate:InfDate
+					},false);
+					var InfLoc =TransInfo.split("^")[0];
+					if (InfLoc=="") return;
+					var objLoc = $cm({
+						ClassName:"DHCHAI.BT.Location",
+						MethodName:"GetObjById",		
+						aId: InfLoc
+					},false);
+					if (!objLoc) return;
+					if (!InfLoc)  {
+						$('#txtInfDate').datebox('clear');
+						$.messager.alert("提示", "根据感染日期无法找到感染归属科室，请检查填写是否有误!", 'info');
+						return;
+					} else {
+						$('#txtInfLoc').val(InfLoc);	
+						$('#cboInfLoc').lookup('setText',objLoc.BTDesc);	
+					}
+				} else {
+					$('#txtInfLoc').val('');	
+					$('#cboInfLoc').lookup('setText','');	
 				}
 			}
 		});
+		
+		
 		
 		//数据加载
 		if (ReportID) {
@@ -158,10 +278,14 @@
 				}else {
 					$HUI.radio('#radInfType-1').setValue(true);
 				}
-				$('#cboInfPos').combobox('setValue',RepDiag.InfPosID);
-				$('#cboInfPos').combobox('setText',RepDiag.InfPos);
-				$('#cboInfSub').combobox('setValue',RepDiag.InfSubID);
-				$('#cboInfSub').combobox('setText',RepDiag.InfSub);
+				if (RepDiag.InfSubID) {
+					$('#cboInfPos').combotree('setValue',RepDiag.InfPosID+"||"+RepDiag.InfSubID);
+					$('#cboInfPos').combotree('setText',RepDiag.InfSub);
+				}else {
+					$('#cboInfPos').combotree('setValue',RepDiag.InfPosID);
+					$('#cboInfPos').combotree('setText',RepDiag.InfPos);
+				}
+				
 				$('#txtInfDate').datebox('setValue',RepDiag.InfDate);
 				$('#txtInfXDate').datebox('setValue',RepDiag.InfXDate);
 				$('#cboInfEffect').combobox('setValue',RepDiag.InfEffectID);
@@ -204,10 +328,15 @@
 			}else {
 				$HUI.radio('#radInfType-1').setValue(true);
 			}
-			$('#cboInfPos').combobox('setValue',InfPosID);
-			$('#cboInfPos').combobox('setText',InfPos);
-			$('#cboInfSub').combobox('setValue',InfSubID);
-			$('#cboInfSub').combobox('setText',InfSub);
+		
+			if (InfSubID) {
+				$('#cboInfPos').combotree('setValue',InfPosID+"||"+InfSubID);
+				$('#cboInfPos').combotree('setText',InfSub);
+			}else {
+				$('#cboInfPos').combotree('setValue',InfPosID);
+				$('#cboInfPos').combotree('setText',InfPos);
+			}
+				
 			$('#txtInfDate').datebox('setValue',InfDate);
 			$('#txtInfXDate').datebox('setValue',InfXDate);
 			$('#cboInfEffect').combobox('setValue',InfEffectID);
@@ -229,8 +358,15 @@
 	obj.DIAG_Save = function() {
 		var errorStr = '';
 		var InfType  = Common_RadioValue("radInfType");
-		var InfPosID = $('#cboInfPos').combobox('getValue');
-		var InfSubID = $('#cboInfSub').combobox('getValue');
+		var InfPosSub = $('#cboInfPos').combotree('getValue');
+		var InfPosID ="" ,InfSubID ="";
+		if ((InfPosSub)&&(InfPosSub.indexOf("||")>0) ){
+			InfPosID =InfPosSub.split("||")[0] ;
+			InfSubID =InfPosSub.split("||")[1];
+		}else {
+			InfPosID =InfPosSub;
+		}
+	   
 		var InfDate = $('#txtInfDate').datebox('getValue');
 		var InfXDate = $('#txtInfXDate').datebox('getValue');
 		var InfEffectID = $('#cboInfEffect').combobox('getValue');
@@ -244,46 +380,86 @@
 	    var InfLoc = $('#txtInfLoc').val();	
 		
 		if (!InfPosID) {
-			errorStr = errorStr + "请填写感染诊断!<br>"; 
+			//errorStr = errorStr + "请填写感染诊断!<br>"; 
+			errorStr = errorStr + $g("请填写感染诊断!")+"<br>"; 
 		}
 		if (!InfDate) {
-			errorStr = errorStr + "请填写感染日期!<br>"; 
-		}else {	
-			if (InfType==1){  //医院感染
-			    if (AdmDate==InfDate) {
-					errorStr = errorStr + "感染类型为医院感染，感染日期不能是入院第一天!<br>";
+			//errorStr = errorStr + "请填写感染日期!<br>"; 
+			errorStr = errorStr + $g("请填写感染日期!")+"<br>"; 
+		}else {
+			
+			if (InfType==1) {  //医院感染
+				//手术部位感染不判断日期范围
+				var InfPosDesc=$('#cboInfPos').combobox('getText');
+				
+				if ((InfPosDesc.indexOf("手术切口")>0||InfPosDesc.indexOf("腔隙感染")>0)) {
+					if (!InfLoc)  {
+						//errorStr = errorStr + "感染科室不能为空，请检查填写是否有误!<br>"; 
+						errorStr = errorStr + $g("感染科室不能为空，请检查填写是否有误!")+"<br>";
+					}
+					if ((Common_CompareDate(InfDate,NowDate)>0)) {
+						//errorStr = errorStr + "感染时间不应超出当前日期!<br>"; 
+						errorStr = errorStr + $g("感染时间不应超出当前日期!")+"<br>"; 
+					}
+				} else{
+					if (AdmDate==InfDate) {
+						//errorStr = errorStr + "感染类型为医院感染，感染日期不能是入院第一天!<br>";
+						errorStr = errorStr + $g("感染类型为医院感染，感染日期不能是入院第一天!")+"<br>";
+					}
+					if ((Common_CompareDate(AdmDate,InfDate)>0)||(Common_CompareDate(InfDate,DischDate)>0)||(Common_CompareDate(InfDate,NowDate)>0)) {
+						//errorStr = errorStr + "感染时间需要在住院期间且不应超出当前日期!<br>"; 
+						errorStr = errorStr + $g("感染时间需要在住院期间且不应超出当前日期!")+"<br>"; 
+					}
+					if (!InfLoc)  {
+						errorStr = errorStr + $g("根据感染日期无法找到感染归属科室，请检查填写是否有误!")+"<br>"; 
+					}
 				}
-				if ((Common_CompareDate(AdmDate,InfDate)>0)||(Common_CompareDate(InfDate,DischDate)>0)||(Common_CompareDate(InfDate,NowDate)>0)) {
-					errorStr = errorStr + "感染时间需要在住院期间且不应超出当前日期!<br>"; 
+			} else {
+				var AdmDate = obj.AdmInfo.rows[0].AdmDate;		
+				var Day = DateDiff(InfDate,AdmDate);
+				if ((Day>=3)||(Common_CompareDate(InfDate,NowDate)>0)) {
+					errorStr = errorStr +  $g("社区感染日期只能在入院前3天及之前且不应超出当前日期!")+"<br>"; 
 				}
-				if (!InfLoc)  {
-					errorStr = errorStr + "根据感染日期无法找到感染归属科室，请检查填写是否有误!<br>"; 
-				}
-			}else {
+				/*
 				if ((Common_CompareDate(InfDate,DischDate)>0)||(Common_CompareDate(InfDate,NowDate)>0)) {
 					errorStr = errorStr + "社区感染时间需要在出院之前且不应超出当前日期!<br>"; 
 				}
+				*/
 			}
+			
 		}
 		if (InfXDate) {
 			if (Common_CompareDate(InfDate,InfXDate)>0){
-    			errorStr = errorStr + "感染结束日期不能在感染日期之前!<br>"; 
+    			//errorStr = errorStr + "感染结束日期不能在感染日期之前!<br>"; 
+    			errorStr = errorStr + $g("感染结束日期不能在感染日期之前!")+"<br>"; 
     		}
-			if ((Common_CompareDate(InfXDate,DischDate)>0)||(Common_CompareDate(InfXDate,NowDate)>0)) {
-				errorStr = errorStr + "感染结束日期需在住院期间且不应超出当前日期!<br>"; 
-			}
+    		if (obj.IsHist!=1){	
+				if ((Common_CompareDate(InfXDate,DischDate)>0)||(Common_CompareDate(InfXDate,NowDate)>0)) {
+					//errorStr = errorStr + "感染结束日期需在住院期间且不应超出当前日期!<br>"; 
+					errorStr = errorStr + $g("感染结束日期需在住院期间且不应超出当前日期!")+"<br>"; 
+				}
+    		}
     		if (!InfEffectID){
-				errorStr = errorStr + "感染结束后感染转归不能为空!<br>"; 
+				//errorStr = errorStr + "感染结束后感染转归不能为空!<br>"; 
+				errorStr = errorStr + $g("感染结束后感染转归不能为空!")+"<br>"; 
 		    }
 		} else {
 			if ((InfEffect=='治愈')||(InfEffect=='死亡')||(InfEffect=='好转')){
-				errorStr = errorStr + "感染转归为治愈、死亡、好转感染结束日期不能为空!<br>"; 
+				//errorStr = errorStr + "感染转归为治愈、死亡、好转感染结束日期不能为空!<br>"; 
+				errorStr = errorStr + $g("感染转归为治愈、死亡、好转感染结束日期不能为空!")+"<br>"; 
 			}
 		}
 		if (((InfEffect=='死亡')||(obj.AdmInfo.rows[0].IsDeath=='1'))&&(!DeathRelationID)) {
-			errorStr = errorStr + "感染转归为死亡、死亡病例，请填写感染与死亡关系!<br>"; 
+			//errorStr = errorStr + "感染转归为死亡、死亡病例，请填写感染与死亡关系!<br>"; 
+			errorStr = errorStr + $g("感染转归为死亡、死亡病例，请填写感染与死亡关系!")+"<br>"; 
 		}
+		
+		if ((ServerObj.BasisNeed==1)&&(!InfDiagnosisBasis)) {
+			errorStr = errorStr + $g("请填写诊断依据!")+"<br>"; 
+		}
+		
 		if (errorStr!="") { 
+		    //errorStr=$g(errorStr);  分开翻译
 			$.messager.alert("提示", errorStr, 'info');
 			return; 
 		}
@@ -325,7 +501,7 @@
 	//诊断依据
 	obj.LayerDiagBasis = function() {
 		$HUI.dialog('#LayerDiagBasis',{
-			title:'诊断依据-选择',
+			title:$g('诊断依据-选择'),
 			iconCls:'icon-w-paper',
 			width: 900,    
 			modal: true,
@@ -373,7 +549,7 @@
 				ClassName:'DHCHAI.BTS.InfPosGistSrv',
 				QueryName:'QryPosGistTree',
 				aTypeCode:'',
-				aInfPosID:$('#cboInfPos').combobox('getValue')
+				aInfPosID:(($('#cboInfPos').combotree('getValue').indexOf("||")>0) ? $('#cboInfPos').combotree('getValue').split("||")[0]:$('#cboInfPos').combotree('getValue'))
 			},
 			columns:[[
 				{field:'RowDesc',title:'诊断依据',width:720},

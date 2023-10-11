@@ -12,7 +12,7 @@ $(function () {
 	InitGridScanPresc();
 	InitGridBatPresc();
 	InitGridColPresc();
-	InitSetDefVal();
+	InitSetDefVal("");
 	$('#txtBarCode').on('keypress', function (event) {
 		if (event.keyCode == "13") {
 			var tabTitle = $('#tabsColPre').tabs('getSelected').panel('options').title;
@@ -65,26 +65,35 @@ function InitDict() {
  * 给控件赋初始值
  * @method InitSetDefVal
  */
-function InitSetDefVal() {
+function InitSetDefVal(clearFlag) {
 	//公共配置
-	$.cm({
-		ClassName: "PHA.DEC.Com.Method",
-		MethodName: "GetAppProp",
-		UserId: gUserID,
-		LocId: gLocId,
-		SsaCode: "DEC.COMMON",
-	}, function (jsonComData) {
-		if(parseInt(jsonComData.ScanPageTbNum)>0){
-			pageTbNum=parseInt(jsonComData.ScanPageTbNum);
+	var ComPropData = $.cm({	
+		ClassName: "PHA.DEC.Com.Method", 
+		MethodName: "GetAppProp", 
+		UserId: gUserID, 
+		LocId: gLocId, 
+		SsaCode: "DEC.COMMON", 
+		AppCode:""
+		}, false)
+		$HUI.radio("#radioAll").setValue(true);
+		if(parseInt(ComPropData.ScanPageTbNum)>0){
+			pageTbNum=parseInt(ComPropData.ScanPageTbNum);
 		}
-		$("#cmbDecLoc").combobox("setValue", jsonComData.DefaultDecLoc);
-		$("#cmbPhaLoc").combobox("setValue", jsonComData.DefaultPhaLoc);
-		$("#cmbBarDecLoc").combobox("setValue", jsonComData.DefaultDecLoc);
-		$("#tabsColPre").tabs("select", parseInt(jsonComData.OperateModel));
-		if (parseInt(jsonComData.OperateModel) == 0) {
+		$("#cmbBarDecLoc").combobox("setValue", ComPropData.DefaultDecLoc);	
+		if (clearFlag ==""){
+			$("#tabsColPre").tabs("select", parseInt(ComPropData.OperateModel));
+		}
+		if(ComPropData.PrescView=="Y") { 
+			DEC_PRESC.Layout("mainLayout", {width: ComPropData.PrescWidth});	//显示处方预览panel
+		}
+		var tabId= $('#tabsColPre').tabs('getSelected').attr("id");
+		NowTAB = tabId;		
+		if (NowTAB == "tabPresc") {
 			//$('#colprelayout').layout('collapse', 'north');
 			$("#chkOnlyColPre").parent().css('visibility','hidden');
 			$('#txtBarCode').focus(); 
+			$("#cmbDecLoc").combobox("setValue", "");
+			$("#cmbPhaLoc").combobox("setValue", "");
 			$HUI.datebox("#dateColStart").disable();
 			$HUI.datebox("#dateColEnd").disable();
 			$HUI.timespinner("#timeColStart").disable();
@@ -93,9 +102,17 @@ function InitSetDefVal() {
 			$HUI.combobox("#cmbPhaLoc").disable();
 			$HUI.radio("[name='busType']").disable();
 			$HUI.checkbox("#onlyColPre").disable();
+			
 		} else {
-			$("#chkOnlyColPre").parent().css('visibility','hidden');	
+			if (NowTAB == "tabBatPresc") {
+				$("#chkOnlyColPre").parent().css('visibility','hidden');
+			}
+			else{
+				$("#chkOnlyColPre").parent().css('visibility','visible');
+			}	
 			//$('#colprelayout').layout('expand', 'north');
+			$("#cmbDecLoc").combobox("setValue", ComPropData.DefaultDecLoc);
+			$("#cmbPhaLoc").combobox("setValue", ComPropData.DefaultPhaLoc);
 			$HUI.datebox("#dateColStart").enable();
 			$HUI.datebox("#dateColEnd").enable();
 			$HUI.timespinner("#timeColStart").enable();
@@ -104,27 +121,28 @@ function InitSetDefVal() {
 			$HUI.combobox("#cmbPhaLoc").enable();
 			$HUI.radio("[name='busType']").enable();
 			$HUI.checkbox("#onlyColPre").enable();
+		
+			//界面配置
+			$.cm({
+				ClassName: "PHA.DEC.Com.Method",
+				MethodName: "GetAppProp",
+				UserId: gUserID,
+				LocId: gLocId,
+				SsaCode: "DEC.COLPRESC"
+			}, function (jsonColData) {
+				if (NowTAB == "tabPresc"){
+					return ;
+				}
+				$("#dateColStart").datebox("setValue", jsonColData.ColStartDate);
+				$("#dateColEnd").datebox("setValue", jsonColData.ColEndDate);
+				$('#timeColStart').timespinner('setValue', "00:00:00");
+				$('#timeColEnd').timespinner('setValue', "23:59:59");
+				
+			});
+			if (clearFlag ==""){
+				setTimeout("Query()",1000);
+			}
 		}
-		var tabId= $('#tabsColPre').tabs('getSelected').attr("id");
-		NowTAB=tabId;
-		if(jsonComData.PrescView=="Y") { 
-			DEC_PRESC.Layout("mainLayout", {width: jsonComData.PrescWidth});	//显示处方预览panel
-		}
-	});
-	//界面配置
-	$.cm({
-		ClassName: "PHA.DEC.Com.Method",
-		MethodName: "GetAppProp",
-		UserId: gUserID,
-		LocId: gLocId,
-		SsaCode: "DEC.COLPRESC"
-	}, function (jsonColData) {
-		$("#dateColStart").datebox("setValue", jsonColData.ColStartDate);
-		$("#dateColEnd").datebox("setValue", jsonColData.ColEndDate);
-		$('#timeColStart').timespinner('setValue', "00:00:00");
-		$('#timeColEnd').timespinner('setValue', "23:59:59");
-		$HUI.radio("#radioAll").setValue(true);
-	});
 }
 
 /**
@@ -137,11 +155,16 @@ function ChangeTabs() {
 		return;
 	}
 	NowTAB=tabId;
-	var tabTitle = $('#tabsColPre').tabs('getSelected').panel('options').title;
-	if (tabTitle == "扫码收方") {
+	if (NowTAB == "tabPresc") {
 		//$('#colprelayout').layout('collapse', 'north');
 		$("#chkOnlyColPre").parent().css('visibility','hidden');
 		$('#txtBarCode').focus();
+		$("#dateColStart").datebox("setValue", "");
+		$("#dateColEnd").datebox("setValue", "");
+		$('#timeColStart').timespinner('setValue', "");
+		$('#timeColEnd').timespinner('setValue', "");
+		$("#cmbDecLoc").combobox("setValue", "");
+		$("#cmbPhaLoc").combobox("setValue", "");
 		$HUI.datebox("#dateColStart").disable();
 		$HUI.datebox("#dateColEnd").disable();
 		$HUI.timespinner("#timeColStart").disable();
@@ -151,31 +174,55 @@ function ChangeTabs() {
 		$HUI.radio("[name='busType']").disable();
 		$HUI.checkbox("#onlyColPre").disable();
 	}else{
-		if(tabTitle == "批量收方"){
-			$("#chkOnlyColPre").parent().css('visibility','hidden');	
-			$HUI.datebox("#dateColStart").enable();
-			$HUI.datebox("#dateColEnd").enable();
-			$HUI.timespinner("#timeColStart").enable();
-			$HUI.timespinner("#timeColEnd").enable();
-			$HUI.combobox("#cmbDecLoc").enable();
-			$HUI.combobox("#cmbPhaLoc").enable();
-			$HUI.radio("[name='busType']").enable();
-			$HUI.checkbox("#onlyColPre").enable();
-		}else{
-			$("#chkOnlyColPre").parent().css('visibility','visible');	
-			$HUI.datebox("#dateColStart").enable();
-			$HUI.datebox("#dateColEnd").enable();
-			$HUI.timespinner("#timeColStart").enable();
-			$HUI.timespinner("#timeColEnd").enable();
-			$HUI.combobox("#cmbDecLoc").enable();
-			$HUI.combobox("#cmbPhaLoc").enable();
-			$HUI.radio("[name='busType']").enable();
-			$HUI.checkbox("#onlyColPre").enable();
-		}
+		//公共配置
+		$.cm({
+			ClassName: "PHA.DEC.Com.Method",
+			MethodName: "GetAppProp",
+			UserId: gUserID,
+			LocId: gLocId,
+			SsaCode: "DEC.COMMON",
+		}, function (jsonComData) {
+			$("#cmbDecLoc").combobox("setValue", jsonComData.DefaultDecLoc);
+			$("#cmbPhaLoc").combobox("setValue", jsonComData.DefaultPhaLoc);	
+		});
+			
+		$HUI.datebox("#dateColStart").enable();
+		$HUI.datebox("#dateColEnd").enable();
+		$HUI.timespinner("#timeColStart").enable();
+		$HUI.timespinner("#timeColEnd").enable();
+		$HUI.combobox("#cmbDecLoc").enable();
+		$HUI.combobox("#cmbPhaLoc").enable();
+		$HUI.radio("[name='busType']").enable();
+		$HUI.checkbox("#onlyColPre").enable();
+		//界面配置
+		$.cm({
+			ClassName: "PHA.DEC.Com.Method",
+			MethodName: "GetAppProp",
+			UserId: gUserID,
+			LocId: gLocId,
+			SsaCode: "DEC.COLPRESC"
+		}, function (jsonColData) {
+			$("#dateColStart").datebox("setValue", jsonColData.ColStartDate);
+			$("#dateColEnd").datebox("setValue", jsonColData.ColEndDate);
+			$('#timeColStart').timespinner('setValue', "00:00:00");
+			$('#timeColEnd').timespinner('setValue', "23:59:59");
+			
+		});
+		
 		if ($(".panel.layout-panel.layout-panel-north").css("top") != "0px"){
 			//$('#colprelayout').layout('expand', 'north');
 		}
-		Query();
+		
+		if(NowTAB == "tabBatPresc"){
+			$("#chkOnlyColPre").parent().css('visibility','hidden');
+			$('#gridBatPresc').datagrid('clear');	
+		}else{
+			$("#chkOnlyColPre").parent().css('visibility','visible');
+			$('#gridColPresc').datagrid('clear');	
+		}
+		
+	
+		setTimeout("Query()",500);
 	}
 	
 }
@@ -370,7 +417,7 @@ function InitGridBatPresc() {
 			QueryName: "BatColPre",
 		},
 		onLoadSuccess: function () {
-			//$('#gridBatPresc').datagrid('uncheckAll');
+			$('#gridBatPresc').datagrid('uncheckAll');
 		}
 	};
 	PHA.Grid("gridBatPresc", dataGridOption);
@@ -478,12 +525,14 @@ function ScanExecute(barCode) {
 	var barCode = barCode.trim();
 	//var prescNo = rowData.TPrescNo;
 	var barDecLocId = $("#cmbBarDecLoc").combobox('getValue');
+	var LogonInfo = gGroupId + "^" + barDecLocId+ "^" + gUserID
 			
 	var jsonData = $cm({
 			ClassName: "PHA.DEC.ColPre.Query",
 			MethodName: "GetBarCodeInfo",
 			BarCode: barCode,
 			DecLocID: barDecLocId,
+			LogonInfo: LogonInfo ,
 			dataType: 'json'
 		}, false);
 	var retCode = jsonData.retCode;
@@ -494,7 +543,6 @@ function ScanExecute(barCode) {
 		});
 		return;
 	} else {
-		ColPrescView(barCode);
 		var decLocId = $('#cmbBarDecLoc').combobox("getValue") || "";
 		$.m({
 			ClassName: "PHA.DEC.ColPre.OperTab",
@@ -513,11 +561,12 @@ function ScanExecute(barCode) {
 				PHA.Popover({
 					msg: "收方成功！",
 					type: 'success'
-				})
+				});
+				ColPrescView(barCode);
 				$('#gridScanPresc').datagrid('insertRow', {
 					index: 0,
 					row: jsonData
-				});f
+				});
 				Number = Number + 1; //增加行id顺序号
 				$('#gridScanPresc').datagrid('selectRow', 0);
 				var totalRows = $('#gridScanPresc').datagrid('getRows').length;
@@ -555,12 +604,16 @@ function ColPrescView(prescno){
  * @method Query
  */
 function Query() {
+	if (NowTAB == "tabPresc") {
+		return;
+	}
 	var params = GetParams();
 	if (params == "") {
 		return;
 	}
 	var tabTitle = $('#tabsColPre').tabs('getSelected').panel('options').title;
 	if (tabTitle == "批量收方") {
+		//$('#gridBatPresc').datagrid('uncheckAll');
 		$('#gridBatPresc').datagrid('query', {
 			ParamStr: params
 		});
@@ -573,7 +626,6 @@ function Query() {
 			});
 			return;
 		}
-		params = params + "^" + decLocId;
 		$('#gridColPresc').datagrid('query', {
 			ParamStr: params
 		});
@@ -588,7 +640,7 @@ function Query() {
  * @method Clear
  */
 function Clear() {
-	InitSetDefVal();
+	InitSetDefVal("Y");
 	$('#gridScanPresc').datagrid('clear');
 	$('#gridBatPresc').datagrid('clear');
 	$('#gridColPresc').datagrid('clear');
@@ -608,8 +660,11 @@ function GetParams() {
 	var locId = $('#cmbPhaLoc').combobox("getValue") || "";
 	var type = $("input[name='busType']:checked").val() || ""; 
 	var onlyCPFlag = ($('#chkOnlyColPre').checkbox('getValue')==true?'Y':'N');
+	var decLocId = $('#cmbDecLoc').combobox("getValue") || "";
 	
-	var params = stDate + "^" + enDate + "^" + stTime + "^" + enTime + "^" + locId + "^" + type+"^"+onlyCPFlag;
+	var params = stDate + "^" + enDate + "^" + stTime + "^" + enTime + "^" + locId ;
+	var params = params + "^" + type +"^"+ onlyCPFlag +"^"+ decLocId + "^" + gGroupId + "^" + gUserID;
+	
 	return params;
 }
 

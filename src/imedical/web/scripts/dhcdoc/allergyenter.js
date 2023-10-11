@@ -89,26 +89,28 @@ $(document).ready(function() {
 	}
 	
 	var OrdColumns=[[
-      	{field: 'Category',title: '分类',align: 'left'},
-		{field: 'Allergen',title: '过敏原',align: 'left'},
-		{field: 'ALGItem',title: '过敏项目',align: 'left'},
-		{field: 'Comments',title: '注释',align: 'left'},
-		{field: 'Status',title: '状态',align: 'left',formatter:FormStatus},
-		{field: 'ALGCheckConflict',title: '冲突检测是否开启',align: 'left'},
-		{field: 'OnsetDateText',title: '发作日期',align: 'left'},
-		{field: 'LastUpdateUser',title: '最后更新用户',align: 'left'},
-		{field: 'LastUpdateDate',title: '最后更新日期',align: 'left'},
-		{field: 'tag',title: '过敏类型',align: 'left'},	///,hidden:true
-		{field: 'operation',title: '操作',align: 'left'	,formatter:opFormatter}
+      	{field: 'Category',title: $g('分类'),align: 'center',width:150},
+		{field: 'Allergen',title: $g('过敏原'),align: 'center',width:250},
+		{field: 'ALGItem',title: $g('过敏项目'),align: 'center',width:250},
+		{field: 'Comments',title: $g('注释'),align: 'center',width:200},
+		{field: 'Status',title: $g('状态'),align: 'center',width:200,formatter:FormStatus},
+		//{field: 'ALGCheckConflict',title: $g('冲突检测是否开启'),align: 'center',width:200},
+		{field: 'OnsetDateText',title: $g('发作日期'),align: 'center',width:200},
+		{field: 'LastUpdateUser',title: $g('最后更新用户'),align: 'center',width:200},
+		{field: 'LastUpdateDate',title: $g('最后更新日期'),align: 'center',width:200},
+		{field: 'tag',title: $g('过敏类型'),align: 'left'},	///,hidden:true
+		{field: 'operation',title: $g('操作'),align: 'center',width:200,formatter:opFormatter}
 		]]; 
 	var Property={
 		fit:true,
 	    pagination:true,
 	    singleSelect:true,
-	    fitColumns:true,
-	    title:'过敏记录', //hxy 2018-10-09 st
+	    fitColumns:false,
+	    title:(IsOnlyShowPAList=="N"?'过敏记录':""), //hxy 2018-10-09 st
+		border:(IsOnlyShowPAList=="N"?true:false), 
 	    iconCls:'icon-paper',
 	    headerCls:'panel-header-gray', //配置项使表格变成灰色
+		bodyCls:'panel-body-gray',
         toolbar: [], //配置项toolbar为空时,会在标题与列头产生间距" //hxy ed
         url: 'dhcapp.broker.csp?ClassName=web.DHCDocAllergyEnter&MethodName=QueryAllergyInfoNew&PatientID='+PatientID,
         columns:OrdColumns,
@@ -141,8 +143,11 @@ $(document).ready(function() {
 						}else{
 							parent.invokeChartFun('门急诊病历记录', 'updateEMRInstanceData', "allergic", EMRReturnValue);
 						}
-					}else if (typeof(window.opener.updateEMRInstanceData) === 'function'){
+					}else if ((typeof(window.opener) !== 'undefined')&&(typeof(window.opener.updateEMRInstanceData) === 'function')){
 						window.opener.updateEMRInstanceData("allergic", EMRReturnValue);
+					}
+					if (typeof(parent.closeDialog) === 'function'){
+						parent.closeDialog("dialogLinkAllergic");
 					}
 					window.close();
 				}
@@ -157,7 +162,7 @@ $(document).ready(function() {
     //$('#clearMRCATTagDescription').on('click',UpdateALLItem);
     //医生站设置->常规设置->过敏冲突检测开启
     if (ALGCheckConflictOpen=="1"){
-	    $("#ALGCheckConflict").checkbox('check');
+	    //$("#ALGCheckConflict").checkbox('check');
 	}
 });	
 
@@ -171,8 +176,8 @@ function IntALGItemLookUp(){
         idField:'id',
         textField:'text',
         columns:[[  
-           {field:'text',title:'名称',width:320,sortable:true},
-            {field:'id',title:'项目ID',width:70,sortable:true}
+           {field:'text',title:$g('名称'),width:320,sortable:true},
+            {field:'id',title:$g('项目ID'),width:70,sortable:true}
         ]],
         pagination:true,
         width:150,
@@ -256,7 +261,7 @@ function UpdateOnClick()
 	var ALGComments=$('#ALGComments').val();
 	
 	//过敏冲突检测开启  
-	var ALGCheckConflict =  $("#ALGCheckConflict").checkbox('getValue')?"on":"";
+	var ALGCheckConflict =  ""	//$("#ALGCheckConflict").checkbox('getValue')?"on":"";
     /*$("input[type=checkbox][name=ALGCheckConflict]:checked").each(function(){
 		if($(this).is(':checked')){
 			ALGCheckConflict =this.value;
@@ -264,9 +269,11 @@ function UpdateOnClick()
 	})*/
 	if(ALGDescCT==null){ALGDescCT=""}
 	if(ALGItem==null){ALGItem=""}
-	if ((ALGDescCT=="")&&(ALGItem==""))
+	//过敏原补充
+	var ALGDescAdd=$('#ALGDescAdd').val();
+	if ((ALGDescCT=="")&&(ALGItem=="")&&(ALGDescAdd==""))
 	{
-		$.messager.alert("提示","过敏原和过敏项目必须至少填一项!");
+		$.messager.alert("提示","过敏原和过敏项目、过敏原补充至少填一项!");
 		return;
 	}
 	var id =""
@@ -274,14 +281,16 @@ function UpdateOnClick()
 	if(rowsData.length=="1"){
 		id =rowsData[0].RowID;
 	}
-
-	var list=EpisodeID+"!!"+ALGOnsetDate+"!!"+MRCATTagDescription+"!!"+ALGMRCCat+"!!"+ALGDescCT+"!!"+ALGItem+"!!"+ALGComments+"!!"+ALGCheckConflict+"!!"+MRCATTagDescriptionCode+"!!"+LgUserID+"!!"+PatientID+"!!"+""; //2016-10-26
+	
+	var list=EpisodeID+"!!"+ALGOnsetDate+"!!"+MRCATTagDescription+"!!"+ALGMRCCat+"!!"+ALGDescCT+"!!"+ALGItem+"!!"+ALGComments+"!!"+ALGCheckConflict+"!!"+MRCATTagDescriptionCode+"!!"+LgUserID+"!!"+PatientID+"!!"+"" +"!!"+ALGDescAdd; //2016-10-26
     runClassMethod( "web.DHCDocAllergyEnter", "SaveAllergyInfo", { 'list':list,'id':id}, function(data){
 		if(data!=-1){
 			clearLeftPanel();
 			$.messager.popover({msg: '保存成功！',type:'success'});
 			InitCurDate();
 			RefreshTabsTitleAndStyle();
+			if(CDSSObj) CDSSObj.SynAllergy(EpisodeID);
+			selectRowIndex="";
 		}
 		$('#allergytb').datagrid('load', {   
     			PatientID:PatientID
@@ -323,10 +332,10 @@ function compareSelTimeAndCurTime(SelDate)
 //格式换状态字段
 function FormStatus	(value){
 	if(value=="A"){
-		return "Active"
+		return $g("有效")
 	}
 	if(value=="I"){
-		return "Inactive"
+		return $g("无效")
 	}
 	if(value==""){
 		return ""
@@ -351,10 +360,10 @@ function UpdateALLItem(){
 	}); 	  
 }
 
-function $g(value){
+/*function $g(value){
 	if(value==null) return ""
 	return value;
-}
+}*/
 
 ///QQA 2017-03-22
 ///清空左侧面板
@@ -365,15 +374,16 @@ function clearLeftPanel(){
 	$("#ALGDescCT").combobox('clear');
 	//$("#ALGItem").combobox('clear');
 	$("#ALGItemRowid").val("");
+	$("#ALGDescAdd").val("");
 	$("#ALGItem").lookup("setText","");
 	//$("#ALGComments").empty(); //  并不能清空
 	$("#ALGComments").val("");   //QQA 2017-03-02
 	//$("#ALGCheckConflict").checkbox('uncheck'); //hxy 2017-02-06 en
-	if(ALGCheckConflictOpen=="1"){
+	/* 	if(ALGCheckConflictOpen=="1"){
 		$("#ALGCheckConflict").checkbox('check');	
 	}else{
 		$("#ALGCheckConflict").checkbox('uncheck');	
-	}
+	} */
 	UpdateALLItem();	
 }
 
@@ -398,18 +408,18 @@ function loadLeftPanel(allRowId){
 			*/				
 			$("#ALGItemRowid").val(data.ALGItemRowId);
 			$("#ALGItem").lookup("setText",data.ALGItem);		
-			$HUI.combobox('#ALGMRCCat',{
+			/*$HUI.combobox('#ALGMRCCat',{
 				url:LINK_CSP+"?ClassName=web.DHCDocAllergyEnter&MethodName=listAlgMrcCat&tag="+data.TagCode 
-			}); 
+			});*/ 
 			$("#ALGMRCCat").combobox('select',data.CategoryRowId);        			//过敏分类
-			
+			$("#ALGDescAdd").val(data.ALGDescAdd);
 								//过敏项目
 			$("#ALGComments").val(data.Comments);										//过敏情况补充
-			if(data.ALGCheckConflict=="on"){
+			/* 			if(data.ALGCheckConflict=="on"){
 				$("#ALGCheckConflict").checkbox('check');	
 			}else{
 				$("#ALGCheckConflict").checkbox('uncheck');	
-			}
+			} */
 			setTimeout(function(){
 				$("#ALGDescCT").combobox('setValue',data.AllergenRowId);					//过敏源
 			},500)
@@ -418,10 +428,26 @@ function loadLeftPanel(allRowId){
 
 ///删除按钮
 function opFormatter(value, rowData){
-	//return "<a href='#' style='background: red;border: 1px solid;color: white;box-sizing: border-box;' class='hisui-linkbutton' iconCls='icon-remove'  onclick='delAllergy(this);' data-Id='"+rowData.RowID+"'  ><img style='margin-left:3px;position:relative;top: 4px;' src='../scripts/dhcadvEvt/jQuery/themes/icons/cancel.png' border=0/>删除</a>" 
-	return "<a href='#' class='hisui-linkbutton' iconCls='icon-cancel'  onclick='delAllergy(this);' data-Id='"+rowData.RowID+"'  ><img src='../scripts/dhcnewpro/images/cancel.png' border=0/></a>"  //hxy 2018-10-23 change
+	if (rowData.Status=="I") return;
+	//return "<a href='#' class='hisui-linkbutton' iconCls='icon-cancel'  onclick='delAllergy(this);' data-Id='"+rowData.RowID+"'  ><img src='../scripts/dhcnewpro/images/cancel.png' border=0/></a>"  //hxy 2018-10-23 change
+	//return "<a href='#' class='hisui-linkbutton' iconCls='icon-cancel'  onclick='cancelAllergy(this);' data-Id='"+rowData.RowID+"' ><img src='../scripts/dhcnewpro/images/cancel.png' border=0/></a>"  //hxy 2018-10-23 change
+	return "<a href='#'  onclick='cancelAllergy(this);' data-Id='"+rowData.RowID+"' ><div class='icon icon-cancel' style='height:16px;width:auto;text-aglin:center'></div></a>"  //hxy 2018-10-23 change
 }	
-
+function cancelAllergy(thisObj){
+	var id = $(thisObj).attr("data-id");
+	 runClassMethod( "web.DHCDocAllergyEnter", "CancelPatAllergy", {'id':id,'UserID':session['LOGON.USERID']}, function(data){
+		if(data==0){
+			clearLeftPanel();
+			if(CDSSObj) CDSSObj.SynAllergy(EpisodeID);
+			$.messager.popover({msg: '取消成功!',type:'success',timeout: 1000});
+		}
+		$('#allergytb').datagrid('load', {   
+		    RegNo:RegNo 
+		}); 
+	},"text");
+	
+	return false;
+}
 function delAllergy(thisObj){
 	//删除操作
 	//重新加载表格
@@ -431,10 +457,11 @@ function delAllergy(thisObj){
 			clearLeftPanel();
 			$.messager.popover({msg: '删除成功!',type:'success',timeout: 1000});
 			RefreshTabsTitleAndStyle();
+			if(CDSSObj) CDSSObj.SynAllergy(EpisodeID);
 		}
 		$('#allergytb').datagrid('load', {   
-			    RegNo:RegNo 
-			}); 
+		    RegNo:RegNo 
+		}); 
 	},"text");
 	
 	return false;
@@ -501,4 +528,11 @@ function RefreshTabsTitleAndStyle(){
 			parent.refreshBar();
 		}
 	}
+}
+function ClearOnClick(){
+	clearLeftPanel();
+	InitCurDate();
+	$('#allergytb').datagrid('load', {   
+		PatientID:PatientID
+	}); 
 }

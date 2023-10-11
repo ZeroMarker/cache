@@ -1,23 +1,29 @@
 ﻿/**
  * FileName: dhcbill.ipbill.deposit.pay.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-07-03
  * Description: 住院押金充值
  */
 
 $.extend($.fn.validatebox.defaults.rules, {
+	checkNegativeAmt: {    //校验负数
+	    validator: function(value) {
+		    return value > 0;
+		},
+		message: $g("金额须大于0")
+	},
 	checkMaxAmt: {    //校验最大值
 	    validator: function(value) {
-		    return value < 1000000000;
+		    return value < 10000000;
 		},
-		message: "金额输入过大"
+		message: $g("金额输入过大")
 	}
 });
 
-function initPayDepPanel() {
+$(function () {
 	initPayDepMenu();
 	initPayDepList();
-}
+});
 
 function initPayDepMenu() {
 	$HUI.linkbutton("#btn-pay", {
@@ -34,13 +40,7 @@ function initPayDepMenu() {
 	
 	$HUI.linkbutton("#btn-voidInvNo", {
 		onClick: function () {
-			altVoidInvClick();
-		}
-	});
-	
-	$HUI.linkbutton("#btn-abort", {
-		onClick: function () {
-			abortClick();
+			skipNoClick();
 		}
 	});
 	
@@ -49,7 +49,7 @@ function initPayDepMenu() {
 	//押金类型
 	$HUI.combobox("#payDepositType", {
 		panelHeight: 150,
-		url: $URL + '?ClassName=web.DHCIPBillDeposit&QueryName=FindGrpDepType&ResultSetType=array',
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryGrpDepType&ResultSetType=array',
 		method: 'GET',
 		editable: false,
 		valueField: 'id',
@@ -63,42 +63,6 @@ function initPayDepMenu() {
 		}
 	});
 	
-	//银行
-	$HUI.combobox("#bank", {
-		panelHeight: 150,
-		method: 'GET',
-		valueField: 'id',
-		textField: 'text',
-		blurValidValue: true,
-		defaultFilter: 4
-	});
-	
-	//支付方式
-	$HUI.combobox("#payMode", {
-		panelHeight: 150,
-		url: $URL + "?ClassName=web.UDHCOPGSConfig&QueryName=ReadGSINSPMList&ResultSetType=array",
-		method: 'GET',
-		editable: false,
-		valueField: "CTPMRowID",
-		textField: "CTPMDesc",
-		onBeforeLoad: function(param) {
-			param.GPRowID = PUBLIC_CONSTANT.SESSION.GROUPID;
-			param.HospID = PUBLIC_CONSTANT.SESSION.HOSPID;
-			param.TypeFlag = "DEP";
-		},
-		onLoadSuccess: function(data) {
-			$.each(data, function (index, item) {
-				if (item.selected) {
-					selectPayMode(item);
-					return false;
-				}
-			});
-		},
-		onSelect: function(rec) {
-			selectPayMode(rec);
-		}
-	});
-	
 	$(".combo-text").keydown(function(e) {
 		var key = websys_getKey(e);
 		if (key == 13) {
@@ -107,112 +71,78 @@ function initPayDepMenu() {
 	});
 }
 
-function selectPayMode(rec) {
-	setValueById("requiredFlag", rec.RPFlag);
-	if (rec.RPFlag == "Y") {
-		enablePayMenu();
-	}else {
-		disablePayMenu();
-	}
-}
-
-function disablePayMenu() {
-	disableById("checkNo");
-	setValueById("checkNo", "");
-
-	disableById("bank");
-	setValueById("bank", "");
-	
-	disableById("bankBranch");
-	setValueById("bankBranch", "");
-	
-	disableById("payAccNo");
-	setValueById("payAccNo", "");
-	
-	disableById("company");
-	setValueById("company", "");
-}
-
-function enablePayMenu() {
-	enableById("checkNo");
-
-	var url = $URL + "?ClassName=web.UDHCOPOtherLB&MethodName=ReadBankListBroker&ResultSetType=array&JSFunName=GetBankToHUIJson";
-	$("#bank").combobox("enable").combobox("reload", url);
-	enableById("bankBranch");
-	
-	enableById("payAccNo");
-	enableById("company");
-}
-
 function initPayDepList() {
 	$HUI.datagrid("#payDepList", {
 		fit: true,
 		border: false,
-		striped: true,
 		singleSelect: true,
 		pagination: true,
 		pageSize: 20,
-		data: [],
-		columns: [[{title: '收款时间', field: 'Tprtdate', width: 155,
-				   	formatter: function(value, row, index) {
-					   	return value + " " + row.Tprttime;
-					}
-				   },
-				   {title: '金额', field: 'Tpayamt', width: 100, align: 'right'},
-				   {title: 'TPaymodeDR', field: 'TPaymodeDR', hidden: true},
-				   {title: '支付方式', field: 'Tpaymode', width: 100},
-				   {title: 'Tprtstatus', field: 'Tprtstatus', hidden: true},
-				   {title: '收据状态', field: 'TStatus', width: 100,
-				   	styler: function(value, row, index) {
-						if (("^1^4^").indexOf("^" + row.Tprtstatus + "^") == -1) {
-							return 'color: #FF0000;';
+		className: 'web.DHCIPBillDeposit',
+		queryName: 'FindDeposit',
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["TPrtDate", "Tbbackdate", "TDepositTypeDR", "TDepositTypeCode", "TAutoFlag", "TReRcptNo", "TLostRegistDR", "TLostRegUser", "TLostRegDate", "TLostRegTime", "TLostRegReason"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if ($.inArray(cm[i].field, ["TDepRowId", "TPaymodeDR", "TPrtStatus", "TUserDR", "TFootId", "TInitPrtRowId", "TStrikeInvPrtId"]) != -1) {
+					cm[i].hidden = true;
+					continue;
+				}
+				if (cm[i].field == "TPrtTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.TPrtDate + " " + value;
+					};
+				}
+				if (cm[i].field == "TStatus") {
+					cm[i].styler = function(value, row, index) {
+						if ([1, 4].indexOf(+row.TPrtStatus) == -1) {
+							return "color: #FF0000;";
 						}
-					}
-				   },
-				   {title: 'TArrcpId', field: 'TArrcpId', hidden: true},
-				   {title: '收据号', field: 'Trcptno', width: 120},
-				   {title: '原收据号', field: 'TInitRcptNo', width: 120},
-				   {title: 'TAddUserDR', field: 'TAddUserDR', hidden: true},
-				   {title: '收款员', field: 'Tadduser', width: 100},
-				   {title: '账单号', field: 'Tarpbl', width: 80},
-				   {title: 'Tadm', field: 'Tadm', hidden: true},
-				   {title: 'Tprtrowid', field: 'Tprtrowid', hidden: true},
-				   {title: 'TjkDR', field: 'TjkDR', hidden: true},
-				   {title: '是否结账', field: 'Tjkflag', width: 80,
-				   	formatter: function (value, row, index) {
+					};
+				}
+				if (cm[i].field == "TFootFlag") {
+					cm[i].formatter = function (value, row, index) {
 					   	if (value) {
-						   	return (value == 'Y') ? '<font color="#21ba45">是</font>' : '<font color="#f16e57">否</font>';
+						   	var color = (value == "Y") ? "#21ba45" : "#f16e57";
+							return "<font color=\"" + color + "\">" + ((value == "Y") ? $g("是") : $g("否")) + "</font>";
 						}
-					}
-				   },
-				   {title: 'TDepositTypeDR', field: 'TDepositTypeDR', hidden: true},
-				   {title: '押金类型', field: 'TDepositType', width: 100},
-				   {title: 'TInitPrtRowId', field: 'TInitPrtRowId', hidden: true},
-				   {title: '结算状态', field: 'Tpaystatus', width: 80},
-				   {title: '支票号', field: 'Tcardno', width: 100},
-				   {title: '单位', field: 'Tcompany', width: 100},
-				   {title: '银行', field: 'Tbank', width: 100},
-				   {title: '是否到账', field: 'Tbbackflag', width: 80,
-				    formatter: function (value, row, index) {
+					};
+				}
+				if (cm[i].field == "TPayedFlag") {
+					cm[i].formatter = function (value, row, index) {
 					   	if (value) {
-							return (value == 'Y') ? '<font color="#21ba45">是</font>' : '<font color="#f16e57">否</font>';
+							return (value == "Y") ? $g("已结") : $g("未结");
 						}
-					}
-				   },
-				   {title: '到账时间', field: 'Tbbackdate', width: 150,
-				    formatter: function (value, row, index) {
+					};
+				}
+				if (cm[i].field == "Tbbackflag") {
+					cm[i].formatter = function (value, row, index) {
 					   	if (value) {
-							return value + " " + row.Tbbacktime;
+						   	var color = (value == "Y") ? "#21ba45" : "#f16e57";
+							return "<font color=\"" + color + "\">" + ((value == "Y") ? $g("是") : $g("否")) + "</font>";
 						}
+					};
+				}
+				if (cm[i].field == "Tbbacktime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.Tbbackdate + " " + value;
+					};
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if ($.inArray(cm[i].field, ["TPrtTime", "Tbbacktime"]) != -1) {
+						cm[i].width = 155;
 					}
-				   },
-				   {title: '退款原因', field: 'Trefreason', width: 100}
-			]]
+				}
+			}
+		}
 	});
 }
 
 function loadPayDepList() {
-	var episodeId = getValueById("episodeId");
+	var episodeId = getValueById("EpisodeId");
 	if (episodeId) {
 		var queryParams = {
 			ClassName: "web.DHCIPBillDeposit",
@@ -242,7 +172,7 @@ function initPayDepDoc() {
 
 function getPayDepConfig() {
 	enableById("btn-pay");
-	var episodeId = getValueById("episodeId");
+	var episodeId = getValueById("EpisodeId");
 	if (episodeId) {
 		var rtn = $.m({ClassName: "web.UDHCJFBaseCommon", MethodName: "GetOutAdmInOutDateInfo", EpisodeID: episodeId}, false);
 		var disChStatus = rtn.split("^")[3];
@@ -250,18 +180,12 @@ function getPayDepConfig() {
 			if (IPBILL_CONF.PARAM.DischgPayDep != "Y") {
 				$.messager.popover({msg: "该患者已做最终结算，不能交押金", type: "info"});
 				disableById("btn-pay");
-			} else {
-				$.cm({
-					ClassName: "web.DHCBillCommon",
-					MethodName: "GetClsPropValById",
-					clsName: "User.PAAdm",
-					id: episodeId
-				}, function(jsonObj) {
-					if (jsonObj.PAADMBillFlag == "Y") {
-						$.messager.popover({msg: "该患者已做财务结算，不能交押金", type: "info"});
-						disableById("btn-pay");
-					}
-				});
+				return;
+			}
+			var admBillFlag = getPropValById("PA_Adm", episodeId, "PAADM_BillFlag");
+			if (admBillFlag == "Y") {
+				$.messager.popover({msg: "该患者已做财务结算，不能交押金", type: "info"});
+				disableById("btn-pay");
 			}
 		}
 	}
@@ -279,12 +203,15 @@ function reloadPayDepPanel() {
 			}
 		}
 	});
-	refreshBar(getValueById("papmi"), getValueById("episodeId"));
+	refreshBar(getValueById("PatientId"), getValueById("EpisodeId"));
 	getPayRcptNo();
 	loadPayDepList();
 }
 
 function getPayRcptNo() {
+	if (CV.ReceiptType == 1) {
+		return;
+	}
 	$.m({
 		ClassName: "web.UDHCJFBaseCommon",
 		MethodName: "GetRcptNo",
@@ -292,166 +219,200 @@ function getPayRcptNo() {
 		hospId: PUBLIC_CONSTANT.SESSION.HOSPID
 	}, function (rtn) {
 		var myAry = rtn.split("^");
-		GV.RcptId = myAry[0];
-		GV.EndNo = myAry[1];
-		GV.CurrNo = myAry[2];
-		GV.Title = myAry[3];
+		var rcptId = myAry[0];
+		var endNo = myAry[1];
+		var currNo = myAry[2];
+		var title = myAry[3];
 		var leftNum = myAry[4];
 		var tipFlag = myAry[6];
-		if (!GV.CurrNo) {
+		if (!currNo) {
 			$.messager.popover({msg: "没有可用的票据，请先领取", type: "info"});
 			disableById("btn-pay");
 			return;
 		}
-		if (GV.RcptId) {
-			var payRcptNo = GV.Title + "[" + GV.CurrNo + "]";
+		if (rcptId) {
+			var payRcptNo = title + "[" + currNo + "]";
 			setValueById("payRcptNo", payRcptNo);
 			var color = "green";
 			if ($("#payRcptNo").hasClass("newClsInvalid")) {
 				$("#payRcptNo").removeClass("newClsInvalid");
 			}
-			if (tipFlag == "1") {
+			if (tipFlag == 1) {
 				color = "red";
 				$("#payRcptNo").addClass("newClsInvalid");
 			}
-			var content = "该号段可用票据剩余 <font style='font-weight: bold;color: " + color + ";'>" + leftNum + "</font> 张";
-			$("#btn-payRcptTip").popover({cache: false, trigger: 'hover', content: content});
+			var content = $g("该号段可用票据剩余") + " <font style='font-weight: bold;color: " + color + ";'>" + leftNum + "</font> " + $g("张");
+			$("#btn-payRcptTip").show().popover({cache: false, trigger: 'hover', content: content});
 		}
 	});
 }
 
 function payClick() {
-	if ($("#btn-pay").hasClass("l-btn-disabled")) {
-		return;
-	}
-	if (!checkData()) {
-		return;
-	}
-	var episodeId = getValueById("episodeId");
-	if (!episodeId) {
-		$.messager.popover({msg: "请选择患者", type: "info"});
-		return;
-	}
-	var rtn = $.m({ClassName: "web.DHCIPBillDeposit", MethodName: "GetBillFlag", adm: episodeId}, false);
-	if (rtn == "Y") {
-		$.messager.popover({msg: "该患者已做财务结算，不能交押金", type: "info"});
-		return;
-	}
-	var payDepositType = getValueById("payDepositType");
-	if (!payDepositType) {
-		$.messager.popover({msg: "请选择押金类型", type: "info"});
-		return;
-	}
-	var payAmt = getValueById("payAmt");
-	if (!payAmt) {
-		$.messager.popover({msg: "请输入金额", type: "info"});
-		focusById("payAmt");
-		return;
-	}
-	if (!(+payAmt > 0)) {
-		$.messager.popover({msg: "金额输入错误", type: "info"});
-		focusById("payAmt");
-		return;
-	}
-	var payMode = getValueById("payMode");
-	if (!payMode) {
-		$.messager.popover({msg: "请选择支付方式", type: "info"});
-		return;
-	}
-	if (!GV.CurrNo) {
-		$.messager.popover({msg: "没有可用的票据，请先领取", type: "info"});
-		return;
-	}
-	if ((getValueById("requiredFlag") == "Y") && !$.trim(getValueById("checkNo"))) {
-		$.messager.popover({msg: "请输入支票号", type: "info"});
-		return;
-	}
-	$.messager.confirm("确认", "收款额：<font style='color:red;'>" + payAmt + "</font> 元，是否确认交款?", function (r) {
-		if (r) {
-			payDeposit();
-		}
-	});
-}
-
-function payDeposit() {
-	var episodeId = getValueById("episodeId");
-	var payDepositType = getValueById("payDepositType");
-	var payAmt = getValueById("payAmt");
-	var payMode = getValueById("payMode");
-	var company = getValueById("company");
-	var bank = getValueById("bank");
-	var checkNo = getValueById("checkNo");
-	var payAccNo = getValueById("payAccNo");
-	var bankBranch = getValueById("bankBranch");
-	var remarks = "";
-	var password = "";
-	var transferFlag = getValueById("transferFlag");   //转账标识
-	
-	//第三方支付
-	var expStr = PUBLIC_CONSTANT.SESSION.CTLOCID + "^" + PUBLIC_CONSTANT.SESSION.GROUPID + "^" + PUBLIC_CONSTANT.SESSION.HOSPID + "^" + PUBLIC_CONSTANT.SESSION.USERID + "^^^^^C";
-	var payServRtn = PayService("DEP", payMode, payAmt, expStr);
-	if (payServRtn.ResultCode != "00") {
-		$.messager.alert("提示", "支付失败：" + payServRtn.ResultMsg, "error");
-		return;
-	}else {
-		GV.ETPRowID = payServRtn.ETPRowID;
-	}
-	//
-	var depStr = payDepositType + "^" + payAmt + "^" + payMode + "^" + company + "^" + bank;
-	depStr += "^" + checkNo + "^" + payAccNo + "^" + episodeId + "^" + GV.CurrNo + "^" + PUBLIC_CONSTANT.SESSION.CTLOCID;
-	depStr += "^" + PUBLIC_CONSTANT.SESSION.USERID + "^" + GV.EndNo + "^" + GV.Title + "^" + bankBranch + "^" + remarks;
-	depStr += "^" + password + "^" + GV.RcptId + "^" + transferFlag + "^" + PUBLIC_CONSTANT.SESSION.HOSPID;
-	$.m({
-		ClassName: "web.DHCIPBillDeposit",
-		MethodName: "InsertDeposit",
-		depStr: depStr
-	}, function(rtn) {
-		var myAry = rtn.split("^");
-		switch(myAry[0]) {
-		case "0":
-			var depositId = myAry[1];
-			var arrcpId = myAry[2];
-			//用于第三方支付接口保存信息
-			if (GV.ETPRowID != "") {
-				var linkRtn = $.m({
-					ClassName: "DHCBILL.Common.DHCBILLCommon",
-					MethodName: "RelationOrderToHIS",
-					ETPRowID: GV.ETPRowID,
-					HisPrtStr: depositId
-				}, false);
+	var _validate = function() {
+		return new Promise(function (resolve, reject) {
+			var bool = true;
+			$("#payDepList").parents(".layout-panel-center").prev(".layout-panel-north").find(".validatebox-text").each(function(index, item) {
+				if (!$(this).validatebox("isValid")) {
+					bool = false;
+					return false;
+				}
+			});
+			if (!bool) {
+				return reject();
 			}
-			//
-			$.messager.alert("提示", "交款成功", "success");
-			reloadPayDepPanel();
-			depositPrint(depositId + "#" + "");
-			break;
-		case "-1":
-			$.messager.popover({msg: "患者已退院，不能交押金", type: "info"});
-			break;
-		case "-2":
-			$.messager.popover({msg: "没有可用收据号，请核实", type: "info"});
-			break;
-		case "-3":
-			$.messager.popover({msg: "收据号与系统实际收据号不符，请核实", type: "info"});
-			break;
-		case "-4":
-			$.messager.popover({msg: "该收据号已经使用过，请刷新界面", type: "info"});
-			break;
-		default:
-			$.messager.popover({msg: "交押金失败：" + rtn, type: "error"});
-		}
-	});
-}
-
-function checkData() {
-	var bool = true;
-	$(".validatebox-text").each(function(index, item) {
-		if (!$(this).validatebox("isValid")) {
-			bool = false;
-			return false;
-		}
-	});
-	return bool;
+			if (!episodeId) {
+				$.messager.popover({msg: "请选择患者", type: "info"});
+				return reject();
+			}
+			var rtn = $.m({ClassName: "web.DHCIPBillDeposit", MethodName: "GetBillFlag", adm: episodeId}, false);
+			if (rtn == "Y") {
+				$.messager.popover({msg: "该患者已做财务结算，不能交押金", type: "info"});
+				return reject();
+			}
+			if (!payDepositType) {
+				$.messager.popover({msg: "请选择押金类型", type: "info"});
+				return reject();
+			}
+			if (!payAmt) {
+				$.messager.popover({msg: "请输入金额", type: "info"});
+				focusById("payAmt");
+				return reject();
+			}
+			if (!(payAmt > 0)) {
+				$.messager.popover({msg: "金额输入错误", type: "info"});
+				focusById("payAmt");
+				return reject();
+			}
+			if ((CV.ReceiptType != 1) && (receiptNo == "")) {
+				$.messager.popover({msg: "没有可用的票据，请先领取", type: "info"});
+				return reject();
+			}
+			resolve();
+		});
+	};
+	
+	var _cfr = function() {
+		return new Promise(function (resolve, reject) {
+			var payAmt = getValueById("payAmt");
+			$.messager.confirm("确认", ($g("收款") + "：<font style='color:red;'>" + payAmt + "</font> " + $g("元，是否确认交款？")), function (r) {
+				return r ? resolve() : reject();
+			});
+		});
+	};
+	
+	/**
+	* 生成支付方式列表
+	* 如果有第三方支付也在此方法中完成
+	*/
+	var _buildPayMList = function() {
+		return new Promise(function (resolve, reject) {
+			var argumentObj = {
+				title: '收银台-住院押金交款',
+				cardNo: cardNo,
+		        cardTypeId: cardTypeId,
+				patientId: patientId,
+				accMLeft: accMLeft,
+				episodeIdStr: episodeId,
+				typeFlag: "DEP",
+				payAmt: payAmt,
+				bizType: "DEP"
+			};
+			return BILL_INF.showCheckout(argumentObj).then(function (payMList) {
+			    paymStr = payMList;
+		        resolve();
+		    }, function () {
+		        reject();
+		    });
+		});
+	};
+	
+	var _pay = function() {
+		return new Promise(function (resolve, reject) {
+			var depAry = [];
+			depAry.push(payDepositType);
+			depAry.push(payAmt);
+			depAry.push(episodeId);
+			depAry.push(remark);
+			depAry.push(transferFlag);
+			var depStr = depAry.join("^");
+			
+			var rtn = $.m({
+				ClassName: "web.DHCIPBillDeposit",
+				MethodName: "InsertDeposit",
+				depStr: depStr,
+				paymStr: paymStr,
+				sessionStr: getSessionStr()
+			}, false);
+			var myAry = rtn.split("^");
+			if (myAry[0] == 0) {
+				depositId = myAry[1];
+				$.messager.alert("提示", "交款成功", "success", function() {
+					return resolve();
+				});
+				return;
+			}
+			$.messager.alert("提示", ($g("交款失败：") + (myAry[1] || myAry[0])), "error");
+			return reject();
+		});
+	};
+	
+	var _success = function() {
+		depositPrint(depositId + "#" + "");
+		reloadPayDepPanel();
+	};
+	
+	/**
+	* 撤销第三方交易
+	*/
+	var _cancelPaySrv = function() {
+		var expStr = PUBLIC_CONSTANT.SESSION.CTLOCID + "^" + PUBLIC_CONSTANT.SESSION.GROUPID + "^" + PUBLIC_CONSTANT.SESSION.HOSPID + "^" + PUBLIC_CONSTANT.SESSION.USERID;
+		$.each(paymStr.split(PUBLIC_CONSTANT.SEPARATOR.CH2), function(index, item) {
+			if (!item) {
+				return true;
+			}
+			var myPayMAry = item.split("^");
+			var myETPRowID = myPayMAry[11];
+			if (!(myETPRowID > 0)) {
+				return true;
+			}
+			var rtnValue = CancelPayService(myETPRowID, expStr);
+			if (rtnValue.ResultCode != 0) {
+				$.messager.popover({msg: "第三方支付撤销失败，请联系工程师处理", type: "error"});
+			}
+		});
+	};
+	
+	if ($("#btn-pay").linkbutton("options").disabled) {
+		return;
+	}
+	$("#btn-pay").linkbutton("disable");
+	
+	var cardNo = getValueById("CardNo");
+	var cardTypeId = getValueById("CardTypeRowId");
+	var receiptNo = getValueById("payRcptNo");
+	var patientId = getValueById("PatientId");
+	var episodeId = getValueById("EpisodeId");
+	var payAmt = getValueById("payAmt");
+	var payDepositType = getValueById("payDepositType");
+	var remark = getValueById("payRemark");
+	var transferFlag = getValueById("transferFlag");   //转账标识
+	var accMLeft = getDepLeftAmt();
+	var paymStr = "";        //支付方式串
+	var depositId = "";      //交押金记录的Id
+	
+	var promise = Promise.resolve();
+	promise
+		.then(_validate)
+		.then(_cfr)
+		.then(_buildPayMList)
+		.then(_pay)
+		.then(function() {
+			_success();
+			$("#btn-pay").linkbutton("enable");
+		}, function () {
+			_cancelPaySrv();
+			$("#btn-pay").linkbutton("enable");
+		});
 }
 
 function focusNextEle(id) {
@@ -493,10 +454,10 @@ function focusNextEle(id) {
 	if (nextId) {
 		focusById(nextId);
 		return false;
-	}else {
-		setTimeout("focusById('btn-pay')", 20);
-		return false;
 	}
+	setTimeout(function() {
+		focusById("btn-pay");
+	}, 20);
 	return true;
 }
 
@@ -504,131 +465,70 @@ function focusNextEle(id) {
 * 补打押金条
 */
 function reprintClick() {
-	var row = $("#payDepList").datagrid("getSelected");
-	if (!row || !row.Tprtrowid) {
-		$.messager.popover({msg: "请选择要补打的押金记录", type: "info"});
-		return;
-	}
+	var _validate = function() {
+		return new Promise(function (resolve, reject) {
+			var row = $("#payDepList").datagrid("getSelected");
+			if (!row || !row.TDepRowId) {
+				$.messager.popover({msg: "请选择要补打的押金记录", type: "info"});
+				return reject();
+			}
+			if (row.TPrtStatus != 1) {
+				var msg = "该笔押金已退款，" + ((row.TPrtStatus == 3) ? "请到【退押金】界面补打" : "不能补打");
+				$.messager.popover({msg: msg, type: "info"});
+				return reject();
+			}
+			var recepitNo = row.TRecepitNo;
+			if (!recepitNo) {
+				$.messager.popover({msg: "票据号为空，不能补打", type: "info"});
+				return reject();
+			}
+			depositId = row.TDepRowId;
+			resolve();
+	    });
+	};
 	
-	if (row.Tprtstatus != "1") {
-		var msg = "该笔押金已退款，";
-		if (row.Tprtstatus == "3") {
-			msg += "请到【退押金】界面补打";
-		}else {
-			msg += "不能补打";
-		}
-		$.messager.popover({msg: msg, type: "info"});
-		return;
-	}
+	var _cfr = function() {
+		return new Promise(function (resolve, reject) {
+			$.messager.confirm("确认", "是否确认补打？", function (r) {
+				return r ? resolve() : reject();
+			});
+		});
+	};
 	
-	var recepitNo = row.Trcptno;
-	if (!recepitNo) {
-		$.messager.popover({msg: "票据号为空，不能补打", type: "info"});
+	if ($("#btn-reprint").linkbutton("options").disabled) {
 		return;
 	}
-	var depositId = row.Tprtrowid;
+	$("#btn-reprint").linkbutton("disable");
+	
+	var depositId = "";
 	var reprtFlag = "Y";
-	$.messager.confirm("确认", "是否确认补打?", function (r) {
-		if (r) {
+	
+	var promise = Promise.resolve();
+	promise
+		.then(_validate)
+		.then(_cfr)
+		.then(function () {
 			depositPrint(depositId + "#" + reprtFlag);
-		}
-	});
+			$("#btn-reprint").linkbutton("enable");
+		}, function () {
+			$("#btn-reprint").linkbutton("enable");
+		});
 }
 
 /**
-* 作废押金
-*/
-function abortClick() {
-	var row = $("#payDepList").datagrid("getSelected");
-	if (!row || !row.Tprtrowid) {
-		$.messager.popover({msg: "请选择要作废的押金", type: "info"});
-		return;
-	}
-	var billId = row.Tarpbl;
-	if (billId) {
-		$.messager.popover({msg: "该笔押金已经结算，不能作废", type: "info"});
-		return;
-	}
-	var handinFlag = row.Tjkflag;
-	if (handinFlag == "Y") {
-		$.messager.popover({msg: "该笔押金已经结账，不能作废", type: "info"});
-		return;
-	}
-	if (row.Tprtstatus != "1") {
-		$.messager.popover({msg: "不能作废非正常状态的押金", type: "info"});
-		return;
-	}
-	if (row.TAddUserDR != PUBLIC_CONSTANT.SESSION.USERID) {
-		$.messager.popover({msg: "不能作废非本人收的押金", type: "info"});
-		return;
-	}
-	var depositId = row.Tprtrowid;
-	var expStr = PUBLIC_CONSTANT.SESSION.GROUPID + "^" + PUBLIC_CONSTANT.SESSION.CTLOCID + "^" + PUBLIC_CONSTANT.SESSION.HOSPID;
-	$.messager.confirm("确认", "是否确认作废押金?", function (r) {
-		if (r) {
-			$.m({
-				ClassName: "web.DHCIPBillDeposit",
-				MethodName: "RefundDeposit",
-				initDepId: depositId,
-				userId: PUBLIC_CONSTANT.SESSION.USERID,
-				refReasonId: "",
-				refModeId: "",
-				expstr: expStr
-			}, function(rtn) {
-				var myAry = rtn.split("^");
-				if (myAry[0] == "0") {
-					if (IPBILL_CONF.PARAM.AbortDepRenewPrint == "Y") {
-						$.m({
-							ClassName: "web.DHCIPBillDeposit",
-							MethodName: "GetDepositDetail",
-							prtRowId: depositId
-						}, function(rtn) {
-							var myAry = rtn.split("^");
-							var depositTypeAry = myAry[0].split("@");
-							setValueById("payDepositType", depositTypeAry[0]);
-							var payAmt = myAry[1];
-							setValueById("payAmt", payAmt);
-							var paymAry = myAry[2].split("@");
-							setValueById("payMode", paymAry[0]);
-							var bankAry = myAry[3].split("@");
-							setValueById("bank", bankAry[0]);
-							var bankBranch = myAry[4];
-							setValueById("bankBranch", bankBranch);
-							var company = myAry[5];
-							setValueById("company", company);
-							var payAccNo = myAry[6];						
-							setValueById("payAccNo", payAccNo);
-							var checkNo = myAry[7];
-							setValueById("checkNo", checkNo);
-							
-							var password = myAry[8];
-							var remarks = myAry[9];
-							//setValueById("remarks", remarks);
-							payDeposit();   //自动交押金
-						});
-					}else {
-						$.messager.popover({msg: "作废成功", type: "success"});
-						reloadPayDepPanel();
-					}
-				}else {
-					$.messager.popover({msg: "作废失败：" + myAry[1], type: "error"});
-				}
-			});
-		}
-	});
+ * 押金跳号
+ */
+function skipNoClick() {
+	var argumentObj = {
+		receiptType: "ID"
+	};
+	BILL_INF.showSkipInv(argumentObj).then(getPayRcptNo);
 }
 
-function altVoidInvClick() {
-	var payDepositType = $("#payDepositType").combobox("getText");
-	var url = "websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCBillSkipInvoice&receiptType=" + payDepositType;
-	websys_showModal({
-		width: 520,
-		height: 227,
-		iconCls: 'icon-skip-no',
-		title: '住院押金跳号',
-		url: url,
-		onClose: function() {
-			getPayRcptNo();
-		}
-	});
+/**
+* 取押金余额
+*/
+function getDepLeftAmt() {
+	var episodeId = getValueById("EpisodeId");
+	return (episodeId > 0) ? $.m({ClassName: "BILL.IP.COM.Method", MethodName: "GetDepositLeftAmt", episodeId: episodeId}, false) : "";
 }

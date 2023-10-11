@@ -6,6 +6,12 @@ function BodyLoadHandler()
 	InitUserInfo();
 	InitPage();
 	initButtonWidth()
+	initButtonColor();//cjc 2023-01-18 设置极简积极按钮颜色
+	initPanelHeaderStyle();//cjc 2023-01-17 初始化极简面板样式
+	
+	//add by cjc 20230208管理类组输入框宽度
+	document.getElementById("EquipType").classList.add("textbox");
+	document.getElementById("EquipType").style.width='';
 }
 
 function InitPage()

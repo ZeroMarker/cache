@@ -1,22 +1,28 @@
 ﻿
 var init = function() {
 	$UI.linkbutton('#SearchBT', {
-		onClick: function(){
+		onClick: function() {
 			Query();
 		}
 	});
-	function Query(){
+	function Query() {
 		var ParamsObj = $UI.loopBlock('Conditions');
-		if(isEmpty(ParamsObj['FrLoc'])){
+		var StartDate = ParamsObj.StartDate;
+		var EndDate = ParamsObj.EndDate;
+		if (isEmpty(ParamsObj.FrLoc)) {
 			$UI.msg('alert', '科室不可为空!');
 			return;
 		}
-		if(isEmpty(ParamsObj['StartDate'])){
-			$UI.msg('alert', '起始日期不可为空!');
+		if (isEmpty(StartDate)) {
+			$UI.msg('alert', '开始日期不能为空!');
 			return;
 		}
-		if(isEmpty(ParamsObj['EndDate'])){
-			$UI.msg('alert', '截止日期不可为空!');
+		if (isEmpty(EndDate)) {
+			$UI.msg('alert', '截止日期不能为空!');
+			return;
+		}
+		if (compareDate(StartDate, EndDate)) {
+			$UI.msg('alert', '截止日期不能小于开始日期!');
 			return;
 		}
 		var Params = JSON.stringify(ParamsObj);
@@ -25,11 +31,12 @@ var init = function() {
 		MasterGrid.load({
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 			QueryName: 'DHCINIsTrfM',
+			query2JsonStrict: 1,
 			Params: Params
 		});
 	}
 	$UI.linkbutton('#ClearBT', {
-		onClick: function(){
+		onClick: function() {
 			$UI.clearBlock('Conditions');
 			$UI.clear(DetailGrid);
 			$UI.clear(MasterGrid);
@@ -37,118 +44,222 @@ var init = function() {
 		}
 	});
 	$UI.linkbutton('#PrintBT', {
-		onClick: function(){
-			var SelectedRow = MasterGrid.getSelected();
-			if(isEmpty(SelectedRow)){
+		onClick: function() {
+			var SelectedRow = MasterGrid.getSelections();
+			if (isEmpty(SelectedRow)) {
 				$UI.msg('alert', '请选择需要打印的单据!');
 				return;
 			}
-			var RowId = SelectedRow['RowId'];
-			PrintInIsTrf(RowId);
+			var InitStr = '';
+			for (var i = 0; i < SelectedRow.length; i++) {
+				var Init = SelectedRow[i].RowId;
+				if (InitStr == '') {
+					InitStr = Init;
+				} else {
+					InitStr = InitStr + '^' + Init;
+				}
+			}
+			if (InitStr == '') {
+				$UI.msg('alert', '请选择需要打印的信息!');
+				return false;
+			}
+			PrintInIsTrf(InitStr);
 		}
 	});
 	$UI.linkbutton('#PrintHVColBT', {
-		onClick: function(){
-			var SelectedRow = MasterGrid.getSelected();
-			if(isEmpty(SelectedRow)){
+		onClick: function() {
+			var SelectedRow = MasterGrid.getSelections();
+			if (isEmpty(SelectedRow)) {
 				$UI.msg('alert', '请选择需要打印的单据!');
 				return;
 			}
-			var RowId = SelectedRow['RowId'];
-			PrintInIsTrfHVCol(RowId);
+			var InitStr = '';
+			for (var i = 0; i < SelectedRow.length; i++) {
+				var Init = SelectedRow[i].RowId;
+				if (InitStr == '') {
+					InitStr = Init;
+				} else {
+					InitStr = InitStr + '^' + Init;
+				}
+			}
+			if (InitStr == '') {
+				$UI.msg('alert', '请选择需要打印的信息!');
+				return false;
+			}
+			PrintInIsTrfHVCol(InitStr);
 		}
 	});
 	$UI.linkbutton('#ConfirmBT', {
-		onClick: function(){
-			var SelectedRow = MasterGrid.getSelected();
-			if(isEmpty(SelectedRow)){
+		onClick: function() {
+			var SelectedRow = MasterGrid.getSelections();
+			if (isEmpty(SelectedRow)) {
 				$UI.msg('alert', '请选择需要确认的单据!');
 				return;
 			}
-			var RowId = SelectedRow['RowId'];
-			var ConfirmFlag = SelectedRow['ConfirmFlag'];
-			if (ConfirmFlag == 'Y') {
-				$UI.msg('alert', '转移单已确认!');
-				return;
+			var RowIdStr = '';
+			for (var i = 0; i < SelectedRow.length; i++) {
+				var RowId = SelectedRow[i].RowId;
+				var ConfirmFlag = SelectedRow[i].ConfirmFlag;
+				if (ConfirmFlag == 'Y') {
+					$UI.msg('alert', '转移单已确认!');
+					return;
+				}
+				if (RowIdStr == '') {
+					RowIdStr = RowId;
+				} else {
+					RowIdStr = RowIdStr + '^' + RowId;
+				}
 			}
-			Confirm(RowId);
+			if (RowIdStr == '') {
+				$UI.msg('alert', '没有需要确认的单据!');
+				return false;
+			}
+			Confirm(RowIdStr);
 		}
 	});
-	
-	function Confirm(RowId){
-		var Params = JSON.stringify({RowId:RowId});
+
+	function Confirm(RowIdStr) {
+		var Params = JSON.stringify({ RowIdStr: RowIdStr });
 		$.cm({
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 			MethodName: 'jsConfirm',
 			Params: Params
-		},function(jsonData){
-			if(jsonData.success == 0){
+		}, function(jsonData) {
+			if (jsonData.success == 0) {
 				$UI.msg('success', jsonData.msg);
-				MasterGrid.reload();
-			}else{
+				Query();
+			} else {
 				$UI.msg('alert', jsonData.msg);
 			}
-		},false);
+		}, false);
 	}
-
-	var FrLoc = $HUI.combobox('#FrLoc',{
+	$HUI.combobox('#FrLoc', {
 		url: $URL
 			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
-			+ JSON.stringify(addSessionParams({Type:'Login'})),
+			+ JSON.stringify(addSessionParams({ Type: 'Login', Element: 'FrLoc' })),
 		valueField: 'RowId',
 		textField: 'Description',
-		onSelect: function(record){
+		onSelect: function(record) {
 			var LocId = record['RowId'];
-			$('#CreateUser').combobox('clear');  
+			$('#CreateUser').combobox('clear');
 			$('#CreateUser').combobox('reload', $URL
 				+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetDeptUser&ResultSetType=Array&Params='
-				+ JSON.stringify({LocDr:LocId})
+				+ JSON.stringify({ LocDr: LocId })
 			);
+			var ToLoc = $('#ToLoc').combobox('getValue');
+			$HUI.combotree('#ScgId').setFilterByLoc(LocId, ToLoc);
 		}
 	});
+	$UI.linkbutton('#AutitNoBT', {
+		onClick: function() {
+			var Sels = MasterGrid.getSelections();
+			if (isEmpty(Sels)) {
+				$UI.msg('alert', '请选择需要取消审核的单据!');
+				return;
+			}
+			$.messager.confirm('拒绝', '确定取消审核选取的单据?', function(r) {
+				if (r) {
+					TransInAuditNo();
+				}
+			});
+		}
+	});
+	function TransInAuditNo() {
+		var Sels = MasterGrid.getSelections();
+		var InitStr = '';
+		for (var i = 0, Len = Sels.length; i < Len; i++) {
+			var InitId = Sels[i]['RowId'];
+			var InitNo = Sels[i]['InitNo'];	// 单号
+			var InitStatus = Sels[i]['StatusCode'];	// 单据状态
+			if (InitStatus != '审核通过') {
+				$UI.msg('alert', InitNo + '出库单不是审核通过状态,不允许取消审核!');
+				return false;
+			}
+			if (InitStr == '') {
+				InitStr = InitId;
+			} else {
+				InitStr = InitStr + '^' + InitId;
+			}
+		}
+		showMask();
+		$.cm({
+			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
+			MethodName: 'jsTransInAuditNoStr',
+			InitStr: InitStr,
+			UserId: gUserId
+		}, function(jsonData) {
+			var Ret = jsonData.msg;
+			var RetArr = Ret.split(',');
+			var InitRetStr = RetArr[0];
+			var TotalCnt = RetArr[1];
+			var SucessCnt = RetArr[2];
+			if (jsonData.success == 0) {
+				$UI.msg('success', '共' + TotalCnt + '张单据,成功取消审核' + SucessCnt + '张单据!');
+				Query();
+			} else {
+				var FailCnt = TotalCnt - SucessCnt;
+				$UI.msg('error', '共' + TotalCnt + '张单据,失败' + FailCnt + '张单据!');
+			}
+			hideMask();
+		});
+	}
 	$('#FrLoc').combobox('setValue', session['LOGON.CTLOCID']);
 	
-	var ToLoc = $HUI.combobox('#ToLoc',{
+	$HUI.combobox('#ToLoc', {
 		url: $URL
 			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
-			+ JSON.stringify(addSessionParams({Type:'All'})),
+			+ JSON.stringify(addSessionParams({ Type: 'All', Element: 'ToLoc' })),
 		valueField: 'RowId',
-		textField: 'Description'
+		textField: 'Description',
+		onSelect: function(record) {
+			var ToLoc = record['RowId'];
+			var FrLoc = $('#FrLoc').combobox('getValue');
+			$HUI.combotree('#ScgId').setFilterByLoc(FrLoc, ToLoc);
+		}
 	});
 	
-	var CreateUser = $HUI.combobox('#CreateUser',{
+	$HUI.combobox('#CreateUser', {
 		url: $URL
 			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetDeptUser&ResultSetType=Array&Params='
-			+ JSON.stringify({LocDr:gLocId}),
+			+ JSON.stringify({ LocDr: gLocId }),
 		valueField: 'RowId',
 		textField: 'Description'
 	});
 	
-	var HandlerParams = function(){
+	var HandlerParams = function() {
 		var ScgId = $('#ScgId').combotree('getValue');
 		var FrLoc = $('#FrLoc').combobox('getValue');
 		var ToLoc = $('#ToLoc').combobox('getValue');
-		var Obj = {StkGrpRowId:ScgId, StkGrpType:'M', Locdr:FrLoc, ToLoc:ToLoc,BDPHospital:gHospId};
+		var Obj = { StkGrpRowId: ScgId, StkGrpType: 'M', Locdr: FrLoc, ToLoc: ToLoc, BDPHospital: gHospId };
 		return Obj;
-	}
+	};
 	$('#InciDesc').lookup(InciLookUpOp(HandlerParams, '#InciDesc', '#Inci'));
 	
-	var VirtualFlag = $HUI.checkbox('#VirtualFlag',{
-		onCheckChange: function(e, value){
-			if(value){
+	$HUI.checkbox('#VirtualFlag', {
+		onCheckChange: function(e, value) {
+			if (value) {
 				var FrLoc = $('#FrLoc').combobox('getValue');
-				var Info = tkMakeServerCall('web.DHCSTMHUI.Common.UtilCommon','GetMainLoc',FrLoc);
+				var Info = tkMakeServerCall('web.DHCSTMHUI.Common.UtilCommon', 'GetMainLoc', FrLoc);
 				var InfoArr = Info.split('^');
 				var VituralLoc = InfoArr[0], VituralLocDesc = InfoArr[1];
 				AddComboData($('#FrLoc'), VituralLoc, VituralLocDesc);
 				$('#FrLoc').combobox('setValue', VituralLoc);
-			}else{
+			} else {
 				$('#FrLoc').combobox('setValue', gLocId);
 			}
 		}
 	});
-
-	var MasterCm = [[{
+	var FVendorBoxParams = JSON.stringify(addSessionParams({ APCType: 'M' }));
+	$HUI.combobox('#FVendorBox', {
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetVendor&ResultSetType=array&Params=' + FVendorBoxParams,
+		valueField: 'RowId',
+		textField: 'Description'
+	});
+	var MasterCm = [[
+		{
+			field: 'ck',
+			checkbox: true
+		}, {
 			title: 'RowId',
 			field: 'RowId',
 			width: 80,
@@ -177,6 +288,10 @@ var init = function() {
 			field: 'InitDateTime',
 			width: 150
 		}, {
+			title: '审核时间',
+			field: 'AckDateTime',
+			width: 150
+		}, {
 			title: '出库类型',
 			field: 'OperateTypeDesc',
 			width: 80
@@ -187,6 +302,10 @@ var init = function() {
 		}, {
 			title: '制单人',
 			field: 'UserName',
+			width: 80
+		}, {
+			title: '接收人',
+			field: 'InAckUser',
 			width: 80
 		}, {
 			title: '进价金额',
@@ -225,29 +344,33 @@ var init = function() {
 	var MasterGrid = $UI.datagrid('#MasterGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
-			QueryName: 'DHCINIsTrfM'
+			QueryName: 'DHCINIsTrfM',
+			query2JsonStrict: 1
 		},
 		columns: MasterCm,
 		showBar: true,
-		onSelect: function(index, row){
+		singleSelect: false,
+		onSelect: function(index, row) {
 			var Init = row['RowId'];
-			var ParamsObj = {Init:Init, InitType:'T'};
+			var ParamsObj = { Init: Init, InitType: 'T' };
 			$UI.clear(DetailGrid);
 			DetailGrid.load({
 				ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
 				QueryName: 'DHCINIsTrfD',
+				query2JsonStrict: 1,
 				Params: JSON.stringify(ParamsObj),
 				rows: 99999
 			});
 		},
-		onLoadSuccess: function(data){
-			if(data.rows.length > 0){
+		onLoadSuccess: function(data) {
+			if ((data.rows.length > 0) && (CommParObj.IfSelFirstRow == 'Y')) {
 				MasterGrid.selectRow(0);
 			}
 		}
 	});
 
-	var DetailCm = [[{
+	var DetailCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
 			width: 80,
@@ -273,8 +396,12 @@ var init = function() {
 			field: 'BatExp',
 			width: 200
 		}, {
-			title: '厂商',
+			title: '生产厂家',
 			field: 'ManfDesc',
+			width: 160
+		}, {
+			title: '供应商',
+			field: 'VendorDesc',
 			width: 160
 		}, {
 			title: '批次库存',
@@ -311,6 +438,14 @@ var init = function() {
 			align: 'right',
 			width: 80
 		}, {
+			title: '国家医保编码',
+			field: 'MatInsuCode',
+			width: 160
+		}, {
+			title: '国家医保名称',
+			field: 'MatInsuDesc',
+			width: 160
+		}, {
 			title: '灭菌批号',
 			field: 'SterilizedBat',
 			width: 160
@@ -334,6 +469,10 @@ var init = function() {
 			field: 'InclbAvaQty',
 			align: 'right',
 			width: 100
+		}, {
+			title: '备注',
+			field: 'Remark',
+			width: 150
 		}
 	]];
 
@@ -341,23 +480,32 @@ var init = function() {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
 			QueryName: 'DHCINIsTrfD',
+			query2JsonStrict: 1,
 			rows: 99999
 		},
-		pagination:false,
+		pagination: false,
 		columns: DetailCm,
 		showBar: true,
 		remoteSort: false
 	});
 	
-	//设置缺省值
-	function SetDefaValues(){
+	// 设置缺省值
+	function SetDefaValues() {
+		var DefaultData = {
+			StartDate: DefaultStDate(),
+			EndDate: DefaultEdDate(),
+			FrLoc: gLocObj
+		};
+		$UI.fillBlock('#Conditions', DefaultData);
 		$('#ScgId').combotree('options')['setDefaultFun']();
-		$('#FrLoc').combobox('setValue', gLocId);
-		$('#StartDate').datebox('setValue', DefaultStDate());
-		$('#EndDate').datebox('setValue',  DefaultEdDate());
+		if (ItmTrackParamObj.AutoVirFlag == 'Y') {
+			$('#VirtualFlag').checkbox('setValue', true);
+		} else {
+			$('#VirtualFlag').checkbox('setValue', false);
+		}
 	}
 	
 	SetDefaValues();
 	Query();
-}
+};
 $(init);

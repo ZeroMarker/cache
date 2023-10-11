@@ -9,6 +9,16 @@ function InitEnviHyItemWinEvent(obj){
 		modal: true,
 		isTopZindex:true	
 	});	
+	//检索框
+	$('#btnsearch').searchbox({ 
+		searcher:function(value,name){
+			$('#gridEvItem').datagrid('load',{
+				ClassName:'DHCHAI.IRS.EnviHyItemSrv',
+	        	QueryName:'QryEvItem',
+	       		aAlis:value
+			});
+		}	
+	});	
 	obj.LoadEvent = function(args){
 		//保存
 		$('#btnSave').on('click', function(){
@@ -50,8 +60,10 @@ function InitEnviHyItemWinEvent(obj){
 			$("#btnAdd").linkbutton("disable");
 			$("#btnEdit").linkbutton("enable");
 			$("#btnDelete").linkbutton("enable");
-			obj.EvItemObjLoad();  //加载对象	
+			$('#showAll').checkbox('setValue','0');  //选择一条监测项目勾选【关联全部对象】后，切换其他监测项目，自动取消【关联全部对象】
+				
 		}
+		obj.EvItemObjLoad(2);  //加载对象
 	}	
 	
 	//双击编辑事件 父表
@@ -85,7 +97,7 @@ function InitEnviHyItemWinEvent(obj){
 		var EHEnterTypeDesc = $('#txtEHEnterTypeDr').combobox('getText');
 		var ReferToNum=$('#txtReferToNum').val();
 		var HospID=$('#cboHospital').combobox('getValue');
-		
+		var LabItemDr = $('#cboLabItem').combobox('getValue');
 		if (!ItemTypeDesc) {
 			errinfo = errinfo + "项目分类不允许为空!<br>";
 		}
@@ -106,9 +118,21 @@ function InitEnviHyItemWinEvent(obj){
 		}
 		if (!SpecimenNum) {
 			errinfo = errinfo + "标本个数不允许为空!<br>";
+		}else{
+			var EnviHyMaxSpecimen=$m({
+				ClassName:"DHCHAI.BT.Config",
+				MethodName:"GetValByCode",
+				aCode:"EnviHyMaxSpecimen"
+			},false);
+			if (parseInt(SpecimenNum)>parseInt(EnviHyMaxSpecimen)){
+				errinfo = errinfo + "标本个数超出最大环境卫生学标本数量!<br>";
+			}
 		}
 		if (!CenterNum) {
 			errinfo = errinfo + "中心个数不允许为空!<br>";
+		}
+		if (!Uom) {
+			errinfo = errinfo + "单位不允许为空!<br>";
 		}
 		if (!SurroundNum) {
 			errinfo = errinfo + "周边个数不允许为空!<br>";
@@ -123,11 +147,21 @@ function InitEnviHyItemWinEvent(obj){
 			errinfo = errinfo + "参照点个数不允许大于标本个数!<br>";
 		}
 		if ((parseInt(ReferToNum)+parseInt(CenterNum)+parseInt(SurroundNum))>parseInt(SpecimenNum)) {
-			errinfo = errinfo + "参照点个数、中心个数、周边个数总数不允许大于标本个数!<br>";
+			errinfo = errinfo + "参照点个数、中心个数、周边个数总数应该等于标本个数!<br>";
+		}
+		if ((parseInt(ReferToNum)+parseInt(CenterNum)+parseInt(SurroundNum))<parseInt(SpecimenNum)) {
+			errinfo = errinfo + "参照点个数、中心个数、周边个数总数应该等于标本个数!<br>";
 		}
 		if (!ReferToNum) {
 			errinfo = errinfo + "参照点个数不允许为空!<br>";
 		}
+		/*
+		if (!EnvironmentCateDesc) {
+			errinfo = errinfo + "环境类别不允许为空!<br>";
+		}
+		if (!Freq) {
+			errinfo = errinfo + "监测频率不允许为空!<br>";
+		}*/
 		if (!EHEnterTypeDesc) {
 			errinfo = errinfo + "录入方式不允许为空!<br>";
 		}
@@ -157,6 +191,7 @@ function InitEnviHyItemWinEvent(obj){
 		inputStr = inputStr + CHR_1 + EHEnterTypeDesc;
 		inputStr = inputStr + CHR_1 + HospID;
 		inputStr = inputStr + CHR_1 + $.LOGON.USERID;
+		inputStr = inputStr + CHR_1 + LabItemDr;
 		var flg = $m({
 			ClassName:"DHCHAI.IR.EnviHyItem",
 			MethodName:"Update",
@@ -205,8 +240,9 @@ function InitEnviHyItemWinEvent(obj){
 	}
 
 	//加载对象
-	obj.EvItemObjLoad = function(){
+	obj.EvItemObjLoad = function(num){
 		var ShowAll=$('#showAll').checkbox('getValue') ? 1:0;
+		if (num==2) ShowAll=''  //防止切换项目时多选框置空，调用这个方法，导致关联对象都取消选中
 		var ParRef = "";
 		if (obj.RecRowID1) {
 			ParRef =obj.RecRowID1;
@@ -249,49 +285,58 @@ function InitEnviHyItemWinEvent(obj){
 			var EHEnterTypeDesc = rd["EHEnterTypeDesc"];
 			var ReferToNum = rd["ReferToNum"];
 			var HospID = rd["HospID"];
-			$('#cboItemType').combobox('setValue',ItemTypeID);
+			var IsActive=rd['IsActive']
+		$('#cboItemType').combobox('setValue',ItemTypeID);
 			$('#cboItemType').combobox('setText',ItemTypeDesc);
-			$('#txtItemDesc').val(ItemDesc);
+			$('#cboItemType').validatebox("validate");
+			$('#cboLabItem').combobox('setValue',rd["LabItemDr"]);
+			$('#cboLabItem').combobox('setText',rd["LabItem"]);
+			$('#txtItemDesc').val(ItemDesc).validatebox("validate");
 			$('#cboSpecimenType').combobox('setValue',SpecimenTypeID);
 			$('#cboSpecimenType').combobox('setText',SpecimenTypeDesc);
-			$('#txtNorm').val(Norm);
-			$('#txtNormMax').val(NormMax);
-			$('#txtNormMin').val(NormMin);
-			$('#txtSpecimenNum').val(SpecimenNum);
-			$('#txtCenterNum').val(CenterNum);
-			$('#txtSurroundNum').val(SurroundNum);
+			$('#cboSpecimenType').validatebox("validate");
+			$('#txtNorm').val(Norm).validatebox("validate");
+			$('#txtNormMax').val(NormMax).validatebox("validate");
+			$('#txtNormMin').val(NormMin).validatebox("validate");
+			$('#txtSpecimenNum').val(SpecimenNum).validatebox("validate");
+			$('#txtCenterNum').val(CenterNum).validatebox("validate");
+			$('#txtSurroundNum').val(SurroundNum).validatebox("validate");
 			$('#txtForMula').val(ForMula);
-			$('#txtFreq').val(Freq);
-			$('#txtUom').val(Uom);
+			$('#txtFreq').val(Freq).validatebox("validate");
+			$('#txtUom').val(Uom).validatebox("validate");
 			$('#cboEnvironmentCate').combobox('setValue',EnvironmentCateID);
 			$('#cboEnvironmentCate').combobox('setText',EnvironmentCateDesc);
+			$('#cboEnvironmentCate').validatebox("validate");
 		    $('#txtEHIsObjNull').checkbox('setValue',IsObjNullDesc);
 			$('#txtEHIsSpecNum').checkbox('setValue',IsSpecNumDesc);
 			$('#txtEHEnterTypeDr').combobox('setValue',EHEnterTypeID);
 			$('#txtEHEnterTypeDr').combobox('setText',EHEnterTypeDesc);
-			$('#txtReferToNum').val(ReferToNum);
+			$('#txtEHEnterTypeDr').validatebox("validate");
+			$('#txtReferToNum').val(ReferToNum).validatebox("validate");
 			Common_SetValue('cboHospital',HospID);
+			$('#chkActive').checkbox('setValue',IsActive)
 		}else{
 			obj.RecRowID1="";
-			
-			$('#cboItemType').combobox('clear');
-			$('#txtItemDesc').val('');
-			$('#cboSpecimenType').combobox('clear');
-			$('#txtNorm').val('');
-			$('#txtNormMax').val('');
-			$('#txtNormMin').val('');
-			$('#txtSpecimenNum').val('');
-			$('#txtCenterNum').val('');
-			$('#txtSurroundNum').val('');
+			$('#cboLabItem').combobox('setValue','');
+			$('#cboItemType').combobox('setValue','');
+			$('#txtItemDesc').val('').validatebox("validate");
+			$('#cboSpecimenType').combobox('setValue','');
+			$('#txtNorm').val('').validatebox("validate");
+			$('#txtNormMax').val('').validatebox("validate");
+			$('#txtNormMin').val('').validatebox("validate");
+			$('#txtSpecimenNum').val('').validatebox("validate");
+			$('#txtCenterNum').val('').validatebox("validate");
+			$('#txtSurroundNum').val('').validatebox("validate");
 			$('#txtForMula').val('');
-			$('#txtFreq').val('');
-			$('#txtUom').val('');
+			$('#txtFreq').val('').validatebox("validate");
+			$('#txtUom').val('').validatebox("validate");
 			$('#cboEnvironmentCate').combobox('setValue','');
 			$('#txtEHIsObjNull').checkbox('setValue',false);
 			$('#txtEHIsSpecNum').checkbox('setValue',false);
-			$('#txtEHEnterTypeDr').combobox('clear');
-			$('#txtReferToNum').val('');
+			$('#txtEHEnterTypeDr').combobox('setValue','');
+			$('#txtReferToNum').val('').validatebox("validate");
 			$('#cboHospital').combobox('clear');
+			$('#chkActive').checkbox('setValue',false);
 		}
 		$HUI.dialog('#winEvItem').open();
 	}

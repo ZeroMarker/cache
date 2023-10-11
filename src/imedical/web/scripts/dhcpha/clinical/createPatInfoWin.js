@@ -8,23 +8,24 @@ function createPatInfoWin(adm,patno)
 	if($('#win').is(":visible")){return;}  //窗体处在打开状态,退出
 	
 	var offsetWidth=document.body.offsetWidth-100;
-	var offsetHeight=document.body.offsetHeight-100;
+	var offsetHeight=document.body.offsetHeight-50;
 
 	$('body').append('<div id="win"></div>');
 	$('#win').append('<div id="ptab"></div>');
 	//iframe 直接加在tab的div中
-	//$('#tab').append('<div id="pal" title="过敏记录"><iframe scrolling="yes" width=100% height=100%  frameborder="0" src=""></iframe></div>');
-	$('#ptab').append('<div id="pal" title="过敏记录"></div>');
-	$('#ptab').append('<div id="ris" title="检查记录"></div>');
-	$('#ptab').append('<div id="lab" title="检验记录"></div>');
-	$('#ptab').append('<div id="epl" title="药历浏览"></div>');
-	$('#ptab').append('<div id="ord" title="医嘱单"></div>');
-	$('#ptab').append('<div id="oper" title="手术信息"></div>');
-	$('#ptab').append('<div id="med" title="用药建议"></div>');
-	$('#ptab').append('<div id="consultpat" title="会诊列表"></div>');
+	//$('#tab').append('<div id="pal" title=$g("过敏记录"><iframe scrolling="yes" width=100% height=100%  frameborder="0" src=""></iframe></div>');
+	$('#ptab').append('<div id="pal" title='+$g("过敏记录")+'></div>');
+	$('#ptab').append('<div id="ris" title='+$g("检查记录")+'></div>');
+	$('#ptab').append('<div id="lab" title='+$g("检验记录")+'></div>');
+	$('#ptab').append('<div id="epl" title='+$g("药历浏览")+'></div>');
+	$('#ptab').append('<div id="ord" title='+$g("医嘱单")+'></div>');
+	$('#ptab').append('<div id="oper" title='+$g("手术信息")+'></div>');
+	$('#ptab').append('<div id="med" title='+$g("用药建议")+'></div>');
+	$('#ptab').append('<div id="consultpat" title='+$g("会诊查询")+'></div>');
+	$('#ptab').append('<div id="emr" title='+$g("病历浏览")+'></div>');
 
 	$('#win').window({
-		title:'病人检查检验信息',
+		title:$g('病人检查检验信息'),
 		collapsible:true,
 		border:true,
 		closed:"true",
@@ -43,12 +44,13 @@ function createPatInfoWin(adm,patno)
 	        var tab = $('#ptab').tabs('getSelected'); 		 		/// 获取选择的面板
 	        var tbId = tab.attr("id");
 	        var maintab="";
-	        
+	        var IsOnlyShowPAList="";
 	        switch(tbId){
 	            case "pal":
 					//maintab="dhcpha.comment.paallergy.csp";  		/// 过敏记录
 					//maintab="dhcem.allergyenter.csp";               /// 过敏记录
 					maintab="dhcdoc.allergyenter.csp";               /// 过敏记录
+					IsOnlyShowPAList="Y"
 					break;
 				case "ris":
 					//maintab="dhcpha.comment.risquery.csp";   		/// 检查记录
@@ -76,12 +78,16 @@ function createPatInfoWin(adm,patno)
 					maintab="dhcpha.clinical.medadvises.csp";  		/// 用药建议
 					break;
 				case "consultpat":
-					maintab="dhcem.consultmain.csp";  		            /// 会诊列表
+					//maintab="dhcem.consultmain.csp";  		            /// 会诊列表
+					maintab="dhcem.consultpathis.csp";
+					break;
+				case "emr":
+				    maintab="emr.browse.manage.csp";
 			}
 			if(typeof AppType=="undefined"){AppType="";}
 
 			//iframe 定义
-	        var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="'+maintab+'?PatientID='+patno+'&EpisodeID='+adm+'&AppType='+AppType+'&ORditm='+orditm+'"></iframe>';
+			var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="'+maintab+'?PatientID='+patno+'&EpisodeID='+adm+'&AppType='+AppType+'&ORditm='+orditm+'&IsOnlyShowPAList='+IsOnlyShowPAList+'&MWToken='+websys_getMWToken()+'"></iframe>';
 	        tab.html(iframe);
 	        tab.panel('refresh');
 			
@@ -98,10 +104,10 @@ function createPatInfoWin(adm,patno)
 			}
 	    }
 	});
-	$('#ptab').tabs('select','过敏记录'); //默认选中项
+	$('#ptab').tabs('select',$g('过敏记录')); //默认选中项
 	$('#win').window('open');
 }
 function medadvises(ORditm){
 	orditm=ORditm
-	$('#ptab').tabs('select','用药建议');
+	$('#ptab').tabs('select',$g('用药建议'));
 	}

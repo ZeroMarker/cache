@@ -4,7 +4,91 @@
  * description: 配液状态时间轴
  * div 等命名固定
  */
+
 var PIVASTIMELINE = {
+    Init: function (_opts) {
+        var field = _opts.Field;
+        var clickField = _opts.ClickField;
+        var barCode = _opts.Params;
+        // 医嘱闭环在改造后使用此方式 start, yunhaibao 20230116, 还是先用本组的时间轴, 有针对性
+        websys_showModal({
+            url: 'dhc.orderview.csp?ordViewType=PIVAEXEC&hideSensitiveInfo=1&ordViewBizId=' + barCode.replace(/-/g, '||'),
+            title: '配液时间轴',
+            width: document.body.clientWidth - 40,
+            height: 265,
+            iconCls: 'icon-w-list'
+        });
+        return;
+        // 医嘱闭环在改造后使用此方式 end
+        if (field !== clickField) {
+            if ($('#PIVAS_TimeLine')) {
+                $('#PIVAS_TimeLine').window('close');
+            }
+            return;
+        }
+        var winId = 'PIVAS_TimeLine';
+        var lineId = winId + '_Line';
+        var existHtml = $('#' + winId).html() || '';
+        if (existHtml === '') {
+            var winDiv = '<div id=' + winId + ' style="padding:10px"><div id=' + lineId + '></div></div>';
+            $('body').append(winDiv);
+            var winOpts = {
+                title: ' 配液时间轴',
+                collapsible: false,
+                iconCls: 'icon-w-clock',
+                border: false,
+                resizable: true,
+                minimizable: false,
+                maximizable: false,
+                closed: true,
+                modal: true,
+                width: $('body').width() - 40,
+                height: 165,
+                //top: 20,
+                //left: 20,
+                toolbar: null,
+                onBeforeClose: function () {}
+            };
+
+            $('#' + winId).window($.extend({}, winOpts));
+        }
+        $('#' + winId).window('open');
+
+        var retData = $.cm(
+            {
+                ClassName: 'web.DHCSTPIVAS.Dictionary',
+                QueryName: 'LabelExeRecords',
+                inputStr: _opts.Params
+            },
+            false
+        );
+        var itemsArr = [];
+        var rowsData = retData.rows;
+        for (var i = 0; i < rowsData.length; i++) {
+            var rowData = rowsData[i];
+            var contextArr = [];
+            contextArr.push('<div style="font-weight:normal;">');
+            contextArr.push(rowData.dateTime);
+            contextArr.push('</div>');
+            contextArr.push('<div style="font-weight:normal;">');
+            contextArr.push(rowData.userName);
+            contextArr.push('</div>');
+            var item = {};
+            item.title = rowData.pivasState;
+            item.context = contextArr.join('');
+            itemsArr.push(item);
+        }
+        $('.hstep').children().remove();
+        $('#' + lineId).hstep({
+            showNumber: false,
+            stepWidth: 200,
+            currentInd: rowsData.length,
+            items: itemsArr
+        });
+        $('#PIVAS_TimeLine').scrollLeft(10000);
+    }
+};
+var PIVASTIMELINE_V83 = {
     /**配液状态时间轴显示窗口创建
      * _options.Params:     条码
      * _options.Field:      定义点击哪一列弹出分析窗口
@@ -63,7 +147,12 @@ var PIVASTIMELINE = {
     },
     Prev: function () {
         var curLeft = parseInt($('#atimeline').css('left'));
-        $('#atimeline').animate({ left: 25 }, 500);
+        $('#atimeline').animate(
+            {
+                left: 25
+            },
+            500
+        );
     },
     Next: function (aniFlag) {
         var liLen = $('li').length;
@@ -74,7 +163,12 @@ var PIVASTIMELINE = {
         if (curLeft < 0) {
             return;
         }
-        $('#atimeline').animate({ left: needLeft }, aniFlag == 1 ? 0 : 500);
+        $('#atimeline').animate(
+            {
+                left: needLeft
+            },
+            aniFlag == 1 ? 0 : 500
+        );
     },
     Show: function () {
         $('#TimeLineWin').window({

@@ -27,25 +27,31 @@ Ext.onReady(function() {
 
 	//统计科室
 	var PhaLoc = new Ext.ux.LocComboBox({
-			fieldLabel : '科室',
+			fieldLabel : $g('科室'),
 			id : 'PhaLoc',
 			name : 'PhaLoc',
 			groupId:gGroupId,
 	        listeners : {
 	            'select' : function(e) {
-	                 var SelLocId=Ext.getCmp('PhaLoc').getValue();//add wyx 根据选择的科室动态加载类组
-	                 StkGrpType.getStore().removeAll();
-	                 StkGrpType.getStore().setBaseParam("locId",SelLocId)
-	                 StkGrpType.getStore().setBaseParam("userId",UserId)
-	                 StkGrpType.getStore().setBaseParam("type",App_StkTypeCode)
-	                 StkGrpType.getStore().load();
+	                 SetDefaultSCG();
 				}
 			}
 	});
+	
+	function SetDefaultSCG()
+	{
+		 var SelLocId=Ext.getCmp('PhaLoc').getValue();//add wyx 根据选择的科室动态加载类组
+         StkGrpType.getStore().removeAll();
+         StkGrpType.getStore().setBaseParam("locId",SelLocId)
+         StkGrpType.getStore().setBaseParam("userId",UserId)
+         StkGrpType.getStore().setBaseParam("type",App_StkTypeCode)
+         StkGrpType.getStore().load();
+         Ext.getCmp("DHCStkCatGroup").setValue("");
+	}
 		
 	// 起始日期
 	var StartDate = new Ext.ux.DateField({
-			fieldLabel : '起始日期',
+			fieldLabel : $g('起始日期'),
 			id : 'StartDate',
 			name : 'StartDate',
 			anchor : '90%',
@@ -55,7 +61,7 @@ Ext.onReady(function() {
 
 	// 结束日期
 	var EndDate = new Ext.ux.DateField({
-			fieldLabel : '结束日期',
+			fieldLabel : $g('结束日期'),
 			id : 'EndDate',
 			name : 'EndDate',
 			anchor : '90%',
@@ -66,18 +72,18 @@ Ext.onReady(function() {
 	var StkGrpType=new Ext.ux.StkGrpComboBox({ 
 			id : 'StkGrpType',
 			name : 'StkGrpType',
-			fieldLabel:'类　　组',
+			fieldLabel:$g('类　　组'),
 			StkType:App_StkTypeCode,     //标识类组类型
 			LocId:gLocId,
 			UserId:userId,
 			anchor:'90%'
 		});
-	StkGrpType.on('change',function(){
+	StkGrpType.on('select',function(){
 		Ext.getCmp("DHCStkCatGroup").setValue("");
 	});
 		
 	var DHCStkCatGroup = new Ext.ux.ComboBox({
-			fieldLabel : '库存分类',
+			fieldLabel : $g('库存分类'),
 			id : 'DHCStkCatGroup',
 			name : 'DHCStkCatGroup',
 			anchor : '90%',
@@ -89,7 +95,7 @@ Ext.onReady(function() {
 		});
 
 	var InciDr = new Ext.form.TextField({
-			fieldLabel : '药品RowId',
+			fieldLabel : $g('药品RowId'),
 			id : 'InciDr',
 			name : 'InciDr',
 			anchor : '90%',
@@ -98,7 +104,7 @@ Ext.onReady(function() {
 		});
 
 	var ItmDesc = new Ext.form.TextField({
-			fieldLabel : '药品名称',
+			fieldLabel : $g('药品名称'),
 			id : 'ItmDesc',
 			name : 'ItmDesc',
 			anchor : '90%',
@@ -120,7 +126,8 @@ Ext.onReady(function() {
 	function GetPhaOrderInfo(item, group) {
 					
 		if (item != null && item.length > 0) {
-			GetPhaOrderWindow(item, group, App_StkTypeCode, "", "", "", "",
+			var PhaLoc = Ext.getCmp("PhaLoc").getValue();
+			GetPhaOrderWindow(item, group, App_StkTypeCode, PhaLoc, "", "", "",
 					getDrugList);
 		}
 	}
@@ -144,7 +151,7 @@ Ext.onReady(function() {
 	
 	// 药学大类
 	var PhcCat = new Ext.form.ComboBox({
-			fieldLabel : '药学大类',
+			fieldLabel : $g('药学大类'),
 			id : 'PhcCat',
 			name : 'PhcCat',
 			anchor : '90%',
@@ -170,7 +177,7 @@ Ext.onReady(function() {
 		});
 
 var PHCCATALL = new Ext.form.TextField({
-	fieldLabel : '药学分类',
+	fieldLabel : $g('药学分类'),
 	id : 'PHCCATALL',
 	name : 'PHCCATALL',
 	anchor : '90%',
@@ -187,14 +194,14 @@ function GetAllCatNew(catdescstr,newcatid){
 
 var PHCCATALLButton = new Ext.Button({
 	id:'PHCCATALLButton',
-	text : '药学分类',
+	text : $g('药学分类'),
 	handler : function() {	
 		PhcCatNewSelect(gNewCatId,GetAllCatNew)
 
     }
 });
 	var PHCDFPhcDoDR = new Ext.ux.ComboBox({
-					fieldLabel : '管制分类',
+					fieldLabel : $g('管制分类'),
 					id : 'PHCDFPhcDoDR',
 					name : 'PHCDFPhcDoDR',
 					store : PhcPoisonStore,
@@ -223,7 +230,7 @@ var PHCCATALLButton = new Ext.Button({
 		
 	//管理药
 	var ManageDrug = new Ext.form.Checkbox({
-			boxLabel : '管理药',
+			boxLabel : $g('管理药'),
 			id : 'ManageDrug',
 			name : 'ManageDrug',
 			anchor : '90%',
@@ -232,7 +239,7 @@ var PHCCATALLButton = new Ext.Button({
 	
 	//业务损益标志
 	var RetAspFlag = new Ext.form.Checkbox({
-		boxLabel : '是否显示业务损益',
+		boxLabel : $g('是否显示业务损益'),
 		id : 'RetAspFlag',
 		name : 'RetAspFlag',
 		anchor : '90%',
@@ -241,11 +248,11 @@ var PHCCATALLButton = new Ext.Button({
 				
 	var TypeStore = new Ext.data.SimpleStore({
 			fields : ['RowId', 'Description'],
-			data : [['0', '全部'], ['1', '零消耗'], ['2', '非零消耗']]
+			data : [['0', $g('全部')], ['1', $g('零消耗')], ['2', $g('非零消耗')]]
 		});
 	//统计标志
 	var QueryFlag = new Ext.form.ComboBox({
-			fieldLabel : '统计标志',
+			fieldLabel : $g('统计标志'),
 			id : 'QueryFlag',
 			name : 'QueryFlag',
 			anchor : '90%',
@@ -264,7 +271,7 @@ var PHCCATALLButton = new Ext.Button({
 	
 	/// 业务类型
 	var TransType = new Ext.form.ComboBox({
-		fieldLabel : '业务类型',
+		fieldLabel : $g('业务类型'),
 		id : 'TransType',
 		name : 'TransType',
 		anchor : '90%',					
@@ -281,8 +288,8 @@ var PHCCATALLButton = new Ext.Button({
 	
 	// 检索按钮
 	var searchBT = new Ext.Toolbar.Button({
-				text : '查询',
-				tooltip : '点击查询台账',
+				text : $g('查询'),
+				tooltip : $g('点击查询台账'),
 				iconCls : 'page_find',
 				height:30,
 				width:70,
@@ -292,8 +299,8 @@ var PHCCATALLButton = new Ext.Button({
 			});		
 	// 另存按钮
 	var SaveAsBT = new Ext.Toolbar.Button({
-				text : '另存',
-				tooltip : '另存为Excel',
+				text : $g('另存'),
+				tooltip : $g('另存为Excel'),
 				iconCls : 'page_export',
 				width : 70,
 				height : 30,
@@ -305,8 +312,8 @@ var PHCCATALLButton = new Ext.Button({
 				}
 			});		
 	var GridColSetBT = new Ext.Toolbar.Button({
-	      text:'列设置',
-          tooltip:'列设置',
+	      text:$g('列设置'),
+          tooltip:$g('列设置'),
           iconCls:'page_gear',
 	      handler:function(){
 		      GridSelectWinType=2
@@ -315,8 +322,8 @@ var PHCCATALLButton = new Ext.Button({
         });
        	// 确定按钮
 	var returnBT = new Ext.Toolbar.Button({
-				text : '确定',
-				tooltip : '点击确定',
+				text : $g('确定'),
+				tooltip : $g('点击确定'),
 				iconCls : 'page_goto',
 				handler : function() {
 					var selectradio = Ext.getCmp('GridSelectModel').getValue();
@@ -346,8 +353,8 @@ var PHCCATALLButton = new Ext.Button({
 
 	// 取消按钮
 	var cancelBT = new Ext.Toolbar.Button({
-				text : '取消',
-				tooltip : '点击取消',
+				text : $g('取消'),
+				tooltip : $g('点击取消'),
 				iconCls : 'page_delete',
 				handler : function() {
 					GridSelectWin.hide();
@@ -356,7 +363,7 @@ var PHCCATALLButton = new Ext.Button({
 
       //选择按钮
 	 var GridSelectWin=new Ext.Window({
-			title:'选择',
+			title:$g('选择'),
 			width : 200,
 			height : 110,
 			labelWidth:100,
@@ -371,13 +378,13 @@ var PHCCATALLButton = new Ext.Button({
 				  style: 'padding:10px 10px 10px 10px;',
 				  items : [{
 						 checked: true,				             
-				             boxLabel: '台账',
+				             boxLabel: $g('台账'),
 				             id: 'GridSelectModel1',
 				             name:'GridSelectModel',
 				             inputValue: '1' 							
 						},{
 						 checked: false,				             
-				             boxLabel: '台账明细',
+				             boxLabel: $g('台账明细'),
 				             id: 'GridSelectModel2',
 				             name:'GridSelectModel',
 				             inputValue: '2' 							
@@ -388,7 +395,7 @@ var PHCCATALLButton = new Ext.Button({
 			})	
 	function priceRender(val){
 		//var val = Ext.util.Format.number(val,'0.00'); //不四舍五入
-		if (this.header.indexOf("进")>=0){
+		if (this.header.indexOf($g("进"))>=0){
 			val=FormatGridRp(val);
 		}else{
 			val=FormatGridSp(val);
@@ -397,7 +404,7 @@ var PHCCATALLButton = new Ext.Button({
 	}	
 	function amountRender(val){
 		//var val = Ext.util.Format.number(val,'0.00'); //不四舍五入
-		if (this.header.indexOf("进")>=0){
+		if (this.header.indexOf($g("进"))>=0){
 			val=FormatGridRpAmount(val);
 		}else{
 			val=FormatGridSpAmount(val);
@@ -414,7 +421,7 @@ var PHCCATALLButton = new Ext.Button({
 		//wyx add 2014-01-15
 		var StartDatetmp = Ext.getCmp("StartDate").getValue()
 		if (StartDatetmp=="") {
-		    Msg.info("warning", "开始日期不能为空！");
+		    Msg.info("warning", $g("开始日期不能为空！"));
 		    Ext.getCmp("StartDate").focus();
 		    return;
 				}
@@ -422,31 +429,31 @@ var PHCCATALLButton = new Ext.Button({
 		var StartDate = Ext.getCmp("StartDate").getValue().format(App_StkDateFormat)
 				.toString();;
 		if(StartDate==null||StartDate.length <= 0) {
-			Msg.info("warning", "开始日期不能为空！");
+			Msg.info("warning", $g("开始日期不能为空！"));
 			return;
 		}
 		var EndDatetmp = Ext.getCmp("EndDate").getValue()
 		if (EndDatetmp=="") {
-		    Msg.info("warning", "截止日期不能为空！");
+		    Msg.info("warning", $g("截止日期不能为空！"));
 		    Ext.getCmp("EndDate").focus();
 		    return;
 				}
 		var EndDate = Ext.getCmp("EndDate").getValue().format(App_StkDateFormat)
 				.toString();
 		if(EndDate==null||EndDate.length <= 0) {
-			Msg.info("warning", "截止日期不能为空！");
+			Msg.info("warning",$g( "截止日期不能为空！"));
 			return;
 		}
 		
 		var PhaLocDesc = Ext.getCmp("PhaLoc").getRawValue();
 		if (PhaLocDesc ==""||PhaLocDesc == null || PhaLocDesc.length <= 0) {
-				Msg.info("warning", "科室不能为空！");
+				Msg.info("warning", $g("科室不能为空！"));
 				Ext.getCmp("PhaLoc").focus();
 				return;
 			}
 		var PhaLoc = Ext.getCmp("PhaLoc").getValue();
 		if(PhaLoc==null||PhaLoc.length <= 0) {
-			Msg.info("warning", "科室不能为空！");
+			Msg.info("warning", $g("科室不能为空！"));
 			return;
 		}
 		
@@ -481,7 +488,7 @@ var PHCCATALLButton = new Ext.Button({
 			params:{start:0,limit:size},
 			callback : function(r,options, success){
 				if(success==false){
-     				Ext.MessageBox.alert("查询错误",this.reader.jsonData.Error);
+     				Ext.MessageBox.alert($g("查询错误"),this.reader.jsonData.Error);
      			}else{
      				if(r.length>0){
 	     				MasterInfoGrid.getSelectionModel().selectFirstRow();
@@ -497,8 +504,8 @@ var PHCCATALLButton = new Ext.Button({
 
 	// 清空按钮
 	var clearBT = new Ext.Toolbar.Button({
-				text : '清屏',
-				tooltip : '点击清屏',
+				text :$g( '清屏'),
+				tooltip : $g('点击清屏'),
 				iconCls : 'page_clearscreen',
 				height:30,
 				width:70,
@@ -509,6 +516,7 @@ var PHCCATALLButton = new Ext.Button({
 
 	function clearData() {
 		SetLogInDept(PhaLoc.getStore(),'PhaLoc');
+		SetDefaultSCG();
 		Ext.getCmp("StartDate").setValue(new Date());
 		Ext.getCmp("EndDate").setValue(new Date());
 		Ext.getCmp("StkGrpType").getStore().load();
@@ -526,12 +534,13 @@ var PHCCATALLButton = new Ext.Button({
 		DetailInfoGrid.store.removeAll();
 		DetailInfoGrid.store.load({params:{start:0,limit:0}});
 		Ext.getCmp("PHCCATALL").setValue("");
+		gNewCatId=""
 	}
 
 	// 3关闭按钮
 	var closeBT = new Ext.Toolbar.Button({
-				text : '关闭',
-				tooltip : '关闭界面',
+				text : $g('关闭'),
+				tooltip : $g('关闭界面'),
 				iconCls : 'close',
 				handler : function() {
 					window.close();
@@ -553,7 +562,7 @@ var PHCCATALLButton = new Ext.Button({
 	// ^期末金额(进价)^期末金额(售价)
 	// 
 	var fields = ["INCIL", "InciCode", "InciDesc","StkCat","PurUom","BUom","BegQty","BegQtyUom",
-	"BegRpAmt","BegSpAmt","EndQty","EndQtyUom","EndRpAmt","EndSpAmt","PlusQty","MinusQty"];
+	"BegRpAmt","BegSpAmt","EndQty","EndQtyUom","EndRpAmt","EndSpAmt","PlusQty","MinusQty","InsuCode","InsuDesc"];
 	// 支持分页显示的读取方式
 	var reader = new Ext.data.JsonReader({
 				root : 'rows',
@@ -576,98 +585,102 @@ var PHCCATALLButton = new Ext.Button({
 				sortable : true,
 				hidden : true
 			}, {
-				header : "药品名称",
+				header : $g("药品名称"),
 				dataIndex : 'InciDesc',
 				width : 200,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '入库单位',
+				header : $g('入库单位'),
 				dataIndex : 'PurUom',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '增加数量',
+				header : $g('增加数量'),
 				dataIndex : 'PlusQty',
 				width : 100,
 				align : 'right',
 				sortable : true,
 				renderer:FormatGridQty
 			}, {
-				header : '减少数量',
+				header : $g('减少数量'),
 				dataIndex : 'MinusQty',
 				width : 100,
 				align : 'right',
 				sortable : true,
 				renderer:FormatGridQty
 			}, {
-				header : '基本单位',
+				header : $g('基本单位'),
 				dataIndex : 'BUom',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '期初库存',
+				header : $g('期初库存'),
 				dataIndex : 'BegQtyUom',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '期初金额(进价)',
+				header : $g('期初金额(进价)'),
 				dataIndex : 'BegRpAmt',
 				width : 100,
 				align : 'right',
 				renderer:amountRender,
 				sortable : true
 			}, {
-				header : '期初金额(售价)',
+				header : $g('期初金额(售价)'),
 				dataIndex : 'BegSpAmt',
 				width : 100,
 				align : 'right',
 				renderer:amountRender,
 				sortable : true
 			}, {
-				header : '期末库存',
+				header : $g('期末库存'),
 				dataIndex : 'EndQtyUom',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '期末金额(进价)',
+				header : $g('期末金额(进价)'),
 				dataIndex : 'EndRpAmt',
 				width : 100,
 				align : 'right',
 				renderer:amountRender,
 				sortable : true
 			}, {
-				header : '期末金额(售价)',
+				header : $g('期末金额(售价)'),
 				dataIndex : 'EndSpAmt',
 				width : 100,
 				align : 'right',
 				renderer:amountRender,
 				sortable : true
 			}, {
-				header : '库存分类',
-				dataIndex : 'StkCat',
+				header : "国家医保编码",
+				dataIndex : 'InsuCode',
 				width : 100,
-				align : 'left',
-				sortable : true
+				align : ''
+			}, {
+				header : "国家医保名称",
+				dataIndex : 'InsuDesc',
+				width : 100,
+				align : ''
 			}]);
 	MasterInfoCm.defaultSortable = true;
 	var StatuTabPagingToolbar = new Ext.PagingToolbar({
 		store : MasterInfoStore,
 		pageSize : PageSize,
 		displayInfo : true,
-		displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
-		prevText : "上一页",
-		nextText : "下一页",
-		refreshText : "刷新",
-		lastText : "最后页",
-		firstText : "第一页",
-		beforePageText : "当前页",
-		afterPageText : "共{0}页",
-		emptyMsg : "没有数据"
+		displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
+		prevText : $g("上一页"),
+		nextText : $g("下一页"),
+		refreshText : $g("刷新"),
+		lastText : $g("最后页"),
+		firstText : $g("第一页"),
+		beforePageText : $g("当前页"),
+		afterPageText : $g("共{0}页"),
+		emptyMsg : $g("没有数据")
 	});
 	var MasterInfoGrid = new Ext.grid.GridPanel({
 				id : 'MasterInfoGrid',
@@ -699,7 +712,7 @@ var PHCCATALLButton = new Ext.Button({
 										params:{start:0,limit:size},
 										callback : function(r,options, success){
 											if(success==false){
-												Ext.MessageBox.alert("查询错误",this.reader.jsonData.Error);
+												Ext.MessageBox.alert($g("查询错误"),this.reader.jsonData.Error);
 											}
 										}
 									});
@@ -730,7 +743,7 @@ var PHCCATALLButton = new Ext.Button({
 	// 指定列参数
 	//业务日期^批号^单位^售价^进价^结余数量(基本单位)^结余数量(带单位)^增减数量(基本单位)
 	//^增减数量(带单位)^增减金额(进价)^增减金额(售价)^处理号^处理信息^摘要
-	//^期末金额(进价)^期末金额(售价)^供应商^厂商^操作人	
+	//^期末金额(进价)^期末金额(售价)^生产企业^生产企业^操作人	
 	var fields = ["TrId","TrDate", "BatExp", "PurUom", "Sp","Rp","EndQty","EndQtyUom",
 			"TrQty", "TrQtyUom", "RpAmt", "SpAmt","TrNo","TrAdm","TrMsg",
 			"EndRpAmt", "EndSpAmt", "Vendor", "Manf","OperateUser","TypeFlag"];
@@ -756,50 +769,50 @@ var PHCCATALLButton = new Ext.Button({
 				sortable : true,
 				hidden : true
 			}, {
-				header : "日期时间",
+				header : $g("日期时间"),
 				dataIndex : 'TrDate',
 				width : 150,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '批号效期',
+				header : $g('批号效期'),
 				dataIndex : 'BatExp',
 				width : 185,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "单位",
+				header : $g("单位"),
 				dataIndex : 'PurUom',
 				width : 80,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "售价",
+				header : $g("售价"),
 				dataIndex : 'Sp',
 				width : 60,
 				align : 'right',
 				renderer:priceRender,				
 				sortable : true
 			}, {
-				header : "进价",
+				header : $g("进价"),
 				dataIndex : 'Rp',
 				width : 60,
 				renderer:priceRender,
 				align : 'right'
 			}, {
-				header : "结余数量",
+				header : $g("结余数量"),
 				dataIndex : 'EndQtyUom',
 				width : 90,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "数量",
+				header :$g( "数量"),
 				dataIndex : 'TrQtyUom',
 				width : 90,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "进价金额",
+				header : $g("进价金额"),
 				dataIndex : 'RpAmt',
 				width : 100,
 				renderer:amountRender,
@@ -807,7 +820,7 @@ var PHCCATALLButton = new Ext.Button({
 				
 				sortable : true
 			}, {
-				header : "售价金额",
+				header :$g("售价金额"),
 				dataIndex : 'SpAmt',
 				width : 100,
 				renderer:amountRender,
@@ -815,25 +828,25 @@ var PHCCATALLButton = new Ext.Button({
 				
 				sortable : true
 			}, {
-				header : "处理号",
+				header : $g("处理号"),
 				dataIndex : 'TrNo',
 				width : 150,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "处理信息",
+				header : $g("处理信息"),
 				dataIndex : 'TrAdm',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "业务类型",
+				header : $g("业务类型"),
 				dataIndex : 'TrMsg',
 				width : 65,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "结余金额(进价)",
+				header : $g("结余金额(进价)"),
 				dataIndex : 'EndRpAmt',
 				width : 100,
 				renderer:amountRender,
@@ -841,7 +854,7 @@ var PHCCATALLButton = new Ext.Button({
 				
 				sortable : true
 			}, {
-				header : "结余金额(售价)",
+				header : $g("结余金额(售价)"),
 				dataIndex : 'EndSpAmt',
 				width : 100,
 				renderer:amountRender,
@@ -849,19 +862,19 @@ var PHCCATALLButton = new Ext.Button({
 				
 				sortable : true
 			}, {
-				header : "供应商",
+				header : $g("生产企业"),
 				dataIndex : 'Vendor',
 				width : 160,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "厂商",
+				header : $g("生产企业"),
 				dataIndex : 'Manf',
 				width : 160,
 				align : 'left',				
 				sortable : true
 			}, {
-				header : "操作人",
+				header : $g("操作人"),
 				dataIndex : 'OperateUser',
 				width : 65,
 				align : 'left',				
@@ -879,16 +892,16 @@ var PHCCATALLButton = new Ext.Button({
 		store : DetailInfoStore,
 		pageSize : 20,
 		displayInfo : true,
-		displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
+		displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
 		emptyMsg : "No results to display",
-		prevText : "上一页",
-		nextText : "下一页",
-		refreshText : "刷新",
-		lastText : "最后页",
-		firstText : "第一页",
-		beforePageText : "当前页",
-		afterPageText : "共{0}页",
-		emptyMsg : "没有数据"
+		prevText : $g("上一页"),
+		nextText : $g("下一页"),
+		refreshText :$g("刷新"),
+		lastText : $g("最后页"),
+		firstText : $g("第一页"),
+		beforePageText : $g("当前页"),
+		afterPageText : $g("共{0}页"),
+		emptyMsg : $g("没有数据")
 	});
 	var DetailInfoGrid = new Ext.grid.GridPanel({
 				title : '',
@@ -930,7 +943,7 @@ var PHCCATALLButton = new Ext.Button({
 			{ 
 				id: 'mnumodTransBat',   //批次修改增加 bianshuai 2014-04-23
 				handler: mQueryBusDetail, 
-				text: '业务明细查询' 
+				text: $g('业务明细查询') 
 			}
 		] 
 	});
@@ -939,7 +952,7 @@ var PHCCATALLButton = new Ext.Button({
     {
 		var rows=DetailInfoGrid.getSelectionModel().getSelections() ; 
 		if(rows.length==0){
-			Ext.Msg.show({title:'错误',msg:'请选择要查看的台账明细！',buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
+			Ext.Msg.show({title:$g('错误'),msg:$g('请选择要查看的台账明细！'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR});
 		}else {
 			selectedRow = rows[0];
 			var TrId = selectedRow.get("TrId");
@@ -959,7 +972,7 @@ var PHCCATALLButton = new Ext.Button({
 			region : 'north',
 			labelAlign : 'right',
 			frame : true,
-			title:"台账查询",
+			title:$g("台账查询"),
 			tbar : [searchBT, '-', clearBT,'-',SaveAsBT,'-',GridColSetBT],		
 		    items:[{
 						layout : 'column',			
@@ -967,7 +980,7 @@ var PHCCATALLButton = new Ext.Button({
 									columnWidth:0.25,
 									autoHeight : true,
 									xtype: 'fieldset',
-									title:'必选条件',	
+									title:$g('必选条件'),	
 									style:DHCSTFormStyle.FrmPaddingV+"background",  //css最后;结束不起作用
 									layout : 'column',	
 									defaults: { border:false},    // Default config options for child items
@@ -978,10 +991,10 @@ var PHCCATALLButton = new Ext.Button({
 										items : [PhaLoc,StartDate,EndDate]
 									}]
 								},{
-									columnWidth:0.75,
+									columnWidth:0.7,
 									autoHeight : true,									
 									xtype: 'fieldset',
-									title:'可选条件',
+									title:$g('可选条件'),
 									style:DHCSTFormStyle.FrmPaddingV+"margin-left:10px",	
 									defaults: { border:false}, 
 									layout : 'column',	

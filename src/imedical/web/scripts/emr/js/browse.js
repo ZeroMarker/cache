@@ -4,9 +4,17 @@
 
 function xhrRefresh(tempParam)
 {
+	var refreshFlag = "0";
+	if (episodeID != tempParam.adm)
+	{
+		refreshFlag = "1";
+	}
 	patientID = tempParam.papmi;
 	episodeID = tempParam.adm;
-	initFrameURL();
+	if (refreshFlag == "1")
+	{
+		initFrameURL();	
+	}
 }
 
 function initFrameURL()
@@ -16,7 +24,7 @@ function initFrameURL()
 	{
 		if(status.IsPDF == 0)
 		{
-			var url = "emr.browse.emr.csp?EpisodeID="+episodeID+"&Action="+action+"&ViewType=Editor&InstanceID="+instanceID;
+			var url = "emr.browse.emr.csp?EpisodeID="+episodeID+"&Action="+action+"&ViewType="+viewType+"&InstanceID="+instanceID+"&MWToken="+getMWToken();
 			$('#frameBrowseEPRorEMR').attr("src",url);
 		}
 	}
@@ -24,15 +32,20 @@ function initFrameURL()
 	{
 		if(status.IsPDF == 0)
 		{
-			var url = "emr.browse.emr.csp?EpisodeID="+episodeID+"&Action="+action+"&ViewType=Editor&InstanceID="+instanceID;
+			var url = "emr.browse.emr.csp?EpisodeID="+episodeID+"&Action="+action+"&ViewType="+viewType+"&InstanceID="+instanceID+"&MWToken="+getMWToken();
 			$('#frameBrowseEPRorEMR').attr("src",url);
 		}
 	}
 	else
 	{
-		var url = "epr.newfw.episodelistuvpanel.csp?patientID=" + patientID + "&episodeID=" + episodeID + "&admType=" + admType;
+		var url = "epr.newfw.episodelistuvpanel.csp?patientID=" + patientID + "&episodeID=" + episodeID + "&admType=" + admType+"&MWToken="+getMWToken();
 		$('#frameBrowseEPRorEMR').attr("src",url);
 	}
+	if(!judgeIsIE())
+	{
+		document.body.style.margin = "-10px";
+		document.body.style.backgroundColor = "white";
+	}	
 }
 
 
@@ -78,4 +91,14 @@ function getRefData()
         rtn["success"] = true;
     }
     return rtn;
+}
+
+//医务管理组调用关闭病历页签
+function onBeforeCloseTab()
+{
+    if (document.getElementById("frameBrowseEPRorEMR").contentWindow){
+        if (document.getElementById("frameBrowseEPRorEMR").contentWindow.onBeforeCloseTab){
+            document.getElementById("frameBrowseEPRorEMR").contentWindow.onBeforeCloseTab();
+        }
+    }
 }

@@ -3,7 +3,7 @@ function BodyLoadHandler(){
 	InitPage();
 	SetBEnable();
 	SetStatus();
-	Muilt_LookUp("BuyLoc^Loc");
+	Muilt_LookUp("BuyLoc^Loc^Hospital"); //回车选择 Modied By QW20210629 BUG:QW0131 院区
 	
 	var CancelOper=GetElementValue("CancelOper")
 	if (CancelOper=="Y")
@@ -11,7 +11,20 @@ function BodyLoadHandler(){
 		SetElement("Status",2)
 		DisableBElement("Status",true);
 	}
-	initButtonWidth()  //hisui改造 add by zy 2018-10-31
+	initButtonWidth();  //hisui改造 add by zy 2018-10-31
+	initPanelHeaderStyle();
+	initButtonColor();	//ui改造 add by hyy 2023-1-31
+	if (jQuery("#BAddNew").length>0)
+	{
+		if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+			// 极简版
+			if (($("#BAddNew").attr('class')).indexOf("l-btn-disabled")==-1){
+				$("#BAddNew").css({"background-color":"#28ba05","color":"#ffffff"})
+			}else{
+				$("#BAddNew").css({'background-color':'#E5E5E5','color':'#999'})
+			}
+		}
+	}
 }
 
 function SetStatus()
@@ -20,7 +33,15 @@ function SetStatus()
 }
 function InitPage()
 {
-	KeyUp("Loc^BuyLoc");
+	KeyUp("Loc^BuyLoc^Hospital"); //清空选择 Modied By QW20210629 BUG:QW0131 院区
+	//Add By QW20210629 BUG:QW0131 院区 begin
+	var HosCheckFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","990051");
+	if(HosCheckFlag=="0")
+	{
+		hiddenObj("cHospital",1);
+		hiddenObj("Hospital",1);
+	}
+	//Add By QW20210629 BUG:QW0131 院区 end
 }
 function GetLoc(value)
 {
@@ -64,5 +85,11 @@ function BAddNew_Click() //GR0026 点击新增后新窗口打开模态窗口
 	
 	showWindow(url,"入库单","","","icon-w-paper","modal","","","large")	//modified by lmm 2020-06-04 UI
 	
+}
+
+//Add By QW20210629 BUG:QW0131 院区
+function GetHospital(value)
+{
+	GetLookUpID("HospitalDR",value); 			
 }
 document.body.onload = BodyLoadHandler;

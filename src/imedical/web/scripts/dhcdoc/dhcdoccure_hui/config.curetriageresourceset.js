@@ -11,6 +11,7 @@ function InitHospList()
 	var hospStr=session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
 	var hospComp = GenHospComp("Doc_Cure_TriageRes",hospStr);
 	hospComp.jdata.options.onSelect = function(e,t){
+		$("#SLocDesc").searchbox("setValue","");
 		if (!CheckDocCureUseBase()){
 			return;
 		}
@@ -28,11 +29,10 @@ function InitHospList()
 function CheckDocCureUseBase(){
 	var UserHospID=GetSelHospID();
 	var DocCureUseBase=$.m({
-		ClassName:"web.DHCDocConfig",
-		MethodName:"GetConfigNode",
-		Node: "DocCureUseBase",
-		HospId:UserHospID,
-		dataType:"text",
+		ClassName:"DHCDoc.DHCDocCure.VersionControl",
+		MethodName:"UseBaseControl",
+		HospitalId:UserHospID,
+		dataType:"text"
 	},false);
 	if (DocCureUseBase=="1"){
 		$(".window-mask.alldom").show();
@@ -54,20 +54,22 @@ function Init()
 	InitWinComb();
 }
 
+function AddGridData(){
+  	$('#add-dialog').window('open');
+  	$('#add-form').form("clear")
+  	$('#ServiceGroupList').combobox('enable')
+  	$HUI.checkbox("#DDCTRActive",{
+		checked:false	
+	})
+  	$('#submitdata').val("添加")  	
+}
+
 function InitCureTriageResourceDataGrid(){
 	var CureTriageResourceToolBar = [{
             text: '增加',
             iconCls: 'icon-add',
             handler: function() { 
-              	//$("#add-dialog").dialog("open");
-              	$('#add-dialog').window('open').window('resize',{width:'250px',height:'450px',top: 50,left:400});
-	 			//清空表单数据
-	 		  	$('#add-form').form("clear")
-	 		  	$('#ServiceGroupList').combobox('enable')
-	 		  	$HUI.checkbox("#DDCTRActive",{
-					checked:false	
-				})
-	 		  	$('#submitdata').val("添加")  
+              	AddGridData();
             }
         },
         /*{
@@ -113,42 +115,41 @@ function InitCureTriageResourceDataGrid(){
 			}
 		}];
 	var CureTriageResourceColumns=[[    
-                    { field: 'DDCTRROWID', title: 'DDCTRROWID', width: 1, sortable: true,hidden:true
-					}, 
-					{ field: 'DDCTRServiceGroup', title:'服务组名称', width: 200, sortable: true  
-					},
-					{ field: 'DDCTRServiceGroupID', title:'', width: 20, sortable: true  ,hidden:true
-					},
-					{ field: 'DDCTRCTLoc', title:'科室名称', width: 300, sortable: true  
-					},
-					{ field: 'DDCTRCTLocID', title:'', width: 20, sortable: true,hidden:true
-					},
-        			{ field: 'DDCTRCTPCP', title: '资源名称', width: 250, sortable: true
-					},
-					{ field: 'DDCTRCTPCPID', title:'', width: 20, sortable: true  ,hidden:true
-					},
-					{ field: 'DDCTRCount', title:'可分配数量', width: 150, sortable: true
-					},
-					{ field: 'DDCTRActive', title: '是否无效', width: 150, sortable: true, resizable: true
-					}
-    			 ]];
+			{ field: 'DDCTRROWID', title: 'DDCTRROWID', width: 1, sortable: true,hidden:true
+			}, 
+			{ field: 'DDCTRServiceGroup', title:'服务组名称', width: 200, sortable: true  
+			},
+			{ field: 'DDCTRServiceGroupID', title:'', width: 20,hidden:true
+			},
+			{ field: 'DDCTRCTLoc', title:'科室名称', width: 300, sortable: true  
+			},
+			{ field: 'DDCTRCTLocID', title:'', width: 20,hidden:true
+			},
+			{ field: 'DDCTRCTPCP', title: '资源名称', width: 250
+			},
+			{ field: 'DDCTRCTPCPID', title:'', width: 20,hidden:true
+			},
+			{ field: 'DDCTRCount', title:'可分配数量', width: 150
+			},
+			{ field: 'DDCTRActive', title: '是否无效', width: 150
+			}
+		]];
 	CureTriageResourceDataGrid=$('#tabCureTriageResource').datagrid({  
 		fit : true,
-		//width : 'auto',
+		remoteSort:false,
 		border : false,
 		striped : true,
 		singleSelect : true,
 		fitColumns : true,
 		autoRowHeight : false,
-		//url : PUBLIC_CONSTANT.URL.QUERY_GRID_URL,
 		loadMsg : '加载中..',  
-		pagination : true,  //是否分页
-		rownumbers : true,  //
+		pagination : true,
+		rownumbers : true,
 		idField:"Rowid",
-		pageSize:15,
-		pageList : [15,50,100],
+		pageSize:20,
+		pageList : [20,50,100],
 		columns :CureTriageResourceColumns,
-		toolbar:CureTriageResourceToolBar,
+		//toolbar:CureTriageResourceToolBar,
 		onClickRow:function(rowIndex, rowData){
 			//PTRowid=rowData.PTRowid
 		},
@@ -285,16 +286,16 @@ function SaveFormData(){
 		'str':InputPara,
 	},function testget(value){
 		if(value=="0"){
-			$.messager.show({title:"提示",msg:"保存成功"});	
+			$.messager.show({title:"提示",msg:"保存成功！"});	
 			$("#add-dialog").dialog( "close" );
 			CureTriageResourceDataGridLoad();
 			return true;							
 		}else{
 			var err=""
-			if (value=="100") err="必填字段不能为空";
-			else if (value=="101") err="该资源已配置,请确认.";
+			if (value=="100") err="必填字段不能为空！";
+			else if ((value=="101")||(value=="102")) err="该资源已配置,请确认！";
 			else err=value;
-			$.messager.alert('Warning',err);
+			$.messager.alert('提示',err,"warning");
 			return false;
 		}
 	});
@@ -303,8 +304,7 @@ function SaveFormData(){
 function UpdateGridData(){
 	var rows = CureTriageResourceDataGrid.datagrid('getSelections');
 	if (rows.length ==1) {
-		//$("#add-dialog").dialog("open");
-		$('#add-dialog').window('open').window('resize',{width:'250px',height:'450px',top: 50,left:400});
+		$('#add-dialog').window('open');
 		//清空表单数据
 		$('#add-form').form("clear");
 		$('#DDCTRCTLocList').combobox('setValue',rows[0].DDCTRCTLocID)
@@ -336,9 +336,9 @@ function UpdateGridData(){
 
 		$('#updateym').val("修改")    
 	}else if (rows.length>1){
-		$.messager.alert("错误","您选择了多行！",'err')
+		$.messager.alert("提示","您选择了多行！",'warning')
 	}else{
-		$.messager.alert("错误","请选择一行！",'err')
+		$.messager.alert("提示","请选择一行！",'warning')
 	}
 
 }
@@ -346,22 +346,27 @@ function UpdateGridData(){
 function CureTriageResourceDataGridLoad()
 {
 	var HospID=GetSelHospID();
+	var LocDesc=$("#SLocDesc").searchbox("getValue");
 	$.cm({
 		ClassName:"DHCDoc.DHCDocCure.RBCServiceGroupSet",
 		QueryName:"QueryTriageResource",
 		LocRowID:"",
 		HospID:HospID,
+		LocDesc:LocDesc,
 		Pagerows:CureTriageResourceDataGrid.datagrid("options").pageSize,
 		rows:99999
 	},function(GridData){
-		CureTriageResourceDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData); 
+		CureTriageResourceDataGrid.datagrid('unselectAll').datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData); 
 	})
 };
 
 function GetSelHospID(){
-	var HospID=$HUI.combogrid('#_HospList').getValue();
-	if ((!HospID)||(HospID=="")) {
-		HospID=session['LOGON.HOSPID'];
+	var HospID=session['LOGON.HOSPID'];
+	if($('#_HospList').length>0){
+		HospID=$HUI.combogrid('#_HospList').getValue();
+		if ((!HospID)||(HospID=="")) {
+			HospID=session['LOGON.HOSPID'];
+		}
 	}
 	return HospID;
 }

@@ -16,18 +16,53 @@ var SelectedRow = -1;  //hisui改造 modified by kdf 2018-03-01
 var rowid=0;
 function BodyLoadHandler() 
 {	
+    //modified by cjt 20230203 需求号3220218 UI页面改造
+    initPanelHeaderStyle();
+    initButtonColor();
     InitUserInfo(); //系统参数
 	InitEvent();
 	KeyUp("EquipType^Cat^StatCat^Unit");	//清空选择	
 	//messageShow("","","",document.getElementById("UnitDR").value)
 	Muilt_LookUp("EquipType^Cat^StatCat^Unit^Hold1Desc^Hold2Desc");
 	disabled(true);//灰化
-	initButtonWidth()  //hisui改造 add by lmm 2018-08-20
+	//initButtonWidth()  //hisui改造 add by lmm 2018-08-20
 	initCatLookUp()	//add by csj 20190603	分类树根据参数是否弹窗
 	//Add by JDL 2012-12-20 JDL0095
 	//InitPageNumInfo("DHCEQCMasterItem.MasterItem","DHCEQCMasterItem");
 	initMasterItem()	//add by csj 20190809
+	//czf 2021-05-12 1837088 begin
+	var CatShow=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","990052")	//是否新窗口打开分类树
+	if (!+CatShow)
+	{
+		initEquipCatTree();
+	}
+	else
+	{
+		singlelookup("Cat","EM.L.EquipCat",[{name:"Desc",type:1,value:"Cat"},{name:"EquipTypeDR",type:4,value:"EquipTypeDR"},{name:"StatCatDR",type:4,value:"StatCatDR"},{"name":"EditFlag","type":"2","value":"1"}],CatDR)
+	}
+	//czf 2021-05-12 1837088 end
 }
+
+///czf 1837088 2021-05-12
+///初始化分类树
+function initEquipCatTree()
+{
+	var EquipeCatTree=$.m({
+		    ClassName:"web.DHCEQ.Plat.LIBTree",
+		    MethodName:"GetEquipeCatTreeStr"
+		},false);
+		
+	var cbtree = $HUI.combotree('#Cat',{
+		panelWidth:400,
+		panelHeight:400,
+		editable:true,
+		onChange: function (newValue, oldValue) {
+			SetElement("CatDR",newValue);
+		}
+		});
+	cbtree.loadData(JSON.parse(EquipeCatTree));
+}
+
 function InitEvent()
 {
 	var obj=document.getElementById("BAdd");
@@ -36,7 +71,7 @@ function InitEvent()
 	if (obj) obj.onclick=BUpdate_Click;
 	var obj=document.getElementById("BDelete");
 	if (obj) obj.onclick=BDelete_Click;
-	var obj=document.getElementById(GetLookupName("Cat"));
+	var obj=document.getElementById("Cat");		//czf 1835492
 	if (obj) obj.onclick=EquiCat_Click;
 	var obj=document.getElementById("BClear");
 	if (obj) obj.onclick=BClear_Click;
@@ -123,6 +158,9 @@ function BFind_Click()
 		
 	}
 	val=val+"&EquipAttributeFlag="+GetElementValue("EquipAttributeFlag");
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		val += "&MWToken="+websys_getMWToken()
+	}
 	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCMasterItem"+val;  //hisui改造 modify by lmm 2018-08-17
 }
 function BClear_Click() 
@@ -132,10 +170,16 @@ function BClear_Click()
 }
 function EquiCat_Click()
 {
-	var CatName=GetElementValue("Cat")
-	var str="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCEquipCatTree&Type=SelectTree&CatName="+CatName;
-	showWindow(str,"设备分类树","","","","","","","middle",SetEquipCat)	 //modify by lmm 2020-06-05 UI
-//    window.open(str,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=360,height=460,left=150,top=150')
+	//modified by czf 2021-03-23 1835492
+	var CatShow=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","990052")	//是否新窗口打开分类树
+	if (!+CatShow)
+	{
+		$("#Cat").lookup('hidePanel');
+		var CatName=GetElementValue("Cat")
+		var str="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCEquipCatTree&Type=SelectTree&CatName="+CatName;
+		showWindow(str,"设备分类树","","","","","","","middle",SetEquipCat)	 //modify by lmm 2020-06-05 UI
+		//window.open(str,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=360,height=460,left=150,top=150')
+	}
 }
 
 function SetEquipCat(id,text)
@@ -144,7 +188,7 @@ function SetEquipCat(id,text)
 	SetElement("CatDR",id);
 }
 
-function BCopy_Click() //
+function BCopy_Click()
 {
 	if (condition()) return;
 	if (CheckEquipCat(GetElementValue("CatDR"))<0)	//2010-05-31 党军 DJ0044 begin
@@ -218,6 +262,10 @@ function BAdd_Click() //增加
 	{
 		alertShow("操作成功")
 		location.reload();
+	}
+	else
+	{
+		alertShow("操作失败!")
 	}	
 }
 function CombinData()
@@ -267,16 +315,25 @@ function BUpdate_Click()
 	var SelectType=$("#EquipAttributeList").keywords("getSelected");
 	var i=SelectType.length;
 	var EquipAttributeString=""
-	for (var j=0;j<i;j++)
+	if(i>0)  //modified by sjh SJH0035 2020-09-22 start   修改设备属性不能完全删除的问题
 	{
-		if(EquipAttributeString=="")
+		for (var j=0;j<i;j++)
 		{
-			EquipAttributeString=SelectType[j].id
-		}else
-		{
-			EquipAttributeString=EquipAttributeString+"^"+SelectType[j].id
+			if(EquipAttributeString=="")
+			{
+				EquipAttributeString=SelectType[j].id
+			}else
+			{
+				EquipAttributeString=EquipAttributeString+"^"+SelectType[j].id
+			}
 		}
 	}
+	else
+	{
+		var EquipAttributeString=""
+	}
+	//modified by sjh SJH0035 2020-09-22 end
+	
 	//begin add by jyp 2019-09-02 设备属性相关调整
 	var result=cspRunServerMethod(encmeth,'','',plist,"",EquipAttributeString);    // modify by jyp 2019-09-02 设备属性相关调整
 	result=result.replace(/\\n/g,"\n")
@@ -342,26 +399,38 @@ function Clear()
 	SetElement("Code",""); 
 	SetElement("Desc","");
 	//SetElement("EquipTypeDR",""); //modified by wy 2019-5-25 899765
-	//SetElement("EquipType",""); //
-	SetElement("CatDR",""); //
-	SetElement("Cat","");//
-	SetElement("StatCatDR","");//
-	SetElement("StatCat","");//
-	SetElement("Remark","");//
-	SetElement("UnitDR","");//
+	//SetElement("EquipType",""); 
+	SetElement("CatDR",""); 
+	//SetElement("Cat","");	//czf 1837088 2021-05-12 begin
+	var jObj=$("#Cat")
+	var objClassInfo=jObj.prop("class")
+	if (objClassInfo.indexOf("combotree")>=0){
+		jObj.combotree('setValue',""); 
+		var t = $("#Cat").combotree('tree');
+		collapseAllNode(t);
+	}
+	else
+	{
+		SetElement("Cat","");
+	}						//czf 1837088 2021-05-12 end
+	
+	SetElement("StatCatDR","");
+	SetElement("StatCat","");
+	SetElement("Remark","");
+	SetElement("UnitDR","");
 	SetElement("Unit","");
 	
 	//add by jdl 2009-9-12 JDL0029
-	//SetElement("InvalidFlag","");//
-	SetElement("ForceInspectFlag","");//
-	SetElement("Hold1","");//
-	SetElement("Hold2","");//
-	SetElement("Hold3","");//
+	//SetElement("InvalidFlag","");
+	SetElement("ForceInspectFlag","");
+	SetElement("Hold1","");
+	SetElement("Hold2","");
+	SetElement("Hold3","");
 	SetElement("Hold4","");
 	SetElement("Hold5","");
 	SetElement("Hold1Desc","");
 	SetElement("Hold1Code",""); //Mozy0110
-	SetElement("Hold2Desc","");//
+	SetElement("Hold2Desc","");
 	$("#EquipAttributeList").keywords("clearAllSelected"); //add by wl 2020-02-18 WL0051
 	SetElement("MeasureFee","");		//czf 2020-04-27
 
@@ -372,18 +441,35 @@ function SetData(rowid)
 	if (encmeth=="") return;
 	var gbldata=cspRunServerMethod(encmeth,'','',rowid);
 	var list=gbldata.split("^");
-	SetElement("RowID",list[0]); //rowid
-	SetElement("Code",list[1]); //
-	SetElement("Desc",list[2]); //
-	SetElement("EquipTypeDR",list[3]); //
-	SetElement("EquipType",list[4]); //
-	SetElement("CatDR",list[5]); //
-	SetElement("Cat",list[6]);//
-	SetElement("StatCatDR",list[7]);//
-	SetElement("StatCat",list[8]);//
-	SetElement("Remark",list[9]);//
-	SetElement("UnitDR",list[10]);//
-	SetElement("Unit",list[11]);//
+	SetElement("RowID",list[0]);
+	SetElement("Code",list[1]);
+	SetElement("Desc",list[2]);
+	SetElement("EquipTypeDR",list[3]);
+	SetElement("EquipType",list[4]);
+	SetElement("CatDR",list[5]);
+	//SetElement("Cat",list[6]);	///czf 1837088 2021-05-12 begin
+	var jObj=$("#Cat")
+	var objClassInfo=jObj.prop("class")
+	if (objClassInfo.indexOf("combotree")>=0){
+		jObj.combotree('setValue',list[5]);
+		var t = $("#Cat").combotree('tree');
+		var node = t.tree('find', list[5]);
+		if (node!=null)
+		{
+			expandParent(t,node);
+			t.tree("scrollTo",node.target);
+		}
+	}
+	else
+	{
+		SetElement("Cat",list[6]);
+	}		///czf 1837088 2021-05-12 end
+	
+	SetElement("StatCatDR",list[7]);
+	SetElement("StatCat",list[8]);
+	SetElement("Remark",list[9]);
+	SetElement("UnitDR",list[10]);
+	SetElement("Unit",list[11]);
 	
 	//add by jdl 2009-9-12 JDL0029
 	if (list[12]=="N")
@@ -471,14 +557,28 @@ function disabled(value)//灰化
 		DisableBElement("BAdd",!value)
 		EQCommon_HiddenElement("BComputer")   //add by lmm 2020-05-07
 	}
-}	
+	// add by sjh SJH0031 2020-08-03 begin
+	if ((GetElementValue("Status")==1)||(GetElementValue("Status")==2))
+	{
+		DisableBElement("BUpdate",true)
+		DisableBElement("BDelete",true)
+		DisableBElement("BAdd",true)
+		DisableBElement("BClear",true)
+	}
+	// add by sjh SJH0031 2020-08-03 end
+}
+
+//czf 1837088 2021-05-12 combotree的DR未验证值
 function condition()//条件
 {
-	if (CheckMustItemNull()) return true;
-	/*
-	if (CheckItemNull(0,"Code")) return true;
-	if (CheckItemNull(0,"Desc")) return true;
-	*/
+	if(GetElementValue("Code")==""){alertShow("代码不能为空");return true;}
+	else if(GetElementValue("Desc")==""){alertShow("描述不能为空");return true;}
+	else if(GetElementValue("EquipTypeDR")==""){alertShow("管理类组不能为空");return true;}
+	else if(GetElementValue("StatCatDR")==""){alertShow("设备类型不能为空");return true;}
+	else if(GetElementValue("CatDR")==""){alertShow("设备分类不能为空");return true;}
+	else if(GetElementValue("UnitDR")==""){alertShow("单位不能为空");return true;}
+	
+	//if (CheckMustItemNull()) return true;
 	return false;
 }
 
@@ -651,5 +751,49 @@ function clearData()
 {
 
 }
+
+///czf 1837088 2021-05-12
+///根据叶子节点展开所有父节点
+function expandParent(treeObj, curnode)
+{
+    var parentNode = treeObj.tree("getParent", curnode.target);
+    if(parentNode != null && parentNode != "undefined"){
+	    treeObj.tree("expand", parentNode.target);
+	    expandParent(treeObj, parentNode);
+    }
+    else
+    {
+	    treeObj.tree("expand", curnode.target);
+	}
+}
+
+///czf 1837088 2021-05-12
+///返回当前节点的首级节点
+function getFirstTreeNode(treeObj, curnode)
+{
+	var parentNode = treeObj.tree("getParent", curnode.target);
+	if(parentNode != null && parentNode != "undefined"){
+    	return getFirstTreeNode(treeObj, parentNode);
+    }
+    else
+    {
+    	return curnode;
+    }
+}
+
+///czf 1837088 2021-05-12
+//折叠所有节点
+function collapseAllNode(treeObj)
+{
+	var roots=treeObj.tree("getRoots");
+    for(var j=0; j<roots.length; j++){
+        var rootnode=roots[j];
+        if(rootnode!=null&& rootnode != "undefined")
+        {
+            treeObj.tree("collapseAll",rootnode.target);
+        }
+    }
+}
+
 document.body.style.padding="10px 10px 10px 5px"  // hisui-调整 add by kdf 2018-11-09 设置面板内边距 
 document.body.onload = BodyLoadHandler;

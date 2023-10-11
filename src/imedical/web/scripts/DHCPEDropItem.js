@@ -983,13 +983,17 @@ function GetPayModeInfo(IsAllRefund)
 		}		
 		backtotal=parseFloat(backtotal)+parseFloat(backamount);
 		newInvAmount=newInvAmount+remainamount;
+		var PayModeCode=tkMakeServerCall("web.DHCPE.DHCPECommon","GetPayModeCode",GetCtlValueById('PayModeDR'+i))
 		if (IsAllRefund=="1")	 //全退  20120718 需要修改支付方式ID
 		{
-			if ((GetCtlValueById('PayModeDR'+i)=="3"))  CardFlag="1"
-		}                                         //如果有预交金支付
+			//if ((GetCtlValueById('PayModeDR'+i)=="3"))  CardFlag="1"  //如果有预交金支付
+			if ((PayModeCode=="CPP")) CardFlag="1" 
+		}                                        
+
 	    else
 	   	{
-			if ((GetCtlValueById('PayModeDR'+i)=="3")&&(parseFloat(backamount)!=""))  CardFlag="1"  
+			//if ((GetCtlValueById('PayModeDR'+i)=="3")&&(parseFloat(backamount)!=""))  CardFlag="1"  
+			if ((PayModeCode=="CPP")&&(parseFloat(backamount)!="")) CardFlag="1"  
 		}	
 		if (remainamount!=0)
 		{
@@ -1347,13 +1351,17 @@ function GetAccPayModeInfo(IsAllRefund)
 		}		
 		backtotal=parseFloat(backtotal)+parseFloat(backamount);
 		newInvAmount=newInvAmount+remainamount;
+		var PayModeCode=tkMakeServerCall("web.DHCPE.DHCPECommon","GetPayModeCode",GetCtlValueById('PayModeDR'+i))
 		if (IsAllRefund=="1")	 //全退  20120718 需要修改支付方式ID
 		{
-			if ((GetCtlValueById('PayModeDR'+i)=="3"))  CardFlag="1"
-		}                                         //如果有预交金支付
+			//if ((GetCtlValueById('PayModeDR'+i)=="3"))  CardFlag="1"  //如果有预交金支付
+			if ((PayModeCode=="CPP")) CardFlag="1" 
+
+		}                                        
 	    else
 	   	{
-			if ((GetCtlValueById('PayModeDR'+i)=="3")&&(parseFloat(backamount)!=""))  CardFlag="1"  
+			//if ((GetCtlValueById('PayModeDR'+i)=="3")&&(parseFloat(backamount)!=""))  CardFlag="1"  
+			if ((PayModeCode=="CPP")&&(parseFloat(backamount)!="")) CardFlag="1"  
 		}	
 		//if (remainamount!=0)
 		if (1)

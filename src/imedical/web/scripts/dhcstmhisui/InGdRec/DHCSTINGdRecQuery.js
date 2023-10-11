@@ -1,64 +1,68 @@
-/*Èë¿â×ÛºÏ²éÑ¯*/
-var init = function () {
-	$UI.linkbutton('#QueryBT',{
-		onClick:function(){
+ï»¿/* å…¥åº“ç»¼åˆæŸ¥è¯¢*/
+var init = function() {
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
 			QueryRecDetailInfo();
 		}
 	});
-	$UI.linkbutton('#ClearBT',{
-		onClick:function(){
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
 			INgrClear();
 		}
 	});
-	var RecLocParams=JSON.stringify(addSessionParams({Type:"Login"}));
+	var RecLocParams = JSON.stringify(addSessionParams({ Type: 'Login' }));
 	var RecLocBox = $HUI.combobox('#RecLoc', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+RecLocParams,
-			valueField: 'RowId',
-			textField: 'Description'
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + RecLocParams,
+		valueField: 'RowId',
+		textField: 'Description',
+		onSelect: function(record) {
+			var LocId = record['RowId'];
+			$HUI.combotree('#StkGrpId').setFilterByLoc(LocId);
+			if (CommParObj.ApcScg == 'L') {
+				FVendorBox.clear();
+				var Params = JSON.stringify(addSessionParams({ APCType: 'M', LocId: LocId }));
+				var url = $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetVendor&ResultSetType=array&Params=' + Params;
+				FVendorBox.reload(url);
+			}
+		}
 	});
-	var VendorParams=JSON.stringify(addSessionParams({APCType:"M",RcFlag:"Y"}));
+	var VendorParams = JSON.stringify(addSessionParams({ APCType: 'M' }));
 	var VendorBox = $HUI.combobox('#Vendor', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetVendor&ResultSetType=array&Params='+VendorParams,
-			valueField: 'RowId',
-			textField: 'Description'
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetVendor&ResultSetType=array&Params=' + VendorParams,
+		valueField: 'RowId',
+		textField: 'Description'
 	});
-	var PhManufacturerParams=JSON.stringify(addSessionParams({StkType:"M"}));
+	var PhManufacturerParams = JSON.stringify(addSessionParams({ StkType: 'M' }));
 	var PhManufacturerBox = $HUI.combobox('#PhManufacturer', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetPhManufacturer&ResultSetType=array&Params='+PhManufacturerParams,
-			valueField: 'RowId',
-			textField: 'Description'
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetPhManufacturer&ResultSetType=array&Params=' + PhManufacturerParams,
+		valueField: 'RowId',
+		textField: 'Description'
 	});
-	var IngrTypeIdParams=JSON.stringify(addSessionParams({Type:"IM"}));
+	var IngrTypeIdParams = JSON.stringify(addSessionParams({ Type: 'IM' }));
 	var IngrTypeIdBox = $HUI.combobox('#IngrTypeId', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetOperateType&ResultSetType=array&Params='+IngrTypeIdParams,
-			valueField: 'RowId',
-			textField: 'Description'
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetOperateType&ResultSetType=array&Params=' + IngrTypeIdParams,
+		valueField: 'RowId',
+		textField: 'Description'
 	});
-	var CreateUserIdParams=JSON.stringify(addSessionParams({LocDr:""}));
+	var CreateUserIdParams = JSON.stringify(addSessionParams({ LocDr: '' }));
 	var CreateUserIdBox = $HUI.combobox('#CreateUserId', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetDeptUser&ResultSetType=array&Params='+CreateUserIdParams,
-			valueField: 'RowId',
-			textField: 'Description'
-	});	
-	var INFOMTParams=JSON.stringify(addSessionParams());
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetDeptUser&ResultSetType=array&Params=' + CreateUserIdParams,
+		valueField: 'RowId',
+		textField: 'Description'
+	});
+	var INFOMTParams = JSON.stringify(addSessionParams());
 	var INFOMTBox = $HUI.combobox('#INFOMT', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetMarkType&ResultSetType=array&Params='+INFOMTParams,
-			valueField: 'RowId',
-			textField: 'Description'
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetMarkType&ResultSetType=array&Params=' + INFOMTParams,
+		valueField: 'RowId',
+		textField: 'Description'
 	});
-	var INFOPBLevelParams=JSON.stringify(addSessionParams());
+	var INFOPBLevelParams = JSON.stringify(addSessionParams());
 	var INFOPBLevelBox = $HUI.combobox('#INFOPBLevel', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetPBLevel&ResultSetType=array&Params='+INFOPBLevelParams,
-			valueField: 'RowId',
-			textField: 'Description'
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetPBLevel&ResultSetType=array&Params=' + INFOPBLevelParams,
+		valueField: 'RowId',
+		textField: 'Description'
 	});
-	var InsuTypeParams=JSON.stringify(addSessionParams());
-	var InsuTypeBox = $HUI.combobox('#InsuType', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetInsuCat&ResultSetType=array&Params='+InsuTypeParams,
-			valueField: 'RowId',
-			textField: 'Description'
-	});
-	/*$('#StkGrpId').stkscgcombotree({
+	/* $('#StkGrpId').stkscgcombotree({
 		onSelect:function(node){
 			var Params=JSON.stringify(addSessionParams());
 			$.cm({
@@ -74,204 +78,263 @@ var init = function () {
 			}
 	})*/
 	var StkCatBox = $HUI.combobox('#StkCatBox', {
-			valueField: 'RowId',
-			textField: 'Description',
-			onShowPanel: function () {
-				var scg=$("#StkGrpId").combotree('getValue');
-				var Params=JSON.stringify(addSessionParams());
-				StkCatBox.clear();
-				var url=$URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetStkCat&ResultSetType=array&StkGrpId=' + scg+'&Params='+Params;
-				StkCatBox.reload(url);
-			}
+		valueField: 'RowId',
+		textField: 'Description',
+		onShowPanel: function() {
+			var scg = $('#StkGrpId').combotree('getValue');
+			var Params = JSON.stringify(addSessionParams());
+			StkCatBox.clear();
+			var url = $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetStkCat&ResultSetType=array&StkGrpId=' + scg + '&Params=' + Params;
+			StkCatBox.reload(url);
+		}
 	});
-	var HandlerParams = function(){
+	var HandlerParams = function() {
 		var ScgId = $('#StkGrpId').combotree('getValue');
 		var Locdr = $('#RecLoc').combo('getValue');
-		var Obj = {StkGrpRowId:ScgId, StkGrpType:'M', Locdr:Locdr,BDPHospital:gHospId};
+		var Obj = { StkGrpRowId: ScgId, StkGrpType: 'M', Locdr: Locdr, BDPHospital: gHospId };
 		return Obj;
-	}
+	};
 	$('#InciDesc').lookup(InciLookUpOp(HandlerParams, '#InciDesc', '#InciRowid'));
 	
-	
-	var InGdRecDetailCm = [[{
-			title : "RowId",
-			field : 'RowId',
-			width : 100,
-			hidden : true
+	var InGdRecDetailCm = [[
+		{
+			title: 'RowId',
+			field: 'RowId',
+			width: 100,
+			hidden: true
 		}, {
-			title : "Èë¿âµ¥ºÅ",
-			field : 'IngrNo',
-			width : 80
+			title: 'å…¥åº“å•å·',
+			field: 'IngrNo',
+			width: 150
 		}, {
-			title : "ÖÆµ¥ÈÕÆÚ",
-			field : 'IngrCreateDate',
-			width : 100
+			title: 'åˆ¶å•æ—¥æœŸ',
+			field: 'IngrCreateDate',
+			width: 100
 		}, {
-			title : 'Îï×Ê´úÂë',
-			field : 'InciCode',
-			width : 80
+			title: 'ç‰©èµ„ä»£ç ',
+			field: 'InciCode',
+			width: 80
 		}, {
-			title : 'Îï×ÊÃû³Æ',
-			field : 'InciDesc',
-			width : 230
+			title: 'ç‰©èµ„åç§°',
+			field: 'InciDesc',
+			width: 230
 		}, {
-			title : '¸ßÖµÌõÂë',
-			field : 'HVBarCode',
-			width : 80
+			title: 'é«˜å€¼æ¡ç ',
+			field: 'HVBarCode',
+			width: 120
 		}, {
-			title : '×Ô´øÌõÂë',
-			field : 'OrigiBarCode',
-			width : 80
+			title: 'è‡ªå¸¦æ¡ç ',
+			field: 'OrigiBarCode',
+			width: 120
 		}, {
-			title : '¹æ¸ñ',
-			field : 'Spec',
-			width : 80
+			title: 'è§„æ ¼',
+			field: 'Spec',
+			width: 80
 		}, {
-			title : 'ĞÍºÅ',
-			field : 'Model',
-			width : 80
+			title: 'å‹å·',
+			field: 'Model',
+			width: 80
 		}, {
-			title : "µ¥Î»",
-			field : 'PurUom',
-			width : 80
+			title: 'å•ä½',
+			field: 'PurUom',
+			width: 80
 		}, {
-			title : "ÊıÁ¿",
-			field : 'Qty',
-			width : 100,
-	        align : 'right'
+			title: 'æ•°é‡',
+			field: 'Qty',
+			width: 100,
+			align: 'right'
 		}, {
-			title : "½ø¼Û",
-			field : 'Rp',
-			width : 100,
-	        align : 'right'
+			title: 'è¿›ä»·',
+			field: 'Rp',
+			width: 100,
+			align: 'right'
 		}, {
-			title : "ÊÛ¼Û",
-			field : 'Sp',
-			width : 100,
-	        align : 'right'
+			title: 'å”®ä»·',
+			field: 'Sp',
+			width: 100,
+			align: 'right'
 		}, {
-			title : "½øÏú²î¼Û",
-			field : 'Margin',
-			width : 100,
-	        align : 'right'
+			title: 'è¿›é”€å·®ä»·',
+			field: 'Margin',
+			width: 100,
+			align: 'right'
 		}, {
-			title : "½ø¼Û½ğ¶î",
-			field : 'RpAmt',
-			width : 100,
-	        align : 'right'
+			title: 'è¿›ä»·é‡‘é¢',
+			field: 'RpAmt',
+			width: 100,
+			align: 'right'
 		}, {
-			title : "ÊÛ¼Û½ğ¶î",
-			field : 'SpAmt',
-			width : 100,
-	        align : 'right'
+			title: 'å”®ä»·é‡‘é¢',
+			field: 'SpAmt',
+			width: 100,
+			align: 'right'
 		}, {
-			title : "¹©Ó¦ÉÌ",
-			field : 'Vendor',
-			width : 180
+			title: 'ä¾›åº”å•†',
+			field: 'Vendor',
+			width: 180
 		}, {
-			title : "ÅúºÅ",
-			field : 'BatNo',
-			width : 90
+			title: 'æ‰¹å·',
+			field: 'BatNo',
+			width: 90
 		}, {
-			title : "ÓĞĞ§ÆÚ",
-			field : 'ExpDate',
-			width : 100
+			title: 'æœ‰æ•ˆæœŸ',
+			field: 'ExpDate',
+			width: 100
 		}, {
-			title : "³§ÉÌ",
-			field : 'Manf',
-			width : 180
+			title: 'ç”Ÿäº§å‚å®¶',
+			field: 'Manf',
+			width: 180
 		}, {
-			title : "Åú´Îid",
-			field : 'Inclb',
-			width : 70,
-			hidden : true
+			title: 'æ‰¹æ¬¡id',
+			field: 'Inclb',
+			width: 70,
+			hidden: true
 		}, {
-			title : "»õÎ»",
-			field : 'StkBin',
-			width : 80
+			title: 'è´§ä½',
+			field: 'StkBin',
+			width: 80
 		}, {
-			title : "·¢Æ±ºÅ",
-			field : 'InvNo',
-			width : 80
+			title: 'å‘ç¥¨å·',
+			field: 'InvNo',
+			width: 80
 		}, {
-			title : "·¢Æ±ÈÕÆÚ",
-			field : 'InvDate',
-			width : 100
+			title: 'å‘ç¥¨æ—¥æœŸ',
+			field: 'InvDate',
+			width: 100
 		}, {
-			title : "·¢Æ±½ğ¶î",
-			field : 'InvMoney',
-			width : 100,
-	        align:'right'
+			title: 'å‘ç¥¨é‡‘é¢',
+			field: 'InvMoney',
+			width: 100,
+			align: 'right'
 		}, {
-			title : "¶¨¼ÛÀàĞÍ",
-			field : 'SpType',
-			width : 180
+			title: 'å®šä»·ç±»å‹',
+			field: 'SpType',
+			width: 180
 		}, {
-			title : "ÕĞ±ê±êÖ¾",
-			field : 'PbFlag',
-			width : 180
+			title: 'æ‹›æ ‡æ ‡å¿—',
+			field: 'PbFlag',
+			width: 180
 		}, {
-			title : "ÕĞ±ê¼¶±ğ",
-			field : 'PbLevel',
-			width : 180
+			title: 'æ‹›æ ‡çº§åˆ«',
+			field: 'PbLevel',
+			width: 180
 		}, {
-			title : "Ò½±£Àà±ğ",
-			field : 'InsuType',
-			width : 180
+			title: 'åŒ»ä¿ç±»åˆ«',
+			field: 'InsuType',
+			width: 180
 		}, {
-			title : "µ¥¾İ×´Ì¬",
-			field : 'Status',
-			width : 180
+			title: 'å•æ®çŠ¶æ€',
+			field: 'Status',
+			width: 180
 		}, {
-			title : "ÉóºËÈÕÆÚ",
-			field : 'IngrDate',
-			width : 180
+			title: 'å®¡æ ¸æ—¥æœŸ',
+			field: 'IngrDate',
+			width: 180
 		}, {
-			title : "¿â´æ·ÖÀà",
-			field : 'StkCatDesc',
-			width : 180
-		}			
+			title: 'å®¡æ ¸æ—¶é—´',
+			field: 'IngrTime',
+			width: 180
+		}, {
+			title: 'åº“å­˜åˆ†ç±»',
+			field: 'StkCatDesc',
+			width: 180
+		}, {
+			title: 'æ³¨å†Œè¯å·',
+			field: 'AdmNo',
+			width: 180
+		}, {
+			title: 'å›½å®¶åŒ»ä¿ç¼–ç ',
+			field: 'MatInsuCode',
+			width: 160
+		}, {
+			title: 'å›½å®¶åŒ»ä¿åç§°',
+			field: 'MatInsuDesc',
+			width: 160
+		}
 	]];
 	
 	var InGdRecDetailGrid = $UI.datagrid('#InGdRecDetailGrid', {
-		url: $URL,
 		queryParams: {
-			ClassName: 'web.DHCSTMHUI.DHCINGdRecStat',
-			QueryName: 'QueryRecDetail'
+			ClassName: 'web.DHCSTMHUI.DHCINGdRecItm',
+			QueryName: 'QueryRecDetail',
+			query2JsonStrict: 1,
+			totalFooter: '"InciDesc":"åˆè®¡"',
+			totalFields: 'RpAmt,SpAmt'
 		},
 		columns: InGdRecDetailCm,
-		showBar:true
-	})
+		showBar: true,
+		showFooter: true,
+		navigatingWithKey: true,
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
+				$(this).datagrid('selectRow', 0);
+			}
+		}
+	});
 	function QueryRecDetailInfo() {
-		var ParamsObj=$UI.loopBlock('FindConditions');
-		if(isEmpty(ParamsObj.StartDate)){
-			$UI.msg('alert','ÆğÊ¼ÈÕÆÚ²»ÄÜÎª¿Õ!');
+		var ParamsObj = $UI.loopBlock('FindConditions');
+		var StartDate = ParamsObj.StartDate;
+		var EndDate = ParamsObj.EndDate;
+		if (isEmpty(ParamsObj.RecLoc)) {
+			$UI.msg('alert', 'å…¥åº“ç§‘å®¤ä¸èƒ½ä¸ºç©º!');
 			return;
 		}
-		if(isEmpty(ParamsObj.EndDate)){
-			$UI.msg('alert','½ØÖ¹ÈÕÆÚ²»ÄÜÎª¿Õ!');
+		if (isEmpty(StartDate)) {
+			$UI.msg('alert', 'å¼€å§‹æ—¥æœŸä¸èƒ½ä¸ºç©º!');
 			return;
 		}
-		if(isEmpty(ParamsObj.RecLoc)){
-			$UI.msg('alert','Èë¿â¿ÆÊÒ²»ÄÜÎª¿Õ!');
+		if (isEmpty(EndDate)) {
+			$UI.msg('alert', 'æˆªæ­¢æ—¥æœŸä¸èƒ½ä¸ºç©º!');
 			return;
-		}	
-		var Params=JSON.stringify(ParamsObj);
+		}
+		if (compareDate(StartDate, EndDate)) {
+			$UI.msg('alert', 'æˆªæ­¢æ—¥æœŸä¸èƒ½å°äºå¼€å§‹æ—¥æœŸ!');
+			return;
+		}
+		var Params = JSON.stringify(ParamsObj);
 		InGdRecDetailGrid.load({
-			ClassName: 'web.DHCSTMHUI.DHCINGdRecStat',
+			ClassName: 'web.DHCSTMHUI.DHCINGdRecItm',
 			QueryName: 'QueryRecDetail',
-			Params:Params
+			query2JsonStrict: 1,
+			Params: Params,
+			totalFooter: '"InciDesc":"åˆè®¡"',
+			totalFields: 'RpAmt,SpAmt'
+		});
+		$HUI.tabs('#StockRecQuery', {
+			onSelect: function(title) {
+				if (title == 'å…¥åº“å•æ˜ç»†') {
+					var Params = JSON.stringify(ParamsObj);
+					InGdRecDetailGrid.load({
+						ClassName: 'web.DHCSTMHUI.DHCINGdRecItm',
+						QueryName: 'QueryRecDetail',
+						query2JsonStrict: 1,
+						Params: Params,
+						totalFooter: '"InciDesc":"åˆè®¡"',
+						totalFields: 'RpAmt,SpAmt'
+					});
+				} else if (title == 'å…¥åº“éªŒæ”¶å•æ‰“å°') {
+					var Params = JSON.stringify(ParamsObj);
+					var p_URL = PmRunQianUrl + '?reportName=DHCSTM_HUI_StockRecCheckStat.raq' + '&Params=' + Params;
+					var reportFrame = document.getElementById('StockRecCheck');
+					p_URL = CommonFillUrl(p_URL);
+					reportFrame.src = p_URL;
+					AddStatTab('', p_URL, '#tabs');
+				}
+			}
 		});
 	}
+	
 	function INgrClear() {
 		$UI.clearBlock('#FindConditions');
 		$UI.clear(InGdRecDetailGrid);
-		var Dafult={StartDate: DefaultStDate(),
-					EndDate: DefaultEdDate(),
-					RecLoc:gLocObj
-					}
-		$UI.fillBlock('#FindConditions',Dafult);
+		var DefaultData = {
+			StartDate: DefaultStDate(),
+			EndDate: DefaultEdDate(),
+			RecLoc: gLocObj
+		};
+		$UI.fillBlock('#FindConditions', DefaultData);
 	}
 	INgrClear();
-}
+	QueryRecDetailInfo();
+};
 $(init);

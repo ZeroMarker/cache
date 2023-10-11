@@ -24,32 +24,28 @@
    	}
 
    	obj.LoadRep = function(){
-		var aHospID = $('#cboHospital').combobox('getValue');
-		var DateFrom = $('#dtDateFrom').datebox('getValue');
-		var DateTo= $('#dtDateTo').datebox('getValue');
-		var Statunit = Common_CheckboxValue('chkStatunit');
-		var Qrycon = $('#aQryCon').combobox('getText');
+		var aHospID 	= $('#cboHospital').combobox('getValues').join('|');
+		var aDateFrom 	= $('#dtDateFrom').datebox('getValue');
+		var aDateTo		= $('#dtDateTo').datebox('getValue');
+		var aLocType 	= Common_CheckboxValue('chkStatunit');
+		var aQrycon 	= $('#cboQryCon').combobox('getValue');
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
+		
 		ReportFrame = document.getElementById("ReportFrame");
-		if(Qrycon==""){
-			$.messager.alert("提示","请选择筛选条件！", 'info');
-			return;	
-		}
-		if(DateFrom > DateTo){
+		if(aDateFrom > aDateTo){
 			$.messager.alert("提示","开始日期应小于或等于结束日期！", 'info');
 			return;
 		}
-		if ((DateFrom=="")||(DateTo=="")){
+		if ((aDateFrom=="")||(aDateTo=="")){
 			$.messager.alert("提示","请选择开始日期、结束日期！", 'info');
 			return;
 		}
-		var objDic = $cm({                  
-					ClassName:"DHCHAI.BT.Dictionary",
-					MethodName:"GetObjByDesc",
-					aTypeCode:"StatScreenCondition",
-					aDesc:Qrycon
-				},
-		false);	
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S400InvasOper.raq&aDateFrom=' + DateFrom +'&aDateTo='+ DateTo +'&aHospIDs='+aHospID +'&aLocIDs='+'' +'&aLocType='+ Statunit +'&aQryCon='+ objDic.BTCode;
+		if ((aStatDimens=="")){
+			$.messager.alert("提示","请选择展示维度！", 'info');
+			return;
+		}
+		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S400InvasOper.raq&aHospIDs='+aHospID +'&aDateFrom=' + aDateFrom +'&aDateTo='+ aDateTo+'&aLocType='+aLocType+'&aQryCon='+aQrycon+'&aStatDimens='+aStatDimens+'&aLocIDs='+aLocIDs+'&aPath='+cspPath;
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
@@ -69,6 +65,14 @@
 			},
 		    tooltip: {
 				trigger: 'axis',
+			},
+			toolbox: {
+				feature: {
+					dataView: {show: false, readOnly: false},
+					magicType: {show: false},
+					restore: {show: true},
+					saveAsImage: {show: true}
+				}
 			},
 		    legend: {
 		        orient: 'vertical',
@@ -124,65 +128,52 @@
 		obj.myChart.setOption(option1,true);
 		
 		 //当月科室感染率图表
-		var HospID = $('#cboHospital').combobox('getValue');
-		var DateFrom = $('#dtDateFrom').datebox('getValue');
-		var DateTo= $('#dtDateTo').datebox('getValue');
-		var StaType = Common_CheckboxValue('chkStatunit');
-		var Qrycon = $('#aQryCon').combobox('getValue');
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S400InvasOper' + "&QueryName=" + 'QryInvasOper' + "&Arg1=" + DateFrom + "&Arg2=" + DateTo+  "&Arg3=" + HospID +"&Arg4=" + "" +"&Arg5=" + StaType+"&Arg6=" +1+"&ArgCnt=" + 6;
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 120000, //60秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-				//console.log(data);
-				if(data=='{record:[],total : 0}'){
-					$('#EchartDiv').addClass('no-result');
-				}
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
+		var aHospID 	= $('#cboHospital').combobox('getValues').join('|');
+		var aDateFrom = $('#dtDateFrom').datebox('getValue');
+		var aDateTo= $('#dtDateTo').datebox('getValue');
+		var aLocType = Common_CheckboxValue('chkStatunit');
+		var aQryCon =  $('#cboQryCon').combobox('getValue');
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
+		
+		obj.myChart.showLoading();
+		$cm({
+			ClassName:'DHCHAI.STATV2.S400InvasOper',
+			QueryName:'QryInvasOper',
+			aHospIDs:aHospID,
+			aDateFrom:aDateFrom,
+			aDateTo:aDateTo,
+			aLocType:aLocType,
+			aQryCon:aQryCon,
+			aStatDimens:aStatDimens,
+			aLocIDs:aLocIDs,
+			page:1,    //可选项，页码，默认1
+			rows:999   //可选项，获取多少条数据，默认50
+		},function(rs){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			obj.echartLocInfRatio(rs);
 		});
 		
 	   obj.echartLocInfRatio = function(runQuery){
 			if (!runQuery) return;
+			var aHospID = $('#cboHospital').combobox('getValue');
+		    var QryCon="-H-";	//默认统计医院
+		    if (aHospID.indexOf('|')>-1) QryCon="-A-";	//多院区时统计全院
+			var aLocIDs = $('#cboLoc').combobox('getValues').join(',');	
 			var arrViewLoc = new Array();
 			var arrInfRatio = new Array();
 			var arrInfDiag = new Array();
 			var arrInfCount = new Array();
 			obj.arrLocG= new Array();
-			var arrRecord = runQuery.record;
+			var arrRecord = runQuery.rows;
 
 			for (var indRd = 0; indRd < arrRecord.length; indRd++){
 				var rd = arrRecord[indRd];
-				//去掉全院、医院、科室组
-				if ((rd["DimenCode"].indexOf('-A-')<0)) {
-					delete arrRecord[indRd];
-					continue;
+				if ((rd["xDimensKey"].indexOf(QryCon)>-1)||((aLocIDs!="")&&(rd["DimensDesc"]=="全部"))) {   	
+					arrViewLoc.push(rd["InvDesc"]);
+					arrInfRatio.push(rd["InfInvCount"]);
 				}
 			}
-			for (var indRd = 0; indRd < arrRecord.length; indRd++){                     
-				var rd = arrRecord[indRd];
-				//console.log(rd);
-				if(rd==undefined){   //去掉全院、医院、科室组后,会有数据变为undefined
-					continue;
-				}else{
-					arrViewLoc.push(rd["InvOperDesc"]);
-					arrInfRatio.push(rd["InvOperCount"]);
-				}
-			}
-			console.log(arrViewLoc)
-			console.log(arrInfRatio)
 			// 装载数据
 			obj.myChart.setOption(
 				{
@@ -192,7 +183,7 @@
 					series: [{
 						data:(function(){
 				            var arrNum=[];
-				        	for (var i = 0; i < arrViewLoc.length; i++) {	
+				        	for (var i = 0; i < arrViewLoc.length; i++) {
  								arrNum.push({"value": arrInfRatio[i],"name":arrViewLoc[i]});
 							}
 							return arrNum;  

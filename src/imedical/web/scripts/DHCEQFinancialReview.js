@@ -3,11 +3,20 @@ var rowid=0;
 var readonly;
 function BodyLoadHandler() 
 {
+	InitUserInfo();
 	InitPage();
 	FillData();
 	FillEquipType();
 	SetBussinessType();
 	SetEnabled();
+	initButtonWidth();
+	initPanelHeaderStyle();
+	initButtonColor();//cjc 2023-01-18 设置极简积极按钮颜色
+	initPanelHeaderStyle();//cjc 2023-01-17 初始化极简面板样式
+	//add by cjc 20230208管理类组输入框宽度
+	document.getElementById("EquipType").classList.add("textbox");
+	document.getElementById("EquipType").style.width='';
+	
 }
 
 function InitPage()
@@ -42,16 +51,16 @@ function BCreate_Clicked()
 {
 	//检测是否可以生成
 	var FRRowID=GetElementValue("FRRowID");
-	var BussinessTypeDR=GetElementValue("BussinessTypeDR");
+	var BussinessTypeDR=GetElementValue("BussinessType");
 	if (BussinessTypeDR=="")
 	{
-		alertShow("请选择业务类型!")
+		messageShow("","","","请选择业务类型!");
 		return
 	}
 	var EquipTypeIDs=GetElementValue("EquipTypeIDs");
 	if (EquipTypeIDs=="")
 	{
-		alertShow("请选择类组!")
+		messageShow("","","","请选择类组!");
 		return
 	}
 	var BussinessSDate=GetElementValue("BussinessSDate");
@@ -59,7 +68,7 @@ function BCreate_Clicked()
 	var Month=GetElementValue("Month");
 	if ((BussinessTypeDR=="ZJ")&&(Month==""))
 	{
-		alertShow("请输入月份!")
+		messageShow("","","","请输入月份!");
 		return
 	}
 	var Remark=GetElementValue("Remark");
@@ -76,16 +85,25 @@ function BCreate_Clicked()
 	//开始生成业务数据
   	var encmeth=GetElementValue("CreateData");
   	if (encmeth=="") return;
-	var Rtn=cspRunServerMethod(encmeth,val,"3");
+	var Rtn=cspRunServerMethod(encmeth,val,"3","");
 	if (Rtn>0)
 	{
-		alertShow("成功生成数据!")
-		window.location.href='websys.default.csp?WEBSYS.TCOMPONENT=DHCEQFinancialReview&FRRowID='+Rtn;
-	  	parent.DHCEQFinancialReviewList.location.href="dhccpmrunqianreport.csp?reportName=DHCEQFinancialReviewSum.raq&vFRRowID="+Rtn;
+		messageShow("","","","成功生成数据");
+		var url='websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQFinancialReview&FRRowID='+Rtn;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
+		window.location.href=url;
+		
+		var parenturl="dhccpmrunqianreport.csp?reportName=DHCEQFinancialReviewSum.raq&vFRRowID="+Rtn;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			parenturl += "&MWToken="+websys_getMWToken()
+		}
+	  	parent.DHCEQFinancialReviewList.location.href=parenturl;
 	}
 	else
 	{
-		alertShow("操作失败!:"+Rtn);
+		messageShow("","","","操作失败!+"+Rtn);
 		return
 	}
 }
@@ -106,7 +124,7 @@ function BDelete_Clicked()
 	var CancelReason=GetElementValue("CancelReason");
 	if (CancelReason=="")
 	{
-		alertShow("请输入作废原因");
+		messageShow("","","","请输入作废原因");
 		return
 	}
 	UpdateData(1);
@@ -116,7 +134,7 @@ function UpdateData(isDel)
 	var FRRowID=GetElementValue("FRRowID");
 	if (FRRowID=="")
 	{
-		alertShow("单据不存在!")
+		messageShow("","","","单据不存在!");
 		return
 	}
   	var encmeth=GetElementValue("Update");
@@ -125,12 +143,21 @@ function UpdateData(isDel)
   	var Rtn=cspRunServerMethod(encmeth,val,isDel);
   	if (Rtn>0)
   	{
-	  	window.location.href='websys.default.csp?WEBSYS.TCOMPONENT=DHCEQFinancialReview&FRRowID='+Rtn;
-	  	parent.DHCEQFinancialReviewList.location.href="dhccpmrunqianreport.csp?reportName=DHCEQFinancialReviewList.raq&vFRRowID="+Rtn;
+	  	var url='websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQFinancialReview&FRRowID='+Rtn;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
+		window.location.href=url;
+		
+		var parenturl="dhccpmrunqianreport.csp?reportName=DHCEQFinancialReviewSum.raq&vFRRowID="+Rtn;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			parenturl += "&MWToken="+websys_getMWToken()
+		}		
+	  	parent.DHCEQFinancialReviewList.location.href=parenturl
   	}
   	else
   	{
-	  	alertShow("操作失败!")
+	  	messageShow("","","","操作失败!");
 	  	return
   	}
 }
@@ -191,7 +218,7 @@ function Month_Change()
 	var IsMonth=cspRunServerMethod(encmeth,YearMonth);
 	if ((Month.length!=6)||(IsMonth=="1"))
 	{
-		alertShow("正确输入月份格式(YYYYMM)");
+		messageShow("","","","正确输入月份格式(YYYYMM)");
 		SetElement("BussinessSDate","");
 		SetElement("BussinessEDate","");
 		return

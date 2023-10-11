@@ -219,6 +219,7 @@ function loadIframe(node, isReplacePanelBody, callback) {
 	}
 	$("#TemplFrame").parent().show();
 	var lnk=replaceLinkParams(node["urlObject"],node);
+	if(typeof websys_writeMWToken=='function') LinkUrl=websys_writeMWToken(LinkUrl);
 	$("#TemplFrame").attr("src",lnk);
 	if (callback) callback();
 }

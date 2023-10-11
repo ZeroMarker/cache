@@ -73,7 +73,7 @@ function InitStkCat() {
 		"?action=GetStkCatDs&style=select2",
 		allowClear: true,
 		width: 250,
-		placeholder: "库存分类..."
+		placeholder: $g("库存分类")+"..."
 	}
 	$("#sel-stk").dhcphaSelect(selectoption)
 	$('#sel-stk').on('select2:select', function (event) {
@@ -87,7 +87,7 @@ function InitManaGroup() {
 		"?action=GetManaGroupDs&style=select2&gLocId=" + DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID,
 		allowClear: true,
 		minimumResultsForSearch: Infinity,
-		placeholder: "管理组..."
+		placeholder: $g("管理组")+"..."
 	}
 	$("#sel-managroup").dhcphaSelect(selectoption)
 	$('#sel-managroup').on('select2:select', function (event) {
@@ -101,7 +101,7 @@ function InitFyUser() {
 		url: DHCPHA_CONSTANT.URL.COMMON_OUTPHA_URL +
 		"?action=GetPYUserList&style=select2&gLocId=" + DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID + "&gUserId=" + DHCPHA_CONSTANT.SESSION.GUSER_ROWID,
 		allowClear: true,
-		placeholder: "发药人..."
+		placeholder: $g("发药人")+"..."
 	}
 	$("#sel-fyuser").dhcphaSelect(selectoption)
 	$('#sel-fyuser').on('select2:select', function (event) {
@@ -114,57 +114,57 @@ function InitRXBList() {
 	//定义columns
 	var columns = [[{
 				field: 'incCode',
-				title: '药品代码',
+				title: ("药品代码"),
 				width: 80,
 				sortable: true
 			}, {
 				field: 'incDesc',
-				title: '药品名称',
+				title: ("药品名称"),
 				width: 250,
 				sortable: true
 			}, {
 				field: 'qty',
-				title: '发出数量',
+				title: ("发出数量"),
 				width: 100,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'uomDesc',
-				title: '单位',
+				title: ("单位"),
 				width: 100,
 				sortable: true
 			}, {
 				field: 'sp',
-				title: '售价',
+				title: ("售价"),
 				width: 75,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'spAmt',
-				title: '发出金额',
+				title: ("发出金额"),
 				width: 100,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'rp',
-				title: '进价',
+				title: ("进价"),
 				width: 75,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'rpAmt',
-				title: '进价金额',
+				title: ("进价金额"),
 				width: 100,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'manfDesc',
-				title: '生产厂家',
+				title: ("生产企业"),
 				width: 200,
 				sortable: true
 			}, {
 				field: 'pid',
-				title: '进程号',
+				title: ("进程号"),
 				width: 200,
 				sortable: true,
 				hidden: true
@@ -265,7 +265,7 @@ window.onbeforeunload = function () {
 function BtnPrintHandler() {
 	//获取当面界面数据行数
 	if ($('#rxbdg').datagrid('getData').rows.length == 0) {
-		dhcphaMsgBox.alert("页面没有数据","info");
+		dhcphaMsgBox.alert($g("页面没有数据"),"info");
 		return ;
 	}
 	// 取页面数据

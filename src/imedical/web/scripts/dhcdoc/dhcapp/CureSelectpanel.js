@@ -4,7 +4,7 @@
 		LoadOtherInfo();
 	}
 	function LoadTestItemList(){
-		$("#CureSelect").html('<tr style="height:0px;" ><td style="width:20px;"></td><td style="width:20px;"></td><td></td><td style="width:20px;"></td><td></td><td style="width:20px;"></td><td></td><td style="width:20px;"></td><td></td></tr>');
+		$("#CureSelect").html('<tr style="height:0px;" ><td style="width:30px;"></td><td></td><td style="width:30px;"></td><td></td><td style="width:30px;"></td><td></td><td style="width:30px;"></td><td></td></tr>');
 		runClassMethod("web.DHCAppPisMasterQuery","JsonCureSelect",{"HospID":LgHospID},function(jsonString){
 
 			if (jsonString != ""){
@@ -17,7 +17,8 @@
 		}
 	function InsTesItemRegion(itemobj){
 		var htmlstr = '';
-		htmlstr = '<tr style="height:30px"><td colspan="9" class=" tb_td_required" style="border:0px solid #ccc;font-weight:bold;">'+ itemobj.text +'</td></tr>';
+		//htmlstr = '<tr style="height:30px"><td colspan="2" style="border:0px solid #ccc;font-weight:bold;float:right;margin-top:3px;" >标本名称：</td><td colspan="2" id ="PisSpec" style="border:0px solid #ccc;font-weight:bold;" ></td><td colspan="5" ></td></tr>';
+		htmlstr = '<tr style="height:30px">'+ "" +'</td><td  colspan="8"  style="border:1px solid #ccc;font-weight:bold;margin-top:3px;padding-left: 10px;border-top:0px; border-left:0px; border-right:0px" >标本名称:<span id ="PisSpec" style="border:0px solid #ccc;padding-left: 10px; font-weight:bold;" ></span></td></tr>';
 		var itemArr = itemobj.items;
 		var itemhtmlArr = []; itemhtmlstr = "";
 		for (var j=1; j<=itemArr.length; j++){
@@ -25,14 +26,16 @@
 			if (itemArr[j-1].text == "其他"){
 			   InputHtml = '<input type="text" class="name-input-80" id="CureSelect'+ itemArr[j-1].value +'"></input>';
 			}
-			itemhtmlArr.push('<td style="width:30px;"><input id="'+ itemArr[j-1].value +'" name="'+ itemArr[j-1].name +'" type="checkbox" value="'+ itemArr[j-1].value +'"></input></td><td>'+ itemArr[j-1].text +InputHtml+'</td>');
 			if (j % 4 == 0){
-				itemhtmlstr = itemhtmlstr + '<tr><td></td>' + itemhtmlArr.join("") + '</tr>';
+				itemhtmlArr.push('<td style="width:30px;"><input id="'+ itemArr[j-1].value +'" name="'+ itemArr[j-1].name +'" type="checkbox" class="checkbox" value="'+ itemArr[j-1].value +'"></input></td><td  style="border-right:none;" >'+ itemArr[j-1].text +InputHtml+'</td>');
+				itemhtmlstr = itemhtmlstr + '<tr>' + itemhtmlArr.join("") + '</tr>';
 				itemhtmlArr = [];
-			}
+			}else{
+				itemhtmlArr.push('<td style="width:30px;"><input id="'+ itemArr[j-1].value +'" name="'+ itemArr[j-1].name +'" type="checkbox" class="checkbox" value="'+ itemArr[j-1].value +'"></input></td><td>'+ itemArr[j-1].text +InputHtml+'</td>');
+				}
 		}
 		if ((j-1) % 4 != 0){
-			itemhtmlstr = itemhtmlstr + '<tr><td></td>' + itemhtmlArr.join("") + '<td style="width:30px"></td><td></td></tr>';
+			itemhtmlstr = itemhtmlstr + '<tr>' + itemhtmlArr.join("") + '<td style="width:30px"></td><td style="" ></td><td style="width:30px"></td><td style="" ></td><td style="width:30px"></td><td style="border-right:none;" ></td></tr>';
 			itemhtmlArr = [];
 		}
 		$("#CureSelect").append(htmlstr+itemhtmlstr)
@@ -55,7 +58,11 @@
 				if (TypeID!=this.id){
 					$("input[name=CureSelect][value='"+this.id+"']").removeAttr("checked");}
 			});
-			
+			if($("[value='"+this.id+"'][name=CureSelect]").is(':checked')){
+				$("#PisSpec").text($(this).parent().next().text()+"脱落细胞")
+			}else{
+				$("#PisSpec").text("")
+				}
 		});
 	}
 	function LoadOtherInfo(){
@@ -83,6 +90,7 @@
 									$("#CureSelect"+ PsiID).show();
 									$("#CureSelect"+ PsiID).val(Psiarry.split("^")[1]);
 								}
+							$("#PisSpec").text($('#'+PsiID).parent().next().text()+"脱落细胞")
 			    		}
 		    		}
 				}
@@ -92,9 +100,11 @@
 	function OtherInfo(){
 		var mPisTesDiagArr=[]; var mPisTesDiag="";
 		var TesDiagArr = $("input[name=CureSelect]");
+		var PartName=""
 		for (var j=0; j < TesDiagArr.length; j++){
 		    if($("[value='"+TesDiagArr[j].value+"'][name=CureSelect]").is(':checked')){
-				var TestItem = "";
+				var PartName = $('#'+TesDiagArr[j].id).parent().next().text()
+				var TestItem=""
 			    if ($('#'+TesDiagArr[j].id).parent().next().text() == "其他"){
 					TestItem = $("#SentOrder"+ TesDiagArr[j].id).val();
 				}
@@ -104,6 +114,12 @@
 		var mCureSelect = JSON.stringify(mPisTesDiagArr);
 		var rtnObj = {}
 		rtnObj["mCureSelect"] = mCureSelect;
+		var PisSpecArr=[];
+		var TmpData = 1 +"^"+ 1 +"^"+ $("#PisSpec").text() +"^"+ "" +"^"+ 1 +"^^^"+ "";
+		PisReqSpec = 1+String.fromCharCode(1)+$("#PisSpec").text() +String.fromCharCode(1) +PartName+String.fromCharCode(1)+ 1 +String.fromCharCode(1)+""+String.fromCharCode(1)+ "";
+		PisSpecArr.push(TmpData);
+		rtnObj["PisSpec"] = PisSpec;
+		rtnObj["PisReqSpec"] = PisReqSpec;
 		return rtnObj
 	}
 	function PrintInfo(){

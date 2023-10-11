@@ -22,10 +22,12 @@
    	obj.LoadRep = function(){
 		var SurNumID 	= $('#cboSurNum').combobox('getValue');	
 		var aLocType 	= Common_CheckboxValue('chkStatunit');
-	
+		var aQryCon= $('#cboQryCon').combobox('getValue');
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs = $('#cboLoc').combobox('getValues').join(',');	
 		ReportFrame = document.getElementById("ReportFrame");
 	
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S410CssInf.raq&aSurNumID='+SurNumID +'&aStaType='+aLocType;	
+		p_URL = Append_Url('dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S410CssInf.raq&aSurNumID='+SurNumID +'&aStaType='+aLocType+'&aQryCon='+aQryCon);	
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
@@ -33,9 +35,7 @@
 		} 
 		
 	}
-	obj.up=function(x,y){
-        return y.InfPatCnt-x.InfPatCnt		//根据感染人数排序
-    }
+
 	obj.option1 = function(arrViewLoc,arrInfPatCnt,arrInfPatRatio,endnumber){
 		var option1 = {
 			title : {
@@ -154,24 +154,12 @@
 		var arrViewLoc 		= new Array();
 		var arrInfPatCnt 	= new Array();		
 		var arrInfPatRatio 	= new Array();
-		
-		arrRecord 		= runQuery.record;
-		
-		var arrlength		= 0;
-		for (var indRd = 0; indRd < arrRecord.length; indRd++){
-			var rd = arrRecord[indRd];
-			//去掉全院、医院、科室组
-			if ((rd["DimensKey"].indexOf('-A-')>-1)||(rd["DimensKey"].indexOf('-H-')>-1)||(rd["DimensKey"].indexOf('-G-')>-1)) {
-				delete arrRecord[indRd];
-				arrlength = arrlength + 1;
-				continue;
-			}
-			rd["DimensDesc"] = $.trim(rd["DimensDesc"]); //去掉空格
-			rd["InfPatRatio"] = parseFloat(rd["InfPatRatio"].replace('%','').replace('‰','')).toFixed(2);
-		}
-		
-		arrRecord = arrRecord.sort(obj.up);
-		arrRecord.length = arrRecord.length - arrlength;
+
+		var arrRecord = runQuery.rows;
+		RemoveArr(arrRecord);
+		 arrRecord = arrRecord.sort(function(x, y){
+			return parseInt(y.InfPatCnt) - parseInt(x.InfPatCnt)
+		});
 		for (var indRd = 0; indRd < arrRecord.length; indRd++){
 			var rd = arrRecord[indRd];
 			
@@ -182,7 +170,7 @@
 		}
 		var endnumber = (14/arrViewLoc.length)*100;
 	
-		// 使用刚指定的配置项和数据显示图表。
+		// 使用刚指定的配置项和数据显示图表
 		obj.myChart.setOption(obj.option1(arrViewLoc,arrInfPatCnt,arrInfPatRatio,endnumber),true);
 	}
    	obj.ShowEChaert1 = function(){
@@ -190,29 +178,32 @@
 		 //当月科室感染率图表
 		var SurNumID 	= $('#cboSurNum').combobox('getValue');	
 		var aLocType 	= Common_CheckboxValue('chkStatunit');
-		
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S410CssInf' + "&QueryName=" + 'QryInfPreByCSS' + "&Arg1=" + SurNumID + "&Arg2=" + aLocType + "&ArgCnt=" + 2;
+		var aQryCon= $('#cboQryCon').combobox('getValue');
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs = $('#cboLoc').combobox('getValues').join(',');	
 
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 30000, //30秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				var tkclass="DHCHAI.STATV2.S410CssInf";
-				var tkQuery="QryInfPreByCSS";
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
+		obj.myChart.showLoading();	
+		var className="DHCHAI.STATV2.S410CssInf";
+		var queryName="QryInfPreByCSS";
+		$cm({
+		    ClassName: className,
+		    QueryName: queryName,
+		    aSurNumID: SurNumID,
+		    aStaType: aLocType,
+			aQryCon:aQryCon,
+			aStatDimens:aStatDimens,
+            aLocIDs:aLocIDs,
+			page:1,    //可选项，页码，默认1
+			rows:999   //可选项，获取多少条数据，默认50
+		},
+		function(data){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			obj.echartLocInfRatio(data);
+		}
+		,function(XMLHttpRequest, textStatus, errorThrown){
+			alert("类" + className + ":" + queryName+ "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
+			obj.myChart.hideLoading();    //隐藏加载动画
+
 		});
 	}
 	

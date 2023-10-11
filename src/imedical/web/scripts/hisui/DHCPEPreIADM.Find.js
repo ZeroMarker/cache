@@ -1843,12 +1843,15 @@ function UpdateAsCharged()
     ID=ID.split(";")[0];
 	ID=ID+"^"+AsType+"^"+AsRemark;
 
-	obj=document.getElementById("UpdateAsCharged");
-	if (obj) var encmeth=obj.value;
-	var Return=cspRunServerMethod(encmeth,ID,Type)
-	if (Return==""){alert("Status Err");}
-	else if (Return=="SQLErr"){alert("Update Err");}
-	else{
+	var Return=tkMakeServerCall("web.DHCPE.PreGADM","UpdateAsCharged",ID,Type)
+ 
+	if (Return=="StatusErr"){
+		$.messager.alert("提示","状态错误!","info");
+	}else if (Return=="SQLErr"){
+		$.messager.alert("提示","更新错误!","info");
+	}else if (Return=="MedErr"){
+		$.messager.alert("提示","存在发药品的医嘱,不能取消视同收费","info"); 
+	}else{
 		$.messager.alert("提示","更新成功!","success");
 		$("#AsRemark").val(""); 
 		$("#AsType").combobox('setValue',"");
@@ -1857,6 +1860,8 @@ function UpdateAsCharged()
 		//location.reload();
 		
 	}
+
+
 }
 //打印检查项目信息 2008-06-30
 //create by  zhouli

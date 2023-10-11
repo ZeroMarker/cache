@@ -35,10 +35,10 @@ function InitPYWinCodeList(){
 	    {field:'TLocId',title:'TLocId',width:200,hidden:true},
 	    {field:'TPhPyWin',title:'TPhPyWin',width:200,hidden:true},
 	    {field:'TPhlid',title:'TPhlid',width:200,hidden:true},
-	    {field:'TLocDesc',title:'药房名称',width:200,align:'left'},
-	    {field:'TWinDesc',title:'窗口名称',width:200,align:'left'},
-	    {field:'TBoxNum',title:'药框数',width:200,align:'right'},
-	    {field:'TSendCode',title:'传入端口号',width:200,align:'right'}
+	    {field:'TLocDesc',title:$g("药房名称"),width:200,align:'left'},
+	    {field:'TWinDesc',title:$g("窗口名称"),width:200,align:'left'},
+	    {field:'TBoxNum',title:$g("药框数"),width:200,align:'right'},
+	    {field:'TSendCode',title:$g("传入端口号"),width:200,align:'right'}
 	]];  
    //定义datagrid	
    $('#PYWinCodedg').datagrid({    
@@ -56,7 +56,7 @@ function InitPYWinCodeList(){
         pageSize:30,  // 每页显示的记录条数
 	    pageList:[30,50,100],   // 可以设置每页记录条数的列表
 	    singleSelect:true,
-	    loadMsg: '正在加载信息...',
+	    loadMsg: $g("正在加载信息")+"...",
 	    pagination:true,
 	    onSelect:function(rowIndex,rowData){
 			if (rowData){
@@ -84,21 +84,21 @@ function Add()
 	var BoxNum=$("#BoxNum").val();
 	var SendCode=$("#SendCode").val();
 	if((LocRowId=="")||(LocRowId==undefined)){
-		$.messager.alert('提示',"请选择药房名称!","info");
+		$.messager.alert($g("提示"),$g("请选择药房名称!"),"info");
 		return;
 	}
 	if(WinDesc==""){
-		$.messager.alert('提示',"请输入窗口名称!","info");
+		$.messager.alert($g("提示"),$g("请输入窗口名称!"),"info");
 		return;
 	}
 	var retValue= tkMakeServerCall("PHA.OP.CfPyWin.OperTab","Insert",LocRowId,WinDesc,BoxNum,SendCode);
 	var retCode = retValue.split("^")[0];
 	var retMessage = retValue.split("^")[1];
 	if (retCode != 0) {
-		$.messager.alert('提示', retMessage, "warning");
+		$.messager.alert($g("提示"), retMessage, "warning");
 		return;
 	} else {
-		$.messager.alert('提示',"增加成功!","info");
+		$.messager.alert($g("提示"),$g("增加成功!"),"info");
 		$('#PYWinCodedg').datagrid('reload');
 	}
 }
@@ -108,14 +108,14 @@ function Update()
 {
 	var selected = $("#PYWinCodedg").datagrid("getSelected");
 	if (selected==null){
-		$.messager.alert('提示',"请先选中需要修改的数据!","info");
+		$.messager.alert($g("提示"),$g("请先选中需要修改的数据!"),"info");
 		return;
 	}
 	var RowId=selected.TPhPyWin;
 	var ctLocId=selected.TLocId;
 	var LocRowId=$("#LocDesc").combobox("getValue");
 	if (ctLocId != LocRowId) {
-		$.messager.alert('提示', "不允许修改药房!", "warning");
+		$.messager.alert($g("提示"), $g("不允许修改药房!"), "warning");
 		return;
 	}
 	var WinDesc=$("#WinDesc").val();
@@ -125,10 +125,10 @@ function Update()
 	var retCode = retValue.split("^")[0];
 	var retMessage = retValue.split("^")[1];
 	if (retCode != 0) {
-		$.messager.alert('提示', retMessage, "warning");
+		$.messager.alert($g("提示"), retMessage, "warning");
 		return;
 	} else {
-		$.messager.alert('提示', "修改成功!", "info");
+		$.messager.alert($g("提示"), $g("修改成功!"), "info");
 		$('#PYWinCodedg').datagrid('reload');
 	}
 }
@@ -137,20 +137,20 @@ function Update()
 function Delete(){
 	var selected = $("#PYWinCodedg").datagrid("getSelected");
 	if (selected==null){
-		$.messager.alert('提示',"请先选中需要删除的数据!","info");
+		$.messager.alert($g("提示"),$g("请先选中需要删除的数据!"),"info");
 		return;
 	}
 	else{
 		var RowId=selected.PhPyWin
-		$.messager.confirm('提示',"确认删除吗？",function(r){
+		$.messager.confirm($g("提示"),$g("确认删除吗？"),function(r){
 			if(r){
 				var retValue=tkMakeServerCall("PHA.OP.CfPyWin.OperTab","Delete",RowId);
 				if(retValue==0){
-					$.messager.alert('提示',"删除成功!");
+					$.messager.alert($g("提示"),$g("删除成功!"));
 					$('#PYWinCodedg').datagrid('reload');
 				}
 				else{
-					$.messager.alert('提示',"删除失败,错误代码:"+retValue,"warning");
+					$.messager.alert($g("提示"),$g("删除失败,错误代码:")+retValue,"warning");
 				}
 			}
 		});

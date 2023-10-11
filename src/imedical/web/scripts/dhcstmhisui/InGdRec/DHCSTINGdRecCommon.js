@@ -1,49 +1,50 @@
-// /Ãû³Æ: Èë¿âÏà¹Ø¹«¹²·½·¨¼°±äÁ¿
-// /ÃèÊö: Èë¿âÏà¹Ø¹«¹²·½·¨¼°±äÁ¿
-// /±àĞ´Õß£ºlihui
-// /±àĞ´ÈÕÆÚ: 20180521
+ï»¿// /åç§°: å…¥åº“ç›¸å…³å…¬å…±æ–¹æ³•åŠå˜é‡
+// /æè¿°: å…¥åº“ç›¸å…³å…¬å…±æ–¹æ³•åŠå˜é‡
+// /ç¼–å†™è€…ï¼šlihui
+// /ç¼–å†™æ—¥æœŸ: 20180521
 
-//±£´æ²ÎÊıÖµµÄobject
+// ä¿å­˜å‚æ•°å€¼çš„object
 var IngrParamObj = GetAppPropValue('DHCSTIMPORTM');
-var SessionParams=gGroupId+"^"+gLocId+"^"+gUserId+"^"+gHospId;
+var SessionParams = gGroupId + '^' + gLocId + '^' + gUserId + '^' + gHospId;
 var ItmTrackParamObj = GetAppPropValue('DHCITMTRACKM');
+var CodeMainParamObj = GetAppPropValue('DHCSTDRUGMAINTAINM');
 /*
  * creator:zhangdongmei,2012-09-26
- * description:ÑéÖ¤·¢Æ±ºÅÊÇ·ñ´æÔÚÓÚ±ğµÄÈë¿âµ¥
- * params: invNo:·¢Æ±ºÅ,ingr:Èë¿âÖ÷±íid
- * return: true:²»´æÔÚ,·¢Æ±ºÅÓĞĞ§£»false:´æÔÚ,·¢Æ±ºÅÎŞĞ§
+ * description:éªŒè¯å‘ç¥¨å·æ˜¯å¦å­˜åœ¨äºåˆ«çš„å…¥åº“å•
+ * params: invNo:å‘ç¥¨å·,ingr:å…¥åº“ä¸»è¡¨id
+ * return: true:ä¸å­˜åœ¨,å‘ç¥¨å·æœ‰æ•ˆï¼›false:å­˜åœ¨,å‘ç¥¨å·æ— æ•ˆ
  * */
-function InvNoValidator(invNo,ingr){
-	if(isEmpty(IngrParamObj)){
+function InvNoValidator(invNo, ingr, invCode) {
+	if (isEmpty(IngrParamObj)) {
 		return true;
 	}
-	if(isEmpty(invNo)){
+	if (isEmpty(invNo)) {
 		return true;
 	}
-	if(IngrParamObj.CheckInvNo!='Y'){
-		return true;      //²»ĞèÒªÑéÖ¤
+	if (IngrParamObj.CheckInvNo != 'Y') {
+		return true;
 	}
-	var Flag=true;
-	var InvnoExistFlag=tkMakeServerCall('web.DHCSTMHUI.DHCINGdRecItm', 'CheckInvnoExist', ingr,invNo);
+	var Flag = true;
+	var InvnoExistFlag = tkMakeServerCall('web.DHCSTMHUI.DHCINGdRecItm', 'CheckInvnoExist', ingr, invNo, invCode);
 	
-	if(InvnoExistFlag==1){
-			Flag=false;   //¸Ã·¢Æ±ºÅÒÑ´æÔÚÓÚ±ğµÄÈë¿âµ¥		
+	if (InvnoExistFlag == 1) {
+		Flag = false; // è¯¥å‘ç¥¨å·å·²å­˜åœ¨äºåˆ«çš„å…¥åº“å•
 	}
 	return Flag;
 }
 
 /*
  * creator:zhangdongmei,2012-09-26
- * description:ÑéÖ¤Ğ§ÆÚÊÇ·ñĞèÒªÌáÊ¾
- * params: expDate:Ğ§ÆÚ£¬ARG_DATEFORMAT
- * return: true:Ğ§ÆÚºÏÀí£¬²»ĞèÒªÌáÊ¾£»false:Ğ§ÆÚ²»ºÏÀí£¬ĞèÒªÌáÊ¾
+ * description:éªŒè¯æ•ˆæœŸæ˜¯å¦éœ€è¦æç¤º
+ * params: expDate:æ•ˆæœŸï¼ŒARG_DATEFORMAT
+ * return: true:æ•ˆæœŸåˆç†ï¼Œä¸éœ€è¦æç¤ºï¼›false:æ•ˆæœŸä¸åˆç†ï¼Œéœ€è¦æç¤º
  * */
-function ExpDateValidator(expDate, Inci){
+function ExpDateValidator(expDate, Inci) {
 	if (isEmpty(expDate)) {
 		return '';
 	}
 	var ExpChcekInfo = tkMakeServerCall('web.DHCSTMHUI.DHCINGdRecItm', 'CheckExpDate', Inci, expDate);
-	if(ExpChcekInfo != ''){
+	if (ExpChcekInfo != '') {
 		return ExpChcekInfo;
 	}
 	return '';
@@ -51,59 +52,43 @@ function ExpDateValidator(expDate, Inci){
 
 /*
  * creator:zhangdongmei,2012-09-26
- * description:È¡Ä¬ÈÏµÄÆğÊ¼ÈÕÆÚ
+ * description:å–é»˜è®¤çš„èµ·å§‹æ—¥æœŸ
  * params: 
- * return:ÆğÊ¼ÈÕÆÚ
+ * return:èµ·å§‹æ—¥æœŸ
  * */
-function DefaultStDate(){
+function DefaultStDate() {
 	var Today = new Date();
 	var DefaStartDate = IngrParamObj.DefaStartDate;
-	if(isEmpty(DefaStartDate)){
-		return Today;
+	if (isEmpty(DefaStartDate)) {
+		return DateFormatter(Today);
 	}
 	var EdDate = DateAdd(Today, 'd', parseInt(DefaStartDate));
-	return DateFormatter(EdDate);		
+	return DateFormatter(EdDate);
 }
 
 /*
  * creator:zhangdongmei,2012-09-26
- * description:È¡Ä¬ÈÏµÄ½ØÖ¹ÈÕÆÚ
+ * description:å–é»˜è®¤çš„æˆªæ­¢æ—¥æœŸ
  * params: 
- * return:½ØÖ¹ÈÕÆÚ
+ * return:æˆªæ­¢æ—¥æœŸ
  * */
-function DefaultEdDate(){
+function DefaultEdDate() {
 	var Today = new Date();
 	var DefaEndDate = IngrParamObj.DefaEndDate;
-	if(isEmpty(DefaEndDate)){
-		return Today;
+	if (isEmpty(DefaEndDate)) {
+		return DateFormatter(Today);
 	}
 	var EdDate = DateAdd(Today, 'd', parseInt(DefaEndDate));
 	return DateFormatter(EdDate);
 }
-//äÖÈ¾×Ê½ğÀ´Ô´
-function SourceOfFundRender(v){
-	var SourceOfFund = v;
-	switch (v){
-		case 'KS':
-			SourceOfFund = '¿ÆÊÒÁìÓÃ';
-			break;
-		case 'CZ':
-			SourceOfFund = '²ÆÕş×Ê½ğ';
-			break;
-		case 'KT':
-			SourceOfFund = '¿ÎÌâ¾­·Ñ';
-			break;
-		case 'KY':
-		    SourceOfFund = '¿ÆÑĞ»ù½ğ';	
-		    break;
-		default :
-			break
-	}
-	return SourceOfFund;
+
+// å…¥åº“ç±»å‹é»˜è®¤å€¼
+function GetIngrtypeDefa() {
+	var TYPE = 'IM';
+	var IngrtypeInfo = tkMakeServerCall('web.DHCSTMHUI.Common.Dicts', 'GetDefaOPtype', TYPE, gHospId);
+	return IngrtypeInfo;
 }
-//Èë¿âÀàĞÍÄ¬ÈÏÖµ
-function GetIngrtypeDefa(){
-	var TYPE="IM";
-	var IngrtypeId=tkMakeServerCall("web.DHCSTMHUI.Common.Dicts","GetDefaOPtype",TYPE,gHospId);
-	return IngrtypeId;
+function GetPurUserDefa(LocId) {
+	var PurUserInfo = tkMakeServerCall('web.DHCSTMHUI.Common.Dicts', 'GetDefaPurUser', LocId);
+	return PurUserInfo;
 }

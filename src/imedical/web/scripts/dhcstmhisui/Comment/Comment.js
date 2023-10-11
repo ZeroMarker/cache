@@ -1,247 +1,299 @@
-var init = function() {
-var EpisodeId="";
-var IncCode="";
-/*°´Å¥ÊÂ¼ş*/
-/*--²éÑ¯--*/
+ï»¿var init = function() {
+	var EpisodeId = '';
+	var IncCode = '';
+	var PaadmType = '';
+	/* æŒ‰é’®äº‹ä»¶*/
+	/* --æŸ¥è¯¢--*/
 	$UI.linkbutton('#SearchBT', {
-		onClick: function () {
+		onClick: function() {
 			ComSearch(Select);
 		}
 	});
-	var Select = function (ComRowid,RetStatus) {
+	var Select = function(ComRowid, RetStatus) {
 		ComMainGrid.load({
 			ClassName: 'web.DHCSTMHUI.Comment',
 			QueryName: 'QueryDetail',
+			query2JsonStrict: 1,
 			Parref: ComRowid,
-			RetStatus:RetStatus
+			RetStatus: RetStatus
 		});
-	}
+	};
 	
-	var ComMainCm = [[{
-			title:"µãÆÀÃ÷Ï¸id",
-			field:'RowId',
-			width:100,
-			hidden:true
+	var ComMainCm = [[
+		{
+			title: 'ç‚¹è¯„æ˜ç»†id',
+			field: 'RowId',
+			width: 100,
+			hidden: true
 		}, {
-			title:"Îï×Ê´úÂë",
-			field:'InciCode',
-			width:100,
-			hidden:true
+			title: 'ç‰©èµ„ä»£ç ',
+			field: 'InciCode',
+			width: 100,
+			hidden: true
 		}, {
-			title:"¸ßÖµÒ½ÖöÌáÈ¡±íid",
-			field:'ORIRowId',
-			width:100,
-			hidden:true
+			title: 'é«˜å€¼åŒ»å˜±æå–è¡¨id',
+			field: 'ORIRowId',
+			width: 100,
+			hidden: true
 		}, {
-			title:"Ò½ÖöID",
-			field:'Oeori',
-			hidden:true
+			title: 'åŒ»å˜±ID',
+			field: 'Oeori',
+			hidden: true,
+			width: 80
 		}, {
-			title:"µãÆÀµ¥ºÅ",
-			field:'ComNo',
-			width:200,
-			hidden:true
+			title: 'ç‚¹è¯„å•å·',
+			field: 'ComNo',
+			width: 200,
+			hidden: true
 		}, {
-			title:"Ò½ÖöÃû³Æ",
-			field:'Arcim',
-			width:180
+			title: 'åŒ»å˜±åç§°',
+			field: 'Arcim',
+			width: 180
 		}, {
-			title:"¸ßÖµÌõÂë",
-			field:'Barcode',
-			width:120
+			title: 'é«˜å€¼æ¡ç ',
+			field: 'Barcode',
+			width: 120
 		}, {
-			title:"µãÆÀ½á¹û",
-			field:'CurRet',
-			width:80,
-	        formatter: function(value,row,index){
-				if (row.CurRet==0){
-					return "²»ºÏÀí";
-				} else if(row.CurRet==1){
-					return "ºÏÀí";
-				}else if(row.CurRet==2){
-					return "ÒÑÉêËß"
-				}else if(row.CurRet==3){
-					return "ÒÑ½ÓÊÜ"
-				}else if(row.CurRet==4){
-					return "Î´µãÆÀ"
-				}else {
-					return ""
-				
+			title: 'ç‚¹è¯„ç»“æœ',
+			field: 'CurRet',
+			width: 80,
+			formatter: function(value, row, index) {
+				if (row.CurRet == 0) {
+					return 'ä¸åˆç†';
+				} else if (row.CurRet == 1) {
+					return 'åˆç†';
+				} else if (row.CurRet == 2) {
+					return 'å·²ç”³è¯‰';
+				} else if (row.CurRet == 3) {
+					return 'å·²æ¥å—';
+				} else if (row.CurRet == 4) {
+					return 'æœªç‚¹è¯„';
+				} else {
+					return '';
 				}
 			}
 		}, {
-			title:"¹æ¸ñ",
-			field:'Spec',
-			width:80
+			title: 'è§„æ ¼',
+			field: 'Spec',
+			width: 80
 		}, {
-			title:"ÊıÁ¿",
-			field:'OeoriNum',
-			width:40
+			title: 'æ•°é‡',
+			field: 'OeoriNum',
+			width: 40
 		}, {
-			title:"µ¥Î»",
-			field:'OeoriUom',
-			width:50
+			title: 'å•ä½',
+			field: 'OeoriUom',
+			width: 50
 		}, {
-			title:"¿ªµ¥¿ÆÊÒ",
-			field:'OeoriLoc',
-			width:150
+			title: 'å¼€å•ç§‘å®¤',
+			field: 'OeoriLoc',
+			width: 150
 		}, {
-			title:"¿ªµ¥Ò½Éú",
-			field:'OeoriDoctor',
-			width:100
+			title: 'å¼€å•åŒ»ç”Ÿ',
+			field: 'OeoriDoctor',
+			width: 100
 		}, {
-			title:"Ò½ÖöÈÕÆÚ",
-			field:'OeoriDate',
-			width:100
+			title: 'åŒ»å˜±æ—¥æœŸ',
+			field: 'OeoriDate',
+			width: 100
 		}, {
-			title:"Ò½ÖöÊ±¼ä",
-			field:'OeoriTime',
-			width:100
+			title: 'åŒ»å˜±æ—¶é—´',
+			field: 'OeoriTime',
+			width: 100
 		}, {
-			title:"½ÓÊÕ¿ÆÊÒ",
-			field:'OeoriRecLoc',
-			width:150
+			title: 'æ¥æ”¶ç§‘å®¤',
+			field: 'OeoriRecLoc',
+			width: 150
 		}, {
-			title:"Adm",
-			field:'Adm',
-			width:100,
-			hidden:true
+			title: 'Adm',
+			field: 'Adm',
+			width: 100,
+			hidden: true
 		}
-	]];	
+	]];
 	var ComMainGrid = $UI.datagrid('#ComMainGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.Comment',
-			QueryName: 'QueryDetail'
+			QueryName: 'QueryDetail',
+			query2JsonStrict: 1
 		},
-		onClickCell: function(index, filed ,value){	
-			ComMainGrid.commonClickCell(index,filed,value)
+		onClickRow: function(index, row) {
+			ComMainGrid.commonClickRow(index, row);
 		},
 		columns: ComMainCm,
 		toolbar: '#ComMainTB',
-		onClickRow:function(index, row){
-			//»¼Õß»ù±¾ĞÅÏ¢
-			$("#Patinfo").empty();
-			EpisodeId=row.Adm;
-			IncCode=row.InciCode;
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
+				$(this).datagrid('selectRow', 0);
+			}
+		},
+		onSelect: function(index, row) {
+			// æ‚£è€…åŸºæœ¬ä¿¡æ¯
+			$('#Patinfo').empty();
+			EpisodeId = row.Adm;
+			IncCode = row.InciCode;
 			var ArrData = $.cm({
 				ClassName: 'web.DHCSTMHUI.Comment',
 				MethodName: 'GetPaInfo',
 				adm: EpisodeId
 			}, false);
-			var patordinfo='';
-			var patId=ArrData.papmidr;
-			var patNo=ArrData.patNo;
-			var patName=ArrData.patName;
-			var imageid="";
-			var sexDesc=ArrData.sexDesc;	//ĞÔ±ğ
-			if (sexDesc=="Å®"){	
-				imageid="icon-female.png";
-			}else if (sexDesc=="ÄĞ"){
-				imageid="icon-male.png";
-			}else{
-				imageid="icon-unmale.png";
+			var patordinfo = '';
+			var patId = ArrData.papmidr;
+			var patNo = ArrData.patNo;
+			var patName = ArrData.patName;
+			PaadmType = ArrData.paadmtype;
+			var imageid = '';
+			var sexDesc = ArrData.sexDesc;	// æ€§åˆ«
+			if (sexDesc == 'å¥³') {
+				imageid = 'icon-female.png';
+			} else if (sexDesc == 'ç”·') {
+				imageid = 'icon-male.png';
+			} else {
+				imageid = 'icon-unmale.png';
 			}
-			var patAge=ArrData.patAge;
+			var patAge = ArrData.patAge;
 			
-			var depdesc=ArrData.depdesc;
-			var patDiag ="Õï¶Ï£º"+ ArrData.diag;	//Õï¶Ï
-			patordinfo=patordinfo+'<span>'+patNo+'&nbsp;&nbsp;</span>|&nbsp;&nbsp;';
-			patordinfo=patordinfo+'<span>'+sexDesc+'&nbsp;&nbsp;</span>|&nbsp;&nbsp;';
-			patordinfo=patordinfo+'<span>'+patAge+'&nbsp;&nbsp;</span>|&nbsp;&nbsp;';
-			patordinfo=patordinfo+'<span>'+depdesc+'&nbsp;&nbsp;</span>|&nbsp;&nbsp;';
-			var pathtml=' <div class="col-md-12" id="patInfo"><div style="margin-left:10px;">'+
-				'<a href="#" class="thumbnail" style="border:0px;height:20px;">'+
-				'<img src=/dthealth/web/scripts/dhcstmhisui/Common/images/'+imageid+' style="border-radius:35px;height:50px;width:50px;">'+
-				'</a>'+	
-                '</div>'+
-				' <div style="margin-left:70px;margin-top:-40px;">'+				
-				' <span style="font-size:17px;">'+patName+'&nbsp;&nbsp;&nbsp;</span>'+
-				patordinfo+
-				' </div></div>'			
-			var pathtml=pathtml+'<div style="margin-top:10px;margin-left:60px;">'+' <span>&nbsp;&nbsp;&nbsp;'+patDiag+'</span>'+' </div>'
-			$("#Patinfo").append(pathtml);
+			var depdesc = ArrData.depdesc;
+			var patDiag = 'è¯Šæ–­ï¼š' + ArrData.diag;	// è¯Šæ–­
+			patordinfo = patordinfo + '<span>' + patNo + '&nbsp;&nbsp;</span>|&nbsp;&nbsp;';
+			patordinfo = patordinfo + '<span>' + sexDesc + '&nbsp;&nbsp;</span>|&nbsp;&nbsp;';
+			patordinfo = patordinfo + '<span>' + patAge + '&nbsp;&nbsp;</span>|&nbsp;&nbsp;';
+			patordinfo = patordinfo + '<span>' + depdesc + '&nbsp;&nbsp;</span>|&nbsp;&nbsp;';
+			var pathtml = ' <div class="col-md-12" id="patInfo"><div style="margin-left:10px;">'
+				+ '<a href="#" class="thumbnail" style="border:0px;height:20px;">'
+				+ '<img src=../scripts/dhcstmhisui/Common/images/' + imageid + ' style="border-radius:35px;height:50px;width:50px;">'
+				+ '</a>'
+                + '</div>'
+				+ ' <div style="margin-left:70px;margin-top:-40px;">'
+				+ ' <span style="font-size:17px;">' + patName + '&nbsp;&nbsp;&nbsp;</span>'
+				+ patordinfo
+				+ ' </div></div>';
+			var pathtml = pathtml + '<div style="margin-top:10px;margin-left:60px;">' + ' <span>&nbsp;&nbsp;&nbsp;' + patDiag + '</span>' + ' </div>';
+			$('#Patinfo').append(pathtml);
+			if ((patordinfo != '') && (patordinfo != undefined)) {
+				if ($('#PatPanel').hasClass('NoDataPic')) {
+					$('#PatPanel').removeClass('NoDataPic');
+				} else if ($('#PatPanel').hasClass('LiteNoDataPic')) {
+					$('#PatPanel').removeClass('LiteNoDataPic');
+				}
+			}
 			var tab = $('#tabsForm').tabs('getSelected');
-			var index = $('#tabsForm').tabs('getTabIndex',tab);
-			if (index==0){	//¹ıÃô¼ÇÂ¼
-				$('#ifrmAllergy').attr('src', 'dhcem.allergyenter.csp'+'?EpisodeID=' + EpisodeId+'&PatientID='+patId);		
-			}else if (index==1){	//¼ì²é¼ÇÂ¼
-				$('#ifrmRisQuery').attr('src', 'dhcapp.inspectrs.csp'+'?EpisodeID=' + EpisodeId+'&PatientID='+patId);			
-			}else if (index==2){	//¼ìÑé¼ÇÂ¼
-				$('#ifrmLisQuery').attr('src', 'dhcapp.seepatlis.csp'+'?EpisodeID=' + EpisodeId+'&NoReaded='+'1'+'&PatientID='+patId);			
-			}else if (index==3){	//²¡Àúä¯ÀÀ
-				 $('#ifrmEMR').attr('src', 'emr.browse.csp'+ '?EpisodeID=' + EpisodeId);			
-			}else if (index==4){	//±¾´ÎÒ½Öö
-				$('#ifrmOrdQuery').attr('src', 'ipdoc.patorderview.csp'+'?EpisodeID=' + EpisodeId+'&PageShowFromWay=ShowFromEmrList&DefaultOrderPriorType=ALL');		
-			}else if (index==5){	//»áÕï¼ÇÂ¼
-				$('#ifrmConQuery').attr('src', 'dhcem.consultpathis.csp'+'?EpisodeID=' + EpisodeId+'&PatientID='+patId);		
-			}else if (index==6){	//ËµÃ÷Êé
-				//http://172.0.0.1/dthealth/web/csp/dhc.bdp.kb.dhcmatbrowser.csp&GenCode=&PointerCode=
-				$('#ifrmInstruction').attr('src', 'ddhc.bdp.kb.dhcmatbrowser.csp'+'?GenCode=' + InciCode);		
+			var index = $('#tabsForm').tabs('getTabIndex', tab);
+			var url = '';
+			if (index == 0) {	// è¿‡æ•è®°å½•
+				url = 'dhcem.allergyenter.csp' + '?EpisodeID=' + EpisodeId + '&PatientID=' + patId;
+				$('#ifrmAllergy').attr('src', CommonFillUrl(url));
+			} else if (index == 1) {	// æ£€æŸ¥è®°å½•
+				url = 'dhcapp.inspectrs.csp' + '?EpisodeID=' + EpisodeId + '&PatientID=' + patId;
+				$('#ifrmRisQuery').attr('src', CommonFillUrl(url));
+			} else if (index == 2) {	// æ£€éªŒè®°å½•
+				url = 'dhcapp.seepatlis.csp' + '?EpisodeID=' + EpisodeId + '&NoReaded=' + '1' + '&PatientID=' + patId;
+				$('#ifrmLisQuery').attr('src', CommonFillUrl(url));
+			} else if (index == 3) {	// ç—…å†æµè§ˆ
+				url = 'emr.bs.browse.csp' + '?EpisodeID=' + EpisodeId;
+				$('#ifrmEMR').attr('src', CommonFillUrl(url));
+			} else if (index == 4) {	// æœ¬æ¬¡åŒ»å˜±
+				if (PaadmType == 'I') {
+					url = 'ipdoc.patorderview.csp' + '?EpisodeID=' + EpisodeId + '&PageShowFromWay=ShowFromEmrList&DefaultOrderPriorType=ALL';
+					$('#ifrmOrdQuery').attr('src', CommonFillUrl(url));
+				} else {
+					url = 'oeorder.opbillinfo.csp' + '?PatientID=' + patId + '&EpisodeID=' + EpisodeId + '&mradm=' + EpisodeId + '&OpenWinName=OPDocRecAdm';
+					$('#ifrmOrdQuery').attr('src', CommonFillUrl(url));
+				}
+			} else if (index == 5) {	// ä¼šè¯Šè®°å½•
+				url = 'dhcem.consultpathis.csp' + '?EpisodeID=' + EpisodeId + '&PatientID=' + patId;
+				$('#ifrmConQuery').attr('src', CommonFillUrl(url));
+			} else if (index == 6) {	// è¯´æ˜ä¹¦
+				url = 'ddhc.bdp.kb.dhcmatbrowser.csp' + '?GenCode=' + InciCode;
+				$('#ifrmInstruction').attr('src', CommonFillUrl(url));
 			}
-			
-			
-			
 		}
 	});
-	$HUI.tabs("#tabsForm",{
-		onSelect:function(title,index){
-			var ArrData=tkMakeServerCall("web.DHCSTMHUI.Comment","GetPaInfo",EpisodeId);
-		    var patId=ArrData.papmidr;	
-	        if (title=="²¡Àúä¯ÀÀ"){
-		        if ($('#ifrmEMR').attr('src')==""||"undefined"){
-                    $('#ifrmEMR').attr('src', 'emr.browse.csp'+ '?EpisodeID=' + EpisodeId);
-		        } 
-		    }else if (title=="¹ıÃô¼ÇÂ¼"){
-			    if ($('#ifrmAllergy').attr('src')==""||"undefined"){
-					$('#ifrmAllergy').attr('src', 'dhcem.allergyenter.csp'+'?EpisodeID=' + EpisodeId+'&PatientID='+patId); 
-			    }
-			}else if (title=="¼ì²é¼ÇÂ¼"){
-				if ($('#ifrmRisQuery').attr('src')==""||"undefined"){
-					$('#ifrmRisQuery').attr('src', 'dhcapp.inspectrs.csp'+'?EpisodeID=' + EpisodeId+'&PatientID='+patId);
-				}
-			}else if (title=="¼ìÑé¼ÇÂ¼"){
-				if ($('#ifrmLisQuery').attr('src')==""||"undefined"){
-					$('#ifrmLisQuery').attr('src', 'dhcapp.seepatlis.csp'+'?EpisodeID=' + EpisodeId+'&NoReaded='+'1'+'&PatientID='+patId); 
-				}
-			}else if (title=="±¾´ÎÒ½Öö"){
-				if ($('#ifrmOrdQuery').attr('src')==""||"undefined"){
-					$('#ifrmOrdQuery').attr('src', 'ipdoc.patorderview.csp'+'?EpisodeID=' + EpisodeId+'&PageShowFromWay=ShowFromEmrList&DefaultOrderPriorType=ALL');
-					//$('#ifrmOrdQuery').attr('src', 'oeorder.opbillinfo.csp'+'?EpisodeID=' + EpisodeId);
-				} 
-			}else if (title=="»áÕï¼ÇÂ¼"){
-				if ($('#ifrmConQuery').attr('src')==""||"undefined"){
-					$('#ifrmConQuery').attr('src', 'dhcem.consultpathis.csp'+'?EpisodeID=' + EpisodeId+'&PatientID='+patId);				
-				}
-			}else if (title=="ËµÃ÷Êé"){
-				alert(IncCode)
-				if ($('#ifrmInstruction').attr('src')==""||"undefined"){
-					$('#ifrmInstruction').attr('src', 'ddhc.bdp.kb.dhcmatbrowser.csp'+'?GenCode=' + IncCode);
-				}
+	$HUI.tabs('#tabsForm', {
+		onSelect: function(title, index) {
+			var Row = ComMainGrid.getSelected();
+			if (isEmpty(Row)) {
+				$UI.msg('alert', 'è¯·å…ˆé€‰æ‹©ä¸€æ¡é«˜å€¼åŒ»å˜±!');
+				return;
 			}
 			
+			var ArrData = tkMakeServerCall('web.DHCSTMHUI.Comment', 'GetPaInfo', EpisodeId);
+			var patId = ArrData.papmidr;
+			// å°†æ‚£è€…ä¿¡æ¯ä¼ è‡³å¤´èœå•ï¼Œé¿å…å¼•ç”¨ç•Œé¢ä¸²æ‚£è€…
+			var menuWin = websys_getMenuWin(); // è·å¾—å¤´èœå•Windowå¯¹è±¡
+			if (menuWin) {
+				var frm = dhcsys_getmenuform(); // menuWin.document.forms['fEPRMENU'];
+				if ((frm) && (frm.EpisodeID.value != EpisodeId)) {
+					// if (menuWin.MainClearEpisodeDetails) menuWin.MainClearEpisodeDetails();  //æ¸…é™¤å¤´èœå•ä¸Šæ‰€æœ‰ç—…äººç›¸å…³ä¿¡æ¯
+					frm.EpisodeID.value = EpisodeId;
+					frm.PatientID.value = patId;
+				}
+			}
+			var url = '';
+			if (title == 'ç—…å†æµè§ˆ') {
+				if ($('#ifrmEMR').attr('src') == '' || 'undefined') {
+					url = 'emr.bs.browse.csp' + '?EpisodeID=' + EpisodeId;
+					$('#ifrmEMR').attr('src', CommonFillUrl(url));
+				}
+			} else if (title == 'è¿‡æ•è®°å½•') {
+				if ($('#ifrmAllergy').attr('src') == '' || 'undefined') {
+					url = 'dhcem.allergyenter.csp' + '?EpisodeID=' + EpisodeId + '&PatientID=' + patId;
+					$('#ifrmAllergy').attr('src', CommonFillUrl(url));
+				}
+			} else if (title == 'æ£€æŸ¥è®°å½•') {
+				if ($('#ifrmRisQuery').attr('src') == '' || 'undefined') {
+					url = 'dhcapp.inspectrs.csp' + '?EpisodeID=' + EpisodeId + '&PatientID=' + patId;
+					$('#ifrmRisQuery').attr('src', CommonFillUrl(url));
+				}
+			} else if (title == 'æ£€éªŒè®°å½•') {
+				if ($('#ifrmLisQuery').attr('src') == '' || 'undefined') {
+					url = 'dhcapp.seepatlis.csp' + '?EpisodeID=' + EpisodeId + '&NoReaded=' + '1' + '&PatientID=' + patId;
+					$('#ifrmLisQuery').attr('src', CommonFillUrl(url));
+				}
+			} else if (title == 'æœ¬æ¬¡åŒ»å˜±') {
+				if ($('#ifrmOrdQuery').attr('src') == '' || 'undefined') {
+					if (PaadmType == 'I') {
+						url = 'ipdoc.patorderview.csp' + '?EpisodeID=' + EpisodeId + '&PageShowFromWay=ShowFromEmrList&DefaultOrderPriorType=ALL';
+						$('#ifrmOrdQuery').attr('src', CommonFillUrl(url));
+					} else {
+						url = 'oeorder.opbillinfo.csp' + '?PatientID=' + patId + '&EpisodeID=' + EpisodeId + '&mradm=' + EpisodeId + '&OpenWinName=OPDocRecAdm';
+						$('#ifrmOrdQuery').attr('src', CommonFillUrl(url));
+					}
+				}
+			} else if (title == 'ä¼šè¯Šè®°å½•') {
+				if ($('#ifrmConQuery').attr('src') == '' || 'undefined') {
+					url = 'dhcem.consultpathis.csp' + '?EpisodeID=' + EpisodeId + '&PatientID=' + patId;
+					$('#ifrmConQuery').attr('src', CommonFillUrl(url));
+				}
+			} else if (title == 'è¯´æ˜ä¹¦') {
+				if ($('#ifrmInstruction').attr('src') == '' || 'undefined') {
+					url = 'ddhc.bdp.kb.dhcmatbrowser.csp' + '?GenCode=' + IncCode;
+					$('#ifrmInstruction').attr('src', CommonFillUrl(url));
+				}
+			}
 		}
-	});	
-/*--µãÆÀºÏÀí--*/
+	});
+	/* --ç‚¹è¯„åˆç†--*/
 	$UI.linkbutton('#PassBT', {
-		onClick: function () {
-			var Row=ComMainGrid.getSelected();
+		onClick: function() {
+			var Row = ComMainGrid.getSelected();
 			if ((isEmpty(Row)) || (Row.length == 0)) {
-				$UI.msg('alert', 'ÇëÑ¡ÔñĞèÒªµãÆÀµÄÒ½ÖöÃ÷Ï¸!');
+				$UI.msg('alert', 'è¯·é€‰æ‹©éœ€è¦ç‚¹è¯„çš„åŒ»å˜±æ˜ç»†!');
 				return false;
 			}
-			var DetailId=Row.RowId;
+			var DetailId = Row.RowId;
 			var Params = JSON.stringify(addSessionParams({
-				Result: "Y"
+				Result: 'Y'
 			}));
 			$.cm({
 				ClassName: 'web.DHCSTMHUI.Comment',
 				MethodName: 'SaveLogItm',
-				DetailId:DetailId,
-				Params:Params
-			},function(jsonData){
+				DetailId: DetailId,
+				Params: Params
+			}, function(jsonData) {
 				if (jsonData.success == 0) {
 					$UI.msg('success', jsonData.msg);
-					var ComRowid= jsonData.rowid;
+					var ComRowid = jsonData.rowid;
 					Select(ComRowid);
 				} else {
 					$UI.msg('error', jsonData.msg);
@@ -249,30 +301,44 @@ var IncCode="";
 			});
 		}
 	});
-/*--µãÆÀ²»ºÏÀí--*/
+	/* --ç‚¹è¯„ä¸åˆç†--*/
 	$UI.linkbutton('#RefuseBT', {
-		onClick: function () {
-			var Row=ComMainGrid.getSelected();
+		onClick: function() {
+			var Row = ComMainGrid.getSelected();
 			if ((isEmpty(Row)) || (Row.length == 0)) {
-				$UI.msg('alert', 'ÇëÑ¡ÔñĞèÒªµãÆÀµÄÒ½ÖöÃ÷Ï¸!');
+				$UI.msg('alert', 'è¯·é€‰æ‹©éœ€è¦ç‚¹è¯„çš„åŒ»å˜±æ˜ç»†!');
 				return false;
 			}
-			var DetailId=Row.RowId;
-			ComRefuse(DetailId,Select);
+			var DetailId = Row.RowId;
+			ComRefuse(DetailId, Select);
 		}
-	});	
-/*--µãÆÀÈÕÖ¾--*/	
-		$UI.linkbutton('#LogBT', {
-		onClick: function () {
-			var Row=ComMainGrid.getSelected();
+	});
+	/* --ç‚¹è¯„æ—¥å¿—--*/
+	$UI.linkbutton('#LogBT', {
+		onClick: function() {
+			var Row = ComMainGrid.getSelected();
 			if ((isEmpty(Row)) || (Row.length == 0)) {
-				$UI.msg('alert', 'ÇëÑ¡ÔñÒ½ÖöÃ÷Ï¸!');
+				$UI.msg('alert', 'è¯·é€‰æ‹©åŒ»å˜±æ˜ç»†!');
 				return false;
 			}
-			var DetailId=Row.RowId;
+			var DetailId = Row.RowId;
 			ComLogSearch(DetailId);
 		}
-	});	
-	
-}
+	});
+	function Default() {
+		var emptyMsg = 'è¯·å…ˆé€‰æ‹©ä¸€æ¡åŒ»å˜±';
+		var pathtml = ' <div class="col-md-12" id="patInfo"><div align="center" style="padding-top:180px; padding-left:310px" >'
+			+ ' <span style="font-size:14px;color:#666666">' + emptyMsg
+			+ ' </div></div>';
+		$('#Patinfo').append(pathtml);
+		if (HISUIStyleCode == 'lite') {
+			$('#PatPanel').removeClass('NoDataPic');
+			$('#PatPanel').addClass('LiteNoDataPic');
+		}
+		var url = 'dhcem.allergyenter.csp' + '?EpisodeID=' + '' + '&PatientID=' + '';
+		$('#ifrmAllergy').attr('src', CommonFillUrl(url));
+	}
+	Default();
+	$('#SearchBT').click();
+};
 $(init);

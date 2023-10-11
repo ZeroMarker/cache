@@ -12,6 +12,17 @@
 	$('#cboQryCon').combobox('setValue',1);
 	$('#cboQryCon').combobox('setText',"显示全部病区(科室)");
 	$HUI.radio("#chkStatunit-Ward").setValue(true);
+	var unitConfig = $m({
+		ClassName: "DHCHAI.BT.Config",
+		MethodName: "GetValByCode",
+		aCode: "StatV2ScreenuUnit",
+		aHospDr: $.LOGON.HOSPID
+	},false);
+	if (unitConfig) {
+		if (unitConfig == 'E') {
+			$HUI.radio("#chkStatunit-Loc").setValue(true);
+		}
+	}
 	
 	InitS091gpbacWinEvent(obj);
 	obj.LoadEvent(arguments);

@@ -69,7 +69,8 @@ function BFind_Click()
 	    	ClassName:"web.DHCEQ.Plat.CTMaintItemCat",
 			QueryName:"GetMaintItemCat",
 	    	Code:getElementValue("MICCode"),
-	    	Desc:getElementValue("MICDesc")
+	    	Desc:getElementValue("MICDesc"),
+	    	Type:getElementValue("MICType")  // add by mwz 20221228 mwz0066
 		}
 	});
 }
@@ -151,8 +152,12 @@ function BSave_Click()
 	$HUI.datagrid('#DHCEQCMaintItemCat').reload(); 
 	BClear_Click()
 }
-
+// MZY0096	2135208		2021-09-16	增加确认选项
 function BDelete_Click()
+{
+	messageShow("confirm","","","确定要删除该记录吗？","",DeleteMaintItemCat,unDeleteMaintItemCat,"是","否");
+}
+function DeleteMaintItemCat()
 {
 	var val=Combindata();
 	var result=tkMakeServerCall("web.DHCEQ.Plat.CTMaintItemCat","SaveData",val,"1");
@@ -168,7 +173,9 @@ function BDelete_Click()
 	$HUI.datagrid('#DHCEQCMaintItemCat').reload(); 
 	BClear_Click()
 }
-
+function unDeleteMaintItemCat()
+{
+}
 function BClear_Click()
 {
 	setElement("RowID","");

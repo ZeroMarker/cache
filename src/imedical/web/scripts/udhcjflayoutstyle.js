@@ -1,7 +1,5 @@
 // udhcjflayoutstyle.js
 
-var M_DATAGRIDHEIGHT = "";
-
 /**
  * Creator: tangzf
  * CreatDate: 2019-4-22
@@ -188,26 +186,4 @@ function DHCWeb_ComponentLayout() {
 	$('.first-col').css('padding-left','6px');
 	$('.first-col').parent().parent().parent().css('margin-top','2px');
 	$('#PageContent').find('.panel-body-noheader').css('margin-top','1px');
-
-	// 下边框间隙
-	if ($('.datagrid-f').length > 0){
-		var component = $('.datagrid-f')[0].id;
-		$('#'+component).datagrid({
-			onLoadSuccess: function() {
-				$('.datagrid-sort-icon').text(''); // 金额列 文字和金额右对齐
-				M_DATAGRIDHEIGHT = M_DATAGRIDHEIGHT || $('.panel-body-noheader')[0].style.height;
-				var menuObj = window.parent.document.getElementById('myTab');
-				if (menuObj) {
-					var menuClass = menuObj.className;
-					if(menuClass.indexOf('breadcrumbs')>0){
-						$('.panel-body-noheader')[0].style.height = parseInt(M_DATAGRIDHEIGHT.split('px')[0]) + 7 + 'px';
-					}else{
-						$('.panel-body-noheader')[0].style.height = parseInt(M_DATAGRIDHEIGHT.split('px')[0]) + 10 + 'px';
-					}
-				}else{ // 多个组件构成一个界面
-					$('.panel-body-noheader')[0].style.height = parseInt(M_DATAGRIDHEIGHT.split('px')[0]) +7 + 'px';
-				}
-			}
-		})
-	}
 }

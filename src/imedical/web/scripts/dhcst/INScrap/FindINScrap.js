@@ -7,7 +7,7 @@ FindINScrap = function(ds,inscrapNumField,finshCK,auditCK,mainRowId,locField,dat
 		width:150,
 		listWidth:210,
 		allowBlank:true,
-		fieldLabel:'起始日期',
+		fieldLabel:$g('起始日期'),
 		anchor:'90%',
 		value:new Date()
 	});
@@ -17,17 +17,17 @@ FindINScrap = function(ds,inscrapNumField,finshCK,auditCK,mainRowId,locField,dat
 		width:150,
 		listWidth:210,
 		allowBlank:true,
-		fieldLabel:'截止日期',
+		fieldLabel:$g('截止日期'),
 		anchor:'90%',
 		value:new Date()
 	});
 	
 	var Loc = new Ext.ux.LocComboBox({
 		id:'Loc',
-		fieldLabel:'科室',
+		fieldLabel:$g('科室'),
 		width:200,
 		listWidth:210,
-		emptyText:'科室...',
+		emptyText:$g('科室...'),
 		groupId:gGroupId
 	});
 	Loc.getStore().load(session['LOGON.GROUPID']);
@@ -35,7 +35,7 @@ FindINScrap = function(ds,inscrapNumField,finshCK,auditCK,mainRowId,locField,dat
 	
 	var finish = new Ext.form.Checkbox({
 		id: 'finish',
-		boxLabel:'已完成',
+		boxLabel:$g('已完成'),
 		allowBlank:true,
 		listeners:{
 			'check':function(t,chk){
@@ -48,7 +48,7 @@ FindINScrap = function(ds,inscrapNumField,finshCK,auditCK,mainRowId,locField,dat
 
 	var audit = new Ext.form.Checkbox({
 		id: 'audit',
-		boxLabel:'已审核',
+		boxLabel:$g('已审核'),
 		allowBlank:true,
 		listeners:{
 			'check':function(t,chk){
@@ -96,35 +96,35 @@ FindINScrap = function(ds,inscrapNumField,finshCK,auditCK,mainRowId,locField,dat
 	var InscrapCm = new Ext.grid.ColumnModel([
 		new Ext.grid.RowNumberer(),
 		{
-			header: '报损单rowid',
+			header: $g('报损单rowid'),
 			dataIndex: 'inscp',
 			hidden:true
 		},{
-			header: '调整单号',
+			header: $g('调整单号'),
 			dataIndex: 'no',
 			width: 150,
 			sortable:true,
 			align: 'center'
 		},{
-			header: '科室',
+			header: $g('科室'),
 			dataIndex: 'locDesc',
 			width: 150,
 			sortable:true,
 			align: 'left'
 		},{
-			header: "报损日期",
+			header: $g("报损日期"),
 			dataIndex: 'date',
 			width: 150,
 			align: 'left',
 			sortable: true
 		},{
-			header: "原因",
+			header: $g("原因"),
 			dataIndex: 'reasonDesc',
 			width: 150,
 			align: 'left',
 			sortable: true
 		},{
-			header: "完成状态",
+			header: $g("完成状态"),
 			dataIndex: 'completed',
 			width: 100,
 			align: 'center',
@@ -134,7 +134,7 @@ FindINScrap = function(ds,inscrapNumField,finshCK,auditCK,mainRowId,locField,dat
 				return '<div class="x-grid3-check-col'+(((v=='Y')||(v==true))?'-on':'')+' x-grid3-cc-'+this.id+'">&#160;</div>';
 			}
 		},{
-			header: "审核状态",
+			header: $g("审核状态"),
 			dataIndex: 'chkFlag',
 			width: 100,
 			align: 'center',
@@ -144,7 +144,7 @@ FindINScrap = function(ds,inscrapNumField,finshCK,auditCK,mainRowId,locField,dat
 				return '<div class="x-grid3-check-col'+(((v=='Y')||(v==true))?'-on':'')+' x-grid3-cc-'+this.id+'">&#160;</div>';
 			}
 		},{
-			header: "备注",
+			header: $g("备注"),
 			dataIndex: 'remark',
 			width: 200,
 			align: 'left',
@@ -156,12 +156,12 @@ FindINScrap = function(ds,inscrapNumField,finshCK,auditCK,mainRowId,locField,dat
 		store:InscrapDs,
 		pageSize:15,
 		displayInfo:true,
-		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录"
+		displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+		emptyMsg:$g("没有记录")
 	});
 	
 	var clearB=new Ext.Toolbar.Button({
-		text:'清屏',
+		text:$g('清屏'),
 		height:30,
 		width:70,
 		iconCls:'page_clearscreen',
@@ -179,8 +179,8 @@ FindINScrap = function(ds,inscrapNumField,finshCK,auditCK,mainRowId,locField,dat
 	
 	})
 	var fB = new Ext.Toolbar.Button({
-		text:'查询',
-		tooltip:'查询',
+		text:$g('查询'),
+		tooltip:$g('查询'),
 		iconCls:'page_find',
 		width:70,
 		height:30,
@@ -190,7 +190,7 @@ FindINScrap = function(ds,inscrapNumField,finshCK,auditCK,mainRowId,locField,dat
 	});
 	
 	var closWinB=new Ext.Toolbar.Button({
-		text:'关闭',
+		text:$g('关闭'),
 		height:30,
 		width:70,
 		iconCls:'page_delete',
@@ -253,83 +253,83 @@ FindINScrap = function(ds,inscrapNumField,finshCK,auditCK,mainRowId,locField,dat
 			dataIndex: 'inclb',
 			hidden:true
 		},{
-			header: '药品rowid',
+			header: $g('药品rowid'),
 			dataIndex: 'inci',
 			hidden:true
 		},{
-			header: '代码',
+			header: $g('代码'),
 			dataIndex: 'code',
 			width: 72,
 			sortable:true,
 			align: 'left'
 		},{
-			header: '名称',
+			header: $g('名称'),
 			dataIndex: 'desc',
 			width: 140,
 			sortable:true,
 			align: 'left'
 		},{
-			header: "批次~效期",
+			header: $g("批次~效期"),
 			dataIndex: 'batNo',
 			width: 150,
 			align: 'left',
 			sortable: true
 		},{
-			header: "厂商",
+			header: $g("生产企业"),
 			dataIndex: 'manf',
 			width: 150,
 			align: 'left',
 			sortable: true
 		},{
-			header: "报损数量",
+			header: $g("报损数量"),
 			dataIndex: 'qty',
 			width: 72,
 			align: 'right',
 			sortable: true
 		},{
-			header:'单位',
+			header:$g('单位'),
 			dataIndex:'uomDesc',
 			align:'left',
 			width:80,
 			sortable:true
 		},{
-			header:'单价',
+			header:$g('单价'),
 			dataIndex:'rp',
 			align:'right',
 			width:80,
 			sortable:true
 		},{
-			header:'金额',
+			header:$g('金额'),
 			dataIndex:'rpAmt',
 			align:'right',
 			width:80,
 			sortable:true
 		},{
-			header:'规格',
+			header:$g('规格'),
 			dataIndex:'spec',
 			align:'left',
 			width:80,
 			sortable:true
 		},{
-			header:'售价',
+			header:$g('售价'),
 			dataIndex:'sp',
 			align:'right',
 			width:80,
 			sortable:true
 		},{
-			header:'售价金额',
+			header:$g('售价金额'),
 			dataIndex:'spAmt',
 			align:'right',
 			width:80,
 			sortable:true
 		},{
-			header:'批价',
+			header:$g('批价'),
 			dataIndex:'pp',
 			align:'right',
 			width:80,
 			sortable:true
 		},{
-			header:'批价金额',
+			header:$g('批价金额'),
 			dataIndex:'ppAmt',
 			align:'right',
 			width:80,
@@ -340,8 +340,8 @@ var InscrapItmPagingToolbar = new Ext.PagingToolbar({
 		store:InscrapItmDs,
 		pageSize:30,
 		displayInfo:true,
-		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录"
+		displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+		emptyMsg:$g("没有记录")
 	});
 	var InscrapItmGrid = new Ext.grid.GridPanel({
 		region:'south',
@@ -374,7 +374,7 @@ var InscrapItmPagingToolbar = new Ext.PagingToolbar({
 			params:{start:0,limit:InscrapItmPagingToolbar.pageSize},
 			callback : function(r,options, success){
 				if(success==false){
-					Ext.MessageBox.alert("查询错误",this.reader.jsonData.Error); 
+					Ext.MessageBox.alert($g("查询错误"),this.reader.jsonData.Error); 
 	 			}
 			}	
 		});
@@ -397,7 +397,7 @@ var InscrapItmPagingToolbar = new Ext.PagingToolbar({
 		layout:'fit',
 		items:[{
 			xtype:'fieldset',
-			title:'查询条件',
+			title:$g('查询条件'),
 			layout:'column',
 			style:DHCSTFormStyle.FrmPaddingV,
 			items:[{
@@ -432,7 +432,7 @@ var InscrapItmPagingToolbar = new Ext.PagingToolbar({
 	});
 	
 	var findWin = new Ext.Window({
-		title:'查找库存报损单',
+		title:$g('查找库存报损单'),
 		id:'scrapWinFind',
 		height:document.body.clientHeight*0.9,
 		width:document.body.clientWidth*0.9,
@@ -479,20 +479,20 @@ var InscrapItmPagingToolbar = new Ext.PagingToolbar({
 		if((startDate!="")&&(startDate!=null)){
 			startDate = startDate.format(App_StkDateFormat);
 		}else{
-			Msg.info("error","请选择起始日期!");
+			Msg.info("error",$g("请选择起始日期!"));
 			return false;
 		}
 		var endDate = Ext.getCmp('endDate').getValue();
 		if((endDate!="")&&(endDate!=null)){
 			endDate = endDate.format(App_StkDateFormat);
 		}else{
-			Msg.info("error","请选择截止日期!");
+			Msg.info("error",$g("请选择截止日期!"));
 			return false;
 		}
 		
 		var locId = Ext.getCmp('Loc').getValue();
 		if((locId=="")||(locId==null)){
-			Msg.info("error","请选择申请部门!");
+			Msg.info("error",$g("请选择申请部门!"));
 			return false;
 		}
 		

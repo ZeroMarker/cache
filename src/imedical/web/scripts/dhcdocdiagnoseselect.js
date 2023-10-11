@@ -44,6 +44,7 @@ function InitPrescNoList(){
 		striped : true,
 		singleSelect : false,
 		fitColumns : false,
+		toolbar:[],
 		autoRowHeight : false,
 		rownumbers:true,
 		pagination : true,   
@@ -53,7 +54,7 @@ function InitPrescNoList(){
 		idField:"prceno",
 		columns :[[ 
 			{field:'prceno',checkbox:true},
-			{field:'prcedesc',title:"处方",align:'left'}
+			{field:'prcedesc',title:"处方",align:'left',width:425}
 		]],
 		onSelect:function (rowIndex, rowData){
 			LoadOrderList();
@@ -85,7 +86,8 @@ function InitDiagList(){
 		border : false,
 		striped : true,
 		singleSelect : false,
-		fitColumns : false,
+		fitColumns : true,
+		toolbar:[],
 		autoRowHeight : false,
 		rownumbers:true,
 		pagination : true,   
@@ -93,10 +95,10 @@ function InitDiagList(){
 		pageList : [20,50],
 		idField:"diaid",
 		columns :[[ 
-				{field:'RowCheck',checkbox:true},
-				{field:'desc',title:"诊断描述",width:400,align:'left'},
-				{field:'diaid',title:"诊断ID",width:60,align:'left',hidden:true},
-			]]
+			{field:'RowCheck',checkbox:true},
+			{field:'diaid',hidden:true},
+			{field:'desc',title:"诊断描述",width:535,align:'left'},
+		]]
 	});
 	return tabdatagrid
 }
@@ -108,6 +110,7 @@ function IntorderlistList(){
 		singleSelect : true,
 		fitColumns : false,
 		autoRowHeight : false,
+		toolbar:[],
 		rownumbers:true,
 		pagination : true,   
 		pageSize: 30,
@@ -231,12 +234,33 @@ function InsertPresc(){
 	   window.setTimeout('CloseAtto()',100)
 	   return true
   }else{
-	  $.messager.alert("提示","保存失败"+rtn)
+	  $.messager.alert("提示",$g("保存失败!")+rtn)
 	  return false
   }
 }
+function CheckAfterSaveCloseDia(){
+	var PrescNoStr=""
+	var data=PageLogicObj.m_PrescNoList.datagrid("getData")
+	for (i=0;i<data.rows.length;i++){
+		if (PrescNoStr=="") PrescNoStr=data.rows[i].prceno;
+		else  PrescNoStr=PrescNoStr+"^"+data.rows[i].prceno;
+	}
+	var rtn=$cm({
+		ClassName:"web.DHCDocDiagLinkToPrse",
+		MethodName:"CheckSaveAfterCloseDia",
+		dataType:"text",
+		PrescNoStr:PrescNoStr,
+   	},false);
+	
+	return rtn
+}
 function CloseAtto()
 {
+	var CloseAttoFlag=CheckAfterSaveCloseDia()
+	if (CloseAttoFlag=="Y"){
+		websys_showModal("close");
+		return ;
+	}
 	//自动关闭标识
 	if (ServerObj.ExitFlag=="Y"){
 		   websys_showModal("close");

@@ -141,12 +141,12 @@ function InitEtiologyEvi(obj){
 				{field:'BacteriaDesc',title:'细菌',width:150},
 				{field:'YesNoTDesc',title:'是否耐替加环素',width:120},
 				{field:'AntDescTDesc',title:'抗生素',width:100},
-				{field:'TMethodDesc',title:'药敏方法',width:100},
-				{field:'TNumber',title:'数值',width:80},
+				//{field:'TMethodDesc',title:'药敏方法',width:100},
+				//{field:'TNumber',title:'数值',width:80,},
 				{field:'YesNoQDesc',title:'是否耐碳青霉烯',width:120},
 				{field:'AntDescQDesc',title:'抗生素',width:100},
-				{field:'QMethodDesc',title:'药敏方法',width:100},
-				{field:'QNumber',title:'数值',width:80}
+				//{field:'QMethodDesc',title:'药敏方法',width:100},
+				//{field:'QNumber',title:'数值',width:80}
 			]],	
 			onDblClickRow:function(rowIndex, rowData) {
 				if (rowIndex>-1) {
@@ -375,7 +375,7 @@ function InitEtiologyEvi(obj){
 		if ((Common_CompareDate(CollDate,NowDate)>0)||(Common_CompareDate(AuthDate,NowDate)>0)) {
     		errinfo = errinfo + "送检日期、报告日期不能在当前日期之后!<br>"; 
     	}
-    	if ((TAntiDesc!='')&&((TMethodDesc=='')||(TNumber==''))){
+    	/*if ((TAntiDesc!='')&&((TMethodDesc=='')||(TNumber==''))){
 	    	errinfo = errinfo + "请填写是否耐替加环素的药敏方法及数值!<br>"; 	
 	    }
 	    if ((QAntiDesc!='')&&((QMethodDesc=='')||(QNumber==''))){
@@ -410,7 +410,7 @@ function InitEtiologyEvi(obj){
 	    	    ||((TNumber.indexOf("<")==0)&&(TNumber!='<0.004'))||((TNumber.indexOf(">")==0)&&(TNumber!='>512'))) {   
 		    	errinfo = errinfo + "耐替加环素药敏方法为自动化法时，MIC值结果小于0.004记为<0.004，大于512记为>512，0.004-512之间需填写具体数值，请检查!<br>"; 
 	    	}
-    	}												
+    	}	*/											
 		if (errinfo !='') {
 			$.messager.alert("提示", errinfo, 'info');
 			return ;

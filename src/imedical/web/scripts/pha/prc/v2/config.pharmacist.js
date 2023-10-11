@@ -6,10 +6,12 @@
 PHA_COM.App.Csp = "pha.prc.v2.config.pharmacist.csp";
 PHA_COM.App.Name = "PRC.Config.Pharmacist";
 PHA_COM.App.Load = "";
+var hospId = PHA_COM.Session.HOSPID;
 $(function () {
 	InitDict();
 	InitGridPharmacist();
 	InitEvents();
+	InitHospCombo();
 });
 
 // 事件
@@ -29,10 +31,10 @@ function InitDict() {
 	PHA.ComboBox("conLevel", {
 		data: [{
 			RowId: "A",
-			Description: "审核"
+			Description: $g("审核")
 		}, {
 			RowId: "C",
-			Description: "点评"
+			Description: $g("点评")
 		}],
 		panelHeight: "auto"
 	});
@@ -56,7 +58,8 @@ function InitGridPharmacist() {
         url: $URL,
         queryParams: {
             ClassName: 'PHA.PRC.ConFig.Pharmacist',
-            QueryName: 'SelectPharmacist'
+            QueryName: 'SelectPharmacist',
+            hospID: hospId
         },
         columns: columns,
         toolbar: "#gridPharmacistBar",
@@ -100,7 +103,7 @@ function AddPha(){
 		MethodName: 'SaveComPha',
 		phaId: '',
 		OtherStr: OtherStr,
-		logonLoc: session['LOGON.CTLOCID'],
+		hospID: hospId,
 		dataType: 'text'
 	}, false);
 	var saveArr = saveRet.split('^');
@@ -115,6 +118,7 @@ function AddPha(){
 			type: 'success'
 		});
 		ClearPha();
+		$("#gridPharmacist").datagrid("reload");	
 	}
 }
 //修改点评药师信息
@@ -146,7 +150,7 @@ function EditPha(){
 		MethodName: 'SaveComPha',
 		phaId: phaId,
 		OtherStr: OtherStr,
-		logonLoc: session['LOGON.CTLOCID'],
+		hospID: hospId,
 		dataType: 'text'
 	}, false);
 	var saveArr = saveRet.split('^');
@@ -161,6 +165,7 @@ function EditPha(){
 			type: 'success'
 		});
 		ClearPha();
+		$("#gridPharmacist").datagrid("reload");	
 	}
 }
 
@@ -187,6 +192,7 @@ function DelPha(){
 		ClassName: 'PHA.PRC.ConFig.Pharmacist',
 		MethodName: 'DelComPha',
 		phaId: phaId,
+		hospID: hospId,
 		dataType: 'text'
 	}, false);
 	var saveArr = saveRet.split('^');
@@ -201,6 +207,7 @@ function DelPha(){
 			type: 'success'
 		});
 		ClearPha();
+		$("#gridPharmacist").datagrid("reload");	
 	}
 	
 }
@@ -211,11 +218,20 @@ function ClearPha(){
 	$("#conLevel").combobox("setValue",'');
 	$("#conLevel").combobox("setText", '');
 	$("#conGrp").val('');
-	$("#gridPharmacist").datagrid("reload");
-	
 }
 
-
-
+function InitHospCombo() {
+	var genHospObj = GenHospComp('DHC_PHCNTSALLOTUSER');
+	if (typeof genHospObj ==='object'){
+        genHospObj.options().onSelect =  function(index, record) {	
+            var newHospId = record.HOSPRowId;
+            hospId = newHospId;
+            ClearPha();
+            $('#conPharmacist').combobox('options').url = $URL + "?ResultSetType=Array&" + 'ClassName=PHA.STORE.Org&QueryName=Pharmacist&HospId=' + newHospId;
+			$('#conPharmacist').combobox('reload');
+			$('#gridPharmacist').datagrid('query', {hospID: newHospId});
+        }
+    }
+}
 
 

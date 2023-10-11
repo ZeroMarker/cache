@@ -1,7 +1,6 @@
-ï»¿var PageLogicObj={
+var PageLogicObj={
 	m_BookListTabDataGrid:"",
 	m_AdmListTabDataGrid:"",
-	m_DianosListICD:"",
 	m_CanSave:"Y",
 	m_PatPhoneFlag:"",
 	m_PatLinkPhoneFlag:"",
@@ -10,55 +9,71 @@
 	m_PatFRelation:"",
 	LocWardCheckBox:"LocWard^LinkWard^AllWard",
 	pageLoagFinish:"N",
-	IsCellCheckFlag:false
+	IsCellCheckFlag:false,
+	Print_flag:0
 }
-/*	 var script = document.createElement('script');
+if (websys_isIE==true) {
+	 var script = document.createElement('script');
 	 script.type = 'text/javaScript';
-	 script.src = '../scripts/dhcdoc/tools/bluebird.min.js';  // bluebird æ–‡ä»¶åœ°å€
+	 script.src = '../scripts/dhcdoc/tools/bluebird.min.js';  // bluebird ÎÄ¼şµØÖ·
 	 document.getElementsByTagName('head')[0].appendChild(script);
-}*/
+}
+if (ServerObj.sysDateFormat=="4"){
+	//DD/MM/YYYY
+    var DATE_FORMAT= new RegExp("(((0[1-9]|[12][0-9]|3[01])/((0[13578]|1[02]))|((0[1-9]|[12][0-9]|30)/(0[469]|11))|(0[1-9]|[1][0-9]|2[0-8])/(02))/([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3}))|(29/02/(([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00)))");
+}else if(ServerObj.sysDateFormat=="3"){
+	//YYYY-MM-DD
+	var DATE_FORMAT= new RegExp("(([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})-(((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)-(0[1-9]|[12][0-9]|30))|(02-(0[1-9]|[1][0-9]|2[0-8]))))|((([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))-02-29)");
+}
 $(function(){
-	//åˆå§‹åŒ–
+	//³õÊ¼»¯
 	Init();
-	//äº‹ä»¶åˆå§‹åŒ–
+	//ÊÂ¼ş³õÊ¼»¯
 	InitEvent();
+	if(!ServerObj.EpisodeID&&!ServerObj.PatientID&&!ServerObj.BookID){
+		$('#CreatNew').click();
+	}
 })
 $(window).load(function() {
-	//æ•°æ®åˆå§‹åŒ–,setTimeoutä¸å¯å»æ‰ï¼Œä¼šå¯¼è‡´è”ç³»äººå…³ç³»å’Œä½å€æ•°æ®æ¸…ç©º
+	//Êı¾İ³õÊ¼»¯,setTimeout²»¿ÉÈ¥µô£¬»áµ¼ÖÂÁªÏµÈË¹ØÏµºÍ×¡Ö·Êı¾İÇå¿Õ
 	setTimeout(function (){
 		PageHandle();
 	},50)
 	//$HUI.radio("#LocWard").setValue(true);
 })
 function Init(){
-	//åˆå§‹åŒ–Combç»„ä»¶
+	//³õÊ¼»¯Comb×é¼ş
 	IntCombList();
 }
 function InitEvent(){
-	//ä¿å­˜ä½é™¢è¯
+	//±£´æ×¡ÔºÖ¤
 	$('#Save').click(SaveCon);
-	//ä½é™¢è¯æ‰“å°
+	//×¡ÔºÖ¤´òÓ¡
 	$('#Print').click(Print);
-	//ä½é™¢è¯ä¿å­˜å¹¶æ‰“å°
+	//×¡ÔºÖ¤±£´æ²¢´òÓ¡
 	$('#SaPrint').click(SaPrint);
-	//æ‚£è€…åˆ‡æ¢
+	//»¼ÕßÇĞ»»
 	$('#CreatNew').click(CreatNew);
-	//ä½é™¢è¯æŸ¥è¯¢
+	//×¡ÔºÖ¤²éÑ¯
 	$('#BookListFind').click(BookListTabLoad);
-	//å°±è¯Šåˆ—è¡¨æŸ¥è¯¢
+	//¾ÍÕïÁĞ±í²éÑ¯
 	$('#AdmListFind').click(AdmListTabLoad);
-	//åŒ»å˜±å½•å…¥
+	//Ò½ÖöÂ¼Èë
 	$('#OrderLink').click(OrderLinkClick);
-	//è”ç³»ç”µè¯ä¿®æ”¹
+	//ÁªÏµµç»°ĞŞ¸Ä
 	$('#PatPhone').blur(function(){
 		PatPhoneOnblur("PatPhone");	
 	});
-	//è”ç³»äººç”µè¯ä¿®æ”¹
+	//ÁªÏµÈËµç»°ĞŞ¸Ä
 	//$('#PatFPhone').blur(function(){
 	//	PatPhoneOnblur("PatFPhone");	
 	//});
-	//æ—¥é—´æ‰‹æœ¯ç”³è¯·
+	//ÈÕ¼äÊÖÊõÉêÇë
 	$('#OpertionLink').click(OpenOpertionClick);
+	$('#OpertionLinkBook').click(OpertionLinkBookClick);
+	if (ServerObj.OpertionLinkBookFlag!="Y"){
+		$('#OpertionLinkBook').hide();
+		}
 	$("#tt").tabs({
 		onSelect:function(title,index){
 			if (index==1) {
@@ -69,43 +84,64 @@ function InitEvent(){
 			}
 		}
 	})
-	
+	if (ServerObj.ShowSaveBtn=="N") {
+		$("#Save,#SaPrint").hide();
+	}
+	$('#DiaType').checkbox({
+		onCheckChange:function(){
+			if(ServerObj.SDSDiagEntry){
+				IntAdmDiadesc();
+			}
+		}
+	})
 }
 function PageHandle(){
-	//æ¡†æ¶å’Œäº‹ä»¶åˆå§‹åŒ–
+	//¿ò¼ÜºÍÊÂ¼ş³õÊ¼»¯
 	PageLogicObj.m_BookListTabDataGrid=InitBookListTabDataGrid();
 	$("#InSdate").dateboxq('setValue',ServerObj.NowDate);
-	//é€‰æ‹©ç—…åŒºèŒƒå›´
+	//Ñ¡Ôñ²¡Çø·¶Î§
 	$HUI.radio("[name='WardAre']",{
        onChecked:function(e,value){
-            //é€šè¿‡ç—…åŒºç±»å‹åˆå§‹åŒ–ç—…åŒº
+            //Í¨¹ı²¡ÇøÀàĞÍ³õÊ¼»¯²¡Çø
 			InWardCombCreat()
         }
     });
     
     
     /*
-	//åˆå§‹åŒ–æ‚£è€…ä¿¡æ¯	
+	//³õÊ¼»¯»¼ÕßĞÅÏ¢	
 	IntPaMes();
-	//åˆå§‹åŒ–å°±è¯Šä¿¡æ¯
+	//³õÊ¼»¯¾ÍÕïĞÅÏ¢
 	IntAmdMes();
-	//åˆå§‹åŒ–è¯Šæ–­æ”¾å¤§é•œ
+	//³õÊ¼»¯Õï¶Ï·Å´ó¾µ
 	IntAdmDiadesc();
-	//åˆå§‹åŒ–ä½é™¢è¯ä¿¡æ¯
+	//³õÊ¼»¯×¡ÔºÖ¤ĞÅÏ¢
 	setTimeout(function(){IntBookMes()});
 	setTimeout(function(){Find()});
 	*/
 	
-	//æŒ‰ç…§æ‚£è€…ä¿¡æ¯è¿›è¡Œåˆå§‹åŒ–
+	//°´ÕÕ»¼ÕßĞÅÏ¢½øĞĞ³õÊ¼»¯
 	NewIntPatMesCreat()
-	//åˆå§‹åŒ–è¯Šæ–­æ”¾å¤§é•œ
+	//³õÊ¼»¯Õï¶Ï·Å´ó¾µ
 	IntAdmDiadesc();
-	//æŸ¥è¯¢
+	//²éÑ¯
 	setTimeout(function(){Find()});
-	//åˆå§‹åŒ–ç¼“å­˜
+	//³õÊ¼»¯»º´æ
 	InitCache();
-	//å…¨éƒ¨åŠ åœ¨å®Œæˆ
+	//È«²¿¼ÓÔÚÍê³É
 	PageLogicObj.pageLoagFinish="Y"	
+	if (ServerObj.TempCardFlag=="Y"){
+		$.messager.alert('¾¯¸æ','<font color=red>ÁÙÊ±¿¨²»ÔÊĞí¿ªÁ¢×¡ÔºÖ¤£¡</font> ');
+	}
+	var ErrMsg=$.cm({
+		ClassName:"web.DHCDocIPBookNew",
+		MethodName:"CheckEmerInfo",
+		PatientID:ServerObj.PatientID,
+		dataType:"text"
+	},false);
+	if (ErrMsg!=""){
+		$.messager.alert('ÌáÊ¾',$g("»¼ÕßÕıÔÚ ")+"<font color=red>"+ $g(ErrMsg)+"!</font> ");
+	}
 }
 
 function InitCache () {
@@ -116,30 +152,34 @@ function InitCache () {
 }
 function InitBookListTabDataGrid(){
 	var Columns=[[ 
-		{field:'NO',title:'åºå·',width:50},
-		{field:'IPBookingNo',title:'ä½é™¢è¯å·',width:100,align:'left'},
-		{field:'BName',title:'å§“å',width:70,align:'left'},
-		{field:'BStatu',title:'çŠ¶æ€',width:50,align:'left'},
-		{field:'BBDate',title:'é¢„çº¦æ—¥æœŸ',width:90},
-		{field:'BBCTloc',title:'é¢„çº¦ç§‘å®¤',width:100},   
-		{field:'BBWard',title:'é¢„çº¦ç—…åŒº',width:100},  
-		{field:'AdmInitStateDesc',title:'ç—…æƒ…',width:60},    
-		{field:'BBBed',title:'é¢„çº¦åºŠä½',width:100,hidden:true},
-		{field:'BBCreaterUser',title:'åˆ›å»ºäºº',width:100},
-		{field:'BBCreaterDate',title:'åˆ›å»ºæ—¥æœŸ',width:100},
-		{field:'rjss',title:'æ˜¯å¦æ—¥é—´æ‰‹æœ¯',width:100},
-		{field:'BPatID',title:'æ‚£è€…ID',width:100,hidden:true},
-		{field:'BAmdID',title:'å°±è¯ŠID',width:100,hidden:true},
-		{field:'BBookID',title:'æ“ä½œ',width:50,
+		{field:'NO',title:'ĞòºÅ',width:50},
+		{field:'IPBookingNo',title:'×¡ÔºÖ¤ºÅ',width:146,align:'left'},
+		{field:'BName',title:'ĞÕÃû',width:100,align:'left'},
+		{field:'BStatu',title:'×´Ì¬',width:60,align:'left'},
+		{field:'BBDate',title:'Ô¤Ô¼ÈÕÆÚ',width:100},
+		{field:'BBCTloc',title:'Ô¤Ô¼¿ÆÊÒ',width:140},   
+		{field:'BBWard',title:'Ô¤Ô¼²¡Çø',width:150},  
+		{field:'AdmInitStateDesc',title:'²¡Çé',width:60},    
+		{field:'BBBed',title:'Ô¤Ô¼´²Î»',width:100,hidden:true},
+		{field:'BBCreaterUser',title:'´´½¨ÈË',width:120},
+		{field:'BBCreaterDate',title:'´´½¨ÈÕÆÚ',width:120},
+		{field:'BTimeLiness',title:'Ê±Ğ§×´Ì¬',width:120,
+			styler: function(value,row,index){
+				return "color:red;";
+			}
+		},
+		{field:'rjss',title:'ÊÇ·ñÈÕ¼äÊÖÊõ',width:100},
+		{field:'BBookID',title:'²Ù×÷',width:60,align:"center",
 			formatter: function(value,row,index){
-				var btn = '<a class="editcls" onclick="CancelIPBook(\'' + row["BBookID"] + '\')">'+$g("æ’¤é”€")+'</a>';
+				var btn = '<a class="editcls" style="text-algin:center;" onclick="CancelIPBook(\'' + row["BBookID"] + '\')"><div class="icon icon-cancel" style="height:16px;width:auto;text-aglin:center;"></div></a>';
 				return btn;
 			}
-		}
+		},
+		{field:'BPatID',title:'»¼ÕßID',width:100,hidden:true},
+		{field:'BAmdID',title:'¾ÍÕïID',width:100,hidden:true},
     ]]
 	var BookListTabDataGrid=$("#BookListTab").datagrid({
 		fit : true,
-		height:'100',
 		border : false,
 		striped : true,
 		singleSelect : true,
@@ -152,9 +192,10 @@ function InitBookListTabDataGrid(){
 		idField:'BBookID',
 		columns :Columns,
 		onSelect:function(index, row){
-			//é€‰æ‹©ä½é™¢è¯è·å–å¯¹åº”ä¿¡æ¯
+			//Ñ¡Ôñ×¡ÔºÖ¤»ñÈ¡¶ÔÓ¦ĞÅÏ¢
 			ServerObj.BookID=row["BBookID"];
-			//åˆå§‹åŒ–ä½é™¢è¯ä¿¡æ¯
+			PageLogicObj.m_CanSave="Y";
+			//³õÊ¼»¯×¡ÔºÖ¤ĞÅÏ¢
 			IntBookMes();
 		},onBeforeSelect:function(index, row){
 			if (PageLogicObj.IsCellCheckFlag==true) return true;
@@ -167,6 +208,7 @@ function InitBookListTabDataGrid(){
 			}
 		},onUnselect:function(index, row){
 			ServerObj.BookID="";
+			ServerObj.EpisodeID=ServerObj.MasterEpisodeID
 			ClearBookMes();
 			ClearAdmMes();	
 		}
@@ -175,12 +217,12 @@ function InitBookListTabDataGrid(){
 }
 function InitAdmListTabDataGrid(){
 	var Columns=[[ 
-		{field:'NO',title:'åºå·',width:50},
-		{field:'AdmDate',title:'å°±è¯Šæ—¥æœŸ',width:100,align:'left'}, 
-		{field:'AdmLoc',title:'å°±è¯Šç§‘å®¤',width:150},
-		{field:'AdmMark',title:'å°±è¯Šå·åˆ«',width:150},
-		{field:'AdmDoc',title:'æ¥è¯ŠåŒ»ç”Ÿ',width:100},
-		{field:'AdmDias',title:'è¯Šæ–­',width:200},
+		{field:'NO',title:'ĞòºÅ',width:50},
+		{field:'AdmDate',title:'¾ÍÕïÈÕÆÚ',width:100,align:'left'}, 
+		{field:'AdmLoc',title:'¾ÍÕï¿ÆÊÒ',width:150},
+		{field:'AdmMark',title:'¾ÍÕïºÅ±ğ',width:150},
+		{field:'AdmDoc',title:'½ÓÕïÒ½Éú',width:100},
+		{field:'AdmDias',title:'Õï¶Ï',width:200},
 		{field:'AdmID',title:'AdmID',width:100,hidden:true}
     ]]
 	var AdmListTabDataGrid=$("#AdmListTab").datagrid({
@@ -188,7 +230,7 @@ function InitAdmListTabDataGrid(){
 		border : false,
 		striped : true,
 		singleSelect : true,
-		fitColumns : false,
+		fitColumns : true,
 		autoRowHeight : false,
 		pagination : true,  
 		pageSize: 20,
@@ -202,10 +244,10 @@ function InitAdmListTabDataGrid(){
 				PageLogicObj.m_BookListTabDataGrid.datagrid('unselectRow',selBookIndex);
 			}			
 			PageLogicObj.m_CanSave="Y";
-			//é€‰æ‹©ä½é™¢è¯è·å–å¯¹åº”ä¿¡æ¯
+			//Ñ¡Ôñ×¡ÔºÖ¤»ñÈ¡¶ÔÓ¦ĞÅÏ¢
 			ServerObj.BookID="";
 			ServerObj.EpisodeID=row["AdmID"];
-			//åˆå§‹åŒ–ä½é™¢è¯ä¿¡æ¯
+			//³õÊ¼»¯×¡ÔºÖ¤ĞÅÏ¢
 			IntAmdMes()
 		},onBeforeSelect:function(index, row){
 			var oldSelRow=$(this).datagrid('getSelected');
@@ -227,7 +269,7 @@ function IntPaMes(){
 		$.cm({
 			ClassName:"web.DHCDocIPBookNew",
 			MethodName:"GetPatDetail",
-			PatientID:ServerObj.PatientID, PatientNO:"", AdmID:"",
+			PatientID:ServerObj.PatientID, PatientNO:"", AdmID:ServerObj.EpisodeID,
 			dataType:"text"
 		},function(Patmes){
 			var PatmesArry=Patmes.split("^");
@@ -277,14 +319,15 @@ function IntPaMes(){
 			PageLogicObj.m_PatFRelation.setValue(patLinkRelationDr);
 			$("#PatCompany").val(patWorkAddress);
 			$("#PatAddress").combobox('setText',patAddress); 
-			
+			//ÈëÔº·Ñ±ğ
+			IntInAdmReason(PatID);
 		})
 	}
 }
 function IntAmdMes(){
-	//è·å–è¯Šæ–­ID
+	//»ñÈ¡Õï¶ÏID
 	if (ServerObj.EpisodeID!=""){
-		//åˆ¤æ–­å°±è¯Šæ˜¯å¦å¯ä»¥ç”¨æ¥åŠç†ä½é™¢è¯
+		//ÅĞ¶Ï¾ÍÕïÊÇ·ñ¿ÉÒÔÓÃÀ´°ìÀí×¡ÔºÖ¤
 		if (ServerObj.IPBKFlag=="Booking"){
 			var Rtn=$.cm({
 				ClassName:"web.DHCDocIPBookNew",
@@ -296,12 +339,12 @@ function IntAmdMes(){
 				var RtnArry=Rtn.split("^");
 				//alert(RtnArry)
 				if (RtnArry[0]=="-1"){
-					$.messager.alert('æç¤º',RtnArry[1],"info",function(){
+					$.messager.alert('ÌáÊ¾',RtnArry[1],"info",function(){
 						PageLogicObj.m_CanSave="N";
 					});
 					return false;
 				}else{
-					$.messager.alert('æç¤º',RtnArry[1]);
+					$.messager.alert('ÌáÊ¾',RtnArry[1]);
 				}
 			}
 		}
@@ -311,8 +354,7 @@ function IntAmdMes(){
 			Adm:ServerObj.EpisodeID,
 			dataType:"text"
 		},false);
-		PageLogicObj.m_DianosListICD=AdmICDList;
-		IntDianosList();
+		InitDiagList(AdmICDList);
 		var PatAdmMes=$.cm({
 			ClassName:"web.DHCDocIPBookNew",
 			MethodName:"GetPatAdmMes",
@@ -329,30 +371,34 @@ function IntAmdMes(){
 	}
 }
 function IntCombList(){
-	//å…¥é™¢ç—…æƒ…
+	//ÈëÔº²¡Çé
 	AdmInitStateCombCreat()
-	//è¯Šæ–­çŠ¶æ€
+	//Õï¶Ï×´Ì¬
 	DiaStatusCombCreat()
-	//å½“å‰çŠ¶æ€
+	//µ±Ç°×´Ì¬
 	InCurStatuCombCreat()
-	//æ“ä½œåŸå› 
+	//²Ù×÷Ô­Òò
 	InReasonCombCreat()
-	//å…¥é™¢é€”å¾„
+	//ÈëÔºÍ¾¾¶
 	InSorceCombCreat()
-	//ä½é™¢ç§‘å®¤
-	InCtlocCombCreat()
-	//å»ºè®®åºŠä½ç±»å‹ 
+	//×¡ÔºÔºÇø
+	InitInHosp()
+	//½¨Òé´²Î»ÀàĞÍ 
 	InBedTypeCombCreat()
-	//ç—…äººç­‰çº§
+	//²¡ÈËµÈ¼¶
 	PatientLevelCreat()
-	//æ”¶æ²»åŸåˆ™
+	//ÊÕÖÎÔ­Ôò
 	TreatedPrincipleCreat()
-	//æ’åº
+	//ÅÅĞò
 	SortCombCreat()
-	//è”ç³»äººå…³ç³»
+	//ÁªÏµÈË¹ØÏµ
 	PatFRelationCombCreat()
-	// å®¶åº­ä½å€
+	// ¼ÒÍ¥×¡Ö·
 	PatAddressCombCreat();
+	//½»Í¨¹¤¾ß
+	InSInHosTransport();
+	//15ÌìÔÙÈëÔº
+	InReAdmission();
 }
 function IntBookMes(){
 	if (ServerObj.BookID!=""){
@@ -364,7 +410,7 @@ function IntBookMes(){
 		},function(BookMesag){
 			if (BookMesag!=""){
 				var ArryBookMesag=BookMesag.split("^")
-				//æŒ‰ç…§ä½é™¢è¯ä¿¡æ¯åˆå§‹åŒ–ç•Œé¢ä¿¡æ¯
+				//°´ÕÕ×¡ÔºÖ¤ĞÅÏ¢³õÊ¼»¯½çÃæĞÅÏ¢
 				if (ServerObj.PatientID!=ArryBookMesag[1]){
 					ServerObj.PatientID=ArryBookMesag[1];
 					IntPaMes();
@@ -373,30 +419,11 @@ function IntBookMes(){
 					ServerObj.EpisodeID=ArryBookMesag[2];
 					IntAmdMes();
 				}
-				//æŒ‰ç…§ä½é™¢è¯åˆå§‹åŒ–è¯Šæ–­ä¿¡æ¯
+				//°´ÕÕ×¡ÔºÖ¤³õÊ¼»¯Õï¶ÏĞÅÏ¢
 				var DiagnoseStr=ArryBookMesag[36] ;
-				var DiagnoseStrArry=DiagnoseStr.split(String.fromCharCode(2));
-				var Legnt1=DiagnoseStrArry.length;
-				var TemStr="";
-				for (var i=0;i<Legnt1;i++){
-					var Desc=DiagnoseStrArry[i].split(String.fromCharCode(1))[0];
-					var ID=DiagnoseStrArry[i].split(String.fromCharCode(1))[1];
-					var SID=DiagnoseStrArry[i].split(String.fromCharCode(1))[2];
-					var SIDesc=DiagnoseStrArry[i].split(String.fromCharCode(1))[3];
-					var DiagnosCat=DiagnoseStrArry[i].split(String.fromCharCode(1))[4];
-					if ((ID=="")&&(Desc=="")){continue};
-					if (TemStr==""){
-						TemStr=Desc+"^"+ID+"^"+SID+"^"+SIDesc+"^"+DiagnosCat;
-					}else{
-						TemStr=TemStr+"!"+Desc+"^"+ID+"^"+SID+"^"+SIDesc+"^"+DiagnosCat;
-					}
-				}
-				//alert(ArryBookMesag[25])
-				PageLogicObj.m_DianosListICD=TemStr;
-				
-				IntDianosList();
-				//å½“å‰çŠ¶æ€
-				//è‹¥ä½é™¢è¯æ˜¯ä½é™¢çŠ¶æ€,åˆ™åªèƒ½æŸ¥çœ‹
+				InitDiagList(DiagnoseStr);
+				//µ±Ç°×´Ì¬
+				//Èô×¡ÔºÖ¤ÊÇ×¡Ôº×´Ì¬,ÔòÖ»ÄÜ²é¿´
 				if (ArryBookMesag[8]==ServerObj.AdmissionRowid){
 					//$("#InCurStatu").combobox('disable'); 
 					$(".kw-section-list>li").addClass("disable-li");
@@ -416,29 +443,29 @@ function IntBookMes(){
 				//$('#InCurStatu').combobox('setValue',ArryBookMesag[8]);
 				//$('#InCurStatu').combobox('setText',ArryBookMesag[25]);
 				
-				//å…¥é™¢ç—…æƒ…
+				//ÈëÔº²¡Çé
 				$('#AdmInitState').combobox('select',ArryBookMesag[20]);
-				//æ“ä½œåŸå› 
+				//²Ù×÷Ô­Òò
 				$('#InReason').combobox('select',ArryBookMesag[21]);
-				//å…¥é™¢é€”å¾„
+				//ÈëÔºÍ¾¾¶
 				$("#InSorce").combobox('select',ArryBookMesag[22]);
-				//é¢„äº¤é‡‘
+				//Ô¤½»½ğ
 				$("#IPDeposit").val(ArryBookMesag[17])
 				
-				//å¤‡æ³¨
+				//±¸×¢
 				$("#InResumeText").val(ArryBookMesag[15])
 				
-				//å»ºè®®åºŠä½ç±»å‹
+				//½¨Òé´²Î»ÀàĞÍ
 				$("#InBedType").combobox('select',ArryBookMesag[23]);
-				//é¢„çº¦æ—¥æœŸ
+				//Ô¤Ô¼ÈÕÆÚ
 				$('#InSdate').dateboxq('setValue',ArryBookMesag[10]);
-				//ç§‘å®¤--å…ˆè®¾ç½®ç§‘å®¤åœ¨è®¾ç½®ç—…åŒº
+				//¿ÆÊÒ--ÏÈÉèÖÃ¿ÆÊÒÔÚÉèÖÃ²¡Çø
 				$("#InCtloc").combobox('select',ArryBookMesag[13]);
-				if (ArryBookMesag[25].indexOf("ç­¾åºŠ")>=0) {
+				if (ArryBookMesag[25].indexOf("Ç©´²")>=0) {
 					$("#InCtloc").combobox('disable')
 				}
 				setTimeout(function(){
-					//è®¾ç½®ç—…åŒºé€‰æ‹©åŒº
+					//ÉèÖÃ²¡ÇøÑ¡ÔñÇø
 					var WardType=ArryBookMesag[54];
 					if (WardType>0){
 						var LocWardCheckBoxArry=PageLogicObj.LocWardCheckBox.split("^")
@@ -448,14 +475,22 @@ function IntBookMes(){
 						}
 					}
 					
-					//ç—…åŒº
+					//²¡Çø
 					$("#InWard").combobox('select',ArryBookMesag[11]);
-					//åºŠä½
+					//´²Î»
 					//$("#InBed").combobox('select',ArryBookMesag[12]);
 					$("#PatientLevel").combobox('select',ArryBookMesag[40]);
 					$("#CTLocMedUnit").combobox('select',ArryBookMesag[41]);
 					$("#InDoctor").combobox('select',ArryBookMesag[42]);
+					var InAdmDateTime=""
+					if (ArryBookMesag[58]){
+						InAdmDateTime=ArryBookMesag[58]+" "+ArryBookMesag[59]
+					}
+					$("#InAdmDateTime").datetimebox('setValue',InAdmDateTime);
 				})
+				//ÈëÔºÍ¾¾¶
+				$("#InHosTransport").combobox('select',ArryBookMesag[60]);
+				
 				$("#TreatedPrinciple").combobox('select',ArryBookMesag[43]);
 				if(ArryBookMesag[51]=="Y"){
 					$("#IsDayFlag").checkbox('setValue',true);	
@@ -467,8 +502,14 @@ function IntBookMes(){
 				}else{
 					$("#IsOutTriage").checkbox('setValue',false);		
 				}
-				
-				
+				//Ô¤½»½ğ
+				$("#CompanyNum").val(ArryBookMesag[57])
+				$("#ReAdmission").combobox('setValue',ArryBookMesag[62]);
+				// renyx ·Ñ±ğ½øĞĞ³Ù¼ÓÔØ
+				setTimeout(function(){
+					$("#InAdmReason").combobox('setValue',ArryBookMesag[63]);
+					//$("#InAdmReason").combobox('setText',ArryBookMesag[64]);
+				},50)
 			}
 		})
 	}
@@ -479,7 +520,7 @@ function Find(){
 }
 function BookListTabLoad(){
 	if (ServerObj.IPBKFlag=="Booking"){
-		//é¢„çº¦æ—¥æœŸ
+		//Ô¤Ô¼ÈÕÆÚ
 		var FindBookDateF=$('#FindBookDateF').dateboxq('getValue');
 		var FindBookDateN=$('#FindBookDateN').dateboxq('getValue');
 		
@@ -512,80 +553,33 @@ function AdmListTabLoad(){
 		PageLogicObj.m_AdmListTabDataGrid.datagrid('loadData',{ 'total':'0',rows:[] });
 	}
 }
-///è¯Šæ–­åˆ—è¡¨åˆ›å»º
-function IntDianosList()
+///Õï¶ÏÁĞ±í´´½¨
+function InitDiagList(DiagList)
 {
 	$("#MRDiaList").empty();
-	var panel=$("#MRDiaList");
-	var InnerStr="";
-	if (PageLogicObj.m_DianosListICD!=""){
-		var DianosListArry=PageLogicObj.m_DianosListICD.split("!");
-		for (var i=0;i<DianosListArry.length;i++){
-			var Desc=DianosListArry[i].split("^")[0];
-			var ICDDr=DianosListArry[i].split("^")[1];
-			var StatusId=DianosListArry[i].split("^")[2];
-			var StatusDesc=DianosListArry[i].split("^")[3];
-			var DiagnosCat=DianosListArry[i].split("^")[4];
-			var DiagosRowId=DianosListArry[i].split("^")[5];
-			if (!DiagosRowId) DiagosRowId="";
-			var SubDiagosRowIdStr=DianosListArry[i].split("^")[6];
-			if (!SubDiagosRowIdStr) SubDiagosRowIdStr="";
-			var Desc1=Desc
-			if (StatusDesc!="") Desc1=Desc1+"("+StatusDesc+")";
-			if (StatusId == "") StatusId="I-999"
-			if (ICDDr=="undefined") continue;
-			if (ICDDr=="") ICDDr=i+"_null";
-			//<input name="ICDList" class="hisui-checkbox" id="16452" style="position: absolute; opacity: 0;" type="checkbox" data-options="checked:true" label="å£°å˜¶" descicd="å£°å˜¶" "=""></input>
-			InnerStr=InnerStr+"<input DiagosRowId=\""+DiagosRowId+"\" SubDiagosRowIdStr=\""+SubDiagosRowIdStr+"\" diagnoscat=\""+DiagnosCat+"\" siddesc=\""+StatusDesc+"\" sid=\""+StatusId+"\" id=\""+ICDDr+"\" name=\""+"ICDList"+ "\" "+"\" DescICD=\""+Desc+ "\" class='hisui-checkbox' data-options='checked:true' type='checkbox' label='"+Desc1+"'>";
-		}
-	}
-	panel.append(InnerStr);
-	$HUI.checkbox($("input[name='ICDList']"),{onUnchecked:function(){DelDiangose()}});
+	var DiagListArr=DiagList.split('!');
+	$.each(DiagListArr,function(index,diagnos){
+		AddDiagnos(diagnos);
+	});
 }
-function DelDiangose(){
-	//å»é™¤åˆ—è¡¨ä¸­æœªé€‰ä¸­çš„è¯Šæ–­
-	var ObjInputs=$("input[name='ICDList']");
-	var Str=""
-    for(var i=0;i<ObjInputs.length;i++){
-        var inputObj=ObjInputs[i];
-        if (inputObj){
-	        var DiagosRowId=inputObj.getAttribute("diagosRowid");
-		    var SubDiagosRowIdStr=inputObj.getAttribute("subdiagosrowidstr");
-	        if (inputObj.checked) {
-		        var Desc=inputObj.getAttribute("DescICD");
-		        var StatusId=inputObj.getAttribute("sid");
-		        var siddesc=inputObj.getAttribute("siddesc");
-		        var diagnoscat=inputObj.getAttribute("diagnoscat");
-		        var ICD=inputObj.id;
-		        if (Str==""){
-			       Str=Desc+"^"+ICD+"^"+StatusId+"^"+siddesc+"^"+diagnoscat+"^"+DiagosRowId+"^"+SubDiagosRowIdStr;
-			    }else{
-				   Str=Str+"!"+Desc+"^"+ICD+"^"+StatusId+"^"+siddesc+"^"+diagnoscat+"^"+DiagosRowId+"^"+SubDiagosRowIdStr;
-			    }
-		    }else{
-			    if (DiagosRowId!="") {
-				    var SubDiagosRowIdStr=String.fromCharCode(1)+SubDiagosRowIdStr+String.fromCharCode(1);
-				    for (var j=i+1;j<ObjInputs.length;j++){
-					    var inputObj1=ObjInputs[j];
-					    if (inputObj1) {
-						    var DiagosRowId1=inputObj1.getAttribute("diagosRowid");
-						    if ((DiagosRowId1!="")&&(SubDiagosRowIdStr.indexOf(String.fromCharCode(1)+DiagosRowId1+String.fromCharCode(1))>=0)){
-								$(inputObj1).checkbox('setValue',false);
-							}
-						}
-					}
-				}
-			}
-	    } 
-    }
-    if (Str==""){
-	    $.messager.alert('è­¦å‘Š','è¯·æ³¨æ„æ‚¨å½“å‰ä¸´åºŠè¯Šæ–­è¢«æ¸…é™¤ä¸ºç©º,è¯·åŠæ—¶é€‰æ‹©!');   
-	}
-    //é‡æ–°èµ‹å€¼
-	PageLogicObj.m_DianosListICD=Str;
-	IntDianosList();
+function AddDiagnos(diagnos)
+{
+	if(!diagnos) return;
+	$('<div></div>').text(diagnos.split(String.fromCharCode(2))[1]).data("diagnos",diagnos).click(DelDiangose).appendTo('#MRDiaList');
 }
-
+function DelDiangose(e){
+	$(this).remove();
+}
+function GetAllDia(){
+	//»ñÈ¡ËùÓĞ¼ÓÔØÔÚ½çÃæÉÏÑ¡ÖĞµÄÕï¶ÏICD
+	var Str="";
+	$('#MRDiaList').children('div').each(function(){
+		var diagnos=$(this).data("diagnos");
+		if(Str=='') Str=diagnos;
+		else Str=Str+'!'+diagnos;
+	});
+    return Str
+}
 function DiaStatusCombCreat() {
 	PageLogicObj.m_DiaStatusBox = $HUI.combobox("#DiaStatus", {
 		//url:$URL+"?ClassName=web.DHCDocIPBookNew&QueryName=QryDiaStatus&ResultSetType=array",
@@ -627,7 +621,7 @@ function AdmInitStateCombCreat(){
 	//});
 }
 function InCurStatuCombCreat(){
-	//æ ¹æ®IPBKFlagæ ‡å¿—è®¾ç½®é»˜è®¤æ˜¾ç¤ºå€¼
+	//¸ù¾İIPBKFlag±êÖ¾ÉèÖÃÄ¬ÈÏÏÔÊ¾Öµ
 	/*DHCDocIPBDictoryCommonNew("InCurStatu",ServerObj.InCurStatuPara);
 	if (ServerObj.LogonDoctorType != "DOCTOR") {
 		$("#InCurStatu").combobox({disabled:true}); 
@@ -653,7 +647,7 @@ function InCurStatuCombCreat(){
 	}
 }
 function InReasonCombCreat(){
-	//æ ¹æ®IPBKFlagæ ‡å¿—è®¾ç½®é»˜è®¤æ˜¾ç¤ºå€¼
+	//¸ù¾İIPBKFlag±êÖ¾ÉèÖÃÄ¬ÈÏÏÔÊ¾Öµ
 	/*var CodeDefault=""
 	var DisplayCode=""
 	if (ServerObj.IPBKFlag=="Booking"){
@@ -665,7 +659,7 @@ function InReasonCombCreat(){
 	DHCDocIPBDictoryCommon("InReason","IPBookingStateChangeReason",CodeDefault,DisplayCode)*/
 	DHCDocIPBDictoryCommonNew("InReason",ServerObj.InReasonPara);
 }
-//å…¥é™¢é€”å¾„åˆå§‹åŒ–
+//ÈëÔºÍ¾¾¶³õÊ¼»¯
 function InSorceCombCreat(){
 	/*$.cm({
 		ClassName:"web.DHCDocIPBookNew",
@@ -683,6 +677,33 @@ function InSorceCombCreat(){
 				filter: function(q, row){
 					return (row["CombDesc"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
 				},onLoadSuccess:function(){
+					//$(this).combobox('select',"");
+				},onChange:function(newValue,oldValue){
+					if (newValue==""){
+						$(this).combobox('select',"");
+					}
+				}
+		 });
+	//});
+}
+//½»Í¨¹¤¾ß³õÊ¼»¯
+function InSInHosTransport(){
+	/*$.cm({
+		ClassName:"web.DHCDocIPBookNew",
+		QueryName:"CombListFind",
+		CombName:"InSorce", Inpute1:"", Inpute2:"", Inpute3:"", Inpute4:"", Inpute5:"", Inpute6:"",
+		rows:99999
+	},function(GridData){*/
+		var cbox = $HUI.combobox("#InHosTransport", {
+				valueField: 'CombValue',
+				textField: 'CombDesc', 
+				data: JSON.parse(ServerObj.InHosTransportPara),
+				editable:true,
+				blurValidValue:true,
+				//data: GridData["rows"],
+				filter: function(q, row){
+					return (row["CombDesc"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
+				},onLoadSuccess:function(){
 					$(this).combobox('select',"");
 				},onChange:function(newValue,oldValue){
 					if (newValue==""){
@@ -692,81 +713,124 @@ function InSorceCombCreat(){
 		 });
 	//});
 }
-function InCtlocCombCreat(){
-	/*$.cm({
+
+function InReAdmission() {
+	$("#ReAdmission").combobox({
+		valueField: 'CombValue',
+		textField: 'CombDesc', 
+		data: JSON.parse(ServerObj.ReAdmissionData),
+		editable:false
+	 });
+}
+
+function IntInAdmReason(PatientID) {
+	
+	$.cm({
 		ClassName:"web.DHCDocIPBookNew",
-		QueryName:"CombListFind",
-		CombName:"InCtloc", Inpute1:session['LOGON.CTLOCID'], Inpute2:"", Inpute3:"", Inpute4:"", Inpute5:"", Inpute6:"",
-		rows:99999
-	},function(GridData){
-		var defaultLoc=tkMakeServerCall("DHCDoc.DHCDocConfig.CommonFunction","GetDefaultIPBookLoc", session['LOGON.CTLOCID']);*/
-		$("#InCtloc").combobox({
-				valueField: 'CombValue',
-				textField: 'CombDesc', 
-				editable:true,
-				blurValidValue:true,
-				//data: GridData["rows"],
-				data: JSON.parse(ServerObj.InCTLocPara),
-				filter: function(q, row){
-					return (row["CombDesc"].toUpperCase().indexOf(q.toUpperCase()) >= 0)||(row["Alias"].toUpperCase().indexOf(q.toUpperCase()) >= 0); 
-				},onSelect: function(rec){
-					if ((rec)&&(rec["CombValue"]!="")){
-						//$("input[name='WardAre']:checked").radio('setValue',false);
-						var PatSex = $("#PatSex").val();
-						var Bol = (rec.CombDesc.indexOf("å¦‡")>=0)||(rec.CombDesc.indexOf("äº§")>=0);
-						var errMsg = "ç”·æ€§ç—…äººä¸å…è®¸å¼€åˆ°ã€" + rec["CombDesc"]+"ã€‘"
-						if (Bol&&(PatSex == "ç”·")) {
-							$.messager.alert("æç¤º",errMsg,"info",function(){
-								$("#InCtloc").combobox('setValue','').combobox('setText','').combobox('hidePanel');
-								$('#InCtloc').next('span').find('input').focus();
-							});
-							return false;
-						}
-						var myrtn=$.cm({
-							ClassName:"web.DHCOPAdmReg",
-							MethodName:"CheckRegDeptAgeSex",
-							ASRowId:"", PatientID:ServerObj.PatientID,LocRowid:rec["CombValue"],
-							dataType:"text"
-					    },false);
-					    var Flag=myrtn.split(String.fromCharCode(2))[0];
-						if (Flag!="0") {
-							var msg="";
-							var AllowSexDesc=myrtn.split(String.fromCharCode(2))[1];
-							if (AllowSexDesc!="") msg="æ­¤ç§‘å®¤æ”¯æŒæ€§åˆ«ã€"+AllowSexDesc+"ã€‘";
-							var AgeRange=myrtn.split(String.fromCharCode(2))[2];
-							if (AgeRange!="") {
-								if (msg=="") {msg="æ­¤ç§‘å®¤æ”¯æŒå¹´é¾„æ®µ:"+AgeRange;}else{msg=msg+","+"æ­¤ç§‘å®¤æ”¯æŒå¹´é¾„æ®µã€"+AgeRange+"ã€‘";}
-							}
-							$.messager.alert("æç¤º","ä¸å…è®¸é€‰æ‹©ã€"+rec["CombDesc"]+"ã€‘,"+msg,"info",function(){
-								$("#InCtloc").combobox('setValue','').combobox('setText','').combobox('hidePanel');
-								$('#InCtloc').next('span').find('input').focus();
-							});
-							return false;
-						}
-						diaplayWardCheck(rec["CombValue"]);
-						setTimeout(function(){
-							//åˆå§‹åŒ–ç—…åŒº
-					        InWardCombCreat();
-					        //åˆå§‹åŒ–åŒ»ç–—å•å…ƒ
-					        CTLocMedUnitCreat();
-					        //åˆå§‹åŒ–ä½é™¢åŒ»å¸ˆ
-					        InDoctorCreat();
-						})
-					 }
-					
-				},onLoadSuccess:function(){
-					//å½“ç§‘å®¤ä¸‹æ‹‰æ¡†åªæœ‰ä¸€æ¡æ•°æ®ä¸”ä¸ºé»˜è®¤ç§‘å®¤,ä¸æ¸…ç©ºvalueç›´æ¥selectä¸ä¼šè¿›å…¥onselectäº‹ä»¶
-					$("#InCtloc").combobox('setValue',"").combobox('select',ServerObj.DefaultLocRowId);
-					if (ServerObj.DefaultLocRowId=="") {
-						$HUI.combobox($("#InWard,#CTLocMedUnit,#InDoctor"),{});
-					}
-				}/*,onChange:function(newValue,oldValue){
-					if (newValue==""){
-						//$("#InWard,#CTLocMedUnit").combobox('select','');
-					}
-				}*/
+		MethodName:"CombListFindJson",
+		CombName:"InAdmReasonData",
+		Inpute1:PatientID,
+		Inpute2:session["LOGON.HOSPID"],
+		dataType:"json"
+	},function(InAdmReasonData){
+		$("#InAdmReason").combobox({
+			valueField: 'CombValue',
+			textField: 'CombDesc', 
+			data: InAdmReasonData,
+			editable:false
 		 });
-	//});
+	});
+	
+}
+function InitInHosp(){
+	$("#InHosp").combobox({
+		url:'DHCDoc.Util.QueryToJSON.cls?JSONTYPE=Combo',
+		valueField: 'id',
+		textField: 'text', 
+		editable:false,
+		onBeforeLoad:function(param){
+			param.ClassName='DHCDoc.DHCDocConfig.IPBook';
+			param.QueryName='QueryInLocHosp';
+			param.LocID=session["LOGON.CTLOCID"];
+		},
+		onSelect:function(){
+			InCtlocCombCreat();
+		},
+		onLoadSuccess:function(){
+			InCtlocCombCreat();
+		}
+	 });
+}
+function InCtlocCombCreat(){
+	$("#InCtloc").combobox({
+		url:'DHCDoc.Util.QueryToJSON.cls?JSONTYPE=Combo',
+		valueField: 'id',
+		textField: 'text', 
+		editable:true,
+		blurValidValue:true,
+		onBeforeLoad:function(param){
+			param.ClassName='DHCDoc.DHCDocConfig.IPBook';
+			param.QueryName='QueryInLoc';
+			param.OPLocID=session["LOGON.CTLOCID"];
+			param.InHospID=$("#InHosp").combobox('getValue');
+		},
+		filter: function(q, row){
+			return (row.text.toUpperCase().indexOf(q.toUpperCase()) >= 0)||(row["alias"].toUpperCase().indexOf(q.toUpperCase()) >= 0); 
+		},
+		onSelect: function(rec){
+			if ((rec)&&(rec["id"]!="")){
+				//$("input[name='WardAre']:checked").radio('setValue',false);
+				var PatSex = $("#PatSex").val();
+				var Bol = (rec.text.indexOf("¸¾")>=0)||(rec.text.indexOf("²ú")>=0);
+				var errMsg = "ÄĞĞÔ²¡ÈË²»ÔÊĞí¿ªµ½¡¾" + rec["text"]+"¡¿"
+				if (Bol&&(PatSex == "ÄĞ")) {
+					$.messager.alert("ÌáÊ¾",errMsg,"info",function(){
+						$("#InCtloc").combobox('setValue','').combobox('setText','').combobox('hidePanel');
+						$('#InCtloc').next('span').find('input').focus();
+					});
+					return false;
+				}
+				var myrtn=$.cm({
+					ClassName:"web.DHCOPAdmReg",
+					MethodName:"CheckRegDeptAgeSex",
+					ASRowId:"", PatientID:ServerObj.PatientID,LocRowid:rec["id"],
+					dataType:"text"
+				},false);
+				var Flag=myrtn.split(String.fromCharCode(2))[0];
+				if (Flag!="0") {
+					var msg="";
+					var AllowSexDesc=myrtn.split(String.fromCharCode(2))[1];
+					if (AllowSexDesc!="") msg="´Ë¿ÆÊÒÖ§³ÖĞÔ±ğ¡¾"+AllowSexDesc+"¡¿";
+					var AgeRange=myrtn.split(String.fromCharCode(2))[2];
+					if (AgeRange!="") {
+						if (msg=="") {msg="´Ë¿ÆÊÒÖ§³ÖÄêÁä¶Î:"+AgeRange;}else{msg=msg+","+"´Ë¿ÆÊÒÖ§³ÖÄêÁä¶Î¡¾"+AgeRange+"¡¿";}
+					}
+					$.messager.alert("ÌáÊ¾","²»ÔÊĞíÑ¡Ôñ¡¾"+rec["text"]+"¡¿,"+msg,"info",function(){
+						$("#InCtloc").combobox('setValue','').combobox('setText','').combobox('hidePanel');
+						$('#InCtloc').next('span').find('input').focus();
+					});
+					return false;
+				}
+				diaplayWardCheck(rec["id"]);
+				setTimeout(function(){
+					//³õÊ¼»¯²¡Çø
+					InWardCombCreat();
+					//³õÊ¼»¯Ò½ÁÆµ¥Ôª
+					CTLocMedUnitCreat();
+					//³õÊ¼»¯×¡ÔºÒ½Ê¦
+					InDoctorCreat();
+					ChangeInAdmDateTimeStatus(rec["id"]);
+				})
+			}
+		},
+		onLoadSuccess:function(){
+			var defLocID=$(this).combobox('getValue');
+			if(defLocID){
+				var defLoc=$(this).combobox('getText');
+				$(this).combobox('options').onSelect.call(this,{id:defLocID,text:defLoc});
+			}
+		}
+	});
 }
 function CTLocMedUnitCreat()
 {
@@ -786,7 +850,7 @@ function CTLocMedUnitCreat()
 			filter: function(q, row){
 				return (row["CombDesc"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
 			},onSelect: function(rec){
-				//é€‰æ‹©åŒ»ç–—å•å…ƒååˆå§‹åŒ–ä½é™¢åŒ»å¸ˆ
+				//Ñ¡ÔñÒ½ÁÆµ¥Ôªºó³õÊ¼»¯×¡ÔºÒ½Ê¦
 				InDoctorCreat();
 			},onLoadSuccess:function(){
 				$(this).combobox('select',"");
@@ -825,7 +889,7 @@ function InDoctorCreat()
 			}
 	 });
 }
-//ç—…åŒºCombåˆå§‹åŒ–
+//²¡ÇøComb³õÊ¼»¯
 function InWardCombCreat()
 {
 	var WardFlag=WardSelectFind()
@@ -852,7 +916,7 @@ function InWardCombCreat()
 				var data=$("#InWard").combobox('getData');
 				if ((LocId!="")&&(data.length>0)){
 					$("#InWard").combobox('select',data[0]['CombValue']);
-					 //æ ¹æ®é€‰æ‹©ç—…åŒºæ”¹å˜ä½é™¢è¯çŠ¶æ€
+					 //¸ù¾İÑ¡Ôñ²¡Çø¸Ä±ä×¡ÔºÖ¤×´Ì¬
 					ChangeStatuByWard(data[0]['CombValue'])
 				}
 			},onChange:function(newValue,oldValue){
@@ -865,21 +929,21 @@ function InWardCombCreat()
 			}
 	 });
 }
-//å»ºè®®åºŠä½ç±»å‹åˆå§‹åŒ–
+//½¨Òé´²Î»ÀàĞÍ³õÊ¼»¯
 function InBedTypeCombCreat(){
 	/*var CodeDefault="01"
 	var DisplayCode=""
 	DHCDocIPBDictoryCommon("InBedType","IPBookingBedType",CodeDefault,DisplayCode)*/
 	DHCDocIPBDictoryCommonNew("InBedType",ServerObj.InBedTypePara);
 }
-///ç—…äººç­‰çº§åˆå§‹åŒ–
+///²¡ÈËµÈ¼¶³õÊ¼»¯
 function PatientLevelCreat(){
 	/*var CodeDefault=""	
 	var DisplayCode=""
 	DHCDocIPBDictoryCommon("PatientLevel","IPBookingPatientLevel",CodeDefault,DisplayCode)*/
 	DHCDocIPBDictoryCommonNew("PatientLevel",ServerObj.PatientLevelPara);
 }
-//æ”¶æ²»åŸåˆ™åˆå§‹åŒ–
+//ÊÕÖÎÔ­Ôò³õÊ¼»¯
 function TreatedPrincipleCreat(){
 	/*var CodeDefault=""
 	var DisplayCode=""
@@ -893,19 +957,19 @@ function TreatedPrincipleCreat(){
 		}
 	});
 }
-///æ’åº
+///ÅÅĞò
 function SortCombCreat() {
 	PageLogicObj.m_SortBox = $HUI.combobox("#i-sort", {
 		valueField:'id',
 		blurValidValue:true,
 		textField:'desc',
 		data:[
-			{id:"1",desc:"æ­£åº"},
-			{id:"2",desc:"å€’åº"}
+			{id:"1",desc:$g("ÕıĞò")},
+			{id:"2",desc:$g("µ¹Ğò")}
 		]
 	});	
 }
-///è”ç³»äººå…³ç³»
+///ÁªÏµÈË¹ØÏµ
 function PatFRelationCombCreat() {
 	/*$.m({
 		ClassName:"web.DHCBL.CTBASEIF.ICTCardRegLB",
@@ -924,7 +988,7 @@ function PatFRelationCombCreat() {
 	//});
 }
 
-///åˆ›å»ºå­—å…¸Combå…¬å…±æ–¹æ³•
+///´´½¨×ÖµäComb¹«¹²·½·¨
 //DHCDocIPBDictoryCommon("InCurStatu","IPBookingState",CodeDefault,DisplayCode);
 function DHCDocIPBDictoryCommon(ListName,CodeType,CodeDefault,DisplayCode){
 	$.cm({
@@ -1008,17 +1072,19 @@ function DHCDocIPBDictoryCommonNew(ListName,data){
 		 });
 }
 function SaPrint(){
-	if (Save()){
-		Print()
-	}
+	PageLogicObj.Print_flag=1
+	Save()
 }
 function Print(){
-	//æ‰“å°XMLæ¨¡æ¿
+	IPBookPrint(ServerObj.BookID)
+	return;
+	
+	//´òÓ¡XMLÄ£°å
 	DHCP_GetXMLConfig("InvPrintEncrypt","DHCDocIPBookPrt");
 	var MyPara="";
 	var PDlime=String.fromCharCode(2);
 	if (ServerObj.BookID==""){
-		$.messager.alert('è­¦å‘Š','ç¼ºå°‘é¢„çº¦ä¿¡æ¯!');
+		$.messager.alert('¾¯¸æ','È±ÉÙÔ¤Ô¼ĞÅÏ¢!');
 		return false;
 	}
 	var BookMesag=$.cm({
@@ -1028,7 +1094,7 @@ function Print(){
 		dataType:"text"
 	},false);
 	if (BookMesag==""){
-		$.messager.alert('è­¦å‘Š','ç¼ºå°‘é¢„çº¦ä¿¡æ¯!');
+		$.messager.alert('¾¯¸æ','È±ÉÙÔ¤Ô¼ĞÅÏ¢!');
 		return false;
 	}
 	var BookMesagArry=BookMesag.split("^");
@@ -1040,7 +1106,7 @@ function Print(){
 		dataType:"text"
 	},false);
 	var PatMesArry=PatMes.split("^");
-	//æŒ‰ç…§ä½é™¢è¯åˆå§‹åŒ–è¯Šæ–­ä¿¡æ¯
+	//°´ÕÕ×¡ÔºÖ¤³õÊ¼»¯Õï¶ÏĞÅÏ¢
 	var DiagnoseStr=BookMesagArry[36];
 	var DiagnoseStrArry=DiagnoseStr.split(String.fromCharCode(2));
 	var Legnt1=DiagnoseStrArry.length;
@@ -1052,8 +1118,8 @@ function Print(){
 		if (DiaS==""){DiaS=Desc}
 		else{DiaS=DiaS+","+Desc}
 	}
-	//å§“å æ€§åˆ« å¹´é¾„ ç™»è®°å· ç¤¾ä¼šåœ°ä½ å·¥ä½œå•ä½ ä½å€ è”ç³»ç”µè¯ è”ç³»äºº å…³ç³» è”ç³»äººç”µè¯ è¯Šæ–­
-	//ä½é™¢ç§‘å®¤ ä½é™¢å¤©æ•°ï¼ˆä¸ç”¨ï¼‰ é¦–è¯ŠåŒ»é™¢ï¼ˆä¸ç”¨ï¼‰ æ“ä½œç”¨æˆ·å§“å æ“ä½œæ—¥æœŸ é¢„çº¦æ—¥æœŸ
+	//ĞÕÃû ĞÔ±ğ ÄêÁä µÇ¼ÇºÅ Éç»áµØÎ» ¹¤×÷µ¥Î» ×¡Ö· ÁªÏµµç»° ÁªÏµÈË ¹ØÏµ ÁªÏµÈËµç»° Õï¶Ï
+	//×¡Ôº¿ÆÊÒ ×¡ÔºÌìÊı£¨²»ÓÃ£© Ê×ÕïÒ½Ôº£¨²»ÓÃ£© ²Ù×÷ÓÃ»§ĞÕÃû ²Ù×÷ÈÕÆÚ Ô¤Ô¼ÈÕÆÚ
 	MyPara=MyPara+"PatName"+PDlime+PatMesArry[2]+"^"+"PatSex"+PDlime+PatMesArry[3]+"^"+"PatAge"+PDlime+PatMesArry[5];
 	MyPara=MyPara+"^"+"PatRegNo"+PDlime+PatMesArry[1]+"^"+"PatStat"+PDlime+PatMesArry[19];
 	MyPara=MyPara+"^"+"PatCom"+PDlime+PatMesArry[15]+"^"+"PatAdd"+PDlime+PatMesArry[17];
@@ -1091,197 +1157,200 @@ function Print(){
 	MyPara=MyPara+"^"+"HospDesc"+PDlime+BookMesagArry[49]; 
 	MyPara=MyPara+"^"+"PatDate"+PDlime+BookMesagArry[50]; 
 	//
-	if (BookMesagArry[25]=="é¢„ä½é™¢"){
-	MyPara=MyPara+"^"+"PreFlag"+PDlime+"é¢„"; }
+	if (BookMesagArry[25]=="Ô¤×¡Ôº"){
+	MyPara=MyPara+"^"+"PreFlag"+PDlime+"Ô¤"; }
 	//var myobj=document.getElementById("ClsBillPrint");
 	//DHCP_PrintFunNew(myobj,MyPara,"");
 	DHC_PrintByLodop(getLodop(),MyPara,"","","");
 }
-///åˆ‡æ¢æ‚£è€…
+///ÇĞ»»»¼Õß
 function CreatNew(){
-	var src="doc.patlistquery.hui.csp"; //"websys.default.csp?WEBSYS.TCOMPONENT=DHCExamPatList";
+	//var src="doc.patlistquery.hui.csp?FromPage=IPBookCreate"; //"websys.default.csp?WEBSYS.TCOMPONENT=DHCExamPatList";
+	var src="opdoc.patient.list.csp?NotShowBtnBar=Y";
+	if(ServerObj.PAAdmType=='E'){
+		src="dhcem.patlist.csp";
+	}
+	if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
 	var $code ="<iframe width='100%' height='99%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
-	createModalDialog("BookCreat","æ‚£è€…åˆ‡æ¢", 1300, 600,"icon-change-loc","",$code,"");
+	createModalDialog("BookCreat","»¼ÕßÇĞ»»", 1300, 600,"icon-change-loc","",$code,"");
 }
-
-//ä¿å­˜ä½é™¢è¯
+function switchPatient(PatientID,EpisodeID,mradm)
+{
+	ChangePerson(EpisodeID,PatientID);
+	destroyDialog("BookCreat");
+}
+//±£´æ×¡ÔºÖ¤
 function Save()
 {
-	if (PageLogicObj.m_CanSave!="Y"){
-		return false;
-	}
-	if (ServerObj.IPBKFlag!="Booking"){
-		//éé¢„çº¦æƒé™ç”¨æˆ· BookIDä¸èƒ½ä¸ºç©ºåªèƒ½ä¿å­˜
-		if (ServerObj.BookID==""){
-			$.messager.alert('è­¦å‘Š','ä½é™¢è¯ä¸»ç´¢å¼•ä¸å­˜åœ¨ä¸èƒ½æ­£å¸¸ä¿å­˜.');   
-			return false
+	new Promise(function(resolve,rejected){
+		CheckBeforeSave(resolve);
+	}).then(function(ret){
+		return new Promise(function(resolve,rejected){
+			if (!ret){
+				return websys_cancel();
+			}
+			resolve();
+		})
+	}).then(function(){
+		//×¡ÔºÖ¤ID
+		var BookID=ServerObj.BookID; 
+		//»¼ÕßID
+		var PatID=ServerObj.PatientID; 
+		//¾ÍÕïID ÃÅÕï
+		var PAAdmOP=ServerObj.EpisodeID; 
+		//¹ØÁª×¡ÔºID
+		var PAAdmIP=ServerObj.EpisodeIDIP; 
+		//´´½¨ÈÕÆÚ
+		var CreateDate="";
+		//´´½¨Ê±¼ä
+		var CreateTime="";
+		var CreaterUser=session['LOGON.USERID'];
+		var CreaterDocIDUser=session['LOGON.USERID'];
+		//×¡ÔºÖ¤×´Ì¬
+		var InCurStatuObj=$("#InCurStatuKW").keywords('getSelected'); //getComValue("InCurStatu");
+		var InCurStatu=InCurStatuObj[0].id;
+		//×¡ÔºÖ¤ÓĞĞ§×´Ì¬
+		var BookActive="Y";
+		//Ô¤Ô¼ÈÕÆÚ
+		var InSdate=$('#InSdate').dateboxq('getValue'); 
+		//²¡Çø
+		var InWard=getComValue("InWard");
+		//´²Î»
+		var InBed="" //$('#InBed').combobox('getValue'); 
+		//¿ÆÊÒ
+		var InCtloc=getComValue("InCtloc");
+		//ËùÓĞÕï¶ÏICD
+		var ICDList=GetAllDia();
+		//±¸×¢
+		var InResumeText=$("#InResumeText").val().replace(/(^\s*)|(\s*$)/g,''); 
+		//×¡ÔºÑº½ğ
+		var IPDeposit=$("#IPDeposit").val().replace(/(^\s*)|(\s*$)/g,''); 
+		//ÈëÔº²¡Çé
+		var AdmInitState=getComValue("AdmInitState");
+		//²Ù×÷Ô­Òò
+		var InReason=getComValue("InReason");
+		//ÈëÔºÍ¾¾¶
+		var InSorce=getComValue("InSorce");
+		//½¨Òé´²Î»ÀàĞÍ
+		var InBedType=getComValue("InBedType");
+		//½ô¼±Ìõ¼ş£¨ÉØ¹Ø£©-ĞÂ°æ²»ÓÃ
+		var MRCCondtion=""; 
+		//ICDÕï¶Ï-ĞÂ°æ²»ÓÃ
+		var ICDCode="";
+		//Ò½ÁÆµ¥Ôª
+		var CTLocMedUnit=getComValue("CTLocMedUnit");
+		//Ö÷ÖÎÒ½Ê¦
+		var InDoctor=getComValue("InDoctor");
+		//»¼ÕßµÈ¼¶
+		var PatientLevel=getComValue("PatientLevel");
+		//ÊÕÖÎÔ­Ôò
+		var TreatedPrinciple=getComValue("TreatedPrinciple");
+		//½»Í¨¹¤¾ß
+		var InHosTransport=getComValue("InHosTransport");
+		var IsDayFlag="";
+		if($('#IsDayFlag').checkbox('getValue')) {
+		    IsDayFlag="Y";
 		}
-	}
-	//éªŒè¯å¿…å¡«å­—æ®µ
-	var isMustFill = $.DHCDoc.validateMustFill();
-	if (!isMustFill) {
-		return false;
-	}
-	
-	//ä¿å­˜å‰å¯¹å°±è¯Šå®¡æ ¸-ç›®å‰å…è®¸å¤šå¼ ä½é™¢è¯ è¿”å›-2ä¸åˆ¤æ–­
-	var Rtn=$.cm({
-		ClassName:"web.DHCDocIPBookNew",
-		MethodName:"CheckBeforeSave",
-		AdmID:ServerObj.EpisodeID, BookID:ServerObj.BookID, Type:1, Instring:"",
-		dataType:"text"
-	},false);
-	if (Rtn!=0){
-		var RtnArry=Rtn.split("^")
-		if (RtnArry[0]=="-1"){
-			$.messager.alert('è­¦å‘Š',RtnArry[1]);
-			return false
+		var IsOutTriage="";
+		if($('#IsOutTriage').checkbox('getValue')) {
+		    IsOutTriage="Y";
 		}
-	}
-	var PatPhone=$('#PatPhone').val();
-	if (PatPhone!=""){
-		if (!CheckTelOrMobile(PatPhone,"PatPhone","è”ç³»ç”µè¯")) return false;
-	}
-	var PatFPhone=$('#PatFPhone').val();
-	if (PatFPhone!=""){
-		if (!CheckTelOrMobile(PatFPhone,"PatFPhone","è”ç³»äººç”µè¯")) return false;
-	}
-	//ä½é™¢è¯ID
-	var BookID=ServerObj.BookID; 
-	//æ‚£è€…ID
-	var PatID=ServerObj.PatientID; 
-	//å°±è¯ŠID é—¨è¯Š
-	var PAAdmOP=ServerObj.EpisodeID; 
-	//å…³è”ä½é™¢ID
-	var PAAdmIP=ServerObj.EpisodeIDIP; 
-	//åˆ›å»ºæ—¥æœŸ
-	var CreateDate="";
-	//åˆ›å»ºæ—¶é—´
-	var CreateTime="";
-	var CreaterUser=session['LOGON.USERID'];
-	var CreaterDocIDUser=session['LOGON.USERID'];
-	//ä½é™¢è¯çŠ¶æ€
-	var InCurStatuObj=$("#InCurStatuKW").keywords('getSelected'); //getComValue("InCurStatu"); 
-	var InCurStatu=InCurStatuObj[0].id;
-	//ä½é™¢è¯æœ‰æ•ˆçŠ¶æ€
-	var BookActive="Y";
-	//é¢„çº¦æ—¥æœŸ
-	var InSdate=$('#InSdate').dateboxq('getValue'); 
-	//ç—…åŒº
-	var InWard=getComValue("InWard");
-	//åºŠä½
-	var InBed="" //$('#InBed').combobox('getValue'); 
-	//ç§‘å®¤
-	var InCtloc=getComValue("InCtloc");
-	//æ‰€æœ‰è¯Šæ–­ICD
-	var ICDList=GetAllDia();
-	//å¤‡æ³¨
-	var InResumeText=$("#InResumeText").val().replace(/(^\s*)|(\s*$)/g,''); 
-	//ä½é™¢æŠ¼é‡‘
-	var IPDeposit=$("#IPDeposit").val().replace(/(^\s*)|(\s*$)/g,''); 
-	//å…¥é™¢ç—…æƒ…
-	var AdmInitState=getComValue("AdmInitState");
-	//æ“ä½œåŸå› 
-	var InReason=getComValue("InReason");
-	//å…¥é™¢é€”å¾„
-	var InSorce=getComValue("InSorce");
-	//å»ºè®®åºŠä½ç±»å‹
-	var InBedType=getComValue("InBedType");
-	//ç´§æ€¥æ¡ä»¶ï¼ˆéŸ¶å…³ï¼‰-æ–°ç‰ˆä¸ç”¨
-	var MRCCondtion=""; 
-	//ICDè¯Šæ–­-æ–°ç‰ˆä¸ç”¨
-	var ICDCode="";
-	//åŒ»ç–—å•å…ƒ
-	var CTLocMedUnit=getComValue("CTLocMedUnit");
-	//ä¸»æ²»åŒ»å¸ˆ
-	var InDoctor=getComValue("InDoctor");
-	//æ‚£è€…ç­‰çº§
-	var PatientLevel=getComValue("PatientLevel");
-	//æ”¶æ²»åŸåˆ™
-	var TreatedPrinciple=getComValue("TreatedPrinciple");
-	var IsDayFlag="";
-	if($('#IsDayFlag').checkbox('getValue')) {
-	    IsDayFlag="Y";
-	}
-	var IsOutTriage="";
-	if($('#IsOutTriage').checkbox('getValue')) {
-	    IsOutTriage="Y";
-	}
-	var LocLogOn=session['LOGON.CTLOCID'];
-	//ç—…åŒºé€‰æ‹©ç±»å‹
-	var WardFlag=WardSelectFind()
-	
-	//å¯æ“ä½œçš„çŠ¶æ€
-	var CanDoStatu=GetCanDoBookCode()
-	
-	//-----------
-	var InCurStatuObj=$("#InCurStatuKW").keywords('getSelected');
-	var Flag=InCurStatuObj[0].id; //$("#InCurStatu").combobox('getValue');
-	//ç»„ç»‡ä¿¡æ¯
-	var Instr=BookID+"^"+PatID+"^"+PAAdmOP+"^"+PAAdmIP+"^"+CreateDate+"^"+CreateTime+"^"+CreaterUser+"^"+CreaterDocIDUser;
-	var Instr=Instr+"^"+InCurStatu+"^"+BookActive+"^"+InSdate+"^"+InWard+"^"+InBed+"^"+InCtloc;
-	var Instr=Instr+"^"+ICDCode+"^"+InResumeText+"^"+""+"^"+IPDeposit+"^"+MRCCondtion;
-	//----------æ–°ç‰ˆå¢åŠ 
-	var Instr=Instr+"^"+AdmInitState+"^"+InReason+"^"+InSorce+"^"+InBedType+"^"+ICDList;
-	var Instr=Instr+"^"+CTLocMedUnit+"^"+InDoctor+"^"+PatientLevel+"^"+TreatedPrinciple;
-	var Instr=Instr+"^"+IsDayFlag+"^"+IsOutTriage+"^"+WardFlag+"^"+LocLogOn;
-	//ä¿å­˜å‰å¯¹å•å­å®¡æ ¸
-	var Rtn=$.cm({
-		ClassName:"web.DHCDocIPBookNew",
-		MethodName:"CheckBeforeSave",
-		AdmID:PAAdmOP, BookID:BookID, Type:2, Instring:Instr,CanDoStatu:CanDoStatu,
-		dataType:"text"
-	},false);
-	if (Rtn!=0){
-		var RtnArry=Rtn.split("^")
-		if (RtnArry[0]=="-1"){
-			$.messager.alert('è­¦å‘Š',RtnArry[1]);
-			return false
+		var LocLogOn=session['LOGON.CTLOCID'];
+		//²¡ÇøÑ¡ÔñÀàĞÍ
+		var WardFlag=WardSelectFind()
+		//¿É²Ù×÷µÄ×´Ì¬
+		var CanDoStatu=GetCanDoBookCode()
+		//-----------
+		var InCurStatuObj=$("#InCurStatuKW").keywords('getSelected');
+		var Flag=InCurStatuObj[0].id; //$("#InCurStatu").combobox('getValue');
+		//Åã°éÈËÊı
+		var CompanyNum=$('#CompanyNum').val();
+		//Êµ¼ÊÈëÔºÈÕÆÚºÍÊ±¼ä
+		var InAdmDate="",InAdmTime="";
+		if (ServerObj.needAdmDateLocStr.indexOf("^"+InCtloc+"^")>=0) {
+			var InAdmDateTime=$("#InAdmDateTime").datetimebox('getValue');
+			if (InAdmDateTime){
+				var InAdmDateTimeArr=InAdmDateTime.split(" ");
+				InAdmDate=InAdmDateTimeArr[0];
+				InAdmTime=InAdmDateTimeArr[1];
+			}
 		}
-	}
-	//ä¿å­˜
-	var rtn=$.cm({
-		ClassName:"web.DHCDocIPBookNew",
-		MethodName:"SaveBookMeth",
-		Instring:Instr,
-		dataType:"text"
-	},false);
-	if ((rtn=="-100")&&(rtn<0)){
-		 $.messager.alert('è­¦å‘Š','ä½é™¢è¯ä¿å­˜å¤±è´¥',rtn);
-		 return false;
-	}else{
-		 ServerObj.BookID=rtn;
-	    var BookMesag=$.cm({
+		var ReAdmission=$("#ReAdmission").combobox("getValue");
+		var InAdmReason=$("#InAdmReason").combobox("getValue");
+		//×éÖ¯ĞÅÏ¢
+		var Instr=BookID+"^"+PatID+"^"+PAAdmOP+"^"+PAAdmIP+"^"+CreateDate+"^"+CreateTime+"^"+CreaterUser+"^"+CreaterDocIDUser;
+		var Instr=Instr+"^"+InCurStatu+"^"+BookActive+"^"+InSdate+"^"+InWard+"^"+InBed+"^"+InCtloc;
+		var Instr=Instr+"^"+ICDCode+"^"+InResumeText+"^"+""+"^"+IPDeposit+"^"+MRCCondtion;
+		//----------ĞÂ°æÔö¼Ó
+		var Instr=Instr+"^"+AdmInitState+"^"+InReason+"^"+InSorce+"^"+InBedType+"^"+ICDList;
+		var Instr=Instr+"^"+CTLocMedUnit+"^"+InDoctor+"^"+PatientLevel+"^"+TreatedPrinciple;
+		var Instr=Instr+"^"+IsDayFlag+"^"+IsOutTriage+"^"+WardFlag+"^"+LocLogOn+"^"+CompanyNum;
+		var Instr=Instr+"^"+InAdmDate+"^"+InAdmTime+"^"+InHosTransport+"^"+ReAdmission+"^"+InAdmReason;
+		//±£´æÇ°¶Ôµ¥×ÓÉóºË
+		var Rtn=$.cm({
 			ClassName:"web.DHCDocIPBookNew",
-			MethodName:"GetBookMesage",
-			BookID:ServerObj.BookID,
+			MethodName:"CheckBeforeSave",
+			AdmID:PAAdmOP, BookID:BookID, Type:2, Instring:Instr,CanDoStatu:CanDoStatu,
 			dataType:"text"
 		},false);
-		var Statu=BookMesag.split("^")[53];
-		if ((Statu=="Cancel")&&(ServerObj.IPBKFlag=="Booking")){
-			 ServerObj.BookID="";
-			 ClearBookMes();
-		}
-		SavePatInfo();
-		$.messager.alert('æç¤º','æˆåŠŸ!','info',function(){
-			//æŸ¥è¯¢
-			BookListTabLoad();
-			if (PageLogicObj.m_AdmListTabDataGrid!="") {
-				AdmListTabLoad();
+		if (Rtn!=0){
+			var RtnArry=Rtn.split("^")
+			if (RtnArry[0]=="-1"){
+				$.messager.alert('¾¯¸æ',RtnArry[1]);
+				return false
 			}
-			//ä¿å­˜åè‡ªåŠ¨æ‰“å¼€
-			OpenOpertion("Auto")
+		}
+		//±£´æ
+		var rtn=$.cm({
+			ClassName:"web.DHCDocIPBookNew",
+			MethodName:"SaveBookMeth",
+			Instring:Instr,
+			dataType:"text"
+		},false);
+		if ((rtn=="-100")&&(rtn<0)){
+			 $.messager.alert('¾¯¸æ','×¡ÔºÖ¤±£´æÊ§°Ü',rtn);
+			 return false;
+		}else{
+			 ServerObj.BookID=rtn;
+		    var BookMesag=$.cm({
+				ClassName:"web.DHCDocIPBookNew",
+				MethodName:"GetBookMesage",
+				BookID:ServerObj.BookID,
+				dataType:"text"
+			},false);
+			var Statu=BookMesag.split("^")[53];
+			if ((Statu=="Cancel")&&(ServerObj.IPBKFlag=="Booking")){
+				 ServerObj.BookID="";
+				 ClearBookMes();
+			}
+			SavePatInfo();
+			$.messager.alert('ÌáÊ¾','³É¹¦!','info',function(){
+				//²éÑ¯
+				BookListTabLoad();
+				if (PageLogicObj.m_AdmListTabDataGrid!="") {
+					AdmListTabLoad();
+				}
+				//±£´æºó×Ô¶¯´ò¿ª
+				OpenOpertion("Auto")
+				if (PageLogicObj.Print_flag==1){
+					IPBookPrint(ServerObj.BookID)
+					PageLogicObj.Print_flag=0
+				}
+				return true;
+			}); 
 			return true;
-		}); 
+		}
 		return true;
-	}
+	})
 }
 function SavePatInfo(){
 	var PatPhone=$('#PatPhone').val();
 	var PatFPhone=$('#PatFPhone').val();
 	var PatFName=$("#PatFName").val();
+	var PatCompany=$('#PatCompany').val();
 	var PatAddress=$("#PatAddress").combobox('getText');
 	var PatFRelation=getComValue("PatFRelation") //PageLogicObj.m_PatFRelation.getValue();
-	var Para=PatPhone+"^"+PatFPhone+"^"+PatFName+"^"+PatFRelation
+	var Para=PatPhone+"^"+PatFPhone+"^"+PatFName+"^"+PatFRelation+"^"+PatCompany
 	//if(PatPhone!=PageLogicObj.m_PatPhoneFlag){
 		var Rtn=$.cm({
 			ClassName:"web.DHCDocIPBookNew",
@@ -1292,41 +1361,14 @@ function SavePatInfo(){
 			dataType:"text"
 		},false);
 		if(Rtn!=0){
-			$.messager.alert("æç¤º","æ‚£è€…ä¿¡æ¯ä¿®æ”¹å¤±è´¥");
+			$.messager.alert("ÌáÊ¾","»¼ÕßĞÅÏ¢ĞŞ¸ÄÊ§°Ü");
 		}
 	//}
 }
-function GetAllDia(){
-	//è·å–æ‰€æœ‰åŠ è½½åœ¨ç•Œé¢ä¸Šé€‰ä¸­çš„è¯Šæ–­ICD
-	var Str="";
-	var ObjInputs=$("input[name='ICDList']");
-    for(var i=0;i<ObjInputs.length;i++){
-        var inputObj=ObjInputs[i];
-        if ((inputObj)&&(inputObj.checked)){
-	       var Desc=inputObj.getAttribute("DescICD")
-	       var ICD=inputObj.id; 
-	       var SID=inputObj.getAttribute("sid")
-	       if (SID=="I-999") SID="";
-	       var diagnoscat=inputObj.getAttribute("diagnoscat");
-	       if (ICD.indexOf("_null")>=0) ICD="";
-	       if (ICD==""){
-		       ICD=""+String.fromCharCode(2)+Desc+String.fromCharCode(2)+SID+String.fromCharCode(2)+diagnoscat;
-		   }else{
-			   ICD=ICD+String.fromCharCode(2)+""+String.fromCharCode(2)+SID;
-		   }
-	       if (Str==""){
-		       Str=ICD;
-		   }else{
-		       Str=Str+"!"+ICD;
-		   }
-	    } 
-    }
-    return Str
-}
-///å½•å…¥é™¢å‰åŒ»å˜±
+///Â¼ÈëÔºÇ°Ò½Öö
 function OrderLinkClick(){
 	if (ServerObj.BookID==""){
-		$.messager.alert("æç¤º","ç¼ºå°‘é¢„çº¦ä¿¡æ¯!");
+		$.messager.alert("ÌáÊ¾","È±ÉÙÔ¤Ô¼ĞÅÏ¢!");
 		return false
 	}
 	var url=$.cm({
@@ -1336,22 +1378,18 @@ function OrderLinkClick(){
 		dataType:"text"
 	},false);
 	if (url==""){
-		$.messager.alert("æç¤º","éé¢„ä½é™¢çŠ¶æ€ä¸èƒ½å¼€åŒ»å˜±!");
+		$.messager.alert("ÌáÊ¾","·ÇÔ¤×¡Ôº×´Ì¬²»ÄÜ¿ªÒ½Öö!");
 		return false
 	}
-	/*var winName="IPBookOrderWrite"; 
-	var awidth=screen.availWidth/6*5.5; 
-	var aheight=screen.availHeight/5*4; 
-	var atop=(screen.availHeight - aheight)/2;
-	var aleft=(screen.availWidth - awidth)/2;
-	var param0="scrollbars=0,status=0,menubar=0,resizable=2,location=0"; 
-	var params="top=" + atop + ",left=" + aleft + ",width=" + awidth + ",height=" + aheight + "," + param0 ;
-	var $code ="<iframe width='100%' height='99%' scrolling='auto' frameborder='0' src='"+url+"'></iframe>" ;
-	createModalDialog("BookCreat","é™¢å‰åŒ»å˜±å½•å…¥", awidth, aheight,"icon-w-edit","",$code,"");*/
 	websys_showModal({
+		iconCls:'icon-w-pen-paper',
 		url:url,
-		title:'é™¢å‰åŒ»å˜±å½•å…¥',
-		width:'95%',height:'95%'
+		title:'ÔºÇ°Ò½ÖöÂ¼Èë',
+		width:'95%',height:'95%',
+		onBeforeClose:function(){
+			 //½â³ı»¼ÕßËø
+    		tkMakeServerCall("web.DHCDocOrderCommon","OrderEntryClearLock");
+		}
 	});
 }
 //
@@ -1365,7 +1403,7 @@ function PatPhoneOnblur(id){
 	}
 	if(bol){
 		if ((PatPhone=="")&&(id=="PatPhone")){
-			$.messager.alert("æç¤º","è”ç³»ç”µè¯ä¸èƒ½ä¸ºç©º!","info",function(){
+			$.messager.alert("ÌáÊ¾","ÁªÏµµç»°²»ÄÜÎª¿Õ!","info",function(){
 				$("#" + id).focus();
 			});
 			return false;
@@ -1375,27 +1413,27 @@ function PatPhoneOnblur(id){
 			var Phonearr=PatPhone.split("-")[1]
 			if(Phone.length==3){
 				if(Phonearr.length!=8){
-					$.messager.alert("æç¤º","å›ºå®šç”µè¯é•¿åº¦é”™è¯¯,å›ºå®šç”µè¯åŒºå·é•¿åº¦ä¸ºã€3ã€‘æˆ–ã€4ã€‘ä½,å›ºå®šç”µè¯å·ç é•¿åº¦ä¸ºã€7ã€‘æˆ–ã€8ã€‘ä½,å¹¶ä»¥è¿æ¥ç¬¦ã€-ã€‘è¿æ¥,è¯·æ ¸å®!","info",function(){
+					$.messager.alert("ÌáÊ¾","¹Ì¶¨µç»°³¤¶È´íÎó,¹Ì¶¨µç»°ÇøºÅ³¤¶ÈÎª¡¾3¡¿»ò¡¾4¡¿Î»,¹Ì¶¨µç»°ºÅÂë³¤¶ÈÎª¡¾7¡¿»ò¡¾8¡¿Î»,²¢ÒÔÁ¬½Ó·û¡¾-¡¿Á¬½Ó,ÇëºËÊµ!","info",function(){
 						$("#" + id).focus();
 					});
 		        	return false;
 				}
 			}else if(Phone.length==4){
 				if(Phonearr.length!=7){
-					$.messager.alert("æç¤º","å›ºå®šç”µè¯é•¿åº¦é”™è¯¯,å›ºå®šç”µè¯åŒºå·é•¿åº¦ä¸ºã€3ã€‘æˆ–ã€4ã€‘ä½,å›ºå®šç”µè¯å·ç é•¿åº¦ä¸ºã€7ã€‘æˆ–ã€8ã€‘ä½,å¹¶ä»¥è¿æ¥ç¬¦ã€-ã€‘è¿æ¥,è¯·æ ¸å®!","info",function(){
+					$.messager.alert("ÌáÊ¾","¹Ì¶¨µç»°³¤¶È´íÎó,¹Ì¶¨µç»°ÇøºÅ³¤¶ÈÎª¡¾3¡¿»ò¡¾4¡¿Î»,¹Ì¶¨µç»°ºÅÂë³¤¶ÈÎª¡¾7¡¿»ò¡¾8¡¿Î»,²¢ÒÔÁ¬½Ó·û¡¾-¡¿Á¬½Ó,ÇëºËÊµ!","info",function(){
 						$("#" + id).focus();
 					});
 		        	return false;
 				}
 			}else{
-				$.messager.alert("æç¤º","ä¸å­˜åœ¨å›ºå®šç”µè¯,è¯·æ ¸å®!","info",function(){
+				$.messager.alert("ÌáÊ¾","²»´æÔÚ¹Ì¶¨µç»°,ÇëºËÊµ!","info",function(){
 					$("#" + id).focus();
 				});
 	        	return false;
 			}
 		}else{
 			if(PatPhone.length!=11){
-				$.messager.alert("æç¤º","ç”µè¯é•¿åº¦åº”ä¸ºã€11ã€‘ä½,è¯·æ ¸å®!","info",function(){
+				$.messager.alert("ÌáÊ¾","µç»°³¤¶ÈÓ¦Îª¡¾11¡¿Î»,ÇëºËÊµ!","info",function(){
 					$("#" + id).focus();
 				});
 	        	return false;
@@ -1410,40 +1448,53 @@ function ChangePerson(PAAdmNew,PatientIDNew){
 		ServerObj.EpisodeID=PAAdmNew;
 		ServerObj.PatientID=PatientIDNew;
 		ServerObj.BookID="";
-		//åˆå§‹åŒ–æ‚£è€…ä¿¡æ¯
+		//³õÊ¼»¯»¼ÕßĞÅÏ¢
 		IntPaMes();
-		//åˆå§‹åŒ–å°±è¯Šä¿¡æ¯
+		//³õÊ¼»¯¾ÍÕïĞÅÏ¢
 		IntAmdMes();
-		//åˆå§‹åŒ–ä½é™¢è¯ä¿¡æ¯
+		//³õÊ¼»¯×¡ÔºÖ¤ĞÅÏ¢
 		IntBookMes();
-		//åˆå§‹åŒ–æŸ¥è¯¢
+		//³õÊ¼»¯²éÑ¯
 		BookListTabLoad();
+		ServerObj.TempCardFlag=$.cm({
+			ClassName:"web.DHCDocIPBookNew",
+			MethodName:"CheckTempCardByPatientID",
+			PatientID:PatientIDNew,
+			dataType:"text"
+		},false);
+		if (ServerObj.TempCardFlag=="Y"){
+			$.messager.alert('¾¯¸æ','<font color=red>ÁÙÊ±¿¨²»ÔÊĞí¿ªÁ¢×¡ÔºÖ¤£¡</font> ');
+		}
 		if (PageLogicObj.m_AdmListTabDataGrid!="") {
 			AdmListTabLoad();
 		}
 	}
 }
-//æ¸…é™¤æ‰€æœ‰
+//Çå³ıËùÓĞ
 function ClearAll(){
 	ClearBookMes();
 	ClearPatMest();
 	ClearAdmMes();	
 }
-//æ¸…é™¤ä½é™¢è¯ä¿¡æ¯
+//Çå³ı×¡ÔºÖ¤ĞÅÏ¢
 function ClearBookMes(){
-	$('#InCtloc,#InWard,#InSorce,#InBedType,#InReason,#AdmInitState,#PatientLevel,#InBedType,#TreatedPrinciple,#InBedType,#CTLocMedUnit,#InDoctor').combobox('select','');
+	$('#InCtloc,#InWard,#InSorce,#InBedType,#InReason,#AdmInitState,#PatientLevel,#InBedType,#TreatedPrinciple,#InBedType,#CTLocMedUnit,#InDoctor,#InHosTransport').combobox('select','');
+	$("#InCtloc").combobox('enable');
 	$('#InSdate').dateboxq('setValue',ServerObj.NowDate);
-	$("#IPDeposit,#InResumeText").val("");
+	$("#IPDeposit,#InResumeText,#CompanyNum").val("");
 	$("#IsDayFlag,#IsOutTriage").checkbox('setValue',false);
+	$("#InAdmDate").datetimebox('setValue',"");
+	$("#ReAdmission").combobox("setValue","");
+	$("#InAdmReason").combobox("setValue","");
 	InReasonCombCreat();
 	InBedTypeCombCreat();
+	InCurStatuCombCreat();
 }
-//æ¸…é™¤å°±è¯Šè¯Šæ–­
+//Çå³ı¾ÍÕïÕï¶Ï
 function ClearAdmMes(){
-	PageLogicObj.m_DianosListICD="";
-	IntDianosList();
+	InitDiagList('');
 }
-//æ¸…é™¤æ‚£è€…åŸºæœ¬ä¿¡æ¯
+//Çå³ı»¼Õß»ù±¾ĞÅÏ¢
 function ClearPatMest(){
 	$("#PatNo,#PatName,#PatSex,#PatAge,#PatMRNo,#PatPhone,#PatType,#PatID,#PatFName,#PatFPhone,#PatCompany").val('');
 	$("#PatAddress").combobox('setText','');
@@ -1451,7 +1502,12 @@ function ClearPatMest(){
 	else $("#PatFRelation").val("");
 }
 function IntAdmDiadesc(){
-	//è¯Šæ–­
+	if(ServerObj.SDSDiagEntry){
+		var DiaType=$HUI.checkbox("#DiaType").getValue()?1:0;
+		InitDiagnosICDDescLookUp('AdmDiadesc',DiaType+'^'+ServerObj.PAAdmType);
+		return;
+	}
+	//Õï¶Ï
 	 $("#AdmDiadesc").lookup({
         url:$URL,
         mode:'remote',
@@ -1459,7 +1515,7 @@ function IntAdmDiadesc(){
         idField:'HIDDEN',
         textField:'desc',
         columns:[[  
-            {field:'desc',title:'è¯Šæ–­åç§°',width:300,sortable:true},
+            {field:'desc',title:'Õï¶ÏÃû³Æ',width:300,sortable:true},
 			{field:'code',title:'code',width:120,sortable:true},
 			{field:'HIDDEN',title:'HIDDEN',width:120,sortable:true,hidden:true}
         ]],
@@ -1483,17 +1539,14 @@ function IntAdmDiadesc(){
 		    var DiaStatus=PageLogicObj.m_DiaStatusBox.getText();
 		    var DiaStatusId=PageLogicObj.m_DiaStatusBox.getValue();
             var Desc=item['desc'];
-            //if (DiaStatus!="") Desc = Desc + "(" + DiaStatus + ")";
+            if(DiaStatus!="") Desc+="(" + DiaStatus + ")";
 			var ID=item['HIDDEN'];
-			if (PageLogicObj.m_DianosListICD==""){
-				PageLogicObj.m_DianosListICD=Desc+"^"+ID+"^"+DiaStatusId+"^"+DiaStatus+"^"+"";
-			}else{
-				PageLogicObj.m_DianosListICD=PageLogicObj.m_DianosListICD+"!"+Desc+"^"+ID+"^"+DiaStatusId+"^"+DiaStatus+"^"+"";
-			}
-			//é€‰æ‹©ä¹‹åç›´æ¥åˆ›å»ºåˆ°åˆ—è¡¨	
-			IntDianosList();
+			var DiagnosCat=$HUI.checkbox("#DiaType").getValue()?'ÖĞÒ½':'Î÷Ò½';
+			var diagnos=ID+String.fromCharCode(2)+Desc+String.fromCharCode(2)+DiaStatusId+String.fromCharCode(2)+DiagnosCat+String.fromCharCode(2)+String.fromCharCode(2)+String.fromCharCode(2);
+			AddDiagnos(diagnos);
 			$HUI.lookup("#AdmDiadesc").clear();
 			$HUI.lookup("#AdmDiadesc").hidePanel();
+			$.messager.popover({msg: 'Ôö¼Ó³É¹¦£¡',type:'success',timeout: 1000});
 		}
     });
 }
@@ -1580,18 +1633,56 @@ function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,
     });
 }
 function destroyDialog(id){
-   //ç§»é™¤å­˜åœ¨çš„Dialog
+   //ÒÆ³ı´æÔÚµÄDialog
    $("body").remove("#"+id); 
    $("#"+id).dialog('destroy');
 }
 function OpenOpertionClick(){
 	OpenOpertion("Handel")
 }
+function OpertionLinkBookClick(){
+	var Url="";
+	var rtn=$.cm({
+		ClassName:"web.DHCDocIPBookNew",
+		MethodName:"HavveActiveOpertion",
+		BookID:ServerObj.BookID,
+		dataType:"text"
+	},false);
+	var rtnArry=rtn.split("^")
+	var rtnflag=rtnArry[0]
+	if (rtnflag!="1"){
+		$.messager.alert('ÌáÊ¾',"²»ÄÜ½øĞĞÊÖÊõÉêÇë´²Î»Ô¤Ô¼:"+rtnArry[1]);	
+		return
+		}
+	var PatMes=$.cm({
+		ClassName:"web.DHCDocIPBookNew",
+		MethodName:"GetBookMesage",
+		BookID:ServerObj.BookID,
+		dataType:"text"
+	},false);
+	var IPBookingNo=PatMes.split("^")[44];
+	//var Url="nur.hisui.appointManageV2.csp?&BookingtNo="+IPBookingNo+"&isShowPatInfoBar="
+	var Url="nur.hisui.appointManage.csp?&BookingtNo="+IPBookingNo+"&isShowPatInfoBar="
+	if(typeof websys_writeMWToken=='function') Url=websys_writeMWToken(Url);
+	var winName="OpenOpertionBook"; 
+	var awidth=1260 //screen.availWidth/6*5; 
+	var aheight=680 ;screen.availHeight/5*4; 
+	var atop=(screen.availHeight - aheight)/2;
+	var aleft=(screen.availWidth - awidth)/2;
+	var param0="scrollbars=0,status=0,menubar=0,resizable=2,location=0"; 
+	var params="top=" + atop + ",left=" + aleft + ",width=" + awidth + ",height=" + aheight + "," + param0 ;
+	win=window.open(Url,winName,params); 
+	win.focus();
+	}
 function SaveCon(){
+	if (ServerObj.TempCardFlag=="Y"){
+		$.messager.alert('¾¯¸æ','<font color=red>ÁÙÊ±¿¨²»ÔÊĞí¿ªÁ¢×¡ÔºÖ¤£¡</font> ');
+		return false;
+	}
 	var DoFlag="Y"
 	if (ServerObj.BookID!=""){
 		var InCurStatuObj=$("#InCurStatuKW").keywords('getSelected');
-		var InCurStatu=InCurStatuObj[0].id; //$('#InCurStatu').combobox('getValue'); //ä½é™¢è¯çŠ¶æ€
+		var InCurStatu=InCurStatuObj[0].id; //$('#InCurStatu').combobox('getValue'); //×¡ÔºÖ¤×´Ì¬
 		var BookMesag=$.cm({
 			ClassName:"web.DHCDocIPBookNew",
 			MethodName:"GetBookMesage",
@@ -1610,12 +1701,11 @@ function SaveCon(){
 			if ((BookMesagArry[8]!=InCurStatu)&&(("Register^SignBed").indexOf(BookMesagArry[53])>=0))
 			{
 				DoFlag="N"
-				$.messager.confirm("ç¡®è®¤","å½“å‰ä½é™¢è¯çŠ¶æ€ä¸ºã€"+BookMesagArry[25]+"ã€‘,å°†è¦æ›´æ”¹ä¸ºã€"+diastrArry[1]+"ã€‘,æ˜¯å¦ç»§ç»­ä¿å­˜ï¼Ÿ",function(r){
+				$.messager.confirm("È·ÈÏ","µ±Ç°×¡ÔºÖ¤×´Ì¬Îª¡¾"+BookMesagArry[25]+"¡¿,½«Òª¸ü¸ÄÎª¡¾"+diastrArry[1]+"¡¿,ÊÇ·ñ¼ÌĞø±£´æ£¿",function(r){
 					if (r){
 						Save()
 					}
 				})
-				
 			}
 		}
 	}
@@ -1626,7 +1716,7 @@ function SaveCon(){
 function ChangeStatuByWard(WardDr){
 	if (WardDr==undefined) WardDr="";
 	if (ServerObj.BookID!=""){return}
-	//é€‰æ‹©ç—…åŒº é¢„å…¥é™¢ç—…åŒºè‡ªåŠ¨æ”¹å˜çŠ¶æ€åˆ°é¢„å…¥é™¢
+	//Ñ¡Ôñ²¡Çø Ô¤ÈëÔº²¡Çø×Ô¶¯¸Ä±ä×´Ì¬µ½Ô¤ÈëÔº
 	var InpatWardFlag=$.cm({
 		ClassName:"web.DHCDocIPBookNew",
 		MethodName:"GetWardPreInPatientFlag",
@@ -1640,7 +1730,7 @@ function ChangeStatuByWard(WardDr){
 	}
 	
 }
-//æŒ‰ç…§ç—…åŒºä¸²å¾—ä½ç½®è·å–å½“å‰é€‰ä¸­å¾—ç—…åŒºç±»å‹
+//°´ÕÕ²¡Çø´®µÃÎ»ÖÃ»ñÈ¡µ±Ç°Ñ¡ÖĞµÃ²¡ÇøÀàĞÍ
 function WardSelectFind(){
 	var checkedRadioJObj= $("input[name='WardAre']:checked");
 	var WardFlag=""
@@ -1653,9 +1743,9 @@ function WardSelectFind(){
 	return WardFlag
 }
 function diaplayWardCheck(inlocdr){
-	//æ§åˆ¶é€‰ä¸­åæ˜¾ç¤ºCheckBox
+	//¿ØÖÆÑ¡ÖĞºóÏÔÊ¾CheckBox
 	if (inlocdr!=""){
-		//å…³è”å¾—å…¶ä»–ç—…åŒº
+		//¹ØÁªµÃÆäËû²¡Çø
 		var LinkWard=$.cm({
 			ClassName:"web.DHCDocIPBookNew",
 			MethodName:"GetLinkWard",
@@ -1668,7 +1758,7 @@ function diaplayWardCheck(inlocdr){
 		}else{
 			$('#'+"C"+'LinkWard').show();
 		}
-		//æ— é™åˆ¶æ ‡è¯†
+		//ÎŞÏŞÖÆ±êÊ¶
 		var LocCureLimit=$.cm({
 			ClassName:"web.DHCDocIPBookNew",
 			MethodName:"GetLocCureLimit",
@@ -1683,7 +1773,7 @@ function diaplayWardCheck(inlocdr){
 			$('#'+"C"+'AllWard').show();
 		}
 		setTimeout(function(){
-			//æœªæ‰¾åˆ°é€‰ä¸­å¾—é»˜è®¤é€‰ä¸­ç¬¬ä¸€ä¸ª
+			//Î´ÕÒµ½Ñ¡ÖĞµÃÄ¬ÈÏÑ¡ÖĞµÚÒ»¸ö
 			var WardFlag=WardSelectFind()
 			if (WardFlag==""){
 				$HUI.radio("#LocWard").setValue(true);
@@ -1692,7 +1782,7 @@ function diaplayWardCheck(inlocdr){
 	}
 }
 
-//æ—¥é—´æ‰‹æœ¯ç‚¹å‡»
+//ÈÕ¼äÊÖÊõµã»÷
 function IsDayFlagClick(TreatedPrinciplevalue){
 	if (TreatedPrinciplevalue==""){return}
 	var diastr=$.cm({
@@ -1725,9 +1815,10 @@ function IsDayFlagClick(TreatedPrinciplevalue){
 			findstatu="Y";
 		}
 		if ((findstatu=="N")&&(statustrarry[0]!="Cancel")){
-			$.messager.alert('æç¤º',"é¢„ä½é™¢çŠ¶æ€ä¸å¯ç”¨!");	
+			$.messager.alert('ÌáÊ¾',"Ô¤×¡Ôº×´Ì¬²»¿ÉÓÃ!");	
 		}
 		SetCurStatu("PreInPatient")
+		$("#IsDayFlag").checkbox("setValue",true);
 	}else{
 		//SetCurStatu("Booking")
 	}
@@ -1751,7 +1842,7 @@ function SetCurStatu(CurStatuCode){
 		}
 	}
 }
-//æ‰“å¼€æ—¥é—´æ‰‹æœ¯ID
+//´ò¿ªÈÕ¼äÊÖÊõID
 function OpenOpertion(OpeType)
 {
 	var Url="";
@@ -1765,7 +1856,7 @@ function OpenOpertion(OpeType)
 	var rtnflag=rtnArry[0]
 	if ((rtnflag==0)||(rtnflag==1)){
 		if (OpeType=="Auto"){
-			//è‡ªåŠ¨æ¨¡å¼ä¸‹åªæœ‰æœªç”³è¯·çš„å•å­æ‰æ‰“å¼€
+			//×Ô¶¯Ä£Ê½ÏÂÖ»ÓĞÎ´ÉêÇëµÄµ¥×Ó²Å´ò¿ª
 			if (rtnflag==0){
 				var Url=$.cm({
 					ClassName:"web.DHCDocIPBookNew",
@@ -1783,15 +1874,16 @@ function OpenOpertion(OpeType)
 			},false);
 		}
 	}else{
-		//ä¸ç¬¦åˆæ¡ä»¶çš„å•å­è‡ªåŠ¨æ¨¡å¼ä¸‹ä¸æç¤º
+		//²»·ûºÏÌõ¼şµÄµ¥×Ó×Ô¶¯Ä£Ê½ÏÂ²»ÌáÊ¾
 		if (OpeType=="Auto"){return}
-		$.messager.alert('æç¤º',"ä¸èƒ½è¿›è¡Œæ‰‹æœ¯ç”³è¯·:"+rtnArry[1]);	
+		$.messager.alert('ÌáÊ¾',"²»ÄÜ½øĞĞÊÖÊõÉêÇë:"+rtnArry[1]);	
 		return
 	}
 	if (Url=="") return;
-	//æ—¥é—´æ‰‹æœ¯ç”³è¯·å›ºå®šå®½åº¦
+	if(typeof websys_writeMWToken=='function') Url=websys_writeMWToken(Url);
+	//ÈÕ¼äÊÖÊõÉêÇë¹Ì¶¨¿í¶È
 	var winName="OpenOpertion"; 
-	var awidth=1260 //screen.availWidth/6*5; 
+	var awidth=1150 //screen.availWidth/6*5; 
 	var aheight=680 ;screen.availHeight/5*4; 
 	var atop=(screen.availHeight - aheight)/2;
 	var aleft=(screen.availWidth - awidth)/2;
@@ -1803,7 +1895,7 @@ function OpenOpertion(OpeType)
 }
 
 function GetCanDoBookCode(){
-	//å¯æ“ä½œçš„çŠ¶æ€
+	//¿É²Ù×÷µÄ×´Ì¬
 	var CanDoStatu=""
 	if (ServerObj.IPBKFlag=="Booking"){
 		CanDoStatu=ServerObj.BookStr
@@ -1843,7 +1935,7 @@ function PatAddressCombCreat(){
             up: function () {
 	            var Data=$(this).combobox("getData");
 				var CurValue=$(this).combobox("getValue");
-                //å–å¾—ä¸Šä¸€è¡Œ
+                //È¡µÃÉÏÒ»ĞĞ
                 for (var i=0;i<Data.length;i++) {
 					if (Data[i] && Data[i].provid==CurValue) {
 						if (i>0) $(this).combobox("select",Data[i-1].provid);
@@ -1854,7 +1946,7 @@ function PatAddressCombCreat(){
              down: function () {
               	var Data=$(this).combobox("getData");
 				var CurValue=$(this).combobox("getValue");
-                //å–å¾—ä¸‹ä¸€è¡Œ
+                //È¡µÃÏÂÒ»ĞĞ
                 for (var i=0;i<Data.length;i++) {
 					if (CurValue!="") {
 						if (Data[i] && Data[i].provid==CurValue) {
@@ -1868,7 +1960,7 @@ function PatAddressCombCreat(){
 				}
             },
             enter: function () { 
-                //é€‰ä¸­åè®©ä¸‹æ‹‰è¡¨æ ¼æ¶ˆå¤±
+                //Ñ¡ÖĞºóÈÃÏÂÀ­±í¸ñÏûÊ§
                 $(this).combogrid('hidePanel');
             },
             query:function(q){
@@ -1889,24 +1981,24 @@ function CheckTelOrMobile(telephone,Name,Type){
 	if (DHCC_IsTelOrMobile(telephone)) return true;
 	if (telephone.substring(0,1)==0){
 		if (telephone.indexOf('-')>=0){
-			$.messager.alert("æç¤º",Type+"å›ºå®šç”µè¯é•¿åº¦é”™è¯¯,å›ºå®šç”µè¯åŒºå·é•¿åº¦ä¸ºã€3ã€‘æˆ–ã€4ã€‘ä½,å›ºå®šç”µè¯å·ç é•¿åº¦ä¸ºã€7ã€‘æˆ–ã€8ã€‘ä½,å¹¶ä»¥è¿æ¥ç¬¦ã€-ã€‘è¿æ¥,è¯·æ ¸å®!","info",function(){
+			$.messager.alert("ÌáÊ¾",Type+"¹Ì¶¨µç»°³¤¶È´íÎó,¹Ì¶¨µç»°ÇøºÅ³¤¶ÈÎª¡¾3¡¿»ò¡¾4¡¿Î»,¹Ì¶¨µç»°ºÅÂë³¤¶ÈÎª¡¾7¡¿»ò¡¾8¡¿Î»,²¢ÒÔÁ¬½Ó·û¡¾-¡¿Á¬½Ó,ÇëºËÊµ!","info",function(){
 				$("#"+Name).focus();
 			})
 	        return false;
 		}else{
-			$.messager.alert("æç¤º",Type+"å›ºå®šç”µè¯é•¿åº¦é”™è¯¯,å›ºå®šç”µè¯åŒºå·é•¿åº¦ä¸ºã€3ã€‘æˆ–ã€4ã€‘ä½,å›ºå®šç”µè¯å·ç é•¿åº¦ä¸ºã€7ã€‘æˆ–ã€8ã€‘ä½,è¯·æ ¸å®!","info",function(){
+			$.messager.alert("ÌáÊ¾",Type+"¹Ì¶¨µç»°³¤¶È´íÎó,¹Ì¶¨µç»°ÇøºÅ³¤¶ÈÎª¡¾3¡¿»ò¡¾4¡¿Î»,¹Ì¶¨µç»°ºÅÂë³¤¶ÈÎª¡¾7¡¿»ò¡¾8¡¿Î»,ÇëºËÊµ!","info",function(){
 				$("#"+Name).focus();
 			})
 	        return false;
 		}
 	}else{
 		if(telephone.length!=11){
-			$.messager.alert("æç¤º",Type+"ç”µè¯é•¿åº¦åº”ä¸ºã€11ã€‘ä½,è¯·æ ¸å®!","info",function(){
+			$.messager.alert("ÌáÊ¾",Type+"µç»°³¤¶ÈÓ¦Îª¡¾11¡¿Î»,ÇëºËÊµ!","info",function(){
 				$("#"+Name).focus();
 			})
 	        return false;
 		}else{
-			$.messager.alert("æç¤º",Type+"ä¸å­˜åœ¨è¯¥å·æ®µçš„æ‰‹æœºå·,è¯·æ ¸å®!","info",function(){
+			$.messager.alert("ÌáÊ¾",Type+"²»´æÔÚ¸ÃºÅ¶ÎµÄÊÖ»úºÅ,ÇëºËÊµ!","info",function(){
 				$("#"+Name).focus();
 			})
 	        return false;
@@ -1917,10 +2009,13 @@ function CheckTelOrMobile(telephone,Name,Type){
 
 
 
-//æœ€æ–°åˆå§‹åŒ–æ–¹æ³•
+//×îĞÂ³õÊ¼»¯·½·¨
 function NewIntPatMesCreat(){
 	if (ServerObj.BookID!=""){
-		setTimeout(function(){IntBookMes()});
+		setTimeout(function(){
+			IntPaMes();
+			IntBookMes()
+		});
 	}else{
 		if (ServerObj.IntPatDetail!="")
 		{
@@ -1928,79 +2023,75 @@ function NewIntPatMesCreat(){
 		}
 		if ((ServerObj.IntPatAdmCheck!="")&&(ServerObj.IntPatAdmCheck!=0)){
 			var RtnArry=ServerObj.IntPatAdmCheck.split("^");
+			RtnArry[2]=RtnArry[2]||"";
 			if (RtnArry[0]=="-1"){
-				
-				//var rtn=dhcsys_alert(RtnArry[1])
-				//PageLogicObj.m_CanSave="N";
-				
-				$.messager.alert('æç¤º',RtnArry[1],"info",function(){
+				$.messager.alert('ÌáÊ¾',RtnArry[1]+" "+RtnArry[2],"info",function(){
 					PageLogicObj.m_CanSave="N";
 				});
-				
 				return false;
 			}else{
-				//dhcsys_alert(RtnArry[1])
-				$.messager.alert('æç¤º',RtnArry[1]);
+				$.messager.alert('ÌáÊ¾',RtnArry[1]+" "+RtnArry[2]);
 			}
 		}
 		
 		if (ServerObj.IntAdmICDList!=""){
-			PageLogicObj.m_DianosListICD=ServerObj.IntAdmICDList
-			IntDianosList();
+			InitDiagList(ServerObj.IntAdmICDList);
 		}
 	}
 	function SetPatDetail(Patmes){
-			var PatmesArry=Patmes.split("^");
-			var PatID=PatmesArry[0];
-			var PatNO=PatmesArry[1];
-			var PatName=PatmesArry[2];
-			var PatSex=PatmesArry[3];
-			var PatBob=PatmesArry[4];
-			var PatAge=PatmesArry[5];
-			var PatGov=PatmesArry[6];
-			var PatContry=PatmesArry[7];
-			var PatProvince=PatmesArry[8];
-			var PatCity=PatmesArry[9];
-			var PatMarital=PatmesArry[10];
-			var patNation=PatmesArry[11];
-			var patPhone=PatmesArry[12];
-			var patTel=PatmesArry[13];
-			var patEducation=PatmesArry[14];
-			var patWorkAddress=PatmesArry[15];
-			var patCategoryDesc=PatmesArry[16];
-			var patAddress=PatmesArry[17];
-			var patMrNo=PatmesArry[18];
-			var patSocial=PatmesArry[19];
-			var patLinkName=PatmesArry[20];
-			var patLinkPhone=PatmesArry[21];
-			var patLinkRelation=PatmesArry[22];
-			var patLinkRelationDr=PatmesArry[23];
-			var patEmployeeFunction=PatmesArry[24];
-			var patSecretLevel=PatmesArry[25];
-			$("#PatNo").val(PatNO);
-			$("#PatName").val(PatName);
-			$("#PatSex").val(PatSex);
-			$("#PatAge").val(PatAge);
-			$("#PatMRNo").val(patMrNo);
-			if (patTel!=""){
-				$("#PatPhone").val(patTel);
-			}else{
-				$("#PatPhone").val(patPhone);
-			}
-			PageLogicObj.m_PatPhoneFlag=$("#PatPhone").val();
-			$("#PatType").val(patSocial);
-			$("#PatID").val(PatGov);
-			$("#PatFName").val(patLinkName);
-			$("#PatFPhone").val(patLinkPhone);
-			PageLogicObj.m_PatLinkPhoneFlag = patLinkPhone;
-			//$("#PatFRelation").val(patLinkRelation);
-			PageLogicObj.m_PatFRelation.setValue(patLinkRelationDr);
-			$("#PatCompany").val(patWorkAddress);
-			$("#PatAddress").combobox('setText',patAddress); 
+		var PatmesArry=Patmes.split("^");
+		var PatID=PatmesArry[0];
+		var PatNO=PatmesArry[1];
+		var PatName=PatmesArry[2];
+		var PatSex=PatmesArry[3];
+		var PatBob=PatmesArry[4];
+		var PatAge=PatmesArry[5];
+		var PatGov=PatmesArry[6];
+		var PatContry=PatmesArry[7];
+		var PatProvince=PatmesArry[8];
+		var PatCity=PatmesArry[9];
+		var PatMarital=PatmesArry[10];
+		var patNation=PatmesArry[11];
+		var patPhone=PatmesArry[12];
+		var patTel=PatmesArry[13];
+		var patEducation=PatmesArry[14];
+		var patWorkAddress=PatmesArry[15];
+		var patCategoryDesc=PatmesArry[16];
+		var patAddress=PatmesArry[17];
+		var patMrNo=PatmesArry[18];
+		var patSocial=PatmesArry[19];
+		var patLinkName=PatmesArry[20];
+		var patLinkPhone=PatmesArry[21];
+		var patLinkRelation=PatmesArry[22];
+		var patLinkRelationDr=PatmesArry[23];
+		var patEmployeeFunction=PatmesArry[24];
+		var patSecretLevel=PatmesArry[25];
+		$("#PatNo").val(PatNO);
+		$("#PatName").val(PatName);
+		$("#PatSex").val(PatSex);
+		$("#PatAge").val(PatAge);
+		$("#PatMRNo").val(patMrNo);
+		if (patTel!=""){
+			$("#PatPhone").val(patTel);
+		}else{
+			$("#PatPhone").val(patPhone);
+		}
+		PageLogicObj.m_PatPhoneFlag=$("#PatPhone").val();
+		$("#PatType").val(patSocial);
+		$("#PatID").val(PatGov);
+		$("#PatFName").val(patLinkName);
+		$("#PatFPhone").val(patLinkPhone);
+		PageLogicObj.m_PatLinkPhoneFlag = patLinkPhone;
+		//$("#PatFRelation").val(patLinkRelation);
+		PageLogicObj.m_PatFRelation.setValue(patLinkRelationDr);
+		$("#PatCompany").val(patWorkAddress);
+		$("#PatAddress").combobox('setText',patAddress); 
+		//ÈëÔº·Ñ±ğ
+		IntInAdmReason(PatID);
 	}
 	
 }
-//æ’¤é”€ä½é™¢è¯
+//³·Ïú×¡ÔºÖ¤
 function CancelIPBook(BookID){
 	PageLogicObj.IsCellCheckFlag=true;
 	setTimeout(function() {
@@ -2021,14 +2112,187 @@ function CancelIPBook(BookID){
 		dataType:"text"
 	},false);
 	if ((rtn=="-100")&&(rtn<0)){
-		 $.messager.alert('è­¦å‘Š','æ’¤é”€ä½é™¢è¯ä¿å­˜å¤±è´¥ï¼š'+rtn);
+		 $.messager.alert('¾¯¸æ','³·Ïú×¡ÔºÖ¤±£´æÊ§°Ü£º'+rtn);
 		 return false;
 	}else{
 		ServerObj.BookID="";
 		ClearBookMes();
-		//æŸ¥è¯¢
+		//²éÑ¯
 		BookListTabLoad();
 	}
 	*/
 }
+function ChangeInAdmDateTimeStatus(LocId){
+	$("#InAdmDateTime").datetimebox('setValue',"");
+	$("label[for=InAdmDateTime]").parent().hide();
+	$("#InAdmDateTime").parent().hide();
+	if (ServerObj.needAdmDateLocStr.indexOf("^"+LocId+"^")>=0) {
+		$("label[for=InAdmDateTime]").parent().show();
+		$("#InAdmDateTime").parent().show();
+	}
+}
+function IsValidTime(time){
+   if (time.split(":").length==3){
+	   var TIME_FORMAT=/^(0\d{1}|1\d{1}|2[0-3]):[0-5]\d{1}:([0-5]\d{1})$/;
+   }else if(time.split(":").length==2){
+	   var TIME_FORMAT=/^(0\d{1}|1\d{1}|2[0-3]):([0-5]\d{1})$/;  
+   }else{
+	   return false;
+   }
+   if(!TIME_FORMAT.test(time)) return false;
+   return true;
+}
+//CDSSÕï¶ÏÑ¡Ôñ»Øµ÷
+function CDSSPropertyConfirmCallBack(resWordICD,DomID){
+	var SDSSArr=resWordICD.split("^");
+	var SDSDesc=SDSSArr[1];
+	var ICDRowid=SDSSArr[8];
+	if(ICDRowid==''){
+		$.messager.alert('Ìí¼ÓÊ§°Ü',SDSDesc+' Î´¶ÔÕÕICDÕï¶Ï');
+		return
+	}
+	var SDSInfo=new Array('',SDSSArr[0],SDSSArr[2],SDSSArr[4],SDSSArr[3]).join(String.fromCharCode(1));
+	var DiaStatus=PageLogicObj.m_DiaStatusBox.getText();
+	var DiaStatusId=PageLogicObj.m_DiaStatusBox.getValue();
+	var DiagnosCat=$HUI.checkbox("#DiaType").getValue()?'ÖĞÒ½':'Î÷Ò½';
+	if(DiaStatus) SDSDesc+='('+DiaStatus+')';
+	var diagnos=ICDRowid+String.fromCharCode(2)+SDSDesc+String.fromCharCode(2)+DiaStatusId+String.fromCharCode(2)+DiagnosCat+String.fromCharCode(2)+String.fromCharCode(2)+String.fromCharCode(2)+SDSInfo;
+	AddDiagnos(diagnos);
+	$.messager.popover({msg: 'Ôö¼Ó³É¹¦£¡',type:'success',timeout: 1000});
+	CDSSPropertyCcancelfirmCallBack(DomID);
+}
+//CDSSÕï¶ÏÈ¡ÏûÑ¡Ôñ»Øµ÷
+function CDSSPropertyCcancelfirmCallBack(DomID){
+    $('#'+DomID).lookup('setValue','').lookup('setText','');
+}
+
+/// Ğ£Ñé±£´æ×¡ÔºÖ¤(°ÑĞ£Ñéº¯ÊıÌá³öµ¥¶À·½·¨£¬¸ÄÎªÒì²½º¯Êı)
+function CheckBeforeSave(callBackFun) {
+    if (ServerObj.TempCardFlag == "Y") {
+        $.messager.alert('¾¯¸æ', '<font color=red>ÁÙÊ±¿¨²»ÔÊĞí¿ªÁ¢×¡ÔºÖ¤£¡</font> ');
+        callBackFun(false);
+        return false;
+    }
+    var InCurStatuObj = $("#InCurStatuKW").keywords('getSelected');
+    var InCurStatutext = InCurStatuObj[0].text;
+    if ((PageLogicObj.m_CanSave != "Y") && (InCurStatutext != "³·Ïú")) {
+        $.messager.alert('¾¯¸æ', 'ĞÂÔö×¡ÔºÖ¤Êı¾İ²»ÄÜ±£´æ.');
+        callBackFun(false);
+        return false;
+    }
+    if (ServerObj.IPBKFlag != "Booking") {
+        //·ÇÔ¤Ô¼È¨ÏŞÓÃ»§ BookID²»ÄÜÎª¿ÕÖ»ÄÜ±£´æ
+        if (ServerObj.BookID == "") {
+            $.messager.alert('¾¯¸æ', '×¡ÔºÖ¤Ö÷Ë÷Òı²»´æÔÚ²»ÄÜÕı³£±£´æ.');
+            callBackFun(false);
+            return false
+        }
+    }
+    //ÑéÖ¤±ØÌî×Ö¶Î
+    var isMustFill = $.DHCDoc.validateMustFill();
+    if (!isMustFill) {
+        callBackFun(false);
+        return false;
+    }
+    if ((ServerObj.BookID == "") && (InCurStatutext == "³·Ïú")) {
+        $.messager.alert('¾¯¸æ', '²»ÄÜĞÂÔö³·ÏúµÄ×¡ÔºÖ¤');
+        callBackFun(false);
+        return false
+    }
+    var PatPhone = $('#PatPhone').val();
+    if (PatPhone != "") {
+        if (!CheckTelOrMobile(PatPhone, "PatPhone", "ÁªÏµµç»°")) {
+            callBackFun(false);
+            return false;
+        }
+    }
+    var PatFPhone = $('#PatFPhone').val();
+    if (PatFPhone != "") {
+        if (!CheckTelOrMobile(PatFPhone, "PatFPhone", "ÁªÏµÈËµç»°")) {
+            callBackFun(false);
+            return false;
+        }
+    }
+    //×¡ÔºÖ¤×´Ì¬
+    var InCurStatu = "";
+    var InCurStatuObj = $("#InCurStatuKW").keywords('getSelected');
+    if (InCurStatuObj[0]) { InCurStatu = InCurStatuObj[0].id; }
+    if (InCurStatu == "") {
+        $.messager.alert('¾¯¸æ', 'ÇëÑ¡Ôñµ±Ç°µÄ²Ù×÷ÀàĞÍ!');
+        callBackFun(false);
+        return false
+    }
+    var InCtloc = getComValue("InCtloc");
+    if (ServerObj.needAdmDateLocStr.indexOf("^" + InCtloc + "^") >= 0) {
+        //Êµ¼ÊÈëÔºÈÕÆÚºÍÊ±¼ä
+        InAdmDateTime = $("#InAdmDateTime").datetimebox('getValue');
+        if (InAdmDateTime == "") {
+            $.messager.alert("ÌáÊ¾", "Êµ¼ÊÈëÔºÈÕÆÚ²»ÄÜÎª¿Õ!", "info", function() {
+                $('#InAdmDateTime').next('span').find('input').focus();
+            });
+            callBackFun(false);
+            return false;
+        }
+    }
+	var IPDeposit=$("#IPDeposit").val(); 
+	if ((IPDeposit!="")&&(isNaN(IPDeposit))){
+			$.messager.alert('¾¯¸æ', '×¡ÔºÑº½ğÇëÊäÈëÓĞĞ§Êı×Ö!');
+        	callBackFun(false);
+        	return false
+		}
+	var CompanyNum=$("#CompanyNum").val(); 
+	if ((CompanyNum!="")&&(isNaN(CompanyNum))){
+			$.messager.alert('¾¯¸æ', 'Åã°éÈËÊıÇëÊäÈëÓĞĞ§Êı×Ö!');
+        	callBackFun(false);
+        	return false
+		}
+    new Promise(function(resolve, rejected) {
+        //±£´æÇ°¶Ô¾ÍÕïÉóºË-Ä¿Ç°ÔÊĞí¶àÕÅ×¡ÔºÖ¤ ·µ»Ø-2²»ÅĞ¶Ï
+        var Rtn = $.cm({
+            ClassName: "web.DHCDocIPBookNew",
+            MethodName: "CheckBeforeSave",
+            AdmID: ServerObj.EpisodeID,
+            BookID: ServerObj.BookID,
+            Type: 1,
+            Instring: "",
+            dataType: "text"
+        }, false);
+        if (Rtn != 0) {
+            var RtnArry = Rtn.split("^")
+            if ((RtnArry[0] == "-1") && (InCurStatutext != "³·Ïú")) {
+                var PreInfo = RtnArry[2] || "";
+                $.messager.alert('¾¯¸æ', RtnArry[1] + PreInfo);
+                resolve(false);
+            }
+            resolve(true);
+        } else if ((ServerObj.BookID == "") && (InCurStatutext != "³·Ïú")) {
+            //ĞÂÔö×¡ÔºÖ¤Ê±£¬ÅĞ¶ÏÊÇ·ñ´æÔÚÓĞĞ§×¡ÔºÖ¤£¬½øĞĞÌáÊ¾
+            var Rtn = $.cm({
+                ClassName: "web.DHCDocIPBookNew",
+                MethodName: "CheckActiveBookInfo",
+                AdmID: ServerObj.EpisodeID,
+                BookID: ServerObj.BookID,
+                Flag: "OtherAdm",
+                dataType: "text"
+            }, false);
+            var FindArr = Rtn.split(String.fromCharCode(2));
+            if (FindArr[0] == "Y") {
+                $.messager.confirm("È·ÈÏ", FindArr[1] + $g(" ÊÇ·ñ¼ÌĞø±£´æ£¿"), function(r) {
+                    if (!r) {
+                        resolve(false);
+                    }
+                    resolve(true);
+                })
+            } else {
+                resolve(true);
+            }
+        }else{
+	    	resolve(true);
+	    }
+    }).then(function(ret) {
+        callBackFun(ret);
+        return true;
+    })
+}
+
 document.body.onbeforeunload = DocumentUnloadHandler;

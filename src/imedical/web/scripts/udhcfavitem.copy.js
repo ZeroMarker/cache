@@ -12,17 +12,19 @@ function InitUDHCFavOrderSetsDataGrid(){
             text: '引用至个人',
             iconCls: 'icon-copy',
             handler: function() {
-	            ARCOSCopySave(1);
-            }
-        },
-        {
-            text: '引用至科室',
-            iconCls: 'icon-copy',
-            handler: function() {
-	            ARCOSCopySave(2);
+	            ARCOSCopySave('User');
             }
         }
 	];
+	if(UserAuthObj['Loc']){
+		ARCOSToolBar.push({
+			text: '引用至科室',
+			iconCls: 'icon-copy',
+			handler: function() {
+				ARCOSCopySave('Loc');
+			}
+		});
+	}
 	//医嘱套
 	UDHCFavOrderSetsDataGrid=$('#UDHCFavOrderSets').datagrid({  
 		width : 'auto',
@@ -87,6 +89,7 @@ function InitUDHCARCOrderSetItemDataGrid(){
 		fit:true,
 		border : false,
 		striped : true,
+		toolbar:[],
 		singleSelect : true,
 		fitColumns : false,
 		autoRowHeight : false,
@@ -134,7 +137,7 @@ function LoadUDHCARCOrderSetItemDataGrid(ARCOSRowid){
 		PageLogicObj.m_tabUDHCARCOrderSetItemDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
 	})
 }
-function ARCOSCopySave(CopyToConditione){
+function ARCOSCopySave(ToType){
 	var rows=PageLogicObj.m_tabUDHCFavOrderSetsDataGrid.datagrid("getSelections");
 	if (rows.length==0) {
 		$.messager.alert('提示','请选择需要引用的医嘱套!');
@@ -146,22 +149,18 @@ function ARCOSCopySave(CopyToConditione){
 		if (FromARCOSIdStr=="") FromARCOSIdStr=ARCOSRowid;
 		else  FromARCOSIdStr=FromARCOSIdStr+"^"+ARCOSRowid;
 	}
-	if (CopyToConditione=="1"){
-		var InUser=session['LOGON.USERID'],FavDepList="";
-	}else if (CopyToConditione=="2"){
-		var InUser="",FavDepList=session['LOGON.CTLOCID'];
+	var ret=$.cm({
+		ClassName:'DHCDoc.Order.Sets',
+		MethodName:'CopyToOtherAuth',
+		ASCOSRowids:FromARCOSIdStr, 
+		UserID:session['LOGON.USERID'], LocID:session['LOGON.CTLOCID'], HospID:session['LOGON.HOSPID'], 
+		ToType:ToType,
+		dataType:'text'
+	},false);
+	if(ret==0){
+		$.messager.popover({msg: '引用医嘱套成功！',type:'success'});
+		PageLogicObj.m_tabUDHCFavOrderSetsDataGrid.datagrid('uncheckAll');
+	}else{
+		$.messager.alert('提示',$g("引用医嘱套失败:")+ret);
 	}
-	$.cm({
-	    ClassName : "web.DHCARCOrdSetsAuthorize",
-	    MethodName : "ARCOSCopy",
-	    FromARCOSIdStr:FromARCOSIdStr,
-	    UserRowid:session['LOGON.USERID'],
-	    InUser:InUser,
-	    FavDepList:FavDepList
-	},function(rtn){
-		if (rtn>0) {
-			$.messager.popover({msg: '引用成功!',type:'success'});
-			PageLogicObj.m_tabUDHCFavOrderSetsDataGrid.datagrid('uncheckAll');
-		}
-	})
 }

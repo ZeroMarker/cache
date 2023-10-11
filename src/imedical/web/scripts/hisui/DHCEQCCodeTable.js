@@ -8,73 +8,6 @@ var tabNameStr="";
 var preFixStr="";
 var ReadOnly="";
 
-///modify by lmm 2018-09-02
-///描述：单击行填充事件
-///入参：index 行号
-///      rowData 选中行json事件
-function SelectRowHandler(index,rowData)	{
-	
-	Selected(index,rowData);
-}
-///modify by lmm 2018-09-02 hisui改造：增加入参 rowData
-function Selected(selectrow,rowData)
-{	
-	if(ReadOnly!="1")
-	{
-		InitPage();	
-	}
-	if (SelectedRow==selectrow)	{			
-		SelectedRow=-1;	  //modify by lmm 2018-09-02 hisui改造：修改填充函数开始行号	
-		Clear()	
-		//取消选取记录后:填写框,添加,查找 可用 
-		if(ReadOnly!="1")
-		{
-		DisableBElement("BAdd",false);
-		DisableBElement("BUpdate",true);
-		DisableBElement("BDel",true);
-		DisableBElement("BClear",false);
-		DisableBElement("BFind",false);
-	
-		DisableElement("RowID",false);
-		DisableElement("Code",false);
-		DisableElement("Desc",false);
-		DisableElement("Remark",false);						
-		}
-		$('#tDHCEQCCodeTable').datagrid('unselectAll');  //add by lmm 2018-09-02 hisui改造：再点击取消选中状态
-	}
-	else
-	{		
-		//选取记录后:新增不可用
-		if(ReadOnly!="1")
-		{
-		DisableBElement("BAdd",true);
-		DisableBElement("BUpdate",false);
-		DisableBElement("BDel",false);
-		DisableBElement("BClear",false);   //modify by lmm 2017-03-30 355667
-		//DisableBElement("BFind",true);   //Modefied by zc 2014-09-05 ZC0004
-	
-		DisableElement("RowID",false);
-		DisableElement("Code",false);
-		DisableElement("Desc",false);
-		DisableElement("Remark",false);	
-		}	
-		SelectedRow=selectrow;		
-		SetData(SelectedRow,rowData);   //modify by lmm 2018-09-02 hisui改造：增加入参
-	}			
-}
-///modify by lmm 2018-09-02 hisui改造：增加入参 rowData,修改值获取
-function SetData(SelectedRow,rowData)
-{	
-	var rowidstr=rowData.TRowID;
-	var codestr=rowData.TCode;
-	var descstr=rowData.TDesc;
-	var remarkstr=rowData.TRemark;
-	SetElement("RowID",rowidstr);
-	SetElement("Code",codestr);
-	SetElement("Desc",descstr);
-	SetElement("Remark",remarkstr);	
-}
-
 function BodyLoadHandler() 
 {
 	//document.body.scroll="no";
@@ -85,6 +18,7 @@ function BodyLoadHandler()
 	Clear();
 	InitPage();
 	initButtonWidth()  //hisui改造：修改按钮长度 add by lmm 2018-09-02
+	initPanelHeaderStyle()
 	var obj=document.getElementById("cEQTitle");
 	
 	if(GetElementValue("titleName").length<1)
@@ -160,6 +94,73 @@ function InitPage()
 	if (obj) obj.onclick=BFind_Click;
 }
 
+///modify by lmm 2018-09-02
+///描述：单击行填充事件
+///入参：index 行号
+///      rowData 选中行json事件
+function SelectRowHandler(index,rowData)	{
+	
+	Selected(index,rowData);
+}
+///modify by lmm 2018-09-02 hisui改造：增加入参 rowData
+function Selected(selectrow,rowData)
+{	
+	if(ReadOnly!="1")
+	{
+		InitPage();	
+	}
+	if (SelectedRow==selectrow)	{			
+		SelectedRow=-1;	  //modify by lmm 2018-09-02 hisui改造：修改填充函数开始行号	
+		Clear()	
+		//取消选取记录后:填写框,添加,查找 可用 
+		if(ReadOnly!="1")
+		{
+		DisableBElement("BAdd",false);
+		DisableBElement("BUpdate",true);
+		DisableBElement("BDel",true);
+		DisableBElement("BClear",false);
+		DisableBElement("BFind",false);
+	
+		DisableElement("RowID",false);
+		DisableElement("Code",false);
+		DisableElement("Desc",false);
+		DisableElement("Remark",false);						
+		}
+		$('#tDHCEQCCodeTable').datagrid('unselectAll');  //add by lmm 2018-09-02 hisui改造：再点击取消选中状态
+	}
+	else
+	{		
+		//选取记录后:新增不可用
+		if(ReadOnly!="1")
+		{
+		DisableBElement("BAdd",true);
+		DisableBElement("BUpdate",false);
+		DisableBElement("BDel",false);
+		DisableBElement("BClear",false);   //modify by lmm 2017-03-30 355667
+		//DisableBElement("BFind",true);   //Modefied by zc 2014-09-05 ZC0004
+	
+		DisableElement("RowID",false);
+		DisableElement("Code",false);
+		DisableElement("Desc",false);
+		DisableElement("Remark",false);	
+		}	
+		SelectedRow=selectrow;		
+		SetData(SelectedRow,rowData);   //modify by lmm 2018-09-02 hisui改造：增加入参
+	}			
+}
+///modify by lmm 2018-09-02 hisui改造：增加入参 rowData,修改值获取
+function SetData(SelectedRow,rowData)
+{	
+	var rowidstr=rowData.TRowID;
+	var codestr=rowData.TCode;
+	var descstr=rowData.TDesc;
+	var remarkstr=rowData.TRemark;
+	SetElement("RowID",rowidstr);
+	SetElement("Code",codestr);
+	SetElement("Desc",descstr);
+	SetElement("Remark",remarkstr);	
+}
+
 function BFind_Click()                   //add function by GR 2014-09-26 缺陷号2944
 {
 	
@@ -176,6 +177,9 @@ function GetData()                  //add function by GR 2014-09-26 缺陷号2944
 	preFixStr=GetElementValue("PreFix");
 	ReadOnly=GetElementValue("ReadOnly");
 	var url="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCCodeTable&TabName="+tabNameStr+"&PreFix="+preFixStr+"&ReadOnly="+ReadOnly+"&titleName="+titleName;  //modify by lmm 2018-09-02 修改hisui默认csp
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		lnk += "&MWToken="+websys_getMWToken()
+	}
 	return url;
 }
 
@@ -248,7 +252,7 @@ function SaveData(encmeth,typeStr)
 	var rowidStr=GetElementValue("RowID");	
 	var codeStr=GetElementValue("Code");
 	var descStr=GetElementValue("Desc");	
-	var remarkStr=GetElementValue("Remark");	
+	var remarkStr=GetElementValue("Remark");
 	///2010-06-11 党军 begin
 	var CheckData=GetElementValue("CheckData");
 	var TableName=tabNameStr.replace("_","");
@@ -282,7 +286,6 @@ function SaveData(encmeth,typeStr)
 		sqlStr="update SqlUser."+tabNameStr+" set "+preFixStr+"_Code='"+codeStr+"',"+preFixStr+"_Desc='"+descStr+"',"+preFixStr+"_Remark='"+remarkStr+"' where "+preFixStr+"_RowID="+rowidStr;
 	}*/
 	var result=cspRunServerMethod(encmeth,typeStr,tabNameStr,preFixStr,rowidStr,codeStr,descStr,remarkStr);
-
 	if (result=="0")
 	{
 			alertShow("操作成功")
@@ -300,7 +303,7 @@ function Clear()
 	SetElement("RowID","");
 	SetElement("Code","");
 	SetElement("Desc","");
-	SetElement("Remark","");	
+	SetElement("Remark","");
 	$('#tDHCEQCCodeTable').datagrid('unselectAll');  //add by wy 2019-09-11清除选行事件 1015798
 	//add by wl 2020-02-17 WL0048
 	DisableBElement("BAdd",false);		

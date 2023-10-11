@@ -72,28 +72,22 @@ function setDataGrid() {
                 width: 150
             }, {
                 field: 'EntryScore',
-                title: '评分标准',
+                title: '条目分数',
+                halign: 'center',
+                align: 'center',
+                width: 35
+            }, {
+                field: 'ExamCount',
+                title: '缺陷数',
                 halign: 'center',
                 align: 'center',
                 width: 25
-            }, {
-                field: 'ExamCount',
-                title: '次数',
-                halign: 'center',
-                align: 'center',
-                width: 20
-            }, {
-                field: 'Score',
-                title: '扣分',
-                halign: 'center',
-                align: 'center',
-                width: 20
             }, {
                 field: 'CreateUserDesc',
                 title: '质控医师',
                 halign: 'center',
                 align: 'center',
-                width: 27
+                width: 35
             }, {
                 field: 'ExecuteStatus',
                 title: '状态',
@@ -103,7 +97,7 @@ function setDataGrid() {
             }
             , {
                 field: 'ExecuteDateTime',
-                title: '执行时间',
+                title: '处理时间',
                 halign: 'center',
                 align: 'center',
                 width: 50

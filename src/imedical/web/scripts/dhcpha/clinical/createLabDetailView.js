@@ -13,15 +13,14 @@ function createLabDetailView(callBack)
 
 	///定义columns
 	var columns=[[
-		{field:"EpisodeID",title:'EpisodeID',width:90,hidden:true},
-		{field:"oeori",title:'oeori',width:90,hidden:true},
-		{field:"LabTestSetRow",title:'LabTestSetRow',width:90,hidden:true},
-		{field:'arcitmcode',title:'代码',width:100},
-		{field:'arcitmdesc',title:'名称',width:300},
-		{field:'SpecName',title:'样本类型',width:200},
-		{field:'recdate',title:'接收日期',width:100},
-		{field:'rectime',title:'接收时间',width:100},
-		//{field:'HisResult',title:'历次结果',width:80,formatter:frameHisResult}
+		{field:"oneReportDR",title:$g('报告ID')},
+		{field:"OrdRowIds",title:'OrdRowIds',hidden:true},
+		{field:"LabTestSetRow",title:'LabTestSetRow',hidden:true},
+		{field:'LabEpisode',title:$g('检验号')},
+		{field:'OrdNames',title:$g('医嘱名称')},
+		{field:'SpecName',title:$g('样本类型')},
+		{field:'ReqDateTime',title:$g('申请日期')},
+		{field:'AuthDateTime',title:$g('报告日期')}
 	]];
 	
 	$('#Lab').datagrid({
@@ -32,7 +31,7 @@ function createLabDetailView(callBack)
 		pageSize:40,        // 每页显示的记录条数
 		pageList:[40,80],   // 可以设置每页记录条数的列表
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		onDblClickRow:function(rowIndex, rowData){
 			$('#Lab').window('close');
@@ -47,17 +46,16 @@ function createLabDetailView(callBack)
 				$('#Lab').datagrid('collapseRow',LabIndex);
 			}
 			LabIndex = index;
-			var LabDate=rowData.recdate;
+			var LabDate=rowData.AuthDateTime;
 			///定义columns
 			var columns=[[
-				{field:"itmcode",title:'项目编号',width:80},
-				{field:"itmname",title:'项目名称',width:200},
-				{field:'units',title:'单位',width:70},
-				{field:'itmval',title:'检验值',width:80,formatter:SetCellColor},
-				{field:'ItmRange',title:'参考范围',width:100},
-				{field:'AbnorFlag',title:'异常标记',width:90,hidden:true},
-				{field:'ItemRes',title:'检验结果',width:220,hidden:true},
-				{field:'AddSign',title:'添加标志',width:80,align:'center'}
+				{field:"TestCodeCode",title:$g('项目编号')},
+				{field:"TestCodeName",title:$g('项目名称')},
+				{field:'Result',title:$g('结果'),formatter:SetCellColor},
+				{field:'Units',title:$g('单位')},
+				{field:'RefRanges',title:$g('参考范围')},
+				{field:'AbFlag',title:$g('异常提示')},
+				{field:'AddSign',title:$g('添加标志'),align:'center'}
 			]];
 
 			$('#ddv-'+index).datagrid({
@@ -67,26 +65,26 @@ function createLabDetailView(callBack)
 				rownumbers:true,
 				columns:columns,
 			    singleSelect:true,
-				loadMsg: '正在加载信息...',
+				loadMsg: $g('正在加载信息...'),
 			    onDblClickRow: function (rowIndex, rowData) {//双击选择行编辑
-			    var text=LabDate+" "+rowData.itmname+":"+rowData.itmval+" "+rowData.units+"["+rowData.ItmRange+"]";
+			    var text=LabDate+" "+rowData.TestCodeName+":"+rowData.Result+" "+rowData.Units+"["+rowData.RefRanges+"]"+";  ";
 			            callBack(text);
 		            $("tr[datagrid-row-index="+rowIndex+"]"+" "+"td[field=AddSign]"+" "+"div").html("<img src='../scripts/dhcpha/images/accept.png' border=0/>");
 		        },
 				rowStyler:function(rowIndex,rowData){
-					if (rowData.AbnorFlag!="N"){
+					if (rowData.AbFlag!="N"){
 						return 'color:red;font-weight:bold;';
 					}
 				}
 			});
 			///自动加载
 			$('#ddv-'+index).datagrid({
-				url:url+'?action=LabItmsValue',
-				queryParams:{
-					LabTestSetRow:rowData.LabTestSetRow,
-					rows:"100",
-					page:'1'
-				}
+				url:'dhcapp.broker.csp',
+		        queryParams:{
+	     		    ClassName: 'PHA.CPW.Com.OutInterfance',
+	     			MethodName: 'LabItmsValue',
+					oneReportDR:rowData.oneReportDR,
+		        }
 			});
 		}
 	});
@@ -98,7 +96,7 @@ function createLabDetailView(callBack)
 		collapsible:true,
 		border:true,
 		closed:"true",
-		width:870,
+		width:800,
 		height:450,
 		minimizable:false,						/// 隐藏最小化按钮(qunianpeng 2018/3/15)
 		//maximized:true,						/// 最大化
@@ -111,11 +109,12 @@ function createLabDetailView(callBack)
 	
 	///自动加载
 	$('#Lab').datagrid({
-		url:url+'?action=GetPatLabList',
+		url:'dhcapp.broker.csp',
 		queryParams:{
-			EpisodeID:AdmDr,
-			param:""
-		}
+	     		ClassName: 'PHA.CPW.Com.OutInterfance',
+	     		MethodName: 'GetPatLabList',
+				EpisodeID: AdmDr
+			},
 	});
 	//initScroll("#Lab");  liyarong 2016-09-21
 	$('#Lab').datagrid('loadData', {total:0,rows:[]});  //sufan 2016/09/21
@@ -125,7 +124,7 @@ function createLabDetailView(callBack)
 function SetCellColor(value, rowData, rowIndex)
 {
 	var color="";
-	if(rowData.AbnorFlag=="N"){
+	if(rowData.AbFlag=="N"){
 		color="green";
 	}else{
 		color="red";}
@@ -133,7 +132,7 @@ function SetCellColor(value, rowData, rowIndex)
 }
 
 /// 历次检验结果
-function  frameHisResult(value,rowData,rowIndex){
+/*function  frameHisResult(value,rowData,rowIndex){
    // return "<a href='#' mce_href='#' onclick='showHisResultWin("+rowIndex+");'>历次结果</a>";  
 }
 
@@ -141,4 +140,4 @@ function showHisResultWin(rowIndex)
 {
 	var oeori=$("tr[datagrid-row-index="+rowIndex+"] "+"td[field=oeori]").text();
 	window.open("dhclabviewoldresult.csp?PatientBanner=1&OrderID="+oeori+"&StartDate=",'','toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=yes,width=1250,height=670,left=80,top=10');
-}
+}*/

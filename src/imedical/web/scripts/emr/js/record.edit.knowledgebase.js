@@ -79,6 +79,19 @@ function init()
 //建立数据库连接
 function setConnect(){
 	var netConnect = "";
+	
+	var port = window.location.port;
+	var protocol = window.location.protocol.split(":")[0];
+	
+	if (protocol == "http")
+	{
+		port = port==""?"80":port;
+	}
+	else if (protocol == "https")
+	{
+		port = port==""?"443":port;
+	}
+	
 	$.ajax({
 		type: 'Post',
 		dataType: 'text',
@@ -88,7 +101,10 @@ function setConnect(){
 		data: {
 			"OutputType":"String",
 			"Class":"EMRservice.BL.BLSysOption",
-			"Method":"GetNetConnectJson"
+			"Method":"GetNetConnectJson",
+			"p1":window.location.hostname,
+			"p2":port,
+			"p3":protocol
 		},
 		success: function (ret) {
 
@@ -610,6 +626,10 @@ function eventSaveDocument(commandJson)
 			}
 		}
 	}
+	else if (commandJson.args.result == "INVALID")
+    {
+		alert('病历存在非法字符，不能保存。'); 
+    }
 	else if (commandJson.args.result == "NONE")
 	{
 		if (flag == "1")

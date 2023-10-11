@@ -12,14 +12,19 @@ Ext.onReady(function() {
 
     function ChartInfoAddFun() {
         var PhaLoc = new Ext.ux.LocComboBox({
-            fieldLabel: '科室',
+            fieldLabel: $g('科室'),
             id: 'PhaLoc',
             name: 'PhaLoc',
             width: 250,
-            groupId: gGroupId
+            groupId: gGroupId,
+            listeners: {
+                select: function(field, e) {
+                    searchData();
+                }
+            }
         });
         var StkBin = new Ext.form.TextField({
-            fieldLabel: '货位码',
+            fieldLabel: $g('货位码'),
             id: 'StkBin',
             name: 'StkBin',
             width: 150,
@@ -34,8 +39,8 @@ Ext.onReady(function() {
         });
         // 查询按钮
         var SearchBT = new Ext.Toolbar.Button({
-            text: '查询',
-            tooltip: '点击查询',
+            text: $g('查询'),
+            tooltip: $g('点击查询'),
             iconCls: 'page_find',
             width: 70,
             height: 30,
@@ -51,7 +56,7 @@ Ext.onReady(function() {
             // 必选条件
             var phaLoc = Ext.getCmp("PhaLoc").getValue();
             if (phaLoc == null || phaLoc.length <= 0) {
-                Msg.info("warning", "科室不能为空！");
+                Msg.info("warning", $g("科室不能为空！"));
                 Ext.getCmp("PhaLoc").focus();
                 return;
             }
@@ -67,8 +72,8 @@ Ext.onReady(function() {
         // 删除按钮
         var DeleteBT = new Ext.Toolbar.Button({
             id: "DeleteBT",
-            text: '删除',
-            tooltip: '点击删除',
+            text: $g('删除'),
+            tooltip: $g('点击删除'),
             width: 70,
             height: 30,
             iconCls: 'page_delete',
@@ -78,27 +83,52 @@ Ext.onReady(function() {
         });
 
         function deleteData() {
+	        
+	        var rows = StkBinGrid.getSelectionModel().getSelections();
+	        var sbIdArr = [];
+			for(var i=0;i<rows.length;i++){
+				var sbId = rows[i].get("sb");
+				if(!sbId) StkBinGrid.getStore().remove(rows[i]);
+				else sbIdArr.push(rows[i].get("sb")) 
+			}
+			if(sbIdArr.length == 0) return;
+	
+			var sbIdStr = sbIdArr.join(",");
+			Ext.MessageBox.show({
+                title: $g('提示'),
+                msg: $g('是否确定删除勾选的货位信息'),
+                buttons: Ext.MessageBox.YESNO,
+                parm: sbIdStr,
+                fn: showResult,
+                icon: Ext.MessageBox.QUESTION
+            });
+			
+			return;
+	        
+	        /*
             var cell = StkBinGrid.getSelectionModel().getSelectedCell();
             if (cell == null) {
-                Msg.info("warning", "没有选中行!");
+                Msg.info("warning", $g("没有选中行!"));
                 return;
             }
             // 选中行
             var row = cell[0];
             var record = StkBinGrid.getStore().getAt(row);
             var Rowid = record.get("sb");
+            
             if (Rowid == null || Rowid.length <= 0) {
                 StkBinGrid.getStore().remove(record);
             } else {
                 Ext.MessageBox.show({
-                    title: '提示',
-                    msg: '是否确定删除该货位信息',
+                    title: $g('提示'),
+                    msg: $g('是否确定删除选中货位信息'),
                     buttons: Ext.MessageBox.YESNO,
                     parm: Rowid,
                     fn: showResult,
                     icon: Ext.MessageBox.QUESTION
                 });
             }
+            */
         }
 
         /**
@@ -107,26 +137,26 @@ Ext.onReady(function() {
         function showResult(btn, text, opt) {
             if (btn == "yes") {
                 var url = DictUrl +
-                    "incstkbinaction.csp?actiontype=Delete&Rowid=" +
+                    "incstkbinaction.csp?actiontype=DeleteItms&sbIdStr=" +
                     opt.parm;
-                var mask = ShowLoadMask(Ext.getBody(), "处理中请稍候...");
+                var mask = ShowLoadMask(Ext.getBody(), $g("处理中请稍候..."));
                 Ext.Ajax.request({
                     url: url,
                     method: 'POST',
-                    waitMsg: '查询中...',
+                    waitMsg: $g('查询中...'),
                     success: function(result, request) {
                         var jsonData = Ext.util.JSON
                             .decode(result.responseText);
                         mask.hide();
                         if (jsonData.success == 'true') {
-                            Msg.info("success", "删除成功!");
+                            Msg.info("success", $g("删除成功!"));
                             searchData();
                         } else {
                             var ret = jsonData.info;
                             if (ret == -2) {
-                                Msg.info("error", "该货位已经在用，不能删除！");
+                                Msg.info("error", $g("该货位已经在用，不能删除！"));
                             } else {
-                                Msg.info("error", "删除失败:" + jsonData.info);
+                                Msg.info("error", $g("删除失败:") + jsonData.info);
                             }
                         }
                     },
@@ -137,8 +167,8 @@ Ext.onReady(function() {
 
         // 清空按钮
         var RefreshBT = new Ext.Toolbar.Button({
-            text: '清空',
-            tooltip: '点击清空',
+            text: $g('清空'),
+            tooltip: $g('点击清空'),
             iconCls: 'page_refresh',
             width: 70,
             height: 30,
@@ -159,19 +189,21 @@ Ext.onReady(function() {
         // 新建按钮
         var AddBT = new Ext.Toolbar.Button({
             id: "AddBT",
-            text: '新建',
-            tooltip: '点击新建',
+            text: $g('新建'),
+            tooltip: $g('点击新建'),
             width: 70,
             height: 30,
             iconCls: 'page_add',
             handler: function() {
+	            addNewRow();
+	            return;
                 // 判断是否已经有添加行
                 var rowCount = StkBinGrid.getStore().getCount();
                 if (rowCount > 0) {
                     var rowData = StkBinStore.data.items[rowCount - 1];
-                    var data = rowData.get("sb");
+                    var data = rowData.get("desc");
                     if (data == null || data.length <= 0) {
-                        Msg.info("warning", "已存在新建行!");
+                        Msg.info("warning", $g("已存在新建行!"));
                         return;
                     }
                 }
@@ -197,16 +229,19 @@ Ext.onReady(function() {
                 code: '',
                 desc: ''
             });
-            StkBinStore.add(NewRecord);
-            StkBinGrid.getSelectionModel().select(StkBinStore.getCount() - 1, 3);
-            StkBinGrid.startEditing(StkBinStore.getCount() - 1, 3);
+            StkBinGrid.getStore().add(NewRecord);
+            var s = StkBinGrid.getStore().getCount();
+            //StkBinGrid.getSelectionModel().select(StkBinGrid.getStore().getCount() - 1, 3);
+            //StkBinGrid.startEditing(StkBinStore.getCount() - 1, 3);
+            StkBinGrid.getSelectionModel().selectRow(StkBinGrid.getStore().getCount() - 1, 4);
+            StkBinGrid.startEditing(StkBinGrid.getStore().getCount() - 1, 4);
         };
 
         // 保存按钮
         var SaveBT = new Ext.Toolbar.Button({
             id: "SaveBT",
-            text: '保存',
-            tooltip: '点击保存',
+            text: $g('保存'),
+            tooltip: $g('点击保存'),
             width: 70,
             height: 30,
             iconCls: 'page_save',
@@ -218,7 +253,7 @@ Ext.onReady(function() {
         function save() {
             PhaLocId = Ext.getCmp('PhaLoc').getValue();
             if (PhaLocId == null || PhaLocId.length < 1) {
-                Msg.info("warning", "科室不能为空!");
+                Msg.info("warning", $g("科室不能为空!"));
                 return;
             }
             var ListDetail = "";
@@ -240,32 +275,32 @@ Ext.onReady(function() {
             }
             var url = DictUrl +
                 "incstkbinaction.csp?actiontype=Save";
-            var mask = ShowLoadMask(Ext.getBody(), "处理中请稍候...");
+            var mask = ShowLoadMask(Ext.getBody(), $g("处理中请稍候..."));
             Ext.Ajax.request({
                 url: url,
                 method: 'POST',
                 params: { LocId: PhaLocId, Detail: ListDetail },
-                waitMsg: '处理中...',
+                waitMsg: $g('处理中...'),
                 success: function(result, request) {
                     var jsonData = Ext.util.JSON
                         .decode(result.responseText);
                     mask.hide();
                     if (jsonData.success == 'true') {
 
-                        Msg.info("success", "保存成功!");
+                        Msg.info("success", $g("保存成功!"));
                         // 刷新界面
                         searchData();
 
                     } else {
                         var ret = jsonData.info;
                         if (ret == -1) {
-                            Msg.info("error", "科室为空,不能保存!");
+                            Msg.info("error", $g("科室为空,不能保存!"));
                         } else if (ret == -2) {
-                            Msg.info("error", "没有需要保存的数据!");
+                            Msg.info("error", $g("没有需要保存的数据!"));
                         } else if (ret == -4) {
-                            Msg.info("error", "货位名称重复!");
+                            Msg.info("error", $g("货位名称重复!"));
                         } else {
-                            Msg.info("error", "部分明细保存不成功：" + ret);
+                            Msg.info("error", $g("部分明细保存不成功：") + ret);
                         }
                     }
                 },
@@ -274,7 +309,8 @@ Ext.onReady(function() {
         }
 
         var nm = new Ext.grid.RowNumberer();
-        var StkBinCm = new Ext.grid.ColumnModel([nm, {
+        var chkSm = new Ext.grid.CheckboxSelectionModel();
+        var StkBinCm = new Ext.grid.ColumnModel([nm, chkSm, {
             header: "rowid",
             dataIndex: 'sb',
             width: 80,
@@ -282,14 +318,14 @@ Ext.onReady(function() {
             sortable: true,
             hidden: true
         }, {
-            header: '代码',
+            header: $g('代码'),
             dataIndex: 'code',
             width: 80,
             align: 'left',
             sortable: true,
             hidden: true
         }, {
-            header: "货位码",
+            header: $g("货位码"),
             dataIndex: 'desc',
             width: 400,
             align: 'left',
@@ -299,7 +335,7 @@ Ext.onReady(function() {
                 listeners: {
                     specialkey: function(field, e) {
                         if (e.getKey() == Ext.EventObject.ENTER) {
-                            addNewRow();
+                           setTimeout(function(){addNewRow()},0)
                         }
                     }
                 }
@@ -334,8 +370,8 @@ Ext.onReady(function() {
             store: StkBinStore,
             pageSize: 50,
             displayInfo: true,
-            displayMsg: '第 {0} 条到 {1}条 ，一共 {2} 条',
-            emptyMsg: "没有记录"
+            displayMsg: $g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+            emptyMsg: $g("没有记录")
         });
 
         var StkBinGrid = new Ext.grid.EditorGridPanel({
@@ -345,7 +381,7 @@ Ext.onReady(function() {
             store: StkBinStore,
             trackMouseOver: true,
             stripeRows: true,
-            sm: new Ext.grid.CellSelectionModel({}),
+            sm: chkSm, //new Ext.grid.CellSelectionModel({}),
             clicksToEdit: 1,
             loadMask: true,
             bbar: GridPagingToolbar
@@ -365,13 +401,13 @@ Ext.onReady(function() {
             labelWidth: 60,
             height: DHCSTFormStyle.FrmHeight(1),
             labelAlign: 'right',
-            title: '货位码维护',
+            title: $g('货位码维护'),
             region: 'north',
             frame: true,
             tbar: [SearchBT, '-', AddBT, '-', SaveBT, '-', DeleteBT],
             items: [{
                 xtype: 'fieldset',
-                title: '查询条件',
+                title: $g('查询条件'),
                 layout: 'column',
                 style: DHCSTFormStyle.FrmPaddingV,
                 layout: 'column',

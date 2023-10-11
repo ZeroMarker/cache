@@ -1,7 +1,10 @@
 ///qqa
 ///2017-11-28
 ///HISUI检验查看
-
+var PageLogicObj={
+	m_selARCIMRowid:"",
+	MainSreenFlag:websys_getAppScreenIndex()		//双屏标识
+}
 $(function (){
 
 	initParam();
@@ -18,6 +21,11 @@ $(function (){
 	
 	initCombobox();
 	
+	InitARCItemSearch();
+	
+	if ((PageLogicObj.MainSreenFlag==0)&&(EpisodeID!="")){
+		websys_emit("onSelectIPPatient",{PatientID:PatientID,EpisodeID:EpisodeID,mradm:""});
+	}
 })
 
 function initCombobox(){
@@ -35,9 +43,9 @@ function initCombobox(){
 	if($("#admType").length==1){
 		$HUI.combobox("#admType",{
 			data:[
-				{"value":"O","text":"门诊"},
-				{"value":"E","text":"急诊"},
-				{"value":"I","text":"住院"}
+				{"value":"O","text":$g("门诊")},
+				{"value":"E","text":$g("急诊")},
+				{"value":"I","text":$g("住院")}
 			],
 		
 			valueField:'value',
@@ -57,6 +65,23 @@ function initCombobox(){
 	       
 	    }	
 	})
+	$HUI.combobox("#ordResultCombo",{
+		data:[
+				{"value":"All","text":$g("全部")},
+				{"value":"HasRe","text":$g("有结果")},
+				{"value":"NoRe","text":$g("无结果")}
+			],
+		//panelHeight:"auto",
+		valueField:'value',
+		textField:'text',
+		onSelect:function(option){
+	       
+	    }	
+	})
+}
+
+function thisAdm_CheckChange(value){
+	searchLisOrd();	
 }
 
 function initParam(){
@@ -67,9 +92,14 @@ function initParam(){
 	ConnectString="";   ///报告打印数据库连接 
 	webIP="";
 	DateOrder="N";
-	thisAdm="Y";        ///默认查询当前就诊
+	Unread="N"
 	aIcon0Str=getIconHtmlI("鉴","white","blue");
 	aIcon1Str=getIconHtmlI("预","white","blue");
+	FindLocID="";
+	if(FindByLocFlag=="Y"){
+		FindLocID=LgCtLocID;
+		$HUI.radio("#radio_week").setValue(true);
+	}
 	
 	var params = OEORIID;
 	runClassMethod("web.DHCAPPSeePatLis","GetParams",{Params:params},
@@ -98,7 +128,13 @@ function initMethod(){
 	if($('#patRegNo').length==1){
 		$('#patRegNo').on('keypress', regNoKeyPress); 	
 	}
+	$('#MotherLab').on('click',MotherLabwindow);
 	
+	$HUI.radio("[name='timeRange']",{
+        onChecked:function(e,value){
+            upLisDate(e,value);
+        }
+    });
 	$(window).resize(resizeLayout); 
 }
 
@@ -151,7 +187,12 @@ function regNoKeyPress(){
 function initDateBox(){
 	$HUI.datebox("#sel-stDate",{});
 	$HUI.datebox("#sel-edDate",{});	
-	$HUI.datebox("#sel-stDate").setValue((ordStDate==""?formatDate(-30):ordStDate));
+	if(FindByLocFlag=="Y"){
+		var defStDate=ordStDate==""?formatDate(-7):ordStDate;
+	}else{
+		var defStDate=ordStDate==""?formatDate(-30):ordStDate;
+	}
+	$HUI.datebox("#sel-stDate").setValue(defStDate);
 	$HUI.datebox("#sel-edDate").setValue(formatDate(0));
 }
 
@@ -168,15 +209,34 @@ function initDatagrid(){
 	var stDate = $HUI.datebox("#sel-stDate").getValue();
 	var edDate = $HUI.datebox("#sel-edDate").getValue();
 	
-	Params= EpisodeID+"^"+PatientID+"^"+stDate+"^"+edDate+"^^0^^^"+UserId+"^0^^^^Y"+"^^^^"+OEORIID;  //##
+	Params= EpisodeID+"^"+PatientID+"^"+stDate+"^"+edDate+"^^0^^^"+UserId+"^0^^^^Y"+"^^^^"+OEORIID+"^";  //##
+	Params= Params+"^"+""+"^"+FindLocID;
 
 	
 	var columns=[[
           { field: 'chkReportList', checkbox: true },
+          { field: 'AdmBedNO', title: '床号', width: 60, sortable: false, hidden: (FindLocID=="") },
+          { field: 'PatNameC', title: '姓名', width: 80, sortable: false, hidden: (FindLocID==""),
+          	formatter: function(value, rowData, rowIndex){
+				return rowData.PatName;
+	        }
+          },
+          { field: 'PatAge', title: '年龄', width: 50, sortable: false, hidden: (FindLocID=="") },
+          { field: 'PatSex', title: '性别', width: 50, sortable: false, hidden: (FindLocID=="") },
           { field: 'LabEpisode', title: '检验号', width: 105, sortable: true, align: 'center' },
           { field: 'OrdItemName', title: '医嘱名称', width: 200, sortable: true, align: 'left' ,formatter:orderviewArci},
           { field: 'AuthDateTime', title: '报告日期', width: 150, sortable: true, align: 'center' },
-          { field: 'PatName', title: '姓名', width: 80, sortable: false, align: 'center' },
+		  { field: 'ReportStatus', title: '报告状态', width: 200, sortable: false, align: 'center' 
+          ,formatter: function(value, rowData, rowIndex){
+	          	if (value=="预报告"){
+					var btn = '<a href="#"  class="editcls"  onclick="ShowPreWindow(\'' + rowData.ReportUrl + '\')">'+value+'</a>';
+				}else{
+					var btn =value
+				}
+				return btn;
+	        } 
+          },
+          { field: 'PatName', title: '姓名', width: 80, sortable: false, hidden: (FindLocID!="") },
           //{ field: 'Order', title: '预报告', width: 55, sortable: false, align: 'center',formatter:FormatOrder},
           //{ field: 'ResultStatus', title: '结果状态', width:100, sortable: false, align: 'center', formatter: ResultIconPrompt },
 		  /*{ field: 'PrintFlag', title: '打印', width: 40, sortable: false, align: 'left',
@@ -205,11 +265,13 @@ function initDatagrid(){
           { field: 'MajorConclusion', title: '报告评价', width: 150, sortable: false, align: 'left' },
           { field: 'ReqDateTime', title: '申请日期', width: 150, sortable: true, align: 'center' },
           { field: 'SpecDateTime', title: '采集日期', width: 150, sortable: false, align: 'center' },
-         // { field: 'RecDateTime', title: '接收日期', width: 150, sortable: false, align: 'center' },
-          { field: 'InsureList',align: 'center', title: '说明书',formatter:formatterInsureList},
+          { field: 'AdmLoc', title: '就诊科室', width: 150, sortable: false, align: 'center' },
+          //{ field: 'RecDateTime', title: '接收日期', width: 150, sortable: false, align: 'center' },
+          //旧版知识库的链接，标版停用,等待新版接口{ field: 'InsureList',align: 'center', title: '说明书',formatter:formatterInsureList},
           { field: 'VisitNumberReportDR', title: '报告ID', width: 100, sortable: false, align: 'center' },
           { field: 'OrderNote', title: '医嘱备注', width: 200, sortable: false, align: 'center' },
           { field: 'ARCIMId',align: 'center', title: 'ARCIMId',hidden:'true'},
+          { field: 'AdmRowId',align: 'center', title: 'AdmRowId',hidden:'true'}
         ]]
 
 	$HUI.datagrid('#lisOrdTable',{
@@ -219,9 +281,9 @@ function initDatagrid(){
 		columns:columns,
 		pageSize:60,  
 		pageList:[60], 
-	    //singleSelect:true,
 		loadMsg: $g('正在加载信息...'),
 		//showHeader:false,
+		toolbar:[],
 		rownumbers : false,
 		pagination:true,
 		singleSelect:true,
@@ -229,31 +291,85 @@ function initDatagrid(){
 		checkOnSelect: false,
 		onSelect:function (rowIndex, rowData){
 
-			if(rowData.ResultStatus!="3"){
-				reloadOrdDetailTable("");
-				return;
-			}
+			var ARCIMId=rowData.ARCIMId
+			var VisitNumberReportDR=rowData.VisitNumberReportDR
+			var Url=$.m({ 
+				ClassName:"DHCDoc.DHCApp.LabReportSet", 
+				MethodName:"GetUrl",
+				Arcim:ARCIMId, HospId:session['LOGON.HOSPID'], VisitNumberReportDR:VisitNumberReportDR, 
+				PatientID:PatientID, UserID:session['LOGON.USERID'],
+				dataType:"text"
+			},false); 
+			if (Url==""){
+				$("#lisOrdDetailTable").html('<table style="border:0px" id="lisOrdDetailTable"></table>')
+				Initdetailtalbe();
+				if(rowData.ResultStatus!="3"){
+					reloadOrdDetailTable("");
+					$("#detailOrdName").html(rowData.OrdItemName.substring(0,30));
+				}
+				setTimeout(function() { 
+					reloadOrdDetailTable(rowData.VisitNumberReportDR);	   //刷新明细
+				},600)
+			}else{
+				if(typeof websys_writeMWToken=='function') Url=websys_writeMWToken(Url);
+				var toolbar=$('#toolbar').html()
+				$("#lisOrdDetailTableID").html("")
+				$("#lisOrdDetailTableID").html('<iframe id="lisOrdDetailTable" scrolling="yes" width=100% height=100% frameborder="0" src=""></iframe>')	
+				$("#lisOrdDetailTable").attr("src", Url)
+				$("body").append('<div id="toolbar" class="toolbar"></div>')
+				var toolbarhtml='<input id="radio5" class="hisui-radio" checked="checked" type="radio" data-options="label:'+"'查看所有'"+',disable:false,name:'+"'detailType'"+',onCheckChange:function(event,value){upShowType(event,value)}">'
+				toolbarhtml=toolbarhtml+'<input id="radio6" class="hisui-radio" type="radio" data-options="label:'+"'只看异常'"+',name:'+"'detailType'"+',disable:false,onCheckChange:function(event,value){upShowType(event,value)}">'
+				toolbarhtml=toolbarhtml+'<a href="#" id="affirmReadBtn" class="pb-linkbutton" style="margin-left:0px;display:none"><img src="../scripts/dhcdoc/dhcapp/images/qryd.png">确认阅读</a>'
+				toolbarhtml=toolbarhtml+'<a href="#" id="seeReadDetail" class="pb-linkbutton" style="margin-left:0px"><img src="../scripts/dhcdoc/dhcapp/images/ydmx.png">阅读明细</a>'
+				//toolbarhtml=toolbarhtml+'<a href="#" id="seeOpHist" class="pb-linkbutton" style="margin-left:0px;display:none"><img src="../scripts/dhcdoc/dhcapp/images/bbzz.png">标本追踪</a>'
+				$('#toolbar').html(toolbarhtml)
+				$('#affirmReadBtn').on('click',affirmReadBtnClick);
+				$('#seeReadDetail').on('click',seeReadDetail);
+			    /*$("#radio6").click(function (){
+				    $HUI.radio("#radio6").setValue(true);
+							    })*/
+				$HUI.radio("#radio5",{
+					label:"查看所有",
+			        onCheckChange:function(event,value){upShowType(event,value)}
+			    });
+			    $HUI.radio("#radio6",{
+					label:"只看异常",
+			        onCheckChange:function(event,value){upShowType(event,value)}
+			    });
+				//$('#seePrtDetail').on('click',seePrtDetail);
+				}
 			curCheckIndex= rowIndex; //设置全局的选中列号
 			lisOrdRowData=rowData;   //设置全局的选中行数据
 			$("#radio5").radio("setValue",true);  //默认查询所有
 			
-			reloadOrdDetailTable(rowData.VisitNumberReportDR);	   //刷新明细
 			reloadLisLab(rowIndex, rowData);
 			hideOrShowReadBtn(rowData);
 		}
 	});
 		
+	
+	
+	var pager = $HUI.datagrid('#lisOrdTable').getPager();
+	
+	$(pager).pagination({
+		showRefresh:false
+	});
+	
+	
+}
+function Initdetailtalbe(){
 	var columns=[[
     	{ field: 'Synonym',align: 'center', title: '缩写',width:45},
         { field: 'TestCodeName',align: 'center', title: '项目名称',width:60},
         { field: 'Result',align: 'center', title: '结果',styler:stylerResult,formatter:formatterResult,width:45},
-		{ field: 'ExtraRes',align: 'center', title: '结果提示'},
+		{ field: 'ExtraRes',align: 'center', title: '扩展结果'},
 		{ field: 'AbFlag',align: 'center', title: '异常提示',width:45,styler: stylerAbFlag},
 		{ field: 'HelpDisInfo',align: 'center', title: '辅助诊断',width:65,formatter: formatterHelpDisInfo},
 		{ field: 'Units',align: 'center', title: '单位'},
 		{ field: 'RefRanges',align: 'center', title: '参考范围',width:49},
 		{ field: 'PreResult',align: 'center', title: '历次',width:35,formatter:HistoryIconPrompt,styler: stylerPreRs}, 
-		{ field: 'PreAbFlag', align: 'center',title: '前次异常提示',hidden: true}
+		{ field: 'PreAbFlag', align: 'center',title: '前次异常提示',hidden: true},
+		{ field: 'ResNoes',align: 'center', title: '结果说明'},
  	]]; 
  	
  	$HUI.datagrid('#lisOrdDetailTable',{
@@ -263,6 +379,7 @@ function initDatagrid(){
 			showType:showType 
 		},
 		fit:true,
+		border:false,
 		toolbar:'#toolbar',
 		rownumbers:false,
 		columns:columns,
@@ -275,18 +392,23 @@ function initDatagrid(){
 		pagination:false,
 		onLoadSuccess: function (data) {
 	        ShowDrugAllergy(data);   //显示药敏检验结果内容
-        }
+        },
+        onClickRow:function(rowIndex, rowData){
+			var value=rowData.PreResult||"";
+			var TestCodeName=rowData.TestCodeName||"";
+			if (PageLogicObj.MainSreenFlag==0){
+				if ((value=="")||(TestCodeName=="备注")||(rowData.ResultFormat!="N")){
+					websys_emit("onSelectIPPatient",{PatientID:"",EpisodeID:lisOrdRowData.AdmNo,mradm:""});
+					return false;
+				}
+				var frameurl="dhcapp.rscurve.csp?VisitNumberReportDR="+lisOrdRowData.VisitNumberReportDR+"&TestCodeDR="+rowData.TestCodeDR;
+				//因为不能传递url参数以及对象Json链接参数
+				var frameurl=frameurl.replace(/&/g,"!@")
+				websys_emit("onOpenDHCDoc",{title:"检验结果曲线图",frameurl:frameurl});
+			}
+		}
 	});	
-	
-	
-	var pager = $HUI.datagrid('#lisOrdTable').getPager();
-	
-	$(pager).pagination({
-		showRefresh:false
-	});
-	
-	
-}
+	}
 ///显示药敏检验内容
 function ShowDrugAllergy(data){
 	var selectedRow=$('#lisOrdTable').datagrid('getSelected');
@@ -325,7 +447,8 @@ function ShowDrugAllergy(data){
 						 ClassName:"web.DHCENS.STBLL.Method.PostReportInfo",
 						 QueryName:"QryReportResultSen",
 						 FunModul:"JSON",
-						 P0:dataItm["ReportResultDR"]
+						 P0:dataItm["ReportResultDR"],
+						 MWToken:(typeof websys_getMWToken=='function')?websys_getMWToken():""
 					 },
 			         success: function (retData) {
 			         	var htmlStr="";
@@ -378,10 +501,13 @@ function ShowDrugAllergy(data){
 	             url:'jquery.easyui.dhclabclassjson.csp',
 	             async: false,
 				 data: { 
-					 ClassName:"LIS.WS.BLL.DHCRPMicNumberReport",
+					 ClassName:"web.DHCENS.STBLL.Method.PostReportInfo",
 					 QueryName:"QryReportResultRst",
 					 FunModul:"JSON",
-					 P0:dataItm["ReportResultDR"]
+					 P0:dataItm["ReportResultDR"],
+					 P1:dataItm["ReportDR"],
+					 P2:dataItm["TestCodeDR"],
+					 MWToken:(typeof websys_getMWToken=='function')?websys_getMWToken():""
 				 },
 		         success: function (retData) {
 			         var htmlStr="";
@@ -396,7 +522,7 @@ function ShowDrugAllergy(data){
 						for(var index=0;index<retData["rows"].length;index++) {
 							  htmlStr+="<tr>";
 							  	htmlStr+="<td>"+retData["rows"][index]["ResistanceItemName"]+"</td>";
-								var resItem=jQuery.parseJSON(retData["rows"][index]["ResItem"]);
+								var resItem=retData["rows"][index]["ResItem"];
 								var result=retData["rows"][index]["Result"];
 								if(resItem.length>0)
 								{
@@ -442,7 +568,9 @@ function reloadLisLab(rowIndex, rowData){
 }
 
 function showHistory(OEOrdItemID){
-	window.open ('dhcapp.seepatlishist.csp?OEORIID='+OEOrdItemID, "newwindow", "height=450, width=650, toolbar =no,top=100,left=300,, menubar=no, scrollbars=no, resizable=yes, location=no, status=no") ;
+	var url='dhcapp.seepatlishist.csp?OEORIID='+OEOrdItemID;
+	if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
+	window.open (url, "newwindow", "height=450, width=650, toolbar =no,top=100,left=300,, menubar=no, scrollbars=no, resizable=yes, location=no, status=no") ;
 	return false;
 
 }
@@ -450,9 +578,9 @@ function showHistory(OEOrdItemID){
 //
 function hideOrShowReadBtn(rowData){
 	if((rowData.ResultStatus==3)&&(rowData.ReadFlag!=1)){
-		$("#affirmReadBtn").show();	
+		$(".affirmReadBtn").show();	
 	}else{
-		$("#affirmReadBtn").hide();	
+		$(".affirmReadBtn").hide();	
 	}
 }
 
@@ -544,7 +672,7 @@ function HistoryIconPrompt(value, rowData, rowIndex) {
    iconHtml = '<IMG align="top" style="width:16px;float:right;" SRC=\"'+inconUrl+'\" title="" border=0/>';
    if (value != "" && rowData.TestCodeName != $g("备注")) {
 	    if (rowData.ResultFormat == "N"){
-       		retHtml ="<a style='text-decoration:none;' href=\"javascript:void(ShowHistoryResult("+lisOrdRowData.VisitNumberReportDR+","+rowData.TestCodeDR+"));\">"+value+iconHtml+"</a>";
+       		retHtml ="<a style='text-decoration:none;' href=\"javascript:void(ShowHistoryResult('"+lisOrdRowData.VisitNumberReportDR+"','"+rowData.TestCodeDR+"'));\">"+value+iconHtml+"</a>";
 	    }else{ 
        		retHtml=value
 	    }
@@ -554,7 +682,7 @@ function HistoryIconPrompt(value, rowData, rowIndex) {
 
 /////结果曲线图
 function ShowHistoryResult(VisitNumberReportDR,TestCodeDR) {
-	window.open ('dhcem.rscurve.csp?VisitNumberReportDR='+VisitNumberReportDR+'&TestCodeDR='+TestCodeDR, "newwindow", "height=450, width=650, toolbar =no,top=100,left=300,, menubar=no, scrollbars=no, resizable=no, location=no, status=no") ;
+	window.open ('dhcapp.rscurve.csp?VisitNumberReportDR='+VisitNumberReportDR+'&TestCodeDR='+TestCodeDR+"&MWToken="+websys_getMWToken(), "newwindow", "height=450, width=650, toolbar =no,top=100,left=300,, menubar=no, scrollbars=no, resizable=no, location=no, status=no") ;
 	return false;
 }
 
@@ -593,10 +721,13 @@ function formatterHelpDisInfo(value, row, index){
 	if(value!=""){
 		rs=$g("辅助");
 	}
-
-	return "<a href='#' title='"+value+"'>"+rs+"</a>";
+	var btn = '<a href="#" id ="HelpDis'+row.TestCodeDR +'"title="'+value+'" class="hisui-tooltip" onmouseover="HelpDisInfoonmouse(\'' + row.TestCodeDR+ '\') " ">'+rs+'</a>';
+	return btn;
+	//return "<a href='#' title='"+value+"' class='hisui-tooltip' data-options='position:right'>"+rs+"</a>";
 }
-
+function HelpDisInfoonmouse(TestCodeDR){
+	$HUI.tooltip("#HelpDis"+TestCodeDR,{position:'top'}).show();
+	}
 function stylerAbFlag(value, row, index) {
 	 var colStyle="color:black";
 	 if (value) {  
@@ -716,6 +847,10 @@ function upLisDate(event,value){
 				$HUI.datebox("#sel-stDate").setValue(formatDate(0));
 				$HUI.datebox("#sel-edDate").setValue(formatDate(0));
 				break;
+			case "radio_week":
+				$HUI.datebox("#sel-stDate").setValue(formatDate(-7));
+				$HUI.datebox("#sel-edDate").setValue(formatDate(0));
+				break;
 			case "radio2":
 				$HUI.datebox("#sel-stDate").setValue(formatDate(-30));
 				$HUI.datebox("#sel-edDate").setValue(formatDate(0));
@@ -750,7 +885,7 @@ function ReportView(url) {
 						ReadFlag: '1'
 					}
 				});
-                $('#affirmReadBtn').hide();
+                $('.affirmReadBtn').hide();
 		   }
 		}
 	})
@@ -769,16 +904,33 @@ function searchLisOrd(){
 	ARCICatDr=ARCICatDr==undefined?"":ARCICatDr;
 	admTypeDesc=admTypeDesc==undefined?"":admTypeDesc;
 	dataOrderVal = DateOrder=="Y"?1:-1;
-
+	var ordResult = $HUI.combobox("#ordResultCombo").getValue();
 	$("#detailOrdName").html($g("检验名称"));
 	$("#lisOrdInfo").html("");
-
-	Params=(thisAdm==="Y"?EpisodeID:"")+"^"+PatientID+"^"+stDate+"^"+edDate+"^^0^^^"+UserId+"^0^^^^Y"+"^"+ARCICatDr+"^"+admTypeDesc+"^"+dataOrderVal+"^"+"";  //##
-
-	$HUI.datagrid('#lisOrdDetailTable').load({
-		ReportDR:"",
-		showType:showType
-	})
+	var thisAdm="N";
+	if($("#thisAdm").length>0){
+		thisAdm=$("#thisAdm").checkbox("getValue")?"Y":"N";	
+	}
+	
+	if ($("#ARCItemSearch").lookup('getText')=="") PageLogicObj.m_selARCIMRowid="";
+	var ItemRowid=PageLogicObj.m_selARCIMRowid;
+	if (typeof ItemRowid =="undefined" || ItemRowid==undefined) {ItemRowid="";}
+	if ((ItemRowid.indexOf("||")==-1)&&(ItemRowid!="")){
+		ItemRowid=ItemRowid+"||1";
+	}
+	var bedNo="";
+	if($("#bedNo").length>0){
+		bedNo=$("#bedNo").val();
+	}
+	Params=(thisAdm==="Y"?EpisodeID:"")+"^"+PatientID+"^"+stDate+"^"+edDate+"^^0^^^"+UserId+"^"+Unread+"^^^^Y"+"^"+ARCICatDr+"^"+admTypeDesc+"^"+dataOrderVal+"^"+""+"^"+ordResult;
+	Params=Params+"^"+ItemRowid+"^"+FindLocID+"^"+bedNo;
+	/*if ($HUI.datagrid('#lisOrdDetailTable')){
+		$HUI.datagrid('#lisOrdDetailTable').load({
+			ReportDR:"",
+			showType:showType
+		})
+	}*/
+	$("#lisOrdDetailTable").html('<table id="lisOrdDetailTable"></table>')
 	
 	$HUI.datagrid('#lisOrdTable').load({
 		Params:Params
@@ -890,7 +1042,7 @@ function printOutClick() {
     var funName = "QueryPrintData";
     
 	//var Param = printFlag + "@" + connectString + "@" + reportDRs + "@" + UserParam + "@" + printType + "@" + paramList;
-	var Param = printFlag + "@@" + reportDRs + "@" + UserParam + "@" + printType + "@@@"+funName;
+	var Param = printFlag + "@@" + reportDRs + "@" + UserParam + "@" + printType + "@"+paramList+"@@"+funName;
 	//PrintCommon(Param);
 	HISBasePrint(Param);	
    
@@ -940,8 +1092,8 @@ function readPort(selectedRow){
 			if(ret!=0){
 				$.messager.alert("提示","保存阅读记录异常！");
 			}else{
-				$.messager.alert("提示","阅读成功！");	
-				$("#affirmReadBtn").hide();
+				$.messager.popover({msg:"阅读成功！",type:'success'});
+				$(".affirmReadBtn").hide();
 				updateRowReadFlag();
 			}	
 		},"text"
@@ -978,8 +1130,8 @@ function seeReadDetail(){
 	
 	var columns=[[
 		{field:'ReadDoctorName',title:'阅读人',width:110},
-		{field:'ReadDate',title:'阅读日期',width:110},
-		{field:'ReadTime',title:'阅读时间',width:110}
+		{field:'ReadDate',title:'阅读日期',width:122},
+		{field:'ReadTime',title:'阅读时间',width:122}
 	]];
 
 	$HUI.datagrid('#readDetailTable',{
@@ -1048,6 +1200,7 @@ function seeOpHist(){
 
 function PrintCommon(Param) {
 	var printUrl="http://"+ webIP +"/imedicallis/lisprint/print2HIS/ResultPrintForHis.application?Param="+Param;
+	if(typeof websys_writeMWToken=='function') printUrl=websys_writeMWToken(printUrl);
 	document.location.href=printUrl;
 }
 
@@ -1055,6 +1208,7 @@ function showTraceDetail(OEOrdItemID){
 	//var url = 'jquery.easyui.dhclabreporttrace.csp?LabNo='+LabNo;
 	var url = 'dhc.orderview.csp?ord='+OEOrdItemID;
 	var openCss = 'width='+(window.screen.availWidth-100)+',height='+(window.screen.availHeight-380)+ ', top=150, left=50, location=no,toolbar=no, menubar=no, scrollbars=no, resizable=no,status=no'
+	if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
 	window.open(url,'newwindow',openCss) 	
 }
 
@@ -1125,51 +1279,91 @@ function getIconHtmlI(Desc, Color, BackGroundColor) {
 
 //报告鉴定过程浏览
 function ReportMCView(VisitNumberReportDR) {
-	window.open ('jquery.easyui.dhcMCProcess.csp?VisitNumberReportDR='+VisitNumberReportDR, "newwindow", "height=450, width=650, toolbar =no,top=100,left=300,, menubar=no, scrollbars=no, resizable=yes, location=no, status=no") ;
+	var url='jquery.easyui.dhcMCProcess.csp?VisitNumberReportDR='+VisitNumberReportDR;
+	if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
+	window.open (url, "newwindow", "height=450, width=650, toolbar =no,top=100,left=300,, menubar=no, scrollbars=no, resizable=yes, location=no, status=no") ;
 	return false;
 }
 
 
 //报告中间报告浏览
 function ReportMIDView(VisitNumberReportDR) {
-	window.open ('jquery.easyui.dhclabmidreport.csp?VisitNumberReportDR='+VisitNumberReportDR, "newwindow", "height=450, width=650, toolbar =no,top=100,left=300,, menubar=no, scrollbars=no, resizable=yes, location=no, status=no") ;
+	var url='jquery.easyui.dhclabmidreport.csp?VisitNumberReportDR='+VisitNumberReportDR;
+	if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
+	window.open (url, "newwindow", "height=450, width=650, toolbar =no,top=100,left=300,, menubar=no, scrollbars=no, resizable=yes, location=no, status=no") ;
 	return false;
 }
 
 //集中打印
 function printCentralClick() {
-	var admNo = EpisodeID;
-	if(admNo==""){
-		$.messager.alert("提示","没有当前就诊信息,不能集中打印！");
+	if(FindByLocFlag=="Y"){
+		var checkedRows = $HUI.datagrid("#lisOrdTable").getChecked();
+		if(checkedRows.length===0){
+			$.messager.alert("提示","没有勾选选中数据！");
+			return ;
+		}
+		var admNoAry = [];
+		for (var i in checkedRows) {
+			var AdmRowId=checkedRows[i].AdmRowId;
+			admNoAry.push(AdmRowId);
+		}
+		if(admNoAry.length===0){
+			$.messager.alert("提示","没有勾选选中数据！");
+			return ;
+		}
+		for(var i=0;i<admNoAry.length;i++){
+			print(admNoAry[i]);
+		}
+	}else{
+		var admNo = EpisodeID;
+		if(admNo==""){
+			$.messager.alert("提示","没有当前就诊信息,不能集中打印！","warning");
+			return;
+		}
+		print(admNo);
+	}
+	function print(admNo){
+		param="DOCTOR"
+		connectString=ConnectString
+		var UserParam=UserId //+ "^" + HospID
+		var printFlag = "0";       ///0:打印所有报告 1:循环打印每一份报告
+	    var printType = "PrintOut";    ///PrintOut:打印  PrintPreview打印预览
+	    var paramList = "LIS";               ///1:报告处理打印 2:自助打印 3:医生打印
+	    var clsName = "HIS.DHCCentralPrint";
+	    var funName = "QueryPrintData";
+		//var Param = printFlag + "@" + connectString + "@" + admNo + "@" + UserParam + "@" + printType + "@" + paramList +"@"+clsName+"@"+funName;
+		var Param = printFlag + "@@" + admNo + "@" + UserParam + "@" + printType + "@"+paramList+"@"+clsName+"@"+funName;
+		HISBasePrint(Param);	
+		//PrintCommon(Param);
 		return;
 	}
-	param="DOCTOR"
-	connectString=ConnectString
-	var UserParam=UserId //+ "^" + HospID
-	var printFlag = "0";       ///0:打印所有报告 1:循环打印每一份报告
-    var printType = "PrintOut";    ///PrintOut:打印  PrintPreview打印预览
-    var paramList = "LIS";               ///1:报告处理打印 2:自助打印 3:医生打印
-    var clsName = "HIS.DHCCentralPrint";
-    var funName = "QueryPrintData";
-	//var Param = printFlag + "@" + connectString + "@" + admNo + "@" + UserParam + "@" + printType + "@" + paramList +"@"+clsName+"@"+funName;
-	var Param = printFlag + "@@" + admNo + "@" + UserParam + "@" + printType + "@@"+clsName+"@"+funName;
-	HISBasePrint(Param);	
-	//PrintCommon(Param);
-	return;
 }
 function formatterInsureList(value, rowData, rowIndex){
-	return "<a style='text-decoration:none;color:#017bce;' href='javascript:void(showInsureListview(\"" + rowData.ARCIMId + "\",\"" + rowData.OrdSpecimenCode + "\"))';>"+$g("说明书")+"</a>";;
+	return "<a style='text-decoration:none;color:#017bce;' href='javascript:void(showInsureListview(\"" + rowData.ARCIMId + "\",\"" + rowData.OrdSpecimenCode + "\"))';>"+$g("说明书")+"</a>";
+	/*
+	if (rowData.InsureListviewFlag==1){
+		return "<a style='text-decoration:none;color:#017bce;' href='javascript:void(showInsureListview(\"" + rowData.ARCIMId + "\",\"" + rowData.OrdSpecimenCode + "\"))';>"+$g("说明书")+"</a>";
+	}else{
+		return ""
+	}*/
 }
+
+/// Modify  20230322
+/// 旧版知识库的链接，标版停用。药品说明书使用新产品组合理用药，检查检验等将使用基础数据平台
 function showInsureListview(ARCIMId,OrderLabSpecRowid){
-	var itemHtml = GetItemInstr(ARCIMId, "", OrderLabSpecRowid);
+	var itemHtml = "";
+	if(Common_ControlObj.LibPhaFunc.ZSKOpenFlag=="Y"){
+		itemHtml = GetItemInstr(ARCIMId, "", OrderLabSpecRowid);
+	}
 	if (itemHtml == "") {
-		$.messager.alert("提示","该医嘱未维护说明书!");
+		$.messager.alert("提示","未启用或未维护相应说明书!","warning");
 		return;
 	}
 	$("#itro_content").html(itemHtml); 
 	$HUI.window("#readInter").open();
 }
 /// 提取检查项目说明书
+/// 此方法需与医嘱录入统一。待新版检查检验知识库说明书
 function GetItemInstr(itmmastid, itemPartID, OrderLabSpecRowid){
 	var html = '';
 	// 获取显示数据
@@ -1192,9 +1386,113 @@ function initMedIntrTip(itmArr){
 		
 		htmlstr = htmlstr + "<table  cellpadding='0' cellspacing='0' class='itro_content'>" //<tr><td style='background-color:#F6F6F6;width:120px' >〖检查项目〗</td><td colspan='2'  style='border-right:solid #E3E3E3 1px'>"+itmArr[i].geneDesc+"["+itmArr[i].pointer+"]</td></tr>";
 		htmlstr = htmlstr + "<tr><td style='background-color:#F6F6F6;font-weight:bold; font-size:14px;'>"+itmArr[i].itemTile+"</td></tr>";
-		htmlstr = htmlstr + "<tr><td style='border-right:solid #E3E3E3 1px; font-size:14px; padding-left: 10px;'>"+itmArr[i].itemContent+"</td></tr>";
+		htmlstr = htmlstr + "<tr><td style='font-size:14px; padding-left: 10px;'>"+itmArr[i].itemContent+"</td></tr>";
 		htmlstr = htmlstr + "</table>";
 	}
 
    return htmlstr;
+}
+function ShowPreWindow(url){
+	websys_showModal({
+		url:url,
+		title:'检验中间报告',
+		width:900,height:500,
+		CallBackFunc:function(){
+		   var selectedRow=$('#lisOrdTable').datagrid("getSelected");
+	   	   if(selectedRow!=null){
+		   	    var index=$('#lisOrdTable').datagrid("getRowIndex",selectedRow);
+		   	    $('#lisOrdTable').datagrid('updateRow',{
+					index:index,
+					row: {
+						ReadFlag: '1'
+					}
+				});
+                $('.affirmReadBtn').hide();
+		   }
+		}
+	})
+	
+	}
+//tanjishan
+//2020-09-22
+//考虑到目前该界面的应用场景，只做了界面数据刷新，并未实现切换患者的功能
+function xhrRefresh(refreshArgs){
+	$("#search").click()
+	if ((PageLogicObj.MainSreenFlag==0)&&(EpisodeID!="")){
+		websys_emit("onSelectIPPatient",{PatientID:PatientID,EpisodeID:EpisodeID,mradm:""});
+	}
+}
+function MotherLabwindow(){
+	var scremwidth=$(window).width()-40
+	var scremheight=$(window).height()-80
+	var src="dhcapp.seepatlis.csp?&PatientID="+MotherPatientID+"&EpisodeID="+MotherAdmDR+"&mradm="+MotherMradm
+	if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
+	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
+	createModalDialog("Motherlabwindow","母亲检验结果", scremwidth, scremheight,"icon-w-edit","",$code,"");
+	}
+function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,_event){
+    $("body").append("<div id='"+id+"' class='hisui-dialog'></div>");
+    if (_width == null)
+        _width = 800;
+    if (_height == null)
+        _height = 500;
+    $("#"+id).dialog({
+        title: _title,
+        width: _width,
+        height: _height,
+        cache: false,
+        iconCls: _icon,
+        //href: _url,
+        collapsible: false,
+        minimizable:false,
+        maximizable: false,
+        resizable: false,
+        modal: true,
+        closed: false,
+        closable: true,
+        content:_content,
+        onClose:function(){
+	        destroyDialog(id);
+	        if (_title=="预交金充值"){
+		        PatientNo=$("#PatientNo").val();
+		        if (PatientNo!=""){
+					CheckPatientNo();
+					PageLogicObj.m_PreCardNo=$("#CardNo").val();
+					PageLogicObj.m_PreCardType=$("#CardTypeNew").val();
+					PageLogicObj.m_PreCardLeaving=$("#CardLeaving").val();
+		        }
+		    }
+	    }
+    });
+}
+
+function InitARCItemSearch(){
+		$("#ARCItemSearch").lookup({
+	        url:$URL,
+	        mode:'remote',
+	        method:"Get",
+	        idField:'ArcimRowID',
+	        textField:'ArcimDesc',
+	        columns:[[  
+				{field:'ArcimDesc',title:'名称',width:350,sortable:true},
+				{field:'ArcimRowID',title:'ID',width:120,sortable:true},
+				{field:'selected',title:'ID',width:120,sortable:true,hidden:true}
+	        ]],
+	        pagination:true,
+	        panelWidth:500,
+	        panelHeight:400,
+	        isCombo:true,
+	        minQueryLen:2,
+	        delay:'500',
+	        queryOnSameQueryString:true,
+	        queryParams:{ClassName: 'DHCDoc.DHCDocConfig.ArcItemConfig',QueryName: 'FindAllItem'},
+	        onBeforeLoad:function(param){
+		        var desc=param['q'];
+		        if (desc=="") return false;
+				param = $.extend(param,{Alias:desc});
+		    },onSelect:function(ind,item){
+			    PageLogicObj.m_selARCIMRowid=item['ArcimRowID'];
+			}
+	    });
+	    return false;
 }

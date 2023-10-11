@@ -1,8 +1,24 @@
 /// 收费项目明细窗口
 
 showTarItmWin = function(param){
-
-	if($("#newTarWin").is(":visible")){return;}  //窗体处在打开状态,退出
+	var ParamId=param.split("||")[0]+"Part"+param.split("^")[1].split("$$")[0];
+	if ($('#dgTarItm'+ParamId).length>0){
+		$('#dgTarItm'+ParamId).remove();
+	}
+	$("#CellTar"+ParamId).popover({
+		width:600,
+		height:$("#CellTar"+ParamId).offset().top-90,
+		title:"收费明细",
+		content:'<table id="dgTarItm'+ParamId+'"></<table>',
+		trigger:'hover',
+		placement:'auto-top',
+		onShow:function(){
+			initTarItmList(param);
+			//LoadTarItmList(param)
+		}
+	});
+	$("#CellTar"+ParamId).popover('show');
+	/*if($("#newTarWin").is(":visible")){return;}  //窗体处在打开状态,退出
 
 	$('body').append('<div id="newTarWin"></div>');
 	$("#newTarWin").append('<div id="dgTarItm"></div>');
@@ -19,11 +35,11 @@ showTarItmWin = function(param){
 	new WindowUX('收费明细', 'newTarWin', '700', '400', option).Init();
 	
 	initTarItmList();   /// 收费项目明细
-	LoadTarItmList(param);
+	LoadTarItmList(param);*/
 }
 
 /// 收费项目明细 DataGrid初始定义
-function initTarItmList(){
+function initTarItmList(param){
 	
 	///  定义columns
 	var columns=[[
@@ -35,15 +51,39 @@ function initTarItmList(){
 		{field:'TarDiscCost',title:'折后价',width:80,formatter:SetCellFontColor}
 		
 	]];
-	
-	///  定义datagrid
+	$('#dgTarItm'+param.split("||")[0]+"Part"+param.split("^")[1].split("$$")[0]).datagrid({  
+		fit : true,
+		width : 'auto',
+		border : true,
+		//striped : true,
+		singleSelect : true,
+		fitColumns : true,
+		autoRowHeight : false,
+		url:$URL+"?ClassName=web.DHCAPPExaReportQuery&MethodName=QueryExaReqTarList&param="+param,
+		loadMsg : '加载中..',  
+		pagination : true,  //是否分页
+		rownumbers : true,  //
+		idField:"TarCode",
+		pageSize:15,
+		pageList : [15,50,100,200],
+		columns :columns,
+		onClickRow:function(rowIndex, rowData){
+		
+		},
+       onLoadSuccess:function(data){
+	       //$("#Moster"+param.split("||")[0]).popover('show');
+	   },
+	   onBeforeLoad:function(param){
+	   }
+	});
+	/*///  定义datagrid
 	var option = {
 		rownumbers : true,
 		singleSelect : true
 	};
 
 	var uniturl = "";
-	new ListComponent('dgTarItm', columns, uniturl, option).Init(); 
+	new ListComponent('dgTarItm', columns, uniturl, option).Init(); */
 }
 
 /// 加载收费项明细

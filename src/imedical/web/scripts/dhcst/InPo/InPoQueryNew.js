@@ -10,7 +10,7 @@ Ext.onReady(function() {
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 	
 	var PhaLoc = new Ext.ux.LocComboBox({
-		fieldLabel : '科室',
+		fieldLabel : $g('科室'),
 		id : 'PhaLoc',
 		name : 'PhaLoc',
 		anchor : '90%',
@@ -21,7 +21,7 @@ Ext.onReady(function() {
 	
 	// 起始日期
 	var StartDate = new Ext.ux.DateField({
-		fieldLabel : '起始日期',
+		fieldLabel : $g('起始日期'),
 		id : 'StartDate',
 		name : 'StartDate',
 		anchor : '90%',
@@ -30,7 +30,7 @@ Ext.onReady(function() {
 	});
 	// 截止日期
 	var EndDate = new Ext.ux.DateField({
-		fieldLabel : '截止日期',
+		fieldLabel : $g('截止日期'),
 		id : 'EndDate',
 		name : 'EndDate',
 		anchor : '90%',
@@ -40,16 +40,16 @@ Ext.onReady(function() {
 
 	var inpoNoField = new Ext.form.TextField({
 		id:'inpoNoField2',
-		fieldLabel:'订单号',
+		fieldLabel:$g('订单号'),
 		allowBlank:true,
-		emptyText:'订单号...',
+		emptyText:$g('订单号...'),
 		anchor:'90%',
 		selectOnFocus:true
 	});
 	
 	// 物资名称
 	var InciDesc = new Ext.form.TextField({
-		fieldLabel : '名称',
+		fieldLabel : $g('名称'),
 		id : 'InciDesc',
 		name : 'InciDesc',
 		anchor : '90%',
@@ -64,7 +64,7 @@ Ext.onReady(function() {
 		}
 	});
 	var IncId = new Ext.form.TextField({
-		fieldLabel : '名称',
+		fieldLabel : $g('名称'),
 		id : 'IncId',
 		name : 'IncId',
 		hidden:true
@@ -74,7 +74,7 @@ Ext.onReady(function() {
 	 */
 	function GetPhaOrderInfo(item, stktype) {
 		if (item != null && item.length > 0) {
-			GetPhaOrderWindow(item, stktype, App_StkTypeCode, "", "N", "0", "",getDrugList);
+			GetPhaOrderWindow(item, stktype, App_StkTypeCode, "", "", "", "",getDrugList);
 		}
 	}
 	
@@ -90,19 +90,19 @@ Ext.onReady(function() {
 		Ext.getCmp("InciDesc").setValue(InciDesc);
 		Ext.getCmp("IncId").setValue(inciDr);
 	}
-	// 供应商
+	// 经营企业
 	var apcVendorField = new Ext.ux.VendorComboBox({
-		fieldLabel : '供应商',
+		fieldLabel : $g('经营企业'),
 		id : 'apcVendorField',
 		name : 'apcVendorField',
 		anchor : '90%',
-		emptyText : '供应商...'
+		emptyText : $g('经营企业...')
 	});
 	
 	
 	var finishflag = new Ext.form.Checkbox({
 		id: 'finishflag',
-		fieldLabel:'完成',
+		fieldLabel:$g('完成'),
 		allowBlank:true,
 		anchor:'90%'
 	});
@@ -110,8 +110,8 @@ Ext.onReady(function() {
 	// 查询订单按钮
 	var SearchBT = new Ext.Toolbar.Button({
 		id : "SearchBT",
-		text : '查询',
-		tooltip : '点击查询订单',
+		text : $g('查询'),
+		tooltip : $g('点击查询订单'),
 		width : 70,
 		height : 30,
 		iconCls : 'page_find',
@@ -124,8 +124,8 @@ Ext.onReady(function() {
 	// 清空按钮
 	var ClearBT = new Ext.Toolbar.Button({
 		id : "ClearBT",
-		text : '清屏',
-		tooltip : '点击清屏',
+		text : $g('清屏'),
+		tooltip : $g('点击清屏'),
 		width : 70,
 		height : 30,
 		iconCls : 'page_clearscreen',
@@ -134,29 +134,19 @@ Ext.onReady(function() {
 		}
 	});
 	
-	var cancelBt=new Ext.Toolbar.Button({
-		id : "cancelBT",
-		text : '取消',
-		iconCls:'page_delete',
-		width : 70,
-		height : 30,
-		iconCls : 'page_delete',
-		handler : function() {
-			if (win) win.close();
-		}
-	})
+
 	// 打印按钮
 	var PrintBT = new Ext.Toolbar.Button({
 		id : "PrintBT",
-		text : '打印',
-		tooltip : '点击打印',
+		text : $g('打印'),
+		tooltip : $g('点击打印'),
 		width : 70,
 		height : 30,
 		iconCls : 'page_print',
 		handler : function() {
 						var rowData=MasterGrid.getSelectionModel().getSelected();
 						if (rowData ==null) {
-							Msg.info("warning", "请选择需要打印的入库单!");
+							Msg.info("warning", $g("请选择需要打印的入库单!"));
 							return;
 						}
 						var PoId = rowData.get("PoId");
@@ -164,17 +154,7 @@ Ext.onReady(function() {
 						var Vendor = rowData.get("Vendor");
 						var PoDate = rowData.get("PoDate");
 						
-						var printtype=""
-						if (printtype==1) {
-							//直接打印
-							fileName="{DHCST_INPO_Detail.raq(Parref="+PoId+";vendor="+Vendor+";inpono="+PoNo+";inpodate="+PoDate+")}";
-							DHCCPM_RQDirectPrint(fileName);
-						}
-						else {
-							//预览打印	
-							fileName="DHCST_INPO_Detail.raq&Parref="+PoId+"&vendor="+Vendor+"&inpono="+PoNo+"&inpodate="+PoDate;
-							DHCCPM_RQPrint(fileName)	
-						}
+						PrintInPo(PoId); 
 						
 					}
 	});
@@ -193,19 +173,16 @@ Ext.onReady(function() {
 		Ext.getCmp('StartDate').setValue(DefaultStDate());
 		Ext.getCmp('EndDate').setValue(DefaultEdDate());
 		
-		DetailGrid.store.removeAll();
-		DetailGrid.getView().refresh();
-		
-		MasterGrid.store.removeAll();
-		MasterGrid.getView().refresh();
-		
+		MasterStore.load({params:{start:0,limit:999,ParamStr:""}});
+		DetailStore.load({params:{start:0,limit:999,Parref:""}});
 	}
 
 	// 显示订单数据
 	function Query() {
+		DetailStore.load({params:{start:0,limit:999,Parref:""}});
 		var phaLoc = Ext.getCmp("PhaLoc").getValue();
 		if (phaLoc =='' || phaLoc.length <= 0) {
-			Msg.info("warning", "请选择订购部门!");
+			Msg.info("warning", $g("请选择订购部门!"));
 			return;
 		}
 		var startDate = Ext.getCmp("StartDate").getRawValue();
@@ -225,7 +202,7 @@ Ext.onReady(function() {
 			Ext.getCmp("IncId").setValue("");
 		}
 		var InciId=Ext.getCmp("IncId").getRawValue();
-		//开始日期^截止日期^订单号^供应商id^科室id^完成标志^审核标志^订单状态(未入库，部分入库，全部入库)^物资id
+		//开始日期^截止日期^订单号^经营企业id^科室id^完成标志^审核标志^订单状态(未入库，部分入库，全部入库)^物资id
 		var ListParam=startDate+'^'+endDate+'^'+PoNo+'^'+Vendor+'^'+phaLoc+'^'+Complete+'^N^'+Status+'^'+InciId;
 		//alert(ListParam);
 		var Page=GridPagingToolbar.pageSize;
@@ -253,11 +230,11 @@ Ext.onReady(function() {
 	function renderPoStatus(value){
 		var PoStatus='';
 		if(value==0){
-			PoStatus='未入库';			
+			PoStatus=$g('未入库');			
 		}else if(value==1){
-			PoStatus='部分入库';
+			PoStatus=$g('部分入库');
 		}else if(value==2){
-			PoStatus='全部入库';
+			PoStatus=$g('全部入库');
 		}
 		return PoStatus;
 	}
@@ -305,39 +282,39 @@ Ext.onReady(function() {
 		sortable : true,
 		hidden : true
 	}, {
-		header : "订单号",
+		header : $g("订单号"),
 		dataIndex : 'PoNo',
 		width : 120,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "订购科室",
+		header : $g("订购科室"),
 		dataIndex : 'PoLoc',
 		width : 120,
 		align : 'left',
 		sortable : true,
 		hidden:true
 	}, {
-		header : "供应商",
+		header : $g("经营企业"),
 		dataIndex : 'Vendor',
 		width : 120,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "订单状态",
+		header : $g("订单状态"),
 		dataIndex : 'PoStatus',
 		width : 90,
 		align : 'left',
 		sortable : true,
 		renderer:renderPoStatus
 	}, {
-		header : "订单日期",
+		header : $g("订单日期"),
 		dataIndex : 'PoDate',
 		width : 80,
 		align : 'right',
 		sortable : true
 	},{
-		header : "完成",
+		header : $g("完成"),
 		dataIndex : 'CmpFlag',
 		width : 60,
 		align : 'center',
@@ -350,12 +327,14 @@ Ext.onReady(function() {
 	
 	]);
 	MasterCm.defaultSortable = true;
-	var GridPagingToolbar = new Ext.PagingToolbar({
+	var GridPagingToolbar = new Ext.PagingToolbar({ 
 		store:MasterStore,
 		pageSize:PageSize,
 		displayInfo:true,
 		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录"
+		emptyMsg:$g("没有记录"),
+		beforePageText : $g("当前页"),
+		afterPageText : $g("共{0}页"),
 	});
 	var MasterGrid = new Ext.grid.GridPanel({
 		title : '',
@@ -427,7 +406,9 @@ Ext.onReady(function() {
 		pageSize:PageSize,
 		displayInfo:true,
 		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录"
+		emptyMsg:$g("没有记录"),
+		beforePageText : $g("当前页"),
+		afterPageText : $g("共{0}页"),
 	});
 		
 	var nm = new Ext.grid.RowNumberer();
@@ -446,44 +427,44 @@ Ext.onReady(function() {
 		sortable : true,
 		hidden : true
 	}, {
-		header : '代码',
+		header : $g('代码'),
 		dataIndex : 'IncCode',
 		width : 80,
 		align : 'left',
 		sortable : true
 	}, {
-		header : '名称',
+		header : $g('名称'),
 		dataIndex : 'IncDesc',
 		width : 230,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "单位",
+		header : $g("单位"),
 		dataIndex : 'PurUom',
 		width : 80,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "进价",
+		header : $g("进价"),
 		dataIndex : 'Rp',
 		width : 60,
 		align : 'right',
 		
 		sortable : true
 	}, {
-		header : "订购数量",
+		header : $g("订购数量"),
 		dataIndex : 'PurQty',
 		width : 80,
 		align : 'right',
 		sortable : true
 	}, {
-		header : "到货数量",
+		header : $g("到货数量"),
 		dataIndex : 'ImpQty',
 		width : 80,
 		align : 'right',
 		sortable : true
 	}, {
-		header : "未到货数量",
+		header : $g("未到货数量"),
 		dataIndex : 'NotImpQty',
 		width : 80,
 		align : 'right',
@@ -511,11 +492,11 @@ Ext.onReady(function() {
 			height:DHCSTFormStyle.FrmHeight(1),
 			labelAlign : 'right',
 			frame : true,
-			tbar : [SearchBT, '-',  ClearBT,'-',cancelBt,'-',PrintBT],
+			tbar : [SearchBT, '-',  ClearBT,'-',PrintBT],
 			layout:'fit',
 			items : [{
 				xtype : 'fieldset',
-				title : '查询信息',
+				title : $g('查询信息'),
 				layout : 'column',
 				style:DHCSTFormStyle.FrmPaddingV,				
 				items : [{
@@ -587,7 +568,7 @@ Ext.onReady(function() {
 		layout:'border',
 		items : [{
 			region:'west',		
-			title:'订单',
+			title:$g('订单'),
 			activeTab:0,
 			height:410,
 			autoScroll:true,
@@ -601,7 +582,7 @@ Ext.onReady(function() {
 		},{
 			region:'center',
 			layout:'fit',
-			title:'订单明细',
+			title:$g('订单明细'),
 			activeTab:0,
 			height:410,
 			deferredRender:true,

@@ -87,36 +87,36 @@ function InitCheckRadio(){
 }
 function showDrugList(id){
 	if(EpisodeID==""){
-	   $.messager.alert('Warning','请先选择患者就诊记录！');
+	   $.messager.alert('Warning',$g('请先选择患者就诊记录！'));
 	   return;
 	}
 	var input=input+'&StkGrpRowId=&StkGrpType=G&Locdr=&NotUseFlag=N&QtyFlag=0&HospID=' ;
 	var mycols=[[
 		{field:"orditm",title:'orditm',width:90,hidden:true},
 		{field:'phcdf',title:'phcdf',width:80,hidden:true},
-		{field:'incidesc',title:'名称',width:140},
-		{field:'genenic',title:'通用名',width:140},
-	    {field:'batno',title:'生产批号',width:60,hidden:true}, //,hidden:true
-	    {field:'staDate',title:'开始日期',width:60,hidden:true},//,hidden:true
-	    {field:'endDate',title:'结束日期',width:60,hidden:true},  //
+		{field:'incidesc',title:$g('名称'),width:140},
+		{field:'genenic',title:$g('通用名'),width:140},
+	    {field:'batno',title:$g('生产批号'),width:60,hidden:true}, //,hidden:true
+	    {field:'staDate',title:$g('开始日期'),width:60,hidden:true},//,hidden:true
+	    {field:'endDate',title:$g('结束日期'),width:60,hidden:true},  //
 		{field:'genenicdr',title:'genenicdr',width:80,hidden:true},
-		{field:'dosage',title:'剂量',width:60},
+		{field:'dosage',title:$g('剂量'),width:60},
 		{field:'dosuomID',title:'dosuomID',width:80,hidden:true},
-		{field:'instru',title:'用法',width:80},
+		{field:'instru',title:$g('用法'),width:80},
 		{field:'instrudr',title:'instrudr',width:80,hidden:true},
-		{field:'freq',title:'频次',width:40},//priorty
-		{field:'priorty',title:'优先级',width:60},//priorty
+		{field:'freq',title:$g('频次'),width:40},//priorty
+		{field:'priorty',title:$g('优先级'),width:60},//priorty
 		{field:'freqdr',title:'freqdr',width:80,hidden:true},
-		{field:'duration',title:'疗程',width:40},
+		{field:'duration',title:$g('疗程'),width:40},
 		{field:'durId',title:'durId',width:80,hidden:true},
-		{field:'apprdocu',title:'批准文号',width:140},
-		{field:'manf',title:'厂家',width:140},
+		{field:'apprdocu',title:$g('批准文号'),width:140},
+		{field:'manf',title:$g('厂家'),width:140},
 		{field:'manfdr',title:'manfdr',width:80,hidden:true},
-		{field:'form',title:'剂型',width:80},
-		{field:'spec',title:'规格',width:80},
+		{field:'form',title:$g('剂型'),width:80},
+		{field:'spec',title:$g('规格'),width:80},
 		{field:'formdr',title:'formdr',width:80,hidden:true},
-		{field:'vendor',title:'供应商',width:80},
-		{field:'OrderPackQty',title:'数量',width:80}
+		{field:'vendor',title:$g('供应商'),width:80},
+		{field:'OrderPackQty',title:$g('数量'),width:80}
 		
 	]];
 	var mydgs = {
@@ -141,17 +141,42 @@ function addDrgTest(rowData)
 	    return;
 	    }
       var $td =$("input[name='"+drugname+"'][type=input]").parent().parent().children('td');
- 
-      $td.eq(0).find("input").val(row.incidesc);
-      $td.eq(1).find("input").val(row.genenic);
-      $td.eq(2).find("input").val(row.vendor);
-      $td.eq(3).find("input").val(row.manf)
-      //$td.eq(2).find("input").val(row.genenic+"/["+row.form+"]");
-      $td.eq(4).find("input").val(row.batno);
-      $td.eq(5).find("input").val(row.OrderPackQty);
-      $td.eq(6).find("input").val(row.form); 
-      $td.eq(7).find("input").val(row.spec); 
+	if(checkSusAndBleIfRepApp(row.incidesc)){
+		$td.eq(0).find("input").val(row.genenic);  // 通用名
+		$td.eq(1).find("input").val(row.vendor); // 供应商
+		$td.eq(2).find("input").val(row.manf); // 厂家 生产企业
+		$td.eq(3).find("input").val(row.apprdocu);  // 批号  批准文号
+		$td.eq(4).find("input").val(row.OrderPackQty);  // 数量
+		$td.eq(5).find("input").val(row.form); // 剂型
+		$td.eq(6).find("input").val(row.spec); // 规格
+		$td.eq(7).find("input").val(row.PackUOMDesc); // 包装类型
+		$td.eq(8).find("input").val(row.incidesc); // 商品名称
+		//TableControl();
+		
+		/// 2021-02-09 cy 保存绑定医嘱id
+		if(OrdList!=""){ 
+			OrdList=OrdList+"$$"+row.orditm+"&&"+drugname;
+		}
+		if(OrdList==""){
+			OrdList=row.orditm+"&&"+drugname;
+		}
+	}
   
+}
+function checkSusAndBleIfRepApp(incidesc){
+	var flag=0
+	$("#quadruglist").next().find("tbody tr").each(function(i){  // 药品列表
+		//医嘱id
+		var tdincidesc=$(this).children('td').eq(8).find("input").val()
+		if(tdincidesc==incidesc){
+			flag=1;
+		}
+	})
+	if(flag!=0){
+		$.messager.alert($g("提示:"),$g("该药品已添加,不能重复添加！"));
+		return false;
+	}
+	return true;
 }
 
 function ReportControl(){
@@ -175,7 +200,7 @@ function ReportControl(){
 function SaveReport(flag)
 {
 	if($('#PatName').val()==""){
-		$.messager.alert("提示:","患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！");	
+		$.messager.alert($g("提示:"),$g("患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！"));	
 		return false;
 	} 
 	///保存前,对页面必填项进行检查
@@ -210,12 +235,12 @@ function checkTableRequired(){
 		if(str.length==0){
 			rowMsg=rowMsg+"商品名称,"
 		}
-		// 通用名
+		/*// 通用名
 		var str1=$(this).children('td').eq(1).find("input").val();
 		if(str1.length==0){
 			rowMsg=rowMsg+"通用名,"
 		}
-		/* // 供应商
+		 // 供应商
 		var str2=$(this).children('td').eq(2).find("input").val();
 		if(str2.length==0){
 			rowMsg=rowMsg+"供应商,"
@@ -258,7 +283,10 @@ function checkTableRequired(){
 	})
 	if(errMsg!=""){
 		//$("html,body").stop(true);$("html,body").animate({scrollTop: $("#quadruglist").offset().top}, 1000);
-		$.messager.alert("提示:",errMsg);
+		$.messager.alert($g("提示:"),errMsg);
 	}
 	return errMsg;
+}
+function add_event(){
+	
 }

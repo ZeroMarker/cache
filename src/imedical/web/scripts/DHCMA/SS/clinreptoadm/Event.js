@@ -10,7 +10,12 @@ function InitClinRepToAdmWinEvent(obj){
     }else {
 	     var Height = winHeight-80;
     }
-    
+    var strSSTitle =$g('手术切口调查表');
+    var strDNBGTitle =$g('多耐细菌报告');
+	var strCD9Title = $g("新冠病毒感染个案调查");
+	var strESurTitle = $g("流行病学调查表");
+	var SusRepTitle =  $g('疑似食源性疾病报卡');
+	var HCVRefTitle=$g("丙肝转介通知单");
     //弹出加载层
 	function loadingWindow() {
 	    var left = ($(window).outerWidth(true) - 190) / 2; 
@@ -47,6 +52,16 @@ function InitClinRepToAdmWinEvent(obj){
 		$('#btnRepEPD_epd').on('click', function(){
 			obj.OpenEPDReport('epd','');
      	});
+		$('#btnRepEPD_hcvref').on('click', function(){
+			obj.OpenEPDReport('hcvreferral','');
+     	});
+     	$('#btnRepEPD_esur').on('click', function(){
+	     	obj.OpenESurRep('');
+     	});
+     	//新增丙肝个案调查表
+     	$('#btnRepEPD_hcv').on('click', function(){
+	     	obj.OpenHcvRep('');
+     	});
         $('#btnRepEPD_ncp').on('click', function(){
 	     	obj.OpenNCPReport('');
      	});
@@ -59,7 +74,14 @@ function InitClinRepToAdmWinEvent(obj){
      	$('#btnScreen').on('click', function(){
 	     	obj.PatScreenInfo(HAIEpisodeDr);
      	});
+		
+		$('#btnMBRRep').on('click', function(){   //多重耐药细菌调查报告
+	     	obj.OpenMBRReport('');
+     	});
      	
+     	$('#btnOPSRep').on('click', function(){   //手术切口调查报告
+	     	obj.OpenOPSReport('','','');
+     	});
      	$('#btnRepDTH').on('click', function(){
 	     	obj.OpenDTHReport('');
      	});
@@ -70,9 +92,7 @@ function InitClinRepToAdmWinEvent(obj){
 	     	obj.OpenFBDReport('SUS','');
      	});
      	 
-     	$('#btnRepSPE').on('click', function(){
-	     	obj.OpenEditSPE('');
-     	});
+     
      	
      	$('#btnRepCD_ZLK').on('click', function(){
 	     	obj.OpenCDReport('ZLK','');
@@ -104,6 +124,12 @@ function InitClinRepToAdmWinEvent(obj){
      	$('#btnRepCD_CSQX').on('click', function(){
 	     	obj.OpenCDReport('CSQX','');
      	});
+		$('#btnRepCD_ETSH').on('click', function(){
+	     	obj.OpenCDReport('ETSH','');
+     	});
+		$('#btnRepCD_GXY').on('click', function(){
+	     	obj.OpenCDReport('GXY','');
+     	});
      	$('#btnRepSMD_O').on('click', function(){
 	     	obj.OpenSMDReport('',1);
      	});
@@ -133,10 +159,14 @@ function InitClinRepToAdmWinEvent(obj){
 					obj.LoadHIVData();
 					obj.LoadRefData();
 					obj.LoadNCPData();
+					obj.LoadHCVData();
+					obj.LoadHCVRefData();
 				}
 				//医院感染管理V4.0
 				if ((objRepType.TypeCate == 'HAI')&&(objRepType.TypeCode == '1')) {
 					obj.LoadHAIData();
+					obj.LoadMBRData();
+					obj.LoadOPSData();
 				}
 				//死亡证
 				if ((objRepType.TypeCate == 'DTH')&&(objRepType.TypeCode == '2')) {
@@ -155,10 +185,7 @@ function InitClinRepToAdmWinEvent(obj){
 				if (objRepType.TypeCate == 'CD') {
 					obj.LoadCDData();
 				}
-				//加载特殊患者
-				if (objRepType.TypeCate == 'SPE') {
-					obj.LoadSPEData();
-				}
+				
 				//加载罕见病
 				if (objRepType.TypeCate == 'RDS') {
 					obj.LoadRDSData();
@@ -192,9 +219,9 @@ function InitClinRepToAdmWinEvent(obj){
 		t=t.getTime();
 		var strUrl="";
 		var width=1340;	
-		var title="传染病报告"
+		var title=$g("传染病报告");
 		if(atype=="ili"){
-			title="流感样病例登记"
+			title=$g("流感样病例登记");
 			strUrl = "./dhcma.epd.reportili.csp?1=1" + "&PatientID=" + PatientID + "&EpisodeID=" + EpisodeID + "&ReportID=" + aRepID+ "&t=" + t;
 			
 		}else if(atype=="referral"){
@@ -204,12 +231,10 @@ function InitClinRepToAdmWinEvent(obj){
 				aEpisodeID:EpisodeID,
 			},false);
 			if(strInfo==""){
-				$.messager.alert("错误",'请先填写"肺结核"传染病报告!');
+				$.messager.alert("错误",'请先填写"肺结核"传染病报告!','info');
 				return
 			}
-			width=870;
-			
-			title="肺结核转诊单"
+			title=$g("肺结核转诊单");
 			strUrl = "./dhcma.epd.referral.csp?1=1" + "&PatientID=" + PatientID + "&EpisodeID=" + EpisodeID + "&ReportID=" + aRepID+ "&t=" + t;	
 		}else if(atype=="hiv"){
 			var EPDRepInfo = $m({                  
@@ -219,12 +244,26 @@ function InitClinRepToAdmWinEvent(obj){
 				aReportID:""
 			},false);
 			if (!EPDRepInfo){
-				$.messager.alert("错误",'请先填写"HIV"传染病报告!');
+				$.messager.alert("错误",'请先填写"HIV"传染病报告!','info');
 				return
 			}
-			title="HIV个案随访登记表"
+			title=$g("HIV个案随访登记表");
 			strUrl = "./dhcma.epd.hivfollow.csp?1=1" + "&PatientID=" + PatientID + "&EpisodeID=" + EpisodeID + "&ReportID=" + aRepID+ "&t=" + t;	
+		}else if(atype=="hcvreferral"){
+			var HCVRefRepInfo = $m({                  
+				ClassName:"DHCMed.EPD.HCVReferral",
+				MethodName:"GetInfoByEPD",
+				aEpisodeID:EpisodeID
+			},false);
+			if (!HCVRefRepInfo){
+				$.messager.alert("错误",'请先填写"丙型病毒性肝炎"传染病报告!','info');
+				return
+			}
+			Height = "480px;"
+			title=HCVRefTitle;
+			strUrl = "./dhcma.epd.hcvreferral.csp?1=1" + "&PatientID=" + PatientID + "&EpisodeID=" + EpisodeID + "&ReportID=" + aRepID+ "&LocFlag=" + 0;	
 		}else{
+			Height = "624px"
 			strUrl = "./dhcma.epd.report.csp?1=1" + "&PatientID=" + PatientID + "&EpisodeID=" + EpisodeID + "&ReportID=" + aRepID+ "&t=" + t;
 		}
 	    websys_showModal({
@@ -234,8 +273,43 @@ function InitClinRepToAdmWinEvent(obj){
 	        originWindow:window,
 	        closable:false,
 			width:(atype!="referral"?width:"880px"),    //限定肺结核转诊单的大小
-			height:(atype!="referral"?Height:"430px"),
+			height:(atype!="referral"?Height:"464px"),
 			dataRow:{RowID:aRepID},  
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
+		});
+	}
+	/* 流行病学调查表 */
+	obj.OpenESurRep = function(aRepID){
+		var t=new Date();
+		t=t.getTime();
+		var strUrl = "./dhcma.epd.esurreg.csp?1=1" + "&PatientID=" + PatientID + "&EpisodeID=" + EpisodeID + "&ReportID=" + aRepID+ "&LocFlag=0"+ "&t=" + t;
+	    websys_showModal({
+			url:strUrl,
+			title:strESurTitle,
+			iconCls:'icon-w-epr',
+			closable:true,  
+			width:1360,
+			height:Height,
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
+		});
+	}
+	/* 新诊断报告丙肝病例个案调查表 */
+	obj.OpenHcvRep = function(aRepID){
+		var t=new Date();
+		t=t.getTime();
+		var repTitle = $g("新诊断报告丙肝病例个案调查表");
+		var strUrl = "./dhcma.epd.hcvreg.csp?1=1" + "&PatientID=" + PatientID + "&EpisodeID=" + EpisodeID + "&ReportID=" + aRepID+ "&LocFlag=0"+ "&t=" + t;
+	    websys_showModal({
+			url:strUrl,
+			title:repTitle,
+			iconCls:'icon-w-epr',
+			closable:true,  
+			width:1360,
+			height:Height,
 			onBeforeClose:function(){
 				window.location.reload();  //刷新当前界面
 			} 
@@ -254,14 +328,13 @@ function InitClinRepToAdmWinEvent(obj){
 		},false);
 		
 		if (!flg) {
-			$.messager.alert("提示", "患者没有有效的新冠肺炎相关传染病报告，请先填写传染病报告!",'info');
+			$.messager.alert($g("提示"), $g("患者没有有效的新冠病毒感染相关传染病报告，请先填写传染病报告!"),'info');
 			return;
         }
-		
 	    var strUrl = "./dhcma.epd.ncp.investigation.csp?1=1&EpisodeID="+EpisodeID+"&CTLocID="+session['LOGON.CTLOCID']+"&ReportID=" + aRepID + "&t=" + t;
 	    websys_showModal({
 			url:strUrl,
-			title:'新冠肺炎个案调查',
+			title:strCD9Title,
 			iconCls:'icon-w-epr',
 			closable:false,  
 			width:1320,
@@ -280,23 +353,21 @@ function InitClinRepToAdmWinEvent(obj){
 		if (HAIEpisodeDr=="") {
 			$.messager.alert("提示","该患者可能非办理入院登记的患者，请查证后再填报!", 'info');
 			return false;
+		} else {
+			var IsActive  = $m({
+				ClassName:"DHCHAI.DP.PAAdm",
+				MethodName:"GetVisIsActive",
+				aEpisodeID:HAIEpisodeDr
+			},false);
+			if (IsActive!="1") {
+				$.messager.alert("提示","预住院、退院、未曾分配床位等患者不允许填报院感报告，请查证后再填报!", 'info');
+				return false;
+			}
 		}
-		var NewBabyFlg  = $m({
-			ClassName:"DHCHAI.DP.PAAdm",
-			MethodName:"GetNewBabyById",
-			id:HAIEpisodeDr
-		},false);
-	
-		if (NewBabyFlg=="1"){
-			Type = 2;
-		}		
-		if (Type == '1') {
-			var strTitle = '医院感染报告';
-			var strUrl="dhcma.hai.ir.inf.report.csp?1=1&Paadm=" + EpisodeID + "&ReportID="+ aRepID +"&t=" + t;
-		}else if(Type == '2') {
-			var strTitle = '新生儿医院感染报告';
-			var strUrl="dhcma.hai.ir.inf.nreport.csp?1=1&Paadm=" + EpisodeID + "&ReportID="+ aRepID +"&t=" + t;	   
-		}	
+		
+		var strTitle = $g('医院感染报告');
+		var strUrl="dhcma.hai.ir.inf.report.csp?1=1&Paadm=" + EpisodeID + "&ReportID="+ aRepID +"&t=" + t;
+		
 		websys_showModal({
 			url:strUrl,
 			title:strTitle,
@@ -317,10 +388,11 @@ function InitClinRepToAdmWinEvent(obj){
 	obj.PatScreenInfo = function(aHAIEpisodeDr) {
 		var t=new Date();
 		t=t.getTime();
+		var strTitle=$g('疑似病例筛查');
 		var strUrl = "./dhcma.hai.ir.patscreening.csp?1=1&EpisodeDr=" + aHAIEpisodeDr+"&Paadm=" + EpisodeID+"&LocFlag=1&t=" + t;	
 		websys_showModal({
 			url:strUrl,
-			title:'疑似病例筛查',
+			title:strTitle,
 			iconCls:'icon-w-paper',  
 	        originWindow:window,
 			width:'95%',
@@ -328,7 +400,79 @@ function InitClinRepToAdmWinEvent(obj){
 			onBeforeClose:function(){}  //若无词句,IE下打开一份报告关闭后，摘要无法关闭
 		});
 	}
+	
+	//多重耐药菌调查（医院感染管理V4.0）
+	obj.OpenMBRReport = function(aRepID,aLabRepID){
+		var t=new Date();
+		t=t.getTime();
+		var Type = 1;
+		if (HAIEpisodeDr=="") {
+			$.messager.alert("提示","该患者可能非办理入院登记的患者，请查证后再填报!", 'info');
+			return false;
+		} else {
+			var IsActive  = $m({
+				ClassName:"DHCHAI.DP.PAAdm",
+				MethodName:"GetVisIsActive",
+				aEpisodeID:HAIEpisodeDr
+			},false);
+			if (IsActive!="1") {
+				$.messager.alert("提示","预住院、退院、未曾分配床位等患者不允许填报院感报告，请查证后再填报!", 'info');
+				return false;
+			}
+		}
+	
+		var strUrl="dhcma.hai.ir.mrb.ctlreport.csp?1=1&EpisodeID=" + HAIEpisodeDr + "&ReportID="+ aRepID + "&LabRepID="+ aLabRepID +"&t=" + t;
+		strDNBGTitle =$g('多耐细菌报告');
+		websys_showModal({
+			url:strUrl,
+			title:strDNBGTitle,
+			iconCls:'icon-w-epr',  
+	        originWindow:window,
+	        closable:false,
+			width:1320,
+			height:Height,
+			dataRow:{ReportID:aRepID},  
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
+		});
+	}
 
+	//手术切口调查（医院感染管理V4.0）
+	obj.OpenOPSReport = function(aReportID,aOPSID,aOperAnaesID){
+		var t=new Date();
+		t=t.getTime();
+		var Type = 1;
+		if (HAIEpisodeDr=="") {
+			$.messager.alert("提示","该患者可能非办理入院登记的患者，请查证后再填报!", 'info');
+			return false;
+		} else {
+			var IsActive  = $m({
+				ClassName:"DHCHAI.DP.PAAdm",
+				MethodName:"GetVisIsActive",
+				aEpisodeID:HAIEpisodeDr
+			},false);
+			if (IsActive!="1") {
+				$.messager.alert("提示","预住院、退院、未曾分配床位等患者不允许填报院感报告，请查证后再填报!", 'info');
+				return false;
+			}
+		}
+		strSSTitle =$g('手术切口调查表');
+		var url = "dhcma.hai.ir.opr.report.csp?Admin=0"+ '&OpsID=' + aOPSID+ '&ReportID=' + aReportID +'&OperAnaesID='+aOperAnaesID+ '&EpisodeID=' + HAIEpisodeDr+ "&5=5";
+		websys_showModal({
+            url: url,
+            title: strSSTitle,
+            iconCls: 'icon-w-epr',
+            closable: false,
+            width: 1320,
+            height: '95%',
+            onBeforeClose: function () {
+                window.location.reload();  //刷新当前界面
+            }
+        });
+	}
+	
+	
 	//死亡证
     obj.OpenDTHReport = function(aRepID){
 	    var t=new Date();
@@ -347,7 +491,7 @@ function InitClinRepToAdmWinEvent(obj){
 	    var strUrl = "./dhcma.dth.report.csp?1=1&EpisodeID="+EpisodeID+"&CTLocID="+session['LOGON.CTLOCID']+"&ReportID=" + aRepID + "&t=" + t;;
 	    websys_showModal({
 			url:strUrl,
-			title:'居民死亡医学证明（推断）书',
+			title:$g("居民死亡医学证明（推断）书"),
 			iconCls:'icon-w-epr',  
 	        originWindow:window,
 	        closable:false,
@@ -385,10 +529,10 @@ function InitClinRepToAdmWinEvent(obj){
 	    var t=new Date();
 		t=t.getTime();
 		if(aTypeCode== 'FBD'){
-			var strTitle = '食源性疾病报卡';
+			var strTitle = $g('食源性疾病报卡');
 			var strUrl = "./dhcma.fbd.report.csp?1=1" + "&PatientID=" + PatientID + "&EpisodeID=" + EpisodeID + "&ReportID=" + aRepID+ "&LocFlag=0" + "&t=" + t;
 	    }else if(aTypeCode== 'SUS'){
-			var strTitle = '疑似食源性疾病报卡';
+			var strTitle = SusRepTitle;
 			 var strUrl = "./dhcma.fbd.SusAbRep.csp?1=1" + "&PatientID=" + PatientID + "&EpisodeID=" + EpisodeID + "&ReportID=" + aRepID+ "&LocFlag=0" + "&t=" + t;
 	    }
 	    websys_showModal({
@@ -405,75 +549,70 @@ function InitClinRepToAdmWinEvent(obj){
 		});
 	}
 
-	//特殊患者
-	obj.OpenEditSPE = function(aSpeID){
-		var strUrl = "./dhcma.spe.spemark.csp?1=1" + "&SpeID=" + aSpeID + "&EpisodeID=" + EpisodeID + "&OperTpCode=" + 1;
-	    websys_showModal({
-			url:strUrl,
-			title:'标记特殊患者',
-			iconCls:'icon-w-star', 
-			originWindow:window,
-			closable:false,
-			width:400,
-			height:545, 
-			dataRow:{SpeID:aSpeID},  
-			onBeforeClose:function(){
-				window.location.reload();  //刷新当前界面
-			} 
-		});
-		
-	}
-	//特殊患者消息列表	
-	obj.OpenSpeNewsWin = function(aSpeID){
-		var strUrl = "./dhcma.spe.spenews.csp?1=1" + "&SpeID=" + aSpeID + "&OperTpCode=" + 1;						   
-        websys_showModal({
-			url:strUrl,
-			title:'消息列表',
-			iconCls:'icon-w-msg',  
-	        originWindow:window,
-			width:850,
-			height:520,
-			dataRow:{SpeID:aSpeID},  
-			onBeforeClose:function(){
-				window.location.reload();  //刷新当前界面
-			} 
-		});
-	}
+
 	
 	//慢病
     obj.OpenCDReport = function(aTypeCode,aRepID){
 	    var t=new Date();
 		t=t.getTime();
+		var ZLReportTitle =$g('肿瘤报告卡');
+		var XNXGReportTitle =$g('心脑血管事件报告卡');
+		var SHKReportTitle =$g('意外伤害监测报告卡');
+		var NYZDReportTitle =$g('农药中毒报告卡');
+		var GWZSReportTitle =$g('高温中暑报告卡');
+		var TNBReportTitle =$g('糖尿病报告卡');
+		var YSZYBReportTitle =$g('疑似职业病报告卡');
+		var FZYCOReportTitle =$g('非职业CO中毒报告卡');
+		var MBBKReportTitle =$g('慢性病报告卡');
+		var CSQXReportTitle =$g('出生缺陷儿报告卡');
+		var ETSHReportTitle =$g('儿童伤害监测报告卡');
+		var GXYReportTitle =$g('高血压报告卡');
 		if(aTypeCode== 'ZLK'){
-			var strTitle = '肿瘤报告卡';
+			var strTitle = ZLReportTitle;
 			var strUrl= "./dhcma.cd.reportzlk.csp?1=1&ReportID=" + aRepID + "&EpisodeID=" + EpisodeID + "&PatientID="+PatientID + "&t=" + t;		
 		}else if(aTypeCode== 'XNXG'){
-			var strTitle = '心脑血管事件报告卡';
+			var strTitle = XNXGReportTitle;
 			var strUrl= "./dhcma.cd.reportxnxg.csp?1=1&ReportID=" + aRepID + "&EpisodeID=" + EpisodeID + "&PatientID="+PatientID + "&t=" + t;
 		}else if(aTypeCode== 'SHK'){
-			var strTitle = '意外伤害监测报告卡';
+			var strTitle = SHKReportTitle;
 			var strUrl= "./dhcma.cd.reportshk.csp?1=1&ReportID=" + aRepID + "&EpisodeID=" + EpisodeID + "&PatientID="+PatientID + "&t=" + t;
 		}else if(aTypeCode== 'NYZD'){
-			var strTitle = '农药中毒报告卡';
+			var strTitle = NYZDReportTitle;
 			var strUrl= "./dhcma.cd.reportnyzd.csp?1=1&ReportID=" + aRepID + "&EpisodeID=" + EpisodeID + "&PatientID="+PatientID + "&t=" + t;
 		}else if(aTypeCode== 'GWZS'){
-			var strTitle = '高温中暑报告卡';
+			var strTitle = GWZSReportTitle;
 			var strUrl= "./dhcma.cd.reportgwzs.csp?1=1&ReportID=" + aRepID + "&EpisodeID=" + EpisodeID + "&PatientID="+PatientID + "&t=" + t;
 		}else if(aTypeCode== 'TNB'){
-			var strTitle = '糖尿病报告卡';
+			var strTitle = TNBReportTitle;
 			var strUrl= "./dhcma.cd.reporttnb.csp?1=1&ReportID=" + aRepID + "&EpisodeID=" + EpisodeID + "&PatientID="+PatientID + "&t=" + t;
 		}else if(aTypeCode== 'YSZYB'){
-			var strTitle = '疑似职业病报告卡';
+			var strTitle = YSZYBReportTitle;
 			var strUrl= "./dhcma.cd.reportyszyb.csp?1=1&ReportID=" + aRepID + "&EpisodeID=" + EpisodeID + "&PatientID="+PatientID + "&t=" + t;
 		}else if(aTypeCode== 'FZYCO'){
-			var strTitle = '非职业CO中毒报告卡';
+			var strTitle = FZYCOReportTitle;
 			var strUrl= "./dhcma.cd.reportfzyco.csp?1=1&ReportID=" + aRepID + "&EpisodeID=" + EpisodeID + "&PatientID="+PatientID + "&t=" + t;
 		}else if(aTypeCode== 'MBBK'){
-			var strTitle = '慢性病报病卡';
+			var strTitle = MBBKReportTitle;
 			var strUrl= "./dhcma.cd.reportmbbk.csp?1=1&ReportID=" + aRepID + "&EpisodeID=" + EpisodeID + "&PatientID="+PatientID + "&t=" + t;
 		}else if(aTypeCode== 'CSQX'){
-			var strTitle = '出生缺陷儿报告卡';
+			var strTitle = CSQXReportTitle;
 			var strUrl= "./dhcma.cd.reportcsqx.csp?1=1&ReportID=" + aRepID + "&EpisodeID=" + EpisodeID + "&PatientID="+PatientID + "&t=" + t;
+		}else if(aTypeCode== 'ETSH'){
+			var strTitle = ETSHReportTitle ;
+			var strUrl= "./dhcma.cd.reportetsh.csp?1=1&ReportID=" + aRepID + "&EpisodeID=" + EpisodeID + "&PatientID="+PatientID + "&t=" + t;
+		}else if(aTypeCode== 'GXY'){
+			var strTitle = GXYReportTitle;
+			var Height	 = "670px";
+			var strUrl= "./dhcma.cd.reportgxy.csp?1=1&ReportID=" + aRepID + "&EpisodeID=" + EpisodeID + "&PatientID="+PatientID + "&t=" + t;
+		}
+		var Width  = window.screen.availWidth-20;
+		var winHeight = window.screen.availHeight;
+		if (winHeight>1000) {
+			var Height = winHeight-200;
+		}else if (winHeight>800) {
+			 var Height = winHeight-160;
+		}else {
+			 var Height = winHeight-80;
 		}
 	    websys_showModal({
 			url:strUrl,

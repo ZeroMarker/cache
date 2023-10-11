@@ -1,239 +1,255 @@
-/*
-Èë¿âµ¥ÖÆµ¥²éÑ¯
+ï»¿/*
+å…¥åº“å•åˆ¶å•æŸ¥è¯¢
 */
-var DrugImportGrSearch=function(Fn){
-	$HUI.dialog('#FindWin').open();
-	var Clear=function(){
+var DrugImportGrSearch = function(Fn) {
+	$HUI.dialog('#FindWin', {
+		height: gWinHeight,
+		width: gWinWidth
+	}).open();
+	var Clear = function() {
 		$UI.clearBlock('#FindConditions');
 		$UI.clear(InGdRecMainGrid);
 		$UI.clear(InGdRecDetailGrid);
-		///ÉèÖÃ³õÊ¼Öµ ¿¼ÂÇÊ¹ÓÃÅäÖÃ
-		var LocId = $("#RecLoc").combobox('getValue');
-		var LocDesc = $("#RecLoc").combobox('getText');
-		var Dafult={
+		// /è®¾ç½®åˆå§‹å€¼ è€ƒè™‘ä½¿ç”¨é…ç½®
+		var LocId = $('#RecLoc').combobox('getValue');
+		var LocDesc = $('#RecLoc').combobox('getText');
+		var DefaultData = {
 			StartDate: DefaultStDate(),
 			EndDate: DefaultEdDate(),
-			FRecLoc: {RowId: LocId, Description: LocDesc},
-			AuditFlag:"N",
-			HVFlag:"N"
+			FRecLoc: { RowId: LocId, Description: LocDesc },
+			AuditFlag: 'N',
+			HVFlag: 'N'
 		};
-		$UI.fillBlock('#FindConditions', Dafult);
-	}
-	var FRecLocParams=JSON.stringify(addSessionParams({Type:"Login"}));
-//	var FRecLocBox = $HUI.combobox('#FRecLoc', {
-//			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+FRecLocParams,
-//			valueField: 'RowId',
-//			textField: 'Description'
-//	});
-	$("#FRecLoc").lookup({
+		$UI.fillBlock('#FindConditions', DefaultData);
+	};
+	var FRecLocParams = JSON.stringify(addSessionParams({ Type: 'Login' }));
+	var FRecLocBox = $HUI.combobox('#FRecLoc', {
+			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+FRecLocParams,
+			valueField: 'RowId',
+			textField: 'Description'
+	});
+	/*
+	$('#FRecLoc').lookup({
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.Common.Dicts',
 			QueryName: 'GetCTLoc',
-			Params: FRecLocParams
+			Params: FRecLocParams,
+			rows: 99999
 		}
+	});*/
+	var FVendorBoxParams = JSON.stringify(addSessionParams({ APCType: 'M' }));
+	var FVendorBoxBox = $HUI.combobox('#FVendorBox', {
+			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetVendor&ResultSetType=array&Params='+FVendorBoxParams,
+			valueField: 'RowId',
+			textField: 'Description'
 	});
-	var FVendorBoxParams=JSON.stringify(addSessionParams({APCType:"M",RcFlag:"Y"}));
-//	var FVendorBoxBox = $HUI.combobox('#FVendorBox', {
-//			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetVendor&ResultSetType=array&Params='+FVendorBoxParams,
-//			valueField: 'RowId',
-//			textField: 'Description'
-//	});
-	$("#FVendorBox").lookup({
+	/*
+	$('#FVendorBox').lookup({
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.Common.Dicts',
 			QueryName: 'GetVendor',
-			Params: FVendorBoxParams
+			Params: FVendorBoxParams,
+			rows: 99999
 		}
-	});
-	$UI.linkbutton('#FQueryBT',{
-		onClick:function(){
+	});*/
+	$UI.linkbutton('#FQueryBT', {
+		onClick: function() {
 			FQuery();
 		}
 	});
-	function FQuery(){
-		var ParamsObj=$UI.loopBlock('#FindConditions')
-		if(isEmpty(ParamsObj.StartDate)){
-			$UI.msg('alert','¿ªÊ¼ÈÕÆÚ²»ÄÜÎª¿Õ!');
+	function FQuery() {
+		var ParamsObj = $UI.loopBlock('#FindConditions');
+		if (isEmpty(ParamsObj.StartDate)) {
+			$UI.msg('alert', 'å¼€å§‹æ—¥æœŸä¸èƒ½ä¸ºç©º!');
 			return;
 		}
-		if(isEmpty(ParamsObj.EndDate)){
-			$UI.msg('alert','½ØÖ¹ÈÕÆÚ²»ÄÜÎª¿Õ!');
+		if (isEmpty(ParamsObj.EndDate)) {
+			$UI.msg('alert', 'æˆªæ­¢æ—¥æœŸä¸èƒ½ä¸ºç©º!');
 			return;
 		}
-		if(isEmpty(ParamsObj.FRecLoc)){
-			$UI.msg('alert','Èë¿â¿ÆÊÒ²»ÄÜÎª¿Õ!');
+		if (isEmpty(ParamsObj.FRecLoc)) {
+			$UI.msg('alert', 'å…¥åº“ç§‘å®¤ä¸èƒ½ä¸ºç©º!');
 			return;
 		}
-		var Params=JSON.stringify(ParamsObj);
+		var Params = JSON.stringify(ParamsObj);
 		$UI.clear(InGdRecDetailGrid);
 		InGdRecMainGrid.load({
 			ClassName: 'web.DHCSTMHUI.DHCINGdRec',
 			QueryName: 'Query',
-			Params:Params
+			query2JsonStrict: 1,
+			Params: Params
 		});
 	}
 	
-	$UI.linkbutton('#FClearBT',{
-		onClick:function(){
+	$UI.linkbutton('#FClearBT', {
+		onClick: function() {
 			Clear();
 		}
 	});
-	$UI.linkbutton('#FReturnBT',{
-		onClick:function(){
-			var Row=InGdRecMainGrid.getSelected();
-			if(isEmpty(Row)){
-				$UI.msg('alert','ÇëÑ¡ÔñÒª·µ»ØµÄÈë¿âµ¥!');
+	$UI.linkbutton('#FReturnBT', {
+		onClick: function() {
+			var Row = InGdRecMainGrid.getSelected();
+			if (isEmpty(Row)) {
+				$UI.msg('alert', 'è¯·é€‰æ‹©è¦è¿”å›çš„å…¥åº“å•!');
+				return;
 			}
 			Fn(Row.IngrId);
 			$HUI.dialog('#FindWin').close();
 		}
 	});
-	var InGdRecMainCm = [[{
-			title : "RowId",
-			field : 'IngrId',
-			width : 100,
-			hidden : true
+	var InGdRecMainCm = [[
+		{
+			title: 'RowId',
+			field: 'IngrId',
+			width: 100,
+			hidden: true
 		}, {
-			title : "Èë¿âµ¥ºÅ",
-			field : 'IngrNo',
-			width : 120
+			title: 'å…¥åº“å•å·',
+			field: 'IngrNo',
+			width: 120
 		}, {
-			title : "¹©Ó¦ÉÌ",
-			field : 'Vendor',
-			width : 200
+			title: 'ä¾›åº”å•†',
+			field: 'Vendor',
+			width: 200
 		}, {
-			title : '¶©¹º¿ÆÊÒ',
-			field : 'ReqLocDesc',
-			width : 150
+			title: 'è®¢è´­ç§‘å®¤',
+			field: 'ReqLocDesc',
+			width: 150
 		}, {
-			title : '´´½¨ÈË',
-			field : 'CreateUser',
-			width : 70
+			title: 'é‡‡è´­å‘˜',
+			field: 'PurchUser',
+			width: 70
 		}, {
-			title : '´´½¨ÈÕÆÚ',
-			field : 'CreateDate',
-			width : 90
+			title: 'å…¥åº“ç±»å‹',
+			field: 'IngrType',
+			width: 80
 		}, {
-			title : '²É¹ºÔ±',
-			field : 'PurchUser',
-			width : 70
+			title: 'å®Œæˆæ ‡å¿—',
+			field: 'Complete',
+			width: 70
 		}, {
-			title : "Èë¿âÀàĞÍ",
-			field : 'IngrType',
-			width : 80
+			title: 'è¿›ä»·é‡‘é¢',
+			field: 'RpAmt',
+			width: 100,
+			align: 'right'
 		}, {
-			title : "Íê³É±êÖ¾",
-			field : 'Complete',
-			width : 70
+			title: 'å”®ä»·é‡‘é¢',
+			field: 'SpAmt',
+			width: 100,
+			align: 'right'
 		}, {
-			title : "½ø¼Û½ğ¶î",
-			field : 'RpAmt',
-			width : 100,
-			align : 'right'
+			title: 'åˆ›å»ºäºº',
+			field: 'CreateUser',
+			width: 70
 		}, {
-			title : "ÊÛ¼Û½ğ¶î",
-			field : 'SpAmt',
-			width : 100,
-			align : 'right'
+			title: 'åˆ›å»ºæ—¥æœŸ',
+			field: 'CreateDate',
+			width: 90
 		}
 	]];
 
 	var InGdRecMainGrid = $UI.datagrid('#InGdRecMainGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINGdRec',
-			QueryName: 'Query'
+			QueryName: 'Query',
+			query2JsonStrict: 1
 		},
 		columns: InGdRecMainCm,
-		onSelect:function(index, row){
+		showBar: true,
+		onSelect: function(index, row) {
 			InGdRecDetailGrid.load({
 				ClassName: 'web.DHCSTMHUI.DHCINGdRecItm',
 				QueryName: 'QueryDetail',
+				query2JsonStrict: 1,
 				Parref: row.IngrId
 			});
 		},
-		onDblClickRow:function(index, row){
+		onDblClickRow: function(index, row) {
 			Fn(row.IngrId);
 			$HUI.dialog('#FindWin').close();
 		},
-		onLoadSuccess: function(data){
-			if(data.rows.length > 0){
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
 				InGdRecMainGrid.selectRow(0);
 			}
 		}
 	});
 
-	var InGdRecDetailCm = [[{
-			title : "RowId",
-			field : 'RowId',
-			width : 100,
-			hidden : true
+	var InGdRecDetailCm = [[
+		{
+			title: 'RowId',
+			field: 'RowId',
+			width: 100,
+			hidden: true
 		}, {
-			title : 'Îï×Ê´úÂë',
-			field : 'IncCode',
-			width : 80
+			title: 'ç‰©èµ„ä»£ç ',
+			field: 'IncCode',
+			width: 80
 		}, {
-			title : 'Îï×ÊÃû³Æ',
-			field : 'IncDesc',
-			width : 230
+			title: 'ç‰©èµ„åç§°',
+			field: 'IncDesc',
+			width: 230
 		}, {
-			title : "³§ÉÌ",
-			field : 'Manf',
-			width : 180
+			title: 'ç”Ÿäº§å‚å®¶',
+			field: 'Manf',
+			width: 180
 		}, {
-			title : "ÅúºÅ",
-			field : 'BatchNo',
-			width : 90
+			title: 'æ‰¹å·',
+			field: 'BatchNo',
+			width: 90
 		}, {
-			title : "ÓĞĞ§ÆÚ",
-			field : 'ExpDate',
-			width : 100
+			title: 'æœ‰æ•ˆæœŸ',
+			field: 'ExpDate',
+			width: 100
 		}, {
-			title : "µ¥Î»",
-			field : 'IngrUom',
-			width : 80
+			title: 'å•ä½',
+			field: 'IngrUom',
+			width: 60
 		}, {
-			title : "ÊıÁ¿",
-			field : 'RecQty',
-			width : 80,
-			align : 'right'
+			title: 'æ•°é‡',
+			field: 'RecQty',
+			width: 80,
+			align: 'right'
 		}, {
-			title : "½ø¼Û",
-			field : 'Rp',
-			width : 60,
-			align : 'right'
+			title: 'è¿›ä»·',
+			field: 'Rp',
+			width: 60,
+			align: 'right'
 		}, {
-			title : "ÊÛ¼Û",
-			field : 'Sp',
-			width : 60,
-			align : 'right'
+			title: 'å”®ä»·',
+			field: 'Sp',
+			width: 60,
+			align: 'right'
 		}, {
-			title : "·¢Æ±ºÅ",
-			field : 'InvNo',
-			width : 80
+			title: 'å‘ç¥¨å·',
+			field: 'InvNo',
+			width: 80
 		}, {
-			title : "·¢Æ±ÈÕÆÚ",
-			field : 'InvDate',
-			width : 100
+			title: 'å‘ç¥¨æ—¥æœŸ',
+			field: 'InvDate',
+			width: 100
 		}, {
-			title : "½ø¼Û½ğ¶î",
-			field : 'RpAmt',
-			width : 100,
-			align : 'right'
+			title: 'è¿›ä»·é‡‘é¢',
+			field: 'RpAmt',
+			width: 100,
+			align: 'right'
 		}, {
-			title : "ÊÛ¼Û½ğ¶î",
-			field : 'SpAmt',
-			width : 100,
-			align : 'right'
+			title: 'å”®ä»·é‡‘é¢',
+			field: 'SpAmt',
+			width: 100,
+			align: 'right'
 		}
 	]];
 
 	var InGdRecDetailGrid = $UI.datagrid('#InGdRecDetailGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINGdRecItm',
-			QueryName: 'QueryDetail'
+			QueryName: 'QueryDetail',
+			query2JsonStrict: 1
 		},
-		columns: InGdRecDetailCm
+		columns: InGdRecDetailCm,
+		showBar: true
 	});
 	Clear();
 	FQuery();
-}
+};

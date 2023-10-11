@@ -9,7 +9,7 @@ function InitMED0101Win(){
 	$HUI.combobox('#cboHospital',{
 	    onSelect:function(rows){
 		    var HospID=rows["CTHospID"];
-		    Common_ComboToLoc("cboLocation","E","","",HospID);
+		    Common_ComboToMultiLoc("cboLocation","E","","O",HospID);
 	    }
     });
     var myDate=new Date()

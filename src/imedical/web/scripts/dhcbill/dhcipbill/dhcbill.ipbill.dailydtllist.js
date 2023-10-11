@@ -1,6 +1,6 @@
 ﻿/**
  * FileName: dhcbill.ipbill.dailydtllist.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2018-04-02
  * Description: 病区日清明细
  */
@@ -15,19 +15,19 @@ $(function () {
 function initQueryMenu() {
 	$("#more-container").click(function () {
 		var t = $(this);
-		if (t.find(".arrows-w-text").text() == "更多") {
-			t.find(".arrows-w-text").text("收起");
-			t.find(".spread-w-down").removeClass("spread-w-down").addClass("retract-w-up");
+		var ui = (HISUIStyleCode == "lite") ? "l" : "w";  //+2022-07-08 ZhYW 根据HISUI风格显示上下箭头图标
+		if (t.find(".arrows-" + ui + "-text").text() == $g("更多")) {
+			t.find(".arrows-" + ui + "-text").text($g("收起"));
+			t.find(".spread-" + ui + "-down").removeClass("spread-" + ui + "-down").addClass("retract-" + ui + "-up");
 			$("tr.display-more-td").slideDown("normal", setHeight(140));
 		} else {
-			t.find(".arrows-w-text").text("更多");
-			t.find(".retract-w-up").removeClass("retract-w-up").addClass("spread-w-down");
+			t.find(".arrows-" + ui + "-text").text($g("更多"));
+			t.find(".retract-" + ui + "-up").removeClass("retract-" + ui + "-up").addClass("spread-" + ui + "-down");
 			$("tr.display-more-td").slideUp("normal", setHeight(-140));
 		}
 	});
 	
-	var defDate = getDefStDate(-1);
-	$("#menu-stDate, #menu-endDate").datebox("setValue", defDate);  //初始化日期为昨天
+	$("#menu-stDate, #menu-endDate").datebox("setValue", CV.DefDate);  //初始化日期为昨天
 
 	$("#menu-stTime").timespinner("setValue", "00:00:00");
 	$("#menu-endTime").timespinner("setValue", "23:59:59");
@@ -43,12 +43,13 @@ function initQueryMenu() {
 			printClick(this.id);
 		}
 	});
-
+	
 	$HUI.switchbox("#merge-switch", {
-		onText: '合并',
-		offText: '拆分',
+		onText: $g('合并'),
+		offText: $g('拆分'),
 		animated: true,
-		offClass: 'info',
+		onClass: 'primary',
+		offClass: 'gray',
 		onSwitchChange: function (e, val) {
 			loadDtlList();
 		}
@@ -56,15 +57,21 @@ function initQueryMenu() {
 
 	$HUI.combobox("#menu-ward", {
 		panelHeight: 150,
-		url: $URL + '?ClassName=web.DHCIPBillDailyDtlList&QueryName=FindWard&ResultSetType=array',
-		mode: 'remote',
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryWard&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
 		valueField: 'id',
-		textField: 'ward',
+		textField: 'text',
 		selectOnNavigation: false,
 		value: PUBLIC_CONSTANT.SESSION.WARDID,   //默认本病区
-		onBeforeLoad: function (param) {
-			param.desc = param.q;
-			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
+		defaultFilter: 5,
+		blurValidValue: true,
+		filter: function(q, row) {
+			var opts = $(this).combobox("options");
+			var mCode = false;
+			if (row.contactName) {
+				mCode = row.contactName.toUpperCase().indexOf(q.toUpperCase()) >= 0
+			}
+			var mValue = row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0;
+			return mCode || mValue;
 		},
 		onChange: function (newValue, oldValue) {
 			$("#menu-episodeId").combogrid("clear").combogrid("grid").datagrid("reload");
@@ -78,7 +85,7 @@ function initQueryMenu() {
 		pagination: true,
 		selectOnNavigation: false,
 		showRefresh: false,
-		url: $URL + '?ClassName=web.DHCIPBillDailyDtlList&QueryName=FindPatAdm',
+		url: $URL + '?ClassName=web.DHCIPBillDailyDtlList&QueryName=FindAdmList',
 		mode: 'remote',
 		delay: 500,
 		lazy: true,
@@ -121,33 +128,38 @@ function initQueryMenu() {
 
 	$HUI.combobox("#menu-userDept, #menu-recDept", {
 		panelHeight: 150,
-		url: $URL + '?ClassName=web.DHCIPBillDailyDtlList&QueryName=FindDept&ResultSetType=array',
-		editable: true,
-		mode: 'remote',
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryDept&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
 		valueField: 'id',
-		textField: 'dept',
-		onBeforeLoad: function (param) {
-			param.desc = param.q;
-			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
+		textField: 'text',
+		defaultFilter: 5,
+		blurValidValue: true,
+		filter: function(q, row) {
+			var opts = $(this).combobox("options");
+			var mCode = false;
+			if (row.contactName) {
+				mCode = row.contactName.toUpperCase().indexOf(q.toUpperCase()) >= 0
+			}
+			var mValue = row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0;
+			return mCode || mValue;
 		}
 	});
 	
 	$HUI.combobox("#menu-userDeptGrp", {
 		panelHeight: 150,
-		url: $URL + "?ClassName=web.DHCIPBillDailyDtlList&QueryName=FindDeptGrp&ResultSetType=array&hospId=" + PUBLIC_CONSTANT.SESSION.HOSPID,
+		url: $URL + "?ClassName=web.DHCBillOtherLB&QueryName=QryDeptGrp&ResultSetType=array&hospId=" + PUBLIC_CONSTANT.SESSION.HOSPID,
 		editable: true,
 		valueField: 'id',
-		textField: 'deptGrp',
-		defaultFilter: 4
+		textField: 'text',
+		defaultFilter: 5
 	});
 
 	$HUI.combobox("#menu-tarCate", {
 		panelHeight: 150,
-		url: $URL + "?ClassName=web.DHCIPBillDailyDtlList&QueryName=FindTarCate&ResultSetType=array&hospId=" + PUBLIC_CONSTANT.SESSION.HOSPID,
+		url: $URL + "?ClassName=web.DHCBillOtherLB&QueryName=QryTarIC&ResultSetType=array&hospId=" + PUBLIC_CONSTANT.SESSION.HOSPID,
 		editable: true,
 		valueField: 'id',
-		textField: 'cate',
-		defaultFilter: 4
+		textField: 'text',
+		defaultFilter: 5
 	});
 }
 
@@ -165,8 +177,8 @@ function initPatTree() {
 		},
 		onLoadSuccess: function (node, data) {
 			var patNum = (data.length > 0) ? data[0].children.length : 0;
-			$("#head-menu").layout('panel', 'north').panel({
-				title: "患者列表 ( " + patNum + "人 )"
+			$(".layout:eq(0)").layout("panel", "west").panel({
+				title: $g("患者列表 ")+ "(" + patNum + $g("人") + ")"
 			});
 		}
 	});
@@ -178,34 +190,48 @@ function initDtlList() {
 		border: false,
 		bodyCls: 'panel-header-gray',
 		singleSelect: true,
-		fitColumns: false,
 		pagination: true,
 		pageSize: 20,
 		toolbar: [],
-		data: [],
-		frozenColumns: [[{title: '姓名', field: 'TPatName', width: 100},
+		frozenColumns: [[{title: '患者姓名', field: 'TPatName', width: 100},
 						 {title: '床号', field: 'TBedName', width: 60}
 			]],
-		columns: [[{title: '分类', field: 'TCateDesc', width: 100, styler: setCellStyle},
-				   {title: '项目名称', field: 'TItemDesc', width: 180},
-				   {title: '数量', field: 'TQty', width: 80},
-				   {title: '单位', field: 'TUom', width: 70},
-				   {title: '单价', field: 'TPrice', align: 'right',width: 100},
-				   {title: '金额', field: 'TAmt', align: 'right', width: 100, formatter: formatAmt, styler: setCellStyle},
-				   {title: '日期', field: 'TDate', width: 100},
-				   {title: '时间', field: 'TTime', width: 100},
-				   {title: '物价编码', field: 'TChargeBasis', width: 100},
-				   {title: '医保等级', field: 'TYBLevel', width: 80},
-				   {title: '自付比例', field: 'TYBSelfRate', width: 80}
-			]],
+		className: "web.DHCIPBillDailyDtlList",
+		queryName: "FindDailyDtl",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["TRegNo", "TMrNo", "TPatName", "TSex", "TAdm", "TBedName"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if (cm[i].field == "TItemDesc") {
+						cm[i].width = 180;
+					}
+					if (cm[i].field == "TQty") {
+						cm[i].width = 80;
+					}
+					if (cm[i].field == "TUom") {
+						cm[i].width = 70;
+					}
+				}
+				if ($.inArray(cm[i].field, ["TCateDesc", "TAmt"]) != -1) {
+					cm[i].styler = setCellStyle;
+				}
+			}
+		},
 		rowStyler: setRowStyle,
 		onLoadSuccess: function (data) {
+			var colCont = GV.DtlList.getColumnFields().filter(function(field) {
+				return !GV.DtlList.getColumnOption(field).hidden;
+			}).length;
 			$.each(data.rows, function (index, row) {
 				if ($.trim(row.TPatName)) {
 					GV.DtlList.mergeCells({
 						index: index,
 						field: 'TCateDesc',
-						colspan: GV.DtlList.getColumnFields().length
+						colspan: colCont
 					});
 				}
 			});
@@ -219,28 +245,54 @@ function initCateList() {
 		border: false,
 		bodyCls: 'panel-header-gray',
 		singleSelect: true,
-		fitColumns: false,
 		pagination: true,
 		pageSize: 20,
 		toolbar: [],
-		data: [],
-		frozenColumns: [[{title: '姓名', field: 'TPatName', width: 100},
+		frozenColumns: [[{title: '患者姓名', field: 'TPatName', width: 100},
 						 {title: '床号', field: 'TBedName', width: 60}
 			]],
-		columns: [GV.CateColumns],
+		className: "web.DHCIPBillDailyDtlList",
+		queryName: "FindCateFee",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["TRegNo", "TMrNo", "TPatName", "TSex", "TAdm", "TBedName"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				cm[i].styler = setCellStyle;
+				if (!cm[i].width) {
+					cm[i].width = 100;
+				}
+			}
+		},
 		rowStyler: setRowStyle,
 		onLoadSuccess: function (data) {
+			var colCont = GV.CateList.getColumnFields().filter(function(field) {
+				return !GV.CateList.getColumnOption(field).hidden;
+			}).length;
 			$.each(data.rows, function (index, row) {
 				if ($.trim(row.TPatName)) {
 					GV.CateList.mergeCells({
 						index: index,
-						field: "TCateDesc1",
-						colspan: GV.CateList.getColumnFields().length
+						field: 'TCateDesc1',
+						colspan: colCont
 					});
 				}
 			});
 		}
 	});
+}
+
+/**
+* 修改datagrid 单元格 Style
+* @method setCellStyle
+* @author ZhYW
+*/
+function setCellStyle(value, row, index) {
+	var cateDesc = row.TCateDesc || row.TCateDesc1;
+	if ($.inArray(cateDesc, [$g("小计"), $g("总计")]) != -1) {
+		return "font-weight: bold";
+	}
 }
 
 /**
@@ -250,7 +302,8 @@ function initCateList() {
  */
 function setRowStyle(index, row) {
 	if ($.trim(row.TPatName)) {
-		return "background-color: #40a2de; color: #fff;";
+		var bgColor = (HISUIStyleCode == "lite") ? "#339EFF" : "#40a2de";
+		return "color:#fff;background-color:" + bgColor + ";";
 	}
 }
 
@@ -287,8 +340,7 @@ function loadDtlList() {
 		stTime: $("#menu-stTime").timespinner("getValue"),
 		endDate: getValueById("menu-endDate"),
 		endTime: $("#menu-endTime").timespinner("getValue"),
-		otherQryStr: otherQryStr,
-		guser: PUBLIC_CONSTANT.SESSION.USERID
+		otherQryStr: otherQryStr
 	};
 	loadDataGridStore("dtlList", queryParams);
 }
@@ -316,7 +368,6 @@ function loadCateList() {
 		endDate: getValueById("menu-endDate"),
 		endTime: $("#menu-endTime").timespinner("getValue"),
 		otherQryStr: otherQryStr,
-		guser: PUBLIC_CONSTANT.SESSION.USERID,
 		hospId: PUBLIC_CONSTANT.SESSION.HOSPID
 	};
 	loadDataGridStore("cateList", queryParams);
@@ -329,13 +380,13 @@ function loadCateList() {
  * @author ZhYW
  */
 function setHeight(num) {
-	var l = $("#head-menu");
+	var l = $(".layout:eq(1)");
 	var n = l.layout("panel", "north");
 	var nh = parseInt(n.panel("panel").outerHeight()) + parseInt(num);
 	n.panel("resize", {
 		height: nh
 	});
-	if (+num > 0) {
+	if (num > 0) {
 		$("tr.display-more-td").show();
 	} else {
 		$("tr.display-more-td").hide();
@@ -354,14 +405,11 @@ function setHeight(num) {
  * @author ZhYW
  */
 function getTreeChecked() {
-	var myAry = [];
-	$.each(GV.PatTree.getChecked(), function (index, node) {
-		if (GV.PatTree.isLeaf(node.target)) {
-			myAry.push(node.id);
-		}
-	});
-	var admStr = myAry.join("!");
-	return admStr;
+	return GV.PatTree.getChecked().filter(function(node) {
+		return GV.PatTree.isLeaf(node.target);
+	}).map(function(node) {
+		return node.id;
+	}).join("!");
 }
 
 /**
@@ -397,8 +445,8 @@ function printClick(btnId) {
 	default:
 	}
 	var params = "&wardId=" + wardId + "&admStr=" + admStr + "&stDate=" + stDate + "&stTime=" + stTime;
-	params += "&endDate=" + endDate + "&endTime=" + endTime + "&guser=" + PUBLIC_CONSTANT.SESSION.USERID;
-	params += "&hospId=" + PUBLIC_CONSTANT.SESSION.HOSPID + "&otherQryStr=" + otherQryStr;
+	params += "&endDate=" + endDate + "&endTime=" + endTime + "&hospId=" + PUBLIC_CONSTANT.SESSION.HOSPID;
+	params += "&otherQryStr=" + otherQryStr;
 	
 	var pageAdmFlag = $.m({ClassName: "web.DHCBillPageConf", MethodName: "GetPageConfValue", cspName: "dhcbill.ipbill.dailydtllist.csp", code: "PA", groupId: "", hospId: PUBLIC_CONSTANT.SESSION.HOSPID}, false);
 	params += "&pageAdmFlag=" + pageAdmFlag;

@@ -114,7 +114,7 @@ function InitCtlResultWinEvent(obj){
     });		
 	obj.btnMsgSend_Click = function(patName,EpisodeID)
 	{		
-		var url = "../csp/dhchai.ir.ccmessage.csp?EpisodeDr=" + EpisodeID + "&PageType=layerOpen&MsgType=1";
+		var url = "../csp/dhcma.hai.ir.ccmessage.csp?EpisodeDr=" + EpisodeID + "&PageType=layerOpen&MsgType=1";
 		obj.idxLayerMsg = layer.open({
 			type: 2,  //0(–≈œ¢øÚ,ƒ¨»œ) 1(“≥√Ê≤„)  2(iframe≤„) 3(º”‘ÿ≤„) 4(tips≤„)
 			maxmin: false,
@@ -344,9 +344,26 @@ function InitCtlResultWinEvent(obj){
 		obj.layer_rd = rd;
 		var EpisodeID = $(this).attr("data-EpisodeID");
 		var DiasID = $(this).attr("data-DiasID");
-		OpenINFDiagnosEdit(EpisodeID, DiasID);
+		//OpenINFDiagnosEdit(EpisodeID, DiasID);
+		obj.OpenInfPosDialog(EpisodeID, DiasID,rd["AdmitDate"],rd["DischDate"])
     });
 	
+	 obj.OpenInfPosDialog = function(aEpisodeID,aDiasID,aAdmitDate,aDischDate){
+	    var t=new Date();
+		t=t.getTime();
+	 
+		var strUrl = "./dhcma.hai.ir.infdiagnos.csp?EpisodeID=" + aEpisodeID + "&DiagID=" + aDiasID +"&AdmitDate=" + aAdmitDate +"&DischDate=" + aDischDate+"&t=" + t ;
+		websys_showModal({
+			url:strUrl,
+			title:'∏–»æ’Ô∂œ-±‡º≠',
+			iconCls:'icon-w-paper',  
+			width:'1010',
+			height:'555',
+			onBeforeClose:function(){
+				obj.gridReport.ajax.reload(null,false);
+			} 
+		});
+    }
 	function refreshGridReport()
 	{
 		if(obj.gridReport==null)

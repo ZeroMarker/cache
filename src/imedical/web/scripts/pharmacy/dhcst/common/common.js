@@ -139,6 +139,7 @@ var DHCST =({
                     _text = '  删  除  数  据  中'
                 }
             }
+            _text = $g(_text);
             $.messager.progress({
                 title: '请耐心等待...',
                 text: _text,
@@ -178,6 +179,9 @@ var DHCST =({
         if (isPreview == 1) {
             fileName = raqName+ "&"+ params;
             if (isPath == 1) {
+                if (typeof websys_writeMWToken !== 'undefined') {
+                    return websys_writeMWToken("dhccpmrunqianreport.csp?reportName=" + fileName);
+                }
                 return "dhccpmrunqianreport.csp?reportName=" + fileName;
             } else {
                 DHCCPM_RQPrint(fileName, window.screen.availWidth * 0.5, window.screen.availHeight);

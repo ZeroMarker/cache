@@ -56,7 +56,7 @@ function InitPatInfoPanel(){
 	
 	//卡类型
 	$('#CardTypeDr').combobox({
-		url:$URL+"?ClassName=web.DHCEMPatCheckLevCom&MethodName=CardTypeDefineListBroker",
+		url:$URL+"?ClassName=web.DHCEMPatCheckLevCom&MethodName=CardTypeDefineListBroker"+"&MWToken="+websys_getMWToken(),
 		valueField: 'value',
 		textField: 'text',
 		blurValidValue:true,
@@ -76,8 +76,7 @@ function InitPatInfoPanel(){
 	
 	/// 申请科室
 	$HUI.combobox("#CstRLoc",{
-		//url:$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonAllLoc&HospID="+LgHospID,
-		url:$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonGrpLoc",
+		url:$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonReqLoc&HospID="+ LgHospID+"&MWToken="+websys_getMWToken(),  //JsonGrpLoc
 		valueField:'value',
 		textField:'text',
 		mode:'remote',
@@ -88,7 +87,7 @@ function InitPatInfoPanel(){
 	
 	/// 会诊状态
 	$HUI.combobox("#consStatus",{
-		url:$URL+"?ClassName=web.DHCMDTCom&MethodName=GetListMdtStatus&HospID="+ LgHospID,
+		url:$URL+"?ClassName=web.DHCMDTCom&MethodName=GetListMdtStatus&HospID="+ LgHospID+"&MWToken="+websys_getMWToken(),
 		valueField:'value',
 		textField:'text',
 		onSelect:function(option){
@@ -98,7 +97,7 @@ function InitPatInfoPanel(){
 	
 	/// 疑难病种
 	$HUI.combobox("#mdtDisGrp",{
-		url:$URL+"?ClassName=web.DHCMDTGroup&MethodName=jsonGroupAll&HospID="+LgHospID,
+		url:$URL+"?ClassName=web.DHCMDTGroup&MethodName=jsonGroupAll&HospID="+LgHospID+"&MWToken="+websys_getMWToken(),
 		valueField:'value',
 		textField:'text',
 		onSelect:function(option){
@@ -112,6 +111,17 @@ function InitPatInfoPanel(){
 		valueField:'value',
 		textField:'text',
 		onSelect:function(option){
+	    }	
+	})
+
+	/// 医院
+	$HUI.combobox("#HospID",{
+		url:$URL+"?ClassName=web.DHCMDTCom&MethodName=getHosp",
+		valueField:'value',
+		textField:'text',
+		onSelect:function(option){
+			var url=$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonReqLoc&HospID="+ option.value+"&MWToken="+websys_getMWToken()
+			$("#CstRLoc").combobox("reload",url)
 	    }	
 	})
 	$HUI.combobox("#AuditFlag").setValue("N");
@@ -133,7 +143,7 @@ function PatCardNo_KeyPress(e){
 			return;
 		}
 		var CardNoLen = CardNo.length;
-		if ((CardNo == "")||(m_CardNoLength < CardNoLen)){
+		if ((((CardNo == "")||(m_CardNoLength < CardNoLen)))&(m_CardNoLength != 0)&(m_CardNoLength != "")){
 			$.messager.alert("提示:","卡号输入错误,请重新录入！");
 			return;
 		}
@@ -177,8 +187,8 @@ function InitPatList(){
 		{field:'PatNo',title:'病人ID',width:100},
 		{field:'PayMony',title:'收费状态',width:80,formatter:
 			function (value, row, index){
-				if (value == "未收费"){return '<font style="color:red;font-weight:bold;">'+value+'</font>'}
-				else {return '<font style="color:green;font-weight:bold;">'+value+'</font>'}
+				if (value == "N"){return '<font style="color:red;font-weight:bold;">'+$g("未收费")+'</font>'}
+				else {return '<font style="color:green;font-weight:bold;">'+$g("已收费")+'</font>'}
 			}
 		},
 		{field:'CstStatus',title:'会诊状态',width:80,formatter:
@@ -194,8 +204,8 @@ function InitPatList(){
 		},{field:'PrintCons',title:'打印告知单',width:80,align:'center',formatter:
 			function (value, row, index){
 				
-				if (row.PrintFlag.indexOf("Z")!=-1){return '<font style="color:green;font-weight:bold;">已打印</font>'}
-				else {return '<font style="color:red;font-weight:bold;">未打印</font>'}
+				if (row.PrintFlag.indexOf("Z")!=-1){return '<font style="color:green;font-weight:bold;">'+$g('已打印')+'</font>'}
+				else {return '<font style="color:red;font-weight:bold;">'+$g('未打印')+'</font>'}
 			}
 		},
 		{field:'PatLoc',title:'就诊科室',width:120},
@@ -205,6 +215,7 @@ function InitPatList(){
 		{field:'CstRTime',title:'申请时间',width:160},
 		{field:'CstLocArr',title:'参加会诊科室',width:220},
 		{field:'CstPrvArr',title:'参加会诊医师',width:220},
+		{field:'OutHospConsDoc',title:'参加外院医师',width:220},
 		{field:'MedicareNo',title:'病案号',width:120},
 		{field:'PatTelH',title:'病人电话',width:150},
 		{field:'CstTrePro',title:'简要病历',width:400,formatter:SetCellField},
@@ -240,7 +251,7 @@ function InitPatList(){
 	/// 就诊类型
 	var PatNo = $("#PatNo").val();
 	var param = "^^^"+ PatNo +"^^^^^^^^"+ QryType;
-	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsGetMdtAudit&Params="+param;
+	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsGetMdtAudit&Params="+param+"&LgParams="+LgParam+"&MWToken="+websys_getMWToken();
 	new ListComponent('bmDetList', columns, uniturl, option).Init(); 
 }
 
@@ -280,7 +291,7 @@ function QryPatList(){
 /// 填写MDT申请
 function WriteMdt(EpisodeID, mdtID){
 
-	var Link = "dhcmdt.write.csp?EpisodeID="+EpisodeID +"&ID="+mdtID+"&seeCstType=1";
+	var Link = "dhcmdt.write.csp?EpisodeID="+EpisodeID +"&ID="+mdtID+"&seeCstType=1"+"&MWToken="+websys_getMWToken();
 	mdtPopWin(1, Link); /// 弹出MDT会诊处理窗口
 }
 
@@ -295,6 +306,10 @@ function mdtPopWin(WidthFlag, Link){
 		iconCls:'icon-w-paper',
 		closed:"true"
 	};
+	//签到后，刷新列表 ylp
+	if(WidthFlag == 3){
+		option.onClose=QryPatList
+		}
 	var mdtWinTitle = "";
 	if (WidthFlag == 2) mdtWinTitle = $g("安排");
 	if (WidthFlag == 3) mdtWinTitle = $g("签到");
@@ -308,7 +323,7 @@ function mdtPopWin(WidthFlag, Link){
 		new WindowUX(mdtWinTitle, 'mdtResWin', 910, 460, option).Init();
 	}else{
 		$("#mdtFrame").attr("src",Link);
-		new WindowUX(mdtWinTitle||$g('MDT修改医生'), 'mdtWin', 1400, 630, option).Init();
+		new WindowUX(mdtWinTitle||$g('MDT修改医生'), 'mdtWin', 1300, 630, option).Init();
 	}
 }
 
@@ -327,7 +342,7 @@ function Print(){
 	
 	var mCstID = rowData.ID;
 	if(PrintWay==1){
-	    window.open("dhcmdt.printconsmdtopin.csp?CstID="+mCstID);
+	    window.open("dhcmdt.printconsmdtopin.csp?CstID="+mCstID+"&MWToken="+websys_getMWToken());
 	}else{
 	    PrintCons(mCstID);  /// 打印会诊申请单	
 	}
@@ -346,8 +361,8 @@ function printZQTYS(){
 	}
 	
 	if (rowData.PayMony == "未收费"){
-		$.messager.alert('提示',"当前会诊未收费，不能打印!","error");
-		return;
+		//$.messager.alert('提示',"当前会诊未收费，不能打印!","error");
+		//return;
 	}
 	
 	if (GetIsOperFlag(rowData.ID, "10") == "1"){
@@ -422,34 +437,37 @@ function mdtHandleWin(FlagCode){
 		return;
 	}
 
-	var itmCodes = (HasCenter == 1)?"30^40":"20^40"; /// 有无中心时，控制在何种状态下允许修改资源
+	var itmCodes = (HasCenter != 0)?"30^40":"20^40"; /// 有无中心时，控制在何种状态下允许修改资源
 	if ((FlagCode == "R")&(GetIsTakOperFlag(rowData.ID, itmCodes) != "1")){
-		$.messager.alert("提示:","申请单当前状态，不允许进行此操作！","warning");
+		var TipMes=(HasCenter != 0?"非安排状态":"非发送状态")
+		$.messager.alert("提示:","申请单"+TipMes+",不允许进行资源修改！","warning");
 		return;
 	}
-	
-	var itmCodes = (HasCenter == 1)?"30":"20"; /// 有无中心时，控制在何种状态下允许签到
-	if ((FlagCode == "W")&(GetIsOperFlag(rowData.ID, itmCodes) != "1")){
-		$.messager.alert("提示:","申请单当前状态，不允许进行此操作！","warning");
-		return;
+	var itmCodes = (HasCenter != 0)?"30^70":"20^70"; /// 有无中心时，控制在何种状态下允许修改资源
+	if ((FlagCode == "W")&(GetIsTakOperFlag(rowData.ID, itmCodes) != "1")){
+		var TipMes=(HasCenter != 0?"非安排状态":"非发送状态")
+			$.messager.alert('提示',"申请单"+TipMes+",不允许签到！","error");
+			return;
 	}
 
 	var Link = ""; WidthFlag = 0;
 	if (FlagCode == "P"){
 		WidthFlag = 2;
-		Link = "dhcmdt.makeresplan.csp?ID="+rowData.ID +"&mdtMakResID="+rowData.mdtMakResID+"&DisGrpID="+ rowData.DisGrpID+"&EpisodeID="+ rowData.EpisodeID;
+		Link = "dhcmdt.matreview.csp?ID="+rowData.ID +"&mdtMakResID="+rowData.mdtMakResID+"&DisGrpID="+ rowData.DisGrpID+"&EpisodeID="+ rowData.EpisodeID
+			+"&IsConsCentPlan=1"+"&MWToken="+websys_getMWToken();
+		//Link = "dhcmdt.makeresplan.csp?ID="+rowData.ID +"&mdtMakResID="+rowData.mdtMakResID+"&DisGrpID="+ rowData.DisGrpID+"&EpisodeID="+ rowData.EpisodeID;
 	}else if (FlagCode == "W"){
 		WidthFlag = 3;
-		Link = "dhcmdt.conssignin.csp?ID="+rowData.ID;
+		Link = "dhcmdt.conssignin.csp?ID="+rowData.ID+"&MWToken="+websys_getMWToken();
 	}else if (FlagCode == "U"){
-		Link = "dhcmdt.updconsdoc.csp?ID="+rowData.ID +"&DisGrpID="+ rowData.DisGrpID;
+		Link = "dhcmdt.updconsdoc.csp?ID="+rowData.ID +"&DisGrpID="+ rowData.DisGrpID+"&MWToken="+websys_getMWToken();
 	}else if (FlagCode == "R"){
 		selMdtMakResID = rowData.mdtMakResID; /// 资源ID
-		Link = "dhcmdt.makeresources.csp?ID="+rowData.ID +"&mdtMakResID="+rowData.mdtMakResID+"&DisGrpID="+ rowData.DisGrpID +"&EpisodeID="+ rowData.EpisodeID;
+		Link = "dhcmdt.makeresources.csp?ID="+rowData.ID +"&mdtMakResID="+rowData.mdtMakResID+"&DisGrpID="+ rowData.DisGrpID +"&EpisodeID="+ rowData.EpisodeID+"&MWToken="+websys_getMWToken();
 		$("#mdtID").val(rowData.ID);  /// mdt 会诊ID
 		WidthFlag = 5;
 	}else{
-		Link = "dhcmdt.execonclusion.csp?EpisodeID="+rowData.EpisodeID +"&ID="+rowData.ID;
+		Link = "dhcmdt.execonclusion.csp?EpisodeID="+rowData.EpisodeID +"&ID="+rowData.ID+"&MWToken="+websys_getMWToken();
 		WidthFlag = 1;
 	}
 
@@ -500,17 +518,17 @@ function GetCurSystemDate(offset){
 /// 检查项目绑定提示栏
 function BindTips(){
 	
-	var html='<div id="tip" style="border-radius:3px; display:none; border:1px solid #000; padding:10px; margin:5px; position: absolute; background-color: #000;color:#FFF;"></div>';
+	var html='<div id="tip" style="border-radius:3px; display:none; border:1px solid #000; padding:10px; margin:5px; position: absolute; background-color: #000;color:#FFF;word-break:break-all;"></div>';
 	$('body').append(html);
 	
 	/// 鼠标离开
-	$('td[field="CstTrePro"],td[field="CstPurpose"]').on({
+	$('td[field="CstTrePro"],td[field="CstPurpose"],td[field="McNotes"]').on({
 		'mouseleave':function(){
 			$("#tip").css({display : 'none'});
 		}
 	})
 	/// 鼠标移动
-	$('td[field="CstTrePro"],td[field="CstPurpose"]').on({
+	$('td[field="CstTrePro"],td[field="CstPurpose"],td[field="McNotes"]').on({
 		'mousemove':function(){
 			
 			var tleft=(event.clientX + 10);
@@ -547,29 +565,22 @@ function RetMakRes(){
 		return;
 	}
 	
-	$.messager.confirm('确认对话框','退号会释放此号别预约资源，并且停止会诊医嘱，您确定要进行此操作吗？', function(r){
+	var IsValid=GetIsTakOperFlagNew(rowData.ID,"25");
+	if (IsValid!=0){
+		$.messager.alert('提示',IsValid,"error");
+		return;
+	}
+	
+	$.messager.confirm('确认对话框','如果是想更改预约日期和地点,请通过修改资源操作！退号会释放此号别预约资源,并且停止会诊医嘱,您确定要进行此操作吗？', function(r){
 		if (r){
 			/// 保存
-			runClassMethod("web.DHCMDTConsult","RetMakRes",{"CstID":rowData.ID, "LgParams":LgParam},function(jsonString){
-				if (jsonString == -1){
-					$.messager.alert("提示:","申请单当前状态，不允许进行退号操作！","warning");
-					return;
-				}
-				if (jsonString == -2){
-					$.messager.alert("提示:","已收费申请不允许撤销，请填写退费申请！","warning");
-					return;
-				}
-				if (jsonString == -3){
-					$.messager.alert("提示:","医嘱已执行，请护士先撤消执行！","warning");
-					return;
-				}
-				if (jsonString < 0){
-					$.messager.alert("提示:","退号失败！","warning");
-					return;
-				}
-				if (jsonString == 0){
-					$.messager.alert("提示:","退号成功！","info");
+			runClassMethod("web.DHCMDTConsult","CancelArrange",{"CstID":rowData.ID, "LgParams":LgParam},function(jsonString){
+				
+				if ( jsonString == 0){
+					$.messager.alert("提示:","取消安排成功！","info");
 					$("#bmDetList").datagrid("reload");
+				}else{
+					$.messager.alert("提示:","失败,信息:"+jsonString,"error");	
 				}
 			},'',false)
 		}
@@ -753,7 +764,7 @@ function AddNotes(){
 		$.messager.alert('提示',"请先选择一行记录!","error");
 		return;
 	}
-	var linkUrl ="dhcmdt.addnotes.csp?ID="+rowData.ID+"&DisGrpID="+ rowData.DisGrpID+"&EpisodeID="+ rowData.EpisodeID;
+	var linkUrl ="dhcmdt.addnotes.csp?ID="+rowData.ID+"&DisGrpID="+ rowData.DisGrpID+"&EpisodeID="+ rowData.EpisodeID+"&MWToken="+websys_getMWToken();
 	commonShowWin({
 		url: linkUrl,
 		title: $g("备注"),
@@ -771,9 +782,9 @@ function modProWin(){
 		return;
 	}
 	
-	var itmCodes = (HasCenter == 1)?"30^40":"20^40"; /// 有无中心时，控制在何种状态下允许编辑
+	var itmCodes ="20^30^40"; /// 有无中心时，控制在何种状态下允许编辑
 	if (GetIsTakOperFlag(rowData.ID, itmCodes) != "1"){
-		$.messager.alert("提示:","申请单当前状态，不允许进行此操作！","warning");
+		$.messager.alert("提示:","申请单非发送和安排状态,不允许修改专家！","warning");
 		return;
 	}
 	
@@ -782,13 +793,76 @@ function modProWin(){
 //		return;
 //	}
 	
-	var Link = "dhcmdt.updconsdoc.csp?ID="+rowData.ID +"&DisGrpID="+ rowData.DisGrpID;
+	var Link = "dhcmdt.updconsdoc.csp?ID="+rowData.ID +"&DisGrpID="+ rowData.DisGrpID+"&MWToken="+websys_getMWToken();
 	commonShowWin({
 		url: Link,
 		title: $g("修改专家"),
 		width: 1200,
 		height: 590
 	})	
+}
+
+
+/// 预约 二级页面
+function TakPlan(){
+	
+	var rowData = $('#bmDetList').datagrid('getSelected');
+	if (rowData == null){
+		$.messager.alert('提示',"请先选择一行记录!","error");
+		return;
+	}
+	
+	var IsValid=GetIsTakOperFlagNew(rowData.ID,"30");
+	if (IsValid!=0){
+		$.messager.alert('提示',IsValid,"error");
+		return;
+	}
+	
+	var Link="";
+	if(IsOpenMoreScreen==1){
+		Link = "dhcmdt.consarrange.csp?EpisodeID="+rowData.EpisodeID+"&PatientID="+rowData.PatientID+"&ID="+rowData.ID+"&IsConsCentPlan=1&mdtMakResID="+rowData.mdtMakResID+"&MWToken="+websys_getMWToken();
+	}else{
+		Link = "dhcmdt.matreview.csp?ID="+rowData.ID +"&mdtMakResID="+rowData.mdtMakResID+"&DisGrpID="+ rowData.DisGrpID+"&EpisodeID="+ rowData.EpisodeID+"&MWToken="+websys_getMWToken()	
+			+"&IsConsCentPlan=1";
+	}
+		
+	
+	commonShowWin({
+		url: Link,
+		title: $g("安排"),
+		width: $(window).width() - 60,
+		height: $(window).height() - 120,
+		onClose:function(){
+			QryPatList();
+			openVisScreen();
+		}
+	})	
+	return;
+}
+
+function openVisScreen(){
+	if(!IsOpenMoreScreen) return;
+	var Obj={
+		
+	}
+	websys_emit("onMdtConsPortalOpen",Obj);	
+}
+
+
+/// 是否允许操作
+function GetIsTakOperFlagNew(CstID, ToStCode){
+	var Ret=$.cm({ 
+		ClassName:"web.DHCMDTConsult",
+		MethodName:"ValidStatus",
+		ID:CstID,ToStatusIdCode:ToStCode,
+		dataType:"text"
+	}, false);
+	return Ret;
+}
+
+///
+function TakClsWin(){
+	commonCloseWin();	
 }
 
 /// 多语言支持

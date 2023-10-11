@@ -51,7 +51,7 @@
     //加载传染病信息
     obj.showEpdData = function() {
 	    var arrEpdData =  obj.EpidemicList.split("^");
-	    $('#EpdTips').append('本调查登记表关联传染病报告:'+arrEpdData[17]+' 报告日期:'+arrEpdData[25]+' 当前报告状态:'+arrEpdData[24]);
+	    $('#EpdTips').append($g('本调查登记表关联传染病报告:')+arrEpdData[17]+$g(' 报告日期:')+arrEpdData[25]+$g(' 当前报告状态:')+arrEpdData[24]);
 	    $('#txtPapmiNo').val(arrEpdData[2]);
 		$('#txtInPatientMrNo').val(arrEpdData[3]);		
 		$('#txtPatientName').val(arrEpdData[4]);					
@@ -72,7 +72,7 @@
 	
 		if (!obj.reportID) {
 			$('#txtIdentity').val(arrEpdData[18]);
-			$('#txtRepUser').val(session['LOGON.USERNAME']);
+			$('#txtRepUser').val(DocName);
 			$('#dtRepDate').datebox('setValue', Common_GetDate(new Date()));
 		}
     }
@@ -186,7 +186,9 @@
             $('#cboSampleType').combobox('disable');
             $('#cboSampleResult').combobox('disable');
             $('#btnSaveSample').linkbutton('disable');
-            $('#btnDeleteSample').linkbutton('disable');           
+            $('#btnDeleteSample').linkbutton('disable');  
+			$('#btnSaveSample').hide();
+            $('#btnDeleteSample').hide();           
 
         }else {
            
@@ -241,6 +243,8 @@
             $('#cboSampleResult').combobox('enable');
             $('#btnSaveSample').linkbutton('enable');
             $('#btnDeleteSample').linkbutton('enable');
+			$('#btnSaveSample').show();
+            $('#btnDeleteSample').show();           
         }       
     }
 
@@ -269,14 +273,16 @@
                 $('#btnSaveRep').show();    // 报卡
                 $('#btnSaveRep').linkbutton({text:'修改报卡'});
                 $('#btnDelete').show();  // 删除
-            } else if (statusCode==6) { // 草稿
+            } 
+            /*else if (statusCode==6) { // 草稿
                 $('#btnSaveTmp').show();    // 草稿
                 $('#btnSaveRep').show();    // 报卡
                 $('#btnDelete').show();     // 删除
-            } else if (statusCode==7) { // 删除
+            }*/ 
+            else if (statusCode==7) { // 删除
                 //
             } else {                    // 无报告
-                $('#btnSaveTmp').show();    // 草稿
+               // $('#btnSaveTmp').show();    // 草稿
                 $('#btnSaveRep').show();    // 报卡
             }
 
@@ -296,14 +302,14 @@
                 $('#btnSaveRep').show();    // 报卡
                 $('#btnSaveRep').linkbutton({text:'修改报卡'});
                 $('#btnDelete').show();  // 删除
-            } else if (statusCode==6) { // 草稿
+            } /*else if (statusCode==6) { // 草稿
                 $('#btnSaveTmp').show();    // 草稿
                 $('#btnSaveRep').show();    // 报卡
                 $('#btnDelete').show();     // 删除
-            } else if (statusCode==7) { // 删除
+            } */else if (statusCode==7) { // 删除
                 //
             } else {                    // 无报告
-                $('#btnSaveTmp').show();    // 草稿
+               // $('#btnSaveTmp').show();    // 草稿
                 $('#btnSaveRep').show();    // 报卡
             }
         }
@@ -486,19 +492,19 @@
 	    $('#cboMarketType').combobox('setValue',MarketTypeID);
 	    $('#cboMarketType').combobox('setText',MarketTypeDesc);
 	
-		if (ChestXrayDesc=="有"){	
+		if (ChestXrayDesc==$g("有")){	
 			$('#dtChestXrayDate').datebox('enable');
         }
-		if (ChestCTDesc=="有"){	
+		if (ChestCTDesc==$g("有")){	
 			$('#dtChestCTDate').datebox('enable');
         }
-		if (OccupationDesc=="其他"){	
+		if (OccupationDesc==$g("其他")){	
 			$('#txtOccupation').removeAttr("disabled");
         }
-		if (MarketDesc=="是"){	
+		if (MarketDesc==$g("是")){	
 			$('#txtDistance').removeAttr('disabled');
         }
-		if (IsMarketDesc=="是"){	
+		if (IsMarketDesc==$g("是")){	
 			$('#cboMarketType').combobox('enable'); 
 		}
     }
@@ -527,7 +533,7 @@
         });
 
         $('#btnCancheck').on("click", function(){
-            $.messager.confirm("提示", "请确认是否取消审核?", function (r) {
+            $.messager.confirm($g("提示"), $g("请确认是否取消审核?"), function (r) {
                 if (r){
                     obj.btnCancheck_click(); 
                 }
@@ -535,7 +541,7 @@
         });
 
         $('#btnReturn').on("click", function(){
-            $.messager.confirm("提示", "请确认是否退回?", function (r) {
+            $.messager.confirm($g("提示"), $g("请确认是否退回?"), function (r) {
                 if (r){
                     obj.btnReturn_click(); 
                 }
@@ -543,7 +549,7 @@
         });
 
         $('#btnDelete').on("click", function(){
-            $.messager.confirm("提示", "请确认是否作废？", function (r) {
+            $.messager.confirm($g("提示"), $g("请确认是否作废？"), function (r) {
                 if (r){
                     obj.btnDelete_click(); 
                 }
@@ -564,18 +570,18 @@
         var SampleResultID = $.trim($('#cboSampleResult').combobox('getValue'));
         var SampleResultDesc = $.trim($('#cboSampleResult').combobox('getText'));
         
-        if (SampleDate=="") { errorStr = errorStr + "请填写采样日期!"; }
-        if (SampleTypeID=="") { errorStr = errorStr + "请选择样本类型!"; }
-        if (SampleResultID=="") { errorStr = errorStr + "请选择采样结果!"; }          
+        if (SampleDate=="") { errorStr = errorStr + $g("请填写采样日期!"); }
+        if (SampleTypeID=="") { errorStr = errorStr + $g("请选择样本类型!"); }
+        if (SampleResultID=="") { errorStr = errorStr + $g("请选择采样结果!"); }          
 
         var thisNowDate = Common_GetDate(new Date());
      	if (Common_CompareDate(SampleDate,thisNowDate)>0) {
-            $.messager.alert("提示","抱歉，采样日期不能大于当前日期!", 'info');
+            $.messager.alert($g("提示"),$g("抱歉，采样日期不能大于当前日期!"), 'info');
             return ;
         }
     
         if (errorStr!="") {
-            $.messager.alert("提示", errorStr,'info');
+            $.messager.alert($g("提示"), errorStr,'info');
             return;
         }
 
@@ -613,10 +619,10 @@
         var index = obj.gridSample.getRowIndex(selectObj); //获取当前选中行的行号(从0开始)      
 
         if (!selectObj) {
-            $.messager.alert("提示", "请选中一条记录!", 'info');
+            $.messager.alert($g("提示"), $g("请选中一条记录!"), 'info');
             return;
         }else {
-            $.messager.confirm("提示", "确认要删除该条实验室样本采集数据?", function (r) {
+            $.messager.confirm($g("提示"), $g("确认要删除该条实验室样本采集数据?"), function (r) {
                 if (r){         
                     if (selectObj.ID!="") {
                         obj.DelListSample = obj.DelListSample + selectObj.ID + ",";
@@ -652,9 +658,9 @@
     
 
     // ****************************** ↓↓↓ report func   // 1待审 2已审 5退回 6草稿 7删除
-    obj.btnSaveTmp_click = function() { // 草稿
+    /*obj.btnSaveTmp_click = function() { // 草稿
         obj.saveReportInfo(6, "^");
-    }  
+    } */ 
 
     obj.btnSaveRep_click = function() { // 报卡
         obj.saveReportInfo(1, "^");
@@ -688,7 +694,7 @@
         var objStatus = obj.IsExistDic("EpidemicReportStatus", statusCode);
         if (objStatus) { statusID = objStatus.ID; }
         if (obj.reportID=="" || statusID=="") {
-            $.messager.alert("提示", "操作失败!", 'info');
+            $.messager.alert($g("提示"), $g("操作失败!"), 'info');
             return;
         }
         var checkDate = "", checkTime = "", resume = "";
@@ -705,17 +711,17 @@
             aSeparate:separate
         },false);
         if (ret>0) {
-            $.messager.alert("提示", "操作成功!", 'info');
+            $.messager.alert($g("提示"), $g("操作成功!"), 'info');
             obj.refreshFormInfo(ret);
         } else {
-            $.messager.alert("提示", "操作失败!", 'info');
+            $.messager.alert($g("提示"), $g("操作失败!"), 'info');
         }
     }
 
     obj.saveReportInfo = function(statusCode, separate) {
         var errorStr = "";
         var inputStr = obj.saveReportStr(statusCode, separate);
-        if (inputStr=="") { return; } 
+        if ((inputStr=="")||((typeof inputStr == 'undefined'))) { return; } 
 
         var retRep = $m({ 
             ClassName:"DHCMed.EPD.NCPInvestigation",
@@ -723,16 +729,16 @@
             aInputStr:inputStr, 
             aSeparate:separate
         },false);
-        
+        console.log(inputStr)
         if (retRep>0) {
             var retSample = obj.saveSample(retRep, separate);
-            if (retSample<0) { errorStr = errorStr + "实验室检测保存失败!"; }
+            if (retSample<0) { errorStr = errorStr + $g("实验室检测保存失败!"); }
         } else {
-            errorStr = errorStr + "报告信息保存失败!";
+            errorStr = errorStr + $g("报告信息保存失败!");
         }
 
         if (errorStr=="") {
-            errorStr = "保存成功!";
+            errorStr = $g("保存成功!");
             obj.refreshFormInfo(retRep);
             //新建报告保存成功后不关闭窗口直接刷新时，界面显示空白问题处理
             if (typeof(history.pushState) === 'function') {
@@ -741,7 +747,7 @@
 				history.pushState("", "", Url);
             }
         }
-        $.messager.alert("提示", errorStr, 'info');
+        $.messager.alert($g("提示"), errorStr, 'info');
     }
 
     obj.saveSample = function(reportID, separate) {
@@ -793,17 +799,17 @@
         if (objStatus) { StatusID = objStatus.ID; }
         
       
-        var IsComplication = $("input[name=IsComplication]:checked").val();       // 有无并发症
-        var IsBloodTest = $("input[name=IsBloodTest]:checked").val();             // 血常规检查是否检测
-        var IsMedical = $("input[name=IsMedical]:checked").val();                 // 发病后是否就诊
-        var IsIsolated = $("input[name=IsIsolated]:checked").val();               // 是否隔离
-        var IsInHosp = $("input[name=IsInHosp]:checked").val();                   // 是否住院
-        var IsInICU = $("input[name=IsInICU]:checked").val();                     // 是否收住 ICU 治疗
-        var IsGravida = $("input[name=IsGravida]:checked").val();                 // 患者是否孕妇
-        var IsContactFever = $("input[name=IsContactFever]:checked").val();       // 是否接触过有武汉或其他有本地病例持续传播地区有发热或有呼吸道症状的人
-        var IsContactTrave = $("input[name=IsContactTrave]:checked").val();       // 是否接触过有武汉或其他有本地病例持续传播地区旅行史或居住史的人
-        var IsContactDiag = $("input[name=IsContactDiag]:checked").val();         // 是否有确诊病例、轻症病例或无症状感染者的接触史
-        var IsTreatment = $("input[name=IsTreatment]:checked").val();             // 是否有医疗机构就诊史
+        var IsComplication = Common_RadioValue("IsComplication");		// 有无并发症
+        var IsBloodTest = Common_RadioValue("IsBloodTest");             // 血常规检查是否检测
+        var IsMedical = Common_RadioValue("IsMedical");                 // 发病后是否就诊
+        var IsIsolated =Common_RadioValue("IsIsolated");                // 是否隔离
+        var IsInHosp = Common_RadioValue("IsInHosp");                   // 是否住院
+        var IsInICU = Common_RadioValue("IsInICU");                     // 是否收住 ICU 治疗
+        var IsGravida = Common_RadioValue("IsGravida");                 // 患者是否孕妇
+        var IsContactFever = Common_RadioValue("IsContactFever");       // 是否接触过有武汉或其他有本地病例持续传播地区有发热或有呼吸道症状的人
+        var IsContactTrave = Common_RadioValue("IsContactTrave");       // 是否接触过有武汉或其他有本地病例持续传播地区旅行史或居住史的人
+        var IsContactDiag = Common_RadioValue("IsContactDiag");         // 是否有确诊病例、轻症病例或无症状感染者的接触史
+        var IsTreatment = Common_RadioValue("IsTreatment");             // 是否有医疗机构就诊史
         
         var CardNo           = $.trim($('#txtCardNo').val());
         var Identity         = $.trim($('#txtIdentity').val());
@@ -854,93 +860,97 @@
      
         if ((statusCode==1)||(statusCode==2)) {
             var errorStr = "";
-			if (Identity=="") { errorStr = errorStr + "请填写身份证号!<br>"; }
-			if (RepCompany=="") { errorStr = errorStr + "请填写调查单位!<br>"; }
-			if (RepDate=="") { errorStr = errorStr + "请填写调查日期!<br>"; }
-			if (SymPtoms=="") { errorStr = errorStr + "请填写症状和体征!<br>"; }
-			if ((SymPtomsDesc.indexOf('发热')>0)&&(Temperature=="")) { errorStr = errorStr + "请填写症状和体征!<br>"; }
-			if ((SymPtomsDesc.indexOf('其他')>0)&&(SymPtomExt=="")) { errorStr = errorStr + "请填写其他症状和体征!<br>"; }
-			if ((SymPtomExt)&&((Temperature>42)||(Temperature<35))) { errorStr = errorStr + "请检查最高体温填写是否有误!<br>"; }
-			if (IsComplication=="") { errorStr = errorStr + "请填写有无并发症!<br>"; }
-			if ((IsComplication==1)&&(Complication=="")) { errorStr = errorStr + "请填写并发症!<br>"; }
-			if ((ComplicationDesc.indexOf('其他')>0)&&(ComplicationExt=="")) { errorStr = errorStr + "请填写其他并发症!<br>"; }
-			if (IsBloodTest=="") { errorStr = errorStr + "请填写血常规检查是否检测!<br>"; }	
-			if ((IsBloodTest==1)&&(BloodTestDate=="")) { errorStr = errorStr + "请填写血常规检查检测时间!<br>"; }
-			if ((IsBloodTest==1)&&(WBC=="")) { errorStr = errorStr + "请填写WBC（白细胞数）!<br>"; }
-			if ((IsBloodTest==1)&&(Lymphocyte=="")) { errorStr = errorStr + "请填写L（淋巴细胞数）!<br>"; }
-			if ((IsBloodTest==1)&&(LymphocytePer=="")) { errorStr = errorStr + "请填写L （淋巴细胞百分比）!<br>"; }
-			if ((IsBloodTest==1)&&(NePer=="")) { errorStr = errorStr + "请填写N（中性粒细胞百分比）!<br>"; }
-			if (ChestXray=="") { errorStr = errorStr + "请填写胸部Ｘ线检测是否有肺炎影像学特征!<br>"; }	      	
-			if ((ChestXrayDesc=="有")&&(ChestXrayDate=="")) { errorStr = errorStr + "请填写胸部 Ｘ线 检测检测时间!<br>"; }
-			if (ChestCT=="") { errorStr = errorStr + "请填写胸部CT线检测是否有肺炎影像学特征!<br>"; }	
-			if ((ChestCTDesc=="有")&&(ChestCTDate=="")) { errorStr = errorStr + "请填写胸部 CT 检测检测时间!<br>"; }
-			if (IsMedical=="") { errorStr = errorStr + "请填写发病后是否就诊!<br>"; }
-			if ((IsMedical==1)&&(FirstAdmDate=="")) { errorStr = errorStr + "请填写发病后首次就诊日期!<br>"; }
-			if ((IsMedical==1)&&(AdmHospital=="")) { errorStr = errorStr + "请填写发病后就诊医院名称!<br>"; }
-			if (IsIsolated=="") { errorStr = errorStr + "请填写是否隔离!<br>"; }
-			if ((IsIsolated==1)&&(IsolatedDate=="")) { errorStr = errorStr + "请填写隔离开始日期!<br>"; }
-			if (IsInHosp=="") { errorStr = errorStr + "请填写是否住院!<br>"; }				
-			if ((IsInHosp==1)&&(InHospDate=="")) { errorStr = errorStr + "请填写入院日期!<br>"; }
-			if (IsInICU=="") { errorStr = errorStr + "请填写是否收住ICU治疗!<br>"; }
-			if ((IsInICU==1)&&(InICUDate=="")) { errorStr = errorStr + "请填写入 ICU日期!<br>"; }
-			if (Occupation=="") { errorStr = errorStr + "请填写患者是否是以下特定职业人群!<br>"; }
-			if ((OccupationDesc=='其他')&&(OccupationExt=="")) { errorStr = errorStr + "请填写其他职业!<br>"; }
-			if (IsGravida=="") { errorStr = errorStr + "请填写患者是否孕妇!<br>"; }
-			if (PreAnamnesis=="") { errorStr = errorStr + "请填写既往病史!<br>"; }
-			if ((PreAnamnesisDesc.indexOf('其他')>0)&&(PreAnamnesisExt=="")) { errorStr = errorStr + "请填写其他既往病史!<br>"; }
-			if (TravelLive=="") { errorStr = errorStr + "请填写是否有武汉或其他有本地病例持续传播地区的旅行史或居住史!<br>"; }
-			if (IsContactFever=="") { errorStr = errorStr + "请填写是否接触过有武汉或其他有本地病例持续传播地区有发热或有呼吸道症状的人!<br>"; }
-			if (IsContactTrave=="") { errorStr = errorStr + "请填写是是否接触过有武汉或其他有本地病例持续传播地区旅行史或居住史的人!<br>"; }		
-			if (IsContactDiag=="") { errorStr = errorStr + "请填写是否有确诊病例、轻症病例或无症状感染者的接触史!<br>"; }
-			if (Gather=="") { errorStr = errorStr + "请填写患者同一家庭、工作单位、托幼机构或学校等集体单位是否有聚集性发病!<br>"; }
-			if (IsTreatment=="") { errorStr = errorStr + "请填写是否有医疗机构就诊史!<br>"; }
-			if (Market=="") { errorStr = errorStr + "请填写居住地点(村庄/居民楼)周围是否有农贸市场!<br>"; }
-			if ((MarketDesc=="是")&&(Distance=="")) { errorStr = errorStr + "请填写农贸市场距离您家大约距离!<br>"; }
-			if (IsMarket=="") { errorStr = errorStr + "请填写是否去过农贸市场!<br>"; }
-			if ((IsMarket=="是")&&(MarketType=="")) { errorStr = errorStr + "请填写病例是农贸市场类型!<br>"; }
-		
+			if (Identity=="") { errorStr = errorStr + $g("请填写身份证号!")+"<br>"; }
+			if (RepCompany=="") { errorStr = errorStr + $g("请填写调查单位!")+"<br>"; }
+			if (RepDate=="") { errorStr = errorStr + $g("请填写调查日期!")+"<br>"; }
+			if (SymPtoms=="") { errorStr = errorStr + $g("请填写症状和体征!")+"<br>"; }
+			if ((SymPtomsDesc.indexOf($g('发热'))>0)&&(Temperature=="")) { errorStr = errorStr + $g("请填写症状和体征!")+"<br>"; }
+			if ((SymPtomsDesc.indexOf($g('其他'))>0)&&(SymPtomExt=="")) { errorStr = errorStr + $g("请填写其他症状和体征!")+"<br>"; }
+			if ((SymPtomExt)&&((Temperature>42)||(Temperature<35))) { errorStr = errorStr + $g("请检查最高体温填写是否有误!")+"<br>"; }
+			if (IsComplication=="") { errorStr = errorStr + $g("请填写有无并发症!")+"<br>"; }
+			if ((IsComplication==1)&&(Complication=="")) { errorStr = errorStr + $g("请填写并发症!")+"<br>"; }
+			if ((ComplicationDesc.indexOf($g('其他'))>0)&&(ComplicationExt=="")) { errorStr = errorStr + $g("请填写其他并发症!")+"<br>"; }
+			if (IsBloodTest=="") { errorStr = errorStr + $g("请填写血常规检查是否检测!")+"<br>"; }	
+			if ((IsBloodTest==1)&&(BloodTestDate=="")) { errorStr = errorStr + $g("请填写血常规检查检测时间!")+"<br>"; }
+			if ((IsBloodTest==1)&&(WBC=="")) { errorStr = errorStr + $g("请填写WBC（白细胞数）!")+"<br>"; }
+			if ((IsBloodTest==1)&&(Lymphocyte=="")) { errorStr = errorStr + $g("请填写L（淋巴细胞数）!")+"<br>"; }
+			if ((IsBloodTest==1)&&(LymphocytePer=="")) { errorStr = errorStr + $g("请填写L （淋巴细胞百分比）!")+"<br>"; }
+			if ((IsBloodTest==1)&&(NePer=="")) { errorStr = errorStr + $g("请填写N（中性粒细胞百分比）!")+"<br>"; }
+			if (ChestXray=="") { errorStr = errorStr + $g("请填写胸部Ｘ线检测是否有肺炎影像学特征!")+"<br>"; }	      	
+			if ((ChestXrayDesc=="有")&&(ChestXrayDate=="")) { errorStr = errorStr + $g("请填写胸部 Ｘ线 检测检测时间!")+"<br>"; }
+			if (ChestCT=="") { errorStr = errorStr + $g("请填写胸部CT线检测是否有肺炎影像学特征!")+"<br>"; }	
+			if ((ChestCTDesc=="有")&&(ChestCTDate=="")) { errorStr = errorStr + $g("请填写胸部 CT 检测检测时间!")+"<br>"; }
+			if (IsMedical=="") { errorStr = errorStr + $g("请填写发病后是否就诊!")+"<br>"; }
+			if ((IsMedical==1)&&(FirstAdmDate=="")) { errorStr = errorStr + $g("请填写发病后首次就诊日期!")+"<br>"; }
+			if ((IsMedical==1)&&(AdmHospital=="")) { errorStr = errorStr + $g("请填写发病后就诊医院名称!")+"<br>"; }
+			if (IsIsolated=="") { errorStr = errorStr + $g("请填写是否隔离!")+"<br>"; }
+			if ((IsIsolated==1)&&(IsolatedDate=="")) { errorStr = errorStr + $g("请填写隔离开始日期!")+"<br>"; }
+			if (IsInHosp=="") { errorStr = errorStr + $g("请填写是否住院!")+"<br>"; }				
+			if ((IsInHosp==1)&&(InHospDate=="")) { errorStr = errorStr + $g("请填写入院日期!")+"<br>"; }
+			if (IsInICU=="") { errorStr = errorStr + $g("请填写是否收住ICU治疗!")+"<br>"; }
+			if ((IsInICU==1)&&(InICUDate=="")) { errorStr = errorStr + $g("请填写入 ICU日期!")+"<br>"; }
+			if (Occupation=="") { errorStr = errorStr + $g("请填写患者是否是以下特定职业人群!")+"<br>"; }
+			if ((OccupationDesc==$g('其他'))&&(OccupationExt=="")) { errorStr = errorStr + $g("请填写其他职业!")+"<br>"; }
+			if (IsGravida=="") { errorStr = errorStr + $g("请填写患者是否孕妇!")+"<br>"; }
+			if (PreAnamnesis=="") { errorStr = errorStr + $g("请填写既往病史!")+"<br>"; }
+			if ((PreAnamnesisDesc.indexOf($g('其他'))>0)&&(PreAnamnesisExt=="")) { errorStr = errorStr + $g("请填写其他既往病史!")+"<br>"; }
+			if (TravelLive=="") { errorStr = errorStr + $g("请填写是否有武汉或其他有本地病例持续传播地区的旅行史或居住史!")+"<br>"; }
+			if (IsContactFever=="") { errorStr = errorStr + $g("请填写是否接触过有武汉或其他有本地病例持续传播地区有发热或有呼吸道症状的人!")+"<br>"; }
+			if (IsContactTrave=="") { errorStr = errorStr + $g("请填写是是否接触过有武汉或其他有本地病例持续传播地区旅行史或居住史的人!")+"<br>"; }		
+			if (IsContactDiag=="") { errorStr = errorStr + $g("请填写是否有确诊病例、轻症病例或无症状感染者的接触史!")+"<br>"; }
+			if (Gather=="") { errorStr = errorStr + $g("请填写患者同一家庭、工作单位、托幼机构或学校等集体单位是否有聚集性发病!")+"<br>"; }
+			if (IsTreatment=="") { errorStr = errorStr + $g("请填写是否有医疗机构就诊史!")+"<br>"; }
+			if (Market=="") { errorStr = errorStr + $g("请填写居住地点(村庄/居民楼)周围是否有农贸市场!")+"<br>"; }
+			if ((MarketDesc==$g("是"))&&(Distance=="")) { errorStr = errorStr + $g("请填写农贸市场距离您家大约距离!")+"<br>"; }
+			if (IsMarket=="") { errorStr = errorStr + $g("请填写是否去过农贸市场!")+"<br>"; }
+			if ((IsMarket==$g("是"))&&(MarketType=="")) { errorStr = errorStr + $g("请填写病例是农贸市场类型!")+"<br>"; }
+			var rows = obj.gridSample.getRows(); //返回当前页的所有行
+        	var sampleLength = rows.length;  
+       		if (sampleLength<1){
+	       		errorStr = errorStr + $g("请填写实验室检测信息!")+"<br>";
+	       	}
 																																				
             // 身份证格式验证  
             if ($.trim(Identity) != ""){
                 if (!(/(^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{2}$)/.test(Identity))) {
-                  errorStr += '输入的身份证号格式不符合规定！请重新输入!<br>';
+                  errorStr += $g('输入的身份证号格式不符合规定！请重新输入!')+'<br>';
                 }
             }
 
             var thisNowDate = Common_GetDate(new Date());
       	  	if (Common_CompareDate(RepDate,thisNowDate)>0) {
-                $.messager.alert("提示","抱歉，调查日期不能大于当前日期!<br>", 'info');
+                $.messager.alert($g("提示"),$g("抱歉，调查日期不能大于当前日期!")+"<br>", 'info');
                 return false;
             }
             if (Common_CompareDate(BloodTestDate,thisNowDate)>0) {
-                $.messager.alert("提示","抱歉，血常规检查日期不能大于当前日期!<br>", 'info');
+                $.messager.alert($g("提示"),$g("抱歉，血常规检查日期不能大于当前日期!")+"<br>", 'info');
                 return false;
             }
             if (Common_CompareDate(ChestXrayDate,thisNowDate)>0) {
-                $.messager.alert("提示","抱歉，胸部Ｘ线检测日期不能大于当前日期!<br>", 'info');
+                $.messager.alert($g("提示"),$g("抱歉，胸部Ｘ线检测日期不能大于当前日期!")+"<br>", 'info');
                 return false;
             }
             if (Common_CompareDate(ChestCTDate,thisNowDate)>0) {
-                $.messager.alert("提示","抱歉，胸部CT检测日期不能大于当前日期!<br>", 'info');
+                $.messager.alert($g("提示"),$g("抱歉，胸部CT检测日期不能大于当前日期!")+"<br>", 'info');
                 return false;
             }
             if (Common_CompareDate(FirstAdmDate,thisNowDate)>0) {
-                $.messager.alert("提示","抱歉，首次就诊日期不能大于当前日期!<br>", 'info');
+                $.messager.alert($g("提示"),$g("抱歉，首次就诊日期不能大于当前日期!")+"<br>", 'info');
                 return false;
             }
             if (Common_CompareDate(InHospDate,thisNowDate)>0) {
-                $.messager.alert("提示","抱歉，入院日期不能大于当前日期!<br>", 'info');
+                $.messager.alert($g("提示"),$g("抱歉，入院日期不能大于当前日期!")+"<br>", 'info');
                 return false;
             }
             
             if (Common_CompareDate(InICUDate,thisNowDate)>0) {
-                $.messager.alert("提示","抱歉，入ICU日期不能大于当前日期!<br>", 'info');
+                $.messager.alert($g("提示"),$g("抱歉，入ICU日期不能大于当前日期!")+"<br>", 'info');
                 return false;
             }
 
             if (errorStr!="") {
-                $.messager.alert("提示", errorStr, 'info');
-                return "";
+                $.messager.alert("提示",'<div style="min-height:20px;max-height:480px;overflow:auto">' + errorStr + '</div>', 'info');
+				return;	
             }
         }
        

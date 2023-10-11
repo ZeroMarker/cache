@@ -3,6 +3,9 @@ var PageLogicObj={
 	m_OrdLocBox: "",
 	dw:$(window).width()-400,
 	dh:$(window).height()-100,
+	onlySearchByPatId:0,
+	FromDate:"",
+	ToDate:""
 }
 $(function(){
 	//初始化
@@ -20,7 +23,7 @@ function PageHandle(){
 	}
 	$("#StDate,#EdDate").datebox('setValue',ServerObj.CurDate);
 	//录入人
-	LoadDocCreateBookId(); 
+	LoadDocCreateBookId(""); 
 	//科室
 	LoadDept(); 
 	//开单科室
@@ -83,11 +86,12 @@ function InitIPBookQueryTabDataGrid(){
 				}
 			}*/
 		},
+		{field:'PatientLevel',title:'患者等级',width:100},
 		{field:'OPDate',title:'门诊日期',width:100},
 		{field:'IPDep',title:'预住院科室',width:100},
 		{field:'ConIPDep',title:'实际住院科室',width:100},
 		{field:'IPLoc',title:'病房',width:120},
-		{field:'InputDoctor',title:'开证医生',width:80},
+		{field:'InputDoctor',title:'开证医生',width:80,hidden:true},
 		{field:'Company',title:'工作单位',width:150},
 		{field:'Address',title:'家庭住址',width:200},
 		
@@ -121,12 +125,12 @@ function InitIPBookQueryTabDataGrid(){
 					SumStr=SumStr+","+status+": "+BookStatusCountObj[0][status];
 				}
 			}
-			if (SumStr!="") var SumStr="总计:  "+SumStr
+			if (SumStr!="") var SumStr=$g("总计:  ")+SumStr
 			$("#SumallStatus").html(SumStr)
 		},
 		onDblClickRow:function(index, row){
 			if (ServerObj.UDHCJFFlag=="Y"){
-				if (window.parent.name=="") return false;
+				//if (window.parent.name=="") return false;
 				var mode = $.cm({
 					ClassName:"web.DHCBillInterface",
 					MethodName:"IIsIPBook",
@@ -147,7 +151,7 @@ function InitIPBookQueryTabDataGrid(){
 						return false;
 					}
 				}
-				websys_showModal("options").originWindow.getRegInfoByIPBook(row["RowID"]);
+				websys_showModal("options").callbackFunc(row["RowID"]);
 				websys_showModal("close");
 				/*
 				window.parent.returnValue=row["RowID"];
@@ -183,10 +187,16 @@ function DocumentOnKeyDown(e){
 			$("#RegNo").val(PatientNo);
 			IPBookQueryTabDataGridLoad();
 			return false;
+		}else if(SrcObj && SrcObj.id.indexOf("IDCardNo")>=0){
+			IPBookQueryTabDataGridLoad();
+			return false;
 		}else if(SrcObj && SrcObj.id.indexOf("CardNo")>=0){
 			var CardNo=$('#CardNo').val();
 			if (CardNo=="") return;
 			var myrtn=DHCACC_GetAccInfo("",CardNo,"","","CardNoKeyDownCallBack");
+			return false;
+		}else if(SrcObj && SrcObj.id.indexOf("PatName")>=0){
+			IPBookQueryTabDataGridLoad();
 			return false;
 		}
 		return true;
@@ -226,31 +236,36 @@ function ReadCardClickHandle(PrintFlag){
 	DHCACC_GetAccInfo7(CardNoKeyDownCallBack);
 }
 function IPBookQueryTabDataGridLoad(){
-	var FromDate=$("#StDate").datebox('getValue');
-	var ToDate=$("#EdDate").datebox('getValue');
+	PageLogicObj.onlySearchByPatId=0;
+	PageLogicObj.FromDate=$("#StDate").datebox('getValue');
+	PageLogicObj.ToDate=$("#EdDate").datebox('getValue');
 	var Regno=$("#RegNo").val();
 	if (Regno!=""){
 		if(ServerObj.UDHCJFFlag=="Y"){
-			var FromDate="";
-			var ToDate="";
+			PageLogicObj.FromDate="";
+			PageLogicObj.ToDate="";
+			LoadData();
 		}else{
 			$.messager.confirm("确认对话框", "是否仅按照患者ID进行查询,不需要日期条件!", function (r) {
 				if (r) {
-					var FromDate="";
-					var ToDate="";
+					PageLogicObj.FromDate="";
+					PageLogicObj.ToDate="";
+					PageLogicObj.onlySearchByPatId=1;
 				}
 				LoadData();
-				return;
 			});
 		}
+	}else{
+		LoadData();
 	}
-	LoadData();
-	function LoadData(){
+}
+function LoadData(){
+	
 		var GridData=$.cm({
 		    ClassName : "web.DHCDocIPBookingCtl",
 		    QueryName : "QueryBookByDateLoc",
-		    FromDate:FromDate,
-		    ToDate:ToDate,
+		    FromDate:PageLogicObj.FromDate,
+		    ToDate:PageLogicObj.ToDate,
 		    CtLoc:$("#CtLoc").combobox('getValue'),
 		    State:$("#State").combobox('getValue'),
 		    RegNo:$("#RegNo").val(),
@@ -258,29 +273,30 @@ function IPBookQueryTabDataGridLoad(){
 		    DocCreateBookId:$("#DocCreateBookId").combobox('getValue'),
 		    OrderOrCreateDate:$HUI.checkbox("#OrderOrCreateDate").getValue() ? 1 : 2,
 		    OrdLoc:PageLogicObj.m_OrdLocBox.getValue(),
+		    PatName:$("#PatName").val(),
+		    IDCardNo:$("#IDCardNo").val(),
 		    Pagerows:PageLogicObj.m_IPBookQueryTabDataGrid.datagrid("options").pageSize,rows:99999
 		},function(GridData){
 			PageLogicObj.m_IPBookQueryTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
 		});
 	}
-}
-function GetPrintDetailData(){
-	var PrintFlag="Y";
-	return IPBookQueryTabDataGridLoad(PrintFlag);
-}
 function ExportClickHandle(){
+	var Data=PageLogicObj.m_IPBookQueryTabDataGrid.datagrid("getRows");
+	if (Data.length==0){
+		$.messager.alert("提示","请查询出数据后导出!");
+		return false;
+	}
 	var FromDate=$("#StDate").datebox('getValue');
 	var ToDate=$("#EdDate").datebox('getValue');
 	var Regno=$("#RegNo").val();
 	if (Regno!=""){
 		if(ServerObj.UDHCJFFlag=="Y"){
-			var FromDate="";
-			var ToDate="";
+			FromDate="";
+			ToDate="";
 		}else{
-			var vaild = window.confirm("是否仅按照病人Id进行查询，不需要日期条件！");
-			if(vaild){
-				var FromDate="";
-				var ToDate="";
+			if (PageLogicObj.onlySearchByPatId==1){
+				FromDate="";
+				ToDate="";
 			}
 		}
 	}
@@ -300,84 +316,13 @@ function ExportClickHandle(){
 	    OrderOrCreateDate:$HUI.checkbox("#OrderOrCreateDate").getValue() ? 1 : 2,
 	    OrdLoc:PageLogicObj.m_OrdLocBox.getValue()
 	}, false);
-	/*var logonUserID=session['LOGON.USERID']
-	var gnum=$.cm({
-	    ClassName : "web.DHCDocIPBookingCtl",
-	    MethodName : "getnum",
-	    logonUserID:logonUserID,
-	    dataType:"text"
-	},false)
-	if((gnum=="")||(gnum=="0")){
-		return false	
-	}
-	var Template,xlApp,xlsheet,xlBook
-	var path =$.cm({
-	    ClassName : "web.DHCDocIPBookingCtl",
-	    MethodName : "getpath",
-	    dataType:"text"
-	},false)
-	Template=path+"DHCDocIPBookingCtl.xls"
-	xlApp = new ActiveXObject("Excel.Application");
-	xlBook = xlApp.Workbooks.Add(Template);
-	xlsheet = xlBook.ActiveSheet  
-	xlsheet.cells(1,1)="登记号"
-	xlsheet.cells(1,2)="病人姓名"
-	xlsheet.cells(1,3)="性别"
-	xlsheet.cells(1,4)="年龄"
-	xlsheet.cells(1,5)="证件类型"
-	xlsheet.cells(1,6)="证件号码"
-	xlsheet.cells(1,7)="工作单位"
-	xlsheet.cells(1,8)="家庭住址"
-	xlsheet.cells(1,9)="门诊日期"
-	xlsheet.cells(1,10)="住院科室"
-	xlsheet.cells(1,11)="病房"
-	xlsheet.cells(1,12)="医师"
-	//xlsheet.cells(1,13)="预计住院天数"
-	xlsheet.cells(1,13)="门诊诊断"
-	xlsheet.cells(1,14)="当前状态"
-	xlsheet.cells(1,15)="录入人"
-	xlsheet.cells(1,16)="入院病情"
-	xlsheet.cells(1,17)="等候天数"
-	for (var i=1;i<=gnum;i++){
-		var str =$.cm({
-		    ClassName : "web.DHCDocIPBookingCtl",
-		    MethodName : "getdata",
-		    itmjs:"", logonUserID:logonUserID, num:i,
-		    dataType:"text"
-		},false)
-		myData=str.split("^")    
-		xlsheet.cells(i+1,1)=myData[0]
-		xlsheet.cells(i+1,2)=myData[1]
-		xlsheet.cells(i+1,3)=myData[2]
-		xlsheet.cells(i+1,4)=myData[3]
-		xlsheet.cells(i+1,5)=myData[15]
-		xlsheet.cells(i+1,6)=myData[4]
-		xlsheet.cells(i+1,7)=myData[5]
-		xlsheet.cells(i+1,8)=myData[6]
-		xlsheet.cells(i+1,9)=myData[7]
-		xlsheet.cells(i+1,10)=myData[8]
-		xlsheet.cells(i+1,11)=myData[9]
-		xlsheet.cells(i+1,12)=myData[10]
-		//xlsheet.cells(i+1,13)=myData[11]
-		xlsheet.cells(i+1,13)=myData[12]
-		xlsheet.cells(i+1,14)=myData[13]
-		xlsheet.cells(i+1,15)=myData[14]
-		xlsheet.cells(i+1,16)=myData[16]
-		xlsheet.cells(i+1,17)=myData[17]
-	}
-	xlApp.Visible=true
-	var fname = xlApp.Application.GetSaveAsFilename("住院证列表.xls", "Excel Spreadsheets (*.xls), *.xls");
-    xlBook.SaveAs(fname);
-	//xlBook.Close (savechanges=true);
-	xlApp.Quit();
-	xlApp=null;
-	xlsheet=null*/
 }
-function LoadDocCreateBookId(){
+function LoadDocCreateBookId(DepID){
 	var GridData=$.cm({
 		ClassName:"web.DHCDocIPBookingCtl",
 		QueryName:"GetDocCreateBookInfo",
 	    DocCreateBook:"",
+	    txtAdmDepID:DepID,
 		rows:99999
 	},false);
 	var cbox = $HUI.combobox("#DocCreateBookId", {
@@ -396,7 +341,12 @@ function LoadDocCreateBookId(){
 				    dataType:"text"
 				},false)
 				if (Rtn=="Y"){
-					$("#DocCreateBookId").combobox('select',session['LOGON.USERID'])
+					row=GridData["rows"]
+					for (var i=0;i<GridData["rows"].length;i++){
+						if (GridData["rows"][i].DocNo.toUpperCase().indexOf(session['LOGON.USERID'].toUpperCase()) >= 0){
+							$("#DocCreateBookId").combobox('select',session['LOGON.USERID'])
+						}
+					}
 				}
 			}
 	 });
@@ -415,12 +365,15 @@ function LoadOrdLoc () {
 			}
 			var mValue = row[ops.textField].indexOf(q) >= 0;
 			return mCode||mValue;  
-		}
+		},
+		onSelect: function(rec){  
+					LoadDocCreateBookId(rec.rowid);  
+				},
 	});
 }
 function LoadDept(){
 	$.cm({
-		ClassName:"web.UDHCJFIPReg",
+		ClassName:"web.DHCDocIPBookingCtl",
 		QueryName:"admdeplookup",
 	    desc:"", UserDepID:session['LOGON.CTLOCID'],
 		rows:99999
@@ -505,25 +458,26 @@ function Register(RowID,regNo,CardNo) {
 	websys_showModal({
 		url: url,
 		title: "入院登记",
-		iconCls: "icon-write-order",
+		iconCls: "icon-w-paper",
 		height: '95%',
 		width: '98%',
 		onClose:function(title,index){
-			IPBookQueryTabDataGridLoad();
+			LoadData();
 		}
 	});
 }
 
 function Detail(BookID){
 	var src="doc.ipbookcreate.hui.csp?BookID="+BookID; // dhcdocipbooknewcreat.csp
+	if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
 	websys_showModal({
 		url: src,
 		title: "住院证详情",
 		iconCls: "icon-w-paper",
-		height: 570,
-		width: 1260,
+		height: 716,
+		width: 1280,
 		onClose:function(title,index){
-			IPBookQueryTabDataGridLoad();
+			LoadData();
 		}
 	});
 }

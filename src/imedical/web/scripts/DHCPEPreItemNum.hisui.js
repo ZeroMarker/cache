@@ -23,7 +23,8 @@ function BFind_click()
 	$("#PreItemNumTab").datagrid('load',{
 			ClassName:"web.DHCPE.PreManager",
 			QueryName:"FindPreItemNum",
-			Date:$("#Date").datebox('getValue'),		
+			Date:$("#Date").datebox('getValue'),
+			LocID:session['LOGON.CTLOCID']		
 			});
 }
 
@@ -47,6 +48,7 @@ $HUI.datagrid("#PreItemNumTab",{
 		queryParams:{
 			ClassName:"web.DHCPE.PreManager",
 			QueryName:"FindPreItemNum",
+			LocID:session['LOGON.CTLOCID']
 		},
 		columns:[[
 		 	{field:'TPreNum',width:'300',title:'Ô¤Ô¼ÏÞ¶î'},

@@ -3,20 +3,8 @@ $(function(){
     strXml = convertToXml(scheme);
     var interface = $(strXml).find("interface").text();
     pageConfig = $(strXml).find("pageConfig").text();
-    $("#resourceConfig").hide();
-    $HUI.radio("[name='episode']",{
-        onChecked:function(e,value){
-            //alert("选中事件");
-            queryData();
-            $('#EpisodeList').combogrid('setValue','');
-            if (pageConfig == "Y") {
-                resourceConfig.Pacs = this.id;
-            }
-        }
-    });
     
     if (pageConfig == "Y") {
-        $("#resourceConfig").show();
         //获取其它资源区的查询按钮配置项数据
         resourceConfig = getResourceConfig();
         var configItem = resourceConfig.Pacs;
@@ -24,12 +12,13 @@ $(function(){
         {
             $HUI.radio("#"+configItem).setValue(true);
         }else{
-            $HUI.radio("#currentEpisode").setValue(true);
+            $HUI.radio("#oneMonth").setValue(true);
         }
     }else{
-        $HUI.radio("#currentEpisode").setValue(true);
+        $HUI.radio("#oneMonth").setValue(true);
     }
-    initEpisodeList("#EpisodeList");
+    //获取医嘱分类数据
+    getpacsCategoryData();
     setDataGrid(interface);
 
     $('#pacsDataPnl').panel('resize', {
@@ -42,25 +31,7 @@ $(function(){
 //设置数据
 function setDataGrid(interface)
 {
-    //$HUI.radio("#allEpisode").setValue(true);
-    /*
-    if ($('#allEpisode')[0].checked)
-    {
-            var param = {
-            EpisodeIDS: getAllEpisodeIdByPatientId(),
-            StartDateTime: "",
-            EndDateTime: "",
-            RrtStartDateTime: "",
-            RrtEndDateTime: "",
-            RrtedFlag: ""
-        };
-    }else{
-        var param = getParam();
-    }
-    */
     var param = getParam();
-    
-    
     $('#pacsData').datagrid({
         pageSize:10,
         pageList:[10,20,30], 
@@ -103,33 +74,33 @@ function setDataGrid(interface)
 //初始化检查子项
 function initPacsSubTable()
 {
-    var tr = $("<tr></tr>");
-    pacsSubItems = getColumnScheme("show>child>item")
-    var pacsSubRefScheme = getRefScheme("reference>child>item");
-    for (var i=1;i<pacsSubItems[0].length;i++)
-    {
-        var	td = "";
-        if (pacsSubItems[0][i].hidden)
-        { 
-            td= "<th id='" +pacsSubItems[0][i].field+ "' style='display:none;font-size:16px;' ><input type='checkbox' name='SubPacs'/>" + emrTrans(pacsSubItems[0][i].title) + "</th>"    
-        }
-        else
-        {
-            td= "<th id='" +pacsSubItems[0][i].field+ "' style='border-bottom:#999 1px dotted;font-size:16px;border-right:#999 1px dotted;background-color:#F5F5F5;width:" +pacsSubItems[0][i].width+ ";'><input type='checkbox' name='SubPacs' onclick='checkOnClick(this)' />" + emrTrans(pacsSubItems[0][i].title) + "</th>"
-        }
-        $(tr).append(td);
-    }
-    $("#pacsSubData").append(tr);
-    
-    for (var i=0;i<pacsSubRefScheme.length; i++)
-    {
-        if (pacsSubRefScheme[i].check)
-        { 
-            var code = pacsSubRefScheme[i].code;
-            $('#'+ code+ " input").attr("checked",true);
-        }
-    }
-    
+	var tr = $("<tr></tr>");
+	pacsSubItems = getColumnScheme("show>child>item")
+	var pacsSubRefScheme = getRefScheme("reference>child>item");
+	for (var i=1;i<pacsSubItems[0].length;i++)
+	{
+		var	td = "";		
+		if (pacsSubItems[0][i].hidden)
+		{ 
+			td= "<th id='" +pacsSubItems[0][i].field+ "' style='display:none;'><input class='hisui-checkbox' type='checkbox' name='SubPacs' label='" + pacsSubItems[0][i].title + "'/></th>"    
+		}
+		else
+		{
+			td= "<th id='" +pacsSubItems[0][i].field+ "' style='width:" +pacsSubItems[0][i].width+ ";'><input class='hisui-checkbox' type='checkbox' name='SubPacs' data-options='onCheckChange:function(event,value){checkOnClick(this)}' label='" + pacsSubItems[0][i].title + "'/></th>" 			
+		}
+		$(tr).append(td);
+	}
+	$("#pacsSubData").append(tr);
+	$.parser.parse('#pacsSubData');
+	for (var i=0;i<pacsSubRefScheme.length; i++)
+	{
+		if (pacsSubRefScheme[i].check)
+		{ 
+			var code = pacsSubRefScheme[i].code;
+			//$('#'+ code+ " input").attr("checked",true);
+			$HUI.checkbox('#'+ code+ " input").setValue(true);
+		}
+	}
 }
 // 取检验结果
 function getPacsSubData(Interface,EpisodeID,ID)
@@ -152,85 +123,100 @@ function getPacsSubData(Interface,EpisodeID,ID)
 //检查子项赋值
 function setPacsSubData(data)
 {
-    $("#pacsSubData  tr:not(:first)").remove();
-    var tr = $("<tr></tr>");
-    for (var i=0;i<data.rows.length;i++)
-    {
-        $(tr).attr("id",data.rows[i].OEItemRowID);
-        var td = ""; 
-        for (var j=1;j<pacsSubItems[0].length;j++)
-        {
-            if (pacsSubItems[0][j].hidden)
-            {
-                td = "<td style='border:#999 1px dotted;display:none;font-size:16px;'>" + data.rows[i][pacsSubItems[0][j].field] +"</td>";
-            }
-            else
-            {
-                td = "<td valign='top' style='border-bottom:#999 1px dotted;border-right:#999 1px dotted;font-size:16px;white-space:normal;word-break:break-all;'>" + data.rows[i][pacsSubItems[0][j].field] +"</td>";
-            }
-            $(tr).append(td);
-        }
-        
-        $("#pacsSubData tr th").each(function(){
-            if ($(this).find("input")[0].checked)
-            {
-                var field = $(this).attr("id");
-                quoteData[data.rows[i].OEItemRowID][field]= data.rows[i][field];	
-            }
-        });
-        $("#pacsSubData").append(tr);
-    }
+	var pacsSubRefScheme = getRefScheme("reference>child>item");
+	for (var i=0;i<pacsSubRefScheme.length; i++)
+	{
+		if (selectConfig=="Y"&&clickFlag==false)
+		{ 
+			var code = pacsSubRefScheme[i].code;
+			$HUI.checkbox('#'+ code+ " input").setValue(false);
+		}
+		else{
+			if (pacsSubRefScheme[i].check){
+			var code = pacsSubRefScheme[i].code;
+			$HUI.checkbox('#'+ code+ " input").setValue(true);
+			}
+		}
+	}
+	$("#pacsSubData  tr:not(:first)").remove();
+	var tr = $("<tr></tr>");
+	for (var i=0;i<data.rows.length;i++)
+	{
+		$(tr).attr("id",data.rows[i].OEItemRowID);
+		var td = ""; 
+		for (var j=1;j<pacsSubItems[0].length;j++)
+		{
+			if (pacsSubItems[0][j].hidden)
+			{
+				td = "<td style='display:none;'>" + data.rows[i][pacsSubItems[0][j].field] +"</td>";	
+			}
+			else
+			{
+				td = "<td>" + data.rows[i][pacsSubItems[0][j].field] +"</td>";	
+			}
+			$(tr).append(td);
+		}
+		
+		$("#pacsSubData tr th").each(function(){
+			if ($(this).find("input")[0].checked)
+			{
+				var field = $(this).attr("id");
+				quoteData[data.rows[i].OEItemRowID][field]= data.rows[i][field];	
+			}
+		});
+		$("#pacsSubData").append(tr);
+	}
 }
 
 // 查询
 function queryData()
 {
     var param = getParam();
-    $('#pacsData').datagrid('load',param);
+    if (param){
+        $('#pacsData').datagrid('load',param);
+    }
 }
 //获取查询参数
 function getParam()
 {
-    quoteData = {};
-    var stDateTime = "",endDateTime = "";
-    //rrtStDateTime、rrtEndDateTime是按报告日期查询的始末条件
-    var rrtStDateTime = "",rrtEndDateTime = "";
-    //报告标识rrtedFlag
-    var rrtedFlag = "";
-    //三个月时间标识
-    var dateGap = "";
+    var param = "";
     var epsodeIds = episodeID;
-    if ($('#currentEpisode')[0].checked) {
-        //本次就诊
-        //rrtedFlag = 1;
-    }else if ($('#recentTwice')[0].checked) {
-        rrtedFlag = 2;
+    var rrtStDate = $("#stDate").datebox("getValue");
+    var rrtEndDate = $("#endDate").datebox("getValue");
+    if (!$("#currentEpisode")[0].checked)
+    {
+        epsodeIds = getAllEpisodeIdByPatientId();
     }
-	
-	/*else if ($('#threeMonths')[0].checked) {
-        dateGap = $('#threeMonths').attr('value');
-    }*/
-	else {
-        epsodeIds = "";
-        var values = $('#EpisodeList').combogrid('getValues');
-        for (var i=0;i< values.length;i++)
+    if ("" != rrtStDate){
+        rrtStDate = getHISDateTimeFormate("Date",rrtStDate);
+    }
+    if ("" != rrtEndDate){
+        rrtEndDate = getHISDateTimeFormate("Date",rrtEndDate);
+    }
+    if (("" != rrtStDate)&&("" != rrtEndDate)){
+        if (!compareDateTime(rrtStDate+" 00:00:00",rrtEndDate+" 00:00:00"))
         {
-            epsodeIds = (i==0)?"":epsodeIds + ",";
-            epsodeIds = epsodeIds + values[i];
+            $.messager.alert("提示信息", "报告开始日期大于报告结束日期,请重新选择起始日期!");
+            return param;
         }
     }
-    var param = {
+    var pacscategoryID = "";
+    if($("#pacsCategory"))
+	{
+		pacscategoryID = $("#pacsCategory").combobox('getValue');
+	}
+    quoteData = {};
+    param = {
         EpisodeIDS: epsodeIds,
-        StartDateTime: stDateTime,
-        EndDateTime: endDateTime,
-        RrtStartDateTime: rrtStDateTime,
-        RrtEndDateTime: rrtEndDateTime,
-        RrtedFlag: rrtedFlag,
-        PatientID: patientID,
-        DateGap: dateGap
+        StartDateTime: "",
+        EndDateTime: "",
+        RrtStartDateTime: rrtStDate,
+        RrtEndDateTime: rrtEndDate,
+        PacscategoryID:pacscategoryID
     };
     return param;
 }
+
 //引用数据
 function getData()
 {
@@ -262,6 +248,9 @@ function getData()
             }
         }
     });
+	//还原后台转义字符
+	result = result.split("&lt").join("<");
+    result = result.split("&gt").join(">");
     var param = {"action":"insertText","text":result}
     parent.eventDispatch(param);
     
@@ -308,21 +297,111 @@ function UnCheckAll()
 {
     $("#pacsData").datagrid("uncheckAll");
 }
-function onHidePanel()
-{
-    if ($('#currentEpisode')[0].checked) {
-        $HUI.radio("#currentEpisode").setValue(false);
-    }else if ($('#recentTwice')[0].checked) {
-        $HUI.radio("#recentTwice").setValue(false);
-    }
-	
-	/*else if ($('#threeMonths')[0].checked) {
-        $HUI.radio("#threeMonths").setValue(false);
-    }*/
-    queryData();
+
+//open方式打开报告和图像
+function reportOrImageLink(url)
+{ 
+	var xpwidth=window.screen.width-100;
+	var xpheight=window.screen.height-100;
+	window.open(url,"","width="+xpwidth+",height="+xpheight+",top=50,left=50");
 }
 
-function BrowserReport(URL)
+//设置报告日期
+function upPacsDate(e,sel,val){
+    if(!sel) return;
+    if(val==1){
+        $HUI.datebox("#stDate").setValue(formatDate(-30));
+        $HUI.datebox("#endDate").setValue(formatDate(0));
+    }
+    
+    if(val==2){
+        $HUI.datebox("#stDate").setValue(formatDate(-90));
+        $HUI.datebox("#endDate").setValue(formatDate(0));
+    }
+    
+    if(val==3){
+        $HUI.datebox("#stDate").setValue(formatDate(-180));
+        $HUI.datebox("#endDate").setValue(formatDate(0));
+    }
+    
+    if(val==4){
+        $HUI.datebox("#stDate").setValue("");
+        $HUI.datebox("#endDate").setValue("");
+    }
+    if (initFlag){
+        queryData();
+    }else{
+        initFlag = true;
+    }
+    if (pageConfig == "Y") {
+        resourceConfig.Pacs = e.target.id;
+        saveResourceConfig("Pacs");
+    }
+    return;
+}
+
+/// 格式化日期
+function formatDate(t){
+    var curr_Date = new Date();  
+    curr_Date.setDate(curr_Date.getDate() + parseInt(t)); 
+    var Year = curr_Date.getFullYear();
+    var Month = curr_Date.getMonth()+1;
+    var Day = curr_Date.getDate();
+    
+    if(typeof(DateFormat)=="undefined"){
+        return Year+"-"+Month+"-"+Day;
+    }else{
+        if(DateFormat=="4"){
+            //日期格式 4:"DMY" DD/MM/YYYY
+            return Day+"/"+Month+"/"+Year;
+        }else if(DateFormat=="3"){
+            //日期格式 3:"YMD" YYYY-MM-DD
+            return Year+"-"+Month+"-"+Day;
+        }else if(DateFormat=="1"){
+            //日期格式 1:"MDY" MM/DD/YYYY
+            return Month+"/"+Day+"/"+Year;
+        }else{
+            return Year+"-"+Month+"-"+Day;
+        }
+    }
+}
+//通过接口获取医嘱分类数据
+function getpacsCategoryData()
 {
-	window.open(URL,"");
+	var result = "";
+	jQuery.ajax({
+		type: "get",
+		dataType: "text",
+		url: "../EMRservice.Ajax.common.cls",
+		async: false,
+		data: {
+			"OutputType":"String",
+			"Class":"web.DHCAPPSeePatPacs",
+			"Method":"GetOrdType",
+			"p1":"2"
+		},
+		success: function(d) {
+			if (d != "")
+			{
+				result = eval("("+d+")");
+				initpacsCategory(result);
+			}	
+		},
+		error: function(d) {alert("error");}
+	});	
+	return result;	
+}
+//初始化医嘱分类下拉框
+function initpacsCategory(data)
+{
+	$("#pacsCategory").combobox({
+		valueField:"value",
+		textField:"text",
+		data:data,
+		filter: function (q, row) {
+            var opts = $(this).combobox('options');
+            return (row["text"].toLowerCase().indexOf(q.toLowerCase()) >= 0)||(row[opts.textField].toLowerCase().indexOf(q.toLowerCase()) >= 0);
+        }
+	});
+	
 }

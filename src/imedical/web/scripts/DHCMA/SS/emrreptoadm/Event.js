@@ -56,6 +56,8 @@ function InitEmrRepAdmWinEvent(obj){
 				//医院感染管理V4.0
 				if ((objRepType.TypeCate == 'HAI')&&(objRepType.TypeCode == '1')) {
 					obj.LoadHAIData();
+					obj.LoadMBRData();
+					obj.LoadOPSData();
 				}
 				//死亡证
 				if ((objRepType.TypeCate == 'DTH')&&(objRepType.TypeCode == '2')) {
@@ -160,10 +162,7 @@ function InitEmrRepAdmWinEvent(obj){
 			iconCls:'icon-w-epr',  
 	        originWindow:window,
 			width:1320,
-			height:Height,
-			onBeforeClose:function(){
-				window.location.reload();  //刷新当前界面
-			} 
+			height:Height
 		});
 	}
 	
@@ -176,6 +175,16 @@ function InitEmrRepAdmWinEvent(obj){
 		if (HAIEpisodeDr=="") {
 			$.messager.alert("提示","该患者可能非办理入院登记的患者，请查证后再填报!", 'info');
 			return false;
+		} else {
+			var IsActive  = $m({
+				ClassName:"DHCHAI.DP.PAAdm",
+				MethodName:"GetVisIsActive",
+				aEpisodeID:HAIEpisodeDr
+			},false);
+			if (IsActive!="1") {
+				$.messager.alert("提示","预住院、退院、未曾分配床位等患者不允许填报院感报告，请查证后再填报!", 'info');
+				return false;
+			}
 		}
 		var NewBabyFlg  = $m({
 			ClassName:"DHCHAI.DP.PAAdm",
@@ -202,6 +211,69 @@ function InitEmrRepAdmWinEvent(obj){
 			width:1320,
 			height:Height
 		});
+	}
+	
+	//多重耐药菌调查（医院感染管理V4.0）
+	obj.OpenMBRReport = function(aRepID,aLabRepID){
+		var t=new Date();
+		t=t.getTime();
+		var Type = 1;
+		if (HAIEpisodeDr=="") {
+			$.messager.alert("提示","该患者可能非办理入院登记的患者，请查证后再填报!", 'info');
+			return false;
+		} else {
+			var IsActive  = $m({
+				ClassName:"DHCHAI.DP.PAAdm",
+				MethodName:"GetVisIsActive",
+				aEpisodeID:HAIEpisodeDr
+			},false);
+			if (IsActive!="1") {
+				$.messager.alert("提示","预住院、退院、未曾分配床位等患者不允许填报院感报告，请查证后再填报!", 'info');
+				return false;
+			}
+		}
+	
+		var strUrl="dhcma.hai.ir.mrb.ctlreport.csp?1=1&EpisodeID=" + HAIEpisodeDr + "&ReportID="+ aRepID + "&LabRepID="+ aLabRepID +"&EmrOpen=1&t=" + t;
+		
+		websys_showModal({
+			url:strUrl,
+			title:'多耐细菌报告',
+			iconCls:'icon-w-epr',  
+	        originWindow:window,
+			width:1320,
+			height:Height
+		});
+	}
+
+
+	//手术切口调查（医院感染管理V4.0）
+	obj.OpenOPSReport = function(aReportID,aOPSID,aOperAnaesID){
+		var t=new Date();
+		t=t.getTime();
+		var Type = 1;
+		if (HAIEpisodeDr=="") {
+			$.messager.alert("提示","该患者可能非办理入院登记的患者，请查证后再填报!", 'info');
+			return false;
+		} else {
+			var IsActive  = $m({
+				ClassName:"DHCHAI.DP.PAAdm",
+				MethodName:"GetVisIsActive",
+				aEpisodeID:HAIEpisodeDr
+			},false);
+			if (IsActive!="1") {
+				$.messager.alert("提示","预住院、退院、未曾分配床位等患者不允许填报院感报告，请查证后再填报!", 'info');
+				return false;
+			}
+		}
+	
+		var url = "dhcma.hai.ir.opr.report.csp?Admin=0"+ '&OpsID=' + aOPSID+ '&ReportID=' + aReportID +'&OperAnaesID='+aOperAnaesID+ '&EpisodeID=' + HAIEpisodeDr +"&EmrOpen=1&t=" + t;
+		websys_showModal({
+            url: url,
+            title: '手术切口调查表',
+            iconCls: 'icon-w-epr',
+			width:1320,
+			height:Height
+        });
 	}
 	
 	//死亡证
@@ -327,6 +399,9 @@ function InitEmrRepAdmWinEvent(obj){
 		}else if(aTypeCode== 'MBBK'){
 			var strTitle = '慢性病报病卡';
 			var strUrl= "./dhcma.cd.reportmbbk.csp?1=1&ReportID=" + aRepID + "&EpisodeID=" + EpisodeID + "&PatientID="+PatientID + "&EmrOpen=1&t=" + t;
+		}else if(aTypeCode== 'CSQX'){
+			var strTitle = '出生缺陷儿报告卡';
+			var strUrl= "./dhcma.cd.reportcsqx.csp?1=1&ReportID=" + aRepID + "&EpisodeID=" + EpisodeID + "&PatientID="+PatientID + "&EmrOpen=1&t="  + t;
 		}
 	    websys_showModal({
 			url:strUrl,
@@ -340,7 +415,7 @@ function InitEmrRepAdmWinEvent(obj){
 	
 	//罕见病登记
 	obj.OpenRDSReport = function(aReportID){
-		var strUrl = "./dhcma.rd.report.csp?1=1&PatientID="+ PatientID + "&EpisodeID="+ EpisodeID +"&ReportID="+ aReportID;
+		var strUrl = "./dhcma.rd.report.csp?1=1&PatientID="+ PatientID + "&EpisodeID="+ EpisodeID +"&ReportID="+ aReportID+"&EmrOpen=1";
 		websys_showModal({
 			url:strUrl,
 			title:'罕见病登记报告',
@@ -348,6 +423,30 @@ function InitEmrRepAdmWinEvent(obj){
 	        originWindow:window,
 			width:1320,
 			height:Height
+		});
+	}
+	// 罕见病登记-随访报卡
+	obj.OpenRDSFollowReport = function(aReportID){
+		var strUrl = "./dhcma.rd.followreport.csp?1=1&PatientID="+ PatientID + "&EpisodeID="+ EpisodeID +"&ReportID="+ aReportID + "&aFrom=PH"+"&EmrOpen=1";
+		websys_showModal({
+			url		: strUrl,
+			title	: '罕见病随访报告',
+			iconCls	: 'icon-w-epr',  
+			width	: 1320,
+			height	: Height
+			
+		});
+	}
+	
+	//慢阻肺上报
+	obj.OpenCOPReport = function(aReportID) {
+		var strUrl = "./dhcma.cop.ir.report.csp?1=1&EpisodeID="+ EpisodeID +"&ReportID="+ aReportID+"&EmrOpen=1";
+		websys_showModal({
+			url		: strUrl,
+			title	: '慢阻肺报告',
+			iconCls	: 'icon-w-epr',  
+			width	: 1320,
+			height	: Height
 		});
 	}
 }

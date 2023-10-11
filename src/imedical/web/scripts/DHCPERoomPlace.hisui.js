@@ -41,6 +41,7 @@ function BUpdate_click(){
  
  function BSave_click(Type)
  {
+	 var CurLoc=session['LOGON.CTLOCID'];
 	 var ID=$("#RowId").val();
 	 if(Type=="1"){
 		
@@ -79,7 +80,7 @@ function BUpdate_click(){
 		
 	}
 if(Type=="0"){
-    var flags=tkMakeServerCall("web.DHCPE.RoomManagerEx","IsExistRoomPlace",Code,Desc)
+    var flags=tkMakeServerCall("web.DHCPE.RoomManagerEx","IsExistRoomPlace",Code,Desc,CurLoc)
     if(flags.split("^")[0]=="1"){
 	    $.messager.alert("提示","描述不能重复","info");
 		return false;

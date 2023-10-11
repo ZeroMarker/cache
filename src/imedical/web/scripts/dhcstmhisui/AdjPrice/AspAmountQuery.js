@@ -2,159 +2,176 @@
 // /描述: 调价损益查询
 // /编写者：zhangxiao
 // /编写日期: 2018.06.15
-var init = function () {
-	var InciHandlerParams = function () {
-		var Scg = $("#ScgId").combotree('getValue');
+var init = function() {
+	var InciHandlerParams = function() {
+		var Scg = $('#ScgId').combotree('getValue');
 		var Obj = {
 			StkGrpRowId: Scg,
-			StkGrpType: "M",
-			BDPHospital:gHospId
+			StkGrpType: 'M',
+			BDPHospital: gHospId
 		};
 		return Obj;
 	};
-	$("#InciDesc").lookup(InciLookUpOp(InciHandlerParams, '#InciDesc', '#Inci'));
-	var LocParams=JSON.stringify(addSessionParams({Type:"Login"}));
+	$('#InciDesc').lookup(InciLookUpOp(InciHandlerParams, '#InciDesc', '#Inci'));
+	var LocParams = JSON.stringify(addSessionParams({ Type: 'Login' }));
 	var LocBox = $HUI.combobox('#Loc', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+LocParams,
-			valueField: 'RowId',
-			textField: 'Description'
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + LocParams,
+		valueField: 'RowId',
+		textField: 'Description'
 	});
-	var Clear=function(){
+	var Clear = function() {
 		$UI.clearBlock('#Conditions');
 		$UI.clear(DetailGrid);
-		var Dafult={
-			StartDate:DateFormatter(new Date()),
-			EndDate:DateFormatter(new Date()),
-			Loc:gLocObj,
-			OptType:"1"
-			}
-		$UI.fillBlock('#Conditions',Dafult);
+		var DefaultData = {
+			StartDate: DateFormatter(new Date()),
+			EndDate: DateFormatter(new Date()),
+			Loc: gLocObj,
+			OptType: '1'
+		};
+		$UI.fillBlock('#Conditions', DefaultData);
 		$('#ScgId').combotree('options')['setDefaultFun']();
-	}
-	$UI.linkbutton('#ClearBT',{
-		onClick:function(){
-			Clear()
+	};
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
+			Clear();
 		}
 	});
-	$UI.linkbutton('#QueryBT',{ 
-		onClick:function(){
-			Query()
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
+			Query();
 		}
 	});
-	function Query(){
-		var ParamsObj=$UI.loopBlock('Conditions');
-		if(isEmpty(ParamsObj.StartDate)){
-				$UI.msg('alert','开始日期不能为空!');
-				return;
-			}
-		if(isEmpty(ParamsObj.EndDate)){
-				$UI.msg('alert','截止日期不能为空!');
-				return;
-			}	
+	function Query() {
+		var ParamsObj = $UI.loopBlock('Conditions');
+		var StartDate = ParamsObj.StartDate;
+		var EndDate = ParamsObj.EndDate;
+		if (isEmpty(StartDate)) {
+			$UI.msg('alert', '开始日期不能为空!');
+			return;
+		}
+		if (isEmpty(EndDate)) {
+			$UI.msg('alert', '截止日期不能为空!');
+			return;
+		}
+		if (compareDate(StartDate, EndDate)) {
+			$UI.msg('alert', '截止日期不能小于开始日期!');
+			return;
+		}
 		var Params = JSON.stringify(ParamsObj);
 		DetailGrid.load({
 			ClassName: 'web.DHCSTMHUI.AspAmount',
 			QueryName: 'QueryAspAmount',
+			query2JsonStrict: 1,
 			Params: Params
-		});		
+		});
 	}
-	var DetailGridCm = [[{
+	var DetailGridCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
-			hidden: true
+			hidden: true,
+			width: 60
 		}, {
 			title: '物资代码',
 			field: 'InciCode',
-			width:120
+			width: 120
 		}, {
 			title: '物资名称',
 			field: 'InciDesc',
-			width:150
+			width: 150
 		}, {
-        	title: "规格",
-       		field:'Spec',
-        	width:100
-    	}, {
-	        title:"调价单位",
-	        field:'AspUom',
-	        width:100
-	    }, {
-	        title:"库存量",
-	        field:'StkQty',
-	        align:'right',
-	        width:100
-	    }, {
-	        title:"调前售价",
-	        field:'PriorSp',
-	        width:100,
-	        align:'right'
+			title: '规格',
+			field: 'Spec',
+			width: 100
 		}, {
-	        title:"调后售价",
-	        field:'ResultSp',
-	        width:100,
-	        align:'right'
-	    }, {
-	        title:"差价(售价)",
-	        field:'DiffSp',
-	        width:80
-	    }, {
-	        title:"调前进价",
-	        field:'PriorRp',
-	        width:100,
-	        align:'right'
-	    }, {
-	        title:"调后进价",
-	        field:'ResultRp',
-	        width:100,
-	        align:'right'
-	    }, {
-	        title:"差价(进价)",
-	        field:'DiffRp',
-	        width:100
-	    }, {
-	        title:"损益金额(售价)",
-	        field:'SpAmt',
-	        width:80,
-	        align:'center'
-	    }, {
-	        title:"损益金额(进价)",
-	        field:'RpAmt',
-	        width:100,
-	        align:'center'
-	    }, {
-	        title:"科室",
-	        field:'LocDesc',
-	        width:100,
-	        align:'center'
-	    }, {
-	        title:"生效日期",
-	        field:'ExecuteDate',
-	        width:100,
-	        align:'left'
-	    }, {
-	        title:"调价人",
-	        field:'AspUser',
-	        width:60,
-	        align:'left'
-	    }, {
-	        title:"调价原因",
-	        field:'AspReason',
-	        width:60,
-	        align:'left'
-	    }		
+			title: '调价单位',
+			field: 'AspUom',
+			width: 100
+		}, {
+			title: '库存量',
+			field: 'StkQty',
+			align: 'right',
+			width: 100
+		}, {
+			title: '调前售价',
+			field: 'PriorSp',
+			width: 100,
+			align: 'right'
+		}, {
+			title: '调后售价',
+			field: 'ResultSp',
+			width: 100,
+			align: 'right'
+		}, {
+			title: '差价(售价)',
+			field: 'DiffSp',
+			width: 80
+		}, {
+			title: '调前进价',
+			field: 'PriorRp',
+			width: 100,
+			align: 'right'
+		}, {
+			title: '调后进价',
+			field: 'ResultRp',
+			width: 100,
+			align: 'right'
+		}, {
+			title: '差价(进价)',
+			field: 'DiffRp',
+			width: 100
+		}, {
+			title: '损益金额(售价)',
+			field: 'SpAmt',
+			width: 80,
+			align: 'center'
+		}, {
+			title: '损益金额(进价)',
+			field: 'RpAmt',
+			width: 100,
+			align: 'center'
+		}, {
+			title: '科室',
+			field: 'LocDesc',
+			width: 100,
+			align: 'center'
+		}, {
+			title: '生效日期',
+			field: 'ExecuteDate',
+			width: 100,
+			align: 'left'
+		}, {
+			title: '调价人',
+			field: 'AspUser',
+			width: 60,
+			align: 'left'
+		}, {
+			title: '调价原因',
+			field: 'AspReason',
+			width: 60,
+			align: 'left'
+		}
 	]];
 	var DetailGrid = $UI.datagrid('#DetailGrid', {
-		url:$URL,
+		url: $URL,
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.AspAmount',
-			QueryName: 'QueryAspAmount'
+			QueryName: 'QueryAspAmount',
+			query2JsonStrict: 1
 		},
-		sortName: 'RowId',  
+		sortName: 'RowId',
 		sortOrder: 'Desc',
-		showBar:true,
-		columns: DetailGridCm	
-	})
+		showBar: true,
+		columns: DetailGridCm,
+		navigatingWithKey: true,
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
+				$(this).datagrid('selectRow', 0);
+			}
+		}
+	});
 	
-	Clear()
-}
+	Clear();
+	Query();
+};
 $(init);

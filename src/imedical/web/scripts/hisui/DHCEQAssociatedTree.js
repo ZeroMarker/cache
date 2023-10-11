@@ -64,12 +64,11 @@ function NodeClick(EquipDR)
 }
 function NodeClickHandler(nod)
 {
-	/*
-	alertShow(nod.IsLast);
-	alertShow(nod.Parent);
-	alertShow(nod.ID);
-	*/
-	parent.frames["DHCEQAssociated"].location.href='websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQAssociated&ParEquipDR='+nod.ID+"&ReadOnly="+getElementValue("ReadOnly");	//modified by csj 2020-03-27 –Ë«Û∫≈£∫1242084 
+	var lnk='websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQAssociated&ParEquipDR='+nod.ID+"&ReadOnly="+getElementValue("ReadOnly");
+	if ('function'==typeof websys_getMWToken){
+		lnk += "&MWToken="+websys_getMWToken()
+	}
+	parent.frames["DHCEQAssociated"].location.href=lnk;
 }
 function LoadData(EquipDR,layer,preline)
 {

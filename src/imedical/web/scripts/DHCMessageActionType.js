@@ -38,7 +38,8 @@ var ReceiveTypeSelectHandler = function(index,rowData){
 		ReceiveTypeDescJObj.combogrid('setValue', rowData["DHCReceiveDesc"]);
 	}
 }
-var SendModeJson = [{id:"I",text:"信息系统"},{id:"S",text:"手机短信"},{id:"E",text:"电子邮箱"},{id:"ENS",text:"集成平台"}];
+var SendModeJson=$.cm({ClassName:'websys.DHCMessageActionTypeMgr',MethodName:'OutSendModeJSON'},false)
+//var SendModeJson = [{id:"I",text:"信息系统"},{id:"S",text:"手机短信"},{id:"E",text:"电子邮箱"},{id:"ENS",text:"集成平台"},{id:"BKRS",text:"北科瑞声"}];
 var LevelTypeJson = [{Code:"G",Desc:"一般消息"},{Code:"I",Desc:"重要消息"},{Code:"V",Desc:"非常重要"},{Code:"D",Desc:"紧急消息"}];
 //var TeamExecJson = [{Code:"N",Desc:"消息相互独立,读后自己消息不显示"},{Code:"Y",Desc:"有一人处理,消息全部消失"},{Code:"A",Desc:"全员处理,消息才算处理"}];
 var TeamExecJson = [{Code:"N",Desc:"消息相互独立,读后自己消息不显示"},{Code:"Y",Desc:"需要处理"}];
@@ -88,7 +89,20 @@ function initDialogStyle(){
 			},{
 				key:'level',
 				desc:'H此配置高于OtherInfoJson'
+			},{
+				key:'noDetailsId',
+				desc:'为1不拼接消息明细记录ID参数'
+			},{
+				key:'execMsgOnOpen',
+				desc:'弹窗时直接处理消息：<br>All处理全部,One处理自己'
+			},{
+				key:'clientPath',
+				desc:'客户程序端路径，用于调用其它客户端'
+			},{
+				key:'autoOpen',
+				desc:'为1时展示消息详情时自动打开业务处理界面或业务详情查看界面'
 			}
+
 		]
 		var o=parseShowInNewWindow(str);
 		var all=[];
@@ -251,6 +265,10 @@ $(function(){
 		if($("#HideExp").attr("checked")){
 			HideExp = "Y";	
 		}
+		
+		var AudioContent=$('#AudioContent').val();
+		var BizExecMethod=$('#BizExecMethod').val();
+		
 		$.ajaxRunServerMethod({
 			ClassName:cls,MethodName:"Save",
 			Code:CodeJObj.val(),
@@ -277,6 +295,9 @@ $(function(){
 			,MarqueeShow:MarqueeShow
 			,AllowReply:AllowReply
 			,HideExp:HideExp
+			,AudioContent:AudioContent
+			,BizExecMethod:BizExecMethod
+			,Sequence:$('#Sequence').val()
 			},
 			function(data,textStatus){
 				if ("undefined" == typeof data.err){
@@ -320,6 +341,10 @@ $(function(){
 		$('#MarqueeShow').attr('checked',false);
 		$('#AllowReply').attr('checked','checked');
 		$('#HideExp').attr('checked',false);
+		$('#AudioContent').val('');
+		$('#BizExecMethod').val('');
+		$('#Sequence').val('');
+		
 		//$("#tDHCMessageActionType").datagrid("getPager").pagination("select");
 	});
 	//$("#tDHCMessageActionType").data("datagrid").options["onClickRow"]
@@ -370,8 +395,11 @@ $(function(){
 			
 			$('#HideExp').attr('checked',rowData["THideExp"]=="Y");
 			
-			EffectiveDaysJObj.val(rowData["TEffectiveDays"])
+			$('#AudioContent').val(rowData['TAudioContent']);
+			$('#BizExecMethod').val(rowData['TBizExecMethod']);
 			
+			EffectiveDaysJObj.val(rowData["TEffectiveDays"]);
+			$('#Sequence').val(rowData["TSequence"]);
 			DelJObj.linkbutton('enable');
 		}
 	}

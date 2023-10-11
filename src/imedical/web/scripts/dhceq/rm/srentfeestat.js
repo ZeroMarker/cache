@@ -9,7 +9,8 @@ function initDocument()
 	initUserInfo();
 	initButton(); //按钮初始化
 	initLookUp();
-	initButtonWidth();
+	//showBtnIcon('BFind',false); //added by LMH 20230207 动态设置是否极简显示按钮图标
+	//initButtonWidth();  //modified by LMH 20230302 UI
 	defindTitleStyle();
 	$HUI.datagrid("#tDHCEQSRentFeeStat",{
 		url:$URL,
@@ -78,6 +79,7 @@ function creatToolbar()
 		AllCost=AllCost+parseFloat(rows[i].TAllCost);
 		AllProfit=AllProfit+parseFloat(rows[i].TAllProfit);
 	}
-	var lable_innerText='借入次数:'+AllNum+'总支出:'+AllPay+'总减免:'+AllCut+'总成本:'+AllCost+'总利润:'+AllProfit;
+	//modified by ZY0300 20220511
+	var lable_innerText='借入次数:'+AllNum+'&nbsp;&nbsp;&nbsp;总支出:'+AllPay.toFixed(2)+'&nbsp;&nbsp;&nbsp;总减免:'+AllCut.toFixed(2)+'&nbsp;&nbsp;&nbsp;总成本:'+AllCost.toFixed(2)+'&nbsp;&nbsp;&nbsp;总利润:'+AllProfit.toFixed(2);
 	$("#sumTotal").html(lable_innerText);
 }

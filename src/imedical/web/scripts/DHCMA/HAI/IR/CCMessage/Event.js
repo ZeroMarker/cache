@@ -60,7 +60,7 @@ function InitMessageWinEvent(obj){
 			obj.MsgLoad(EpisodeID); //刷新单个患者消息
 			$('#txtMessage').val('');
 			$.messager.popover({msg: '消息发送成功！',type:'success',timeout: 2000});
-		} else {
+		} else if(retval!="-1"){
 			$.messager.alert("提示", "消息发送失败！", "info");
 		}
 	}
@@ -91,7 +91,7 @@ function InitMessageWinEvent(obj){
 			type:'html'
 		});
 		$('#btnMSend').popover('show');  
-		
+
 		$('#ulqMsg').delegate("li","click",function(e) {
 			e.preventDefault();
 			var MsgTxt = $(this).attr("text");
@@ -100,9 +100,11 @@ function InitMessageWinEvent(obj){
 				obj.MsgLoad(EpisodeID); //刷新单个患者消息
 				$('#txtMessage').val('');
 				$.messager.popover({msg: '消息发送成功！',type:'success',timeout: 2000});
-			} else {
+			} else if(retval!="-1"){
 				$.messager.alert("提示", "消息发送失败！", "info");
 			}
+			$('#btnMSend').popover('hide');
+			$('#btnMSend').popover('destroy');  
 		});
 	}	
 	

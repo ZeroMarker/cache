@@ -1,4 +1,4 @@
-﻿function InitS430cssantuseWinEvent(obj){
+function InitS430cssantuseWinEvent(obj){
    	obj.LoadEvent = function(args){
 		
 		$('#ReportFrame').css('display', 'block');
@@ -28,10 +28,12 @@
    	obj.LoadRep = function(){
 		var SurNumID 	= $('#cboSurNum').combobox('getValue');	
 		var aLocType 	= Common_CheckboxValue('chkStatunit');
-	
+		//var aQryCon= $('#cboQryCon').combobox('getValue');
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs = $('#cboLoc').combobox('getValues').join(',');	
 		ReportFrame = document.getElementById("ReportFrame");
 	
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S430CssAntUse.raq&aSurNumID='+SurNumID +'&aStaType='+aLocType;	
+		p_URL = Append_Url('dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S430CssAntUse.raq&aSurNumID='+SurNumID +'&aStaType='+aLocType);	
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
@@ -52,10 +54,18 @@
 			        trigger: 'item',
 			        formatter: "{a} <br/>{b} : {c} ({d}%)"
 			    },
+				toolbox: {
+					feature: {
+						dataView: {show: false, readOnly: false},
+						magicType: {show: false, type: ['line', 'bar']},
+						restore: {show: true},
+						saveAsImage: {show: true}
+					}
+				},
 			    legend: {
 			        orient: 'vertical',
 			        left: 'left',
-			        data: ['治疗用药人数','预防用药人数','治疗+预防用药人数','无指征用药人数','其他用药人数','单联人数','二联人数','三联人数','四联人数','四联以上人数']
+			        data: ['治疗用药人数','预防用药人数','治疗+预防用药人数','一联人数','二联人数','三联人数','四联及以上人数']
 			    },
 			    series : [
 			        {
@@ -66,9 +76,7 @@
 			            data:[
 			                {value:HospAntUseZL, name:'治疗用药人数'},
 			                {value:HospAntUseYF, name:'预防用药人数'},
-			                {value:HospAntUseZLYF, name:'治疗+预防用药人数'},
-			                {value:HospAntUseWZZ, name:'无指征用药人数'},
-			                {value:HospAntUseQT, name:'其他用药人数'}
+			                {value:HospAntUseZLYF, name:'治疗+预防用药人数'}
 			            ]
 			        },{
 				        name: '全院抗菌药物使用情况',
@@ -76,11 +84,10 @@
 			            radius : '50%',
 			            center: ['75%', '50%'],
 			            data:[
-			                {value:HospAntUseDL, name:'单联人数'},
+			                {value:HospAntUseDL, name:'一联人数'},
 			                {value:HospAntUseEL, name:'二联人数'},
 			                {value:HospAntUseSL, name:'三联人数'},
-			                {value:HospAntUseESIL, name:'四联人数'},
-			                {value:HospAntUseSLYS, name:'四联以上人数'}
+			                {value:HospAntUseSLYS, name:'四联及以上人数'}
 			            ]
 			        },
 			    ]
@@ -89,21 +96,31 @@
 	}
     obj.echartLocInfRatio = function(runQuery){
 		if (!runQuery) return;
-	
-		arrRecord 		= runQuery.record;
-		
-		for (var indRd = 0; indRd < 1; indRd++){
+		var arrRecord = runQuery.rows;
+		RemoveArr(arrRecord);
+		var HospAntUseZL=0;
+		var HospAntUseYF=0;
+		var HospAntUseZLYF=0;
+		var HospAntUseWZZ=0;
+		var HospAntUseQT=0;
+		var HospAntUseDL=0;
+		var HospAntUseEL=0;
+		var HospAntUseSL=0;
+		var HospAntUseESIL=0;
+		var HospAntUseSLYS=0;
+		for (var indRd = 0; indRd < arrRecord.length; indRd++){
 			var rd = arrRecord[indRd];
-			var HospAntUseZL 	= rd["HospAntUseZL"];		//治疗用药人数
-			var HospAntUseYF 	= rd["HospAntUseYF"];		//预防用药人数
-			var HospAntUseZLYF 	= rd["HospAntUseZLYF"];		//治疗+预防用药人数
-			var HospAntUseWZZ 	= rd["HospAntUseWZZ"];		//无指征用药人数
-			var HospAntUseQT 	= rd["HospAntUseQT"];		//其他用药人数
-			var HospAntUseDL	= rd["HospAntUseDL"];		//单联人数
-			var HospAntUseEL	= rd["HospAntUseEL"];		//二联人数
-			var HospAntUseSL	= rd["HospAntUseSL"];		//三联人数
-			var HospAntUseESIL	= rd["HospAntUseESIL"];		//四联人数
-			var HospAntUseSLYS	= rd["HospAntUseSLYS"];		//四联以上人数
+			
+			HospAntUseZL 	+= parseInt(rd["HospAntUseZL"]);		//治疗用药人数
+			HospAntUseYF 	+= parseInt(rd["HospAntUseYF"]);		//预防用药人数
+			HospAntUseZLYF 	+= parseInt(rd["HospAntUseZLYF"]);		//治疗+预防用药人数
+			HospAntUseWZZ 	+= parseInt(rd["HospAntUseWZZ"]);		//无指征用药人数
+			HospAntUseQT 	+= parseInt(rd["HospAntUseQT"]);		//其他用药人数
+			HospAntUseDL	+= parseInt(rd["HospAntUseDL"]);		//单联人数
+			HospAntUseEL	+= parseInt(rd["HospAntUseEL"]);		//二联人数
+			HospAntUseSL	+= parseInt(rd["HospAntUseSL"]);		//三联人数
+			HospAntUseESIL	+= parseInt(rd["HospAntUseESIL"]);		//四联人数
+			HospAntUseSLYS	+= parseInt(rd["HospAntUseESIL"]);		//四联及以上人数
 			
 		}
 		
@@ -114,29 +131,33 @@
 		obj.myChart.clear()
 		var SurNumID 	= $('#cboSurNum').combobox('getValue');	
 		var aLocType 	= Common_CheckboxValue('chkStatunit');
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S430CssAntUse' + "&QueryName=" + 'CssQryAntUse' + "&Arg1=" + SurNumID + "&Arg2=" + aLocType + "&ArgCnt=" + 2;
+	
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs = $('#cboLoc').combobox('getValues').join(',');	
 
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 30000, //30秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				var tkclass="DHCHAI.STATV2.S430CssAntUse";
-				var tkQuery="CssQryAntUse";
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
-		});
+		obj.myChart.showLoading();	
+		var className="DHCHAI.STATV2.S430CssAntUse";
+		var queryName="CssQryAntUse";
+		$cm({
+		    ClassName: className,
+		    QueryName: queryName,
+		    aSurNumID: SurNumID,
+		    aStaType: aLocType,
+			aStatDimens:aStatDimens,
+			aLocIDs:aLocIDs,
+			page:1,    //可选项，页码，默认1
+			rows:999   //可选项，获取多少条数据，默认50
+		},
+		function(data){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			obj.echartLocInfRatio(data);
+			
+		}
+		,function(XMLHttpRequest, textStatus, errorThrown){
+			alert("类" + className + ":" + queryName+ "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
+			obj.myChart.hideLoading();    //隐藏加载动画
+		}); 
+
 	}
 	
 }

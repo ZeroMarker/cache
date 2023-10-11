@@ -25,6 +25,8 @@ function initPageDefault(){
 	
 	/// 初始化病人基本信息
 	InitPatInfoPanel();
+	
+	IsOpenMoreScreen?InitMoreScreen():''; //2022-03-07 用户大会
 }
 
 function InitMethod(){
@@ -40,6 +42,7 @@ function InitPatEpisodeID(){
 	PatientID = getParam("PatientID");
 	EpisodeID = getParam("EpisodeID");
 	CsType = getParam("CsType");         /// 会诊类型
+	IsOpenMoreScreen = isOpenMoreScreen();	///是否多屏幕 2022-03-07 用户大会
 }
 
 /// 初始化病人基本信息
@@ -207,7 +210,11 @@ function WriteMdt(EpisodeID, CstID){
 	//var rowsData = $("#bmDetList").datagrid('getSelected'); //选中要删除的行
 	//if (rowsData != null) {
 		OpenMdtConsWin();
-		$("#newWinFrame").attr("src","dhcem.consultwrite.csp?EpisodeID="+EpisodeID +"&CstID="+CstID);
+		var lnk="dhcem.consultwrite.csp?EpisodeID="+EpisodeID +"&CstID="+CstID;
+		if ('undefined'!==typeof websys_getMWToken){
+			lnk += "&MWToken="+websys_getMWToken();
+		}
+		$("#newWinFrame").attr("src",lnk);
 		//$("#newWinFrame").attr("src","dhcem.consultjdf.csp");
 		//$("#newWinFrame").attr("src","dhcem.consultjdf.csp?EpisodeID="+rowsData.EpisodeID +"&ConsID="+ rowsData.ConsID);
 	//}else{
@@ -220,8 +227,24 @@ function WriteMdt(EpisodeID, CstID){
 function PrintCst(){
 	
 	var rowsData = $("#bmDetList").datagrid('getSelected'); //选中要删除的行
+	var CsStatCode = rowsData.CstStatus;
+	if(CsStatCode=="取消"){
+		$.messager.alert("提示","申请单已经取消,不能打印！","warning");
+		return;
+	}
+	
+	if((CsStatCode=="发送")||(CsStatCode.indexOf("审核")!=-1)||(CsStatCode=="驳回")||(CsStatCode=="拒绝")||(CsStatCode=="接收")||(CsStatCode=="取消接收")||(CsStatCode=="到达")||(CsStatCode=="取消完成")){
+		if(ConsNoCompCanPrt==1){
+			$.messager.alert("提示","会诊未完成,不能打印！","warning");
+			return;
+		}
+	}
 	if(PrintModel==1){
-		window.open("dhcem.printconsone.csp?CstItmIDs="+rowsData.CstItmID);
+		var lnk="dhcem.printconsone.csp?CstItmIDs="+rowsData.CstItmID;
+		if ('undefined'!==typeof websys_getMWToken){
+			lnk += "&MWToken="+websys_getMWToken();
+		}
+		window.open(lnk);
 		InsCsMasPrintFlag();  /// 修改会诊打印标志
 	}else{
 		var prtRet = PrintCstNew(rowsData.CstItmID,LgHospID);
@@ -232,12 +255,44 @@ function PrintCst(){
 	return;
 }
 
+/// 会诊闭环
+function CloseLoop(){
+	
+	var rowsData = $("#bmDetList").datagrid('getSelected'); //选中要删除的行
+	var CsStatCode = rowsData.CstStatus;
+	if(CsStatCode=="取消"){
+		$.messager.alert("提示","申请单已经取消,不能打印！","warning");
+		return;
+	}
+	
+	var lnk = "dhc.orderview.csp?ord="+rowsData.Oeori+"&ordViewType=CST&ordViewBizId="+rowsData.CstItmID; //hxy 2022-07-22 无医嘱显示空白问题：少入参
+	//var lnk = "dhc.orderview.csp?ord="+ rowsData.Oeori;
+	
+	if(rowsData.TypeCode=="NUR"){ //hxy 2022-09-29
+		var lnk = "dhcem.consultnur.csp?CstID="+rowsData.CstID+"&CstItmID="+rowsData.CstItmID+"&seeCstType=1"
+	}
+	
+	websys_showModal({
+		url: lnk,
+		height:640,
+		width:1300, //hxy 2021-05-07 890->1280 引用弹窗不可关闭 //900->1300 患者信息遮盖
+		iconCls:"icon-w-paper",
+		title: $g('会诊明细'),
+		closed: true,
+		onClose:function(){}
+	});	
+}
+
 /// 会诊记录
 function InsPageConsult(jsonObj){
 	
 	$("#ConsTrePro").text($_TrsTxtToSymbol(jsonObj.CstTrePro));    /// 病情摘要
 	$("#ConsPurpose").text($_TrsTxtToSymbol(jsonObj.CstPurpose));  /// 会诊目的
 	$("#ConsOpinion").text($_TrsTxtToSymbol(jsonObj.CsOpinion));   /// 会诊意见
+	
+	if(IsOpenMoreScreen){
+	LoadMoreScr(jsonObj); //2023-03-07 用户大会
+	}
 }
 
 /// 获取系统当前日期
@@ -251,6 +306,19 @@ function GetCurSystemDate(offset){
 		}
 	},'',false)
 	return SysDate
+}
+
+function InitMoreScreen(){
+	
+}
+
+function LoadMoreScr(rowData){
+	var Obj={
+		CstID:rowData.CstID,
+		seeCstType:1
+	}
+	
+	websys_emit("onOpenConsMessage",Obj);
 }
 
 /// JQuery 初始化页面

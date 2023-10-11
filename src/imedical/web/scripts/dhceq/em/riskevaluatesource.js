@@ -18,7 +18,8 @@ function initPanel()
 function initTopPanel()
 {
 	initMessage(""); //获取所有业务消息  Modiedy by zc0056 20200204
-	initButtonWidth();
+	//showBtnIcon('BFind',false); //modified by LMH 20230202 动态设置是否极简显示按钮图标
+	//initButtonWidth();  //modified by LMH 20230302 UI
 	jQuery('#BFind').on("click", BFind_Clicked);
 	initSourceTypeData();
 	defindTitleStyle();
@@ -64,13 +65,14 @@ function initDHCEQRiskEvaluateSoucre()
 			Desc:getElementValue("Desc"),
 	    },
 	    singleSelect:true,
-		fitColumns:true,	
+		//fitColumns:true,	//modified by LMH 20230202  列少时默认向左对齐
+		//modified by LMH 20230202  列少时默认向左对齐修改列宽度,避免查询的文字显示不全问题
     	columns:[[
 			{field:'TRowID',title:'TRowID',width:0,align:'center',hidden:true},
 			{field:'TSourceType',title:'TSourceType',width:0,align:'center',hidden:true},
-			{field:'TSourceTypeDesc',title:'来源类型',width:30,align:'center'},
-			{field:'TName',title:'名称',width:80,align:'center'},
-			{field:'TCode',title:'代码',width:40,align:'center'},
+			{field:'TSourceTypeDesc',title:'来源类型',width:80,align:'center'},
+			{field:'TName',title:'名称',width:200,align:'center'},  //modified by LMH 20230302 UI
+			{field:'TCode',title:'代码',width:200,align:'center'},  //modified by LMH 20230302 UI
 			{field:'TOpt',title:'评估',width:100,align:'center',formatter: detailOperation},
 		]],
 		pagination:true,
@@ -82,9 +84,7 @@ function initDHCEQRiskEvaluateSoucre()
 function detailOperation(value,row,index)
 {
 	var result=tkMakeServerCall("web.DHCEQ.Risk.BUSEvaluate","GetRecentRiskEvaluate",row.TSourceType,row.TRowID);
-	//Modiedy by zc0043 修改错误链接
     var str= "dhceq.em.riskevaluate.csp?&ReadOnly=0&SourceType="+row.TSourceType+"&SourceID="+row.TRowID+"&Name="+row.TName+"&RowID="+result ; 
-	//add by yh 2020-02-17 1161616
 	var width=""
 	var height="19row"
 	var icon="icon-paper"

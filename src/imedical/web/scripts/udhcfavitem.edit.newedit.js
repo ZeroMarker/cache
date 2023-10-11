@@ -5,7 +5,8 @@ var m_iorderSubCatID="";
 var m_Itemcat="";
 var SearchLimitType=""; //限制医嘱套明细修改时,医嘱套只能修改为医嘱套,医嘱项只能替换为医嘱项
 var PageLogicObj = {
-	m_SameFreqDifferentDosesFlag:"N"
+	m_SameFreqDifferentDosesFlag:"N",
+	m_PHPrescType:""
 }
 if (websys_isIE==true) {
 	 var script = document.createElement('script');
@@ -118,9 +119,13 @@ function AddClickHandler()
 	}
 	var ItmLinkDoctor=$("#ItmLinkDoctor").val(); //关联
 	if (ItmLinkDoctor!=""){
-		ItmLinkDoctor=ChangeNum(ItmLinkDoctor);
+		if(isNaN(ItmLinkDoctor)||(parseFloat(ItmLinkDoctor)<1)){
+			$.messager.alert('提示','请填入正确的关联序号','info',function(){
+				$("#ItmLinkDoctor").select();
+			}); 
+			return;
+		}
 	}
-	if (ItmLinkDoctor==0) ItmLinkDoctor="";
 	var ItemDoseUOMID=$("#ItemDoseUOM").combobox('getValue');
 	var ItemFrequenceID=$("#ItemFrequence").combobox('getValue');
 	var ItemDurationID=$("#ItemDuration").combobox('getValue');
@@ -145,12 +150,12 @@ function AddClickHandler()
 	var RemoveCeler=$("#RemoveCeler").checkbox("getValue")?"Y":"N";
 	var OrderFreqTimeDoseStr=$("#OrderFreqTimeDoseStr").val();
 	if (OrderFreqTimeDoseStr!="") ItemDoseQty=""
-	var OrderFreqWeekStr=$("#OrderFreqWeekStr").val();
+	var OrderFreqDispTimeStr=$("#OrderFreqDispTimeStr").val();
 	//tkMakeServerCall最大入参个数为16个,考虑以后可能继续增加维护字段,可拼至ExpStr字段,后台拆分
 	var ExpStr="";
 	ExpStr=DHCDocOrderStageID+"^"+MustEnter+"^"+ItemBillUOMRowId;
 	ExpStr=ExpStr+"^"+OrderSpeedFlowRate+"^"+OrderFlowRateUnit+"^"+OrderBodyPartLabel;
-	ExpStr=ExpStr+"^"+SkinTest+"^"+SkinActionID+"^"+NotifyClinician+"^"+RemoveCeler+"^"+OrderFreqTimeDoseStr+"^"+OrderFreqWeekStr;
+	ExpStr=ExpStr+"^"+SkinTest+"^"+SkinActionID+"^"+NotifyClinician+"^"+RemoveCeler+"^"+OrderFreqTimeDoseStr+"^"+OrderFreqDispTimeStr;
 	//通过是否传入了医嘱套明细ID来区分更新和新增
 	if (ARCOSItemRowid==""){
 		var RtnARCOSItemRowid=$.cm({
@@ -168,6 +173,10 @@ function AddClickHandler()
 		}else{
 			$.messager.popover({msg: '新增医嘱项目成功!',type:'success'});
 			ClearClickHandler();
+			if ((ARCOSPrescType=="")||(ARCOSPrescType=="CNMedItem")) {
+				ARCOSPrescType=tkMakeServerCall("web.UDHCFavItemNew","GetARCOSPrescType",ARCOSRowid,session['LOGON.HOSPID']);
+				ARCOSPrescType=ARCOSPrescType.split("^")[0];
+			}
 			if (window.name=="ARCOrdIetmEdit"){
 				Clear_Mes();
 				try{
@@ -180,6 +189,10 @@ function AddClickHandler()
 				Clear_Mes();
 				$("#ItemDesc").focus();
 				//window.parent.destroyDialog("ARCOSEdit");
+			}else if(websys_showModal('options')&&websys_showModal('options').LoadUDHCARCOrderSetItemEditDataGrid){
+				websys_showModal('options').LoadUDHCARCOrderSetItemEditDataGrid("Add");
+				Clear_Mes();
+				$("#ItemDesc").focus();
 			}
 		}
 	}else{
@@ -205,7 +218,8 @@ function AddClickHandler()
 			}
 			if ("function" === typeof window.parent.LoadUDHCARCOrderSetItemEditDataGrid){
 				window.parent.LoadUDHCARCOrderSetItemEditDataGrid();
-				window.parent.destroyDialog("ARCOSEdit");
+				//window.parent.destroyDialog("ARCOSEdit");
+				window.parent.websys_showModal("close");
 			}
 		}
 	}	
@@ -482,7 +496,7 @@ function CheckBeforeSave() {
 	
 	var OrderPriorRemarks=$("#OrderPriorRemarks").combobox('getValue');
 	var OrderPriorRemarksText=$("#OrderPriorRemarks").combobox('getText');
-	if ((OrderPriorRemarksText!="取药医嘱")&&(OrderPriorRemarksText!="自备药")&&(OrderPriorRemarksText!="出院带药")&&(OrderPriorRemarksText!="嘱托")&&(OrderPriorRemarksText!="")){
+	if ((OrderPriorRemarksText!=$g("取药医嘱"))&&(OrderPriorRemarksText!=$g("自备药"))&&(OrderPriorRemarksText!=$g("出院带药"))&&(OrderPriorRemarksText!=$g("嘱托"))&&(OrderPriorRemarksText!="")){
 		$.messager.alert('提示','请选择正确的附加说明'); 
 		return false;
 	}
@@ -563,7 +577,11 @@ function CheckBeforeSave() {
 				var ItemDoseQty=$("#ItemDoseQty").val();
 				if ((ItemDoseQty=="")&&(ItemDoseQty.indexOf("-")<0)) {
 					$.messager.alert('提示','请输入有效的单次剂量!',"info",function(){
-						$("#ItemDoseQty").focus();
+						if (PageLogicObj.m_SameFreqDifferentDosesFlag=="Y") {
+							$("#ItemDoseQty").click();
+						}else{
+							$("#ItemDoseQty").focus();
+						}
 					}); 
 					return false;
 				}
@@ -581,25 +599,23 @@ function CheckBeforeSave() {
 		}
 		var ItemQty=$("#ItemQty").val();
 		var ItemDoseQty=$("#ItemDoseQty").val();
-		if (ARCIMRowid!="") {
+		if((ARCOSPrescType=='CNMedItemCat')&&!isPositiveInteger(ItemDoseQty)){
+			var CMAllowEntryDecimalItemCat=tkMakeServerCall("web.DHCOEOrdItemCMView","CheckAllowEntryDecimalItem",ARCIMRowid);
+			if(CMAllowEntryDecimalItemCat=='N'){
+				$.messager.alert('提示',"该医嘱单次剂量应为整数!","info",function(){
+					websys_setfocus('ItemDoseQty');
+				});
+				return false;
+			}
+		}
+		if((ARCOSPrescType=='Other')&&!isPositiveInteger(ItemQty)){
 			var SubCatID = cspRunServerMethod(GetARCItemSubCatID, '', '', ARCIMRowid);
 			var AllowEntryDecimalItemCatStr = "^" + AllowEntryDecimalItemCat + "^";
-			if ((AllowEntryDecimalItemCatStr.indexOf("^" + SubCatID + "^")) == -1) {
-				if (ARCOSPrescType=="Other") {
-					if (!isPositiveInteger(ItemQty)) {
-						$.messager.alert('提示',"该医嘱整包装数量应为整数!","info",function(){
-							websys_setfocus('ItemQty');
-						});
-					   return false;
-					}
-				}else{
-					if (!isPositiveInteger(ItemDoseQty)) {
-						$.messager.alert('提示',"该医嘱单次剂量应为整数!","info",function(){
-							websys_setfocus('ItemDoseQty');
-						});
-					   return false;
-					}
-				}
+			if (((AllowEntryDecimalItemCatStr.indexOf("^" + SubCatID + "^")) == -1)) {
+				$.messager.alert('提示',"该医嘱整包装数量应为整数!","info",function(){
+					websys_setfocus('ItemQty');
+				});
+			   	return false;
 			}
 		}
 	}
@@ -651,7 +667,7 @@ function Clear_Mes(){
 	ComCreat("ALL");
 	$("#ItemRowid").val(""); //医嘱项ID
 	$("#ItemDesc").lookup("setText",""); //医嘱描述
-	$("#ItemDoseQty,#ItemQty,#ItmLinkDoctor,#OrderSpeedFlowRate,#OrderBodyPartLabelText,#OrderBodyPartLabel,#OrderFreqWeekStr,#OrderFreqTimeDoseStr").val("");
+	$("#ItemDoseQty,#ItemQty,#ItmLinkDoctor,#OrderSpeedFlowRate,#OrderBodyPartLabelText,#OrderBodyPartLabel,#OrderFreqDispTimeStr,#OrderFreqTimeDoseStr").val("");
 	$("#MustEnter,#SkinTest,#NotifyClinician,#RemoveCeler").checkbox('uncheck');
 	$("#MustEnter,#SkinTest,#NotifyClinician").checkbox("enable");
 }
@@ -884,7 +900,6 @@ function DurationCombCreat()
 //用法
 function InsTructionCombCreat()
 {
-
 	var INPut="^N"
 	if (ARCOSPrescType!="Other"){
 		INPut="^Clear";
@@ -910,12 +925,26 @@ function InsTructionCombCreat()
 				if (rec) {
 					$("#SkinTest").checkbox('enable');
 					$("#SkinAction").combobox('enable');
-					if ((SkinTestInstr!="")&&(SkinTestInstr.indexOf(rec.CombValue)>=0)) {
+					if (m_ArcimClassification =="RC") {
+						
+						$("#SkinTest").checkbox('enable');
+						$("#SkinAction").combobox('enable');
+					}
+					if (m_ArcimClassification !="RW") {
+						$("#SkinTest").checkbox('disable')
 						$("#SkinAction").combobox('setValue',"").combobox('disable');
+					}
+					if ((SkinTestInstr!="")&&(SkinTestInstr.indexOf("^"+rec.CombValue+"^")>=0)) {
+						$("#SkinAction").combobox('setValue',"").combobox('disable');
+						$("#SkinTest").checkbox('setValue', true);
 						//$("#SkinTest").checkbox('disable').checkbox('uncheck');
 					}
-					//var OrderFlowRateUnit=$("#OrderFlowRateUnit").combobox('getValue');
-					//if (OrderFlowRateUnit=="") {
+					if ((WYInstr!="")&&(WYInstr.indexOf("^"+rec.CombValue+"^")>=0)){
+						$("#ItemDoseQty,#OrderFreqTimeDoseStr").val("");
+					}
+					var disabled=$("#OrderFlowRateUnit").combobox('options').disabled;
+					var OrderFlowRateUnit=$("#OrderFlowRateUnit").combobox('getValue');
+					if (!disabled&&(OrderFlowRateUnit=="")) {
 						$.cm({
 						    ClassName:"web.DHCOEOrdItemView",
 						    MethodName:"GetInstrDefSpeedRateUnit",
@@ -926,7 +955,7 @@ function InsTructionCombCreat()
 								$("#OrderFlowRateUnit").combobox('select',OrderFlowRateUnitRowId);
 						    }
 						})
-					//}
+					}
 				}  
 			},onChange:function(newValue, oldValue){
 				if (newValue=="") {
@@ -967,7 +996,7 @@ function FreqCombCreat()
 				}  
 			},onChange:function(newValue, oldValue){
 				if (newValue=="") {
-					$("#OrderFreqWeekStr").val("");
+					$("#OrderFreqDispTimeStr").val("");
 					ChangeOrderFreqTimeDoseStr();
 				}
 			},
@@ -1048,12 +1077,13 @@ function IntItemDescLookUp(){
         idField:'ArcimRowID',
         textField:'ARCIMDesc',
         columns:[[  
-           {field:'ARCIMDesc',title:'名称',width:320,sortable:true},
-            {field:'ArcimRowID',title:'ID',width:70,sortable:true}
+           {field:'ARCIMDesc',title:'名称',width:300,sortable:true},
+           {field:'ItemPrice',title:'单价',width:70,sortable:true},
+           {field:'ArcimRowID',hidden:true}
         ]],
         pagination:true,
         panelWidth:400,
-        panelHeight:400,
+        panelHeight:410,
         isCombo:true,
         minQueryLen:2,
         delay:'500',
@@ -1062,7 +1092,7 @@ function IntItemDescLookUp(){
         onBeforeLoad:function(param){
 	        var desc=param['q'];
 	        if (desc=="") return false;
-			param = $.extend(param,{Item:desc,GroupID:session['LOGON.GROUPID'],OrderPrescType:ARCOSPrescType,SearchLimitType:SearchLimitType});
+			param = $.extend(param,{Item:desc,GroupID:session['LOGON.GROUPID'],OrderPrescType:ARCOSPrescType,SearchLimitType:SearchLimitType,ParamARCOSRowid:ARCOSRowid});
 	    },onSelect:function(ind,item){
 		   $("#ItemRowid").val(item['ArcimRowID']);
 		   var ItemArr=new Array();
@@ -1074,7 +1104,7 @@ function IntItemDescLookUp(){
     });
 }
 //基本单位
-function ItemDoseUOMCombCreat(ArcimID,DefaultDosUomDr)
+function ItemDoseUOMCombCreat(ArcimID,DefaultDosUomDr,callBackFun)
 {
 	$.cm({
 		ClassName:"web.UDHCFavItemNew",
@@ -1092,6 +1122,7 @@ function ItemDoseUOMCombCreat(ArcimID,DefaultDosUomDr)
 					return (row["CombDesc"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
 				},onLoadSuccess:function(){
 					$(this).combobox('select',DefaultDosUomDr);
+					if(callBackFun) callBackFun();
 				}
 		 });
 	});
@@ -1187,8 +1218,9 @@ function OrderItemLookupSelect(txt)
 			var ArcimClassification=mPiece(ret,"^",12);
 			var NotifyClinician=mPiece(ret,"^",13);
 			var ARCIMDefSensitive=mPiece(ret,"^",14);
+			var PHPrescType=mPiece(ret,"^",16);
 			PageLogicObj.m_SameFreqDifferentDosesFlag=mPiece(ret,"^",15);//同频次不同剂量医嘱标志
-			
+			PageLogicObj.m_PHPrescType=PHPrescType;
 			var OrderPackQty=mPiece(ipackqtystr,String.fromCharCode(1),0);
 			var OrderPackUOM=mPiece(ipackqtystr,String.fromCharCode(1),1);
 			var OrderPackUOMRowid=mPiece(ipackqtystr,String.fromCharCode(1),2);
@@ -1232,7 +1264,14 @@ function OrderItemLookupSelect(txt)
 			$("#NotifyClinician").checkbox("uncheck");
 		}
 		//初始化计量单位
-		ItemDoseUOMCombCreat(icode,DefaultDoseUOMRowid); 
+		ItemDoseUOMCombCreat(icode,DefaultDoseUOMRowid,function(){
+			if (ARCOSPrescType=="Other"){
+				if (OrderFreqRowid!="")  {
+					$('#ItemFrequence').combobox('select',OrderFreqRowid);//频次
+					ItemFrequenceChange();
+				}
+			}
+		}); 
 		//整包装单位
 		ItemBillUOMCombCreat(icode,OrderPackUOMRowid);
 		DefaultDoseQty=ChangeNum(DefaultDoseQty)
@@ -1245,10 +1284,6 @@ function OrderItemLookupSelect(txt)
 			//初始化标本
 			sampleTypeCombCreat(icode,"",1);
 			OrderPackQty=ChangeNum(OrderPackQty)
-			if (OrderFreqRowid!="")  {
-				$('#ItemFrequence').combobox('select',OrderFreqRowid);//频次
-				ItemFrequenceChange();
-			}
 			if (OrderInstrRowid!="")  $('#ItemInstruction').combobox('select',OrderInstrRowid); //用法
 			if (OrderDurRowid!="")  $('#ItemDuration').combobox('select',OrderDurRowid);
 			if (OrderPackQty!="")  $("#ItemQty").val(OrderPackQty);
@@ -1322,9 +1357,10 @@ function OrderBodyPartLabelTextFocusHandler(){
 		$("#OrderBodyPartLabel").val(value);
 	}*/
 	 websys_showModal({
+		iconCls:'icon-w-pen-paper',
 		url:linkUrl,
 		title:'部位选择',
-		width:810,height:600,
+		width:1200,height:700,
 		CallBackFunc:function(reppartStr){
 			var reppartArr=reppartStr.split("^");
 			var Text=reppartArr[0];
@@ -1342,164 +1378,176 @@ function ChangeFormStyle(ArcimClassification,ArcItemSubCat,idoseqtystr) {
 		$(".hisui-checkbox").checkbox('disable');
 		return;
 	}
-		m_idoseqtystr=idoseqtystr;
-		m_ArcimClassification=ArcimClassification;
-		m_iorderSubCatID=ArcItemSubCat;
-		$(".textbox").prop("disabled",false);  
-		$(".hisui-combobox").combobox('enable'); 
-		var InstructionRowID=$("#ItemInstruction").combobox('getValue');
+	m_idoseqtystr=idoseqtystr;
+	m_ArcimClassification=ArcimClassification;
+	m_iorderSubCatID=ArcItemSubCat;
+	$(".textbox").prop("disabled",false);  
+	$(".hisui-combobox").combobox('enable'); 
+	var InstructionRowID=$("#ItemInstruction").combobox('getValue');
+	var ActionCode=GetActionCode();
+	if ((ArcimClassification !="RW")||(ActionCode == "MS") || (ActionCode == "XZ") || (ActionCode == "TM")|| (ActionCode == "YX")) {
+		$("#SkinTest").checkbox('disable')
+		if((ArcimClassification !="RW")) $("#SkinAction").combobox('setValue',"").combobox('disable');
+	}else{
+		$("#SkinTest").checkbox('enable')
 		if ((SkinTestInstr!="")&&(SkinTestInstr.indexOf(InstructionRowID)>=0)) {
 			$("#SkinAction").combobox('setValue',"").combobox('disable');
-			$("#SkinTest").checkbox('disable').checkbox('uncheck');
-		} 
-		if ((("^" + NotLinkItemCat + "^").indexOf("^" + m_iorderSubCatID + "^") >= 0)){ 
-			$("#ItmLinkDoctor").val("").prop("disabled",true);
-		}
-		//检验、检查医嘱
-		if((ArcimClassification=="L")||(ArcimClassification=="E")) {
-			//剂量单位、频次、疗程、用法、附加说明 不可编辑
-			$("#ItemDoseUOM,#ItemFrequence,#ItemDuration,#ItemInstruction,#OrderPriorRemarks").combobox('disable');
-			//单次剂量、关联 不可编辑
-			$("#ItemDoseQty,#ItmLinkDoctor").prop("disabled",true);
-			//医嘱类型 强制临时
-			$("#DHCDocOrderType").combobox('select',ShortOrderPriorRowid);
-		}
-		//非药品、检查、检验医嘱,判断维护医嘱套的频次和用法是不是可选 频次和疗程同步,不能用频次也不能维护疗程
-		if ((ArcItemSubCat!="")&&(ArcimClassification!="RW")){
-			var DisPlayFreq="N",DisInstr="N";
-			//录入频次的非药品子类
-			if ((FrequencedItemCat!="")&&(("^"+FrequencedItemCat+"^").indexOf("^"+ArcItemSubCat+"^")>=0)){
-					DisPlayFreq="Y";
-			}
-			//可选择用法的非药品子分类
-			if ((inputInstrNotDrugCat!="")&&(("^"+inputInstrNotDrugCat+"^").indexOf("^"+ArcItemSubCat+"^")>=0)){
-				DisInstr="Y";
-			}
-			if (DisPlayFreq!="Y"){
-				$("#ItemFrequence,#ItemDuration").combobox('disable');
-			}
-			if (DisInstr!="Y"){
-				$("#ItemInstruction").combobox('disable');
-			}
-		}
-		//如果不是西药 也不是草药 则单次剂量单位不可录入
-		if ((ArcimClassification!="RW")&&(ArcimClassification!="RC")){
-			$("#ItemDoseUOM").prop("disabled",true);
-		}
-		//如果剂量单位串为空，则不允许录入剂量
-		if (idoseqtystr==""){ 
-			$("#ItemDoseQty").prop("disabled",true);
-		}
-		//非西药 不可维护输液流速 流速单位
-		if (ArcimClassification!="RW"){
-			$("#OrderSpeedFlowRate").prop("disabled",true);
-			$("#OrderFlowRateUnit").combobox('disable');
-			if (ArcimClassification=="RC"){
-				//草药 数量单位、标本、附加说明、医嘱阶段
-				$("#ItemBillUOM,#sampleType,#OrderPriorRemarks,#DHCDocOrderStage").combobox('disable');
-				//整包装数量、关联
-				$("#ItemQty,#ItmLinkDoctor").prop("disabled",true);
-			}
+			//$("#SkinTest").checkbox('disable').checkbox('uncheck');
 		}else{
-			$("#sampleType").combobox('disable');
+			$("#SkinAction").combobox('enable');
 		}
-		if (ArcimClassification=="O"){
-			if ($("#DHCDocOrderType").combobox('getValue')==LongOrderPriorRowid){
-				var PHPrescType=$.cm({
-					ClassName:"web.DHCDocOrderCommon",
-					MethodName:"GetPHPrescType",
-					ItemCatRowid:ArcItemSubCat, 
-					dataType:"text",
-				},false);
-				if (PHPrescType==4){
-					$("#ItemDoseQty").prop("disabled",false);
-					if (idoseqtystr==""){
-						//#ItemBillUOM  CombValue CombDesc
-						var data=$("#ItemBillUOM").combobox('getData');
-						$("#ItemDoseUOM").combobox('loadData',data);
-						if (data.length==1){
-							$("#ItemDoseUOM").combobox('select',data[0]['CombValue']);
-						}
+	}
+	if ((("^" + NotLinkItemCat + "^").indexOf("^" + m_iorderSubCatID + "^") >= 0)){ 
+		$("#ItmLinkDoctor").val("").prop("disabled",true);
+	}
+	//检验、检查医嘱
+	if((ArcimClassification=="L")||(ArcimClassification=="E")) {
+		//剂量单位、频次、疗程、用法、附加说明 不可编辑
+		$("#ItemDoseUOM,#ItemFrequence,#ItemDuration,#ItemInstruction,#OrderPriorRemarks").combobox('disable');
+		//单次剂量、关联 不可编辑
+		$("#ItemDoseQty").prop("disabled",true);
+		//医嘱类型 强制临时
+		$("#DHCDocOrderType").combobox('select',ShortOrderPriorRowid);
+	}
+	//非药品、检查、检验医嘱,判断维护医嘱套的频次和用法是不是可选 频次和疗程同步,不能用频次也不能维护疗程
+	var DisPlayFreq="N",DisInstr="N";
+	if ((ArcItemSubCat!="")&&(ArcimClassification!="RW")){
+		//录入频次的非药品子类
+		//if ((FrequencedItemCat!="")&&(("^"+FrequencedItemCat+"^").indexOf("^"+ArcItemSubCat+"^")>=0)){
+		if (PageLogicObj.m_PHPrescType =="4"){
+			DisPlayFreq="Y";
+		}
+		//可选择用法的非药品子分类
+		if ((inputInstrNotDrugCat!="")&&(("^"+inputInstrNotDrugCat+"^").indexOf("^"+ArcItemSubCat+"^")>=0)){
+			DisInstr="Y";
+		}
+		if (DisPlayFreq!="Y"){
+			$("#ItemFrequence,#ItemDuration").combobox('disable');
+		}else{
+            $("#ItemFrequence,#ItemDuration").combobox('enable');
+        }
+		if (DisInstr!="Y"){
+			$("#ItemInstruction").combobox('disable');
+		}
+	}
+	//如果不是西药 也不是草药 则单次剂量单位不可录入
+	if ((ArcimClassification!="RW")&&(ArcimClassification!="RC")){
+		$("#ItemDoseUOM").prop("disabled",true);
+	}
+	//如果剂量单位串为空且非录入频次的非药品子类，则不允许录入剂量
+	if ((idoseqtystr=="")&&(DisPlayFreq=="N")){ 
+		$("#ItemDoseQty").prop("disabled",true);
+	}
+	//非西药 不可维护输液流速 流速单位
+	if (ArcimClassification!="RW"){
+		$("#OrderSpeedFlowRate").prop("disabled",true);
+		$("#OrderFlowRateUnit").combobox('disable');
+		if (ArcimClassification=="RC"){
+			//草药 数量单位、标本、附加说明、医嘱阶段
+			$("#ItemBillUOM,#sampleType,#OrderPriorRemarks,#DHCDocOrderStage").combobox('disable');
+			//整包装数量、关联
+			$("#ItemQty,#ItmLinkDoctor").prop("disabled",true);
+		}
+	}else{
+		$("#sampleType").combobox('disable');
+	}
+	if (ArcimClassification=="O"){
+		if ($("#DHCDocOrderType").combobox('getValue')==LongOrderPriorRowid){
+			var PHPrescType=$.cm({
+				ClassName:"web.DHCDocOrderCommon",
+				MethodName:"GetPHPrescType",
+				ItemCatRowid:ArcItemSubCat, 
+				dataType:"text",
+			},false);
+			if (PHPrescType==4){
+				$("#ItemDoseQty").prop("disabled",false);
+				if (idoseqtystr==""){
+					//#ItemBillUOM  CombValue CombDesc
+					var data=$("#ItemBillUOM").combobox('getData');
+					$("#ItemDoseUOM").combobox('loadData',data);
+					if (data.length==1){
+						$("#ItemDoseUOM").combobox('select',data[0]['CombValue']);
 					}
 				}
-			}else{
-				if (idoseqtystr==""){
-					$("#ItemDoseQty").val('');
-					$("#ItemDoseUOM").combobox('loadData',[]);
-					$("#ItemDoseUOM").combobox('select',"");
-				}
+			}
+		}else{
+			if ((idoseqtystr=="")&&(DisPlayFreq=="N")){
+				$("#ItemDoseQty").val('');
+				$("#ItemDoseUOM").combobox('loadData',[]);
+				$("#ItemDoseUOM").combobox('select',"");
 			}
 		}
-		//ChangePrescTypeLayout();
-		
-		/*//隐藏label
-		$("#CsampleType").hide();
+	}
+	//ChangePrescTypeLayout();
+	
+	/*//隐藏label
+	$("#CsampleType").hide();
+	//隐藏combo元素
+	$("#sampleType").next(".combo").hide();
+	//隐藏textbox
+	//显示combo的label
+	$("#CItemDoseQty,#CItemDoseUOM,#CItmLinkDoctor,#CItemFrequence,#CItemDuration,#CItemInstruction,#COrderPriorRemarks").show();
+	$("#CItemDoseQty").parent().show();
+	//显示combo元素
+	$("#ItemDoseQty,#ItemDoseUOM,#ItmLinkDoctor,#ItemFrequence,#ItemDuration,#ItemInstruction,#OrderPriorRemarks").next(".combo").show();
+	//显示textbox
+	$("#ItemDoseQty,#ItmLinkDoctor").show();
+	
+	//医嘱类型 强制临时
+	//$("#DHCDocOrderType").combobox('setValue','');
+	if((ArcimClassification=="L")||(ArcimClassification=="E")) {
+		//隐藏label
+		$("#CItemDoseQty,#CItemDoseUOM,#CItmLinkDoctor,#CItemFrequence,#CItemDuration,#CItemInstruction,#COrderPriorRemarks").hide();
 		//隐藏combo元素
-		$("#sampleType").next(".combo").hide();
-		//隐藏textbox
+		$("#ItemDoseUOM,#ItemFrequence,#ItemDuration,#ItemInstruction,#OrderPriorRemarks").next(".combo").hide();
+		//隐藏textx		box
+		$("#ItemDoseQty,#ItmLinkDoctor").hide();
 		//显示combo的label
-		$("#CItemDoseQty,#CItemDoseUOM,#CItmLinkDoctor,#CItemFrequence,#CItemDuration,#CItemInstruction,#COrderPriorRemarks").show();
-		$("#CItemDoseQty").parent().show();
+		$("#CsampleType").show();
 		//显示combo元素
-		$("#ItemDoseQty,#ItemDoseUOM,#ItmLinkDoctor,#ItemFrequence,#ItemDuration,#ItemInstruction,#OrderPriorRemarks").next(".combo").show();
+		$("#sampleType").next(".combo").show();
 		//显示textbox
-		$("#ItemDoseQty,#ItmLinkDoctor").show();
-		
 		//医嘱类型 强制临时
-		//$("#DHCDocOrderType").combobox('setValue','');
-		if((ArcimClassification=="L")||(ArcimClassification=="E")) {
-			//隐藏label
-			$("#CItemDoseQty,#CItemDoseUOM,#CItmLinkDoctor,#CItemFrequence,#CItemDuration,#CItemInstruction,#COrderPriorRemarks").hide();
-			//隐藏combo元素
-			$("#ItemDoseUOM,#ItemFrequence,#ItemDuration,#ItemInstruction,#OrderPriorRemarks").next(".combo").hide();
-			//隐藏textx		box
-			$("#ItemDoseQty,#ItmLinkDoctor").hide();
-			//显示combo的label
-			$("#CsampleType").show();
-			//显示combo元素
-			$("#sampleType").next(".combo").show();
-			//显示textbox
-			//医嘱类型 强制临时
-			$("#DHCDocOrderType").combobox('setValue',ShortOrderPriorRowid);
+		$("#DHCDocOrderType").combobox('setValue',ShortOrderPriorRowid);
+	}
+	
+	//不归属于药品同时不是检验检查医嘱,判断维护医嘱套的频次和用法是不是可选 频次和疗程同步不能用频次也不能维护疗程
+	if ((ArcItemSubCat!="")&&(ArcimClassification!="RW"))
+	{
+		var DisPlayFreq="N"
+		var DisInstr="N"
+		if ((FrequencedItemCat!="")&&(("^"+FrequencedItemCat+"^").indexOf("^"+ArcItemSubCat+"^")>=0)){DisPlayFreq="Y"}
+		if ((SelectInstrNotDrugCat!="")&&(("^"+SelectInstrNotDrugCat+"^").indexOf("^"+ArcItemSubCat+"^")>=0)){DisInstr="Y"}
+		if (DisPlayFreq=="Y"){
+			$("#CItemFrequence").show();$("#ItemFrequence").next(".combo").show();
+			$("#CItemDuration").show();$("#ItemDuration").next(".combo").show();
+			$("#CItemFrequence").parent().parent().show();
 		}
+		else{
+			$("#CItemFrequence").hide();$("#ItemFrequence").next(".combo").hide();
+			$("#CItemDuration").hide();$("#ItemDuration").next(".combo").hide();
+			$("#CItemFrequence").parent().parent().hide();
+		}
+		if (DisInstr=="Y"){$("#CItemInstruction").show();$("#ItemInstruction").next(".combo").show();}else{$("#CItemInstruction").hide();$("#ItemInstruction").next(".combo").hide();}
 		
-		//不归属于药品同时不是检验检查医嘱,判断维护医嘱套的频次和用法是不是可选 频次和疗程同步不能用频次也不能维护疗程
-		if ((ArcItemSubCat!="")&&(ArcimClassification!="RW"))
-		{
-			var DisPlayFreq="N"
-			var DisInstr="N"
-			if ((FrequencedItemCat!="")&&(("^"+FrequencedItemCat+"^").indexOf("^"+ArcItemSubCat+"^")>=0)){DisPlayFreq="Y"}
-			if ((SelectInstrNotDrugCat!="")&&(("^"+SelectInstrNotDrugCat+"^").indexOf("^"+ArcItemSubCat+"^")>=0)){DisInstr="Y"}
-			if (DisPlayFreq=="Y"){
-				$("#CItemFrequence").show();$("#ItemFrequence").next(".combo").show();
-				$("#CItemDuration").show();$("#ItemDuration").next(".combo").show();
-				$("#CItemFrequence").parent().parent().show();
-			}
-			else{
-				$("#CItemFrequence").hide();$("#ItemFrequence").next(".combo").hide();
-				$("#CItemDuration").hide();$("#ItemDuration").next(".combo").hide();
-				$("#CItemFrequence").parent().parent().hide();
-			}
-			if (DisInstr=="Y"){$("#CItemInstruction").show();$("#ItemInstruction").next(".combo").show();}else{$("#CItemInstruction").hide();$("#ItemInstruction").next(".combo").hide();}
-			
-		}
-		//如果不是西药 也不是草药 则单次剂量单位不可录入
-		if ((ArcimClassification!="RW")&&(ArcimClassification!="RC")){
-			$("#CItemDoseUOM").hide();$("#ItemDoseUOM").next(".combo").hide();
-		}
-		//如果剂量单位串为空，则不允许录入剂量
-		if (idoseqtystr==""){ 
-			$("#CItemDoseQty").hide();$("#ItemDoseQty").hide();
-		}else{
-		}
-		if (ArcimClassification=="RW"){
-			$("#COrderSpeedFlowRate,#OrderSpeedFlowRate").show();
-			$("#COrderFlowRateUnit").show();$("#OrderFlowRateUnit").next(".combo").show();
-		}else{
-			$("#COrderSpeedFlowRate,#OrderSpeedFlowRate").hide();
-			$("#COrderFlowRateUnit").hide();$("#OrderFlowRateUnit").next(".combo").hide();
-		}
-		ChangePrescTypeLayout();*/
+	}
+	//如果不是西药 也不是草药 则单次剂量单位不可录入
+	if ((ArcimClassification!="RW")&&(ArcimClassification!="RC")){
+		$("#CItemDoseUOM").hide();$("#ItemDoseUOM").next(".combo").hide();
+	}
+	//如果剂量单位串为空，则不允许录入剂量
+	if (idoseqtystr==""){ 
+		$("#CItemDoseQty").hide();$("#ItemDoseQty").hide();
+	}else{
+	}
+	if (ArcimClassification=="RW"){
+		$("#COrderSpeedFlowRate,#OrderSpeedFlowRate").show();
+		$("#COrderFlowRateUnit").show();$("#OrderFlowRateUnit").next(".combo").show();
+	}else{
+		$("#COrderSpeedFlowRate,#OrderSpeedFlowRate").hide();
+		$("#COrderFlowRateUnit").hide();$("#OrderFlowRateUnit").next(".combo").hide();
+	}
+	ChangePrescTypeLayout();*/
 }
 function ChangePrescTypeLayout(){
 	if (ARCOSPrescType!="Other") {
@@ -1544,6 +1592,7 @@ function SetARCOSItemMes(ARCOSItemRowid,ARCIMRowid)
 			 var ARCOSItemCatDR=mPiece(Str,"^",14)
 			 m_Itemcat=ARCOSItemCatDR
 			 var ARCOSItemSubCatDR=mPiece(Str,"^",15)
+			 m_iorderSubCatID=ARCOSItemSubCatDR;
 			 var ARCOSItemOrderType=mPiece(Str,"^",16)
 			 var ARCOSItmLinkDoctor=mPiece(Str,"^",17)
 			 var Tremark=mPiece(Str,"^",18)
@@ -1573,8 +1622,9 @@ function SetARCOSItemMes(ARCOSItemRowid,ARCIMRowid)
 			 var NotifyClinician=mPiece(Str,"^",39);
 			 var RemoveCeler=mPiece(Str,"^",40);
 			 var OrderFreqTimeDoseStr=mPiece(Str,"^",41);
-			 var OrderFreqWeekStr=mPiece(Str,"^",42);
+			 var OrderFreqDispTimeStr=mPiece(Str,"^",42);
 			 PageLogicObj.m_SameFreqDifferentDosesFlag=mPiece(Str,"^",43);
+			 PageLogicObj.m_PHPrescType=mPiece(Str,"^",44);
 			 //var ret=tkMakeServerCall("web.DHCDocOrderCommon","GetARCIMDetail",ARCIMRowid);
 			 ItemDoseUOMCombCreat(ARCIMRowid,ARCOSItemUOMDR) //初始化计量单位
 			 sampleTypeCombCreat(ARCIMRowid,SampleID,0) //初始化标本
@@ -1585,13 +1635,13 @@ function SetARCOSItemMes(ARCOSItemRowid,ARCIMRowid)
 			$("#ItemDesc").val(ARCIMDesc);
 			$("#ItemRowid").val(ARCIMRowid);
 			$("#ItemQty").val(ARCOSItemQty);
-			$("#ItemDoseQty").val(ARCOSItemDoseQty);
 			$("#ItmLinkDoctor").val(ARCOSItmLinkDoctor); //关联
 			$("#ItemDoseUOM").combobox('select',ARCOSItemUOMDR);
 			$("#ItemFrequence").combobox('setValue',ARCOSItemFrequenceDR);
 			$("#ItemFrequence").combobox('setText',ARCOSItemFrequence);
 			$("#ItemDuration").combobox('select',ARCOSItemDurationDR);
 		    $("#ItemInstruction").combobox('select',ARCOSItemInstructionDR);
+			$("#ItemDoseQty").val(ARCOSItemDoseQty);
 			//$("#remark").combobox('setValue',Tremark); //备注选择为空则获取描述
 			
 			//$("#sampleType").combobox('select',SampleID); //标本
@@ -1616,14 +1666,15 @@ function SetARCOSItemMes(ARCOSItemRowid,ARCIMRowid)
 				$("#RemoveCeler").checkbox('setValue', false);
 			}
 			$("#OrderFreqTimeDoseStr").val(OrderFreqTimeDoseStr);
-			$("#OrderFreqWeekStr").val(OrderFreqWeekStr);
+			$("#OrderFreqDispTimeStr").val(OrderFreqDispTimeStr);
 			var ArcimClassification=$.cm({
 				ClassName:"web.DHCDocOrderCommon",
 				MethodName:"GetArcimClassification",
 				ArcimRowid:ARCIMRowid,
 				dataType:"text"
 			 },false);
-			 m_ArcimClassification=ArcimClassification
+			 m_ArcimClassification=ArcimClassification;
+			 
 			 DHCDocOrderTypeCombCreat();
 			//var ArcimClassification=tkMakeServerCall("web.DHCDocOrderCommon","GetArcimClassification",ARCIMRowid);
 			setTimeout(function(){
@@ -1635,7 +1686,9 @@ function SetARCOSItemMes(ARCOSItemRowid,ARCIMRowid)
 			InitBodyPartLabel(false);
 			if (PageLogicObj.m_SameFreqDifferentDosesFlag=="Y"){
 				OrdDoseQtyBindClick();
-			}
+			}else{
+				$("#OrderFreqTimeDoseStr").val("");
+				}
 		}else{
 			var ARCIMDesc=mPiece(Str,"^",0);
 			var ARCOSItemRowid=mPiece(Str,"^",8)
@@ -1704,13 +1757,23 @@ function OrdDoseQtyBindClick(){
 	});
 }
 function ChangeOrderFreqTimeDoseStr(callBackFun){
+	var OldItemInstructionID=$("#ItemInstruction").combobox('getValue');
+	if ($("#ItemInstruction").combobox('getText')=="") OldItemInstructionID="";
+	var ItemInstructionID=CheckComboxSelData("ItemInstruction",OldItemInstructionID);
+	if ((WYInstr!="")&&(WYInstr.indexOf("^"+ItemInstructionID+"^")>=0)){
+		$("#ItemDoseQty,#OrderFreqTimeDoseStr").val("");
+		if (callBackFun) callBackFun();
+		return;
+	}
 	var OrderFreqRowid=$("#ItemFrequence").combobox('getValue');
+	var OrderFreqDispTimeStr=$("#OrderFreqDispTimeStr").val();
     if (PageLogicObj.m_SameFreqDifferentDosesFlag=="Y"){
 	    var FreqDispTimeDoseQtyStr=$("#OrderFreqTimeDoseStr").val();
 	    var FreqDispTimeStr=$.m({
 		    ClassName:"web.DHCOEOrdItemView",
 		    MethodName:"GetFreqFreqDispTimeStr",
 		    OrderFreqRowid:OrderFreqRowid,
+		    OrderFreqDispTimeStr:OrderFreqDispTimeStr,
 		    type:"text"
 		},false);
 		if (FreqDispTimeStr.split("!").length==1) {
@@ -1752,7 +1815,7 @@ function ShowFreqQty(FreqDispTimeStr,OrderName,FreqDispTimeDoseQtyStr,OrderDoseU
 	var lnk = "dhcdocshowfreq.csp?FreqDispTimeStr=" + FreqDispTimeStr+"&FreqDispTimeDoseQtyStr="+FreqDispTimeDoseQtyStr+"&OrderDoseUOM="+OrderDoseUOM;
 	websys_showModal({
 		url:lnk,
-		title:OrderName+' 剂量填写',
+		title:OrderName+$g(' 剂量填写'),
 		width:400,height:300,
 		closable:false,
 		CallBackFunc:function(result){
@@ -1796,6 +1859,31 @@ function GetOrderFreqWeekStr(OrderFreqRowid,OrderFreqDispTimeStr,callBackFun){
 	})
 }
 //周频次相关--end
+/**
+* @description: 让用户选择不规则分发时间频次的分发时间并返回
+* @param {String} 
+* @return: {String} 
+*/
+function GetOrderFreqFreeTimeStr(OrderFreqRowid,OrderFreqDispTimeStr,callBackFun){
+	var OrderFreqDispTimeStr=OrderFreqDispTimeStr.split(String.fromCharCode(1)).join("A");
+	OrderFreqDispTimeStr=OrderFreqDispTimeStr.split(String.fromCharCode(2)).join("B");
+	OrderFreqDispTimeStr=OrderFreqDispTimeStr.replace(/:/g,"C");
+	websys_showModal({
+		url:"dhcdoc.freq.disptime.csp?OrderFreqDispTimeStr=" + OrderFreqDispTimeStr+"&OrderFreqRowid="+OrderFreqRowid,
+		title:'分发时间选择',
+		width:370,height:410,
+		closable:false,
+		CallBackFunc:function(result){
+			websys_showModal("close");
+			if (typeof result=="undefined"){
+				result="";
+			}
+			callBackFun(result);
+		}
+	})
+	
+}
+
 function ItemFrequenceChange(){
 	var OrderFreqRowid=$("#ItemFrequence").combobox('getValue');
 	 if ($("#ItemFrequence").combobox('getText')=="") OrderFreqRowid="";
@@ -1813,30 +1901,70 @@ function ItemFrequenceChange(){
 		  if (FreqInfoStr!="") {
 			    var Split_Value = FreqInfoStr.split("!"); //String.fromCharCode(1)
 				var WeekFlag = Split_Value[8];
+				var FreeTimeFreqFlag = Split_Value[12];
 				if (WeekFlag=="Y") {
 					new Promise(function(resolve,rejected){
-						var OrderFreqDispTimeStr=""; //$("#OrderFreqWeekStr").val();
+						//周频次
+						var OrderFreqDispTimeStr=""; //$("#OrderFreqDispTimeStr").val();
 						GetOrderFreqWeekStr(OrderFreqRowid,OrderFreqDispTimeStr,resolve);
 					}).then(function(OrderFreqWeekInfo){
 						var OrderFreqDispTimeStr=mPiece(OrderFreqWeekInfo, "^", 0);
 						if (OrderFreqDispTimeStr==""){
 				            $.messager.alert("提示","周频次请务必选择使用周数!","info",function(){
 					            $("#ItemFrequence").combobox('setValue',"");
-				            	$("#OrderFreqWeekStr").val("");
+				            	$("#OrderFreqDispTimeStr").val("");
 					        });
 				            return;
 						}
 						var OrderFreqWeekDesc=mPiece(OrderFreqWeekInfo, "^", 1);
 						var CalOrderStartDateStr=mPiece(OrderFreqWeekInfo, "^", 2);
-						$("#OrderFreqWeekStr").val(OrderFreqDispTimeStr);
+						$("#OrderFreqDispTimeStr").val(OrderFreqDispTimeStr);
 						var OrderFreq=$("#ItemFrequence").combobox('getText')+" "+OrderFreqWeekDesc;
 						$("#ItemFrequence").combobox('setText',OrderFreq);
+						ChangeOrderFreqTimeDoseStr();
 					})
+				}else if (FreeTimeFreqFlag=="Y"){
+					new Promise(function(resolve,rejected){
+						//不规则分发时间
+						var OrderFreqDispTimeStr=""; //$("#OrderFreqDispTimeStr").val();
+						GetOrderFreqFreeTimeStr(OrderFreqRowid,OrderFreqDispTimeStr,resolve);
+					}).then(function(OrderFreqFreeTimeInfo){
+						var OrderFreqDispTimeStr=mPiece(OrderFreqFreeTimeInfo, "^", 0);
+						if (OrderFreqDispTimeStr==""){
+				            $.messager.alert("提示","不规则分发时间频次请务必选择分发时间!","info",function(){
+					            $("#ItemFrequence").combobox('setValue',"");
+				            	$("#OrderFreqDispTimeStr").val("");
+					        });
+				            return;
+						}
+						var OrderFreqFactor=OrderFreqDispTimeStr.split(String.fromCharCode(1)).length;
+						var OrderFreqWeekDesc=mPiece(OrderFreqFreeTimeInfo, "^", 1);
+						$("#OrderFreqDispTimeStr").val(OrderFreqDispTimeStr);
+						var OrderFreq=$("#ItemFrequence").combobox('getText')+" "+OrderFreqWeekDesc;
+						$("#ItemFrequence").combobox('setText',OrderFreq);
+						ChangeOrderFreqTimeDoseStr();
+					})
+					
 				}else{
-					$("#OrderFreqWeekStr").val("");
+					$("#OrderFreqDispTimeStr").val("");
+					ChangeOrderFreqTimeDoseStr();
 				}
-				ChangeOrderFreqTimeDoseStr();
+				
 		  }
 	  }
 }
-				 
+function GetActionCode()
+{
+	var ActionCode="";
+	var ActionID=$('#SkinAction').combobox('getValue');
+	if(ActionID){
+		var ActionData=$('#SkinAction').combobox('getData');
+		$.each(ActionData,function(){
+			if(this.CombValue==ActionID){
+				ActionCode=this.CombCode;
+				return false;
+			}
+		});
+	}
+	return ActionCode;
+}

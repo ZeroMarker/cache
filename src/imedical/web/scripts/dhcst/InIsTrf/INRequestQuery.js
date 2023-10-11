@@ -11,7 +11,7 @@ Ext.onReady(function() {
 	var gUserId=session['LOGON.USERID'];
 	var gUserName=session['LOGON.USERNAME'];
 	var FrLoc=new Ext.ux.LocComboBox({
-		fieldLabel : '<font color=blue>供给科室</font>',
+		fieldLabel : '<font color=blue>'+$g('供给科室')+'</font>',
 		id : 'FrLoc',
 		name : 'FrLoc',
 		anchor : '90%',
@@ -20,7 +20,7 @@ Ext.onReady(function() {
 	});
 	
 	var ToLoc = new Ext.ux.LocComboBox({
-		fieldLabel : '<font color=blue>申请科室</font>',
+		fieldLabel : '<font color=blue>'+$g('申请科室')+'</font>',
 		id : 'ToLoc',
 		name : 'ToLoc',
 		emptyText : '接收科室...',
@@ -29,7 +29,7 @@ Ext.onReady(function() {
 	});
 	
 	var DateFrom = new Ext.ux.DateField({
-		fieldLabel : '<font color=blue>开始日期</font>',
+		fieldLabel : '<font color=blue>'+$g('开始日期')+'</font>',
 		id : 'DateFrom',
 		name : 'DateFrom',
 		anchor : '90%',
@@ -37,7 +37,7 @@ Ext.onReady(function() {
 	});
 	
 	var DateTo = new Ext.ux.DateField({
-		fieldLabel : '<font color=blue>截止日期</font>',
+		fieldLabel : '<font color=blue>'+$g('截止日期')+'</font>',
 		id : 'DateTo',
 		name : 'DateTo',
 		anchor : '90%',
@@ -55,7 +55,7 @@ Ext.onReady(function() {
 	});
 	
 	var InciDr = new Ext.form.TextField({
-		fieldLabel : '药品RowId',
+		fieldLabel : $g('药品RowId'),
 		id : 'InciDr',
 		name : 'InciDr',
 		anchor : '90%',
@@ -63,14 +63,14 @@ Ext.onReady(function() {
 	});
 
 	var InciCode = new Ext.form.TextField({
-		fieldLabel : '药品编码',
+		fieldLabel : $g('药品编码'),
 		id : 'InciCode',
 		name : 'InciCode',
 		anchor : '90%',
 		valueNotFoundText : ''
 	});
 	var InciDesc = new Ext.form.TextField({
-		fieldLabel : '药品名称',
+		fieldLabel : $g('药品名称'),
 		id : 'InciDesc',
 		name : 'InciDesc',
 		anchor : '90%',
@@ -86,7 +86,7 @@ Ext.onReady(function() {
 	});
 	
 	var UnTranser = new Ext.form.Checkbox({
-					boxLabel : '仅未转移',
+					boxLabel : $g('仅未转移'),
 					id : 'UnTranser',
 					name : 'UnTranser',
 					anchor : '90%',
@@ -94,7 +94,7 @@ Ext.onReady(function() {
 				});
 	var HelpBT = new Ext.Button({
 	　　　　id:'HelpBtn',
-			text : '帮助',
+			text : $g('帮助'),
 			width : 70,
 			height : 30,
 			renderTo: Ext.get("tipdiv"),
@@ -132,7 +132,7 @@ Ext.onReady(function() {
 	
       // 申请单明细查询
 		var InreqDetail = new Ext.form.Radio({
-					boxLabel : '申请单明细查询',
+					boxLabel : $g('申请单明细查询'),
 					id : 'InreqDetail',
 					name : 'ReportType',
 					anchor : '80%',
@@ -144,8 +144,8 @@ Ext.onReady(function() {
 		// 统计按钮
 		var OkBT = new Ext.Toolbar.Button({
 					id : "OkBT",
-					text : '查询',
-					tooltip : '点击查询',
+					text : $g('查询'),
+					tooltip : $g('点击查询'),
 					width : 70,
 					iconCls : 'page_find',
 					height : 30,
@@ -161,7 +161,7 @@ Ext.onReady(function() {
 			var EndDate=Ext.getCmp("DateTo").getValue()
 			if(StartDate==""||EndDate=="")
 			{
-				Msg.info("warning", "开始日期和截止日期不能空！");
+				Msg.info("warning", $g("开始日期和截止日期不能空！"));
 				return;
 			}
 			var StartDate=Ext.getCmp("DateFrom").getValue().format(App_StkDateFormat).toString();;
@@ -213,11 +213,11 @@ Ext.onReady(function() {
 			tbar : [OkBT,'->',HelpBT],
 			items : [{
 						xtype : 'fieldset',
-						title : '查询条件',					
+						title : $g('查询条件'),					
 						items : [FrLoc,ToLoc,DateFrom,DateTo,StkGrpType,InciDesc,UnTranser]
 					}, {
 						xtype : 'fieldset',
-						title : '报表类型',
+						title : $g('报表类型'),
 						items : [InreqDetail]
 					}]
 		});
@@ -232,7 +232,7 @@ Ext.onReady(function() {
 					layout : 'border',
 					items : [{
 						region:'west',
-						title:"未转移查询",
+						title:$g("请求单转移情况查询"),
 						width:300,
 						split:true,
 						collapsible:true,
@@ -252,7 +252,7 @@ Ext.onReady(function() {
         width: 250,
         anchorOffset: 50,
 		hideDelay : 90000,
-        html: "<font size=2 color=blue ><b>查询内容为尚未做库存转移的库存请求</b></font>"
+        html: "<font size=2 color=blue ><b>"+$g("查询库存请求单的转移情况")+"</b></font>"
    });
     Ext.getCmp('HelpBtn').focus('',100); //初始化页面给某个元素设置焦点
 

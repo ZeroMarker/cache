@@ -14,7 +14,7 @@ function initDocument(){
 	defindTitleStyle(); 
 	initLookUp();
 	initButton();
-	
+	//initButtonWidth();  // add by jyp 2023-02-06 modify by zyq 2023-03-23
 	
 
 	$HUI.datagrid("#mergeorderfinddatagrid",{   
@@ -37,18 +37,36 @@ function initDocument(){
         StartDate:getElementValue("StartDate"),
         EndDate:getElementValue("EndDate"),
         SourceType:getElementValue("SourceType"),
+        QXType:getElementValue("QXType"), //Add By QW20201223 BUG: QW0085 增加入参  begin
+        Type:getElementValue("Type"),
+        WaitAD:getElementValue("WaitAD"),
+        StatusDR:getElementValue("StatusDR"), //Add By QW20201223 BUG: QW0085 增加入参 end 
+         Ejob:getElementValue("Job")  //Add By QW20210429 BUG:QW0102 增加入参
     },
 	fitColumns:true,   //modify by lmm 2020-06-02
 	columns:MergeOrdercolumns, 
+	toolbar:[{}],   //Add By QW20210429 BUG: QW0102 增加工具栏合计  begin
+	onLoadSuccess:function(data){
+		InitToolbarForAmountInfo();
+	}
 	});
-
-	jQuery("#BAdd").linkbutton({iconCls: 'icon-w-add'});
-	jQuery("#BAdd").on("click", BAdd_Clicked);
+	//Add By QW20201223 BUG: QW0085 报废汇总批量审核 隐藏按钮  begin
+	var KindFlag=getElementValue("KindFlag"); 
+	if (KindFlag=="1")
+	{
+		hiddenObj("BAdd",true);
+	}
+	//Add By QW20201223 BUG: QW0085 报废汇总批量审核 end
 
 		
 	
 }	
 
+// Add By QW20210429 BUG:QW0102 菜单栏中显示合计信息
+function InitToolbarForAmountInfo() {
+	var Data = tkMakeServerCall("web.DHCEQ.Plat.BUSMergeOrder","GetEquipSumInfo",getElementValue("Job"));  
+	$("#sumTotal").html(Data);	
+}
 function BAdd_Clicked()
 {
 	var url="dhceq.em.mergeorder.csp?&RowID=&SourceType="+getElementValue("SourceType")+"&SubType="+getElementValue("SubType")
@@ -71,6 +89,11 @@ function BFind_Clicked()
         StartDate:getElementValue("StartDate"),
         EndDate:getElementValue("EndDate"),
         SourceType:getElementValue("SourceType"),
+        QXType:getElementValue("QXType"), //Add By QW20201223 BUG: QW0085 增加入参  begin
+        Type:getElementValue("Type"),
+        WaitAD:getElementValue("WaitAD"),
+        StatusDR:getElementValue("StatusDR"), //Add By QW20201223 BUG: QW0085 增加入参 end 
+        Ejob:getElementValue("Job")  //Add By QW20210429 BUG:QW0102 增加入参
 	    },
 	});
 

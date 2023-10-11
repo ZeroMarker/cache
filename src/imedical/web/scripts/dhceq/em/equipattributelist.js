@@ -29,7 +29,8 @@ function initDocument()
 			//add by lmm 2020-06-02
 			toolbar:[{
 						iconCls: 'icon-save',
-		            	text:'保存',          
+		            	text:'保存',
+		            	id:'update',	// MZY0060	1568774		2020-11-3
 		            	handler: function(){
 		                	BSave_Clicked();
 		            }}], 
@@ -58,19 +59,23 @@ function initDocument()
 				return html;
 		}	
 		
-	//add by lmm 2020-04-28 end 1282948
-	
+	// MZY0060	1568774		2020-11-3	调整按钮无效处理
+	if (getElementValue("ReadOnly")=="1")
+	{
+		disableElement("update",true);
+	}
+	// MZY0157	3220824		2023-03-29
+	if ((typeof(HISUIStyleCode)!="undefined")&&(HISUIStyleCode=="lite"))
+	{
+		jQuery("#DivPanel").attr("style","border-color: #e2e2e2");
+	}
 }
 
 
 //按钮可用控制
 function setEnabled()
 {
-	//Mozy003018	1279498	2020-04-27
-	if (getElementValue("ReadOnly")=="1")
-	{
-		disableElement("BSave",true)
-	}
+	
 }
 
 //保存按钮操作

@@ -36,7 +36,7 @@ function InitTransAdmTabDataGrid(){
 		border : false,
 		striped : true,
 		singleSelect : true,
-		fitColumns : false,
+		fitColumns : true,
 		autoRowHeight : false,
 		pagination : true,  
 		pageSize: 15,

@@ -19,12 +19,20 @@ if ((CurrentDate>YearBuyReqSDate)&(CurrentDate<YearBuyReqEDate)) InYearBuyTimeFl
 
 function BodyLoadHandler(){	
 	//document.body.scroll="no"		需求号:264101
-	
 	InitUserInfo();
 	InitPage();
 	SetEnabled();
 	InitTblEvt(); //2014-9-30 HZY0066
 	initButtonWidth();  //hisui改造 add by lmm 2018-08-20
+	//add 20230129 by txr 极简按钮颜色
+	initButtonColor();
+	initPanelHeaderStyle();
+	if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+	// 极简版
+	$("#BAddNN").css({"background-color":"#28ba05","color":"#ffffff"})
+	$("#BAddNew").css({"background-color":"#28ba05","color":"#ffffff"})
+	$("#BAddNNYear").css({"background-color":"#28ba05","color":"#ffffff"})
+	}
 }
 
 function SetEnabled()
@@ -50,10 +58,8 @@ function SetEnabled()
 	}
 	else
 	{
-//		EQCommon_HiddenElement("WaitAD");
 		EQCommon_HiddenElement("cWaitAD");
 		$("#WaitAD").parent().empty()	//Mozy	1012982	2019-9-14
-		//HiddenCheckBox("WaitAD");  //hisui改造 add by lmm 2018-08-18
 	}
 }
 ///add by lmm 2018-08-18
@@ -61,8 +67,6 @@ function SetEnabled()
 ///入参：name 勾选框id
 function HiddenCheckBox(name)
 {
-	//modify by lmm 2019-09-20
-	//$("#"+name).parent(".hischeckbox_square-blue").css("display","none");
 	$("#"+name).next(".checkbox").css("display","none");
 }
 function InitPage()
@@ -78,11 +82,12 @@ function InitPage()
 	var obj=document.getElementById("BAdd");
 	if (obj) obj.onclick=BAdd_Clicked;
 	
-	// Mozy0041	2011-2-14
 	var obj=document.getElementById("BAddNew");
 	if (obj) obj.onclick=BAddNew_Clicked;
 	var obj=document.getElementById("BAddNN");
 	if (obj) obj.onclick=BAddNN_Clicked;
+	var obj=document.getElementById("BAddNNYear");
+	if (obj) obj.onclick=BAddNNYear_Clicked;
 }
 ///modified by ZY0217 2020-04-08
 function BAdd_Clicked()
@@ -126,9 +131,16 @@ function confirmFunNew()
 // modified by csj 20190201 UI评审弹窗调整
 function BAddNN_Clicked()
 {
-	var url="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQBuyRequestNN&RequestDate="+GetElementValue("EndDate")+"&RequestLocDR="+"&Status=&WaitAD=off&QXType="+GetElementValue("QXType")+"&YearFlag="+GetElementValue("YearFlag");
-	showWindow(url,"采购申请单","","","icon-w-paper","modal","","","large",refreshWindow)  //modify by lmm 2019-06-02
+	//var url="websys.default.csp?WEBSYS.TCOMPONENT=DHCEQBuyRequestNN&RequestDate="+GetElementValue("EndDate")+"&RequestLocDR="+"&Status=&WaitAD=off&QXType="+GetElementValue("QXType")+"&YearFlag="+GetElementValue("YearFlag");
+	var url="dhceq.em.buyrequestbatch.csp?&WaitAD="+getElementValue("WaitAD")+"&YearFlag=N";		//czf 1950494
+	showWindow(url,"常规批量采购申请单","","","icon-w-paper","modal","","","large",refreshWindow)
+}
 
+//czf 1950494 2021-06-17
+function BAddNNYear_Clicked()
+{
+	var url="dhceq.em.buyrequestbatch.csp?&WaitAD="+getElementValue("WaitAD")+"&YearFlag=Y";
+	showWindow(url,"年度批量采购申请单","","","icon-w-paper","modal","","","large",refreshWindow)
 }
 ///modify by lmm 2018-08-18
 ///描述：hisui改造 重写查询方法 更改勾选框入参变量
@@ -189,13 +201,48 @@ function TDetailHandler(rowData,rowIndex)
     }
     
     val=val+"&YearFlag="+GetElementValue("YearFlag");
-    var batchFlag=rowData.THold;
-    var LinkComponentName="DHCEQBuyRequestNew";
+    var batchFlag=rowData.THold1;
+    //var LinkComponentName="DHCEQBuyRequestNew";		//czf 20210516 begin 1837956
     if (batchFlag=="Y")
     {
-	    LinkComponentName="DHCEQBuyRequestNN";
+	    //LinkComponentName="DHCEQBuyRequestNN";
+	    var str="dhceq.em.buyrequest.csp?"+val;
     }
-    var str= 'websys.default.hisui.csp?WEBSYS.TCOMPONENT='+LinkComponentName+val ; 
+    else
+    {
+	    var str="dhceq.em.buyrequestbatch.csp?"+val;
+    }
+    //var str= 'websys.default.hisui.csp?WEBSYS.TCOMPONENT='+LinkComponentName+val;		//czf 20210516 end
+    showWindow(str,"采购申请单","","","icon-w-paper","modal","","","large",refreshWindow);   //modify by lmm 2019-02-16
+}
+
+///add by czf 2021-05-18 1837956
+///双击行事件
+function DblClickRowHandler(rowIndex,rowData)
+{
+	var val="&RowID="+rowData.TRowID;
+    val=val+"&CurRole="+GetElementValue("ApproveRole");
+    val=val+"&QXType="+GetElementValue("QXType");
+    val=val+"&Type="+GetElementValue("Type");
+	 if (GetElementValue("WaitAD"))
+    {
+    	val=val+"&WaitAD=on";
+    }
+    else
+    {
+    	val=val+"&WaitAD=off";
+    }
+    
+    val=val+"&YearFlag="+GetElementValue("YearFlag");
+    var batchFlag=rowData.THold1;
+    if (batchFlag=="Y")
+    {
+	    var str="dhceq.em.buyrequestbatch.csp?"+val;
+    }
+    else
+    {
+	    var str="dhceq.em.buyrequest.csp?"+val;
+	}
 	showWindow(str,"采购申请单","","","icon-w-paper","modal","","","large",refreshWindow);   //modify by lmm 2019-02-16
 }
 document.body.onload = BodyLoadHandler;

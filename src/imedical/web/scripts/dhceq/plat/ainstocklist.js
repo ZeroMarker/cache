@@ -66,7 +66,7 @@ function initDocument()
         InvoiceInfoDR:'',
         QXType:'',
         InvoiceID:getElementValue("InvoiceDR"),
-        Status:getElementValue("Status"),	//add by csj 2020-03-04 发票状态查询
+        Params:getElementValue("Status")+"^"+getElementValue("StartAuditDate")+"^"+getElementValue("EndAuditDate")  //Modify by zx 2020-09-09 BUG ZX0108
 	    },
 		//fitColumns:true,
     	toolbar:toolbar, 			
@@ -116,7 +116,7 @@ function BFind_Clicked()
         InvoiceID:getElementValue("InvoiceDR"),
         ShowType:getElementValue("ShowType"),
         HasInvoiceType:getElementValue("HasInvoiceType"),
-        Status:getElementValue("Status"),	//add by csj 20200102
+        Params:getElementValue("Status")+"^"+getElementValue("StartAuditDate")+"^"+getElementValue("EndAuditDate")  //Modify by zx 2020-09-09 BUG ZX0108
 	    },
 	    onLoadSuccess:function(){
     	if(getElementValue("Status")=="0")
@@ -156,12 +156,13 @@ function BAudit_Clicked()
 			combindata=rowData.TISLRowID;
 		}
 		 else combindata=combindata+","+rowData.TISLRowID; 
-	}); 
+	});
 	var Rtn = tkMakeServerCall("web.DHCEQ.Plat.BUSInvoice", "AuditInvoice",combindata,"3");
 	if (Rtn=='0')
 	{
 		$.messager.popover({msg: '审核成功！',type:'success',timeout: 1000});
 		$("#instocklistdatagrid").datagrid('reload');
+		$('#instocklistdatagrid').datagrid("unselectAll"); //Modify by zx 2020-09-10 BUG ZX0108 刷新后需要清空选择
 		return;
 	}
 	else

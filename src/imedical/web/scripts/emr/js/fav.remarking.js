@@ -1,8 +1,9 @@
 ﻿﻿$(function(){
+	$("#content").attr("placeholder",emrTrans("字数限制为1-200个"));
     initFavInfo();
     getComment();
     
-    $('#editorFrame').attr('src', 'emr.record.browse.browsform.editor.csp?id='+instanceId+'&pluginType='+pluginType+'&chartItemType='+chartItemType+'&emrDocId='+emrDocId);
+    $('#editorFrame').attr('src', 'emr.record.browse.browsform.editor.csp?id='+instanceId+'&pluginType='+pluginType+'&chartItemType='+chartItemType+'&emrDocId='+emrDocId+"&MWToken="+getMWToken());
     
     $("#saveComment").click(function(){
         
@@ -19,6 +20,18 @@
         }
         
     });
+	if ("undefined"==typeof HISUIStyleCode || HISUIStyleCode=="")
+	{
+		 // 炫彩版
+	}
+	else if (HISUIStyleCode=="lite")
+	{
+		 // 极简版
+		$('#content').css('height','96px')
+	}else
+	{
+		// 炫彩版
+	}
 });
 
 //初始化病历信息
@@ -40,11 +53,26 @@ function initFavInfo()
 //加载病历信息
 function setFavInfo(data)
 {
+	var manImg = "";
+	var womanImg = "";
+	if ("undefined"==typeof HISUIStyleCode || HISUIStyleCode==""){
+	 // 炫彩版
+	 var manImg = "scripts/emr/image/icon/man_big.png";
+	 var womanImg = "scripts/emr/image/icon/woman_big.png";
+	 }else if (HISUIStyleCode=="lite"){
+	 // 极简版
+	 var manImg = "images/man_lite.png";
+	 var womanImg = "images/woman_lite.png";
+	 }else{
+	// 炫彩版
+	 var manImg = "scripts/emr/image/icon/man_big.png";
+	 var womanImg = "scripts/emr/image/icon/woman_big.png";
+	}
     $("#record").empty();
     var table = $('<table class="tbData"></table>');
     var tr = $('<tr></tr>');
-    var image =  data[0].Gender=="女"?"../scripts/emr/image/icon/woman_big.png":"../scripts/emr/image/icon/man_big.png";
-    var td = '<td class="centertd"><img src="'+image+'"/></td>';
+    var image =  data[0].Gender=="女"?"../"+womanImg:"../"+manImg;
+    var td = '<td class="centertd"><img src="'+image+'" style="height:60px;width:60px;border-radius:30px"/></td>';
     td = td + '<td class="info">';
     td = td + '<div><span>'+data[0].Name+'</span><div class="i-sep"></div>';
     td = td + '<span>'+data[0].Gender+'</span><div class="i-sep"></div>';
@@ -90,12 +118,12 @@ function initComment(data)
         var total = parseInt(data[i].score);
         if (total != 0) {
             for (n=1;n<=total;n++) {
-                content = content + '<div class="favIcon icon-star" style="width:20px;height:inherit;display:inline-block"/>';
+                content = content + '<span class="favIcon icon icon-star" style="width:20px;height:inherit;display:inline-block"/>';
             }
         }
         if (total != 5) {
             for (n=1;n<=(5 - total);n++) {
-                content = content + '<div class="favIcon icon-star-empty" style="width:20px;height:inherit;display:inline-block"/>';
+                content = content + '<span class="favIcon icon-star-empty" style="width:20px;height:inherit;display:inline-block"/>';
             }
         }
         content = content + '</div>';
@@ -145,11 +173,11 @@ function picScore(id){
 
 //改变评价图标样式
 function changeIconStatus(num) {
-    $("img[name=startscore]").each(function(i){
+    $("span[name=startscore]").each(function(i){
         if (i < num) {
-            $(this).attr("class","favIcon icon-star");
+            $(this).attr("class","favIcon icon icon-star");
         }else {
-            $(this).attr("class","favIcon icon-star-empty");
+            $(this).attr("class","favIcon icon icon-star-empty");
         }
     });
 }

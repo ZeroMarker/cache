@@ -1,4 +1,4 @@
-﻿var LookUpUser = function(str){}
+var LookUpUser = function(str){}
 var LookUpGroup = function(str){}
 var LookUpLoc = function(str){}
 var CCRecipientsJObj = $("#CCRecipients");
@@ -136,7 +136,7 @@ $(function(){
 			return true;
 		},
 		idField:"ID",textField:"Desc",
-		columns:[[{field:'Desc',title:'姓名',width:200},{field:'Code',title:'工号',width:200}]],
+		columns:[[{field:'Desc',title:t.colUserName,width:200},{field:'Code',title:t.colUserCode,width:200}]],
 		pagination:true
 		,onSelect:function(ind,row){
 			setTimeout(function(){
@@ -162,7 +162,7 @@ $(function(){
 			return true;
 		},
 		idField:"ID",textField:"Desc",
-		columns:[[{field:'Desc',title:'安全组',width:300}]],
+		columns:[[{field:'Desc',title:t.colGroup,width:300}]],
 		pagination:true
 		,onSelect:function(ind,row){
 			setTimeout(function(){
@@ -198,7 +198,7 @@ $(function(){
 			return true;
 		},
 		idField:"ID",textField:"Desc",
-		columns:[[{field:'Desc',title:'科室名称',width:200},{field:'Code',title:'科室代码',width:200}]],
+		columns:[[{field:'Desc',title:t.colLocDesc,width:200},{field:'Code',title:t.colLocCode,width:200}]],
 		pagination:true
 		,onSelect:function(ind,row){
 			setTimeout(function(){
@@ -236,13 +236,22 @@ $(function(){
 					strArr.push(tccObj.options[i].value);
 				}
 			}	
-				var ActionIdObj = document.getElementById("ActionId");
-				if(ActionIdObj && ActionIdObj.value!=""){
-					$.ajaxRunServerMethod({ClassName:'websys.DHCMessageActionTypeMgr',MethodName: 'SaveUCC',Id:ActionIdObj.value,UserIds:strArr.join("^")},function(data){
+			
+			var currActionId='';
+			if ($("#ccwin").data('ActionId')>0){
+				currActionId=$("#ccwin").data('ActionId');
+			}else{
+				currActionId=$('#ActionId').val();
+				
+			}
+				//var ActionIdObj = document.getElementById("ActionId");
+				//if(ActionIdObj && ActionIdObj.value!=""){
+				if(currActionId>0){
+					$.ajaxRunServerMethod({ClassName:'websys.DHCMessageActionTypeMgr',MethodName: 'SaveUCC',Id:currActionId,UserIds:strArr.join("^")},function(data){
 						if (data==0){
 							$.messager.alert(t['tip'],t["succ"]);
 							$("#ccwin").window("close");
-							$("#tDHCMessageActionType").datagrid("load");
+							$("#tDHCMessageActionType").datagrid("reload");
 						}else{
 							$.messager.alert(t['tip'],t["fail"]+data); 
 						}

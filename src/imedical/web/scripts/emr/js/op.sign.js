@@ -113,6 +113,7 @@ function getIdentityVerifcation()
             return;	
         }
     }
+    tmpPassword = base64encode(tmpPassword);
     jQuery.ajax({
         type: "POST",
         dataType: "text",

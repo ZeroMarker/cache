@@ -11,17 +11,17 @@ Ext.onReady(function () {
     var gGroupId = session["LOGON.GROUPID"];
     var url = DictUrl + 'instktkaction.csp';
     var PhaLoc = new Ext.ux.LocComboBox({
-        fieldLabel: '科室',
+        fieldLabel: $g('科室'),
         id: 'PhaLoc',
         name: 'PhaLoc',
         anchor: '90%',
-        emptyText: '科室...',
+        emptyText: $g('科室...'),
         groupId: gGroupId
     });
 
     // 起始日期
     var StartDate = new Ext.ux.DateField({
-        fieldLabel: '起始日期',
+        fieldLabel: $g('起始日期'),
         id: 'StartDate',
         name: 'StartDate',
         anchor: '90%',
@@ -31,7 +31,7 @@ Ext.onReady(function () {
 
     // 结束日期
     var EndDate = new Ext.ux.DateField({
-        fieldLabel: '结束日期',
+        fieldLabel: $g('结束日期'),
         id: 'EndDate',
         name: 'EndDate',
         anchor: '90%',
@@ -41,8 +41,8 @@ Ext.onReady(function () {
 
     // 查询按钮
     var QueryBT = new Ext.Toolbar.Button({
-        text: '查询',
-        tooltip: '点击查询',
+        text: $g('查询'),
+        tooltip: $g('点击查询'),
         iconCls: 'page_find',
         width: 70,
         height: 30,
@@ -58,11 +58,11 @@ Ext.onReady(function () {
         var EndDate = Ext.getCmp("EndDate").getValue().format(App_StkDateFormat).toString();
         var PhaLoc = Ext.getCmp("PhaLoc").getValue();
         if (PhaLoc == "") {
-            Msg.info("warning", "请选择盘点科室!");
+            Msg.info("warning", $g("请选择盘点科室!"));
             return;
         }
         if (StartDate == "" || EndDate == "") {
-            Msg.info("warning", "请选择开始日期和截止日期!");
+            Msg.info("warning", $g("请选择开始日期和截止日期!"));
             return;
         }
         var CompFlag = 'Y';
@@ -84,8 +84,8 @@ Ext.onReady(function () {
 
     // 清空按钮
     var RefreshBT = new Ext.Toolbar.Button({
-        text: '清屏',
-        tooltip: '点击清屏',
+        text: $g('清屏'),
+        tooltip: $g('点击清屏'),
         iconCls: 'page_clearscreen',
         width: 70,
         height: 30,
@@ -131,8 +131,8 @@ Ext.onReady(function () {
     }
 
     var CompleteBT = new Ext.Toolbar.Button({
-        text: '确认',
-        tooltip: '点击确认调整',
+        text: $g('确认'),
+        tooltip: $g('点击确认调整'),
         iconCls: 'page_gear',
         width: 70,
         height: 30,
@@ -145,17 +145,17 @@ Ext.onReady(function () {
 
         var selectRow = MasterInfoGrid.getSelectionModel().getSelected();
         if (selectRow == null || selectRow == "") {
-            Msg.info("Warning", "请选择要调整的盘点单!");
+            Msg.info("Warning", $g("请选择要调整的盘点单!"));
             return;
         }
 
         var inst = selectRow.get('inst');
         if (inst == null || inst == "") {
-            Msg.info("Warning", "请选择要调整的盘点单!");
+            Msg.info("Warning", $g("请选择要调整的盘点单!"));
             return;
         }
         var userId = session['LOGON.USERID'];
-        var mask = ShowLoadMask(Ext.getBody(), "处理中...");
+        var mask = ShowLoadMask(Ext.getBody(), $g("处理中..."));
         Ext.Ajax.request({
             url: url,
             params: {
@@ -164,11 +164,11 @@ Ext.onReady(function () {
                 UserId: userId
             },
             method: 'post',
-            waitMsg: '处理中...',
+            waitMsg: $g('处理中...'),
             success: function (response, opt) {
                 var jsonData = Ext.util.JSON.decode(response.responseText);
                 if (jsonData.success == 'true') {
-                    Msg.info("success", "调整成功!");
+                    Msg.info("success", $g("调整成功!"));
                     Query();
                     InstDetailGrid.store.removeAll();
                     InstDetailGrid.store.load({
@@ -181,17 +181,17 @@ Ext.onReady(function () {
                 } else {
                     var ret = jsonData.info;
                     if (ret == -1) {
-                        Msg.info("error", "该盘点单账盘尚未完成!");
+                        Msg.info("error", $g("该盘点单账盘尚未完成!"));
                     } else if (ret == -2) {
-                        Msg.info("error", "该盘点单实盘数尚未汇总!");
+                        Msg.info("error", $g("该盘点单实盘数尚未汇总!"));
                     } else if (ret == -3) {
-                        Msg.info("error", "该盘点单已经调整!");
+                        Msg.info("error", $g("该盘点单已经调整!"));
                     } else if (ret == -4) {
-                        Msg.info("error", "保存调整单失败!");
+                        Msg.info("error", $g("保存调整单失败!"));
                     } else if (ret == -6) {
-                        Msg.info("error", "保存调整明细失败!");
+                        Msg.info("error", $g("保存调整明细失败!"));
                     } else if (ret == -8) {
-                        Msg.info("error", "调整审核失败!");
+                        Msg.info("error", $g("调整审核失败!"));
                     } else {
                         ret = ret.replace('-8:-100^', '');
                         Ext.Msg.show({
@@ -209,8 +209,8 @@ Ext.onReady(function () {
     }
 
     var SaveBT = new Ext.Toolbar.Button({
-        text: '保存',
-        tooltip: '点击保存修改后的实盘数量',
+        text: $g('保存'),
+        tooltip: $g('点击保存修改后的实盘数量'),
         iconCls: 'page_save',
         width: 70,
         height: 30,
@@ -239,7 +239,7 @@ Ext.onReady(function () {
                 var afterqty = Number(countQty) - Number(freQty) + Number(curqty)
                 if (afterqty < 0) {
                     changeBgColor(i, "yellow");
-                    Msg.info("warning", desc + ",第" + i + "行" + "调整后库存为负数,请修改实盘数!");
+                    Msg.info("warning", desc + $g(",第") + i + $g("行调整后库存为负数,请修改实盘数!"));
                     return;
                 }
                 var Detail = rowid + '^' + inclb + '^' + countQty;
@@ -251,10 +251,10 @@ Ext.onReady(function () {
             }
         }
         if (ListDetail == '') {
-            Msg.info('Warning', '没有需要保存的数据!');
+            Msg.info('Warning', $g('没有需要保存的数据!'));
             return;
         }
-        var mask = ShowLoadMask(Ext.getBody(), "处理中请稍候...");
+        var mask = ShowLoadMask(Ext.getBody(), $g("处理中请稍候..."));
         Ext.Ajax.request({
             url: url,
             params: {
@@ -262,21 +262,21 @@ Ext.onReady(function () {
                 Params: ListDetail
             },
             method: 'post',
-            waitMsg: '处理中...',
+            waitMsg: $g('处理中...'),
             success: function (response, opt) {
                 var jsonData = Ext.util.JSON.decode(response.responseText);
                 mask.hide();
                 if (jsonData.success == 'true') {
-                    Msg.info('success', '保存成功!');
+                    Msg.info('success', $g('保存成功!'));
                     InstDetailStore.reload();
                 } else {
                     var ret = jsonData.info;
                     if (ret == '-1') {
-                        Msg.info('warning', '没有需要保存的数据!');
+                        Msg.info('warning', $g('没有需要保存的数据!'));
                     } else if (ret == '-2') {
-                        Msg.info('error', '保存失败!');
+                        Msg.info('error', $g('保存失败!'));
                     } else {
-                        Msg.info('error', '部分数据保存失败:' + ret);
+                        Msg.info('error', $g('部分数据保存失败:') + ret);
                     }
                 }
             }
@@ -312,17 +312,17 @@ Ext.onReady(function () {
 
     function renderManaFlag(value) {
         if (value == 'Y') {
-            return '管理药';
+            return $g('管理药');
         } else {
-            return '非管理药'
+            return $g('非管理药')
         }
     }
 
     function renderYesNo(value) {
         if (value == 'Y') {
-            return '是';
+            return $g('是');
         } else {
-            return '否'
+            return $g('否')
         }
     }
     var nm = new Ext.grid.RowNumberer();
@@ -335,83 +335,83 @@ Ext.onReady(function () {
         hidden: true,
         hideable: false
     }, {
-        header: "盘点单号",
+        header: $g("盘点单号"),
         dataIndex: 'instNo',
         width: 150,
         align: 'left',
         sortable: true
     }, {
-        header: "盘点日期",
+        header: $g("盘点日期"),
         dataIndex: 'date',
         width: 100,
         align: 'left',
         sortable: true
     }, {
-        header: '盘点时间',
+        header: $g('盘点时间'),
         dataIndex: 'time',
         width: 100,
         align: 'left',
         sortable: true
     }, {
-        header: '盘点人',
+        header: $g('盘点人'),
         dataIndex: 'userName',
         width: 70,
         align: 'left',
         sortable: true
     }, {
-        header: '管理药标志',
+        header: $g('管理药标志'),
         dataIndex: 'manFlag',
         width: 80,
         align: 'left',
         renderer: renderManaFlag,
         sortable: true
     }, {
-        header: "账盘单位",
+        header: $g("账盘单位"),
         dataIndex: 'freezeUom',
         width: 80,
         align: 'left',
         renderer: function (value) {
             if (value == 1) {
-                return '入库单位';
+                return $g('入库单位');
             } else {
-                return '基本单位';
+                return $g('基本单位');
             }
         },
         sortable: true
     }, {
-        header: "包含不可用",
+        header: $g("包含不可用"),
         dataIndex: 'includeNotUse',
         width: 80,
         align: 'center',
         renderer: renderYesNo,
         sortable: true
     }, {
-        header: "仅不可用",
+        header: $g("仅不可用"),
         dataIndex: 'onlyNotUse',
         renderer: renderYesNo,
         width: 60,
         align: 'center',
         sortable: true
     }, {
-        header: "类组",
+        header:$g( "类组"),
         dataIndex: 'scgDesc',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: "库存分类",
+        header: $g("库存分类"),
         dataIndex: 'scDesc',
         width: 100,
         align: 'left',
         sortable: true
     }, {
-        header: "开始货位",
+        header: $g("开始货位"),
         dataIndex: 'frSb',
         width: 100,
         align: 'left',
         sortable: true
     }, {
-        header: "截止货位",
+        header: $g("截止货位"),
         dataIndex: 'toSb',
         width: 100,
         align: 'left',
@@ -422,16 +422,16 @@ Ext.onReady(function () {
         store: MasterInfoStore,
         pageSize: PageSize,
         displayInfo: true,
-        displayMsg: '当前记录 {0} -- {1} 条 共 {2} 条记录',
+        displayMsg: $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
         emptyMsg: "No results to display",
-        prevText: "上一页",
-        nextText: "下一页",
-        refreshText: "刷新",
-        lastText: "最后页",
-        firstText: "第一页",
-        beforePageText: "当前页",
-        afterPageText: "共{0}页",
-        emptyMsg: "没有数据"
+        prevText:$g( "上一页"),
+        nextText: $g("下一页"),
+        refreshText: $g("刷新"),
+        lastText: $g("最后页"),
+        firstText: $g("第一页"),
+        beforePageText: $g("当前页"),
+        afterPageText:$g( "共{0}页"),
+        emptyMsg: $g("没有数据")
         /*,
                             doLoad:function(C){
                                 var B={},
@@ -449,7 +449,7 @@ Ext.onReady(function () {
     });
     var MasterInfoGrid = new Ext.grid.GridPanel({
         id: 'MasterInfoGrid',
-        title: '盘点单',
+        title: $g('盘点单'),
         height: 170,
         cm: MasterInfoCm,
         sm: new Ext.grid.RowSelectionModel({
@@ -503,7 +503,7 @@ Ext.onReady(function () {
         });
     }
    function StatusColorRenderer(val,meta){
-			if (val=="已调整")
+			if (val==$g("已调整"))
 			meta.css='classCyan';
 			return val
 		
@@ -525,56 +525,56 @@ Ext.onReady(function () {
         sortable: true,
         hidden: true
     }, {
-        header: '状态',
+        header: $g('状态'),
         dataIndex: 'statusi',
         width: 60,
         align: 'left',
         sortable: true,
 		renderer:StatusColorRenderer
     }, {
-        header: '代码',
+        header: $g('代码'),
         dataIndex: 'code',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: "名称",
+        header: $g("名称"),
         dataIndex: 'desc',
         width: 200,
         align: 'left',
         sortable: true
     }, {
-        header: "规格",
+        header: $g("规格"),
         dataIndex: 'spec',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: '批号',
+        header: $g('批号'),
         dataIndex: 'batchNo',
         width: 80,
         align: 'right',
         sortable: true
     }, {
-        header: '效期',
+        header: $g('效期'),
         dataIndex: 'expDate',
         width: 100,
         align: 'right',
         sortable: true
     }, {
-        header: "单位",
+        header: $g("单位"),
         dataIndex: 'uomDesc',
         width: 60,
         align: 'left',
         sortable: true
     }, {
-        header: '冻结数量',
+        header: $g('冻结数量'),
         dataIndex: 'freQty',
         width: 80,
         align: 'right',
         sortable: true
     }, {
-        header: '<font color=blue>实盘数量</font>',
+        header: '<font color=blue>'+$g('实盘数量')+'</font>',
         dataIndex: 'countQty',
         width: 80,
         align: 'right',
@@ -585,6 +585,9 @@ Ext.onReady(function () {
             listeners: {
                 'specialkey': function (field, e) {
                     var keyCode = e.getKey();
+                    if (keyCode == 8) { //屏蔽backspace建
+                        return;
+                    }
                     var col = GetColIndex(InstDetailGrid, 'countQty');
                     var cell = InstDetailGrid.getSelectionModel().getSelectedCell();
                     InstDetailGrid.stopEditing(cell[0], col);
@@ -593,7 +596,7 @@ Ext.onReady(function () {
                     if (keyCode == Ext.EventObject.ENTER) {
                         var qty = field.getValue();
                         if (qty < 0) {
-                            Msg.info('warning', '实盘数量不能小于零!');
+                            Msg.info('warning', $g('实盘数量不能小于零!'));
                             return;
                         }
                         var freQty = record.get("freQty")
@@ -624,67 +627,67 @@ Ext.onReady(function () {
             }
         })
     }, {
-        header: '损益数量',
+        header: $g('损益数量'),
         dataIndex: 'variance',
         width: 80,
         align: 'right',
         sortable: true
     }, {
-        header: '可用库存',
+        header: $g('可用库存'),
         dataIndex: 'avaqty',
         width: 100,
         align: 'right',
         sortable: true
     }, {
-        header: '当前库存',
+        header: $g('当前库存'),
         dataIndex: 'curqty',
         width: 100,
         align: 'right',
         sortable: true
     }, {
-        header: '调后库存',
+        header: $g('调后库存'),
         dataIndex: 'afterqty',
         width: 100,
         align: 'right',
         sortable: true
     }, {
-        header: "厂商",
+        header: $g("生产企业"),
         dataIndex: 'manf',
         width: 100,
         align: 'right',
         sortable: true
     },{
-		header:'账盘进价金额',
+		header:$g('账盘进价金额'),
 		dataIndex:'freezeRpAmt',
 		width:120,
 		align:'right',
 		sortable:true
 	},{
-		header:'实盘进价金额',
+		header:$g('实盘进价金额'),
 		dataIndex:'countRpAmt',
 		width:120,
 		align:'right',
 		sortable:true
 	},{
-		header:'账盘售价金额',
+		header:$g('账盘售价金额'),
 		dataIndex:'freezeSpAmt',
 		width:120,
 		align:'right',
 		sortable:true
 	},{
-		header:'实盘售价金额',
+		header:$g('实盘售价金额'),
 		dataIndex:'countSpAmt',
 		width:120,
 		align:'right',
 		sortable:true
 	},{
-		header:'进价差额',
+		header:$g('进价差额'),
 		dataIndex:'varianceRpAmt',
 		width:120,
 		align:'right',
 		sortable:true
 	},{
-		header:'售价差额',
+		header:$g('售价差额'),
 		dataIndex:'varianceSpAmt',
 		width:120,
 		align:'right',
@@ -715,15 +718,15 @@ Ext.onReady(function () {
         store: InstDetailStore,
         pageSize: PageSize,
         displayInfo: true,
-        displayMsg: '当前记录 {0} -- {1} 条 共 {2} 条记录',
-        prevText: "上一页",
-        nextText: "下一页",
-        refreshText: "刷新",
-        lastText: "最后页",
-        firstText: "第一页",
-        beforePageText: "当前页",
-        afterPageText: "共{0}页",
-        emptyMsg: "没有数据",
+        displayMsg: $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
+        prevText: $g("上一页"),
+        nextText: $g("下一页"),
+        refreshText: $g("刷新"),
+        lastText: $g("最后页"),
+        firstText: $g("第一页"),
+        beforePageText: $g("当前页"),
+        afterPageText: $g("共{0}页"),
+        emptyMsg: $g("没有数据"),
         doLoad: function (C) {
             var B = {},
                 A = this.getParams();
@@ -752,8 +755,8 @@ Ext.onReady(function () {
         var records = InstDetailStore.getModifiedRecords();
         if (records.length > 0) {
             Ext.Msg.show({
-                title: '提示',
-                msg: '本页数据发生改变，是否需要保存？',
+                title: $g('提示'),
+                msg: $g('本页数据发生改变，是否需要保存？'),
                 buttons: Ext.Msg.YESNOCANCEL,
                 fn: function (btn, text, opt) {
                     if (btn == 'yes') {
@@ -792,7 +795,7 @@ Ext.onReady(function () {
     }
 
     var InstDetailGrid = new Ext.grid.EditorGridPanel({
-        title: "盘点单明细",
+        title: $g("盘点单明细"),
         id: 'InstDetailGrid',
         region: 'center',
         cm: InstDetailGridCm,
@@ -806,14 +809,14 @@ Ext.onReady(function () {
         bbar: [StatuTabPagingToolbar],
         tbar: ['       ', {
                 xtype: 'checkbox',
-                boxLabel: '明细未调整',
+                boxLabel:$g( '明细未调整'),
                 id: 'adjFail',
                 checked: false,
                 width: '100px'
             },
             {
                 xtype: 'checkbox',
-                boxLabel: '可用数量小于调整数',
+                boxLabel: $g('可用数量小于调整数'),
                 id: 'avaLessAdj',
                 checked: false,
                 width: '155px'
@@ -844,7 +847,7 @@ Ext.onReady(function () {
                 var statusi = rowData.get("statusi"); 
                 if(statusi != "") 
                 { 
-                	Msg.info("warning", "已经调整的记录不允许再修改！");
+                	Msg.info("warning", $g("已经调整的记录不允许再修改！"));
                     return false; 
                 } 
                 else  
@@ -868,11 +871,11 @@ Ext.onReady(function () {
         labelWidth: 60,
         frame: true,
         autoHeight: true,
-        title: '盘点调整',
+        title: $g('盘点调整'),
         tbar: [QueryBT, '-', RefreshBT, '-', SaveBT, '-', CompleteBT],
         items: [{
             xtype: 'fieldset',
-            title: '查询条件',
+            title: $g('查询条件'),
             layout: 'column',
             defaults: {
                 border: false

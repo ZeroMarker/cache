@@ -54,11 +54,26 @@ $(function(){
 	$('#IllDietGuide_btn').click(function(){
     	IllDietGuide_Click();
     });
+    
+    // IllCondition_btn 条件指标
+  	$('#IllCondition_btn').click(function(){
+    	IllCondition_Click();
+    });
   
       
 })
 
-
+function IllCondition_Click(){
+	
+	var ID=$("#ILLSRowId").val();
+	var Desc=$("#ILLSDesc").val();
+	//alert(ID)
+	//alert(Desc)
+	lnk="dhcpeillnesscondition.hisui.csp"+"?ParrefRowId="+ID+"&Desc="+Desc;
+					
+	websys_lu(lnk,false,'iconCls=icon-w-edit,width=1280,height=600,hisui=true,title=疾病指标维护-'+Desc);
+	
+}
 
 //疾病解释
 function IllExplain_Click(){
@@ -271,6 +286,9 @@ SaveForm=function(id)
   	var CommonIllness=$("#CommonIllness").checkbox('getValue');
 	if(CommonIllness) {iCommonIllness="Y";}
   	
+  	var iIfCompare="N"
+  	var CommonIllness=$("#IfCompare").checkbox('getValue');
+	if(CommonIllness) {iIfCompare="Y";}
  	
   	var DiagnoseConclusion=$("#IllDesc").val();
 	if (""==DiagnoseConclusion){
@@ -298,15 +316,26 @@ SaveForm=function(id)
 	var Type=$("#Type").combobox('getValue');
 	if (($('#Type').combobox('getValue')==undefined)||($('#Type').combobox('getValue')=="")){var Type="";}
 	
+	var TypeNew=$("#TypeNew").combobox('getValue');
+	if (($('#TypeNew').combobox('getValue')==undefined)||($('#TypeNew').combobox('getValue')=="")){var TypeNew="";}
+	
+	var ILLSStation=$("#ILLSStation").combobox('getValue');
+	if (($('#ILLSStation').combobox('getValue')==undefined)||($('#ILLSStation').combobox('getValue')=="")){var ILLSStation="";}
+	
+	var FatherIll=$("#FatherIll").combobox('getValue');
+	if (($('#FatherIll').combobox('getValue')==undefined)||($('#FatherIll').combobox('getValue')=="")){var FatherIll="";}
+	
+	var note=$("#IllNote").val();
+	
 		
 	if(id==""){
-		var Instring=Code+"^"+DiagnoseConclusion+"^"+Detail+"^"+Illness+"^"+iCommonIllness+"^"+UserId+"^"+InsertType+"^"+EDAlias+"^"+ToReport+"^"+SexDR+"^^"+Type;
+		var Instring=Code+"^"+DiagnoseConclusion+"^"+Detail+"^"+Illness+"^"+iCommonIllness+"^"+UserId+"^"+InsertType+"^"+EDAlias+"^"+ToReport+"^"+SexDR+"^^"+Type+"^"+TypeNew+"^"+ILLSStation+"^"+FatherIll+"^"+note+"^"+iIfCompare;
 		var ReturnStr=tkMakeServerCall("web.DHCPE.IllnessStandard","InsertED",Instring);
 		var flag=ReturnStr.split("^")[0];
 		
 	}else{
 		
-		var InString=Code+"^"+DiagnoseConclusion+"^"+Detail+"^^^"+Illness+"^"+iCommonIllness+"^"+ToReport+"^"+SexDR+"^^"+Type;  
+		var InString=Code+"^"+DiagnoseConclusion+"^"+Detail+"^^^"+Illness+"^"+iCommonIllness+"^"+ToReport+"^"+SexDR+"^^"+Type+"^"+TypeNew+"^"+ILLSStation+"^"+FatherIll+"^"+note+"^"+iIfCompare;  
 		 //alert(InString)
 		 var flag=tkMakeServerCall("web.DHCPE.IllnessStandard","UpdateED",id,InString);
 		   
@@ -349,6 +378,17 @@ function UpdateData()
 		   }
 		   $("#Sex").combobox('setValue',EDList[8]);
 		   $("#Type").combobox('setValue',EDList[10]);
+		   $("#TypeNew").combobox('setValue',EDList[11]);
+		   $("#ILLSStation").combobox('setValue',EDList[12]);
+		   $("#FatherIll").combobox('setValue',EDList[13]);
+		   $("#IllNote").val(EDList[14]);
+		  // alert(EDList[15])
+		   if(EDList[15]=="Y"){
+			    $("#IfCompare").checkbox('setValue',true);
+		   }else{
+			   
+			   $("#IfCompare").checkbox('setValue',false);
+		   }
 		   
 			$("#myWin").show();
 			
@@ -375,6 +415,7 @@ function UpdateData()
 
 //查询
 function BFind_click(){
+	$("#IllnessFindGrid").datagrid('clearSelections');
 	$("#IllnessFindGrid").datagrid('load',{
 			ClassName:"web.DHCPE.IllnessStandard",
 			QueryName:"QueryED",
@@ -382,15 +423,19 @@ function BFind_click(){
 		    DiagnoseConclusion:$("#DiagnoseConclusion").val(),
 			Alias:$("#Alias").val(),
 		});	
+		
+		$("#ILLSRowId").val("");
+		$("#ILLSDesc").val("");
 
 }
 
 //清屏
 function BClear_click(){
 	$("#Code,#DiagnoseConclusion,#Alias").val("");
+	BFind_click();
 }
 
-
+/// TypeNew,ILLSStation,FatherIll,Note,TypeNewDesc,ILLSStationDesc,FatherIllDesc
 function InitIllnessFindDataGrid(){
 	$HUI.datagrid("#IllnessFindGrid",{
 		url:$URL,
@@ -420,10 +465,15 @@ function InitIllnessFindDataGrid(){
 		]],
 		columns:[[
 		    {field:'ED_RowId',title:'ID',hidden: true},
-			{field:'ED_CommonIllness',width:'80',title:'常见病'},
-			{field:'TSex',width:'80',title:'性别'},
+			{field:'ED_CommonIllness',width:'40',title:'常见病'},
+			{field:'TSex',width:'40',title:'性别'},
 			{field:'TType',width:'100',title:'类型'},
-			{field:'ED_Detail',width:'650',title:'建议'},	
+			{field:'ED_Detail',width:'650',title:'建议'},
+			{field:'TypeNewDesc',width:'50',title:'标记'},
+			{field:'ILLSStationDesc',width:'80',title:'站点'},
+			{field:'FatherIllDesc',width:'80',title:'特殊分类'},
+			{field:'IfCompare',width:'50',title:'对比'},
+			{field:'TNote',width:'600',title:'备注'}
 		
 		]],
 		onSelect: function (rowIndex, rowData) {
@@ -440,6 +490,36 @@ function InitIllnessFindDataGrid(){
 
 
 function InitCombobox(){
+	
+	// 标记
+	var SexObj = $HUI.combobox("#TypeNew",{
+		valueField:'id',
+		textField:'text',
+		panelHeight:'100',
+		data:[
+            {id:'1',text:'分类'},
+            {id:'2',text:'疾病'},
+            {id:'3',text:'项目'},
+           
+        ]
+
+		});
+		
+	// 站点
+	var SexObj = $HUI.combobox("#ILLSStation",{
+		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindStationBase&ResultSetType=array",
+		valueField:'id',
+		textField:'desc'
+
+		});
+	// 特殊分类
+	var SexObj = $HUI.combobox("#FatherIll",{
+		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindIllness&ResultSetType=array",
+		valueField:'id',
+		textField:'desc'
+
+		});
+	
 	//性别
 	var SexObj = $HUI.combobox("#Sex",{
 		valueField:'id',

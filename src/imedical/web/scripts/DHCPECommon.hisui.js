@@ -179,3 +179,6 @@ function DisabledTableCheckbox(ComponentName,Item)
     }
 	
 }	
+function PEURLAddToken(url) {
+    return 'function' === typeof websys_writeMWToken ? websys_writeMWToken(url) : url;
+}

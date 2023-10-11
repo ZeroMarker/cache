@@ -312,7 +312,7 @@ function GetData()
 		     isArrivedQue="chkGroup";
 		     tmpUserID = "";
 		     expectedLocId = "";
-		 }	 
+	     }
 		 
 		 }
 	 var signStatus =  $('#cboSign').combobox('getValue');
@@ -374,7 +374,7 @@ $("#chkLoc").change(function() {
 		 $("#cbxLoc").combobox('enable');
 		 $("#cbxLoc").combogrid('setValue',"");
 	}
-}
+})
 
 $("#chkUser").change(function() {
 	if ($('#chkUser')[0].checked) 

@@ -351,7 +351,7 @@ var initTabPage=function(){
 			{field:'logcid',title:'id',hidden:true},{field:'date',title:'日期'},{field:'time',title:'时间'},
 			{field:'page',title:'页面'},{field:'pagedesc',title:'页面描述'},
 			{field:'rule',title:'事件'},{field:'srcEle',title:'事件源'},{field:'srcVal',title:'事件源值'},{field:'other',title:'其它'},
-			{field:'user',title:'用户'},{field:'loc',title:'科室'},{field:'group',title:'安全组'}
+			{field:'user',title:'用户'},{field:'loc',title:'科室'},{field:'group',title:'安全组'},{field:'IPAddr',title:'IP地址'}
 		]],
 		pagination:true,
 		pageSize:30,

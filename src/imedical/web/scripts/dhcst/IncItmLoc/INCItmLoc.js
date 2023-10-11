@@ -11,7 +11,7 @@ Ext.onReady(function() {
     var gUserId=session['LOGON.USERID'];
 
     var PhaLoc = new Ext.ux.LocComboBox({
-        fieldLabel : '科室',
+        fieldLabel : $g('科室'),
         id : 'PhaLoc',
         name : 'PhaLoc',
         anchor : '90%',
@@ -37,11 +37,11 @@ Ext.onReady(function() {
         UserId:gUserId,
         LocId:gLocId,
         anchor : '90%',
-        fieldLabel : '类组'
+        fieldLabel : $g('类组')
     }); 
     
     var InciDesc = new Ext.form.TextField({
-                fieldLabel : '药品名称',
+                fieldLabel : $g('药品名称'),
                 id : 'InciDesc',
                 name : 'InciDesc',
                 anchor : '90%',
@@ -76,15 +76,39 @@ Ext.onReady(function() {
     }
 
     var NotUseFlag = new Ext.form.Checkbox({
-        fieldLabel : '包含不可用',
+        fieldLabel : $g('包含不可用'),
         id : 'NotUseFlag',
         name : 'NotUseFlag',
         //anchor : '90%',
         checked : false
     });
     
+    //加锁标致下拉框
+	var LockFlagStore = new Ext.data.SimpleStore({
+				fields : ['RowId', 'Description'],
+				data : [['ALL', $g('门诊/住院')], ['OUT', $g('门诊')], ['IN', $g('住院')]]
+			});
+	var LockFlagCon = new Ext.form.ComboBox({
+				fieldLabel : $g('加锁标志'),
+				id : 'LockFlagCon',
+				name : 'LockFlagCon',
+				anchor : '90%',
+				store : LockFlagStore,
+				triggerAction : 'all',
+				mode : 'local',
+				valueField : 'RowId',
+				displayField : 'Description',
+				allowBlank : true,
+				triggerAction : 'all',
+				selectOnFocus : true,
+				forceSelection : true,
+				minChars : 1,
+				valueNotFoundText : ''
+			});
+    
+    
     var StkBin = new Ext.form.ComboBox({
-        fieldLabel : '货位',
+        fieldLabel : $g('货位'),
         id : 'StkBin',
         name : 'StkBin',
         anchor : '90%',
@@ -112,10 +136,10 @@ Ext.onReady(function() {
     
     var StockTypeStore=new Ext.data.SimpleStore({
         fields : ['RowId', 'Description'],
-        data : [['-1', '负库存'], ['0', '零库存'], ['1', '正库存']]
+        data : [['-1', $g('负库存')], ['0', $g('零库存')], ['1', $g('正库存')]]
     });
     var StockType=new Ext.form.ComboBox({
-        fieldLabel : '库存类型',
+        fieldLabel : $g('库存类型'),
         id : 'StockType',
         name : 'StockType',
         anchor : '90%',
@@ -137,7 +161,7 @@ Ext.onReady(function() {
     Ext.getCmp('StockType').setValue('');
     
     var LocManGrp=new Ext.form.ComboBox({
-        fieldLabel : '管理组',
+        fieldLabel : $g('管理组'),
         id : 'LocManGrp',
         name : 'LocManGrp',
         anchor : '90%',
@@ -163,7 +187,7 @@ Ext.onReady(function() {
         }
     });
     var LocManGrpG=new Ext.form.ComboBox({
-        fieldLabel : '管理组',
+        fieldLabel : $g('管理组'),
         id : 'LocManGrpG',
         name : 'LocManGrpG',
         anchor : '90%',
@@ -191,8 +215,8 @@ Ext.onReady(function() {
     
     // 查询按钮
     var SearchBT = new Ext.Toolbar.Button({
-                text : '查询',
-                tooltip : '点击查询',
+                text : $g('查询'),
+                tooltip : $g('点击查询'),
                 iconCls : 'page_find',
                 width : 70,
                 height : 30,
@@ -208,7 +232,7 @@ Ext.onReady(function() {
         // 必选条件
         var phaLoc = Ext.getCmp("PhaLoc").getValue();
         if (phaLoc == null || phaLoc.length <= 0) {
-            Msg.info("warning", "科室不能为空！");
+            Msg.info("warning", $g("科室不能为空！"));
             Ext.getCmp("PhaLoc").focus();
             return;
         }
@@ -219,24 +243,25 @@ Ext.onReady(function() {
         var StkGrpRowId = Ext.getCmp("StkGrpType").getValue();
         var StockType = Ext.getCmp("StockType").getValue();
         var IncludeNotUse=(Ext.getCmp("NotUseFlag").getValue()==true?1:0);
+        var LockFlagCon=Ext.getCmp("LockFlagCon").getValue();
         var StkBinId=Ext.getCmp("StkBin").getValue();
         var LocManGrpId=Ext.getCmp("LocManGrp").getValue();
-        gStrParam=phaLoc+"^"+gIncId+"^"+StkGrpRowId+"^"+IncludeNotUse+"^"+StkBinId+"^^"+StockType+"^"+LocManGrpId;
+        gStrParam=[phaLoc,gIncId,StkGrpRowId,IncludeNotUse,StkBinId,"",StockType,LocManGrpId,LockFlagCon].join("^");
         var PageSize=StatuTabPagingToolbar.pageSize;
         ItmLocStore.setBaseParam('Params',gStrParam);   //分页时基本参数不会丢失
         ItmLocStore.load({
 	        params:{start:0,limit:PageSize},
 			callback : function(o,response,success) { 
 				if (success == false){  
-					Ext.MessageBox.alert("查询错误",ItmLocStore.reader.jsonData.Error);  
+					Ext.MessageBox.alert($g("查询错误"),ItmLocStore.reader.jsonData.Error);  
 				}
 			}});
 
     }
 		// 另存按钮
 	var SaveAsBT = new Ext.Toolbar.Button({
-		text : '另存',
-		tooltip : '另存为Excel',
+		text : $g('另存'),
+		tooltip : $g('另存为Excel'),
 		iconCls : 'page_excel',
 		width : 70,
 		height : 30,
@@ -247,8 +272,8 @@ Ext.onReady(function() {
 	});
     // 清空按钮
     var RefreshBT = new Ext.Toolbar.Button({
-        text : '清空',
-        tooltip : '点击清空',
+        text : $g('清空'),
+        tooltip : $g('点击清空'),
         iconCls : 'page_clearscreen',
         width : 70,
         height : 30,
@@ -266,9 +291,12 @@ Ext.onReady(function() {
         SetLogInDept(GetGroupDeptStore,'PhaLoc')
         Ext.getCmp("InciDesc").setValue('');
         Ext.getCmp("NotUseFlag").setValue(false);
+        
         Ext.getCmp("StkBin").setValue('');
         Ext.getCmp("StockType").setValue('');
         Ext.getCmp("LocManGrp").setValue('');
+        Ext.getCmp("LockFlagCon").setValue('');
+        
         StkGrpType.getStore().setBaseParam("locId",gLocId);
 		StkGrpType.getStore().setBaseParam("userId",gUserId);
 		StkGrpType.getStore().setBaseParam("type",App_StkTypeCode);
@@ -282,8 +310,8 @@ Ext.onReady(function() {
     // 保存按钮
     var SaveBT = new Ext.Toolbar.Button({
         id : "SaveBT",
-        text : '保存',
-        tooltip : '点击保存',
+        text : $g('保存'),
+        tooltip : $g('点击保存'),
         width : 70,
         height : 30,
         iconCls : 'page_save',
@@ -307,6 +335,7 @@ Ext.onReady(function() {
              var EnforceStock='';
             var MinQty = mr[i].data["minQty"];
             var LockFlag = mr[i].data["lockFlag"];
+            var InLockFlag = mr[i].data["InLockFlag"];
             var SpStkBin = mr[i].data["spStkBin"];
             var PivaFlag = mr[i].data["pivaPack"];  //配液打包标志
             //var sd = mr[i].data["SdDesc"].trim();         
@@ -318,10 +347,11 @@ Ext.onReady(function() {
             var IfPivaFlag=mr[i].data["pivaflag"].trim();  //是否配液
             var DrugSendFlag=mr[i].data["drugsendflag"].trim();
             var DrugPackFlag=mr[i].data["drugpackflag"].trim();
-           if(Number(MaxQty)<Number(MinQty)){Msg.info("warning","库存上限不能小于下限!");return;}
+           if((MaxQty != "") && (MinQty != "")&&(Number(MaxQty)<Number(MinQty))){Msg.info("warning",$g("库存上限不能小于下限!"));return;}
 
             var dataRow =Rowid + "^" + Incsc+"^"+RepLev+"^"+RepQty+"^"+MaxQty+"^"+MinQty+"^"+LockFlag
-                +"^"+SpStkBin+"^"+EnforceStock+"^"+PivaFlag+"^"+ManFlag+"^"+Lmg+"^"+PlanFlag+"^"+IfPivaFlag+"^"+DrugSendFlag+"^"+DrugPackFlag;
+                +"^"+SpStkBin+"^"+EnforceStock+"^"+PivaFlag+"^"+ManFlag+"^"+Lmg+"^"+PlanFlag+"^"+IfPivaFlag
+                +"^"+DrugSendFlag+"^"+DrugPackFlag+"^"+InLockFlag;
             //alert(dataRow);
             if(ListDetail==""){
                 
@@ -336,22 +366,22 @@ Ext.onReady(function() {
                     url : url,
                     params:{Detail:ListDetail},
                     method : 'POST',
-                    waitMsg : '处理中...',
+                    waitMsg : $g('处理中...'),
                     success : function(result, request) {
                         var jsonData = Ext.util.JSON
                                 .decode(result.responseText);
                         if (jsonData.success == 'true') {
                              
-                            Msg.info("success", "保存成功!");
+                            Msg.info("success", $g("保存成功!"));
                             // 刷新界面
                             Query();
 
                         } else {
                             var ret=jsonData.info;
                             if(ret==-1){
-                                Msg.info("error", "没有需要保存的数据!");
+                                Msg.info("error", $g("没有需要保存的数据!"));
                             }else {
-                                Msg.info("error", "部分明细保存不成功："+ret);
+                                Msg.info("error", $g("部分明细保存不成功：")+ret);
                             }
                             
                         }
@@ -363,8 +393,8 @@ Ext.onReady(function() {
     
       // 生成上下限
     var CreatLimtBT = new Ext.Toolbar.Button({
-                text : '生成上下限',
-                tooltip : '点击生成上下限',
+                text : $g('生成上下限'),
+                tooltip : $g('点击生成上下限'),
                 iconCls : 'page_find',
                 width : 70,
                 height : 30,
@@ -374,7 +404,7 @@ Ext.onReady(function() {
             });
     
     var GridStkBin = new Ext.ux.ComboBox({
-        fieldLabel : '货位',
+        fieldLabel : $g('货位'),
         id : 'GridStkBin',
         name : 'GridStkBin',
         anchor : '90%',
@@ -386,40 +416,46 @@ Ext.onReady(function() {
     }); 
     
     var ChkLockFlag=new Ext.grid.CheckColumn({
-       header: '<font color=blue>加锁标志</font>',
+       header: '<font color=blue>'+$g('门诊加锁')+'</font>',
        dataIndex: 'lockFlag',
        width: 80
     });
     
+    var ChkInLockFlag=new Ext.grid.CheckColumn({
+       header: '<font color=blue>'+$g('住院加锁')+'</font>',
+       dataIndex: 'InLockFlag',
+       width: 80
+    });
+    
     var ChkPivaFlag=new Ext.grid.CheckColumn({
-       header: '<font color=blue>配液打包标志</font>',
+       header: '<font color=blue>'+$g('配液打包标志')+'</font>',
        dataIndex: 'pivaPack',
        width: 80
     });
     
     var ChkManFlag=new Ext.grid.CheckColumn({
-        header:'<font color=blue>管理药标志</font>',
+        header:'<font color=blue>'+$g('管理药标志')+'</font>',
         dataIndex:'manFlag',
         width:80
     });
     var ChkPlanFlag=new Ext.grid.CheckColumn({
-        header:'<font color=blue>自动采购标志</font>',
+        header:'<font color=blue>'+$g('自动采购标志')+'</font>',
         dataIndex:'planFlag',
         width:80
     })
     var PivaFlag=new Ext.grid.CheckColumn({
-        header:'<font color=blue>是否配液标志</font>',
+        header:'<font color=blue>'+$g('是否配液标志')+'</font>',
         dataIndex:'pivaflag',
         width:80
     })
     var DrugSendFlag=new Ext.grid.CheckColumn({
-        header:'<font color=blue>发药机标志</font>',
+        header:'<font color=blue>'+$g('发药机标志')+'</font>',
         dataIndex:'drugsendflag',
         sortable : true,
         width:80
     })
     var DrugPackFlag=new Ext.grid.CheckColumn({
-        header:'<font color=blue>分包机标志</font>',
+        header:'<font color=blue>'+$g('分包机标志')+'</font>',
         dataIndex:'drugpackflag',
         width:80,
         sortable : true
@@ -434,44 +470,44 @@ Ext.onReady(function() {
                 sortable : true,
                 hidden : true
             }, {
-                header : '代码',
+                header : $g('代码'),
                 dataIndex : 'code',
                 width : 80,
                 align : 'left',
                 sortable : true,
                 hidden : false
             }, {
-                header : "名称",
+                header : $g("名称"),
                 dataIndex : 'desc',
                 width : 200,
                 align : 'left',
                 sortable : true
             },{
-                header : "规格",
+                header : $g("规格"),
                 dataIndex : 'spec',
                 width : 80,
                 align : 'left',
                 sortable : true
             },{
-                header : "厂商",
+                header : $g("生产企业"),
                 dataIndex : 'manf',
                 width : 200,
                 align : 'left',
                 sortable : true
             },{
-                header : "基本单位",
+                header : $g("基本单位"),
                 dataIndex : 'bUomDesc',
                 width : 80,
                 align : 'left',
                 sortable : true
             },{
-                header : "包装单位",
+                header : $g("包装单位"),
                 dataIndex : 'pUomDesc',
                 width : 80,
                 align : 'left',
                 sortable : true
             },{
-                header : "<font color=blue>库存上限</font>",
+                header : "<font color=blue>"+$g("库存上限")+"</font>",
                 dataIndex : 'maxQty',
                 width : 80,
                 align : 'left',
@@ -493,7 +529,7 @@ Ext.onReady(function() {
                 })
                 
             },{
-                header:"<font color=blue>库存下限</font>",
+                header:"<font color=blue>"+$g("库存下限")+"</font>",
                 dataIndex:"minQty",
                 width : 80,
                 align : 'left',
@@ -514,19 +550,19 @@ Ext.onReady(function() {
                 })
             
             },{
-                header:"库存",
+                header:$g("库存"),
                 dataIndex:"stkQty",
                 width : 80,
                 align : 'left',
                 sortable : true
             },{
-                header:"可用库存",
+                header:$g("可用库存"),
                 dataIndex:"avaQty",
                 width : 80,
                 align : 'left',
                 sortable : true
             },{
-                header:"<font color=blue>标准库存</font>",
+                header:"<font color=blue>"+$g("标准库存")+"</font>",
                 dataIndex:"repQty",
                 width : 80,
                 align : 'left',
@@ -547,7 +583,7 @@ Ext.onReady(function() {
                 })
             
             },{
-                header:"<font color=blue>补货标准</font>",
+                header:"<font color=blue>"+$g("补货标准")+"</font>",
                 dataIndex:"repLev",
                 width : 80,
                 align : 'left',
@@ -568,13 +604,13 @@ Ext.onReady(function() {
                 })
             
             },{
-				header:"货位",
+				header:$g("货位"),
                 dataIndex:"incsb",
                 width : 150,
                 align : 'left',
                 sortable : true
             },{
-                header:"<font color=blue>备用货位</font>",
+                header:"<font color=blue>"+$g("备用货位")+"</font>",
                 dataIndex:"spStkBin",
                 width : 100,
                 align : 'left',
@@ -584,20 +620,21 @@ Ext.onReady(function() {
                     
                 })          
             },{
-                header : "管制分类",
+                header : $g("管制分类"),
                 dataIndex : 'phcpoCode',
                 width : 100,
                 align : 'left',
                 sortable : true
             },
             { 
-                header:"<font color=blue>管理组</font>",
+                header:"<font color=blue>"+$g("管理组")+"</font>",
                 dataIndex:'inciLmg',
                 editor:LocManGrpG,
                 width : 100,
                 renderer:Ext.util.Format.comboRenderer2(LocManGrp,"inciLmg","inciLmgDesc")   
             },
             ChkLockFlag,
+            ChkInLockFlag,
             ChkPivaFlag,
             ChkManFlag,
             PivaFlag,
@@ -605,7 +642,7 @@ Ext.onReady(function() {
             DrugPackFlag,
             ChkPlanFlag,
             {
-            header : "不可用",
+            header : $g("不可用"),
             dataIndex : 'NotUseFlag',
             width : 75,
             align : 'center',
@@ -615,19 +652,19 @@ Ext.onReady(function() {
             },
 			sortable : true
             },{
-                header:"更新人",
+                header:$g("加锁更新人"),
                 dataIndex:"lastUpdUser",
                 width : 80,
                 align : 'left',
                 sortable : true
             },{
-                header:"更新日期",
+                header:$g("加锁更新日期"),
                 dataIndex:"lastUpdDate",
                 width : 100,
                 align : 'left',
                 sortable : true
             },{
-                header:"更新时间",
+                header:$g("加锁更新时间"),
                 dataIndex:"lastUpdTime",
                 width : 100,
                 align : 'left',
@@ -648,7 +685,7 @@ Ext.onReady(function() {
     var fields = ["incil", "inci", "code","desc","spec","manf","pUom","pUomDesc","bUom",
     "bUomDesc","maxQty","minQty","stkQty","avaQty","repQty","repLev","incsb","sbDesc","phcpoCode",
     "lockFlag","spStkBin","pivaPack","manFlag","inciLmg","inciLmgDesc","planFlag","NotUseFlag",
-    "sp","pivaflag","drugsendflag","drugpackflag","lastUpdUser","lastUpdDate","lastUpdTime"]; 
+    "sp","pivaflag","drugsendflag","drugpackflag","lastUpdUser","lastUpdDate","lastUpdTime","InLockFlag"]; 
     // 支持分页显示的读取方式
     var reader = new Ext.data.JsonReader({
                 root : 'rows',
@@ -667,16 +704,16 @@ Ext.onReady(function() {
         store : ItmLocStore,
         pageSize : PageSize,
         displayInfo : true,
-        displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
+        displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
         emptyMsg : "No results to display",
-        prevText : "上一页",
-        nextText : "下一页",
-        refreshText : "刷新",
-        lastText : "最后页",
-        firstText : "第一页",
-        beforePageText : "当前页",
-        afterPageText : "共{0}页",
-        emptyMsg : "没有数据"
+        prevText : $g("上一页"),
+        nextText : $g("下一页"),
+        refreshText : $g("刷新"),
+        lastText :$g( "最后页"),
+        firstText : $g("第一页"),
+        beforePageText : $g("当前页"),
+        afterPageText : $g("共{0}页"),
+        emptyMsg :$g( "没有数据")
     });
     var ItmLocGrid = new Ext.grid.EditorGridPanel({
                 id:'ItmLocGrid',
@@ -688,7 +725,7 @@ Ext.onReady(function() {
                 sm : new Ext.grid.CellSelectionModel({}),
                 clicksToEdit : 1,
                 bbar:StatuTabPagingToolbar,
-                plugins: [ChkLockFlag,ChkPivaFlag,ChkManFlag,ChkPlanFlag,PivaFlag,DrugSendFlag,DrugPackFlag],
+                plugins: [ChkLockFlag,ChkInLockFlag,ChkPivaFlag,ChkManFlag,ChkPlanFlag,PivaFlag,DrugSendFlag,DrugPackFlag],
                 loadMask : true
             });
 
@@ -696,7 +733,7 @@ Ext.onReady(function() {
 
 
     var HisListTab = new Ext.form.FormPanel({
-        title:'科室药品信息维护',
+        title:$g('科室药品信息维护'),
         labelWidth : 80,
         height : DHCSTFormStyle.FrmHeight(3),
         labelAlign : 'right',
@@ -705,26 +742,34 @@ Ext.onReady(function() {
         tbar : [SearchBT, '-',SaveBT,'-',CreatLimtBT,'-',SaveAsBT,'-',RefreshBT],            
         items : [{
             layout:'column',
-            title:'查询条件',
+            title:$g('查询条件'),
             xtype:'fieldset',
             style:DHCSTFormStyle.FrmPaddingV,
             defaults: {border:false}, 
             items:[{
-                    columnWidth:0.34,
+                    columnWidth:0.25,
                     xtype:'fieldset',
                     defaults: {width: 180},
-                    items:[PhaLoc,StkGrpType,NotUseFlag]
+                    items:[PhaLoc,StkGrpType,LockFlagCon]
                   },{
-                    columnWidth:0.33,
+                    columnWidth:0.25,
                     xtype:'fieldset',
                     defaults: {width: 180},
                     items:[InciDesc,StockType]
                   },{
-                    columnWidth:0.33,
+                    columnWidth:0.25,
                     xtype:'fieldset',
                     defaults: {width: 150},
                     items:[StkBin,LocManGrp]    
-                  }]
+                  },{
+                    columnWidth:0.25,
+                    xtype:'fieldset',
+                    defaults: {width: 150},
+                    items:[NotUseFlag]    
+                  }
+                  
+                  
+                  ]
         }]
     });
 
@@ -734,7 +779,7 @@ Ext.onReady(function() {
         items : [  HisListTab,
             {
                  region: 'center',                                      
-                 title: '科室库存项---<font color=blue>蓝色显示的列为可编辑列</font>',
+                 title: $g('科室库存项---<font color=blue>蓝色显示的列为可编辑列</font>'),
                  layout: 'fit', // specify layout manager for items
                  items: ItmLocGrid                             
             }

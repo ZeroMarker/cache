@@ -12,11 +12,11 @@ function ScanItmQuery (Fn){
 	var gInciRowid=""
 	var RowId="-1"
 		var InciDesc = new Ext.form.TextField({
-					fieldLabel : '药品名称',
+					fieldLabel : $g('药品名称'),
 					id : 'InciDesc',
 					name : 'InciDesc',
 					width : 200,
-					emptyText : '别名...',
+					emptyText : $g('别名...'),
 					selectOnfocus: true,
 					listeners : {
 						specialkey : function(field, e) {
@@ -57,9 +57,9 @@ function ScanItmQuery (Fn){
 	
 	// 查询按钮
 	var findBT = new Ext.Toolbar.Button({
-				text : '查询',
+				text : $g('查询'),
 				id:'findBT',
-				tooltip : '点击查询药品位置',
+				tooltip : $g('点击查询药品位置'),
 				iconCls : 'page_find',
 				handler:function(){
 					searchData();  //ext会先执行handler,再执行listeners
@@ -70,15 +70,15 @@ function searchData(){
  if (gInciRowid!=""){
    RowId=gInciRowid;}
  else{
-   Msg.info("warning", "没有数据！");  }
+   Msg.info("warning", $g("没有数据！"));  }
  window.close();
 
 }
 
 	// 取消按钮
 	var cancelBT = new Ext.Toolbar.Button({
-				text : '关闭',
-				tooltip : '点击取消查找药品位置',
+				text : $g('关闭'),
+				tooltip : $g('点击取消查找药品位置'),
 				iconCls : 'page_delete',
 				handler : function() {
 					window.close();
@@ -107,9 +107,10 @@ function searchData(){
 		});
 
 	var window = new Ext.Window({
-				title : '查找项',
+				title : $g('查找项'),
 				width : 400,
 				height : 150,
+				modal:true,
 				layout:'border',
 				items : [ HisListTab]
 			});

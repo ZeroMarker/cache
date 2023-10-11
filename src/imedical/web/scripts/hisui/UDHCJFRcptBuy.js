@@ -1,26 +1,61 @@
 /// UDHCJFRcptBuy.js
 
-var SelectedRow = 0;
-
 $(function () {
     init_Layout();
 
-    var obj = document.getElementById("Add");
-    if (obj) {
-        obj.onclick = Add_click;
-    }
-
-    var obj = document.getElementById("Delete");
-    if (obj) {
-        obj.onclick = Delete_click;
-    }
-
-    var resumeGrantobj = document.getElementById("resumeGrant");
-    resumeGrantobj.onclick = resumeGrant_click;
-    var numobj = document.getElementById('number');
-    if (numobj) {
-        numobj.onkeyup = celendno;
-    }
+	$HUI.linkbutton('#Add', {
+		onClick: function () {
+			Add_click();
+		}
+	});
+	
+	$HUI.linkbutton('#Delete', {
+		onClick: function () {
+			Delete_click();
+		}
+	});
+	
+	$HUI.linkbutton('#resumeGrant', {
+		onClick: function () {
+			resumeGrant_click();
+		}
+	});
+	
+	$HUI.numberbox('#number', {
+		min: 1,
+		isKeyupChange: true,
+		onChange: function (newValue, oldValue) {
+			celendno();
+		}
+	});
+    
+    //购入人
+    $("#gruser").combobox({
+        panelHeight: 150,
+		url: $URL + '?ClassName=web.UDHCJFReceipt&QueryName=FindRcptBuyer&ResultSetType=array',
+		valueField: 'id',
+		textField: 'text',
+		defaultFilter: 5,
+		selectOnNavigation: false,
+		onBeforeLoad: function (param) {
+			param.hospId = session['LOGON.HOSPID'];
+		},
+		onChange: function(newValue, oldValue) {
+			setValueById("userid", (newValue || ""));
+		}
+    });
+    	
+	//类型
+    $("#type").combobox({
+        panelHeight: 'auto',
+		valueField: 'id',
+		textField: 'text',
+		editable: false,
+		data:[{id: 'I', text: '住院押金', selected: true}],
+		onChange: function(newValue, oldValue) {
+			StartNo();
+		}
+    });
 });
 
 function StartNo() {
@@ -46,49 +81,42 @@ function StartNo() {
 function Add_click() {
     var stno = getValueById('stno');
     if (stno == "") {
-        DHCWeb_HISUIalert(t['01']);
+	    $.messager.popover({msg: '开始号码不能为空', type: 'info'});
         return;
     }
     var endno = getValueById('endno');
     if (endno == "") {
-        DHCWeb_HISUIalert(t['02']);
+	    $.messager.popover({msg: '结束号码不能为空', type: 'info'});
         return;
     }
     if (stno.length != endno.length) {
-        DHCWeb_HISUIalert(t['03'])
+	    $.messager.popover({msg: '开始号码和结束号码位数不同', type: 'info'});
         return;
     }
     if (!checkno(stno)) {
-        DHCWeb_HISUIalert(t['16']);
+	    $.messager.popover({msg: '开始号码输入有误', type: 'info'});
         focusById('stno');
         return;
     }
     if (!checkno(endno)) {
-        DHCWeb_HISUIalert(t['17']);
+	    $.messager.popover({msg: '结束号码输入有误', type: 'info'});
         focusById('endno');
         return;
     }
     if (parseInt(endno, 10) < parseInt(stno, 10)) {
-        DHCWeb_HISUIalert(t['10']);
+	    $.messager.popover({msg: '结束号码不能小于开始号码', type: 'info'});
         return;
     }
     var gruser = getValueById('gruser');
     if (gruser == "") {
-        DHCWeb_HISUIalert(t['04']);
+	    $.messager.popover({msg: '购入人不能为空', type: 'info'});
         return;
     }
-    /*
-    var encmeth = getValueById('getbuynote');
-    var buynum = cspRunServerMethod(encmeth, '', '', stno, endno);
-    if (eval(buynum) > 0) {
-	    DHCWeb_HISUIalert(t['14']);
-	    return;
-    }
-	*/
+    
     var title = getValueById('title');
     var type = getValueById('type');
     if (type == "") {
-        DHCWeb_HISUIalert(t['15']);
+	    $.messager.popover({msg: '请选择类型', type: 'info'});
         return;
     }
     $.messager.confirm("确认", "确认购入从[<font color='red'>" + title + stno + "</font>]到[<font color='red'>" + title + endno + "</font>]的收据?", function(r) {
@@ -106,24 +134,34 @@ function Add_click() {
 				switch(rtn) {
 				case "0":
 					$.messager.alert("提示", "购入成功", "success", function() {
-						$("#Find").click();
+						reloadMenuPanel();
 					});
 					break;
 				case "-505":
-					DHCWeb_HISUIalert("不能重复购入押金收据");
+					$.messager.popover({msg: '不能重复购入押金收据', type: 'info'});
 					break;
 				default:
-					DHCWeb_HISUIalert("购入失败：" + rtn);
+					$.messager.popover({msg: '购入失败：' + rtn, type: 'error'});
 				}
 			});
 		}
 	});
 }
 
+/**
+* 购入成功后重新获取新的发票号段
+*/
+function reloadMenuPanel() {
+	$('#number').numberbox('clear');
+	setValueById('endno', '');
+	StartNo();            //购入成功后重新获取新的发票号段
+	$('#Find').click();
+}
+
 function Delete_click() {
     var row = $HUI.datagrid("#tUDHCJFRcptBuy").getSelected();
 	if (!row || !row.Tbuyrowid) {
-		DHCWeb_HISUIalert("请选择要删除的记录");
+		$.messager.popover({msg: '请选择要删除的记录', type: 'info'});
         return;
 	}
     var rowId = row.Tbuyrowid;
@@ -141,10 +179,10 @@ function Delete_click() {
 					});
 					break;
 				case "-2":
-					$.messager.alert("提示", "此号段已使用，不能删除", "info");
+					$.messager.popover({msg: '此号段已使用，不能删除', type: 'info'});
 					break;
 				default:
-					$.messager.alert("提示", "删除失败：" + rtn, "error");
+					$.messager.popover({msg: '删除失败：' + rtn, type: 'error'});
 				}
 			});
 		}
@@ -167,16 +205,16 @@ function checkno(inputtext) {
 function resumeGrant_click() {
 	var row = $HUI.datagrid("#tUDHCJFRcptBuy").getSelected();
 	if (!row || !row.Tbuyrowid) {
-		DHCWeb_HISUIalert("请先选择一行");
+		$.messager.popover({msg: '请先选择一行', type: 'info'});
         return;
 	}
 	var comment1 = row.Tcomment1;
     if (comment1 == "") {
-        DHCWeb_HISUIalert("所选的行不是恢复发放的类型");
+	    $.messager.popover({msg: '所选的行不是恢复发放的类型', type: 'info'});
         return;
     }
     if (comment1 != "Return") {
-        DHCWeb_HISUIalert("该收据已经恢复发放过了");
+	    $.messager.popover({msg: '该收据已经恢复发放过了', type: 'info'});
         return;
     }
 	var rowId = row.Tbuyrowid;
@@ -187,7 +225,7 @@ function resumeGrant_click() {
 			$("#Find").click();
 		});
     } else {
-	    $.messager.alert("提示", "恢复发放失败：" + rtn, "error");
+	    $.messager.popover({msg: '恢复发放失败：' + rtn, type: 'error'});
     }
 }
 
@@ -217,32 +255,4 @@ function celendno() {
 function init_Layout() {
     DHCWeb_ComponentLayout();
     $('#cstno').parent().parent().css("width", "71px");
-	
-	//类型
-    $("#type").combobox({
-        panelHeight: 'auto',
-		url: $URL + '?ClassName=web.UDHCJFReceipt&QueryName=FindRcptType&ResultSetType=array',
-		valueField: 'code',
-		textField: 'text',
-		editable: false,
-		onChange: function(newValue, oldValue) {
-			StartNo();
-		}
-    });
-    
-    //购入人
-    $("#gruser").combobox({
-        panelHeight: 150,
-		url: $URL + '?ClassName=web.UDHCJFReceipt&QueryName=FindRcptBuyer&ResultSetType=array',
-		valueField: 'id',
-		textField: 'text',
-		defaultFilter: 4,
-		selectOnNavigation: false,
-		onBeforeLoad: function (param) {
-			param.hospId = session['LOGON.HOSPID'];
-		},
-		onChange: function(newValue, oldValue) {
-			setValueById("userid", (newValue || ""));
-		}
-    });
 }

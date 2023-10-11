@@ -65,6 +65,17 @@ Ext.onReady(function(){
         //items:[chartitems]
         listeners: {
 			beforetabchange:function(tabPnl,newTab,tab){
+				var frm = dhcsys_getmenuform();
+				if (frm.DoingSth){
+					 var doingSthDesc = frm.DoingSth.value;
+					 if (doingSthDesc!=""){
+						 //var sthWin = new Ext.Window({closable:true, modal:true, layout:'fit', width:200, html:doingSthDesc,title:'提示',height:80}).show().setPosition(800,50);	
+						 //setTimeout("sthWin.hide()",1500);
+						 //Ext.Msg.alert('提示', doingSthDesc);
+						 alert(doingSthDesc);
+						 return false;
+					 }
+				}
 				if (typeof(tab) == 'undefined' || typeof(tab.id) == 'undefined') return true;
 				
 				var frame = window.frames["dataframe"+tab.id];		

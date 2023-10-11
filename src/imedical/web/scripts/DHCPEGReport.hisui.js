@@ -861,7 +861,7 @@ function InitCombobox()
 		
 	//Õ¾µã	
 	var StationObj = $HUI.combobox("#StationID",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindStationBase&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindStationBase&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
 		valueField:'id',
 		textField:'desc'
 		
@@ -877,7 +877,8 @@ function BFind_click(){
 			QueryName:"SearchGReportNew",
 			DateFrom:$("#DateFrom").datebox('getValue'),
 			DateTo:$("#DateTo").datebox('getValue'),
-			GID:$("#GDesc").combogrid('getValue')
+			GID:$("#GDesc").combogrid('getValue'),
+			LocID:session['LOGON.CTLOCID']
 			});
 	
 }
@@ -904,7 +905,8 @@ function InitGReportQueryTabDataGrid(){
 			QueryName:"SearchGReportNew",
 			DateFrom:$("#DateFrom").datebox('getValue'),
 			DateTo:$("#DateTo").datebox('getValue'),
-			GID:$("#GDesc").combogrid('getValue')
+			GID:$("#GDesc").combogrid('getValue'),
+			LocID:session['LOGON.CTLOCID']
 				
 		},
 		columns:[[

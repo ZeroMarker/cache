@@ -27,8 +27,10 @@ function info(){
 	
 	if(MainDoctor=="Y"){
 		$("#BBatchAudit").linkbutton({text:'批量复审'});
-		$("#NoResultFlag")[0].parentNode.children[1].style.display="none";
-		$("#tNoResultFlag").hide();
+		//删除"存在未完成项"一列
+		$('#NoResultFlag').parents("td").remove();
+		//$("#NoResultFlag")[0].parentNode.children[1].style.display="none";
+		//$("#tNoResultFlag").hide();
 	}
 	else{$("#BBatchAudit").linkbutton({text:'批量初审'});}
 	

@@ -12,22 +12,34 @@ function commonShowWin(option){
 			closed: false,
 			content: content,
 			modal: true,
-			isTopZindex:true
+			isTopZindex:true,
+			isParentOpen:false
 		}
 		$.extend(defOpt,option);
-		if (document.getElementById("CommonWin")){
-			winObj = $("#CommonWin");
+		var _thisWin=defOpt.isParentOpen?window.parent:window; //父界面打开还是子界面打开
+		
+		var domName=(option.domName?option.domName:"CommonWin");
+		
+		if (_thisWin.document.getElementById(domName)){
+			winObj = _thisWin.$(domName);
 		}else{
-			winObj = $('<div id="CommonWin"></div>').appendTo("body");	
+			winObj = _thisWin.$('<div id="'+domName+'"></div>').appendTo("body");	
 		}
-		//$('#CommonWin').dialog(defOpt);
-		$HUI.dialog('#CommonWin', defOpt)
+		_thisWin.$HUI.dialog('#'+domName, defOpt)
+		return;
 }
 
 function commonCloseWin(){
 	$('#CommonWin').dialog('close');
 }
 
+function commonCloseWinById(domName){
+	$('#'+domName).dialog('close');
+}
+
 function commonParentCloseWin(){
 	window.parent.$('#CommonWin').dialog('close');
+}
+function commonParentCloseWinById(domName){
+	window.parent.$('#'+domName).dialog('close');
 }

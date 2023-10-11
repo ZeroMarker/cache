@@ -1,10 +1,10 @@
-ï»¿function OnHidePanel(item)
+function OnHidePanel(item)
 {
 	var valueField = $(item).combobox("options").valueField;
-	var val = $(item).combobox("getValue");  //å½“å‰comboboxçš„å€¼
+	var val = $(item).combobox("getValue");  //µ±Ç°comboboxµÄÖµ
 	var txt = $(item).combobox("getText");
-	var allData = $(item).combobox("getData");   //è·å–comboboxæ‰€æœ‰æ•°æ®
-	var result = true;      //ä¸ºtrueè¯´æ˜è¾“å…¥çš„å€¼åœ¨ä¸‹æ‹‰æ¡†æ•°æ®ä¸­ä¸å­˜åœ¨
+	var allData = $(item).combobox("getData");   //»ñÈ¡comboboxËùÓĞÊı¾İ
+	var result = true;      //ÎªtrueËµÃ÷ÊäÈëµÄÖµÔÚÏÂÀ­¿òÊı¾İÖĞ²»´æÔÚ
 	if (val=="") result=false;
 	for (var i = 0; i < allData.length; i++) {
 		if (val == allData[i][valueField]) {
@@ -18,24 +18,24 @@
 	    if ((val==undefined)&&(txt!=""))
 	    {
 		    $(item).combobox('setValue',"");
-	    	$.messager.alert("æç¤º","è¯·ä»ä¸‹æ‹‰æ¡†é€‰æ‹©","error");
+	    	$.messager.alert("ÌáÊ¾","Çë´ÓÏÂÀ­¿òÑ¡Ôñ","error");
 	    	return;
 	    }
 	}
 }
 $(function(){
-    //æ¿€æ´»
+    //¼¤»î
 	$HUI.combobox("#FTPActive",{
         valueField:"code",
         textField:"desc",
         panelHeight:'auto',
-        data:[{'code':"Y",'desc':"æ˜¯"},{'code':"N",'desc':"å¦"}],
+        data:[{'code':"Y",'desc':"ÊÇ"},{'code':"N",'desc':"·ñ"}],
         onHidePanel: function () {
         	OnHidePanel("#FTPActive");
         }
     });
 	
-	//åˆå§‹åŒ–è¾“å…¥æ¡†
+	//³õÊ¼»¯ÊäÈë¿ò
 	function InitBPDiag()
 	{
 		$("#FTPSrvIP").val("");
@@ -46,37 +46,38 @@ $(function(){
 		$("#FTPType").val("");
 		$("#FTPActive").combobox('setValue',"");
 		$("#FTPLocalPath").val("");
+		$("#FTPHttpsPortNo").val("");
 	}
 	
-	//å¢åŠ 
+	//Ôö¼Ó
 	var InsertHandler=function(){
 		$("#ftpDlg").show();
 		var ftpDlgObj=$HUI.dialog("#ftpDlg",{
 			iconCls:'icon-w-add',
-			title:'æ–°å¢è¡€é€PDFä¸Šä¼ æœåŠ¡å™¨',
+			title:'ĞÂÔöÑªÍ¸PDFÉÏ´«·şÎñÆ÷',
 			resizable:true,
 			modal:true,
 			buttons:[{
-				text:"ä¿å­˜",
+				text:"±£´æ",
 				handler:function(){
 					 var datas=$.m({
 						 ClassName:"web.DHCBPPDFConfig",
 						 MethodName:"InsertFTP",
-						 data:$("#FTPSrvIP").val()+"^"+$("#FTPSrvPortNo").val()+"^"+$("#FTPSrvUserName").val()+"^"+$("#FTPSrvUserCode").val()+"^"+$("#FTPFolderName").val()+"^"+$("#FTPType").val()+"^"+$("#FTPLocalPath").val()+"^"+$("#FTPActive").combobox('getValue')
+						 data:$("#FTPSrvIP").val()+"^"+$("#FTPSrvPortNo").val()+"^"+$("#FTPSrvUserName").val()+"^"+$("#FTPSrvUserCode").val()+"^"+$("#FTPFolderName").val()+"^"+$("#FTPType").val()+"^"+$("#FTPLocalPath").val()+"^"+$("#FTPActive").combobox('getValue')+"^"+$("#FTPHttpsPortNo").val()
 					},function(success){
 						if(success>=0)
 						{
 							ftpDlgObj.close();
 							ftpListDataObj.load();
-							$.messager.alert("æç¤º","æ·»åŠ æˆåŠŸï¼", 'info');
+							$.messager.alert("ÌáÊ¾","Ìí¼Ó³É¹¦£¡", 'info');
 						}else
 						{
-							$.messager.alert("æç¤º","è¡€é€PDFæœåŠ¡å™¨æ·»åŠ å¤±è´¥ï¼", "error");
+							$.messager.alert("ÌáÊ¾","ÑªÍ¸PDF·şÎñÆ÷Ìí¼ÓÊ§°Ü£¡", "error");
 						}					
 					})
 				}
 			},{
-				text:"å…³é—­",
+				text:"¹Ø±Õ",
 				handler:function(){
 					ftpDlgObj.close();
 				}
@@ -87,8 +88,8 @@ $(function(){
 		})
 	}
 	
-	//ä¿®æ”¹
-	var UpdateHandler=function(id,FTPSrvIP,FTPSrvPortNo,FTPSrvUserName,FTPSrvUserCode,FTPFolderName,FTPType,FTPActive,FTPLocalPath)
+	//ĞŞ¸Ä
+	var UpdateHandler=function(id,FTPSrvIP,FTPSrvPortNo,FTPSrvUserName,FTPSrvUserCode,FTPFolderName,FTPType,FTPActive,FTPLocalPath,FTPHttpsPortNo)
 	{
 		$("#FTPSrvIP").val(FTPSrvIP);
 		$("#FTPSrvPortNo").val(FTPSrvPortNo);
@@ -98,35 +99,36 @@ $(function(){
 		$("#FTPType").val(FTPType);
 		$("#FTPActive").combobox('setValue',FTPActive);
 		$("#FTPLocalPath").val(FTPLocalPath);
+		$("#FTPHttpsPortNo").val(FTPHttpsPortNo);
 		$("#ftpDlg").show();
 		
 		var ftpDlgObj=$HUI.dialog("#ftpDlg",{
 			iconCls:'icon-w-edit',
 			resizable:true,
-			title:'ä¿®æ”¹è¡€é€PDFä¸Šä¼ æœåŠ¡å™¨',
+			title:'ĞŞ¸ÄÑªÍ¸PDFÉÏ´«·şÎñÆ÷',
 			modal:true,
 			buttons:[{
-				text:"ä¿å­˜",
+				text:"±£´æ",
 				handler:function(){
 
 						var datas=$.m({
 							ClassName:"web.DHCBPPDFConfig",
 							MethodName:"UpdateFTP",
 							bppId:id,
-							data:$("#FTPSrvIP").val()+"^"+$("#FTPSrvPortNo").val()+"^"+$("#FTPSrvUserName").val()+"^"+$("#FTPSrvUserCode").val()+"^"+$("#FTPFolderName").val()+"^"+$("#FTPType").val()+"^"+$("#FTPLocalPath").val()+"^"+$("#FTPActive").combobox('getValue')
+							data:$("#FTPSrvIP").val()+"^"+$("#FTPSrvPortNo").val()+"^"+$("#FTPSrvUserName").val()+"^"+$("#FTPSrvUserCode").val()+"^"+$("#FTPFolderName").val()+"^"+$("#FTPType").val()+"^"+$("#FTPLocalPath").val()+"^"+$("#FTPActive").combobox('getValue')+"^"+$("#FTPHttpsPortNo").val()
     					},function(success){
 							if(success>=0)
 							{
 								ftpDlgObj.close();
 								ftpListDataObj.load();
-								$.messager.alert("æç¤º","ä¿®æ”¹æˆåŠŸï¼", 'info');
+								$.messager.alert("ÌáÊ¾","ĞŞ¸Ä³É¹¦£¡", 'info');
 							}else{
-								$.messager.alert("æç¤º","è¡€é€PDFæœåŠ¡å™¨æ›´æ–°å¤±è´¥ï¼", "error");
+								$.messager.alert("ÌáÊ¾","ÑªÍ¸PDF·şÎñÆ÷¸üĞÂÊ§°Ü£¡", "error");
 							}					
 					})
 				}
 			},{
-				text:"å…³é—­",
+				text:"¹Ø±Õ",
 				handler:function(){
 					ftpDlgObj.close();
 				}
@@ -145,20 +147,21 @@ $(function(){
 			bppId:''
 		},
         columns:[[
-			{ field: "BPPID", title: "ç³»ç»Ÿå·", width: 80 },
-			{ field: "FTPSrvIP", title: "FTPæœåŠ¡å™¨IP", width: 150 },
-			{ field: "FTPSrvPortNo", title: "ç«¯å£å·", width: 150 },
-			{ field: "FTPSrvUserName", title: "ç”¨æˆ·å", width: 150 },
-			{ field: "FTPSrvUserCode", title: "å¯†ç ", width: 100,
+			{ field: "BPPID", title: "ÏµÍ³ºÅ", width: 80 },
+			{ field: "FTPSrvIP", title: "FTP·şÎñÆ÷IP", width: 150 },
+			{ field: "FTPSrvPortNo", title: "¶Ë¿ÚºÅ", width: 150 },
+			{ field: "FTPSrvUserName", title: "ÓÃ»§Ãû", width: 150 },
+			{ field: "FTPSrvUserCode", title: "ÃÜÂë", width: 100,
 			 formatter: function(value, row, index) {
 				return "******";
 			 }
 		     },
-			{ field: "FTPFolderName", title: "æ–‡ä»¶å", width: 100 },
-			{ field: "FTPType", title: "æ–‡ä»¶ç±»å‹", width: 100 },
-			{ field: "FTPLocalPath", title: "æœ¬åœ°è·¯å¾„", width: 150 },
-			{ field: "FTPActive", title: "æ˜¯å¦æ¿€æ´»", width: 120, hidden:true},
-			{ field: "FTPActiveDesc", title: "æ˜¯å¦æ¿€æ´»", width: 120 }
+			{ field: "FTPFolderName", title: "ÎÄ¼şÃû", width: 100 },
+			{ field: "FTPType", title: "ÎÄ¼şÀàĞÍ", width: 100 },
+			{ field: "FTPLocalPath", title: "±¾µØÂ·¾¶", width: 150 },
+			{ field: "FTPActive", title: "ÊÇ·ñ¼¤»î", width: 120, hidden:true},
+			{ field: "FTPActiveDesc", title: "ÊÇ·ñ¼¤»î", width: 120 },
+			{ field: "FTPHttpsPortNo", title: "»ñÈ¡Â·¾¶", width: 120 }
         ]],
 		pagination:true,
 		pageSize: 20,
@@ -168,39 +171,39 @@ $(function(){
 		fitColumns:true,
 		headerCls:"panel-header-gray",
 		singleSelect:true,
-		checkOnSelect:true,	///easyuiå–æ¶ˆå•å‡»è¡Œé€‰ä¸­çŠ¶æ€
+		checkOnSelect:true,	///easyuiÈ¡Ïûµ¥»÷ĞĞÑ¡ÖĞ×´Ì¬
 		selectOncheck:true,
         iconCls:'icon-paper',
         rownumbers: true,
 		toolbar:[{
 			iconCls: 'icon-add',
-		    text:'æ–°å¢',
+		    text:'ĞÂÔö',
 		    handler: function(){
 				InsertHandler();
 			}
         },{
 	        iconCls: 'icon-write-order',
-	        text:'ä¿®æ”¹',
+	        text:'ĞŞ¸Ä',
 		    handler: function(){
 				var row=ftpListDataObj.getSelected();
 				if(row)
 				{
-					UpdateHandler(row.BPPID,row.FTPSrvIP,row.FTPSrvPortNo,row.FTPSrvUserName,row.FTPSrvUserCode,row.FTPFolderName,row.FTPType,row.FTPActive,row.FTPLocalPath);
+					UpdateHandler(row.BPPID,row.FTPSrvIP,row.FTPSrvPortNo,row.FTPSrvUserName,row.FTPSrvUserCode,row.FTPFolderName,row.FTPType,row.FTPActive,row.FTPLocalPath,row.FTPHttpsPortNo);
 				}
 				else{
-					$.messager.alert("æç¤º", "è¯·å…ˆé€‰æ‹©è¦ä¿®æ”¹çš„è®°å½•ï¼", 'error');
+					$.messager.alert("ÌáÊ¾", "ÇëÏÈÑ¡ÔñÒªĞŞ¸ÄµÄ¼ÇÂ¼£¡", 'error');
 					return;
 				}
 			}
         },{ 
-			//åˆ é™¤
+			//É¾³ı
 		    iconCls: 'icon-cancel',
-		    text:'åˆ é™¤',
+		    text:'É¾³ı',
 		    handler: function(){
 				var row=ftpListDataObj.getSelected();
 				if(row)
 				{
-					$.messager.confirm("ç¡®è®¤","ç¡®å®šåˆ é™¤ï¼Ÿ",function(r){
+					$.messager.confirm("È·ÈÏ","È·¶¨É¾³ı£¿",function(r){
 						if(r)
 						{
 							$.m({
@@ -213,14 +216,14 @@ $(function(){
 								{
 									ftpListDataObj.load();
 								}else{
-									$.messager.alert("æç¤º","åˆ é™¤å¤±è´¥ï¼é”™è¯¯ä»£ç ï¼š"+success, "error");
+									$.messager.alert("ÌáÊ¾","É¾³ıÊ§°Ü£¡´íÎó´úÂë£º"+success, "error");
 								}
 							})
 						}
 					})
 				}
 				else{
-					$.messager.alert("æç¤º", "è¯·å…ˆé€‰æ‹©è¦åˆ é™¤çš„è®°å½•ï¼", 'error');
+					$.messager.alert("ÌáÊ¾", "ÇëÏÈÑ¡ÔñÒªÉ¾³ıµÄ¼ÇÂ¼£¡", 'error');
 					return;
 				}
 			}

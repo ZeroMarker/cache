@@ -1,4 +1,9 @@
 ﻿$(function(){
+	$('#searchInput').searchbox({ 
+	    searcher:function(value,name){ 
+	    	serachRecord();
+	    }          
+	  });	
 	getCategory();	
 });
 
@@ -27,6 +32,10 @@ function getCategory()
 //加载页面病历目录
 function setCategory(data)
 {
+    if (data.length == 0)
+    {
+        return;
+    }
     var isSelected = false;
 	for (var i=0;i<data.length;i++)
 	{
@@ -43,7 +52,7 @@ function setCategory(data)
 				$(link).attr("emrDocId",data[i].children[0].emrDocId);
 				$(link).attr("type",data[i].children[0].type);
 				$(link).attr("characteristic",data[i].children[0].characteristic);
-				
+				$(link).attr("onclick","javascript:clickCategory(this)");
 				$(li).append(link);
 				$('.navcategory').append(li);
                 if ((historyDefaultSelectDocID !== "")&&(historyDefaultSelectDocID == data[i].children[0].emrDocId))
@@ -65,6 +74,7 @@ function setCategory(data)
 					$(link).attr("emrDocId",data[i].children[j].emrDocId);
 					$(link).attr("type",data[i].children[j].type);
 					$(link).attr("characteristic",data[i].children[j].characteristic);
+					$(link).attr("onclick","javascript:clickCategory(this)");
 					$(tmpli).append(link);
 					$('.navcategory').append(tmpli);
 					if ((historyDefaultSelectDocID !== "")&&(historyDefaultSelectDocID == data[i].children[j].emrDocId))
@@ -85,6 +95,7 @@ function setCategory(data)
 			$(link).attr("emrDocId",data[i].emrDocId);
 			$(link).attr("type",data[i].type);
 			$(link).attr("characteristic",data[i].characteristic);
+			$(link).attr("onclick","javascript:clickCategory(this)");
 			$(li).append(link);
 			$('.navcategory').append(li);	
             if ((historyDefaultSelectDocID !== "")&&(historyDefaultSelectDocID == data[i].emrDocId))
@@ -106,11 +117,18 @@ function setCategory(data)
 	}	
 }
 //目录点击事件
-$(".navcategory li a").live('click',function(){
+/* $(".navcategory li a").click(function(){
 	//选中文档目录
 	selectListRecord($(this).attr("id"));
 	loadRecords(this);
-});
+}); 
+*/
+
+function clickCategory(obj)
+{
+	selectListRecord(obj.id);
+	loadRecords(obj);
+}
 
 //选中文档目录
 function selectListRecord(id)
@@ -147,7 +165,8 @@ function initRecord(obj)
 	var tempParam = setTempParam(obj);
 	var src = "emr.record.browse.browsform.editor.csp?id="+tempParam.id+"&text="+tempParam.text+"&chartItemType="+tempParam.chartItemType
         + "&pluginType="+tempParam.pluginType+"&emrDocId="+tempParam.emrDocId
-        + "&characteristic="+tempParam.characteristic + "&status=BROWSE" + "&episodeId=" + episodeID + "&patientId=" + patientID + "&Action=" + action;	
+        + "&characteristic="+tempParam.characteristic + "&status=BROWSE" + "&episodeId=" + episodeID + "&patientId=" + patientID + "&Action=" + action
+        + "&MWToken="+getMWToken() ;	
 
 	var content = "<iframe id='frameBrowseCategory' src='" + src + "' scrolling='no' width='100%' height='100%' frameborder='0'></iframe>";
 	$('#InterfaceBrowseCategory').append(content);
@@ -177,45 +196,18 @@ function GetBrowseStatus(episodeID)
 	return result;
 }
 
-//点击控件事件
-function my_click(obj, myid)
-{
-	if (document.getElementById(myid).value == document.getElementById(myid).defaultValue)
-	{
-		document.getElementById(myid).value = '';
-		obj.style.color='#000';
-	}
-}
-//离开控件事件
-function my_blur(obj, myid)
-{
-	if (document.getElementById(myid).value == '')
-	{
-		document.getElementById(myid).value = document.getElementById(myid).defaultValue;
-		obj.style.color='#999';
-	}
-}
-// 回车事件
-function my_keyDown()
-{
-	if(event.keyCode==13)
-    {
-		serachRecord();
-    }
+///查询//////////////////////////////////////////////////////////
+//搜索框回车查询
+$('#searchInput').searchbox({ 
+    searcher:function(value,name){ 
+    	serachRecord();
+    }          
+  });
 
-}
-//病历检索
-$("#searchRecord").click(function(){
-	serachRecord();
-});
 //检索当前病历
 function serachRecord()
 {
-	var serachValue = $("#searchInput").val();
-	if (serachValue == $("#searchInput")[0].defaultValue)
-	{
-		serachValue = "";
-	}
+	var serachValue = $('#searchInput').searchbox('getValue');
 	$("#ulcategory li").hide();
 	var $Category = $("#ulcategory li a").filter(":contains('"+$.trim(serachValue)+"')");
 	$Category.parent().show();

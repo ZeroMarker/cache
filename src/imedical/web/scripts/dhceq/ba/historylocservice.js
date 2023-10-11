@@ -9,11 +9,18 @@ function initDocument()
 	initUserInfo();
 	initMessage("EquipService");
 	defindTitleStyle();
+	initLookUp();  //add by wy 2022-7-12 2790212初始化放大镜
 	initButtonWidth();
 	initButton(); //按钮初始化
 	initOrdCat();
 	initOrdItemCat("");
 	findServiceItem();
+	if(getElementValue("SLocDR")!="")  //add by wy 2022-7-18 2790212给科室默认赋值
+	{
+		var result=tkMakeServerCall("web.DHCEQCommon","GetTrakNameByID","dept",getElementValue("SLocDR"))
+		setElement("SLoc",result)
+		}
+
 	jQuery("#BDownload").linkbutton({iconCls: 'icon-w-update'});
 	jQuery("#BDownload").on("click", BDownload_Clicked);
 };
@@ -79,6 +86,18 @@ function checkboxOnChange(Opt,rowIndex)
 	var row = jQuery('#DHCEQHistoryLocService').datagrid('getRows')[rowIndex];
 	if (row)
 	{
+		///modified by ZY0282 20211112
+		if ((row.TSingleFlag=="Y")&&(row.TCount>1))
+		{
+			alertShow("当前服务项是设备单一使用,已经被使用，不能再选!");
+			$.each(row,function(key,val){
+				if (Opt==key)
+				{
+					row.Opt="N"
+				}
+			})
+			return;
+		}
 		$.each(row,function(key,val){
 			if (Opt==key)
 			{
@@ -177,6 +196,10 @@ function findServiceItem()
 				BussType:getElementValue("BussType"),
 				SourceType:getElementValue("SourceType"),
 				SourceID:getElementValue("SourceID"),
+				vIncludeInput:getElementValue("IncludeInput"),	/////modified by ZY0257 20210325
+				Code:getElementValue("Code"),  //add by wy 2022-6-29
+				Desc:getElementValue("Desc")   //add by wy 2022-6-29 2790212
+				
 		},
 		rownumbers: true,  //如果为true，则显示一个行号列。
 		singleSelect:false,
@@ -189,4 +212,13 @@ function findServiceItem()
 		pageList:[25,50,75,100],
 	    onClickRow: function (rowIndex,rowData) {}
 	});
+}
+//add by wy 2022-7-12 2790212放大镜赋值和清除
+function setSelectValue(vElementID,item)
+{
+	setElement(vElementID+"DR",item.TRowID)
+}
+function clearData(vElementID)
+{
+	setElement(vElementID+"DR","")
 }

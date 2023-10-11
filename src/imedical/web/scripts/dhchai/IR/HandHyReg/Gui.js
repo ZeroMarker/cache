@@ -9,6 +9,9 @@ function InitHandHyRegWin(){
 	$("#cboHospital").select2();
 	$("#cboObsLoc").data("param",$.form.GetValue("cboHospital")+"^^I^W^1");
 	$.form.SelectRender("cboObsLoc");
+	$.form.SelectRender("cboObsType");
+	$("#cboObsType option:selected").next().attr("selected", true)
+	$("#cboObsType").select2();
 	$.form.SelectRender("cboObsPage");
 	$("#cboObsPage option:selected").next().attr("selected", true)
 	$("#cboObsPage").select2();
@@ -115,7 +118,8 @@ function InitHandHyRegWin(){
 				d.Arg1 = $.form.GetValue("cboObsLoc");
 				d.Arg2 = $.form.GetValue("ObsDate");
 				d.Arg3 = $.form.GetValue("cboObsPage");
-				d.ArgCnt = 3;
+				d.Arg4 = $.form.GetValue("cboObsType");
+				d.ArgCnt = 4;
 			}
 		},
 		"columns": [

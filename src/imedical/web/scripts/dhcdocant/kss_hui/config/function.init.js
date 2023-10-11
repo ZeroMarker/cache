@@ -55,6 +55,10 @@
 			if(this.tabPanel.tabs("exists",pTitle)){
 				this.tabPanel.tabs("select", pTitle);
 			}else{
+                if ('undefined'!==typeof websys_getMWToken){
+                    if (pUrl.indexOf("?")==-1) pUrl += "?a=1"
+                    pUrl += "&MWToken="+websys_getMWToken();
+                }
 				this.tabPanel.tabs("add",{
 					title:pTitle,
 					content:'<iframe scrolling="no" frameborder="no"  src="' + pUrl + '" style="width:100%;height:100%"></iframe>',
@@ -65,6 +69,10 @@
 			if(this.tabBasedata.tabs("exists",pTitle)){
 				this.tabBasedata.tabs("select", pTitle);
 			}else{
+                if ('undefined'!==typeof websys_getMWToken){
+                    if (pUrl.indexOf("?")==-1) pUrl += "?a=1"
+                    pUrl += "&MWToken="+websys_getMWToken();
+                }
 				this.tabBasedata.tabs("add",{
 					title:pTitle,
 					content:'<iframe scrolling="no" frameborder="no"  src="' + pUrl + '" style="width:100%;height:100%"></iframe>',
@@ -80,8 +88,12 @@
 	$(document).ready(function(){
 		var Tab = new TabControl();
 		Tab.init();
-		var functionHomeUrl = "dhcant.kss.config.function.home.csp";
-		var baseDataHomeUrl = "dhcant.kss.config.basedata.home.csp"
+		var functionHomeUrl = "dhcant.kss.config.function.home.csp?a=1";
+		var baseDataHomeUrl = "dhcant.kss.config.basedata.home.csp?a=1"
+        if ('undefined'!==typeof websys_getMWToken){
+            functionHomeUrl += "&MWToken="+websys_getMWToken();
+            baseDataHomeUrl += "&MWToken="+websys_getMWToken();
+        }
 		Tab.tabPanel.tabs("add",{
 			title:"ึ๗าณ",
 			content:'<iframe scrolling="no" frameborder="no"  src="' + functionHomeUrl + '" style="width:100%;height:100%"></iframe>',

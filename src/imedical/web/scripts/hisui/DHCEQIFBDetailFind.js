@@ -9,6 +9,10 @@ function InitPage()
 	SetElement("Status",GetElementValue("GetStatus"));
 	KeyUp("Mode^Vendor");
 	Muilt_LookUp("Mode^Vendor");
+	//add by lmm 2023-02-01 ¼«¼òUI¸ÄÔì
+	initButtonColor(); 
+	initPanelHeaderStyle();
+	
 }
 
 function GetModeDR(value)

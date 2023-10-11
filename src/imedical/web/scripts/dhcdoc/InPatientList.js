@@ -1,24 +1,21 @@
 $(document).ready(function(){
 	$(".SelectedLiCls").removeClass("SelectedLiCls");
 	if (ServerObj.isNurseLogin!="1"){
-		$.ajax({ 
-		  type:'get', 
-		  url:'../web.DHCDocInPatientListNew.cls?action=GetPatCount&LocID=' + session['LOGON.CTLOCID']+"&UserId="+session['LOGON.USERID'], 
-		  success:function(data,textStatus){ 
-		  	var obj = eval('(' + data + ')');
+		$.cm({
+			ClassName:"web.DHCDocInPatientListNew",
+			MethodName:"GetPatCount",
+		    locID:session['LOGON.CTLOCID'],
+		    UserId:session['LOGON.USERID']
+		},function(obj){
 		  	for ( var ind in obj[0]) {
 			  	$("#"+ind)[0].innerHTML=obj[0][ind];
 			}
-		    //$("#CurLocInPatCount")[0].innerHTML=obj[0].CurLocPatCount
+			//$("#CurLocInPatCount")[0].innerHTML=obj[0].CurLocPatCount
 		    //$("#CurLocCriticallyPatCount")[0].innerHTML=obj[0].CriticallyPatConut	
-		  }
 		});
-	    $("#InPatList").addClass("SelectedLiCls");
-		initPatientList("InPatList");
-	}else{
-		initPatientList("CurWarPatList");
-		$("#CurWarPatList").addClass("SelectedLiCls");
 	}
+    $('#'+ServerObj.InitPatListType).addClass("SelectedLiCls");
+	initPatientList(ServerObj.InitPatListType);
 	$("#Tool_Search").click(OpenSearchPatCondition);
 	$("#Tool_Refresh").click(RefreshPatientList);
 	$("ul>li>a").click(ReLoadPatientList);
@@ -70,7 +67,8 @@ function initPatientList(id){
 	else{
 		return false;
 	}
-	src=src+"?PatListType="+PatListType;
+	src=src+"?PatListType="+PatListType+'&InitPatListTypeRadio='+ServerObj.InitPatListTypeRadio;
+	if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
 	var patientList= '<iframe id="framePatientList" src="'+src+'" width="100%" height="100%"'+
                      'marginheight="0" marginwidth="0" scrolling="no" align="middle" ></iframe>'	
      window.setTimeout(function(){

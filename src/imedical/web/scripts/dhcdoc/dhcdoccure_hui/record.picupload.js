@@ -44,94 +44,108 @@ function Page_OnKeyDown(e){
         return false;
     }
 }
+
 function UploadPicFile(){
 	var DCRRowId=$("#DCRRowId").val();
 	if(DCRRowId==""){
-		$.messager.alert('提示',"未获取到治疗记录,请重试.");
+		$.messager.alert('提示',"未获取到治疗记录,请重试.","info");
 		return false;		
 	}
-	var PicCount=5;
-	for(i=1;i<=PicCount;i++){
-		var TageName="Pic"+i;
-		var PicName="图片"+i;
-    	var FileObj =$HUI.filebox('#'+TageName).files();
-    	var FilePath=FileObj[0];
-    	//alert(!FilePath+",,,"+typeof(FilePath))
-    	if((!FilePath)||(typeof(FilePath)=="undefined")){
-			continue;
+	var PicObj=$HUI.filebox("#Pic");
+	var PicName=PicObj.options().oldValue;
+    if(PicName.indexOf("^")>-1){
+		$.messager.alert('提示',PicName+"图片名称不宜包含系统限定字符'^'.","info");
+		return false; 
+	}
+	var FileObj =PicObj.files();
+	if (FileObj.length>10) {
+		$.messager.alert('提示',"一次上传图片不能大于10张.","info");
+		return false; 
+	}else if (FileObj.length==0) {
+		$.messager.alert('提示',"请选择需要上传的图片.","info");
+		return false; 
+	}
+	$.messager.progress({
+	    title:"提示",
+	    msg:"请稍等,正在上传保存....",
+	    text:"上传中..."
+    })
+    var eachCount=0;
+	$.each(FileObj, function(index, FilePath){
+		if((!FilePath)||(typeof(FilePath)=="undefined")){
+	    }else {
+		    convertImgToBase64(FilePath,function(base64Img,file){
+		    	if(base64Img!=""){
+			    	var DCRRowId=$("#DCRRowId").val();
+					var PicName=file.name;
+				    var ret=$.cm({
+						ClassName:"DHCDoc.DHCDocCure.Record",
+						MethodName:"SaveRecordPic",
+						'DCRRowID':DCRRowId,
+						'PicName':PicName,
+						'PicData':base64Img,
+						'UserID':session['LOGON.USERID'],
+						dataType:"text"
+					},false)
+					if (ret!=0){
+						if(ret=="-100"){ret="保存图片数据失败!"}
+						else if(ret=="-101"){ret="更新保存图片标记失败!"}
+						$.messager.alert('提示',PicName+"上传失败,"+ret,"warning");
+					}
+					eachCount++;
+					if(eachCount==FileObj.length){
+						AfterUpload();	
+					}else{
+						$.messager.progress('close');	
+					}
+		    	}
+		    });
 	    }
-	    var PicName=$HUI.filebox('#'+TageName).options().oldValue;
-	    var PicObj=$HUI.filebox('#'+TageName);
-	    if(PicName.indexOf("^")>-1){
-			$.messager.alert('提示',PicName+"图片名称不宜包含系统限定字符'^'.");
-			continue; 
+	})
+	function AfterUpload(){
+		$.messager.progress('close');
+		if (websys_showModal("options")) {
+			websys_showModal('options').CureRecordDataGridLoad();	
 		}
-    	convertImgToBase64(FilePath,function(base64Img,picobj){
-	    	if(base64Img!=""){
-		    	//base64Img=base64Img.split(",")[1]
-		    	var DCRRowId=$("#DCRRowId").val();
-		    	/*var onelen=50000;
-				var loop=Math.ceil(base64Img.length/onelen)
-				var base64ImgArr=new Array();
-				for(var i=0;i<5;i++){
-					base64ImgArr[i]=base64Img.substring(i*onelen,onelen)
-				}*/
-				var PicName=picobj.options().oldValue;
-			    var ret=$.cm({
-					ClassName:"DHCDoc.DHCDocCure.Record",
-					MethodName:"SaveRecordPic",
-					'DCRRowID':DCRRowId,
-					'PicName':PicName,
-					'PicData':base64Img,
-					'UserID':session['LOGON.USERID'],
-					dataType:"text"
-				},false)
-				//var ret=tkMakeServerCall("DHCDoc.DHCDocCure.Record","SaveRecordPic",DCRRowId,name,base64Img,session['LOGON.USERID'])
-				if (ret!=0){
-					if(ret=="-100"){ret="保存图片数据失败!"}
-					else if(ret=="-101"){ret="更新保存图片标记失败!"}
-					$.messager.alert('提示',PicName+"上传失败,"+ret);
-				}else{
-					$.messager.alert('提示',PicName+"上传成功");
-					picobj.clear();
-					websys_showModal('options').CureRecordDataGridLoad();	
-					//websys_showModal("close");
-				}
-	    	}
-	    },PicObj);
+		PicObj.clear();	
 	}
 }
 
-function convertImgToBase64(file,callback,picobj){
+function convertImgToBase64(file,callback){
 	try{
 		var reader = new FileReader();
-		var AllowImgFileSize = 2100000; //上传图片最大值(单位字节)（ 2 M = 2097152 B ）超过2M上传失败
+		var AllowImgFileSize = 10485760; //上传图片最大值(单位字节)（ 1 M = 1048576 B ）超过2M上传失败
 		var imgUrlBase64;
 		var base64Img="";
 		if (file) {
-			if(!/.(gif|jpg|jpeg|png|gif|jpg|png)$/.test(file.name)){
-	            $.messager.alert('提示',"上传图片类型必须是.gif,jpeg,jpg,png中的一种!");
+			var fname=file.name.toLowerCase();
+			if(!/.(gif|jpg|jpeg|png|gif|jpg|png)$/.test(fname)){
+				$.messager.progress('close');
+	            $.messager.alert('提示',"上传图片类型必须是.gif,jpeg,jpg,png中的一种!","info");
 	            return false;
 	        }
 			//将文件以Data URL形式读入页面  
 			imgUrlBase64 = reader.readAsDataURL(file);
 			reader.onload = function (e) {
 				if (AllowImgFileSize != 0 && AllowImgFileSize < reader.result.length) {
-					$.messager.alert('提示',picname+"请上传不大于2M的图片！");
+					$.messager.progress('close');
+					$.messager.alert('提示',picname+"请上传不大于10M的图片！","info");
 					return false;
 				}else{
 					base64Img=reader.result;
-					callback.call(this, base64Img,picobj);
+					callback.call(this, base64Img,file);
 					return true;
 				}
 			}
 		}else{
-			$.messager.alert('提示',picname+"获取文件错误!");
+			$.messager.progress('close');
+			$.messager.alert('提示',picname+"获取文件错误!","warning");
 			return false;
 		}
 		return true;
 	}catch(e){
-		alert(picname+e.message)
+		$.messager.progress('close');
+		$.messager.alert('提示',picname+e.message,"error");
 		return false;
 	}
 }

@@ -1,7 +1,7 @@
 ///Creator:sufan
 ///date:2016/10/28
 var url="dhcpha.clinical.action.csp";
-var Array = [{ "value": "Save", "text": "完成" }];
+var StatusArray = [{ "value": "Save", "text": $g('完成') }];
 var HospID=session['LOGON.HOSPID']
 function initPageDefault()
 {
@@ -15,19 +15,19 @@ function initMedrecordlist()
 {
 	//  定义columns
 	var columns=[[
-		{field:'PatientID',title:'病人ID',width:80,align:'center',hidden:'true'},
-		{field:'Admdr',title:'就诊号',width:80,align:'center',hidden:'true'},
-		{field:'Patno',title:'登记号',width:80,align:'center'},
-		{field:'PatName',title:'姓名',width:80,align:'center'},
-		{field:'SexDesc',title:'性别',width:60,align:'center'},
-		{field:'PatAge',title:'年龄',width:60,align:'center'},
-		{field:'CtlocDesc',title:'就诊科室',width:100,align:'center'},
-		{field:'WardDesc',title:'就诊病区',width:100,align:'center'},
-		{field:"MainDiag",title:'诊断',width:300,align:'center'},
-		{field:'Episodtype',title:'病人类型',width:60,align:'center'},
-		{field:'status',title:'药历状态',width:100,align:'center'},
-		{field:"Createuser",title:'药师',width:200,align:'center'},
-		{field:'operate',title:'操作',width:100,align:'center',formatter:getpatientrecord},
+		{field:'PatientID',title:$g('病人ID'),width:80,align:'center',hidden:'true'},
+		{field:'Admdr',title:$g('就诊号'),width:80,align:'center',hidden:'true'},
+		{field:'Patno',title:$g('登记号'),width:80,align:'center'},
+		{field:'PatName',title:$g('姓名'),width:80,align:'center'},
+		{field:'SexDesc',title:$g('性别'),width:60,align:'center'},
+		{field:'PatAge',title:$g('年龄'),width:60,align:'center'},
+		{field:'CtlocDesc',title:$g('就诊科室'),width:100,align:'center'},
+		{field:'WardDesc',title:$g('就诊病区'),width:100,align:'center'},
+		{field:"MainDiag",title:$g('诊断'),width:300,align:'center'},
+		{field:'Episodtype',title:$g('病人类型'),width:60,align:'center'},
+		{field:'status',title:$g('药历状态'),width:100,align:'center'},
+		{field:"Createuser",title:$g('药师'),width:200,align:'center'},
+		{field:'operate',title:$g('操作'),width:100,align:'center',formatter:getpatientrecord},
 	]];
 	// 初始化 datagrid
 	$('#medrecordlist').datagrid({
@@ -39,7 +39,7 @@ function initMedrecordlist()
 		pageSize:20,  		// 每页显示的记录条数
 		pageList:[20,40],   // 可以设置每页记录条数的列表
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true
 	});
 	$('#medrecordlist').datagrid('loadData', {total:0,rows:[]}); 
@@ -49,7 +49,7 @@ function initMedrecordlist()
 function initButton()
 {
 	// 查询按钮
-	$('a:contains("查询")').bind("click",querymedrecord);
+	$('a:contains('+$g("查询")+')').bind("click",querymedrecord);
 	
 	// 回车事件
 	$("#patno").bind("keypress",function(event){
@@ -80,10 +80,10 @@ function getpatno(patno)
 function initCombobox()
 {
 	// 药历状态
-	var StatusCombobox = new ListCombobox("statue",'',Array,{panelHeight:"auto",editable:false});
+	var StatusCombobox = new ListCombobox("statue",'',StatusArray,{panelHeight:"auto",editable:false});
 	StatusCombobox.init();
-	$("#statue").combobox("setValue","Save");
-
+	//$("#statue").combobox("setValue","Save");
+   
 	// 病区
 	/*var uniturl = LINK_CSP+"?ClassName=web.DHCCM.QueryPatient&MethodName=";	
 	var url = uniturl+"SelAllWard";
@@ -168,7 +168,7 @@ function getpatientrecord(value, rowData, rowIndex)
     
     	} */
     	var html = "";
-			html = "<a href='#' onclick=\"newCreateConsultWin('"+patientID+"','"+episodeID+"','"+patientName+"','"+episodeType+"','"+episodeLocID+"')\" style='margin:0px 5px;font-weight:bold;color:blue;text-decoration:none;'>查看药历列表</a>";
+			html = "<a href='#' onclick=\"newCreateConsultWin('"+patientID+"','"+episodeID+"','"+patientName+"','"+episodeType+"','"+episodeLocID+"')\" style='margin:0px 5px;font-weight:bold;color:blue;text-decoration:none;'>"+$g("查看药历列表")+"</a>";
     return html;
 }
 
@@ -178,7 +178,7 @@ function newCreateConsultWin(patientID,episodeID,patientName,episodeType,episode
 
 	$('body').append('<div id="winonline"></div>');
 	$('#winonline').window({
-		title:patientName+'-药历列表',
+		title:patientName+"-"+$g('药历列表'),
 		collapsible:true,
 		border:false,
 		closed:"true",

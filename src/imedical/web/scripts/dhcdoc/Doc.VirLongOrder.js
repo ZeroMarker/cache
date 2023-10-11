@@ -1,21 +1,23 @@
-ï»¿var PageLogicObj={
+var PageLogicObj={
 	m_OrderTableDataGrid:"",
 	m_OrderDetailTableDataGrid:"",
 	Order_selRowIndex:"",
-	OrderDetail_selRowIndex:""
+	OrderDetail_selRowIndex:"",
+	HasGifDocList:new Array()		//»º´æÊÇ·ñÓĞÇ©ÃûÍ¼Æ¬
 }
 var GridParams={};
 var OrderDetailGridParams={};
 var DATE_FORMAT;
 $(function(){
-	//é¡µé¢æ•°æ®åˆå§‹åŒ–
+	//Ò³ÃæÊı¾İ³õÊ¼»¯
 	Init();
-	//é¡µé¢å…ƒç´ åˆå§‹åŒ–
+	//Ò³ÃæÔªËØ³õÊ¼»¯
 	PageHandle();
 	LoadOrderTableDataGrid();
 });
 
 function Init(){
+	InitPatInfoBanner(ServerObj.EpisodeID);
 	PageLogicObj.m_OrderTableDataGrid=InitOrderTableDataGrid();
 	PageLogicObj.m_OrderDetailTableDataGrid=InitOrderDetailTableDataGrid();
 }
@@ -28,14 +30,14 @@ function PageHandle(){
     	DATE_FORMAT= new RegExp("(([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})-(((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)-(0[1-9]|[12][0-9]|30))|(02-(0[1-9]|[1][0-9]|2[0-8]))))|((([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))-02-29)");
 	}
 	
-	//æè¿°
+	//ÃèÊö
 	$('#orderDesc').keydown(function(e){
 		if(e.keyCode==13){
 			GridParams.inputOrderDesc=e.target.value;
 			LoadOrderTableDataGrid();
 		}
 	});
-	//å¼€å‡ºç§‘å®¤
+	//¿ª³ö¿ÆÊÒ
 	var cbox = $HUI.combobox("#locDesc", {
 		valueField: 'id',
 		textField: 'text',
@@ -46,7 +48,7 @@ function PageHandle(){
 			LoadOrderTableDataGrid();
 		}
 	});
-	//åŒ»å˜±å•å‹
+	//Ò½Ööµ¥ĞÍ
 	var cbox = $HUI.combobox("#nursebillDesc", {
 		valueField: 'id',
 		textField: 'text',
@@ -57,7 +59,7 @@ function PageHandle(){
 			LoadOrderTableDataGrid();
 		}
 	});
-	//èŒƒå›´
+	//·¶Î§
 	var cbox = $HUI.combobox("#scopeDesc", {
 		valueField: 'id',
 		textField: 'text',
@@ -68,7 +70,7 @@ function PageHandle(){
 			LoadOrderTableDataGrid();
 		}
 	});
-	//æ’åº
+	//ÅÅĞò
 	var cbox = $HUI.combobox("#OrderSort", {
 		valueField: 'id',
 		textField: 'text',
@@ -122,28 +124,28 @@ function InitOrderTableDataGrid(){
 		CatType:DefaultOrdReSubCat
 	};
 	var OrdToolBar=[{
-            text: 'åœåŒ»å˜±',
+            text: $g('Í£Ò½Öö'),
             iconCls: 'icon-stop-order',
             handler: function() {ShowStopMulOrdWin();}
         },{
-            text: 'åˆ·æ–°',
+            text: $g('Ë¢ĞÂ'),
             iconCls: 'icon-reload',
             handler: function() {LoadOrderTableDataGrid();}
         },{
-            text: 'é¢„è§ˆæ‰“å°',
+            text: $g('Ô¤ÀÀ´òÓ¡'),
             iconCls: 'icon-print',
             handler: function() {PrintClickHandle();}
         }];
 	var columns=[[
-	    {field:'CheckOrd',title:'é€‰æ‹©',checkbox:'true',align:'center',width:70,auto:false},
+	    {field:'CheckOrd',title:'Ñ¡Ôñ',checkbox:'true',align:'center',width:70,auto:false},
 		{field:'TItemStatCode',hidden:true,title:''},
 		{field:'TOeoriOeori',hidden:true,title:''},
 		{field:'PHFreqDesc1',hidden:true,title:''},
 		{field:'TPermission',hidden:true,title:''},
 		{field:'TItemStatCode',hidden:true,title:''},
-		{field:'Priority',title:'åŒ»å˜±ç±»å‹',align:'center',width:80,auto:false},
-		{field:'TStDate',title:'åŒ»å˜±å¼€å§‹æ—¶é—´',align:'center',width:150,auto:false},
-		{field:'TOrderName',title:'åŒ»å˜±',align:'left',width:350,auto:false,
+		{field:'Priority',title:'Ò½ÖöÀàĞÍ',align:'center',width:80,auto:false},
+		{field:'TStDate',title:'Ò½Öö¿ªÊ¼Ê±¼ä',align:'center',width:150,auto:false},
+		{field:'TOrderName',title:'Ò½Öö',align:'left',width:350,auto:false,
 			formatter: function(value,row,index){
  				var inparaOrderDesc=$("#orderDesc").val();
  				if (inparaOrderDesc!=""){
@@ -158,15 +160,15 @@ function InitOrderTableDataGrid(){
 				//return "<span title='" + ordtitle + "' class='hisui-tooltip'>" + value + "</span>";
 			}
 		},
-		{field:'DoseQtyInfo',title:'å‰‚é‡',align:'center',width:80,auto:false},
-		{field:'InstrDesc',title:'ç”¨è¯é€”å¾„',align:'center',width:80,auto:false},
-		{field:'FreqDesc',title:'é¢‘ç‡',align:'center',width:50,auto:false},
-		{field:'TDuratDesc',title:'ç–—ç¨‹',align:'center',width:50,auto:false},
-		//{field:'SumQty',title:'æ€»é‡',align:'center',width:70,auto:false},
-		{field:'OrderPackQty',title:'æ•°é‡',align:'center',width:70,auto:false},
+		{field:'DoseQtyInfo',title:'¼ÁÁ¿',align:'center',width:80,auto:false},
+		{field:'InstrDesc',title:'ÓÃÒ©Í¾¾¶',align:'center',width:80,auto:false},
+		{field:'FreqDesc',title:'ÆµÂÊ',align:'center',width:50,auto:false},
+		{field:'TDuratDesc',title:'ÁÆ³Ì',align:'center',width:50,auto:false},
+		//{field:'SumQty',title:'×ÜÁ¿',align:'center',width:70,auto:false},
+		{field:'OrderPackQty',title:'ÊıÁ¿',align:'center',width:70,auto:false},
 		
-		{field:'TDoctor',title:'å¼€åŒ»å˜±äºº',align:'center',width:80,auto:false},
-		{field:'TStopDate',title:'åœæ­¢æ—¶é—´',align:'center',width:140,auto:false,
+		{field:'TDoctor',title:'¿ªÒ½ÖöÈË',align:'center',width:80,auto:false},
+		{field:'TStopDate',title:'Í£Ö¹Ê±¼ä',align:'center',width:140,auto:false,
 			styler: function(value,row,index){
  				if ((value!="")&&(value!=" ")){
 	 				var stopDate=value.split(" ")[0];
@@ -176,8 +178,8 @@ function InitOrderTableDataGrid(){
 	 			}
  			}
 		},
-		{field:'TStopDoctor',title:'åœæ­¢åŒ»ç”Ÿ',align:'center',width:80,auto:false},
-		{field:'TItemStatDesc',title:'çŠ¶æ€',align:'center',width:80,auto:false,
+		{field:'TStopDoctor',title:'Í£Ö¹Ò½Éú',align:'center',width:80,auto:false},
+		{field:'TItemStatDesc',title:'×´Ì¬',align:'center',width:80,auto:false,
 			formatter:function(value,rec){ 
  				var btn =""; 
  				if (rec.OrderViewFlag=="Y"){
@@ -188,17 +190,17 @@ function InitOrderTableDataGrid(){
 		        return btn;
             }
 		},
-		{field:'TdeptDesc',title:'å¼€å•ç§‘å®¤',align:'center',width:120,auto:false},
-		{field:'TRecDepDesc',title:'æ¥æ”¶ç§‘å®¤',align:'center',width:120,auto:false},
+		{field:'TdeptDesc',title:'¿ªµ¥¿ÆÊÒ',align:'center',width:120,auto:false},
+		{field:'TRecDepDesc',title:'½ÓÊÕ¿ÆÊÒ',align:'center',width:120,auto:false},
 		
-		{field:'OrderType',title:'åŒ»å˜±å­ç±»ç±»å‹',align:'center',width:60,auto:false},
-		{field:'TBillUom',title:'è®¡ä»·å•ä½',align:'center',width:80,auto:false},
-		{field:'GroupSign',title:'ç»„ç¬¦å·',align:'center',width:30,auto:false,
+		{field:'OrderType',title:'Ò½Öö×ÓÀàÀàĞÍ',align:'center',width:60,auto:false},
+		{field:'TBillUom',title:'¼Æ¼Ûµ¥Î»',align:'center',width:80,auto:false},
+		{field:'GroupSign',title:'×é·ûºÅ',align:'center',width:30,auto:false,
 		 styler: function(value,row,index){
  			 return 'color:red;';
 		 }
 		},
-		{field:'OrderId',title:'åŒ»å˜±ID',align:'center',width:120,auto:false,
+		{field:'OrderId',title:'Ò½ÖöID',align:'center',width:120,auto:false,
 			formatter:function(value,rec){  
                var btn = '<a class="editcls" onclick="ordDetailInfoShow(\'' + rec.OrderId + '\')">'+value+'</a>';
 		       return btn;
@@ -209,7 +211,7 @@ function InitOrderTableDataGrid(){
 		{field:'TPriorityCode',hidden:true},
 		{field:'TStDateHide',hidden:true},
 		{field:'TPHFreqCode',hidden:true},
-		{field:'TOEORIAddDate',title:'å¼€åŒ»å˜±æ—¥æœŸ',align:'center',width:145,auto:false},
+		{field:'TOEORIAddDate',title:'¿ªÒ½ÖöÈÕÆÚ',align:'center',width:145,auto:false},
 		{field:'OrderViewFlag',hidden:true},
 		{field:'ZSQUrl',hidden:true},
 		{field:'ORDVLRowID',hidden:true},
@@ -236,20 +238,20 @@ function InitOrderTableDataGrid(){
 		columns :columns,
 		toolbar :OrdToolBar,
         rowStyler:function(rowIndex, rowData){
-			if (rowData.OrdStatus == "åœæ­¢"){
+			if (rowData.OrdStatus == "Í£Ö¹"){
 				return 'background-color:pink;';
 			}
 		},
 		onLoadSuccess:function (data){
-			var obj1=document.getElementById("TotalAmount");	//æ€»è´¹ç”¨
-			var obj2=document.getElementById("PayedAmount");	//å·²ç¼´è´¹åˆè®¡
-			var obj3=document.getElementById("NotPayedAmount");	//æœªç¼´è´¹åˆè®¡
-			var obj4=document.getElementById("ObservedAmount"); //ç•™è§‚æŠ¼é‡‘
-			//æ ¹æ®å°±è¯Šå·è¿”å›ç—…äººè´¹ç”¨ä¿¡æ¯ 
+			var obj1=document.getElementById("TotalAmount");	//×Ü·ÑÓÃ
+			var obj2=document.getElementById("PayedAmount");	//ÒÑ½É·ÑºÏ¼Æ
+			var obj3=document.getElementById("NotPayedAmount");	//Î´½É·ÑºÏ¼Æ
+			var obj4=document.getElementById("ObservedAmount"); //Áô¹ÛÑº½ğ
+			//¸ù¾İ¾ÍÕïºÅ·µ»Ø²¡ÈË·ÑÓÃĞÅÏ¢ 
 	    	$(".pricePart").show();
-		    if(obj1) obj1.innerHTML="æ€»é‡‘é¢:<font style='color:blue;font-weight:bold;'>"+data.AllPrice+"</font>";
-		    if(obj2) obj2.innerHTML="å·²è®°è´¦é‡‘é¢:<font style='color:green;font-weight:bold;'>"+data.PayPrice+"</font>";
-		    if(obj3) obj3.innerHTML="æœªè®°è´¦é‡‘é¢:<font style='color:red;font-weight:bold;'>"+data.NoPrice+"</font>";
+		    if(obj1) obj1.innerHTML=$g("×Ü½ğ¶î")+":<font style='color:blue;font-weight:bold;'>"+data.AllPrice+"</font>";
+		    if(obj2) obj2.innerHTML=$g("ÒÑ¼ÇÕË½ğ¶î")+":<font style='color:green;font-weight:bold;'>"+data.PayPrice+"</font>";
+		    if(obj3) obj3.innerHTML=$g("Î´¼ÇÕË½ğ¶î")+":<font style='color:red;font-weight:bold;'>"+data.NoPrice+"</font>";
 		},
 		onDblClickRow :function(rowIndex, rowData){   //  onDblClickRow  onClickRow
 			OrdDataGridDbClick(rowIndex, rowData);
@@ -268,7 +270,7 @@ function InitOrderTableDataGrid(){
 	        	var rows = PageLogicObj.m_OrderTableDataGrid.datagrid('getRows');
 			}
 			var NurseLinkOrderRowId=rowData.NurseLinkOrderRowId;
-			//å‹¾é€‰ä¸»åŒ»å˜±
+			//¹´Ñ¡Ö÷Ò½Öö
 			if ((TOeoriOeori=="")&&(GroupSign!="")){
 				for (var idx=rowIndex+1;idx<rows.length;idx++) {
 					var myTOeoriOeori=rows[idx].TOeoriOeori;
@@ -277,7 +279,7 @@ function InitOrderTableDataGrid(){
 						PageLogicObj.m_OrderTableDataGrid.datagrid('checkRow',idx);
 					}
 				}
-			}else if (TOeoriOeori.indexOf("||")>=0){ //å‹¾é€‰å­åŒ»å˜± å­˜åœ¨ç©ºè¡Œçš„æƒ…å†µ
+			}else if (TOeoriOeori.indexOf("||")>=0){ //¹´Ñ¡×ÓÒ½Öö ´æÔÚ¿ÕĞĞµÄÇé¿ö
 				var MasterrowIndex=PageLogicObj.m_OrderTableDataGrid.datagrid('getRowIndex',TOeoriOeori);
 				if (MasterrowIndex>=0){
 					PageLogicObj.m_OrderTableDataGrid.datagrid('checkRow',MasterrowIndex);
@@ -297,7 +299,7 @@ function InitOrderTableDataGrid(){
             }else{
 	        	var rows = PageLogicObj.m_OrderTableDataGrid.datagrid('getRows');
 			}
-			//å‹¾é€‰ä¸»åŒ»å˜±
+			//¹´Ñ¡Ö÷Ò½Öö
 			if ((TOeoriOeori=="")&&(GroupSign!="")){
 				for (var idx=rowIndex+1;idx<rows.length;idx++) {
 					var myTOeoriOeori=rows[idx].TOeoriOeori;
@@ -306,7 +308,7 @@ function InitOrderTableDataGrid(){
 						PageLogicObj.m_OrderTableDataGrid.datagrid('uncheckRow',idx);
 					}
 				}
-			}else if (TOeoriOeori!=""){ //å‹¾é€‰å­åŒ»å˜±
+			}else if (TOeoriOeori!=""){ //¹´Ñ¡×ÓÒ½Öö
 				var MasterrowIndex=PageLogicObj.m_OrderTableDataGrid.datagrid('getRowIndex',TOeoriOeori);
 				if (MasterrowIndex>=0){
 					PageLogicObj.m_OrderTableDataGrid.datagrid('uncheckRow',MasterrowIndex);
@@ -334,16 +336,16 @@ function LoadOrderTableDataGrid(){
 		PriorType:GridParams.PriorType,
 		SortType:GridParams.SortType,
 		CatType:GridParams.CatType,
-	    Pagerows:PageLogicObj.m_OrderTableDataGrid.datagrid("options").pageSize,rows:99999
+	    Pagerows:99999,rows:99999 //PageLogicObj.m_OrderTableDataGrid.datagrid("options").pageSize
 	},function(GridData){
-		PageLogicObj.m_OrderTableDataGrid.datagrid('uncheckAll').datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
-		PageLogicObj.m_OrderDetailTableDataGrid.datagrid('uncheckAll').datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',[]);
+		PageLogicObj.m_OrderTableDataGrid.datagrid('uncheckAll').datagrid('loadData',GridData);
+		PageLogicObj.m_OrderDetailTableDataGrid.datagrid('uncheckAll').datagrid('loadData',[]);
 	}); 
 }
 function OrdDataGridDbClick(rowIndex, rowData,type){
 	 if ($("#OrderDetailTable").length>0){
         PageLogicObj.m_OrderTableDataGrid.datagrid("clearChecked");
-        //ä¿è¯åŒå‡»æˆ–å³é”®æ—¶åªé€‰ä¸­è¿™ä¸€è¡Œ,ä¸»è¦é’ˆå¯¹æˆç»„åŒ»å˜±
+        //±£Ö¤Ë«»÷»òÓÒ¼üÊ±Ö»Ñ¡ÖĞÕâÒ»ĞĞ,Ö÷ÒªÕë¶Ô³É×éÒ½Öö
         PageLogicObj.m_OrderTableDataGrid.datagrid("checkRow", rowIndex);
         $.extend(OrderDetailGridParams,{oeori:rowData.OrderId});
 		LoadOrderDetail();
@@ -366,20 +368,20 @@ function InitOrderDetailTableDataGrid(){
 		oeori:""
 	};
 	var OrdToolBar=[{
-        text: 'æ’¤é”€',
+        text: '³·Ïú',
         iconCls: 'icon-stop-order',
         handler: function() {ShowCancelMulOrdWin();}
     }];
 	var columns=[[
-	    {field:'CheckOrd',title:'é€‰æ‹©',checkbox:'true',align:'center',width:70,auto:false},
+	    {field:'CheckOrd',title:'Ñ¡Ôñ',checkbox:'true',align:'center',width:70,auto:false},
 		{field:'TItemStatCode',hidden:true,title:''},
 		{field:'TOeoriOeori',hidden:true,title:''},
 		{field:'PHFreqDesc1',hidden:true,title:''},
 		{field:'TPermission',hidden:true,title:''},
 		{field:'TItemStatCode',hidden:true,title:''},
 		
-		{field:'TStDate',title:'åŒ»å˜±å¼€å§‹æ—¶é—´',align:'center',width:150,auto:false},
-		{field:'TOrderName',title:'åŒ»å˜±',align:'left',width:350,auto:false,
+		{field:'TStDate',title:'Ò½Öö¿ªÊ¼Ê±¼ä',align:'center',width:150,auto:false},
+		{field:'TOrderName',title:'Ò½Öö',align:'left',width:350,auto:false,
 			formatter: function(value,row,index){
  				var inparaOrderDesc=$("#orderDesc").val();
  				if (inparaOrderDesc!=""){
@@ -392,9 +394,9 @@ function InitOrderDetailTableDataGrid(){
 				return "<span title='" + ordtitle + "' class='hisui-tooltip'>" + value + "</span>";
 			}
 		},
-		{field:'SumQty',title:'æ€»é‡',align:'center',width:70,auto:false},
-		{field:'Priority',title:'åŒ»å˜±ç±»å‹',align:'center',width:80,auto:false},
-		{field:'TStopDate',title:'åœæ­¢æ—¶é—´',align:'center',width:140,auto:false,
+		{field:'SumQty',title:'×ÜÁ¿',align:'center',width:70,auto:false},
+		{field:'Priority',title:'Ò½ÖöÀàĞÍ',align:'center',width:80,auto:false},
+		{field:'TStopDate',title:'Í£Ö¹Ê±¼ä',align:'center',width:140,auto:false,
 			styler: function(value,row,index){
  				if ((value!="")&&(value!=" ")){
 	 				var stopDate=value.split(" ")[0];
@@ -404,8 +406,8 @@ function InitOrderDetailTableDataGrid(){
 	 			}
  			}
 		},
-		{field:'TStopDoctor',title:'åœæ­¢åŒ»ç”Ÿ',align:'center',width:80,auto:false},
-		{field:'TItemStatDesc',title:'çŠ¶æ€',align:'center',width:80,auto:false,
+		{field:'TStopDoctor',title:'Í£Ö¹Ò½Éú',align:'center',width:80,auto:false},
+		{field:'TItemStatDesc',title:'×´Ì¬',align:'center',width:80,auto:false,
 			formatter:function(value,rec){ 
  				var btn =""; 
  				if (rec.OrderViewFlag=="Y"){
@@ -416,12 +418,12 @@ function InitOrderDetailTableDataGrid(){
 		        return btn;
             }
 		},
-		{field:'GroupSign',title:'ç»„ç¬¦å·',align:'center',width:30,auto:false,
+		{field:'GroupSign',title:'×é·ûºÅ',align:'center',width:30,auto:false,
 		 styler: function(value,row,index){
  			 return 'color:red;';
 		 }
 		},
-		{field:'OrderId',title:'åŒ»å˜±ID',align:'center',width:120,auto:false,
+		{field:'OrderId',title:'Ò½ÖöID',align:'center',width:120,auto:false,
 			formatter:function(value,rec){  
                var btn = '<a class="editcls" onclick="ordDetailInfoShow(\'' + rec.OrderId + '\')">'+value+'</a>';
 		       return btn;
@@ -432,7 +434,7 @@ function InitOrderDetailTableDataGrid(){
 		{field:'TPriorityCode',hidden:true},
 		{field:'TStDateHide',hidden:true},
 		{field:'TPHFreqCode',hidden:true},
-		{field:'TOEORIAddDate',title:'å¼€åŒ»å˜±æ—¥æœŸ',align:'center',width:145,auto:false},
+		{field:'TOEORIAddDate',title:'¿ªÒ½ÖöÈÕÆÚ',align:'center',width:145,auto:false},
 		{field:'OrderViewFlag',hidden:true},
 		{field:'ORDVLRowID',hidden:true}
 		
@@ -454,7 +456,7 @@ function InitOrderDetailTableDataGrid(){
 		columns :columns,
 		toolbar :OrdToolBar,
         rowStyler:function(rowIndex, rowData){
-			if (rowData.OrdStatus == "åœæ­¢"){
+			if (rowData.OrdStatus ==$g( "Í£Ö¹")){
 				return 'background-color:pink;';
 			}
 		},
@@ -471,7 +473,7 @@ function InitOrderDetailTableDataGrid(){
             }else{
 	        	var rows = PageLogicObj.m_OrderDetailTableDataGrid.datagrid('getRows');
 			}
-			//å‹¾é€‰ä¸»åŒ»å˜±
+			//¹´Ñ¡Ö÷Ò½Öö
 			if ((TOeoriOeori=="")&&(GroupSign!="")){
 				for (var idx=rowIndex+1;idx<rows.length;idx++) {
 					var myTOeoriOeori=rows[idx].TOeoriOeori;
@@ -480,7 +482,7 @@ function InitOrderDetailTableDataGrid(){
 						PageLogicObj.m_OrderDetailTableDataGrid.datagrid('checkRow',idx);
 					}
 				}
-			}else if (TOeoriOeori.indexOf("||")>=0){ //å‹¾é€‰å­åŒ»å˜± å­˜åœ¨ç©ºè¡Œçš„æƒ…å†µ
+			}else if (TOeoriOeori.indexOf("||")>=0){ //¹´Ñ¡×ÓÒ½Öö ´æÔÚ¿ÕĞĞµÄÇé¿ö
 				var MasterrowIndex=PageLogicObj.m_OrderDetailTableDataGrid.datagrid('getRowIndex',TOeoriOeori);
 				if (MasterrowIndex>=0){
 					PageLogicObj.m_OrderDetailTableDataGrid.datagrid('checkRow',MasterrowIndex);
@@ -500,7 +502,7 @@ function InitOrderDetailTableDataGrid(){
             }else{
 	        	var rows = PageLogicObj.m_OrderDetailTableDataGrid.datagrid('getRows');
 			}
-			//å‹¾é€‰ä¸»åŒ»å˜±
+			//¹´Ñ¡Ö÷Ò½Öö
 			if ((TOeoriOeori=="")&&(GroupSign!="")){
 				for (var idx=rowIndex+1;idx<rows.length;idx++) {
 					var myTOeoriOeori=rows[idx].TOeoriOeori;
@@ -509,7 +511,7 @@ function InitOrderDetailTableDataGrid(){
 						PageLogicObj.m_OrderDetailTableDataGrid.datagrid('uncheckRow',idx);
 					}
 				}
-			}else if (TOeoriOeori!=""){ //å‹¾é€‰å­åŒ»å˜±
+			}else if (TOeoriOeori!=""){ //¹´Ñ¡×ÓÒ½Öö
 				var MasterrowIndex=PageLogicObj.m_OrderDetailTableDataGrid.datagrid('getRowIndex',TOeoriOeori);
 				if (MasterrowIndex>=0){
 					PageLogicObj.m_OrderDetailTableDataGrid.datagrid('uncheckRow',MasterrowIndex);
@@ -526,9 +528,9 @@ function LoadOrderDetail(){
 	    ClassName : OrderDetailGridParams.ClassName,
 	    QueryName : OrderDetailGridParams.QueryName,
 	    oeori:OrderDetailGridParams.oeori,
-	    Pagerows:PageLogicObj.m_OrderDetailTableDataGrid.datagrid("options").pageSize,rows:99999
+	    Pagerows:9999,rows:99999
 	},function(GridData){
-		PageLogicObj.m_OrderDetailTableDataGrid.datagrid('uncheckAll').datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+		PageLogicObj.m_OrderDetailTableDataGrid.datagrid('uncheckAll').datagrid('loadData',GridData);
 	}); 
 }
 function ShowOrderDescDetail(that){
@@ -538,7 +540,7 @@ function ShowOrderDescDetail(that){
 
     var rows = PageLogicObj.m_OrderTableDataGrid.datagrid('getRows');
 	var content=rows[index]['PopoverHtml'];
-	var contentFlag=content.split("@")[0]; //ä¸º0 ä»£è¡¨æ˜¾ç¤ºçš„æ˜¯åŒ»å˜±åˆ—ä¿¡æ¯ ä¸º1ä»£è¡¨æ— è®ºé•¿åº¦éƒ½è¦æ˜¾ç¤º
+	var contentFlag=content.split("@")[0]; //Îª0 ´ú±íÏÔÊ¾µÄÊÇÒ½ÖöÁĞĞÅÏ¢ Îª1´ú±íÎŞÂÛ³¤¶È¶¼ÒªÏÔÊ¾
 	var content=content.split("@")[1];
 	if ((contentFlag==0)&&($(that).width()<450)) return false;
 	var MaxHeight=20;
@@ -560,15 +562,17 @@ function ShowOrderDescDetail(that){
 function ordDetailInfoShow(OrdRowID){
 	websys_showModal({
 		url:"dhc.orderdetailview.csp?ord=" + OrdRowID,
-		title:'åŒ»å˜±æ˜ç»†',
-		width:400,height:screen.availHeight-200
+		title:$g('Ò½ÖöÃ÷Ï¸'),
+		iconCls:'icon-w-paper',
+		width:400,height:screen.availHeight-260
 	});
 }
 function OpenOrderView(OEItemID){
 	websys_showModal({
 		url:"dhc.orderview.csp?ord=" + OEItemID,
-		title:'åŒ»å˜±æŸ¥çœ‹',
-		width:screen.availWidth-200,height:screen.availHeight-200
+		title:$g('Ò½Öö²é¿´'),
+		iconCls:'icon-w-paper',
+		width:screen.availWidth-200,height:screen.availHeight-260
 	});
 }
 
@@ -597,13 +601,13 @@ function ShowStopMulOrdWin(){
 	    ExpStr:session['LOGON.USERID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.GROUPID']+"^^"
 	},false);
     if (rtn!=0){
-	   $.messager.alert("æç¤º",rtn);
+	   $.messager.alert("ÌáÊ¾",rtn);
 	   return false;
     }
-	var title="åœåŒ»å˜±";
+	var title=$g("Í£Ò½Öö");
 	var Content=initDiagDivHtml(StopType);
 	var iconCls="icon-w-edit";
-	createModalDialog("OrdDiag",title, 380, 280,iconCls,"åœæ­¢",Content,"MulOrdDealWithCom('"+StopType+"')");
+	createModalDialog("OrdDiag",title, 380, 280,iconCls,"Í£Ö¹",Content,"MulOrdDealWithCom('"+StopType+"')");
 	InitStopMulOrdWin(OrderStr);
 	$("#winPinNum").focus();
 }
@@ -611,7 +615,9 @@ function ShowCancelMulOrdWin(){
 	var SelOrdObj=GetSelOrdRowStr(PageLogicObj.m_OrderDetailTableDataGrid);
 	if (!SelOrdObj.ErrFlag) return false;
 	var OrderStr=SelOrdObj.OrderStr;
-	var title="åœåŒ»å˜±";	
+	var DetailData=jQuery.parseJSON($("#DetailData").data("Data"));
+	var StopDealType=(DetailData.IsCNMedItem==1)?"":"ReturnVirLongOrdExec"
+	var title=$g("Í£Ò½Öö");	
 	var rtn=$.m({
 	    ClassName:"web.DHCDocInPatPortalCommon",
 	    MethodName:"CheckMulOrdDealPermission",
@@ -619,27 +625,25 @@ function ShowCancelMulOrdWin(){
 	    date:"",
 	    time:"",
 	    type:"C",
-	    ExpStr:session['LOGON.USERID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.GROUPID']+"^^"
+	    ExpStr:session['LOGON.USERID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.GROUPID']+"^^^"+StopDealType
 	},false);
     if (rtn!=0){
-	   $.messager.alert("æç¤º",rtn);
+	   $.messager.alert("ÌáÊ¾",rtn);
 	   return false;
     }
-    
-    var DetailData=jQuery.parseJSON($("#DetailData").data("Data"));
     if (DetailData.IsCNMedItem==1){
 	    var StopType="NormInEM";
 	    var Content=initDiagDivHtml(StopType);
 		var iconCls="icon-w-edit";
-		createModalDialog("OrdDiag",title, 380, 280,iconCls,"åœæ­¢",Content,"MulOrdDealWithCom('"+StopType+"')");
+		createModalDialog("OrdDiag",title, 380, 280,iconCls,"Í£Ö¹",Content,"MulOrdDealWithCom('"+StopType+"')");
 		InitStopMulOrdWin(OrderStr);
 		$("#winPinNum").focus();
 	}else{
-		$.ajax('doc.virlongorder.execlist.hui.csp', {
+		$.ajax('doc.virlongorder.execlist.hui.csp'+((typeof websys_getMWToken=='function')?("?MWToken="+websys_getMWToken()):""), {
 			"type" : "GET",
 			"dataType" : "html",
 			"success" : function(data, textStatus) {
-				createModalDialog("ReturnOrdExecDetail","é€€è´¹æ˜ç»†é€‰æ‹©", 650, 550,"icon-w-ok","ç¡®å®š",data,"ReturnOrdExecOk()");
+				createModalDialog("ReturnOrdExecDetail","ÍË·ÑÃ÷Ï¸Ñ¡Ôñ", 650, 550,"icon-w-ok","È·¶¨",data,"ReturnOrdExecOk()");
 				InitReturnOrdExecList();
 			}
 		});
@@ -648,27 +652,27 @@ function ShowCancelMulOrdWin(){
 
 function InitReturnOrdExecList(){
 	var columns=[[
-	    {field:'CheckOrd',title:'é€‰æ‹©',checkbox:'true',align:'center',width:70,auto:false},
+	    {field:'CheckOrd',title:'Ñ¡Ôñ',checkbox:'true',align:'center',width:70,auto:false},
 		
 		{field:'TExecStateCode',hidden:true,},
-		{field:'TExStDate',title:'è¦æ±‚æ‰§è¡Œæ—¶é—´',align:'center',width:150,auto:false},
-		{field:'TExecState',title:'çŠ¶æ€',align:'center',width:80,auto:false,
+		{field:'TExStDate',title:'ÒªÇóÖ´ĞĞÊ±¼ä',align:'center',width:150,auto:false},
+		{field:'TExecState',title:'×´Ì¬',align:'center',width:80,auto:false,
 			styler: function(value,row,index){
  				if (row.TExecStateCode){
-	 				if( ["æœªæ‰§è¡Œ","C"].indexOf(row.TExecStateCode) > -1 ){
+	 				if( [$g("Î´Ö´ĞĞ"),"C"].indexOf(row.TExecStateCode) > -1 ){
 		 				return "background-color: yellow;"
 		 			}
  				}
  			}
 		},
-		{field:'TgiveDrugQty',title:'å‘è¯æ•°é‡',align:'center',width:80,auto:false},
-		{field:'TRealExecDate',title:'æ“ä½œæ—¶é—´',align:'center',width:150,auto:false},
-		{field:'TExecUser',title:'æ“ä½œäºº',align:'center',width:150,auto:false},
+		{field:'TgiveDrugQty',title:'·¢Ò©ÊıÁ¿',align:'center',width:80,auto:false},
+		{field:'TRealExecDate',title:'²Ù×÷Ê±¼ä',align:'center',width:150,auto:false},
+		{field:'TExecUser',title:'²Ù×÷ÈË',align:'center',width:150,auto:false},
 		
-		{field:'TBillState',title:'å¸å•çŠ¶æ€',align:'center',width:80,auto:false},
-		{field:'ExecPart',title:'æ£€æŸ¥éƒ¨ä½',align:'center',width:150,auto:false},
-		{field:'TcancelDrugQty',title:'é€€è¯æ•°é‡',align:'center',width:80,auto:false},
-		{field:'OrderExecId',title:'æ‰§è¡Œè®°å½•æµæ°´',align:'center',width:90,auto:false}
+		{field:'TBillState',title:'ÕÊµ¥×´Ì¬',align:'center',width:80,auto:false},
+		{field:'ExecPart',title:'¼ì²é²¿Î»',align:'center',width:150,auto:false},
+		{field:'TcancelDrugQty',title:'ÍËÒ©ÊıÁ¿',align:'center',width:80,auto:false},
+		{field:'OrderExecId',title:'Ö´ĞĞ¼ÇÂ¼Á÷Ë®',align:'center',width:90,auto:false}
 	]];
 	
 	$("#ReturnOrdExec").datagrid({
@@ -700,18 +704,19 @@ function InitReturnOrdExecList(){
 		var rows = $("#ReturnOrdExec").datagrid('getRows');
 		for (var idx=0;idx<rows.length;idx++) {
 			var TExecStateCode=rows[idx].TExecStateCode;
-			if (["æœªæ‰§è¡Œ","C"].indexOf(TExecStateCode) > -1 ){
+			if (["Î´Ö´ĞĞ","C"].indexOf(TExecStateCode) > -1 ){
 				$("#ReturnOrdExec").datagrid('checkRow',idx);
 			}
 		}
 		$("#winPinNum").focus();
 	}); 
+	$("td[for=password]")[0].innerHTML=$g($("td[for=password]")[0].innerHTML)
 }
 function ReturnOrdExecOk(){
 	var rows = $("#ReturnOrdExec").datagrid('getRows');
 	var SelOrdExecRowArr=$("#ReturnOrdExec").datagrid('getChecked');
 	if ((SelOrdExecRowArr.length==0)&&(rows.length!=0)){
-	   $.messager.alert("æç¤º","æ²¡æœ‰å‹¾é€‰éœ€é€€è´¹æ‰§è¡Œè®°å½•!")
+	   $.messager.alert("ÌáÊ¾","Ã»ÓĞ¹´Ñ¡ĞèÍË·ÑÖ´ĞĞ¼ÇÂ¼!")
 	   return false;
 	}
 	var ReturnOrdExecList="";
@@ -725,13 +730,13 @@ function ReturnOrdExecOk(){
 	if ($("#winPinNum").length>0){
 		pinNum=$("#winPinNum").val();
 		if (pinNum==""){
-		   $.messager.alert("æç¤º","å¯†ç ä¸èƒ½ä¸ºç©º!","info",function(){
+		   $.messager.alert("ÌáÊ¾","ÃÜÂë²»ÄÜÎª¿Õ!","info",function(){
 			   $("#winPinNum").focus();
 		   });
 		   return false;
 		}
 	}
-	///æœ‰å¯èƒ½æ˜¯æ— æ‰§è¡Œè®°å½•çš„åŒ»å˜±,
+	///ÓĞ¿ÉÄÜÊÇÎŞÖ´ĞĞ¼ÇÂ¼µÄÒ½Öö,
 	if (ReturnOrdExecList==""){
 		var SelOrdObj=GetSelOrdRowStr(PageLogicObj.m_OrderDetailTableDataGrid);
 		if (SelOrdObj.OrderStr!=""){
@@ -762,11 +767,12 @@ function ReturnOrdExecOk(){
 	var alertCode=val.split("^")[0];
 	if (alertCode=="0"){
 		LoadOrderDetail();
+		LoadOrderTableDataGrid();
 		destroyDialog("ReturnOrdExecDetail");
 		//ExeCASigin(OrderStr);
 	}else{
-		$.messager.alert("æç¤º",val.split("^")[0],"info",function(){
-			if (val.indexOf("å¯†ç ")>=0){
+		$.messager.alert("ÌáÊ¾",val.split("^")[0],"info",function(){
+			if (val.indexOf("ÃÜÂë")>=0){
 				$("#winPinNum").focus();
 			}
 		});
@@ -785,9 +791,9 @@ function GetSelOrdRowStr(table$){
 		NorOrderStr:"",
 		OrderStr:""
 	}
-	var SelOrdRowArr=table$.datagrid('getChecked'); //åŒ»å˜±å¤„ç†ä»¥å‹¾é€‰ä¸ºå‡†,æœªå‹¾é€‰ä»£è¡¨ä¸å¤„ç†
+	var SelOrdRowArr=table$.datagrid('getChecked'); //Ò½Öö´¦ÀíÒÔ¹´Ñ¡Îª×¼,Î´¹´Ñ¡´ú±í²»´¦Àí
 	if (SelOrdRowArr.length==0){
-	   $.messager.alert("æç¤º","æ²¡æœ‰å‹¾é€‰åŒ»å˜±!")
+	   $.messager.alert("ÌáÊ¾","Ã»ÓĞ¹´Ñ¡Ò½Öö!")
 	   $.extend(SelOrdObj,{ErrFlag:false});
 	   return SelOrdObj;
 	}
@@ -806,7 +812,7 @@ function GetSelOrdRowStr(table$){
 		}
 	});
 	if (Length==0){
-	   $.messager.alert("æç¤º","æ²¡æœ‰å‹¾é€‰åŒ»å˜±!")
+	   $.messager.alert("ÌáÊ¾","Ã»ÓĞ¹´Ñ¡Ò½Öö!")
 	   $.extend(SelOrdObj,{ErrFlag:false});
 	   return SelOrdObj;
 	}
@@ -819,11 +825,14 @@ function GetSelOrdRowStr(table$){
 	return SelOrdObj;
 }
 function GetStopOrdPriorType(){
-	var SelOrdRowArr=PageLogicObj.m_OrderTableDataGrid.datagrid('getChecked'); //åŒ»å˜±å¤„ç†ä»¥å‹¾é€‰ä¸ºå‡†,æœªå‹¾é€‰ä»£è¡¨ä¸å¤„ç†
+	var SelOrdRowArr=PageLogicObj.m_OrderTableDataGrid.datagrid('getChecked'); //Ò½Öö´¦ÀíÒÔ¹´Ñ¡Îª×¼,Î´¹´Ñ¡´ú±í²»´¦Àí
 	var IsLongPrior="";
 	
 	$.each(SelOrdRowArr,function(Index,RowData){
 		var ORDVLRowID=RowData.ORDVLRowID;
+		if (RowData.TOeoriOeori!=""){
+			return true;
+		}
 		var myIsLongPrior;
 		if (ORDVLRowID==""){
 			myIsLongPrior="0";
@@ -840,7 +849,7 @@ function GetStopOrdPriorType(){
 		}
 	});
 	if (IsLongPrior=="-1"){
-		$.messager.alert("æç¤º","ä¸å¯åŒæ—¶é€‰æ‹©ä¸´æ—¶å’Œé•¿æœŸåŒ»å˜±è¿›è¡Œåœæ­¢æ“ä½œï¼")
+		$.messager.alert("ÌáÊ¾","²»¿ÉÍ¬Ê±Ñ¡ÔñÁÙÊ±ºÍ³¤ÆÚÒ½Öö½øĞĞÍ£Ö¹²Ù×÷£¡")
 	}
 	return IsLongPrior;
 }
@@ -870,8 +879,8 @@ function initDiagDivHtml(type){
 	   var html="<div id='DiagWin' style=''>"
 		   html +="	<table class='search-table' style='margin:0 auto;border:none;'>"
 		       html +="	 <tr>"
-		       	html +="	 <td class='r-label'>"
-		       		html +="	 æ˜¯å¦é¢„åœ"
+		       	html +="	 <td class='r-label' style='padding-left: 0;'>"
+		       		html +=$g("	 ÊÇ·ñÔ¤Í£")
 		       	html +="	 </td>"
 		       	html +="	 <td>"
 		       		html +="	 <input class='hisui-checkbox' type='checkbox' id='isExpStopOrderCB'/>"
@@ -879,8 +888,8 @@ function initDiagDivHtml(type){
 		       html +="	 </tr>"
 		       
 		       html +="	 <tr>"
-		       	html +="	 <td class='r-label'>"
-		       		html +="	 åœæ­¢æ—¥æœŸ"
+		       	html +="	 <td class='r-label' style='padding-left: 0;'>"
+		       		html +=$g("	 Í£Ö¹ÈÕÆÚ")
 		       	html +="	 </td>"
 		       	html +="	 <td>"
 		       		html +="	 <input id='winStopOrderDate' disabled='false' class='hisui-datebox textbox' required='required'></input>"
@@ -889,24 +898,24 @@ function initDiagDivHtml(type){
 		       
 		       
 		       html +="	 <tr>"
-		       	html +="	 <td class='r-label'>"
-		       		html +="	 åœæ­¢æ—¶é—´"
+		       	html +="	 <td class='r-label' style='padding-left: 0;'>"
+		       		html +=$g("	 Í£Ö¹Ê±¼ä")
 		       	html +="	 </td>"
 		       	html +="	 <td>"
 		       		html +="	 <input id='winStopOrderTime' class='hisui-timespinner textbox' data-options='showSeconds:true' style='width:155px'/> "
 		       	html +="	 </td>"
 		       html +="	 </tr>"
-		       html +="	 <tr title='åœæ­¢åœæ­¢æ—¥æœŸå½“æ—¥çš„åŒ»å˜±'>"
-		       	html +="	 <td class='r-label'>"	//colspan='2'
-		       		html +="	 åŒ…å«å½“æ—¥"
+		       html +="	 <tr title='"+$g("Í£Ö¹Í£Ö¹ÈÕÆÚµ±ÈÕµÄÒ½Öö")+"'>"
+		       	html +="	 <td class='r-label' style='padding-left: 0;'>"	//colspan='2'
+		       		html +=$g("	 °üº¬µ±ÈÕ")
 		       	html +="	 </td>"
 		       	html +="	 <td>"
 		       		html +="	 <input class='hisui-checkbox' type='checkbox' id='IncludeStopDateOrd'/>"
 		       	html +="	 </td>"
 		       html +="	 </tr>"
 		       html +="	 <tr>"
-		       	html +="	 <td class='r-label'>"
-		       		html +="	 å¯†ç "
+		       	html +="	 <td class='r-label' style='padding-left: 0;'>"
+		       		html +=$g("	 ÃÜÂë")
 		       	html +="	 </td>"
 		       	html +="	 <td>"
 		       		html +="	 <input type='password' id='winPinNum' style='' class='hisui-validatebox textbox' data-options='required:true'  onkeydown='DiagDivKeyDownHandle(\"Confirm\",\""+type+"\")'  /> "
@@ -921,7 +930,7 @@ function initDiagDivHtml(type){
 		   		/*
 		   		html +="	 <tr>"
 			       	html +="	 <td class='r-label'>"
-			       		html +="	 è¯·é€‰æ‹©åŸå› "
+			       		html +="	 ÇëÑ¡ÔñÔ­Òò"
 			       	html +="	 </td>"
 			       	html +="	 <td>"
 			       		html +="	 <input id='OECStatusChReason' class='textbox'></input>"
@@ -929,8 +938,8 @@ function initDiagDivHtml(type){
 		        html +="	 </tr>"
 		       */
 		   		html +="	 <tr>"
-		       		html +="	 <td class='r-label'>"
-		       			html +="	 å¯†ç "
+		       		html +="	 <td class='r-label' style='padding-left: 0;'>"
+		       			html +=$g("	 ÃÜÂë")
 		       		html +="	 </td>"
 		       		html +="	 <td>"
 		       			html +="	 <input type='password' id='winPinNum' class='hisui-validatebox textbox' data-options='required:true'  onkeydown='DiagDivKeyDownHandle(\"Confirm\",\""+type+"\")' />"
@@ -943,14 +952,14 @@ function initDiagDivHtml(type){
    return html;
 }
 /**
- * åˆ›å»ºä¸€ä¸ªæ¨¡æ€ Dialog
+ * ´´½¨Ò»¸öÄ£Ì¬ Dialog
  * @param id divId
- * @param _url Divé“¾æ¥
- * @param _title æ ‡é¢˜
- * @param _width å®½åº¦
- * @param _height é«˜åº¦
- * @param _icon ICONå›¾æ ‡
- * @param _btntext ç¡®å®šæŒ‰é’®text
+ * @param _url DivÁ´½Ó
+ * @param _title ±êÌâ
+ * @param _width ¿í¶È
+ * @param _height ¸ß¶È
+ * @param _icon ICONÍ¼±ê
+ * @param _btntext È·¶¨°´Å¥text
 */
 function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,_event){
    if(_btntext==""){
@@ -964,9 +973,9 @@ function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,
 			}
 		}]
    }
-   //å¦‚æœå»æ‰å…³é—­æŒ‰é’®ï¼Œå½“ç”¨æˆ·ç‚¹å‡»çª—ä½“å³ä¸Šè§’Xå…³é—­æ—¶ï¼Œçª—ä½“æ— æ³•å›è°ƒç•Œé¢é”€æ¯äº‹ä»¶ï¼Œéœ€è¦åŸºç¡€å¹³å°ååŠ©å¤„ç†
+   //Èç¹ûÈ¥µô¹Ø±Õ°´Å¥£¬µ±ÓÃ»§µã»÷´°ÌåÓÒÉÏ½ÇX¹Ø±ÕÊ±£¬´°ÌåÎŞ·¨»Øµ÷½çÃæÏú»ÙÊÂ¼ş£¬ĞèÒª»ù´¡Æ½Ì¨Ğ­Öú´¦Àí
    buttons.push({
-	   text:'å…³é—­',
+	   text:'¹Ø±Õ',
 		iconCls:'icon-w-close',
 		handler:function(){
 			destroyDialog(id);
@@ -1014,8 +1023,8 @@ function GetCurTime(){
 	   return s < 10 ? '0' + s: s;
    }
    var myDate = new Date();
-   var h=myDate.getHours();       //è·å–å½“å‰å°æ—¶æ•°(0-23)
-   var m=myDate.getMinutes();     //è·å–å½“å‰åˆ†é’Ÿæ•°(0-59)
+   var h=myDate.getHours();       //»ñÈ¡µ±Ç°Ğ¡Ê±Êı(0-23)
+   var m=myDate.getMinutes();     //»ñÈ¡µ±Ç°·ÖÖÓÊı(0-59)
    var s=myDate.getSeconds();  
    var nowTime=p(h)+':'+p(m)+":"+p(s);
    return nowTime;
@@ -1046,7 +1055,7 @@ function myparser(s){
 		
 }
 function destroyDialog(id){
-   $("body").remove("#"+id); //ç§»é™¤å­˜åœ¨çš„Dialog
+   $("body").remove("#"+id); //ÒÆ³ı´æÔÚµÄDialog
    $("#"+id).dialog('destroy');
 }
 function IsValidTime(time){
@@ -1080,12 +1089,12 @@ function MulOrdDealWithCom(type){
    if (type=="SInEM"){
 	   var date = $('#winStopOrderDate').datebox('getValue');
 	   if (date==""){
-		   $.messager.alert("æç¤º","åœæ­¢æ—¥æœŸä¸èƒ½ä¸ºç©º!");
+		   $.messager.alert("ÌáÊ¾","Í£Ö¹ÈÕÆÚ²»ÄÜÎª¿Õ!");
 		   $('#winStopOrderDate').next('span').find('input').focus();
 		   return false;
 	   }
 	   if(!DATE_FORMAT.test(date)){
-		   $.messager.alert("æç¤º","åœæ­¢æ—¥æœŸæ ¼å¼ä¸æ­£ç¡®!");
+		   $.messager.alert("ÌáÊ¾","Í£Ö¹ÈÕÆÚ¸ñÊ½²»ÕıÈ·!");
 		   return false;
 	   }
 	   if ($("#isExpStopOrderCB").checkbox("getValue")) {
@@ -1097,7 +1106,7 @@ function MulOrdDealWithCom(type){
 				var chkDate = new Date(date.replace("-", "/").replace("-", "/"));
 			}
 			if(chkDate<=CurrentDate){
-				$.messager.alert("æç¤º","é¢„åœæ—¶åœæ­¢æ—¥æœŸä¸èƒ½å°äºç­‰äºå½“å¤©!","info",function(){
+				$.messager.alert("ÌáÊ¾","Ô¤Í£Ê±Í£Ö¹ÈÕÆÚ²»ÄÜĞ¡ÓÚµÈÓÚµ±Ìì!","info",function(){
 					$('#winStopOrderDate').next('span').find('input').focus();
 				});
 				return false;
@@ -1105,13 +1114,13 @@ function MulOrdDealWithCom(type){
 	   }
 	   var time=$('#winStopOrderTime').timespinner('getValue'); //$('#winStopOrderTime').combobox('getText');
 	   if (time==""){
-		   $.messager.alert("æç¤º","åœæ­¢æ—¶é—´ä¸èƒ½ä¸ºç©º!","info",function(){
+		   $.messager.alert("ÌáÊ¾","Í£Ö¹Ê±¼ä²»ÄÜÎª¿Õ!","info",function(){
 			   $('#winStopOrderTime').next('span').find('input').focus();
 		   });
 		   return false;
 	   }
 	   if (!IsValidTime(time)){
-		   $.messager.alert("æç¤º","åœæ­¢æ—¶é—´æ ¼å¼ä¸æ­£ç¡®! æ—¶:åˆ†:ç§’,å¦‚11:05:01","info",function(){
+		   $.messager.alert("ÌáÊ¾","Í£Ö¹Ê±¼ä¸ñÊ½²»ÕıÈ·! Ê±:·Ö:Ãë,Èç11:05:01","info",function(){
 			   $('#winStopOrderTime').next('span').find('input').focus();
 		   });
 		   return false;
@@ -1120,7 +1129,7 @@ function MulOrdDealWithCom(type){
    if ($("#winPinNum").length>0){
 	   pinNum=$("#winPinNum").val();
 	   if (pinNum==""){
-		   $.messager.alert("æç¤º","å¯†ç ä¸èƒ½ä¸ºç©º!","info",function(){
+		   $.messager.alert("ÌáÊ¾","ÃÜÂë²»ÄÜÎª¿Õ!","info",function(){
 			   $("#winPinNum").focus();
 		   });
 		   return false;
@@ -1158,7 +1167,7 @@ function MulOrdDealWithCom(type){
 	},false);
 	var alertCode=val.split("^")[0];
 	if ((type=="U")&&(alertCode=="-901")){
-		$.messager.alert("æç¤º",val.split("^")[1]);
+		$.messager.alert("ÌáÊ¾",val.split("^")[1]);
 		alertCode="0";
 	}
 	if (alertCode=="0"){
@@ -1168,7 +1177,7 @@ function MulOrdDealWithCom(type){
 		destroyDialog("OrdDiag");
 		ExeCASigin(OrderStr);
 	}else{
-		$.messager.alert("æç¤º",val.split("^")[0]);
+		$.messager.alert("ÌáÊ¾",val.split("^")[0]);
 		return false;
 	}
 }
@@ -1194,19 +1203,19 @@ function GetArrayDefaultData(Arr){
 function GetPrintDetailData(OrderType){
 	var DefaultGridParams={};
 	$.extend(DefaultGridParams,GridParams);
-	//å¼€å•ç§‘å®¤ï¼šæœ¬ç§‘å®¤ä¸ç—…åŒº
+	//¿ªµ¥¿ÆÊÒ£º±¾¿ÆÊÒÓë²¡Çø
 	DefaultGridParams.stloc=1;
-	//åŒ»å˜±å•å‹ :åŒ»å˜±å•
+	//Ò½Ööµ¥ĞÍ :Ò½Ööµ¥
 	DefaultGridParams.nursebill="N";
-	//èŒƒå›´:å…¨éƒ¨
+	//·¶Î§:È«²¿
 	DefaultGridParams.scope=1;
-	//å…³é”®å­—
+	//¹Ø¼ü×Ö
 	DefaultGridParams.inputOrderDesc="";
-	//æ’åºæ–¹å¼
+	//ÅÅĞò·½Ê½
 	DefaultGridParams.PriorType=OrderType;
-	//æ’åºæ–¹å¼
+	//ÅÅĞò·½Ê½
 	DefaultGridParams.SortType="AT";
-	//åŒ»å˜±é‡åˆ†ç±»
+	//Ò½ÖöÖØ·ÖÀà
 	DefaultGridParams.CatType="ALL";
 	var GridData=$.q({
 	    ClassName : DefaultGridParams.ClassName,
@@ -1225,7 +1234,9 @@ function GetPrintDetailData(OrderType){
 	return GridData.rows;
 }
 
-
+function xhrRefresh(Args){
+	LoadOrderTableDataGrid();
+}
 function ExeCASigin(OrdList)
 {
 	if (ServerObj.CAInit!=1){
@@ -1244,7 +1255,7 @@ function ExeCASigin(OrdList)
 		}
 	}
 	if (caIsPass==0){
-		$.messager.alert("æç¤º","ç­¾åå¤±è´¥!");
+		$.messager.alert("ÌáÊ¾","Ç©ÃûÊ§°Ü!");
         return false;
 	}
 	if (OrdList!=""){
@@ -1258,7 +1269,7 @@ function SaveCASign(ContainerName,OrdList,OperationType)
 {    
 	try{
       if (ContainerName=="") return false;
-		//1.æ‰¹é‡è®¤è¯
+		//1.ÅúÁ¿ÈÏÖ¤
 	    var CASignOrdStr="";
 	    var TempIDs=OrdList.split("^");
 		var IDsLen=TempIDs.length;
@@ -1289,12 +1300,12 @@ function SaveCASign(ContainerName,OrdList,OperationType)
 				if (OEORIItemXMLArr[ordcount]=="")continue;
   				var OEORIItemXML=OEORIItemXMLArr[ordcount].split(String.fromCharCode(1))[1];
    				var OEORIOperationType=OEORIItemXMLArr[ordcount].split(String.fromCharCode(1))[0];
-				//$.messager.alert("è­¦å‘Š","OEORIItemXML:"+OEORIItemXML);
+				//$.messager.alert("¾¯¸æ","OEORIItemXML:"+OEORIItemXML);
 				var OEORIItemXMLHash=HashData(OEORIItemXML);
-				//$.messager.alert("è­¦å‘Š","HashOEORIItemXML:"+OEORIItemXMLHash);
+				//$.messager.alert("¾¯¸æ","HashOEORIItemXML:"+OEORIItemXMLHash);
 				if(SignOrdHashStr=="") SignOrdHashStr=OEORIItemXMLHash;
 				else SignOrdHashStr=SignOrdHashStr+"&&&&&&&&&&"+OEORIItemXMLHash;
-				//$.messager.alert("è­¦å‘Š",ContainerName);
+				//$.messager.alert("¾¯¸æ",ContainerName);
 				var SignedData=SignedOrdData(OEORIItemXMLHash,ContainerName);
 				if(SignedOrdStr=="") SignedOrdStr=SignedData;
 				else SignedOrdStr=SignedOrdStr+"&&&&&&&&&&"+SignedData;
@@ -1304,7 +1315,7 @@ function SaveCASign(ContainerName,OrdList,OperationType)
 		}
 		if (SignOrdHashStr!="")SignOrdHashStr=SignOrdHashStr+"&&&&&&&&&&";
 		if (SignedOrdStr!="")SignedOrdStr=SignedOrdStr+"&&&&&&&&&&";
-		//è·å–å®¢æˆ·ç«¯è¯ä¹¦
+		//»ñÈ¡¿Í»§¶ËÖ¤Êé
     	var varCert = GetSignCert(ContainerName);
     	var varCertCode=GetUniqueID(varCert);
 		/*
@@ -1314,15 +1325,15 @@ function SaveCASign(ContainerName,OrdList,OperationType)
 		alert("SignedData:"+SignedOrdStr);
 		*/
     	if ((CASignOrdValStr!="")&&(SignOrdHashStr!="")&&(varCert!="")&&(SignedOrdStr!="")){
-			//3.ä¿å­˜ç­¾åä¿¡æ¯è®°å½•																												CASignOrdValStr,session['LOGON.USERID'],"A",					SignOrdHashStr,varCertCode,SignedOrdStr,""
+			//3.±£´æÇ©ÃûĞÅÏ¢¼ÇÂ¼																												CASignOrdValStr,session['LOGON.USERID'],"A",					SignOrdHashStr,varCertCode,SignedOrdStr,""
 			var ret=cspRunServerMethod(ServerObj.InsertCASignInfoMethod,CASignOrdValStr,session['LOGON.USERID'],OperationType,SignOrdHashStr,varCertCode,SignedOrdStr,"");
 			if (ret!="0") {
-				alert("æ•°å­—ç­¾åæ²¡æˆåŠŸ");
+				alert("Êı×ÖÇ©ÃûÃ»³É¹¦");
 				return false;
 			}else{
 			}
 		}else{
-	  		alert("æ•°å­—ç­¾åé”™è¯¯");
+	  		alert("Êı×ÖÇ©Ãû´íÎó");
 	  		return false;
 		} 
 		return true;
@@ -1331,47 +1342,54 @@ function SaveCASign(ContainerName,OrdList,OperationType)
 
 function PrintClickHandle(){
 	
-	var PrintNum = 1; //æ‰“å°æ¬¡æ•°
-	var IndirPrint = "Y"; //æ˜¯å¦é¢„è§ˆæ‰“å°
-	var TaskName="æ€¥è¯Šæ‚£è€…åŒ»å˜±å•"; //æ‰“å°ä»»åŠ¡åç§°
+	var PrintNum = 1; //´òÓ¡´ÎÊı
+	var IndirPrint = "Y"; //ÊÇ·ñÔ¤ÀÀ´òÓ¡
+	var TaskName=$g("¼±Õï»¼ÕßÒ½Ööµ¥"); //´òÓ¡ÈÎÎñÃû³Æ
 	
-	var DetailData=GetPrintOrdInfo("ALL"); //æ˜ç»†ä¿¡æ¯
+	var DetailData=GetPrintOrdInfo("ALL"); //Ã÷Ï¸ĞÅÏ¢
 	if (DetailData==false) return false;
 	
-	//æ˜ç»†ä¿¡æ¯å±•ç¤º
+	//Ã÷Ï¸ĞÅÏ¢Õ¹Ê¾
 	var Cols=[
-		{field:'TStDate',title:'åŒ»å˜±å¼€å§‹æ—¶é—´',width:'125px',align:"left"},
-		{field:'Priority',title:'åŒ»å˜±ç±»å‹',width:'65px',align:"left"}, 
-		{field:'TOrderDesc',title:'åŒ»å˜±',width:'250px',align:"left"}, 
-		{field:'TDoctor',title:'ä¸‹åŒ»å˜±äºº',width:'80px',align:"left"}, 
-		{field:'TStopDate',title:'åœæ­¢æ—¶é—´',width:'125px',align:"left"},
-		{field:'TStopDoctor',title:'åœæ­¢åŒ»ç”Ÿ',width:'80px',align:"left"}
+		{field:'TStDate',title:'Ò½Öö¿ªÊ¼Ê±¼ä',width:'125px',align:"left"},
+		{field:'Priority',title:'Ò½ÖöÀàĞÍ',width:'65px',align:"left"}, 
+		{field:'TOrderDesc',title:'Ò½Öö',width:'250px',align:"left"}, 
+		{field:'TDoctor',title:'ÏÂÒ½ÖöÈË',width:'80px',align:"left"}, 
+		{field:'TStopDate',title:'Í£Ö¹Ê±¼ä',width:'125px',align:"left"},
+		{field:'TStopDoctor',title:'Í£Ö¹Ò½Éú',width:'80px',align:"left"}
 	];	
 	DHCP_GetXMLConfig("InvPrintEncrypt","DocVirlongOrderPrtHead");
 	var MyPara=GetPrintPatInfo(TaskName);
 	PrintOrd(PrintNum,IndirPrint,TaskName,MyPara,Cols,DetailData);
 }
 function GetPrintOrdInfo(OrderType){
-	var DetailData=GetPrintDetailData(OrderType); //æ˜ç»†ä¿¡æ¯
+	var DetailData=GetPrintDetailData(OrderType); //Ã÷Ï¸ĞÅÏ¢
 	if (DetailData==false) return false;
 	
 	if (DetailData.length==0) {
-		$.messager.alert("æç¤º","æ²¡æœ‰éœ€è¦æ‰“å°çš„æ•°æ®!");
+		$.messager.alert("ÌáÊ¾","Ã»ÓĞĞèÒª´òÓ¡µÄÊı¾İ!");
 		return false;
 	}
 	for (var i=0;i<DetailData.length;i++){
 		if (DetailData[i].DoctorUserDr!=""){
-			if (GetGifInfo(DetailData[i].DoctorUserDr)==0){
+			if (typeof PageLogicObj.HasGifDocList[DetailData[i].DoctorUserDr] =="undefined"){
+				var GifFlag=GetGifInfo(DetailData[i].DoctorUserDr);
+				PageLogicObj.HasGifDocList[DetailData[i].DoctorUserDr]=GifFlag;
+			}
+			if (PageLogicObj.HasGifDocList[DetailData[i].DoctorUserDr]==0){
 				DetailData[i].TDoctor="<img src='c://"+DetailData[i].DoctorUserDr+".gif'>"
 				
 			}
 		}
 		if (DetailData[i].StopDoctorUserDr!=""){
-			if (GetGifInfo(DetailData[i].StopDoctorUserDr)==0){
+			if (typeof PageLogicObj.HasGifDocList[DetailData[i].StopDoctorUserDr] =="undefined"){
+				var GifFlag=GetGifInfo(DetailData[i].StopDoctorUserDr);
+				PageLogicObj.HasGifDocList[DetailData[i].StopDoctorUserDr]=GifFlag;
+			}
+			if (PageLogicObj.HasGifDocList[DetailData[i].StopDoctorUserDr]==0){
 				DetailData[i].TStopDoctor="<img src='c://"+DetailData[i].StopDoctorUserDr+".gif'>"
 			}
 		}
-		
 	}
 	return DetailData
 }
@@ -1408,34 +1426,33 @@ function GetPrintPatInfo(TaskName){
 	var PDlime=String.fromCharCode(2);
 	var MyPara="Name"+PDlime+Name+"^"+"Sex"+PDlime+Sex+"^"+"Age"+PDlime+Age+"^"+"AdmDep"+PDlime+AdmDep+"^"+"Ward"+PDlime+CurrentWard;
 	var MyPara=MyPara+"^"+"BedNo"+PDlime+BedNo+"^"+"HospName"+PDlime+SessHospDesc;
-	var MyPara=MyPara+"^"+"Title"+PDlime+TaskName
+	var MyPara=MyPara+"^"+"Title"+PDlime+TaskName+"^"+"PANo"+PDlime+PANo
 	return MyPara
 }
 
-///æ‰“å°
+///´òÓ¡
 function PrintOrd(PrintNum,IndirPrint,TaskName,inpara,Cols,DetailData) {
 	
 	if(PrintNum==""){PrintNum=1}
 	if(IndirPrint==""){IndirPrint="Y"}
-	if(TaskName==""){TaskName="å•æ®æ‰“å°"}
+	if(TaskName==""){TaskName=$g("µ¥¾İ´òÓ¡")}
 	
-	/*åˆ¤æ–­Lodopæ§ä»¶*/
+	/*ÅĞ¶ÏLodop¿Ø¼ş*/
 	var LODOP=getLodop();
-	/*åˆå§‹åŒ–*/
+	/*³õÊ¼»¯*/
 	LODOP.PRINT_INIT(TaskName);
-	LODOP.SET_PRINT_STYLE("FontSize", 11); //å•ä½æ˜¯pt
-	LODOP.SET_PRINT_MODE("RESELECT_PAGESIZE",true); //å…è®¸é‡é€‰çº¸å¼ 
-	/*æ¨¡æ¿å†…å®¹*/
+	LODOP.SET_PRINT_STYLE("FontSize", 11); //µ¥Î»ÊÇpt
+	LODOP.SET_PRINT_MODE("RESELECT_PAGESIZE",true); //ÔÊĞíÖØÑ¡Ö½ÕÅ
+	/*Ä£°åÄÚÈİ*/
 	
 	LODOP.SET_PRINT_STYLEA(0,"FontSize",12);
 	LODOP.SET_PRINT_STYLEA(0,"FontColor","#FF0000");
 	LODOP.SET_PRINT_STYLEA(0,"Alignment",2);
 	LODOP.SET_PRINT_STYLEA(0,"Horient",3);
-	
-	LODOP.ADD_PRINT_HTM(1,600,300,100,"<span tdata='pageNO'>ç¬¬##é¡µ</span> <span tdata='pageCount'>å…±##é¡µ</span>");
+
+	LODOP.ADD_PRINT_HTM("98%","45%","300",25,"<span tdata='pageNO'>µÚ##Ò³</span> <span tdata='pageCount'>¹²##Ò³</span>");
 	LODOP.SET_PRINT_STYLEA(0,"ItemType",1);	
-	//LODOP.SET_PRINT_STYLEA(0,"ItemType",0);
-	//è¡¨å¤´çš„é«˜åº¦
+	//±íÍ·µÄ¸ß¶È
 	var invHeight="30mm";
 	var mystr="";
 	for (var i= 0; i<PrtAryData.length;i++){
@@ -1455,13 +1472,13 @@ function PrintOrd(PrintNum,IndirPrint,TaskName,inpara,Cols,DetailData) {
 	DHC_CreateByXML(LODOP,inpara,"","","","");
 	
 	/*
-	var intOrient=3; //æ‰“å°æ–¹å‘
-	var PageWidth='0'; //ä¸åŠ å•ä½,é»˜è®¤0.1mm
-	var PageHeight='0'; //ä¸åŠ å•ä½,é»˜è®¤0.1mm
-	var strPageName="A4"; //å½“widthå’Œheightä¸èµ·ä½œç”¨æ—¶ï¼Œæ‰æœ‰ç”¨
+	var intOrient=3; //´òÓ¡·½Ïò
+	var PageWidth='0'; //²»¼Óµ¥Î»,Ä¬ÈÏ0.1mm
+	var PageHeight='0'; //²»¼Óµ¥Î»,Ä¬ÈÏ0.1mm
+	var strPageName="A4"; //µ±widthºÍheight²»Æğ×÷ÓÃÊ±£¬²ÅÓĞÓÃ
 	LODOP.SET_PRINT_PAGESIZE(intOrient, PageWidth,PageHeight,strPageName)
 	*/
-	////-----æ¨¡æ¿å†…å®¹ç»“æŸ
+	////-----Ä£°åÄÚÈİ½áÊø
 	var tableStyle={
 		HeadTrHeight:20,
 		HeadFontsize:"9pt",
@@ -1475,16 +1492,16 @@ function PrintOrd(PrintNum,IndirPrint,TaskName,inpara,Cols,DetailData) {
 	//LODOP.SET_PRINT_STYLEA(0,"Vorient",3);	
 	//LODOP.ADD_PRINT_HTM(invHeight, 0, 800, 1000, strTableStyle);
 	
-	var TableHtml=GetPrintTableHtml(tableStyle,Cols,DetailData)
-	LODOP.ADD_PRINT_TABLE(invHeight, 0, "100%", '100%', TableHtml);
-		/*ç»“æŸæ‰“å°*/
-	LODOP.SET_PRINT_COPIES(PrintNum)  //è®¾ç½®æ‰“å°æ¬¡æ•°
+	var TableHtml=GetPrintTableHtml(tableStyle,Cols,DetailData,"N")
+	LODOP.ADD_PRINT_TABLE(invHeight, 0, "100%", "BottomMargin:25", TableHtml);
+	
+	/*½áÊø´òÓ¡*/
+	LODOP.SET_PRINT_COPIES(PrintNum)  //ÉèÖÃ´òÓ¡´ÎÊı
 	if (IndirPrint == "N") {
-		LODOP.PRINT ();  //ç›´æ¥æ‰“å°
+		LODOP.PRINT ();  //Ö±½Ó´òÓ¡
 		//LODOP.PREVIEW();
-	}
-	else{
-		LODOP.PREVIEW();  //é¢„è§ˆæ‰“å°
+	}else{
+		LODOP.PREVIEW();  //Ô¤ÀÀ´òÓ¡
 	}
 
 }

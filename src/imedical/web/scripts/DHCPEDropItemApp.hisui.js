@@ -5,6 +5,8 @@
 //创建人  xy
 
 $(function(){
+	// 退费原因宽度与按钮对齐
+	$("#RefundRmark").width($("#RefundRmark").width()-7);
 	 
 	InitCombobox();
 	
@@ -12,13 +14,14 @@ $(function(){
 	
 	initOrdItmList();
 	
+	iniForm();
 	//查询
 	$("#BFind").click(function() {	
 		BFind_click();		
         });
         
     //清屏 
-    $("#Bclear").click(function() {	
+   	 $("#Bclear").click(function() {	
 		 Bclear_click();		
         }); 
       
@@ -58,6 +61,12 @@ $(function(){
 	$("#BPrint").click(function() {	
 		 BPrint_Click();		
     }); 
+
+	//撤销退费申请
+	$("#BCancelRefundApp").click(function() { 
+		 BCancelRefundApp_Click(); 
+    });
+
     
     //卡类型
 	$HUI.combobox('#cardType', {
@@ -85,6 +94,24 @@ $(function(){
 	
 })
 
+
+function iniForm(){
+
+    var UserDR=session['LOGON.USERID'];
+	var LocID=session['LOGON.CTLOCID'];
+	
+
+	var OPflag=tkMakeServerCall("web.DHCPE.CT.ChargeLimit","GetOPChargeLimitInfo",UserDR,LocID);
+	var OPflagOne=OPflag.split("^");
+	
+	//全退申请
+	if(OPflagOne[5]=="Y"){
+		$("#BAllRefundApp").linkbutton('enable');
+	}else{
+		$("#BAllRefundApp").linkbutton('disable');
+	}
+
+}
 
 
 function ReadCardClickHandle(){
@@ -135,11 +162,15 @@ function InitCombobox()
 {
 	// 日结标记	
 	var RPObj = $HUI.combobox("#RPFlag",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindRPFlag&ResultSetType=array",
 		valueField:'id',
-		textField:'desc'
-		
-		})
+		textField:'text',
+		panelHeight:'70',
+		data:[
+            {id:'Y',text:$g('是')},
+            {id:'N',text:$g('否')} 
+        ]
+
+	}); 
 		
 }
 
@@ -169,7 +200,8 @@ function BFind_click(){
 			PatName:$("#PatName").val(),
 			User:$("#User").val(),
 			RPFlag:$("#RPFlag").combobox('getValue'),
-			isApply:"0"
+			isApply:"0",
+			LocID:session['LOGON.CTLOCID']
 			
 		}
 	});
@@ -190,7 +222,8 @@ function loadOrdItmList(row) {
 	$('#ordItmList').datagrid('load', {
 		ClassName: 'web.DHCPE.ItemFeeList',
 		QueryName: 'FindItemFeeList',
-		InvPrtId: row.TRowId
+		InvPrtId: row.TRowId,
+		CSPName:"dhcpedropfeeapp.hisui.csp"	
 		
 	});
 	if(row.TRowId!=$('#InvPrtId').val()){$("#RefundRmark").val("");}
@@ -244,7 +277,8 @@ function initInvList() {
 			PatName:$("#PatName").val(),
 			User:$("#User").val(),
 			RPFlag:$("#RPFlag").combobox('getValue'),
-			isApply:"0"
+			isApply:"0",
+			LocID:session['LOGON.CTLOCID']
 			
 		},
 		columns: [[{
@@ -265,17 +299,35 @@ function initInvList() {
 					align: 'right',
 					width: 100
 				}, {
+					title:'是否打印电子发票',
+					field:'TPrintEInv',
+					width:160,
+					align:'center',
+           			formatter: function (value,rowData,rowIndex) {
+	           			if(rowData.TRowId!=""){
+							if(value=="0"){
+								return '<input type="checkbox" checked="checked" disabled/>';
+							}else{
+								return '<input type="checkbox" value="" disabled/>';
+							}
+	           			}
+					}
+    			},{
+	    			title:'电子票据号',
+	    			field:'TEInvNo',
+    				width:140	
+    			},{
 					title: '收费员',
 					field: 'TUser',
 					width: 100
 				}, {
 					title: '收费日期',
 					field: 'TInvDate',
-					width: 180
+					width: 160
 				},{
 					title: '日结标记',
 					field: 'TRPFlag',
-					width: 30
+					width: 80
 				}, {
 					title: 'TRowId',
 					field: 'TRowId',
@@ -288,6 +340,13 @@ function initInvList() {
 				total: 0,
 				rows: []
 			});
+			var flag=tkMakeServerCall("web.DHCPE.ItemFeeList","GetApplyRefundFlag",rowData.TRowId);
+   			if(flag=="0"){
+				$("#AllRefundApp").checkbox('setValue',true);
+			}else{
+				 $("#AllRefundApp").checkbox('setValue',false);	
+			}
+			
 			loadOrdItmList(rowData);
 		}
 	});
@@ -302,7 +361,7 @@ function initOrdItmList() {
 		selectOnCheck: false,
 		checkOnSelect:false,
 		autoRowHeight: false,
-		showFooter: true,
+		//showFooter: true,
 		url: $URL,
 		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
 		rownumbers: true, //如果为true, 则显示一个行号列
@@ -311,6 +370,7 @@ function initOrdItmList() {
 	    queryParams:{
 			ClassName:"web.DHCPE.ItemFeeList",
 			QueryName:"FindItemFeeList",
+			CSPName:"dhcpedropfeeapp.hisui.csp"
 				
 		},
 		columns: [[{
@@ -482,6 +542,11 @@ function AddSelectItem(rowIndex,rowData)
 {
 	
 	 var invPrtId=$("#InvPrtId").val();
+	 var InvStatus=tkMakeServerCall("web.DHCPE.InvPrt","GetInvStatus",invPrtId);
+	 if(InvStatus=="1"){
+		 $.messager.alert("提示","该发票已作废，不能申请退费!","info");
+		return ;
+	 }
 	 var SelectIds=","
 	  backAmount=0
 
@@ -500,14 +565,33 @@ function AddSelectItem(rowIndex,rowData)
        		 backAmount = parseFloat(backAmount) + parseFloat(RefundAmount[j]); 
        }
        
+       //alert(SelectIds)
       backAmount= parseFloat(backAmount).toFixed(2);
        $("#BackAmount").val(backAmount); 
-    var flag=tkMakeServerCall("web.DHCPE.ItemFeeList","SetApplyRefund",invPrtId,SelectIds,"temp",backAmount)
+	var UserID=session['LOGON.USERID'];
+	var LocID=session['LOGON.CTLOCID'];
+    var flag=tkMakeServerCall("web.DHCPE.ItemFeeList","SetApplyRefund",invPrtId,SelectIds,"temp",backAmount,LocID,UserID)
 	  
 }
 
 function RemoveSelectItem(rowIndex, rowData) { 
+  //alert(rowIndex+"rowIndex")
+    var UserID=session['LOGON.USERID'];
 	var invPrtId=$("#InvPrtId").val();
+	var InvStatus=tkMakeServerCall("web.DHCPE.InvPrt","GetInvStatus",invPrtId);
+	 if(InvStatus=="1"){
+		 $.messager.alert("提示","该发票已作废，不能申请退费!","info");
+		return ;
+	 }
+	if(rowData.OrdStatusDesc=="已发药"){
+	var CancleDuugApply=tkMakeServerCall("web.DHCPE.ItemFeeList","CancleDrugApply",rowData.RowId,rowData.FeeType,UserID);
+	//alert(CancleDuugApply+"CancleDuugApply")
+	if(CancleDuugApply!=0){
+		$.messager.alert("提示", "撤销退药申请失败!", 'success');
+		$(this).datagrid('reload');
+		return false;
+		}
+	}
 	 backAmount=0
     var SelectIds=","
     var k = FindSelectItem(rowData.FeeType+"^"+rowData.RowId); 
@@ -527,7 +611,11 @@ function RemoveSelectItem(rowIndex, rowData) {
        
       backAmount= parseFloat(backAmount).toFixed(2); 
      $("#BackAmount").val(backAmount);
-     var flag=tkMakeServerCall("web.DHCPE.ItemFeeList","SetApplyRefund",invPrtId,SelectIds,"temp",backAmount)
+     //alert(SelectIds+"SelectIds")
+	  if(SelectIds==","){var SelectIds="";}
+	  var UserID=session['LOGON.USERID'];
+	 var LocID=session['LOGON.CTLOCID'];  
+     var flag=tkMakeServerCall("web.DHCPE.ItemFeeList","SetApplyRefund",invPrtId,SelectIds,"temp",backAmount,LocID,UserID)
 	
                         
   } 
@@ -564,7 +652,9 @@ function GetSelectIds()
 
 	//退费申请的记录写到global中
 	//alert(invPrtId+","+SelectIds+","+backAmount)
-	var flag=tkMakeServerCall("web.DHCPE.ItemFeeList","SetApplyRefund",invPrtId,SelectIds,"temp",backAmount)
+	var UserID=session['LOGON.USERID'];
+	var LocID=session['LOGON.CTLOCID']; 
+	var flag=tkMakeServerCall("web.DHCPE.ItemFeeList","SetApplyRefund",invPrtId,SelectIds,"temp",backAmount,LocID,UserID)
 	//alert(flag+"flag")
 	if(flag==1)
 	{
@@ -579,19 +669,72 @@ function GetSelectIds()
 	//alert(SelectIds)
 }
 
+
+function BCancelRefundApp_Click()
+{
+	var UserId=session['LOGON.USERID'];
+	var invPrtId=$("#InvPrtId").val();
+	if (invPrtId==""){
+		$.messager.alert("提示","请选择待撤销退费申请的发票!","info");
+		return false;
+	}
+	 var InvStatus=tkMakeServerCall("web.DHCPE.InvPrt","GetInvStatus",invPrtId);
+	 if(InvStatus=="1"){
+		 $.messager.alert("提示","该发票已作废，不能撤销申请退费!","info");
+		return ;
+	 }
+	var flag=tkMakeServerCall("web.DHCPE.ItemFeeList","GetApplyRefundFlag",invPrtId);
+	if(flag==""){
+		$.messager.alert("提示","没有申请退费,不能撤销退费申请!","info");
+return false;
+	}else{
+		var ret=tkMakeServerCall("web.DHCPE.ItemFeeList","BCancelRefundApp",invPrtId,UserId);
+		if(ret=="0"){
+			$.messager.alert("提示","撤销退费申请成功!","success");
+			var flag=tkMakeServerCall("web.DHCPE.ItemFeeList","GetApplyRefundFlag",invPrtId);
+   			if(flag=="0"){
+				$("#AllRefundApp").checkbox('setValue',true);
+			}else{
+				$("#AllRefundApp").checkbox('setValue',false);	
+			}
+			
+			$('#ordItmList').datagrid('load', {
+				ClassName: 'web.DHCPE.ItemFeeList',
+				QueryName: 'FindItemFeeList',
+				InvPrtId:invPrtId
+		
+			});
+		}
+	}
+	
+	
+}
+
 //全退申请
 function BAllRefundApp_Click()
 {
-	
+	var UserID=session['LOGON.USERID'];
+	var LocID=session['LOGON.CTLOCID']; 
 	var invPrtId=$("#InvPrtId").val();
 	if (invPrtId==""){
-		$.messager.alert("提示","没有退费申请发票","info");
+		$.messager.alert("提示","没有退费申请发票!","info");
 		return false;
 	}
+     var InvStatus=tkMakeServerCall("web.DHCPE.InvPrt","GetInvStatus",invPrtId);
+	 if(InvStatus=="1"){
+		 $.messager.alert("提示","该发票已作废，不能申请退费!","info");
+		return ;
+	 }
 	//退费申请的记录写到global中
-	var flag=tkMakeServerCall("web.DHCPE.ItemFeeList","SetApplyRefund",invPrtId,"AllRefund")
+	var flag=tkMakeServerCall("web.DHCPE.ItemFeeList","SetApplyRefund",invPrtId,"AllRefund","","",LocID,UserID)
 	if(flag==1){
 		$.messager.alert("提示","全退申请成功!","success");
+		var flag=tkMakeServerCall("web.DHCPE.ItemFeeList","GetApplyRefundFlag",invPrtId);
+   		if(flag=="0"){
+			$("#AllRefundApp").checkbox('setValue',true);
+		}else{
+			$("#AllRefundApp").checkbox('setValue',false);	
+		}
 	}else{
 		$.messager.alert("提示","全退申请失败!","error");
 		
@@ -603,13 +746,18 @@ function BPrint_Click()
 {
 	var invPrtId=$("#InvPrtId").val();
 	if (invPrtId==""){
-		$.messager.alert("提示","没有退费申请发票","info");
+		$.messager.alert("提示","没有退费申请发票!","info");
 		return false;
 	}
+	 var InvStatus=tkMakeServerCall("web.DHCPE.InvPrt","GetInvStatus",invPrtId);
+	 if(InvStatus=="1"){
+		 $.messager.alert("提示","该发票已作废，不能打印退费申请单!","info");
+		return ;
+	 }
 	var info=tkMakeServerCall("web.DHCPE.ItemFeeList","GetRefundInfo",invPrtId);
 	
 	if (info==""){
-		$.messager.alert("提示","还没有做退费申请，请选择退费项目或者点击全退申请","info");
+		$.messager.alert("提示","还没有做退费申请，请选择退费项目或者点击全退申请!","info");
 		return false;
 	}
 	var RefundRmark=$("#RefundRmark").val();
@@ -627,19 +775,43 @@ function TFDCreatePrintPage(PrinterName,invPrtId)
 	}
 	var PrintURL=tkMakeServerCall("web.DHCPE.GetLodopPrintPath","GetTFDPrintInfo",invPrtId,"Header");
 	//alert(PrintURL)
-	//增加打印基本信息，做为页眉打印，每页都有
-	LODOP.ADD_PRINT_URL("12mm","12mm","RightMargin:6mm","80mm",PrintURL); //Top,Left,Width,Height,strURL
-	LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
-	LODOP.SET_PRINT_MODE("PRINT_PAGE_PERCENT","Full-Page");
+	var xmlHttp=createXmlHttp();
+	xmlHttp.onreadystatechange = function (a,b){
+	    if (xmlHttp.readyState == 4) {
+			//增加打印基本信息，做为页眉打印，每页都有
+			//LODOP.ADD_PRINT_URL("12mm","12mm","RightMargin:6mm","80mm",PrintURL); //Top,Left,Width,Height,strURL
+			LODOP.ADD_PRINT_HTM("12mm","12mm","RightMargin:6mm","80mm",xmlHttp.responseText);
+			LODOP.SET_PRINT_STYLEA(0,"ItemType",1);
+			LODOP.SET_PRINT_MODE("PRINT_PAGE_PERCENT","Full-Page");
 	
-		//增加打印项目信息
-	var PrintURL=tkMakeServerCall("web.DHCPE.GetLodopPrintPath","GetTFDPrintInfo",invPrtId,"Body");
-	LODOP.ADD_PRINT_URL("60mm","12mm","RightMargin:6mm","BottomMargin:20mm",PrintURL); //Top,Left,Width,Height,strURL
-	LODOP.SET_PRINT_MODE("FULL_WIDTH_FOR_OVERFLOW",true);
+			//增加打印项目信息
+			var PrintURL=tkMakeServerCall("web.DHCPE.GetLodopPrintPath","GetTFDPrintInfo",invPrtId,"Body");
+			var xmlHttp2=createXmlHttp();
+			xmlHttp2.onreadystatechange = function (a,b){
+	    		if (xmlHttp2.readyState == 4) {
+					//LODOP.ADD_PRINT_URL("60mm","12mm","RightMargin:6mm","BottomMargin:20mm",PrintURL); //Top,Left,Width,Height,strURL
+					LODOP.ADD_PRINT_HTM("60mm","12mm","RightMargin:6mm","BottomMargin:20mm",xmlHttp2.responseText);
+					LODOP.SET_PRINT_MODE("FULL_WIDTH_FOR_OVERFLOW",true);
 	
-	LODOP.PRINT();
+					LODOP.PRINT();
+	    		}
+			}
+			xmlHttp2.open("GET", PEURLAddToken(PrintURL), true);
+    		xmlHttp2.send(null);
+		} 
+	}
+	xmlHttp.open("GET", PEURLAddToken(PrintURL), true);
+    xmlHttp.send(null);
 }
-
+function createXmlHttp() {
+    //根据window.XMLHttpRequest对象是否存在使用不同的创建方式
+    if (window.XMLHttpRequest) {
+       xmlHttp = new XMLHttpRequest();                  //FireFox、Opera等浏览器支持的创建方式
+    } else {
+       xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");//IE浏览器支持的创建方式
+    }
+    return xmlHttp;
+}
 
 /*
 //打印退费单

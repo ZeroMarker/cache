@@ -1,91 +1,96 @@
 // /名称: 实盘：录入方式三（根据账盘数据按品种填充实盘数）
 // /描述: 实盘：录入方式三（根据账盘数据按品种填充实盘数）
 var init = function() {
-	//盘点录入方式三
-	//=======================条件初始化start==================
-	//类组  库存分类联动
-	$('#ScgStk').stkscgcombotree({
-		onSelect:function(node){
+	// 盘点录入方式三
+	// =======================条件初始化start==================
+	// 库存分类
+	var StkCatBox = $HUI.combobox('#StkCat', {
+		valueField: 'RowId',
+		textField: 'Description'
+	});
+	
+	// 类组
+	$('#StkScg').stkscgcombotree({
+		onSelect: function(node) {
+			StkCatBox.clear();
 			$.cm({
-				ClassName:'web.DHCSTMHUI.Common.Dicts',
-				QueryName:'GetStkCat',
-				ResultSetType:'array',
-				StkGrpId:node.id
-			},function(data){
+				ClassName: 'web.DHCSTMHUI.Common.Dicts',
+				QueryName: 'GetStkCat',
+				ResultSetType: 'array',
+				StkGrpId: node.id
+			}, function(data) {
 				StkCatBox.loadData(data);
-				})
-			}
-	})
-	//库存分类
-	var StkCatBox = $HUI.combobox('#StkCatBox', {
-			valueField: 'RowId',
-			textField: 'Description'
-		});
-	//货位
-	var LocStkBinParams=JSON.stringify(addSessionParams({LocDr:gLocId}));
-	var LocStkBinBox = $HUI.combobox('#LocStkBin', {
-		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetLocStkBin&ResultSetType=array&Params='+LocStkBinParams,
-		valueField: 'RowId',
-		textField: 'Description'
+			});
+		}
 	});
-	//管理组
-	var LocManaGrpBox = $HUI.combobox('#LocManaGrp', {
-		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetLocManGrp&ResultSetType=array&LocId='+gLocId,
-		valueField: 'RowId',
-		textField: 'Description'
-	});
-	//实盘窗口
-	var InStkTkWinBox = $HUI.combobox('#InStkTkWin', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetInStkTkWindow&ResultSetType=array&LocId='+gLocId,
+	var StktkReasonParams = JSON.stringify(addSessionParams({
+		Type: 'M'
+	}));
+	var StktkReasonCombox = {
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetStktkReason&ResultSetType=array&Params=' + StktkReasonParams,
 			valueField: 'RowId',
 			textField: 'Description',
-			editable:false
-		});
-	$('#InStkTkWin').combobox('setValue', gInstwWin);
-	var HandlerParams=function(){
-		var Scg=$("#ScgStk").combotree('getValue');
-		var Obj={StkGrpRowId:Scg,StkGrpType:"M"};
-		return Obj
-	}
-	$("#InciDesc").lookup(InciLookUpOp(HandlerParams,'#InciDesc','#Inci'));
-	//===========================条件初始end===========================
+			mode: 'remote',
+			onSelect: function(record) {
+				var rows = DetailGrid.getRows();
+				var row = rows[DetailGrid.editIndex];
+				row.StktkReason = record.Description;
+			},
+			onShowPanel: function() {
+				$(this).combobox('reload');
+			}
+		}
+	};
+	var HandlerParams = function() {
+		var Scg = $('#StkScg').combotree('getValue');
+		var Obj = { StkGrpRowId: Scg, StkGrpType: 'M' };
+		return Obj;
+	};
+	$('#InciDesc').lookup(InciLookUpOp(HandlerParams, '#InciDesc', '#InciId'));
+	// ===========================条件初始end===========================
 	// ======================tbar操作事件start=========================
-		//清屏
-	$UI.linkbutton('#ClearBT',{ 
-		onClick:function(){
+	// 清屏
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
 			Clear();
 		}
 	});
 	function Clear() {
 		$UI.clearBlock('#ConditionsInput');
 		$UI.clear(DetailGrid);
-		var Dafult={
-				ScgStk:"",
-				LocManaGrp:"",
-				InstNo:"",
-				StkCatBox:"",
-				LocStkBin:"",
-				InStkTkWin:""
-			}
-		$UI.fillBlock('#ConditionsInput',Dafult);
+		var DefaultData = {
+			StkScg: '',
+			LocManGrp: '',
+			InstNo: '',
+			StkCat: '',
+			LocStkBin: '',
+			InStkTkWin: ''
+		};
+		$UI.fillBlock('#ConditionsInput', DefaultData);
+		Select(gRowId);
 	}
-	//查询
-	$UI.linkbutton('#QueryBT',{ 
-		onClick:function(){
+	// 查询
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
 			QueryDetail();
 		}
 	});
-	//保存
-	$UI.linkbutton('#SaveBT',{ 
-		onClick:function(){
-			var ParamsObj=$UI.loopBlock('#ConditionsInput');
-			var Main=JSON.stringify(ParamsObj)
-			var ListData=DetailGrid.getChangesData("rowid");
-			if (ListData === false){	//未完成编辑或明细为空
+	// 保存
+	$UI.linkbutton('#SaveBT', {
+		onClick: function() {
+			if (!DetailGrid.endEditing()) {
 				return;
 			}
-			if (isEmpty(ListData)){	//明细不变
-				$UI.msg("alert", "没有需要保存的明细!");
+			var ParamsObj = $UI.loopBlock('#ConditionsInput');
+			var Main = JSON.stringify(ParamsObj);
+			var ListData = DetailGrid.getChangesData('RowId');
+			if (ListData === false) {	// 未完成编辑或明细为空
+				return;
+			}
+			if (isEmpty(ListData)) {	// 明细不变
+				$UI.msg('alert', '没有需要保存的明细!');
 				return;
 			}
 			showMask();
@@ -94,241 +99,314 @@ var init = function() {
 				MethodName: 'jsSave',
 				Main: Main,
 				ListData: JSON.stringify(ListData)
-			},function(jsonData){
+			}, function(jsonData) {
 				hideMask();
-				if(jsonData.success==0){
-					$UI.msg('success',jsonData.msg);
-					QueryDetail()
-				}else{
-					$UI.msg('error',jsonData.msg);
+				if (jsonData.success == 0) {
+					$UI.msg('success', jsonData.msg);
+					QueryDetail();
+				} else {
+					$UI.msg('error', jsonData.msg);
 				}
 			});
-			
 		}
 	});
-	//设置未填数 flag=1 等于0  flag=2 等于账盘数
-	function SetDefault(flag){
-		var ParamsObj=$UI.loopBlock('#ConditionsInput');
-		var Params=JSON.stringify(ParamsObj)
+	// 设置未填数 flag=1 等于0  flag=2 等于账盘数
+	function SetDefault(Flag) {
+		var ParamsObj = $UI.loopBlock('#ConditionsInput');
+		var Params = JSON.stringify(ParamsObj);
+		showMask();
 		$.cm({
 			ClassName: 'web.DHCSTMHUI.InStkTkInput',
 			MethodName: 'jsSetDefaultQty',
 			Params: Params,
-			Flag:flag
-		},function(jsonData){
-			$UI.msg('success',jsonData.msg);
-			QueryDetail();
-//			if(jsonData.success>=0){
-//				QueryDetail()
-//			}
+			Flag: Flag
+		}, function(jsonData) {
+			hideMask();
+			if (jsonData.success >= 0) {
+				$UI.msg('success', jsonData.msg);
+				QueryDetail();
+			} else {
+				$UI.msg('error', jsonData.msg);
+			}
 		});
 	}
 	
-	
 	// 根据账盘数据插入实盘列表
-	function creatStk(inst, instwWin){
-		if (isEmpty(inst)) {
-			$UI.msg('alert','请选择盘点单!');
+	function CreatStk(Inst, InstwWin) {
+		if (isEmpty(Inst)) {
+			$UI.msg('alert', '请选择盘点单!');
 			return false;
 		}
 		$.cm({
-				ClassName: 'web.DHCSTMHUI.InStkTkInput',
-				MethodName: 'jsCreateStkTkInput',
-				Inst: gRowid,
-				User:gUserId,
-				InputWin:gInstwWin
-			},function(jsonData){
-				//$UI.msg('alert',jsonData.msg);
-				if(jsonData.success>=0){
-					Select(gRowid);
-				}
-			});
+			ClassName: 'web.DHCSTMHUI.InStkTkInput',
+			MethodName: 'jsCreateStkTkInput',
+			Inst: Inst,
+			UserId: gUserId,
+			WinId: InstwWin
+		}, function(jsonData) {
+			if (jsonData.success >= 0) {
+				Select(Inst);
+			}
+		});
 	}
 	
-	var Select=function(inst){
-		//$UI.clearBlock('#ConditionsInput');
-		//$UI.clear(DetailGrid);
+	var Select = function(Inst) {
 		$.cm({
 			ClassName: 'web.DHCSTMHUI.INStkTk',
 			MethodName: 'jsSelect',
-			inst: inst
-			},
-			function(jsonData){
-				$UI.fillBlock('#ConditionsInput',jsonData);
-				QueryDetail();
+			Inst: Inst
+		},
+		function(jsonData) {
+			var SupLocId = jsonData.SupLocId;
+			LoadData(SupLocId);
+			$UI.fillBlock('#ConditionsInput', jsonData);
+			QueryDetail();
 		});
-		
-	
+	};
+	function LoadData(LocId) {
+		// 货位
+		var LocStkBinParams = JSON.stringify(addSessionParams({ LocDr: LocId }));
+		$HUI.combobox('#LocStkBin', {
+			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetLocStkBin&ResultSetType=array&Params=' + LocStkBinParams,
+			valueField: 'RowId',
+			textField: 'Description'
+		});
+		// 管理组
+		$HUI.combobox('#LocManGrp', {
+			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetLocManGrp&ResultSetType=array&LocId=' + LocId,
+			valueField: 'RowId',
+			textField: 'Description'
+		});
+		// 实盘窗口
+		$HUI.combobox('#InStkTkWin', {
+			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetInStkTkWindow&ResultSetType=array&LocId=' + LocId,
+			valueField: 'RowId',
+			textField: 'Description',
+			editable: false
+		});
+		$('#InStkTkWin').combobox('setValue', gInstwWin);
 	}
 	
-	function QueryDetail(){
-		var ParamsObj=$UI.loopBlock('#ConditionsInput');
-		var Params=JSON.stringify(ParamsObj)
-		$UI.setUrl(DetailGrid);
+	function QueryDetail() {
+		var ParamsObj = $UI.loopBlock('#ConditionsInput');
+		var Params = JSON.stringify(ParamsObj);
 		DetailGrid.load({
 			ClassName: 'web.DHCSTMHUI.InStkTkInput',
 			QueryName: 'jsINStkTkInPut',
-			Sort:"code",
-			Dir:"ASC",
+			query2JsonStrict: 1,
 			Params: Params,
 			rows: 99999
 		});
-		
 	}
+	// ======================tbar操作事件end============================
 	
-	//======================tbar操作事件end============================
-	
-	
-	var DetailGridCm = [[{
-			title: 'rowid',
-			field: 'rowid',
+	var DetailGridCm = [[
+		{
+			title: 'RowId',
+			field: 'RowId',
+			width: 50,
 			hidden: true
 		}, {
-			title: 'parref',
-			field: 'parref',
+			title: 'Inst',
+			field: 'Inst',
+			width: 50,
 			hidden: true
 		}, {
-			title: 'inci',
-			field: 'inci',
+			title: 'InciId',
+			field: 'InciId',
+			width: 50,
 			hidden: true
 		}, {
 			title: '物资代码',
-			field: 'code',
-			width:120
+			field: 'InciCode',
+			width: 120
 		}, {
 			title: '物资名称',
-			field: 'desc',
-			width:150
+			field: 'InciDesc',
+			width: 150
 		}, {
-			title: "规格",
-			field:'spec',
-			width:100
+			title: '规格',
+			field: 'Spec',
+			width: 100
 		}, {
-			title:"uomrowid",
-			field:'uom',
-			hidden:true
+			title: 'UomId',
+			field: 'UomId',
+			width: 50,
+			hidden: true
 		}, {
-			title:"单位",
-			field:'uomDesc',
-			width:100
+			title: '单位',
+			field: 'UomDesc',
+			width: 60
 		}, {
-			title:"进价",
-			field:'rp',
-			width:100,
-			align:'right'
+			title: '账盘数量',
+			field: 'FreezeQty',
+			width: 80,
+			align: 'right'
 		}, {
-			title:"账盘数量",
-			field:'freQty',
-			width:80,
-			align:'right'
-		}, {
-			title:"实盘数量",
-			field:'countQty',
-			width:100,
-			align:'right',
-			editor:{
-				type:'numberbox',
-				options:{
-					
-					}
+			title: '实盘数量',
+			field: 'CountQty',
+			width: 80,
+			align: 'right',
+			editor: {
+				type: 'numberbox',
+				options: {
+					min: 0,
+					precision: GetFmtNum('FmtQTY')
 				}
+			}
 		}, {
-			title:"实盘日期",
-			field:'countDate',
-			width:100
+			title: '损益数量',
+			field: 'VarianceQty',
+			width: 80,
+			align: 'right'
 		}, {
-			title:"实盘时间",
-			field:'countTime',
-			width:100
+			title: '损益原因',
+			field: 'StktkReasonId',
+			width: 120,
+			align: 'left',
+			formatter: CommonFormatter(StktkReasonCombox, 'StktkReasonId', 'StktkReason'),
+			editor: StktkReasonCombox
 		}, {
-			title:"实盘人",
-			field:'userName',
-			width:60
+			title: '进价',
+			field: 'Rp',
+			width: 60,
+			align: 'right'
 		}, {
-			title:"货位",
-			field:'IncsbDesc',
-			width:100
+			title: '账盘金额',
+			field: 'FreezeRpAmt',
+			width: 100,
+			align: 'right'
 		}, {
-			title:"损益数量",
-			field:'adjQty',
-			width:100,
-			align:'right'
+			title: '实盘金额',
+			field: 'CountRpAmt',
+			width: 100,
+			align: 'right'
 		}, {
-			title:"账盘进价金额",
-			field:'freezeRpAmt',
-			width:100,
-			align:'right'
+			title: '损益金额',
+			field: 'VarianceRpAmt',
+			width: 100,
+			align: 'right'
 		}, {
-			title:"实盘进价金额",
-			field:'countRpAmt',
-			width:100,
-			align:'right'
+			title: '货位',
+			field: 'StkBinDesc',
+			width: 100
 		}, {
-			title:"损益进价金额",
-			field:'adjRpAmt',
-			width:100,
-			align:'right'
+			title: '实盘人',
+			field: 'CountUserName',
+			width: 100
+		}, {
+			title: '实盘日期',
+			field: 'CountDate',
+			width: 100
+		}, {
+			title: '实盘时间',
+			field: 'CountTime',
+			width: 100
 		}
 	]];
-	var DetailGrid = $UI.datagrid('#DetailGrid',{
-		queryParams : {
+	var DetailGrid = $UI.datagrid('#DetailGrid', {
+		queryParams: {
 			ClassName: 'web.DHCSTMHUI.InStkTkInput',
-			QueryName: 'INStkTkInPut',
+			QueryName: 'jsINStkTkInPut',
+			query2JsonStrict: 1,
 			rows: 99999
 		},
-		columns : DetailGridCm,
-		pagination:false,
-		onClickCell: function(index, filed ,value){
-			DetailGrid.commonClickCell(index,filed,value);
+		columns: DetailGridCm,
+		showBar: true,
+		sortName: 'InciCode',
+		sortOrder: 'asc',
+		pagination: false,
+		onClickRow: function(index, row) {
+			DetailGrid.commonClickRow(index, row);
 		},
-		onBeginEdit: function (index, row) {
+		onBeginEdit: function(index, row) {
 			$('#DetailGrid').datagrid('beginEdit', index);
 			var ed = $('#DetailGrid').datagrid('getEditors', index);
 			for (var i = 0; i < ed.length; i++) {
 				var e = ed[i];
-				if (e.field == 'countQty') {
-					$(e.target).bind('keydown', function (event) {
-						if (event.keyCode == 38) {//up
-							//向上移动到第一行为止
+				if (e.field == 'CountQty') {
+					$(e.target).bind('keydown', function(event) {
+						if (event.keyCode == 38) { // up
+							var newed;
+							// 向上移动到第一行为止
 							if (index > 0) {
-								newindex=index-1;
+								newindex = index - 1;
 								$('#DetailGrid').datagrid('selectRow', newindex);
 								$('#DetailGrid').datagrid('endEdit', index).datagrid('beginEdit', newindex);
-								var newed = DetailGrid.getEditor({index:newindex,field:'countQty'});
-								if(newed!=null){
+								newed = DetailGrid.getEditor({ index: newindex, field: 'CountQty' });
+								if (newed != null) {
 									$(newed.target).focus();
 									$(newed.target).next().children().focus();
 								}
 							}
 						}
-						if (event.keyCode == 40) {//down
+						if (event.keyCode == 40) { // down
 							if (index < $('#DetailGrid').datagrid('getData').rows.length - 1) {
-								newindex=index+1;
+								newindex = index + 1;
 								$('#DetailGrid').datagrid('selectRow', newindex);
 								$('#DetailGrid').datagrid('endEdit', index).datagrid('beginEdit', newindex);
-								var newed = DetailGrid.getEditor({index:newindex,field:'countQty'});
-								if(newed!=null){
+								newed = DetailGrid.getEditor({ index: newindex, field: 'CountQty' });
+								if (newed != null) {
 									$(newed.target).focus();
 									$(newed.target).next().children().focus();
 								}
 							}
 						}
-					})
+					});
 				}
 			}
 		},
-		toolbar:[{
+		onEndEdit: function(index, row, changes) {
+			if (changes.hasOwnProperty('CountQty')) {
+				var CountQty = Number(row.CountQty);
+				var FreezeQty = Number(row.FreezeQty);
+				var Rp = Number(row.Rp);
+				var FreezeRpAmt = Number(row.FreezeRpAmt);
+				var VarianceQty, VarianceRpAmt;
+				if (CountQty < 0) {
+					$UI.msg('alert', '实盘数量不能小于0!');
+					VarianceQty = 0 - FreezeQty;
+					VarianceRpAmt = 0 - FreezeRpAmt;
+					$(this).datagrid('updateRow', {
+						index: index,
+						row: {
+							CountQty: 0,
+							CountRpAmt: 0,
+							VarianceQty: VarianceQty,
+							VarianceRpAmt: VarianceRpAmt
+						}
+					});
+					return false;
+				} else {
+					VarianceQty = CountQty - FreezeQty;
+					VarianceRpAmt = VarianceQty * Rp;
+					var CountRpAmt = CountQty * Rp;
+					$(this).datagrid('updateRow', {
+						index: index,
+						row: {
+							CountRpAmt: CountRpAmt,
+							VarianceQty: VarianceQty,
+							VarianceRpAmt: VarianceRpAmt
+						}
+					});
+				}
+			}
+		},
+		toolbar: [
+			{
 				text: '设置未填数等于0',
-				iconCls: 'icon-paper-cfg',
-				handler: function () {
+				iconCls: 'icon-set-zero',
+				handler: function() {
 					SetDefault(1);
-				}},{
+				}
+			}, {
 				text: '设置未填数等于账盘数',
-				iconCls: 'icon-paper-cfg',
-				handler: function () {
+				iconCls: 'icon-set-paper',
+				handler: function() {
 					SetDefault(2);
-				}}]
-	})
-	creatStk(gRowid, gInstwWin);
-}
+				}
+			}]
+	});
+	CreatStk(gRowId, gInstwWin);
+};
 $(init);

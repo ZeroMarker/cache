@@ -4,9 +4,33 @@ function InitPathEntityListWin(){
 	obj.RecRowID= "";
     $.parser.parse(); // 解析整个页面 
 	
+	//增加院区配置 add by yankai20210803
+	var DefHospOID = $cm({ClassName:"DHCMA.Util.IO.MultiHospInterface",MethodName:"GetDefaultHosp",aTableName:"DHCMA_CPW_BT.PathEntity",aHospID:session['LOGON.HOSPID'],dataType:'text'},false);
+	var SessionStr=session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
+	obj.cboSSHosp = Common_ComboToSSHosp3("cboSSHosp","","","DHCMA_CPW_BT.PathEntity",SessionStr,"");
+	$('#cboSSHosp').combobox({
+  		onSelect: function(title,index){
+	  		obj.gridPathEntity.load({
+				ClassName:"DHCMA.CPW.BTS.PathEntitySrv",
+				QueryName:"QryPathEntity",
+				aHospID: $("#cboSSHosp").combobox('getValue'),
+				aIsActive:""
+			});
+	  	}
+	 })
+	var retMultiHospCfg = $m({
+		ClassName:"DHCMA.Util.BT.Config",
+		MethodName:"GetValueByCode",
+		aCode:"SYSIsOpenMultiHospMode",
+		aHospID:session['DHCMA.HOSPID']
+	},false);
+	if(retMultiHospCfg!="Y" && retMultiHospCfg!="1"){
+		$("#divHosp").hide();	
+	}
+	
 	obj.gridPathEntity = $HUI.datagrid("#gridPathEntity",{
 		fit: true,
-		title: "病种字典维护",
+		//title: "病种字典维护",
 		iconCls:"icon-resort",
 		headerCls:'panel-header-gray',
 		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
@@ -20,7 +44,8 @@ function InitPathEntityListWin(){
 	    queryParams:{
 		    ClassName:"DHCMA.CPW.BTS.PathEntitySrv",
 			QueryName:"QryPathEntity",
-			aIsActive:""
+			aIsActive:"",
+			aHospID: $("#cboSSHosp").combobox('getValue')
 	    },
 		columns:[[
 			{field:'BTID',title:'ID',width:'50'},
@@ -59,7 +84,11 @@ function InitPathEntityListWin(){
 		onBeforeLoad: function (param) {
 			param.ClassName = 'DHCMA.CPW.BTS.PathTypeSrv';
 			param.QueryName = 'QryPathType';
+			param.aHospID = $("#cboSSHosp").combobox('getValue');
 			param.ResultSetType = 'array'
+		},
+		onShowPanel:function(){			
+			$(this).combobox('loadData',[]).combobox('reload');	
 		}
 	});
 	

@@ -69,7 +69,7 @@ GetPhaOrderLookUp = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 	}); 
 	// the check column is created using a custom plugin
 	var ColumnNotUseFlag = new Ext.grid.CheckColumn({
-		header: '不可用',
+		header: $g('不可用'),
 		dataIndex: 'NotUseFlag',
 		width: 45,
 		renderer: function(v, p, record) {
@@ -78,49 +78,49 @@ GetPhaOrderLookUp = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 		}
 	});
 	var PhaOrderCm = new Ext.grid.ColumnModel([ {
-		header: "代码",
+		header: $g("代码"),
 		dataIndex: 'InciCode',
 		width: 80,
 		align: 'left',
 		sortable: true
 	},
 	{
-		header: '名称',
+		header: $g('名称'),
 		dataIndex: 'InciDesc',
 		width: 200,
 		align: 'left',
 		sortable: true
 	},
 	{
-		header: "规格",
+		header: $g("规格"),
 		dataIndex: 'Spec',
 		width: 100,
 		align: 'left',
 		sortable: true
 	},
 	{
-		header: "厂商",
+		header: $g("厂商"),
 		dataIndex: 'ManfName',
 		width: 180,
 		align: 'left',
 		sortable: true
 	},
 	{
-		header: '入库单位',
+		header: $g('入库单位'),
 		dataIndex: 'PuomDesc',
 		width: 70,
 		align: 'left',
 		sortable: true
 	},
 	{
-		header: "售价(入库单位)",
+		header: $g("售价(入库单位)"),
 		dataIndex: 'pSp',
 		width: 100,
 		align: 'right',
 		sortable: true
 	},
 	{
-		header: "数量(入库单位)",
+		header: $g("数量(入库单位)"),
 		dataIndex: 'PuomQty',
 		width: 100,
 		align: 'right',
@@ -128,7 +128,7 @@ GetPhaOrderLookUp = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 		hidden:true
 	},
 	{
-		header: "基本单位",
+		header: $g("基本单位"),
 		dataIndex: 'BuomDesc',
 		width: 80,
 		align: 'left',
@@ -136,7 +136,7 @@ GetPhaOrderLookUp = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 		hidden:true
 	},
 	{
-		header: "售价(基本单位)",
+		header: $g("售价(基本单位)"),
 		dataIndex: 'bSp',
 		width: 100,
 		align: 'right',
@@ -144,7 +144,7 @@ GetPhaOrderLookUp = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 		hidden:true
 	},
 	{
-		header: "数量(基本单位)",
+		header: $g("数量(基本单位)"),
 		dataIndex: 'BuomQty',
 		width: 100,
 		align: 'right',
@@ -152,7 +152,7 @@ GetPhaOrderLookUp = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 		hidden:true
 	},
 	{
-		header: "计价单位",
+		header: $g("计价单位"),
 		dataIndex: 'BillUomDesc',
 		width: 80,
 		align: 'left',
@@ -160,7 +160,7 @@ GetPhaOrderLookUp = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 		hidden:true
 	},
 	{
-		header: "售价(计价单位)",
+		header: $g("售价(计价单位)"),
 		dataIndex: 'BillSp',
 		width: 100,
 		align: 'right',
@@ -168,7 +168,7 @@ GetPhaOrderLookUp = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 		hidden:true
 	},
 	{
-		header: "数量(计价单位)",
+		header: $g("数量(计价单位)"),
 		dataIndex: 'BillUomQty',
 		width: 100,
 		align: 'right',
@@ -176,7 +176,7 @@ GetPhaOrderLookUp = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 		hidden:true
 	},
 	{
-		header: "剂型",
+		header: $g("剂型"),
 		dataIndex: 'PhcFormDesc',
 		width: 60,
 		align: 'left',
@@ -184,7 +184,7 @@ GetPhaOrderLookUp = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 		hidden:true
 	},
 	{
-		header: "商品名",
+		header: $g("商品名"),
 		dataIndex: 'GoodName',
 		width: 80,
 		align: 'left',
@@ -192,7 +192,7 @@ GetPhaOrderLookUp = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 		hidden:true
 	},
 	{
-		header: "通用名",
+		header: $g("通用名"),
 		dataIndex: 'GeneName',
 		width: 80,
 		align: 'left',
@@ -204,7 +204,7 @@ GetPhaOrderLookUp = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 	InciDescLookupGrid = new dhcst.icare.Lookup({
 		lookupListComponetId: 1872,
 		defaultWidth:1000,
-		lookupPage: "药品选择",
+		lookupPage:$g( "药品选择"),
 		lookupName: "M_InciDesc",
 		listeners: { 'selectRow': Fn },
 		pageSize: 30,

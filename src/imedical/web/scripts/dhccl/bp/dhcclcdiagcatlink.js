@@ -53,7 +53,11 @@ $(function(){
 		url:$URL+"?ClassName=web.DHCCLCDiagCat&QueryName=LookUpDiagCat&ResultSetType=array",
 		textField:"DiagCatDes",
 		valueField:"rowId",
-		 panelHeight:'auto',
+		panelHeight:'auto',
+		onBeforeLoad:function(param)
+        {
+            param.hospId=session['LOGON.HOSPID'];
+        },
 		formatter:function(row){				
 			var opts = $(this).combobox('options');
 			return row[opts.textField];
@@ -95,7 +99,8 @@ $(function(){
 						ClassName:"web.DHCCLCDiagCat",
 						MethodName:"InsertDiagCatLink",
 						DiagId:$('#diagnosis').combobox('getValue'),
-						DiagCatId:$('#comDiagnosisCat').combobox('getValue')
+						DiagCatId:$('#comDiagnosisCat').combobox('getValue'),
+						hospId:session['LOGON.HOSPID']
 						},function(success){
 							if(success==0)
 							{
@@ -139,7 +144,8 @@ $(function(){
 						MethodName:"UpdateDiagCatLink",
 						DiagCatLinkId:id,
 						DiagId:$('#diagnosis').combobox('getValue'),
-						DiagCatId:$('#comDiagnosisCat').combobox('getValue')
+						DiagCatId:$('#comDiagnosisCat').combobox('getValue'),
+						hospId:session['LOGON.HOSPID']
 					},function(success){
 						if(success==0)
 						{
@@ -168,7 +174,8 @@ $(function(){
 		queryParams:{
 			ClassName:"web.DHCCLCDiagCat",
 			QueryName:"LookUpDiagCatLink",
-			diagCatId:''
+			diagCatId:'',
+			hospId:session['LOGON.HOSPID']
 		},
         columns:[[
 			{ field: "rowId", title: "±àºÅ", width: 100 },

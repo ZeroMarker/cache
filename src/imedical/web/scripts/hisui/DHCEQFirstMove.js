@@ -1,5 +1,7 @@
 function BodyLoadHandler() 
 {
+	//modified by cjt 20230211 需求号3220778 UI页面改造
+	initPanelHeaderStyle();
 	InitUserInfo();
 	InitEvent();	//初始化
 	initButtonWidth(); //HISUI改造-修改按钮展示样式	add by kdf 2018-09-04
@@ -22,6 +24,9 @@ function BFind_Click()
 	var StartDate=GetElementValue("StartDate"); 
 	var EndDate=GetElementValue("EndDate"); 
 	val="&StartDate="+StartDate+"&EndDate="+EndDate ;
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		val += "&MWToken="+websys_getMWToken()
+	}
 	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQFirstMove"+val;
 }
 

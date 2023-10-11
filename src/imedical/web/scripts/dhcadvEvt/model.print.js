@@ -23,7 +23,7 @@ function printHtml(JSONData)
 }
 
 ///Éú³Étable
-function createTable(arrData,title,filter) {
+function createTableToHtml(arrData,title,filter) {
 
 	var htmlStr="";
 	htmlStr = "<head><w:SnapToGridInCell/><w:WrapTextWithPunct/><w:UseAsianBreakRules/> <w:DontGrowAutofit/><w:SplitPgBreakAndParaMark/><w:DontVertAlignCellWithSp/><w:DontBreakConstrainedForcedTables/><w:DontVertAlignInTxbx/> <w:Word11KerningPairs/><w:CachedColBalance/><w:UseFELayout/></w:Compatibility><w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel> <m:mathPr><m:mathFont m:val='Cambria Math'/><m:brkBin m:val='before'/><m:brkBinSub m:val='--'/><m:smallFrac m:val='off'/> <m:dispDef/><m:lMargin m:val='0'/> <m:rMargin m:val='0'/><m:defJc m:val='centerGroup'/><m:wrapIndent m:val='1440'/> <m:intLim m:val='subSup'/><m:naryLim m:val='undOvr'/></m:mathPr></w:WordDocument></xml><![endif]-->\n<style>\n_styles_\n</style>\n</head>\n",
@@ -79,7 +79,7 @@ function HtmlStyles(arrData,title,filter)
             }
      };
     var styles = "table{border-collapse:collapse;border:none;}\ntd{border:solid #000 1px;}";
-    var TableHtml = createTable(arrData,title,filter);
+    var TableHtml = createTableToHtml(arrData,title,filter);
     var fileContent = static.mhtml.top.replace("_html_", static.mhtml.head.replace("_styles_", styles) + static.mhtml.body.replace("_body_", TableHtml));
 	return fileContent;
 }

@@ -1,81 +1,58 @@
-var editRow=""
+var editRow="",HospDr="";
 var dicclonms = [[
 	    {field:'DicField',title:'属性代码',width:120},
 	    {field:'DicDesc',title:'属性描述',width:100}
 	]];
 $(function(){
-
-	$HUI.radio("#queryTypen").setValue(true);
-	if($("#userEdit").val()==1){
-	    $("#goFormName").hide();
-	    $("#subHidden").parent().parent().hide();
-	    $("#addRow").hide(); //hxy 2018-06-12 st
-	    $("#addSub").hide();
-	    $("#save").hide();
-	    $("#remove").hide();
-	    $('#subStyle').combobox({disabled:true});//hxy 2018-06-12
-		$("#subUrl").attr("disabled",true);//hxy 2018-06-12
-		$("#bindRow").hide(); //cy 2018-11-08
-		$(".tool-bar-line").hide();//cy 2018-08-28
-	    //hxy ed
-	    
-	    $('#datagrid').datagrid('hideColumn','style');
-	    $('#datagrid').datagrid('hideColumn','url');
-	    $('#datagrid').datagrid('hideColumn','value');
-	    $('#datagrid').datagrid('hideColumn','newLine');
-	    $('#datagrid').datagrid('hideColumn','width');
-	    $('#datagrid').datagrid('hideColumn','height');
-	    $('#datagrid').datagrid('hideColumn','cols');
-	    $('#datagrid').datagrid('hideColumn','rows');
-
-	    $('#datagrid').datagrid('hideColumn','sameLevel');
-	    $('#datagrid').datagrid('hideColumn','hiddenSub');
-	    $('#datagrid').datagrid('hideColumn','subDicSameLine');
-	    $('#datagrid').datagrid('hideColumn','canCopy');
-	    $('#datagrid').datagrid('hideColumn','displayTitle');
-	    $('#datagrid').datagrid('hideColumn','userEdit');
-	    $('#datagrid').datagrid('hideColumn','subDicTile');
-
-
-
-
+    //InitHosp(); 	//初始化医院 多院区改造 cy 2021-04-09
+	InitDefault();	//初始化界面默认信息
+	initAttrList();
+});
+// 初始化医院 多院区改造 cy 2021-04-09
+function InitHosp(){
+	hospComp = GenHospComp("DHC_AdvFormName"); 
+	HospDr=hospComp.getValue(); 
+	//$HUI.combogrid('#_HospList',{value:"11"})
+	hospComp.options().onSelect = function(){///选中事件
+		HospDr=hospComp.getValue();
+		$("#queryForm").combobox('setValue',""); 
+		QueryDataGrid(); 
+		var url='dhcapp.broker.csp?ClassName=web.DHCADVFormName&MethodName=listCombo&HospDr='+HospDr;
+		$("#queryForm").combobox('reload',url); 
 	}
+}
+function InitDefault(){
+	$HUI.radio("#queryTypen").setValue(true);
+	
 	var IEVersion =serverCall("ext.util.String","GetIEVersion"); //hxy 2017-12-14 st
     $('#datagrid').datagrid({   
 		url:'dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listGrid&IEVersion='+IEVersion
 	});//ed
 	$("#queryStyle").next().find(".combo-text").on("input propertychange",function(){  
      	$('#queryStyle').combobox('clear');
-   		commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})
+   		QueryDataGrid();
 	})
+	//表单类型
+	$('#queryForm').combobox({
+		valueField:'value',
+		textField:'text',
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVFormName&MethodName=listCombo&HospDr='+HospDr,
+		onSelect: function(rec){  
+			QueryDataGrid();
+		} 	  
+	}); 
 	$("#queryForm").next().find(".combo-text").on("input propertychange",function(){  
-     	$('#queryForm').combobox('clear');
-   		commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})
+   		QueryDataGrid();
 	}) 	
 	//$(".combo-text").change(function(){alert(1);}); 
 	$("#queryFormBtn").hide(); 
 	$("#queryField").keydown(
 		function(e){
 			if(e.keyCode==13) {
-				commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})
+				QueryDataGrid();
      		}	
 		}
-	
 	) 
-	/* $("#queryTreeField").keydown(
-		function(e){
-			if(e.keyCode==13) {
-				
-				val=$.trim($("#queryTreeField").val());
-				var rowsData = $("#datagrid").datagrid('getSelected')
-				var url = LINK_CSP+'?ClassName=web.DHCADVFormDic&MethodName=listTree&id='+rowsData.ID+'&text='+val;
-				$('#formTree').tree('options').url=encodeURI(url);
-				$('#formTree').tree('reload')
-			
-				
-			}
-		}
-	) */
 	$('#queryTreeField').searchbox({
 		searcher : function (value, name) {
 			var rowsData = $("#datagrid").datagrid('getSelected')
@@ -84,9 +61,6 @@ $(function(){
 				$('#formTree').tree('reload');
 		}
 	});
-	
-	
-	
 	$("#subValue").keydown(
 		function(e){
 			if(e.keyCode==13) {
@@ -102,13 +76,16 @@ $(function(){
 		queryFormDataGrid(); 
 	})
 	
-	$(":radio").click(function(){
-   		commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})
+	$HUI.radio("[name='queryType']",{
+		onChecked:function(){   		
+			QueryDataGrid();
+		}
   	}); 
-	commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})
-	
-	initAttrList();
-});
+	QueryDataGrid();
+}
+function QueryDataGrid(){
+	commonQuery({'datagrid':'#datagrid','formid':'#toolbar'});
+}
 
 function queryFormDataGrid(){
 	$('#formDatagrid').datagrid('load', {    
@@ -168,7 +145,7 @@ function seldgRow(index,row){
 			    
 	}else{
 		$('#mainPanel').layout('panel', 'east').panel("resize", {
-			width:340
+			width:400
 		});
 		$("#mainPanel").layout("show","center");
 		
@@ -598,3 +575,4 @@ function delAttr()
 		 return;
 	}
 }
+

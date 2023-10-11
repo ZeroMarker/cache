@@ -201,7 +201,32 @@ var emrTemplate = {
 
             emrEditor.createDoc(ret);
         });
-
+    },
+    LoadGroupTemplate: function (temparam) {
+        var ret = common.IsAllowMuteCreate(temparam.emrDocId);
+        if (ret === '0')
+        {
+            alert('已创建同类型模板，不允许继续创建！');
+            return false;
+        }
+        emrEditor.saveConfirm(true);
+        var rtn = common.IsExistInstance(temparam.emrDocId);
+        // 唯一模板病历已经存在，则切换到已经保存的病历上
+        if ('Single' == temparam.chartItemType && "0" != rtn) {
+            var tabId = this.getTabId(temparam.templateId, rtn);
+            this.selectTmplTab(tabId);
+            showEditorMsg( '已经创建同类型的文档，不允许重复创建！', 'alert');
+            return false;
+        } else if ('1' == temparam.isLeadframe) {
+            // 引导框型模板病历已存在，则切换到已经保存的病历上
+            var tabId = this.getTabId(temparam.templateId, rtn);
+            if (this.selectTmplTab(tabId, true)) {
+                showEditorMsg( '引导框类型的文档不能批量创建！', 'alert');
+                return false;
+            }
+        }
+        emrEditor.createDoc(temparam);
+        return true;
     }
 }
 
@@ -585,4 +610,105 @@ function showTemplateTree() {
         return true;
     }
     return false;
+}
+
+// 批量创建
+function CreateGroupTemplate(temparam) {
+    if (isReadonly()) {
+        alert('当前不可创建病历！');
+        return;
+    }
+    envVar.groupTempParam = temparam;
+    if (!emrTemplate.LoadGroupTemplate(temparam[0])) {
+        envVar.groupTempParam.length = 0;
+        return;
+    }
+}
+
+/// 根据DocId和就诊号创建病历
+function createEmrLastDocFromInstance(docParam, admID) {
+    var ret = common.IsAllowMuteCreate(docParam.emrDocId);
+    if (ret === '0') {
+        alert('已创建同类型模板，不允许继续创建！');
+        return;
+    }
+
+    function createDocByAdmID() {
+        if (docParam == null){
+            return;
+        }
+        sysOption.pluginType = docParam.pluginType;
+        emrEditor.setPlugin(docParam.chartItemType);
+        var _patInfo = {};
+        for (var key in patInfo) {
+            _patInfo[key] = patInfo[key];
+        }
+        _patInfo['LastAdm'] = admID;
+        iEmrPlugin.SET_PATIENT_INFO({
+            args: _patInfo
+        });
+    
+        iEmrPlugin.SET_CURRENT_REVISOR({
+            Id: patInfo.UserID,
+            Name: patInfo.UserName,
+            IP: patInfo.IPAddress
+        });
+        var isMutex = (docParam.isMutex === '1') ? true : false;
+        var isGuideBox = (docParam.isLeadframe === '1') ? true : false;
+        //设置引导框
+        iEmrPlugin.SET_DOCUMENT_TEMPLATE({
+            DocID: docParam.emrDocId,
+            IsMutex: isMutex,
+            CreateGuideBox: isGuideBox
+        });
+        if ('Single' == docParam.chartItemType) {
+            emrEditor.createAsLoad = true;
+            iEmrPlugin.CREATE_DOCUMENT({
+                AsLoad: emrEditor.createAsLoad,
+                DisplayName: docParam.text
+            });
+        } else {
+            var defaultLoadId = common.getDefaultLoadId(docParam.emrDocId, patInfo.UserLocID,docParam.templateId);
+            if (defaultLoadId == "") {
+                if (!isGuideBox) {
+                    emrEditor.createAsLoad = true;
+                    iEmrPlugin.CREATE_DOCUMENT({
+                        AsLoad: emrEditor.createAsLoad,
+                        DisplayName: docParam.text
+                    });
+                } else {
+                    iEmrPlugin.FOCUS_ELEMENT({
+                        Path: '',
+                        InstanceID: 'GuideDocument',
+                        actionType: 'First'
+                    });
+                }
+            }
+            else {
+                emrEditor.createAsLoad = true;
+                iEmrPlugin.CREATE_DOCUMENT_BY_TITLE({
+                    TitleCode: defaultLoadId
+                });    
+            }        
+        }
+        iEmrPlugin.SET_PATIENT_INFO({
+            args: {
+                LastAdm: ''
+            }
+        });
+        //自动记录病例操作日志
+        hisLog.create('EMR.OP.AdmHistoryLst.CreateDoc',docParam);
+    }
+
+    var id = common.IsExistInstance(docParam.emrDocId);
+    if ('Single' == docParam.chartItemType && "0" != id) {
+        var tabId = emrTemplate.getTabId(docParam.templateId, id);
+        emrTemplate.selectTmplTab(tabId);
+        alert('已经创建同类型的文档，不允许重复创建！');
+        return;
+    } else if ('1' == docParam.isLeadframe) {
+        var tabId = emrTemplate.getTabId(docParam.templateId, id);
+        emrTemplate.selectTmplTab(tabId, true);
+    }
+    createDocByAdmID();
 }

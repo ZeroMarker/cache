@@ -20,8 +20,8 @@ Ext.onReady(function() {
 	// 删除按钮
 	var DeleteBT = new Ext.Toolbar.Button({
 				id : "DeleteBT",
-				text : '删除',
-				tooltip : '点击删除',
+				text : $g('删除'),
+				tooltip : $g('点击删除'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_delete',
@@ -33,8 +33,8 @@ Ext.onReady(function() {
 		// 查询按钮
 	var SearchBT = new Ext.Toolbar.Button({
 				id : "SearchBT",
-				text : '查询',
-				tooltip : '点击查询',
+				text : $g('查询'),
+				tooltip : $g('点击查询'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_find',
@@ -46,8 +46,8 @@ Ext.onReady(function() {
 	// 确定按钮
 	var OkBT = new Ext.Toolbar.Button({
 				id : "OkBT",
-				text : '生成月报',
-				tooltip : '点击生成月报',
+				text : $g('生成月报'),
+				tooltip : $g('点击生成月报'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_gear',
@@ -77,7 +77,7 @@ Ext.onReady(function() {
 			}
 			var Month=record.get("CurMonth")
 			if(Month==""){
-				Msg.info("warning",LocDesc+"本期月份不能为空!");
+				Msg.info("warning",LocDesc+$g("本期月份不能为空!"));
 				return;
 			}
 			var CurMonth=record.get("CurMonth")+"-"+"01";
@@ -90,15 +90,15 @@ Ext.onReady(function() {
 			var EndDateChk=EndDateVal.format("Y-m-d");
 			var EndTime = record.get("CurEndTime");
 			if((StartDateChk>EndDateChk)||(StartDateChk==EndDateChk && StartTime>=EndTime)){
-				Msg.info("warning",LocDesc+"截止时间要晚于开始时间!");
+				Msg.info("warning",LocDesc+$g("截止时间要晚于开始时间!"));
 				return;
 			}
 			if(EndDateChk>today.format('Y-m-d')){
-				Msg.info("error",LocDesc+"本期截止日期不能超过当天!");
+				Msg.info("error",LocDesc+$g("本期截止日期不能超过当天!"));
 				return;
 			}else if(EndDateChk==today.format('Y-m-d')){
 				if(EndTime>today.format('H:i:s')){
-					Msg.info("error",LocDesc+"本期截止时间不能为晚于当前时间!");
+					Msg.info("error",LocDesc+$g("本期截止时间不能为晚于当前时间!"));
 					return;
 				}
 			}
@@ -106,12 +106,12 @@ Ext.onReady(function() {
 			var ExistFlag=CheckIfExist(Loc,CurMonth);
 		    
 			if(ExistFlag==true){
-				Msg.info("warning",LocDesc+'本月月报已经生成，如需重新生成的话请先删除后再生成!');
+				Msg.info("warning",LocDesc+$g('本月月报已经生成，如需重新生成的话请先删除后再生成!'));
 				return;
 			}
 			var CompleteStr=CheckIfCompleted(Loc,StartDate,EndDate);
 			if((CompleteStr!="")&(gParam[0]=='Y')){
-				Msg.info("warning",'"有未完成的业务单，不能生成月报！'+CompleteStr);
+				Msg.info("warning",$g('有未完成的业务单，不能生成月报！')+CompleteStr);
 				return;
 			}
 			if(listParams==""){
@@ -121,10 +121,10 @@ Ext.onReady(function() {
 			}			
 		}
 		if(listParams==""){
-			Msg.info("warning","请选择需要生成月报的科室!");
+			Msg.info("warning",$g("请选择需要生成月报的科室!"));
 			return;
 		}
-		var loadMask=ShowLoadMask(Ext.getBody(),"处理中...");
+		var loadMask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 		var pid=tkMakeServerCall("web.DHCST.DHCStkMon","JobSendCreateReports",listParams);
 		var refInt=setInterval(function(){
 	    	var jobRet=tkMakeServerCall("web.DHCST.Common.Job","GetJobResult",pid);
@@ -151,12 +151,12 @@ Ext.onReady(function() {
 				loadMask.hide();
 				if (jsonData.success == 'true') {
 					// 刷新界面
-					Msg.info("success", "生成月报成功!");
+					Msg.info("success", $g("生成月报成功!"));
 					Query();  //月报都生成后执行查询
 					//QueryRep();
 				} else {
 					var ret=jsonData.info;					
-					Msg.info("error", "生成月报失败："+ret);		
+					Msg.info("error", $g("生成月报失败：")+ret);		
 				}			
 			}
 		})
@@ -200,13 +200,13 @@ var DetailCm = new Ext.grid.ColumnModel([nm, selcol,{
 			sortable : true,
 			hidden : true
 		}, {
-			header : '科室',
+			header : $g('科室'),
 			dataIndex : 'LocDesc',
 			width : 180,
 			align : 'left',
 			sortable : true
 		}, {
-			header : '上期月份',
+			header : $g('上期月份'),
 			dataIndex : 'Month',
 			width : 80,
 			align : 'left',
@@ -219,31 +219,31 @@ var DetailCm = new Ext.grid.ColumnModel([nm, selcol,{
 				return newValue;
 			}
 		}, {
-			header : '上期起始日期',
+			header : $g('上期起始日期'),
 			dataIndex : 'StartDate',
 			width : 100,
 			align : 'left',
 			sortable : true
 		}, {
-			header : "上期起始时间",
+			header : $g("上期起始时间"),
 			dataIndex : 'StartTime',
 			width : 100,
 			align : 'left',
 			sortable : true
 		}, {
-			header : "上期截止日期",
+			header :$g( "上期截止日期"),
 			dataIndex : 'EndDate',
 			width : 100,
 			align : 'left',
 			sortable : true
 		}, {
-			header : "上期截止时间",
+			header : $g("上期截止时间"),
 			dataIndex : 'EndTime',
 			width : 100,
 			align : 'center',
 			sortable : true
 		},{
-			header:'本期月份',
+			header:$g('本期月份'),
 			dataIndex:'CurMonth',
 			width:100,
 			align:'center',
@@ -253,10 +253,10 @@ var DetailCm = new Ext.grid.ColumnModel([nm, selcol,{
 			},
 			editor:new Ext.form.TextField({
 				regex:/(^\d{4})-((0?[1-9]|1[0-2])$)/,
-                regexText: "请输入正确的本期月份，例如2018-05",
+                regexText: $g("请输入正确的本期月份，例如2018-05"),
 			})
 		},{
-			header:'本期开始日期',
+			header:$g('本期开始日期'),
 			dataIndex:'CurStartDate',
 			width:100,
 			sortable:false,
@@ -266,17 +266,17 @@ var DetailCm = new Ext.grid.ColumnModel([nm, selcol,{
 				format:App_StkDateFormat
 			})
 		},{
-			header:'本期开始时间',
+			header:$g('本期开始时间'),
 			dataIndex:'CurStartTime',
 			width:100,
 			sortable:false,
 			editor:new Ext.form.TextField({
 				regex : /^(0\d{1}|1\d{1}|2[0-3]):[0-5]\d{1}:([0-5]\d{1})$/,
-				regexText:'时间格式错误，正确格式hh:mm:ss',
+				regexText:$g('时间格式错误，正确格式hh:mm:ss'),
 				width : 120
 			})
 		},{
-			header:'本期截止日期',
+			header:$g('本期截止日期'),
 			dataIndex:'CurEndDate',
 			width:100,
 			sortable:false,
@@ -286,13 +286,13 @@ var DetailCm = new Ext.grid.ColumnModel([nm, selcol,{
 				format:App_StkDateFormat
 			})
 		},{
-			header:'本期截止时间',
+			header:$g('本期截止时间'),
 			dataIndex:'CurEndTime',
 			width:100,
 			sortable:false,
 			editor:new Ext.form.TextField({
 				regex : /^(0\d{1}|1\d{1}|2[0-3]):[0-5]\d{1}:([0-5]\d{1})$/,
-				regexText:'时间格式错误，正确格式hh:mm:ss',
+				regexText:$g('时间格式错误，正确格式hh:mm:ss'),
 				width : 120
 			})
 		}]);
@@ -342,7 +342,7 @@ var DetailGrid = new Ext.grid.EditorGridPanel({
 			id : 'DetailGrid',
 			region : 'center',
 			height:200,
-			title : '月报生成',
+			title : $g('月报生成'),
 			tbar : [OkBT],
 			cm : DetailCm,
 			store : DetailStore,
@@ -377,7 +377,7 @@ function QueryRep(){
 	var edDate=edYear+'-'+edMonth+'-'+'01';
 	var Loc=Ext.getCmp('PhaLoc').getValue();
 	if(Loc==""){
-		Msg.info("warning","请选择需要查询月报的科室!");
+		Msg.info("warning",$g("请选择需要查询月报的科室!"));
 		return;
 	}
 	MainStore.setBaseParam("LocId",Loc);
@@ -393,10 +393,10 @@ function Delete(){
 		rowid=selectRow.get("smRowid");
 	}
 	if(rowid==null || rowid==""){
-		Msg.info("warning","请选择要删除的月报!");
+		Msg.info("warning",$g("请选择要删除的月报!"));
 		return false;
 	}
-	var loadMask=ShowLoadMask(Ext.getBody(),"处理中...");
+	var loadMask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 	Ext.Ajax.request({
 		url:Url,
 		method:'POST',
@@ -404,17 +404,17 @@ function Delete(){
 		success:function(response,request){
 			var jsonData=Ext.util.JSON.decode(response.responseText);
 			if(jsonData.success=='true'){
-				Msg.info('success','删除成功!');
+				Msg.info('success',$g('删除成功!'));
 				Query();
 				MainStore.load();
 			}else{
 				var ret=jsonData.info;
 				if(ret==-1){
-					Msg.info('warning','该月报不是最后一份月报，不允许删除!');
+					Msg.info('warning',$g('该月报不是最后一份月报，不允许删除!'));
 				}else if(ret==-5){
-					Msg.info('error','删除月报凭证状态记录表失败!');
+					Msg.info('error',$g('删除月报凭证状态记录表失败!'));
 				}else{
-					Msg.info('error','删除失败!');
+					Msg.info('error',$g('删除失败!'));
 				}			
 			}
 			
@@ -424,7 +424,7 @@ function Delete(){
 	
 }
 var StYear=new Ext.form.TextField({
-		fieldLabel:'月份',
+		fieldLabel:$g('月份'),
 		id:'StYear',
 		name:'StYear',
 		anchor:'90%',
@@ -461,7 +461,7 @@ var StYear=new Ext.form.TextField({
 	var PhaLoc = new Ext.ux.form.LovCombo({
 		id : 'PhaLoc',
 		name : 'PhaLoc',
-		fieldLabel : '科室',
+		fieldLabel : $g('科室'),
 		listWidth : 400,
 		anchor: '90%',
 		labelStyle : "text-align:right;width:100;",
@@ -490,7 +490,7 @@ var MainStore = new Ext.data.JsonStore({
 var mainChkCol=new Ext.grid.CheckboxSelectionModel({checkOnly:true,singleSelect:true});
 var MainGrid=new Ext.grid.GridPanel({
 	id:'MainGrid',
-	title:'历史月报',
+	title:$g('历史月报'),
 	store:MainStore,
 	tbar:new Ext.Toolbar({items:[PhaLoc,{xtype:'tbtext',text:'月报范围:'},StYear,{xtype:'tbtext',text:'年'},
 	StMonth,{xtype:'tbtext',text:'月----'},EdYear,{xtype:'tbtext',text:'年'},EdMonth,{xtype:'tbtext',text:'月'},SearchBT,'-',DeleteBT]}),
@@ -501,19 +501,19 @@ var MainGrid=new Ext.grid.GridPanel({
 		align:'left',
 		hidden:true
 	},{
-		header:'科室',
+		header:$g('科室'),
 		dataIndex:'locDesc',
 		width:120,
 		align:'left',
 		sortable:true
 	},{
-		header:'月份',
+		header:$g('月份'),
 		dataIndex:'mon',
 		width:100,
 		align:'left',
 		sortable:true
 	},{
-		header:'月报起始日期',
+		header:$g('月报起始日期'),
 		dataIndex:'frDate',
 		width:150,
 		align:'left',
@@ -523,7 +523,7 @@ var MainGrid=new Ext.grid.GridPanel({
 			return StDateTime;
 		}
 	},{
-		header:'月报截止日期',
+		header:$g('月报截止日期'),
 		dataIndex:'toDate',
 		width:150,
 		align:'left',

@@ -1,10 +1,5 @@
-/// 
-function BodyLoadHandler()
-{
-	document.body.style.padding="10px";
-	document.body.style.paddingTop="0px";
-	document.body.style.paddingBottom="0px";
-}
+/// UDHCACFinBR.PFBalance.ACDetailRP.js
 
-
-document.body.onload = BodyLoadHandler;
+$(function () {
+	$(document.body).css("padding-top", "0");
+});

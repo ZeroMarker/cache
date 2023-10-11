@@ -4,6 +4,13 @@
  * 编写人:	 guofa	 
  * 编写日期: 2019-07-10
  */
+
+var HospId = session['LOGON.HOSPID'];
+PHA_COM.App.ProCode = "DEC"
+PHA_COM.App.ProDesc = "煎药室"
+PHA_COM.App.Csp = "pha.dec.v2.proeqmconf.csp"
+PHA_COM.App.Name = "煎药设备维护"
+
 $(function () {
 	InitDict();
 	InitGridEquipment();
@@ -25,7 +32,8 @@ function QueryEqm(e){
 		var eqmCode = $.trim($("#equipCode").val());
 		var eqmDesc = $.trim($("#equipDesc").val());
 		$('#gridEquipment').datagrid('query', {
-			inputStr: locId + "^" + status + "^" + eqmCode + "^" + eqmDesc +"^"+ gHospID
+			inputStr: locId + "^" + status + "^" + eqmCode + "^" + eqmDesc ,
+			HospId: HospId
 		});	
 	}			
 }
@@ -51,6 +59,42 @@ function InitDict() {
 			QueryEqm();
 		}
 	});	
+	
+	InitHospCombo();
+}
+
+function InitHospCombo() {
+	var genHospObj=DEC.AddHospCom({tableName:'PHA_DECEquiMai'});
+	if (typeof genHospObj ==='object'){
+        genHospObj.options().onSelect =  function(index, record) {	
+            var newHospId = record.HOSPRowId;
+            if (newHospId != HospId) {
+                HospId = newHospId;
+                //$('#cmbDecLoc').combobox('loadData', {});
+                $("#cmbDecLoc").combobox("setValue",'');
+                $('#cmbDecLoc').combobox('options').url = $URL + "?ResultSetType=Array&" + "ClassName=PHA.DEC.Com.Store&QueryName=DecLoc&HospId="+HospId+"&UserId=" + gUserID
+				$('#cmbDecLoc').combobox('reload');
+                $('#gridEquipment').datagrid('options').queryParams.HospId =  HospId;
+                $('#gridEquipment').datagrid('options').queryParams.inputStr =  '';
+                $('#gridEquipment').datagrid('load');
+            }
+        }
+    }
+    
+    var defHosp = $cm(
+        {
+            dataType: 'text',
+            ClassName: 'web.DHCBL.BDP.BDPMappingHOSP',
+            MethodName: 'GetDefHospIdByTableName',
+            tableName: 'PHA_DECEquiMai',
+            HospID: HospId
+        },
+        false
+    );
+    HospId = defHosp;
+    $("#cmbDecLoc").combobox("setValue",'');
+    $('#cmbDecLoc').combobox('options').url = $URL + "?ResultSetType=Array&" + "ClassName=PHA.DEC.Com.Store&QueryName=DecLoc&HospId="+HospId+"&UserId=" + gUserID
+	$('#cmbDecLoc').combobox('reload');
 }
 /**
  * 初始化流程表格
@@ -178,7 +222,8 @@ function InitGridEquipment() {
 		queryParams: {
 			ClassName: "PHA.DEC.CfEqMai.Query",
 			QueryName: "QueryEquipment",
-			inputStr: "^^^^"+ gHospID
+			inputStr: "^^^",
+			HospId: HospId
 		},
 		onDblClickRow: function (rowIndex) {
 			editRow();
@@ -264,7 +309,8 @@ function saveEquip() {
 	$cm({
 		ClassName: "PHA.DEC.CfEqMai.OperTab",
 		MethodName: "saveEquip",
-		params: inputStr
+		params: inputStr,
+		HospId: HospId
 	},
 		function (jsonData) {
 		if (typeof(jsonData) == "String") {

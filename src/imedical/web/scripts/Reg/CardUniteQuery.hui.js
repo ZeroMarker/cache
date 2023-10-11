@@ -25,7 +25,7 @@ function InitCardUniteQueryTabDataGrid(){
 		{field:'TCancelUser',title:'撤销人',width:80},
 		{field:'TPoliticalLevel',title:'病人级别',width:80},
 		{field:'TSecretLevel',title:'病人密级',width:80},
-		{field:'TUnitReason',title:'卡合并原因',width:130}
+		{field:'TUnitReason',title:'患者信息合并原因',width:130}
     ]]
 	var CardUniteQueryTabDataGrid=$("#CardUniteQueryTab").datagrid({
 		fit : true,
@@ -79,6 +79,7 @@ function CancelUnitclickHandle(){
 			    ClassName : "web.DHCPATCardUnite",
 			    MethodName : "CardConverse",
 			    OldRegNo:OldRegNo, RegNo:NewRegNo,
+			    ExpStr:session['LOGON.USERID']+"^"+session['LOGON.HOSPID']+"^"+ClientIPAddress,
 			    dataType:"text"
 			},function(rtn){
 				if (rtn==""){

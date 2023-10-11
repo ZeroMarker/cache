@@ -34,13 +34,13 @@ $(function () {
         onChecked: function (e, value) {
             if ($('#cmbPivaLoc').combobox('getValue') === '') {
                 DHCPHA_HUI_COM.Msg.popover({
-                    msg: '请先选择配液中心',
+                    msg: $g('请先选择配液中心'),
                     type: 'alert'
                 });
                 return;
             }
             if (Loaded != '') {
-                $.messager.confirm('提示', '您确认修改规则吗?', function (r) {
+                $.messager.confirm($g('提示'), $g('您确认修改规则吗?'), function (r) {
                     if (r) {
                         Save();
                     }
@@ -48,13 +48,14 @@ $(function () {
             }
         }
     });
+    $('.dhcpha-win-mask').remove();
 });
 
 //保存
 function Save() {
     var locId = $('#cmbPivaLoc').combobox('getValue');
     if (locId == '') {
-        $.messager.alert('提示', '配液中心为空', 'info');
+        $.messager.alert($g('提示'), $g('配液中心为空'), 'info');
         return;
     }
     var bigFlag = $("input[name='radCubage']:checked").val() || 'N';
@@ -65,10 +66,10 @@ function Save() {
     var saveVal = saveArr[0];
     var saveInfo = saveArr[1];
     if (saveVal == '-1') {
-        $.messager.alert('提示', saveInfo, 'warning');
+        $.messager.alert($g('提示'), saveInfo, 'warning');
         return;
     } else if (saveVal < 0) {
-        $.messager.alert('提示', saveInfo, 'error');
+        $.messager.alert($g('提示'), saveInfo, 'error');
         return;
     }
 }

@@ -1,5 +1,7 @@
 ﻿/// 对编辑器的命令进行包装，不包含业务逻辑
 var iEmrPlugin;
+var iwordFlag = false;
+var igridFlag = false;
 /// 构造函数
 function iEmrPluginEx(edtorFrame) {
 
@@ -32,57 +34,73 @@ function iEmrPluginEx(edtorFrame) {
     }
 
     var _pluginWord;
-    this.attachWord = function (pluginUrl, pluginType, argConnect, fnEvtDispatch) {
+    this.attachWord = function (pluginUrl, pluginType, fnEvtDispatch) {
         //debugger;
         _pluginType = pluginType;
         var isSetPlugin = true;
-        if (_pluginWord==null || _pluginWord.innerHTML== undefined)
+        if (_pluginWord==null || _pluginWord.innerHTML== undefined || !iwordFlag)
         {
-	        var objString = "<object id='pluginWord' type='application/x-iemrplugin' style='width:100%;height:100%;padding:0px;'>";
-	        objString += "<param name='install-url' value='";
-	        objString += pluginUrl;
-	        objString += "'/></object>";
-	        _pluginWord = edtorFrame.attachWord(objString);
-	        if (!_pluginWord.initWindow) {
-	            this.setUpPlug(pluginUrl);
-	            isSetPlugin = false;
-	            return isSetPlugin;
-	        }
-	        this.pluginAdd(fnEvtDispatch);
-	        var ret = _pluginWord.initWindow("iEditor") || false;
-	        if (!ret)
-	            throw ('iEditor initWindow error');
-	        this.SET_NET_CONNECT({
-	            args: argConnect
-	        }); 
+            edtorFrame.attachGrid("");
+            var objString = "<object id='pluginWord' type='application/x-iemrplugin' style='width:100%;height:100%;padding:0px;'>";
+            objString += "<param name='install-url' value='";
+            objString += pluginUrl;
+            objString += "'/></object>";
+            _pluginWord = edtorFrame.attachWord(objString);
+            if (!_pluginWord.initWindow) {
+                this.setUpPlug(pluginUrl);
+                isSetPlugin = false;
+                return isSetPlugin;
+            }
+            this.pluginAdd(fnEvtDispatch);
+            var ret = _pluginWord.initWindow("iEditor") || false;
+            if (!ret)
+                throw ('iEditor initWindow error');
+            var nectresult = this.SET_NET_CONNECT(); 
+            if (nectresult != "" && nectresult.result != "OK")
+            {
+                alert('设置链接失败！');
+                isSetPlugin = false;
+                return isSetPlugin;
+            }
+            setRunEMRParams();
+            iwordFlag = true;
+            igridFlag = false;
         }
         return isSetPlugin;  
     }
 
     var _pluginGrid;
-    this.attachGrid = function (pluginUrl, pluginType, argConnect, fnEvtDispatch) {
+    this.attachGrid = function (pluginUrl, pluginType, fnEvtDispatch) {
         //debugger;
         _pluginType = pluginType;
         var isSetPlugin = true;
-        if (_pluginGrid==null || _pluginGrid.innerHTML== undefined)
+        if (_pluginGrid==null || _pluginGrid.innerHTML== undefined || !igridFlag)
         {
-	        var objString = "<object id='pluginGrid' type='application/x-iemrplugin' style='width:100%;height:100%;padding:0px;'>";
-	        objString += "<param name='install-url' value='";
-	        objString += pluginUrl;
-	        objString += "'/></object>";
-	        _pluginGrid = edtorFrame.attachGrid(objString);
-	        if (!_pluginGrid.initWindow) {
-	            iEmrPlugin.setUpPlug(pluginUrl);
-	            isSetPlugin = false;
-	            return isSetPlugin;
-	        }
-	        iEmrPlugin.pluginAdd(fnEvtDispatch);
-	        var ret = _pluginGrid.initWindow("iGridEditor") || false;
-	        if (!ret)
-	            throw ('iGridEditor initWindow error');
-	        this.SET_NET_CONNECT({
-	            args: argConnect
-	        });
+            edtorFrame.attachWord("");
+            var objString = "<object id='pluginGrid' type='application/x-iemrplugin' style='width:100%;height:100%;padding:0px;'>";
+            objString += "<param name='install-url' value='";
+            objString += pluginUrl;
+            objString += "'/></object>";
+            _pluginGrid = edtorFrame.attachGrid(objString);
+            if (!_pluginGrid.initWindow) {
+                iEmrPlugin.setUpPlug(pluginUrl);
+                isSetPlugin = false;
+                return isSetPlugin;
+            }
+            iEmrPlugin.pluginAdd(fnEvtDispatch);
+            var ret = _pluginGrid.initWindow("iGridEditor") || false;
+            if (!ret)
+                throw ('iGridEditor initWindow error');
+            var nectresult = this.SET_NET_CONNECT(); 
+            if (nectresult != "" && nectresult.result != "OK")
+            {
+                alert('设置链接失败！');
+                isSetPlugin = false;
+                return isSetPlugin;
+            } 
+            setRunEMRParams();
+            igridFlag = true;
+            iwordFlag = false;
         }
         return isSetPlugin;
 
@@ -98,20 +116,23 @@ function iEmrPluginEx(edtorFrame) {
 
     ///安装插件提示
     this.setUpPlug = function (pluginUrl) {
-		//以前的模态框
+        //以前的模态框
 //        var result = window.showModalDialog("emr.record.downloadplugin.csp?PluginUrl=" + pluginUrl, "", "dialogHeight:100px;dialogWidth:200px;resizable:yes;status:no");
 //        if (result) {
 //            window.location.reload();
 //        }
-		//HISUI模态框
+        //HISUI模态框
         pluginUrl = base64encode(utf16to8(pluginUrl));
-        var iframeContent = '<iframe id="InstallPlugin" scrolling="no" frameborder="0" src="emr.record.downloadplugin.csp?PluginUrl='+pluginUrl+'&openWay=editor'+'" style="width:100%;height:99%;"></iframe>'
-		createModalDialog("downloadPluginDialog", "下载插件", 300, 150, "InstallPlugin", iframeContent,"","");
-		$HUI.dialog('#downloadPluginDialog',{ 
-        	onClose:function(){
-   				window.location.reload();
-       		}
-    	});
+        var iframeContent = '<iframe id="InstallPlugin" scrolling="no" frameborder="0" src="emr.record.downloadplugin.csp?PluginUrl='+pluginUrl+'&openWay=editor&MWToken='+getMWToken()+'" style="width:100%;height:99%;"></iframe>'
+        createModalDialog("downloadPluginDialog", "下载插件", 300, 150, "InstallPlugin", iframeContent,setUpPlugCallBack,"");
+    }
+    
+    function setUpPlugCallBack(returnValue,arr)
+    {
+        if (returnValue)
+        {
+            window.location.reload();
+        }
     }
 
     ///添加监听事件 挂接插件 \ 事件监听
@@ -154,41 +175,57 @@ function iEmrPluginEx(edtorFrame) {
     }
 
     ///建立数据库连接
-    this.SET_NET_CONNECT = function (argParams) {
+    this.SET_NET_CONNECT = function () {
  
         var netConnect = "";
-		$.ajax({
-			type: 'Post',
-			dataType: 'text',
-			url: '../EMRservice.Ajax.common.cls',
-			async: false,
-			cache: false,
-			data: {
-				"OutputType":"String",
-				"Class":"EMRservice.BL.BLSysOption",
-				"Method":"GetNetConnectJson",
-				"p1":window.location.host
-			},
-			success: function (ret) {
+        
+        var port = window.location.port;
+        var protocol = window.location.protocol.split(":")[0];
+        
+        if (protocol == "http")
+        {
+            port = port==""?"80":port;
+        }
+        else if (protocol == "https")
+        {
+            port = port==""?"443":port;
+        }
+    
+        $.ajax({
+            type: 'Post',
+            dataType: 'text',
+            url: '../EMRservice.Ajax.common.cls',
+            async: false,
+            cache: false,
+            data: {
+                "OutputType":"String",
+                "Class":"EMRservice.BL.BLSysOption",
+                "Method":"GetNetConnectJson",
+                "p1":window.location.hostname,
+                "p2":port,
+                "p3":protocol
+            },
+            success: function (ret) {
 
-				netConnect = eval("("+ret+")");
-			},
-			error: function (ret) {
-				alert('get err');
-				if (!onError) {}
-				else {
-					onError(ret);
-				}
-			}
-		});
+                netConnect = eval("("+ret+")");
+            },
+            error: function (ret) {
+                alert('get err');
+                if (!onError) {}
+                else {
+                    onError(ret);
+                }
+            }
+        });
         var command = {
             action: 'SET_NET_CONNECT',
             args: netConnect
 
         };
+        var argParams = {
+            isSync: true
+        };
         return this.invoke(command, argParams);
-        
-
     }
 
     ///设置默认字体
@@ -229,7 +266,7 @@ function iEmrPluginEx(edtorFrame) {
         var command = {
             action: 'CREATE_DOCUMENT',
             args: {
-                AsLoad: argParams.AsLoad,
+                AsLoad: argParams.AsLoad || false,
                 Title: {
                     DisplayName: argParams.DisplayName
                 }
@@ -269,7 +306,7 @@ function iEmrPluginEx(edtorFrame) {
                 args: {
                     InstanceID: argParams.InstanceID,
                     TitleCode: argParams.TitleCode,
-                    AsLoad: argParams.AsLoad
+                    AsLoad: argParams.AsLoad || false
                 }
             };
         }
@@ -281,32 +318,52 @@ function iEmrPluginEx(edtorFrame) {
         var command = {
             action: 'CREATE_DOCUMENT',
             args: {
-                AsLoad: argParams.AsLoad,
+                AsLoad: argParams.AsLoad || false,
                 Title: {
                     DisplayName: argParams.DisplayName
                 },
+                TitleCode:argParams.TitleCode,
                 LoadMode:'UserTemplate',
-                UserTemplateCode:argParams.ExampleInstanceID,
+                UserTemplateCode:argParams.ExampleInstanceID
             }
         };
         return this.invoke(command, argParams);
     }
     
     ///使用个人模板创建文档
-	this.CREATE_DOCUMENT_PERSONAL_TEMPLATE = function (argParams) {
-        var command = {
-            action: 'CREATE_DOCUMENT',
-            args: {
-	            AsLoad: argParams.AsLoad,
-	            Title: {
-	                    DisplayName: argParams.DisplayName
-	                },
-                params: {
-                    action: 'CREATE_PERSONAL_TEMPLATE',
-                    PersonalTemplateID: argParams.ExampleInstanceID
-                }
-            }
-        };
+    this.CREATE_DOCUMENT_PERSONAL_TEMPLATE = function (argParams) {
+	    ///根据标题创建实例
+		if ((argParams.TitleCode || "") != "")
+		{
+	        var command = {
+	            action: 'CREATE_DOCUMENT_BY_TITLE',
+	            args: {
+	                AsLoad: argParams.AsLoad || false,
+	                TitleCode: argParams.TitleCode || '',
+	                params: {
+	                    action: 'CREATE_PERSONAL_TEMPLATE',
+	                    PersonalTemplateID: argParams.ExampleInstanceID
+	                }
+	            }
+	        };
+		}
+		else
+		{   
+	        var command = {
+	            action: 'CREATE_DOCUMENT',
+	            args: {
+	                AsLoad: argParams.AsLoad || false,
+	                TitleCode: argParams.TitleCode,
+	                Title: {
+	                        DisplayName: argParams.DisplayName
+	                    },
+	                params: {
+	                    action: 'CREATE_PERSONAL_TEMPLATE',
+	                    PersonalTemplateID: argParams.ExampleInstanceID
+	                }
+	            }
+	        };
+		}
         return this.invoke(command, argParams);
     }
     
@@ -330,7 +387,7 @@ function iEmrPluginEx(edtorFrame) {
         var command = {
             action: 'SAVE_SECTION',
             args: {
-	            Items:items,
+                Items:items,
                 params: {
                     CategoryID: argParams.CategoryID,
                     UserID: argParams.UserID,
@@ -362,7 +419,8 @@ function iEmrPluginEx(edtorFrame) {
             action: 'LOAD_DOCUMENT',
             args: {
                 params: {
-                    status: argParams.status
+                    status: argParams.status,
+                    LoadType: argParams.LoadType||""
                 },
                 InstanceID: argParams.InstanceID,
                 actionType: argParams.actionType
@@ -444,7 +502,10 @@ function iEmrPluginEx(edtorFrame) {
             action: 'REVOKE_SIGNED_DOCUMENT',
             args: {
                 SignatureLevel: argParams.SignatureLevel,
-                InstanceID: argParams.InstanceID
+                InstanceID: argParams.InstanceID,
+                "params":{
+	                OperatorID:argParams.OperatorID
+	             }
             }
         };
         return this.invoke(command, argParams);
@@ -517,11 +578,20 @@ function iEmrPluginEx(edtorFrame) {
     ///签名
     this.SIGN_DOCUMENT = function (argParams) {
         var imageZoomRatio = getImageZoomRatio(argParams.Id);
+        //患者签名不传图片行高，通过编辑器系统参数设置
+        if (argParams.SignatureLevel == "Patient") imageZoomRatio = "";
+        //增加参数控制是否压缩图片，患者批注时不压缩图片
+        if ((typeof(argParams.IsZoom) == "undefined")||(argParams.IsZoom === "")) {
+            var isZoom = true;
+        } else {
+            var isZoom = argParams.IsZoom;  
+        }    
         var command = {
             action: 'SIGN_DOCUMENT',
             args: {
                 InstanceID: argParams.InstanceID,
                 Type: argParams.Type,
+                Path: argParams.Path || '',   //增加单元路径，处理光标改变导致签名失败问题
                 SignatureLevel: argParams.SignatureLevel,
                 actionType: argParams.actionType,
                 Authenticator: {
@@ -531,7 +601,8 @@ function iEmrPluginEx(edtorFrame) {
                     HeaderImage: argParams.HeaderImage,
                     FingerImage: argParams.FingerImage,                    
                     Description: argParams.Description,
-                    SignImageZoomRatio: imageZoomRatio
+                    SignImageZoomRatio: imageZoomRatio,
+                    IsZoom: isZoom
                 },
                 params: {}
             }
@@ -559,7 +630,8 @@ function iEmrPluginEx(edtorFrame) {
             args: {
                 DocID: argParams.DocID,
                 IsMutex: argParams.IsMutex,
-                CreateGuideBox: argParams.CreateGuideBox
+                CreateGuideBox: argParams.CreateGuideBox,
+                KBLoadMode: 'Replace'
             }
         };
         return this.invoke(command, argParams);
@@ -743,11 +815,11 @@ function iEmrPluginEx(edtorFrame) {
 
     /// 刷新引用数据; InterfaceStyle:Web  js弹框，否则插件弹框
     this.REFRESH_REFERENCEDATA = function (argParams) {
-		dataObjStr = argParams.AutoRefresh;
+        dataObjStr = argParams.AutoRefresh;
         var command = {
             action: 'REFRESH_REFERENCEDATA',
             args: {
-	            InterfaceStyle:"Web",
+                InterfaceStyle:"Web",
                 InstanceID: argParams.InstanceID || '',
                 AutoRefresh: argParams.AutoRefresh,
                 SyncDialogVisible: argParams.SyncDialogVisible
@@ -827,7 +899,8 @@ function iEmrPluginEx(edtorFrame) {
             action: 'INSERT_IMG',
             args: {
                 ImageType: argParams.ImageType,
-                ImageData: argParams.ImageData
+                ImageData: argParams.ImageData || '',
+                ImageId: argParams.ImageId
             }
         };
         return this.invoke(command, argParams);
@@ -871,7 +944,7 @@ function iEmrPluginEx(edtorFrame) {
         var command = {
             action: 'CREATE_DOCUMENT_BY_TITLE',
             args: {
-                AsLoad: argParams.AsLoad,
+                AsLoad: argParams.AsLoad || false,
                 TitleCode: argParams.TitleCode || ''
             }
         };
@@ -888,6 +961,43 @@ function iEmrPluginEx(edtorFrame) {
         }
         return this.invoke(command, argParams);
     }    
+    
+    ///模拟双击触发签名单元
+    this.TRIGGER_SIGN_ELEMENT = function (argParams) {
+        var command = {
+            action: 'TRIGGER_SIGN_ELEMENT',
+            args: {
+                Path: argParams.Path
+            }
+        };
+        return this.invoke(command, argParams);
+    }
+     ///2021/11/12 Zhangxy 病历缩放
+  	this.ZOOM_DOCUMENT = function (zoomScale) {
+    	if (!zoomScale) return;
+    	var command = {
+      		action: "ZOOM_DOCUMENT",
+      		args: {
+        		zoomType: "PERCENT",
+        		zoomScale: zoomScale,
+      		},
+    	};
+    	return this.invoke(command);
+  	}    
+    /// 插入前房深度公式
+    this.EYE = function (argParams) {
+        var command = {
+            action: 'APPEND_ELEMENT',
+            args: {
+                Code:"",
+                ElemType:"MIMacroObject",
+                DisplayName: "深度公式",
+                Description: "深度公式",
+                MacroType:"macro_eye_deep_grade"
+            }
+        };
+        return this.invoke(command, argParams);
+    }   
     ///-------------------编辑按钮-------------------///
     ///字体
     this.FONT_FAMILY = function (argParams) {
@@ -1071,8 +1181,64 @@ function iEmrPluginEx(edtorFrame) {
         return this.invoke(command, argParams);
     }   
     ///-------------------编辑按钮-------------------///
+
+    ///设置电子病历运行环境参数
+    this.SET_RUNEMR_PARAMS=function (argParams) {
+        var command = {
+            action: argParams.action,
+            args:argParams.args || ''
+          
+        }
+        return this.invoke(command, argParams);
+    }
     
+    /// 获取打印范围内InstanceID
+    this.GET_PRINT_DOC_INSTANCEID_LIST = function (argParams) {
+        var command = {
+            action: 'GET_PRINT_DOC_INSTANCEID_LIST',
+            args: {}
+          
+        }
+        return this.invoke(command, argParams);
+    }
+    
+    /// 静默刷新引用数据
+    this.SILENT_REFRESH_REFERENCEDATA = function (argParams) {
+        var command = {
+            action: 'SILENT_REFRESH_REFERENCEDATA',
+            args: {
+                InstanceID: argParams.InstanceID || ''
+            }
+        };
+        return this.invoke(command, argParams);
+    }
+    
+    /// 获取签名单元数据
+    this.GET_SIGNED_INFO = function (argParams) {
+        var command = {
+            action: 'GET_SIGNED_INFO',
+            args: {
+                Path: argParams.Path
+            }
+        };
+        return this.invoke(command, argParams);
+    }
+    
+    ///插入个人短语
+    this.APPEND_DPCOMPOSITE = function (argParams) {
+        var command = {
+            action: 'APPEND_COMPOSITE_ADVANCED',
+            args: {
+                params: {
+                    action: 'LOAD_COMPOSITE',
+                    KBNodeID: argParams.KBNodeID,
+                    Type: argParams.Type
+                }
+            }
+        };
+        return this.invoke(command, argParams);
+    }
 }
 function closeEditorDiaglog(args){
-	$HUI.dialog('#HisUIInstallPlugin').close();
+    $HUI.dialog('#HisUIInstallPlugin').close();
 }

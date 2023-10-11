@@ -25,6 +25,10 @@ function InitReportWin()
 	obj.RepStatusCode = '';
 	obj.Bacterias =Bacterias;
 	obj.DiagList = ServerObj.DiagList;
+	obj.LabIsNeed=ServerObj.LabIsNeed;
+	obj.AntIsNeed=ServerObj.AntIsNeed;
+	obj.OprIsNeed=ServerObj.OprIsNeed;
+	obj.OpIsShow =ServerObj.OpIsShow;
 	if ((ServerObj.DiagList)&&(!DiagnosID)) {   //存在未报时每次取一条
 		DiagnosID = ServerObj.DiagList.split(",")[0];
 	}
@@ -38,7 +42,9 @@ function InitReportWin()
 	InitOper(obj);
 	InitLab(obj);
 	InitAnt(obj);
-	
+	if (ServerObj.BasisNeed!=1) {
+		$("#LabDiagBasis").empty();
+	}
 	InitReportWinEvent(obj);
 	return obj;
 }

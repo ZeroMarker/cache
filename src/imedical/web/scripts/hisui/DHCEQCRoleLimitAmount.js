@@ -4,7 +4,10 @@ function BodyLoadHandler() {
 	InitPage();
 	ChangeStatus(false);
 	InitUserInfo();
-	initButtonWidth()  //hisui改造:按钮长度一致 add by lmm 2018-08-20
+	initPanelHeaderStyle(); //added by LMH 20230211 UI 极简组件界面标题格式
+	//showBtnIcon('BAdd^BUpdate^BDelete',false); //modified by LMH 20230211 动态设置是否极简显示按钮图标
+	initButtonColor(); //added by LMH 20230211 UI 初始化按钮颜色
+	//initButtonWidth()  //hisui改造:按钮长度一致 add by lmm 2018-08-20
     setRequiredElements("ApproveRole^ApproveType");   //add by wy 2019-5-25 912791
 }
 function InitPage(){

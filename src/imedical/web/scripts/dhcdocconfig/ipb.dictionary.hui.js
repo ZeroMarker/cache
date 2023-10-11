@@ -32,6 +32,7 @@ $(function(){
 	hospComp.jdata.options.onLoadSuccess= function(data){
 		PageLogicObj.m_DicDataGrid.reload();
 	}
+	InitCache();
 })
 
 function Init(){
@@ -43,7 +44,13 @@ function InitEvent(){
 	$("#i-edit").click(function(){opDictionary("edit")});
 	$(document.body).bind("keydown",BodykeydownHandler)
 }
-
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function PageHandle(){
 	//
 }
@@ -102,7 +109,19 @@ function InitDicDataGrid(){
 					}
 					GenHospWin("DHCDocIPBDictory",row.Rowid);
 			    }
-		    }],
+		    }/*,{
+		        text: '翻译',
+		        iconCls: 'icon-translate-word',
+		        handler: function() {
+			         var SelectedRow = $('#i-dicList').datagrid('getSelected');
+					if (!SelectedRow){
+					$.messager.alert("提示","请选择需要翻译的行!","info");
+					return false;
+					}
+					CreatTranLate("User.DHCDocIPBDictory","MDICDesc",SelectedRow["Desc"])
+				}
+			}*/
+			],
 		onBeforeLoad:function(param){
 			param.HospID=$HUI.combogrid('#_HospUserList').getValue();
 		}
@@ -239,7 +258,7 @@ function saveDictionary() {
 				PageLogicObj.m_DicDataGrid.reload();
 				
 			}else{
-				$.messager.alert('提示','保存失败,错误代码: '+ responseText , "info");
+				$.messager.alert('提示','保存失败,'+ responseText , "info");
 				return false;
 			}	
 		})

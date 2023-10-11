@@ -3,6 +3,7 @@
 // 2010-12-2
 var SelectedRow = -1;  //hisui改造：修改开始行号  add by wy 2018-09-01
 var rowid=0;
+var HospFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","990051")
 //装载页面  函数名称固定
 function BodyLoadHandler()
 {
@@ -12,8 +13,56 @@ function BodyLoadHandler()
 	InitEvent();
 	disabled(true);
 	initButtonWidth();  //hisui改造 add by wy 2018-09-01
-	KeyUp("Equip^PurposeType^ManageLoc^ManageUser");
-	Muilt_LookUp("Equip^PurposeType^ManageLoc^ManageUser^Hold1Desc^Hold2Desc");
+	//add by lmm 2021-06-25 begin
+	KeyUp("Hospital^Loc^Building^BuildingUnit");
+	Muilt_LookUp("Hospital^Loc^Building^BuildingUnit"); 
+	initBDPHospComponent("DHC_EQCLocation");	//CZF0138 多院区改造
+	if (HospFlag=="2") DisableElement("Hospital",true);
+	//modify by lmm 2021-07-09
+	if (GetElementValue("SpaceFlag")=="2")
+	{
+		setRequiredElements("Building^BuildingUnit")
+	}
+	else if (GetElementValue("SpaceFlag")=="0")
+	{
+		HiddenObj("cBuilding","1")
+		HiddenObj("Building","1")
+		HiddenObj("cBuildingUnit","1")
+		HiddenObj("BuildingUnit","1")
+		
+	}
+	//add by lmm 2021-06-25 begin
+	//add by lmm 2021-07-09
+	$('input#BuildingUnit').on('keyup',function(){
+		disableElement("Loc",false);
+	})
+}
+
+//CZF0138 平台医院组件选择事件
+function onBDPHospSelectHandler()
+{
+	BClear_Click();
+	SetElement("Hospital",GetElementValue("_HospList"));	//czf 2021-11-2
+	SetElement("HospitalDR",GetBDPHospValue("_HospList"));
+	initLocationGrid();
+}
+
+//CZF0138
+function initLocationGrid()
+{
+	var HospDR=GetBDPHospValue("_HospList");
+	$("#tDHCEQCLocation").datagrid( {
+		url:$URL,
+		queryParams:{
+			ComponentID:GetElementValue("GetComponentID"),
+			gHospId:curSSHospitalID,
+			BDPHospId:HospDR
+		},
+		showRefresh:false,
+		showPageList:false,
+		afterPageText:'',
+		beforePageText:''
+	})
 }
 
 function InitEvent()
@@ -41,23 +90,21 @@ function CombinData()
 	combindata=combindata+"^"+GetElementValue("Code");
   	combindata=combindata+"^"+GetElementValue("Desc");
   	combindata=combindata+"^"+GetElementValue("Type");
-  	combindata=combindata+"^"+GetElementValue("Area");
-  	combindata=combindata+"^"+GetElementValue("Address");
-  	combindata=combindata+"^"+GetElementValue("ManageLocDR");
-  	combindata=combindata+"^"+GetElementValue("ManageUserDR");
-  	combindata=combindata+"^"+GetElementValue("PurposeTypeDR");
-  	combindata=combindata+"^"+GetElementValue("EquipDR");
-  	combindata=combindata+"^"+GetElementValue("Floor");
+  	//modify by lmm 2021-06-25 begin
+  	combindata=combindata+"^"+GetElementValue("HospitalDR");
+  	combindata=combindata+"^"+GetElementValue("LocDR");
+  	combindata=combindata+"^"+GetElementValue("BuildingDR");
+  	combindata=combindata+"^"+GetElementValue("BuildingUnitDR");
+  	combindata=combindata+"^"+GetElementValue("Place");
   	combindata=combindata+"^"+GetElementValue("DateActiveFrom");
   	combindata=combindata+"^"+GetElementValue("DateActiveTo");
   	combindata=combindata+"^"+GetElementValue("Remark");
-  	
   	combindata=combindata+"^"+GetElementValue("Hold1");
   	combindata=combindata+"^"+GetElementValue("Hold2");
   	combindata=combindata+"^"+GetElementValue("Hold3");
   	combindata=combindata+"^"+GetElementValue("Hold4");
   	combindata=combindata+"^"+GetElementValue("Hold5");
-  	
+  	//modify by lmm 2021-06-25 end
   	return combindata;
 }
 function BAdd_Click() //添加
@@ -66,7 +113,7 @@ function BAdd_Click() //添加
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="") return;
 	var plist=CombinData(); //函数调用
-	var result=cspRunServerMethod(encmeth,'','',plist,'0');
+	var result=cspRunServerMethod(encmeth,'','',plist,'0',curSSHospitalID,GetBDPHospValue("_HospList"));
 	result=result.replace(/\\n/g,"\n");
 	if(result=="")
 	{
@@ -84,7 +131,7 @@ function BUpdate_Click() //修改
 	if (condition()) return;
 	var encmeth=GetElementValue("GetUpdate");
 	var plist=CombinData(); //函数调用
-	var result=cspRunServerMethod(encmeth,'','',plist,'0');
+	var result=cspRunServerMethod(encmeth,'','',plist,'0',curSSHospitalID,GetBDPHospValue("_HospList"));
 	result=result.replace(/\\n/g,"\n");
 	if(result=="") 
 	{
@@ -103,7 +150,7 @@ function BDelete_Click() //删除
 	var truthBeTold = window.confirm("确定删除该记录?");
     if (!truthBeTold) return;
 	var encmeth=GetElementValue("GetUpdate");
-	var result=cspRunServerMethod(encmeth,'','',rowid,'1');
+	var result=cspRunServerMethod(encmeth,'','',rowid,'1',curSSHospitalID,GetBDPHospValue("_HospList"));
 	result=result.replace(/\\n/g,"\n")
 	if (result>0)
 	{
@@ -115,6 +162,10 @@ function BFind_Click()
 {
 	var val="&Code="+GetElementValue("Code");
 	val=val+"&Desc="+GetElementValue("Desc");
+	val=val+"&HospitalDR="+GetElementValue("HospitalDR");
+	val=val+"&LocDR="+GetElementValue("LocDR");
+	val=val+"&Hospital="+GetElementValue("Hospital");
+	val=val+"&Loc="+GetElementValue("Loc");
 	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCLocation" +val;
 }
 
@@ -169,12 +220,24 @@ function Clear()
 	SetElement("Hold3","");
 	SetElement("Hold4","");
 	SetElement("Hold5","");
+  	//modify by lmm 2021-06-25 begin
+	SetElement("LocDR","");
+	SetElement("Loc","");
+	SetElement("BuildingDR","");
+	SetElement("Building","");
+	SetElement("BuildingUnitDR","");
+	SetElement("BuildingUnit","");
+	SetElement("HospitalDR","");
+	SetElement("Hospital","");
+  	//modify by lmm 2021-06-25 end
+	SetElement("Place","");   //modfiy by lmm 2021-08-03 2054181
 }
 
 function SetData(RowID)
 {
+	//modify by lmm 2021-06-25 begin
 	SetElement("RowID",RowID);  //hisui改造：RowID赋值 add by wy  2018-09-01
-	var sort=20
+	var sort=17
 	var encmeth=GetElementValue("GetData");
 	if (encmeth=="") return;
 	var gbldata=cspRunServerMethod(encmeth,'','',RowID);
@@ -185,28 +248,25 @@ function SetData(RowID)
 	SetElement("Code",list[1]);
 	SetElement("Desc",list[2]);
 	SetElement("Type",list[3]);
-	SetElement("Area",list[4])
-	SetElement("Address",list[5]);
-	SetElement("ManageLocDR",list[6]);
-	SetElement("ManageLoc",list[sort+1]);
-	SetElement("ManageUserDR",list[7]);
-	SetElement("ManageUser",list[sort+2]);
-	SetElement("PurposeTypeDR",list[8]);
-	SetElement("PurposeType",list[sort+3]);
-	SetElement("EquipDR",list[9]);
-	SetElement("Equip",list[sort+4]);
-	SetElement("Floor",list[10]);
-	SetElement("DateActiveFrom",list[11]);
-	SetElement("DateActiveTo",list[12]);
-	SetElement("Remark",list[15]);
-	//Add by ZY 2015-4-27 ZY0125
-	SetElement("Hold1Desc",list[sort+5]);
-	SetElement("Hold1",list[16]);
-	SetElement("Hold2Desc",list[sort+6]);
-	SetElement("Hold2",list[17]);
-	SetElement("Hold3",list[18]);
-	SetElement("Hold4",list[19]);
-	SetElement("Hold5",list[20]);
+  	
+	SetElement("HospitalDR",list[4])
+	SetElement("Hospital",list[sort+1]);
+	SetElement("LocDR",list[5]);
+	SetElement("Loc",list[sort+2]);
+	SetElement("BuildingDR",list[6]);
+	SetElement("Building",list[sort+3]);
+	SetElement("BuildingUnitDR",list[7]);
+	SetElement("BuildingUnit",list[sort+4]);
+	SetElement("Place",list[8]);
+	SetElement("DateActiveFrom",list[9]);
+	SetElement("DateActiveTo",list[10]);
+	SetElement("Remark",list[12]);
+	SetElement("Hold1",list[13]);
+	SetElement("Hold2",list[14]);
+	SetElement("Hold3",list[15]);
+	SetElement("Hold4",list[16]);
+	SetElement("Hold5",list[17]);
+  	//modify by lmm 2021-06-25 end
 }
 
 function GetPurposeType (value)
@@ -235,22 +295,43 @@ function condition()//条件
 	if (CheckMustItemNull()) return true;
 	return false;
 }
-	//Add by ZY 2015-4-27 ZY0125
+//add by lmm 2021-06-22
 function GetHospital(value)
 {
-	var obj=document.getElementById("Hold1");
+	var obj=document.getElementById("HospitalDR");
 	var val=value.split("^");	
 	if (obj) obj.value=val[1];
 }
-
+//add by lmm 2021-06-22
+function GetBuilding(value)
+{
+	var obj=document.getElementById("BuildingDR");
+	var val=value.split("^");
+	//modify by lmm 2021-07-09	
+	if (obj) obj.value=val[0];
+	var obj=document.getElementById("Building");
+	if (obj) obj.value=val[1];
+}
+//add by lmm 2021-06-22
+function GetBuildingUnit(value)
+{
+	var obj=document.getElementById("BuildingUnitDR");
+	var val=value.split("^");	
+	if (obj) obj.value=val[0];
+	var obj=document.getElementById("BuildingUnit");
+	if (obj) obj.value=val[4];
+	disableElement("Loc",true);  //add by lmm 2021-07-09
+	
+}
 function Hold1Desc_KeyUp()
 {
 	var obj=document.getElementById("Hold1");	
 	if (obj) obj.value="";
 }
+//add by lmm 2021-06-22
 function GetLocID(value)
 {
-	var obj=document.getElementById("Hold2");
+	var obj=document.getElementById("LocDR");
 	var val=value.split("^");	
 	if (obj) obj.value=val[1];
 }

@@ -23,9 +23,9 @@ function initTopPanel()
 {
 	defindTitleStyle();
 	initButton(); //按钮初始化
-	jQuery("#BAdd").linkbutton({iconCls: 'icon-w-add'});
-	jQuery("#BAdd").on("click", BAdd_Clicked);
-	initButtonWidth();
+	//jQuery("#BAdd").linkbutton({iconCls: 'icon-w-add'});
+	//jQuery("#BAdd").on("click", BAdd_Clicked);
+	//initButtonWidth();  //modified by LMH 20230302 UI
 	initMessage("");   //Modefied by zc 2018-12-21  zc0047  修改弹出提示undefined
 	setRequiredElements("PTCode^PTDesc")
 	setEnabled();		//按钮控制
@@ -92,7 +92,11 @@ function BAdd_Clicked()
 	jsonData=eval('(' + jsonData + ')')
 	if (jsonData.SQLCODE<0) {messageShow("alert","error","错误提示",jsonData.Data);return;}
 	messageShow("alert","success","提示","新增成功！");
-	window.setTimeout(function(){window.location.href= "dhceq.rm.pricetype.csp"},50);
+	var url="dhceq.rm.pricetype.csp";
+    if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.setTimeout(function(){window.location.href= url},50);
 }
 function BSave_Clicked()
 {
@@ -104,7 +108,11 @@ function BSave_Clicked()
 	jsonData=eval('(' + jsonData + ')')
 	if (jsonData.SQLCODE<0) {messageShow("alert","error","错误提示",jsonData.Data);return;}
 	messageShow("alert","success","提示","更新成功");
-	window.setTimeout(function(){window.location.href= "dhceq.rm.pricetype.csp"},50);
+	var url="dhceq.rm.pricetype.csp";
+    if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.setTimeout(function(){window.location.href= url},50);
 }
 function BDelete_Clicked()
 {
@@ -119,7 +127,11 @@ function DeleteData()
 	var jsonData=tkMakeServerCall("web.DHCEQ.RM.CTPriceType","SaveData",data,"1");
 	if (jsonData.SQLCODE<0) {messageShow("alert","error","错误提示",jsonData.Data);return;}
 	messageShow("alert","success","提示","删除成功！");
-	window.setTimeout(function(){window.location.href= "dhceq.rm.pricetype.csp"},50);
+	var url="dhceq.rm.pricetype.csp";
+    if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.setTimeout(function(){window.location.href= url},50);
 }
 function initDHCEQSCPriceType()
 {
@@ -134,6 +146,7 @@ function initDHCEQSCPriceType()
 	    fie:true,
 	    singleSelect:true,
 		fitColumns:true,
+		rownumbers:true,  //modefied by zc0107 2021-11-14 增加行号属性
 		pagination:true,
     	columns:columns,
 		onClickRow:function(rowIndex,rowData){OnclickRow();},

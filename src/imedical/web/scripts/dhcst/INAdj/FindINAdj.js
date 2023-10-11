@@ -6,7 +6,7 @@ FindINAdj = function(ds,adjNumField,mainRowId,locField,dateField,addB,finshCK,au
 		id:'startDate',
 		listWidth:210,
 		allowBlank:true,
-		fieldLabel:'起始日期',
+		fieldLabel:$g('起始日期'),
 		anchor:'95%',
 		value:new Date()
 	});
@@ -15,43 +15,43 @@ FindINAdj = function(ds,adjNumField,mainRowId,locField,dateField,addB,finshCK,au
 		id:'endDate',
 		listWidth:210,
 		allowBlank:true,
-		fieldLabel:'截止日期',
+		fieldLabel:$g('截止日期'),
 		anchor:'95%',
 		value:new Date()
 	});
 	
 	var Loc = new Ext.ux.LocComboBox({
 		id:'Loc',
-		fieldLabel:'科室',
+		fieldLabel:$g('科室'),
 		listWidth:210,
-		emptyText:'科室...',
+		emptyText:$g('科室...'),
 		anchor:'95%',
 		groupId:GroupId
 	});
 	
 	var finsh = new Ext.form.Checkbox({
 		id: 'finsh',
-		boxLabel:'完成',
+		boxLabel:$g('完成'),
 		anchor:'95%',
 		allowBlank:true
 	});
 
 	var audit = new Ext.form.Checkbox({
 		id: 'audit',
-		boxLabel:'审核',
+		boxLabel:$g('审核'),
 		anchor:'95%',
 		allowBlank:true
 	});
 	// 调整原因
 	var adjReasonField = new Ext.form.ComboBox({
 		id:'adjReasonField',
-		fieldLabel:'调整原因',
+		fieldLabel:$g('调整原因'),
 		listWidth:200,
 		allowBlank:true,
 		store:ReasonForAdjustMentStore,
 		valueField:'RowId',
 		displayField:'Description',
-		emptyText:'调整原因...',
+		emptyText:$g('调整原因...'),
 		triggerAction:'all',
 		emptyText:'',
 		minChars:1,
@@ -106,23 +106,23 @@ FindINAdj = function(ds,adjNumField,mainRowId,locField,dateField,addB,finshCK,au
 	var InadjCm = new Ext.grid.ColumnModel([
 		new Ext.grid.RowNumberer(),
 		{
-			header: '调整单rowid',
+			header: $g('调整单rowid'),
 			dataIndex: 'adj',
 			hidden:true
 		},{
-			header: '调整单号',
+			header: $g('调整单号'),
 			dataIndex: 'no',
 			width: 150,
 			sortable:true,
 			align: 'left'
 		},{
-			header: '科室',
+			header: $g('科室'),
 			dataIndex: 'locDesc',
 			width: 150,
 			sortable:true,
 			align: 'left'
 		},{
-			header: "调整日期",
+			header: $g("调整日期"),
 			dataIndex: 'date',
 			width: 150,
 			align: 'left',
@@ -135,14 +135,14 @@ FindINAdj = function(ds,adjNumField,mainRowId,locField,dateField,addB,finshCK,au
 			hidden:true
 		},
 		{
-			header: "类组",
+			header: $g("类组"),
 			dataIndex: 'scgDesc',
 			width: 60,
 			align: 'left',
 			sortable: true
 		},
 		{
-			header: "完成",
+			header: $g("完成"),
 			dataIndex: 'comp',
 			width: 100,
 			align: 'center',
@@ -152,7 +152,7 @@ FindINAdj = function(ds,adjNumField,mainRowId,locField,dateField,addB,finshCK,au
 				return '<div class="x-grid3-check-col'+(((v=='Y')||(v==true))?'-on':'')+' x-grid3-cc-'+this.id+'">&#160;</div>';
 			}
 		},{
-			header: "审核",
+			header: $g("审核"),
 			dataIndex: 'chkFlag',
 			width: 100,
 			align: 'center',
@@ -162,24 +162,24 @@ FindINAdj = function(ds,adjNumField,mainRowId,locField,dateField,addB,finshCK,au
 				return '<div class="x-grid3-check-col'+(((v=='Y')||(v==true))?'-on':'')+' x-grid3-cc-'+this.id+'">&#160;</div>';
 			}
 		},{
-	        header:"进价金额",
+	        header:$g("进价金额"),
 	        dataIndex:'rpAmt',
 	        width:100,
 	        align:'right',
 	        sortable:true
 	    },{
-	        header:"售价金额",
+	        header:$g("售价金额"),
 	        dataIndex:'spAmt',
 	        width:100,
 	        align:'right',
 	        sortable:true
 	    },{
-	        header:"调整原因",
+	        header:$g("调整原因"),
 	        dataIndex:'adjReason',
 	        width:100,
 	        align:'left'
 	    },{
-	        header:"备注",
+	        header:$g("备注"),
 	        dataIndex:'adjRemark',
 	        width:100,
 	        align:'left'
@@ -191,13 +191,13 @@ FindINAdj = function(ds,adjNumField,mainRowId,locField,dateField,addB,finshCK,au
 		pageSize:15,
 		id:'adjGrid',
 		displayInfo:true,
-		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录"
+		displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+		emptyMsg:$g("没有记录")
 	});
 	
 	var fB = new Ext.Toolbar.Button({
-		text:'查询',
-		tooltip:'查询',
+		text:$g('查询'),
+		tooltip:$g('查询'),
 		iconCls:'page_find',
 		width:70,
 		height:30,
@@ -206,20 +206,20 @@ FindINAdj = function(ds,adjNumField,mainRowId,locField,dateField,addB,finshCK,au
 			if((startDate!="")&&(startDate!=null)){
 				startDate = startDate.format(App_StkDateFormat);
 			}else{
-				Msg.info("error","请选择起始日期!");
+				Msg.info("error",$g("请选择起始日期!"));
 				return false;
 			}
 			var endDate = Ext.getCmp('endDate').getValue();
 			if((endDate!="")&&(endDate!=null)){
 				endDate = endDate.format(App_StkDateFormat);
 			}else{
-				Msg.info("error","请选择截止日期!");
+				Msg.info("error",$g("请选择截止日期!"));
 				return false;
 			}
 			
 			var locId = Ext.getCmp('Loc').getValue();
 			if((locId=="")||(locId==null)){
-				Msg.info("error","请选择科室!");
+				Msg.info("error",$g("请选择科室!"));
 				return false;
 			}
 			
@@ -299,79 +299,79 @@ FindINAdj = function(ds,adjNumField,mainRowId,locField,dateField,addB,finshCK,au
 	var InadjItmCm = new Ext.grid.ColumnModel([
 		new Ext.grid.RowNumberer(),
 		{
-			header: '明细rowid',
+			header: $g('明细rowid'),
 			dataIndex: 'adjitm',
 			hidden:true
 		},{
-			header: '批次rowid',
+			header: $g('批次rowid'),
 			dataIndex: 'inclb',
 			hidden:true
 		},{
-			header: '药品rowid',
+			header: $g('药品rowid'),
 			dataIndex: 'inci',
 			hidden:true
 		},{
-			header: '代码',
+			header: $g('代码'),
 			dataIndex: 'code',
 			width: 70,
 			sortable:true,
 			align: 'left'
 		},{
-			header: '名称',
+			header: $g('名称'),
 			dataIndex: 'desc',
 			width: 150,
 			sortable:true,
 			align: 'left'
 		},{
-			header: "批次~效期",
+			header: $g("批次~效期"),
 			dataIndex: 'batNo',
 			width: 150,
 			align: 'left',
 			sortable: true
 		},{
-			header: "厂商",
+			header: $g("生产企业"),
 			dataIndex: 'manf',
 			width: 80,
 			align: 'left',
 			sortable: true
 		},{
-			header: "调整数量",
+			header: $g("调整数量"),
 			dataIndex: 'qty',
 			width: 72,
 			align: 'right',
 			sortable: true
 		},{
-			header:'单位',
+			header:$g('单位'),
 			dataIndex:'uomDesc',
 			align:'left',
 			width:80,
 			sortable:true
 		},{
-			header:'进价',
+			header:$g('进价'),
 			dataIndex:'rp',
 			align:'right',
 			width:80,
 			sortable:true
 		},{
-			header:'进价金额',
+			header:$g('进价金额'),
 			dataIndex:'rpAmt',
 			align:'right',
 			width:80,
 			sortable:true
 		},{
-			header:'售价',
+			header:$g('售价'),
 			dataIndex:'sp',
 			align:'right',
 			width:100,
 			sortable:true
 		},{
-			header:'售价金额',
+			header:$g('售价金额'),
 			dataIndex:'spAmt',
 			align:'right',
 			width:100,
 			sortable:true
 		},{
-			header:'规格',
+			header:$g('规格'),
 			dataIndex:'spec',
 			align:'left',
 			width:80,
@@ -384,8 +384,8 @@ FindINAdj = function(ds,adjNumField,mainRowId,locField,dateField,addB,finshCK,au
 		pageSize:15,
 		id:'adjItmGrid',
 		displayInfo:true,
-		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录"
+		displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+		emptyMsg:$g("没有记录")
 	});
 	
 	var InadjItmGrid = new Ext.grid.GridPanel({
@@ -409,7 +409,7 @@ FindINAdj = function(ds,adjNumField,mainRowId,locField,dateField,addB,finshCK,au
 			params:{start:0,limit:InadjItmPagingToolbar.pageSize},
 			callback : function(r,options, success){
 				if(success==false){
-					Ext.MessageBox.alert("查询错误",this.reader.jsonData.Error); 
+					Ext.MessageBox.alert($g("查询错误"),this.reader.jsonData.Error); 
 	 			}
 			}
 		
@@ -435,7 +435,7 @@ FindINAdj = function(ds,adjNumField,mainRowId,locField,dateField,addB,finshCK,au
 		layout:'fit',
 		items:[{
 			xtype:'fieldset',
-			title:'查询条件',
+			title:$g('查询条件'),
 			items:[{
 				layout:'column',
 				items:[
@@ -450,7 +450,7 @@ FindINAdj = function(ds,adjNumField,mainRowId,locField,dateField,addB,finshCK,au
 	});
 	
 	var findWin = new Ext.Window({
-		title:'查找库存调整单',
+		title:$g('查找库存调整单'),
 		width:document.body.clientWidth*0.9,
 		height:document.body.clientHeight*0.9,
 		minWidth:document.body.clientWidth*0.3, 

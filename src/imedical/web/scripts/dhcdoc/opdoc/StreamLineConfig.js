@@ -4,6 +4,7 @@ opl.view=(function(){
 	var editRow;
 	function Init(){
 		InitHospList();
+		InitCache();
 	}
 	function InitHospList()
 	{
@@ -14,6 +15,13 @@ opl.view=(function(){
 		hospComp.jdata.options.onLoadSuccess= function(data){
 			InitTable();
 			LoadDataGrid();
+		}
+	}
+	function InitCache(){
+		var hasCache = $.DHCDoc.ConfigHasCache();
+		if (hasCache!=1) {
+			$.DHCDoc.CacheConfigPage();
+			$.DHCDoc.storageConfigPageCache();
 		}
 	}
 	/*

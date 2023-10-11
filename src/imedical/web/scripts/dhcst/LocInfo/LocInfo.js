@@ -19,22 +19,22 @@ allLocStore.load();
 
 var conditionCodeField = new Ext.form.TextField({
     id: 'conditionCode',
-    fieldLabel: '代码',
+    fieldLabel: $g('代码'),
     allowBlank: true,
     //width:180,
     listWidth: 180,
-    emptyText: '代码...',
+    emptyText: $g('代码...'),
     anchor: '90%',
     selectOnFocus: true
 });
 
 var conditionDescField = new Ext.form.TextField({
     id: 'conditionDesc',
-    fieldLabel: '名称',
+    fieldLabel: $g('名称'),
     allowBlank: true,
     //width:150,
     listWidth: 150,
-    emptyText: '名称...',
+    emptyText: $g('名称...'),
     anchor: '90%',
     selectOnFocus: true
 });
@@ -42,19 +42,18 @@ var conditionDescField = new Ext.form.TextField({
 var LocInfoTypeStore = new Ext.data.SimpleStore({
     fields: ['key', 'keyValue'],
     data: [
-        ['', '全部'],
-        ['R', '药库'],
-        ['I', '住院药房'],
-        ['O', '门诊药房'],
-        ['A', '器械材料'],
-        ['G', '总务药房'],
-        ['E', '其他']
+        ['R', $g('药库')],
+        ['I', $g('住院药房')],
+        ['O', $g('门诊药房')],
+        ['A', $g('器械材料')],
+        ['G', $g('总务药房')],
+        ['E', $g('其他')]
     ]
 });
 
 var LocInfoTypeField = new Ext.form.ComboBox({
     id: 'LocInfoType',
-    fieldLabel: '库房类别',
+    fieldLabel: $g('库房类别'),
     anchor: '90%',
     //width:222,
     listWidth: 222,
@@ -63,7 +62,7 @@ var LocInfoTypeField = new Ext.form.ComboBox({
     value: '', // 默认值"全部查询"
     valueField: 'key',
     displayField: 'keyValue',
-    emptyText: '科室类别...',
+    emptyText: $g('科室类别...'),
     triggerAction: 'all',
     emptyText: '',
     minChars: 1,
@@ -75,7 +74,7 @@ var LocInfoTypeField = new Ext.form.ComboBox({
 
 var conditionLocGField = new Ext.ux.ComboBox({
     id: 'conditionLocG',
-    fieldLabel: '科室组',
+    fieldLabel: $g('科室组'),
     anchor: '90%',
     //width:222,
     listWidth: 222,
@@ -83,42 +82,42 @@ var conditionLocGField = new Ext.ux.ComboBox({
     store: StkLocGrpStore,
     valueField: 'RowId',
     displayField: 'Description',
-    emptyText: '科室组...',
+    emptyText: $g('科室组...'),
     filterName: 'str'
 });
 
 var conditionItemGField = new Ext.ux.ComboBox({
     id: 'conditionItemG',
     anchor: '90%',
-    fieldLabel: '项目组',
+    fieldLabel: $g('项目组'),
     //width:220,
     listWidth: 220,
     allowBlank: true,
     store: StkItemGrpStore,
     valueField: 'RowId',
     displayField: 'Description',
-    emptyText: '项目组...',
+    emptyText: $g('项目组...'),
     filterName: 'str'
 });
 
 var conditionMainLocField = new Ext.ux.LocComboBox({
     id: 'conditionMainLoc',
     anchor: '90%',
-    fieldLabel: '支配科室',
-    emptyText: '支配科室...',
+    fieldLabel: $g('支配科室'),
+    emptyText: $g('支配科室...'),
     defaultLoc: ''
 });
 
 var activeField = new Ext.form.Checkbox({
     id: 'active',
     anchor: '90%',
-    fieldLabel: '激活标识',
+    fieldLabel: $g('激活标识'),
     allowBlank: false,
     checked: true
 });
 
 var ActiveF = new Ext.grid.CheckColumn({
-    header: '激活标识',
+    header: $g('激活标识'),
     dataIndex: 'Active',
     //width:150,
     anchor: '90%',
@@ -131,7 +130,7 @@ var ActiveF = new Ext.grid.CheckColumn({
 });
 
 var LigG = new Ext.ux.ComboBox({
-    fieldLabel: '项目组',
+    fieldLabel: $g('项目组'),
     id: 'LigG',
     name: 'LigG',
     anchor: '90%',
@@ -139,11 +138,11 @@ var LigG = new Ext.ux.ComboBox({
     store: StkItemGrpStore,
     valueField: 'RowId',
     displayField: 'Description',
-    emptyText: '项目组...'
+    emptyText: $g('项目组...')
 });
 
 var MainLocCb = new Ext.form.ComboBox({
-    fieldLabel: '支配科室',
+    fieldLabel: $g('支配科室'),
     id: 'MainLoc',
     name: 'MainLoc',
     anchor: '90%',
@@ -153,7 +152,7 @@ var MainLocCb = new Ext.form.ComboBox({
     displayField: 'Description',
     //allowBlank : false,
     triggerAction: 'all',
-    emptyText: '支配科室...',
+    emptyText: $g('支配科室...'),
     selectOnFocus: true,
     forceSelection: true,
     minChars: 1,
@@ -218,7 +217,7 @@ var LigGStoreList = new Ext.data.Store({
 
 LigGStoreList.load();
 var LigGList = new Ext.form.ComboBox({
-    fieldLabel: '项目组',
+    fieldLabel: $g('项目组'),
     id: 'LigGList',
     name: 'LigGList',
     anchor: '90%',
@@ -228,7 +227,7 @@ var LigGList = new Ext.form.ComboBox({
     displayField: 'Description',
     allowBlank: false,
     triggerAction: 'all',
-    emptyText: '项目组...',
+    emptyText: $g('项目组...'),
     selectOnFocus: true,
     forceSelection: true,
     minChars: 1,
@@ -239,7 +238,7 @@ var LigGList = new Ext.form.ComboBox({
 
 ///科室
 var DescIdcb = new Ext.form.ComboBox({
-    fieldLabel: '科室',
+    fieldLabel: $g('科室'),
     id: 'DescId',
     name: 'DescId',
     anchor: '90%',
@@ -249,7 +248,7 @@ var DescIdcb = new Ext.form.ComboBox({
     displayField: 'Description',
     //allowBlank : false,
     triggerAction: 'all',
-    emptyText: '科室...',
+    emptyText: $g('科室...'),
     selectOnFocus: true,
     forceSelection: true,
     minChars: 1,
@@ -272,7 +271,7 @@ var DescIdcb = new Ext.form.ComboBox({
 });
 
 var SlgG = new Ext.form.ComboBox({
-    fieldLabel: '科室组',
+    fieldLabel: $g('科室组'),
     id: 'SlgG',
     name: 'SlgG',
     anchor: '90%',
@@ -282,7 +281,7 @@ var SlgG = new Ext.form.ComboBox({
     displayField: 'Description',
     allowBlank: true,
     triggerAction: 'all',
-    emptyText: '科室组...',
+    emptyText: $g('科室组...'),
     selectOnFocus: true,
     forceSelection: true,
     minChars: 1,
@@ -323,7 +322,7 @@ var SlgGStoreList = new Ext.data.Store({
 
 SlgGStoreList.load();
 var SlgGList = new Ext.form.ComboBox({
-    fieldLabel: '科室组',
+    fieldLabel: $g('科室组'),
     id: 'SlgGList',
     name: 'SlgGList',
     anchor: '90%',
@@ -333,7 +332,7 @@ var SlgGList = new Ext.form.ComboBox({
     displayField: 'Description',
     allowBlank: false,
     triggerAction: 'all',
-    emptyText: '科室组...',
+    emptyText: $g('科室组...'),
     selectOnFocus: true,
     forceSelection: true,
     minChars: 1,
@@ -375,14 +374,14 @@ var LocInfoGridDs = new Ext.data.Store({
 var LocInfoGridCm = new Ext.grid.ColumnModel([
     new Ext.grid.RowNumberer(),
     {
-        header: '代码',
+        header: $g('代码'),
         dataIndex: 'Code',
         width: 150,
         align: 'left',
         sortable: true
     },
     {
-        header: '名称',
+        header: $g('名称'),
         dataIndex: 'DescId',
         width: 300,
         align: 'left',
@@ -391,7 +390,7 @@ var LocInfoGridCm = new Ext.grid.ColumnModel([
         editor: new Ext.grid.GridEditor(DescIdcb)
     },
     {
-        header: '科室组',
+        header: $g('科室组'),
         dataIndex: 'SlgId',
         width: 150,
         align: 'left',
@@ -400,7 +399,7 @@ var LocInfoGridCm = new Ext.grid.ColumnModel([
         editor: new Ext.grid.GridEditor(SlgG)
     },
     {
-        header: '项目组',
+        header: $g('项目组'),
         dataIndex: 'LigId',
         width: 150,
         align: 'left',
@@ -409,18 +408,18 @@ var LocInfoGridCm = new Ext.grid.ColumnModel([
         editor: new Ext.grid.GridEditor(LigG)
     },
     {
-        header: '库房类别',
+        header: $g('库房类别'),
         dataIndex: 'Type',
         width: 150,
         align: 'left',
         sortable: true,
         renderer: function (v, p, record) {
-            if (v == 'R') return '药库';
-            if (v == 'I') return '住院药房';
-            if (v == 'O') return '门诊药房';
-            if (v == 'A') return '器械材料';
-            if (v == 'G') return '总务药房';
-            if (v == 'E') return '其他';
+            if (v == 'R') return $g('药库');
+            if (v == 'I') return $g('住院药房');
+            if (v == 'O') return $g('门诊药房');
+            if (v == 'A') return $g('器械材料');
+            if (v == 'G') return $g('总务药房');
+            if (v == 'E') return $g('其他');
         },
         editor: new Ext.form.ComboBox({
             id: 'LocInfoField',
@@ -443,7 +442,7 @@ var LocInfoGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '支配科室',
+        header: $g('支配科室'),
         dataIndex: 'MainLoc',
         width: 150,
         align: 'left',
@@ -461,7 +460,7 @@ var LocInfoGridCm = new Ext.grid.ColumnModel([
 //}
 //});
 var AddDetailBT = new Ext.Button({
-    text: '增加一条',
+    text: $g('增加一条'),
     tooltip: '',
     iconCls: 'page_add',
     handler: function () {
@@ -511,8 +510,8 @@ function addDetailRow() {
 LocInfoGridCm.defaultSortable = true;
 
 var clearLocInfo = new Ext.Toolbar.Button({
-    text: '清空',
-    tooltip: '清空',
+    text: $g('清空'),
+    tooltip: $g('清空'),
     iconCls: 'page_clearscreen',
     width: 70,
     height: 30,
@@ -537,8 +536,8 @@ var clearLocInfo = new Ext.Toolbar.Button({
 });
 
 var findLocInfo = new Ext.Toolbar.Button({
-    text: '查询',
-    tooltip: '查询',
+    text: $g('查询'),
+    tooltip: $g('查询'),
     iconCls: 'page_find',
     width: 70,
     height: 30,
@@ -556,12 +555,13 @@ var findLocInfo = new Ext.Toolbar.Button({
         LocInfoGridDs.setBaseParam('filterStr', filterStr);
 
         LocInfoGridDs.load({ params: { start: 0, limit: LocInfoPagingToolbar.pageSize } });
+        StkLocGrpStore.reload();// 不重新刷新 科室组会限制明细列表中增加的科室组
     }
 });
 
 var saveLocInfo = new Ext.Toolbar.Button({
-    text: '保存',
-    tooltip: '保存',
+    text: $g('保存'),
+    tooltip: $g('保存'),
     iconCls: 'page_save',
     width: 70,
     height: 30,
@@ -586,7 +586,7 @@ var saveLocInfo = new Ext.Toolbar.Button({
             }
         }
         if (data == '') {
-            Msg.info('error', '没有修改或添加新数据!');
+            Msg.info('error', $g('没有修改或添加新数据!'));
             return false;
         } else {
             var filterStr =
@@ -601,19 +601,19 @@ var saveLocInfo = new Ext.Toolbar.Button({
                 Ext.getCmp('LocInfoType').getValue() +
                 '^' +
                 (Ext.getCmp('active').getValue() == true ? 'Y' : 'N');
-            var mask = ShowLoadMask(Ext.getBody(), '处理中请稍候...');
+            var mask = ShowLoadMask(Ext.getBody(), $g('处理中请稍候...'));
             Ext.Ajax.request({
                 url: LocInfoGridUrl + '?actiontype=save',
                 params: { data: data },
                 failure: function (result, request) {
                     mask.hide();
-                    Msg.info('error', '请检查网络连接!');
+                    Msg.info('error', $g('请检查网络连接!'));
                 },
                 success: function (result, request) {
                     var jsonData = Ext.util.JSON.decode(result.responseText);
                     mask.hide();
                     if (jsonData.success == 'true') {
-                        Msg.info('success', '保存成功!');
+                        Msg.info('success', $g('保存成功!'));
                         LocInfoGridDs.commitChanges();
                         LocInfoGridDs.setBaseParam('sort', 'Rowid');
                         LocInfoGridDs.setBaseParam('dir', 'desc');
@@ -621,7 +621,7 @@ var saveLocInfo = new Ext.Toolbar.Button({
 
                         LocInfoGridDs.load({ params: { start: 0, limit: LocInfoPagingToolbar.pageSize } });
                     } else {
-                        Msg.info('error', '保存失败!' + jsonData.info);
+                        Msg.info('error', $g('保存失败!') + jsonData.info);
                     }
                 },
                 scope: this
@@ -639,7 +639,7 @@ var formPanel = new Ext.form.FormPanel({
     items: [
         {
             xtype: 'fieldset',
-            title: '查询条件',
+            title: $g('查询条件'),
             layout: 'column',
             style: DHCSTFormStyle.FrmPaddingV,
             items: [
@@ -671,8 +671,8 @@ var LocInfoPagingToolbar = new Ext.PagingToolbar({
     store: LocInfoGridDs,
     pageSize: PageSize,
     displayInfo: true,
-    displayMsg: '第 {0} 条到 {1}条 ，一共 {2} 条',
-    emptyMsg: '没有记录'
+    displayMsg: $g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+    emptyMsg: $g('没有记录')
 });
 
 //表格
@@ -717,7 +717,7 @@ Ext.onReady(function () {
     Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 
     var panel = new Ext.Panel({
-        title: '科室扩展信息',
+        title: $g('科室扩展信息'),
         activeTab: 0,
         region: 'north',
         items: [formPanel]

@@ -46,6 +46,15 @@ $(function() {
     	AddLoc();
     });
     
+	 //修改科室
+    $('#UpdateLoc').click(function(e){
+    	UpdateLoc();
+    });
+      
+     //清屏科室
+    $('#ClearLoc').click(function(e){
+    	ClearLoc();
+    });
     //删除科室
     $('#DelLoc').click(function(e){
     	DelLoc();
@@ -71,11 +80,14 @@ function iniForm() {
 	if (Desc.indexOf("检验") >= 0) {
 		$("#CYGItem").css('display','block');//显示
 	 	$("#YGItem").next(".checkbox").show();//显示
+		$('#BarPrintNum').val("1");
 	} else {
 		$("#CYGItem").css('display','none');//隐藏
 		$("#YGItem").next(".checkbox").hide();//隐藏
+		$('#BarPrintNum').val("");
 	}
 	$("#IFPrint").checkbox('setValue',true)
+	$("#IFReprotPrint").checkbox('setValue',true)
 }
 
 //查询
@@ -85,6 +97,9 @@ function BFind_click() {
 		QueryName:"QueryAll",
 		ParRef:$('#ParRef').val(),
 		ARCIMDesc:$("#ARCIMDesc").val(), 
+		Type:"B",
+		LocID:session['LOGON.CTLOCID'],
+		hospId:session['LOGON.HOSPID']
 
 	});
 }
@@ -114,6 +129,17 @@ function AddData() {
 			text:'关闭',
 			handler:function(){
 				myWin.close();
+					$("#ID,#ChildSub").val("")
+					$("#SationOrderComTab").datagrid('load',{
+		   	 		ClassName:"web.DHCPE.StationOrder",
+					QueryName:"QueryAll",
+					ParRef:$("#ParRef").val(),
+					Type:"B",
+					LocID:session['LOGON.CTLOCID'],
+					hospId:session['LOGON.HOSPID']
+				}); 
+
+
 			}
 		}]
 	});
@@ -301,11 +327,35 @@ SaveForm = function(id) {
 	var iMarriedDR = $('#Married_DR_Name').combobox('getValue');
 	if (($('#Married_DR_Name').combobox('getValue')==undefined)||($('#Married_DR_Name').combobox('getValue')=="")) {var iMarriedDR = "";}
 	
+	//条码数量
+	var iBarPrintNum=$("#BarPrintNum").val();
+    if(iBarPrintNum!=""){
+	    if(!isPositiveInteger(iBarPrintNum)){
+		    $.messager.alert("提示","条码数量格式不对,请输入整数","info");
+		    return false
+	    }
+	  if((iBaseInfoBar=="0")&&(iReportFormat.indexOf("LIS")<0)){
+		    $.messager.alert("提示","请勾选基本信息条码","info");
+		    return false;
+		    }
+
+    }
+    if(iBaseInfoBar=="1"){
+	    if(iBarPrintNum==""){var iBarPrintNum=1;}
+    }else{
+	    var iBarPrintNum="";
+    }
+
+  ///是否打印(报告)
+	var iIFReprotPrint = "N";
+	var IFReprotPrint = $("#IFReprotPrint").checkbox('getValue');
+	if (IFReprotPrint) { iIFReprotPrint = "Y";}
+
 	var Instring=iParRef+"^"+""+"^"+iChildSub+"^"+iARCIMDR+"^"+iDiet+"^"+iARCOSDR+"^"+iReportFormat+"^"+iNotice		
 				+"^"+iAutoReturn+"^"+iSignItem+"^"+iPhoto+"^"+TempName+"^"+iPatItemName+"^"+iExtend+"^"+iShowOrHide
     			+"^"+iYGCheck+"^"+iPatFeeType+"^"+Minute+"^"+iSex+"^"+iReportItemName+"^"+iSort+"^"+iBaseInfoBar
 				+"^"+iPatPrintOrder+"^"+iIFPrint+"^"+iVIPLevel+"^"+iPreNum+"^"+iPISCode+"^"+iAlowAddFlag+"^"+iAgeMax
-				+"^"+iAgeMin+"^"+iMarriedDR+"^"+iPrintName;
+				+"^"+iAgeMin+"^"+iMarriedDR+"^"+iPrintName+"^"+iBarPrintNum+"^"+iIFReprotPrint;
 				;
 	//alert(Instring)
 	
@@ -316,9 +366,12 @@ SaveForm = function(id) {
 		$("#SationOrderComTab").datagrid('load',{
 		    ClassName:"web.DHCPE.StationOrder",
 			QueryName:"QueryAll",
-			ParRef:iParRef, 
+			ParRef:iParRef,
+			Type:"B",
+			LocID:session['LOGON.CTLOCID'],
+			hospId:session['LOGON.HOSPID']
 		}); 
-		$("#ID,#ChildSub").val("");
+		//$("#ID,#ChildSub").val("");
 			   
 		//$('#myWin').dialog('close'); 
 	} else if ('-119' == flag || '-120' == flag) {
@@ -335,7 +388,7 @@ function UpdateData() {
 		$.messager.alert('操作提示',"请选择待修改的记录","info");
 		return
 	}
-	
+	iniForm();
 	var StaionDesc=$("#StaionDesc").val();
 	$("#OrdStaionDesc").val(StaionDesc);
 	$("#OrdARCIMDesc").combogrid('disable');
@@ -436,6 +489,14 @@ function UpdateData() {
 			$("#IFPrint").checkbox('setValue',false);
 		}
 		
+		$("#BarPrintNum").val(StationOrder[31]);
+
+		if (StationOrder[32] == "Y") {
+			$("#IFReprotPrint").checkbox('setValue',true);
+		} else {
+			$("#IFReprotPrint").checkbox('setValue',false);
+		}
+
 
 		
 		$("#myWin").show();
@@ -455,10 +516,21 @@ function UpdateData() {
 				text:'关闭',
 				handler:function(){
 					myWin.close();
+					$("#ID,#ChildSub").val("")
+					$("#SationOrderComTab").datagrid('load',{
+		   	 		ClassName:"web.DHCPE.StationOrder",
+					QueryName:"QueryAll",
+					ParRef:$("#ParRef").val(),
+					Type:"B",
+					LocID:session['LOGON.CTLOCID'],
+					hospId:session['LOGON.HOSPID']
+				}); 
+
+
 				}
 			}]
 		});	
-		iniForm();						
+							
 	}	
 }
 
@@ -486,6 +558,9 @@ function DelData()
 						ClassName:"web.DHCPE.StationOrder",
 						QueryName:"QueryAll",
 						ParRef:$('#ParRef').val(),
+						Type:"B",
+						LocID:session['LOGON.CTLOCID'],
+						hospId:session['LOGON.HOSPID']
 					});	
 	
 			        $('#myWin').dialog('close'); 
@@ -493,6 +568,28 @@ function DelData()
 			});	
 		}
 	});
+}
+
+
+//修改科室
+function UpdateLoc()
+{
+	var iOrderLocID=$("#OrderLocID").val();
+	if(iOrderLocID==""){
+		$.messager.alert('提示',"请选择待修改的记录","info");
+		return
+	}
+	AddLoc();
+	
+}
+
+//清屏科室
+function ClearLoc()
+{
+	$("#Loc").combobox('setValue',"");
+	$("#OrderLocID").val("")
+	$("#LocTable").datagrid('reload'); 
+	$("#AddLoc").linkbutton('enable');
 }
 
 //新增科室
@@ -505,7 +602,7 @@ function AddLoc(){
 	}
 	//科室
 	var ilocid = $("#Loc").combobox('getValue');
-	if (($('#Loc').combobox('getValue') == undefined) || ($('#Loc').combobox('getValue') == "")) { var ilocid = "N"; }
+	if (($('#Loc').combobox('getValue') == undefined) || ($('#Loc').combobox('getValue') == "")) { var ilocid = ""; }
     if(ilocid=="")
     {
 	    $.messager.alert('提示',"科室不能为空","info");
@@ -514,13 +611,20 @@ function AddLoc(){
 
    var iOrderLocID=$("#OrderLocID").val();
    var iNoPrint="N"	
+    
+   var ExistFlag=tkMakeServerCall("web.DHCPE.SelectLoc","IsExistLoc",$.trim(ilocid),$.trim(ID));
+    if(ExistFlag=="1"){
+	      $.messager.alert('提示',"该科室已存在，无需新增","info");
+	    return false;
+    }
+
     var Instring=$.trim(ilocid)+"^"+$.trim(ID)+"^"+$.trim(iNoPrint)+"^"+$.trim(iOrderLocID);
+    //alert(Instring)
     var flag=tkMakeServerCall("web.DHCPE.SelectLoc","Save",Instring);
     if(flag=="0"){
-	    $("#Loc").combobox('setValue',"");
-	     $("#OrderLocID").val("")
-	    $.messager.popover({msg: '新增成功！',type:'success',timeout: 1000});
-	    $("#LocTable").datagrid('reload'); 
+	    if(iOrderLocID==""){  $.messager.popover({msg: '新增成功！',type:'success',timeout: 1000});}
+	    else{ $.messager.popover({msg: '修改完成！',type:'success',timeout: 1000});}
+	    ClearLoc();
     }
    
 }
@@ -537,9 +641,10 @@ function DelLoc(){
             
      var flag=tkMakeServerCall("web.DHCPE.SelectLoc","Delete",Instring);
     if(flag=="0"){
-	    $("#OrderLocID").val("")
+	  
 	    $.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
-	    $("#LocTable").datagrid('reload'); 
+	     ClearLoc();
+	    
     }
 	
 }
@@ -557,7 +662,7 @@ function LocData(){
 		minimizable:false,
 		collapsible:false,
 		modal:true,
-		width:600,
+		width:710,
 		height:390
 		
 	});
@@ -587,6 +692,7 @@ function LocData(){
 	onSelect: function (rowIndex, rowData) { 
 				$("#OrderLocID").val(rowData.TRowId);
 				$("#LocID").val(rowData.TLocId); 
+				$("#AddLoc").linkbutton('disable');
 		}
 		
 		})
@@ -597,7 +703,7 @@ function LocData(){
 
 function InitCombobox() {
 	//医嘱名称
-	var OPNameObj = $HUI.combogrid("#OrdARCIMDesc",{
+	var ARCIMDObj = $HUI.combogrid("#OrdARCIMDesc",{
 		panelWidth:400,
 		url:$URL+"?ClassName=web.DHCPE.StationOrder&QueryName=ArcItmmastList",
 		mode:'remote',
@@ -606,6 +712,10 @@ function InitCombobox() {
 		textField:'STORD_ARCIM_Desc',
 		onBeforeLoad:function(param){
 			param.Desc = param.q;
+			param.Type="B";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID'];
+
 		},
 		columns:[[
 		    {field:'STORD_ARCIM_DR',title:'ID',width:40},
@@ -644,7 +754,7 @@ function InitCombobox() {
 
 	
 	//报告格式
-	var OPNameObj = $HUI.combogrid("#ReportFormat",{
+	var ReportFormatObj  = $HUI.combogrid("#ReportFormat",{
 		panelWidth:200,
 		url:$URL+"?ClassName=web.DHCPE.StationOrder&QueryName=SearchReportFormat",
 		mode:'remote',
@@ -721,7 +831,11 @@ function InitCombobox() {
 		var PISObj = $HUI.combobox("#PISCode",{
 		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindPISCodeNew&ResultSetType=array",
 		valueField:'id',
-		textField:'desc'
+		textField:'desc',
+		onBeforeLoad:function(param){ 
+			param.hospId = session['LOGON.HOSPID']; 
+		}
+
 		});
 	} else {
 		var PISObj = $HUI.combobox("#PISCode",{
@@ -743,6 +857,12 @@ function InitCombobox() {
 		valueField:'id',
 		textField:'desc',
 		//defaultFilter:4,
+		onBeforeLoad:function(param){
+			param.Type="B";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID']; 
+		}
+
 		
 	});
 
@@ -772,6 +892,9 @@ function InitSationOrderComDataGrid()
 			ParRef:"",
 			Desc:"",
 			Code:"",
+			Type:"B",
+			LocID:session['LOGON.CTLOCID'],
+			hospId:session['LOGON.HOSPID']
 		},
 		frozenColumns:[[
 			{field:'STORD_ARCIM_Code',width:'100',title:'项目编码'},
@@ -800,12 +923,14 @@ function InitSationOrderComDataGrid()
 			{field:'TPatPrintOrder',width:'120',title:'导诊单打印顺序'},
 			{field:'TPreNum',width:'100',title:'预约数量'},
 			{field:'TBaseBar',width:'120',title:'基本信息条码'},
+			{field:'TBarPrintNum',width:'80',title:'条码数量'},
 			{field:'STORD_Notice',width:'150',title:'注意事项'},
 			{field:'TPISCode',width:'150',title:'标本类型'},
 			{field:'TYGFlag',width:'70',title:'乙肝项目'},
 			{field:'STORD_ARCOS_DR_Name',width:'100',title:'医嘱套'},
 			{field:'TPrintName',width:'120',title:'打印名称(导)'},
-			{field:'TIFPrint',width:'80',title:'打印(导)'}
+			{field:'TIFPrint',width:'80',title:'打印(导)'},
+			{field:'TIFReprotPrint',width:'80',title:'打印(报)'}
 			
 		]],
 		onSelect: function (rowIndex, rowData) {
@@ -830,7 +955,10 @@ function LoadSationOrderComlist(rowData)
 			ClassName:"web.DHCPE.StationOrder",
 			QueryName:"QueryAll",
 			ParRef:$('#ParRef').val(),
-			ARCIMDesc:"",	
+			ARCIMDesc:"",
+			Type:"B",
+			LocID:session['LOGON.CTLOCID'],
+			hospId:session['LOGON.HOSPID']
 	});
 	
 	
@@ -881,6 +1009,16 @@ function InitStationDataGrid()
 	});
 
 }
+
+
+//是否为正整数
+function isPositiveInteger(s){
+
+     var re =/^\+?[1-9][0-9]*$/ ;
+
+     return re.test(s)
+
+ }
 
 //判断输入的字符串是否为非负整数
 function isNumber(elem){

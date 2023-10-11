@@ -136,13 +136,14 @@ function InitOutofBedWinEvent(obj){
 		var t=new Date();
 		t=t.getTime();
 		var strUrl = "./dhchai.ir.view.main.csp?PaadmID=" + aEpisodeID + "&PageType=WinOpen&t=" + t;
-		websys_showModal({
-			url:strUrl,
-			title:'医院感染集成视图',
-			iconCls:'icon-w-paper',  
-			width:'95%',
-			height:'95%'
-		});
+		
+		//websys_createWindow样式打开[宽:95%,高：95%]
+		var Width=window.screen.availWidth*0.95;
+		var Height=window.screen.availHeight*0.95;
+		var Top = (window.screen.availHeight - Height-30) / 2; 			//获得窗口的垂直位置 
+        var Left = (window.screen.availWidth - Width-10) / 2; 			//获得窗口的水平位置
+		 //--打开摘要
+		var page=websys_createWindow(strUrl,"",'height='+Height+',innerHeight='+Height+',width='+Width+',innerWidth='+Width+',top='+Top+',left='+Left+',status=no,toolbar=no,menubar=no,location=no,resizable=no,scrollbars=0,titlebar=no'); 
 	}
 	
 	//操作日期

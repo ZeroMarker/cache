@@ -46,17 +46,19 @@ function InitPatList(){
 	
 	///  定义columns
 	var columns=[[
-		{field:'CPrvID',title:'CPrvID',width:100,align:'center',hidden:true},
-		{field:'CPrvCode',title:'工号',width:100,align:'center'},
-		{field:'CPrvUser',title:'姓名',width:100,align:'center'},
-		{field:'PatNums',title:'接收病人总数',width:120,align:'center'},
-		{field:'Detail',title:'查看明细',width:100,align:'center',formatter:setCellLabel},
-		{field:'Pid',title:'Pid',width:100,align:'center',hidden:true}
+		{field:'CPrvID',title:'CPrvID',width:100,hidden:true},
+		{field:'CPrvCode',title:'工号',width:100},
+		{field:'CPrvUser',title:'姓名',width:100},
+		{field:'PatNums',title:'接收病人总数',width:120},
+		{field:'Detail',title:'查看明细',width:100,formatter:setCellLabel},
+		{field:'Pid',title:'Pid',width:100,hidden:true}
 	]];
 	
 	///  定义datagrid
 	var option = {
 		//showHeader:false,
+		toolbar:"#toolbar",
+		fitColumns:true,
 		rownumbers : true,
 		singleSelect : true,
 		pagination: true,
@@ -77,7 +79,7 @@ function InitPatList(){
 /// 申请列表 卡片样式
 function setCellLabel(value, rowData, rowIndex){
 	
-	var html = '<a href="#" onclick="OpenDetailWin('+ rowData.Pid +','+ rowData.CPrvID +')">明细</a>';
+	var html = '<a href="#" onclick="OpenDetailWin('+ rowData.Pid +','+ rowData.CPrvID +')">'+$g("明细")+'</a>';
 	return html;
 }
 
@@ -103,6 +105,7 @@ function OpenDetailWin(Pid, CPrvID){
 function InitPatDetailWin(){
 	
 	var option = {
+		iconCls:'icon-w-paper',
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,
@@ -114,22 +117,25 @@ function InitPatDetailWin(){
 	
 	///  定义columns
 	var columns=[[
-		{field:'EpisodeID',title:'EpisodeID',width:100,align:'center',hidden:true},
-		{field:'PatientID',title:'PatientID',width:100,align:'center',hidden:true},
-		{field:'PatNo',title:'登记号',width:100,align:'center'},
-		{field:'PatName',title:'姓名',width:100,align:'center'},
-		{field:'PatSex',title:'性别',width:100,align:'center'},
-		{field:'PatAge',title:'年龄',width:100,align:'center'},
-		{field:'PatBed',title:'床位',width:100,align:'center'},
+		{field:'EpisodeID',title:'EpisodeID',width:100,hidden:true},
+		{field:'PatientID',title:'PatientID',width:100,hidden:true},
+		{field:'PatNo',title:'登记号',width:100},
+		{field:'PatName',title:'姓名',width:100},
+		{field:'PatSex',title:'性别',width:100},
+		{field:'PatAge',title:'年龄',width:100},
+		{field:'PatBed',title:'床位',width:100},
 		{field:'PatDiag',title:'诊断',width:300},
-		{field:'BillType',title:'费别',width:100,align:'center'},
+		{field:'BillType',title:'费别',width:100},
 		{field:'PatLoc',title:'科室',width:140},
 		{field:'PatWard',title:'病区',width:140},
-		{field:'UpdateUser',title:'更新人',width:100,align:'center',hidden:true}
+		{field:'UpdateUser',title:'更新人',width:100,hidden:true}
 	]];
 	
 	///  定义datagrid
 	var option = {
+		bodyCls:'panel-header-gray',
+		border:true,
+		fitColumns:true,
 		rownumbers : true,
 		singleSelect : true,
 		pagination: true

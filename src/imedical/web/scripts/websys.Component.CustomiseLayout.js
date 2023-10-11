@@ -132,7 +132,7 @@ function InitList() {
 
 	// Columns to show (in sequence)
 	for (var j=0;j<aColumns.length-1;j++) {
-		if (aColumns[j]!='') {
+		if (aColumns[j]!='' && (aColumns[j]-1)>-1 && (aColumns[j]-1)<aCaptions.length ) {  /*20210715 列号不在captions数组内不显示，不然显示空*/
 			TableItems[TableItems.length]=new TableItem(lstItems,aColumns[j],aCaptions[aColumns[j]-1],aWidths[j],true,aDelims[aColumns[j]-1],aEnableSort[j]);
 		}
 	}
@@ -434,6 +434,8 @@ function SetSaveAs(type) {
 function GetDesc(type) {
 	var desc="";
 	switch (type) {
+		case 'L' : desc = local['LOGON.LOCDESC'];
+			break;
 		case 'G' : desc = local['LOGON.GROUPDESC'];
 			break;
 		case 'H' : desc = local['LOGON.HOSPDESC'];

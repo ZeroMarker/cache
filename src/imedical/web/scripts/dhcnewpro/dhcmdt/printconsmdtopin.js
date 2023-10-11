@@ -1,9 +1,15 @@
+var LODOP="";
+$(document).ready(function(){
 
-$(document).ready(function(){	
-	InitParams();
-	PageSetup_Null() //IE 隐藏打印时文件路径和日期
-	PrintCons();
+	setTimeout("DelayedPrint()","2000");   ///给与LODOP的准备时间 
 })
+
+function DelayedPrint(){
+	LODOP = getLodop();	
+	//InitParams();
+	//PageSetup_Null() //IE 隐藏打印时文件路径和日期
+	PrintCons();
+}
 
 function InitParams(){
 	pageMargin={};
@@ -20,6 +26,7 @@ function PrintCons(){
 			var jsonObjArr = jsonString;
 			PrintCst(jsonObjArr);
 			UlcerPrint();
+			PrintMethod();
 		},'json',true)	
 	}catch(e){alert(e.message)}
 
@@ -27,17 +34,35 @@ function PrintCons(){
 }
 
 //打印
+/*
 function UlcerPrint(){
 	if(!!window.ActiveXObject||"ActiveXObject"in window){ //判断是否是IE浏览器
 		document.getElementById('WebBrowser').ExecWB(6,2);
-		
-		InsCsMasPrintFlag(CstID,"Y");  /// 修改会诊打印标志
-		window.close();	 
+		//window.close();	 
 	}else{
 		if(document.execCommand("print")){
-			//window.close();	
+			//window.close();
+			setTimeout("window.close();",10000);
 		}	
-	}	
+	}
+	InsCsMasPrintFlag(CstID,"Y");  /// 修改会诊打印标志
+ }
+ */
+ 
+ function PrintMethod(){
+	var LODOPPRTSTATS=LODOP.PRINT();
+	if(LODOPPRTSTATS){
+		window.close();	
+	}
+	return;	
+}
+
+//打印
+function UlcerPrint(){
+	LODOP.PRINT_INIT("CST PRINT");
+	LODOP.SET_PRINT_PAGESIZE(1,"210mm","297mm","A4")
+	LODOP.ADD_PRINT_HTM(0,0,"210mm","297mm",document.documentElement.innerHTML);
+	return;
  }
  
  /// 修改会诊打印标志
@@ -97,6 +122,7 @@ function PrintCst(jsonObj){
 	$("#PatDiag").html(jsonObj.PatDiag);       /// 初步诊断
 	$("#CstPurpose").html(jsonObj.CstPurpose); /// 会诊目的
 	$("#CstOpinion").html(jsonObj.CstOpinion); /// 会诊意见
+	$("#HospDesc").html(jsonObj.HospDesc);     /// 医院描述
 	
 	var itemhtmlArr = []; itemhtmlstr = "";
 	var mdtCsLocs = jsonObj.mdtCsLocs;  /// 会诊科室列表
@@ -122,8 +148,8 @@ function PrintCst(jsonObj){
 		}else{
 			rowpan = parseInt(mdtCsLocArr.length / 2) + 1;
 		}
-		$("#user").attr("rowspan",rowpan + 1); /// 合并行
-		$(".form-table tr:eq(9)").after(itemhtmlstr);
+		//$("#user").attr("rowspan",rowpan + 1); /// 合并行
+		$(".form-table tr:eq(11)").after(itemhtmlstr);
 	}
 	
 	return;

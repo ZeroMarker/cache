@@ -30,10 +30,18 @@ function PageHandle(){
 	//无卡预约展示证件信息填写位置
 	$("#NoCardApp").checkbox({
 		onChecked:function(){
+			ClearPatInfo("N");
+			if ((ServerObj.CommonCardNoStr.split("&").length)>1){
+			   $('#CommonCardWin').window('open');	
+			   InitCommonCardWin();
+			}else{
+				CommonCardclickRadio(ServerObj.CommonCardNoStr)
+			}
 			$("[name='CCreadNum'],[name='mesage']").show()
 		},
 		onUnchecked:function(){
-			$("[name='CCreadNum'],[name='mesage']").hide()
+			$("[name='CCreadNum'],[name='mesage']").hide();
+			ClearPatInfo();
 		}
 	})
 	//初始化患者信息
@@ -45,9 +53,9 @@ function PageHandle(){
 	PageLogicObj.RBApptScheduleList=intAppTable()
 	document.onkeydown = DocumentOnKeyDown;
 	if (window.parent.PageLogicObj.LockPatientID==""){
-		$("#BLockPatient").find(".l-btn-text").text("锁定患者");
+		$("#BLockPatient").find(".l-btn-text").text($g("锁定患者"));
 	}else{
-		$("#BLockPatient").find(".l-btn-text").text("取消锁定");
+		$("#BLockPatient").find(".l-btn-text").text($g("取消锁定"));
 		ServerObj.PatientID=window.parent.PageLogicObj.LockPatientID
 		if (ServerObj.PatientID!=""){
 			var PatNo=$.cm({
@@ -171,7 +179,7 @@ function CardTypeCallBack(myrtn)
 //预约
 function AppointClick(RegType)
 {
-	var rtn=CheckBeforeAppoint()
+	var rtn=CheckBeforeAppoint("APP")
 	if (!rtn){return}
 	var PatientID=ServerObj.PatientID
 	var AdmReason="";
@@ -198,8 +206,8 @@ function AppointClick(RegType)
 		var Phone=$("#Phone").val().replace(/(^\s*)|(\s*$)/g,'');
 		var CreadNum=$("#CreadNum").val().replace(/(^\s*)|(\s*$)/g,'');
 		var Address=""
-		var AppPatInfo=Name+"$"+CreadNum+"$"+Phone+"$"+Address
-		var CommonPatientID=$.cm({
+		var AppPatInfo=Name+"$"+CreadNum+"$"+Phone+"$"+Address+"$$"+ServerObj.IDCredTypeId;
+		/*var CommonPatientID=$.cm({
 			ClassName:"web.DHCOPAdmReg",
 			MethodName:"GetCommonPatientID",
 			dataType:"text"
@@ -208,7 +216,7 @@ function AppointClick(RegType)
 			$.messager.alert("提示","请联系信息科维护公共卡号!")
 			return false
 		}
-		PatientID=CommonPatientID.split("^")[0];
+		PatientID=CommonPatientID.split("^")[0];*/
 	}
 	
 	//获取预约方式
@@ -279,16 +287,16 @@ function AppointClick(RegType)
 		    window.parent.destroyDialog("Appoint");
 		}*/
 	}else{
-		var rettip="";
-  		if (retArr[0]==-203)rettip="：停诊或替诊的班次则不能预约。";
-  		if (retArr[0]==-301)rettip="：超过每天预约限额。";
-  		if (retArr[0]==-302)rettip="：超过每天预约相同医生号限额。";
-		if (retArr[0]==-304)rettip="：超过每人每天同时段同科室同医生限额。";
-  		if (retArr[0]==-201)rettip="：没有预约资源。";
-  		if (retArr[0]==-223)rettip="：该预约患者已进黑名单,暂时无法预约."
-  		if (retArr[0]==-303)rettip="：此病人超过每人每天挂相同科室限额"
-  		if (retArr[0]==-402)rettip=": 还未到预约时间!"	
-		$.messager.alert("提示","预约失败"+rettip)
+		var rettip=retArr[0];
+  		if (retArr[0]==-203)rettip="停诊或替诊的班次则不能预约！";
+  		if (retArr[0]==-301)rettip="超过每天预约限额！";
+  		if (retArr[0]==-302)rettip="超过每天预约相同医生号限额！";
+		if (retArr[0]==-304)rettip="超过每人每天同时段同科室同医生限额！";
+  		if (retArr[0]==-201)rettip="没有预约资源！";
+  		if (retArr[0]==-223)rettip="该预约患者已进黑名单,暂时无法预约！"
+  		if (retArr[0]==-303)rettip="此病人超过每人每天挂相同科室限额！"
+  		if (retArr[0]==-402)rettip="还未到预约时间!"	
+		$.messager.alert("提示","预约失败！"+rettip)
 		LoadTableList()
 		return false
 	}
@@ -297,18 +305,41 @@ function AppointClick(RegType)
 //预约加号之前检测患者有效信息.
 function CheckBeforeAppoint(Type)
 {
-	
 	if (PageLogicObj.ASRowId==""){
 		$.messager.alert("提示","请先选择需要【预约/加号】的排班信息!")
 		return false
 	}
-	
+	var CardNo=$("#CardNo").val();
+	var CardTypeRowID=$("#CardTypeRowID").val();
+	if ((CardNo=="")&&(CardTypeRowID =="")) {
+		var CardNoStr=$.cm({
+		    ClassName : "web.DHCOPAdmReg",
+		    MethodName : "GetCardNoByPatientNo",
+		    dataType:"text",
+		    PatientNo:$("#PatNo").val()
+	    },false);
+	    var CardNo=CardNoStr.split("^")[0];
+	    var CardTypeRowID=CardNoStr.split("^")[1];
+	}
+	if (CardNo!="") {
+		var TemporaryCardFlag=CheckTemporaryCard(CardNo, CardTypeRowID);
+		var IsTempCard=TemporaryCardFlag.split("^")[0];
+		var DiscDate=TemporaryCardFlag.split("^")[1];
+		if (IsTempCard=="Y"){
+			if (Type =="APP") {
+				$.messager.alert("提示","临时卡不能进行预约!");
+			}else if (Type =="ADD"){
+				$.messager.alert("提示","临时卡只能挂急诊号!");
+			}
+			return false;
+		}
+	}
 	//检测预约必要患者信息
 	var NoCardApp=$("#NoCardApp").checkbox('getValue')
 	if (!NoCardApp){
 		if (ServerObj.PatientID==""){
-		$.messager.alert("提示","请通过读卡或者输入登记号确定有效的患者信息!")
-		return false
+			$.messager.alert("提示","请通过读卡或者输入登记号确定有效的患者信息!")
+			return false
 		}
 		//患者黑名单检测
 		var BlackStr=$cm({
@@ -325,6 +356,10 @@ function CheckBeforeAppoint(Type)
 		}
 		
 	}else{
+		if (ServerObj.PatientID==""){
+			$.messager.alert("提示","请通过读卡或者输入登记号确定有效的患者信息!")
+			return false
+		}
 		var Name=$("#Name").val().replace(/(^\s*)|(\s*$)/g,'');
 		if (Name==""){$.messager.alert("提示","请输入有效的患者姓名!");return false;}
 		var Phone=$("#Phone").val().replace(/(^\s*)|(\s*$)/g,'');
@@ -357,13 +392,10 @@ function CheckBeforeAppoint(Type)
 	return true;
 }
 
-
-
 //加号
 function AddClick(RegType)
 {
-	
-	var rtn=CheckBeforeAppoint()
+	var rtn=CheckBeforeAppoint("ADD")
 	if (!rtn){return}
 	var PatientID=ServerObj.PatientID
 	var AdmReason="";
@@ -432,9 +464,9 @@ function AddClick(RegType)
 			if (window.parent.PageLogicObj.LockPatientID==""){
 				ClearPatInfo();
 			}
-			if (r){
-			    window.parent.destroyDialog("Appoint");
-			} 
+			//if (r){
+			//    window.parent.destroyDialog("Appoint");
+			//} 
 		//});
 	}else{
 		var rettip="";
@@ -448,6 +480,7 @@ function AddClick(RegType)
   		else if (retArr[0]==-403)rettip="：还未到加号时间!"	
   		else if (retArr[0]==-404)rettip="：已经过了此排班记录出诊时间点!"	
   		else if (retArr[0]==-405)rettip="：非本人号别不能加号!"	
+  		else if (retArr[0]==-213) rettip="：已经开启停止挂号,不予许加号！";
   		else rettip="："+retArr
   		if(RegType=="DOCADD"){rettip="加号失败"+rettip}
   		else{rettip="预约失败"+rettip}
@@ -512,6 +545,14 @@ function SetPatInfo(rtn) {
 	$("#Sex").val(rtnarry[3])
 	$("#Phone").val(rtnarry[6])
 	$("#AppBreakCount").val(rtnarry[15])
+	var IsDeceased=rtnarry[16];
+	if (IsDeceased =="Y") {
+		$.messager.alert("提示","患者已死亡!","info",function(){
+			ClearPatInfo();
+			$("#CardNo").focus();
+		})
+		return false;
+	} 
 	//$("#CreadNum").val(rtnarry[14]); //默认不展示患者证件信息防止信息泄露
 	ServerObj.PatientID=rtnarry[0]
 	LoadTableList()
@@ -519,6 +560,7 @@ function SetPatInfo(rtn) {
 function LoadTableList()
 {
 	//需要加入患者信息 获取价格折扣
+	IntTimeRange("")
 	$cm({
 		ClassName:"web.DHCDocAppointmentHui",
 		QueryName:"FindApptSchedule",
@@ -549,6 +591,7 @@ function intAppTable()
 	idField:"RBScheduleDr",
 	pageNumber:0,
 	pageSize : 30,
+	toolbar:[],
 	pageList : [30,50,100],
 	columns :[[ 
 				{field:'AppDate',title:"出诊日期",width:150,align:'left'},
@@ -588,9 +631,27 @@ function intAppTable()
 			onLoadSuccess:function(rowData){
 				$(this).datagrid('unselectAll');
 				PageLogicObj.ASRowId="";
+				for (var i=0;i<rowData.rows.length;i++){
+					var SelectFlag=rowData.rows[i].SelectFlag
+					if (SelectFlag==1){
+						$(this).datagrid("selectRow",i)
+						var AddFlag=rowData.rows[i].AddFlag
+						if (AddFlag=="Y"){
+							$("#CAppoint").hide();$("#CAdd").show();$('#timerangelist').html("");PageLogicObj.AppAddFlag="ADD";
+							$("#CNoCardApp").hide()
+						}
+						else{
+							$("#CAppoint").show();$("#CAdd").hide();IntTimeRange(rowData.rows[i].RBScheduleDr);PageLogicObj.AppAddFlag="APP";
+							$("#CNoCardApp").show();
+						}
+						
+						//选中资源
+						PageLogicObj.ASRowId=rowData.rows[i].RBScheduleDr;
+						}
+					}
 			},
 			onUnselectAll:function(index, row){
-				IntTimeRange("");
+				//IntTimeRange("");
 			}
 	
 });
@@ -636,9 +697,9 @@ function IntTimeRange(ASRowId)
 		var Time=col[j]['Time'];
 		var Status=col[j]['Status'];
 		if(Status==0){
-			innerHTML=innerHTML+"<td class='td-seqno-invalid'>"+"<span class='td-seqno'>剩号:"+SeqNo+"</span><br><span class='td-time'>"+Time+"</span></td>";
+			innerHTML=innerHTML+"<td class='td-seqno-invalid'>"+"<span class='td-seqno'>"+$g("可用:无")+"</span><br><span class='td-time'>"+Time+"</span></td>";
 		}else{
-			innerHTML=innerHTML+"<td onclick=dbtdclick(this) ondblclick=dbtdclick(this) id='"+ASRowId+"_table_"+Time+"'>"+"<span class='td-seqno'>剩号:"+SeqNo+"</span><br><span class='td-time'>"+Time+"</span></td>";
+			innerHTML=innerHTML+"<td onclick=dbtdclick(this) ondblclick=dbtdclick(this) id='"+ASRowId+"_table_"+Time+"'>"+"<span class='td-seqno'>"+$g("可用:有")+"</span><br><span class='td-time'>"+Time+"</span></td>";
 		}
 		innerHTML=innerHTML+"</td>";
 		colNum=colNum+1;
@@ -691,8 +752,9 @@ function selectseqnum(seqno,statu)
 }
 
 ///清除患者信息
-function ClearPatInfo()
+function ClearPatInfo(isReLoadRBASTable)
 {
+	if (!isReLoadRBASTable) isReLoadRBASTable="";
 	$("#Name").val('')
 	$("#Age").val('')
 	$("#Sex").val('')
@@ -708,32 +770,34 @@ function ClearPatInfo()
 	ServerObj.PatNo="";
 	$("#CardTypeRowID").val('')
 	$("#NoCardApp").checkbox('uncheck');
-	LoadTableList()
-	
+	if (isReLoadRBASTable!="N") {
+		LoadTableList();
+	}
 }
 
 //预约打印新加入方法 和日历预约的查询保持一致
 function PrintAPPMesag(AppID)
 {
 	DHCP_GetXMLConfig("XMLObject","DHCOPAppointPrint");
-	var Rtn = $cm({
-		ClassName:"web.DHCOPAdmReg",
+	
+	$.cm({
+		ClassName:"DHCDoc.Common.pa",
 		MethodName:"GetAppPrintData",
-		dataType:"text",
 		AppARowid:AppID,
-		AppMedthod:ServerObj.AppMethCodeStr,
-	},false);
-	var RtnArry=Rtn.split("^")
-	var PDlime=String.fromCharCode(2);
-	var MyPara="CardNo"+PDlime+RtnArry[0]+"^"+"PatNo"+PDlime+RtnArry[13]+"^"+"PatName"+PDlime+RtnArry[2]+"^"+"RegDep"+PDlime+RtnArry[6]
-	var MyPara=MyPara+"^"+"SessionType"+PDlime+RtnArry[18]+"^"+"MarkDesc"+PDlime+RtnArry[7]+"^"+"Total"+PDlime+RtnArry[17];
-	var MyPara=MyPara+"^"+"AdmDate"+PDlime+RtnArry[10]+"^"+"APPDate"+PDlime+RtnArry[8]+" "+RtnArry[9]+"^"+"SeqNo"+PDlime+RtnArry[4]
-	var MyPara=MyPara+"^"+"UserCode"+PDlime+RtnArry[15];
-	var MyPara=MyPara+"^"+"MethType"+PDlime+"["+RtnArry[16]+"]"
-	var MyPara=MyPara+"^"+"AdmTimeRange"+PDlime+RtnArry[14] //建议就诊时间
-	var myobj=document.getElementById("ClsBillPrint");
-	//DHCP_PrintFun(myobj,MyPara,"");
-	DHC_PrintByLodop(getLodop(),MyPara,"","","");
+		dataType:"json"
+	},function(data){
+		var PDlime=String.fromCharCode(2);
+		var PrtObj=data[0];
+		var MyPara="CardNo"+PDlime+PrtObj['CardNo']+"^"+"PatNo"+PDlime+PrtObj['PatNo']+"^"+"PatName"+PDlime+PrtObj['PatName']+"^"+"RegDep"+PDlime+PrtObj['RegDep'];
+		var MyPara=MyPara+"^"+"SessionType"+PDlime+PrtObj['SessionType']+"^"+"MarkDesc"+PDlime+PrtObj['MarkDesc']+"^"+"Total"+PDlime+PrtObj['Total'];
+		var MyPara=MyPara+"^"+"AdmDate"+PDlime+PrtObj['AdmDate']+"^"+"APPDate"+PDlime+PrtObj['APPDate']+"^"+"SeqNo"+PDlime+PrtObj['SeqNo'];
+		var MyPara=MyPara+"^"+"UserCode"+PDlime+PrtObj['UserCode'];
+		var MyPara=MyPara+"^"+"MethType"+PDlime+"["+PrtObj['APPTMethod']+"]"
+		var MyPara=MyPara+"^"+"AdmTimeRange"+PDlime+PrtObj['AdmTimeRange'] //建议就诊时间
+		var myobj=document.getElementById("ClsBillPrint");
+		//DHCP_PrintFun(myobj,MyPara,"");
+		DHC_PrintByLodop(getLodop(),MyPara,"","","");
+	});
 }
 
 function DocumentOnKeyDown(e){
@@ -792,6 +856,16 @@ function LoadPage(RBASRowID,PatientID,AppMethCodeStr,CanNoCardApp){
 		$("#CNoCardApp").hide()
 	}
 	$("#NoCardApp").checkbox('uncheck');
+	if (RBASRowID) {
+		var ASDate=$(".selectCls" , parent.document)[0].id;
+		if (ASDate == ServerObj.nowDate) {
+			$("#CNoCardApp").hide();
+		}else{
+			$("#CNoCardApp").show();
+		}
+	}else{
+		$("#CNoCardApp").hide();
+	}
 	if (ServerObj.PatientID!=""){
 		var PatNo=$.cm({
 			ClassName:"web.DHCDocAppointmentHui",
@@ -814,20 +888,20 @@ function LoadPage(RBASRowID,PatientID,AppMethCodeStr,CanNoCardApp){
 	}
 	IntTimeRange("");
 	if (window.parent.PageLogicObj.LockPatientID==""){
-		$("#BLockPatient").find(".l-btn-text").text("锁定患者");
+		$("#BLockPatient").find(".l-btn-text").text($g("锁定患者"));
 	}else{
-		$("#BLockPatient").find(".l-btn-text").text("取消锁定");	
+		$("#BLockPatient").find(".l-btn-text").text($g("取消锁定"));	
 	}
 }
 function BLockPatientClickHandler(){
 	if (ServerObj.PatientID!=""){
 		var text=$("#BLockPatient").find(".l-btn-text").text()
-		if (text=="锁定患者"){
+		if (text==$g("锁定患者")){
 			window.parent.PageLogicObj.LockPatientID=ServerObj.PatientID;
-			$("#BLockPatient").find(".l-btn-text").text("取消锁定");
+			$("#BLockPatient").find(".l-btn-text").text($g("取消锁定"));
 		}else{
 			window.parent.PageLogicObj.LockPatientID=""
-			$("#BLockPatient").find(".l-btn-text").text("锁定患者");
+			$("#BLockPatient").find(".l-btn-text").text($g("锁定患者"));
 		}
 	}else{
 		$.messager.alert("提示","请读取患者后再进行锁定");
@@ -859,10 +933,11 @@ function CheckTelOrMobile(telephone,Name,Type){
 }
 function BFindPatClick() {
 	var src="doc.patlistquery.hui.csp";
+	if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
 	var $width=$(window.parent).width()-100
 	var $height=$(window.parent).height()-80
-	window.parent.createModalDialog("FindPatInfo","患者查询", $width, $height,"icon-w-edit","",$code,"");
+	window.parent.createModalDialog("FindPatInfo","患者查询", $width, $height,"icon-w-find","",$code,"");
 }
 function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,_event){
     $("body").append("<div id='"+id+"' class='hisui-dialog'></div>");
@@ -886,4 +961,36 @@ function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,
         closable: true,
         content:_content
     });
+}
+function InitCommonCardWin(){
+	$("#CommonCardChoose").empty();
+	retArry=ServerObj.CommonCardNoStr.split("&");
+	htmlstr='<table class="search-table" style="margin:10px auto;">';
+	for (var i=0; i<retArry.length; i++){
+		htmlstr=htmlstr+'<tr><td colSpan=""><a class="hisui-linkbutton l-btn l-btn-small" id="Commoncard'+retArry[i]+'" onclick="CommonCardclickRadio('+"'"+retArry[i]+"'"+')" data-options="" group=""><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">'+retArry[i]+'</span><span class="l-btn-icon icon-w-plus">&nbsp;</span></span></a></td></tr>'
+	}
+	htmlstr=htmlstr+'</table>';
+	$("#CommonCardChoose").append(htmlstr);
+}
+function CommonCardclickRadio(ChoseCommonCardNo){
+	$('#CommonCardWin').window('close');	
+	var PatientNomyrtn=$.cm({
+		ClassName:"web.DHCOPAdmReg",
+		MethodName:"GetCommonCardNoandPatientNo",
+		dataType:"text",
+		ChoseCommonCardNo:ChoseCommonCardNo
+	},false);
+	if (PatientNomyrtn==""){
+		$.messager.alert("提示","请维护公共卡."); 
+		$("#NoCardApp").checkbox('uncheck');      				
+		return false;
+	}else{
+		var CardNo=PatientNomyrtn.split("^")[0]
+		var PatientNo=PatientNomyrtn.split("^")[1];
+		var CardTypeNew=PatientNomyrtn.split("^")[2];
+		$("#CardNo").val(CardNo);
+		$("#PatNo").val(PatientNo);
+		$("#CardTypeNew").val(CardTypeNew);
+		PatNoSearch()
+	}
 }

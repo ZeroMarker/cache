@@ -9,6 +9,7 @@ var appointRequestSpan = defaultAppointRequestSpan;
 var globalRequestRange = "";
 var eprIntegratedAuthorization = '1';
 var currAppointAction = "getunappointed";  //用于切换查询结果子表中的"授权的操作"和"将要授权的操作"列的Title值 add by niucaicai
+var emrTemplateDocId = "0";	//病历目录下拉框节点，0表示未选择病历节点
 $(function(){
 	initCombox();
 	initDataGrid();
@@ -30,9 +31,32 @@ $(function(){
 		queryReset();
 	});
 	$("#btnExport").click(function(){
-		var exportType=$('#cbxExport').combobox('getValue');
-		exportData(exportType);
+		var rows =$("#dgResultGrid").datagrid("getRows");
+		if (rows.length == 0)
+		{
+			$.messager.alert('操作提示', '没有数据，不能进行导出操作！');
+		}
+		else
+		{
+			var exportType=$('#cbxExport').combobox('getValue');
+			exportData(exportType);
+		}
 	});
+	 if ("undefined"==typeof HISUIStyleCode || HISUIStyleCode=="")
+	 {
+	 	// 炫彩版
+	 }
+	 else if (HISUIStyleCode=="lite"){
+	 	// 极简版
+	 	$('body').css('background-color','#f5f5f5');
+	 	$('#centerDiv').css('background-color','#f5f5f5');
+	 	$('#centerDivSec').css('background-color','#f5f5f5');
+	 	$('#centerLayOut').css('background-color','#f5f5f5');
+	 }
+	 else
+	 {
+		// 炫彩版
+	}
 });
 
 function initCombox()
@@ -206,12 +230,12 @@ function initCombox()
 	});
 	//导出数据
 	$('#cbxExport').combobox({
-	    data: [{"id":"current","text":emrTrans("导出该页数据"),"selected":true}, {"id":"all","text":emrTrans("导出所有数据")}],
+	    data: [{"id":"current","text":emrTrans("该页数据"),"selected":true},{"id":"currentF","text":emrTrans("该页外层表数据")},{"id":"all","text":emrTrans("所有页数据")},{"id":"allF","text":emrTrans("所有页外层表数据")}],
 	    valueField:'id',
 	    textField:'text',
 	    panelHeight:"auto"
 	});									
-										
+	InitEMRTree();										
 }
 
 function initDataGrid()
@@ -232,6 +256,7 @@ function initDataGrid()
 		columns:[[
 			{field:'ck',checkbox:true},
 			{field:'AppointID',title:'AppointID',hidden:true},
+			{field:'Operate',title:'操作',width:45,resizable:false,align:'center',formatter:clickOperate,styler:function(value,row,index){return "cursor:pointer ;";}},
 			{field:'CanAppoint',title:emrTrans('能否审核'),width:70,align:'center',formatter:rendererCanAppoint},
 			{field:'AuthLevelDesc',title:emrTrans('授权级别'),width:70},
 			{field:'IsActive',title:emrTrans('是否过期'),width:70,formatter:rendererIsActive},
@@ -255,6 +280,7 @@ function initDataGrid()
 			{field:'RequestDept',title:emrTrans('申请科室'),width:100},
 			{field:'IsAppointed',title:emrTrans('授权状态'),width:100,formatter:rendererIsAppointed},
 			{field:'AppointUser',title:emrTrans('授权医师'),width:100},
+			{field:'AppointDeptDesc',title:emrTrans('授权科室'),width:100},
 			{field:'AppointType',title:emrTrans('授权类型'),width:70,formatter:getAppointType},
 			//{field:'AppointSpan',title:emrTrans('授权剩余时间(小时)'),width:100,formatter:rendererAppointSpan},
 			{field:'AppointDateTime',title:emrTrans('授权/拒绝时间'),width:150,formatter:rendererAppointDateTime},
@@ -269,10 +295,10 @@ function initDataGrid()
 			{
 				$.messager.alert("简单提示", "选择的申请中有复印过病历，如果授权可能导致病历内容不一致，请谨慎操作！", 'info');
 			}
-			$("#taRequestReason").append(rowData.RequestReason);
-			$("#taBeforeRequestContent").append(rowData.BeforeRequestContent);
-			$("#taAfterRequestContent").append(rowData.AfterRequestContent);
-			$("#taRequestNumber").append(rowData.RequestNumber);
+			$("#taRequestReason").append(TrimEnterAndWrite(rowData.RequestReason));
+			$("#taBeforeRequestContent").append(TrimEnterAndWrite(rowData.BeforeRequestContent));
+			$("#taAfterRequestContent").append(TrimEnterAndWrite(rowData.AfterRequestContent));
+			$("#taRequestNumber").append(TrimEnterAndWrite(rowData.RequestNumber));
 			
 		},
 		view:detailview,
@@ -283,7 +309,7 @@ function initDataGrid()
 		///禁用无权限，已授权或拒绝的授权申请前的checkbox
 			if(data.rows.length>0){
 				for (var i=0;i<data.rows.length;i++) {
-					if(data.rows[i].CanAppoint!=1){
+					if(data.rows[i].CanAppoint!=1&&data.rows[i].CanAppoint!=2){
 						$("#datagrid-row-r1-2-"+i).find("input[type='checkbox']")[0].disabled=true;
 						}
 					}
@@ -313,12 +339,28 @@ function initDataGrid()
 			}
 			
 			var expanderdata = row['AppointDetailData'];
+			var checkFlag = false;
+			if(expanderdata.length!==0){
+				checkFlag = expanderdata[0].IsAppointed==="appointed"?true:false;
+				if(row.IsAppointed==="appointed"){
+					expanderdata=expanderdata.filter(function(currentValue,index,arr){
+						return currentValue.Modify==="1"
+					});
+				}
+			}
 			var detailData = $(this).datagrid('getRowDetail',index).find('table.detailData');
             detailData.datagrid({ 
-            	data:expanderdata,
-            	singleSelect:true,
+				data:expanderdata,
             	rownumbers:true,
+            	selectOnCheck:false,
+            	checkOnSelect:false,
+            	rowStyler:function(index,childRow){
+	            	if(childRow.Modify==="1"&&childRow.IsAppointed==="appointed"){
+		            	return 'background-color:#6293BB;color:#fff;';
+		            	}
+	            	},
             	columns:[[
+					{field:'ckChild',checkbox:true,hidden:checkFlag},
 					{field:'CateCharpter',title:emrTrans('模板ID'),hidden:true}, 
 					{field:'CCDesc',title:emrTrans('病历名称'),width:260},
 					{field:'IsSealed',title:emrTrans('封存状态'),width:80,align:'center',formatter:rendererSealed},
@@ -329,8 +371,11 @@ function initDataGrid()
 				onResize:function(){
 					$('#dgResultGrid').datagrid('fixDetailRowHeight',index);
 				},	
-				onLoadSuccess:function(){
+				onLoadSuccess:function(data){
                     $('#dgResultGrid').datagrid('fixDetailRowHeight',index);
+                    if(row.IsAppointed==="unappointed"){
+                   	 	detailData.datagrid("checkAll");
+                    }
                 },
                 onClickRow:function(subindex){
 	                if (row.CanAppoint != 1) return;
@@ -520,6 +565,10 @@ function rendererIsActive(val){
 
 function TrimEnterAndWrite(val)
 {
+	while (val.indexOf("shuangyinhao")!= -1)
+	{
+		val = val.replace("shuangyinhao","\"");
+	}
 	while (val.indexOf("xiegangxiegang")!= -1)
 	{
 		val = val.replace("xiegangxiegang","\\");
@@ -834,7 +883,7 @@ function getParam()
 	var isUseRequestTime = (tmRequestTimeStart != ""&&tmRequestTimeEnd != "")||(tmRequestTimeStart == "" && tmRequestTimeEnd == "");
 	var isUseAppointTime = (tmAppointTimeStart != ""&&tmAppointTimeEnd != "")||(tmAppointTimeStart == "" && tmAppointTimeEnd == "");
 	if (!(isUseRequestDate && isUseAppointDate && isUseRequestTime && isUseAppointTime)) {
-		alert("申请起止日期/授权起止日期/申请起止时间/授权起止时间 必须成对出现!");
+		$.messager.alert("提示", "申请起止日期/授权起止日期/申请起止时间/授权起止时间 必须成对出现!", 'info');
 		return "";
 	}
     
@@ -886,7 +935,8 @@ function getParam()
 		"RequestRange":globalRequestRange,
 		"AuthLevelType":AuthLevelType,
 		"AuthLevelTop":authLevelTop,
-		"frameType":"HISUI"
+		"frameType":"HISUI",
+		"EmrTemplateDocId":emrTemplateDocId
 	};
 	return param;		
 }
@@ -918,6 +968,29 @@ function commitAppoint(){
 		$.messager.alert("简单提示", "不能操作授权条目,条目已授权或已拒绝", 'info');
 		return;
 	}
+	//获取选中项相关信息"就诊号:实例ID^实例ID2,就诊2:实例ID^实例ID2" 如 41:268||1^370||1,67:252||2^283||5^386||2^253||3
+	var strSelectDatas = getSelectTipsDatas(selections);
+	var strMessage=""
+	if (strSelectDatas!="")
+	{
+		var strMessage = getPrintTipsDatas(strSelectDatas);
+	}
+	if (strMessage!="")
+	{
+		$.messager.confirm("操作提示", strMessage, function (data){
+	        if(data){
+				setAppoint(selections);
+			}
+	 	});
+	}
+	else
+	{
+		setAppoint(selections);
+	}		
+}
+
+
+function setAppoint(selections){
 	for (var i = 0; i < selections.length; i++) 
 	{
 		var row = selections[i];
@@ -940,6 +1013,27 @@ function commitAppoint(){
 		if (span == "" || isNaN(span)) span = defaultAppointSpan;
 		var appointSpan = 3600 * parseFloat(span).toString();
 		
+			//获取子条目是否被选中，若无被选中则不发送请求
+		var rowIndex = $('#dgResultGrid').datagrid("getRowIndex",row);
+		var childTable = $('#dgResultGrid').datagrid('getRowDetail', rowIndex).find('table.detailData');
+	var catestr = "";
+	try{
+		var childSelect = childTable.datagrid('getChecked');
+		if(childSelect.length===0){
+				$.messager.alert("简单提示", "请选中一条病历记录再提交申请", 'info');
+				return;
+			}
+		//获取选中的模板id
+		for(var k=0;k<childSelect.length;k++){
+			if(catestr!==""){
+					catestr = catestr+"#"+childSelect[k].CateCharpter;
+				}else{
+					catestr = childSelect[k].CateCharpter;
+				}
+			}
+	}catch(e){
+		catestr = "noclick";
+	}		
 		jQuery.ajax({
 			type: "post",
 			dataType: "text",
@@ -950,7 +1044,10 @@ function commitAppoint(){
 				AppointID: AppointID,
 				AppointSpan: appointSpan,
 				AppointUserID: appointUserID,
-				AppointType: appointType
+				AppointType: appointType,
+				AppointUserLocID:appointUserLoc,
+				AppointTempCate:catestr,
+				Atype:"authorize"
 			},
 			success: function(d) {
 				if (d == "1")
@@ -965,9 +1062,8 @@ function commitAppoint(){
 			error : function(d) { alert(" error");}
 		});
 	}
-	resetProperty();	
+	resetProperty();
 }
-
 //拒绝
 function refuseAppoint(){
 	var seletedCount = 0;
@@ -983,42 +1079,49 @@ function refuseAppoint(){
 		$.messager.alert("简单提示", "不能操作拒绝条目,条目已授权或已拒绝", 'info');
 		return;
 	}
-	var RefuseReason = "";
-	$.messager.prompt("提示", "拒绝原因", function (r) {
-		if (r) 
-		{
-			var RefuseReason = r;
-			for (var i = 0; i < selections.length; i++) 
-			{
-				var row = selections[i];
-				var AppointID = row.AppointID;
-				jQuery.ajax({
-					type: "post",
-					dataType: "text",
-					url: '../EMRservice.Ajax.auth.authorize.cls',
-					async: true,
-					data: {
-					    "Action": "refuse",
-						AppointID: AppointID,
-						AppointUserID: appointUserID,
-						RefuseReason: RefuseReason
-					},
-					success: function(d) {
-						if (d == "1")
-						{
-							queryData();
-						}
-						else
-						{
-							$.messager.alert("简单提示", "拒绝权限操作提交失败", 'info');
-						}
-					},
-					error : function(d) { $.messager.alert("简单提示", "error", 'info');}
-				});					
-			}				
-		} 
-	});
+	
+	var RefuseReasonFrame = "<iframe id='iframeRefuseReason' scrolling='auto' frameborder='0' src='emr.auth.authorize.refusereason.csp' style='width:100%; height:100%; display:block;'></iframe>";
+	createModalDialog("dialogRefuseReason","拒绝原因","400","275","iframeRefuseReason",RefuseReasonFrame,RefuseReasonCallBack,"");
+	
     resetProperty();
+}
+
+function RefuseReasonCallBack(returnValue,arr)
+{
+	if (returnValue !== "")
+	{
+		var RefuseReason = returnValue;
+		var selections = $('#dgResultGrid').datagrid('getSelections');
+		for (var i = 0; i < selections.length; i++) 
+		{
+			var row = selections[i];
+			var AppointID = row.AppointID;
+			jQuery.ajax({
+				type: "post",
+				dataType: "text",
+				url: '../EMRservice.Ajax.auth.authorize.cls',
+				async: true,
+				data: {
+					"Action": "refuse",
+					AppointID: AppointID,
+					AppointUserID: appointUserID,
+					AppointUserLocID:appointUserLoc,
+					RefuseReason: RefuseReason
+				},
+				success: function(d) {
+					if (d == "1")
+					{
+						queryData();
+					}
+					else
+					{
+						$.messager.alert("简单提示", "拒绝权限操作提交失败", 'info');
+					}
+				},
+				error : function(d) { $.messager.alert("简单提示", "error", 'info');}
+			});					
+		}	
+	}
 }
 
 //回收
@@ -1143,7 +1246,17 @@ function exportData(type){
 		col += fields[key]+":"+fieldDesc;
 	}
 	//子表可能没有加载
-	col += "#"+"CCDesc"+":"+"病历名称"+"#"+"CCCreator"+":"+"病历创建者"+"#"+"DetailStr"+":"+"申请的操作"+"#"+"DetailStr1"+":"+"授权的操作"
+	if ((type == "current")||(type == "all"))
+	{
+		if (currAppointAction == "getunappointed")
+		{
+			col += "#"+"CCDesc"+":"+"病历名称"+"#"+"CCCreator"+":"+"病历创建者"+"#"+"DetailStr"+":"+"申请的操作"+"#"+"DetailStr1"+":"+"将要授权的操作";
+		}
+		else
+		{
+			col += "#"+"CCDesc"+":"+"病历名称"+"#"+"CCCreator"+":"+"病历创建者"+"#"+"DetailStr"+":"+"申请的操作"+"#"+"DetailStr1"+":"+"授权的操作";
+		}
+	}
 	var param = getParam();
 	var page="";
 	var rows="";
@@ -1156,7 +1269,7 @@ function exportData(type){
 	var defaultAppointSpan=param.DefaultAppointSpan || "24";
 	var defaultAppointType=param.DefaultAppointType || "0";
 	var appointRequestSpan=param.AppointRequestSpan || "0";
-	var parameters = appointUserLoc+"^"+appointUserID+"^"+param.RequestDateStart+"||"+param.RequestTimeStart+"||"+param.RequestDateEnd+"||"+param.RequestTimeEnd+"||"+param.AppointDateStart+"||"+param.AppointTimeStart+"||"+param.AppointDateEnd+"||"+param.AppointTimeEnd+"^"+param.CanAppointSelect+"^"+param.TreatmentLoc+"^"+param.RequestLoc+"^"+param.RequestUserName+"^"+defaultAppointSpan+"^"+defaultAppointType+"^"+param.PAAdmType+"^"+param.PAStatus+"^"+param.IsActive+"^"+appointRequestSpan+"^"+ssgroupID+"^"+param.RequestRange+"^"+hospitalID
+	var parameters = appointUserLoc+"^"+appointUserID+"^"+param.RequestDateStart+"||"+param.RequestTimeStart+"||"+param.RequestDateEnd+"||"+param.RequestTimeEnd+"||"+param.AppointDateStart+"||"+param.AppointTimeStart+"||"+param.AppointDateEnd+"||"+param.AppointTimeEnd+"^"+param.CanAppointSelect+"^"+param.TreatmentLoc+"^"+param.RequestLoc+"^"+param.RequestUserName+"^"+defaultAppointSpan+"^"+defaultAppointType+"^"+param.PAAdmType+"^"+param.PAStatus+"^"+param.IsActive+"^"+appointRequestSpan+"^"+ssgroupID+"^"+param.RequestRange+"^"+hospitalID+"^"+authLevelTop+"^"+emrTemplateDocId
 	var onlyCurrentDept=param.OnlyCurrentDept;
 	var docType="all";
 	if(onlyCurrentDept==1){
@@ -1177,13 +1290,19 @@ function exportData(type){
 	{
 		var loadType="Refuse";	
 	}else{return;}
+	
+	var PapmiNo=param.PapmiNo;
+	var MedicareNo=param.MedicareNo;
+	var PatName=param.PatName;
+	
 	$.messager.progress({
 				title: "提示",
 				msg: '正在导出数据',
 				text: '导出中....'
 			});
-	var params=loadType+","+patientID+","+parameters+","+type+","+page+","+rows+","+docType+","+authLevelType+","+col
-		jQuery.ajax({
+	var params=loadType+","+patientID+","+parameters+","+type+","+page+","+rows+","+docType+","+authLevelType+","+col+","+PapmiNo+","+MedicareNo+","+PatName
+	
+	jQuery.ajax({
 		type: "post",
 		dataType: "text",
 		url: "../EMRservice.Ajax.common.cls",
@@ -1202,13 +1321,131 @@ function exportData(type){
 				if(flag=="w"){
 					location.href=d;
 				}else{
-					alert("导出错误");
+					$.messager.alert('操作提示', '导出错误！');
 				}	
 				$.messager.progress("close");
 		},
 		error : function(d) { 
-			alert("系统错误");
+			$.messager.alert('操作提示', '系统错误！');
 			$.messager.progress("close");
 		}
 	});	
+}
+
+
+function getSelectTipsDatas(selections)
+{
+	var retStr = "";
+	for (var i = 0; i < selections.length; i++) 
+	{
+		var strItem = "";
+		var row = selections[i];
+		var strEpisodeID = row.EpisodeID;
+		var appointData = row.AppointDetailData;
+		$.each(appointData,function(i,item){
+			if (item.CateCharpter.indexOf("||") !=-1)
+			{
+				if(strItem==="")
+				{
+					strItem=strItem+item.CateCharpter
+				}
+				else
+				{
+					strItem=strItem+"^"+item.CateCharpter
+				}
+			}
+		});
+		if(strItem!="")
+		{
+			if (retStr==="")
+			{
+				retStr = retStr +strEpisodeID+":"+strItem
+			}
+			else
+			{
+				retStr = retStr+","+strEpisodeID+":"+strItem
+			}
+		}
+	}
+	return retStr;
+}
+
+function getPrintTipsDatas(strDatas){
+	var retStr = "";
+	jQuery.ajax({
+			type: "get",
+			dataType: "text",
+			url: '../EMRservice.Ajax.auth.appointTips.cls',
+			async: false,
+			data: {
+				Action: "GetAppointPrinted",
+				AppointDatas: strDatas
+			},
+			success: function(d){
+				retStr =d;
+				},
+			error : function(d) { $.messager.alert("简单提示", "error", 'info');}
+		});	
+	return retStr;
+}
+
+function InitEMRTree()
+{
+	$('#EMRName').combotree({
+		panelWidth: 260,
+		width:180,
+		value: '0',
+		editable: true,
+		onBeforeSelect: function(node){
+			//只能选中叶子节点
+			if (!$('#EMRName').tree('isLeaf',node.target))
+			{
+				return false;
+			}
+		},
+	    onSelect: function(record){
+		    emrTemplateDocId = record.id;
+		    queryData();
+	    }
+	});
+	GetEMRNameData();
+}
+
+//Desc:获取病历名称数据
+function GetEMRNameData()
+{
+	jQuery.ajax({
+		type : "GET",
+		dataType : "text",
+		url : "../EMRservice.Ajax.auth.authorize.cls",
+		async : true,
+		data : {"Action":"getEMRTempTree"},
+		success : function(d) {
+			$('#EMRName').combotree('loadData',eval(d));
+		},
+		error : function(d) {
+			alert("get disease error");
+		}
+	});
+}
+
+function clickOperate(value,row,index)
+{
+	var html = '<div>';			
+	var title = "病历浏览";
+	var style="display:block;width:100%;";
+	if (row["EpisodeID"]!="")
+	{
+		style += "background:url(../skin/default/images/read.png) center center no-repeat;"
+		html = html + '<span title="'+title+'" style="'+style+'" onclick = recordBrowser(' + row["EpisodeID"] + ');>&nbsp;&nbsp;</span>';
+	}
+
+	html = html + '</div>';
+	return html;	
+}
+
+function recordBrowser(EpisodeID)
+{
+	$("#mainLayOut").layout('expand','east');
+	$("#frameRec").attr("src","emr.browse.emr.csp?EpisodeID=" + EpisodeID);
 }

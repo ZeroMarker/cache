@@ -62,25 +62,25 @@ function InitPatList()
 {
 	//定义columns
 	var columns=[[
-		{field:'Ward',title:'病区',width:160},
-		{field:'PatNo',title:'登记号',width:80,formatter:SetCellUrl},
-		{field:'PatName',title:'姓名',width:80},
-		{field:'Bed',title:'床号',width:80},
-		{field:'PatSex',title:'性别',width:80},
-		{field:'PatAge',title:'年龄',width:80},
-		{field:'PatHeight',title:'身高',width:80},
-		{field:'PatWeight',title:'体重',width:80},
-		{field:'AdmLoc',title:'科室',width:120},
-		{field:'AdmDoc',title:'主管医师',width:80},
-		{field:'PatDiag',title:'诊断',width:180},
-		{field:'PatInDate',title:'入院时间',width:80},
-		{field:'ExpCause',title:'异常原因',width:200,formatter:showExpCause},
+		{field:'Ward',title:$g('病区'),width:160},
+		{field:'PatNo',title:$g('登记号'),width:80,formatter:SetCellUrl},
+		{field:'PatName',title:$g('姓名'),width:80},
+		{field:'Bed',title:$g('床号'),width:80},
+		{field:'PatSex',title:$g('性别'),width:80},
+		{field:'PatAge',title:$g('年龄'),width:80},
+		{field:'PatHeight',title:$g('身高'),width:80},
+		{field:'PatWeight',title:$g('体重'),width:80},
+		{field:'AdmLoc',title:$g('科室'),width:120},
+		{field:'AdmDoc',title:$g('主管医师'),width:80},
+		{field:'PatDiag',title:$g('诊断'),width:180},
+		{field:'PatInDate',title:$g('入院时间'),width:80},
+		{field:'ExpCause',title:$g('异常原因'),width:200,formatter:showExpCause},
 		{field:"AdmDr",title:'AdmDr',width:90}
 	]];
 	
 	//定义datagrid
 	$('#maindg').datagrid({
-		title:'病人列表',
+		title:$g('病人列表'),
 		url:'',
 		fit:true,
 		rownumbers:true,
@@ -88,7 +88,7 @@ function InitPatList()
 		pageSize:40,  // 每页显示的记录条数
 		pageList:[40,80],   // 可以设置每页记录条数的列表
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true
 	});
 	

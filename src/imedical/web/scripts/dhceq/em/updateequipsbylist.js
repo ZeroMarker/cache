@@ -20,6 +20,7 @@ function initDocument()
 			Type:getElementValue("Type"),
 			EquipID:getElementValue("EquipID")
 		},
+		border:false,
 	    fit:true,
 	    singleSelect:true,
 	    rownumbers: true,  //如果为true，则显示一个行号列
@@ -144,7 +145,11 @@ function updateRow()
 		var listInfo=TRowID;
 		var TSelect=rows[i].TSelect;
 		var TLeaveFactoryNo=rows[i].TLeaveFactoryNo; //add by csj 20190125
-		UpdateLeaveFactoryNoVal = TRowID+"^"+TLeaveFactoryNo
+		///modified by ZY0266 20210531
+		var TFileNo=rows[i].TFileNo;
+		//modified by ZY20230209 bug:  增加旧编号处理
+		var TOldNo=rows[i].TOldNo;
+		UpdateLeaveFactoryNoVal = TRowID+"^"+TLeaveFactoryNo+"^"+TFileNo+"^"+TOldNo
 		if(UpdateLeaveFactoryNoVals == ""){
 			UpdateLeaveFactoryNoVals = UpdateLeaveFactoryNoVal //add by csj 20190125
 		}else{
@@ -181,15 +186,37 @@ function updateRow()
 	}
 	var truthBeTold = true;
 	var Rnt=Num-quantityNum;
+	//Modified by QW20210615 弹框演示修改 BUG:QW0123 Begin
 	if (Rnt<0)
 	{
-		var truthBeTold = window.confirm("选择的设备数量少了"+-Rnt+"台,是否修改?");
+		messageShow("confirm","info","提示","选择的设备数量少了"+-Rnt+"台,是否修改?","",function(){
+			UpdateData(UpdateLeaveFactoryNoVals,Num,totalNum,listInfos);
+		},function(){
+			return
+		});
 	}
 	else if (Rnt>0)
 	{
-		var truthBeTold = window.confirm("选择的设备数量多了"+Rnt+"台,是否修改?");
+		messageShow("confirm","info","提示","选择的设备数量多了"+Rnt+"台,是否修改?","",function(){
+			UpdateData(UpdateLeaveFactoryNoVals,Num,totalNum,listInfos);
+		},function(){
+			return
+		});
+	}	///add by ZY0279 20210907
+	else
+	{
+		UpdateData(UpdateLeaveFactoryNoVals,Num,totalNum,listInfos);
 	}
-	if(truthBeTold)
+	//Modified by QW20210615 弹框演示修改 BUG:QW0123 End
+}
+///modified by ZY0279 20210907
+//add by QW20210615 弹框演示修改 BUG:QW0123
+function UpdateData(UpdateLeaveFactoryNoVals,Num,totalNum,listInfos)
+{
+	///add by ZY0279 20210907
+	///type=1 是转移，2是减少退货
+	var BussType=getElementValue("Type");
+	if (BussType!=2)
 	{
 		//satrt by csj 20190125 检测出厂编号，修改出厂编号
 		var rtn=CheckLeaveFactoryNo(UpdateLeaveFactoryNoVals);
@@ -199,42 +226,41 @@ function updateRow()
 			messageShow('alert','error','提示',"出厂编号更新失败!");
 		}
 		//end by csj 20190126 修改出厂编号
-		var MXInfo=job+"^"+index+"^"+Num+"^"+mXRowID+"^"+type;
-		var result=tkMakeServerCall("web.DHCEQ.EM.BUSUpdateEquipByList","UpdateEquipsByList",listInfos,MXInfo);
-		if (result==0)
+	}
+	
+	var job=getElementValue("Job");
+	var index=getElementValue("Index");
+	var mXRowID=getElementValue("MXRowID");
+	//var type=getElementValue("Type");
+	var storeLocDR=getElementValue("StoreLocDR");
+	var sourceID=getElementValue("SourceID");
+	var MXInfo=job+"^"+index+"^"+Num+"^"+mXRowID+"^"+BussType;
+	var result=tkMakeServerCall("web.DHCEQ.EM.BUSUpdateEquipByList","UpdateEquipsByList",listInfos,MXInfo);
+	if (result==0)
+	{
+		if (BussType<6)
 		{
-			if (type==1)
-			{
-				websys_showModal("options").mth(index,totalNum);  //modify by lmm 2019-02-19
-			}
-			else if (type==2)
-			{
-				websys_showModal("options").mth(index,totalNum);  //modify by lmm 2019-02-19
-			}
-			else if (type==5)
-			{
-				websys_showModal("options").mth(index,totalNum);  //Add by QW20200303 BUG:QW0042
-			}
-			else if (type==6)
-			{
-				
-			}
+			websys_showModal("options").mth(index,totalNum);  //modify by lmm 2019-02-19
+		}
 
-			var val="&Job="+job;
-			val=val+"&Index="+index;
-			val=val+"&SourceID="+sourceID;
-			val=val+"&MXRowID="+mXRowID;
-			val=val+"&QuantityNum="+Num;
-			val=val+"&StoreLocDR="+storeLocDR;
-			val=val+"&Status="+getElementValue("Status");
-			val=val+"&Type="+type;
-			val=val+"&EquipID="+getElementValue("EquipID");
-			window.location.href= 'dhceq.em.updateequipsbylist.csp?'+val;
+		var val="&Job="+job;
+		val=val+"&Index="+index;
+		val=val+"&SourceID="+sourceID;
+		val=val+"&MXRowID="+mXRowID;
+		val=val+"&QuantityNum="+Num;
+		val=val+"&StoreLocDR="+storeLocDR;
+		val=val+"&Status="+getElementValue("Status");
+		val=val+"&Type="+BussType;
+		val=val+"&EquipID="+getElementValue("EquipID");
+		var url= 'dhceq.em.updateequipsbylist.csp?'+val;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
 		}
-		else
-		{
-			messageShow('alert','error','提示',"更新失败!");
-		}
+	    window.location.href= url;
+	}
+	else
+	{
+		messageShow('alert','error','提示',"更新失败!");
 	}
 }
 

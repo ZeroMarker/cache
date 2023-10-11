@@ -217,7 +217,8 @@ $(function(){
 								BPCIResultCount:$("#BPCIResultCount").val(),
 								BPCIType:$("#BPCIType").combobox('getValue'),
 								BPCIUpdateUserDr:"0",
-								BPCIDataType:$("#BPCIDataType").combobox('getValue')
+								BPCIDataType:$("#BPCIDataType").combobox('getValue'),
+								hospId:session['LOGON.HOSPID']
 					},function(success){
 						if(success>=0)
 						{
@@ -278,8 +279,8 @@ $(function(){
 							BPCIBpaCount:$("#BPCICount").val(),							
 							BPCIResultCount:$("#BPCIResultCount").val(),		
 							BPCIType:$("#BPCIType").combobox('getValue'),						
-							BPCIDataType:$("#BPCIDataType").combobox('getValue')
-							
+							BPCIDataType:$("#BPCIDataType").combobox('getValue'),
+							hospId:session['LOGON.HOSPID']							
 						},function(success){
 							if(success==0)
 							{
@@ -311,7 +312,8 @@ $(function(){
 		},
 		onBeforeLoad:function(param){			
 			param.CtlocDr=$("#SearchBPCICtloc").combobox('getValue'),
-			param.desc=$("#SearchBPCIDesc").val()
+			param.desc=$("#SearchBPCIDesc").val(),
+			param.hospId = session['LOGON.HOSPID']	
 		},
 		title:'统计条件',
         columns:[[

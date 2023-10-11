@@ -34,6 +34,7 @@ function InitMessageWin(){
 			ClassName:'DHCHAI.IRS.CCMessageSrv',
 			QueryName:'QryMsgByPaadm',
 			aPaadm:aEpisodeID
+			,page:1,rows:9999
 		},false);
 		
 		if (obj.Msg.total>0) {
@@ -47,7 +48,7 @@ function InitMessageWin(){
 							+ '     	<span>'+rd.MTitle+'</span>'
 							+ '     </div>'
 							+ '     <div class="MessDtl">'	
-							+ '			<div>'+ ((rd.CSIsRead==0) ? '<div style="background-color:red;color:#fff;border-radius:10px;font-size:10px;padding:3px;width:25px;font-weight: 600;">未读</div>' :'')+'</div>'
+							+ '			<div>'+ ((rd.CSIsRead==0) ? '<div style="background-color:red;color:#fff;border-radius:10px;font-size:10px;padding:3px;width:25px;padding: 5px;">'+$g("未读")+'</div>' :'')+'</div>'
 							+ ' 		<div class="message">'
 							+ '     	    <div class="left message-green">'
 							+ '					<div class="message-arrow"></div>'				
@@ -74,13 +75,17 @@ function InitMessageWin(){
 							+ '     			<div class="message-inner">'+rd.CSMessage+'</div>'
 							+ '     		</div>'
 							+ '     	</div>'	
-							+ ' 		<div>'+ ((rd.CSIsRead==0) ? '<div style="background-color:red;color:#fff;border-radius:10px;font-size:10px;padding:3px;width:25px;font-weight: 600;">未读</div>' :'')+'</div>'
+							+ ' 		<div>'+ ((rd.CSIsRead==0) ? '<div style="background-color:red;color:#fff;border-radius:10px;font-size:10px;padding:3px;width:25px;padding: 5px;">'+$g("未读")+'</div>' :'')+'</div>'
 							+ '     </div>'
 							+ ' </div>'
 				}
 			}
 		
 			$('#divMessage').append(Msghtml);	
+			//滚动条默认最后
+			var scrollHeight = $('#divCenter').prop("scrollHeight");
+ 		 	$('#divCenter').animate({scrollTop:scrollHeight}, 300);
+			
 			return true;
 		}			
 	}

@@ -103,39 +103,6 @@ $(function(){
 			onHidePanel: function () {
         		OnHidePanel("#bpcCHighFluxed");
         	},			
-		});				
-		
-		$HUI.combogrid("#BPCBPMode",{
-			idField:"tBPCBPMRowId",
-			textField:"tBPCBPMDesc",
-			mode:"remote",
-			multiple:true,
-			url:$URL,  //"dhcclinic.jquery.csp",
-			queryParams:{
-				ClassName:"web.DHCBPCBloodPurificationMode",
-				QueryName:"FindDHCBPCBPMode",
-				ctlocId:""			
-				},
-			columns:[[
-			{filed:"ck",checkbox:true,width:0},
-			{field:"tBPCBPMDesc",title:"透析方式"}
-			]],
-			onHidePanel: function () {
-        		OnHidePanel3("#BPCBPMode");
-        	},			
-		});
-		$HUI.combobox("#bpcCtlocDr",{
-			url:$URL+"?ClassName=web.DHCBPCInquiry&QueryName=ctloclookup&ResultSetType=array",
-			textField:"oprCtLoc",
-			valueField:"oprLocId",
-			//multiple:true,
-			formatter:function(row){				
-				var opts = $(this).combobox('options');
-				return row[opts.textField];
-			},
-			onHidePanel: function () {
-        		OnHidePanel("#bpcCtlocDr");
-        	},			
 		});
 		$HUI.combobox("#bpcCArcim",{
 			url:$URL+"?ClassName=web.DHCBPOrder&QueryName=GetArcimList&ResultSetType=array",
@@ -166,8 +133,6 @@ $(function(){
 		$("#bpcCMembraneArea").val("");
 		$("#bpcCHighFluxed").combobox('setValue',"");
 		$("#bpcCArcim").combobox('setValue',"");
-		$("#BPCBPMode").combobox('setValue',"");
-		$("#bpcCtlocDr").combobox('setValue',"");
 	}	
 	var insertHandler=function(){
 		$("#consumableDlg").show();
@@ -180,16 +145,6 @@ $(function(){
 			{
 				text:"保存",
 				handler:function(){
-					var MDrow=$("#BPCBPMode").combogrid('grid').datagrid('getSelections')					
-					if (MDrow.length>0)
-					{	
-						var r=MDrow[0].tBPCBPMRowId;				
-						for(var i=1;i<MDrow.length;i++)
-						{
-							r=r+","+MDrow[i].tBPCBPMRowId
-						}
-					}
-					//var r= $("#BPCBPMode").combobox('getValues');
 					$.m({
 						ClassName:"web.DHCBPCConsumable",
 						MethodName:"InsertConsumable",
@@ -199,8 +154,6 @@ $(function(){
 						bpcCMembraneArea:$("#bpcCMembraneArea").val(),
 						bpcCHighFluxed:$("#bpcCHighFluxed").combobox('getValue'),
 						bpcCArcimDr:$("#bpcCArcim").combobox('getValue'),
-						bpcMDrList:r,
-						bpLocIdList:$("#bpcCtlocDr").combobox('getValue')
 						
 						},function(s){
 							if(s==0){
@@ -234,8 +187,6 @@ $(function(){
 		}
 	var updateHandler=function(r){
 		var id=r.tID
-		var Mode=[]
-		Mode=r.tBPCBPMRowId.split(",")
 		$("#bpcCCode").val(r.tBPCCCode)
 		$("#bpcCDesc").val(r.tBPCCDesc)
 		$("#bpcCMembraneArea").val(r.tBPCCMembraneArea)
@@ -243,9 +194,6 @@ $(function(){
 		$("#bpcCType").combobox('setText',r.tBPCCTypeD)
 		$("#bpcCHighFluxed").combobox('setValue',r.tBPCCHighFluxed)
 		$("#bpcCHighFluxed").combobox('setText',r.tBPCCHighFluxedD)
-		$("#BPCBPMode").combogrid('setValues',Mode)
-		$("#bpcCtlocDr").combobox('setValue',r.tBPCBPMDeptDr)
-		$("#bpcCtlocDr").combobox('setText',r.tBPCBPMDept);
 		$("#bpcCArcim").combobox('setValue',r.tBPCCArcimDr);
 		$("#bpcCArcim").combobox('setText',r.tBPCCArcim);
 		$("#consumableDlg").show();
@@ -257,16 +205,7 @@ $(function(){
 			buttons:[
 			{
 				text:"保存",
-				handler:function(){
-					var MDrow=$("#BPCBPMode").combogrid('grid').datagrid('getSelections')
-					if (MDrow.length>0)
-					{
-						var MDr=MDrow[0].tBPCBPMRowId;
-						for(var i=1;i<MDrow.length;i++)
-						{
-							MDr=MDr+","+MDrow[i].tBPCBPMRowId
-						}
-					}				
+				handler:function(){				
 					$.m({
 						ClassName:"web.DHCBPCConsumable",
 						MethodName:"UpdateConsumable",
@@ -277,9 +216,6 @@ $(function(){
 						bpcCMembraneArea:$("#bpcCMembraneArea").val(),
 						bpcCHighFluxed:$("#bpcCHighFluxed").combobox('getValue'),
 						bpcCArcimDr:$("#bpcCArcim").combobox('getValue'),
-						bpcMDrList:MDr,
-						bpLocIdList:$("#bpcCtlocDr").combobox('getValue')
-						
 						},function(s){
 							if(s==0){
 								consumableDlgObj.close();
@@ -344,13 +280,9 @@ $(function(){
 		{field:"tBPCCMembraneArea",title:"膜面积",width:100},
 		{field:"tBPCCHighFluxedD",title:"是否高通量",width:100},
 		{field:"tBPCCArcim",title:"医嘱",width:100},
-		{field:"tBPCBPMDesc",title:"透析方式",width:150},
-		{field:"tBPCBPMDept",title:"科室",width:100},
 		{field:"tBPCCType",hidden:true},
 		{field:"tBPCCHighFluxed",hidden:true},
 		{field:"tBPCCArcimDr",hidden:true},
-		{field:"tBPCBPMRowId",hidden:true},
-		{field:"tBPCBPMDeptDr",hidden:true}
 		]],
 		pagination:true,
 		pageSize: 20,

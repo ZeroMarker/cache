@@ -191,19 +191,19 @@ function InitGirdPreOrderList() {
             align: 'right'
         },
         {
-            header: '接收人',
+            header: '核对人',
             index: 'TNurseCheckUser',
             name: 'TNurseCheckUser',
             width: 80
         },
         {
-            header: '接收部门',
+            header: '核对部门',
             index: 'TWardLoc',
             name: 'TWardLoc',
             width: 120
         },
         {
-            header: '接收时间',
+            header: '核对时间',
             index: 'TNurseCheckDate',
             name: 'TNurseCheckDate',
             width: 140

@@ -38,6 +38,7 @@ function doneCheck()
         $.messager.alert('错误', '提交已处理失败，请再次尝试！', 'error');
     }	
 }
+
 //设置数据
 function setDataGrid() {
     $('#QualityData').datagrid({
@@ -45,68 +46,70 @@ function setDataGrid() {
         pageList: [10, 20, 30],
         loadMsg: '数据装载中......',
         autoRowHeight: true,
-        url: '../EMRservice.Ajax.Quality.cls?Action=GetProfilerList&EpisodeID='+EpisodeID+'&RuleID='+RuleID+'&CTLocatID='+CTLocatID+'&userID='+userID,
+        url: '../EMRservice.Ajax.Quality.cls?Action=GetProfilerList&EpisodeID='+EpisodeID+'&RuleID='+RuleID+'&CTLocatID='+CTLocatID+'&userID='+userID+'&action='+action,
         rownumbers: true,
         pagination: false,
         singleSelect: false,
-        nowrap: false,
+        //nowrap: false,
         fitColumns: true,
         fit: true,
+        scrollbarSize :0,
         columns: [[
         	{ field: 'ck', checkbox: true },
         	{
                 field: 'CreateDateTime',
                 title: '质控时间',
-                halign: 'center',
-                align: 'center',
-                width: 50
+                halign: 'left',
+                align: 'left',
+                width: 160
             }, {
                 field: 'StructName',
                 title: '质控类型',
-                halign: 'center',
-                width: 50
+                halign: 'left',
+                width: 80
             }, {
                 field: 'MessageBody',
                 title: '质控缺陷',
-                halign: 'center',
-                width: 150
+                halign: 'left',
+                width: 250
             }, {
                 field: 'EntryScore',
                 title: '评分标准',
-                halign: 'center',
-                align: 'center',
-                width: 25
+                halign: 'left',
+                align: 'left',
+                width: 80
             }, {
                 field: 'ExamCount',
                 title: '次数',
-                halign: 'center',
-                align: 'center',
-                width: 20
-            }, {
+                halign: 'left',
+                align: 'left',
+                width: 50
+            },/* {
                 field: 'Score',
                 title: '扣分',
-                halign: 'center',
-                align: 'center',
+                halign: 'left',
+                align: 'left',
                 width: 20
-            }, {
+            },*/
+			{
                 field: 'CreateUserDesc',
                 title: '质控医师',
-                halign: 'center',
-                align: 'center',
-                width: 27
+                halign: 'left',
+                align: 'left',
+                width: 150
             }, {
                 field: 'ExecuteStatus',
                 title: '状态',
-                halign: 'center',
-                align: 'center',
-                width: 25
+                halign: 'left',
+                align: 'left',
+                width: 130
             }
             , {
                 field: 'ExecuteDateTime',
-                title: '执行时间',
-                halign: 'center',
-                align: 'center',
-                width: 50
+                title: '处理时间',
+                halign: 'left',
+                align: 'left',
+                width: 150
             }]
         ],/*
         toolbar:['->',{

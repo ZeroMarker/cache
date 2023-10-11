@@ -1,17 +1,21 @@
 ﻿/**
  * FileName: dhcbill.opbill.epdep.refund.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-08-13
  * Description: 急诊留观退押金
  */
 
-var GV = {
-	RefPartFlag: "Y"    //是否允许部分退标识("Y":能部分退 "N":不能部分退)
-};
+$.extend($.fn.validatebox.defaults.rules, {
+	checkRefableAmt: {    //校验退费金额
+	    validator: function(value) {
+		    return !GV.RefableAmt || (+value <= +GV.RefableAmt);
+		},
+		message: $g("金额不能超过可退金额")
+	}
+});
 
 $(function () {
 	$(document).keydown(function (e) {
-		banBackSpace(e);
 		frameEnterKeyCode(e);
 	});
 	initRefundMenu();
@@ -28,12 +32,15 @@ function frameEnterKeyCode(e) {
 		focusNextEle(e.target.id);
 		break;
 	case 115: //F4
+		e.preventDefault();
 		readHFMagCardClick();
 		break;
 	case 118: //F7
+		e.preventDefault();
 		clearClick();
 		break;
 	case 120: //F9
+		e.preventDefault();
 		setValueById("refAmt", $("#refAmt").val());   //numberbox在光标未离开时getValue取不到值，故先赋值
 		refundClick();
 		break;
@@ -76,7 +83,7 @@ function initRefundMenu() {
 	});
 	
 	//卡号回车查询事件
-	$("#cardNo").keydown(function (e) {
+	$("#CardNo").focus().keydown(function (e) {
 		cardNoKeydown(e);
 	});
 
@@ -85,33 +92,25 @@ function initRefundMenu() {
 		patientNoKeydown(e);
 	});
 	
-	getReceiptNo();
-		
-	//卡类型
-	$HUI.combobox("#cardType", {
-		panelHeight: 'auto',
-		method: 'GET',
-		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QCardTypeDefineList&ResultSetType=array',
-		editable: false,
-		valueField: 'value',
-		textField: 'caption',
-		onChange: function (newValue, oldValue) {
-			initReadCard(newValue);
+	//退押金金额
+	$HUI.numberbox("#accMLeft", {
+		onChange: function(newValue, oldValue) {
+			GV.RefableAmt = newValue;   //初始化为账户余额
 		}
 	});
 	
 	//支付方式
 	$HUI.combobox("#payMode", {
 		panelHeight: 150,
-		url: $URL + "?ClassName=web.UDHCOPGSConfig&QueryName=ReadGSINSPMList&ResultSetType=array",
+		url: $URL + '?ClassName=web.UDHCOPGSConfig&QueryName=ReadGSINSPMList&ResultSetType=array',
 		method: 'GET',
 		editable: false,
-		valueField: "CTPMRowID",
-		textField: "CTPMDesc",
+		valueField: 'CTPMRowID',
+		textField: 'CTPMDesc',
 		onBeforeLoad: function(param) {
 			param.GPRowID = PUBLIC_CONSTANT.SESSION.GROUPID;
 			param.HospID = PUBLIC_CONSTANT.SESSION.HOSPID;
-			param.TypeFlag = "DEP";
+			param.TypeFlag = "RDEP";
 		},
 		onLoadSuccess: function(data) {
 			$.each(data, function (index, item) {
@@ -136,14 +135,14 @@ function initRefundMenu() {
 		idField: 'TAdmRowID',
 		textField: 'TAdmRowID',
 		columns: [[ {field: 'TAdmRowID', title: '就诊ID', width: 60},
-					{field: 'TAdmLocDesc', title: '科室病区', width: 150,
+					{field: 'TAdmLoc', title: '科室病区', width: 150,
 						formatter: function (value, row, index) {
 							if (value) {
-								return value + " " + row.TAdmWardDesc;
+								return value + " " + row.TAdmWard;
 							}
 						}
 					},
-					{field: 'TAdmBedDesc', title: '床号', width: 50},
+					{field: 'TBedCode', title: '床号', width: 50},
 					{field: 'TAdmDate', title: '入院时间', width: 150,
 						formatter: function (value, row, index) {
 							if (value) {
@@ -158,24 +157,32 @@ function initRefundMenu() {
 							}
 						}
 					},
-					{field: 'TStayState', title: '留观状态', width: 80},
-					{field: 'TAdmInsType', title: '就诊费别', width: 80}
+					{field: 'TStayStatus', title: '留观状态', width: 80,
+						formatter: function (value, row, index) {
+							if (value) {
+								return (value == 1) ? $g("留观出院") : ((value == 2) ? $g("正在留观") : "非留观");
+							}
+						}
+					},
+					{field: 'TAdmInsType', title: '就诊费别', width: 80},
+					{field: 'TAccMRowId', title: 'TAccMRowId', hidden: true},
+					{field: 'TAccMLeft', title: 'TAccMLeft', hidden: true}
 			]],
 		onLoadSuccess: function (data) {
 			$(this).combogrid("clear");
-			if (data.total == 1) {
+			if (data.total > 0) {
 				setValueById("admList", data.rows[0].TAdmRowID);
-			}else {
-				setValueById("admDate", "");
-				setValueById("dept", "");
-				setValueById("ward", "");
-				setValueById("bedCode", "");
-				setValueById("admReason", "");
-				setValueById("refAmt", "");
-				setValueById("accMRowId", "");
-				setValueById("accMLeft", "");
-				loadEPDepList();
+				return;
 			}
+			setValueById("admDate", "");
+			setValueById("dept", "");
+			setValueById("ward", "");
+			setValueById("bedCode", "");
+			setValueById("admReason", "");
+			setValueById("refAmt", "");
+			setValueById("accMRowId", "");
+			setValueById("accMLeft", "");
+			loadEPDepList();
 		},
 		onSelect: function (index, row) {
 			setAdmInfo(row);
@@ -185,11 +192,11 @@ function initRefundMenu() {
 	//退款原因
 	$HUI.combobox("#refReason", {
 		panelHeight: 150,
-		url: $URL + "?ClassName=web.DHCIPBillDeposit&QueryName=FindRefReason&ResultSetType=array",
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryRefDepReason&ResultSetType=array',
 		method: 'GET',
 		valueField: 'id',
 		textField: 'text',
-		defaultFilter: 4,
+		defaultFilter: 5,
 		blurValidValue: true,
 		onBeforeLoad: function(param) {
 			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
@@ -202,6 +209,8 @@ function initRefundMenu() {
 			return focusNextEle($(e.target).parents("td").find("input")[0].id);
 		}
 	});
+	
+	getReceiptNo();
 }
 
 /**
@@ -213,125 +222,55 @@ function readHFMagCardClick() {
 	if ($("#btn-readCard").hasClass("l-btn-disabled")) {
 		return;
 	}
-	try {
-		var cardType = getValueById("cardType");
-		var cardTypeDR = cardType.split("^")[0];
-		var myRtn = "";
-		var securityNo = "";
-		if (cardTypeDR == "") {
-			myRtn = DHCACC_GetAccInfo();
-		} else {
-			myRtn = DHCACC_GetAccInfo(cardTypeDR, cardType);
-		}
-		var myAry = myRtn.toString().split("^");
-		var rtn = myAry[0];
-		switch (rtn) {
-		case "0":
-			setValueById("cardNo", myAry[1]);
-			setValueById("patientId", myAry[4]);
-			setValueById("patientNo", myAry[5]);
-			getPatInfo();
-			break;
-		case "-200":
-			$("#admList").combogrid("clear").combogrid("grid").datagrid("loadData", {
-				total: 0,
-				rows: []
-			});
-			$.messager.alert("提示", "卡无效", "info", function () {
-				focusById("btn-readCard");
-			});
-			break;
-		case "-201":
-			setValueById("cardNo", myAry[1]);
-			setValueById("patientId", myAry[4]);
-			setValueById("patientNo", myAry[5]);
-			getPatInfo();
-			break;
-		default:
-		}
-	} catch (e) {
-	}
+	DHCACC_GetAccInfo7(magCardCallback);
 }
 
 function cardNoKeydown(e) {
-	try {
-		var key = websys_getKey(e);
-		if (key == 13) {
-			var cardNo = getValueById("cardNo");
-			if (!cardNo) {
-				return;
-			}
-			var cardType = getValueById("cardType");
-			cardNo = formatCardNo(cardType, cardNo);
-			var cardTypeAry = cardType.split("^");
-			var cardTypeDR = cardTypeAry[0];
-			var cardAccountRelation = cardTypeAry[24];
-			var securityNo = "";
-			var myRtn = "";
-			if((cardAccountRelation == "CA") || (cardAccountRelation == "CL")) {
-				myRtn = DHCACC_GetAccInfo(cardTypeDR, cardNo, securityNo, "");
-			}else {
-				myRtn = DHCACC_GetAccInfo(cardTypeDR, cardType);
-			}
-			var myAry = myRtn.toString().split("^");
-			var rtn = myAry[0];
-			switch (rtn) {
-			case "0":
-				setValueById("cardNo", myAry[1]);
-				setValueById("patientId", myAry[4]);
-				setValueById("patientNo", myAry[5]);
-				getPatInfo();
-				break;
-			case "-200":
-				$("#admList").combogrid("clear").combogrid("grid").datagrid("loadData", {
-					total: 0,
-					rows: []
-				});
-				setTimeout(function () {
-					$.messager.alert("提示", "卡无效", "info", function () {
-						focusById("cardNo");
-					});
-				}, 300);
-				break;
-			case "-201":
-				setValueById("cardNo", myAry[1]);
-				setValueById("patientId", myAry[4]);
-				setValueById("patientNo", myAry[5]);
-				getPatInfo();
-				break;
-			default:
-			}
+	var key = websys_getKey(e);
+	if (key == 13) {
+		var cardNo = getValueById("CardNo");
+		if (!cardNo) {
+			return;
 		}
-	} catch (e) {
+		DHCACC_GetAccInfo("", cardNo, "", "", magCardCallback);
 	}
 }
 
-/**
- * 初始化卡类型时卡号和读卡按钮的变化
- * @method initReadCard
- * @param {String} cardType
- * @author ZhYW
- */
-function initReadCard(cardType) {
-	try {
-		var cardTypeAry = cardType.split("^");
-		var readCardMode = cardTypeAry[16];
-		if (readCardMode == "Handle") {
-			disableById("btn-readCard");
-			$("#cardNo").attr("readOnly", false);
-			focusById("cardNo");
-		} else {
-			enableById("btn-readCard");
-			setValueById("cardNo", "");
-			$("#cardNo").attr("readOnly", true);
-			focusById("btn-readCard");
-		}
-	} catch (e) {
+function magCardCallback(rtnValue) {
+	var patientId = "";
+	var myAry = rtnValue.split("^");
+	switch (myAry[0]) {
+	case "0":
+		setValueById("CardNo", myAry[1]);
+		patientId = myAry[4];
+		setValueById("patientNo", myAry[5]);
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	case "-200":
+		$("#admList").combogrid("clear").combogrid("grid").datagrid("loadData", {
+			total: 0,
+			rows: []
+		});
+		$.messager.alert("提示", "卡无效", "info", function () {
+			focusById("CardNo");
+		});
+		break;
+	case "-201":
+		setValueById("CardNo", myAry[1]);
+		patientId = myAry[4];
+		setValueById("patientNo", myAry[5]);
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	default:
+	}
+	
+	if (patientId != "") {
+		getPatInfo();
 	}
 }
 
 function getReceiptNo() {
-	if (!GV.ReceiptType) {
+	if (!CV.ReceiptType) {
 		return;
 	}
 	$.m({
@@ -347,8 +286,8 @@ function getReceiptNo() {
 		if (invoiceId) {
 			setValueById("receiptNo", (title + "[" + currNo + "]"));
 		}else {
-			disableById("btn-refund");
 			$.messager.popover({msg: "没有可用的票据，请先领取", type: "info"});
+			disableById("btn-refund");
 		}
 	});
 }
@@ -374,48 +313,44 @@ function initEPDepList() {
 		pagination: true,
 		rownumbers: true,
 		pageSize: 20,
-		data: [],
-		columns: [[{title: '交款日期', field: 'Tdate', width: 100},
-		           {title: '交款时间', field: 'Ttime', width: 80},
-				   {title: '金额', field: 'Tamt', width: 100, align: 'right',
-				  	 styler: function (value, row, index) {
-						if (row.Tamt >= 0) {
-							return 'color: #21ba45;font-weight: bold;';
-						}else {
-							return 'color: #f16e57;font-weight: bold;';
-						}
-					 }
-				   },
-				   {title: '交款类型', field: 'Ttype', width: 80,
-				   	styler: function (value, row, index) {
-						if (row.Tamt >= 0) {
-							return 'color: #21ba45;font-weight: bold;';
-						}else {
-							return 'color: #f16e57;font-weight: bold;';
-						}
-					 }
-				   },
-				   {title: '收费员', field: 'Tuser', width: 80},
-				   {title: '收据号', field: 'Treceiptsno', width: 150},
-				   {title: '结账时间', field: 'Tjkdate', width: 150},
-				   {title: '当时账户余额', field: 'Taccleft', width: 100, align: 'right'},
-				   {title: '支付方式', field: 'Tpaymode', width: 80},
-				   {title: '银行卡类型', field: 'Tbankcardtype', width: 100},
-				   {title: '支票号', field: 'Tchequeno', width: 100},
-				   {title: '银行', field: 'Tbank', width: 100},
-				   {title: '支付单位', field: 'Tcompany', width: 100},
-				   {title: '支票日期', field: 'Tchequedate', width: 100},
-				   {title: '退款原因', field: 'Tbackreason', width: 100},
-				   {title: '备注', field: 'Tremark', width: 100},
-				   {title: 'AccPreRowID', field: 'AccPreRowID', hidden: true}
-			]],
+		className: "web.DHCOPBillEPAddDeposit",
+		queryName: "GetEPDepDetail",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["Tdate", "Tjkdate", "disDate", "prtDate"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if ($.inArray(cm[i].field, ["TInitPDDR", "AccPreRowID"]) != -1) {
+					cm[i].hidden = true;
+					continue;
+				}
+				if (cm[i].field == "Ttime") {
+					cm[i].formatter = function(value, row, index) {
+					   	return row.Tdate + " " + value;
+					};
+				}
+				if ($.inArray(cm[i].field, ["Tamt", "Ttype"]) != -1) {
+					cm[i].styler = function (value, row, index) {
+						var color = (row.Tamt >= 0) ? "#21ba45" : "#f16e57";
+					 	return "font-weight: bold;color:" + color;
+					 };
+				}
+				if (cm[i].field == "Tjktime") {
+					cm[i].formatter = function(value, row, index) {
+					   	return row.Tjkdate + " " + value;
+					};
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if ($.inArray(cm[i].field, ["Ttime", "Tjktime"]) != -1) {
+						cm[i].width = 160;
+					}
+				}
+			}
+		},
 		onLoadSuccess: function(data) {
 			selectRowIndex = undefined;
-			if (data.total == 0) {
-				disableById("btn-refund");
-			}else {
-				enableById("btn-refund");
-			}
 		},
 		onSelect: function(index, row) {
 			if (selectRowIndex == index) {
@@ -423,7 +358,7 @@ function initEPDepList() {
 				return;
 			}
 			selectRowIndex = index;
-			if ((GV.RefPartFlag != "Y") && (+row.Tamt > 0)) {
+			if ((GV.PartRefFlag != "Y") && (row.Tamt > 0)) {
 				setValueById("refAmt", row.Tamt);
 			}
 			if (row.AccPreRowID) {
@@ -434,7 +369,7 @@ function initEPDepList() {
 		},
 		onUnselect: function(index, row) {
 			selectRowIndex = undefined;
-			if (GV.RefPartFlag != "Y") {
+			if (GV.PartRefFlag != "Y") {
 				setValueById("refAmt", "");
 			}
 			disableById("btn-reprint");
@@ -446,9 +381,8 @@ function loadEPDepList() {
 	var queryParams = {
 		ClassName: "web.DHCOPBillEPAddDeposit",
 		QueryName: "GetEPDepDetail",
-		AccountID: getValueById("accMRowId"),
-		USERID: "",
-		FOOTID: ""
+		AccMRowID: getValueById("accMRowId"),
+		SessionStr: getSessionStr()
 	};
 	loadDataGridStore("accDepList", queryParams);
 }
@@ -458,112 +392,61 @@ function getPatInfo() {
 	if (!patientNo) {
 		return;
 	}
-	var encmeth = getValueById("GetEPMInfoEncrypt");
-	var rtn = cspRunServerMethod(encmeth, "setPatInfo", "", patientNo, "", "", "", "");
-}
-
-function setPatInfo(str) {
-	var myAry = str.split("^");
-	if (!myAry[1]) {
+	var json = $.cm({ClassName: "web.DHCOPBillEPManageCLS", MethodName: "GetPatInfo", patientNo: patientNo, hospId: PUBLIC_CONSTANT.SESSION.HOSPID}, false);
+	if (!json.PatientId) {
 		$.messager.popover({msg: "患者不存在", type: "info"});
-		disableById("btn-refund");
 		focusById("patientNo");
 		return;
 	}
-	var stayFlag = myAry[24];
-	if (stayFlag == "N") {
-		$.messager.popover({msg: "该患者无留观就诊", type: "info"});
-		focusById("patientNo");
-		return;
-	}
-	setValueById("patientNo", myAry[0]);
-	setValueById("patientId", myAry[1]);
-	setValueById("patName", myAry[2]);
+	
+	setValueById("patientNo", json.PatientNo);
+	setValueById("patientId", json.PatientId);
+	setValueById("patName", json.PatName);
+	setValueById("IDNo", json.ID);
+	setValueById("mobPhone", json.MobPhone);
+	
+	//加载就诊列表
 	$.cm({
-		ClassName: "web.DHCBillCommon",
-		MethodName: "GetPatientInfo",
-		patientId: getValueById("patientId")
-	}, function(jsonObj) {
-		setValueById("patName", jsonObj.PAPERName);
-		setValueById("IDNo", jsonObj.PAPERID);
-		setValueById("mobPhone", jsonObj.PAPERTelH);
-	});
-	loadAdmList();
-}
-
-/**
- * 加载就诊列表
- */
-function loadAdmList() {
-	var queryParams = {
 		ClassName: "web.DHCOPBillEPManageCLS",
-		QueryName: "SearchSatyAdm",
-		RegNo: "",
-		PatientID: getValueById("patientId"),
-		CardNo: "",
-		CardVerify: "",
-		HospId: PUBLIC_CONSTANT.SESSION.HOSPID,
+		QueryName: "SearchStayAdm",
+		PatientID: json.PatientId,
+		SessionStr: getSessionStr(),
 		rows: 999999
-	}
-	loadComboGridStore("admList", queryParams);
+	}, function(data) {
+		$("#admList").combogrid("grid").datagrid("loadData", data);
+		if (data.total == 0) {
+			$.messager.popover({msg: "该患者无留观就诊", type: "info"});
+			focusById("patientNo");
+			return;
+		}
+	});
 }
 
 function setAdmInfo(row) {
+	var episodeId = row.TAdmRowID;
+	var accMLeft = row.TAccMLeft;
 	setValueById("admDate", row.TAdmDate);
-	setValueById("dept", row.TAdmLocDesc);
-	setValueById("ward", row.TAdmWardDesc);
-	setValueById("bedCode", row.TAdmBedDesc);
+	setValueById("dept", row.TAdmLoc);
+	setValueById("ward", row.TAdmWard);
+	setValueById("bedCode", row.TBedCode);
 	setValueById("admReason", row.TAdmInsType);
+	setValueById("accMRowId", row.TAccMRowId);
+	setValueById("accMLeft", accMLeft);
 	
-	getEPMInfo(row.TAdmRowID);
-}
-
-/**
-* 获取留观账号信息
-*/
-function getEPMInfo(adm) {
-	if (!adm) {
-		return;
-	}
-	//获取账户信息
+	//判断是否允许部分退
 	$.m({
 		ClassName: "web.DHCOPBillEPManageCLS",
-		MethodName: "getCurrAcountID",
-		admId: adm
+		MethodName: "GetAdmBillStatus",
+		Adm: episodeId
 	}, function(rtn) {
-		var myAry = rtn.split("^");
-		var accMRowId = myAry[1];
-		var accMLeft = myAry[2];
-		switch(myAry[0]) {
-		case "0":
-			//判断是否允许部分退
-			$.m({
-				ClassName: "web.DHCOPBillEPManageCLS",
-				MethodName: "GetAdmBillStatus",
-				Adm: adm
-			}, function(rtn) {
-				if (rtn == "Y") {
-					GV.RefPartFlag = "Y";
-					setValueById("refAmt", accMLeft);
-					enableById("refAmt");
-				}else {
-					/*
-					GV.RefPartFlag = "N";
-					disableById("refAmt");
-					*/
-				}
-			});
-			break;
-		case "-1":
-			$.messager.popover({msg: "就诊号错误", type: "info"});
-			focusById("patientNo");
-			break;
-		default:
+		if (rtn == "Y") {
+			GV.PartRefFlag = "Y";
+			setValueById("refAmt", accMLeft);
+			enableById("refAmt");
 		}
-		setValueById("accMRowId", accMRowId);
-		setValueById("accMLeft", accMLeft);
-		loadEPDepList();
 	});
+	
+	loadEPDepList();
 }
 
 function focusNextEle(id) {
@@ -608,260 +491,369 @@ function focusNextEle(id) {
 	if (nextId) {
 		focusById(nextId);
 		return false;
-	}else {
-		setTimeout("focusById('btn-refund')", 20);
-		return false;
 	}
-	return true;
+	setTimeout(function() {
+		focusById("btn-refund");
+	}, 20);
+	return false;
 }
 
 function refundClick() {
-	if ($("#btn-refund").hasClass("l-btn-disabled")) {
-		return;
-	}
-	if (!checkData()) {
-		return;
-	}
-	refundAccDep();
-}
-
-function refundAccDep() {
-	var refAmt = getValueById("refAmt");
-	$.messager.confirm("确认", "退款额：<font style='color:red;'>" + refAmt + "</font> 元，是否确认退款?", function (r) {
-		if (r) {
-			var episodeId = getValueById("admList");
-			var papmi = getValueById("patientId");
-			var patientNo = getValueById("patientNo");
-			var cardNo = getValueById("cardNo");
-			
-			//只能全退时，取原Id
-			var initPreDepID = "";
-			if (GV.RefPartFlag != "Y") {
-				var row = GV.EPDepList.getSelected();
-				if (row && GV.AccPreRowID) {
-					initPreDepID = row.AccPreRowID;
+	var _validate = function() {
+		return new Promise(function (resolve, reject) {
+			var bool = true;
+			$(".validatebox-text").each(function(index, item) {
+				if (!$(this).validatebox("isValid")) {
+					bool = false;
+					return false;
+				}
+			});
+			if (!bool) {
+				return reject();
+			}
+			$("td:visible label[class='clsRequired']").each(function() {
+				var id = $(this).parent().next().find("input")[0].id;
+				if (getValueById(id) == "") {
+					$.messager.popover({msg: ($g("请选择") + "<font color='red'>" + $(this).text() + "</font>"), type: "info"});
+					bool = false;
+					return false;
+				}
+			});
+			if (!bool) {
+				return reject();
+			}
+			if (!episodeId) {
+				$.messager.popover({msg: "请选择就诊", type: "info"});
+				return reject();
+			}
+			if (!isCallPaySvr()) {
+				if (!refAmt) {
+					$.messager.popover({msg: "请输入金额", type: "info"});
+					focusById("refAmt");
+					return reject();
+				}
+				if (!(refAmt > 0)) {
+					$.messager.popover({msg: "金额输入错误", type: "info"});
+					focusById("refAmt");
+					return reject();
+				}
+				if (+refAmt > +accMLeft) {
+					$.messager.popover({msg: "余额不足", type: "info"});
+					focusById("refAmt");
+					return reject();
 				}
 			}
-			
-			var refReason = getValueById("refReason");
-			var payMode = getValueById("payMode");
+			if (CV.ReceiptType && (receiptNo == "")) {
+				$.messager.popover({msg: "没有可用的票据，请先领取", type: "info"});
+				return reject();
+			}
+			//急诊留观标志
+			var rtn = $.m({ClassName: "web.UDHCJFBaseCommon", MethodName: "GetPatAdmStayStat", Adm: episodeId}, false);
+			var stayFlag = rtn.split("^")[0];
+			if (stayFlag != "Y") {
+				$.messager.popover({msg: "不是急诊留观患者，不能交留观押金", type: "info"});
+				return reject();
+			}
+			//只能全退时，取原Id
+			if (GV.PartRefFlag != "Y") {
+				var row = GV.EPDepList.getSelected();
+				if (row && row.AccPreRowID) {
+					initPDRowId = row.AccPreRowID;
+				}
+			}
+			resolve();
+		});
+	};
+	
+	/**
+	* openEPDETPList()中获取原交押金记录Id，支付方式，重新计算退款金额
+	*/
+	var _resetRefInfo = function(obj) {
+		return new Promise(function (resolve, reject) {
+			if ($.isEmptyObject(obj)) {
+				return resolve();
+			}
+			initPDRowId = obj.initId;
+			payMode = obj.refmode;
+			refAmt = obj.refAmt;    //这里重新取是因为在openAccPDETPList()中会修改refAmt
+			resolve();
+		});
+	};
+	
+	var _cfr = function() {
+		return new Promise(function (resolve, reject) {
+			$.messager.confirm("确认", ($g("退款") + "：<font style='color:red;'>" + refAmt + "</font> " + $g("元，是否确认退款？")), function (r) {
+				return r ? resolve() : reject();
+			});
+		});
+	};
+	
+	/**
+	* 退留观金
+	*/
+	var _refund = function() {
+		return new Promise(function (resolve, reject) {
 			var bankCardType = getValueById("bankCardType");
 			var checkNo = getValueById("checkNo");
 			var bank = getValueById("bank");
 			var company = getValueById("company");
+			var payAccNo = getValueById("payAccNo");
 			var chequeDate = getValueById("chequeDate");
-			var remark = getValueById("remark");
-			var accPDType = "R";
+
+			var credTypeId = "";
+			var credNo = "";
+			var accAry = [];
+			accAry.push(episodeId);
+			accAry.push(patientId);
+			accAry.push(cardNo);
+			accAry.push(PUBLIC_CONSTANT.SESSION.USERID);
+			accAry.push(credTypeId);
+			accAry.push(credNo);
+			var accStr = accAry.join("^");
 			
-			var str1 = episodeId + "^" + papmi + "^" + patientNo + "^" + cardNo + "^" + PUBLIC_CONSTANT.SESSION.USERID + "^" + "" + "^" + "";
-			var str2 = initPreDepID + "^" + refAmt + "^" + PUBLIC_CONSTANT.SESSION.USERID + "^" + "";
-			str2 += "^" + refReason + "^" + payMode + "^" + bankCardType + "^" + checkNo + "^" + bank;
-			str2 += "^" + company + "^" + chequeDate + "^" + remark + "^" + accPDType;
-			str2 += "^" + PUBLIC_CONSTANT.SESSION.HOSPID;
+			var accPDAry = [];
+			accPDAry.push(refAmt);
+			accPDAry.push(PUBLIC_CONSTANT.SESSION.USERID);
+			accPDAry.push(refReason);
+			accPDAry.push(password);
+			accPDAry.push(accPDType);
+			accPDAry.push(remark);
+			accPDAry.push(PUBLIC_CONSTANT.SESSION.HOSPID);
+			accPDAry.push(initPDRowId);
+			var accPDStr = accPDAry.join("^");
 			
-			str2 = str2.replace(/undefined/g, "");   //替换所有的undefined
+			var paymAry = [];
+			paymAry.push(payMode);
+			paymAry.push(bank);
+			paymAry.push(checkNo);
+			paymAry.push(bankCardType);
+			paymAry.push(company);
+			paymAry.push(chequeDate);
+			paymAry.push(payAccNo);
+			paymAry.push(refAmt);
+			var paymStr = paymAry.join("^");
 			
 			$.m({
 				ClassName: "web.DHCOPBillEPAddDeposit",
 				MethodName: "NewDeposit",
-				str1: str1,
-				str2: str2,
-				grp: PUBLIC_CONSTANT.SESSION.GROUPID,
-				refPartFlag: GV.RefPartFlag
+				AccInfo: accStr,
+				PDInfo: accPDStr,
+				PDPMInfo: paymStr,
+				PartRefFlag: GV.PartRefFlag
 			}, function(rtn) {
 				var myAry = rtn.split("^");
-				switch(myAry[0]) {
-				case "0":
-					var accPDRowId = myAry[6];
-					emPreDepPrint(accPDRowId);
+				if (myAry[0] == 0) {
+					abortPDRowId = myAry[1];
 					if (!getValueById("accMRowId")) {
-						setValueById("accMRowId", accPDRowId.split("||")[0]);
+						setValueById("accMRowId", abortPDRowId.split("||")[0]);
 					}
-					reloadRefundMenu();
-					$.messager.alert("提示", "退款成功", "success");
-					break;
-				case "admerr":
-					$.messager.alert("提示", "该患者非急诊流观患者", "info");
-					break;
-				case "epmerr":
-					$.messager.alert("提示", "账户有误", "info");
-					break;
-				case "amterr":
-					$.messager.alert("提示", "金额输入有误", "info");
-					break;
-				case "PayModeErr":
-					$.messager.alert("提示", "支付方式为空", "info");
-					break;
-				default:
-					$.messager.popover({msg: "退款失败：" + rtn, type: "error"});
+					return resolve();
 				}
+				$.messager.popover({msg: $g("退款失败：") + (myAry[1] || myAry[0]), type: "error"});
+				return reject();
 			});
+		});
+	};
+	
+	/**
+	 * 第三方退费接口
+	 */
+	var _refSrv = function() {
+		return new Promise(function (resolve, reject) {
+			if (!isCallPaySvr()) {
+				return resolve();
+			}
+			//第三方退费接口 DHCBillPayService.js
+			var tradeType = "EPDEP";
+			var expStr = PUBLIC_CONSTANT.SESSION.CTLOCID + "^" + PUBLIC_CONSTANT.SESSION.GROUPID + "^" + PUBLIC_CONSTANT.SESSION.HOSPID + "^" + PUBLIC_CONSTANT.SESSION.USERID;
+			srvRtnObj = RefundPayService(tradeType, initPDRowId, abortPDRowId, "", refAmt, tradeType, expStr);
+			resolve();
+		});
+	};
+
+	var _success = function() {
+		var msg = $g("退款成功");
+		var iconCls = "success";
+		if (!$.isEmptyObject(srvRtnObj) && (srvRtnObj.ResultCode != 0)) {
+			msg = $g("HIS退款成功，第三方退款失败：") + srvRtnObj.ResultMsg + $g("，错误代码：") + srvRtnObj.ResultCode + $g("，请补交易");
+			iconCls = "error";
 		}
-	});
-}
-
-function checkData() {
-	var episodeId = getValueById("admList");
-	if (!episodeId) {
-		$.messager.popover({msg: "请选择就诊", type: "info"});
-		return false;
-	}
+		$.messager.alert("提示", msg, iconCls, function() {
+			emPreDepPrint(abortPDRowId);
+			reloadRefundMenu();
+		});
+	};
 	
-	var refAmt = getValueById("refAmt");
-	if (!refAmt) {
-		$.messager.popover({msg: "请输入金额", type: "info"});
-		focusById("refAmt");
-		return false;
+	if ($("#btn-refund").linkbutton("options").disabled) {
+		return;
 	}
-	if (!(+refAmt > 0)) {
-		$.messager.popover({msg: "金额输入错误", type: "info"});
-		focusById("refAmt");
-		return false;
-	}
+	$("#btn-refund").linkbutton("disable");
+	
+	var receiptNo = getValueById("receiptNo");
 	var accMLeft = getValueById("accMLeft");
-	if (+refAmt > +accMLeft) {
-		$.messager.popover({msg: "账户余额不足", type: "info"});
-		focusById("refAmt");
-		return false;
-	}
-	
+	var refAmt = getValueById("refAmt");
+	var episodeId = $("#admList").combogrid("getValue");
+	var patientId = getValueById("patientId");
+	var cardNo = getValueById("CardNo");
+	var password = "";
+	var refReason = getValueById("refReason");
 	var payMode = getValueById("payMode");
-	if (!payMode) {
-		$.messager.popover({msg: "请选择支付方式", type: "info"});
-		return false;
-	}
+	var remark = getValueById("remark");
+	var accPDType = "R";
 	
-	if (GV.ReceiptType && !getValueById("receiptNo")) {
-		$.messager.popover({msg: "没有可用的票据，请先领取", type: "info"});
-		return false;
-	}
+	var initPDRowId = "";       //待退押金记录的Id
+	var abortPDRowId = "";
+	var srvRtnObj = {};         //第三方退费返回对象
 	
-	//急诊留观标志
-	var rtn = $.m({ClassName: "web.UDHCJFBaseCommon", MethodName: "GetPatAdmStayStat", Adm: episodeId}, false);
-	var stayFlag = rtn.split("^")[0];
-	if (stayFlag != "Y") {
-		$.messager.popover({msg: "不是急诊留观患者，不能交留观押金", type: "info"});
-		return false;
-	}
-	
-	if (!getValueById("refReason")) {
-		$.messager.popover({msg: "请选择<font color=red>退款原因</font>", type: "info"});
-		focusById("refReason");
-		return false;
-	}
-
-	$("#appendDlg").form("clear");   //需要先清除对话框中表单值
-	if (getValueById("requiredFlag") == "Y") {
-		openAppendDlg();             //弹出其他必填项对话框
-		return false;
-	}
-	
-	return true;
+	var promise = Promise.resolve();
+	promise
+		.then(_validate)
+		.then(openAppendDlg)
+		.then(openEPDETPList)
+		.then(function (obj) {
+			_resetRefInfo(obj);
+		})
+		.then(_cfr)
+		.then(_refund)
+		.then(_refSrv)
+		.then(function () {
+			_success();
+			$("#btn-refund").linkbutton("enable");
+		}, function () {
+			$("#btn-refund").linkbutton("enable");
+		});
 }
 
 function openAppendDlg() {
-	$("#appendDlg").show();
-	var dlgObj = $HUI.dialog("#appendDlg", {
-		title: '附加项',
-		iconCls: 'icon-w-plus',
-		draggable: false,
-		resizable: false,
-		cache: false,
-		modal: true,
-		onBeforeOpen: function() {
-			$("#appendDlg").form("clear");
-			setValueById("chequeDate", getDefStDate(0));
-			
-			//银行卡类型
-			$HUI.combobox("#bankCardType", {
-				panelHeight: 'auto',
-				url: $URL + "?ClassName=web.UDHCOPOtherLB&MethodName=ReadBankCardType&ResultSetType=array&JSFunName=GetBankCardTypeToHUIJson",
-				method: 'GET',
-				valueField: 'id',
-				textField: 'text',
-				blurValidValue: true,
-				defaultFilter: 4,
-			});
-			
-			//银行
-			$HUI.combobox("#bank", {
-				panelHeight: 150,
-				url: $URL + "?ClassName=web.UDHCOPOtherLB&MethodName=ReadBankListBroker&ResultSetType=array&JSFunName=GetBankToHUIJson",
-				method: 'GET',
-				valueField: 'id',
-				textField: 'text',
-				blurValidValue: true,
-				defaultFilter: 4
-			});
-		},
-		onOpen: function() {
-			focusById("checkNo");
-			var id = "";
-			$("#appendDlg").find("input[id]").each(function(index, item) {
-				if ($(this).is(":hidden")) {
-					$(this).next("span").find("input").keydown(function(e) {
-						id = $(this).parents("td").find("input")[0].id;
-						var key = websys_getKey(e);
-						if (key == 13) {
-							_setNextFocus(id);
-						}
-					});
-				}else {
-					$(this).keydown(function(e) {
-						var key = websys_getKey(e);
-						if (key == 13) {
-							_setNextFocus(this.id);
-						}
-					});
-				}
-			});
-			
-			function _setNextFocus(id) {
-				var myIdx = -1;
-				var inputAry = $("#appendDlg").find("input[id]"); 
-				inputAry.each(function(index, item) {
-					if (this.id == id) {
-						myIdx = index;
-						return false;
+	return new Promise(function (resolve, reject) {
+		$("#appendDlg").form("clear");
+		if (getValueById("requiredFlag") != "Y") {
+			return resolve();
+		}
+		$("#appendDlg").show();
+		var dlgObj = $HUI.dialog("#appendDlg", {
+			title: $g('附加项'),
+			iconCls: 'icon-w-plus',
+			draggable: false,
+			resizable: false,
+			cache: false,
+			modal: true,
+			closable: false,
+			onBeforeOpen: function() {
+				setValueById("chequeDate", getDefStDate(0));
+				
+				//银行卡类型
+				$HUI.combobox("#bankCardType", {
+					panelHeight: 'auto',
+					url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryBankCardType&ResultSetType=array',
+					method: 'GET',
+					valueField: 'id',
+					textField: 'text',
+					blurValidValue: true,
+					defaultFilter: 5
+				});
+				
+				//银行
+				$HUI.combobox("#bank", {
+					panelHeight: 150,
+					url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QBankList&ResultSetType=array',
+					method: 'GET',
+					valueField: 'id',
+					textField: 'text',
+					blurValidValue: true,
+					defaultFilter: 5,
+                    loadFilter: function(data) {
+                        return data.filter(function (item) {
+					   		return (item.id > 0);
+					  	});
+                    }
+				});
+				
+				//公费单位
+				var patientId = getValueById("patientId");
+				$HUI.combobox("#company", {
+                    panelHeight: 150,
+                    url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryHCPList&ResultSetType=array&patientId=' + patientId + '&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
+                    method: 'GET',
+                    valueField: 'id',
+                    textField: 'text',
+                    blurValidValue: true,
+                    defaultFilter: 5,
+                    loadFilter: function(data) {
+                        return data.filter(function (item) {
+					   		return (item.id > 0);
+					  	});
+                    }
+                });
+			},
+			onOpen: function() {
+				focusById("checkNo");
+				var id = "";
+				$("#appendDlg").find("input[id]").each(function(index, item) {
+					if ($(this).is(":hidden")) {
+						$(this).next("span").find("input").keydown(function(e) {
+							id = $(this).parents("td").find("input")[0].id;
+							var key = websys_getKey(e);
+							if (key == 13) {
+								_setNextFocus(id);
+							}
+						});
+					}else {
+						$(this).keydown(function(e) {
+							var key = websys_getKey(e);
+							if (key == 13) {
+								_setNextFocus(this.id);
+							}
+						});
 					}
 				});
-				if (myIdx < 0) {
-					return;
-				}
-				var id = "";
-				var $obj = "";
-				var nextId = "";
-				for (var i = (myIdx + 1); i < inputAry.length; i++) {
-					id = inputAry[i].id;
-					$obj = $("#" + id);
-					if ($obj.parents("tr").is(":hidden")) {
-						continue;
+				
+				function _setNextFocus(id) {
+					var myIdx = -1;
+					var inputAry = $("#appendDlg").find("input[id]"); 
+					inputAry.each(function(index, item) {
+						if (this.id == id) {
+							myIdx = index;
+							return false;
+						}
+					});
+					if (myIdx < 0) {
+						return;
 					}
-					if ($obj.is(":hidden")) {
-						if ($obj.next("span").find("input").attr("readonly") == "readonly") {
+					var id = "";
+					var $obj = "";
+					var nextId = "";
+					for (var i = (myIdx + 1); i < inputAry.length; i++) {
+						id = inputAry[i].id;
+						$obj = $("#" + id);
+						if ($obj.parents("tr").is(":hidden")) {
 							continue;
 						}
-						if ($obj.next("span").find("input").attr("disabled") == "disabled") {
-							continue;
+						if ($obj.is(":hidden")) {
+							if ($obj.next("span").find("input").attr("readonly") == "readonly") {
+								continue;
+							}
+							if ($obj.next("span").find("input").attr("disabled") == "disabled") {
+								continue;
+							}
+						}else {
+							if ($obj.attr("disabled") == "disabled") {
+								continue;
+							}
 						}
-					}else {
-						if ($obj.attr("disabled") == "disabled") {
-							continue;
-						}
+						nextId = id;
+						break;
 					}
-					nextId = id;
-					break;
+					if (nextId) {
+						focusById(nextId);
+						return;
+					}
+					setTimeout(function() {
+						focusById("btn-ok");
+					}, 20);
 				}
-				if (nextId) {
-					focusById(nextId);
-					return;
-				}else {
-					setTimeout("focusById('btn-ok')", 20);
-					return;
-				}
-			}
-		},
-		buttons: [{
+			},
+			buttons: [{
 					text: '确认',
 					id: 'btn-ok',
 					handler: function () {
@@ -875,24 +867,134 @@ function openAppendDlg() {
 							if (!getValueById(id)) {
 								bool = false;
 								focusById(id);
-								$.messager.popover({msg: "请输入<font color=red>" + $(this).text() + "</font>", type: "info"});
+								$.messager.popover({msg: ($g("请输入") + "<font color='red'>" + $(this).text() + "</font>"), type: "info"});
 								return false;
 							}
 						});
 						if (!bool) {
 							return;
 						}
-						refundAccDep();
 						dlgObj.close();
+						resolve();
 					}
 				}, {
 					text: '关闭',
 					handler: function () {
 						dlgObj.close();
+						return reject();
 					}
 				}
 			]
+		});
 	});
+}
+
+/**
+* 第三方支付列表
+*/
+function openEPDETPList() {
+    return new Promise(function (resolve, reject) {
+	 	var refObj = {};
+		if (!isCallPaySvr()) {
+			return resolve(refObj);
+		}
+        $("#emPDETPDlg").show();
+        var dlgObj = $HUI.dialog("#emPDETPDlg", {
+            title: $("#payMode").combobox("getText") + $g("支付列表"),
+            iconCls: 'icon-w-list',
+            draggable: false,
+            resizable: false,
+            modal: true,
+            onOpen: function () {
+                $HUI.datagrid("#emPDETPList", {
+                    fit: true,
+                    border: false,
+                    striped: true,
+                    singleSelect: true,
+                    rownumbers: true,
+                    pagination: true,
+                    pageSize: 10,
+                    className: "web.DHCOPBillEPAddDeposit",
+					queryName: "QryEPDETPList",
+					onColumnsLoad: function(cm) {
+						cm.unshift({field: 'ck', checkbox: true});  //将复选框添加到数组起始位置
+						for (var i = (cm.length - 1); i >= 0; i--) {
+							if ($.inArray(cm[i].field, ["Date"]) != -1) {
+								cm.splice(i, 1);
+								continue;
+							}
+							if ($.inArray(cm[i].field, ["PayMRowId", "PDRowId", "ETPRowId", "IsTimeout"]) != -1) {
+								cm[i].hidden = true;
+								continue;
+							}
+							if (cm[i].field == "Time") {
+								cm[i].title = "交款时间";
+								cm[i].formatter = function(value, row, index) {
+									return row.Date + " " + value;
+								}
+							}
+							if (cm[i].field == "RefableAmt") {
+								cm[i].styler = function(value, row, index) {
+									return "color: #21ba45;font-weight: bold;";
+								}
+							}
+							if (cm[i].field == "UserName") {
+								cm[i].title = "收费员";
+							}
+							if (!cm[i].width) {
+								cm[i].width = 100;
+								if (cm[i].field == "Time") {
+									cm[i].width = 155;
+								}
+							}
+						}
+					},
+                    url: $URL,
+                    queryParams: {
+                        ClassName: "web.DHCOPBillEPAddDeposit",
+                        QueryName: "QryEPDETPList",
+                        accMId: getValueById("accMRowId"),
+                        paymId: getValueById("payMode"),
+                        hospId: PUBLIC_CONSTANT.SESSION.HOSPID
+                    },
+                	rowStyler: function(index, row) {
+						if (row.IsTimeout == 1) {
+							return "color: #C0C0C0;";
+						}
+					},
+                    onLoadSuccess: function (data) {
+						//显示不可退费原因
+						$.each(data.rows, function (index, row) {
+							if (row.IsTimeout == 1) {
+								$HUI.datagrid("#emPDETPList").getPanel().find(".datagrid-row[datagrid-row-index=" + index + "]>td>div:not(.datagrid-cell-rownumber)").mouseover(function() {
+									$(this).popover({
+										title: '不能退费原因',
+										trigger: 'hover',
+										content: "已经超过可退时限，不能退费"
+									}).popover("show");
+								});
+							}
+						});
+					},
+                    onDblClickRow: function (index, row) {
+	                    if (row.IsTimeout == 1) {
+		                    return;
+		                }
+	                    var refAmt = getValueById("refAmt");
+	                    refAmt = (refAmt && (+refAmt < +row.RefableAmt)) ? refAmt : row.RefableAmt;
+	                    setValueById("refAmt", refAmt);
+                        GV.RefableAmt = row.RefableAmt; //给全局变量可退金额赋值，方便校验
+                        refObj = {initId: row.PDRowId, refmode: row.PayMRowId, refAmt: refAmt};
+                        resolve(refObj);
+                        dlgObj.close();
+                    }
+                });
+            },
+            onClose: function () {
+	            reject();
+            }
+        });
+    });
 }
 
 function reloadRefundMenu() {
@@ -907,7 +1009,7 @@ function reloadRefundMenu() {
 		setValueById("accMLeft", accMLeft);
 	});
 	
-	if (GV.ReceiptType) {
+	if (CV.ReceiptType) {
 		getReceiptNo();
 	}
 	
@@ -915,7 +1017,7 @@ function reloadRefundMenu() {
 }
 
 function reprintClick() {
-	if ($("#btn-reprint").hasClass("l-btn-disabled")) {
+	if ($("#btn-reprint").linkbutton("options").disabled) {
 		return;
 	}
 	var row = GV.EPDepList.getSelected();
@@ -923,16 +1025,17 @@ function reprintClick() {
 		$.messager.popover({msg: "请选择要补打的急诊留观押金记录", type: "info"});
 		return;
 	}
-	if (+row.Tamt > 0) {
+	if (row.Tamt > 0) {
 		$.messager.popover({msg: "交款记录，请到【急诊留观交押金】界面补打", type: "info"});
 		return;
 	}
-	var accPDRowId = row.AccPreRowID;
-	var reprtFlag = "1";
+	var emPDRowId = row.AccPreRowID;
+	var reprtFlag = 1;
 	$.messager.confirm("确认", "是否确认补打?", function (r) {
-		if (r) {
-			emPreDepPrint(accPDRowId + "#" + reprtFlag);
+		if (!r) {
+			return;
 		}
+		emPreDepPrint(emPDRowId + "#" + reprtFlag);
 	});
 }
 
@@ -940,15 +1043,18 @@ function clearClick() {
 	setValueById("accMRowId", "");
 	setValueById("patientId", "");
 	setValueById("requiredFlag", "");
+	focusById("CardNo");
 	$(":text:not(.pagination-num)").val("");
+	GV.RefableAmt = 0;
 	$(".numberbox-f").numberbox("clear");
-	$("#cardType, #payMode").combobox("reload");
+	$("#refAmt").numberbox("isValid");
+	$("#payMode").combobox("reload");
 	$("#admList").combogrid("grid").datagrid("loadData", {
 		total: 0,
 		rows: []
 	});
 	loadEPDepList();
-	if (GV.ReceiptType) {
+	if (CV.ReceiptType) {
 		getReceiptNo();
 	}
 }
@@ -960,4 +1066,15 @@ function calcClick() {
 	var iLeft = (window.screen.availWidth - 10 - iWidth) / 2;  //获得窗口的水平位置
 	var lnk = "websys.default.csp?WEBSYS.TCOMPONENT=udhcOPCashExpCal&OperFootSum=";
 	websys_createWindow(lnk, "udhcOPCashExpCal", "toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,top="+iTop+",left="+iLeft+",width="+iWidth+",height="+iHeight);
+}
+
+/**
+* 是否调用第三方接口
+*/
+function isCallPaySvr() {
+	var payMode = getValueById("payMode");
+	var payCallInfo = $.m({ClassName: "DHCBILL.Common.DHCBILLCommon", MethodName: "GetCallModeByPayMode", PayMode: payMode}, false);
+	var payCallAry = payCallInfo.split("^");
+	var payCallFlag = payCallAry[0];
+	return (payCallFlag != 0);
 }

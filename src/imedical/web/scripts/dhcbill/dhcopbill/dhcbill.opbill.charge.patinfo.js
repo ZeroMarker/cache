@@ -1,19 +1,26 @@
 ﻿/**
  * FileName: dhcbill.opbill.charge.patinfo.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-06-03
  * Description: 门诊收费
  */
 
-function initPatInfoPanel() {
+$(function () {
 	initPatInfoMenu();
-}
+});
 
 function initPatInfoMenu() {
 	//读卡
 	$HUI.linkbutton("#btn-readCard", {
 		onClick: function () {
 			readHFMagCardClick();
+		}
+	});
+	
+	//读医保卡
+	$HUI.linkbutton("#btn-readInsuCard", {
+		onClick: function () {
+			readInsuCardClick();
 		}
 	});
 	
@@ -25,42 +32,13 @@ function initPatInfoMenu() {
 	});
 	
 	//卡号回车查询事件
-	$("#cardNo").keydown(function (e) {
+	$("#CardNo").focus().keydown(function (e) {
 		cardNoKeydown(e);
 	});
 
 	//登记号回车查询事件
 	$("#patientNo").keydown(function (e) {
 		patientNoKeydown(e);
-	});
-	
-	//卡类型
-	$HUI.combobox("#cardType", {
-		panelHeight: 'auto',
-		method: 'GET',
-		url: $URL + "?ClassName=web.DHCBillOtherLB&QueryName=QCardTypeDefineList&ResultSetType=array",
-		editable: false,
-		valueField: 'value',
-		textField: 'caption',
-		onLoadSuccess: function (data) {
-			var cardTypeRowId = getParam("CardTypeRowId");
-			if (cardTypeRowId) {
-				$.each(data, function(index, item) {
-					var id = item.value.split("^")[0];
-					if (id == cardTypeRowId) {
-						$("#cardType").combobox("select", item.value);
-						return false;
-					}
-				});
-			}else {
-				var cardType = getValueById($(this)[0].id);
-				initReadCard(cardType);
-			}
-		},
-		onSelect: function (record) {
-			var cardType = record.value;
-			initReadCard(cardType);
-		}
 	});
 	
 	//费别列表
@@ -70,119 +48,81 @@ function initPatInfoMenu() {
 }
 
 /**
- * 初始化卡类型时卡号和读卡按钮的变化
- * @method initReadCard
- * @param {String} cardType
- * @author ZhYW
- */
-function initReadCard(cardType) {
-	try {
-		var cardTypeAry = cardType.split("^");
-		var readCardMode = cardTypeAry[16];
-		if (readCardMode == "Handle") {
-			disableById("btn-readCard");
-			$("#cardNo").attr("readOnly", false);
-			focusById("cardNo");
-		} else {
-			enableById("btn-readCard");
-			$("#cardNo").attr("readOnly", true);
-			focusById("btn-readCard");
-		}
-	} catch (e) {
-		$.messager.popover({msg: e.message, type: "info"});
-	}
-}
-
-/**
  * 读卡
  * @method readHFMagCardClick
  * @author ZhYW
  */
 function readHFMagCardClick() {
-	if ($("#btn-readCard").hasClass("l-btn-disabled")) {
+	if ($("#btn-readCard").linkbutton("options").disabled) {
 		return;
 	}
-	try {
-		var cardType = getValueById("cardType");
-		var cardTypeDR = cardType.split("^")[0];
-		var myRtn = "";
-		if (cardTypeDR == "") {
-			myRtn = DHCACC_GetAccInfo();
-		} else {
-			myRtn = DHCACC_GetAccInfo(cardTypeDR, cardType);
-		}
-		var myAry = myRtn.toString().split("^");
-		var rtn = myAry[0];
-		switch (rtn) {
-		case "0":
-			setValueById("cardNo", myAry[1]);
-			setValueById("accMLeft", myAry[3]);
-			setValueById("patientNo", myAry[5]);
-			setValueById("accMRowId", myAry[7]);
-			getPatInfo();
-			break;
-		case "-200":
-			$.messager.alert("提示", "卡无效", "info", function () {
-				focusById("btn-readCard");
-			});
-			break;
-		case "-201":
-			setValueById("cardNo", myAry[1]);
-			setValueById("patientNo", myAry[5]);
-			getPatInfo();
-			break;
-		default:
-		}
-	} catch (e) {
-	}
+	$("#btn-readCard").linkbutton("toggleAble");
+	DHCACC_GetAccInfo7(magCardCallback);
 }
 
 function cardNoKeydown(e) {
-	try {
-		var key = websys_getKey(e);
-		if (key == 13) {
-			var cardNo = getValueById("cardNo");
-			if (!cardNo) {
-				return;
-			}
-			var cardType = getValueById("cardType");
-			cardNo = formatCardNo(cardType, cardNo);
-			var cardTypeAry = cardType.split("^");
-			var cardTypeDR = cardTypeAry[0];
-			var cardAccountRelation = cardTypeAry[24];
-			var securityNo = "";
-			var myRtn = "";
-			if((cardAccountRelation == "CA") || (cardAccountRelation == "CL")){
-				myRtn = DHCACC_GetAccInfo(cardTypeDR, cardNo, securityNo, "");
-			}else {
-				myRtn = DHCACC_GetAccInfo(cardTypeDR, cardNo, securityNo, "PatInfo");
-			}
-			var myAry = myRtn.toString().split("^");
-			var rtn = myAry[0];
-			switch (rtn) {
-			case "0":
-				setValueById("cardNo", myAry[1]);
-				setValueById("accMLeft", myAry[3]);
-				setValueById("patientNo", myAry[5]);
-				setValueById("accMRowId", myAry[7]);
-				getPatInfo();
-				break;
-			case "-200":
-				setTimeout(function () {
-					$.messager.alert("提示", "卡无效", "info", function () {
-						focusById("cardNo");
-					});
-				}, 300);
-				break;
-			case "-201":
-				setValueById("cardNo", myAry[1]);
-				setValueById("patientNo", myAry[5]);
-				getPatInfo();
-				break;
-			default:
-			}
+	var key = websys_getKey(e);
+	if (key == 13) {
+		var cardNo = getValueById("CardNo");
+		if (!cardNo) {
+			return;
 		}
-	} catch (e) {
+		DHCACC_GetAccInfo("", cardNo, "", "", magCardCallback);
+	}
+}
+
+/**
+ * 读医保卡
+ */
+function readInsuCardClick() {
+	if ($("#btn-readInsuCard").linkbutton("options").disabled) {
+		return;
+	}
+	$("#btn-readInsuCard").linkbutton("toggleAble");
+	var rtn = InsuReadCard(0, PUBLIC_CONSTANT.SESSION.USERID, "", "", "00A^^^");
+	var myAry = rtn.split("|");
+	if (myAry[0] == 0) {
+		var insuReadInfo = myAry[1];
+		var insuReadAry = insuReadInfo.split("^");
+		var insuCardNo = insuReadAry[1];	//医保卡号
+		var credNo = insuReadAry[7];	    //身份证号
+		$("#CardNo").val(credNo);
+		if (credNo != "") {
+			DHCACC_GetAccInfo("", credNo, "", "", magCardCallback);
+		}
+	}
+}
+
+function magCardCallback(rtnValue) {
+	var patientId = "";
+	var accMRowId = "";
+	var myAry = rtnValue.split("^");
+	switch (myAry[0]) {
+	case "0":
+		setValueById("CardNo", myAry[1]);
+		patientId = myAry[4];
+		setValueById("patientNo", myAry[5]);
+		accMRowId = myAry[7];
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	case "-200":
+		$.messager.alert("提示", "卡无效", "info", function () {
+			focusById("CardNo");
+		});
+		break;
+	case "-201":
+		setValueById("CardNo", myAry[1]);
+		patientId = myAry[4];
+		setValueById("patientNo", myAry[5]);
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	default:
+	}
+	
+	setValueById("accMRowId", accMRowId);
+	if (patientId != "") {
+		var admStr = "";
+		setPatientDetail(patientId, admStr);
 	}
 }
 
@@ -190,7 +130,6 @@ function initInsTypeList() {
 	var selectInsTypeRowIdx = undefined;
 	GV.InsTypeList = $HUI.datagrid("#insTypeList", {
 		fit: true,
-		striped: false,
 		singleSelect: true,
 		autoSizeColumn: false,
 		showHeader: false,
@@ -203,78 +142,108 @@ function initInsTypeList() {
 				   {title: 'selected', field: 'selected', hidden: true}
 			]],
 		onLoadSuccess: function (data) {
-			var admStr = getValueById("admStr");
-			loadAdmList(admStr);   //费别加载成功之后加载就诊列表，防止因为异步导致加载不了医嘱
-			
 			selectInsTypeRowIdx = undefined;
-			if (data.total == 0) {
-				return;
+			if (data.total > 0) {
+				//设置默认选中行
+				setInsTypeListDefSelected(data.rows);
 			}
-			//设置默认选中行
-			var defSelectIndex = 0;
-			$.each(data.rows, function (index, row) {
-				if (row.selected) {
-					defSelectIndex = index;
-					return false;
-				}
-			});
-			GV.InsTypeList.selectRow(defSelectIndex);
+			//费别加载成功之后加载就诊列表，防止因为异步导致加载不了医嘱
+			loadAdmList();
 		},
 		onSelect: function(index, row) {
-			if (selectInsTypeRowIdx == index) {
+			if (selectInsTypeRowIdx === index) {
 				return;
 			}
-			if (selectInsTypeRowIdx != undefined) {
+			if (selectInsTypeRowIdx !== undefined) {
+				refreshAdmInsCost();
 				reloadOrdItmList();
+				reloadCateList();
 			}
 			selectInsTypeRowIdx = index;
 			selectInsTypeListRowHandler(row);
 		}
 	});
 	GV.InsTypeList.getPanel().addClass("lines-no").find(".datagrid-view2 > .datagrid-header").removeClass("datagrid-header");
-	GV.InsTypeList.loadData({"rows": [], "total": 0});
 }
 
 function reloadOrdItmList() {
 	var adm = getValueById("episodeId");
 	if (adm) {
-		GV.UnBillOrdObj[adm.toString()] = [];
 		loadOrdItmList(adm);
 	}
 }
 
-function selectInsTypeListRowHandler(row) {
-	setValueById("admSource", row.admSource);
-	//结算费别默认为选中的费别
-	if ($("#chargeInsType").length > 0) {
-		var myData = $("#chargeInsType").combobox("getData");
-		if ($.hisui.indexOfArray(myData, "insTypeId", row.insTypeId) != -1) {
-			$("#chargeInsType").combobox("setValue", row.insTypeId);
-		}else {
-			var item = {insType: row.insType, insTypeId: row.insTypeId, admSource:row.admSource};
-			$.hisui.addArrayItem(myData, "insTypeId", item);
-			$("#chargeInsType").combobox("loadData", myData).combobox("setValue", row.insTypeId);
-		}
+function reloadCateList() {
+	var adm = getValueById("episodeId");
+	if (adm) {
+		loadCateList(adm);
 	}
+}
+
+/**
+* 设置费别grid默认选中行
+*/
+function setInsTypeListDefSelected(rows) {
+	var defSelectIndex = 0;
+	$.each(rows, function (index, row) {
+		if (row.selected) {
+			defSelectIndex = index;
+			return false;
+		}
+	});
+	GV.InsTypeList.selectRow(defSelectIndex);
+}
+
+function selectInsTypeListRowHandler(row) {	
+	loadChargeInsType(row);  //加载结算费别
 	
-	loadInsuCombo(row.insTypeId);   //加载医疗类别、病种
-	
-	var url = $URL + "?ClassName=web.UDHCOPGSConfig&QueryName=ReadGSINSPMList&ResultSetType=array" + "&InsType=" + row.insTypeId;
-	$("#paymode").combobox("reload", url);
-	
-	getReceiptNo();   //重新通过费别加载支付方式
+	getReceiptNo();   //通过费别取发票号
+}
+
+/**
+* 结算全部就诊时，更新金额
+*/
+function refreshAdmInsCost() {
+	if (CV.BillByAdmSelected) {
+		return;
+	}
+	var admStr = getValueById("admStr");
+	var insTypeId = getSelectedInsType();
+	$.cm({
+		ClassName: "web.DHCOPCashier",
+		QueryName: "FindAdmDtlList",
+		episodeIdStr: admStr,
+		insTypeId: insTypeId,
+		sessionStr: getSessionStr(),
+		rows: 99999999
+	}, function(data) {
+		$.each(data.rows, function(index, row) {
+			var rowIndex = GV.AdmList.getRowIndex(row.adm);
+			if (!(rowIndex < 0)) {
+				GV.AdmList.updateRow({
+					index: rowIndex,
+					row: {
+						admTotalSum: Number(row.admTotalSum).toFixed(2),
+						admDiscSum: Number(row.admDiscSum).toFixed(2),
+						admPayOrSum: Number(row.admPayOrSum).toFixed(2),
+						admPatSum: Number(row.admPatSum).toFixed(2)
+					}
+				});
+			}
+		});
+	});
 }
 
 function initAdmList() {
 	var selectAdmListRowIdx = undefined;
 	GV.AdmList = $HUI.datagrid("#admList", {
 		fit: true,
-		striped: false,
 		fitColumns: true,
 		singleSelect: true,
 		bodyCls: 'panel-header-gray',
 		loadMsg: null,
 		pageSize: 999999999,
+		idField: 'adm',
 		columns: [[{title: 'adm', field: 'adm', hidden: true},
 				   {title: '就诊日期', field: 'admDate', width: 90},
 				   {title: 'admDeptDR', field: 'admDeptDR', hidden: true},
@@ -285,7 +254,7 @@ function initAdmList() {
 				   {title: 'admTotalSum', field: 'admTotalSum', align: 'right', hidden: true},
 				   {title: 'admDiscSum', field: 'admDiscSum', align: 'right', hidden: true},
 				   {title: 'admPayOrSum', field: 'admPayOrSum', align: 'right', hidden: true},
-				   {title: '金额', field: 'admPatSum', align: 'right', width: 80, formatter: formatAmt}
+				   {title: '金额', field: 'admPatSum', align: 'right', width: 80}
 			]],
 		onLoadSuccess: function (data) {
 			setValueById("episodeId", "");
@@ -299,7 +268,16 @@ function initAdmList() {
 				if (!row.adm) {
 					return true;
 				}
-				GV.UnBillOrdObj[row.adm.toString()] = [];
+				
+				GV.UnBillOrdObj[row.adm] = [];
+				$.each(row.limitOrdStr.split("^"), function(index, item) {
+					if (!item) {
+						return true;
+					}
+					if (GV.UnBillOrdObj[row.adm].indexOf(item) == -1) {
+						GV.UnBillOrdObj[row.adm].push(item);
+					}
+				});
 				if ((row.admTotalSum > 0) && (defSelectIndex === "")) {
 					defSelectIndex = index;
 				}
@@ -307,8 +285,8 @@ function initAdmList() {
 			GV.AdmList.selectRow(defSelectIndex || 0);
 		},
 		rowStyler:  function(index, row) {
-			if (row.hasOrd) {
-				return 'color: #FF0000;';
+			if (row.hasOrd == 1) {
+				return "color: #FF0000;";
 			}
 		},
 		onSelect: function(index, row) {
@@ -319,63 +297,82 @@ function initAdmList() {
 			selectAdmListRowHandler(row);
 		}
 	});
-	
-	GV.AdmList.loadData({"rows": [], "total": 0});
 }
 
 function selectAdmListRowHandler(row) {
-	refreshBar(getValueById("papmi"), row.adm);
-	displayInsTypeColor(row.adm);
-	//在更换ADM时要先保存医嘱
-	var rtn = saveOrdToServer();
+	//切换ADM时要先保存医嘱
+	var rtn = checkSaveOrder();
 	if (!rtn) {
-		return;
+		$.messager.popover({msg: "请先保存医嘱", type: "info"});
+		return false;
 	}
+	var patientId = getValueById("patientId");
+	refreshBar(patientId, row.adm);
+	displayInsTypeColor(row.adm);
 	//这两句一定要放到保存医嘱之后
 	setValueById("episodeId", row.adm);
-	$("#admDoc").combobox("loadData", [{"id": row.admDocDR, "text": row.admDoc}]).combobox("setValue", row.admDocDR);
-	
-	$("#paymode").combobox("reload");
-
-	lockAdm(true);   //加锁
+	$("#admDoc").combobox("loadData", [{id: row.admDocDR, text: row.admDoc, selected: true}]);
 	
 	loadOrdItmList(row.adm);
+	loadCateList(row.adm);
 	
+	loadInsuCombo();   //加载医疗类别、病种
+
 	getAdmLimitOrdStr();
+	
+	isValidAdmOrd();
 }
 
 function patientNoKeydown(e) {
 	var key = websys_getKey(e);
 	if (key == 13) {
-		getPatInfo();
+		if ($(e.target).val()) {
+			clearCardInfo();
+			getPatInfo();
+		}
 	}
+}
+
+/**
+* 清空卡信息
+*/
+function clearCardInfo() {
+	setValueById("CardNo", "");
+	setValueById("CardTypeNew", "");
+	setValueById("CardTypeRowId", "");
+	setValueById("accMRowId", "");
 }
 
 function getPatInfo() {
 	var patientNo = getValueById("patientNo");
-	if (patientNo) {
-		var expStr = "";
-		$.m({
-			ClassName: "web.DHCOPCashierIF",
-			MethodName: "GetPAPMIByNo",
-			PAPMINo: patientNo,
-			ExpStr: expStr
-		}, function(papmi) {
-			if (!papmi) {
-				$.messager.popover({msg: "登记号错误，请重新输入", type: "info"});
-				focusById("patientNo");
-			}
-			var admStr = "";
-			setPatientDetail(papmi, admStr);
-		});
+	if (!patientNo) {
+		return;
 	}
+	$.m({
+		ClassName: "web.DHCOPCashierIF",
+		MethodName: "GetPAPMIByNo",
+		PAPMINo: patientNo,
+		ExpStr: ""
+	}, function(papmi) {
+		if (!papmi) {
+			$.messager.popover({msg: "登记号错误，请重新输入", type: "info"});
+			focusById("patientNo");
+		}
+		var admStr = "";
+		setPatientDetail(papmi, admStr);
+	});
 }
 
 function setPatientDetail(papmi, admStr) {
-	lockAdm(false);    //释放前一个就诊锁
+	$(".change-content").empty();    //清空找零提示信息
+	if ($("#insuDic").length > 0) {
+		$("#insuDic").parents("td").prev().find("label").popover("destroy").removeClass("pseudo-hyper");
+	}
 	
-	setValueById("papmi", papmi);
+	setValueById("patientId", papmi);
 	if (!papmi) {
+		clearBanner();
+		clearAdmsRela();
 		return;
 	}
 	
@@ -392,110 +389,82 @@ function setPatientDetail(papmi, admStr) {
 		return;
 	}
 	
-	loadInsTypeList(papmi, admStr);
-	
-	if ($("#chargeInsType").length > 0) {
-		initChargeInsType(papmi);
-	}
-
-	//调用平台组接口插入试管信息
-	$.m({
-		ClassName: "web.DHCOPAdmFind",
-		MethodName: "GetOeditemInfoByAdm",
-		admStr: admStr
-	}, function(rtn) {
-		if (+rtn == -1) {
-			$.messager.alert("提示", "请手工录入试管费", "info");
-		}
-	});
+	loadInsTypeList(papmi);
 }
 
 function setPatientInfo(papmi) {
 	//公费单位
 	$("#healthCareProvider").combobox("clear");
-	$.m({
-		ClassName: "web.DHCOPCashier11",
-		MethodName: "getContractCorporation",
-		PatientID: papmi
-	}, function(rtn) {
-		var myAry = rtn.split("^");
-		if (myAry[0]) {
-			$("#healthCareProvider").combobox("loadData", [{"id": myAry[0], "text": myAry[1]}]).combobox("setValue", myAry[0]);
-		}
-	});
+	var careProvId = getPropValById("PA_Person", papmi, "PAPER_HCP_DR");
+	if (careProvId > 0) {
+		var careProv = getPropValById("CT_HealthCareProvider", papmi, "HCP_Desc");
+		careProv = $.m({ClassName: "User.CTHealthCareProvider", MethodName: "GetTranByDesc", Prop: "HCPDesc", Desc: careProv, LangId: PUBLIC_CONSTANT.SESSION.LANGID}, false);
+		$("#healthCareProvider").combobox("loadData", [{id: careProvId, text: careProv, selected: true}]);
+	}
 	
-	var expStr = PUBLIC_CONSTANT.SESSION.HOSPID;
 	$.m({
 		ClassName: "web.DHCOPCashierIF",
 		MethodName: "GetPatientByRowId",
 		PAPMI: papmi,
-		ExpStr: expStr
+		ExpStr: PUBLIC_CONSTANT.SESSION.HOSPID
 	}, function(rtn) {
 		var myAry = rtn.split("^");
-		//这里获取患者信息banner
-		setValueById("patientNo", myAry[1]);
+		setValueById("patientNo", myAry[1]);    //患者登记号
 		var arrearsAmt = myAry[21];
-		if (+arrearsAmt) {
-			$.messager.alert("提示", "该患者共欠费" + arrearsAmt + "元，请注意收款", "info");
-			return;
+		if (arrearsAmt != 0) {
+			$.messager.alert("提示", ($g("该患者") + "<font color=\"red\">" + $g("欠费") + arrearsAmt + "</font>" + $g("元") + "，" + $g("请提醒患者及时补缴欠款")), "warning");
 		}
 	});
 }
 
 function getToAdmStr(papmi) {
-	var expStr = PUBLIC_CONSTANT.SESSION.CTLOCID;
-	return $.m({ClassName: "web.DHCOPCashierIF", MethodName: "GetToDayAdmStr", PatDr:papmi, ExpStr: expStr}, false);
+	return $.m({ClassName: "web.DHCOPCashierIF", MethodName: "GetToDayAdmStr", PAPMI: papmi, SessionStr: getSessionStr()}, false);
 }
 
 /**
-* 锁定/解锁就诊记录
-* admAry:就诊记录数组
-* isLock：true:加锁, false:解锁
-* 返回值：true:有锁定adm, false:无锁定adm
+* 加载结算费别
 */
-function lockAdm(isLock) {
-	var admStr = getBillAdmStr();
-	if (!admStr) {
-		return false;
+function loadChargeInsType(row) {
+	if ($("#chargeInsType").length == 0) {
+		return;
 	}
-	var lockType = "User.OEOrder";
-	if (isLock) {
-		var rtn = $.m({ClassName: "web.DHCBillLockAdm", MethodName: "LockAdm", admStr: admStr, lockType: lockType}, false);
-		if (rtn != "") {
-			rtn = rtn.replace(/\^/g, "\n");
-			$.messager.popover({msg: rtn, type: "info"});
-			disableById("btn-charge");
-			return true;
+	$.cm({
+		ClassName: "web.DHCOPCashier",
+		QueryName: "QryChgInsTypeList",
+		ResultSetType: "array",
+		insTypeId: row.insTypeId,
+		hospId: PUBLIC_CONSTANT.SESSION.HOSPID
+	}, function(data) {
+		if (row.insTypeId && !$.hisui.getArrayItem(data, "insTypeId", row.insTypeId)) {
+			var item = {insType: row.insType, insTypeId: row.insTypeId, admSource: row.admSource, selected: true};
+			$.hisui.addArrayItem(data, "insTypeId", item);
 		}
-	} else {
-		$.m({ClassName: "web.DHCBillLockAdm", MethodName: "UnLockAdm", admStr: admStr, lockType: lockType}, false);
-	}
-	if (!GV.DisableChargeBtn) {
-		enableById("btn-charge");
-	}
-	return false;
+		$("#chargeInsType").combobox("clear").combobox("loadData", data);
+	});
 }
 
-function loadInsTypeList(papmi, admStr) {
-	var expStr = PUBLIC_CONSTANT.SESSION.GROUPID + "^" + PUBLIC_CONSTANT.SESSION.CTLOCID + "^" + PUBLIC_CONSTANT.SESSION.HOSPID;
+function loadInsTypeList(papmi) {
+	var admStr = getValueById("admStr");
 	var queryParams = {
 		ClassName: "web.DHCOPCashier",
-		QueryName: "FindPatPrescTypeList",
+		QueryName: "QryPatPrescTypeList",
 		papmi: papmi,
 		episodeIdStr: admStr,
-		expStr: expStr,
+		sessionStr: getSessionStr(),
 		rows: 99999999
 	}
 	loadDataGridStore("insTypeList", queryParams);
 }
 
-function loadAdmList(admStr) {
-	var expStr = PUBLIC_CONSTANT.SESSION.GROUPID + "^" + PUBLIC_CONSTANT.SESSION.CTLOCID + "^" + PUBLIC_CONSTANT.SESSION.HOSPID;
+function loadAdmList() {
+	var admStr = getValueById("admStr");
+	var insTypeId = getSelectedInsType();
 	var queryParams = {
 		ClassName: "web.DHCOPCashier",
 		QueryName: "FindAdmDtlList",
 		episodeIdStr: admStr,
-		expStr: expStr,
+		insTypeId: insTypeId,
+		sessionStr: getSessionStr(),
 		rows: 99999999
 	}
 	loadDataGridStore("admList", queryParams);
@@ -508,52 +477,26 @@ function displayInsTypeColor(adm) {
 	if (!adm) {
 		return;
 	}
-	var expStr = PUBLIC_CONSTANT.SESSION.GROUPID + "^" + PUBLIC_CONSTANT.SESSION.CTLOCID;
 	$.m({
 		ClassName: "web.DHCOPCashierIF",
-		MethodName: "GetInsTypeOfHaveOrd",
+		MethodName: "GetInsTypeIdStrOfHaveOrd",
 		adm: adm,
 		type: "ALL",
-		expStr: expStr
-	}, function(desc) {
-		$.each(GV.InsTypeList.getPanel().find('div.datagrid-body tr'), function(index, row) {
-			if (new RegExp($(this).find("td[field='insType'] div").text(), "g").exec(desc) != null) {
-				$(this).css({"color": "#FF0000"});
-			}
+		sessionStr: getSessionStr()
+	}, function(rtn) {
+		var myAry = rtn.split("^");
+		GV.InsTypeList.getPanel().find("div.datagrid-body tr").each(function() {
+			var color = ($.inArray($(this).find("td[field='insTypeId'] div").text(), myAry) != -1) ? "#FF0000" : "#000000";
+			$(this).css({"color": color});
 		});
 	});
 }
 
-/**
-* 结算费别
-*/
-function initChargeInsType(papmi) {
-	var expStr = PUBLIC_CONSTANT.SESSION.GROUPID + "^" + PUBLIC_CONSTANT.SESSION.CTLOCID + "^" + PUBLIC_CONSTANT.SESSION.HOSPID;
-	$HUI.combobox("#chargeInsType", {
-		panelHeight: 150,
-		url: $URL + '?ClassName=web.DHCOPCashier&QueryName=FindChargeInsTypeList&ResultSetType=array',
-		method: 'GET',
-		editable: false,
-		valueField: 'insTypeId',
-		textField: 'insType',
-		onBeforeLoad: function(param) {
-			param.papmi = papmi;
-			param.insTypeId = "";
-			param.expStr = expStr;
-		},
-		onSelect: function(rec) {
-			setValueById("admSource", rec.admSource);
-			loadInsuCombo(rec.insTypeId);
-		}
-	});
-}
-
 function getAdmLimitOrdStr() {
-	var admStr = getValueById("admStr");
 	$.m({
 		ClassName: "web.DHCOPCashier",
 		MethodName: "GetSkinRtnFlag",
-		AdmStr: admStr,
+		AdmStr: getValueById("admStr"),
 		HospId: PUBLIC_CONSTANT.SESSION.HOSPID
 	}, function(rtn) {
 		var myAry = rtn.split("^");
@@ -569,13 +512,82 @@ function getSelectedInsType() {
 }
 
 function getBillAdmStr() {
-	return (getValueById("billByAdmSelected") == "1") ? getValueById("episodeId") : getValueById("admStr");
+	return CV.BillByAdmSelected ? getValueById("episodeId") : getValueById("admStr");
 }
 
 function clearClick() {
 	if ($("#btn-clear").hasClass("l-btn-disabled")) {
 		return;
 	}
-	lockAdm(false); //就诊记录释放锁
 	initFeeAll();
+	$(".change-content").empty();    //清空找零提示信息
+	if ($("#insuDic").length > 0) {
+		$("#insuDic").parents("td").prev().find("label").popover("destroy").removeClass("pseudo-hyper");
+	}
+}
+
+/**
+* @method 验证医嘱数据合法性
+* @param {String} admStr
+* @author ZhYW
+*/
+function isValidAdmOrd() {
+	var admStr = getBillAdmStr();
+	$.m({
+		ClassName: "web.DHCOPCashier",
+		MethodName: "IsValidAdmOrd",
+		admStr: admStr,
+		unBillOrdStr: ""
+	}, function(rtn) {
+		var myAry = rtn.split("^");
+		if (myAry[0] != 0) {
+			$.messager.alert("提示", (myAry[1] || myAry[0]), "error", function () {
+				disableById("btn-charge");
+			});
+		}
+	});
+}
+
+/**
+* 清除就诊相关信息
+*/
+function clearAdmsRela() {
+	setValueById("episodeId", "");
+	setValueById("admStr", "");
+	$(".combobox-f").combobox("clear").combobox("loadData", []);
+	if (GV.EditRowIndex) {
+		GV.OEItmList.endEdit(GV.EditRowIndex);
+  	}
+	$(".datagrid-f").datagrid("loadData", {total: 0, rows: []});
+}
+
+/**
+* 2022-10-17
+* ZhYW
+* 用于结算后获取尚存在未结算医嘱的费别，将该费别在费别列表中设置为默认
+*/
+function setToPayInsTypeSelected() {
+	var admStr = getValueById("admStr");
+	var insTypeId = getSelectedInsType();
+	$.m({
+		ClassName: "web.DHCOPCashier",
+		MethodName: "GetToPayOrdInsTypeIdStr",
+		episodeIdStr: admStr,
+		type: "ALL",
+		sessionStr: getSessionStr()
+	}, function(rtn) {
+		var myAry = rtn.split("^");
+		if ($.inArray(insTypeId, myAry) != -1) {
+			//当前选中费别下有未结算医嘱时，按当前费别刷新医嘱和分类
+			reloadOrdItmList();
+			reloadCateList();
+			return;
+		}
+		GV.InsTypeList.getPanel().find("div.datagrid-body tr").each(function(index) {
+			if ($.inArray($(this).find("td[field='insTypeId'] div").text(), myAry) != -1) {
+				GV.InsTypeList.selectRow(index);
+				return false;
+			}
+		});
+	});
 }

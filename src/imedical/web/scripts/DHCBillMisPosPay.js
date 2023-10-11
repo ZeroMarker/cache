@@ -1,144 +1,139 @@
-ï»¿/// DHCBillMisPosPay.js
+/// DHCBillMisPosPay.js
 
 /**
- * @fileOverview <MisPosäº¤äº’è°ƒç”¨>
+ * @fileOverview <MisPos½»»¥µ÷ÓÃ>
  * @author <zfb>
- * @version <MisPosè°ƒç”¨äº¤äº’>
+ * @version <MisPosµ÷ÓÃ½»»¥>
  * @updateDate <2018-04-22>
- * @desc <é”™è¯¯ä»£ç >
- * @param -1001 æœªè¯»å–åˆ°é…ç½®ä¿¡æ¯
- * @param -1002 åˆ›å»ºè®¢å•å¤±è´¥
- * @param -1003 POSæ¥å£è°ƒç”¨å¤±è´¥
- * @param -1004 POSäº¤æ˜“å¤±è´¥
+ * @desc <´íÎó´úÂë>
+ * @param -1001 Î´¶ÁÈ¡µ½ÅäÖÃĞÅÏ¢
+ * @param -1002 ´´½¨¶©µ¥Ê§°Ü
+ * @param -1003 POS½Ó¿Úµ÷ÓÃÊ§°Ü
+ * @param -1004 POS½»Ò×Ê§°Ü
  */
 
-document.write("<OBJECT ID='MISPOSPay' CLASSID='CLSID:9555A07C-0810-49E0-AA5A-59DF5593A0C5' CODEBASE='../addins/client/MISPOSPay.CAB#version=1,0,0,1'>");
-document.write("</OBJECT>");
+document.write("<object id='MISPOSPay' classid='CLSID:9555A07C-0810-49E0-AA5A-59DF5593A0C5' codebase='../addins/client/MISPOSPay.CAB#version=1,0,0,1' style='display:none;'></object>");
 
-//posé…ç½®æ–‡ä»¶ä¿¡æ¯
-var PUBLIC_POSCONFIG = {
-	POSTYPE: "", //[é“¶è¡Œposæœºç±»å‹ ä¾‹:è”è¿ªLD/åˆ›è¯†CS]
-	TID: "", //ç»ˆç«¯å·
-	ISLOG: "", //æ˜¯å¦ä¿å­˜æ—¥å¿—
-	LOGPATH: "" //æ—¥å¿—ä¿å­˜è·¯å¾„
+//posÅäÖÃÎÄ¼şĞÅÏ¢
+var PUBLIC_POSCfG = {
+	POSTYPE: "",   //[ÒøĞĞpos»úÀàĞÍ Àı:ÁªµÏLD/´´Ê¶CS]
+	TID: "",       //ÖÕ¶ËºÅ
+	ISLOG: "",     //ÊÇ·ñ±£´æÈÕÖ¾
+	LOGPATH: ""    //ÈÕÖ¾±£´æÂ·¾¶
 }
 
 /**
  * @author <zfb>
  * @date <2018-3-12>
- * @desc <posç¼´è´¹å…¥å£>
- * @param {[String]}	tradeType		[ä¸šåŠ¡ç±»å‹ OP/PRE/DEP/IP/INSU/CARD]
- * @param {[String]}	tradeAmt		[äº¤æ˜“é‡‘é¢]
- * @param {[String]}	bankType		[é“¶è¡Œposæœºç±»å‹ ä¾‹:è”è¿ªLD/åˆ›è¯†CS]
- * @param {[String]}	payMode			[æ”¯ä»˜æ–¹å¼id]
- * @param {[String]}	expStr			[æ‰©å±• ç§‘å®¤^å®‰å…¨ç»„^é™¢åŒº^æ“ä½œå‘˜ID^ç—…äººID^å°±è¯Š^ä¸šåŠ¡è¡¨æŒ‡é’ˆä¸²(ä»¥!åˆ†éš”,å¯ä¸ºç©º)]
- * @return{[String]} 	ä»£ç ^æè¿°^è®¢å•è¡¨ID	[ä»£ç (0:æˆåŠŸ;1äº¤æ˜“æˆåŠŸ,ä¿å­˜æ•°æ®å¼‚å¸¸éœ€æé†’;å…¶ä»–å¤±è´¥)]
+ * @desc <pos½É·ÑÈë¿Ú>
+ * @param {[String]}	tradeType		[ÒµÎñÀàĞÍ OP/PRE/DEP/IP/INSU/CARD]
+ * @param {[String]}	tradeAmt		[½»Ò×½ğ¶î]
+ * @param {[String]}	bankType		[ÒøĞĞpos»úÀàĞÍ Àı:ÁªµÏLD/´´Ê¶CS]
+ * @param {[String]}	payMode			[Ö§¸¶·½Ê½id]
+ * @param {[String]}	expStr			[À©Õ¹ ¿ÆÊÒ^°²È«×é^ÔºÇø^²Ù×÷Ô±ID^²¡ÈËID^¾ÍÕï^ÒµÎñ±íÖ¸Õë´®(ÒÔ!·Ö¸ô,¿ÉÎª¿Õ)]
+ * @return{[String]} 	´úÂë^ÃèÊö^¶©µ¥±íID	[´úÂë(0:³É¹¦;1½»Ò×³É¹¦,±£´æÊı¾İÒì³£ĞèÌáĞÑ;ÆäËûÊ§°Ü)]
  */
 function BankCardPay(tradeType, tradeAmt, payMode, expStr) {
-	//1:åˆ›å»ºè®¢å•
-	//var bankTradeType = "C";
-	var posConfig = PUBLIC_POSCONFIG.POSTYPE + "^" + PUBLIC_POSCONFIG.TID;
-	var myRtn = tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic", "CreatePayOrder", tradeType, payMode, tradeAmt, posConfig, expStr);
-	var RtnCode = myRtn.split("^")[0];
+	//1:´´½¨¶©µ¥
+	var posCfg = PUBLIC_POSCfG.POSTYPE + "^" + PUBLIC_POSCfG.TID;
+	var myRtn = tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic", "CreatePayOrder", tradeType, payMode, tradeAmt, posCfg, expStr);
+	var ResultCode = myRtn.split("^")[0];
 	var ETPRowID = myRtn.split("^")[1];
-	var RtnDesc = myRtn.split("^")[2];
-	if (RtnCode != 0) {
-		return "-1002^" + RtnDesc + "^";
+	var ResultDesc = myRtn.split("^")[2];
+	if (ResultCode != 0) {
+		return -1002 + "^" + ResultDesc + "^";
 	}
-	//2:æ ¹æ®é“¶è¡Œç±»å‹ç»„ç»‡å‚æ•°
+	//2:¸ù¾İÒøĞĞÀàĞÍ×éÖ¯²ÎÊı
 	var bankInput = tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic", "GetMisPosInput", ETPRowID);
-	//3:è°ƒç”¨æ¥å£
+	//3:µ÷ÓÃ½Ó¿Ú
 	var bankData = CallDLLFun(bankInput);
-	if (bankData == "-1003") {
-		return bankData + "^" + "MisPosè°ƒç”¨å¤±è´¥" + "^" + ETPRowID;
-	} else {
-		//4:ä¿å­˜æ•°æ®åˆ°äº¤æ˜“è¡¨
-		var myResult = tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic", "SaveMisPosData", ETPRowID, bankData);
-		var ReslutCode = myResult.split("^")[0];
-		var SaveCode = myResult.split("^")[1];
-		var ReslutDesc = myResult.split("^")[2];
-		if (ReslutCode == 0) {
-			if (SaveCode == 0) {
-				return "0" + "^" + ReslutDesc + "^" + ETPRowID;
-			} else {
-				return "1" + "^" + ReslutDesc + "^" + ETPRowID;
-			}
-		} else {
-			return "-1004" + "^" + ReslutDesc + "^" + ETPRowID;
-		}
-
+	if (bankData == -1003) {
+		return bankData + "^" + "MisPosµ÷ÓÃÊ§°Ü" + "^" + ETPRowID;
 	}
+	
+	//4:±£´æÊı¾İµ½½»Ò×±í
+	var RtnValue = tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic", "SaveMisPosData", ETPRowID, bankData);
+	var ReslutCode = RtnValue.split("^")[0];
+	var SaveCode = RtnValue.split("^")[1];
+	var ReslutDesc = RtnValue.split("^")[2];
+	if (ReslutCode == 0) {
+		if (SaveCode == 0) {
+			return 0 + "^" + ReslutDesc + "^" + ETPRowID;
+		}
+		return 1 + "^" + ReslutDesc + "^" + ETPRowID;
+	}
+	
+	return -1004 + "^" + ReslutDesc + "^" + ETPRowID;
 }
 
 /**
  * @author <zfb>
  * @date <2018-3-12>
- * @desc <POSé€€è´¹/é€€è´§>
- * @param {[String]}	OrgETPRowID		[åŸæ­£è®°å½•å¯¹åº”äº¤æ˜“è¡¨id]
- * @param {[String]}	tradeAmt		[äº¤æ˜“é‡‘é¢]
- * @param {[String]}	tradeType		[ä¸šåŠ¡ç±»å‹ OP/PRE/DEP/IP/INSU/CARD]
- * @param {[String]}	bankTradeType	[é“¶è¡Œäº¤æ˜“ç±»å‹ C/D/T]
- * @param {[String]}	payMode			[æ”¯ä»˜æ–¹å¼id]
- * @param {[String]}	expStr			[æ‰©å±• ç§‘å®¤^å®‰å…¨ç»„^é™¢åŒº^æ“ä½œå‘˜ID^ç—…äººID^å°±è¯Š^ä¸šåŠ¡è¡¨æŒ‡é’ˆä¸²(ä»¥!åˆ†éš”,å¯ä¸ºç©º)]
- * @return{[String]} 	ä»£ç ^æè¿°		[ä»£ç (0:æˆåŠŸ;1äº¤æ˜“æˆåŠŸ,ä¿å­˜æ•°æ®å¼‚å¸¸éœ€æé†’;å…¶ä»–å¤±è´¥)]
+ * @desc <POSÍË·Ñ/ÍË»õ>
+ * @param {[String]}	OrgETPRowID		[Ô­Õı¼ÇÂ¼¶ÔÓ¦½»Ò×±íid]
+ * @param {[String]}	tradeAmt		[½»Ò×½ğ¶î]
+ * @param {[String]}	tradeType		[ÒµÎñÀàĞÍ OP/PRE/DEP/IP/INSU/CARD]
+ * @param {[String]}	bankTradeType	[ÒøĞĞ½»Ò×ÀàĞÍ C/D/T]
+ * @param {[String]}	payMode			[Ö§¸¶·½Ê½id]
+ * @param {[String]}	expStr			[À©Õ¹ ¿ÆÊÒ^°²È«×é^ÔºÇø^²Ù×÷Ô±ID^²¡ÈËID^¾ÍÕï^ÒµÎñ±íÖ¸Õë´®(ÒÔ!·Ö¸ô,¿ÉÎª¿Õ)]
+ * @return{[String]} 	´úÂë^ÃèÊö		[´úÂë(0:³É¹¦;1½»Ò×³É¹¦,±£´æÊı¾İÒì³£ĞèÌáĞÑ;ÆäËûÊ§°Ü)]
  */
 function BankCardRefund(OrgETPRowID, tradeAmt, tradeType, bankTradeType, payMode, expStr) {
-	var posConfig = PUBLIC_POSCONFIG.POSTYPE + "^" + PUBLIC_POSCONFIG.TID;
-	var myRtn = tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic", "CreateRefOrder", OrgETPRowID, tradeType, payMode, tradeAmt, bankTradeType, posConfig, expStr);
-	var RtnCode = myRtn.split("^")[0];
-	var ETPRowID = myRtn.split("^")[1];
-	var RtnDesc = myRtn.split("^")[2];
-	if (RtnCode != 0) {
-		return "-1002^" + RtnDesc + "^";
+	var posCfg = PUBLIC_POSCfG.POSTYPE + "^" + PUBLIC_POSCfG.TID;
+	var RefOrderValue = tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic", "CreateRefOrder", OrgETPRowID, tradeType, payMode, tradeAmt, bankTradeType, posCfg, expStr);
+	var RefOrderAry = RefOrderValue.split("^");
+	var ResultCode = RefOrderAry[0];
+	var ETPRowID = RefOrderAry[1];
+	var ResultDesc = RefOrderAry[2];
+	if (ResultCode != 0) {
+		return -1002 + "^" + ResultDesc + "^";
 	}
-	//1:æ ¹æ®é“¶è¡Œç±»å‹ç»„ç»‡å‚æ•°
+	//1:¸ù¾İÒøĞĞÀàĞÍ×éÖ¯²ÎÊı
 	var bankInput = tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic", "GetMisPosInput", ETPRowID);
-	//2:è°ƒç”¨æ¥å£
+	//2:µ÷ÓÃ½Ó¿Ú
 	var bankData = CallDLLFun(bankInput);
-	if (bankData == "-1003") {
-		return "-1003" + "^" + "MisPosè°ƒç”¨å¤±è´¥^";
-	} else {
-		//3:ä¿å­˜æ•°æ®åˆ°äº¤æ˜“è¡¨
-		var myResult = tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic", "SaveMisPosData", ETPRowID, bankData);
-		var ReslutCode = myResult.split("^")[0];
-		var SaveCode = myResult.split("^")[1];
-		var ReslutDesc = myResult.split("^")[2];
-		if (ReslutCode == 0) {
-			if (SaveCode == 0) {
-				return "0" + "^" + ReslutDesc + "^" + ETPRowID;
-			} else {
-				return "1" + "^" + ReslutDesc + "^" + ETPRowID;
-			}
-		} else {
-			return "-1004" + "^" + ReslutDesc + "^";
-		}
-
+	if (bankData == -1003) {
+		return bankData + "^" + "MisPosµ÷ÓÃÊ§°Ü" + "^";
 	}
-	return rtn + "^";
+	//3:±£´æÊı¾İµ½½»Ò×±í
+	var SaveDataValue = tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic", "SaveMisPosData", ETPRowID, bankData);
+	var SaveDataAry = SaveDataValue.split("^");
+	var ReslutCode = SaveDataAry[0];
+	var SaveCode = SaveDataAry[1];
+	var ReslutDesc = SaveDataAry[2];
+	if (ReslutCode == 0) {
+		if (SaveCode == 0) {
+			return 0 + "^" + ReslutDesc + "^" + ETPRowID;
+		}
+		return 1 + "^" + ReslutDesc + "^" + ETPRowID;
+	}
+	
+	return -1004 + "^" + ReslutDesc + "^";
 }
 
 /**
  * @author <zfb>
  * @date <2018-3-12>
- * @desc <poså…¶ä»–ä¸šåŠ¡åŠŸèƒ½è°ƒç”¨æ–¹æ³•>
- * @param {[String]}	bankTradeType	[é“¶è¡Œäº¤æ˜“ç±»å‹ C/D/T]
- * @param {[String]}	bankType 		[é“¶è¡Œposç±»å‹ï¼Œä¾‹å¦‚è”è¿ªLD]
- * @param {[String]}	expStr 			[æ‰©å±•å‚æ•°:å¯ä¸ä¼ ]
- * @return{[obj]} 		bankData		[è¿”å›å€¼]
+ * @desc <posÆäËûÒµÎñ¹¦ÄÜµ÷ÓÃ·½·¨>
+ * @param {[String]}	bankTradeType	[ÒøĞĞ½»Ò×ÀàĞÍ C/D/T]
+ * @param {[String]}	bankType 		[ÒøĞĞposÀàĞÍ£¬ÀıÈçÁªµÏLD]
+ * @param {[String]}	expStr 			[À©Õ¹²ÎÊı:¿É²»´«]
+ * @return{[obj]} 		bankData		[·µ»ØÖµ]
  */
 function PosOtherService(bankTradeType, expStr) {
-	//hiså®šä¹‰ï¼šQ-00-ç­¾åˆ°,C-01-æ¶ˆè´¹,D-02-æ¶ˆè´¹æ’¤é”€,T-03-éš”æ—¥é€€è´§,S-04-æŸ¥è¯¢,P-05-é‡æ‰“å°,H-06-ç»“ç®—
-	//bankTradeType:é™¤å¸¸è§„çš„äº¤æ˜“C/D/Tå¤–ï¼Œå…¶ä»–ä¸šåŠ¡è¿˜å­˜åœ¨Q/S/P/Hç­‰ï¼Œç»Ÿä¸€å®šä¹‰
+	//his¶¨Òå£ºQ-00-Ç©µ½,C-01-Ïû·Ñ,D-02-Ïû·Ñ³·Ïú,T-03-¸ôÈÕÍË»õ,S-04-²éÑ¯,P-05-ÖØ´òÓ¡,H-06-½áËã
+	//bankTradeType:³ı³£¹æµÄ½»Ò×C/D/TÍâ£¬ÆäËûÒµÎñ»¹´æÔÚQ/S/P/HµÈ£¬Í³Ò»¶¨Òå
 	var bool = ReadIniTxt();
 	if (!bool) {
-		alert("æœªè·å–åˆ°é…ç½®æ–‡ä»¶");
+		alert("Î´»ñÈ¡µ½ÅäÖÃÎÄ¼ş");
+		return "";
 	}
 	var expStr = "";
-	var posConfig = PUBLIC_POSCONFIG.POSTYPE + "^" + PUBLIC_POSCONFIG.TID;
-	var bankInput = tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic", "GetOtherServicePara", bankTradeType, posConfig, expStr);
+	var posCfg = PUBLIC_POSCfG.POSTYPE + "^" + PUBLIC_POSCfG.TID;
+	var bankInput = tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic", "GetOtherServicePara", bankTradeType, posCfg, expStr);
 	var bankData = CallDLLFun(bankInput);
-	if (bankData == "-1003") {
-		alert("MisPosè°ƒç”¨å¤±è´¥");
+	if (bankData == -1003) {
+		alert("MisPosµ÷ÓÃÊ§°Ü");
 	}
 	return bankData;
 }
@@ -146,85 +141,81 @@ function PosOtherService(bankTradeType, expStr) {
 /**
  * @author <zfb>
  * @date <2018-3-12>
- * @desc <è°ƒç”¨POS DLL/OCX>
- * @param {[String]}	bankInput	[posäº¤æ˜“å…¥å‚ä¸²]
- * @return{[String]} 	bankData	[posäº¤æ˜“è¿”å›ä¸²]
+ * @desc <µ÷ÓÃPOS DLL/OCX>
+ * @param {[String]}	bankInput	[pos½»Ò×Èë²Î´®]
+ * @return{[String]} 	bankData	[pos½»Ò×·µ»Ø´®]
  */
 function CallDLLFun(bankInput) {
 	var bankData = "-1003";
+	var bool = false;
 	try {
-		var bankType = PUBLIC_POSCONFIG.POSTYPE;
+		var bankType = PUBLIC_POSCfG.POSTYPE;
 		switch (bankType) {
 		case "POSJH":
-			var boolRtn = false;
 			do {
 				Log("input:" + bankType + "!" + bankInput, "");
 				var obj = document.getElementById("MISPOSPay");
 				var bankDataStr = obj.TestTransPay(bankInput);
 				Log("", "onput:" + bankType + "!" + bankData);
 				var bankDataClassFlag = bankDataStr.split("|")[0];
-				var bankData = bankDataStr.split("|")[1];
+				bankData = bankDataStr.split("|")[1];
 				var posRtn = bankData.substr(0, 2);
 				if (bankData.substr(0, 2) != "00") {
-					//æ­¤å¤„åˆ¤æ–­é“¶è¡Œè¿”å›å€¼çš„å‰2ä½æ˜¯å¦æˆåŠŸ(00),ä¸æˆåŠŸï¼Œæç¤ºæ˜¯å¦å†è¿›è¡Œä¸€æ¬¡äº¤æ˜“
-					//ä¸€èˆ¬é“¶è¡Œè¿”å›å€¼çš„å‰2ä½æ˜¯æˆåŠŸå¤±è´¥æ ‡å¿—ï¼Œå…·ä½“ä»¥æ¥å£æ–‡æ¡£ä¸ºå‡†
-					var truthBeTold = window.confirm(posRtn + ":POSæœºäº¤æ˜“å¤±è´¥,æ˜¯å¦å†æ¬¡å‘èµ·äº¤æ˜“");
-					if (!truthBeTold) {
-						boolRtn = true;
+					//´Ë´¦ÅĞ¶ÏÒøĞĞ·µ»ØÖµµÄÇ°2Î»ÊÇ·ñ³É¹¦(00),²»³É¹¦£¬ÌáÊ¾ÊÇ·ñÔÙ½øĞĞÒ»´Î½»Ò×
+					//Ò»°ãÒøĞĞ·µ»ØÖµµÄÇ°2Î»ÊÇ³É¹¦Ê§°Ü±êÖ¾£¬¾ßÌåÒÔ½Ó¿ÚÎÄµµÎª×¼
+					if (!confirm(posRtn + ":POS»ú½»Ò×Ê§°Ü£¬ÊÇ·ñÔÙ´Î·¢Æğ½»Ò×")) {
+						bool = true;
 					}
 				} else {
-					boolRtn = true;
+					bool = true;
 				}
-			} while (!boolRtn)
+			} while (!bool)
 			break;
 		case "POSCS":
-			var boolRtn = false;
 			do {
 				Log("input:" + bankType + "!" + bankInput, "");
 				var obj = document.getElementById("MISPOSPay");
-				var bankData = obj.PayCardPay(bankInput);
-				//æµ‹è¯•ä¸²
-				//bankData = "00|123456|4047390069421560|000000100000|120000782231|1211|20091102|134256|äº¤æ˜“æˆåŠŸ|03|000000000000001|00000001|";
+				bankData = obj.PayCardPay(bankInput);
+				//²âÊÔ´®
+				//bankData = "00|123456|4047390069421560|000000100000|120000782231|1211|20091102|134256|½»Ò×³É¹¦|03|000000000000001|00000001|";
 				Log("", "onput:" + bankType + "!" + bankData);
 				var posRtn = bankData.substr(0, 2);
 				if (bankData.substr(0, 2) != "00") {
-					//æ­¤å¤„åˆ¤æ–­é“¶è¡Œè¿”å›å€¼çš„å‰2ä½æ˜¯å¦æˆåŠŸ(00),ä¸æˆåŠŸï¼Œæç¤ºæ˜¯å¦å†è¿›è¡Œä¸€æ¬¡äº¤æ˜“
-					//ä¸€èˆ¬é“¶è¡Œè¿”å›å€¼çš„å‰2ä½æ˜¯æˆåŠŸå¤±è´¥æ ‡å¿—ï¼Œå…·ä½“ä»¥æ¥å£æ–‡æ¡£ä¸ºå‡†
-					var truthBeTold = window.confirm(posRtn + ":POSæœºäº¤æ˜“å¤±è´¥,æ˜¯å¦å†æ¬¡å‘èµ·äº¤æ˜“");
-					if (!truthBeTold) {
-						boolRtn = true;
+					//´Ë´¦ÅĞ¶ÏÒøĞĞ·µ»ØÖµµÄÇ°2Î»ÊÇ·ñ³É¹¦(00),²»³É¹¦£¬ÌáÊ¾ÊÇ·ñÔÙ½øĞĞÒ»´Î½»Ò×
+					//Ò»°ãÒøĞĞ·µ»ØÖµµÄÇ°2Î»ÊÇ³É¹¦Ê§°Ü±êÖ¾£¬¾ßÌåÒÔ½Ó¿ÚÎÄµµÎª×¼
+					if (!confirm(posRtn + ":POS»ú½»Ò×Ê§°Ü£¬ÊÇ·ñÔÙ´Î·¢Æğ½»Ò×")) {
+						bool = true;
 					}
 				} else {
-					boolRtn = true;
+					bool = true;
 				}
-			} while (!boolRtn)
+			} while (!bool)
 			break;
 		case "POSLKL":
-			var boolRtn = false;
 			do {
 				Log("input:" + bankType + "!" + bankInput, "");
 				var obj = document.getElementById("MISPOSPay");
-				var bankData = obj.cardtrans(bankInput);
+				bankData = obj.cardtrans(bankInput);
 				Log("", "onput:" + bankType + "!" + bankData);
 				var payCode = bankData.substr(13, 2);
 				if (payCode != "00") {
-					//æ­¤å¤„åˆ¤æ–­é“¶è¡Œè¿”å›å€¼çš„å‰2ä½æ˜¯å¦æˆåŠŸ(00),ä¸æˆåŠŸï¼Œæç¤ºæ˜¯å¦å†è¿›è¡Œä¸€æ¬¡äº¤æ˜“
-					//ä¸€èˆ¬é“¶è¡Œè¿”å›å€¼çš„å‰2ä½æ˜¯æˆåŠŸå¤±è´¥æ ‡å¿—ï¼Œå…·ä½“ä»¥æ¥å£æ–‡æ¡£ä¸ºå‡†
-					var truthBeTold = window.confirm(payCode + ":POSæœºäº¤æ˜“å¤±è´¥,æ˜¯å¦å†æ¬¡å‘èµ·äº¤æ˜“");
-					if (!truthBeTold) {
-						boolRtn = true;
+					//´Ë´¦ÅĞ¶ÏÒøĞĞ·µ»ØÖµµÄÇ°2Î»ÊÇ·ñ³É¹¦(00),²»³É¹¦£¬ÌáÊ¾ÊÇ·ñÔÙ½øĞĞÒ»´Î½»Ò×
+					//Ò»°ãÒøĞĞ·µ»ØÖµµÄÇ°2Î»ÊÇ³É¹¦Ê§°Ü±êÖ¾£¬¾ßÌåÒÔ½Ó¿ÚÎÄµµÎª×¼
+					if (!confirm(payCode + ":POS»ú½»Ò×Ê§°Ü£¬ÊÇ·ñÔÙ´Î·¢Æğ½»Ò×")) {
+						bool = true;
 					}
 				} else {
-					boolRtn = true;
+					bool = true;
 				}
-			} while (!boolRtn)
+			} while (!bool)
 			break;
 		default:
-			bankData = "DHCBillMisPosPay.jsä¸­CallDLLFunæ–¹æ³•æœªä¿®æ”¹,è¯·æ£€æŸ¥";
+			bankData = "DHCBillMisPosPay.jsÖĞCallDLLFun·½·¨Î´ĞŞ¸Ä£¬Çë¼ì²é";
 			break;
 		}
-		return bankData;
 	} catch (e) {
+		alert("µ÷ÓÃMISPOS½Ó¿Ú·¢ÉúÒì³££º" + e.message);
+	}finally {
 		return bankData;
 	}
 }
@@ -232,109 +223,129 @@ function CallDLLFun(bankInput) {
 /**
  * @author <zfb>
  * @date <2018-3-12>
- * @desc <JSç”Ÿæˆå®¢æˆ·ç«¯æ—¥å¿—æ–‡ä»¶,è®°å½•POSæœºæ¥å£çš„å…¥å‚ï¼Œå‡ºå‚ä¿¡æ¯>
- * @param {[String]}	input	[å…¥å‚]
- * @param {[String]}	output	[å‡ºå‚]
+ * @desc <JSÉú³É¿Í»§¶ËÈÕÖ¾ÎÄ¼ş,¼ÇÂ¼POS»ú½Ó¿ÚµÄÈë²Î£¬³ö²ÎĞÅÏ¢>
+ * @param {[String]}	input	[Èë²Î]
+ * @param {[String]}	output	[³ö²Î]
  */
 function Log(input, output) {
-	//æ ¹æ®é…ç½®åˆ¤æ–­æ˜¯å¦ä¿å­˜æ—¥å¿—
-	if (PUBLIC_POSCONFIG.ISLOG == "Y") {
-		var GuserCode = session['LOGON.USERCODE'];
-		var GuserName = session['LOGON.USERNAME'];
-		var date = new Date(); //æ—¥æœŸå¯¹è±¡
-		var now = "";
-		now = date.getFullYear() + "-";           //è¯»è‹±æ–‡å°±è¡Œäº†
-		now = now + (date.getMonth() + 1) + "-";  //å–æœˆçš„æ—¶å€™å–çš„æ˜¯å½“å‰æœˆ-1å¦‚æœæƒ³å–å½“å‰æœˆ+1å°±å¯ä»¥äº†
-		now = now + date.getDate() + " ";
-		now = now + date.getHours() + ":";
-		now = now + date.getMinutes() + ":";
-		now = now + date.getSeconds() + "";
-		var FileNameDate = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
-		try {
-			var fso = new ActiveXObject("Scripting.FileSystemObject");
-			//var LogFolder = "C:\\POSTradeDataLogFolder";
-			//è·å–é…ç½®æ–‡ä»¶ä¸­çš„æ—¥å¿—ä¿å­˜è·¯å¾„
-			var LogFolder = PUBLIC_POSCONFIG.LOGPATH;
-			if (!fso.FolderExists(LogFolder)) {
-				fso.CreateFolder(LogFolder);
-			}
-			ts = fso.OpenTextFile(LogFolder + "\\" + FileNameDate + "POSLog.txt", 8, true);
-			ts.WriteLine("-------------------------------------------------------------------");
-			ts.WriteLine("æ—¥æœŸ:" + now + ",æ“ä½œå‘˜:" + GuserName + "(" + GuserCode + ")");
-			ts.WriteLine("å…¥å‚:" + input);
-			ts.WriteLine("å‡ºå‚:" + output);
-			ts.WriteLine("-------------------------------------------------------------------");
-			ts.Close();
-		} catch (e) {
-			alert("äº¤æ˜“æ—¥å¿—ä¿å­˜å¤±è´¥,è¯·æ£€æŸ¥é…ç½®çš„æ—¥å¿—ä¿å­˜è·¯å¾„æ˜¯å¦æ­£ç¡®")
-		}
+	//¸ù¾İÅäÖÃÅĞ¶ÏÊÇ·ñ±£´æÈÕÖ¾
+	if (PUBLIC_POSCfG.ISLOG != "Y") {
+		return;
+	}
+	//»ñÈ¡ÅäÖÃÎÄ¼şÖĞµÄÈÕÖ¾±£´æÂ·¾¶
+	//var LogPath = "C:/POSLogs";
+	var LogPath = PUBLIC_POSCfG.LOGPATH;
+	
+	var date = new Date();
+	var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    var hour = date.getHours();
+    var minute = date.getMinutes();
+    var second = date.getSeconds();
+	var now = year + '-' + ((month < 10) ? ('0' + month) : month) + '-' + ((day < 10) ? ('0' + day) : day) + ' ' + ((hour < 10) ? ('0' + hour) : hour) + ':' + ((minute < 10) ? ('0' + minute) : minute) + ':' + ((second < 10) ? ('0' + second) : second);
+	var fileName = year + '-' + ((month < 10) ? ('0' + month) : month) + '-' + ((day < 10) ? ('0' + day) : day);
+
+	try {
+		var str = "(function() {" + '\n' + 
+		"var fso = new ActiveXObject('Scripting.FileSystemObject');" + '\n' + 
+		"if (!fso.FolderExists('" + LogPath + "')) {" + '\n' + 
+			"fso.CreateFolder('" + LogPath + "');" + '\n' + 
+		"}" + '\n' + 
+		"f = fso.OpenTextFile('" + LogPath + "/" + fileName + ".txt', 8, true);" + '\n' + 
+		"f.WriteLine('-------------------------------------------------------------------');" + '\n' + 
+		"f.WriteLine('Ê±¼ä£º" + now + "£¬²Ù×÷Ô±£º" + session['LOGON.USERNAME'] + "(" + session['LOGON.USERCODE'] + ")');" + '\n' + 
+		"f.WriteLine('Èë²Î£º" + input + "');" + '\n' + 
+		"f.WriteLine('³ö²Î£º" + output + "');" + '\n' + 
+		"f.WriteLine('-------------------------------------------------------------------');" + '\n' + 
+		"f.Close();" + '\n' + 
+		"return;" + '\n' + 
+		"}());";
+		CmdShell.notReturn = 1;   //ÉèÖÃÎŞ½á¹ûµ÷ÓÃ£¬²»×èÈûµ÷ÓÃ
+		CmdShell.EvalJs(str);     //Í¨¹ıÖĞ¼ä¼şÔËĞĞ´òÓ¡³ÌĞò
+	} catch (e) {
+		alert("½»Ò×ÈÕÖ¾±£´æÊ§°Ü£¬Çë¼ì²éÅäÖÃµÄÈÕÖ¾±£´æÂ·¾¶ÊÇ·ñÕıÈ·");
 	}
 }
 
 /**
  * @author <zfb>
  * @date <2018-3-12>
- * @desc <è¯»å–æœ¬åœ°é…ç½®æ–‡ä»¶,è·å–ã€poså‚å®¶(HISè‡ªè¡Œå®šä¹‰);ç»ˆç«¯å·;æ˜¯å¦ä¿å­˜æ—¥å¿—;æ—¥å¿—ä¿å­˜è·¯å¾„ã€‘ä¿å­˜åˆ°å…¨å±€å˜é‡PUBLIC_POSCONFIGä¸­
- * @param {[String]}	input	[å…¥å‚]
- * @return{[String]} 	bool	[true:è¯»å–æˆåŠŸ,false:è¯»å–å¤±è´¥]
+ * @desc <¶ÁÈ¡±¾µØÅäÖÃÎÄ¼ş,»ñÈ¡¡¾pos³§¼Ò(HIS×ÔĞĞ¶¨Òå);ÖÕ¶ËºÅ;ÊÇ·ñ±£´æÈÕÖ¾;ÈÕÖ¾±£´æÂ·¾¶¡¿±£´æµ½È«¾Ö±äÁ¿PUBLIC_POSCONFIGÖĞ
+ * @param {[String]}	input	[Èë²Î]
+ * @return{[String]} 	bool	[true:¶ÁÈ¡³É¹¦,false:¶ÁÈ¡Ê§°Ü]
  */
 function ReadIniTxt() {
+	var bool = false;
 	try {
-		var fso = new ActiveXObject("Scripting.FileSystemObject");
-		var f = fso.OpenTextFile("C:\\Windows\\POSConfig.ini", 1);
-		while (!f.AtEndOfStream) {
-			var s = f.ReadLine();
-			var sname = s.split("=")[0];
-			var svalue = s.split("=")[1];
-			for (var name in PUBLIC_POSCONFIG) {
-				if (name == sname) {
-					PUBLIC_POSCONFIG[name] = svalue;
-					break;
-				}
-			}
-		}
-		f.Close();
-		return true;
+		var str = "(function() {" + '\n' + 
+			"var cfgAry = [];" + '\n' + 
+			"var fso = new ActiveXObject('Scripting.FileSystemObject');" + '\n' + 
+			"var f = fso.OpenTextFile('C:/Windows/POSConfig.ini', 1);" + '\n' + 
+			"while (!f.AtEndOfStream) {" + '\n' + 
+				"var s = f.ReadLine();" + '\n' + 
+				"cfgAry.push(s);" + '\n' + 
+			"}" + '\n' + 
+			"f.Close();" + '\n' + 
+			"return cfgAry.join('\\n');" + '\n' + 
+		"}());";
+		CmdShell.notReturn = 0;          //ÓĞ·µ»ØÖµµ÷ÓÃ
+		var rtn = CmdShell.EvalJs(str);  //Í¨¹ıÖĞ¼ä¼şÔËĞĞ´òÓ¡³ÌĞò
+		if (rtn.status == 200) {
+			bool = true;
+            var cfgAry = rtn.rtn.split("\n");
+            $.each(cfgAry, function(index, item) {
+            	var myAry = item.split("=");
+            	var name = myAry[0];
+            	var value = myAry[1];
+            	if (PUBLIC_POSCfG[name] !== undefined) {
+	            	PUBLIC_POSCfG[name] = value;
+	            }
+	        });
+        }
 	} catch (e) {
-		return false;
+		alert("¶ÁÈ¡±¾µØÅäÖÃ·¢ÉúÒì³££º" + e.message);
+	}finally {
+		return bool;
 	}
 }
 
 /**
  * @author <zfb>
  * @date <2018-3-12>
- * @desc <posæ”¶è´¹å…¥å£>
- * @param {[String]}	tradeType	[äº¤æ˜“ç±»å‹ OP/PRE/DEP/IP/INSU/CARD]
- * @param {[String]} 	hisPrtStr	[ä¸šåŠ¡è¡¨id ! ä¸šåŠ¡è¡¨id]
- * @param {[String]}	payMode		[æ”¯ä»˜æ–¹å¼id]
- * @param {[String]}	expStr		[æ‰©å±• ç§‘å®¤^å®‰å…¨ç»„^é™¢åŒº^æ“ä½œå‘˜ID^ç—…äººID^å°±è¯Š^ä¸šåŠ¡è¡¨æŒ‡é’ˆä¸²(ä»¥!åˆ†éš”,å¯ä¸ºç©º)]
- * @return{[obj]} 		rtnValue	[è¿”å›å€¼ obj.returnCode ä»£ç ã€obj.returnMsg æè¿°ã€obj.ETPRowID è®¢å•ID å¤šä¸ª^åˆ†éš”]
+ * @desc <posÊÕ·ÑÈë¿Ú>
+ * @param {[String]}	tradeType	[½»Ò×ÀàĞÍ OP/PRE/DEP/IP/INSU/CARD]
+ * @param {[String]} 	hisPrtStr	[ÒµÎñ±íid ! ÒµÎñ±íid]
+ * @param {[String]}	payMode		[Ö§¸¶·½Ê½id]
+ * @param {[String]}	expStr		[À©Õ¹ ¿ÆÊÒ^°²È«×é^ÔºÇø^²Ù×÷Ô±ID^²¡ÈËID^¾ÍÕï^ÒµÎñ±íÖ¸Õë´®(ÒÔ!·Ö¸ô,¿ÉÎª¿Õ)]
+ * @return{[obj]} 		rtnValue	[·µ»ØÖµ obj.returnCode ´úÂë¡¢obj.returnMsg ÃèÊö¡¢obj.ETPRowID ¶©µ¥ID ¶à¸ö^·Ö¸ô]
  */
 function posPay(tradeType, tradeAmt, payMode, expStr) {
-	rtnValue = {
-		ResultCode: "-1004",
-		ResultMsg: "äº¤æ˜“å¤±è´¥",
+	var rtnValue = {
+		ResultCode: -1004,
+		ResultMsg: "½»Ò×Ê§°Ü",
 		ETPRowID: ""
 	}
 	//var prtRowIDAry = hisPrtStr.split("!");
-	var posConfig = ReadIniTxt();    //è°ƒç”¨æœ¬åœ°é…ç½®æ–‡ä»¶è·å–é“¶è¡Œposæœºå‚å®¶åŠç»ˆç«¯å·
-	if (!posConfig) {
+	var bool = ReadIniTxt();    //µ÷ÓÃ±¾µØÅäÖÃÎÄ¼ş»ñÈ¡ÒøĞĞpos»ú³§¼Ò¼°ÖÕ¶ËºÅ
+	if (!bool) {
 		rtnValue = {
-			ResultCode: "-1001",
-			ResultMsg: "æœªè¯»å–åˆ°MisPosé…ç½®ä¿¡æ¯",
+			ResultCode: -1001,
+			ResultMsg: "Î´¶ÁÈ¡µ½MisPosÅäÖÃĞÅÏ¢",
 			ETPRowID: ""
 		};
 		return rtnValue;
 	}
 
-	//æ”¯æŒé€€è´§
-	var rtnPosPay = BankCardPay(tradeType, tradeAmt, payMode, expStr);
-	var rtnResultCode = rtnPosPay.split("^")[0];
-	var rtnResultMsg = rtnPosPay.split("^")[1];
-	var ETPRowID = rtnPosPay.split("^")[2];
+	//Ö§³ÖÍË»õ
+	var PayRtn = BankCardPay(tradeType, tradeAmt, payMode, expStr);
+	var PayAry = PayRtn.split("^");
+	var ResultCode = PayAry[0];
+	var ResultMsg = PayAry[1];
+	var ETPRowID = PayAry[2];
 	rtnValue = {
-		ResultCode: rtnResultCode,
-		ResultMsg: rtnResultMsg,
+		ResultCode: ResultCode,
+		ResultMsg: ResultMsg,
 		ETPRowID: ETPRowID
 	};
 	return rtnValue;
@@ -343,150 +354,250 @@ function posPay(tradeType, tradeAmt, payMode, expStr) {
 /**
  * @author <zfb>
  * @date <2018-3-12>
- * @desc <posé€€è´¹å…¥å£>
- * @param {[String]}	receipRowID		[åŸæ­£è®°å½•id]
- * @param {[String]}	abortPrtRowID	[è´Ÿè®°å½•id]
- * @param {[String]}	newPrtRowID		[æ–°çºªå½•id]
- * @param {[String]}	tradeType		[ä¸šåŠ¡ç±»å‹ OP/PRE/DEP/IP/INSU/CARD]
- * @param {[String]}	bankTradeType	[é“¶è¡Œäº¤æ˜“ç±»å‹ C/D/T]	---
- * @param {[String]}	bankType		[é“¶è¡Œposæœºç±»å‹ ä¾‹:è”è¿ªLD/åˆ›è¯†CS]-----------
- * @param {[String]}	payMode			[æ”¯ä»˜æ–¹å¼id]
- * @param {[String]} 	OrgETPRowID		[åŸæ­£è®°å½•å¯¹åº”äº¤æ˜“è¡¨id]
- * @param {[String]}	originalType	[åŸä¸šåŠ¡ç±»å‹ OP/PRE/DEP/IP/INSU/CARD ä¸»è¦é’ˆå¯¹ä½é™¢æŠ¼é‡‘å‡ºé™¢ç»“ç®—ä½¿ç”¨]
- * @param {[String]}	expStr			[æ‰©å±• ç§‘å®¤^å®‰å…¨ç»„^é™¢åŒº^æ“ä½œå‘˜ID^ç—…äººID^å°±è¯Š^ä¸šåŠ¡è¡¨æŒ‡é’ˆä¸²(ä»¥!åˆ†éš”,å¯ä¸ºç©º)]
- * @return{[String]} 	rtnValue		[è¿”å›å€¼:ä»£ç ,æè¿°()1^äº¤æ˜“æˆåŠŸ	[è¿”å›å€¼ 0^æˆåŠŸ/é”™è¯¯æè¿°]
+ * @desc <posÍË·ÑÈë¿Ú>
+ * @param {[String]}	receipRowID		[Ô­Õı¼ÇÂ¼id]
+ * @param {[String]}	abortPrtRowID	[¸º¼ÇÂ¼id]
+ * @param {[String]}	newPrtRowID		[ĞÂ¼ÍÂ¼id]
+ * @param {[String]}	tradeType		[ÒµÎñÀàĞÍ OP/PRE/DEP/IP/INSU/CARD]
+ * @param {[String]}	bankTradeType	[ÒøĞĞ½»Ò×ÀàĞÍ C/D/T]	---
+ * @param {[String]}	bankType		[ÒøĞĞpos»úÀàĞÍ Àı:ÁªµÏLD/´´Ê¶CS]-----------
+ * @param {[String]}	payMode			[Ö§¸¶·½Ê½id]
+ * @param {[String]} 	OrgETPRowID		[Ô­Õı¼ÇÂ¼¶ÔÓ¦½»Ò×±íid]
+ * @param {[String]}	originalType	[Ô­ÒµÎñÀàĞÍ OP/PRE/DEP/IP/INSU/CARD Ö÷ÒªÕë¶Ô×¡ÔºÑº½ğ³öÔº½áËãÊ¹ÓÃ]
+ * @param {[String]}	expStr			[À©Õ¹ ¿ÆÊÒ^°²È«×é^ÔºÇø^²Ù×÷Ô±ID^²¡ÈËID^¾ÍÕï^ÒµÎñ±íÖ¸Õë´®(ÒÔ!·Ö¸ô,¿ÉÎª¿Õ)]
+ * @return{[String]} 	rtnValue		[·µ»ØÖµ:´úÂë,ÃèÊö()1^½»Ò×³É¹¦	[·µ»ØÖµ 0^³É¹¦/´íÎóÃèÊö]
  */
 function posPayRefund(receipRowID, abortPrtRowID, newPrtRowID, tradeType, payMode, OrgETPRowID, originalType, refundAmt, expStr) {
 	var rtnValue = {};
-	var posTypeRtn = ReadIniTxt();     //è°ƒç”¨é…ç½®æ–‡ä»¶è·å–é“¶è¡ŒåŠç»ˆç«¯å·
-	if (!posTypeRtn) {
+	var bool = ReadIniTxt();     //µ÷ÓÃÅäÖÃÎÄ¼ş»ñÈ¡ÒøĞĞ¼°ÖÕ¶ËºÅ
+	if (!bool) {
 		rtnValue = {
-			rtnCode: "-1001",
-			rtnMsg: "æœªè¯»å–åˆ°MisPosé…ç½®ä¿¡æ¯"
+			ResultCode: -1001,
+			ResultMsg: "Î´¶ÁÈ¡µ½MisPosÅäÖÃĞÅÏ¢"
 		};
 		return rtnValue;
 	}
-	var bankType = PUBLIC_POSCONFIG.POSTYPE; //åŒºåˆ†é“¶è¡Œ(å·¥å†œä¸­å»ºç­‰,æŒ‰ç¬¬ä¸‰æ–¹å‚å•†ç¼–ç ,æ¯”å¦‚å»ºè¡Œè”è¿ª-LD,å†œè¡Œåˆ›è¯†-CS)
-	var posTerminal = PUBLIC_POSCONFIG.TID;
-	var PosConfig = bankType + "^" + posTerminal;
-	//åˆ¤æ–­äº¤æ˜“ç±»å‹(D:å½“æ—¥é€€è´¹ï¼ŒT:éš”æ—¥é€€è´§)
-	var bankTradeTypeRtn = GetBankTradeType(OrgETPRowID, PosConfig);
-	var bankTradeType = bankTradeTypeRtn.split("^")[0];
-	var posUser = bankTradeTypeRtn.split("^")[1];
-	if (bankTradeType == "-2003") {
-		//è¿™å—åˆ¤æ–­éœ€è¦æ”¾åˆ°å¤–å±‚é€€è´¹å¼€å§‹å§ï¼Ÿï¼Ÿï¼Ÿ
-		var ErrMsg = "é€€è´¹ç»ˆç«¯posé“¶è¡Œè·ŸåŸæ”¶æ¬¾è¡Œä¸ä¸€è‡´,ä¸èƒ½é€€è´¹,è¯·å»" + posUser + "å¤„é€€è´¹ï¼";
+	var posCfg = PUBLIC_POSCfG.POSTYPE + "^" + PUBLIC_POSCfG.TID;
+	//ÅĞ¶Ï½»Ò×ÀàĞÍ(D:µ±ÈÕÍË·Ñ£¬T:¸ôÈÕÍË»õ)
+	var bankTradeTypeRtn = GetBankTradeType(OrgETPRowID, posCfg);
+	var bankTradeTypeAry = bankTradeTypeRtn.split("^");
+	var bankTradeType = bankTradeTypeAry[0];
+	var posUser = bankTradeTypeAry[1];
+	if (bankTradeType == -2003) {
+		//Õâ¿éÅĞ¶ÏĞèÒª·Åµ½Íâ²ãÍË·Ñ¿ªÊ¼°É£¿£¿£¿
 		rtnValue = {
-			rtnCode: bankTradeType,
-			rtnMsg: ErrMsg
+			ResultCode: bankTradeType,
+			ResultMsg: "ÍË·ÑÖÕ¶ËposÒøĞĞ¸úÔ­ÊÕ¿îĞĞ²»Ò»ÖÂ£¬²»ÄÜÍË·Ñ£¬ÇëÈ¥" + posUser + "´¦ÍË·Ñ£¡"
 		};
 		return rtnValue;
-	} else if (bankTradeType == "-2001") {
-		var ErrMsg = "æœªå–åˆ°é€€è´¹çš„æ­£äº¤æ˜“æ•°æ®";
+	} 
+	if (bankTradeType == -2001) {
 		rtnValue = {
-			rtnCode: bankTradeType,
-			rtnMsg: ErrMsg
-		};
-		return rtnValue;
-	} else if (bankTradeType == "-2002") {
-		var ErrMsg = "è·å–åŸäº¤æ˜“æ—¥æœŸå‡ºé”™";
-		rtnValue = {
-			rtnCode: bankTradeType,
-			rtnMsg: ErrMsg
+			ResultCode: bankTradeType,
+			ResultMsg: "Î´È¡µ½ÍË·ÑµÄÕı½»Ò×Êı¾İ"
 		};
 		return rtnValue;
 	}
-	//newPrtRowID: éç©ºä¸ºå…¨é€€
-	//m_RefFlag: 0-è¡¨ç¤ºå…è®¸å·®é¢é€€è´¹ 1-è¡¨ç¤ºåªèƒ½èµ°å…¨é€€å†æ”¶
-	//bankTradeType: D æ’¤é”€, T é€€è´§
+	if (bankTradeType == -2002) {
+		rtnValue = {
+			ResultCode: bankTradeType,
+			ResultMsg: "»ñÈ¡Ô­½»Ò×ÈÕÆÚ³ö´í"
+		};
+		return rtnValue;
+	};
+	//newPrtRowID: ·Ç¿ÕÎªÈ«ÍË
+	//m_RefFlag: 0-±íÊ¾ÔÊĞí²î¶îÍË·Ñ 1-±íÊ¾Ö»ÄÜ×ßÈ«ÍËÔÙÊÕ
+	//bankTradeType: D ³·Ïú, T ÍË»õ
 	if ((m_RefFlag == 1) && (newPrtRowID != "") && (bankTradeType == "D")) {
 		var refundAmt = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "GetRefundAmt", originalType, abortPrtRowID, "", payMode);
-		var myExpStr = expStr + "^" + abortPrtRowID; //æ³¨æ„å¿…é¡»æŠŠä¸šåŠ¡IDåŠ åˆ°æ‰©å±•ä¸²ç¬¬5ä½,å¦åˆ™è®¢å•ä¸ä¼šä¸ä¸šåŠ¡å…³è”
-		var rtnPosPay = BankCardRefund(OrgETPRowID, refundAmt, tradeType, bankTradeType, payMode, myExpStr);
-		var rtnResultCode = rtnPosPay.split("^")[0]; //é€€è´¹æ˜¯å¦æˆåŠŸæ ‡å¿—ï¼ˆ0-é€€è´¹æˆåŠŸï¼Œ1-é€€è´¹å¤±è´¥ï¼‰
-		var rtnResultMsg = rtnPosPay.split("^")[1];
-		switch (rtnResultCode) {
+		var myExpStr = expStr + "^" + abortPrtRowID;    //×¢Òâ±ØĞë°ÑÒµÎñID¼Óµ½À©Õ¹´®µÚ5Î»£¬·ñÔò¶©µ¥²»»áÓëÒµÎñ¹ØÁª
+		var RefundRtn = BankCardRefund(OrgETPRowID, refundAmt, tradeType, bankTradeType, payMode, myExpStr);
+		var RefundAry = RefundRtn.split("^");
+		var ResultCode = RefundAry[0];       //ÍË·ÑÊÇ·ñ³É¹¦±êÖ¾£¨0-ÍË·Ñ³É¹¦£¬1-ÍË·ÑÊ§°Ü£©
+		var ResultMsg = RefundAry[1];
+		switch (ResultCode) {
 		case "0":
-			//é€€è´¹æˆåŠŸå†æ”¶
+			//ÍË·Ñ³É¹¦ÔÙÊÕ
 			var tradeAmt = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "GetChargeAmt", tradeType, newPrtRowID, payMode);
-			var PosPay = BankCardPay(tradeType, tradeAmt, payMode, expStr);
-			var ResultCode = PosPay.split("^")[0];
-			var ResultMsg = PosPay.split("^")[1];
-			var ETPRowID = PosPay.split("^")[2];
-			//é€€è´¹æ— å¼‚å¸¸,æ ¹æ®å†æ”¶æƒ…å†µè¿”å›
+			var PayRtn = BankCardPay(tradeType, tradeAmt, payMode, expStr);
+			var PayAry = PayRtn.split("^");
+			var ResultCode = PayAry[0];
+			var ResultMsg = PayAry[1];
+			var ETPRowID = PayAry[2];
+			//ÍË·ÑÎŞÒì³£,¸ù¾İÔÙÊÕÇé¿ö·µ»Ø
 			rtnValue = {
-				rtnCode: ResultCode,
-				rtnMsg: ResultMsg
+				ResultCode: ResultCode,
+				ResultMsg: ResultMsg
 			};
-			//æ”¶è´¹æˆåŠŸå…³è”æ”¶è´¹è®¢å•
-			if ((ResultCode == "0") || (ResultCode == "1")) {
+			//ÊÕ·Ñ³É¹¦¹ØÁªÊÕ·Ñ¶©µ¥
+			if ([0, 1].indexOf(+ResultCode) != -1) {
 				var RelaRtn = RelationService(ETPRowID, newPrtRowID, tradeType);
-				if (RelaRtn.ResultCode != "0") {
+				if (RelaRtn.ResultCode != 0) {
 					rtnValue = {
-						rtnCode: "1",
-						rtnMsg: ResultMsg + "," + RelaRtn.ResultMsg
+						ResultCode: 1,
+						ResultMsg: ResultMsg + "£¬" + RelaRtn.ResultMsg
 					};
 				}
 			}
-			break
+			break;
 		case "1":
-			rtnValue.rtnCode = ResultCode;
-			//é€€è´¹æˆåŠŸå†æ”¶
+			rtnValue.ResultCode = ResultCode;
+			//ÍË·Ñ³É¹¦ÔÙÊÕ
 			var tradeAmt = tkMakeServerCall("DHCBILL.Common.DHCBILLCommon", "GetChargeAmt", tradeType, newPrtRowID, payMode);
 			var myExpStr = expStr + "^" + newPrtRowID;
-			var PosPay = BankCardPay(tradeType, tradeAmt, payMode, myExpStr);
-			var ResultCode = PosPay.split("^")[0];
-			var ResultMsg = PosPay.split("^")[1];
+			var PayRtn = BankCardPay(tradeType, tradeAmt, payMode, myExpStr);
+			var PayAry = PayRtn.split("^");
+			var ResultCode = PayAry[0];
+			var ResultMsg = PayAry[1];
 			switch (ResultCode) {
 			case "0":
-				rtnValue.rtnMsg = "é€€è´¹ä¿¡æ¯ä¿å­˜å¤±è´¥,å†æ”¶æˆåŠŸ";
-				//å…³è”æ”¶è´¹è®¢å•
-				if ((ResultCode == "0") || (ResultCode == "1")) {
+				rtnValue.ResultMsg = "ÍË·ÑĞÅÏ¢±£´æÊ§°Ü£¬ÔÙÊÕ³É¹¦";
+				//¹ØÁªÊÕ·Ñ¶©µ¥
+				if ([0, 1].indexOf(+ResultCode) != -1) {
 					var RelaRtn = RelationService(ETPRowID, newPrtRowID, tradeType);
-					if (RelaRtn.ResultCode != "0") {
+					if (RelaRtn.ResultCode != 0) {
 						rtnValue = {
-							rtnCode: "1",
-							rtnMsg: "é€€è´¹ä¿¡æ¯ä¿å­˜å¤±è´¥,å†æ”¶æˆåŠŸ,å…³è”æ”¶è´¹è®¢å•å¤±è´¥"
+							ResultCode: 1,
+							ResultMsg: "ÍË·ÑĞÅÏ¢±£´æÊ§°Ü£¬ÔÙÊÕ³É¹¦£¬¹ØÁªÊÕ·Ñ¶©µ¥Ê§°Ü"
 						};
 					}
 				}
 				break;
 			case "1":
-				rtnValue.rtnMsg = "é€€è´¹ä¿¡æ¯ä¿å­˜å¤±è´¥,å†æ”¶ä¿å­˜å¤±è´¥";
-				//å…³è”æ”¶è´¹è®¢å•
-				if ((ResultCode == "0") || (ResultCode == "1")) {
+				rtnValue.ResultMsg = "ÍË·ÑĞÅÏ¢±£´æÊ§°Ü£¬ÔÙÊÕ±£´æÊ§°Ü";
+				//¹ØÁªÊÕ·Ñ¶©µ¥
+				if ([0, 1].indexOf(+ResultCode) != -1) {
 					var RelaRtn = RelationService(ETPRowID, newPrtRowID, tradeType);
-					if (RelaRtn.ResultCode != "0") {
+					if (RelaRtn.ResultCode != 0) {
 						rtnValue = {
-							rtnCode: "1",
-							rtnMsg: "é€€è´¹ä¿¡æ¯ä¿å­˜å¤±è´¥,å†æ”¶æˆåŠŸ,å…³è”æ”¶è´¹è®¢å•å¤±è´¥"
+							ResultCode: 1,
+							ResultMsg: "ÍË·ÑĞÅÏ¢±£´æÊ§°Ü£¬ÔÙÊÕ±£´æÊ§°Ü£¬¹ØÁªÊÕ·Ñ¶©µ¥Ê§°Ü"
 						};
 					}
 				}
 				break;
 			default:
-				rtnValue.rtnMsg = "é€€è´¹ä¿¡æ¯ä¿å­˜å¤±è´¥,æ–°ç¥¨å†æ”¶å¤±è´¥";
-				break;
+				rtnValue.ResultMsg = "ÍË·ÑĞÅÏ¢±£´æÊ§°Ü£¬ĞÂÆ±ÔÙÊÕÊ§°Ü";
 			}
 			break;
 		default:
 			rtnValue = {
-				rtnCode: ResultCode,
-				rtnMsg: ResultMsg
+				ResultCode: ResultCode,
+				ResultMsg: ResultMsg
 			};
-			break;
 		}
 	} else {
-		//é€€è´§æˆ–å…¨é€€
+		//ÍË»õ»òÈ«ÍË
 		var myExpStr = expStr + "^" + abortPrtRowID + "!" + newPrtRowID;
-		var rtnPosPay = BankCardRefund(OrgETPRowID, refundAmt, tradeType, bankTradeType, payMode, myExpStr);
-		//é€€è´¹æ˜¯å¦æˆåŠŸæ ‡å¿—ï¼ˆ0-é€€è´¹æˆåŠŸ;1-é€€è´¹æˆåŠŸæ•°æ®ä¿å­˜å¤±è´¥;é€€è´¹å¤±è´¥ï¼‰
-		var ResultCode = rtnPosPay.split("^")[0];
-		var ResultMsg = rtnPosPay.split("^")[1];
+		var RefundRtn = BankCardRefund(OrgETPRowID, refundAmt, tradeType, bankTradeType, payMode, myExpStr);
+		//ÍË·ÑÊÇ·ñ³É¹¦±êÖ¾£¨0-ÍË·Ñ³É¹¦;1-ÍË·Ñ³É¹¦Êı¾İ±£´æÊ§°Ü;ÍË·ÑÊ§°Ü£©
+		var RefundAry = RefundRtn.split("^");
+		var ResultCode = RefundAry[0];
+		var ResultMsg = RefundAry[1];
 		rtnValue = {
-			rtnCode: ResultCode,
-			rtnMsg: ResultMsg
+			ResultCode: ResultCode,
+			ResultMsg: ResultMsg
 		};
 	}
+	return rtnValue;
+}
+
+/**
+ * @author <xiongwang>
+ * @date <2022-03-02>
+ * @desc <pos³åÏúÈë¿Ú>
+ * @param {[String]} 	ETPRowID		[Ô­Õı¼ÇÂ¼¶ÔÓ¦½»Ò×±íid]
+ * @param {[String]}	ExpStr			[À©Õ¹ ¿ÆÊÒ^°²È«×é^ÔºÇø^²Ù×÷Ô±ID]
+ * @return{[String]} 	rtnValue		[·µ»ØÖµ:´úÂë,ÃèÊö()1^½»Ò×³É¹¦	[·µ»ØÖµ 0^³É¹¦/´íÎóÃèÊö]
+ */
+function correctPosPay(ETPRowID, ExpStr) {
+	var rtnValue = {
+		ResultCode: -3001,
+		ResultMsg: "¶©µ¥³åÏúÊ§°Ü"
+	};
+    var bool = ReadIniTxt(); //µ÷ÓÃ±¾µØÅäÖÃÎÄ¼ş»ñÈ¡ÒøĞĞpos»ú³§¼Ò¼°ÖÕ¶ËºÅ
+    if (!bool) {
+	    rtnValue.ResultCode = -1001;
+		rtnValue.ResultMsg = "Î´¶ÁÈ¡µ½MisPosÅäÖÃĞÅÏ¢";
+        return rtnValue;
+    }
+    var posCfg = PUBLIC_POSCONFIG.POSTYPE + "^" + PUBLIC_POSCONFIG.TID;
+    var myRtn = tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic", "CreatCorrectOrder", ETPRowID, posCfg, ExpStr);
+    var resultCode = myRtn.split("^")[0];
+    var ETPRowID = myRtn.split("^")[1];
+    var resultDesc = myRtn.split("^")[2];
+    if (resultCode != 0) {
+	    rtnValue.ResultCode = -1002;
+		rtnValue.ResultMsg = resultDesc;
+        return rtnValue;
+    }
+    //1:¸ù¾İÒøĞĞÀàĞÍ×éÖ¯²ÎÊı
+    var bankInput = tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic", "GetMisPosInput", ETPRowID);
+    //2:µ÷ÓÃ½Ó¿Ú
+    var bankData = CallDLLFun(bankInput);
+    if (bankData == -1003) {
+	    rtnValue.ResultCode = -1003;
+		rtnValue.ResultMsg = "MisPosµ÷ÓÃÊ§°Ü";
+        return rtnValue;
+    }
+    //3:±£´æÊı¾İµ½½»Ò×±í
+    var myRtn = tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic", "SaveMisPosData", ETPRowID, bankData);
+    var myAry = myRtn.split("^");
+    var resultCode = myAry[0];
+    var saveCode = myAry[1];
+    var resultDesc = myAry[2];
+    if (resultCode == 0) {
+	    rtnValue.ResultCode = saveCode;
+		rtnValue.ResultMsg = resultDesc;
+        return rtnValue;
+    }
+    return rtnValue;
+}
+/**
+ * @author <zhenghao>
+ * @date <2020-8-30>
+ * @desc <pos²éÖ¤µ÷ÓÃ·½·¨>
+ * @param {[String]}	ETPRowID	[¶©µ¥ID]
+ * @return{[obj]} 		bankData		[·µ»ØÖµ]
+ */
+
+function BankPayCheck(ETPRowID)
+{
+	var rtnValue = {
+		ResultCode: -1004,
+		ResultMsg: "½»Ò×Ê§°Ü",
+		ETPRowID: ETPRowID
+	}
+	var posCfg = ReadIniTxt();    //µ÷ÓÃ±¾µØÅäÖÃÎÄ¼ş»ñÈ¡ÒøĞĞpos»ú³§¼Ò¼°ÖÕ¶ËºÅ
+	if (!posCfg) {
+		rtnValue = {
+			ResultCode: -1001,
+			ResultMsg: "Î´¶ÁÈ¡µ½MisPosÅäÖÃĞÅÏ¢",
+			ETPRowID: ETPRowID
+		};
+		return rtnValue;
+	}
+	var ResultMsg="";
+	var ResultCode="";
+		
+	var payMode = tkMakeServerCall("web.DHCBillCommon", "GetPropValById", "DHC_BillExtTradePay", ETPRowID, "ETP_PayMode");
+	var bankInput=tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic","GetMisPosCheckInput",ETPRowID);	
+	
+	var bankData = CallDLLFun(bankInput);
+	
+	if (bankData == -1003) {
+		return bankData + "^" + "MisPosµ÷ÓÃÊ§°Ü" + "^";
+	}else{
+		//´¦ÀíÒøĞĞµÄ·µ»ØÖµ×Ö¶Î£¬his½»Ò×³É¹¦ºó£¬±£´æµ½½»Ò×±í
+		var rtn=tkMakeServerCall("DHCBILL.MisPos.BLL.MisPosLogic","SaveMisPosCheckData",ETPRowID,bankData,"");
+		ResultCode=rtn.split("^")[0];
+		ResultMsg=rtn.split("^")[2];
+		
+	}
+	rtnValue = {
+		ResultCode: ResultCode,
+		ResultMsg: ResultMsg,
+		ETPRowID: ETPRowID
+	};
 	return rtnValue;
 }

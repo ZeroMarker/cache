@@ -9,7 +9,13 @@ function BodyLoadHandler()
 	FillEquipType();
 	SetBussinessType();
 	SetEnabled();
-	initButtonWidth()
+	initButtonWidth();
+	initButtonColor();//cjc 2023-01-18 è®¾ç½®æç®€ç§¯ææŒ‰é’®é¢œè‰²
+	initPanelHeaderStyle();//cjc 2023-01-17 åˆå§‹åŒ–æç®€é¢æ¿æ ·å¼
+		//add by cjc 20230208ç®¡ç†ç±»ç»„è¾“å…¥æ¡†å®½åº¦
+	document.getElementById("EquipType").classList.add("textbox");
+	document.getElementById("EquipType").style.width='';
+	
 }
 
 function InitPage()
@@ -42,18 +48,18 @@ function InitPage()
 }
 function BCreate_Clicked()
 {
-	//¼ì²âÊÇ·ñ¿ÉÒÔÉú³É
+	//æ£€æµ‹æ˜¯å¦å¯ä»¥ç”Ÿæˆ
 	var FRRowID=GetElementValue("FRRowID");
 	var BussinessTypeDR=GetElementValue("BussinessType");
 	if (BussinessTypeDR=="")
 	{
-		messageShow("","","","ÇëÑ¡ÔñÒµÎñÀàĞÍ!");
+		messageShow("","","","è¯·é€‰æ‹©ä¸šåŠ¡ç±»å‹!");
 		return
 	}
 	var EquipTypeIDs=GetElementValue("EquipTypeIDs");
 	if (EquipTypeIDs=="")
 	{
-		messageShow("","","","ÇëÑ¡ÔñÀà×é!");
+		messageShow("","","","è¯·é€‰æ‹©ç±»ç»„!");
 		return
 	}
 	var BussinessSDate=GetElementValue("BussinessSDate");
@@ -61,7 +67,7 @@ function BCreate_Clicked()
 	var Month=GetElementValue("Month");
 	if ((BussinessTypeDR=="ZJ")&&(Month==""))
 	{
-		messageShow("","","","ÇëÊäÈëÔÂ·İ!");
+		messageShow("","","","è¯·è¾“å…¥æœˆä»½!");
 		return
 	}
 	var Remark=GetElementValue("Remark");
@@ -75,19 +81,19 @@ function BCreate_Clicked()
 		alertShow(Rtn[1]);
 		return
 	}
-	//¿ªÊ¼Éú³ÉÒµÎñÊı¾İ
+	//å¼€å§‹ç”Ÿæˆä¸šåŠ¡æ•°æ®
   	var encmeth=GetElementValue("CreateData");
   	if (encmeth=="") return;
 	var Rtn=cspRunServerMethod(encmeth,val,"3","");
 	if (Rtn>0)
 	{
-		messageShow("","","","³É¹¦Éú³ÉÊı¾İ");
+		messageShow("","","","æˆåŠŸç”Ÿæˆæ•°æ®");
 		window.location.href='websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQFinancialReview&FRRowID='+Rtn;
 	  	parent.DHCEQFinancialReviewList.location.href="dhccpmrunqianreport.csp?reportName=DHCEQFinancialReviewSum.raq&vFRRowID="+Rtn;
 	}
 	else
 	{
-		messageShow("","","","²Ù×÷Ê§°Ü!+"+Rtn);
+		messageShow("","","","æ“ä½œå¤±è´¥!+"+Rtn);
 		return
 	}
 }
@@ -108,7 +114,7 @@ function BDelete_Clicked()
 	var CancelReason=GetElementValue("CancelReason");
 	if (CancelReason=="")
 	{
-		messageShow("","","","ÇëÊäÈë×÷·ÏÔ­Òò");
+		messageShow("","","","è¯·è¾“å…¥ä½œåºŸåŸå› ");
 		return
 	}
 	UpdateData(1);
@@ -118,7 +124,7 @@ function UpdateData(isDel)
 	var FRRowID=GetElementValue("FRRowID");
 	if (FRRowID=="")
 	{
-		messageShow("","","","µ¥¾İ²»´æÔÚ!");
+		messageShow("","","","å•æ®ä¸å­˜åœ¨!");
 		return
 	}
   	var encmeth=GetElementValue("Update");
@@ -132,7 +138,7 @@ function UpdateData(isDel)
   	}
   	else
   	{
-	  	messageShow("","","","²Ù×÷Ê§°Ü!");
+	  	messageShow("","","","æ“ä½œå¤±è´¥!");
 	  	return
   	}
 }
@@ -193,7 +199,7 @@ function Month_Change()
 	var IsMonth=cspRunServerMethod(encmeth,YearMonth);
 	if ((Month.length!=6)||(IsMonth=="1"))
 	{
-		messageShow("","","","ÕıÈ·ÊäÈëÔÂ·İ¸ñÊ½(YYYYMM)");
+		messageShow("","","","æ­£ç¡®è¾“å…¥æœˆä»½æ ¼å¼(YYYYMM)");
 		SetElement("BussinessSDate","");
 		SetElement("BussinessEDate","");
 		return
@@ -281,50 +287,50 @@ function BPDFCreate_Clicked()
     var FRRowID=GetElementValue("FRRowID");
     if (FRRowID=="")
     {
-	    alertShow("ÎŞµ¥¾İĞèÒªÉú³ÉPDF!")
+	    alertShow("æ— å•æ®éœ€è¦ç”ŸæˆPDF!")
 	    return
     }
     var FundsTypeDR=GetElementValue("FundsTypeDR");
     var FundsType=GetElementValue("FundsType");
     if (FundsTypeDR=="")
     {
-	    FundsType="È«²¿×Ê½ğÀ´Ô´"
-		var truthBeTold = window.confirm("ÊÇ·ñÉú³É["+FundsType+"]µÄPDF?");
+	    FundsType="å…¨éƒ¨èµ„é‡‘æ¥æº"
+		var truthBeTold = window.confirm("æ˜¯å¦ç”Ÿæˆ["+FundsType+"]çš„PDF?");
 	    if (!truthBeTold) return;
     }
-    //¼ì²âÊÇ·ñÒÑ¾­Éú³É
+    //æ£€æµ‹æ˜¯å¦å·²ç»ç”Ÿæˆ
     var encmeth=GetElementValue("CheckPDFFile");
     if (encmeth=="") return;
     var InputStr=FRRowID+"^"+FundsTypeDR;
     var myrtn=cspRunServerMethod(encmeth,InputStr);
     if (myrtn!="")
     {
-	    alertShow("PDFÎÄ¼şÒÑÉú³É¹ı!")
+	    alertShow("PDFæ–‡ä»¶å·²ç”Ÿæˆè¿‡!")
 	    return
     }
-    //¿ªÊ¼Éú³É
+    //å¼€å§‹ç”Ÿæˆ
     var InputStr=FRRowID+"^"+curUserName+"^"+FundsTypeDR
   	var encmeth=GetElementValue("GetPDFQueueID");
   	if (encmeth=="") return;
   	var myrtn=cspRunServerMethod(encmeth,InputStr);
     if (myrtn=="")
     {
-	    alertShow("Éú³ÉPDFÊ§°Ü")
+	    alertShow("ç”ŸæˆPDFå¤±è´¥")
 	}
     else
     {
-	    //µÇ¼ÇÒÑÉú³ÉPDFÎÄ¼ş
+	    //ç™»è®°å·²ç”ŸæˆPDFæ–‡ä»¶
 	    var encmeth=GetElementValue("SetPDFRecord");
 	    if (encmeth=="") return;
 	    var InputStr=FRRowID+"^"+FundsTypeDR;
 	    var myrtn=cspRunServerMethod(encmeth,InputStr);
 	    if (myrtn=="")
 	    {
-		    alertShow("µÇ¼ÇPDFÊ§°Ü")
+		    alertShow("ç™»è®°PDFå¤±è´¥")
 	    }
 	    else
 	    {
-		    alertShow("Éú³ÉPDF³É¹¦")
+		    alertShow("ç”ŸæˆPDFæˆåŠŸ")
 	    }
     }
 }
@@ -336,8 +342,8 @@ function BPrint_Clicked()
 	var FundsType=GetElementValue("FundsType");
     if (vFundsType=="")
     {
-	    FundsType="È«²¿×Ê½ğÀ´Ô´"
-		var truthBeTold = window.confirm("ÊÇ·ñ´òÓ¡["+FundsType+"]?");
+	    FundsType="å…¨éƒ¨èµ„é‡‘æ¥æº"
+		var truthBeTold = window.confirm("æ˜¯å¦æ‰“å°["+FundsType+"]?");
 	    if (!truthBeTold) return;
     }
 	PDFPrint_Clicked(vFRRowID,vUserName,vFundsType)
@@ -345,7 +351,7 @@ function BPrint_Clicked()
 function PDFPrint_Clicked(vFRRowID,vUserName,vFundsType)
 {
 	if (vFRRowID=="") return;
-	/*****************×Üµ¥ĞÅÏ¢********************/
+	/*****************æ€»å•ä¿¡æ¯********************/
 	var encmetha=GetElementValue("GetSumInfo");
 	if (encmetha=="") return;
 	var ReturnList=cspRunServerMethod(encmetha,vFRRowID,vFundsType);
@@ -359,10 +365,10 @@ function PDFPrint_Clicked(vFRRowID,vUserName,vFundsType)
 	var TMonth=lista[3];
 	rows=lista[0];
 	if (rows<=1) return
-	/********************Ã÷Ï¸ĞÅÏ¢******************/
+	/********************æ˜ç»†ä¿¡æ¯******************/
 	var PageRows=rows;
 	var Pages=parseInt(rows / PageRows);
-	var ModRows=rows%PageRows; //×îºóÒ»Ò³ĞĞÊı
+	var ModRows=rows%PageRows; //æœ€åä¸€é¡µè¡Œæ•°
 	if (ModRows==0) {Pages=Pages-1;}
 	var encmeth=GetElementValue("GetRepPath");
 	if (encmeth=="") return;
@@ -372,7 +378,7 @@ function PDFPrint_Clicked(vFRRowID,vUserName,vFundsType)
     xlApp = new ActiveXObject("Excel.Application");
 	var encmeth=GetElementValue("GetSumListInfo");
 	if (encmeth=="") return;
-	var GetRowsPerTime=100	//Ã¿Êä³ö50ĞĞÕ³ÌùÒ»´Î
+	var GetRowsPerTime=100	//æ¯è¾“å‡º50è¡Œç²˜è´´ä¸€æ¬¡
 	var strArr=new Array();
 	var strLine="";
 	var strConcat="";
@@ -382,7 +388,7 @@ function PDFPrint_Clicked(vFRRowID,vUserName,vFundsType)
     	xlBook = xlApp.Workbooks.Add(Template);
     	xlsheet = xlBook.ActiveSheet;
     	xlsheet.cells.replace("[Hospital]",GetElementValue("GetHospitalDesc"))
-    	xlsheet.cells(2,1)="µ¥ºÅ:"+TBussinessNo;
+    	xlsheet.cells(2,1)="å•å·:"+TBussinessNo;
     	xlsheet.cells(2,4)=TMonth;
     	var OnePageRow=PageRows;
    		if ((i==Pages)&&(ModRows!=0)) OnePageRow=ModRows;
@@ -433,7 +439,7 @@ function PDFPrint_Clicked(vFRRowID,vUserName,vFundsType)
 	    //var size=obj.GetPaperInfo("DHCEQInStock");
 	    //if (0!=size) xlsheet.PageSetup.PaperSize = size;
 	    //xlBook.SaveAs(FileName);
-    	xlsheet.printout; 	//´òÓ¡Êä³ö
+    	xlsheet.printout; 	//æ‰“å°è¾“å‡º
     	xlBook.Close (savechanges=false);
     	
     	xlsheet.Quit;
@@ -442,11 +448,11 @@ function PDFPrint_Clicked(vFRRowID,vUserName,vFundsType)
 	xlApp=null;
 }
 /***********************************************************/
-///ÃèÊö:Ã÷Ï¸¼ÇÂ¼´òÓ¡
+///æè¿°:æ˜ç»†è®°å½•æ‰“å°
 function BPrint2_Clicked(vFRRowID,vUserName)
 {
 	if (vFRRowID=="") return;
-	/*****************×Üµ¥ĞÅÏ¢********************/
+	/*****************æ€»å•ä¿¡æ¯********************/
 	var encmetha=GetElementValue("CreatePrintInfo");
 	if (encmetha=="") return;
 	var ReturnList=cspRunServerMethod(encmetha,vFRRowID);
@@ -464,10 +470,10 @@ function BPrint2_Clicked(vFRRowID,vUserName)
 	var TMonth=lista[10];
 	var FundsTypeInfo=FundsTypeStr.split("@")
 	rows=lista[0];
-	/********************Ã÷Ï¸ĞÅÏ¢******************/
+	/********************æ˜ç»†ä¿¡æ¯******************/
 	var PageRows=rows;
 	var Pages=parseInt(rows / PageRows);
-	var ModRows=rows%PageRows; //×îºóÒ»Ò³ĞĞÊı
+	var ModRows=rows%PageRows; //æœ€åä¸€é¡µè¡Œæ•°
 	if (ModRows==0) {Pages=Pages-1;}
 	var encmeth=GetElementValue("GetRepPath");
 	if (encmeth=="") return;
@@ -479,9 +485,9 @@ function BPrint2_Clicked(vFRRowID,vUserName)
 	if (encmeth=="") return;
 	var CurSourceID=0
 	var CurLocDR=0
-	var PreColCount=4		//ÏÔÊ¾×Ê½ğÀ´Ô´Êı¾İÇ°ÁĞÊı
-	var SufColCount=3		//ÏÔÊ¾×Ê½ğÀ´Ô´Êı¾İºóÁĞÊı
-	var GetRowsPerTime=100	//Ã¿Êä³ö50ĞĞÕ³ÌùÒ»´Î
+	var PreColCount=4		//æ˜¾ç¤ºèµ„é‡‘æ¥æºæ•°æ®å‰åˆ—æ•°
+	var SufColCount=3		//æ˜¾ç¤ºèµ„é‡‘æ¥æºæ•°æ®ååˆ—æ•°
+	var GetRowsPerTime=100	//æ¯è¾“å‡º50è¡Œç²˜è´´ä¸€æ¬¡
 	var SumNum=0
 	var SumAmount=0
 	var SumFundsType=new Array();
@@ -495,20 +501,20 @@ function BPrint2_Clicked(vFRRowID,vUserName)
     	xlsheet = xlBook.ActiveSheet;
     	xlsheet.Range("A1",xlsheet.Cells(1, PreColCount+FundsTypeInfo.length-1+SufColCount)).MergeCells = true;
     	//xlsheet.cells.replace("[Hospital]",GetElementValue("GetHospitalDesc"));
-    	xlsheet.cells(1,1)="ÉòÑôÒ½´ó"+TMonth.substr(0,4)+"Äê"+TMonth.substr(4,6)+"ÔÂÕÛ¾ÉÃ÷Ï¸"; //µ¥ºÅ
+    	xlsheet.cells(1,1)="æ²ˆé˜³åŒ»å¤§"+TMonth.substr(0,4)+"å¹´"+TMonth.substr(4,6)+"æœˆæŠ˜æ—§æ˜ç»†"; //å•å·
     	xlsheet.cells(1,1).HorizontalAlignment = 3;
-    	xlsheet.cells(2,1)="µ¥ºÅ:"+TBussinessNo;
-    	xlsheet.cells(2,4)="ÈÕÆÚ:"+TBussinessSDate+"--"+TBussinessEDate;
+    	xlsheet.cells(2,1)="å•å·:"+TBussinessNo;
+    	xlsheet.cells(2,4)="æ—¥æœŸ:"+TBussinessSDate+"--"+TBussinessEDate;
     	xlsheet.Range("A3",xlsheet.Cells(3, PreColCount+FundsTypeInfo.length-1+SufColCount)).MergeCells = true;
-    	xlsheet.cells(3,1)="Àà×é:"+TEquipTypes;
+    	xlsheet.cells(3,1)="ç±»ç»„:"+TEquipTypes;
     	xlsheet.Range(xlsheet.Cells(4, PreColCount+1),xlsheet.Cells(4,PreColCount+FundsTypeInfo.length-1)).MergeCells = true;
-    	xlsheet.cells(4, PreColCount+1)="ÆäÖĞ";
+    	xlsheet.cells(4, PreColCount+1)="å…¶ä¸­";
     	xlsheet.Range(xlsheet.Cells(4, PreColCount+FundsTypeInfo.length),xlsheet.Cells(5,PreColCount+FundsTypeInfo.length)).MergeCells = true;
     	xlsheet.Range(xlsheet.Cells(4, PreColCount+FundsTypeInfo.length+1),xlsheet.Cells(5,PreColCount+FundsTypeInfo.length+1)).MergeCells = true;
     	xlsheet.Range(xlsheet.Cells(4, PreColCount+FundsTypeInfo.length+2),xlsheet.Cells(5,PreColCount+FundsTypeInfo.length+2)).MergeCells = true;
-    	xlsheet.cells(4, PreColCount+FundsTypeInfo.length)="±¸×¢";
-    	xlsheet.cells(4, PreColCount+FundsTypeInfo.length+1)="Éè±¸Àà×é";
-    	xlsheet.cells(4, PreColCount+FundsTypeInfo.length+2)="¿ÆÊÒ";
+    	xlsheet.cells(4, PreColCount+FundsTypeInfo.length)="å¤‡æ³¨";
+    	xlsheet.cells(4, PreColCount+FundsTypeInfo.length+1)="è®¾å¤‡ç±»ç»„";
+    	xlsheet.cells(4, PreColCount+FundsTypeInfo.length+2)="ç§‘å®¤";
     	xlsheet.Range("A4",xlsheet.Cells(5,PreColCount+FundsTypeInfo.length-1+SufColCount)).HorizontalAlignment = 3;
     	var FundsTypeDR=new Array();
     	for (var k=1;k<FundsTypeInfo.length;k++)
@@ -581,7 +587,7 @@ function BPrint2_Clicked(vFRRowID,vUserName)
 				strConcat=""
 				CurRowCount=0
 				var strArr=new Array();
-				xlsheet.cells(Row+1,1)="ºÏ¼Æ:"
+				xlsheet.cells(Row+1,1)="åˆè®¡:"
 				xlsheet.cells(Row+1,2)=SumNum;
 				xlsheet.cells(Row+1,4)=SumAmount;
 				for (var k=1;k<FundsTypeInfo.length;k++)
@@ -596,11 +602,11 @@ function BPrint2_Clicked(vFRRowID,vUserName)
 		xlsheet.Range("A4",xlsheet.Cells(rows*1+6,PreColCount+FundsTypeInfo.length-1+SufColCount)).Borders.Weight = 1;
     	xlsheet.Range(xlsheet.Cells(rows*1+7, 1),xlsheet.Cells(rows*1+7, PreColCount+FundsTypeInfo.length-1+SufColCount)).MergeCells = true;
     	var CurDate=new Date();
-    	xlsheet.cells(rows*1+7,1)="ÖÆµ¥ÈË:"+vUserName+"                            ÖÆµ¥ÈÕÆÚ:"+CurDate.toLocaleString(); //ÖÆµ¥ÈË
+    	xlsheet.cells(rows*1+7,1)="åˆ¶å•äºº:"+vUserName+"                            åˆ¶å•æ—¥æœŸ:"+CurDate.toLocaleString(); //åˆ¶å•äºº
     	//var obj = new ActiveXObject("PaperSet.GetPrintInfo");
 	    //var size=obj.GetPaperInfo("DHCEQInStock");
 	    //if (0!=size) xlsheet.PageSetup.PaperSize = size;
-    	//xlsheet.printout; 	//´òÓ¡Êä³ö
+    	//xlsheet.printout; 	//æ‰“å°è¾“å‡º
     	xlBook.Close (savechanges=false);
     	
     	xlsheet.Quit;
@@ -613,7 +619,7 @@ function BPrint2_Clicked(vFRRowID,vUserName)
 function BPrintBAK_Clicked(vFRRowID,vUserName)
 {
 	if (vFRRowID=="") return;
-	/*****************×Üµ¥ĞÅÏ¢********************/
+	/*****************æ€»å•ä¿¡æ¯********************/
 	var encmetha=GetElementValue("CreatePrintInfo");
 	if (encmetha=="") return;
 	var ReturnList=cspRunServerMethod(encmetha,vFRRowID);
@@ -631,10 +637,10 @@ function BPrintBAK_Clicked(vFRRowID,vUserName)
 	var TMonth=lista[10];
 	var FundsTypeInfo=FundsTypeStr.split("@")
 	rows=lista[0];
-	/********************Ã÷Ï¸ĞÅÏ¢******************/
+	/********************æ˜ç»†ä¿¡æ¯******************/
 	var PageRows=rows;
 	var Pages=parseInt(rows / PageRows);
-	var ModRows=rows%PageRows; //×îºóÒ»Ò³ĞĞÊı
+	var ModRows=rows%PageRows; //æœ€åä¸€é¡µè¡Œæ•°
 	if (ModRows==0) {Pages=Pages-1;}
 	var encmeth=GetElementValue("GetRepPath");
 	if (encmeth=="") return;
@@ -646,8 +652,8 @@ function BPrintBAK_Clicked(vFRRowID,vUserName)
 	if (encmeth=="") return;
 	var CurSourceID=0
 	var CurLocDR=0
-	var PreColCount=4		//ÏÔÊ¾×Ê½ğÀ´Ô´Êı¾İÇ°ÁĞÊı
-	var SufColCount=3		//ÏÔÊ¾×Ê½ğÀ´Ô´Êı¾İºóÁĞÊı
+	var PreColCount=4		//æ˜¾ç¤ºèµ„é‡‘æ¥æºæ•°æ®å‰åˆ—æ•°
+	var SufColCount=3		//æ˜¾ç¤ºèµ„é‡‘æ¥æºæ•°æ®ååˆ—æ•°
 	var SumNum=0
 	var SumAmount=0
 	var SumFundsType=new Array();
@@ -657,20 +663,20 @@ function BPrintBAK_Clicked(vFRRowID,vUserName)
     	xlsheet = xlBook.ActiveSheet;
     	xlsheet.Range("A1",xlsheet.Cells(1, PreColCount+FundsTypeInfo.length-1+SufColCount)).MergeCells = true;
     	//xlsheet.cells.replace("[Hospital]",GetElementValue("GetHospitalDesc"));
-    	xlsheet.cells(1,1)="ÉòÑôÒ½´ó"+TMonth.substr(0,4)+"Äê"+TMonth.substr(4,6)+"ÔÂÕÛ¾ÉÃ÷Ï¸"; //µ¥ºÅ
+    	xlsheet.cells(1,1)="æ²ˆé˜³åŒ»å¤§"+TMonth.substr(0,4)+"å¹´"+TMonth.substr(4,6)+"æœˆæŠ˜æ—§æ˜ç»†"; //å•å·
     	xlsheet.cells(1,1).HorizontalAlignment = 3;
-    	xlsheet.cells(2,1)="µ¥ºÅ:"+TBussinessNo;
-    	xlsheet.cells(2,4)="ÈÕÆÚ:"+TBussinessSDate+"--"+TBussinessEDate;
+    	xlsheet.cells(2,1)="å•å·:"+TBussinessNo;
+    	xlsheet.cells(2,4)="æ—¥æœŸ:"+TBussinessSDate+"--"+TBussinessEDate;
     	xlsheet.Range("A3",xlsheet.Cells(3, PreColCount+FundsTypeInfo.length-1+SufColCount)).MergeCells = true;
-    	xlsheet.cells(3,1)="Àà×é:"+TEquipTypes;
+    	xlsheet.cells(3,1)="ç±»ç»„:"+TEquipTypes;
     	xlsheet.Range(xlsheet.Cells(4, PreColCount+1),xlsheet.Cells(4,PreColCount+FundsTypeInfo.length-1)).MergeCells = true;
-    	xlsheet.cells(4, PreColCount+1)="ÆäÖĞ";
+    	xlsheet.cells(4, PreColCount+1)="å…¶ä¸­";
     	xlsheet.Range(xlsheet.Cells(4, PreColCount+FundsTypeInfo.length),xlsheet.Cells(5,PreColCount+FundsTypeInfo.length)).MergeCells = true;
     	xlsheet.Range(xlsheet.Cells(4, PreColCount+FundsTypeInfo.length+1),xlsheet.Cells(5,PreColCount+FundsTypeInfo.length+1)).MergeCells = true;
     	xlsheet.Range(xlsheet.Cells(4, PreColCount+FundsTypeInfo.length+2),xlsheet.Cells(5,PreColCount+FundsTypeInfo.length+2)).MergeCells = true;
-    	xlsheet.cells(4, PreColCount+FundsTypeInfo.length)="±¸×¢";
-    	xlsheet.cells(4, PreColCount+FundsTypeInfo.length+1)="Éè±¸Àà×é";
-    	xlsheet.cells(4, PreColCount+FundsTypeInfo.length+2)="¿ÆÊÒ";
+    	xlsheet.cells(4, PreColCount+FundsTypeInfo.length)="å¤‡æ³¨";
+    	xlsheet.cells(4, PreColCount+FundsTypeInfo.length+1)="è®¾å¤‡ç±»ç»„";
+    	xlsheet.cells(4, PreColCount+FundsTypeInfo.length+2)="ç§‘å®¤";
     	xlsheet.Range("A4",xlsheet.Cells(5,PreColCount+FundsTypeInfo.length-1+SufColCount)).HorizontalAlignment = 3;
     	var FundsTypeDR=new Array();
     	for (var k=1;k<FundsTypeInfo.length;k++)
@@ -692,10 +698,10 @@ function BPrintBAK_Clicked(vFRRowID,vUserName)
 			CurSourceID=List[0];
 			CurLocDR=List[1];
 			var Row=5+j;
-			xlsheet.cells(Row,1)=List[2];//Éè±¸Ãû³Æ
-			xlsheet.cells(Row,2)=List[3];//ÊıÁ¿
-			xlsheet.cells(Row,3)=List[4];//µ¥¼Û
-			xlsheet.cells(Row,4)=List[5];//½ğ¶î
+			xlsheet.cells(Row,1)=List[2];//è®¾å¤‡åç§°
+			xlsheet.cells(Row,2)=List[3];//æ•°é‡
+			xlsheet.cells(Row,3)=List[4];//å•ä»·
+			xlsheet.cells(Row,4)=List[5];//é‡‘é¢
 			SumNum=SumNum+List[3]*1;
 			SumAmount=SumAmount+List[5]*1;
 			var ListFTInfo=List[11].split("@");
@@ -706,19 +712,19 @@ function BPrintBAK_Clicked(vFRRowID,vUserName)
 					var ListFundsType=ListFTInfo[m-1].split("=");
 					if (FundsTypeDR[k]==ListFundsType[0])
 					{
-						xlsheet.cells(Row,PreColCount+k)=ListFundsType[1];//×Ê½ğÀ´Ô´½ğ¶î
+						xlsheet.cells(Row,PreColCount+k)=ListFundsType[1];//èµ„é‡‘æ¥æºé‡‘é¢
 						SumFundsType[k]=SumFundsType[k]+ListFundsType[1]*1;
 					}
 				}
 			}
-			xlsheet.cells(Row,PreColCount+FundsTypeInfo.length)=List[6];//±¸×¢
-			xlsheet.cells(Row,PreColCount+FundsTypeInfo.length+1)=List[7];//Éè±¸Àà×é			
-			xlsheet.cells(Row,PreColCount+FundsTypeInfo.length+2)=List[9];//¿ÆÊÒ
-			//xlsheet.cells(Row,PreColCount+FundsTypeInfo.length+3)=List[8];//Éè±¸ÀàĞÍ
-			//xlsheet.cells(Row,PreColCount+FundsTypeInfo.length+4)=List[10];//À´Ô´
+			xlsheet.cells(Row,PreColCount+FundsTypeInfo.length)=List[6];//å¤‡æ³¨
+			xlsheet.cells(Row,PreColCount+FundsTypeInfo.length+1)=List[7];//è®¾å¤‡ç±»ç»„			
+			xlsheet.cells(Row,PreColCount+FundsTypeInfo.length+2)=List[9];//ç§‘å®¤
+			//xlsheet.cells(Row,PreColCount+FundsTypeInfo.length+3)=List[8];//è®¾å¤‡ç±»å‹
+			//xlsheet.cells(Row,PreColCount+FundsTypeInfo.length+4)=List[10];//æ¥æº
 			if (rows==i*PageRows+j)
 			{
-				xlsheet.cells(Row+1,1)="ºÏ¼Æ:"
+				xlsheet.cells(Row+1,1)="åˆè®¡:"
 				xlsheet.cells(Row+1,2)=SumNum;
 				xlsheet.cells(Row+1,4)=SumAmount;
 				for (var k=1;k<FundsTypeInfo.length;k++)
@@ -733,11 +739,11 @@ function BPrintBAK_Clicked(vFRRowID,vUserName)
 		xlsheet.Range("A4",xlsheet.Cells(rows*1+6,PreColCount+FundsTypeInfo.length-1+SufColCount)).Borders.Weight = 1;
     	xlsheet.Range(xlsheet.Cells(rows*1+7, 1),xlsheet.Cells(rows*1+7, PreColCount+FundsTypeInfo.length-1+SufColCount)).MergeCells = true;
     	var CurDate=new Date();
-    	xlsheet.cells(rows*1+7,1)="ÖÆµ¥ÈË:"+vUserName+"                            ÖÆµ¥ÈÕÆÚ:"+CurDate.toLocaleString(); //ÖÆµ¥ÈË
+    	xlsheet.cells(rows*1+7,1)="åˆ¶å•äºº:"+vUserName+"                            åˆ¶å•æ—¥æœŸ:"+CurDate.toLocaleString(); //åˆ¶å•äºº
     	//var obj = new ActiveXObject("PaperSet.GetPrintInfo");
 	    //var size=obj.GetPaperInfo("DHCEQInStock");
 	    //if (0!=size) xlsheet.PageSetup.PaperSize = size;
-    	xlsheet.printout; 	//´òÓ¡Êä³ö
+    	xlsheet.printout; 	//æ‰“å°è¾“å‡º
     	xlBook.Close (savechanges=false);
     	
     	xlsheet.Quit;

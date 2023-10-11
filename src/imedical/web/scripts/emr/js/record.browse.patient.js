@@ -118,7 +118,7 @@ function LoadBrowsePage(patientID,episodeID,episodeType,episodeLocID)
 	{
 		admType = "I";
 	}
-	var url = "emr.record.browse.browseform.csp?PatientID="+patientID+"&EpisodeID="+episodeID+"&EpisodeLocID="+episodeLocID+"&AdmType="+admType;
+	var url = "emr.record.browse.browseform.csp?PatientID="+patientID+"&EpisodeID="+episodeID+"&EpisodeLocID="+episodeLocID+"&AdmType="+admType+"&Action="+action;
 	$('#frameBrowsepage').attr("src",url);
 }
 

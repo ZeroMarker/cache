@@ -1,81 +1,83 @@
-var SelInIsTrfOut = function(Fn){
-	$HUI.dialog('#TransWin',{width: gWinWidth, height: gWinHeight}).open();
+var SelInIsTrfOut = function(Fn) {
+	$HUI.dialog('#TransWin', { width: gWinWidth, height: gWinHeight }).open();
 	
-	$UI.linkbutton('#TransQueryBT',{
-		onClick:function(){
+	$UI.linkbutton('#TransQueryBT', {
+		onClick: function() {
 			FindTransQuery();
 		}
 	});
-	function FindTransQuery(){
+	function FindTransQuery() {
 		$UI.clear(TransDetailGrid);
 		$UI.clear(TransMasterGrid);
 		var ParamsObj = $UI.loopBlock('#TransConditions');
 		ParamsObj.FrLoc = $('#InitToLoc').combobox('getValue');
-		if(isEmpty(ParamsObj.StartDate)){
+		if (isEmpty(ParamsObj.StartDate)) {
 			$UI.msg('alert', '开始日期不能为空!');
 			return;
 		}
-		if(isEmpty(ParamsObj.EndDate)){
+		if (isEmpty(ParamsObj.EndDate)) {
 			$UI.msg('alert', '截止日期不能为空!');
 			return;
 		}
-		if(isEmpty(ParamsObj.FrLoc)){
+		if (isEmpty(ParamsObj.FrLoc)) {
 			$UI.msg('alert', '库房不能为空!');
 			return;
 		}
-		if(isEmpty(ParamsObj.Status)){
+		if (isEmpty(ParamsObj.Status)) {
 			ParamsObj.Status = '31';
 		}
 		var Params = JSON.stringify(ParamsObj);
 		TransMasterGrid.load({
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 			QueryName: 'DHCINIsTrfM',
+			query2JsonStrict: 1,
 			Params: Params
 		});
 	}
 	
-	$UI.linkbutton('#TransSaveBT',{
-		onClick: function(){
+	$UI.linkbutton('#TransSaveBT', {
+		onClick: function() {
 			var Row = TransMasterGrid.getSelected();
-			if(isEmpty(Row)){
+			if (isEmpty(Row)) {
 				$UI.msg('alert', '请选择要保存的单据!');
 			}
-			Params=JSON.stringify(addSessionParams({Init:Row.RowId}))
+			Params = JSON.stringify(addSessionParams({ Init: Row.RowId }));
 			$.cm({
 				ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 				MethodName: 'jsCreateInIsTrf',
 				Params: Params
-			},function(jsonData){
-				if(jsonData.success === 0){
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
 					$UI.msg('success', jsonData.msg);
 					Fn(jsonData.rowid);
 					$HUI.dialog('#TransWin').close();
-				}else{
+				} else {
 					$UI.msg('error', jsonData.msg);
 				}
 			});
 		}
 	});
 	
-	function Clear(){
+	function Clear() {
 		$UI.clearBlock('#TransConditions');
 		$UI.clear(TransMasterGrid);
 		$UI.clear(TransDetailGrid);
-		var Dafult = {
+		var DefaultData = {
 			StartDate: DefaultStDate(),
 			EndDate: DefaultEdDate()
 		};
-		$UI.fillBlock('#TransConditions', Dafult);
+		$UI.fillBlock('#TransConditions', DefaultData);
 	}
 	
-	TransLocParams=JSON.stringify(addSessionParams({Type:'All'}));
+	TransLocParams = JSON.stringify(addSessionParams({ Type: 'All' }));
 	var TransLocBox = $HUI.combobox('#TransLoc', {
-		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+TransLocParams,
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + TransLocParams,
 		valueField: 'RowId',
 		textField: 'Description'
 	});
 	
-	var TransMasterCm = [[{
+	var TransMasterCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
 			width: 50,
@@ -84,7 +86,7 @@ var SelInIsTrfOut = function(Fn){
 			title: '单号',
 			field: 'InitNo',
 			align: 'left',
-			editor : 'text',
+			editor: 'text',
 			width: 150,
 			sortable: true
 		}, {
@@ -110,26 +112,29 @@ var SelInIsTrfOut = function(Fn){
 	var TransMasterGrid = $UI.datagrid('#TransMasterGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
-			QueryName: 'DHCINIsTrfM'
+			QueryName: 'DHCINIsTrfM',
+			query2JsonStrict: 1
 		},
 		columns: TransMasterCm,
-		onSelect: function(index, row){
+		onSelect: function(index, row) {
 			var Init = row['RowId'];
-			var ParamsObj = {Init:Init, InitType:'T'};
+			var ParamsObj = { Init: Init, InitType: 'T' };
 			$UI.clear(TransDetailGrid);
 			TransDetailGrid.load({
 				ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
 				QueryName: 'DHCINIsTrfD',
+				query2JsonStrict: 1,
 				Params: JSON.stringify(ParamsObj)
 			});
 		},
-		onLoadSuccess: function(data){
-			if(data.rows.length > 0){
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
 				TransMasterGrid.selectRow(0);
 			}
 		}
 	});
-	var TransDetailCm = [[{
+	var TransDetailCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
 			width: 50,
@@ -156,7 +161,7 @@ var SelInIsTrfOut = function(Fn){
 			field: 'BatExp',
 			width: 200
 		}, {
-			title: '厂商',
+			title: '生产厂家',
 			field: 'ManfDesc',
 			width: 160
 		}, {
@@ -204,7 +209,8 @@ var SelInIsTrfOut = function(Fn){
 	var TransDetailGrid = $UI.datagrid('#TransDetailGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
-			QueryName: 'DHCINIsTrfD'
+			QueryName: 'DHCINIsTrfD',
+			query2JsonStrict: 1
 		},
 		columns: TransDetailCm,
 		remoteSort: false
@@ -212,4 +218,4 @@ var SelInIsTrfOut = function(Fn){
 	
 	Clear();
 	FindTransQuery();
-}
+};

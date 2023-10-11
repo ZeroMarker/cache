@@ -17,7 +17,7 @@ function PrintIngDret(ingrt){
 	var ingrtDate=mainArr[29];
 	var ingrtUserIO=mainArr[8];
 	var ingrtUser=mainArr[30];
-	var PrintNegative=gParam[2];//鎵撳嵃鏄剧ず鈥滆礋鍊尖??
+	var PrintNegative=gParam[2]; 
 	var qPar="" //"ingrti^desc";	//sort^dir
 	var HospDescIO=session['LOGON.HOSPID'];
 	var RQDTFormat=App_StkRQDateFormat  //+" "+App_StkRQTimeFormat;

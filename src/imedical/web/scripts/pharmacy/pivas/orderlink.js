@@ -15,7 +15,6 @@ $(function() {
     InitGridOrderLink();
     InitGridPivasCat();
     InitGridInstruct();
-    InitGridLiquid();
     //配液大类
     $('#btnAdd').on('click', AddOrderLink);
     $('#btnSave').on('click', SaveOrderLink);
@@ -29,9 +28,8 @@ $(function() {
     $('#btnSavePols').on('click', SavePols);
     $('#btnDelPols').on('click', DeletePols);
     //液体量
-    $('#btnSaveLiquid').on('click', function() {
-        SaveLiquid();
-    });
+    $('#btnSaveLiquid').on('click', SaveSingle);
+    PHA_UX.Translate({ buttonID: 'btnTranslate', gridID: 'gridOrderLink', idField: 'polId', sqlTableName: 'PIVA_OrderLink' });
     $('.dhcpha-win-mask').remove();
 });
 
@@ -40,12 +38,14 @@ function InitGridDict() {
         { Type: 'PHCPivaCat' },
         {
             required: true,
+            multiple:true,
+            panelHeight: 'auto',
             onBeforeLoad: function(param) {
                 param.hosp = HospId;
             }
         }
     );
-    GridCmbInstruc = PIVAS.GridComboBox.Init({ Type: 'Instruc' }, { required: true });
+    GridCmbInstruc = PIVAS.GridComboBox.Init({ Type: 'Instruc' }, { required: true,tipPosition:'bottom' });
 }
 
 /// 初始化配液大类表格
@@ -106,7 +106,7 @@ function InitGridOrderLink() {
             if ($(this).datagrid('options').editIndex == undefined) {
                 QueryGridPivasCat();
                 QueryGridInstruct();
-                QueryGridLiquid();
+                QuerySingle();
             }
         },
         onDblClickRow: function(rowIndex, rowData) {
@@ -118,8 +118,7 @@ function InitGridOrderLink() {
         onLoadSuccess: function() {
             $('#gridPivasCat').datagrid('clear');
             $('#gridInstruct').datagrid('clear');
-            $('#txtPolMinVol').val('');
-            $('#txtPolMaxVol').val('');
+            $('#txtPolMinVol,#txtPolMaxVol,#txtPolMinAge,#txtPolMaxAge').numberbox('setValue','');
         },
         onBeforeLoad: function(param) {
             param.HospId = HospId;
@@ -163,7 +162,7 @@ function SaveOrderLink() {
     var saveVal = saveArr[0];
     var saveInfo = saveArr[1];
     if (saveVal < 0) {
-        $.messager.alert('提示', saveInfo, 'warning');
+        $.messager.alert($g('提示'), saveInfo, 'warning');
     }
     $('#gridOrderLink').datagrid('query', {});
 }
@@ -173,12 +172,12 @@ function DeleteOrderLink() {
     var gridSelect = $('#gridOrderLink').datagrid('getSelected');
     if (gridSelect == null) {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: '请选择需要删除的记录',
+            msg: $g('请选择需要删除的记录'),
             type: 'alert'
         });
         return;
     }
-    $.messager.confirm('确认对话框', '您确定删除吗？', function(r) {
+    $.messager.confirm($g('确认对话框'), $g('您确定删除吗？'), function(r) {
         if (r) {
             var polId = gridSelect.polId || '';
             if (polId == '') {
@@ -237,21 +236,17 @@ function InitGridPivasCat() {
 
 /// 保存配液小类
 function SavePoli() {
-    var gridPOLSelect = $('#gridOrderLink').datagrid('getSelected');
-    var polId = gridPOLSelect.polId;
-    if (polId == '') {
-        DHCPHA_HUI_COM.Msg.popover({
-            msg: '请选择左侧配液大类',
-            type: 'alert'
-        });
-        return;
+    var polId = GetSelectPolId();
+    if(polId === ''){
+        return
     }
+
     $('#gridPivasCat').datagrid('endEditing');
     var gridChanges = $('#gridPivasCat').datagrid('getChanges');
     var gridChangeLen = gridChanges.length;
     if (gridChangeLen == 0) {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: '没有需要保存的数据',
+            msg: $g('没有需要保存的数据'),
             type: 'alert'
         });
         return;
@@ -262,12 +257,13 @@ function SavePoli() {
         var params = (iData.poliId || '') + '^' + polId + '^' + (iData.pivasCatId || '');
         paramsStr = paramsStr == '' ? params : paramsStr + '!!' + params;
     }
+    debugger
     var saveRet = tkMakeServerCall('web.DHCSTPIVAS.OrderLink', 'SavePivasCatMulti', paramsStr);
     var saveArr = saveRet.split('^');
     var saveVal = saveArr[0];
     var saveInfo = saveArr[1];
     if (saveVal < 0) {
-        $.messager.alert('提示', saveInfo, 'warning');
+        $.messager.alert($g('提示'), saveInfo, 'warning');
     }
     $('#gridPivasCat').datagrid('query', {});
 }
@@ -285,12 +281,12 @@ function DeletePoli() {
     var gridSelect = $('#gridPivasCat').datagrid('getSelected');
     if (gridSelect == null) {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: '请选择需要删除的记录',
+            msg: $g('请选择需要删除的记录'),
             type: 'alert'
         });
         return;
     }
-    $.messager.confirm('确认对话框', '您确定删除吗？', function(r) {
+    $.messager.confirm($g('确认对话框'), $g('您确定删除吗？'), function(r) {
         if (r) {
             var poliId = gridSelect.poliId || '';
             if (poliId == '') {
@@ -344,21 +340,16 @@ function InitGridInstruct() {
 
 /// 保存用法
 function SavePols() {
-    var gridPOLSelect = $('#gridOrderLink').datagrid('getSelected');
-    var polId = gridPOLSelect.polId || '';
-    if (polId == '') {
-        DHCPHA_HUI_COM.Msg.popover({
-            msg: '请选择左侧配液大类',
-            type: 'alert'
-        });
-        return;
+    var polId = GetSelectPolId();
+    if(polId === ''){
+        return
     }
     $('#gridInstruct').datagrid('endEditing');
     var gridChanges = $('#gridInstruct').datagrid('getChanges');
     var gridChangeLen = gridChanges.length;
     if (gridChangeLen == 0) {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: '没有需要保存的数据',
+            msg: $g('没有需要保存的数据'),
             type: 'alert'
         });
         return;
@@ -374,7 +365,7 @@ function SavePols() {
     var saveVal = saveArr[0];
     var saveInfo = saveArr[1];
     if (saveVal < 0) {
-        $.messager.alert('提示', saveInfo, 'warning');
+        $.messager.alert($g('提示'), saveInfo, 'warning');
     }
     $('#gridInstruct').datagrid('query', {});
 }
@@ -392,12 +383,12 @@ function DeletePols() {
     var gridSelect = $('#gridInstruct').datagrid('getSelected');
     if (gridSelect == null) {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: '请选择需要删除的记录',
+            msg: $g('请选择需要删除的记录'),
             type: 'alert'
         });
         return;
     }
-    $.messager.confirm('确认对话框', '您确定删除吗？', function(r) {
+    $.messager.confirm($g('确认对话框'), $g('您确定删除吗？'), function(r) {
         if (r) {
             var polsId = gridSelect.polsId || '';
             if (polsId == '') {
@@ -411,49 +402,42 @@ function DeletePols() {
     });
 }
 
-/// 初始化液体量
-function InitGridLiquid() {
-    var columns = [
-        [{ field: 'liquidQty', title: '液体量(ml)', width: 200, halign: 'left', align: 'left' }]
-    ];
-    var dataGridOption = {
-        url: '',
-        pagination: false,
-        fitColumns: true,
-        fit: true,
-        rownumbers: false,
-        columns: columns,
-        toolbar: '#gridLiquidBar',
-        onClickRow: function(rowIndex, rowData) {},
-        onLoadSuccess: function() {}
-    };
-    DHCPHA_HUI_COM.Grid.Init('gridLiquid', dataGridOption);
-}
 
-/// 保存液体量
-function SaveLiquid() {
+/// 保存液体量年龄等
+function SaveSingle() {
     var polId = GetSelectPolId();
     if (polId == '') {
         return;
     }
-    var PolMinVol = $('#txtPolMinVol').val();
-    var PolMaxVol = $('#txtPolMaxVol').val();
-    if (PolMinVol != '' && PolMaxVol != '' && PolMinVol > PolMaxVol) {
+    var PolMinVol = $('#txtPolMinVol').numberbox('getValue');
+    var PolMaxVol = $('#txtPolMaxVol').numberbox('getValue');
+    var PolMinAge = $('#txtPolMinAge').numberbox('getValue');
+    var PolMaxAge = $('#txtPolMaxAge').numberbox('getValue');
+    if (PolMinVol != '' && PolMaxVol != '' && parseFloat(PolMinVol) > parseFloat(PolMaxVol)) {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: '最小下限量' + PolMinVol + '不能大于最大上限量' + PolMaxVol,
+            msg: $g('最小液体量') + PolMinVol + $g('不能大于最大液体量') + PolMaxVol,
+            type: 'alert'
+        });
+        return false;
+    }
+    if (PolMinAge != '' && PolMaxAge != '' && parseFloat(PolMinAge) > parseFloat(PolMaxAge)) {
+        DHCPHA_HUI_COM.Msg.popover({
+            msg: $g('最小年龄') + PolMinAge + $g('不能大于最大年龄') + PolMaxAge,
             type: 'alert'
         });
         return false;
     }
     PolMinVol = isNaN(PolMinVol) || PolMinVol == '' ? '' : parseInt(PolMinVol);
     PolMaxVol = isNaN(PolMaxVol) || PolMaxVol == '' ? '' : parseInt(PolMaxVol);
-    var params = polId + '^' + PolMinVol + '^' + PolMaxVol;
-    var saveRet = tkMakeServerCall('web.DHCSTPIVAS.OrderLink', 'SaveLiquid', params);
+    PolMinAge = isNaN(PolMinAge) || PolMinAge == '' ? '' : parseFloat(PolMinAge);
+    PolMaxAge = isNaN(PolMaxAge) || PolMaxAge == '' ? '' : parseFloat(PolMaxAge);
+    var params = polId + '^' + PolMinVol + '^' + PolMaxVol+ '^' + PolMinAge + '^' + PolMaxAge;
+    var saveRet = tkMakeServerCall('web.DHCSTPIVAS.OrderLink', 'SaveSingle', params);
     var saveArr = saveRet.split('^');
     var saveVal = saveArr[0];
     var saveInfo = saveArr[1];
     if (saveVal < 0) {
-        $.messager.alert('提示', saveInfo, 'warning');
+        $.messager.alert($g('提示'), saveInfo, 'warning');
         return;
     } else {
         DHCPHA_HUI_COM.Msg.popover({
@@ -461,15 +445,23 @@ function SaveLiquid() {
             type: 'success'
         });
     }
-    QueryGridLiquid();
+    QuerySingle();
 }
-//获取液体量列表
-function QueryGridLiquid() {
+//获取液体量等单独维护的
+function QuerySingle() {
     var gridPOLSelect = $('#gridOrderLink').datagrid('getSelected');
     var polId = gridPOLSelect.polId;
-    var result = tkMakeServerCall('web.DHCSTPIVAS.OrderLink', 'GetLiquidInfo', polId);
-    $('#txtPolMinVol').val(result.split('^')[0] || '');
-    $('#txtPolMaxVol').val(result.split('^')[1] || '');
+    $.cm({
+        ClassName:'web.DHCSTPIVAS.OrderLink',
+        MethodName:'GetLinkSingle',
+        polId:polId,
+    },function(data){
+        $('#txtPolMinVol').numberbox('setValue',data.minVol);
+        $('#txtPolMaxVol').numberbox('setValue',data.maxVol);
+        $('#txtPolMinAge').numberbox('setValue',data.minAge);
+        $('#txtPolMaxAge').numberbox('setValue',data.maxAge);
+    });
+
 }
 /// 配液大类增加
 function AddOrderLink() {
@@ -478,8 +470,7 @@ function AddOrderLink() {
     });
     $('#gridPivasCat').datagrid('clear');
     $('#gridInstruct').datagrid('clear');
-    $('#txtPolMinVol').val('');
-    $('#txtPolMaxVol').val('');
+    $('#txtPolMinVol,#txtPolMaxVol,#txtPolMinAge,#txtPolMaxAge').numberbox('setValue','');
 }
 
 /// 配液小类增加
@@ -507,7 +498,7 @@ function GetSelectPolId() {
     var gridSelect = $('#gridOrderLink').datagrid('getSelected');
     if (gridSelect == null) {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: '请先选中需要增加规则的配液大类记录',
+            msg: $g('请先选中需要增加规则的配液大类记录'),
             type: 'alert'
         });
         return '';
@@ -515,7 +506,7 @@ function GetSelectPolId() {
     var polId = gridSelect.polId || '';
     if (polId == '') {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: '请先保存配液大类',
+            msg: $g('请先保存配液大类'),
             type: 'alert'
         });
         return '';
@@ -524,7 +515,7 @@ function GetSelectPolId() {
 }
 
 function InitHospCombo() {
-	var genHospObj=PIVAS.AddHospCom({tableName:'PIVA_OrderLink'});
+	var genHospObj=PIVAS.AddHospCom({tableName:'PIVA_OrderLink'},{width:315});
 	if (typeof genHospObj ==='object'){
         //增加选择事件
         genHospObj.options().onSelect =  function(index, record) {
@@ -535,4 +526,15 @@ function InitHospCombo() {
             }
         };
     }
+ 	var defHosp = $.cm(
+		{
+		    dataType: 'text',
+		    ClassName: 'web.DHCBL.BDP.BDPMappingHOSP',
+		    MethodName: 'GetDefHospIdByTableName',
+		    tableName: 'PIVA_OrderLink',
+		    HospID: HospId
+		},
+		false
+	);
+	HospId = defHosp;  
 }

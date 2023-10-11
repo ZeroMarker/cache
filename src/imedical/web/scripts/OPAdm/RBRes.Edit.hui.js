@@ -387,6 +387,7 @@ function UpdateClickHandle(){
 	var RESAllowGetSeqNoFlag=$HUI.checkbox("#RESAllowGetSeqNoFlag").getValue();	
 	if(RESAllowGetSeqNoFlag){RESAllowGetSeqNoFlag="Y"}
 	else{RESAllowGetSeqNoFlag="N"}
+	var RESReAdmFeeFlag=$("#RESReAdmFeeFlag").checkbox("getValue")?"Y":"N";
 	
 	var entityInfo=["ID="+RowID,
 					"RESClinicGroupDR="+RESClinicGroupID,
@@ -396,7 +397,8 @@ function UpdateClickHandle(){
 					"RESAppStartNum="+RESAppStartNum,
 					"RESAddLoad="+RESAddLoad,
 					"RESEPMarkFlag="+RESEPMarkFlag,
-					"RESAllowGetSeqNoFlag="+RESAllowGetSeqNoFlag
+					"RESAllowGetSeqNoFlag="+RESAllowGetSeqNoFlag,
+					"RESReAdmFeeFlag="+RESReAdmFeeFlag
     				];
                 
 	var resource=Card_GetEntityClassInfoToXML(entityInfo);
@@ -599,6 +601,7 @@ function DoctorRowChangeHandle(row){
  	  	var RESAddLoad= DataArr[5];
  	  	var RESEPMarkFlag=DataArr[9];
  	  	var RESAllowGetSeqNoFlag=DataArr[13];
+ 	  	var RESReAdmFeeFlag=DataArr[14];
  	  	//sessionType=sessionType.Trim()
  	  	//clinicGroupDR=clinicGroupDR.Trim()
  	  	$HUI.combobox("#RESSessionType").setValue(sessionType);	
@@ -617,6 +620,7 @@ function DoctorRowChangeHandle(row){
 		else{RESAllowGetSeqNoFlag=false}
 		$HUI.checkbox("#RESEPMarkFlag").setValue(RESEPMarkFlag);
 		$HUI.checkbox("#RESAllowGetSeqNoFlag").setValue(RESAllowGetSeqNoFlag);	
+		$("#RESReAdmFeeFlag").checkbox("setValue",RESReAdmFeeFlag=="Y");
 	})
 	PutTimeRangeselectHandle();
 }
@@ -716,6 +720,7 @@ function ClearData(){
 	$HUI.checkbox("#RESEPMarkFlag",{checked:false});
 	$HUI.checkbox("#RESAllowGetSeqNoFlag").setValue(false);
 	$HUI.checkbox("#RESAllowGetSeqNoFlag",{checked:false});
+	$("#RESReAdmFeeFlag").checkbox("setValue",false);
 }
 
 function ClearDataNew(){

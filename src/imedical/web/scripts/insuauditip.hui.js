@@ -1,9 +1,9 @@
-/**
- * ×¡ÔºÒ½±£Ò½ÖöÉóºËJS
+ï»¿/**
+ * ä½é™¢åŒ»ä¿åŒ»å˜±å®¡æ ¸JS
  * FileName:insuauditip.hui.js
  * DingSH 2020-02-25
- * °æ±¾£ºV1.0
- * hisui°æ±¾:0.1.0
+ * ç‰ˆæœ¬ï¼šV1.0
+ * hisuiç‰ˆæœ¬:0.1.0
  */
 var HospDr=session['LOGON.HOSPID'];
 var GUser=session['LOGON.USERID'];
@@ -26,28 +26,28 @@ $(function()
    function (e){
        //banBackSpace(e);
     });
- //#1³õÊ¼»¯ĞèÉóºË»¼Õßgd
+ //#1åˆå§‹åŒ–éœ€å®¡æ ¸æ‚£è€…gd
  InitPatDg()
     
- //#2³õÊ¼»¯ĞèÉóºËÒ½ÖöÏîÄ¿gd
+ //#2åˆå§‹åŒ–éœ€å®¡æ ¸åŒ»å˜±é¡¹ç›®gd
  InitPatOrdDg()
 
- //#3³õÊ¼»¯BtnÊÂ¼ş
+ //#3åˆå§‹åŒ–Btnäº‹ä»¶
  InitBtnClick();   
  
- //#4Òş²ØÔªËØ
+ //#4éšè—å…ƒç´ 
  $('#DiagWin').hide();
  $('#PatOrdLstWin').hide();    
  //$('#stDate').datebox('setValue','08/01/2020');
 // $('#edDate').datebox('setValue','08/01/2020');
- //#5ÈÕÆÚÄ¬ÈÏÉèÖÃ
+ //#5æ—¥æœŸé»˜è®¤è®¾ç½®
  setDefDateValue();
 });
 
 
 
 /**
-* ÈÕÆÚÄ¬ÈÏÉèÖÃ
+* æ—¥æœŸé»˜è®¤è®¾ç½®
 */
 function setDefDateValue() {
 	var curDateTime =$.m({ClassName: "web.UDHCJFBaseCommon", MethodName: "FormDateTime"}, false);
@@ -58,25 +58,25 @@ function setDefDateValue() {
 
 
 /**
-* È¡µ±Ç°Ê±¼ä
+* å–å½“å‰æ—¶é—´
 */
 function getCurDateTime() {
 	return 
 }
 
 
-//³õÊ¼»¯BtnÊÂ¼ş
+//åˆå§‹åŒ–Btnäº‹ä»¶
 function InitBtnClick(){
-   //µÇ¼ÇºÅ»Ø³µ
+   //ç™»è®°å·å›è½¦
    $("#regNo").keydown( function(e){ 
       RegNo_onkeydown(e);
    }); 
-   //²¡°¸ºÅ»Ø³µ
+   //ç—…æ¡ˆå·å›è½¦
    $("#medicareNo").keydown( function(e){ 
       MedicareNo_onkeydown(e);
    }); 
    
-   //¿ªÊ¼ÉóºË
+   //å¼€å§‹å®¡æ ¸
    $HUI.linkbutton('#btnAuditSt',
    {
      onClick: function()
@@ -84,30 +84,32 @@ function InitBtnClick(){
              btnAuditSt_click();
             }
     });    
-  //¿ªÊ¼×Ô¶¯²éÑ¯           
+  //å¼€å§‹è‡ªåŠ¨æŸ¥è¯¢           
    $HUI.linkbutton('#btnSearchAutoSt',
    {
       onClick: function()
            {
-             theInterval=setInterval("QryChkPatInfo()",10000);
+             theInterval=setInterval(QryChkPatInfo,10000);
+             $("#btnSearchAutoSt").linkbutton('disable');
             }
     });  
-  //Í£Ö¹×Ô¶¯²éÑ¯     
+  //åœæ­¢è‡ªåŠ¨æŸ¥è¯¢     
    $HUI.linkbutton('#btnSearchAutoStp',
     {
        onClick: function()
             {
               clearInterval(theInterval);
+              $("#btnSearchAutoSt").linkbutton('enable');
             }
      });     
-  //Ò½±£Íê³ÉÉóºË     
+  //åŒ»ä¿å®Œæˆå®¡æ ¸     
    $HUI.linkbutton('#btnAudit',{
       onClick: function()
            {
               Audit_click();
             }
        });
-   //±£´æ   
+   //ä¿å­˜   
    $HUI.linkbutton('#btnSave',{
            onClick: function()
            {
@@ -115,14 +117,14 @@ function InitBtnClick(){
             }
        });
 
-   //ÖØĞÂÉóºË   
+   //é‡æ–°å®¡æ ¸   
    $HUI.linkbutton('#btnAuditReset',{
            onClick: function()
            {
              BtnAuditBack_click();
             }
        });    
-  //ÉóºË×´Ì¬
+  //å®¡æ ¸çŠ¶æ€
    $HUI.combobox("#chkType",{
       onSelect: function(rec)
       {
@@ -130,7 +132,7 @@ function InitBtnClick(){
 	   }
    });
    
-   //²éÑ¯ÀàĞÍ
+   //æŸ¥è¯¢ç±»å‹
    $HUI.combobox("#searchType",{
       onSelect: function(rec)
       {
@@ -142,9 +144,9 @@ function InitBtnClick(){
   
    }
 
-//³õÊ¼»¯ĞèÉó»¼ÕßĞÅÏ¢gd
+//åˆå§‹åŒ–éœ€å®¡æ‚£è€…ä¿¡æ¯gd
 function InitPatDg() {
-   //³õÊ¼»¯datagrid
+   //åˆå§‹åŒ–datagrid
    $HUI.datagrid("#chkpatdg",{
 	   fit: true,
        url: $URL,
@@ -152,56 +154,61 @@ function InitPatDg() {
        border: false,
        data: [],
        columns:[[
-           {field:'TabRegNo',title:'µÇ¼ÇºÅ',width:120,align:'left'},
-           {field:'TabPatName',title:'ĞÕÃû',width:100},
-           {field:'TabCTDesc',title:'²¡·¿ÃèÊö',width:150},
-           {field:'TabPatType',title:'²¡ÈËÀàĞÍ',width:100,align:'center'},
-           {field:'TabDiagDesc',title:'Õï¶Ï',width:160
+           {field:'TabRegNo',title:'ç™»è®°å·',width:120},
+           {field:'TabPatName',title:'å§“å',width:100},
+           {field:'TabCTDesc',title:'ç—…æˆ¿æè¿°',width:150},
+           {field:'TabPatType',title:'ç—…äººç±»å‹',width:100},
+           {field:'TabDiagDesc',title:'è¯Šæ–­',width:160
            ,formatter: function (value, row, index) {
                           if(value!="")
                           {
-                           return "<a class='hisui-tooltip' href='#' title='²é¿´Õï¶ÏÏêÏ¸' onclick='showDiagWin("+JSON.stringify(row)+")' \'>"+value+"</a>";
+                           return "<a class='hisui-tooltip' href='#' title='æŸ¥çœ‹è¯Šæ–­è¯¦ç»†' onclick='showDiagWin("+JSON.stringify(row)+")' \'>"+value+"</a>";
                           }
                    }
            
            },
-           {field:'TabDemo',title:'±¸×¢ ',width:100,
+           {field:'TabDemo',title:'å¤‡æ³¨ ',width:100,
             editor:{
                        type:'text',
                    }},
-           {field:'TabAuditFlag',title:'ÉóºË±ê¼Ç',width:80,align:'center'},
-           {field:'TabAuditUserName',title:'ÉóºËÈË',width:120,align:'center'},
-           {field:'TabAuditDate',title:'ÉóºËÈÕÆÚ',width:120},
-           {field:'TabAuditTime',title:'ÉóºËÊ±¼ä',width:80},
-           {field:'TabAdmDate',title:'ÈëÔºÈÕÆÚ',width:100},
-           {field:'TabDischgDate',title:'³öÔºÈÕÆÚ',width:100},
-           {field:'TabPoint',title:'×Ô·Ñ±ÈÖØ',width:80},
-           {field:'TabTolAmount',title:'×Ü½ğ¶î',width:100},
-           {field:'TabSex',title:'ĞÔ±ğ',width:60},
-           {field:'TMediCare',title:'²¡°¸ºÅ',width:100},
-           {field:'TabBillDr',title:'ÕÊµ¥ºÅ',width:100},
-           {field:'TabReceiveFlag',title:'½ÓÊÕ×´Ì¬',width:40,hidden:true},
+           {field:'TabAuditFlag',title:'å®¡æ ¸æ ‡è®°',width:80},
+           {field:'TabAuditUserName',title:'å®¡æ ¸äºº',width:120},
+           {field:'TabAuditDate',title:'å®¡æ ¸æ—¥æœŸ',width:120},
+           {field:'TabAuditTime',title:'å®¡æ ¸æ—¶é—´',width:80},
+           {field:'TabAdmDate',title:'å…¥é™¢æ—¥æœŸ',width:100},
+           {field:'TabDischgDate',title:'å‡ºé™¢æ—¥æœŸ',width:100},
+           {field:'TabPoint',title:'è‡ªè´¹æ¯”é‡',width:80},
+           {field:'TabTolAmount',title:'æ€»é‡‘é¢',width:100,align:'right'},
+           {field:'TabSex',title:'æ€§åˆ«',width:60},
+           {field:'TMediCare',title:'ç—…æ¡ˆå·',width:100},
+           {field:'TabBillDr',title:'å¸å•å·',width:100},
+           {field:'TabReceiveFlag',title:'æ¥æ”¶çŠ¶æ€',width:40,hidden:true},
            {field:'TabAdmRowid',title:'TabAdmRowid',width:40,hidden:true},
            
        ]],
        pageSize: 10,
        pagination:true,
        onClickRow : function(rowIndex, rowData) {
+	      
+	       var ordEditIndex=undefined;
+	       OrdEndEditing();
            SelAdmDr=rowData.TabAdmRowid;
            SelBillDr=rowData.TabBillDr
+           setEprMenuForm(rowData.TabAdmRowid,""); // + DingSH 20220126 
           var DivFlag=tkMakeServerCall("web.DHCINSUDivideSubCtl","GetDivSubUpConutByBillDr",SelBillDr,"");
 	     if (DivFlag>0)
 	      {  
-	        $.messager.alert('ÌáÊ¾', '¸Ã»¼ÕßÒÑ¾­Ò½±£·ÑÓÃÉÏ´«,²»ÄÜ½øĞĞ·ÑÓÃµ÷Õû£¡','info');
+	        $.messager.alert('æç¤º', 'è¯¥æ‚£è€…å·²ç»åŒ»ä¿è´¹ç”¨ä¸Šä¼ ,ä¸èƒ½è¿›è¡Œè´¹ç”¨è°ƒæ•´ï¼','info');
 	         disableById('btnSave')
 	        return;
 	      }
-           if(rowData.TabAuditFlag=="¿ªÊ¼ÉóºË")
+           if(rowData.TabAuditFlag=="å¼€å§‹å®¡æ ¸")
            {
 	           
 	           disableById('btnAuditSt')
 	           enableById('btnAudit')
 	           enableById('btnSave')
+	           enableById('btnAuditReset')
 	           QryPatOrd();
 	       }
 	       if(rowData.TabAuditFlag=="")
@@ -209,14 +216,16 @@ function InitPatDg() {
 	           
 	           disableById('btnSave')
 	           disableById('btnAudit')
+	           disableById('btnAuditReset')
 	           enableById('btnAuditSt')
 	       }
-	       if(rowData.TabAuditFlag=="Íê³É")
+	       if(rowData.TabAuditFlag=="å®Œæˆ")
            {
 	           
 	           disableById('btnSave')
 	           disableById('btnAuditSt')
 	           disableById('btnAudit')
+	           enableById('btnAuditReset')
 	            QryPatOrd();
 	       }
 	       
@@ -244,12 +253,12 @@ function InitPatDg() {
    
 }
 
-//³õÊ¼»¯ĞèÉóºË»¼ÕßÒ½Öögd
+//åˆå§‹åŒ–éœ€å®¡æ ¸æ‚£è€…åŒ»å˜±gd
 function InitPatOrdDg()
 {
-    //³õÊ¼»¯datagrid
+    //åˆå§‹åŒ–datagrid
    $HUI.datagrid("#chkpatOrddg",{
-	    url: $URL,
+	   url: $URL,
 	   fit: true,
        singleSelect: false,
        rownumbers: true,
@@ -264,14 +273,16 @@ function InitPatOrdDg()
        [[ { 
            field: 'TListFlag',
            width: 40,
-           title: 'Á´½Ó',
+           title: 'é“¾æ¥',
            align: 'center',
            formatter: function (value, row, index) {
                           if(value!="")
                           {
-
-                           return "<img class='myTooltip' style='width:60' title='²é¿´Ò½ÖöÏêÏ¸' onclick='showPatOrdLstWin("+JSON.stringify(row)+")'  src='../scripts_lib/hisui-0.1.0/dist/css/icons/paper_info.png' style='border:0px;cursor:pointer' \'>";
-                           
+                            if(HISUIStyleCode == "lite") {
+                                return "<p class='icon icon-paper-info' style='width:60' title='æŸ¥çœ‹åŒ»å˜±è¯¦ç»†' onclick='showPatOrdLstWin("+JSON.stringify(row)+")'  style='border:0px;cursor:pointer; \'>";
+                            }else{
+                                return "<img class='myTooltip' style='width:60' title='æŸ¥çœ‹åŒ»å˜±è¯¦ç»†' onclick='showPatOrdLstWin("+JSON.stringify(row)+")' src='../scripts_lib/hisui-0.1.0/dist/css/icons/paper_info.png' style='border:0px;cursor:pointer; \'>";
+                            }                   
                           }
                    }
          },
@@ -284,40 +295,42 @@ function InitPatOrdDg()
            {field:'TTarDr',title:'TTarDr',width:10,hidden:true},
            {field:'TOEORI',title:'TOEORI',width:10,hidden:true},
            {field:'Tchangeflag',title:'Tchangeflag',width:10,hidden:true},
-           {field:'TTarDesc',title:'ÏîÄ¿Ãû³Æ',width:180},
-           {field:'Txmdj',title:'ÏîÄ¿µÈ¼¶',width:100,
+           {field:'TTarDesc',title:'é¡¹ç›®åç§°',width:180},
+           {field:'Txmdj',title:'é¡¹ç›®ç­‰çº§',width:100,
             styler:function(value,row,index)
              {
-	            
-	            return 'color:blue' ;
-	            
+	            if(HISUIStyleCode == "lite") {
+                    return 'color:#339EFF' ;
+                }else{
+                }
+	            return 'color:#40A2DE' ;
 	            }
            },
-           {field:'TPrice',title:'µ¥¼Û',width:80,align:'right',
+           {field:'TPrice',title:'å•ä»·',width:80,align:'right',
               formatter:function(val,rowData,rowIndex){
                if(val!=null)
                 return Number(val).toFixed(4);
                 }
            },
-           {field:'TQty',title:'ÊıÁ¿',width:80,align:'center'},
-           {field:'TAmount',title:'×Ü½ğ¶î',width:100,align:'right',
+           {field:'TQty',title:'æ•°é‡',width:80,align:'right'},
+           {field:'TAmount',title:'æ€»é‡‘é¢',width:100,align:'right',
 	           formatter:function(val,rowData,rowIndex){
                if(val!=null)
                 return Number(val).toFixed(2);
                 }
             
             },
-            {field:'TInsuFlag',title:'µ÷ÕûÎª×Ô·Ñ',width:100,align:'center',
+            {field:'TInsuFlag',title:'è°ƒæ•´ä¸ºè‡ªè´¹',width:100,
             formatter:function(val,rowData,rowIndex){
-                  return (val=="Y") ? "ÊÇ" : "·ñ";
+                  return (val=="Y") ? "æ˜¯" : "å¦";
                 },
              editor:{
 	             type:'switchbox',
 	             options:{   
 		         onClass:'primary',
 	             offClass:'gray',
-	             onText:'ÊÇ',
-	             offText:'·ñ',
+	             onText:'æ˜¯',
+	             offText:'å¦',
 	             onSwitchChange:function(event,obj){
 		                RowTInsuFlagOnChange(obj.value,"chkpatOrddg",PatOrd.curIndex,PatOrd.curRow);
 		             }
@@ -325,18 +338,20 @@ function InitPatOrdDg()
 	             }
            },
             
-           {field:'TOrderDate',title:'Ò½ÖöÈÕÆÚ',width:90,align:'center'},
-           {field:'TOrderTime',title:'Ò½ÖöÊ±¼ä',width:80,align:'center'},
-           {field:'TDocName',title:'Ò½ÖöÂ¼ÈëÈË',width:90,align:'center'},
-           {field:'Tybbz',title:'ÏŞÖÆĞÅÏ¢',width:130},
-           {field:'TUomDesc',title:'µ¥Î»',width:60},
-           {field:'TDemo',title:'±¸×¢',width:100},
-           {field:'TDHCTarCate',title:'ÏîÄ¿·ÖÀà',width:80},
-           {field:'TarInsuFlag',title:'Ô­Ê¼µÈ¼¶',width:140},
-           {field:'TArcimDesc',title:'Ò½ÖöÃû³Æ',width:140},
-           {field:'TInsuTarCode',title:'Ò½±£ÏîÄ¿±àÂë',width:120},
-           {field:'TInsuTarDesc',title:'Ò½±£ÏîÄ¿Ãû³Æ',width:140},
-           {field:'TTarCode',title:'Ò½ÔºÏîÄ¿±àÂë',width:120},
+           {field:'TOrderDate',title:'åŒ»å˜±æ—¥æœŸ',width:90},
+           {field:'TOrderTime',title:'åŒ»å˜±æ—¶é—´',width:80},
+           {field:'TDocName',title:'åŒ»å˜±å½•å…¥äºº',width:90},
+           {field:'Tybbz',title:'é™åˆ¶ä¿¡æ¯',width:130},
+           {field:'TUomDesc',title:'å•ä½',width:60},
+           {field:'TDemo',title:'å¤‡æ³¨',width:100, editor:{
+                       type:'text',
+                   }},
+           {field:'TDHCTarCate',title:'é¡¹ç›®åˆ†ç±»',width:80},
+           {field:'TarInsuFlag',title:'åŸå§‹ç­‰çº§',width:140},
+           {field:'TArcimDesc',title:'åŒ»å˜±åç§°',width:140},
+           {field:'TInsuTarCode',title:'åŒ»ä¿é¡¹ç›®ç¼–ç ',width:120},
+           {field:'TInsuTarDesc',title:'åŒ»ä¿é¡¹ç›®åç§°',width:140},
+           {field:'TTarCode',title:'åŒ»é™¢é¡¹ç›®ç¼–ç ',width:120},
            {field:'MotherAdmFlag',title:'MotherAdmFlag',width:100},
            {field:'TmpOutDrugFlag',title:'TmpOutDrugFlag',width:150},
            
@@ -356,7 +371,7 @@ function InitPatOrdDg()
    });
 }
 
-//²éÑ¯ÉóºË»¼ÕßĞÅÏ¢
+//æŸ¥è¯¢å®¡æ ¸æ‚£è€…ä¿¡æ¯
 function QryChkPatInfo()
 {
    SelAdmDr="",SelBillDr=""
@@ -368,13 +383,13 @@ function QryChkPatInfo()
    var tmpRegNo=regNo;
 	if (tmpRegNo!="")
 		{
-	    var regNoLength=10-regNo.length;     //µÇ¼ÇºÅ²¹Áã   	
+	    var regNoLength=10-regNo.length;     //ç™»è®°å·è¡¥é›¶   	
 		for (var i=0;i<regNoLength;i++){
 			tmpRegNo="0"+tmpRegNo;			
 		}
 		}
 	regNo=tmpRegNo;	
-    setValueById('regNo',regNo)              //µÇ¼ÇºÅ²¹È«ºó»ØĞ´
+    setValueById('regNo',regNo)              //ç™»è®°å·è¡¥å…¨åå›å†™
    
    var medicareNo=getValueById('medicareNo')
    $('#chkpatdg').datagrid('reload',{
@@ -392,9 +407,9 @@ function QryChkPatInfo()
        HospDr:HospDr
        });
        
-       ///
+       EditIndexDefault(); ///
 }
-//²éÑ¯»¼ÕßÒ½ÖöÏîÄ¿Ã÷Ï¸
+//æŸ¥è¯¢æ‚£è€…åŒ»å˜±é¡¹ç›®æ˜ç»†
 function QryPatOrd()
 {    
      $('#chkpatOrddg').datagrid('reload',{
@@ -408,33 +423,34 @@ function QryPatOrd()
    
 }
 
-//¿ªÊ¼ÉóºË
+//å¼€å§‹å®¡æ ¸
 function btnAuditSt_click()
 {
     //Rowid^Adm_Dr^AdmInfo_Dr^OEORI_Dr^TaritmDr^PBD_Dr^InsuFlag^Scale^UnitPrice^Qty^Amount^AuditInfo^User_Dr^UserName^Date^Time^AuditFlag^BZ^Demo1^Demo2^Demo3^Demo4^Demo5^Demo6^Demo7^Demo8^Demo9^Demo10
     endEditing();
     if(SelPatModifyAfterRowObj==null)
     {
-       $.messager.alert('ÌáÊ¾', 'ÇëÑ¡ÔñĞèÉóºË»¼Õß¼ÇÂ¼', 'info') ;
+       $.messager.alert('æç¤º', 'è¯·é€‰æ‹©éœ€å®¡æ ¸æ‚£è€…è®°å½•', 'info') ;
        return ;
 	}
     if(SelAdmDr=="")
     {
-       $.messager.alert('ÌáÊ¾', '¾ÍÕïºÅ²»ÄÜÎª¿Õ£¬ÇëÑ¡ÔñĞèÉóºË»¼Õß¼ÇÂ¼', 'info') ;
+       $.messager.alert('æç¤º', 'å°±è¯Šå·ä¸èƒ½ä¸ºç©ºï¼Œè¯·é€‰æ‹©éœ€å®¡æ ¸æ‚£è€…è®°å½•', 'info') ;
        return ;
     }
     if(SelBillDr=="")
     {
-       $.messager.alert('ÌáÊ¾', 'ÕÊµ¥ºÅ²»ÄÜÎª¿Õ£¬ÇëÑ¡ÔñĞèÉóºË»¼Õß¼ÇÂ¼', 'info') ;
+       $.messager.alert('æç¤º', 'å¸å•å·ä¸èƒ½ä¸ºç©ºï¼Œè¯·é€‰æ‹©éœ€å®¡æ ¸æ‚£è€…è®°å½•', 'info') ;
        return ;
     }
     var BZ=SelPatModifyAfterRowObj.TabDemo
     var AuditUserName=SelPatModifyAfterRowObj.TabAuditUserName
+    var TabAuditFlag=SelPatModifyAfterRowObj.TabAuditFlag
 	if ((AuditUserName!="")&&(AuditUserName!=GUserName)){
-		$.messager.alert('ÌáÊ¾', '¸Ã»¼ÕßÒÑÓĞ'+SelPatModifyAfterRowObj.TabAuditUserName+'ÔÚÉóºË,²»¿ÉÉóºË', 'info')
+		$.messager.alert('æç¤º', 'è¯¥æ‚£è€…,å·²ç”±å®¡æ ¸äººå‘˜['+SelPatModifyAfterRowObj.TabAuditUserName+']åœ¨å®¡æ ¸<br>å®¡æ ¸çŠ¶æ€:'+abAuditFlag+',ä¸å¯é‡å¤å®¡æ ¸', 'info')
 		return;
 		}
-   	var InString = "^"+SelAdmDr+"^"+SelBillDr+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+0+"^"+0+"^"+0+"^"+0+"^"+GUser+"^"+GUserName+"^^^"+"¿ªÊ¼ÉóºË"+"^"+BZ+"^^^^^^^^^^^"
+   	var InString = "^"+SelAdmDr+"^"+SelBillDr+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+0+"^"+0+"^"+0+"^"+0+"^"+GUser+"^"+GUserName+"^^^"+"å¼€å§‹å®¡æ ¸"+"^"+BZ+"^^^^^^^^^^^"
 	
 	 $.m({
             ClassName: "web.INSUAuditIP",
@@ -442,55 +458,55 @@ function btnAuditSt_click()
             InString: InString,
         }, function (rtn) {
             if (rtn > 0) {
-              $.messager.alert('ÌáÊ¾', 'ÉóºË¿ªÊ¼', 'success') ;
+              $.messager.alert('æç¤º', 'å®¡æ ¸å¼€å§‹', 'success') ;
               QryChkPatInfo() ;  
             } else {
-                $.messager.alert('ÌáÊ¾', 'ÉóºË¿ªÊ¼Ê§°Ü,Error=' + rtn, 'error') ;
+                $.messager.alert('æç¤º', 'å®¡æ ¸å¼€å§‹å¤±è´¥,Error=' + rtn, 'error') ;
             }
         });
         
     
 }
 
-//ÉóºËÍê³É
+//å®¡æ ¸å®Œæˆ
 function Audit_click()
 {
     endEditing();
     if(SelPatModifyAfterRowObj==null)
     {
-      $.messager.alert('ÌáÊ¾', 'ÇëÑ¡ÔñĞèÉóºË»¼Õß¼ÇÂ¼', 'info') ;
+      $.messager.alert('æç¤º', 'è¯·é€‰æ‹©éœ€å®¡æ ¸æ‚£è€…è®°å½•', 'info') ;
       return ;
 	 }
     if(SelAdmDr=="")
     {
-      $.messager.alert('ÌáÊ¾', '¾ÍÕïºÅ²»ÄÜÎª¿Õ£¬ÇëÑ¡ÔñĞèÉóºË»¼Õß¼ÇÂ¼', 'info') ;
+      $.messager.alert('æç¤º', 'å°±è¯Šå·ä¸èƒ½ä¸ºç©ºï¼Œè¯·é€‰æ‹©éœ€å®¡æ ¸æ‚£è€…è®°å½•', 'info') ;
       return ;
     }
     if(SelBillDr=="")
     {
-     $.messager.alert('ÌáÊ¾', 'ÕÊµ¥ºÅ²»ÄÜÎª¿Õ£¬ÇëÑ¡ÔñĞèÉóºË»¼Õß¼ÇÂ¼', 'info') ;
+     $.messager.alert('æç¤º', 'å¸å•å·ä¸èƒ½ä¸ºç©ºï¼Œè¯·é€‰æ‹©éœ€å®¡æ ¸æ‚£è€…è®°å½•', 'info') ;
      return ;
     }
     var BZ=SelPatModifyAfterRowObj.TabDemo ;
 	if ((SelPatModifyAfterRowObj.TabAuditUserName!=GUserName))
 	{
-		$.messager.alert('ÌáÊ¾', '¸Ã»¼ÕßÒÑÓĞ'+SelPatModifyAfterRowObj.TabAuditUserName+'ÔÚÉóºË,²»¿ÉÉóºË', 'info')
+		$.messager.alert('æç¤º', 'è¯¥æ‚£è€…å·²æœ‰'+SelPatModifyAfterRowObj.TabAuditUserName+'åœ¨å®¡æ ¸,ä¸å¯å®¡æ ¸', 'info')
 		return ;
 	}
 		
-	//Save_Click();  //Íê³ÉÉóºËÊ±×Ô¶¯±£´æ 2011 12 26
+	//Save_Click();  //å®Œæˆå®¡æ ¸æ—¶è‡ªåŠ¨ä¿å­˜ 2011 12 26
 
-   	var InString = "^"+SelAdmDr+"^"+SelBillDr+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+0+"^"+0+"^"+0+"^"+0+"^"+GUser+"^"+GUserName+"^^^"+"Íê³É"+"^"+BZ+"^^^^^^^^^^^"
+   	var InString = "^"+SelAdmDr+"^"+SelBillDr+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+0+"^"+0+"^"+0+"^"+0+"^"+GUser+"^"+GUserName+"^^^"+"å®Œæˆ"+"^"+BZ+"^^^^^^^^^^^"
 	$.m({
             ClassName: "web.INSUAuditIP",
             MethodName: "SaveAuditLog",
             InString: InString,
         }, function (rtn) {
             if (rtn > 0) {
-              $.messager.alert('ÌáÊ¾', 'Íê³ÉÉóºË' + rtn, 'success');
+              $.messager.alert('æç¤º', 'å®Œæˆå®¡æ ¸' + rtn, 'success');
                QryChkPatInfo() ; 
             } else {
-                $.messager.alert('ÌáÊ¾', 'Íê³ÉÉóºËÊ§°Ü,Error=' + rtn, 'error');
+                $.messager.alert('æç¤º', 'å®Œæˆå®¡æ ¸å¤±è´¥,Error=' + rtn, 'error');
             }
         });
         
@@ -498,60 +514,60 @@ function Audit_click()
         
 }
 
-//ÖØĞÂÉóºË
+//é‡æ–°å®¡æ ¸
 function BtnAuditBack_click()
 {	
 	endEditing();
     if(SelPatModifyAfterRowObj==null)
     {
-        $.messager.alert('ÌáÊ¾', 'ÇëÑ¡ÔñĞèÉóºË»¼Õß¼ÇÂ¼', 'info') ;
+        $.messager.alert('æç¤º', 'è¯·é€‰æ‹©éœ€å®¡æ ¸æ‚£è€…è®°å½•', 'info') ;
         return ;
 	 }
     if(SelAdmDr=="")
     {
-        $.messager.alert('ÌáÊ¾', '¾ÍÕïºÅ²»ÄÜÎª¿Õ£¬ÇëÑ¡ÔñĞèÉóºË»¼Õß¼ÇÂ¼', 'info') ;
+        $.messager.alert('æç¤º', 'å°±è¯Šå·ä¸èƒ½ä¸ºç©ºï¼Œè¯·é€‰æ‹©éœ€å®¡æ ¸æ‚£è€…è®°å½•', 'info') ;
         return ;
      }
     if(SelBillDr=="")
     {
-        $.messager.alert('ÌáÊ¾', 'ÕÊµ¥ºÅ²»ÄÜÎª¿Õ£¬ÇëÑ¡ÔñĞèÉóºË»¼Õß¼ÇÂ¼', 'info');
+        $.messager.alert('æç¤º', 'å¸å•å·ä¸èƒ½ä¸ºç©ºï¼Œè¯·é€‰æ‹©éœ€å®¡æ ¸æ‚£è€…è®°å½•', 'info');
         return ;
     }
     var BZ=SelPatModifyAfterRowObj.TabDemo
 	if ((SelPatModifyAfterRowObj.TabAuditUserName!=GUserName))
 	{
-		$.messager.alert('ÌáÊ¾', '¸Ã»¼ÕßÒÑÓĞ'+SelPatModifyAfterRowObj.TabAuditUserName+'ÔÚÉóºË,²»¿ÉÉóºË', 'info')
+		$.messager.alert('æç¤º', 'è¯¥æ‚£è€…å·²æœ‰'+SelPatModifyAfterRowObj.TabAuditUserName+'åœ¨å®¡æ ¸,ä¸å¯å®¡æ ¸', 'info')
 		return;
 	 }
      //Rowid^Adm_Dr^AdmInfo_Dr^OEORI_Dr^TaritmDr^PBD_Dr^InsuFlag^Scale^UnitPrice^Qty^Amount^AuditInfo^User_Dr^UserName^Date^Time^AuditFlag^BZ^Demo1^Demo2^Demo3^Demo4^Demo5^Demo6^Demo7^Demo8^Demo9^Demo10
-    //var InString = "^"+AdmRowid+"^"+BillDr+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+0+"^"+0+"^"+0+"^"+0+"^"+Guser+"^"+GuserName+"^^^"+"Íê³É"+"^"+BZ+"^^^^^^^^^^^"
-   	var InString = "^"+SelAdmDr+"^"+SelBillDr+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+0+"^"+0+"^"+0+"^"+0+"^"+GUser+"^"+GUserName+"^^^"+"¿ªÊ¼ÉóºË"+"^"+BZ+"^^^^^^^^^^^"
+    //var InString = "^"+AdmRowid+"^"+BillDr+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+0+"^"+0+"^"+0+"^"+0+"^"+Guser+"^"+GuserName+"^^^"+"å®Œæˆ"+"^"+BZ+"^^^^^^^^^^^"
+   	var InString = "^"+SelAdmDr+"^"+SelBillDr+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+0+"^"+0+"^"+0+"^"+0+"^"+GUser+"^"+GUserName+"^^^"+"å¼€å§‹å®¡æ ¸"+"^"+BZ+"^^^^^^^^^^^"
 	$.m({
             ClassName: "web.INSUAuditIP",
             MethodName: "SaveAuditLog",
             InString: InString,
         }, function (rtn) {
             if (rtn > 0) {
-              $.messager.alert('ÌáÊ¾', 'ÖØĞÂÉóºË¿ªÊ¼', 'success');
+              $.messager.alert('æç¤º', 'é‡æ–°å®¡æ ¸å¼€å§‹', 'success');
                QryChkPatInfo() ;
             } else {
-                $.messager.alert('ÌáÊ¾', 'ÖØĞÂÉóºËÊ§°Ü,Error=' + rtn, 'error');
+                $.messager.alert('æç¤º', 'é‡æ–°å®¡æ ¸å¤±è´¥,Error=' + rtn, 'error');
             }
         });
 }
 
 
 
-//ÏîÄ¿µ÷Õû×Ô·Ñµ÷ÓÃº¯Êı
+//é¡¹ç›®è°ƒæ•´è‡ªè´¹è°ƒç”¨å‡½æ•°
 function RowTInsuFlagOnChange(val,dgId,index,row){
 	var selPatRow=$HUI.datagrid("#chkpatdg").getSelected()
-    if (selPatRow.TabAuditFlag!="¿ªÊ¼ÉóºË"){
-	   $.messager.alert('ÌáÊ¾', '·Ç¿ªÊ¼ÉóºË×´Ì¬,²»ÄÜµ÷ÕûÏîÄ¿', 'info');
+    if (selPatRow.TabAuditFlag!="å¼€å§‹å®¡æ ¸"){
+	   $.messager.alert('æç¤º', 'éå¼€å§‹å®¡æ ¸çŠ¶æ€,ä¸èƒ½è°ƒæ•´é¡¹ç›®', 'info');
 	    return ;
 	    }
 	 if ((selPatRow.TabAuditUserName!=GUserName))
 	{
-		$.messager.alert('ÌáÊ¾', '¸Ã»¼ÕßÒÑÓĞ'+selPatRow.TabAuditUserName+'ÔÚÉóºË,²»ÄÜµ÷ÕûÏîÄ¿', 'info')
+		$.messager.alert('æç¤º', 'è¯¥æ‚£è€…å·²æœ‰'+selPatRow.TabAuditUserName+'åœ¨å®¡æ ¸,ä¸èƒ½è°ƒæ•´é¡¹ç›®', 'info')
 		return;
 	 }    
      $HUI.datagrid('#'+dgId).checkRow(index);
@@ -562,7 +578,7 @@ function RowTInsuFlagOnChange(val,dgId,index,row){
 		      if(val) {
 			      InsuFlag="N";
 			      if (row.Txmdj.indexOf("-")<0) {
-				       Txmdj=row.Txmdj+"->±ûÀà";	
+				       Txmdj=row.Txmdj+"->ä¸™ç±»";	
 		           }
 			      
 			   } else  {
@@ -590,18 +606,18 @@ function RowTInsuFlagOnChange(val,dgId,index,row){
 	  
 	}
 
-//µ÷ÕûÎª×Ô·ÑĞ£Ñé
+//è°ƒæ•´ä¸ºè‡ªè´¹æ ¡éªŒ
 function RowTInsuFlagCheck(dgId,index,row)
 {
 	
   var selPatRow=$HUI.datagrid("#chkpatdg").getSelected()
-    if (selPatRow.TabAuditFlag!="¿ªÊ¼ÉóºË"){
-	   $.messager.alert('ÌáÊ¾', '·Ç¿ªÊ¼ÉóºË×´Ì¬,²»ÄÜµ÷ÕûÏîÄ¿', 'info');
+    if (selPatRow.TabAuditFlag!="å¼€å§‹å®¡æ ¸"){
+	   $.messager.alert('æç¤º', 'éå¼€å§‹å®¡æ ¸çŠ¶æ€,ä¸èƒ½è°ƒæ•´é¡¹ç›®', 'info');
 	    return ;
 	    }
 	 if ((selPatRow.TabAuditUserName!=GUserName))
 	{
-		$.messager.alert('ÌáÊ¾', '¸Ã»¼ÕßÒÑÓĞ'+selPatRow.TabAuditUserName+'ÔÚÉóºË,²»ÄÜµ÷ÕûÏîÄ¿', 'info')
+		$.messager.alert('æç¤º', 'è¯¥æ‚£è€…å·²æœ‰'+selPatRow.TabAuditUserName+'åœ¨å®¡æ ¸,ä¸èƒ½è°ƒæ•´é¡¹ç›®', 'info')
 		return;
 	 }     
 	ed= $HUI.datagrid('#'+dgId).getEditor({index: index, field: "TInsuFlag"});
@@ -621,7 +637,7 @@ function RowTInsuFlagCheck(dgId,index,row)
 	
 }
 
-//µ÷ÕûÎª×Ô·Ñcheckbox¸Ä±äÊ±µ÷ÓÃ
+//è°ƒæ•´ä¸ºè‡ªè´¹checkboxæ”¹å˜æ—¶è°ƒç”¨
 function SaveInsuFlag(TarDr,OEORIDr,InsuFlag)
 {
 	
@@ -637,7 +653,7 @@ function SaveInsuFlag(TarDr,OEORIDr,InsuFlag)
 	  },
 	   function(rtn)
 	   {
-		   // $.messager.alert('ÌáÊ¾', '²âÊÔ,rtn=' + rtn, 'info');
+		   // $.messager.alert('æç¤º', 'æµ‹è¯•,rtn=' + rtn, 'info');
 		   
 		}
 	
@@ -645,53 +661,58 @@ function SaveInsuFlag(TarDr,OEORIDr,InsuFlag)
 	);
 	
 }
-//ÉóºË±£´æÒ½ÖöÏîÄ¿Ã÷Ï¸
+//å®¡æ ¸ä¿å­˜åŒ»å˜±é¡¹ç›®æ˜ç»†
 function btnSave_click()
 {
 
     endEditing();
     if(SelPatModifyAfterRowObj==null)
     {
-        $.messager.alert('ÌáÊ¾', 'ÇëÑ¡ÔñĞèÉóºË»¼Õß¼ÇÂ¼', 'info') ;
+        $.messager.alert('æç¤º', 'è¯·é€‰æ‹©éœ€å®¡æ ¸æ‚£è€…è®°å½•', 'info') ;
         return ;
 	 }
-    if ((SelPatModifyAfterRowObj.TabAuditFlag!="¿ªÊ¼ÉóºË"))
+    if ((SelPatModifyAfterRowObj.TabAuditFlag!="å¼€å§‹å®¡æ ¸"))
      {
-		$.messager.alert('ÌáÊ¾', "'ÉóºË±ê¼Ç' ²»ÊÇ '¿ªÊ¼ÉóºË' ×´Ì¬,²»¿É±£´æ", 'info') ;
+		$.messager.alert('æç¤º', "'å®¡æ ¸æ ‡è®°' ä¸æ˜¯ 'å¼€å§‹å®¡æ ¸' çŠ¶æ€,ä¸å¯ä¿å­˜", 'info') ;
 		return ;
 	 }  
     if(SelAdmDr=="")
     {
-        $.messager.alert('ÌáÊ¾', '¾ÍÕïºÅ²»ÄÜÎª¿Õ£¬ÇëÑ¡ÔñĞèÉóºË»¼Õß¼ÇÂ¼', 'info') ;
+        $.messager.alert('æç¤º', 'å°±è¯Šå·ä¸èƒ½ä¸ºç©ºï¼Œè¯·é€‰æ‹©éœ€å®¡æ ¸æ‚£è€…è®°å½•', 'info') ;
         return
      }
     if(SelBillDr=="")
     {
-        $.messager.alert('ÌáÊ¾', 'ÕÊµ¥ºÅ²»ÄÜÎª¿Õ£¬ÇëÑ¡ÔñĞèÉóºË»¼Õß¼ÇÂ¼', 'info') ;
+        $.messager.alert('æç¤º', 'å¸å•å·ä¸èƒ½ä¸ºç©ºï¼Œè¯·é€‰æ‹©éœ€å®¡æ ¸æ‚£è€…è®°å½•', 'info') ;
         return ;
     }
   
 	if ((SelPatModifyAfterRowObj.TabAuditUserName!=GUserName))
 	{
-		$.messager.alert('ÌáÊ¾', '¸Ã»¼ÕßÒÑÓĞ'+SelPatModifyAfterRowObj.TabAuditUserName+'ÔÚÉóºË,²»¿ÉÉóºË', 'info')
+		$.messager.alert('æç¤º', 'è¯¥æ‚£è€…å·²æœ‰'+SelPatModifyAfterRowObj.TabAuditUserName+'åœ¨å®¡æ ¸,ä¸å¯å®¡æ ¸', 'info')
 		return ;
 	}    
       OrdEndEditing()
      //s val=##Class(%CSP.Page).Encrypt($lb("")) 
      var SuccNum=0, ErrorNum=0,ErrMsg="" ;
       var SelRows=$HUI.datagrid('#chkpatOrddg').getChecked();
+      if (SelRows.length==0){
+	      
+	      $.messager.alert('æç¤º', 'è¯·é€‰æ‹©è®°å½•,ä¿æŒå¤é€‰æ¡†å‹¾é€‰', 'info')
+		  return ;
+	      }
       $.each(SelRows, function (index, row) {
 	      
 			var rowInString="",Insuflag="",Price="",Qty="",Amount="",orderRowid="",TarDr="",BZ="",ListFlag="";
-			Insuflag=row.TInsuFlag; //µ÷Õû×Ô·Ñ±êÖ¾
+			Insuflag=row.TInsuFlag; //è°ƒæ•´è‡ªè´¹æ ‡å¿—
 			orderRowid=row.TOEORI
 			TarDr=row.TTarDr	
             Price=row.TPrice
             Qty=row.TQty
             Amount=row.TAmount
             ListFlag=row.TListFlag
-            if(ListFlag=="Ã÷Ï¸"){orderRowid="";}
-            orderRowid="" //Èç¹ûÏµÍ³Ã»ÓĞÖ´ĞĞ¼ÇÂ¼¾ÍÈ¡Ïû×¢ÊÍ Zhan 20160413
+            if(ListFlag=="æ˜ç»†"){orderRowid="";}
+            orderRowid="" //å¦‚æœç³»ç»Ÿæ²¡æœ‰æ‰§è¡Œè®°å½•å°±å–æ¶ˆæ³¨é‡Š Zhan 20160413
 			BZ=row.TDemo
 			rowInString="^"+SelAdmDr+"^"+SelBillDr+"^"+orderRowid+"^"+TarDr+"^"+""+"^"+Insuflag+"^"+""+"^"+Price+"^"+Qty+"^"+Amount+"^"+1+"^"+GUser+"^"+GUserName+"^^^^"+BZ+"^^^^^^^^^^^"
 			$.m({
@@ -701,26 +722,26 @@ function btnSave_click()
                 }, function (rtn) {
                    if (rtn > 0) 
                      {
-                        //$.messager.alert('ÌáÊ¾', 'ÖØĞÂÉóºË¿ªÊ¼', 'success');  
+                        //$.messager.alert('æç¤º', 'é‡æ–°å®¡æ ¸å¼€å§‹', 'success');  
                          SuccNum=SuccNum+1       
                      } else 
                       {
-                         //$.messager.alert('ÌáÊ¾', 'ÖØĞÂÉóºËÊ§°Ü,Error=' + rtn, 'error');
+                         //$.messager.alert('æç¤º', 'é‡æ–°å®¡æ ¸å¤±è´¥,Error=' + rtn, 'error');
                          ErrorNum=ErrorNum+1
-                         ErrMsg=ErrMsg+'|ÊÕ·ÑÏîÄ¿Dr='+TarDr+"±£´æÊ§°Ü,ErrNo:"+rtn
+                         ErrMsg=ErrMsg+'|æ”¶è´¹é¡¹ç›®Dr='+TarDr+"ä¿å­˜å¤±è´¥,ErrNo:"+rtn
                        }
                   });
 			
 		    
 		});
 		
-		$.messager.alert('ÌáÊ¾', '±£´æ³É¹¦', 'success',function(){
+		$.messager.alert('æç¤º', 'ä¿å­˜æˆåŠŸ', 'success',function(){
 			QryPatOrd();	
 		});
 		return ;
 }
 
-//µÇ¼ÇºÅ»Ø³µ
+//ç™»è®°å·å›è½¦
 function RegNo_onkeydown(e)
 {
    if (e.keyCode==13)
@@ -730,7 +751,7 @@ function RegNo_onkeydown(e)
    }
 }
 
-//²¡°¸ºÅ»Ø³µ
+//ç—…æ¡ˆå·å›è½¦
 function MedicareNo_onkeydown(e)
 {
    if (e.keyCode==13)
@@ -740,37 +761,45 @@ function MedicareNo_onkeydown(e)
    }
 }
 
-//Õï¶ÏĞÅÏ¢ÁĞ±íÕ¹Ê¾
+//è¯Šæ–­ä¿¡æ¯åˆ—è¡¨å±•ç¤º
 function showDiagWin(rowData)
 {       
    
    InitPatDiagDg(rowData)
    $('#DiagWin').show(); 
        $HUI.dialog("#DiagWin",{
-           title:"Õï¶ÏÏêÏ¸ĞÅÏ¢",
+           title:"è¯Šæ–­è¯¦ç»†ä¿¡æ¯",
            height:300,
-           width:420,
+           width:640,
            //collapsible:true,
-           modal:false,
+           modal:true,
            iconCls: 'icon-w-list'
   
        })
    
 }
-//³õÊ¼»¯Õï¶Ïgd
+//åˆå§‹åŒ–è¯Šæ–­gd
 function InitPatDiagDg(rowData)
 {
-   //³õÊ¼»¯datagrid
+   //åˆå§‹åŒ–datagrid
    $HUI.datagrid("#patdiagdg",{
-       url:$URL+'?ClassName='+"web.INSUAuditIP"+'&QueryName='+"GetDiagnosInfo"+"&AdmDr="+rowData.TabAdmRowid,
-        width: '100%',
-        border: false ,
+       url:$URL+'?ClassName='+"web.DHCINSUPortUse"+'&QueryName='+"GetDiagnosInfo"+"&AdmDr="+rowData.TabAdmRowid,
+       width: '100%',
+       border: false ,
        singleSelect: true,
        columns:[[
-           {field:'DiagnosNum',title:'ĞòºÅ',width:60,align:'center'},
-           {field:'DiagName',title:'Õï¶ÏÃû³Æ',width:150},
-           {field:'MedicalRecord',title:'Õï¶Ï±¸×¢',width:80},
-           {field:'ICDCode',title:'ICDÕï¶Ï',width:103}
+           {field:'DiagnosNum',title:'åºå·',width:80},
+           {field:'ICDCode',title:'ICDè¯Šæ–­',width:103},
+           {field:'SDSDesc',title:'è¯Šæ–­ä¿¡æ¯',width:230},
+           {field:'DiagnosPrefix',title:'è¯Šæ–­å‰ç¼€',width:80},
+           {field:'MedicalRecord',title:'è¯Šæ–­å¤‡æ³¨',width:80},
+          {field:'MainDiagFlag',title:'ä¸»è¯Šæ–­',width:60,
+	            formatter: function(value,row,index)
+	                {
+			              return  value=="Y" ? "æ˜¯":"å¦" 
+			        }
+			   },    
+	        {field:'DiagnosType',title:'è¯Šæ–­ç±»å‹',width:80},   
           
        ]],
        pageSize: 10,
@@ -790,14 +819,14 @@ function InitPatDiagDg(rowData)
    
 }
 
-//Ò½ÖöÏêÏ¸Ï¢ÁĞ±íÕ¹Ê¾+²Ù×÷
+//åŒ»å˜±è¯¦ç»†æ¯åˆ—è¡¨å±•ç¤º+æ“ä½œ
 function showPatOrdLstWin(rowData)
 {
 	
   InitPatOrdLstDg(rowData)
    $('#PatOrdLstWin').show(); 
        $HUI.dialog("#PatOrdLstWin",{
-           title:"Ò½ÖöÏêÏ¸ĞÅÏ¢",
+           title:"åŒ»å˜±è¯¦ç»†ä¿¡æ¯",
            height:400,
            width:900,
            //collapsible:true,
@@ -815,11 +844,11 @@ function showPatOrdLstWin(rowData)
 	
 }
 
-//³õÊ¼»¯Ò½ÖöÏîÄ¿ÏêÏ¸gd
+//åˆå§‹åŒ–åŒ»å˜±é¡¹ç›®è¯¦ç»†gd
 function InitPatOrdLstDg(rowData)
 {
 	setValueById('lstTarDr',rowData.TTarDr);
-   //³õÊ¼»¯datagrid
+   //åˆå§‹åŒ–datagrid
    $HUI.datagrid("#patordlstdg",{
        url:$URL+'?ClassName='+"web.INSUAuditIP"+'&QueryName='+"AuditDetailsList"+'&AdmDr='+SelAdmDr+'&BillDr='+SelBillDr+'&TarDr='+rowData.TTarDr+'&MotherAdmFlag='+rowData.MotherAdmFlag+'&TmpOutDrugFlag='+rowData.TmpOutDrugFlag+'&Price='+rowData.TPrice,
        width: '100%',
@@ -835,22 +864,22 @@ function InitPatOrdLstDg(rowData)
           {field:'lstck',title:'lstck',width:10,checkbox:true}
           ]],
        columns:[[
-           {field:'TTarDesc',title:'ÏîÄ¿Ãû³Æ',width:160},
-           {field:'Txmdj',title:'ÏîÄ¿µÈ¼¶',width:100},
-           {field:'TPrice',title:'µ¥¼Û',width:60,align:'center'},
-           {field:'TQty',title:'ÊıÁ¿',width:60,align:'center'},
-           {field:'TAmount',title:'½ğ¶î',width:80,align:'center'},
-           {field:'TInsuFlag',title:'µ÷ÕûÎª×Ô·Ñ',width:100,align:'center',
+           {field:'TTarDesc',title:'é¡¹ç›®åç§°',width:160},
+           {field:'Txmdj',title:'é¡¹ç›®ç­‰çº§',width:100},
+           {field:'TPrice',title:'å•ä»·',width:60,align:'right'},
+           {field:'TQty',title:'æ•°é‡',width:60,align:'right'},
+           {field:'TAmount',title:'é‡‘é¢',width:80,align:'right'},
+           {field:'TInsuFlag',title:'è°ƒæ•´ä¸ºè‡ªè´¹',width:100,align:'center',
             formatter:function(val,rowData,rowIndex){
-                  return (val=="Y") ? "ÊÇ" : "·ñ";
+                  return (val=="Y") ? "æ˜¯" : "å¦";
                 },
              editor:{
 	             type:'switchbox',
 	             options:{   
 		         onClass:'primary',
 	             offClass:'gray',
-	             onText:'ÊÇ',
-	             offText:'·ñ',
+	             onText:'æ˜¯',
+	             offText:'å¦',
 	             onSwitchChange:function(event,obj){
 		                RowTInsuFlagOnChange(obj.value,"patordlstdg",PatOrdLst.curIndex,PatOrdLst.curRow);
 		             }
@@ -858,9 +887,9 @@ function InitPatOrdLstDg(rowData)
 	             }
            },
            {field:'TOEORIDr',title:'TOEORIDr',width:80,hidden:true},
-           {field:'TOeordDate',title:'Ò½ÖöÈÕÆÚ',width:90,align:'center'},
-           {field:'TOeordTime',title:'Ò½ÖöÊ±¼ä',width:80,align:'center'},
-           {field:'TArcimDesc',title:'Ò½ÖöÃû³Æ',width:80},
+           {field:'TOeordDate',title:'åŒ»å˜±æ—¥æœŸ',width:90},
+           {field:'TOeordTime',title:'åŒ»å˜±æ—¶é—´',width:80},
+           {field:'TArcimDesc',title:'åŒ»å˜±åç§°',width:80},
            {field:'TOEExeDr',title:'TOEExeDr',width:80}
            
           
@@ -936,7 +965,7 @@ var OrdmodifyAfterRow = {};
 function OrdEndEditing(){
        if (ordEditIndex == undefined){return true}
        if ($('#chkpatOrddg').datagrid('validateRow', ordEditIndex)){
-           //ÁĞ±íÖĞÏÂÀ­¿òÊµÏÖ
+           //åˆ—è¡¨ä¸­ä¸‹æ‹‰æ¡†å®ç°
            $('#chkpatOrddg').datagrid('endEdit', ordEditIndex);
            OrdmodifyAfterRow = $('#chkpatOrddg').datagrid('getRows')[ordEditIndex];
            
@@ -946,12 +975,12 @@ function OrdEndEditing(){
 			//if (thisEd) {
 				//$HUI.switchbox(thisEd.target,'setValue',OrdmodifyAfterRow.TInsuFlag);
 				//RowTInsuFlagOnChange(OrdmodifyAfterRow.TInsuFlag,"chkpatOrddg",PatOrd.curIndex,PatOrd.curRow);
-				HISUIDataGrid.setFieldValue('TInsuFlag',(OrdmodifyAfterRow.TInsuFlag=="ÊÇ") ? "Y" : "N",ordEditIndex,'chkpatOrddg');
+				HISUIDataGrid.setFieldValue('TInsuFlag',(OrdmodifyAfterRow.TInsuFlag=="æ˜¯") ? "Y" : "N",ordEditIndex,'chkpatOrddg');
 				var td = $('.datagrid-view').find('.datagrid-body td[field="' + 'TInsuFlag' + '"]')[ordEditIndex];
 				var div = $(td).find('div')[0];
-				$(div).text((OrdmodifyAfterRow.TInsuFlag=="Y") ? "ÊÇ" : "·ñ");
+				$(div).text((OrdmodifyAfterRow.TInsuFlag=="Y") ? "æ˜¯" : "å¦");
 			//}
-			// tangzf 20200407 end ±ÜÃâÑ¡ÖĞºó ¿ª¹ØÄ¬ÈÏÎª·ñ
+			// tangzf 20200407 end é¿å…é€‰ä¸­å å¼€å…³é»˜è®¤ä¸ºå¦
 
 			
            ordEditIndex = undefined;
@@ -980,7 +1009,7 @@ var ordLstEditIndex=undefined;
 function OrdLstEndEditing(){
        if (ordLstEditIndex == undefined){return true}
        if ($('#patordlstdg').datagrid('validateRow', ordEditIndex)){
-           //ÁĞ±íÖĞÏÂÀ­¿òÊµÏÖ
+           //åˆ—è¡¨ä¸­ä¸‹æ‹‰æ¡†å®ç°
            $('#patordlstdg').datagrid('endEdit', ordLstEditIndex);
           // tangzf 20200407 start
          var selectRow = $('#patordlstdg').datagrid('getRows')[ordLstEditIndex];
@@ -988,12 +1017,12 @@ function OrdLstEndEditing(){
 			//if (thisEd) {
 				//$HUI.switchbox(thisEd.target,'setValue',OrdmodifyAfterRow.TInsuFlag);
 				//RowTInsuFlagOnChange(OrdmodifyAfterRow.TInsuFlag,"chkpatOrddg",PatOrd.curIndex,PatOrd.curRow);
-				HISUIDataGrid.setFieldValue('TInsuFlag',(selectRow.TInsuFlag=="ÊÇ") ? "Y" : "N",ordLstEditIndex,'patordlstdg');
+				HISUIDataGrid.setFieldValue('TInsuFlag',(selectRow.TInsuFlag=="æ˜¯") ? "Y" : "N",ordLstEditIndex,'patordlstdg');
 				var td = $('#PatOrdLstWin').find('td[field="' + 'TInsuFlag' + '"]')[ordLstEditIndex+1];
 				var div = $(td).find('div')[0];
-				$(div).text((selectRow.TInsuFlag=="Y") ? "ÊÇ" : "·ñ");
+				$(div).text((selectRow.TInsuFlag=="Y") ? "æ˜¯" : "å¦");
 			//}
-			// tangzf 20200407 end ±ÜÃâÑ¡ÖĞºó ¿ª¹ØÄ¬ÈÏÎª·ñ
+			// tangzf 20200407 end é¿å…é€‰ä¸­å å¼€å…³é»˜è®¤ä¸ºå¦
            ordLstEditIndex = undefined;
            return true;
        } else {
@@ -1011,4 +1040,20 @@ function onClickOrdLstRow(index){
            $('#patordlstdg').datagrid('selectRow', ordLstEditIndex);
        }
    }
+}
+
+function EditIndexDefault()
+{
+	
+	ordLstEditIndex=undefined;
+	ordEditIndex=undefined;
+	
+}
+/*å¤´èœå•ä¼ å€¼*/
+function setEprMenuForm(episodeId, patientId) {
+	var frm = dhcsys_getmenuform();
+	if (frm && (frm.EpisodeID.value != episodeId)) {
+		frm.EpisodeID.value = episodeId;
+		frm.PatientID.value = patientId;
+	}
 }

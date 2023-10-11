@@ -96,7 +96,7 @@ function InitReport(recordId)
 function SaveReport(flag)
 {
 	if($('#PatName').val()==""){
-		$.messager.alert("提示:","患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！");	
+		$.messager.alert($g("提示:"),$g("患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！"));	
 		return false;
 	}
 	///保存前,对页面必填项进行检查
@@ -130,7 +130,7 @@ function checkother(){
 			}
 		})
 		if (AFResultList==""){
-			$.messager.alert("提示:","【事件造成的结果】勾选'患者住院天数'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),$g("【事件造成的结果】勾选'患者住院天数'，请勾选相应内容！"));	
 			return false;
 		}
 	}
@@ -143,7 +143,7 @@ function checkother(){
 		}
 	})
 	if(AFResultoth==-1){
-		$.messager.alert("提示:","【事件造成的结果】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【事件造成的结果】勾选'其他'，请填写内容！"));	
 		return false;
 	}
 	
@@ -161,7 +161,7 @@ function checkother(){
 			}
 		})
 		if (PatEventProList==""){
-			$.messager.alert("提示:","【患者意外事件处理经过】勾选'立即通知'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),$g("【患者意外事件处理经过】勾选'立即通知'，请勾选相应内容！"));	
 			return false;
 		}
 	}
@@ -181,11 +181,11 @@ function checkother(){
 	})
 	
 	if(PatEventProoth==-1){
-		$.messager.alert("提示:","【患者意外事件处理经过】勾选'医疗或护理措施'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【患者意外事件处理经过】勾选'医疗或护理措施'，请填写内容！"));	
 		return false;
 	}
 	if(PatEventProoth==-2){
-		$.messager.alert("提示:","【患者意外事件处理经过】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【患者意外事件处理经过】勾选'其他'，请填写内容！"));	
 		return false;
 	}	
 	return true;
@@ -255,23 +255,7 @@ function InitCheckRadio(){
 //时间 数字校验
 function CheckTimeorNum(){	
 	//数字输入校验  
-	//入院时ADL得分
-	chknum("PatAdmADLScore",1,0,100);
-	$('#PatAdmADLScore').live("keyup",function(){
-		RepSetRead("PatSelfCareAbility-","radio",0);  //自我照顾能力
-		if((this.value>100)||(this.value=="")){
-			$("input[type=radio][id^='PatSelfCareAbility-']").removeAttr("checked");
-		}else if((this.value>40)||(this.value<100)){
-			$("input[type=radio][id^='PatSelfCareAbility-94346']").click();	
-		}
-		if(((this.value>0)||(this.value==0))&&((this.value<40)||(this.value==40))&&(this.value!="")){
-			$("input[type=radio][id^='PatSelfCareAbility-94347']").click();	
-		}
-		if(this.value==100){
-			$("input[type=radio][id^='PatSelfCareAbility-94345']").click();	
-		}
-		RepSetRead("PatSelfCareAbility-","radio",1);  //自我照顾能力
-	})
+	
 }
 
 

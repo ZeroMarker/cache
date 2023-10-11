@@ -1,7 +1,7 @@
 ///CreatDate:  2016-05-31
 ///Author:    huaxiaoying 
 $(function(){ 
-	$('#hospDrID').combobox({ //hxy 2019-07-18 st
+	/*$('#hospDrID').combobox({ //hxy 2019-07-18 st
 	 	url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
 	 	valueField:'value',
 		textField:'text',   
@@ -9,7 +9,17 @@ $(function(){
 	 }) 
 	 $('#queryBTN').on('click',function(){
 		 $("#datagrid").datagrid('reload',{hospDrID:$('#hospDrID').combobox('getValue')});
-	 }) //hxy ed
+	 }) //hxy ed *///hxy 2020-12-28注释
+	 
+	//同时给代码和描述绑定回车事件 //hxy 2020-12-28 st
+    $('#LKCode,#LKDesc').bind('keypress',function(event){
+        if(event.keyCode == "13"){
+	    	query();
+        }
+    });
+	$('#queryBTN').on('click',function(){
+		query();
+	}) //ed
 	
 });
 
@@ -49,3 +59,14 @@ function cancel(){
     }    
 }); 
 }
+
+function query(){
+	$("#datagrid").datagrid('reload',{hospDrID:"",LKCode:$("#LKCode").val(),LKDesc:$("#LKDesc").val()});
+}
+
+function queryReset(){
+	$("#LKCode").val("");
+	$("#LKDesc").val("");
+	query();
+}
+

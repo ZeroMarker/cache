@@ -1,6 +1,6 @@
-ï»¿// åç§°:Gridè®¾ç½®ç®¡ç†
-// ç¼–å†™æ—¥æœŸ:2012-06-11
-//=========================å®šä¹‰å…¨å±€å˜é‡=================================
+// Ãû³Æ:GridÉèÖÃ¹ÜÀí
+// ±àĞ´ÈÕÆÚ:2012-06-11
+//=========================¶¨ÒåÈ«¾Ö±äÁ¿=================================
 var StkSysAppId = "";
 var AppCode = "";
 var GridId = "";
@@ -11,10 +11,10 @@ var GroupId = session['LOGON.GROUPID'];
 var UserId=session['LOGON.USERID'];
 var SiteCode=session['LOGON.SITECODE']
 
-//=========================å®šä¹‰å…¨å±€å˜é‡=================================
-//=========================åº”ç”¨ç³»ç»Ÿè®¾ç½®=================================
+//=========================¶¨ÒåÈ«¾Ö±äÁ¿=================================
+//=========================Ó¦ÓÃÏµÍ³ÉèÖÃ=================================
 var StkSysAppGrid="";
-//é…ç½®æ•°æ®æº
+//ÅäÖÃÊı¾İÔ´
 var StkSysAppGridUrl = 'dhcst.stksysappaction.csp';
 var StkSysAppGridProxy= new Ext.data.HttpProxy({url:StkSysAppGridUrl+'?actiontype=selectAll',method:'GET'});
 var StkSysAppGridDs = new Ext.data.Store({
@@ -31,17 +31,17 @@ var StkSysAppGridDs = new Ext.data.Store({
     pruneModifiedRecords:true
 });
 
-//æ¨¡å‹
+//Ä£ĞÍ
 var StkSysAppGridCm = new Ext.grid.ColumnModel([
 	 new Ext.grid.RowNumberer(),
 	 {
-        header:"ä»£ç ",
+        header:"´úÂë",
         dataIndex:'Code',
         width:120,
         align:'left',
         sortable:true
     },{
-        header:"åç§°",
+        header:"Ãû³Æ",
         dataIndex:'Desc',
         width:120,
         align:'left',
@@ -49,10 +49,10 @@ var StkSysAppGridCm = new Ext.grid.ColumnModel([
     }
 ]);
 
-//åˆå§‹åŒ–é»˜è®¤æ’åºåŠŸèƒ½
+//³õÊ¼»¯Ä¬ÈÏÅÅĞò¹¦ÄÜ
 StkSysAppGridCm.defaultSortable = true;
 
-//è¡¨æ ¼
+//±í¸ñ
 StkSysAppGrid = new Ext.grid.GridPanel({
 	store:StkSysAppGridDs,
 	cm:StkSysAppGridCm,
@@ -64,12 +64,12 @@ StkSysAppGrid = new Ext.grid.GridPanel({
 });
 
 StkSysAppGridDs.load();
-//=========================åº”ç”¨ç³»ç»Ÿè®¾ç½®=================================
+//=========================Ó¦ÓÃÏµÍ³ÉèÖÃ=================================
 
-//=========================åº”ç”¨ç³»ç»Ÿå±æ€§è®¾ç½®=============================
+//=========================Ó¦ÓÃÏµÍ³ÊôĞÔÉèÖÃ=============================
 var StkSysAppParameGrid="";
 var StkDecimalDesc="";
-//é…ç½®æ•°æ®æº
+//ÅäÖÃÊı¾İÔ´
 var StkSysAppParameGridUrl = 'dhcst.stksysgridsetaction.csp';
 var StkSysAppParameGridProxy= new Ext.data.HttpProxy({url:StkSysAppParameGridUrl,method:'GET'});
 var StkSysAppParameGridDs = new Ext.data.Store({
@@ -86,16 +86,16 @@ var StkSysAppParameGridDs = new Ext.data.Store({
     remoteSort:true
 });
 
-//æ¨¡å‹
+//Ä£ĞÍ
 var StkSysAppParameGridCm = new Ext.grid.ColumnModel([
 	new Ext.grid.RowNumberer(),{
-        header:"ä¿å­˜æ¨¡å¼",
+        header:"±£´æÄ£Ê½",
         dataIndex:'SaveMod',
         width:120,
         align:'left',
         sortable:true
     },{
-        header:"æ¨¡å¼å€¼",
+        header:"Ä£Ê½Öµ",
         dataIndex:'SaveValue',
         width:120,
         align:'left',
@@ -107,13 +107,13 @@ var StkSysAppParameGridCm = new Ext.grid.ColumnModel([
         align:'left',
         sortable:true
     },{
-        header:"èœå•",
+        header:"²Ëµ¥",
         dataIndex:'CspName',
         width:180,
         align:'left',
         sortable:true
     },{
-        header:"æ¨¡å¼å€¼id",
+        header:"Ä£Ê½Öµid",
         dataIndex:'SaveValueID',
         width:180,
         align:'left',
@@ -122,10 +122,10 @@ var StkSysAppParameGridCm = new Ext.grid.ColumnModel([
     
 ]);
 
-//åˆå§‹åŒ–é»˜è®¤æ’åºåŠŸèƒ½
+//³õÊ¼»¯Ä¬ÈÏÅÅĞò¹¦ÄÜ
 StkSysAppParameGridCm.defaultSortable = true;
 
-//è¡¨æ ¼
+//±í¸ñ
 StkSysAppParameGrid = new Ext.grid.EditorGridPanel({
 	store:StkSysAppParameGridDs,
 	cm:StkSysAppParameGridCm,
@@ -138,9 +138,9 @@ StkSysAppParameGrid = new Ext.grid.EditorGridPanel({
 	deferRowRender:false
 });
 
-//=========================Gridè®¾ç½®=============================
+//=========================GridÉèÖÃ=============================
 var isHidden = new Ext.grid.CheckColumn({
-	header:'æ˜¯å¦éšè—',
+	header:'ÊÇ·ñÒş²Ø',
 	dataIndex:'hidden',
 	width:75,
 	sortable:true,
@@ -151,7 +151,7 @@ var isHidden = new Ext.grid.CheckColumn({
 });
 
 var isSortable = new Ext.grid.CheckColumn({
-	header:'æ˜¯å¦æ’åº',
+	header:'ÊÇ·ñÅÅĞò',
 	dataIndex:'sortable',
 	width:75,
 	sortable:true,
@@ -161,7 +161,7 @@ var isSortable = new Ext.grid.CheckColumn({
 	}
 });
 var isEnterSortable = new Ext.grid.CheckColumn({
-	header:'å›è½¦è·³è½¬',
+	header:'»Ø³µÌø×ª',
 	dataIndex:'entersort',
 	width:75,
 	sortable:true,
@@ -177,15 +177,15 @@ var dataTypeStore = new Ext.data.SimpleStore({
 
 var dataTypeField = new Ext.form.ComboBox({
 	id:'dataTypeField',
-	fieldLabel:'æ•°å€¼ç±»å‹',
+	fieldLabel:'ÊıÖµÀàĞÍ',
 	width:222,
 	listWidth:222,
 	allowBlank:true,
 	store:dataTypeStore,
-	value:'', // é»˜è®¤å€¼""
+	value:'', // Ä¬ÈÏÖµ""
 	valueField:'key',
 	displayField:'keyValue',
-	emptyText:'æ•°å€¼ç±»å‹...',
+	emptyText:'ÊıÖµÀàĞÍ...',
 	triggerAction:'all',
 	emptyText:'',
 	minChars:1,
@@ -203,15 +203,15 @@ var alignStore = new Ext.data.SimpleStore({
 
 var AlignField = new Ext.form.ComboBox({
 	id:'AlignField',
-	fieldLabel:'å¯¹å…¶æ–¹å¼',
+	fieldLabel:'¶ÔÆä·½Ê½',
 	width:222,
 	listWidth:222,
 	allowBlank:true,
 	store:alignStore,
-	value:'', // é»˜è®¤å€¼""
+	value:'', // Ä¬ÈÏÖµ""
 	valueField:'key',
 	displayField:'keyValue',
-	emptyText:'å¯¹å…¶æ–¹å¼...',
+	emptyText:'¶ÔÆä·½Ê½...',
 	triggerAction:'all',
 	emptyText:'',
 	minChars:1,
@@ -278,7 +278,7 @@ function addNewMXRow() {
 	grid.startEditing(gridDs.getCount() - 1, 1);
 }
 
-//é…ç½®æ•°æ®æº
+//ÅäÖÃÊı¾İÔ´
 var gridUrl = 'dhcst.stksysgridsetaction.csp';
 var gridProxy= new Ext.data.HttpProxy({url:gridUrl,method:'GET'});
 var gridDs = new Ext.data.Store({
@@ -303,14 +303,14 @@ var gridDs = new Ext.data.Store({
     pruneModifiedRecords:true
 });
 
-//æ¨¡å‹
+//Ä£ĞÍ
 var gridCm = new Ext.grid.ColumnModel([
 	new Ext.grid.RowNumberer(),{
 		header:'rowid',
 		dataIndex:'rowid',
 		hidden:true
 	},{
-        header:"åˆ—å",
+        header:"ÁĞÃû",
         dataIndex:'name',
         width:130,
         align:'left',
@@ -327,7 +327,7 @@ var gridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"åˆ—æ˜¾ç¤ºåç§°",
+        header:"ÁĞÏÔÊ¾Ãû³Æ",
         dataIndex:'header',
         width:130,
         align:'left',
@@ -344,7 +344,7 @@ var gridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"åˆ—å®½",
+        header:"ÁĞ¿í",
         dataIndex:'width',
         width:80,
         align:'left',
@@ -361,7 +361,7 @@ var gridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"å¯¹é½æ–¹å¼",
+        header:"¶ÔÆë·½Ê½",
         dataIndex:'align',
         width:130,
         align:'left',
@@ -372,7 +372,7 @@ var gridCm = new Ext.grid.ColumnModel([
 			listWidth:200,
 			allowBlank:true,
 			store:alignStore,
-			value:'', // é»˜è®¤å€¼""
+			value:'', // Ä¬ÈÏÖµ""
 			valueField:'key',
 			displayField:'keyValue',
 			emptyText:'',
@@ -393,7 +393,7 @@ var gridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"æ•°å­—æ ¼å¼",
+        header:"Êı×Ö¸ñÊ½",
         dataIndex:'format',
         width:130,
         align:'left',
@@ -410,7 +410,7 @@ var gridCm = new Ext.grid.ColumnModel([
 			}
         })
     },isHidden,isSortable,isEnterSortable,{
-        header:"åºåˆ—å·",
+        header:"ĞòÁĞºÅ",
         dataIndex:'seqno',
         width:80,
         align:'left',
@@ -427,7 +427,7 @@ var gridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"æ•°æ®ç±»å‹",
+        header:"Êı¾İÀàĞÍ",
         dataIndex:'datatype',
         width:150,
         align:'left',
@@ -438,7 +438,7 @@ var gridCm = new Ext.grid.ColumnModel([
 			listWidth:200,
 			allowBlank:true,
 			store:dataTypeStore,
-			value:'', // é»˜è®¤å€¼""
+			value:'', // Ä¬ÈÏÖµ""
 			valueField:'key',
 			displayField:'keyValue',
 			emptyText:'',
@@ -462,12 +462,12 @@ var gridCm = new Ext.grid.ColumnModel([
     
 ]);
 
-//åˆå§‹åŒ–é»˜è®¤æ’åºåŠŸèƒ½
+//³õÊ¼»¯Ä¬ÈÏÅÅĞò¹¦ÄÜ
 gridCm.defaultSortable = true;
 
 var addGrid = new Ext.Toolbar.Button({
-	text:'æ–°å»º',
-    tooltip:'æ–°å»º',
+	text:'ĞÂ½¨',
+    tooltip:'ĞÂ½¨',
     iconCls:'page_add',
 	width : 70,
 	height : 30,
@@ -475,15 +475,15 @@ var addGrid = new Ext.Toolbar.Button({
 		if(StkSysAppId!=""){
 			addNewMXRow();
 		}else{
-			Msg.info("error", "è¯·é€‰æ‹©åº”ç”¨ç³»ç»Ÿæˆ–è€…ä¿å­˜æ¨¡å¼!");
+			Msg.info("error", "ÇëÑ¡ÔñÓ¦ÓÃÏµÍ³»òÕß±£´æÄ£Ê½!");
 			return false;
 		}
 	}
 });
 
 var saveGrid = new Ext.Toolbar.Button({
-	text:'ä¿å­˜',
-    tooltip:'ä¿å­˜',
+	text:'±£´æ',
+    tooltip:'±£´æ',
 	width : 70,
 	height : 30,
     iconCls:'page_save',
@@ -491,7 +491,7 @@ var saveGrid = new Ext.Toolbar.Button({
 		if(grid.activeEditor != null){
 			grid.activeEditor.completeEdit();
 		} 
-		//è·å–æ‰€æœ‰çš„æ–°è®°å½•
+		//»ñÈ¡ËùÓĞµÄĞÂ¼ÇÂ¼
 		var mr=gridDs.getModifiedRecords();
 		var data="";
 		for(var i=0;i<mr.length;i++){
@@ -518,24 +518,24 @@ var saveGrid = new Ext.Toolbar.Button({
 		}
 		
 		if(data!=""){
-			var mask=ShowLoadMask(Ext.getBody(),"å¤„ç†ä¸­è¯·ç¨å€™...");
+			var mask=ShowLoadMask(Ext.getBody(),"´¦ÀíÖĞÇëÉÔºò...");
 			Ext.Ajax.request({
 				url: gridUrl+'?actiontype=Save',
 				params:{ListData:data,AppName:AppCode,GridId:GridId,SaveMod:SaveMod,ModValue:ModValue,CspName:CspName},
 				failure: function(result, request) {
 					mask.hide();
-					Msg.info("error", "è¯·æ£€æŸ¥ç½‘ç»œè¿æ¥!");
+					Msg.info("error", "Çë¼ì²éÍøÂçÁ¬½Ó!");
 				},
 				success: function(result, request) {
 					data="";
 					var jsonData = Ext.util.JSON.decode( result.responseText );
 					mask.hide();
 					if (jsonData.success=='true') {
-						Msg.info("success", "ä¿å­˜æˆåŠŸ!");
+						Msg.info("success", "±£´æ³É¹¦!");
 						gridDs.proxy = new Ext.data.HttpProxy({url:gridUrl+'?actiontype=Query&AppName='+AppCode+'&GridId='+GridId+'&SaveMod='+SaveMod+'&ModValue='+ModValue+'&CspName='+CspName,method:'GET'});
 						gridDs.load();
 					}else{
-						Msg.info("error", "ä¿å­˜å¤±è´¥!");
+						Msg.info("error", "±£´æÊ§°Ü!");
 					}
 				},
 				scope: this
@@ -544,7 +544,7 @@ var saveGrid = new Ext.Toolbar.Button({
     }
 });
 
-//è¡¨æ ¼
+//±í¸ñ
 grid = new Ext.grid.EditorGridPanel({
 	store:gridDs,
 	cm:gridCm,
@@ -555,11 +555,11 @@ grid = new Ext.grid.EditorGridPanel({
 	sm:new Ext.grid.CellSelectionModel({}),
 	loadMask:true,
 	clicksToEdit:1,
-	tbar:[saveGrid]	//addGrid,'-',  ä¸å†æ˜¾ç¤ºæ–°å»ºæŒ‰é’®
+	tbar:[saveGrid]	//addGrid,'-',  ²»ÔÙÏÔÊ¾ĞÂ½¨°´Å¥
 });
-//=========================Gridè®¾ç½®=============================
+//=========================GridÉèÖÃ=============================
 
-//=============åº”ç”¨ç³»ç»Ÿè®¾ç½®ä¸ä¿å­˜æ¨¡å¼äºŒçº§è”åŠ¨===================
+//=============Ó¦ÓÃÏµÍ³ÉèÖÃÓë±£´æÄ£Ê½¶ş¼¶Áª¶¯===================
 StkSysAppGrid.on('rowclick',function(grid,rowIndex,e){
 	var selectedRow = StkSysAppGridDs.data.items[rowIndex];
 	StkSysAppId = selectedRow.data["RowId"];
@@ -576,9 +576,9 @@ StkSysAppGrid.on('rowclick',function(grid,rowIndex,e){
 	
 	
 });
-//=============åº”ç”¨ç³»ç»Ÿè®¾ç½®ä¸ä¿å­˜æ¨¡å¼äºŒçº§è”åŠ¨===================
+//=============Ó¦ÓÃÏµÍ³ÉèÖÃÓë±£´æÄ£Ê½¶ş¼¶Áª¶¯===================
 
-//=============ä¿å­˜æ¨¡å¼ä¸Gridè®¾ç½®äºŒçº§è”åŠ¨===================
+//=============±£´æÄ£Ê½ÓëGridÉèÖÃ¶ş¼¶Áª¶¯===================
 StkSysAppParameGrid.on('rowclick',function(grid,rowIndex,e){
 	var selectedRow = StkSysAppParameGridDs.data.items[rowIndex];
 	GridId = selectedRow.data["GridId"];
@@ -589,7 +589,7 @@ StkSysAppParameGrid.on('rowclick',function(grid,rowIndex,e){
 	gridDs.load();
 });
 
-//åˆ é™¤æŸä¸€ä¿å­˜æ¨¡å¼ä¸‹çš„gridè®¾ç½®
+//É¾³ıÄ³Ò»±£´æÄ£Ê½ÏÂµÄgridÉèÖÃ
 function DeleteGridSet(){
 	var AppId="";
 	var selectAppRow=StkSysAppGrid.getSelectionModel().getSelected();
@@ -599,7 +599,7 @@ function DeleteGridSet(){
 	var selectedRow = StkSysAppParameGrid.getSelectionModel().getSelected();
 	//var rowIndex=cell[0];
 	if(selectedRow==null){
-		Msg.info("warning","è¯·é€‰æ‹©è¦åˆ é™¤çš„æ•°æ®!");
+		Msg.info("warning","ÇëÑ¡ÔñÒªÉ¾³ıµÄÊı¾İ!");
 		return;
 	}
 	//var selectedRow=StkSysAppParameGrid.getStore().getAt(rowIndex);
@@ -608,22 +608,22 @@ function DeleteGridSet(){
 	var myModValue = selectedRow.get("SaveValueID"); //selectedRow.get("SaveValue"); //Huxt 2020-03-02
 	var myCspName=selectedRow.get("CspName");
 	if(myGridId==null ||myGridId==""){
-		Msg.info("warning","GridIdä¸èƒ½ä¸ºç©º!");
+		Msg.info("warning","GridId²»ÄÜÎª¿Õ!");
 		return;
 	}
 	if(mySaveMod==null ||mySaveMod==""){
-		Msg.info("warning","ä¿å­˜æ¨¡å¼ä¸èƒ½ä¸ºç©º!");
+		Msg.info("warning","±£´æÄ£Ê½²»ÄÜÎª¿Õ!");
 		return;
 	}
 	if(myModValue==null ||myModValue==""){
-		Msg.info("warning","æ¨¡å¼å€¼ä¸èƒ½ä¸ºç©º!");
+		Msg.info("warning","Ä£Ê½Öµ²»ÄÜÎª¿Õ!");
 		return;
 	}
 	if(myCspName==null ||myCspName==""){
-		Msg.info("warning","èœå•ä¸èƒ½ä¸ºç©º!");
+		Msg.info("warning","²Ëµ¥²»ÄÜÎª¿Õ!");
 		return;
 	}
-	var mask=ShowLoadMask(Ext.getBody(),"å¤„ç†ä¸­è¯·ç¨å€™...");
+	var mask=ShowLoadMask(Ext.getBody(),"´¦ÀíÖĞÇëÉÔºò...");
 	Ext.Ajax.request({
 		url:gridUrl+'?actiontype=Delete',
 		method:'POST',
@@ -632,12 +632,12 @@ function DeleteGridSet(){
 			var jsonData=Ext.util.JSON.decode(response.responseText);
 			 mask.hide();
 			if(jsonData.success=='true'){
-				Msg.info("success","åˆ é™¤æˆåŠŸ!");
+				Msg.info("success","É¾³ı³É¹¦!");
 				StkSysAppParameGrid.getStore().remove(selectedRow);
 				gridDs.removeAll();
 				return;
 			}else{
-				Msg.info("error","åˆ é™¤å¤±è´¥:"+jsonData.info);
+				Msg.info("error","É¾³ıÊ§°Ü:"+jsonData.info);
 			}
 		}
 	})
@@ -645,22 +645,22 @@ function DeleteGridSet(){
 
 var DeleteBT=new Ext.Toolbar.Button({
 	id:'DeleteBT',
-	text:'åˆ é™¤',
+	text:'É¾³ı',
 	iconCls:'page_delete',
 	handler:function(){
 		DeleteGridSet();
 	}
 });
-//=============ä¿å­˜æ¨¡å¼ä¸Gridè®¾ç½®äºŒçº§è”åŠ¨===================
+//=============±£´æÄ£Ê½ÓëGridÉèÖÃ¶ş¼¶Áª¶¯===================
 
-//===========æ¨¡å—ä¸»é¡µé¢=================================================
+//===========Ä£¿éÖ÷Ò³Ãæ=================================================
 Ext.onReady(function(){
 	Ext.QuickTips.init();
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 	
 	var StkSysAppPanel = new Ext.Panel({
 		deferredRender : true,
-		title:'åº”ç”¨ç³»ç»Ÿ',
+		title:'Ó¦ÓÃÏµÍ³',
 		activeTab: 0,
 		region:'west',
 		height:328,
@@ -675,7 +675,7 @@ Ext.onReady(function(){
 	
 	var StkSysAppParamePanel = new Ext.Panel({
 		deferredRender : true,
-		tbar:['<font color=blue>Gridè®¾ç½®</font>',DeleteBT],
+		tbar:['<font color=blue>GridÉèÖÃ</font>',DeleteBT],
 		activeTab: 0,
 		region:'center',
 		height:328,
@@ -686,7 +686,7 @@ Ext.onReady(function(){
 	
 	var gridPanel = new Ext.Panel({
 		deferredRender : true,
-		title:'åˆ—è®¾ç½®',
+		title:'ÁĞÉèÖÃ',
 		activeTab: 0,
 		region:'south',
 		split:true,
@@ -703,4 +703,4 @@ Ext.onReady(function(){
 		renderTo:'mainPanel'
 	});
 });
-//===========æ¨¡å—ä¸»é¡µé¢=================================================
+//===========Ä£¿éÖ÷Ò³Ãæ=================================================

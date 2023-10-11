@@ -11,6 +11,7 @@ function BodyLoadHandler()
 	initButtonWidth();
 	KeyUp("Name^Location","N");
 	Muilt_LookUp("Name^Location");
+	SetTableMarginbottom();		// MZY0129	2612987		2022-07-07
 }
 function InitPage()
 {
@@ -91,11 +92,17 @@ function SetEnabled()
 	{
 		DisableBElement("BDelete",true);
 		DisableBElement("BSubmit",true);
+		// MZY0123	2612987		2022-05-12
+		EQCommon_HiddenElement("BDelete");
+		EQCommon_HiddenElement("BSubmit");
 		if (Status!="")
 		{
 			DisableBElement("BUpdate",true);
 			DisableBElement("BClear",true);
 			//SetElement("ReadOnly",1);
+			// MZY0123	2612987		2022-05-12
+			EQCommon_HiddenElement("BUpdate");
+			EQCommon_HiddenElement("BClear");
 		}
 	}
 	//非建单据菜单,不可更新等操作单据
@@ -108,8 +115,9 @@ function SetEnabled()
 		DisableBElement("BClear",true);
 		//SetElement("ReadOnly",1);	//非建单据菜单,设为只读
 	}
-	DisableBElement("BCancel",true);
-	DisableBElement("BPrint",true);
+	// MZY0123	2612987		2022-05-12
+	//DisableBElement("BCancel",true);
+	//DisableBElement("BPrint",true);
 	if (Status=="2")
 	{
 		DisableBElement("BCancel",false);
@@ -117,7 +125,13 @@ function SetEnabled()
 		if (obj) obj.onclick=BCancel_Clicked;
 		DisableBElement("BPrint",false);
 		var obj=document.getElementById("BPrint");
-	if (obj) obj.onclick=BPrint_Clicked;
+		if (obj) obj.onclick=BPrint_Clicked;
+	}
+	else
+	{
+		// MZY0123	2612987		2022-05-12
+		EQCommon_HiddenElement("BCancel");
+		EQCommon_HiddenElement("BPrint");
 	}
 }
 function FillEquipInfo(value)

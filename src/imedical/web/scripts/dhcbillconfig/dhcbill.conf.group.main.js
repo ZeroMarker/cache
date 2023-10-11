@@ -1,11 +1,9 @@
 ﻿/**
  * FileName: dhcbill.conf.group.main.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-10-21
  * Description: 安全组功能授权
  */
-
-var GV = {};
 
 $(function() {
 	$(".tabs-container").tabs({
@@ -64,14 +62,26 @@ function initGroupList() {
 		singleSelect: true,
 		fitColumns: true,
 		pagination: true,
-		pageSize: 30,
+		pageSize: 20,
 		displayMsg: '',
+		showRefresh: false,
 		idField: 'id',
-		data: [],
-		columns: [[
-			{title: '安全组', field: 'text', width: 230},
-			{filed: 'id', hidden: true}
-		]],
+		className: "BILL.CFG.COM.GroupAuth",
+		queryName: "QuerySSGroup",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["id"]) != -1) {
+					cm[i].hidden = true;
+					continue;
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if (cm[i].field == "text") {
+						cm[i].width = 230;
+					}
+				}
+			}
+		},
 		onLoadSuccess: function(data) {
 			$HUI.datagrid("#groupList").unselectAll();
 			$("iframe").attr("src", "dhcbill.nodata.warning.csp");
@@ -109,11 +119,18 @@ function loadTabContent() {
 	case "ipbillmenu-iframe":
 		url = "dhcbill.conf.group.ipbillmenu.csp";
 		break;
+	case "deptype-iframe":
+		url = "dhcbill.conf.group.deptype.csp";
+		break;
+	case "instype-iframe":
+		url = "dhcbill.conf.group.instype.csp";
+		break;
 	default:
 	}
 	
 	var hospId = getValueById("hospital");
-	var src = url+ "?GroupId=" + groupId + "&HospId=" + hospId;
+	var src = url + "?GroupId=" + groupId + "&HospId=" + hospId;
+	src = websys_writeMWToken(src);
 	if ($("#" + iframeId).attr("src") != src) {
 		$("#" + iframeId).attr("src", src);
 	}

@@ -38,8 +38,15 @@
         });
         return envVar.docContext;
     },
+    getDocWithoutPrivilege: function (InstanceID) {
+        envVar.docContext = iEmrPlugin.GET_DOCUMENT_CONTEXT({
+                InstanceID: InstanceID || '',
+                isSync: true
+            });
+        return envVar.docContext;
+    },
     getInstanceID: function() {
-        this.getDocContext('');
+        this.getDocWithoutPrivilege('');
         if (!envVar.docContext)
             return '';
         return (envVar.docContext.InstanceID || '');
@@ -103,29 +110,32 @@
         
 
         var escapeRevokeSignDocIDArray = new Array(); 
-		escapeRevokeSignDocIDArray = sysOption.escapeRevokeSignDocID.split("^");
-		var result = {result:false,requestSign:""}
-		if ($.inArray(param.emrDocId,escapeRevokeSignDocIDArray) == -1)
-		{
-			 var result = this.doRevokeSignedDocument(modifyResult, (extraArgs || {})['signElementPath']);
-		}
-		flag = result.result;
-        if (!flag) {
-            editorEvt.evtAfterSave = function (commandJson) {
-                commandJson.requestSign = result.requestSign;
-                if ('function' === typeof callback) {
-                    callback(commandJson);
-                }
-            };
-            //调用平台方法，用途锁定头菜单
-            setSysMenuDoingSth('病历保存中...');
-            iEmrPlugin.SAVE_DOCUMENT();
-        }else {
-            if ('function' === typeof callback) {
-                callback({requestSign: result.requestSign});
+        escapeRevokeSignDocIDArray = sysOption.escapeRevokeSignDocID.split("^");
+        var result = {result:false,requestSign:""}
+        var instance = emrEditor.getDocWithoutPrivilege();
+        common.GetRecodeParamByInsIDSync(instance.InstanceID,function(param){
+            if ($.inArray(param.emrDocId,escapeRevokeSignDocIDArray) == -1)
+            {
+                 var result = emrEditor.doRevokeSignedDocument(modifyResult, (extraArgs || {})['signElementPath']);
             }
-        }
-        return;
+            flag = result.result;
+            if (!flag) {
+                editorEvt.evtAfterSave = function (commandJson) {
+                    commandJson.requestSign = result.requestSign;
+                    if ('function' === typeof callback) {
+                            callback(commandJson);
+                    }
+                };
+                //调用平台方法，用途锁定头菜单
+                setSysMenuDoingSth('病历保存中...');
+                iEmrPlugin.SAVE_DOCUMENT();
+            }else {
+                if ('function' === typeof callback) {
+                    callback({requestSign: result.requestSign});
+                }
+            }
+            return;
+        });
     },
     //打印 ： printArg Print/PrintDirectly
     printDoc: function(printArg, documentContext) {
@@ -135,7 +145,7 @@
         if (!privilege.canPrint(documentContext)) {
             return;
         }
-
+     
         var instanceId = emrEditor.getInstanceID();
         if (instanceId === '') return;
         var id = common.isPrinted(instanceId);
@@ -145,7 +155,27 @@
             var returnValues = window.showModalDialog("emr.printprompt.csp", text, "dialogHeight:150px;dialogWidth:350px;resizable:no;status:no;scroll:yes;");
             if (returnValues == "cancel") return;
         }
-
+        
+        //自动保存如未配置打印动作，进行提醒
+        var modifyResult = emrEditor.getModifyResult();
+        if (modifyResult.Modified == 'True')&&((','+sysOption.OPAutoSave+',').indexOf(',print,') == "-1")
+        {
+            var text = '文档正在编辑，请保存后打印，是否保存？';
+            //判断客户端浏览器IE及其版本
+            if ($.browser.msie && $.browser.version == '6.0')
+            {
+                returnValues = window.showModalDialog("emr.prompt.csp",text,"dialogHeight:180px;dialogWidth:350px;resizable:no;status:no;scroll:yes;");
+            }
+            else
+            {
+                returnValues = window.showModalDialog("emr.prompt.csp",text,"dialogHeight:150px;dialogWidth:350px;resizable:no;status:no;scroll:yes;");
+            }
+            if (returnValues !== "save")
+            {
+                return;
+            }
+        }
+        
         var fnAfterSave = function(commandJson) {
             if (commandJson && commandJson.args) {
                 if (commandJson.args.result === 'ERROR')
@@ -157,6 +187,7 @@
             if (!quality.printChecker(documentContext))
                 return;
 
+            setSysMenuDoingSth('病历打印中...');
             iEmrPlugin.PRINT_DOCUMENT({
                 args: printArg || 'Print'
             });
@@ -175,6 +206,27 @@
         }
 
         if (confirm('确定删除【' + documentContext.Title.DisplayName + '】?')) {
+            //判断是否要求验证密码
+            var creatorMessage = common.getCreatorMessage(documentContext.InstanceID);
+            if ((sysOption.isDeleteVerification == "Y")&&(creatorMessage.status != "UNSAVE"))
+            {
+                if (creatorMessage != "")
+                {
+                    if ((creatorMessage.creatorID != "")&&(creatorMessage.creatorName != ""))
+                    {	
+                        var result = window.showModalDialog("emr.userverification.delete.csp?UserID="+creatorMessage.creatorID+"&UserName="+creatorMessage.creatorName,"","dialogHeight:200px;dialogWidth:180px;resizable:no;status:no");
+                        if ((result == "")||(typeof(result) == "undefined")) 
+                        {
+                            return;
+                        }
+                        else if(result == "0")
+                        {
+                            alert("密码验证失败");
+                            return;
+                        }
+                    }
+                }
+            }
             iEmrPlugin.DELETE_DOCUMENT({
                 InstanceID: documentContext.InstanceID
             });
@@ -182,7 +234,6 @@
     },
     //新建文档
     createDoc: function (docParam) {
-		param = docParam;
         if (docParam == null)
             return;
         sysOption.pluginType = docParam.pluginType;
@@ -212,7 +263,7 @@
                 DisplayName: docParam.text
             });
         } else {
-            var defaultLoadId = common.getDefaultLoadId(docParam.emrDocId, patInfo.UserLocID);
+            var defaultLoadId = common.getDefaultLoadId(docParam.emrDocId, patInfo.UserLocID,docParam.templateId);
             if (defaultLoadId == "") {
                 if (!isGuideBox) {
                     this.createAsLoad = true;
@@ -238,6 +289,10 @@
         }
         //自动记录病例操作日志
         hisLog.create('EMR.OP.CreateDoc',docParam);
+        //创建病历 调用CDSS
+        var instance = emrEditor.getDocWithoutPrivilege();
+        docParam.id=instance.InstanceID;
+       	cdssParam(docParam,'create');
     },
     isOpened: function(docParam) {
 
@@ -245,7 +300,7 @@
             return false;
         }
 
-        var documentContext = this.getDocContext();
+        var documentContext = this.getDocWithoutPrivilege();
         if (!documentContext || 'ERROR' === documentContext.result) {
             return false;
         }
@@ -294,13 +349,10 @@
                 InstanceID: docParam.id
             });
         }
-
         //自动记录病例操作日志
         hisLog.operate('EMR.OP.LoadDoc',docParam);
-		param = docParam;
-		if(typeof cdssTool != "undefined"&&typeof cdssLock != "undefined"&&cdssLock=="Y"){
-			cdssTool.getData(param,"Save");
-		}
+        //加载病历调用CDSS
+		cdssParam(docParam,"Save");
     },
     cleanDoc: function() {
         iEmrPlugin.CLEAN_DOCUMENT();
@@ -317,10 +369,43 @@
         var revokeStatus = privilege.GetRevokeStatus();
         for (var i = 0; i < modifyResult.InstanceID.length; i++) {
             var instanceId = modifyResult.InstanceID[i];
+            var tmpDocContext = that.getDocContext(instanceId);
+       		if (!privilege.canSave(tmpDocContext))
+	            continue;
+            
             var userLevel = common.getUserInfo().UserLevel;
-
             if (revokeStatus != 'Superior')
                 userLevel = '';
+            /*var revokeInfo = iEmrPlugin.GET_REVOKE_SIGNER_INFO({
+                SignatureLevel: userLevel,
+                InstanceID: instanceId,
+                isSync: true
+            });
+            if (revokeInfo.result == "ERROR"){
+                showEditorMsg('失效文档信息获取失败!','warning');
+                result = true;
+                break;
+            }else{
+                if((typeof(revokeInfo.Authenticator) != "undefined")&&(revokeInfo.Authenticator.length>0))
+                {
+                    // 有失效签名时给予提示
+                    var text = '本次保存会使 "' +revokeInfo.HappenDateTime+' '+revokeInfo.Title+ '" 的';
+                    var name = ""
+                    $.each(revokeInfo.Authenticator, function(idx, val){
+                        if (name == ""){
+                            name = val.Name;
+                        }else{
+                            name += "、"+val.Name;
+                        }
+                    });
+                    text += name+'签名失效，是否确认保存修改?'
+                    if(!confirm(text)) {
+                        result = true;
+                        break;
+                    }
+                }
+            }*/
+            
             var revokeResult = iEmrPlugin.REVOKE_SIGNED_DOCUMENT({
                 SignatureLevel: userLevel,
                 InstanceID: instanceId,
@@ -341,13 +426,28 @@
                 }
                 showEditorMsg('文档签名已经被撤销!', 'warning');
                 result = true;
-                var tmpDocContext = that.getDocContext(instanceId);
                 if (tmpDocContext.result == 'ERROR' && !result) {
                     result = true;
                 }
                 showEditorMsg('数据保存成功,签名已失效!', 'warning');
+                
+                //启用病历信息订阅与发布
+                if (sysOption.Observer.split("^")[0] == "Y")
+                {
+                    if (sysOption.Observer.split("^")[1] == "Y")
+                    {
+                        common.getTemplateIDByInsId(instanceId, AutoUpdateObserverData);
+                    }else{
+                        common.getTemplateIDByInsId(instanceId, GetObserverData);
+                    }
+                }
                 //质控
                 quality.saveChecker(tmpDocContext);
+                
+                common.GetRecodeParamByInsID(instanceId, function(tempParam) {
+                    //自动记录病例操作日志
+                    hisLog.operate('EMR.OP.Save.OK',tempParam);
+                });
             }
         }
 
@@ -521,8 +621,55 @@
         if ('Single' == insData.chartItemType) { // 唯一模板
             var tabId = emrTemplate.getTabId(insData.templateId, id);
             emrTemplate.selectTmplTab(tabId);
-            alert('已经创建同类型的文档，不允许重复创建！');
-            return;
+            if (confirm('已经创建同类型的文档，确定删除【' + insData.text + '】并重新创建?')) {
+                var documentContext = that.getDocContext(id);
+                if (!documentContext)
+                    return;
+                if (!privilege.canDelete(documentContext)) {
+                    return;
+                }
+                var creatorMessage = common.getCreatorMessage(documentContext.InstanceID);
+                if ((sysOption.isDeleteVerification == "Y")&&(creatorMessage.status != "UNSAVE"))
+                {
+                    if (creatorMessage != "")
+                    {
+                        if ((creatorMessage.creatorID != "")&&(creatorMessage.creatorName != ""))
+                        {	
+                            var result = window.showModalDialog("emr.userverification.delete.csp?UserID="+creatorMessage.creatorID+"&UserName="+creatorMessage.creatorName,"","dialogHeight:200px;dialogWidth:180px;resizable:no;status:no");
+                            if ((result == "")||(typeof(result) == "undefined")) 
+                            {
+                                return;
+                            }
+                            else if(result == "0")
+                            {
+                                alert("密码验证失败");
+                                return;
+                            }
+                        }
+                    }
+                }
+                var rtn = iEmrPlugin.DELETE_DOCUMENT({
+                    InstanceID: documentContext.InstanceID,
+                    isSync: true
+                });
+                if (rtn.result === 'OK') {
+                    common.GetRecodeParamByInsID(rtn.InstanceID, function(tempParam) {
+                        //自动记录病例操作日志
+                        hisLog.operate('EMR.OP.Delete.OK',tempParam);
+                    });
+                    // 移除记录
+                    $.each(envVar.savedRecords, function(idx, item) {
+                        if (rtn.InstanceID === item.id) {
+                            envVar.savedRecords.splice(idx, 1);
+                            emrTemplate.closeCurTmplsTab();
+                            return false; //break
+                        }
+                    });
+                    createDocByInstance(insData.id);
+                }
+            } else {
+                return;
+            }
         } else if ('1' == insData.isLeadframe) { // 带引导框的可重复
             var tabId = emrTemplate.getTabId(insData.templateId, id);
             emrTemplate.selectTmplTab(tabId);
@@ -536,11 +683,14 @@
         isSync = isSync || false;
         documentContext = documentContext || this.getDocContext();
         
-        if (!privilege.canSave(documentContext))
+        if (!documentContext)
             return false;
-
-        var modifyResult = this.getModifyResult();
+        
+		var modifyResult = this.getModifyResult();
         if (modifyResult.Modified !== 'True')
+            return false;
+		
+        if (!privilege.canSave(documentContext))
             return false;
 
         var returnFlag = false ;
@@ -718,6 +868,7 @@ var editorEvt = {
         //调用平台方法，用途锁定头菜单
         setSysMenuDoingSth();
         if (commandJson.args.result === 'ERROR') {
+            envVar.groupTempParam.length = 0;
             alert('保存失败');
             return;
         } else if (commandJson.args.result === 'OK') {
@@ -725,21 +876,37 @@ var editorEvt = {
                 showEditorMsg('数据保存成功!', 'alert');
                 emrEditor.createAsLoad = false;
                 var insId = commandJson.args.params.InstanceID;
+                //启用病历信息订阅与发布
+                if (sysOption.Observer.split("^")[0] == "Y")
+                {
+                    if (sysOption.Observer.split("^")[1] == "Y")
+                    {
+                        common.getTemplateIDByInsId(insId, AutoUpdateObserverData);
+                    }else{
+                        common.getTemplateIDByInsId(insId, GetObserverData);
+                    }
+                }
                 common.GetRecodeParamByInsID(insId, function(tempParam) {
                     //自动记录病例操作日志
                     hisLog.operate('EMR.OP.Save.OK',tempParam);
                 });
-                var documentContext = emrEditor.getDocContext(insId);
+                var documentContext = emrEditor.getDocWithoutPrivilege(insId);
                 //commandJson['QCResult'] = quality.saveChecker(documentContext);
                 common.getSavedRecords(function(ret) {
                     envVar.savedRecords = $.parseJSON(ret);
                     common.getTemplateIDByInsId(insId, function(tmpId) {
                         emrTemplate.loadTmplTabs(envVar.savedRecords, tmpId, insId);
+                        if (envVar.groupTempParam.length > 0) {
+                            if (!emrTemplate.LoadGroupTemplate(envVar.groupTempParam[0])) {
+                                envVar.groupTempParam.length = 0;
+                            }
+                        }
                     });
                 });
-				if(typeof cdssTool != "undefined"&&typeof cdssLock != "undefined"&&cdssLock=="Y"){
-					cdssTool.getData(param,"Save");
-				}
+		//保存调用CDSS
+                common.GetRecodeParamByInsIDSync(insId,function(param){
+	               cdssParam(param,"Save"); 
+	            });
             } else {
                 alert('数据保存失败!');
             }
@@ -769,19 +936,38 @@ var editorEvt = {
         }
         
         if (commandJson.args.result === 'ERROR') {
+            envVar.groupTempParam.length = 0;
+            //串病历时编辑器会返回创建失败，清空文档
+            emrEditor.cleanDoc();
             alert('创建失败！');
             return;
         }
         emrEditor.setEditorReadonly();
+        // 批量创建
+        if (envVar.groupTempParam.length > 0) {
+            envVar.groupTempParam.splice(0,1);
+            emrEditor.saveDoc();
+        }
     },
     //加载文档事件
     eventLoadDocument: function(commandJson) {
         setSysMenuDoingSth();
         hideLoadingWinFun();
         if (commandJson.args.result === 'ERROR') {
+            emrEditor.cleanDoc();
             alert('加载失败！');
             return;
         }
+        //加载文档后修改createAsLoad状态，处理切换患者后不修改病历也会保存导致签名失效的问题
+        emrEditor.createAsLoad = false;
+        
+        //加载完毕后判断是否存在串病历情形，如果存在给予提示并清空文档
+        var documentContext = emrEditor.getDocContext(commandJson.args.InstanceID);
+		if (!isConsistent(documentContext))
+		{
+			emrEditor.cleanDoc();
+			return;
+		}
         
         //设置引导框
         common.GetRecodeParamByInsIDSync(commandJson.args.InstanceID, function(tempParam) {
@@ -794,7 +980,6 @@ var editorEvt = {
             });
         });
         
-        var documentContext = emrEditor.getDocContext();
         if (!isReadonly()) {
             if (privilege.canSave(documentContext))
 	        {
@@ -845,7 +1030,7 @@ var editorEvt = {
                     //自动记录病例操作日志
                     hisLog.operate('EMR.OP.Delete.OK',tempParam);
                 });
-                var documentContext = emrEditor.getDocContext();
+                var documentContext = emrEditor.getDocWithoutPrivilege();
                 if (documentContext) {
                     if (documentContext.result === 'ERROR') {
                         // 移除记录
@@ -894,9 +1079,10 @@ var editorEvt = {
                         });
                     }
                 }
-				if(typeof cdssTool != "undefined"&&typeof cdssLock != "undefined"&&cdssLock=="Y"){
-					cdssTool.getData(param,"Delete");
-				}
+			 //删除病历调用CDSS
+               common.GetRecodeParamByInsIDSync(commandJson.args.InstanceID,function(param){
+	               cdssParam(param,"Delete"); 
+	            });
             } catch (err) {
                 alert(err.message || err);
             } finally {
@@ -985,11 +1171,13 @@ var editorEvt = {
                 return;
             }
             
-            if (!privilege.canCheck(documentContext)) {
-                return;
-            }
+            //患者手写签名
+            if ('PATIENT' == signProperty.OriSignatureLevel.toUpperCase()) { 
+                if ((!privilege.canPatCheck(documentContext))&&(signProperty.Authenticator.length == 0))
+            		return ;
+            	else if ((!privilege.canPatReCheck(documentContext))&&(signProperty.Authenticator.length > 0))
+            		return ;
             
-            if ('PATIENT' == signProperty.OriSignatureLevel.toUpperCase()) { //手写签名
                 var argEditor = {
                     instanceId: instanceId,
                     userId: patInfo.UserID,
@@ -1035,8 +1223,15 @@ var editorEvt = {
                 };
                 handSign.sign(argEditor);
             } else if ('1' === sysOption.CAServicvice) {
+                if (!privilege.canCheck(documentContext))
+                    return;
+                
                 keySign.sign(signProperty.SignatureLevel, instanceId, signProperty ,patInfo.UserID);
-            } else { // 系统签名 sysSign
+            } else { 
+                // 系统签名 sysSign
+                if (!privilege.canCheck(documentContext))
+                    return;
+                
                 if ('Y' !== sysOption.isDirectSignOP)
                 {
                     var signParam = {"cellName":signProperty.Name};
@@ -1114,6 +1309,7 @@ var editorEvt = {
     },
     //打印事件监听
     eventPrintDocument: function(commandJson) {
+        setSysMenuDoingSth();
         if (commandJson.args.result == 'OK') {
             if (commandJson.args.params.result == "OK") {
                 showEditorMsg('病历打印成功!', 'alert');
@@ -1258,16 +1454,13 @@ function eventDispatch(commandJson) {
     } else if (commandJson.action == 'CHECK_DOCUMENT_MODIFY') {
         return iEmrPlugin.CHECK_DOCUMENT_MODIFY(commandJson.args);
     }else if (commandJson.action == 'eventRequestKnowledgeBase') {
-	    //请求章节知识库
+	    //ctrl+k 快捷键
         eventRequestKnowledgeBase(commandJson);
-    }
-}
-//ctrl+k 快捷键请求
-function eventRequestKnowledgeBase(commandJson){
-	//快捷键请求惠每
-	if(typeof cdssTool != "undefined" && typeof cdssLock!="undefined"&&cdssLock=="Y"){
-		cdssTool.getData(param,"Save");
-	}
+    }else if(commandJson["action"] == "eventSearchCdssBase")
+	{
+		//查看知识库
+		eventSearchCdssBase(commandJson);
+	}	
 }
 ///跨页传json对象包含数组，会变换格式
 function eventDispatchBroker(commandStr) {
@@ -1313,7 +1506,7 @@ function createDocFromInstance(insData) {
 }
 
 function getDocumentContext(insID) {
-    return emrEditor.getDocContext(insID);
+    return emrEditor.getDocWithoutPrivilege(insID);
 }
 
 //判断当前光标在文档中的位置
@@ -1361,7 +1554,7 @@ function insertText(text){
 ///保存时调用判断是否串患者
 function isConsistent(documentContext)
 {
-	documentContext = documentContext || emrEditor.getDocContext();
+	documentContext = documentContext || emrEditor.getDocWithoutPrivilege();
 	
 	if (documentContext.result === "ERROR") {
 		showEditorMsg('请注意：当前保存病历可能不属于当前患者，保存失败，请重新打开病历页面进行编辑保存！', 'forbid');
@@ -1385,4 +1578,159 @@ function isConsistent(documentContext)
         return false;
 	}
 	return true;
+}
+//设置电子病历运行环境参数
+function setRunEMRParams()
+{
+    $.ajax({
+		type: 'GET',
+		dataType: 'text',
+		url: '../EMRservice.Ajax.common.cls',
+		async: false,
+		data: {
+			"OutputType":"String",
+			"Class":"EMRservice.BL.BLSysOption",
+			"Method":"GetRunEMRParams",
+            "p1":"",
+            "p2":"OP"
+		},
+		success: function (ret) {
+			if (ret != "") {
+                result = eval("("+ret+")");
+				iEmrPlugin.SET_RUNEMR_PARAMS(result);
+            }
+		},
+		error: function (ret) {
+			alert('setRunEMRParams error');
+		}
+	});
+}
+
+//同步患者基本信息选项卡列表
+function GetObserverData(templateId)
+{
+    var returnValues = "";
+    //获取电子病历信息同步选项卡数据
+    $.ajax({ 
+        type: "post",
+        dataType: "text", 
+        url: "../EMRservice.Ajax.common.cls",
+        async : false,
+        data:{
+            "OutputType":"Stream",
+            "Class":"EMRservice.Observer.BOUpdateData",
+            "Method":"ObserverUpData",
+            "p1":patInfo.EpisodeID,
+            "p2":patInfo.PatientID,
+            "p3":patInfo.UserID,
+            "p4":templateId,
+            "p5":"SAVE"
+        }, 
+        error: function(d)
+        {
+            $.messager.alert("简单提示", "同步信息获取失败!");
+        }, 
+        success: function (d)
+        {
+            if (d != "")
+            {
+                var data = eval("["+d+"]");
+                $.each(data, function(index, item){
+                    if (item.Type == "PaPatMas")
+                    {
+                        var array = {
+                            "data":item.children,
+                            "patientID":patInfo.PatientID,
+                            "userID":patInfo.UserID
+                        };
+                        returnValues = window.showModalDialog("emr.observerdata.csp",array,"dialogWidth:625px;dialogHeight:320px;resizable:yes;center:yes;status:no;");
+                    }else if (item.Type == "WMRInfection")
+                    {
+                        $.each(item.children, function(childindex, childitem){
+                            //传染病上报
+                            ReportWMRInfection(childitem.ActionInfo);
+                        });
+                    }else if (item.Type == "NosocomialInfection")
+                    {
+                        $.each(item.children, function(childindex, childitem){
+                            //院内感染
+                            ReportWMRInfection(childitem.ActionInfo);
+                        });
+                    }
+                });
+            }
+        } 
+    });
+    if (returnValues)
+    {
+        showEditorMsg('同步数据项数据保存成功!', 'alert');
+    }
+}
+
+// 传染病上报,院内感染界面
+function ReportWMRInfection(reportInfectionUrl)
+{
+    if (reportInfectionUrl == "") return;
+    
+    var c1 = String.fromCharCode(1);
+    var arrReportInfection = reportInfectionUrl.split(c1);
+    if (arrReportInfection[0] == "0")
+    {
+        alert(arrReportInfection[1]);
+    }
+    else if (arrReportInfection[0] == "1")
+    {
+        if (!window.confirm(arrReportInfection[1])) return;
+        var c2 = String.fromCharCode(2);
+        var arrReportInfectionUrl = arrReportInfection[2].split(c2);
+        for (var i=0; i<arrReportInfectionUrl.length; i++)
+        {
+            if (arrReportInfectionUrl[i] == "") continue;
+            try{
+            window.showModalDialog(arrReportInfectionUrl[i],"","dialogHeight:800px;dialogWidth:800px;resizable:yes;center:yes;status:no;");
+        }catch(e){
+            alert(e.message);
+        }
+    }
+  }
+}
+
+//自动同步患者基本信息
+function AutoUpdateObserverData(templateId)
+{
+    var data = ajaxDATA('String', 'EMRservice.Observer', 'BLAutoUpdateData', patInfo.PatientID, patInfo.EpisodeID, patInfo.UserID, patInfo.IPAddress, templateId, "SAVE");
+    ajaxGETSync(data, function (ret) {
+        if (ret == "") return;
+        if (ret != "1")
+        {
+            showEditorMsg("自动同步患者基本信息失败！", "warning");
+        }else {
+            showEditorMsg("自动同步患者基本信息成功！", "alert");
+        }
+    }, function (ret) {
+        showEditorMsg("自动同步患者基本信息失败！", "warning");
+    });
+}
+
+//ctrl+K 快捷键事件
+function eventRequestKnowledgeBase(commandJson){
+ 	//快捷键请求CDSS
+	var instance = emrEditor.getDocWithoutPrivilege();
+	common.GetRecodeParamByInsIDSync(instance.InstanceID,function(param){
+		cdssParam(param,"Save"); 
+	});
+}
+//查看知识库
+function eventSearchCdssBase(commandJson){
+	if(commandJson.args.Value!=""){
+		cdssParam(commandJson.args.Value);
+	}
+}
+//调用第三方CDSS
+function cdssParam(tempParam,type){
+	var tool = typeof cdssTool != "undefined" ? cdssTool : parent.cdssTool;
+	var lock = typeof cdssLock != "undefined" ? cdssLock : parent.cdssLock;
+	if(tool != undefined && lock != undefined && lock === "Y"){
+		tool.getData(tempParam,type);	
+	}	
 }

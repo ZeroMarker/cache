@@ -83,7 +83,7 @@ function InitFBDQueryWin(){
 		for (var dicIndex = 0; dicIndex < dicList.length; dicIndex++) {
 			var dicSubList = dicList[dicIndex].split("^");
 			$("#chkStatusList").append(
-				 "<input id="+dicSubList[0]+" type='checkbox' class='hisui-checkbox' "+(dicSubList[0]==1? "checked='checked'":"")+" label="+dicSubList[1]+" name='chkStatus' value="+dicSubList[0]+">"
+				 "<input id="+dicSubList[0]+" type='checkbox' class='hisui-checkbox' "+(dicSubList[0]==1? "checked='checked'":"")+" label="+dicSubList[1]+" name='chkStatus' value="+dicSubList[0]+"><span style='padding-right:10px;'></span>"
 			);
 		}
 		$.parser.parse("#chkStatusList");  //解析checkbox
@@ -117,8 +117,11 @@ function InitFBDQueryWin(){
 					if (value=="") return "";
 					var ReportID = row["ID"];
 					var EpisodeID = row["EpisodeID"];
-					
-					var btn = '<a href="#" class="btn_detail" onclick="objScreen.OpenFBDReport(\'' + ReportID + '\',\'' + EpisodeID + '\')"></a>';
+					if ((typeof HISUIStyleCode != 'undefined') && (HISUIStyleCode=="lite")){
+						var btn = '<a href="#" class="icon icon-paper" onclick="objScreen.OpenFBDReport(\'' + ReportID + '\',\'' + EpisodeID + '\')"></a>';
+					}else{
+						var btn = '<a href="#" class="btn_detail" onclick="objScreen.OpenFBDReport(\'' + ReportID + '\',\'' + EpisodeID + '\')"></a>';
+					}
 					return btn;
 				}
 			}, 
@@ -146,22 +149,17 @@ function InitFBDQueryWin(){
 			{field:'PatName',title:'姓名',width:80},
 			{field:'Sex',title:'性别',width:50},
 			{field:'PatAge',title:'年龄',width:50},
-			{field:'Secret1',title:'密级',width:60,hidden:(IsSecret==1 ? true:'')},
-			{field:'Secret2',title:'级别',width:60,hidden:(IsSecret==1 ? true:'')}, 
-			{field:'AdmTypeDesc',title:'上报位置',width:80}, 
-			{field:'PersonalID',title:'身份证号',width:160},
-			{field:'Contactor',title:'联系人',width:100},
-			{field:'Telephone',title:'联系电话',width:100},
+			{field:'EncryptLevel',title:'密级',width:60,hidden:(IsSecret==1 ? true:'')},
+			{field:'PatLevel',title:'级别',width:60,hidden:(IsSecret==1 ? true:'')}, 
+			{field:'AdmTypeDesc',title:'报告位置',width:80}, 
+			{field:'Telephone',title:'联系电话',width:120},
 			{field:'Company',title:'单位',width:200},
 			{field:'Address',title:'现住址',width:220},
 			{field:'CateDesc',title:'疾病分类',width:140},
 			{field:'DiseaseDesc',title:'疾病名称',width:160},
-			{field:'DiseaseText',title:'疾病备注',width:180},
 			{field:'AreaDesc',title:'病人属于',width:120},
 			{field:'OccupationDesc',title:'职业',width:100},
 			{field:'IsInHospDesc',title:'是否<br>住院',width:50},
-			{field:'IsUseAntiDesc',title:'就诊前是否<br>使用抗生素',width:80},
-			{field:'UseAntiDesc',title:'就诊前使用<br>抗生素名称',width:120},
 			{field:'SickDate',title:'发病日期',width:100},
 			{field:'AdmitDate',title:'就诊日期',width:100},
 			{field:'DeathDate',title:'死亡日期',width:100},
@@ -172,8 +170,7 @@ function InitFBDQueryWin(){
 			{field:'CheckDate',title:'审核日期',width:100},
 			{field:'CheckTime',title:'审核时间',width:80},
 			{field:'ReportLocDesc',title:'上报科室',width:120},
-			{field:'PreDiagnosDrs',title:'初步诊断',width:120},
-			{field:'AnamnesisDrs',title:'既往病史',width:120}			
+			{field:'Resume',title:'退回原因',width:120}		
 		]],
 		onDblClickRow:function(index, row) {
 			if (index>-1) {				
@@ -182,6 +179,8 @@ function InitFBDQueryWin(){
 		},onLoadSuccess:function(data){
 			//加载成功
 			dispalyEasyUILoad(); //隐藏效果
+			$('#FBDQuery').datagrid('unselectAll');//清除所有选中
+			
 		}
 	});
 

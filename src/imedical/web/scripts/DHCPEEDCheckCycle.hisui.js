@@ -96,7 +96,7 @@ function BSave_click(Type)
 	var rtn=tkMakeServerCall("web.DHCPE.Endanger","EDCheckCycleSave",ID,Str);
 	var Arr=rtn.split("^");
 	if (rtn.split("^")[0]=="-1"){
-		$.messager.alert("提示","更新失败","error");
+		$.messager.alert("提示","更新失败"+rtn.split("^")[1],"error");
 		
 	}else{
 		BClear_click();
@@ -137,7 +137,7 @@ function BDel_click(){
 
 function BClear_click(){
 	$("#ID,#Code,#Desc,#ExpInfo,#Remark").val("");
-	$(".hisui-checkbox").checkbox('setValue',false);
+	$("#Active").checkbox('setValue',true);
 	$(".hisui-combogrid").combogrid('setValue',"");
 
 	var valbox = $HUI.validatebox("#Code,#Desc", {

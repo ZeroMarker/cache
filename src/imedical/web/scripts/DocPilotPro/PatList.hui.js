@@ -15,6 +15,7 @@ $(function(){
 });
 function InitEvent(){
 	$("#BFind").click(PilotProPatListTabDataGridLoad);
+	$("#BClean").click(BCleanHandler);
 	$("#BExport").click(ExportClickHandle);
 	$("#PatientNo").keydown(PapmiNoKeyDownHander);
 	$("#PatName").keydown(PatNameKeyDownHander);
@@ -72,19 +73,20 @@ function SetPatInfo(){
 function PageHandle(){
 	LoadProjectList();
 	//进入科研病人列表清除头菜单的选择信息
-	var frm=dhcsys_getmenuform();
+	/*var frm=dhcsys_getmenuform();
 	if (frm){
 		frm.PPRowId.value="";
 		frm.EpisodeID.value="";
 		frm.PatientID.value="";
-	}
+	}*/
 }
 function LoadProjectList(){
 	var ret=$.cm({
 		ClassName:"web.PilotProject.DHCDocPilotProject",
 		MethodName:"GetProjectStrDocSelf",
 		dataType:"text",
-		UserID:session['LOGON.USERID']
+		UserID:session['LOGON.USERID'],
+		InHosp:session['LOGON.HOSPID']
 	},false); 
 	var arrDate=new Array();
 	for (var i=0;i<ret.split("^").length;i++){
@@ -106,7 +108,7 @@ function LoadProjectList(){
 			}
 	 });
 	 
-	 $HUI.combobox("#PatStatus", {
+	 /*$HUI.combobox("#PatStatus", {
 			valueField: 'id',
 			textField: 'text', 
 			editable:true,
@@ -116,17 +118,30 @@ function LoadProjectList(){
 				{id:'C',text:'取消'},{id:'O',text:'完成'}
 				
 			]
-	 });
+	 });*/
 	 
+	 $HUI.combobox("#PatStatus", {
+		url:$URL+"?ClassName=web.PilotProject.DHCDocPilotProPat&QueryName=QryPatStatus&ResultSetType=array",
+		valueField:'id',
+		textField:'text',
+		//required:true,
+		blurValidValue:true
+	});
+	
 }
 function Init(){
 	PageLogicObj.m_PilotProPatListTabDataGrid=InitPilotProPatListTabDataGrid();
 }
 function InitPilotProPatListTabDataGrid(){
 	var toobar=[{
-        text: '取消',
-        iconCls: 'icon-cancel',
+        text: '入组状态改变',
+        iconCls: 'icon-write-order',
         handler: function() {CancelClickHandle(); }
+    },
+    {
+        text: '阶段变更',
+        iconCls: 'icon-write-order',
+        handler: function() {Stage_Handle(); }
     }];
 	var Columns=[[ 
 		{field:'PPRowId',hidden:true,title:''},
@@ -134,6 +149,7 @@ function InitPilotProPatListTabDataGrid(){
 		{field:'PatientID',hidden:true,title:''},
 		{field:'EpisodeID',hidden:true,title:''},
 		{field:'mradm',hidden:true,title:''},
+		{field:'Stage',title:'阶段',width:100},
 		{field:'PAPMINO',title:'登记号',width:100},
 		{field:'PAPMIName',title:'患者姓名',width:100},
 		{field:'PAPMIDOB',title:'出生日期',width:100},
@@ -160,7 +176,7 @@ function InitPilotProPatListTabDataGrid(){
 		//{field:'CancelUser',title:'备注',width:100},
 		{field:'CancelReason',title:'退出原因',width:100},
 		{field:'TPPDesc',title:'所属科研项目',width:100},
-		{field:'ScreenNo',title:'筛选号',width:100}
+		{field:'ScreenNo',title:'筛选号',width:120}
     ]]
 	var PilotProPatListTabDataGrid=$("#PilotProPatListTab").datagrid({
 		fit : true,
@@ -188,7 +204,7 @@ function InitPilotProPatListTabDataGrid(){
 					frm.mradm.value=row["mradm"];
 				}
 			} else {
-				$.messager.alert("提示","非在组状态不能选择","info");
+				$.messager.alert("提示",$g("非在组状态不能选择"),"info");
 				$("#PilotProPatListTab").datagrid("clearSelections");
 				
 			}
@@ -199,13 +215,13 @@ function InitPilotProPatListTabDataGrid(){
 			var oldSelIndex=PageLogicObj.m_PilotProPatListTabDataGrid.datagrid('getRowIndex',oldSelRow);
 			if (oldSelIndex==index){
 				PageLogicObj.m_PilotProPatListTabDataGrid.datagrid('unselectRow',index);
-				var frm=dhcsys_getmenuform();
+				/*var frm=dhcsys_getmenuform();
 				if (frm){
 					frm.PPRowId.value="";
 					frm.EpisodeID.value="";
 					frm.PatientID.value="";
 					frm.mradm.value="";
-				}
+				}*/
 				return false;
 			}
 		}
@@ -229,15 +245,16 @@ function PilotProPatListTabDataGridLoad(){
 		PPRowId:$("#PPDesc").combobox("getValue"),
 		All:ServerObj.All,
 		PPStatus:$("#PatStatus").combobox("getValue"),
+		InHosp:session['LOGON.HOSPID'],
 		Pagerows:PageLogicObj.m_PilotProPatListTabDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
-		var frm=dhcsys_getmenuform();
+		/*var frm=dhcsys_getmenuform();
 		if (frm){
 			frm.PPRowId.value="";
 			frm.EpisodeID.value="";
 			frm.PatientID.value="";
 			frm.mradm.value="";
-		}
+		}*/
 		PageLogicObj.m_PilotProPatListTabDataGrid.datagrid("uncheckAll");
 		PageLogicObj.m_PilotProPatListTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
 	}); 
@@ -270,10 +287,18 @@ function myparser(s){
 		return new Date();
 	}
 }
+function BCleanHandler() {
+	$("#PatientNo,#PatName").val("");	
+	$("#PatStatus").combobox("setValue","");
+	$("#PPDesc").combobox("clear");
+	$("#StartDate,#EndDate").datebox("clear")
+	PilotProPatListTabDataGridLoad();
+}
 function ExportClickHandle(){
 	var src="docpilotpro.labresultexport.hui.csp";
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
-	createModalDialog("Project","导出检验结果", 300, 230,"icon-w-export","",$code,"");
+	createModalDialog("Project",$g("导出检验结果"), 275, 240,"icon-w-export","",$code,"");
 }
 function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,_event){
     $("body").append("<div id='"+id+"' class='hisui-dialog'></div>");
@@ -306,21 +331,46 @@ function destroyDialog(id){
    $("body").remove("#"+id); 
    $("#"+id).dialog('destroy');
 }
+
+function Stage_Handle () {
+	var row=PageLogicObj.m_PilotProPatListTabDataGrid.datagrid('getSelected');
+	if ((!row)||(row.length==0)){
+		$.messager.alert("提示","请选择记录!","warning");
+		return false;
+	}
+	var PPRowId=row["PPRowId"];
+	var PPPatid=row["PPPRowId"];
+	var URL = "docpilotpro.bs.patlist.stage.csp?PPPatid="+PPPatid+"&PPRowId="+PPRowId;
+	websys_showModal({
+		url:URL,
+		iconCls: 'icon-w-edit',
+		title:$g('阶段修改'),
+		width:320,height:240,
+		CallBackFunc:PilotProPatListTabDataGridLoad
+	})
+	
+	
+	
+}
+
 function CancelClickHandle(){
 	var row=PageLogicObj.m_PilotProPatListTabDataGrid.datagrid('getSelected');
 	if ((!row)||(row.length==0)){
-		$.messager.alert("提示","请选择记录!");
+		$.messager.alert("提示",$g("请选择记录!"),"warning");
 		return false;
 	}
 	var PatStatus=row['PatStatus'];
-	if (PatStatus!="在组"){
+	var VisitState=row['VisitState'];
+	if (VisitState!="N"){
 		$.messager.alert("提示","患者已"+PatStatus+"!");
 		return false;
 	}
 	var EpisodeID=row["EpisodeID"];
 	var PatientID=row["PatientID"];
 	var PPRowId=row["PPRowId"];
-	var src="docpilotpro.patcancel.hui.csp?EpisodeID="+EpisodeID+"&PatientID="+PatientID+"&PPRowId="+PPRowId;
+	var PPPatid=row["PPPRowId"];
+	var src="docpilotpro.patcancel.hui.csp?EpisodeID="+EpisodeID+"&PatientID="+PatientID+"&PPRowId="+PPRowId+"&PPPatid="+PPPatid;
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
-	createModalDialog("Project","患者取消入组", 526, 345,"icon-w-edit","",$code,"");
+	createModalDialog("Project",$g("入组状态改变"), 526, 340,"icon-w-edit","",$code,"");
 }

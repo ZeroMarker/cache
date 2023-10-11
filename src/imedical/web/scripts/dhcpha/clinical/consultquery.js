@@ -4,13 +4,16 @@
 /// Descript:   咨询回复列表
 
 var url="dhcpha.clinical.action.csp";
-var consStatusArr = [{"value":"","text":'全部'}, {"value":"Y","text":'完成'}, {"value":"N","text":'未完成'}];
+if ("undefined"!==typeof(websys_getMWToken)){
+	url += "?MWToken="+websys_getMWToken()
+	}
+var consStatusArr = [{"value":"","text":$g('全部')}, {"value":"Y","text":$g('完成')}, {"value":"N","text":$g('未完成')}];
 $(function(){
 	
 	$("#startDate").datebox("setValue", formatDate(-2));  //Init起始日期
 	$("#endDate").datebox("setValue", formatDate(0));  	  //Init结束日期
 	
-	$("a:contains('查询')").bind("click",queryConsultDetail);
+	$("a:contains("+$g('查询')+")").bind("click",queryConsultDetail);
 	
 	/**
 	 * 咨询记录状态
@@ -24,17 +27,18 @@ $(function(){
 	 $('#consDept').combobox({
 		mode:'remote',		
 		onShowPanel:function(){ //qunianpeng 2017/8/14 支持拼音码和汉字
-			$('#consDept').combobox('reload',url+'?action=GetAllLocNewVersion&hospId='+LgHospID+'  ')
-			//$('#dept').combobox('reload',url+'?action=SelAllLoc&HospID='+HospID)
+		     $('#consDept').combobox('reload',url+'&action=SelAllLoc&hospId='+LgHospID);
+			//$('#consDept').combobox('reload',url+'&action=GetAllLocNewVersion&hospId='+LgHospID+'  ')
+			//$('#dept').combobox('reload',url+'&action=SelAllLoc&HospID='+HospID)
 		}
 	}); 
-	//var conDeptCombobox = new ListCombobox("consDept",url+'?action=QueryConDept','',{});
+	//var conDeptCombobox = new ListCombobox("consDept",url+'&action=QueryConDept','',{});
 	//conDeptCombobox.init();
 	
 	///回车事件 wangxuejian   2016/09/19
 	$('#drug').bind('keypress',function(event){
 		if(event.keyCode == "13"){
-			var unitUrl = url+'?action=QueryArcItmDetail&Input='+$('#drug').val(); 
+			var unitUrl = url+'&action=QueryArcItmDetail&Input='+$('#drug').val(); 
 			//var unitUrl =  "&Input="+$('#drug').val();
 			/// 调用医嘱项列表窗口
 			new ListComponentWin($('#drug'), "", "600px", "" , unitUrl, ArcColumns, setCurrEditRowCellVal).init();
@@ -48,9 +52,9 @@ $(function(){
 
 // wangxuejian 2016-09-19
 ArcColumns = [[
-	    {field:'itmDesc',title:'医嘱项名称',width:220},
-	    {field:'itmCode',title:'医嘱项代码',width:100},
-	    {field:'itmPrice',title:'单价',width:100},
+	    {field:'itmDesc',title:$g('医嘱项名称'),width:220},
+	    {field:'itmCode',title:$g('医嘱项代码'),width:100},
+	    {field:'itmPrice',title:$g('单价'),width:100},
 		{field:'itmID',title:'itmID',width:80}
 	]];	
 
@@ -70,24 +74,24 @@ function InitConsultList()
 	 */
 	var columns=[[
 		{field:'consultID',title:'consultID',width:80,hidden:true},
-		{field:'finiFlag',title:'完成标志',width:50,align:'center',formatter:SetCellUrl},
-		{field:'consDate',title:'咨询日期',width:100},
-		{field:'consTime',title:'咨询时间',width:90},
-		{field:'quesType',title:'问题类型',width:120},
-		{field:'consIden',title:'咨询身份',width:100},
-		{field:'consDept',title:'咨询部门',width:160},
-		{field:'consName',title:'咨询人',width:100},
-		{field:'consTele',title:'联系电话',width:100},
-		{field:'consDesc',title:'问题描述',width:500},
-		{field:'ansCount',title:'回复次数',width:100},
-		{field:'LkDetial',title:'操作',width:100,align:'center',formatter:SetCellOpUrl}
+		{field:'finiFlag',title:$g('完成标志'),width:50,align:'center',formatter:SetCellUrl},
+		{field:'consDate',title:$g('咨询日期'),width:100},
+		{field:'consTime',title:$g('咨询时间'),width:90},
+		{field:'quesType',title:$g('问题类型'),width:120},
+		{field:'consIden',title:$g('咨询身份'),width:100},
+		{field:'consDept',title:$g('咨询部门'),width:160},
+		{field:'consName',title:$g('咨询人'),width:100},
+		{field:'consTele',title:$g('联系电话'),width:100},
+		{field:'consDesc',title:$g('问题描述'),width:500},
+		{field:'ansCount',title:$g('回复次数'),width:100},
+		{field:'LkDetial',title:$g('操作'),width:100,align:'center',formatter:SetCellOpUrl}
 	]];
 	
 	/**
 	 * 定义datagrid
 	 */
 	var option = {
-		title:'咨询问题列表',
+		title:$g('咨询问题列表'),
                 singleSelect : true
 		};
 	var conDetListComponent = new ListComponent('conDetList', columns, '', option);
@@ -107,10 +111,10 @@ function newCreateConsultWin(consultID){
 		maximizable : true,
 		collapsible:true
 		};
-	var newConWindowUX = new WindowUX('列表', 'newConWin', '930', '550', option);
+	var newConWindowUX = new WindowUX($g('列表'), 'newConWin', '930', '550', option);
 	newConWindowUX.Init();
 	
-	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.replyconsult.csp?consultID='+consultID+'"></iframe>';
+	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.replyconsult.csp?consultID='+consultID+'&MWToken='+websys_getMWToken()+'"></iframe>';
 	$('#newConWin').html(iframe);
 }
 
@@ -131,7 +135,7 @@ function queryConsultDetail(){
 	var params=startDate +"^"+ endDate +"^^^" + consStatus +"^"+ consDept+"^^"+LgHospID;
 	
 	$('#conDetList').datagrid({
-		url:url + "?action=QueryPhConsult",	
+		url:url + "&action=QueryPhConsult",	
 		queryParams:{
 			params:params}
 	});
@@ -142,7 +146,7 @@ function SetCellUrl(value, rowData, rowIndex)
 {
 	var html = "";
 	if (value == "Y"){
-		html = "<span style='margin:0px 5px;font-weight:bold;color:red;'>完成</span>";		
+		html = "<span style='margin:0px 5px;font-weight:bold;color:red;'>"+$g("完成")+"</span>";		
 	}else{
 		html = "<span style='margin:0px 5px;font-weight:bold;color:green;'>No</span>";
 		}
@@ -154,10 +158,10 @@ function SetCellOpUrl(value, rowData, rowIndex)
 {
 	var html = "";
 	if (rowData.finiFlag == "Y"){
-		html = "<a href='#' onclick='newCreateConsultWin("+rowData.consultID+")' style='margin:0px 5px;font-weight:bold;color:red;text-decoration:none;'>查看回复列表</a>";
+		html = "<a href='#' onclick='newCreateConsultWin("+rowData.consultID+")' style='margin:0px 5px;font-weight:bold;color:red;text-decoration:none;'>"+$g("查看回复列表")+"</a>";
 		
 	}else{
-		html = "<a href='#' onclick='newCreateConsultWin("+rowData.consultID+")'>查看回复列表</a>";
+		html = "<a href='#' onclick='newCreateConsultWin("+rowData.consultID+")'>"+$g("查看回复列表")+"</a>";
 		}
     return html;
 }

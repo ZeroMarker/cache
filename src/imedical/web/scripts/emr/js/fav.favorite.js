@@ -1,5 +1,4 @@
-﻿﻿var returnValue = 1; 
-$(function(){
+﻿ $(function(){
     //个人收藏夹
     getFavNavigation();
     
@@ -7,7 +6,7 @@ $(function(){
         searcher:function(value,name){
             doSearch(value);
         },
-        prompt : '查询病历'
+        prompt : emrTrans('查询病历')
     });
     
 });
@@ -151,12 +150,12 @@ function setFavInformation(favdata,dirType)
         var panel = $('<div class="favData" id="'+data[i].id+'"></div>');
         $(panel).attr({"CatalogID":data[i].CatalogID,"DirType":dirType});
         var title = '<div class="panelTitle"><span id="Name">'+data[i].Name+'</span><span id="PatientNo">'+data[i].PatientNo+'</span><div class="i-sep"></div><span id="Gender">'+data[i].Gender+'</span><div class="i-sep"></div><span id="BOD">'+data[i].BOD+'</span>';
-        title = title + '<div class="tool"><a href="#" class="hisui-linkbutton" onclick="deleteInfomation('+"'"+data[i].id+"'"+')">取消收藏</a>';
-        title = title + '<a href="#" class="hisui-linkbutton" onclick="openRecord('+"'"+data[i].id+"','"+data[i].EpisodeID+"','"+data[i].PatientID+"','"+data[i].Name+"'"+')">查看病历</a>';
+        title = title + '<div class="tool"><a href="#" class="hisui-linkbutton" onclick="deleteInfomation('+"'"+data[i].id+"'"+')">取消收藏</a><span style="margin-right:10px;"></span>';
+        title = title + '<a href="#" class="hisui-linkbutton" onclick="openRecord('+"'"+data[i].id+"','"+data[i].EpisodeID+"','"+data[i].PatientID+"','"+data[i].Name+"'"+')">查看病历</a><span style="margin-right:10px;"></span>';
         title = title + '<a href="#" class="hisui-linkbutton" onclick="moveTo('+"'"+data[i].id+"','"+data[i].CatalogID+"'"+')">移动病历</a></div></div>';
         $(panel).append(title);
         var memo = '<table id="tagMemo" style="width:100%;">';
-        memo = memo + '<tr><td style="width:40px;text-align:right;">'+emrTrans("备注")+'</td>';
+        memo = memo + '<tr><td style="width:40px;text-align:right;"><div style="margin-top:-25px">'+emrTrans("备注")+'</div></td>';
         memo = memo + '<td style="padding:0px 5px;"><textarea class="textbox" id="com">'+data[i].Memo.replace(/\\n/g,"\n")+'</textarea></td>';
         memo = memo + '<td style="width:93px;"><a href="#" class="hisui-linkbutton" id="modifymemo" onclick="modifyMemo('+"'"+data[i].id+"'"+')">修改备注</a></td>';
         memo = memo + '</tr></table>';
@@ -177,6 +176,28 @@ function setFavInformation(favdata,dirType)
         $("#favInfoList").append(panel);
         $.parser.parse('#favInfoList');
     }
+    if ("undefined"==typeof HISUIStyleCode || HISUIStyleCode=="")
+    {
+	 // 炫彩版
+	 
+	}else if (HISUIStyleCode=="lite"){
+	 // 极简版
+	 $('.favData').css('border','#cccccc 1px solid');
+	 $('.favData').css('border-radius','4px');
+	 $('.panelTitle').css('background-color','#fff');
+	 $('.panelTitle').css('border-bottom','1px solid #cccccc');
+	 $('.panelTitle').css('border-top-right-radius','4px');
+	 $('.panelTitle').css('border-top-left-radius','4px');
+	 $('.panelTitle').css('height','28px');
+	 $('.panelTitle').css('line-height','28px');
+	 $('#Name,#PatientNo,#Gender,#BOD').css('color','#000');
+	 $('#Name,#PatientNo,#Gender,#BOD').css('font-weight','700');
+	 $('div.i-sep').css('border-right','1px solid #000');	 
+	}else
+	{
+	// 炫彩版
+	 
+	}
     
 }
 
@@ -209,7 +230,7 @@ function deleteInfomation(id)
                     }
                     else
                     {
-                        alert("取消收藏失败");
+                        $.messager.alert("提示","取消收藏失败");
                     }
                 }
             });
@@ -226,7 +247,7 @@ function modifyMemo(id)
     $.ajax({ 
         type: "POST", 
         url: "../EMRservice.Ajax.favorites.cls", 
-        data: "Action=ModifyInfoMemo&FavInfoID="+ id+"&Memo="+$("#com").val().replace(/\n|\r\n/g,"\\n"), 
+        data: "Action=ModifyInfoMemo&FavInfoID="+ id+"&Memo="+$("#"+ id +" #tagMemo" + " #com").val().replace(/\n|\r\n/g,"\\n"), 
         error: function (XMLHttpRequest, textStatus, errorThrown) { 
             alert(textStatus); 
         }, 
@@ -624,7 +645,7 @@ function updateTree(node)
             alert(textStatus); 
         }, 
         success: function (data) { 
-            if (data == "0") alert("重命名失败");
+            if (data == "0") $.messager.alert("提示","重命名失败");
         } 
     });
     
@@ -678,7 +699,7 @@ function selectAll(value,Location)
                 if(favdata.count == 0)
                 {
                     $("#favcount").text(0);
-                    alert("请输入关键字进行搜索！");
+                    $.messager.alert("提示","请输入关键字进行搜索！");
                 }else
                 {
                     setFavInformation(favdata,false,"Catalog");
@@ -690,7 +711,7 @@ function selectAll(value,Location)
                 if(favdata.count == 0)
                 {
                     $("#favcount").text(0);
-                    alert("没有找到相关病历，请重新进行搜索！");
+                    $.messager.alert("提示","没有找到相关病历，请重新进行搜索！");
                 }else
                 {
                     setFavInformation(favdata,false,"Catalog");

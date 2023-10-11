@@ -64,33 +64,21 @@ function reportControl(){
 			return date<=now;
 		}
 	});
-	///控制输血不良反应时间sufan 2019-11-12
-	if(!$('input[id^="AdvBloodsereactions"][type="radio"]:checked').length){
-		$('#AdvBloodSereaOccTime').datebox({disabled:'true'});//输血不良反应时间
-	}
-	
 	///输血前后体温控制 sufan 2019-11-12
-	$('input[id^="BloodForTemperatureChange"]').blur(function(){
-		var tempval = $(this).val();
-		if((tempval<34)||(tempval>43)){
-			$.messager.alert("提示","体温应在34-43，请重新输入!");
-			$(this).val("");
-			return false;
-		}
-	})
+	chknum("BloodForTemperatureChange",1,34,43);
+	
 	
 	///孕产史控制  sufan 2019-11-14
+	// 孕 没有怀孕过即没有生产过
 	$('input[id^="isPregnancy"][type="radio"]').click(function(){
 		if($(this).val()=="否"){
 			$('input[id^="isGive"][value="否"]').attr('checked','true');
 		}
 	})
-	
+	/// 产 生产过即怀孕过
 	$('input[id^="isGive"][type="radio"]').click(function(){
 		if($(this).val()=="是"){
 			$('input[id^="isPregnancy"][value="是"]').attr('checked','true');
-		}else{
-			$('input[id^="isPregnancy"][value="否"]').attr('checked','true');
 		}
 	})
 	TableControl();
@@ -111,7 +99,7 @@ function InitReport(recordId)
 function SavePipeReport(flag)
 {
 	if($('#PatName').val()==""){
-		$.messager.alert("提示:","患者姓名为空，请输入登记号/病案号回车选择记录录入患者信息！");	
+		$.messager.alert($g("提示:"),$g("患者姓名为空，请输入登记号/病案号回车选择记录录入患者信息！"));	
 		return false;
 	}
 	///保存前,对页面必填项进行检查
@@ -169,7 +157,7 @@ function add_event(){
 	$("input[id^='BloodGiveList-97701-97703-97710']").live('keydown',function(event){	
 		if(event.keyCode == "13"){
 			if(EpisodeID==""){
-				$.messager.alert('提示:','请先选择患者就诊记录！');
+				$.messager.alert($g('提示:'),$g('请先选择患者就诊记录！'));
 				return;
 			}
 			ShowBldWin()
@@ -182,7 +170,7 @@ function ShowBldWin(){
 	
 	$('#bldwin').show();
 	$('#bldwin').window({
-		title:'输血单列表',
+		title:$g('输血单列表'),
 		collapsible:true,
 		closed:"true",
 		modal:true,
@@ -201,13 +189,14 @@ function SetBldTxtVal(BloodGiveListID)
 {
 	
 	var columns = [[
-		{field:'issueId',title:'输血单ID',width:60}, 
-		{field:'issueDate',title:'发放日期',width:80}, 
-		{field:'issueTime',title:'发放时间',width:80},
-		{field:'IsTransBlood',title:'是否有既往输血史',width:80},
-		{field:'IsReaction',title:'是否有输血反应史',width:80},
-		{field:'Parity',title:'孕次',width:80},
-		{field:'Gravidity',title:'产次',width:80}
+		{field:'issueId',title:$g('输血单ID'),width:60,hidden:true}, 
+		{field:'issFormNo',title:$g('申请单号'),width:60,hidden:false}, 
+		{field:'issueDate',title:$g('发放日期'),width:80}, 
+		{field:'issueTime',title:$g('发放时间'),width:80},
+		{field:'IsTransBlood',title:$g('是否有既往输血史'),width:80},
+		{field:'IsReaction',title:$g('是否有输血反应史'),width:80},
+		{field:'Parity',title:$g('孕次'),width:80},
+		{field:'Gravidity',title:$g('产次'),width:80}
 	]];
 	//定义datagrid
 	$('#bldgrid').datagrid({
@@ -219,7 +208,7 @@ function SetBldTxtVal(BloodGiveListID)
 		pageSize:200,  // 每页显示的记录条数
 		pageList:[200,400],   // 可以设置每页记录条数的列表
 	    singleSelect:false,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		onDblClickRow: function (rowIndex, rowData) 
 		{
@@ -228,8 +217,11 @@ function SetBldTxtVal(BloodGiveListID)
 				$('#BB'+rowData.IsTransBlood).attr("checked",true); 	//继往输血史 BloodtransfusionHistory-label-97440
 				if((rowData.IsTransBlood!="否")&&(rowData.Parity!=undefined)){
 					$('#BloodtransfusionHistory-label-97440').attr("checked",true);//既往输血史 有
+					$('#BloodtransfusionHistory-label-97440').nextAll(".lable-input").show();
 				}else{
 					$('#BloodtransfusionHistory-label-97443').attr("checked",true);//既往输血史 无
+					$('#BloodtransfusionHistory-label-97440').nextAll(".lable-input").val("");
+					$('#BloodtransfusionHistory-label-97440').nextAll(".lable-input").hide();
 				}
 				if((rowData.Parity!="0")&&(rowData.Parity!=undefined)){
 					$('#isPregnancy-97293').attr("checked",true);//孕史 是
@@ -241,9 +233,7 @@ function SetBldTxtVal(BloodGiveListID)
 				}else{
 					$('#isGive-97308').attr("checked",true);//产史 否
 				}
-				$.each($('input[id^="BloodtransfusionHistory-label"]:checked'),function(){   //sufan 2019-11-14 有后边的横向出不来
-						showPre(this);
-				})
+				
 				GetbldBldTypedgInfo(issueId,BloodGiveListID);
 			}
   			$('#bldwin').window('close');
@@ -262,7 +252,7 @@ function GetbldBldTypedgInfo(issueId,BloodGiveListID)
 			BldList=val;
 		},"text",false)
 	if(BldList==""){
-		$.messager.alert('提示:','该输血单无血袋信息，请重新选择！');
+		$.messager.alert($g('提示:'),$g('该输血单无血袋信息，请重新选择！'));
 		return;
 	}
 	var BldListArr=BldList.split("$$")
@@ -271,9 +261,13 @@ function GetbldBldTypedgInfo(issueId,BloodGiveListID)
 	var num=0,rowid="",rownum="";
 	$("input[id^='BloodGiveList-97701-97703-97710']").each(function(){
 			num=num+1;
+			if(num!=1){
+				$(this).parent().parent().remove(); /// 删除之前的数据（第一行除外，第一行会被数据替换）
+			}
+			
 	})
 	for(var k=1;k<=Bldlen;k++){
-		if(k>num){
+		if(k>1){  // k>num
 			$('a:contains("增加")').click(); //自动添加行数据
 		}
 	}
@@ -338,19 +332,15 @@ function TableControl(){
 
 //页面初始加载checkbox,radio控制子元素不可以填写
 function InitCheckRadio(){
-	$("input[type=radio][id^='AdvBloodsereactions-']").each(function(){
-		if ($(this).is(':checked')){
-			//是否输血不良反应
-			if(this.id=="AdvBloodsereactions-97446"){ //否
-				$('#AdvBloodSereaOccTime').datebox({disabled:'true'});//输血不良反应时间
-				$("#AdvBloodSereaOccTime").datebox("setValue","");  //并将值设置为空
-			}
-			if(this.id=="AdvBloodsereactions-97445"){ //是
-				$('#AdvBloodSereaOccTime').datebox({disabled:false});//输血不良反应时间
-			}
-			
-		}
-	})
+	//是否输血不良反应
+	if($("input[type=radio][id='AdvBloodsereactions-97445']").is(':checked')){
+		var DeathDate=$('#AdvBloodSereaOccTime').datebox('getValue');
+		RepSetRead("AdvBloodSereaOccTime","datebox",0);
+		RepSetValue("AdvBloodSereaOccTime","datebox",DeathDate); 	//输血不良反应时间
+	}else{
+		RepSetRead("AdvBloodSereaOccTime","datebox",1);
+		$("#AdvBloodSereaOccTime").datebox("setValue","");  //并将值设置为空
+	}
 }
 ///判断输血列表是否为空 sufan 2019-11-14
 function checkother()
@@ -368,9 +358,9 @@ function checkother()
 	})
 	if(ret==1){
 		if(MKIOrdFlag!="1"){
-			$.messager.alert("提示:","请维护输血记录！（列表手动输入输血信息无效，需回车选择输血单）！");
+			$.messager.alert($g("提示:"),$g("请维护输血记录！（列表手动输入输血信息无效，需回车选择输血单）！"));
 		}else{
-			$.messager.alert("提示:","请维护输血记录！（列表输入输血信息少，需补充信息）！");
+			$.messager.alert($g("提示:"),$g("请维护输血记录！（列表输入输血信息少，需补充信息）！"));
 		}
 		return false;
 		
@@ -403,7 +393,7 @@ function checkother()
 		}
 	}
 	if(clorec>0){
-		$.messager.alert("提示:","输血列表第"+clorec+"行输血开始时间大于输血结束时间！");
+		$.messager.alert($g("提示:"),$g("输血列表第")+clorec+$g("行输血开始时间大于输血结束时间！"));
 		return false;
 	}
 	return true;
@@ -416,7 +406,7 @@ function DateTimecontrast(stDateTime,endDateTime)
 	var stTime=stDateTime.split(" ")[1]==undefined?"":stDateTime.split(" ")[1].replace(reg,"");
 	var endDate=endDateTime.split(" ")[0];
 	var endTime=endDateTime.split(" ")[1]==undefined?"":endDateTime.split(" ")[1].replace(reg,"");
-	if(stDate>endDate){
+	if(!compareSelTowTime(stDate,endDate)){
 		ret=0;
 	}else if((stDate==endDate)&&(stTime>endTime)){
 		ret=0

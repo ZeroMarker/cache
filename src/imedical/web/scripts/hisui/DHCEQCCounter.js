@@ -2,6 +2,8 @@
 var Component="tDHCEQCCounter"  //add by lmm 2018-10-10 hisui改造：定义组件名
 function BodyLoadHandler() 
 {  
+    initPanelHeaderStyle() //added by LMH 20230210 UI 极简组件界面面板标题样式
+    initButtonColor(); //added by LMH 20230210 UI 初始化按钮颜色
 	initButtonWidth();  //add by lmm 2018-09-05 hisui改造：修改按钮长度
 	InitUserInfo();
 	//InitEvent();     //modify by lmm 2018-10-18 hisui改造：暂不调用

@@ -1,11 +1,14 @@
-var SelectedRow = 0;
+var SelectedRow = -1;	//hisui改造：修改开始行号  Add By DJ 2018-10-12
 var rowid=0;
 function BodyLoadHandler() 
 {	
-    InitUserInfo(); //系统参数
-	InitEvent();	
+    $("body").parent().css("overflow-y","hidden");  //Add By DJ 2018-10-12 hiui-改造 去掉y轴 滚动条
+	$("#tDHCEQMCPart").datagrid({showRefresh:false,showPageList:false,afterPageText:'',beforePageText:''});   //Add By DJ 2018-10-12 hisui改造：隐藏翻页条内容
+	InitUserInfo(); //系统参数
+	InitEvent();
+	initButtonWidth();	//hisui改造 Add By DJ 2018-10-12	
+	initPanelHeaderStyle();//hisui改造 add by zyq 2023-02-02
 	disabled(true);//灰化
-	//InitPageNumInfo("DHCEQMCPart.Part","DHCEQMCPart");
 	
 }
 function InitEvent()
@@ -32,9 +35,9 @@ function BAdd_Click() //增加
 	var plist=CombinData(); //函数调用
 	var result=cspRunServerMethod(encmeth,plist,'2');
 	result=result.replace(/\\n/g,"\n")
-	if(result=="")
+	if(result<0) //modified by sjh SJH0034 2020-09-11
 	{
-		alertShow(t[-3001])
+		messageShow("","","",t[-3001])  //modified by sjh SJH0034 2020-09-11
 		return
 	}
 	else
@@ -62,7 +65,7 @@ function BUpdate_Click()
 	result=result.replace(/\\n/g,"\n")
 	if(result=="") 
 	{
-		alertShow(t[-3001]);
+		messageShow("","","",t[-3001]);
 		return
 	}
 	else 
@@ -79,7 +82,7 @@ function BDelete_Click()
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="") 
 	{
-		alertShow(t[-3001])
+		messageShow("","","",t[-3001])
 		return;
 	}
 	var result=cspRunServerMethod(encmeth,rowid,'1');
@@ -90,33 +93,19 @@ function BDelete_Click()
 		location.reload();	
 	}
 }
-///选择表格行触发此方法
-function SelectRowHandler()
-	{
-	var eSrc=window.event.srcElement;
-	var objtbl=document.getElementById('tDHCEQMCPart');//+组件名 就是你的组件显示 Query 结果的部分
-	var rows=objtbl.rows.length;
-	
-	var lastrowindex=rows - 1;
-	
-	var rowObj=getRow(eSrc);
-	
-	var selectrow=rowObj.rowIndex;
-	//alertShow("selectrow"+selectrow)
-	if (!selectrow)	 return;
-	if (SelectedRow==selectrow)	{
+///hisui改造： Add By DJ 2018-10-12
+function SelectRowHandler(index,rowdata){
+	if (index==SelectedRow){
 		Clear();
-		disabled(true);//灰化	
-		SelectedRow=0;
-		rowid=0;
-		SetElement("RowID","");
+		SelectedRow= -1;
+		disabled(true); 
+		$('#tDHCEQMCPart').datagrid('unselectAll'); 
+		return;
 		}
-	else{
-		SelectedRow=selectrow;
-		rowid=GetElementValue("TRowIDz"+SelectedRow);
-		SetData(rowid);//调用函数
-		disabled(false);//反灰化
-		}
+		
+	SetData(rowdata.TRowID); 
+	disabled(false)  
+    SelectedRow = index;
 }
 function Clear()
 {
@@ -151,5 +140,3 @@ function condition()//条件
 	return false;
 }
 document.body.onload = BodyLoadHandler;
-
-

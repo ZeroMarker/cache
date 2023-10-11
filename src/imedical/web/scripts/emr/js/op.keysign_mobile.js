@@ -8,7 +8,7 @@ $(function() {
 function KeySign() {
 
     //登录，返回用户名，和签名图片
-    function GetUserInfo(UserName) {
+    function GetUserInfo(UserName,UserCertCode,CertNo) {
 	    var loginInfo = '';
         if ('' === UserName) return '';
         $.ajax({
@@ -19,7 +19,9 @@ function KeySign() {
             cache: false,
             data: {
 	            func: 'GetUserInfo',
-	            UserName: UserName
+	            UserName: UserName,
+	            UserCertCode:UserCertCode,
+	            CertNo:CertNo
 	        },
             success: function(ret) {
 	            if (ret && ret.Err) {
@@ -119,6 +121,17 @@ function KeySign() {
 						alert('签名图为空, 请联系管理员导入签名图！');
                         return;
 					}
+                    
+                    //如果是三级医师审核时，传入签名级别为医师级别
+                    var signlevel = signProperty.SignatureLevel;
+                    if (signProperty.OriSignatureLevel === 'Check') {
+                        signlevel = loginInfo.Level;
+                    }
+                    
+                    if ('' === signlevel) {
+                        alert('用户签名级别为空，请检查系统配置！');
+                        return;
+                    }
 					
                     //文档签名
                     var signInfo = getSignContent(loginInfo, insID, checkresult, signProperty);
@@ -129,7 +142,7 @@ function KeySign() {
                         return;
                     }
                     //CA接口
-                    var signValue = rtn.ca_key.SignedData(contentHash, rtn.ContainerName) || '';
+                    var signValue = rtn.ca_key.SignedData(contentHash, rtn.ContainerName, patInfo.EpisodeID) || '';
                     if ('' === signValue) {
 	                    $('#msgTable').hide();
                         alert('签名数据为空！');
@@ -139,16 +152,6 @@ function KeySign() {
                     if ('' === signID) {
 	                    $('#msgTable').hide();
                         alert('SignID为空！');
-                        return;
-                    }
-                    //如果是三级医师审核时，传入签名级别为医师级别
-                    var signlevel = signProperty.SignatureLevel;
-                    if (signProperty.OriSignatureLevel === 'Check') {
-                        signlevel = loginInfo.Level;
-                    }
-                    
-                    if (('' === signlevel) && (signProperty.OriSignatureLevel !== "All")) {
-                        alert('用户签名级别为空！');
                         return;
                     }
 
@@ -199,7 +202,7 @@ function KeySign() {
 
         }
 		showEditorMsg('签名中，请耐心等待...','alwaysshow');
-		var rtn = dhcsys_getcacert();
+        var rtn = dhcsys_getcacert({modelCode:"OPEMR", isHeaderMenuOpen:true, SignUserCode:patInfo.UserCode},undefined,undefined,undefined);
 		if (!rtn.IsSucc) 
 		{
 			//alert("证书未登录,请重新登录证书!");
@@ -210,7 +213,7 @@ function KeySign() {
 		if (rtn.ContainerName!="")
 		{ 
 			//该科室需签名
-			var loginInfo = GetUserInfo(rtn.UserName);
+			var loginInfo = GetUserInfo(rtn.UserName,rtn.CAUserCertCode,rtn.CACertNo);
 			if (loginInfo !="")
 			{
 				doSign(loginInfo,rtn);

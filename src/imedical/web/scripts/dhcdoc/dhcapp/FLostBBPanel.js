@@ -1,7 +1,9 @@
 ﻿var FLostBBPanel=(function(){
 	function Init(){
 		InitPageDataGrid();
-		//LoadOtherInfo();
+		//医生站直接录入病理带出标本
+		LoadPisSpecList("")
+		//LoadOtherInfo("");
 	}
 	var editSelRow = -1;    /// 当前编辑行
 	var isPageEditFlag = 1; /// 页面是否允许编辑
@@ -30,14 +32,19 @@
 				}
 			}
 		
-		var TitLnk = '<a href="#" onclick="FLostBBPanel.insRow()"><img style="margin:6px 3px 0px 3px;" src="../scripts/dhcpha/jQuery/themes/icons/edit_add.png" border=0/></a>';
+		//var TitLnk = '<a href="#" onclick="FLostBBPanel.insRow()"><img style="margin:6px 3px 0px 3px;" src="../scripts/dhcpha/jQuery/themes/icons/edit_add.png" border=0/></a>';
+		var TitLnk =$('<a href="javascript:void(0)" onclick="FLostBBPanel.insRow()"></a>').linkbutton({
+			iconCls:'icon-add',
+			plain:true
+			}).prop('outerHTML');
+		
 		///  定义columns
 		var columns=[[
 			{field:'No',title:'标本序号',width:120,align:'center'},
 			//{field:'ID',title:'标本标识',width:120,editor:texteditor},
-			{field:'Name',title:'标本名称',width:200,editor:texteditor},
-			{field:'Part',title:'标本部位',width:200,editor:texteditor},
-			{field:'Qty',title:'标本数量',width:100,editor:numberboxeditor},
+			{field:'Name',title:'标本名称',width:200,editor:texteditor,Required:true},
+			{field:'Part',title:'标本部位',width:200,editor:texteditor,Required:true},
+			{field:'Qty',title:'标本数量',width:100,editor:numberboxeditor,Required:true},
 			//{field:'Remark',title:'备注',width:200,editor:texteditor},
 			{field:'operation',title:TitLnk,width:40,align:'center',
 				formatter:SetCellUrl}
@@ -50,7 +57,8 @@
 			headerCls:'panel-header-gray',
 			rownumbers : false,
 			singleSelect : true,
-			pagination: false,		
+			pagination: false,	
+			toolbar:[],	
 		    onDblClickRow: function (rowIndex, rowData) {
 				
 				if (isPageEditFlag == 0) return;
@@ -73,6 +81,8 @@
 					}
 				}
 				if (OtherInfo!=""){
+					var rows = $('#PisSpecList').datagrid('getRows');
+					var maxLen=rows.length;
 					OtherObj=$.parseJSON(OtherInfo); 
 					PisSpec=$.parseJSON(OtherObj["PisSpec"])
 					//setTimeout(function(){
@@ -81,6 +91,9 @@
 							var PisArryStr=PisArry.split("^")
 								var rowObj = {"No":PisArryStr[0],"Name":PisArryStr[2],"Explain":"","Part":PisArryStr[3],"Qty":PisArryStr[4],"ID":PisArryStr[1],"SepDate":PisArryStr[8],"FixDate":PisArryStr[9]};
 								var Index= parseFloat(PisArryStr[0])-1
+								if (Index >= maxLen) {
+									insRow();
+								}
 								$('#PisSpecList').datagrid('updateRow',{index: Index, row:rowObj});
 							
 						} 
@@ -94,7 +107,13 @@
 	}
 		/// 链接
 	function SetCellUrl(value, rowData, rowIndex){	
-		return "<a href='#' onclick='FLostBBPanel.delRow("+ rowIndex +")'><img src='../scripts/dhcpha/jQuery/themes/icons/edit_remove.png' border=0/></a>";
+		return "<a href='javascript:void(0)' style='display:inline-block;width:16px;height: 16px;'  class='icon-remove'  onclick='FLostBBPanel.delRow("+ rowIndex +")'></a>";
+		/*以下写法点击删除没反应
+		return TitLnk =$('<a href="#" onclick="FLostBBPanel.delRow("'+ rowIndex +'")"></a>').linkbutton({
+			iconCls:'icon-remove',
+			plain:true
+			}).prop('outerHTML');
+			*/
 	}
 
 	/// 删除行
@@ -141,6 +160,9 @@
 		rowNo += 1;
 		var rowObj = {"No":rowNo,"Name":"","Explain":"","Part":"","Qty":"","SliType":"","PisNo":""};
 		$("#PisSpecList").datagrid('appendRow',rowObj);
+		if ((editSelRow != -1)||(editSelRow == 0)) { 
+            $("#PisSpecList").datagrid('endEdit', editSelRow); 
+        }
 		sortTable()
 		
 	}
@@ -173,9 +195,9 @@
 			    var TmpData = item.No +"^"+ item.ID +"^"+ item.Name +"^"+ item.Part +"^"+ item.Qty +"^^^"+ "";
 			    PisSpecArr.push(TmpData);
 			    if (PisReqSpec==""){
-					PisReqSpec = item.No+"#"+item.Name +"#"+ item.Part +"#"+ item.Qty +"#"+ item.No+ "#"+ "";
+					PisReqSpec = item.No+String.fromCharCode(1)+item.Name +String.fromCharCode(1)+ item.Part +String.fromCharCode(1)+ item.Qty +String.fromCharCode(1)+ ""+ String.fromCharCode(1)+ "";
 				}else{
-					PisReqSpec = PisReqSpec+"@"+item.No+"#"+item.Name +"#"+ item.Part +"#"+ item.Qty +"#"+ item.No+ "#"+ "";	
+					PisReqSpec = PisReqSpec+String.fromCharCode(2)+item.No+String.fromCharCode(1)+item.Name +String.fromCharCode(1)+ item.Part +String.fromCharCode(1)+ item.Qty +String.fromCharCode(1)+ ""+ String.fromCharCode(1)+ "";	
 				}
 			}
 		})
@@ -232,11 +254,16 @@
 		rtnObj["List"] = PisSpec;
 		return rtnObj
 	}
+	function LoadPisSpecList(Arcimid){
+		if ((ARCIM!="")&&(Arcimid=="")){Arcimid=ARCIM}
+		$("#PisSpecList").datagrid("load",{"HospID":session['LOGON.HOSPID'],"Arcimid":Arcimid});
+	}
 	return {
 		"Init":Init,
 		"OtherInfo":OtherInfo,
 		"PrintInfo":PrintInfo,
 		"insRow":insRow,
-		"delRow":delRow
+		"delRow":delRow,
+		"LoadPisSpecList":LoadPisSpecList
 	}
 })();

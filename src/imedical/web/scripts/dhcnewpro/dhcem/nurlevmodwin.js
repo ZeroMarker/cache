@@ -20,6 +20,7 @@ showNurWin = function(EmPCLvID){
 	
 	/// 护士修改分级窗口
 	var option = {
+		iconCls:'icon-w-paper', //hxy 2022-07-29
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,
@@ -27,5 +28,5 @@ showNurWin = function(EmPCLvID){
 		closed:"true"
 	};
 	
-	new WindowUX('护士修改分级窗体', 'newNurWin', '400', '200', option).Init();
+	new WindowUX('护士修改分级', 'newNurWin', '400', '150', option).Init();
 }

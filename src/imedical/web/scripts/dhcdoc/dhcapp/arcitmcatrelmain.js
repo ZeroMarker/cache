@@ -150,6 +150,7 @@ function addTab(tabTitle, tabUrl){
 /// ´´½¨¿ò¼Ü
 function createFrame(tabUrl, cat){
 	tabUrl = tabUrl.split("?")[0];
+	if(typeof websys_writeMWToken=='function') tabUrl=websys_writeMWToken(tabUrl);
 	var content = '<iframe scrolling="auto" frameborder="0" src="' +tabUrl+ '?cat='+ cat +'" style="width:100%;height:100%;"></iframe>';
 	return content;
 }

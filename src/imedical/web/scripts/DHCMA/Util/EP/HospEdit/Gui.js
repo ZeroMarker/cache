@@ -26,7 +26,7 @@ function InitHISUIWin(){
 			{field:'Code',title:'医院代码',sortable:true,width:100},
 			{field:'Desc',title:'医院名称',sortable:true,width:300},
 			{field:'Desc2',title:'医院别名',sortable:true,width:100},
-			{field:'GroupDesc',title:'医院分组',sortable:true,width:100},
+			{field:'GroupDesc',title:'医院分组',sortable:true,width:300},
 			{field:'RangeID',title:'RangeID',sortable:true,width:100,hidden:true},
 			{field:'IsActDesc',title:'是否有效',width:'80'}
 		]],

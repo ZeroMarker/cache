@@ -7,11 +7,14 @@ var decNumber = "DQ";	//煎药流程
 var PAGESIZE = 30;		//行数
 var NowTAB=""; 			//记录当前页签的tab
 var ComPropData;		//公共参数
+var PrintPropData;		//界面配置
+var logonInfo = gGroupId + "^" + gLocId + "^" + gUserID + "^" + gHospID;
 $(function () {
 	InitDict();
 	InitGridPresc();
 	InitGridPrescList();
 	InitGridPrescListPrt();
+	
 	$("#txtBarCode").on('keypress',function(event){
 		if(window.event.keyCode == "13"){
 			savePrtLabState();
@@ -32,15 +35,16 @@ $(function () {
 			}
 		}
 	});
-	setTimeout(function(){
-		$("#tabPrt").tabs({ 		// 绑定选中事件,切换页签自动查询
-			onSelect: function(title, index){ 
-				queryPrtLabList(); 
-			}
-		})
-	}, 1000);
-	SetDefVal(true);  
+//	setTimeout(function(){
+//		$("#tabPrt").tabs({ 		// 绑定选中事件,切换页签自动查询
+//			onSelect: function(title, index){ 
+//				queryPrtLabList(); 
+//			}
+//		})
+//	}, 1000);
+	
 	$("#tabPrt").on("click", ChangeTabs);
+	SetDefVal(true);  
 });
 /**
  * 初始化组件
@@ -72,57 +76,56 @@ function SetDefVal(InitFlag) {
 		SsaCode: "DEC.COMMON", 
 		AppCode:""
 		}, false)
-	if(ComPropData.ViewDecInfo=="Y") {
-		if(parseInt(ComPropData.ScanPageTbNum)>0){
-			PAGESIZE=parseInt(ComPropData.ScanPageTbNum);
-		} 
-		//显示煎药信息panel
-		var decInfoId = DEC_PRINT.DecInfo("mainLayout");	
-		ComPropData.decInfoId = decInfoId;
-		DEC_PRINT.VIEW(decInfoId, {PrescNo: ""});	
-	}
-	$("#cmbPhaLoc").combobox("setValue", ComPropData.DefaultPhaLoc);
-	//if(InitFlag) {$("#tabPrt").tabs("select",parseInt(ComPropData.OperateModel));}
-	$("#tabPrt").tabs("select",parseInt(ComPropData.OperateModel));
-	var tabId= $('#tabPrt').tabs('getSelected').attr("id");
-	NowTAB=tabId;	
-	//设置默认值
-	$.cm({	
+	PrintPropData = $.cm({	
 		ClassName: "PHA.DEC.Com.Method", 
 		MethodName: "GetAppProp", 
 		UserId: gUserID, 
 		LocId: gLocId, 
 		SsaCode: "DEC.PRINTLAB", 
 		AppCode:""
-		}, function(AppPropData){
-			$("#cmbDecLoc").combobox("setValue", ComPropData.DefaultDecLoc);
-			$("#dateStart").datebox("setValue", AppPropData.PrtStartDate);
-			$("#dateEnd").datebox("setValue", AppPropData.PrtEndDate);
-			$('#timeStart').timespinner('setValue',"00:00:00");
-			$('#timeEnd').timespinner('setValue',"23:59:59");
-			$('#cmbDocLoc').combobox("setValue","");
-			$('#txtPatNo').val("");
-		});
-	$('#gridPresc').datagrid('clear');
-	$('#gridPrescList').datagrid('clear');
-	$('#gridPrescListPrt').datagrid('clear');
+		},false)
+			
+	if(parseInt(ComPropData.ScanPageTbNum)>0){
+		PAGESIZE=parseInt(ComPropData.ScanPageTbNum);
+	}	
+	if(ComPropData.ViewDecInfo=="Y") {
+		//显示煎药信息panel
+		var decInfoId = DEC_PRINT.DecInfo("mainLayout");	
+		ComPropData.decInfoId = decInfoId;
+		DEC_PRINT.VIEW(decInfoId, {PrescNo: ""});	
+	}
+	$("#cmbDecLoc").combobox("setValue", ComPropData.DefaultDecLoc);
+	if (InitFlag){
+		$("#tabPrt").tabs("select",parseInt(ComPropData.OperateModel));
+	}
+	var tabId= $('#tabPrt').tabs('getSelected').attr("id");
+	NowTAB=tabId;	
+	
 	$('#txtEditNum').val("");
 	$('#txtPackNum').val("");
 	$('#txtReEditNum').val("");
 	$("#txtBarCode").val("");
 	$("input[label='全部']").radio("check");
 	
-	var tabTitle = $('#tabPrt').tabs('getSelected').panel('options').title;
-	if (tabTitle == "扫码打签") {
+	//设置默认值
+	if (NowTAB == "tabScanLable"){
 		$HUI.datebox("#dateStart").disable();
 		$HUI.datebox("#dateEnd").disable();
 		$HUI.timespinner("#timeStart").disable();
 		$HUI.timespinner("#timeEnd").disable();
 		$HUI.combobox("#cmbDocLoc").disable();
 		$HUI.combobox("#cmbPhaLoc").disable();
-		$('#txtPatNo').val("").prop('disabled', true);
+		$('#txtPatNo').val("").prop('disabled', true);		
 	}
-	else {
+	else {		
+		$("#dateStart").datebox("setValue", PrintPropData.PrtStartDate);
+		$("#dateEnd").datebox("setValue", PrintPropData.PrtEndDate);
+		$('#timeStart').timespinner('setValue',"00:00:00");
+		$('#timeEnd').timespinner('setValue',"23:59:59");
+		$('#cmbDocLoc').combobox("setValue","");
+		$("#cmbPhaLoc").combobox("setValue", ComPropData.DefaultPhaLoc);
+		$("#cmbDecLoc").combobox("setValue", ComPropData.DefaultDecLoc);
+	
 		$HUI.datebox("#dateStart").enable();
 		$HUI.datebox("#dateEnd").enable();
 		$HUI.timespinner("#timeStart").enable();
@@ -146,6 +149,7 @@ function InitGridPresc() {
 		{field: 'pdLoc', 	title: '科室', 		align: 'left', width: 200}
 	]];
 	var dataGridOption = {
+		url: '',
 		fit: true,
 		pagination: false,
 		singleSelect: true,
@@ -153,7 +157,7 @@ function InitGridPresc() {
 		toolbar: '#toolBarPresc',
 		queryParams: {
 			ClassName: "",
-			QueryName: "",
+			QueryName: ""
 		},
 		rownumbers: true,
 		idField: "prescno",
@@ -219,7 +223,8 @@ function InitGridPrescList() {
 		queryParams: {
 			ClassName: "PHA.DEC.PrtLab.Query",
 			QueryName: "QueryPrtLabList",
-			inputStr: ''
+			inputStr: '',
+			logonInfo: logonInfo
 		},
 		onSelect: function(rowIndex, rowData){
 			var prescno = rowData.prescno;
@@ -236,7 +241,10 @@ function InitGridPrescList() {
             }else {
                 $(this).datagrid('endEditing');
             }
-        }
+        },
+		onLoadSuccess: function () {
+			$('#gridPrescList').datagrid('uncheckAll');
+		}
 	};
 	PHA.Grid("gridPrescList", dataGridOption);
 }
@@ -309,7 +317,10 @@ function InitGridPrescListPrt() {
             }else {
                 $(this).datagrid('endEditing');
             }
-        }
+        },
+		onLoadSuccess: function () {
+			$('#gridPrescListPrt').datagrid('uncheckAll');
+		}
 	};
 	PHA.Grid("gridPrescListPrt", dataGridOption);
 }
@@ -382,10 +393,15 @@ function savePrtLabState(){
  * 查询打签数据
  * @method queryPrtLabList
  */
-function queryPrtLabList(){
+function queryPrtLabList(){	
+	var tabTitle = $('#tabPrt').tabs('getSelected').panel('options').title;
+	if (tabTitle == "扫码打签") {
+		PHA.Popover({showType: "show", msg: "扫码打签无需查询，直接扫码即可！", type: 'alert'});
+		return ;
+	}
 	var inputStr = getParams();
 	if(!inputStr) return;
-	var tabTitle = $('#tabPrt').tabs('getSelected').panel('options').title;
+	
 	if (tabTitle == "批量打签") {
 		var prtFalg = "false";
 		inputStr = inputStr +"^"+ prtFalg;
@@ -564,9 +580,21 @@ function ChangeTabs() {
 	if(NowTAB==tabId){
 		return;
 	}
+	if(ComPropData.ViewDecInfo=="Y"){
+		var decInfoId = DEC_PRINT.DecInfo("mainLayout");	
+		DEC_PRINT.VIEW(decInfoId, {PrescNo: ""});
+	}	
+		
 	NowTAB=tabId;
-	var tabTitle = $('#tabPrt').tabs('getSelected').panel('options').title;
-	if (tabTitle == "扫码打签") {
+	if (NowTAB == "tabScanLable") {
+		$('#gridPresc').datagrid('clear');
+		$("#dateStart").datebox("setValue", "");
+		$("#dateEnd").datebox("setValue", "");
+		$('#timeStart').timespinner('setValue',"");
+		$('#timeEnd').timespinner('setValue',"");
+		$('#cmbDocLoc').combobox("setValue","");
+		$("#cmbPhaLoc").combobox("setValue", "");
+		$("#cmbDecLoc").combobox("setValue", ComPropData.DefaultDecLoc);
 		$("#txtBarCode").focus();
 		$HUI.datebox("#dateStart").disable();
 		$HUI.datebox("#dateEnd").disable();
@@ -577,6 +605,19 @@ function ChangeTabs() {
 		$('#txtPatNo').val("").prop('disabled', true);
 	}
 	else{
+		if (NowTAB == "tabPrintBatLable") {
+			$('#gridPrescList').datagrid('clear');
+		}
+		else {
+			$('#gridPrescListPrt').datagrid('clear');
+		}
+		$("#dateStart").datebox("setValue", PrintPropData.PrtStartDate);
+		$("#dateEnd").datebox("setValue", PrintPropData.PrtEndDate);
+		$('#timeStart').timespinner('setValue',"00:00:00");
+		$('#timeEnd').timespinner('setValue',"23:59:59");
+		$('#cmbDocLoc').combobox("setValue","");
+		$("#cmbPhaLoc").combobox("setValue", ComPropData.DefaultPhaLoc);
+		$("#cmbDecLoc").combobox("setValue", ComPropData.DefaultDecLoc);
 		$HUI.datebox("#dateStart").enable();
 		$HUI.datebox("#dateEnd").enable();
 		$HUI.timespinner("#timeStart").enable();
@@ -584,5 +625,20 @@ function ChangeTabs() {
 		$HUI.combobox("#cmbDocLoc").enable();
 		$HUI.combobox("#cmbPhaLoc").enable();
 		$('#txtPatNo').val("").prop('disabled', false);	
+		setTimeout("queryPrtLabList();",500);
 	}
+}
+
+
+
+/*
+ * 清屏
+ * @method Clear
+ */
+function Clear() {
+	$('#gridPresc').datagrid('clear');
+	$('#gridPrescList').datagrid('clear');
+	$('#gridPrescListPrt').datagrid('clear');
+	SetDefVal(false);
+	
 }

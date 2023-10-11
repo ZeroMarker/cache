@@ -103,8 +103,8 @@ function InitMainList(){
 	///  定义datagrid
 	var option = {
 		headerCls:'panel-header-gray',
-		//title:'交班记录'+titleNote,
-		//showHeader:false,
+		title:'',
+		toolbar:'#toolbar',
 		rownumbers : true,
 		singleSelect : true,
 		pagination: true,
@@ -154,7 +154,7 @@ function setCellType(value, row, index){
 /// 链接
 function SetCellLogUrl(value, rowData, rowIndex){
 	
-	var html = "<a href='#' onclick='log("+ rowData.EpisodeID +")' style='display:block;width:38px;background:#7dba56;padding:3px 6px;color:#fff;border-radius: 4px 4px 4px 4px;'>日志</a>";
+	var html = "<a href='#' onclick='log("+ rowData.EpisodeID +")' style='display:block;width:38px;background:#7dba56;padding:3px 6px;color:#fff;border-radius: 4px 4px 4px 4px;'>"+$g("日志")+"</a>";
 	return html;
 }
 
@@ -241,9 +241,12 @@ function export_click(){
 
 /// 查看日志
 function log(EpisodeID){
-	
+	var link="dhcem.pattimeaxis.csp?PatientID=&EpisodeID="+ EpisodeID +"&EmType="+ EmType;
+	if ('undefined'!==typeof websys_getMWToken){
+		link += "&MWToken="+websys_getMWToken();
+	}
 	commonShowWin({
-		url:"dhcem.pattimeaxis.csp?PatientID=&EpisodeID="+ EpisodeID +"&EmType="+ EmType,
+		url:link,
 		title:"历次交班信息",
 		height: (window.screen.availHeight - 180)	
 	})
@@ -258,16 +261,16 @@ function Export_Xml(jsonObjArr){
 		'var objSheet = xlBook.ActiveSheet;' +
 		
 		'xlApp.Range(xlApp.Cells(1,1),xlApp.Cells(1,11)).MergeCells = true;' + //合并单元格
-		'objSheet.Cells(1, 1).value = "急诊交班病人列表";'+		 
-		'objSheet.Cells(2, 1).value = "交班日期";' +  /// 交班日期
-		'objSheet.Cells(2, 2).value = "床号";' +      /// 床号
-		'objSheet.Cells(2, 3).value = "姓名";' +      /// 姓名
-		'objSheet.Cells(2, 4).value = "班次";' +      /// 班次
-		'objSheet.Cells(2, 5).value = "交班人";' +    /// 交班人
-		'objSheet.Cells(2, 6).value = "接班人";' +    /// 接班人
-		'objSheet.Cells(2, 7).value = "背景";' +      /// 背景
-		'objSheet.Cells(2, 8).value = "评估";' +      /// 评估
-		'objSheet.Cells(2, 9).value = "建议";'        /// 建议
+		'objSheet.Cells(1, 1).value = "'+$g("急诊交班病人列表")+'";'+		 
+		'objSheet.Cells(2, 1).value = "'+$g("交班日期")+'";' +  /// 交班日期
+		'objSheet.Cells(2, 2).value = "'+$g("床号")+'";' +      /// 床号
+		'objSheet.Cells(2, 3).value = "'+$g("姓名")+'";' +      /// 姓名
+		'objSheet.Cells(2, 4).value = "'+$g("班次")+'";' +      /// 班次
+		'objSheet.Cells(2, 5).value = "'+$g("交班人")+'";' +    /// 交班人
+		'objSheet.Cells(2, 6).value = "'+$g("接班人")+'";' +    /// 接班人
+		'objSheet.Cells(2, 7).value = "'+$g("背景")+'";' +      /// 背景
+		'objSheet.Cells(2, 8).value = "'+$g("评估")+'";' +      /// 评估
+		'objSheet.Cells(2, 9).value = "'+$g("建议")+'";'        /// 建议
 		str = str +setCellLine("",2,1,9);
 		for (var i=0; i<jsonObjArr.length; i++){
 			str = str +
@@ -290,13 +293,13 @@ function Export_Xml(jsonObjArr){
 		}
 		str = str +
 		"xlApp.Visible=true;" +
-		'xlBook.SaveAs("交班个人明细.xlsx");' +
+		'xlBook.SaveAs("'+$g("交班个人明细")+'.xlsx");' +
 		'xlApp=null;' +
 		'objSheet=null;' +
 		"return 1;}());";
 	//以上为拼接Excel打印代码为字符串
     CmdShell.notReturn = 1;   //设置无结果调用，不阻塞调用
-	var rtn = CmdShell.EvalJs(str);   //通过中间件运行打印程序 
+	var rtn = CmdShell.CurrentUserEvalJs(str);   //通过中间件运行打印程序 
 	return;
 		
 //	var xlApp = new ActiveXObject("Excel.Application");
@@ -366,6 +369,7 @@ function setCellLine(objSheet,row,startcol,colnum){
 function escape2Html(str) {
 	
 	str = str.trim().replace("\n", String.valueOf(10));
+	str = str.replace(/\s/g," ");
 	var arrEntities={'lt':'<','gt':'>','nbsp':' ','amp':'&','quot':'"'}; 
 	return str.replace(/&(lt|gt|nbsp|amp|quot);/ig,function(all,t){return arrEntities[t];}); 
 }

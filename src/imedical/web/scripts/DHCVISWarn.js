@@ -6,13 +6,7 @@ var init = function(){
 	var WarnHospitalNameObj = $HUI.combogrid("#WarnHospitalName",{
 		panelWidth:380,
 		panelHeight:280,
-		//url:$URL+"?ClassName=web.DHCVISVoiceSet&QueryName=LookUpServer",
-		url:$URL,
-		queryParams:{
-			ClassName:"web.DHCVISWarnQuery",
-			QueryName:"FindHosInfo",
-			Name:""
-		},
+		url:$URL+"?ClassName=web.DHCVISWarnQuery&QueryName=FindHosInfo",
 		mode:'remote',
 		delay:200,
 		idField:'RowId',
@@ -20,6 +14,13 @@ var init = function(){
 		onBeforeLoad:function(param){
 			param.Name = param.q;
 		},
+		onShowPanel:function () {
+			var HospitalName=WarnHospitalNameObj.getText();
+			$('#WarnHospitalName').combogrid('grid').datagrid('reload',{q: HospitalName});
+    	},
+    	onSelect: function (rowIndex, rowData){
+	    	onChangeHos(rowData.RowId);
+    	},
 		columns:[[
 			{field:'RowId',title:'院区ID',width:50},
 			{field:'HosCode',title:'院区代码',width:100},
@@ -41,6 +42,10 @@ var init = function(){
 		onBeforeLoad:function(param){
 			param.Name = param.q;
 		},
+		onShowPanel:function () {
+			var BuildName=WarnBuildNameObj.getText();
+			$('#WarnBuildName').combogrid('grid').datagrid('reload',{q: BuildName});
+    	},
 		columns:[[
 			{field:'RowId',title:'楼宇ID',width:50},
 			{field:'BuildCode',title:'楼宇代码',width:100},
@@ -52,7 +57,7 @@ var init = function(){
 	});
 	//选择科室
 	var WarnLocDescObj = $HUI.combogrid("#WarnLocDesc",{
-		panelWidth:300,
+		panelWidth:320,
 		panelHeight:400,
 		url:$URL+"?ClassName=web.DHCVISWarnQuery&QueryName=FindLocInfo",
 		mode:'remote',
@@ -66,12 +71,18 @@ var init = function(){
 			
 		},
 		onShowPanel:function () {
-			$('#WarnLocDesc').combogrid('grid').datagrid('reload');
+			var LocDesc=WarnLocDescObj.getText();
+			$('#WarnLocDesc').combogrid('grid').datagrid('reload',{q: LocDesc});
+    	},
+    	onSelect: function (rowIndex, rowData){
+	    	checkLocHosId(rowData.LocHosId,rowData.LocHosName);
     	},
 		columns:[[
 			{field:'RowId',title:'科室ID',width:50},
 			{field:'LocCode',title:'科室代码',width:130},
-			{field:'LocName',title:'科室名称',width:130}
+			{field:'LocName',title:'科室名称',width:130},
+			{field:'LocHosId',title:'院区ID',width:130,hidden:true},
+			{field:'LocHosName',title:'院区',width:130,hidden:true}
 			
 		]],
 		displayMsg:"",
@@ -90,6 +101,10 @@ var init = function(){
 			param.Name = param.q;
 			
 		},
+		onShowPanel:function () {
+			var ClinicalName=WarnClinicalNameObj.getText();
+			$('#WarnClinicalName').combogrid('grid').datagrid('reload',{q: ClinicalName});
+    	},
 		columns:[[
 		    
 		    {field:'RowId',title:'诊区ID',width:50},
@@ -113,6 +128,10 @@ var init = function(){
 			param.Name = param.q;
 			
 		},
+		onShowPanel:function () {
+			var RoomName=WarnRoomNameObj.getText();
+			$('#WarnRoomName').combogrid('grid').datagrid('reload',{q: RoomName});
+    	},
 		columns:[[
 		    
 		    {field:'RowId',title:'房间ID',width:50},
@@ -136,6 +155,10 @@ var init = function(){
 			param.Name = param.q;
 			
 		},
+		onShowPanel:function () {
+			var FloorName=WarnFloorNameObj.getText();
+			$('#WarnFloorName').combogrid('grid').datagrid('reload',{q: FloorName});
+    	},
 		columns:[[
 		    
 		    {field:'RowId',title:'楼层ID',width:50},
@@ -186,7 +209,6 @@ var init = function(){
 		
 		onClickRow:function(rowIndex,rowData){
 			if (rowIndex>-1){
-				
 		        WarnHospitalNameObj.setValue(rowData.WarnHospitalId);
 		        WarnHospitalNameObj.setText(rowData.WarnHospitalName);
 		        WarnBuildNameObj.setValue(rowData.WarnBuildId);
@@ -407,6 +429,25 @@ var init = function(){
 	
 		
 		})	
+	function onChangeHos(hosId){
+		var locId=WarnLocDescObj.getValue();
+		if(locId){
+			var flag=tkMakeServerCall("web.DHCVISWarnQuery","GetHosFlag",locId,hosId)
+			if(flag=="N"){
+				WarnLocDescObj.setValue("");
+	    		WarnLocDescObj.setText("");	
+			}
+		}
 	
+	}
+	function checkLocHosId(lochosId,locHosName){
+		var hosId=WarnHospitalNameObj.getValue();
+		if(hosId!=lochosId){
+			WarnHospitalNameObj.setValue(lochosId);
+			WarnHospitalNameObj.setText(locHosName);
+		}
+	
+	
+	}	
 };
 $(init);

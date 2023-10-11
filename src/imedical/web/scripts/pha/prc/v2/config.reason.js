@@ -6,29 +6,47 @@
 PHA_COM.App.Csp = "pha.prc.v2.config.reason.csp";
 PHA_COM.App.Name = "PRC.Config.Reason";
 PHA_COM.App.Load = "";
-PHA_STORE.Tree = function () {
-	return {
-		url: PHA_STORE.Url + "ClassName=web.PHA.PRC.Reason&MethodName=JsGetReasonTree"
-	}
-}
+var hospID = PHA_COM.Session.HOSPID;
 $(function () {
 	InitDict();
 	InitEvents();
-	InitTreeGridReason(); 
     InitGridReason();
+    LoadTreeGridReason();
+	InitHospCombo();
 });
 
 // 字典
 function InitDict() {
-	// 初始化方式
-	PHA.ComboBox("conWay", {
-		url: PRC_STORE.PCNTSWay("","").url ,
-		onSelect: function (data) {
+	PHA.Tree("treeGridReason",{
+		//url: $URL + "?ClassName=PHA.PRC.Com.Store&MethodName=GetPRCReasonTree&params=^^N^",
+		lines: false,
+		onSelect: function (node) {
 			Clear();
-			InitTreeGridReason();			
+			var includeNFlag = $HUI.checkbox("#filterFlag").getValue()? "Y":"N";
+			$("#gridReason").datagrid("query", {
+				hospID: hospID,
+				params: node.id +"^"+ includeNFlag
+			});			
+		},
+		onLoadSuccess: function(node, data){
+			$("#gridReason").datagrid("clear");
+			if(data.length === 0){
+				return;	
+			}
+			var node = $(this).tree('getRoot');
+			$(this).tree('select', node.target);
 		}
-	});	
-	
+	});
+	$('#search-form').searchbox({
+		searcher: function(e){
+			LoadTreeGridReason();	
+		}	
+	});
+	$("#filterFlag").checkbox({
+	    onCheckChange: function(){
+			LoadTreeGridReason();   
+		}
+	})
 }
 
 // 事件
@@ -36,32 +54,19 @@ function InitEvents() {
 	$("#btnAdd").on("click", AddReason);
 	$("#btnEdit").on("click", EditReason);
 	$("#btnDel").on("click", ComfirmDel);
-
 }
 
-function InitTreeGridReason() {
-	var loadWayId = $("#conWay").combobox('getValue')||''; 
-	PHA.Tree("treeGridReason",{
-		lines: false,
-		onClick: function (node) {			 
-			$("#conLevel").val(node.id)
-			Clear();
-			$("#gridReason").datagrid("query", {
-				wayId: loadWayId ,
-				reaLevel: node.id
-			});			
-		}
-	})
+function LoadTreeGridReason() {
+	var desc = $HUI.searchbox('#search-form').getValue();	
+	var filterFlag = $HUI.checkbox("#filterFlag").getValue()? "Y":"N";
 	$.cm({
-		ClassName: 'PHA.PRC.ConFig.Reason',
+		ClassName: 'PHA.PRC.Com.Store',
 		MethodName: 'GetPRCReasonTree',
-		wayId: loadWayId , 
+		params: "^^"+ filterFlag+ "^"+ desc,
+		hospID: hospID
 	},function(data){
-		$('#treeGridReason').tree({
-			data: data
-		});
+		$('#treeGridReason').tree('loadData', data);
 	});
-
 }
 
 function InitGridReason() {
@@ -80,6 +85,7 @@ function InitGridReason() {
                     }
                 }
             },
+            { field: "activeFlag", title: '是否可用'},
             {
                 field: 'reasonDesc',
                 title: '原因描述',
@@ -98,8 +104,7 @@ function InitGridReason() {
         queryParams: {
             ClassName: 'PHA.PRC.ConFig.Reason',
             QueryName: 'SelectReason',
-			wayId: '',
-			reaLevel: ''
+			hospID: hospID
         },
         columns: columns,
         pagination: true,
@@ -110,8 +115,16 @@ function InitGridReason() {
 	        var code = rowData.reasonCode ;
 			var desc = rowData.reasonDesc ;
 			var reaId = rowData.reasonId ;
+			var activeFlag = rowData.activeFlag;
 			$("#conCode").val(code);
 			$("#conDesc").val(desc);
+			$HUI.checkbox("#activeFlag").setValue(activeFlag=="否");
+        },
+	    onBeforeLoad: function (param) {
+		    if(param.params){
+				return true;    
+			}
+			return false;
         }
     };
     PHA.Grid("gridReason", dataGridOption);
@@ -125,19 +138,28 @@ function AddReason(){
 		PHA.Popover({
 			msg: "请填写点评原因代码和描述后再保存！",
 			type: "alert",
-			timeout: 3000
+			timeout: 1000
 		});
 		return;
 	}
-	var loadWayId = $("#conWay").combobox('getValue')||''; 
-	var reaLevel = $("#conLevel").val();
-	
-	var DataStr = reaCode + "^" + reaDesc + "^" + reaLevel + "^" + loadWayId
+	var selectedNode = $('#treeGridReason').tree('getSelected');
+	if(selectedNode === null){
+		PHA.Popover({
+			msg: "请在左侧选中需要添加明细的原因等级！",
+			type: "alert",
+			timeout: 1000
+		});
+		return;	
+	}
+	var reaLevel = selectedNode.id;
+	var nouseFlag = $HUI.checkbox("#activeFlag").getValue()?"N":"Y";	
+	var DataStr = reaCode + "^" + reaDesc + "^" + reaLevel +"^"+ nouseFlag;
 	var saveRet = $.cm({
 		ClassName: 'PHA.PRC.ConFig.Reason',
 		MethodName: 'SaveComReason',
 		ReasonID: '',
 		DataStr: DataStr,
+		hospID: hospID,
 		dataType: 'text'
 	}, false);
 	var saveArr = saveRet.split('^');
@@ -147,19 +169,30 @@ function AddReason(){
 		PHA.Alert('提示', saveInfo, 'warning');
 		return;
 	} else {
-		PHA.Alert('提示',"增加成功", 'success');
+		PHA.Popover({msg: "增加成功！", type: "success", timeout: 1000});
 		Clear();
+		$('#treeGridReason').tree('append', {
+			parent: selectedNode.target,
+			data: [{
+				id: saveVal,
+				text: reaDesc
+			}]
+		});
+		var includeNFlag = $HUI.checkbox("#filterFlag").getValue()? "Y":"N";
+		$("#gridReason").datagrid("query", {
+			params: reaLevel +"^"+ includeNFlag
+		});	
 	}
 }
 function EditReason(){
 	var gridSelect = $('#gridReason').datagrid('getSelected') || "";
-		if (gridSelect == "") {
-			PHA.Popover({
-				msg: "请选择需要修改的点评原因",
-				type: "alert"
-			});
-			return;
-		}
+	if (gridSelect == "") {
+		PHA.Popover({
+			msg: "请选择需要修改的点评原因",
+			type: "alert"
+		});
+		return;
+	}
 	var reaCode=$("#conCode").val();
 	var reaDesc=$("#conDesc").val();
 	if ((reaCode=="")||(reaDesc == "")) {
@@ -170,16 +203,16 @@ function EditReason(){
 		});
 		return;
 	}
-	var reasonId = gridSelect.reasonId ;	
-	var loadWayId = $("#conWay").combobox('getValue')||''; 
-	var reaLevel = $("#conLevel").val();
+	var reasonId = gridSelect.reasonId ;
+	var nouseFlag = $HUI.checkbox("#activeFlag").getValue()?"N":"Y";	
 	
-	var DataStr = reaCode + "^" + reaDesc + "^" + reaLevel + "^" + loadWayId
+	var DataStr = reaCode + "^" + reaDesc +"^^"+ nouseFlag;
 	var saveRet = $.cm({
 		ClassName: 'PHA.PRC.ConFig.Reason',
 		MethodName: 'SaveComReason',
 		ReasonID: reasonId,
 		DataStr: DataStr,
+		hospID: hospID,
 		dataType: 'text'
 	}, false);
 	var saveArr = saveRet.split('^');
@@ -189,9 +222,40 @@ function EditReason(){
 		PHA.Alert('提示', saveInfo, 'warning');
 		return;
 	} else {
-		PHA.Alert('提示',"修改成功", 'success');
+		PHA.Popover({msg: "修改成功！", type: "success", timeout: 1000});
 		Clear();
-		
+		var selectedNode = $('#treeGridReason').tree('getSelected');
+		if(selectedNode !== null){
+			if(reasonId == selectedNode.id){
+				if(nouseFlag === "N"){
+					$('#treeGridReason').tree('remove', selectedNode.target);		
+				}else{
+					$('#treeGridReason').tree('update', {
+						target: selectedNode.target,
+						text: reaDesc
+					});	
+				}
+			}else{
+				var children = $('#treeGridReason').tree('getChildren', selectedNode.target);
+				$.each(children, function(key, val){
+					if(val.id.toString() === reasonId){
+						if(nouseFlag === "N"){
+							$('#treeGridReason').tree('remove', val.target);		
+						}else{
+							$('#treeGridReason').tree('update', {
+								target: val.target,
+								text: reaDesc
+							});	
+						}
+						return false;
+					}
+				});
+			}
+		}
+		var includeNFlag = $HUI.checkbox("#filterFlag").getValue()? "Y":"N";
+		$("#gridReason").datagrid("query", {
+			params: selectedNode.id +"^"+ includeNFlag
+		});	
 	}
 }
 
@@ -202,59 +266,20 @@ function ComfirmDel(){
 	})
 }
 
-//删除点评药师
-function deleteReason(){
-	var gridSelect = $('#gridReason').datagrid('getSelected') || "";
-	if (gridSelect == "") {
-		PHA.Popover({
-			msg: "请先选中需要删除的点评原因",
-			type: "alert",
-			timeout: 1000
-		});
-		return;
-	}
-	var reasonId = gridSelect.reasonId ;
-	var reaLevel = $("#conLevel").val();
-	var loadWayId = $("#conWay").combobox('getValue')||'';
-	
-	var DataStr = reasonId + "^" + reaLevel + "^" + loadWayId
-	var saveRet = $.cm({
-		ClassName: 'PHA.PRC.ConFig.Reason',
-		MethodName: 'DelComReason',
-		DataStr: DataStr,
-		dataType: 'text'
-	}, false);
-	var saveArr = saveRet.split('^');
-	var saveVal = saveArr[0];
-	var saveInfo = saveArr[1];
-	if (saveVal < 0) {
-		PHA.Alert('提示', saveInfo, 'warning');
-		return;
-	} else {
-		PHA.Alert('提示',"删除成功", 'success');
-		Clear();
-		//$('#gridReason').datagrid("reload");
-	}
-	
-}
-
 function Clear(){
-	//$("#gridReason").datagrid("clear");
-	//$('#gridReason').datagrid("reload");
-	//$('#treeGridReason').tree("reload");
-	var loadWayId = $("#conWay").combobox('getValue')||'';
-	var reasonLevel = $("#conLevel").val();
-	$("#gridReason").datagrid("query", {
-		wayId: loadWayId ,
-		reaLevel: reasonLevel
-	});	
 	$("#conCode").val('');
 	$("#conDesc").val('');
-	
-	
+	$HUI.checkbox("#activeFlag").uncheck();
 }
 
-
-
+function InitHospCombo() {
+	var genHospObj = GenHospComp('DHC_PHCNTSREASON');
+	if (typeof genHospObj ==='object'){
+        genHospObj.options().onSelect =  function(index, record) {	
+        	hospID = record.HOSPRowId;
+            LoadTreeGridReason();
+        }
+    }
+}
 
 

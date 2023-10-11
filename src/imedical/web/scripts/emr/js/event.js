@@ -30,6 +30,14 @@ function setHtmlTitle()
 	else if (eventType == "ModDiagnosis")
 	{
 		document.title = "诊断记录";
+	} 
+	else if (eventType == "Consult")
+	{
+		document.title = "会诊";
+	} 
+	else if (eventType == "MDTConsult")
+	{
+		document.title = "MDT会诊";
 	} 		
 }
 
@@ -154,7 +162,7 @@ function create(){
 				}
 			}
 		}
-		Ids = Ids + "," + item["ID"];
+		Ids = Ids + "@" + item["ID"];
 	})
 	Ids = Ids.substring(1);
 	var titlecode = $("#title").val();

@@ -9,11 +9,6 @@ $(function(){
 		
 	InitCombobox();
 	
-	InitFeeListLefGrid();
-	
-	InitFeeListRightGrid();
-	  
-	
 	//拆分类型
 	$("#SplitType").combobox({
        onSelect:function(){
@@ -21,8 +16,15 @@ $(function(){
 	}
 	});
 	
+	init();
+	 
+	InitFeeListLefGrid();
+	
+	InitFeeListRightGrid();
+	  
 	
 	
+	/*
 	//全选登记  
 	$('#SelectR').checkbox({
 		onCheckChange:function(e,vaule){
@@ -40,7 +42,7 @@ $(function(){
 			}
 			
 	});
-	
+	*/
 	
 	//移动选择项(向右)
     $("#MoveToR").click(function() {	
@@ -76,7 +78,7 @@ $(function(){
 			
         });
    
-     init();
+    
 	
 })
 
@@ -92,10 +94,13 @@ function BFind_Click(){
 	 var auditid=$("#AuditID").val();
 	
 	if($("#SplitType").combobox('getValue')=="item"){
-	   var ItemNameTitle="项目名称";
+	   var ItemNameTitle=$g("项目名称");
+	   var ARCOShidden=false;
    }else{
-	   var ItemNameTitle="状态";
+	   var ItemNameTitle=$g("状态");
+	   var ARCOShidden=true;
    }
+   var Status=$("#Status").combobox('getValue');
    
    $HUI.datagrid("#FeeListLeftGrid",{
 		url:$URL,
@@ -124,7 +129,9 @@ function BFind_Click(){
 			GIADM:"", 
 			ARCIMID:iARCIMID, 
 			OrdSetID:iOrdSetID, 
-			Name:$("#Name").val(),		
+			Name:$("#Name").val(),
+			Status:$("#Status").combobox('getValue'),
+			CSPName:"dhcpesplitaudit.hiui.csp"	
 		},
 		frozenColumns:[[
 			{title:'选择',field:'Select',width:60,checkbox:true},
@@ -136,9 +143,10 @@ function BFind_Click(){
 		]],
 		columns:[[
 		    {field:'RowId',title:'TRowId',hidden:true},
-			{field:'FactAmount',width:120,title:'销售金额',align:'right'},
-			{field:'PrivilegeMode',width:100,title:'优惠形式'},	
-			{field:'OrdStatusDesc',width:100,title:'执行状态'},		
+			{field:'FactAmount',width:100,title:'销售金额',align:'right'},
+			{field:'PrivilegeMode',width:80,title:'优惠形式'},	
+			{field:'OrdStatusDesc',width:80,title:'执行状态'},		
+			{field:'ARCOSName',width:140,title:'套餐名称',hidden:ARCOShidden}		
 				
 		]],
 		
@@ -237,11 +245,18 @@ function Move(auditid,toAuditid,allFlag,feeItems,isLToR)
 		$.messager.alert("提示","更新成功","success");
 		
 		if($("#SplitType").combobox('getValue')=="item"){
-	       var ItemNameTitle="项目名称";
+	       var ItemNameTitle=$g("项目名称");
         }else{
-	       var ItemNameTitle="状态";
+	       var ItemNameTitle=$g("状态");
        }
+	    if($("#SplitType").combobox('getValue')=="group"){
+			 var PatNameTitle=$g("分组名称");
+		}else{
+			var PatNameTitle=$g("姓名");
+		 }
+
 	   
+
 	     if (1==isLToR) {
 		       $("#ToAuditID").val(result);
 		       $("#AuditID").val(auditid);
@@ -257,7 +272,8 @@ function Move(auditid,toAuditid,allFlag,feeItems,isLToR)
 				GIADM:"", 
 				ARCIMID:"", 
 				OrdSetID:"", 
-				Name:"",	
+				Name:"",
+				CSPName:"dhcpesplitaudit.hiui.csp"	
 		
 			});
 		$HUI.datagrid("#FeeListRightGrid",{
@@ -287,21 +303,22 @@ function Move(auditid,toAuditid,allFlag,feeItems,isLToR)
 			GIADM:"", 
 			ARCIMID:"", 
 			OrdSetID:"", 
-			Name:"",			
+			Name:"",
+			CSPName:"dhcpesplitaudit.hiui.csp"	
 		},
 		frozenColumns:[[
 			{title:'选择',field:'Select',width:60,checkbox:true},
 			{title:'FeeType',field:'FeeType',hidden:true},
 			{field:'FeeTypeDesc',width:50,title:'类别'},
 			{field:'ItemName',width:120,title:ItemNameTitle},
-			{field:'PatName',width:100,title:'姓名'},
+			{field:'PatName',width:80,title:PatNameTitle},
 						 
 		]],
 		columns:[[
 		    {field:'RowId',title:'TRowId',hidden:true},
-			{field:'FactAmount',width:120,title:'销售金额',align:'right'},
-			{field:'PrivilegeMode',width:100,title:'优惠形式'},	
-			{field:'OrdStatusDesc',width:100,title:'执行状态'},		
+			{field:'FactAmount',width:100,title:'销售金额',align:'right'},
+			{field:'PrivilegeMode',width:80,title:'优惠形式'},	
+			{field:'OrdStatusDesc',width:80,title:'执行状态'},		
 				
 		]],
 		
@@ -325,7 +342,8 @@ function Move(auditid,toAuditid,allFlag,feeItems,isLToR)
 				GIADM:"", 
 				ARCIMID:"", 
 				OrdSetID:"", 
-				Name:"",	
+				Name:"",
+				CSPName:"dhcpesplitaudit.hiui.csp"	
 		
 			});
 		$HUI.datagrid("#FeeListRightGrid",{
@@ -355,21 +373,22 @@ function Move(auditid,toAuditid,allFlag,feeItems,isLToR)
 			GIADM:"", 
 			ARCIMID:"", 
 			OrdSetID:"", 
-			Name:"",		
+			Name:"",
+			CSPName:"dhcpesplitaudit.hiui.csp"	
 		},
 		frozenColumns:[[
 			{title:'选择',field:'Select',width:60,checkbox:true},
 			{title:'FeeType',field:'FeeType',hidden:true},
 			{field:'FeeTypeDesc',width:50,title:'类别'},
 			{field:'ItemName',width:120,title:ItemNameTitle},
-			{field:'PatName',width:100,title:'姓名'},
+			{field:'PatName',width:80,title:PatNameTitle},
 						 
 		]],
 		columns:[[
 		    {field:'RowId',title:'TRowId',hidden:true},
-			{field:'FactAmount',width:120,title:'销售金额',align:'right'},
-			{field:'PrivilegeMode',width:100,title:'优惠形式'},	
-			{field:'OrdStatusDesc',width:100,title:'执行状态'},		
+			{field:'FactAmount',width:100,title:'销售金额',align:'right'},
+			{field:'PrivilegeMode',width:80,title:'优惠形式'},	
+			{field:'OrdStatusDesc',width:80,title:'执行状态'},		
 				
 		]],
 		
@@ -377,12 +396,15 @@ function Move(auditid,toAuditid,allFlag,feeItems,isLToR)
 	});
 			
 	     }
-	    
+	     
+	   
+	    parent.window.$("#PreAuditListTab").datagrid('load',{ClassName:"web.DHCPE.PreAudit",QueryName:"SerchPreAudit",ADMType:ADMType,CRMADM:CRMADM,GIADM:GIADM,AppType:"Fee"});
+					
 		window.opener.$("#PreAuditPayTable").datagrid('load',{ClassName:"web.DHCPE.PreAudit",QueryName:"SerchPreAudit",ADMType:ADMType,CRMADM:"",GIADM:GIADM,AppType:"Fee"});
 					
 }
 }
-
+/*
 function SelectR_clicked(vaule)
 {
 
@@ -428,22 +450,192 @@ function Select(Type,value)
 	}
 	
 }
+*/
 
-
+var ItemNameTitle="状态";
+var PatNameTitle="姓名";
 
 function SplitType_change(){
 	
 	
-	if((ADMType=="I")){var ItemNameTitle="项目名称";}
+	if((ADMType=="I")){
+		var ItemNameTitle=$g("项目名称");
+		var ARCOShidden=false;
+	}
 	else{
    		if($("#SplitType").combobox('getValue')=="item"){
-	   		var ItemNameTitle="项目名称";
+	   		var ItemNameTitle=$g("项目名称");
+	   		var ARCOShidden=false;
    		}else{
-	  	 var ItemNameTitle="状态";
+	  	 	var ItemNameTitle=$g("状态");
+	  	 	var ARCOShidden=true;	
    		}
+		if($("#SplitType").combobox('getValue')=="group"){
+	        var PatNameTitle=$g("分组名称");
+		}else{
+			var PatNameTitle=$g("姓名");
+		 }
+
   
 	}
 	
+	$HUI.datagrid("#FeeListLeftGrid",{
+		url:$URL,
+		fit : true,
+		border : false,
+		striped : false,
+		fitColumns : false,
+		autoRowHeight : false,
+		rownumbers:true,
+		pagination : true,  
+		pageSize: 20,
+		pageList : [20,100,200],
+		singleSelect:false,
+		checkOnSelect: true, //如果为false, 当用户仅在点击该复选框的时候才会被选中或取消
+		selectOnCheck: true,
+		queryParams:{
+			ClassName:"web.DHCPE.ItemFeeList",
+			QueryName:"FindItemFeeList",
+			SplitType:$("#SplitType").combobox('getValue'),
+			InvPrtId:"", 
+			PreAudits:$("#AuditID").val(),
+			SelectIds:"",
+			ReadOnlyFlag:"", 
+			 ADMType:"", 
+			 GIADM:"", 
+			ARCIMID:"", 
+			OrdSetID:"", 
+			Name:"",
+			CSPName:"dhcpesplitaudit.hiui.csp"	
+			
+			
+		},
+		frozenColumns:[[
+			{title:'选择',field:'Select',width:60,checkbox:true},
+			{title:'FeeType',field:'FeeType',hidden:true},
+			{field:'FeeTypeDesc',width:50,title:'类别'},
+			{field:'ItemName',width:120,title:ItemNameTitle},
+			{field:'PatName',width:100,title:PatNameTitle},
+						 
+		]],
+		columns:[[
+		    {field:'RowId',title:'TRowId',hidden:true},
+			{field:'FactAmount',width:100,title:'销售金额',align:'right'},
+			{field:'PrivilegeMode',width:80,title:'优惠形式'},	
+			{field:'OrdStatusDesc',width:80,title:'执行状态'},		
+			{field:'ARCOSName',width:140,title:'套餐名称',hidden:ARCOShidden}		
+				
+		]],
+		
+			
+	})
+	
+   if($("#SplitType").combobox('getValue')=="person"){
+	    //$("#SelectR").checkbox("enable");
+	   // $("#SelectA").checkbox("enable");
+	      $("#Status").combobox("enable");
+	    $("#Name").attr('disabled',false);
+	    if(ADMType=="I"){
+			$("#Name").attr('disabled',true);
+			 $("#Status").combobox("disable");
+			//$("#SelectR").checkbox("disable");
+			//$("#SelectA").checkbox("disable");
+		
+	}
+   }else{
+	  // $("#SelectR").checkbox("setValue",false);
+	  // $("#SelectA").checkbox("setValue",false);
+	   //$("#SelectR").checkbox("disable");
+	   //$("#SelectA").checkbox("disable");
+	    $("#Status").combobox("disable");
+	   $("#Name").val("")
+	   $("#Name").attr('disabled',true);
+	   $("#Status").combobox('setValue',"");
+   }
+
+	if($("#SplitType").combobox('getValue')=="item"){
+		$("#ARCIMDesc").combogrid("enable");
+		$("#SetDesc").combogrid("enable");
+	}else{
+		$("#ARCIMDesc").combogrid("setValue","");
+		$("#SetDesc").combogrid("setValue","");
+		$("#ARCIMDesc").combogrid("disable");
+		$("#SetDesc").combogrid("disable");
+	}
+
+$HUI.datagrid("#FeeListRightGrid",{
+		url:$URL,
+		fit : true,
+		border : false,
+		striped : false,
+		fitColumns : false,
+		autoRowHeight : false,
+		rownumbers:true,
+		pagination : true,  
+		pageSize: 20,
+		pageList : [20,100,200],
+		singleSelect:false,
+		checkOnSelect: true, //如果为false, 当用户仅在点击该复选框的时候才会被选中或取消
+		selectOnCheck: true,
+		toolbar:[] ,
+		queryParams:{
+			ClassName:"web.DHCPE.ItemFeeList",
+			QueryName:"FindItemFeeList",
+			SplitType:"",
+			InvPrtId:"", 
+			PreAudits:"",
+			SelectIds:"",
+			ReadOnlyFlag:"", 
+			 ADMType:"", 
+			 GIADM:"", 
+			ARCIMID:"", 
+			OrdSetID:"", 
+			Name:"",
+			CSPName:"dhcpesplitaudit.hiui.csp"	
+			
+		},
+		frozenColumns:[[
+			{title:'选择',field:'Select',width: 60,checkbox:true},
+			{title:'FeeType',field:'FeeType',hidden:true},
+			{field:'FeeTypeDesc',width:50,title:'类别'},
+			{field:'ItemName',width:110,title:ItemNameTitle},
+			{field:'PatName',width:100,title:PatNameTitle},
+		]],
+		columns:[[
+		    {field:'RowId',title:'TRowId',hidden:true},
+			{field:'FactAmount',width:90,title:'最终金额',align:'right'},
+			{field:'PrivilegeMode',width:80,title:'优惠形式'},	
+			{field:'OrdStatusDesc',width:80,title:'执行状态'},			
+			{field:'ARCOSName',width:140,title:'套餐名称',hidden:ARCOShidden}		
+			
+		]],
+		onSelect: function (rowIndex, rowData) {
+										
+		}		
+	})
+	
+}
+function InitFeeListLefGrid()
+{
+	if(ADMType=="I" ){
+		var ItemNameTitle=$g("项目名称");
+		var ARCOShidden=false;
+		}
+    if(ADMType=="G" ){
+	    var ItemNameTitle=$g("状态");
+	     if($("#SplitType").combobox('getValue')=="item"){
+	    	var ARCOShidden=false;
+	     }else{
+		     var ARCOShidden=true;
+	     }
+	     
+	    }
+    if($("#SplitType").combobox('getValue')=="group"){
+	      var PatNameTitle=$g("分组名称");
+     }else{
+	     var PatNameTitle=$g("姓名");
+     }
+
 	$HUI.datagrid("#FeeListLeftGrid",{
 		url:$URL,
 		fit : true,
@@ -472,6 +664,7 @@ function SplitType_change(){
 			ARCIMID:"", 
 			OrdSetID:"", 
 			Name:"",
+			CSPName:"dhcpesplitaudit.hiui.csp"	
 			
 			
 		},
@@ -480,99 +673,15 @@ function SplitType_change(){
 			{title:'FeeType',field:'FeeType',hidden:true},
 			{field:'FeeTypeDesc',width:50,title:'类别'},
 			{field:'ItemName',width:120,title:ItemNameTitle},
-			{field:'PatName',width:100,title:'姓名'},
+			{field:'PatName',width:100,title:PatNameTitle},
 						 
 		]],
 		columns:[[
 		    {field:'RowId',title:'TRowId',hidden:true},
-			{field:'FactAmount',width:120,title:'销售金额',align:'right'},
-			{field:'PrivilegeMode',width:100,title:'优惠形式'},	
-			{field:'OrdStatusDesc',width:100,title:'执行状态'},		
-				
-		]],
-		
-			
-	})
-	
-   if($("#SplitType").combobox('getValue')=="person"){
-	    $("#SelectR").checkbox("enable");
-	    $("#SelectA").checkbox("enable");
-	    $("#Name").attr('disabled',false);
-	    if(ADMType=="I"){
-			$("#Name").attr('disabled',true);
-			$("#SelectR").checkbox("disable");
-			$("#SelectA").checkbox("disable");
-		
-	}
-   }else{
-	   $("#SelectR").checkbox("setValue",false);
-	   $("#SelectA").checkbox("setValue",false);
-	   $("#SelectR").checkbox("disable");
-	   $("#SelectA").checkbox("disable");
-	   $("#Name").val("")
-	   $("#Name").attr('disabled',true);
-   }
-
-	if($("#SplitType").combobox('getValue')=="item"){
-		$("#ARCIMDesc").combogrid("enable");
-		$("#SetDesc").combogrid("enable");
-	}else{
-		$("#ARCIMDesc").combogrid("setValue","");
-		$("#SetDesc").combogrid("setValue","");
-		$("#ARCIMDesc").combogrid("disable");
-		$("#SetDesc").combogrid("disable");
-	}
-
-
-	
-}
-function InitFeeListLefGrid()
-{
-	
-	$HUI.datagrid("#FeeListLeftGrid",{
-		url:$URL,
-		fit : true,
-		border : false,
-		striped : true,
-		fitColumns : false,
-		autoRowHeight : false,
-		rownumbers:true,
-		pagination : true,  
-		rownumbers : true,  
-		pageSize: 20,
-		pageList : [20,100,200],
-		singleSelect:false,
-		checkOnSelect: true, //如果为false, 当用户仅在点击该复选框的时候才会被选中或取消
-		selectOnCheck: true,
-		queryParams:{
-			ClassName:"web.DHCPE.ItemFeeList",
-			QueryName:"FindItemFeeList",
-			SplitType:SplitType,
-			InvPrtId:"", 
-			PreAudits:$("#AuditID").val(),
-			SelectIds:"",
-			ReadOnlyFlag:"", 
-			 ADMType:"", 
-			 GIADM:"", 
-			ARCIMID:"", 
-			OrdSetID:"", 
-			Name:"",
-			
-			
-		},
-		frozenColumns:[[
-			{title:'选择',field:'Select',width:60,checkbox:true},
-			{title:'FeeType',field:'FeeType',hidden:true},
-			{field:'FeeTypeDesc',width:50,title:'类别'},
-			{field:'ItemName',width:120,title:ItemNameTitle},
-			{field:'PatName',width:100,title:'姓名'},
-						 
-		]],
-		columns:[[
-		    {field:'RowId',title:'TRowId',hidden:true},
-			{field:'FactAmount',width:120,title:'销售金额',align:'right'},
-			{field:'PrivilegeMode',width:100,title:'优惠形式'},	
-			{field:'OrdStatusDesc',width:100,title:'执行状态'},		
+			{field:'FactAmount',width:100,title:'销售金额',align:'right'},
+			{field:'PrivilegeMode',width:80,title:'优惠形式'},	
+			{field:'OrdStatusDesc',width:80,title:'执行状态'},		
+			{field:'ARCOSName',width:140,title:'套餐名称',hidden:ARCOShidden}
 				
 		]],
 		onSelect: function (rowIndex, rowData) {
@@ -586,6 +695,24 @@ function InitFeeListLefGrid()
 
 function InitFeeListRightGrid()
 {
+	if(ADMType=="I" ){
+		var ItemNameTitle=$g("项目名称");
+		var ARCOShidden=false;
+		
+		}
+   if(ADMType=="G" ){
+	   var ItemNameTitle=$g("状态");
+	   if($("#SplitType").combobox('getValue')=="item"){
+	    	var ARCOShidden=false;
+	     }else{
+		     var ARCOShidden=true;
+	     }
+	   }
+    if($("#SplitType").combobox('getValue')=="group"){
+	      var PatNameTitle=$g("分组名称");
+     }else{
+	     var PatNameTitle=$g("姓名");
+     }
 	$HUI.datagrid("#FeeListRightGrid",{
 		url:$URL,
 		fit : true,
@@ -614,7 +741,8 @@ function InitFeeListRightGrid()
 			 GIADM:"", 
 			ARCIMID:"", 
 			OrdSetID:"", 
-			Name:"",	
+			Name:"",
+			CSPName:"dhcpesplitaudit.hiui.csp"	
 			
 		},
 		frozenColumns:[[
@@ -622,13 +750,14 @@ function InitFeeListRightGrid()
 			{title:'FeeType',field:'FeeType',hidden:true},
 			{field:'FeeTypeDesc',width:50,title:'类别'},
 			{field:'ItemName',width:120,title:ItemNameTitle},
-			{field:'PatName',width:100,title:'姓名'},
+			{field:'PatName',width:80,title:PatNameTitle},
 		]],
 		columns:[[
 		    {field:'RowId',title:'TRowId',hidden:true},
-			{field:'FactAmount',width:120,title:'销售金额',align:'right'},
-			{field:'PrivilegeMode',width:100,title:'优惠形式'},	
-			{field:'OrdStatusDesc',width:100,title:'执行状态'},			
+			{field:'FactAmount',width:100,title:'销售金额',align:'right'},
+			{field:'PrivilegeMode',width:80,title:'优惠形式'},	
+			{field:'OrdStatusDesc',width:80,title:'执行状态'},			
+			{field:'ARCOSName',width:140,title:'套餐名称',hidden:ARCOShidden}			
 			
 		]],
 		onSelect: function (rowIndex, rowData) {
@@ -639,7 +768,7 @@ function InitFeeListRightGrid()
 
 
 function init()
-{
+{/*
 	$("#SplitType").combobox('setValue',SplitType); 
 	$("#SelectR").checkbox("enable");
 	$("#SelectA").checkbox("enable");
@@ -652,7 +781,22 @@ function init()
 			$("#SelectA").checkbox("disable");
 			$("#SplitType").combobox("disable");
 		
-	}
+	}*/
+	
+	if(ADMType=="G"){
+		$("#SplitType").combobox('setValue',"person"); 
+		$("#Status").combobox("enable");
+		$("#ARCIMDesc").combogrid("disable");
+		$("#SetDesc").combogrid("disable");
+		$("#Name").attr('disabled',false);
+	}else if(ADMType=="I"){
+		$("#SplitType").combobox('setValue',"item"); 
+		$("#SplitType").combobox("disable");
+		$("#Status").combobox("disable");
+		$("#ARCIMDesc").combogrid("enable");
+		$("#SetDesc").combogrid("enable");
+		$("#Name").attr('disabled',true);
+	} 
 }
 function InitCombobox()
 {
@@ -663,35 +807,49 @@ function InitCombobox()
 		textField:'text',
 		panelHeight:'100',
 		data:[
-            {id:'item',text:'项目'},
-            {id:'person',text:'人员'},
-            {id:'group',text:'分组'},
+            {id:'item',text:$g('项目')},
+            {id:'person',text:$g('人员')},
+            {id:'group',text:$g('分组')},
            
         ]
 
 	});
 	
+	//状态
+	var StatusObj = $HUI.combobox("#Status",{
+		valueField:'id',
+		textField:'text',
+		panelHeight:'80',
+		data:[
+            {id:'到达',text:$g('到达')},
+            {id:'登记',text:$g('登记')}, 
+        ]
+
+	});
 	
-	
-	//项目
-	var OrdObj = $HUI.combogrid("#ARCIMDesc",{
+		//项目
+	var ARCIMDescObj = $HUI.combogrid("#ARCIMDesc",{
 		panelWidth:340,
-		url:$URL+"?ClassName=web.DHCPE.StationOrder&QueryName=ArcItmmastList",
+		url:$URL+"?ClassName=web.DHCPE.CT.StationOrder&QueryName=FindLocAllOrder",
 		mode:'remote',
 		delay:200,
-		idField:'STORD_ARCIM_DR',
-		textField:'STORD_ARCIM_Desc',
+		idField:'TARCIMDR',
+		textField:'TARCIMDesc',
 		onBeforeLoad:function(param){
-			param.Desc = param.q;
+			param.ARCIMDesc = param.q;
+			param.Type ="B";
+			param.hospId=session['LOGON.HOSPID'];
+			param.LocID=session['LOGON.CTLOCID'];
+			param.tableName="DHC_PE_StationOrder"
 		},
 		onShowPanel:function()
 		{
 			$('#ARCIMDesc').combogrid('grid').datagrid('reload');
 		},
 		columns:[[
-			{field:'STORD_ARCIM_Desc',title:'名称',width:200},
-			{field:'STORD_ARCIM_Code',title:'编码',width:100},
-			{field:'STORD_ARCIM_DR',title:'医嘱ID',hidden: true},	
+			{field:'TARCIMDesc',title:'名称',width:200},
+			{field:'TARCIMCode',title:'编码',width:100},
+			{field:'TARCIMDR',title:'医嘱ID',hidden: true},	
 					
 		]],
 		onLoadSuccess:function(){
@@ -700,7 +858,7 @@ function InitCombobox()
 		},
 
 		});
-		
+
 		//套餐
 	var SetObj = $HUI.combogrid("#SetDesc",{
 		panelWidth:390,
@@ -711,6 +869,9 @@ function InitCombobox()
 		textField:'OrderSetDesc',
 		onBeforeLoad:function(param){
 			param.Set = param.q;
+			param.hospId=session['LOGON.HOSPID'];
+			param.LocID=session['LOGON.CTLOCID'];
+			param.UserID=session['LOGON.USERID'];
 		},
 		onShowPanel:function()
 		{

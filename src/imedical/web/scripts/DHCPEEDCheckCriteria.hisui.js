@@ -121,7 +121,7 @@ function BDel_click() {
 
 function BClear_click(){
 	$("#ID,#Code,#ExpInfo,#Remark").val("");
-	$(".hisui-checkbox").checkbox('setValue',false);
+	$("#Active").checkbox('setValue',true);
 	$(".hisui-combobox").combobox('setValue',"");
 	$(".hisui-combogrid").combogrid('setValue',"");
 

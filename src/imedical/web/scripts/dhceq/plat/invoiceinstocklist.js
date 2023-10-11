@@ -10,10 +10,10 @@ function initDocument()
 	defindTitleStyle(); 
 	initLookUp();
 	initButton();
-	jQuery("#BAdd").linkbutton({iconCls: 'icon-w-add'});
-	jQuery("#BAdd").on("click", BAdd_Clicked);
+	disableElement("BSave",true) //modify by mwz 20210415 MWZ0046 
+	$("#RequestLoc").validatebox() //modify by mwz 20210519 MWZ0049
 	initButtonWidth();
-	setRequiredElements("Provider^InvoiceNo^ProviderDR^RequestLoc^RequestLocDR");
+	setRequiredElements("Provider^InvoiceNo^ProviderDR^RequestLoc"); 
 	initMessage();
 	$HUI.datagrid("#invoicelistdatagrid",{   
     url:$URL, 
@@ -60,11 +60,13 @@ function initDocument()
 	onClickRow:function(rowIndex,rowData){
 		if (SelectedRow==rowIndex)	{
 			SelectedRow=-1
+			disableElement("BSave",true)  //modify by mwz 20210415 MWZ0046 
 			ClearInvoiceData()
 			$('#invoicefinddatagrid').datagrid('unselectAll');}
 			else{
 				var InvoiceID=rowData.TRowID
 				SelectedRow=rowIndex;
+				disableElement("BSave",false)  //modify by mwz 20210415 MWZ0046 
 				FillData(InvoiceID)
 
 				}
@@ -122,7 +124,28 @@ function creatToolbar()
 ///desc:删除发票及并取消关联
 function DeleteGridData()
 {
-	
+    var rows = $('#invoicelistdatagrid').datagrid('getRows');
+    var CheckCount=0
+	$.each(rows, function(rowIndex, rowData){
+		if (rowData.TFlag=="Y")
+		{
+			CheckCount=CheckCount+1
+			if (CheckCount==1)
+			{
+				FillData(rowData.TRowID)
+			}			
+		}
+	});
+	if (CheckCount==0)
+	{
+		messageShow("","","","请先选择需要删除的发票号!")
+	    return;
+	}
+	if (CheckCount>1)
+	{
+		messageShow("","","","一次只能删除一个发票!")
+		return
+	}
     var InvoiceDR=getElementValue("InvoiceDR")
     var InStockListStr=getElementValue("InStockListStr")
 	var InInStr = tkMakeServerCall("web.DHCEQ.Plat.BUSInvoice", "GetInStockStrByInv",InvoiceDR,getElementValue("BussType"),InStockListStr);	// Mozy003005	1248969		2020-4-1
@@ -160,25 +183,50 @@ function DeleteGridData()
 	
 }
 
+function checkboxOnChange(TFlag,rowIndex)
+{
+	var row = jQuery('#invoicelistdatagrid').datagrid('getRows')[rowIndex];
+	if (row)
+	{
+		$.each(row,function(key,val){
+			if (TFlag==key)
+			{
+				if (((val=="N")||val==""))
+				{
+					row.TFlag="Y"
+				}
+				else
+				{
+					row.TFlag="N"
+				}
+			}
+		})
+	}
+}
 
 ///add by lmm 2019-09-19
 ///desc:勾选发票与入库明细解除关联
 function RemoveGridData()
 {
     var invoicestr="";
-    var rows = $('#invoicelistdatagrid').datagrid('getChecked');
-    if (rows=="")
-    {
+    var rows = $('#invoicelistdatagrid').datagrid('getRows');
+    var CheckFlag=""
+	$.each(rows, function(rowIndex, rowData){
+		if (rowData.TFlag=="Y")
+		{
+			CheckFlag="Y"
+			if (invoicestr=="")
+			{ 
+				invoicestr=rowData.TRowID;
+			}
+			 else invoicestr=invoicestr+","+rowData.TRowID;
+		}
+	});
+	if (CheckFlag=="")
+	{
 		messageShow("","","","请先选择需要取消的发票号!")
 	    return;
-	 }
-	$.each(rows, function(rowIndex, rowData){
-		if (invoicestr=="")
-		{ 
-			invoicestr=rowData.TRowID;
-		}
-		 else invoicestr=invoicestr+","+rowData.TRowID; 
-	}); 
+	} 
     var combindata="";
     var rows = $('#instocklistdatagrid').datagrid('getRows');
 	$.each(rows, function(rowIndex, rowData){
@@ -223,6 +271,8 @@ function BAdd_Clicked()
 	}
 
 	AddGridData(InvoiceDR)
+	$("#invoicelistdatagrid").datagrid('reload');  //add by mwz 20210415 MWZ0046 
+	
 }
 ///add by lmm 2019-09-19
 ///desc:修改发票信息点击事件
@@ -433,8 +483,8 @@ function FillData(InvoiceID)
 	setElement("PayedAmountFee",list[8])	
 	setElement("Remark",list[13])	
 	setElement("CertificateDR",list[14])	
-	setElement("RequestLocDR",list[16])	//modify by lmm 2019-09-19 Hold1改为管理科室类型
-	setElement("RequestLoc",list[23])	//modify by lmm 2019-09-19 Hold1改为管理科室类型
+	//setElement("RequestLocDR",list[16])	//modify by lmm 2019-09-19 Hold1改为管理科室类型  //modify by LMH 20220725 BUG LMH0005  Hold1改为发票数量
+	//setElement("RequestLoc",list[23])	//modify by lmm 2019-09-19 Hold1改为管理科室类型  //modify by LMH 20220725 BUG LMH0005      Hold1改为发票数量
 	setElement("Hold2",list[17])	
 	setElement("Hold3",list[18])	
 	setElement("Hold4",list[19])	

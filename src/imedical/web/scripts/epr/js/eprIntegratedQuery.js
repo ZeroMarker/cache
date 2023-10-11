@@ -64,7 +64,7 @@ var frmSimple = new Ext.form.FormPanel({
 			xtype: 'tabpanel',
 			activeTab: 0,
 			deferredRender: false,
-			width: 328,
+			width: 358,
 			//defaults: Ext.isIE?{}:{bodyStyle:'padding:10px'},
 			items: [
 			{
@@ -75,7 +75,7 @@ var frmSimple = new Ext.form.FormPanel({
 				lableWidth: 60,
 				labelAlign: 'right',
 				autoHeight: true,
-				width: 320,
+				width: 350,
 				//frame: true,
 				defaults: { width: 150 },
 				defaultType: 'textfield',
@@ -108,6 +108,12 @@ var frmSimple = new Ext.form.FormPanel({
 						name: 'txtDiagnose',
 						fieldLabel: '诊断',
 						emptyText: '请输诊断内容'
+					},
+					{
+						id: 'txtDiagnote',
+						name: 'txtDiagnote',
+						fieldLabel: '诊断备注',
+						emptyText: '请输诊断备注内容'
 					},
 					{
 						id: 'cbxRegType',
@@ -246,6 +252,7 @@ var frmSimple = new Ext.form.FormPanel({
 							Ext.getCmp("MedicareNo").reset();
 							Ext.getCmp("txtEpisodeNo").reset();
 							Ext.getCmp("txtDiagnose").reset();
+							Ext.getCmp("txtDiagnote").reset();
 							Ext.getCmp("cbxRegType").reset();
 							Ext.getCmp("cbxLoc").reset();
 							Ext.getCmp("cbxWard").reset();
@@ -274,7 +281,7 @@ var frmSimple = new Ext.form.FormPanel({
 				id: 'SimpleNoStr',
 				title: '查询号串检索',
 				autoHeight: true,
-				width: 320,
+				width: 350,
 				defaults: { width: 150 },
 				defaultType: 'textfield',
 				items: [
@@ -284,7 +291,7 @@ var frmSimple = new Ext.form.FormPanel({
 						layout: 'form',
 						lableWidth: 60,
 						labelAlign: 'right',
-						width: 328,
+						width: 358,
 						frame: true,
 						items: [
 							{
@@ -317,14 +324,14 @@ var frmSimple = new Ext.form.FormPanel({
 						id: 'SimpleNoStrNoArea',
 						layout: 'fit',
 						autoHeight: true,
-						width: 328,
+						width: 358,
 						frame: true,
 						items: [
 							{
 								id: 'NoStrEpisodeNoStrArea',
 								name: 'NoStrEpisodeNoStrArea',
 								xtype: 'textarea',
-								width: 320,
+								width: 350,
 								height: 226,
 								emptyText: '请输入/导入号串内容!\n\n导入数据时,读取Excel中的A1——An,每个单元格中是一个号,一次最多导入1500个号.\n\n查询时,每次查询不得多于2500个号,且每个号之间用 # 隔开！例:IP0000000001#IP0000000002'
 							}
@@ -385,7 +392,7 @@ var frmSimple = new Ext.form.FormPanel({
 		id: 'frmSimpleCols',
 		title: '定义结果设置',
 		header: true,
-		width: 328,
+		width: 358,
 		//height: 327,
 		autoHeight: true,
 		frame: true,
@@ -482,7 +489,7 @@ var putinTextPanel = new Ext.Panel({
 	id: 'putinTextPanel',
 	name: 'putinTextPanel',
 	bodyStyle: 'width:99%',
-	width: 228,
+	width: 258,
 	height: 28,
 	frame: true,
 	items: [
@@ -516,7 +523,7 @@ var btnQueryPanel = new Ext.Panel({
 var queryPanel = new Ext.Panel({
 	id: 'queryPanel',
 	layout: 'column',
-	width: 316,
+	width: 346,
 	height: 41,
 	frame: true,
 	items: [
@@ -553,7 +560,7 @@ var ReadCaseGrid = new Ext.grid.GridPanel({
 	frame: true,
 	autoScroll: true,
 	bodyStyle: 'width:99%',
-	width: 316,
+	width: 346,
 	height: 150,
 	store: readCaseStore,
 	columns: [
@@ -599,7 +606,7 @@ var tpCondition = new Ext.TabPanel({
     id: "tpCondition",
     activeTab: 0,
     deferredRender: false,
-	width: 343,
+	width: 373,
     //defaults: Ext.isIE?{}:{bodyStyle:'padding:10px'},  //质量部要求的统一修改UI时，应用EXT3.2.1.css后效果不好，故去掉  by niucaicai 2017-4-1
     items: [
 		{
@@ -629,11 +636,11 @@ var tpCondition = new Ext.TabPanel({
                     xtype: 'panel',
                     title: '定义条件设置',
                     header: true,
-					width: 328,
+					width: 358,
 					autoHeight: true,
                     frame: true,
                     //html: '<div id="divCondition" style="width:100%;height:100%;overflow:scroll;overflow-x:hidden;"><input type="hidden" id="hiddenAdvancedGUID" name="hiddenAdvancedGUID" /><table id="tblCondition"></table></div>',
-					html: '<div id="divCondition" style="width:100%;height:100%;overflow:hidden;overflow-x:hidden;"><input type="hidden" id="hiddenAdvancedGUID" name="hiddenAdvancedGUID" /><table id="tblCondition"></table></div>',
+					html: '<div id="divCondition" style="width:100%;overflow:hidden;overflow-x:hidden;"><input type="hidden" id="hiddenAdvancedGUID" name="hiddenAdvancedGUID" /><table id="tblCondition" style="width:100%"></table></div>',
                     tbar: [
 						'-',
 						{
@@ -689,7 +696,8 @@ var tpCondition = new Ext.TabPanel({
 									InitIQpopupWindow(windowType,addX,addY);						//初始化“保存查询方案”弹出窗口，见eprIntegratedQuery.js文件
 								}
 							}
-						},'-','->','-',
+						},
+						'-',
 						{
 							id: 'buttonModify',
 							name: 'buttonModify',
@@ -718,7 +726,19 @@ var tpCondition = new Ext.TabPanel({
 									}
 								}
 							}
-						},'-'
+						},
+						'->','-',
+						{
+                            id: 'btnTaskList',
+                            name: 'btnTaskList',
+                            text: '后台任务',
+                            cls: 'x-btn-text-icon',
+                            icon: '../scripts/epr/Pics/btnConfirm.gif',	
+                            pressed: false,
+                            handler: function() {
+                                openTaskList();
+                            }
+                        }
 					],
 					bbar: [
                         {
@@ -733,7 +753,19 @@ var tpCondition = new Ext.TabPanel({
                                 //return;
                             }
                         },
-						'->','-',
+                        '-',
+						{
+                            id: 'btnAddTask',
+                            name: 'btnAddTask',
+                            text: '添加任务',
+                            cls: 'x-btn-text-icon',
+                            icon: '../scripts/epr/Pics/btnConfirm.gif',	
+                            pressed: false,
+                            handler: function() {
+                                addTaskRecord();
+                            }
+                        },
+                        '-',
 						{
                             id: 'btnAddAdvanceCon',
                             name: 'btnAddAdvanceCon',
@@ -768,7 +800,7 @@ var tpCondition = new Ext.TabPanel({
 				{
 					xtype: 'panel',
 					id: 'CasePanel',
-					width: 328,
+					width: 358,
                     autoHeight: true,
 					title: '查询方案设置',
 					buttonAlign : 'center',
@@ -785,7 +817,7 @@ var tpCondition = new Ext.TabPanel({
                     layout: 'fit',
                     title: '定义结果设置',
                     header: true,
-					width: 328,
+					width: 358,
                     frame: true,
                     autoScroll: true,
                     html: '<div id="divAdvancedResultCols" clsss="divColumn"></div>',
@@ -988,7 +1020,7 @@ var frmMainContent = new Ext.Viewport({
         id: 'west',
         region: 'west',
         title: '电子病历综合查询条件设置',
-		width: 372,
+		width: 402,
         split: true,
 		autoScroll: true,
         collapsible: true,
@@ -1023,4 +1055,104 @@ window.onbeforeunload = function() {
             }
         });
     }
+}
+
+//添加任务
+function addTaskRecord()
+{
+	Ext.MessageBox.prompt('输入框','任务名称',function(btn,text){
+		if(btn == "ok")
+		{
+			var arrAdvancedCondition = getAdvancedConditions("addTask");
+			if (!arrAdvancedCondition[0]) 
+			{
+				 alert(arrAdvancedCondition[1]); 
+				 return;
+			}
+			jQuery.ajax({
+				type: "post",
+				dataType: "json",
+				url: '../web.eprajax.query.advancedquery.cls',
+				async: true,
+				data:{action: 'getGUID', hiddenGUID: ""},
+				success: function(d) 
+				{
+					if (d.GUID != "")
+					{
+						var ReslutFields = getResultCMAndFields("divAdvancedResultCols");
+						var advancedResultCols = ReslutFields[2];
+						var queryType0 = "",queryType1 = "";
+						queryType0 = document.getElementById("column0").value.split("^")[1];
+						queryType1 = document.getElementById("column1").value.split("^")[1];
+						if (queryType0 == queryType1)
+						{
+							queryType = queryType0;
+							jQuery.ajax({
+								type: "post",
+								dataType: "text",
+								url: "../EMRservice.Ajax.common.cls",
+								async: true,
+								data: {
+									"OutputType":"",
+									"Class":"EPRservice.BLL.Query.BLMedicalQueryTasklist",
+									"Method":"InsertInfo",
+									"p1":text,
+									"p2":userID,
+									"p3":userName,
+									"p4":d.GUID,
+									"p5":arrAdvancedCondition[2][0],
+									"p6":taskConditions,
+									"p7":advancedResultCols,
+									"p8":queryType
+								},
+							});
+							
+							//创建任务时记录日志
+							var resultColumnArr = advancedResultCols.split("&");
+							var resColDesc = "";
+							$.each(resultColumnArr,function(i,item)
+							{
+								var itemArr = item.split("^");
+								resColDesc = resColDesc+"/"+itemArr[3];
+							});	//获取结果列
+							var url = "../web.eprajax.query.medicalquerytask.cls";
+							if (queryType == "DischDate"){taskConditions = "出院日期"+taskConditions;}else{taskConditions = "入院日期"+taskConditions;}
+							setQueryLog(url,"EMR.Query.Task.Create",queryType,taskConditions,resColDesc);
+						}
+						else
+						{
+							alert("条件需要成对出现！");
+						}
+					}
+				},
+				errot: function(){alert("getGUID ERROR!");}
+			})
+		}
+	});
+}
+
+function openTaskList()
+{
+	window.showModalDialog("dhc.epr.query.tasklist.csp?UserId="+userID+"&UserName="+userName,"","dialogHeight:600px;dialogWidth:1200px;resizable:no;status:no");
+}
+
+//记录日志
+function setQueryLog(url,actionType,dateType,conditions,resultCol)
+{
+	var ipAddress = getIpAddress();
+	jQuery.ajax({
+		type : "GET",
+		dataType : "text",
+		url : url,
+		async : true,
+		data : {
+			"actionType":actionType,
+			"userID":userID,
+			"userName":userName,
+			"ipAddress":ipAddress,			//当前ip
+			"dateType":dateType,			//日期类型
+			"conditions":conditions,		//条件描述
+			"resultCol":resultCol			//结果列
+		}
+	});	
 }

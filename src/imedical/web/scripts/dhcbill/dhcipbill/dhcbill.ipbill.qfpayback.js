@@ -8,9 +8,6 @@
 var GV = {};
 
 $(function () {
-	$(document).keydown(function (e) {
-		banBackSpace(e);
-	});
 	initQueryMenu();
 	initPayList();
 });
@@ -288,7 +285,7 @@ function checkData() {
 		return false;
 	}
 	var qfAmt = getValueById("qfAmt");
-	if (+qfAmt == 0) {
+	if (qfAmt == 0) {
 		$.messager.popover({msg: '该患者没有' + $("#qfAmt").parent().prev().text().slice(0,2) + '，不需要' + $("#flag").combobox("getText"), type: 'info'});
 		return false;
 	}
@@ -337,10 +334,11 @@ function abortClick() {
 			$.m({
 				ClassName: "web.UDHCJFQFDEAL",
 				MethodName: "Abort",
-				RowId: rowId
+				QFRowId: rowId,
+				UserId: PUBLIC_CONSTANT.SESSION.USERID
 			}, function(rtn) {
 				var myAry = rtn.split("^");
-				if (myAry[0] == "0") {
+				if (myAry[0] == 0) {
 					$.messager.popover({msg: '作废成功', type: 'success'});
 					GV.PayList.reload();
 				}else {

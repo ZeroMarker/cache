@@ -26,6 +26,43 @@ function InitPageComponent(){
 	/// 结束日期
 	$HUI.datebox("#CstEndDate").setValue(GetCurSysDate(0));
 	
+	/// 会诊类型 2021-01-29
+	$HUI.combobox("#CstType",{ 
+		url:LINK_CSP+"?ClassName=web.DHCEMConsultCom&MethodName=JsonAllCstType&HospID="+session['LOGON.HOSPID'],
+		valueField: "value", 
+		textField: "text",
+		editable:true,
+		onLoadSuccess:function(data){
+	    }	
+	})
+	
+	/// 会诊性质 hxy 2021-04-15
+	$HUI.combobox("#consNature",{
+		url:LINK_CSP+"?ClassName=web.DHCEMConsultCom&MethodName=JsonCstProp&LgHospID="+LgHospID, //hxy 2020-05-29 add LgHospID
+		valueField: "itmID", 
+		textField: "itmDesc",
+		panelHeight:'auto',
+		editable:true
+		
+	})
+	
+	/// 申请科室
+	$HUI.combobox("#consRLoc",{
+		url: LINK_CSP+"?ClassName=web.DHCEMConsultCom&MethodName=JsonLoc&HospID="+LgHospID,
+		valueField: "value", 
+		textField: "text",
+		editable:true,
+		mode:'remote'
+	})
+	
+	/// 会请科室
+	$HUI.combobox("#consultLoc",{
+		url: LINK_CSP+"?ClassName=web.DHCEMConsultCom&MethodName=JsonLoc&HospID="+LgHospID,
+		valueField: "value", 
+		textField: "text",
+		editable:true,
+		mode:'remote'
+	})
 	/*var uniturl = LINK_CSP+"?ClassName=web.DHCEMConsStatus&MethodName=";
 	/// 状态类型
 	var option = {
@@ -44,21 +81,25 @@ function InitPageDataGrid(){
 	var columns=[[
 		{field:'CstType',title:'会诊类型',width:100,align:'left'},
 		{field:'CstRLoc',title:'申请科室',width:140},
-		{field:'CstRUser',title:'申请医生',width:100},
+		{field:'CstRUser',title:'申请人',width:100},
 		{field:'CstRDate',title:'申请日期',width:100,align:'left'},
 		{field:'CstRTime',title:'申请时间',width:100,align:'left'},
 		{field:'CstNDate',title:'会诊日期',width:100,align:'left'},
 		{field:'CstNTime',title:'会诊时间',width:100,align:'left'},
 		{field:'PatName',title:'病人姓名',width:100,align:'left'},
 		{field:'PatRegNo',title:'登记号',width:100,align:'left'},
+		{field:'PatMrNo',title:'病案号',width:100,align:'left'}, //hxy 2021-06-24
 		{field:'CstTrePro',title:'病例摘要',width:100,align:'left',formatter:SetCellField},//
 		{field:'CstPurpose',title:'会诊理由及要求',width:120,align:'left',formatter:SetCellField},//
 		{field:'CstStat',title:'状态',width:100,align:'left'},
 		{field:'CsLocDesc',title:'会诊科室',width:140,align:'left'},
+		{field:'CsUser',title:'会诊人',width:100,align:'left'}, //hxy 2021-06-24
 		//{field:'CstECLArriTime',title:'报到时间',width:150,align:'center'},
 		{field:'CstLogOverTime',title:'完成时间',width:150,align:'left'},
-		{field:'CstECLUser',title:'确认医生',width:100,align:'left'},
-		{field:'CstECLTime',title:'确认时间',width:150,align:'left'}
+		{field:'CstECLUser',title:'确认人',width:100,align:'left'},
+		{field:'CstECLTime',title:'确认时间',width:150,align:'left'},
+		{field:'CstNature',title:'会诊性质',width:100,align:'left'}, //hxy 2021-04-15
+		{field:'CsOpinion',title:'会诊结论',align:'left',width:250,formatter:SetCellField}, //hxy 2022-06-27
 	]];
 	
 	///  定义datagrid
@@ -100,9 +141,13 @@ function QryConsList(){
 	var CstStatus = $("input[name='CstStatus']:checked").val();   /// 状态
 	if(CstStatus==undefined){CstStatus="";}
 	//var CstTypeID = $HUI.combobox("#CstType").getValue();    /// 状态
-	
+	var CstType = $HUI.combobox("#CstType").getValue()==undefined?"":$HUI.combobox("#CstType").getValue(); //hxy 2021-01-29
+	var consNature = $HUI.combobox("#consNature").getValue()==undefined?"":$HUI.combobox("#consNature").getValue(); //hxy 2021-04-15
+	var cstRLocID = $HUI.combobox("#consRLoc").getValue()==undefined?"":$HUI.combobox("#consRLoc").getValue();    //申请科室
+	var cstLocID = $HUI.combobox("#consultLoc").getValue()==undefined?"":$HUI.combobox("#consultLoc").getValue(); //会诊科室
+	var DOCA = $HUI.checkbox("#DOCA").getValue()?"Y":"N"; //hxy 2022-09-02
     /// 重新加载会诊列表
-	var params = CstStartDate +"^"+ CstEndDate +"^"+ CstStatus +"^"+ LgHospID;
+	var params = CstStartDate +"^"+ CstEndDate +"^"+ CstStatus +"^"+ LgHospID +"^"+ CstType +"^"+ consNature+"^"+cstRLocID+"^"+cstLocID+"^"+DOCA;
 	$("#dgCstDetList").datagrid("load",{"Params":params});
 }
 
@@ -178,38 +223,63 @@ function PrtConsList(){
 function ExpConsList(){	
 	var CstStartDate = $HUI.datebox('#CstStartDate').getValue();  /// 开始日期
 	var CstEndDate = $HUI.datebox('#CstEndDate').getValue();      /// 结束日期
+	var CstType = $HUI.combobox("#CstType").getText();            ///会诊类型 hxy 2021-04-15 st
+	var Nature = $HUI.combobox("#consNature").getText();          ///会诊性质
+	var CstStatus = $("input[name='CstStatus']:checked").val(); /// 状态
+	var Note="";
+	if((CstType!="")&&(CstType!=undefined)){
+		CstType="+"+CstType;
+	}
+	if((Nature!="")&&(Nature!=undefined)){
+		Nature="+"+Nature;
+	}
+	if(CstStatus!=""){
+		CstStatus="+"+CstStatus+"状态";
+	}
+	Note=CstType+Nature+CstStatus; //ed
+
 	
 	var Str = "(function test(x){"+
 	"var xlsExcel = new ActiveXObject('Excel.Application');"+
 	"var xlsBook = xlsExcel.Workbooks.Add();"+
 	"var objSheet = xlsBook.ActiveSheet;"+ 
 	"xlsExcel.Visible = true;"+ 
-	"xlsExcel.Range(objSheet.Cells(1,1),objSheet.Cells(1,16)).MergeCells = true;"+
+	"xlsExcel.Range(objSheet.Cells(1,1),objSheet.Cells(1,20)).MergeCells = true;"+
 	"objSheet.Columns(5).NumberFormatLocal='@';"+
 	"objSheet.Columns(7).NumberFormatLocal='@';"+
-	"objSheet.Columns(13).NumberFormatLocal='@';"+
-	"objSheet.Columns(14).NumberFormatLocal='@';"+
-	"objSheet.Columns(16).NumberFormatLocal='@';"+
+	"objSheet.Columns(9).NumberFormatLocal='@';"+
+	"objSheet.Columns(10).NumberFormatLocal='@';"+
+	"objSheet.Columns(11).NumberFormatLocal='@';"+ //
+	"objSheet.Columns(12).NumberFormatLocal='@';"+ //
+	"objSheet.Columns(13).NumberFormatLocal='@';"+ //
+	"objSheet.Columns(17).NumberFormatLocal='@';"+
+	"objSheet.Columns(19).NumberFormatLocal='@';"+
 	"objSheet.cells(1,1).Font.Bold = true;"+
-	"objSheet.cells(1,1).Font.Size =24;"+
+	"objSheet.cells(1,1).Font.Size =20;"+
 	"objSheet.cells(1,1).HorizontalAlignment = -4108;"+
-	"objSheet.cells(1,1)='会诊明细统计("+CstStartDate+"至"+CstEndDate+")';"+
+	"objSheet.cells(1,1)='会诊明细统计("+CstStartDate+"至"+CstEndDate+Note+")';"+
 	"objSheet.cells(2,1)='序号';"+
 	"objSheet.cells(2,2)='会诊类型';"+
 	"objSheet.cells(2,3)='申请科室';"+
-	"objSheet.cells(2,4)='申请医生';"+
+	"objSheet.cells(2,4)='申请人';"+
 	"objSheet.cells(2,5)='申请日期';"+
 	"objSheet.cells(2,6)='申请时间';"+
 	"objSheet.cells(2,7)='会诊日期';"+
 	"objSheet.cells(2,8)='会诊时间';"+
-	"objSheet.cells(2,9)='病例摘要';"+
-	"objSheet.cells(2,10)='会诊理由及要求';"+
-	"objSheet.cells(2,11)='状态';"+
-	"objSheet.cells(2,12)='会诊科室';"+
-	"objSheet.cells(2,13)='报到时间';"+
-	"objSheet.cells(2,14)='完成时间';"+
-	"objSheet.cells(2,15)='确认医生';"+
-	"objSheet.cells(2,16)='确认时间';";
+	"objSheet.cells(2,9)='病人姓名';"+ //hxy 2021-05-11 add
+	"objSheet.cells(2,10)='登记号';"+  //hxy 2021-05-11 add
+	"objSheet.cells(2,11)='病案号';"+  //hxy 2021-06-24 add
+	"objSheet.cells(2,12)='病例摘要';"+
+	"objSheet.cells(2,13)='会诊理由及要求';"+
+	"objSheet.cells(2,14)='状态';"+
+	"objSheet.cells(2,15)='会诊科室';"+
+	"objSheet.cells(2,16)='会诊人';"+  //hxy 2021-06-24 add
+	//"objSheet.cells(2,13)='报到时间';"+ //hxy 2021-05-11 注释
+	"objSheet.cells(2,17)='完成时间';"+
+	"objSheet.cells(2,18)='确认人';"+
+	"objSheet.cells(2,19)='确认时间';"+
+	"objSheet.cells(2,20)='会诊性质';"+
+	"objSheet.cells(2,21)='会诊结论';"; //hxy 2022-06-27
 	
 	var strjLen=$HUI.datagrid('#dgCstDetList').getData().rows.length;
 	
@@ -219,19 +289,25 @@ function ExpConsList(){
 		"objSheet.cells("+(i+2)+",3)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstRLoc+"';"+
 		"objSheet.cells("+(i+2)+",4)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstRUser+"';"+
 		"objSheet.cells("+(i+2)+",5)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstRDate+"';"+
-		"objSheet.cells("+(i+2)+",6)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstNTime+"';"+
+		"objSheet.cells("+(i+2)+",6)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstRTime+"';"+
 		"objSheet.cells("+(i+2)+",7)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstNDate+"';"+
 		"objSheet.cells("+(i+2)+",8)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstNTime+"';"+
-		"objSheet.cells("+(i+2)+",9)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstTrePro.replace(/\n/g,"\\n").replace(/\'/g,"\\'")+"';"+
-		"objSheet.cells("+(i+2)+",10)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstPurpose+"';"+
-		"objSheet.cells("+(i+2)+",11)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstStat+"';"+
-		"objSheet.cells("+(i+2)+",12)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CsLocDesc+"';"+
-		"objSheet.cells("+(i+2)+",13)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstECLArriTime+"';"+
-		"objSheet.cells("+(i+2)+",14)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstLogOverTime+"';"+
-		"objSheet.cells("+(i+2)+",15)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstECLUser+"';"+
-		"objSheet.cells("+(i+2)+",16)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstECLTime+"';"
+		"objSheet.cells("+(i+2)+",9)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].PatName+"';"+
+		"objSheet.cells("+(i+2)+",10)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].PatRegNo+"';"+
+		"objSheet.cells("+(i+2)+",11)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].PatMrNo+"';"+
+		"objSheet.cells("+(i+2)+",12)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstTrePro.replace(/\n/g,"\\n").replace(/\'/g,"\\'")+"';"+
+		"objSheet.cells("+(i+2)+",13)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstPurpose.replace(/\'/g,"\\'")+"';"+
+		"objSheet.cells("+(i+2)+",14)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstStat+"';"+
+		"objSheet.cells("+(i+2)+",15)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CsLocDesc+"';"+
+		"objSheet.cells("+(i+2)+",16)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CsUser+"';"+
+		//"objSheet.cells("+(i+2)+",13)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstECLArriTime+"';"+
+		"objSheet.cells("+(i+2)+",17)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstLogOverTime+"';"+
+		"objSheet.cells("+(i+2)+",18)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstECLUser+"';"+
+		"objSheet.cells("+(i+2)+",19)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstECLTime+"';"+
+		"objSheet.cells("+(i+2)+",20)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CstNature+"';"+
+		"objSheet.cells("+(i+2)+",21)='"+$HUI.datagrid('#dgCstDetList').getData().rows[i-1].CsOpinion+"';" //hxy 2022-06-27
 	}
-	var row1=2,row2=strjLen+2,c1=1,c2=16;
+	var row1=2,row2=strjLen+2,c1=1,c2=21;
 	Str=Str+"objSheet.Range(objSheet.Cells("+row1+","+c1+"),objSheet.Cells("+row2+","+c2+")).Borders(1).LineStyle=1;"+
 	"objSheet.Range(objSheet.Cells("+row1+","+c1+"),objSheet.Cells("+row2+","+c2+")).Borders(1).Weight=2;"+
 	"objSheet.Range(objSheet.Cells("+row1+","+c1+"),objSheet.Cells("+row2+","+c2+")).Borders(2).LineStyle=1;"+
@@ -249,7 +325,7 @@ function ExpConsList(){
     "return 1;}());";
 	//以上为拼接Excel打印代码为字符串
     CmdShell.notReturn = 1;   //设置无结果调用，不阻塞调用
-	var rtn = CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
+	var rtn = CmdShell.CurrentUserEvalJs(Str);   //通过中间件运行打印程序 
 	return;
 
 }
@@ -344,17 +420,17 @@ function gridlistOld(objSheet,row1,row2,c1,c2)
 /// 检查项目绑定提示栏
 function BindTips(){
 	
-	var html='<div id="tip" style="border-radius:3px; display:none; border:1px solid #000; padding:10px; margin:5px; position: absolute; background-color: #000;color:#FFF;"></div>';
+	var html='<div id="tip" style="word-break:break-all;border-radius:3px; display:none; border:1px solid #000; padding:10px; margin:5px; position: absolute; background-color: #000;color:#FFF;"></div>';
 	$('body').append(html);
 	
 	/// 鼠标离开
-	$('td[field="CstTrePro"],td[field="CstPurpose"]').on({
+	$('td[field="CstTrePro"],td[field="CstPurpose"],td[field="CsOpinion"]').on({
 		'mouseleave':function(){
 			$("#tip").css({display : 'none'});
 		}
 	})
 	/// 鼠标移动
-	$('td[field="CstTrePro"],td[field="CstPurpose"]').on({
+	$('td[field="CstTrePro"],td[field="CstPurpose"],td[field="CsOpinion"]').on({
 		'mousemove':function(){
 			
 			var tleft=(event.clientX + 10);

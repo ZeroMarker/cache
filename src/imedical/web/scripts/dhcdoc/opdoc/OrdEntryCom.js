@@ -11,6 +11,7 @@ function Init(){
 	LoadOrdEntryiFrame(ServerObj.CONTEXT); //  W50007
 	InitOrdTemplTree();
    $("#OrdTemplMan").click(OrdTemplManClick);
+   document.onkeydown = Doc_OnKeyDown;
 }
 function LoadOrdEntryiFrame(iFrameName){
 	var Url=window.location.href;
@@ -24,6 +25,7 @@ function LoadOrdEntryiFrame(iFrameName){
 		argobj.CONTEXT="W50007";
 		var src="opdoc.oeorder.cmlistcustom.csp?"+UrlArr[1]; //PatientID="+ServerObj.PatientID+"&EpisodeID="+ServerObj.EpisodeID
 	}
+	if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
 	ServerObj.CONTEXT=iFrameName;
 	var ordEntry= '<iframe name="OrdEntryFrame" id="frameOrdEntry" src="'+src+'" width="100%" height="100%"'+
                      'marginheight="0" marginwidth="0" scrolling="no" align="middle" ></iframe>';
@@ -45,7 +47,8 @@ function OrdTemplManClick(){
 		title:'医嘱模板维护',
 		width:$(window).width()-50,height:$(window).height()-50,
 		onClose: function() {
-			InitOrdTemplTree();
+			//InitOrdTemplTree();
+			LoadOrdTemplTree();
 		}
 	});
 }
@@ -102,7 +105,10 @@ function getCheckedNodes(){
 	for (var i=0;i<nodes.length;i++){
 		var eleid=nodes[i]['value'];
 		if (eleid=="") continue;
-		nodeArr.push(eleid.replace(/\^/g,String.fromCharCode(4)));
+		var isLeaf=$("#OrdTemplTree").tree('isLeaf',nodes[i].target);
+		if (isLeaf) {
+			nodeArr.push(eleid.replace(/\^/g,String.fromCharCode(4)));
+		}
 	}
 	return nodeArr;
 }
@@ -191,11 +197,12 @@ function InitTree(){
 	$("#OrdTemplTree").parent().css("height",$(window).height()-95)
 	var tbox=$HUI.tree("#OrdTemplTree",{
 		checkbox:true,
-		onlyLeafCheck:true,
+		cascadeCheck:false,
+		//onlyLeafCheck:true,
 		onDblClick:function(node){
 			var value=node.value.replace(/\^/g,String.fromCharCode(4));
 			if ((value=="")||(value==undefined)) return false;
-			OrdEntryFrame.window.addSelectedFav(value);
+			OrdEntryFrame.window.addSelectedFav(value,node.text);
 		},
 		formatter:function(node){
 			if (node.eleid=="") return node.text;
@@ -224,6 +231,25 @@ function InitTree(){
 				}
 				if (!isChecked){
 					$(this).tree('check',node.target);
+				}else{
+					var parentNode=$(this).tree('getParent',node.target);
+					//$(this).tree('uncheck',parentNode.target);
+					if (!$($(parentNode.target).children()[2]).hasClass("tree-checkbox1")) return;
+					var isLeafCheck=false;
+					for (var i=0;i<childList.length;i++){
+						var curNode=childList[i];
+						var eleid=curNode.value;
+		    			if (eleid !="") {
+			    			var type=eleid.split(String.fromCharCode(4))[0];
+			    			if (type=="ARCIM"){
+			    				if ($($(curNode.target).children()[3]).hasClass("tree-checkbox1")) {
+				    				isLeafCheck=true;
+				    				break;
+				    			}
+			    			}
+		    			}
+					}
+					if (!isLeafCheck)$(this).tree('uncheck',parentNode.target);
 				}
 			}
 		},
@@ -231,7 +257,7 @@ function InitTree(){
 			var isLeaf=$(this).tree('isLeaf',node.target);
 			if (isLeaf){
 				var eleid=node.value;
-				if (eleid=="") return false;
+				if (!eleid) return false;
 				var type=eleid.split(String.fromCharCode(4))[0];
 				if (type=="ARCIM"){
 					$(this).tree('select',node.target);
@@ -239,7 +265,75 @@ function InitTree(){
 					return false;
 				}
 			}else{
-				return false;
+				return true;
+			}
+		},
+		onCheck:function(node, checked){
+			var isLeaf=$(this).tree('isLeaf',node.target);
+			if (!isLeaf){
+				var childList = $(this).tree('getChildren',node.target);
+				var checkedTrue = function(){
+	    			childList.map(function(curNode){
+		    			var eleid=curNode.value;
+		    			if (eleid !="") {
+			    			var type=eleid.split(String.fromCharCode(4))[0];
+			    			if (type=="ARCIM"){
+			    				$("#OrdTemplTree").tree('check', curNode.target);
+			    			}
+		    			}
+	    			})
+	    		};
+				var checkedFalse = function(){
+	    			$.each(childList,function(index,curNode){
+		    			var eleid=curNode.value;
+		    			if (eleid !="") {
+			    			var type=eleid.split(String.fromCharCode(4))[0];
+			    			if (type=="ARCIM"){	
+						    	$("#OrdTemplTree").tree('uncheck', curNode.target);
+						    }
+					    }
+	    			})
+				};
+				var checkChangeProperties = checked==true ? checkedTrue() : checkedFalse();
+
+			}else{
+				var parentNode=$(this).tree('getParent',node.target);
+				var childList = $(this).tree('getChildren',parentNode.target);
+				if (checked) {
+					if ($($(parentNode.target).children()[2]).hasClass("tree-checkbox1")) return;
+					var isLeafUnCheck=false;
+					for (var i=0;i<childList.length;i++){
+						var curNode=childList[i];
+						var eleid=curNode.value;
+		    			if (eleid !="") {
+			    			var type=eleid.split(String.fromCharCode(4))[0];
+			    			if (type=="ARCIM"){
+			    				if (!$($(curNode.target).children()[3]).hasClass("tree-checkbox1")) {
+				    				isLeafUnCheck=true;
+				    				break;
+				    			}
+			    			}
+		    			}
+					}
+					if (!isLeafUnCheck) $(this).tree('check',parentNode.target);
+				}else{
+					if (!$($(parentNode.target).children()[2]).hasClass("tree-checkbox1")) return;
+					var isLeafCheck=false;
+					for (var i=0;i<childList.length;i++){
+						var curNode=childList[i];
+						var eleid=curNode.value;
+		    			if (eleid !="") {
+			    			var type=eleid.split(String.fromCharCode(4))[0];
+			    			if (type=="ARCIM"){
+			    				if ($($(curNode.target).children()[3]).hasClass("tree-checkbox1")) {
+				    				isLeafCheck=true;
+				    				break;
+				    			}
+			    			}
+		    			}
+					}
+					if (!isLeafCheck)$(this).tree('uncheck',parentNode.target);
+				}
 			}
 		}
 	});
@@ -317,12 +411,35 @@ function templNameTabSelect(index){
 	var ObjectType="User."+kwsel[0].id;
 	var data=treeData[ObjectType][index]["children"];
 	var treeDataArr=new Array();
+	var OpenFlag=0;
 	for (var i=0;i<data.length;i++){
 		var id=data[i]["id"];
 		var name=data[i]["text"];
 		var children=data[i]["children"];
-		var state=(i==0)?"open":"closed";   
+		//var state=(i==0)?"open":"closed";   
+		var state="closed"; 
+		if ((children.length>0)&&(OpenFlag==0)){
+			state="open";
+			OpenFlag=1;
+		}
 		treeDataArr.push({"id":id,"text":name,"state":state,"children":children});
 	}
 	$("#OrdTemplTree").tree("loadData",treeDataArr)
+}
+function Doc_OnKeyDown(e){
+	if (e){
+        var ctrlKeyFlag=e.ctrlKey;
+    }else{
+        var ctrlKeyFlag=window.event.ctrlKey;
+    }
+    if (ctrlKeyFlag){
+	    if(event.keyCode == 65){ //去掉 ctrl+a快捷键
+		    var OrdEntryWin=$('#OrdEntryWin').find("iframe").get(0);
+			var curNewIframe=window.frames[OrdEntryWin.name];
+			if (typeof curNewIframe.DocumentUnloadHandler =="function"){
+				curNewIframe.MultiTemplOrdEntry();
+				return false;
+			}
+        }
+	}
 }

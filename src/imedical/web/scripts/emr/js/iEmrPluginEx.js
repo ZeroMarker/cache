@@ -61,6 +61,7 @@ function iEmrPluginEx(edtorFrame) {
             if ('' != ret && 'OK' != ret.result)
                 alert('数据库连接失败,请检查连接参数!');
         }
+		//setRunEMRParams();
     }
 
     var _pluginGrid;
@@ -91,6 +92,7 @@ function iEmrPluginEx(edtorFrame) {
             if ('OK' != ret.result)
                 alert('数据库连接失败,请检查连接参数!');
         }
+		//setRunEMRParams();
     }
 
     this.getPlugin = function () {
@@ -152,14 +154,18 @@ function iEmrPluginEx(edtorFrame) {
     ///建立数据库连接
     this.SET_NET_CONNECT = function (argParams) {
 	    var netConnect="";
-	    /*
-        var command = {
-            action: 'SET_NET_CONNECT',
-            args: argParams.args
-
-        };
-        return this.invoke(command, argParams);
-        */
+	    
+		var port = window.location.port;
+		var protocol = window.location.protocol.split(":")[0];
+		
+		if (protocol == "http")
+		{
+			port = port==""?"80":port;
+		}
+		else if (protocol == "https")
+		{
+			port = port==""?"443":port;
+		}
         $.ajax({
 			type: 'Post',
 			dataType: 'text',
@@ -169,7 +175,10 @@ function iEmrPluginEx(edtorFrame) {
 			data: {
 				"OutputType":"String",
 				"Class":"EMRservice.BL.BLSysOption",
-				"Method":"GetNetConnectJson"
+				"Method":"GetNetConnectJson",
+				"p1":window.location.hostname,
+				"p2":port,
+				"p3":protocol
 			},
 			success: function (ret) {
 				ret=$.parseJSON(ret.replace(/\'/g,"\""));
@@ -219,7 +228,8 @@ function iEmrPluginEx(edtorFrame) {
             args: {
                 actionType: argParams.args,
                 PrintMode: argParams.PrintMode || "All",
-                CopyCount:argParams.CopyCount || '1'
+                CopyCount:argParams.CopyCount || '1',
+                ProductSourceType:argParams.ProductSourceType || ""
             }
         };
         return this.invoke(command, argParams);
@@ -297,7 +307,8 @@ function iEmrPluginEx(edtorFrame) {
             action: 'LOAD_DOCUMENT',
             args: {
                 params: {
-                    status: argParams.status
+                    status: argParams.status,
+					LoadType: argParams.LoadType||""
                 },
                 InstanceID: argParams.InstanceID,
                 actionType: argParams.actionType
@@ -493,7 +504,8 @@ function iEmrPluginEx(edtorFrame) {
             args: {
                 DocID: argParams.DocID,
                 IsMutex: argParams.IsMutex,
-                CreateGuideBox: argParams.CreateGuideBox
+                CreateGuideBox: argParams.CreateGuideBox,
+                KBLoadMode: 'Replace'
             }
         };
         return this.invoke(command, argParams);
@@ -992,6 +1004,27 @@ function iEmrPluginEx(edtorFrame) {
             action: 'UPDATE_PRIVILEGE',
             args: {
                 InstanceID: argParams.InstanceID || ''
+            }
+        }
+        return this.invoke(command, argParams);
+    }
+	//设置电子病历运行环境参数
+    this.SET_RUNEMR_PARAMS=function (argParams) {
+        var command = {
+            action: argParams.action,
+            args:argParams.args || ''
+          
+        }
+        return this.invoke(command, argParams);
+    }
+    
+    ///获取失效签名文档信息
+    this.GET_REVOKE_SIGNER_INFO = function (argParams) {
+        var command = {
+            action: 'GET_REVOKE_SIGNER_INFO',
+            args: {
+                SignatureLevel: argParams.SignatureLevel,
+                InstanceID: argParams.InstanceID
             }
         }
         return this.invoke(command, argParams);

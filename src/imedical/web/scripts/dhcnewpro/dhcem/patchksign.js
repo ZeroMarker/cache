@@ -30,7 +30,7 @@ $(function(){
 
 ///走后台方法:获取生命体征正常值
 function initSignNormalValue(){
-	runClassMethod("web.DHCEMPatCheckLevQuery","GetSignNoralList",{},
+	runClassMethod("web.DHCEMPatCheckLevQuery","GetSignNoralList",{LgHospID:LgHospID},
 	function(jsonString){
 		SignNormalObj = jsonString;
 	},'json',false)
@@ -45,7 +45,7 @@ function initInputEvent(){
 		var key = e.keyCode;
 		if (key == 13) {
 			//荒诞值验证
-			valiAbsValueBoolean();
+			//valiAbsValueBoolean();
 			var nxtIdx = $inp.index(this) + 1;
 			$(".enter:eq(" + nxtIdx + ")").focus();
 		}
@@ -85,6 +85,7 @@ function valiAbsValueAgain(){
 		
 		var EmPcsDBP =  $("#EmPcsDBPAgain").val();  ///舒张压
 		EmPcsDBP = parseInt(EmPcsDBP);
+		itmInfo = SignNormalObj.diaPressure;
 		if(itmInfo!=undefined){
 			itmMinVal = itmInfo.split("@")[2];
 			itmMaxVal = itmInfo.split("@")[3];
@@ -289,7 +290,7 @@ function InitRecord(){
 		columns:columngz,		
 	    singleSelect:true,
 		loadMsg:'正在加载信息...',
-		pagination:true,
+		pagination:true
 	});
 }
 

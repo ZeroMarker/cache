@@ -33,10 +33,16 @@ function InitViewport(){
 				formatter: function(value,row,index){
 					var ReportID = row["ReportID"];
 					var EpisodeID = row["EpisodeID"];
-					var btn = '<a href="#" class="btn_detail" onclick="objScreen.OpenReport(\'' + ReportID + '\',\'' + EpisodeID + '\')"></a>';
+					var btn = '';
+					if ((typeof HISUIStyleCode != 'undefined') && (HISUIStyleCode=="lite")) {
+						btn = '<a href="#" class="icon icon-paper" onclick="objScreen.OpenReport(\'' + ReportID + '\',\'' + EpisodeID + '\')"></a>';
+					} else {
+						btn = '<a href="#" class="btn_detail" onclick="objScreen.OpenReport(\'' + ReportID + '\',\'' + EpisodeID + '\')"></a>';
+					}
 					return btn;
 				}
-			}, 
+			},  
+			{field:'RepStatusDesc',title:'报告状态',width:120},
 			{field:'RegNo',title:'登记号',width:100},
 			{field:'MrNo',title:'住院号',width:100},
 			{field:'PatName',title:'患者姓名',width:80}, 		

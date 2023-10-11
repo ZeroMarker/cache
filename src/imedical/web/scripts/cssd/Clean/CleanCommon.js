@@ -1,24 +1,29 @@
-var ParamObj = GetAppPropValue('CSSDCLEAN');
-function IfcleanRack(){
-	var IfCleanRack = ParamObj.IfCleanRack;
-	return IfCleanRack;
-}
-function DefaultStDate(){
+﻿var CleanParamObj = GetAppPropValue('CSSDCLEAN');
+var MachineFtpObj = GetAppPropValue('CSSDMACHINEFTP');
+function DefaultStDate() {
 	var Today = new Date();
-	var DefStartDate = ParamObj.DefStartDate;
-	if(isEmpty(DefStartDate)){
-		return Today;
+	var DefStartDate = CleanParamObj.DefStartDate;
+	if (isEmpty(DefStartDate)) {
+		return DateFormatter(Today);
 	}
 	var EdDate = DateAdd(Today, 'd', parseInt(DefStartDate));
-	return DateFormatter(EdDate);	
-		
+	return DateFormatter(EdDate);
 }
-function DefaultEdDate(){
+function DefaultEdDate() {
 	var Today = new Date();
-	var DefEndDate = ParamObj.DefEndDate;
-	if(isEmpty(DefEndDate)){
-		return Today;
+	var DefEndDate = CleanParamObj.DefEndDate;
+	if (isEmpty(DefEndDate)) {
+		return DateFormatter(Today);
 	}
 	var EdDate = DateAdd(Today, 'd', parseInt(DefEndDate));
 	return DateFormatter(EdDate);
+}
+function DefaultBeforeDate() {
+	var Today = new Date();
+	var DefBeforeDate = -7;
+	if (isEmpty(DefBeforeDate)) {
+		return DateFormatter(Today);
+	}
+	var EdBeforeDate = DateAdd(Today, 'd', parseInt(DefBeforeDate));
+	return DateFormatter(EdBeforeDate);
 }

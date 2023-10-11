@@ -7,8 +7,7 @@ function BodyLoadHandler()
 	Muilt_LookUp("Loc^AccessoryType");
 	HiddenTableIcon("DHCEQAStockDetailFind","TRowID","TDetail");
 	initButtonWidth();           //增加初始化按钮方法   
-	SetTableRow();
-		
+	//SetTableRow();		// MZY0080	1899363		2021-06-03
 }
 
 function SetStatus()
@@ -50,7 +49,7 @@ function ClearDR()
 		SetElement("LocDR","");
 	}
 }
-
+/*	 MZY0080	1899363		2021-06-03
 function SelectRowHandler(rowIndex,rowData)
 {
 	if (SelectedRow==rowIndex)
@@ -64,7 +63,7 @@ function SelectRowHandler(rowIndex,rowData)
 		rowid=rowData.TRowID;
 		setElement("RowID",rowid)
 	}
-}
+}*/
 
 function DblClickRowHandler(rowIndex,rowData)
 {

@@ -6,8 +6,9 @@
 	/// 加载标本内容
 	function LoadSpecItemList(Arcim){
 		if ((ARCIM!="")&&(Arcim=="")){Arcim=ARCIM}
+		if (MapCode=="HPVN") Arcim=""
 		/// 初始化标本内容区域
-		$("#itemPisSpec").html('<tr style="height:0px;"><td style="width:20px;"></td><td style="width:200px;" ></td><td style="width:20px;"></td><td style="width:200px;"></td><td style="width:20px;"></td><td style="width:200px;"></td></tr>');
+		$("#itemPisSpec").html('<tr style="height:3px;"><td style="width:30px;"></td><td style="width:200px;" ></td><td style="width:30px;"></td><td style="width:200px;"></td><td style="width:30px;"></td><td style="width:200px;"></td></tr>');
 		runClassMethod("web.DHCAppPisMasterQuery","JsonGetPisSpecList",{"HospID":LgHospID,"Arcim":Arcim},function(jsonString){
 
 			if (jsonString != ""){
@@ -37,14 +38,16 @@
 			var InputHtml = '<input type="text" class="name-input" style="width:100px" id="Spec'+ itemArr[j-1].value +'" value="1" name="'+ MulFlag +'"></input>';
 			
 			}
-			itemhtmlArr.push('<td style="width:30px;"><input name="'+ itemArr[j-1].name +'" type="checkbox" value="'+ itemArr[j-1].value +'"></input></td><td>'+ itemArr[j-1].text + InputHtml +'</td>');
 			if (j % 3 == 0){
+				itemhtmlArr.push('<td style="width:30px;"><input name="'+ itemArr[j-1].name +'" type="checkbox" class="checkbox" value="'+ itemArr[j-1].value +'"></input></td><td style="border-right:none;">'+ itemArr[j-1].text + InputHtml +'</td>');
 				itemhtmlstr = itemhtmlstr + '<tr style="height:40px;">' + itemhtmlArr.join("") + '</tr>';
 				itemhtmlArr = [];
-			}
+			}else{
+				itemhtmlArr.push('<td style="width:30px;"><input name="'+ itemArr[j-1].name +'" type="checkbox" class="checkbox" value="'+ itemArr[j-1].value +'"></input></td><td>'+ itemArr[j-1].text + InputHtml +'</td>');
+				}
 		}
 		if ((j-1) % 3 != 0){
-			itemhtmlstr = itemhtmlstr + '<tr style="height:40px;">' + itemhtmlArr.join("") + '<td style="width:30px"></td><td></td></tr>';
+			itemhtmlstr = itemhtmlstr + '<tr style="height:40px;">' + itemhtmlArr.join("") + '<td style="width:30px"></td><td style="border-right:none;" ></td></tr>';
 			itemhtmlArr = [];
 		}
 		$("#itemPisSpec").append(htmlstr+itemhtmlstr)
@@ -148,9 +151,9 @@
 				var Qty = $("#Spec"+ PatSpecArr[j].value).val();
 				PisPatSpecArr.push((i++) +"^"+ PatSpecArr[j].value +"^"+ PisSpecDesc +"^^"+ Qty);
 				if (PisReqSpec==""){
-					PisReqSpec = j+"#"+PisSpecDesc +"#"+ Qty +"#"+ "" + "#"+ j+ "#"+ "";
+					PisReqSpec = j+String.fromCharCode(1)+PisSpecDesc +String.fromCharCode(1)+ Qty +String.fromCharCode(1)+ "" + String.fromCharCode(1)+ ""+ String.fromCharCode(1)+ "";
 				}else{
-					PisReqSpec = PisReqSpec+"@"+j+"#"+PisSpecDesc +"#"+ Qty +"#"+ "" +"#"+ j+ "#"+ "";	
+					PisReqSpec = PisReqSpec+String.fromCharCode(2)+j+String.fromCharCode(1)+PisSpecDesc +String.fromCharCode(1)+ Qty +String.fromCharCode(1)+ "" +String.fromCharCode(1)+ ""+ String.fromCharCode(1)+ "";	
 				}
 		    }
 		}

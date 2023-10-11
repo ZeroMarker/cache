@@ -21,7 +21,7 @@ function resizeWset()
 	$('#layout').layout('resize');	
 }
 
-//关闭病历页面事件
+//关闭药历页面事件
 function savePrompt(instanceID)
 {
 	var returnValues = "";
@@ -35,14 +35,14 @@ function savePrompt(instanceID)
 			//增加判定如果无保存权限，则退出保存检查
 			if (documentContext.privelege.canSave != "1") return returnValues;
 
-			var text = '病历 "' +documentContext.Title.DisplayName + '" 有修改是否保存';
+			var text = '药历 "' +documentContext.Title.DisplayName + '" 有修改是否保存';
 			//returnValues = window.showModalDialog("emr.ip.prompt.csp",text,"dialogHeight:150px;dialogWidth:350px;resizable:no;status:no;scroll:yes;");
 			returnValues = window.confirm(text);
 			if (returnValues)
 			{
 				returnValues = "save"
 				saveDocument();
-				alert("病历已保存");
+				alert("药历已保存");
 				
 			}
 			else
@@ -80,7 +80,7 @@ function getPrivilege(type,instanceId,templateId,docId)
 	return result;	
 }
 
-///检查加载病历权限
+///检查加载药历权限
 function checkLoadPrivilege(tempParam,sendflag)
 {
 	var flag = false;
@@ -97,7 +97,7 @@ function checkLoadPrivilege(tempParam,sendflag)
 	}
 }
 
-///检查新建病历权限
+///检查新建药历权限
 function checkCreatePrivilege(tempParam,sendflag)
 {
 	var flag = false;
@@ -179,7 +179,7 @@ function getConfig()
 	});
 }
 
-//切换病历初始化状态
+//切换药历初始化状态
 function initStatus()
 {
 	//初始化消息框

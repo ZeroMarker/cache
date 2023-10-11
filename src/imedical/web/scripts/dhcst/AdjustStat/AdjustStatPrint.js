@@ -2,7 +2,7 @@
 *AdjustStatPrint.js
 *库存调整统计打印及导出JS
 */
-
+var gUserId = session['LOGON.USERID'];
 function PrintAdjustStat(ParStr)
 {
 	if(ParStr==null || ParStr==''){
@@ -19,7 +19,7 @@ function PrintAdjustStat(ParStr)
 	var LocDesc=StrArr[7];
 	var User=StrArr[8];
 
-	fileName="{DHCST_AdjustStat_Detail_Common.raq(StartDate="+StartDate+";EndDate="+EndDate+";StkType="+StkType+";StkGrpType="+StkGrpType+";Loc="+LocID+";ReasonDr="+ReasonID+";ItmDr="+InciID+";LocDesc="+LocDesc+";HospDesc="+App_LogonHospDesc+";User="+User+")}";
+	fileName="{DHCST_AdjustStat_Detail_Common.raq(StartDate="+StartDate+";EndDate="+EndDate+";StkType="+StkType+";StkGrpType="+StkGrpType+";Loc="+LocID+";ReasonDr="+ReasonID+";ItmDr="+InciID+";User="+gUserId+")}";
 	DHCCPM_RQDirectPrint(fileName);
 }
 
@@ -39,6 +39,6 @@ function ExportAdjustStat(ParStr)
 	var LocDesc=StrArr[7];
 	var User=StrArr[8];
 	
-	fileName="DHCST_AdjustStat.raq&StartDate="+StartDate+"&EndDate="+EndDate+"&StkType="+StkType+"&StkGrpType="+StkGrpType+"&Loc="+LocID+"&ReasonDr="+ReasonID+"&ItmDr="+InciID+"&LocDesc="+LocDesc+"&User="+User+"&HospDesc="+App_LogonHospDesc;
+	fileName="DHCST_AdjustStat.raq&StartDate="+StartDate+"&EndDate="+EndDate+"&StkType="+StkType+"&StkGrpType="+StkGrpType+"&Loc="+LocID+"&ReasonDr="+ReasonID+"&ItmDr="+InciID+"&User="+gUserId;
 	DHCCPM_RQPrint(fileName);
 }

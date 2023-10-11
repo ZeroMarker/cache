@@ -91,12 +91,13 @@ function SavegridData()
 	$.each(checkedItems, function(index, item){
         	selectItems.push(item.TValueDR);
 		});
-	
-	if(selectItems=="")
+	//modified By QW20210311 BUG:QW0095 测试需求1803601 begin
+	/*if(selectItems=="")
 	{
 		$.messager.popover({msg:"未选择勾选项目！",type:'alert'});
 		return false;
-	}
+	}*/
+	//modified By QW20210311 BUG:QW0095 测试需求1803601 end
 	var str=""
 	for(i=0;i<selectItems.length;i++)//开始循环
 	{

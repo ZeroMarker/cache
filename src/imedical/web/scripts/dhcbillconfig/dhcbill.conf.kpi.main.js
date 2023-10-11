@@ -2,61 +2,61 @@
  * FileName: dhcbill.conf.kpi.main.js
  * Anchor: ZhYW
  * Date: 2017-08-02
- * Description: 
+ * Description: 指标维护
  */
 
+//全局变量
+var GV = {};
+
 $(function () {
-	initBtn();
-	initMainCombo();
-	initBillKPIGrid();
+	initQueryMenu();
+	initKPIList();
 });
 
-function initBtn() {
-	$HUI.linkbutton("#btnAdd", {
+function initQueryMenu() {
+	$HUI.linkbutton("#btn-add", {
 		onClick: function () {
-			addBillKPI();
+			addClick();
 		}
 	});
 	
-	$HUI.linkbutton("#btnEdit", {
+	$HUI.linkbutton("#btn-edit", {
 		onClick: function () {
-			editBillKPI();
+			editClick();
 		}
 	});
 	
-	$HUI.linkbutton("#btnDelete", {
+	$HUI.linkbutton("#btn-delete", {
 		onClick: function () {
-			deleteBillKPI();
+			deleteClick();
 		}
 	});
 	
-	$HUI.linkbutton("#btnFind", {
+	$HUI.linkbutton("#btn-find", {
 		onClick: function () {
-			loadBillKPIGrid();
+			loadKPIList();
 		}
 	});
 	
-	$HUI.linkbutton("#btnAuth", {
+	$HUI.linkbutton("#btn-auth", {
 		onClick: function () {
-			hospAuthClick();
+			authClick();
 		}
 	});
-}
-
-function initMainCombo() {
-	$('#taskType').combobox({
+	
+	$("#taskType").combobox({
 		panelHeight: 'auto',
-		url: $URL + "?ClassName=BILL.CFG.COM.HospAuth&QueryName=FindKPITaskType&ResultSetType=array",
+		url: $URL + '?ClassName=BILL.CFG.COM.HospAuth&QueryName=FindKPITaskType&ResultSetType=array',
 		valueField: 'id',
 		textField: 'text',
 		onChange: function (newValue, oldValue) {
-			loadBillKPIGrid();
+			loadKPIList();
 		}
 	});
 }
 
-function initBillKPIGrid() {
-	$('#tBillKPI').datagrid({
+function initKPIList() {
+	GV.KPIList = $HUI.datagrid("#KPIList", {
 		fit: true,
 		border: false,
 		striped: true,
@@ -90,7 +90,7 @@ function initBillKPIGrid() {
 			]],
 		toolbar: '#tToolBar',
 		onDblClickRow: function (rowIndex, rowData) {
-			editBillKPI();
+			editClick();
 		},
 		url: $URL,
 		queryParams: {
@@ -103,7 +103,7 @@ function initBillKPIGrid() {
 	});
 }
 
-function loadBillKPIGrid() {
+function loadKPIList() {
 	var queryParams = {
 		ClassName: "BILL.CFG.COM.HospAuth",
 		QueryName: "FindKPIDetails",
@@ -111,86 +111,89 @@ function loadBillKPIGrid() {
 		kpiCode: "",
 		kpiName: ""
 	};
-	loadDataGridStore('tBillKPI', queryParams);
+	loadDataGridStore("KPIList", queryParams);
 }
 
-function addBillKPI() {
-	websys_showModal({
+function addClick() {
+	var opt = {
 		url: 'dhcbill.conf.kpi.details.csp?',
 		title: '新增',
-		iconCls: 'icon-w-add',
-		height: 380,
-		width: 540,
-		callbackFunc: loadBillKPIGrid
-	});
+		iconCls: 'icon-w-add'
+	};
+	showEditModal(opt);
 }
 
 /**
 * 修改
 */
-function editBillKPI() {
-	var row = $('#tBillKPI').datagrid('getSelected');
+function editClick() {
+	var row = GV.KPIList.getSelected();
 	if (!row) {
-		$.messager.popover({msg: "请选择需要修改的行", type: "success"});
+		$.messager.popover({msg: "请选择需要修改的行", type: "info"});
 		return;
 	}
-	websys_showModal({
+	var opt = {
 		url: 'dhcbill.conf.kpi.details.csp?&KPIID=' + row.ID,
 		title: '修改',
-		iconCls: 'icon-w-edit',
+		iconCls: 'icon-w-edit'
+	};
+	showEditModal(opt);
+}
+
+function showEditModal(opt) {
+	websys_showModal({
+		url: opt.url,
+		title: opt.title,
+		iconCls: opt.iconCls,
 		height: 380,
 		width: 540,
-		callbackFunc: loadBillKPIGrid
+		callbackFunc: loadKPIList
 	});
 }
 
 /**
 * 删除
 */
-function deleteBillKPI() {
-	var selectedRow = $('#tBillKPI').datagrid('getSelected');
-	if (!selectedRow) {
-		$.messager.popover({msg: "请选择需要删除的行", type: "success"});
+function deleteClick() {
+	var row = GV.KPIList.getSelected();
+	if (!row || !row.ID) {
+		$.messager.popover({msg: "请选择需要删除的行", type: "info"});
 		return;
 	}
-	var ID = selectedRow.ID;
-	$.messager.confirm('提示', '您确定要删除该条记录吗？', function (r) {
+	$.messager.confirm("确定", "您确定要删除该条记录吗？", function (r) {
 		if (r) {
 			$.m({
 				ClassName: "BILL.CFG.COM.HospAuth",
 				MethodName: "DeleteKPI",
-				kpiId: ID
+				kpiId: row.ID
 			}, function (rtn) {
 				if (rtn == 0) {
-					$.messager.alert('提示', '删除成功', 'success');
-					loadBillKPIGrid();
+					$.messager.popover({msg: "删除成功", type: "success"});
+					loadKPIList();
 				} else {
-					$.messager.alert('提示', '保存失败，错误代码：' + rtn);
+					$.messager.popover({msg: "保存失败，错误代码：" + rtn, type: "error"});
 				}
 			});
 		}
 	});
+	
 	//以下代码控制焦点在取消按钮
-	var okSpans = $('.l-btn-text');
-	var len = okSpans.length;
-	for (var i = 0; i < len; i++) {
-		var $okSpan = $(okSpans[i]);
-		var okSpanHtml = $okSpan.html();
-		if (okSpanHtml == 'Cancel' || okSpanHtml == '取消') {
-			$okSpan.parent().parent().trigger('focus');
+	$(".messager-button>a .l-btn-text").each(function(index, item) {
+		var $okSpan = $(item);
+		if ($.inArray($okSpan.text(), ["Cancel", "取消"])) {
+			$okSpan.parent().parent().trigger("focus");   //取消按钮聚焦
 		}
-	}
+	});
 }
 
 /**
 * 授权
 */
-function hospAuthClick() {
-	websys_showModal({
-		url: 'dhcbill.conf.hosp.kpi.csp?',
-		title: '授权',
-		iconCls: 'icon-w-edit',
-		height: 450,
-		width: 400
-	});
+function authClick() {
+	var row = GV.KPIList.getSelected();
+	if (!row || !row.ID) {
+		$.messager.popover({msg: "请选择需要授权的行", type: "info"});
+		return;
+	}
+	GenHospWin("Bill_Com_KPI", row.ID);
 }

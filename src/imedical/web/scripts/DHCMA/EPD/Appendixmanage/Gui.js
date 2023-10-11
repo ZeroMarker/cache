@@ -6,7 +6,7 @@ function InitviewScreen(){
     $.parser.parse(); // 解析整个页面
 	obj.gridAppendixCard =$HUI.datagrid("#gridAppendixCard",{
 		fit: true,
-		title: "传染病附卡维护",
+		title: "传染病附卡维护   (点击维护传染病附卡,双击附卡维护传染病附卡项目)",
 		headerCls:'panel-header-gray',
 		iconCls:'icon-write-order',
 		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
@@ -35,8 +35,13 @@ function InitviewScreen(){
 		},
 		onSelect:function(rowIndex,rowData){
 			if (rowIndex>-1) { 
-				obj.gridInfType_onSelect(rowData);
+				obj.gridAppendixCard_onSelect(rowData);
 			}
+		},
+		onLoadSuccess:function(data){
+			obj.RecRowID = "";
+			obj.ClearFormItem1();
+			
 		}
 	});
 

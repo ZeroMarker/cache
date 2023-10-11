@@ -55,7 +55,7 @@ function InitPatInfoPanel(){
 	
 	/// 申请科室
 	$HUI.combobox("#CstRLoc",{
-		url:$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonGrpLoc",
+		url:$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonReqLoc&HospID="+ LgHospID+"&MWToken="+websys_getMWToken(),  //JsonGrpLoc
 		valueField:'value',
 		textField:'text',
 		mode:'remote',
@@ -65,7 +65,7 @@ function InitPatInfoPanel(){
 	})
 	/// 疑难病种
 	$HUI.combobox("#mdtDisGrp",{
-		url:$URL+"?ClassName=web.DHCMDTGroup&MethodName=jsonGroupAll&HospID="+ LgHospID,
+		url:$URL+"?ClassName=web.DHCMDTGroup&MethodName=jsonGroupAll&HospID="+ LgHospID+"&MWToken="+websys_getMWToken(),
 		valueField:'value',
 		textField:'text',
 		onSelect:function(option){
@@ -92,8 +92,8 @@ function InitPatList(){
 		{field:'PreTime',title:'预约时间',width:140},
 		{field:'PayMony',title:'收费状态',width:80,formatter:
 			function (value, row, index){
-				if (value == "未收费"){return '<font style="color:red;font-weight:bold;">'+value+'</font>'}
-				else {return '<font style="color:green;font-weight:bold;">'+value+'</font>'}
+				if (value == "1"){return '<font style="color:red;font-weight:bold;">'+$g("已收费")+'</font>'}
+				else {return '<font style="color:green;font-weight:bold;">'+$g("未收费")+'</font>'}
 			}
 		},
 		{field:'CstStatusDesc',title:'会诊状态',width:80,formatter:
@@ -103,14 +103,14 @@ function InitPatList(){
 			}
 		},{field:'PrintFlag',title:'打印',width:80,align:'center',hidden:true,formatter:
 			function (value, row, index){
-				if (value.indexOf("Y")!=-1){return '<font style="color:green;font-weight:bold;">已打印</font>'}
-				else {return '<font style="color:red;font-weight:bold;">未打印</font>'}
+				if (value.indexOf("Y")!=-1){return '<font style="color:green;font-weight:bold;">'+$g("已打印")+'</font>'}
+				else {return '<font style="color:red;font-weight:bold;">'+$g("未打印")+'</font>'}
 			}
 		},{field:'PrintCons',title:'打印告知单',width:80,align:'center',formatter:
 			function (value, row, index){
 				
-				if (row.PrintFlag.indexOf("Z")!=-1){return '<font style="color:green;font-weight:bold;">已打印</font>'}
-				else {return '<font style="color:red;font-weight:bold;">未打印</font>'}
+				if (row.PrintFlag.indexOf("Z")!=-1){return '<font style="color:green;font-weight:bold;">'+$g("已打印")+'</font>'}
+				else {return '<font style="color:red;font-weight:bold;">'+$g("未打印")+'</font>'}
 			}
 		},
 		{field:'PatNo',title:'登记号',width:100},
@@ -158,7 +158,7 @@ function InitPatList(){
 	};
 	/// 就诊类型
 	var param = "^^^^" + PatientID +"^"+ EpisodeID +"^"+TimesArr;
-	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsGetPatHisCons&Params="+param;
+	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsGetPatHisCons&Params="+param+"&MWToken="+websys_getMWToken();
 	new ListComponent('bmDetList', columns, uniturl, option).Init(); 
   
   
@@ -179,7 +179,7 @@ function QryPatList(){
 /// 填写MDT申请
 function WriteMdt(EpisodeID, CstID){
 
-		$("#newWinFrame").attr("src","dhcmdt.consultwrite.csp?EpisodeID="+EpisodeID +"&CstID="+CstID);
+		$("#newWinFrame").attr("src","dhcmdt.consultwrite.csp?EpisodeID="+EpisodeID +"&CstID="+CstID+"&MWToken="+websys_getMWToken());
 	
 }
 /// 处理特殊字符

@@ -127,6 +127,22 @@
 		};
 		cmdDoExecute(strJosn);
 	});
+	
+	 //单选单元(平铺)
+    $('#MIMonoChoiceCheck').bind('click', function(){  
+        maxElementObj.MIMonoChoice = getNewCode(+maxElementObj.MIMonoChoice);
+        var strJosn = {
+	        action : "APPEND_ELEMENT",
+	        args : {
+		        "ElemType" : "MIMonoChoice",
+		        "Code" : "O"+maxElementObj.MIMonoChoice,
+            	"DisplayName" : "新建单选单元" + (+maxElementObj.MIMonoChoice),
+            	"Choices" : [{"Code":"1","DisplayName":"新建单选框"}],
+            	"ShowType":"CheckBox"
+            }
+        };
+        cmdDoExecute(strJosn);
+    });
 
 	//多选单元
 	$('#MIMultiChoice').bind('click', function () {
@@ -141,6 +157,23 @@
 		};
 		cmdDoExecute(strJosn);
 	});
+	
+	
+	//多选单元(平铺)
+    $('#MIMultiChoiceCheck').bind('click', function(){  
+        maxElementObj.MIMultiChoice = getNewCode(+maxElementObj.MIMultiChoice);
+        var strJosn = {
+	        action : "APPEND_ELEMENT",
+	        args : {
+		        "ElemType" : "MIMultiChoice",
+		        "Code" : "M"+maxElementObj.MIMultiChoice,
+            	"DisplayName" : "新建多选单元"+(+maxElementObj.MIMultiChoice),
+            	"Choices" : [{"Code":"1","DisplayName":"新建多选框"}],
+            	"ShowType" : "CheckBox"
+            }
+        };
+        cmdDoExecute(strJosn);
+    });
 
 	//字典单元
 	$('#MIDictionary').bind('click', function () {
@@ -151,6 +184,20 @@
 				"ElemType" : "MIDictionary",
 				"Code" : "I" + maxElementObj.MIDictionary,
 				"DisplayName" : "新建字典单元" + (+maxElementObj.MIDictionary)
+			}
+		};
+		cmdDoExecute(strJosn);
+	});
+
+	//链接单元
+	$('#MILink').bind('click', function () {
+		maxElementObj.MILink = getNewCode(+maxElementObj.MILink);
+		var strJosn = {
+			action : "APPEND_ELEMENT",
+			args : {
+				"ElemType" : "MIString",
+				"Code" : "H" + maxElementObj.MILink,
+				"DisplayName" : "新建链接单元" + (+maxElementObj.MILink)
 			}
 		};
 		cmdDoExecute(strJosn);
@@ -231,7 +278,13 @@ function init() {
 	pluginAdd();
 	plugin().initWindow("iEditor");
 	//建立数据连接
-	setConnect();
+    var nectresult = setConnect();
+    nectresult = typeof nectresult=="object"?nectresult:$.parseJSON(nectresult.replace(/\'/g, "\""));
+    if (nectresult != "" && nectresult.result != "OK")
+    {
+        alert('设置链接失败！');
+        return;
+    } 
 	//设置工作环境  "Template"     Single
 	cmdDoExecute({
 		"action" : "SET_WORKSPACE_CONTEXT",
@@ -266,6 +319,18 @@ function init() {
 //建立数据库连接
 function setConnect(){
 	var netConnect = "";
+	var port = window.location.port;
+	var protocol = window.location.protocol.split(":")[0];
+	
+	if (protocol == "http")
+	{
+		port = port==""?"80":port;
+	}
+	else if (protocol == "https")
+	{
+		port = port==""?"443":port;
+	}
+	
 	$.ajax({
 		type: 'Post',
 		dataType: 'text',
@@ -275,9 +340,13 @@ function setConnect(){
 		data: {
 			"OutputType":"String",
 			"Class":"EMRservice.BL.BLSysOption",
-			"Method":"GetNetConnectJson"
+			"Method":"GetNetConnectJson",
+			"p1":window.location.hostname,
+			"p2":port,
+			"p3":protocol
 		},
 		success: function (ret) {
+
 			netConnect = eval("("+ret+")");
 		},
 		error: function (ret) {
@@ -288,10 +357,12 @@ function setConnect(){
 			}
 		}
 	});
-	return cmdSyncExecute({
-		action:"SET_NET_CONNECT",
-		args:netConnect
-	});
+	
+    var strJson = {
+        action: 'SET_NET_CONNECT',
+        args: netConnect
+    };
+	return cmdSyncExecute(strJson);
 }
 
 //加载个人模板
@@ -374,6 +445,10 @@ function setMaxElementObj(code) {
 	case "I":
 		if (+value > +maxElementObj.MIDictionary)
 			maxElementObj.MIDictionary = value;
+		break;
+	case "H":
+		if (+value > +maxElementObj.MILink)
+			maxElementObj.MILink = value;
 		break;
 	}
 }
@@ -583,6 +658,8 @@ $("#fontSize").change(function () {
 		args : $("#fontSize").find("option:selected").val()
 	};
 	cmdDoExecute(strJson);
+}).on('focus',function(){
+    $(this).val(-1); //设置为空
 });
 
 //工具栏
@@ -783,6 +860,14 @@ function eventLoadDocument(commandJson) {
 		alert('加载失败！');
 	}
 
+    //清除留痕
+    var strJson = {
+        "action" : "CLEAN_ALL_REVISIONS",
+        "args" : ""
+    };
+    cmdDoExecute(strJson);
+    
+    //根据章节继承属性设置只读
 	var items = [];
 	for(var i=0;i<SectionRelationArray.length;i++)
 	{
@@ -812,9 +897,9 @@ function eventSectionChanged(commandJson) {
 //保存个人模板
 function eventSaveSection(commandJson) {
 	if (commandJson.args.result == "OK") {
-		alert('保存成功');
+		$.messager.popover({msg:'保存成功！', type:'success', style:{top:10,right:5}});
 	} else {
-		alert('保存失败');
+		$.messager.popover({msg:'保存失败！', type:'error', style:{top:10,right:5}});
 	}
 }
 
@@ -867,7 +952,7 @@ function selectStatus() {
 	var status = document.getElementById("SectionStatus").value;
 	var name = document.getElementById("SectionName").value;
 	if (status == "REFERENCE"){
-		$.messager.confirm("警示", "继承属性由【否】改为【是】，修改的章节内容会丢失，请再次确认是否修改？", function (r) {
+		top.$.messager.confirm("警示", "继承属性由【否】改为【是】，修改的章节内容会丢失，请再次确认是否修改？", function (r) {
 		    if (r) {   
 				isReadonly = true;
 					var item =[{"SectionCode":code,"ReadOnly":isReadonly}];
@@ -936,6 +1021,8 @@ function setProperty() {
 		setMIMultiChoice(elementContext);
 	} else if (type == "MIDictionary") {
 		setMIDictionary(elementContext);
+	} else if (type == "MILink") {
+		setMILink(elementContext);
 	}
 }
 
@@ -971,18 +1058,18 @@ function setBasePropty(obj) {
 function getBasePropty() {
 	var obj = {};
 	obj.TabIndex = $("#TabIndex").val();
-	obj.Visible = $("#Visible")[0].status;
-	obj.AllowNull = $("#AllowNull")[0].status;
-	obj.ReadOnly = $("#ReadOnly")[0].status;
+	obj.Visible = $("#Visible")[0].checked;
+	obj.AllowNull = $("#AllowNull")[0].checked;
+	obj.ReadOnly = $("#ReadOnly")[0].checked;
 	obj.Code = $("#Code").val();
 	obj.DisplayName = $("#DisplayName").val();
 	obj.Description = $("#Description").val();
 	obj.BindCode = $("#BindCode").val();
 	obj.BindType = $("#BindType").val();
-	obj.Synch = $("#Synch")[0].status;
+	obj.Synch = $("#Synch")[0].checked;
 	obj.ValidateMsg = $("#ValidateMsg").val();
 	obj.ConfidentialityCode = $("#ConfidentialityCode").val();
-	obj.FixedStructs = $("#FixedStructs")[0].status;
+	obj.FixedStructs = $("#FixedStructs")[0].checked;
 	return obj;
 }
 
@@ -1032,12 +1119,18 @@ function setMIMonoChoice(obj) {
 		return;
 	var strPropty = initBasePropty()
 		 + '<div style="margin:5px">' + initChoices() + '</div>'
+		 + '<div id="choiceCheckDiv" style="margin:5px"></div>'
 		 + '<div style="margin:5px">' + initSave() + '</div>'
 
 		$("#property")[0].innerHTML = strPropty;
 	$.parser.parse('#property');
 	setBasePropty(obj);
 	setChoices(obj.Props.Choices);
+	//平铺额外显示备选项
+	if (obj.Props.ShowType == "CheckBox")
+	{
+		setCheckBoxChoices(obj,"1");
+	}
 	initSaveOnclick();
 }
 
@@ -1048,6 +1141,7 @@ function setMIMultiChoice(obj) {
 	var strPropty = initBasePropty()
 		 + '<div style="margin:5px">' + initSeparator() + initWrapChoice() + '</div>'
 		 + '<div style="margin:5px">' + initChoices() + '</div>'
+		 + '<div id="choiceCheckDiv" style="margin:5px"></div>'
 		 + '<div style="margin:5px">' + initSave() + '</div>'
 
 		$("#property")[0].innerHTML = strPropty;
@@ -1057,6 +1151,11 @@ function setMIMultiChoice(obj) {
 	setSeparator(obj.Props.Separator);
 	setWrapChoice(obj.Props.WrapChoice);
 	setChoices(obj.Props.Choices);
+	//平铺额外显示备选项
+	if (obj.Props.ShowType == "CheckBox")
+	{
+		setCheckBoxChoices(obj,"2");
+	}
 	initSaveOnclick();
 }
 
@@ -1119,6 +1218,49 @@ function setMIDictionary(obj) {
 	initSaveOnclick();
 }
 
+//设置链接单元
+function setMILink(obj) {
+	if (!obj || obj == "")
+		return;
+	var strPropty = initBasePropty()
+		 + '<div style="margin:5px">' + initMILinkUrl() + '</div>'
+		 + '<div style="margin:5px">' + initWriteBack() + '</div>'
+		 + '<div style="margin:5px">' + initSave() + '</div>'
+		 
+	$("#property")[0].innerHTML = strPropty;
+	$.parser.parse('#property');
+	setBasePropty(obj);
+	setMILinkUrl(obj.Props.Url);
+	setWriteBack(obj.Props.WriteBack);
+	initSaveOnclick();
+}
+
+//连接单元的操作
+function setMILinkUrl(value) {
+	$("#MILinkUrl").val(value);
+}
+
+//回写方式
+function setWriteBack(value) {
+	var json = [{
+			value : "Replace",
+			name : "Replace"
+		}, {
+			value : "Append",
+			name : "Append"
+		}, {
+			value : "None",
+			name : "None"
+		}
+	]
+	for (var i = 0; i < json.length; i++) {
+		$('#WriteBack').append("<option value='" + json[i].value + "'>" + json[i].name + "</option>");
+		if (json[i].value == value) {
+			$("#WriteBack").val(value);
+		}
+	}
+}
+
 //字符元素obj
 function getMIString() {
 	var obj = getBasePropty();
@@ -1128,17 +1270,26 @@ function getMIString() {
 	return obj;
 }
 
+//链接单元
+function getMILink() {
+	var obj = getBasePropty();
+	obj.ElemType = "MILink";
+	obj.Url = $("#MILinkUrl").val();
+	obj.WriteBack = $("#WriteBack").val();
+	return obj;
+}
+
 //数字元素obj
 function getMINumber() {
 	var obj = getBasePropty();
 	obj.ElemType = "MINumber";
-	obj.HasMinVal = $("#HasMinVal")[0].status;
+	obj.HasMinVal = $("#HasMinVal")[0].checked;
 	obj.MinVal = $("#MinVal").val();
-	obj.IncludeMin = $("#IncludeMin")[0].status;
-	obj.HasMaxVal = $("#HasMaxVal")[0].status;
+	obj.IncludeMin = $("#IncludeMin")[0].checked;
+	obj.HasMaxVal = $("#HasMaxVal")[0].checked;
 	obj.MaxVal = $("#MaxVal").val();
-	obj.IncludeMax = $("#IncludeMax")[0].status;
-	obj.DecimalPlace = $("#DecimalPlace")[0].status;
+	obj.IncludeMax = $("#IncludeMax")[0].checked;
+	obj.DecimalPlace = $("#DecimalPlace")[0].checked;
 	return obj;
 }
 
@@ -1165,7 +1316,7 @@ function getMIMultiChoice() {
 	var obj = getBasePropty();
 	obj.ElemType = "MIMultiChoice";
 	obj.Separator = $("#Separator").val();
-	obj.WrapChoice = $("#WrapChoice")[0].status;
+	obj.WrapChoice = $("#WrapChoice")[0].checked;
 	var list = $("#Choices").val().split("\n");
 	var Choices = new Array();
 	for (i = 0; i < list.length; i++) {
@@ -1182,8 +1333,8 @@ function getMIMultiChoice() {
 function getMIDateTime() {
 	var obj = getBasePropty();
 	obj.ElemType = "MIDateTime";
-	obj.IncludeDate = $("#IncludeDate")[0].status;
-	obj.IncludeTime = $("#IncludeTime")[0].status;
+	obj.IncludeDate = $("#IncludeDate")[0].checked;
+	obj.IncludeTime = $("#IncludeTime")[0].checked;
 	obj.DateFormat = $("#DateFormat").find("option:selected").text();
 	obj.TimeFormat = $("#TimeFormat").find("option:selected").text();
 	return obj;
@@ -1202,7 +1353,7 @@ function getMIDictionary() {
 	obj.LinkCode = $("#LinkCode").val();
 	obj.LinkMethod = $("#LinkMethod").val();
 	obj.LinkDisplayType = $("#LinkDisplayType").val();
-	obj.AllowCodeNull = $("#AllowCodeNull")[0].status;
+	obj.AllowCodeNull = $("#AllowCodeNull")[0].checked;
 	obj.AllowValueNull = $("#AssociateItem").val();
 	obj.RegExp = $("#RegExp").val();
 	obj.MaxLength = $("#MaxLength").val();
@@ -1224,6 +1375,8 @@ function getElementPropty(type) {
 		obj = getMIMultiChoice();
 	} else if (type == "I") {
 		obj = getMIDictionary();
+	} else if (type == "H") {
+		obj = getMILink();
 	}
 	return obj;
 }
@@ -1246,6 +1399,20 @@ function initDisplayName() {
 function initDescription() {
 	var str = '<span>含义描述  </span>'
 		 + '<span><textarea id="Description" rows="2" cols="20" style="width:160px;"></textarea></span>'
+		return str;
+}
+
+//链接单元的操作
+function initMILinkUrl() {
+	var str = '<span style="margin-right: 28px;">操作  </span>'
+		 + '<span><textarea id="MILinkUrl" rows="2" cols="20" style="width:160px;"></textarea></span>'
+		return str;
+}
+
+//回写方式
+function initWriteBack() {
+	var str = '<span>回写方式  </span>'
+		 + '<span><select id="WriteBack" name="WriteBack" style="width:166px;"></select></span>'
 		return str;
 }
 
@@ -1485,7 +1652,7 @@ function initLinkDisplayType() {
 
 //保存
 function initSave() {
-	var str ='<a href="#" id="propertySave" class="hisui-linkbutton" style="float:right">保存</a>'
+	var str ='<a href="#" id="propertySave" class="hisui-linkbutton" style="float:right">保存属性</a>'
 	return str;
 }
 
@@ -1869,6 +2036,25 @@ function initSaveOnclick()
 		var strJson = {action:"UPDATE_ELEMENT",args:{"Path":currentPath,"Props":getElementPropty(type)}}
 		cmdDoExecute(strJson);
 	};
+}
+
+//插入平铺选项：单元Code，选项描述，选项code，单选1|多选2
+function inSertChoice(groupCode,name,code,type)
+{
+	var strJson = {action:"INSERT_CHOICE_FIELD",args:{"ChoiceType":type,"Value":"0","Context":name,"Code":code,"Groupid":groupCode}}
+		cmdDoExecute(strJson);
+}
+
+//显示平铺备选项
+function setCheckBoxChoices(obj,type)
+{
+	var html = "<table>";
+	html += "<tr><td style='color:8F8C8D'>备选项(双击选项带入到编辑器中)：</td></tr>"
+	for (var i =0;i < obj.Props.Choices.length; i++){
+		html += '<tr><td ondblclick="inSertChoice(\''+obj.Props.Code+'\',\''+obj.Props.Choices[i].DisplayName+'\',\''+obj.Props.Choices[i].Code+'\',\''+type+'\')">'+ obj.Props.Choices[i].DisplayName+'</td></tr>';
+	}
+	html += "</table>";
+	$("#choiceCheckDiv").append(html);
 }
 
 ///后台交互///////////////////////////////////////////////////////////////

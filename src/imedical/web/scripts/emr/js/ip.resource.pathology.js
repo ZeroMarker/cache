@@ -2,26 +2,8 @@
 $(function(){
 	strXml = convertToXml(scheme);
 	var interface =$(strXml).find("interface").text();
-	$("#comboxEpisode").hide();
-	initEpisodeList("#EpisodeList");
+    $HUI.radio("#oneMonth").setValue(true);
 	setDataGrid(interface);
-	$HUI.radio("[name='episode']",{
-        onChecked:function(e,value){
-	        var value = $(e.target).attr("value");
-            if (value === "allEpisode")
-            {
-				$("#comboxEpisode").show(); 
-	        } 
-	        else
-	        {
-				$("#comboxEpisode").hide();
- 				$("#EpisodeList").combogrid('hidePanel');
-				queryData();
-		    }      
-        }
-    })
-    $HUI.radio("#currentEpisode").setValue(true);	
-	queryData();
 });
 
 //设置数据 
@@ -124,7 +106,7 @@ function setPatholSubData(data)
 		var td = "";
 		if (data.rows.length>1)
 		{
-			td = "<td id='" +data.rows[i].Tmrowid+ "' name='"+i+"'><input type='checkbox' name='rowcheck' checked='true' onclick='rowcheckOnClick(this)' />" + "</td>"	
+			td = "<td id='" +data.rows[i].Tmrowid+ "' name='"+i+"'><input type='checkbox' name='rowcheck' checked='true' onclick='rowcheckOnClick(this)' />" + "</td>"
 		}
 		else
 		{
@@ -161,27 +143,41 @@ function setPatholSubData(data)
 function queryData()
 {
 	var param = getParam();
-	$('#patholData').datagrid('load',param);
+    if (param){
+        $('#patholData').datagrid('load',param);
+    }
 }
 //获取查询参数
 function getParam()
 {
-	quoteData = {};
-	var epsodeIds = episodeID;
-	if ($('#allEpisode')[0].checked)
-	{
-		epsodeIds = "";
-		var values = $('#EpisodeList').combogrid('getValues');
-		for (var i=0;i< values.length;i++)
-		{
-			epsodeIds = (i==0)?"":epsodeIds + ",";
-			epsodeIds = epsodeIds + values[i];
-		}	
-	}
-	var param = {
-		EpisodeID: epsodeIds
-	};
-	return param;	
+    var param = "";
+    var epsodeIds = episodeID;
+    var appStDate = $("#stDate").datebox('getValue');
+    var appEndDate = $("#endDate").datebox('getValue');
+    if (!$('#currentEpisode')[0].checked)
+    {
+        epsodeIds = getAllEpisodeIdByPatientId();
+    }
+    if ("" != appStDate){
+        appStDate = getHISDateTimeFormate("Date",appStDate);
+    }
+    if ("" != appEndDate){
+        appEndDate = getHISDateTimeFormate("Date",appEndDate);
+    }
+    if (("" != appStDate)&&("" != appEndDate)){
+        if (!compareDateTime(appStDate+" 00:00:00",appEndDate+" 00:00:00"))
+        {
+            $.messager.alert("提示信息", "申请开始日期大于申请结束日期,请重新选择起始日期!");
+            return param;
+        }
+    }
+    quoteData = {};
+    param = {
+        EpisodeIDS: epsodeIds,
+        AppStDate: appStDate,
+        AppEndDate: appEndDate
+    };
+    return param;
 }
 //引用数据
 function getData()
@@ -237,8 +233,8 @@ function checkOnClick(obj)
 		if (!$("#patholSubData tr td")) return;
 		var ordItemId = $("#patholSubData tr:eq(1)").attr("id");
 		if (!ordItemId) return;
-		var field = $(obj).parent().parent().attr("id");
-		var tdNum = $(obj).parent().parent()[0].cellIndex; 
+		var field = $(obj).parents('th').attr("id");
+		var tdNum = $(obj).parents('th')[0].cellIndex;
 		var context = {};
 		var number = 0;
 		$("#patholSubData tr td:not(:first)").each(function() {
@@ -330,4 +326,60 @@ function rowcheckOnClick(obj)
 function UnCheckAll()
 {
 	$("#patholData").datagrid("uncheckAll");
+}
+
+//设置报告日期
+function upPacsDate(e,sel,val){
+    if(!sel) return;
+    if(val==1){
+        $HUI.datebox("#stDate").setValue(formatDate(-30));
+        $HUI.datebox("#endDate").setValue(formatDate(0));
+    }
+    
+    if(val==2){
+        $HUI.datebox("#stDate").setValue(formatDate(-90));
+        $HUI.datebox("#endDate").setValue(formatDate(0));
+    }
+    
+    if(val==3){
+        $HUI.datebox("#stDate").setValue(formatDate(-180));
+        $HUI.datebox("#endDate").setValue(formatDate(0));
+    }
+    
+    if(val==4){
+        $HUI.datebox("#stDate").setValue("");
+        $HUI.datebox("#endDate").setValue("");
+    }
+    if (initFlag){
+        queryData();
+    }else{
+        initFlag = true;
+    }
+    return;
+}
+
+/// 格式化日期
+function formatDate(t){
+    var curr_Date = new Date();  
+    curr_Date.setDate(curr_Date.getDate() + parseInt(t)); 
+    var Year = curr_Date.getFullYear();
+    var Month = curr_Date.getMonth()+1;
+    var Day = curr_Date.getDate();
+    
+    if(typeof(DateFormat)=="undefined"){
+        return Year+"-"+Month+"-"+Day;
+    }else{
+        if(DateFormat=="4"){
+            //日期格式 4:"DMY" DD/MM/YYYY
+            return Day+"/"+Month+"/"+Year;
+        }else if(DateFormat=="3"){
+            //日期格式 3:"YMD" YYYY-MM-DD
+            return Year+"-"+Month+"-"+Day;
+        }else if(DateFormat=="1"){
+            //日期格式 1:"MDY" MM/DD/YYYY
+            return Month+"/"+Day+"/"+Year;
+        }else{
+            return Year+"-"+Month+"-"+Day;
+        }
+    }
 }

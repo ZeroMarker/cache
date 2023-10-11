@@ -5,23 +5,23 @@
  */
 var SessionLoc = session['LOGON.CTLOCID'];
 var SessionUser = session['LOGON.USERID'];
-var ReturnPid = "";
+var ReturnPid = '';
 $(function () {
-    $(".newScroll").mCustomScrollbar({
-        theme: "inset-2-dark",
+    $('.newScroll').mCustomScrollbar({
+        theme: 'inset-2-dark',
         scrollInertia: 100
-    })
+    });
     InitDict();
     InitGridPat();
     InitGridOrdExe();
     InitGridWard();
     InitGridArc();
-    $('#btnFind').bind("click", Query);
-    $('#btnReturn').bind("click", ConfirmReturn);
+    $('#btnFind').bind('click', Query);
+    $('#btnReturn').bind('click', ConfirmReturn);
     $('#txtPatNo').bind('keypress', function (event) {
-        if (event.keyCode == "13") {
+        if (event.keyCode == '13') {
             var patNo = $('#txtPatNo').val();
-            if (patNo == "") {
+            if (patNo == '') {
                 return;
             }
             var patNo = PIVAS.PadZero(patNo, PIVAS.PatNoLength());
@@ -30,66 +30,76 @@ $(function () {
         }
     });
     $('#txtBarCode').bind('keypress', function (event) {
-        if (event.keyCode == "13") {
+        if (event.keyCode == '13') {
             Query();
         }
     });
     $('#txtScanCode').bind('keypress', function (event) {
-        if (event.keyCode == "13") {
+        if (event.keyCode == '13') {
             ConfirmScanReturn();
         }
     });
-    $(".dhcpha-win-mask").remove();
+    $('.dhcpha-win-mask').remove();
 });
 
 function InitDict() {
     // 日期
     PIVAS.Date.Init({
         Id: 'dateStart',
-        LocId: "",
+        LocId: '',
         Type: 'Start',
         QueryType: 'Query'
     });
     PIVAS.Date.Init({
         Id: 'dateEnd',
-        LocId: "",
+        LocId: '',
         Type: 'End',
         QueryType: 'Query'
     });
     // 病区
-    PIVAS.ComboBox.Init({
-        Id: 'cmbWard',
-        Type: 'Ward'
-    }, {
-        placeholder: "病区..."
-    });
-    // 退药原因
-    PIVAS.ComboBox.Init({
-        Id: 'cmbRetReason',
-        Type: 'RetReason'
-    }, {
-        placeholder: "退药原因...",
-        width: 270
-    });
-    PIVAS.ComboBox.Init({
-        Id: 'cmbScanRetReason',
-        Type: 'RetReason'
-    }, {
-        placeholder: "退药原因...",
-        width: 200,
-        onLoadSuccess: function () {
-            $("#cmbScanRetReason").combobox('showPanel');
-            $("#cmbScanRetReason").combobox("textbox").focus();
+    PIVAS.ComboBox.Init(
+        {
+            Id: 'cmbWard',
+            Type: 'Ward'
         },
-        onHidePanel: function (data) {
-            //$("#txtScanCode").focus();
+        {
+            placeholder: '病区...'
         }
-    });
+    );
+    // 退药原因
+    PIVAS.ComboBox.Init(
+        {
+            Id: 'cmbRetReason',
+            Type: 'RetReason'
+        },
+        {
+            placeholder: '退药原因...',
+            width: 260
+        }
+    );
+    PIVAS.ComboBox.Init(
+        {
+            Id: 'cmbScanRetReason',
+            Type: 'RetReason'
+        },
+        {
+            placeholder: '退药原因...',
+            width: 200,
+            onLoadSuccess: function () {
+                $('#cmbScanRetReason').combobox('showPanel');
+                $('#cmbScanRetReason').combobox('textbox').focus();
+            },
+            onHidePanel: function (data) {
+                //$("#txtScanCode").focus();
+            }
+        }
+    );
 }
 // 病人列表
 function InitGridPat() {
     var columns = [
-        [{
+        [
+            {
                 field: 'admId',
                 title: 'admId',
                 width: 80,
@@ -129,8 +139,8 @@ function InitGridPat() {
     var dataGridOption = {
         url: $URL,
         queryParams: {
-            ClassName: "web.DHCSTPIVAS.Return",
-            QueryName: "QueryPat"
+            ClassName: 'web.DHCSTPIVAS.Return',
+            QueryName: 'QueryPat'
         },
         fitColumns: false,
         border: false,
@@ -140,73 +150,74 @@ function InitGridPat() {
         fitColumns: true,
         onSelect: function (rowIndex, rowData) {
             // 查询明细
-            var params = QueryParams() + "^" + rowData.admId;
+            var params = QueryParams() + '^' + rowData.admId;
             $('#gridOrdExe').datagrid('query', {
                 inputStr: params,
                 rows: 9999
             });
         },
         onLoadSuccess: function () {
-            if ($(this).datagrid("getRows").length > 0) {
-                $(this).datagrid("selectRow", 0);
+            if ($(this).datagrid('getRows').length > 0) {
+                $(this).datagrid('selectRow', 0);
             } else {
-                $("#gridOrdExe").datagrid("clear");
-                $("#txtBarCode").val("");
+                $('#gridOrdExe').datagrid('clear');
+                $('#txtBarCode').val('');
             }
         }
     };
-    DHCPHA_HUI_COM.Grid.Init("gridPat", dataGridOption);
+    DHCPHA_HUI_COM.Grid.Init('gridPat', dataGridOption);
 }
 // 医嘱明细列表
 function InitGridOrdExe() {
     var columns = [
-        [{
+        [
+            {
                 field: 'gridOrdExeChk',
                 checkbox: true
             },
             {
-                field: "psNumber",
+                field: 'psNumber',
                 title: 'psNumber',
                 width: 100,
                 hidden: true
             },
             {
-                field: "psState",
+                field: 'psState',
                 title: '状态',
                 width: 45,
                 styler: function (value, row, index) {
                     var psNumber = row.psNumber;
-                    var colorStyle = "";
-                    if ((parseInt(psNumber) > 50) && (row.packFlag != "P")) {
-                        colorStyle = "background-color:#ffe3e3;color:#ff3d2c;font-weight:bold;";
+                    var colorStyle = '';
+                    if (parseInt(psNumber) > 50 && row.packFlag != 'P') {
+                        colorStyle = 'background-color:#ffe3e3;color:#ff3d2c;font-weight:bold;';
                     }
                     return colorStyle;
                 }
             },
             {
-                field: "mDsp",
+                field: 'mDsp',
                 title: 'mDsp',
                 width: 100,
                 hidden: true
             },
             {
-                field: "dspId",
+                field: 'dspId',
                 title: 'dspId',
                 width: 100,
                 hidden: true
             },
             {
-                field: "doseDateTime",
+                field: 'doseDateTime',
                 title: '用药时间',
                 width: 100
             },
             {
-                field: "batNo",
+                field: 'batNo',
                 title: '批次',
                 width: 50,
                 styler: function (value, row, index) {
-                    var colorStyle = "";
-                    if (row.packFlag != "") {
+                    var colorStyle = '';
+                    if (row.packFlag != '') {
                         colorStyle = PIVAS.Grid.CSS.BatchPack;
                     }
                     return colorStyle;
@@ -218,8 +229,9 @@ function InitGridOrdExe() {
                 width: 30,
                 styler: function (value, row, index) {
                     var colColor = row.colColor;
-                    var colorStyle = "";
-                    if ((colColor % 2) == 0) { // 按成组的背景色
+                    var colorStyle = '';
+                    if (colColor % 2 == 0) {
+                        // 按成组的背景色
                         colorStyle = PIVAS.Grid.CSS.PersonEven;
                     }
                     return colorStyle;
@@ -238,28 +250,28 @@ function InitGridOrdExe() {
             },
             {
                 field: 'manfDesc',
-                title: "厂商",
+                title: '生产企业',
                 width: 100
             },
             {
                 field: 'dspQty',
                 title: '发药数量',
                 width: 70,
-                halign: "left",
+                halign: 'left',
                 align: 'right'
             },
             {
                 field: 'canRetQty',
                 title: '可退数量',
                 width: 70,
-                halign: "left",
+                halign: 'left',
                 align: 'right'
             },
             {
                 field: 'sp',
                 title: '售价',
                 width: 70,
-                halign: "left",
+                halign: 'left',
                 align: 'right'
             },
             {
@@ -290,8 +302,8 @@ function InitGridOrdExe() {
     var dataGridOption = {
         url: $URL,
         queryParams: {
-            ClassName: "web.DHCSTPIVAS.Return",
-            QueryName: "QueryOrdExe"
+            ClassName: 'web.DHCSTPIVAS.Return',
+            QueryName: 'QueryOrdExe'
         },
         fitColumns: false,
         border: true,
@@ -306,9 +318,7 @@ function InitGridOrdExe() {
         border: false,
         onLoadSuccess: function () {},
         onClickRow: function (rowIndex, rowData) {},
-        rowStyler: function (index, row) {
-
-        },
+        rowStyler: function (index, row) {},
         onCheck: function (rowIndex, rowData) {
             PIVAS.Grid.LinkCheck.Init({
                 CurRowIndex: rowIndex,
@@ -338,19 +348,20 @@ function InitGridOrdExe() {
             });
         },
         onUnselect: function (rowIndex, rowData) {
-			PIVAS.Grid.ClearSelections(this.id);
+            PIVAS.Grid.ClearSelections(this.id);
         },
         onLoadSuccess: function () {
-            $("#txtBarCode").val("");
+            $('#txtBarCode').val('');
         }
-    }
-    DHCPHA_HUI_COM.Grid.Init("gridOrdExe", dataGridOption);
+    };
+    DHCPHA_HUI_COM.Grid.Init('gridOrdExe', dataGridOption);
 }
 
 // 病区合计列表
 function InitGridWard() {
     var columns = [
-        [{
+        [
+            {
                 field: 'wardId',
                 title: 'wardId',
                 width: 80,
@@ -365,7 +376,7 @@ function InitGridWard() {
                 field: 'wardRetCnt',
                 title: '已退组数',
                 width: 2,
-                align: "right",
+                align: 'right',
                 halign: 'left'
             }
         ]
@@ -374,8 +385,8 @@ function InitGridWard() {
     var dataGridOption = {
         url: $URL,
         queryParams: {
-            ClassName: "web.DHCSTPIVAS.Return",
-            QueryName: "CalcuTmpWard"
+            ClassName: 'web.DHCSTPIVAS.Return',
+            QueryName: 'CalcuTmpWard'
         },
         fitColumns: true,
         border: false,
@@ -385,13 +396,14 @@ function InitGridWard() {
         onSelect: function (rowIndex, rowData) {},
         onLoadSuccess: function () {}
     };
-    DHCPHA_HUI_COM.Grid.Init("gridWard", dataGridOption);
+    DHCPHA_HUI_COM.Grid.Init('gridWard', dataGridOption);
 }
 
 // 已扫药品合计
 function InitGridArc() {
     var columns = [
-        [{
+        [
+            {
                 field: 'arcItmId',
                 title: 'arcItmId',
                 width: 80,
@@ -406,7 +418,7 @@ function InitGridArc() {
                 field: 'qty',
                 title: '已退数量',
                 width: 100,
-                align: "right",
+                align: 'right',
                 halign: 'left'
             }
         ]
@@ -415,8 +427,8 @@ function InitGridArc() {
     var dataGridOption = {
         url: $URL,
         queryParams: {
-            ClassName: "web.DHCSTPIVAS.Return",
-            QueryName: "CalcuTmpArcim"
+            ClassName: 'web.DHCSTPIVAS.Return',
+            QueryName: 'CalcuTmpArcim'
         },
         fitColumns: false,
         border: false,
@@ -426,7 +438,7 @@ function InitGridArc() {
         onSelect: function (rowIndex, rowData) {},
         onLoadSuccess: function () {}
     };
-    DHCPHA_HUI_COM.Grid.Init("gridArc", dataGridOption);
+    DHCPHA_HUI_COM.Grid.Init('gridArc', dataGridOption);
 }
 //查询
 function Query() {
@@ -442,96 +454,96 @@ function QueryParams() {
     var edDate = $('#dateEnd').datebox('getValue');
     var locId = SessionLoc;
     var wardId = $('#cmbWard').combobox('getValue');
-    var patNo = $("#txtPatNo").val().trim();
-    var barCode = $("#txtBarCode").val().trim();
+    var patNo = $('#txtPatNo').val().trim();
+    var barCode = $('#txtBarCode').val().trim();
     // 第七个参数为就诊Id
-    var params = locId + "^" + wardId + "^" + stDate + "^" + edDate + "^" + patNo + "^" + barCode;
+    var params = locId + '^' + wardId + '^' + stDate + '^' + edDate + '^' + patNo + '^' + barCode;
     return params;
 }
 
 function ConfirmReturn() {
-    var rowsData = $("#gridOrdExe").datagrid("getRows");
-    if (rowsData == "") {
+    var rowsData = $('#gridOrdExe').datagrid('getRows');
+    if (rowsData == '') {
         $.messager.alert('提示', '医嘱明细列表无数据', 'warning');
         return;
     }
-    if (GetCheckedDspStr("") == "") {
+    if (GetCheckedDspStr('') == '') {
         return;
     }
-    $.messager.confirm('提示', "您确认退药吗?", function (r) {
+    $.messager.confirm('提示', '您确认退药吗?', function (r) {
         if (r) {
-            $("#cmbRetReason").combobox("clear");
+            $('#cmbRetReason').combobox('clear');
             $('#retReasonWin').window('open');
-            $("#cmbRetReason").combobox('showPanel');
-            $("#cmbRetReason").combobox("textbox").focus();
+            $('#cmbRetReason').combobox('showPanel');
+            $('#cmbRetReason').combobox('textbox').focus();
+            // $('#retReasonWin').find('.dialog-button').css('padding-top', '0px');
         }
     });
 }
 
 function Return() {
-    var retReasonId = $("#cmbRetReason").combobox("getValue") || "";
-    if (retReasonId == "") {
+    var retReasonId = $('#cmbRetReason').combobox('getValue') || '';
+    if (retReasonId == '') {
         $.messager.alert('提示', '请选择退药原因', 'warning');
         return;
     }
     $('#retReasonWin').window('close');
     var chkDspData = GetCheckedDspStr(retReasonId);
-    var retData = tkMakeServerCall("web.DHCSTPIVAS.Return", "Return", SessionLoc, SessionUser, chkDspData);
-    var retDataArr = retData.split("|$|");
+    var retData = tkMakeServerCall('web.DHCSTPIVAS.Return', 'Return', SessionLoc, SessionUser, chkDspData);
+    var retDataArr = retData.split('|$|');
     if (retDataArr[0] == 0) {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: "退药成功",
+            msg: '退药成功',
             type: 'success'
         });
-        $("#gridOrdExe").datagrid("reload")
+        $('#gridOrdExe').datagrid('reload');
     } else {
-        $.messager.alert('提示', retDataArr[1], 'warning');
+        $.messager.alert('提示', $got(retDataArr[1]), 'warning');
         return;
     }
-
 }
 
 function GetCheckedDspStr(retReasonId) {
     var dspArr = [];
     var gridChecked = $('#gridOrdExe').datagrid('getChecked');
-    if (gridChecked == "") {
-        $.messager.alert("提示", "请先选择需要退药记录", "warning");
-        return "";
+    if (gridChecked == '') {
+        $.messager.alert('提示', '请先选择需要退药记录', 'warning');
+        return '';
     }
     var cLen = gridChecked.length;
     for (var cI = 0; cI < cLen; cI++) {
         var cIData = gridChecked[cI];
         var dspId = cIData.dspId;
-        if (dspId == "") {
+        if (dspId == '') {
             continue;
         }
         var canRetQty = cIData.canRetQty;
         var dspSubId = cIData.dspSubId;
         var phacItmLbId = cIData.phacItmLbId;
-        dspArr.push(dspId + "^" + canRetQty + "^" + retReasonId + "^" + dspSubId + "^" + phacItmLbId);
+        dspArr.push(dspId + '^' + canRetQty + '^' + retReasonId + '^' + dspSubId + '^' + phacItmLbId);
     }
-    return dspArr.join(",");
+    return dspArr.join(',');
 }
 // 扫描退药前确认
 function ConfirmScanReturn() {
-    var retReasonId = $("#cmbScanRetReason").combobox("getValue") || "";
-    if (retReasonId == "") {
-        $.messager.alert("提示", "请先选择退药原因", "warning", function () {
-            $("#cmbScanRetReason").combobox('showPanel');
-            $("#cmbScanRetReason").combobox("textbox").focus();
+    var retReasonId = $('#cmbScanRetReason').combobox('getValue') || '';
+    if (retReasonId == '') {
+        $.messager.alert('提示', '请先选择退药原因', 'warning', function () {
+            $('#cmbScanRetReason').combobox('showPanel');
+            $('#cmbScanRetReason').combobox('textbox').focus();
         });
         return;
     }
-    var barCode = $("#txtScanCode").val();
-    var chkRet = tkMakeServerCall("web.DHCSTPIVAS.Return", "CheckScan", barCode);
-    var chkArr = chkRet.split("|$|");
+    var barCode = $('#txtScanCode').val();
+    var chkRet = tkMakeServerCall('web.DHCSTPIVAS.Return', 'CheckScan', barCode);
+    var chkArr = chkRet.split('|$|');
     if (chkArr[0] < 0) {
-        $.messager.confirm('提示', chkArr[1] + ",您确认退药吗?", function (r) {
+        $.messager.confirm('提示', $got(chkArr[1]) + ',' + $g('您确认退药吗?'), function (r) {
             if (r) {
                 ScanReturn();
             } else {
-                $("#txtScanCode").val("");
-                $("#txtScanCode").focus();
+                $('#txtScanCode').val('');
+                $('#txtScanCode').focus();
             }
         });
     } else {
@@ -541,16 +553,16 @@ function ConfirmScanReturn() {
 
 // 扫描退药
 function ScanReturn() {
-    var retReasonId = $("#cmbScanRetReason").combobox("getValue") || "";
-    var barCode = $("#txtScanCode").val();
-    var retData = tkMakeServerCall("web.DHCSTPIVAS.Return", "ReturnByBarCode", barCode, SessionUser, SessionLoc, retReasonId, ReturnPid, 1);
-    var retDataArr = retData.split("|$|");
+    var retReasonId = $('#cmbScanRetReason').combobox('getValue') || '';
+    var barCode = $('#txtScanCode').val();
+    var retData = tkMakeServerCall('web.DHCSTPIVAS.Return', 'ReturnByBarCode', barCode, SessionUser, SessionLoc, retReasonId, ReturnPid, 1);
+    var retDataArr = retData.split('|$|');
     if (retDataArr[0] == 0) {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: "退药成功",
+            msg: '退药成功',
             type: 'success'
         });
-        PIVAS.Media.Play("success");
+        PIVAS.Media.Play('success');
         // 加载标签数据
         PIVASLABEL.Init({
             labelData: retDataArr[1]
@@ -564,18 +576,17 @@ function ScanReturn() {
             pid: ReturnPid,
             rows: 9999
         });
-
     } else {
         DHCPHA_HUI_COM.Msg.popover({
             msg: retDataArr[1],
             type: 'error'
         });
-        PIVAS.Media.Play("warning");
-        $("#labelContent").html("");
+        PIVAS.Media.Play('warning');
+        $('#labelContent').html('');
     }
-    $("#txtScanCode").val("");
+    $('#txtScanCode').val('');
 }
 
 window.onbeforeunload = function () {
-    tkMakeServerCall("web.DHCSTPIVAS.Return", "KillCalcuTmpReturn", ReturnPid);
+    tkMakeServerCall('web.DHCSTPIVAS.Return', 'KillCalcuTmpReturn', ReturnPid);
 };

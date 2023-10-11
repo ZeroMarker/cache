@@ -11,9 +11,9 @@ function PrintInPo(Parref)
 	}
 	var mainArr=mainData.split("^");
 	var inpono=mainArr[1]
-	var date=mainArr[31]
+	var date=mainArr[34]
 	var user=mainArr[30]
-	var PoLocDesc=mainArr[26]
+	var PoLocDesc=mainArr[26]  //£»
 	var VenDesc=mainArr[29]
 	var RQDTFormat=App_StkRQDateFormat;  //+" "+App_StkRQTimeFormat;
 	//alert(inpono+" "+date+" "+user+" "+PoLocDesc+" "+VenDesc) 

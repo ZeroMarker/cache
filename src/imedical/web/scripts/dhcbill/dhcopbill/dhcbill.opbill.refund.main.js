@@ -1,24 +1,12 @@
-ï»¿/**
+/**
  * FileName: dhcbill.opbill.refund.main.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-04-23
- * Description: é—¨è¯Šé€€è´¹
+ * Description: ÃÅÕïÍË·Ñ
  */
-
-var GV = {
-	DefAuditFlag: false,    //å·²ç”³è¯·é€€è´¹checkboxé»˜è®¤(true:å‹¾ä¸­, false:ä¸å‹¾ä¸­)
-	INVYBConFlag: 1,
-	AccPINVYBConFlag: 1,
-	InvRequireFlag: "Y",
-	INVXMLName: "INVPrtFlag2007",
-	AccPINVXMLName: "INVPrtFlagCPP",
-	ReBillFlag: 0,
-	RefOrdAry: []
-};
 
 $(function () {
 	$(document).keydown(function (e) {
-		banBackSpace(e);
 		frameEnterKeyCode(e);
 	});
 	initQueryMenu();
@@ -28,111 +16,110 @@ $(function () {
 });
 
 function initQueryMenu() {
-	var defDate = getDefStDate(0);
-	$(".datebox-f").datebox("setText", defDate);
-	setValueById("auditFlag", GV.DefAuditFlag);
-	
-	//è¯»å¡
+	$(".datebox-f").datebox("setValue", CV.DefDate);
+	setValueById("auditFlag", CV.DefAuditFlag);
+
+	//¶Á¿¨
 	$HUI.linkbutton("#btn-readCard", {
 		onClick: function () {
 			readHFMagCardClick();
 		}
 	});
 	
-	//æŸ¥è¯¢
+	//¶ÁÒ½±£¿¨
+	$HUI.linkbutton("#btn-readInsuCard", {
+		onClick: function () {
+			readInsuCardClick();
+		}
+	});
+	
+	//²éÑ¯
 	$HUI.linkbutton("#btn-find", {
 		onClick: function () {
 			loadInvList();
 		}
 	});
 	
-	//åŸå·é‡æ‰“
+	//Ô­ºÅÖØ´ò
 	$HUI.linkbutton("#btn-reprt", {
 		onClick: function () {
 			reprtClick();
 		}
 	});
 	
-	//è¿‡å·é‡æ‰“
+	//¹ıºÅÖØ´ò
 	$HUI.linkbutton("#btn-passNoReprt", {
 		onClick: function () {
 			passNoReprtClick();
 		}
 	});
 	
-	//è¡¥è°ƒåŒ»ä¿
+	//²¹µ÷Ò½±£
 	$HUI.linkbutton("#btn-reInsuDivide", {
 		onClick: function () {
 			reInsuDivideClick();
 		}
 	});
 	
-	//æ’¤é”€ç•™è§‚ç»“ç®—
+	//³·ÏúÁô¹Û½áËã
 	$HUI.linkbutton("#btn-cancleStayCharge", {
 		onClick: function () {
 			cancleStayChargeClick();
 		}
 	});
 	
-	//æ¸…å±
+	//ÇåÆÁ
 	$HUI.linkbutton("#btn-clear", {
 		onClick: function () {
 			clearClick();
 		}
 	});
 
-	//ä½œåºŸ/çº¢å†²
-	$HUI.linkbutton("#btn-abort, #btn-refund", {
+	//ÍË·Ñ
+	$HUI.linkbutton("#btn-refund", {
 		onClick: function () {
 			refundInvClick();
 		}
 	});
 	
-	//å¡å·å›è½¦æŸ¥è¯¢äº‹ä»¶
-	$("#cardNo").keydown(function (e) {
+	//¿¨ºÅ»Ø³µ²éÑ¯ÊÂ¼ş
+	$("#CardNo").focus().keydown(function (e) {
 		cardNoKeydown(e);
 	});
 
-	//ç™»è®°å·å›è½¦æŸ¥è¯¢äº‹ä»¶
+	//µÇ¼ÇºÅ»Ø³µ²éÑ¯ÊÂ¼ş
 	$("#patientNo").keydown(function (e) {
 		patientNoKeydown(e);
 	});
 
-	//å‘ç¥¨å›è½¦æŸ¥è¯¢äº‹ä»¶
+	//·¢Æ±»Ø³µ²éÑ¯ÊÂ¼ş
 	$("#invNo").keydown(function (e) {
 		invNoKeydown(e);
 	});
-
-	$("#more-container").click(function () {
+	
+	var $tb = $("#more-container");
+	if (HISUIStyleCode == "lite") {
+		$(".arrows-b-text").css("color", "#339EFF");
+		$tb.find(".spread-b-down").removeClass("spread-b-down").addClass("spread-l-down");
+	};
+	$tb.click(function () {
 		var t = $(this);
-		if (t.find(".arrows-b-text").text() == "æ›´å¤š") {
-			t.find(".arrows-b-text").text("æ”¶èµ·");
-			t.find(".spread-b-down").removeClass("spread-b-down").addClass("retract-b-up");
-			$("tr.display-more-tr").slideDown("'normal", setHeight(40));
+		var ui = (HISUIStyleCode == "lite") ? "l" : "b";
+		if (t.find(".arrows-b-text").text() == $g("¸ü¶à")) {
+			t.find(".arrows-b-text").text($g("ÊÕÆğ"));
+			t.find(".spread-" + ui + "-down").removeClass("spread-" + ui + "-down").addClass("retract-" + ui + "-up");
+			$("tr.display-more-tr").slideDown("normal", setHeight(40));
 		} else {
-			t.find(".arrows-b-text").text("æ›´å¤š");
-			t.find(".retract-b-up").removeClass("retract-b-up").addClass("spread-b-down");
+			t.find(".arrows-b-text").text($g("¸ü¶à"));
+			t.find(".retract-" + ui + "-up").removeClass("retract-" + ui + "-up").addClass("spread-" + ui + "-down");
 			$("tr.display-more-tr").slideUp("fast", setHeight(-40));
 		}
 	});
 
-	//å¡ç±»å‹
-	$HUI.combobox("#cardType", {
-		panelHeight: 'auto',
-		method: 'GET',
-		url: $URL + "?ClassName=web.DHCBillOtherLB&QueryName=QCardTypeDefineList&ResultSetType=array",
-		editable: false,
-		valueField: 'value',
-		textField: 'caption',
-		onChange: function (newValue, oldValue) {
-			initReadCard(newValue);
-		}
-	});
-
-	//æ“ä½œå‘˜
+	//²Ù×÷Ô±
 	$HUI.combobox("#guser", {
 		panelHeight: 150,
-		url: $URL + '?ClassName=web.DHCOPBillRefund&QueryName=FindInvUser&ResultSetType=array',
+		url: $URL + '?ClassName=web.DHCOPBillRefund&QueryName=FindInvUser&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
 		mode: 'remote',
 		method: 'GET',
 		valueField: 'id',
@@ -140,69 +127,26 @@ function initQueryMenu() {
 		blurValidValue: true,
 		onBeforeLoad: function (param) {
 			param.desc = param.q;
-			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
 		}
-	});
-	
-	//åŒ»ç–—ç±»åˆ«
-	$HUI.combobox("#insuAdmType", {
-		panelHeight: 150,
-		method: 'GET',
-		valueField: "cCode",
-		textField: "cDesc",
-		blurValidValue: true,
-		defaultFilter: 4
-	});
-
-	//ç—…ç§
-	$HUI.combobox("#insuDic", {
-		panelHeight: 150,
-		method: 'GET',
-		valueField: "DiagCode",
-		textField: "DiagDesc",
-		blurValidValue: true,
-		defaultFilter: 4
-	});
-	
-	$.m({
-		ClassName: "web.DHCOPConfig",
-		MethodName: "GetOPBaseConfig",
-		type: "GET",
-		hospId: PUBLIC_CONSTANT.SESSION.HOSPID
-	}, function (rtn) {
-		var myAry = rtn.split("^");
-		GV.AccPINVYBConFlag = myAry[9];
-		GV.INVYBConFlag = myAry[12];
-	});
-	
-	$.m({
-		ClassName: "web.UDHCOPGSConfig",
-		MethodName: "ReadCFByGRowID",
-		type: "GET",
-		GPRowID: PUBLIC_CONSTANT.SESSION.GROUPID,
-		HospID: PUBLIC_CONSTANT.SESSION.HOSPID
-	}, function (rtn) {
-		var myAry = rtn.split("^");
-		GV.AbortFlag = myAry[7];    //ä½œåºŸæƒé™
-		GV.RefundFlag = myAry[8];   //çº¢å†²æƒé™
-		GV.INVXMLName = myAry[10];
-		GV.AccPINVXMLName = myAry[11];
 	});
 }
 
 /**
- * å¿«æ·é”®
+ * ¿ì½İ¼ü
  */
 function frameEnterKeyCode(e) {
 	var key = websys_getKey(e);
 	switch (key) {
 	case 115: //F4
+		e.preventDefault();
 		readHFMagCardClick();
 		break;
 	case 118: //F7
+		e.preventDefault();
 		clearClick();
 		break;
 	case 119: //F8
+		e.preventDefault();
 		loadInvList();
 		break;
 	default:
@@ -210,44 +154,76 @@ function frameEnterKeyCode(e) {
 }
 
 /**
- * è¯»å¡
+ * ¶Á¿¨
  * @method readHFMagCardClick
  * @author ZhYW
  */
 function readHFMagCardClick() {
-	if ($("#btn-readCard").hasClass("l-btn-disabled")) {
+	if ($("#btn-readCard").linkbutton("options").disabled) {
 		return;
 	}
-	try {
-		var cardType = getValueById("cardType");
-		var cardTypeDR = cardType.split("^")[0];
-		var myRtn = "";
-		if (cardTypeDR == "") {
-			myRtn = DHCACC_GetAccInfo();
-		} else {
-			myRtn = DHCACC_GetAccInfo(cardTypeDR, cardType);
+	$("#btn-readCard").linkbutton("toggleAble");
+	DHCACC_GetAccInfo7(magCardCallback);
+}
+
+function cardNoKeydown(e) {
+	var key = websys_getKey(e);
+	if (key == 13) {
+		var cardNo = getValueById("CardNo");
+		if (!cardNo) {
+			return;
 		}
-		var myAry = myRtn.toString().split("^");
-		var rtn = myAry[0];
-		switch (rtn) {
-		case "0":
-			setValueById("cardNo", myAry[1]);
-			setValueById("patientNo", myAry[5]);
-			loadInvList();
-			break;
-		case "-200":
-			$.messager.alert("æç¤º", "å¡æ— æ•ˆ", "info", function () {
-				focusById("btn-readCard");
-			});
-			break;
-		case "-201":
-			setValueById("cardNo", myAry[1]);
-			setValueById("patientNo", myAry[5]);
-			loadInvList();
-			break;
-		default:
+		DHCACC_GetAccInfo("", cardNo, "", "", magCardCallback);
+	}
+}
+
+/**
+ * ¶ÁÒ½±£¿¨
+ */
+function readInsuCardClick() {
+	if ($("#btn-readInsuCard").linkbutton("options").disabled) {
+		return;
+	}
+	$("#btn-readInsuCard").linkbutton("toggleAble");
+	var rtn = InsuReadCard(0, PUBLIC_CONSTANT.SESSION.USERID, "", "", "00A^^^");
+	var myAry = rtn.split("|");
+	if (myAry[0] == 0) {
+		var insuReadInfo = myAry[1];
+		var insuReadAry = insuReadInfo.split("^");
+		var insuCardNo = insuReadAry[1];	//Ò½±£¿¨ºÅ
+		var credNo = insuReadAry[7];	    //Éí·İÖ¤ºÅ
+		$("#CardNo").val(credNo);
+		if (credNo != "") {
+			DHCACC_GetAccInfo("", credNo, "", "", magCardCallback);
 		}
-	} catch (e) {
+	}
+}
+
+function magCardCallback(rtnValue) {
+	var patientId = "";
+	var myAry = rtnValue.split("^");
+	switch (myAry[0]) {
+	case "0":
+		setValueById("CardNo", myAry[1]);
+		patientId = myAry[4];
+		setValueById("patientNo", myAry[5]);
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	case "-200":
+		$.messager.alert("ÌáÊ¾", "¿¨ÎŞĞ§", "info", function () {
+			focusById("CardNo");
+		});
+		break;
+	case "-201":
+		setValueById("CardNo", myAry[1]);
+		patientId = myAry[4];
+		setValueById("patientNo", myAry[5]);
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	default:
+	}
+	if (patientId != "") {
+		loadInvList();
 	}
 }
 
@@ -265,48 +241,8 @@ function patientNoKeydown(e) {
 	}
 }
 
-function cardNoKeydown(e) {
-	try {
-		var key = websys_getKey(e);
-		if (key == 13) {
-			var cardNo = getValueById("cardNo");
-			if (!cardNo) {
-				return;
-			}
-			var cardType = getValueById("cardType");
-			cardNo = formatCardNo(cardType, cardNo);
-			var cardTypeAry = cardType.split("^");
-			var cardTypeDR = cardTypeAry[0];
-			var myRtn = DHCACC_GetAccInfo(cardTypeDR, cardNo, "", "PatInfo");
-			var myAry = myRtn.toString().split("^");
-			var rtn = myAry[0];
-			switch (rtn) {
-			case "0":
-				setValueById("cardNo", myAry[1]);
-				setValueById("patientNo", myAry[5]);
-				loadInvList();
-				break;
-			case "-200":
-				setTimeout(function () {
-					$.messager.alert("æç¤º", "å¡æ— æ•ˆ", "info", function () {
-						focusById("cardNo");
-					});
-				}, 300);
-				break;
-			case "-201":
-				setValueById("cardNo", myAry[1]);
-				setValueById("patientNo", myAry[5]);
-				loadInvList();
-				break;
-			default:
-			}
-		}
-	} catch (e) {
-	}
-}
-
 /**
- * å‘ç¥¨å·å›è½¦æŸ¥è¯¢
+ * ·¢Æ±ºÅ»Ø³µ²éÑ¯
  */
 function invNoKeydown(e) {
 	var key = websys_getKey(e);
@@ -318,55 +254,30 @@ function invNoKeydown(e) {
 				recepitNo: $(e.target).val(),
 				hospId: PUBLIC_CONSTANT.SESSION.HOSPID
 			}, function (rtn) {
-				if (rtn == "0") {
-					$.messager.popover({msg: "è¯¥å‘ç¥¨å·ä¸å­˜åœ¨", type: "info"});
+				if (rtn == 0) {
+					$.messager.popover({msg: "¸Ã·¢Æ±ºÅ²»´æÔÚ", type: "info"});
 					return;
-				} else {
-					loadInvList();
 				}
+				loadInvList();
 			});
 		}
 	}
 }
 
 /**
- * åˆå§‹åŒ–å¡ç±»å‹æ—¶å¡å·å’Œè¯»å¡æŒ‰é’®çš„å˜åŒ–
- * @method initReadCard
- * @param {String} cardType
- * @author ZhYW
- */
-function initReadCard(cardType) {
-	try {
-		var cardTypeAry = cardType.split("^");
-		var readCardMode = cardTypeAry[16];
-		if (readCardMode == "Handle") {
-			disableById("btn-readCard");
-			$("#cardNo").attr("readOnly", false);
-			focusById("cardNo");
-		} else {
-			enableById("btn-readCard");
-			setValueById("cardNo", "");
-			$("#cardNo").attr("readOnly", true);
-			focusById("btn-readCard");
-		}
-	} catch (e) {
-	}
-}
-
-/**
- * é‡ç½®layouté«˜åº¦
+ * ÖØÖÃlayout¸ß¶È
  * @method setHeight
  * @param {int} num
  * @author ZhYW
  */
 function setHeight(num) {
-	var l = $("#head-menu");
+	var l = $(".layout-panel-west .layout:eq(0)");
 	var n = l.layout("panel", "north");
 	var nh = parseInt(n.outerHeight()) + parseInt(num);
 	n.panel("resize", {
 		height: nh
 	});
-	if (+num > 0) {
+	if (num > 0) {
 		$("tr.display-more-tr").show();
 	} else {
 		$("tr.display-more-tr").hide();
@@ -380,41 +291,56 @@ function setHeight(num) {
 }
 
 function initInvList() {
-	$HUI.datagrid("#invList", {
+	GV.InvList = $HUI.datagrid("#invList", {
 		fit: true,
 		border: false,
-		striped: true,
 		singleSelect: true,
 		pagination: true,
 		rownumbers: true,
 		pageSize: 20,
-		data: [],
-		columns: [[{title: 'å‘ç¥¨å·', field: 'invNo', width: 100},
-				   {title: 'ç™»è®°å·', field: 'patNo', width: 100},
-				   {title: 'æ‚£è€…å§“å', field: 'patName', width: 80},
-				   {title: 'è´¹ç”¨æ€»é¢', field: 'totalAmt', align: 'right', width: 80},
-				   {title: 'è‡ªä»˜é‡‘é¢', field: 'patShareAmt', align: 'right', width: 80},
-				   {title: 'æ”¶è´¹å‘˜', field: 'userName', width: 70},
-				   {title: 'æ”¶è´¹æ—¶é—´', field: 'invDate', width: 155,
-					formatter: function (value, row, index) {
-						return value + " " + row.invTime;
+		className: "web.DHCOPBillRefund",
+		queryName: "FindOPBillINV",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["prtDate", "invDate"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if ($.inArray(cm[i].field, ["invRowId", "prtRowId", "invFlag", "hasRefOrd"]) != -1) {
+					cm[i].hidden = true;
+					continue;
+				}
+				if (cm[i].field == "userName") {
+					cm[i].title = "ÊÕ·ÑÔ±";
+				}
+				if (cm[i].field == "prtTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.prtDate + " " + value;
 					}
-				   },
-				   {title: 'invRowId', field: 'invRowId', hidden: true},
-				   {title: 'prtRowId', field: 'prtRowId', hidden: true},   //é›†ä¸­æ‰“å°å‘ç¥¨å…³è”çš„å°æ¡RowId
-				   {title: 'invFlag', field: 'invFlag', hidden: true},
-				   {title: 'auditFlag', field: 'auditFlag', hidden: true}
-			]],
+				}
+				if (cm[i].field == "invTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.invDate + " " + value;
+					}
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if ($.inArray(cm[i].field, ["prtTime", "invTime"]) != -1) {
+						cm[i].width = 155;
+					}
+				}
+			}
+		},
 		onLoadSuccess: function (data) {
 			if (data.total == 1) {
-				$(this).datagrid("selectRow", 0);
+				GV.InvList.selectRow(0);
 			}else {
 				clearRefPanel();
 			}
 		},
 		rowStyler: function (index, row) {
-			if (row.auditFlag == "1") {
-				return "background-color: #FFEFD5;";
+			if (row.hasRefOrd == 1) {
+				return "background-color:" + CV.RefInvRowBgClr + ";color:" + CV.RefInvRowClr + ";";
 			}
 		},
 		onSelect: function (index, row) {
@@ -427,23 +353,30 @@ function selectRowHandler(row) {
 	var invRowId = row.invRowId;
 	var prtRowId = row.prtRowId;
 	var invFlag = row.invFlag;
-	var invNo = row.invNo;
-	if (!invNo) {
-		GV.InvRequireFlag = "N";
-	}
-	if ((invFlag == "API") && prtRowId) {      //é›†ä¸­æ‰“å°å‘ç¥¨è‡ªåŠ¨æ’¤é”€æ—¶æŒ‰å°æ¡æŸ¥è¯¢å‘ç¥¨ä¿¡æ¯
+	GV.InvRequireFlag = row.invNo ? "Y" : "N";     //¼¯ÖĞ´òÓ¡·¢Æ±ÔÚÆÕÍ¨ÍË·Ñ½çÃæ²¿·ÖÍË·ÑÊ±£¬Ò²ĞèÒª´òÓ¡·¢Æ±
+	
+	if ((invFlag == "API") && prtRowId) {      //¼¯ÖĞ´òÓ¡·¢Æ±×Ô¶¯³·ÏúÊ±°´Ğ¡Ìõ²éÑ¯·¢Æ±ĞÅÏ¢
 		invRowId = prtRowId;
 		invFlag = "PRT";
-		GV.InvRequireFlag = "Y";               //é›†ä¸­æ‰“å°å‘ç¥¨åœ¨æ™®é€šé€€è´¹ç•Œé¢éƒ¨åˆ†é€€è´¹æ—¶ï¼Œéœ€è¦æ‰“å°å‘ç¥¨
 	}
+	
+	//+2022-03-29 ZhYW ÅĞ¶ÏÊÇ·ñ×öÁËÖ±½ÓÍË·ÑÉóºË£¬ÅäÖÃ"²¿·ÖÍË·Ñ°´È«ÍËºóÔÙÊÕ·Ñ½çÃæÖØÊÕ"Ê±£¬µ±×÷ÒÑÉóºË
+	GV.IsDirRefAudited = (CV.IsRefedReChrg == 1) ? CV.IsRefedReChrg : isDirectRefAudit(invRowId, invFlag);
+	if (GV.IsDirRefAudited == 1) {
+		//Ö±½ÓÍË·ÑÉóºË¹ıµÄ·¢Æ±£¬È«²¿ÍË·Ñ£¬ÍË·Ñ½ğ¶îÈ¡·¢Æ±µÄ×Ô¸¶½ğ¶î
+		setValueById("refundAmt", row.patShareAmt);
+		setValueById("factRefundAmt", row.patShareAmt);
+	}
+	
 	loadOrdItmList();
+	
 	var invStr = invRowId + ":" + invFlag;
 	getPaymList(invStr);
 	getReceiptInfo(invStr);
 }
 
 /**
-* è·å–æ”¯ä»˜æ–¹å¼ä¿¡æ¯
+* »ñÈ¡Ö§¸¶·½Ê½ĞÅÏ¢
 */
 function getPaymList(invStr) {
 	$.m({
@@ -451,32 +384,32 @@ function getPaymList(invStr) {
 		MethodName: "GetInvPayModeList",
 		invStr: invStr
 	}, function(rtn) {
-		if (rtn) {
-			var invPMAry = rtn.split("#");
-			setValueById("invPayment", ((+invPMAry[0] > 1) ? "Y" : "N"));
-			var paymAry = invPMAry[1].split("^");
-			var myPMAry = [];
-			var paymHtml = "<table>";
-			$.each(paymAry, function (index, item) {
-				myPMAry = item.split(PUBLIC_CONSTANT.SEPARATOR.CH2);
-				GV[myPMAry.pop()] = myPMAry[1];    //ç”¨æ”¯ä»˜æ–¹å¼ä»£ç è®°å½•æ”¯ä»˜é‡‘é¢
-				paymHtml += "<tr>";
-				paymHtml += "<td class='paym-desc'>";
-				paymHtml += myPMAry[0] + "ï¼š";
-				paymHtml += "</td>";
-				paymHtml += "<td class='paym-amt'>";
-				paymHtml += myPMAry[1];
-				paymHtml += "</td>";
-				paymHtml += "</tr>";
-			});
-			paymHtml += "</table>";
-			$("#paymList").html(paymHtml);
+		if (!rtn) {
+			return;
 		}
+		var invPMAry = rtn.split("#");
+		setValueById("invPayment", ((invPMAry[0] > 1) ? "Y" : "N"));
+		var paymAry = invPMAry[1] ? invPMAry[1].split("^") : [];
+		var myPMAry = [];
+		var paymHtml = "<table>";
+		$.each(paymAry, function (index, item) {
+			myPMAry = item.split(PUBLIC_CONSTANT.SEPARATOR.CH2);
+			paymHtml += "<tr>";
+			paymHtml += "<td class='paym-desc'>";
+			paymHtml += myPMAry[0] + "£º";
+			paymHtml += "</td>";
+			paymHtml += "<td class='paym-amt'>";
+			paymHtml += myPMAry[1];
+			paymHtml += "</td>";
+			paymHtml += "</tr>";
+		});
+		paymHtml += "</table>";
+		$("#paymList").html(paymHtml);
 	});
 }
 
 /**
-* è·å–ç¥¨æ®ä¿¡æ¯
+* »ñÈ¡Æ±¾İĞÅÏ¢
 */
 function getReceiptInfo(invStr) {
 	$.cm({
@@ -484,142 +417,88 @@ function getReceiptInfo(invStr) {
 		MethodName: "GetReceiptInfo",
 		invStr: invStr,
 		userId: PUBLIC_CONSTANT.SESSION.USERID
-	}, function (jsonObj) {
-		if (!jsonObj) {
+	}, function (json) {
+		if (!json) {
 			return;
 		}
-		var papmi = jsonObj.papmi;
-		var totalAmt = jsonObj.totalAmt;
-		var patShareAmt = jsonObj.patShareAmt;
-		var userId = jsonObj.userId;
-		var prtFlag = jsonObj.prtFlag;
-		var reportsId = jsonObj.reportsId;
-		var insTypeId = jsonObj.insTypeId;
-		var roundErrAmt = jsonObj.roundErrAmt;
-		var stayInvFlag = jsonObj.stayInvFlag;
-		var invPaymCode = jsonObj.invPaymCode;
-		var insuDivId = jsonObj.insuDivId;
-		var insuPayAmt = jsonObj.insuPayAmt;
-		var refBtnFlag = jsonObj.refBtnFlag;
-		var accMRowId = jsonObj.accMRowId;
-		var accMBalance = jsonObj.accMBalance;
-		var accMStatus = jsonObj.accMStatus;
-		var autoFlag = jsonObj.autoFlag;
-		var writeOffFlag = jsonObj.writeOffFlag;
-
 		disablePageBtn();
-		setValueById("papmi", papmi);
-		setValueById("accMRowId", accMRowId);
-		setValueById("accMBalance", accMBalance);
-		setValueById("insTypeId", insTypeId);
-		setValueById("insuDivId", insuDivId);
-		setValueById("stayInvFlag", stayInvFlag);
-		setValueById("insuPayAmt", insuPayAmt);
-		setValueById("invPaymCode", invPaymCode);
-		setValueById("refBtnFlag", refBtnFlag);
-		setValueById("autoFlag", autoFlag);
+		setValueById("patientId", json.patientId);
+		setValueById("accMRowId", json.accMRowId);
+		setValueById("accMLeft", json.accMLeft);
+		setValueById("insTypeId", json.insTypeId);
+		setValueById("insuDivId", json.insuDivId);
+		setValueById("stayInvFlag", json.stayInvFlag);
+		setValueById("insuPayAmt", json.insuPayAmt);
+		setValueById("refBtnFlag", json.refBtnFlag);
+		setValueById("autoFlag", json.autoFlag);
 		
-		initNewInsType(insTypeId);
+		loadNewInsType(json.insTypeId);
+		loadInsuCombo(json.insTypeId);  //¼ÓÔØÒ½ÁÆÀà±ğ¡¢²¡ÖÖ
+				
+		loadRefundModeData(json.invPaymDR);   //2022-09-14 ZhYW ¼ÓÔØÍË·Ñ·½Ê½
 		
-		loadInsuCombo(insTypeId);  //åŠ è½½åŒ»ç–—ç±»åˆ«ã€ç—…ç§
-		
-		var canRefFlag = true;    //æ˜¯å¦æœ‰é€€è´¹æƒé™æ ‡è¯†(true: èƒ½é€€, false: ä¸èƒ½é€€)
-		var refModeAry = $("#refundMode").combobox("getData");
-		var index = $.hisui.indexOfArray(refModeAry, "CTPMCode", invPaymCode);
-		if (index == -1) {
-			canRefFlag = false;
-			$("#refundMode").combobox("clear");
-			if (stayInvFlag != "Y") {
-				$.messager.popover({msg: "æ“ä½œå‘˜æ²¡æœ‰æƒé™é€€æ­¤å‘ç¥¨", type: "info"});
-			}
-		}else {
-			setValueById("refundMode", refModeAry[index].CTPMRowID);
-		}
-		
-		if (prtFlag == "A") {
-			$.messager.popover({msg: "è¯¥è®°å½•å·²ä½œåºŸ", type: "info"});
-			return;
-		}else if (prtFlag == "S") {
-			$.messager.popover({msg: "è¯¥è®°å½•å·²çº¢å†²", type: "info"});
+		if (json.prtFlag != "N") {
+			var msg = "¸Ã¼ÇÂ¼ÒÑ" + ((json.prtFlag == "A") ? "×÷·Ï" : ((json.prtFlag == "S") ? "ºì³å" : ""));
+			$.messager.popover({msg: msg, type: "info"});
 			return;
 		}
-		if ((accMRowId != "") && (accMStatus != "N")) {
-			$.messager.popover({msg: "è¯¥æ‚£è€…æ²¡æœ‰æœ‰æ•ˆå¸æˆ·ï¼Œä¸èƒ½åŠç†é€€è´¹", type: "info"});
-			return;
-		}
-		if (!insuDivId) {
+
+		if (!json.insuDivId) {
 			enableById("btn-reInsuDivide");
 		}
 		enableById("btn-reprt");
 		enableById("btn-passNoReprt");
 		
-		if (stayInvFlag == "Y") {
+		if (json.stayInvFlag == "Y") {
 			enableById("btn-cancleStayCharge");
-			return;    //æ€¥è¯Šç•™è§‚çš„æ’¤é”€ç•™è§‚ç»“ç®—åé‡æ–°ç»“ç®—ï¼Œä¸èƒ½åœ¨æ­¤é€€è´¹
+			return;    //¼±ÕïÁô¹ÛµÄ³·ÏúÁô¹Û½áËãºóÖØĞÂ½áËã£¬²»ÄÜÔÚ´ËÍË·Ñ
 		}
 		
-		if (writeOffFlag == "Y") {
-			disableById("btn-reInsuDivide");   //éå¡æ”¯ä»˜çš„ä¸èƒ½è¡¥æ‰åŒ»ä¿æ¥å£
-			$.messager.alert("æç¤º", "è‹¥éœ€é€€è´¹ï¼Œè¯·å…ˆæ’¤é”€é›†ä¸­æ‰“å°å‘ç¥¨", "info");
-			return;    //éœ€æ’¤é”€é›†ä¸­æ‰“å°å‘ç¥¨çš„ï¼Œä¸èƒ½åœ¨æ­¤é€€è´¹
+		if (json.writeOffFlag == "Y") {
+			disableById("btn-reInsuDivide");   //·Ç¿¨Ö§¸¶µÄ²»ÄÜ²¹µôÒ½±£½Ó¿Ú
+			$.messager.alert("ÌáÊ¾", "ÈôĞèÍË·Ñ£¬ÇëÏÈ³·Ïú¼¯ÖĞ´òÓ¡·¢Æ±", "info");
+			return;    //Ğè³·Ïú¼¯ÖĞ´òÓ¡·¢Æ±µÄ£¬²»ÄÜÔÚ´ËÍË·Ñ
 		}
 		
-		if (canRefFlag) {
-			switch(refBtnFlag) {
-			case "A":
-				if (GV.AbortFlag != "1") {
-					$.messager.popover({msg: "è¯¥å®‰å…¨ç»„æ²¡æœ‰ä½œåºŸæƒé™ï¼Œè¯·æ£€æŸ¥ã€å®‰å…¨ç»„åŠŸèƒ½é…ç½®ã€‘", type: "info"});
-				}else {
-					enableById("btn-abort");
-				}
-				break;
-			case "S":
-				if (GV.RefundFlag != "1") {
-					$.messager.popover({msg: "è¯¥å®‰å…¨ç»„æ²¡æœ‰çº¢å†²æƒé™ï¼Œè¯·æ£€æŸ¥ã€å®‰å…¨ç»„åŠŸèƒ½é…ç½®ã€‘", type: "info"});
-				}else {
-					enableById("btn-refund");
-				}
-				break;
-			default:
+		switch(json.refBtnFlag) {
+		case "A":
+			if (CV.AbortFlag != 1) {
+				$.messager.popover({msg: "¸Ã°²È«×éÃ»ÓĞ×÷·ÏÈ¨ÏŞ£¬Çë¼ì²é¡¾°²È«×é¹¦ÄÜÅäÖÃ¡¿", type: "info"});
+			}else {
+				enableById("btn-refund");
 			}
+			break;
+		case "S":
+			if (CV.RefundFlag != 1) {
+				$.messager.popover({msg: "¸Ã°²È«×éÃ»ÓĞºì³åÈ¨ÏŞ£¬Çë¼ì²é¡¾°²È«×é¹¦ÄÜÅäÖÃ¡¿", type: "info"});
+			}else {
+				enableById("btn-refund");
+			}
+			break;
+		default:
 		}
 	});
 }
 
 /**
-* åˆå§‹åŒ–æ–°è´¹åˆ«
+* ¼ÓÔØĞÂ·Ñ±ğ
 */
-function initNewInsType(insTypeId) {
-	var expStr = PUBLIC_CONSTANT.SESSION.GROUPID + "^" + PUBLIC_CONSTANT.SESSION.CTLOCID + "^" + PUBLIC_CONSTANT.SESSION.HOSPID;
-	$("#newInsType").combobox({
-		panelHeight: 150,
-		editable: false,
-		url: $URL + "?ClassName=web.DHCOPCashier&QueryName=FindPatPrescTypeList&ResultSetType=array&papmi=" + getValueById("papmi") + "&expStr=" + expStr,
-		valueField: "insTypeId",
-		textField: "insType",
-		onLoadSuccess: function (data) {
-			if (data.length == 0) {
-				return;
-			}
-			if ($.hisui.indexOfArray(data,"insTypeId",insTypeId) != -1) {
-				$("#newInsType").combobox("select", insTypeId);
-			}else {
-				$.cm({
-					ClassName: "web.DHCBillCommon",
-					MethodName: "GetClsPropValById",
-					clsName: "User.PACAdmReason",
-					id: insTypeId
-				}, function(jsonObj) {
-					var item = {insType: jsonObj.READesc, insTypeId: insTypeId, admSource: jsonObj.REAAdmSource};
-					$.hisui.addArrayItem(data, 'insTypeId', item);
-					$("#newInsType").combobox("loadData", data).combobox("select", insTypeId);
-				});
-			}
-		},
-		onSelect: function(rec) {
-			loadInsuCombo(rec.insTypeId);
-		}
-	});
+function loadNewInsType(insTypeId) {
+    $.cm({
+        ClassName: "web.DHCOPCashier",
+        QueryName: "QryChgInsTypeList",
+        ResultSetType: "array",
+        insTypeId: insTypeId,
+        hospId: PUBLIC_CONSTANT.SESSION.HOSPID
+    }, function (data) {
+        if (insTypeId && !$.hisui.getArrayItem(data, "insTypeId", insTypeId)) {
+            var jsonObj = getPersistClsObj("User.PACAdmReason", insTypeId);
+            var insType = $.m({ClassName: "User.PACAdmReason", MethodName: "GetTranByDesc", Prop: "READesc", Desc: jsonObj.READesc, LangId: PUBLIC_CONSTANT.SESSION.LANGID}, false);
+            var item = {insType: insType, insTypeId: insTypeId, admSource: jsonObj.REAAdmSource, selected: true};
+            $.hisui.addArrayItem(data, "insTypeId", item);
+        }
+      	$("#newInsType").combobox("clear").combobox("loadData", data);
+    });
 }
 
 function loadInvList() {
@@ -632,132 +511,140 @@ function loadInvList() {
 		receiptNo: getValueById("invNo"),
 		patientNo: getValueById("patientNo"),
 		auditFlag: getValueById("auditFlag") ? 1 : 0,
-		expStr: PUBLIC_CONSTANT.SESSION.GROUPID + "^" + PUBLIC_CONSTANT.SESSION.CTLOCID + "^" + PUBLIC_CONSTANT.SESSION.HOSPID
+		sessionStr: getSessionStr()
 	}
 	loadDataGridStore("invList", queryParams);
 }
 
 /**
-* åˆå§‹åŒ–é€€è´¹é¢æ¿
+* ³õÊ¼»¯ÍË·ÑÃæ°å
 */
 function initRefundMenu() {
-	$("#item-tip").show();   //æ˜¾ç¤ºæ”¯ä»˜ä¿¡æ¯
+	$("#item-tip").show();   //ÏÔÊ¾Ö§¸¶ĞÅÏ¢
 	
-	//é€€è´¹æ–¹å¼
+	//ÍË·Ñ·½Ê½
 	$("#refundMode").combobox({
 		panelHeight: 150,
 		editable: false,
-		url: $URL + "?ClassName=web.UDHCOPGSConfig&QueryName=ReadGSINSPMList&ResultSetType=array",
-		valueField: "CTPMRowID",
-		textField: "CTPMDesc",
-		onBeforeLoad: function(param) {
-			param.GPRowID = PUBLIC_CONSTANT.SESSION.GROUPID;
-			param.HospID = PUBLIC_CONSTANT.SESSION.HOSPID;
-			param.TypeFlag = "REF";
-		},
-		onSelect: function (rec) {
-			var invPaymCode = getValueById("invPaymCode");
-			var select = true;
-			switch (rec.CTPMCode) {
-			case "CPP":
-				if (invPaymCode && (invPaymCode != "CPP")) {
-					select = false;
-					$.messager.popover({msg: "éé¢„äº¤é‡‘æ”¯ä»˜å‘ç¥¨ä¸èƒ½é€‰é¢„äº¤é‡‘é€€è´¹", type: "info"});
-				}
-				break;
-			case "QF":
-				if (invPaymCode && (invPaymCode != "QF")) {
-					select = false;
-					$.messager.popover({msg: "éæ¬ è´¹å‘ç¥¨ä¸èƒ½é€‰æ¬ è´¹æ–¹å¼é€€è´¹", type: "info"});
-				}
-				break;
-			default:
-				if (invPaymCode == "QF") {
-					select = false;
-					$.messager.popover({msg: "æ¬ è´¹å‘ç¥¨åªèƒ½é€‰æ¬ è´¹æ–¹å¼é€€è´¹", type: "info"});
-				}
-			}
-			if (!select) {
-				var refModeAry = $("#refundMode").combobox("getData");
-				var index = $.hisui.indexOfArray(refModeAry, "CTPMCode", invPaymCode);
-				if (index != -1) {
-					setValueById("refundMode", refModeAry[index].CTPMRowID);
-				}else {
-					$("#refundMode").combobox("clear");
-				}
-			}
+		valueField: 'CTPMRowID',
+		textField: 'CTPMDesc'
+	});
+	
+	$("#newInsType").combobox({
+		panelHeight: 150,
+		editable: false,
+		valueField: 'insTypeId',
+		textField: 'insType',
+		onSelect: function(rec) {
+			loadInsuCombo(rec.insTypeId);
 		}
+	});
+	
+	//Ò½ÁÆÀà±ğ
+	$HUI.combobox("#insuAdmType", {
+		panelHeight: 150,
+		method: 'GET',
+		valueField: 'cCode',
+		textField: 'cDesc',
+		blurValidValue: true,
+		defaultFilter: 5
+	});
+
+	//²¡ÖÖ
+	$HUI.combobox("#insuDic", {
+		panelHeight: 150,
+		method: 'GET',
+		valueField: 'DiagCode',
+		textField: 'DiagDesc',
+		blurValidValue: true,
+		defaultFilter: 5
 	});
 }
 
 function initOrdItmList() {
-	GV.OrdGridObj = $HUI.datagrid("#ordItmList", {
+	GV.OEItmList = $HUI.datagrid("#ordItmList", {
 		fit: true,
-		striped: true,
-		title: 'åŒ»å˜±æ˜ç»†',
+		title: 'Ò½ÖöÃ÷Ï¸',
 		iconCls: 'icon-paper',
 		headerCls: 'panel-header-gray',
-		checkOnSelect: false, //å¦‚æœä¸ºfalse, å½“ç”¨æˆ·ä»…åœ¨ç‚¹å‡»è¯¥å¤é€‰æ¡†çš„æ—¶å€™æ‰ä¼šè¢«é€‰ä¸­æˆ–å–æ¶ˆ
+		checkOnSelect: false,
 		selectOnCheck: false,
 		rownumbers: false,
 		pageSize: 999999999,
-		data: [],
 		toolbar: [],
-		columns: [[{title: 'ck', field: 'ck', checkbox: true},
-				   {title: 'åŒ»å˜±', field: 'arcimDesc', width: 150},
-				   {title: 'é€€è´¹éƒ¨ä½', field: 'repPartTar', width: 80, align: 'center',
-					formatter: function (value, row, index) {
-						//æ£€æŸ¥ç”³è¯·å•å…¨éƒ¨æ‰§è¡Œæ—¶ä¸èƒ½é€€
-						if ((row.isAppRepFlag == "Y") && (row.disabled == "N")) {
-							return "<a href='javascript:;' class='editCls' onclick='openPartWinOnClick(" + JSON.stringify(row) + ", " + index + ")'></a>";
-						}
-					}
-				   },
-				   {title: 'é‡‘é¢', field: 'patShareAmt', align: 'right', width: 60},
-				   {title: 'æ•°é‡/å•ä½', field: 'billQty', width: 85,
-					formatter: function (value, row, index) {
-						return value + "/" + row.packUom;
-					}
-				   },
-				   {title: 'åŒ»å˜±çŠ¶æ€', field: 'itmStat', width: 90},
-				   {title: 'å¤„æ–¹å·', field: 'prescNo', width: 130},
-				   {title: 'æ¥æ”¶ç§‘å®¤', field: 'recDept', width: 120},
-				   {title: 'refQty', field: 'refQty', hidden: true},
-				   {title: 'refAmt', field: 'refAmt', hidden: true},
-				   {title: 'auditFlag', field: 'auditFlag', hidden: true},
-				   {title: 'disabled', field: 'disabled', hidden: true},
-				   {title: 'select', field: 'select', hidden: true},
-				   {title: 'æ‰§è¡Œæƒ…å†µ', field: 'execInfo', width: 160},
-				   {title: 'åŒ»å˜±æ—¥æœŸ', field: 'ordSttDate', width: 100},
-				   {title: 'isAppRepFlag', field: 'isAppRepFlag', hidden: true},
-				   {title: 'refRepPart', field: 'refRepPart', hidden: true},				   
-				   {title: 'isCNMedItem', field: 'isCNMedItem', hidden: true},
-				   {title: 'åŒ»å˜±ID', field: 'oeori', width: 70},
-				   {title: 'pboRowId', field: 'pboRowId', hidden: true},
-				   {title: 'prtId', field: 'prtId', hidden: true}
+		className: "web.DHCOPBillRefund",
+		queryName: "FindOrdItm",
+		frozenColumns: [[{field: 'ck', checkbox: true},
+		           		 {title: 'Ò½Öö', field: 'arcimDesc', width: 180,
+			           	  	formatter: function (value, row, index) {
+								if (row.cantRefReason) {
+									return "<a onmouseover='showCantRefReason(this, " + JSON.stringify(row) + ")' style='text-decoration:none;color:#000000;'>" + value + "</a>";
+								}
+								return value;
+						  	}
+		           		 }
 			]],
+		onColumnsLoad: function(cm) {
+			cm.unshift({title: 'ÍË·Ñ²¿Î»', field: 'repPartTar', align: 'center'});   //ÍùÊı×é¿ªÊ¼Î»ÖÃÔö¼ÓÒ»Ïî
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["arcimDesc", "packUom", "cantRefReason"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if ($.inArray(cm[i].field, ["refQty", "refAmt", "auditFlag", "disabled", "select", "isAppRep", "isCNMedItem", "pboRowId", "prtId"]) != -1) {
+					cm[i].hidden = true;
+					continue;
+				}
+				if (cm[i].field == "repPartTar") {
+					cm[i].formatter = function (value, row, index) {
+						//¼ì²éÉêÇëµ¥È«²¿Ö´ĞĞÊ±²»ÄÜÍË
+						if ((row.isAppRep == "Y") && (row.disabled == "N")) {
+							return "<a href='javascript:;' class='editCls' onclick='openPartWinOnClick(" + index + ")'></a>";
+						}
+					};
+				}
+				if (cm[i].field == "billQty") {
+					cm[i].title = "ÊıÁ¿/µ¥Î»";
+					cm[i].formatter = function (value, row, index) {
+						return value + "/" + row.packUom;
+					};
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if (cm[i].field == "repPartTar") {
+						cm[i].width = 80;
+					}
+					if (cm[i].field == "prescNo") {
+						cm[i].width = 130;
+					}
+					if (cm[i].field == "execInfo") {
+						cm[i].width = 160;
+					}
+				}
+			}
+		},
 		onLoadSuccess: function (data) {
-			$(".editCls").linkbutton({text: "éƒ¨ä½"});
+			$(".editCls").linkbutton({text: $g("²¿Î»")});
 			$(this).datagrid("clearChecked");
 			var hasDisabledRow = false;
 			$.each(data.rows, function (index, row) {
 				if (row.disabled == "Y") {
 					hasDisabledRow = true;
-					$("#ordItmList").parent().find(".datagrid-row[datagrid-row-index=" + index + "] input:checkbox")[0].disabled = true;
+					GV.OEItmList.getPanel().find(".datagrid-row[datagrid-row-index=" + index + "] input:checkbox")[0].disabled = true;
 					if (row.select == 1) {
-						$("#ordItmList").datagrid("checkRow", index);
+						GV.OEItmList.checkRow(index);
 					}
 				}
 			});
-			//æœ‰disabledè¡Œæ—¶,è¡¨å¤´ä¹Ÿdisabled
-			$("#ordItmList").parent().find(".datagrid-header-row input:checkbox")[0].disabled = hasDisabledRow;
+			//ÓĞdisabledĞĞÊ±£¬±íÍ·Ò²disabled
+			GV.OEItmList.getPanel().find(".datagrid-header-row input:checkbox")[0].disabled = hasDisabledRow;
 		},
 		onCheck: function (index, row) {
 			if (GV.SelOrdRowIdx !== undefined) {
 				return;
 			}
 			if (!canCheck(row)) {
-				$("#ordItmList").datagrid("uncheckRow", index);
+				GV.OEItmList.uncheckRow(index);
 			} else {
 				controlCNMedItm(index, row);
 				calcRefAmt();
@@ -773,7 +660,7 @@ function initOrdItmList() {
 		onCheckAll: function (rows) {
 			$.each(rows, function (index, row) {
 				if (!canCheck(row)) {
-					$("#ordItmList").datagrid("uncheckRow", index);
+					GV.OEItmList.uncheckRow(index);
 				}
 			});
 			calcRefAmt();
@@ -781,7 +668,7 @@ function initOrdItmList() {
 		onUncheckAll: function (rows) {
 			$.each(rows, function (index, row) {
 				if ((row.disabled == "Y") && (row.select == 1)) {
-					$("#ordItmList").datagrid("checkRow", index);
+					GV.OEItmList.checkRow(index);
 				}
 			});
 			calcRefAmt();
@@ -790,7 +677,7 @@ function initOrdItmList() {
 }
 
 /**
- * åˆ¤æ–­è¡Œèƒ½å¦è¢«å‹¾é€‰
+ * ÅĞ¶ÏĞĞÄÜ·ñ±»¹´Ñ¡
  */
 function canCheck(row) {
 	if (row.select == 1) {
@@ -799,62 +686,76 @@ function canCheck(row) {
 	if (row.disabled == "Y") {
 		return false;
 	}
-	if ((row.isAppRepFlag == "Y") && (row.refRepPart == "")) {
+	if ((row.isAppRep == "Y") && !row.refRepPart) {
 		return false;
 	}
 	return true;
 }
 
 /**
-* æ–°ç‰ˆæ£€æŸ¥ç”³è¯·å•è·å–éƒ¨ä½
+* ĞÂ°æ¼ì²éÉêÇëµ¥»ñÈ¡²¿Î»
 */
-function openPartWinOnClick(row, index) {
+function openPartWinOnClick(index) {
+	var invRow = GV.InvList.getSelected();
+	if (!invRow) {
+		return;
+	}
+	var prtFlag = "";
+	if (invRow.invFlag == "API") {
+		prtFlag = getPropValById("DHC_AccPayINV", invRow.invRowId, "API_Flag");
+	}else {
+		prtFlag = getPropValById("DHC_INVPRT", invRow.invRowId, "PRT_Flag");
+	}
+	if (prtFlag != "N") {
+		var msg = "¸Ã·¢Æ±ÒÑ" + ((prtFlag == "A") ? "×÷·Ï" : ((prtFlag == "S") ? "ºì³å" : "")) + "£¬²»ÄÜÑ¡Ôñ²¿Î»";
+		$.messager.popover({msg: msg, type: "info"});
+		return;
+	}
+	
+	var row = GV.OEItmList.getRows()[index];
 	var oeori = row.oeori;
-	var url = "dhcapp.repparttarwin.csp?oeori=" + oeori;
+	var pboRowId = row.pboRowId;
+	var oldRefRepPart = row.refRepPart || "";   //ÒÑ¾­¹´Ñ¡µÄ²¿Î»
+	var url = "dhcapp.repparttarwin.csp?oeori=" + oeori + "&refRepPart=" + oldRefRepPart;
 	websys_showModal({
 		url: url,
-		title: 'éƒ¨ä½åˆ—è¡¨',
+		title: '²¿Î»ÁĞ±í',
 		width: 640,
 		height: 400,
-		callBackFunc: function(rtn) {
-			var repReqItmIdAry = [];
-			$.each(rtn.split("!!"), function(idx, item) {
-				var id = item.split("^")[0];
-				repReqItmIdAry.push(id);
-			});
-			arReqItmIdStr = repReqItmIdAry.join("!!");
-			
-			HISUIDataGrid.setFieldValue("refRepPart", arReqItmIdStr, index, "ordItmList");
+		callBackFunc: function(rtnValue) {
+			var arReqItmIdStr = rtnValue.split("!!").map(function (item) {
+			        return item.split("^")[0];
+			    }).join("!!");
+			row.refRepPart = arReqItmIdStr;    //¶à²¿Î»¼ì²éÉêÇëµ¥ÍË·Ñ²¿Î»RowId´®
 	
 			if (arReqItmIdStr != "") {
 				var rtn = $.m({ClassName: "web.DHCOPBillRefund", MethodName: "UpdateExaReqFlag", oeitm: oeori, arReqItmIdStr: arReqItmIdStr}, false);
-				if (+rtn != 0) {
-					$.messager.popover({msg: "æ›´æ–°æ£€æŸ¥ç”³è¯·éƒ¨ä½è¡¨é€€è´¹ç”³è¯·çŠ¶æ€å¤±è´¥ï¼š" + rtn, type: "error"});
+				if (rtn != 0) {
+					$.messager.popover({msg: "¸üĞÂ¼ì²éÉêÇë²¿Î»±íÍË·ÑÉêÇë×´Ì¬Ê§°Ü£º" + rtn, type: "error"});
 					return;
 				}
-				setOrdItmRowChecked(index, true);
-			} else {
-				setOrdItmRowChecked(index, false);
 			}
 			
-			//æ–°ç‰ˆæ£€æŸ¥ç”³è¯·å•å…¨é€€/éƒ¨åˆ†é€€æ ‡è¯†
+			setOrdItmRowChecked(index, (arReqItmIdStr != ""));
+			
+			//ĞÂ°æ¼ì²éÉêÇëµ¥È«ÍË/²¿·ÖÍË±êÊ¶
 			$.m({
 				ClassName: "web.DHCOPBillRefund",
 				MethodName: "IsAllRefundRepPart",
 				oeitm: oeori
 			}, function(refPartFlag) {
-				HISUIDataGrid.setFieldValue("refQty", refPartFlag, index, "ordItmList");  //0:å…¨éƒ¨æˆ–æœªé€€ï¼Œ1:éƒ¨åˆ†é€€
+				GV.OEItmList.setFieldValue({index: index, field: "refQty", value: refPartFlag});   //0:È«²¿»òÎ´ÍË£¬1:²¿·ÖÍË
 			});
 			
-			//è®¡ç®—æŒ‰éƒ¨ä½é€€è´¹é‡‘é¢
+			//¼ÆËã°´²¿Î»ÍË·Ñ½ğ¶î
 			$.m({
 				ClassName: "web.DHCOPBillRefund",
 				MethodName: "GetRepPartRefAmt",
 				oeitm: oeori,
-				pbo: row.pboRowId,
+				pbo: pboRowId,
 				arReqItmIdStr: arReqItmIdStr
 			}, function (repPartAmt) {
-				HISUIDataGrid.setFieldValue("refAmt", repPartAmt, index, "ordItmList");
+				GV.OEItmList.setFieldValue({index: index, field: "refAmt", value: repPartAmt});
 				calcRefAmt();
 			});
 		}
@@ -862,19 +763,22 @@ function openPartWinOnClick(row, index) {
 }
 
 /**
- * è®¡ç®—é€€è´¹é‡‘é¢
+ * ¼ÆËãÍË·Ñ½ğ¶î
  */
 function calcRefAmt() {
-	var refSum = 0;
-	$.each($("#ordItmList").datagrid("getChecked"), function (index, row) {
-		refSum = numCompute(refSum, row.refAmt, "+");
-	});
-	setValueById("refundAmt", refSum);
-	setValueById("factRefundAmt", refSum);
+	var refSum = GV.OEItmList.getChecked().reduce(function (total, row) {
+        return Number(total).add(row.refAmt).toFixed(2);
+    }, 0);
+    setValueById("ordRefundAmt", refSum);   //Ò½ÖöÍË·Ñ½ğ¶î
+    //+2022-03-29 ZhYW Ö±½ÓÍË·ÑÉóºË¹ıµÄ·¢Æ±£¬È«²¿ÍË·Ñ£¬ÍË·Ñ½ğ¶î²»ĞèÒª¸ù¾İÒ½Öö¼ÆËã
+	if (GV.IsDirRefAudited == 0) {
+		setValueById("refundAmt", refSum);
+		setValueById("factRefundAmt", refSum);
+	}
 }
 
 function loadOrdItmList() {
-	var row = $("#invList").datagrid("getSelected");
+	var row = GV.InvList.getSelected();
 	if (!row) {
 		return;
 	}
@@ -889,7 +793,7 @@ function loadOrdItmList() {
 }
 
 /**
- * æ§åˆ¶è‰è¯æŒ‰å¤„æ–¹é€€è´¹
+ * ¿ØÖÆ²İÒ©°´´¦·½ÍË·Ñ
  */
 function controlCNMedItm(index, row) {
 	var prescNo = row.prescNo;
@@ -897,7 +801,7 @@ function controlCNMedItm(index, row) {
 	if ((prescNo == "") || (isCNMedItem != 1)) {
 		return;
 	}
-	var rows = GV.OrdGridObj.getRows();
+	var rows = GV.OEItmList.getRows();
 	$.each(rows, function (idx, row) {
 		if ((index == idx) || (prescNo != row.prescNo)) {
 			return true;
@@ -907,30 +811,30 @@ function controlCNMedItm(index, row) {
 }
 
 /**
- * è·å–åŒ»å˜±æ˜ç»†datagridå‹¾é€‰/ä¸å‹¾é€‰çŠ¶æ€
+ * ÉèÖÃÒ½ÖöÃ÷Ï¸datagrid¹´Ñ¡/²»¹´Ñ¡×´Ì¬
  */
 function setOrdItmRowChecked(index, checked) {
 	GV.SelOrdRowIdx = index;
 	if (checked) {
-		GV.OrdGridObj.checkRow(index);
+		GV.OEItmList.checkRow(index);
 	} else {
-		GV.OrdGridObj.uncheckRow(index);
+		GV.OEItmList.uncheckRow(index);
 	}
 	delete GV.SelOrdRowIdx;
 }
 
 /**
- * è®¾ç½®åŒ»å˜±æ˜ç»†datagridå‹¾é€‰/ä¸å‹¾é€‰çŠ¶æ€
+ * »ñÈ¡Ò½ÖöÃ÷Ï¸datagrid¹´Ñ¡/²»¹´Ñ¡×´Ì¬
  */
 function getOrdItmRowChecked(index) {
-	return getColumnValue(index, "ck", "ordItmList") == 1;
+	return GV.OEItmList.getPanel().find("div.datagrid-cell-check").children("input[type='checkbox']").eq(index).is(":checked");
 }
 
 /**
-* åŸå·é‡æ‰“
+* Ô­ºÅÖØ´ò
 */
 function reprtClick() {
-	var row = $("#invList").datagrid("getSelected");
+	var row = GV.InvList.getSelected();
 	if (!row) {
 		return;
 	}
@@ -944,96 +848,122 @@ function reprtClick() {
 }
 
 /**
-* è¿‡å·é‡æ‰“
+* ¹ıºÅÖØ´ò
 */
 function passNoReprtClick() {
-	var row = $("#invList").datagrid("getSelected");
-	if (!row) {
-		return;
-	}
-	var invRowId = row.invRowId;
-	var invFlag = row.invFlag;
-	var invNo = row.invNo;
-	if (!invNo) {
-		$.messager.popover({msg: "æ²¡æœ‰æ‰“å°å‘ç¥¨ï¼Œä¸èƒ½è¿‡å·é‡æ‰“", type: "info"});
-		return;
-	}
-	if (invFlag == "API") {
-		var jsonObj = $.cm({ClassName: "web.DHCBillCommon", MethodName: "GetClsPropValById", clsName: "User.DHCAccPayINV", id: invRowId}, false);
-		if (jsonObj.APIFlag != "N") {
-			$.messager.popover({msg: "è¯¥å‘ç¥¨å·²é€€è´¹ï¼Œä¸èƒ½è¿‡å·é‡æ‰“", type: "info"});
-			return;
-		}
-		if (jsonObj.APIINVRepDR) {
-			$.messager.popover({msg: "è¯¥å‘ç¥¨å·²ç»“è´¦ï¼Œä¸èƒ½è¿‡å·é‡æ‰“", type: "info"});
-			return;
-		}
-		if (jsonObj.APIPUserDR != PUBLIC_CONSTANT.SESSION.USERID) {
-			$.messager.popover({msg: "è¯·è”ç³»åŸæ”¶è´¹å‘˜ï¼ˆ<font color=red>" + row.userName + "</font>ï¼‰è¿‡å·é‡æ‰“", type: "info"});
-			return;
-		}
-	}else {
-		var jsonObj = $.cm({ClassName: "web.DHCBillCommon", MethodName: "GetClsPropValById", clsName: "User.DHCINVPRT", id: invRowId}, false);
-		if (jsonObj.PRTFlag != "N") {
-			$.messager.popover({msg: "è¯¥å‘ç¥¨å·²é€€è´¹ï¼Œä¸èƒ½è¿‡å·é‡æ‰“", type: "info"});
-			return;
-		}
-		if (jsonObj.PRTDHCINVPRTRDR) {
-			$.messager.popover({msg: "è¯¥å‘ç¥¨å·²ç»“è´¦ï¼Œä¸èƒ½è¿‡å·é‡æ‰“", type: "info"});
-			return;
-		}
-		if (jsonObj.PRTUsr != PUBLIC_CONSTANT.SESSION.USERID) {
-			$.messager.popover({msg: "è¯·è”ç³»åŸæ”¶è´¹å‘˜ï¼ˆ<font color=red>" + row.userName + "</font>ï¼‰è¿‡å·é‡æ‰“", type: "info"});
-			return;
-		}
-	}
-	$.messager.confirm("ç¡®è®¤", "æ˜¯å¦ç¡®è®¤å°†å‘ç¥¨ã€<font color='red'>" + invNo + "</font>ã€‘è¿‡å·é‡æ‰“? ", function(r) {
-		if (r) {
-			var expStr = PUBLIC_CONSTANT.SESSION.GROUPID + "^" + PUBLIC_CONSTANT.SESSION.CTLOCID;
+	var _validate = function() {
+		return new Promise(function(resolve, reject) {
+			var row = GV.InvList.getSelected();
+			if (!row) {
+				$.messager.popover({msg: "ÇëÑ¡ÔñĞèÒª¹ıºÅÖØ´òµÄ·¢Æ±¼ÇÂ¼", type: "info"});
+				return reject();
+			}
+			invRowId = row.invRowId;
+			invFlag = row.invFlag;
+			invNo = row.invNo;
+			if (!invNo) {
+				$.messager.popover({msg: "Ã»ÓĞ´òÓ¡·¢Æ±£¬²»ÄÜ¹ıºÅÖØ´ò", type: "info"});
+				return reject();
+			}
+			var prtFlag = "";
+			var prtUserDR = "";
+			var prtReportsDR = "";
+			if (invFlag == "API") {
+				var jsonObj = getPersistClsObj("User.DHCAccPayINV", invRowId);
+				prtFlag = jsonObj.APIFlag;
+				prtUserDR = jsonObj.APIPUserDR;
+				prtReportsDR = jsonObj.APIINVRepDR;
+			}else {
+				var jsonObj = getPersistClsObj("User.DHCINVPRT", invRowId);
+				prtFlag = jsonObj.PRTFlag;
+				prtUserDR = jsonObj.PRTUsr;
+				prtReportsDR = jsonObj.PRTDHCINVPRTRDR;
+			}
+			if (prtFlag != "N") {
+				$.messager.popover({msg: "¸Ã·¢Æ±ÒÑÍË·Ñ£¬²»ÄÜ¹ıºÅÖØ´ò", type: "info"});
+				return reject();
+			}
+			if (prtUserDR != PUBLIC_CONSTANT.SESSION.USERID) {
+				$.messager.popover({msg: "·ÇÄú±¾ÈË´òÓ¡µÄ·¢Æ±£¬²»ÄÜ¹ıºÅÖØ´ò", type: "info"});
+				return reject();
+			}
+			if (prtReportsDR > 0) {
+				$.messager.popover({msg: "ÒÑ×öÈÕ½áµÄ·¢Æ±£¬²»ÄÜ¹ıºÅÖØ´ò", type: "info"});
+				return reject();
+			}
+			resolve();
+		});
+	};
+	
+	var _cfr = function() {
+		return new Promise(function(resolve, reject) {
+			$.messager.confirm("È·ÈÏ", $g("ÊÇ·ñÈ·ÈÏ½«·¢Æ±") + "¡¾<font color='red'>" + invNo + "</font>¡¿" + $g("¹ıºÅÖØ´ò? "), function(r) {
+				return r ? resolve() : reject();
+			});
+		});
+	};
+
+	/**
+	 * ¹ıºÅÖØ´ò
+	*/
+	var _passRePrint = function() {
+		return new Promise(function(resolve, reject) {
 			$.m({
 				ClassName: "web.udhcOPRefEditIF",
-				MethodName: "OPBillRefReCharge",
+				MethodName: "PassNoRePrint",
 				invRowId: invRowId,
 				invFlag: invFlag,
-				userId: PUBLIC_CONSTANT.SESSION.USERID,
-				expStr: expStr
+				sessionStr: getSessionStr()
 			}, function(rtn) {
-				var myAry = rtn.split(PUBLIC_CONSTANT.SEPARATOR.CH2);
-				if (+myAry[0] == 0) {
-					var newPrtRowId = "";    //æ–°ç¥¨RowId
-					if (myAry.length > 1) {
-						newPrtRowId = myAry[1];
-					}
-					if (invFlag == "API") {
-						accPInvPrint(newPrtRowId);
-					}else {
-						billPrintTask(newPrtRowId);
-					}
-					$.messager.alert("æç¤º", "è¿‡å·é‡æ‰“æˆåŠŸ", "success");
-					disablePageBtn();
-					return;
-				}else {
-					switch (myAry[0]) {
-					case "109":
-						$.messager.alert("æç¤º", "æ²¡æœ‰ç¥¨æ®ï¼Œä¸èƒ½è¿‡å·é‡æ‰“", "info");
-						break;
-					case "110":
-						$.messager.alert("æç¤º", "æœ‰éœ€è¦é€€è´¹çš„åŒ»å˜±ï¼Œä¸èƒ½è¿‡å·é‡æ‰“", "info");
-						break;
-					default:
-						$.messager.alert("æç¤º", "è¿‡å·é‡æ‰“å¤±è´¥: " + myAry[0], "error");
-					}
+				var myAry = rtn.split("^");
+				if (myAry[0] == 0) {
+					$.messager.popover({msg: "¹ıºÅÖØ´ò³É¹¦", type: "success"});
+					return resolve();
 				}
+				$.messager.popover({msg: "¹ıºÅÖØ´òÊ§°Ü: " + (myAry[1] || myAry[0]), type: "error"});
+				return reject();
 			});
+		});
+	};
+
+	/**
+	* ¹ıºÅÖØ´ò³É¹¦ºó´òÓ¡·¢Æ±
+	*/
+	var _success = function () {
+		if (invFlag == "API") {
+			accPInvPrint(invRowId);
+		}else {
+			billPrintTask(invRowId);
 		}
-	});
+	};
+
+	if ($("#btn-passNoReprt").linkbutton("options").disabled) {
+		return;
+	}
+	$("#btn-passNoReprt").linkbutton("disable");
+	
+	var invRowId = "";
+	var invFlag = "";
+	var invNo = "";
+	
+	var promise = Promise.resolve();
+	promise
+		.then(_validate)
+		.then(_cfr)
+		.then(_passRePrint)
+		.then(function() {
+			_success();
+			$("#btn-passNoReprt").linkbutton("enable");
+		}, function () {
+			$("#btn-passNoReprt").linkbutton("enable");
+		});
 }
 
 /**
-* è¡¥è°ƒåŒ»ä¿
+* ²¹µ÷Ò½±£
 */
 function reInsuDivideClick() {
-	var row = $("#invList").datagrid("getSelected");
+	var row = GV.InvList.getSelected();
 	if (!row) {
 		return;
 	}
@@ -1047,20 +977,20 @@ function reInsuDivideClick() {
 }
 
 /**
-* æ’¤é”€ç•™è§‚ç»“ç®—
+* ³·ÏúÁô¹Û½áËã
 */
 function cancleStayChargeClick() {
 	if ($("#btn-cancleStayCharge").hasClass("l-btn-disabled")) {
 		return;
 	}
-	var row = $("#invList").datagrid("getSelected");
+	var row = GV.InvList.getSelected();
 	if (!row) {
 		return;
 	}
 	var invRowId = row.invRowId;
 	var prtRowId = row.prtRowId;
 	var invFlag = row.invFlag;
-	if ((invFlag == "API") && prtRowId) {    //é›†ä¸­æ‰“å°å‘ç¥¨è‡ªåŠ¨æ’¤é”€æ—¶æŒ‰å°æ¡é€€è´¹ï¼Œåœ¨é€€è´¹ç¨‹åºä¸­æ’¤æ¶ˆé›†ä¸­æ‰“å°å‘ç¥¨
+	if ((invFlag == "API") && prtRowId) {    //¼¯ÖĞ´òÓ¡·¢Æ±×Ô¶¯³·ÏúÊ±°´Ğ¡ÌõÍË·Ñ£¬ÔÚÍË·Ñ³ÌĞòÖĞ³·Ïû¼¯ÖĞ´òÓ¡·¢Æ±
 		invRowId = prtRowId;
 		invFlag = "PRT";
 	}
@@ -1073,37 +1003,28 @@ function cancleStayChargeClick() {
 }
 
 /**
- * æ¸…å±
+ * ÇåÆÁ
  */
 function clearClick() {
-	$(":text:not(.pagination-num)").val("");
+	focusById("CardNo");
+	$(":text:not(.pagination-num,.combo-text)").val("");
 	$(".combobox-f").combobox("clear");
-	$("#cardType,#guser").combobox("reload");
-	var defDate = getDefStDate(0);
-	$(".datebox-f").datebox("setText", defDate);
-	setValueById("auditFlag", GV.DefAuditFlag);
-	$("#invList").datagrid("load", {
-		ClassName: "web.DHCOPBillRefund",
-		QueryName: "FindOPBillINV",
-		stDate: "",
-		endDate: "",
-		userId: "",
-		receiptNo: "",
-		patientNo: "",
-		auditFlag: "",
-		expStr: ""
-	});
+	$("#refundMode").combobox("loadData", []);
+	$("#guser").combobox("reload");
+	$(".datebox-f").datebox("setValue", CV.DefDate);
+	setValueById("auditFlag", CV.DefAuditFlag);
+	GV.InvList.options().pageNumber = 1;   //Ìø×ªµ½µÚÒ»Ò³
+	GV.InvList.loadData({total: 0, rows: []});
 	clearRefPanel();
 }
 
 /**
- * æ¸…é™¤é€€è´¹Panelå†…å®¹
+ * Çå³ıÍË·ÑPanelÄÚÈİ
  */
 function clearRefPanel() {
-	$(".combobox-f:not(#cardType,#guser,#refundMode)").combobox("clear").combobox("loadData", []);
+	$(".combobox-f:not(#guser,#refundMode)").combobox("clear").combobox("loadData", []);
 	$(".numberbox-f").numberbox("setValue", 0);
-	$("#refundMode").combobox("reload");
-	setValueById("invPaymCode", "");
+	$("#refundMode").combobox("clear").combobox("loadData", []);
 	$("#paymList").html("");
 	$(".datagrid-f:not(#invList)").datagrid("loadData", {
 		total: 0,
@@ -1113,17 +1034,17 @@ function clearRefPanel() {
 }
 
 /**
-* ä½œåºŸ/çº¢å†²
+* ×÷·Ï/ºì³å
 */
 function refundInvClick() {
-	var row = $("#invList").datagrid("getSelected");
+	var row = GV.InvList.getSelected();
 	if (!row) {
 		return;
 	}
 	var invRowId = row.invRowId;
 	var prtRowId = row.prtRowId;
 	var invFlag = row.invFlag;
-	if ((invFlag == "API") && prtRowId) {    //é›†ä¸­æ‰“å°å‘ç¥¨è‡ªåŠ¨æ’¤é”€æ—¶æŒ‰å°æ¡é€€è´¹ï¼Œåœ¨é€€è´¹ç¨‹åºä¸­æ’¤æ¶ˆé›†ä¸­æ‰“å°å‘ç¥¨
+	if ((invFlag == "API") && prtRowId) {    //¼¯ÖĞ´òÓ¡·¢Æ±×Ô¶¯³·ÏúÊ±°´Ğ¡ÌõÍË·Ñ£¬ÔÚÍË·Ñ³ÌĞòÖĞ³·Ïû¼¯ÖĞ´òÓ¡·¢Æ±
 		invRowId = prtRowId;
 		invFlag = "PRT";
 	}
@@ -1138,7 +1059,6 @@ function refundInvClick() {
 }
 
 function disablePageBtn() {
-	disableById("btn-abort");
 	disableById("btn-refund");
 	disableById("btn-reprt");
 	disableById("btn-passNoReprt");
@@ -1147,25 +1067,150 @@ function disablePageBtn() {
 }
 
 /**
-* é€šè¿‡åŒ»ä¿ç±»å‹ä»£ç åŠ è½½åŒ»ç–—ç±»åˆ«ã€ç—…ç§
+* ¼ÓÔØÒ½ÁÆÀà±ğ¡¢²¡ÖÖ
 */
 function loadInsuCombo(insTypeId) {
-	//è·å–åŒ»ä¿ç±»å‹ä»£ç 
-	$.m({
-		ClassName: "web.INSUDicDataCom",
-		MethodName: "GetDicByCodeAndInd",
-		SysType: "AdmReasonDrToDLLType",
-		Code: insTypeId,
-		Ind: 6,
-		HospDr: PUBLIC_CONSTANT.SESSION.HOSPID
-	}, function(insuTypeCode) {
-		//åŒ»ç–—ç±»åˆ«
-		$("#insuAdmType").combobox("options").url = $URL + "?ClassName=web.INSUDicDataCom&QueryName=QueryDic1&ResultSetType=array&Code=&OPIPFlag=OP&Type=AKA130" + insuTypeCode + "&HospDr=" + PUBLIC_CONSTANT.SESSION.HOSPID;  
-		$("#insuAdmType").combobox("clear").combobox("reload");
-	});
+	var row = GV.InvList.getSelected();
+	if (!row) {
+		return;
+	}
+	var invFlag = row.invFlag;
+	if ((invFlag == "API") && row.prtRowId) {
+		invFlag = "PRT";
+	}
+	var CPPFlag = (invFlag == "API") ? "Y" : "";
+	var strikeFlag = "S";
+	var insuDivId = getValueById("insuDivId");
+	var expStr = "OP" + "^" + CPPFlag + "^" + strikeFlag + "^" + insuDivId;
+	//Ò½ÁÆÀà±ğ
+	var url = $URL + "?ClassName=web.INSUDicDataCom&QueryName=QueryMedType&ResultSetType=array&AdmReaId=" + insTypeId + "&HospDr=" + PUBLIC_CONSTANT.SESSION.HOSPID + "&ExpStr=" + expStr;  
+	$("#insuAdmType").combobox("clear").combobox("reload", url);
 	
-	//ç—…ç§
-	var papmi = getValueById("papmi");
-	$("#insuDic").combobox("options").url = $URL + "?ClassName=web.DHCOPAdmFind&QueryName=GetChronicList&ResultSetType=array&papmi=" + papmi + "&insuNo=&admReaId=" + insTypeId + "&hospId=" + PUBLIC_CONSTANT.SESSION.HOSPID;
-	$("#insuDic").combobox("clear").combobox("reload");
+	//²¡ÖÖ
+	var patientId = getValueById("patientId");
+	var url = $URL + "?ClassName=web.INSUDicDataCom&QueryName=QueryChronic&ResultSetType=array&AdmReaId=" + insTypeId + "&PapmiDr=" + patientId + "&HospDr=" + PUBLIC_CONSTANT.SESSION.HOSPID + "&ExpStr=" + expStr;
+	$("#insuDic").combobox("clear").combobox("reload", url);
+}
+
+/**
+* ÅİÜ½ÌáÊ¾²»¿ÉÍË·ÑÔ­Òò
+*/
+function showCantRefReason($this, row) {
+	if (GV.IsDirRefAudited == 1) {
+		return;   //×öÁËÖ±½ÓÍË·ÑÉóºËµÄ²»ÏÔÊ¾²»¿ÉÍË·ÑÔ­Òò
+	}
+	$($this).popover({
+		title: '<font color="#FF0000">' + row.arcimDesc + '</font>' + $g("²»¿ÉÍË·ÑÔ­Òò"),
+		trigger: 'hover',
+		content: row.cantRefReason
+	}).popover("show");
+}
+
+function getRefInfoHTML(invStr) {
+	var html = "";
+	var jsonObj = $.cm({ClassName: "web.DHCOPBillRefund", MethodName: "GetRefundInfo", invStr: invStr}, false);
+	if ((jsonObj.code == 0) && (jsonObj.refPatSum != 0)) {
+		setValueById("factRefundAmt", jsonObj.refSelfSum);
+		
+		html += "<p class=\"fail-Cls\">" + "ÍË·Ñ½ğ¶îÎª£º" + jsonObj.refPatSum + "Ôª</p>";
+		if (jsonObj.refmodeStr) {
+			var begSign = "";
+			var endSign = "";
+			var refmodeAry = jsonObj.refmodeStr.split(",");
+			$.each(refmodeAry, function(index, item) {
+				begSign = (index == 0) ? "£¨" : "";
+				endSign = (index == (refmodeAry.length - 1)) ? "£©" : "";
+				item = item.replace(/ÊÕ/, "<a class=\"succ-Cls\">ÊÕ</a>") + "Ôª";
+				html += "<p class=\"fail-Cls\">" + begSign + item + endSign + "</p>";
+			});
+		}
+	}
+	return html;
+}
+
+/**
+* »ñÈ¡ÕË»§Óà¶î
+*/
+function getAccMLeft() {
+	var accMRowId = getValueById("accMRowId");
+	return (accMRowId > 0) ? $.m({ClassName: "web.UDHCAccManageCLS", MethodName: "getAccBalance", Accid: accMRowId}, false) : "";
+}
+
+/**
+* ÅĞ¶ÏÊÇ·ñÓĞÒÑÉóºËµ«Î´³·ÏúÖ´ĞĞµÄ²»ÄÜÍË·ÑÒ½Öö
+*/
+function hasNoCancelAuditOrd() {
+	var bool = false;
+	$.each(GV.OEItmList.getRows(), function (index, row) {
+		if (row.auditFlag != "Y") {
+			return true;
+		}
+		if (row.disabled != "Y") {
+			return true;
+		}
+		if (getOrdItmRowChecked(index)) {
+			return true;
+		}
+		bool = true;
+		return false;
+	});
+	return bool;
+}
+
+/**
+* ÅĞ¶ÏÊÇ·ñ×öÁËÖ±½ÓÍË·ÑÉóºË
+*/
+function isDirectRefAudit(invId, invType) {
+	return $.m({ClassName: "BILL.OP.BL.DirectRefundAudit", MethodName: "CheckIsAudited", invId: invId, invType: invType}, false)
+}
+
+/**
+* µã"ÍË·Ñ"°´Å¥Ê±£¬ÅĞ¶ÏÊÇ·ñÊÇ¹ıºÅÖØ´ò
+*/
+function isPassNoReChg() {
+	if (GV.ReBillFlag == 0) {
+		return false;
+	}
+	if (GV.OEItmList.getChecked().length > 0) {
+		return false;
+	}
+	return true;
+}
+
+/**
+* 2022-09-14
+* ZhYW
+* »ñÈ¡¼ÓÔØÍË·Ñ·½Ê½comboboxµÄurl
+*/
+function loadRefundModeData(paymId) {
+	$.cm({
+		ClassName: "web.UDHCOPGSConfig",
+		QueryName: "QryGSContraRefPMList",
+		ResultSetType: "array",
+		GPRowID: PUBLIC_CONSTANT.SESSION.GROUPID,
+		HospID: PUBLIC_CONSTANT.SESSION.HOSPID,
+		TypeFlag: "REF",
+		CfgCode: "OPCHRG.OPRefd.TFZFFSYSFZFFSDZ",
+		PayMID: paymId
+	}, function(data) {
+		$("#refundMode").combobox("loadData", data);
+	});
+};
+
+/**
+* 2022-11-22
+* ZhYW
+* Ò½±£ÊÕ·Ñ¿çÔÂÊÇ·ñÄÜÍË·Ñ
+*/
+function isAllowedRefInsuDiffMth(invId, invType) {
+	return ($.m({ClassName: "web.DHCOPBillRefund", MethodName: "IsAllowedRefInsuDiffMth", prtRowId: invId, invType: invType}, false) == 1);
+}
+
+/**
+* 2023-04-04
+* ZhYW
+* Ò½±£×¡Ôº»¼ÕßÊÇ·ñÔÊĞíÃÅÕï²¿·ÖÍË·Ñ
+*/
+function isAllowedIPPatPartRef(patientId) {
+	return ($.m({ClassName: "web.DHCOPBillRefund", MethodName: "IsAllowedIPPatPartRef", patientId: patientId, hospId: PUBLIC_CONSTANT.SESSION.HOSPID}, false) == 1);
 }

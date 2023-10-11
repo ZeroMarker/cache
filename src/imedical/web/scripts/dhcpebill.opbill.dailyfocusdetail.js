@@ -16,25 +16,32 @@ var PUBLIC_CONSTANT = {
 	}
 };
 
-$(document).ready(function () {
-	initFocusPRTListGrid();
-});
-
-function initFocusPRTListGrid() {
-	var accPreListObj = $HUI.datagrid('#dhcpeFocusPRTList', {
-			fit: true,
-			striped: true,
-			singleSelect: true,
-			selectOnCheck: false,
-			fitColumns: true,
-			autoRowHeight: false,
-			showFooter: true,
-			url: $URL,
-			pagination: true,
-			rownumbers: true,
-			pageSize: 20,
-			pageList: [20, 30, 40, 50],
-			columns: [[{
+$(function () {
+	var toolbar = [{
+		text: $g('导出'),
+		iconCls: 'icon-export',
+		handler: function () {
+			exportClick();
+		}
+	},{
+		text: $g('导出配置'),
+		iconCls: 'icon-batch-cfg',
+		handler: function () {
+			configClick();
+		}
+	}];
+	
+	$HUI.datagrid('#dhcpeFocusPRTList', {
+		url: $URL,
+		fit: true,
+		striped: true,
+		border: false,
+		fitColumns: true,
+		pagination: true,
+		rownumbers: true,
+		pageSize: 20,
+		toolbar: toolbar,
+		columns: [[{
 						title: '打印日期',
 						field: 'TPrintDate',
 						width: 80
@@ -70,7 +77,7 @@ function initFocusPRTListGrid() {
 						width: 80
 					}
 				]],
-			queryParams: {
+		queryParams: {
 				ClassName: PUBLIC_CONSTANT.METHOD.CLS,
 				QueryName: PUBLIC_CONSTANT.METHOD.QUERY,
 				stDate: GlobalObj.stDate,
@@ -80,6 +87,49 @@ function initFocusPRTListGrid() {
 				footId: GlobalObj.footId,
 				guser: GlobalObj.guser,
 				hospDR: GlobalObj.hospDR
-			}
-		});
+		}
+	});
+});
+
+/**
+ * Creator: xueying
+ * CreatDate: 20230420
+ * Description: 导出
+*/
+function exportClick() {
+	$.cm({
+		ResultSetType: "ExcelPlugin",
+		localDir: "Self",
+		ExcelName: $(".tabs-selected .tabs-title", parent.document).text(),
+		PageName: page,
+		ClassName: PUBLIC_CONSTANT.METHOD.CLS,
+	    QueryName: PUBLIC_CONSTANT.METHOD.QUERY,
+	    stDate: GlobalObj.stDate,
+		stTime: GlobalObj.stTime,
+		endDate: GlobalObj.endDate,
+		endTime: GlobalObj.endTime,
+		footId: GlobalObj.footId,
+		guser: GlobalObj.guser,
+		hospDR: GlobalObj.hospDR,
+		LocID:session['LOGON.CTLOCID']
+	}, false);
 }
+
+/**
+ * Creator: xueying
+ * CreatDate: 20230420
+ * Description: 导出配置
+*/
+function configClick() {
+	var url = "websys.query.customisecolumn.csp?CONTEXT=Kweb.DHCOPBillDailyDetails:FindOPBillInvDetails&PREFID=0&PAGENAME=" + page;
+	websys_showModal({
+		url: url,
+		title: '导出配置',
+		iconCls: 'icon-w-config',
+		width: '80%',
+		height: '80%'
+	});
+}
+
+
+

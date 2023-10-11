@@ -4,7 +4,7 @@
  var monLevId=""; //监护级别ID
  var monLevelDesc=""  //监护级别描述
  var monLocID=""; //病人科室ID
- var monAdmID=""; //就诊ID
+ var AdmDr=""; //就诊ID
  var monSubClassId=""; //学科分类ID
  var monWardID="";
  var monID="";
@@ -18,39 +18,73 @@
 		monLevelDesc = "<font color="+ monLevelDesc.split("@")[1] +">"+monLevelDesc.split("@")[0]+"</font>"; 
 	 }
 	 monLocID=getParam("monLocID");
-	 monAdmID=getParam("monAdmID");
+	 AdmDr=getParam("monAdmID");
 	 monWardID=getParam("monWardID");
 	 monSubClassId=getParam("monSubCId");
+	 if(monSubClassId==""){
+		$.messager.alert("提示","请配置该科室关联的学科分类！");   
+		return;
+	 }
 	 setMonItem();
  	 InitUI();
  	 LoadMonScope();  /// 初始化监护标准列表
  	 LoadMonItem();   /// 初始化监护项目列表
  	 $("#btnAddEmp").bind("click",save);  //提交
+ 	 $("#Btn_Lab").bind("click",function(){  //引用检验
+ 	     createLabDetailView(qouteLabResult);
+	 });
+ 	 $("#Btn_Ris").bind("click", function(){ // 引用检查
+	 	 createRisWin(qouteRisResult);
+	 });
  	 SpecControlInputShow(); ///特殊控制
  })
- 
+ function qouteRisResult(addTxt){
+	 var text = $("#ImpMonItems").val();
+	 if(text.indexOf(addTxt)!="-1"){
+			$.messager.alert('错误提示',"已添加！");
+			return;
+	 }
+	 if(text==$g("编辑内容...")) {
+		 $("#ImpMonItems").val(addTxt);
+	 }else{
+		 $("#ImpMonItems").val(text +" "+ addTxt);
+	 }
+}
+function qouteLabResult(addTxt){
+	 var text = $("#ImpMonItems").val();
+	 if(text.indexOf(addTxt)!="-1"){
+			$.messager.alert('错误提示',"已添加！");
+			return;
+	 }
+	 if(text==$g("编辑内容...")) {
+		 $("#ImpMonItems").val(addTxt);
+	 }else{
+		 $("#ImpMonItems").val(text +" "+ addTxt);
+	 }
+} 
+  
  function InitUI(){
 	$('#ImpMonItems').bind("focus",function(){
-		if(this.value=="编辑内容..."){
+		if(this.value==$g("编辑内容...")){
 			$('#ImpMonItems').val("");
 		}
 	});
 	
 	$('#ImpMonItems').bind("blur",function(){
 		if(this.value==""){
-			$('#ImpMonItems').val("编辑内容...");
+			$('#ImpMonItems').val($g("编辑内容..."));
 		}
 	});
 	
 	$('#ImpMonContent').bind("focus",function(){
-		if(this.value=="编辑内容..."){
+		if(this.value==$g("编辑内容...")){
 			$('#ImpMonContent').val("");
 		}
 	});
 	
 	$('#ImpMonContent').bind("blur",function(){
 		if(this.value==""){
-			$('#ImpMonContent').val("编辑内容...");
+			$('#ImpMonContent').val($g("编辑内容..."));
 		}
 	});
  }
@@ -65,8 +99,8 @@
 	 }else{
 	 	notes="[符合一项即为三级监护]";
 	 } */
-	  notes="[符合一项即为"+monLevelDesc+"监护]";
-	 $('span.ui-font12:contains("符合")').html(notes);
+	 notes="["+$g("符合一项即为")+monLevelDesc+$g('监护')+"]";
+	 $('span.ui-font12:contains('+$g("符合")+')').html(notes);
  }
  
  /// 加载监护范围
@@ -362,18 +396,18 @@ function save(){
 	}
 
 	var ImpMonItems=$("#ImpMonItems").val();       ///重要化验结果
-	if((ImpMonItems=="编辑内容...")||(ImpMonItems=="")){
+	if((ImpMonItems==$g("编辑内容..."))||(ImpMonItems=="")){
 		$.messager.alert('提示','<font style="color:red;font-weight:bold;">请填写病人相关化验结果！</font>','warning');
 		return;
 		}
 	var ImpMonContent=$("#ImpMonContent").val();   ///病情转归情况
-	if((ImpMonContent=="编辑内容...")||(ImpMonContent=="")){
+	if((ImpMonContent==$g("编辑内容..."))||(ImpMonContent=="")){
 		$.messager.alert('提示','<font style="color:red;font-weight:bold;">请填写病人病情转归情况！</font>','warning');
 		return;
 		}
 
 	//药学监护主信息
-	var monMainList=monLevId+"^"+monAdmID+"^"+monWardID+"^"+monLocID+"^"+LgUserID+"^"+ImpMonContent+"^"+ImpMonItems;
+	var monMainList=monLevId+"^"+AdmDr+"^"+monWardID+"^"+monLocID+"^"+LgUserID+"^"+ImpMonContent+"^"+ImpMonItems;
 	var monMInfoList=monMainList+"!!"+LevScopeList+"!!"+LevItemList+"!!"+"";
 
 	$.ajax({  
@@ -423,9 +457,9 @@ function textCounterNew(){
 /// 特殊控制
 function SpecControlInputShow(){
 	if((monLevId == "1")&(monSubClassId == "8")){
-		$('#ImpMonContent').val("营养方案：总液量：ml、总能量：kcal、NPC：kcal 、渗透压：mOsm/L、葡萄糖：g、脂肪：g、氨基酸：g、氯化钾：g、氯化钠：g、PN途径(PICC、外周静脉、CVC 、输液港)：");
+		$('#ImpMonContent').val($g("营养方案：总液量：ml、总能量：kcal、NPC：kcal 、渗透压：mOsm/L、葡萄糖：g、脂肪：g、氨基酸：g、氯化钾：g、氯化钠：g、PN途径(PICC、外周静脉、CVC 、输液港)："));
 	}
 	if((monLevId == "2")&(monSubClassId == "8")){
-		$('#ImpMonContent').val("营养方案：总液量：ml、总能量：kcal、葡萄糖： g、脂肪： g、氨基酸：g、EN途径(经口、鼻胃管、鼻空肠管、PEG/PEJ):、每日用量:ml/日、(供能:kcal/日)、速度:ml/小时、输注方式(经口饮入、重力滴注、泵入): ");
+		$('#ImpMonContent').val($g("营养方案：总液量：ml、总能量：kcal、葡萄糖： g、脂肪： g、氨基酸：g、EN途径(经口、鼻胃管、鼻空肠管、PEG/PEJ):、每日用量:ml/日、(供能:kcal/日)、速度:ml/小时、输注方式(经口饮入、重力滴注、泵入): "));
 	}
 }

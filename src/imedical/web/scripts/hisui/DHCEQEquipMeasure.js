@@ -7,6 +7,9 @@ function BodyLoadHandler()
 	fillData();
 	RefreshData();
 	initButtonWidth();	//modified by czf 20180821 HISUI改造
+	//ui改造 add by hyy 2023-1-31
+	initPanelHeaderStyle();
+	initButtonColor();
 	//HiddenTableIcon("DHCEQEquipMeasure","TRowID","TEquip");	///add by lmm
 	//add by lmm 2020-04-27	1282978
 	//add by lmm 2020-05-06 1303731 begin
@@ -21,6 +24,12 @@ function BodyLoadHandler()
 		SetElement("cEQTitle","已报废计量设备台账");  
 		hiddenObj("cPlanName",1)
 		hiddenObj("PlanName",1)
+		//mdoify by lmm 2020-11-10 1594044
+		hiddenObj("cStartDate",1)
+		jQuery("#StartDate").next().hide()
+		hiddenObj("cEndDate",1)
+		jQuery("#EndDate").next().hide()
+		//mdoify by lmm 2020-11-10
 		hiddenObj("BAdd",1)   //add by lmm 2020-05-07
 	}
 	else
@@ -58,6 +67,7 @@ function BFind_Click()
 	lnk=lnk+"&QXType="+GetElementValue("QXType");
 	lnk=lnk+"&ReadOnly="+GetElementValue("ReadOnly");
 	lnk=lnk+"&IsDisused="+GetElementValue("IsDisused");   //add by lmm 2020-04-27 1282978
+    if ('function'==typeof websys_getMWToken) lnk += "&MWToken="+websys_getMWToken();	// MZY0162	3537156		2023-05-18
 	location.href=lnk;
 }
 

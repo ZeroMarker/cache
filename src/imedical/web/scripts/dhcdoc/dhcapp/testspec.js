@@ -5,7 +5,7 @@ var editRow="";
 /// 页面初始化函数
 function initPageDefault(){
 	var hospStr=session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
-	var hospComp = GenHospComp("Doc_APP_Testspec",hospStr);
+	var hospComp = GenHospComp("DHC_AppTestSpec",hospStr);
 	hospComp.jdata.options.onSelect  = function(){
 		initTestItem();
 		} 
@@ -124,14 +124,14 @@ function initTestItem(){
 		{field:"CatDesc",title:'标本所属分类',width:140,editor:catEditor,hidden:'true'},
 		{field:"HospDesc",title:'医院标识',width:200}, //editor:Hospeditor
 		{field:"ActiveFlag",title:'是否可用',width:80,align:'center',editor:atsflag},
-		{field:"ActiveFlagCode",title:'ActiveFlagCode',width:80,align:'center',editor:textEditor},
+		{field:"ActiveFlagCode",title:'ActiveFlagCode',width:80,align:'center',editor:textEditor,hidden:'true'},
 		{field:"CatDr",title:'CatDr',width:20,hidden:'true',align:'center'},
 		{field:"HospDr",title:'HospDr',width:20,hidden:'true',align:'center'},
 		{field:"ATSid",title:'ATSid',width:20,hidden:'true',align:'center'},
 		{field:"MulFlag",title:'多选',width:80,align:'center',editor:mulflag},
-		{field:"MulFlagCode",title:'MulFlagCode',width:80,align:'center',editor:textEditor},
+		{field:"MulFlagCode",title:'MulFlagCode',width:80,align:'center',editor:textEditor,hidden:'true'},
 		{field:"CatInsFlag",title:'是否为穿刺',width:80,align:'center',editor:catinsflag},
-		{field:"CatInsFlagCode",title:'CatInsFlagCode',width:80,align:'center',editor:textEditor}
+		{field:"CatInsFlagCode",title:'CatInsFlagCode',width:80,align:'center',editor:textEditor,hidden:'true'}
 	]];
 	///  定义datagrid  
 	var option = {
@@ -148,7 +148,7 @@ function initTestItem(){
 }
 function addRow(){
 	var HospDesc=$HUI.combogrid('#_HospList').getText();
-	commonAddRow({'datagrid':'#datagrid',value:{'HospDesc':HospDesc,'ActiveFlag':'Y','ActiveFlagCode':'Y','MulFlag':'Y','MulFlagCode':'Y'}})
+	commonAddRow({'datagrid':'#datagrid',value:{'HospDesc':HospDesc,'ActiveFlag':'Y','ActiveFlagCode':'Y','MulFlag':'Y','MulFlagCode':'Y','CatInsFlag':'Y','CatInsFlagCode':'Y'}})
 	editRow=0;
 }
 function onClickRow(index,row){
@@ -244,7 +244,7 @@ function InitReBLMapDataGrid(){
         handler: function() {ConItemaddClickHandle();}
     }, {
         text: '删除',
-        iconCls: 'icon-remove',
+        iconCls: 'icon-cancel',
         handler: function() {ConItemdelectClickHandle();}
     }];
 	var Columns=[[ 
@@ -307,8 +307,12 @@ function ConItemaddClickHandle(){
 		TestSpecArc:TestSpecArc,
 		dataType:"text",
 	},function(data){
-		$.messager.popover({msg: '增加成功!',type:'success',timeout: 1000});
-		LoadReBLMapDataGrid();
+		if(data==-1) {
+			$.messager.alert("提示","增加失败!记录重复!");
+		}else{
+			$.messager.popover({msg: '增加成功!',type:'success',timeout: 1000});
+			LoadReBLMapDataGrid();
+		}
 	})
 }
 function ConItemdelectClickHandle(){
@@ -328,5 +332,13 @@ function ConItemdelectClickHandle(){
 		LoadReBLMapDataGrid();
 	})
 }
+function translateword(){
+	var SelectedRow = $("#datagrid").datagrid('getSelected');
+	if (!SelectedRow){
+		$.messager.alert("提示","请选择需要翻译的行!","info");
+		return false;
+	}
+	CreatTranLate("User.DHCAppTestSpec","ATSDesc",SelectedRow["ATSDesc"])	
+	}
 /// JQuery 初始化页面
 $(function(){ initPageDefault(); })

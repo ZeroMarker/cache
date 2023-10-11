@@ -7,7 +7,11 @@ var rowid=0;
 //装载页面  函数名称固定
 function BodyLoadHandler()
 {
-	initButtonWidth();///Add By QW 2018-08-31 HISUI改造:修改按钮长度
+	hidePanelTitle(); //added by LMH 20230211 UI 极简组件界面弹框面板标题隐藏
+	initPanelHeaderStyle(); //added by LMH 20230211 UI 极简组件界面标题格式
+	//showBtnIcon('BAdd^BUpdate^BDelete^BFind',false); //modified by LMH 20230211 动态设置是否极简显示按钮图标
+	//initButtonWidth();///Add By QW 2018-08-31 HISUI改造:修改按钮长度
+	initButtonColor(); //added by LMH 20230211 UI 初始化按钮颜色
 	setButtonText();///Add By QW 2018-09-29 HISUI改造:按钮文字规范
 	InitUserInfo();
 	InitEvent();	//初始化
@@ -20,12 +24,35 @@ function InitEvent() //初始化
 {
 	var obj=document.getElementById("BAdd");
 	if (obj) obj.onclick=BAdd_Click;
+	var obj=document.getElementById("BFind");
+	if (obj) obj.onclick=BFind_Click;
 	var obj=document.getElementById("BUpdate");
 	if (obj) obj.onclick=BUpdate_Click;
 	var obj=document.getElementById("BDelete");
 	if (obj) obj.onclick=BDelete_Click;
 }
-
+//add by cjt 需求号2782419 2022-08-17
+function BFind_Click()
+{
+	var url="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCRoleReqFields&ApproveFlowDR="+GetElementValue("ApproveFlowDR")+"&vData="+GetVData();
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.location.href=url;
+}
+//add by cjt 需求号2782419 2022-08-17 拼接查询参数
+function GetVData()
+{
+	var val="^vField="+GetElementValue("Field");
+	val=val+"^vType="+GetElementValue("Type");
+	val=val+"^vPosition="+GetElementValue("Position");
+	val=val+"^vHold1="+GetElementValue("Hold1");
+	val=val+"^vTableName="+GetElementValue("TableName");
+	val=val+"^vSort="+GetElementValue("Sort");
+	val=val+"^vHold2="+GetElementValue("Hold2");
+	val=val+"^vMustFlag="+GetElementValue("MustFlag");
+	return val;
+}
 function BAdd_Click()
 {
 	if (condition()) return;

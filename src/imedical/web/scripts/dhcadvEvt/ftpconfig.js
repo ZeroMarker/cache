@@ -1,5 +1,13 @@
 var dgrow=0;
+var HospDr="";
 $(function(){ 
+    //初始化医院 多院区改造 cy 2021-04-09
+    InitHosp(); 
+	//初始化界面默认信息
+	InitDefault();
+	
+});
+function InitDefault(){ 
 	$.extend($.fn.datagrid.defaults.editors,{ //huaxiaoying 2018-02-06 st 密码编辑时的加密
 	      password: {//datetimebox就是你要自定义editor的名称
 	         init: function(container, options){
@@ -27,21 +35,26 @@ $(function(){
 	$(":radio").click(function(){
    		commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})
   	});
-  	
-  	$('#hospID').combobox({ //hxy 2019-07-20 st
-	 	url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMON&MethodName=GetHospDs',
-	 	valueField:'value',
-		textField:'text',   
-		panelHeight:'auto'
-	}) //ed
-});
+	findftplist();    ///调用查询
+}
+// 初始化医院 多院区改造 cy 2021-04-09
+function InitHosp(){
+	hospComp = GenHospComp("DHC_AdvFTPConfig"); 
+	HospDr=hospComp.getValue();
+	//hospComp.setValue("全部"); 
+	//$HUI.combogrid('#_HospList',{value:"11"})
+	hospComp.options().onSelect = function(){///选中事件
+ 		HospDr=hospComp.getValue();
+ 		findftplist();    ///调用查询
+	}
+}
 function onClickRow(index,row){
 	CommonRowClick(index,row,"#datagrid");
 	dgrow=index;
 }
 
 function addRow(){
-	commonAddRow({'datagrid':'#datagrid',value:{hospDr:LgHospDesc,hospDrID:LgHospID}}) //hxy 2019-07-03 LgHospID
+	commonAddRow({'datagrid':'#datagrid',value:{hospDr:HospDr,hospDrID:HospDr}}) //hxy 2019-07-03 LgHospID
 }
 
 function save(){
@@ -88,7 +101,7 @@ function save(){
 }
 
 /// 删除
-function remove(){
+function delRow(){
 	var rowsData = $("#datagrid").datagrid('getSelected')
 	if (rowsData == null) {
 		$.messager.alert("提示","请选择数据!");
@@ -125,8 +138,6 @@ function findftplist()
 {
 	var code=$('#code').val();
 	var desc=$('#desc').val();
-	var hospID=$('#hospID').combobox("getValue")
 	var params=code+"^"+desc;
-	//alert(params)
-	$('#datagrid').datagrid('load',{params:params,HospID:hospID}); 
+	$('#datagrid').datagrid('load',{params:params,HospID:HospDr}); 	
 }	 

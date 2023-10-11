@@ -24,11 +24,12 @@ function InitviewScreen(){
 			    singleSelect:true,
 			    items:[	       
 			        {text:'取值表达式',id:'GetValue'},
-			        {text:'入组表达式',id:'QCRule'},
-			        {text:'校验表达式',id:'ValiRule'},
+			        {text:'入单表达式',id:'QCRule'},
+			        {text:'检验表达式',id:'ValiRule'},
 			         {text:'全部表达式',id:''}
 				    ],
 			    onClick:function(v){
+					$("#gridQCExpress").datagrid("loadData", { total: 0, rows: [] });
 				    obj.clearForm();
 				    if (v.id=='ValiRule'){
 						$('#BTLevel').combobox('enable');
@@ -69,12 +70,13 @@ function InitviewScreen(){
 							]]	
 						})
 			    	}
-				    obj.gridQCExpress.reload({
-						    ClassName:"DHCMA.CPW.SDS.QCExpressSrv",
+				    setTimeout(function(){			//延迟加载数据，等待列渲染
+						obj.gridQCExpress.reload({
+							ClassName:"DHCMA.CPW.SDS.QCExpressSrv",
 							QueryName:"QryQCExpress",
 							aExpType:v.id	
-					    })
-					
+						})
+					},20)
 				    },
 			    onUnselect:function(v){},
 			    onSelect:function(v){

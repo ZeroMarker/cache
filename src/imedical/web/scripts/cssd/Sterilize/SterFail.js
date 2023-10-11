@@ -1,432 +1,311 @@
-﻿//删除明细
-function deleteItem(ItemRowId){
-	var requiredDelete = RequiredDelete();
-	if (requiredDelete == "Y"&&!isEmpty(ItemRowId)) {
-		$.messager.confirm("操作提示","您确定要执行操作吗？",function(data){  
-			if(data){   
-				$.cm({
-					ClassName:'web.CSSDHUI.PackageSterilize.SterilizeFailItem',
-					MethodName:'jsDelete',
-					rowId:ItemRowId
-				},function(jsonData){
-					if(jsonData.success==0){
-						$UI.msg('success',jsonData.msg);
-						$('#ItemList').datagrid('reload');
-					}else{
-						$UI.msg('error',jsonData.msg);
-					}
-				});
-			}
-		});
+﻿var CurrId = '';
+function CancelOrder(SterFailId) {
+	if (isEmpty(SterFailId)) {
+		$UI.msg('alert', '请选择要撤销的单据!');
+		return false;
 	}
-}
-//删除主表单据
-//第一步:盘点单据是否可以删除
-// 第二步删除主表单据
-// 第三步删除子表数据 (包括修改打包表数据)目前的策略是:有明细不允许删除
-function deleteMain(mainRowId){
-	if (isEmpty(mainRowId)) {
-			$UI.msg('alert','请选择要删除的单据!');
-			return false;
-		}
-	$.messager.confirm("操作提示","您确定要执行操作吗？",function(data){  
-		if(data){   
+	$.messager.confirm('操作提示', '您确定要执行操作吗？', function(data) {
+		if (data) {
+			showMask();
 			$.cm({
-				ClassName:'web.CSSDHUI.PackageSterilize.SterilizeFail',
-				MethodName:'jsDelete',
-				mainRowId:mainRowId
-			},function(jsonData){
-				if(jsonData.success==0){
-					$UI.msg('success',jsonData.msg);
+				ClassName: 'web.CSSDHUI.PackageSterilize.SterilizeFail',
+				MethodName: 'jsCancelOrder',
+				SterFailId: SterFailId
+			}, function(jsonData) {
+				hideMask();
+				if (jsonData.success == 0) {
+					$UI.msg('success', jsonData.msg);
+					CurrId = SterFailId;
 					$('#MainList').datagrid('reload');
-					$('#ItemList').datagrid('reload');
-				}else{
-					$UI.msg('error',jsonData.msg);
+				} else {
+					$UI.msg('error', jsonData.msg);
 				}
 			});
 		}
 	});
 }
-	var GridListIndex = "";
-	var GridListIndexId = ""
-	function cancelOrder(Id){
-		$.messager.confirm("操作提示","您确定要执行操作吗？",function(data){
-			if(data){
-				var Rows = $('#MainList').datagrid("getRows");
-				$.each(Rows,function(index,item){
-					if(item.RowId==Id){
-						GridListIndex=index;
-						GridListIndexId=item.CSSDSPNo;
-					}
-				});
-				$.cm({
-					ClassName:'web.CSSDHUI.PackageSterilize.SterilizeFail',
-					MethodName:'jsCancelOrder',
-					Id:Id
-				},function(jsonData){
-					if(jsonData.success==0){
-						$UI.msg('success',jsonData.msg);
-						$('#MainList').datagrid('reload');
-						$('#ItemList').datagrid('reload');
-					}else{
-						$UI.msg('error',jsonData.msg);
-					}
-				});				
-			}
-		});
-	}	
-	function submitOrder(Id){
-		var Rows = $('#MainList').datagrid("getRows");
-		$.each(Rows,function(index,item){
-			if(item.RowId==Id){
-				GridListIndex=index;
-				GridListIndexId=Id;
-			}
-		})
-		$.cm({
-			ClassName:'web.CSSDHUI.PackageSterilize.SterilizeFail',
-			MethodName:'jsSubmitOrder',
-			Id:Id
-		},function(jsonData){
-			if(jsonData.success==0){
-				$UI.msg('success',jsonData.msg);
-				$('#MainList').datagrid('reload');
-				$('#ItemList').datagrid('reload');
-			}else{
-				$UI.msg('error',jsonData.msg);
-			}
-		});
+function SubmitOrder(SterFailId) {
+	if (isEmpty(SterFailId)) {
+		$UI.msg('alert', '请选择要提交的单据!');
+		return false;
 	}
+	showMask();
+	$.cm({
+		ClassName: 'web.CSSDHUI.PackageSterilize.SterilizeFail',
+		MethodName: 'jsSubmitOrder',
+		SterFailId: SterFailId
+	}, function(jsonData) {
+		hideMask();
+		if (jsonData.success == 0) {
+			$UI.msg('success', jsonData.msg);
+			CurrId = SterFailId;
+			$('#MainList').datagrid('reload');
+		} else {
+			$UI.msg('error', jsonData.msg);
+		}
+	});
+}
 
 var init = function() {
-	//科室
-	var ReqLocParams=JSON.stringify(addSessionParams({Type:"All"}));
-	var ReqLocBox = $HUI.combobox('#DeptLocID', {
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+ReqLocParams,
+	// 科室
+	var ReqLocParams = JSON.stringify(addSessionParams({ Type: 'Login' }));
+	$HUI.combobox('#DeptLocID', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + ReqLocParams,
 		valueField: 'RowId',
-		textField: 'Description',
-		onLoadSuccess: function (data) {   //默认登录科室
-			$("#DeptLocID").combobox('setValue',gLocId);
+		textField: 'Description'
+	});
+	
+	// 查询
+	$UI.linkbutton('#SearchBT', {
+		onClick: function() {
+			var ParamsObj = $UI.loopBlock('#MainCondition');
+			if (isEmpty(ParamsObj.DeptLocID)) {
+				$UI.msg('alert', '科室不能为空！');
+				return;
+			} else if (isEmpty(ParamsObj.StartDate)) {
+				$UI.msg('alert', '开始日期不能为空！');
+				return;
+			} else if (isEmpty(ParamsObj.EndDate)) {
+				$UI.msg('alert', '截止日期不能为空！');
+				return;
+			} else {
+				Query();
+			}
 		}
 	});
-	setDafult();
-	//查询
-	$UI.linkbutton('#SearchBT',{ 
-		onClick:function(){
-			query()
-		}
-	});
-	var query = function query(){ 
+	function Query(SterFailId) {
 		$UI.clear(ItemListGrid);
-		GridListIndex = "";
-		GridListIndexId = ""
-		var ParamsObj=$UI.loopBlock('#MainCondition');
-		var Params=JSON.stringify(ParamsObj);
+		var ParamsObj = $UI.loopBlock('#MainCondition');
+		ParamsObj.SterFailId = SterFailId;
+		var Params = JSON.stringify(ParamsObj);
 		MainListGrid.load({
 			ClassName: 'web.CSSDHUI.PackageSterilize.SterilizeFail',
 			QueryName: 'SelectAll',
-			parame: Params
-		});   
-	}
-	//保存单据
-	$UI.linkbutton('#SaveBT',{ 
-		onClick:function(){
-			saveMast()
-		}
-	});
-	function saveMast(){
-		var Params = JSON.stringify($UI.loopBlock('MainCondition'));
-		GridListIndex = "";
-		GridListIndexId = ""
-		$.cm({
-			ClassName: 'web.CSSDHUI.PackageSterilize.SterilizeFail',
-			MethodName: 'GetItemCount',
-			Params : Params
-		},function(count){
-			if(count==0){
-				$.messager.confirm("操作提示","已存在一个没有明细的空单据,是否仍需要新建?",function(data){
-					if(data){
-						CreatMast()
-					}
-				})
-			}else{
-				CreatMast()
-			}
+			Params: Params
 		});
-	}
-	function CreatMast(){
-		var MainObj = $UI.loopBlock('#MainCondition');
-		$.cm({
-			ClassName: 'web.CSSDHUI.PackageSterilize.SterilizeFail',
-			MethodName: 'jsSave',
-			Params: JSON.stringify(MainObj)
-		},function(jsonData){
-			if(!isEmpty(jsonData.rowid)){
-				$UI.msg('success',jsonData.msg);
-				FindNew(jsonData.rowid);
-			}
-		});
-	}
-	function FindNew(ID){
-		MainListGrid.load({
-		ClassName: 'web.CSSDHUI.PackageSterilize.SterilizeFail',
-		QueryName: 'FindNew',
-		ID: ID
-		});
-	}
-	function Clear(){
-		$UI.clearBlock('#MainCondition');
-		$UI.clear(MainListGrid);
-		$UI.clear(ItemListGrid);
-	}
-	//设置默认值
-	function setDafult(){
-		var Dafult={
-			FStartD:DefaultStDate(),
-			FEndD:DefaultEdDate
-		}
-		$UI.fillBlock('#MainCondition',Dafult)
-		$("#DeptLocID").combobox('setValue',gLocId);
 	}
 
-	var MainCm = [[{
-		field:'operate',
-		title:'操作',
-		align:'center',
-		width:80,
-		formatter:function(value, row, index){
-			if(row.Status==1){
-				var str = '<a href="#" name="operaM" class="easyui-linkbutton" title="删除" disabled onclick="deleteMain('+row.RowId+')"></a>';
-				var str = str + '<a href="#" name="operaR" class="easyui-linkbutton" title="撤销" onclick="cancelOrder('+ row.RowId + ')"></a>';					
-			}else{
-				var str = '<a href="#" name="operaM" class="easyui-linkbutton" title="删除" onclick="deleteMain('+row.RowId+')"></a>';
-				var str = str + '<a href="#" name="operaC" class="easyui-linkbutton" title="确认" onclick="submitOrder('+ row.RowId + ')"></a>';					
+	// 设置默认值
+	function setDefault() {
+		var Default = {
+			DeptLocID: gLocObj,
+			StartDate: DefaultStDate(),
+			EndDate: DefaultEdDate()
+		};
+		$UI.fillBlock('#MainCondition', Default);
+	}
+
+	var MainCm = [[
+		{
+			field: 'operate',
+			title: '操作',
+			frozen: true,
+			align: 'center',
+			width: 50,
+			allowExport: false,
+			formatter: function(value, row, index) {
+				var str = '';
+				if (row.Status === '1') {
+					str = '<div class="icon-back col-icon" href="#" title="撤销" onclick="CancelOrder(' + row.RowId + ')"></div>';
+				} else {
+					str = '<div class="icon-submit col-icon" href="#" title="提交" onclick="SubmitOrder(' + row.RowId + ')"></div>';
+				}
+				return str;
 			}
-			return str;
-		}
-	},{
+		}, {
 			title: 'RowId',
 			field: 'RowId',
-			width:50,
+			width: 50,
 			hidden: true
-		},  {
+		}, {
 			title: '确认标记',
 			field: 'Status',
-			width : 70,
-			align : 'center',
-			styler : flagColor,
-			fitColumns:true,
-			formatter : function(value) {
-				var status = "";
-				if (value == 0) {
-					status = "未确认";
-				} else{
-					status = "确认";
+			width: 70,
+			align: 'center',
+			styler: flagColor,
+			formatter: function(value) {
+				var status = '';
+				if (value === '1') {
+					status = '确认';
+				} else {
+					status = '未确认';
 				}
 				return status;
 			}
-		},{
+		}, {
 			title: '单号',
 			field: 'CSSDSPNo',
-			width:150,
-			fitColumns:true
+			width: 110
+		}, {
+			title: '灭菌批号',
+			field: 'SterNo',
+			width: 130
 		}, {
 			title: '科室',
 			field: 'CSSDSPLoc',
-			width:150,
-			fitColumns:true
+			width: 150
 		}, {
 			title: '登记日期',
 			field: 'CSSDSPDate',
-			width:150,
-			fitColumns:true
+			width: 150
 		}, {
 			title: '登记人',
 			field: 'Register',
-			width:150,
-			fitColumns:true
+			width: 150
 		}
 	]];
 	function flagColor(val, row, index) {
-		if (val == '1') {
-			return 'background:#15b398;color:white';
-		}else{
-			return 'background:#ff584c;color:white';
+		if (val === '1') {
+			return 'color:white;background:' + GetColorCode('green');
+		} else {
+			return 'color:white;background:' + GetColorCode('red');
 		}
 	}
-	var Params=JSON.stringify($UI.loopBlock('#MainCondition')); 
 	var MainListGrid = $UI.datagrid('#MainList', {
 		queryParams: {
 			ClassName: 'web.CSSDHUI.PackageSterilize.SterilizeFail',
-			QueryName: 'SelectAll'  ,
-			parame: Params
+			QueryName: 'SelectAll'
 		},
 		columns: MainCm,
-		toolbar: '#UomTB',
-		lazy:false,
-		onLoadSuccess:function(data){  
-			$("a[name='operaM']").linkbutton({plain:true,iconCls:'icon-cancel'});  
-			$("a[name='operaC']").linkbutton({text:'',plain:true,iconCls:'icon-upload'});  
-			$("a[name='operaR']").linkbutton({text:'',plain:true,iconCls:'icon-back'});
-			if(data.rows.length>0&&isEmpty(GridListIndex)){
-				$('#MainList').datagrid("selectRow", 0);
-				FindItemByF(data.rows[0].RowId);
-			}
-			if(!isEmpty(GridListIndex)){
-				$('#MainList').datagrid("selectRow", GridListIndex);
-				FindItemByF(GridListIndexId);
+		sortName: 'RowId',
+		sortOrder: 'desc',
+		singleSelect: true,
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
+				var GridListIndex = '';
+				if (!isEmpty(CurrId)) {
+					var Rows = $('#MainList').datagrid('getRows');
+					$.each(Rows, function(index, item) {
+						if (item.RowId == CurrId) {
+							GridListIndex = index;
+							return false;
+						}
+					});
+					CurrId = '';
+				} else if (CommParObj.SelectFirstRow === 'Y') {
+					GridListIndex = 0;
+				}
+				if (!isEmpty(GridListIndex)) {
+					$('#MainList').datagrid('selectRow', GridListIndex);
+				}
 			}
 		},
-		onClickCell: function(index, filed ,value){
-			var Row=MainListGrid.getRows()[index]
-			var Id = Row.RowId;
-			if(!isEmpty(Id)){
-				FindItemByF(Id);
+		onClickRow: function(index, row) {
+			MainListGrid.commonClickRow(index, row);
+		},
+		onSelect: function(index, rowData) {
+			var SterFailId = rowData.RowId;
+			$UI.clear(ItemListGrid);
+			if (!isEmpty(SterFailId)) {
+				ItemListGrid.load({
+					ClassName: 'web.CSSDHUI.PackageSterilize.SterilizeFailItem',
+					QueryName: 'SelectByF',
+					SterFailId: SterFailId,
+					rows: 9999
+				});
+			}
 		}
-		MainListGrid.commonClickCell(index,filed)
-		}
-	})
-	//不合格原因下拉
-	var packData=$.cm({
-			ClassName: 'web.CSSDHUI.Common.Dicts',
-			QueryName: 'GetRetReason'   ,
-			ResultSetType:"array"
-	},false);
+	});
+	// 不合格原因下拉
+	var ReasonData = $.cm({
+		ClassName: 'web.CSSDHUI.Common.Dicts',
+		QueryName: 'GetRetReason',
+		ResultSetType: 'array'
+	}, false);
 	var ReasonBox = {
 		type: 'combobox',
 		options: {
-			data:packData,
+			data: ReasonData,
 			valueField: 'RowId',
 			textField: 'Description',
-			onSelect: function (record) {
+			onSelect: function(record) {
 				var rows = ItemListGrid.getRows();
 				var row = rows[ItemListGrid.editIndex];
-				row.ReasonName = record.Description;
-			},
-			onShowPanel: function () {
-				$(this).combobox('reload')
+				row.ReasonDesc = record.Description;
 			}
 		}
 	};
-	
-	var ItemCm = [[{
-		field:'operate',title:'操作',align:'center',width:50,
-		formatter:function(value, row, index){
-			var rowMain = $('#MainList').datagrid('getSelected');
-			if(rowMain.Status==0){
-				var str = '<a href="#" name="opera"    class="easyui-linkbutton" title="删除"  onclick="deleteItem('+row.RowId+')"></a>';
-			}else{
-				var str = '<a href="#" name="opera"    class="easyui-linkbutton" title="删除" disabled onclick="deleteItem('+row.RowId+')"></a>';
-			}
-			return str;
-		}},{
+
+	var ItemCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
-			width:100,
+			width: 100,
 			hidden: true
-		},{
-			title: '条码',
-			field: 'pkgnum',
-			width:200,
-			editor:{type:'validatebox',options:{required:true}}
-		},{
+		}, {
+			title: '标签',
+			field: 'Label',
+			width: 160
+		}, {
+			title: '消毒包',
+			field: 'PkgDesc',
+			width: 150
+		}, {
 			title: '不合格原因',
-			field: 'ReasonDr',
-			width:179,
-			formatter: CommonFormatter(ReasonBox, 'ReasonDr', 'ReasonName'),
+			field: 'ReasonId',
+			width: 160,
+			formatter: CommonFormatter(ReasonBox, 'ReasonId', 'ReasonDesc'),
 			editor: ReasonBox
-		},{
+		}, {
 			title: '分析',
 			field: 'ReasonAnalysis',
-			width:200,
-			editor:{type:'validatebox'}
-		},{
+			width: 200,
+			editor: { type: 'validatebox' }
+		}, {
 			title: '改进措施',
 			field: 'Improve',
-			width:200,
-			editor:{type:'validatebox'}
-		},{
-			title: '是否启用',
-			field: 'NotUseFlag',
-			width:130,
-			hidden: true
+			width: 200,
+			editor: { type: 'validatebox' }
 		}
-	]]; 
+	]];
 
 	var ItemListGrid = $UI.datagrid('#ItemList', {
-			queryParams: {
-				ClassName: 'web.CSSDHUI.PackageSterilize.SterilizeFailItem',
-				MethodName: 'SelectByF'
-			},
-			columns: ItemCm,
-			pagination:false,
-			onLoadSuccess:function(data){ 
-				$("a[name='opera']").linkbutton({plain:true,iconCls:'icon-cancel'});  
-			},
-			showAddSaveDelItems: true,
-			saveDataFn:function(){//保存明细
-				var Rows=ItemListGrid.getChangesData();
-				if(isEmpty(Rows)) return ;
-				var rowMain = $('#MainList').datagrid('getSelected');
-				$.cm({
-					ClassName: 'web.CSSDHUI.PackageSterilize.SterilizeFailItem',
-					MethodName: 'jsSaveSter',
-					Params: JSON.stringify(Rows),
-					MainId:rowMain.RowId
-				},function(jsonData){
-					if(jsonData.success==0){
-						$UI.msg('success',jsonData.msg);
-						ItemListGrid.reload();
-					}else{
-						$UI.msg('error',jsonData.msg);
-					}
-				});
-			},
-			beforeAddFn:function(){
-				var rowMain = $('#MainList').datagrid('getSelected');
-				if(rowMain.Status==1){
-					return false;
-				}
-			},
-			beforeDelFn:function(){
-				var ItemRowId="";
-				var row = $('#ItemList').datagrid('getSelected');
-				if(!isEmpty(row)){
-					ItemRowId = row.RowId;
-				}else{
-					$UI.msg('alert','请选择要删除的单据!');
-					return false;
-				}
-				var rowMain = $('#MainList').datagrid('getSelected');
-				if(rowMain.Status==1){
-					$UI.msg('alert','已确认单据不能删除明细!');
-					return false;
-				}
-				deleteItem(ItemRowId);	
-			},
-			onBeforeEdit:function(){
-				var rowMain = $('#MainList').datagrid('getSelected');
-				if(rowMain.Status==1){
-					return false;
-				}	
-			},
-			onBeforeCellEdit: function(index, field){
-            	var RowData = $(this).datagrid('getRows')[index];
-            	if(RowData['NotUseFlag']=="N"){
-            		$UI.msg('alert','该器械已被停用，不可修改!');
-               		return false;
-            	}
-        	},
-			onClickCell: function(index, field, value){
-				ItemListGrid.commonClickCell(index, field);
-			}
-	}); 
-	function FindItemByF(Id) {
-		ItemListGrid.load({
+		queryParams: {
 			ClassName: 'web.CSSDHUI.PackageSterilize.SterilizeFailItem',
-			QueryName: 'SelectByF',
-			MainId:Id
-		});
-	}
-}
+			QueryName: 'SelectByF'
+		},
+		columns: ItemCm,
+		pagination: false,
+		checkField: 'Label',
+		showSaveItems: true,
+		sortName: 'RowId',
+		sortOrder: 'desc',
+		saveDataFn: function() { // 保存明细
+			var Rows = ItemListGrid.getChangesData();
+			if (isEmpty(Rows)) return;
+			if (Rows === false) {
+				$UI.msg('alert', '存在未填写的必填项，不能保存!');
+				return;
+			}
+			var rowMain = $('#MainList').datagrid('getSelected');
+			showMask();
+			$.cm({
+				ClassName: 'web.CSSDHUI.PackageSterilize.SterilizeFailItem',
+				MethodName: 'jsSaveSterFailItm',
+				Params: JSON.stringify(Rows),
+				SterFailId: rowMain.RowId
+			}, function(jsonData) {
+				hideMask();
+				if (jsonData.success === 0) {
+					$UI.msg('success', jsonData.msg);
+					ItemListGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		onBeforeEdit: function() {
+			var rowMain = $('#MainList').datagrid('getSelected');
+			if (rowMain.Status === '1') {
+				return false;
+			}
+		},
+		onClickRow: function(index, row) {
+			ItemListGrid.commonClickRow(index, row);
+		}
+	});
+	
+	setDefault();
+	Query();
+};
 $(init);

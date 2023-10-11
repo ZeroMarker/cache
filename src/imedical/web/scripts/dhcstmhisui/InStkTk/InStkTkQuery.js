@@ -1,52 +1,87 @@
-var init = function() {
-	//=======================Ìõ¼ş³õÊ¼»¯start==================
+ï»¿var init = function() {
+	// =======================æ¡ä»¶åˆå§‹åŒ–start==================
 	
-	//¿ÆÊÒ
-	var LocParams=JSON.stringify(addSessionParams({Type:"LinkLoc"}));
-	var LocBox = $HUI.combobox('#FLocId', {
-		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+LocParams,
+	// ç§‘å®¤
+	var LocParams = JSON.stringify(addSessionParams({ Type: 'Login' }));
+	if (InStkTkParamObj.AllLoc == 'Y') {
+		LocParams = JSON.stringify(addSessionParams({ Type: 'All' }));
+	}
+	var LocBox = $HUI.combobox('#FLoc', {
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + LocParams,
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-	var HandlerParams=function(){
-		var Obj={StkGrpType:"M",BDPHospital:gHospId};
-		return Obj
-	}
-	$("#InciDesc").lookup(InciLookUpOp(HandlerParams,'#InciDesc','#Inci'));
-	$("#FInciDesc").lookup(InciLookUpOp(HandlerParams,'#FInciDesc','#FInci'));
-	//===========================Ìõ¼ş³õÊ¼end===========================
-	// ======================tbar²Ù×÷ÊÂ¼şstart=========================
-	$UI.linkbutton('#QueryBT',{ 
-		onClick:function(){
+	
+	var FCompBox = $HUI.combobox('#FCompBox', {
+		data: [{ 'RowId': '', 'Description': 'å…¨éƒ¨' }, { 'RowId': '1', 'Description': 'æœªè´¦ç›˜å®Œæˆ' }, { 'RowId': '2', 'Description': 'è´¦ç›˜å®Œæˆ' }, { 'RowId': '3', 'Description': 'å®ç›˜å®Œæˆ' }, { 'RowId': '4', 'Description': 'è°ƒæ•´å®Œæˆ' }],
+		valueField: 'RowId',
+		textField: 'Description'
+	});
+	
+	var HandlerParams = function() {
+		var Obj = { StkGrpType: 'M', BDPHospital: gHospId };
+		return Obj;
+	};
+	$('#InciDesc').lookup(InciLookUpOp(HandlerParams, '#InciDesc', '#InciId'));
+	$('#FInciDesc').lookup(InciLookUpOp(HandlerParams, '#FInciDesc', '#FInciId'));
+	// ===========================æ¡ä»¶åˆå§‹end===========================
+	// ======================tbaræ“ä½œäº‹ä»¶start=========================
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
 			Query();
 		}
 	});
-	function Query(){ 
-		var ParamsObj=$UI.loopBlock('Conditions');
-		if(isEmpty(ParamsObj.FLocId)){
-				$UI.msg('alert','¿ÆÊÒ²»ÄÜÎª¿Õ!');
-				return;
-			}
-		if(isEmpty(ParamsObj.FStartDate)){
-				$UI.msg('alert','¿ªÊ¼ÈÕÆÚ²»ÄÜÎª¿Õ!');
-				return;
-			}
-		if(isEmpty(ParamsObj.FEndDate)){
-				$UI.msg('alert','½ØÖ¹ÈÕÆÚ²»ÄÜÎª¿Õ!');
-				return;
-			}	
+	function Query() {
+		var ParamsObj = $UI.loopBlock('Conditions');
+		var StartDate = ParamsObj.FStartDate;
+		var EndDate = ParamsObj.FEndDate;
+		var CompFlag = ParamsObj.FCompBox;
+		if (CompFlag == '') {
+			ParamsObj.FInstComp = '';
+			ParamsObj.FStkTkComp = '';
+			ParamsObj.FAdjComp = '';
+		} else if (CompFlag == '1') {
+			ParamsObj.FInstComp = 'N';
+			ParamsObj.FStkTkComp = 'N';
+			ParamsObj.FAdjComp = 'N';
+		} else if (CompFlag == '2') {
+			ParamsObj.FInstComp = 'Y';
+			ParamsObj.FStkTkComp = 'N';
+			ParamsObj.FAdjComp = 'N';
+		} else if (CompFlag == '3') {
+			ParamsObj.FInstComp = 'Y';
+			ParamsObj.FStkTkComp = 'Y';
+			ParamsObj.FAdjComp = 'N';
+		} else if (CompFlag == '4') {
+			ParamsObj.FInstComp = 'Y';
+			ParamsObj.FStkTkComp = 'Y';
+			ParamsObj.FAdjComp = 'Y';
+		}
+		
+		if (isEmpty(StartDate)) {
+			$UI.msg('alert', 'å¼€å§‹æ—¥æœŸä¸èƒ½ä¸ºç©º!');
+			return;
+		}
+		if (isEmpty(EndDate)) {
+			$UI.msg('alert', 'æˆªæ­¢æ—¥æœŸä¸èƒ½ä¸ºç©º!');
+			return;
+		}
+		if (compareDate(StartDate, EndDate)) {
+			$UI.msg('alert', 'æˆªæ­¢æ—¥æœŸä¸èƒ½å°äºå¼€å§‹æ—¥æœŸ!');
+			return;
+		}
 		var Params = JSON.stringify(ParamsObj);
 		$UI.clear(MasterGrid);
 		$UI.clear(DetailGrid);
-		$UI.setUrl(MasterGrid);
 		MasterGrid.load({
 			ClassName: 'web.DHCSTMHUI.INStkTk',
 			QueryName: 'jsDHCSTINStkTk',
+			query2JsonStrict: 1,
 			Params: Params
 		});
 	}
-	$UI.linkbutton('#ClearBT',{ 
-		onClick:function(){
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
 			Clear();
 		}
 	});
@@ -54,470 +89,414 @@ var init = function() {
 		$UI.clearBlock('#Conditions');
 		$UI.clear(MasterGrid);
 		$UI.clear(DetailGrid);
-		var Dafult={
-				FLocId:gLocObj,
-				FStartDate:DateFormatter(new Date()),
-				FEndDate:DateFormatter(new Date()),
-				FInstComp:"",
-				FStkTkComp:"",
-				FAdjComp:""
-			}
-		$UI.fillBlock('#Conditions',Dafult);
-		$('#detailtype').tabs('disableTab', 1)
+		var DefaultData = {
+			FLoc: gLocObj,
+			FStartDate: DateFormatter(new Date()),
+			FEndDate: DateFormatter(new Date()),
+			FCompBox: ''
+		};
+		$UI.fillBlock('#Conditions', DefaultData);
+		$('#detailtype').tabs('disableTab', 1);
 	}
-	$UI.linkbutton('#PrintBT',{ 
-		onClick:function(){
-			Print();
+	$UI.linkbutton('#PrintBT', {
+		onClick: function() {
+			Print(1);
 		}
 	});
-	function Print(){
+	function Print(type) {
 		var row = $('#MasterGrid').datagrid('getSelected');
-		if(isEmpty(row)){
-			$UI.msg('alert','ÇëÑ¡ÔñÊı¾İ!');
+		if (isEmpty(row)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©æ•°æ®!');
 			return;
 		}
-		if(isEmpty(row.inst)){
-			$UI.msg('alert','²ÎÊı´íÎó!');
+		if (isEmpty(row.RowId)) {
+			$UI.msg('alert', 'å‚æ•°é”™è¯¯!');
 			return;
 		}
-		var ret = tkMakeServerCall("web.DHCSTMHUI.INStkTk", "UpPrintFlag", row.inst);
-		PrintINStk(row.inst, 1);
+		PrintINStk(row.RowId, type);
 	}
-	function loadDetailGrid(){
+	
+	$UI.linkbutton('#PrintInciBT', {
+		onClick: function() {
+			Print(2);
+		}
+	});
+	
+	function loadDetailGrid() {
 		var row = $('#MasterGrid').datagrid('getSelected');
-		if(isEmpty(row)){
-			$UI.msg('alert','ÇëÑ¡ÔñÊı¾İ!');
+		if (isEmpty(row)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©æ•°æ®!');
 			return;
 		}
-		if(isEmpty(row.inst)){
-			$UI.msg('alert','²ÎÊı´íÎó!');
+		if (isEmpty(row.RowId)) {
+			$UI.msg('alert', 'å‚æ•°é”™è¯¯!');
 			return;
 		}
-		var ParamsObj=$UI.loopBlock('DetailConditions');
+		var SSObj = $UI.loopBlock('Conditions');
+		var ParamsObj = $UI.loopBlock('DetailConditions');
+		ParamsObj.FFreezeNonzero = SSObj.FFreezeNonzero;
+		ParamsObj.FCountNonzero = SSObj.FCountNonzero;
 		var Params = JSON.stringify(ParamsObj);
-		$UI.setUrl(DetailGrid);
 		DetailGrid.load({
-				ClassName: 'web.DHCSTMHUI.INStkTkItm',
-				QueryName: 'jsDHCSTInStkTkItm',
-				Inst: row.inst,
-				Others:Params,
-				qPar:"",
-				totalFooter:'"code":"ºÏ¼Æ"',
-				totalFields:'freezeRpAmt,countRpAmt,varianceRpAmt'
-			});
+			ClassName: 'web.DHCSTMHUI.INStkTkItm',
+			QueryName: 'jsDHCSTInStkTkItm',
+			query2JsonStrict: 1,
+			Inst: row.RowId,
+			Others: Params,
+			totalFooter: '"InciCode":"åˆè®¡"',
+			totalFields: 'FreezeRpAmt,CountRpAmt'
+		});
 	}
-	//¼ìË÷Ã÷Ï¸
-	$UI.linkbutton('#QueryDetailBT',{ 
-		onClick:function(){
+	// æ£€ç´¢æ˜ç»†
+	$UI.linkbutton('#QueryDetailBT', {
+		onClick: function() {
 			loadDetailGrid();
 		}
 	});
 	
-	//Ò¶Ç©ÇĞ»» ¼àÌı
-	$HUI.tabs("#detailtype",{
-		onSelect:function(title){
-			if(title=="°´Æ·ÖÖ»ã×Ü"){
+	// å¶ç­¾åˆ‡æ¢ ç›‘å¬
+	$HUI.tabs('#detailtype', {
+		onSelect: function(title) {
+			if (title == 'æŒ‰å“ç§æ±‡æ€»') {
 				loadDetailGridRQ();
-			}else{
+			} else {
 				loadDetailGrid();
 			}
 		}
 	});
-	function loadDetailGridRQ(){
+	function loadDetailGridRQ() {
 		var row = $('#MasterGrid').datagrid('getSelected');
-		var Rowid=row.inst;
-		var Params=JSON.stringify({Inst:Rowid});
-		var p_URL = PmRunQianUrl+'?reportName=DHCSTM_HUI_INStkTk_GroupInci.raq'
-			+"&Inst="+Rowid+"&Params="+Params
-		$("#frameInstktkInciPanel").attr("src",p_URL);
+		var RowId = row.RowId;
+		var NoFreezeZero = InStkTkParamObj.NoFreezeZeroWhilePrint;		// æ‰“å°æ—¶è¿‡æ»¤å†»ç»“æ•°ä¸º0çš„é¡¹ç›®
+		var SSObj = $UI.loopBlock('Conditions');
+		var FFreezeNonzero = SSObj.FFreezeNonzero;
+		var FCountNonzero = SSObj.FCountNonzero;
+		var Others = JSON.stringify({ NoFreezeZero: NoFreezeZero, FFreezeNonzero: FFreezeNonzero, FCountNonzero: FCountNonzero });
+		var p_URL = PmRunQianUrl + '?reportName=DHCSTM_HUI_INStkTk_GroupInci.raq'
+			+ '&Inst=' + RowId + '&Others=' + Others;
+		$('#frameInstktkInciPanel').attr('src', CommonFillUrl(p_URL));
 	}
-	//======================tbar²Ù×÷ÊÂ¼şend============================
+	// ======================tbaræ“ä½œäº‹ä»¶end============================
 	
-	var MasterGridCm = [[ {
-			title: 'inst',
-			field: 'inst',
+	var MasterGridCm = [[
+		{
+			title: 'RowId',
+			field: 'RowId',
+			hidden: true,
+			width: 50
+		}, {
+			title: 'ç›˜ç‚¹å•å·',
+			field: 'InstNo',
+			width: 200
+		}, {
+			title: 'è´¦ç›˜æ—¥æœŸ',
+			field: 'FreezeDate',
+			width: 100
+		}, {
+			title: 'è´¦ç›˜æ—¶é—´',
+			field: 'FreezeTime',
+			width: 100
+		}, {
+			title: 'ç§‘å®¤',
+			field: 'LocDesc',
+			width: 150
+		}, {
+			title: 'ç›˜ç‚¹å®Œæˆ',
+			field: 'CompFlag',
+			width: 100,
+			formatter: function(value, row, index) {
+				if (row.CompFlag == 'Y') {
+					return 'å·²å®Œæˆ';
+				} else {
+					return 'æœªå®Œæˆ';
+				}
+			}
+		}, {
+			title: 'å®ç›˜å®Œæˆ',
+			field: 'StkTkCompFlag',
+			width: 100,
+			formatter: function(value, row, index) {
+				if (row.StkTkCompFlag == 'Y') {
+					return 'å·²å®Œæˆ';
+				} else {
+					return 'æœªå®Œæˆ';
+				}
+			}
+		}, {
+			title: 'è°ƒæ•´å®Œæˆ',
+			field: 'AdjCompFlag',
+			width: 100,
+			formatter: function(value, row, index) {
+				if (row.AdjCompFlag == 'Y') {
+					return 'å·²å®Œæˆ';
+				} else {
+					return 'æœªå®Œæˆ';
+				}
+			}
+		}, {
+			title: 'æ ‡å¿—',
+			field: 'ManaFlag',
+			width: 70,
 			hidden: true
-		},{
-			title: 'ÅÌµãµ¥ºÅ',
-			field: 'instNo',
-			width:200
 		}, {
-			title:"ÈÕÆÚ",
-			field:'date',
-			width:100
-		}, {
-			title:"Ê±¼ä",
-			field:'time',
-			width:100
-		}, {
-			title:"¿ÆÊÒ",
-			field:'locDesc',
-			width:150
-		}, {
-			title:"ÅÌµãÍê³É",
-			field:'comp',
-			width:70,
-			formatter: function(value,row,index){
-				if (row.comp=="Y"){
-					return "ÒÑÍê³É";
+			title: 'è´¦ç›˜å•ä½',
+			field: 'FreezeUomId',
+			width: 100,
+			formatter: function(value, row, index) {
+				if (row.FreezeUomId == 1) {
+					return 'å…¥åº“å•ä½';
 				} else {
-					return "Î´Íê³É";
+					return 'åŸºæœ¬å•ä½';
 				}
 			}
 		}, {
-			title:"ÊµÅÌÂ¼ÈëÍê³É",
-			field:'stktkComp',
-			width:100,
-			formatter: function(value,row,index){
-				if (row.stktkComp=="Y"){
-					return "ÒÑÍê³É";
-				} else {
-					return "Î´Íê³É";
-				}
-			}
+			title: 'è´¦ç›˜é‡‘é¢',
+			field: 'SumFreezeRpAmt',
+			width: 100,
+			align: 'right'
 		}, {
-			title:"µ÷ÕûÍê³É",
-			field:'adjComp',
-			width:70,
-			formatter: function(value,row,index){
-				if (row.adjComp=="Y"){
-					return "ÒÑÍê³É";
-				} else {
-					return "Î´Íê³É";
-				}
-			}
+			title: 'å®ç›˜é‡‘é¢',
+			field: 'SumCount1RpAmt',
+			width: 100,
+			align: 'right'
 		}, {
-			title:"±êÖ¾",
-			field:'manFlag',
-			width:70,
-			hidden:true
+			title: 'æŸç›Šé‡‘é¢',
+			field: 'SumVariance1RpAmt',
+			width: 100,
+			align: 'right'
 		}, {
-			title:"ÕËÅÌµ¥Î»",
-			field:'freezeUom',
-			width:70,
-			formatter: function(value,row,index){
-				if (row.freezeUom==1){
-					return "Èë¿âµ¥Î»";
-				} else {
-					return "»ù±¾µ¥Î»";
-				}
-			}
+			title: 'ä¸å¯ç”¨æ ‡å¿—',
+			field: 'NotUseFlag',
+			width: 100
 		}, {
-			title:"ÕËÅÌ½ø¼Û½ğ¶î",
-			field:'SumFreezeRpAmt',
-			width:100,
-			align:'right'
+			title: 'ç±»ç»„',
+			field: 'StkScgDesc',
+			width: 100
 		}, {
-			title:"ÕËÅÌÊÛ¼Û½ğ¶î",
-			field:'SumFreezeSpAmt',
-			width:100,
-			align:'right'
+			title: 'åº“å­˜åˆ†ç±»',
+			field: 'StkCatDesc',
+			width: 100
 		}, {
-			title:"ÊµÅÌ½ø¼Û½ğ¶î",
-			field:'SumCount1RpAmt',
-			width:100,
-			align:'right'
+			title: 'å¼€å§‹è´§ä½ç ',
+			field: 'FrSbDesc',
+			width: 100
 		}, {
-			title:"ÊµÅÌÊÛ¼Û½ğ¶î",
-			field:'SumCount1SpAmt',
-			width:100,
-			align:'right'
+			title: 'ç»“æŸè´§ä½ç ',
+			field: 'ToSbDesc',
+			width: 100
 		}, {
-			title:"ËğÒæ½ø¼Û½ğ¶î",
-			field:'SumVariance1RpAmt',
-			width:100,
-			align:'right'
+			title: 'å½•å…¥ç±»å‹',
+			field: 'InputType',
+			width: 100,
+			formatter: InputTypeFormatter
 		}, {
-			title:"ËğÒæÊÛ¼Û½ğ¶î",
-			field:'SumVariance1SpAmt',
-			width:100,
-			align:'right'
+			title: 'æ‰“å°æ ‡å¿—',
+			field: 'PrintFlag',
+			width: 100,
+			hidden: true
 		}, {
-			title:"°üÀ¨²»¿ÉÓÃ",
-			field:'includeNotUse',
-			width:100
+			title: 'æœ€ä½è¿›ä»·',
+			field: 'MinRp',
+			width: 100,
+			align: 'right'
 		}, {
-			title:"½ö²»¿ÉÓÃ",
-			field:'onlyNotUse',
-			width:70
+			title: 'æœ€é«˜è¿›ä»·',
+			field: 'MaxRp',
+			width: 100,
+			align: 'right'
 		}, {
-			title:"Àà×é",
-			field:'scgDesc',
-			width:100
+			title: 'æŠ½æŸ¥æ•°',
+			field: 'RandomNum',
+			width: 70,
+			align: 'right'
 		}, {
-			title:"¿â´æ·ÖÀà",
-			field:'scDesc',
-			width:100
-		}, {
-			title:"¿ªÊ¼»õÎ»Âë",
-			field:'frSb',
-			width:100
-		}, {
-			title:"½áÊø»õÎ»Âë",
-			field:'toSb',
-			width:100
-		}, {
-			title:"Â¼ÈëÀàĞÍ",
-			field:'InputType',
-			width:70,
-			hidden:true
-		}, {
-			title:"´òÓ¡±êÖ¾",
-			field:'printflag',
-			width:70,
-			hidden:true
-		}, {
-			title:"×îµÍ½ø¼Û",
-			field:'MinRp',
-			width:70,
-			align:'right'
-		}, {
-			title:"×î¸ß½ø¼Û",
-			field:'MaxRp',
-			width:70,
-			align:'right'
-		}, {
-			title:"Ëæ»úÊı",
-			field:'RandomNum',
-			width:70,
-			align:'right'
-		}, {
-			title:"¸ßÖµ±êÖ¾",
-			field:'HighValueFlag',
-			width:70
+			title: 'é«˜å€¼æ ‡å¿—',
+			field: 'HVFlag',
+			width: 100
 		}
 	]];
-	var MasterGrid = $UI.datagrid('#MasterGrid',{
-		url : $URL,
+	var MasterGrid = $UI.datagrid('#MasterGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.INStkTk',
-			QueryName: 'jsDHCSTINStkTk'
+			QueryName: 'jsDHCSTINStkTk',
+			query2JsonStrict: 1
 		},
 		columns: MasterGridCm,
-		onSelect:function(index, row){
-			var DTTabed = $('#detailtype').tabs('getSelected');  
-			var DTTabed=$('#detailtype').tabs('getTabIndex',DTTabed);
-			if(DTTabed==0){
+		onSelect: function(index, row) {
+			var DTTabed = $('#detailtype').tabs('getSelected');
+			DTTabed = $('#detailtype').tabs('getTabIndex', DTTabed);
+			if (DTTabed == 0) {
 				loadDetailGrid();
-			}else if(DTTabed==1){
+			} else if (DTTabed == 1) {
 				loadDetailGridRQ();
 			}
-			
 		},
-		onLoadSuccess:function(data){
-			if(data.rows.length>0){
-				$('#detailtype').tabs('enableTab', 1)
-				$('#MasterGrid').datagrid("selectRow", 0)
-				loadDetailGrid();
-			}	
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
+				$('#detailtype').tabs('enableTab', 1);
+				$('#MasterGrid').datagrid('selectRow', 0);
+			}
 		}
-	})
-	var DetailGridCm = [[{
-			title: 'rowid',
-			field: 'rowid',
+	});
+	var DetailGridCm = [[
+		{
+			title: 'RowId',
+			field: 'RowId',
+			hidden: true,
+			width: 50
+		}, {
+			title: 'Inclb',
+			field: 'Inclb',
+			hidden: true,
+			width: 50
+		}, {
+			title: 'InciId',
+			field: 'InciId',
+			hidden: true,
+			width: 50
+		}, {
+			title: 'ç‰©èµ„ä»£ç ',
+			field: 'InciCode',
+			width: 120
+		}, {
+			title: 'ç‰©èµ„åç§°',
+			field: 'InciDesc',
+			width: 150
+		}, {
+			title: 'è§„æ ¼',
+			field: 'Spec',
+			width: 100
+		}, {
+			title: 'ç”Ÿäº§å‚å®¶',
+			field: 'ManfDesc',
+			width: 100
+		}, {
+			title: 'æ¡ç ',
+			field: 'Barcode',
+			width: 100,
 			hidden: true
 		}, {
-			title: 'inclb',
-			field: 'inclb',
+			title: 'å•ä½',
+			field: 'UomId',
 			hidden: true
 		}, {
-			title: 'inci',
-			field: 'inci',
+			title: 'å•ä½',
+			field: 'UomDesc',
+			width: 60
+		}, {
+			title: 'è´¦ç›˜æ•°é‡',
+			field: 'FreezeQty',
+			width: 100,
+			align: 'right'
+		}, {
+			title: 'å®ç›˜æ•°é‡',
+			field: 'CountQty',
+			width: 100,
+			align: 'right'
+		}, {
+			title: 'æŸç›Šæ•°é‡',
+			field: 'VarianceQty',
+			width: 100,
+			align: 'right'
+		}, {
+			title: 'è´¦ç›˜é‡‘é¢',
+			field: 'FreezeRpAmt',
+			width: 100,
+			align: 'right'
+		}, {
+			title: 'å®ç›˜é‡‘é¢',
+			field: 'CountRpAmt',
+			width: 100,
+			align: 'right'
+		}, {
+			title: 'æŸç›Šé‡‘é¢',
+			field: 'VarianceRpAmt',
+			width: 100,
+			align: 'right'
+		}, {
+			title: 'è´¦ç›˜æ—¥æœŸ',
+			field: 'FreezeDate',
+			width: 100
+		}, {
+			title: 'è´¦ç›˜æ—¶é—´',
+			field: 'FreezeTime',
+			width: 100
+		}, {
+			title: 'å®ç›˜æ—¥æœŸ',
+			field: 'CountDate',
+			width: 100
+		}, {
+			title: 'å®ç›˜æ—¶é—´',
+			field: 'CountTime',
+			width: 80
+		}, {
+			title: 'å®ç›˜äºº',
+			field: 'CountUserId',
 			hidden: true
 		}, {
-			title: 'Îï×Ê´úÂë',
-			field: 'code',
-			width:120
+			title: 'å®ç›˜äºº',
+			field: 'CountUserName',
+			width: 100
 		}, {
-			title: 'Îï×ÊÃû³Æ',
-			field: 'desc',
-			width:150
+			title: 'çŠ¶æ€',
+			field: 'Status',
+			width: 60,
+			hidden: true
 		}, {
-			title: "¹æ¸ñ",
-			field:'spec',
-			width:100
+			title: 'æ‰¹å·',
+			field: 'BatchNo',
+			width: 100
 		}, {
-			title:"³§ÉÌ",
-			field:'manf',
-			width:100
+			title: 'æœ‰æ•ˆæœŸ',
+			field: 'ExpDate',
+			width: 100
 		}, {
-			title:"ÌõÂë",
-			field:'barcode',
-			width:100,
-			hidden:true
+			title: 'è°ƒæ•´æ ‡å¿—',
+			field: 'AdjFlag',
+			width: 60,
+			hidden: true
 		}, {
-			title:"ÕËÅÌÊıÁ¿",
-			field:'freQty',
-			width:100,
-			align:'right'
+			title: 'è´§ä½ç ',
+			field: 'StkBinDesc',
+			width: 100
 		}, {
-			title:"ÕËÅÌÈÕÆÚ",
-			field:'freDate',
-			width:100
+			title: 'è¿›ä»·',
+			field: 'Rp',
+			width: 60,
+			align: 'right'
 		}, {
-			title:"ÕËÅÌÊ±¼ä",
-			field:'freTime',
-			width:100
+			title: 'ç±»ç»„',
+			field: 'StkScgDesc',
+			width: 100
 		}, {
-			title:"ÊµÅÌÊıÁ¿",
-			field:'countQty',
-			width:100,
-			align:'right'
+			title: 'ä¾›åº”å•†',
+			field: 'VendorDesc',
+			width: 100
 		}, {
-			title:"ÊµÅÌÈÕÆÚ",
-			field:'countDate',
-			width:100
+			title: 'åº“å­˜åˆ†ç±»',
+			field: 'StkCatDesc',
+			width: 100
 		}, {
-			title:"ÊµÅÌÊ±¼ä",
-			field:'countTime',
-			width:80
-		}, {
-			title:"ÊµÅÌÈË",
-			field:'countPerson',
-			hidden: true,
-			hidden:true
-		}, {
-			title:"ÊµÅÌÈË",
-			field:'countPersonName',
-			width:100
-		}, {
-			title:"dd",
-			field:'variance',
-			width:100,
-			hidden:true
-		}, {
-			title:"±¸×¢",
-			field:'remark',
-			width:60,
-			hidden:true
-		}, {
-			title:"×´Ì¬",
-			field:'status',
-			width:60,
-			hidden:true
-		}, {
-			title:"µ¥Î»",
-			field:'uom',
-			hidden: true,
-			hidden:true
-		}, {
-			title:"µ¥Î»",
-			field:'uomDesc',
-			width:60
-		}, {
-			title:"ÅúºÅ",
-			field:'batchNo',
-			width:100
-		}, {
-			title:"ÓĞĞ§ÆÚ",
-			field:'expDate',
-			width:100
-		}, {
-			title:"µ÷Õû±êÖ¾",
-			field:'adjFlag',
-			width:60,
-			hidden:true
-		}, {
-			title:"»õÎ»Âë",
-			field:'sbDesc',
-			width:100
-		}, {
-			title:"dd",
-			field:'inadi',
-			hidden: true,
-			align:'right',
-			hidden:true
-		}, {
-			title:"ÊÛ¼Û",
-			field:'sp',
-			width:60,
-			align:'right',
-			hidden:true
-		}, {
-			title:"½ø¼Û",
-			field:'rp',
-			width:60,
-			align:'right'
-		}, {
-			title:"ÕËÅÌÊÛ¼Û½ğ¶î",
-			field:'freezeSpAmt',
-			width:100,
-			align:'right',
-			hidden:true
-		}, {
-			title:"ÕËÅÌ½ø¼Û½ğ¶î",
-			field:'freezeRpAmt',
-			width:100,
-			align:'right'
-		}, {
-			title:"ÊµÅÌÊÛ¼Û½ğ¶î",
-			field:'countSpAmt',
-			width:100,
-			align:'right',
-			hidden:true
-		}, {
-			title:"ÊµÅÌ½ø¼Û½ğ¶î",
-			field:'countRpAmt',
-			width:100,
-			align:'right'
-		}, {
-			title:"ËğÒæÊÛ¼Û½ğ¶î",
-			field:'varianceSpAmt',
-			width:100,
-			align:'right',
-			hidden:true
-		}, {
-			title:"ËğÒæ½ø¼Û½ğ¶î",
-			field:'varianceRpAmt',
-			width:100,
-			align:'right'
-		}, {
-			title:"dd",
-			field:'trueQty',
-			width:60,
-			hidden:true
-		}, {
-			title:"Àà×é",
-			field:'scgDesc',
-			width:100
-		}, {
-			title:"¹©Ó¦ÉÌ",
-			field:'vendor',
-			width:100
-		}, {
-			title:"¿â´æ·ÖÀà",
-			field:'incscdesc',
-			width:100
-		}, {
-			title:"¾ßÌå¹æ¸ñ",
-			field:'specdesc',
-			width:100
-		}, {
-			title:"dd",
-			field:'freeBarCode',
-			width:60,
-			hidden:true
-		}, {
-			title:"dd",
-			field:'countBarCode',
-			width:60,
-			hidden:true
-		}, {
-			title:"dd",
-			field:'varianceBarCode',
-			width:60,
-			hidden:true
+			title: 'å…·ä½“è§„æ ¼',
+			field: 'SpecDesc',
+			width: 100,
+			hidden: CodeMainParamObj.UseSpecList == 'Y' ? false : true
 		}
 	]];
-	var DetailGrid = $UI.datagrid('#DetailGrid',{
-		queryParams : {
+	var DetailGrid = $UI.datagrid('#DetailGrid', {
+		queryParams: {
 			ClassName: 'web.DHCSTMHUI.INStkTkItm',
 			QueryName: 'jsDHCSTInStkTkItm',
-			totalFooter:'"code":"ºÏ¼Æ"',
-			totalFields: 'freezeRpAmt,countRpAmt,varianceRpAmt'
+			query2JsonStrict: 1,
+			totalFooter: '"InciCode":"åˆè®¡"',
+			totalFields: 'FreezeRpAmt,CountRpAmt'
 		},
-		columns : DetailGridCm
-	})
+		columns: DetailGridCm,
+		showBar: true,
+		showFooter: true
+	});
 	Clear();
-}
+	Query();
+	GetReportStyle('#Report');
+};
 $(init);

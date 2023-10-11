@@ -16,6 +16,8 @@ $(function() {
         Save();
     });
     $('#btnDelete').on('click', DeleteHandler);
+    PHA_UX.Translate({ buttonID: 'btnTranslate', gridID: 'gridCat', idField: 'catId', sqlTableName: 'DHC_PHCPivaCat' });
+
     $('.dhcpha-win-mask').remove();
 });
 
@@ -61,6 +63,7 @@ function InitGridCat() {
             HospId: HospId
         },
         columns: columns,
+        rownumbers:true,
         toolbar: '#gridCatBar',
         onClickRow: function(rowIndex, rowData) {
             if (rowData) {
@@ -146,4 +149,15 @@ function InitHospCombo() {
             }
         }
     }
+ 	var defHosp = $.cm(
+		{
+		    dataType: 'text',
+		    ClassName: 'web.DHCBL.BDP.BDPMappingHOSP',
+		    MethodName: 'GetDefHospIdByTableName',
+		    tableName: 'DHC_PHCPivaCat',
+		    HospID: HospId
+		},
+		false
+	);
+	HospId = defHosp;  
 }

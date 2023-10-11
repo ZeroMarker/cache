@@ -58,7 +58,7 @@ function getColumnScheme(path)
         var sortable = $(this).find("sortable").text()=="Y"?true:false;
         var hidden = $(this).find("hidden").text()=="Y"?true:false; 
         var colwidth = $(this).find("width").text();
-            colwidth = (colwidth=="")?80:colwidth;
+            colwidth = (colwidth=="")?85:colwidth;
         var check = $(this).find("check").text()=="N"?false:true; 
         if (sortable){
             columns.push({field:code,title:desc,width:colwidth,hidden:hidden,sortable:sortable,sorter:Sort,check:check});

@@ -34,11 +34,13 @@ function BodyLoadHandler(){
 	$("#OCTloc").keyup(function (e){
 			if ($("#OCTloc").val()==""){
 				$('#OCTLocRowid').val('');
-				$('#OMark').combobox('setValue','');
+				/*$('#OMark').combobox('setValue','');
 				$('#OMark').combobox('setText','');
 				$('#OMark').combobox('clear');
-				$('#OMark').combobox('loadData',{});
-				IntOMark()
+				$('#OMark').combobox('loadData',{});*/
+				$('#OMark').val('');
+				$('#OMarkRowid').val('');
+				//IntOMark()
 				
 			}
 		}
@@ -259,14 +261,15 @@ function PageHandle(){
 			textField: 'markdesc', 
 			data: jsonData.rows,
 			filter: function(q, row){
-		
+				q=q.toUpperCase();
+				return (row["markdesc"].toUpperCase().indexOf(q) >= 0);
 			},
 			onSelect: function (rec) {
 				PageLogicObj.rbasdr=rec.resrowid;
 				$("#OCTloc").val('')
 				$("#OCTLocRowid").val('')
-				$('#OMark').combobox('clear');
-				$('#OMark').combobox('loadData',{});
+				$('#OMark').val('');
+				$('#OMarkRowid').val('');
 				IntCalender()
 				SetFindLocRBAS(session['LOGON.CTLOCID'],rec.resrowid)
 				
@@ -281,7 +284,7 @@ function PageHandle(){
 					$HUI.combobox("#MarkDoc").select(Selectvalue)
 				}else if (jsonData.rows.length>1){
 					for (var j=0;j<jsonData.rows.length;j++){
-						if(jsonData.rows[j].markdesc==session['LOGON.USERNAME']){
+						if(jsonData.rows[j].MarkShowDesc==session['LOGON.USERNAME']){
 							var Selectvalue=jsonData.rows[j].resrowid
 							$HUI.combobox("#MarkDoc").select(Selectvalue)
 							}
@@ -323,7 +326,7 @@ function PageHandle(){
 			});
 		}
     });
-    
+    IntOMark()
     
     //查询科室用放大镜代替
      $("#FindLoc").lookup({
@@ -431,7 +434,8 @@ function IntFindRBAS(FindLoc){
 			textField: 'desc', 
 			data: jsonData.rows,
 			filter: function(q, row){
-		
+				q=q.toUpperCase();
+				return (row["desc"].toUpperCase().indexOf(q) >= 0);
 			},
 			onSelect: function (rec) {
 			
@@ -455,10 +459,12 @@ function OCTlocChangeHandler(){
 
     	if (OCTLocRowidObj){
 	    		OCTLocRowidObj.value="";
-	    		$('#OMark').combobox('clear');
+	    		/*$('#OMark').combobox('clear');
 	    		$('#OMark').combobox('setValue','');
 	    		$('#OMark').combobox('setText','');
-	    		$('#OMark').combobox('loadData',{});
+	    		$('#OMark').combobox('loadData',{});*/
+	    		$('#OMark').val('');
+				$('#OMarkRowid').val('');
 	    		PageLogicObj.rbasdr=""
 	    		IntCalender();
 	    }
@@ -473,10 +479,12 @@ function OCTlocLookupSelect(value){
 
     if (OCTLocRowidObj){
 	    OCTLocRowidObj.value=value.split("^")[1];
-	    $('#OMark').combobox('clear');
+	    /*$('#OMark').combobox('clear');
 	    $('#OMark').combobox('setValue','');
 	    $('#OMark').combobox('setText','');
-	    $('#OMark').combobox('loadData',{});
+	    $('#OMark').combobox('loadData',{});*/
+	    $('#OMark').val('');
+		$('#OMarkRowid').val('');
 	    $('#MarkDoc').combobox('setValue','');
 	    $('#MarkDoc').combobox('setText','');
 	    window.setTimeout('IntOMark()',1)
@@ -488,8 +496,40 @@ function OCTlocLookupSelect(value){
 ///加载其他号别
 function IntOMark(){
 
-   var OCtlocDr=$("#OCTLocRowid").val()
-   $.cm({
+   //var OCtlocDr=$("#OCTLocRowid").val()
+   $("#OMark").lookup({
+        url:$URL,
+        mode:'remote',
+        method:"Get",
+        idField:'resrowid',
+        textField:'markdesc',
+        columns:[[  
+            {field:'resrowid',title:'',hidden:true},
+			{field:'markdesc',title:'名称',width:350}
+        ]], 
+        pagination:true,
+        panelWidth:400,
+        isCombo:true,
+        //minQueryLen:2,
+        delay:'500',
+        queryOnSameQueryString:true,
+        queryParams:{ClassName: 'web.DHCDocAppointmentHui',QueryName: 'FindDocMarkStrOther'},
+        onBeforeLoad:function(param){
+	        var desc=param['q'];
+			param = $.extend(param,{UserID:session['LOGON.USERID'], LocID:$("#OCTLocRowid").val(), LogOnLoc:session['LOGON.CTLOCID'], MarkCodeName:desc});
+	    },
+	    onSelect:function(index, rec){
+		    setTimeout(function(){
+				if (rec!=undefined){
+					PageLogicObj.rbasdr=rec['resrowid'];
+					IntCalender();
+					SetFindLocRBAS(OCtlocDr,rec['resrowid'])
+					$('#OMarkRowid').val(rec['resrowid']);
+				}
+			});
+		}
+    });
+   /*$.cm({
 		ClassName:"web.DHCDocAppointmentHui",
 		QueryName:"FindDocMarkStrOther",
 		UserID:session['LOGON.USERID'],
@@ -516,7 +556,7 @@ function IntOMark(){
 				
 			}
 	   });
-    });
+    });*/
     //加载清空资源
     PageLogicObj.rbasdr=""
     IntCalender();
@@ -526,10 +566,8 @@ function IntOMark(){
 ///清除左侧日历信息
 function Clear(){
 
-	$('#OMark').combobox('clear');
-	$('#OMark').combobox('setValue','');
-	$('#OMark').combobox('setText','');
-	$('#OMark').combobox('loadData',{});
+	$('#OMark').val('');
+	$('#OMarkRowid').val('');
 	$("#OCTloc").val('')
 	$("#OCTLocRowid").val('')
 	$('#MarkDoc').combobox('setValue','');
@@ -716,21 +754,35 @@ function IntCalender(){
 	//当前月份
 	$('#nowmoth').bind('click',function(){ChangeCalenderDate('now')})	
 	
+	var PorpStr={trigger:'hover',placement:'top-left',title:'',content:'假日颜色'}
+	$("#holidaycolor").popover(PorpStr)
+	var PorpStr={trigger:'hover',placement:'top-left',title:'',content:'非本月颜色'}
+	$("#outmethcolor").popover(PorpStr)
+	var PorpStr={trigger:'hover',placement:'top-left',title:'',content:'本月颜色'}
+	$("#nowmothcolor").popover(PorpStr)
+	var PorpStr={trigger:'hover',placement:'top-left',title:'',content:'当日颜色'}
+	$("#nowdatecolor").popover(PorpStr)
+	var PorpStr={trigger:'hover',placement:'top-left',title:'',content:'小于当日的无效日期'}
+	$("#yesdatecolor").popover(PorpStr)
 	PageLogicObj.OldID=""
 	
 	PageLogicObj.OldColor=""
 }
 function AddClass(value){
+	
 	$('#'+value).addClass("selectCls"); //css("background", ServerObj.selectcolor); 
+	$('#T'+value).addClass("selectColor"); 
+	$('#D'+value).addClass("selectColor"); 
 }
 //日历点击背景色处理
 
 function calendersearce(value){
 	//if (PageLogicObj.OldID!=""){$('#'+PageLogicObj.OldID).css("background",PageLogicObj.OldColor);}
 	//PageLogicObj.OldID=value;PageLogicObj.OldColor=$('#'+value).css('background-color');
-	//$('#'+value).css("background", ServerObj.selectcolor); 
+	//$('#'+value).css("background", ServerObj.selectcolor); \
+	
 	$(".selectCls").removeClass("selectCls");
-	AddClass(value);
+	$(".selectColor").removeClass("selectColor");
 	//点击查询
 	var htmldate=$cm({
 		ClassName:"web.DHCDocAppointmentHui",
@@ -738,7 +790,7 @@ function calendersearce(value){
 		dataType:"text",
 		date:value
 	},false);
-	
+	AddClass(value);
 	//日历选择的时候自动发起查询
 	$('#StartDay').datebox('setValue',htmldate)
 	$('#EdDate').datebox('setValue',htmldate)
@@ -919,7 +971,7 @@ function PrintAppInfo()
 		var oneobj=selectobj[i]
 		var AppRowID=oneobj.RowId
 		if (AppRowID==""){
-			$.messager.alert("提示",oneobj.PatientName+"患者不存在预约记录ID")
+			$.messager.alert("提示",oneobj.PatientName+$g("患者不存在预约记录ID"))
 			continue
 		}
 		var statucode = $cm({
@@ -930,7 +982,7 @@ function PrintAppInfo()
 		},false);
 
 		if (statucode!="I"){
-			$.messager.alert("提示",oneobj.PatientName+",预约记录状态是非【预约】状态不能打印预约条！")
+			$.messager.alert("提示",oneobj.PatientName+$g(",预约记录状态是非【预约】状态不能打印预约条！"))
 			continue
 		}
 		PrintAPPMesag(AppRowID)
@@ -969,11 +1021,11 @@ function CancelApp()
 		$.messager.alert("提示","请选择需要取消的预约记录!")
 		return
 	}
+	//检测是否可以撤销执行记录
+	var AppRowIDCheckFlag=0
 	for (var i=0;i<selectobj.length;i++){
-		
 		var oneobj=selectobj[i]
 		var AppRowID=oneobj.RowId
-		//检测是否可以撤销执行记录
 		var Rtn = $cm({
 		ClassName:"web.DHCDocAppointmentHui",
 		MethodName:"CheckBeforeCancel",
@@ -982,27 +1034,36 @@ function CancelApp()
 		LogonUser:session['LOGON.USERID'],
 		},false);
 		if (Rtn!=""){
-			$.messager.alert("提示","患者,"+oneobj.PatientName+Rtn)
-			LoadtabAppList();
-			return
-		}
-		//取消预约
-		var Rtn = $cm({
-			ClassName:"web.DHCRBAppointment",
-			MethodName:"CancelAppointment",
-			dataType:"text",
-			APPTRowId:AppRowID,
-			UserRowId:session['LOGON.USERID'],
-		},false);
-			if (Rtn!=0){
-				$.messager.alert("提示","取消预约失败!")
-				LoadtabAppList();
-				return
+			$.messager.alert("提示",$g("患者,")+oneobj.PatientName+$g(Rtn))
+			AppRowIDCheckFlag=1
 		}
 	}
-	$.messager.popover({msg: '取消预约成功！',type:'success',timeout: 1000});
-	LoadtabAppList();
-	
+	if (AppRowIDCheckFlag==1){
+		return;
+		}
+	$.messager.confirm('确认对话框', '是否确认取消预约?', function(r){
+		if (r) {
+			for (var i=0;i<selectobj.length;i++){
+				var oneobj=selectobj[i]
+				var AppRowID=oneobj.RowId
+				//取消预约
+				var Rtn = $cm({
+					ClassName:"web.DHCRBAppointment",
+					MethodName:"CancelAppointment",
+					dataType:"text",
+					APPTRowId:AppRowID,
+					UserRowId:session['LOGON.USERID'],
+				},false);
+					if (Rtn!=0){
+						$.messager.alert("提示","取消预约失败!")
+						LoadtabAppList();
+						return
+				}
+			}
+			$.messager.popover({msg: '取消预约成功！',type:'success',timeout: 1000});
+			LoadtabAppList();
+		}
+	})
 }
 
 function DocumentOnKeyDown(e){
@@ -1065,7 +1126,8 @@ function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,
 }
 function SetChildPatNo(patno) {
 	$("#FindPatInfo").dialog("close");
-	$("#TabMain").contents().find("#PatNo").val(patno)
-	frames[0].PatNoSearch()
+	frames[0].ClearPatInfo();
+	$("#TabMain").contents().find("#PatNo").val(patno);
+	frames[0].PatNoSearch();
 	//frames[0].LoadPage("",PatientId,"",ServerObj.CanNoCardApp)
 }

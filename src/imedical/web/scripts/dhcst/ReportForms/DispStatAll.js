@@ -29,7 +29,7 @@ Ext.onReady(function() {
 		anchor: '90%',
 		value: new Date
 	})
-	var FindTypeData = [['按药品', '1'], ['按医生科室', '2'], ['按供应商', '3'], ['按基本药物比例', '4'], ['按剂型统计处方', '5']];
+	var FindTypeData = [['按药品', '1'], ['按医生科室', '2'], ['按经营企业', '3'], ['按基本药物比例', '4'], ['按剂型统计处方', '5']];
 	var FindTypeStore = new Ext.data.SimpleStore({
 		fields: ['typedesc', 'typeid'],
 		data: FindTypeData
@@ -94,6 +94,13 @@ Ext.onReady(function() {
 		anchor: '90%',
 		checked: false
 	});
+	var DMJDrugFlag = new Ext.form.Checkbox({
+		fieldLabel: '毒麻精药物',
+		id: 'DMJDrugFlag',
+		name: 'DMJDrugFlag',
+		anchor: '90%',
+		checked: false
+	});
 	var FindButton = new Ext.Button({
 		width: 65,
 		id: "FindButton",
@@ -125,7 +132,7 @@ Ext.onReady(function() {
 				xtype: 'fieldset',
 				columnWidth: .2,
 				border: false,
-				items: [StDateField,EndDateField]
+				items: [StDateField,EndDateField,DMJDrugFlag]
 			},
 			{
 				xtype: 'fieldset',
@@ -223,7 +230,8 @@ Ext.onReady(function() {
 			gIncId = "";
 		}
 		var IOType=Ext.getCmp("IOTypeCombo").getValue();
+		var DMJDrugFlag=(Ext.getCmp("DMJDrugFlag").getValue()==true?'Y':'N'); 
 		
-		StrParam = sdate + "^" + edate + "^" + phaLoc + "^" + gIncId + "^" + findtype + "^" + exeLoc + "^" + BasicFlag+"^"+IOType+"^"+gHospId;
+		StrParam = sdate + "^" + edate + "^" + phaLoc + "^" + gIncId + "^" + findtype + "^" + exeLoc + "^" + BasicFlag+"^"+IOType+"^"+gHospId+"^"+DMJDrugFlag;
 	}
 });

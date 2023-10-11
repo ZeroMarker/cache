@@ -69,44 +69,53 @@ function BSaveItem_click()
 
 function InitCombobox()
 {
-	  //医嘱名称
-	   var OPNameObj = $HUI.combogrid("#DefaultItemDesc",{
+	     //医嘱名称
+	   var DefaultItemObj = $HUI.combogrid("#DefaultItemDesc",{
 		panelWidth:430,
-		url:$URL+"?ClassName=web.DHCPE.Public.SettingEdit&QueryName=QueryFeeID",
+		url:$URL+"?ClassName=web.DHCPE.StationOrder&QueryName=ArcItmmastList",
 		mode:'remote',
 		delay:200,
-		idField:'ID',
-		textField:'Name',
+		idField:'STORD_ARCIM_DR',
+		textField:'STORD_ARCIM_Desc',
 		onBeforeLoad:function(param){
-			param.FeeTest = param.q;
+			param.Desc = param.q;
+			param.Type="B";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID'];
 		},
 		columns:[[
-		    {field:'ID',title:'ID',width:40},
-			{field:'Name',title:'医嘱名称',width:200},
-			{field:'Code',title:'医嘱编码',width:150},
+		    {field:'STORD_ARCIM_DR',title:'ID',width:40},
+			{field:'STORD_ARCIM_Desc',title:'医嘱名称',width:200},
+			{field:'STORD_ARCIM_Code',title:'医嘱编码',width:150}
 			
 				
 		]]
 		});
+		
 		 //医嘱名称
-	   var OPNameObj = $HUI.combogrid("#ItemDesc",{
+		var ItemObj = $HUI.combogrid("#ItemDesc",{
 		panelWidth:430,
-		url:$URL+"?ClassName=web.DHCPE.Public.SettingEdit&QueryName=QueryFeeID",
+		url:$URL+"?ClassName=web.DHCPE.StationOrder&QueryName=ArcItmmastList",
 		mode:'remote',
 		delay:200,
-		idField:'ID',
-		textField:'Name',
+		idField:'STORD_ARCIM_DR',
+		textField:'STORD_ARCIM_Desc',
 		onBeforeLoad:function(param){
-			param.FeeTest = param.q;
+			param.Desc = param.q;
+			param.Type="B";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID'];
 		},
 		columns:[[
-		    {field:'ID',title:'ID',width:40},
-			{field:'Name',title:'医嘱名称',width:200},
-			{field:'Code',title:'医嘱编码',width:150},
-			
-				
+		    {field:'STORD_ARCIM_DR',title:'ID',width:40},
+			{field:'STORD_ARCIM_Desc',title:'医嘱名称',width:200},
+			{field:'STORD_ARCIM_Code',title:'医嘱编码',width:150}
+					
 		]]
 		});
+
+		
+
 }
 
 function InitIPToHPConItemDataGrid()
@@ -132,7 +141,7 @@ function InitIPToHPConItemDataGrid()
 		columns:[[
 	
 		    {field:'CarPrvTpID',title:'CarPrvTpID',hidden: true},
-			{field:'Desc',width:'250',title:'职称'},
+			{field:'Desc',width:'250',title:'医护人员类型'},
 			{field:'InternalType',width:'250',title:'类型'},
 			{field:'ARCIMDesc',width:'300',title:'项目'},
 			{field:'DefaultARCIMDesc',width:'350',title:'默认会诊医嘱'},

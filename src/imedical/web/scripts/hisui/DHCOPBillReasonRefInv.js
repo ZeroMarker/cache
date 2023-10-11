@@ -5,34 +5,41 @@ $(function() {
 	
 	$HUI.linkbutton("#BtAdd", {
 		onClick: function () {
-			Add_OnClick();
+			addClick();
 		}
 	});
 	
 	$HUI.linkbutton("#BtDelete", {
 		onClick: function () {
-			Delete_OnClick();
+			deleteClick();
 		}
 	});
 	
 	$HUI.combobox("#AdmReasondesc", {
-		editable: false,
-		valueField: "id",
-		textField: "text",
+		panelHeight: 150,
+		valueField: 'id',
+		textField: 'text',
+		defaultFilter: 5,
+		blurValidValue: true
 	});
 	
 	$HUI.combobox("#FareType", {
+		panelHeight: 120,
 		url: $URL + "?ClassName=web.DHCOPBillReasonRefInv&QueryName=InvType&ResultSetType=array",
 		editable: false,
-		valueField: "type",
-		textField: "invtype1"
+		valueField: "value",
+		textField: "text"
 	});
 	
 	$HUI.combobox("#UseDept", {
-		url: $URL + "?ClassName=web.DHCOPBillReasonRefInv&QueryName=InvprtType&ResultSetType=array",
+		panelHeight: 120,
 		editable: false,
-		valueField: "type",
-		textField: "invtype1"
+		valueField: 'value',
+		textField: 'text',
+		data: [{value: 'I', text: '住院'},
+			   {value: 'O', text: '门诊'},
+			   {value: 'R', text: '挂号'}
+			  ]
 	});
 	
 	var tableName = "Bill_Com_AdmReaInvType";
@@ -63,7 +70,7 @@ $(function() {
 	});
 });
 
-function Add_OnClick() {
+function addClick() {
 	var hospId = getValueById("hospId");
     var AdmReasonDrVal = getValueById("AdmReasondesc");
     if (!AdmReasonDrVal) {
@@ -87,41 +94,43 @@ function Add_OnClick() {
 	}
 	//判断是否存在  add zhli  17.9.26
 	var rtn = tkMakeServerCall('web.DHCOPBillReasonRefInv', 'CheckInfo', AdmReasonDrVal, FareTypeVal, UseDeptVal, hospId);
-	if (rtn == "1"){
+	if (rtn == 1){
 		$.messager.popover({msg: "不能添加重复数据", type: "info"});
 	    return;
 	}
 	$.messager.confirm('提示', '确认保存？', function (r) {
-		if (r) {
-			var encmeth = getValueById('Insert');
-		    var myrtn = cspRunServerMethod(encmeth, AdmReasonDrVal, FareTypeVal, UseDeptVal, PrintTempVal, hospId);
-			if (myrtn == "0") {
-				$.messager.popover({msg: "保存成功", type: "success"});
-		        $('#BtFind').click();
-			}else {
-				$.messager.popover({msg: "保存失败", type: "error"});
-			}
+		if (!r) {
+			return;
 		}
+		var encmeth = getValueById('Insert');
+	    var myrtn = cspRunServerMethod(encmeth, AdmReasonDrVal, FareTypeVal, UseDeptVal, PrintTempVal, hospId);
+		if (myrtn == 0) {
+			$.messager.popover({msg: "保存成功", type: "success"});
+	        $('#BtFind').click();
+	        return;
+		}
+		$.messager.popover({msg: "保存失败", type: "error"});
 	});
 }
 
-function Delete_OnClick() {
+function deleteClick() {
 	var row = $("#tDHCOPBillReasonRefInv").datagrid("getSelected");
 	if (!row || !row.TRowid) {
 		$.messager.popover({msg: "请选择需要删除的记录", type: "info"});
 		return;
 	}
     $.messager.confirm('提示', '确认删除该条记录？', function (r) { 
-        if (r) {
-	        var encmeth = getValueById('Delete');
-            var myrtn = cspRunServerMethod(encmeth, row.TRowid);
-            if (myrtn == "0"){
-	            $.messager.popover({msg: "删除成功", type: "success"});
-	            $('#BtFind').click();
-            }else {
-	            $.messager.popover({msg: "删除失败", type: "error"});
-            }
+        if (!r) {
+	        return;
         }
+    	var encmeth = getValueById('Delete');
+        var myrtn = cspRunServerMethod(encmeth, row.TRowid);
+        if (myrtn == 0){
+            $.messager.popover({msg: "删除成功", type: "success"});
+            $('#BtFind').click();
+            return;
+        }
+        $.messager.popover({msg: "删除失败", type: "error"});
     });
 }
 

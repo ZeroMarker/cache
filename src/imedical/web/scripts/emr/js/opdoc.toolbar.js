@@ -10,15 +10,21 @@
                 isBtnClicked = false;
                 setPnlBtnDisable(false);
             }, 2000);
-
-            var fnBtnClick = btnClick[$(this).attr('id')];
-            if ('function' == typeof fnBtnClick) {
-                fnBtnClick();
-            } else if ('btnTmpl' == $(this).attr('id').substring(0, 7)) {
-                btnClick.btnTmpl($(this).attr('id').substring(7));
-            } else {
-
-            }
+			
+			if ('btnTmpl' == $(this).attr('id').substring(0, 7))
+			{
+				btnClick.btnTmpl($(this).attr('id').substring(7));
+			}
+			else 
+			{
+	            var fnBtnClick = btnClick[$(this).attr('id')];
+	            if ('function' == typeof fnBtnClick) {
+	                fnBtnClick();
+	            } else {
+                    var msg = "当前系统不支持此按钮功能，请联系管理员查看是否配置有误：<br/>"+ $(this).attr('id')+":"+ $(this).context.innerText||"";
+	            	$.messager.alert('提示', msg, 'error');
+	            }
+			}
         });
 
         var btnClick = new function() {
@@ -88,7 +94,7 @@
 	            
                 //var returnValues = window.showModalDialog("emr.opdoc.spechars.csp","","dialogHeight:420px;dialogWidth:490px;resizable:no;center:yes;status:no");	
                 // InputSpechars(returnValues);
-                var content = "<iframe id='specharsFrame' scrolling='auto' frameborder='0' src='emr.opdoc.spechars.csp' style='width:100%; height:100%;'></iframe>";
+                var content = "<iframe id='specharsFrame' scrolling='auto' frameborder='0' src='emr.opdoc.spechars.csp?MWToken="+getMWToken()+"' style='width:100%; height:100%;'></iframe>";
                 createModalDialog('spechars',"特殊字符",600,460,'specharsFrame',content,InputSpechars,'');
 
             };
@@ -133,7 +139,7 @@
                 //if (!param || param.id == 'GuideDocument')
                 var documentContext = emrEditor.getDocContext();
                 if (!documentContext || 'ERROR' == documentContext.result) {
-                    $.messager.popover({msg:'请选中要导出的文档！',type:'info',style:{top:10,right:5}});
+                    showEditorMsg({msg:'请选中要导出的文档！',type:'info'});
                     return;
                 }
                 iEmrPlugin.SAVE_LOCAL_DOCUMENT();
@@ -141,13 +147,22 @@
 
             // 打开病历模板
             this.btnTmpl = function(emrTmplCateid) {
-                var ret = common.IsAllowMuteCreate(emrTmplCateid);
-                if (ret === '0') {
-                    //$.messager.alert('提示', '已创建同类型模板，不允许继续创建！', 'info');
-                    alert('已创建同类型模板，不允许继续创建！');
+                //按钮ID如果带有^会有异常，替换为了-，后台程序判断时再替换成^
+	            emrTmplCateid = emrTmplCateid.replace(/-/g, '^');
+	            var DocID = common.getEmrDocId(emrTmplCateid);
+                if (DocID === '0') {
+                    //alert('未找到病历模板！'+emrTmplCateid);
+                    showEditorMsg({msg:'未找到病历模板！'+emrTmplCateid,type:'info'});
                     return;
+                } else {
+                    var ret = common.IsAllowMuteCreate(DocID);
+                    if (ret === '0') {
+                        //alert('已创建同类型模板，不允许继续创建！');
+                        showEditorMsg({msg:'已创建同类型模板，不允许继续创建！',type:'info'});
+                        return;
+                    }
+                    emrTemplate.LoadTemplate(DocID);
                 }
-                emrTemplate.LoadTemplate(emrTmplCateid);
             };
 
             //范例病历
@@ -155,8 +170,9 @@
                 //var antMainUrl = 'emr.modelinstance.csp?PatientID=@patientID&EpisodeID=@episodeID&UserID=@userID';
                 //lnk = replaceLinkParams(antMainUrl);
                 //window.showModalDialog(lnk, window, 'dialogHeight:570px;dialogWidth:350px;resizable:no;status:no');
-           	var content = '<iframe id="modelinstanceFrame" scrolling="auto" frameborder=0 style="width:100%;height:100%;display:block;" src=emr.modelinstance.csp?PatientID=@patientID&EpisodeID=@episodeID&UserID=@userID></iframe>'
-            	content = replaceLinkParams(content);
+                var tmpUrl = "emr.modelinstance.csp?PatientID=@patientID&EpisodeID=@episodeID&UserID=@userID"
+            	tmpUrl = replaceLinkParams(tmpUrl);
+                var content = '<iframe id="modelinstanceFrame" scrolling="auto" frameborder=0 style="width:100%;height:100%;display:block;" src="'+tmpUrl+'"></iframe>'
             	createModalDialog("modelInstance","范例病历",350,570,"modelinstanceFrame",content,"","");
             };
 
@@ -203,22 +219,21 @@
             //操作日志
             this.btnLogFlagInfo = function () {
                 var instanceId = emrEditor.getInstanceID();
-                var data = ajaxDATA('String', 'EMRservice.Ajax.opInterface', 'LogFlagInfo', instanceId);
-                ajaxGETSync(data, function (ret) {
-                    result = ret;
-                    var TmpNum = result.split('^')[1];
-                    var TmpChartItemID = result.split('^')[0];
-                    //门诊HisUI页面风格改造-操作日志页面 add by niucaicai 2018-06-20
-                    //window.showModalDialog("emr.logdetailrecord.csp?EpisodeID=" + patInfo.EpisodeID + "&EMRDocId=" + TmpChartItemID + "&EMRNum=" + TmpNum, "", "dialogWidth:801px;dialogHeight:550px;resizable:yes;");
-                    /* var logdetailSRC = "emr.opdoc.logdetailrecord.csp?EpisodeID=" + patInfo.EpisodeID + "&EMRDocId=" + TmpChartItemID + "&EMRNum=" + TmpNum;
-                    $('#LogdetailWin').attr('src',logdetailSRC);
-                    $HUI.dialog('#HisUILogdetailWin').open(); */
-                    
-	                var content = '<iframe id="logdetailWinFrame" scrolling="auto" frameborder="0" src="emr.opdoc.logdetailrecord.csp?EpisodeID=' + patInfo.EpisodeID + '&EMRDocId=' + TmpChartItemID + '&EMRNum=' + TmpNum +'" style="width:100%;height:100%;display:block;"></iframe>';
-	            	createModalDialog('LogdetailWin','操作日志',800,450,"logdetailWinFrame",content,"","");
-                }, function (ret) {
-                    //$.messager.alert('发生错误', 'LogFlagInfo error:' + ret, 'error');
-                    alert('LogFlagInfo error:' + ret);
+                $.each(envVar.savedRecords, function(idx, item) {
+                    if ('1' == item.isLeadframe) {
+                        if (instanceId.split('||')[0] != item.id.split('||')[0]) {
+                            return true;
+                        }
+                    }else if (instanceId != item.id) {
+                        return true;
+                    }
+                    var epsiodeId = item.epsiodeId || patInfo.EpisodeID;
+                    var docId = item.emrDocId;
+                    var num = instanceId.split("||")[1];
+                    var logdetailSRC = 'emr.opdoc.logdetailrecord.csp?EpisodeID=' + epsiodeId + '&EMRDocId=' + docId + '&EMRNum=' + num + '&MWToken=' + getMWToken();
+                    var content = '<iframe id="logdetailWinFrame" scrolling="auto" frameborder="0" src="' + logdetailSRC +'" style="width:100%;height:100%;display:block;"></iframe>';
+                    createModalDialog('LogdetailWin','操作日志',800,450,"logdetailWinFrame",content,"","");
+                    return false; //break
                 });
             };
             
@@ -243,17 +258,23 @@
             this.btnTooth = function() {
                 var dialogId = "toothDialog";
                 var iframeId = "opdocTooth";
-                var src = "emr.ip.tool.tooth.csp?dialogId="+dialogId;
+                var src = "emr.ip.tool.toothimg.csp?dialogId="+dialogId+"&MWToken="+getMWToken();
                 var iframeCotent = "<iframe id='"+iframeId+"' width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>";
-                createModalDialog(dialogId,"牙位图", 1060, 475,iframeId,iframeCotent,insertTooth);
+                createModalDialog(dialogId,"牙位图", "1145","700",iframeId,iframeCotent,insertTooth);
             };
             
             //权限申请
             this.btnAuthRequest = function () {
 	            
                 //var returnValues = window.showModalDialog("emr.auth.request.csp?EpisodeID="+ patInfo.EpisodeID + "&PatientID=" + patInfo.PatientID,window,"dialogHeight:550px;dialogWidth:1150px;resizable:no;status:no");
-            	var content = '<iframe id="authRequestFrame" scrolling="auto" frameborder="0" src="emr.auth.request.csp?EpisodeID='+patInfo.EpisodeID+"&PatientID="+patInfo.PatientID+'" style="width:100%;height:100%;display:block;"></iframe>';
-            	createModalDialog('authRequest','权限申请',1200,600,"authRequestFrame",content,"","");
+            	var content = '<iframe id="authRequestFrame" scrolling="auto" frameborder="0" src="emr.auth.request.csp?EpisodeID='+patInfo.EpisodeID+'&PatientID='+patInfo.PatientID+'&MWToken='+getMWToken()+'" style="width:100%;height:100%;display:block;"></iframe>';
+            	createModalDialog('dialogAuthRequest','权限申请',1200,600,"authRequestFrame",content,"","");
+            };
+
+            //浏览结核病历
+            this.btnPhthisisBrowse = function () {
+                var content = '<iframe id="patientRecordBrowseFrame" scrolling="auto" frameborder="0" src="emr.opdoc.patientRecordBrowse.csp?EpisodeID='+patInfo.EpisodeID+'&PatientID='+patInfo.PatientID+'&MWToken='+getMWToken()+'" style="width:100%;height:100%;display:block;"></iframe>';
+            	createModalDialog('patientRecordBrowse','结核病历浏览',1200,600,"patientRecordBrowseFrame",content,"","");
             };
 
             //测试
@@ -265,21 +286,12 @@
             
             //管理个人模板
             this.btnManagePersonal = function () {
-                var documentContext = emrEditor.getDocContext();
-                if (typeof documentContext === "undefined" || documentContext.status.curStatus === "") {
-			$.messager.alert('提示', "请先保存当前病历后，再打开管理页面！", 'info');
-                        return;
-                }
                 var insID = emrEditor.getInstanceID();
                 
-                var content = '<iframe id="managePersonalWinFrame" scrolling="auto" frameborder="0" src="emr.opdoc.managepersonal.csp?IstanceID=' + insID + '&UserID=' + patInfo.UserID + '&UserLocID=' + patInfo.UserLocID +'" style="width:100%;height:100%;display:block;"></iframe>';
-            	createModalDialog('managePersonalWin','管理个人模版',300,480,"managePersonalWinFrame",content,"","");
-                
-                /* var ManagePersonalSRC = "emr.opdoc.managepersonal.csp?IstanceID=" + insID + "&UserID=" + patInfo.UserID + "&UserLocID=" + patInfo.UserLocID ;
-                $('#ManagePersonalWin').attr('src',ManagePersonalSRC);
-                $HUI.dialog('#HisUIManagePersonalWin').open(); */
+                var content = '<iframe id="managePersonalWinFrame" scrolling="auto" frameborder="0" src="emr.opdoc.managepersonal.csp?&MWToken='+getMWToken()+'" style="width:100%;height:100%;display:block;"></iframe>';
+            	createModalDialog('managePersonalWin','管理个人模版',460,680,"managePersonalWinFrame",content,"","");
             };
-            
+
             //文字编辑
             this.btntextedit = function() {
 	            var display =$('#textedit').css('display');
@@ -304,6 +316,12 @@
 					$.messager.alert("提示信息", "存在有效授权审批，无需再次申请！", 'info');
 					return;
 				}
+				
+				if (common.isRecSignUser(insID) == "0")
+				{
+					$.messager.alert("提示信息", "当前用户非病历的签名医师，不允许进行自动审批动作！", 'info');
+					return;
+				}
 
 		        if (!privilege.canAutoApply(documentContext)) 
 		        {
@@ -311,8 +329,13 @@
 		        }
 		       
 		        //var returnValues = window.showModalDialog("emr.opdoc.autoapplyreason.csp","","dialogHeight:350px;dialogWidth:626px;resizable:no;status:no");
-				var iframe = '<iframe id="autoApplyFrame" scrolling="auto" frameborder="0" src="emr.opdoc.autoapplyreason.csp" style="width:100%;height:100%;display:block;"></iframe>';
+				var iframe = '<iframe id="autoApplyFrame" scrolling="auto" frameborder="0" src="emr.opdoc.autoapplyreason.csp?MWToken='+getMWToken()+'" style="width:100%;height:100%;display:block;"></iframe>';
 				createModalDialog("autoApply","自动审批",680,400,"autoApplyFrame",iframe,autoApplyReturn,documentContext);
+            };
+            
+            //前房深度公式
+            this.btnEye = function () {
+                iEmrPlugin.EYE();
             };
             
             //门诊签名按钮(只支持单一签名单元的签名与改签)
@@ -326,6 +349,128 @@
                         Path: path
                     });
                 }
+            };
+            
+            //门诊图库
+            this.btnImage = function () {
+                var xpwidth = window.screen.width-400;
+                var xpheight = window.screen.height-400;
+                var iframeCotent = "<iframe id='iframeImage' scrolling='auto' frameborder='0' src='emr.opdoc.toolbar.image.csp?MWToken="+getMWToken()+"' style='width:100%;height:100%;display:block;'></iframe>";
+                createModalDialog("dialogImage","图库",xpwidth+4,xpheight+40,"iframeImage",iframeCotent,imageCallBack,"");
+            };
+			
+			//患者签名：待签二维码
+            this.btnPatPushSignQR = function() {
+	            getPatPushSignQR();
+            };
+            
+            //患者签名：同步患者签名结果
+            this.btnPatPushSignResult = function() {
+	            fetchPatPushSignResult();
+            };
+            
+            //患者签名：患者重签
+            this.btnPatPushSignInvalid = function() {
+	            invalidPatSignedPDF();
+            };
+            
+            //解锁
+            this.btnUnLock = function () {
+	            if (sysOption.isLock != "Y")
+	            {
+		            $.messager.alert("提示信息", "未开启加锁功能！", 'info');
+		            return;
+		        }
+	            
+				var lockcode = $("#lock span").attr("userCode");
+				var lockname = $("#lock span").attr("userName");
+				var lockId = $("#lock span").attr("lockId");
+                var lockIp = $("#lock span").attr("ip");
+				if (lockcode != undefined )
+				{
+                    /*只能解锁本人
+                    if (lockcode != patInfo.UserCode)
+					{
+                        $.messager.alert("提示信息","有人正在["+lockIp+"]电脑上编辑该病历，不能解锁，请联系["+lockname+"]保存释放病历权限！", "error");
+                        return;
+                    }
+                    else{
+                        top.$.messager.confirm("提示信息", "正在["+lockIp+"]电脑上编辑，是否确定解锁，解锁编辑可能会覆盖病历", function (r) {
+                            if (!r) 
+                            {
+                                return ;
+                            } 
+                            else
+                            {
+                                var result = unLock(lockId);
+                                if (result == "1") {
+                                    var instanceId = emrEditor.getInstanceID();
+                                    lock(instanceId);        
+                                }
+                            } 
+                        });
+                        
+                    }*/
+                    top.$.messager.confirm("提示信息", "确定解锁吗?", function (r) {
+						if (!r) 
+						{
+							return ;
+						} 
+						else
+						{
+							if (lockcode != patInfo.UserCode)
+							{
+								var doLock = function(returnValue,arr) {
+									if (returnValue == "1")
+									{
+										var result = unLock(arr);
+                                        if (result == "1") {
+                                            var instanceId = emrEditor.getInstanceID();
+                                            lock(instanceId);        
+                                        }
+									}
+									else if(returnValue == "0")
+									{
+										top.$.messager.alert("提示信息", "密码验证失败", 'info');
+									}
+								}
+								var tempFrame = "<iframe id='iframeLock' scrolling='auto' frameborder='0' src='emr.ip.userverification.csp?UserID="+lockcode+"&UserName="+base64encode(utf16to8(encodeURI(lockname)))+"&openWay=group&MWToken="+getMWToken()+"' style='width:240px; height:210px; display:block;'></iframe>"
+								createModalDialog("lockDialog","手工解锁","270","250","iframeLock",tempFrame,doLock,lockId)
+							}
+							else
+							{
+								var result = unLock(lockId);
+                                if (result == "1") {
+                                    var instanceId = emrEditor.getInstanceID();
+                                    lock(instanceId);        
+                                }
+							}
+							
+						} 
+					});
+				} else {
+                    showEditorMsg({msg:'未检测到病历锁，无需解锁！',type:'info'});
+                }
+            };
+            
+            //验签
+            this.btnVerifySignedData = function () {
+                var instanceId = emrEditor.getInstanceID();
+                var data = ajaxDATA('String', 'EMRservice.BL.BLEMRSign', 'VerifySignedData', instanceId);
+                ajaxGETSync(data, function (ret) {
+                    var flag = ret.split('^')[0];
+                    var result = ret.split('^')[1];
+                    if (flag == "1")
+                    {
+                        $.messager.alert("提示信息", result, 'info');
+                    }
+                    else
+                    {
+                        $.messager.alert("提示信息",result, "error");
+                    }
+                }, function (ret) {
+                    alert('VerifySignedData error:' + ret);
+                });
             };
         }
     }
@@ -358,7 +503,7 @@
 							documentContext = emrEditor.getDocContext(insID);
 							//设置当前文档操作权限
 							emrEditor.setEditorReadonly(documentContext);
-							$.messager.popover({msg:'申请编辑成功！', type:'success', style:{top:10,right:5}});
+							showEditorMsg({msg:'申请编辑成功！', type:'success'});
 					   }
 					},
 					error : function(d) { alert("apply edit error");}
@@ -390,12 +535,15 @@
                 tool.removeAttr("style");
                 tool.removeAttr("id");
                 tool.removeAttr("iconCls");
-                if (btn.split(':')[0].indexOf('btnTmpl')!="-1"){
+                /*if (btn.split(':')[0].indexOf('btnTmpl')!="-1"){
                     tool.css("float","right");
                 }else{
-                    tool.css("float","left");
-                }
-                var a = $("a",tool).attr("id",btn.split(':')[0]);
+                */    
+                tool.css("float","left");
+                //}
+                //按钮ID如果带有^会有异常，替换为-
+                var btnId = btn.split(':')[0].replace(/\^/g, '-');
+                var a = $("a",tool).attr("id",btnId);
                 $("a",tool).css("padding", "0 10px");
                 $("a",tool).addClass("button");
                 $("a",tool).find("span").eq(2).removeClass("icon-save");
@@ -412,8 +560,27 @@
 
     function getOPEmrButtons() {
         addButtons(envVar.opEmrButtons);
+        // 2021/11/2 Zhangxy 增加病历缩放滑块
+        if(isShowScaleSliderBtn == "Y")
+        {
+	        $('#tmplsTabsDiv').css('display','inline-block');
+	        $('#tmplsTabsDiv').css('width','69%');
+	        $('#abbreviation').css('display','inline-block');
+	        $('#abbreviation').css('width','30%');
+	        addSliderScale();  
+	    }
         liveBtnBind();
     }
+    // 2021/11/2 Zhangxy 增加病历缩放滑块
+    function addSliderScale() {
+    	var pnlButton = $("#abbreviation");
+    	var sliderScale = $(
+      	'<div style="height: 100%; display: flex; align-items: center; padding: 0px 30px;float:right;">' +
+        	'<div class="scale-slider" style="width: 130px"></div>' +
+        	"</div>"
+    	);
+    pnlButton.append(sliderScale);
+  	}
 
     // 工具栏调整宽度比例的按钮
     function defineBtnScale() {
@@ -421,11 +588,15 @@
             $("#pnlResScale a[id^='btnScale']").css('background-color','');
             $(this).css({'background':'#ddd','border':'#ddd'});
             var rate = parseFloat($(this).attr('rate'));
+            var tempRate = rate;
+            if (sysOption.ResourceLocation == "east"){
+                tempRate = 1-rate;
+            }
             $('#resRegion').panel('resize', {
-                width: $('#main').width() * rate
+                width: $('#main').width() * tempRate
             });
             $('body').layout('resize');
-            common.setOPDisplay(rate);
+            common.setOPDisplay(tempRate);
         });
     }
 
@@ -469,8 +640,7 @@
             var InsertAudit = function () {
                 var data = ajaxDATA('String', 'EMRservice.BL.opInterface', 'InsertAudit', instanceId, auditUsrId, patInfo.UserID);
                 ajaxGET(data, function (ret) {
-                    $.messager.popover({msg:'审核成功！',type:'success',style:{top:10,right:5}});
-                    //showEditorMsg('审核成功', 'warning');
+                    showEditorMsg({msg:'审核成功！',type:'success'});
                 }, function (ret) {
                     //$.messager.alert('发生错误', 'InsertAudit error:' + ret, 'error');
                     alert('InsertAudit error:' + ret);

@@ -3,8 +3,8 @@
 * @author zhouxin
 */
 function commonShowWin(option){
-		
-		var content = '<iframe src="'+option.url+'" scrolling="auto" width="100%" height="100%" frameborder="0" scrolling="no" style="display:block"></iframe>';
+		var url = tokenUrl(option.url); //2023-03-07
+		var content = '<iframe src="'+url+'" scrolling="auto" width="100%" height="100%" frameborder="0" scrolling="no" style="display:block"></iframe>';
 		var defOpt={
 			iconCls:"icon-w-paper",
 			width: 1300,

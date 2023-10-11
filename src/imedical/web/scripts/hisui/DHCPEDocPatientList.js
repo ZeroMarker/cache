@@ -55,10 +55,10 @@ function LoadHandler1() {
 
 function Find_click()
 {
-	 
-	var RegNoLength=tkMakeServerCall("web.DHCPE.DHCPECommon","GetRegNoLength");
+	  var LocID=session['LOGON.CTLOCID'];
+	var RegNoLength=tkMakeServerCall("web.DHCPE.DHCPECommon","GetRegNoLength",LocID);
 	var iPatientNo=getValueById("PatientNo");
-	if (iPatientNo.length<RegNoLength&&iPatientNo.length>0) { iPatientNo=RegNoMask(iPatientNo);}
+	if (iPatientNo.length<RegNoLength&&iPatientNo.length>0) { iPatientNo=RegNoMask(iPatientNo,LocID);}
 	$("#PatientNo").val(iPatientNo);
 
     var iSurName=getValueById("SurName");

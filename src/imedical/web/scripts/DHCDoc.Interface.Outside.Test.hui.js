@@ -1,4 +1,6 @@
-
+var PageLogicObj={
+	ExtOrgCode:"ZZJ"	
+}
 var arrayObj1=new Array(
       new Array("Btn_FindPatientCard","FindPatientCard"),
       new Array("Btn_SavePatientCard","SavePatientCard"),
@@ -11,10 +13,15 @@ var arrayObj1=new Array(
 	  new Array("Btn_QueryAdmOPReg","QueryAdmOPReg"),
 	  new Array("Btn_OPRegReturn","OPRegReturn"),
 	  new Array("Btn_QueryPatList","QueryPatList"),
+	  new Array("Btn_QueryStopDoctorInfo","QueryStopDoctorInfo"),
 	  new Array("Btn_QueryOPAppArriveList","QueryOPAppArriveList"),
 	  new Array("Btn_OPAppArrive","OPAppArrive"),
 	  new Array("Btn_CancelOrder","CancelOrder"),
-	  new Array("Btn_QueryPatCard","QueryPatCard")
+	  new Array("Btn_QueryPatCard","QueryPatCard"),
+	  new Array("Btn_GetInsuRegPara","GetInsuRegPara"),
+	  new Array("Btn_QueryRegStatus","QueryRegStatus"),
+	  new Array("Btn_GetOPAllocReport","GetOPAllocReport"),
+	  new Array("Btn_OPAllocAutoReport","OPAllocAutoReport")
 )
 
 var arrayObj2=new Array(
@@ -27,41 +34,47 @@ var arrayObj2=new Array(
 
 var arrayObj3=new Array(
       new Array("List_QueryAdmOPReg","QueryAdmOPReg"),
-      new Array("List_QueryOPAppArriveList","QueryOPAppArriveList")
+      new Array("List_QueryOPAppArriveList","QueryOPAppArriveList"),
+      new Array("List_GetOPAllocReport","GetOPAllocReport")
 )
 
+$(document).ready(function(){
+	//Init();
+	InitHospList();
+	InitEvent();
+})
+
+function InitHospList()
+{
+	var hospStr=session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
+	var hospComp = GenHospComp("Doc_Interface_OutsideTest",hospStr);
+	hospComp.jdata.options.onSelect = function(e,t){	
+		ClearData();	
+		Init();
+		ReloadCardTypeList();
+	}
+	hospComp.jdata.options.onLoadSuccess= function(data){
+		Init();
+	}
+}
+function ClearData(){
+	$('input[type="text"]').val("");
+	//$("#Text_ExtUserID,#Text_PatientID,#Text_TransactionId,#Text_RegFee,#Text_ScheduleItemCode,#Text_LockQueueNo,#Text_Reponse").val("");
+	$("#List_QueryDepartment,#List_QueryDoctor,#List_QueryAdmSchedule,#List_GetPatBillType,#List_QueryTimeRange").combobox('setValue',"").combobox('setText',"");
+	$("#Comb_ScheduleDate").datebox('setValue',"");
+}
 function Init(){ 
-	//$.messager.alert("提示","测试前准备工作:<br>1、在His系统中维护好一个新的安全组，到门诊收费安全组配置配置该安全组具有门诊结算权限，不打发票，其他一概不维护<br>2、在His系统中维护好一个新的工号，权限为建卡挂号收费权限，安全组为新建安全组。自助机工号一般为：'ZZJ001'之类；微信工号一般为：'WX001'之类<br>3、将测试串中'<ExtUserID>457</ExtUserID>'中的457替换成本项目维护好的工号")
-	/*for( var i=0;i<arrayObj1.length;i++) {
-		var param1=arrayObj1[i][0];
-		var param2=arrayObj1[i][1];
-		InitCardBtn(param1,param2);	    
-	}
-	
-	for( var i=0;i<arrayObj2.length;i++) {
-		var param1=arrayObj2[i][0];
-		var param2=arrayObj2[i][1];
-		InitSelfRegBtn(param1,param2);	    
-	}*/
-	for( var i=0;i<arrayObj1.length;i++) {
-		var param1=arrayObj1[i][0];
-		var param2=arrayObj1[i][1];
-		InitBtnClick(param1,param2);    
-	}
-	
-	$HUI.combobox("#List_QueryAdmOPReg",{});
-	$HUI.combobox("#List_QueryOPAppArriveList",{});
-	
+	InitPatBillType();
 	InitDepartmentGroup();
 	 
 	InitDepartment();
 	 
 	//InitDoctor();
-	 
+	$("#"+"Text_Reponse"+"").val("");
+}
+
+function InitEvent(){
 	InitCombScheduleDate();
-	 
-	//InitSchedule();
-	 
 	InitTimeRange();
 	InitTransactionId();
 	$HUI.tabs("#main_container",{
@@ -71,6 +84,11 @@ function Init(){
 			InitCardNo();
 		}
 	})
+	for( var i=0;i<arrayObj1.length;i++) {
+		var param1=arrayObj1[i][0];
+		var param2=arrayObj1[i][1];
+		InitBtnClick(param1,param2);    
+	}
 	$(document.body).bind("keydown",BodykeydownHandler);
 }
 
@@ -99,55 +117,58 @@ function BodykeydownHandler(e){
     if(keyEvent){   
         e.preventDefault();   
     }  
-    if (e){
+    /*if (e){
         var ctrlKeyFlag=e.ctrlKey;
     }else{
         var ctrlKeyFlag=window.event.ctrlKey;
     }
     if (ctrlKeyFlag){
         return false;
-	}
+	}*/
 }
 
 function InitTransactionId(){
 	$('#Text_TransactionId').bind('keydown', function(event){
 		if(event.keyCode==13)
 		{
+			var HospitalId=$HUI.combogrid('#_HospList').getValue()
 			var TransactionId=$("#Text_TransactionId").val();
 			if(TransactionId=="") return;
-			var QueueNoActive=tkMakeServerCall("web.DHCLockSchedule","CheckQueueNoActive",TransactionId,"","","")
-			//alert(QueueNoActive)
+			var QueueNoActive=tkMakeServerCall("web.DHCLockSchedule","CheckQueueNoActive",TransactionId,"","","",HospitalId)
 			if(QueueNoActive.indexOf("^")>-1){
 				var QueueNoActiveFlag=QueueNoActive.split("^")[0];
 				var QueueNoActiveStr=QueueNoActive.split("^")[1];
 				if(QueueNoActiveFlag=="1"){
-					//alert(QueueNoActiveStr)
 					var ScheduleItemCode=QueueNoActiveStr.split("!")[0];
 					var InsertQueueNo=QueueNoActiveStr.split("!")[1];
 					var PatientID=QueueNoActiveStr.split("!")[2];
+					var Fee=QueueNoActiveStr.split("!")[3];
 					$("#Text_ScheduleItemCode").val(ScheduleItemCode);
 					$("#Text_LockQueueNo").val(InsertQueueNo);
 					$("#Text_PatientID").val(PatientID);
+					$("#Text_RegFee").val(Fee);
 				}else{
-					//$.messager.alert("警告",QueueNoActiveFlag);
 					if(QueueNoActiveFlag=="Reg"){QueueNoActiveFlag="该号已支付";}
 					else if(QueueNoActiveFlag=="NotSamePerson"){QueueNoActiveFlag="该号已被他人锁定";}
 					else if(QueueNoActiveFlag=="-100"){QueueNoActiveFlag="订单在系统中不存在";}
 					else if(QueueNoActiveFlag=="-101"){QueueNoActiveFlag="锁号错误";}
+					else if(QueueNoActiveFlag=="NotCurHosp"){QueueNoActiveFlag="非当前院区的订单，不能操作";}
 					else{QueueNoActiveFlag="锁号错误";}
-					alert(QueueNoActiveFlag)	
+					dhcsys_alert(QueueNoActiveFlag)	
 				}
 			}else{
-				alert("订单信息："+"订单在系统中不存在")
-				//$.messager.alert("警告","");		
+				dhcsys_alert("订单信息："+"订单在系统中不存在")
 			}
-			var request="<Request><TradeCode>1108</TradeCode><ExtOrgCode></ExtOrgCode><ClientType></ClientType><HospitalId></HospitalId><ExtUserID></ExtUserID><PatientCard></PatientCard><CardType></CardType><TransactionId>"+TransactionId+"</TransactionId><IDNo></IDNo><PatienName></PatienName></Request>"
+			var HospitalId=$HUI.combogrid('#_HospList').getValue();
+			var ExtUserID=$("#Text_ExtUserID"+"").val();
+			var request="<Request><TradeCode>1108</TradeCode><ExtOrgCode></ExtOrgCode><ClientType></ClientType><HospitalId></HospitalId><ExtUserID>"+ExtUserID+"</ExtUserID><PatientCard></PatientCard><CardType></CardType><TransactionId>"+TransactionId+"</TransactionId><IDNo></IDNo><PatienName></PatienName></Request>"
 			$.cm({
 		    	ClassName:"DHCDoc.Interface.Outside.Test.Service",
 				MethodName:"DoInterfaceMethod",
 				'ClassType':"SelfReg",
 				'DoMethodName':"QueryRegStatus",
 				'RequestStr':request,	
+				'HospitalId':HospitalId
 		    },function testget(objScope){
 			    $("#"+"Text_Reponse"+"").val("");
 				if(objScope){
@@ -159,12 +180,7 @@ function InitTransactionId(){
 		
 }
 function InitPatientID(e){
-	var SelTab = $("#main_container").tabs('getSelected');    
-	var TabIndex = $("#main_container").tabs('getTabIndex',SelTab);
-	var TabValue="";
-	if(TabIndex==0)TabValue=""
-	else if(TabIndex==1)TabValue=""
-	else if(TabIndex==2)TabValue="_Other"
+	var TabValue=GetTabValue();
 	$('#Text_PatientID'+TabValue).bind('keydown', function(event){
 		if(event.keyCode==13)
 		{
@@ -180,38 +196,39 @@ function InitPatientID(e){
     });
 }
 
-function InitCardTypeList(param1,param2)
+function ReloadCardTypeList(){
+	var TabValue=GetTabValue();
+	if($("#List_CardType"+TabValue).length>0){
+		$HUI.combobox("#List_CardType"+TabValue).reload()
+	}
+}
+function InitCardTypeList()
 {
-	var SelTab = $("#main_container").tabs('getSelected');    
-	var TabIndex = $("#main_container").tabs('getTabIndex',SelTab);
-	var TabValue="";
-	if(TabIndex==0)TabValue=""
-	else if(TabIndex==1)TabValue=""
-	else if(TabIndex==2)TabValue="_Other";
-	$HUI.combobox("#List_CardType"+TabValue,{      
-    	valueField:'RowId',   
-    	textField:'Code',
-    	url:$URL+"?ClassName=DHCDoc.Interface.Outside.Config&QueryName=FindList&value=BarCardType&GroupRowId=&ResultSetType=array",  
-    	onLoadSuccess:function(){
-	    	$HUI.combobox("#List_CardType"+TabValue).clear();	
-	    }  	
-	});	
+	var TabValue=GetTabValue();
+	if($("#List_CardType"+TabValue).length>0){
+		$HUI.combobox("#List_CardType"+TabValue,{      
+	    	valueField:'RowId',   
+	    	textField:'Code',
+	    	url:$URL+"?ClassName=DHCDoc.Interface.Outside.Config&QueryName=FindList&ListName=BarCardType&GroupRowId=&ResultSetType=array",  
+	    	onLoadSuccess:function(){
+		    	$HUI.combobox("#List_CardType"+TabValue).clear();	
+		    },onBeforeLoad:function(param){
+				param.HospitalId=$HUI.combogrid('#_HospList').getValue();
+			}
+		});	
+	}
 }
 
 function InitCardNo(){
-	var SelTab = $("#main_container").tabs('getSelected');    
-	var TabIndex = $("#main_container").tabs('getTabIndex',SelTab);
-	var TabValue="";
-	if(TabIndex==0)TabValue=""
-	else if(TabIndex==1)TabValue=""
-	else if(TabIndex==2)TabValue="_Other"
-	
+	var TabValue=GetTabValue();
+	$('#Text_CardNo'+TabValue).unbind();
 	$('#Text_CardNo'+TabValue).bind('keydown', function(event){
 		if(event.keyCode==13)
 		{
 			var CardTypeCode=$("#List_CardType"+TabValue).combobox('getValue');
 			if(CardTypeCode==""){
-				$.messager.alert("警告","请选择正确的卡类型");	
+				$.messager.alert("提示","请选择正确的卡类型","warning");	
+				return false;	
 			}
 			var CardNo=$("#Text_CardNo"+TabValue).val();
 			var CardNoLen=tkMakeServerCall("DHCDoc.Interface.Outside.Test.Service","GetCardNoLenByType",CardTypeCode)
@@ -227,34 +244,48 @@ function InitCardNo(){
     });	
 }
 
-function InitDepartmentGroup(){	
-	var ObjScope=$.cm({
-		ClassName:"DHCDoc.Interface.Outside.Test.Service",
-		MethodName:"GetJsonStrByService",
-		'DoMethodName':"QueryDepartmentGroup",
-		'RequestStr':"",
-		'HUIFlag':"1",
-	},false)
-	if(ObjScope=="")return;
-	var EditTypeArr=new Array();
-	for(var i=0;i<ObjScope.length;i++){
-		var value=ObjScope[i].DepartmentCode;
-		var desc=ObjScope[i].DepartmentName;
-		var onestr = {"value":value, "desc":desc};
-		EditTypeArr.push(onestr);	
-	}
-	$HUI.combobox("#"+"List_QueryDepartmentGroup",{
-		valueField:'value',   
-    	textField:'desc',
-    	data: EditTypeArr,
-		editable:false,
+function InitPatBillType(){	
+	$HUI.combobox("#List_GetPatBillType",{
+		valueField:'RowId',   
+    	textField:'Desc',
+		editable:true,
+		url:$URL+"?ClassName=DHCDoc.Interface.Outside.Test.Service&QueryName=FindList&DoMethodName=GetPatBillType&RequestStr=&HospitalId=&ResultSetType=array",
+		onBeforeLoad:function(param){
+			var ExtUserID=$("#Text_ExtUserID"+"").val();
+			if(ExtUserID==""){
+				return false;	
+			}
+			var PatientID=$("#"+"Text_PatientID"+"").val();
+			if(PatientID==""){
+				return false;	
+			}
+			var RequestStr="<Request><TradeCode>3302</TradeCode><ExtUserID>"+ExtUserID+"</ExtUserID><PatientCard></PatientCard><CardType></CardType><PatientID>"+PatientID+"</PatientID><PatientName></PatientName></Request>"
+			param.RequestStr=RequestStr;
+			param.HospitalId=$HUI.combogrid('#_HospList').getValue();
+		},
     	onShowPanel:function(){
+	    	var ExtUserID=$("#Text_ExtUserID"+"").val();
+			if(ExtUserID==""){
+				$.messager.alert("提示","请填写操作员工号.","warning");
+				$("#List_GetPatBillType").combobox('hidePanel');
+				return false;	
+			}
+			var PatientID=$("#"+"Text_PatientID"+"").val();
+			if(PatientID==""){
+				$.messager.alert("提示","请填写患者信息.","warning");
+				$("#List_GetPatBillType").combobox('hidePanel');
+				return false;	
+			}
+			$(this).combobox("reload")
+			var HospRowId=$HUI.combogrid('#_HospList').getValue();
+	    	var RequestStr="<Request><TradeCode>3302</TradeCode><ExtUserID>"+ExtUserID+"</ExtUserID><PatientCard></PatientCard><CardType></CardType><PatientID>"+PatientID+"</PatientID><PatientName></PatientName></Request>"
 	    	$.cm({
 		    	ClassName:"DHCDoc.Interface.Outside.Test.Service",
 				MethodName:"DoInterfaceMethod",
 				'ClassType':"SelfReg",
-				'DoMethodName':"QueryDepartmentGroup",
-				'RequestStr':""	
+				'DoMethodName':"GetPatBillType",
+				'RequestStr':RequestStr,
+				'HospitalId':HospRowId
 		    },function testget(objScope){
 			    $("#"+"Text_Reponse"+"").val("");
 				if(objScope){
@@ -262,73 +293,137 @@ function InitDepartmentGroup(){
 				}
 		    })
 		},
+		onChange:function(newValue, oldValue){
+			if(newValue==""){
+			}
+		},
 		onSelect:function(){
-			var boxvalue=$('#List_QueryDepartmentGroup').combobox('getValue');
-			if((boxvalue!="undefined")&&(boxvalue!="")){
-				InitDepartment(); 
+			var boxvalue=$('#List_GetPatBillType').combobox('getValue');
+			if(boxvalue){
 			}else{
-				$.messager.alert("警告","参数获取错误");
+				$.messager.alert("提示","参数获取错误","warning");
 				return false;	
 			} 
-			
+		}	
+	})
+}
+
+function InitDepartmentGroup(){	
+	$HUI.combobox("#List_QueryDepartmentGroup",{
+		valueField:'RowId',   
+    	textField:'Desc',
+		editable:true,
+		url:$URL+"?ClassName=DHCDoc.Interface.Outside.Test.Service&QueryName=FindList&DoMethodName=QueryDepartmentGroup&RequestStr=&HospitalId=&ResultSetType=array",
+		onBeforeLoad:function(param){
+			var ExtUserID=$("#Text_ExtUserID"+"").val();
+			if(ExtUserID==""){
+				return false;	
+			}
+			var RequestStr="<Request><TradeCode>1014</TradeCode><ExtUserID>"+ExtUserID+"</ExtUserID></Request>"
+			param.RequestStr=RequestStr;
+			param.HospitalId=$HUI.combogrid('#_HospList').getValue();
+		},
+    	onShowPanel:function(){
+	    	var ExtUserID=$("#Text_ExtUserID"+"").val();
+			if(ExtUserID==""){
+				$.messager.alert("提示","请填写操作员工号.","warning");
+				$("#List_QueryDepartmentGroup").combobox('hidePanel');
+				return false;	
+			}
+			$(this).combobox("reload")
+			var HospRowId=$HUI.combogrid('#_HospList').getValue();
+	    	var RequestStr="<Request><TradeCode>1014</TradeCode><ExtUserID>"+ExtUserID+"</ExtUserID></Request>"
+	    	$.cm({
+		    	ClassName:"DHCDoc.Interface.Outside.Test.Service",
+				MethodName:"DoInterfaceMethod",
+				'ClassType':"SelfReg",
+				'DoMethodName':"QueryDepartmentGroup",
+				'RequestStr':RequestStr,
+				'HospitalId':HospRowId
+		    },function testget(objScope){
+			    $("#"+"Text_Reponse"+"").val("");
+				if(objScope){
+					$("#"+"Text_Reponse"+"").val(objScope.result);
+				}
+		    })
+		},
+		onChange:function(newValue, oldValue){
+			if(newValue==""){
+				InitDepartment(); 
+			}
+		},
+		onSelect:function(){
+			var boxvalue=$('#List_QueryDepartmentGroup').combobox('getValue');
+			if(boxvalue){
+				InitDepartment(); 
+			}else{
+				$.messager.alert("提示","参数获取错误","warning");
+				return false;	
+			} 
 		}	
 	})
 }
 
 function InitDepartment(){
-	var Groupvalue=$('#List_QueryDepartmentGroup').combobox('getValue');
-	var ExtUserID=$("#"+"Text_ExtUserID"+"").val();
-	if(ExtUserID==""){
-		//$.messager.alert("警告","请填写操作员工号.");
-		//return false;
-	}
-	var HospitalId="";
-	var RequestStr="<Request><TradeCode>1012</TradeCode><ExtUserID>"+ExtUserID+"</ExtUserID><DepartmentGroupCode>"+Groupvalue+"</DepartmentGroupCode><ExtOrgCode></ExtOrgCode><ClientType>ATM</ClientType><HospitalId>"+HospitalId+"</HospitalId></Request>"
-	
 	$HUI.combobox("#"+"List_QueryDepartment"+"",{    
     	valueField:'RowId',   
     	textField:'Desc',
-    	url:$URL+"?ClassName=DHCDoc.Interface.Outside.Test.Service&QueryName=FindList&DoMethodName=QueryDepartment&RequestStr="+RequestStr+"&ResultSetType=array",
+    	url:$URL+"?ClassName=DHCDoc.Interface.Outside.Test.Service&QueryName=FindList&DoMethodName=QueryDepartment&RequestStr=&HospitalId=&ResultSetType=array",
+    	onBeforeLoad:function(param){
+	    	var HospRowId=$HUI.combogrid('#_HospList').getValue();
+			var Groupvalue=$('#List_QueryDepartmentGroup').combobox('getValue');
+			var ExtUserID=$("#"+"Text_ExtUserID"+"").val();
+			if(ExtUserID==""){
+				return false;
+			}
+			var RequestStr="<Request><TradeCode>1012</TradeCode><ExtUserID>"+ExtUserID+"</ExtUserID><DepartmentGroupCode>"+Groupvalue+"</DepartmentGroupCode><ExtOrgCode></ExtOrgCode><ClientType>ATM</ClientType></Request>"
+			param.RequestStr=RequestStr;
+			param.HospitalId=$HUI.combogrid('#_HospList').getValue();
+		},
     	onShowPanel:function(){
+	    	var HospRowId=$HUI.combogrid('#_HospList').getValue();
 	    	var Groupvalue=$('#List_QueryDepartmentGroup').combobox('getValue');
 			var ExtUserID=$("#Text_ExtUserID"+"").val();
 			if(ExtUserID==""){
-				$.messager.alert("警告","请填写操作员工号.");
+				$.messager.alert("提示","请填写操作员工号.","warning");
+				$("#List_QueryDepartment").combobox('hidePanel');
 				return false;	
 			}
-	    	var RequestStr="<Request><TradeCode>1012</TradeCode><ExtUserID>"+ExtUserID+"</ExtUserID><DepartmentGroupCode>"+Groupvalue+"</DepartmentGroupCode><ExtOrgCode></ExtOrgCode><ClientType>ATM</ClientType><HospitalId>"+HospitalId+"</HospitalId></Request>"
+			$(this).combobox("reload");
+	    	var RequestStr="<Request><TradeCode>1012</TradeCode><ExtUserID>"+ExtUserID+"</ExtUserID><DepartmentGroupCode>"+Groupvalue+"</DepartmentGroupCode><ExtOrgCode></ExtOrgCode><ClientType>ATM</ClientType></Request>"
 			$.cm({
 		    	ClassName:"DHCDoc.Interface.Outside.Test.Service",
 				MethodName:"DoInterfaceMethod",
 				'ClassType':"SelfReg",
 				'DoMethodName':"QueryDepartment",
-				'RequestStr':RequestStr	
+				'RequestStr':RequestStr,
+				'HospitalId':HospRowId
 		    },function testget(objScope){
 				if(objScope){
 					$("#"+"Text_Reponse"+"").val("");
-					InitDepartment();
 					$("#"+"Text_Reponse"+"").val(objScope.result);
-					//$HUI.combobox('#List_QueryDepartment').clear();
 				}
 		    })
 		},
-		onLoadSuccess:function(){
-			$HUI.combobox('#List_QueryDepartment').clear();	
-			InitDoctor(); 
-			InitSchedule();
+		onChange:function(newValue, oldValue){
+			if(newValue==""){
+				InitDoctor(); 
+				InitSchedule();
+			}
 		},
 		onSelect:function(){
 			var boxvalue=$('#List_QueryDepartment').combobox('getValue');
 			if((boxvalue!="undefined")&&(boxvalue!="")){
-				//window.setTimeout("$('#List_QueryDepartment').combobox('setValue',boxvalue)",1000);
-				//var DepartmentID = $('#List_QueryDepartment').combobox('getValue');
 				InitDoctor(); 
 				InitSchedule();
 			}else{
-				$.messager.alert("警告","参数获取错误");
+				$.messager.alert("提示","参数获取错误","warning");
 				return false;	
 			} 
 			
+		},filter:function(q, row){
+			q=q.toUpperCase();
+			return (row["AliasDesc"].toUpperCase().indexOf(q) >= 0)||(row["Desc"].toUpperCase().indexOf(q) >= 0);
 		}
 	});
 }
@@ -337,29 +432,32 @@ function InitDoctor(){
 	var DepartmentVal=$('#List_QueryDepartment').combobox('getValue');
 	var ExtUserID=$("#"+"Text_ExtUserID"+"").val();
 	if(ExtUserID==""){
-		//$.messager.alert("警告","请填写操作员工号.");
+		//$.messager.alert("提示","请填写操作员工号.");
 		//return false;
 	}
-	var HospitalId="";
-	var RequestStr="<Request><TradeCode>1013</TradeCode><ExtOrgCode></ExtOrgCode><ClientType></ClientType><HospitalId>"+HospitalId+"</HospitalId><ExtUserID>"+ExtUserID+"</ExtUserID><DepartmentCode>"+DepartmentVal+"</DepartmentCode></Request>"
+	var HospRowId=$HUI.combogrid('#_HospList').getValue();
+	var RequestStr="<Request><TradeCode>1013</TradeCode><ExtOrgCode></ExtOrgCode><ClientType></ClientType><ExtUserID>"+ExtUserID+"</ExtUserID><DepartmentCode>"+DepartmentVal+"</DepartmentCode></Request>"
 	$HUI.combobox("#"+"List_QueryDoctor"+"",{    
     	valueField:'RowId',   
     	textField:'Desc',
-    	url:$URL+"?ClassName=DHCDoc.Interface.Outside.Test.Service&QueryName=FindList&DoMethodName=QueryDoctor&RequestStr="+RequestStr+"&ResultSetType=array",
+    	url:$URL+"?ClassName=DHCDoc.Interface.Outside.Test.Service&QueryName=FindList&DoMethodName=QueryDoctor&RequestStr="+RequestStr+"&HospitalId="+HospRowId+"&ResultSetType=array",
     	onShowPanel:function(){
+	    	var HospRowId=$HUI.combogrid('#_HospList').getValue();
 	    	var DepartmentVal=$('#List_QueryDepartment').combobox('getValue');
 			var ExtUserID=$("#Text_ExtUserID"+"").val();
 			if(DepartmentVal==""){
-				$.messager.alert("警告","请选择挂号科室.");
+				$.messager.alert("提示","请选择挂号科室.","warning");
+				$("#List_QueryDoctor").combobox('hidePanel');
 				return false;	
 			}
-	    	var RequestStr="<Request><TradeCode>1013</TradeCode><ExtOrgCode></ExtOrgCode><ClientType></ClientType><HospitalId>"+HospitalId+"</HospitalId><ExtUserID>"+ExtUserID+"</ExtUserID><DepartmentCode>"+DepartmentVal+"</DepartmentCode></Request>"
+	    	var RequestStr="<Request><TradeCode>1013</TradeCode><ExtOrgCode></ExtOrgCode><ClientType></ClientType><ExtUserID>"+ExtUserID+"</ExtUserID><DepartmentCode>"+DepartmentVal+"</DepartmentCode></Request>"
 			$.cm({
 		    	ClassName:"DHCDoc.Interface.Outside.Test.Service",
 				MethodName:"DoInterfaceMethod",
 				'ClassType':"SelfReg",
 				'DoMethodName':"QueryDoctor",
-				'RequestStr':RequestStr	
+				'RequestStr':RequestStr,
+				'HospitalId':HospRowId
 		    },function testget(objScope){
 			    $("#"+"Text_Reponse"+"").val("");
 				if(objScope){
@@ -375,13 +473,18 @@ function InitDoctor(){
 		onSelect:function(){
 			var boxvalue=$('#List_QueryDepartment').combobox('getValue');
 			if((boxvalue!="undefined")&&(boxvalue!="")){
+				$("#List_QueryTimeRange").combobox('setValue','').combobox('setText','')
+				$HUI.combobox("#List_QueryTimeRange",{data:""})
 				//var DepartmentID = $('#List_QueryDepartment').combobox('getValue');
 				InitSchedule();
 			}else{
-				$.messager.alert("警告","参数获取错误");
+				$.messager.alert("提示","参数获取错误","warning");
 				return false;	
 			} 
 			
+		},filter:function(q, row){
+			q=q.toUpperCase();
+			return (row["AliasDesc"].toUpperCase().indexOf(q) >= 0)||(row["Desc"].toUpperCase().indexOf(q) >= 0);
 		}
 	});		
 }
@@ -392,7 +495,7 @@ function InitCombScheduleDate(){
 			var y = date.getFullYear();
 			var m = date.getMonth()+1;
 			var d = date.getDate();
-			return y+'-'+m+'-'+d;
+			return dtformat=="YMD"?(y+'-'+m+'-'+d):(d+'/'+m+'/'+y);
 		},
 		onSelect:function(){
 			$("#"+"Text_Reponse"+"").val("");
@@ -409,25 +512,31 @@ function InitSchedule(){
 	var ScheduleDate=$('#Comb_ScheduleDate').datebox('getValue');
 	var ExtUserID=$("#"+"Text_ExtUserID"+"").val();
 	var PatientID=$("#"+"Text_PatientID"+"").val();
+	var PatBillType=$('#List_GetPatBillType').combobox('getValue');
 	if(ExtUserID==""){
-		//$.messager.alert("警告","请填写操作员工号.");
+		//$.messager.alert("提示","请填写操作员工号.");
 		//return false;
 	}
-	var HospitalId=session['LOGON.HOSPID'];
-	var RequestStr="<Request><TradeCode>1004</TradeCode><ExtOrgCode></ExtOrgCode><ClientType>ATM</ClientType><HospitalId>"+HospitalId+"</HospitalId><ExtUserID>"+ExtUserID+"</ExtUserID><StartDate>"+ScheduleDate+"</StartDate><EndDate>"+ScheduleDate+"</EndDate><DepartmentCode>"+DepartmentCode+"</DepartmentCode><ServiceCode></ServiceCode><DoctorCode>"+DoctorCode+"</DoctorCode><RBASSessionCode></RBASSessionCode><PatientID>"+PatientID+"</PatientID></Request>"
+	var HospRowId=$HUI.combogrid('#_HospList').getValue();
+	var RequestStr="<Request><TradeCode>1004</TradeCode><ExtOrgCode></ExtOrgCode><ClientType>ATM</ClientType><ExtUserID>"+ExtUserID+"</ExtUserID><StartDate>"+ScheduleDate+"</StartDate><EndDate>"+ScheduleDate+"</EndDate><DepartmentCode>"+DepartmentCode+"</DepartmentCode><BillTypeID>"+PatBillType+"</BillTypeID><DoctorCode>"+DoctorCode+"</DoctorCode><RBASSessionCode></RBASSessionCode><PatientID>"+PatientID+"</PatientID></Request>"
 	var ObjScope=$.cm({
 		ClassName:"DHCDoc.Interface.Outside.Test.Service",
 		MethodName:"GetJsonStrByService",
 		'DoMethodName':"QueryAdmSchedule",
 		'RequestStr':RequestStr,
 		'HUIFlag':"1",
+		'HospitalId':HospRowId
 	},false)
 	//if(ObjScope=="")return;
 	var EditTypeArr=new Array();
 	for(var i=0;i<ObjScope.length;i++){
 		//aRtnObj.ServiceDate_" "_aRtnObj.DepartmentName_" "_aRtnObj.DoctorName_" "_aRtnObj.SessionName
 		var value=ObjScope[i].ScheduleItemCode;
-		var desc=ObjScope[i].ServiceDate+" "+ObjScope[i].DoctorName+" "+ObjScope[i].SessionName+" 价格:"+ObjScope[i].Fee;
+		if (ObjScope[i].ServiceName){
+			var desc=ObjScope[i].ServiceDate+" "+ObjScope[i].DoctorName+"("+ObjScope[i].ServiceName+")"+" "+ObjScope[i].SessionName+" 价格:"+ObjScope[i].Fee;
+		}else{
+			var desc=ObjScope[i].ServiceDate+" "+ObjScope[i].DoctorName+" "+ObjScope[i].SessionName+" 价格:"+ObjScope[i].Fee;
+		}
 		var onestr = {"value":value, "desc":desc};
 		EditTypeArr.push(onestr);	
 	}
@@ -441,22 +550,26 @@ function InitSchedule(){
 			var DoctorCode=$('#List_QueryDoctor').combobox('getValue');
 			var ScheduleDate=$('#Comb_ScheduleDate').combobox('getValue');
 			var ExtUserID=$("#Text_ExtUserID"+"").val();
+			var PatBillType=$('#List_GetPatBillType').combobox('getValue');
 			if(DepartmentCode==""){
 				$HUI.combobox("#"+"List_QueryAdmSchedule",{data:""})
-				$.messager.alert("警告","请选择挂号科室.");
+				$.messager.alert("提示","请选择挂号科室.","warning");
+				$("#List_QueryAdmSchedule").combobox('hidePanel');
 				return false;	
 			}
 			if(ScheduleDate==""){
-				//$.messager.alert("警告","请选择出诊日期.");
+				//$.messager.alert("提示","请选择出诊日期.");
 				//return false;	
 			}
-	    	var RequestStr="<Request><TradeCode>1004</TradeCode><ExtOrgCode>H1</ExtOrgCode><ClientType>ATM</ClientType><HospitalId>"+HospitalId+"</HospitalId><ExtUserID>"+ExtUserID+"</ExtUserID><StartDate>"+ScheduleDate+"</StartDate><EndDate>"+ScheduleDate+"</EndDate><DepartmentCode>"+DepartmentCode+"</DepartmentCode><ServiceCode></ServiceCode><DoctorCode>"+DoctorCode+"</DoctorCode><RBASSessionCode></RBASSessionCode><PatientID>"+PatientID+"</PatientID></Request>"
+			var HospRowId=$HUI.combogrid('#_HospList').getValue();
+	    	var RequestStr="<Request><TradeCode>1004</TradeCode><ExtOrgCode>H1</ExtOrgCode><ClientType>ATM</ClientType><ExtUserID>"+ExtUserID+"</ExtUserID><StartDate>"+ScheduleDate+"</StartDate><EndDate>"+ScheduleDate+"</EndDate><DepartmentCode>"+DepartmentCode+"</DepartmentCode><BillTypeID>"+PatBillType+"</BillTypeID><DoctorCode>"+DoctorCode+"</DoctorCode><RBASSessionCode></RBASSessionCode><PatientID>"+PatientID+"</PatientID></Request>"
 			$.cm({
 		    	ClassName:"DHCDoc.Interface.Outside.Test.Service",
 				MethodName:"DoInterfaceMethod",
 				'ClassType':"SelfReg",
 				'DoMethodName':"QueryAdmSchedule",
-				'RequestStr':RequestStr	
+				'RequestStr':RequestStr,
+				'HospitalId':HospRowId	
 		    },function testget(objScope){
 			    $("#"+"Text_Reponse"+"").val("");
 				if(objScope){
@@ -474,143 +587,93 @@ function InitSchedule(){
 			var boxtext=$('#List_QueryAdmSchedule').combobox('getText');
 			if((boxvalue!="undefined")&&(boxvalue!="")){
 				var RegFee=boxtext.split(":")[1];
-				var RegFee=parseFloat(RegFee)*100;
+				//var RegFee=parseFloat(RegFee)*100;
 				$('#Text_ScheduleItemCode').val(boxvalue);
 				$('#Text_RegFee').val(RegFee);
-				//var DepartmentID = $('#List_QueryDepartment').combobox('getValue');
+				InitScheduleTimeRange();
 			}else{
-				$.messager.alert("警告","参数获取错误");
+				$.messager.alert("提示","参数获取错误","warning");
 				return false;	
 			} 
 			
 		}
 	})
-	return
-	//神奇的下边两种方式，返回值死活获取不到。
-	/*$.cm({
+}
+
+function InitScheduleTimeRange(){
+	$HUI.combobox("#List_QueryTimeRange").setValue("");
+	var ScheduleItemCode=$('#List_QueryAdmSchedule').combobox('getValue');
+	var ExtUserID=$("#"+"Text_ExtUserID"+"").val();
+	var PatientID=$("#"+"Text_PatientID"+"").val();
+	if(ExtUserID==""){
+		//$.messager.alert("提示","请填写操作员工号.");
+		//return false;
+	}
+	var HospRowId=$HUI.combogrid('#_HospList').getValue();
+	var RequestStr="<Request><TradeCode>10041</TradeCode><ExtOrgCode></ExtOrgCode><ClientType>ATM</ClientType><ExtUserID>"+ExtUserID+"</ExtUserID><ScheduleItemCode>"+ScheduleItemCode+"</ScheduleItemCode><ServiceCode></ServiceCode><RBASSessionCode></RBASSessionCode></Request>"
+	var ObjScope=$.cm({
 		ClassName:"DHCDoc.Interface.Outside.Test.Service",
-		QueryName:"FindList",
-		'DoMethodName':"QueryAdmSchedule",
+		MethodName:"GetJsonStrByService",
+		'DoMethodName':"QueryScheduleTimeInfo",
 		'RequestStr':RequestStr,
-		dataType:"json",
-		page:1,  
-		rows:999,
-	},function(jsonData){
-		alert(jsonData["rows"])
-		$HUI.combobox("#"+"List_QueryAdmSchedule",{ 
-	    	valueField:'RowId',   
-	    	textField:'Desc',
-	    	data: jsonData["rows"],
-	    	onShowPanel:function(){
-		    	var DepartmentCode=$('#List_QueryDepartment').combobox('getValue');
-				var DoctorCode=$('#List_QueryDoctor').combobox('getValue');
-				var ScheduleDate=$('#Comb_ScheduleDate').combobox('getValue');
-				var ExtUserID=$("#Text_ExtUserID"+"").val();
-				if(DepartmentCode==""){
-					$.messager.alert("警告","请选择挂号科室.");
-					return false;	
-				}
-				if(ScheduleDate==""){
-					//$.messager.alert("警告","请选择出诊日期.");
-					//return false;	
-				}
-		    	var RequestStr="<Request><TradeCode>1004</TradeCode><ExtOrgCode>H1</ExtOrgCode><ClientType>ATM</ClientType><HospitalId>"+HospitalId+"</HospitalId><ExtUserID>"+ExtUserID+"</ExtUserID><StartDate>"+ScheduleDate+"</StartDate><EndDate>"+ScheduleDate+"</EndDate><DepartmentCode>"+DepartmentCode+"</DepartmentCode><ServiceCode></ServiceCode><DoctorCode>"+DoctorCode+"</DoctorCode><RBASSessionCode></RBASSessionCode></Request>"
-				$.cm({
-			    	ClassName:"DHCDoc.Interface.Outside.Test.Service",
-					MethodName:"DoInterfaceMethod",
-					'ClassType':"SelfReg",
-					'DoMethodName':"QueryAdmSchedule",
-					'RequestStr':RequestStr	
-			    },function testget(objScope){
-				    $("#"+"Text_Reponse"+"").val("");
-					if(objScope){
-						//window.setTimeout("InitSchedule()",1000); 
-						$("#"+"Text_Reponse"+"").val(objScope.result);
-						//$HUI.combobox('#List_QueryAdmSchedule').clear();
-					}
-			    })
-			},
-			onLoadSuccess:function(){
-				$HUI.combobox('#List_QueryAdmSchedule').setValue("");	
-			},
-			onSelect:function(){
-				var boxvalue=$('#List_QueryAdmSchedule').combobox('getValue');
-				var boxtext=$('#List_QueryAdmSchedule').combobox('getText');
-				if((boxvalue!="undefined")&&(boxvalue!="")){
-					var RegFee=boxtext.split(":")[1];
-					var RegFee=parseFloat(RegFee)*100;
-					$('#Text_ScheduleItemCode').val(boxvalue);
-					$('#Text_RegFee').val(RegFee);
-					//var DepartmentID = $('#List_QueryDepartment').combobox('getValue');
-				}else{
-					$.messager.alert("警告","参数获取错误");
-					return false;	
-				} 
-				
-			}
-		});		
-	})*/
-	/*
-	$HUI.combobox("#"+"List_QueryAdmSchedule",{ 
-    	valueField:'RowId',   
-    	textField:'Desc',
-    	url:$URL+"?ClassName=DHCDoc.Interface.Outside.Test.Service&QueryName=FindList&DoMethodName=QueryAdmSchedule&RequestStr="+RequestStr+"&ResultSetType=array",
-    	onShowPanel:function(){
-	    	var DepartmentCode=$('#List_QueryDepartment').combobox('getValue');
-			var DoctorCode=$('#List_QueryDoctor').combobox('getValue');
-			var ScheduleDate=$('#Comb_ScheduleDate').combobox('getValue');
+		'HUIFlag':"1",
+		'HospitalId':HospRowId
+	},false)
+	//if(ObjScope=="")return;
+	var EditTypeArr=new Array();
+	for(var i=0;i<ObjScope.length;i++){
+		var value=ObjScope[i].StartTime+"-"+ObjScope[i].EndTime;
+		var desc=ObjScope[i].StartTime+"-"+ObjScope[i].EndTime;
+		var onestr = {"value":value, "desc":desc};
+		EditTypeArr.push(onestr);	
+	}
+	EditTypeArr.splice(0,0,{"value":"", "desc":"-"})
+	$HUI.combobox("#List_QueryTimeRange",{ 
+		valueField:'value',   
+    	textField:'desc',
+    	data: EditTypeArr,
+		editable:false,
+		onShowPanel:function(){
+			var HospRowId=$HUI.combogrid('#_HospList').getValue();
+	    	var ScheduleItemCode=$('#List_QueryAdmSchedule').combobox('getValue');
 			var ExtUserID=$("#Text_ExtUserID"+"").val();
-			if(DepartmentCode==""){
-				$.messager.alert("警告","请选择挂号科室.");
+			if(ScheduleItemCode==""){
+				$HUI.combobox("#List_QueryTimeRange",{data:""})
+				$.messager.alert("提示","请选择一个排班.","warning");
+				$("#List_QueryTimeRange").combobox('hidePanel');
 				return false;	
 			}
-			if(ScheduleDate==""){
-				//$.messager.alert("警告","请选择出诊日期.");
-				//return false;	
-			}
-	    	var RequestStr="<Request><TradeCode>1004</TradeCode><ExtOrgCode>H1</ExtOrgCode><ClientType>ATM</ClientType><HospitalId>"+HospitalId+"</HospitalId><ExtUserID>"+ExtUserID+"</ExtUserID><StartDate>"+ScheduleDate+"</StartDate><EndDate>"+ScheduleDate+"</EndDate><DepartmentCode>"+DepartmentCode+"</DepartmentCode><ServiceCode></ServiceCode><DoctorCode>"+DoctorCode+"</DoctorCode><RBASSessionCode></RBASSessionCode></Request>"
+			var HospRowId=$HUI.combogrid('#_HospList').getValue();
+	    	var RequestStr="<Request><TradeCode>10041</TradeCode><ExtOrgCode></ExtOrgCode><ClientType>ATM</ClientType><ExtUserID>"+ExtUserID+"</ExtUserID><ScheduleItemCode>"+ScheduleItemCode+"</ScheduleItemCode><ServiceCode></ServiceCode><RBASSessionCode></RBASSessionCode></Request>"
 			$.cm({
 		    	ClassName:"DHCDoc.Interface.Outside.Test.Service",
 				MethodName:"DoInterfaceMethod",
 				'ClassType':"SelfReg",
-				'DoMethodName':"QueryAdmSchedule",
-				'RequestStr':RequestStr	
+				'DoMethodName':"QueryScheduleTimeInfo",
+				'RequestStr':RequestStr,
+				'HospitalId':HospRowId	
 		    },function testget(objScope){
 			    $("#"+"Text_Reponse"+"").val("");
 				if(objScope){
-					//window.setTimeout("InitSchedule()",1000); 
 					$("#"+"Text_Reponse"+"").val(objScope.result);
-					//$HUI.combobox('#List_QueryAdmSchedule').clear();
 				}
 		    })
 		},
 		onLoadSuccess:function(){
-			$HUI.combobox('#List_QueryAdmSchedule').setValue("");	
+			$HUI.combobox('#List_QueryTimeRange').setValue("");	
 		},
 		onSelect:function(){
-			var boxvalue=$('#List_QueryAdmSchedule').combobox('getValue');
-			var boxtext=$('#List_QueryAdmSchedule').combobox('getText');
+			var boxvalue=$(this).combobox('getValue');
+			var boxtext=$(this).combobox('getText');
 			if((boxvalue!="undefined")&&(boxvalue!="")){
-				var RegFee=boxtext.split(":")[1];
-				var RegFee=parseFloat(RegFee)*100;
-				$('#Text_ScheduleItemCode').val(boxvalue);
-				$('#Text_RegFee').val(RegFee);
-				//var DepartmentID = $('#List_QueryDepartment').combobox('getValue');
+				
 			}else{
-				$.messager.alert("警告","参数获取错误");
-				return false;	
+				//$.messager.alert("提示","参数获取错误","warning");
+				//return false;	
 			} 
 			
 		}
-	});
-	*/	
-}
-function ButtonClickBak(param){
-	var request=$("#Text_"+param+"_Request").val();
-	$.dhc.util.runServerMethod("DHCDoc.Interface.Outside.Test.Service","DoInterfaceMethodBak","false",function(objScope,value,extraArg){
-		$("#"+"Text_Reponse"+"").val(objScope.result);
-	},"","",param,request);
-	
+	})
 }
 
 function InitCardBtn(param1,param2){
@@ -634,35 +697,42 @@ function InitBtnClick(param1,param2){
 }
 
 function ButtonClick(param1,param2){
+	var HospRowId=$HUI.combogrid('#_HospList').getValue();
 	var request="";
 	var SelTab = $("#main_container").tabs('getSelected');    
 	var TabIndex = $("#main_container").tabs('getTabIndex',SelTab);
 	var TabValue="";
-	if(TabIndex==0)TabValue="CardManager"
-	else if(TabIndex==1)TabValue="SelfReg"
-	else if(TabIndex==2)TabValue="Other"
+	if(TabIndex==0)TabValue="CardManager";
+	else if(TabIndex==1)TabValue="SelfReg";
+	else if(TabIndex==2)TabValue="Other";
+	else if(TabIndex==4)TabValue="OPAlloc";
+	var PatBillType=$('#List_GetPatBillType').combobox('getValue');
 	if(TabValue=="SelfReg"){
 		var ExtUserID=$("#Text_ExtUserID"+"").val();
 		if(ExtUserID==""){
-			$.messager.alert("警告","请填写操作员工号.");
+			$.messager.alert("提示","请填写操作员工号.","warning");
 			return false;	
 		}
 		if(param2=="LockOrder"){
 			var PatientID=$("#Text_PatientID"+"").val();
 			if(PatientID==""){
-				$.messager.alert("警告","请填写患者登记号,或根据卡号确定登记号.");
-				return false;	
+				//$.messager.alert("提示","请填写患者登记号,或根据卡号确定登记号.","warning");
+				//return false;	
 			}
 			
 			var AdmSchedule=$('#List_QueryAdmSchedule').combobox('getValue');
 			if(AdmSchedule==""){
-				$.messager.alert("警告","请选择出诊记录.");
-				return false;	
+				//$.messager.alert("提示","请选择出诊记录.","warning");
+				//return false;	
 			}
-			var TimeStartTime=$("#Comb_TimeStartTime").val()  
-			var TimeEndTime=$("#Comb_TimeEndTime").val() 
+			var ScheduleTimeRange=$('#List_QueryTimeRange').combobox('getValue');
+			var TimeStartTime="",TimeEndTime="";
+			if(ScheduleTimeRange!=""){
+				var TimeStartTime=ScheduleTimeRange.split("-")[0];
+				var TimeEndTime=ScheduleTimeRange.split("-")[1];
+			}
 			//request="<Request><TradeCode>10015</TradeCode><CardNo></CardNo><CardTypeCode></CardTypeCode><PatientID>"+PatientID+"</PatientID><ScheduleItemCode>"+AdmSchedule+"</ScheduleItemCode><ExtUserID>"+ExtUserID+"</ExtUserID><BeginTime></BeginTime><EndTime></EndTime></Request>"
-			request="<Request><TradeCode>10015</TradeCode><CardNo></CardNo><CardTypeCode></CardTypeCode><PatientID>"+PatientID+"</PatientID><ScheduleItemCode>"+AdmSchedule+"</ScheduleItemCode><ExtUserID>"+ExtUserID+"</ExtUserID><BeginTime>"+TimeStartTime+"</BeginTime><EndTime>"+TimeEndTime+"</EndTime></Request>"
+			request="<Request><TradeCode>10015</TradeCode><CardNo></CardNo><CardTypeCode></CardTypeCode><PatientID>"+PatientID+"</PatientID><ScheduleItemCode>"+AdmSchedule+"</ScheduleItemCode><ExtUserID>"+ExtUserID+"</ExtUserID><BeginTime>"+TimeStartTime+"</BeginTime><EndTime>"+TimeEndTime+"</EndTime><BillTypeID>"+PatBillType+"</BillTypeID></Request>"
 		}
 		
 		else if(param2=="UnLockOrder"){
@@ -671,28 +741,39 @@ function ButtonClick(param1,param2){
 			var ScheduleItemCode="";
 			var LockQueueNo="";
 			if(TransactionId==""){
-				$.messager.alert("警告","请填写锁定订单号.");
+				$.messager.alert("提示","请填写锁定订单号.","warning");
 				return false;	
 				var PatientID=$("#Text_PatientID"+"").val();
 				if(PatientID==""){
-					$.messager.alert("警告","请填写患者登记号,或根据卡号确定登记号.");
+					$.messager.alert("提示","请填写患者登记号,或根据卡号确定登记号.","warning");
 					return false;	
 				}
 				
 				var ScheduleItemCode=$('#Text_ScheduleItemCode').val();
 				if(ScheduleItemCode==""){
-					$.messager.alert("警告","请填写锁定出诊记录.");
+					$.messager.alert("提示","请填写锁定出诊记录.","warning");
 					return false;	
 				}
 				
 				var LockQueueNo=$('#Text_LockQueueNo').val();
 				if(LockQueueNo==""){
-					$.messager.alert("警告","请填写锁定序号.");
+					$.messager.alert("提示","请填写锁定序号.","warning");
 					return false;	
 				}
 			}
 			
 			request="<Request><TradeCode>10016</TradeCode><TransactionId>"+TransactionId+"</TransactionId><ExtUserID>"+ExtUserID+"</ExtUserID></Request>"
+		}else if(param2=="QueryRegStatus"){
+			var TransactionId=$("#Text_TransactionId"+"").val();
+			var PatientID="";
+			var ScheduleItemCode="";
+			var LockQueueNo="";
+			if(TransactionId==""){
+				$.messager.alert("提示","请填写锁定订单号.","warning");
+				return false;	
+			}
+			
+			request="<Request><TradeCode>1108</TradeCode><TransactionId>"+TransactionId+"</TransactionId><ExtUserID>"+ExtUserID+"</ExtUserID></Request>"
 		}
 		else if(param2=="OPRegister"){
 			var UserID=tkMakeServerCall("DHCExternalService.RegInterface.GetRelate","GetUser",ExtUserID)
@@ -701,7 +782,7 @@ function ButtonClick(param1,param2){
 			var TransactionId=$("#Text_TransactionId"+"").val();
 			var RegFee=$("#Text_RegFee"+"").val();
 			if(RegFee==""){
-				$.messager.alert("警告","费用不能为空.");
+				$.messager.alert("提示","费用不能为空.","warning");
 				return false;
 			}
 			var PatientID="";
@@ -710,21 +791,21 @@ function ButtonClick(param1,param2){
 			var LockQueueNo=$("#Text_LockQueueNo"+"").val();
 			if(NotUseLockRegFlag!="1"){
 				if(TransactionId==""){
-					$.messager.alert("警告","请填写锁定订单号.");
+					$.messager.alert("提示","请填写锁定订单号.","warning");
 					return false;
 				}
-				request="<Request><TradeCode>1101</TradeCode><TransactionId>"+TransactionId+"</TransactionId><ExtOrgCode></ExtOrgCode><ClientType></ClientType><HospitalId></HospitalId><TerminalID></TerminalID><ScheduleItemCode></ScheduleItemCode><ExtUserID>"+ExtUserID+"</ExtUserID><PatientCard></PatientCard><CardType></CardType><PatientID>"+PatientID+"</PatientID><PayBankCode></PayBankCode><PayCardNo></PayCardNo><PayModeCode>CASH</PayModeCode><PayFee>"+RegFee+"</PayFee><QueueNo></QueueNo></Request>"
+				request="<Request><TradeCode>1101</TradeCode><TransactionId>"+TransactionId+"</TransactionId><ExtOrgCode>"+PageLogicObj.ExtOrgCode+"</ExtOrgCode><ClientType></ClientType><HospitalId></HospitalId><TerminalID></TerminalID><ScheduleItemCode></ScheduleItemCode><ExtUserID>"+ExtUserID+"</ExtUserID><PatientCard></PatientCard><CardType></CardType><PatientID>"+PatientID+"</PatientID><PayBankCode></PayBankCode><PayCardNo></PayCardNo><PayModeCode>CASH</PayModeCode><PayFee>"+RegFee+"</PayFee><QueueNo></QueueNo><BillTypeID>"+PatBillType+"</BillTypeID></Request>"
 			}else{
 				if(PatientID==""){
-					$.messager.alert("警告","请填写患者登记号,或根据卡号确定登记号.");
+					$.messager.alert("提示","请填写患者登记号,或根据卡号确定登记号.","warning");
 					return false;	
 				}
 				
 				if(ScheduleItemCode==""){
-					$.messager.alert("警告","请选择出诊记录.");
+					$.messager.alert("提示","请选择出诊记录.","warning");
 					return false;	
 				}
-				request="<Request><TradeCode>1101</TradeCode><TransactionId></TransactionId><ExtOrgCode></ExtOrgCode><ClientType></ClientType><HospitalId></HospitalId><TerminalID></TerminalID><ScheduleItemCode>"+ScheduleItemCode+"</ScheduleItemCode><ExtUserID>"+ExtUserID+"</ExtUserID><PatientCard></PatientCard><CardType>02</CardType><PatientID>"+PatientID+"</PatientID><PayBankCode></PayBankCode><PayCardNo></PayCardNo><PayModeCode>CASH</PayModeCode><PayFee>"+RegFee+"</PayFee><QueueNo></QueueNo></Request>"
+				request="<Request><TradeCode>1101</TradeCode><TransactionId></TransactionId><ExtOrgCode></ExtOrgCode><ClientType></ClientType><HospitalId></HospitalId><TerminalID></TerminalID><ScheduleItemCode>"+ScheduleItemCode+"</ScheduleItemCode><ExtUserID>"+ExtUserID+"</ExtUserID><PatientCard></PatientCard><CardType>02</CardType><PatientID>"+PatientID+"</PatientID><PayBankCode></PayBankCode><PayCardNo></PayCardNo><PayModeCode>CASH</PayModeCode><PayFee>"+RegFee+"</PayFee><QueueNo></QueueNo><BillTypeID>"+PatBillType+"</BillTypeID></Request>"
 
 			}
 				
@@ -739,18 +820,26 @@ function ButtonClick(param1,param2){
 			var LockQueueNo=$("#Text_LockQueueNo"+"").val();
 			
 			if(CardNo==""){
-				$.messager.alert("警告","请填写患者卡号.");
-				return false;	
+				//$.messager.alert("提示","请填写患者卡号.","warning");
+				//return false;	
 			}
-			//var CardNo=tkMakeServerCall("DHCDoc.Util.Base","GetCardNoByPAPER","ALL",PatientID)
-			//alert(CardNo)
-			//return false
 			if(ScheduleItemCode==""){
-				$.messager.alert("警告","请选择出诊记录.");
-				return false;	
+				//$.messager.alert("提示","请选择出诊记录.","warning");
+				//return false;	
 			}
-			request="<Request><TradeCode>1000</TradeCode><ExtOrgCode></ExtOrgCode><ClientType></ClientType><HospitalId></HospitalId><ExtUserID>"+ExtUserID+"</ExtUserID><TransactionId></TransactionId><ScheduleItemCode>"+ScheduleItemCode+"</ScheduleItemCode><CardNo>"+CardNo+"</CardNo><CardType>"+CardTypeCode+"</CardType><CredTypeCode></CredTypeCode><IDCardNo></IDCardNo><TelePhoneNo></TelePhoneNo><MobileNo></MobileNo><PatientName></PatientName><PayFlag></PayFlag><PayModeCode></PayModeCode><PayBankCode></PayBankCode><PayCardNo></PayCardNo><PayFee></PayFee><PayInsuFee></PayInsuFee><PayInsuFeeStr></PayInsuFeeStr><PayTradeNo></PayTradeNo><LockQueueNo></LockQueueNo><Gender></Gender><Address></Address><HISApptID></HISApptID><SeqCode></SeqCode><AdmitRange></AdmitRange></Request>"
-				
+			request="<Request><TradeCode>1000</TradeCode><ExtOrgCode>"+PageLogicObj.ExtOrgCode+"</ExtOrgCode><ClientType></ClientType><HospitalId></HospitalId><ExtUserID>"+ExtUserID+"</ExtUserID><TransactionId></TransactionId><ScheduleItemCode>"+ScheduleItemCode+"</ScheduleItemCode><CardNo>"+CardNo+"</CardNo><CardType>"+CardTypeCode+"</CardType><CredTypeCode></CredTypeCode><IDCardNo></IDCardNo><TelePhoneNo></TelePhoneNo><MobileNo></MobileNo><PatientName></PatientName><PayFlag></PayFlag><PayModeCode></PayModeCode><PayBankCode></PayBankCode><PayCardNo></PayCardNo><PayFee></PayFee><PayInsuFee></PayInsuFee><PayInsuFeeStr></PayInsuFeeStr><PayTradeNo></PayTradeNo><LockQueueNo></LockQueueNo><Gender></Gender><Address></Address><HISApptID></HISApptID><SeqCode></SeqCode><AdmitRange></AdmitRange></Request>"
+		}else if(param2=="GetInsuRegPara"){
+			var PatientID="";
+			var PatientID=$("#Text_PatientID"+"").val();
+			var CardNo=$("#Text_CardNo"+"").val();
+			var CardTypeCode=$("#List_CardType").combobox('getValue');
+			var CardTypeCode=tkMakeServerCall("DHCDoc.Interface.Outside.Test.Service","GetCardTypeCode",CardTypeCode)
+			var ScheduleItemCode=$("#Text_ScheduleItemCode"+"").val();
+			if(ScheduleItemCode==""){
+				//$.messager.alert("提示","请选择出诊记录.","warning");
+				//return false;	
+			}
+			request="<Request><ExtUserID>"+ExtUserID+"</ExtUserID><CardNo>"+CardNo+"</CardNo><CardType>"+CardTypeCode+"</CardType><ScheduleItemCode>"+ScheduleItemCode+"</ScheduleItemCode><PatientID>"+PatientID+"</PatientID><PayModeCode>CASH</PayModeCode></Request>"
 		}else{
 			request=$("#Text_"+param2+"_Request").val();	
 		}
@@ -758,42 +847,67 @@ function ButtonClick(param1,param2){
 		if((param2=="OPRegReturn")||(param2=="OPAppArrive")||(param2=="CancelOrder")){
 			var ExtUserID=$("#Text_ExtUserID"+"_"+TabValue).val();
 			if(ExtUserID==""){
-				$.messager.alert("警告","请填写操作员工号.");
+				$.messager.alert("提示","请填写操作员工号.","warning");
 				return false;	
 			}
 
 			if(param2=="OPRegReturn"){
 				var boxvalue=$("#List_"+"QueryAdmOPReg").combobox('getValue');
 				if(boxvalue==""){
-					$.messager.alert("警告","请选择待退的挂号记录.");
+					$.messager.alert("提示","请选择待退的挂号记录.","warning");
 					return false;		
 				}
 				request="<Request><TradeCode>1003</TradeCode><ExtOrgCode></ExtOrgCode><ClientType></ClientType><HospitalId></HospitalId><ExtUserID>"+ExtUserID+"</ExtUserID><AdmNo>"+boxvalue+"</AdmNo><TransactionId></TransactionId><RefundType></RefundType></Request>";
 			}else if(param2=="OPAppArrive"){
 				var boxvalue=$("#List_"+"QueryOPAppArriveList").combobox('getValue');
 				if(boxvalue==""){
-					$.messager.alert("警告","请选择待操作的预约记录.");
+					$.messager.alert("提示","请选择待操作的预约记录.","warning");
 					return false;		
 				}
-				var PatientID=$("#Text_PatientID"+"_"+TabValue).val();
+				/*var PatientID=$("#Text_PatientID"+"_"+TabValue).val();
 				if(PatientID==""){
-					$.messager.alert("警告","请填写患者登记号,或根据卡号确定登记号.");
+					$.messager.alert("提示","请填写患者登记号,或根据卡号确定登记号.","warning");
 					return false;	
-				}
+				}*/
 				//request="<Request><TradeCode>2001</TradeCode><HospitalId></HospitalId><TransactionId></TransactionId><PatientID>"+PatientID+"</PatientID><OrderCode>"+boxvalue+"</OrderCode><ExtUserID>"+ExtUserID+"</ExtUserID><PayModeCode>CASH</PayModeCode></Request>";
 				//将取号接口合并到挂号接口
 				var boxtext=$("#List_"+"QueryOPAppArriveList").combobox('getText');
 				var RegFee=boxtext.split("价格:")[1].split("元")[0];
+				var PatientID=boxtext.split(" ")[1]
 				param2="OPRegister"
-				request="<Request><TradeCode>1101</TradeCode><TransactionId></TransactionId><ExtOrgCode></ExtOrgCode><ClientType></ClientType><HospitalId></HospitalId><TerminalID></TerminalID><ScheduleItemCode>"+""+"</ScheduleItemCode><ExtUserID>"+ExtUserID+"</ExtUserID><PatientCard></PatientCard><CardType>02</CardType><PatientID>"+PatientID+"</PatientID><AppOrderCode>"+boxvalue+"</AppOrderCode><PayCardNo></PayCardNo><PayModeCode>CASH</PayModeCode><PayFee>"+RegFee+"</PayFee><QueueNo></QueueNo></Request>"
+				request="<Request><TradeCode>1101</TradeCode><TransactionId></TransactionId><ExtOrgCode></ExtOrgCode><ClientType></ClientType><HospitalId></HospitalId><TerminalID></TerminalID><ScheduleItemCode>"+""+"</ScheduleItemCode><ExtUserID>"+ExtUserID+"</ExtUserID><PatientCard></PatientCard><CardType></CardType><PatientID>"+PatientID+"</PatientID><AppOrderCode>"+boxvalue+"</AppOrderCode><PayCardNo></PayCardNo><PayModeCode>CASH</PayModeCode><PayFee>"+RegFee+"</PayFee><QueueNo></QueueNo></Request>"
 			}else if(param2=="CancelOrder"){
 				var boxvalue=$("#List_"+"QueryOPAppArriveList").combobox('getValue');
 				if(boxvalue==""){
-					$.messager.alert("警告","请选择待操作的预约记录.");
+					$.messager.alert("提示","请选择待操作的预约记录.","warning");
 					return false;		
 				}
 				request="<Request><TradeCode>2006</TradeCode><ExtOrgCode></ExtOrgCode><ClientType></ClientType><HospitalId></HospitalId><ExtUserID>"+ExtUserID+"</ExtUserID><TransactionId></TransactionId><OrderCode>"+boxvalue+"</OrderCode></Request>";
+			}
+		}else{
+			request=$("#Text_"+param2+"_Request").val();	
+		}
+	}else if(TabValue=="OPAlloc"){
+		var ExtUserID=$("#Text_ExtUserID"+"_"+TabValue).val();
+		if((param2=="OPAllocAutoReport")){			
+			if(ExtUserID==""){
+				$.messager.alert("提示","请填写操作员工号.","warning");
+				return false;	
+			}
+
+			if(param2=="OPAllocAutoReport"){
+				var PatientID="",CardNo="",CardTypeCode="";
+				/*var PatientID=$("#Text_PatientID"+"_"+TabValue).val();
+				var CardNo=$("#Text_CardNo"+"_"+TabValue).val();
+				var CardTypeCode=$("#List_CardType"+"_"+TabValue).combobox('getValue');
+				var CardTypeCode=tkMakeServerCall("DHCDoc.Interface.Outside.Test.Service","GetCardTypeCode",CardTypeCode)*/
 			
+				var boxvalue=$("#List_"+"GetOPAllocReport").combobox('getValue');
+				if(boxvalue==""){
+					$.messager.alert("提示","请选择需报到的就诊记录.","warning");
+					return false;		
+				}
+				request="<Request><TradeCode>1301</TradeCode><ExtOrgCode></ExtOrgCode><ClientType></ClientType><HospitalId></HospitalId><ExtUserID>"+ExtUserID+"</ExtUserID><AdmQueID>"+boxvalue+"</AdmQueID><TransactionId></TransactionId><PatientCard>"+CardNo+"</PatientCard><CardType>"+CardTypeCode+"</CardType><PatientID>"+PatientID+"</PatientID></Request>";
 			}
 		}else{
 			request=$("#Text_"+param2+"_Request").val();	
@@ -806,7 +920,8 @@ function ButtonClick(param1,param2){
 		MethodName:	"DoInterfaceMethod",
 		'ClassType':TabValue,
 		'DoMethodName':param2,
-		'RequestStr':request
+		'RequestStr':request,
+		'HospitalId':HospRowId
 	},function testget(objScope){
 		$("#"+"Text_Reponse"+"").val("");
 		if(objScope){
@@ -816,7 +931,7 @@ function ButtonClick(param1,param2){
 				SetNodeValue(objScope.result,param2,"RegFee");
 				SetNodeValue(objScope.result,param2,"ScheduleItemCode");
 				SetNodeValue(objScope.result,param2,"LockQueueNo");
-			}else if((param2=="QueryAdmOPReg")||(param2=="QueryOPAppArriveList")){
+			}else if((param2=="QueryAdmOPReg")||(param2=="QueryOPAppArriveList")||(param2=="GetOPAllocReport")){
 				InitOtherList(param2,request);
 			}	
 		}
@@ -871,10 +986,21 @@ function InitOtherList(paramval,request){
 			if((boxvalue!="undefined")&&(boxvalue!="")){
 				
 			}else{
-				$.messager.alert("警告","参数获取错误");
+				$.messager.alert("提示","参数获取错误","warning");
 				return false;	
 			} 
 			
 		}
 	});	
+}
+
+function GetTabValue(){
+	var SelTab = $("#main_container").tabs('getSelected');    
+	var TabIndex = $("#main_container").tabs('getTabIndex',SelTab);
+	var TabValue="";
+	if(TabIndex==0)TabValue=""
+	else if(TabIndex==1)TabValue=""
+	else if(TabIndex==2)TabValue="_Other"
+	else if(TabIndex==4)TabValue="_OPAlloc"
+	return TabValue;
 }

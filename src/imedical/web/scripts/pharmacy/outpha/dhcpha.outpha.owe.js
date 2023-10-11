@@ -65,7 +65,7 @@ $(function(){
 	$("#btn-clear").on("click",ClearConditions);
 	$("#btn-fy").on("click",function(){
 		if(DHCPHA_CONSTANT.DEFAULT.FYFLAG!="Y"){
-		dhcphaMsgBox.alert("用户没有发药权限，发药失败！");	
+		dhcphaMsgBox.alert($g("用户没有发药权限，发药失败！"));	
 		return ;
 		}
 		ExecuteFY();
@@ -81,26 +81,26 @@ window.onload=function(){
 //初始化欠药table
 function InitGridOwe(){
 	var columns=[
-		{header:'选择',index:'TSelect',name:'TSelect',width:70,hidden:true},	
-	    {header:'姓名',index:'TPatName',name:'TPatName',width:100},
-	    {header:'登记号',index:'TPmiNo',name:'TPmiNo',width:100},
-	    {header:'收费日期',index:'TPrtDate',name:'TPrtDate',width:100},
-	    {header:'收据号',index:'TPrtInv',name:'TPrtInv',width:90,hidden:true},
-	    {header:'处方',index:'TPrescNo',name:'TPrescNo',width:120},
-	    {header:'金额',index:'TPrescMoney',name:'TPrescMoney',width:70,align:'right'},
-	    {header:'性别',index:'TPerSex',name:'TPerSex',width:40},
-	    {header:'年龄',index:'TPerAge',name:'TPerAge',width:40},
-		{header:'科室',index:'TPerLoc',name:'TPerLoc',width:100},		
-	    {header:'费别',index:'TPrescType',name:'TPrescType',width:70},
-	    {header:'电话',index:'TCallCode',name:'TCallCode',width:100},
-	    {header:'欠药时间',index:'TOweDate',name:'TOweDate',width:140},
-	    {header:'欠药人',index:'TOweUser',name:'TOweUser',width:100},
-		{header:'欠药状态',index:'TOweStatusdesc',name:'TOweStatusdesc',width:70},	
-	    {header:'退药日期',index:'TOweretdate',name:'TOweretdate',width:100},
-	    {header:'退药人',index:'TOweretuser',name:'TOweretuser',width:70},
-	   	{header:'诊断',index:'TMR',name:'TMR',width:250,align:'left'},
-	    {header:'病人密级',index:'TEncryptLevel',name:'TEncryptLevel',width:100},		
-		{header:'病人级别',index:'TPatLevel',name:'TPatLevel',width:100},
+		{header:$g("选择"),index:'TSelect',name:'TSelect',width:70,hidden:true},	
+	    {header:$g("姓名"),index:'TPatName',name:'TPatName',width:100},
+	    {header:$g("登记号"),index:'TPmiNo',name:'TPmiNo',width:100},
+	    {header:$g("收费日期"),index:'TPrtDate',name:'TPrtDate',width:100},
+	    {header:$g("收据号"),index:'TPrtInv',name:'TPrtInv',width:90,hidden:true},
+	    {header:$g("处方"),index:'TPrescNo',name:'TPrescNo',width:120},
+	    {header:$g("金额"),index:'TPrescMoney',name:'TPrescMoney',width:70,align:'right'},
+	    {header:$g("性别"),index:'TPerSex',name:'TPerSex',width:40},
+	    {header:$g("年龄"),index:'TPerAge',name:'TPerAge',width:40},
+		{header:$g("科室"),index:'TPerLoc',name:'TPerLoc',width:100},		
+	    {header:$g("费别"),index:'TPrescType',name:'TPrescType',width:70},
+	    {header:$g("电话"),index:'TCallCode',name:'TCallCode',width:100},
+	    {header:$g("欠药时间"),index:'TOweDate',name:'TOweDate',width:140},
+	    {header:$g("欠药人"),index:'TOweUser',name:'TOweUser',width:100},
+		{header:$g("欠药状态"),index:'TOweStatusdesc',name:'TOweStatusdesc',width:70},	
+	    {header:$g("退药日期"),index:'TOweretdate',name:'TOweretdate',width:100},
+	    {header:$g("退药人"),index:'TOweretuser',name:'TOweretuser',width:70},
+	   	{header:$g("诊断"),index:'TMR',name:'TMR',width:250,align:'left'},
+	    {header:$g("病人密级"),index:'TEncryptLevel',name:'TEncryptLevel',width:100,hidden:true},		
+		{header:$g("病人级别"),index:'TPatLevel',name:'TPatLevel',width:100,hidden:true},
 	    {header:'TPrt',index:'TPrt',name:'TPrt',width:60,hidden:true},
 	    {header:'TOwedr',index:'TOwedr',name:'TOwedr',width:60,hidden:true},
 	    {header:'Tphdrowid',index:'Tphdrowid',name:'Tphdrowid',width:80,hidden:true}
@@ -131,29 +131,29 @@ function InitGridOwe(){
 //初始化发药明细table
 function InitGirdOweDetail(){
 	var columns=[
-	    {header:'药品名称',index:'TInciDesc',name:'TInciDesc',width:250,align:'left'},
-		{header:'单位',index:'TPhUom',name:'TPhUom',width:60},
-		{header:'欠药数量',index:'TPhQty',name:'TPhQty',width:70,align:'right'},
-		{header:'预发',index:'TRealQty',name:'TRealQty',width:70,
+	    {header:$g("药品名称"),index:'TInciDesc',name:'TInciDesc',width:250,align:'left'},
+		{header:$g("单位"),index:'TPhUom',name:'TPhUom',width:60},
+		{header:$g("欠药数量"),index:'TPhQty',name:'TPhQty',width:70,align:'right'},
+		{header:$g("预发"),index:'TRealQty',name:'TRealQty',width:70,
 			editable:true,
 			cellattr:addTextCellAttr			
 		},
-		{header:'已发',index:'TDispedqty',name:'TDispedqty',width:70},
-		{header:'单价',index:'TPrice',name:'TPrice',width:80,align:'right'},
-		{header:'金额',index:'TMoney',name:'TMoney',width:80,align:'right'},
-		{header:'状态',index:'TOrdStatus',name:'TOrdStatus',width:50},
-		{header:'剂量',index:'TDoseQty',name:'TDoseQty',width:50},
-		{header:'频次',index:'TPC',name:'TPC',width:60},
-		{header:'用法',index:'TYF',name:'TYF',width:40},
-		{header:'疗程',index:'TLC',name:'TLC',width:40},
-		{header:'医师',index:'TDoctor',name:'TDoctor',width:70,hidden:true},
-		{header:'医保类别',index:'TInsuCode',name:'TInsuCode',width:70},
-		{header:'货位',index:'TIncHW',name:'TIncHW',width:70},
-		{header:'规格',index:'TSpec',name:'TSpec',width:70},
-		{header:'备注',index:'TPhbz',name:'TPhbz',width:80},
-		{header:'厂商',index:'TManfDesc',name:'TManfDesc',width:200,align:'left'},
-		{header:'库存',index:'TKCFlag',name:'TKCFlag',width:50},
-		{header:'库存数量',index:'TKCQty',name:'TKCQty',width:80},
+		{header:$g("已发"),index:'TDispedqty',name:'TDispedqty',width:70},
+		{header:$g("单价"),index:'TPrice',name:'TPrice',width:80,align:'right'},
+		{header:$g("金额"),index:'TMoney',name:'TMoney',width:80,align:'right'},
+		{header:$g("状态"),index:'TOrdStatus',name:'TOrdStatus',width:50},
+		{header:$g("剂量"),index:'TDoseQty',name:'TDoseQty',width:50},
+		{header:$g("频次"),index:'TPC',name:'TPC',width:60},
+		{header:$g("用法"),index:'TYF',name:'TYF',width:40},
+		{header:$g("疗程"),index:'TLC',name:'TLC',width:40},
+		{header:$g("医师"),index:'TDoctor',name:'TDoctor',width:70,hidden:true},
+		{header:$g("医保类别"),index:'TInsuCode',name:'TInsuCode',width:70},
+		{header:$g("货位"),index:'TIncHW',name:'TIncHW',width:70},
+		{header:$g("规格"),index:'TSpec',name:'TSpec',width:70},
+		{header:$g("备注"),index:'TPhbz',name:'TPhbz',width:80},
+		{header:$g("生产企业"),index:'TManfDesc',name:'TManfDesc',width:200,align:'left'},
+		{header:$g("库存"),index:'TKCFlag',name:'TKCFlag',width:50},
+		{header:$g("库存数量"),index:'TKCQty',name:'TKCQty',width:80},
 		{header:'TOrditm',index:'TOrditm',name:'TOrditm',width:80,hidden:true},
 		{header:'TUnit',index:'TUnit',name:'TUnit',width:80,hidden:true},
 		{header:'TDoctCode',index:'TDoctCode',name:'TDoctCode',width:80,hidden:true},
@@ -185,14 +185,14 @@ function InitGirdOweDetail(){
 					$("#"+id+"_TRealQty").on("focusout || mouseout",function(){
 						var reg = /^[0-9]\d*$/;
 						if (!reg.test(this.value)) {
-							dhcphaMsgBox.message("第"+id+"行的预发数量只能为整数!")
+							dhcphaMsgBox.message($g("第")+id+$g("行的预发数量只能为整数!"))
 							$("#grid-owedetail").jqGrid('restoreRow',id);
 							return false
 						}	
 						var iddata=$('#grid-owedetail').jqGrid('getRowData',id);
 						var oeoriqty=iddata.TPhQty;								
 						if (parseFloat(this.value*1000)>parseFloat(oeoriqty*1000)) {
-							dhcphaMsgBox.message("第"+id+"行预发数量大于处方数量!")
+							dhcphaMsgBox.message($g("第")+id+$g("行预发数量大于处方数量!"))
 							$("#grid-owedetail").jqGrid('restoreRow',id);
 							return false
 						}else{
@@ -259,12 +259,12 @@ function ExecuteFY(){
 		return;
 	}
 	if(DhcphaGridIsEmpty("#grid-owedetail")==true){
-		 dhcphaMsgBox.alert("欠药单没有明细,不能发药!");
+		 dhcphaMsgBox.alert($g("欠药单没有明细,不能发药!"));
 		 return;
 	}
 	var selectid=$("#grid-owe").jqGrid('getGridParam','selrow');
 	if (selectid==null){
-	    dhcphaMsgBox.alert("没有选中数据,不能发药!");
+	    dhcphaMsgBox.alert($g("没有选中数据,不能发药!"));
 	    return;
 	}
 	if(JqGridCanEdit==false){
@@ -278,16 +278,16 @@ function OweDispMonitor(rowid){
 	var prescno=oweselrowdata.TPrescNo;
 	var owestat=oweselrowdata.TOweStatusdesc;
 	var patname=oweselrowdata.TPatName;
-	var warnmsgtitle="病人姓名:"+patname+"</br>"+"处方号:"+prescno+"</br>";
-	if ((owestat=="已发药")||(owestat=="已退药")){
-		dhcphaMsgBox.alert(warnmsgtitle+"该记录"+owestat+"!");
+	var warnmsgtitle=$g("病人姓名:")+patname+"</br>"+$g("处方号:")+prescno+"</br>";
+	if ((owestat==$g("已发药"))||(owestat==$g("已退药"))){
+		dhcphaMsgBox.alert(warnmsgtitle+$g("该记录")+owestat+"!");
 		return;
 	}
 	var dispQtyString="";
 	var owedetailrowdata = $("#grid-owedetail").jqGrid('getRowData');
     var owedetailgridrows=owedetailrowdata.length;
 	if (owedetailgridrows<=0){
-		dhcphaMsgBox.alert("没有明细数据!");
+		dhcphaMsgBox.alert($g("没有明细数据!"));
 		return;
 	}
 	var chkflag=0,allowe=1,zeroFlag=0
@@ -301,11 +301,11 @@ function OweDispMonitor(rowid){
 			var zeroFlag=1;
 		}
 		if(parseFloat(realQty)>parseFloat(oeoriQty)){
-			dhcphaMsgBox.alert("预发数量不能大于医嘱数量!");
+			dhcphaMsgBox.alert($g("预发数量不能大于医嘱数量!"));
 			return;
 		}
 		if (parseFloat(realQty)<0){
-			dhcphaMsgBox.alert("预发数量不能小于0!");
+			dhcphaMsgBox.alert($g("预发数量不能小于0!"));
 			return;
 		}
 		if (parseFloat(realQty)!=parseFloat(oeoriQty)){
@@ -325,7 +325,7 @@ function OweDispMonitor(rowid){
 		
 	} 	
 	if(zeroFlag!=1){
-		dhcphaMsgBox.alert("预发数量不能都为0!");
+		dhcphaMsgBox.alert($g("预发数量不能都为0!"));
 		return;
 	}
 	dispQtyString=chkflag+"&&"+allowe+"&&"+dispQtyString ;
@@ -337,7 +337,7 @@ function OweDispMonitor(rowid){
 	dispQtyString=dispQtyString+"&&"+owedr;
 	var prescno=oweselrowdata.TPrescNo;
 	if (chkflag=="1"){
-		dhcphaMsgBox.confirm("是否需要生成欠药单？点击[确认]生成，点击[取消]退出。",function(r){
+		dhcphaMsgBox.confirm($g("是否需要生成欠药单？点击[确认]生成，点击[取消]退出。"),function(r){
 			if(r==true){
 				DispMonitor(prescno,dispQtyString,rowid);
 			}else{
@@ -354,16 +354,16 @@ function DispMonitor(prescno,dispQtyString,rowid){
 	var retarr=RetInfo.split("^");
 	var retval=retarr[0];
 	var retmessage=retarr[1];
-	var warnmsgtitle="处方号:"+prescno+"</br>"
+	var warnmsgtitle=$g("处方号")+":"+prescno+"</br>"
 	if (!(retval>0)){
-		dhcphaMsgBox.alert(warnmsgtitle+"发药失败,错误代码: "+retmessage);
+		dhcphaMsgBox.alert(warnmsgtitle+$g("发药失败,错误代码: ")+retmessage);
 		return;
 	}
 	var newdata={
-		TOweStatusdesc:'已发药'
+		TOweStatusdesc:$g("已发药")
 	};	
 	$("#grid-owe").jqGrid('setRowData',rowid,newdata);
-	dhcphaMsgBox.alert("欠药发药成功","success");
+	dhcphaMsgBox.alert($g("欠药发药成功"),"success");
 	var phOweId=tkMakeServerCall("PHA.OP.COM.Print","GetPhOweByPhd",retval);
 	PrintPhdOwe(phOweId);
 	QueryGridOweSub();
@@ -374,33 +374,33 @@ function DoReturn(){
 		return;
 	}
 	if(DhcphaGridIsEmpty("#grid-owedetail")==true){
-		 dhcphaMsgBox.alert("欠药单没有明细,不需退药!");
+		 dhcphaMsgBox.alert($g("欠药单没有明细,不需退药!"));
 		 return;
 	}
 	var selectid=$("#grid-owe").jqGrid('getGridParam','selrow');
 	var selrowdata = $("#grid-owe").jqGrid('getRowData', selectid);
 	var prescno=selrowdata.TPrescNo;
 	var owedr=selrowdata.TOwedr;
-	var retval=tkMakeServerCall("PHA.OP.Owe.OperTab","ExcRetrun",DHCPHA_CONSTANT.DEFAULT.PHUSER,prescno,owedr);
+	var retval=tkMakeServerCall("PHA.OP.Owe.OperTab","ExcRetrun",DHCPHA_CONSTANT.SESSION.GUSER_ROWID,prescno,owedr);
 	if (retval==-1){
-		dhcphaMsgBox.alert("该欠药单状态已处理,不能退药!");
+		dhcphaMsgBox.alert($g("该欠药单状态已处理,不能退药!"));
 		return;
 	}else if (retval==-2){
-		dhcphaMsgBox.alert("该欠药单状态已处理,不能重复退药!")
+		dhcphaMsgBox.alert($g("该欠药单状态已处理,不能重复退药!"))
 		return;
 	}else if (retval==-4){
-		dhcphaMsgBox.alert("该处方还未发药,请取消配药单,不能执行退药!")
+		dhcphaMsgBox.alert($g("该处方还未发药,请取消配药单,不能执行退药!"))
 		return;
 	}else if (retval<0){
-		dhcphaMsgBox.alert("退药失败:"+retval)
+		dhcphaMsgBox.alert($g("退药失败:")+retval)
 		return;
 	} 
-	dhcphaMsgBox.alert("欠药退药成功,请到收费处退费!"); 
+	dhcphaMsgBox.alert($g("欠药退药成功,请到收费处退费!")); 
 	var RetData=tkMakeServerCall("PHA.OP.COM.Method","GetPhOweInfo",owedr);
 	var RetOweDate=RetData.split("^")[2];
 	var RetOweUser=RetData.split("^")[3];
 	var newdata={
-		TOweStatusdesc:'已退药',
+		TOweStatusdesc:$g("已退药"),
 		TOweretdate:RetOweDate,
 		TOweretuser:RetOweUser
 	};	
@@ -436,14 +436,14 @@ function CheckPermission(){
 			var retdata= retjson[0];
 			var permissionmsg="",permissioninfo="";
 			if (retdata.phloc==""){
-				permissionmsg="药房科室:"+defaultLocDesc;
-				permissioninfo="尚未在门诊药房人员代码维护!"	
+				permissionmsg=$g("药房科室:")+defaultLocDesc;
+				permissioninfo=$g("尚未在门诊药房科室配置的人员权限页签中维护!")
 			}else {
-				permissionmsg="工号:"+DHCPHA_CONSTANT.SESSION.GUSER_CODE+"　　姓名:"+DHCPHA_CONSTANT.SESSION.GUSER_NAME;
+				permissionmsg=$g("工号")+":"+DHCPHA_CONSTANT.SESSION.GUSER_CODE+"　　"+$g("姓名")+":"+DHCPHA_CONSTANT.SESSION.GUSER_NAME;
 				if (retdata.phuser==""){					
-					permissioninfo="尚未在门诊药房人员代码维护!";
+					permissioninfo=$g("尚未在门诊药房科室配置的人员权限页签中维护!");
 				}else if(retdata.phnouse=="Y"){
-					permissioninfo="门诊药房人员代码维护中已设置为无效!";
+					permissioninfo=$g("门诊药房科室配置的人员权限页签中已设置为无效!");
 				}
 			}
 			if (permissioninfo!=""){	
@@ -459,6 +459,11 @@ function CheckPermission(){
 				DHCPHA_CONSTANT.DEFAULT.PHUSER=retdata.phuser;
 				DHCPHA_CONSTANT.DEFAULT.CYFLAG=retdata.phcy;
 				DHCPHA_CONSTANT.DEFAULT.FYFLAG=retdata.phfy;
+			}
+			var returnNeedReq=retdata.ReturnNeedReq;
+			if(returnNeedReq=="Y"){
+				
+				$("#btn-return").attr("style", "display:none;")
 			}
 		},  
 		error:function(){}  

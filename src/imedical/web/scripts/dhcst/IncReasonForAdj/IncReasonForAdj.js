@@ -49,7 +49,7 @@ var IncReasonForAdjGridDs = new Ext.data.Store({
 var IncReasonForAdjGridCm = new Ext.grid.ColumnModel([
 	 new Ext.grid.RowNumberer(),
 	 {
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'Code',
         width:180,
         align:'left',
@@ -66,7 +66,7 @@ var IncReasonForAdjGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'Desc',
         width:300,
         align:'left',
@@ -89,8 +89,8 @@ var IncReasonForAdjGridCm = new Ext.grid.ColumnModel([
 IncReasonForAdjGridCm.defaultSortable = true;
 
 var addIncReasonForAdj = new Ext.Toolbar.Button({
-	text:'新建',
-    tooltip:'新建',
+	text:$g('新建'),
+    tooltip:$g('新建'),
     iconCls:'page_add',
 	width : 70,
 	height : 30,
@@ -100,8 +100,8 @@ var addIncReasonForAdj = new Ext.Toolbar.Button({
 });
 
 var saveIncReasonForAdj = new Ext.Toolbar.Button({
-	text:'保存',
-    tooltip:'保存',
+	text:$g('保存'),
+    tooltip:$g('保存'),
     iconCls:'page_save',
 	width : 70,
 	height : 30,
@@ -114,11 +114,11 @@ var saveIncReasonForAdj = new Ext.Toolbar.Button({
 			var desc = mr[i].data["Desc"].trim();
 			var rowNum = IncReasonForAdjGridDs.indexOf(mr[i])+1;
 			if (code==""){
-				Msg.info("warning", "第"+rowNum+"行代码为空!");
+				Msg.info("warning", $g("第")+rowNum+$g("行代码为空!"));
 				return;
 			}
 			if (desc==""){
-				Msg.info("warning", "第"+rowNum+"行名称为空!");
+				Msg.info("warning", $g("第")+rowNum+$g("行名称为空!"));
 				return;
 			}
 			if((code!="")&&(desc!="")){
@@ -132,19 +132,19 @@ var saveIncReasonForAdj = new Ext.Toolbar.Button({
 		}
 		
 		if(data==""){
-			Msg.info("warning", "没有修改或添加新数据!");
+			Msg.info("warning", $g("没有修改或添加新数据!"));
 			return false;
 		}else{
 			Ext.Ajax.request({
 				url: IncReasonForAdjGridUrl+'?actiontype=save',
 				params:{data:data},
 				failure: function(result, request) {
-					Msg.info("error", "请检查网络连接!");
+					Msg.info("error", $g("请检查网络连接!"));
 				},
 				success: function(result, request) {
 					var jsonData = Ext.util.JSON.decode( result.responseText );
 					if (jsonData.success=='true') {
-						Msg.info("success", "保存成功!");
+						Msg.info("success", $g("保存成功!"));
 						IncReasonForAdjGridDs.load();
 					}else{
 						Msg.info("warning", jsonData.info);
@@ -159,37 +159,37 @@ var saveIncReasonForAdj = new Ext.Toolbar.Button({
 
 
 var deleteIncReasonForAdj = new Ext.Toolbar.Button({
-	text:'删除',
-    tooltip:'删除',
+	text:$g('删除'),
+    tooltip:$g('删除'),
     iconCls:'page_delete',
 	width : 70,
 	height : 30,
 	handler:function(){
 		var cell = IncReasonForAdjGrid.getSelectionModel().getSelectedCell();
 		if(cell==null){
-			Msg.info("error", "请选择数据!");
+			Msg.info("error", $g("请选择数据!"));
 			return false;
 		}else{
 			var record = IncReasonForAdjGrid.getStore().getAt(cell[0]);
 			var RowId = record.get("RowId");
 			if(RowId!=""){
-				Ext.MessageBox.confirm('提示','确定要删除选定的行?',
+				Ext.MessageBox.confirm($g('提示'),$g('确定要删除选定的行?'),
 					function(btn) {
 						if(btn == 'yes'){
 							Ext.Ajax.request({
 								url:IncReasonForAdjGridUrl+'?actiontype=delete&rowid='+RowId,
-								waitMsg:'删除中...',
+								waitMsg:$g('删除中...'),
 								failure: function(result, request) {
-									Msg.info("error", "请检查网络连接!");
+									Msg.info("error", $g("请检查网络连接!"));
 								},
 								success: function(result, request) {
 									var jsonData = Ext.util.JSON.decode( result.responseText );
 									if (jsonData.success=='true') {
-										Msg.info("success", "删除成功!");
+										Msg.info("success", $g("删除成功!"));
 										IncReasonForAdjGridDs.remove(record);
 										IncReasonForAdjGrid.getView().refresh();
 									}else{
-										Msg.info("error", "删除失败!");
+										Msg.info("error", $g("删除失败!"));
 									}
 								},
 								scope: this
@@ -233,7 +233,7 @@ Ext.onReady(function(){
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 	
 	var panel = new Ext.Panel({
-		title:'调整原因',
+		title:$g('调整原因'),
 		activeTab:0,
 		region:'center',
 		items:[IncReasonForAdjGrid]                                 

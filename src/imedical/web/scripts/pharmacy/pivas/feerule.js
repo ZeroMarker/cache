@@ -291,7 +291,7 @@ function SaveRule() {
     var gridChangeLen = gridChanges.length;
     if (gridChangeLen == 0) {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: '没有需要保存的数据',
+            msg: $g('没有需要保存的数据'),
             type: 'alert'
         });
         return;
@@ -308,7 +308,7 @@ function SaveRule() {
     var saveVal = saveArr[0];
     var saveInfo = saveArr[1];
     if (saveVal < 0) {
-        $.messager.alert('提示', saveInfo, 'warning');
+        $.messager.alert($g('提示'), saveInfo, 'warning');
     }
     $('#gridFeeRule').datagrid('reload');
 }
@@ -316,12 +316,12 @@ function DeleteRule() {
     var gridSelect = $('#gridFeeRule').datagrid('getSelected');
     if (gridSelect == null) {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: '请选择需要删除的记录',
+            msg: $g('请选择需要删除的记录'),
             type: 'alert'
         });
         return;
     }
-    $.messager.confirm('确认对话框', '您确定删除吗？', function(r) {
+    $.messager.confirm($g('确认对话框'), $g('您确定删除吗？'), function(r) {
         if (r) {
             var ruleID = gridSelect.ruleID || '';
             if (ruleID == '') {
@@ -380,7 +380,7 @@ function SaveRuleLink() {
     var gridChangeLen = gridChanges.length;
     if (gridChangeLen == 0) {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: '没有需要保存的数据',
+            msg: $g('没有需要保存的数据'),
             type: 'alert'
         });
         return;
@@ -396,7 +396,7 @@ function SaveRuleLink() {
     }
     if (paramsStr == '') {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: '没有需要保存的数据',
+            msg: $g('没有需要保存的数据'),
             type: 'alert'
         });
         return;
@@ -415,12 +415,12 @@ function DeleteRuleLink() {
     var gridSelect = $('#gridFeeRuleLink').datagrid('getSelected');
     if (gridSelect == null) {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: '请选择需要删除的记录',
+            msg: $g('请选择需要删除的记录'),
             type: 'alert'
         });
         return;
     }
-    $.messager.confirm('确认对话框', '您确定删除吗？', function(r) {
+    $.messager.confirm($g('确认对话框'), $g('您确定删除吗？'), function(r) {
         if (r) {
             var ruleLinkID = gridSelect.ruleLinkID || '';
             if (ruleLinkID == '') {
@@ -441,12 +441,12 @@ function DeleteRuleItm() {
     var gridSelect = $('#gridFeeRuleItm').datagrid('getSelected');
     if (gridSelect == null) {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: '请选择需要删除的记录',
+            msg: $g('请选择需要删除的记录'),
             type: 'alert'
         });
         return;
     }
-    $.messager.confirm('确认对话框', '您确定删除吗？', function(r) {
+    $.messager.confirm($g('确认对话框'), $g('您确定删除吗？'), function(r) {
         if (r) {
             var ruleItmID = gridSelect.ruleItmID || '';
             if (ruleItmID == '') {
@@ -465,7 +465,7 @@ function ShowDiagRuleItm(btnOpt) {
     var ruleID = GetSelectRuleID();
     if (ruleID == '') {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: '请先选择左侧规则名称',
+            msg: $g('请先选择左侧规则名称'),
             type: 'alert'
         });
         return;
@@ -476,7 +476,7 @@ function ShowDiagRuleItm(btnOpt) {
         var gridSelect = $('#gridFeeRuleItm').datagrid('getSelected') || '';
         if (gridSelect == '') {
             DHCPHA_HUI_COM.Msg.popover({
-                msg: '请先选中需要修改的关联关系',
+                msg: $g('请先选中需要修改的关联关系'),
                 type: 'alert'
             });
             return;
@@ -487,7 +487,7 @@ function ShowDiagRuleItm(btnOpt) {
     }
     $('#gridFeeRuleItmWin')
         .dialog({
-            title: '关联关系' + btnOpt.text,
+            title: $g('关联关系') + btnOpt.text,
             iconCls: ifAdd ? 'icon-w-add' : 'icon-w-edit',
             modal: true,
             width: 390,
@@ -529,11 +529,11 @@ function ShowDiagRuleItm(btnOpt) {
 
 function SaveRuleItm() {
     var title = $('#gridFeeRuleItmWin').panel('options').title;
-    var ifAdd = title.indexOf('新增') >= 0 ? true : false;
+    var ifAdd = title.indexOf($g('新增')) >= 0 ? true : false;
     var ruleID = GetSelectRuleID();
     if (ruleID == '') {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: '请先选择左侧规则名称',
+            msg: $g('请先选择左侧规则名称'),
             type: 'alert'
         });
         return;
@@ -564,7 +564,7 @@ function SaveRuleItm() {
     }
     if (chkMsg != '') {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: chkMsg,
+            msg: $g(chkMsg),
             type: 'alert'
         });
         return;
@@ -583,7 +583,7 @@ function SaveRuleItm() {
     var saveVal = saveArr[0];
     var saveInfo = saveArr[1];
     if (saveVal < 0) {
-        $.messager.alert('提示', saveInfo, 'warning');
+        $.messager.alert($g('提示'), saveInfo, 'warning');
         return;
     }
     $('#gridFeeRuleItmWin').window('close');
@@ -625,7 +625,7 @@ function LoadRuleItmOperate(type) {
 
 }
 function InitHospCombo() {
-	var genHospObj=PIVAS.AddHospCom({tableName:'PHAPIVAS_FeeRule'});
+	var genHospObj=PIVAS.AddHospCom({tableName:'PHAPIVAS_FeeRule'},{width:265});
 	if (typeof genHospObj ==='object'){
 		genHospObj.options().onSelect =  function(index, record) {
             var newHospId = record.HOSPRowId;
@@ -635,4 +635,15 @@ function InitHospCombo() {
             }
         };
     }
+    var defHosp = $.cm(
+		{
+		    dataType: 'text',
+		    ClassName: 'web.DHCBL.BDP.BDPMappingHOSP',
+		    MethodName: 'GetDefHospIdByTableName',
+		    tableName: 'PHAPIVAS_FeeRule',
+		    HospID: HospId
+		},
+		false
+	);
+	HospId = defHosp;
 }

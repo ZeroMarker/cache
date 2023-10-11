@@ -42,7 +42,11 @@ $(function(){
 					var tbIframe = $("#"+tab[0].id+" iframe:first-child");
 					if (tbIframe.attr("src") == "")
 					{
+						if ('undefined'!==typeof websys_getMWToken){
+							tbIframe.attr("src",resourceScheme[index].source+"&MWToken="+websys_getMWToken());
+						}else{
 						tbIframe.attr("src",resourceScheme[index].source);
+						}
 					}
 				}
 			}

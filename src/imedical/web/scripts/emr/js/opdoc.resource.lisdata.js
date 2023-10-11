@@ -1,19 +1,14 @@
-﻿$(function(){
+﻿var lisSubColumn = {"ItemDesc":{"check":true},
+					"Synonym":{"check":true},
+					"ItemResult":{"check":true},
+					"ItemUnit":{"check":true},
+					"AbnorFlag":{"check":true},
+					"ItemRanges":{"check":true}};
+$(function(){
     strXml = convertToXml(scheme);
     var interface =$(strXml).find("interface").text();
     var checkstyle =$(strXml).find("checkstyle").text();
     pageConfig = $(strXml).find("pageConfig").text();
-    $("#resourceConfig").hide();
-    $HUI.radio("[name='episode']",{
-        onChecked:function(e,value){
-            //alert("选中事件");
-            queryData();
-            $('#EpisodeList').combogrid('setValue','');
-            if (pageConfig == "Y") {
-                resourceConfig.Lis = this.id;
-            }
-        }
-    });
     if (pageConfig == "Y") {
         $("#resourceConfig").show();
         //获取其它资源区的查询按钮配置项数据
@@ -23,37 +18,14 @@
         {
             $HUI.radio("#"+configItem).setValue(true);
         }else{
-            //$('#currentEpisode').attr("checked",true);
-            $HUI.radio("#currentEpisode").setValue(true);
+            $HUI.radio("#oneMonth").setValue(true);
         }
     }else{
-        $HUI.radio("#currentEpisode").setValue(true);
-        //默认加载前5条就诊的所有检验数据
-        //$('#allEpisode').attr("checked",true);
-        //$("#comboxEpisode").show();
+        $HUI.radio("#oneMonth").setValue(true);
     }
-    initEpisodeList("#EpisodeList");
     setDataGrid(interface,checkstyle);
-    /*
-    $('#seekform').find(':radio').change(function () {
-        
-        if (this.id == "allEpisode")
-        {
-            $("#comboxEpisode").show();
-        }
-        else
-        {
-            $("#comboxEpisode").hide();
-            queryData();
-        }
-        if (pageConfig == "Y")
-        {
-            resourceConfig.Lis = this.id;
-        }
-        
-    });
-    */
 
+    initlisSubTable();
     $('#lisDataPnl').panel('resize', {
         height: $('#dataPnl').height() * 0.50
     });
@@ -65,12 +37,6 @@
 function setDataGrid(interface,checkstyle)
 {
     var param = getParam();
-    /*
-    if ($('#allEpisode')[0].checked)
-    {
-        param.EpisodeID = getAllEpisodeIdByPatientId();
-    }
-    */
     $('#lisData').datagrid({
         pageSize:10,
         pageList:[10,20,30], 
@@ -108,9 +74,7 @@ function setDataGrid(interface,checkstyle)
             else
             {
                 $('#lisSubData').datagrid('uncheckAll');
-                
-                //delete quoteData[rowData.OEordItemRowID];
-                quoteData = {};
+                delete quoteData[rowData.OEordItemRowID];
                 $('#lisSubData').datagrid('loadData',{total:0,rows:[]});
             }
         },
@@ -139,14 +103,21 @@ function setDataGrid(interface,checkstyle)
             $('#lisSubData').datagrid('loadData',{total:0,rows:[]});
         }
     });
+    lisSubItems = getColumnScheme("show>child>item");
+    var wid = 0;
+    for (var i=0;i<lisSubItems[0].length;i++)
+    {
+	    wid = wid + lisSubItems[0][i].colwidth;
+	}    
     $('#lisSubData').datagrid({ 
-        loadMsg:'数据装载中......',
+        //loadMsg:'数据装载中......',
         autoRowHeight: true,
         url:'../EMRservice.Ajax.lisData.cls?Action=GetSubLis&InterFace='+encodeURI(encodeURI(interface)), 
         singleSelect:true,
         rownumbers:true,
         singleSelect:false,
         fit:true,
+        width:wid,
         columns:getColumnScheme("show>child>item"),
         onCheck:function(rowIndex,rowData){
             quoteData[rowData.OeordID]["child" + rowIndex] = { "ItemDesc": rowData.ItemDesc, "Synonym": rowData.Synonym, "ItemResult": rowData.ItemResult, "ItemUnit": rowData.ItemUnit, "AbnorFlag": rowData.AbnorFlag, "ItemRanges": rowData.ItemRanges, "DetailData": rowData.DetailData, "ReportDR": rowData.ReportDR };
@@ -203,7 +174,7 @@ function setDataGrid(interface,checkstyle)
             {
                 quoteData[rows[0].OeordID]={};
 		for (i = 0; i < length; i++) {
-	                ((rows[0].DetailData.length > 0)&&(rows[0].ReportDR != "")) 
+                    if ((rows[0].DetailData.length > 0)&&(rows[0].ReportDR != "")) 
 	                {
 		                delete qryAnt[rows[0].ReportDR];
 		                $('#Sub-'+i).datagrid('uncheckAll');
@@ -360,48 +331,43 @@ function loadMultiSubData() {
 function queryData()
 {
     var param = getParam();
-    $('#lisData').datagrid('load',param);
-    $('#lisSubData').datagrid('loadData',{total:0,rows:[]});
+    if (param){
+        $('#lisData').datagrid('load',param);
+        $('#lisSubData').datagrid('loadData',{total:0,rows:[]});
+    }
 }
 
 //获取查询参数
 function getParam()
 {
-    var stDateTime = "",endDateTime = "";
-    //authStDateTime、authEndDateTime是按审核日期查询的始末条件
-    var authStDateTime = "",authEndDateTime = "";
-    var authorizedFlag ="";
-    //三个月时间标识
-    var dateGap = "";
+    var param = "";
     var epsodeIds = episodeID;
-    if ($('#currentEpisode')[0].checked)
+    var authStDate = $("#stDate").datebox("getValue");
+    var authEndDate = $("#endDate").datebox("getValue");
+    if (!$("#currentEpisode")[0].checked)
     {
-	//本次就诊
-        //authorizedFlag = 1;
-    }else if ($('#recentTwice')[0].checked) {
-        authorizedFlag = 2;
-    //}else if ($('#threeMonths')[0].checked) {
-        //dateGap = $('#threeMonths').attr('value');
-    }else //if ($('#allEpisode')[0].checked)
-    {
-        epsodeIds = "";
-        var values = $('#EpisodeList').combogrid('getValues');
-        for (var i=0;i< values.length;i++)
-        {
-            epsodeIds = (i==0)?"":epsodeIds + ",";
-            epsodeIds = epsodeIds + values[i];
-        }
-        authorizedFlag ="";
+        epsodeIds = getAllEpisodeIdByPatientId();
     }
-    var param = {
+    if ("" != authStDate){
+        authStDate = getHISDateTimeFormate("Date",authStDate);
+    }
+    if ("" != authEndDate){
+        authEndDate = getHISDateTimeFormate("Date",authEndDate);
+    }
+    if (("" != authStDate)&&("" != authEndDate)){
+        if (!compareDateTime(authStDate+" 00:00:00",authEndDate+" 00:00:00"))
+        {
+            $.messager.alert("提示信息", "审核开始日期大于审核结束日期,请重新选择起始日期!");
+            return param;
+        }
+    }
+    quoteData = {};
+    param = {
         EpisodeID: epsodeIds,
-        StartDateTime: stDateTime,
-        EndDateTime: endDateTime,
-        AuthStartDateTime: authStDateTime,
-        AuthEndDateTime: authEndDateTime,
-        AuthorizedFlag: authorizedFlag,
-        PatientID: patientID,
-        DateGap: dateGap
+        StartDateTime: "",
+        EndDateTime: "",
+        AuthStartDateTime: authStDate,
+        AuthEndDateTime: authEndDate
     };
     return param;
 }
@@ -429,32 +395,35 @@ function getData()
             {
                 for (j=0;j<childList.length;j++)
                 {
-                    if (childList[j].code == "ItemUnit")
-                    {
-                        var obj = getFormatString(item[childList[j].code]);
-                        if (obj != "")
-                        {
-                            var idx1 = item[childList[j].code].indexOf(obj.subChar1);
-                            var idx2 = item[childList[j].code].indexOf(obj.subChar2);
-                            if (item[childList[j].code].charAt(0) != "*")
-                            {
-                                result = result + "*";
-                            }
-                            result = result + item[childList[j].code].substring(0,idx1);
-                            resultItems.push({"TEXT":result});
-                            resultItems.push({"STYLE":[obj.Style],"TEXT":item[childList[j].code].substring(idx1+1,idx2)});
-                            result = item[childList[j].code].substring(idx2);
-                        }
-                        else
-                        {
-                            result = result + item[childList[j].code];
-                        }
-                    } 
-                    else
-                    {
-                        result = result + item[childList[j].code];
+	                if(lisSubColumn[childList[j].code].check==true)
+	                {		             
+	                    if (childList[j].code == "ItemUnit") 
+	                    {
+	                        var obj = getFormatString(item[childList[j].code]);
+	                        if (obj != "") 
+				{
+	                            var idx1 = item[childList[j].code].indexOf(obj.subChar1);
+	                            var idx2 = item[childList[j].code].indexOf(obj.subChar2);
+	                            if ((item[childList[j].code].charAt(0) != "*")&&(item[childList[j].code].charAt(0) != "×")) 
+				    {
+	                                result = result + "*";
+	                            }
+	                            result = result + item[childList[j].code].substring(0, idx1);
+	                            resultItems.push({ "TEXT": result });
+	                            resultItems.push({ "STYLE": [obj.Style], "TEXT": item[childList[j].code].substring(idx1 + 1, idx2) });
+	                            result = item[childList[j].code].substring(idx2);
+	                        } 
+	                        else 
+	                        {
+	                            result = result + item[childList[j].code];
+	                        }
+	                    } 
+	                    else 
+	                    {
+	                        result = result + item[childList[j].code];
+	                    }
+	                  result = result + childList[j].separate;                   
                     }
-                    result = result + childList[j].separate;
                 }
                 if(item["DetailData"]!=null){
 	                if ((item["DetailData"].length > 0)&&(item["ReportDR"] != ""))
@@ -497,14 +466,177 @@ function UnCheckAll()
 {
     $("#lisData").datagrid("uncheckAll");
 }
-function onHidePanel()
-{
-    if ($('#currentEpisode')[0].checked) {
-        $HUI.radio("#currentEpisode").setValue(false);
-    }else if ($('#recentTwice')[0].checked) {
-        $HUI.radio("#recentTwice").setValue(false);
-    //}else if ($('#threeMonths')[0].checked) {
-        //$HUI.radio("#threeMonths").setValue(false);
+
+//设置报告日期
+function upPacsDate(e,sel,val){
+    if(!sel) return;
+    if(val==1){
+        $HUI.datebox("#stDate").setValue(formatDate(-30));
+        $HUI.datebox("#endDate").setValue(formatDate(0));
     }
-    queryData();
+    
+    if(val==2){
+        $HUI.datebox("#stDate").setValue(formatDate(-90));
+        $HUI.datebox("#endDate").setValue(formatDate(0));
+    }
+    
+    if(val==3){
+        $HUI.datebox("#stDate").setValue(formatDate(-180));
+        $HUI.datebox("#endDate").setValue(formatDate(0));
+    }
+    
+    if(val==4){
+        $HUI.datebox("#stDate").setValue("");
+        $HUI.datebox("#endDate").setValue("");
+    }
+    if (initFlag){
+        queryData();
+    }else{
+        initFlag = true;
+    }
+    if (pageConfig == "Y") {
+        resourceConfig.Lis = e.target.id;
+        saveResourceConfig("Lis");
+    }
+    
+    return;
+}
+
+/// 格式化日期
+function formatDate(t){
+    var curr_Date = new Date();  
+    curr_Date.setDate(curr_Date.getDate() + parseInt(t)); 
+    var Year = curr_Date.getFullYear();
+    var Month = curr_Date.getMonth()+1;
+    var Day = curr_Date.getDate();
+    
+    if(typeof(DateFormat)=="undefined"){
+        return Year+"-"+Month+"-"+Day;
+    }else{
+        if(DateFormat=="4"){
+            //日期格式 4:"DMY" DD/MM/YYYY
+            return Day+"/"+Month+"/"+Year;
+        }else if(DateFormat=="3"){
+            //日期格式 3:"YMD" YYYY-MM-DD
+            return Year+"-"+Month+"-"+Day;
+        }else if(DateFormat=="1"){
+            //日期格式 1:"MDY" MM/DD/YYYY
+            return Month+"/"+Day+"/"+Year;
+        }else{
+            return Year+"-"+Month+"-"+Day;
+        }
+    }
+}
+
+function initlisSubTable()
+{
+	var tr = $('<tr class="datagrid-header-row lisSubData-header-row0"></tr>');
+	lisSubItems = getColumnScheme("show>child>item")
+	var lisSubRefScheme = getRefScheme("reference>child>item");
+	tda = "<td class='datagrid-header-rownumber'></td><td style='width:22px;'></td><td class='.datagrid-header-row, .datagrid-row' id='' style='width:15px;'><input class='hisui-checkbox' type='checkbox' name='SubPacs' data-options='onCheckChange:function(event,value){checkAllData(this)}'/></td>"
+	$(tr).append(tda);
+	for (var i=1;i<lisSubItems[0].length;i++)
+	{
+		var	td = "";		
+		if (lisSubItems[0][i].hidden)
+		{ 
+			td= "<td class='' id='" +lisSubItems[0][i].field+ "' style='display:none;'><input class='hisui-checkbox' type='checkbox' name='SubPacs' label='" + lisSubItems[0][i].title + "'/></td>"    
+		}
+		else
+		{
+			var isCheckField = true;
+			$.each(lisSubRefScheme, function(index, item){
+				if (item.code == lisSubItems[0][i].field)
+				{
+					isCheckField = true
+					return false;
+				}
+				else
+				{
+					isCheckField = false
+					return;
+				}
+				
+			})
+			
+			if (isCheckField == true)
+			{
+				td= "<td class='' id='" +lisSubItems[0][i].field+ "' style='width:" +(lisSubItems[0][i].width-2)+ ";' align='center'><input class='hisui-checkbox' type='checkbox' name='" +lisSubItems[0][i].field+ "' data-options='onCheckChange:function(event,value){checkOnClick(this)}' label='" + lisSubItems[0][i].title + "'/></td>" 			
+			}
+			else
+			{
+				td= "<td class='' id='" +lisSubItems[0][i].field+ "' style='width:" +lisSubItems[0][i].width+ ";' align='center'>"+emrTrans(lisSubItems[0][i].title)+"</td>" 			
+
+			}
+		}
+		
+		$(tr).append(td);
+	}
+	$("#lisSubColumn").append(tr);
+	$.parser.parse('#lisSubColumn');
+	if(selectConfig=="Y"&&clickFlag==false)return
+	for (var i=0;i<lisSubRefScheme.length; i++)
+	{
+		if (lisSubRefScheme[i].check)
+		{ 
+			var code = lisSubRefScheme[i].code;
+			//$('#'+ code+ " input").attr("checked",true);
+			$HUI.checkbox('#'+ code+ " input").setValue(true);
+		}
+	}	
+}
+
+function checkAllData(obj)
+{
+	if(obj.checked)
+	{
+		$('#lisSubData').datagrid('checkAll');	
+	}
+	else
+	{
+		$('#lisSubData').datagrid('uncheckAll');
+	}
+	
+}
+
+//选择子项目
+function checkOnClick(obj)
+{
+	try
+	{		
+		if (!$("#lisSubColumn tr td")) return;
+		var field = obj.name;
+		var lisSubItems = getColumnScheme("show>child>item");
+		//lisSubColumn = lisSubItems[0];
+		if(obj.checked)
+		{
+			for(var i=0;i<lisSubItems[0].length;i++)
+			{
+				if((lisSubItems[0][i])&&(lisSubItems[0][i].field))
+				{
+					if (lisSubItems[0][i].field == field)
+					{
+						lisSubColumn[field].check = true;					
+					}
+				}
+			}
+		}
+		else
+		{
+			for(var i=0;i<lisSubItems[0].length;i++)
+			{
+				if((lisSubItems[0][i])&&(lisSubItems[0][i].field))
+				{
+					if (lisSubItems[0][i].field == field)
+					{
+						lisSubColumn[field].check = false;
+					}
+				}
+			}
+		}	
+	}
+	catch(err)
+	{
+	}
+
 }

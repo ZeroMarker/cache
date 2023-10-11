@@ -1,39 +1,39 @@
-// /åç§°: è°ƒä»·å•æ‰“å°
-// /æè¿°: è°ƒä»·å•æ‰“å°
-// /ç¼–å†™è€…ï¼šyunhaibao
-// /ç¼–å†™æ—¥æœŸ: 2015.12.01
+// /Ãû³Æ: µ÷¼Ûµ¥´òÓ¡
+// /ÃèÊö: µ÷¼Ûµ¥´òÓ¡
+// /±àĞ´Õß£ºyunhaibao
+// /±àĞ´ÈÕÆÚ: 2015.12.01
 
 /*
  * creator:yunhaibao
  * createdate:2015-12-01
- * description:æ‰“å°å•ä¸ªè°ƒä»·å•ï¼ˆæ¶¦ä¹¾ï¼‰
- * params: ingr:è°ƒä»·å•å·
+ * description:´òÓ¡µ¥¸öµ÷¼Ûµ¥£¨ÈóÇ¬£©
+ * params: ingr:µ÷¼Ûµ¥ºÅ
  * return:
  * */
 function PrintAdjPrice(adjpriceno){
 	if(adjpriceno==null || adjpriceno==''){
-		Msg.info("warning","è¯·é€‰æ‹©è°ƒä»·å•åæ‰“å°!");
+		Msg.info("warning","ÇëÑ¡Ôñµ÷¼Ûµ¥ºó´òÓ¡!");
 		return;
 	}
 	var RQDTFormat=App_StkRQDateFormat; //+" "+App_StkRQTimeFormat;
 	var printtype=1;
 	/*if (printtype==1) {
-		//ç›´æ¥æ‰“å°
+		//Ö±½Ó´òÓ¡
 		fileName="{DHCST_InAdjSalePrice_Common.raq(AspNo="+adjpriceno+";HospDesc="+App_LogonHospDesc+")}";
 		DHCCPM_RQDirectPrint(fileName);
 	}
 	else {
-		//é¢„è§ˆæ‰“å°	
+		//Ô¤ÀÀ´òÓ¡	
 		fileName="DHCST_InAdjSalePrice_Common.raq&AspNo="+adjpriceno+"&HospDesc="+App_LogonHospDesc;
 		DHCCPM_RQPrint(fileName);
 	}*/
 	if (printtype==1) {
-		//ç›´æ¥æ‰“å°
+		//Ö±½Ó´òÓ¡
 		fileName="{DHCST_InAdjSalePrice_Common.raq(AspNo="+adjpriceno+";HospDescIO="+session['LOGON.HOSPID']+";RQDTFormat="+RQDTFormat+")}";
 		DHCCPM_RQDirectPrint(fileName);
 	}
 	else {
-		//é¢„è§ˆæ‰“å°	
+		//Ô¤ÀÀ´òÓ¡	
 		fileName="DHCST_InAdjSalePrice_Common.raq&AspNo="+adjpriceno+"&HospDescIO="+session['LOGON.HOSPID']+"&RQDTFormat="+RQDTFormat;
 		DHCCPM_RQPrint(fileName);
 	}

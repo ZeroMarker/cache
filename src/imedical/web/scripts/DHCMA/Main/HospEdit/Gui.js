@@ -77,11 +77,11 @@ function InitHISUIWin(){
 		editable: true,
 		//multiple:true,  //多选
 		mode: 'remote',
-		valueField:'rowid',
-		textField:'ProName',
+		valueField:'ProID',
+		textField:'ProDesc',
 		onBeforeLoad: function (param) {
-			param.ClassName = 'DHCMed.SSService.ProductsSrv';
-			param.QueryName = 'QueryProInfo';
+			param.ClassName = 'DHCMA.Util.BTS.ProductSrv';
+			param.QueryName = 'QryProduct';
 			param.ResultSetType = 'array'
 		}
 	});

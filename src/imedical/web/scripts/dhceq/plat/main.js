@@ -37,7 +37,7 @@ function initEcharts_MaintControl()
 		MethodName:"GetMainOfEquipRange",
 		GroupID:curSSGroupID,
 		LocID:curLocID,
-		QXType:getElementValue("#QXType"),
+		QXType:getElementValue("QXType"),
 		UserID:curUserID
 	},function(jsonData){
 		
@@ -72,7 +72,12 @@ function initEcharts_MaintControl()
 			seriesData.push(newSeriesData);
 			legendData.push(data[0]);
 		}
-		var subtext="原值<10000为C类，10000<=原值<100000为B类，原值>=100000为A类。"  //Modify By zx 2020-02-18 BUG ZX0074
+		//start by csj 2020-10-29 需求号：1560462
+		var ABCCat=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","201013")
+		var ABCList=ABCCat.split(',')
+		var ACat=ABCList[0]
+		var CCat=ABCList[1]
+		var subtext="原值<"+CCat+"为C类，"+CCat+"<=原值<"+ACat+"为B类，原值>="+ACat+"为A类。"  //end by csj 2020-10-29 需求号：1560462
 		var objCompositionOfAssets=new setEchertsData('',subtext,'',legendData,'ABC分类统计','pie',seriesData,'','')
 		initEcharts("CompositionOfAssets",objCompositionOfAssets);
 	});
@@ -160,6 +165,10 @@ function initMenu()
 	},function(dataList){
 		var dataList=dataList.split("^")
 		var Len=dataList.length;
+		//Add By QW20210629 待办提示 BUG:QW0128 begin
+		var Message="";
+		var Num=0
+		//Add By QW20210629 end
 		for(var i=0;i<Len;i++)
 		{
 			var data=dataList[i].split(":");
@@ -168,7 +177,16 @@ function initMenu()
 			var BussCode=data[2];
 			var BussType=data[3];
 			var WaitNum=data[4];
-			jQuery('#'+MenuType).append('<li onclick ="addTabsData_Clicked(&quot;'+BussCode+','+BussType+'&quot;)" '+'><span class='+'"eq_radius"'+'>'+WaitNum+'</span><a>'+BussType+'</a></li>')
+			if ((BussCode=="64")&&(getElementValue("RentModeFlag")=="2")) BussType="调配"; //Modify by zx 2020-11-19 共享资源工作台描述修改
+			//Modify by zx 2022-03-16 增加待办显示id处理 BUG ZX0144
+			jQuery('#'+MenuType).append('<li onclick ="addTabsData_Clicked(&quot;'+BussCode+','+BussType+'&quot;)" '+'><span id="wait'+BussCode+'" class='+'"eq_radius"'+'>'+WaitNum+'</span><a>'+BussType+'</a></li>')
+			//Add By QW20210629 待办提示 BUG:QW0128 begin
+			if ((MenuType=="Buss")&&(WaitNum!="0")) 
+			{
+				Message=Message+" "+BussType+":"+WaitNum
+				Num=Num+parseInt(WaitNum)
+			}
+			//Add By QW20210629 end
 		}
 		//add by zx 2019-07-16 无业务或保养影藏相应标题
 		var bussWaitHtml=$("#Buss").html();
@@ -179,8 +197,8 @@ function initMenu()
 	   	if((warningWaitHtml=="")||(warningWaitHtml.length==0)){
 	    	$("#WarningWait").css('display','none')
 	    }
+	    if(+Num>0) messageShow('alert','info','待办总数:'+Num,Message,'','',''); //Add By QW20210629 BUG:QW0128 待办提示
 	});
-	
 }
 ///定义点击左侧待办事项时添加tab的事件
 function addTabsData_Clicked(data)
@@ -188,7 +206,13 @@ function addTabsData_Clicked(data)
 	data = data.split(",")
 	var BussCode=data[0]
 	var BussType=data[1]
-	
+	//Add By QW20200826 BUG:QW0077 begin 解决维修待办webui-popover无法关闭问题
+	$("#TabsData").tabs({
+			onBeforeClose:function(title,index){
+				 WebuiPopovers.hideAll();
+			}
+		});
+	//Add By QW20200826 BUG:QW0077 end 解决维修待办webui-popover无法关闭问题
 	if($("#TabsData").tabs('exists',BussType))
     {
         $("#TabsData").tabs('select',BussType);
@@ -200,18 +224,28 @@ function addTabsData_Clicked(data)
 	    var Columns=objTabsInfo.columns;
 	    var QueryParams=objTabsInfo.queryParams;
 	    var Toolbar=objTabsInfo.toolbar;
-	    //Add By QW20200604 BUG:QW0065 Begin 待办-维修界面初始化
-	    var head='<div data-options="region:\'north\',border:false" style="border-bottom:solid 1px #ccc;padding:10px 0 10px 0;"><div class="eq-table-tr">';
-		var BDate='<div class="eq-table-td "><a id="BPopoverDate" href="#"  iconCls="icon-w-filter" class="hisui-linkbutton  hover-dark">申请日期</a></div>';
-		var BLoc='<div class="eq-table-td "><a id="BPopoverLoc" href="#"  iconCls="icon-w-filter" class="hisui-linkbutton  hover-dark">所属科室</a></div>';
-		var BMainter='<div class="eq-table-td "><a id="BPopoverMainter" href="#"  iconCls="icon-w-filter" class="hisui-linkbutton  hover-dark">维修人</a></div>';
-        ///Modified By QW20200707 BUG:QW0069 begin 增加状态进度 
-		var BAction='<div class="eq-table-td "><a id="BPopoverAction" href="#"  iconCls="icon-w-filter" class="hisui-linkbutton  hover-dark">状态进度</a></div>'; 
-		var html=head+BDate+BLoc+BMainter+BAction+'</div></div>';
- 		///Modified By QW20200707 BUG:QW0069 end 
-		if (BussCode=="31")
-	    {
-		   var content ='<div class="hisui-layout" data-options="fit:true,border:false""><div data-options="region:\'center\',border:false"><div class="hisui-layout" data-options="fit:true,border:false">'+ html+'<div data-options="region:\'center\',border:false" style="position:relative;"><table class="hisui-datagrid" id="'+tableID+'"></table></div>'+'</div></div></div>'; 
+ 		///Modified By zy20221115 bug：3073937
+		if (BussCode == "31") {
+			//add by zyq 2023-02-26 begin
+			var paramsLoc = [{ "name": "Type", "type": "2", "value": "" }, { "name": "LocDesc", "type": "1", "value": "UseLoc" }, { "name": "vgroupid", "type": "2", "value": "" }, { "name": "LocType", "type": "2", "value": "0102" }, { "name": "notUseFlag", "type": "2", "value": "" }];
+			singlelookup("UseLoc", "PLAT.L.Loc", paramsLoc, "");
+			var paramMainter = [{ "name": "MemberUser", "type": "1", "value": "" }, { "name": "MGroupDR", "type": "2", "value": "" }, { "name": "MFlag", "type": "2", "value": "" }, { "name": "CurUserID", "type": "2", "value": "" }];
+			singlelookup("MaintUser", "EM.L.MaintUser", paramMainter, "");//add by zyq 2023-02-26 end
+		    //Add By QW20200604 BUG:QW0065 Begin 待办-维修界面初始化
+		    var head='<div data-options="region:\'north\',border:false" style="border-bottom:solid 1px #ccc;padding:10px 0 10px 0;"><div class="eq-table-tr">';
+			var BDate='<div class="eq-table-td "><a id="BPopoverDate" href="#"  iconCls="icon-w-filter" class="hisui-linkbutton  hover-dark">申请日期</a></div>';
+			var BLoc='<div class="eq-table-td "><a id="BPopoverLoc" href="#"  iconCls="icon-w-filter" class="hisui-linkbutton  hover-dark">所属科室</a></div>';
+			var BMainter='<div class="eq-table-td "><a id="BPopoverMainter" href="#"  iconCls="icon-w-filter" class="hisui-linkbutton  hover-dark">维修人</a></div>';
+	        ///Modified By QW20200707 BUG:QW0069 begin 增加状态进度 
+			var BAction='<div class="eq-table-td "><a id="BPopoverAction" href="#"  iconCls="icon-w-filter" class="hisui-linkbutton  hover-dark">状态进度</a></div>'; 
+			var html=head+BDate+BLoc+BMainter+BAction+'</div></div>';
+		   	var content ='<div class="hisui-layout" data-options="fit:true,border:false""><div data-options="region:\'center\',border:false"><div class="hisui-layout" data-options="fit:true,border:false">'+ html+'<div data-options="region:\'center\',border:false" style="position:relative;"><table class="hisui-datagrid" id="'+tableID+'"></table></div>'+'</div></div></div>'; 
+		}
+		else if (BussCode=="63-1"){
+			var head='<div data-options="region:\'north\',border:false" style="border-bottom:solid 1px #ccc;padding:10px 0 10px 0;"><div class="eq-table-tr">';
+			var BDate='<div class="eq-table-td "><a id="BAvailableDays" href="#"  iconCls="icon-w-filter" class="hisui-linkbutton  hover-dark">时间范围</a></div>';
+			var html=head+BDate+'</div></div>';
+		   	var content ='<div class="hisui-layout" data-options="fit:true,border:false""><div data-options="region:\'center\',border:false"><div class="hisui-layout" data-options="fit:true,border:false">'+ html+'<div data-options="region:\'center\',border:false" style="position:relative;"><table class="hisui-datagrid" id="'+tableID+'"></table></div>'+'</div></div></div>'; 
 		}
 		else{
 			var content = '<table class="hisui-datagrid" id="'+tableID+'"></table>';
@@ -253,7 +287,71 @@ function addTabsData_Clicked(data)
 			 initActionItem(tableID,BussCode); ///Add By QW20200707 BUG:QW0069
 		}
 		//Add By QW20200604 BUG:QW0065 Begin
+		///Modified By zy20221115 bug：3073937
+		else if (BussCode=="63-1")
+		{
+			 initAvailableDaysItem(tableID);
+		}
     }
+}
+//Add By By zy20221115 bug：3073937
+function initAvailableDaysItem(tableID)
+{
+	$('#BAvailableDays').webuiPopover({
+		width:200,//can be set with  number
+    	height:'auto',//can be set with  number
+		url:'#AvailableDaysItem',
+		dismissible:false, //Modified  By QW20210220 BUG:QW0092 测试需求:1743633
+		onShow: function($element) {
+			$HUI.keywords("#AvailableDaysDetail").select(getElementValue("AvailableDaysType"));
+		}
+    });
+    $("#AvailableDaysDetail").keywords({
+	    	singleSelect:true,
+			items:[
+	        {
+	            text:"筛选条件",
+	            type:"chapter", //章
+	            items:[
+	                {
+	                    text:'',
+	                    type:"section", 
+	                    items:[
+							{text:'过期',id:'1'},
+							{text:'1个月',id:'2'},
+							{text:'2个月',id:'3'},
+							{text:'3个月',id:'4'},
+							{text:'4个月',id:'5'},
+							{text:'正常',id:'6'}
+						]
+	                }
+	            ]
+	        }
+	    ]
+	});
+	$("#BAvailableDaysSure").click(function(){
+		var AvailableDaysKeyObj=$HUI.keywords("#AvailableDaysDetail").getSelected();
+		setElement("AvailableDaysType",AvailableDaysKeyObj[0].id);
+		refreshCertificateDataTabsGrid(tableID);
+		$('#BAvailableDays').webuiPopover('hide');
+	});
+	
+}
+
+
+//Add By By zy20221115 bug：3073937
+function refreshCertificateDataTabsGrid(tableID)
+{
+	var queryParams={
+			    	ClassName:"web.DHCEQ.Plat.LIBMessages",
+		        	QueryName:"GetCertificateData",
+					BussType:'63-1',
+					AvailableDaysType:getElementValue("AvailableDaysType")  ///Add By QW20200707 BUG:QW0069
+			};
+		$HUI.datagrid("#"+tableID,{
+			url:$URL,
+			queryParams:queryParams
+		});
 }
 //Add By QW20200604 BUG:QW0065 初始化日期查询
 function initDateItem(tableID)
@@ -262,7 +360,7 @@ function initDateItem(tableID)
 		width:'auto',//can be set with  number
     	height:'auto',//can be set with  number
 		url:'#DateItem',
-		dismissible:false,
+		dismissible:false, //Modified  By QW20210129 BUG:QW0089 测试需求:1743633
 		onShow: function($element) {
 			$HUI.keywords("#DateItemDetail").select(getElementValue("DatePattern"));
 			if(getElementValue("DatePattern")=="8") 
@@ -333,8 +431,9 @@ function initLocItem(tableID)
 		width:'auto',//can be set with  number
     	height:'auto',//can be set with  number
 		url:'#LocItem',
-		dismissible:false,
+		dismissible:false,  //Modified  By QW20210220 BUG:QW0092 测试需求:1743633
 		onShow: function($element) {
+			$element.css( 'z-index','1' ); //Modified  By QW20210129 BUG:QW0089 测试需求:1743648
 			$HUI.keywords("#LocItemDetail").select(getElementValue("LocPattern"));
 			if(getElementValue("LocPattern")=="3") $("#UseLoc").lookup("enable");
 		}
@@ -383,8 +482,9 @@ function initMainterItem(tableID)
 		width:200,//can be set with  number
     	height:'auto',//can be set with  number
 		url:'#MainterItem',
-		dismissible:false,
+		dismissible:false,  //Modified  By QW20210220 BUG:QW0092 测试需求:1743633
 		onShow: function($element) {
+			$element.css( 'z-index','1' ); //Modified  By QW20210129 BUG:QW0089 测试需求:1743648
 			$HUI.keywords("#MainterItemDetail").select(getElementValue("UserPattern"));
 			if(getElementValue("UserPattern")=="4") $("#MaintUser").lookup("enable");
 		}
@@ -451,7 +551,7 @@ function initActionItem(tableID,BussCode)
 		width:200,//can be set with  number
     	height:'auto',//can be set with  number
 		url:'#ActionItem',
-		dismissible:false,
+		dismissible:false, //Modified  By QW20210220 BUG:QW0092 测试需求:1743633
 		onShow: function($element) {
 			$HUI.keywords("#ActionItemDetail").select(getElementValue("ActionID"));
 		}
@@ -486,9 +586,9 @@ function refreshTabsGrid(tableID)
 			    	ClassName:"web.DHCEQ.Plat.LIBMessages",
 		        	QueryName:"GetBussDataByCode",
 					BussType:'31',
-					GroupID:'',
-					UserID:'',
-					CurLocDR:'',
+					GroupID:curGroupID,
+					UserID:curUserID,
+					CurLocDR:curLocID,
 					EquipDR:'',
 					DatePattern:getElementValue("DatePattern"), 
 					StartDate:getElementValue("StartDate"), 
@@ -523,7 +623,13 @@ function initMaintWaitListDataGrid()
 		pagination:true,
 		pageSize:7,
 		pageNumber:1,
-		pageList:[7,14,21,28,35]
+		pageList:[7,14,21,28,35],
+		rowStyler:function(index,row){
+			// MZY0124	2654459		2022-05-23
+			//TPrescription,0:"green",-1:"yellow",-2:"red")	row.TBackColor	#00FF00	#FFFF00	#FF0000
+			//return 'background-color:pink;color:blue;font-weight:bold;';
+			return 'background-color:'+row.TBackColor;
+		}
 	});
 }
 
@@ -537,12 +643,13 @@ function initMaintWaitListDataGrid()
 ///用busscode做数组的索引
 ///modified by czf 20181029 735198
 ///modified by kdf 20190102 解决工作台点开报废 界面为空的问题
+///modified by czf 2021-05-22 1890577 工作台前期管理界面为空
 var componentArray = {"11":"EM.G.Queue.OpenCheckRequest", "12":"EM.G.Queue.OpenCheckRequest", "21":"EM.G.Queue.InStock", "22":"EM.G.Queue.StoreMove", "23":"EM.G.Queue.Return", "31":"EM.G.Queue.MaintRequest", "32":"32",
 					"33":"33", "34":"EM.G.Queue.DisuseRequest", "35":"35", "41":"41", "51":"51", "52":"52", "61":"61",
 					"62":"62", "63":"Plat.G.Queue.Certificate", "63-1":"Plat.G.Queue.Vendor", "63-2":"Plat.G.Queue.Manufacturer", "63-3":"Plat.G.Queue.Certificate", "64":"RM.G.Queue.Rent",
 					"71":"EM.G.Queue.MaintAlert", "72-1":"EM.G.Queue.MaintAlert","72-2":"EM.G.Queue.MaintAlert", "73":"EM.G.Queue.GuaranteeAlert", "75":"EM.G.Queue.ContractArriveAlert", "76":"EM.G.Queue.PayPlanAlert",
-					"81":"81", "91":"EM.G.Queue.BuyRequest", "92":"EM.G.Queue.BuyPlan", "93":"93",
-					"A01":"A01", "A02":"A02", "A03":"A03", "A04":"A04"};
+					"81":"81", "91":"EM.G.Queue.BuyRequestFind", "92":"EM.G.Queue.BuyPlan", "93":"EM.G.Queue.IFB","94":"EM.G.Queue.Contract",
+					"A01":"A01", "A02":"A02", "A03":"A03", "A04":"A04","77":"EM.G.Queue.OLEquip"};
 
 function editTabsInfo(title,busscode)
 {
@@ -622,6 +729,13 @@ function editTabsInfo(title,busscode)
 					CurBussCode:busscode
 			    	};
 		  	break;
+		case '77':				// add by sjh SJH0046 2021-02-23 BEGIN
+			queryParams={
+			    	ClassName:"web.DHCEQ.Plat.LIBMessages",
+		        	QueryName:"GetOverYearLimitEquip",
+					//CurBussCode:busscode
+			    	};
+		  	break;				// add by sjh SJH0046 2021-02-23 END
 		case '81':
 			queryParams={
 			    	ClassName:"web.DHCEQMessages",
@@ -641,14 +755,15 @@ function editTabsInfo(title,busscode)
 			    	ClassName:"web.DHCEQ.Plat.LIBMessages",
 		        	QueryName:"GetBussDataByCode",
 					BussType:busscode,
-					GroupID:'',
-					UserID:'',
-					CurLocDR:'',
+					GroupID:curGroupID,
+					UserID:curUserID,
+					CurLocDR:curLocID,
 					EquipDR:''
 			    	};
 		  	break;
 	}
 	this.queryParams=queryParams; //根据不同的业务定义不同的query
+	if (getElementValue("RentModeFlag")=="1") componentArray["64"]="RM.G.Queue.RentOld";  //Modify by zx 2020-11-09 ZX0113
 	this.columns=getCurColumnsInfo(componentArray[busscode],"","",""); ///动态成一个columns信息x
 	this.toolbar=""
 }
@@ -662,3 +777,39 @@ function clearData(vElementID)
 {
 	setElement(vElementID+"DR","")
 }
+//Modife by zc 2020-09-18 ZC0083 租赁操作后页面刷新
+function reloadDataGrid()
+{
+	$('#table64').datagrid('reload'); 
+}
+//Modified  By QW20210129 BUG:QW0089 测试需求:1743828
+function refreshMaintTable()
+{
+	$('#table31').datagrid('reload');	
+}
+
+//Modify by zx 2022-03-16 增加待办显示id处理 BUG ZX0144
+function reloadTabAndWait(bussCode)
+{
+	$('#table'+bussCode).datagrid({"onLoadSuccess":function(data){
+		var datagridRows=$('#table'+bussCode).datagrid('getPager').data("pagination").options.total;
+		$('#wait'+bussCode).text(datagridRows);
+	}}).datagrid('reload');
+	if(bussCode=="31")
+	{
+		$('#tMaintWaitList').datagrid({"onLoadSuccess":function(data){
+			var datagridRows=$('#tMaintWaitList').datagrid('getPager').data("pagination").options.total;
+			$('#wait31').text(datagridRows);
+		}}).datagrid('reload');
+	}
+}
+//add by zyq 2023-02-16 begin
+function setSelectValue(vElementID, rowData) {
+	if (vElementID == "MaintUser") {
+		setElement("MaintUserDR", rowData.TUserdr)
+	}
+	else if (vElementID == "UseLoc") {
+		setElement("UseLocDR", rowData.TRowID)
+	}
+}
+//add by zyq 2023-02-16 end

@@ -63,7 +63,7 @@ $(function(){
 				var tmpArr=selobj.INDIDDicDemo.split("|")
 				if(tmpArr.length>5){
 					var tmpstr=tmpArr[5]
-					var usercode=session['LOGON.USERCODE']
+					var usercode=session['LOGON.USERCODE'];
 					if((tmpstr!="")&(tmpstr.indexOf(usercode)==-1)){
 						disinput("disabled")
 					}else{
@@ -71,6 +71,7 @@ $(function(){
 					}
 				}else{disinput(false)}
 			}else(disinput(false))
+			clearform();
 			Querydic($('#diccbx').combogrid('grid').datagrid('getSelected'),selobj);
 		},
 		onShowPanel:function(){	
@@ -229,8 +230,9 @@ function UpdateDic(){
 	if((seldictype=="")||(seldictype=='undefined')){
 		$.messager.alert('提示','请选择字典类别!');return;
 	}
-	
-	var saveinfo=selRowid+"^"+seldictype+"^"+$('#code').val()+"^"+$('#desc').val()+"^"+$('#insucode').val()+"^"+$('#insudesc').val()+"^";
+	var ConDate = tkMakeServerCall("web.INSUDicDataCom","GetConDateTime");
+	var Demo = session['LOGON.USERID'] + '|' + ConDate; // 对照类型字典 备注保存对照人|对照日期|对照时间 
+	var saveinfo=selRowid+"^"+seldictype+"^"+$('#code').val()+"^"+$('#desc').val()+"^"+$('#insucode').val()+"^"+$('#insudesc').val()+"^"+Demo;
 	saveinfo=saveinfo.replace(/请输入信息/g,"")
 	///alert(saveinfo)
 	var savecode=tkMakeServerCall("web.INSUDicDataCom","UpdateIn","","",saveinfo)
@@ -252,7 +254,7 @@ function UpdateDic(){
 //删除记录
 function DelDic(){
 	//if(BDPAutDisableFlag('btnDelete')!=true){$.messager.alert('提示','您无权限,请联系管理员授权!');return;}
-	if(selRowid==""){$.messager.alert('提示','请选择要删除的记录!');return;}
+	if(selRowid=="" || selRowid<0 || !selRowid){$.messager.alert('提示','请选择要删除的记录!','info');return;}
 	$.messager.confirm('请确认','你确认要删除这条记录吗?',function(fb){
 		if(fb){
 			var savecode=tkMakeServerCall("web.INSUDicDataCom","Delete","","",selRowid)

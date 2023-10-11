@@ -1,4 +1,4 @@
-//é–»â•‚îŸ‡é‹ï½‰å¹é¾å†²ç¥ª
+//ÅÌµã´òÓ¡
 //zhangxiao
 //20130715
 //INStkTkPrint.js
@@ -17,7 +17,7 @@ function PrintINStk(Inst)
 	var LocDesc=mainArr[6]
 	var InstDate=mainArr[1]
 	var InstTime=mainArr[2]
-	var qPar="" //"desc^ASC"  //é–¸æ §æ‡é¯å ¥æ‚§ç‘™å‹­æš•éæ¶™îšˆé¡‘?
+	var qPar="" //"desc^ASC"  //°üº¬ÌØÊâ×Ö·û
 	var Others=""
 	var HospDesc=App_LogonHospDesc;
 	//fileName="{DHCST_INStkTk_Common.raq(Inst="+Inst+";qPar="+qPar+";Others="+Others+";InstNo="+InstNo+";LocDesc="+LocDesc+";InstDate="+InstDate+";InstTime="+InstTime+";HospDesc="+HospDesc+")}";
@@ -25,7 +25,7 @@ function PrintINStk(Inst)
 
 	DHCCPM_RQDirectPrint(fileName);
 	}
-//é–»â•‚îŸ‡é‹ï½‰å¹é¾å†²ç¥ª(é–¹ç¨¿î˜³é»ï½†æ‹…?
+//ÅÌµã´òÓ¡(°´»õÎ»)
 //wyx
 //20131122
 //INStkTkPrint.js
@@ -44,7 +44,7 @@ function PrintINStkStkBin(Inst){
 	var LocDesc=mainArr[6]
 	var InstDate=mainArr[1]
 	var InstTime=mainArr[2]
-	var qPar=""  //"desc^ASC"   //é–¸æ §æ‡é¯å ¥æ‚§ç‘™å‹­æš•éæ¶™îšˆé¡‘?
+	var qPar=""  //"desc^ASC"   //°üº¬ÌØÊâ×Ö·û
 	var Others=""
 	var HospDesc=App_LogonHospDesc;
 	fileName="{DHCST_INStkTk_StkBin_Common.raq(Inst="+Inst+";qPar="+qPar+";Others="+Others+";InstNo="+InstNo+";InstDate="+InstDate+";InstTime="+InstTime+";)}";
@@ -67,7 +67,7 @@ function PrintINStkTotal(Inst)
 	var LocDesc=mainArr[6]
 	var InstDate=mainArr[1]
 	var InstTime=mainArr[2]
-	var qPar="" //"desc^ASC"  //é–¸æ §æ‡é¯å ¥æ‚§ç‘™å‹­æš•éæ¶™îšˆé¡‘?
+	var qPar="" //"desc^ASC"  //°üº¬ÌØÊâ×Ö·û
 	var Others=""
 	var HospDesc=App_LogonHospDesc;
 	//fileName="{DHCST_INStkTk_Common.raq(Inst="+Inst+";qPar="+qPar+";Others="+Others+";InstNo="+InstNo+";LocDesc="+LocDesc+";InstDate="+InstDate+";InstTime="+InstTime+";HospDesc="+HospDesc+")}";

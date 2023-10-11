@@ -1,7 +1,7 @@
 
-//DHCPEAPSC.Find.hisui.js
-//功能	体检卡状态查询	
-//创建	2019.04.18
+//名称    DHCPEAPSC.Find.hisui.js
+//功能	  体检卡状态查询	
+//创建	  2019.04.18
 //创建人  xy
 
 $(function(){
@@ -28,24 +28,50 @@ $(function(){
 
 	
 function InitCombobox()
-{
-	// 体检卡类型
-	var CTypeObj = $HUI.combobox("#Type",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindTJCType&ResultSetType=array",
-		valueField:'id',
-		textField:'desc',
-		panelHeight:'35',
-		})
-	
-	// 体检卡状态
-	var StatusObj = $HUI.combobox("#Status",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindTJCStatus&ResultSetType=array",
-		valueField:'id',
-		textField:'desc',
-		panelHeight:'130',
-		})
+{	
+	//体检卡类型
+	var TJTypeObj = $HUI.combobox("#Type", {
+		valueField: 'id',
+		textField: 'text',
+		panelHeight: '35',
+		data: [
+			{
+				id: 'C',
+				text:$g('代金卡')
+			},
+
+		]
+
+	})
 	
 
+	// 体检卡状态
+	var StatusObj = $HUI.combobox("#Status",{
+		valueField: 'id',
+		textField: 'text',
+		panelHeight: '140',
+		data: [
+			{
+				id: 'N',
+				text: $g('正常')
+			},
+			{
+				id: 'A',
+				text: $g('作废')
+			},
+			{
+				id: 'L',
+				text: $g('挂失')
+			},
+			{
+				id: 'F',
+				text: $g('冻结')
+			},
+
+
+		]
+
+	});
 }
 
 //查询
@@ -96,16 +122,16 @@ function InitAPSCFindDataGrid(){
 		columns:[[
 			
 			{field:'TRowID',title:'TRowID',hidden: true},
-		    {field:'TRegNo',width:'120',title:'登记号'},
-			{field:'TName',width:'100',title:'姓名'},
-			{field:'TType',width:'150',title:'体检卡类型'},
-			{field:'TCardNo',width:'150',title:'代金卡号'},
-			{field:'TDate',width:'100',title:'日期'},
-			{field:'TTime',width:'100',title:'时间'},
-			{field:'TStatus',width:'100',title:'状态'},
+		    {field:'TRegNo',width:'120',title:'登记号',hidden: true},
+			{field:'TName',width:'200',title:'姓名'},
+			{field:'TType',width:'220',title:'体检卡类型'},
+			{field:'TCardNo',width:'220',title:'代金卡号'},
+			{field:'TDate',width:'220',title:'日期'},
+			{field:'TTime',width:'220',title:'时间'},
+			{field:'TStatus',width:'150',title:'状态'},
 			{field:'TSourceNo',title:'单据号',hidden: true},
-			{field:'TUser',width:'100',title:'操作员'},
-			{field:'TRemark',width:'80',title:'备注'}
+			{field:'TUser',width:'150',title:'操作员'},
+			{field:'TRemark',width:'200',title:'备注'}
 	
 					
 		]]

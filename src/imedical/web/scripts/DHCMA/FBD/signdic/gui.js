@@ -26,7 +26,7 @@ function InitViewport(){
 	    },
 		columns:[[
 			{field: 'Code',title: '代码', width: 150},                                                                                                                           
-			{field: 'Desc',title: '名称', width: 260}, 
+			{field: 'Desc',title: '描述', width: 260}, 
 			{field: 'ExtraTypeDesc',title: '值类型', width: 120},                                                                                                                                              
 			{field: 'ExtraUnit',title: '值单位', width: 120}, 			                                                                                                                                          
 			{field: 'IsActiveDesc',title: '是否有效', width: 80},                                                                                                                                            
@@ -36,6 +36,10 @@ function InitViewport(){
 			if (rindex>-1) {
 				obj.gridSignDic_onSelect();
 			}
+		},
+		onLoadSuccess:function(rowData){
+			obj.clearFormData();
+	
 		}
 	});
 

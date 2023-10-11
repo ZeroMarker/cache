@@ -16,6 +16,11 @@ function BuildBaseDatHospitalComb(){
 	var defaultHospId = GetURLParam("HospId") || '';
 	// GetBDPMenuTable
 	var TableName=tkMakeServerCall("web.DHCBILLINSUCloudCommon","GetBDPMenuTable",BDPID);
+	// 侧菜单取不到配置，取头菜单配置
+	var tmpHeadTable = GetURLParam('TableName');
+	if(tmpHeadTable != "" && TableName==""){
+		TableName = tmpHeadTable;	
+	}
 	if(location.toString().indexOf('insutarcontrast') > 0 &&  TableName=="" ){
 			TableName = 'ALLHospital';
 	}

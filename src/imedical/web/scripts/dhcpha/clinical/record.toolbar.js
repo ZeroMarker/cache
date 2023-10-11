@@ -213,7 +213,7 @@ document.getElementById("favoritesPlus").onclick = function(){
 	   }     
     AddActionLog(userID,userLocID,"FavoritesAdd",""); 
     var arr = {"userId":userID,"userLocId":userLocID};
-	var tempFrame = "<iframe id='iframeFavAdd' scrolling='auto' frameborder='0' src='dhcpha.clinical.favorite.add.csp?EpisodeID="+episodeID+"&InstanceID="+ InstanceID+"&categoryId="+categoryId+"&templateId="+templateId+ "' style='width:450px; height:450px; display:block;'></iframe>";
+	var tempFrame = "<iframe id='iframeFavAdd' scrolling='auto' frameborder='0' src='dhcpha.clinical.favorite.add.csp?EpisodeID="+episodeID+"&InstanceID="+ InstanceID+"&categoryId="+categoryId+"&templateId="+templateId+ "&MWToken="+websys_getMWToken()+"' style='width:450px; height:450px; display:block;'></iframe>";
 	document.getElementById("framRecord").style.visibility="hidden";
 	createDialog("dialogFavAdd","添加收藏","454","490","iframeFavAdd",tempFrame,favAddCallback,arr);
 	};
@@ -253,7 +253,8 @@ document.getElementById("favorites").onclick = function(){
 	}
 	var xpwidth=window.screen.width-10;
 	var xpheight=window.screen.height-35;
-	var returnValues = window.open("dhcpha.clinical.favorite.csp","",'resizable=yes,directories=no,top=0,left=0,width='+xpwidth+',height='+xpheight);
+	var url = "dhcpha.clinical.favorite.csp?MWToken="+websys_getMWToken();
+	var returnValues = window.open(url,"",'resizable=yes,directories=no,top=0,left=0,width='+xpwidth+',height='+xpheight);
 };
 
 //手工解锁
@@ -459,7 +460,7 @@ document.getElementById("redo").onclick = function(){
 //特殊字符   lbb modify 2018/8/16  取值为字符串修改取值
 document.getElementById("spechars").onclick = function(){
 		if (!framRecord) return;
-	var tempFrame = "<iframe id='iframeSpechars' scrolling='auto' frameborder='0' src='dhcpha.clinical.spechars.csp' style='width:510px; height:428px; display:block;'></iframe>";
+	var tempFrame = "<iframe id='iframeSpechars' scrolling='auto' frameborder='0' src='dhcpha.clinical.spechars.csp?MWToken="+websys_getMWToken()+"' style='width:510px; height:428px; display:block;'></iframe>";
 	document.getElementById("framRecord").style.visibility="hidden";
 	createDialog("dialogSpechars","特殊字符","514","480","iframeSpechars",tempFrame,speCallback,"");
 }
@@ -641,7 +642,7 @@ document.getElementById("export").onclick = function(){
 //剪贴板
 document.getElementById("clipboard").onclick = function(){
 	$("#recordlayout").layout("expand","east"); 
-	var clipboard = "<iframe id='framclipboard' frameborder='0' src='emr.clipboard.csp' style='width:100%; height:100%;scrolling:no;margin:0px;'></iframe>"				
+	var clipboard = "<iframe id='framclipboard' frameborder='0' src='emr.clipboard.csp?MWToken="+websys_getMWToken()+"' style='width:100%; height:100%;scrolling:no;margin:0px;'></iframe>"				
 	addResourceTab("clipboard","剪贴板",clipboard,false); 
 
 };
@@ -739,7 +740,7 @@ function setToolBarFontView(disableFont)
 		{
 			document.getElementById("fontSpan").style.display="none";
 		}
-		else
+		else if(document.getElementById(strs[i]))
 		{
 			document.getElementById(strs[i]).style.display="none";
 		}

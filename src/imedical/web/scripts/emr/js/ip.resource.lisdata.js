@@ -1,4 +1,10 @@
-﻿$(function() {
+﻿var lisSubColumn = {"ItemDesc":{"check":true},
+					"Synonym":{"check":true},
+					"ItemResult":{"check":true},
+					"ItemUnit":{"check":true},
+					"AbnorFlag":{"check":true},
+					"ItemRanges":{"check":true}};
+$(function() {
     strXml = convertToXml(scheme);
     var interface = $(strXml).find("interface").text();
     var checkstyle = $(strXml).find("checkstyle").text();
@@ -10,6 +16,11 @@
 	}
     $("#comboxEpisode").hide();
     initEpisodeList("#EpisodeList");
+	$('#searchLisdata').searchbox({ 
+	    searcher:function(value,name){ 
+	    	queryData();
+	    }          
+	  }); 
     setDataGrid(interface, checkstyle);
 	$HUI.radio("[name='episode']",{
         onChecked:function(e,value){
@@ -27,6 +38,7 @@
 		   	if (pageConfig == "Y")
 			{
 				resourceConfig.Lis = this.id;
+				saveResourceConfig('Lis');
 			} 
         }
     }); 
@@ -49,10 +61,10 @@
 	{
 		$HUI.radio("#currentEpisode").setValue(true);
 	}     
-
+	initlisSubTable();
     $('#lisDataPnl').panel('resize', {
         height: $('#dataPnl').height() * 0.50
-    });
+    });   
 
     $('body').layout('resize');
 });
@@ -81,6 +93,8 @@ function setDataGrid(interface, checkstyle) {
         columns: getColumnScheme("show>parent>item"),
         sortOrder: 'desc',
         remoteSort: false,
+		sortName: 'AuthorisationDate,AuthorisationTime',
+		border:false,
         onCheck: function(rowIndex, rowData) {
              clickFlag=true;
             onCheckPar(rowIndex, rowData,checkstyle);
@@ -114,6 +128,18 @@ function setDataGrid(interface, checkstyle) {
             quoteData = {};
             $('#lisSubData').datagrid('loadData', { total: 0, rows: [] });
         },
+		rowStyler: function(index, row) {
+            if (row.IsReferenceOEord == "1")
+			{
+				return 'color:#CCCCCC;';
+			}
+            if (row.ResultStatus == "1") {
+                return 'color:#60F807;';
+            }
+            if (row.AbnormalFlag == "1") {
+                return 'color:#FF0000;';
+            }
+        },
         /*liuzhongwan 在加载页面时和默认选择本次就诊时程序连续发送了两个异步ajax请求，当加载时的请求后接收时就显示空表。
         解决方案：给grid添加onBeforeLoad事件，只有在就诊参数不为空时才发送请求，否则不发。
         */
@@ -123,15 +149,23 @@ function setDataGrid(interface, checkstyle) {
             }
             //liuzhongwan end
     });
+    lisSubItems = getColumnScheme("show>child>item");
+    var wid = 0;
+    for (var i=0;i<lisSubItems[0].length;i++)
+    {
+	    wid = wid + lisSubItems[0][i].colwidth;
+	}
     $('#lisSubData').datagrid({
 	    headerCls:'panel-header-gray',
-        loadMsg: '数据装载中......',
+        //loadMsg: '数据装载中......',
         autoRowHeight: true,
         url: '../EMRservice.Ajax.lisData.cls?Action=GetSubLis&InterFace=' + encodeURI(encodeURI(interface)),
         singleSelect: true,
         rownumbers: true,
         singleSelect: false,
         fit: true,
+        border:false,
+        //width:wid,
         columns: getColumnScheme("show>child>item"),
         onCheck: function(rowIndex, rowData) {
             quoteData[rowData.OeordID]["child" + rowIndex] = { "ItemDesc": rowData.ItemDesc, "Synonym": rowData.Synonym, "ItemResult": rowData.ItemResult, "ItemUnit": rowData.ItemUnit, "AbnorFlag": rowData.AbnorFlag, "ItemRanges": rowData.ItemRanges, "DetailData": rowData.DetailData, "ReportDR": rowData.ReportDR };
@@ -218,20 +252,26 @@ function setDataGrid(interface, checkstyle) {
 					columns:[[  
 				        {field:'ck',checkbox:true},
 				        {field:'ReportDR',title:'ReportDR',width:80,hidden:true},
-				        {field:'AntCode',title:'抗生素代码',width:80},
-				        {field:'AntName',title:'抗生素名称',width:80},
-				        {field:'LowRange',title:'最低抑菌浓度',width:80},
-				        {field:'SenCode',title:'药敏结果代码',width:80},
-						{field:'SenName',title:'药敏结果描述',width:80,sortable:true},
-						{field:'Suggest',title:'建议',width:80},
-				        {field:'SenMethod',title:'药敏方法',width:80,sortable:true}
+				        {field:'RowID',title:'药敏结果ID',width:80,hidden:true},
+				        {field:'Sequence',title:'序号',width:80},
+				        {field:'AntibioticsDR',title:'抗生素代码',width:80},
+				        {field:'AntibioticsName ',title:'抗生素名称',width:80},
+				        {field:'SName',title:'抗生素缩写',width:80},
+				        {field:'SensitivityDR',title:'药敏结果代码',width:80},
+				        {field:'SensitivityName',title:'药敏结果名称',width:80},
+				        {field:'SenMethod',title:'试验方法',width:80},
+				        {field:'SenValue',title:'结果值',width:80},
+						{field:'IRanges',title:'I折点范围',width:80},
+						{field:'SRanges',title:'S折点范围',width:80},
+				        {field:'RRanges',title:'R折点范围',width:80},
+				        {field:'AntibioticsClassDR',title:'抗生素级别代码',width:80}
 				    ]],
-					sortOrder:'SenName',
+					sortOrder:'SensitivityName',
 					onResize:function(){
 						$('#lisSubData').datagrid('fixDetailRowHeight',index);
 					},
 					onCheck: function(rowIndex, rowData) {
-			            qryAnt[rowData.ReportDR]["child" + rowIndex] = { "ReportDR": rowData.ReportDR, "AntCode": rowData.AntCode, "AntName": rowData.AntName, "SenCode": rowData.SenCode, "SenName": rowData.SenName, "SenMethod": rowData.SenMethod, "LowRange": rowData.LowRange, "Suggest": rowData.Suggest };
+			            qryAnt[rowData.ReportDR]["child" + rowIndex] = { "ReportDR": rowData.ReportDR, "Sequence": rowData.Sequence, "AntibioticsDR": rowData.AntibioticsDR, "AntibioticsName": rowData.AntibioticsName, "SName": rowData.SName, "SensitivityDR": rowData.SensitivityDR, "SensitivityName": rowData.SensitivityName, "SenMethod": rowData.SenMethod, "SenValue": rowData.SenValue, "IRanges": rowData.IRanges, "SRanges": rowData.SRanges, "RRanges": rowData.RRanges, "AntibioticsClassDR": rowData.AntibioticsClassDR };
 			        },
 			        onUncheck: function(rowIndex, rowData) {
 			            delete qryAnt[rowData.ReportDR]["child" + rowIndex];
@@ -240,7 +280,7 @@ function setDataGrid(interface, checkstyle) {
 			            var length = rows.length;
 			            if (length <= 0) return;
 			            for (i = 0; i < length; i++) {
-			                qryAnt[rows[i].ReportDR]["child" + i] = { "ReportDR": rows[i].ReportDR, "AntCode": rows[i].AntCode, "AntName": rows[i].AntName, "SenCode": rows[i].SenCode, "SenName": rows[i].SenName, "SenMethod": rows[i].SenMethod, "LowRange": rows[i].LowRange, "Suggest": rows[i].Suggest };
+			                qryAnt[rows[i].ReportDR]["child" + i] = { "ReportDR": rows[i].ReportDR, "Sequence": rows[i].Sequence, "AntibioticsDR": rows[i].AntibioticsDR, "AntibioticsName": rows[i].AntibioticsName, "SName": rows[i].SName, "SensitivityDR": rows[i].SensitivityDR, "SensitivityName": rows[i].SensitivityName, "SenMethod": rows[i].SenMethod, "SenValue": rows[i].SenValue, "IRanges": rows[i].IRanges, "SRanges": rows[i].SRanges, "RRanges": rows[i].RRanges, "AntibioticsClassDR": rows[i].AntibioticsClassDR };
 			            }
 			        },
 			        onUncheckAll: function(rows) {
@@ -408,8 +448,10 @@ function getParam() {
         //本次就诊
         authorizedFlag = 1;
     }
+    var searchInput = $('#searchLisdata').searchbox('getValue');
     var param = {
         EpisodeID: epsodeIds,
+        SearchInput:searchInput,
         StartDateTime: stDateTime,
         EndDateTime: endDateTime,
         AuthStartDateTime: authStDateTime,
@@ -426,8 +468,12 @@ function getData() {
     var childList = getRefScheme("reference>child>item");
     var separate = $(strXml).find("reference>separate").text();
     separate = (separate == "enter") ? "\n" : separate;
+	var endseparate = $(strXml).find("endseparate").text();
     var quality = $(strXml).find("quality").text();
     var checkedItems = $('#lisData').datagrid('getChecked');
+	checkedItems = setArrValue(checkedItems);
+	// 将数据按照时间倒叙排序
+	checkedItems.sort(compareOrdDT("ReceiveDateTime","inverted")); 	
 	var param = {"action":"GET_DOCUMENT_CONTEXT"};
 	documentContext = parent.eventDispatch(param);
     $.each(checkedItems, function(index, item) {
@@ -435,9 +481,9 @@ function getData() {
 		{
 			var happenDatetime = documentContext.HappenDateTime;
 			var tmpDatetime = item.AuthorisationDate + " "+ item.AuthorisationTime;
-			if (compareDateTime(tmpDatetime,happenDatetime))
+			if (compareDateTime(happenDatetime,tmpDatetime))
 			{
-				alert("审核时间大于病历时间,不能引用");
+				top.$.messager.alert("提示","审核时间大于病历时间,不能引用");
 				return false;
 			}
 		}
@@ -447,43 +493,73 @@ function getData() {
                 result = result + parentList[i].desc + item[parentList[i].code] + parentList[i].separate;
             }
             //收集子表内容
-            $.each(quoteData[item.OEordItemRowID], function(index, item) {
-                for (j = 0; j < childList.length; j++) {
-                    if (childList[j].code == "ItemUnit") {
-                        var obj = getFormatString(item[childList[j].code]);
-                        if (obj != "") {
-                            var idx1 = item[childList[j].code].indexOf(obj.subChar1);
-                            var idx2 = item[childList[j].code].indexOf(obj.subChar2);
-                            if ((item[childList[j].code].charAt(0) != "*")&&(item[childList[j].code].charAt(0) != "×")) {
-                                result = result + "*";
-                            }
-                            result = result + item[childList[j].code].substring(0, idx1);
-                            resultItems.push({ "TEXT": result });
-                            resultItems.push({ "STYLE": [obj.Style], "TEXT": item[childList[j].code].substring(idx1 + 1, idx2) });
-                            result = item[childList[j].code].substring(idx2);
-                        } else {
-                            result = result + item[childList[j].code];
-                        }
-                    } else {
-                        result = result + item[childList[j].code];
+			var childLength = Object.keys(quoteData[item.OEordItemRowID]).length;
+            var count = 0;
+            $.each(quoteData[item.OEordItemRowID], function(index1, item) {
+                for (j = 0; j < childList.length; j++) {	            
+	                if(lisSubColumn[childList[j].code].check==true)
+	                {		             
+	                    if (childList[j].code == "ItemUnit") 
+	                    {
+	                        var obj = getFormatString(item[childList[j].code]);
+	                        if (obj != "") {
+	                            var idx1 = item[childList[j].code].indexOf(obj.subChar1);
+	                            var idx2 = item[childList[j].code].indexOf(obj.subChar2);
+	                            if ((item[childList[j].code].charAt(0) != "*")&&(item[childList[j].code].charAt(0) != "×")) {
+	                                result = result + "*";
+	                            }
+	                            result = result + item[childList[j].code].substring(0, idx1);
+	                            resultItems.push({ "TEXT": result });
+	                            resultItems.push({ "STYLE": [obj.Style], "TEXT": item[childList[j].code].substring(idx1 + 1, idx2) });
+	                            result = item[childList[j].code].substring(idx2);
+	                        } 
+	                        else 
+	                        {
+	                            result = result + item[childList[j].code];
+	                        }
+	                    } 
+	                    else 
+	                    {
+	                        result = result + item[childList[j].code];
+	                    }
+                    if (childLength-1 > count)
+                    {
+                    	result = result + childList[j].separate;
                     }
-                    result = result + childList[j].separate;
+					count = count +1;					
                 }
-                if ((item["DetailData"].length > 0)&&(item["ReportDR"] != ""))
-	            {
-            		result = result + "\n";
-            		$.each(qryAnt[item["ReportDR"]], function(row, rowData) {
-	            		result = result + rowData.AntName + "：" + rowData.SenName + " " + rowData.Suggest + "；";	
-            		});
-	            }
-            });
-            if (checkedItems.length - 1 > index) {
-                result = result + separate;
+                    
             }
-            
-	    inputReferenceDataLog(item.EpisodeID,item.OEordItemRowID,item.OEordItemDesc)  
+			if ((item["DetailData"].length > 0)&&(item["ReportDR"] != ""))
+			{
+				result = result + "\n";
+				$.each(qryAnt[item["ReportDR"]], function(row, rowData) {
+					result = result + rowData.AntibioticsName + "：" + rowData.SensitivityName + " " + rowData.SenValue + "；";	
+				});
+			}
+        });
+		if (checkedItems.length  > index) {
+			result = result + separate;
+		}
+	    inputReferenceDataLog(item.EpisodeID,item.OEordItemRowID,item.OEordItemDesc)
+			
+			var curIndex = $('#lisData').datagrid('getRowIndex',item.OEordItemRowID);
+		if((curIndex !=undefined)&&(curIndex >-1)){
+				$('#lisData').datagrid('updateRow',{
+					index: curIndex,
+					row: {
+						IsReferenceOEord: "1"
+					}
+				});	
+			}	
         }
     });
+	
+    if((endseparate != "")&&(result.charAt(result.length-1) == ","))
+    {
+	    result = result.substring(0, result.length-2) + endseparate;
+	}	
+	
     resultItems.push({ "TEXT": result });
     var param = { "action": "INSERT_STYLE_TEXT_BLOCK", "args": { "items": resultItems } };
     parent.eventDispatch(param);
@@ -525,4 +601,139 @@ function inputReferenceDataLog(episodeId,OEordItemRowID,OEordItemDesc)
 					},
 			error : function(d) { alert("input ReferenceDataLog error");}
 		});	
+}
+
+function initlisSubTable()
+{
+	var tr = $('<tr class="datagrid-header-row lisSubData-header-row0"></tr>');
+	lisSubItems = getColumnScheme("show>child>item")
+	var lisSubRefScheme = getRefScheme("reference>child>item");
+	tda = "<td class='datagrid-header-rownumber'></td><td style='width:22px;'></td><td class='datagrid-header-over' id='' style='width:15px;'><input class='hisui-checkbox' type='checkbox' name='SubPacs' data-options='onCheckChange:function(event,value){checkAllData(this)}'/></td>"
+	$(tr).append(tda);
+	for (var i=1;i<lisSubItems[0].length;i++)
+	{
+		var	td = "";		
+		if (lisSubItems[0][i].hidden)
+		{ 
+			td= "<td class='' id='" +lisSubItems[0][i].field+ "' style='display:none;'><input class='hisui-checkbox' type='checkbox' name='SubPacs' label='" + lisSubItems[0][i].title + "'/></td>"    
+		}
+		else
+		{
+			var isCheckField = true;
+			$.each(lisSubRefScheme, function(index, item){
+				if (item.code == lisSubItems[0][i].field)
+				{
+					isCheckField = true
+					return false;
+				}
+				else
+				{
+					isCheckField = false
+					return;
+				}
+				
+			})
+			
+			if (isCheckField == true)
+			{
+				td= "<td class='' id='" +lisSubItems[0][i].field+ "' style='width:" +(lisSubItems[0][i].width-2)+ ";' align='center'><input class='hisui-checkbox' type='checkbox' name='" +lisSubItems[0][i].field+ "' data-options='onCheckChange:function(event,value){checkOnClick(this)}' label='" + lisSubItems[0][i].title + "'/></td>" 			
+			}
+			else
+			{
+				td= "<td class='' id='" +lisSubItems[0][i].field+ "' style='width:" +lisSubItems[0][i].width+ ";' align='center'>"+emrTrans(lisSubItems[0][i].title)+"</td>" 			
+
+			}
+		}
+		
+		$(tr).append(td);
+	}
+	$("#lisSubColumn").append(tr);
+	$.parser.parse('#lisSubColumn');
+	if(selectConfig=="Y"&&clickFlag==false)return
+	for (var i=0;i<lisSubRefScheme.length; i++)
+	{
+		if (lisSubRefScheme[i].check)
+		{ 
+			var code = lisSubRefScheme[i].code;
+			//$('#'+ code+ " input").attr("checked",true);
+			$HUI.checkbox('#'+ code+ " input").setValue(true);
+		}
+	}	
+}
+
+function checkAllData(obj)
+{
+	if(obj.checked)
+	{
+		$('#lisSubData').datagrid('checkAll');	
+	}
+	else
+	{
+		$('#lisSubData').datagrid('uncheckAll');
+	}
+	
+}
+
+//选择子项目
+function checkOnClick(obj)
+{
+	try
+	{		
+		if (!$("#lisSubColumn tr td")) return;
+		var field = obj.name;
+		var lisSubItems = getColumnScheme("show>child>item");
+		//lisSubColumn = lisSubItems[0];
+		if(obj.checked)
+		{
+			for(var i=0;i<lisSubItems[0].length;i++)
+			{
+				if((lisSubItems[0][i])&&(lisSubItems[0][i].field))
+				{
+					if (lisSubItems[0][i].field == field)
+					{
+						lisSubColumn[field].check = true;					
+					}
+				}
+			}
+		}
+		else
+		{
+			for(var i=0;i<lisSubItems[0].length;i++)
+			{
+				if((lisSubItems[0][i])&&(lisSubItems[0][i].field))
+				{
+					if (lisSubItems[0][i].field == field)
+					{
+						lisSubColumn[field].check = false;
+					}
+				}
+			}
+		}	
+	}
+	catch(err)
+	{
+	}
+
+}
+
+function setArrValue(data)
+{
+	if(data.length == 0) return
+	for(var i = 0; i < data.length; i++)
+	{
+		data[i].ReceiveDateTime = data[i].ReceiveDate+" "+data[i].ReceiveTime
+	}
+	return data
+}
+// positive 正序  inverted倒叙
+function compareOrdDT(prop,align){
+	return function(a,b){
+        var value1=a[prop].replace(/-/g,"/");
+        var value2=b[prop].replace(/-/g,"/");
+        if(align=="positive"){//正序
+            return new Date(value1)-new Date(value2);
+        }else if(align=="inverted"){//倒序
+            return new Date(value2)-new Date(value1);
+        }
+	}
 }

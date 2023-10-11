@@ -26,9 +26,11 @@
 		var SurNumID 	= $('#cboSurNum').combobox('getValue');	
 		var aLocType 	= Common_CheckboxValue('chkStatunit');
 		
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs = $('#cboLoc').combobox('getValues').join(',');	
 		ReportFrame = document.getElementById("ReportFrame");
 		
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S440CssOpInfo.raq&aSurNumID='+SurNumID +'&aStaType=' + aLocType ;	
+		p_URL = Append_Url('dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S440CssOpInfo.raq&aSurNumID='+SurNumID +'&aStaType=' + aLocType);	
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
@@ -36,9 +38,7 @@
 		} 
 		
 	}
-	obj.up=function(x,y){
-        return y.OpUseCnt-x.OpUseCnt		//根据手术人数排序
-    }
+
 	obj.option1 = function(arrViewLoc,arrOpUseCnt,endnumber){
 		var option1 = {
 			title : {
@@ -134,26 +134,14 @@
 		
 		var arrViewLoc 		= new Array();
 		var arrOpUseCnt 	= new Array();		//手术人数
-		arrRecord 		= runQuery.record;
-		
-		var arrlength		= 0;
+		var arrRecord = runQuery.rows;
+		RemoveArr(arrRecord);
+		arrRecord = arrRecord.sort(function(x, y) {    
+			return parseInt(y.OpUseCnt) - parseInt(x.OpUseCnt)
+		});
 		for (var indRd = 0; indRd < arrRecord.length; indRd++){
 			var rd = arrRecord[indRd];
-			//去掉全院、医院、科室组
-			if ((rd["DimensKey"].indexOf('-A-')>-1)||(rd["DimensKey"].indexOf('-H-')>-1)||(rd["DimensKey"].indexOf('-G-')>-1)) {
-				delete arrRecord[indRd];
-				arrlength = arrlength + 1;
-				continue;
-			}
-			rd["DimensDesc"] = $.trim(rd["DimensDesc"]); //去掉空格
-		}
-		
-		arrRecord = arrRecord.sort(obj.up);
-		arrRecord.length = arrRecord.length - arrlength;
-		for (var indRd = 0; indRd < arrRecord.length; indRd++){
-			var rd = arrRecord[indRd];
-			
-			arrViewLoc.push(rd["DimensDesc"]);
+			arrViewLoc.push($.trim(rd["DimensDesc"]));
 			arrOpUseCnt.push(rd["OpUseCnt"]);
 		}
 		var endnumber = (14/arrViewLoc.length)*100;
@@ -166,29 +154,32 @@
 		var SurNumID 	= $('#cboSurNum').combobox('getValue');	
 		var aLocType 	= Common_CheckboxValue('chkStatunit');
 		
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S440CssOpInfo' + "&QueryName=" + 'CssQryOpInfo' + "&Arg1=" + SurNumID + "&Arg2=" + aLocType + "&ArgCnt=" +2;
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs = $('#cboLoc').combobox('getValues').join(',');	
+		
+		obj.myChart.showLoading();	
+		var className="DHCHAI.STATV2.S440CssOpInfo";
+		var queryName="CssQryOpInfo";
+		$cm({
+		    ClassName: className,
+		    QueryName: queryName,
+		    aSurNumID: SurNumID,
+		    aStaType: aLocType,
+			aStatDimens:aStatDimens,
+			aLocIDs:aLocIDs,
+			page:1,    //可选项，页码，默认1
+			rows:999   //可选项，获取多少条数据，默认50
+		},
+		function(data){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			obj.echartLocInfRatio(data);
 
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 30000, //30秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				var tkclass="DHCHAI.STATV2.S440CssOpInfo";
-				var tkQuery="CssQryOpInfo";
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
-		});
+		}
+		,function(XMLHttpRequest, textStatus, errorThrown){
+			alert("类" + className + ":" + queryName+ "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
+			obj.myChart.hideLoading();    //隐藏加载动画
+		}); 
+
 	}
 	
 }

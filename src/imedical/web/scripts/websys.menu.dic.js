@@ -505,19 +505,32 @@ function initKeyValueBox(target,opts){
 			var table=$('<table class="combo2-panel-content-dg"></table>');
 			
 			$.data(target, "combo2").panel.find('.combo2-panel-content').empty().append(table);
+			
+			var $prefHtml='';
+			if (opts.showPreffix){
+				var $prefHtml=$('<div ><textarea class="textbox keyvaluebox-preffix" style="box-sizing:border-box;width:100%;height:50px;line-height:25px;padding:0 5px;" placeholder="'+opts.preffixPrompt+'" title="'+opts.preffixPrompt+'"></textarea></div>').insertAfter(table);
+				$prefHtml.find('.keyvaluebox-preffix').val(all.preffix||'');
+			}
+			
+			
 			table.data('editindex','-1');
 			table.datagrid({
 				columns:[[
 					{field:'key',title:'参数名',width:200,editor:'text'},
 					{field:'value',title:'参数值',width:200,editor:opts.valueEditor},
-					{field:'desc',title:'说明',width:150}
+					{field:'desc',title:'说明',width:150,editor:opts.descEditor}
 				]],
 				fit:true,
-				data:all,
+				data:typeof all.rows=='object'?all.rows:all,
 				rownumbers:true,
 				bodyCls:'panel-header-gray',
 				onClickRow:function(index,row){
-					var editindex=$(this).data('editindex')
+					var editindex=$(this).data('editindex');
+					
+					if( index==$(this).datagrid('getRows').length-1){  //只要点击最后一行 就新增一行
+						$(this).datagrid('appendRow',{key:'',value:'',custom:true,desc:''});
+					}
+					
 					if( editindex==index){
 						$(this).datagrid('endEdit', index);
 						editindex=-1;
@@ -539,7 +552,7 @@ function initKeyValueBox(target,opts){
 						}
 					}
 				}
-				
+				,toolbar:opts.showPreffix?$prefHtml:null
 			})
 		});
 	})
@@ -554,7 +567,16 @@ function initKeyValueBox(target,opts){
 		if (editindex>-1) table.datagrid('endEdit',editindex);
 		var rows=table.datagrid('getRows');
 		
-		var str=opts.formatValue(rows);
+		var str='';
+		if (opts.showPreffix) {
+			var preffix=p.find('.keyvaluebox-preffix').val();
+			str=opts.formatValue({rows:rows,preffix:preffix});
+			
+		}else{
+			str=opts.formatValue(rows);
+		}
+		
+		
 		
 		$(target).val(str);
 		
@@ -779,7 +801,7 @@ function initDicShowInNewWindow(){
 	function formatValue(o){
 		var arr=[];
 		$.each(o,function(){
-			console.log(this);
+			//console.log(this);
 			if(this.key!=""&&this.value!=""){
 				arr.push(this.key+"="+this.value)	;
 			} 
@@ -825,7 +847,7 @@ function initDicValueExpression(){
 	var target=$('#ValueExpression')[0];
 	initKeyValueBox(target,{
 		panelWidth:650,
-		panelHeight:250,
+		panelHeight:310,
 		parseValue:parseValue,
 		formatValue:formatValue,
 		checkValue:function(str){
@@ -853,8 +875,9 @@ function initDicValueExpression(){
 					{field:'PDesc',title:'说明',width:200}
 				]]
 			}
-		}
-		
+		},
+		showPreffix:true
+		,preffixPrompt:'URL路径,用其它浏览器或客户端打开的页面地址?前面的部分'
 	});
 	$('#ValueExpression').templateprompt({
 		url:$URL,
@@ -874,10 +897,21 @@ function initDicValueExpression(){
 		]]
 	});
 	function formatValue(o){
-		var arr=[];
-		$.each(o,function(){
+		var arr=[],rows=[];
+		if (typeof o.rows=='object') {
+			
+			rows=o.rows;
+		}else{
+			rows=o;	
+		}
+		var preffix=o.preffix||'';
+		arr.push(preffix)	
+
+		
+		$.each(rows,function(ind){
 			if(this.key!=""&&this.value!=""){
-				arr.push("&"+this.key+"="+this.value)	;
+				var del=(ind==0 && preffix!='' && preffix.indexOf('?')==-1)?'?':'&'; // 第一个且有前置url 是?
+				arr.push(del+this.key+"="+this.value)	;
 			} 
 		})
 		return '"'+arr.join('')+'"';
@@ -888,11 +922,19 @@ function initDicValueExpression(){
 		if (str.charAt(len-1)=='"') str=str.substr(0,len-1);
 		var arr=str.split("&");
 		var o={};
-		$.each(arr,function(){
+		$.each(arr,function(ind){
 			if (this.indexOf("=")>-1){
 				var key=this.split("=")[0];
+				
+				if (ind==0 && key.indexOf('?')>-1) {  //&分隔第一段 http://baidu.com?a=1&b=2
+					o._BASE_URL=key.split('?')[0];
+					key=key.split('?')[1];
+				}
+				
 				var value=this.split("=")[1];
 				if(key!="" && value!="") o[key]=value;
+			}else if (ind==0){  //&分隔第一段 不包含=
+				o._BASE_URL=this.split('?')[0];
 			}
 		})
 		return o;
@@ -914,10 +956,13 @@ function initDicValueExpression(){
 			})
 		}
 		$.each(o,function(i,v){
+			if (i=='_BASE_URL') return;
 			all.push({key:i,value:v,custom:true,desc:''})
 		})
 		all.push({key:'',value:'',desc:'',custom:true});
-		return all;
+		
+		
+		return {rows:all,preffix:o._BASE_URL};
 	}
 }
 

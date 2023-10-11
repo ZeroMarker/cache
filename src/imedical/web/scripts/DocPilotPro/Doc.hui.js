@@ -15,17 +15,18 @@ function InitPilotProDocTabDataGrid(){
 	var Columns=[[ 
 		{field:'PPRowId',hidden:true,title:''},
 		{field:'ProCode',title:'项目编号',width:100},
-		{field:'ProDesc',title:'药物/医疗器械名称',width:250},
-		{field:'ProCreateDepartmen',title:'立项科室',width:150},
+		{field:'ProDesc',title:'药物/医疗器械名称',width:200},
+		{field:'ProCreateDepartmen',title:'立项科室',width:200},
 		{field:'ProStartUser',title:'主要研究者',width:100},
-		{field:'InRemNum',title:'入账总额',width:100,align:'right'},
+		{field:'InRemNum',title:'入账总额',width:150,align:'right'},
 		//{field:'ProState',title:'',hidden:true},
 		{field:'CheckFreq',title:'跟踪审查频率',width:100},
-		{field:'Balance',title:'账户余额',width:100,align:'right'},
+		{field:'Balance',title:'账户余额',width:150,align:'right'},
 		{field:'Account',title:'账户',width:100},
-		{field:'ProCreateDate',title:'立项日期',width:100,align:'right'},
-		{field:'ProState',title:'项目状态',width:100,align:'right'}
+		{field:'ProCreateDate',title:'立项日期',width:100},
+		{field:'ProState',title:'项目状态',width:170,align:'right'}
     ]]
+    var toobar=[];
 	var PilotProDocTabDataGrid=$("#PilotProDocTab").datagrid({
 		fit : true,
 		border : false,
@@ -34,11 +35,13 @@ function InitPilotProDocTabDataGrid(){
 		fitColumns : false,
 		autoRowHeight : false,
 		rownumbers:true,
-		pagination : true,  
+		pagination : true,
+		nowrap:false,  
 		rownumbers : true,  
 		pageSize: 20,
 		pageList : [20,100,200],
 		idField:'PPRowId',
+		toolbar:toobar,
 		columns :Columns
 	}); 
 	return PilotProDocTabDataGrid;
@@ -48,6 +51,7 @@ function PilotProDocTabDataGridLoad(){
 	    ClassName : "web.PilotProject.DHCDocPilotProject",
 	    QueryName : "FindProjectDoc",
 	    PPDesc:"",
+	    InHosp:session['LOGON.HOSPID'],
 	    Pagerows:PageLogicObj.m_PilotProDocTabDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
 		PageLogicObj.m_PilotProDocTabDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData);

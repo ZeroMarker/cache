@@ -92,6 +92,9 @@ function SaveGridData()
 	{
 		var val="&UCRowID="+jsonData.Data
 		url="dhceq.ba.benefititeminfo.csp?"+val
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.location.href= url;
 		parent.opener.location.reload= 'dhceq.ba.benefitsummary.csp?RowID='+getElementValue("BenefitSummaryDR");
 	}

@@ -10,6 +10,9 @@ $(function(){
 	
 	InitINVFocusPrtDataGrid();
 	
+	$("#content").css("height", "608px")
+	//$("#content").css("height", "483px")
+	
 		
 	//查询
 	$("#BFind").click(function() {	
@@ -27,6 +30,7 @@ $(function(){
 	$("#BPrintInv").click(function() {	
 		BPrintInv_click();		
         });
+
     $("#BCancelPrint").click(function() {	
 		CancelFocusPrint();		
         });    
@@ -130,7 +134,9 @@ function SetInvNo()
 { 
 
 	var userId=session['LOGON.USERID'];
-	var ret=tkMakeServerCall("web.DHCPE.DHCPEPAY","getcurinvno",userId);
+	var CTLocID=session['LOGON.CTLOCID']
+	var ret=tkMakeServerCall("web.DHCPE.DHCPEPAY","getcurinvno",userId,"N",CTLocID);
+
 	//alert(ret)
     var invNo=ret.split("^");
     if ((invNo[0]=="")||(invNo[1]=="")){ 
@@ -154,6 +160,7 @@ function SetInvNo()
 	
 	var UserID=session['LOGON.USERID'];
 	var HospitalID=session['LOGON.HOSPID'];
+	var CTLocID=session['LOGON.CTLOCID'];
 	
 	var InvID=$("#InvID").val();
 	
@@ -164,7 +171,7 @@ function SetInvNo()
 	
 	var InvNoZM=$("#CurInvNo").val();
 	//var InvNo=tkMakeServerCall("web.DHCPE.DHCPECommon","GetInvnoNotZM",InvNoZM);
-	var ret=tkMakeServerCall("web.DHCPE.DHCPEPAY","getcurinvno",UserID)
+	var ret=tkMakeServerCall("web.DHCPE.DHCPEPAY","getcurinvno",UserID,"N",CTLocID)
 	var InvNo=ret.split("^")[0];
 
 	if (InvNo==""){
@@ -178,7 +185,7 @@ function SetInvNo()
 	
 	var InvInfo=InvNo+"^"+InvName+"^"+AdmReason;
 	
-	var Ret=tkMakeServerCall("web.DHCPE.INVFocusPrt","Save",InvID,InvInfo,UserID,"1",HospitalID);
+	var Ret=tkMakeServerCall("web.DHCPE.INVFocusPrt","Save",InvID,InvInfo,UserID,"1",HospitalID,CTLocID);
 	var Arr=Ret.split("^");
 	if (Arr[0]!=0){
 		$.messager.alert('提示',Arr[1],"info");
@@ -230,7 +237,7 @@ function SetInvNo()
 		}	
 	}
 	var InvInfo=InvNo+"^"+InvName+"^"+AdmReason;
-	var Ret=tkMakeServerCall("web.DHCPE.INVFocusPrt","Save",InvID,InvInfo,UserID,"0",HospitalID);
+	var Ret=tkMakeServerCall("web.DHCPE.INVFocusPrt","Save",InvID,InvInfo,UserID,"0",HospitalID,CTLocID);
 	var Arr=Ret.split("^");
 	if (Arr[0]!=0){
 		var MessageStr=Arr[1];
@@ -249,8 +256,8 @@ function SetInvNo()
 	var temp=InvID.split("||");
 	if ((temp.length)>1 ){
 		
-		var TxtInfo=tkMakeServerCall("web.DHCPE.INVFocusPrt","GetInvoiceInfo",InvID,InvInfoZM,"1");
-		var ListInfo=tkMakeServerCall("web.DHCPE.INVFocusPrt","GetInvoiceInfo",InvID,InvInfoZM,"2");
+		var TxtInfo=tkMakeServerCall("web.DHCPE.INVFocusPrt","GetInvoiceInfo",InvID,InvInfoZM,"1",CTLocID,UserID);
+		var ListInfo=tkMakeServerCall("web.DHCPE.INVFocusPrt","GetInvoiceInfo",InvID,InvInfoZM,"2",CTLocID,UserID);
 		if (TxtInfo=="") return;
 		//var myobj=document.getElementById("ClsBillPrint");
 		//DHCP_PrintFun(myobj,TxtInfo,ListInfo);
@@ -259,8 +266,8 @@ function SetInvNo()
 	else {
 		
 		var peAdmType=tkMakeServerCall("web.DHCPE.Cashier","GetAdmType",InvID);
-		var listFlag=GetListFlag(peAdmType);
-		var TxtInfo=tkMakeServerCall("web.DHCPE.Cashier","GetInvoiceInfo",peAdmType,InvID);
+		var listFlag=GetListFlag(peAdmType,CTLocID);
+		var TxtInfo=tkMakeServerCall("web.DHCPE.Cashier","GetInvoiceInfo",peAdmType,InvID,"INV",UserID);
 		var ListInfo=tkMakeServerCall("web.DHCPE.Cashier","GetInvoiceListInfo",peAdmType,InvID,listFlag);	
 		//var myobj=document.getElementById("ClsBillPrint");
 		//DHCP_PrintFun(myobj,TxtInfo,ListInfo);
@@ -274,7 +281,8 @@ function SetInvNo()
  
 //打印明细
 function BPrintDetail_click(){
-	
+	var CTLocID=session['LOGON.CTLOCID'];
+	var UserID = session['LOGON.USERID'];
 	var InvID=$("#InvID").val();
 	if(InvID==""){
 		$.messager.alert("提示","请先选择待打印明细的发票记录","info");
@@ -284,9 +292,9 @@ function BPrintDetail_click(){
 	if ((temp.length)>1 ){ return false;}
 	
     var peAdmType=tkMakeServerCall("web.DHCPE.Cashier","GetAdmType",InvID);
-	var listFlag=GetListFlag(peAdmType);
+	var listFlag=GetListFlag(peAdmType,CTLocID);
 	
-	var TxtInfo=tkMakeServerCall("web.DHCPE.Cashier","GetInvoiceInfo",peAdmType,InvID,"List");
+	var TxtInfo=tkMakeServerCall("web.DHCPE.Cashier","GetInvoiceInfo",peAdmType,InvID,"List",UserID);
 	var ListInfo=tkMakeServerCall("web.DHCPE.Cashier","GetInvoiceListInfo",peAdmType,InvID,1,"1");
 	//alert("TxtInfo:"+TxtInfo)
 	//alert("ListInfo:"+ListInfo)
@@ -296,10 +304,10 @@ function BPrintDetail_click(){
 	DHC_PrintByLodop(getLodop(),TxtInfo,ListInfo,"","{printListByText: true}"); 
 }
 
-function GetListFlag(admtype)
+function GetListFlag(admtype,CTLocID)
 {
 	if (admtype!="I") return 0;
-	var InvListFlag=tkMakeServerCall("web.DHCPE.HISUICommon","GetInvListFlag");
+	var InvListFlag=tkMakeServerCall("web.DHCPE.HISUICommon","GetInvListFlag",CTLocID);
 	if (InvListFlag=="1") return 1;
 	return 0;
 	
@@ -379,7 +387,8 @@ function BFind_click()
 			{field:'TRPDate',width:'120',title:'日结日期'},
 			{field:'TPayMode',width:'200',title:'支付方式'},
 			{field:'TCardType',width:'100',title:'体检卡类型'},
-			{field:'TAge',width:'50',title:'年龄'},	
+		    {field:'Tsswr',width:'100',title:'分币误差'},
+			{field:'TAge',width:'50',title:'年龄'}
 						 
 		]];
 
@@ -398,7 +407,8 @@ function BFind_click()
 			{field:'TRPDate',width:'120',title:'日结日期'},
 			{field:'TPayMode',width:'250',title:'支付方式'},
 			{field:'TCardType',title:'体检卡类型',hidden: true},
-			{field:'TAge',width:'50',title:'年龄'},	
+		    {field:'Tsswr',width:'100',title:'分币误差'},
+			{field:'TAge',width:'50',title:'年龄'}	
 						 
 		]];
 
@@ -429,6 +439,7 @@ function BFind_click()
 			EndDate:$("#EndDate").datebox('getValue'),
 			InvType:InvType,
 			FocusPrint:FocusPrint,
+			CTLocID:session['LOGON.CTLOCID']
 
 		},
 		columns:columns,
@@ -449,7 +460,8 @@ var columns =[[
 			{field:'TRPFlag',width:'100',title:'结账标志'},
 			{field:'TRPDate',width:'120',title:'日结日期'},
 			{field:'TPayMode',width:'250',title:'支付方式'},
-			{field:'TAge',width:'50',title:'年龄'},	
+			{field:'Tsswr',width:'100',title:'分币误差'},
+			{field:'TAge',width:'50',title:'年龄'}
 						 
 		]];
 
@@ -473,6 +485,7 @@ function InitINVFocusPrtDataGrid(){
 			ClassName:"web.DHCPE.INVFocusPrt",
 			QueryName:"FindInvFocusPrtList",
 			FocusPrint:"1",
+			CTLocID:session['LOGON.CTLOCID']
 
 		},
 		columns:columns,
@@ -525,9 +538,8 @@ function InitCombobox(){
 		textField:'text',
 		panelHeight:'70',
 		data:[
-            {id:'0',text:'非预交金'},
-            {id:'1',text:'预交金'},
-           
+            {id:'0',text:$g('非预交金')},
+            {id:'1',text:$g('预交金')}
         ]
 
 	});	
@@ -541,9 +553,8 @@ function InitCombobox(){
 		},
 		panelHeight:'70',
 		data:[
-            {id:'1',text:'未打印'},
-            {id:'2',text:'已打印'},
-           
+            {id:'1',text:$g('未打印')},
+            {id:'2',text:$g('已打印')}  
         ]
 
 	});	

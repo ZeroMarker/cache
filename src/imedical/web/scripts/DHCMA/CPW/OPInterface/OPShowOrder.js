@@ -23,7 +23,7 @@ function ShowMakeOrderDialog(){
 		rownumbers: false, //如果为true, 则显示一个行号列
 		singleSelect: true,
 		autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
-		loadMsg:'数据加载中...',
+		loadMsg:$g('数据加载中...'),
 		//pageSize: 20,
 		//pageList : [20,50,100,200],
 		url:$URL,
@@ -91,14 +91,14 @@ function ShowMakeOrderDialog(){
 		view: groupview,
 		groupFormatter:function(value, rows){
 			if(value==undefined) return;
-			return value + ' , 共( ' + rows.length + ' )项';
-			},
+			return value + $g(' , 共( ') + rows.length + $g(' )项');
+		},
 		scrollbarSize: 0,
 		pagination: false, //如果为true, 则在DataGrid控件底部显示分页工具栏
 		rownumbers: true, //如果为true, 则显示一个行号列
 		singleSelect: false,
 		autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
-		loadMsg:'数据加载中...',
+		loadMsg:$g('数据加载中...'),
 		//pageSize: 20,
 		//pageList : [20,50,100,200],
 		url:$URL,
@@ -119,11 +119,11 @@ function ShowMakeOrderDialog(){
 						FormOrdID=FormOrdID.split(':')[2]+"||"+FormOrdID.split(':')[1];
 						var id=FormOrdID.split("||").join("-");
 						var chkPosDesc=row['OrdChkPosID'].split("||")[0];
-						return "<span id='"+id+"' onclick=objOrder.ClickOrdDesc("+index+");>"+value+chkPosDesc+"</span><label id= 'pop"+FJid+"' style='color:red;' onmouseover=objOrder.ShowFJDetail("+FJid+") onmouseout=objOrder.DestoryFJDetail("+FJid+")>[详细]</label>"
+						return "<span id='"+id+"' onclick=objOrder.ClickOrdDesc("+index+");>"+value+chkPosDesc+"</span><label id= 'pop"+FJid+"' style='color:red;' onmouseover=objOrder.ShowFJDetail("+FJid+") onmouseout=objOrder.DestoryFJDetail("+FJid+")>["+$g("详细")+"]</label>"
 					}else{
 						var id=FormOrdID.split("||").join("-");
 						var chkPosDesc=row['OrdChkPosID'].split("||")[0];
-						return "<span id='"+id+"' onclick=objOrder.ClickOrdDesc("+index+");>"+value+chkPosDesc+"</span>"
+						return "<span id='"+id+"' onclick=objOrder.ClickOrdDesc("+index+");>"+value+" "+chkPosDesc+"</span>"
 					}
 				}
 			},
@@ -134,8 +134,14 @@ function ShowMakeOrderDialog(){
 			{field:'OrdInstrucIDDesc',title:'用法',width:'70'},
 			{field:'OrdDuratIDDesc',title:'疗程',width:'70'},
 			{field:'OrdQty',title:'数量',width:'60'},
-			{field:'OrdIsDefault',title:'首选医嘱',width:'70'},
-			{field:'OrdIsFluInfu',title:'主医嘱',width:'70'},
+			{field:'OrdIsDefault',title:'首选医嘱',width:'70',formatter:function(v,r,i){
+				if (v == 1) return $g('是')
+				else return $g('否')	
+			}},
+			{field:'OrdIsFluInfu',title:'主医嘱',width:'70',formatter:function(v,r,i){
+				if (v == 1) return $g('是')
+				else return $g('否')	
+			}},
 			{field:'OrdTypeDrDesc',title:'分类标记',width:'70'},
 			{field:'OrdPriorityIDDesc',title:'医嘱类型',width:'70'},
 			{field:'OrdNote',title:'备注',width:'70'}
@@ -162,7 +168,7 @@ function ShowMakeOrderDialog(){
 						//$("#CPWItemOrder").datagrid("deleteRow", i);
 						//i=i-1;
 					} else {
-						if (data.rows[i].OrdIsDefault=="是") {	//首选医嘱
+						if (data.rows[i].OrdIsDefault==$g("是")) {	//首选医嘱
 							if(objOrder.IsHaveDown[data.rows[i].xID]==5){	//未执行
 								$("#CPWItemOrder").datagrid("selectRow", i);
 								$("#CPWItemOrder").datagrid("checkRow", i);
@@ -174,11 +180,11 @@ function ShowMakeOrderDialog(){
         },
 		onDblClickRow: function(index, row){
 			if(row.OrdCatCode != OrderType){
-				$.messager.popover({msg: '当前界面禁止操作该医嘱！',type:'alert'});	
+				$.messager.popover({msg: $g('当前界面禁止操作该医嘱！'),type:'alert'});	
 				return false;
 			}
 			if(row['xID'].indexOf("FJ")>-1){
-				$.messager.popover({msg: '自定义方剂不支持此操作！',type:'alert'});	
+				$.messager.popover({msg: $g('自定义方剂不支持此操作！'),type:'alert'});	
 				return false;	
 			}
 			objOrder.replaceIndex=index;
@@ -192,7 +198,7 @@ function ShowMakeOrderDialog(){
 				aEpisodeID:EpisodeID.split("!!")[0],
 				aArcimID:ArcimID
 			},function(rs){
-				$('#gridGeneOrder').datagrid({'title':'当前医嘱：'+OrdMastIDDesc});
+				$('#gridGeneOrder').datagrid({'title':$g('当前医嘱：')+OrdMastIDDesc});
 				$('#gridGeneOrder').datagrid('loadData',rs);
 				$HUI.dialog('#GeneCPWDialog').open();	
 			})
@@ -286,7 +292,7 @@ function ShowMakeOrderDialog(){
 		rownumbers: false, //如果为true, 则显示一个行号列
 		singleSelect: false,
 		autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
-		loadMsg:'数据加载中...',
+		loadMsg:$g('数据加载中...'),
 		//pageSize: 20,
 		//pageList : [20,50,100,200],
 		url:$URL,
@@ -336,7 +342,7 @@ function ShowMakeOrderDialog(){
 		rownumbers: false, //如果为true, 则显示一个行号列
 		singleSelect: false,
 		autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
-		loadMsg:'数据加载中...',
+		loadMsg:$g('数据加载中...'),
 		url:$URL,
 	    queryParams:{
 		    ClassName:"DHCMA.CPW.OPCPS.PathwayVarSrv",
@@ -385,7 +391,7 @@ function ShowMakeOrderDialog(){
 		rownumbers: false, //如果为true, 则显示一个行号列
 		singleSelect: false,
 		autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
-		loadMsg:'数据加载中...',
+		loadMsg:$g('数据加载中...'),
 		url:$URL,
 	    queryParams:{
 		    ClassName:"DHCMA.CPW.OPCPS.PathwayVarSrv",
@@ -436,7 +442,7 @@ function ShowMakeOrderDialog(){
 		rownumbers: true, //如果为true, 则显示一个行号列
 		singleSelect: true,
 		autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
-		loadMsg:'数据加载中...',
+		loadMsg:$g('数据加载中...'),
 		/*
 		url:$URL,
 	    queryParams:{

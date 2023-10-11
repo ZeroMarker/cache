@@ -3,6 +3,18 @@
  * 编写日期: 2018-03-29
  * 编写人:   yunhaibao
  */
+$.fn.datagrid.defaults.operators.nofilter.text = $g('无');
+$.fn.datagrid.defaults.operators.contains.text = $g('包含');
+$.fn.datagrid.defaults.operators.equal.text = $g('等于');
+$.fn.datagrid.defaults.operators.notequal.text = $g('不等于');
+$.fn.datagrid.defaults.operators.beginwith.text = $g('前匹配');
+$.fn.datagrid.defaults.operators.endwith.text = $g('后匹配');
+$.fn.datagrid.defaults.operators.less.text = $g('小于');
+$.fn.datagrid.defaults.operators.lessorequal.text = $g('小于等于');
+$.fn.datagrid.defaults.operators.greater.text = $g('大于');
+$.fn.datagrid.defaults.operators.greaterorequal.text = $g('大于等于');
+// 设置分页格式
+//  $.fn.pagination.defaults.layout=['list','sep','first','prev','links','next','last','sep','refresh']
 var SessionLoc = session['LOGON.CTLOCID'];
 var SessionUser = session['LOGON.USERID'];
 var ModifyRow = '';
@@ -16,16 +28,38 @@ $(function () {
     });
     $('#btnFind').on('click', Query);
     $('#btnSave').on('click', Save);
+    $('[name="js-col-filter"]').on('click', function () {
+        $('[name="js-col-filter"]').toggle();
+        $('#gridIncItm').datagrid($(this).attr('handle'));
+    });
+
     var tipInfoArr = [];
-    tipInfoArr.push("<div style='line-height:25px;font-weight:bold'>用于计算配液工作量 , 当获取对应系数为空时 , 按默认系数</div>");
-    tipInfoArr.push("<div style='line-height:25px'> [~1] : 配液配置系数 , 药品配液的默认难度系数</div>");
-    tipInfoArr.push("<div style='line-height:25px'> [~2] : 连续配液配置系数 , 成组药品与上一组配置药品完全相同时 , 按此系数</div>");
-    tipInfoArr.push("<div style='line-height:25px'> [~3] : 同组相同配置系数 , 同组药品内出现相同药品或者数量大于1的部分 , 按此系数</div>");
+    tipInfoArr.push("<div style='line-height:25px;font-weight:bold'>" + $g('用于计算配液工作量 , 当获取对应系数为空时 , 按默认系数') + '</div>');
+    tipInfoArr.push("<div style='line-height:25px'> [~1] : " + $g('配液配置系数 , 药品配液的默认难度系数') + '</div>');
+    tipInfoArr.push("<div style='line-height:25px'> [~2] : " + $g(' 连续配液配置系数 , 成组药品与上一组配置药品完全相同时 , 按此系数') + '</div>');
+    tipInfoArr.push("<div style='line-height:25px'> [~3] : " + $g(' 同组相同配置系数 , 同组药品内出现相同药品或者数量大于1的部分 , 按此系数') + '</div>');
     $('[for=txtCoef]').tooltip({
         content: tipInfoArr.join(''),
         position: 'left',
         showDelay: 500
     });
+
+    $('[for=txtOrdCode]').tooltip({
+        content: "<div style='line-height:25px'> " + $g('维护显示顺序后, 各界面的显示顺序将依据显示顺序 > 主药 > 辅药 > 溶媒 的顺序显示') + '</div>',
+        position: 'left',
+        showDelay: 500
+    });
+    setTimeout(function () {
+        // debugger
+        var tableWidth = $('.js-pha-panel-fit .pha-con-table').width()
+        // var scrollWidth = PIVAS.GetScrollBarWidth() ;
+        $('.js-pha-layout-fit')
+            .layout('panel', 'east')
+            .panel('resize', { width: tableWidth + 12 + 32 }); // 10(split宽度) + 2(border宽度和) + 22(两个padding)
+        $('.js-pha-layout-fit').layout('resize');
+        $('.js-pha-panel-fit').panel('resize');
+        $('.dhcpha-win-mask').hide();
+    }, 100);
 });
 
 function InitDict() {
@@ -35,6 +69,7 @@ function InitDict() {
         {
             placeholder: '配液中心...',
             editable: false,
+            width: 200,
             onLoadSuccess: function () {
                 var datas = $('#cmbPivaLoc').combobox('getData');
                 for (var i = 0; i < datas.length; i++) {
@@ -69,7 +104,7 @@ function InitGridIncItm() {
             { field: 'incCode', title: '药品代码', width: 100 },
             { field: 'incDesc', title: '药品名称', width: 225 },
             { field: 'incSpec', title: '规格', width: 100 },
-            { field: 'manfDesc', title: '生产企业', width: 150 },
+            { field: 'manfDesc', title: '生产企业', width: 170 },
             { field: 'phcDrugTypeDesc', title: '主辅用药', width: 75 },
             {
                 field: 'menstruumFlag',
@@ -78,20 +113,19 @@ function InitGridIncItm() {
                 halign: 'left',
                 align: 'center',
                 formatter: function (value, row, index) {
-                    if (value == 'Y') {
-                        return PIVAS.Grid.CSS.Yes;
-                    }
+                    return value === 'Y' ? $g('是') : '';
                 }
             },
-            { field: 'conTblDesc', title: '配置台', width: 75 },
-            { field: 'phcPivaCatDesc', title: '配液小类', width: 75 },
+            { field: 'conTblDesc', title: '配置台', width: 100 },
+            { field: 'phcPivaCatDesc', title: '配液小类', width: 100 },
             { field: 'ivgttSpeed', title: '滴速', width: 50 },
             { field: 'labelSign', title: '标签标识', width: 75 },
             { field: 'useInfo', title: '用药说明', width: 100 },
             { field: 'storeInfo', title: '储藏条件', width: 100 },
-            { field: 'coef', title: '默认配液</br>配置系数', width: 73 },
-            { field: 'conCoef', title: '连续配液</br>配置系数', width: 73 },
-            { field: 'sameCoef', title: '同组相同</br>配置系数', width: 73 },
+            { field: 'ordCode', title: '显示顺序', width: 75 },
+            { field: 'coef', title: '默认配液配置系数', width: 73 },
+            { field: 'conCoef', title: '连续配液配置系数', width: 73 },
+            { field: 'sameCoef', title: '同组相同配置系数', width: 73 },
             { field: 'phcDrugTypeCode', title: '(主/辅)药代码', width: 75, hidden: true },
             { field: 'phcPivaCatId', title: '配液小类Id', width: 75, hidden: true },
             { field: 'conTblId', title: '配置台Id', width: 75, hidden: true }
@@ -101,7 +135,13 @@ function InitGridIncItm() {
         url: PIVAS.URL.COMMON + '?action=DrugMaintain.JsGetIncItm',
         toolbar: '#gridIncItmBar',
         columns: columns,
+        pageList: [200, 500, 1000],
+        pageSize: 200,
         fit: true,
+        remoteFilter: true,
+        clientPaging: false,
+        filterDelay: 1000,
+        defaultFilterOperator: 'contains',
         onSelect: function (rowIndex, rowData) {
             if (rowData) {
                 $('#txtStoreInfo').val(rowData.storeInfo);
@@ -115,6 +155,7 @@ function InitGridIncItm() {
                 $('#txtCoef').numberbox('setValue', rowData.coef);
                 $('#txtConCoef').numberbox('setValue', rowData.conCoef);
                 $('#txtSameCoef').numberbox('setValue', rowData.sameCoef);
+                $('#txtOrdCode').val(rowData.ordCode);
             }
         },
         onLoadSuccess: function (data) {
@@ -167,6 +208,7 @@ function Save() {
     var coef = $('#txtCoef').val().trim();
     var conCoef = $('#txtConCoef').val().trim();
     var sameCoef = $('#txtSameCoef').val().trim();
+    var ordCode = $('#txtOrdCode').val().trim();
     var chkInfo = '';
     chkInfo = CheckCoef(coef);
     if (chkInfo != '') {
@@ -192,32 +234,22 @@ function Save() {
         });
         return;
     }
-    var params =
-        locId +
-        '^' +
-        incId +
-        '^' +
-        conTblId +
-        '^' +
-        useInfo +
-        '^' +
-        storeInfo +
-        '^' +
-        ivgttSpeed +
-        '^' +
-        phcPivaCat +
-        '^' +
-        phcDrgType +
-        '^' +
-        menstrFlag +
-        '^' +
-        labelSign +
-        '^' +
-        coef +
-        '^' +
-        conCoef +
-        '^' +
-        sameCoef;
+    var paramsArr = [];
+    paramsArr.push(locId);
+    paramsArr.push(incId);
+    paramsArr.push(conTblId);
+    paramsArr.push(useInfo);
+    paramsArr.push(storeInfo);
+    paramsArr.push(ivgttSpeed);
+    paramsArr.push(phcPivaCat);
+    paramsArr.push(phcDrgType);
+    paramsArr.push(menstrFlag);
+    paramsArr.push(labelSign);
+    paramsArr.push(coef);
+    paramsArr.push(conCoef);
+    paramsArr.push(sameCoef);
+    paramsArr.push(ordCode);
+    var params = paramsArr.join('^');
     var saveRet = tkMakeServerCall('web.DHCSTPIVAS.DrugMaintain', 'SaveData', params);
     var saveArr = saveRet.split('^');
     var saveValue = saveArr[0];

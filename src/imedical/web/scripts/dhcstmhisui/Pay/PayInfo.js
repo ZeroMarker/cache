@@ -1,22 +1,18 @@
-var AccAckWin = function (Row, Fn) {
+var AccAckWin = function(Row, Fn) {
 	$HUI.dialog('#AccAckWin').open();
 
 	var PayModeBox = $HUI.combobox('#FPayMode', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetPayMode&ResultSetType=array',
-			valueField: 'RowId',
-			textField: 'Description',
-			onLoadSuccess:function(){
-				var PayModeId=GetPayModeDefa();
-				$('#FPayMode').combobox('select',PayModeId);
-			}
-		});
-	//入库类型默认值
-	function GetPayModeDefa(){
-		var PayModeId=tkMakeServerCall("web.DHCSTMHUI.Common.Dicts","GetDefaPayMode");
-		return PayModeId;
-	}
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetPayMode&ResultSetType=array',
+		valueField: 'RowId',
+		textField: 'Description',
+		onLoadSuccess: function() {
+			var PayModeId = Row.PayModeId;
+			$('#FPayMode').combobox('select', PayModeId);
+		}
+	});
+	
 	$UI.linkbutton('#ConfirmBT', {
-		onClick: function () {
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#FindConditions');
 			if (isEmpty(ParamsObj.CheckAmt)) {
 				$UI.msg('alert', '支付金额不能为空!');
@@ -32,7 +28,7 @@ var AccAckWin = function (Row, Fn) {
 				MethodName: 'AccConfirm',
 				Pay: Row.RowId,
 				Params: Params
-			}, function (jsonData) {
+			}, function(jsonData) {
 				if (jsonData.success == 0) {
 					$UI.msg('success', jsonData.msg);
 					$HUI.dialog('#AccAckWin').close();
@@ -44,11 +40,11 @@ var AccAckWin = function (Row, Fn) {
 		}
 	});
 	$UI.linkbutton('#CancelBT', {
-		onClick: function () {
+		onClick: function() {
 			$HUI.dialog('#AccAckWin').close();
 		}
 	});
 	$('#PayNo').val(Row.PayNo);
 	$('#FVendor').val(Row.VendorDesc);
 	$('#PayAmt').val(Row.PayAmt);
-}
+};

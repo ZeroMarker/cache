@@ -3,7 +3,7 @@
 // 编写日期:   2016-07-23
 // 描述:	   检查申请部位选择界面
 //===========================================================================================
-
+var EpisodeID="";
 var itmmastid = "";  /// 医嘱项ID
 var TraID = "";      /// 分类树ID
 var InvFlag = 0 ;    /// 调用标识: 1-申请界面调用，0-医嘱模板调用
@@ -11,6 +11,7 @@ var mListData = "";
 var LgHospID = session['LOGON.HOSPID'];   /// 医院ID
 var selOrdBodyPartStr="";  /// 已选列表串
 var selOrdBodyPartDescStr="";
+var itmConflictItemArr=new Array();
 /// 页面初始化函数
 function initPageDefault(){
 	
@@ -20,7 +21,7 @@ function initPageDefault(){
 	//LoadPartTree(); /// 部位树
 	initItemDisp();  ///  后处理方法
 	initHideCol();   ///  隐藏列控制
-	initExaPart();   ///  部位列表
+	initExaPart("");   ///  部位列表
 	initSelExaPart(); /// 已选列表
 }
 function initSelExaPart(){
@@ -70,12 +71,16 @@ function initSelExaPart(){
 }
 /// 初始化加载病人就诊ID
 function initParam(){
-	
+	EpisodeID=getParam('EpisodeID');
 	itmmastid = getParam("itmmastid");   /// 医嘱项ID 
 	TraID = getParam("arExaCatID"); /// 分类树ID 
 	InvFlag = getParam("InvFlag");  /// 调用标识 
 	selOrdBodyPartStr = getParam("selOrdBodyPartStr");  /// 已选列表串
 	selOrdBodyPartDescStr = getParam("selOrdBodyPartDescStr");  /// 已选列表串描述
+	GlobaPartID = getParam("GlobaPartID"); 
+	//互斥医嘱
+	var ConflictItemStr=tkMakeServerCall('DHCDoc.DHCDocConfig.ARCIMExt','GetConflict',itmmastid,LgHospID)
+	if(ConflictItemStr!="") itmConflictItemArr=ConflictItemStr.split('^');
 }
 
 /// 页面 Button 绑定事件
@@ -86,6 +91,17 @@ function initBlButton(){
 	
 	/// 部位选择
 	$("#ItmExaPart").on("click","[id^=Part]",selectItem);
+	
+	///  部位项目
+	$("#ItmExaPartSearch").bind("keyup",searchItem);
+	
+	if (GlobaPartID!=""){
+		setTimeout(function(){ 
+		$("#Part_"+GlobaPartID).attr("checked",true);
+		var PartDesc = $("#Part_"+GlobaPartID).parent().next().text(); /// 部位描述
+		addItmSelList(GlobaPartID, PartDesc);
+		},300)
+		}
 }
 
 /// 查找检查部位树
@@ -216,10 +232,12 @@ function initItemList(){
 	
 	///  定义datagrid
 	var option = {
+		fitColumns:true,
 		border : false,
 		rownumbers : false,
 		singleSelect : true,
 		pagination: false,
+		toolbar:[],
 	    onDblClickRow: function (rowIndex, rowData) {//双击选择行编辑
             if (editRow != -1||editRow == 0) { 
                 //$("#dmPartList").datagrid('endEdit', editRow); 
@@ -237,8 +255,12 @@ function initItemList(){
 
 /// 操作
 function SetCellDelUrl(value, rowData, rowIndex){
-	var html = "<a href='#' onclick='delItmRow("+rowData.ItemID+")'>删除</a>";
-    return html;
+	//var html = "<a href='javascript:void(0)' onclick='delItmRow("+rowData.ItemID+")'>删除</a>";
+    //return html;
+	return $('<a onclick="delItmRow('+rowData.ItemID+')"></a>').linkbutton({
+		iconCls:'icon-cancel',
+		plain:true
+	}).prop('outerHTML');
 }
 
 /// 删除行
@@ -282,7 +304,19 @@ function selectItem(){
 
 /// 加入项目列表
 function addItmSelList(id, text){
-	
+	if(itmConflictItemArr.length){
+		var partLinkItmStr=tkMakeServerCall('web.DHCAPPExaReport','GetPAAutoAppendOrdStr',EpisodeID,itmmastid,id);
+		var partLinkItmArr=partLinkItmStr.split('&');
+		for(var i=0;i<partLinkItmArr.length;i++){
+			var linkItmID=partLinkItmArr[i].split('|||')[0];
+			if(linkItmID=="") continue;
+			if(itmConflictItemArr.indexOf(linkItmID)>-1){
+				$.messager.alert('互斥提示','检查项目与部位关联的项目互斥,不能选择该部位',"info");
+				$('#Part_'+id).prop('checked',false);
+				return;
+			}
+		}
+	}
 	var rowobj={ItemID:id, ItemPart:text, ItemPosiID:'', ItemPosi:'', ItemOpt:''}
 	$("#dmPartList").datagrid('appendRow',rowobj);
 	
@@ -483,26 +517,43 @@ function findExaItmTree(event){
 
 
 /// 检查部位列表
-function initExaPart(){
-	
+function initExaPart(Itemdesc){
 	/// 初始化检查方法区域
 	$("#ItmExaPart").html('<tr style="height:0px;" ><td style="width:80px;"></td><td style="width:20px;"></td><td></td><td style="width:20px;"></td><td></td><td style="width:20px;"></td><td></td><td style="width:20px;"></td><td></td><td style="width:20px;"></td><td></td></tr>');
-	runClassMethod("web.DHCAPPExaReportQuery","jsonGetPartTreeByArc",{"itmmastid": itmmastid, "PyCode":"", "TraID":TraID, "HospID": LgHospID},function(jsonString){
+	runClassMethod("web.DHCAPPExaReportQuery","jsonGetPartTreeByArc",{"itmmastid": itmmastid, "PyCode":Itemdesc, "TraID":TraID, "HospID": LgHospID},function(jsonString){
 		if (jsonString != ""){
 			var jsonObjArr = jsonString;
 			for (var i=0; i<jsonObjArr.length; i++){
 				InsPartRegion(jsonObjArr[i]);
 			}
+			if (jsonObjArr.length==1){
+				if (jsonObjArr[0].children.length==1){
+					var PartID=jsonObjArr[0].children[0].id;
+					var PartDesc=jsonObjArr[0].children[0].text;
+					var RepeatFlag=0;
+					var rows=$("#dmPartList").datagrid('getRows');
+					for (var k=0;k<rows.length;k++){
+						if (rows[k].ItemID ==PartID) {
+							RepeatFlag=1;
+							break;
+						}
+					}
+					if (RepeatFlag ==0) {
+						addItmSelList(PartID, PartDesc);
+					}
+					$("#Part_"+PartID).attr("checked",true);
+				}
+			}
 		}
 	},'json',false)
 }
-
+var InsPartColor="#ECF6F1"
 /// 检查部位内容
 function InsPartRegion(itemobj){	
 	/// 标题行
 	var htmlstr = '';
 		// htmlstr = '<tr style="height:30px"><td colspan="9" class=" tb_td_required" style="border:0px solid #ccc;font-weight:bold;">'+ itemobj.text +'</td></tr>';
-
+	if (InsPartColor=="#ECF6F1"){InsPartColor="#ECEDF6"}else{InsPartColor="#ECF6F1"}
 	/// 项目
 	var column = 5;  /// 列数
 	var itemArr = itemobj.children;
@@ -511,17 +562,17 @@ function InsPartRegion(itemobj){
 	for (var j=1; j<=itemArr.length; j++){
 		
 		if (j == 1){
-			itemhtmlArr.push('<td rowspan="'+ merRow +'" align="center">'+ itemobj.text +'</td>');
+			itemhtmlArr.push('<td style="background-color:'+InsPartColor+'" rowspan="'+ merRow +'" align="center">'+ itemobj.text +'</td>');
 		}
 		itemhtmlArr.push('<td><input id="Part_'+ itemArr[j-1].id +'" type="checkbox" value="'+ itemArr[j-1].id +'"></input></td><td>'+ itemArr[j-1].text +'</td>');
 		
 		if (j % column == 0){
-			itemhtmlstr = itemhtmlstr + '<tr>' + itemhtmlArr.join("") + '</tr>';
+			itemhtmlstr = itemhtmlstr + '<tr style="background-color:'+InsPartColor+'">' + itemhtmlArr.join("") + '</tr>';
 			itemhtmlArr = [];
 		}
 	}
 	if ((j-1) % column != 0){
-		itemhtmlstr = itemhtmlstr + '<tr>' + itemhtmlArr.join("") + GetEmptyLabel(column - (itemArr.length % column)) +'</tr>';
+		itemhtmlstr = itemhtmlstr + '<tr style="background-color:'+InsPartColor+'">' + itemhtmlArr.join("") + GetEmptyLabel(column - (itemArr.length % column)) +'</tr>';
 		itemhtmlArr = [];
 	}
 
@@ -538,5 +589,9 @@ function GetEmptyLabel(number){
 	return tempHtmlArr.join("");
 }
 
+function searchItem(){
+	var Itemdesc=$.trim($("#ItmExaPartSearch").val());
+	initExaPart(Itemdesc)
+	}
 /// JQuery 初始化页面
 $(function(){ initPageDefault(); })

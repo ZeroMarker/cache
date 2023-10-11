@@ -1,120 +1,85 @@
-var init = function() {
-	
-	/*--°´Å¥ÊÂ¼ş--*/
-	$UI.linkbutton('#QueryBT',{
-		onClick:function(){
-			var ParamsObj=$UI.loopBlock('#Conditions')
-			if(isEmpty(ParamsObj.StartDate)){
-				$UI.msg('alert','¿ªÊ¼ÈÕÆÚ²»ÄÜÎª¿Õ!');
+ï»¿var init = function() {
+	/* --æŒ‰é’®äº‹ä»¶--*/
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
+			var ParamsObj = $UI.loopBlock('#Conditions');
+			var StartDate = ParamsObj.StartDate;
+			var EndDate = ParamsObj.EndDate;
+			if (isEmpty(StartDate)) {
+				$UI.msg('alert', 'å¼€å§‹æ—¥æœŸä¸èƒ½ä¸ºç©º!');
 				return;
 			}
-			if(isEmpty(ParamsObj.EndDate)){
-				$UI.msg('alert','½ØÖ¹ÈÕÆÚ²»ÄÜÎª¿Õ!');
+			if (isEmpty(EndDate)) {
+				$UI.msg('alert', 'æˆªæ­¢æ—¥æœŸä¸èƒ½ä¸ºç©º!');
 				return;
 			}
-			if(isEmpty(ParamsObj.Loc)){
-				$UI.msg('alert','¿ÆÊÒ²»ÄÜÎª¿Õ!');
+			if (compareDate(StartDate, EndDate)) {
+				$UI.msg('alert', 'æˆªæ­¢æ—¥æœŸä¸èƒ½å°äºå¼€å§‹æ—¥æœŸ!');
 				return;
 			}
-			var Params=JSON.stringify(ParamsObj);
-			Params=encodeUrlStr(Params)
+			/* if(isEmpty(ParamsObj.Loc)){
+				$UI.msg('alert','ç§‘å®¤ä¸èƒ½ä¸ºç©º!');
+				return;
+			}*/
+			var Params = JSON.stringify(ParamsObj);
+			Params = encodeUrlStr(Params);
 			var CheckedRadioObj = $("input[name='ReportType']:checked");
-			var CheckedValue=CheckedRadioObj.val();
-			var CheckedTitle=CheckedRadioObj.attr("label")
-			var Url=CheckedUrl(CheckedValue,Params)
-			AddTab(CheckedTitle,Url);
+			var CheckedValue = CheckedRadioObj.val();
+			var CheckedTitle = CheckedRadioObj.attr('label');
+			var Url = CheckedUrl(CheckedValue, Params);
+			AddStatTab(CheckedTitle, Url, '#tabs');
 		}
 	});
 	
-	function CheckedUrl(Checked,Params){
-		if('FlagAdjlist'==Checked){
-			p_URL = PmRunQianUrl+'?reportName=DHCSTM_HUI_AdjustStat.raq&Params='+Params;
+	function CheckedUrl(Checked, Params) {
+		if ('FlagAdjlist' == Checked) {
+			p_URL = PmRunQianUrl + '?reportName=DHCSTM_HUI_AdjustStat.raq&Params=' + Params;
 		}
 		return p_URL;
 	}
-	function AddTab(title, url) {
-		if ($('#tabs').tabs('exists', title)) {
-			$('#tabs').tabs('select', title); //Ñ¡ÖĞ²¢Ë¢ĞÂ
-			var currTab = $('#tabs').tabs('getSelected');
-			if (url != undefined && currTab.panel('options').title != '±¨±í') {
-				$('#tabs').tabs('update', {
-					tab: currTab,
-					options: {
-						content: createFrame(url)
-					}
-				})
-			}
-		} else {
-			var content = createFrame(url);
-			$('#tabs').tabs('add', {
-				title: title,
-				content: content,
-				closable: true
-			});
-		}
-	}
-	function createFrame(url) {
-		var s = '<iframe scrolling="auto" frameborder="0" src="' + url + '" style="width:100%;height:98%;"></iframe>';
-		return s;
-	}
 
-	$UI.linkbutton('#ClearBT',{
-		onClick:function(){
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
 			Default();
 		}
 	});
-	/*--°ó¶¨¿Ø¼ş--*/
-	var LocParams=JSON.stringify(addSessionParams({Type:"LinkLoc"}));
+	/* --ç»‘å®šæ§ä»¶--*/
+	var LocParams = JSON.stringify(addSessionParams({ Type: 'LinkLoc' }));
 	var LocBox = $HUI.combobox('#Loc', {
-		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+LocParams,
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + LocParams,
 		valueField: 'RowId',
-		textField: 'Description'
+		textField: 'Description',
+		onSelect: function(record) {
+			var LocId = record['RowId'];
+			$HUI.combotree('#ScgStk').setFilterByLoc(LocId);
+		}
 	});
-	
-	var VendorParams=JSON.stringify(addSessionParams({APCType:"M",RcFlag:"Y"}));
-	var VendorBox = $HUI.combobox('#Vendor', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetVendor&ResultSetType=array&Params='+VendorParams,
-			valueField: 'RowId',
-			textField: 'Description'
-	});
-	var AdjustReasonParams=JSON.stringify(addSessionParams({Type:"M"}));
+	var AdjustReasonParams = JSON.stringify(addSessionParams({ Type: 'M' }));
 	var AdjustReasonBox = $HUI.combobox('#AdjustReason', {
-		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetForAdjustReason&ResultSetType=array&Params='+AdjustReasonParams,
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetForAdjustReason&ResultSetType=array&Params=' + AdjustReasonParams,
 		valueField: 'Rowid',
 		textField: 'Description'
 	});
-	var HandlerParams=function(){
-		var Loc=$("#Loc").combo('getValue');
-		var Obj={StkGrpRowId:"",StkGrpType:"M",Locdr:Loc};
-		return Obj
-	}
-	$("#InciDesc").lookup(InciLookUpOp(HandlerParams,'#InciDesc','#Inci'));
-	/*--ÉèÖÃ³õÊ¼Öµ--*/
-	var Default=function(){
+	var HandlerParams = function() {
+		var Loc = $('#Loc').combo('getValue');
+		var Obj = { StkGrpRowId: '', StkGrpType: 'M', Locdr: Loc };
+		return Obj;
+	};
+	$('#InciDesc').lookup(InciLookUpOp(HandlerParams, '#InciDesc', '#Inci'));
+	/* --è®¾ç½®åˆå§‹å€¼--*/
+	var Default = function() {
 		$UI.clearBlock('#Conditions');
 		$UI.clearBlock('#ReportConditions');
-		///ÉèÖÃ³õÊ¼Öµ ¿¼ÂÇÊ¹ÓÃÅäÖÃ
-		var DefaultValue={
-			StartDate:new Date(),
-			EndDate:new Date(),
-			Loc:gLocObj
-			}
-		$UI.fillBlock('#Conditions',DefaultValue)
-		var Tabs=$('#tabs').tabs('tabs')
-		var Tiles = new Array();
-		var Len = Tabs.length;
-		if(Len>0){
-			for(var j=0;j<Len;j++){
-				var Title = Tabs[j].panel('options').title;
-				if(Title!='±¨±í'){
-					Tiles.push(Title);
-				}
-			}
-			for(var i=0;i<Tiles.length;i++){
-				$('#tabs').tabs('close', Tiles[i]);
-			}
-		}
-	}
-	Default()
-}
+		// /è®¾ç½®åˆå§‹å€¼ è€ƒè™‘ä½¿ç”¨é…ç½®
+		var DefaultValue = {
+			StartDate: new Date(),
+			EndDate: new Date(),
+			Loc: gLocObj
+		};
+		$UI.fillBlock('#Conditions', DefaultValue);
+		CloseStatTab('#tabs');
+	};
+	Default();
+	GetReportStyle('#Report');
+};
 $(init);

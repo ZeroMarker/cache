@@ -14,18 +14,17 @@
  * refReqListPrint(123)
  */
 function refReqListPrint(reqInvAry) {
-	if (reqInvAry == "") {
-		dhcsys_alert("票据ID传入错误");
+	if (reqInvAry.length == 0) {
+		$.messager.popover({msg: "票据ID传入错误", type: "error"});
 		return;
 	}
 	getXMLConfig("DHCOPBillAudit");
-	for (var i = 0; i < reqInvAry.length; i++) {
-		var invStr = reqInvAry[i];
+	reqInvAry.forEach(function(invStr) {
 		if (!invStr) {
-			break;
+			return true;
 		}
-		var rtn = tkMakeServerCall("web.UDHCOPINVPrtData12", "GetOPOEAuditData", "xmlPrintFun", invStr, session['LOGON.USERCODE']);
-	}
+		var rtn = tkMakeServerCall("web.UDHCOPINVPrtData12", "GetOPOEAuditData", "xmlPrintFun", invStr, session['LOGON.USERCODE'], session['LOGON.CTLOCID']);
+	});
 }
 
 /**
@@ -42,10 +41,10 @@ function inpatInvPrint(prtRowIdStr) {
 		var rePrtFlag = myAry[1] || "";  //补打标识
 		var xmlName = tkMakeServerCall("web.UDHCJFBaseCommon", "GetPrtXMLName", prtRowId, "I", "DHCJFIPReceipt");
 		getXMLConfig(xmlName);
-		var txtInfo = tkMakeServerCall("web.UDHCJFPRINTINV", "GetPrintInfo", prtRowId, "", rePrtFlag);
+		var txtInfo = tkMakeServerCall("web.UDHCJFPRINTINV", "GetPrintInfo", prtRowId, rePrtFlag);
 		xmlPrintFun(txtInfo, "");
 	} catch (e) {
-		dhcsys_alert("打印异常:" + e.message);
+		$.messager.popover({msg: "打印异常：" + e.message, type: "error"});
 	}
 }
 
@@ -64,7 +63,7 @@ function depositPrint(prtRowIdStr) {
 		getXMLConfig("DHCJFDeposit");
 		var rtn = tkMakeServerCall("web.DHCIPBillDeposit", "GetPrintInfo", "xmlPrintFun", depositId, rePrtFlag);
 	} catch (e) {
-		dhcsys_alert("打印异常:" + e.message);
+		$.messager.popover({msg: "打印异常：" + e.message, type: "error"});
 	}
 }
 
@@ -116,7 +115,7 @@ function arrBackPrint(rowId) {
 		getXMLConfig("DHCJFQFPrint");
 		var rtn = tkMakeServerCall("web.UDHCJFQFDEAL", "GetPrintInfo", "xmlPrintFun", rowId);
 	} catch (e) {
-		dhcsys_alert("打印异常:" + e.message);
+		$.messager.popover({msg: "打印异常：" + e.message, type: "error"});
 	}
 }
 
@@ -132,16 +131,46 @@ function directPrint(rowIdStr) {
 		getXMLConfig("DHCOPBillDirect");
 		var expStr = session['LOGON.USERID'] + "^" + session['LOGON.GROUPID']+ "^" + session['LOGON.CTLOCID'];
 		var myAry = rowIdStr.split("^");
-		for (var i = 0; i < myAry.length; i++) {
-			var prtRowId = myAry[i];
-			if (+prtRowId > 0) {
-				var jsonStr = tkMakeServerCall("BILL.OP.BL.Direct.Interface", "GetPrintJsonStr", prtRowId, expStr);
-				var jsonAry = eval("(" + jsonStr + ")");
-				xmlPrintFun("", "", jsonAry);
+		myAry.forEach(function(id) {
+			if (!(id > 0)) {
+				return true;
 			}
-		}
+			$.cm({
+				ClassName: "BILL.OP.BL.Direct.Interface",
+				MethodName: "GetPrintJsonStr",
+				prtRowId: id,
+				expStr: expStr
+			}, function(jsonAry) {
+				xmlPrintFun("", "", jsonAry);
+			});
+		});
 	} catch (e) {
-		dhcsys_alert("打印异常:" + e.message);
+		$.messager.popover({msg: "打印异常：" + e.message, type: "error"});
+	}
+}
+
+/**
+ * 住院集中打印发票
+ * @method summaryInvPrint
+ * @param {String}
+ * @author ZhYW
+ * summaryInvPrint("1^2")
+ */
+function summaryInvPrint(spiIdStr) {
+	try {
+		var myAry = spiIdStr.split("#");
+		var rePrtFlag = myAry[1] || "";  //补打标识
+		var prtRowId = "";
+		$.each(myAry[0].split("^"), function(index, item) {
+			if (!(item > 0)) {
+				return true;
+			}
+			//目前住院集中打印发票VS小条为1:1，若以后是1:n则需要修改打印方法
+			prtRowId = $.m({ClassName: "BILL.IP.BL.SummaryPrtInv", MethodName: "GetPrtRowIdStrBySPI", spiRowId: item}, false);
+			inpatInvPrint(prtRowId + "#" + rePrtFlag);
+		});
+	} catch (e) {
+		$.messager.popover({msg: "打印异常：" + e.message, type: "error"});
 	}
 }
 
@@ -153,7 +182,7 @@ function getXMLConfig(CFlag) {
 			PrtAryData[i] = DHCP_TextEncoder(PrtAryData[i]);
 		}
 	} catch (e) {
-		dhcsys_alert(e.message);
+		$.messager.popover({msg: e.message, type: "error"});
 	}
 }
 

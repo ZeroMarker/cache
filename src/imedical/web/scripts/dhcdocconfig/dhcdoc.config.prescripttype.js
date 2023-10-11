@@ -12,10 +12,19 @@ function InitHospList()
 {
 	var hospComp = GenHospComp("DHC_PrescriptType");
 	hospComp.jdata.options.onSelect = function(e,t){
-		InitPrescriptType();
+		PTRowid="";
+		$('#tabPrescriptType').datagrid('reload');
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){
 		InitPrescriptType();
+		InitCache();
+	}
+}
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
 	}
 }
 function SaveCatSelect(PTRowid)
@@ -157,11 +166,14 @@ function InitPrescriptType()
 					},false); 
 					if(value==0){
 					   PTRowid="";
-					   PrescriptTypeDataGrid.datagrid('load');
-					   PrescriptTypeDataGrid.datagrid('unselectAll');
+					   PrescriptTypeDataGrid.datagrid('unselectAll').datagrid('load');
 					   $.messager.show({title:"提示",msg:"保存成功"});
+					}else if(value=="repeat"){
+						$.messager.alert('提示',"保存失败!代码或名称重复!");
+						return false;
 					}else{
 					   $.messager.alert('提示',"保存失败:"+value);
+					   return false;
 					}
 					editRow = undefined;
 				}else{
@@ -175,8 +187,12 @@ function InitPrescriptType()
 					   PrescriptTypeDataGrid.datagrid('load');
 					   PrescriptTypeDataGrid.datagrid('unselectAll');
 					   $.messager.show({title:"提示",msg:"保存成功"});
+					}else if(value=="repeat"){
+						$.messager.alert('提示',"保存失败!代码或名称重复!");
+						return false;
 					}else{
 					   $.messager.alert('提示',"保存失败:"+value);
+					   return false;
 					}
 					editRow = undefined;
 				}
@@ -191,6 +207,11 @@ function InitPrescriptType()
 					$.messager.alert('提示',"请先选择一条记录");
 					return false;
 				}
+				var rows = PrescriptTypeDataGrid.datagrid("getSelections");
+                if (rows.length <= 0) {
+	               $.messager.alert('提示',"请先选择一条记录");
+					return false; 
+	                }
 				$("#dialog-ItemCatSelect").css("display", ""); 
 				dialog1 = $("#dialog-ItemCatSelect" ).dialog({
 				  autoOpen: false,
@@ -222,7 +243,19 @@ function InitPrescriptType()
 				}
 	          dialog1.dialog( "open" );
 			}
-		}];
+		}/*,{
+        text: '翻译',
+        iconCls: 'icon-translate-word',
+        handler: function() {
+		         var SelectedRow = PrescriptTypeDataGrid.datagrid('getSelected');
+				if (!SelectedRow){
+				$.messager.alert("提示","请选择需要翻译的行!","info");
+				return false;
+				}
+				CreatTranLate("User.DHCPrescriptType","PTDescription",SelectedRow["PTDescription"])
+		       }
+     }*/
+	 ];
 	PrescriptTypeColumns=[[    
                     { field: 'PTRowid', title: 'ID', width: 1, align: 'center', sortable: true,hidden:true
 					}, 
@@ -276,7 +309,7 @@ function InitPrescriptType()
 					  editor :{  
 							type:'combobox',  
 							options:{
-								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.CNMedCode&QueryName=FindBillTypeConfig&value=",
+								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.CNMedCode&QueryName=FindBillTypeConfig&value="+"&rows=9999",
 								valueField:'BillTypeRowid',
 								textField:'BillTypeDesc',
 								required:true,
@@ -311,7 +344,7 @@ function InitPrescriptType()
 		singleSelect : true,
 		fitColumns : true,
 		autoRowHeight : false,
-		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.PrescriptType&QueryName=GetPrescriptTypeList&HospId="+$HUI.combogrid('#_HospList').getValue(),
+		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.PrescriptType&QueryName=GetPrescriptTypeList",
 		loadMsg : '加载中..',  
 		pagination : true,  //是否分页
 		rownumbers : true,  //
@@ -334,6 +367,10 @@ function InitPrescriptType()
        },
        onLoadSuccess:function(data){
 	       editRow=undefined;
+	   },
+	   onBeforeLoad:function(param){
+		   $('#tabPrescriptType').datagrid('unselectAll');
+		   param = $.extend(param,{HospId:$HUI.combogrid('#_HospList').getValue()});
 	   }
 	});
 }

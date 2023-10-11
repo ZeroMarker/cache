@@ -19,7 +19,8 @@ function initPanel()
 function initTopPanel()
 {
 	initButton(); //按钮初始化 add by wy 2019-4-25
-	initButtonWidth();
+	//showBtnIcon('BFind^BSave',false); //modified by LMH 20230209 动态设置是否极简显示按钮图标
+	//initButtonWidth();
 	setRequiredElements("Loc")
 	defindTitleStyle();
 	initLookUp(); //初始化放大镜
@@ -154,7 +155,9 @@ function FillData(RowID)
 			setElement("ManageUser",list[14]);
 			setElement("Location",list[15]);
 			setElement("Tel",list[16]);
-			setElement("Hold1",list[17]);
+			var IsManageLoc="";
+			if (list[17]=="1") IsManageLoc=true;
+			setElement("IsManageLoc",IsManageLoc);		//Hold1
 			setElement("Hold2",list[18]);
 			setElement("Hold3",list[19]);
 			setElement("Hold4",list[20]);
@@ -181,7 +184,7 @@ function ClearElement()
 	setElement("ManageUser","");
 	setElement("Location","");
 	setElement("Tel","");
-	setElement("Hold1","");
+	setElement("IsManageLoc","");
 	setElement("Hold2","");
 	setElement("Hold3","");
 	setElement("Hold4","");
@@ -226,12 +229,12 @@ function initDHCEQClocTypeNewData()
 	    },
 	    fie:true,
 	    singleSelect:true,
-		fitColumns:true,
+		//fitColumns:true, 
     	columns:[[
     	{field:'TLocDR',title:'TLocDR',width:50,hidden:'true'},    
-        {field:'TLocDesc',title:'科室',width:60,align:'center'},
+        {field:'TLocDesc',title:'科室',width:160,align:'center'},
         {field:'THospital',title:'院区',width:195,align:'center'},
-        {field:'Title1',title:'科室库房',width:50,align:'center'},
+        {field:'Title1',title:'科室库房',width:160,align:'center'},
         {field:'Title2',title:'科室职能',width:100,align:'center'},    
         {field:'Title3',title:'库房属性',width:100,align:'center'},
         {field:'TLocCode',title:'科室代码',width:100,align:'center',hidden:'true'},    
@@ -313,7 +316,10 @@ function CombinData()
 	combindata=combindata+"^"+getElementValue("ManageUserDR");
 	combindata=combindata+"^"+getElementValue("Location");
 	combindata=combindata+"^"+getElementValue("Tel");
-	combindata=combindata+"^"+getElementValue("Hold1");
+	var IsManageLoc=getElementValue("IsManageLoc");
+	if (IsManageLoc==true) IsManageLoc=1;
+	else IsManageLoc="";
+	combindata=combindata+"^"+IsManageLoc;	//Hold1
 	combindata=combindata+"^"+getElementValue("Hold2");
 	combindata=combindata+"^"+getElementValue("Hold3");
 	combindata=combindata+"^"+getElementValue("Hold4");

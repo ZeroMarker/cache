@@ -48,6 +48,7 @@ function setDataGird(interface)
 	    sortName:'OrdCreateDate,OrdCreateTime',
 	    sortOrder:'desc',
 	    view: detailview,
+	    border:false,
 	    detailFormatter: function(rowIndex, rowData){
 	        var strs = new Array(); //定义一数组
 			strs = rowData.ArcimDesc.split(","); //字符分割

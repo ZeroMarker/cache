@@ -1,4 +1,12 @@
+﻿var tmpcategoryId = "";
+var tmpnodeId = "";
+
 $(function(){
+	if (isAllowEditTextKB == "Y"){
+		$("#delete").show();
+		$("#modify").show();
+		$("#new").show();
+	}
 	initCbCategory();
 });
 
@@ -40,7 +48,7 @@ function initcbLoc()
 	    	if (data.length > 0)
 			{
 				$.each(data,function(idx,val){
-					//Ĭ��ֵΪ��¼����
+					//默认值为登录科室
 					if (val.RowID == userLocID){
 						$('#cbLoc').combobox('select',userLocID);
 						return;
@@ -88,6 +96,13 @@ function getInsertText()
 	parent.eventDispatch(param);  
 }
 
+function reloadTextKbTree(){
+	var categoryId = getCagegoryID();
+	var locID = getUserLocID();
+	getCategory(categoryId,locID);
+    document.getElementById('content').innerHTML="";
+}
+
 $("#insert").click(function(){
 	  getInsertText();
 })
@@ -101,7 +116,122 @@ $("#close").click(function(){
 	  parent.foldResource("close");
 })
 
-///����Ŀ¼
+$("#new").click(function(){
+	if (tmpcategoryId == ""){
+        $.messager.alert("提示信息", "请先选择目录节点!");
+	} else {
+        var xpwidth=window.screen.width-200;
+        var xpheight=window.screen.height-100;
+        //HISUI模态框
+        var nodeID = base64encode(utf16to8(escape(tmpcategoryId)));
+        var nodeName = "";
+        var isModify = "";
+        var iframeContent = '<iframe id="KnowledgebaseText" scrolling="no" frameborder="0" src="emr.ip.record.edit.kbtext.csp?nodeID='+nodeID+'&nodeName='+nodeName+'&isModify='+isModify+'" style="width:100%;height:100%;"></iframe>'
+        var callback = reloadTextKbTree;
+        parent.parent.createModalDialog("HisUIKnowledgebaseText", "知识库内容", xpwidth-150, xpheight-250, "KnowledgebaseText", iframeContent,callback,"") 
+    }
+})
+
+$("#modify").click(function(){
+	if (tmpnodeId == ""){
+		$.messager.alert("提示信息", "请先选择要修改的节点!");
+		return;
+	}
+	
+	var createUsrInfo = getCreateUsrInfo(tmpnodeId);
+	if (createUsrInfo == "")
+	{
+		$.messager.alert("提示信息", "获取当前节点创建者相关信息失败，不允许修改此节点");
+		return;
+	}
+	createUsrInfo = eval("("+createUsrInfo+")");
+	if (createUsrInfo.createUser != userCode)
+	{
+		$.messager.alert("提示信息", "非本人创建节点不允许修改，当前节点创建人["+createUsrInfo.createUserName+"];工号["+createUsrInfo.createUser+"]")
+		return;
+	}
+    var xpwidth=window.screen.width-200;
+    var xpheight=window.screen.height-100;
+    //HISUI模态框
+    var nodeID = base64encode(utf16to8(escape(tmpnodeId)));
+    var nodeName = base64encode(utf16to8(escape(createUsrInfo.name)));
+    var isModify = base64encode(utf16to8(escape("Y")));
+    var iframeContent = '<iframe id="KnowledgebaseText" scrolling="no" frameborder="0" src="emr.ip.record.edit.kbtext.csp?nodeID='+nodeID+'&nodeName='+nodeName+'&isModify='+isModify+'" style="width:100%;height:99%;"></iframe>'
+    var callback = reloadTextKbTree;
+    parent.parent.createModalDialog("HisUIKnowledgebaseText", "知识库内容", xpwidth-100, xpheight-200, "KnowledgebaseText", iframeContent,callback,"") 
+})
+
+$("#delete").click(function(){
+	if (tmpnodeId == ""){
+		$.messager.alert("提示信息", "请先选择要删除的节点");
+		return;
+	}
+	
+	var createUsrInfo = getCreateUsrInfo(tmpnodeId);
+	if (createUsrInfo == "")
+	{
+		$.messager.alert("提示信息", "获取当前节点创建者相关信息失败，不允许删除此节点");
+		return;
+	}
+	createUsrInfo = eval("("+createUsrInfo+")");
+	if (createUsrInfo.createUser != userCode)
+	{
+		$.messager.alert("提示信息", "非本人创建节点不允许删除，当前节点创建人["+createUsrInfo.createUserName+"];工号["+createUsrInfo.createUser+"]")
+		return;
+	}
+    $.messager.confirm("删除", "是否确认要删除?", function (r) {
+        if (r) {
+            jQuery.ajax({
+                type: "get",
+                dataType: "text",
+                url: "../EMRservice.Ajax.common.cls",
+                async: false,
+                data: {
+                    "OutputType":"string",
+                    "Class":"EMRservice.BL.BLTextKBContent",
+                    "Method":"DeleteCategory",
+                    "p1":tmpnodeId
+                },
+                success: function(d) {
+                    if (d == "1")
+                    {
+                        reloadTextKbTree();
+                    }
+                    else
+                    {
+                        $.messager.alert("提示信息","删除节点失败，请联系系统管理员")	
+                    }
+                },
+                error : function(d) { alert("DeleteCategory error");}
+            });
+        }
+    });
+})
+
+///获取创建者信息，用于判断是否有权限删除修改节点
+function getCreateUsrInfo(nodeID)
+{ 
+	var result = "";
+	jQuery.ajax({
+		type: "get",
+		dataType: "text",
+		url: "../EMRservice.Ajax.common.cls",
+		async: false,
+		data: {
+			"OutputType":"string",
+			"Class":"EMRservice.BL.BLTextKBContent",
+			"Method":"GetCreateUsrInfo",
+			"p1":nodeID
+		},
+		success: function(d) {
+			result = d;
+		},
+		error : function(d) { alert("GetCreateUsrInfo error");}
+	});	
+	return result;
+}
+
+///加载目录
 function getCategory(parentId,paramLoc)
 {	 
 	jQuery.ajax({
@@ -136,14 +266,24 @@ function getCategory(parentId,paramLoc)
 }
 
 
-//ztree����������ص�����
+//ztree鼠标左键点击回调函数
 function ztOnClick(treeNode)
 {
-	if (treeNode.attributes.type != "leaf") return
+	if (treeNode.attributes.type != "leaf") 
+	{
+		$("#new").linkbutton('enable');
+		tmpnodeId = "";
+		tmpcategoryId = treeNode.id;
+        document.getElementById('content').innerHTML="";
+		return;
+	}
+	$("#new").linkbutton('disable');
+	tmpcategoryId = "";
+	tmpnodeId = treeNode.id;
 	setContent(treeNode.id);
 }
 
-///��������
+///加载内容
 function setContent(categoryId)
 {
 	jQuery.ajax({
@@ -158,7 +298,6 @@ function setContent(categoryId)
 			"p1":categoryId
 		},
 		success: function(d) {
-			//$("#content").text(d);
 			document.getElementById('content').innerHTML=d; 
 		},
 		error : function(d) { alert("GetContent error");}

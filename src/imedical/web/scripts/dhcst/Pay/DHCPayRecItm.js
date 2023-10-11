@@ -43,8 +43,8 @@ function PayFromRec(FnR) {
 		store:VendorToPayStore,
 		pageSize:40,
 		displayInfo:true,
-		displayMsg:'显示第{0}到{1}条记录，一共{2}条',	
-		emptyMsg:"没有记录"
+		displayMsg:$g('显示第{0}到{1}条记录，一共{2}条'),	
+		emptyMsg:$g("没有记录")
 	});
 
 	var nm = new Ext.grid.RowNumberer();
@@ -55,7 +55,7 @@ function PayFromRec(FnR) {
 			hidden:true
 		},
 		{
-			header:'供应商名称',
+			header:$g('经营企业名称'),
 			width:190,
 			dataIndex:'Description',
 			align:'left',
@@ -74,20 +74,20 @@ function PayFromRec(FnR) {
 	});
 
 
-	// 供货厂商
+	// 供货生产企业
 	var VendorR = new Ext.ux.VendorComboBox({
-		fieldLabel : '供应商',
+		fieldLabel : $g('经营企业'),
 		id : 'VendorR',
 		name : 'VendorR',
 		anchor : '90%',
-		emptyText : '供应商...'
+		emptyText :$g('经营企业...')
 	});
 		
 	 
 
 	// 起始日期
 	var StartDateR = new Ext.ux.DateField({
-		fieldLabel : '起始日期',
+		fieldLabel : $g('起始日期'),
 		id : 'StartDateR',
 		name : 'StartDateR',
 		anchor : '90%',
@@ -97,7 +97,7 @@ function PayFromRec(FnR) {
 
 	// 截止日期
 	var EndDateR = new Ext.ux.DateField({
-		fieldLabel : '截止日期',
+		fieldLabel : $g('截止日期'),
 		id : 'EndDateR',
 		name : 'EndDateR',
 		anchor : '90%',
@@ -106,7 +106,7 @@ function PayFromRec(FnR) {
 	});
 		
 	var payNoR=new Ext.form.TextField({
-		fieldLabel : '付款单号',
+		fieldLabel : $g('付款单号'),
 		id : 'payNoR',
 		name : 'payNoR',
 		anchor : '90%',
@@ -116,7 +116,7 @@ function PayFromRec(FnR) {
 
 	//毒麻标志
 	var PoisonFlagR = new Ext.form.Checkbox({
-		fieldLabel : '毒麻标志',
+		fieldLabel : $g('毒麻标志'),
 		id : 'PoisonFlagR',
 		name : 'PoisonFlagR',
 		anchor : '90%',
@@ -126,7 +126,7 @@ function PayFromRec(FnR) {
 	//本次付款金额
 	var payTotalAmtR=new Ext.form.TextField(
 	{
-		fieldLabel:'付款总额',
+		fieldLabel:$g('付款总额'),
 		id:'totalAmtR',
 		anchor : '90%',
 		disabled:true
@@ -135,8 +135,8 @@ function PayFromRec(FnR) {
 
 	// 查询按钮
 	var SearchBTR = new Ext.Toolbar.Button({
-		text : '查询',
-		tooltip : '点击查询',
+		text :$g( '查询'),
+		tooltip : $g('点击查询'),
 		width : 70,
 		height : 30,
 		iconCls : 'page_find',
@@ -146,8 +146,8 @@ function PayFromRec(FnR) {
 	});
 	// 清空按钮
 	var ClearBTR = new Ext.Toolbar.Button({
-		text : '清屏',
-		tooltip : '点击清屏',
+		text : $g('清屏'),
+		tooltip : $g('点击清屏'),
 		width : 70,
 		height : 30,
 		iconCls : 'page_clearscreen',
@@ -158,8 +158,8 @@ function PayFromRec(FnR) {
 
 	// 确定按钮
 	var saveBTR = new Ext.Toolbar.Button({
-		text : '保存付款单',
-		tooltip : '点击保存',
+		text : $g('保存付款单'),
+		tooltip : $g('点击保存'),
 		width : 70,
 		height : 30,
 		iconCls : 'page_save',
@@ -169,8 +169,8 @@ function PayFromRec(FnR) {
 	});
 	// 取消按钮
 	var CancelBTR = new Ext.Toolbar.Button({
-		text : '关闭',
-		tooltip : '点击退出本窗口',
+		text : $g('关闭'),
+		tooltip : $g('点击退出本窗口'),
 		width : 70,
 		height : 30,
 		iconCls : 'page_close',
@@ -185,7 +185,7 @@ function PayFromRec(FnR) {
 	 */
 	function Query() {
 		if (payLocRowId == null || payLocRowId.length <= 0) {
-			Msg.info("warning", "请选择入库科室!");
+			Msg.info("warning", $g("请选择入库科室!"));
 			return;
 		}
 	    VendorToPayStore.removeAll();
@@ -300,7 +300,7 @@ function PayFromRec(FnR) {
 	  for (var i=0;i<cnt;i++){
 	  	var rec=store.getAt(i);
 	  	var amt=rec.get('amt');
-	  	sumAmt=sumAmt+ Number(amt);
+	  	sumAmt=sumAmt.add(Number(amt));
 	  }
 	  payTotalAmtR.setValue(sumAmt);
 	  
@@ -339,21 +339,21 @@ function PayFromRec(FnR) {
 			editable:false
 		}, 
 	 	{
-			header : "单号",
+			header : $g("单号"),
 			align : 'left',
 			dataIndex : 'No',
 			editable:false,
 			width:120	
 		}, 
 		{
-			header : '类型',
+			header :$g( '类型'),
 			dataIndex : 'type',	
 			align : 'left',
 			width:50,
 			editable:false
 		},
 		{
-			header : '付款金额',
+			header :$g( '付款金额'),
 			align : 'right',
 			dataIndex : 'amt',
 			editable:true,
@@ -365,26 +365,26 @@ function PayFromRec(FnR) {
 			})
 		}, 
 	 	{
-			header : "日期",   //审核日期
+			header : $g("日期"),   //审核日期
 			dataIndex : 'gdDate',
 			align : 'left',
 			editable:false
 		}, 
 	 	{
-			header : "时间",  //审核时间
+			header : $g("时间"),  //审核时间
 			dataIndex : 'gdTime',
 			align : 'left',
 			width:50,
 			editable:false
 		}, 
 	 	{
-			header : "审核人",
+			header : $g("审核人"),
 			dataIndex : 'gdAuditUserName',
 			align : 'left',
 			editable:false
 		}, 
 	 	{
-			header : "明细rowid",
+			header : $g("明细rowid"),
 			dataIndex : 'ingri',
 			hidden:true,
 			editable:false
@@ -402,34 +402,34 @@ function PayFromRec(FnR) {
 			editable:false
 		}, 				
 	 	{
-			header : "代码",
+			header : $g("代码"),
 			dataIndex : 'inciCode',
 			editable:false
 		}, 			
 		{
-			header : "名称",
+			header : $g("名称"),
 			dataIndex : 'inciDesc'	,
 			width:200,
 			editable:false
 		}, 							
 								
 	 	{
-			header : '规格',
+			header : $g('规格'),
 			dataIndex : 'spec',	
 			width:80,
 			editable:false
 		}, 		
 		 	{
-			header : '厂商',
+			header :$g( '生产企业'),
 			dataIndex : 'manf'	
 		}, 		
 		 	{
-			header : '单位',
+			header : $g('单位'),
 			dataIndex : 'uomDesc',
 			editable:false	
 		}, 	
 		{
-			header : '数量',
+			header : $g('数量'),
 			dataIndex : 'qty',	
 			align : 'right',
 			editable:false
@@ -441,67 +441,67 @@ function PayFromRec(FnR) {
 			editable:false
 		}, 	
 		 		{
-			header : '进价金额',
+			header :$g( '进价金额'),
 			dataIndex : 'rpAmt'	,
 			align : 'right',
 			editable:false
 		}, 		
 		 	{
-			header : '售价',
+			header : $g('售价'),
 			dataIndex : 'sp',	
 			align : 'right',
 			editable:false,
 			editable:false
 		}, 	{
-			header : '售价金额',
+			header :$g( '售价金额'),
 			dataIndex : 'spAmt'	,
 			align : 'right',
 			editable:false
 		},
 			{
-			header : '已付金额',
+			header : $g('已付金额'),
 			align : 'right',
 			dataIndex : 'payedAmt'	,
 			editable:false
 		}, 		
 			{
-			header : '待付金额',
+			header :$g( '待付金额'),
 			align : 'right',
 			dataIndex : 'restAmt',
 			editable:false
 		}, 		
 		 		{
-			header : '发票号',
+			header : $g('发票号'),
 			dataIndex : 'invNo'	
 		}, 		
 		 	{
-			header : '发票金额',
+			header : $g('发票金额'),
 			dataIndex : 'invAmt',	
 			align : 'right',
 			editable:false
 		}, 		
 		 	{
-			header : '发票日期',
+			header : $g('发票日期'),
 			dataIndex : 'invDate',
 			align : 'left',
 			editable:false
 		}, 	{
-			header : '随行单',
+			header : $g('随行单'),
 			dataIndex : 'sxNo'	
 		}, 		
 		 	{
-			header : '批号',
+			header : $g('批号'),
 			dataIndex : 'batNo'	,
 			editable:false
 		}, 		
 		 	{
-			header : '有效期',
+			header : $g('有效期'),
 			dataIndex : 'expDate',	
 			align : 'left',
 			editable:false
 		}, 		
 		 	{
-			header : '毒麻标记',
+			header : $g('毒麻标记'),
 			dataIndex : 'poison',	
 			align : 'left',
 			editable:false
@@ -605,9 +605,9 @@ function PayFromRec(FnR) {
 		
 		saveOK=true;
 		var verdorCount=getSelectedCount(vendorListGrid);
-		if (verdorCount==0){saveOK=false;Msg.info("warning","未选择供应商!");return;}
+		if (verdorCount==0){saveOK=false;Msg.info("warning",$g("未选择经营企业!"));return;}
 		var selectedCount=getSelectedCount(ItmToPayGrid);
-		if (selectedCount==0){saveOK=false;Msg.info("warning","未选择单据!");return;}
+		if (selectedCount==0){saveOK=false;Msg.info("warning",$g("未选择单据!"));return;}
 		var loc=payLocRowId; 
 		var vendor=gVendorRowId;
 		var poisonFlag=(Ext.getCmp('PoisonFlagR').getValue()==true?'Y':'');
@@ -639,7 +639,7 @@ function PayFromRec(FnR) {
 							}
 						}
 						if (detailDataStr==""){
-							Msg.info('warning','请勾选需要保存的数据');
+							Msg.info('warning',$g('请勾选需要保存的数据'));
 						}
 						var saveRet=tkMakeServerCall("web.DHCST.DHCPayItm","UpdatePay",pay,detailDataStr);
 						if (saveRet!=0){
@@ -662,20 +662,20 @@ function PayFromRec(FnR) {
 					{
 						saveOK=false;
 						saveBT.enable();
-						Msg.info('error','主表更新失败!');}
+						Msg.info('error',$g('主表更新失败!'));}
 				}
 				
 				else
 				{
 					saveOK=false;
 					saveBT.enable();
-				 	Msg.info('error','主表更新失败!')
+				 	Msg.info('error',$g('主表更新失败!'))
 				}
 			 },
 			failure:function(){
 				saveOK=false;
 				saveBT.enable();
-				Msg.info('error','更新失败,请检查网络连接!')
+				Msg.info('error',$g('更新失败,请检查网络连接!'))
 			}
 		});
 		
@@ -685,7 +685,7 @@ function PayFromRec(FnR) {
 	{
 		if (saveOK==true)
 		{
-			alert('刷新')	;
+			alert($g('刷新'))	;
 		
 		}
 
@@ -710,7 +710,7 @@ function PayFromRec(FnR) {
 	/*执行保存*/
 	function Execute(StoreId)
 	{
-		var VenId = gVendorRowId ;//供应商rowid	
+		var VenId = gVendorRowId ;//经营企业rowid	
 		var LocId=payLocRowId ; //付款科室rowid
 		var CreateUser = session['LOGON.USERID'];	;
 		var PonFlag = (Ext.getCmp("PoisonFlagR").getValue()==true?'Y':'N');
@@ -722,25 +722,25 @@ function PayFromRec(FnR) {
 		Ext.Ajax.request({
 			url : url,
 			method : 'POST',
-			waitMsg : '更新中...',
+			waitMsg : $g('更新中...'),
 			success : function(result, request) {
 				var jsonData = Ext.util.JSON
 						.decode(result.responseText);
 				if (jsonData.success == 'true') {
 					// 完成单据
-					Msg.info("success", "保存付款单成功!");								
+					Msg.info("success", $g("保存付款单成功!"));								
 					ItmToPayGrid.store.reload();
 					
 				} else {
 					var ret=jsonData.info;
 					if(ret==-99){
-						Msg.info("error", "加锁失败,不能保存!");
+						Msg.info("error", $g("加锁失败,不能保存!"));
 					}else if(ret==-4){
-						Msg.info("error", "保存付款单主表信息失败!");
+						Msg.info("error", $g("保存付款单主表信息失败!"));
 					}else if(ret==-5){
-						Msg.info("error", "保存付款单明细失败!");
+						Msg.info("error", $g("保存付款单明细失败!"));
 					}else {
-						Msg.info("error", "部分明细保存不成功："+ret);
+						Msg.info("error",$g( "部分明细保存不成功：")+ret);
 					}
 					
 				}
@@ -761,7 +761,7 @@ function PayFromRec(FnR) {
 	    items : [{
 			layout: 'column',    // Specifies that the items will now be arranged in columns
 			items:[{ 	
-				title:'查询条件',			
+				title:$g('查询条件'),			
 				columnWidth: 0.7,
 	        	xtype: 'fieldset',		            	
 	        	defaultType: 'textfield',
@@ -784,7 +784,7 @@ function PayFromRec(FnR) {
 		        	items: [VendorR]
 				}]
 			},{ 	
-				title:'入库单信息',			
+				title:$g('入库单信息'),			
 				columnWidth: 0.3,
 	        	xtype: 'fieldset',		            	
 	        	defaultType: 'textfield',
@@ -807,7 +807,7 @@ function PayFromRec(FnR) {
 	});
 	
 	var fromRecWindow = new Ext.Window({
-		title:'入库/退货单付款',
+		title:$g('入库/退货单付款'),
 		width : document.body.clientWidth*0.9,
 		height : document.body.clientHeight*0.9,
 		layout : 'border',

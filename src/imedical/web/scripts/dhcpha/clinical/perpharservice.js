@@ -19,7 +19,7 @@ function LoadPerPharSerDetail(EpisodeID, bsType, bsPoint){
 	    queryParams:{EpisodeID:EpisodeID},
 	    columns:[[    
 	        {title:'id',field:'id',width:80,hidden:true},    
-	        {field:'text',title:'服务项目',width:250},
+	        {field:'text',title:$g('服务项目'),width:250},
 	        {field:'_parentId',title:'parentId',hidden:true},
 	        {field:'bstype',title:'bsType',hidden:true}
 	    ]],
@@ -81,7 +81,7 @@ function showContent(contentObj){
 	if((typeof contentObj != "undefined")&&(contentObj.length)){
     	htmlstr = htmlstr + '<div style="text-align:center;padding:10px;">';
 		htmlstr = htmlstr + '	<h1>'+contentObj[0].bstitle+'</h1>';
-		htmlstr = htmlstr + '	<span>日期：<span class="ui-font11">'+contentObj[0].bsdate+" "+contentObj[0].bstime+'</span>  病人登记号：<span class="ui-font11">'+contentObj[0].patno+'</span>   姓名：<span class="ui-font11">'+contentObj[0].patname+'</span> 填写人：<span class="ui-font11">'+contentObj[0].bsuser+'</span></span>';
+		htmlstr = htmlstr + '	<span>'+$g("日期：")+'<span class="ui-font11">'+contentObj[0].bsdate+" "+contentObj[0].bstime+'</span>  '+$g("病人登记号：")+'<span class="ui-font11">'+contentObj[0].patno+'</span>   '+$g("姓名：")+'<span class="ui-font11">'+contentObj[0].patname+'</span> '+$g("填写人：")+'<span class="ui-font11">'+contentObj[0].bsuser+'</span></span>';
 		htmlstr = htmlstr + '</div>';
 		for (var i=1;i<contentObj.length;i++){
 			htmlstr = htmlstr + '<div>';
@@ -98,7 +98,7 @@ function showContent(contentObj){
 		}
 	}else{
 		htmlstr += '<div style="text-align:center;padding:10px;">';
-		htmlstr += '	<span>提示：没有填报该项内容</span>';
+		htmlstr += '	<span>'+$g("提示：没有填报该项内容")+'</span>';
 		htmlstr += '</div>';
 	}
 	htmlstr += "</div>"

@@ -6,18 +6,26 @@ $(function(){
 	$("#BFind").click(function(){
 	    ItmDiagnoseDataGrid.datagrid('reload');
      });
+     InitCache();
 });
 function InitHospList()
 {
 	var hospComp = GenHospComp("Doc_BaseConfig_ItmDiagnose");
 	hospComp.jdata.options.onSelect = function(e,t){
-		$("#Combo_PatientType").combobox('setValue',"");
-		$("#Combo_Item,#Combo_Diagnos").combogrid('setValue',"");
-		InitCombo();
+		$("#Combo_PatientType").combobox('select',"").combobox('reload');
+		$("#Combo_Item,#Combo_Diagnos").combogrid('setValue',"").combogrid('setText',"");
+		//InitCombo();
 		ItmDiagnoseDataGrid.datagrid('reload');
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){
 		InitItmDiagnosGrid();
+	}
+}
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
 	}
 }
 function InitItmDiagnosGrid(){
@@ -197,51 +205,10 @@ function InitItmDiagnosGrid(){
         			},
 					{ field : 'PatientTypeDesc',title : '',width : 100 , align: 'center', sortable: true, hidden: true 
                     },
-                    {
-                      field : 'ItmMastDR',title : '药品名称',width : 150,hidden:true
-                    },
-					{ field: 'ARCIMDesc', title: '药品名称', width: 150, align: 'center', sortable: true,
-					   editor:{
-		                         type:'combogrid',
-		                         options:{
-		                             required: true,
-		                             panelWidth:450,
-									 panelHeight:290,
-		                             idField:'ArcimRowID',
-		                             textField:'ArcimDesc',
-		                            value:'',//缺省值 
-		                            mode:'remote',
-									pagination : true,//是否分页   
-									rownumbers:true,//序号   
-									collapsible:false,//是否可折叠的   
-									fit: true,//自动大小   
-									pageSize: 10,//每页显示的记录条数，默认为10   
-									pageList: [10],//可以设置每页记录条数的列表  
-		                            url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
-		                            columns:[[
-		                                {field:'ArcimDesc',title:'名称',width:400,sortable:true},
-					                    {field:'ArcimRowID',title:'ID',width:120,sortable:true},
-					                    {field:'selected',title:'ID',width:120,sortable:true,hidden:true}
-		                             ]],
-									onSelect : function(rowIndex, rowData) {
-										  var rows=ItmDiagnoseDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
-	                                      if(rows)rows.ItmMastDR=rowData.ArcimRowID
-					                 },
-					                 onBeforeLoad:function(param){
-										if (param['q']) {
-											var desc=param['q'];
-										}else{
-											//return false;
-										}
-										param = $.extend(param,{Alias:desc,HospId:$HUI.combogrid('#_HospList').getValue()});
-									}
-                        		}
-		        			  }		
-					},
-                    { field: 'DiagnoseDR', title: '诊断', width: 100, align: 'center', sortable: true, resizable: true,hidden:true
+                    { field: 'DiagnoseDR', title: '适应症诊断', width: 100, align: 'center', sortable: true, resizable: true,hidden:true
 					 
 					},
-					{ field: 'MRCIDDesc', title: '诊断', width: 100, align: 'center', sortable: true,
+					{ field: 'MRCIDDesc', title: '适应症诊断', width: 100, align: 'center', sortable: true,
 					    editor:{
                          type:'combogrid',
                          options:{
@@ -277,6 +244,47 @@ function InitItmDiagnosGrid(){
 							}
                         }
                        }
+					},
+					 {
+                      field : 'ItmMastDR',title : '可开药品医嘱项',width : 150,hidden:true
+                    },
+					{ field: 'ARCIMDesc', title: '可开药品医嘱项', width: 150, align: 'center', sortable: true,
+					   editor:{
+		                         type:'combogrid',
+		                         options:{
+		                             required: true,
+		                             panelWidth:450,
+									 panelHeight:290,
+		                             idField:'ArcimRowID',
+		                             textField:'ArcimDesc',
+		                            value:'',//缺省值 
+		                            mode:'remote',
+									pagination : true,//是否分页   
+									rownumbers:true,//序号   
+									collapsible:false,//是否可折叠的   
+									fit: true,//自动大小   
+									pageSize: 10,//每页显示的记录条数，默认为10   
+									pageList: [10],//可以设置每页记录条数的列表  
+		                            url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem&TYPE=R",
+		                            columns:[[
+		                                {field:'ArcimDesc',title:'名称',width:400,sortable:true},
+					                    {field:'ArcimRowID',title:'ID',width:120,sortable:true},
+					                    {field:'selected',title:'ID',width:120,sortable:true,hidden:true}
+		                             ]],
+									onSelect : function(rowIndex, rowData) {
+										  var rows=ItmDiagnoseDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
+	                                      if(rows)rows.ItmMastDR=rowData.ArcimRowID
+					                 },
+					                 onBeforeLoad:function(param){
+										if (param['q']) {
+											var desc=param['q'];
+										}else{
+											//return false;
+										}
+										param = $.extend(param,{Alias:desc,HospId:$HUI.combogrid('#_HospList').getValue()});
+									}
+                        		}
+		        			  }		
 					},
 					{ field: 'Remark', title: '备注', width: 100, align: 'center', sortable: true, resizable: true,
 					  editor : {
@@ -372,7 +380,7 @@ function InitCombo()
 		panelHeight:400,
 		delay: 200,    
 		mode: 'remote',    
-		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
+		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem&TYPE=R",
 		fitColumns: true,   
 		striped: true,   
 		editable:true,   

@@ -8,7 +8,7 @@ var dataArray = [{"value":"Y","text":'是'}, {"value":"N","text":'否'}];
 
 $(function(){
 	var hospStr=session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
-	var hospComp = GenHospComp("Doc_APP_Position",hospStr);
+	var hospComp = GenHospComp("DHC_AppPosition",hospStr);
 	hospComp.jdata.options.onSelect= function(){
 		 findAdrStatus(); 
 		} 
@@ -130,7 +130,15 @@ $(function(){
 	$('#insert').bind('click',insertRow); 
     $('#delete').bind('click',deleteRow);
     $('#save').bind('click',saveRow);
-    
+    $('#translateword').bind("click",function(){
+		var SelectedRow = $("#positionlist").datagrid('getSelected');
+		if (!SelectedRow){
+		$.messager.alert("提示","请选择需要翻译的行!","info");
+		return false;
+		}
+		CreatTranLate("User.DHCAppPosition","APDesc",SelectedRow["apdesc"])
+		
+		});
     //同时给代码和描述绑定回车事件
     $('#code,#desc').bind('keypress',function(event){
         if(event.keyCode == "13")    

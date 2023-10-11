@@ -16,7 +16,7 @@ function PageHandle(){
 function LoadDept(){
 	//初始化科室
     $.cm({
-		ClassName:"web.DHCDocTransfer",
+		ClassName:"web.DHCOPAdmReg",
 		QueryName:"OPDeptList",
 		dataType:"json",
 		AdmType:"",
@@ -28,6 +28,7 @@ function LoadDept(){
 				textField: 'CTDesc', 
 				editable:true,
 				data: Data["rows"],
+				panelHeight:90,
 				filter: function(q, row){
 					return (row["CTDesc"].toUpperCase().indexOf(q.toUpperCase()) >= 0)||(row["CTAlias"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
 				},
@@ -60,6 +61,7 @@ function LoadDoc(LocId){
 				textField: 'DocDesc', 
 				editable:true,
 				data: Data["rows"],
+				panelHeight:50,
 				filter: function(q, row){
 					return (row["DocDesc"].toUpperCase().indexOf(q.toUpperCase()) >= 0) //||(row["CTAlias"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
 				}

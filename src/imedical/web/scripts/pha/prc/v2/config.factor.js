@@ -6,9 +6,11 @@
 PHA_COM.App.Csp = "pha.prc.v2.config.factor.csp";
 PHA_COM.App.Name = "PRC.Config.Factor";
 PHA_COM.App.Load = "";
+var hospID = PHA_COM.Session.HOSPID;
 $(function () {
 	InitGridFactor();
 	InitEvents();
+	InitHospCombo();
 });
 
 // 事件
@@ -41,7 +43,8 @@ function InitGridFactor() {
         url: $URL,
         queryParams: {
             ClassName: 'PHA.PRC.ConFig.Factor',
-            QueryName: 'SelectFactor'
+            QueryName: 'SelectFactor',
+            hospID: hospID
         },
         columns: columns,
         toolbar: "#gridFactorBar",
@@ -64,7 +67,7 @@ function AddFactor() {
 	var facDesc = facDesc.replace(/\s+/g,"");
 	if (facDesc == "") {
 		PHA.Popover({
-			msg: "请填写不合格警示值内容后再保存！",
+			msg: "请填写不合理警示值内容后再保存！",
 			type: "alert",
 			timeout: 3000
 		});
@@ -113,7 +116,7 @@ function SaveFactor() {
 		var facDesc = facDesc.replace(/\s+/g,"");
 		if (facDesc == "") {
 			PHA.Popover({
-				msg: "请填写不合格警示值内容后再保存！",
+				msg: "请填写不合理警示值内容后再保存！",
 				type: "alert",
 				timeout: 3000
 			});
@@ -129,6 +132,7 @@ function SaveFactor() {
 		ClassName: 'PHA.PRC.ConFig.Factor',
 		MethodName: 'SaveComFactor',
 		inputStr: inputStr,
+		hospID: hospID,
 		dataType: 'text'
 	}, false);
 	var saveArr = saveRet.split('^');
@@ -151,6 +155,15 @@ function ClearFactor(){
 	$("#gridFactor").datagrid("query");	
 }
 
+function InitHospCombo() {
+	var genHospObj = GenHospComp('DHC_PHCNTSFACTOR');
+	if (typeof genHospObj ==='object'){
+        genHospObj.options().onSelect =  function(index, record) {	
+        	hospID = record.HOSPRowId;
+            $('#gridFactor').datagrid('query', {hospID: hospID}); 
+        }
+    }
+}
 
 
 

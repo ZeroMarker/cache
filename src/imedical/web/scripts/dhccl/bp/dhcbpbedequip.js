@@ -2,6 +2,7 @@ var editIndex;
 var bpBERowId;
 var selectBpIndex;
 
+
 $(function(){
 	InitFormItem();
 	InitGroupData();
@@ -75,7 +76,7 @@ function InitFormItem()
         {
             param.fltStr=""
             param.bedRowId="";
-            param.Source="";
+            param.Source="B";
         }   
     });
     //是否连接
@@ -173,6 +174,7 @@ function InitGroupData()
         onBeforeLoad: function(param) {
 	        param.bed=$("#bpbeBedDr").combobox('getText');
 	        param.equip=$("#bpbeBPCEquipDr").combobox('getText');
+	        param.hospId=session['LOGON.HOSPID']
         },
         columns:[
             [
@@ -356,6 +358,7 @@ function saveBedEquip()
         bpbeDefaultInterval:defaultInterval,
         bpbeEditTcpipAddress:editTcpip,
         bpbeIfConnected:ifConnectedBDr,
+        hospId:session['LOGON.HOSPID']
     	},false);
     	if (datas==0)
     	{
@@ -381,9 +384,10 @@ function saveBedEquip()
         bpbeDefaultInterval:defaultInterval,
         bpbeEditTcpipAddress:editTcpip,
         bpbeIfConnected:ifConnectedBDr,
+        hospId:session['LOGON.HOSPID']
     	},false);
     	if (datas==0)
-    	{
+    	{	    	
     		$HUI.datagrid("#bedequipListData").appendRow(rowdata);
     		$.messager.alert("提示", "添加成功！", 'info');  
     	}

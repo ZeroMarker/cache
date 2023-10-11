@@ -90,7 +90,8 @@ function LoadLoc(){
 		QueryName:"FindLoc",
 		Loc:"",
 		UserID:session['LOGON.USERID'],
-		HospitalDr:HospitalDr
+		HospitalDr:HospitalDr,
+		rows: 9999
 	},function(Data){
 		var cbox = $HUI.combobox("#Combo_Loc", {
 				valueField: 'Hidden',

@@ -16,10 +16,10 @@ if(gParamCommon.length<1){
 }
 var LocField = new Ext.ux.LocComboBox({
 	id:'LocField',
-	fieldLabel:'供应科室',
+	fieldLabel:$g('供应科室'),
 	anchor:'90%',
 	listWidth:210,
-	emptyText:'供应科室...',
+	emptyText:$g('供应科室...'),
 	groupId:session['LOGON.GROUPID']
 });
 
@@ -28,7 +28,7 @@ var startDateField = new Ext.ux.DateField({
 	width:150,
 	listWidth:150,
     allowBlank:true,
-	fieldLabel:'起始日期',
+	fieldLabel:$g('起始日期'),
 	anchor:'90%',
 	value:DefaultStDate()
 });
@@ -38,14 +38,14 @@ var endDateField = new Ext.ux.DateField({
 	width:150,
 	listWidth:150,
     allowBlank:true,
-	fieldLabel:'截止日期',
+	fieldLabel:$g('截止日期'),
 	anchor:'90%',
 	value:DefaultEdDate()
 });
 
 var planNnmber = new Ext.form.TextField({
 	id:'planNnmber',
-	fieldLabel:'计划单号',
+	fieldLabel:$g('计划单号'),
 	allowBlank:true,
 	width:150,
 	listWidth:150,
@@ -56,21 +56,21 @@ var planNnmber = new Ext.form.TextField({
 
 var onlyRequest = new Ext.form.Checkbox({
 	id: 'onlyRequest',
-	fieldLabel:'仅申请计划',
+	fieldLabel:$g('仅申请计划'),
 	checked:true,
 	allowBlank:true
 });
 
 var onlyNoTrans = new Ext.form.Checkbox({
 	id: 'onlyNoTrans',
-	fieldLabel:'仅未转移药品',
+	fieldLabel:$g('仅未转移药品'),
 	checked:true,
 	allowBlank:true
 });
 
 var find = new Ext.Toolbar.Button({
-	text:'查询',
-    tooltip:'查询',
+	text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
 	width : 70,
 	height : 30,
@@ -78,7 +78,7 @@ var find = new Ext.Toolbar.Button({
 		InRequestGridDs.removeAll();
 		var locId = Ext.getCmp('LocField').getValue();
 		if(locId==""){
-			Msg.info("warning","请选择需要查询的供应科室!");
+			Msg.info("warning",$g("请选择需要查询的供应科室!"));
 			return;
 		}
 		var startDate = Ext.getCmp('startDateField').getValue();
@@ -102,8 +102,8 @@ var find = new Ext.Toolbar.Button({
 });
 
 var clear = new Ext.Toolbar.Button({
-	text:'清屏',
-    tooltip:'清屏',
+	text:$g('清屏'),
+    tooltip:$g('清屏'),
     iconCls:'page_clearscreen',
 	width : 70,
 	height : 30,
@@ -124,8 +124,8 @@ var clear = new Ext.Toolbar.Button({
 });
 
 var edit = new Ext.Toolbar.Button({
-	text:'生成采购计划',
-    tooltip:'生成采购计划',
+	text:$g('生成采购计划'),
+    tooltip:$g('生成采购计划'),
     iconCls:'page_edit',
 	width : 70,
 	height : 30,
@@ -141,10 +141,10 @@ var edit = new Ext.Toolbar.Button({
 			}
 		}
 		if(listReqId==""){
-			Msg.info("warning","请选择需要生成采购计划的数据!");
+			Msg.info("warning",$g("请选择需要生成采购计划的数据!"));
 			return;
 		}
-		var loadMask=ShowLoadMask(Ext.getBody(),"处理中...");
+		var loadMask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 		Ext.Ajax.request({
 			url:URL,
 			method:'POST',
@@ -155,17 +155,17 @@ var edit = new Ext.Toolbar.Button({
 					window.location.href="dhcst.inpurplan.csp?planNnmber="+jsonData.info+'&locId='+locId;
 				}else{
 					if(jsonData.info==-1){
-						Msg.info("error","科室或人员为空!");
+						Msg.info("error",$g("科室或人员为空!"));
 					}else if(jsonData.info==-99){
-						Msg.info("error","加锁失败!");
+						Msg.info("error",$g("加锁失败!"));
 					}else if(jsonData.info==-2){
-						Msg.info("error","生成计划单号失败!");
+						Msg.info("error",$g("生成计划单号失败!"));
 					}else if(jsonData.info==-3){
-						Msg.info("error","生成计划单失败!");
+						Msg.info("error",$g("生成计划单失败!"));
 					}else if(jsonData.info==-4){
-						Msg.info("error","生成计划单明细失败!"+jsonData.info);
+						Msg.info("error",$g("生成计划单明细失败!")+jsonData.info);
 					}else{
-						Msg.info("error","生成采购计划单失败!"+jsonData.info);
+						Msg.info("error",$g("生成采购计划单失败!")+jsonData.info);
 					}
 				}
 				loadMask.hide();
@@ -209,37 +209,37 @@ var InRequestGridDs = new Ext.data.Store({
 var InRequestGridCm = new Ext.grid.ColumnModel([
 	 new Ext.grid.RowNumberer(),
 	 {
-        header:"请求单号",
+        header:$g("请求单号"),
         dataIndex:'ReqNo',
         width:150,
         align:'left',
         sortable:true
     },{
-        header:"请求部门",
+        header:$g("请求部门"),
         dataIndex:'ReqLoc',
         width:130,
         align:'left',
         sortable:true
     },{
-        header:"类组",
+        header:$g("类组"),
         dataIndex:'StkGrp',
         width:70,
         align:'left',
         sortable:true
     },{
-        header:"制单日期",
+        header:$g("制单日期"),
         dataIndex:'Date',
         width:80,
         align:'left',
         sortable:true
     },{
-        header:"制单时间",
+        header:$g("制单时间"),
         dataIndex:'Time',
         width:80,
         align:'left',
         sortable:true
     },{
-        header:"制单人",
+        header:$g("制单人"),
         dataIndex:'User',
         width:60,
         align:'left',
@@ -254,8 +254,8 @@ var InRequestPagingToolbar = new Ext.PagingToolbar({
     store:InRequestGridDs,
 	pageSize:20,
     displayInfo:true,
-    displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-    emptyMsg:"没有记录"
+    displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+    emptyMsg:$g("没有记录")
 });
 
 //表格
@@ -301,37 +301,37 @@ var InRequestDetailGridDs = new Ext.data.Store({
 //模型
 var InRequestDetailGridCm = new Ext.grid.ColumnModel([
 	new Ext.grid.RowNumberer(),{
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'IncCode',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'IncDesc',
         width:180,
         align:'left',
         sortable:true
     },{
-        header:"单位",
+        header:$g("单位"),
         dataIndex:'ReqUom',
         width:80,
         align:'left',
         sortable:true
      },{
-        header:"本科室数量",
+        header:$g("本科室数量"),
         dataIndex:'Locqty',
         width:100,
         align:'right',
         sortable:true
     },{
-        header:"请求数量",
+        header:$g("请求数量"),
         dataIndex:'ReqQty',
         width:80,
         align:'right',
         sortable:true
     },{
-        header:"已转移数量",
+        header:$g("已转移数量"),
         dataIndex:'TransQty',
         width:100,
         align:'right',
@@ -346,8 +346,8 @@ var InRequestDetailPagingToolbar = new Ext.PagingToolbar({
     store:InRequestDetailGridDs,
 	pageSize:20,
     displayInfo:true,
-    displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-    emptyMsg:"没有记录"
+    displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+    emptyMsg:$g("没有记录")
 });
 
 //表格
@@ -448,90 +448,90 @@ var gridDs = new Ext.data.Store({
 var gridCm = new Ext.grid.ColumnModel([
 	new Ext.grid.RowNumberer(),
 	{
-        header:"药品Id",
+        header:$g("药品Id"),
         dataIndex:'IncId',
         width:180,
         align:'left',
         sortable:true,
 		hidden:true
     },{
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'IncCode',
         width:180,
         align:'left',
         sortable:true
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'IncDesc',
         width:200,
         align:'left',
         sortable:true
     },{
-        header:"单位Id",
+        header:$g("单位Id"),
         dataIndex:'UomId',
         width:100,
         align:'left',
         sortable:true,
 		hidden:true
     },{
-        header:"单位",
+        header:$g("单位"),
         dataIndex:'Uom',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"本科室数量",
+        header:$g("本科室数量"),
         dataIndex:'Locqty',
         width:100,
         align:'right',
         sortable:true
     },{
-        header:"请求数量",
+        header:$g("请求数量"),
         dataIndex:'Qty',
         width:100,
         align:'right',
         sortable:true
    },{
-        header:"已转移数量",
+        header:$g("已转移数量"),
         dataIndex:'TransQty',
         width:100,
         align:'right',
         sortable:true
     },{
-        header:"进价",
+        header:$g("进价"),
         dataIndex:'Rp',
         width:100,
         align:'right',
         sortable:true
     },{
-        header:"供应商Id",
+        header:$g("经营企业Id"),
         dataIndex:'VendorId',
         width:200,
         align:'left',
         sortable:true,
 		hidden:true
     },{
-        header:"供应商",
+        header:$g("经营企业"),
         dataIndex:'Vendor',
         width:200,
         align:'left',
         sortable:true
     },{
-        header:"请求明细rowId",
+        header:$g("请求明细rowId"),
         dataIndex:'DetailIdStr',
         width:300,
         align:'left',
         sortable:true,
 		hidden:true
     },{
-        header:"厂商Id",
+        header:$g("生产企业Id"),
         dataIndex:'ManfId',
         width:200,
         align:'left',
         sortable:true,
 		hidden:true
     },{
-        header:"厂商",
+        header:$g("生产企业"),
         dataIndex:'Manf',
         width:200,
         align:'left',
@@ -611,9 +611,9 @@ var singleSelectFun = function(record){
            var Params=GroupId+"^"+LocId+"^"+UserId
 			if(LocId!=""){
 				Ext.Ajax.request({
-					url : 'dhcst.inpurplanaction.csp?actiontype=GetItmInfo&lncId='+ IncId+'&locId='+LocId,
+					url : 'dhcst.inpurplanaction.csp?actiontype=GetItmInfo&lncId='+ IncId+'&Params='+Params,
 					method : 'POST',
-					waitMsg : '查询中...',
+					waitMsg : $g('查询中...'),
 					success : function(result, request) {
 						var jsonData = Ext.util.JSON.decode(result.responseText.replace(/\r/g,"").replace(/\n/g,""));
 						if (jsonData.success == 'true') {
@@ -628,97 +628,19 @@ var singleSelectFun = function(record){
 							var inci=rowData.get("IncId")
 							var phmanf=data[2]
 							var DataList=vendor+"^"+inci+"^"+phmanf
-						 	Ext.Ajax.request({
-						        url : 'dhcst.inpurplanaction.csp?actiontype=Check&DataList='+ DataList,
-						        method : 'POST',
-						        waitMsg : '查询中...',
-						        success : function(result, request) {
-							    var jsonData = Ext.util.JSON
-									  .decode(result.responseText);
-							    if (jsonData.success == 'true') {
-								var ret=jsonData.info
-								//alert("data="+data)
-								if(ret==1)  
-								{Msg.info("warning", "供应商工商执照将在30天内过期!");
-										return;}
-								if(ret==3)  
-								{Msg.info("warning", "供应商税务登记号将在30天内过期!");
-										return;}
-							    if(ret==4)  
-								{Msg.info("warning", "供应商药品经营许可证将在30天内过期!");
-										return;}
-										
-								if(ret==5)  
-								{Msg.info("warning", "供应商医疗器械经营许可证将在30天内过期!");
-										return;}
-								if(ret==6)  
-								{Msg.info("warning", "供应商医疗器械注册证将在30天内过期!");
-										return;}
-								if(ret==7)  
-								{Msg.info("warning", "供应商卫生许可证将在30天内过期!");
-										return;}
-								if(ret==8)  
-								{Msg.info("warning", "供应商组织机构代码将在30天内过期!");
-										return;}
-								if(ret==9)  
-								{Msg.info("warning", "供应商GSP认证将在30天内过期!");
-										return;}
-								if(ret==10)  
-								{Msg.info("warning", "供应商医疗器械生产许可证将在30天内过期!");
-										return;}
-								if(ret==11)  
-								{Msg.info("warning", "供应商生产制造认可表将在30天内过期!");
-										return;}
-								if(ret==12)  
-								{Msg.info("warning", "供应商进口医疗器械注册证将在30天内过期!");
-										return;}
-								if(ret==13)  
-								{Msg.info("warning", "供应商进口注册登记表将在30天内过期!");
-										return;}
-								if(ret==14)  
-								{Msg.info("warning", "供应商代理销售授权书将在30天内过期!");
-										return;}
-								if(ret==15)  
-								{Msg.info("warning", "供应商质量承诺书将在30天内过期!");
-										return;}
-								if(ret==16)  
-								{Msg.info("warning", "供应商业务员授权书将在30天内过期!");
-										return;}
-								if(ret==19)  
-								{Msg.info("warning", "厂商药品生产许可证将在30天内过期!");
-										return;}
-								if(ret==20)  
-								{Msg.info("warning", "厂商物资生产许可证将在30天内过期!");
-										return;}
-								if(ret==21)  
-								{Msg.info("warning", "厂商工商执照在30天内过期!");
-										return;}
-								if(ret==22)  
-								{Msg.info("warning", "厂商工商注册号将在30天内过期!");
-										return;}
-								if(ret==23)  
-								{Msg.info("warning", "厂商组织机构代码将在30天内过期!");
-										return;}																																							
-								if(ret==24)		
-								{Msg.info("warning", "厂商器械经营许可证将在30天内过期!");
-										return;}
-								if(ret==26)		
-								{Msg.info("warning", "物资批准文号将在30天内过期!");
-										return;}
-							    if(ret==27)		
-								{Msg.info("warning", "物资进口注册证将在30天内过期!");
-										return;}
-							} 
-						},
-						scope : this
-					});  
+						 	var CertExpDateInfo = tkMakeServerCall("PHA.IN.Cert.Query","CheckExpDate",vendor,phmanf)
+		                    if (CertExpDateInfo != ""){
+			                  	Msg.info("warning", CertExpDateInfo);
+			                    return;  
+		                    }
+						 	 
 							//==========供应商资质判断==========
 						} 
 					},
 					scope : this
 				});
 			}else{
-				Msg.info("error", "请选择科室!");
+				Msg.info("error", $g("请选择科室!"));
 			}
 		}
 	}
@@ -770,7 +692,7 @@ InRequestGrid.on('cellclick',function(grid, rowIndex, columnIndex, e) {
 		var AddIncId=tmpRowData.get("IncId");
 		var tmpstkgrpdescstr=tkMakeServerCall("web.DHCST.Common.DrugInfoCommon","GetIncStkCatGrp",AddIncId)  //已加入列表类组
 		if (tmpstkgrpdescstr.indexOf(scgdesc)<0){
-			Msg.info("warning", "请选择类组相同的生成采购计划单!");
+			Msg.info("warning", $g("请选择类组相同的生成采购计划单!"));
 			return;
 		}		
 	}
@@ -811,7 +733,7 @@ InRequestGrid.on('cellclick',function(grid, rowIndex, columnIndex, e) {
 				});
 		}
 	}else{
-		Msg.info("warning", "请选择类组相同的生成采购计划单!");
+		Msg.info("warning", $g("请选择类组相同的生成采购计划单!"));
 		sm.deselectRow(rowIndex);
 	}
 });
@@ -835,13 +757,13 @@ Ext.onReady(function(){
 		labelAlign : 'right',
 		autoHeight:true,
 		frame : true,
-		title:'采购计划-依据请求单',
+		title:$g('采购计划-依据请求单'),
 		//bodyStyle : 'padding:5px;',
 		tbar:[find,'-',clear,'-',edit],
 		items : [{
 			layout : 'column',
 			xtype:'fieldset',
-			title:'查询条件',
+			title:$g('查询条件'),
 			defaults:{border:false},
 			style:DHCSTFormStyle.FrmPaddingV,
 			items : [{
@@ -878,7 +800,7 @@ Ext.onReady(function(){
 			items:[formPanel]
 		},{
 			region:'west',
-			title:'请求单信息----<font color=blue>请选择相同类组生成一个采购计划单</font>',
+			title:$g('请求单信息----<font color=blue>请选择相同类组生成一个采购计划单</font>'),
 			width:650,
 			minSize:150,
 			maxSize:300,
@@ -888,12 +810,12 @@ Ext.onReady(function(){
 			items:[InRequestGrid]
 		},{
 			region:'center',
-			title:'请求单明细信息',
+			title:$g('请求单明细信息'),
 			layout:'fit',
 			items:[InRequestDetailGrid]
 		},{
 			region:'south',
-			title:'采购计划单明细信息',
+			title:$g('采购计划单明细信息'),
 			height:250,
 			minSize:200,
 			maxSize:350,

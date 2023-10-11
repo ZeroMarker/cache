@@ -3,6 +3,8 @@ var rowNo = 4;
 var sPanel=(function(){
 	function Init(){
 		InitPageDataGrid();
+		//医生站直接录入病理带出标本
+		LoadPisSpecList("")
 		//LoadOtherInfo();
 	}
 	var editSelRow = -1;    /// 当前编辑行
@@ -49,7 +51,10 @@ var sPanel=(function(){
 					
 				}
 			}
-		var TitLnk = '<a href="#" onclick="sPanel.insRow()"><img style="margin:6px 3px 0px 3px;" src="../scripts/dhcpha/jQuery/themes/icons/edit_add.png" border=0/></a>';
+		var TitLnk =$('<a href="javascript:void(0)" onclick="sPanel.insRow()"></a>').linkbutton({
+			iconCls:'icon-add',
+			plain:true
+			}).prop('outerHTML');
 		///  定义columns
 		var columns=[[
 			{field:'No',title:'标本序号',width:120,align:'center'},
@@ -71,7 +76,8 @@ var sPanel=(function(){
 			headerCls:'panel-header-gray',
 			rownumbers : false,
 			singleSelect : true,
-			pagination: false,		
+			pagination: false,	
+			toolbar:[],	
 		    onDblClickRow: function (rowIndex, rowData) {
 				
 				if (isPageEditFlag == 0) return;
@@ -102,6 +108,8 @@ var sPanel=(function(){
 					}
 				}
 				if (OtherInfo!=""){
+					var rows=$("#PisSpecList").datagrid('getRows');
+					var maxLen=rows.length;
 					OtherObj=$.parseJSON(OtherInfo); 
 					PisSpec=$.parseJSON(OtherObj["PisSpec"])
 					//setTimeout(function(){
@@ -109,9 +117,11 @@ var sPanel=(function(){
 							var PisArry=PisSpec[i]
 							var PisArryStr=PisArry.split("^")
 								var rowObj = {"No":PisArryStr[0],"Name":PisArryStr[2],"Explain":"","Part":PisArryStr[3],"Qty":PisArryStr[4],"ID":PisArryStr[1],"SepDate":PisArryStr[8],"FixDate":PisArryStr[9]};
-								var Index= parseFloat(PisArryStr[0])-1
+								var Index= parseFloat(PisArryStr[0])-1;
+								if (Index >= maxLen) {
+									insRow();
+								}
 								$('#PisSpecList').datagrid('updateRow',{index: Index, row:rowObj});
-							
 						} 
 					//}, 2000);
 				}
@@ -123,7 +133,13 @@ var sPanel=(function(){
 	}
 		/// 链接
 	function SetCellUrl(value, rowData, rowIndex){	
-		return "<a href='#' onclick='sPanel.delRow("+ rowIndex +")'><img src='../scripts/dhcpha/jQuery/themes/icons/edit_remove.png' border=0/></a>";
+		return "<a href='javascript:void(0)' style='display:inline-block;width:16px;height: 16px;'  class='icon-remove'  onclick='sPanel.delRow("+ rowIndex +")'></a>";
+		/*以下写法点击删除没反应
+		return TitLnk =$('<a href="#" onclick="sPanel.delRow("'+ rowIndex +'")"></a>').linkbutton({
+			iconCls:'icon-remove',
+			plain:true
+			}).prop('outerHTML');
+		*/	
 	}
 
 	/// 删除行
@@ -151,7 +167,7 @@ var sPanel=(function(){
 			$('#PisSpecList').datagrid('deleteRow',rowIndex);  //小于4时,删除该行后,在新增一个空行 qunianepng 2018/1/29
 			 rowNo -= 1;
 			 /// 行对象
-			 var rowObj = {"No":rowNo+1,"Name":"","Explain":"","Part":"","Qty":"","SliType":"","PisNo":""};
+			 var rowObj = {"No":rowNo+1,"Name":"","Explain":"","Part":"","Qty":"","SliType":"","PisNo":"","ID":""};
 			$("#PisSpecList").datagrid('appendRow',rowObj);
 			//$('#PisSpecList').datagrid('updateRow',{index:rowNo, row:rowObj});		
 		}
@@ -184,8 +200,11 @@ var sPanel=(function(){
 		if (isPageEditFlag == 0) return;
 		//var rowObj={No:rowNo, ID:'', Name:'', Part:'', Qty:''};
 		rowNo += 1;
-		var rowObj = {"No":rowNo,"Name":"","Explain":"","Part":"","Qty":"","SliType":"","PisNo":""};
+		var rowObj = {"No":rowNo,"Name":"","Explain":"","Part":"","Qty":"","SliType":"","PisNo":"","ID":""};
 		$("#PisSpecList").datagrid('appendRow',rowObj);
+		if ((sPaneleditSelRow != -1)) { 
+            $("#PisSpecList").datagrid('endEdit', sPaneleditSelRow); 
+        } 
 		sortTable();
 	}
 
@@ -203,9 +222,9 @@ var sPanel=(function(){
 			    var TmpData = item.No +"^"+ item.ID +"^"+ item.Name +"^"+ item.Part +"^"+ item.Qty +"^^^"+ ""+"^"+item.SepDate+"^"+item.FixDate;
 			    PisSpecArr.push(TmpData);
 			    if (PisReqSpec==""){
-					PisReqSpec = item.No+"#"+item.Name +"#"+ item.Part +"#"+ item.Qty +"#"+ item.No+ "#"+ ""+"#"+item.SepDate+"#"+item.FixDate;
+					PisReqSpec = item.No+String.fromCharCode(1)+item.Name +String.fromCharCode(1)+ item.Part +String.fromCharCode(1)+ item.Qty +String.fromCharCode(1)+ ""+String.fromCharCode(1)+item.SepDate+String.fromCharCode(1)+item.FixDate;
 				}else{
-					PisReqSpec = PisReqSpec+"@"+item.No+"#"+item.Name +"#"+ item.Part +"#"+ item.Qty +"#"+ item.No+ "#"+ ""+"#"+item.SepDate+"#"+item.FixDate;	
+					PisReqSpec = PisReqSpec+String.fromCharCode(2)+item.No+String.fromCharCode(1)+item.Name +String.fromCharCode(1)+ item.Part +String.fromCharCode(1)+ item.Qty +String.fromCharCode(1)+ ""+String.fromCharCode(1)+item.SepDate+String.fromCharCode(1)+item.FixDate;	
 				}
 			}
 		})
@@ -262,6 +281,10 @@ var sPanel=(function(){
 		rtnObj["List"] = PisSpec;
 		return rtnObj
 	}
+	function LoadPisSpecList(Arcimid){
+		if ((ARCIM!="")&&(Arcimid=="")){Arcimid=ARCIM}
+		$("#PisSpecList").datagrid("load",{"HospID":session['LOGON.HOSPID'],"Arcimid":Arcimid});
+	}
 	return {
 		"Init":Init,
 		"OtherInfo":OtherInfo,
@@ -269,7 +292,8 @@ var sPanel=(function(){
 		"editSelRow":editSelRow,
 		"delRow":delRow,
 		"insRow":insRow,
-		"SetCellUrl":SetCellUrl
+		"SetCellUrl":SetCellUrl,
+		"LoadPisSpecList":LoadPisSpecList
 	}
 	   
 })();

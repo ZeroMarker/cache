@@ -1,203 +1,234 @@
-var PageLogicObj = {
-	m_FindPatListTabDataGrid: "",
-	dw: $(window).width() - 400,
-	dh: $(window).height() - 100,
-	m_SessionStr: "^" + session['LOGON.USERID'] + "^" + session['LOGON.CTLOCID'] + "^" + session['LOGON.GROUPID'] + "^" + "^" + session['LOGON.SITECODE'] + "^",
-	m_SelectCardTypeRowID: "",
-	m_OverWriteFlag: "",
-	m_CardCost: "",
-	m_CCMRowID: "",
-	m_SetFocusElement: "",
-	m_CardNoLength: "",
-	m_SetRCardFocusElement: "",
-	m_SetCardRefFocusElement: "",
-	m_SetCardReferFlag: "",
-	m_CardINVPrtXMLName: "",
-	m_PatPageXMLName: "",
-	m_CardTypePrefixNo: "",
-	m_UsePANoToCardNO: "",
-	m_RegCardConfigXmlData: "",
-	m_PAPMINOLength: 10,
-	m_PatMasFlag: "",
-	m_CardRefFlag: "",
-	m_AccManagerFlag: "",
-	m_CardSecrityNo: "",
-	m_MedicalFlag: 0, //½¨²¡Àú±êÊ¶
-	m_CurSearchValue: "",
-	m_tmformat: 'HMS',
-	m_IDCredTypePlate: "01", //Éí·İÖ¤´úÂë×Ö¶Î
-	m_CardValidateCode: "",
-	m_CardVerify: "",
-	m_ModifiedFlag: "",
-	m_ReceiptsType: "",
-	m_IsNotStructAddress: "",
-	m_CredTypeDef: "",
-	m_TransferCardFlag: 0,
-	//ÒÑ»é
-	m_MarriedIDStr: "22^23^24^25^26^27",
-	//ÒÑ»é×îµÍÄêÁäÏŞÖÆ(Å®)
-	m_MarriedLimitFemaleFAge: 18,
-	//ÒÑ»é×îµÍÄêÁäÏŞÖÆ(ÄĞ)
-	m_MarriedLimitMaleAge: 18,
-	m_PrtXMLName: "UDHCAccDeposit",
-	JumpAry: ["CardNo", "Name", "Sex", "CredNo", "PatType", "TelHome"],
-	m_CardRegMustFillInArr: [],
-	m_CardRegJumpSeqArr: [],
-	m_CTDTemporaryCardFlag: ""
+ï»¿var PageLogicObj = {
+    m_FindPatListTabDataGrid: "",
+    dw: $(window).width() - 400,
+    dh: $(window).height() - 100,
+    m_SessionStr: "^" + session['LOGON.USERID'] + "^" + session['LOGON.CTLOCID'] + "^" + session['LOGON.GROUPID'] + "^" + "^" + session['LOGON.SITECODE'] + "^",
+    m_SelectCardTypeRowID: "",
+    m_OverWriteFlag: "",
+    m_CardCost: "",
+    m_CCMRowID: "",
+    m_SetFocusElement: "",
+    m_CardNoLength: "",
+    m_SetRCardFocusElement: "",
+    m_SetCardRefFocusElement: "",
+    m_SetCardReferFlag: "",
+    m_CardINVPrtXMLName: "",
+    m_PatPageXMLName: "",
+    m_CardTypePrefixNo: "",
+    m_UsePANoToCardNO: "",
+    m_RegCardConfigXmlData: "",
+    m_PAPMINOLength: 10,
+    m_PatMasFlag: "",
+    m_CardRefFlag: "",
+    m_AccManagerFlag: "",
+    m_CardSecrityNo: "",
+    m_MedicalFlag: 0, //å»ºç—…å†æ ‡è¯†
+    m_CurSearchValue: "",
+    m_tmformat: 'HMS',
+    m_IDCredTypePlate: "01", //èº«ä»½è¯ä»£ç å­—æ®µ
+    m_CardValidateCode: "",
+    m_CardVerify: "",
+    m_ModifiedFlag: "",
+    m_ReceiptsType: "",
+    m_IsNotStructAddress: "",
+    m_CredTypeDef: "",
+    m_CredTypeID: "",
+    m_TransferCardFlag: 0,
+    //å·²å©š
+    m_MarriedIDStr: "22^23^24^25^26^27",
+    //å·²å©šæœ€ä½å¹´é¾„é™åˆ¶(å¥³)
+    m_MarriedLimitFemaleFAge: 18,
+    //å·²å©šæœ€ä½å¹´é¾„é™åˆ¶(ç”·)
+    m_MarriedLimitMaleAge: 18,
+    m_PrtXMLName: "UDHCAccDeposit",
+    JumpAry: ["CardNo", "Name", "Sex", "CredNo", "PatType", "TelHome"],
+    m_CardRegMustFillInArr: [],
+    m_CardRegJumpSeqArr: [],
+    m_CTDTemporaryCardFlag: "",
+    m_ShowWindowFlag: "",
+    m_AllowNoCardNoFlag:""
 }
-$(function () {
-	//³õÊ¼»¯
-	//Init();
-	//ÊÂ¼ş³õÊ¼»¯
-	InitEvent();
-	//Ò³ÃæÔªËØ³õÊ¼»¯
-	//setTimeout(function (){
-	PageHandle();
-	//},50)
+if (websys_isIE == true) {
+    var script = document.createElement('script');
+    script.type = 'text/javaScript';
+    script.src = '../scripts/dhcdoc/tools/bluebird.min.js'; // bluebird æ–‡ä»¶åœ°å€
+    document.getElementsByTagName('head')[0].appendChild(script);
+}
+$(function() {
+    //åˆå§‹åŒ–
+    //Init();
+    //äº‹ä»¶åˆå§‹åŒ–
+    InitEvent();
+    //é¡µé¢å…ƒç´ åˆå§‹åŒ–
+    //setTimeout(function (){
+    PageHandle();
+    //},50)
 })
-$(window).load(function () {
-	if (ServerObj.CardRefgDOMCache == "") {
-		SaveCahce();
-	}
-	InitOtherCom();
-	setTimeout(function () {
-		ExtendComboxEvent();
-		LoadPatInfoByRegNo();
-	})
-	Init();
-	//DHCP_GetXMLConfig("DepositPrintEncrypt","UDHCAccDeposit"
-	$("#ComputerIP").val(ClientIPAddress);
-	$(window).resize(function () {
-		$("#FindPatListTab").datagrid("getPanel").panel('resize', {
-			width: $(window).width(),
-			height: $(window).width() - 460
-		});
+$(window).load(function() {
+    if (ServerObj.CardRefgDOMCache == "") {
+        SaveCahce();
+    }
+    InitOtherCom();
+    setTimeout(function() {
+        ExtendComboxEvent();
+        LoadPatInfoByRegNo();
+    })
+    Init();
+    //DHCP_GetXMLConfig("DepositPrintEncrypt","UDHCAccDeposit"
+    $("#ComputerIP").val(ClientIPAddress);
+    $(window).resize(function() {
+        $("#FindPatListTab").datagrid("getPanel").panel('resize', {
+            width: $(window).width(),
+            height: $(window).width() - 460
+        });
 
-	});
+    });
 });
+
 function Init() {
-	PageLogicObj.m_FindPatListTabDataGrid = InitFindPatListTabDataGrid();
+    PageLogicObj.m_FindPatListTabDataGrid = InitFindPatListTabDataGrid();
 }
+
 function InitEvent() {
-	$("#PAPMINo").blur(PAPMINoOnblur);
-	$("#PAPMINo").keydown(PAPMINoOnKeyDown);
-	$("#InMedicare").blur(InMedicareOnBlur);
-	$("#OpMedicare").blur(OpMedicareOnblur);
-	$("#OpMedicare").keydown(OpMedicareOnKeyDown);
-	$("#Birth").blur(BirthOnBlur);
-	$("#BirthTime").blur(BirthTimeOnBlur);
-	$("#Name").blur(SearchSamePatient);
-	$("#TelHome").blur(SearchSamePatient);
-	$("#PatYBCode").blur(SearchSamePatient);
-	$("#Age").keypress(AgeOnKeypress);
-	$("#Age").blur(AgeOnBlur);
-	$("#CredNo").change(CredNoOnChange);
-	//$("#CredNo").keypress(CredNoOnKeyPress);
-	$("#CredNo").blur(SearchSamePatient);
-	$("#Clear").click(Clearclick);
-	$("#TransferCard").click(TransferCardClick)
-	$("#BReadCard").click(ReadCardClickHandle);
-	$("#ReadRegInfo").click(ReadRegInfoOnClick);
-	$("#NewCard").click(NewCardclick);
-	$("#BModifyInfo").click(BModifyInfoclick);
-	//$("#PatPaySum").keypress(PatPaySumKeyPress);
-	//ºÏ²¢¿¨
-	$("#CardUnite").click(CardUniteClick);
-	//´òÓ¡ÌõÂë
-	$("#prt").click(prtClick);
-	$("#CardSearch").click(CardSearchClick);
-	$("#BOtherCredType").click(OtherCredTypeInput);
-	$("#BAddressInoCollaps").click(BAddressInoCollapsClick);
-	$("#BPayInoCollaps").click(BPayInoCollapsClick);
-	$("#BBaseInoCollaps").click(BBaseInoCollapsClick);
-	document.onkeydown = Doc_OnKeyDown;
+    $("#PAPMINo").blur(PAPMINoOnblur);
+    $("#PAPMINo").keydown(PAPMINoOnKeyDown);
+    $("#InMedicare").blur(InMedicareOnBlur);
+    $("#Birth").blur(BirthOnBlur);
+    $("#BirthTime").blur(BirthTimeOnBlur);
+    $("#Name").blur(SearchSamePatient);
+    $("#TelHome").blur(TelHomeOnBlur); //SearchSamePatient
+    $("#PatYBCode").blur(SearchSamePatient);
+    $("#Age").keypress(AgeOnKeypress);
+    $("#Age").blur(AgeOnBlur);
+    $("#CredNo").change(CredNoOnChange);
+    //$("#CredNo").keypress(CredNoOnKeyPress);
+    $("#CredNo").blur(SearchSamePatient);
+    $("#Clear").click(Clearclick);
+    $("#TransferCard").click(TransferCardClick)
+    $("#BReadCard").click(ReadCardClickHandle);
+    $("#ReadRegInfo").click(ReadRegInfoOnClick);
+    $("#ReadLinkRegInfo").click(ReadLinkRegInfoOnClick);
+    $("#NewCard").click(NewCardclick);
+    $("#BModifyInfo").click(BModifyInfoclick);
+    //$("#PatPaySum").keypress(PatPaySumKeyPress);
+    //åˆå¹¶å¡
+    $("#CardUnite").click(CardUniteClick);
+    //æ‰“å°æ¡ç 
+    $("#prt").click(prtClick);
+    $("#CardSearch").click(CardSearchClick);
+
+    $("#BOtherCredType").click(OtherCredTypeInput);
+    $("#BAddressInoCollaps").click(BAddressInoCollapsClick);
+    $("#BPayInoCollaps").click(BPayInoCollapsClick);
+    $("#BBaseInoCollaps").click(BBaseInoCollapsClick);
+    $("#EmployeeNo").keydown(EmployeeNoOnKeyDown);
+    $("#RealBtn").click(RealBtnClick);
+    $("#SelecAll").click(SelecAllClick);
+    $("#SelecOther").click(SelecOtherClick);
+    $("#OtherName").click(OtherNameclick);
+    $("#ChangeCard").click(ChangeCardClick)
+    document.onkeydown = Doc_OnKeyDown;
 }
+
 function PageHandle() {
-	//¿¨ÀàĞÍ
-	LoadCardType();
-	//Ö¤¼şÀàĞÍ¡¢ÁªÏµÈËÖ¤¼şÀàĞÍ
-	LoadCredType();
-	//LoadForeignCredType();
+    //å¡ç±»å‹
+    LoadCardType();
+    //è¯ä»¶ç±»å‹ã€è”ç³»äººè¯ä»¶ç±»å‹
+    //LoadCredType();
+    LoadForeignCredType();
 
-	//²¡ÈËÀàĞÍ
-	LoadPatType();
+    //ç—…äººç±»å‹
+    LoadPatType();
+    //å­¦å†
+    InitEDUCombo()
+        //è¯­è¨€
+    InitLanguageCombo()
+        //ç»“æ„åŒ–é»˜è®¤åœ°å€
+    InitAddressDefCombo()
+        //ç—…äººçº§åˆ«
+        //LoadPoliticalLevel();
+        //ç—…äººå¯†çº§
+        //LoadSecretLevel();
+        //åˆåŒå•ä½
+        //LoadHCPDR();
+        //æ°‘æ—
+    LoadCTNation();
+    //å…³ç³»
+    //LoadCTRelation();
+    //èŒä¸š
+    //LoadVocation();
+    //åŠ è½½åœ°å€ç±»å‹
+    LoadAddrType()
+        //æ€§åˆ«
+    LoadSex();
+    //ç±è´¯
+    LoadCountry();
+    //é“¶è¡Œ(éœ€åœ¨LoadPayModeä¹‹å‰)
+    LoadBank();
+    //é“¶è¡Œå¡ç±»å‹(éœ€åœ¨LoadPayModeä¹‹å‰)
+    LoadBankCardType();
+    //è®¾å¤‡ç±»å‹
+    LoadIEType();
+    IntDoc();
+    setTimeout(function() {
+        //æ”¯ä»˜æ–¹å¼
+        LoadPayMode();
+        InitPatRegConfig();
+        setTimeout(function() {
+            for (var i = 0; i < PageLogicObj.m_CardRegMustFillInArr.length; i++) {
+                var id = PageLogicObj.m_CardRegMustFillInArr[i]['id'];
+                if (!id) continue;
+                $("label[for=" + id + "]").addClass("clsRequired");
+            }
+        }, 50)
+    }, 50);
 
-	//²¡ÈË¼¶±ğ
-	//LoadPoliticalLevel();
-	//²¡ÈËÃÜ¼¶
-	//LoadSecretLevel();
-	//ºÏÍ¬µ¥Î»
-	//LoadHCPDR();
-	//Ãñ×å
-	LoadCTNation();
-	//¹ØÏµ
-	//LoadCTRelation();
-	//Ö°Òµ
-	//LoadVocation();
-	//ĞÔ±ğ
-	LoadSex();
-	//ÈëÔºÀ´Ô´
-	LoadIpSource();
-	//¼®¹á
-	LoadCountry();
-	//ÒøĞĞ(ĞèÔÚLoadPayModeÖ®Ç°)
-	LoadBank();
-	//ÒøĞĞ¿¨ÀàĞÍ(ĞèÔÚLoadPayModeÖ®Ç°)
-	LoadBankCardType();
-	//Éè±¸ÀàĞÍ
-	LoadIEType();
-	IntDoc();
-	setTimeout(function () {
-		//Ö§¸¶·½Ê½
-		LoadPayMode();
-		InitPatRegConfig();
-		setTimeout(function () {
-			for (var i = 0; i < PageLogicObj.m_CardRegMustFillInArr.length; i++) {
-				var id = PageLogicObj.m_CardRegMustFillInArr[i]['id'];
-				if (!id) continue;
-				$("label[for=" + id + "]").addClass("clsRequired");
-			}
-		}, 50)
-	}, 50);
-
-	if (PageLogicObj.m_UsePANoToCardNO != "Y") {
-		DisableBtn("NewCard", true);
-	}
+    if (PageLogicObj.m_UsePANoToCardNO != "Y") {
+        DisableBtn("NewCard", true);
+    }
 }
+
 function InitOtherCom() {
-	//»éÒö
-	LoadMarital();
-	//²¡ÈË¼¶±ğ
-	LoadPoliticalLevel();
-	//²¡ÈËÃÜ¼¶
-	LoadSecretLevel();
-	//ºÏÍ¬µ¥Î»
-	LoadHCPDR();
-	//¹ØÏµ
-	LoadCTRelation();
-	//Ö°Òµ
-	LoadVocation();
-	//ÁªÏµÈËÖ°Òµ
-	LoadForeignVocation()
-	//ÁªÏµÈËĞÔ±ğ
-	LoadForeignSex();
+    //å©šå§»
+    LoadMarital();
+    //ç—…äººçº§åˆ«
+    LoadPoliticalLevel();
+    //ç—…äººå¯†çº§
+    LoadSecretLevel();
+    //åˆåŒå•ä½
+    LoadHCPDR();
+    //å…³ç³»
+    LoadCTRelation();
+    //èŒä¸š
+    LoadVocation();
 }
+
 function LoadCardType() {
-	$("#CardTypeDefine").combobox({
-		valueField: 'id',
-		textField: 'text',
-		editable: false,
-		blurValidValue: true,
-		data: JSON.parse(ServerObj.DefaultCardTypePara),
-		onSelect: function (rec) {
-			CardTypeKeydownHandler();
-		}
-	})
-	CardTypeKeydownHandler();
+    $("#CardTypeDefine").combobox({
+        valueField: 'id',
+        textField: 'text',
+        editable: false,
+        blurValidValue: true,
+        data: JSON.parse(ServerObj.DefaultCardTypePara),
+        onSelect: function(rec) {
+            CardTypeKeydownHandler();
+        }
+    })
+    CardTypeKeydownHandler();
 }
+
 function LoadCredType() {
-	var CredTypeData = JSON.parse(ServerObj.DefaultCredTypePara);
-	$("#CredType,#ForeignCredType").combobox({
+    //var CredTypeData = JSON.parse(ServerObj.DefaultCredTypePara);
+    //è·å–å¡ç±»å‹å…³è”çš„è¯ä»¶ç±»å‹
+    var CredTypeData=$.cm({
+        ClassName:"web.UDHCOPOtherLB",
+        MethodName:"ReadCredTypeExp",
+        JSFunName:"GetCredTypeToHUIJson",
+        ListName:"",
+        HospId:session["LOGON.HOSPID"], 
+        CardTypeID:PageLogicObj.m_SelectCardTypeRowID
+    },false);
+	$("#CredType").combobox({
 		valueField: 'id',
 		textField: 'text',
 		editable: false,
@@ -207,4059 +238,4417 @@ function LoadCredType() {
 	for (var i = 0; i < CredTypeData.length; i++) {
 		if (CredTypeData[i]['selected'] == true) {
 			PageLogicObj.m_CredTypeDef = CredTypeData[i]['id'];
-			break;
+		}
+		if (CredTypeData[i]['text'].indexOf("èº«ä»½è¯") > -1) {
+			PageLogicObj.m_CredTypeID = CredTypeData[i]['id'];
 		}
 	}
 }
-/*function LoadForeignCredType(){
-	$.m({
-		ClassName:"web.UDHCOPOtherLB",
-		MethodName:"ReadCredTypeExp",
-		JSFunName:"GetCredTypeToHUIJson",
-		ListName:""
-	},function(Data){
-		var cbox = $HUI.combobox("#ForeignCredType", {
-				valueField: 'id',
-				textField: 'text', 
-				editable:false,
-				data: JSON.parse(Data)
-		 });
-	});
-}*/
+function LoadForeignCredType(){
+	var CredTypeData = JSON.parse(ServerObj.DefaultCredTypePara);
+    $("#ForeignCredType").combobox({
+        valueField: 'id',
+        textField: 'text',
+        editable: false,
+        blurValidValue: true,
+        data: CredTypeData
+    })
+    for (var i = 0; i < CredTypeData.length; i++) {
+        if (CredTypeData[i]['selected'] == true) {
+            PageLogicObj.m_CredTypeDef = CredTypeData[i]['id'];
+        }
+        if (CredTypeData[i]['text'].indexOf("èº«ä»½è¯") > -1) {
+            PageLogicObj.m_CredTypeID = CredTypeData[i]['id'];
+        }
+    }
+}
 function LoadPatType() {
-	$("#PatType").combobox({
-		width: 115,
-		valueField: 'id',
-		textField: 'text',
-		//editable:false,
-		blurValidValue: true,
-		data: JSON.parse(ServerObj.DefaultPatTypePara),
-		filter: function (q, row) {
-			if (q == "") return true;
-			if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
-			var find = 0;
-			if ((row["AliasStr"]) && (row["AliasStr"] != "")) {
-				for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
-					if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
-						find = 1;
-						break;
-					}
-				}
-			}
-			if (find == 1) return true;
-			return false;
-		},
-		onSelect: function (rec) {
-			PatTypeOnChange();
-		}
-	})
+    $("#PatType").combobox({
+        width: 115,
+        valueField: 'id',
+        textField: 'text',
+        //editable:false,
+        blurValidValue: true,
+        data: JSON.parse(ServerObj.DefaultPatTypePara),
+        filter: function(q, row) {
+            if (q == "") return true;
+            if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
+            var find = 0;
+            if ((row["AliasStr"]) && (row["AliasStr"] != "")) {
+                for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
+                    if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
+                        find = 1;
+                        break;
+                    }
+                }
+            }
+            if (find == 1) return true;
+            return false;
+        },
+        onSelect: function(rec) {
+            PatTypeOnChange();
+        }
+    })
 }
+
 function LoadMarital() {
-	$("#PAPERMarital").combobox({
-		valueField: 'id',
-		textField: 'text',
-		editable: false,
-		blurValidValue: true,
-		data: JSON.parse(ServerObj.DefaultMaritalPara)
-	})
+    $("#PAPERMarital").combobox({
+        valueField: 'id',
+        textField: 'text',
+        editable: false,
+        blurValidValue: true,
+        data: JSON.parse(ServerObj.DefaultMaritalPara)
+    })
 }
+
 function LoadPoliticalLevel() {
-	$("#PoliticalLevel").combobox({
-		valueField: 'id',
-		textField: 'text',
-		editable: true,
-		blurValidValue: true,
-		data: JSON.parse(ServerObj.DefaultPoliticalLevPara)
-	})
+    $("#PoliticalLevel").combobox({
+        valueField: 'id',
+        textField: 'text',
+        editable: true,
+        blurValidValue: true,
+        data: JSON.parse(ServerObj.DefaultPoliticalLevPara)
+    })
 }
+
 function LoadSecretLevel() {
-	$("#SecretLevel").combobox({
-		valueField: 'id',
-		textField: 'text',
-		editable: true,
-		blurValidValue: true,
-		data: JSON.parse(ServerObj.DefaultSecretLevelPara)
-	})
+    $("#SecretLevel").combobox({
+        valueField: 'id',
+        textField: 'text',
+        editable: true,
+        blurValidValue: true,
+        data: JSON.parse(ServerObj.DefaultSecretLevelPara)
+    })
 }
+
 function LoadHCPDR() {
-	$("#HCPDR").combobox({
-		valueField: 'id',
-		textField: 'text',
-		editable: true,
-		blurValidValue: true,
-		data: JSON.parse(ServerObj.DefaultHCPDRPara)
-	})
+    $("#HCPDR").combobox({
+        valueField: 'id',
+        textField: 'text',
+        editable: true,
+        blurValidValue: true,
+        data: JSON.parse(ServerObj.DefaultHCPDRPara)
+    })
 }
+
 function LoadCTNation() {
-	var cbox = $HUI.combobox("#NationDescLookUpRowID", {
-		width: 115,
-		valueField: 'id',
-		textField: 'text',
-		editable: true,
-		blurValidValue: true,
-		data: JSON.parse(ServerObj.DefaultNationPara),
-		filter: function (q, row) {
-			if (q == "") return true;
-			if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
-			var find = 0;
-			for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
-				if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
-					find = 1;
-					break;
-				}
-			}
-			if (find == 1) return true;
-			return false;
-		}
-	});
+    var cbox = $HUI.combobox("#NationDescLookUpRowID", {
+        width: 115,
+        valueField: 'id',
+        textField: 'text',
+        editable: true,
+        blurValidValue: true,
+        data: JSON.parse(ServerObj.DefaultNationPara),
+        filter: function(q, row) {
+            if (q == "") return true;
+            if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
+            var find = 0;
+            for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
+                if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
+                    find = 1;
+                    break;
+                }
+            }
+            if (find == 1) return true;
+            return false;
+        }
+    });
 }
+
 function LoadCTRelation() {
-	$("#CTRelationDR").combobox({
-		valueField: 'id',
-		textField: 'text',
-		editable: true,
-		blurValidValue: true,
-		data: JSON.parse(ServerObj.DefaultRelationPara)
-	});
+    $("#CTRelationDR").combobox({
+        valueField: 'id',
+        textField: 'text',
+        editable: true,
+        blurValidValue: true,
+        data: JSON.parse(ServerObj.DefaultRelationPara)
+    });
 }
+
 function LoadVocation() {
-	$("#Vocation").combobox({
-		valueField: 'id',
-		textField: 'text',
-		editable: true,
-		blurValidValue: true,
-		data: JSON.parse(ServerObj.DefaultOccuptionPara),
-		filter: function (q, row) {
-			if (q == "") return true;
-			if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
-			var find = 0;
-			for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
-				if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
-					find = 1;
-					break;
-				}
-			}
-			if (find == 1) return true;
-			return false;
-		}
-	});
+    $("#Vocation").combobox({
+        valueField: 'id',
+        textField: 'text',
+        editable: true,
+        blurValidValue: true,
+        data: JSON.parse(ServerObj.DefaultOccuptionPara),
+        filter: function(q, row) {
+            if (q == "") return true;
+            if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
+            var find = 0;
+            for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
+                if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
+                    find = 1;
+                    break;
+                }
+            }
+            if (find == 1) return true;
+            return false;
+        }
+    });
 }
-function LoadForeignVocation() {
-	$("#PAPMIName8").combobox({
-		valueField: 'id',
-		textField: 'text',
-		editable: true,
-		blurValidValue: true,
-		data: JSON.parse(ServerObj.DefaultOccuptionPara),
-		filter: function (q, row) {
-			if (q == "") return true;
-			if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
-			var find = 0;
-			for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
-				if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
-					find = 1;
-					break;
-				}
-			}
-			if (find == 1) return true;
-			return false;
-		}
-	});
-}
+
 function LoadSex() {
-	$HUI.combobox("#Sex", {
-		width: 115,
-		valueField: 'id',
-		textField: 'text',
-		blurValidValue: true,
-		data: JSON.parse(ServerObj.DefaultSexPara),
-		filter: function (q, row) {
-			if (q == "") return true;
-			var find = 0;
-			if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
-			for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
-				if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
-					find = 1;
-					break;
-				}
-			}
-			if (find == 1) return true;
-			return false;
-		},
-		onSelect: function (rec) {
-			SearchSamePatient();
-		}
-	})
+    $HUI.combobox("#Sex", {
+        width: 115,
+        valueField: 'id',
+        textField: 'text',
+        blurValidValue: true,
+        data: JSON.parse(ServerObj.DefaultSexPara),
+        filter: function(q, row) {
+            if (q == "") return true;
+            var find = 0;
+            if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
+            for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
+                if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
+                    find = 1;
+                    break;
+                }
+            }
+            if (find == 1) return true;
+            return false;
+        },
+        onSelect: function(rec) {
+            SearchSamePatient();
+        }
+    })
 
 }
-function LoadIpSource() {
-	$HUI.combobox("#IpSourcePrim", {
-		//width: 115,
-		valueField: 'id',
-		textField: 'text',
-		blurValidValue: true,
-		data: JSON.parse(ServerObj.DefaultIpSourcePara),
-		filter: function (q, row) {
-			if (q == "") return true;
-			var find = 0;
-			if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
-			for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
-				if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
-					find = 1;
-					break;
-				}
-			}
-			if (find == 1) return true;
-			return false;
-		},
-		onSelect: function (rec) {
-			SearchSamePatient();
-		}
-	})
-	console.log(ServerObj.DefaultIpSourcePara);
 
-}
-function LoadForeignSex() {
-	$HUI.combobox("#PAPMIName7", {
-		//width: 115,
-		valueField: 'id',
-		textField: 'text',
-		blurValidValue: true,
-		data: JSON.parse(ServerObj.DefaultSexPara),
-		filter: function (q, row) {
-			if (q == "") return true;
-			var find = 0;
-			if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
-			for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
-				if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
-					find = 1;
-					break;
-				}
-			}
-			if (find == 1) return true;
-			return false;
-		},
-		onSelect: function (rec) {
-			SearchSamePatient();
-		}
-	})
-
-}
 function LoadCountry() {
-	var cbox = $HUI.combobox("#CountryDescLookUpRowID,#CountryHome,#CountryBirth,#CountryHouse", {
-		valueField: 'id',
-		textField: 'text',
-		editable: true,
-		blurValidValue: false,
-		//data: JSON.parse(ServerObj.DefaultCTCountryPara),
-		filter: function (q, row) {
-			if (q == "") return true;
-			if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
-			var find = 0;
-			for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
-				if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
-					find = 1;
-					break;
-				}
-			}
-			if (find == 1) return true;
-			return false;
-		},
-		onSelect: function (rec) {
-			if (rec) {
-				var id = rec.id //$(this).combobox("getValue");
-				var Item = $(this)[0].id;
-				var tt = Item;
-				CountrySelect(Item, id);
-			}
-		}, onChange: function (newValue, oldValue) {
-			if (newValue == "") {
-				var item = $(this)[0].id;
+    var cbox = $HUI.combobox("#CountryDescLookUpRowID,#CountryHome,#CountryBirth,#CountryHouse", {
+        valueField: 'id',
+        textField: 'text',
+        editable: true,
+        blurValidValue: false,
+        //data: JSON.parse(ServerObj.DefaultCTCountryPara),
+        filter: function(q, row) {
+            if (q == "") return true;
+            if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
+            var find = 0;
+            for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
+                if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
+                    find = 1;
+                    break;
+                }
+            }
+            if (find == 1) return true;
+            return false;
+        },
+        onSelect: function(rec) {
+            if (rec) {
+                var id = rec.id //$(this).combobox("getValue");
+                if ($(this).combobox("getValue") != id) id = ""
+                var Item = $(this)[0].id;
+                var tt = Item;
+                CountrySelect(Item, id);
+            }
+        },
+        onChange: function(newValue, oldValue) {
+            if (newValue == "") {
+                var item = $(this)[0].id;
 
-				if (item == "CountryHome") {
-					var provinceId = "ProvinceHome";
-				} else if (item == "CountryBirth") {
-					var provinceId = "ProvinceBirth";
-				} else if (item == "CountryHouse") {
-					var provinceId = "ProvinceInfoLookUpRowID"; //Ê¡ÏÖ×¡
-				} else if (item == "CountryDescLookUpRowID") {
-					var provinceId = "ProvinceHouse"
-				}
-				$("#" + provinceId).combobox('select', '');
-				(function (item) {
-					setTimeout(function () {
-						$("#" + item).combobox('setValue', "").combobox('setText', "");
-						$($("#" + item).combobox('panel')[0].childNodes).removeClass("combobox-item-selected")
-					})
-				})(item)
-			}
-		},
-		onShowPanel: function () {
-			var item = $(this)[0].id;
-			LoadCountryData(item);
-		}
-	});
-	$HUI.combobox($("#ProvinceHome,#CityHome,#ProvinceBirth,#CityBirth,#AreaBirth,#ProvinceInfoLookUpRowID,#CityDescLookUpRowID,#CityAreaLookUpRowID,#Cityhouse,#AreaHouse"), { width: 110 });
-	$HUI.combobox($("#ProvinceHouse"), {});
+                if (item == "CountryHome") {
+                    var provinceId = "ProvinceHome";
+                } else if (item == "CountryBirth") {
+                    var provinceId = "ProvinceBirth";
+                } else if (item == "CountryHouse") {
+                    var provinceId = "ProvinceInfoLookUpRowID"; //çœç°ä½
+                } else if (item == "CountryDescLookUpRowID") {
+                    var provinceId = "ProvinceHouse"
+                }
+                $("#" + provinceId).combobox('select', '');
+                (function(item) {
+                    setTimeout(function() {
+                        $("#" + item).combobox('setValue', "").combobox('setText', "");
+                        $($("#" + item).combobox('panel')[0].childNodes).removeClass("combobox-item-selected")
+                    })
+                })(item)
+            } else if ($(this)[0].id == "CountryDescLookUpRowID") {
+                DefLanguage(newValue)
+            }
+        },
+        onShowPanel: function() {
+            var item = $(this)[0].id;
+            LoadCountryData(item);
+        }
+    });
+    $HUI.combobox($("#ProvinceHome,#CityHome,#ProvinceBirth,#CityBirth,#AreaBirth,#ProvinceInfoLookUpRowID,#CityDescLookUpRowID,#CityAreaLookUpRowID,#Cityhouse,#AreaHouse,#StreetBirth,#StreetNow,#StreetHouse,#AreaHome"), { width: 110 });
+    $HUI.combobox($("#ProvinceHouse"), {});
 }
+
 function LoadCountryData(id) {
-	if (typeof id != "undefined") {
-		var text = $("#" + id).combobox("getText");
-		var data = $("#" + id).combobox("getData");
-		$("#" + id).combobox("loadData", JSON.parse(ServerObj.DefaultCTCountryPara)).combobox("setText", text);
-	}
+    if (typeof id != "undefined") {
+        var text = $("#" + id).combobox("getText");
+        var data = $("#" + id).combobox("getData");
+        $("#" + id).combobox("loadData", JSON.parse(ServerObj.DefaultCTCountryPara)).combobox("setText", text);
+    }
 }
+
 function CountrySelect(id, value) {
-	if (id == "CountryHome") {
-		$("#CityHome").combobox("loadData", []).combobox('setValue', "");
-		//$("#CityHome").combobox('select',"");
-	} else if (id == "CountryBirth") {
-		$("#CityBirth,#AreaBirth").combobox("loadData", []).combobox('setValue', "");
-	} else if (id == "CountryHouse") {
-		$("#CityDescLookUpRowID,#CityAreaLookUpRowID").combobox("loadData", []).combobox('setValue', "");
-	} else if (id == "CountryDescLookUpRowID") {
-		$("#Cityhouse,#AreaHouse").combobox("loadData", []).combobox('setValue', "");
-	}
-	LoadProvince(id, value);
+    if (id == "CountryHome") {
+        $("#CityHome,#AreaHome").combobox("loadData", []).combobox('setValue', "");
+        //$("#CityHome").combobox('select',"");
+    } else if (id == "CountryBirth") {
+        $("#CityBirth,#AreaBirth").combobox("loadData", []).combobox('setValue', "");
+    } else if (id == "CountryHouse") {
+        $("#CityDescLookUpRowID,#CityAreaLookUpRowID").combobox("loadData", []).combobox('setValue', "");
+    } else if (id == "CountryDescLookUpRowID") {
+        $("#Cityhouse,#AreaHouse").combobox("loadData", []).combobox('setValue', "");
+    }
+    LoadProvince(id, value);
 
 }
+
 function LoadPayMode() {
-	$("#PayMode").combobox({
-		valueField: 'id',
-		textField: 'text',
-		editable: false,
-		blurValidValue: true,
-		data: JSON.parse(ServerObj.DefaultPaymodePara),
-		onSelect: function (rec) {
-			PayModeOnChange();
-		},
-		onLoadSuccess: function () {
-			var Data = $(this).combobox("getData");
-			if (Data.length > 0) {
-				$(this).combobox("select", Data[0]["id"]);
-				PayModeOnChange();
-			}
-		}
-	});
+    $("#PayMode").combobox({
+        valueField: 'id',
+        textField: 'text',
+        editable: false,
+        blurValidValue: true,
+        data: JSON.parse(ServerObj.DefaultPaymodePara),
+        onSelect: function(rec) {
+            PayModeOnChange();
+        },
+        onLoadSuccess: function() {
+            var Data = $(this).combobox("getData");
+            if (Data.length > 0) {
+                $(this).combobox("select", Data[0]["id"]);
+                PayModeOnChange();
+            }
+        }
+    });
 }
+
 function LoadBank() {
-	$("#Bank").combobox({
-		valueField: 'id',
-		textField: 'text',
-		editable: false,
-		blurValidValue: true,
-		data: JSON.parse(ServerObj.DefaultBankPara)
-	});
+    $("#Bank").combobox({
+        valueField: 'id',
+        textField: 'text',
+        editable: false,
+        blurValidValue: true,
+        data: JSON.parse(ServerObj.DefaultBankPara)
+    });
 }
+
 function LoadBankCardType() {
-	$("#BankCardType").combobox({
-		valueField: 'id',
-		textField: 'text',
-		editable: false,
-		blurValidValue: true,
-		data: JSON.parse(ServerObj.DefaultBankCardTypePara)
-	});
+    $("#BankCardType").combobox({
+        valueField: 'id',
+        textField: 'text',
+        editable: false,
+        blurValidValue: true,
+        data: JSON.parse(ServerObj.DefaultBankCardTypePara)
+    });
 }
+
 function LoadIEType() {
-	$("#IEType").combobox({
-		valueField: 'HGRowID',
-		textField: 'HGDesc',
-		editable: false,
-		blurValidValue: true,
-		data: JSON.parse(ServerObj.DefaultIETypePara),
-		onLoadSuccess: function () {
-			var Data = $(this).combobox("getData");
-			if (Data.length > 0) {
-				$(this).combobox("select", Data[0]["HGRowID"]);
-			}
-		}
-	});
+    $("#IEType").combobox({
+        valueField: 'HGRowID',
+        textField: 'HGDesc',
+        editable: false,
+        blurValidValue: true,
+        data: JSON.parse(ServerObj.DefaultIETypePara),
+        onLoadSuccess: function() {
+            var Data = $(this).combobox("getData");
+            if (Data.length > 0) {
+                $(this).combobox("select", Data[0]["HGRowID"]);
+            }
+        }
+    });
 }
+
 function LoadProvince(item, CountryId) {
-	if (item == "CountryHome") {
-		var provinceId = "ProvinceHome";
-	} else if (item == "CountryBirth") {
-		var provinceId = "ProvinceBirth";
-	} else if (item == "CountryHouse") {
-		var provinceId = "ProvinceInfoLookUpRowID"; //Ê¡ÏÖ×¡
-	} else if (item == "CountryDescLookUpRowID") {
-		var provinceId = "ProvinceHouse"
-	}
-	if ((ServerObj.defaultCountryDr == CountryId) && (ServerObj.DefaultCTProvince != "")) {
-		var Data = ServerObj.DefaultCTProvince
-	} else {
-		var Data = $.m({
-			ClassName: "web.DHCBL.CTBASEIF.ICTCardRegLB",
-			MethodName: "ReadBaseData",
-			dataType: "text",
-			TabName: "CTProvince",
-			QueryInfo: CountryId + "^^^HUIJSON^" + provinceId
-		}, false);
-	}
-	var cbox = $HUI.combobox("#" + provinceId, {
-		valueField: 'id',
-		textField: 'text',
-		editable: true,
-		blurValidValue: true,
-		data: JSON.parse(Data),
-		filter: function (q, row) {
-			if (q == "") return true;
-			if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
-			var find = 0;
-			for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
-				if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
-					find = 1;
-					break;
-				}
-			}
-			if (find == 1) return true;
-			return false;
-		},
-		onSelect: function (rec) {
-			if (rec) {
-				//¼ÓÔØÊĞĞÅÏ¢
-				var id = rec.id; //$(this).combobox("getValue");
-				var item = $(this)[0].id;
-				if (item == "ProvinceHome") {
+    if (item == "CountryHome") {
+        var provinceId = "ProvinceHome";
+    } else if (item == "CountryBirth") {
+        var provinceId = "ProvinceBirth";
+    } else if (item == "CountryHouse") {
+        var provinceId = "ProvinceInfoLookUpRowID"; //çœç°ä½
+    } else if (item == "CountryDescLookUpRowID") {
+        var provinceId = "ProvinceHouse"
+    } else {
+        provinceId = item
+    }
+    if ((ServerObj.defaultCountryDr == CountryId) && (ServerObj.DefaultCTProvince != "")) {
+        var Data = ServerObj.DefaultCTProvince
+    } else {
+        var Data = $.m({
+            ClassName: "web.DHCBL.CTBASEIF.ICTCardRegLB",
+            MethodName: "ReadBaseData",
+            dataType: "text",
+            TabName: "CTProvince",
+            QueryInfo: CountryId + "^^^HUIJSON^" + provinceId
+        }, false);
+    }
+    var cbox = $HUI.combobox("#" + provinceId, {
+        valueField: 'id',
+        textField: 'text',
+        editable: true,
+        blurValidValue: true,
+        data: JSON.parse(Data),
+        filter: function(q, row) {
+            if (q == "") return true;
+            if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
+            var find = 0;
+            for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
+                if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
+                    find = 1;
+                    break;
+                }
+            }
+            if (find == 1) return true;
+            return false;
+        },
+        onSelect: function(rec) {
+            if (rec) {
+                //åŠ è½½å¸‚ä¿¡æ¯
+                var id = rec.id; //$(this).combobox("getValue");
+                var item = $(this)[0].id;
+                if (item == "ProvinceHome") {
+                    $("#AreaHome").combobox("loadData", []);
+                    $("#AreaHome").combobox('select', "");
+                } else if (item == "ProvinceBirth") {
+                    $("#AreaBirth").combobox("loadData", []);
+                    $("#AreaBirth").combobox('select', "");
 
-				} else if (item == "ProvinceBirth") {
-					$("#AreaBirth").combobox("loadData", []);
-					$("#AreaBirth").combobox('select', "");
+                } else if (item == "ProvinceInfoLookUpRowID") {
+                    $("#CityAreaLookUpRowID").combobox("loadData", []);
+                    $("#CityAreaLookUpRowID").combobox('select', "");
 
-				} else if (item == "ProvinceInfoLookUpRowID") {
-					$("#CityAreaLookUpRowID").combobox("loadData", []);
-					$("#CityAreaLookUpRowID").combobox('select', "");
-
-				} else if (item == "ProvinceHouse") { //¹ú¼®
-					$("#AreaHouse").combobox("loadData", []);
-					$("#AreaHouse").combobox('select', "");
-				}
-				LoadCity($(this)[0].id, id);
-			}
-		}, onChange: function (newValue, oldValue) {
-			if (newValue == "") {
-				var item = $(this)[0].id;
-				if (item == "ProvinceHome") {
-					var cityId = "CityHome";
-				} else if (item == "ProvinceBirth") {
-					var cityId = "CityBirth";
-				} else if (item == "ProvinceInfoLookUpRowID") {
-					var cityId = "CityDescLookUpRowID";
-				} else if (item == "ProvinceHouse") { //¹ú¼®
-					var cityId = "Cityhouse"
-				}
-				$("#" + cityId).combobox('select', '');
-			}
-		}
-	});
-	var id = $("#" + provinceId).combobox("getValue");
-	if (id != "") {
-		LoadCity(provinceId, id);
-	}
+                } else if (item == "ProvinceHouse") { //å›½ç±
+                    $("#AreaHouse").combobox("loadData", []);
+                    $("#AreaHouse").combobox('select', "");
+                }
+                LoadCity($(this)[0].id, id);
+                var PostCodeId = GetPostCodeId(item)
+                $("#" + PostCodeId).val("")
+            }
+        },
+        onChange: function(newValue, oldValue) {
+            if (newValue == "") {
+                var item = $(this)[0].id;
+                if (item == "ProvinceHome") {
+                    var cityId = "CityHome";
+                } else if (item == "ProvinceBirth") {
+                    var cityId = "CityBirth";
+                } else if (item == "ProvinceInfoLookUpRowID") {
+                    var cityId = "CityDescLookUpRowID";
+                } else if (item == "ProvinceHouse") { //å›½ç±
+                    var cityId = "Cityhouse"
+                }
+                $("#" + cityId).combobox('select', '');
+            }
+        }
+    });
+    var id = $("#" + provinceId).combobox("getValue");
+    if (id != "") {
+        LoadCity(provinceId, id);
+    }
 }
+
 function LoadCity(item, ProvinceId) {
-	if (item == "ProvinceHome") {
-		var cityId = "CityHome";
-	} else if (item == "ProvinceBirth") {
-		var cityId = "CityBirth";
-	} else if (item == "ProvinceInfoLookUpRowID") {
-		var cityId = "CityDescLookUpRowID";
-	} else if (item == "ProvinceHouse") { //¹ú¼®
-		var cityId = "Cityhouse"
-	}
-	var Data = $.m({
-		ClassName: "web.DHCBL.CTBASEIF.ICTCardRegLB",
-		MethodName: "ReadBaseData",
-		dataType: "text",
-		TabName: "CTCITY",
-		QueryInfo: ProvinceId + "^^^HUIJSON"
-	}, false);
-	var cbox = $HUI.combobox("#" + cityId, {
-		width: 110,
-		valueField: 'id',
-		textField: 'text',
-		editable: true,
-		blurValidValue: true,
-		data: JSON.parse(Data),
-		filter: function (q, row) {
-			if (q == "") return true;
-			if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
-			var find = 0;
-			for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
-				if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
-					find = 1;
-					break;
-				}
-			}
-			if (find == 1) return true;
-			return false;
-		},
-		onSelect: function (rec) {
-			if (rec != undefined) {
-				//¼ÓÔØÏØĞÅÏ¢
-				var id = rec.id; //$(this).combobox("getValue");
-				LoadArea($(this)[0].id, id);
-			}
-		}, onChange: function (newValue, oldValue) {
-			if (newValue == "") {
-				var item = $(this)[0].id;
-				if (item == "CityHome") {
-					var areaId = "";
-				} else if (item == "CityBirth") {
-					var areaId = "AreaBirth";
-				} else if (item == "CityDescLookUpRowID") {
-					var areaId = "CityAreaLookUpRowID";
-				} else if (item == "Cityhouse") {
-					var areaId = "AreaHouse"
-				}
-				if (areaId != "") {
-					$("#" + areaId).combobox('select', '');
-				}
-			}
-		}
-	});
-	var id = $("#" + cityId).combobox("getValue");
-	if (id != "") {
-		LoadArea(cityId, id);
-	}
+    if (item == "ProvinceHome") {
+        var cityId = "CityHome";
+    } else if (item == "ProvinceBirth") {
+        var cityId = "CityBirth";
+    } else if (item == "ProvinceInfoLookUpRowID") {
+        var cityId = "CityDescLookUpRowID";
+    } else if (item == "ProvinceHouse") { //å›½ç±
+        var cityId = "Cityhouse"
+    }
+    var Data = $.m({
+        ClassName: "web.DHCBL.CTBASEIF.ICTCardRegLB",
+        MethodName: "ReadBaseData",
+        dataType: "text",
+        TabName: "CTCITY",
+        QueryInfo: ProvinceId + "^^^HUIJSON"
+    }, false);
+    var cbox = $HUI.combobox("#" + cityId, {
+        width: 110,
+        valueField: 'id',
+        textField: 'text',
+        editable: true,
+        blurValidValue: true,
+        data: JSON.parse(Data),
+        filter: function(q, row) {
+            if (q == "") return true;
+            if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
+            var find = 0;
+            for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
+                if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
+                    find = 1;
+                    break;
+                }
+            }
+            if (find == 1) return true;
+            return false;
+        },
+        onSelect: function(rec) {
+            if (rec != undefined) {
+                //åŠ è½½å¿ä¿¡æ¯
+                var id = rec.id; //$(this).combobox("getValue");
+                LoadArea($(this)[0].id, id);
+                var PostCodeId = GetPostCodeId(item)
+                $("#" + PostCodeId).val("")
+            }
+        },
+        onChange: function(newValue, oldValue) {
+            if (newValue == "") {
+                var item = $(this)[0].id;
+                if (item == "CityHome") {
+                    var areaId = "AreaHome";
+                } else if (item == "CityBirth") {
+                    var areaId = "AreaBirth";
+                } else if (item == "CityDescLookUpRowID") {
+                    var areaId = "CityAreaLookUpRowID";
+                } else if (item == "Cityhouse") {
+                    var areaId = "AreaHouse"
+                }
+                if (areaId != "") {
+                    $("#" + areaId).combobox('select', '');
+                }
+            }
+        }
+    });
+    var id = $("#" + cityId).combobox("getValue");
+    if (id != "") {
+        LoadArea(cityId, id);
+    }
 }
+
 function LoadArea(item, cityId) {
-	if (item == "CityHome") {
-		var areaId = "";
-	} else if (item == "CityBirth") {
-		var areaId = "AreaBirth";
-	} else if (item == "CityDescLookUpRowID") {
-		var areaId = "CityAreaLookUpRowID";
-	} else if (item == "Cityhouse") {
-		var areaId = "AreaHouse"
-	}
-	var Data = $.m({
-		ClassName: "web.DHCBL.CTBASEIF.ICTCardRegLB",
-		MethodName: "ReadBaseData",
-		dataType: "text",
-		TabName: "CTCITYAREA",
-		QueryInfo: cityId + "^^^HUIJSON"
-	}, false);
-	var cbox = $HUI.combobox("#" + areaId, {
-		width: 110,
-		valueField: 'id',
-		textField: 'text',
-		editable: true,
-		blurValidValue: true,
-		data: JSON.parse(Data),
-		filter: function (q, row) {
-			if (q == "") return true;
-			if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
-			var find = 0;
-			for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
-				if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
-					find = 1;
-					break;
-				}
-			}
-			if (find == 1) return true;
-			return false;
-		}
-	});
+    if (item == "CityHome") {
+        var areaId = "AreaHome";
+    } else if (item == "CityBirth") {
+        var areaId = "AreaBirth";
+    } else if (item == "CityDescLookUpRowID") {
+        var areaId = "CityAreaLookUpRowID";
+    } else if (item == "Cityhouse") {
+        var areaId = "AreaHouse"
+    }
+    var Data = $.m({
+        ClassName: "web.DHCBL.CTBASEIF.ICTCardRegLB",
+        MethodName: "ReadBaseData",
+        dataType: "text",
+        TabName: "CTCITYAREA",
+        QueryInfo: cityId + "^^^HUIJSON"
+    }, false);
+    var cbox = $HUI.combobox("#" + areaId, {
+        width: 110,
+        valueField: 'id',
+        textField: 'text',
+        editable: true,
+        blurValidValue: true,
+        data: JSON.parse(Data),
+        filter: function(q, row) {
+            if (q == "") return true;
+            if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
+            var find = 0;
+            for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
+                if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
+                    find = 1;
+                    break;
+                }
+            }
+            if (find == 1) return true;
+            return false;
+        },
+        onSelect: function(row) {
+            CityAreaSelectHandler(areaId)
+            StreetSelectHandler(areaId)
+        }
+    });
 }
+
 function CardTypeKeydownHandler() {
-	var myoptval = $("#CardTypeDefine").combobox("getValue");
-	var myary = myoptval.split("^");
-	var myCardTypeDR = myary[0];
-	if (myCardTypeDR == "") {
-		return;
+    var myoptval = $("#CardTypeDefine").combobox("getValue");
+    var myary = myoptval.split("^");
+    var myCardTypeDR = myary[0];
+    if (myCardTypeDR == "") {
+        return;
+    }
+    PageLogicObj.m_SelectCardTypeRowID = myCardTypeDR;
+    PageLogicObj.m_OverWriteFlag = myary[23];
+    $("#CardFareCost,#ReceiptNO,#CardNo").val("");
+    if (ServerObj.defCardDr == myCardTypeDR) {
+        var m_RegCardConfigXmlData = $("#RegCardConfigXmlData").val()
+    } else {
+        var m_RegCardConfigXmlData = $.m({
+            ClassName: "web.DHCBL.CARD.UCardPATRegConfig",
+            MethodName: "ReadDefaultCardTypeConfigByDR",
+            CardTypeDR: PageLogicObj.m_SelectCardTypeRowID,
+            SessionStr: ""
+        }, false);
+    }
+    PageLogicObj.m_RegCardConfigXmlData = m_RegCardConfigXmlData;
+    PageLogicObj.m_CardCost = 0;
+    if (myary[3] == "C") {
+        $("#CardFareCost").val(myary[6]);
+        PageLogicObj.m_CardCost = myary[6];
+        GetReceiptNo();
+    }
+    if (myary[16] == "Handle") {
+        $("#CardNo").attr("disabled", false);
+        DisableBtn("BReadCard", true);
+        $("#CardNo").focus();
+    } else {
+        $("#CardNo").attr("disabled", true);
+        DisableBtn("BReadCard", false);
+        $("#BReadCard").focus();
+    }
+    PageLogicObj.m_CCMRowID = myary[14];
+    PageLogicObj.m_SetFocusElement = myary[13];
+    if (PageLogicObj.m_SetFocusElement != "") {
+        $("#" + PageLogicObj.m_SetFocusElement).focus();
+    }
+    PageLogicObj.m_CardNoLength = myary[17];
+    PageLogicObj.m_SetRCardFocusElement = myary[20];
+    PageLogicObj.m_SetCardRefFocusElement = myary[22];
+    PageLogicObj.m_SetCardReferFlag = myary[21];
+    var myobj = document.getElementById("PAPMINo");
+    if (PageLogicObj.m_SetCardReferFlag == "Y") {
+        //myobj.onkeydown = PAPMINoOnKeyDown;
+        //myobj.readOnly=false;
+        $('#PAPMINo').removeAttr("disabled");
+    } else {
+        myobj.onclick = function() { return false; }
+            //myobj.readOnly=true;
+        $('#PAPMINo').val('').attr("disabled", true);
+    }
+    PageLogicObj.m_CardINVPrtXMLName = myary[25];
+    PageLogicObj.m_PatPageXMLName = myary[26];
+    PageLogicObj.m_CardTypePrefixNo = myary[29];
+    //è®¾ç½®ä½¿ç”¨ç™»è®°å·ä½œä¸ºå¡å·
+    if (myary.length >= 37) {
+        PageLogicObj.m_UsePANoToCardNO = myary[36];
+        PageLogicObj.m_AllowNoCardNoFlag=myary[42];
+    }
+    if (PageLogicObj.m_UsePANoToCardNO == "Y") {
+        DisableBtn("BReadCard", true);
+        $("#CardNo").attr("disabled", true);
+        DisableBtn("NewCard", false);
+        PageLogicObj.m_CardNoLength = 0;
+        $('#Name').focus();
+    }
+    if (PageLogicObj.m_AllowNoCardNoFlag=="Y") {
+		DisableBtn("NewCard",false);
 	}
-	PageLogicObj.m_SelectCardTypeRowID = myCardTypeDR;
-	PageLogicObj.m_OverWriteFlag = myary[23];
-	$("#CardFareCost,#ReceiptNO,#CardNo").val("");
-	if (ServerObj.defCardDr == myCardTypeDR) {
-		var m_RegCardConfigXmlData = $("#RegCardConfigXmlData").val()
-	} else {
-		var m_RegCardConfigXmlData = $.m({
-			ClassName: "web.DHCBL.CARD.UCardPATRegConfig",
-			MethodName: "ReadDefaultCardTypeConfigByDR",
-			CardTypeDR: PageLogicObj.m_SelectCardTypeRowID,
-			SessionStr: ""
-		}, false);
-	}
-	PageLogicObj.m_RegCardConfigXmlData = m_RegCardConfigXmlData;
-	PageLogicObj.m_CardCost = 0;
-	if (myary[3] == "C") {
-		$("#CardFareCost").val(myary[6]);
-		PageLogicObj.m_CardCost = myary[6];
-		GetReceiptNo();
-	}
-	if (myary[16] == "Handle") {
-		$("#CardNo").attr("disabled", false);
-		DisableBtn("BReadCard", true);
-		$("#CardNo").focus();
-	} else {
-		$("#CardNo").attr("disabled", true);
-		DisableBtn("BReadCard", false);
-		$("#BReadCard").focus();
-	}
-	PageLogicObj.m_CCMRowID = myary[14];
-	PageLogicObj.m_SetFocusElement = myary[13];
-	if (PageLogicObj.m_SetFocusElement != "") {
-		$("#" + PageLogicObj.m_SetFocusElement).focus();
-	}
-	PageLogicObj.m_CardNoLength = myary[17];
-	PageLogicObj.m_SetRCardFocusElement = myary[20];
-	PageLogicObj.m_SetCardRefFocusElement = myary[22];
-	PageLogicObj.m_SetCardReferFlag = myary[21];
-	var myobj = document.getElementById("PAPMINo");
-	if (PageLogicObj.m_SetCardReferFlag == "Y") {
-		//myobj.onkeydown = PAPMINoOnKeyDown;
-		//myobj.readOnly=false;
-		$('#PAPMINo').removeAttr("disabled");
-	} else {
-		myobj.onclick = function () { return false; }
-		//myobj.readOnly=true;
-		$('#PAPMINo').val('').attr("disabled", true);
-	}
-	PageLogicObj.m_CardINVPrtXMLName = myary[25];
-	PageLogicObj.m_PatPageXMLName = myary[26];
-	PageLogicObj.m_CardTypePrefixNo = myary[29];
-	//ÉèÖÃÊ¹ÓÃµÇ¼ÇºÅ×÷Îª¿¨ºÅ
-	if (myary.length >= 37) {
-		PageLogicObj.m_UsePANoToCardNO = myary[36];
-	}
-	if (PageLogicObj.m_UsePANoToCardNO == "Y") {
-		DisableBtn("BReadCard", true);
-		$("#CardNo").attr("disabled", true);
-		DisableBtn("NewCard", false);
-		PageLogicObj.m_CardNoLength = 0;
-		$('#Name').focus();
-	}
-	PageLogicObj.m_CTDTemporaryCardFlag = myary[38];
-	//³õÊ¼»¯ÁÙÊ±¿¨Ïà¹Ø
-	InitTemporaryCard($("#CardNo").val());
+    PageLogicObj.m_CTDTemporaryCardFlag = myary[38];
+    if ((myary[24] == "N") && (myary[3] == "NP")) {
+        //ä¸æ˜¾ç¤ºæ”¶è´¹ä¿¡æ¯
+        document.getElementById("PayInfo").style.display = "none";
+        if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
+    } else {
+        document.getElementById("PayInfo").style.display = "block";
+        if (AddressInfoIsExpand()) BAddressInoCollapsClick();
+    }
+    //åˆå§‹åŒ–ä¸´æ—¶å¡ç›¸å…³
+    InitTemporaryCard($("#CardNo").val());
+    //ä¿®æ”¹å¡ç±»å‹æ—¶åˆ¤æ–­ä¸€ä¸‹æ‚£è€…ç±»å‹æ˜¯å¦æ”¶å–å¡è´¹ç”¨
+    PatTypeOnChange()
+    //åŠ è½½å¡ç±»å‹å…³è”çš„è¯ä»¶ç±»å‹
+    LoadCredType()
 }
+
 function ReadCardClickHandle() {
-	if ($("#BReadCard").hasClass('l-btn-disabled')) {
-		return false;
-	}
-	var myVersion = ServerObj.ConfigVersion;
-	if (myVersion == "12") {
-		M1Card_InitPassWord();
-	}
-	var rtn = DHCACC_ReadMagCard(PageLogicObj.m_CCMRowID, "R", "23");
-	var myary = rtn.split("^");
-	if (myary[0] == '0') {
-		$("#CardNo").val(myary[1]);
-		PageLogicObj.m_CardVerify = myary[2];
-		PageLogicObj.m_CardValidateCode = myary[2];
-		PageLogicObj.m_CardSecrityNo = myary[2];
-		GetValidatePatbyCard();
-	}
+    if ($("#BReadCard").hasClass('l-btn-disabled')) {
+        return false;
+    }
+    var myVersion = ServerObj.ConfigVersion;
+    if (myVersion == "12") {
+        M1Card_InitPassWord();
+    }
+    var rtn = DHCACC_ReadMagCard(PageLogicObj.m_CCMRowID, "R", "23");
+    var myary = rtn.split("^");
+    if (myary[0] == '0') {
+        $("#CardNo").val(myary[1]);
+        PageLogicObj.m_CardVerify = myary[2];
+        PageLogicObj.m_CardValidateCode = myary[2];
+        PageLogicObj.m_CardSecrityNo = myary[2];
+        GetValidatePatbyCard();
+    }
 }
+
 function M1Card_InitPassWord() {
-	try {
-		var myobj = document.getElementById("ClsM1Card");
-		if (myobj == null) return;
-		var rtn = myobj.M1Card_Init();
-	} catch (e) {
-	}
+    try {
+        var myobj = document.getElementById("ClsM1Card");
+        if (myobj == null) return;
+        var rtn = myobj.M1Card_Init();
+    } catch (e) {}
 }
+
 function GetReceiptNo() {
-	var myPINVFlag = "Y";
-	var myExpStr = session['LOGON.USERID'] + "^" + myPINVFlag;
-	if (cspRunServerMethod(ServerObj.GetreceipNO, 'SetReceipNO', session['LOGON.USERID'], PageLogicObj.m_SelectCardTypeRowID, myExpStr) != '0') {
-		$.messager.alert("ÌáÊ¾", t['InvalidReceiptNo']);
-		return false;
-	}
+    var myPINVFlag = "Y";
+    var myExpStr = session['LOGON.USERID'] + "^" + myPINVFlag;
+    if (cspRunServerMethod(ServerObj.GetreceipNO, 'SetReceipNO', session['LOGON.USERID'], PageLogicObj.m_SelectCardTypeRowID, myExpStr) != '0') {
+        $.messager.alert("æç¤º", t['InvalidReceiptNo']);
+        return false;
+    }
 }
+
 function SetReceipNO(value) {
-	var myary = value.split("^");
-	var ls_ReceipNo = myary[0];
-	$('#ReceiptNO').val(ls_ReceipNo);
-	//Èç¹ûÕÅÊıĞ¡ÓÚ×îĞ¡ÌáÊ¾¶îchange the Txt Color
-	if (myary[1] != "0") {
-		$("#ReceiptNO").addClass("newclsInvalid");
-	}
+    var myary = value.split("^");
+    var ls_ReceipNo = myary[0];
+    $('#ReceiptNO').val(ls_ReceipNo);
+    //å¦‚æœå¼ æ•°å°äºæœ€å°æç¤ºé¢change the Txt Color
+    if (myary[1] != "0") {
+        $("#ReceiptNO").addClass("newclsInvalid");
+    }
 }
+
 function PAPMINoOnKeyDown(e) {
-	var key = websys_getKey(e);
-	if (key == 13) {
-		$("#PAPMINo").unbind("blur");
-		SetPAPMINoLenth();
-		GetPatDetailByPAPMINo();
-		setTimeout(function () {
-			$("#PAPMINo").blur(PAPMINoOnblur);
-		});
-		return false;
-	}
+    var key = websys_getKey(e);
+    if (key == 13) {
+        $("#PAPMINo").unbind("blur");
+        SetPAPMINoLenth();
+        GetPatDetailByPAPMINo();
+        setTimeout(function() {
+            $("#PAPMINo").blur(PAPMINoOnblur);
+        });
+        return false;
+    }
 }
+
 function PAPMINoOnblur() {
-	SetPAPMINoLenth();
-	GetPatDetailByPAPMINo();
+    SetPAPMINoLenth();
+    GetPatDetailByPAPMINo();
 }
-function OpMedicareOnKeyDown(e) {
-	var key = websys_getKey(e);
-	if (key == 13) {
-		$("#OpMedicare").unbind("blur");
-		SetOpMedicareLenth();
-		GetPatDetailByOpMedicare();
-		setTimeout(function () {
-			$("#OpMedicare").blur(OpMedicareOnblur);
-		});
-		return false;
-	}
-}
-function OpMedicareOnblur() {
-	SetOpMedicareLenth();
-	GetPatDetailByOpMedicare();
-}
+
 function InMedicareOnBlur() {
-	var myInMedicare = $("#InMedicare").val();
-	if (myInMedicare.split('M').length > 1) {
-		$("#InMedicare").val(myInMedicare.split('M')[0]);
-	}
-	SearchSamePatient();
+    var myInMedicare = $("#InMedicare").val();
+    if (myInMedicare.split('M').length > 1) {
+        $("#InMedicare").val(myInMedicare.split('M')[0]);
+    }
+    SearchSamePatient();
 }
+
 function BirthOnBlur() {
-	///ÇåÆÁµÄÊ±ºò²»ÔÚ´¦Àí
-	//var Obj=GetEventElementObj()
-	//if (Obj.name=="Clear"){return websys_cancel();}
-	var mybirth = $("#Birth").val();
-	if ((mybirth != "") && ((mybirth.length != 8) && ((mybirth.length != 10)))) {
-		$.messager.alert("ÌáÊ¾", "ÇëÊäÈëÕıÈ·µÄ³öÉúÈÕÆÚ!", "info", function () {
-			$("#Birth").addClass("newclsInvalid");
-			$("#Birth").focus();
-		});
-		return false;
-	}
-	$("#Birth").removeClass("newclsInvalid");
-	if ((mybirth.length == 8)) {
-		if (ServerObj.dtformat == "YMD") {
-			var mybirth = mybirth.substring(0, 4) + "-" + mybirth.substring(4, 6) + "-" + mybirth.substring(6, 8)
-		}
-		if (ServerObj.dtformat == "DMY") {
-			var mybirth = mybirth.substring(6, 8) + "/" + mybirth.substring(4, 6) + "/" + mybirth.substring(0, 4)
-		}
-		$("#Birth").val(mybirth);
-	}
-	if (mybirth != "") {
-		if (ServerObj.dtformat == "YMD") {
-			var reg = /^(([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})-(((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)-(0[1-9]|[12][0-9]|30))|(02-(0[1-9]|[1][0-9]|2[0-8]))))|((([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))-02-29)$/;
-		}
-		if (ServerObj.dtformat == "DMY") {
-			var reg = /^(((0[1-9]|[12][0-9]|3[01])\/((0[13578]|1[02]))|((0[1-9]|[12][0-9]|30)\/(0[469]|11))|(0[1-9]|[1][0-9]|2[0-8])\/(02))\/([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3}))|(29\/02\/(([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00)))$/;
-		}
-		var ret = mybirth.match(reg);
-		if (ret == null) {
-			$.messager.alert("ÌáÊ¾", "ÇëÊäÈëÕıÈ·µÄ³öÉúÈÕÆÚ!", "info", function () {
-				$("#Birth").addClass("newclsInvalid");
-				$("#Birth").focus();
-			});
-			return false;
-		}
-		if (ServerObj.dtformat == "YMD") {
-			var myrtn = DHCWeb_IsDate(mybirth, "-")
-		}
-		if (ServerObj.dtformat == "DMY") {
-			var myrtn = DHCWeb_IsDate(mybirth, "/")
-		}
-		if (!myrtn) {
-			$.messager.alert("ÌáÊ¾", "ÇëÊäÈëÕıÈ·µÄ³öÉúÈÕÆÚ!", "info", function () {
-				$("#Birth").addClass("newclsInvalid");
-				$("#Birth").focus();
-			});
-			return false;
-		} else {
-			var mybirth1 = $("#Birth").val();
-			var Checkrtn = CheckBirth(mybirth1);
-			if (Checkrtn == false) {
-				$.messager.alert("ÌáÊ¾", "³öÉúÈÕÆÚ²»ÄÜ´óÓÚ½ñÌì»òÕßĞ¡ÓÚ¡¢µÈÓÚ1840Äê!", "info", function () {
-					$("#Birth").addClass("newclsInvalid");
-					$("#Birth").focus();
-				});
-				return false;
-			}
-			var myAge = DHCWeb_GetAgeFromBirthDay("Birth");
-			$("#Age").val(myAge);
-		}
-	} else {
-		$("#Birth").removeClass("newclsInvalid");
-	}
-	SearchSamePatient();
+    ///æ¸…å±çš„æ—¶å€™ä¸åœ¨å¤„ç†
+    //var Obj=GetEventElementObj()
+    //if (Obj.name=="Clear"){return websys_cancel();}
+    var mybirth = $("#Birth").val();
+    if ((mybirth != "") && ((mybirth.length != 8) && ((mybirth.length != 10)))) {
+        $.messager.alert("æç¤º", "è¯·è¾“å…¥æ­£ç¡®çš„å‡ºç”Ÿæ—¥æœŸ!", "info", function() {
+            $("#Birth").addClass("newclsInvalid");
+            $("#Birth").focus();
+        });
+        return false;
+    }
+    $("#Birth").removeClass("newclsInvalid");
+    if ((mybirth.length == 8)) {
+        if (ServerObj.dtformat == "YMD") {
+            var mybirth = mybirth.substring(0, 4) + "-" + mybirth.substring(4, 6) + "-" + mybirth.substring(6, 8)
+        }
+        if (ServerObj.dtformat == "DMY") {
+            var mybirth = mybirth.substring(6, 8) + "/" + mybirth.substring(4, 6) + "/" + mybirth.substring(0, 4)
+        }
+        $("#Birth").val(mybirth);
+    }
+    if (mybirth != "") {
+        if (ServerObj.dtformat == "YMD") {
+            var reg = /^(([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})-(((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)-(0[1-9]|[12][0-9]|30))|(02-(0[1-9]|[1][0-9]|2[0-8]))))|((([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))-02-29)$/;
+        }
+        if (ServerObj.dtformat == "DMY") {
+            var reg = /^(((0[1-9]|[12][0-9]|3[01])\/((0[13578]|1[02]))|((0[1-9]|[12][0-9]|30)\/(0[469]|11))|(0[1-9]|[1][0-9]|2[0-8])\/(02))\/([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3}))|(29\/02\/(([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00)))$/;
+        }
+        var ret = mybirth.match(reg);
+        if (ret == null) {
+            $.messager.alert("æç¤º", "è¯·è¾“å…¥æ­£ç¡®çš„å‡ºç”Ÿæ—¥æœŸ!", "info", function() {
+                $("#Birth").addClass("newclsInvalid");
+                $("#Birth").focus();
+            });
+            return false;
+        }
+        if (ServerObj.dtformat == "YMD") {
+            var myrtn = DHCWeb_IsDate(mybirth, "-")
+        }
+        if (ServerObj.dtformat == "DMY") {
+            var myrtn = DHCWeb_IsDate(mybirth, "/")
+        }
+        if (!myrtn) {
+            $.messager.alert("æç¤º", "è¯·è¾“å…¥æ­£ç¡®çš„å‡ºç”Ÿæ—¥æœŸ!", "info", function() {
+                $("#Birth").addClass("newclsInvalid");
+                $("#Birth").focus();
+            });
+            return false;
+        } else {
+            var mybirth1 = $("#Birth").val();
+            var Checkrtn = CheckBirth(mybirth1);
+            if (Checkrtn == false) {
+                $.messager.alert("æç¤º", "å‡ºç”Ÿæ—¥æœŸä¸èƒ½å¤§äºä»Šå¤©æˆ–è€…å°äºã€ç­‰äº1840å¹´!", "info", function() {
+                    $("#Birth").addClass("newclsInvalid");
+                    $("#Birth").focus();
+                });
+                return false;
+            }
+            var myAge = DHCWeb_GetAgeFromBirthDay("Birth");
+            $("#Age").val(myAge);
+            if (!LimitBirthTime()) {
+                $("label[for=BirthTime]").addClass("clsRequired");
+            } else {
+                $("label[for=BirthTime]").removeClass("clsRequired");
+            }
+            AdjustForeignPhone();
+        }
+    } else {
+        $("#Birth").removeClass("newclsInvalid");
+    }
+    SearchSamePatient();
 }
+
 function BirthTimeOnBlur() {
-	var mybirthTime = $("#BirthTime").val();
-	if (mybirthTime == "") return false;
-	var eSrc = document.getElementById('BirthTime')
-	if (!IsValidTime(eSrc)) {
-		$.messager.alert("ÌáÊ¾", "ÇëÊäÈëÕıÈ·µÄ³öÉúÊ±¼ä!", "info", function () {
-			$("#BirthTime").addClass("newclsInvalid");
-			$("#BirthTime").focus();
-		});
-		return false;
-	}
-	var mybirth = $("#Birth").val();
-	if (mybirth == "") return false;
-	var myage = $("#Age").val();
-	var mybirthTime = $("#BirthTime").val();
-	$.cm({
-		ClassName: "web.UDHCJFCOMMON",
-		MethodName: "DispPatAge",
-		dataType: "text",
-		birthDate: mybirth, admDate: "", birthTime: mybirthTime, admTime: "", controlFlag: "N",
-		hospId: session['LOGON.HOSPID']
-	}, function (ageStr) {
-		var ageStr = ageStr.split("||")[0]
-		$("#Age").val(ageStr);
-	});
-	$("#BirthTime").removeClass("newclsInvalid");
+    var mybirthTime = $("#BirthTime").val();
+    if (mybirthTime == "") return false;
+    if (mybirthTime.length < 6) {
+        var AddZeroNum = 6 - mybirthTime.length
+        for (var i = 0; i < AddZeroNum; i++) {
+            mybirthTime = mybirthTime + "0"
+        }
+        $("#BirthTime").val(mybirthTime);
+    }
+    var eSrc = document.getElementById('BirthTime')
+    if (!IsValidTime(eSrc)) {
+        $.messager.alert("æç¤º", "è¯·è¾“å…¥æ­£ç¡®çš„å‡ºç”Ÿæ—¶é—´!", "info", function() {
+            $("#BirthTime").addClass("newclsInvalid");
+            $("#BirthTime").focus();
+        });
+        return false;
+    }
+    var mybirth = $("#Birth").val();
+    if (mybirth == "") return false;
+    var myage = $("#Age").val();
+    var mybirthTime = $("#BirthTime").val();
+    $.cm({
+        ClassName: "web.UDHCJFCOMMON",
+        MethodName: "DispPatAge",
+        dataType: "text",
+        birthDate: mybirth,
+        admDate: "",
+        birthTime: mybirthTime,
+        admTime: "",
+        controlFlag: "N",
+        hospId: session['LOGON.HOSPID']
+    }, function(ageStr) {
+        var ageStr = ageStr.split("||")[0];
+        if (parseInt(ageStr) < 0) {
+            $.messager.alert("æç¤º", "å‡ºç”Ÿæ—¶é—´ä¸èƒ½å°äºå½“å‰æ—¶é—´!", "info", function() {
+                $("#Age").val("");
+                $("#BirthTime").addClass("newclsInvalid");
+                $("#BirthTime").focus();
+            });
+        } else {
+            $("#Age").val(ageStr);
+        }
+    });
+    $("#BirthTime").removeClass("newclsInvalid");
 }
+
 function AgeOnKeypress() {
-	try { keycode = websys_getKey(e); } catch (e) { keycode = websys_getKey(); }
-	if (keycode == 45) { window.event.keyCode = 0; return websys_cancel(); }
-	//¹ıÂË"." ÄêÁä¼ÆËã»á´íÎó
-	if (keycode == 46) { window.event.keyCode = 0; return websys_cancel(); }
-	if (((keycode > 47) && (keycode < 58)) || (keycode == 46)) {
-	} else {
-		window.event.keyCode = 0; return websys_cancel();
-	}
+    try { keycode = websys_getKey(e); } catch (e) { keycode = websys_getKey(); }
+    if (keycode == 45) { window.event.keyCode = 0; return websys_cancel(); }
+    //è¿‡æ»¤"." å¹´é¾„è®¡ç®—ä¼šé”™è¯¯
+    if (keycode == 46) { window.event.keyCode = 0; return websys_cancel(); }
+    if (((keycode > 47) && (keycode < 58)) || (keycode == 46)) {} else {
+        window.event.keyCode = 0;
+        return websys_cancel();
+    }
 }
+
 function setBirthAndSex(mypId) {
-	var myary = DHCWeb_GetInfoFromId(mypId);
-	if (myary[0] == "1") {
-		var myBirth = $("#Birth").val();
-		$("#Birth").val(myary[2]);
-		$("#Age").val(myary[4]);
-		var mySexDR = "";
-		switch (myary[3]) {
-			case "ÄĞ":
-				mySexDR = "1";
-				break;
-			case "Å®":
-				mySexDR = "2";
-				break;
-			default:
-				mySexDR = "4";
-				break;
-		}
-		$("#Sex").combobox("select", mySexDR);
-	} else {
-		$("#CredNo").focus();
-		return false;
-	}
+    var myary = DHCWeb_GetInfoFromId(mypId);
+    if (myary[0] == "1") {
+        var myBirth = $("#Birth").val();
+        $("#Birth").val(myary[2]);
+        $("#Age").val(myary[4]);
+        var mySexDR = "";
+        switch (myary[3]) {
+            case "ç”·":
+                mySexDR = "1";
+                break;
+            case "å¥³":
+                mySexDR = "2";
+                break;
+            default:
+                mySexDR = "4";
+                break;
+        }
+        $("#Sex").combobox("select", mySexDR);
+    } else {
+        $("#CredNo").focus();
+        return false;
+    }
 }
+
 function AgeOnBlur() {
-	var myrtn = IsCredTypeID();
-	var mypId = $("#CredNo").val();
-	if ((myrtn) && (mypId != "")) {
-		var Birth = $("#Birth").val();
-		if (Birth == "") {
-			setBirthAndSex(mypId);
-		}
-		return;
-	};
-	var myage = $("#Age").val();
-	if (((myage.indexOf("Ëê") != -1) || (!isNaN(myage))) && (myage != "")) {
-		if (parseInt(myage) >= parseInt(ServerObj.LimitAge)) {
-			$.messager.alert("ÌáÊ¾", "ÄêÁä²»ÄÜ³¬¹ı" + LimitAge + "Ëê", "info", function () {
-				$("#Birth").focus();
-				$("#Birth").val("");
-			});
-			return false;
-		}
-	}
-	var myBirth = $("#Birth").val();
-	if ((myBirth == "") || (myBirth == undefined)) {
-		$.cm({
-			ClassName: "web.DHCDocCommon",
-			MethodName: "GetBirthDateByAge",
-			dataType: "text",
-			Age: myage, Type: ""
-		}, function (rtn) {
-			$("#Birth").val(rtn);
-		});
-	}
+    var myrtn = IsCredTypeID();
+    var mypId = $("#CredNo").val();
+    if ((myrtn) && (mypId != "")) {
+        var Birth = $("#Birth").val();
+        if (Birth == "") {
+            setBirthAndSex(mypId);
+            AdjustForeignPhone();
+        }
+        return;
+    };
+    var myage = $("#Age").val();
+    if (((myage.indexOf("å²") != -1) || (!isNaN(myage))) && (myage != "")) {
+        if (parseInt(myage) >= parseInt(ServerObj.LimitAge)) {
+            $.messager.alert("æç¤º", "å¹´é¾„ä¸èƒ½è¶…è¿‡" + LimitAge + "å²", "info", function() {
+                $("#Birth").focus();
+                $("#Birth").val("");
+            });
+            return false;
+        }
+    }
+    var myBirth = $("#Birth").val();
+    if ((myBirth == "") || (myBirth == undefined)) {
+        $.cm({
+            ClassName: "web.DHCDocCommon",
+            MethodName: "GetBirthDateByAge",
+            dataType: "text",
+            Age: myage,
+            Type: ""
+        }, function(rtn) {
+            $("#Birth").val(rtn);
+            AdjustForeignPhone();
+        });
+    }
 }
+
 function SetPAPMINoLenth() {
-	var PAPMINo = $("#PAPMINo").val();
-	if (PAPMINo != '') {
-		if ((PAPMINo.length < PageLogicObj.m_PAPMINOLength) && (PageLogicObj.m_PAPMINOLength != 0)) {
-			for (var i = (PageLogicObj.m_PAPMINOLength - PAPMINo.length - 1); i >= 0; i--) {
-				PAPMINo = "0" + PAPMINo;
-			}
-		}
-		$("#PAPMINo").val(PAPMINo);
-	}
+    var PAPMINo = $("#PAPMINo").val();
+    if (PAPMINo != '') {
+        if ((PAPMINo.length < PageLogicObj.m_PAPMINOLength) && (PageLogicObj.m_PAPMINOLength != 0)) {
+            for (var i = (PageLogicObj.m_PAPMINOLength - PAPMINo.length - 1); i >= 0; i--) {
+                PAPMINo = "0" + PAPMINo;
+            }
+        }
+        $("#PAPMINo").val(PAPMINo);
+    }
 }
+
 function GetPatDetailByPAPMINo() {
-	$("#PAPMINo").removeClass("newclsInvalid");
-	var myPAPMINo = $('#PAPMINo').val();
-	if (myPAPMINo != "") {
-		var myPatInfo = $.cm({
-			ClassName: "web.DHCBL.CARD.UCardPaPatMasInfo",
-			MethodName: "GetPatInfoByPANo",
-			dataType: "text",
-			PAPMINo: myPAPMINo,
-			ExpStr: ""
-		}, false);
-		var myary = myPatInfo.split("^");
-		if (myary[0] == "0") {
-			//ÏÈÇå³ıÒ³ÃæĞÅÏ¢,¶ÔÓ¦ÓÃÓÚÇå³ıÆ¥ÅäµÄXML»ñÈ¡:##class(web.DHCBL.UDHCUIDefConfig).ReadCardPatUDIef
-			InitPatRegConfig();
-			var myXMLStr = myary[1];
-			var PAPMIXMLStr = GetRegMedicalEPMI("", myPAPMINo);
-			if (PAPMIXMLStr != "") myXMLStr = PAPMIXMLStr;
-			SetPatInfoByXML(myXMLStr);
-			if (PageLogicObj.m_SetCardRefFocusElement != "") {
-				$("#" + PageLogicObj.m_SetCardRefFocusElement).focus();
-			}
-			//¼ÓÈëÍ¼Æ¬base64Ó¦ÓÃ
-			var PhotoInfo = $("#PhotoInfo").val();
-			if (PhotoInfo != "") {
-				var src = "data:image/png;base64," + PhotoInfo;
-			} else {
-				var src = "../images/uiimages/patdefault.png";
-			}
-			ShowPicBySrcNew(src, "imgPic");
-			var PAPMIDR = $('#PAPMIRowID').val();
-			return true;
-		} else if (myary[0] == "2001") {
-			$.messager.alert("ÌáÊ¾", "ÎŞ´ËµÇ¼ÇºÅµÄ»¼Õß!");
-		} else if (myary[0] == "-353") {
-			$.messager.alert("ÌáÊ¾", "´ËµÇ¼ÇºÅ²»ÄÜÖØ¸´½¨Á¢ÕË»§!");
-		} else {
-			$.messager.alert("ÌáÊ¾", "Error Code: " + myary[0]);
-		}
-		$("#PAPMINo").addClass("newclsInvalid");
-		return false;
-	}
+    $("#PAPMINo").removeClass("newclsInvalid");
+    var myPAPMINo = $('#PAPMINo').val();
+    if (myPAPMINo != "") {
+        var myPatInfo = $.cm({
+            ClassName: "web.DHCBL.CARD.UCardPaPatMasInfo",
+            MethodName: "GetPatInfoByPANo",
+            dataType: "text",
+            PAPMINo: myPAPMINo,
+            ExpStr: ""
+        }, false);
+        var myary = myPatInfo.split("^");
+        if (myary[0] == "0") {
+            //å…ˆæ¸…é™¤é¡µé¢ä¿¡æ¯,å¯¹åº”ç”¨äºæ¸…é™¤åŒ¹é…çš„XMLè·å–:##class(web.DHCBL.UDHCUIDefConfig).ReadCardPatUDIef
+            InitPatRegConfig();
+            var myXMLStr = myary[1];
+            var PAPMIXMLStr = GetRegMedicalEPMI("", myPAPMINo);
+            if (PAPMIXMLStr != "") myXMLStr = PAPMIXMLStr;
+            SetPatInfoByXML(myXMLStr);
+            if (PageLogicObj.m_SetCardRefFocusElement != "") {
+                $("#" + PageLogicObj.m_SetCardRefFocusElement).focus();
+            }
+            //åŠ å…¥å›¾ç‰‡base64åº”ç”¨
+            var PhotoInfo = $("#PhotoInfo").val();
+            if (PhotoInfo != "") {
+                var src = "data:image/png;base64," + PhotoInfo;
+            } else {
+                var src = "../images/uiimages/patdefault.png";
+            }
+            ShowPicBySrcNew(src, "imgPic");
+            var PAPMIDR = $('#PAPMIRowID').val();
+            return true;
+        } else if (myary[0] == "2001") {
+            $.messager.alert("æç¤º", "æ— æ­¤ç™»è®°å·çš„æ‚£è€…!");
+        } else if (myary[0] == "-353") {
+            $.messager.alert("æç¤º", "æ­¤ç™»è®°å·ä¸èƒ½é‡å¤å»ºç«‹è´¦æˆ·!");
+        } else if (myary[0] == "2002") {
+	        $.messager.confirm("æç¤º", "è¯¥ç™»è®°å·å·²ç»è¢«åˆå¹¶æ— æ³•ä½¿ç”¨ï¼Œä¿ç•™çš„ç™»è®°å·ä¸º <font color=red>" + myary[1]+ "</font>ï¼Œæ˜¯å¦è‡ªåŠ¨ä½¿ç”¨æ–°ç™»è®°å·è¿›è¡Œæ£€ç´¢ï¼Ÿ", function(r) {
+                if (r) {
+	                $("#PAPMINo").val(myary[1]);
+                    GetPatDetailByPAPMINo();
+                }
+            });
+        } else {
+            $.messager.alert("æç¤º", "Error Code: " + myary[0]);
+        }
+        $("#PAPMINo").addClass("newclsInvalid");
+        return false;
+    }
 }
-function SetOpMedicareLenth() {
-	var PAPMINo = $("#OpMedicare").val();
-	if (PAPMINo != '') {
-		if ((PAPMINo.length < PageLogicObj.m_PAPMINOLength) && (PageLogicObj.m_PAPMINOLength != 0)) {
-			for (var i = (PageLogicObj.m_PAPMINOLength - PAPMINo.length - 1); i >= 0; i--) {
-				PAPMINo = "0" + PAPMINo;
-			}
-		}
-		$("#OpMedicare").val(PAPMINo);
-	}
-}
-function GetPatDetailByOpMedicare() {
-	$("#OpMedicare").removeClass("newclsInvalid");
-	var myPAPMINo = $('#OpMedicare').val();
-	if (myPAPMINo != "") {
-		var myPatInfo = $.cm({
-			ClassName: "web.DHCBL.CARD.UCardPaPatMasInfo",
-			MethodName: "GetPatInfoByPANo",
-			dataType: "text",
-			PAPMINo: myPAPMINo,
-			ExpStr: ""
-		}, false);
-		var myary = myPatInfo.split("^");
-		if (myary[0] == "0") {
-			//ÏÈÇå³ıÒ³ÃæĞÅÏ¢,¶ÔÓ¦ÓÃÓÚÇå³ıÆ¥ÅäµÄXML»ñÈ¡:##class(web.DHCBL.UDHCUIDefConfig).ReadCardPatUDIef
-			var OpMedicare = $("#OpMedicare").val();
-			InitPatRegConfig();
-			var myXMLStr = myary[1];
-			var PAPMIXMLStr = GetRegMedicalEPMI("", myPAPMINo);
-			if (PAPMIXMLStr != "") myXMLStr = PAPMIXMLStr;
-			SetPatInfoByXML(myXMLStr);
-			if (PageLogicObj.m_SetCardRefFocusElement != "") {
-				$("#" + PageLogicObj.m_SetCardRefFocusElement).focus();
-			}
-			//¼ÓÈëÍ¼Æ¬base64Ó¦ÓÃ
-			var PhotoInfo = $("#PhotoInfo").val();
-			if (PhotoInfo != "") {
-				var src = "data:image/png;base64," + PhotoInfo;
-			} else {
-				var src = "../images/uiimages/patdefault.png";
-			}
-			ShowPicBySrcNew(src, "imgPic");
-			var PAPMIDR = $('#PAPMIRowID').val();
-			$("#OpMedicare").val(OpMedicare);
-			return true;
-		} else if (myary[0] == "2001") {
-			$.messager.alert("ÌáÊ¾", "ÎŞ´ËÃÅÕïºÅµÄ»¼Õß!");
-		} else if (myary[0] == "-353") {
-			$.messager.alert("ÌáÊ¾", "´ËÃÅÕïºÅ²»ÄÜÖØ¸´½¨Á¢ÕË»§!");
-		} else {
-			$.messager.alert("ÌáÊ¾", "Error Code: " + myary[0]);
-		}
-		$("#OpMedicare").addClass("newclsInvalid");
-		return false;
-	}
-}
+
 function InitPatRegConfig() {
-	/*var myvalue=$.cm({
-		ClassName:"web.DHCBL.CARD.UCardPATRegConfig",
-		MethodName:"GetCardPatRegConfig",
-		dataType:"text",
-		SessionStr:""
-	},false);*/
-	var myvalue = ServerObj.DefaultCardPatRegConfigPara;
-	if (myvalue == "") {
-		return;
-	}
-	var myRtnAry = myvalue.split(String.fromCharCode(2))
-	var myary = myRtnAry[0].split("^");
-	var mySetFocusElement = myary[2];
-	PageLogicObj.m_IsNotStructAddress = myary[17];
-	if (PageLogicObj.m_IsNotStructAddress == "Y") {
-		InitAddressCombo();
-	}
-	PageLogicObj.m_SetFocusElement = mySetFocusElement;
-	PageLogicObj.m_PatMasFlag = myary[3];
-	PageLogicObj.m_CardRefFlag = myary[4];
-	PageLogicObj.m_AccManagerFlag = myary[5];
-	//SetPatInfoByXML(myRtnAry[1]);
-	SetPatInfoByXML(ServerObj.CardPatUIDefStr);
-	if (mySetFocusElement != "") {
-		$("#" + mySetFocusElement).focus();
-	}
-	PageLogicObj.m_CardSecrityNo = "";
-	PageLogicObj.m_CardRegMustFillInArr = JSON.parse(myary[19]);
-	PageLogicObj.m_CardRegJumpSeqArr = JSON.parse(myary[20]);
+    /*var myvalue=$.cm({
+    	ClassName:"web.DHCBL.CARD.UCardPATRegConfig",
+    	MethodName:"GetCardPatRegConfig",
+    	dataType:"text",
+    	SessionStr:""
+    },false);*/
+    var myvalue = ServerObj.DefaultCardPatRegConfigPara;
+    if (myvalue == "") {
+        return;
+    }
+    var myRtnAry = myvalue.split(String.fromCharCode(2))
+    var myary = myRtnAry[0].split("^");
+    var mySetFocusElement = myary[2];
+    PageLogicObj.m_IsNotStructAddress = myary[17];
+    if (PageLogicObj.m_IsNotStructAddress == "Y") {
+        InitAddressCombo();
+    }
+    if (mySetFocusElement != "") {
+        PageLogicObj.m_SetFocusElement = mySetFocusElement;
+    }
+    PageLogicObj.m_PatMasFlag = myary[3];
+    PageLogicObj.m_CardRefFlag = myary[4];
+    PageLogicObj.m_AccManagerFlag = myary[5];
+    //SetPatInfoByXML(myRtnAry[1]);
+    SetPatInfoByXML(ServerObj.CardPatUIDefStr);
+    if (mySetFocusElement != "") {
+        $("#" + mySetFocusElement).focus();
+    }
+    PageLogicObj.m_CardSecrityNo = "";
+    PageLogicObj.m_CardRegMustFillInArr = JSON.parse(myary[19]);
+    PageLogicObj.m_CardRegJumpSeqArr = JSON.parse(myary[20]);
 }
+
 function SetPatInfoByXML(XMLStr, CheckFlag, getMessageByIdCard) {
-	XMLStr = "<?xml version='1.0' encoding='gb2312'?>" + XMLStr
-	var AddressObj = {
-		AdrDesc: {
-			Country: '',
-			Province: '',
-			City: '',
-			Area: ''
-		},
-		AdrHouse: {
-			Country: '',
-			Province: '',
-			City: '',
-			Area: ''
-		},
-		AdrBirth: {
-			Country: '',
-			Province: '',
-			City: '',
-			Area: ''
-		},
-		AdrHome: {
-			Country: '',
-			Province: '',
-			City: ''
-		}
-	};
-	oldPersonMessage = [];
-	if (typeof getMessageByIdCard != "undefined") {
-		oldPersonMessageFromIDCard = {};
-	}
-	/*var xmlDoc = DHCDOM_CreateXMLDOM();
-	xmlDoc.async = false;
-	xmlDoc.loadXML(XMLStr);*/
-	var xmlDoc = DHCDOM_CreateXMLDOMNew(XMLStr);
-	if (!xmlDoc) return;
-	var nodes = xmlDoc.documentElement.childNodes;
-	if (nodes.length <= 0) { return; }
-	for (var i = 0; i < nodes.length; i++) {
-		//var myItemName = nodes(i).nodeName;
-		//var myItemValue = nodes(i).text;
-		var myItemName = getNodeName(nodes, i);
-		var myItemValue = getNodeValue(nodes, i);
-		if ((myItemName == "OtherCardInfo") && (myItemValue != "")) {
-			myItemValue = myItemValue.replace(/@/g, "^");
-		}
-		var _$id = $("#" + myItemName);
-		if (_$id.length > 0) {
-			//if (_$id.hasClass("hisui-combobox")){
-			if (_$id.next().hasClass('combo')) {
-				if (typeof getMessageByIdCard != "undefined") {
-					if (myItemName == "PatType") {
-						oldPersonMessageFromIDCard.PatType = myItemValue
-					}
-				} else {
-					//µØÖ·ĞÅÏ¢ÓĞ¼ÓÔØË³ĞòÎÊÌâ,ËùÒÔÏÈ¼ÇÂ¼,ºó´¦Àí
-					if (myItemName == "CountryHouse") { //¹ú(ÏÖ×¡)
-						AddressObj.AdrDesc.Country = myItemValue;
-					} else if (myItemName == "ProvinceInfoLookUpRowID") { //Ê¡(ÏÖ×¡)
-						AddressObj.AdrDesc.Province = myItemValue;
-					} else if (myItemName == "CityDescLookUpRowID") { //ÊĞ(ÏÖ×¡)
-						AddressObj.AdrDesc.City = myItemValue;
-					} else if (myItemName == "CityAreaLookUpRowID") { //CTArea ÏØ(ÏÖ×¡)
-						AddressObj.AdrDesc.Area = myItemValue;
-					} else if (myItemName == "CountryDescLookUpRowID") { //¹ú¼®
-						AddressObj.AdrHouse.Country = myItemValue;
-					} else if (myItemName == "ProvinceHouse") { //Ê¡(»§¿Ú)
-						AddressObj.AdrHouse.Province = myItemValue;
-					} else if (myItemName == "Cityhouse") { //ÊĞ(»§¿Ú)
-						AddressObj.AdrHouse.City = myItemValue;
-					} else if (myItemName == "AreaHouse") { //ÏØ(»§¿Ú)
-						AddressObj.AdrHouse.Area = myItemValue;
-					} else if (myItemName == "CountryBirth") { //¹ú(³öÉú)
-						AddressObj.AdrBirth.Country = myItemValue;
-					} else if (myItemName == "ProvinceBirth") { //Ê¡(³öÉú)
-						AddressObj.AdrBirth.Province = myItemValue;
-					} else if (myItemName == "CityBirth") { //ÊĞ(³öÉú)
-						AddressObj.AdrBirth.City = myItemValue;
-					} else if (myItemName == "AreaBirth") { //ÏØ(³öÉú)
-						AddressObj.AdrBirth.Area = myItemValue;
-					} else if (myItemName == "CountryHome") {
-						AddressObj.AdrHome.Country = myItemValue;
-					} else if (myItemName == "ProvinceHome") {
-						AddressObj.AdrHome.Province = myItemValue;
-					} else if (myItemName == "CityHome") {
-						AddressObj.AdrHome.City = myItemValue;
-					} else {
-						if ((myItemName == "CardTypeDefine") || (myItemName == "PayMode") || (myItemName == "CredType") || (myItemName == "ForeignCredType")) {
-							if (myItemName == "ForeignCredType") {
-							}
-							var Data = _$id.combobox("getData");
-							for (var m = 0; m < Data.length; m++) {
-								var id = Data[m]["id"];
-								if (myItemValue == id.split("^")[0]) {
-									_$id.combobox("select", id);
-									break;
-								}
-							}
-						} else if (myItemName == "IEType") {
-							if (myItemValue != "") {
-								_$id.combobox("select", myItemValue);
-							}
-						} else {
-							//tanjishan 20200605·ÀÖ¹ÎŞ·¨´¥·¢onselectÊÂ¼ş
-							if ((_$id.combo("getValues") == myItemValue) && (myItemValue != "")) {
-								_$id.combobox("setValues", "");
-							}
-							_$id.combobox("select", myItemValue);
-						}
-					}
-				}
-			} else {
-				if (typeof getMessageByIdCard != "undefined") {
-					if (myItemName == "InMedicare") {
-						oldPersonMessageFromIDCard.InMedicare = myItemValue
-					}
-					if (myItemName == "Name") {
-						oldPersonMessageFromIDCard.Name = myItemValue
-					}
-					if (myItemName == "CredNo") {
-						oldPersonMessageFromIDCard.CredNo = myItemValue
-					}
-				} else {
-					if ((PageLogicObj.m_IsNotStructAddress == "Y") && ((myItemName == "Address") || (myItemName == "RegisterPlace"))) {
-						_$id.combobox("setText", myItemValue);
-					} else {
-						_$id.val(myItemValue);
-					}
-				}
-				if ((myItemName == "InMedicare") && (myItemValue != "")) {
-					$("#InMedicare").attr("disabled", true);
-				} else if ((myItemName == "InMedicare") && (myItemValue == "") && (PageLogicObj.m_MedicalFlag == 1)) {
-					$("#InMedicare").attr("disabled", false);
-				}
-			}
-		}
-	}
-	delete (xmlDoc);
-	//µØÖ·×Ö¶ÎÁª¶¯(¹ú¼Ò,Ê¡·İ,³ÇÊĞ)
-	for (var Item in AddressObj) {
-		if (Item === "AdrDesc") {
-			SetCountryComboxData("CountryHouse", AddressObj[Item].Country);
-			CountrySelect("CountryHouse", AddressObj[Item].Country);
-			//$("#CountryHouse").combobox("select",AddressObj[Item].Country);
-			$("#ProvinceInfoLookUpRowID").combobox("select", AddressObj[Item].Province);
-			$("#CityDescLookUpRowID").combobox("select", AddressObj[Item].City);
-			$("#CityAreaLookUpRowID").combobox("select", AddressObj[Item].Area);
-		} else if (Item === "AdrHouse") {
-			SetCountryComboxData("CountryDescLookUpRowID", AddressObj[Item].Country);
-			CountrySelect("CountryDescLookUpRowID", AddressObj[Item].Country);
-			//$("#CountryDescLookUpRowID").combobox("select",AddressObj[Item].Country);
-			$("#ProvinceHouse").combobox("select", AddressObj[Item].Province);
-			$("#Cityhouse").combobox("select", AddressObj[Item].City);
-			$("#AreaHouse").combobox("select", AddressObj[Item].Area);
-		} else if (Item === "AdrBirth") {
-			SetCountryComboxData("CountryBirth", AddressObj[Item].Country);
-			CountrySelect("CountryBirth", AddressObj[Item].Country);
-			//$("#CountryBirth").combobox("select",AddressObj[Item].Country);
-			$("#ProvinceBirth").combobox("select", AddressObj[Item].Province);
-			$("#CityBirth").combobox("select", AddressObj[Item].City);
-			$("#AreaBirth").combobox("select", AddressObj[Item].Area);
-		} else if (Item === "AdrHome") {
-			SetCountryComboxData("CountryHome", AddressObj[Item].Country);
-			CountrySelect("CountryHome", AddressObj[Item].Country);
-			//$("#CountryHome").combobox("select",AddressObj[Item].Country);
-			$("#ProvinceHome").combobox("select", AddressObj[Item].Province);
-			$("#CityHome").combobox("select", AddressObj[Item].City);
-		}
-	}
-	if (typeof getMessageByIdCard != "undefined") {
-		return;
-	}
-	oldPersonMessage.push($("#Name").val(), $("#CredNo").val(), $("#InMedicare").val(), $("#PatType").combobox("getText"));
-	if (typeof CheckFlag != "undefined") {
-		//¶ÁÖ¤¼ş½¨¿¨Ê±£¬ĞÕÃû¡¢³öÉúÈÕÆÚ¡¢Ö¤¼şºÅ¡¢Ãñ×å¡¢ĞÔ±ğĞÅÏ¢²»ÄÜĞŞ¸Ä£¬ÒÔ¶Á³öĞÅÏ¢Îª×¼¡£
-		$("#Name,#Birth,#CredNo").attr("disabled", true);
-		$('#NationDescLookUpRowID,#Sex').combobox('disable');
-	} else {
-		$("#Name,#Birth,#CredNo").attr("disabled", false);
-		$('#NationDescLookUpRowID,#Sex').combobox('enable');
-	}
+    XMLStr = "<?xml version='1.0' encoding='gb2312'?>" + XMLStr
+    var AddressObj = {
+        AdrDesc: {
+            Country: '',
+            Province: '',
+            City: '',
+            Area: '',
+            Street: ''
+        },
+        AdrHouse: {
+            Country: '',
+            Province: '',
+            City: '',
+            Area: '',
+            Street: ''
+        },
+        AdrBirth: {
+            Country: '',
+            Province: '',
+            City: '',
+            Area: '',
+            Street: ''
+        },
+        AdrHome: {
+            Country: '',
+            Province: '',
+            City: '',
+            Area: '',
+            Street: ''
+        }
+    };
+    oldPersonMessage = [];
+    if (typeof getMessageByIdCard != "undefined") {
+        oldPersonMessageFromIDCard = {};
+    }
+    /*var xmlDoc = DHCDOM_CreateXMLDOM();
+    xmlDoc.async = false;
+    xmlDoc.loadXML(XMLStr);*/
+    var xmlDoc = DHCDOM_CreateXMLDOMNew(XMLStr);
+    if (!xmlDoc) return;
+    var nodes = xmlDoc.documentElement.childNodes;
+    if (nodes.length <= 0) { return; }
+    var PostArr = []
+    for (var i = 0; i < nodes.length; i++) {
+        //var myItemName = nodes(i).nodeName;
+        //var myItemValue = nodes(i).text;
+        var myItemName = getNodeName(nodes, i);
+        var myItemValue = getNodeValue(nodes, i);
+        if ((myItemName == "OtherCardInfo") && (myItemValue != "")) {
+            myItemValue = myItemValue.replace(/@/g, "^");
+        }
+        if ((myItemName == "OtherNameInfo") && (myItemValue != "")) {
+            myItemValue = myItemValue.replace(/@/g, "^");
+        }
+        var _$id = $("#" + myItemName);
+        if (_$id.length > 0) {
+            //if (_$id.hasClass("hisui-combobox")){
+            if (_$id.next().hasClass('combo')) {
+                if (typeof getMessageByIdCard != "undefined") {
+                    if (myItemName == "PatType") {
+                        oldPersonMessageFromIDCard.PatType = myItemValue
+                    }
+                } else {
+                    //åœ°å€ä¿¡æ¯æœ‰åŠ è½½é¡ºåºé—®é¢˜,æ‰€ä»¥å…ˆè®°å½•,åå¤„ç†
+                    if (myItemName == "CountryHouse") { //å›½(ç°ä½)
+                        AddressObj.AdrDesc.Country = myItemValue;
+                    } else if (myItemName == "ProvinceInfoLookUpRowID") { //çœ(ç°ä½)
+                        AddressObj.AdrDesc.Province = myItemValue;
+                    } else if (myItemName == "CityDescLookUpRowID") { //å¸‚(ç°ä½)
+                        AddressObj.AdrDesc.City = myItemValue;
+                    } else if (myItemName == "CityAreaLookUpRowID") { //CTArea å¿(ç°ä½)
+                        AddressObj.AdrDesc.Area = myItemValue;
+                    } else if (myItemName == "CountryDescLookUpRowID") { //å›½ç±
+                        AddressObj.AdrHouse.Country = myItemValue;
+                    } else if (myItemName == "ProvinceHouse") { //çœ(æˆ·å£)
+                        AddressObj.AdrHouse.Province = myItemValue;
+                    } else if (myItemName == "Cityhouse") { //å¸‚(æˆ·å£)
+                        AddressObj.AdrHouse.City = myItemValue;
+                    } else if (myItemName == "AreaHouse") { //å¿(æˆ·å£)
+                        AddressObj.AdrHouse.Area = myItemValue;
+                    } else if (myItemName == "CountryBirth") { //å›½(å‡ºç”Ÿ)
+                        AddressObj.AdrBirth.Country = myItemValue;
+                    } else if (myItemName == "ProvinceBirth") { //çœ(å‡ºç”Ÿ)
+                        AddressObj.AdrBirth.Province = myItemValue;
+                    } else if (myItemName == "CityBirth") { //å¸‚(å‡ºç”Ÿ)
+                        AddressObj.AdrBirth.City = myItemValue;
+                    } else if (myItemName == "AreaBirth") { //å¿(å‡ºç”Ÿ)
+                        AddressObj.AdrBirth.Area = myItemValue;
+                    } else if (myItemName == "CountryHome") {
+                        AddressObj.AdrHome.Country = myItemValue;
+                    } else if (myItemName == "ProvinceHome") {
+                        AddressObj.AdrHome.Province = myItemValue;
+                    } else if (myItemName == "CityHome") {
+                        AddressObj.AdrHome.City = myItemValue;
+                    } else if (myItemName == "AreaHome") {
+                        AddressObj.AdrHome.Area = myItemValue;
+                    } else if (myItemName == "StreetBirth") {
+                        AddressObj.AdrBirth.Street = myItemValue;
+                    } else if (myItemName == "StreetHouse") {
+                        AddressObj.AdrHouse.Street = myItemValue;
+                    } else if (myItemName == "StreetNow") {
+                        AddressObj.AdrDesc.Street = myItemValue;
+                    } else {
+                        if ((myItemName == "CardTypeDefine") || (myItemName == "PayMode") || (myItemName == "CredType") || (myItemName == "ForeignCredType")) {
+                            if (myItemName == "ForeignCredType") {}
+                            var Data = _$id.combobox("getData");
+                            for (var m = 0; m < Data.length; m++) {
+                                var id = Data[m]["id"];
+                                if (myItemValue == id.split("^")[0]) {
+                                    _$id.combobox("select", id);
+                                    break;
+                                }
+                            }
+                        } else if (myItemName == "IEType") {
+                            if (myItemValue != "") {
+                                _$id.combobox("select", myItemValue);
+                            }
+                        } else if ((PageLogicObj.m_IsNotStructAddress == "Y") && ((myItemName == "Address") || (myItemName == "RegisterPlace"))) {
+		                        _$id.combobox("setValue", myItemValue);
+		                        _$id.combobox("setText", myItemValue);
+		                 }else {
+	       
+                            //tanjishan 20200605é˜²æ­¢æ— æ³•è§¦å‘onselectäº‹ä»¶
+                            if ((_$id.combo("getValues") == myItemValue) && (myItemValue != "")) {
+                                _$id.combobox("setValues", "");
+                            }
+                            _$id.combobox("select", myItemValue);
+							//ä¸€èˆ¬idæ˜¯ä¸ä¼šå’Œæè¿°é‡å¤ï¼Œå¦‚æœé‡å¤comboboxç›´æ¥selectç©º
+							//å¦‚æœæœ‰é‡å¤çš„å¯ä»¥ä¿®æ”¹æ­¤å¤„
+                            if (_$id.combobox("getText") == myItemValue){
+	                            _$id.combobox("select", "");
+	                        }
+                        }
+                    }
+                }
+            } else {
+                if (typeof getMessageByIdCard != "undefined") {
+                    if (myItemName == "InMedicare") {
+                        oldPersonMessageFromIDCard.InMedicare = myItemValue
+                    }
+                    if (myItemName == "Name") {
+                        oldPersonMessageFromIDCard.Name = myItemValue
+                    }
+                    if (myItemName == "CredNo") {
+                        oldPersonMessageFromIDCard.CredNo = myItemValue
+                    }
+                } else {
+                    if ((PageLogicObj.m_IsNotStructAddress == "Y") && ((myItemName == "Address") || (myItemName == "RegisterPlace"))) {
+                        _$id.combobox("setText", myItemValue);
+                    } else {
+                        //æŠŠé‚®ç¼–å·ç å­˜å‚¨åˆ°æ•°æ®PostArrä¸­ é˜²æ­¢ä¿®æ”¹åœ°å€ä¿¡æ¯æ¸…ç©ºé‚®ç¼–
+                        if (myItemName.indexOf("PostCode") != -1) {
+                            var PostObj = {}
+                            PostObj["ItemName"] = myItemName
+                            PostObj["ItemValue"] = myItemValue
+                            PostArr.unshift(PostObj)
+                            if (myItemValue == "") {
+                                _$id.val(myItemValue);
+                            }
+                        } else {
+                            _$id.val(myItemValue);
+                        }
+                        //_$id.val(myItemValue);
+                    }
+                }
+                if ((myItemName == "InMedicare") && (myItemValue != "")) {
+                    $("#InMedicare").attr("disabled", true);
+                } else if ((myItemName == "InMedicare") && (myItemValue == "") && (PageLogicObj.m_MedicalFlag == 1)) {
+                    $("#InMedicare").attr("disabled", false);
+                }
+            }
+        }
+    }
+    delete(xmlDoc);
+    //åœ°å€å­—æ®µè”åŠ¨(å›½å®¶,çœä»½,åŸå¸‚)
+    for (var Item in AddressObj) {
+        if (Item === "AdrDesc") {
+            SetCountryComboxData("CountryHouse", AddressObj[Item].Country);
+            CountrySelect("CountryHouse", AddressObj[Item].Country);
+            //$("#CountryHouse").combobox("select",AddressObj[Item].Country);
+            $("#ProvinceInfoLookUpRowID").combobox("select", AddressObj[Item].Province);
+            $("#CityDescLookUpRowID").combobox("select", AddressObj[Item].City);
+            $("#CityAreaLookUpRowID").combobox("select", AddressObj[Item].Area);
+            $("#StreetNow").combobox("select", AddressObj[Item].Street);
+        } else if (Item === "AdrHouse") {
+            SetCountryComboxData("CountryDescLookUpRowID", AddressObj[Item].Country);
+            CountrySelect("CountryDescLookUpRowID", AddressObj[Item].Country);
+            //$("#CountryDescLookUpRowID").combobox("select",AddressObj[Item].Country);
+            $("#ProvinceHouse").combobox("select", AddressObj[Item].Province);
+            $("#Cityhouse").combobox("select", AddressObj[Item].City);
+            $("#AreaHouse").combobox("select", AddressObj[Item].Area);
+            $("#StreetHouse").combobox("select", AddressObj[Item].Street);
+        } else if (Item === "AdrBirth") {
+            SetCountryComboxData("CountryBirth", AddressObj[Item].Country);
+            CountrySelect("CountryBirth", AddressObj[Item].Country);
+            //$("#CountryBirth").combobox("select",AddressObj[Item].Country);
+            $("#ProvinceBirth").combobox("select", AddressObj[Item].Province);
+            $("#CityBirth").combobox("select", AddressObj[Item].City);
+            $("#AreaBirth").combobox("select", AddressObj[Item].Area);
+            $("#StreetBirth").combobox("select", AddressObj[Item].Street);
+        } else if (Item === "AdrHome") {
+            SetCountryComboxData("CountryHome", AddressObj[Item].Country);
+            CountrySelect("CountryHome", AddressObj[Item].Country);
+            //$("#CountryHome").combobox("select",AddressObj[Item].Country);
+            $("#ProvinceHome").combobox("select", AddressObj[Item].Province);
+            $("#CityHome").combobox("select", AddressObj[Item].City);
+            $("#AreaHome").combobox("select", AddressObj[Item].Area);
+
+        }
+    }
+    //ç»™é‚®ç¼–å·ç èµ‹å€¼
+    setTimeout(function() {
+        for (var i = 0; i < PostArr.length; i++) {
+            var PostObj = PostArr[i]
+            if (PostObj["ItemValue"] == "") continue;
+            $("#" + PostObj["ItemName"]).val(PostObj["ItemValue"]);
+        }
+    }, 300);
+    if (typeof getMessageByIdCard != "undefined") {
+        return;
+    }
+    oldPersonMessage.push($("#Name").val(), $("#CredNo").val(), $("#InMedicare").val(), $("#PatType").combobox("getText"));
+    if (typeof CheckFlag != "undefined") {
+        //è¯»è¯ä»¶å»ºå¡æ—¶ï¼Œå§“åã€å‡ºç”Ÿæ—¥æœŸã€è¯ä»¶å·ã€æ°‘æ—ã€æ€§åˆ«ä¿¡æ¯ä¸èƒ½ä¿®æ”¹ï¼Œä»¥è¯»å‡ºä¿¡æ¯ä¸ºå‡†ã€‚
+        $("#Name,#Birth,#CredNo").attr("disabled", true);
+        $('#NationDescLookUpRowID,#Sex').combobox('disable');
+    } else {
+        $("#Name,#Birth,#CredNo").attr("disabled", false);
+        $('#NationDescLookUpRowID,#Sex').combobox('enable');
+    }
 }
-///ÅĞ¶ÏÊÇ·ñÒªÊ¹ÓÃAPP»¼ÕßÂ¼ÈëµÄ½¨´ó²¡ÀúµÄÔİ´æĞÅÏ¢,Èç¹ûÊ¹ÓÃÔòÊä³öXML£¬µ÷ÓÃSetPatInfoByXML·½·¨Íê³ÉÒ³Ãæ¸³Öµ
-///Ö§³Ö´«Èë²¡ÈËRowid »ò ²¡ÈËµÇ¼ÇºÅ£¬´«Ò»¸ö¼´¿É
+///åˆ¤æ–­æ˜¯å¦è¦ä½¿ç”¨APPæ‚£è€…å½•å…¥çš„å»ºå¤§ç—…å†çš„æš‚å­˜ä¿¡æ¯,å¦‚æœä½¿ç”¨åˆ™è¾“å‡ºXMLï¼Œè°ƒç”¨SetPatInfoByXMLæ–¹æ³•å®Œæˆé¡µé¢èµ‹å€¼
+///æ”¯æŒä¼ å…¥ç—…äººRowid æˆ– ç—…äººç™»è®°å·ï¼Œä¼ ä¸€ä¸ªå³å¯
 function GetRegMedicalEPMI(PAPMIRowID, PAPMINo) {
-	if ((PAPMIRowID == "") && (PAPMINo == "")) return "";
-	var ret = $.m({
-		ClassName: "web.DHCBL.CARD.UCardPaPatMasInfo",
-		MethodName: "IsNeedRegMedicalEPMI",
-		PAPMIRowID: PAPMIRowID,
-		PAPMINo: PAPMINo
-	}, false);
-	if (ret.split('^')[0] == "1") {
-		var PAPMINo = ret.split('^')[1];
-		var conFlag = confirm("»¼ÕßÃ»ÓĞ²¡°¸ºÅÇÒÒÑ¾­ÔÚÊÖ»úAPPÉÏ×¢²áÁË´ó²¡ÀúĞÅÏ¢,ÊÇ·ñÔØÈë£¿");
-		if (conFlag) {
-			var ExpStr = "^1"
-			var PAPMIXMLStr = $.m({
-				ClassName: "web.DHCBL.CARD.UCardPaPatMasInfo",
-				MethodName: "GetPatInfoByPANo",
-				PAPMINo: PAPMINo,
-				ExpStr: "^1"
-			}, false);
-			if (PAPMIXMLStr.split('^')[0] == "0") return PAPMIXMLStr.split('^')[1];
-		}
-	}
-	return "";
+    if ((PAPMIRowID == "") && (PAPMINo == "")) return "";
+    var ret = $.m({
+        ClassName: "web.DHCBL.CARD.UCardPaPatMasInfo",
+        MethodName: "IsNeedRegMedicalEPMI",
+        PAPMIRowID: PAPMIRowID,
+        PAPMINo: PAPMINo
+    }, false);
+    if (ret.split('^')[0] == "1") {
+        var PAPMINo = ret.split('^')[1];
+        var conFlag = confirm("æ‚£è€…æ²¡æœ‰ç—…æ¡ˆå·ä¸”å·²ç»åœ¨æ‰‹æœºAPPä¸Šæ³¨å†Œäº†å¤§ç—…å†ä¿¡æ¯,æ˜¯å¦è½½å…¥ï¼Ÿ");
+        if (conFlag) {
+            var ExpStr = "^1"
+            var PAPMIXMLStr = $.m({
+                ClassName: "web.DHCBL.CARD.UCardPaPatMasInfo",
+                MethodName: "GetPatInfoByPANo",
+                PAPMINo: PAPMINo,
+                ExpStr: "^1"
+            }, false);
+            if (PAPMIXMLStr.split('^')[0] == "0") return PAPMIXMLStr.split('^')[1];
+        }
+    }
+    return "";
 }
+
 function SearchSamePatient() {
-	var name = "",
-		sex = "",
-		birth = "",
-		CredNo = "";
-	PatYBCode = "";
-	var name = $('#Name').val();
-	var sex = $("#Sex").combobox("getValue");
-	var birth = $('#Birth').val();
-	var CredNo = $("#CredNo").val();
-	var PatYBCode = $("#PatYBCode").val();
-	var InMedicare = $("#InMedicare").val();
-	var OpMedicare = $("#OpMedicare").val();
-	var TelHome = $("#TelHome").val()
-	if (name == "" && ((CredNo == "") && (PatYBCode == "") && (InMedicare == "") && (TelHome == ""))) return false;
-	var Age = $("#Age").val();
-	var ArgValue = name + "^" + birth + "^" + CredNo + "^" + sex + "^" + Age + "^" + PatYBCode + "^" + InMedicare + "^" + TelHome;
-	if (PageLogicObj.m_CurSearchValue == ArgValue) return false;
-	PageLogicObj.m_CurSearchValue = ArgValue;
-	var myval = $("#CredType").combobox("getValue");
-	var myary = myval.split("^");
-	var CredTypeID = myary[0];
-	if (CredNo == "") CredTypeID = "";
-	name = DHCC_CharTransAsc(name);
-	$.cm({
-		ClassName: "web.DHCPATCardUnite",
-		QueryName: "PatientCardQuery",
-		Name: name, CredNo: CredNo, BirthDay: birth, Sex: sex, UserID: "", TPAGCNTX: "",
-		PatYBCode: PatYBCode, Age: Age, InMedicare: InMedicare, CredTypeID: CredTypeID,
-		TelHome: TelHome,
-		Pagerows: PageLogicObj.m_FindPatListTabDataGrid.datagrid("options").pageSize, rows: 99999
-	}, function (GridData) {
-		PageLogicObj.m_FindPatListTabDataGrid.datagrid({ loadFilter: pagerFilter }).datagrid('loadData', GridData);
-	});
+    setTimeout(function() {
+        var name = "",
+            sex = "",
+            birth = "",
+            CredNo = "";
+        PatYBCode = "";
+        var name = $('#Name').val();
+        var sex = $("#Sex").combobox("getValue");
+        var birth = $('#Birth').val();
+        var CredNo = $("#CredNo").val();
+        var myval = $("#CredType").combobox("getValue");
+        var myary = myval.split("^");
+        var CredTypeID = myary[0];
+        if (CredNo == "") CredTypeID = "";
+        var PatYBCode = $("#PatYBCode").val();
+        var InMedicare = $("#InMedicare").val();
+        var TelHome = $("#TelHome").val()
+        if (name == "" && ((CredNo == "") && (PatYBCode == "") && (InMedicare == "") && (TelHome == ""))) return false;
+        var Age = $("#Age").val();
+        var PAPMINo = $("#PAPMINo").val()
+        var ArgValue = name + "^" + birth + "^" + CredNo + "^" + sex + "^" + Age + "^" + PatYBCode + "^" + InMedicare + "^" + TelHome + "^" + CredTypeID;
+        if (PageLogicObj.m_CurSearchValue == ArgValue) return false;
+        PageLogicObj.m_CurSearchValue = ArgValue;
+        name = DHCC_CharTransAsc(name);
+        $.cm({
+            ClassName: "web.DHCPATCardUnite",
+            QueryName: "PatientCardQuery",
+            Name: name,
+            CredNo: CredNo,
+            BirthDay: birth,
+            Sex: sex,
+            UserID: "",
+            TPAGCNTX: "",
+            PatYBCode: PatYBCode,
+            Age: Age,
+            InMedicare: InMedicare,
+            CredTypeID: CredTypeID,
+            TelHome: TelHome,
+            PAPMINo: PAPMINo,
+            Pagerows: $("#FindPatListTab").datagrid("options").pageSize,
+            rows: 99999
+        }, function(GridData) {
+            PageLogicObj.m_FindPatListTabDataGrid.datagrid({ loadFilter: pagerFilter }).datagrid('loadData', GridData);
+        });
+    }, 500)
 }
+
 function InitFindPatListTabDataGrid() {
-	var Columns = [[
-		{ field: 'TPatientID', hidden: true, title: '' },
-		{ field: 'Name', title: 'ĞÕÃû', width: 100 },
-		{
-			field: 'CardNO', title: '¿¨ºÅ', width: 200,
-			formatter: function (value, row, index) {
-				return value.replace("\\u", " ")
-			}
-		},
-		{ field: 'Sex', title: 'ĞÔ±ğ', width: 50 },
-		{ field: 'Birthday', title: '³öÉúÈÕÆÚ', width: 140 },
-		{ field: 'CredTypeDesc', title: 'Ö¤¼şÀàĞÍ', width: 100 },
-		{ field: 'CredNo', title: 'Ö¤¼şºÅÂë', width: 150 },
-		{ field: 'RegNo', title: 'µÇ¼ÇºÅ', width: 120 },
-		{ field: 'PatType', title: '»¼ÕßÀàĞÍ', width: 90 },
-		{ field: 'Telphone', title: 'µç»°', width: 100 },
-		{ field: 'NewInMedicare', title: '²¡ÀúºÅ', width: 90 },
-		{ field: 'Company', title: 'µ¥Î»', width: 150 },
-		{ field: 'Adress', title: 'µØÖ·(ÏÖ×¡)', width: 150 },
-		{ field: 'ContactPerson', title: 'ÁªÏµÈË', width: 90 },
-		{ field: 'PatYBCode', title: 'Ò½±£¿¨ºÅ', width: 90 },
-		{ field: 'MobPhone', title: 'ÊÖ»ú', width: 100 },
-		{ field: 'myOtherStr', title: '', hidden: true },
-		{ field: 'EmployeeNo', title: '', hidden: true },
-		{ field: 'IDCardNo', title: '', hidden: true },
-		{ field: 'CardID', title: '', hidden: true },
-		{ field: 'TCreateDate', title: '', hidden: true },
-		{ field: 'TCreateUser', title: '', hidden: true },
-		{ field: 'OtherCardNo', title: '', hidden: true }
-	]]
-	var FindPatListTabDataGrid = $("#FindPatListTab").datagrid({
-		fit: true,
-		border: false,
-		striped: true,
-		singleSelect: true,
-		fitColumns: false,
-		autoRowHeight: false,
-		rownumbers: true,
-		pagination: true,
-		rownumbers: true,
-		pageSize: 20,
-		pageList: [20, 100, 200],
-		idField: 'CardID',
-		columns: Columns,
-		onDblClickRow: function (index, row) {
-			CardSearchDBClickHander(row);
-		},
-		onBeforeLoad: function () {
-			return false;
-		}
-	});
-	FindPatListTabDataGrid.datagrid('loadData', { total: 0, rows: [] });
-	return FindPatListTabDataGrid;
+    var Columns = [
+        [
+            { field: 'TPatientID', hidden: true, title: '' },
+            {
+                field: 'Goto',
+                title: 'æ“ä½œ',
+                width: 45,
+                formatter: function(value, row, index) {
+                    return '<a><img style="cursor:pointer;margin-left:10px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/back.png" border="0" onmouseover="ShowGotoDetail(this)" onclick="BackRegWindow(\'' + row["TPatientID"] + '\',\'' +  row["RegNo"]  + '\')"></a>';
+                }
+            },
+            { field: 'Name', title: 'å§“å', width: 100 },
+            {
+                field: 'CardNO',
+                title: 'å¡å·',
+                width: 200,
+                formatter: function(value, row, index) {
+                    value = value.replace("\\u", " ")
+                    return '<a class="" style="color:black"  id= "' + row["CardNO"] + '"onmouseover="ShowCardDescDetail(this)">' + value + '</a>';
+                    //return value.replace("\\u"," ")
+                }
+            },
+            { field: 'Sex', title: 'æ€§åˆ«', width: 50 },
+            { field: 'Birthday', title: 'å‡ºç”Ÿæ—¥æœŸ', width: 140 },
+            { field: 'CredTypeDesc', title: 'è¯ä»¶ç±»å‹', width: 100 },
+            { field: 'CredNo', title: 'è¯ä»¶å·ç ', width: 150 },
+            { field: 'RegNo', title: 'ç™»è®°å·', width: 120 },
+            { field: 'PatType', title: 'æ‚£è€…ç±»å‹', width: 90 },
+            { field: 'Telphone', title: 'ç”µè¯', width: 100 },
+            { field: 'NewInMedicare', title: 'ç—…å†å·', width: 90 },
+            { field: 'Company', title: 'å•ä½', width: 150 },
+            { field: 'Adress', title: 'åœ°å€(ç°ä½)', width: 150 },
+            { field: 'ContactPerson', title: 'è”ç³»äºº', width: 90 },
+            { field: 'PatYBCode', title: 'åŒ»ä¿å¡å·', width: 90 },
+            { field: 'MobPhone', title: 'æ‰‹æœº', width: 100 },
+            { field: 'myOtherStr', title: '', hidden: true },
+            { field: 'EmployeeNo', title: '', hidden: true },
+            { field: 'IDCardNo', title: '', hidden: true },
+            { field: 'CardID', title: '', hidden: true },
+            { field: 'TCreateDate', title: '', hidden: true },
+            { field: 'TCreateUser', title: '', hidden: true },
+            { field: 'OtherCardNo', title: '', hidden: true }
+        ]
+    ]
+
+    var FindPatListTabDataGrid = $("#FindPatListTab").datagrid({
+        fit: true,
+        border: false,
+        striped: true,
+        singleSelect: true,
+        fitColumns: false,
+        autoRowHeight: false,
+        rownumbers: true,
+        pagination: true,
+        rownumbers: true,
+        pageSize: 20,
+        pageList: [20, 100, 200],
+        idField: 'CardID',
+        //toolbar:toobar,
+        columns: Columns,
+        onDblClickRow: function(index, row) {
+            CardSearchDBClickHander(row);
+        },
+        onBeforeLoad: function() {
+            return false;
+        }
+    });
+    FindPatListTabDataGrid.datagrid('loadData', { total: 0, rows: [] });
+    return FindPatListTabDataGrid;
 }
+
 function pagerFilter(data) {
-	if (typeof data.length == 'number' && typeof data.splice == 'function') {	// is array
-		data = {
-			total: data.length,
-			rows: data
-		}
-	}
-	var dg = $(this);
-	var opts = dg.datagrid('options');
-	var pager = dg.datagrid('getPager');
-	pager.pagination({
-		showRefresh: false,
-		onSelectPage: function (pageNum, pageSize) {
-			opts.pageNumber = pageNum;
-			opts.pageSize = pageSize;
-			pager.pagination('refresh', {
-				pageNumber: pageNum,
-				pageSize: pageSize
-			});
-			dg.datagrid('loadData', data);
-			dg.datagrid('scrollTo', 0); //¹ö¶¯µ½Ö¸¶¨µÄĞĞ        
-		}
-	});
-	if (!data.originalRows) {
-		data.originalRows = (data.rows);
-	}
-	if (opts.pageNumber == 0) { opts.pageNumber = 1 }
-	if (opts.pagination) {
-		var start = (opts.pageNumber - 1) * parseInt(opts.pageSize);
-		if ((start + 1) > data.originalRows.length) {
-			//È¡ÏÖÓĞĞĞÊı×î½üµÄÕûÒ³ÆğÊ¼Öµ
-			start = Math.floor((data.originalRows.length - 1) / opts.pageSize) * opts.pageSize;
-			opts.pageNumber = (start / opts.pageSize) + 1;
-		}
-		var end = start + parseInt(opts.pageSize);
-		data.rows = (data.originalRows.slice(start, end));
-	}
-	if (data.rows) {
-		for (var i = 0; i < data.rows.length; i++) {
-			var myOtherStr = data.rows[i].myOtherStr;
-			data.rows[i].Sex = myOtherStr.split("^")[4];
-			data.rows[i].Birthday = myOtherStr.split("^")[1];
-			data.rows[i].RegNo = myOtherStr.split("^")[6];
-			data.rows[i].PatType = myOtherStr.split("^")[5];
-			data.rows[i].Telphone = myOtherStr.split("^")[0];
-			data.rows[i].TPatType = myOtherStr.split("^")[5];
-			data.rows[i].NewInMedicare = myOtherStr.split("^")[7];
-			data.rows[i].Company = myOtherStr.split("^")[3];
-			data.rows[i].Adress = myOtherStr.split("^")[2];
-			data.rows[i].ContactPerson = myOtherStr.split("^")[13];
-			data.rows[i].PatYBCode = myOtherStr.split("^")[16];
-			data.rows[i].MobPhone = myOtherStr.split("^")[17];
-		}
-	}
-	return data;
+    if (typeof data.length == 'number' && typeof data.splice == 'function') { // is array
+        data = {
+            total: data.length,
+            rows: data
+        }
+    }
+    var dg = $(this);
+    var opts = dg.datagrid('options');
+    var pager = dg.datagrid('getPager');
+    pager.pagination({
+        showRefresh: false,
+        onSelectPage: function(pageNum, pageSize) {
+            opts.pageNumber = pageNum;
+            opts.pageSize = pageSize;
+            pager.pagination('refresh', {
+                pageNumber: pageNum,
+                pageSize: pageSize
+            });
+            dg.datagrid('loadData', data);
+            dg.datagrid('scrollTo', 0); //æ»šåŠ¨åˆ°æŒ‡å®šçš„è¡Œ        
+        }
+    });
+    if (!data.originalRows) {
+        data.originalRows = (data.rows);
+    }
+    if (opts.pageNumber == 0) { opts.pageNumber = 1 }
+    if (opts.pagination) {
+        var start = (opts.pageNumber - 1) * parseInt(opts.pageSize);
+        if ((start + 1) > data.originalRows.length) {
+            //å–ç°æœ‰è¡Œæ•°æœ€è¿‘çš„æ•´é¡µèµ·å§‹å€¼
+            start = Math.floor((data.originalRows.length - 1) / opts.pageSize) * opts.pageSize;
+            opts.pageNumber = (start / opts.pageSize) + 1;
+        }
+        var end = start + parseInt(opts.pageSize);
+        data.rows = (data.originalRows.slice(start, end));
+    }
+    if (data.rows) {
+        for (var i = 0; i < data.rows.length; i++) {
+            var myOtherStr = data.rows[i].myOtherStr;
+            data.rows[i].Sex = myOtherStr.split("^")[4];
+            data.rows[i].Birthday = myOtherStr.split("^")[1];
+            data.rows[i].RegNo = myOtherStr.split("^")[6];
+            data.rows[i].PatType = myOtherStr.split("^")[5];
+            data.rows[i].Telphone = myOtherStr.split("^")[0];
+            data.rows[i].TPatType = myOtherStr.split("^")[5];
+            data.rows[i].NewInMedicare = myOtherStr.split("^")[7];
+            data.rows[i].Company = myOtherStr.split("^")[3];
+            data.rows[i].Adress = myOtherStr.split("^")[2];
+            data.rows[i].ContactPerson = myOtherStr.split("^")[13];
+            data.rows[i].PatYBCode = myOtherStr.split("^")[16];
+            data.rows[i].MobPhone = myOtherStr.split("^")[17];
+        }
+    }
+    return data;
 }
+
 function CheckBirth(Birth) {
-	var Year, Mon, Day, Str;
-	if (ServerObj.dtformat == "YMD") {
-		Str = Birth.split("-")
-		Year = Str[0];
-		Mon = Str[1];
-		Day = Str[2];
-	}
-	if (ServerObj.dtformat == "DMY") {
-		Str = Birth.split("/")
-		Year = Str[2];
-		Mon = Str[1];
-		Day = Str[0];
-	}
+    var Year, Mon, Day, Str;
+    if (ServerObj.dtformat == "YMD") {
+        Str = Birth.split("-")
+        Year = Str[0];
+        Mon = Str[1];
+        Day = Str[2];
+    }
+    if (ServerObj.dtformat == "DMY") {
+        Str = Birth.split("/")
+        Year = Str[2];
+        Mon = Str[1];
+        Day = Str[0];
+    }
 
-	var Today, ToYear, ToMon, ToDay;
-	Today = new Date();
-	ToYear = Today.getFullYear();
-	ToMon = (Today.getMonth() + 1);
-	ToDay = Today.getDate();
-	if ((Year > ToYear) || (Year <= 1840)) {
-		return false;
-	} else if ((Year == ToYear) && (Mon > ToMon)) {
-		return false;
-	} else if ((Year == ToYear) && (Mon == ToMon) && (Day > ToDay)) {
-		return false;
-	} else {
-		return true;
-	}
+    var Today, ToYear, ToMon, ToDay;
+    Today = new Date();
+    ToYear = Today.getFullYear();
+    ToMon = (Today.getMonth() + 1);
+    ToDay = Today.getDate();
+    if ((Year > ToYear) || (Year <= 1840)) {
+        return false;
+    } else if ((Year == ToYear) && (Mon > ToMon)) {
+        return false;
+    } else if ((Year == ToYear) && (Mon == ToMon) && (Day > ToDay)) {
+        return false;
+    } else {
+        return true;
+    }
 }
+
 function IsValidTime(fld) {
-	var TIMER = 0;
-	var tm = fld.value;
-	var re = /^(\s)+/; tm = tm.replace(re, '');
-	var re = /(\s)+$/; tm = tm.replace(re, '');
-	var re = /(\s){2,}/g; tm = tm.replace(re, ' ');
-	tm = tm.toUpperCase();
-	var x = tm.indexOf(' AM');
-	if (x == -1) x = tm.indexOf(' PM');
-	if (x != -1) tm = tm.substring(0, x) + tm.substr(x + 1);
-	if (tm == '') { fld.value = ''; return 1; }
-	re = /[^0-9A-Za-z]/g;
-	tm = tm.replace(re, ':');
-	if (isNaN(tm.charAt(0))) return ConvNTime(fld);
-	if ((tm.indexOf(':') == -1) && (tm.length > 2)) tm = ConvertNoDelimTime(tm);
-	symIdx = tm.indexOf('PM');
-	if (symIdx == -1) {
-		symIdx = tm.indexOf('AM');
-		if (symIdx != -1) {
-			if (tm.slice(symIdx) != 'AM') return 0;
-			else {
-				tm = tm.slice(0, symIdx);
-				TIMER = 1;
-			}
-		}
-	} else {
-		if (tm.slice(symIdx) != 'PM') return 0;
-		else {
-			tm = tm.slice(0, symIdx);
-			TIMER = 2;
-		}
-	}
-	if (tm == '') return 0;
-	var tmArr = tm.split(':');
-	var len = tmArr.length;
-	if (len > 3) return 0;
-	for (i = 0; i < len; i++) {
-		if (tmArr[i] == '') return 0;
-	}
-	var hr = tmArr[0];
-	var mn = tmArr[1];
-	var sc = tmArr[2];
-	if (len == 1) {
-		mn = 0;
-		sc = 0;
-	} else if (len == 2) {
-		if (mn.length != 2) return 0;
-		sc = 0;
-	} else if (len == 3) {
-		if (mn.length != 2) return 0;
-		if (sc.length != 2) return 0;
-	}
-	if ((hr > 12) && (TIMER == 1)) return 0;
-	if ((hr == 12) && (TIMER == 1)) hr = 0;
-	if (isNaN(hr) || isNaN(mn) || isNaN(sc)) return 0;
-	hr = parseInt(hr, 10);
-	mn = parseInt(mn, 10);
-	sc = parseInt(sc, 10);
-	if ((hr > 23) || (hr < 0) || (mn > 59) || (mn < 0) || (sc > 59) || (sc < 0)) return 0;
-	if ((hr < 12) && (TIMER == 2)) hr += 12;
-	fld.value = ReWriteTime(hr, mn, sc);
-	websys_returnEvent();
-	return 1;
+    var TIMER = 0;
+    var tm = fld.value;
+    var re = /^(\s)+/;
+    tm = tm.replace(re, '');
+    var re = /(\s)+$/;
+    tm = tm.replace(re, '');
+    var re = /(\s){2,}/g;
+    tm = tm.replace(re, ' ');
+    tm = tm.toUpperCase();
+    var x = tm.indexOf(' AM');
+    if (x == -1) x = tm.indexOf(' PM');
+    if (x != -1) tm = tm.substring(0, x) + tm.substr(x + 1);
+    if (tm == '') { fld.value = ''; return 1; }
+    re = /[^0-9A-Za-z]/g;
+    tm = tm.replace(re, ':');
+    if (isNaN(tm.charAt(0))) return ConvNTime(fld);
+    if ((tm.indexOf(':') == -1) && (tm.length > 2)) tm = ConvertNoDelimTime(tm);
+    symIdx = tm.indexOf('PM');
+    if (symIdx == -1) {
+        symIdx = tm.indexOf('AM');
+        if (symIdx != -1) {
+            if (tm.slice(symIdx) != 'AM') return 0;
+            else {
+                tm = tm.slice(0, symIdx);
+                TIMER = 1;
+            }
+        }
+    } else {
+        if (tm.slice(symIdx) != 'PM') return 0;
+        else {
+            tm = tm.slice(0, symIdx);
+            TIMER = 2;
+        }
+    }
+    if (tm == '') return 0;
+    var tmArr = tm.split(':');
+    var len = tmArr.length;
+    if (len > 3) return 0;
+    for (i = 0; i < len; i++) {
+        if (tmArr[i] == '') return 0;
+    }
+    var hr = tmArr[0];
+    var mn = tmArr[1];
+    var sc = tmArr[2];
+    if (len == 1) {
+        mn = 0;
+        sc = 0;
+    } else if (len == 2) {
+        if (mn.length != 2) return 0;
+        sc = 0;
+    } else if (len == 3) {
+        if (mn.length != 2) return 0;
+        if (sc.length != 2) return 0;
+    }
+    if ((hr > 12) && (TIMER == 1)) return 0;
+    if ((hr == 12) && (TIMER == 1)) hr = 0;
+    if (isNaN(hr) || isNaN(mn) || isNaN(sc)) return 0;
+    hr = parseInt(hr, 10);
+    mn = parseInt(mn, 10);
+    sc = parseInt(sc, 10);
+    if ((hr > 23) || (hr < 0) || (mn > 59) || (mn < 0) || (sc > 59) || (sc < 0)) return 0;
+    if ((hr < 12) && (TIMER == 2)) hr += 12;
+    fld.value = ReWriteTime(hr, mn, sc);
+    websys_returnEvent();
+    return 1;
 }
+
 function ConvertNoDelimTime(tm) {
-	if (isNaN(tm)) return tm;
-	var hr = tm.slice(0, 2);
-	var mn = tm.slice(2, 4);
-	var s = tm.slice(4);
-	var tmconv = hr + ':' + mn + ':' + s;
-	return tmconv
+    if (isNaN(tm)) return tm;
+    var hr = tm.slice(0, 2);
+    var mn = tm.slice(2, 4);
+    var s = tm.slice(4);
+    var tmconv = hr + ':' + mn + ':' + s;
+    return tmconv
 }
+
 function ReWriteTime(h, m, s) {
-	var newtime = '';
-	if (h < 10) h = '0' + h;
-	if (m < 10) m = '0' + m;
-	if (s < 10) s = '0' + s;
-	if (PageLogicObj.m_tmformat == 'HMS') { newtime = h + ':' + m + ':' + s; }
-	if (PageLogicObj.m_tmformat == 'HM') { newtime = h + ':' + m; }
-	return newtime;
+    var newtime = '';
+    if (h < 10) h = '0' + h;
+    if (m < 10) m = '0' + m;
+    if (s < 10) s = '0' + s;
+    if (PageLogicObj.m_tmformat == 'HMS') { newtime = h + ':' + m + ':' + s; }
+    if (PageLogicObj.m_tmformat == 'HM') { newtime = h + ':' + m; }
+    return newtime;
 }
+
 function ConvNTime(fld) {
-	var now = new Date();
-	var tm = fld.value;
-	var re = /(\s)+/g;
-	tm = tm.replace(re, '');
-	if (tm.charAt(0).toUpperCase() == 'N') {
-		xmin = tm.slice(2);
-		if (xmin == '') xmin = 0;
-		if (isNaN(xmin)) return 0;
-		xmin_ms = xmin * 60 * 1000;
-		if (tm.charAt(1) == '+') now.setTime(now.getTime() + xmin_ms);
-		else if (tm.charAt(1) == '-') now.setTime(now.getTime() - xmin_ms);
-		else if (tm.length > 1) return 0;
-		fld.value = ReWriteTime(now.getHours(), now.getMinutes(), now.getSeconds());
-		websys_returnEvent();
-		return 1;
-	}
-	return 0;
+    var now = new Date();
+    var tm = fld.value;
+    var re = /(\s)+/g;
+    tm = tm.replace(re, '');
+    if (tm.charAt(0).toUpperCase() == 'N') {
+        xmin = tm.slice(2);
+        if (xmin == '') xmin = 0;
+        if (isNaN(xmin)) return 0;
+        xmin_ms = xmin * 60 * 1000;
+        if (tm.charAt(1) == '+') now.setTime(now.getTime() + xmin_ms);
+        else if (tm.charAt(1) == '-') now.setTime(now.getTime() - xmin_ms);
+        else if (tm.length > 1) return 0;
+        fld.value = ReWriteTime(now.getHours(), now.getMinutes(), now.getSeconds());
+        websys_returnEvent();
+        return 1;
+    }
+    return 0;
 }
+
 function PayModeOnChange() {
-	var myoptval = $("#PayMode").combobox("getValue");
-	var myary = myoptval.split("^");
-	if (myary[2] == "Y") {
-		SetPayInfoStatus(false);
-	} else {
-		SetPayInfoStatus(true);
-	}
+    var myoptval = $("#PayMode").combobox("getValue");
+    var myary = myoptval.split("^");
+    if (myary[2] == "Y") {
+        SetPayInfoStatus(false);
+    } else {
+        SetPayInfoStatus(true);
+    }
 }
+
 function SetPayInfoStatus(SFlag) {
-	$("#ChequeDate").dateboxq('setValue', '');
-	$("#PayCompany,#CardChequeNo,#PayAccNo").attr("disabled", SFlag).val(""); //#ChequeDate
-	if (SFlag) {
-		$('#Bank,#BankCardType').combobox('select', '').combobox('disable');
-		//$("#ChequeDate").dateboxq('disable');
-	} else {
-		$('#Bank,#BankCardType').combobox('select', '').combobox('enable');
-		//$("#ChequeDate").dateboxq('enable');
-	}
-	//Remark
+    $("#ChequeDate").dateboxq('setValue', '');
+    $("#PayCompany,#CardChequeNo,#PayAccNo").attr("disabled", SFlag).val(""); //#ChequeDate
+    if (SFlag) {
+        $('#Bank,#BankCardType').combobox('select', '').combobox('disable');
+        //$("#ChequeDate").dateboxq('disable');
+    } else {
+        $('#Bank,#BankCardType').combobox('select', '').combobox('enable');
+        //$("#ChequeDate").dateboxq('enable');
+    }
+    //Remark
 }
+
 function myformatter(date) {
-	var y = date.getFullYear();
-	var m = date.getMonth() + 1;
-	var d = date.getDate();
-	if (ServerObj.sysDateFormat == "3") return y + '-' + (m < 10 ? ('0' + m) : m) + '-' + (d < 10 ? ('0' + d) : d);
-	else if (ServerObj.sysDateFormat == "4") return (d < 10 ? ('0' + d) : d) + "/" + (m < 10 ? ('0' + m) : m) + "/" + y
-	else return y + '-' + (m < 10 ? ('0' + m) : m) + '-' + (d < 10 ? ('0' + d) : d);
+    var y = date.getFullYear();
+    var m = date.getMonth() + 1;
+    var d = date.getDate();
+    if (ServerObj.sysDateFormat == "3") return y + '-' + (m < 10 ? ('0' + m) : m) + '-' + (d < 10 ? ('0' + d) : d);
+    else if (ServerObj.sysDateFormat == "4") return (d < 10 ? ('0' + d) : d) + "/" + (m < 10 ? ('0' + m) : m) + "/" + y
+    else return y + '-' + (m < 10 ? ('0' + m) : m) + '-' + (d < 10 ? ('0' + d) : d);
 }
+
 function myparser(s) {
-	if (!s) return new Date();
-	if (ServerObj.sysDateFormat == "4") {
-		var ss = s.split('/');
-		var y = parseInt(ss[2], 10);
-		var m = parseInt(ss[1], 10);
-		var d = parseInt(ss[0], 10);
-	} else {
-		var ss = s.split('-');
-		var y = parseInt(ss[0], 10);
-		var m = parseInt(ss[1], 10);
-		var d = parseInt(ss[2], 10);
-	}
-	if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
-		return new Date(y, m - 1, d);
-	} else {
-		return new Date();
-	}
+    if (!s) return new Date();
+    if (ServerObj.sysDateFormat == "4") {
+        var ss = s.split('/');
+        var y = parseInt(ss[2], 10);
+        var m = parseInt(ss[1], 10);
+        var d = parseInt(ss[0], 10);
+    } else {
+        var ss = s.split('-');
+        var y = parseInt(ss[0], 10);
+        var m = parseInt(ss[1], 10);
+        var d = parseInt(ss[2], 10);
+    }
+    if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+        return new Date(y, m - 1, d);
+    } else {
+        return new Date();
+    }
 }
+
 function CredNoOnChange() {
-	var myrtn = IsCredTypeID();
-	var CredNo = $("#CredNo").val();
-	if (myrtn) {
-		$("#IDCardNo1").val(CredNo);
-		//ÈôÊÇÉí·İÖ¤ÔòÄ¬ÈÏ¹ú(¼®¹á)
-		if ($("#CountryHome").combobox('getData').length == 0) {
-			LoadCountryData("CountryHome");
-		}
-		$("#CountryHome").combobox('select', 1)
-	}
-	if (!myrtn) {
-		$("#IDCardNo1").val("");
-	}
+    var myrtn = IsCredTypeID();
+    var CredNo = $("#CredNo").val();
+    if (myrtn) {
+        $("#IDCardNo1").val(CredNo);
+        //è‹¥æ˜¯èº«ä»½è¯åˆ™é»˜è®¤å›½(ç±è´¯)
+        if ($("#CountryHome").combobox('getData').length == 0) {
+            LoadCountryData("CountryHome");
+        }
+        $("#CountryHome").combobox('select', 1)
+    }
+    if (!myrtn) {
+        $("#IDCardNo1").val("");
+    }
 }
+
 function IsCredTypeID() {
-	var myval = $("#CredType").combobox("getValue");
-	var myary = myval.split("^");
-	if (myary[1] == PageLogicObj.m_IDCredTypePlate) {
-		return true;
-	} else {
-		return false;
-	}
+    var myval = $("#CredType").combobox("getValue");
+    var myary = myval.split("^");
+    if (myary[1] == PageLogicObj.m_IDCredTypePlate) {
+        return true;
+    } else {
+        return false;
+    }
 }
+
 function ForeignIDCardOnKeyPress() {
-	var myval = $("#ForeignCredType").combobox("getValue");
-	var myary = myval.split("^");
-	if (myary[1] == PageLogicObj.m_IDCredTypePlate) {
-		var mypId = $("#ForeignIDCard").val();
-		mypId = mypId.toUpperCase();
-		$("#ForeignIDCard").val(mypId);
-		if (mypId != "") {
-			var myary = DHCWeb_GetInfoFromId(mypId);
-			if (myary[0] == "1") {
-				return true;
-			}
-			else {
-				$("#ForeignIDCard").focus();
-				return false;
-			}
-		}
-	}
-	return true
+    var myval = $("#ForeignCredType").combobox("getValue");
+    var myary = myval.split("^");
+    if (myary[1] == PageLogicObj.m_IDCredTypePlate) {
+        var mypId = $("#ForeignIDCard").val();
+        mypId = mypId.toUpperCase();
+        $("#ForeignIDCard").val(mypId);
+        if (mypId != "") {
+            var myary = DHCWeb_GetInfoFromId(mypId);
+            if (myary[0] == "1") {
+                return true;
+            } else {
+                $("#ForeignIDCard").focus();
+                return false;
+            }
+        }
+    }
+    return true
 }
+
 function CredNoOnKeyPress() {
-	var winEvent = window.event;
-	var mykey = winEvent.keyCode;
-	if (mykey == 13) {
-		var myrtn = IsCredTypeID();
-		if (myrtn) {
-			var mypId = $("#CredNo").val();
-			mypId = mypId.toUpperCase();
-			$("#CredNo").val(mypId);
-			var RtnStr = $.cm({
-				ClassName: "web.DHCRBAppointment",
-				MethodName: "GetAppedCommomInfo",
-				dataType: "text",
-				CredNo: mypId
-			}, false);
-			var FindAppFlag = RtnStr.split("^")[0];
-			if (FindAppFlag == "1") {
-				var LastAppedInfo = RtnStr.split("^")[1];
-				var LastAppendName = LastAppedInfo.split("$")[0];
-				var LastAppenTelH = LastAppedInfo.split("$")[1];
-				var DifferenceAppInfo = RtnStr.split("^")[2];
-				if (DifferenceAppInfo != "") {
-					$.messager.confirm('È·ÈÏ¶Ô»°¿ò', "´ËÉí·İÖ¤ºÅ´æÔÚÒÔÏÂÓĞĞ§µÄ¹«¹²¿¨Ô¤Ô¼Ô¤ÁôĞÅÏ¢:\nĞÕÃû:" + LastAppendName + "  µç»°:" + LastAppenTelH + "(×îºóÒ»´ÎÔ¤ÁôĞÅÏ¢)\n" + DifferenceAppInfo + "\nÊÇ·ñÈ¡×îºóÒ»´ÎµÄÔ¤ÁôĞÅÏ¢?", function (r) {
-						if (r) {
-							$("#Name").val(LastAppendName);
-							$("#TelHome").val(LastAppenTelH);
-						}
-					});
-				} else {
-					$.messager.confirm('È·ÈÏ¶Ô»°¿ò', "´ËÉí·İÖ¤ºÅ´æÔÚÓĞĞ§µÄ¹«¹²¿¨Ô¤Ô¼Ô¤ÁôĞÅÏ¢:\nĞÕÃû:" + LastAppendName + "  µç»°:" + LastAppenTelH + "\nÊÇ·ñ´øÈëÔ¤Ô¼Ô¤ÁôĞÅÏ¢?", function (r) {
-						if (r) {
-							$("#Name").val(LastAppendName);
-							$("#TelHome").val(LastAppenTelH);
-						}
-					});
-				}
-			}
-			if (mypId != "") {
-				setBirthAndSex(mypId);
-			}
-			//ÈôÊÇÉí·İÖ¤ÔòÄ¬ÈÏ¹ú(¼®¹á)
-			if ($("#CountryHome").combobox('getData').length == 0) {
-				LoadCountryData("CountryHome");
-			}
-			$("#CountryHome").combobox('select', 1)
-		}
-		CredNoOnChange();
-		var myIDNo = $("#IDCardNo1").val();
-		var myval = $("#CredType").combobox("getValue");
-		var myCredTypeDR = myval.split("^")[0];
-		var myCredNo = $("#CredNo").val();
-		var myval = $("#CardTypeDefine").combobox("getValue");
-		var myCardTypeDR = myval.split("^")[0];
-		var myValidateMode = myval.split("^")[30];
-		BuildAddressByIDCard(myCredNo);
-		if (myValidateMode == "IDU") {
-			if ((myIDNo != "") || (myCredNo != "")) {
-				var myInfo = $.cm({
-					ClassName: "web.DHCBL.CARD.UCardPATRegConfig",
-					MethodName: "ReadConfigByIDU",
-					dataType: "text",
-					IDNo: myIDNo,
-					CredTypeDR: myCredTypeDR,
-					CredNo: myCredNo,
-					CardTypeDR: myCardTypeDR
-				}, false);
-				var myary = myInfo.split(String.fromCharCode(1));
-				switch (myary[0]) {
-					case "0":
-						break;
-					case "-368":
-						PageLogicObj.m_RegCardConfigXmlData = myary[1];
-						var myPatInfoXmlData = myary[2];
-						var myRepairFlag = myary[3];
-						// myRepairFlag Îª¿¨ÀàĞÍÅäÖÃµÄ"Êı¾İÀàĞÍ×ª»»ÑéÖ¤",ÓÃÓÚ¿ØÖÆ±»¸³ÖµµÄÔªËØÊÇ·ñ¿ÉÔÙ±à¼­
-						if (myRepairFlag == "Y") {
-							SetPatInfoModeByXML(myPatInfoXmlData, false);
-						} else {
-							SetPatInfoModeByXML(myPatInfoXmlData, false);
-						}
-						GetPatDetailByPAPMINo();
-						SetPatRegCardDefaultConfigValue(myary[4]);
-						break;
-					case "-365":
-						$.messager.alert('ÌáÊ¾', '´ËÖ¤¼şºÅÂëÒÑ¾­´æÔÚ,Çë°ìÀíÆäËû¿¨»ò°ìÀí²¹¿¨!');
-						break;
-					default:
-						$.messager.alert('ÌáÊ¾', "" + " Err Code=" + myary[0]);
-						break;
-				}
+    var winEvent = window.event;
+    var mykey = winEvent.keyCode;
+    if (mykey == 13) {
+        //var myrtn=IsCredTypeID();
+        //if (myrtn){
+        var mypId = $("#CredNo").val();
+        mypId = mypId.toUpperCase();
+        var myval = $("#CredType").combobox("getValue");
+        var myCredTypeDR = myval.split("^")[0];
+        var RtnStr = $.cm({
+            ClassName: "web.DHCRBAppointment",
+            MethodName: "GetAppedCommomInfo",
+            dataType: "text",
+            CredNo: mypId,
+            CredTypeDR: myCredTypeDR
+        }, false);
+        var FindAppFlag = RtnStr.split("^")[0];
+        if (FindAppFlag == "1") {
+            var LastAppedInfo = RtnStr.split("^")[1];
+            var LastAppendName = LastAppedInfo.split("$")[0];
+            var LastAppenTelH = LastAppedInfo.split("$")[1];
+            var DifferenceAppInfo = RtnStr.split("^")[2];
+            if (DifferenceAppInfo != "") {
+                $.messager.confirm('ç¡®è®¤å¯¹è¯æ¡†', "æ­¤è¯ä»¶å·å­˜åœ¨ä»¥ä¸‹æœ‰æ•ˆçš„å…¬å…±å¡é¢„çº¦é¢„ç•™ä¿¡æ¯:<br/>å§“å:" + LastAppendName + "  ç”µè¯:" + LastAppenTelH + "(æœ€åä¸€æ¬¡é¢„ç•™ä¿¡æ¯)<br/>" + DifferenceAppInfo + "<br/>æ˜¯å¦å–æœ€åä¸€æ¬¡çš„é¢„ç•™ä¿¡æ¯?", function(r) {
+                    if (r) {
+                        $("#Name").val(LastAppendName);
+                        $("#TelHome").val(LastAppenTelH);
+                    }
+                });
+            } else {
+                $.messager.confirm('ç¡®è®¤å¯¹è¯æ¡†', "æ­¤è¯ä»¶å·å­˜åœ¨æœ‰æ•ˆçš„å…¬å…±å¡é¢„çº¦é¢„ç•™ä¿¡æ¯:<br/>å§“å:" + LastAppendName + "  ç”µè¯:" + LastAppenTelH + "<br/>æ˜¯å¦å¸¦å…¥é¢„çº¦é¢„ç•™ä¿¡æ¯?", function(r) {
+                    if (r) {
+                        $("#Name").val(LastAppendName);
+                        $("#TelHome").val(LastAppenTelH);
+                    }
+                });
+            }
+        }
+        if (IsCredTypeID()) {
+            $("#CredNo").val(mypId);
+            if (mypId != "") {
+                setBirthAndSex(mypId);
+            }
+            //è‹¥æ˜¯èº«ä»½è¯åˆ™é»˜è®¤å›½(ç±è´¯)
+            if ($("#CountryHome").combobox('getData').length == 0) {
+                LoadCountryData("CountryHome");
+            }
+            $("#CountryHome").combobox('select', 1);
+        }
+        //}
+        CredNoOnChange();
+        var myIDNo = $("#IDCardNo1").val();
+        var myval = $("#CredType").combobox("getValue");
+        var myCredTypeDR = myval.split("^")[0];
+        var myCredNo = $("#CredNo").val();
+        if (myval.split("^")[1] == PageLogicObj.m_IDCredTypePlate) {
+            BuildAddressByIDCard(myCredNo);
+        }
+        var myval = $("#CardTypeDefine").combobox("getValue");
+        var myCardTypeDR = myval.split("^")[0];
+        var myValidateMode = myval.split("^")[30];
+        if (myValidateMode == "IDU") {
+            if ((myIDNo != "") || (myCredNo != "")) {
+                var myInfo = $.cm({
+                    ClassName: "web.DHCBL.CARD.UCardPATRegConfig",
+                    MethodName: "ReadConfigByIDU",
+                    dataType: "text",
+                    IDNo: myIDNo,
+                    CredTypeDR: myCredTypeDR,
+                    CredNo: myCredNo,
+                    CardTypeDR: myCardTypeDR
+                }, false);
+                var myary = myInfo.split(String.fromCharCode(1));
+                switch (myary[0]) {
+                    case "0":
+                        break;
+                    case "-368":
+                        PageLogicObj.m_RegCardConfigXmlData = myary[1];
+                        var myPatInfoXmlData = myary[2];
+                        var myRepairFlag = myary[3];
+                        // myRepairFlag ä¸ºå¡ç±»å‹é…ç½®çš„"æ•°æ®ç±»å‹è½¬æ¢éªŒè¯",ç”¨äºæ§åˆ¶è¢«èµ‹å€¼çš„å…ƒç´ æ˜¯å¦å¯å†ç¼–è¾‘
+                        if (myRepairFlag == "Y") {
+                            SetPatInfoModeByXML(myPatInfoXmlData, false);
+                        } else {
+                            SetPatInfoModeByXML(myPatInfoXmlData, false);
+                        }
+                        GetPatDetailByPAPMINo();
+                        SetPatRegCardDefaultConfigValue(myary[4]);
+                        break;
+                    case "-365":
+                        $.messager.alert('æç¤º', 'æ­¤è¯ä»¶å·ç å·²ç»å­˜åœ¨,è¯·åŠç†å…¶ä»–å¡æˆ–åŠç†è¡¥å¡!');
+                        SearchSamePatient();
+                        break;
+                    default:
+                        $.messager.alert('æç¤º', "" + " Err Code=" + myary[0]);
+                        break;
+                }
 
-			}
-		}
-	}
+            }
+        }
+    }
 }
+
 function SetPatInfoModeByXML(XMLStr, Mode) {
-	XMLStr = "<?xml version='1.0' encoding='gb2312'?>" + XMLStr
-	var xmlDoc = DHCDOM_CreateXMLDOM();
-	xmlDoc.async = false;
-	xmlDoc.loadXML(XMLStr);
-	if (xmlDoc.parseError.errorCode != 0) {
-		alert(xmlDoc.parseError.reason);
-		return;
-	}
-	var nodes = xmlDoc.documentElement.childNodes;
-	for (var i = 0; i < nodes.length; i++) {
-		var myItemName = nodes(i).nodeName;
-		var myItemValue = nodes(i).text;
-		var _$id = $("#" + myItemName);
-		if (_$id.length > 0) {
-			//if (_$id.hasClass("hisui-combobox")){
-			if (_$id.next().hasClass('combo')) {
-				if (Mode) {
-					$('#NationDescLookUpRowID').combobox('disable');
-				} else {
-					$('#NationDescLookUpRowID').combobox('enable');
-				}
-				_$id.combobox("select", myItemValue);
-			} else {
-				_$id.attr("disabled", Mode);
-			}
-		}
-	}
-	delete (xmlDoc);
-	//¹ØÁª½¨¿¨Ê¹ÓÃµÇ¼ÇºÅ×÷Îª¿¨ºÅ£¬ÑéÖ¤¿¨ºÅµÄÓĞĞ§ĞÔ
-	CheckForUsePANoToCardNO("New");
+    XMLStr = "<?xml version='1.0' encoding='gb2312'?>" + XMLStr
+        /*var xmlDoc=DHCDOM_CreateXMLDOM();
+        xmlDoc.async = false;
+        xmlDoc.loadXML(XMLStr);
+        if(xmlDoc.parseError.errorCode != 0) { 
+        	alert(xmlDoc.parseError.reason); 
+        	return; 
+        }
+        */
+    var xmlDoc = DHCDOM_CreateXMLDOMNew(XMLStr);
+    
+    if (!xmlDoc) return;
+    var nodes = xmlDoc.documentElement.childNodes;
+    if (nodes.length <= 0) { return; }
+    for (var i = 0; i < nodes.length; i++) {
+        //var myItemName=nodes(i).nodeName;
+        //var myItemValue= nodes(i).text;
+        var myItemName = getNodeName(nodes, i);
+        var myItemValue = getNodeValue(nodes, i);
+        if ((myItemName == "OtherCardInfo") && (myItemValue != "")) {
+            myItemValue = myItemValue.replace(/@/g, "^");
+        }
+        if ((myItemName == "OtherNameInfo") && (myItemValue != "")) {
+            myItemValue = myItemValue.replace(/@/g, "^");
+            alert(myItemValue)
+        }
+        var _$id = $("#" + myItemName);
+        if (_$id.length > 0) {
+            //if (_$id.hasClass("hisui-combobox")){
+            if (_$id.next().hasClass('combo')) {
+                if (Mode) {
+                    $('#NationDescLookUpRowID').combobox('disable');
+                } else {
+                    $('#NationDescLookUpRowID').combobox('enable');
+                }
+                _$id.combobox("select", myItemValue);
+            } else {
+                _$id.attr("disabled", Mode);
+                _$id.val(myItemValue);
+            }
+        }
+    }
+    delete(xmlDoc);
+    //å…³è”å»ºå¡ä½¿ç”¨ç™»è®°å·ä½œä¸ºå¡å·ï¼ŒéªŒè¯å¡å·çš„æœ‰æ•ˆæ€§
+    CheckForUsePANoToCardNO("New");
 }
-//ÑéÖ¤Ê¹ÓÃµÇ¼ÇºÅ×÷ÓĞÃ»ÓĞÎª¿¨ºÅÊ±ºòµÇ¼ÇºÅ×÷Îª¿¨ºÅÓĞÃ»ÓĞ±»Ê¹ÓÃ
+//éªŒè¯ä½¿ç”¨ç™»è®°å·ä½œæœ‰æ²¡æœ‰ä¸ºå¡å·æ—¶å€™ç™»è®°å·ä½œä¸ºå¡å·æœ‰æ²¡æœ‰è¢«ä½¿ç”¨
 function CheckForUsePANoToCardNO(Type) {
-	var PAPMINO = $("#PAPMINo").val();
-	if (PageLogicObj.m_UsePANoToCardNO == "Y") {
-		if (PAPMINO != "") {
-			$("#CardNo").val(PAPMINO);
-			var myPAPMIStr = $.cm({
-				ClassName: "web.DHCBL.CARD.UCardRefInfo",
-				MethodName: "GetPAPMIInfoByCardNo",
-				dataType: "text",
-				CardNo: PAPMINO,
-				CardType: PageLogicObj.m_SelectCardTypeRowID
-			}, false);
-			if (myPAPMIStr != "") {
-				if (Type == "New") {
-					$.messager.alert('ÌáÊ¾', "¸ÃµÇ¼ÇºÅÒÑ¾­×÷Îª¿¨ºÅ´æÔÚ,²»ÄÜÔÙ´ÎÊ¹ÓÃ½¨¿¨!", "info", function () {
-						$("#CardNo").val("");
-					});
-				}
-				DisableBtn("NewCard", true);
-			} else {
-				DisableBtn("NewCard", false);
-			}
-		} else {
-			DisableBtn("NewCard", false);
-		}
+    var PAPMINO = $("#PAPMINo").val();
+    if (PageLogicObj.m_UsePANoToCardNO == "Y") {
+        if (PAPMINO != "") {
+            //$("#CardNo").val(PAPMINO);
+            var myPAPMIStr = $.cm({
+                ClassName: "web.DHCBL.CARD.UCardRefInfo",
+                MethodName: "GetPAPMIInfoByCardNo",
+                dataType: "text",
+                CardNo: PAPMINO,
+                CardType: PageLogicObj.m_SelectCardTypeRowID
+            }, false);
+            if (myPAPMIStr != "") {
+                if (Type == "New") {
+                    $.messager.alert('æç¤º', "è¯¥ç™»è®°å·å·²ç»ä½œä¸ºå¡å·å­˜åœ¨,ä¸èƒ½å†æ¬¡ä½¿ç”¨å»ºå¡!", "info", function() {
+                        $("#CardNo").val("");
+                    });
+                }
+                DisableBtn("NewCard", true);
+            } else {
+                DisableBtn("NewCard", false);
+            }
+        } else {
+            DisableBtn("NewCard", false);
+        }
 
-	}
+    }
 }
+
 function SetPatRegCardDefaultConfigValue(Value) {
-	var myary = Value.split("^");
-	PageLogicObj.m_PatMasFlag = myary[1];
-	PageLogicObj.m_CardRefFlag = myary[2];
-	PageLogicObj.m_AccManagerFlag = myary[3];
-	PageLogicObj.m_SetCardReferFlag = myary[4];
+    var myary = Value.split("^");
+    PageLogicObj.m_PatMasFlag = myary[1];
+    PageLogicObj.m_CardRefFlag = myary[2];
+    PageLogicObj.m_AccManagerFlag = myary[3];
+    PageLogicObj.m_SetCardReferFlag = myary[4];
 }
+
 function Clearclick() {
-	SetUIDefaultValue();
-	$(".newclsInvalid").removeClass("newclsInvalid");
-	$("#PatYBCode,#ChequeDate,#PatPaySum,#OtherCardInfo").val("");
-	$("#PAPERMarital,#Bank,#BankCardType").combobox('select', '');
-	if (PageLogicObj.m_UsePANoToCardNO != "Y") {
-		DisableBtn("NewCard", true);
-	}
-	PageLogicObj.m_CurSearchValue = "";
-	$("#CredType,#ForeignCredType").combobox('select', PageLogicObj.m_CredTypeDef);
-	if (PageLogicObj.m_IsNotStructAddress == "Y") {
-		$("#Address").combobox('setText', "");
-	} else {
-		$("#Address").val("");
-	}
-	setTimeout(function () {
-		PageLogicObj.m_FindPatListTabDataGrid.datagrid('loadData', { total: 0, rows: [] });
-	}, 500);
+    SetUIDefaultValue();
+    $(".newclsInvalid").removeClass("newclsInvalid");
+    $("#PatYBCode,#ChequeDate,#PatPaySum,#OtherCardInfo,#OtherNameInfo").val("");
+    $("#PAPERMarital,#Bank,#BankCardType,#PAPMILangPrimDR,#PAPMILangSecondDR,#Education,#AddressDef").combobox('select', '');
+    if (PageLogicObj.m_UsePANoToCardNO != "Y") {
+        DisableBtn("NewCard", true);
+    }
+    PageLogicObj.m_CurSearchValue = "";
+    $("#CredType,#ForeignCredType").combobox('select', PageLogicObj.m_CredTypeDef);
+    if (PageLogicObj.m_IsNotStructAddress == "Y") {
+        $("#Address").combobox('setText', "");
+    } else {
+        $("#Address").val("");
+    }
+    //é‡æ–°åŠ è½½åœ°å€ç±»å‹
+    LoadAddrType()
+    DefLanguage("")
+    setTimeout(function() {
+        PageLogicObj.m_FindPatListTabDataGrid.datagrid('loadData', { total: 0, rows: [] });
+    }, 500);
+    PageLogicObj.m_FindPatListTabDataGrid.datagrid('clearChecked')
 }
+
 function SetUIDefaultValue() {
-	InitPatRegConfig();
-	$("#OpMedicare,#InMedicare").attr("disabled", true);
-	IDReadControlDisable(false);
-	CardTypeKeydownHandler();
-	var src = "../images/uiimages/patdefault.png";
-	ShowPicBySrcNew(src, "imgPic");
+    InitPatRegConfig();
+    $("#OpMedicare,#InMedicare").attr("disabled", true);
+    IDReadControlDisable(false);
+    CardTypeKeydownHandler();
+    var src = "../images/uiimages/patdefault.png";
+    ShowPicBySrcNew(src, "imgPic");
 }
+
 function IDReadControlDisable(bFlag) {
-	$("#CredNo,#Name,#Birth,#Age").attr("disabled", bFlag);
-	if (bFlag) {
-		$('#Sex,#NationDescLookUpRowID').combobox('disable');
-	} else {
-		$('#Sex,#NationDescLookUpRowID').combobox('enable');
-	}
-	//µØÖ· ÓĞ½á¹¹»¯µØÖ· todo
-	//var myobj=document.getElementById("Address");
+    $("#CredNo,#Name,#Birth,#Age").attr("disabled", bFlag);
+    if (bFlag) {
+        $('#Sex,#NationDescLookUpRowID').combobox('disable');
+    } else {
+        $('#Sex,#NationDescLookUpRowID').combobox('enable');
+    }
+    //åœ°å€ æœ‰ç»“æ„åŒ–åœ°å€ todo
+    //var myobj=document.getElementById("Address");
 }
+
 function GetValidatePatbyCard() {
-	var myCardNo = $("#CardNo").val();
-	if (myCardNo == "") {
-		$.messager.alert('ÌáÊ¾', "¿¨ºÅ²»ÄÜÎª¿Õ!");
-		return false;
-	}
-	var rtn = $.m({
-		ClassName: "web.DHCBL.CARDIF.ICardRefInfo",
-		MethodName: "ReadPatValidateInfoByCardNo",
-		CardNO: myCardNo,
-		SecurityNo: PageLogicObj.m_CardVerify, CardTypeDR: PageLogicObj.m_SelectCardTypeRowID,
-		ExpStr: ""
-	}, false);
-	var myary = rtn.split("^");
-	if (rtn == "") return;
-	if (myary[0] == '0') {
-		//InitPatRegConfig();
-		$("#CardNo").val(myCardNo);
-		var myXMLStr = myary[1];
-		SetPatInfoByXML(myXMLStr);
-		DisableBtn("NewCard", false);
-		if (PageLogicObj.m_SetRCardFocusElement != "") {
-			$("#" + PageLogicObj.m_SetRCardFocusElement).focus();
-		}
-	} else {
-		switch (myary[0]) {
-			case "-341": //ÒÑ¾­½¨¿¨
-				//¾­¹ıÌÖÂÛÈç¹ûÒÑ¾­½¨¿¨µÄ²»´ø³öÒÑÓĞĞÅÏ¢
-				var CardNo = $("#CardNo").val();
-				//IntListItemNew();
-				//InitTextItem();
-				//IntHelpControlNew();
-				var myPAPMIStr = $.m({
-					ClassName: "web.DHCBL.CARD.UCardRefInfo",
-					MethodName: "GetPAPMIInfoByCardNo",
-					CardNo: myCardNo,
-					CardType: PageLogicObj.m_SelectCardTypeRowID
-				}, false);
-				if (myPAPMIStr != "") {
-					$("#PAPMINo").val(myPAPMIStr.split("^")[1]);
-					$("#PAPMIRowID").val(myPAPMIStr.split("^")[0]);
-					var IsTemporaryCard = InitTemporaryCard(CardNo);
-					if (IsTemporaryCard == "Y") {
-						$.messager.alert('ÌáÊ¾', "´Ë¿¨ÎªÁÙÊ±¿¨!");
-						GetPatDetailByPAPMINo();
-						SearchSamePatient();
-						return;
-					} else {
-						$("#CardNo").val("");
-						GetPatDetailByPAPMINo();
-						SearchSamePatient();
-					}
-				}
-				CardTypeKeydownHandler();
-				if (PageLogicObj.m_MedicalFlag == 1) {
-					var flag = ValidateRegInfoByCQU(myary[2]);
-					if (flag) {
-						DisableBtn("NewCard", false);
-						return true;
-					}
-				}
-				$.messager.alert('ÌáÊ¾', "´Ë¿¨ºÅÒÑ¾­´æÔÚ,²»ÄÜ·¢¿¨!");
-				break;
-			case "-340":
-				$.messager.alert('ÌáÊ¾', "´Ë¿¨Ã»ÓĞ¶ÔÓ¦µÄ²¡ÈËĞÅÏ¢!");
-				break;
-			case "-350":
-				$.messager.alert('ÌáÊ¾', "´Ë¿¨ÒÑ¾­Ê¹ÓÃ,²»ÄÜÖØ¸´·¢¿¨!");
-				break;
-			case "-351":
-				var CancelInfo = $.cm({
-					ClassName: "web.UDHCAccManageCLS7",
-					MethodName: "GetCancenlInfo",
-					dataType: "text",
-					cardno: myCardNo,
-					CardTypeDR: PageLogicObj.m_SelectCardTypeRowID
-				}, false);
-				$.messager.alert('ÌáÊ¾', "´Ë¿¨ÒÑ¾­±»¹ÒÊ§,²»ÄÜÊ¹ÓÃ,¹ÒÊ§ÈË:" + CancelInfo.split("^")[0] + ",¹ÒÊ§Ô­Òò:" + CancelInfo.split("^")[1]);
-				break;
-			case "-352":
-				$.messager.alert('ÌáÊ¾', "´Ë¿¨ÒÑ¾­±»×÷·Ï,²»ÄÜÊ¹ÓÃ!");
-				break;
-			case "-356":
-				$.messager.alert('ÌáÊ¾', "·¢¿¨Ê±,ÅäÖÃÒªÇóĞÂÔö¿¨¼ÇÂ¼,µ«ÊÇ´Ë¿¨Êı¾İ±»Ô¤ÏÈÉú³É´íÎó!");
-				break;
-			case "-357":
-				$.messager.alert('ÌáÊ¾', "·¢¿¨Ê±,ÅäÖÃÒªÇó¸üĞÂ¿¨¼ÇÂ¼,µ«ÊÇ´Ë¿¨Êı¾İÃ»ÓĞÔ¤ÏÈÉú³É!");
-				break;
-			case "-358":
-				$.messager.alert('ÌáÊ¾', "·¢¿¨Ê±,´Ë¿¨ÒÑ¾­ÓĞ¶ÔÓ¦µÄµÇ¼ÇºÅÁË,²»ÄÜÔÙĞÂÔö!");
-				break;
-			default:
-				$.messager.alert('ÌáÊ¾', "Error Code:" + myary[0]);
-				break;
-		}
-		DisableBtn("NewCard", true);
-	}
+    var myCardNo = $("#CardNo").val();
+    if (myCardNo == "") {
+        $.messager.alert('æç¤º', "å¡å·ä¸èƒ½ä¸ºç©º!");
+        return false;
+    }
+    var rtn = $.m({
+        ClassName: "web.DHCBL.CARDIF.ICardRefInfo",
+        MethodName: "ReadPatValidateInfoByCardNo",
+        CardNO: myCardNo,
+        SecurityNo: PageLogicObj.m_CardVerify,
+        CardTypeDR: PageLogicObj.m_SelectCardTypeRowID,
+        ExpStr: ""
+    }, false);
+    var myary = rtn.split("^");
+    if (rtn == "") return;
+    if (myary[0] == '0') {
+        //InitPatRegConfig();
+        $("#CardNo").val(myCardNo);
+        var myXMLStr = myary[1];
+        SetPatInfoByXML(myXMLStr);
+        DisableBtn("NewCard", false);
+        if (PageLogicObj.m_SetRCardFocusElement != "") {
+            $("#" + PageLogicObj.m_SetRCardFocusElement).focus();
+        }
+    } else {
+        switch (myary[0]) {
+            case "-341": //å·²ç»å»ºå¡
+                //ç»è¿‡è®¨è®ºå¦‚æœå·²ç»å»ºå¡çš„ä¸å¸¦å‡ºå·²æœ‰ä¿¡æ¯
+                var CardNo = $("#CardNo").val();
+                //IntListItemNew();
+                //InitTextItem();
+                //IntHelpControlNew();
+                var myPAPMIStr = $.m({
+                    ClassName: "web.DHCBL.CARD.UCardRefInfo",
+                    MethodName: "GetPAPMIInfoByCardNo",
+                    CardNo: myCardNo,
+                    CardType: PageLogicObj.m_SelectCardTypeRowID
+                }, false);
+                if (myPAPMIStr != "") {
+                    $("#PAPMINo").val(myPAPMIStr.split("^")[1]);
+                    $("#PAPMIRowID").val(myPAPMIStr.split("^")[0]);
+                    var IsTemporaryCard = InitTemporaryCard(CardNo);
+                    if (IsTemporaryCard == "Y") {
+                        $.messager.alert('æç¤º', "æ­¤å¡ä¸ºä¸´æ—¶å¡!");
+                        GetPatDetailByPAPMINo();
+                        SearchSamePatient();
+                        return;
+                    } else {
+                        $("#CardNo").val("");
+                        GetPatDetailByPAPMINo();
+                        SearchSamePatient();
+                    }
+                }
+                CardTypeKeydownHandler();
+                if (PageLogicObj.m_MedicalFlag == 1) {
+                    var flag = ValidateRegInfoByCQU(myary[2]);
+                    if (flag) {
+                        DisableBtn("NewCard", false);
+                        return true;
+                    }
+                }
+                $.messager.alert('æç¤º', "æ­¤å¡å·å·²ç»å­˜åœ¨,ä¸èƒ½å‘å¡!");
+                break;
+            case "-340":
+                $.messager.alert('æç¤º', "æ­¤å¡æ²¡æœ‰å¯¹åº”çš„ç—…äººä¿¡æ¯!");
+                break;
+            case "-350":
+                $.messager.alert('æç¤º', "æ­¤å¡å·²ç»ä½¿ç”¨,ä¸èƒ½é‡å¤å‘å¡!");
+                break;
+            case "-351":
+                var CancelInfo = $.cm({
+                    ClassName: "web.UDHCAccManageCLS7",
+                    MethodName: "GetCancenlInfo",
+                    dataType: "text",
+                    cardno: myCardNo,
+                    CardTypeDR: PageLogicObj.m_SelectCardTypeRowID
+                }, false);
+                $.messager.alert('æç¤º', "æ­¤å¡å·²ç»è¢«æŒ‚å¤±,ä¸èƒ½ä½¿ç”¨,æŒ‚å¤±äºº:" + CancelInfo.split("^")[0] + ",æŒ‚å¤±åŸå› :" + CancelInfo.split("^")[1]);
+                break;
+            case "-352":
+                $.messager.alert('æç¤º', "æ­¤å¡å·²ç»è¢«ä½œåºŸ,ä¸èƒ½ä½¿ç”¨!");
+                break;
+            case "-356":
+                $.messager.alert('æç¤º', "å‘å¡æ—¶,é…ç½®è¦æ±‚æ–°å¢å¡è®°å½•,ä½†æ˜¯æ­¤å¡æ•°æ®è¢«é¢„å…ˆç”Ÿæˆé”™è¯¯!");
+                break;
+            case "-357":
+                $.messager.alert('æç¤º', "å‘å¡æ—¶,é…ç½®è¦æ±‚æ›´æ–°å¡è®°å½•,ä½†æ˜¯æ­¤å¡æ•°æ®æ²¡æœ‰é¢„å…ˆç”Ÿæˆ!");
+                break;
+            case "-358":
+                $.messager.alert('æç¤º', "å‘å¡æ—¶,æ­¤å¡å·²ç»æœ‰å¯¹åº”çš„ç™»è®°å·äº†,ä¸èƒ½å†æ–°å¢!");
+                break;
+            default:
+                $.messager.alert('æç¤º', "Error Code:" + myary[0]);
+                break;
+        }
+        DisableBtn("NewCard", true);
+    }
 }
+
 function DisableBtn(id, disabled) {
-	if (disabled) {
-		$HUI.linkbutton("#" + id).disable();
-	} else {
-		$HUI.linkbutton("#" + id).enable();
-	}
+    if (disabled) {
+        $HUI.linkbutton("#" + id).disable();
+    } else {
+        $HUI.linkbutton("#" + id).enable();
+    }
 }
+
 function ReadRegInfoOnClick() {
-	var myHCTypeDR = $("#IEType").combobox("getValue");
-	var myInfo = DHCWCOM_PersonInfoRead(myHCTypeDR);
-	var myary = myInfo.split("^");
-	if (myary[0] == "0") {
-		SetPatInfoByXML(myary[1]);
-		var CredNo = $("#CredNo").val();
-		$("#IDCardNo1").val(CredNo);
-		//SetIDCredType();
-		IDReadControlDisable(true);
-		if ($("#CountryHome").combobox('getData').length == 0) {
-			LoadCountryData("CountryHome");
-		}
-		$("#CountryHome").combobox('select', 1)
-		BirthOnBlur();
-		BuildAddressByIDCard(CredNo)
-	}
-	//Ê¹ÓÃ¶ÁÈ¡µÃÕÕÆ¬Êı¾İÎÄ¼ş
-	var PhotoInfo = $("#PhotoInfo").val();
-	if (PhotoInfo != "") {
-		var src = "data:image/png;base64," + PhotoInfo;
-	} else {
-		var src = 'c://' + $("#CredNo").val() + ".bmp"
-	}
-	ShowPicBySrcNew(src, "imgPic");
+    var myHCTypeDR = $("#IEType").combobox("getValue");
+    var myInfo = DHCWCOM_PersonInfoRead(myHCTypeDR);
+    var myary = myInfo.split("^");
+    if (myary[0] == "0") {
+        /* SetPatInfoByXML(myary[1]);
+        var CredNo = $("#CredNo").val();
+        $("#IDCardNo1").val(CredNo);
+        //SetIDCredType();
+        IDReadControlDisable(true);
+        if ($("#CountryHome").combobox('getData').length == 0) {
+            LoadCountryData("CountryHome");
+        }
+        $("#CountryHome").combobox('select', 1)
+        BirthOnBlur();
+        var myval = $("#CredType").combobox("getValue");
+        var myCredTypeDR = myval.split("^")[0];
+        if (myval.split("^")[1] == PageLogicObj.m_IDCredTypePlate) {
+            BuildAddressByIDCard(CredNo);
+        } */
+        SetPatInfo(myary[1]);
+        IDReadControlDisable(true);
+    }
+    //ä½¿ç”¨è¯»å–å¾—ç…§ç‰‡æ•°æ®æ–‡ä»¶
+    var PhotoInfo = $("#PhotoInfo").val();
+    if (PhotoInfo != "") {
+        var src = "data:image/png;base64," + PhotoInfo;
+    } else {
+        var src = 'c://' + $("#CredNo").val() + ".bmp"
+            //æ­¤å¤„çš„srcéœ€è¦çœ‹å…·ä½“é¡¹ç›®ç”Ÿæˆçš„è·¯å¾„
+        var PhotoInfo = "";
+        var myrtn = ImageToBase64.ImgToBase64(src);
+        if (typeof myrtn == 'object') { PhotoInfo = myrtn.rtn; }
+        $("#PhotoInfo").val(PhotoInfo);
+        src = "data:image/bmp;base64," + PhotoInfo;
+    }
+    ShowPicBySrcNew(src, "imgPic");
+}
+function SetPatInfo(PatInfoXML) {
+    SetPatInfoByXML(PatInfoXML);
+    var CredNo = $("#CredNo").val();
+    $("#IDCardNo1").val(CredNo);
+    //SetIDCredType();
+    if ($("#CountryHome").combobox('getData').length == 0) {
+        LoadCountryData("CountryHome");
+    }
+    $("#CountryHome").combobox('select', 1)
+    BirthOnBlur();
+    var myval = $("#CredType").combobox("getValue");
+    var myCredTypeDR = myval.split("^")[0];
+    if (myval.split("^")[1] == PageLogicObj.m_IDCredTypePlate) {
+        BuildAddressByIDCard(CredNo);
+    }
 }
 function NewCardclick() {
-	if ($("#NewCard").hasClass('l-btn-disabled')) {
-		return false;
-	}
-	SaveDataToServer();
-	return;
+    if ($("#NewCard").hasClass('l-btn-disabled')) {
+        return false;
+    }
+    SaveDataToServer();
+    return;
 }
+
 function BModifyInfoclick() {
-	var PAPMIRowID = $("#PAPMIRowID").val();
-	if (PAPMIRowID == "") {
-		$.messager.alert("ÌáÊ¾", "ÇëÏÈÑ¡Ôñ²¡ÈË¼ÇÂ¼,ÔÙ¸üĞÂ!");
-		return false;
-	}
-	PageLogicObj.m_MedicalFlag = 1;
-	PageLogicObj.m_ModifiedFlag = 1;
-	//»¼ÕßÖ¤¼şÀàĞÍÎªÉí·İÖ¤Ê±£¬ÑéÖ¤Éí·İÖ¤ºÅÊÇ·ñÒÑ¾­´æÔÚ»¼ÕßĞÅÏ¢£¬Èç¹û´æÔÚÔò²»ÄÜ¸üĞÂ
-	var myExpstr = "";
-	var myIDrtn = IsCredTypeID();
-	if (myIDrtn) {
-		var CredNo = $("#CredNo").val();
-		if (CredNo != "") {
-			myExpstr = CredNo;
-		}
-	}
-	var myPAPMINo = $('#PAPMINo').val();
-	if (myExpstr != "") {
-		var myPatInfo = $.cm({
-			ClassName: "web.DHCBL.CARD.UCardPaPatMasInfo",
-			MethodName: "GetPatInfoByPANo",
-			dataType: "text",
-			PAPMINo: "", ExpStr: myExpstr
-		}, false);
-		var myary = myPatInfo.split("^");
-		if (myary[0] == "0") {
-			var myXMLStr = myary[1];
-			var PAPMIRowID = $("#PAPMIRowID").val();
-			var PatientID = myXMLStr.split("<PAPMIRowID>")[1].split("</PAPMIRowID>")[0];
-			if ((PatientID != "") && (PatientID != PAPMIRowID)) {
-				$.messager.alert("ÌáÊ¾", "´ËÉí·İÖ¤ÒÑ¾­±»Ê¹ÓÃ!", "info", function () {
-					$("#CredNo").focus();
-				})
-				return false;
-			}
-		}
-	}
-	SaveDataToServer();
-	PageLogicObj.m_MedicalFlag = 0;
-	PageLogicObj.m_ModifiedFlag = 0;
+    var PAPMIRowID = $("#PAPMIRowID").val();
+    if (PAPMIRowID == "") {
+        $.messager.alert("æç¤º", "è¯·å…ˆé€‰æ‹©ç—…äººè®°å½•,å†æ›´æ–°!");
+        return false;
+    }
+    PageLogicObj.m_MedicalFlag = 1;
+    PageLogicObj.m_ModifiedFlag = 1;
+    //æ‚£è€…è¯ä»¶ç±»å‹ä¸ºèº«ä»½è¯æ—¶ï¼ŒéªŒè¯èº«ä»½è¯å·æ˜¯å¦å·²ç»å­˜åœ¨æ‚£è€…ä¿¡æ¯ï¼Œå¦‚æœå­˜åœ¨åˆ™ä¸èƒ½æ›´æ–°
+    var myExpstr = "";
+    var myIDrtn = IsCredTypeID();
+    if (myIDrtn) {
+        var CredNo = $("#CredNo").val();
+        if (CredNo != "") {
+            myExpstr = CredNo;
+        }
+    }
+    var myPAPMINo = $('#PAPMINo').val();
+    if (myExpstr != "") {
+        var myPatInfo = $.cm({
+            ClassName: "web.DHCBL.CARD.UCardPaPatMasInfo",
+            MethodName: "GetPatInfoByPANo",
+            dataType: "text",
+            PAPMINo: "",
+            ExpStr: myExpstr
+        }, false);
+        var myary = myPatInfo.split("^");
+        if (myary[0] == "0") {
+            var myXMLStr = myary[1];
+            var PAPMIRowID = $("#PAPMIRowID").val();
+            var PatientID = myXMLStr.split("<PAPMIRowID>")[1].split("</PAPMIRowID>")[0];
+            if ((PatientID != "") && (PatientID != PAPMIRowID)) {
+                $.messager.alert("æç¤º", "æ­¤èº«ä»½è¯å·²ç»è¢«ä½¿ç”¨!", "info", function() {
+                    $("#CredNo").focus();
+                })
+                return false;
+            }
+        }
+    }
+    SaveDataToServer();
+    PageLogicObj.m_MedicalFlag = 0;
+    PageLogicObj.m_ModifiedFlag = 0;
 }
+
 function checkPatYBCode() {
-	var PatYBCode = $('#PatYBCode').val();
-	var myPatType = $("#PatType").combobox("getValue");
-	myPatType = CheckComboxSelData("PatType", myPatType);
-	if ((myPatType == "") || (myPatType == undefined)) {
-		$.messager.alert("ÌáÊ¾", "ÇëÑ¡Ôñ²¡ÈËÀàĞÍ£¡", "info", function () {
-			$('#PatType').next('span').find('input').focus();
-		});
-		return false;
-	}
-	var PatypeDrArray = myPatType.split("^");
-	var PatypeDr = PatypeDrArray[0];
-	var rtn = $.cm({
-		ClassName: "web.DHCBL.CARD.UCardRefInfo",
-		MethodName: "GetInsurFlag",
-		dataType: "text",
-		PatypeDr: PatypeDr
-	}, false);
-	if ((rtn == 0) && (PatYBCode != "")) {
-		$.messager.alert("ÌáÊ¾", "·ÇÒ½±£²¡ÈË,Ò½±£¿¨ºÅ²»¿ÉÌî!", "info", function () {
-			$("#PatYBCode").focus();
-		})
-		return false;
-	}
-	if ((rtn != 0) && (PatYBCode == "")) {
-		$.messager.alert("ÌáÊ¾", "Ò½±£²¡ÈË,ÇëÌîĞ´ÕıÈ·µÄÒ½±£¿¨ºÅ", "info", function () {
-			$("#PatYBCode").focus();
-		})
-		return false;
-	}
-	return true;
+    var PatYBCode = $('#PatYBCode').val();
+    var myPatType = $("#PatType").combobox("getValue");
+    myPatType = CheckComboxSelData("PatType", myPatType);
+    if ((myPatType == "") || (myPatType == undefined)) {
+        $.messager.alert("æç¤º", "è¯·é€‰æ‹©ç—…äººç±»å‹ï¼", "info", function() {
+            $('#PatType').next('span').find('input').focus();
+        });
+        return false;
+    }
+    var PatypeDrArray = myPatType.split("^");
+    var PatypeDr = PatypeDrArray[0];
+    var rtn = $.cm({
+        ClassName: "web.DHCBL.CARD.UCardRefInfo",
+        MethodName: "GetInsurFlag",
+        dataType: "text",
+        PatypeDr: PatypeDr
+    }, false);
+    if ((rtn == 0) && (PatYBCode != "")) {
+        $.messager.alert("æç¤º", "éåŒ»ä¿ç—…äºº,åŒ»ä¿å¡å·ä¸å¯å¡«!", "info", function() {
+            $("#PatYBCode").focus();
+        })
+        return false;
+    }
+    if ((rtn != 0) && (PatYBCode == "")) {
+        $.messager.alert("æç¤º", "åŒ»ä¿ç—…äºº,è¯·å¡«å†™æ­£ç¡®çš„åŒ»ä¿å¡å·", "info", function() {
+            $("#PatYBCode").focus();
+        })
+        return false;
+    }
+    return true;
 }
+
 function SaveDataToServer() {
-	//¸ù¾İÅäÖÃÀ´ÑéÖ¤ ½çÃæÊı¾İÊÇ·ñÍêÕû ,Õâ¸öĞèÒªµ¥¶ÀÀ´Ğ´
-	//ÅäÖÃĞèÒª´«µİµ½ Cache¶ËµÄÊı¾İ´®
-	//µ÷ÓÃCacheº¯Êı
-	//·Ö±ğµ÷ÓÃ´òÓ¡³ÌĞò
-	//1.Èç¹û¿¨ĞèÒªÊÕ·Ñ, ÊÇ·ñ´òÓ¡·¢Æ±,»òÕß´òÓ¡Ğ¡Ìõ(ÈÈÃôÌõ)
-	//2.Èç¹ûÓĞÔ¤½»½ğÊÇ·ñĞèÒª´òÓ¡Ğ¡Ìõ;
-	//3.¸ù¾İ¿¨ÀàĞÍÊÇ·ñ´òÓ¡ÌõĞÎÂë
-	if (!CheckData()) {
-		return false;
-	}
-	DisableBtn("NewCard", true);
-	///ÅäÖÃĞèÒª´«µİµ½ Cache¶ËµÄÊı¾İ´®
-	var myPatInfo = GetPatMasInfo();
-	var myCardInfo = GetCardRefInfo();
-	var myCardInvInfo = GetCardINVInfo();
-	var myAccInfo = GetAccManagerInfo();
-	var myAccDepInfo = GetPreDepositeInfo();
-	var mySecrityNo = "";
-	//Èç¹ûÊÇĞŞ¸Ä²¡ÈË»ù±¾ĞÅÏ¢²»ÔÙÉèÖÃĞ´¿¨¡£
-	if ((PageLogicObj.m_MedicalFlag != "1") && (PageLogicObj.m_UsePANoToCardNO != "Y")) {
-		if (PageLogicObj.m_CardRefFlag == "Y") {
-			if (PageLogicObj.m_OverWriteFlag == "Y") {
-				///ÉèÖÃĞ´¿¨
-				var myrtn = WrtCard();
-				var myary = myrtn.split("^");
-				if (myary[0] != "0") {
-					DisableBtn("NewCard", false);
-					return false;
-				}
-				var mySecrityNo = myary[1];
-			} else {
-				var mySecrityNo = PageLogicObj.m_CardSecrityNo;
-			}
+    //æ ¹æ®é…ç½®æ¥éªŒè¯ ç•Œé¢æ•°æ®æ˜¯å¦å®Œæ•´ ,è¿™ä¸ªéœ€è¦å•ç‹¬æ¥å†™
+    //é…ç½®éœ€è¦ä¼ é€’åˆ° Cacheç«¯çš„æ•°æ®ä¸²
+    //è°ƒç”¨Cacheå‡½æ•°
+    //åˆ†åˆ«è°ƒç”¨æ‰“å°ç¨‹åº
+    //1.å¦‚æœå¡éœ€è¦æ”¶è´¹, æ˜¯å¦æ‰“å°å‘ç¥¨,æˆ–è€…æ‰“å°å°æ¡(çƒ­æ•æ¡)
+    //2.å¦‚æœæœ‰é¢„äº¤é‡‘æ˜¯å¦éœ€è¦æ‰“å°å°æ¡;
+    //3.æ ¹æ®å¡ç±»å‹æ˜¯å¦æ‰“å°æ¡å½¢ç 
+    if (!CheckData()) {
+        return false;
+    }
+    DisableBtn("NewCard", true);
+    ///é…ç½®éœ€è¦ä¼ é€’åˆ° Cacheç«¯çš„æ•°æ®ä¸²
+    var myPatInfo = GetPatMasInfo();
+    var myCardInfo = GetCardRefInfo();
+    var myCardInvInfo = GetCardINVInfo();
+    var myAccInfo = GetAccManagerInfo();
+    var myAccDepInfo = GetPreDepositeInfo();
+    var mySecrityNo = "";
+    //å¦‚æœæ˜¯ä¿®æ”¹ç—…äººåŸºæœ¬ä¿¡æ¯ä¸å†è®¾ç½®å†™å¡ã€‚
+    if ((PageLogicObj.m_MedicalFlag != "1") && (PageLogicObj.m_UsePANoToCardNO != "Y")) {
+        if (PageLogicObj.m_CardRefFlag == "Y") {
+            if (PageLogicObj.m_OverWriteFlag == "Y") {
+                ///è®¾ç½®å†™å¡
+                var myrtn = WrtCard();
+                var myary = myrtn.split("^");
+                if (myary[0] != "0") {
+                    DisableBtn("NewCard", false);
+                    return false;
+                }
+                var mySecrityNo = myary[1];
+            } else {
+                var mySecrityNo = PageLogicObj.m_CardSecrityNo;
+            }
+        }
+    }
+    var Password = "000000";
+    if (PageLogicObj.m_AccManagerFlag == "Y") {
+        var myDefaultPWDFlag = $("#SetDefaultPassword").checkbox('getValue');
+        if (myDefaultPWDFlag) {
+            var ren = DHCACC_GetValidatePWD(Password);
+            var myary = ren.split("^");
+            if (myary[0] == '0') {
+                Password = myary[1];
+            } else {
+                $.messager.alert("æç¤º", "è®¾ç½®å¯†ç å¤±è´¥!");
+                DisableBtn("NewCard", false);
+                return false;
+            }
+        } else {
+            var ren = DHCACC_SetAccPWD();
+            var myary = ren.split("^");
+            if (myary[0] == '0') {
+                Password = myary[1];
+            } else {
+                $.messager.alert("æç¤º", "è®¾ç½®å¯†ç å¤±è´¥!");
+                DisableBtn("NewCard", false);
+                return false;
+            }
+        }
+    }
+    //å› ä¸ºä½¿ç”¨promiseï¼Œæ•…å…¨å±€å˜é‡åœ¨æ­¤å…ˆè®°å½•
+    var DataObj = {};
+    DataObj.m_ModifiedFlag = PageLogicObj.m_ModifiedFlag;
+    DataObj.m_MedicalFlag = PageLogicObj.m_MedicalFlag;
+    DataObj.m_TransferCardFlag = PageLogicObj.m_TransferCardFlag;
+
+    new Promise(function(resolve, rejected) {
+        var CardNo = $("#CardNo").val();
+        var PayModeStr = $("#PayMode").combobox("getValue");
+        if (PayModeStr == "") {
+            $.messager.alert("æç¤º", "è¯·é€‰æ‹©æ”¯ä»˜æ–¹å¼!", "info", function() {
+                $('#PayMode').next('span').find('input').focus();
+            });
+            return false;
+        }
+        var PayModeId = PayModeStr.split("^")[0];
+		var PatPaySum=$("#PatPaySum").val();
+		var PatPaySum=parseFloat(PatPaySum)             //è½¬åŒ–æ­£æ•°å­—ç±»å‹
+		if ((PatPaySum>0)&&(PatPaySum!="")&&(DataObj.m_MedicalFlag!="1")){
+            //ç¬¬ä¸‰æ–¹äº¤æ˜“æ¥å£éƒ¨ç½²
+			RegPayObj.RegPay(PatPaySum,"",PayModeId,"","","","","","","","CARD",resolve)
+        } else {
+            resolve(true);
+        }
+    }).then(function(rtnPay) {
+		if (!rtnPay) {
+			DisableBtn("NewCard",false);
+			return false;
 		}
-	}
-	var Password = "000000";
-	if (PageLogicObj.m_AccManagerFlag == "Y") {
-		var myDefaultPWDFlag = $("#SetDefaultPassword").checkbox('getValue');
-		if (myDefaultPWDFlag) {
-			var ren = DHCACC_GetValidatePWD(Password);
-			var myary = ren.split("^");
-			if (myary[0] == '0') {
-				Password = myary[1];
-			} else {
-				$.messager.alert("ÌáÊ¾", "ÉèÖÃÃÜÂëÊ§°Ü!");
-				DisableBtn("NewCard", false);
-				return false;
-			}
-		} else {
-			var ren = DHCACC_SetAccPWD();
-			var myary = ren.split("^");
-			if (myary[0] == '0') {
-				Password = myary[1];
-			} else {
-				$.messager.alert("ÌáÊ¾", "ÉèÖÃÃÜÂëÊ§°Ü!");
-				DisableBtn("NewCard", false);
-				return false;
-			}
+		var ETPRowID=""
+		if (typeof RegPayObj.PayRtnJsonObj.ETPRowID!="undefined"){
+			ETPRowID=RegPayObj.PayRtnJsonObj.ETPRowID;
 		}
-	}
-	var myConfigInfo = PageLogicObj.m_RegCardConfigXmlData;
-	var mySpecInfo = mySecrityNo;
-	mySpecInfo += "^" + Password;
-	var myExpStr = PageLogicObj.m_MedicalFlag + "^" + PageLogicObj.m_UsePANoToCardNO + "^" + session['LOGON.HOSPID'] + "^" + PageLogicObj.m_TransferCardFlag;
-	myExpStr = myExpStr + "^" + "";
-	var rtn = $.cm({
-		ClassName: "web.DHCBL.CARDIF.ICardRefInfo",
-		MethodName: "SavePCAInfoToServer",
-		dataType: "text",
-		ConfigInfo: myConfigInfo,
-		PaPatInfo: myPatInfo,
-		CardInfo: myCardInfo,
-		AccInfo: myAccInfo,
-		DepositInfo: myAccDepInfo,
-		CardINVInfo: myCardInvInfo,
-		SepcialInfo: mySpecInfo,
-		ExpStr: myExpStr
-	}, false);
-	var myary = rtn.split(String.fromCharCode(1));
-	if (myary[0] == '0') {
-		//¸üĞÂÕÕÆ¬
-		var PhotoInfo = $("#PhotoInfo").val();
-		if (PhotoInfo != "") {
-			$.cm({
-				ClassName: "web.DHCPE.PreIBIUpdate",
-				MethodName: "SavePhoto",
-				dataType: "text",
-				RegNo: PageLogicObj.m_MedicalFlag == 1 ? myary[3].split("^")[0] : myary[6],
-				PhotoInfo: PhotoInfo
-			}, false);
-		}
-		////¸ù¾İÅäÖÃÉèÖÃ´òÓ¡
-		////·¢¿¨Ê±ÊÕ·ÑÆ±¾İ´òÓ¡µÄRowID
-		if (myary[1] != "") {
-			var myCardCost = $("#CardFareCost").val();
-			var myCardCost = parseFloat(myCardCost)             //×ª»¯ÕıÊı×ÖÀàĞÍ
-			if ((myCardCost > 0) && (myCardCost != "")) {
-				PatRegPatInfoPrint(myary[1], PageLogicObj.m_CardINVPrtXMLName, "ReadCardINVEncrypt");
-			}
-		}
-		////Ô¤½»½ğRowID
-		var myAmtValue = $("#amt").val();
-		if ((myAmtValue > 0) && (myary[2] != "")) {
-			//Add Version Contral
-			var myVersion = ServerObj.ConfigVersion;
-			switch (myVersion) {
-				case "1":
-					var mystr = rtn + "^";
-					Print_Click(mystr);
-					break;
-				default:
-					PatRegPatInfoPrint(myary[2], PageLogicObj.m_PrtXMLName, "ReadAccDPEncrypt");
-			}
-		}
-		////´òÓ¡ÌõĞÎÂëµÈ
-		if (myary[3] != "") { }
-		///´òÓ¡Ê×Ò³
-		if (myary[4] != "") {
-			PatRegPatInfoPrint(myary[4], PageLogicObj.m_PatPageXMLName, "ReadFirstPageEncrypt");
-		}
-		// ÉÏ´«Éí·İÖ¤ÕÕÆ¬µ½·şÎñÆ÷ Start
-		/*
-			ChangeStrToPhotoNew(myary[4],mycredobj.value);
-		*/
-		// ÉÏ´«Éí·İÖ¤ÕÕÆ¬µ½·şÎñÆ÷ End
-		if (PageLogicObj.m_ModifiedFlag == 1) {
-			$.messager.alert("ÌáÊ¾", "ĞÅÏ¢ĞŞ¸Ä³É¹¦!");
-			PageLogicObj.m_CurSearchValue = "";
-			SearchSamePatient()
-			return;
-		} else if (PageLogicObj.m_MedicalFlag == 1) {
-			$.messager.alert("ÌáÊ¾", "½¨²¡Àú³É¹¦!");
-			return;
-		}
-		$.messager.alert("ÌáÊ¾", "½¨¿¨³É¹¦!", "info", function () {
-			//Ê¹ÓÃºóÌ¨·µ»ØµÄ¿¨ºÅºÍµÇ¼ÇºÅ´¦Àí½çÃæÖµ£¬Èç¹ûÊÇµÇ¼ÇºÅ×÷Îª¿¨ºÅµÄ´òÓ¡µÇ¼ÇºÅ
-			var CardNo = $("#CardNo").val();
-			if (CardNo == "") {
-				$("#CardNo").val(myary[7]);
-			}
-			var PAPMINo = $("#PAPMINo").val();
-			if (PAPMINo == "") {
-				$("#PAPMINo").val(myary[6]);
-			}
-			if (PageLogicObj.m_UsePANoToCardNO == "Y") {
-				PatInfoPrint("PAPMINo");
-			}
-			if ((window.parent) && (window.parent.SetPassCardNo)) {
-				if (PageLogicObj.m_UsePANoToCardNO == "Y") {
-					window.parent.SetPassCardNo(myary[6]);
-				} else {
-					window.parent.SetPassCardNo(CardNo);
-				}
-				window.parent.destroyDialog("CardReg");
-				return;
-			}
-			/*var par_win = parent.window.opener;
-			if (par_win){
-				var CardNo=$("#CardNo").val();
-				try{
-					if ((par_win)&&(CardNo!='')){
-						par_win.SetPassCardNo(CardNo,PageLogicObj.m_SelectCardTypeRowID);
-					}
-				}catch(e){}
-				window.setTimeout("parent.window.close();",500);
-					return;
-			}*/
-			Clearclick();
-			DisableBtn("NewCard", false);
-		});
-	} else if (myary[0] == '-302') {
-		$.messager.alert("ÌáÊ¾", "´Ë²¡ÈËÒÑ¾­ÓĞÕı³£µÄ¿¨ÁË,²»ÄÜ·¢¿¨!");
-	} else if (myary[0] == '-303') {
-		$.messager.alert("ÌáÊ¾", "¿¨ºÅ²»ÄÜÎª¿Õ,Çë¶Á¿¨!");
-	} else if (myary[0] == '-304') {
-		$.messager.alert("ÌáÊ¾", "´Ë¿¨ºÅÒÑ¾­´æÔÚ,²»ÄÜ·¢¿¨!");
-	} else if (myary[0] == '-365') {
-		$.messager.alert("ÌáÊ¾", "´ËÖ¤¼şºÅÂëÒÑ¾­´æÔÚ,Çë°ìÀíÆäËû¿¨»ò°ìÀí²¹¿¨!");
-	} else if (myary[0] == '-366') {
-		$.messager.alert("ÌáÊ¾", "ÇëÑ¡Ôñ¿¨ÀàĞÍ!");
-	} else if (myary[0] == '-367') {
-		$.messager.alert("ÌáÊ¾", "Ö¤¼şºÅÂë²»ÄÜÎª¿Õ!");
-	} else if (myary[0] == '-369') {
-		$.messager.alert("ÌáÊ¾", "°ìÀí¿¨°ó¶¨Ê±,»ñÈ¡»¼ÕßĞÅÏ¢´íÎó!");
-	} else if (myary[0] == '-364') {
-		$.messager.alert("ÌáÊ¾", "ÒÑ¾­´æÔÚ´Ë¿¨ÀàĞÍÏÂµÄÓĞĞ§¿¨,²»ÔÊĞíÔÙ·¢!");
-	} else if (myary[0] == '-341') {
-		$.messager.alert("ÌáÊ¾", "´Ë¿¨ÒÑ¾­½¨¿¨,²»ÄÜÖØ¸´·¢¿¨!");
-	} else if (myary[0] == '-3411') {
-		$.messager.alert("ÌáÊ¾", "×ªÕıÊ½¿¨Ê§°Ü,Î´ÕÒµ½¶ÔÓ¦µÄ¿¨¼ÇÂ¼,ÇëºËÊµ¿¨ºÅºÍ¿¨ÀàĞÍ!");
-	} else {
-		$.messager.alert("ÌáÊ¾", "Error Code: " + myary[0] + "  ±£´æÊı¾İÊ§°Ü!");
-	}
-	if (myary[0] != '0') {
-		DisableBtn("NewCard", false);
-	}
+        return new Promise(function(resolve, rejected) {
+            var myConfigInfo = PageLogicObj.m_RegCardConfigXmlData;
+            var mySpecInfo = mySecrityNo;
+            mySpecInfo += "^" + Password;
+            var myExpStr = DataObj.m_MedicalFlag + "^" + PageLogicObj.m_UsePANoToCardNO + "^" + session['LOGON.HOSPID'] + "^" + DataObj.m_TransferCardFlag;
+            myExpStr = myExpStr + "^" + "";
+			myExpStr=myExpStr+"^"+ETPRowID;
+            var rtn = $.cm({
+                ClassName: "web.DHCBL.CARDIF.ICardRefInfo",
+                MethodName: "SavePCAInfoToServer",
+                dataType: "text",
+                ConfigInfo: myConfigInfo,
+                PaPatInfo: myPatInfo,
+                CardInfo: myCardInfo,
+                AccInfo: myAccInfo,
+                DepositInfo: myAccDepInfo,
+                CardINVInfo: myCardInvInfo,
+                SepcialInfo: mySpecInfo,
+                ExpStr: myExpStr
+            }, false);
+            var myary = rtn.split(String.fromCharCode(1));
+            if (myary[0] == '0') {
+                //ç¬¬ä¸‰æ–¹äº¤æ˜“æ¥å£ä¿¡æ¯å…³è”
+                RegPayObj.Relation(myary[1], "CARD");
+                //æ›´æ–°ç…§ç‰‡
+                var PhotoInfo = $("#PhotoInfo").val();
+                if (PhotoInfo != "") {
+                    $.cm({
+                        ClassName: "web.DHCBL.CARD.UCardPaPatMasInfo",
+                        MethodName: "SavePhoto",
+                        dataType: "text",
+                        RegNo: PageLogicObj.m_MedicalFlag == 1 ? myary[3].split("^")[0] : myary[6],
+                        PhotoInfo: PhotoInfo
+                    }, false);
+                }
+                ////æ ¹æ®é…ç½®è®¾ç½®æ‰“å°
+                ////å‘å¡æ—¶æ”¶è´¹ç¥¨æ®æ‰“å°çš„RowID
+                if (myary[1] != "") {
+                    var myCardCost = $("#CardFareCost").val();
+                    var myCardCost = parseFloat(myCardCost) //è½¬åŒ–æ­£æ•°å­—ç±»å‹
+                    if ((myCardCost > 0) && (myCardCost != "")) {
+                        PatRegPatInfoPrint(myary[1], PageLogicObj.m_CardINVPrtXMLName, "ReadCardINVEncrypt");
+                    }
+                }
+                ////é¢„äº¤é‡‘RowID
+                var myAmtValue = $("#amt").val();
+                if ((myAmtValue > 0) && (myary[2] != "")) {
+                    //Add Version Contral
+                    var myVersion = ServerObj.ConfigVersion;
+                    switch (myVersion) {
+                        case "1":
+                            var mystr = rtn + "^";
+                            Print_Click(mystr);
+                            break;
+                        default:
+                            PatRegPatInfoPrint(myary[2], PageLogicObj.m_PrtXMLName, "ReadAccDPEncrypt");
+                    }
+                }
+                ////æ‰“å°æ¡å½¢ç ç­‰
+                if (myary[3] != "") {}
+                ///æ‰“å°é¦–é¡µ
+                if (myary[4] != "") {
+                    PatRegPatInfoPrint(myary[4], PageLogicObj.m_PatPageXMLName, "ReadFirstPageEncrypt");
+                }
+                if (DataObj.m_ModifiedFlag == 1) {
+                    $.messager.alert("æç¤º", "ä¿¡æ¯ä¿®æ”¹æˆåŠŸ!");
+                    PageLogicObj.m_CurSearchValue = "";
+                    SearchSamePatient();
+                    //è°ƒç”¨å›è°ƒå‡½æ•°
+                    resolve();
+                    //return;
+                } else if (DataObj.m_MedicalFlag == 1) {
+                    $.messager.alert("æç¤º", "å»ºç—…å†æˆåŠŸ!");
+                    //è°ƒç”¨å›è°ƒå‡½æ•°
+                    resolve();
+                    //return;
+                } else {
+                    $.messager.alert("æç¤º", "å»ºå¡æˆåŠŸ!", "info", function() {
+                        //ä½¿ç”¨åå°è¿”å›çš„å¡å·å’Œç™»è®°å·å¤„ç†ç•Œé¢å€¼ï¼Œå¦‚æœæ˜¯ç™»è®°å·ä½œä¸ºå¡å·çš„æ‰“å°ç™»è®°å·
+                        var CardNo = $("#CardNo").val();
+                        if (CardNo == "") {
+                            $("#CardNo").val(myary[7]);
+                        }
+                        var PAPMINo = $("#PAPMINo").val();
+                        if (PAPMINo == "") {
+                            $("#PAPMINo").val(myary[6]);
+                        }
+                        if (PageLogicObj.m_UsePANoToCardNO == "Y") {
+                            PatInfoPrint("PAPMINo");
+                        }
+			
+			var argObj = { CardTypeDR: PageLogicObj.m_SelectCardTypeRowID, CardNo: myary[7], PatientID: myary[4] };
+                        var rtn = PrintQRCode(argObj);
+			
+                        if ((window.parent) && (window.parent.SetPassCardNo)) {
+                            if (PageLogicObj.m_UsePANoToCardNO == "Y") {
+                                window.parent.SetPassCardNo(myary[6]);
+                            } else {
+                                window.parent.SetPassCardNo(CardNo);
+                            }
+                            window.parent.destroyDialog("CardReg");
+                            //è°ƒç”¨å›è°ƒå‡½æ•°
+                            resolve();
+                            //return;
+                        }
+                        Clearclick();
+                        DisableBtn("NewCard", false);
+                    });
+                    //è°ƒç”¨å›è°ƒå‡½æ•°
+                    resolve(true);
+                }
+            } else {
+                //lxz ç¬¬ä¸‰æ–¹æ”¯ä»˜äº¤æ˜“æ¥å£é€€å›
+                RegPayObj.ErrCard();
+                var errmsg = GetErrMsg(myary[0]);
+				//å•æ¬¡å……å€¼ä¸Šé™åˆ¤æ–­ç”±äºè¿”å›-1é€šè¿‡è¿”å›çš„æè¿°æç¤º
+                if ((typeof myary[2]!="undefined")&&(myary[2]!="")&&(errmsg == "")) {
+	            	errmsg=myary[2];    
+	            }
+                if (errmsg == "") errmsg = "Error Code: " + myary[0] + "  ä¿å­˜æ•°æ®å¤±è´¥!";
+                $.messager.alert("æç¤º", errmsg);
+                DisableBtn("NewCard", false);
+                return false
+            }
+        })
+    })
 }
+
 function CardNokeydown(e) {
-	var key = websys_getKey(e);
-	if (key == 13) {
-		if (!SetCardNOLength()) return false;
-	}
-}
-function PatPaySumKeyPress(e) {
-	var key = event.keyCode;
-	if (key == 13) {
-		var PatPaySum = $("#PatPaySum").val();
-		var CardFareCost = $("#CardFareCost").val()
-		$("#amt").val(DHCCalCom(PatPaySum, CardFareCost, "-"));
-		var myChange = $("#amt");
-		if ((isNaN(myChange)) || (myChange == "")) {
-			myChange = 0;
-		}
-		myChange = parseFloat(myChange);
-		if (myChange < 0) {
-			$.messager.alert("ÌáÊ¾", "ÊäÈë·ÑÓÃ½ğ¶î´íÎó!", "info", function () {
-				$("#PatPaySum").focus();
-			})
-		}
-	}
-}
-function DHCCalCom(value1, value2, caloption) {
-	var mynum1 = parseFloat(value1);
-	if (isNaN(mynum1)) { var mynum1 = 0; }
-	var mynum2 = parseFloat(value2);
-	if (isNaN(mynum2)) { mynum2 = 0; }
-	switch (caloption) {
-		case "-":
-			var myres = mynum1 - mynum2;
-			break;
-		case "+":
-			var myres = mynum1 + mynum2;
-			break;
-		case "*":
-			var myres = mynum1 * mynum2;
-			break;
-		case "%":
-			var myres = mynum2 / mynum1;
-			break;
-		default:
-			var myres = mynum1 * mynum2;
-			break;
-	}
-	myres = parseFloat(myres) + 0.0000001;
-	myres = myres.toFixed(2); //.toString();
-	return myres.toFixed(2);
-}
-function TransferCardClick(e) {
-	if ($("#TransferCard").hasClass('l-btn-disabled')) {
-		return false;
-	}
-	var CardNo = $("#CardNo").val();
-	if (CardNo == "") {
-		$.messager.alert("ÌáÊ¾", "¿¨ºÅ²»ÄÜÎª¿Õ¡£×ªÕıÊ½¿¨Ç°£¬ÇëË«»÷ÁÙÊ±¿¨¼ÇÂ¼´ø³öÁÙÊ±¿¨ºÅ!", "info", function () {
-			$("#CardNo").focus();
-		});
-		return false;
-	}
-	var myval = $("#CardTypeDefine").combobox('getValue');
-	var myCardTypeDR = myval.split("^")[0];
-	var myCardType = myval.split("^")[2];
-	var TemporaryCardFlag = $.m({
-		ClassName: "web.DHCBL.CARD.UCardRefInfo",
-		MethodName: "GetTemporaryCardFlag",
-		CardTypeId: myCardTypeDR
-	}, false)
-	if (TemporaryCardFlag != "Y") {
-		$.messager.alert("ÌáÊ¾", myCardType + " ÎŞÁÙÊ±¿¨È¨ÏŞ!");
-		return false;
-	}
-	PageLogicObj.m_MedicalFlag = 1;
-	PageLogicObj.m_ModifiedFlag = 1;
-	PageLogicObj.m_TransferCardFlag = 1;
-	$("#TemporaryCard").switchbox("setValue", false);
-	setTimeout(function () {
-		SaveDataToServer();
-		PageLogicObj.m_MedicalFlag = 0;
-		PageLogicObj.m_ModifiedFlag = 0;
-		PageLogicObj.m_TransferCardFlag = 0;
-	});
-}
-function InitTemporaryCard(CardNo) {
-	if (!CardNo) CardNo = "";
-	if (CardNo != "") {
-		var myval = $("#CardTypeDefine").combobox('getValue');
-		var myCardTypeDR = myval.split("^")[0];
-		var Data = $.m({
-			ClassName: "web.DHCBL.CARD.UCardRefInfo",
-			MethodName: "GetTemporaryCardFlag",
-			CardTypeId: myCardTypeDR,
-			CardNo: CardNo
-		}, false)
-	} else {
-		var Data = PageLogicObj.m_CTDTemporaryCardFlag;
-	}
-	if (Data == "Y") {
-		$("#TemporaryCard").switchbox('setActive', true)
-		var Val = CardNo ? true : false
-		$("#TemporaryCard").switchbox('setValue', Val)
-		DisableBtn("TransferCard", false);
-	} else {
-		$("#TemporaryCard").switchbox('setActive', false)
-		$("#TemporaryCard").switchbox('setValue', false)
-		DisableBtn("TransferCard", true);
-	}
-	return Data
-}
-function IntDoc() {
-	var myary = ServerObj.DefaultAccPara.split("^");
-	if (isNaN(myary[0])) {
-		var myVal = 0;
-	} else {
-		var myVal = parseInt(myary[0]);
-	}
-	if (myVal == 1) myVal = true;
-	else myVal = false;
-	$("#SetDefaultPassword").checkbox('setValue', myVal);
-	if (myVal) {
-		$("#SetDefaultPassword").checkbox('disable')
-	} else {
-		$("#SetDefaultPassword").checkbox('enable')
-	}
-	if (isNaN(myary[14])) {
-		var myVal = 0;
-	} else {
-		var myVal = parseInt(myary[14]);
-	}
-	$("#DepPrice").val(myVal);
-	GetCurrentRecNo();
-	var src = "../images/uiimages/patdefault.png";
-	ShowPicBySrcNew(src, "imgPic");
-}
-function GetCurrentRecNo() {
-	/*$.m({
-		ClassName:"web.UDHCAccAddDeposit",
-		MethodName:"GetCurrentRecNo",
-		userid:session['LOGON.USERID'],
-		type:"D"
-	},function(ren){
-		var myary=ren.split("^");
-		if (myary.length>5) PageLogicObj.m_ReceiptsType=myary[5];
-		if (myary[0]=='0'){
-			$("#ReceiptsNo").val(myary[3]);
-		}
-	});*/
-	var myary = ServerObj.DefaultCurrentRecNoPara.split("^");
-	if (myary.length > 5) PageLogicObj.m_ReceiptsType = myary[5];
-	if (myary[0] == '0') {
-		$("#ReceiptsNo").val(myary[3]);
-	}
-}
-function prtClick() {
-	if ($("#PAPMINo").val() == "") {
-		$.messager.alert("ÌáÊ¾", "²¡ÈËID²»ÄÜÎª¿Õ!");
-		return false;
-	}
-	PatInfoPrint("PAPMINo");
-}
-function PatInfoPrint(ElementName) {
-	var PatInfoXMLPrint = "PatInfoPrint";
-	var Char_2 = "\x02";
-	var InMedicare = $("#InMedicare").val();
-	var Name = $("#Name").val();
-	var RegNo = $("#" + ElementName).val();
-	//Èç¹ûµÇ¼ÇºÅ´æÔÚÈ¥ºóÌ¨È¡»¼ÕßĞÕÃû
-	if (RegNo != "") {
-		var PatStr = $.cm({
-			ClassName: "web.DHCDocOrderEntry",
-			MethodName: "GetPatientByNo",
-			dataType: "text",
-			PapmiNo: RegNo
-		}, false)
-		if (PatStr != "") { Name = PatStr.split("^")[2] }
-	}
-	var TxtInfo = "TPatName" + Char_2 + "ĞÕ  Ãû:" + "^Name" + Char_2 + Name + "^TRegNo" + Char_2 + "²¡ÈËID:" + "^RegNo" + Char_2 + RegNo + "^RegNoTM" + Char_2 + "*" + RegNo + "*"
-	if (InMedicare != "") TxtInfo = TxtInfo + "^TMedicareNo" + Char_2 + "²¡°¸ºÅ:" + "^MedicareNo" + Char_2 + InMedicare;
-	var ListInfo = "";
-	DHCP_GetXMLConfig("DepositPrintEncrypt", PatInfoXMLPrint);
-	//var myobj = document.getElementById("ClsBillPrint");
-	//DHCP_PrintFun(myobj, TxtInfo, ListInfo);
-	DHC_PrintByLodop(getLodop(), TxtInfo, ListInfo, "", "");
-}
-function CardSearchCallBack(cardno, Regno, patientid) {
-	$("#PAPMINo").val(Regno);
-	ValidateRegInfoByCQU(patientid);
-}
-function ValidateRegInfoByCQU(PAPMIDR) {
-	var myval = $("#CardTypeDefine").combobox('getValue');
-	var myCardTypeDR = myval.split("^")[0];
-	var myValidateMode = myval.split("^")[30];
-	if (myValidateMode == "CQU") {
-		var myInfo = $.cm({
-			ClassName: "web.DHCBL.CARD.UCardPATRegConfig",
-			MethodName: "ReadConfigByCQU",
-			dataType: "text",
-			PAPMIDR: PAPMIDR, CardTypeDR: myCardTypeDR, SessionStr: ""
-		}, false)
-		var myary = myInfo.split(String.fromCharCode(1));
-		switch (myary[0]) {
-			case "0":
-				break;
-			case "-368":
-				PageLogicObj.m_RegCardConfigXmlData = myary[1];
-				var myPatInfoXmlData = myary[2];
-				var myRepairFlag = myary[3];
-				SetPatInfoByXML(myPatInfoXmlData);
-				GetPatDetailByPAPMINo();
-				SetPatRegCardDefaultConfigValue(myary[4]);
-				break;
-			case "-365":
-				$.messager.alert("ÌáÊ¾", "´ËÖ¤¼şºÅÂëÒÑ¾­´æÔÚ,Çë°ìÀíÆäËû¿¨»ò°ìÀí²¹¿¨!");
-				break;
-			default:
-				$.messager.alert("ÌáÊ¾", "" + " Err Code=" + myary[0]);
-				break;
-		}
-	} else {
-		GetPatDetailByPAPMINo();
-	}
-}
-function CardSearchClick() {
-	var src = "reg.cardsearchquery.hui.csp";
-	var $code = "<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='" + src + "'></iframe>";
-	createModalDialog("FindPatReg", "¿¨²éÑ¯", 1260, PageLogicObj.dh, "icon-w-find", "", $code, "");
-}
-function OtherCredTypeInput() {
-	var src = "doc.othercredtype.hui.csp?OtherCardInfo=" + $("#OtherCardInfo").val();;
-	var $code = "<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='" + src + "'></iframe>";
-	createModalDialog("OtherCredTypeManager", "ÆäËûÖ¤¼ş¹ÜÀí", "500", "350", "icon-w-list", "", $code, "");
-}
-function CardUniteClick() {
-	var src = "reg.dhcpatcardunite.hui.csp"; //websys.default.csp?WEBSYS.TCOMPONENT=DHCPATCardUnite
-	var $code = "<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='" + src + "'></iframe>";
-	createModalDialog("Find", "¿¨ºÏ²¢", PageLogicObj.dw + 150, PageLogicObj.dh + 100, "icon-w-edit", "", $code, "");
-}
-function CardTypeSave(newData) {
-	$("#OtherCardInfo").val(newData);
-}
-function PatTypeOnChange() {
-	var myoptval = $("#PatType").combobox("getText");
-	if (myoptval == "±¾ÔºÖ°¹¤") {
-		$("#CardFareCost").val("0");
-	} else {
-		$("#CardFareCost").val(PageLogicObj.m_CardCost);
-	}
-}
-function Doc_OnKeyDown(e) {
-	if (window.event) {
-		var keyCode = window.event.keyCode;
-		var type = window.event.type;
-		var SrcObj = window.event.srcElement;
-	} else {
-		var keyCode = e.which;
-		var type = e.type;
-		var SrcObj = e.target;
-	}
-	if (keyCode == 13) {
-		if ((SrcObj.tagName == "A") || (SrcObj.tagName == "INPUT")) {
-			if ($(".window-mask").is(":visible")) {
-				$(".messager-button a").click();
-				return false;
-			}
-			var myComName = SrcObj.id;
-			if (myComName == "CardNo") {
-				CardNokeydown(e);
-			}/*else if(myComName=="PAPMINo"){
-				PAPMINoOnKeyDown(e);
-			}*/if (myComName == "ForeignIDCard") {
-				ForeignIDCardOnKeyPress(e);
-			} else if (myComName == "CredNo") {
-				CredNoOnKeyPress(e);
-			} else if (myComName == "PatPaySum") {
-				PatPaySumKeyPress(e);
-			}
-			return DOMFocusJump(myComName);
-		}
-		return true;
-	}
-	if (((event.altKey) && ((event.keyCode == 82) || (event.keyCode == 114)))) {
-		DisableBtn("BReadCard", false);
-		ReadCardClickHandle();
-	}
-	if ((event.keyCode == 119)) {
-		ReadRegInfoOnClick();
-	}
-	if (event.keyCode == 118) {
-		Clearclick();
-	} else if (event.keyCode == 120) {
-		CardSearchClick();
-	}
-	if (((event.altKey) && ((event.keyCode == 67) || (event.keyCode == 99)))) {
-		NewCardclick();
-	}
-}
-function InitAddressCombo() {
-	var cbox = $HUI.combobox("#Address,#RegisterPlace", {
-		valueField: 'provid',
-		textField: 'provdesc',
-		editable: true,
-		mode: "remote",
-		delay: "500",
-		url: $URL + "?ClassName=web.DHCBL.CTBASEIF.ICTCardRegLB&QueryName=admaddressNewlookup&rows=999999",
-		onBeforeLoad: function (param) {
-			var desc = "";
-			if (param['q']) {
-				desc = param['q'];
-			}
-			param = $.extend(param, { desc: desc });
-		},
-		loadFilter: function (data) {
-			return data['rows'];
-		}
-	});
-	//$("#Address").combobox("resize","625");
-}
-function BAddressInoCollapsClick() {
-	if ($(".addressinfo").css("display") == "none") {
-		$(".addressinfo-div").removeClass("addressinfo-collapse").addClass("addressinfo-expand");
-		$(".addressinfo").show();
-		$("#BAddressInoCollaps .l-btn-text")[0].innerText = "Òş²ØÈ«²¿";
-		if (PageLogicObj.m_IsNotStructAddress == "Y") {
-			$("#Address").combobox("resize", 547);
-			$("#RegisterPlace").combobox("resize", 110);
-		}
-	} else {
-		$(".addressinfo-div").removeClass("addressinfo-expand").addClass("addressinfo-collapse");
-		$(".addressinfo").hide();
-		$("#BAddressInoCollaps .l-btn-text")[0].innerText = "Õ¹¿ªÈ«²¿";
-	}
-}
-function BPayInoCollapsClick() {
-	if ($(".payinfo").css("display") == "none") {
-		$(".payinfo-div").removeClass("payinfo-collapse").addClass("payinfo-expand");
-		$(".payinfo").show();
-		$("#BPayInoCollaps .l-btn-text")[0].innerText = "Òş²ØÈ«²¿";
-	} else {
-		$(".payinfo-div").removeClass("payinfo-expand").addClass("payinfo-collapse");
-		$(".payinfo").hide();
-		$("#BPayInoCollaps .l-btn-text")[0].innerText = "Õ¹¿ªÈ«²¿";
-	}
-}
-function BBaseInoCollapsClick() {
-	if ($(".baseinfo").css("display") == "none") {
-		$(".baseinfo-div").removeClass("baseinfo-collapse").addClass("baseinfo-expand");
-		$(".baseinfo").show();
-		$("#BBaseInoCollaps .l-btn-text")[0].innerText = "Òş²ØÈ«²¿";
-	} else {
-		$(".baseinfo-div").removeClass("baseinfo-expand").addClass("baseinfo-collapse");
-		$(".baseinfo").hide();
-		$("#BBaseInoCollaps .l-btn-text")[0].innerText = "Õ¹¿ªÈ«²¿";
-	}
-}
-function CheckData() {
-	var IsTemporaryCard = $("#TemporaryCard").switchbox("getValue")
-	if (IsTemporaryCard) {
-		var myCardNo = $("#CardNo").val();
-		if ((PageLogicObj.m_UsePANoToCardNO != "Y") && (myCardNo == "")) {
-			$.messager.alert("ÌáÊ¾", "ÇëÊäÈëÁÙÊ±¿¨¿¨ºÅ!", "info", function () { $("#CardNo").focus(); });
-			return false;
-		}
-		var myName = $("#Name").val();
-		if (myName == "") {
-			$.messager.alert("ÌáÊ¾", "ÇëÊäÈë»¼ÕßĞÕÃû!", "info", function () { $("#Name").focus(); });
-			return false;
-		}
-		var mySex = $("#Sex").combobox("getValue");
-		if ((mySex == "") || (mySex == undefined)) {
-			$.messager.alert("ÌáÊ¾", "ÇëÑ¡ÔñĞÔ±ğ!", "info", function () {
-				$('#Sex').next('span').find('input').focus();
-			});
-			return false;
-		}
-		var PAPMIRowID = $("#PAPMIRowID").val();
-		if ((PAPMIRowID == "") && (!ChkCardCost())) return false;
-		return true;	//ÁÙÊ±¿¨Ö»ĞèÒªÑéÖ¤ĞÕÃû¡¢ĞÔ±ğ¡¢¿¨·ÑÓÃ
-	}
-	if (PageLogicObj.m_PatMasFlag == "Y") {
-		var IsNullInfo = "", FocusName = "";
-		//±ØÌîÏîÄ¿ÑéÖ¤
-		var myrtn = true;
-		for (var i = 0; i < PageLogicObj.m_CardRegMustFillInArr.length; i++) {
-			var id = PageLogicObj.m_CardRegMustFillInArr[i]['id'];
-			var text = PageLogicObj.m_CardRegMustFillInArr[i]['text'];
-			var val = getValue(id);
-			if (val == "") {
-				if (IsNullInfo == "") IsNullInfo = text, FocusName = id;
-				else IsNullInfo = IsNullInfo + " , " + text;
+    var key = websys_getKey(e);
+    if (key == 13) {        
+        var argObj = { CardTypeDR: PageLogicObj.m_SelectCardTypeRowID, CardNo: $("#CardNo").val() };
+        var PatInfo = CardCommon_ControlObj.GetQRPatInfo(argObj);
+        if (PatInfo) {
+            SetPatInfo(PatInfo);
+        }
 
-			}
-		}
-		if (IsNullInfo != "") {
-			$.messager.alert("ÌáÊ¾", "ÇëÊäÈë<font color=red>" + IsNullInfo + "</font> !", "info", function () {
-				setFocus(FocusName)
-			});
-			return false;
-		}
-	}
-	var myExpstr = "";
-	//»¼ÕßÖ¤¼şÀàĞÍÎªÉí·İÖ¤Ê±£¬ÑéÖ¤Éí·İÖ¤ºÅÊÇ·ñÒÑ¾­´æÔÚ»¼ÕßĞÅÏ¢£¬Èç¹û´æÔÚÔò¸üĞÂ»¼ÕßĞÅÏ¢
-	var myIDrtn = IsCredTypeID();
-	if (myIDrtn) {
-		var CredNo = $("#CredNo").val();
-		if (CredNo != "") {
-			myExpstr = CredNo;
-		}
-	}
-	var myPAPMINo = $('#PAPMINo').val();
-	if ((myPAPMINo != "") || (myExpstr != "")) {
-		var myPatInfo = $.cm({
-			ClassName: "web.DHCBL.CARD.UCardPaPatMasInfo",
-			MethodName: "GetPatInfoByPANo",
-			dataType: "text",
-			PAPMINo: myPAPMINo, ExpStr: myExpstr
-		}, false);
-		var myary = myPatInfo.split("^");
-		if (myary[0] == "2001") {
-			$.messager.alert("ÌáÊ¾", "ÎŞ´ËµÇ¼ÇºÅµÄ»¼Õß,²»ÄÜ½¨¿¨!", "info", function () {
-				$("#PAPMINo").focus();
-			});
-			return false;
-		} else if (myary[0] == "0") {
-			var myXMLStr = myary[1];
-			var PatientID = myXMLStr.split("<PAPMIRowID>")[1].split("</PAPMIRowID>")[0];
-			if (PatientID != "") {
-				$("#PAPMIRowID").val(PatientID);
-			} else {
-				$("#PAPMIRowID").val("");
-			}
-		}
-	}
-	var PAPMIRowID = $("#PAPMIRowID").val();
-	//ÑéÖ¤»¼ÕßĞÅÏ¢(ĞÕÃû¡¢ĞÔ±ğ¡¢³öÉúÈÕÆÚ¡¢ÁªÏµµç»°)ÊÇ·ñ´æÔÚÒ»ÖÂµÄ»¼Õß
-	if (!PatInfoUnique()) {
-		return false;
-	}
-	var InsuNo = $('#PatYBCode').val();
-	//Ò½±£ÊÖ²áºÅ
-	if ((InsuNo != "") && (InsuNo != "99999999999S")) {
-		var Rtn = $.cm({
-			ClassName: "web.DHCBL.Patient.DHCPatient",
-			MethodName: "PatUniInfoQuery",
-			dataType: "text",
-			PatientDr: PAPMIRowID, Type: "InsuNo", NoStr: InsuNo
-		}, false);
-		if (Rtn > 0) {
-			$.messager.alert("ÌáÊ¾", InsuNo + "Ò½±£ºÅÒÑ±»Ê¹ÓÃ!", "info", function () {
-				$("#PatYBCode").focus();
-			});
-			return false
-		}
-	}
-	var OpMedicareObj = document.getElementById('OpMedicare');
-	if (PageLogicObj.m_PatMasFlag == "Y") {
-		var myBirthTime = $("#BirthTime").val();
-		if (myBirthTime != "") {
-			var regTime = /^([0-2][0-9]):([0-5][0-9]):([0-5][0-9])$/;
-			if (!regTime.test(myBirthTime)) {
-				$.messager.alert("ÌáÊ¾", "ÇëÊäÈëÕıÈ·µÄ³öÉúÊ±¼ä!", "info", function () {
-					$("#BirthTime").focus();
-				});
-				return false;
-			}
-		}
-		/*var IsNullInfo="",FocusIndex=""
-		var myTelHome=$("#TelHome").val();
-		if (myTelHome=="")
-		{
-			IsNullInfo="ÁªÏµµç»°"
-			FocusIndex="TelHome"
-			//$.messager.alert("ÌáÊ¾","ÇëÊäÈëÁªÏµµç»°!","info",function(){
-			//	$("#TelHome").focus();
-			//});
-			//return false;
-		}
-		var myMobPhone=$("#MobPhone").val();
-		if (myMobPhone!=""){
-			if(myMobPhone.length!="11"){
-				$.messager.alert("ÌáÊ¾","ÊÖ»úºÅÂë³¤¶È´íÎó,Ó¦Îª¡¾11¡¿Î»,ÇëºËÊµ!","info",function(){
-					$("#MobPhone").focus();
-				});
-				return false;
-			}
-		}
-		var myName=$("#Name").val();
-		if (myName==""){
-			if (IsNullInfo=="")	{
-				IsNullInfo="»¼ÕßĞÕÃû"
-				FocusIndex="Name"
-			}
-			else IsNullInfo=IsNullInfo+"¡¢»¼ÕßĞÕÃû"
-			//$.messager.alert("ÌáÊ¾","ÇëÊäÈë»¼ÕßĞÕÃû!","info",function(){
-			//	$("#Name").focus();
-			//});
-			//return false;
-		}
-		var mySex=$("#Sex").combobox("getValue");
-		if ((mySex=="")||(mySex==undefined)){
-			if (IsNullInfo=="")	{
-				IsNullInfo="ĞÔ±ğ"
-				FocusIndex="Sex"
-			}
-			else IsNullInfo=IsNullInfo+"¡¢ĞÔ±ğ"
-			//$.messager.alert("ÌáÊ¾","ÇëÑ¡ÔñĞÔ±ğ!","info",function(){
-			//	$("#Sex").focus();
-			//});
-			//return false;
-		}
-		var myPatType= $("#PatType").combobox("getValue");
-		myPatType=CheckComboxSelData("PatType",myPatType);
-		if ((myPatType=="")||(myPatType==undefined)){
-			if (IsNullInfo=="")	{
-				IsNullInfo="»¼ÕßÀàĞÍ"
-				FocusIndex="PatType"
-			}
-			else IsNullInfo=IsNullInfo+"¡¢»¼ÕßÀàĞÍ"
-			//$.messager.alert("ÌáÊ¾","ÇëÑ¡Ôñ»¼ÕßÀàĞÍ!","info",function(){
-			//	$("#PatType").focus();
-			//});
-			//return false;
-		}
-		var myBirth=$("#Birth").val();
-		if (myBirth==""){
-			if (IsNullInfo=="")	{
-				IsNullInfo="³öÉúÈÕÆÚ"
-				FocusIndex="Birth"
-			}
-			else IsNullInfo=IsNullInfo+"¡¢³öÉúÈÕÆÚ"
-			//$.messager.alert("ÌáÊ¾","ÇëÊäÈë³öÉúÈÕÆÚ!","info",function(){
-			//	$("#Birth").focus();
-			//});
-			//return false;
-		}
-		if (IsNullInfo!=""){
-			$.messager.alert("ÌáÊ¾",IsNullInfo+"²»ÄÜÎª¿Õ!","info",function(){
-				$("#"+FocusIndex).focus();
-			});
-			return false;
-		}*/
-		//·ÇÒ½±£ÀàĞÍ²»ÄÜÌîĞ´Ò½±£ºÅ
-		if (!checkPatYBCode()) return false;
-		if (!BirthCheck()) return false;
-		if (!ForeignIDCardOnKeyPress()) return false;
-		var myTelHome = $("#TelHome").val();
-		if (myTelHome != "") {
-			if (!CheckTelOrMobile(myTelHome, "TelHome", "ÁªÏµµç»°")) return false;
-		}
-		var myMobPhone = $("#MobPhone").val();
-		if (myMobPhone != "") {
-			if (!CheckTelOrMobile(myMobPhone, "MobPhone", "ÊÖ»ú")) return false;
-		}
-		var myTelOffice = $("#TelOffice").val();
-		if (myTelOffice != "") {
-			if (!CheckTelOrMobile(myTelOffice, "TelOffice", "°ì¹«µç»°")) return false;
-		}
-		var myBirth = $("#Birth").val();
-		if (myBirth != "") {
-			if (ServerObj.dtformat == "YMD") {
-				var reg = /^(([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})-(((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)-(0[1-9]|[12][0-9]|30))|(02-(0[1-9]|[1][0-9]|2[0-8]))))|((([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))-02-29)$/;
-			}
-			if (ServerObj.dtformat == "DMY") {
-				var reg = /^(((0[1-9]|[12][0-9]|3[01])\/((0[13578]|1[02]))|((0[1-9]|[12][0-9]|30)\/(0[469]|11))|(0[1-9]|[1][0-9]|2[0-8])\/(02))\/([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3}))|(29\/02\/(([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00)))$/;
-			}
-			var ret = myBirth.match(reg);
-			if (ret == null) {
-				$.messager.alert("ÌáÊ¾", "ÇëÊäÈëÕıÈ·µÄ³öÉúÈÕÆÚ!", "info", function () {
-					$("#Birth").focus();
-				});
-				return false;
-			}
-			if (ServerObj.dtformat == "YMD") {
-				var myrtn = DHCWeb_IsDate(myBirth, "-")
-			}
-			if (ServerObj.dtformat == "DMY") {
-				var myrtn = DHCWeb_IsDate(myBirth, "/")
-			}
-			if (!myrtn) {
-				$.messager.alert("ÌáÊ¾", "ÇëÊäÈëÕıÈ·µÄ³öÉúÈÕÆÚ!", "info", function () {
-					$("#Birth").focus();
-				});
-				return false;
-			} else {
-				var mybirth1 = $("#Birth").val();
-				var Checkrtn = CheckBirth(mybirth1);
-				if (Checkrtn == false) {
-					$.messager.alert("ÌáÊ¾", "³öÉúÈÕÆÚ²»ÄÜ´óÓÚ½ñÌì»òÕßĞ¡ÓÚ¡¢µÈÓÚ1840Äê!", "info", function () {
-						$("#Birth").focus();
-					});
-					return false;
-				}
-			}
-			var mybirth = $("#Birth").val();
-			var myage = $("#Age").val();
-			var mybirthTime = $("#BirthTime").val();
-			var ageStr = $.cm({
-				ClassName: "web.UDHCJFCOMMON",
-				MethodName: "DispPatAge",
-				dataType: "text",
-				birthDate: mybirth, admDate: "", birthTime: mybirthTime, admTime: "", controlFlag: "N",
-				hospId: session['LOGON.HOSPID']
-			}, false);
-			if ((ageStr.split("||")[1] != myage) && (ageStr.split("||")[0] != myage)) {
-				$.messager.alert("ÌáÊ¾", "³öÉúÈÕÆÚ²»ÄÜÓëÄê¼Í²»ÏàµÈ!", "info", function () {
-					$("#Birth").focus();
-				});
-				return false;
-			}
-		}
-		//½ö½¨²¡ÀúÏÂÁĞÌáÊ¾ĞÅÏ¢Îª±ØÌî
-		if ((PageLogicObj.m_MedicalFlag == 1) && (PageLogicObj.m_ModifiedFlag == 0)) {
-			if (PageLogicObj.m_IsNotStructAddress == "Y") {
-				var myAddress = $("#Address").combobox("getText");
-				if (myAddress == "") {
-					$.messager.alert("ÌáÊ¾", "Ã»ÓĞµØÖ·,ÇëÌîĞ´µØÖ·!", "info", function () {
-						$('#Address').next('span').find('input').focus();
-					});
-					return false;
-				}
-			} else {
-				var myAddress = $("#Address").val();
-				if (myAddress == "") {
-					$.messager.alert("ÌáÊ¾", "Ã»ÓĞµØÖ·,ÇëÌîĞ´µØÖ·!", "info", function () {
-						$("#Address").focus();
-					});
-					return false;
-				}
-			}
-			var myCountryDesc = $("#CountryDescLookUpRowID").combobox('getValue');
-			myCountryDesc = CheckComboxSelData("CountryDescLookUpRowID", myCountryDesc);
-			if (myCountryDesc == "") {
-				$.messager.alert("ÌáÊ¾", "ÇëÑ¡Ôñ¹ú¼®!", "info", function () {
-					$('#CountryDescLookUpRowID').next('span').find('input').focus();
-				});
-				return false;
-			}
-			var myPAPERMarital = $("#PAPERMarital").combobox('getValue');
-			if (myPAPERMarital == "") {
-				$.messager.alert("ÌáÊ¾", "ÇëÑ¡Ôñ»éÒö×´Ì¬!", "info", function () {
-					$('#PAPERMarital').next('span').find('input').focus();
-				});
-				return false;
-			}
-			var myProvinceBirth = $("#ProvinceBirth").combobox('getValue');
-			myProvinceBirth = CheckComboxSelData("ProvinceBirth", myProvinceBirth);
-			if (myProvinceBirth == "") {
-				if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
-				$.messager.alert("ÌáÊ¾", "ÇëÑ¡ÔñÊ¡(³öÉú)!", "info", function () {
-					$('#ProvinceBirth').next('span').find('input').focus();
-				});
-				return false;
-			}
-			var myNationDesc = $("#NationDescLookUpRowID").combobox('getValue');
-			myNationDesc = CheckComboxSelData("NationDescLookUpRowID", myNationDesc);
-			if (myNationDesc == "") {
-				$.messager.alert("ÌáÊ¾", "ÇëÑ¡ÔñÃñ×å!", "info", function () {
-					$('#NationDescLookUpRowID').next('span').find('input').focus();
-				});
-				return false;
-			}
-			var myCityBirth = $("#CityBirth").combobox('getValue');
-			myCityBirth = CheckComboxSelData("CityBirth", myCityBirth);
-			if (myCityBirth == "") {
-				if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
-				$.messager.alert("ÌáÊ¾", "ÇëÑ¡ÔñÊĞ(³öÉú)!", "info", function () {
-					$('#CityBirth').next('span').find('input').focus();
-				});
-				return false;
-			}
-			var myAreaBirth = $("#AreaBirth").combobox('getValue');
-			myAreaBirth = CheckComboxSelData("AreaBirth", myAreaBirth);
-			if (myAreaBirth == "") {
-				if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
-				$.messager.alert("ÌáÊ¾", "ÇëÑ¡ÔñÏØ(³öÉú)!", "info", function () {
-					$('#AreaBirth').next('span').find('input').focus();
-				});
-				return false;
-			}
-			var myProvinceInfo = $("#ProvinceInfoLookUpRowID").combobox('getValue');
-			myProvinceInfo = CheckComboxSelData("ProvinceInfoLookUpRowID", myProvinceInfo);
-			if (myProvinceInfo == "") {
-				if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
-				$.messager.alert("ÌáÊ¾", "ÇëÑ¡ÔñÊ¡(ÏÖ×¡)!", "info", function () {
-					$('#AreaBirth').next('span').find('input').focus();
-				});
-				return false;
-			}
-			var myCityDesc = $("#CityDescLookUpRowID").combobox('getValue');
-			myCityDesc = CheckComboxSelData("CityDescLookUpRowID", myCityDesc);
-			if (myCityDesc == "") {
-				if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
-				$.messager.alert("ÌáÊ¾", "ÇëÑ¡ÔñÊĞ(ÏÖ×¡)!", "info", function () {
-					$('#CityDescLookUpRowID').next('span').find('input').focus();
-				});
-				return false;
-			}
-			var myCTArea = $("#CityAreaLookUpRowID").combobox('getValue');
-			myCTArea = CheckComboxSelData("CityAreaLookUpRowID", myCTArea);
-			if (myCTArea == "") {
-				if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
-				$.messager.alert("ÌáÊ¾", "ÇëÑ¡ÔñÏØ(ÏÖ×¡)!", "info", function () {
-					$('#CityAreaLookUpRowID').next('span').find('input').focus();
-				});
-				return false;
-			}
-			var myCompany = $("#EmployeeCompanyLookUpRowID").val();
-			if (myCompany == "") {
-				if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
-				$.messager.alert("ÌáÊ¾", "ÇëÊäÈë¹¤×÷µ¥Î»!", "info", function () {
-					$('#EmployeeCompanyLookUpRowID').focus();
-				});
-				return false;
-			}
-			var myProvinceHouse = $("#ProvinceHouse").combobox('getValue');
-			myProvinceHouse = CheckComboxSelData("ProvinceHouse", myProvinceHouse);
-			if (myProvinceHouse == "") {
-				if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
-				$.messager.alert("ÌáÊ¾", "ÇëÑ¡ÔñÊ¡(»§¿Ú)!", "info", function () {
-					$('#CityAreaLookUpRowID').next('span').find('input').focus();
-				});
-				return false;
-			}
-			var myCityhouse = $("#Cityhouse").combobox('getValue');
-			myCityhouse = CheckComboxSelData("Cityhouse", myCityhouse);
-			if (myCityhouse == "") {
-				if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
-				$.messager.alert("ÌáÊ¾", "ÇëÑ¡ÔñÊĞ(»§¿Ú)!", "info", function () {
-					$('#CityAreaLookUpRowID').next('span').find('input').focus();
-				});
-				return false;
-			}
-			var myAreaHouse = $("#AreaHouse").combobox('getValue');
-			myAreaHouse = CheckComboxSelData("AreaHouse", myAreaHouse);
-			if (myAreaHouse == "") {
-				if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
-				$.messager.alert("ÌáÊ¾", "ÇëÑ¡ÔñÏØ(»§¿Ú)!", "info", function () {
-					$('#AreaHouse').next('span').find('input').focus();
-				});
-				return false;
-			}
-			if (PageLogicObj.m_IsNotStructAddress == "Y") {
-				var myAddress = $("#RegisterPlace").combobox("getText");
-				if (myAddress == "") {
-					if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
-					$.messager.alert("ÌáÊ¾", "ÇëÌîĞ´µØÖ·(»§¿Ú)!", "info", function () {
-						$('#RegisterPlace').next('span').find('input').focus();
-					});
-					return false;
-				}
-			} else {
-				var myAddress = $("#RegisterPlace").val();
-				if (myAddress == "") {
-					if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
-					$.messager.alert("ÌáÊ¾", "ÇëÌîĞ´µØÖ·(»§¿Ú)!", "info", function () {
-						$("#RegisterPlace").focus();
-					});
-					return false;
-				}
-			}
-			var myCTRelationDR = $("#CTRelationDR").combobox("getText");
-			myCTRelationDR = CheckComboxSelData("CTRelationDR", myCTRelationDR);
-			if (myCTRelationDR == "") {
-				if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
-				$.messager.alert("ÌáÊ¾", "ÇëÑ¡Ôñ¹ØÏµ!", "info", function () {
-					$("#CTRelationDR").focus();
-				});
-				return false;
-			}
-			var myForeignPhone = $("#ForeignPhone").val();
-			if (myForeignPhone == "") {
-				if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
-				$.messager.alert("ÌáÊ¾", "ÇëÊäÈëÁªÏµÈËµç»°!", "info", function () {
-					$("#ForeignPhone").focus();
-				});
-				return false;
-			} else {
-				if (!CheckTelOrMobile(myForeignPhone, "ForeignPhone", "ÁªÏµÈËµç»°")) return false;
-			}
-		}
-	}
-	//var OpMedicareObj = document.getElementById('OpMedicare');
-	var CredNo = $("#CredNo").val();
-	if (PageLogicObj.m_PatMasFlag == "Y") {
-		var myForeignName = $("#ForeignName").val();
-		if (myForeignName == "") {
-			/*if(PageLogicObj.m_MedicalFlag==1){
-				if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
-				$.messager.alert("ÌáÊ¾","ÇëÊäÈëÁªÏµÈË!","info",function(){
+        if (!SetCardNOLength()) return false;
+    }
+}
+
+function PatPaySumKeyPress(e) {
+    var key = event.keyCode;
+    if (key == 13) {
+        var PatPaySum = $("#PatPaySum").val();
+        var CardFareCost = $("#CardFareCost").val()
+        $("#amt").val(DHCCalCom(PatPaySum, CardFareCost, "-"));
+        var myChange = $("#amt");
+        if ((isNaN(myChange)) || (myChange == "")) {
+            myChange = 0;
+        }
+        myChange = parseFloat(myChange);
+        if (myChange < 0) {
+            $.messager.alert("æç¤º", "è¾“å…¥è´¹ç”¨é‡‘é¢é”™è¯¯!", "info", function() {
+                $("#PatPaySum").focus();
+            })
+        }
+    }
+}
+
+function DHCCalCom(value1, value2, caloption) {
+    var mynum1 = parseFloat(value1);
+    if (isNaN(mynum1)) { var mynum1 = 0; }
+    var mynum2 = parseFloat(value2);
+    if (isNaN(mynum2)) { mynum2 = 0; }
+    switch (caloption) {
+        case "-":
+            var myres = mynum1 - mynum2;
+            break;
+        case "+":
+            var myres = mynum1 + mynum2;
+            break;
+        case "*":
+            var myres = mynum1 * mynum2;
+            break;
+        case "%":
+            var myres = mynum2 / mynum1;
+            break;
+        default:
+            var myres = mynum1 * mynum2;
+            break;
+    }
+    myres = parseFloat(myres) + 0.0000001;
+    myres = myres.toFixed(2); //.toString();
+    return myres.toFixed(2);
+}
+
+function TransferCardClick(e) {
+    if ($("#TransferCard").hasClass('l-btn-disabled')) {
+        return false;
+    }
+    var CardNo = $("#CardNo").val();
+    if (CardNo == "") {
+        $.messager.alert("æç¤º", "å¡å·ä¸èƒ½ä¸ºç©ºã€‚è½¬æ­£å¼å¡å‰ï¼Œè¯·åŒå‡»ä¸´æ—¶å¡è®°å½•å¸¦å‡ºä¸´æ—¶å¡å·!", "info", function() {
+            $("#CardNo").focus();
+        });
+        return false;
+    }
+    var myval = $("#CardTypeDefine").combobox('getValue');
+    var myCardTypeDR = myval.split("^")[0];
+    var myCardType = myval.split("^")[2];
+    var TemporaryCardFlag = $.m({
+        ClassName: "web.DHCBL.CARD.UCardRefInfo",
+        MethodName: "GetTemporaryCardFlag",
+        CardTypeId: myCardTypeDR
+    }, false)
+    if (TemporaryCardFlag != "Y") {
+        $.messager.alert("æç¤º", myCardType + " æ— ä¸´æ—¶å¡æƒé™!");
+        return false;
+    }
+    PageLogicObj.m_MedicalFlag = 1;
+    PageLogicObj.m_ModifiedFlag = 1;
+    PageLogicObj.m_TransferCardFlag = 1;
+    $("#TemporaryCard").switchbox("setValue", false);
+    setTimeout(function() {
+        SaveDataToServer();
+        PageLogicObj.m_MedicalFlag = 0;
+        PageLogicObj.m_ModifiedFlag = 0;
+        PageLogicObj.m_TransferCardFlag = 0;
+    });
+}
+
+function InitTemporaryCard(CardNo) {
+    if (!CardNo) CardNo = "";
+    if (CardNo != "") {
+        var myval = $("#CardTypeDefine").combobox('getValue');
+        var myCardTypeDR = myval.split("^")[0];
+        var Data = $.m({
+            ClassName: "web.DHCBL.CARD.UCardRefInfo",
+            MethodName: "GetTemporaryCardFlag",
+            CardTypeId: myCardTypeDR,
+            CardNo: CardNo
+        }, false)
+    } else {
+        var Data = PageLogicObj.m_CTDTemporaryCardFlag;
+    }
+    if (Data == "Y") {
+        $("#TemporaryCard").switchbox('setActive', true)
+        var Val = CardNo ? true : false
+        $("#TemporaryCard").switchbox('setValue', Val)
+        DisableBtn("TransferCard", false);
+    } else {
+        $("#TemporaryCard").switchbox('setActive', false)
+        $("#TemporaryCard").switchbox('setValue', false)
+        DisableBtn("TransferCard", true);
+    }
+    return Data
+}
+
+function IntDoc() {
+    var myary = ServerObj.DefaultAccPara.split("^");
+    if (isNaN(myary[0])) {
+        var myVal = 0;
+    } else {
+        var myVal = parseInt(myary[0]);
+    }
+    if (myVal == 1) myVal = true;
+    else myVal = false;
+    $("#SetDefaultPassword").checkbox('setValue', myVal);
+    if (myVal) {
+        $("#SetDefaultPassword").checkbox('disable')
+    } else {
+        $("#SetDefaultPassword").checkbox('enable')
+    }
+    if (isNaN(myary[14])) {
+        var myVal = 0;
+    } else {
+        var myVal = parseInt(myary[14]);
+    }
+    $("#DepPrice").val(myVal);
+    GetCurrentRecNo();
+    var src = "../images/uiimages/patdefault.png";
+    ShowPicBySrcNew(src, "imgPic");
+}
+
+function GetCurrentRecNo() {
+    /*$.m({
+    	ClassName:"web.UDHCAccAddDeposit",
+    	MethodName:"GetCurrentRecNo",
+    	userid:session['LOGON.USERID'],
+    	type:"D"
+    },function(ren){
+    	var myary=ren.split("^");
+    	if (myary.length>5) PageLogicObj.m_ReceiptsType=myary[5];
+    	if (myary[0]=='0'){
+    		$("#ReceiptsNo").val(myary[3]);
+    	}
+    });*/
+    var myary = ServerObj.DefaultCurrentRecNoPara.split("^");
+    if (myary.length > 5) PageLogicObj.m_ReceiptsType = myary[5];
+    if (myary[0] == '0') {
+        $("#ReceiptsNo").val(myary[3]);
+    }
+}
+
+function prtClick() {
+    if ($("#PAPMINo").val() == "") {
+        $.messager.alert("æç¤º", "ç—…äººIDä¸èƒ½ä¸ºç©º!");
+        return false;
+    }
+    //PatInfoPrint("PAPMINo");
+    var argObj = { CardTypeDR: PageLogicObj.m_SelectCardTypeRowID, CardNo: $("#CardNo").val(), PatientID: $("#PAPMIRowID").val() };
+    var rtn = PrintQRCode(argObj); 
+    if (!rtn){
+        PatInfoPrint("PAPMINo");
+    }
+}
+
+function PatInfoPrint(ElementName) {
+    var PatInfoXMLPrint = "PatInfoPrint";
+    var Char_2 = "\2";
+    var InMedicare = $("#InMedicare").val();
+    var Name = $("#Name").val();
+    var RegNo = $("#" + ElementName).val();
+    //å¦‚æœç™»è®°å·å­˜åœ¨å»åå°å–æ‚£è€…å§“å
+    if (RegNo != "") {
+        var PatStr = $.cm({
+            ClassName: "web.DHCDocOrderEntry",
+            MethodName: "GetPatientByNo",
+            dataType: "text",
+            PapmiNo: RegNo
+        }, false)
+        if (PatStr != "") { Name = PatStr.split("^")[2] }
+    }
+    var TxtInfo = "TPatName" + Char_2 + "å§“  å:" + "^Name" + Char_2 + Name + "^TRegNo" + Char_2 + "ç—…äººID:" + "^RegNo" + Char_2 + RegNo + "^RegNoTM" + Char_2 + "*" + RegNo + "*"
+    if (InMedicare != "") TxtInfo = TxtInfo + "^TMedicareNo" + Char_2 + "ç—…æ¡ˆå·:" + "^MedicareNo" + Char_2 + InMedicare;
+    var ListInfo = "";
+    DHCP_GetXMLConfig("DepositPrintEncrypt", PatInfoXMLPrint);
+    //var myobj = document.getElementById("ClsBillPrint");
+    //DHCP_PrintFun(myobj, TxtInfo, ListInfo);
+    DHC_PrintByLodop(getLodop(), TxtInfo, ListInfo, "", "");
+}
+
+function CardSearchCallBack(cardno, Regno, patientid) {
+    $("#PAPMINo").val(Regno);
+    ValidateRegInfoByCQU(patientid);
+}
+
+function ValidateRegInfoByCQU(PAPMIDR) {
+    var myval = $("#CardTypeDefine").combobox('getValue');
+    var myCardTypeDR = myval.split("^")[0];
+    var myValidateMode = myval.split("^")[30];
+    if (myValidateMode == "CQU") {
+        var myInfo = $.cm({
+            ClassName: "web.DHCBL.CARD.UCardPATRegConfig",
+            MethodName: "ReadConfigByCQU",
+            dataType: "text",
+            PAPMIDR: PAPMIDR,
+            CardTypeDR: myCardTypeDR,
+            SessionStr: ""
+        }, false)
+        var myary = myInfo.split(String.fromCharCode(1));
+        switch (myary[0]) {
+            case "0":
+                break;
+            case "-368":
+                PageLogicObj.m_RegCardConfigXmlData = myary[1];
+                var myPatInfoXmlData = myary[2];
+                var myRepairFlag = myary[3];
+                SetPatInfoByXML(myPatInfoXmlData);
+                GetPatDetailByPAPMINo();
+                SetPatRegCardDefaultConfigValue(myary[4]);
+                break;
+            case "-365":
+                $.messager.alert("æç¤º", "æ­¤è¯ä»¶å·ç å·²ç»å­˜åœ¨,è¯·åŠç†å…¶ä»–å¡æˆ–åŠç†è¡¥å¡!");
+                SearchSamePatient();
+                break;
+            default:
+                $.messager.alert("æç¤º", "" + " Err Code=" + myary[0]);
+                break;
+        }
+    } else {
+        GetPatDetailByPAPMINo();
+    }
+}
+
+function CardSearchClick() {
+    var src = "reg.cardsearchquery.hui.csp";
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
+    var $code = "<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='" + src + "'></iframe>";
+    createModalDialog("FindPatReg", "å¡æŸ¥è¯¢", 1260, PageLogicObj.dh, "icon-w-find", "", $code, "");
+}
+
+function OtherCredTypeInput() {
+    var src = "doc.othercredtype.hui.csp?OtherCardInfo=" + $("#OtherCardInfo").val();;
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
+    var $code = "<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='" + src + "'></iframe>";
+    createModalDialog("OtherCredTypeManager", "å…¶ä»–è¯ä»¶ç®¡ç†", "500", "390", "icon-w-list", "", $code, "");
+}
+
+function CardUniteClick() {
+    var src = "reg.dhcpatcardunite.hui.csp"; //websys.default.csp?WEBSYS.TCOMPONENT=DHCPATCardUnite
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
+    var $code = "<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='" + src + "'></iframe>";
+    createModalDialog("Find", "æ‚£è€…ä¿¡æ¯åˆå¹¶", PageLogicObj.dw + 150, PageLogicObj.dh + 80, "icon-w-edit", "", $code, "");
+}
+
+function CardTypeSave(newData) {
+    $("#OtherCardInfo").val(newData);
+}
+
+function PatTypeOnChange() {
+    if (!$("#PatType").next().hasClass('combo')) return false
+    var PatType = $("#PatType").combobox("getValue");
+    var CardTypeDefine = $("#CardTypeDefine").combobox("getValue");
+    var NotCardFeePatType = CardTypeDefine.split("^")[39]
+    if (NotCardFeePatType == "") {
+        $("#CardFareCost").val(PageLogicObj.m_CardCost);
+        return false
+    }
+    var NotCardFeePatTypeStr = "," + NotCardFeePatType + ","
+    var PatTypeStr = "," + PatType + ","
+    if (NotCardFeePatTypeStr.indexOf(PatTypeStr) > -1) {
+        $("#CardFareCost").val("0");
+        $("#PatPaySum").val(0)
+        $("#amt").val("");
+    } else {
+        $("#CardFareCost").val(PageLogicObj.m_CardCost);
+        $("#amt").val("");
+    }
+}
+
+function Doc_OnKeyDown(e) {
+    if (window.event) {
+        var keyCode = window.event.keyCode;
+        var type = window.event.type;
+        var SrcObj = window.event.srcElement;
+    } else {
+        var keyCode = e.which;
+        var type = e.type;
+        var SrcObj = e.target;
+    }
+    if (keyCode == 13) {
+        var dis = $("#EditWindow").parent().css('display');
+        if ((dis != 'none') && (PageLogicObj.m_ShowWindowFlag == "Y")) {
+            RealBtnClick();
+        }
+        if (dis != 'none') {
+            PageLogicObj.m_ShowWindowFlag = "Y";
+        }
+        if ((SrcObj.tagName == "A") || (SrcObj.tagName == "INPUT")) {
+            if ($(".window-mask").is(":visible")) {
+                $(".messager-button a").click();
+                return false;
+            }
+            var myComName = SrcObj.id;
+            if (myComName == "CardNo") {
+                CardNokeydown(e);
+            }
+            /*else if(myComName=="PAPMINo"){
+            				PAPMINoOnKeyDown(e);
+            			}*/
+            if (myComName == "ForeignIDCard") {
+                ForeignIDCardOnKeyPress(e);
+            } else if (myComName == "CredNo") {
+                CredNoOnKeyPress(e);
+            } else if (myComName == "PatPaySum") {
+                PatPaySumKeyPress(e);
+            }
+            return DOMFocusJump(myComName);
+        }
+        return true;
+    }
+    if (((event.altKey) && ((event.keyCode == 82) || (event.keyCode == 114)))) {
+        DisableBtn("BReadCard", false);
+        ReadCardClickHandle();
+    }
+    if ((event.keyCode == 119)) {
+        ReadRegInfoOnClick();
+    }
+    if (event.keyCode == 118) {
+        Clearclick();
+    } else if (event.keyCode == 120) {
+        CardSearchClick();
+    }
+    if (((event.altKey) && ((event.keyCode == 67) || (event.keyCode == 99)))) {
+        NewCardclick();
+    }
+}
+
+function InitAddressCombo() {
+
+    var cbox = $HUI.combobox("#Address,#RegisterPlace,#AddressBirth", {
+        valueField: 'provid',
+        textField: 'provdesc',
+        editable: true,
+        selectOnNavigation: false,
+        mode: "remote",
+        delay: "500",
+        url: $URL + "?ClassName=web.DHCBL.CTBASEIF.ICTCardRegLB&QueryName=admaddressNewlookup&rows=999999",
+        onBeforeLoad: function(param) {
+            var desc = "";
+            if (param['q']) {
+                desc = param['q'];
+            }
+            param = $.extend(param, { desc: desc });
+        },
+        loadFilter: function(data) {
+            return data['rows'];
+        },
+        onSelect: function(record) {
+            if (typeof record == "undefined") { return }
+            var AdddressIDStr = ""
+            var AdddressIDStr = record.AddressIDStr; //sbqå¯¼è‡´è¯»ä¸å‡ºç—…äººä¿¡æ¯
+            if (AdddressIDStr == "") {
+                return true;
+            }
+            var AdddressIDArr = AdddressIDStr.split("^");
+            var CountryDR = AdddressIDArr[0];
+            var ProvinceDR = AdddressIDArr[1];
+            var CityDR = AdddressIDArr[2];
+            var CityAreaDR = AdddressIDArr[3];
+            var CommunityDR = AdddressIDArr[4];
+            var StreetDR = AdddressIDArr[5];
+            if (this.id == "Address") {
+                SetCountryComboxData("CountryHouse", CountryDR);
+                CountrySelect("CountryHouse", CountryDR);
+                $("#ProvinceInfoLookUpRowID").combobox("select", ProvinceDR);
+                $("#CityDescLookUpRowID").combobox("select", CityDR);
+                $("#CityAreaLookUpRowID").combobox("select", CityAreaDR);
+                $("#StreetNow").combobox("select", StreetDR);
+            } else if (this.id == "RegisterPlace") {
+                SetCountryComboxData("CountryDescLookUpRowID", CountryDR);
+                CountrySelect("CountryDescLookUpRowID", CountryDR);
+                $("#ProvinceHouse").combobox("select", ProvinceDR);
+                $("#Cityhouse").combobox("select", CityDR);
+                $("#AreaHouse").combobox("select", CityAreaDR);
+                $("#StreetHouse").combobox("select", StreetDR);
+
+            } else if (this.id == "AddressDef") {
+                var winEvent = window.event;
+                var mykey = winEvent.keyCode;
+                if (mykey == 13) {
+                    PageLogicObj.m_ShowWindowFlag = ""
+                }
+                OpenWin(AdddressIDStr)
+            } else if (this.id == "AddressBirth") {
+                $("#ProvinceBirth").combobox("select", ProvinceDR);
+                $("#CityBirth").combobox("select", CityDR);
+                $("#AreaBirth").combobox("select", CityAreaDR);
+                $("#StreetBirth").combobox("select", StreetDR);
+
+            }
+            return true;
+        }
+    });
+    //$("#Address").combobox("resize","625");
+}
+
+function BAddressInoCollapsClick() {
+    if ($(".addressinfo").css("display") == "none") {
+        $(".addressinfo-div").removeClass("addressinfo-collapse").addClass("addressinfo-expand");
+        $(".addressinfo").show();
+        $("#BAddressInoCollaps .l-btn-text")[0].innerText = "éšè—å…¨éƒ¨";
+        if (PageLogicObj.m_IsNotStructAddress == "Y") {
+            $("#Address").combobox("resize", 547);
+            $("#RegisterPlace").combobox("resize", 110);
+        }
+    } else {
+        $(".addressinfo-div").removeClass("addressinfo-expand").addClass("addressinfo-collapse");
+        $(".addressinfo").hide();
+        $("#BAddressInoCollaps .l-btn-text")[0].innerText = "å±•å¼€å…¨éƒ¨";
+    }
+}
+
+function BPayInoCollapsClick() {
+    if ($(".payinfo").css("display") == "none") {
+        $(".payinfo-div").removeClass("payinfo-collapse").addClass("payinfo-expand");
+        $(".payinfo").show();
+        $("#BPayInoCollaps .l-btn-text")[0].innerText = "éšè—å…¨éƒ¨";
+    } else {
+        $(".payinfo-div").removeClass("payinfo-expand").addClass("payinfo-collapse");
+        $(".payinfo").hide();
+        $("#BPayInoCollaps .l-btn-text")[0].innerText = "å±•å¼€å…¨éƒ¨";
+    }
+}
+
+function BBaseInoCollapsClick() {
+    if ($(".baseinfo").css("display") == "none") {
+        $(".baseinfo-div").removeClass("baseinfo-collapse").addClass("baseinfo-expand");
+        $(".baseinfo").show();
+        $("#BBaseInoCollaps .l-btn-text")[0].innerText = "éšè—å…¨éƒ¨";
+    } else {
+        $(".baseinfo-div").removeClass("baseinfo-expand").addClass("baseinfo-collapse");
+        $(".baseinfo").hide();
+        $("#BBaseInoCollaps .l-btn-text")[0].innerText = "å±•å¼€å…¨éƒ¨";
+    }
+}
+
+function CheckData() {
+    //æ‚£è€…ä½é™¢æœŸé—´æ§åˆ¶åªå…è®¸åœ¨ä½é™¢ç™»è®°ç•Œé¢ä¿®æ”¹æ‚£è€…åŸºæœ¬ä¿¡æ¯
+    var rtn = CheckInHos();
+    if (!rtn) { return false; }
+    var IsTemporaryCard = $("#TemporaryCard").switchbox("getValue")
+    var myrtn = true;
+    if (IsTemporaryCard) {
+        var myCardNo = $("#CardNo").val();
+        if (PageLogicObj.m_UsePANoToCardNO != "Y") {
+            if (myCardNo == "") {
+                $.messager.alert("æç¤º", "è¯·è¾“å…¥ä¸´æ—¶å¡å¡å·!", "info", function() { $("#CardNo").focus(); });
+                return false;
+            } else {
+                if ((PageLogicObj.m_CardNoLength != 0) && (myCardNo.length != PageLogicObj.m_CardNoLength)) {
+                    $.messager.alert("æç¤º", "å¡å·é•¿åº¦åº”è¯¥ä¸º" + PageLogicObj.m_CardNoLength + "ä½ï¼Œè¯·æ ¸å®ï¼", "info", function() {
+                        $("#CardNo").focus();
+                    });
+                    return false;
+                }
+            }
+        }
+        var myName = $("#Name").val();
+        if (myName == "") {
+            $.messager.alert("æç¤º", "è¯·è¾“å…¥æ‚£è€…å§“å!", "info", function() { $("#Name").focus(); });
+            return false;
+        }
+        var mySex = $("#Sex").combobox("getValue");
+        if ((mySex == "") || (mySex == undefined)) {
+            $.messager.alert("æç¤º", "è¯·é€‰æ‹©æ€§åˆ«!", "info", function() {
+                $('#Sex').next('span').find('input').focus();
+            });
+            return false;
+        }
+        var myPatType = $("#PatType").combobox("getValue");
+        myPatType = CheckComboxSelData("PatType", myPatType);
+        if ((myPatType == "") || (myPatType == undefined)) {
+            $.messager.alert("æç¤º", "è¯·é€‰æ‹©æ‚£è€…ç±»å‹", "info", function() {
+                $('#PatType').next('span').find('input').focus();
+            });
+            return false;
+        }
+        var PAPMIRowID = $("#PAPMIRowID").val();
+        if ((PAPMIRowID == "") && (!ChkCardCost())) return false;
+        return true; //ä¸´æ—¶å¡åªéœ€è¦éªŒè¯å§“åã€æ€§åˆ«ã€å¡è´¹ç”¨
+    }
+    if (PageLogicObj.m_PatMasFlag == "Y") {
+        var IsNullInfo = "",
+            FocusName = "";
+        //å¿…å¡«é¡¹ç›®éªŒè¯
+        var myrtn = true;
+        for (var i = 0; i < PageLogicObj.m_CardRegMustFillInArr.length; i++) {
+            var id = PageLogicObj.m_CardRegMustFillInArr[i]['id'];
+            if (id == "CredNo") continue;
+            var text = PageLogicObj.m_CardRegMustFillInArr[i]['text'];
+            var val = getValue(id);
+            if (val == "") {
+                if (IsNullInfo == "") IsNullInfo = text, FocusName = id;
+                else IsNullInfo = IsNullInfo + " , " + text;
+
+            }
+        }
+        if (IsNullInfo != "") {
+            $.messager.alert("æç¤º", "è¯·è¾“å…¥<font color=red>" + IsNullInfo + "</font> !", "info", function() {
+                setFocus(FocusName)
+            });
+            return false;
+        }
+    }
+    var myExpstr = "";
+    //æ‚£è€…è¯ä»¶ç±»å‹ä¸ºèº«ä»½è¯æ—¶ï¼ŒéªŒè¯èº«ä»½è¯å·æ˜¯å¦å·²ç»å­˜åœ¨æ‚£è€…ä¿¡æ¯ï¼Œå¦‚æœå­˜åœ¨åˆ™æ›´æ–°æ‚£è€…ä¿¡æ¯
+    var myIDrtn = IsCredTypeID();
+    if (myIDrtn) {
+        var CredNo = $("#CredNo").val();
+        if (CredNo != "") {
+            myExpstr = CredNo;
+        }
+		if ((CredNo.substr(0,6)=="810000")||((CredNo.substr(0,6)=="820000"))||((CredNo.substr(0,6)=="830000"))){
+    		$.messager.alert("æç¤º", CredNo+"<font color=red>" + "ä¸ºæ¸¯æ¾³å°é€šè¡Œè¯å·ç " + "</font> !", "info", function() {
+          		setFocus("CredNo")
+       		});
+        	return false;
+    	}
+    }
+    var myPAPMINo = $('#PAPMINo').val();
+    if ((myPAPMINo != "") || (myExpstr != "")) {
+        var myPatInfo = $.cm({
+            ClassName: "web.DHCBL.CARD.UCardPaPatMasInfo",
+            MethodName: "GetPatInfoByPANo",
+            dataType: "text",
+            PAPMINo: myPAPMINo,
+            ExpStr: myExpstr
+        }, false);
+        var myary = myPatInfo.split("^");
+        if (myary[0] == "2001") {
+            $.messager.alert("æç¤º", "æ— æ­¤ç™»è®°å·çš„æ‚£è€…,ä¸èƒ½å»ºå¡!", "info", function() {
+                $("#PAPMINo").focus();
+            });
+            return false;
+        } else if (myary[0] == "0") {
+            var myXMLStr = myary[1];
+            var PatientID = myXMLStr.split("<PAPMIRowID>")[1].split("</PAPMIRowID>")[0];
+            if (PatientID != "") {
+                $("#PAPMIRowID").val(PatientID);
+            } else {
+                $("#PAPMIRowID").val("");
+            }
+        }
+    }
+    var PAPMIRowID = $("#PAPMIRowID").val();
+    //éªŒè¯æ‚£è€…ä¿¡æ¯(å§“åã€æ€§åˆ«ã€å‡ºç”Ÿæ—¥æœŸã€è”ç³»ç”µè¯)æ˜¯å¦å­˜åœ¨ä¸€è‡´çš„æ‚£è€…
+    if (!PatInfoUnique()) {
+        return false;
+    }
+    var InsuNo = $('#PatYBCode').val();
+    //åŒ»ä¿æ‰‹å†Œå·
+    if ((InsuNo != "") && (InsuNo != "99999999999S")) {
+        var Rtn = $.cm({
+            ClassName: "web.DHCBL.Patient.DHCPatient",
+            MethodName: "PatUniInfoQuery",
+            dataType: "text",
+            PatientDr: PAPMIRowID,
+            Type: "InsuNo",
+            NoStr: InsuNo
+        }, false);
+        if (Rtn > 0) {
+            $.messager.alert("æç¤º", InsuNo + "åŒ»ä¿å·å·²è¢«ä½¿ç”¨!", "info", function() {
+                $("#PatYBCode").focus();
+            });
+            return false
+        }
+    }
+    var OpMedicareObj = document.getElementById('OpMedicare');
+    if (PageLogicObj.m_PatMasFlag == "Y") {
+        var myBirthTime = $("#BirthTime").val();
+        if (myBirthTime != "") {
+            var regTime = /^([0-2][0-9]):([0-5][0-9]):([0-5][0-9])$/;
+            if (!regTime.test(myBirthTime)) {
+                $.messager.alert("æç¤º", "è¯·è¾“å…¥æ­£ç¡®çš„å‡ºç”Ÿæ—¶é—´!", "info", function() {
+                    $("#BirthTime").focus();
+                });
+                return false;
+            }
+        }
+        /*var IsNullInfo="",FocusIndex=""
+        var myTelHome=$("#TelHome").val();
+        if (myTelHome=="")
+        {
+        	IsNullInfo="è”ç³»ç”µè¯"
+        	FocusIndex="TelHome"
+        	//$.messager.alert("æç¤º","è¯·è¾“å…¥è”ç³»ç”µè¯!","info",function(){
+        	//	$("#TelHome").focus();
+        	//});
+        	//return false;
+        }
+        var myMobPhone=$("#MobPhone").val();
+        if (myMobPhone!=""){
+        	if(myMobPhone.length!="11"){
+        		$.messager.alert("æç¤º","æ‰‹æœºå·ç é•¿åº¦é”™è¯¯,åº”ä¸ºã€11ã€‘ä½,è¯·æ ¸å®!","info",function(){
+        			$("#MobPhone").focus();
+        		});
+        	    return false;
+        	}
+        }
+        var myName=$("#Name").val();
+        if (myName==""){
+        	if (IsNullInfo=="")	{
+        		IsNullInfo="æ‚£è€…å§“å"
+        		FocusIndex="Name"
+        	}
+        	else IsNullInfo=IsNullInfo+"ã€æ‚£è€…å§“å"
+        	//$.messager.alert("æç¤º","è¯·è¾“å…¥æ‚£è€…å§“å!","info",function(){
+        	//	$("#Name").focus();
+        	//});
+        	//return false;
+        }
+        var mySex=$("#Sex").combobox("getValue");
+        if ((mySex=="")||(mySex==undefined)){
+        	if (IsNullInfo=="")	{
+        		IsNullInfo="æ€§åˆ«"
+        		FocusIndex="Sex"
+        	}
+        	else IsNullInfo=IsNullInfo+"ã€æ€§åˆ«"
+        	//$.messager.alert("æç¤º","è¯·é€‰æ‹©æ€§åˆ«!","info",function(){
+        	//	$("#Sex").focus();
+        	//});
+        	//return false;
+        }
+        var myPatType= $("#PatType").combobox("getValue");
+        myPatType=CheckComboxSelData("PatType",myPatType);
+        if ((myPatType=="")||(myPatType==undefined)){
+        	if (IsNullInfo=="")	{
+        		IsNullInfo="æ‚£è€…ç±»å‹"
+        		FocusIndex="PatType"
+        	}
+        	else IsNullInfo=IsNullInfo+"ã€æ‚£è€…ç±»å‹"
+        	//$.messager.alert("æç¤º","è¯·é€‰æ‹©æ‚£è€…ç±»å‹!","info",function(){
+        	//	$("#PatType").focus();
+        	//});
+        	//return false;
+        }
+        var myBirth=$("#Birth").val();
+        if (myBirth==""){
+        	if (IsNullInfo=="")	{
+        		IsNullInfo="å‡ºç”Ÿæ—¥æœŸ"
+        		FocusIndex="Birth"
+        	}
+        	else IsNullInfo=IsNullInfo+"ã€å‡ºç”Ÿæ—¥æœŸ"
+        	//$.messager.alert("æç¤º","è¯·è¾“å…¥å‡ºç”Ÿæ—¥æœŸ!","info",function(){
+        	//	$("#Birth").focus();
+        	//});
+        	//return false;
+        }
+        if (IsNullInfo!=""){
+        	$.messager.alert("æç¤º",IsNullInfo+"ä¸èƒ½ä¸ºç©º!","info",function(){
+        		$("#"+FocusIndex).focus();
+        	});
+        	return false;
+        }*/
+        //éåŒ»ä¿ç±»å‹ä¸èƒ½å¡«å†™åŒ»ä¿å·
+        if (!checkPatYBCode()) return false;
+        if (!BirthCheck()) return false;
+        if (!ForeignIDCardOnKeyPress()) return false;
+        var myTelHome = $("#TelHome").val();
+        if (myTelHome != "") {
+            if (!CheckTelOrMobile(myTelHome, "TelHome", "è”ç³»ç”µè¯")) return false;
+        }
+        var myMobPhone = $("#MobPhone").val();
+        if (myMobPhone != "") {
+            if (!CheckTelOrMobile(myMobPhone, "MobPhone", "æ‰‹æœº")) return false;
+        }
+        var myTelOffice = $("#TelOffice").val();
+        if (myTelOffice != "") {
+            if (!CheckTelOrMobile(myTelOffice, "TelOffice", "åŠå…¬ç”µè¯")) return false;
+        }
+        var myBirth = $("#Birth").val();
+        if (myBirth != "") {
+            if (ServerObj.dtformat == "YMD") {
+                var reg = /^(([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})-(((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)-(0[1-9]|[12][0-9]|30))|(02-(0[1-9]|[1][0-9]|2[0-8]))))|((([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))-02-29)$/;
+            }
+            if (ServerObj.dtformat == "DMY") {
+                var reg = /^(((0[1-9]|[12][0-9]|3[01])\/((0[13578]|1[02]))|((0[1-9]|[12][0-9]|30)\/(0[469]|11))|(0[1-9]|[1][0-9]|2[0-8])\/(02))\/([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3}))|(29\/02\/(([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00)))$/;
+            }
+            var ret = myBirth.match(reg);
+            if (ret == null) {
+                $.messager.alert("æç¤º", "è¯·è¾“å…¥æ­£ç¡®çš„å‡ºç”Ÿæ—¥æœŸ!", "info", function() {
+                    $("#Birth").focus();
+                });
+                return false;
+            }
+            if (ServerObj.dtformat == "YMD") {
+                var myrtn = DHCWeb_IsDate(myBirth, "-")
+            }
+            if (ServerObj.dtformat == "DMY") {
+                var myrtn = DHCWeb_IsDate(myBirth, "/")
+            }
+            if (!myrtn) {
+                $.messager.alert("æç¤º", "è¯·è¾“å…¥æ­£ç¡®çš„å‡ºç”Ÿæ—¥æœŸ!", "info", function() {
+                    $("#Birth").focus();
+                });
+                return false;
+            } else {
+                var mybirth1 = $("#Birth").val();
+                var Checkrtn = CheckBirth(mybirth1);
+                if (Checkrtn == false) {
+                    $.messager.alert("æç¤º", "å‡ºç”Ÿæ—¥æœŸä¸èƒ½å¤§äºä»Šå¤©æˆ–è€…å°äºã€ç­‰äº1840å¹´!", "info", function() {
+                        $("#Birth").focus();
+                    });
+                    return false;
+                }
+            }
+            var mybirth = $("#Birth").val();
+            var myage = $("#Age").val();
+            var mybirthTime = $("#BirthTime").val();
+            var ageStr = $.cm({
+                ClassName: "web.UDHCJFCOMMON",
+                MethodName: "DispPatAge",
+                dataType: "text",
+                birthDate: mybirth,
+                admDate: "",
+                birthTime: mybirthTime,
+                admTime: "",
+                controlFlag: "N",
+                hospId: session['LOGON.HOSPID']
+            }, false);
+            if ((ageStr.split("||")[1] != myage) && (ageStr.split("||")[0] != myage)) {
+                if (ageStr.split("||")[1] != 0) {
+                    $.messager.alert("æç¤º", "å‡ºç”Ÿæ—¥æœŸä¸èƒ½ä¸å¹´çºªä¸ç›¸ç­‰!å®é™…å¹´é¾„" + ageStr.split("||")[1], "info", function() {
+                        $("#Birth").focus();
+                    });
+                    return false;
+                } else {
+                    $.messager.alert("æç¤º", "å‡ºç”Ÿæ—¥æœŸä¸èƒ½ä¸å¹´çºªä¸ç›¸ç­‰!å®é™…å¹´é¾„" + ageStr.split("||")[0], "info", function() {
+                        $("#Birth").focus();
+                    });
+                    return false;
+                }
+
+            }
+            if (!LimitBirthTime() && mybirthTime == "") {
+                $("label[for=BirthTime]").addClass("clsRequired");
+                $.messager.alert("æç¤º", "å¹´é¾„å°äº" + ServerObj.LimitBirthTimeByAge + "å¤©éœ€å¡«å†™å‡ºç”Ÿæ—¶é—´", "info", function() {
+                    $("#BirthTime").focus();
+                });
+                return false;
+            } else {
+                $("label[for=BirthTime]").removeClass("clsRequired");
+            }
+        }
+        //ä»…å»ºç—…å†ä¸‹åˆ—æç¤ºä¿¡æ¯ä¸ºå¿…å¡«
+        if ((PageLogicObj.m_MedicalFlag == 1) && (PageLogicObj.m_ModifiedFlag == 0)) {
+            if (PageLogicObj.m_IsNotStructAddress == "Y") {
+                var myAddress = $("#Address").combobox("getText");
+                if (myAddress == "") {
+                    $.messager.alert("æç¤º", "æ²¡æœ‰åœ°å€,è¯·å¡«å†™åœ°å€!", "info", function() {
+                        $('#Address').next('span').find('input').focus();
+                    });
+                    return false;
+                }
+            } else {
+                var myAddress = $("#Address").val();
+                if (myAddress == "") {
+                    $.messager.alert("æç¤º", "æ²¡æœ‰åœ°å€,è¯·å¡«å†™åœ°å€!", "info", function() {
+                        $("#Address").focus();
+                    });
+                    return false;
+                }
+            }
+            var myCountryDesc = $("#CountryDescLookUpRowID").combobox('getValue');
+            myCountryDesc = CheckComboxSelData("CountryDescLookUpRowID", myCountryDesc);
+            if (myCountryDesc == "") {
+                $.messager.alert("æç¤º", "è¯·é€‰æ‹©å›½ç±!", "info", function() {
+                    $('#CountryDescLookUpRowID').next('span').find('input').focus();
+                });
+                return false;
+            }
+            var myPAPERMarital = $("#PAPERMarital").combobox('getValue');
+            if (myPAPERMarital == "") {
+                $.messager.alert("æç¤º", "è¯·é€‰æ‹©å©šå§»çŠ¶æ€!", "info", function() {
+                    $('#PAPERMarital').next('span').find('input').focus();
+                });
+                return false;
+            }
+            var myProvinceBirth = $("#ProvinceBirth").combobox('getValue');
+            myProvinceBirth = CheckComboxSelData("ProvinceBirth", myProvinceBirth);
+            if (myProvinceBirth == "") {
+                if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
+                $.messager.alert("æç¤º", "è¯·é€‰æ‹©çœ(å‡ºç”Ÿ)!", "info", function() {
+                    $('#ProvinceBirth').next('span').find('input').focus();
+                });
+                return false;
+            }
+            var myNationDesc = $("#NationDescLookUpRowID").combobox('getValue');
+            myNationDesc = CheckComboxSelData("NationDescLookUpRowID", myNationDesc);
+            if (myNationDesc == "") {
+                $.messager.alert("æç¤º", "è¯·é€‰æ‹©æ°‘æ—!", "info", function() {
+                    $('#NationDescLookUpRowID').next('span').find('input').focus();
+                });
+                return false;
+            }
+            var myCityBirth = $("#CityBirth").combobox('getValue');
+            myCityBirth = CheckComboxSelData("CityBirth", myCityBirth);
+            if (myCityBirth == "") {
+                if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
+                $.messager.alert("æç¤º", "è¯·é€‰æ‹©å¸‚(å‡ºç”Ÿ)!", "info", function() {
+                    $('#CityBirth').next('span').find('input').focus();
+                });
+                return false;
+            }
+            var myAreaBirth = $("#AreaBirth").combobox('getValue');
+            myAreaBirth = CheckComboxSelData("AreaBirth", myAreaBirth);
+            if (myAreaBirth == "") {
+                if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
+                $.messager.alert("æç¤º", "è¯·é€‰æ‹©å¿(å‡ºç”Ÿ)!", "info", function() {
+                    $('#AreaBirth').next('span').find('input').focus();
+                });
+                return false;
+            }
+            var myProvinceInfo = $("#ProvinceInfoLookUpRowID").combobox('getValue');
+            myProvinceInfo = CheckComboxSelData("ProvinceInfoLookUpRowID", myProvinceInfo);
+            if (myProvinceInfo == "") {
+                if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
+                $.messager.alert("æç¤º", "è¯·é€‰æ‹©çœ(ç°ä½)!", "info", function() {
+                    $('#AreaBirth').next('span').find('input').focus();
+                });
+                return false;
+            }
+            var myCityDesc = $("#CityDescLookUpRowID").combobox('getValue');
+            myCityDesc = CheckComboxSelData("CityDescLookUpRowID", myCityDesc);
+            if (myCityDesc == "") {
+                if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
+                $.messager.alert("æç¤º", "è¯·é€‰æ‹©å¸‚(ç°ä½)!", "info", function() {
+                    $('#CityDescLookUpRowID').next('span').find('input').focus();
+                });
+                return false;
+            }
+            var myCTArea = $("#CityAreaLookUpRowID").combobox('getValue');
+            myCTArea = CheckComboxSelData("CityAreaLookUpRowID", myCTArea);
+            if (myCTArea == "") {
+                if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
+                $.messager.alert("æç¤º", "è¯·é€‰æ‹©å¿(ç°ä½)!", "info", function() {
+                    $('#CityAreaLookUpRowID').next('span').find('input').focus();
+                });
+                return false;
+            }
+            var myCompany = $("#EmployeeCompanyLookUpRowID").val();
+            if (myCompany == "") {
+                if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
+                $.messager.alert("æç¤º", "è¯·è¾“å…¥å·¥ä½œå•ä½!", "info", function() {
+                    $('#EmployeeCompanyLookUpRowID').focus();
+                });
+                return false;
+            }
+            var myProvinceHouse = $("#ProvinceHouse").combobox('getValue');
+            myProvinceHouse = CheckComboxSelData("ProvinceHouse", myProvinceHouse);
+            if (myProvinceHouse == "") {
+                if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
+                $.messager.alert("æç¤º", "è¯·é€‰æ‹©çœ(æˆ·å£)!", "info", function() {
+                    $('#CityAreaLookUpRowID').next('span').find('input').focus();
+                });
+                return false;
+            }
+            var myCityhouse = $("#Cityhouse").combobox('getValue');
+            myCityhouse = CheckComboxSelData("Cityhouse", myCityhouse);
+            if (myCityhouse == "") {
+                if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
+                $.messager.alert("æç¤º", "è¯·é€‰æ‹©å¸‚(æˆ·å£)!", "info", function() {
+                    $('#CityAreaLookUpRowID').next('span').find('input').focus();
+                });
+                return false;
+            }
+            var myAreaHouse = $("#AreaHouse").combobox('getValue');
+            myAreaHouse = CheckComboxSelData("AreaHouse", myAreaHouse);
+            if (myAreaHouse == "") {
+                if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
+                $.messager.alert("æç¤º", "è¯·é€‰æ‹©å¿(æˆ·å£)!", "info", function() {
+                    $('#AreaHouse').next('span').find('input').focus();
+                });
+                return false;
+            }
+            if (PageLogicObj.m_IsNotStructAddress == "Y") {
+                var myAddress = $("#RegisterPlace").combobox("getText");
+                if (myAddress == "") {
+                    if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
+                    $.messager.alert("æç¤º", "è¯·å¡«å†™åœ°å€(æˆ·å£)!", "info", function() {
+                        $('#RegisterPlace').next('span').find('input').focus();
+                    });
+                    return false;
+                }
+            } else {
+                var myAddress = $("#RegisterPlace").val();
+                if (myAddress == "") {
+                    if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
+                    $.messager.alert("æç¤º", "è¯·å¡«å†™åœ°å€(æˆ·å£)!", "info", function() {
+                        $("#RegisterPlace").focus();
+                    });
+                    return false;
+                }
+            }
+            var myCTRelationDR = $("#CTRelationDR").combobox("getText");
+            myCTRelationDR = CheckComboxSelData("CTRelationDR", myCTRelationDR);
+            if (myCTRelationDR == "") {
+                if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
+                $.messager.alert("æç¤º", "è¯·é€‰æ‹©å…³ç³»!", "info", function() {
+                    $("#CTRelationDR").focus();
+                });
+                return false;
+            }
+            var myForeignPhone = $("#ForeignPhone").val();
+            if (myForeignPhone == "") {
+                if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
+                $.messager.alert("æç¤º", "è¯·è¾“å…¥è”ç³»äººç”µè¯!", "info", function() {
+                    $("#ForeignPhone").focus();
+                });
+                return false;
+            } else {
+                if (!CheckTelOrMobile(myForeignPhone, "ForeignPhone", "è”ç³»äººç”µè¯")) return false;
+            }
+        }
+    }
+    //var OpMedicareObj = document.getElementById('OpMedicare');
+    var CredNo = $("#CredNo").val();
+    if (PageLogicObj.m_PatMasFlag == "Y") {
+        var myForeignName = $("#ForeignName").val();
+        if (myForeignName == "") {
+            /*if(PageLogicObj.m_MedicalFlag==1){
+			    if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
+				$.messager.alert("æç¤º","è¯·è¾“å…¥è”ç³»äºº!","info",function(){
 					$("#ForeignName").focus();
 				});
 				return false;
 			}*/
-		}
-		/*var myTelHome = $("#TelHome").val();
-		if (myTelHome == "") {
-			$.messager.alert("ÌáÊ¾","ÇëÊäÈëÁªÏµµç»°!","info",function(){
-				$("#TelHome").focus();
-			});
-			return false;
-		}else{
-			if (!CheckTelOrMobile(myTelHome,"TelHome","")) return false;
-		}
-		var myBirth = $("#Birth").val();
-		if (myBirth == "") {
-			$.messager.alert("ÌáÊ¾","ÇëÊäÈë³öÉúÈÕÆÚ!","info",function(){
-				$("#Birth").focus();
-			});
-			return false;
-		}*/
-		if (CheckBirthAndBirthTime()) {
-			$.messager.alert("ÌáÊ¾", "³öÉúÈÕÆÚÊÇµ±ÌìµÄ,³öÉúÊ±¼ä²»ÄÜ´óÓÚµ±Ç°Ê±¼ä,ÇëºËÊµ!", "info", function () {
-				$("#BirthTime").focus();
-			});
-			return false;
-		}
-		/*var mySex = $("#Sex").combobox("getValue");
-		if (mySex == "") {
-			$.messager.alert("ÌáÊ¾","ÇëÑ¡ÔñĞÔ±ğ!","info",function(){
-				$('#Sex').next('span').find('input').focus();
-			});
-			return false;
-		}*/
-		var Age = AgeForYear(myBirth)
-		if (Age < ServerObj.ForeignInfoByAge) {
-			var ForeignName = $("#ForeignName").val();
-			var ForeignPhone = $("#ForeignPhone").val();
-			var ForeignIDCard = $("#ForeignIDCard").val();
-			if (ForeignName == "") {
-				if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
-				$.messager.alert("ÌáÊ¾", "ÄêÁäĞ¡ÓÚ" + ServerObj.ForeignInfoByAge + "Ëê,ÁªÏµÈË²»ÄÜÎª¿Õ!", "info", function () {
-					$("#ForeignName").focus();
-				});
-				return false;
-			}
-			if (ForeignPhone == "") {
-				if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
-				$.messager.alert("ÌáÊ¾", "ÄêÁäĞ¡ÓÚ" + ServerObj.ForeignInfoByAge + "Ëê,ÁªÏµÈËµç»°²»ÄÜÎª¿Õ!", "info", function () {
-					$("#ForeignPhone").focus();
-				});
-				return false;
-			}
-			if (ForeignPhone != "") {
-				if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
-				if (!CheckTelOrMobile(ForeignPhone, "ForeignPhone", "ÁªÏµÈËµç»°")) return false;
-			}
-			if (ForeignIDCard == "") {
-				if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
-				$.messager.alert("ÌáÊ¾", "ÄêÁäĞ¡ÓÚ" + ServerObj.ForeignInfoByAge + "Ëê,ÁªÏµÈËÖ¤¼şĞÅÏ¢²»ÄÜÎª¿Õ", "info", function () {
-					$("#ForeignIDCard").focus();
-				});
-				return false;
-			}
-		} else {
-			var myForeignPhone = $("#ForeignPhone").val();
-			if (myForeignPhone != "") {
-				if (!CheckTelOrMobile(myForeignPhone, "ForeignPhone", "ÁªÏµÈËµç»°")) return false;
-			}
-		}
-		/*»éÒö×´Ì¬¿ØÖÆ start*/
-		var mySex = $("#Sex").combobox('getText');
-		var myPAPERMarital = $("#PAPERMarital").combobox('getValue');
-		var AgeToMaritalFlag = 0
-		if (mySex == "Å®") {
-			if ((Age < PageLogicObj.m_MarriedLimitFemaleFAge) && (("^" + PageLogicObj.m_MarriedIDStr + "^").indexOf("^" + myPAPERMarital + "^") != -1)) {
-				AgeToMaritalFlag = 1;
-			}
-		} else if (mySex == "ÄĞ") {
-			if ((Age < PageLogicObj.m_MarriedLimitMaleAge) && (("^" + PageLogicObj.m_MarriedIDStr + "^").indexOf("^" + myPAPERMarital + "^") != -1)) {
-				AgeToMaritalFlag = 1;
-			}
-		}
-		if (AgeToMaritalFlag == 1) {
-			dhcsys_alert("¸Ã»¼ÕßÎ´µ½·¨¶¨ÄêÁä!");
-		}
-		/*»éÒö×´Ì¬¿ØÖÆ end*/
-		/*var myPatType = $("#PatType").combobox("getValue");
-		myPatType=CheckComboxSelData("PatType",myPatType);
-		if ((myPatType == "")||(myPatType==undefined)) {
-			$.messager.alert("ÌáÊ¾","ÇëÑ¡Ôñ»¼ÕßÀàĞÍ","info",function(){
-				$('#PatType').next('span').find('input').focus();
-			});
-			return false;
-		}*/
-		//¶ÔÓÚ²¡ÈËÀàĞÍÎªÖ°¹¤µÄ¶Ô¹¤ºÅµÄÅĞ¶Ï
-		var myPatType = $("#PatType").combobox("getText");
-		if (myPatType.indexOf('±¾Ôº') >= 0) {
-			var EmployeeNo = $("#EmployeeNo").val();
-			if (EmployeeNo == "") {
-				$.messager.alert("ÌáÊ¾", "±¾ÔºÖ°¹¤,ÇëÌîĞ´Ö°¹¤¹¤ºÅ!", "info", function () {
-					$("#EmployeeNo").focus();
-				});
-				return false;
-			}
-			var curPAPMIRowID = $.cm({
-				ClassName: "web.DHCBL.CARDIF.ICardPaPatMasInfo",
-				MethodName: "GetPAPMIRowIDByEmployeeNo",
-				dataType: "text",
-				EmployeeNo: EmployeeNo
-			}, false);
-			var name = curPAPMIRowID.split("^")[1];
-			var UserName = curPAPMIRowID.split("^")[2];
-			curPAPMIRowID = curPAPMIRowID.split("^")[0];
-			if (curPAPMIRowID == "0") {
-				$.messager.alert("ÌáÊ¾", "¹¤ºÅ²»ÕıÈ·,ÇëºËÊµ¹¤ºÅ!", "info", function () {
-					$("#EmployeeNo").focus();
-				});
-				return false;
-			}
-			var PAPMIRowID = $("#PAPMIRowID").val();
-			if ((PAPMIRowID != curPAPMIRowID) && (curPAPMIRowID != "")) {
-				$.messager.alert("ÌáÊ¾", "´Ë¹¤ºÅÒÑ¾­±»'" + name + "'ËùÓÃ,ÇëºËÊµ¹¤ºÅ!", "info", function () {
-					$("#EmployeeNo").focus();
-				});
-				return false;
-			}
-			var Name = $("#Name").val();
-			if (UserName != Name) {
-				$.messager.alert("ÌáÊ¾", "´Ë¹¤ºÅ¶ÔÓ¦ĞÕÃûÎª'" + UserName + "'ºÍËùÂ¼ÈëĞÕÃû²»Ò»ÖÂ!", "info", function () {
-					$("#Name").focus();
-				});
-				return false;
-			}
-		} else {
-			var EmployeeNo = $("#EmployeeNo").val();
-			if (EmployeeNo != "") {
-				$.messager.alert("ÌáÊ¾", "·Ç±¾ÔºÖ°¹¤¹¤ºÅ²»¿ÉÌîĞ´!", "info", function () {
-					$("#EmployeeNo").focus();
-				});
-				return false;
-			}
-		}
-		var myIDNo = $("#CredNo").val();
-		if (myIDNo != "") {
-			var myval = $("#CredType").combobox("getValue");
-			if (myval == "") {
-				$.messager.alert("ÌáÊ¾", "Ö¤¼şºÅÂë²»Îª¿ÕÊ±,Ö¤¼şÀàĞÍ²»ÄÜÎª¿Õ!");
-				return false;
-			}
-			var myIDrtn = IsCredTypeID();
-			if (myIDrtn) {
-				var myIsID = DHCWeb_IsIdCardNo(myIDNo);
-				if (!myIsID) {
-					$("#CredNo").focus();
-					return false;
-				}
-				var IDNoInfoStr = DHCWeb_GetInfoFromId(myIDNo)
-				var IDBirthday = IDNoInfoStr[2]
-				if (myBirth != IDBirthday) {
-					$.messager.alert("ÌáÊ¾", "³öÉúÈÕÆÚÓëÉí·İÖ¤ĞÅÏ¢²»·û!", "info", function () {
-						$("#Birth").focus();
-					});
-					return false;
-				}
-				var IDSex = IDNoInfoStr[3]
-				if (mySex != IDSex) {
-					$.messager.alert("ÌáÊ¾", "Éí·İÖ¤ºÅ:" + myIDNo + "¶ÔÓ¦µÄĞÔ±ğÊÇ¡¾" + IDSex + "¡¿,ÇëÑ¡ÔñÕıÈ·µÄĞÔ±ğ!", "info", function () {
-						$('#Sex').next('span').find('input').focus();
-					});
-					return false;
-				}
-			} else {
-				var myval = $("#CredType").combobox("getValue");
-				var myCredTypeDR = myval.split("^")[0];
-				var PAPMIRowID = $("#PAPMIRowID").val();
-				var mySameFind = $.cm({
-					ClassName: "web.DHCBL.CARD.UCardPaPatMasInfo",
-					MethodName: "CheckCredNoIDU",
-					PatientID: PAPMIRowID, CredNo: myIDNo, CredTypeDR: myCredTypeDR,
-					dataType: "text"
-				}, false);
-				if (mySameFind == "1") {
-					$.messager.alert("ÌáÊ¾", myIDNo + " ´ËÖ¤¼şºÅÂëÒÑ¾­±»Ê¹ÓÃ!", "info", function () {
-						$("#CredNo").focus();
-					})
-					return false;
-				}
-				//Èç¹ûÖ¤¼şÀàĞÍ²»ÊÇÉí·İÖ¤,Çå¿ÕIDCardNo1Öµ£¬·ÀÖ¹IDCardNo1¸üĞÂµ½papmi_id
-				$("#IDCardNo1").val("");
-			}
-			var OtherCardInfo = $("#OtherCardInfo").val();
-			if (OtherCardInfo != "") {
-				var CredNo = $("#CredNo").val();
-				var myval = $("#CredType").combobox("getValue");
-				var myCredTypeDR = myval.split("^")[0];
-				for (var i = 0; i < OtherCardInfo.split("!").length; i++) {
-					var oneCredTypeId = OtherCardInfo.split("!")[i].split("^")[0];
-					if (oneCredTypeId != myCredTypeDR) continue;
-					var oneCredNo = OtherCardInfo.split("!")[i].split("^")[1];
-					if ((oneCredNo != CredNo) && (oneCredNo != "")) {
-						$.messager.alert("ÌáÊ¾", "Ö¤¼şºÅÂë: " + CredNo + " ºÍÆäËûÖ¤¼şÀïÃæÏàÍ¬Ö¤¼şÀàĞÍÎ¬»¤µÄºÅÂë: " + oneCredNo + " ²»Ò»ÖÂ!ÇëºËÊµ!", "info", function () {
-							$("#CredNo").focus();
-						});
-						return false;
-					}
-				}
-			}
-		} else {
-			var myval = $("#CredType").combobox("getValue");
-			var myCredTypeDR = myval.split("^")[0];
-			var CredNoRequired = $.cm({
-				ClassName: "web.DHCBL.CARD.UCardRefInfo",
-				MethodName: "CheckCardNoRequired",
-				dataType: "text",
-				CredTypeDr: myCredTypeDR
-			}, false)
-			var AgeAllow = $.cm({
-				ClassName: "web.DHCDocConfig",
-				MethodName: "GetDHCDocCardConfig",
-				dataType: "text",
-				Node: "AllowAgeNoCreadCard"
-			}, false);
-			var FlagNoCread = $.cm({
-				ClassName: "web.DHCDocConfig",
-				MethodName: "GetDHCDocCardConfig",
-				dataType: "text",
-				Node: "NOCREAD"
-			}, false);
-			if (CredNoRequired == "Y") {
-				if ((AgeAllow != "") & (parseFloat(Age) <= parseFloat(AgeAllow))) { }
-				else {
-					$.messager.alert("ÌáÊ¾", "ÇëÌîĞ´Ö¤¼şºÅÂë!", "info", function () {
-						$('#CredNo').focus();
-					});
-					return false;
-				}
-			}
-		}
-		var myval = $("#CardTypeDefine").combobox("getValue");
-		var myary = myval.split("^");
-		if (myary[3] == "C") {
-			var mypmval = $("#PayMode").combobox("getValue");
-			if (mypmval == "") {
-				$.messager.alert("ÌáÊ¾", "ÇëÑ¡ÔñÖ§¸¶·½Ê½!", "info", function () {
-					$('#PayMode').next('span').find('input').focus();
-				});
-				return false;
-			}
-			var mytmpary = mypmval.split("^");
-			if (mytmpary[2] == "Y") {
-				///Require Pay Info
-				var myCheckNO = $("#CardChequeNo").val();
-				if (myCheckNO == "") {
-					if (!PayInfoIsExpand()) BPayInoCollapsClick();
-					$.messager.alert("ÌáÊ¾", "ÇëÊäÈëÖ§Æ±/ĞÅÓÃ¿¨ºÅ!", "info", function () {
-						$('#CardChequeNo').focus();
-					});
-					return false;
-				}
-			}
-		}
-		var myOtheRtn = OtherSpecialCheckData();
-		if (!myOtheRtn) {
-			return myOtheRtn;
-		}
-		if (PageLogicObj.m_ModifiedFlag == 1) return true;
-	}
-	//Èç¹ûÊÇÓÃµÇ¼ÇºÅºÅ×÷Îª¿¨ºÅÔò²»È¡Ğ£Ñé½çÃæ¿¨ºÅ
-	if ((PageLogicObj.m_CardRefFlag == "Y") && (PageLogicObj.m_UsePANoToCardNO != "Y")) {
-		var myCardNo = $("#CardNo").val();
-		if (myCardNo == "") {
-			$.messager.alert("ÌáÊ¾", "¿¨ºÅ²»ÄÜÎª¿Õ,Çë¶Á¿¨!", "info", function () {
-				if (PageLogicObj.m_SetFocusElement != "") {
-					$("#" + PageLogicObj.m_SetFocusElement).focus();
-				}
-			});
-			return false;
-		}
-		////Card NO Length ?= Card Type Define Length
-		var myCTDefLength = 0;
-		if (isNaN(PageLogicObj.m_CardNoLength)) {
-			myCTDefLength = 0;
-		} else {
-			myCTDefLength = PageLogicObj.m_CardNoLength;
-		}
-		if ((myCTDefLength != 0) && (myCardNo.length != myCTDefLength)) {
-			if (PageLogicObj.m_SetFocusElement != "") {
-				$.messager.alert("ÌáÊ¾", "¿¨ºÅ³¤¶È´íÎó " + myCTDefLength + " ", "info", function () {
-					$("#CardNo").focus();
-				});
-			}
-			return false;
-		}
-		////Card No Pre ?= Card Type Define Pre
-		if (PageLogicObj.m_CardTypePrefixNo != "") {
-			var myPreNoLength = PageLogicObj.m_CardTypePrefixNo.length;
-			var myCardNo = $("#CardNo").val();
-			var myPreNo = myCardNo.substring(0, myPreNoLength);
-			if (myPreNo != PageLogicObj.m_CardTypePrefixNo) {
-				$.messager.alert("ÌáÊ¾", "¿¨ºÅÂëÇ°×º´íÎó!", "info", function () {
-					$("#CardNo").focus();
-				});
-				return false;
-			}
-		}
-	}
-	if (!ChkCardCost()) return false;
+        }
+        /*var myTelHome = $("#TelHome").val();
+        if (myTelHome == "") {
+        	$.messager.alert("æç¤º","è¯·è¾“å…¥è”ç³»ç”µè¯!","info",function(){
+        		$("#TelHome").focus();
+        	});
+        	return false;
+        }else{
+        	if (!CheckTelOrMobile(myTelHome,"TelHome","")) return false;
+        }
+        var myBirth = $("#Birth").val();
+        if (myBirth == "") {
+        	$.messager.alert("æç¤º","è¯·è¾“å…¥å‡ºç”Ÿæ—¥æœŸ!","info",function(){
+        		$("#Birth").focus();
+        	});
+        	return false;
+        }*/
+        if (CheckBirthAndBirthTime()) {
+            $.messager.alert("æç¤º", "å‡ºç”Ÿæ—¥æœŸæ˜¯å½“å¤©çš„,å‡ºç”Ÿæ—¶é—´ä¸èƒ½å¤§äºå½“å‰æ—¶é—´,è¯·æ ¸å®!", "info", function() {
+                $("#BirthTime").focus();
+            });
+            return false;
+        }
+        /*var mySex = $("#Sex").combobox("getValue");
+        if (mySex == "") {
+        	$.messager.alert("æç¤º","è¯·é€‰æ‹©æ€§åˆ«!","info",function(){
+        		$('#Sex').next('span').find('input').focus();
+        	});
+        	return false;
+        }*/
+        var Age = AgeForYear(myBirth)
+        if (Age < ServerObj.ForeignInfoByAge) {
+            var ForeignName = $("#ForeignName").val();
+            var ForeignPhone = $("#ForeignPhone").val();
+            var ForeignIDCard = $("#ForeignIDCard").val();
+            if (ForeignName == "") {
+                if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
+                $.messager.alert("æç¤º", "å¹´é¾„å°äº" + ServerObj.ForeignInfoByAge + "å²,è”ç³»äººä¸èƒ½ä¸ºç©º!", "info", function() {
+                    $("#ForeignName").focus();
+                });
+                return false;
+            }
+            if (ForeignPhone == "") {
+                if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
+                $.messager.alert("æç¤º", "å¹´é¾„å°äº" + ServerObj.ForeignInfoByAge + "å²,è”ç³»äººç”µè¯ä¸èƒ½ä¸ºç©º!", "info", function() {
+                    $("#ForeignPhone").focus();
+                });
+                return false;
+            }
+            if (ForeignPhone != "") {
+                if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
+                if (!CheckTelOrMobile(ForeignPhone, "ForeignPhone", "è”ç³»äººç”µè¯")) return false;
+            }
+            if (ForeignIDCard == "") {
+                if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
+                $.messager.alert("æç¤º", "å¹´é¾„å°äº" + ServerObj.ForeignInfoByAge + "å²,è”ç³»äººè¯ä»¶ä¿¡æ¯ä¸èƒ½ä¸ºç©º", "info", function() {
+                    $("#ForeignIDCard").focus();
+                });
+                return false;
+            }
+        } else {
+            var myForeignPhone = $("#ForeignPhone").val();
+            if (myForeignPhone != "") {
+                if (!CheckTelOrMobile(myForeignPhone, "ForeignPhone", "è”ç³»äººç”µè¯")) return false;
+            }
+        }
+        /*å©šå§»çŠ¶æ€æ§åˆ¶ start*/
+        var mySex = $("#Sex").combobox('getText');
+        var myPAPERMarital = $("#PAPERMarital").combobox('getValue');
+        var AgeToMaritalFlag = 0
+        if (mySex == "å¥³") {
+            if ((Age < PageLogicObj.m_MarriedLimitFemaleFAge) && (("^" + PageLogicObj.m_MarriedIDStr + "^").indexOf("^" + myPAPERMarital + "^") != -1)) {
+                AgeToMaritalFlag = 1;
+            }
+        } else if (mySex == "ç”·") {
+            if ((Age < PageLogicObj.m_MarriedLimitMaleAge) && (("^" + PageLogicObj.m_MarriedIDStr + "^").indexOf("^" + myPAPERMarital + "^") != -1)) {
+                AgeToMaritalFlag = 1;
+            }
+        }
+        if (AgeToMaritalFlag == 1) {
+            dhcsys_alert("è¯¥æ‚£è€…æœªåˆ°æ³•å®šå¹´é¾„!");
+        }
+        /*å©šå§»çŠ¶æ€æ§åˆ¶ end*/
+        /*var myPatType = $("#PatType").combobox("getValue");
+        myPatType=CheckComboxSelData("PatType",myPatType);
+        if ((myPatType == "")||(myPatType==undefined)) {
+        	$.messager.alert("æç¤º","è¯·é€‰æ‹©æ‚£è€…ç±»å‹","info",function(){
+        		$('#PatType').next('span').find('input').focus();
+        	});
+        	return false;
+        }*/
+        //å¯¹äºç—…äººç±»å‹ä¸ºèŒå·¥çš„å¯¹å·¥å·çš„åˆ¤æ–­
+        var myPatType = $("#PatType").combobox("getText");
+        if (myPatType.indexOf('æœ¬é™¢') >= 0) {
+            var EmployeeNo = $("#EmployeeNo").val();
+            if (EmployeeNo == "") {
+                $.messager.alert("æç¤º", "æœ¬é™¢èŒå·¥,è¯·å¡«å†™èŒå·¥å·¥å·!", "info", function() {
+                    $("#EmployeeNo").focus();
+                });
+                return false;
+            }
+            var curPAPMIRowID = $.cm({
+                ClassName: "web.DHCBL.CARDIF.ICardPaPatMasInfo",
+                MethodName: "GetPAPMIRowIDByEmployeeNo",
+                dataType: "text",
+                EmployeeNo: EmployeeNo
+            }, false);
+            var name = curPAPMIRowID.split("^")[1];
+            var UserName = curPAPMIRowID.split("^")[2];
+            curPAPMIRowID = curPAPMIRowID.split("^")[0];
+            if (curPAPMIRowID == "0") {
+                $.messager.alert("æç¤º", "å·¥å·ä¸æ­£ç¡®,è¯·æ ¸å®å·¥å·!", "info", function() {
+                    $("#EmployeeNo").focus();
+                });
+                return false;
+            }
+            var PAPMIRowID = $("#PAPMIRowID").val();
+            if ((PAPMIRowID != curPAPMIRowID) && (curPAPMIRowID != "")) {
+                $.messager.alert("æç¤º", "æ­¤å·¥å·å·²ç»è¢«'" + name + "'æ‰€ç”¨,è¯·æ ¸å®å·¥å·!", "info", function() {
+                    $("#EmployeeNo").focus();
+                });
+                return false;
+            }
+            var Name = $("#Name").val();
+            if (UserName != Name) {
+                $.messager.alert("æç¤º", "æ­¤å·¥å·å¯¹åº”å§“åä¸º'" + UserName + "'å’Œæ‰€å½•å…¥å§“åä¸ä¸€è‡´!", "info", function() {
+                    $("#Name").focus();
+                });
+                return false;
+            }
+        } else {
+            var EmployeeNo = $("#EmployeeNo").val();
+            if (EmployeeNo != "") {
+                $.messager.alert("æç¤º", "éæœ¬é™¢èŒå·¥å·¥å·ä¸å¯å¡«å†™!", "info", function() {
+                    $("#EmployeeNo").focus();
+                });
+                return false;
+            }
+        }
+        var myIDNo = $("#CredNo").val();
+        if (myIDNo != "") {
+            var myval = $("#CredType").combobox("getValue");
+            if (myval == "") {
+                $.messager.alert("æç¤º", "è¯ä»¶å·ç ä¸ä¸ºç©ºæ—¶,è¯ä»¶ç±»å‹ä¸èƒ½ä¸ºç©º!");
+                return false;
+            }
+            var myIDrtn = IsCredTypeID();
+            if (myIDrtn) {
+                var myIsID = DHCWeb_IsIdCardNo(myIDNo);
+                if (!myIsID) {
+                    $("#CredNo").focus();
+                    return false;
+                }
+                var IDNoInfoStr = DHCWeb_GetInfoFromId(myIDNo)
+                var IDBirthday = IDNoInfoStr[2]
+                if (myBirth != IDBirthday) {
+                    $.messager.alert("æç¤º", "å‡ºç”Ÿæ—¥æœŸä¸èº«ä»½è¯ä¿¡æ¯ä¸ç¬¦!", "info", function() {
+                        $("#Birth").focus();
+                    });
+                    return false;
+                }
+                var IDSex = IDNoInfoStr[3]
+                if (mySex != IDSex) {
+                    $.messager.alert("æç¤º", "èº«ä»½è¯å·:" + myIDNo + "å¯¹åº”çš„æ€§åˆ«æ˜¯ã€" + IDSex + "ã€‘,è¯·é€‰æ‹©æ­£ç¡®çš„æ€§åˆ«!", "info", function() {
+                        $('#Sex').next('span').find('input').focus();
+                    });
+                    return false;
+                }
+            } else {
+                var myval = $("#CredType").combobox("getValue");
+                var myCredTypeDR = myval.split("^")[0];
+                var PAPMIRowID = $("#PAPMIRowID").val();
+                var mySameFind = $.cm({
+                    ClassName: "web.DHCBL.CARD.UCardPaPatMasInfo",
+                    MethodName: "CheckCredNoIDU",
+                    PatientID: PAPMIRowID,
+                    CredNo: myIDNo,
+                    CredTypeDR: myCredTypeDR,
+                    dataType: "text"
+                }, false);
+                if (mySameFind == "1") {
+                    $.messager.alert("æç¤º", myIDNo + " æ­¤è¯ä»¶å·ç å·²ç»è¢«ä½¿ç”¨!", "info", function() {
+                        $("#CredNo").focus();
+                    })
+                    return false;
+                }
+                //å¦‚æœè¯ä»¶ç±»å‹ä¸æ˜¯èº«ä»½è¯,æ¸…ç©ºIDCardNo1å€¼ï¼Œé˜²æ­¢IDCardNo1æ›´æ–°åˆ°papmi_id
+                $("#IDCardNo1").val("");
+            }
+            var OtherCardInfo = $("#OtherCardInfo").val();
+            if (OtherCardInfo != "") {
+                var CredNo = $("#CredNo").val();
+                var myval = $("#CredType").combobox("getValue");
+                var myCredTypeDR = myval.split("^")[0];
+                for (var i = 0; i < OtherCardInfo.split("!").length; i++) {
+                    var oneCredTypeId = OtherCardInfo.split("!")[i].split("^")[0];
+                    if (oneCredTypeId != myCredTypeDR) continue;
+                    var oneCredNo = OtherCardInfo.split("!")[i].split("^")[1];
+                    if ((oneCredNo != CredNo) && (oneCredNo != "")) {
+                        $.messager.alert("æç¤º", "è¯ä»¶å·ç : " + CredNo + " å’Œå…¶ä»–è¯ä»¶é‡Œé¢ç›¸åŒè¯ä»¶ç±»å‹ç»´æŠ¤çš„å·ç : " + oneCredNo + " ä¸ä¸€è‡´!è¯·æ ¸å®!", "info", function() {
+                            $("#CredNo").focus();
+                        });
+                        return false;
+                    }
+                }
+            }
+        } else {
+            var myval = $("#CredType").combobox("getValue");
+            var myCredTypeDR = myval.split("^")[0];
+            var CredNoRequired = $.cm({
+                ClassName: "web.DHCBL.CARD.UCardRefInfo",
+                MethodName: "CheckCardNoRequired",
+                dataType: "text",
+                CredTypeDr: myCredTypeDR
+            }, false)
+            var AgeAllow = $.cm({
+                ClassName: "web.DHCDocConfig",
+                MethodName: "GetDHCDocCardConfig",
+                dataType: "text",
+                Node: "AllowAgeNoCreadCard"
+            }, false);
+            var FlagNoCread = $.cm({
+                ClassName: "web.DHCDocConfig",
+                MethodName: "GetDHCDocCardConfig",
+                dataType: "text",
+                Node: "NOCREAD"
+            }, false);
+            if (CredNoRequired == "Y") {
+                if ((AgeAllow != "") & (parseFloat(Age) <= parseFloat(AgeAllow))) {} else {
+                    $.messager.alert("æç¤º", "è¯·å¡«å†™è¯ä»¶å·ç !", "info", function() {
+                        $('#CredNo').focus();
+                    });
+                    return false;
+                }
+            }
+        }
+        var myval = $("#CardTypeDefine").combobox("getValue");
+        var myary = myval.split("^");
+        if (myary[3] == "C") {
+            var mypmval = $("#PayMode").combobox("getValue");
+            if (mypmval == "") {
+                $.messager.alert("æç¤º", "è¯·é€‰æ‹©æ”¯ä»˜æ–¹å¼!", "info", function() {
+                    $('#PayMode').next('span').find('input').focus();
+                });
+                return false;
+            }
+            var mytmpary = mypmval.split("^");
+            if (mytmpary[2] == "Y") {
+                ///Require Pay Info
+                var myCheckNO = $("#CardChequeNo").val();
+                if (myCheckNO == "") {
+                    if (!PayInfoIsExpand()) BPayInoCollapsClick();
+                    $.messager.alert("æç¤º", "è¯·è¾“å…¥æ”¯ç¥¨/ä¿¡ç”¨å¡å·!", "info", function() {
+                        $('#CardChequeNo').focus();
+                    });
+                    return false;
+                }
+            }
+        }
+        var myOtheRtn = OtherSpecialCheckData();
+        if (!myOtheRtn) {
+            return myOtheRtn;
+        }
+        if (PageLogicObj.m_ModifiedFlag == 1) return true;
+    }
+    //å¦‚æœæ˜¯ç”¨ç™»è®°å·å·ä½œä¸ºå¡å·åˆ™ä¸å–æ ¡éªŒç•Œé¢å¡å·
+    // if ((PageLogicObj.m_CardRefFlag == "Y") && (PageLogicObj.m_UsePANoToCardNO != "Y")) {
+    if ((PageLogicObj.m_CardRefFlag == "Y") && (PageLogicObj.m_UsePANoToCardNO != "Y")&&(PageLogicObj.m_AllowNoCardNoFlag!="Y")) {
+        var myCardNo = $("#CardNo").val();
+        if (myCardNo == "") {
+            $.messager.alert("æç¤º", "å¡å·ä¸èƒ½ä¸ºç©º,è¯·è¯»å¡!", "info", function() {
+                if (PageLogicObj.m_SetFocusElement != "") {
+                    $("#" + PageLogicObj.m_SetFocusElement).focus();
+                } else {
+                    $("#CardNo").focus();
+                }
+            });
+            return false;
+        }
+        ////Card NO Length ?= Card Type Define Length
+        var myCTDefLength = 0;
+        if (isNaN(PageLogicObj.m_CardNoLength)) {
+            myCTDefLength = 0;
+        } else {
+            myCTDefLength = PageLogicObj.m_CardNoLength;
+        }
+        if ((myCTDefLength != 0) && (myCardNo.length != myCTDefLength)) {
+            $.messager.alert("æç¤º", "å¡å·é•¿åº¦åº”è¯¥ä¸º" + PageLogicObj.m_CardNoLength + "ä½ï¼Œè¯·æ ¸å®ï¼", "info", function() {
+                if (PageLogicObj.m_SetFocusElement != "") {
+                    $("#" + PageLogicObj.m_SetFocusElement).focus();
+                } else {
+                    $("#CardNo").focus();
+                }
+            });
+            return false;
+        }
+        ////Card No Pre ?= Card Type Define Pre
+        if (PageLogicObj.m_CardTypePrefixNo != "") {
+            var myPreNoLength = PageLogicObj.m_CardTypePrefixNo.length;
+            var myCardNo = $("#CardNo").val();
+            var myPreNo = myCardNo.substring(0, myPreNoLength);
+            if (myPreNo != PageLogicObj.m_CardTypePrefixNo) {
+                $.messager.alert("æç¤º", "å¡å·ç å‰ç¼€é”™è¯¯!", "info", function() {
+                    $("#CardNo").focus();
+                });
+                return false;
+            }
+        }
+    }
+    if (!ChkCardCost()) return false;
 
-	return myrtn;
+    return myrtn;
 }
+
 function ChkCardCost() {
-	var myPatPaySum = $("#PatPaySum").val();
-	if ((myPatPaySum == "") && (+PageLogicObj.m_CardCost > 0)) {
-		$.messager.alert("ÌáÊ¾", "ÇëÊäÈëÊÕ¿î½ğ¶î!", "info", function () {
-			$("#PatPaySum").focus();
-		});
-		return false;
-	} else {
-		var PatPaySum = $("#PatPaySum").val();
-		var CardFareCost = $("#CardFareCost").val()
-		$("#amt").val(DHCCalCom(PatPaySum, CardFareCost, "-"));
-		var myChange = $("#amt").val();
-		if ((isNaN(myChange)) || (myChange == "")) {
-			myChange = 0;
-		}
-		myChange = parseFloat(myChange);
-		if (myChange < 0) {
-			$.messager.alert("ÌáÊ¾", "ÊäÈë·ÑÓÃ½ğ¶î´íÎó!", "info", function () {
-				$("#PatPaySum").focus();
-			});
-			return false;
-		}
-		var ReceiptsNo = $("#ReceiptsNo").val();
-		var myChange = $("#amt").val();
-		if ((myChange != "") && (myChange != "0") && (ReceiptsNo == "") && (PageLogicObj.m_ReceiptsType != "")) {
-			$.messager.alert("ÌáÊ¾", "ÄúÒÑ¾­Ã»ÓĞ¿ÉÓÃÊÕ¾İ,ÇëÏÈÁìÈ¡ÊÕ¾İ!");
-			return false;
-		}
-	}
-	if (PageLogicObj.m_AccManagerFlag == "Y") {
-		var amt = $("#amt").val();
-		if ((!IsNumber(amt)) || (amt < 0)) {
-			$.messager.alert("ÌáÊ¾", "½ğ¶îÊäÈëÓĞÎó,ÇëÖØĞÂÊäÈë!", "info", function () {
-				$("#PatPaySum").focus();
-			});
-			return false;
-		}
-	}
-	return true;
+    var myPatPaySum = $("#PatPaySum").val();
+    if ((myPatPaySum == "") && (+PageLogicObj.m_CardCost > 0)) {
+        $.messager.alert("æç¤º", "è¯·è¾“å…¥æ”¶æ¬¾é‡‘é¢!", "info", function() {
+            $("#PatPaySum").focus();
+        });
+        return false;
+    } else {
+        var PatPaySum = $("#PatPaySum").val();
+        var CardFareCost = $("#CardFareCost").val()
+        $("#amt").val(DHCCalCom(PatPaySum, CardFareCost, "-"));
+        var myChange = $("#amt").val();
+        if ((isNaN(myChange)) || (myChange == "")) {
+            myChange = 0;
+        }
+        myChange = parseFloat(myChange);
+        if (myChange < 0) {
+            $.messager.alert("æç¤º", "è¾“å…¥è´¹ç”¨é‡‘é¢é”™è¯¯!", "info", function() {
+                $("#PatPaySum").focus();
+            });
+            return false;
+        }
+        var ReceiptsNo = $("#ReceiptsNo").val();
+        var myChange = $("#amt").val();
+        if ((myChange != "") && (myChange != "0") && (ReceiptsNo == "") && (PageLogicObj.m_ReceiptsType != "")) {
+            $.messager.alert("æç¤º", "æ‚¨å·²ç»æ²¡æœ‰å¯ç”¨æ”¶æ®,è¯·å…ˆé¢†å–æ”¶æ®!");
+            return false;
+        }
+    }
+    if (PageLogicObj.m_AccManagerFlag == "Y") {
+        var amt = $("#amt").val();
+        if ((!IsNumber(amt)) || (amt < 0)) {
+            $.messager.alert("æç¤º", "é‡‘é¢è¾“å…¥æœ‰è¯¯,è¯·é‡æ–°è¾“å…¥!", "info", function() {
+                $("#PatPaySum").focus();
+            });
+            return false;
+        }
+    }
+    return true;
 }
+
 function CheckTelOrMobile(telephone, Name, Type) {
-	if (telephone.length == 8) return true;
-	if (DHCC_IsTelOrMobile(telephone)) return true;
-	if (telephone.substring(0, 1) == 0) {
-		if (telephone.indexOf('-') >= 0) {
-			$.messager.alert("ÌáÊ¾", Type + "¹Ì¶¨µç»°³¤¶È´íÎó,¹Ì¶¨µç»°ÇøºÅ³¤¶ÈÎª¡¾3¡¿»ò¡¾4¡¿Î»,¹Ì¶¨µç»°ºÅÂë³¤¶ÈÎª¡¾7¡¿»ò¡¾8¡¿Î»,²¢ÒÔÁ¬½Ó·û¡¾-¡¿Á¬½Ó,ÇëºËÊµ!", "info", function () {
-				$("#" + Name).focus();
-			})
-			return false;
-		} else {
-			$.messager.alert("ÌáÊ¾", Type + "¹Ì¶¨µç»°³¤¶È´íÎó,¹Ì¶¨µç»°ÇøºÅ³¤¶ÈÎª¡¾3¡¿»ò¡¾4¡¿Î»,¹Ì¶¨µç»°ºÅÂë³¤¶ÈÎª¡¾7¡¿»ò¡¾8¡¿Î»,ÇëºËÊµ!", "info", function () {
-				$("#" + Name).focus();
-			})
-			return false;
-		}
-	} else {
-		if (telephone.length != 11) {
-			$.messager.alert("ÌáÊ¾", Type + "µç»°³¤¶ÈÓ¦Îª¡¾11¡¿Î»,ÇëºËÊµ!", "info", function () {
-				$("#" + Name).focus();
-			})
-			return false;
-		} else {
-			$.messager.alert("ÌáÊ¾", Type + "²»´æÔÚ¸ÃºÅ¶ÎµÄÊÖ»úºÅ,ÇëºËÊµ!", "info", function () {
-				$("#" + Name).focus();
-			})
-			return false;
-		}
-	}
-	return true;
+    if (telephone.length == 8) return true;
+    if (DHCC_IsTelOrMobile(telephone)) return true;
+    if (telephone.substring(0, 1) == 0) {
+        if (telephone.indexOf('-') >= 0) {
+            $.messager.alert("æç¤º", Type + "å›ºå®šç”µè¯é•¿åº¦é”™è¯¯,å›ºå®šç”µè¯åŒºå·é•¿åº¦ä¸ºã€3ã€‘æˆ–ã€4ã€‘ä½,å›ºå®šç”µè¯å·ç é•¿åº¦ä¸ºã€7ã€‘æˆ–ã€8ã€‘ä½,å¹¶ä»¥è¿æ¥ç¬¦ã€-ã€‘è¿æ¥,è¯·æ ¸å®!", "info", function() {
+                $("#" + Name).focus();
+            })
+            return false;
+        } else {
+            $.messager.alert("æç¤º", Type + "å›ºå®šç”µè¯é•¿åº¦é”™è¯¯,å›ºå®šç”µè¯åŒºå·é•¿åº¦ä¸ºã€3ã€‘æˆ–ã€4ã€‘ä½,å›ºå®šç”µè¯å·ç é•¿åº¦ä¸ºã€7ã€‘æˆ–ã€8ã€‘ä½,è¯·æ ¸å®!", "info", function() {
+                $("#" + Name).focus();
+            })
+            return false;
+        }
+    } else {
+        if (telephone.length != 11) {
+            $.messager.alert("æç¤º", Type + "ç”µè¯é•¿åº¦åº”ä¸ºã€11ã€‘ä½,è¯·æ ¸å®!", "info", function() {
+                $("#" + Name).focus();
+            })
+            return false;
+        } else {
+            $.messager.alert("æç¤º", Type + "ä¸å­˜åœ¨è¯¥å·æ®µçš„æ‰‹æœºå·,è¯·æ ¸å®!", "info", function() {
+                $("#" + Name).focus();
+            })
+            return false;
+        }
+    }
+    return true;
 }
+
 function CheckBirthAndBirthTime() {
-	var Today = new Date();
-	var mytime = Today.getHours();
-	var CurMinutes = Today.getMinutes();
-	if (CurMinutes <= 9) {
-		CurMinutes = "0" + CurMinutes;
-	}
-	mytime = mytime + ":" + CurMinutes;
-	var CurSeconds = Today.getSeconds();
-	if (CurSeconds <= 9) {
-		CurSeconds = "0" + CurSeconds;
-	}
-	mytime = mytime + ":" + CurSeconds;
-	var Today = getNowFormatDate();
-	var myBirth = $("#Birth").val();
-	if (myBirth == Today) {
-		var BirthTime = $("#BirthTime").val();
-		if (BirthTime != "") {
-			if (BirthTime.split(":").length == 2) {
-				BirthTime = BirthTime + ":00"
-			}
-		}
-		BirthTime = BirthTime.replace(/:/g, "")
-		mytime = mytime.replace(/:/g, "")
-		if (parseInt(BirthTime) > parseInt(mytime)) {
-			return true
-		} else {
-			return false
-		}
-	}
-	return false;
+    var Today = new Date();
+    var mytime = Today.getHours();
+    var CurMinutes = Today.getMinutes();
+    if (CurMinutes <= 9) {
+        CurMinutes = "0" + CurMinutes;
+    }
+    mytime = mytime + ":" + CurMinutes;
+    var CurSeconds = Today.getSeconds();
+    if (CurSeconds <= 9) {
+        CurSeconds = "0" + CurSeconds;
+    }
+    mytime = mytime + ":" + CurSeconds;
+    var Today = getNowFormatDate();
+    var myBirth = $("#Birth").val();
+    if (myBirth == Today) {
+        var BirthTime = $("#BirthTime").val();
+        if (BirthTime != "") {
+            if (BirthTime.split(":").length == 2) {
+                BirthTime = BirthTime + ":00"
+            }
+        }
+        BirthTime = BirthTime.replace(/:/g, "")
+        mytime = mytime.replace(/:/g, "")
+        if (parseInt(BirthTime) > parseInt(mytime)) {
+            return true
+        } else {
+            return false
+        }
+    }
+    return false;
 }
+
 function getNowFormatDate() {
-	var date = new Date();
-	var seperator1 = "-";
-	var month = date.getMonth() + 1;
-	var strDate = date.getDate();
-	if (month >= 1 && month <= 9) {
-		month = "0" + month;
-	}
-	if (strDate >= 0 && strDate <= 9) {
-		strDate = "0" + strDate;
-	}
-	if (ServerObj.dtformat == "YMD") {
-		var currentdate = date.getFullYear() + seperator1 + month + seperator1 + strDate
-	}
-	if (ServerObj.dtformat == "DMY") {
-		var seperator1 = "/";
-		var currentdate = strDate + seperator1 + month + seperator1 + date.getFullYear()
-	}
-	return currentdate;
+    var date = new Date();
+    var seperator1 = "-";
+    var month = date.getMonth() + 1;
+    var strDate = date.getDate();
+    if (month >= 1 && month <= 9) {
+        month = "0" + month;
+    }
+    if (strDate >= 0 && strDate <= 9) {
+        strDate = "0" + strDate;
+    }
+    if (ServerObj.dtformat == "YMD") {
+        var currentdate = date.getFullYear() + seperator1 + month + seperator1 + strDate
+    }
+    if (ServerObj.dtformat == "DMY") {
+        var seperator1 = "/";
+        var currentdate = strDate + seperator1 + month + seperator1 + date.getFullYear()
+    }
+    return currentdate;
 }
-//»ñÈ¡ÄêÁä--ÄêÓÃÀ´±È½Ï
+//è·å–å¹´é¾„--å¹´ç”¨æ¥æ¯”è¾ƒ
 function AgeForYear(strBirthday) {
-	if (ServerObj.dtformat == "YMD") {
-		var strBirthdayArr = strBirthday.split("-");
-		var birthYear = strBirthdayArr[0];
-		var birthMonth = strBirthdayArr[1];
-		var birthDay = strBirthdayArr[2];
-	}
-	if (ServerObj.dtformat == "DMY") {
-		var strBirthdayArr = strBirthday.split("/");
-		var birthYear = strBirthdayArr[2];
-		var birthMonth = strBirthdayArr[1];
-		var birthDay = strBirthdayArr[0];
-	}
-	var d = new Date();
-	var nowYear = d.getFullYear();
-	var nowMonth = d.getMonth() + 1;
-	var nowDay = d.getDate();
-	var ageDiff = nowYear - birthYear; //ÄêÖ®²î
-	return ageDiff
+    if (ServerObj.dtformat == "YMD") {
+        var strBirthdayArr = strBirthday.split("-");
+        var birthYear = strBirthdayArr[0];
+        var birthMonth = strBirthdayArr[1];
+        var birthDay = strBirthdayArr[2];
+    }
+    if (ServerObj.dtformat == "DMY") {
+        var strBirthdayArr = strBirthday.split("/");
+        var birthYear = strBirthdayArr[2];
+        var birthMonth = strBirthdayArr[1];
+        var birthDay = strBirthdayArr[0];
+    }
+    var d = new Date();
+    var nowYear = d.getFullYear();
+    var nowMonth = d.getMonth() + 1;
+    var nowDay = d.getDate();
+    var ageDiff = nowYear - birthYear; //å¹´ä¹‹å·®
+    if (birthMonth > nowMonth) {
+        ageDiff = ageDiff - 1
+    } else if (birthMonth == nowMonth) {
+        if (birthDay > nowDay) {
+            ageDiff = ageDiff - 1
+        }
+    }
+    return ageDiff
 }
+
 function OtherSpecialCheckData() {
-	var myVer = ServerObj.ConfigVersion;
-	switch (myVer) {
-		case "7":
-			var myAge = $("#Age").val();
-			if (isNaN(myAge)) { myAge = 0 };
-			if (myAge < 14) {
-				var myForeignName = $("#ForeignName").val();
-				if (myForeignName == "") {
-					if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
-					$.messager.alert("ÌáÊ¾", "14ËêÒÔÏÂ,ÁªÏµÈËÊÇ±ØÌîÏîÄ¿!", "info", function () {
-						$("#ForeignName").focus();
-					});
-					return false;
-				}
-				if (PageLogicObj.m_IsNotStructAddress == "Y") {
-					var myAddress = $("#Address").combobox("getText");
-					if (myAddress == "") {
-						if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
-						$.messager.alert("ÌáÊ¾", "14ËêÒÔÏÂ, µØÖ·ÊÇ±ØÌîÏîÄ¿!", "info", function () {
-							$('#Address').next('span').find('input').focus();
-						});
-						return false;
-					}
-				} else {
-					var myAddress = $("#Address").val();
-					if (myAddress == "") {
-						if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
-						$.messager.alert("ÌáÊ¾", "14ËêÒÔÏÂ, µØÖ·ÊÇ±ØÌîÏîÄ¿!", "info", function () {
-							$("#Address").focus();
-						});
-						return false;
-					}
-				}
-				var myTelHome = $("#TelHome").val();
-				if (myTelHome == "") {
-					if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
-					$.messager.alert("ÌáÊ¾", "14ËêÒÔÏÂ, ÁªÏµµç»°ÊÇ±ØÌîÏîÄ¿!", "info", function () {
-						$("#TelHome").focus();
-					});
-					return false;
-				}
-			}
-			break;
-		default:
-			break;
-	}
-	return true;
+    var myVer = ServerObj.ConfigVersion;
+    switch (myVer) {
+        case "7":
+            var myAge = $("#Age").val();
+            if (isNaN(myAge)) { myAge = 0 };
+            if (myAge < 14) {
+                var myForeignName = $("#ForeignName").val();
+                if (myForeignName == "") {
+                    if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
+                    $.messager.alert("æç¤º", "14å²ä»¥ä¸‹,è”ç³»äººæ˜¯å¿…å¡«é¡¹ç›®!", "info", function() {
+                        $("#ForeignName").focus();
+                    });
+                    return false;
+                }
+                if (PageLogicObj.m_IsNotStructAddress == "Y") {
+                    var myAddress = $("#Address").combobox("getText");
+                    if (myAddress == "") {
+                        if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
+                        $.messager.alert("æç¤º", "14å²ä»¥ä¸‹, åœ°å€æ˜¯å¿…å¡«é¡¹ç›®!", "info", function() {
+                            $('#Address').next('span').find('input').focus();
+                        });
+                        return false;
+                    }
+                } else {
+                    var myAddress = $("#Address").val();
+                    if (myAddress == "") {
+                        if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
+                        $.messager.alert("æç¤º", "14å²ä»¥ä¸‹, åœ°å€æ˜¯å¿…å¡«é¡¹ç›®!", "info", function() {
+                            $("#Address").focus();
+                        });
+                        return false;
+                    }
+                }
+                var myTelHome = $("#TelHome").val();
+                if (myTelHome == "") {
+                    if (!BaseInfoIsExpand()) BBaseInoCollapsClick();
+                    $.messager.alert("æç¤º", "14å²ä»¥ä¸‹, è”ç³»ç”µè¯æ˜¯å¿…å¡«é¡¹ç›®!", "info", function() {
+                        $("#TelHome").focus();
+                    });
+                    return false;
+                }
+            }
+            break;
+        default:
+            break;
+    }
+    return true;
 }
+
 function IsNumber(string, sign) {
-	var number;
-	if (string == null) return false;
-	if ((sign != null) && (sign != '-') && (sign != '+')) {
-		return false;
-	}
-	number = new Number(string);
-	if (isNaN(number)) {
-		return false;
-	} else if ((sign == null) || (sign == '-' && number < 0) || (sign == '+' && number > 0)) {
-		return true;
-	} else
-		return false;
+    var number;
+    if (string == null) return false;
+    if ((sign != null) && (sign != '-') && (sign != '+')) {
+        return false;
+    }
+    number = new Number(string);
+    if (isNaN(number)) {
+        return false;
+    } else if ((sign == null) || (sign == '-' && number < 0) || (sign == '+' && number > 0)) {
+        return true;
+    } else
+        return false;
 }
+
 function PatInfoUnique() {
-	var myoptval = $("#CardTypeDefine").combobox("getValue");
-	var myary = myoptval.split("^");
-	var myCardTypeDR = myary[0];
-	var Name = $("#Name").val();
-	var Sex = $("#Sex").combobox("getValue");
-	var Birth = $('#Birth').val();
-	var Tel = $("#TelHome").val();
-	var PAPMIRowID = $("#PAPMIRowID").val()
-	var rtn = $.cm({
-		ClassName: "web.DHCPATCardUnite",
-		MethodName: "GetPatByInfo",
-		CardType: myCardTypeDR,
-		Name: Name,
-		Sex: Sex,
-		Birth: Birth,
-		Tel: Tel,
-		PAPMIRowID: PAPMIRowID,
-		dataType: "text"
-	}, false)
-	var RtnArr = rtn.split("^")
-	if (RtnArr[0] == "0") {
-		return true;
-	} else if (RtnArr[0] == "S") {
-		$.messager.alert('ÌáÊ¾', '´Ë¿¨ÀàĞÍ¡¢ĞÕÃû¡¢ĞÔ±ğ¡¢³öÉúÈÕÆÚ¡¢ÁªÏµµç»°ĞÅÏ¢°ó¶¨ÒÑ¹ÒÊ§¿¨' + RtnArr[1] + ',Çë×÷·Ï´Ë¿¨ºóÖØĞÂ½¨¿¨');
-		return false;
-	} else if (RtnArr[0] == "N") {
-		$.messager.alert('ÌáÊ¾', '´Ë¿¨ÀàĞÍ¡¢ĞÕÃû¡¢ĞÔ±ğ¡¢³öÉúÈÕÆÚ¡¢ÁªÏµµç»°ĞÅÏ¢°ó¶¨¿¨' + RtnArr[1] + ',Çë°ìÀíÆäËû¿¨»òÕß²¹¿¨');
-		return false;
-	}
-	return true;
+    var myoptval = $("#CardTypeDefine").combobox("getValue");
+    var myary = myoptval.split("^");
+    var myCardTypeDR = myary[0];
+    var Name = $("#Name").val();
+    var Sex = $("#Sex").combobox("getValue");
+    var Birth = $('#Birth').val();
+    var Tel = $("#TelHome").val();
+    var PAPMIRowID = $("#PAPMIRowID").val()
+    var rtn = $.cm({
+        ClassName: "web.DHCPATCardUnite",
+        MethodName: "GetPatByInfo",
+        CardType: myCardTypeDR,
+        Name: Name,
+        Sex: Sex,
+        Birth: Birth,
+        Tel: Tel,
+        PAPMIRowID: PAPMIRowID,
+        dataType: "text"
+    }, false)
+    var RtnArr = rtn.split("^")
+    if (RtnArr[0] == "0") {
+        return true;
+    } else if (RtnArr[0] == "S") {
+        $.messager.alert('æç¤º', 'æ­¤å¡ç±»å‹ã€å§“åã€æ€§åˆ«ã€å‡ºç”Ÿæ—¥æœŸã€è”ç³»ç”µè¯ä¿¡æ¯ç»‘å®šå·²æŒ‚å¤±å¡' + RtnArr[1] + ',è¯·ä½œåºŸæ­¤å¡åé‡æ–°å»ºå¡');
+        return false;
+    } else if (RtnArr[0] == "N") {
+        $.messager.alert('æç¤º', 'æ­¤å¡ç±»å‹ã€å§“åã€æ€§åˆ«ã€å‡ºç”Ÿæ—¥æœŸã€è”ç³»ç”µè¯ä¿¡æ¯ç»‘å®šå¡' + RtnArr[1] + ',è¯·åŠç†å…¶ä»–å¡æˆ–è€…è¡¥å¡');
+        return false;
+    }
+    return true;
 }
+
 function BirthCheck() {
-	var mybirth = $("#Birth").val();
-	if ((mybirth == "") || ((mybirth.length != 8) && ((mybirth.length != 10)))) {
-		$.messager.alert("ÌáÊ¾", "ÇëÊäÈëÕıÈ·µÄ³öÉúÈÕÆÚ!", "info", function () {
-			$("#Birth").focus();
-		});
-		return false;
-	} else {
-		$("#Birth").removeClass("newclsInvalid");
-	}
-	if ((mybirth.length == 8)) {
-		if (ServerObj.dtformat == "YMD") {
-			var mybirth = mybirth.substring(0, 4) + "-" + mybirth.substring(4, 6) + "-" + mybirth.substring(6, 8)
-		}
-		if (ServerObj.dtformat == "DMY") {
-			var mybirth = mybirth.substring(6, 8) + "/" + mybirth.substring(4, 6) + "/" + mybirth.substring(0, 4)
-		}
-		$("#Birth").val(mybirth);
-	}
-	if (ServerObj.dtformat == "YMD") {
-		var myrtn = DHCWeb_IsDate(mybirth, "-")
-	}
-	if (ServerObj.dtformat == "DMY") {
-		var myrtn = DHCWeb_IsDate(mybirth, "/")
-	}
-	if (!myrtn) {
-		$.messager.alert("ÌáÊ¾", "ÇëÊäÈëÕıÈ·µÄ³öÉúÈÕÆÚ!", "info", function () {
-			$("#Birth").focus();
-		});
-		return false;
-	} else {
-		$("#Birth").removeClass("newclsInvalid");
-	}
-	return true;
+    var mybirth = $("#Birth").val();
+    if ((mybirth == "") || ((mybirth.length != 8) && ((mybirth.length != 10)))) {
+        $.messager.alert("æç¤º", "è¯·è¾“å…¥æ­£ç¡®çš„å‡ºç”Ÿæ—¥æœŸ!", "info", function() {
+            $("#Birth").focus();
+        });
+        return false;
+    } else {
+        $("#Birth").removeClass("newclsInvalid");
+    }
+    if ((mybirth.length == 8)) {
+        if (ServerObj.dtformat == "YMD") {
+            var mybirth = mybirth.substring(0, 4) + "-" + mybirth.substring(4, 6) + "-" + mybirth.substring(6, 8)
+        }
+        if (ServerObj.dtformat == "DMY") {
+            var mybirth = mybirth.substring(6, 8) + "/" + mybirth.substring(4, 6) + "/" + mybirth.substring(0, 4)
+        }
+        $("#Birth").val(mybirth);
+    }
+    if (ServerObj.dtformat == "YMD") {
+        var myrtn = DHCWeb_IsDate(mybirth, "-")
+    }
+    if (ServerObj.dtformat == "DMY") {
+        var myrtn = DHCWeb_IsDate(mybirth, "/")
+    }
+    if (!myrtn) {
+        $.messager.alert("æç¤º", "è¯·è¾“å…¥æ­£ç¡®çš„å‡ºç”Ÿæ—¥æœŸ!", "info", function() {
+            $("#Birth").focus();
+        });
+        return false;
+    } else {
+        $("#Birth").removeClass("newclsInvalid");
+    }
+    return true;
 }
+
 function GetPatMasInfo() {
-	var myxml = "";
-	if (PageLogicObj.m_PatMasFlag == "Y") {
-		var myparseinfo = $("#InitPatMasEntity").val();
-		var myxml = GetEntityClassInfoToXML(myparseinfo)
-	}
-	return myxml;
+    var myxml = "";
+    if (PageLogicObj.m_PatMasFlag == "Y") {
+        var myparseinfo = $("#InitPatMasEntity").val();
+        var myxml = GetEntityClassInfoToXML(myparseinfo)
+    }
+    return myxml;
 }
+
 function GetCardRefInfo() {
-	var myxml = "";
-	if (PageLogicObj.m_CardRefFlag == "Y") {
-		var myparseinfo = $("#InitCardRefEntity").val();
-		var myxml = GetEntityClassInfoToXML(myparseinfo)
-	}
-	return myxml;
+    var myxml = "";
+    if (PageLogicObj.m_CardRefFlag == "Y") {
+        var myparseinfo = $("#InitCardRefEntity").val();
+        var myxml = GetEntityClassInfoToXML(myparseinfo)
+    }
+    return myxml;
 }
+
 function GetCardINVInfo() {
-	var myxml = "";
-	if (PageLogicObj.m_CardRefFlag == "Y") {
-		var myparseinfo = $("#InitCardINVPRTEntity").val();
-		var myxml = GetEntityClassInfoToXML(myparseinfo)
-	}
-	return myxml;
+    var myxml = "";
+    if (PageLogicObj.m_CardRefFlag == "Y") {
+        var myparseinfo = $("#InitCardINVPRTEntity").val();
+        var myxml = GetEntityClassInfoToXML(myparseinfo)
+    }
+    return myxml;
 }
+
 function GetAccManagerInfo() {
-	var myxml = "";
-	if (PageLogicObj.m_AccManagerFlag == "Y") {
-		var myparseinfo = $("#InitAccManagerEntity").val();
-		var myxml = GetEntityClassInfoToXML(myparseinfo)
-	}
-	return myxml;
+    var myxml = "";
+    if (PageLogicObj.m_AccManagerFlag == "Y") {
+        var myparseinfo = $("#InitAccManagerEntity").val();
+        var myxml = GetEntityClassInfoToXML(myparseinfo)
+    }
+    return myxml;
 }
+
 function GetPreDepositeInfo() {
-	var myxml = "";
-	if (PageLogicObj.m_AccManagerFlag == "Y") {
-		var myparseinfo = $("#InitAccPreDepositEncrypt").val();
-		var myxml = GetEntityClassInfoToXML(myparseinfo)
-	}
-	return myxml;
+    var myxml = "";
+    if (PageLogicObj.m_AccManagerFlag == "Y") {
+        var myparseinfo = $("#InitAccPreDepositEncrypt").val();
+        var myxml = GetEntityClassInfoToXML(myparseinfo)
+    }
+    return myxml;
 }
+
 function GetEntityClassInfoToXML(ParseInfo) {
-	var myxmlstr = "";
-	try {
-		var myary = ParseInfo.split("^");
-		var xmlobj = new XMLWriter();
-		xmlobj.BeginNode(myary[0]);
-		for (var myIdx = 1; myIdx < myary.length; myIdx++) {
-			xmlobj.BeginNode(myary[myIdx]);
-			var _$id = $("#" + myary[myIdx]);
-			if (_$id.length == 0) {
-				var myval = "";
-			} else {
-				//if (_$id.hasClass("hisui-combobox")){
-				if (_$id.next().hasClass('combo')) {
-					if ((myary[myIdx] == "RegisterPlace") || (myary[myIdx] == "Address")) {
-						var myval = _$id.combobox("getText");
-					} else {
-						var myval = _$id.combobox("getValue");
-						if (myval == undefined) myval = "";
-						//·ÀÖ¹ÀàĞÍ¿¨ÀàĞÍ¡¢Ö§¸¶·½Ê½idÊÇÒÑ´®µÄĞÎÊ½´æÔÚ
-						if (myval != "") {
-							myval = myval.split("^")[0];
-						}
-					}
-				} else if (_$id.hasClass("hisui-switchbox")) {
-					var Val = _$id.switchbox("getValue");
-					var myval = Val ? "Y" : "N"
-				} else {
-					if (PageLogicObj.m_IsNotStructAddress == "Y") {
-						if ((myary[myIdx] == "RegisterPlace") || (myary[myIdx] == "Address")) {
-							var myval = _$id.combobox("getText");
-						} else {
-							var myval = _$id.val();
-						}
-					} else {
-						var myval = _$id.val();
-					}
-					if (myary[myIdx] == "PhotoInfo") {
-						myval = "";
-					}
-				}
-			}
-			xmlobj.WriteString(myval);
-			xmlobj.EndNode();
-		}
-		xmlobj.Close();
-		myxmlstr = xmlobj.ToString();
-	} catch (Err) {
-		$.messager.alert("ÌáÊ¾", "Error: " + Err.description);
-	}
-	return myxmlstr;
+    var myxmlstr = "";
+    try {
+        var myary = ParseInfo.split("^");
+        var xmlobj = new XMLWriter();
+        xmlobj.BeginNode(myary[0]);
+        for (var myIdx = 1; myIdx < myary.length; myIdx++) {
+            xmlobj.BeginNode(myary[myIdx]);
+            var _$id = $("#" + myary[myIdx]);
+            if (_$id.length == 0) {
+                var myval = "";
+            } else {
+                //if (_$id.hasClass("hisui-combobox")){
+                if (_$id.next().hasClass('combo')) {
+                    if ((myary[myIdx] == "RegisterPlace") || (myary[myIdx] == "Address") || (myary[myIdx] == "AddressBirth")) {
+                        var myval = _$id.combobox("getText");
+                    } else {
+                        var myval = _$id.combobox("getValue");
+                        if (myval == undefined) myval = "";
+                        //é˜²æ­¢ç±»å‹å¡ç±»å‹ã€æ”¯ä»˜æ–¹å¼idæ˜¯å·²ä¸²çš„å½¢å¼å­˜åœ¨
+                        if (myval != "") {
+                            myval = myval.split("^")[0];
+                        }
+                    }
+                } else if (_$id.hasClass("hisui-switchbox")) {
+                    var Val = _$id.switchbox("getValue");
+                    var myval = Val ? "Y" : "N"
+                } else {
+                    if (PageLogicObj.m_IsNotStructAddress == "Y") {
+                        if ((myary[myIdx] == "RegisterPlace") || (myary[myIdx] == "Address")) {
+                            var myval = _$id.combobox("getText");
+                        } else {
+                            var myval = _$id.val();
+                        }
+                    } else {
+                        var myval = _$id.val();
+                    }
+                    if (myary[myIdx] == "PhotoInfo") {
+                        myval = "";
+                    }
+                    if (myary[myIdx] == "Name") {
+                        myval = escape(myval) + "!!Unicode";
+                    }
+                }
+            }
+            xmlobj.WriteString(myval);
+            xmlobj.EndNode();
+        }
+        xmlobj.Close();
+        myxmlstr = xmlobj.ToString();
+    } catch (Err) {
+        $.messager.alert("æç¤º", "Error: " + Err.description);
+    }
+    return myxmlstr;
 }
+
 function WrtCard() {
-	var myPAPMINo = $("#PAPMINo").val();
-	var mySecrityNo = $.cm({
-		ClassName: "web.UDHCAccCardManage",
-		MethodName: "GetCardCheckNo",
-		dataType: "text",
-		PAPMINo: myPAPMINo
-	}, false);
-	if (mySecrityNo != "") {
-		var rtn = DHCACC_WrtMagCard("3", "", mySecrityNo, PageLogicObj.m_CCMRowID);
-		if (rtn != "0") {
-			return "-1^"
-		}
-	} else {
-		return "-1^";
-	}
-	return "0^" + mySecrityNo
+    var myPAPMINo = $("#PAPMINo").val();
+    var mySecrityNo = $.cm({
+        ClassName: "web.UDHCAccCardManage",
+        MethodName: "GetCardCheckNo",
+        dataType: "text",
+        PAPMINo: myPAPMINo
+    }, false);
+    if (mySecrityNo != "") {
+        var rtn = DHCACC_WrtMagCard("3", "", mySecrityNo, PageLogicObj.m_CCMRowID);
+        if (rtn != "0") {
+            return "-1^"
+        }
+    } else {
+        return "-1^";
+    }
+    return "0^" + mySecrityNo
 }
+
 function PatRegPatInfoPrint(RowIDStr, CurXMLName, EncryptItemName) {
-	if (CurXMLName == "") {
-		return;
-	}
-	var INVtmp = RowIDStr.split("^");
-	if (INVtmp.length > 0) {
-		DHCP_GetXMLConfig("DepositPrintEncrypt", CurXMLName);
-	}
-	for (var invi = 0; invi < INVtmp.length; invi++) {
-		if (INVtmp[invi] != "") {
-			var encmeth = $("#" + EncryptItemName).val();
-			var Guser = session['LOGON.USERID'];
-			var sUserCode = session['LOGON.USERCODE'];
-			var myExpStr = "";
-			var Printinfo = cspRunServerMethod(encmeth, "InvPrintNew", CurXMLName, INVtmp[invi], Guser, myExpStr);
-		}
-	}
+    if (CurXMLName == "") {
+        return;
+    }
+    var INVtmp = RowIDStr.split("^");
+    if (INVtmp.length > 0) {
+        DHCP_GetXMLConfig("DepositPrintEncrypt", CurXMLName);
+    }
+    for (var invi = 0; invi < INVtmp.length; invi++) {
+        if (INVtmp[invi] != "") {
+            var encmeth = $("#" + EncryptItemName).val();
+            var Guser = session['LOGON.USERID'];
+            var sUserCode = session['LOGON.USERCODE'];
+            var myExpStr = "";
+            var Printinfo = cspRunServerMethod(encmeth, "InvPrintNew", CurXMLName, INVtmp[invi], Guser, myExpStr);
+        }
+    }
 }
+
 function InvPrintNew(TxtInfo, ListInfo) {
-	var HospName = $("#HospName").val();
-	var PDlime = String.fromCharCode(2);
-	var TxtInfo = TxtInfo + "^" + "HospName3" + PDlime + HospName;
-	var TxtInfo = TxtInfo + "^" + "hospitalDesc" + PDlime + HospName;
-	//var myPAName=$("#Name").val();
-	//TxtInfo=TxtInfo+"^"+"PatName"+PDlime+myPAName;
-	//var myobj=document.getElementById("ClsBillPrint");
-	//DHCP_PrintFun(myobj,TxtInfo,ListInfo);
-	DHC_PrintByLodop(getLodop(), TxtInfo, ListInfo, "", "");
+    var HospName = $("#HospName").val();
+    var PDlime = String.fromCharCode(2);
+    var TxtInfo = TxtInfo + "^" + "HospName3" + PDlime + HospName;
+    var TxtInfo = TxtInfo + "^" + "hospitalDesc" + PDlime + HospName;
+    //var myPAName=$("#Name").val();
+    //TxtInfo=TxtInfo+"^"+"PatName"+PDlime+myPAName;
+    //var myobj=document.getElementById("ClsBillPrint");
+    //DHCP_PrintFun(myobj,TxtInfo,ListInfo);
+    DHC_PrintByLodop(getLodop(), TxtInfo, ListInfo, "", "");
 }
+
 function CheckComboxSelData(id, selId) {
-	var Find = 0;
-	var Data = $("#" + id).combobox('getData');
-	for (var i = 0; i < Data.length; i++) {
-		var CombValue = Data[i].id;
-		var CombDesc = Data[i].text;
-		if (selId == CombValue) {
-			selId = CombValue;
-			Find = 1;
-			break;
-		}
-	}
-	if (Find == "1") return selId
-	return "";
+    var Find = 0;
+    var Data = $("#" + id).combobox('getData');
+    for (var i = 0; i < Data.length; i++) {
+        var CombValue = Data[i].id;
+        var CombDesc = Data[i].text;
+        if (selId == CombValue) {
+            selId = CombValue;
+            Find = 1;
+            break;
+        }
+    }
+    if (Find == "1") return selId
+    return "";
 }
+
 function SetCardNOLength() {
-	var CardNo = $("#CardNo").val();
-	if ((PageLogicObj.m_CardNoLength != 0) && (CardNo.length > PageLogicObj.m_CardNoLength)) {
-		$.messager.confirm('ÌáÊ¾', '¿¨ºÅÎ»Êı´óÓÚ¿¨ÀàĞÍÅäÖÃÎ»Êı,ÊÇ·ñ½ØÈ¡?', function (r) {
-			if (r) {
-				GetPatByCardNo();
-			} else {
-				return false;
-			}
-		});
-	} else {
-		GetPatByCardNo();
-	}
-	function GetPatByCardNo() {
-		if ((CardNo.length < PageLogicObj.m_CardNoLength) && (PageLogicObj.m_CardNoLength != 0)) {
-			for (var i = (PageLogicObj.m_CardNoLength - CardNo.length - 1); i >= 0; i--) {
-				CardNo = "0" + CardNo;
-			}
-		}
-		if ((CardNo.length > PageLogicObj.m_CardNoLength) && (PageLogicObj.m_CardNoLength != 0)) {
-			PageLogicObj.m_CardSecrityNo = CardNo.substring(PageLogicObj.m_CardNoLength, CardNo.length);
-			CardNo = CardNo.substring(0, PageLogicObj.m_CardNoLength);
-		}
-		$("#CardNo").val(CardNo);
-		PageLogicObj.m_CardVerify = "";
-		GetValidatePatbyCard();
-	}
-	return true;
+    var CardNo = $("#CardNo").val();
+    if ((PageLogicObj.m_CardNoLength != 0) && (CardNo.length > PageLogicObj.m_CardNoLength)) {
+        $.messager.confirm('æç¤º', 'å¡å·ä½æ•°å¤§äºå¡ç±»å‹é…ç½®ä½æ•°,æ˜¯å¦æˆªå–?', function(r) {
+            if (r) {
+                GetPatByCardNo();
+            } else {
+                return false;
+            }
+        });
+    } else {
+        GetPatByCardNo();
+    }
+
+    function GetPatByCardNo() {
+        if ((CardNo.length < PageLogicObj.m_CardNoLength) && (PageLogicObj.m_CardNoLength != 0)) {
+            for (var i = (PageLogicObj.m_CardNoLength - CardNo.length - 1); i >= 0; i--) {
+                CardNo = "0" + CardNo;
+            }
+        }
+        if ((CardNo.length > PageLogicObj.m_CardNoLength) && (PageLogicObj.m_CardNoLength != 0)) {
+            PageLogicObj.m_CardSecrityNo = CardNo.substring(PageLogicObj.m_CardNoLength, CardNo.length);
+            CardNo = CardNo.substring(0, PageLogicObj.m_CardNoLength);
+        }
+        $("#CardNo").val(CardNo);
+        PageLogicObj.m_CardVerify = "";
+        GetValidatePatbyCard();
+    }
+    return true;
 }
+
 function createModalDialog(id, _title, _width, _height, _icon, _btntext, _content, _event) {
-	$("body").append("<div id='" + id + "' class='hisui-dialog'></div>");
-	if (_width == null)
-		_width = 800;
-	if (_height == null)
-		_height = 500;
-	$("#" + id).dialog({
-		title: _title,
-		width: _width,
-		height: _height,
-		cache: false,
-		iconCls: _icon,
-		//href: _url,
-		collapsible: false,
-		minimizable: false,
-		maximizable: false,
-		resizable: false,
-		modal: true,
-		closed: false,
-		closable: true,
-		content: _content,
-		onClose: function () {
-			destroyDialog(id);
-		}
-	});
+    $("body").append("<div id='" + id + "' class='hisui-dialog'></div>");
+    if (_width == null)
+        _width = 800;
+    if (_height == null)
+        _height = 500;
+    $("#" + id).dialog({
+        title: _title,
+        width: _width,
+        height: _height,
+        cache: false,
+        iconCls: _icon,
+        //href: _url,
+        collapsible: false,
+        minimizable: false,
+        maximizable: false,
+        resizable: false,
+        modal: true,
+        closed: false,
+        closable: true,
+        content: _content,
+        onClose: function() {
+            destroyDialog(id);
+        }
+    });
 }
+
 function destroyDialog(id) {
-	//ÒÆ³ı´æÔÚµÄDialog
-	$("body").remove("#" + id);
-	$("#" + id).dialog('destroy');
+    //ç§»é™¤å­˜åœ¨çš„Dialog
+    $("body").remove("#" + id);
+    $("#" + id).dialog('destroy');
 }
-//ÅĞ¶Ï»ù±¾ĞÅÏ¢ÊÇ·ñÈ«²¿Õ¹¿ª
+//åˆ¤æ–­åŸºæœ¬ä¿¡æ¯æ˜¯å¦å…¨éƒ¨å±•å¼€
 function BaseInfoIsExpand() {
-	if ($(".baseinfo").css("display") == "none") {
-		return false;
-	}
-	return true;
+    if ($(".baseinfo").css("display") == "none") {
+        return false;
+    }
+    return true;
 }
-//ÅĞ¶ÏµØÖ·ĞÅÏ¢ÊÇ·ñÈ«²¿Õ¹¿ª
+//åˆ¤æ–­åœ°å€ä¿¡æ¯æ˜¯å¦å…¨éƒ¨å±•å¼€
 function AddressInfoIsExpand() {
-	if ($(".addressinfo").css("display") == "none") {
-		return false;
-	}
-	return true;
+    if ($(".addressinfo").css("display") == "none") {
+        return false;
+    }
+    return true;
 }
-//ÅĞ¶Ï½É·ÑĞÅÏ¢ÊÇ·ñÈ«²¿Õ¹¿ª
+//åˆ¤æ–­ç¼´è´¹ä¿¡æ¯æ˜¯å¦å…¨éƒ¨å±•å¼€
 function PayInfoIsExpand() {
-	if ($(".payinfo").css("display") == "none") {
-		return false;
-	}
-	return true;
+    if ($(".payinfo").css("display") == "none") {
+        return false;
+    }
+    return true;
 }
+
 function CardSearchDBClickHander(row) {
-	var myPatientID = row['TPatientID'];
-	var Regno = row['RegNo'];
-	var OtherCardNo = row['OtherCardNo'];
-	$("#PAPMINo").val(row['RegNo']);
-	GetPatDetailByPAPMINo();
-	var CardNO = row['CardNO'];
-	if (CardNO.indexOf(",") < 0) {
-		var CardType = $.cm({
-			ClassName: "web.DHCPATCardUnite",
-			MethodName: "ReadCardTypeByDesc",
-			Desc: CardNO,
-			dataType: "text"
-		}, false)
-		$("#CardTypeDefine").combobox('select', CardType);
-		var CardNo = CardNO.split(" ")[1];
-		var IsTemporaryCard = InitTemporaryCard(CardNo);
-		if (IsTemporaryCard == "Y") {
-			$("#CardNo").val(CardNo);
-		}
-	} else {
-		$.messagert.alert("ÌáÊ¾", "»¼ÕßÓµÓĞ²»Ö¹Ò»ÖÖ¿¨,ÇëÑ¡ÔñĞèÒªĞŞ¸ÄµÄ¶ÔÓ¦¿¨ÀàĞÍ!")
-	}
-	//ÉèÖÃÆäËûÖ¤¼şĞÅÏ¢
-	CardTypeSave(OtherCardNo);
-	//¹ØÁª½¨¿¨Ê¹ÓÃµÇ¼ÇºÅ×÷Îª¿¨ºÅ£¬ÑéÖ¤¿¨ºÅµÄÓĞĞ§ĞÔ
-	CheckForUsePANoToCardNO("Modify");
+    var myPatientID = row['TPatientID'];
+    var Regno = row['RegNo'];
+    var OtherCardNo = row['OtherCardNo'];
+    $("#PAPMINo").val(row['RegNo']);
+    var myCardNo = $("#CardNo").val();
+    GetPatDetailByPAPMINo();
+    //åŒå‡»æ‚£è€…ä¿¡æ¯è¡Œç»‘å®šï¼Œä¸æ¸…æ¥šå¡å·æ¡†
+    $("#CardNo").val(myCardNo);
+
+    var CardNO = row['CardNO'];
+    if (CardNO.indexOf(",") < 0) {
+        var CardType = $.cm({
+            ClassName: "web.DHCPATCardUnite",
+            MethodName: "ReadCardTypeByDesc",
+            Desc: CardNO,
+            dataType: "text"
+        }, false)
+        $("#CardTypeDefine").combobox('select', CardType);
+        var CardNo = CardNO.split(" ")[1];
+        var IsTemporaryCard = InitTemporaryCard(CardNo);
+        if (IsTemporaryCard == "Y") {
+            $("#CardNo").val(CardNo);
+        }
+    }
+    //è®¾ç½®å…¶ä»–è¯ä»¶ä¿¡æ¯
+    CardTypeSave(OtherCardNo);
+    //å…³è”å»ºå¡ä½¿ç”¨ç™»è®°å·ä½œä¸ºå¡å·ï¼ŒéªŒè¯å¡å·çš„æœ‰æ•ˆæ€§
+    CheckForUsePANoToCardNO("Modify");
 }
 
-//cache¶ÔÏóÖĞÒÔ¼üÖµ¶ÔµÄĞÎÊ½´æ´¢ÎÒÃÇµÄ»º´æÊı¾İ
+//cacheå¯¹è±¡ä¸­ä»¥é”®å€¼å¯¹çš„å½¢å¼å­˜å‚¨æˆ‘ä»¬çš„ç¼“å­˜æ•°æ®
 var cache = {};
-//indexÊı×éÖĞ¸Ã´æ´¢¼ü£¬Õâ¸ö¼üÊÇÓĞË³Ğò£¬¿ÉÒÔ·½±ãÎÒÃÇ×ö³¬³öÈİÁ¿µÄ´¦Àí
+//indexæ•°ç»„ä¸­è¯¥å­˜å‚¨é”®ï¼Œè¿™ä¸ªé”®æ˜¯æœ‰é¡ºåºï¼Œå¯ä»¥æ–¹ä¾¿æˆ‘ä»¬åšè¶…å‡ºå®¹é‡çš„å¤„ç†
 var index = [];
+
 function createCache() {
-	return function (key, value) {
-		//Èç¹û´«ÁËÖµ£¬¾ÍËµÃûÊÇÉèÖÃÖµ
-		if (value !== undefined) {
-			//½«Êı¾İ´æÈëcache¶ÔÏó£¬×ö»º´æ
-			cache[key] = value;
-			//½«¼ü´æÈëindexÊı×éÖĞ£¬ÒÔºÍcacheÖĞµÄÊı¾İ½øĞĞ¶ÔÓ¦
-			index.push(key);
+    return function(key, value) {
+        //å¦‚æœä¼ äº†å€¼ï¼Œå°±è¯´åæ˜¯è®¾ç½®å€¼
+        if (value !== undefined) {
+            //å°†æ•°æ®å­˜å…¥cacheå¯¹è±¡ï¼Œåšç¼“å­˜
+            cache[key] = value;
+            //å°†é”®å­˜å…¥indexæ•°ç»„ä¸­ï¼Œä»¥å’Œcacheä¸­çš„æ•°æ®è¿›è¡Œå¯¹åº”
+            index.push(key);
 
-			//ÅĞ¶Ï»º´æÖĞµÄÊı¾İÊıÁ¿ÊÇ²»ÊÇ³¬³öÁËÏŞÖÆ
-			if (index.length >= 150) {
-				//Èç¹û³¬³öÁËÏŞÖÆ
-				//É¾³ıµô×îÔç´æ´¢»º´æµÄÊı¾İ
-				//×îÔç´æÈë»º´æµÄÊı¾İµÄ¼üÊÇÔÚindexÊı×éµÄµÚÒ»Î»
-				//Ê¹ÓÃÊı×éµÄshift·½·¨¿ÉÒÔ»ñÈ¡²¢É¾³ıµôÊı×éµÄµÚÒ»¸öÔªËØ
-				var tempKey = index.shift();
-				//»ñÈ¡µ½×îÔç¼ÓÈë»º´æµÄÕâ¸öÊı¾İµÄ¼ü£¬¿ÉÒÔÊ¹ÓÃËü½«Êı¾İ´Ó»º´æ¸÷ÖÖÉ¾³ı
-				delete cache[tempKey];
-			}
-		}
-		return cache[key];
-	}
+            //åˆ¤æ–­ç¼“å­˜ä¸­çš„æ•°æ®æ•°é‡æ˜¯ä¸æ˜¯è¶…å‡ºäº†é™åˆ¶
+            if (index.length >= 150) {
+                //å¦‚æœè¶…å‡ºäº†é™åˆ¶
+                //åˆ é™¤æ‰æœ€æ—©å­˜å‚¨ç¼“å­˜çš„æ•°æ®
+                //æœ€æ—©å­˜å…¥ç¼“å­˜çš„æ•°æ®çš„é”®æ˜¯åœ¨indexæ•°ç»„çš„ç¬¬ä¸€ä½
+                //ä½¿ç”¨æ•°ç»„çš„shiftæ–¹æ³•å¯ä»¥è·å–å¹¶åˆ é™¤æ‰æ•°ç»„çš„ç¬¬ä¸€ä¸ªå…ƒç´ 
+                var tempKey = index.shift();
+                //è·å–åˆ°æœ€æ—©åŠ å…¥ç¼“å­˜çš„è¿™ä¸ªæ•°æ®çš„é”®ï¼Œå¯ä»¥ä½¿ç”¨å®ƒå°†æ•°æ®ä»ç¼“å­˜å„ç§åˆ é™¤
+                delete cache[tempKey];
+            }
+        }
+        return cache[key];
+    }
 }
+
 function SaveCahce() {
-	var typeCache = createCache();
-	var $txt = $(".textbox");
-	for (var i = 0; i < $txt.length; i++) {
-		var id = $txt[i]['id'];
-		var _$label = $("label[for=" + id + "]");
-		if (_$label.length == 1) {
-			var text = _$label[0].innerHTML;
-			typeCache(id, text);
-		}
-	}
-	$.cm({
-		ClassName: "web.DHCBL.CARD.UCardPATRegConfig",
-		MethodName: "SaveCardRegDOMCache",
-		dataType: "text",
-		obj: JSON.stringify(cache)
-	}, function (rtn) { });
+    var typeCache = createCache();
+    var $txt = $(".textbox");
+    for (var i = 0; i < $txt.length; i++) {
+        var id = $txt[i]['id'];
+        var _$label = $("label[for=" + id + "]");
+        if (_$label.length == 1) {
+            var text = _$label[0].innerHTML;
+            typeCache(id, text);
+        }
+    }
+    $.cm({
+        ClassName: "web.DHCBL.CARD.UCardPATRegConfig",
+        MethodName: "SaveCardRegDOMCache",
+        dataType: "text",
+        obj: JSON.stringify(cache)
+    }, function(rtn) {});
 }
-///¸ù¾İÔªËØµÄclassname»ñÈ¡ÔªËØÖµ
+///æ ¹æ®å…ƒç´ çš„classnameè·å–å…ƒç´ å€¼
 function getValue(id) {
-	var className = $("#" + id).attr("class")
-	if (typeof className == "undefined") {
-		return $("#" + id).val()
-	}
-	if (className.indexOf("hisui-lookup") >= 0) {
-		var txt = $("#" + id).lookup("getText")
-		//Èç¹û·Å´ó¾µÎÄ±¾¿òµÄÖµÎª¿Õ,Ôò·µ»Ø¿ÕÖµ
-		if (txt != "") {
-			var val = $("#" + id).val()
-		} else {
-			var val = ""
-			$("#" + id + "Id").val("")
-		}
-		return val
-	} else if (className.indexOf("combobox-f") >= 0) { //hisui-combobox
-		var val = $("#" + id).combobox("getValue")
-		if (typeof val == "undefined") val = ""
-		return val
-	} else if (className.indexOf("hisui-datebox") >= 0) {
-		return $("#" + id).dateboxq("getValue")
-	} else {
-		return $("#" + id).val()
-	}
-	return ""
+    var className = $("#" + id).attr("class")
+    if (typeof className == "undefined") {
+        return $("#" + id).val()
+    }
+    if (className.indexOf("hisui-lookup") >= 0) {
+        var txt = $("#" + id).lookup("getText")
+            //å¦‚æœæ”¾å¤§é•œæ–‡æœ¬æ¡†çš„å€¼ä¸ºç©º,åˆ™è¿”å›ç©ºå€¼
+        if (txt != "") {
+            var val = $("#" + id).val()
+        } else {
+            var val = ""
+            $("#" + id + "Id").val("")
+        }
+        return val
+    } else if (className.indexOf("combobox-f") >= 0) { //hisui-combobox
+        var val = $("#" + id).combobox("getValue")
+        if (typeof val == "undefined") val = ""
+        return val
+    } else if (className.indexOf("hisui-datebox") >= 0) {
+        return $("#" + id).dateboxq("getValue")
+    } else {
+        return $("#" + id).val()
+    }
+    return ""
 }
-function setFocus(id) {
-	var className = $("#" + id).attr("class")
-	if (typeof className == "undefined") {
-		$("#" + id).focus();
-	}
-	if (("^hisui-lookup^hisui-combobox^hisui-datebox^combobox-f").indexOf(("^" + className + "^")) >= 0) {
-		$("#" + id).next('span').find('input').focus();
-	} else {
-		$("#" + id).focus();
-	}
-}
-function DOMFocusJump(myComName) {
-	var myComIdx = find(PageLogicObj.m_CardRegJumpSeqArr, myComName)
-	if (myComIdx >= 0) {
-		if (myComIdx == (PageLogicObj.m_CardRegJumpSeqArr.length - 1)) {
-		} else {
-			var id = PageLogicObj.m_CardRegJumpSeqArr[myComIdx + 1]['id'];
-			if (id == "PAPMINo") {
-				if ($("#PAPMINo").val() != "") {
-					DOMFocusJump("PAPMINo");
-					return;
-				}
-			}
-			if (id != "undefined") {
-				var _$id = $("#" + id);
-				//if (_$id.hasClass("hisui-combobox")){
-				if (_$id.next().hasClass('combo')) {
-					_$id.next('span').find('input').focus();
-				} else {
-					_$id.focus();
-				}
 
-			}
-		}
-		return false;
-	} else {
-		return true;
-	}
-	function find(list, elem) {
-		var index = -1;
-		for (var i = 0; i < list.length; i++) {
-			var current = list[i];
-			if (elem == current['id']) {
-				index = i;
-				break;
-			}
-		}
-		return index;
-	}
+function setFocus(id) {
+    var className = $("#" + id).attr("class")
+    if (typeof className == "undefined") {
+        $("#" + id).focus();
+    }
+    if (("^hisui-lookup^hisui-combobox^hisui-datebox^combobox-f").indexOf(("^" + className + "^")) >= 0) {
+        $("#" + id).next('span').find('input').focus();
+    } else {
+        $("#" + id).focus();
+    }
 }
-///¸ù¾İÉí·İÖ¤ºÅ¸³Öµ½á¹¹»¯µØÖ·ĞÅÏ¢
+
+function DOMFocusJump(myComName) {
+    var myComIdx = find(PageLogicObj.m_CardRegJumpSeqArr, myComName)
+    if (myComIdx >= 0) {
+        if (myComIdx == (PageLogicObj.m_CardRegJumpSeqArr.length - 1)) {} else {
+            var id = PageLogicObj.m_CardRegJumpSeqArr[myComIdx + 1]['id'];
+            if (id == "PAPMINo") {
+                if ($("#PAPMINo").val() != "") {
+                    DOMFocusJump("PAPMINo");
+                    return;
+                } else {
+                    var id = PageLogicObj.m_CardRegJumpSeqArr[myComIdx + 2]['id'];
+
+                }
+            }
+            if (id != "undefined") {
+                var _$id = $("#" + id);
+                //if (_$id.hasClass("hisui-combobox")){
+                if (_$id.next().hasClass('combo')) {
+                    _$id.next('span').find('input').focus();
+                } else {
+                    _$id.focus();
+                }
+
+            }
+        }
+        return false;
+    } else {
+        return true;
+    }
+
+    function find(list, elem) {
+        var index = -1;
+        for (var i = 0; i < list.length; i++) {
+            var current = list[i];
+            if (elem == current['id']) {
+                index = i;
+                break;
+            }
+        }
+        return index;
+    }
+}
+///æ ¹æ®èº«ä»½è¯å·èµ‹å€¼ç»“æ„åŒ–åœ°å€ä¿¡æ¯
 function BuildAddressByIDCard(IDCard) {
-	$.cm({
-		ClassName: "web.DHCDocCommon",
-		MethodName: "GetAddrInfoByCredNo",
-		CredNo: IDCard,
-		dataType: "text"
-	}, function (Data) {
-		if (Data == "") return;
-		var DataArr = Data.split("!")
-		var ProvInfo = DataArr[0]
-		var CityInfo = DataArr[1]
-		var AreaInfo = DataArr[2]
-		if (ServerObj.BuildAddrHomeByIDCard == "Y") {
-			if ($("#CountryHome").combobox('getData').length == 0) {
-				LoadCountryData("CountryHome");
-			}
-			$("#CountryHome").combobox('select', 1)
-			$("#ProvinceHome").combobox('select', ProvInfo.split("^")[0])
-			$("#CityHome").combobox('select', CityInfo.split("^")[0])
-		}
-		if (ServerObj.BuildAddrBirthByIDCard == "Y") {
-			if ($("#CountryBirth").combobox('getData').length == 0) {
-				LoadCountryData("CountryBirth");
-			}
-			$("#CountryBirth").combobox('select', 1)
-			$("#ProvinceBirth").combobox('select', ProvInfo.split("^")[0])
-			$("#CityBirth").combobox('select', CityInfo.split("^")[0])
-			$("#AreaBirth").combobox('select', AreaInfo.split("^")[0])
-		}
-		if (ServerObj.BuildAddrLookUpByIDCard == "Y") {
-			if ($("#CountryHouse").combobox('getData').length == 0) {
-				LoadCountryData("CountryHouse");
-			}
-			$("#CountryHouse").combobox('select', 1)
-			$("#ProvinceInfoLookUpRowID").combobox('select', ProvInfo.split("^")[0])
-			$("#CityDescLookUpRowID").combobox('select', CityInfo.split("^")[0])
-			$("#CityAreaLookUpRowID").combobox('select', AreaInfo.split("^")[0])
-		}
-		if (ServerObj.BuildAddrHouseByIDCard == "Y") {
-			if ($("#CountryDescLookUpRowID").combobox('getData').length == 0) {
-				LoadCountryData("CountryDescLookUpRowID");
-			}
-			$("#CountryDescLookUpRowID").combobox('select', 1)
-			$("#ProvinceHouse").combobox('select', ProvInfo.split("^")[0])
-			$("#Cityhouse").combobox('select', CityInfo.split("^")[0])
-			$("#AreaHouse").combobox('select', AreaInfo.split("^")[0])
-		}
-	})
+    $.cm({
+        ClassName: "web.DHCDocCommon",
+        MethodName: "GetAddrInfoByCredNo",
+        CredNo: IDCard,
+        dataType: "text"
+    }, function(Data) {
+        if (Data == "") return;
+        var DataArr = Data.split("!")
+        var ProvInfo = DataArr[0]
+        var CityInfo = DataArr[1]
+        var AreaInfo = DataArr[2]
+        if (ServerObj.BuildAddrHomeByIDCard == "Y") {
+            if ($("#CountryHome").combobox('getData').length == 0) {
+                LoadCountryData("CountryHome");
+            }
+            $("#CountryHome").combobox('select', 1)
+            $("#ProvinceHome").combobox('select', ProvInfo.split("^")[0])
+            $("#CityHome").combobox('select', CityInfo.split("^")[0])
+        }
+        if (ServerObj.BuildAddrBirthByIDCard == "Y") {
+            if ($("#CountryBirth").combobox('getData').length == 0) {
+                LoadCountryData("CountryBirth");
+            }
+            $("#CountryBirth").combobox('select', 1)
+            $("#ProvinceBirth").combobox('select', ProvInfo.split("^")[0])
+            $("#CityBirth").combobox('select', CityInfo.split("^")[0])
+            $("#AreaBirth").combobox('select', AreaInfo.split("^")[0])
+        }
+        if (ServerObj.BuildAddrLookUpByIDCard == "Y") {
+            if ($("#CountryHouse").combobox('getData').length == 0) {
+                LoadCountryData("CountryHouse");
+            }
+            $("#CountryHouse").combobox('select', 1)
+            $("#ProvinceInfoLookUpRowID").combobox('select', ProvInfo.split("^")[0])
+            $("#CityDescLookUpRowID").combobox('select', CityInfo.split("^")[0])
+            $("#CityAreaLookUpRowID").combobox('select', AreaInfo.split("^")[0])
+        }
+        if (ServerObj.BuildAddrHouseByIDCard == "Y") {
+            if ($("#CountryDescLookUpRowID").combobox('getData').length == 0) {
+                LoadCountryData("CountryDescLookUpRowID");
+            }
+            $("#CountryDescLookUpRowID").combobox('select', 1)
+            $("#ProvinceHouse").combobox('select', ProvInfo.split("^")[0])
+            $("#Cityhouse").combobox('select', CityInfo.split("^")[0])
+            $("#AreaHouse").combobox('select', AreaInfo.split("^")[0])
+        }
+    })
 }
+
 function ExtendComboxEvent() {
-	$.extend(true, $.fn.combobox.defaults, {
-		keyHandler: {
-			left: function (e) {
-				return false;
-			},
-			right: function (e) {
-				return false;
-			},
-			up: function (e) {
-				nav(this, 'prev');
-				e.preventDefault();
-			},
-			down: function (e) {
-				var Data = $(this).combobox("getData");
-				var CurValue = $(this).combobox("getValue");
-				if ($(this).combobox('panel').is(":hidden")) {
-					$(this).combobox('showPanel');
-					return false;
-				}
-				nav(this, 'next');
-				e.preventDefault();
-			},
-			query: function (q, e) {
-				_8c0(this, q);
-			},
-			enter: function (e) {
-				_8c5(this);
-				var id = $(this)[0].id;
-				return DOMFocusJump(id);
-			}
-		}
-	});
-	/*$HUI.combobox(".combobox-f", { //.hisui-combobox
+    $.extend(true, $.fn.combobox.defaults, {
+        keyHandler: {
+            left: function(e) {
+                return false;
+            },
+            right: function(e) {
+                return false;
+            },
+            up: function(e) {
+                nav(this, 'prev');
+                e.preventDefault();
+            },
+            down: function(e) {
+                var Data = $(this).combobox("getData");
+                var CurValue = $(this).combobox("getValue");
+                if ($(this).combobox('panel').is(":hidden")) {
+                    $(this).combobox('showPanel');
+                    return false;
+                }
+                nav(this, 'next');
+                e.preventDefault();
+            },
+            query: function(q, e) {
+                _8c0(this, q);
+            },
+            enter: function(e) {
+                _8c5(this);
+                var id = $(this)[0].id;
+                return DOMFocusJump(id);
+            }
+        }
+    });
+    /*$HUI.combobox(".combobox-f", { //.hisui-combobox
 		keyHandler:{
 			left: function (e) {
 				return false;
-			},
+            },
 			right: function (e) {
 				return false;
-			},
-			up: function (e) {
-				nav(this,'prev');
-				e.preventDefault();
-			 },
-			 down: function (e) {
-					var Data=$(this).combobox("getData");
+            },
+            up: function (e) {
+	            nav(this,'prev');
+	            e.preventDefault();
+             },
+             down: function (e) {
+              	var Data=$(this).combobox("getData");
 				var CurValue=$(this).combobox("getValue");
 				if ($(this).combobox('panel').is(":hidden")){
 					$(this).combobox('showPanel');
@@ -4267,44 +4656,723 @@ function ExtendComboxEvent() {
 				}
 				nav(this,'next');
 				e.preventDefault();
-			},
-			query: function (q, e) {
-				_8c0(this, q);
-			},
-			enter: function (e) { 
-				_8c5(this);
-				var id=$(this)[0].id;
-				return DOMFocusJump(id);
-			}
+            },
+            query: function (q, e) {
+                _8c0(this, q);
+            },
+            enter: function (e) { 
+            	_8c5(this);
+            	var id=$(this)[0].id;
+            	return DOMFocusJump(id);
+            }
 		}
 	})*/
 }
+
 function SetCountryComboxData(comboId, CountryId) {
-	if (comboId == "") return;
-	if (CountryId == "") {
-		$("#" + comboId).combobox('setValue', "").combobox('setText', text);
-		return;
-	}
-	var CountryDataJson = JSON.parse(ServerObj.DefaultCTCountryPara);
-	for (var k = 0; k < CountryDataJson.length; k++) {
-		if (CountryDataJson[k]['id'] == CountryId) {
-			var text = CountryDataJson[k]['text'];
-			var AliasStr = CountryDataJson[k]['AliasStr'];
-			break;
-		}
-	}
-	$("#" + comboId).combobox('setValue', CountryId).combobox('setText', text);
+    if (comboId == "") return;
+    if (CountryId == "") {
+        $("#" + comboId).combobox('setValue', "").combobox('setText', text);
+        return;
+    }
+    var CountryDataJson = JSON.parse(ServerObj.DefaultCTCountryPara);
+    for (var k = 0; k < CountryDataJson.length; k++) {
+        if (CountryDataJson[k]['id'] == CountryId) {
+            var text = CountryDataJson[k]['text'];
+            var AliasStr = CountryDataJson[k]['AliasStr'];
+            break;
+        }
+    }
+    $("#" + comboId).combobox('setValue', CountryId).combobox('setText', text);
 }
+
 function LoadPatInfoByRegNo() {
-	if (ServerObj.PatientNoReg != "") {
-		$("#PAPMINo").val(ServerObj.PatientNoReg);
-		PAPMINoOnblur();
-		ServerObj.PatientNoReg = "";
-		if (typeof (history.pushState) === 'function') {
-			//·ÀÖ¹ÓÒ¼üË¢ĞÂºóÒ½ÖöÖØ¸´¸´ÖÆ
-			var Url = window.location.href;
-			var NewUrl = rewriteUrl(Url, { PatientNoReg: "" });
-			history.pushState("", "", NewUrl);
-		}
-	}
+    if (ServerObj.PatientNoReg != "") {
+        $("#PAPMINo").val(ServerObj.PatientNoReg);
+        PAPMINoOnblur();
+        ServerObj.PatientNoReg = "";
+        if (typeof(history.pushState) === 'function') {
+            //é˜²æ­¢å³é”®åˆ·æ–°ååŒ»å˜±é‡å¤å¤åˆ¶
+            var Url = window.location.href;
+            var NewUrl = rewriteUrl(Url, { PatientNoReg: "" });
+            history.pushState("", "", NewUrl);
+        }
+    }
+}
+
+/// desc:	è·å–é‚®ç¼–Id
+function GetPostCodeId(item) {
+    var postCodeId = "",
+        areaId = ""
+    if (item == "CountryHome") {
+        var areaId = "";
+    } else if (item == "CountryBirth") {
+        var areaId = "AreaBirth";
+    } else if (item == "CountryDescLookUpRowID") {
+        var areaId = "CityAreaLookUpRowID";
+    } else if (item == "CountryHouse") {
+        var areaId = "AreaHouse"
+    }
+    if (item == "ProvinceHome") {
+        var areaId = "";
+    } else if (item == "ProvinceBirth") {
+        var areaId = "AreaBirth";
+    } else if (item == "ProvinceInfoLookUpRowID") {
+        var areaId = "CityAreaLookUpRowID";
+    } else if (item == "ProvinceHouse") {
+        var areaId = "AreaHouse"
+    }
+
+    if (areaId == "CityAreaLookUpRowID") {
+        postCodeId = "PostCode";
+    } else if (areaId == "AreaHouse") {
+        postCodeId = "PostCodeHouse";
+    }
+    return postCodeId;
+}
+
+function CityAreaSelectHandler(AreaType) {
+    var ProviceId = "",
+        CityId = "",
+        AreaId = "",
+        PostCodeId = ""
+
+    if (AreaType == "CityAreaLookUpRowID") {
+        ProviceId = $("#ProvinceInfoLookUpRowID").combobox("getValue");
+        CityId = $("#CityDescLookUpRowID").combobox("getValue");
+        AreaId = $("#CityAreaLookUpRowID").combobox("getValue");
+        PostCodeId = "PostCode";
+    } else if (AreaType == "AreaHouse") {
+        ProviceId = $("#ProvinceHouse").combobox("getValue");
+        CityId = $("#Cityhouse").combobox("getValue");
+        AreaId = $("#AreaHouse").combobox("getValue");
+        PostCodeId = "PostCodeHouse";
+    } else if (AreaType == "AreaHome") {
+        ProviceId = $("#ProvinceHome").combobox("getValue");
+        CityId = $("#CityHome").combobox("getValue");
+        AreaId = $("#AreaHome").combobox("getValue");
+        PostCodeId = "CompanyPostCode";
+    }
+    if (ProviceId != "" && CityId != "" && AreaId != "" && PostCodeId != "") {
+        $.cm({
+            ClassName: "web.DHCBL.CTBASEIF.ICTCardRegLB",
+            MethodName: "GetPostCodeByPCA",
+            Prov: ProviceId,
+            City: CityId,
+            CityArea: AreaId,
+            dataType: "text"
+        }, function(PostCode) {
+            $("#" + PostCodeId).val(PostCode)
+        })
+    }
+}
+
+function StreetSelectHandler(AreaID) {
+    var StreetId = ""
+    if (AreaID == "AreaHouse") {
+        var StreetId = "StreetHouse";
+    } else if (AreaID == "AreaBirth") {
+        var StreetId = "StreetBirth";
+    } else if (AreaID == "CityAreaLookUpRowID") {
+        var StreetId = "StreetNow";
+    }
+
+    var AreaValue = $("#" + AreaID).combobox("getValue")
+    if (StreetId != "") {
+        var Data = $.m({
+            ClassName: "web.DHCBL.CTBASEIF.ICTCardRegLB",
+            MethodName: "ReadBaseData",
+            dataType: "text",
+            TabName: "CTLocalityType",
+            QueryInfo: AreaValue + "^^^HUIJSON"
+        }, false);
+        var cbox = $HUI.combobox("#" + StreetId, {
+            width: 110,
+            valueField: 'id',
+            textField: 'text',
+            editable: true,
+            blurValidValue: true,
+            data: JSON.parse(Data),
+            filter: function(q, row) {
+                if (q == "") return true;
+                if (row["text"].indexOf(q.toUpperCase()) >= 0) return true;
+                var find = 0;
+                for (var i = 0; i < row["AliasStr"].split("^").length; i++) {
+                    if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0) {
+                        find = 1;
+                        break;
+                    }
+                }
+                if (find == 1) return true;
+                return false;
+            },
+            onSelect: function(rec) {
+                if (rec != undefined) {
+
+                }
+            },
+            onChange: function(newValue, oldValue) {
+
+
+            }
+        });
+    }
+}
+
+function LimitBirthTime() {
+    var LimitFlag = true
+    var Birth = $("#Birth").val();
+    var DaysBetween = $.cm({
+        ClassName: "web.DHCDocCommon",
+        MethodName: "GetDaysBetween",
+        FromDate: Birth,
+        dataType: "text"
+    }, false);
+    if (DaysBetween != "") {
+        if (parseInt(DaysBetween) <= parseInt(ServerObj.LimitBirthTimeByAge)) {
+            LimitFlag = false
+        }
+    }
+    return LimitFlag
+
+}
+
+function TelHomeOnBlur() {
+    AdjustForeignPhone();
+    SearchSamePatient();
+}
+
+/// å½“è”ç³»äººä¿¡æ¯å¿…å¡«æ—¶ï¼Œå°†è”ç³»ç”µè¯åŒæ­¥åˆ°è”ç³»äººç”µè¯ä¸­
+/// æ³¨å†Œé…ç½®->å…¨å±€é…ç½®->è”ç³»äººä¿¡æ¯å¿…å¡«(å¹´é¾„) 
+function AdjustForeignPhone() {
+    var Birth = $("#Birth").val();
+    if (Birth != "") {
+        var Age = AgeForYear(Birth);
+        if (Age < ServerObj.ForeignInfoByAge) {
+            var TelHome = $("#TelHome").val();
+            $("#ForeignPhone").val(TelHome);
+        } else {
+            $("#ForeignPhone").val("");
+        }
+    } else {
+        $("#ForeignPhone").val("");
+    }
+}
+
+
+function EmployeeNoOnKeyDown(e) {
+    var key = websys_getKey(e);
+    if (key == 13) {
+        var myPatType = $("#PatType").combobox("getText");
+        if (myPatType.indexOf('æœ¬é™¢') >= 0) {
+            var EmployeeNo = $("#EmployeeNo").val();
+            if (EmployeeNo == "") {
+                $.messager.alert("æç¤º", "æœ¬é™¢èŒå·¥,è¯·å¡«å†™èŒå·¥å·¥å·!", "info", function() {
+                    $("#EmployeeNo").focus();
+                });
+                return false;
+            }
+            var curPAPMIRowID = $.cm({
+                ClassName: "web.DHCBL.CARDIF.ICardPaPatMasInfo",
+                MethodName: "GetPAPMIRowIDByEmployeeNo",
+                dataType: "text",
+                EmployeeNo: EmployeeNo
+            }, false);
+            var name = curPAPMIRowID.split("^")[1];
+            var UserName = curPAPMIRowID.split("^")[2];
+            curPAPMIRowID = curPAPMIRowID.split("^")[0];
+            if (curPAPMIRowID == "0") {
+                $.messager.alert("æç¤º", "å·¥å·ä¸æ­£ç¡®,è¯·æ ¸å®å·¥å·!", "info", function() {
+                    $("#EmployeeNo").focus();
+                });
+                return false;
+            }
+            var PAPMIRowID = $("#PAPMIRowID").val();
+            if ((PAPMIRowID != curPAPMIRowID) && (curPAPMIRowID != "")) {
+                $.messager.alert("æç¤º", "æ­¤å·¥å·å·²ç»è¢«'" + name + "'æ‰€ç”¨,è¯·æ ¸å®å·¥å·!", "info", function() {
+                    $("#EmployeeNo").focus();
+                });
+                return false;
+            }
+            $.messager.confirm("æç¤º", "æ˜¯å¦åŠ è½½å‘˜å·¥åŸºæœ¬ä¿¡æ¯åˆ°å½“å‰ç•Œé¢?", function(r) {
+                if (r) {
+                    SetUserInfoByEmployeeNo();
+                }
+            });
+        } else {
+            var EmployeeNo = $("#EmployeeNo").val();
+            if (EmployeeNo != "") {
+                $.messager.alert("æç¤º", "éæœ¬é™¢èŒå·¥å·¥å·ä¸å¯å¡«å†™!", "info", function() {
+                    $("#EmployeeNo").focus();
+                });
+            }
+        }
+        return false;
+    }
+}
+
+function SetUserInfoByEmployeeNo() {
+    var EmployeeNo = $("#EmployeeNo").val();
+    $.cm({
+        ClassName: "web.DHCBL.CARDIF.ICardPaPatMasInfo",
+        MethodName: "GetUserInfoByEmployeeNo",
+        EmployeeNo: EmployeeNo,
+        dataType: "text"
+    }, function(UserInfo) {
+        if (UserInfo != "") {
+            var InfoArr = UserInfo.split("^")
+            var UserName = InfoArr[0];
+            var SexStr = InfoArr[1];
+            var PatDob = InfoArr[2];
+            var CredNo = InfoArr[3];
+            var NationStr = InfoArr[4];
+            var MaritalStr = InfoArr[5];
+            var Address = InfoArr[6];
+            var TelH = InfoArr[7];
+            var CountryStr = InfoArr[8];
+            var Img = InfoArr[9];
+
+            $("#Name").val(UserName);
+            $("#Birth").val(PatDob);
+            if (PatDob) BirthOnBlur();
+            $("#CredType").combobox('select', PageLogicObj.m_CredTypeDef);
+            $("#CredNo").val(CredNo);
+            $("#TelHome").val(TelH);
+            if (PageLogicObj.m_IsNotStructAddress == "Y") {
+                $("#Address").combobox('setText', Address);
+            } else {
+                $("#Address").val(Address);
+            }
+            if (SexStr != "") {
+                var SexId = SexStr.split(String.fromCharCode(1))[0];
+                var Sex = SexStr.split(String.fromCharCode(1))[1];
+                $("#Sex").combobox("setValue", SexId);
+            }
+            if (NationStr != "") {
+                var NationId = NationStr.split(String.fromCharCode(1))[0];
+                var Nation = NationStr.split(String.fromCharCode(1))[1];
+                $("#NationDescLookUpRowID").combobox("setValue", NationId);
+            }
+            if (MaritalStr != "") {
+                var MaritalId = MaritalStr.split(String.fromCharCode(1))[0];
+                var Marital = MaritalStr.split(String.fromCharCode(1))[1];
+                $("#PAPERMarital").combobox("setValue", MaritalId);
+            }
+            if (CountryStr != "") {
+                var CountryId = CountryStr.split(String.fromCharCode(1))[0];
+                var Country = CountryStr.split(String.fromCharCode(1))[1];
+                $("#CountryDescLookUpRowID").combobox("setValue", CountryId);
+                $("#CountryHome").combobox("setValue", CountryId);
+                $("#CountryBirth").combobox("setValue", CountryId);
+                $("#CountryHouse").combobox("setValue", CountryId);
+                $("#CountryDescLookUpRowID").combobox("setText", Country);
+                $("#CountryHome").combobox("setText", Country);
+                $("#CountryBirth").combobox("setText", Country);
+                $("#CountryHouse").combobox("setText", Country);
+                //CountrySelect("CountryDescLookUpRowID",Country);
+                //CountrySelect("CountryHome",Country);
+                //CountrySelect("CountryBirth",Country);
+                //CountrySelect("CountryHouse",Country);
+            }
+            if (Img != "") {
+                ShowPicBySrcNew(Img, "imgPic");
+                var PhotoBase64 = Img.split(";base64,")[1];
+                $("#PhotoInfo").val(PhotoBase64);
+            } else {
+                ShowPicBySrcNew("", "imgPic");
+                $("#PhotoInfo").val("");
+            }
+            $("#CardNo").focus();
+        } else {
+            $.messager.alert("æç¤º", "å‘˜å·¥åŸºæœ¬ä¿¡æ¯åŠ è½½å¤±è´¥ï¼")
+        }
+    })
+}
+
+function GetErrMsg(ErrCode) {
+    var errmsg = "";
+    if (ErrCode == "-302") errmsg = "æ­¤ç—…äººå·²ç»æœ‰æ­£å¸¸çš„å¡äº†,ä¸èƒ½å‘å¡!";
+    if (ErrCode == "-303") errmsg = "å¡å·ä¸èƒ½ä¸ºç©º,è¯·è¯»å¡!";
+    if (ErrCode == "-304") errmsg = "æ­¤å¡å·å·²ç»å­˜åœ¨,ä¸èƒ½å‘å¡!";
+    if (ErrCode == "-364") errmsg = "å·²ç»å­˜åœ¨æ­¤å¡ç±»å‹ä¸‹çš„æœ‰æ•ˆå¡,ä¸å…è®¸å†å‘!";
+    if (ErrCode == "-365") errmsg = "æ­¤è¯ä»¶å·ç å·²ç»å­˜åœ¨,è¯·åŠç†å…¶ä»–å¡æˆ–åŠç†è¡¥å¡!";
+    if (ErrCode == "-366") errmsg = "è¯·é€‰æ‹©å¡ç±»å‹!";
+    if (ErrCode == "-367") errmsg = "è¯ä»¶å·ç ä¸èƒ½ä¸ºç©º!";
+    if (ErrCode == "-369") errmsg = "åŠç†å¡ç»‘å®šæ—¶,è·å–æ‚£è€…ä¿¡æ¯é”™è¯¯!";
+    if (ErrCode == "-341") errmsg = "æ­¤å¡å·²ç»å»ºå¡,ä¸èƒ½é‡å¤å‘å¡!";
+    if (ErrCode == "-371") errmsg = "å¡å·ç å‰ç¼€é”™è¯¯,ä¸èƒ½å‘å¡!";
+    if (ErrCode == "-3411") errmsg = "è½¬æ­£å¼å¡å¤±è´¥,æœªæ‰¾åˆ°å¯¹åº”çš„å¡è®°å½•,è¯·æ ¸å®å¡å·å’Œå¡ç±»å‹!";
+    if (ErrCode == "-10001") errmsg = "è·å–å½“å‰ç”¨æˆ·å‘ç¥¨ä¿¡æ¯å¤±è´¥ï¼Œéœ€æ ¸å®å¡ç±»å‹å‘ç¥¨ç±»å‹æ˜¯å¦ç»´æŠ¤æ­£ç¡®ã€æ˜¯å¦å¼€å¯éœ€è¦å‘ç¥¨!";
+    return errmsg;
+}
+
+function LoadAddrType() {
+    $.cm({
+        ClassName: "web.DHCBL.CARD.CardTypeDef",
+        MethodName: "GetAddrDefTypeJson",
+        HospId: session['LOGON.HOSPID'],
+        dataType: "text"
+    }, function(ret) {
+        var cbox = $HUI.combobox("#AddressType", {
+            multiple: true,
+            valueField: 'id',
+            textField: 'text',
+            blurValidValue: true,
+            data: JSON.parse(ret),
+        })
+    })
+}
+
+function SetAddressByAddrType(AdddressIDStr) {
+    if (AdddressIDStr == "") return false
+    var AdddressIDArr = AdddressIDStr.split("^");
+    var CountryDR = AdddressIDArr[0];
+    var ProvinceDR = AdddressIDArr[1];
+    var CityDR = AdddressIDArr[2];
+    var CityAreaDR = AdddressIDArr[3];
+    var CommunityDR = AdddressIDArr[4];
+    var StreetDR = AdddressIDArr[5];
+    var AddrDefType = $("#AddressType").combobox("getValues")
+    var AddressDef = $("#AddressDef").combobox('getText');
+    var CheckFlag = ""
+    if ($("#BirthAddrbox").checkbox('getValue')) {
+        var CountryBirth = $("#CountryBirth").combobox("getValue")
+        if (CountryBirth == "") {
+            SetCountryComboxData("CountryBirth", CountryDR);
+            CountrySelect("CountryBirth", CountryDR);
+        }
+        if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
+        $("#ProvinceBirth").combobox("select", ProvinceDR);
+        $("#CityBirth").combobox("select", CityDR);
+        $("#AreaBirth").combobox("select", CityAreaDR);
+        $("#StreetBirth").combobox("select", StreetDR)
+        CheckFlag = "Y"
+    }
+    if ($("#HomeAddrbox").checkbox('getValue')) { //case "ç°ä½":
+        if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
+        var CountryHouse = $("#CountryHouse").combobox("getValue")
+        if (CountryHouse == "") {
+            SetCountryComboxData("CountryHouse", CountryDR);
+            CountrySelect("CountryHouse", CountryDR);
+        }
+        $("#ProvinceInfoLookUpRowID").combobox("select", ProvinceDR);
+        $("#CityDescLookUpRowID").combobox("select", CityDR);
+        $("#CityAreaLookUpRowID").combobox("select", CityAreaDR);
+        $("#StreetNow").combobox("select", StreetDR)
+        CheckFlag = "Y"
+    }
+    if ($("#HKAddrbox").checkbox('getValue')) { //case "æˆ·å£":
+        if (!AddressInfoIsExpand()) BAddressInoCollapsClick();
+        LoadProvince("ProvinceHouse", CountryDR);
+        $("#ProvinceHouse").combobox("select", ProvinceDR);
+        $("#Cityhouse").combobox("select", CityDR);
+        $("#AreaHouse").combobox("select", CityAreaDR);
+        $("#StreetHouse").combobox("select", StreetDR)
+        CheckFlag = "Y"
+    }
+    return true;
+}
+
+function OpenWin(AdddressIDStr) {
+    $('#EditWindow').window({
+        title: "åœ°å€å¡«å……",
+        zIndex: 9999,
+        iconCls: 'icon-w-edit',
+        inline: false,
+        minimizable: false,
+        maximizable: false,
+        collapsible: false,
+        closable: true
+    });
+    $("#Str").val(AdddressIDStr);
+    SetWincheckbox()
+}
+function UncheckAllClick() {
+    $("#BirthAddrbox").checkbox('uncheck');
+    $("#HomeAddrbox").checkbox('uncheck');
+    $("#HKAddrbox").checkbox('uncheck');
+}
+function SetWincheckbox() {
+	UncheckAllClick()
+    var AddrDefType = $("#AddressType").combobox("getValues")
+
+    if (AddrDefType.indexOf('å‡ºç”Ÿ') >= 0) {
+        $("#BirthAddrbox").checkbox('check');
+
+    }
+    if (AddrDefType.indexOf('ç°ä½') >= 0) { //case "ç°ä½":
+        $("#HomeAddrbox").checkbox('check');
+    }
+    if (AddrDefType.indexOf('æˆ·å£') >= 0) { //case "æˆ·å£":
+        $("#HKAddrbox").checkbox('check');
+    }
+}
+//
+function SelecAllClick() {
+    $("#BirthAddrbox").checkbox('check');
+    $("#HomeAddrbox").checkbox('check');
+    $("#HKAddrbox").checkbox('check');
+}
+
+function SelecOtherClick() {
+    if ($("#BirthAddrbox").checkbox('getValue')) {
+        $("#BirthAddrbox").checkbox('uncheck');
+    } else {
+        $("#BirthAddrbox").checkbox('check');
+    }
+    if ($("#HomeAddrbox").checkbox('getValue')) {
+        $("#HomeAddrbox").checkbox('uncheck');
+    } else {
+        $("#HomeAddrbox").checkbox('check');
+    }
+    if ($("#HKAddrbox").checkbox('getValue')) {
+        $("#HKAddrbox").checkbox('uncheck');
+    } else {
+        $("#HKAddrbox").checkbox('check');
+    }
+    return;
+}
+
+function RealBtnClick() {
+    var AdddressIDStr = $("#Str").val()
+    var rtn = SetAddressByAddrType(AdddressIDStr)
+    if (rtn) $('#EditWindow').window('close');
+}
+
+function ShowCardDescDetail(that) {
+    var content = that.id;
+    MaxHeight = 'auto', placement = "bottom";
+    $(that).webuiPopover({
+        title: '',
+        content: content,
+        trigger: 'hover',
+        placement: placement,
+        style: 'inverse',
+        height: MaxHeight
+
+    });
+    $(that).webuiPopover('show');
+}
+
+function ShowGotoDetail(that) {
+    var content = "è·³è½¬åˆ°æŒ‚å·"
+    if ((window.parent) && (window.parent.ServerObj.ParaRegType == "APP")) {
+        content = "è·³è½¬åˆ°é¢„çº¦"
+    }
+    $(that).webuiPopover({
+        title: '',
+        content: content,
+        trigger: 'hover',
+        placement: "top",
+        //style:'inverse',
+        height: 'auto'
+
+    });
+    $(that).webuiPopover('show');
+}
+
+function BackRegWindow(PatientID,RegNo) {
+    if (typeof window.parent.SetPassCardNo == 'function') {
+        window.parent.$("#PatientNo").val(RegNo)
+        window.parent.CheckPatientNo()
+        window.parent.destroyDialog("CardReg");
+    } else {
+		var mwin = ("undefined"!=typeof window.websys_getMenuWin_origin)?websys_getMenuWin_origin():websys_getMenuWin(); /*åœ¨å¼¹å‡ºå¼ç•Œé¢ä¹Ÿå¼ºåˆ¶æ‰¾åˆ°å¤´èœå•*/
+        if (mwin){
+	        var frm = mwin.document.forms['fEPRMENU'];
+	        if (frm) {
+	            frm.PatientID.value = PatientID;
+	        }
+        }
+        window.opener.clickHeaderMenu({ code: "opadm_reg_hui_reg" });
+        window.close()
+    }
+}
+
+function InitEDUCombo() {
+    $.m({
+        ClassName: "web.DHCBL.CTBASEIF.ICTCardRegLB",
+        MethodName: "GetEDUJsonInfo",
+    }, function(Data) {
+        var cbox = $HUI.combobox("#Education", {
+            valueField: 'id',
+            textField: 'text',
+            //editable:false,
+            data: JSON.parse(Data)
+        });
+    });
+}
+
+function InitLanguageCombo() {
+    $.m({
+        ClassName: "web.DHCBL.CTBASEIF.ICTCardRegLB",
+        MethodName: "GetLANJsonInfo",
+    }, function(Data) {
+        var cbox = $HUI.combobox("#PAPMILangPrimDR,#PAPMILangSecondDR", {
+            valueField: 'id',
+            textField: 'text',
+            //editable:false,
+            width: 115,
+            data: JSON.parse(Data)
+        });
+    });
+}
+
+function InitAddressDefCombo() {
+    var cbox = $HUI.combobox("#AddressDef", {
+        valueField: 'provid',
+        textField: 'provdesc',
+        editable: true,
+        selectOnNavigation: false,
+        mode: "remote",
+        delay: "500",
+        url: $URL + "?ClassName=web.DHCBL.CTBASEIF.ICTCardRegLB&QueryName=admaddressNewlookup&rows=999999",
+        onBeforeLoad: function(param) {
+            var desc = "";
+            if (param['q']) {
+                desc = param['q'];
+            }
+            param = $.extend(param, { desc: desc });
+        },
+        loadFilter: function(data) {
+            return data['rows'];
+        },
+        onSelect: function(record) {
+            if (typeof record == "undefined") { return }
+            var AdddressIDStr = ""
+            var AdddressIDStr = record.AddressIDStr; //sbqå¯¼è‡´è¯»ä¸å‡ºç—…äººä¿¡æ¯
+            if (AdddressIDStr == "") {
+                return true;
+            }
+            var AdddressIDArr = AdddressIDStr.split("^");
+            var CountryDR = AdddressIDArr[0];
+            var ProvinceDR = AdddressIDArr[1];
+            var CityDR = AdddressIDArr[2];
+            var CityAreaDR = AdddressIDArr[3];
+            var CommunityDR = AdddressIDArr[4];
+            if (this.id == "AddressDef") {
+                var winEvent = window.event;
+                var mykey = winEvent.keyCode;
+                if (mykey == 13) {
+                    PageLogicObj.m_ShowWindowFlag = ""
+                }
+                OpenWin(AdddressIDStr)
+            }
+            return true;
+        }
+    });
+    //$("#Address").combobox("resize","625");
+}
+
+function CheckInHos() {
+    var PAPMIRowID = $("#PAPMIRowID").val();
+    var InHosFlag = $.cm({
+        ClassName: "web.DHCDocOrderCommon",
+        MethodName: "CheckPatInIPAdmission",
+        PatientID: PAPMIRowID,
+        HospID: session['LOGON.HOSPID'],
+        dataType: "text"
+    }, false);
+    if (InHosFlag == 1) {
+        $.messager.alert('æç¤º', 'æ‚£è€…ä½é™¢æœŸé—´è¯·åˆ°ä½é™¢ç™»è®°ç•Œé¢ä¿®æ”¹æ‚£è€…ä¿¡æ¯!', "info");
+        return false;
+    }
+    return true;
+}
+///å¦‚æœå›½ç±ä¸­ç»´æŠ¤äº†é»˜è®¤è¯­è¨€å¯ä»¥è®²è¯­è¨€é»˜è®¤åˆ°æ¯è¯­1ä¸Š
+function DefLanguage(CountryID) {
+    if (CountryID == "") {
+        var CountryID = $("#CountryDescLookUpRowID").combobox('getValue');
+        if (CountryID == "") return;
+    }
+    $.m({
+        ClassName: "web.DHCBL.CTBASEIF.ICTCardRegLB",
+        MethodName: "GetDefLanByCountry",
+        CountryID: CountryID
+    }, function(Data) {
+        $("#PAPMILangPrimDR").combobox('select', Data);
+    });
+    return true;
+}
+
+function ReadLinkRegInfoOnClick() {
+    var myHCTypeDR = $("#IEType").combobox("getValue");
+    var myInfo = DHCWCOM_PersonInfoRead(myHCTypeDR);
+    var myary = myInfo.split("^");
+    if (myary[0] == "0") {
+        var XMLStr = "<?xml version='1.0' encoding='gb2312'?>" + myary[1];
+        var xmlDoc = DHCDOM_CreateXMLDOMNew(XMLStr);
+        if (!xmlDoc) return;
+        var nodes = xmlDoc.documentElement.childNodes;
+        if (nodes.length <= 0) { return; }
+        var CredTypeID = "";
+        for (var i = 0; i < nodes.length; i++) {
+            var myItemName = getNodeName(nodes, i);
+            var myItemValue = getNodeValue(nodes, i);
+            if (myItemName == "Name") $("#ForeignName").val(myItemValue);
+            if (myItemName == "Address") $("#ForeignAddress").val(myItemValue);
+            if (myItemName == "CredNo") $("#ForeignIDCard").val(myItemValue);
+            if (myItemName == "CredType") CredTypeID = myItemValue;
+        }
+        SelectCredType("ForeignCredType", CredTypeID, PageLogicObj.m_CredTypeID);
+        if ($(".baseinfo").css("display") == "none") {
+            $(".baseinfo-div").removeClass("baseinfo-collapse").addClass("baseinfo-expand");
+            $(".baseinfo").show();
+            $("#BBaseInoCollaps .l-btn-text")[0].innerText = "éšè—å…¨éƒ¨";
+        }
+        $("#ForeignPhone").focus()
+    }
+}
+
+function SelectCredType(ElementID, CredTypeID, DefaultID) {
+    var _id = $("#" + ElementID);
+    if (_id.length < 1) return;
+    if (CredTypeID != "") {
+        var Data = _id.combobox("getData");
+        for (var m = 0; m < Data.length; m++) {
+            var id = Data[m]["id"];
+            var text = Data[m]["text"];
+            if (CredTypeID == id.split("^")[0]) {
+                _id.combobox("select", id);
+                break;
+            }
+        }
+    } else {
+        _id.combobox("select", DefaultID);
+    }
+    return true;
+}
+
+function ShowOtherNamePopover(that) {
+    var content = "å¤šç±»å‹å§“åç®¡ç†"
+    
+    $(that).webuiPopover({
+        title: '',
+        content: content,
+        trigger: 'hover',
+        //style:'inverse',
+        height: 'auto'
+
+    });
+    $(that).webuiPopover('show');
+}
+
+function OtherNameclick(that) {
+	var src = "doc.othernametype.hui.csp?OtherNameInfo=" + $("#OtherNameInfo").val();;
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
+    var $code = "<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='" + src + "'></iframe>";
+    createModalDialog("OtherNameInfoManager", "å¤šç±»å‹å§“åç®¡ç†", "500", "290", "icon-w-list", "", $code, "");
+}
+
+function NameTypeSave(newData) {
+    $("#OtherNameInfo").val(newData);
+}
+function ChangeCardClick() {
+	var row=PageLogicObj.m_FindPatListTabDataGrid.datagrid('getSelected');
+	var RegNo=""
+	if (row) RegNo=row["RegNo"];
+	var src = "reg.cardmanagement.hui.csp?RegNo=" + RegNo;
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
+    var $code = "<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='" + src + "'></iframe>";
+    createModalDialog("cardmanagement","å¡æ“ä½œ", 1360  , PageLogicObj.dh, "icon-edit", "", $code, "");
 }

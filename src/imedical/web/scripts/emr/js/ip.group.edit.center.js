@@ -43,7 +43,8 @@ function InitDocument(tempParam)
 	}
 	else
 	{
-		if (!doCreate(tempParam)) return; 	
+		if (!doCreate(tempParam)) return;
+		param = tempParam;	
 	}
 	if (isEnableEditMultiRecord != "false")
 	{
@@ -173,8 +174,12 @@ function doMultiplyCreate(tempParam)
 			var isGuideBox = (tempParam.isLeadframe == "1")?true:false;
 			setDocTempalte(tempParam.emrDocId,isMutex,isGuideBox); //设置引导框	
 			if (tempParam.actionType == "CREATE")
-			{
-				var defaultLoadId = getDefaultLoadId(tempParam.emrDocId,userLocID);
+			{				
+				var defaultLoadId = tempParam.titleCode;
+				if (defaultLoadId=="")
+				{
+					var defaultLoadId = getDefaultLoadId(tempParam.emrDocId,userLocID);
+				}
 				if (defaultLoadId == "")
 				{
 					focusDocument("GuideDocument","","First");
@@ -235,7 +240,7 @@ function doOpen(tempParam)
 	}
 	else
 	{
-		$.messager.alert("提示信息","插件创建失败");
+		top.$.messager.alert("提示信息","插件创建失败");
 		return false;
 	}
 	if ((param != "")&&(param.emrDocId == tempParam.emrDocId) && ((param.characteristic != "0") || (param.id == tempParam.id)))
@@ -283,7 +288,7 @@ function wordDoc(tempParam)
 	document.getElementById("containerGrid").style.display="none";
 	document.getElementById("containerWord").style.display="block";
 	var iword = pluginword()
-	if(iword==null || iword.innerHTML== undefined)
+	if(iword==null || iword.innerHTML== undefined || !iwordFlag)
 	{
 		var objString = "<object id='pluginWord' type='application/x-iemrplugin' style='width:100%;height:100%;padding:0px;'>";
 	    objString = objString + "<param name='install-url' value='" + pluginUrl + "'/>";
@@ -311,7 +316,9 @@ function wordDoc(tempParam)
 			return result;
 		} 
 		SetDefaultFontStyle();
-		//iword = true;                             	
+		//iword = true; 
+		iwordFlag = true;
+		igridFlag = false; 		
 		setRunEMRParams();
 	}
 	return result;
@@ -326,7 +333,7 @@ function girdDoc(tempParam)
 	document.getElementById("containerGrid").style.display="block";
 	document.getElementById("containerWord").style.display="none";
 	var igrid = plugingrid()
-	if(igrid==null || igrid.innerHTML== undefined)
+	if(igrid==null || igrid.innerHTML== undefined || !igridFlag)
 	{
 		var objString = "<object id='pluginGrid' type='application/x-iemrplugin' style='width:100%;height:100%;padding:0px;'>";         
 	    objString = objString + "<param name='install-url' value='" + pluginUrl + "'/>";
@@ -354,14 +361,16 @@ function girdDoc(tempParam)
 			result = false;
 			return result;
 		}	                      
-		//igrid = true; 
+		//igrid = true;
+		igridFlag = true;
+		iwordFlag = false;		
 		setRunEMRParams();
 	}
 	return result;
 }
 //安装插件提示
 function setUpPlug (){
-	var iframeContent = "<iframe id='iframeDownloadPlugin' scrolling='auto' frameborder='0' src='emr.record.downloadplugin.csp?PluginUrl=" +base64encode(utf16to8(encodeURI(pluginUrl)))+"&openWay=editor' style='width:290px; height:140px; display:block;'></iframe>";
+	var iframeContent = "<iframe id='iframeDownloadPlugin' scrolling='auto' frameborder='0' src='emr.record.downloadplugin.csp?PluginUrl=" +base64encode(utf16to8(encodeURI(pluginUrl)))+"&openWay=editor"+"&MWToken="+getMWToken()+"' style='width:290px; height:140px; display:block;'></iframe>";
 	createModalDialog("downloadPluginDialog","下载插件",310,180,"iframeDownloadPlugin",iframeContent,setUpPlugCallBack,"");
 };
 
@@ -509,12 +518,12 @@ function setReadOnly(flag,instanceIds)
 		//设置当前文档是否可保存
 		if(documentContext.privelege.canSave == 1)
 		{
-			toolbar.setSaveStatus('enable');
+			setSaveStatus('enable');
 		}
 		//设置当前文档是否可删除
 		if(documentContext.privelege.canDelete == 1)
 		{
-			toolbar.setDeleteStatus('enable');
+			setDeleteStatus('enable');
 		}
 	}
 }
@@ -527,9 +536,10 @@ function setPatientInfo()
     var argJson = {action: "SET_PATIENT_INFO",args:argParams};
     cmdDoExecute(argJson);
 	var userLevel = "";
-	if (getUserInfo() != "")
+	var userInfo = getUserInfo();
+	if (userInfo != "")
 	{
-		userLevel = getUserInfo().UserLevel;
+		userLevel = userInfo.UserLevel;
 	}
     //设置当前操作者信息
     setCurrentRevisor(userID,userName,ipAddress,userLevel);
@@ -611,7 +621,7 @@ function loadDocument(tempParam)
 	if (status == "DELETE")
 	{
 		setReadOnly(true,[tempParam["id"]]);
-		toolbar.setToolBarStatus("disable");
+		setToolBarStatus("disable");
 	}
 	else
 	{
@@ -976,7 +986,7 @@ function printDocument()
 	if (getModifyStatus("").Modified == "True")
 	{
 		var text = '文档正在编辑，请保存后打印，是否保存？';
-		$.messager.confirm("操作提示", text, function (data) { 
+		top.$.messager.confirm("操作提示", text, function (data) { 
 			if(data) {
 				saveDocument();
 				return;
@@ -996,7 +1006,7 @@ function printDocumentContent()
 	$("#InstanceTree li").each(function(){
 		var instanceId = $(this).attr("id");
 		var page = "";
-		if ($(this).find("input[name='checkbox']:checked").length == 1)
+		if ($(this).find("input[name='recordList']:checked").length == 1)
 		{
 			checkFlag = "true";
 			page = getpagenum($(this).attr("page"));
@@ -1077,7 +1087,7 @@ function printOneDocument()
 	if (getModifyStatus("").Modified == "True")
 	{
 		var text = '文档正在编辑，请保存后打印，是否保存？';
-		$.messager.confirm("操作提示", text, function (data) { 
+		top.$.messager.confirm("操作提示", text, function (data) { 
 			if(data) {
 				saveDocument();
 				printOneDocumentContent();
@@ -1109,7 +1119,7 @@ function printOneDocumentContent()
 	}
 	//打印
 	parent.setPrintInfo("true");
-    createModalDialog("printDialog","打印","320","470","iframePrint","<iframe id='iframePrint' scrolling='auto' frameborder='0' src='emr.interface.print.csp?EpisodeID=" + episodeID + "&PatientID=" + patientID + "&UserID=" + userID + "&InsID=" + documentContext.InstanceID + "&IPAddress=" + ipAddress + "&IsPrintDirectly=N' style='width:320px; height:470px; display:block;'></iframe>","","")
+    createModalDialog("printDialog","打印","320","470","iframePrint","<iframe id='iframePrint' scrolling='auto' frameborder='0' src='emr.interface.print.csp?EpisodeID=" + episodeID + "&PatientID=" + patientID + "&UserID=" + userID + "&InsID=" + documentContext.InstanceID + "&IPAddress=" + ipAddress + "&IsPrintDirectly=N"+"&MWToken="+getMWToken()+"' style='width:320px; height:470px; display:block;'></iframe>","","")
     parent.setPrintInfo("false");
 }
 
@@ -1118,7 +1128,7 @@ function autoPrintDocument(){
 	if (getModifyStatus("").Modified == "True")
 	{
 		var text = '文档正在编辑，请保存后打印，是否保存？';
-		$.messager.confirm("操作提示", text, function (data) { 
+		top.$.messager.confirm("操作提示", text, function (data) { 
 			if(data) {
 				saveDocument();
 				autoPrintDocumentContent();
@@ -1157,7 +1167,7 @@ function autoPrintDocumentContent()
 			},
 			success: function(d) {
 				if(d== 0){
-					$.messager.alert("提示","病历已全部打印，无可续打病历");
+					top.$.messager.alert("提示","病历已全部打印，无可续打病历");
 					return;
 				}else{
 					parent.setPrintInfo("true");
@@ -1235,7 +1245,7 @@ function revokeSignedDocument(modifyResult)
 	{
 		var instanceId = modifyResult.InstanceID[i];
 		var documentContext = getDocumentContext(instanceId);
-		var userLevel = getUserInfo().UserLevel;
+		var userLevel = getUserInfo().characterCode;
 		if (revokeStatus()!= "Superior") userLevel = "";
 		var revokeResult = cmdRevokeSignedDocument(userLevel,instanceId);
 		if (revokeResult.result == "ERROR")
@@ -1298,20 +1308,15 @@ function getUserInfo()
 			"p3":userLocID,
 			"p4":"",
 			"p5":"inpatient",
-			"p6":episodeID
+			"p6":episodeID,
+			"p7":"",
+			"p8":"",
+			"p9":param.id
 		},
 		success: function(d) {
 			if (d != "")
 			{
 				result = eval("("+d+")");
-				if (signLogic == "Custom")
-				{
-					var temp =  getEpisodeThreeDoctor(result);
-					if (temp.flag == 1)
-					{
-						result = temp.userInfo;
-					}
-				}
 			}
 		},
 		error: function(d) {alert("error");}
@@ -1358,7 +1363,7 @@ function qualitySaveDocument()
 	if (qualityData.total > 0)
 	{
 		var controlType = qualityData.ControlType;
-		var quality = "<iframe id='framclipboard' src='dhc.epr.quality.runtimequalitylist.csp?EpisodeID="+episodeID+"&EventType="+eventType+"&TemplateID="+param.templateId+"&key="+qualityData.key+"' style='width:98%; height:98%;border:0;margin:0px;padding:5px;overflow:hidden;' scrolling=no></iframe>"			
+		var quality = "<iframe id='framclipboard' src='dhc.epr.quality.runtimequalitylist.csp?EpisodeID="+episodeID+"&EventType="+eventType+"&TemplateID="+param.templateId+"&key="+qualityData.key+"&MWToken="+getMWToken()+"' style='width:98%; height:98%;border:0;margin:0px;padding:5px;overflow:hidden;' scrolling=no></iframe>"			
 		addTabs("quality","质控提示",quality,true); 
 		if (controlType == "0") 
 		{
@@ -1385,7 +1390,7 @@ function qualitySignDocument()
 	if (qualityData.total > 0)
 	{
 		var controlType = qualityData.ControlType;
-		var quality = "<iframe id='framclipboard' src='dhc.epr.quality.runtimequalitylist.csp?EpisodeID="+episodeID+"&EventType="+eventType+"&TemplateID="+param.templateId+"&key="+qualityData.key+"' style='width:98%; height:98%;border:0;margin:0px;padding:5px;overflow:hidden;' scrolling=no></iframe>"			
+		var quality = "<iframe id='framclipboard' src='dhc.epr.quality.runtimequalitylist.csp?EpisodeID="+episodeID+"&EventType="+eventType+"&TemplateID="+param.templateId+"&key="+qualityData.key+"&MWToken="+getMWToken()+"' style='width:98%; height:98%;border:0;margin:0px;padding:5px;overflow:hidden;' scrolling=no></iframe>"			
 		addTabs("quality","质控提示",quality,true); 
 		if (controlType == "0") 
 		{
@@ -1460,6 +1465,7 @@ function audit(signProperty)
     var canRevokCheck = documentContext.privelege.canRevokCheck;
     if (pluginType != "GRID") canRevokCheck =0;
     var tmpInstanceId = signProperty.InstanceID;
+    if (typeof(tmpInstanceId) == "undefined") tmpInstanceId = documentContext.InstanceID;
     var openFlag = episodeType=="O"?"0":"1";
    	if (signProperty.OriSignatureLevel.toUpperCase() == 'PATIENT') 
    	{
@@ -1484,32 +1490,35 @@ function audit(signProperty)
 	}
 	if ('1' == CAServicvice) 
 	{
-		var signParam = {"topwin":window,"canRevokCheck":canRevokCheck,"cellName":signProperty.Name};
+		var signParam = {"topwin":window,"canRevokCheck":canRevokCheck,"cellName":signProperty.Name,"oriSignatureLevel":signProperty.OriSignatureLevel};
+		
 		if (CAVersion == "2")
 		{
 			var ca_key = window.ca_key;
-			var certObj = ca_key.LoginForm({forceLogin:false});
-			if ((certObj.retCode == "0")&&(certObj.hisUserID != "")) {
-				var userInfo = ajaxLoginCA(certObj,ca_key.VenderCode,ca_key.SignType);
-				if (userInfo != "") {
-					returnValues = '{"action":"sign","userInfo":'+userInfo+'}';
-				}
-			}
-		
-			returnValues = returnValues||"";
-			caSignContent(returnValues,signProperty,tmpInstanceId,certObj);	
+            
+            if ((ca_key.SignType == "UKEY")||(ca_key.SignType == "FACE")){
+                var signParam = {"canRevokCheck":canRevokCheck,"cellName":signProperty.Name,"oriSignatureLevel":signProperty.OriSignatureLevel};
+				var signParamStr = base64encode(utf16to8(escape(JSON.stringify(signParam))));
+				var usernameStr = base64encode(utf16to8(encodeURI(userName)))
+				var iframeContent = "<iframe id='iframeSignCA' scrolling='no' frameborder='0' src='emr.ip.signca.csp?UserName="+usernameStr+"&UserID="+userID+"&OpenFlag="+openFlag+"&UserLocID="+userLocID+"&EpisodeID="+episodeID+"&SignParamStr="+signParamStr+"&openWay=editor"+"&MWToken="+getMWToken()+"' style='width:350px; height:245px; display:block;overflow:hidden;'></iframe>"
+				var arr = {"signProperty":signProperty,"tmpInstanceId":tmpInstanceId}
+				createModalDialog("CASignDialog","CA签名","370","295","iframeSignCA",iframeContent,signCACallBack,arr)
+            } else {
+	            var src = "emr.ip.signca.phone.csp?episodeID="+episodeID+"&canRevokCheck="+canRevokCheck+"&oriSignatureLevel="+signProperty.OriSignatureLevel+"&venderCode="+ca_key.VenderCode+"&signType="+ca_key.SignType+"&product=EMR&cellName="+base64encode(utf16to8(encodeURI(signProperty.Name)))+"&MWToken="+getMWToken();
+				var iframeContent = "<iframe id='iframeLoginQrcode' scrolling='no' frameborder='0' src='"+src+"' style='width:749px; height:712px; display:block;overflow:hidden;'></iframe>"
+				var arr = {"signProperty":signProperty,"tmpInstanceId":tmpInstanceId}
+				createModalDialog("loginQrcode","CA签名","750","750","iframeLoginQrcode",iframeContent,signCACallBack,arr)
+            }
 		}
 		else
 		{
-			var signParam = {"canRevokCheck":canRevokCheck,"cellName":signProperty.Name};
+			var signParam = {"canRevokCheck":canRevokCheck,"cellName":signProperty.Name,"oriSignatureLevel":signProperty.OriSignatureLevel};
 			var signParamStr = base64encode(utf16to8(escape(JSON.stringify(signParam))));
 			var usernameStr = base64encode(utf16to8(encodeURI(userName)))
-			var iframeContent = "<iframe id='iframeSignCA' scrolling='auto' frameborder='0' src='emr.ip.signca.csp?UserName="+usernameStr+"&UserID="+userID+"&OpenFlag="+openFlag+"&UserLocID="+userLocID+"&EpisodeID="+episodeID+"&SignParamStr="+signParamStr+"&openWay=sign' style='width:340px; height:235px; display:block;'></iframe>"
+			var iframeContent = "<iframe id='iframeSignCA' scrolling='no' frameborder='0' src='emr.ip.signca.csp?UserName="+usernameStr+"&UserID="+userID+"&OpenFlag="+openFlag+"&UserLocID="+userLocID+"&EpisodeID="+episodeID+"&SignParamStr="+signParamStr+"&openWay=editor"+"&MWToken="+getMWToken()+"' style='width:350px; height:245px; display:block;overflow:hidden;'></iframe>"
 			var arr = {"signProperty":signProperty,"tmpInstanceId":tmpInstanceId}
-			createModalDialog("CASignDialog","CA签名","360","285","iframeSignCA",iframeContent,signCACallBack,arr)
+			createModalDialog("CASignDialog","CA签名","370","295","iframeSignCA",iframeContent,signCACallBack,arr)
 		}
-		
-		
 	}
 	else
 	{
@@ -1518,14 +1527,28 @@ function audit(signProperty)
 		{
 			openFlag = "0";
 		}
-		var signParam = {"canRevokCheck":canRevokCheck,"cellName":signProperty.Name};
+		var signParam = {"canRevokCheck":canRevokCheck,"cellName":signProperty.Name,"oriSignatureLevel":signProperty.OriSignatureLevel};
 		var signParamStr = base64encode(utf16to8(escape(JSON.stringify(signParam))));
 		
-		var iframeContent = "<iframe id='iframeSign' scrolling='auto' frameborder='0' src='emr.ip.sign.csp?UserName="+userName+"&UserCode="+userCode+"&OpenFlag="+openFlag+"&UserLocID="+userLocID+"&EpisodeID="+episodeID+"&SignParamStr="+signParamStr+"&openWay=sign' style='width:340px; height:255px; display:block;'></iframe>"
+		var iframeContent = "<iframe id='iframeSign' scrolling='auto' frameborder='0' src='emr.ip.sign.csp?UserName="+userName+"&UserCode="+userCode+"&OpenFlag="+openFlag+"&UserLocID="+userLocID+"&EpisodeID="+episodeID+"&SignParamStr="+signParamStr+"&openWay=sign"+"&MWToken="+getMWToken()+"' style='width:360px; height:255px; display:block;'></iframe>"
 		var arr = {"signProperty":signProperty,"tmpInstanceId":tmpInstanceId,"documentContext":documentContext}
-		createModalDialog("SignDialog","系统签名","365","295","iframeSign",iframeContent,signCallBack,arr)
+		createModalDialog("SignDialog","系统签名","385","295","iframeSign",iframeContent,signCallBack,arr)
 		
 	}
+}
+
+//移动扫码签变更实现方式，此方法作废
+function mobileSignCallBack(returnValue,arr1,arr2)
+{
+	var certObj = returnValue || "";
+    if ((certObj.retCode == "0")&&(certObj.hisUserID != "")) {
+        var userInfo = ajaxLoginCA(certObj,ca_key.VenderCode,ca_key.SignType,arr1.OriSignatureLevel);
+        if (userInfo != "") {
+            returnValues = '{"action":"sign","userInfo":'+userInfo+'}';
+        }
+    }
+    returnValues = returnValues||"";
+    caSignContent(returnValues,arr1,arr2,certObj);		
 }
 
 function signCallBack(returnValue,arr)
@@ -1554,7 +1577,7 @@ function signCallBack(returnValue,arr)
 
 	returnValues = eval("("+returnValues+")");
 	userInfo = returnValues.userInfo;	
-	if ((userInfo.UserLevel == "")&&(userInfo.UserPos == "")&&(signProperty.OriSignatureLevel !== "All"))
+	if ((userInfo.UserLevel == "")&&(userInfo.UserPos == "")&&(userInfo.characterCode == ""))
 	{
 		setMessage('请先维护用户级别','forbid');
 		return;	
@@ -1603,13 +1626,13 @@ function signCallBack(returnValue,arr)
 	}
 }
 
-function caSignContent(returnValues,signProperty,tmpInstanceId,certObj)
+function caSignContent(returnValues,signProperty,tmpInstanceId)
 {
 	if ((returnValues == "") || (returnValues == undefined)) return;
 	
 	var returnValues = eval("("+returnValues+")");
 	userInfo = returnValues.userInfo;
-	if ((userInfo.UserLevel == "")&&(userInfo.UserPos == "")&&(signProperty.OriSignatureLevel !== "All"))
+	if ((userInfo.UserLevel == "")&&(userInfo.UserPos == "")&&(userInfo.characterCode == ""))
 	{
 		setMessage('请先维护用户级别','forbid');
 		return;	
@@ -1623,7 +1646,14 @@ function caSignContent(returnValues,signProperty,tmpInstanceId,certObj)
 		}
 		if (CAVersion == "2")
 		{
-			caSignMobile(signProperty,userInfo,tmpInstanceId,certObj);
+            var ca_key = window.ca_key;
+            if ((ca_key.SignType == "UKEY")||(ca_key.SignType == "FACE")){
+                caSign(signProperty,userInfo,tmpInstanceId);
+            }else{
+                var certObj = returnValues.cert;
+                ca_key.SetCertInfo(JSON.stringify(certObj));
+                caSignMobile(signProperty,userInfo,tmpInstanceId,certObj);
+            }
 		}
 		else
 		{	
@@ -1662,11 +1692,12 @@ function signCACallBack(returnValue,arr)
 	{
 		tmpInstanceId = arr.tmpInstanceId;
 	}
-	caSignContent(returnValue,signProperty,tmpInstanceId,"")
+	caSignContent(returnValue,signProperty,tmpInstanceId)
 }
 
+//移动扫码签变更实现方式，此方法作废
 //登录，返回用户名，和签名图片
-function ajaxLoginCA(certObj,venderCode,signType) {
+function ajaxLoginCA(certObj,venderCode,signType,oriSignatureLevel) {
     var loginInfo = '';
     
 	var strServerRan = "";
@@ -1686,16 +1717,17 @@ function ajaxLoginCA(certObj,venderCode,signType) {
         		"OutputType":"String",
 				"Class":"EMRservice.BL.BLEMRSign",
 				"Method":"CALogin",
-				"p1":strServerRan,
-				"p2":UsrCertCode,
-            	"p3":UserSignedData,
-            	"p4":certificateNo,
-            	"p5":cert,
-            	"p6":userLocID,
-            	"p7":"inpatient",
-            	"p8":episodeID,
-            	"p9":signType,
-            	"p91":venderCode
+				"pa":strServerRan,
+				"pb":UsrCertCode,
+            	"pc":UserSignedData,
+            	"pd":certificateNo,
+            	"pe":cert,
+            	"pf":userLocID,
+            	"pg":"inpatient",
+            	"ph":episodeID,
+            	"pi":signType,
+            	"pj":venderCode,
+            	"pk":oriSignatureLevel
         },
         success: function(ret) 
         {
@@ -1724,7 +1756,7 @@ function caSign(signProperty,userInfo,instanceId)
 
 	//开始签名
 	var cert = GetSignCert(strKey);
-    var UsrCertCode = GetUniqueID(cert);
+    var UsrCertCode = GetUniqueID(cert,strKey);
     if (!UsrCertCode || '' == UsrCertCode) return '用户唯一标示为空！';
     if (CAVersion == "2")
 	{
@@ -1734,14 +1766,23 @@ function caSign(signProperty,userInfo,instanceId)
 	{
 		var certNo = ""
 	}
-	var signlevel = signProperty.SignatureLevel;
+	var signlevel = userInfo.characterCode;
 	var actionType = checkresult.ationtype;
-    if (signProperty.OriSignatureLevel == "Check") signlevel = userInfo.UserLevel
-	var signInfo = signDocument(instanceId,userInfo.Type,signlevel,userInfo.UserID,userInfo.UserName,userInfo.Image,actionType,userInfo.LevelDesc,"","");
+	if (signCTPCPType == "Character")
+	{
+		//职称描述取签名角色描述
+		var CTPCPDesc = userInfo.characterDesc
+	}
+	else
+	{
+		//职称描述取真实职称
+		var CTPCPDesc = userInfo.CTPCPDesc
+	}
+	var signInfo = signDocument(instanceId,userInfo.Type,signlevel,userInfo.UserID,userInfo.UserName,userInfo.Image,actionType,CTPCPDesc,"","");
 
     if (!signInfo.Digest || signInfo.Digest == "") 
     {
-	    $.messager.alert("签名提示", "签名原文为空！",'info');
+	    top.$.messager.alert("签名提示", "签名原文为空！",'info');
 	    return ;
 	}
     var signValue = SignedData(signInfo.Digest,strKey);
@@ -1789,20 +1830,36 @@ function caSignMobile(signProperty,userInfo,instanceId,certObj)
 
 	//开始签名
 	var cert = GetSignCert(certObj.certContainer);
-    var UsrCertCode = GetUniqueID(cert);
+    var UsrCertCode = GetUniqueID(cert,certObj.certContainer);
     if (!UsrCertCode || '' == UsrCertCode) return '用户唯一标示为空！';
     
-	var signlevel = signProperty.SignatureLevel;
+	var signlevel = userInfo.characterCode;
 	var actionType = checkresult.ationtype;
-    if (signProperty.OriSignatureLevel == "Check") signlevel = userInfo.UserLevel
-	var signInfo = signDocument(instanceId,userInfo.Type,signlevel,userInfo.UserID,userInfo.UserName,userInfo.Image,actionType,userInfo.LevelDesc,"","");
+	if (signCTPCPType == "Character")
+	{
+		//职称描述取签名角色描述
+		var CTPCPDesc = userInfo.characterDesc
+	}
+	else
+	{
+		//职称描述取真实职称
+		var CTPCPDesc = userInfo.CTPCPDesc
+	}
+	var signInfo = signDocument(instanceId,userInfo.Type,signlevel,userInfo.UserID,userInfo.UserName,userInfo.Image,actionType,CTPCPDesc,"","");
 
     if (!signInfo.Digest || signInfo.Digest == "") 
     {
-	    $.messager.alert("签名提示", "签名原文为空！",'info');
+	    top.$.messager.alert("签名提示", "签名原文为空！",'info');
 	    return ;
 	}
-    var signValue = SignedData(signInfo.Digest,certObj.certContainer,episodeID);
+    
+    //获取病历信息传给CA展示
+    var recordInfo = GetRecordInfo(instanceId);
+	if (recordInfo != "") {
+		recordInfo = JSON.stringify({"subject":recordInfo.subject});
+	}
+    
+    var signValue = SignedData(signInfo.Digest,certObj.certContainer,episodeID,recordInfo);
     $.ajax({
         type: 'POST',
         dataType: 'json',
@@ -1838,23 +1895,60 @@ function caSignMobile(signProperty,userInfo,instanceId,certObj)
     });
 }
 
+//病历信息
+function GetRecordInfo(instanceID) {
+    var info = '';
+    if ('' === instanceID) return '';
+	
+    $.ajax({
+        type: 'POST',
+        dataType: 'json',
+        url: "../EMRservice.Ajax.caKeySign.cls",
+        async: false,
+        cache: false,
+        data: {
+            func: 'GetRecordInfo',
+            InstanceDataID: instanceID
+        },
+        success: function(ret) {
+            if (ret && ret.Err) {
+                alert('GetRecordInfo' + ret.Err);
+            } else {
+                info = ret;
+            }
+        },
+        error: function(err) {
+            alert(err.message || err);
+        }
+    });
+    return info;
+}
+
 //系统签名
 function checkSign(signProperty,userInfo,instanceId,documentContext)
 {
 	//权限检查
 	var checkresult = checkPrivilege(userInfo,signProperty);
 	if(!checkresult.flag) return;
-	var signlevel = signProperty.SignatureLevel;
+	var signlevel = userInfo.characterCode;
 	var actionType = checkresult.ationtype;	
 	if ((actionType == "Append" && documentContext.privelege.canCheck == 0) || (actionType == "Replace" && documentContext.privelege.canReCheck == 0))
 	{
 		setMessage("没有权限签名",'forbid');
 		return
 	}
-	
+	if (signCTPCPType == "Character")
+	{
+		//职称描述取签名角色描述
+		var CTPCPDesc = userInfo.characterDesc
+	}
+	else
+	{
+		//职称描述取真实职称
+		var CTPCPDesc = userInfo.CTPCPDesc
+	}
 	//开始签名
-    if (signProperty.OriSignatureLevel == "Check") signlevel = userInfo.UserLevel
-	var signInfo = signDocument(instanceId,userInfo.Type,signlevel,userInfo.UserID,userInfo.UserName,userInfo.Image,actionType,userInfo.LevelDesc,"","");
+	var signInfo = signDocument(instanceId,userInfo.Type,signlevel,userInfo.UserID,userInfo.UserName,userInfo.Image,actionType,CTPCPDesc,"","");
 	if (signInfo.result == "OK")
 	{
 		saveSignDocument(instanceId,userInfo.UserID,signlevel,"","","SYS",signInfo.Path,actionType);
@@ -1922,266 +2016,36 @@ function getEpisodeThreeDoctor(userInfo)
 function checkPrivilege(userInfo,signProperty)
 {
 	var result = {"flag":false,"ationtype":""};
-	if (signLogic == "Custom")
-	{
-		var tempResult = getEpisodeThreeDoctor(userInfo);
-		if (tempResult.flag !== "1") 
-		{
-			setMessage(tempResult.message,'forbid');
-	   		return result;	
-		}
-		else
-		{
-			userInfo = tempResult.userInfo; 
-		}
-	}	
-	var count = signProperty.Authenticator.length;
-	if ((count >0) && (signProperty.Id == userInfo.UserID) && (isEnableSelectUserLevel != "Y"))
-	{
-		result = {"flag":false,"ationtype":""};
-		setMessage('已签名,不必再签','forbid');
-	    return result;
-	}
 	
-	var signArray = ["All","QCDoc","QCNurse","ChargeNurse","student","intern","Refresher","Coder"];
+	var UserID = userInfo.UserID;
+	var characterCode = userInfo.characterCode;
+	var OriSignatureLevel = signProperty.OriSignatureLevel;
+	var SignatureLevel = signProperty.SignatureLevel;
+	var Id = signProperty.Id;
+	var signedLength = signProperty.Authenticator.length;
 	
-	if ($.inArray(signProperty.OriSignatureLevel, signArray) != -1)
-	{
-		if (count>0)
-		{
-			//改签
-			if (confirm("已签名，是否改签")==true)
-			{
-				result = {"flag":true,"ationtype":"Replace"};
-			}
-			else
-			{
-				result = {"flag":false,"ationtype":""};
-			}
-		}
-		else
-		{
-			//签名
-			 result = {"flag":true,"ationtype":"Append"};
-		}
-	}
-	else if (signProperty.OriSignatureLevel == "Check")
-	{
-        //签名单元是三级医师审核,禁止质控护士/责任护士级别的用户签名
-        if ($.inArray(userInfo.UserLevel,["QCNurse","ChargeNurse"]) != -1)
-        {
-			//无权限签
-			result = {"flag":false,"ationtype":""};
-			setMessage("无权限签名","forbid");
-            return result;
-        }
-		if (count <=0)
-		{
-			//签名
-			result = {"flag":true,"ationtype":"Append"};
-		}
-		else
-		{
-			if (userInfo.UserLevel == "student")
-			{
-				if (count == 1 && signProperty.SignatureLevel == "student")
-				{
-					//改签
-					if (confirm("已签名，是否改签")==true)
-					{
-						result = {"flag":true,"ationtype":"Replace"};
-					}
-					else
-					{
-						result = {"flag":false,"ationtype":""};
-					}
-				}
-				else
-				{
-					//无权限签
-					result = {"flag":false,"ationtype":""};
-					setMessage("无权限签名","forbid");
-				}
-	
-			}
-			else if (userInfo.UserLevel == "intern")
-			{
-				if (count == 1 && signProperty.SignatureLevel == "intern")
-				{
-					//改签
-					if (confirm("已签名，是否改签")==true)
-					{
-						result = {"flag":true,"ationtype":"Replace"};
-					}
-					else
-					{
-						result = {"flag":false,"ationtype":""};
-					}
-				}
-				else
-				{
-					//无权限签
-					result = {"flag":false,"ationtype":""};
-					setMessage("无权限签名","forbid");
-				}
-	
-			}	
-			else if (userInfo.UserLevel == "Resident")
-			{
-				var flag = 0
-				for (var i=0;i<count;i++)
-				{
-					if ($.inArray(signProperty.Authenticator[i].SignatureLevel,["Attending","ViceChief","Chief"]) != -1)
-					{
-						flag = 1
-						break;
-					} 
-				}
-				
-				if (flag == 1)
-				{
-					//无权限签
-					result = {"flag":false,"ationtype":""};
-					setMessage("无权限签名","forbid");
-					return result;
-				}
-				
-				flag = 0
-				for (var i=0;i<count;i++)
-				{
-					if (signProperty.Authenticator[i].SignatureLevel == "Resident")
-					{
-						flag = 1
-						break;
-					} 
-				}
-				
-				if (flag != 1)
-				{
-					//签名
-					result = {"flag":true,"ationtype":"Append"};		
-				}
-				else if (signProperty.SignatureLevel == "Resident")
-				{
-					//改签
-					if (confirm("已签名，是否改签")==true)
-					{
-						result = {"flag":true,"ationtype":"Replace"};
-					}
-					else
-					{
-						result = {"flag":false,"ationtype":""};
-					}
-				}
-				else
-				{
-					//无权限签
-					result = {"flag":false,"ationtype":""};
-					setMessage("无权限签名","forbid");
-				}
-			}
-			else if (userInfo.UserLevel == "Attending")
-			{
-				var flag = 0
-				for (var i=0;i<count;i++)
-				{
-					if ($.inArray(signProperty.Authenticator[i].SignatureLevel,["ViceChief","Chief"]) != -1)
-					{
-						flag = 1
-						break;
-					} 
-				}
-				
-				if (flag == 1)
-				{
-					//无权限签
-					result = {"flag":false,"ationtype":""};
-					setMessage("无权限签名","forbid");
-					return result;
-				}
-				
-				flag = 0
-				for (var i=0;i<count;i++)
-				{
-					if (signProperty.Authenticator[i].SignatureLevel == "Attending")
-					{
-						flag = 1
-						break;
-					} 
-				}
-				
-				if (flag != 1)
-				{
-					//签名
-					result = {"flag":true,"ationtype":"Append"};		
-				}
-				else if (signProperty.SignatureLevel == "Attending")
-				{
-					//改签
-					if (confirm("已签名，是否改签")==true)
-					{
-						result = {"flag":true,"ationtype":"Replace"};
-					}
-					else
-					{
-						result = {"flag":false,"ationtype":""};
-					}
-				}
-				else
-				{
-					//无权限签
-					result = {"flag":false,"ationtype":""};
-					setMessage("无权限签名","forbid");
-				}
-			}			
-			else if ($.inArray(userInfo.UserLevel,["Chief","ViceChief"]) != -1)
-			{
-				var flag = 0
-				for (var i=0;i<count;i++)
-				{
-					if ($.inArray(signProperty.Authenticator[i].SignatureLevel,["Chief","ViceChief"]) != -1)
-					{
-						flag = 1
-						break;
-					} 
-				}
-				if (flag != 1)
-				{
-					//签名
-					result = {"flag":true,"ationtype":"Append"};		
-				}
-				else if ($.inArray(signProperty.SignatureLevel,["Chief","ViceChief"]) != -1)
-				{
-					//改签
-					if (confirm("已签名，是否改签")==true)
-					{
-						result = {"flag":true,"ationtype":"Replace"};
-					}
-					else
-					{
-						result = {"flag":false,"ationtype":""};
-					}
-				}
-				else
-				{
-					//无权限签
-					result = {"flag":false,"ationtype":""};
-					setMessage("无权限签名","forbid");
-				}				
-			}
-		}
-	}
-	else if(signProperty.OriSignatureLevel == "Resident")
-	{
-		//住院医师签名可签上级
-		if ($.inArray(userInfo.UserLevel,["Chief","ViceChief","Attending","Resident"]) != -1)
-		{
-			if (count <=0)
+	$.ajax({
+		type: "GET",
+		url: "../EMRservice.Ajax.common.cls", 
+		async : false,
+		data: {
+			"OutputType":"String",
+			"Class":"EMRservice.BL.BLEMRSign",
+			"Method":"CheckPrivilege",
+			"p1":UserID,
+			"p2":characterCode,
+			"p3":OriSignatureLevel,
+			"p4":SignatureLevel,
+			"p5":Id,
+			"p6":signedLength
+		},
+		success: function (data){
+			if (data == "Append")
 			{
 				//签名
-				result = {"flag":true,"ationtype":"Append"};		
+				result = {"flag":true,"ationtype":"Append"};
 			}
-			else
+			else if(data == "Replace")
 			{
 				//改签
 				if (confirm("已签名，是否改签")==true)
@@ -2192,101 +2056,18 @@ function checkPrivilege(userInfo,signProperty)
 				{
 					result = {"flag":false,"ationtype":""};
 				}	
-			}	
-		}
-		else
-		{
-			//无权限签
-			result = {"flag":false,"ationtype":""};
-			setMessage("无权限签名","forbid");			
-		}
-	}
-	else if (signProperty.OriSignatureLevel == "Attending")
-	{
-		//住治医师签名可签上级
-		if ($.inArray(userInfo.UserLevel,["Attending","ViceChief","Chief"]) != -1)
-		{
-			if (count <=0)
+			}
+			else if(data != "")
 			{
-				//签名
-				result = {"flag":true,"ationtype":"Append"};		
+				setMessage(data,"forbid");
 			}
 			else
 			{
-				//改签
-				if (confirm("已签名，是否改签")==true)
-				{
-					result = {"flag":true,"ationtype":"Replace"};
-				}
-				else
-				{
-					result = {"flag":false,"ationtype":""};
-				}	
-			}	
-		}
-		else
-		{
-			//无权限签
-			result = {"flag":false,"ationtype":""};
-			setMessage("无权限签名","forbid");			
-		}	
-	}
-	else if ($.inArray(signProperty.OriSignatureLevel,["ViceChief","Chief"]) != -1)
-	{
-		//主任副主任可签
-		if ($.inArray(userInfo.UserLevel,["ViceChief","Chief"]) != -1)
-		{
-			if (count <=0)
-			{
-				//签名
-				result = {"flag":true,"ationtype":"Append"};		
+				setMessage("无权限签名","forbid");
 			}
-			else
-			{
-				//改签
-				if (confirm("已签名，是否改签")==true)
-				{
-					result = {"flag":true,"ationtype":"Replace"};
-				}
-				else
-				{
-					result = {"flag":false,"ationtype":""};
-				}	
-			}	
-		}
-		else
-		{
-			//无权限签
-			result = {"flag":false,"ationtype":""};
-			setMessage("无权限签名","forbid");			
-		}		
-	}
-	else 
-	{
-		if (signProperty.OriSignatureLevel != userInfo.UserLevel && signProperty.OriSignatureLevel != userInfo.UserPos)
-		{
-			//无权限签
-			result = {"flag":false,"ationtype":""};
-			setMessage("签名身份不符，无权限签名","forbid");
-		}
-		else if (count > 0)
-		{
-			//改签
-			if (confirm("已签名，是否改签")==true)
-			{
-				result = {"flag":true,"ationtype":"Replace"};
-			}
-			else
-			{
-				result = {"flag":false,"ationtype":""};
-			}
-		}
-		else
-		{
-			//签名
-			result = {"flag":true,"ationtype":"Append"};		
-		}
-	}
+		 }
+	});
+	
 	return result;	
 }
 
@@ -2299,14 +2080,14 @@ function setPrivelege(documentText)
 	if (documentText.status.curStatus == "deleted") return;
 	
 	//设置工具栏
-	toolbar.setActionPrivilege(documentText.privelege);
-	toolbar.initRevision();
+	setActionPrivilege(documentText.privelege);
+	initRevision();
 	
 	//判断文档是否只读，只读则使文档不能保存
 	if (getReadOnlyStatus().ReadOnly == "True")
 	{
-		toolbar.setSaveStatus('disable');
-		toolbar.setDeleteStatus('disable');
+		setSaveStatus('disable');
+		setDeleteStatus('disable');
 	}
 	
 	if (documentText.privelege.canSave == "0")
@@ -2317,11 +2098,11 @@ function setPrivelege(documentText)
 	{
 		if (documentText.privelege.canRevise == "-1" && documentText.status.signStatus == "1")
 		{
-			if (setRevisionState(documentText.InstanceID,true).result != "OK") $.messager.alert("提示信息", "开启留痕失败", 'info');
+			if (setRevisionState(documentText.InstanceID,true).result != "OK") top.$.messager.alert("提示信息", "开启留痕失败", 'info');
 		}
 		else if (documentText.privelege.canRevise == "1")
 		{
-			if (setRevisionState(documentText.InstanceID,true).result != "OK") $.messager.alert("提示信息", "开启留痕失败", 'info');
+			if (setRevisionState(documentText.InstanceID,true).result != "OK") top.$.messager.alert("提示信息", "开启留痕失败", 'info');
 		}
 	}	
 }
@@ -2376,7 +2157,7 @@ function deleteDocument()
 	var tipMsg4 = "【"+happendatetime+ " " +titleName+"】"+tipMsg1+" "+tipMsg2+" "+tipMsg3+" "+"是否确定删除 ?";
 	if(!flag)
 	{
-		$.messager.confirm("操作提示", tipMsg, function (data) {
+		top.$.messager.confirm("操作提示", tipMsg, function (data) {
 				if (!data)
 				{   
 				   return ;
@@ -2389,7 +2170,7 @@ function deleteDocument()
 	}
 	else
 	{
-		$.messager.confirm("提示", tipMsg4, function (data) {
+		top.$.messager.confirm("提示", tipMsg4, function (data) {
 				if (!data)
 				{   
 				   return ;
@@ -2412,7 +2193,7 @@ function deleteComDocument(instanceId)
 			if ((creatorMessage[0].creatorID != "")&&(creatorMessage[0].creatorName != ""))
 			{	
 				var arr = {"instanceId":instanceId};
-				createModalDialog("deleteDialog","删除","265","250","iframeDelete","<iframe id='iframeDelete' scrolling='auto' frameborder='0' src='emr.ip.userverification.delete.csp?UserID="+creatorMessage[0].creatorID+"&UserName="+base64encode(utf16to8(encodeURI(creatorMessage[0].creatorName)))+"' style='width:255px; height:210px; display:block;'></iframe>",deleteCallBacke,arr)
+				createModalDialog("deleteDialog","删除","265","250","iframeDelete","<iframe id='iframeDelete' scrolling='auto' frameborder='0' src='emr.ip.userverification.delete.csp?UserID="+creatorMessage[0].creatorID+"&UserName="+base64encode(utf16to8(encodeURI(creatorMessage[0].creatorName)))+"&MWToken="+getMWToken()+"' style='width:255px; height:210px; display:block;'></iframe>",deleteCallBacke,arr)
 			}
 		}
 	}	
@@ -2427,7 +2208,7 @@ function deleteCallBacke(returnValue,arr)
 	}
 	else if(returnValue == "0")
 	{
-		$.messager.alert("提示信息", "密码验证失败");
+		top.$.messager.alert("提示信息", "密码验证失败");
 		return;
 	}
 	if (param.IsActive != "N") param.IsActive = "N";
@@ -2778,7 +2559,7 @@ function eventSaveDocument(commandJson)
 			qualitySaveDocument();
 			if (typeof (param.args) != "undefined" && typeof (param.args.event) !="undefined" && param.args.event != "")
 	   		{
-		   		toolbar.getEvent();
+		   		getEvent();
 		   	}
 	   		//保存日志(基础平台组)
 			setOperationLog(param,"EMR.Save");
@@ -2800,6 +2581,10 @@ function eventSaveDocument(commandJson)
 	{
 	    setMessage('保存失败','warning');
 	}
+	else if (commandJson["args"]["result"] == "INVALID")
+    {
+		setMessage('病历存在非法字符，不能保存。','warning'); 
+    }
 	else if (commandJson["args"]["result"] != "NONE")
 	{
 		setMessage('文档没有发生改变','warning');
@@ -2828,7 +2613,7 @@ function GetObserverData()
 		}, 
 		error: function(d)
 		{
-			$.messager.alert("简单提示", "同步信息获取失败!");
+			top.$.messager.alert("简单提示", "同步信息获取失败!");
         }, 
         success: function (d)
         {
@@ -2844,7 +2629,7 @@ function GetObserverData()
 							"userID":userID
 						};
 						var arrayStr = base64encode(utf16to8(escape(JSON.stringify(array))));
-						createModalDialog("observerDialog","同步患者基本信息","617","323","iframeObserver","<iframe id='iframeObserver' scrolling='auto' frameborder='0' src='emr.observerdata.csp?ArrayStr="+arrayStr+"&openWay=editor' style='width:607px; height:313px; display:block;'></iframe>",observerCallBack,"")
+						createModalDialog("observerDialog","同步患者基本信息","617","323","iframeObserver","<iframe id='iframeObserver' scrolling='auto' frameborder='0' src='emr.observerdata.csp?ArrayStr="+arrayStr+"&openWay=editor"+"&MWToken="+getMWToken()+"' style='width:607px; height:313px; display:block;'></iframe>",observerCallBack,"")
 					}else if (item.Type == "WMRInfection")
 					{
 						$.each(item.children, function(childindex, childitem){
@@ -2883,7 +2668,7 @@ function ReportWMRInfection(reportInfectionUrl)
 	var arrReportInfection = reportInfectionUrl.split(c1);
 	if (arrReportInfection[0] == "0")
 	{
-		$.messager.alert("提示信息", arrReportInfection[1]);
+		top.$.messager.alert("提示信息", arrReportInfection[1]);
 	}
 	else if (arrReportInfection[0] == "1")
 	{
@@ -2894,9 +2679,9 @@ function ReportWMRInfection(reportInfectionUrl)
 		{
 			if (arrReportInfectionUrl[i] == "") continue;
 			try{
-	        createModalDialog("infectionDialog","传染病上报","810","810","iframeInfection","<iframe id='iframeInfection' scrolling='auto' frameborder='0' src='arrReportInfectionUrl[i]' style='width:800px; height:800px; display:block;'></iframe>","","")
+	        createModalDialog("infectionDialog","传染病上报","810","810","iframeInfection","<iframe id='iframeInfection' scrolling='auto' frameborder='0' src='arrReportInfectionUrl[i]'"+"&MWToken="+getMWToken()+" style='width:800px; height:800px; display:block;'></iframe>","","")
 	    }catch(e){
-	        $.messager.alert("提示信息", e.message);
+	        top.$.messager.alert("提示信息", e.message);
 	    }
   	}
   }
@@ -3054,7 +2839,7 @@ function eventInsertSummary(commandJson)
 {
 	var paramSummary = {"memoText":commandJson.args.Value,"instanceId":param.id};
 	var paramSummaryStr = base64encode(utf16to8(escape(JSON.stringify(paramSummary))));
-	createModalDialog("memoDialog","插入备注","490","350","iframeMemo","<iframe id='iframeMemo' scrolling='auto' frameborder='0' src='emr.ip.memo.csp?&paramSummaryStr="+paramSummaryStr+"' style='width:465px; height:310px; display:block;'></iframe>","","")
+	createModalDialog("memoDialog","插入备注","490","350","iframeMemo","<iframe id='iframeMemo' scrolling='auto' frameborder='0' src='emr.ip.memo.csp?&paramSummaryStr="+paramSummaryStr+"&MWToken="+getMWToken()+"' style='width:465px; height:310px; display:block;'></iframe>","","")
 }
 
 //设置字体样式
@@ -3259,7 +3044,7 @@ function eventUpdateInstanceData(commandJson)
 ///引用框事件
 function eventRequestTemplate(commandJson)
 {
-	var content = "<iframe id='iframeTempTitle' scrolling='auto' frameborder='0' src='emr.ip.navigation.template.csp?DocID="+param.emrDocId+"&LocID="+userLocID+"&EpisodeID="+episodeID+"&openWay=editor' style='width:520px; height:620px; display:block;'></iframe>";
+	var content = "<iframe id='iframeTempTitle' scrolling='auto' frameborder='0' src='emr.ip.navigation.template.csp?DocID="+param.emrDocId+"&LocID="+userLocID+"&EpisodeID="+episodeID+"&openWay=editor"+"&MWToken="+getMWToken()+"' style='width:520px; height:620px; display:block;'></iframe>";
 	createModalDialog("temptitleDialog","模板选择","525","660","iframeTempTitle",content,templateCallBack,"")
 }
 
@@ -3318,7 +3103,7 @@ function openTooth(commandJson)
 	var selectedToothObj = commandJson["args"];
 	var selectedToothObjStr = base64encode(utf16to8(escape(JSON.stringify(selectedToothObj))));
 	//showDialogEditorTooth("toolbarPublicDialog","牙位图","1060","475","<iframe id='iframeEditorTooth' scrolling='auto' frameborder='0' src='emr.ip.tool.tooth.csp?selectedToothObjStr="+selectedToothObjStr+"' style='width:1060px; height:475px; display:block;'></iframe>")
-	var tempFrame = "<iframe id='iframeTooth' scrolling='auto' frameborder='0' src='emr.ip.tool.tooth.csp?selectedToothObjStr="+selectedToothObjStr+"' style='width:1040px; height:438px; display:block;'></iframe>";
+	var tempFrame = "<iframe id='iframeTooth' scrolling='auto' frameborder='0' src='emr.ip.tool.tooth.csp?selectedToothObjStr="+selectedToothObjStr+"&MWToken="+getMWToken()+"' style='width:1040px; height:438px; display:block;'></iframe>";
 	createModalDialog("dialogTooth","牙位图","1060","475","iframeTooth",tempFrame,editorToothCallBack,"");
 }
 //牙位图回调
@@ -3380,7 +3165,7 @@ function applyedit()
 	}
 	if (isSuperiorPhysicianSign() == 1) 
 	{
-		$.messager.alert("提示信息", "上级医师已签名，不能自动授权，请申请人工授权！", 'info');
+		top.$.messager.alert("提示信息", "上级医师已签名，不能自动授权，请申请人工授权！", 'info');
 		return;
 	}
 	jQuery.ajax({
@@ -3408,7 +3193,7 @@ function applyedit()
 					//设置当前文档操作权限
 					setPrivelege(documentContext);
 					setReadOnly(false,[param.id]);
-					$.messager.alert("提示信息", "申请编辑成功！", 'info');
+					top.$.messager.alert("提示信息", "申请编辑成功！", 'info');
 			   }
 			},
 			error : function(d) { alert("apply edit error");}
@@ -3634,7 +3419,7 @@ function eventTitleSuperiorDoctor(commandJson)
 function eventRequestUpdateTitleInfo(commandJson)
 {
 	if (param == "") return;
-	var content = "<iframe id='iframeUpdateTitle' scrolling='auto' frameborder='0' src='emr.ip.navigation.template.csp?DocID="+param.emrDocId+"&LocID="+userLocID+"&EpisodeID="+episodeID+"&Action=updateTitle"+"&TitleCode="+titleCode+"&DateTime="+escape(commandJson.args.TitleDateTime)+"&TitlePrefix="+escape(commandJson.args.TitlePrefix)+"&openWay=editor' style='width:500px; height:400px; display:block;'></iframe>";
+	var content = "<iframe id='iframeUpdateTitle' scrolling='auto' frameborder='0' src='emr.ip.navigation.template.csp?DocID="+param.emrDocId+"&LocID="+userLocID+"&EpisodeID="+episodeID+"&Action=updateTitle"+"&TitleCode="+titleCode+"&DateTime="+escape(commandJson.args.TitleDateTime)+"&TitlePrefix="+escape(commandJson.args.TitlePrefix)+"&openWay=editor"+"&MWToken="+getMWToken()+"' style='width:500px; height:400px; display:block;'></iframe>";
 	createModalDialog("temptitleDialog","更新标题","510","445","iframeUpdateTitle",content,updateTitleCallBack,"")
 }
 

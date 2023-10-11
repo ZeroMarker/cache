@@ -718,24 +718,23 @@ function PrintA5YY(value)
 		} 
 	}
 
-
- 
 	if (ListInfo!=""){	var myobj=document.getElementById("ClsBillPrint");
 	if (!DHCP_PrintFun(myobj,TxtInfo,ListInfo)) return false;}
 
 }
 
+//打印检查申请单
 function PrintRisRequestApp(PADM,crmOrder,Type)
 {   
 	if (PADM==""){
-		alert("没有选择人员");
+		$.messager.alert("提示","请选择人员！","info");
 		return false;
 	}
 	var encmeth="";
 	var obj=document.getElementById("GetRisPrintInfo")
 	if (obj) encmeth=obj.value;
 	if (encmeth==""){
-		var Info=tkMakeServerCall("web.DHCPE.RisRequestPrint","GetRisRequestInfo",PADM,crmOrder,Type);
+		var value=tkMakeServerCall("web.DHCPE.RisRequestPrint","GetRisRequestInfo",PADM,crmOrder,Type);
 	}else{
 		var value=cspRunServerMethod(encmeth,PADM,crmOrder,Type);
 	}
@@ -770,7 +769,9 @@ function PrintRisRequestApp(PADM,crmOrder,Type)
 		
 		}
 		DHCP_GetXMLConfig("InvPrintEncrypt",tempName);
-		DHCP_PrintFun(myobj,TxtInfo,"");
+		//DHCP_PrintFun(myobj,TxtInfo,"");
+		
+		DHC_PrintByLodop(getLodop(),TxtInfo,"","", "");
 	}
 	
 }

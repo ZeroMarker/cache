@@ -78,7 +78,7 @@ function InitDomElEvent(){
 	/// 组标题
 	$('#GrpTitle').on('keydown keyup',function(){
 		if (grpobj){
-			if ($(grpobj).prop("outerHTML").indexOf("td") != "-1"){
+			if ($(grpobj).is("td")){
 				$(grpobj).text(this.value);
 			}else{
 				$("div.select .list-title label").text(this.value);
@@ -146,6 +146,7 @@ function InitDomElEvent(){
 	
 	/// table
 	$(".container").on("click","td",function (e){
+		$(this).parents("#itemList").removeClass("table-select");
 		/// 判断是否按下Ctrl键
 		if(!window.event.ctrlKey){
 			$("td").removeClass("tb-select");
@@ -154,6 +155,17 @@ function InitDomElEvent(){
 		$("table").removeClass("tb-select-tr");
 		$(this).parent().parent().parent().addClass("tb-select-tr");
 		grpobj = this;
+		e.stopPropagation();
+		InsPropPanel("T"); /// 清空界面属性内容
+	});
+	
+	/// table
+	$(".container").on("dblclick","td",function (e){
+		$("td").removeClass("tb-select");
+		$(this).parents("#itemList").toggleClass("table-select");
+		if($(this).parents("#itemList").hasClass("table-select")){
+			grpobj = $(this).parents("#itemList");	
+		}
 		e.stopPropagation();
 		InsPropPanel("T"); /// 清空界面属性内容
 	});
@@ -199,7 +211,6 @@ function getObject(obj,e){    //获取捕获到的对象
 
 /// 更新元素关联类型
 function InsRelType(relType){
-	
 	$(".select-li input").attr("data-reltype",relType);
 }
 
@@ -215,6 +226,7 @@ function InsPropPanel(FlagCode){
 		$('#cols').parent().hide();
 		$HUI.combobox("#RelType").disable();
 		$('#GrpTitle').val($("div.select .list-title label").text());       /// 组标题
+		$("#GrpHeight").val($("div.select .list-item").returnCss("min-height")?parseInt($("div.select .list-item").returnCss("min-height")):""); ///高度
 	}
 	if (FlagCode == "E"){
 		$('#GrpTitle').parent().hide();
@@ -223,7 +235,7 @@ function InsPropPanel(FlagCode){
 		$('#Score').parent().show();
 		$('#rows').parent().hide();
 		$('#cols').parent().hide();
-		$('#Question').val($(".select-li span").text());       /// 选项
+		$('#Question').val($(".select-li span").length?$(".select-li span").text():$(".select-li").text());
 		$('#Score').val($(".select-li input").attr("value"));  /// 分值
 		$HUI.combobox("#RelType").enable();
 	}
@@ -236,16 +248,19 @@ function InsPropPanel(FlagCode){
 		$('#rows').parent().show();
 		$('#cols').parent().show();
 		$HUI.combobox("#RelType").disable();
-		$('#GrpTitle').val($(grpobj).text());       /// 组标题
+		if($(grpobj).is("td")){
+			$('#GrpTitle').val($(grpobj).text());       /// 组标题
+		}
 	}
 	$HUI.combobox("#RelType").setValue("");
 }
 
 /// 删除界面元素样式
 function ClrDocElStyle(){
-	
 	$('.select').removeClass('select');
 	$('.select-li').removeClass('select-li');
+	$('.table-select').removeClass('table-select');
+	$('.tb-select').removeClass('tb-select');
 }
 
 /// 页面DataGrid初始定义
@@ -338,7 +353,7 @@ function check(){
 	var id = GetFormEleID(ScoreID);      /// 自动生成表单元素ID
 	var htmlstr = "";
 	htmlstr = htmlstr + '<li class="list-ul-item '+ css +'"><label><input id="'+ id +'" name="'+ grpname +'" type="checkbox" value="" /><span class="item">待选项</span><span class="item-score"></span></label></li>';
-	if ($(grpobj).prop("outerHTML").indexOf("td") != "-1"){
+	if ($(grpobj).is("td")){
 		$(grpobj).html(htmlstr);
 	}else{
 		$(grpobj).find('.list-item .list-ul').append(htmlstr);
@@ -357,7 +372,7 @@ function radio(){
 	var id = GetFormEleID(ScoreID);      /// 自动生成表单元素ID
 	var htmlstr = "";
 	htmlstr = htmlstr + '<li class="list-ul-item '+ css +'"><label><input id="'+ id +'" type="radio" name="'+ grpname +'" value=""/><span class="item">待选项</span><span class="item-score"></span></label></li>';
-	if ($(grpobj).prop("outerHTML").indexOf("td") != "-1"){
+	if ($(grpobj).is("td")){
 		$(grpobj).html(htmlstr);
 	}else{
 		$(grpobj).find('.list-item .list-ul').append(htmlstr);
@@ -376,7 +391,7 @@ function input(){
 	var id = GetFormEleID(ScoreID);      /// 自动生成表单元素ID
 	var css = "";
 	if (grpobj){
-		if ($(grpobj).prop("outerHTML").indexOf("td") != "-1"){
+		if ($(grpobj).is("td")){
 			css = "";
 		}else{
 			css = "draggable";
@@ -384,7 +399,7 @@ function input(){
 	}
 	var htmlstr = "";
 	htmlstr = htmlstr + '<div class="itemClass '+ css +'"><span>待选项</span><input id="'+ id +'" type="text" name="'+ grpname +'"/></div>';
-	if ($(grpobj).prop("outerHTML").indexOf("td") != "-1"){
+	if ($(grpobj).is("td")){
 		$(grpobj).html(htmlstr);
 	}else{
 		$(grpobj).find('.list-item').append(htmlstr);
@@ -406,6 +421,13 @@ function textarea(){
 
 /// 插入table
 function table(){
+	
+	
+	if (grpobj){
+		if($(grpobj).find('#itemList').length){
+			return;	
+		}
+	}
 	var htmlstr = "";
 	htmlstr = htmlstr + ' <table id="itemList" border="1" cellspacing="0" cellpadding="1" class="form-table">';
 	htmlstr = htmlstr + ' <tr><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
@@ -433,7 +455,7 @@ function ins_p(){
 	var css = "";
 	var htmlstr = "";
 	htmlstr = htmlstr + '<p class="item_par">段落文本</p>';
-	if ($(grpobj).prop("outerHTML").indexOf("td") != "-1"){
+	if ($(grpobj).is("td")){
 		// $(grpobj).html(htmlstr);
 	}else{
 		$(grpobj).find('.list-item .list-ul').before(htmlstr);
@@ -735,6 +757,32 @@ function runClassMethod(className,methodName,datas,successHandler,datatype,sync)
 	var option={dataType:typeof(datatype) == "undefined"?"json":datatype,async:typeof(sync) == "undefined"?_options.async:sync};
 	_options=$.extend(_options, option);
 	return $.ajax(_options).done(successHandler);
+}
+
+///collbak 回调方法名
+function comboClear(_this,collbak){
+	var forCombId=$(_this).attr("for");
+	if(!forCombId) return;
+	if(!$("#"+forCombId).length) return;
+	$("#"+forCombId).combobox("setValue","");
+	eval(collbak+"('')");
+}
+
+///qqa only style no other css
+///jq扩展返回css属性方法
+$.fn.returnCss=function(toReturn) {
+	var props = ($(this).attr('style')||"").split(';');
+	var tmp = "";
+	for( var p=0; p<props.length; p++) {
+		if(props[p].indexOf(toReturn)!== -1 ) {
+		    tmp=props[p];
+		}
+	}
+	
+	if(tmp !== "") {
+        tmp=tmp.split(":")[1];
+    }
+	return tmp;
 }
 
 /// 自动设置页面布局

@@ -42,7 +42,7 @@ $(function () {
 		editable: false,
 		blurValidValue: true,
 		onLoadSuccess: function(data) {
-			$(this).combobox('select', session['LOGON.HOSPID']);
+			$(this).combobox("select", PUBLIC_CONSTANT.SESSION.HOSPID);
 		},
 		onChange: function(newValue, oldValue) {
 			initLoadGrid();
@@ -51,16 +51,16 @@ $(function () {
 });
 
 function initGrid() {
-	var JudgeFlag = [{
-			id: 'N',
-			name: '不允许'
+	var ctrlData = [{
+			value: 'N',
+			text: '不允许'
 		}, {
-			id: 'Y',
-			name: '允许'
+			value: 'Y',
+			text: '允许'
 		}
 	];
 
-	// 初始化Columns
+	//初始化Columns
 	var CateColumns = [[{
 				field: 'JFALCode',
 				title: '级别名称',
@@ -105,9 +105,9 @@ function initGrid() {
 				editor: {
 					type: 'combobox',
 					options: {
-						valueField: 'id',
-						textField: 'name',
-						data: JudgeFlag
+						valueField: 'value',
+						textField: 'text',
+						data: ctrlData
 					}
 				}
 			}, {
@@ -119,15 +119,15 @@ function initGrid() {
 				editor: {
 					type: 'combobox',
 					options: {
-						valueField: 'id',
-						textField: 'name',
-						data: JudgeFlag
+						valueField: 'value',
+						textField: 'text',
+						data: ctrlData
 					}
 				}
 			}, {
 				field: 'JFALLimitPrice',
 				title: '允许录入和执行医嘱限价',
-				width: 170,
+				width: 200,
 				editor: 'text',
 				sortable: true,
 				resizable: true
@@ -140,9 +140,9 @@ function initGrid() {
 				editor: {
 					type: 'combobox',
 					options: {
-						valueField: 'id',
-						textField: 'name',
-						data: JudgeFlag
+						valueField: 'value',
+						textField: 'text',
+						data: ctrlData
 					}
 				}
 			}, {
@@ -155,9 +155,9 @@ function initGrid() {
 				editor: {
 					type: 'combobox',
 					options: {
-						valueField: 'id',
-						textField: 'name',
-						data: JudgeFlag
+						valueField: 'value',
+						textField: 'text',
+						data: ctrlData
 					}
 				}
 			}, {
@@ -190,7 +190,7 @@ function initGrid() {
 				width: 150,
 				align: 'center',
 				formatter: function(value, row, index) {
-					return '<img onclick="OpenWinView(\'' + row.JFALRowID + '\',' + '\'' + row.JFALHospId + '\')" src="../scripts_lib/hisui-0.1.0/dist/css/icons/compare.png" style="cursor:pointer">';
+					return '<img onclick="openWinView(\'' + row.JFALRowID + '\',' + '\'' + row.JFALHospId + '\')" src="../scripts_lib/hisui-0.1.0/dist/css/icons/compare.png" style="cursor:pointer">';
 				}
 			}, {
 				field: 'JFALHospId',
@@ -200,17 +200,14 @@ function initGrid() {
 			}
 		]];
 
-	// 初始化DataGrid
-	$('#tArrearsLevel').datagrid({
+	//初始化DataGrid
+	$("#tArrearsLevel").datagrid({
 		fit: true,
 		border: false,
-		striped: true,
 		singleSelect: true,
-		fitColumns: false,
 		pagination: true,
 		rownumbers: true,
 		pageSize: 20,
-		data: [],
 		columns: CateColumns,
 		toolbar: '#tToolBar',
 		onLoadSuccess: function (data) {
@@ -234,12 +231,12 @@ $('#BtnArrAdd').bind('click', function () {
 	var selected = $('#tArrearsLevel').datagrid('getSelected');
 	if (selected) {
 		if (typeof(selected.JFALRowID) == "undefined") {
-			$.messager.alert('提示', "不能同时添加多条", 'info');
+			$.messager.popover({msg: "不能同时添加多条", type: "info"});
 			return;
 		}
 	}
 	if ((EditIndex >= 0)) {
-		$.messager.alert('提示', "一次只能修改一条记录", 'info');
+		$.messager.popover({msg: "一次只能修改一条记录", type: "info"});
 		return;
 	}
 	$('#tArrearsLevel').datagrid('appendRow', {
@@ -263,7 +260,7 @@ $('#BtnArrUpdate').bind('click', function () {
 	if (selected) {
 		var thisIndex = $('#tArrearsLevel').datagrid('getRowIndex', selected);
 		if ((EditIndex != -1) && (EditIndex != thisIndex)) {
-			$.messager.alert('提示', "一次只能修改一条记录", 'info');
+			$.messager.popover({msg: "一次只能修改一条记录", type: "info"});
 			return;
 		}
 		$('#tArrearsLevel').datagrid('beginEdit', thisIndex);
@@ -309,26 +306,26 @@ $('#BtnArrSave').bind('click', function () {
 			CateStr = CateStr + "^" + selected.JFALOrderEntry + "^" + selected.JFALOrderExecute + "^" + selected.JFALLimitPrice;
 			CateStr = CateStr + "^" + selected.JFALFlag + "^" + "Y" + "^" + getValueById("Hospital");
 			if ((typeof(selected.JFALCode) == "undefined") || (selected.JFALCode == "") || (typeof(selected.JFALType) == "undefined") || (selected.JFALType == "")) {
-				$.messager.alert('提示', "级别名称，级别类型为空，不允许添加", 'info');
+				$.messager.popover({msg: "级别名称，级别类型为空，不允许添加", type: "info"});
 				EditIndex = -1;
 				initLoadGrid();
 				return;
 			}
 			if ((typeof(selected.JFALType) == "undefined") || (selected.JFALType == "")) {
-				$.messager.alert('提示', "控制权限为空，不允许添加", 'info');
+				$.messager.popover({msg: "控制权限为空，不允许添加", type: "info"});
 				EditIndex = -1;
 				initLoadGrid();
 				return;
 			}
 			if ((typeof(selected.JFALOrderEntry) == "undefined") || (selected.JFALOrderEntry == "") || (typeof(selected.JFALOrderExecute) == "undefined") || (selected.JFALOrderExecute == "")) {
-				$.messager.alert('提示', "控制权限为空，不允许添加", 'info');
+				$.messager.popover({msg: "控制权限为空，不允许添加", type: "info"});
 				EditIndex = -1;
 				initLoadGrid();
 				return;
 			}
 			//if((typeof(selected.JFALFlag) == "undefined") || (selected.JFALFlag == "") || (typeof(selected.JFALOrdCatReverse) == "undefined") || (selected.JFALOrdCatReverse == "")){
 			if ((typeof(selected.JFALFlag) == "undefined") || (selected.JFALFlag == "")) {
-				$.messager.alert('提示', "控制权限为空，不允许添加", 'info');
+				$.messager.popover({msg: "控制权限为空，不允许添加", type: "info"});
 				EditIndex = -1;
 				initLoadGrid();
 				return;
@@ -339,7 +336,7 @@ $('#BtnArrSave').bind('click', function () {
 				LevelInfo: CateStr,
 				Guser: PUBLIC_CONSTANT.SESSION.USERID
 			}, function (rtn) {
-				if (rtn == "0") {
+				if (rtn == 0) {
 					$.messager.alert('提示', "保存成功", 'success');
 				} else {
 					$.messager.alert('提示', "保存失败，错误代码：" + rtn, 'error');
@@ -354,25 +351,25 @@ $('#BtnArrSave').bind('click', function () {
 			CateStr = CateStr + "^" + selected.JFALOrderEntry + "^" + selected.JFALOrderExecute + "^" + selected.JFALLimitPrice;
 			CateStr = CateStr + "^" + selected.JFALFlag + "^" + "Y" + "^" + getValueById("Hospital");
 			if ((typeof(selected.JFALCode) == "undefined") || (selected.JFALCode == "") || (typeof(selected.JFALType) == "undefined") || (selected.JFALType == "")) {
-				$.messager.alert('提示', "级别名称，级别类型为空，不允许修改", 'info');
+				$.messager.popover({msg: "级别名称，级别类型为空，不允许修改", type: "info"});
 				EditIndex = -1;
 				initLoadGrid();
 				return;
 			}
 			if ((typeof(selected.JFALType) == "undefined") || (selected.JFALType == "")) {
-				$.messager.alert('提示', "控制权限为空，不允许修改", 'info');
+				$.messager.popover({msg: "控制权限为空，不允许修改", type: "info"});
 				EditIndex = -1;
 				initLoadGrid();
 				return;
 			}
 			if ((typeof(selected.JFALOrderEntry) == "undefined") || (selected.JFALOrderEntry == "") || (typeof(selected.JFALOrderExecute) == "undefined") || (selected.JFALOrderExecute == "")) {
-				$.messager.alert('提示', "控制权限为空，不允许修改", 'info');
+				$.messager.popover({msg: "控制权限为空，不允许修改", type: "info"});
 				EditIndex = -1;
 				initLoadGrid();
 				return;
 			}
 			if ((typeof(selected.JFALFlag) == "undefined") || (selected.JFALFlag == "")) {
-				$.messager.alert('提示', "控制权限为空,不允许修改", 'info');
+				$.messager.popover({msg: "控制权限为空，不允许修改", type: "info"});
 				EditIndex = -1;
 				initLoadGrid();
 				return;
@@ -383,7 +380,7 @@ $('#BtnArrSave').bind('click', function () {
 				LevelInfo: CateStr,
 				Guser: PUBLIC_CONSTANT.SESSION.USERID
 			}, function (rtn) {
-				if (rtn == "0") {
+				if (rtn == 0) {
 					$.messager.alert('提示', '修改成功', 'success');
 				} else {
 					$.messager.alert('提示', '修改失败，错误代码：' + rtn, 'error');
@@ -395,35 +392,35 @@ $('#BtnArrSave').bind('click', function () {
 	}
 });
 
-$('#BtnArrDelete').bind('click', function () {
+$("#BtnArrDelete").bind('click', function () {
 	var selected = $('#tArrearsLevel').datagrid('getSelected');
 	if (!selected) {
-		$.messager.alert('提示', "请选择要删除的记录", 'info');
+		$.messager.popover({msg: "请选择要删除的记录", type: "info"});
 		return;
 	}
-
 	$.messager.confirm('确认', '您确认想要删除记录吗？', function (r) {
-		if (r) {
-			var selected = $('#tArrearsLevel').datagrid('getSelected');
-			if (selected) {
-				if (typeof(selected.JFALRowID) != "undefined") {
-					var CateStr = selected.JFALRowID + "^" + selected.JFALCode + "^" + selected.JFALDesc + "^" + selected.JFALType;
-					CateStr = CateStr + "^" + selected.JFALOrderEntry + "^" + selected.JFALOrderExecute + "^" + selected.JFALLimitPrice;
-					CateStr = CateStr + "^" + selected.JFALFlag + "^" + selected.JFALOrdCatReverse;
-					$.cm({
-						ClassName: "DHCBILLConfig.DHCBILLArrears",
-						MethodName: "DeleteArrearsLevel",
-						LevelInfo: CateStr,
-						Guser: PUBLIC_CONSTANT.SESSION.USERID
-					}, function (rtn) {
-						if (rtn == "0") {
-							$.messager.alert('提示', '删除成功', 'success');
-						} else {
-							$.messager.alert('提示', '删除失败，错误代码：' + rtn, 'error');
-						}
-						initLoadGrid("");
-					});
-				}
+		if (!r) {
+			return;
+		}
+		var selected = $("#tArrearsLevel").datagrid('getSelected');
+		if (selected) {
+			if (typeof(selected.JFALRowID) != "undefined") {
+				var CateStr = selected.JFALRowID + "^" + selected.JFALCode + "^" + selected.JFALDesc + "^" + selected.JFALType;
+				CateStr = CateStr + "^" + selected.JFALOrderEntry + "^" + selected.JFALOrderExecute + "^" + selected.JFALLimitPrice;
+				CateStr = CateStr + "^" + selected.JFALFlag + "^" + selected.JFALOrdCatReverse;
+				$.cm({
+					ClassName: "DHCBILLConfig.DHCBILLArrears",
+					MethodName: "DeleteArrearsLevel",
+					LevelInfo: CateStr,
+					Guser: PUBLIC_CONSTANT.SESSION.USERID
+				}, function (rtn) {
+					if (rtn == 0) {
+						$.messager.alert('提示', '删除成功', 'success');
+					} else {
+						$.messager.alert('提示', '删除失败，错误代码：' + rtn, 'error');
+					}
+					initLoadGrid("");
+				});
 			}
 		}
 	});
@@ -434,7 +431,7 @@ $('#BtnArrFind').bind('click', function () {
 	initLoadGrid("");
 });
 
-function OpenWinView(JFALRowID, JFALHospID) {
+function openWinView(JFALRowID, JFALHospID) {
 	if (!(+JFALRowID > 0) || !(+JFALHospID > 0)) {
 		return;
 	}

@@ -58,18 +58,18 @@ function InitDict() {
 		columns: [
 			[{
 					field: 'prescNo',
-					title: '处方号',
+					title: $g("处方号"),
 					width: 130,
 					sortable: true,
 					hidden: false
 				}, {
 					field: 'recLocDesc',
-					title: '接收科室',
+					title: $g("接收科室"),
 					width: 100,
 					sortable: true
 				}, {
 					field: 'admDate',
-					title: '就诊日期',
+					title: $g("就诊日期"),
 					width: 100,
 					sortable: true
 				},
@@ -142,37 +142,37 @@ function InitGridRequest() {
 				hidden: true
 			}, {
 				field: 'TPhLocDesc',
-				title: '药房名称',
+				title: $g("药房名称"),
 				width: 150,
 				align: 'left'
 			}, {
 				field: 'TPrescNo',
-				title: '处方号',
+				title: $g("处方号"),
 				width: 150,
 				align: 'left'
 			}, {
 				field: 'TPrtInv',
-				title: '原收据号',
+				title: $g("原收据号"),
 				width: 120,
 				hidden: true
 			}, {
 				field: 'TPhDesc',
-				title: '药品名称',
+				title: $g("药品名称"),
 				width: 240,
 				align: 'left'
 			}, {
 				field: 'TPhQty',
-				title: '数量',
+				title: $g("数量"),
 				width: 90,
 				align: 'left'
 			}, {
 				field: 'TPhPrice',
-				title: '单价',
+				title: $g("单价"),
 				width: 90,
 				align: 'right'
 			}, {
 				field: 'TReqQty',
-				title: '申请数量',
+				title: $g("申请数量"),
 				width: 100,
 				align: 'left',
 				editor: {
@@ -184,23 +184,23 @@ function InitGridRequest() {
 				}
 			}, {
 				field: 'TReqMoney',
-				title: '申请金额',
+				title: $g("申请金额"),
 				width: 100,
 				align: 'right',
 				hidden: true
 			}, {
 				field: 'TPhUomDesc',
-				title: '单位',
+				title: $g("单位"),
 				width: 100,
 				align: 'left'
 			}, {
 				field: 'TCantRetReason',
-				title: '不可退药原因',
+				title: $g("不可退药原因"),
 				width: 120,
 				align: 'left'
 			}, {
 				field: 'TCyFlag',
-				title: '草药处方标志',
+				title: $g("草药处方标志"),
 				width: 30,
 				align: 'left',
 				hidden: true
@@ -249,11 +249,11 @@ function Refund() {
 	var retCode = saveRet.split("^")[0];
 	var retMessage = saveRet.split("^")[1];
 	if (retCode > 0) {
-		$.messager.alert("提示", "申请成功", "info");
+		$.messager.alert($g("提示"), $g("申请成功"), "info");
 		//Query();
 		Clear();
 	} else {
-		$.messager.alert("提示", "申请失败，失败原因：" + retMessage, "warning");
+		$.messager.alert($g("提示"), $g("申请失败，失败原因：") + retMessage, "warning");
 		return;
 	}
 }
@@ -263,13 +263,13 @@ function GetSaveParams() {
 	var gridChanges = $('#gridRequest').datagrid('getChanges');
 	var gridChangeLen = gridChanges.length;
 	if (gridChangeLen == 0) {
-		$.messager.alert("提示", "没有需要保存的数据", "info");
+		$.messager.alert($g("提示"), $g("没有需要保存的数据"), "info");
 		return "";
 	}
 
 	var reason = $('#cmbRetReason').combobox("getValue");
 	if (reason == "") {
-		$.messager.alert("提示", "请选择退药原因", "warning");
+		$.messager.alert($g("提示"), $g("请选择退药原因"), "warning");
 		return "";
 	}
 
@@ -282,12 +282,12 @@ function GetSaveParams() {
 		var reqQty = jData.TReqQty || "";
 		var cyFlag = jData.TCyFlag || "";
 		if ((cyFlag == "Y") && ((reqQty == "") || (reqQty == null))) {
-			$.messager.alert("提示", "第" + (j + 1) + "条申请数量为空或不等于发药数量，草药处方必须全退", "warning");
+			$.messager.alert($g("提示"), $g("第") + (j + 1) + $g("条申请数量为空或不等于发药数量，草药处方必须全退"), "warning");
 			return "";
 		}
 		var cantretreason = jData.TCantRetReason || "";
 		if (cantretreason != "") {
-			$.messager.alert("提示", "第" + (j + 1) + "条药品维护了不可退药原因", "warning");
+			$.messager.alert($g("提示"), $g("第") + (j + 1) + $g("条药品维护了不可退药原因"), "warning");
 			return "";
 		}
 		var phd = jData.TPhdRowid || "";
@@ -301,7 +301,7 @@ function GetSaveParams() {
 	}
 
 	if ((mainRecLoc == "") || (mainPhd == "")) {
-		$.messager.alert("提示", "未获取到处方的接收科室或发药主表ID", "warning");
+		$.messager.alert($g("提示"), $g("未获取到处方的接收科室或发药主表ID"), "warning");
 		return "";
 	}
 
@@ -324,7 +324,7 @@ function GetSaveParams() {
 		paramsStr = (paramsStr == "") ? iParams : paramsStr + "," + iParams;
 	}
 	if (paramsStr == "") {
-		$.messager.alert("提示", "无可用的申请明细数据", "warning");
+		$.messager.alert($g("提示"), $g("无可用的申请明细数据"), "warning");
 		return "";
 	}
 	return mainStr + "&&" + paramsStr;
@@ -365,7 +365,7 @@ function InitExtend() {
 					return true;
 				}
 			},
-			message: '申请数量需为大于0,且小于等于可退数量的正整数！'
+			message: $g("申请数量需为大于0,且小于等于可退数量的正整数！")
 		},
 		// 是否草药处方作了部分退
 		CheckCyPresc: {
@@ -385,7 +385,7 @@ function InitExtend() {
 				}
 				return true;
 			},
-			message: '草药处方不能部分退,申请数量必须等于可退数量！'
+			message: $g("草药处方不能部分退,申请数量必须等于可退数量！")
 		}
 	});
 }

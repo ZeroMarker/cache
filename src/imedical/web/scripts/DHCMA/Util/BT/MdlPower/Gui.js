@@ -61,6 +61,9 @@ function InitMdlPowerListWin(){
 			}
 		},
 		onBeforeCheckNode:function(row,checked){
+			if (!checked){
+				obj.UpdateMdlPower(row,false);	
+			}
 			//alert(row["MdlID"] + "," + row["MdlRoleID"]+",checked="+checked);
 		},
 		onLoadSuccess:function(row,data){

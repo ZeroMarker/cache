@@ -3,6 +3,18 @@
  * @Author   wangguoying
  * @DateTime 2019-07-04
  */
+$.extend($.fn.validatebox.defaults.rules, {
+	checkCodeExist:{
+		validator: function(value){
+			var url=$URL;  
+			var data={ClassName:'web.DHCHM.QuestionnaireSet',MethodName:'CheckQSCodeExist',Type:$("#QType").combobox("getValue"),Code:value,ID:$("#QNID").val()};
+			var rtn=$.ajax({ url: url, async: false, cache: false, type: "post" ,data:data}).responseText;
+			return rtn==0;
+		},
+		message: '代码已存在'
+	}
+});
+
 
 var QNDataGrid=$HUI.datagrid("#QNList",{
 		url:$URL,
@@ -12,7 +24,11 @@ var QNDataGrid=$HUI.datagrid("#QNList",{
 		},
 		onSelect:function(rowIndex,rowData){
 			if(rowIndex>-1){
-				QClear_onclick();
+				//QClear_onclick();
+				$("#QNID,#QCode,#QDesc,#QRemark").val("");
+				$("#QType").combobox('setValue','HM');
+				$("#QActive").checkbox("check");
+
 				$("#QNID").val(rowData.QNID);
 				$("#QCode").val(rowData.QCode);
 				$("#QDesc").val(rowData.QDesc);
@@ -117,6 +133,7 @@ function evaluation_clean(){
 	$("#EvaOrder").val("");
 	$("#EvaCalcOrder").val("");	
 	$("#EvaActive").checkbox("check");
+	EDDataGrid.load({ClassName:"web.DHCHM.QuestionnaireSet",QueryName:"FindEDL",ParRef:$("#QNID").val()});
 }
 
 function evaluation_save(){
@@ -168,8 +185,16 @@ function QClear_onclick(){
 	$("#QCode").val("");
 	$("#QDesc").val("");
 	$("#QRemark").val("");
-	$("#QType").combobox("setValue","");
+	//$("#QType").combobox("setValue","");
+	$("#QType").combobox('setValue','HM');
 	$("#QActive").checkbox("check");
+	RefreshTab();
+	evaluation_clean();
+	EDDataGrid.load({
+		ClassName:"web.DHCHM.QuestionnaireSet",
+		QueryName:"FindEDL"
+	});
+  QNDataGrid.load({ClassName:"web.DHCHM.QuestionnaireSet",QueryName:"FindQuestion"});
 }
 /**
  * 左侧保存
@@ -184,12 +209,26 @@ function QSave_onclick(){
 		$.messager.alert("提示","编码不能为空","info");
 		return false;
 	}
+	if(!$("#QCode").validatebox("isValid")){
+		$.messager.alert("提示","代码已存在","info");
+		return false;
+	}
 	if(Desc==""){
 		$.messager.alert("提示","描述不能为空","info");
 		return false;
 	}
 	var Remark=$("#QRemark").val();
+	if(!$("#QRemark").validatebox("isValid")){
+		$.messager.alert("提示","备注超长","info");
+		return false;
+	}
+
 	var Type=$("#QType").combobox("getValue");
+	if(Type==""){
+		$.messager.alert("提示","类型不能为空","info");
+		return false;
+	}
+
 	var Active="N";
 	if($("#QActive").checkbox("getValue")){
 		Active="Y";
@@ -238,7 +277,7 @@ function RefreshTab(){
 var EvaluateCombogrid=$("#EvaluationID").combobox({
         valueField: 'QEDLEvaluationDetailDR',
         textField: 'EDDesc',
-        url:$URL+'?ClassName=web.DHCHM.QuestionnaireSet&QueryName=FindEvaDetail&ResultSetType=array',
+        url:$URL+'?ClassName=web.DHCHM.QuestionnaireSet&QueryName=FindEvaDetail&ResultSetType=array'
 	});
 
 

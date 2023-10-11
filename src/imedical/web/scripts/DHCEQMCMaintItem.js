@@ -1,14 +1,13 @@
-///--------------------------------------------
-///Created By ZC 2014-8-15 ZC0001
-///Description:在维护管理菜单下新增维修类型子菜单?实现对维修类型信息的管理?
-///--------------------------------------------
-
-var SelectedRow = 0;
+var SelectedRow = -1;	//hisui改造：修改开始行号  Add By DJ 2018-10-12
 var rowid=0;
 function BodyLoadHandler() 
 {		
-    InitUserInfo(); //系统参数
-	InitEvent();	
+    $("body").parent().css("overflow-y","hidden");  //Add By DJ 2018-10-12 hiui-改造 去掉y轴 滚动条
+	$("#tDHCEQMCMaintItem").datagrid({showRefresh:false,showPageList:false,afterPageText:'',beforePageText:''});   //Add By DJ 2018-10-12 hisui改造：隐藏翻页条内容
+	InitUserInfo(); //系统参数
+	InitEvent();
+	initButtonWidth();	//hisui改造 Add By DJ 2018-10-12
+	initPanelHeaderStyle();//hisui改造 add by zyq 2023-02-02		
 	disabled(true);//灰化	
 }
 function InitEvent()
@@ -59,7 +58,7 @@ function BAdd_Click()
 	}
 	else
 	{
-		alertShow(t[result]);
+		messageShow("","","",t[result]);
 	}
 
 }
@@ -84,7 +83,7 @@ function BUpdate_Click()
 	}
 	else
 	{
-		alertShow(t[result]);
+		messageShow("","","",t[result]);
 	}
 }
 
@@ -96,11 +95,11 @@ function BDelete_Click()
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="") 
 	{
-		alertShow(t[-4001])
+		messageShow("","","",t[-4001])
 		return;
 	}
 	var result=cspRunServerMethod(encmeth,rowid,'1');
-	//alertShow(result);
+	//messageShow("","","",result);
 	result=result.replace(/\\n/g,"\n")
 	if (result>0)
 	{
@@ -108,32 +107,19 @@ function BDelete_Click()
 		location.reload();
 	}	
 }
-///选择表格行触发此方法
-function SelectRowHandler()
-	{
-	var eSrc=window.event.srcElement;
-	var objtbl=document.getElementById('tDHCEQMCMaintItem');  //t+组件名 就是你的组件显示 Query 结果的部分
-	var rows=objtbl.rows.length;
-	var lastrowindex=rows - 1;	
-	var rowObj=getRow(eSrc);
-	
-	var selectrow=rowObj.rowIndex;
-	if (!selectrow)	 return;
-	if (SelectedRow==selectrow)	
-	{
+///hisui改造： Add By DJ 2018-10-12
+function SelectRowHandler(index,rowdata){
+	if (index==SelectedRow){
 		Clear();
-		disabled(true);//灰化	
-		SelectedRow=0;
-		rowid=0;
-		SetElement("RowID","");
-	}
-	else
-	{
-		SelectedRow=selectrow;
-		rowid=GetElementValue("TRowIDz"+SelectedRow);
-		SetData(rowid);//调用函数
-		disabled(false);//反灰化
-	}
+		SelectedRow= -1;
+		disabled(true); 
+		$('#tDHCEQMCMaintItem').datagrid('unselectAll'); 
+		return;
+		}
+		
+	SetData(rowdata.TRowID); 
+	disabled(false)  
+    SelectedRow = index;
 }
 function Clear()
 {
@@ -148,7 +134,7 @@ function SetData(rowid)
 	var encmeth=GetElementValue("GetData");
 	if (encmeth=="") return;
 	var gbldata=cspRunServerMethod(encmeth,rowid);
-	//alertShow(gbldata);
+	//messageShow("","","",gbldata);
 	var list=gbldata.split("^");
 	SetElement("RowID",rowid); //rowid
 	SetElement("Code",list[0]); //

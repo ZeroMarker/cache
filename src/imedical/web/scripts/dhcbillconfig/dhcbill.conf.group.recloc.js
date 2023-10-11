@@ -1,6 +1,6 @@
 ﻿/**
  * FileName: dhcbill.conf.group.recloc.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-10-24
  * Description: 接收科室设置
  */
@@ -25,19 +25,19 @@ $(function() {
 	//登录科室
 	$HUI.combobox("#logonLoc", {
 		panelHeight: 150,
-		url: $URL + "?ClassName=BILL.CFG.COM.GroupAuth&QueryName=ReadLoc&ResultSetType=array&hospId=" + GV.HospId,
+		url: $URL + "?ClassName=BILL.CFG.COM.GroupAuth&QueryName=ReadLoc&ResultSetType=array&hospId=" + CV.HospId,
 		method: 'GET',
 		valueField: 'id',
 		textField: 'desc',
 		disabled: true,
 		selectOnNavigation: false,
-		defaultFilter: 4,
+		defaultFilter: 5,
 		onChange: function(newValue, oldValue) {
 			GV.RecLocList.load({
 				ClassName: "BILL.CFG.COM.GroupAuth",
 				QueryName: "ReadSelRecLocList",
-				groupId: GV.GroupId,
-				hospId: GV.HospId,
+				groupId: CV.GroupId,
+				hospId: CV.HospId,
 				logonLocId: newValue || "",
 				rows: 99999999
 			});
@@ -48,7 +48,7 @@ $(function() {
 	GV.RecLocList = $HUI.datagrid("#recLocList", {
 		fit: true,
 		border: false,
-		rownumbers: false,
+		rownumbers: true,
 		pageSize: 999999999,
 		loadMsg: '',
 		columns: [[{field: 'ck', checkbox: true},
@@ -62,8 +62,8 @@ $(function() {
 		queryParams: {
 			ClassName: "BILL.CFG.COM.GroupAuth",
 			QueryName: "ReadSelRecLocList",
-			groupId: GV.GroupId,
-			hospId: GV.HospId,
+			groupId: CV.GroupId,
+			hospId: CV.HospId,
 			logonLocId: getValueById("logonLoc"),
 			rows: 99999999
 		},
@@ -76,8 +76,8 @@ $(function() {
 		}
 	});
 	
-	if (+GV.GSCfgJson.ID > 0) {
-		setValueById("recLocFlag", (GV.GSCfgJson.GSRecLocFlag == "Y"));
+	if (CV.GSCfgJson.ID > 0) {
+		setValueById("recLocFlag", (CV.GSCfgJson.GSRecLocFlag == "Y"));
 	}
 });
 
@@ -85,33 +85,33 @@ $(function() {
 * 保存
 */
 function saveClick() {
-	var recLocFlag = getValueById("recLocFlag") ? "Y" : "N";
-	
-	var rlAry = [];
-	var str = "";
-	$.each(GV.RecLocList.getChecked(), function(index, row) {
-		str = row.id + "^" + row.rlRowId;
-		rlAry.push(str);
-	});
-	var rlStr = rlAry.join(PUBLIC_CONSTANT.SEPARATOR.CH2);
+	var rlStr = GV.RecLocList.getChecked().map(function(row) {
+		return row.id + "^" + row.rlRowId;
+	}).join(PUBLIC_CONSTANT.SEPARATOR.CH2);
 	var logonLocId = getValueById("logonLoc");
 	if (rlStr && !logonLocId) {
 		$.messager.popover({msg: "请选择登录科室", type: "info"});
 		return;
 	}
-	$.m({
-		ClassName: "BILL.CFG.COM.GroupAuth",
-		MethodName: "UpdateGSRL",
-		groupId: GV.GroupId,
-		hospId: GV.HospId,
-		recLocFlag: recLocFlag,
-		logonLocId: logonLocId,
-		gsRLStr: rlStr
-	}, function(rtn) {
-		if (rtn == "0") {
-			$.messager.popover({msg: "保存成功", type: "success"});
-		}else {
-			$.messager.popover({msg: "保存失败：" + rtn, type: "error"});
+	var recLocFlag = getValueById("recLocFlag") ? "Y" : "N";
+	$.messager.confirm("确认", "确认保存？", function(r) {
+		if (!r) {
+			return;
 		}
+		var rtn = $.m({
+			ClassName: "BILL.CFG.COM.GroupAuth",
+			MethodName: "UpdateGSRL",
+			groupId: CV.GroupId,
+			hospId: CV.HospId,
+			recLocFlag: recLocFlag,
+			logonLocId: logonLocId,
+			gsRLStr: rlStr
+		}, false);
+		var myAry = rtn.split("^");
+		if (myAry[0] == 0) {
+			$.messager.popover({msg: "保存成功", type: "success"});
+			return;
+		}
+		$.messager.popover({msg: "保存失败：" + (myAry[1] || myAry[0]), type: "error"});
 	});
 }

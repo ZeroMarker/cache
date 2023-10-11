@@ -1,3 +1,27 @@
+/*html*/
+var bodyhtml = "<div id='Loading' style=\"position:absolute;z-index:1000;top:0px;left:0px;width:100%;height:100%;background:#DDDDDB;text-align:center;padding-top: 20%;\"><h1><image src='../skin/default/images/loading.gif'/><font color=\"#15428B\">加载中···</font></h1></div>"
++'<DIV id="PageContent">'
++"<div class=tbToolbar>"
++"</div>"
++'<input TYPE="HIDDEN" id="RowID" name="RowID" value="" /><TABLE width="100%"><TBODY><TR><TD class=defaulttitle>客户端动态库维护</TD></TR><TR><TD class=i-tableborder><TABLE width="100%"><TBODY><TR><TD><P align=right><label id="cCode">控件代码</label></P></TD><TD>'
++'<input id="Code" name="Code" style="" value="" class="hisui-validatebox textbox"/></TD><TD><P align=right><label id="cVersion">DLL包版本</label></P></TD><TD>'
++'<input id="Version" name="Version" style="" value="" class="hisui-validatebox textbox"/></TD><TD><P align=right><label id="cAss">程序集名</label></P></TD><TD>'
++'<input id="Ass" name="Ass" style="width:300px" value="" class="hisui-validatebox textbox"/></TD><TD><P align=right><label id="cIsVis">是否可见</label></P></TD><TD>'
++'<input class="hisui-checkbox" id="IsVis" name="IsVis" type="checkbox"   /></TD><TD>'
++'<a id="Find" name="Find" class="hisui-linkbutton" data-options="disabled:false,iconCls:\'icon-w-find\'">查询</a></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR><TR><TD><P align=right><label id="cDomId">调用ID名</label></P></TD><TD>'
++'<input id="DomId" name="DomId" style="" value="" class="hisui-validatebox textbox"/></TD><TD><P align=right><label id="cNote">功能说明</label></P></TD><TD>'
++'<input id="Note" name="Note" style="" value="" class="hisui-validatebox textbox"/></TD><TD><P align=right><label id="cCls">类名</label></P></TD><TD>'
++'<input id="Cls" name="Cls" style="width:300px" value="" class="hisui-validatebox textbox"/></TD><TD><P align=right><label id="cActive">是否激活</label></P></TD><TD>'
++'<input class="hisui-checkbox" id="Active" name="Active" type="checkbox"   /></TD><TD>'
++'<a id="Clean" name="Clean" class="hisui-linkbutton" data-options="disabled:false,iconCls:\'icon-w-clean\'">清空</a></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR><TR><TD><P align=right><label id="cSubPath">DLL文件路径</label></P></TD><TD>'
++'<input id="SubPath" name="SubPath" style="width:800px" value="" class="hisui-validatebox textbox"/></TD><TD>&nbsp;</TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD>'
++'<a id="Ins" name="Ins" class="hisui-linkbutton" data-options="disabled:false,iconCls:\'icon-w-add\'">增加</a></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR><TR><TD><P align=right><label id="cAssDir">路径</label></P></TD><TD>'
++'<input id="AssDir" name="AssDir" style="width:800px" value="" class="hisui-validatebox textbox" data-options=" prompt:\'只用修改IP\'" /></TD><TD>&nbsp;</TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD>'
++'<a id="Save" name="Save" class="hisui-linkbutton" data-options="disabled:false,iconCls:\'icon-w-save\'">保存</a></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR><TR><TD><P align=right><label id="cClientIPExp">客户端IP</label></P></TD><TD>'
++'<input id="ClientIPExp" name="ClientIPExp" style="" value="" class="hisui-validatebox textbox" data-options=" prompt:\'哪些IP需要更新。格式：192.168.1.[18-200] 或192.168.[2-4].* 或 10.*.10.1。多种组合用逗号分割。\'" /></TD><TD>&nbsp;'
++'<input id="NewItem71" name="NewItem71" style="" value="" class="hisui-validatebox textbox"/></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR><TR><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD><TD></TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE><TABLE width="100%"><TBODY><TR><TD class=listtitle>动态库列表</TD></TR><TR><TD class=i-tableborder><table id="twebsys_AddIns" style="height:400px;"></table></TD></TR></TBODY></TABLE>'
++'<div><span><!--54486,websys.AddIns--></span></div>'
++'</DIV>'
 
 /*websys.AddIns.js*/
 var getData = function(){
@@ -14,6 +38,7 @@ var getData = function(){
 	data["dto.addIns.Note"]=getValueById("Note");
 	data["dto.addIns.SubPath"]=getValueById("SubPath");
 	data["dto.addIns.Version"]=getValueById("Version");
+	data["dto.addIns.ClientIPExp"]=getValueById("ClientIPExp");
 	return data;
 };
 var clearData = function(){
@@ -30,9 +55,18 @@ var clearData = function(){
 	setValueById("Note","");
 	setValueById("SubPath","");
 	setValueById("Version","");
+	setValueById("ClientIPExp","");
 	return data;
 };
+function reSizeInput(id){
+	$("#"+id).css({position: "absolute",width: "800px",marginTop: "-15px"})
+}
 function init(){
+	//$(bodyhtml).appendTo("#PageContent");
+	//$.parser.parse("#PageContent");
+	reSizeInput("SubPath");
+	reSizeInput("AssDir");
+	reSizeInput("ClientIPExp");
 	$("#Ins").click(function(){
 		var data = getData();
 		$cm($.extend({

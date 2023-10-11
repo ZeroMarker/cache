@@ -16,11 +16,9 @@ function initPatientList()
 function initpatientRecord()
 {
     var patientRecord = '<iframe id="framePatient"src="emr.record.browse.patient.csp?PatientID=' + patientID + 
-                        '&EpisodeID=' + episodeID +'" width="100%" height="100%" marginheight="0"' + 
+                        '&EpisodeID=' + episodeID + '&Action=' + action +'" width="100%" height="100%" marginheight="0"' + 
                         'marginwidth="0" scrolling="no" align="middle"></iframe>'; 
     $('#browseList').append(patientRecord);                   
-    // 调用平台方法，锁定页面
-    setSysMenuDoingSth("正在加载病历...");
 }
 
 //获取头菜单信息

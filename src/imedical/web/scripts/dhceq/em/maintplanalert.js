@@ -11,7 +11,13 @@ function initDocument()
 	initLookUp();
 	defindTitleStyle();
 	initButton();
-	initButtonWidth();
+	// MZY0124		2022-05-23
+	if (getElementValue("PrivateFlag")==1)
+	{
+		//hiddenObj("cMPMaintUserDR_UserName",1);
+		//hiddenObj("MPMaintUserDR_UserName",1);
+		disableElement("MPMaintUserDR_UserName",1);
+	}
 	//显示列表
 	createMaintPlan()
 }
@@ -34,6 +40,7 @@ function createMaintPlan()
 	queryParams.QXType=getElementValue("QXType")
 	queryParams.Schedule=getElementValue("MPSchedule")
 	queryParams.MaintUserDR=getElementValue("MPMaintUserDR")  //add by lmm 2019-01-12 804709
+	queryParams.PrivateFlag=getElementValue("PrivateFlag")		// MZY0121	2022-04-15
 	//动态生成datagrid窗口显示数据
 	createdatagrid("tMaintPlanAlert",queryParams,Columns)
 }
@@ -81,8 +88,8 @@ function maintPlanExecute(index)
 	{
 		MPExeID=tkMakeServerCall("web.DHCEQ.EM.BUSMaintPlan","ExecuteMaintPlan",MPRowID,MeasureFlag)
 	}
-	//add by lmm 2019-01-12 804385 end
-	var url="dhceq.em.maintplanexecute.csp?&RowID="+MPExeID+"&MPRowID="+MPRowID+"&BussType="+BussType+"&ReadOnly=&Status=0"
+	$('#tMaintPlanAlert').datagrid('reload');	// MZY0093	2021-09-08
+	var url="dhceq.em.maintplanexecute.csp?&RowID="+MPExeID+"&MPRowID="+MPRowID+"&BussType="+BussType+"&ReadOnly=&Status=0"+"&MaintTypeDR="+MaintTypeDR //modified by sjh SJH0037 2020-10-16 增加MaintTypeDR传参
 	showWindow(url,"计划执行","","","icon-w-paper","modal","","","large");   //modify by lmm 2020-06-05 UI
 }
 
@@ -94,33 +101,34 @@ function maintPlanHistoryExeList(index)
 	var url="dhceq.em.historyexecutelist.csp?&MPRowID="+MPRowID+"&BussType="+BussType
 	showWindow(url,"执行记录","","","icon-w-paper","modal","","","large");   //modify by lmm 2020-06-05 UI
 }
+//Modify by zx 2022-06-24 BUG:2744761  去调后台调用
 function getAutoPic(row)
 {
-	var sourceID=row.TRowID
-	var AutoPicInfo=tkMakeServerCall("web.DHCEQ.EM.BUSMaintPlan","GetWarnIcon",sourceID)
-	return AutoPicInfo
+	var alertType=row.TAlertType;
+	//var AutoPicInfo=tkMakeServerCall("web.DHCEQ.EM.BUSMaintPlan","GetWarnIcon",row.TRowID)
+	if(alertType=="1") return "../images/websys/sys_warning.gif";
+	else if(alertType=="2") return "../images/websys/sys_information.gif";
+	else return "";
 }
 ///add by lmm 2019-1-12 804709
 ///描述：下拉框赋值事件
 function setSelectValue(vElementID,item)
 {
-	var ElementID=vElementID.split("_")
-	var len=ElementID.length
+	var ElementID=vElementID.split("_");
+	var len=ElementID.length;
 	if(len>1)
 	{
-		setElement(ElementID[0],item.TRowID)
+		setElement(ElementID[0],item.TRowID);
 	}
-	
 }
 ///add by lmm 2019-1-12 804709
 ///描述：下拉框清除事件
 function clearData(vElementID)
 {
-	var ElementID=vElementID.split("_")
-	var len=ElementID.length
+	var ElementID=vElementID.split("_");
+	var len=ElementID.length;
 	if(len>1)
 	{
-		setElement(ElementID[0],"")
-		
+		setElement(ElementID[0],"");
 	}
 }

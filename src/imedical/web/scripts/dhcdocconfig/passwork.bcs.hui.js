@@ -27,6 +27,7 @@ $(function(){
 	
 	//页面元素初始化
 	PageHandle();
+	InitCache();
 })
 
 function Init(){
@@ -59,10 +60,10 @@ function InitBaseData () {
 	return responseText;
 }
 function InitPatDg () {
-	if($('#dg-pat').hasClass("c-hidden")) {
+	/*if($('#dg-pat').hasClass("c-hidden")) {
 		$('#dg-pat').removeClass("c-hidden");
-	};
-	
+	};*/
+	$("#dg-pat").dialog('open');
 	$("#dg-pat-code").val("").removeAttr("disabled");
 	$("#dg-pat-desc").val("");
 	$("#dg-pat-isDisplay").checkbox("uncheck");
@@ -72,7 +73,7 @@ function InitPatDg () {
 			
 	PageLogicObj.m_dg_patGrid = InitPatGrid();
 
-	var cWin = $HUI.window('#dg-pat', {
+	/*var cWin = $HUI.window('#dg-pat', {
 		title: "病人类型",
 		iconCls: "icon-w-config",
 		modal: true,
@@ -85,23 +86,23 @@ function InitPatDg () {
 		}
 	});
 	
-	PageLogicObj.m_dg_ruleWin = cWin;
+	PageLogicObj.m_dg_ruleWin = cWin;*/
 
 	InitPatEvent();
 }
 
 function InitRuleDg () {
-	if($('#dg-rule').hasClass("c-hidden")) {
+	/*if($('#dg-rule').hasClass("c-hidden")) {
 		$('#dg-rule').removeClass("c-hidden");
-	};
-	
+	};*/
+	$("#dg-rule").dialog('open');
 	$("#dg-rule-code").val("").removeAttr("disabled");
 	$("#dg-rule-desc").val("");
 	$("#dg-rule-value").val("");
 			
 	PageLogicObj.m_dg_ruleGrid = InitRuleGrid();
 
-	var cWin = $HUI.window('#dg-rule', {
+	/*var cWin = $HUI.window('#dg-rule', {
 		title: "规则配置",
 		iconCls: "icon-w-config",
 		modal: true,
@@ -114,7 +115,7 @@ function InitRuleDg () {
 		}
 	});
 	
-	PageLogicObj.m_dg_ruleWin = cWin;
+	PageLogicObj.m_dg_ruleWin = cWin;*/
 
 	InitRuleEvent();
 	
@@ -614,6 +615,13 @@ function BodykeydownHandler(e){
     if(keyEvent){   
         e.preventDefault();   
     }   
+}
+function InitCache () {
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
 }
 
 

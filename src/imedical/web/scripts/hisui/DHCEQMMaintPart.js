@@ -2,14 +2,17 @@ var SelectedRow = -1;	//hisui改造：修改开始行号  Add By DJ 2018-10-12
 var rowid=0;
 function BodyLoadHandler() 
 {
-	KeyUp("Accessory^AccessoryType^MTPProvider^MTPManufacturer","N")
+	KeyUp("Accessory^AccessoryType^MTPProvider^MTPManufacturer^MTPHold4Desc","N");	// MZY0118	2542893		2022-03-28
 	$("#tDHCEQMMaintPart").datagrid({showRefresh:false,showPageList:false,afterPageText:'',beforePageText:''});   //Add By DJ 2018-10-12 hisui改造：隐藏翻页条内容
     InitUserInfo(); //系统参数
     InitEvent();
 	disabled(true);//灰化
+	InitAccessory();	//Add by CZF0091 2020-09-25
 	//刷新主窗口配件费及总费用
-	parent.$("#MROtherFee").val(getElementValue("GetTotalFee"))
-	parent.totalFee_Change();
+	//Modify by zx 2022-11-22 模态窗处理维修界面配件费
+	//parent.$("#MROtherFee").val(getElementValue("GetTotalFee"));
+	//parent.totalFee_Change();
+	websys_showModal("options").mth(getElementValue("GetTotalFee"));
 	//MTPTotalFee_Change();
 	Muilt_LookUp("Accessory^AccessoryType^MTPProvider^MTPManufacturer^MTPAccessoryOriginal"); //Modify by zx 2020-02-27 BUG ZX0078
 	// 2019-11-17	Mozy0232
@@ -27,6 +30,7 @@ function BodyLoadHandler()
 			DisableElement("MTPProvider",false);
 		    DisableElement("MTPManufacturer",false);
 		    DisableElement("InvoiceNos",false);
+		    DisableElement("MTPHold4Desc",false);	// MZY0118	2542893		2022-03-28
 		}
 		else
 		{
@@ -37,12 +41,100 @@ function BodyLoadHandler()
 			DisableElement("MTPProvider",true);
 		    DisableElement("MTPManufacturer",true);
 		    DisableElement("InvoiceNos",true);
+		    DisableElement("MTPHold4Desc",true);	// MZY0118	2542893		2022-03-28
 		}
 	})
-	DisableElement("AccessoryName",true);
+	//DisableElement("AccessoryName",true);	//modified by CZF0091 2020-03-09	
 	DisableElement("GetTotalFee",true);
 	document.getElementById("GetTotalFee").style.color="#ff8000";
-	initButtonWidth()
+	initButtonWidth();
+	initButtonColor();
+	initPanelHeaderStyle();
+	$(".eq-toolborder").css("border-top","1px dashed #e2e2e2");
+}
+
+//add by CZF0091 2020-03-09
+function InitAccessory()
+{
+	var AInputType=GetElementValue("GetAccessoryInputType");	//配件录入方式 0或空:手工录入配件,DHC-EQA:设备维修配件,DHC-STM:物资耗材库
+	if((AInputType=="DHC-EQA"))
+	{
+		//singlelookup("AccessoryType","PLAT.L.AccessoryType",[{name:"AccessoryType",type:1,value:"AccessoryType"},{name:"GroupID",type:3,value:"LOGON.GROUPID"}],GetAccessoryType);
+		//singlelookup("Accessory","MP.L.AInStock.AccessoryList",[{name:"Desc",type:1,value:"Accessory"},{name:"TypeDR",type:4,value:"AccessoryTypeDR"}],GetAccessory);
+	}
+	else if(AInputType=="DHC-STM")
+	{
+		singlelookup("AccessoryType","PLAT.L.STM.AccessoryType",[{name:"gLocId",type:3,value:"LOGON.CTLOCID"},{name:"AccessoryType",type:1,value:"AccessoryType"}],GetAccessoryTypeNew);
+		singlelookup("Accessory","PLAT.L.STM.AccessoryList",[{name:"InciDesc",type:1,value:"Accessory"},{name:"AccesoryType",type:4,value:"AccessoryTypeDR"}],GetAccessoryNew);
+		disableElement("MTChkFlag",true);
+		DisableElement("AccessoryName",true);
+		hiddenObj("cMTChkFlag",1);
+		hiddenObj("BSubmitManage",1);
+		hiddenObj("BCancelManage",1);
+		$('input#MTChkFlag').next().css('display','none');		//czf 2021-04-21 1880158
+	}
+	else if((AInputType=="0")||(AInputType==""))
+	{
+		SetChkElement("MTChkFlag","Y");
+		disableElement("MTChkFlag",true);
+		hiddenObj("BSubmitManage",1);
+		hiddenObj("BCancelManage",1);
+		DisableElement("Accessory",true);
+		DisableElement("AccessoryName",false);
+		DisableElement("MTPPriceFee",false);
+		DisableElement("MTPModel",false);
+		DisableElement("MTPProvider",false);
+	    DisableElement("MTPManufacturer",false);
+	    DisableElement("InvoiceNos",false);
+	    DisableElement("MTPHold4Desc",false);	// MZY0118	2542893		2022-03-28
+	}
+}
+
+//add by CZF0091
+//获取物资配件项
+function GetAccessoryNew(Item)
+{
+	/*
+	var Provider=Item.TProvider;
+	var ProviderID=""
+	if (Provider!="")
+	{
+		var val=GetPYCode(Provider)+"^"+Provider+"^^^2";
+	 	var encmeth=GetElementValue("UpdProvider");
+		var ProviderID=cspRunServerMethod(encmeth,val);
+		if(ProviderID<=0)
+		{
+			alert("供应商登记失败");
+			return
+		}
+	}
+	var ManuFactory=Item.TManuFactory;
+	var ManuFactoryID=""
+	if(ManuFactory!="")
+	{
+		var val=GetPYCode(ManuFactory)+"^"+ManuFactory+"^^^3";
+	 	var encmeth=GetElementValue("UpdProvider");
+		var ManuFactoryID=cspRunServerMethod(encmeth,val);
+		if(ManuFactoryID<=0)
+		{
+			alert("生产厂商登记失败");
+			return
+		}
+	}
+	*/
+	SetElement('Accessory',Item.TDesc);
+	SetElement('AccessoryDR',Item.TRowID);
+	SetElement('MTPModel',Item.TModel);
+	SetElement('MTPQuantityNum',Item.TNum);
+	SetElement('MTPPriceFee',Item.TCurBPrice);
+	SetElement('MTPProviderDR',Item.TProviderDR);
+	SetElement('MTPProvider',Item.TProvider);
+	SetElement('MTPManufacturerDR',Item.TManuFactoryDR);
+	SetElement('MTPManufacturer',Item.TManuFactory);
+	// MZY0118	2542893		2022-03-28
+	//SetElement('MTPHold4',Item.TBaseUOM);
+	//SetElement('MTPHold4Desc',Item.BUomDesc);
+	MTPTotalFee_Change();
 }
 
 function InitEvent()
@@ -73,6 +165,9 @@ function InitEvent()
 	//需求序号:	400702		Mozy	20170710
 	var obj=document.getElementById("Accessory");
 	if (obj) obj.onchange=Accessory_Change;
+	// MZY0118	2542893		2022-03-28
+	var obj=document.getElementById("MTPHold4Desc");
+	if (obj) obj.onchange=MTPHold4Desc_Change;
 }
 //Modify DJ 2014-09-23
 function GetAccessory(value)
@@ -98,6 +193,9 @@ function GetAccessory(value)
 	//SetElement("MTPHold1",list[22]);	//Modify by zx 2020-02-27 BUG ZX0078 库存数处理去掉
 	SetElement('CanUseNum',list[23]);
 	SetElement('InvoiceNos',list[44]); //add by jyp 2018-02-26 546653
+	SetElement('SerialNo',list[32]); //czf 1877905 20210512
+	SetElement('MTPHold4',list[5]);		// MZY0118	2542893		2022-03-28
+	SetElement('MTPHold4Desc',list[34]);
 	MTPTotalFee_Change();
 }
 function BClear_Click() 
@@ -155,7 +253,6 @@ function CombinData()
 	combindata=combindata+"^"+GetElementValue("Accessory");
 	combindata=combindata+"^"+GetElementValue("InvoiceNos");
 	combindata=combindata+"^"+GetElementValue("MTPOfferPrice");		//Modify by zx BUG ZX0078 改为报价
-	// 2019-11-17	Mozy0232
 	combindata=combindata+"^"+GetElementValue("MTPAccessoryOriginalDR");  //Modify by zx BUG ZX0078
 	combindata=combindata+"^"+GetElementValue("MTPHold3");
 	combindata=combindata+"^"+GetElementValue("MTPHold4");
@@ -245,10 +342,31 @@ function Clear()
 	SetElement("MTPOfferPrice","");		//Modify by zx 2020-02-27 BUG ZX0078 报价
 	// 2019-11-17	Mozy0232
 	SetElement("StockDetailDR","");
-	SetElement("AccessoryType",tkMakeServerCall("web.DHCEQACommon","GetDefaultAccessoryType",2));
-	SetElement("AccessoryTypeDR",tkMakeServerCall("web.DHCEQACommon","GetDefaultAccessoryType",1));
+	if (GetElementValue("GetAccessoryInputType")=="DHC-STM")
+	{
+		SetElement("AccessoryType","");
+		SetElement("AccessoryTypeDR","");
+	}
+	else
+	{
+		SetElement("AccessoryType",tkMakeServerCall("web.DHCEQACommon","GetDefaultAccessoryType",2));
+		SetElement("AccessoryTypeDR",tkMakeServerCall("web.DHCEQACommon","GetDefaultAccessoryType",1));
+	}
 	SetElement("MTPAccessoryOriginalDR",""); //Modify by zx 2020-02-27 BUG ZX0078 配件来源
 	SetElement("MTPAccessoryOriginal","");
+	SetElement("SerialNo","");		// MZY0080	1943178		2021-06-03
+	
+	// MZY0103	2324463		2021-12-06
+	SetElement("MTPMaintDR","");
+	SetElement("MTPStoreRoomDR","");
+	SetElement("MTPFeeFlag","");
+  	SetElement("ASMLRowID","");
+  	SetElement("AISListDR","");
+	SetElement("MaintItemDR","");
+  	SetElement("MTPHold3","");
+	SetElement("MTPHold4","");
+	SetElement("MTPHold4Desc","");		// MZY0118	2542893		2022-03-28
+	SetElement("MTPHold5","");
 }
 function SetData(rowid)
 {
@@ -271,14 +389,14 @@ function SetData(rowid)
 	SetElement("MTPFeeFlag",list[8]);
 	SetElement("MaintRequestDR",list[9]);
 	SetElement("AccessoryTypeDR",list[10]);
-	SetElement("AccessoryType",list[sort+5]);
+	SetElement("AccessoryType",list[sort+6]);  //modified by wy 2023-3-3 3327258 begin
 	SetElement("ASMLRowID",list[11]);
 	SetElement("StockDetailDR",list[13]);
 	SetElement("MTPModel",list[14]);
 	SetElement("MTPManufacturerDR",list[15]);
-	SetElement("MTPManufacturer",list[sort+3]);
+	SetElement("MTPManufacturer",list[sort+4]);
 	SetElement("MTPProviderDR",list[16]);
-	SetElement("MTPProvider",list[sort+4]);
+	SetElement("MTPProvider",list[sort+5]);  //modified by wy 2023-3-3  3327258 end
 	SetElement("MaintItemDR",list[17]);
 	SetElement("AISListDR",list[18]);
 	// 2019-11-17	Mozy0232
@@ -295,13 +413,27 @@ function SetData(rowid)
 	SetElement("MTPOfferPrice",list[21]);		//Modify by zx 2020-02-27 BUG ZX0078 报价
 	SetElement("MTPAccessoryOriginalDR",list[22]); //Modify by zx 2020-02-27 BUG ZX0078 配件来源
 	SetElement("MTPAccessoryOriginal",list[sort+7]);
+	SetElement("SerialNo",list[sort+8]);		// MZY0080	1943178		2021-06-03
+	// MZY0118	2542893		2022-03-28
+	SetElement("MTPHold4",list[24]);
+	SetElement("MTPHold4Desc",list[sort+9])
 }
 function disabled(value)//灰化
 {
 	InitEvent();
 	var Status=getElementValue("Status");
 	var MaintType=getElementValue("MaintType"); 	//add by CZF0075
-	if (Status==1)
+	// MZY0080	1891466		2021-06-03
+	if (GetElementValue("ReadOnly")=="Y")
+	{
+		DisableBElement("BUpdate",true);
+		DisableBElement("BDelete",true);
+		DisableBElement("BAdd",true);
+		DisableBElement("BCancelConfirm",true);
+	    DisableBElement("BSubmitManage",true);
+	    DisableBElement("BCancelManage",true);
+	}
+	else if (Status==1)
 	{
 		disableElement("BUpdate",value);
 	    disableElement("BDelete",value);
@@ -370,7 +502,12 @@ function disabled(value)//灰化
 		disableElement("MTPProvider",true);
 	    disableElement("MTPManufacturer",true);
 	    disableElement("InvoiceNos",true);
-	    disableElement("MTPPriceFee",true);
+	    disableElement("MTPHold4Desc",true);	// MZY0118	2542893		2022-03-28
+	    if (GetElementValue("GetAccessoryInputType")=="DHC-STM")
+	    {
+	    	disableElement("MTPPriceFee",false);    
+		}
+		else  disableElement("MTPPriceFee",true);
 	}
 }
 function condition()//条件
@@ -394,7 +531,7 @@ function MTPTotalFee_Change()
 		return
 	}
 	var CanUseNum=GetElementValue("CanUseNum")*1;
-	if ((QuantityNum>CanUseNum)&&(!GetChkElementValue("MTChkFlag")))
+	if ((QuantityNum>CanUseNum)&&(!GetChkElementValue("MTChkFlag"))&&(GetElementValue("GetAccessoryInputType")!="DHC-STM"))		//czf 2020-09-25
 	{
 		alertShow("最大可用数量为"+CanUseNum);
 		SetElement("MTPQuantityNum","");
@@ -415,7 +552,16 @@ function CheckInvalidData()
 }
 function GetAccessoryType(value)
 {
+	//SetElement("AccessoryType",Item.TName);
+	//SetElement("AccessoryTypeDR",Item.TRowID);
 	GetLookUpID('AccessoryTypeDR',value);
+}
+
+//add by czf 2020-09-25
+function GetAccessoryTypeNew(Item)
+{
+	SetElement("AccessoryType",Item.TName);
+	SetElement("AccessoryTypeDR",Item.TRowID);
 }
 /* 2019-11-17	Mozy0232
 function Accessory_Click()
@@ -521,11 +667,13 @@ function BCancelConfirm_Click()
 }
 function BSubmitManage_Click()
 {
-	// Mozy		2019-10-18
-	var rows = $("#tDHCEQMMaintPart").datagrid('getRows');
-	var Rows=rows.length;
+	// MZY0039		1416082		2020-7-20	修正获取配件记录数方式
+	//var rows = $("#tDHCEQMMaintPart").datagrid('getRows');
+	//var Rows=rows.length;
 	//var Objtbl=document.getElementById('tDHCEQMMaintPart');
 	//var Rows=Objtbl.rows.length;
+	// MZY0046	1467448		2020-8-17
+	var Rows=tkMakeServerCall("web.DHCEQM.DHCEQMMaintPart","GetMaintPartNum");
 	if (Rows==0)
 	{
 		alertShow("无消耗配件记录,未能提交成功!");
@@ -592,12 +740,12 @@ function BSubmitManage_Click()
 }
 function BCancelManage_Click()
 {
-	// Mozy		2019-10-18
-	var rows = $("#tDHCEQMMaintPart").datagrid('getRows');
-	var Rows=rows.length;
+	// MZY0039		1416082		2020-7-20	修正获取配件记录数方式
+	//var rows = $("#tDHCEQMMaintPart").datagrid('getRows');
+	//var Rows=rows.length;
 	//var Objtbl=document.getElementById('tDHCEQMMaintPart');
 	//var Rows=Objtbl.rows.length;
-	if (Rows==0)
+	if (tkMakeServerCall("web.DHCEQM.DHCEQMMaintPart","GetMaintPartNum")==0)
 	{
 		alertShow("无消耗配件记录,未能取消成功!");
 		return;
@@ -673,4 +821,15 @@ function GetAccessoryOriginal(value)
 }
 document.body.onload = BodyLoadHandler;
 
-
+// MZY0118	2542893		2022-03-28
+function GetUOM(value)
+{
+	var list=value.split("^");
+	SetElement('MTPHold4Desc',list[0]);
+	SetElement('MTPHold4',list[1]);
+}
+function MTPHold4Desc_Change()
+{
+	SetElement("MTPHold4Desc","");
+	SetElement("MTPHold4","");
+}

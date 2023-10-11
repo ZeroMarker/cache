@@ -6,11 +6,14 @@ var editRow = ""; editDRow = ""; editPRow = "";
 /// 页面初始化函数
 function initPageDefault(){
 	var hospStr=session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
-	var hospComp = GenHospComp("Doc_APP_Pisdictype",hospStr);
+	var hospComp = GenHospComp("DHC_AppPisDicType",hospStr);
 	hospComp.jdata.options.onSelect  = function(){
-		InitMainList();
-		InitItemList();
+		//InitMainList();
+		//InitItemList();
 		InitWidListener();
+		var HospID=$HUI.combogrid('#_HospList').getValue();	
+		$('#main').datagrid('reload'); 
+		$("#item").datagrid('reload',{mID:"0",HospID:HospID});
 		} 
 	//初始化字典类型列表
 	InitMainList();
@@ -268,6 +271,7 @@ function InitItemList(){
 		{field:'Desc',title:'描述',width:500,editor:textEditor},
 		{field:'ActCode',title:'aitActCode',width:100,editor:textEditor,hidden:true,align:'center'},
 		{field:'ActDesc',title:'启用',width:80,editor:activeEditor,align:'center'},
+		{field:'Priority',title:'优先级',width:160,align:'center',formatter:SetCellUrl},
 		{field:'HospID',title:'HospID',width:100,hidden:true,align:'center'}, //editor:textEditor,
 		{field:'HospDesc',title:'医院',width:200,align:'center'} //editor:HospEditor,
 		//{field:'HospID',title:'HospID',width:100,editor:textEditor,hidden:true,align:'center'}
@@ -429,7 +433,7 @@ function InitReBLMapDataGrid(){
         handler: function() {ConItemaddClickHandle();}
     }, {
         text: '删除',
-        iconCls: 'icon-remove',
+        iconCls: 'icon-cancel',
         handler: function() {ConItemdelectClickHandle();}
     }];
 	var Columns=[[ 
@@ -483,6 +487,10 @@ function ConItemaddClickHandle(){
 	var rowsData = $("#main").datagrid('getSelected');
 	var PisDicType=rowsData.ID
 	var PisBLmap=$("#BLMap").combobox("getValue")
+	if (PisBLmap == "") {
+		$.messager.alert("提示", "请选择一个申请单!", 'info');
+		return 
+	}
 	var PisDefulat="N";
 	var ForRequest=$("#BLMapDef").prop("checked");
 	if(ForRequest) PisDefulat="Y"
@@ -522,5 +530,115 @@ function ConItemdelectClickHandle(){
 		LoadReBLMapDataGrid();
 	})
 }
+function translateword1(){
+	var SelectedRow = $("#main").datagrid('getSelected');
+	if (!SelectedRow){
+		$.messager.alert("提示","请选择需要翻译的行!","info");
+		return false;
+	}
+	CreatTranLate("User.DHCAppPisDicType","APDesc",SelectedRow["Desc"])
+	}
+function translateword2(){
+	var SelectedRow = $("#item").datagrid('getSelected');
+	if (!SelectedRow){
+		$.messager.alert("提示","请选择需要翻译的行!","info");
+		return false;
+	}
+	CreatTranLate("User.DHCAppPisDicItem","APDesc",SelectedRow["Desc"])	
+	}
+/// 上移和下移
+function SetCellUrl(value,row,index){
+	
+	if(value==undefined){   //2016-07-18 qunianpeng
+		value="" ;
+	}	
+	html="<a class='easyui-linkbutton l-btn l-btn-plain' onclick='javascript:moveUp("+index+")'>"
+	html=html+"<span class='l-btn-left'><span class='l-btn-text icon-up l-btn-icon-left'>上移</span></span>"
+	html=html+"</a><span style='margin:0px 10px;'> </span>"
+	html=html+"<a class='easyui-linkbutton l-btn l-btn-plain' onclick='javascript:moveDown("+index+")'>"
+	html=html+"<span class='l-btn-left'><span class='l-btn-text icon-down l-btn-icon-left'>下移</span></span>"
+	html=html+"</a>"
+	html=html+"<span style='display:none;'>"+value+"</span>"
+	return html;
+}
+
+/// 上移
+function moveUp(index){
+	move(true,index)
+}
+
+/// 下移
+function moveDown(index){
+	move(false,index)
+}
+
+/// 移动
+function move(isUp,index) {
+
+	/*var queryParams=$("#item").datagrid("options").queryParams;
+	if (typeof queryParams!="undefined"){
+		if (!$.isEmptyObject(queryParams)){
+			var params=queryParams.params;
+			var paramsArr=params.split("^");
+			var ExaItmCode=paramsArr[2]?paramsArr[2]:"";
+			if (ExaItmCode!=""){
+				$.messager.alert("提示","请删除检索项重新检索后再调整顺序!"); 
+				return;
+			}
+		}
+	}*/
+	var newrow = "";
+	if(isUp){
+		var newrow=parseInt(index)-1;  /// 上移
+	}else{
+		var newrow=parseInt(index)+1;  /// 下移
+	}
+	var TrsRow = $("#item").datagrid('getData').rows[index];
+	var TrsID = TrsRow.ID;
+	var LastRow =$("#item").datagrid('getData').rows[newrow];
+	var LastID = LastRow.ID;
+	var mListData = TrsID +"^"+ LastID;
+    runClassMethod("web.DHCAPPPisDicItem","moveTreeLink",{'mListData':mListData},function(jsonString){
+		if (jsonString != 0){
+			$.messager.alert("提示","移动出错!"); 
+			return;
+		}else{
+			moveTreeLink(isUp, index, 'item'); /// 移动界面行
+		}
+ 	})
+}
+
+/// 移动界面行
+function moveTreeLink(isUp, index, gridname){
+	
+    if (isUp) {
+
+        if (index != 0) {
+			var nextrow=parseInt(index)-1 ;
+			var lastrow=parseInt(index);
+            var toup = $('#' + gridname).datagrid('getData').rows[lastrow];
+            var todown = $('#' + gridname).datagrid('getData').rows[index - 1];
+            $('#' + gridname).datagrid('getData').rows[lastrow] = todown;
+            $('#' + gridname).datagrid('getData').rows[nextrow] = toup;
+            $('#' + gridname).datagrid('refreshRow', lastrow);
+            $('#' + gridname).datagrid('refreshRow', nextrow);
+            $('#' + gridname).datagrid('selectRow', nextrow);
+        }
+    }else{
+        var rows = $('#' + gridname).datagrid('getRows').length;
+        if (index != rows - 1) {
+		    var nextrow=parseInt(index)+1 ;
+			var lastrow=parseInt(index);
+            var todown = $('#' + gridname).datagrid('getData').rows[lastrow];
+            var toup = $('#' + gridname).datagrid('getData').rows[nextrow];
+            $('#' + gridname).datagrid('getData').rows[nextrow] = todown;              
+            $('#' + gridname).datagrid('getData').rows[lastrow] = toup;
+            $('#' + gridname).datagrid('refreshRow', lastrow);
+            $('#' + gridname).datagrid('refreshRow', nextrow);
+            $('#' + gridname).datagrid('selectRow', nextrow);
+        }
+    }
+}
+
 /// JQuery 初始化页面
 $(function(){ initPageDefault(); })

@@ -25,7 +25,9 @@ function BFind_click(){
 		BeginDate:$("#BeginDate").datebox('getValue'),
 		EndDate:$("#EndDate").datebox('getValue'),
 		GBID:$("#GDesc").combogrid('getValue'),
-		PayModeDR:$("#PayMode").combobox('getValue')
+		PayModeDR:$("#PayMode").combobox('getValue'),
+		LocID:session['LOGON.CTLOCID']
+
 	});
 	
 }
@@ -33,7 +35,8 @@ function BFind_click(){
 function InitGPaymodeDetailDataGrid(){
 	$.cm({
 		ClassName: "web.DHCPE.FeeReport.RcptPayDetail",
-		MethodName: "GetGPaymodeDetailColumns"
+		MethodName: "GetGPaymodeDetailColumns",
+		LocID:session['LOGON.CTLOCID']
 	}, function (txtData) {
 		var columnAry = new Array();
 		$.each(txtData, function (index, item) {
@@ -62,7 +65,8 @@ function InitGPaymodeDetailDataGrid(){
 						BeginDate:$("#BeginDate").datebox('getValue'),
 						EndDate:$("#EndDate").datebox('getValue'),
 						GBID:$("#GDesc").combogrid('getValue'),
-						PayModeDR:$("#PayMode").combobox('getValue')
+						PayModeDR:$("#PayMode").combobox('getValue'),
+						LocID:session['LOGON.CTLOCID']
 				
 				}
 			});
@@ -101,7 +105,7 @@ function InitCombobox()
 		
 	// Ö§¸¶·½Ê½	
 	var RPObj = $HUI.combobox("#PayMode",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindTJPayMode&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindTJPayMode&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
 		valueField:'id',
 		textField:'text'
 		

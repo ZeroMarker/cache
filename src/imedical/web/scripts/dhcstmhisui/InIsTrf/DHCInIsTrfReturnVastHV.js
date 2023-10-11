@@ -1,74 +1,73 @@
 ﻿
 var CURR_INIT = '';
 
-var init = function(){
-	
+var init = function() {
 	$UI.linkbutton('#SearchBT', {
-		onClick: function(){
-			FindWin(Select);
+		onClick: function() {
+			FindWin(Select, '', 'Y');
 		}
 	});
 	
-	function Select(RowId){
+	function Select(RowId) {
 		$UI.clearBlock('#Conditions');
 		$UI.clear(DetailGrid);
 		$.cm({
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 			MethodName: 'Select',
 			Init: RowId
-		}, function(jsonData){
-			$UI.fillBlock('#Conditions',jsonData);
+		}, function(jsonData) {
+			$UI.fillBlock('#Conditions', jsonData);
 			SetEditDisable();
 			var InitComp = jsonData['InitComp'];
 			var InitState = jsonData['InitState'];
-			if(InitComp == "Y"){
-				if(InitState == '21'){
-					var BtnEnaleObj = {'#SaveBT':false, '#DeleteBT':false, '#CompleteBT':false, '#CancelCompBT':false};
-				}else if(InitState == '31'){
-					var BtnEnaleObj = {'#SaveBT':false, '#DeleteBT':false, '#CompleteBT':false, '#CancelCompBT':false};
-				}else{
-					var BtnEnaleObj = {'#SaveBT':false, '#DeleteBT':false, '#CompleteBT':false, '#CancelCompBT':true};
+			if (InitComp == 'Y') {
+				if (InitState == '21') {
+					var BtnEnaleObj = { '#SaveBT': false, '#DeleteBT': false, '#CompleteBT': false, '#CancelCompBT': false };
+				} else if (InitState == '31') {
+					var BtnEnaleObj = { '#SaveBT': false, '#DeleteBT': false, '#CompleteBT': false, '#CancelCompBT': false };
+				} else {
+					var BtnEnaleObj = { '#SaveBT': false, '#DeleteBT': false, '#CompleteBT': false, '#CancelCompBT': true };
 				}
-			}else{
-				var BtnEnaleObj = {'#SaveBT':true, '#DeleteBT':true, '#CompleteBT':true, '#CancelCompBT':false};
+			} else {
+				var BtnEnaleObj = { '#SaveBT': true, '#DeleteBT': true, '#CompleteBT': true, '#CancelCompBT': false };
 			}
 			ChangeButtonEnable(BtnEnaleObj);
 		});
 		
-		$UI.setUrl(DetailGrid);
-		var ParamsObj = {Init: RowId, InitType:'K'};
+		var ParamsObj = { Init: RowId, InitType: 'K' };
 		var Params = JSON.stringify(ParamsObj);
 		DetailGrid.load({
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
 			QueryName: 'DHCINIsTrfD',
+			query2JsonStrict: 1,
 			Params: Params
-		})
+		});
 	}
 	
 	$UI.linkbutton('#SaveBT', {
-		onClick: function(){
+		onClick: function() {
 			var MainObj = $UI.loopBlock('#Conditions');
-			if(MainObj['InitComp'] == 'Y'){
+			if (MainObj['InitComp'] == 'Y') {
 				$UI.msg('alert', '该单据已经完成,不可重复保存!');
 				return;
 			}
-			if(isEmpty(MainObj['InitFrLoc'])){
+			if (isEmpty(MainObj['InitFrLoc'])) {
 				$UI.msg('alert', '退库科室不可为空!');
 				return;
 			}
-			if(isEmpty(MainObj['InitToLoc'])){
+			if (isEmpty(MainObj['InitToLoc'])) {
 				$UI.msg('alert', '库房不可为空!');
 				return;
 			}
 			MainObj['InitState'] = '10';
 			var Main = JSON.stringify(MainObj);
 			var Detail = DetailGrid.getChangesData('Inclb');
-			var ifChangeMain=$UI.isChangeBlock('#Conditions');
-			if (Detail === false){	//未完成编辑或明细为空
+			var ifChangeMain = $UI.isChangeBlock('#Conditions');
+			if (Detail === false) {	// 未完成编辑或明细为空
 				return;
 			}
-			if (!ifChangeMain && (isEmpty(Detail))){	//主单和明细不变
-				$UI.msg("alert", "没有需要保存的信息!");
+			if (!ifChangeMain && (isEmpty(Detail))) {	// 主单和明细不变
+				$UI.msg('alert', '没有需要保存的信息!');
 				return;
 			}
 			$.cm({
@@ -76,25 +75,25 @@ var init = function(){
 				MethodName: 'jsSave',
 				Main: Main,
 				Detail: JSON.stringify(Detail)
-			},function(jsonData){
-				if(jsonData.success === 0){
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
 					$UI.msg('success', jsonData.msg);
 					Select(jsonData.rowid);
-				}else{
+				} else {
 					$UI.msg('error', jsonData.msg);
 				}
 			});
 		}
 	});
 	$UI.linkbutton('#CompleteBT', {
-		onClick: function(){
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			var InitId = ParamsObj['RowId'];
-			if(isEmpty(InitId)){
+			if (isEmpty(InitId)) {
 				return;
 			}
 			var InitComp = ParamsObj['InitComp'];
-			if(InitComp == 'Y'){
+			if (InitComp == 'Y') {
 				$UI.msg('alert', '该单据已完成,不可重复操作!');
 				return;
 			}
@@ -103,34 +102,34 @@ var init = function(){
 				ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 				MethodName: 'jsSetCompleted',
 				Params: Params
-			},function(jsonData){
-				if(jsonData.success === 0){
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
 					$UI.msg('success', jsonData.msg);
 					Select(jsonData.rowid);
-					//$('#InitComp').checkbox('setValue', true);
-					var BtnEnaleObj = {'#SaveBT':false, '#DeleteBT':false, '#CompleteBT':false, '#CancelCompBT':true};
+					// $('#InitComp').checkbox('setValue', true);
+					var BtnEnaleObj = { '#SaveBT': false, '#DeleteBT': false, '#CompleteBT': false, '#CancelCompBT': true };
 					ChangeButtonEnable(BtnEnaleObj);
-					$UI.setUrl(MasterGrid);
 					MasterGrid.load({
-								ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
-								QueryName: 'QueryTrans',
-								InitStr: CURR_INIT
+						ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
+						QueryName: 'QueryTrans',
+						query2JsonStrict: 1,
+						InitStr: CURR_INIT
 					});
-				}else{
+				} else {
 					$UI.msg('error', jsonData.msg);
 				}
 			});
 		}
 	});
 	$UI.linkbutton('#CancelCompBT', {
-		onClick: function(){
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			var InitId = ParamsObj['RowId'];
-			if(isEmpty(InitId)){
+			if (isEmpty(InitId)) {
 				return;
 			}
 			var InitComp = ParamsObj['InitComp'];
-			if(InitComp != 'Y'){
+			if (InitComp != 'Y') {
 				$UI.msg('alert', '该单据不是完成状态,不可操作!');
 				return;
 			}
@@ -139,35 +138,35 @@ var init = function(){
 				ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 				MethodName: 'jsCancelComplete',
 				Params: Params
-			},function(jsonData){
-				if(jsonData.success === 0){
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
 					$UI.msg('success', jsonData.msg);
 					Select(jsonData.rowid);
-					//$('#InitComp').checkbox('setValue', false);
-					var BtnEnaleObj = {'#SaveBT':true, '#DeleteBT':true, '#CompleteBT':true, '#CancelCompBT':false};
+					// $('#InitComp').checkbox('setValue', false);
+					var BtnEnaleObj = { '#SaveBT': true, '#DeleteBT': true, '#CompleteBT': true, '#CancelCompBT': false };
 					ChangeButtonEnable(BtnEnaleObj);
-				}else{
+				} else {
 					$UI.msg('error', jsonData.msg);
 				}
 			});
 		}
 	});
 	$UI.linkbutton('#DeleteBT', {
-		onClick: function(){
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			var InitId = ParamsObj['RowId'];
-			if(isEmpty(InitId)){
+			if (isEmpty(InitId)) {
 				return;
 			}
 			var InitComp = ParamsObj['InitComp'];
-			if(InitComp == 'Y'){
+			if (InitComp == 'Y') {
 				$UI.msg('alert', '该单据已经完成,不可删除!');
 				return;
 			}
 			$UI.confirm('您将要删除单据,是否继续?', '', '', Delete);
 		}
 	});
-	function Delete(){
+	function Delete() {
 		var ParamsObj = $UI.loopBlock('#Conditions');
 		var InitId = ParamsObj['RowId'];
 		var Params = JSON.stringify(ParamsObj);
@@ -175,24 +174,24 @@ var init = function(){
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 			MethodName: 'jsDelete',
 			Params: Params
-		},function(jsonData){
-			if(jsonData.success === 0){
+		}, function(jsonData) {
+			if (jsonData.success === 0) {
 				$UI.msg('success', jsonData.msg);
 				$UI.clearBlock('#Conditions');
 				$UI.clear(DetailGrid);
 				var RowIndex = MasterGrid.find('RowId', InitId);
-				if(RowIndex != -1){
+				if (RowIndex != -1) {
 					MasterGrid.deleteRow(RowIndex);
 				}
 				SetDefaValues();
-			}else{
+			} else {
 				$UI.msg('error', jsonData.msg);
 			}
 		});
 	}
 	
 	$UI.linkbutton('#ClearBT', {
-		onClick: function(){
+		onClick: function() {
 			$UI.clearBlock('#Conditions');
 			$UI.clear(MasterGrid);
 			$UI.clear(DetailGrid);
@@ -200,20 +199,20 @@ var init = function(){
 			SetEditEnable();
 		}
 	});
-	function SetEditDisable(){
+	function SetEditDisable() {
 		$HUI.combobox('#InitToLoc').disable();
-		//$HUI.combobox('#InitScg').disable();
+		// $HUI.combobox('#InitScg').disable();
 	}
-	function SetEditEnable(){
+	function SetEditEnable() {
 		$HUI.combobox('#InitToLoc').enable();
-		//$HUI.combobox('#InitScg').enable();
+		// $HUI.combobox('#InitScg').enable();
 	}
 	
 	$UI.linkbutton('#PrintBT', {
-		onClick: function(){
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			var InitId = ParamsObj['RowId'];
-			if(isEmpty(InitId)){
+			if (isEmpty(InitId)) {
 				$UI.msg('alert', '请选择需要打印的单据!');
 				return;
 			}
@@ -221,45 +220,46 @@ var init = function(){
 		}
 	});
 	$UI.linkbutton('#SelReqBT', {
-		onClick: function(){
+		onClick: function() {
 			SelReq(Select);
 		}
 	});
 	
-	var InitFrLoc = $HUI.combobox('#InitFrLoc',{
+	var InitFrLoc = $HUI.combobox('#InitFrLoc', {
 		url: $URL
 			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
-			+ JSON.stringify(addSessionParams({Type:'All'})),
+			+ JSON.stringify(addSessionParams({ Type: 'All', Element: 'InitFrLoc' })),
 		valueField: 'RowId',
 		textField: 'Description',
-		onSelect: function(record){
+		onSelect: function(record) {
 			var LocId = record['RowId'];
-//			$('#CreateUser').combobox('clear');  
-//			$('#CreateUser').combobox('reload', $URL
-//				+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetDeptUser&ResultSetType=Array&Params='
-//				+ JSON.stringify({LocId:LocId})
-//			);
+			//			$('#CreateUser').combobox('clear');  
+			//			$('#CreateUser').combobox('reload', $URL
+			//				+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetDeptUser&ResultSetType=Array&Params='
+			//				+ JSON.stringify({LocId:LocId})
+			//			);
 		}
 	});
 	
-	var InitToLoc = $HUI.combobox('#InitToLoc',{
+	var InitToLoc = $HUI.combobox('#InitToLoc', {
 		url: $URL
 			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
-			+ JSON.stringify(addSessionParams({Type:'Login'})),
+			+ JSON.stringify(addSessionParams({ Type: 'Login', Element: 'InitToLoc' })),
 		valueField: 'RowId',
 		textField: 'Description'
 	});
 	$('#InitToLoc').combobox('setValue', session['LOGON.CTLOCID']);
 	
-	var OperateType = $HUI.combobox('#OperateType',{
-		url : $URL
+	var OperateType = $HUI.combobox('#OperateType', {
+		url: $URL
 			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetOperateType&ResultSetType=Array&Params='
-			+ JSON.stringify({Type: 'OM'}),
+			+ JSON.stringify({ Type: 'OM' }),
 		valueField: 'RowId',
 		textField: 'Description'
 	});
 	
-	var MasterCm = [[{
+	var MasterCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
 			width: 80,
@@ -298,16 +298,17 @@ var init = function(){
 	var MasterGrid = $UI.datagrid('#MasterGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
-			QueryName: 'QueryTrans'
+			QueryName: 'QueryTrans',
+			query2JsonStrict: 1
 		},
 		columns: MasterCm,
 		showBar: false,
 		pagination: false,
-		onSelect: function(index, row){
+		onSelect: function(index, row) {
 			var Init = row['RowId'];
 			Select(Init);
 		}
-	});	
+	});
 	
 	var UomCombox = {
 		type: 'combobox',
@@ -315,28 +316,29 @@ var init = function(){
 			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetInciUom&ResultSetType=array',
 			valueField: 'RowId',
 			textField: 'Description',
-			required:true,
-			mode:'remote',
-			onBeforeLoad:function(param){
+			required: true,
+			mode: 'remote',
+			onBeforeLoad: function(param) {
 				var Select = DetailGrid.getSelected();
-				if(!isEmpty(Select)){
-					param.Inci =Select.Inci;
+				if (!isEmpty(Select)) {
+					param.Inci = Select.Inci;
 				}
 			}
-//			,
-//			onSelect:function(record){
-//				var rows =InRequestGrid.getRows();
-//				var row = rows[InRequestGrid.editIndex];
-//				row.UomDesc=record.Description;
-//				
-//			},
-//			onShowPanel:function(){
-//				$(this).combobox('reload');
-//			}
+			//			,
+			//			onSelect:function(record){
+			//				var rows =InRequestGrid.getRows();
+			//				var row = rows[InRequestGrid.editIndex];
+			//				row.UomDesc=record.Description;
+			//				
+			//			},
+			//			onShowPanel:function(){
+			//				$(this).combobox('reload');
+			//			}
 		}
 	};
 	
-	var DetailCm = [[{
+	var DetailCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
 			saveCol: true,
@@ -367,7 +369,8 @@ var init = function(){
 			editor: {
 				type: 'validatebox',
 				options: {
-					required: true
+					required: true,
+					tipPosition: 'bottom'
 				}
 			},
 			width: 150
@@ -386,7 +389,7 @@ var init = function(){
 			field: 'BatExp',
 			width: 200
 		}, {
-			title: '厂商',
+			title: '生产厂家',
 			field: 'ManfDesc',
 			width: 160
 		}, {
@@ -431,6 +434,14 @@ var init = function(){
 			align: 'right',
 			width: 80
 		}, {
+			title: '国家医保编码',
+			field: 'MatInsuCode',
+			width: 160
+		}, {
+			title: '国家医保名称',
+			field: 'MatInsuDesc',
+			width: 160
+		}, {
 			title: '灭菌批号',
 			field: 'SterilizedBat',
 			width: 160
@@ -450,7 +461,8 @@ var init = function(){
 	var DetailGrid = $UI.datagrid('#DetailGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
-			QueryName: 'DHCINIsTrfD'
+			QueryName: 'DHCINIsTrfD',
+			query2JsonStrict: 1
 		},
 		deleteRowParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
@@ -460,45 +472,45 @@ var init = function(){
 		remoteSort: false,
 		showBar: true,
 		showAddDelItems: true,
-		beforeAddFn: function(){
-			if(isEmpty($HUI.combobox('#InitToLoc').getValue())){
+		beforeAddFn: function() {
+			if (isEmpty($HUI.combobox('#InitToLoc').getValue())) {
 				$UI.msg('alert', '库房不可为空!');
 				return false;
 			}
 			return true;
 		},
-		afterAddFn: function(){
+		afterAddFn: function() {
 			SetEditDisable();
 		},
-		onClickCell: function(index, field ,value){
+		onClickCell: function(index, field, value) {
 			DetailGrid.commonClickCell(index, field);
 		},
-		onBeforeCellEdit: function(index, field){
+		onBeforeCellEdit: function(index, field) {
 			var InitComp = $('#InitComp').val();
-			if(InitComp == 'Y'){
+			if (InitComp == 'Y') {
 				return false;
 			}
 			var RowData = $(this).datagrid('getRows')[index];
-			if(field == 'HVBarCode' && !isEmpty(RowData['RowId'])){
+			if (field == 'HVBarCode' && !isEmpty(RowData['RowId'])) {
 				return false;
 			}
 			return true;
 		},
-		onBeginEdit: function(index, row){
-			//增加完成情况字数输入限制
+		onBeginEdit: function(index, row) {
+			// 增加完成情况字数输入限制
 			$('#DetailGrid').datagrid('beginEdit', index);
 			var ed = $('#DetailGrid').datagrid('getEditors', index);
-			for (var i = 0; i < ed.length; i++){
+			for (var i = 0; i < ed.length; i++) {
 				var e = ed[i];
-				if(e.field == 'HVBarCode'){
-					$(e.target).bind('keydown', function(event){
-						if(event.keyCode == 13){
+				if (e.field == 'HVBarCode') {
+					$(e.target).bind('keydown', function(event) {
+						if (event.keyCode == 13) {
 							var BarCode = $(this).val();
-							if(isEmpty(BarCode)){
+							if (isEmpty(BarCode)) {
 								return;
 							}
 							var FindIndex = DetailGrid.find('HVBarCode', BarCode);
-							if(FindIndex >= 0 && FindIndex != index){
+							if (FindIndex >= 0 && FindIndex != index) {
 								$UI.msg('alert', '条码不可重复录入!');
 								$(this).val('');
 								$(this).focus();
@@ -508,10 +520,10 @@ var init = function(){
 								ClassName: 'web.DHCSTMHUI.DHCItmTrack',
 								MethodName: 'GetItmByBarcode',
 								BarCode: BarCode
-							},false);
+							}, false);
 							
-							if(!isEmpty(BarCodeData.sucess) && BarCodeData.sucess != 0){
-								$UI.msg('alert', BarCodeData.msg)
+							if (!isEmpty(BarCodeData.success) && BarCodeData.success != 0) {
+								$UI.msg('alert', BarCodeData.msg);
 								$(this).val('');
 								$(this).focus();
 								return;
@@ -529,61 +541,61 @@ var init = function(){
 							var Inci = BarCodeData['Inci'];
 							var dhcit = BarCodeData['dhcit'];
 							var ReqLocId = $('#InitToLoc').combobox('getValue');
-							//var InitScg = $('#InitScg').combobox('getValue');
-//							if(!CheckScgRelation(InitScg, ScgStk)){
-//								$UI.msg('alert', '条码'+BarCode+'属于'+ScgStkDesc+'类组,与当前不符!');
-//								$(this).val('');
-//								$(this).focus();
-//								return;
-//							}else 
-							if(Inclb == ''){
+							// var InitScg = $('#InitScg').combobox('getValue');
+							//							if(!CheckScgRelation(InitScg, ScgStk)){
+							//								$UI.msg('alert', '条码'+BarCode+'属于'+ScgStkDesc+'类组,与当前不符!');
+							//								$(this).val('');
+							//								$(this).focus();
+							//								return;
+							//							}else 
+							if (Inclb == '') {
 								$UI.msg('alert', '该高值材料没有相应库存记录,不能制单!');
 								$(this).val('');
 								$(this).focus();
 								return;
-							}else if(IsAudit != 'Y'){
-								$UI.msg('alert', '该高值材料有未审核的'+OperNo+',请核实!');
+							} else if (IsAudit != 'Y') {
+								$UI.msg('alert', '该高值材料有未审核的' + OperNo + ',请核实!');
 								$(this).val('');
 								$(this).focus();
 								return;
-							}else if(Type=='T'){
+							} else if (Type == 'T') {
 								$UI.msg('alert', '该高值材料已经出库,不可制单!');
 								$(this).val('');
 								$(this).focus();
 								return;
-							}else if(Status!='Enable'){
+							} else if (Status != 'Enable') {
 								$UI.msg('alert', '该高值条码处于不可用状态,不可制单!');
 								$(this).val('');
 								$(this).focus();
 								return;
-							}else if(RecallFlag=='Y'){
+							} else if (RecallFlag == 'Y') {
 								$UI.msg('alert', '该高值条码处于锁定状态,不可制单!');
 								$(this).val('');
 								$(this).focus();
 								return;
-							}else if(LocId==ReqLocId){
+							} else if (LocId == ReqLocId) {
 								$UI.msg('alert', '本科室条码!');
 								$(this).val('');
 								$(this).focus();
 								return;
 							}
 							
-							//判断退库单状态
+							// 判断退库单状态
 							var Init = '';
 							var FrLocIndex = MasterGrid.find('FrLocId', LocId);
-							if(FrLocIndex != -1){
+							if (FrLocIndex != -1) {
 								Init = MasterGrid.getData().rows[FrLocIndex]['RowId'];
 								var Status = MasterGrid.getData().rows[FrLocIndex]['Status'];
 								var InitNo = MasterGrid.getData().rows[FrLocIndex]['InitNo'];
-								if(Status != '10'){
+								if (Status != '10') {
 									$UI.msg('alert', '退库单' + InitNo + '已完成!');
 									return;
 								}
 							}
 							
-							//var ProLocId = $('#InitFrLoc').combobox('getValue');
+							// var ProLocId = $('#InitFrLoc').combobox('getValue');
 							var ReqLocId = $('#InitToLoc').combobox('getValue');
-							var ParamsObj = {InciDr: Inci, ProLocId: LocId, ReqLocId: ReqLocId, QtyFlag: 1, Inclb: Inclb};
+							var ParamsObj = { InciDr: Inci, ProLocId: LocId, ReqLocId: ReqLocId, QtyFlag: 1, Inclb: Inclb };
 							var Params = JSON.stringify(ParamsObj);
 							var InclbData = $.cm({
 								ClassName: 'web.DHCSTMHUI.Util.DrugUtil',
@@ -591,14 +603,14 @@ var init = function(){
 								page: 1,
 								rows: 1,
 								Params: Params
-							},false);
-							
-							var InclbInfo = $.extend(InclbData.rows[0], {InciDr:Inci, dhcit: dhcit, HVBarCode: BarCode});
-//							row['HVBarCode'] = BarCode;
-//							row['dhcit'] = dhcit;
+							}, false);
+							$(this).val(BarCode).validatebox('validate');
+							var InclbInfo = $.extend(InclbData.rows[0], { InciDr: Inci, dhcit: dhcit, HVBarCode: BarCode });
+							//							row['HVBarCode'] = BarCode;
+							//							row['dhcit'] = dhcit;
 							ReturnInfoFunc(index, InclbInfo);
 							
-							//保存退库单主表
+							// 保存退库单主表
 							var MainObj = {};
 							MainObj['RowId'] = Init;
 							MainObj['InitFrLoc'] = LocId;
@@ -609,7 +621,7 @@ var init = function(){
 							MainObj['InitRemarks'] = '';
 							
 							var UomId = InclbInfo['BUomId'];
-							var DetailObj = [{Initi: '', Inclb: Inclb, Qty: 1, UomId: UomId, HVBarCode: BarCode}];
+							var DetailObj = [{ Initi: '', Inclb: Inclb, Qty: 1, UomId: UomId, HVBarCode: BarCode }];
 							var Detail = JSON.stringify(DetailObj);
 							
 							var Main = JSON.stringify(addSessionParams(MainObj));
@@ -618,21 +630,21 @@ var init = function(){
 								MethodName: 'jsSave',
 								Main: Main,
 								Detail: Detail
-							},false);
+							}, false);
 							var Init = InitData.rowid;
-							if(InitData.success < 0){
+							if (InitData.success < 0) {
 								$UI.msg('error', Barcode + '保存失败!');
 								return false;
 							}
-							if(CURR_INIT == ''){
+							if (CURR_INIT == '') {
 								CURR_INIT = Init;
-							}else if($.inArray(Init + '', CURR_INIT.split(',')) == -1){
+							} else if ($.inArray(Init + '', CURR_INIT.split(',')) == -1) {
 								CURR_INIT = CURR_INIT + ',' + Init;
 							}
-							$UI.setUrl(MasterGrid);
 							MasterGrid.load({
 								ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 								QueryName: 'QueryTrans',
+								query2JsonStrict: 1,
 								InitStr: CURR_INIT
 							});
 						}
@@ -642,8 +654,8 @@ var init = function(){
 		}
 	});
 	
-	function ReturnInfoFunc(RowIndex, row){
-		if(row.AvaQty < 1){
+	function ReturnInfoFunc(RowIndex, row) {
+		if (row.AvaQty < 1) {
 			$UI.msg('alert', '可用库存不足');
 			return;
 		}
@@ -658,7 +670,6 @@ var init = function(){
 				Spec: row.Spec,
 				Inclb: row.Inclb,
 				BatExp: row.BatExp,
-				Qty: row.OperQty,
 				UomId: row.PurUomId,
 				UomDesc: row.PurUomDesc,
 				Rp: row.Rp,
@@ -666,17 +677,19 @@ var init = function(){
 				RpAmt: row.Rp,
 				SpAmt: row.Sp,
 				InclbDirtyQty: row.DirtyQty,
-				Qty: 1
+				Qty: 1,
+				MatInsuCode: row.MatInsuCode,
+				MatInsuDesc: row.MatInsuDesc
 			}
 		});
 		$('#DetailGrid').datagrid('refreshRow', RowIndex);
 		DetailGrid.commonAddRow();
 	}
 	
-		//设置缺省值
-	function SetDefaValues(){
+	// 设置缺省值
+	function SetDefaValues() {
 		$('#InitToLoc').combobox('setValue', session['LOGON.CTLOCID']);
 	}
 	SetDefaValues();
-}
+};
 $(init);

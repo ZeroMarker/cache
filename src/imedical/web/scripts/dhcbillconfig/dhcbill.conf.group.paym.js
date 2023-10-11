@@ -1,19 +1,38 @@
-Ôªø/**
+/**
  * FileName: dhcbill.conf.group.paym.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-10-23
- * Description: ÊîØ‰ªòÊñπÂºèÊéàÊùÉ
+ * Description: ÷ß∏∂∑Ω Ω ⁄»®
  */
 
+$.extend($.fn.validatebox.defaults.rules, {
+	checkRepeat: {    //÷ÿ∏¥–‘–£—È
+	    validator: function(value, param) {
+	    	var bool = true;
+		    $.each(GV.PayMList.getRows(), function (index, row) {
+			    if (index == GV.EditRowIndex) {
+				    return true;
+				}
+			    if (row[param[0]] && (row[param[0]] == value)) {
+				    bool = false;
+				    return false;
+				}
+			});
+			return bool;
+		},
+		message: "∏√÷µ“—¥Ê‘⁄"
+	}
+});
+	
 $(function() {	
-	//‰øùÂ≠ò
+	//±£¥Ê
 	$HUI.linkbutton("#btn-save", {
 		onClick: function () {
 			saveClick();
 		}
 	});
 	
-	GV.PaymList = $HUI.datagrid("#paymList", {
+	GV.PayMList = $HUI.datagrid("#paymList", {
 		fit: true,
 		border: false,
 		singleSelect: true,
@@ -26,67 +45,139 @@ $(function() {
 		columns: [[{field: 'ck', checkbox: true},
 				   {title: 'CTPMRowID', field: 'CTPMRowID', hidden: true},
 		           {title: 'CTPMCode', field: 'CTPMCode', hidden: true},
-				   {title: 'ÊîØ‰ªòÊñπÂºè', field: 'CTPMDesc', width: 120},
+				   {title: '÷ß∏∂∑Ω Ω', field: 'CTPMDesc', width: 100},
 				   {title: 'PMRowID', field: 'PMRowID', hidden: true},
-				   {title: 'ÈªòËÆ§ÊîØ‰ªò', field: 'DefFlag', width: 80, align: 'center', 
+				   {title: 'ƒ¨»œ÷ß∏∂', field: 'DefFlag', width: 70, align: 'center',
 				   	formatter: function (value, row, index) {
 						return "<input type='checkbox' onclick='defFlagCKClick(this, " + index + ")' " + (value == "Y" ? "checked" : "") + "/>";
 					}
 				   },
-				   {title: 'ÊâìÂç∞Ê†áÂøó', field: 'INVPrtFlag', width: 80, align: 'center',
+				   {title: '¥Ú”°±Í÷æ', field: 'INVPrtFlag', width: 70, align: 'center',
 				    formatter: function (value, row, index) {
 						return "<input type='checkbox' " + (value == "Y" ? "checked" : "") + "/>";
 					}
 				   },
-				   {title: 'ÂøÖË¶Å‰ø°ÊÅØ', field: 'RPFlag', width: 80, align: 'center',
+				   {title: '±ÿ“™–≈œ¢', field: 'RPFlag', width: 70, align: 'center',
 				    formatter: function (value, row, index) {
 						return "<input type='checkbox' " + (value == "Y" ? "checked" : "") + "/>";
 					}
 				   },
-				   {title: 'È¢Ñ‰∫§Èáë', field: 'PMPDFlag', width: 70, align: 'center',
+				   {title: ' ’‘§ΩªΩ', field: 'PMPDFlag', width: 70, align: 'center',
 				    formatter: function (value, row, index) {
 						return "<input type='checkbox' " + (value == "Y" ? "checked" : "") + "/>";
 					}
 				   },
-				   {title: 'Êî∂Ë¥π', field: 'PMOPCFlag', width: 70, align: 'center',
+				   {title: 'ÕÀ‘§ΩªΩ', field: 'PMDEPRefundFlag', width: 70, align: 'center',
 				    formatter: function (value, row, index) {
 						return "<input type='checkbox' " + (value == "Y" ? "checked" : "") + "/>";
 					}
 				   },
-				   {title: 'ÈÄÄË¥π', field: 'PMOPRefundFlag', width: 70, align: 'center',
+				   {title: ' ’∑—', field: 'PMOPCFlag', width: 70, align: 'center',
 				    formatter: function (value, row, index) {
 						return "<input type='checkbox' " + (value == "Y" ? "checked" : "") + "/>";
 					}
 				   },
-				   {title: 'ÊåÇÂè∑', field: 'PMOPRegFlag', width: 70, align: 'center',
+				   {title: 'ÕÀ∑—', field: 'PMOPRefundFlag', width: 70, align: 'center',
+				    formatter: function (value, row, index) {
+						return "<input type='checkbox' " + (value == "Y" ? "checked" : "") + "/>";
+					}
+				   },
+				   {title: 'π“∫≈', field: 'PMOPRegFlag', width: 70, align: 'center',
 				   	formatter: function (value, row, index) {
 						return "<input type='checkbox' " + (value == "Y" ? "checked" : "") + "/>";
 					}
-				   }
+				   },
+				   {title: 'º±’Ô¡Ùπ€<br/> ’∑—', field: 'PMObsChgFlag', width: 80, align: 'center',
+				    formatter: function (value, row, index) {
+						return "<input type='checkbox' " + (value == "Y" ? "checked" : "") + "/>";
+					}
+				   },
+				   {field: 'PMSequence', title: 'À≥–Ú∫≈', width: 70,
+				   	 editor: {
+					   	type: 'numberbox',
+					   	options: {
+						   	min:1,
+						   	isKeyupChange: true,
+						   	validType:['checkRepeat["PMSequence"]']
+						 }
+					  }
+				   },
+				   {field: 'PMHotKey', title: ' ’“¯Ã®<br/>øÏΩ›º¸', width: 70,
+				   	editor: {
+					   	type: 'validatebox',
+					   	options: {
+						   	validType: ['checkRepeat["PMHotKey"]']
+						 }
+					}
+				   },
+				   {field: 'PMIconCls', title: ' ’“¯Ã®<br/>÷ß∏∂∑Ω ΩÕº±Í', width: 100, editor: 'text'}
 			]],
 		url: $URL,
 		queryParams: {
 			ClassName: "BILL.CFG.COM.GroupAuth",
 			QueryName: "ReadPMConfig",
-			groupId: GV.GroupId,
-			hospId: GV.HospId,
+			groupId: CV.GroupId,
+			hospId: CV.HospId,
 			rows: 99999999
 		},
 		onLoadSuccess: function(data) {
+			GV.EditRowIndex = undefined;
 			$.each(data.rows, function(index, row) {
 				if (row.PMRowID) {
-					GV.PaymList.checkRow(index);
+					GV.PayMList.checkRow(index);
 				}
 			});
+		},
+		onClickCell: function (index, field, value) {
+			if (GV.PayMList.getPanel().find(".datagrid-view2 tr.datagrid-row[datagrid-row-index=" + index + "] td[field=" + field + "] input").length == 0) {
+				clickCellHandler(index, field, value);
+			}
 		}
 	});
 });
 
+function clickCellHandler(index, field, value) {
+	if (endEditing()) {
+		GV.EditRowIndex = index;
+		GV.PayMList.editCell({index: index, field: field});
+		var ed = GV.PayMList.getEditor({index: index, field: field});
+		if (ed) {
+			$(ed.target).focus();
+		}
+	}
+}
+
+function endEditing() {
+	if (GV.EditRowIndex == undefined) {
+		return true;
+	}
+	if (GV.PayMList.validateRow(GV.EditRowIndex)) {
+		//datagrid endEdit()÷–”–refreshRow£¨ª·refreshµÙcheckboxµƒ÷µ£¨π œ»º«¬º÷µ£¨endEdit∫Û‘Ÿ∏≥÷µ.
+		var fieldObj = {};
+		var field = "";
+		GV.PayMList.getPanel().find(".datagrid-view2 tr.datagrid-row[datagrid-row-index=" + GV.EditRowIndex + "] td[field!='ck'] input:checkbox").each(function(idx, ele) {
+			field = $(this).parents("td").attr("field");
+			fieldObj[field] = $(this).prop("checked");
+		});
+		
+		GV.PayMList.endEdit(GV.EditRowIndex);
+
+		GV.PayMList.getPanel().find(".datagrid-view2 tr.datagrid-row[datagrid-row-index=" + GV.EditRowIndex + "] td[field!='ck'] input:checkbox").each(function(idx, ele) {
+			field = $(this).parents("td").attr("field");
+			$(this).prop("checked", fieldObj[field]);
+		});
+		
+		GV.EditRowIndex = undefined;
+		return true;
+	}
+	return false;
+}
+
 function defFlagCKClick(obj, index) {
 	var cellObj = {};
-	$.each(GV.PaymList.getRows(), function (idx, row) {
+	$.each(GV.PayMList.getRows(), function (idx, row) {
 		if (index != idx) {
-			cellObj = GV.PaymList.getPanel().find(".datagrid-view2 tr.datagrid-row[datagrid-row-index=" + idx + "] td[field=DefFlag] input:checkbox");
+			cellObj = GV.PayMList.getPanel().find(".datagrid-view2 tr.datagrid-row[datagrid-row-index=" + idx + "] td[field=DefFlag] input:checkbox");
 			if ($(obj).prop("checked")) {
 				cellObj.prop("checked", false);
 			}
@@ -95,48 +186,63 @@ function defFlagCKClick(obj, index) {
 }
 
 /**
-* ‰øùÂ≠ò
+* ±£¥Ê
 */
 function saveClick() {
-	var paymAry = [];
-	$.each(GV.PaymList.getChecked(), function(idx, row) {
-		var rowIndex = GV.PaymList.getRowIndex(row);
-		
-		var myCTPMRowID = row.CTPMRowID;
-		var myPMGSRowID = row.PMRowID;
-		var myPMDefault = getEditorCellValue(rowIndex, "DefFlag");
-		var myPMPrintFlag = getEditorCellValue(rowIndex, "INVPrtFlag");
-		var myPMRPFlag = getEditorCellValue(rowIndex, "RPFlag");
-		var myPMPDFlag = getEditorCellValue(rowIndex, "PMPDFlag");
-		var myPMOPCFlag = getEditorCellValue(rowIndex, "PMOPCFlag");
-		var myPMOPRegFlag = getEditorCellValue(rowIndex, "PMOPRegFlag");
-		var myPMOPRefundFlag = getEditorCellValue(rowIndex, "PMOPRefundFlag");
-		
-		var myPMStr = myCTPMRowID + "^" + myPMGSRowID + "^" + myPMDefault + "^" + myPMPrintFlag;
-		myPMStr += "^" + myPMRPFlag + "^" + myPMPDFlag + "^" + myPMOPCFlag;
-		myPMStr += "^" + myPMOPRegFlag + "^" + myPMOPRefundFlag;
-		paymAry.push(myPMStr);
-	});
-	var paymStr = paymAry.join(PUBLIC_CONSTANT.SEPARATOR.CH2);
-	$.m({
-		ClassName: "BILL.CFG.COM.GroupAuth",
-		MethodName: "UpdateGSPM",
-		groupId: GV.GroupId,
-		hospId: GV.HospId,
-		gsPMStr: paymStr
-	}, function(rtn) {
-		if (rtn == "0") {
-			$.messager.popover({msg: "‰øùÂ≠òÊàêÂäü", type: "success"});
-		}else {
-			$.messager.popover({msg: "‰øùÂ≠òÂ§±Ë¥•Ôºö" + rtn, type: "error"});
+	if (!endEditing()) {
+		return;
+	}
+	$.messager.confirm("»∑»œ", "»∑»œ±£¥Ê£ø", function(r) {
+		if (!r) {
+			return;
 		}
+		var paymAry = [];
+		$.each(GV.PayMList.getChecked(), function(idx, row) {
+			var rowIndex = GV.PayMList.getRowIndex(row);
+			var myCTPMRowID = row.CTPMRowID;
+			var myPMGSRowID = row.PMRowID;
+			var myPMDefault = getEditorCellValue(rowIndex, "DefFlag");
+			var myPMPrintFlag = getEditorCellValue(rowIndex, "INVPrtFlag");
+			var myPMRPFlag = getEditorCellValue(rowIndex, "RPFlag");
+			var myPMPDFlag = getEditorCellValue(rowIndex, "PMPDFlag");
+			var myPMOPCFlag = getEditorCellValue(rowIndex, "PMOPCFlag");
+			var myPMOPRegFlag = getEditorCellValue(rowIndex, "PMOPRegFlag");
+			var myPMOPRefundFlag = getEditorCellValue(rowIndex, "PMOPRefundFlag");
+			var myPMSequence = row.PMSequence;
+			var myPMHotKey = row.PMHotKey;
+			var myPMIconCls = row.PMIconCls;
+			var myObsChgFlag = getEditorCellValue(rowIndex, "PMObsChgFlag");   //º±’Ô¡Ùπ€ ’∑—
+			var myPMDEPRefundFlag = getEditorCellValue(rowIndex, "PMDEPRefundFlag");   //ÕÀ‘§ΩªΩ
+			
+			var myPMStr = myCTPMRowID + "^" + myPMGSRowID + "^" + myPMDefault + "^" + myPMPrintFlag
+				+ "^" + myPMRPFlag + "^" + myPMPDFlag + "^" + myPMOPCFlag + "^" + myPMOPRegFlag
+				+ "^" + myPMOPRefundFlag + "^" + myPMSequence + "^" + myPMHotKey + "^" + myPMIconCls
+				+ "^" + myObsChgFlag+ "^" + myPMDEPRefundFlag;
+			paymAry.push(myPMStr);
+		});
+		var paymStr = paymAry.join(PUBLIC_CONSTANT.SEPARATOR.CH2);
+		$.m({
+			ClassName: "BILL.CFG.COM.GroupAuth",
+			MethodName: "UpdateGSPM",
+			groupId: CV.GroupId,
+			hospId: CV.HospId,
+			gsPMStr: paymStr
+		}, function(rtn) {
+			var myAry = rtn.split("^");
+			if (myAry[0] == 0) {
+				$.messager.popover({msg: "±£¥Ê≥…π¶", type: "success"});
+				GV.PayMList.load();
+				return;
+			}
+			$.messager.popover({msg: "±£¥Ê ß∞‹£∫" + (myAry[1] || myAry[0]), type: "error"});
+		});
 	});
 }
 
 /**
-* ÂèñË°åÁºñËæëcheckboxÂÄº
+* »°––±‡º≠checkbox÷µ
 */
-function getEditorCellValue(rowIndex, fieldName) {
-	var obj = GV.PaymList.getPanel().find(".datagrid-view2 tr.datagrid-row[datagrid-row-index=" + rowIndex + "] td[field=" + fieldName + "] input:checkbox");
-	return (obj) ? ($(obj).prop("checked") ? "Y" : "N") : "N";
+function getEditorCellValue(index, field) {
+	var checked = GV.PayMList.getPanel().find(".datagrid-view2 tr.datagrid-row[datagrid-row-index=" + index + "] td[field=" + field + "] input:checkbox").is(":checked");
+	return checked ? "Y" : "N";
 }

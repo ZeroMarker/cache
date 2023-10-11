@@ -57,7 +57,11 @@ function InitDict() {
 	// 初始化点评方式
 	PHA.ComboBox("conWay", {
 		url: PRC_STORE.PCNTSWay("2","RECNTS").url,
-		width:140
+		width:140,
+		disabled: true,
+		onLoadSuccess: function(data){
+			$(this).combobox('setValue', data[0].RowId);
+		}
 	});
 	// 初始化点评结果 1-仅有结果,2-仅无结果,3-仅合理,4-仅不合理,5-仅医生申诉
 	PHA.ComboBox("conResult", {
@@ -233,7 +237,7 @@ function SearchComments(){
 	var parStr = wayId + "^" + result + "^" + phaUserId + "^" + state;
 	
 	$("#gridFindNo").datagrid("query", {
-		findFlag: '2',
+		findFlag: '',
 		stDate: stDate,
 		endDate: endDate,
 		parStr: parStr,

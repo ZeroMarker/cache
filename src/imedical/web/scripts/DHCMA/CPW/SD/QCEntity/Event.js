@@ -11,8 +11,7 @@ function InitviewScreenEvent(obj){
 		buttons:[{
 			text:'保存',
 			handler:function(){
-				obj.btnSave_click();
-				$HUI.dialog('#winProEdit').close();
+				obj.btnSave_click();								
 			}
 		},{
 			text:'关闭',
@@ -24,6 +23,7 @@ function InitviewScreenEvent(obj){
 	
 	obj.LoadEvent = function(args){ 
 		$('#btnAdd').on('click', function(){
+			$('#txtCode').removeAttr("disabled"); 
 			obj.layer();
 		});
 		$('#btnEdit').on('click', function(){
@@ -64,37 +64,28 @@ function InitviewScreenEvent(obj){
 		var IndNo = $('#txtIndNo').val();
 		var Pubdate = $('#Pubdate').val();
 		var IsActive = $('#IsActive').checkbox('getValue');
-		//IsActive = (IsActive==true? 1: 0);
+		IsActive = (IsActive==true? 1: 0);
 		var OperKey = $('#txtOperKey').val();
 		var URL = $('#txtURL').val();
 		var Location=$('#chkLocation').combobox('getValues').join(',');
+		var TotalFee = $('#txtTotalFee').val();
+		var InDays = $('#txtInDays').val();
+		var EntityCat=$('#chkEntityCat').combobox('getValue');
 		if (!Code) {
-			errinfo = errinfo + "代码为空!<br>";
+			errinfo = errinfo + "编码为空!<br>";
 		}
 		if (!Desc) {
 			errinfo = errinfo + "名称为空!<br>";
 		}
+		if (!URL) {
+			errinfo = errinfo + "接口地址为空!<br>";
+		}
 		if (errinfo) {
-			$.messager.alert("错误提示", errinfo, 'info',function(fn){
-				
-				//obj.layer();
-				$('#txtCode').val(Code);
-				$('#txtDesc').val(Desc);
-				$('#txtAbbrev').val(Abbrev);
-				$('#txtIndNo').val(IndNo);
-				$('#IsActive').checkbox('setValue',IsActive);
-				$('#Pubdate').val(Pubdate);
-				$('#txtOperKey').val(OperKey);
-				$('#txtURL').val(URL);
-				var BTLocOIDArr = Location.split(",");
-				$('#chkLocation').combobox('setValues',BTLocOIDArr)
-				$HUI.dialog('#winProEdit').open();
-			});
+			$.messager.alert("错误提示", errinfo, 'info');
 			return;
 		}
-		IsActive = (IsActive==true? 1: 0);
-		
 		var inputStr = obj.RecRowID;
+		var CHR_1="^";
 		inputStr = inputStr + CHR_1 + Code;
 		inputStr = inputStr + CHR_1 + Desc;
 		inputStr = inputStr + CHR_1 + Abbrev;
@@ -104,6 +95,10 @@ function InitviewScreenEvent(obj){
 		inputStr = inputStr + CHR_1 + OperKey;
 		inputStr = inputStr + CHR_1 + URL;
 		inputStr = inputStr + CHR_1 + Location;
+		inputStr = inputStr + CHR_1 + TotalFee;
+		inputStr = inputStr + CHR_1 + InDays;
+		inputStr = inputStr + CHR_1 + EntityCat;
+		inputStr = inputStr + CHR_1 + obj.Version;
 		var flg = $m({
 			ClassName:"DHCMA.CPW.SD.QCEntity",
 			MethodName:"Update",
@@ -119,8 +114,10 @@ function InitviewScreenEvent(obj){
 				$.messager.alert("错误提示", "更新数据错误!Error=" + flg, 'info');
 			}
 		}else {
+			$HUI.dialog('#winProEdit').close();
 			$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
-			obj.RecRowID = flg;
+			obj.gridQcEntity.clearSelections();
+			obj.RecRowID="";
 			obj.gridQcEntity.reload() ;//刷新当前页
 		}
 	}
@@ -138,9 +135,13 @@ function InitviewScreenEvent(obj){
 					MethodName:"DeleteById",
 					aId:obj.RecRowID
 				},false);
-				if(flg=0){alert("删除成功啦")}
+				
 				if (parseInt(flg) < 0) {
-					$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					if (parseInt(flg)==-777) {
+						$.messager.alert("错误提示","系统参数配置不允许删除！", 'info');
+					} else {
+						$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					}
 				} else {
 					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 					obj.RecRowID = "";
@@ -166,8 +167,10 @@ function InitviewScreenEvent(obj){
 			var URL = rd["BTURL"];
 			var BTLocOID = rd["BTLocOID"]
 			var BTLocation = rd["BTLocation"]
+			var BTEntityCat = rd["BTEntityCat"]
 			BTLocOIDArr=BTLocOID.split(",")
 			$('#txtCode').val(Code);
+			$('#txtCode').attr("disabled",true); 
 			$('#txtDesc').val(Desc);
 			$('#txtAbbrev').val(Abbrev);
 			$('#txtIndNo').val(IndNo);
@@ -176,6 +179,9 @@ function InitviewScreenEvent(obj){
 			$('#txtOperKey').val(OperKey);
 			$('#txtURL').val(URL);
 			$('#chkLocation').combobox('setValues',BTLocOIDArr)
+			$('#txtTotalFee').val(rd["BTTotalFee"]);
+			$('#txtInDays').val(rd["BTInDays"]);
+			$('#chkEntityCat').combobox('setValue',BTEntityCat)
 		}else{
 			obj.RecRowID = "";
 			$('#txtCode').val('');
@@ -187,7 +193,7 @@ function InitviewScreenEvent(obj){
 			$('#chkLocation').combobox('setValues','');
 			$('#txtURL').val('');
 			$('#txtOperKey').val('');
-			
+			$('#chkEntityCat').combobox('setValue','')
 		}
 		$HUI.dialog('#winProEdit').open();
 	}

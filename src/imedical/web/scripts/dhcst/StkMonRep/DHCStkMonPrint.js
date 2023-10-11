@@ -18,7 +18,7 @@ Ext.onReady(function() {
 	var PhaLoc = new Ext.ux.LocComboBox({
 		id : 'PhaLoc',
 		name : 'PhaLoc',
-		fieldLabel : '科室',
+		fieldLabel : $g('科室'),
 		anchor : '',
 		width:200,
 		groupId:gGroupId
@@ -26,7 +26,7 @@ Ext.onReady(function() {
 
 
 	var StYear=new Ext.form.TextField({
-		fieldLabel:'开始月份',
+		fieldLabel:$g('开始月份'),
 		id:'StYear',
 		name:'StYear',
 		anchor:'90%',
@@ -43,7 +43,7 @@ Ext.onReady(function() {
 	});
 	
 	var EdYear=new Ext.form.TextField({
-		fieldLabel:'结束月份',
+		fieldLabel:$g('结束月份'),
 		id:'EdYear',
 		name:'EdYear',
 		anchor:'90%',
@@ -60,7 +60,7 @@ Ext.onReady(function() {
 		value:(today.getMonth()+1)
 	});
 	var priceflag = new Ext.form.Checkbox({
-	       boxLabel : '按售价',
+	       boxLabel : $g('按售价'),
 	          id : 'priceflag',
 	          name : 'priceflag',
 	          anchor : '90%',
@@ -80,14 +80,14 @@ Ext.onReady(function() {
 			var MonthType=""
 			if (HospId==1)
 			{
-				MonthType="单位:元"
-				sign="科室主任:                           分管主任:                           部门负责人:                 "	
+				MonthType=$g("单位:元")
+				sign=$g("科室主任:                           分管主任:                           部门负责人:                 "	)
 			}  
 			else
 			{
-				sign="科室负责人:                          采购人:                          保管人:                          复核人:                          "	
-				if (priceflag==true) {MonthType="价格类别:售价"}
-				else {MonthType="价格类别:进价"}
+				sign=$g("科室负责人:                          采购人:                          保管人:                          复核人:                          ")	
+				if (priceflag==true) {MonthType=$g("价格类别:售价")}
+				else {MonthType=$g("价格类别:进价")}
 			}
 			growid=rowid
 			var reportFrame=document.getElementById("frameReport");
@@ -99,8 +99,8 @@ Ext.onReady(function() {
 		// 查询按钮
 	var SearchBT = new Ext.Toolbar.Button({
 				id : "SearchBT",
-				text : '查询',
-				tooltip : '点击查询',
+				text : $g('查询'),
+				tooltip : $g('点击查询'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_find',
@@ -134,12 +134,12 @@ var MonthCoverGridPagingToolbar = new Ext.PagingToolbar({
 	store:MainStore,
 	pageSize:1000,
 	displayInfo:true,
-	displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-	emptyMsg:"没有记录"
+	displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+	emptyMsg:$g("没有记录")
 	});
 var MainGrid=new Ext.grid.GridPanel({
 	id:'MainGrid',
-	title:'月报',
+	title:$g('月报'),
 	store:MainStore,
 	cm:new Ext.grid.ColumnModel([{
 		header:'Rowid',
@@ -148,19 +148,19 @@ var MainGrid=new Ext.grid.GridPanel({
 		align:'left',
 		hidden:true
 	},{
-		header:'科室',
+		header:$g('科室'),
 		dataIndex:'locDesc',
 		width:150,
 		align:'left',
 		sortable:true
 	},{
-		header:'月份',
+		header:$g('月份'),
 		dataIndex:'mon',
 		width:65,
 		align:'left',
 		sortable:true
 	},{
-		header:'月报起始日期',
+		header:$g('月报起始日期'),
 		dataIndex:'frDate',
 		width:130,
 		align:'left',
@@ -170,7 +170,7 @@ var MainGrid=new Ext.grid.GridPanel({
 			return StDateTime;
 		}
 	},{
-		header:'月报截止日期',
+		header:$g('月报截止日期'),
 		dataIndex:'toDate',
 		width:130,
 		align:'left',
@@ -210,18 +210,18 @@ MainGrid.addListener('rowclick',function(grid,rowindex,e){
 	        		xtype: 'compositefield',
     				items : [
 					StYear,
-					{ xtype: 'displayfield', value: '年'},
+					{ xtype: 'displayfield', value: $g('年')},
 					StMonth,
-					{ xtype: 'displayfield', value: '月'}]
+					{ xtype: 'displayfield', value: $g('月')}]
 	        
 	        },
         {
 	        		xtype: 'compositefield',
     				items : [
 					EdYear,
-					{ xtype: 'displayfield', value: '年'},
+					{ xtype: 'displayfield', value: $g('年')},
 					EdMonth,
-					{ xtype: 'displayfield', value: '月'}]
+					{ xtype: 'displayfield', value: $g('月')}]
 	        
 	        },	priceflag
 	        ]           
@@ -231,7 +231,7 @@ MainGrid.addListener('rowclick',function(grid,rowindex,e){
 		items : [ {
 			region:'west',
 			width:350,
-			title:'月报查询打印',
+			title:$g('月报查询打印'),
 			collapsible:true,
 			autoScroll : true,
 			layout:'border',

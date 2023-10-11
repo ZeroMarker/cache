@@ -12,27 +12,27 @@ Ext.onReady(function(){
 		GetParam();  //初始化公共参数
 	}
 	var PhaLoc=new Ext.ux.LocComboBox({
-		fieldLabel : '<font color=blue>科室</font>',
+		fieldLabel : '<font color=blue>'+$g('科室')+'</font>',
 		id : 'PhaLoc',
 		name : 'PhaLoc',
 		anchor : '90%',
 		emptyText : '科室...',
 		groupId:gGroupId,
-		listeners : {
-			'select' : function(e) {
-			                          var SelLocId=Ext.getCmp('PhaLoc').getValue();//add wyx 根据选择的科室动态加载类组
-			                          StkGrpType.getStore().removeAll();
-			                          StkGrpType.getStore().setBaseParam("locId",SelLocId)
-			                          StkGrpType.getStore().setBaseParam("userId",UserId)
-			                          StkGrpType.getStore().setBaseParam("type",App_StkTypeCode)
-			                          StkGrpType.getStore().load();
-                          
-									}
-					}
+		listeners : {'select' : function(e) {SetDefaultSCG();}}
 	});
 	
+	function SetDefaultSCG()
+	{
+		 var SelLocId=Ext.getCmp('PhaLoc').getValue();//add wyx 根据选择的科室动态加载类组
+         StkGrpType.getStore().removeAll();
+         StkGrpType.getStore().setBaseParam("locId",SelLocId)
+         StkGrpType.getStore().setBaseParam("userId",UserId)
+         StkGrpType.getStore().setBaseParam("type",App_StkTypeCode)
+         StkGrpType.getStore().load();
+	}
+	
 	var DateFrom = new Ext.ux.EditDate({
-		fieldLabel : '<font color=blue>开始日期</font>',
+		fieldLabel : '<font color=blue>'+$g('开始日期')+'</font>',
 		id : 'DateFrom',
 		name : 'DateFrom',
 		anchor : '90%',
@@ -40,7 +40,7 @@ Ext.onReady(function(){
 	});
 		
 	var DateTo = new Ext.ux.EditDate({
-		fieldLabel : '<font color=blue>截止日期</font>',
+		fieldLabel : '<font color=blue>'+$g('截止日期')+'</font>',
 		id : 'DateTo',
 		name : 'DateTo',
 		anchor : '90%',
@@ -56,12 +56,12 @@ Ext.onReady(function(){
 		LocId:gLocId,
 		UserId:gUserId
 	}); 
-	StkGrpType.on('change',function(){
+	StkGrpType.on('select',function(){
 		Ext.getCmp("DHCStkCatGroup").setValue("");
 	});
 	
 	var InciDr = new Ext.form.TextField({
-		fieldLabel : '药品RowId',
+		fieldLabel : $g('药品RowId'),
 		id : 'InciDr',
 		name : 'InciDr',
 		anchor : '90%',
@@ -69,14 +69,14 @@ Ext.onReady(function(){
 	});
 
 	var InciCode = new Ext.form.TextField({
-		fieldLabel : '药品编码',
+		fieldLabel : $g('药品编码'),
 		id : 'InciCode',
 		name : 'InciCode',
 		anchor : '90%',
 		valueNotFoundText : ''
 	});
 	var IncDesc = new Ext.form.TextField({
-		fieldLabel : '药品名称',
+		fieldLabel : $g('药品名称'),
 		id : 'IncDesc',
 		name : 'IncDesc',
 		anchor : '90%',
@@ -117,14 +117,14 @@ Ext.onReady(function(){
 		Ext.getCmp("IncDesc").setValue(inciDesc);
 	}
 	var ImpNO = new Ext.form.TextField({
-		fieldLabel : '入库单号',
+		fieldLabel : $g('入库单号'),
 		id : 'ImpNO',
 		name : 'ImpNO',
 		anchor : '90%',
 		valueNotFoundText : ''
 	});	
 	var DHCStkCatGroup = new Ext.ux.ComboBox({
-		fieldLabel : '库存分类',
+		fieldLabel : $g('库存分类'),
 		id : 'DHCStkCatGroup',
 		name : 'DHCStkCatGroup',
 		store : StkCatStore,
@@ -141,7 +141,7 @@ Ext.onReady(function(){
 				
 	// 药学大类
 	var PhcCat = new Ext.ux.ComboBox({
-		fieldLabel : '药学大类',
+		fieldLabel : $g('药学大类'),
 		id : 'PhcCat',
 		name : 'PhcCat',
 		store : PhcCatStore,
@@ -157,7 +157,7 @@ Ext.onReady(function(){
 
 	// 药学子类
 	var PhcSubCat = new Ext.ux.ComboBox({
-		fieldLabel : '药学子类',
+		fieldLabel :$g( '药学子类'),
 		id : 'PhcSubCat',
 		name : 'PhcSubCat',
 		store : PhcSubCatStore,
@@ -172,7 +172,7 @@ Ext.onReady(function(){
 
 	// 药学小类
 	var PhcMinCat = new Ext.ux.ComboBox({
-		fieldLabel : '药学小类',
+		fieldLabel : $g('药学小类'),
 		id : 'PhcMinCat',
 		name : 'PhcMinCat',
 		store : PhcMinCatStore,
@@ -181,7 +181,7 @@ Ext.onReady(function(){
 		params:{PhcSubCatId:'PhcSubCat'}
 	});
 	var PHCCATALL = new Ext.form.TextField({
-		fieldLabel : '药学分类',
+		fieldLabel : $g('药学分类'),
 		id : 'PHCCATALL',
 		name : 'PHCCATALL',
 		anchor : '100%',
@@ -199,7 +199,7 @@ function GetAllCatNew(catdescstr,newcatid){
 
 var PHCCATALLButton = new Ext.Button({
 	id:'PHCCATALLButton',
-	text : '药学分类',
+	text : $g('药学分类'),
 	handler : function() {	
        //var lnk="dhcst.phccatall.csp?gNewCatId="+gNewCatId;
        //window.open(lnk,"_target","height=600,width=800,menubar=no,status=yes,toolbar=no,resizable=yes") ;
@@ -220,7 +220,7 @@ var PHCCATALLButton = new Ext.Button({
     }
 });
 	var PHCDFPhcDoDR = new Ext.ux.ComboBox({
-		fieldLabel : '管制分类',
+		fieldLabel : $g('管制分类'),
 		id : 'PHCDFPhcDoDR',
 		name : 'PHCDFPhcDoDR',
 		anchor : '90%',
@@ -236,7 +236,7 @@ var PHCCATALLButton = new Ext.Button({
 	});
 
 	var PhManufacturer = new Ext.ux.ComboBox({
-		fieldLabel : '生产厂商',
+		fieldLabel :$g( '生产企业'),
 		id : 'PhManufacturer',
 		name : 'PhManufacturer',
 		store : PhManufacturerStore,
@@ -246,7 +246,7 @@ var PHCCATALLButton = new Ext.Button({
 	});
 
 	var PHCDOfficialType = new Ext.form.ComboBox({
-		fieldLabel : '医保类别',
+		fieldLabel : $g('医保类别'),
 		id : 'PHCDOfficialType',
 		name : 'PHCDOfficialType',
 		anchor : '90%',
@@ -262,7 +262,7 @@ var PHCCATALLButton = new Ext.Button({
 	});
 
 	var PHCForm = new Ext.ux.ComboBox({
-		fieldLabel : '剂型',
+		fieldLabel : $g('剂型'),
 		id : 'PHCForm',
 		name : 'PHCForm',
 		store : PhcFormStore,
@@ -273,10 +273,10 @@ var PHCCATALLButton = new Ext.Button({
 
 	var PublicBiddingStore = new Ext.data.SimpleStore({
 		fields : ['RowId', 'Description'],
-		data : [['1', '招标'], ['0', '非招标']]
+		data : [['1', $g('招标')], ['0', $g('非招标')]]
 	});
 	var PublicBidding = new Ext.form.ComboBox({
-		fieldLabel : '招标',
+		fieldLabel : $g('招标'),
 		id : 'PublicBidding',
 		name : 'PublicBidding',
 		anchor : '90%',
@@ -292,7 +292,7 @@ var PHCCATALLButton = new Ext.Button({
 	});
 
 	var INFOPBLevel = new Ext.form.ComboBox({
-		fieldLabel : '招标级别',
+		fieldLabel : $g('招标级别'),
 		id : 'INFOPBLevel',
 		name : 'INFOPBLevel',
 		anchor : '90%',
@@ -312,12 +312,12 @@ var PHCCATALLButton = new Ext.Button({
 		name : 'SpFlag',
 		anchor : '90%',
 		checked : false,
-		boxLabel:'批次售价不等于售价'
+		boxLabel:$g('批次售价不等于售价')
 	});
 	
 	MarkTypeStore.load();
 	var INFOMT = new Ext.form.ComboBox({
-		fieldLabel : '定价类型',
+		fieldLabel : $g('定价类型'),
 		id : 'INFOMT',
 		name : 'INFOMT',
 		anchor : '90%',
@@ -332,7 +332,7 @@ var PHCCATALLButton = new Ext.Button({
 		
 	// 入库类型
 	var OperateInType = new Ext.form.ComboBox({
-		fieldLabel : '入库类型',
+		fieldLabel :$g( '入库类型'),
 		id : 'OperateInType',
 		name : 'OperateInType',
 		anchor : '90%',
@@ -350,10 +350,10 @@ var PHCCATALLButton = new Ext.Button({
 		
 	var ImportStore = new Ext.data.SimpleStore({
 		fields : ['RowId', 'Description'],
-		data : [['国产', '国产'], ['进口', '进口'], ['合资', '合资']]
+		data : [[$g('国产'), $g('国产')], [$g('进口'), $g('进口')], [$g('合资'), $g('合资')]]
 	});
 	var INFOImportFlag = new Ext.form.ComboBox({
-		fieldLabel : '进口标志',
+		fieldLabel : $g('进口标志'),
 		id : 'INFOImportFlag',
 		name : 'INFOImportFlag',
 		anchor : '90%',
@@ -363,7 +363,7 @@ var PHCCATALLButton = new Ext.Button({
 		mode : 'local'
 	});
 	var InvNo = new Ext.form.TextField({
-		fieldLabel : '发票号',
+		fieldLabel : $g('发票号'),
 		id : 'InvNo',
 		name : 'InvNo',
 		anchor : '90%',
@@ -371,7 +371,7 @@ var PHCCATALLButton = new Ext.Button({
 	});
 			
 	var MinSp = new Ext.form.TextField({
-		fieldLabel : '最低售价',
+		fieldLabel : $g('最低售价'),
 		id : 'MinSp',
 		name : 'MinSp',
 		anchor : '90%',
@@ -379,21 +379,21 @@ var PHCCATALLButton = new Ext.Button({
 	});
 			
 	var MaxSp = new Ext.form.TextField({
-		fieldLabel : '最高售价',
+		fieldLabel : $g('最高售价'),
 		id : 'MaxSp',
 		name : 'MaxSp',
 		anchor : '90%',
 		valueNotFoundText : ''
 	});
 	var MaxRp = new Ext.form.TextField({
-		fieldLabel : '最高进价',
+		fieldLabel : $g('最高进价'),
 		id : 'MaxRp',
 		name : 'MaxRp',
 		anchor : '90%',
 		valueNotFoundText : ''
 	});
 	var MinRp = new Ext.form.TextField({
-		fieldLabel : '最低进价',
+		fieldLabel : $g('最低进价'),
 		id : 'MinRp',
 		name : 'MinRp',
 		anchor : '90%',
@@ -404,12 +404,12 @@ var PHCCATALLButton = new Ext.Button({
 		//fieldLabel:'按审核日期统计',
 		id:'DateFlag',
 		anchor:'90%',
-		boxLabel:'按审核日期统计'
+		boxLabel:$g('按审核日期统计')
 	});
 	var searchBT=new Ext.Toolbar.Button({
 		id:'searchBT',
-		text:'查询',
-		tooltip : '点击查询入库明细',
+		text:$g('查询'),
+		tooltip : $g('点击查询入库明细'),
 		height:30,
 		width:70,
 		iconCls : 'page_find',
@@ -420,8 +420,8 @@ var PHCCATALLButton = new Ext.Button({
 	
 	var clearBT=new Ext.Toolbar.Button({
 		id:'clearBT',
-		text:'清屏',
-		tooltip : '点击清屏',
+		text:$g('清屏'),
+		tooltip : $g('点击清屏'),
 		height:30,
 		width:70,
 		iconCls : 'page_clearscreen',
@@ -435,6 +435,7 @@ var PHCCATALLButton = new Ext.Button({
 			f.setValue("");
 		});
 		SetLogInDept(PhaLoc.getStore(),"PhaLoc")
+		SetDefaultSCG();
 		Ext.getCmp("DateFrom").setValue(DefaultStDate());
 		Ext.getCmp("DateTo").setValue(DefaultEdDate());
 		Ext.getCmp("StkGrpType").getStore().load();
@@ -451,7 +452,7 @@ var PHCCATALLButton = new Ext.Button({
 			if(StartDate!=""){
 				StartDate=StartDate.format(App_StkDateFormat);
 			}else{
-				Msg.info("warning","请选择开始日期!");
+				Msg.info("warning",$g("请选择开始日期!"));
 				return;
 			}
 			
@@ -459,7 +460,7 @@ var PHCCATALLButton = new Ext.Button({
 			if(EndDate!=""){
 				EndDate=EndDate.format(App_StkDateFormat);
 			}else{
-				Msg.info("warning","请选择截止日期!");
+				Msg.info("warning",$g("请选择截止日期!"));
 				return;
 			}
 		
@@ -468,15 +469,15 @@ var PHCCATALLButton = new Ext.Button({
 		var LocId=Ext.getCmp("PhaLoc").getValue();		
 		var RetFlag=0;
 		if(LocId==null || LocId==""){
-			Msg.info("warning","科室不能为空!");
+			Msg.info("warning",$g("科室不能为空!"));
 			return;
 		}
 		if(StartDate==null || StartDate==""){
-			Msg.info("warning","开始日期不能为空!");
+			Msg.info("warning",$g("开始日期不能为空!"));
 			return;
 		}
 		if(EndDate==null || EndDate==""){
-			Msg.info("warning","截止日期不能为空!");
+			Msg.info("warning",$g("截止日期不能为空!"));
 			return;
 		}
 		var GrpType=Ext.getCmp("StkGrpType").getValue();			//类组id
@@ -501,11 +502,11 @@ var PHCCATALLButton = new Ext.Button({
 		var PhcCatId=(Ext.getCmp("PhcCat").getRawValue()==""?"":Ext.getCmp("PhcCat").getValue());				//药学大类id
 		var PhcSubCatId=Ext.getCmp("PhcSubCat").getValue();			//药学子类id
 		var PhcMinCatId=Ext.getCmp("PhcMinCat").getValue();			//药学小类id
-		var ManfId=Ext.getCmp("PhManufacturer").getValue();			//生产厂商id
+		var ManfId=Ext.getCmp("PhManufacturer").getValue();			//生产企业id
 		var Form=Ext.getCmp("PHCForm").getValue();					//剂型
 		var InsuType=Ext.getCmp("PHCDOfficialType").getRawValue();		//医保类型
 		var PosionCat=Ext.getCmp("PHCDFPhcDoDR").getValue();		//管制分类
-		var VendorId=Ext.getCmp("Vendor").getValue();				//供应商id
+		var VendorId=Ext.getCmp("Vendor").getValue();				//经营企业id
 		var OperateType=Ext.getCmp("OperateInType").getValue();		//入库类型
 		
 		var MinSp=Ext.getCmp("MinSp").getValue();				//最低售价
@@ -555,127 +556,127 @@ var PHCCATALLButton = new Ext.Button({
 	var nm=new Ext.grid.RowNumberer();
 	var DetailCm=new Ext.grid.ColumnModel([nm,
 		{
-			header:'入库单号',
+			header:$g('入库单号'),
 			dataIndex:'IngrNo',
 			width:100,
 			sortable:true
 		},{
-			header:'制单日期',
+			header:$g('制单日期'),
 			dataIndex:'IngrCreateDate',
 			width:80,
 			sortable:true
 		},{
-			header:'药品代码',
+			header:$g('药品代码'),
 			dataIndex:'InciCode',
 			width:100,
 			sortable:false
 		},{
-			header:'药品名称',
+			header:$g('药品名称'),
 			dataIndex:'InciDesc',
 			width:100,
 			sortable:true
 		},{
-			header:'单位',
+			header:$g('单位'),
 			dataIndex:'PurUom',
 			width:100,
 			sortable:false
 		},{
-			header:'数量',
+			header:$g('数量'),
 			dataIndex:'Qty',
 			width:100,
 			align:'right',
 			sortable:false
 		},{
-			header:'进价',
+			header:$g('进价'),
 			dataIndex:'Rp',
 			width:100,
 			align:'right',
 			sortable:false
 		},{
-			header:'进价金额',
+			header:$g('进价金额'),
 			dataIndex:'RpAmt',
 			width:100,
 			align:'right',
 			sortable:false
 		},{
-			header:'售价',
+			header:$g('售价'),
 			dataIndex:'Sp',
 			width:100,
 			align:'right',
 			sortable:false
 		},{
-			header:'售价金额',
+			header:$g('售价金额'),
 			dataIndex:'SpAmt',
 			width:100,
 			align:'right',
 			sortable:false
 		},{
-			header:'供应商',
+			header:$g('经营企业'),
 			dataIndex:'Vendor',
 			width:100,
 			sortable:true
 		},{
-			header:'批号',
+			header:$g('批号'),
 			dataIndex:'BatNo',
 			width:100,
 			sortable:false
 		},{
-			header:'效期',
+			header:$g('效期'),
 			dataIndex:'ExpDate',
 			width:100,
 			sortable:false
 		},{
-			header:'生产厂商',
+			header:$g('生产企业'),
 			dataIndex:'Manf',
 			width:100,
 			sortable:false
 		},{
-			header:'货位',
+			header:$g('货位'),
 			dataIndex:'StkBin',
 			width:100,
 			sortable:false
 		},{
-			header:'发票号',
+			header:$g('发票号'),
 			dataIndex:'InvNo',
 			width:100,
 			sortable:false
 		},{
-			header:'发票日期',
+			header:$g('发票日期'),
 			dataIndex:'InvDate',
 			width:100,
 			sortable:false
 		},{
-			header:'定价类型',
+			header:$g('定价类型'),
 			dataIndex:'SpType',
 			width:100,
 			sortable:false
 		},{
-			header:'招标标志',
+			header:$g('招标标志'),
 			dataIndex:'PbFlag',
 			width:100,
 			sortable:false
 		},{
-			header:'招标级别',
+			header:$g('招标级别'),
 			dataIndex:'PbLevel',
 			width:100,
 			sortable:false
 		},{
-			header:'医保类别',
+			header:$g('医保类别'),
 			dataIndex:'InsuType',
 			width:100,
 			sortable:false
 		},{
-			header:'单据状态',
+			header:$g('单据状态'),
 			dataIndex:'Status',
 			width:100,
 			sortable:false
 		},{
-			header:'审核日期',
+			header:$g('审核日期'),
 			dataIndex:'IngrDate',
 			width:100,
 			sortable:true
 		},{
-			header:'规格',
+			header:$g('规格'),
 			dataIndex:'Spec',
 			width:100,
 			sortable:true
@@ -687,13 +688,13 @@ var PHCCATALLButton = new Ext.Button({
 		store:DetailStore,
 		displayInfo:true,
 		pageSize:PageSize,
-		displayMsg:"当前记录{0}---{1}条  共{2}条记录",
-		emptyMsg:"没有数据",
-		firstText:'第一页',
-		lastText:'最后一页',
-		prevText:'上一页',
-		refreshText:'刷新',
-		nextText:'下一页'		
+		displayMsg:$g("当前记录{0}---{1}条  共{2}条记录"),
+		emptyMsg:$g("没有数据"),
+		firstText:$g('第一页'),
+		lastText:$g('最后一页'),
+		prevText:$g('上一页'),
+		refreshText:$g('刷新'),
+		nextText:$g('下一页')		
 	});
 	var DetailGrid=new Ext.grid.GridPanel({
 		title:'入库明细',
@@ -708,14 +709,14 @@ var PHCCATALLButton = new Ext.Button({
 	
 	var myForm=new Ext.form.FormPanel({
 		id:'mainForm',
-		title:'入库明细查询---<font color=blue>蓝色表示必选条件</font>',
+		title:$g('入库明细查询---<font color=blue>蓝色表示必选条件</font>'),
 		autoHeight:true,
 		frame:true,
 		labelAlign:'right',
 		tbar:[searchBT,'-',clearBT],
 		items:[{
 			xtype:'fieldset',
-			title:'查询条件',
+			title:$g('查询条件'),
 			layout:'column',
 			style:DHCSTFormStyle.FrmPaddingV,
 			defaults:{border:false},

@@ -11,8 +11,8 @@
 	    columns:[[  
 	        {field:'deptID',title:'deptID',hidden:true},  
 	        {field:'deptName',title:'科室名称',width:100},  
-	        {field:'TransStartDate',title:'进入日期',width:120,align:'right'},
-	        {field:'TransStartTime',title:'进入时间',width:120,align:'right'} 
+	        {field:'TransStartDate',title:'进入日期',width:120,align:'left'},
+	        {field:'TransStartTime',title:'进入时间',width:120,align:'left'} 
 	    ]]  
 	});
 	
@@ -22,13 +22,14 @@
 		fit:true,
 		singleSelect:true,
 		headerCls:'panel-header-gray',
+		toolbar:[],
 	    url:'../EMRservice.Ajax.appointdeptmanager.cls?AppType=Status&EpisodeID='+episodeID+'&Type='+"HISUI", 
 	    //data:[{"emrDept":"ke1","endDate":"2018-1-1","endTime":"12"},{"emrDept":"ke1","endDate":"2018-1-1","endTime":"12"},{"emrDept":"ke1","endDate":"2018-1-1","endTime":"12"}],
 	    columns:[[  
 	        {field:'emrDept',title:'目前科室',width:100},  
-	        {field:'endDate',title:'结束日期',width:120,align:'right'},
-	        {field:'endTime',title:'结束时间',width:120,align:'right'},
-	        {field:'operate',title:'回收病历',width:80,align:'center',formatter:formatOper}  
+	        {field:'endDate',title:'结束日期',width:120,align:'left'},
+	        {field:'endTime',title:'结束时间',width:120,align:'left'},
+	        {field:'operate',title:'回收病历',width:80,align:'left',formatter:formatOper}  
 	    ]],
 	     onLoadSuccess:function(){
 		    $.parser.parse(); 

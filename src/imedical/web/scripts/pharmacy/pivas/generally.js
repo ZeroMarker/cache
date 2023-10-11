@@ -6,23 +6,40 @@
 var SessionLoc = session['LOGON.CTLOCID'];
 var SessionUser = session['LOGON.USERID'];
 var hisPatNoLen = PIVAS.PatNoLength();
+var PersonSameFields = '[field=patNo],[field=patName],[field=bedNo],[field=wardDesc]';
+var SameRowsHanlder = PIVAS.Grid.SameRows('gridGenerally', PersonSameFields);
 var linkOrderCheck = '';
 var GridCmbBatNo;
-$(function() {
+var SessionInfo = SessionLoc + '^' + SessionUser + '^' + session['LOGON.GROUPID'] + '^' + session['LOGON.HOSPID'];
+$(function () {
     PIVAS.Grid.Pagination();
     InitDict();
     InitGridGenerally();
     $('#btnFind').on('click', Query);
     $('#btnPrtLabel').on('click', PrintLabel);
-    $('#btnRetYes').on('click', function() {
+    $('#btnPrtTable').on('click', function () {
+        if ($('#gridGenerally').datagrid('getChecked').length === 0) {
+            $.messager.popover({
+                msg: '请勾选需要打印的记录',
+                type: 'alert'
+            });
+            return;
+        }
+        $.messager.confirm('提示', '您确认打印清单吗?', function (r) {
+            if (r) {
+                PrintTable();
+            }
+        });
+    });
+    $('#btnRetYes').on('click', function () {
         SaveRetFlag('Y');
     });
-    $('#btnRetNo').on('click', function() {
+    $('#btnRetNo').on('click', function () {
         SaveRetFlag('N');
     });
     $('#btnPrtStopLabel').on('click', PrintStopLabel);
     // 登记号回车事件
-    $('#txtPatNo').on('keypress', function(event) {
+    $('#txtPatNo').on('keypress', function (event) {
         if (window.event.keyCode == '13') {
             var patNo = $.trim($('#txtPatNo').val());
             if (patNo != '') {
@@ -33,7 +50,7 @@ $(function() {
         }
     });
     // 条码号回车事件
-    $('#txtBarCode').on('keypress', function(event) {
+    $('#txtBarCode').on('keypress', function (event) {
         if (window.event.keyCode == '13') {
             var barCode = $.trim($('#txtBarCode').val());
             if (barCode != '') {
@@ -43,7 +60,7 @@ $(function() {
     });
     // 流程单号
     $('#txtPrtNo').searchbox({
-        searcher: function(value, name) {
+        searcher: function (value, name) {
             if (event.keyCode == 13) {
                 Query();
                 return;
@@ -57,12 +74,9 @@ $(function() {
             });
         }
     });
-    $('#txtPrtNo')
-        .next()
-        .find('input:first')
-        .attr('placeholder', ' 流程单号...');
+    $('#txtPrtNo').next().find('input:first').attr('placeholder', $g(' 流程单号...'));
     InitPivasSettings();
-    setTimeout(function() {
+    setTimeout(function () {
         getLodop();
     }, 2000);
     $('.dhcpha-win-mask').remove();
@@ -76,9 +90,9 @@ function InitDict() {
             Type: 'PivaLoc'
         },
         {
-            placeholder: '配液中心...',
+            placeholder: $g('配液中心') + '...',
             editable: false,
-            onLoadSuccess: function() {
+            onLoadSuccess: function () {
                 var datas = $('#cmbPivaLoc').combobox('getData');
                 for (var i = 0; i < datas.length; i++) {
                     if (datas[i].RowId == SessionLoc) {
@@ -87,7 +101,7 @@ function InitDict() {
                     }
                 }
             },
-            onSelect: function(data) {
+            onSelect: function (data) {
                 var locId = data.RowId;
                 $('#DivBatNo').html('');
                 PIVAS.BatchNoCheckList({
@@ -106,7 +120,7 @@ function InitDict() {
             Type: 'Priority'
         },
         {
-            placeholder: '医嘱优先级...'
+            placeholder: $g('医嘱优先级') + '...'
         }
     );
     // 病区
@@ -116,7 +130,7 @@ function InitDict() {
             Type: 'Ward'
         },
         {
-            placeholder: '病区...'
+            placeholder: $g('病区') + '...'
         }
     );
     // 科室组
@@ -126,7 +140,7 @@ function InitDict() {
             Type: 'LocGrp'
         },
         {
-            placeholder: '科室组...'
+            placeholder: $g('科室组') + '...'
         }
     );
     // 配伍审核
@@ -136,7 +150,7 @@ function InitDict() {
             Type: 'PassResult'
         },
         {
-            placeholder: '配伍审核...',
+            placeholder: $g('配伍审核') + '...',
             editable: false
         }
     );
@@ -144,10 +158,10 @@ function InitDict() {
     PIVAS.ComboBox.Init(
         {
             Id: 'cmbOeoreStat',
-            Type: 'OrdStatus'
+            Type: 'OrdStatusDetail'
         },
         {
-            placeholder: '执行记录状态...'
+            placeholder: $g('执行记录状态') + '...'
         }
     );
     // 用法
@@ -157,7 +171,7 @@ function InitDict() {
             Type: 'Instruc'
         },
         {
-            placeholder: '用法...'
+            placeholder: $g('用法') + '...'
         }
     );
     // 频次
@@ -167,7 +181,7 @@ function InitDict() {
             Type: 'Freq'
         },
         {
-            placeholder: '频次...'
+            placeholder: $g('频次') + '...'
         }
     );
     // 配液状态
@@ -177,7 +191,7 @@ function InitDict() {
             Type: 'PIVAState'
         },
         {
-            placeholder: '配液状态...'
+            placeholder: $g('配液状态') + '...'
         }
     );
     // 是否已打印停止签
@@ -189,17 +203,18 @@ function InitDict() {
                 data: [
                     {
                         RowId: 'Y',
-                        Description: '已打印停止签'
+                        Description: $g('已打印停止签')
                     },
                     {
                         RowId: 'N',
-                        Description: '未打印停止签'
+                        Description: $g('未打印停止签')
                     }
                 ]
             }
         },
         {
-            placeholder: '停止签打印...'
+            placeholder: $g('停止签打印') + '...',
+            panelHeight: 'auto'
         }
     );
     // 药品
@@ -209,7 +224,7 @@ function InitDict() {
             Type: 'IncItm'
         },
         {
-            placeholder: '药品...'
+            placeholder: $g('药品') + '...'
         }
     ); // width: 315
     // 批次
@@ -231,17 +246,18 @@ function InitDict() {
                 data: [
                     {
                         RowId: 'Y',
-                        Description: '已配液拒绝'
+                        Description: $g('已配液拒绝')
                     },
                     {
                         RowId: 'N',
-                        Description: '未配液拒绝'
+                        Description: $g('未配液拒绝')
                     }
                 ]
             }
         },
         {
-            placeholder: '配液拒绝...'
+            placeholder: $g('配液拒绝') + '...',
+            panelHeight: 'auto'
         }
     );
     PIVAS.BatchNoCheckList({
@@ -257,7 +273,7 @@ function InitDict() {
             Type: 'PIVAWorkType'
         },
         {
-            placeholder: '工作组...'
+            placeholder: $g('工作组') + '...'
         }
     );
     PIVAS.ComboBox.Init(
@@ -266,7 +282,7 @@ function InitDict() {
             Type: 'PackType'
         },
         {
-            placeholder: '打包类型...'
+            placeholder: $g('打包类型') + '...'
         }
     );
     GridCmbBatNo = PIVAS.UpdateBatNoCombo({
@@ -288,22 +304,29 @@ function InitGridGenerally() {
             {
                 field: 'warnInfo',
                 title: '提醒',
-                width: 75,
-                styler: function(value, row, index) {
-                    if (value.indexOf('停止') >= 0) {
-                        return 'color:white;background-color:#ffba42;';
-                    } else if (value.indexOf('配液拒绝') >= 0) {
-                        return 'color:white;background-color:#F4868E;';
-                    } else if (value.indexOf('审核拒绝') >= 0) {
-                        return 'color:white;background-color:#C33A30;';
+                width: 125,
+                formatter: function (value, row, index) {
+                    var retArr = [];
+                    if (row.oeoreStatDesc.indexOf('停止') >= 0) {
+                        retArr.push('<div class="pivas-grid-div">' + '执行记录' + row.oeoreStatDesc + '</div>');
+                    }
+                    if (row.passResultDesc.indexOf('拒绝') >= 0) {
+                        retArr.push('<div class="pivas-grid-div">' + '配伍审核拒绝' + '</div>');
+                    }
+                    if (row.refUser !== '') {
+                        retArr.push('<div class="pivas-grid-div">' + '配液拒绝' + '</div>');
+                    }
+                    if (row.cPrtUser !== '') {
+                        retArr.push('<div class="pivas-grid-div">' + '已打停止签' + '</div>');
+                    }
+                    if (row.nurSeeDesc.indexOf('拒绝') >= 0) {
+                        retArr.push('<div class="pivas-grid-div">' + '护士拒绝' + '</div>');
+                    }
+                    if (retArr.length > 0) {
+                        return '<div style="margin-top:-8px;color:#ff584c;font-weight: bold">' + retArr.join('') + '</div>';
                     }
                     return '';
                 }
-            },
-            {
-                field: 'doseDateTime',
-                title: '用药时间',
-                width: 135
             },
             {
                 field: 'wardDesc',
@@ -326,11 +349,16 @@ function InitGridGenerally() {
                 width: 70
             },
             {
+                field: 'doseDateTime',
+                title: '用药时间',
+                width: 135
+            },
+            {
                 field: 'batNo',
                 title: '批次',
                 width: 75,
                 editor: GridCmbBatNo,
-                styler: function(value, row, index) {
+                styler: function (value, row, index) {
                     var colorStyle = 'text-decoration:underline;';
                     if (row.packFlag != '') {
                         colorStyle += PIVAS.Grid.CSS.BatchPack;
@@ -339,23 +367,24 @@ function InitGridGenerally() {
                 }
             },
             {
-                field: 'oeoriSign',
-                title: '组',
-                width: 30,
-                halign: 'left',
-                align: 'center',
-                formatter: PIVAS.Grid.Formatter.OeoriSign
-            },
-            {
-                field: 'incDesc',
-                title: '药品名称',
-                width: 250,
-				styler: PIVAS.Grid.Styler.IncDesc
+                field: 'drugsArr',
+                title: '药品信息',
+                width: 300,
+                formatter: PIVAS.Grid.Formatter.InciGroup
             },
             {
                 field: 'dosage',
                 title: '剂量',
-                width: 75
+                width: 75,
+                align: 'right',
+                formatter: PIVAS.Grid.Formatter.DosageGroup
+            },
+            {
+                field: 'qtyUom',
+                title: '数量',
+                width: 50,
+                align: 'right',
+                formatter: PIVAS.Grid.Formatter.QtyUomGroup
             },
             {
                 field: 'freqDesc',
@@ -373,22 +402,103 @@ function InitGridGenerally() {
                 width: 90
             },
             {
-                field: 'oeoreStat',
-                title: '医嘱状态',
+                field: 'psName',
+                title: '配液状态',
+                width: 80,
+                styler: PIVAS.Grid.Styler.PivaState
+            },
+            {
+                field: 'linkFeeAmt',
+                title: '配置费',
+                align: 'right',
                 width: 70,
-                hidden: true
+                formatter: function (value, row, index) {
+                    var pog = row.pog;
+                    return '<a class="pha-grid-a" onclick="PIVAS.OrdLinkWindow({Params:\'' + pog + '\'} )">' + value + '</a>';
+                }
             },
             {
-                field: 'qty',
-                title: '数量',
-                width: 50,
-                halign: 'left',
-                align: 'right'
+                field: 'barCode',
+                title: '条码',
+                width: 125,
+                formatter: function (value, row, index) {
+                    var field = 'barCode';
+                    return '<a class="pha-grid-a" onclick="PIVASTIMELINE.Init({Params:\'' + value + "',Field:'" + field + "',ClickField:'" + field + '\'} )">' + value + '</a>';
+                }
             },
             {
-                field: 'bUomDesc',
-                title: '单位',
-                width: 60
+                field: 'pNo',
+                title: '打印序号',
+                align: 'right',
+                width: 75
+            },
+            {
+                field: 'passResultInfo',
+                title: '配伍审核信息',
+                width: 155,
+                formatter: function (value, row, index) {
+                    var retArr = [];
+                    retArr.push('<div>' + row.phaOrdDateTime + '</div>');
+                    retArr.push('<div class="pivas-grid-div">');
+                    retArr.push('   <div style="float:left">' + row.phaOrdUser + '</div>');
+                    retArr.push('   <div style="float:right;font-weight:bold">' + row.passResultDesc + '</div>');
+                    retArr.push('</div>');
+                    return retArr.join('');
+                }
+            },
+            {
+                field: 'printInfo',
+                title: '打签信息',
+                width: 155,
+                formatter: function (value, row, index) {
+                    return '<div>' + row.printDateTime + '</div>' + '<div class="pivas-grid-div">' + row.printUser + '</div>';
+                }
+            },
+            {
+                field: 'cPrtInfo',
+                title: '停止签打印信息',
+                width: 155,
+                formatter: function (value, row, index) {
+                    return '<div>' + row.cPrtDateTime + '</div>' + '<div class="pivas-grid-div">' + row.cPrtUser + '</div>';
+                }
+            },
+            {
+                field: 'refInfo',
+                title: '配液拒绝信息',
+                width: 155,
+                formatter: function (value, row, index) {
+                    var retHtmlArr = [];
+                    if (row.refReasonDesc !== '') {
+                        retHtmlArr.push('<div class="pivas-grid-tip">');
+                        retHtmlArr.push('  <div>');
+                        retHtmlArr.push('      <div>' + row.refDateTime + '</div>');
+                        retHtmlArr.push('  </div>');
+                        retHtmlArr.push('  <div style="padding-top:8px;overflow: hidden; white-space: nowrap;">');
+                        retHtmlArr.push('      <div>' + row.refUser + ' / ' + row.refReasonDesc + '</div>');
+                        retHtmlArr.push('      <div style="clear:both"></div>');
+                        retHtmlArr.push('  </div>');
+                        retHtmlArr.push('</div>');
+                    }
+                    return retHtmlArr.join('');
+                }
+            },
+            {
+                field: 'nurSeeInfo',
+                title: '医嘱处理信息',
+                width: 155,
+                formatter: function (value, row, index) {
+                    var retArr = [];
+                    var nurSeeDateTime = row.nurSeeDateTime;
+                    if (nurSeeDateTime === '') {
+                        nurSeeDateTime = '　';
+                    }
+                    retArr.push('<div>' + nurSeeDateTime + '</div>');
+                    retArr.push('<div class="pivas-grid-div">');
+                    retArr.push('   <div style="float:left">' + row.nurSeeUser + '</div>');
+                    retArr.push('   <div style="float:right;font-weight:bold">' + row.nurSeeDesc + '</div>');
+                    retArr.push('</div>');
+                    return retArr.join('');
+                }
             },
             {
                 field: 'xDateTime',
@@ -396,76 +506,21 @@ function InitGridGenerally() {
                 width: 155
             },
             {
-                field: 'pivaStat',
-                title: '配液状态',
-                width: 80,
-                styler: PIVAS.Grid.Styler.PivaState
+                field: 'oeoriStatDesc',
+                title: '医嘱状态',
+                width: 80
             },
             {
-                field: 'passResult',
-                title: '审核结果',
-                width: 70
+                field: 'oeoreStatDesc',
+                title: '执行记录状态',
+                width: 100
             },
+
             {
-                field: 'incSpec',
-                title: '规格',
-                width: 70
-            },
-            {
-                field: 'barCode',
-                title: '条码',
-                width: 125
-            },
-            {
-                field: 'pNo',
-                title: '打印序号',
-                width: 70,
-                hidden: true
-            },
-            {
-                field: 'printUser',
-                title: '打签人',
-                width: 90
-            },
-            {
-                field: 'printDateTime',
-                title: '打签时间',
-                width: 155
-            },
-            {
-                field: 'refUser',
-                title: '拒绝人',
-                width: 90
-            },
-            {
-                field: 'refDateTime',
-                title: '拒绝时间',
-                width: 155
-            },
-            {
-                field: 'cPrtDateTime',
-                title: '停止签打印时间',
-                width: 155,
-                formatter: function(value, row, index) {
-                    if (value == 'U') {
-                        var cPrtDt = tkMakeServerCall('web.DHCSTPIVAS.StopPrint', 'GetCPrtTimeByPog', row.pogId);
-                        return cPrtDt;
-                    } else {
-                        return value;
-                    }
-                }
-            },
-            {
-                field: 'pogId',
-                title: 'pogId',
+                field: 'pog',
+                title: 'pog',
                 width: 70,
                 hidden: false
-            },
-            {
-                field: 'colColor',
-                title: 'colColor',
-                width: 75,
-                hidden: true
             },
             {
                 field: 'durationDesc',
@@ -484,45 +539,53 @@ function InitGridGenerally() {
                 title: 'mDsp',
                 width: 50,
                 hidden: true
+            },
+            {
+                field: 'sameFlag',
+                title: 'sameFlag',
+                width: 70,
+                hidden: true,
+                styler: function (value, row, index) {
+                    if (value === 'Y') {
+                        return {
+                            class: 'pivas-person-toggle'
+                        };
+                    }
+                }
             }
         ]
     ];
     var dataGridOption = {
-        exportXls: true,
+        exportXls: false,
         url: '',
+        nowrap: false,
         toolbar: '#gridGenerallyBar',
         rownumbers: false,
         columns: columns,
         singleSelect: false,
-        striped: false,
         selectOnCheck: false,
         checkOnSelect: false,
-        pageSize: 50,
-        pageList: [50, 100, 200],
-        onLoadSuccess: function() {
-            PIVAS.Grid.CellTip({
-                TipArr: ['ordRemark', 'incDesc', 'wardDesc']
-            });
+        pageNumber: 1,
+        pageSize: 100,
+        pageList: [100, 300, 500, 1000],
+        onLoadSuccess: function () {
+            var $grid = $(this);
+            SameRowsHanlder.Hide();
+            $grid.datagrid('loaded');
             $(this).datagrid('options').checking = '';
-            // $(".datagrid-btable td[field=oeoriSign]>div").css(PIVAS.Grid.CSS.OeoriSign);
         },
-        rowStyler: function(index, rowData) {
-            return PIVAS.Grid.RowStyler.Person(index, rowData, 'patNo');
+        rowStyler: PIVAS.Grid.RowStyler.PersonAlt,
+        onClickRow: function (rowIndex, rowData) {
+            SameRowsHanlder.ShowRow(rowIndex);
         },
-        onClickRow: function(rowIndex, rowData) {},
-        onClickCell: function(rowIndex, field, value) {
-            if (field == 'oeoriSign') {
-                var barCode = $(this).datagrid('getRows')[rowIndex].barCode;
-                PIVASTIMELINE.Init({
-                    Params: barCode,
-                    Field: 'oeoriSign',
-                    ClickField: field
-                });
-            }
-            if (field == 'pivaStat') {
-                PIVAS.OrdLinkWindow({
-                    Params: $(this).datagrid('getRows')[rowIndex].pogId
-                });
+        onBeforeSelect: function (rowIndex, rowData) {
+            $(this).datagrid('unselectAll');
+        },
+        onClickCell: function (rowIndex, field, value) {
+            if (field !== 'barCode') {
+                if ($('#TimeLineWin')) {
+                    $('#TimeLineWin').window('close');
+                }
             }
             if (field == 'batNo' && value != '') {
                 $(this).datagrid('beginEditRow', {
@@ -533,144 +596,105 @@ function InitGridGenerally() {
                 $(this).datagrid('endEditing');
             }
         },
-        onCheck: function(rowIndex, rowData) {
+        onCheck: function (rowIndex, rowData) {
             if ($(this).datagrid('options').checking == true) {
                 return;
             }
-            PIVAS.Grid.LinkCheck.Init({
-                CurRowIndex: rowIndex,
-                GridId: 'gridGenerally',
-                Field: 'barCode',
-                Check: true,
-                Value: rowData.barCode
-            });
             $(this).datagrid('options').checking = '';
         },
-        onUncheck: function(rowIndex, rowData) {
+        onUncheck: function (rowIndex, rowData) {
             if ($(this).datagrid('options').checking == true) {
                 return;
             }
-            PIVAS.Grid.LinkCheck.Init({
-                CurRowIndex: rowIndex,
-                GridId: 'gridGenerally',
-                Field: 'barCode',
-                Check: false,
-                Value: rowData.barCode
-            });
             $(this).datagrid('options').checking = '';
         },
-        onSelect: function(rowIndex, rowData) {
-            if ($(this).datagrid('options').checking == true) {
-                return;
-            }
-            PIVAS.Grid.LinkCheck.Init({
-                CurRowIndex: rowIndex,
-                GridId: 'gridGenerally',
-                Field: 'pogId',
-                Check: true,
-                Value: rowData.pogId,
-                Type: 'Select'
-            });
-            $(this).datagrid('options').checking = '';
+        onUnselect: function (rowIndex, rowData) {
+            PIVAS.Grid.ClearSelections(this.id);
         },
-        onUnselect: function(rowIndex, rowData) {
-            PIVAS.Grid.ClearSelections(this.id)
-        }
+        loadFilter: PIVAS.Grid.LoadFilter
     };
-    DHCPHA_HUI_COM.Grid.Init('gridGenerally', dataGridOption);
+    PIVAS.Grid.Init('gridGenerally', dataGridOption);
 }
 
 ///查询
 function Query() {
-    var params = GetParams();
-    $('#gridGenerally').datagrid({
-        url: PIVAS.URL.COMMON + '?action=JsGenerallyQuery',
-        queryParams: {
-            params: params
-        }
-    });
+    var $grid = $('#gridGenerally');
+    var pJson = GetParams();
+    PIVAS.Grid.PageHandler($grid);
+    var rowsData = $.cm(
+        {
+            ClassName: 'web.DHCSTPIVAS.Generally',
+            QueryName: 'PogData',
+            pJsonStr: JSON.stringify(pJson),
+            rows: 99999,
+            page: 1
+        },
+        false
+    );
+    $grid.datagrid('loading');
+    setTimeout(function () {
+        $grid.datagrid('loadData', rowsData);
+    }, 100);
 }
 
 ///获取入参
 function GetParams() {
-    var paramsArr = [];
-    var pivaLocId = $('#cmbPivaLoc').combobox('getValue') || ''; // 配液中心
-    var dateOrdStart = $('#dateOrdStart').datebox('getValue'); // 起始日期
-    var dateOrdEnd = $('#dateOrdEnd').datebox('getValue'); // 截止日期
-    var locGrpId = $('#cmbLocGrp').combobox('getValue') || ''; // 科室组
-    var wardId = $('#cmbWard').combobox('getValue') || ''; // 病区
-    var priority = $('#cmbPriority').combobox('getValue') || ''; // 医嘱优先级
-    var passResult = $('#cmbPassResult').combobox('getValue') || ''; // 医嘱审核状态
-    var pivaStat = $('#cmbPivaStat').combobox('getValue') || ''; // 配液状态
-    var oeoreStat = $('#cmbOeoreStat').combobox('getValue') || ''; // 医嘱状态
-    var patNo = $.trim($('#txtPatNo').val()); // 登记号
-    var prtNo = $('#txtPrtNo').searchbox('getValue'); // 打签单号
-    var prtPNo = $('#txtPrtPNo')
-        .val()
-        .trim(); // 打签序号
-    var batNoStr = ''; // 批号
-    $('input[type=checkbox][name=batbox]').each(function() {
+    var pJson = {};
+    pJson.loc = $('#cmbPivaLoc').combobox('getValue') || ''; // 配液中心
+    pJson.ordStartDate = $('#dateOrdStart').datebox('getValue'); // 起始日期
+    pJson.ordEndDate = $('#dateOrdEnd').datebox('getValue'); // 截止日期
+    pJson.locGrp = $('#cmbLocGrp').combobox('getValue') || ''; // 科室组
+    pJson.wardStr = $('#cmbWard').combobox('getValue') || ''; // 病区
+    pJson.priority = $('#cmbPriority').combobox('getValue') || ''; // 医嘱优先级
+    pJson.passResult = $('#cmbPassResult').combobox('getValue') || ''; // 医嘱审核状态
+    pJson.psNumber = $('#cmbPivaStat').combobox('getValue') || ''; // 配液状态
+    pJson.oeoreStat = $('#cmbOeoreStat').combobox('getValue') || ''; // 医嘱状态
+    pJson.patNo = $.trim($('#txtPatNo').val()); // 登记号
+    pJson.pogsNo = $('#txtPrtNo').searchbox('getValue'); // 打签单号
+    var pNoArr = $('#txtPrtPNo').val().split('-');
+    pJson.pNoStart = pNoArr[0] || ''; //$('#txtPrtPNoStart').val().trim(); // 打签序号
+    pJson.pNoEnd = pNoArr[1] || ''; // $('#txtPrtPNoEnd').val().trim(); // 打签序号
+    var batNoArr = [];
+    $('input[type=checkbox][name=batbox]').each(function () {
         if ($('#' + this.id).is(':checked')) {
-            if (batNoStr == '') {
-                batNoStr = this.value;
-            } else {
-                batNoStr = batNoStr + ',' + this.value;
-            }
+            batNoArr.push($('#' + this.id).attr('text'));
         }
     });
-    var printStop = $('#cmbPrintStop').combobox('getValue') || ''; // 是否已打印停止标签
-    var barCode = $.trim($('#txtBarCode').val()); // 条码号
-    var instruc = $('#cmbInstruc').combobox('getValue') || ''; // 用法
-    var freq = $('#cmbFreq').combobox('getValue') || ''; // 频次
-    var datePrtStart = $('#datePrtStart').datebox('getValue'); // 打签起始日期
-    var datePrtEnd = $('#datePrtEnd').datebox('getValue'); // 打签截止日期
-    var incId = $('#cmgIncItm').combobox('getValue') || ''; // 药品
-    var pivaCat = ''; //$("#cmbPivaCat").combobox("getValue"); 	// 配液分类-yunhaibao20180328暂不用
-    var timePrtStart = $('#timePrtStart').timespinner('getValue'); // 打签开始时间
-    var timePrtEnd = $('#timePrtEnd').timespinner('getValue'); // 打签结束时间
-    var pivaRefuse = $('#cmbPivaRefuse').combobox('getValue') || ''; // 配液拒绝
-    var timeOrdStart = $('#timeOrdStart').timespinner('getValue'); // 用药开始时间
-    var timeOrdEnd = $('#timeOrdEnd').timespinner('getValue'); // 用药结束时间
-    var workTypeId = $('#cmbWorkType').combobox('getValue') || ''; // 工作组
-    var packFlag = $('#cmbPack').combobox('getValues') || ''; // 打包类型
-    paramsArr[0] = pivaLocId;
-    paramsArr[1] = dateOrdStart;
-    paramsArr[2] = dateOrdEnd;
-    paramsArr[3] = wardId;
-    paramsArr[4] = locGrpId;
-    paramsArr[5] = priority;
-    paramsArr[6] = passResult;
-    paramsArr[7] = pivaStat;
-    paramsArr[8] = oeoreStat;
-    paramsArr[9] = batNoStr;
-    paramsArr[10] = printStop;
-    paramsArr[11] = barCode;
-    paramsArr[12] = instruc;
-    paramsArr[13] = freq;
-    paramsArr[14] = incId;
-    paramsArr[15] = datePrtStart;
-    paramsArr[16] = datePrtEnd;
-    paramsArr[17] = pivaCat;
-    paramsArr[18] = timePrtStart;
-    paramsArr[19] = timePrtEnd;
-    paramsArr[20] = prtNo;
-    paramsArr[21] = pivaRefuse;
-    paramsArr[22] = patNo;
-    paramsArr[23] = prtPNo;
-    paramsArr[24] = timeOrdStart;
-    paramsArr[25] = timeOrdEnd;
-    paramsArr[26] = workTypeId;
-    paramsArr[27] = packFlag;
-    return paramsArr.join('^');
+    pJson.batNoStr = batNoArr.join(',');
+
+    pJson.prtStoped = $('#cmbPrintStop').combobox('getValue') || ''; // 是否已打印停止标签
+    pJson.barCode = $.trim($('#txtBarCode').val()); // 条码号
+    pJson.instruc = $('#cmbInstruc').combobox('getValue') || ''; // 用法
+    pJson.freq = $('#cmbFreq').combobox('getValue') || ''; // 频次
+    pJson.prtStartDate = $('#datePrtStart').datebox('getValue'); // 打签起始日期
+    pJson.prtEndDate = $('#datePrtEnd').datebox('getValue'); // 打签截止日期
+    pJson.inci = $('#cmgIncItm').combobox('getValue') || ''; // 药品
+    pJson.pivaCat = ''; //$("#cmbPivaCat").combobox("getValue");   // 配液分类-yunhaibao20180328暂不用
+    pJson.prtStartTime = $('#timePrtStart').timespinner('getValue'); // 打签开始时间
+    pJson.prtEndTime = $('#timePrtEnd').timespinner('getValue'); // 打签结束时间
+    pJson.refuseFlag = $('#cmbPivaRefuse').combobox('getValue') || ''; // 配液拒绝
+    pJson.ordStartTime = $('#timeOrdStart').timespinner('getValue'); // 用药开始时间
+    pJson.ordEndTime = $('#timeOrdEnd').timespinner('getValue'); // 用药结束时间
+    pJson.workType = $('#cmbWorkType').combobox('getValue') || ''; // 工作组
+    pJson.packFlag = $('#cmbPack').combobox('getValue') || ''; // 打包类型
+    return pJson;
 }
 
 // 打印标签
 function PrintLabel() {
+    var gridChecked = $('#gridGenerally').datagrid('getChecked');
+    if (gridChecked == '') {
+        $.messager.popover({
+            msg: '请先选择记录',
+            type: 'alert'
+        });
+        return;
+    }
     var pogArr = GetCheckedPogArr(1);
     var pogLen = pogArr.length;
     if (pogLen == 0) {
         $.messager.popover({
-            msg: '温馨提示 : 已停止医嘱无法重打标签',
+            msg: '温馨提示 : 已停止的执行记录无法重打标签',
             type: 'alert'
         });
         return;
@@ -681,7 +705,7 @@ function PrintLabel() {
 }
 // 打印停止签
 function PrintStopLabel() {
-    $.messager.confirm('选择提示', '您确认打印停止签吗?', function(r) {
+    $.messager.confirm('选择提示', '您确认打印停止签吗?', function (r) {
         if (r) {
             var pogArr = GetCheckedPogArr(2);
             var pogLen = pogArr.length;
@@ -704,18 +728,24 @@ function PrintStopLabel() {
             for (var pogI = 0; pogI < pogLen; pogI++) {
                 var pogId = pogArr[pogI];
                 var pogRowIndex =
-                    $("td[field='pogId']")
+                    $("td[field='pog']")
                         .children()
                         .filter(':contains(' + pogId + ')')
                         .closest('tr')
                         .attr('datagrid-row-index') || '';
                 if (pogRowIndex != '') {
+                    var updData = $.cm(
+                        {
+                            ClassName: 'web.DHCSTPIVAS.StopPrint',
+                            MethodName: 'GetCPrtJsonByPog',
+                            PogId: pogId
+                        },
+                        false
+                    );
                     $('#gridGenerally')
                         .datagrid('updateRow', {
                             index: pogRowIndex,
-                            row: {
-                                cPrtDateTime: 'U'
-                            }
+                            row: updData
                         })
                         .datagrid('checkRow', pogRowIndex);
                 }
@@ -736,13 +766,13 @@ function GetCheckedPogArr(pFlag) {
     }
     var cLen = gridChecked.length;
     for (var cI = 0; cI < cLen; cI++) {
-        var pogId = gridChecked[cI].pogId;
-        if (pogId == '') {
+        var pog = gridChecked[cI].pog;
+        if (pog == '') {
             continue;
         }
-        var oeoreStat = gridChecked[cI].oeoreStat;
-        var oeoreStatIndex = oeoreStat.indexOf('停止');
-        var passResult = gridChecked[cI].passResult;
+        var oeoreStatDesc = gridChecked[cI].oeoreStatDesc;
+        var oeoreStatIndex = oeoreStatDesc.indexOf('停止');
+        var passResult = gridChecked[cI].passResultDesc;
         var passResultIndex = passResult.indexOf('打包');
         if (pFlag == 2) {
             // 获取停止的
@@ -758,30 +788,47 @@ function GetCheckedPogArr(pFlag) {
                 continue;
             }
         }
-        if (pogArr.indexOf(pogId) < 0) {
-            pogArr.push(pogId);
+        if (pogArr.indexOf(pog) < 0) {
+            pogArr.push(pog);
         }
     }
     return pogArr;
 }
 // 置可退或不可退药
 function SaveRetFlag(Flag) {
-    $.messager.confirm('提示', '您确认置为' + (Flag == 'Y' ? '可退药' : '不可退药') + '吗?', function(r) {
+    var msgArr = [];
+    msgArr.push('<div>' + $g('您确认置为' + (Flag == 'Y' ? '可退药' : '不可退药') + '吗?') + '</div>');
+    msgArr.push('<div style="color:#8c8c8c">');
+    msgArr.push('<div style="padding-top:15px">' + $g('帮助信息') + '</div>');
+    var packReqNeedAudit = tkMakeServerCall('web.DHCSTPIVAS.Settings', 'GetAppParamProp', '', SessionLoc, '', 'PackReqAudit');
+    if (packReqNeedAudit !== 'Y') {
+        msgArr.push('<div style="padding-top:10px">1. ' + $g('您无法处理已「退药申请」的记录') + '</div>');
+        msgArr.push('<div style="padding-top:10px">2. ' + $g('您不需要处理「打包」的记录') + '</div>');
+    } else {
+        msgArr.push('<div style="padding-top:10px">' + $g('您无法处理已「退药申请」的记录') + '</div>');
+    }
+    msgArr.push('</div">');
+    $.messager.confirm('提示', msgArr.join(''), function (r) {
         if (r) {
             var pogIdArr = GetCheckedPogArr('');
             var pogIdStr = pogIdArr.join('^');
             if (pogIdStr == '') {
                 return;
             }
-            var saveRet = tkMakeServerCall('web.DHCSTPIVAS.DataHandler', 'SaveRetFlag', pogIdStr, Flag, SessionUser);
+            var saveRet = tkMakeServerCall('web.DHCSTPIVAS.DataHandler', 'SaveRetFlag', pogIdStr, Flag, SessionUser, SessionInfo);
             var saveArr = saveRet.split('^');
             if (saveArr[0] < 0) {
-                $.messager.alert('提示', saveArr[1], 'warning');
+                $.messager.alert('提示', $got(saveArr[1]), 'warning');
             } else {
-                $.messager.popover({
-                    msg: '成功',
-                    type: 'success'
-                });
+                if (saveArr[1] || '' !== '') {
+                    $.messager.alert('提示', $got(saveArr[1]), 'info');
+                } else {
+                    $.messager.popover({
+                        msg: '成功',
+                        type: 'success'
+                    });
+                    Query();
+                }
             }
         }
     });
@@ -797,42 +844,121 @@ function InitPivasSettings() {
             appCode: 'Generally',
             morePropStr: 'ReqNeedAudit'
         },
-        function(jsonData) {
+        function (jsonData) {
             $('#dateOrdStart').datebox('setValue', jsonData.OrdStDate);
             $('#dateOrdEnd').datebox('setValue', jsonData.OrdEdDate);
             $('#datePrtStart').datebox('setValue', jsonData.PrtStDate);
             $('#datePrtEnd').datebox('setValue', jsonData.PrtEdDate);
-            if (jsonData.ReqNeedAudit == 'Y') {
-                $('#tdReqNeedAudit').css('display', 'block');
+            var packReqNeedAudit = tkMakeServerCall('web.DHCSTPIVAS.Settings', 'GetAppParamProp', '', SessionLoc, '', 'PackReqAudit');
+            if (jsonData.ReqNeedAudit == 'Y' || packReqNeedAudit == 'Y') {
+                $('#tdReqNeedAudit').css('display', 'inline-block');
             }
+            PIVAS.VAR.MaxDrugCnt = jsonData.MaxDrugCnt;
         }
     );
 }
-// 备份用,遮罩,IE不需要这种遮罩,暂不考虑,2019-04-11
-function PrintLabelLodop() {
-    PIVASLODOP = getLodop();
-    var taskNum = 0;
-    PIVASLODOP.On_Return = function(TaskID, Value) {
-        var taskCnt = PIVASPRINT.TaskCnt;
-        taskNum++;
-        if (taskNum == 1) {
-            //$.messager.progress("close");
-            $.messager.progress({
-                title: '发  送  打  印  任  务  中...',
-                text: '<b>{value}%</b>',
-                interval: 100000
-            });
+
+function PrintTable() {
+    var title = session['LOGON.CTLOCDESC'] + '配液综合查询打印清单';
+    var prtArr = $('#gridGenerally').datagrid('getChecked');
+    if (prtArr.length === 0) {
+        $.messager.popover({
+            msg: '请勾选需要打印的记录',
+            type: 'alert'
+        });
+        return;
+    }
+    var WBLODOP = getLodop();
+    WBLODOP.PRINT_INIT('配液综合查询打印清单');
+
+    var htmlArr = [];
+    htmlArr.push('<style>');
+    htmlArr.push('div{font-size:14px;white-space: nowrap;}');
+    htmlArr.push('</style>');
+
+    htmlArr.push('<table  border=0 style="width:190mm;border-collapse:collapse;table-layout:fixed;">');
+    htmlArr.push('<tr style="visibility:hidden;">');
+    htmlArr.push(' <td style="width:190mm;height:0px;"></td>');
+    htmlArr.push('</tr">');
+    htmlArr.push('<tr>');
+    htmlArr.push('    <td style="font-weight:bold;width:190mm;border:0">');
+    htmlArr.push('        <div style="height:20px;line-height: 20px;;text-align:center;padding-top:5mm;">');
+    htmlArr.push('            <span style="font-size:16px">' + title + ' </span>');
+    htmlArr.push('        </div>');
+    htmlArr.push('        <div>');
+    htmlArr.push('         <div style="padding:2mm;float:left;">');
+    htmlArr.push('            <span>用药日期：' + $('#dateOrdStart').datebox('getValue') + ' 至 ' + $('#dateOrdEnd').datebox('getValue') + ' </span>');
+    htmlArr.push('         </div>');
+    htmlArr.push('         <div style="float:right;;padding:2mm;">');
+    htmlArr.push('            <span>打印时间：' + PIVAS.GetDate() + ' </span>' + '<span>　打印人：' + PIVAS.GetTime() + ' </span>');
+    htmlArr.push('         </div>');
+    htmlArr.push('        </div>');
+    htmlArr.push('    </td>');
+    htmlArr.push('</tr>');
+    for (var i = 0, len = prtArr.length; i < len; i++) {
+        var rowData = prtArr[i];
+        var doseDateTime = rowData.doseDateTime;
+        var pNo = rowData.pNo.trim();
+        var wardDesc = rowData.wardDesc;
+        var bedNoName = rowData.bedNo + '　' + rowData.patName + '　' + rowData.patNo;
+        var batNo = rowData.batNo;
+        var freqDesc = rowData.freqDesc;
+        var mBarCode = rowData.barCode;
+        var batNo = rowData.batNo;
+        if (batNo.indexOf('批') < 0) {
+            batNo += '批';
         }
-        $('body>div.messager-window')
-            .find('div.messager-p-msg')
-            .text(taskNum + ' / ' + taskCnt);
-        $.messager.progress('bar').progressbar('setValue', parseInt((taskNum / taskCnt) * 100));
-        if (taskNum == taskCnt) {
-            $.messager.progress('close');
+        if (rowData.packFlag === 'P') {
+            batNo += '　打包';
         }
-    };
-    PIVASPRINT.LabelsJsonByPogsNo({
-        pogsNo: 'S10P20190219001',
-        sortWay: '15^1'
-    });
+        htmlArr.push('<tr>');
+        htmlArr.push('    <td style="font-weight:bold;width:190mm;border:0;border-top:1px solid #000;">');
+        htmlArr.push('        <div style="height:20px;line-height: 20px;padding-top:2mm;">');
+        htmlArr.push('             <div style="float:left;width:10mm;font-weight:bold;">' + pNo + '</div>');
+        htmlArr.push('             <div style="float:left;width:40mm;">' + wardDesc + '</div>');
+        htmlArr.push('             <div style="float:left;"> ' + bedNoName + '</div>');
+        htmlArr.push('             <div style="float:right;;padding-right:5mm;;"> ' + mBarCode + '</div>');
+        htmlArr.push('             <div style="float:right;padding-right:5mm;">' + batNo + '</div>');
+        htmlArr.push('             <div style="float:right;padding-right:5mm;"> ' + doseDateTime + '　' + freqDesc + '</div>');
+        htmlArr.push('        </div>');
+        htmlArr.push('    </td>');
+        htmlArr.push('</tr>');
+        var drugsArr = JSON.parse(rowData.drugsArr);
+        for (var j = 0, jLen = drugsArr.length; j < jLen; j++) {
+            var drugRow = drugsArr[j];
+            var borderLine = j === 0 ? 'border-top:1px dashed #000;' : '';
+            htmlArr.push('<tr>');
+            htmlArr.push('    <td style=";width:190mm;border:0;">');
+            htmlArr.push('        <div style="height:20px;line-height: 20px;padding-top:2mm;margin-left:10mm;' + borderLine + ';">');
+            htmlArr.push('             <div style="float:left;width:100mm;">' + drugRow.inciDesc + '</div>');
+            htmlArr.push('             <div style="float:left;width:50mm;">' + drugRow.dosage + '</div>');
+            htmlArr.push('             <div style="float:left;width:30mm;">' + drugRow.qtyUom + '</div>');
+            htmlArr.push('        </div>');
+            htmlArr.push('    </td>');
+            htmlArr.push('</tr>');
+        }
+    }
+    htmlArr.push('<tr>');
+    htmlArr.push('    <td style="border-top:1px solid #000;">');
+    htmlArr.push('    </td>');
+    htmlArr.push('</tr>');
+
+    htmlArr.push('</table>');
+    var htmlStr = htmlArr.join('');
+
+    WBLODOP.ADD_PRINT_TABLE('2mm', '2mm', '100%', '100%', htmlStr);
+    WBLODOP.SET_PRINT_PAGESIZE(3, '200mm', '10mm', '');
+    //WBLODOP.PREVIEW();
+    WBLODOP.PRINT();
+    if (typeof App_MenuCsp !== 'undefined') {
+        PHA_LOG.Operate({
+            operate: 'P',
+            logInput: JSON.stringify({ title: title }),
+            // logInput: logParams,
+            type: 'page',
+            pointer: App_MenuCsp,
+            origData: '',
+            remarks: App_MenuName
+        });
+    }
 }

@@ -290,3 +290,30 @@ var GetGrpCatStkStore = new Ext.data.Store({
 				root : 'rows'
 			}, ['Description', 'RowId', 'Code'])
 });
+
+
+/* 
+ * 请求单状态多选 yangshijie    
+ */
+var GetReqStatusStore = new Ext.data.Store({
+	proxy : new Ext.data.HttpProxy({
+		url:'dhcst.orgutil.csp?actiontype=GetReqStatus&start=0&limit=999'
+	}),
+	reader : new Ext.data.JsonReader({
+				totalProperty : "results",
+				root : 'rows'
+			}, ['Description', 'RowId', 'Code'])
+});
+
+/* 
+ * 请求单状态多选 yangshijie  去掉转移完成   
+ */
+var GetReqStatusNotTransCompStore = new Ext.data.Store({
+	proxy : new Ext.data.HttpProxy({
+		url:"dhcst.orgutil.csp?actiontype=GetReqStatus&start=0&limit=999&StatusStr="+encodeURI("完成^部分转移^部分作废^全部作废")
+	}),
+	reader : new Ext.data.JsonReader({
+				totalProperty : "results",
+				root : 'rows'
+			}, ['Description', 'RowId', 'Code'])
+});

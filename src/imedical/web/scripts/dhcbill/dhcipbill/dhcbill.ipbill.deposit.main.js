@@ -1,22 +1,17 @@
 ﻿/**
  * FileName: dhcbill.ipbill.deposit.main.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-07-03
  * Description: 押金管理
  */
 
-var GV = {};
-
 $(function () {
 	$(document).keydown(function (e) {
-		banBackSpace(e);
 		frameEnterKeyCode(e);
 	});
 	showBannerTip();
 	initQueryMenu();
 	initAdmList();
-	initPayDepPanel();
-	initRefDepPanel();
 });
 
 function initQueryMenu() {
@@ -39,7 +34,7 @@ function initQueryMenu() {
 	});
 
 	//卡号回车查询事件
-	$("#cardNo").keydown(function (e) {
+	$("#CardNo").focus().keydown(function (e) {
 		cardNoKeydown(e);
 	});
 
@@ -55,27 +50,14 @@ function initQueryMenu() {
 
 	$("#more-container").click(function () {
 		var t = $(this);
-		if (t.find(".arrows-b-text").text() == "更多") {
-			t.find(".arrows-b-text").text("收起");
+		if (t.find(".arrows-b-text").text() == $g("更多")) {
+			t.find(".arrows-b-text").text($g("收起"));
 			t.find(".spread-b-down").removeClass("spread-b-down").addClass("retract-b-up");
 			$("tr.display-more-tr").slideDown("normal", setHeight(40));
 		} else {
-			t.find(".arrows-b-text").text("更多");
+			t.find(".arrows-b-text").text($g("更多"));
 			t.find(".retract-b-up").removeClass("retract-b-up").addClass("spread-b-down");
 			$("tr.display-more-tr").slideUp("normal", setHeight(-40));
-		}
-	});
-
-	//卡类型
-	$HUI.combobox("#cardType", {
-		panelHeight: 'auto',
-		method: 'GET',
-		url: $URL + "?ClassName=web.DHCBillOtherLB&QueryName=QCardTypeDefineList&ResultSetType=array",
-		editable: false,
-		valueField: 'value',
-		textField: 'caption',
-		onChange: function (newValue, oldValue) {
-			initReadCard(newValue);
 		}
 	});
 	
@@ -85,22 +67,28 @@ function initQueryMenu() {
 		editable: false,
 		valueField: 'id',
 		textField: 'text',
-		data: [{id: '', text: '全部'},
-			   {id: 'I', text: '住院'},
-			   {id: 'P', text: '预住院'}
+		data: [{id: '', text: $g('全部')},
+			   {id: 'I', text: $g('住院')},
+			   {id: 'P', text: $g('预住院')}
 			 ]
 	});
 	
 	//病区
 	$("#ward").combobox({
 		panelHeight: 150,
-		url: $URL + '?ClassName=web.DHCIPBillDeposit&QueryName=FindWard&ResultSetType=array',
-		mode: 'remote',
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryWard&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
 		valueField: 'id',
 		textField: 'text',
-		onBeforeLoad: function (param) {
-			param.desc = param.q;
-			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
+		defaultFilter: 5,
+		blurValidValue: true,
+		filter: function(q, row) {
+			var opts = $(this).combobox("options");
+			var mCode = false;
+			if (row.contactName) {
+				mCode = row.contactName.toUpperCase().indexOf(q.toUpperCase()) >= 0
+			}
+			var mValue = row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0;
+			return mCode || mValue;
 		},
 		onChange: function (newValue, oldValue) {
 			$("#bed").combogrid("clear").combogrid("grid").datagrid("reload");
@@ -135,15 +123,26 @@ function initQueryMenu() {
 		}
 	});
 	
-	var tabsObj = $HUI.tabs("#deposit-tabs", {
+	$HUI.tabs("#deposit-tabs", {
 		onSelect: function (title, index) {
-			if (index == 0) {
-				initPayDepDoc();
-			}else {
-				initRefDepDoc();
-			}
+			initTabDoc(index);
 		}
 	});
+}
+
+function initTabDoc(index) {
+	switch(index) {
+	case 0:
+		initPayDepDoc();
+		break;
+	case 1:
+		initRefDepDoc();
+		break;
+	case 2:
+		initLostDepDoc();
+		break;
+	default:
+	}
 }
 
 /**
@@ -161,37 +160,15 @@ function frameEnterKeyCode(e) {
 		focusNextEle(e.target.id);
 		break;
 	case 120:
+		e.preventDefault();
 		setValueById("payAmt", $("#payAmt").val());   //numberbox在光标未离开时getValue取不到值，故先赋值
 		payClick();
 		break;
 	case 121:
+		e.preventDefault();
 		refundClick();
 		break;
 	default:
-	}
-}
-
-/**
- * 初始化卡类型时卡号和读卡按钮的变化
- * @method initReadCard
- * @param {String} cardType
- * @author ZhYW
- */
-function initReadCard(cardType) {
-	try {
-		var cardTypeAry = cardType.split("^");
-		var readCardMode = cardTypeAry[16];
-		if (readCardMode == "Handle") {
-			disableById("btn-readCard");
-			$("#cardNo").attr("readOnly", false);
-			focusById("cardNo");
-		} else {
-			enableById("btn-readCard");
-			$("#cardNo").attr("readOnly", true);
-			focusById("btn-readCard");
-		}
-	} catch (e) {
-		$.messager.popover({msg: e.message, type: "info"});
 	}
 }
 
@@ -204,77 +181,46 @@ function readHFMagCardClick() {
 	if ($("#btn-readCard").hasClass("l-btn-disabled")) {
 		return;
 	}
-	try {
-		var cardType = getValueById("cardType");
-		var cardTypeDR = cardType.split("^")[0];
-		var myRtn = "";
-		if (cardTypeDR == "") {
-			myRtn = DHCACC_GetAccInfo();
-		} else {
-			myRtn = DHCACC_GetAccInfo(cardTypeDR, cardType);
-		}
-		var myAry = myRtn.toString().split("^");
-		var rtn = myAry[0];
-		switch (rtn) {
-		case "0":
-			setValueById("cardNo", myAry[1]);
-			setValueById("patientNo", myAry[5]);
-			getPatInfo();
-			break;
-		case "-200":
-			$.messager.alert("提示", "卡无效", "info", function () {
-				focusById("btn-readCard");
-			});
-			break;
-		case "-201":
-			setValueById("cardNo", myAry[1]);
-			setValueById("patientNo", myAry[5]);
-			getPatInfo();
-			break;
-		default:
-		}
-	} catch (e) {
-	}
+	DHCACC_GetAccInfo7(magCardCallback);
 }
 
 function cardNoKeydown(e) {
-	try {
-		var key = websys_getKey(e);
-		if (key == 13) {
-			var cardNo = getValueById("cardNo");
-			if (!cardNo) {
-				return;
-			}
-			var cardType = getValueById("cardType");
-			cardNo = formatCardNo(cardType, cardNo);
-			var cardTypeAry = cardType.split("^");
-			var cardTypeDR = cardTypeAry[0];
-			var securityNo = "";
-			var myRtn = DHCACC_GetAccInfo(cardTypeDR, cardNo, securityNo, "PatInfo");
-			var myAry = myRtn.toString().split("^");
-			var rtn = myAry[0];
-			switch (rtn) {
-			case "0":
-				setValueById("cardNo", myAry[1]);
-				setValueById("patientNo", myAry[5]);
-				getPatInfo();
-				break;
-			case "-200":
-				setTimeout(function () {
-					$.messager.alert("提示", "卡无效", "info", function () {
-						focusById("cardNo");
-					});
-				}, 300);
-				break;
-			case "-201":
-				setValueById("cardNo", myAry[1]);
-				setValueById("patientNo", myAry[5]);
-				getPatInfo();
-				break;
-			default:
-			}
+	var key = websys_getKey(e);
+	if (key == 13) {
+		var cardNo = getValueById("CardNo");
+		if (!cardNo) {
+			return;
 		}
-	} catch (e) {
+		DHCACC_GetAccInfo("", cardNo, "", "", magCardCallback);
+	}
+}
+
+function magCardCallback(rtnValue) {
+	var patientId = "";
+	var myAry = rtnValue.split("^");
+	switch (myAry[0]) {
+	case "0":
+		setValueById("CardNo", myAry[1]);
+		patientId = myAry[4];
+		setValueById("patientNo", myAry[5]);
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	case "-200":
+		$.messager.alert("提示", "卡无效", "info", function () {
+			focusById("CardNo");
+		});
+		break;
+	case "-201":
+		setValueById("CardNo", myAry[1]);
+		patientId = myAry[4];
+		setValueById("patientNo", myAry[5]);
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	default:
+	}
+	
+	if (patientId != "") {
+		getPatInfo();
 	}
 }
 
@@ -285,13 +231,13 @@ function cardNoKeydown(e) {
  * @author ZhYW
  */
 function setHeight(num) {
-	var l = $("#head-menu");
+	var l = $(".layout-panel-west .layout:eq(0)");
 	var n = l.layout("panel", "north");
 	var nh = parseInt(n.outerHeight()) + parseInt(num);
 	n.panel("resize", {
 		height: nh
 	});
-	if (+num > 0) {
+	if (num > 0) {
 		$("tr.display-more-tr").show();
 	} else {
 		$("tr.display-more-tr").hide();
@@ -309,40 +255,57 @@ function initAdmList() {
 	$HUI.datagrid("#admList", {
 		fit: true,
 		border: false,
-		striped: true,
 		singleSelect: true,
 		pagination: true,
 		pageSize: 20,
-		data: [],
-		columns: [[{title: 'TPapmi', field: 'TPapmi', hidden: true},
-		           {title: '登记号', field: 'Tpapno', width: 100},
-				   {title: '病案号', field: 'Tzyno', width: 100},
-				   {title: '患者姓名', field: 'Tadmname', width: 100},
-				   {title: '性别', field: 'Tsex', width: 50},
-				   {title: '就诊类型', field: 'TAdmType', width: 80},
-				   {title: '费别', field: 'Tadmreason', width: 100},
-				   {title: '科室病区', field: 'Tdepdesc', width: 150,
-				   	formatter: function(value, row, index) {
-					   	return value + " " + row.Tward;
+		className: 'web.DHCIPBillDeposit',
+		queryName: 'FindAdmInfo',
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["TAdmDate", "TDischDate", "TDept"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if ($.inArray(cm[i].field, ["TPatientId", "TAdm"]) != -1) {
+					cm[i].hidden = true;
+					continue;
+				}
+				if (cm[i].field == "TWard") {
+					cm[i].title = "科室病区";
+					cm[i].formatter = function (value, row, index) {
+						return row.TDept + " " + value;
+					};
+				}
+				if (cm[i].field == "TAdmTime") {
+					cm[i].formatter = function (value, row, index) {
+					   	return row.TAdmDate + " " + value;
+					};
+				}
+				if (cm[i].field == "TDischTime") {
+					cm[i].formatter = function (value, row, index) {
+					   	return row.TDischDate + " " + value;
+					};
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if ($.inArray(cm[i].field, ["TAdmTime", "TDischTime"]) != -1) {
+						cm[i].width = 155;
 					}
-				   },
-				   {title: '入院时间', field: 'Tadmdate', width: 155},
-				   {title: '出院时间', field: 'Tdisdate', width: 155},
-				   {title: '床位', field: 'Tbed', width: 60},
-				   {title: 'Tadmid', field: 'Tadmid', hidden: true}
-			]],
+					if (cm[i].field == "TWard") {
+						cm[i].width = 160;
+					}
+				}
+			}
+		},
 		onLoadSuccess: function (data) {
 			admRowIndex = undefined;
-			setValueById("papmi", "");
-			setValueById("episodeId", "");
+			setValueById("PatientId", "");
+			setValueById("EpisodeId", "");
 			if (data.total == 1) {
 				$(this).datagrid("selectRow", 0);
 			}else {
 				showBannerTip();
-				$("#deposit-tabs .datagrid-f").datagrid("loadData", {
-					total: 0,
-					rows: []
-				});
+				$("#deposit-tabs .datagrid-f").datagrid("loadData", {total: 0, rows: []});
 			}
 		},
 		onSelect: function (index, row) {
@@ -350,14 +313,10 @@ function initAdmList() {
 				return;
 			}
 			admRowIndex = index;
-			setValueById("papmi", row.TPapmi);
-			setValueById("episodeId", row.Tadmid);
-			refreshBar(row.TPapmi, row.Tadmid);
-			if (getSelTabIndex() == 0) {
-				initPayDepDoc();
-			}else {
-				initRefDepDoc();
-			}
+			setValueById("PatientId", row.TPatientId);
+			setValueById("EpisodeId", row.TAdm);
+			refreshBar(row.TPatientId, row.TAdm);
+			initTabDoc(getSelTabIndex());
 		}
 	});
 }
@@ -366,12 +325,12 @@ function loadAdmList() {
 	var queryParams = {
 		ClassName: "web.DHCIPBillDeposit",
 		QueryName: "FindAdmInfo",
-		patName: getValueById("patName"),
+		patientName: getValueById("patName"),
 		patientNo: getValueById("patientNo"),
 		wardId: getValueById("ward") || "",
 		medicareNo: getValueById("medicareNo"),
 		admType: getValueById("admType"),
-		hospId: PUBLIC_CONSTANT.SESSION.HOSPID
+		sessionStr: getSessionStr()
 	}
 	loadDataGridStore("admList", queryParams);
 }
@@ -413,18 +372,13 @@ function getPatInfo() {
 }
 
 function clearClick() {
-	$(":text:not(.pagination-num)").val("");
+	focusById("CardNo");
+	$(":text:not(.pagination-num,#payRcptNo,#refRcptNo,#accPreRcptNo),textarea").val("");
 	$(".combobox-f").combobox("clear");
 	$(".combobox-f:not(#bank)").combobox("reload");
 	$("#bank").combobox("loadData", []);
 	setValueById("admType", "");
-	getAccPreRcptNo();
-	$(".combogrid-f").combogrid("clear").combogrid("grid").datagrid("loadData", {
-		total: 0,
-		rows: []
-	});
-  	$(".datagrid-f").datagrid("loadData", {
-		total: 0,
-		rows: []
-	});
+	$(".datagrid-f").datagrid("options").pageNumber = 1;   //跳转到第一页
+	$(".combogrid-f").combogrid("clear").combogrid("grid").datagrid("loadData", {total: 0, rows: []});
+  	$(".datagrid-f").datagrid("loadData", {total: 0, rows: []});
 }

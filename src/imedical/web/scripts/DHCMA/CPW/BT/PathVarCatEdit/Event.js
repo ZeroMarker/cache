@@ -7,7 +7,14 @@ function InitPathVarCatListWinEvent(obj){
 		closed: true,
 		modal: true,
 		isTopZindex:true,
-	});
+	});	
+	// 检查删除按钮是否允许删除，若否则隐藏该按钮
+	if(!chkDelBtnIsAble("DHCMA.CPW.BT.PathVarCat")){
+		$("#btnDelete").hide();	
+	}else{
+		$("#btnDelete").show();	
+	}
+	
     obj.LoadEvent = function(args){ 
 		//保存
 		$('#btnSave').on('click', function(){
@@ -30,6 +37,10 @@ function InitPathVarCatListWinEvent(obj){
      	$('#btnDelete').on('click', function(){
 	     	obj.btnDelete_click();
      	});
+     	//管控数据医院授权点击事件				add by yankai20210803
+		$('#btnAuthHosp').on('click',function(){
+			Common_WinToAuthHosp(obj.RecRowID,"DHCMA_CPW_BT.PathVarCat","gridAuthHosp","winAuthHosp");	
+		})
     }
 	//单击触发
 	obj.gridPathVarCat_onSelect = function (){
@@ -40,6 +51,7 @@ function InitPathVarCatListWinEvent(obj){
 			$("#btnAdd").linkbutton("enable");
 			$("#btnEdit").linkbutton("disable");
 			$("#btnDelete").linkbutton("disable");
+			$("#btnAuthHosp").linkbutton("disable");
 			obj.RecRowID="";
 			obj.gridPathVarCat.clearSelections();
 		}
@@ -48,6 +60,7 @@ function InitPathVarCatListWinEvent(obj){
 			$("#btnAdd").linkbutton("disable");
 			$("#btnEdit").linkbutton("enable");
 			$("#btnDelete").linkbutton("enable");
+			$("#btnAuthHosp").linkbutton("enable");
 		}
 	}	
 	//双击编辑事件
@@ -88,7 +101,8 @@ function InitPathVarCatListWinEvent(obj){
 			ClassName:"DHCMA.CPW.BT.PathVarCat",
 			MethodName:"Update",
 			aInputStr:inputStr,
-			aSeparete:CHR_1
+			aSeparete:CHR_1,
+			aHospID: $("#cboSSHosp").combobox('getValue')
 		},false);
 		if (parseInt(flg) <= 0) {
 			if (parseInt(flg) == 0) {
@@ -117,11 +131,15 @@ function InitPathVarCatListWinEvent(obj){
 				var flg = $m({
 					ClassName:"DHCMA.CPW.BT.PathVarCat",
 					MethodName:"DeleteById",
-					aId:obj.RecRowID
+					aId:obj.RecRowID,
+					aHospID: $("#cboSSHosp").combobox('getValue')
 				},false);
 				if (parseInt(flg) < 0) {
-					$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
-					
+					if (parseInt(flg)==-777) {
+						$.messager.alert("错误提示","系统参数配置不允许删除！", 'info');
+					} else {
+						$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					}
 				} else {
 					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 					obj.RecRowID = "";

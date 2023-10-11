@@ -1,13 +1,23 @@
 ﻿var $modelInstanceTree;
 var documentContext;
 var retDiagnos;
+//当前模板树数据,用于查询检索
+var TempData = "";
 $(function () {
 	
-	initInstanceTree();
+    //判断编辑器是否已初始化完毕
+	if (parent.getSysMenuDoingSth() == ""){
+		initInstanceTree();
+	}
 
 	var SearchBoxOnTree = NewSearchBoxOnTree();
 	$('#searchBox').searchbox({
 		searcher: function (value, name) {
+            if (TempData == ""){
+                return;
+            }
+            var tmpTemplateData = findTemplate(TempData, value);
+            $modelInstanceTree.tree('loadData',tmpTemplateData);
 			SearchBoxOnTree.Search($modelInstanceTree, value, function (node, searchCon) {
 				return (node.text.indexOf(searchCon) >= 0) || (node.attributes.py.indexOf(searchCon.toUpperCase()) >= 0);
 			});
@@ -30,7 +40,7 @@ $(function () {
         $(this).addClass('selected');  
         var exampleId = $("#sections ul").attr("id"); 
         var nodeId = $(this).find("a input").attr("id");                       
-		getSectionText(exampleId,nodeId);
+		//getSectionText(exampleId,nodeId);
     });
 });
 
@@ -40,6 +50,7 @@ function onContextMenu(e, node) {
 	var node = $modelInstanceTree.tree('getSelected');
 	$('#mm').menu('disableItem', $('#newCategory')[0]);
 	$('#mm').menu('disableItem', $('#toModelIns')[0]);
+	$('#mm').menu('disableItem', $('#modifyit')[0]);
 	$('#mm').menu('disableItem', $('#renameit')[0]);
 	$('#mm').menu('disableItem', $('#removeit')[0]);
 	$('#mm').menu('disableItem', $('#moveUpNode')[0]);
@@ -67,6 +78,7 @@ function onContextMenu(e, node) {
 	{ 
 		if (node.attributes.isShare != "1")
 		{
+		$('#mm').menu('enableItem', $('#modifyit')[0]);
 			$('#mm').menu('enableItem', $('#renameit')[0]);
 			$('#mm').menu('enableItem', $('#removeit')[0]);
 			$('#mm').menu('enableItem', $('#moveUpNode')[0]);
@@ -84,12 +96,64 @@ function onContextMenu(e, node) {
 		top: e.pageY
 	});
 }
+//根据value筛选病历模板树
+function findTemplate(data,value)
+{
+    var result = new Array();
+    for (var i = 0; i < data.length; i++) 
+    { 
+        if ((data[i].children)&&(data[i].children.length >0))
+        {
+            var child = findTemplate(data[i].children,value)
+            if ((child != "")&&(child.length >0))
+            {
+                var tmp = JSON.parse(JSON.stringify(data[i]));
+                tmp.children = [];
+                tmp.children = child;
+                result.push(tmp);
+            }
+        }
+        else
+        {
+            if (data[i].text.indexOf(value)!=-1) {
+                result.push(data[i]);
+            }
+        }
+    }
+    return result;
+}
 function initTree(userId,instanceId)
 {
+    jQuery.ajax({
+        type: 'GET',
+        dataType: 'text',
+        url: '../EMRservice.Ajax.common.cls',
+        async: true,
+        cache: false,
+        data: {
+            "OutputType":"Stream",
+            "Class":"EMRservice.BL.BLExampleInstance",
+            "Method":"GetDataTree",
+            "p1":userId,
+            "p2":instanceId,
+            "p3":userLocID
+        },
+        success: function (d) {
+            if (d != ""){
+                TempData = jQuery.parseJSON(d);
+                initModelInstanceTree(TempData);
+            }
+        },
+        error : function(d) {
+            alert("GetDataTree error");
+        }
+    });
+}
+function initModelInstanceTree(treeData){
 	$modelInstanceTree.tree({
-		url: "../EMRservice.Ajax.common.cls?OutputType=Stream&Class=EMRservice.BL.BLExampleInstance&Method=GetDataTree&p1="+userId+"&p2="+instanceId+"&p3="+userLocID,
 		dnd: true,
 		lines:true,
+		data : treeData,
 		formatter: function (node) {
 			var s = node.text;
 			if (node.children) {
@@ -101,8 +165,10 @@ function initTree(userId,instanceId)
 			if ($(this).tree('isLeaf', node.target)) 
 			{
 				if (node.attributes.type != "node") return;
-				$(".tree").css("display","none");
-				$(".select").css("display","block");
+				if(checkFlag==="N"){
+					$(".tree").css("display","none");
+					$(".select").css("display","block");
+				}
 				getExampleSections(node)
 			}
 		},
@@ -250,6 +316,12 @@ function initContextMenu()
 				return;
 			}
 			showNameDlg(saveExample);
+		}
+	}
+	document.getElementById("modifyit").onclick = function(){
+		var node = $modelInstanceTree.tree('getSelected');
+		if (node) {
+			var returnValues = window.showModalDialog('emr.record.edit.exampleinstance.csp', node, 'dialogHeight:765px;dialogWidth:1360px;resizable:yes;center:yes;minimize:yes;maximize:yes;');
 		}
 	}
 	document.getElementById("shareNode").onclick = function(){
@@ -452,22 +524,82 @@ function getExampleSections(node)
 			$("#sections").empty();
 			var ul = $('<ul id="'+exampleId+'"></ul>');
 			
-			if (d != "")
+			if (d&&d != "")
 			{
-				for (var i=0;i < d.length; i++)
-				{
-					var checkbox = "<li><a href='#'><input type='checkbox' name='section' id='"+d[i].attributes.sectionCode+"'> "+ d[i].text+"</a></li>";	
-					$(ul).append(checkbox);
+				if(checkFlag==="Y"){	
+					clickInsert(d,exampleId);	
+				}else{
+					getCheckPage(d,ul);
 				}
-				$("#sections").append(ul);
-				$("input:checkbox").attr("checked","true"); 
 			}
 		},
 		error: function(d) {alert("error");}
 	}); 
 	return node
 }
-
+function clickInsert(d,exampleId){
+	var CheckCode = [];
+	var flag = true;
+	for (var i = 0; i < d.length; i++) {
+		flag = true;
+		for (var j = 0, len = choiceArr.length; j < len; j++) {
+		  optionName = choiceArr[j].replace(/\s*/g, "");
+		  sectionName = d[i].text.replace(/\s*/g, "");
+		  if (sectionName.match(optionName)) {
+			flag = false;
+		    break;
+		  } 
+		}
+		if(flag){
+			CheckCode.push(d[i].attributes.sectionCode);
+		}
+	}
+	replaceSections(exampleId, CheckCode);
+}
+function getCheckPage(d,ul){
+	var checkCode=[];
+	for (var i=0;i < d.length; i++)
+	{
+		//判断d[i].text是否存在,如果存在就不渲染dom
+		var showflag = true,optionName,sectionName;
+		if(hiddenArr.length>0){
+			for(var k = 0,lenk =hiddenArr.length;k<lenk;k++ ){
+				optionName = hiddenArr[k].replace(/\s*/g,"");
+				sectionName = d[i].text.replace(/\s*/g,"");
+				if(sectionName.match(optionName)){
+					showflag=false;
+					break;
+					}
+				}
+			}
+		if(!showflag) continue;
+		var checkbox = "<li><a href='#'><input type='checkbox' name='section' id='"+d[i].attributes.sectionCode+"'> "+ d[i].text+"</a></li>";	
+		$(ul).append(checkbox);
+		if(choiceArr.length>0)
+		{
+			for(var j = 0,len=choiceArr.length; j <len ; j++)
+			 {
+				optionName = choiceArr[j].replace(/\s*/g,"");
+				sectionName = d[i].text.replace(/\s*/g,"");
+				if(sectionName.match(optionName)){
+					checkCode.push( d[i].attributes.sectionCode);
+					}
+			 }	
+		}
+	}
+	$("#sections").append(ul);
+	if(choiceArr.length===0){
+		//不配置默认全选
+		$("input:checkbox").attr("checked","true");
+	}else if(checkCode&&checkCode.length>0)
+	{
+		$("input:checkbox").attr("checked","true");
+		for(var i = 0; i < checkCode.length; i++)
+		{
+			$("#"+checkCode[i]).attr("checked",false);
+		}
+	}
+}
 function getSectionText(exampleId,sectionCode)
 {
 	$("#sectiontext").empty();
@@ -502,7 +634,7 @@ $("#selectchkbx").on("change",function () {
 });
 
 //替换章节
-function replaceSections(exampleId)
+function replaceSections(exampleId,CheckCode)
 {
 	if(insertControl() === false) return;
 	var param ={
@@ -514,10 +646,20 @@ function replaceSections(exampleId)
 			"SectionList":[]}
 		}
 	};
-	$.each($("input[name='section']:checked"),function(){
-		 param.args.params.SectionList.push({"Code":$(this).context.id});
-	})	
+	if(CheckCode&&checkFlag==="Y"){
+		for (var i = 0; i < CheckCode.length; i++) {
+    		param.args.params.SectionList.push({ Code: CheckCode[i] });
+  		}
+	}else if(checkFlag==="N"){
+	 	$.each($("input[name='section']:checked"),function(){
+	 		param.args.params.SectionList.push({"Code":$(this).context.id});
+		});
+	}else{
+		$.messager.alert("error","未知错误","error");
+		return;	
+	}	
 	var ret = parent.eventDispatch(param);
+	return;
 }
 
 //创建病历

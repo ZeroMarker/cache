@@ -4,7 +4,7 @@
 //=========================库存项厂商类别=============================
 var conditionCodeField = new Ext.form.TextField({
 	id:'conditionCodeField',
-	fieldLabel:'代码',
+	fieldLabel:$g('代码'),
 	allowBlank:true,
 	//width:180,
 	listWidth:180,
@@ -15,7 +15,7 @@ var conditionCodeField = new Ext.form.TextField({
 	
 var conditionNameField = new Ext.form.TextField({
 	id:'conditionNameField',
-	fieldLabel:'名称',
+	fieldLabel:$g('名称'),
 	allowBlank:true,
 	//width:150,
 	listWidth:150,
@@ -26,7 +26,7 @@ var conditionNameField = new Ext.form.TextField({
 
 var PhManfStore = new Ext.data.SimpleStore({
 	fields:['key', 'keyValue'],
-	data:[["O",'出库'], ["I",'入库']]
+	data:[["O",$g('出库')], ["I",$g('入库')]]
 });
 	
 var PhManfGrid="";
@@ -63,73 +63,73 @@ var PhManfGridDs = new Ext.data.Store({
 var PhManfGridCm = new Ext.grid.ColumnModel([
 	 new Ext.grid.RowNumberer(),
 	 {
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'Code',
         width:80,
         align:'left',
         sortable:true
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'Name',
         width:200,
         align:'left',
         sortable:true
     },{
-        header:"地址",
+        header:$g("地址"),
         dataIndex:'Address',
         width:200,
         align:'left',
         sortable:false
     },{
-        header:"电话",
+        header:$g("电话"),
         dataIndex:'Tel',
         width:100,
         align:'left',
         sortable:false
     },{
-        header:"上级厂商",
+        header:$g("上级厂商"),
         dataIndex:'ParManf',
         width:150,
         align:'left',
         sortable:false
     },{
-        header:"药物生产许可",
+        header:$g("药物生产许可"),
         dataIndex:'DrugProductP',
         width:120,
         align:'left',
         sortable:false
     },{
-        header:"药物生产许可有效期",
+        header:$g("药物生产许可有效期"),
         dataIndex:'DrugProductExp',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"材料生产许可",
+        header:$g("材料生产许可"),
         dataIndex:'MatProductP',
         width:120,
         align:'left',
         sortable:false
     },{
-        header:"材料生产许可有效期",
+        header:$g("材料生产许可有效期"),
         dataIndex:'MatProductExp',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"工商执照许可",
+        header:$g("工商执照许可"),
         dataIndex:'ComLic',
         width:120,
         align:'left',
         sortable:false
     },{
-        header:"工商执照许可有效期",
+        header:$g("工商执照许可有效期"),
         dataIndex:'ComLicDate',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"激活标识",
+        header:$g("激活标识"),
         dataIndex:'Active',
         width:80,
         align:'left',
@@ -145,8 +145,8 @@ var PhManfGridCm = new Ext.grid.ColumnModel([
 PhManfGridCm.defaultSortable = true;
 
 var findPhManf = new Ext.Toolbar.Button({
-	text:'查询',
-    tooltip:'查询',
+	text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
 	width : 70,
 	height : 30,
@@ -155,7 +155,7 @@ var findPhManf = new Ext.Toolbar.Button({
 		var conditionName=Ext.getCmp('conditionNameField').getValue();
 		PhManfGridDs.load({params:{start:0,limit:PhManfPagingToolbar.pageSize,sort:'RowId',dir:'desc',conditionCode:conditionCode,conditionName:conditionName},			callback : function(r,options, success) {					//Store异常处理方法二
 			if(success==false){
-				Msg.info("error", "查询错误，请查看日志!");
+				Msg.info("error", $g("查询错误，请查看日志!"));
 				//DrugInfoGrid.loadMask.hide();
 
 				//return "{results:0,rows:[]}";
@@ -166,8 +166,8 @@ var findPhManf = new Ext.Toolbar.Button({
 
 // 另存按钮
 var SaveAsBT = new Ext.Toolbar.Button({
-	text : '另存',
-	tooltip : '另存为Excel',
+	text : $g('另存'),
+	tooltip : $g('另存为Excel'),
 	iconCls : 'page_excel',
 	width : 70,
 	height : 30,
@@ -182,7 +182,7 @@ function CreateEditWin(rowid){
 	//厂商代码
 	var codeField = new Ext.form.TextField({
 		id:'codeField',
-		fieldLabel:'<font color=red>厂商代码</font>',
+		fieldLabel:'<font color=red>'+$g('厂商代码')+'</font>',
 		allowBlank:false,
 		width:200,
 		listWidth:200,
@@ -194,7 +194,7 @@ function CreateEditWin(rowid){
 				if (e.getKey() == Ext.EventObject.ENTER){
 					if(Ext.getCmp('codeField').getValue()==""){
 						Handler = function(){codeField.focus();}
-						Ext.Msg.show({title:'错误',msg:'厂商代码不能为空!',buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR,fn:Handler,width:250});
+						Ext.Msg.show({title:$g('错误'),msg:$g('厂商代码不能为空!'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR,fn:Handler,width:250});
 					}else{
 						nameField.focus();
 					}
@@ -206,7 +206,7 @@ function CreateEditWin(rowid){
 	//厂商名称
 	var nameField = new Ext.form.TextField({
 		id:'nameField',
-		fieldLabel:'<font color=red>厂商名称</font>',
+		fieldLabel:'<font color=red>'+$g('厂商名称')+'</font>',
 		allowBlank:false,
 		width:200,
 		listWidth:200,
@@ -218,7 +218,7 @@ function CreateEditWin(rowid){
 				if (e.getKey() == Ext.EventObject.ENTER){
 					if(Ext.getCmp('nameField').getValue()==""){
 						Handler = function(){nameField.focus();}
-						Ext.Msg.show({title:'错误',msg:'厂商名称不能为空!',buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR,fn:Handler,width:250});
+						Ext.Msg.show({title:$g('错误'),msg:$g('厂商名称不能为空!'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR,fn:Handler,width:250});
 					}else{
 						addressField.focus();
 					}
@@ -230,7 +230,7 @@ function CreateEditWin(rowid){
 	//厂商地址
 	var addressField = new Ext.form.TextField({
 		id:'addressField',
-		fieldLabel:'厂商地址',
+		fieldLabel:$g('厂商地址'),
 		allowBlank:true,
 		width:200,
 		listWidth:200,
@@ -249,14 +249,14 @@ function CreateEditWin(rowid){
 	//厂商电话
 	var phoneField = new Ext.form.TextField({
 		id:'phoneField',
-		fieldLabel:'厂商电话',
+		fieldLabel:$g('厂商电话'),
 		allowBlank:true,
 		width:200,
 		listWidth:200,
 		//emptyText:'厂商电话...',
 		anchor:'90%',
 		regex:/^[^\u4e00-\u9fa5]{0,}$/,
-		regexText:'不正确的电话号码',
+		regexText:$g('不正确的电话号码'),
 		selectOnFocus:true,
 		listeners :{
 			specialKey :function(field,e){
@@ -269,7 +269,7 @@ function CreateEditWin(rowid){
 	//上级厂商
 	var lastPhManfField = new Ext.ux.ComboBox({
 		id:'lastPhManfField',
-		fieldLabel:'上级厂商',
+		fieldLabel:$g('上级厂商'),
 		width:298,
 		listWidth:298,
 		allowBlank:true,
@@ -296,7 +296,7 @@ function CreateEditWin(rowid){
 	//药物生产许可
 	var drugProductPermitField = new Ext.form.TextField({
 		id:'drugProductPermitField',
-		fieldLabel:'药物生产许可',
+		fieldLabel:$g('药物生产许可'),
 		width:200,
 		listWidth:200,
 		//emptyText:'药物生产许可...',
@@ -307,7 +307,7 @@ function CreateEditWin(rowid){
 				if (e.getKey() == Ext.EventObject.ENTER){
 					if(Ext.getCmp('drugProductPermitField').getValue()==""){
 						Handler = function(){drugProductPermitField.focus();}
-						Ext.Msg.show({title:'错误',msg:'药物生产许可不能为空!',buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR,fn:Handler,width:250});
+						Ext.Msg.show({title:$g('错误'),msg:$g('药物生产许可不能为空!'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR,fn:Handler,width:250});
 					}else{
 						drugProductExpDate.focus();
 					}
@@ -319,7 +319,7 @@ function CreateEditWin(rowid){
 	//药物生产许可有效期
 	var drugProductExpDate = new Ext.ux.DateField({ 
 		id:'drugProductExpDate',
-		fieldLabel:'药物生产许可有效期',  
+		fieldLabel:$g('药物生产许可有效期'),  
 		allowBlank:true,
 		width:298,
 		listWidth:298,    
@@ -330,7 +330,7 @@ function CreateEditWin(rowid){
 				if (e.getKey() == Ext.EventObject.ENTER){
 					if(Ext.getCmp('drugProductExpDate').getValue()==""){
 						Handler = function(){drugProductExpDate.focus();}
-						Ext.Msg.show({title:'错误',msg:'药物生产许可有效期不能为空!',buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR,fn:Handler,width:250});
+						Ext.Msg.show({title:$g('错误'),msg:$g('药物生产许可有效期不能为空!'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR,fn:Handler,width:250});
 					}else{
 						matProductPermitField.focus();
 					}
@@ -342,7 +342,7 @@ function CreateEditWin(rowid){
 	//材料生产许可
 	var matProductPermitField = new Ext.form.TextField({
 		id:'matProductPermitField',
-		fieldLabel:'材料生产许可',
+		fieldLabel:$g('材料生产许可'),
 		allowBlank:true,
 		width:200,
 		listWidth:200,
@@ -354,7 +354,7 @@ function CreateEditWin(rowid){
 				if (e.getKey() == Ext.EventObject.ENTER){
 					if(Ext.getCmp('matProductPermitField').getValue()==""){
 						Handler = function(){matProductPermitField.focus();}
-						Ext.Msg.show({title:'错误',msg:'材料生产许可不能为空!',buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR,fn:Handler,width:250});
+						Ext.Msg.show({title:$g('错误'),msg:$g('材料生产许可不能为空!'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR,fn:Handler,width:250});
 					}else{
 						matProductExpDate.focus();
 					}
@@ -366,7 +366,7 @@ function CreateEditWin(rowid){
 	//材料生产许可有效期
 	var matProductExpDate = new Ext.ux.DateField({ 
 		id:'matProductExpDate',
-		fieldLabel:'材料生产许可有效期',  
+		fieldLabel:$g('材料生产许可有效期'),  
 		allowBlank:true,
 		width:298,
 		listWidth:298,       
@@ -377,7 +377,7 @@ function CreateEditWin(rowid){
 				if (e.getKey() == Ext.EventObject.ENTER){
 					if(Ext.getCmp('matProductExpDate').getValue()==""){
 						Handler = function(){matProductExpDate.focus();}
-						Ext.Msg.show({title:'错误',msg:'材料生产许可有效期不能为空!',buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR,fn:Handler,width:250});
+						Ext.Msg.show({title:$g('错误'),msg:$g('材料生产许可有效期不能为空!'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR,fn:Handler,width:250});
 					}else{
 						comLicField.focus();
 					}
@@ -389,7 +389,7 @@ function CreateEditWin(rowid){
 	//工商执照许可
 	var comLicField = new Ext.form.TextField({
 		id:'comLicField',
-		fieldLabel:'工商执照许可',
+		fieldLabel:$g('工商执照许可'),
 		allowBlank:true,
 		width:200,
 		listWidth:200,
@@ -401,7 +401,7 @@ function CreateEditWin(rowid){
 				if (e.getKey() == Ext.EventObject.ENTER){
 					if(Ext.getCmp('comLicField').getValue()==""){
 						Handler = function(){comLicField.focus();}
-						Ext.Msg.show({title:'错误',msg:'工商执照许可不能为空!',buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR,fn:Handler,width:250});
+						Ext.Msg.show({title:$g('错误'),msg:$g('工商执照许可不能为空!'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR,fn:Handler,width:250});
 					}else{
 						comLicExpDate.focus();
 					}
@@ -413,7 +413,7 @@ function CreateEditWin(rowid){
 	//工商执照许可有效期
 	var comLicExpDate = new Ext.ux.DateField({ 
 		id:'comLicExpDate',
-		fieldLabel:'工商执照许可有效期',  
+		fieldLabel:$g('工商执照许可有效期'),  
 		allowBlank:true,
 		width:298,
 		listWidth:298,       
@@ -424,7 +424,7 @@ function CreateEditWin(rowid){
 				if (e.getKey() == Ext.EventObject.ENTER){
 					if(Ext.getCmp('comLicExpDate').getValue()==""){
 						Handler = function(){comLicExpDate.focus();}
-						Ext.Msg.show({title:'错误',msg:'工商执照许可有效期不能为空!',buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR,fn:Handler,width:250});
+						Ext.Msg.show({title:$g('错误'),msg:$g('工商执照许可有效期不能为空!'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.ERROR,fn:Handler,width:250});
 					}else{
 						activeField.focus();
 						activeField.setValue(true);
@@ -437,7 +437,7 @@ function CreateEditWin(rowid){
 	//激活
 	var activeField = new Ext.form.Checkbox({
 		id: 'activeField',
-		fieldLabel:'激活',
+		fieldLabel:$g('激活'),
 		hideLabel:false,
 		allowBlank:false,
 		checked:true,  //默认是"激活"状态
@@ -474,14 +474,14 @@ function CreateEditWin(rowid){
 	
 	//初始化添加按钮
 	editButton = new Ext.Toolbar.Button({
-		text:'确定',
+		text:$g('确定'),
 		iconCls:'page_save',
 		handler:function(){
 			if(rowid==""){
 				addHandler();
 			}
 			else{
-				var ret2=confirm("是否生成厂商历史信息?");
+				var ret2=confirm($g("是否生成厂商历史信息?"));
 				if (ret2==true){
 					editHistoryHandler();
 				}else{
@@ -493,7 +493,7 @@ function CreateEditWin(rowid){
 	});
 	//初始化取消按钮
 	cancelButton = new Ext.Toolbar.Button({
-		text:'取消',
+		text:$g('取消'),
 		iconCls:'page_close'
 	});
 	
@@ -506,7 +506,7 @@ function CreateEditWin(rowid){
 	cancelButton.addListener('click',cancelHandler,false);
 	//初始化窗口
 	var win = new Ext.Window({
-		title:'厂商维护',
+		title:$g('厂商维护'),
 		width:500,
 		height:440,
 		minWidth:500,
@@ -551,43 +551,43 @@ function CreateEditWin(rowid){
 		var active = (activeField.getValue()==true)?'Y':'N';
 		
 		if(code.trim()==""){
-			Msg.info('warning',"厂商代码不能为空");
+			Msg.info('warning',$g("厂商代码不能为空"));
 			return;
 		};
 		
 		if(name.trim()==""){
-			Msg.info('warning',"厂商名称不能为空");
+			Msg.info('warning',$g("厂商名称不能为空"));
 			return;
 		};
 		
 		/*
 		if(drugProductPermit.trim()==""){
-			Ext.Msg.show({title:'提示',msg:'药物生产许可为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
+			Ext.Msg.show({title:$g('提示'),msg:'药物生产许可为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
 			return;
 		};
 		
 		if(drugProductExpDate==""){
-			Ext.Msg.show({title:'提示',msg:'药物生产许可有效期为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
+			Ext.Msg.show({title:$g('提示'),msg:'药物生产许可有效期为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
 			return;
 		};
 		
 		if(matProductPermit.trim()==""){
-			Ext.Msg.show({title:'提示',msg:'材料生产许可为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
+			Ext.Msg.show({title:$g('提示'),msg:'材料生产许可为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
 			return;
 		};
 		
 		if(matProductExpDate==""){
-			Ext.Msg.show({title:'提示',msg:'材料生产许可有效期为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
+			Ext.Msg.show({title:$g('提示'),msg:'材料生产许可有效期为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
 			return;
 		};
 		
 		if(comLic.trim()==""){
-			Ext.Msg.show({title:'提示',msg:'工商执照许可为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
+			Ext.Msg.show({title:$g('提示'),msg:'工商执照许可为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
 			return;
 		};
 		
 		if(comLicExpDate==""){
-			Ext.Msg.show({title:'提示',msg:'工商执照许可有效期为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
+			Ext.Msg.show({title:$g('提示'),msg:'工商执照许可有效期为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
 			return;
 		};
 		*/
@@ -605,17 +605,17 @@ function CreateEditWin(rowid){
 		}
 		else if((retflag>0)||(retflag==-2))
 		{
-			if(confirm("已存在相同的代码或者名称,是否放弃本次新增记录,启用原有记录?")==false)  return ;
+			if(confirm($g("已存在相同的代码或者名称,是否放弃本次新增记录,启用原有记录?"))==false)  return ;
 			var updflag=0;
 			if(retflag>0) updflag=1;
 			var ret=tkMakeServerCall("web.DHCST.ItmManf","UpdateUniversal",retmsg,updflag)
 			if(ret!=0)
 			{
-				Msg.info("error","更新通用类型失败,错误代码:"+ret);
+				Msg.info("error",$g("更新通用类型失败,错误代码:")+ret);
 			}
 			else
 			{
-				Msg.info("success", "保存成功!");
+				Msg.info("success", $g("保存成功!"));
 				win.close();
 				PhManfGridDs.load({params:{start:0,limit:PhManfPagingToolbar.pageSize,sort:'RowId',dir:'desc',conditionCode:Ext.getCmp('conditionCodeField').getValue(),conditionName:Ext.getCmp('conditionNameField').getValue()}});
 			}
@@ -625,24 +625,24 @@ function CreateEditWin(rowid){
 		Ext.Ajax.request({
 			url: PhManfGridUrl+'?actiontype=insert&data='+encodeURIComponent(data),
 			method:'post',
-			waitMsg:'新建中...',
+			waitMsg:$g('新建中...'),
 			failure: function(result, request) {
-				Msg.info("error","请检查网络连接!");
+				Msg.info("error",$g("请检查网络连接!"));
 			},
 			success: function(result, request) {
 				var jsonData = Ext.util.JSON.decode( result.responseText );
 				if (jsonData.success=='true') {
 					var newRowid = jsonData.info;
-					Msg.info("success", "保存成功!");
+					Msg.info("success", $g("保存成功!"));
 					win.close();
 					PhManfGridDs.load({params:{start:0,limit:PhManfPagingToolbar.pageSize,sort:'RowId',dir:'desc',conditionCode:Ext.getCmp('conditionCodeField').getValue(),conditionName:Ext.getCmp('conditionNameField').getValue()}});
 				}else{
 					if(jsonData.info==-1){
-						Msg.info("error","名称重复!");
+						Msg.info("error",$g("名称重复!"));
 					}else if(jsonData.info==-11){
-						Msg.info("error","代码重复!");
+						Msg.info("error",$g("代码重复!"));
 					}else{
-						Msg.info("error", "保存失败!");
+						Msg.info("error", $g("保存失败!"));
 					}
 				}
 			},
@@ -671,12 +671,12 @@ function CreateEditWin(rowid){
 		var active = (activeField.getValue()==true)?'Y':'N';
 		//alert('0')
 		if(code.trim()==""){
-			Ext.Msg.show({title:'提示',msg:'厂商代码为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
+			Ext.Msg.show({title:$g('提示'),msg:$g('厂商代码为空'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
 			return;
 		};
 		
 		if(name.trim()==""){
-			Ext.Msg.show({title:'提示',msg:'厂商名称为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
+			Ext.Msg.show({title:$g('提示'),msg:$g('厂商名称为空'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
 			return;
 		};
 		
@@ -723,7 +723,7 @@ function CreateEditWin(rowid){
 		}
 		else if((retflag>0)||(retflag==-2))
 		{
-			if(confirm("已存在相同的代码或者名称,是否放弃本次修改记录,启用原有记录?")==false)  return ;
+			if(confirm($g("已存在相同的代码或者名称,是否放弃本次修改记录,启用原有记录?"))==false)  return ;
 			var updflag=0;
 			if(retflag>0) updflag=1;
 			var ret=tkMakeServerCall("web.DHCST.ItmManf","UpdateManf",data,retmsg,updflag)
@@ -731,11 +731,11 @@ function CreateEditWin(rowid){
 			var msg=ret.split("^")[1];
 			if(flag!=0)
 			{
-				Msg.info("error","更新通用类型失败,错误信息:"+msg);
+				Msg.info("error",$g("更新通用类型失败,错误信息:")+msg);
 			}
 			else
 			{
-				Msg.info("success", "更新成功!");
+				Msg.info("success", $g("更新成功!"));
 				win.close();
 				PhManfGridDs.load({params:{start:0,limit:PhManfPagingToolbar.pageSize,sort:'RowId',dir:'desc',conditionCode:Ext.getCmp('conditionCodeField').getValue(),conditionName:Ext.getCmp('conditionNameField').getValue()}});
 			}
@@ -743,22 +743,22 @@ function CreateEditWin(rowid){
 		}
 		Ext.Ajax.request({
 			url:PhManfGridUrl+'?actiontype=update&data='+encodeURIComponent(data)+'&histype=',
-			waitMsg:'更新中...',
+			waitMsg:$g('更新中...'),
 			failure:function(result, request) {
-				Msg.info("error","请检查网络连接!");
+				Msg.info("error",$g("请检查网络连接!"));
 			},
 			success:function(result, request) {
 				var jsonData = Ext.util.JSON.decode( result.responseText );
 				if(jsonData.success=='true'){
-					Msg.info("success","更新成功!");
+					Msg.info("success",$g("更新成功!"));
 					PhManfGridDs.load({params:{start:PhManfPagingToolbar.cursor,limit:PhManfPagingToolbar.pageSize,sort:'RowId',dir:'desc',conditionCode:Ext.getCmp('conditionCodeField').getValue(),conditionName:Ext.getCmp('conditionNameField').getValue()}});
 					win.close();
 				}else{
 					if(jsonData.info==-1){
-						Msg.info("error","名称重复!");
+						Msg.info("error",$g("名称重复!"));
 					}
 					if(jsonData.info==-11){
-						Msg.info("error","代码重复!");
+						Msg.info("error",$g("代码重复!"));
 					}
 				}
 			},
@@ -785,43 +785,43 @@ function CreateEditWin(rowid){
 		var active = (activeField.getValue()==true)?'Y':'N';
 		//alert('0')
 		if(code.trim()==""){
-			Ext.Msg.show({title:'提示',msg:'厂商代码为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
+			Ext.Msg.show({title:$g('提示'),msg:$g('厂商代码为空'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
 			return;
 		};
 		
 		if(name.trim()==""){
-			Ext.Msg.show({title:'提示',msg:'厂商名称为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
+			Ext.Msg.show({title:$g('提示'),msg:$g('厂商名称为空'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
 			return;
 		};
 		
 		/*
 		if(drugProductPermit.trim()==""){
-			Ext.Msg.show({title:'提示',msg:'药物生产许可为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
+			Ext.Msg.show({title:$g('提示'),msg:'药物生产许可为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
 			return;
 		};
 		
 		if(drugProductExpDate==""){
-			Ext.Msg.show({title:'提示',msg:'药物生产许可有效期为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
+			Ext.Msg.show({title:$g('提示'),msg:'药物生产许可有效期为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
 			return;
 		};
 		
 		if(matProductPermit.trim()==""){
-			Ext.Msg.show({title:'提示',msg:'材料生产许可为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
+			Ext.Msg.show({title:$g('提示'),msg:'材料生产许可为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
 			return;
 		};
 		
 		if(matProductExpDate==""){
-			Ext.Msg.show({title:'提示',msg:'材料生产许可有效期为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
+			Ext.Msg.show({title:$g('提示'),msg:'材料生产许可有效期为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
 			return;
 		};
 		
 		if(comLic.trim()==""){
-			Ext.Msg.show({title:'提示',msg:'工商执照许可为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
+			Ext.Msg.show({title:$g('提示'),msg:'工商执照许可为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
 			return;
 		};
 		
 		if(comLicExpDate==""){
-			Ext.Msg.show({title:'提示',msg:'工商执照许可有效期为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
+			Ext.Msg.show({title:$g('提示'),msg:'工商执照许可有效期为空',buttons: Ext.Msg.OK,icon:Ext.MessageBox.INFO});
 			return;
 		};
 		*/
@@ -837,7 +837,7 @@ function CreateEditWin(rowid){
 		}
 		else if((retflag>0)||(retflag==-2))
 		{
-			if(confirm("已存在相同的代码或者名称,是否放弃本次修改记录,启用原有记录?")==false)  return ;
+			if(confirm($g("已存在相同的代码或者名称,是否放弃本次修改记录,启用原有记录?"))==false)  return ;
 			var updflag=0;
 			if(retflag>0) updflag=1;
 			var ret=tkMakeServerCall("web.DHCST.ItmManf","UpdateManf",data,retmsg,updflag,"1")
@@ -845,11 +845,11 @@ function CreateEditWin(rowid){
 			var msg=ret.split("^")[1];
 			if(flag!=0)
 			{
-				Msg.info("error","更新通用类型失败,错误信息:"+msg);
+				Msg.info("error",$g("更新通用类型失败,错误信息:")+msg);
 			}
 			else
 			{
-				Msg.info("success", "保存成功!");
+				Msg.info("success", $g("保存成功!"));
 				win.close();
 				PhManfGridDs.load({params:{start:0,limit:PhManfPagingToolbar.pageSize,sort:'RowId',dir:'desc',conditionCode:Ext.getCmp('conditionCodeField').getValue(),conditionName:Ext.getCmp('conditionNameField').getValue()}});
 			}
@@ -857,22 +857,22 @@ function CreateEditWin(rowid){
 		}
 		Ext.Ajax.request({
 			url:PhManfGridUrl+'?actiontype=update&data='+encodeURIComponent(data)+'&histype=1',
-			waitMsg:'更新中...',
+			waitMsg:$g('更新中...'),
 			failure:function(result, request) {
-				Msg.info("error","请检查网络连接!");
+				Msg.info("error",$g("请检查网络连接!"));
 			},
 			success:function(result, request) {
 				var jsonData = Ext.util.JSON.decode( result.responseText );
 				if(jsonData.success=='true'){
-					Msg.info("success","更新成功!");
+					Msg.info("success",$g("更新成功!"));
 					PhManfGridDs.load({params:{start:PhManfPagingToolbar.cursor,limit:PhManfPagingToolbar.pageSize,sort:'RowId',dir:'desc',conditionCode:Ext.getCmp('conditionCodeField').getValue(),conditionName:Ext.getCmp('conditionNameField').getValue()}});
 					win.close();
 				}else{
 					if(jsonData.info==-1){
-						Msg.info("error","名称重复!");
+						Msg.info("error",$g("名称重复!"));
 					}
 					if(jsonData.info==-11){
-						Msg.info("error","代码重复!");
+						Msg.info("error",$g("代码重复!"));
 					}
 				}
 			},
@@ -884,7 +884,7 @@ function CreateEditWin(rowid){
 		Ext.Ajax.request({
 			url: PhManfGridUrl+'?actiontype=queryByRowId&rowid='+rowid,
 			failure: function(result, request) {
-				Msg.info("error", "请检查网络连接!");
+				Msg.info("error", $g("请检查网络连接!"));
 			},
 			success: function(result, request) {
 				var jsonData = Ext.util.JSON.decode( result.responseText );
@@ -907,7 +907,7 @@ function CreateEditWin(rowid){
 					Ext.getCmp('activeField').setValue((arr[13]=="Y")?true:false);
 					//s Data1=Code_"^"_Name_"^"_Address_"^"_Tel_"^"_ManfAddId_"^"_$g(ParManfId)_"^"_$g(ParManf)_"^"_$g(DrugProductP)_"^"_$g(DrugProductE)_"^"_$g(MatProductP)_"^"_$g(MatProductE)_"^"_$g(ComLic)_"^"_$g(ComLicDate)_"^"_Active
 				}else{
-					Msg.info("error", "查询失败!" +newRowid);
+					Msg.info("error", $g("查询失败!") +newRowid);
 				}
 			},
 			scope: this
@@ -916,8 +916,8 @@ function CreateEditWin(rowid){
 }
 
 var addPhManf = new Ext.Toolbar.Button({
-	text:'新建',
-    tooltip:'新建',
+	text:$g('新建'),
+    tooltip:$g('新建'),
     iconCls:'page_add',
 	width : 70,
 	height : 30,
@@ -929,8 +929,8 @@ var addPhManf = new Ext.Toolbar.Button({
 });
 		
 var editPhManf = new Ext.Toolbar.Button({
-	text:'编辑',
-    tooltip:'编辑',
+	text:$g('编辑'),
+    tooltip:$g('编辑'),
     id:'EditManfBt',
     iconCls:'page_edit',
 	width : 70,
@@ -939,7 +939,7 @@ var editPhManf = new Ext.Toolbar.Button({
 		var rowObj = PhManfGrid.getSelectionModel().getSelections(); 
 		var len = rowObj.length;
 		if(len < 1){
-			Msg.info("error","请选择数据!");
+			Msg.info("error",$g("请选择数据!"));
 			return false;
 		}else{
 					
@@ -948,8 +948,8 @@ var editPhManf = new Ext.Toolbar.Button({
     }
 });
 var viewHisManf = new Ext.Toolbar.Button({
-	text:'查看历史信息',
-    tooltip:'查看历史信息',
+	text:$g('查看历史信息'),
+    tooltip:$g('查看历史信息'),
     id:'viewHisManf',
     iconCls:'page_edit',
 	width : 70,
@@ -958,7 +958,7 @@ var viewHisManf = new Ext.Toolbar.Button({
 		var rowObj = PhManfGrid.getSelectionModel().getSelections(); 
 		var len = rowObj.length;
 		if(len < 1){
-			Msg.info("error","请选择数据!");
+			Msg.info("error",$g("请选择数据!"));
 			return false;
 		}else{
 					
@@ -973,12 +973,12 @@ var HospWinButton = GenHospWinButton("PH_Manufacturer");
 HospWinButton.on("click" , function(){
 	var rowObj = PhManfGrid.getSelectionModel().getSelections(); 
 	if (rowObj.length===0){
-		Msg.info("warning","请选择数据!");
+		Msg.info("warning",$g("请选择数据!"));
 		return;	
 	}
 	var rowID=rowObj[0].get("RowId")||'';
 	if (rowID===''){
-		Msg.info("warning","请先保存数据!");
+		Msg.info("warning",$g("请先保存数据!"));
 		return;	
 	}
     GenHospWin("PH_Manufacturer",rowID,function(){PhManfGridDs.reload();}).show()   
@@ -993,7 +993,7 @@ var formPanel = new Ext.form.FormPanel({
     tbar:[findPhManf,'-',addPhManf,'-',editPhManf,'-',SaveAsBT,'-',viewHisManf,'-',HospWinButton],
 	items : [{
 		xtype : 'fieldset',
-		title : '查询条件',
+		title : $g('查询条件'),
 		defaults: {border:false},
 		style:DHCSTFormStyle.FrmPaddingV,
 		layout : 'column',
@@ -1014,8 +1014,8 @@ var PhManfPagingToolbar = new Ext.PagingToolbar({
     store:PhManfGridDs,
 	pageSize:35,
     displayInfo:true,
-    displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-    emptyMsg:"没有记录",
+    displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+    emptyMsg:$g("没有记录"),
 	doLoad:function(C){
 		var B={},
 		A=this.getParams();
@@ -1034,7 +1034,7 @@ var PhManfPagingToolbar = new Ext.PagingToolbar({
 //表格
 PhManfGrid = new Ext.grid.EditorGridPanel({
 	store:PhManfGridDs,
-	title:'厂商明细',
+	title:$g('厂商明细'),
 	cm:PhManfGridCm,
 	trackMouseOver:true,
 	region:'center',
@@ -1067,7 +1067,7 @@ Ext.onReady(function(){
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 	
 	var panel = new Ext.Panel({
-		title:'厂商维护',
+		title:$g('厂商维护'),
 		activeTab:0,
 		region:'north',
 		height:DHCSTFormStyle.FrmHeight(1),

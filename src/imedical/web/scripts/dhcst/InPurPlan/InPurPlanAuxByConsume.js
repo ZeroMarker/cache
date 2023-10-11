@@ -4,8 +4,9 @@
 // /编写日期: 2012.08.01
 
 Ext.onReady(function() {
-	var userId = session['LOGON.USERID'];
-
+	var gUserId = session['LOGON.USERID'];
+	var gLocId = session['LOGON.CTLOCID'];
+	var gGroupId=session['LOGON.GROUPID']
 	Ext.QuickTips.init();
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 	if(gParam.length<1){
@@ -13,28 +14,28 @@ Ext.onReady(function() {
 	}
 	
 	var ConsumeLoc = new Ext.ux.LocComboBox({
-				fieldLabel : '消耗科室',
+				fieldLabel : $g('消耗科室'),
 				id : 'ConsumeLoc',
 				name : 'ConsumeLoc',
 				anchor : '90%',
-				emptyText : '消耗科室...',
+				emptyText : $g('消耗科室...'),
 				defaultLoc:""
 			});
 
 	// 订购部门
 	var PurLoc = new Ext.ux.LocComboBox({
-		fieldLabel : '采购部门',
+		fieldLabel : $g('采购部门'),
 		id : 'PurLoc',
 		name : 'PurLoc',
 		anchor : '90%',
-		emptyText : '采购部门...',
+		emptyText : $g('采购部门...'),
 		groupId:session['LOGON.GROUPID'],
 		listeners : {
 			'select' : function(e) {
 				var SelLocId=Ext.getCmp('PurLoc').getValue();//add wyx 根据选择的科室动态加载类组
 				StkGrpType.getStore().removeAll();
 				StkGrpType.getStore().setBaseParam("locId",SelLocId)
-				StkGrpType.getStore().setBaseParam("userId",userId)
+				StkGrpType.getStore().setBaseParam("gUserId",gUserId)
 				StkGrpType.getStore().setBaseParam("type",App_StkTypeCode)
 				StkGrpType.getStore().load();
 			}
@@ -43,7 +44,7 @@ Ext.onReady(function() {
 			
 	// 起始日期
 	var StartDate = new Ext.ux.EditDate({
-				fieldLabel : '起始日期',
+				fieldLabel : $g('起始日期'),
 				id : 'StartDate',
 				name : 'StartDate',
 				anchor : '90%',
@@ -51,7 +52,7 @@ Ext.onReady(function() {
 			});
 	// 截止日期
 	var EndDate = new Ext.ux.EditDate({
-				fieldLabel : '截止日期',
+				fieldLabel : $g('截止日期'),
 				id : 'EndDate',
 				name : 'EndDate',
 				anchor : '90%',
@@ -59,14 +60,14 @@ Ext.onReady(function() {
 			});
 			
 	var UseDays =new Ext.form.NumberField({
-			fieldLabel : '用药天数',
+			fieldLabel : $g('用药天数'),
 			id : 'UseDays',
 			name : 'UseDays',
 			anchor : '90%'
 	});
 	
 	var HospitalFlag = new Ext.form.Checkbox({
-		boxLabel : '根据全院消耗',
+		boxLabel : $g('根据全院消耗'),
 		id : 'HospitalFlag',
 		name : 'HospitalFlag',
 		anchor : '90%',
@@ -78,7 +79,7 @@ Ext.onReady(function() {
 		}
 	});
 	var AllLocQtyFlag = new Ext.form.Checkbox({
-		boxLabel : '根据全院库存',
+		boxLabel : $g('根据全院库存'),
 		id : 'AllLocQtyFlag',
 		name : 'AllLocQtyFlag',
 		anchor : '90%',
@@ -86,7 +87,7 @@ Ext.onReady(function() {
 		checked : false
 	});
 	var IncludeZeroFlag = new Ext.form.Checkbox({
-		boxLabel : '包含计划数量为0',
+		boxLabel : $g('包含计划数量为0'),
 		id : 'IncludeZeroFlag',
 		name : 'IncludeZeroFlag',
 		anchor : '90%',
@@ -95,21 +96,21 @@ Ext.onReady(function() {
 	});
 		   // 招标
 		var ZBFlag = new Ext.form.Radio({
-			boxLabel : '招标',
+			boxLabel : $g('招标'),
 			id : 'ZBFlag',
 			name : 'ZBType',
 			anchor : '80%'
 				});
 					   // 非招标
 		var NotZBFlag = new Ext.form.Radio({
-			boxLabel : '非招标',
+			boxLabel : $g('非招标'),
 			id : 'NotZBFlag',
 			name : 'ZBType',
 			anchor : '80%'
 				});
 					   // 全部
 		var AllFlag = new Ext.form.Radio({
-			boxLabel : '全部',
+			boxLabel : $g('全部'),
 			id : 'AllFlag',
 			name : 'ZBType',
 			anchor : '80%',
@@ -133,21 +134,47 @@ Ext.onReady(function() {
 		name : 'StkGrpType',
 		StkType:App_StkTypeCode,     //标识类组类型
 		LocId:session['LOGON.CTLOCID'],
-		UserId:userId,
+		UserId:gUserId,
 		anchor : '90%'
 	}); 
 	// 库存分类
-var M_StkCat = new Ext.ux.ComboBox({
-	fieldLabel : '库存分类',
-	id : 'M_StkCat',
-	name : 'M_StkCat',
-	store : StkCatStore,
-	valueField : 'RowId',
-	displayField : 'Description',
-	params:{StkGrpId:'StkGrpType'}
-});
+	var M_StkCat = new Ext.ux.ComboBox({
+		fieldLabel : $g('库存分类'),
+		id : 'M_StkCat',
+		name : 'M_StkCat',
+		store : StkCatStore,
+		valueField : 'RowId',
+		displayField : 'Description',
+		params:{StkGrpId:'StkGrpType'}
+	});
+	
+	// 建议数量类型
+	var PurQtyTypeStore = new Ext.data.SimpleStore({
+				fields : ['RowId', 'Description'],
+				data : [['NotZero', $g('建议数量大于零')], ['ALL', $g('显示所有消耗记录')]]
+			});
+	var PurQtyType = new Ext.form.ComboBox({
+				fieldLabel : $g('建议数量类型'),
+				id : 'PurQtyType',
+				name : 'PurQtyType',
+				anchor : '90%',
+				store : PurQtyTypeStore,
+				triggerAction : 'all',
+				mode : 'local',
+				value : 'NotZero',
+				valueField : 'RowId',
+				displayField : 'Description',
+				allowBlank : true,
+				triggerAction : 'all',
+				selectOnFocus : true,
+				forceSelection : true,
+				minChars : 1,
+				valueNotFoundText : ''
+			});
+	
+	
 	var PFlag = new Ext.form.Checkbox({
-		boxLabel : '住院发药',
+		boxLabel : $g('住院发药'),
 		id : 'PFlag',
 		name : 'PFlag',
 		anchor : '90%',
@@ -155,7 +182,7 @@ var M_StkCat = new Ext.ux.ComboBox({
 		checked : false
 	});
 	var YFlag = new Ext.form.Checkbox({
-		boxLabel : '住院退药',
+		boxLabel :$g( '住院退药'),
 		id : 'YFlag',
 		name : 'YFlag',
 		anchor : '90%',
@@ -163,7 +190,7 @@ var M_StkCat = new Ext.ux.ComboBox({
 		checked : false
 	});
 	var FFlag = new Ext.form.Checkbox({
-		boxLabel : '门诊发药',
+		boxLabel : $g('门诊发药'),
 		id : 'FFlag',
 		name : 'FFlag',
 		anchor : '90%',
@@ -171,7 +198,7 @@ var M_StkCat = new Ext.ux.ComboBox({
 		checked : false
 	});
 	var HFlag = new Ext.form.Checkbox({
-		boxLabel : '门诊退药',
+		boxLabel : $g('门诊退药'),
 		id : 'HFlag',
 		name : 'HFlag',
 		anchor : '90%',
@@ -179,7 +206,7 @@ var M_StkCat = new Ext.ux.ComboBox({
 		checked : false
 	});
 	var TFlag = new Ext.form.Checkbox({
-		boxLabel : '转出',
+		boxLabel : $g('转出'),
 		id : 'TFlag',
 		name : 'TFlag',
 		anchor : '90%',
@@ -187,7 +214,7 @@ var M_StkCat = new Ext.ux.ComboBox({
 		checked : false
 	});
 	var KFlag = new Ext.form.Checkbox({
-		boxLabel : '转入',
+		boxLabel : $g('转入'),
 		id : 'KFlag',
 		name : 'KFlag',
 		anchor : '90%',
@@ -196,8 +223,8 @@ var M_StkCat = new Ext.ux.ComboBox({
 	});
 	// 查询按钮
 	var SearchBT = new Ext.Toolbar.Button({
-				text : '查询',
-				tooltip : '点击查询',
+				text : $g('查询'),
+				tooltip : $g('点击查询'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_find',
@@ -217,8 +244,9 @@ var M_StkCat = new Ext.ux.ComboBox({
 		var ZBFlag=Ext.getCmp("ZBFlag").getValue();
 		var NotZBFlag=Ext.getCmp("NotZBFlag").getValue();
 		var AllFlag=Ext.getCmp("AllFlag").getValue();
+		var IncludeZeroFlag = (Ext.getCmp("PurQtyType").getValue() == "NotZero" ? "N":"Y");
 		var AllLocQtyFlag=(Ext.getCmp('AllLocQtyFlag').getValue()==true?'Y':'N');
-		var IncludeZeroFlag=(Ext.getCmp('IncludeZeroFlag').getValue()==true?'Y':'N');
+		//var IncludeZeroFlag =(Ext.getCmp('IncludeZeroFlag').getValue()==true?'Y':'N');
 		 //库存分类
         var stkCatId = Ext.getCmp('M_StkCat').getValue();
 		if (AllFlag==true){
@@ -232,20 +260,20 @@ var M_StkCat = new Ext.ux.ComboBox({
 			}
 			
 		if (PurLoc == undefined || PurLoc.length <= 0) {
-			Msg.info("warning", "请选择采购部门!");
+			Msg.info("warning",$g( "请选择采购部门!"));
 			return;
 		}
 		
 		if (startDate == undefined || startDate.length <= 0) {
-			Msg.info("warning", "请选择开始日期!");
+			Msg.info("warning", $g("请选择开始日期!"));
 			return;
 		}
 		if (endDate == undefined || endDate.length <= 0) {
-			Msg.info("warning", "请选择截止日期!");
+			Msg.info("warning", $g("请选择截止日期!"));
 			return;
 		}
 		if (UseDays == undefined || UseDays.length <= 0) {
-			Msg.info("warning", "请填写用药天数!");
+			Msg.info("warning", $g("请填写用药天数!"));
 			return;
 		}
 		var stkgrp=Ext.getCmp("StkGrpType").getValue();
@@ -300,22 +328,22 @@ var M_StkCat = new Ext.ux.ComboBox({
 			}
 		}
 		if (TransType == null || TransType.length <= 0) {
-			Msg.info("warning", "请选择业务类型!");
+			Msg.info("warning", $g("请选择业务类型!"));
 			return;
 		}
 		if(HospFlag==true){
 			//开始日期,截止日期,用药天数,类组id,业务类型串,采购科室id
-			var ListParam=startDate+'^'+endDate+'^'+UseDays+'^'+stkgrp+'^'+TransType+'^'+PurLoc+'^'+userId+"^"+zbflagstr+"^"+stkCatId+"^"+AllLocQtyFlag+"^"+IncludeZeroFlag;	
+			var ListParam=startDate+'^'+endDate+'^'+UseDays+'^'+stkgrp+'^'+TransType+'^'+PurLoc+'^'+gUserId+"^"+zbflagstr+"^"+stkCatId+"^"+AllLocQtyFlag+"^"+IncludeZeroFlag+"^"+gGroupId;	
 			var url= DictUrl
 				+ 'inpurplanaction.csp?actiontype=QueryAllItmForPurch';
 	
 		}else{
 			if (ConsumeLoc == undefined || ConsumeLoc.length <= 0) {
-				Msg.info("warning", "请选择消耗部门!");
+				Msg.info("warning", $g("请选择消耗部门!"));
 				return;
 			}
 			//消耗科室id,开始日期,截止日期,用药天数,类组id,业务类型串,采购科室id
-			var ListParam=ConsumeLoc+'^'+startDate+'^'+endDate+'^'+UseDays+'^'+stkgrp+'^'+TransType+'^'+PurLoc+'^'+userId+"^"+zbflagstr+"^"+stkCatId+"^"+AllLocQtyFlag+"^"+IncludeZeroFlag;					
+			var ListParam=ConsumeLoc+'^'+startDate+'^'+endDate+'^'+UseDays+'^'+stkgrp+'^'+TransType+'^'+PurLoc+'^'+gUserId+"^"+zbflagstr+"^"+stkCatId+"^"+AllLocQtyFlag+"^"+IncludeZeroFlag+"^"+gGroupId;					
 			var url= DictUrl
 				+ 'inpurplanaction.csp?actiontype=QueryLocItmForPurch';
 		}
@@ -326,7 +354,7 @@ var M_StkCat = new Ext.ux.ComboBox({
 		DetailStore.load({params:{start:0, limit:999,strParam:ListParam},
 			callback : function(o,response,success) { 
 				if (success == false){  
-					Ext.MessageBox.alert("查询错误",DetailStore.reader.jsonData.Error);
+					Ext.MessageBox.alert($g("查询错误"),DetailStore.reader.jsonData.Error);
 					DetailGrid.loadMask.hide();  
 				}
 			}
@@ -343,19 +371,20 @@ function save(){
 		var rowData = DetailStore.getAt(i);	
 		var rowid = '';
 		var incId = rowData.data["Inci"];
-		var qty = rowData.data["PurQty"];
+		var qty   = rowData.data["PurQty"];
 		var uomId = rowData.data["PurUomId"];
 		var vendorId = rowData.data["VenId"];
-		var rp =rowData.data["Rp"];
-		var manfId =rowData.data["ManfId"];
-		var carrierId =rowData.data["CarrierId"];
-		var reqLocId =rowData.data["ReqLocId"]||"";	// 申购科室
-		var prolocqty=rowData.data["ProLocQty"];;  //建议采购量
-		var dataRow = rowid+"^"+incId+"^"+qty+"^"+uomId+"^"+vendorId+"^"+rp+"^"+manfId+"^"+carrierId+"^"+reqLocId+"^"+prolocqty;
-		if(data==""){
+		var rp       = rowData.data["Rp"];
+		var manfId   = rowData.data["ManfId"];
+		var carrierId  = rowData.data["CarrierId"];
+		var reqLocId   = rowData.data["ReqLocId"]||"";	// 申购科室
+		var prolocqty  = rowData.data["ProLocQty"];;    //建议采购量
+		var DispensQty = rowData.data["DispensQty"];;   //消耗总量
+		var dataRow = rowid+"^"+incId+"^"+qty+"^"+uomId+"^"+vendorId+"^"+rp+"^"+manfId+"^"+carrierId+"^"+reqLocId+"^"+prolocqty+"^"+DispensQty;
+		if(data == ""){
 			data = dataRow;
 		}else{
-			data = data+xRowDelim()+dataRow;
+			data = data+xRowDelim() + dataRow;
 		}
 	}
 		var ZBFlag=Ext.getCmp("ZBFlag").getValue();
@@ -373,32 +402,32 @@ function save(){
 	if(data!=""){
 		Ext.Ajax.request({
 			url: DictUrl+'inpurplanaction.csp?actiontype=save',
-			params:{purNo:purNo,locId:locId,stkGrpId:stkGrpId,userId:userId,data:data},
+			params:{purNo:purNo,locId:locId,stkGrpId:stkGrpId,userId:gUserId,data:data},
 			failure: function(result, request) {
-				Msg.info("error","请检查网络连接!");
+				Msg.info("error",$g("请检查网络连接!"));
 			},
 			success: function(result, request) {
 				var jsonData = Ext.util.JSON.decode( result.responseText );
 				if (jsonData.success=='true') {
-					Msg.info("success","保存成功!");
+					Msg.info("success",$g("保存成功!"));
 					location.href="dhcst.inpurplan.csp?planNnmber="+jsonData.info+'&locId='+locId+'&zbFlag='+zbflagstr;
 				}else{
 					if(jsonData.info==-1){
-						Msg.info("error","科室或人员为空!");
+						Msg.info("error",$g("科室或人员为空!"));
 					}else if(jsonData.info==-99){
-						Msg.info("error","加锁失败!");
+						Msg.info("error",$g("加锁失败!"));
 					}else if(jsonData.info==-2){
-						Msg.info("error","生成计划单号失败!");
+						Msg.info("error",$g("生成计划单号失败!"));
 					}else if(jsonData.info==-3){
-						Msg.info("error","保存计划单失败!");
+						Msg.info("error",$g("保存计划单失败!"));
 					}else if(jsonData.info==-4){
-						Msg.info("error","未找到需更新的计划单!");
+						Msg.info("error",$g("未找到需更新的计划单!"));
 					}else if(jsonData.info==-5){
-						Msg.info("error","保存计划单明细失败,不能生成计划单!如果药品较少请检查是否有不可用药品");
+						Msg.info("error",$g("保存计划单明细失败,不能生成计划单!如果药品较少请检查是否有不可用药品"));
 					}else if(jsonData.info==-7){
-						Msg.info("error","失败药品：部分明细保存不成功，提示不成功的药品!"+jsonData.info);
+						Msg.info("error",$g("失败药品：部分明细保存不成功，提示不成功的药品!")+jsonData.info);
 					}else{
-						Msg.info("error","保存失败!"+jsonData.info);
+						Msg.info("error",$g("保存失败!")+jsonData.info);
 					}
 				}
 			},
@@ -409,8 +438,8 @@ function save(){
 
 	// 清空按钮
 	var ClearBT = new Ext.Toolbar.Button({
-				text : '清屏',
-				tooltip : '点击清屏',
+				text : $g('清屏'),
+				tooltip : $g('点击清屏'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_clearscreen',
@@ -429,6 +458,7 @@ function save(){
 		Ext.getCmp("UseDays").setValue("");
 		Ext.getCmp("StkGrpType").setValue("");
 		Ext.getCmp("StkGrpType").setRawValue("");
+		Ext.getCmp("PurQtyType").setValue("NotZero");
 		Ext.getCmp("PFlag").setValue(false);
 		Ext.getCmp("YFlag").setValue(false);
 		Ext.getCmp("FFlag").setValue(false);
@@ -437,7 +467,8 @@ function save(){
 		Ext.getCmp("KFlag").setValue(false);
 		Ext.getCmp("HospitalFlag").setValue(false);
 		Ext.getCmp("AllLocQtyFlag").setValue(false);
-		Ext.getCmp("IncludeZeroFlag").setValue(false);
+		//Ext.getCmp("IncludeZeroFlag").setValue(false);
+		
 		Ext.getCmp("M_StkCat").setValue("");
 		Ext.getCmp("M_StkCat").setRawValue("");
 		Ext.getCmp("NotZBFlag").setValue(false);
@@ -448,8 +479,8 @@ function save(){
 	}
 	// 另存按钮
 	var SaveAsBT = new Ext.Toolbar.Button({
-				text : '另存',
-				tooltip : '另存为Excel',
+				text : $g('另存'),
+				tooltip : $g('另存为Excel'),
 				iconCls : 'page_export',
 				width : 70,
 				height : 30,
@@ -460,8 +491,8 @@ function save(){
 			});
 	// 保存按钮
 	var SaveBT = new Ext.Toolbar.Button({
-				text : '保存',
-				tooltip : '点击保存',
+				text : $g('保存'),
+				tooltip : $g('点击保存'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_save',
@@ -471,7 +502,7 @@ function save(){
 			});
 			// 单位
 	var CTUom = new Ext.form.ComboBox({
-				fieldLabel : '单位',
+				fieldLabel : $g('单位'),
 				id : 'CTUom',
 				name : 'CTUom',
 				anchor : '90%',
@@ -481,7 +512,7 @@ function save(){
 				displayField : 'Description',
 				allowBlank : false,
 				triggerAction : 'all',
-				emptyText : '单位...',
+				emptyText : $g('单位...'),
 				selectOnFocus : true,
 				forceSelection : true,
 				minChars : 1,
@@ -553,7 +584,7 @@ function save(){
 	function deleteDetail() {
 		var selectlist=DetailGrid.getSelectionModel().getSelections();
 		if ((selectlist == null)||(selectlist=="")) {
-			Msg.info("warning", "请选中需要删除的记录!");
+			Msg.info("warning", $g("请选中需要删除的记录!"));
 			return;
 		}
 		var selectlength=selectlist.length
@@ -607,32 +638,32 @@ function save(){
 	var sm = new Ext.grid.CheckboxSelectionModel();
 	var nm = new Ext.grid.RowNumberer();
 	var DetailCm = new Ext.grid.ColumnModel([nm,sm, {
-				header : "药品Id",
+				header : $g("药品Id"),
 				dataIndex : 'Inci',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : '药品代码',
+				header : $g('药品代码'),
 				dataIndex : 'InciCode',
 				width : 80,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '库存分类',
+				header : $g('库存分类'),
 				dataIndex : 'StkCatDesc',
 				width : 80,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '药品名称',
+				header : $g('药品名称'),
 				dataIndex : 'InciDesc',
 				width : 220,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "采购数量",
+				header : $g("采购数量"),
 				dataIndex : 'PurQty',
 				width : 80,
 				align : 'right',
@@ -645,11 +676,11 @@ function save(){
 							if (e.getKey() == Ext.EventObject.ENTER) {
 								var qty = field.getValue();
 								if (qty == null || qty.length <= 0) {
-									Msg.info("warning", "采购数量不能为空!");
+									Msg.info("warning", $g("采购数量不能为空!"));
 									return;
 								}
 								if (qty <= 0) {
-									Msg.info("warning", "采购数量不能小于或等于0!");
+									Msg.info("warning", $g("采购数量不能小于或等于0!"));
 									return;
 								}									
 							}
@@ -657,7 +688,7 @@ function save(){
 					}
 				})
 			}, {
-				header : "单位",
+				header : $g("单位"),
 				dataIndex : 'PurUomId',
 				width : 80,
 				align : 'left',
@@ -665,88 +696,88 @@ function save(){
 				renderer :Ext.util.Format.comboRenderer2(CTUom,"PurUomId","PurUomDesc"),								
 				editor : new Ext.grid.GridEditor(CTUom)
 			}, {
-				header : "供应商",
+				header : $g("经营企业"),
 				dataIndex : 'VenDesc',
 				width : 140,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "厂商",
+				header : $g("生产企业"),
 				dataIndex : 'ManfDesc',
 				width : 140,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "进价",
+				header : $g("进价"),
 				dataIndex : 'Rp',
 				width : 60,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "采购科室库存",
+				header : $g("采购科室库存"),
 				dataIndex : 'StkQty',
 				width : 100,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "消耗总量",
+				header : $g("消耗总量"),
 				dataIndex : 'DispensQty',
 				width : 80,
 				align : 'right',
 				sortable : true
 			},{
-				header : "建议采购量",
+				header : $g("建议采购量"),
 				dataIndex : 'ProLocQty',
-				width : 80,
+				width : 100,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "配送商",
+				header : $g("配送企业"),
 				dataIndex : 'CarrierDesc',
 				width : 80,
 				align : 'right',
 				sortable : true
 			},{
-				header : "资质信息",
+				header : $g("资质信息"),
 				dataIndex : 'ApcWarn',
 				width : 140,
 				align : 'right',
 				sortable : true
 			},{
-				header : "全院库存",
+				header : $g("全院库存"),
 				dataIndex : 'HospStkQty',
 				width : 90,
 				align : 'right',
 				sortable : true
 			},{
-				header : "大包装数量",
+				header : $g("大包装数量"),
 				dataIndex : 'PackQty',
 				width : 90,
 				align : 'right',
 				sortable : true,
 				hidden:true
 			},{
-				header : "大包装系数",
+				header : $g("大包装系数"),
 				dataIndex : 'PackPurFac',
 				width : 90,
 				align : 'right',
 				sortable : true,
 				hidden:true
 			},{
-				header : "大包装单位",
+				header : $g("大包装单位"),
 				dataIndex : 'PackUomDesc',
 				width : 90,
 				align : 'right',
 				sortable : true
 			},{
-				header : "最后入库效期",
+				header : $g("最后入库效期"),
 				dataIndex : 'LastExpDate',
 				width : 90,
 				align : 'right',
 				sortable : true
 			},{
-				header : "申购科室Id",
+				header : $g("申购科室Id"),
 				dataIndex : 'ReqLocId',
 				width : 90,
 				align : 'right',
@@ -774,7 +805,7 @@ function save(){
 			{ 
 				id: 'mnuDelete', 
 				handler: deleteDetail, 
-				text: '删除' 
+				text: $g('删除' )
 			}
 		] 
 	}); 
@@ -801,7 +832,7 @@ function save(){
            	//	"margin-right": Ext.isIE6 ? (Ext.isStrict ? "-10px" : "-13px") : "0",  // you have to adjust for it somewhere else
            	//	"margin-bottom": "10px"
         	//},
-        	items: [PurLoc,ConsumeLoc,StkGrpType]
+        	items: [PurLoc, StkGrpType, M_StkCat]
 			
 		}
 	var col2={ 				
@@ -822,7 +853,7 @@ function save(){
 		}
 	var col3={ 				
 			width: 360,
-			title:'业务类型',
+			title:$g('业务类型'),
 			xtype: 'fieldset',
 				frame : true,
 				autoScroll : true,
@@ -854,27 +885,30 @@ function save(){
 		}
 		
 	var col4={ 				
-			columnWidth: 0.3,
+			columnWidth: 0.1,
         	xtype: 'fieldset',
         	labelWidth: 90,	
         	defaults: {width: 210, border:false},    // Default config options for child items
         	defaultType: 'textfield',
         	autoHeight: true,
         	border: false,
-        	items: [M_StkCat,
+        	items: [PurQtyType,ConsumeLoc,
         		 {xtype : 'compositefield',
         		 style: {"margin-left": "-55px","margin-top": "-5px"},
-        		 items:[HospitalFlag,AllLocQtyFlag]},
-        		 {xtype : 'compositefield',
-        		 style: {"margin-left": "-55px","margin-top": "-5px"},
-        		 items:[IncludeZeroFlag]}
+        		 items:[HospitalFlag,AllLocQtyFlag]}
+        		 /*,
+        		 {
+	        		 xtype : 'compositefield',
+	        		 style: {"margin-left": "-55px","margin-top": "-5px"},
+	        		 items:[IncludeZeroFlag]}
+	        	 */
         		
         		]			
 		}
 		var col5={ 				
 			columnWidth: 0.2,
         	xtype: 'fieldset',
-        	labelWidth: 80,	
+        	labelWidth: 20,	
         	defaults: {width: 100, border:false},    
         	defaultType: 'textfield',
         	autoHeight: true,
@@ -892,7 +926,7 @@ function save(){
 			xtype:'fieldset',
 			layout: 'table',    // Specifies that the items will now be arranged in columns
 			layoutConfig: {columns:5},
-			title:'查询条件',
+			title:$g('查询条件'),
 			style : 'padding-top:0px;padding-bottom:0px;',
 			items:[col1,col2,col4,col5,col3]
 		}]
@@ -905,13 +939,13 @@ function save(){
 				items : [            // create instance immediately
 		            {
 		                region: 'north',
-		                title:'采购计划制单-依据消耗',
+		                title:$g('采购计划制单-依据消耗'),
 		                height: 220, // give north and south regions a height
 		                layout: 'fit', // specify layout manager for items
 		                items:HisListTab
 		            }, {
 		                region: 'center',
-		                title: '明细',			               
+		                title: $g('明细'),			               
 		                layout: 'fit', // specify layout manager for items
 		                items: DetailGrid       
 		               

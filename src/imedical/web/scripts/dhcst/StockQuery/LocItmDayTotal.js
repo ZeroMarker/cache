@@ -28,7 +28,7 @@ function DayTotalQuery(Incil,IncInfo) {
 	function searchData() {
 		// 必选条件
 		if (Incil == null || Incil.length <= 0) {
-			Msg.info("warning", "请在主界面选择某一条记录查看其全院库存信息！");
+			Msg.info("warning", $g("请在主界面选择某一条记录查看其全院库存信息！"));
 			return;
 		}
 		
@@ -70,19 +70,19 @@ function DayTotalQuery(Incil,IncInfo) {
 				sortable : true,
 				hidden : true
 			},{
-				header : '科室',
+				header : $g('科室'),
 				dataIndex : 'loc',
 				width : 180,
 				align : 'left',
 				sortable : true
 			},{
-				header : "单位",
+				header : $g("单位"),
 				dataIndex : 'pctuom',
 				width : 180,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "数量",
+				header : $g("数量"),
 				dataIndex : 'qty',
 				width : 120,
 				align : 'right',
@@ -93,16 +93,16 @@ function DayTotalQuery(Incil,IncInfo) {
 			store : DetailInfoStore,
 			pageSize : PageSize,
 			displayInfo : true,
-			displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
+			displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
 			emptyMsg : "No results to display",
-			prevText : "上一页",
-			nextText : "下一页",
-			refreshText : "刷新",
-			lastText : "最后页",
-			firstText : "第一页",
-			beforePageText : "当前页",
-			afterPageText : "共{0}页",
-			emptyMsg : "没有数据",
+			prevText : $g("上一页"),
+			nextText : $g("下一页"),
+			refreshText : $g("刷新"),
+			lastText : $g("最后页"),
+			firstText : $g("第一页"),
+			beforePageText : $g("当前页"),
+			afterPageText : $g("共{0}页"),
+			emptyMsg :$g( "没有数据"),
 			doLoad:function(C){
 				var B={},
 				A=this.getParams();
@@ -143,7 +143,7 @@ function DayTotalQuery(Incil,IncInfo) {
 		});
 
 	var window = new Ext.Window({
-				title : '全院科室库存',
+				title : $g('全院科室库存'),
 				width : 550,
 				height : 500,
 				layout:'border',

@@ -21,6 +21,7 @@ function InitHospList()
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){
 		Init();
+		InitCache();
 	}
 }
 function Init(){
@@ -28,11 +29,18 @@ function Init(){
 	LoadRecLoc("List_RecLoc","");
 	PageLogicObj.m_tabLimitItemDataGrid=InittabLimitItemDataGrid();
 }
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function Save()
 {
     var LocId=$("#List_RecLoc").find("option:selected").val();
 	if (!LocId){
-		$.messager.alert("提示", "请选择相应的接受科室!", "error")	
+		$.messager.alert("提示", "请选择相应的接收科室!", "error")	
         return false;
 	}
 	var CatStr="";
@@ -118,7 +126,7 @@ function InittabLimitItemDataGrid(){
             handler: function() { 
 	            var LocId=$("#List_RecLoc").find("option:selected").val();
 				if (!LocId){
-					$.messager.alert("提示", "请选择相应的接受科室!", "error")	
+					$.messager.alert("提示", "请选择相应的接收科室!", "error")	
 			        return false;
 				}
 			    editRow = undefined;
@@ -193,7 +201,7 @@ function InittabLimitItemDataGrid(){
 			   if (editRow != undefined) {
 				    var LocId=$("#List_RecLoc").find("option:selected").val();
 					if (!LocId){
-						$.messager.alert("提示", "请选择相应的接受科室!", "error")	
+						$.messager.alert("提示", "请选择相应的接收科室!", "error")	
 				        return false;
 					}
 					var rows=PageLogicObj.m_tabLimitItemDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
@@ -248,6 +256,7 @@ function InittabLimitItemDataGrid(){
 					fit: true,//自动大小   
 					pageSize: 10,//每页显示的记录条数，默认为10   
 					pageList: [10],//可以设置每页记录条数的列表  
+					delay: 500,  
                     url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
                     columns:[[
                         {field:'ArcimDesc',title:'名称',width:400,sortable:true},

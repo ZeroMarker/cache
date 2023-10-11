@@ -11,7 +11,7 @@ Ext.onReady(function() {
     var gUserId = session["LOGON.USERID"];
     var UserName = session["LOGON.USERNAME"];
     var PhaLoc = new Ext.ux.LocComboBox({
-        fieldLabel: "<font color=blue>科室</font>",
+        fieldLabel: "<font color=blue>"+$g("科室")+"</font>",
         id: "PhaLoc",
         name: "PhaLoc",
         anchor: "90%",
@@ -31,14 +31,14 @@ Ext.onReady(function() {
     var TypeStore = new Ext.data.SimpleStore({
         fields: ["RowId", "Description1"],
         data: [
-            ["11", "正式采购"],
-            ["12", "临时采购"],
-            ["", "其它"]
+            ["11", $g("正式采购")],
+            ["12", $g("临时采购")],
+            ["", $g("其它")]
         ]
     });
     //采购类型
     var OperateType = new Ext.form.ComboBox({
-        fieldLabel: "<font color=blue>采购类型",
+        fieldLabel: "<font color=blue>"+$g("采购类型"),
         id: "OperateType",
         name: "OperateType",
         anchor: "90%",
@@ -58,14 +58,14 @@ Ext.onReady(function() {
     var TypeStore = new Ext.data.SimpleStore({
         fields: ["RowId", "Description"],
         data: [
-            ["0", "计划>实际"],
-            ["1", "计划=实际"],
-            ["2", "计划<实际"]
+            ["0", $g("计划>实际")],
+            ["1", $g("计划=实际")],
+            ["2", $g("计划<实际")]
         ]
     });
     //统计标志
     var QueryFlag = new Ext.form.ComboBox({
-        fieldLabel: "<font color=blue>统计标志",
+        fieldLabel: "<font color=blue>"+$g("统计标志"),
         id: "QueryFlag",
         name: "QueryFlag",
         anchor: "90%",
@@ -83,7 +83,7 @@ Ext.onReady(function() {
     Ext.getCmp("QueryFlag").setValue(0); //设置默认选项.
 
     var DateFrom = new Ext.ux.EditDate({
-        fieldLabel: "<font color=blue>开始日期</font>",
+        fieldLabel: "<font color=blue>"+$g("开始日期")+"</font>",
         id: "DateFrom",
         name: "DateFrom",
         anchor: "90%",
@@ -91,13 +91,13 @@ Ext.onReady(function() {
     });
 
     var StartTime = new Ext.form.TextField({
-        fieldLabel: "<font color=blue>开始时间</font>",
+        fieldLabel: "<font color=blue>"+$g("开始时间")+"</font>",
         id: "StartTime",
         name: "StartTime",
         anchor: "90%",
         //value :DefaultEdTime(),
         regex: /^(0\d{1}|1\d{1}|2[0-3]):[0-5]\d{1}:([0-5]\d{1})$/,
-        regexText: "时间格式错误，正确格式hh:mm:ss",
+        regexText: $g("时间格式错误，正确格式hh:mm:ss"),
         width: 120,
         //value :DefaultEdTime(),
         listeners: {
@@ -127,11 +127,11 @@ Ext.onReady(function() {
         var Sdate = item.substring(4, 6);
 
         if (datelength < 1) {
-            alert("请输入时间！");
+            alert($g("请输入时间！"));
             return;
         }
         if (Hdate > 24) {
-            alert("输入的小时格式错误，应在0~24之间...");
+            alert($g("输入的小时格式错误，应在0~24之间..."));
             return;
         }
         if (Hdate.length < 2) {
@@ -139,7 +139,7 @@ Ext.onReady(function() {
         }
 
         if (Mdate > 60) {
-            alert("输入的分钟格式错误，应在0~60之间...");
+            alert($g("输入的分钟格式错误，应在0~60之间..."));
             return;
         }
         if (Mdate.length < 1) {
@@ -150,7 +150,7 @@ Ext.onReady(function() {
         }
 
         if (Sdate > 60) {
-            alert("输入的秒格式错误，应在0~60之间...");
+            alert($g("输入的秒格式错误，应在0~60之间..."));
             return;
         }
         if (Sdate.length < 1) {
@@ -166,7 +166,7 @@ Ext.onReady(function() {
     }
     //-----------------给时间设定正确的格式 add by myq 20140420
     var DateTo = new Ext.ux.EditDate({
-        fieldLabel: "<font color=blue>截止日期</font>",
+        fieldLabel: "<font color=blue>"+$g("截止日期")+"</font>",
         id: "DateTo",
         name: "DateTo",
         anchor: "90%",
@@ -174,13 +174,13 @@ Ext.onReady(function() {
     });
 
     var EndTime = new Ext.form.TextField({
-        fieldLabel: "<font color=blue>截止时间</font>",
+        fieldLabel: "<font color=blue>"+$g("截止时间")+"</font>",
         id: "EndTime",
         name: "EndTime",
         anchor: "90%",
         //value :DefaultEdTime(),
         regex: /^(0\d{1}|1\d{1}|2[0-3]):[0-5]\d{1}:([0-5]\d{1})$/,
-        regexText: "时间格式错误，正确格式hh:mm:ss",
+        regexText: $g("时间格式错误，正确格式hh:mm:ss"),
         width: 120,
         //value :DefaultEdTime(),
         listeners: {
@@ -208,7 +208,7 @@ Ext.onReady(function() {
 
     // 计划与入库数量对照
     var FlagComparePurPlanAndIngr = new Ext.form.Radio({
-        boxLabel: "计划与入库数量对照报表",
+        boxLabel: $g("计划与入库数量对照报表"),
         id: "FlagComparePurPlanAndIngr",
         name: "ReportType",
         anchor: "80%",
@@ -217,7 +217,7 @@ Ext.onReady(function() {
 
     // 计划评估报告单
     var FlagPurPlan = new Ext.form.Radio({
-        boxLabel: "计划评估报告单",
+        boxLabel: $g("计划评估报告单"),
         id: "FlagPurPlan",
         name: "ReportType",
         anchor: "80%",
@@ -226,8 +226,8 @@ Ext.onReady(function() {
 
     var ClearBT = new Ext.Toolbar.Button({
         id: "ClearBT",
-        text: "清屏",
-        tooltip: "点击清屏",
+        text: $g("清屏"),
+        tooltip: $g("点击清屏"),
         width: 70,
         height: 30,
         iconCls: "page_clearscreen",
@@ -253,8 +253,8 @@ Ext.onReady(function() {
     // 统计按钮
     var OkBT = new Ext.Toolbar.Button({
         id: "OkBT",
-        text: "统计",
-        tooltip: "点击统计",
+        text: $g("统计"),
+        tooltip: $g("点击统计"),
         width: 70,
         iconCls: "page_find",
         height: 30,
@@ -265,11 +265,11 @@ Ext.onReady(function() {
 
     function ShowReport() {
         if (Ext.getCmp("DateFrom").getValue() == "") {
-            Msg.info("warning", "请选择开始日期!");
+            Msg.info("warning", $g("请选择开始日期!"));
             return;
         }
         if (Ext.getCmp("DateTo").getValue() == "") {
-            Msg.info("warning", "请选择截止日期!");
+            Msg.info("warning", $g("请选择截止日期!"));
             return;
         }
         var StartDate = Ext.getCmp("DateFrom")
@@ -282,7 +282,7 @@ Ext.onReady(function() {
             .toString();
         var LocId = Ext.getCmp("PhaLoc").getValue();
         if (LocId == "") {
-            Msg.info("warning", "请选择科室!");
+            Msg.info("warning", $g("请选择科室!"));
             return;
         }
         var OperateType = Ext.getCmp("OperateType").getValue();
@@ -313,12 +313,12 @@ Ext.onReady(function() {
         items: [
             {
                 xtype: "fieldset",
-                title: "查询条件",
+                title: $g("查询条件"),
                 items: [PhaLoc, DateFrom, DateTo, QueryFlag]
             },
             {
                 xtype: "fieldset",
-                title: "报表类型",
+                title: $g("报表类型"),
                 items: [FlagComparePurPlanAndIngr, FlagPurPlan]
             }
         ]
@@ -334,7 +334,7 @@ Ext.onReady(function() {
         items: [
             {
                 region: "west",
-                title: "药库计划与实际进货统计",
+                title: $g("药库计划与实际进货统计"),
                 width: 300,
                 split: true,
                 collapsible: true,

@@ -34,8 +34,8 @@ function initDateBox(){
 function initCombobox(){
 	$HUI.combobox("#renterFlag",{
 		data:[
-			{"value":"1","text":"租"},
-			{"value":"2","text":"还"}
+			{"value":"1","text":$g("租")},
+			{"value":"2","text":$g("还")}
 		],
 		valueField:'value',
 		textField:'text',
@@ -43,13 +43,17 @@ function initCombobox(){
 	    	if(option.value==="1"){
 		    	clearReturnInfo();
 		    }
+			if(option.value==="2"){
+		    	$("#giveNurse").val(UserDesc);
+		    }
+		    setInputReq();
 	    }	
 	})
 	
 	$HUI.combobox("#status",{
 		data:[
-			{"value":"1","text":"租"},
-			{"value":"2","text":"还"}
+			{"value":"1","text":$g("租")},
+			{"value":"2","text":$g("还")}
 		],
 		valueField:'value',
 		textField:'text'	
@@ -70,11 +74,11 @@ function initCombobox(){
 	})
 	
 	$HUI.combobox("#cardType",{
-		data:[{'id':'身份证','text':'身份证'},
-	 	  {'id':'军官证','text':'军官证'},
-	 	  {'id':'警官证','text':'警官证'},
-	  	  {'id':'驾驶证','text':'驾驶证'},
-	  	  {'id':'护照','text':'护照'}],
+		data:[{'id':$g('身份证'),'text':$g('身份证')},
+	 	  {'id':$g('军官证'),'text':$g('军官证')},
+	 	  {'id':$g('警官证'),'text':$g('警官证')},
+	  	  {'id':$g('驾驶证'),'text':$g('驾驶证')},
+	  	  {'id':$g('护照'),'text':$g('护照')}],
 		valueField:'id',
 		textField:'text',
 	    onLoadSuccess:function(){
@@ -87,59 +91,77 @@ function initCombobox(){
 function initDatagrid(){
 	var columns=[[{
                field: 'PCRDate',
-               title: '租用日期'   
+               title: '租用日期',
+               width:100  
         	}, {
                field: 'PCRTime',
-               title: '租用时间'
+               title: '租用时间',
+               width:100  
         	}, {
                field: 'PCROperator',
-               title: '租用操作人'
+               title: '租用操作人',
+               width:100  
         	}, 
         	{
                field: 'PCRRenter',
-               title: '租用者姓名'
+               title: '租用者姓名',
+               width:100  
         	}, {
                field: 'PCRRenterTel',
-               title: '联系方式'
+               title: '联系方式',
+               width:100  
         	}, {
                field: 'PCRCardType',
-               title: '证件'  
+               title: '证件',
+               width:100    
         	}, {
                field: 'PCRCash',
                align: 'center',
-               title: '现金'
+               title: '现金',
+               width:100  
            }, {
                field: 'PCRCashNo',
-               title: '编号' 
+               title: '编号',
+               width:100   
         	}, {
                field: 'PCRRentDesc',  
-               title: '租用工具'
+               title: '租用工具',
+               width:100  
         	}, {
                field: 'PCRGiveUser',
-               title: '归还者姓名'
+               title: '归还者姓名',
+               width:100  
            }, {
                 field: 'PCRGiveRelation',
-                title: '关系'        
+                title: '关系',
+				width:100          
         	}, {
                 field: 'PCRFlag',
                 align: 'center',
-                title: '状态'
+                title: '状态',
+                formatter:SetCell,
+				width:100  
         	},{
                 field: 'PCRGiveDate',
-                title: '归还日期'   
+                title: '归还日期',
+				width:100        
         	},{
                 field: 'PCRGiveTime',
-                title: '归还时间'
+                title: '归还时间',
+				width:100     
         	},{
 				field: 'PCRGiveOpUser',
-				title: '归还操作人'
+				title: '归还操作人',
+				width:100     
         	},{
 				field:'rentRowId',
 				align:'center',
+				hidden:true,
 				title:'ID'
 	        },{
 				field:'PCRRentDr',
 				align:'center',
+				hidden:true,
 				title:'RentId'
 		    }]]
 		    
@@ -151,7 +173,7 @@ function initDatagrid(){
 		fitColumns:true,
 		pageSize:60,  
 		pageList:[60], 
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		rownumbers : false,
 		pagination:true,
 		singleSelect:true,
@@ -219,11 +241,11 @@ function op(model){
 	$HUI.window("#widow").open();  //打开面板
 	///设置面板title
 	if(model=="R"){
-		$("#windowTitle").html("归还");
+		$("#windowTitle").html($g("归还"));
 	}else if (model=="A"){
-		$("#windowTitle").html("租借");
+		$("#windowTitle").html($g("租借"));
 	}else if(model=="U"){
-		$("#windowTitle").html("修改");
+		$("#windowTitle").html($g("修改"));
 	}
 	
 	///设置面板中元素编辑状态
@@ -245,7 +267,7 @@ function op(model){
 		setFormData("A");
 	}
 	
-	
+	setInputReq();
 }
 
 function setFormDisable(model){
@@ -298,7 +320,16 @@ function setFormData(model){
 	}
 }
 
+function setInputReq(){
+	var renterText=$HUI.combobox("#renterFlag").getText();
+	var inputReq=renterText==$g("还")?true:false;
+	$("#giveUser").validatebox("options").required=inputReq;
+	$("#giveUser").validatebox('isValid');
+	return;	
+}
+
 function save(){
+	
 	var rentid=$("#rentRowId").val();
 	var Date=$HUI.datebox("#rentDate").getValue();          //租用日期
 	var Time=$HUI.timespinner('#rentTime').getValue();      //租用时间  
@@ -323,9 +354,14 @@ function save(){
     var giverUser=$("#giveUser").val();   				//归还者姓名
     var giveRelation=$("#giveRelation").val();  		//关系
     
-    if((renter!=giverUser)&&(giveRelation=="")&&(giverUser!="")&&(rentflag=="还")){
-         $.messager.alert("提示","关系不能为空");
-         return;
+    if(!$("#giveUser").validatebox('isValid')){
+	    $.messager.alert("提示","归还者姓名不能为空");
+        return;
+	}
+    
+    if((renter!=giverUser)&&(giveRelation=="")&&(giverUser!="")){
+         //$.messager.alert("提示","关系不能为空");
+         //return;
     }
   
     var renterFlag=($HUI.combobox("#renterFlag").getValue()==undefined?"":$HUI.combobox("#renterFlag").getValue());  //状态
@@ -422,8 +458,8 @@ function load(row){
 	$("#nurse").val(row.PCROperator);
 	$("#giveUser").val(row.PCRGiveUser);
 	$("#giveRelation").val(row.PCRGiveRelation);
-	if(row.PCRFlag=="租") row.PCRFlag=1;
-	if(row.PCRFlag=="还") row.PCRFlag=2;
+//	if(row.PCRFlag==$g("租")) row.PCRFlag=1;
+//	if(row.PCRFlag==$g("还")) row.PCRFlag=2;
 	$HUI.combobox("#renterFlag").setValue(row.PCRFlag);
 	$("#rentRowId").val(row.rentRowId);
 	$HUI.datebox("#rentDate").setValue(row.PCRDate);
@@ -434,4 +470,16 @@ function load(row){
 	
 	$("#renter").validatebox('isValid')
 	return;
+}
+
+//hxy 2022-12-08
+function SetCell(value, rowData, rowIndex){
+	var PCRFlag="";
+	if(value==1){
+		PCRFlag=$g("租");
+	}else if(value==2){
+		PCRFlag=$g("还");
+	}
+	var html = '<span/>'+PCRFlag+'</span>';
+	return html;
 }

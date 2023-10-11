@@ -3,10 +3,13 @@
 //功能	标本采集信息	
 //创建	2019.06.25
 //创建人  xy
+var frozencolumns=[[
+	{field:'TRegNo',width:'150',title:'数量'},
+	{field:'TName',width:'400',title:'项目'}
+
+]];
 var columns =[[
 			{field:'RecordSum',title:'RecordSum',hidden: true},
-			{field:'TRegNo',width:'150',title:'数量'},
-			{field:'TName',width:'400',title:'项目'},
 			{field:'TSpecNo',title:'标本号',hidden: true},
 			{field:'TReceiver',width:'250',title:'采集人'},
 			{field:'TRecDate',title:'采集时间',hidden: true},	
@@ -34,7 +37,16 @@ $(function(){
 	 	
 	InitCombobox();
 	 
-	 info();
+     
+   //类型
+	$("#Type").combobox({
+       onSelect:function(){
+		     SetDisabled();
+			BFind_click();
+	}
+	});
+
+     info(); 
 	 
 	InitSpecDetailGrid();
 	
@@ -61,32 +73,44 @@ $(function(){
 		BPrintASpecimenList_click();		
         });   
     
-    /*    
-   //类型
-	$("#Type").combobox({
-       onSelect:function(){
-			Type_change();
-	}
-	});
-
-    */
-    
+      
+   
+   
         
 })
  
- 
+
+
+  function SetDisabled()
+ {
+	 var Type=$("#Type").combobox('getValue');
+	 
+	 if(Type=="Item"){
+		 $("#Container").combogrid("enable")
+	 }else{
+	 	$("#Container").combogrid("disable");
+		$("#Container").combogrid('setValue',"");
+	 }
+ }
+
+
  function info(){
+	
 	 $("#BeginDate").datebox('setValue',BeginDate);
 	 $("#EndDate").datebox('setValue',EndDate);
-	 $("#Type").combobox('setValue',Type);
+	 $("#Type").combobox('setValue',"Item");
  }
  
  //清屏
 function BClear_click(){
-	$("#BeginDate,#EndDate").datebox('setValue',"")
-	$(".hisui-combobox").combobox('setValue',"");
 	$("#RegNo,#Name").val("");
-	$("#ArrivedFlag").checkbox('setValue',"")
+	$(".hisui-checkbox").checkbox('setValue',false);
+	$("#VIPLevel").combobox('setValue',"");
+	$(".hisui-combogrid").combogrid('setValue',"");
+	info();
+	SetDisabled();
+	InitSpecDetailGrid();
+
 	
 }
 
@@ -222,20 +246,28 @@ function BFind_click(){
 	var Type=$("#Type").combobox('getValue');
 	
 	if(Type=="Detail"){
+		var frozencolumns=[[
+			{field:'TRegNo',width:'180',title:'登记号'},
+			{field:'TName',width:'180',title:'姓名'}
+
+		]];
 		var columns =[[
 			{field:'RecordSum',title:'RecordSum',hidden: true},
-			{field:'TRegNo',width:'180',title:'登记号'},
-			{field:'TName',width:'180',title:'姓名'},
 			{field:'TSpecNo',width:'200',title:'标本号'},
 			{field:'TReceiver',width:'150',title:'采集人'},
 			{field:'TRecDate',width:'250',title:'采集时间'},			 
 		]];
 	}
 	if(Type=="Item"){
-		var columns =[[
+		
+		var frozencolumns=[[
 			{field:'TRegNo',width:'150',title:'数量'},
-			{field:'TName',width:'450',title:'项目'},
-			{field:'TReceiver',width:'150',title:'采集人'},	
+			{field:'TName',width:'400',title:'项目'}
+
+		]];
+		
+		var columns =[[
+			{field:'TReceiver',width:'250',title:'采集人'},	
 			{field:'TSpecDesc',width:'200',title:'容器',
 				formatter:function(value,row,index){ 
 					if(row.TSpecColor!=""&& row.TSpecColor!="#ffffff" && row.TSpecColor!="白色"){
@@ -249,12 +281,16 @@ function BFind_click(){
 					return 'background-color:'+row.TSpecColor;
 				}},
 			{field:'TSpecColor',hidden:true},	
-			{field:'TSpecCode',hidden:true}	 
+			{field:'TSpecCode',hidden:true},
+			{field:'TResultStatus',width:'100',title:'检验状态'}	
 		]];
 	}
  	if(Type=="Person"){
+	 	var frozencolumns=[[
+			{field:'TRegNo',width:'400',title:'数量'}
+
+		]];
 		var columns =[[
-			{field:'TRegNo',width:'400',title:'数量'},
 			{field:'TReceiver',width:'400',title:'采集人'},
 			 
 		]];
@@ -291,7 +327,7 @@ function BFind_click(){
 			SpecCode:SpecCode
 				
 		},
-		
+		frozenColumns:frozencolumns,
 		columns:columns,
 			
 	})
@@ -324,6 +360,7 @@ function InitSpecDetailGrid(){
 			FindType:$("#Type").combobox('getValue'),
 					
 		},
+		frozenColumns:frozencolumns,
 		columns:columns,
 			
 	})
@@ -333,9 +370,11 @@ function InitSpecDetailGrid(){
 
 function InitCombobox(){
 	
+	var LocID=session['LOGON.CTLOCID'];
+
 	// VIP等级	
 	var VIPObj = $HUI.combobox("#VIPLevel",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindVIP&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindVIP&ResultSetType=array&LocID="+LocID,
 		valueField:'id',
 		textField:'desc'
 		
@@ -348,9 +387,9 @@ function InitCombobox(){
 		textField:'text',
 		panelHeight:'100',
 		data:[
-            {id:'Detail',text:'明细'},
-            {id:'Item',text:'项目'},
-            {id:'Person',text:'个人'},
+            {id:'Detail',text:$g('明细')},
+            {id:'Item',text:$g('项目')},
+            {id:'Person',text:$g('个人')}
         ]
 
 	});	
@@ -361,7 +400,8 @@ function InitCombobox(){
 		method: 'get',
 		url:$URL+'?ClassName=web.DHCPE.BarPrintFind&QueryName=QuerySPECContainers',
 		onBeforeLoad:function(param){
-			param.Desc = param.q
+			param.Desc = param.q,
+			param.LocID=LocID
 		},
 		mode:'remote',
 		delay:200,

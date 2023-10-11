@@ -116,7 +116,7 @@ function UserAdvices(){
 	if(num==""){
 		$.messager.show({
 			title:'提示信息',
-			msg:'请至少选择一项建议引用到病历!'
+			msg:'请至少选择一项建议引用到药历!'
 		});
 	}
 	else{

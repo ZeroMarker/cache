@@ -28,7 +28,7 @@ function InitQueryWinEvent(obj){
 	
 	//窗体初始化
 	obj.DicEdit = $('#DicEdit').dialog({
-		title:'诊断ICD维护',
+		title:'肿瘤诊断字典维护',
 		iconCls:'icon-w-edit',
 		closed: true,
 		modal: true,

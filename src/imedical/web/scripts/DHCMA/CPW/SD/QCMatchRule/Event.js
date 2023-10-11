@@ -22,6 +22,7 @@ function InitWinEvent(obj){
 			Common_SetValue('BTRuleAct',(rd.IsActive=="是"?1:0));
 			$("#BTExpress").combobox('setValue',rd.RuleMethodID);
 			$('#BTExpressParam').val(rd.RuleParam);
+			$('#BTExpressKey').val(rd.RuleKey);
 			$("#btnSave").linkbutton('enable');
 			$("#btnDelete").linkbutton('enable');
 			obj.RecRowID=rd.RowID
@@ -38,31 +39,49 @@ function InitWinEvent(obj){
 		Common_SetValue('BTRuleAct','');
 		Common_SetValue('BTExpressParam','');
 		$('#BTRuleDesc').val('');
+		$('#BTExpressKey').val('');
 		}
 	//保存分类
 	obj.btnSave_click = function(flg){
 		var RuleType=$("#BTRuleType").combobox('getValue');
 		var RuleMehod=$("#BTExpress").combobox('getValue');
 		var RuleParam=$("#BTExpressParam").val();
+		var RuleKey=$('#BTExpressKey').val();
 		var RuleDesc=$("#BTRuleDesc").val();
 		var IsActive=Common_GetValue('BTRuleAct')
 		var rd=$('#gridQCMatchRule').datagrid('getSelected');
-		if (rd) {var RowID=rd.RowID}
-		else { var RowID=""}
+		if (rd) {
+			var RowID=rd.RowID
+			var IndNo=rd.IndNo
+		}else { 
+			var RowID=""
+			var GridRows=$('#gridQCMatchRule').datagrid('getRows');
+			var IndNo=GridRows.length+1
+		}
+		var errinfo = "";
 		if (obj.QCEntityID=="") {
-			$.messager.alert("错误提示", "未获取到病种ID", 'info');
-			return;
+			errinfo = errinfo + "未获取到病种ID!<br>";
 			}
-		var GridRows=$('#gridQCMatchRule').datagrid('getRows');
-		var GridLen=GridRows.length;
+		if (RuleType=="") {
+			errinfo = errinfo + "请选择规则类型!<br>";
+			}
+		if (RuleDesc=="") {
+			errinfo = errinfo + "请填写描述!<br>";
+			}
+		if (errinfo) {
+			$.messager.alert("错误提示", errinfo, 'info');
+			return;
+		}
 		var inputStr	=obj.QCEntityID;
 		var inputStr	=inputStr+"^"+RowID;
 		var inputStr	=inputStr+"^"+RuleType;
 		var inputStr	=inputStr+"^"+RuleDesc;
 		var inputStr	=inputStr+"^"+RuleMehod;
 		var inputStr	=inputStr+"^"+RuleParam;
-		var inputStr	=inputStr+"^"+(GridLen+1);
+		var inputStr	=inputStr+"^"+IndNo;
 		var inputStr	=inputStr+"^"+(IsActive?1:0);
+		//新增关键字列表
+		var inputStr	=inputStr+"^"+RuleKey
 		var flg= $m({
 			ClassName:"DHCMA.CPW.SD.QCEntityMatchRule",
 			MethodName:"Update",
@@ -72,6 +91,7 @@ function InitWinEvent(obj){
 		if (parseInt(flg)>0) {
 				$.messager.popover({msg: '提交成功！',type:'success',timeout: 1000})
 				$('#gridQCMatchRule').datagrid('reload');
+				obj.RecRowID=""
 				obj.ClearForms();
 				
 		}else{

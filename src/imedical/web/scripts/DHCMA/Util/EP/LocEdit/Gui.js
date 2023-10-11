@@ -3,6 +3,20 @@ function InitHISUIWin(){
 	var obj = new Object(); //初始化赋值
 	 $.parser.parse(); // 解析整个页面 	
 	//$.fn.pagination.defaults.showPageList=false;
+	
+	//初始查询条件
+    obj.cboSSHosp = Common_ComboToSSHosp2("cboSSHosp",session['DHCMA.HOSPID'],"",1);
+	$('#cboSSHosp').combobox({
+  		onSelect: function(title,index){
+	  		obj.dictList.load({
+				ClassName:"DHCMA.Util.EPS.LocationSrv",
+				QueryName:"QryLocInfo",
+				aHospID:$("#cboSSHosp").combobox('getValue'),
+				aAlias:$('#searchbox').searchbox('getValue')
+			});
+	  	}
+	 })
+	
 	obj.dictList = $HUI.datagrid("#dictList",{
 		fit: true,
 		title:"科室列表",
@@ -18,7 +32,9 @@ function InitHISUIWin(){
 		url:$URL,
 		queryParams:{
 			ClassName:"DHCMA.Util.EPS.LocationSrv",
-			QueryName:"QryLocInfo"
+			QueryName:"QryLocInfo",
+			aHospID:$("#cboSSHosp").combobox('getValue'),
+			aAlias:$('#searchbox').searchbox('getValue')
 		},
 		columns:[[
 			{field:'ID',title:'ID',width:50},
@@ -28,7 +44,8 @@ function InitHISUIWin(){
 			{field:'Desc2',title:'科室别名',sortable:true,width:100},
 			{field:'TypeDesc',title:'科室类型',sortable:true,width:100},
 			{field:'AdmTypeDesc',title:'就诊类型',sortable:true,width:100},
-			{field:'HospDesc',title:'所属医院',sortable:true,width:400},
+			{field:'HospDesc',title:'所属医院',sortable:true,width:300},
+			{field:'CPWIndNo',title:'CPW顺序号',sortable:true,width:100},
 			{field:'RangeID',title:'值域',sortable:true,width:100,hidden:true},
 			{field:'IsActDesc',title:'是否有效',width:'80'}
 		]],
@@ -43,6 +60,7 @@ function InitHISUIWin(){
 			}
 		},
 		onLoadSuccess:function(data){
+			$("#syncIcon").linkbutton("enable");
 			$("#editIcon").linkbutton("disable");
 			$("#delIcon").linkbutton("disable");
 		}
@@ -66,7 +84,7 @@ function InitHISUIWin(){
 		]
 	});
 	obj.txtHospDr = $HUI.combobox("#txtHospDr",{
-		url:$URL+"?ClassName=DHCMA.Util.EPS.HospitalSrv&QueryName=QryHospInfo&ResultSetType=array",
+		url:$URL+"?ClassName=DHCMA.Util.EPS.HospitalSrv&QueryName=QryHospInfo&ResultSetType=array&aIsActive="+"1",
 		valueField:'OID',
 		textField:'Desc',
 		multiple:true,

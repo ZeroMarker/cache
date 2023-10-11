@@ -68,14 +68,14 @@ function ExportClickHandle(){
 	var PPRowId=$("#PPList").combobox("getValue");
 	PPRowId=CheckComboxSelData("PPList",PPRowId);
 	if (PPRowId=="") {
-		$.messager.alert("提示","请选择临床试验项目","info",function(){
+		$.messager.alert("提示",$g("请选择临床试验项目"),"info",function(){
 			$('#PPRowId').next('span').find('input').focus();
 		});
 		return false;
 	}
 	var StartScreenNo=$("#StartScreenNo").val();
 	if (StartScreenNo=="") {
-		$.messager.alert("提示","请录入开始筛选号","info",function(){
+		$.messager.alert("提示",$g("请录入开始筛选号"),"info",function(){
 			$("#StartScreenNo").focus();
 		});
 		return false;
@@ -97,7 +97,7 @@ function ExportClickHandle(){
 		Job=RtnStr.split("@")[1];
 	}
 	if (parseFloat(Totle) < 1) {
-		$.messager.alert("提示","没有可导出的记录.");
+		$.messager.alert("提示",$g("没有可导出的记录."));
 		return false;
 	}
 	/*$.cm({
@@ -120,6 +120,16 @@ function ExportClickHandle(){
 	var FileName=TemplatePath+"UDHCDocProExportLab.xlsx";*/
 	var Str ="(function test(x){"
 		Str +="var xlApp = new ActiveXObject('Excel.Application');"
+		var d=new Date();
+		var h=d.getHours();
+		var m=d.getMinutes();
+		var s=d.getSeconds();
+		var filename="检验结果记录"+h+m+s+".xls";
+		//Str +="Set WshShell=new ActiveXObject('Wscript.Shell');"
+		//Str +="Set strDesktop = WshShell.SpecialFolders('Desktop');"
+		//Str +="xlBook.SaveAs(strDesktop & '\\"+filename+"');"		
+		Str += "var fname = xlApp.Application.GetSaveAsFilename('"+filename+"', 'Excel Spreadsheets (*.xls), *.xls');"
+		Str += "if (fname==false) {xlApp.Quit(); return 1;}"; 
 		Str +="var xlBook = xlApp.Workbooks.Add();"
 		Str +="var xlSheet = xlBook.ActiveSheet;"
 		Str +="xlSheet.Range(xlSheet.Cells(1,1),xlSheet.Cells(1,10)).mergecells=true;"  //合并单元格
@@ -134,33 +144,45 @@ function ExportClickHandle(){
 		Str +="xlSheet.cells(2,8)='结果说明';";
 		Str +="xlSheet.cells(2,9)='检测方法';";
 		Str +="xlSheet.cells(2,10)='显示序号';";
-		for (var i=1;i <= parseFloat(Totle);i++) {
-			var LabResultStr=$.cm({
+		// for (var i=1;i <= parseFloat(Totle);i++) {
+		// 	var LabResultStr=$.cm({
+		// 		ClassName:"web.PilotProject.DHCDocPilotProject",
+		// 		MethodName:"ProExportLabOneItem",
+		// 		dataType:'text',  
+		// 		UserID:session['LOGON.USERID'],
+		// 		Job:Job,
+		// 		Count:i
+		// 	},false);
+		// 	for (var j=0;j<LabResultStr.split('$').length;j++) {
+		// 		Str +="xlSheet.Columns("+(j+1)+").NumberFormatLocal='@';"	//设置登记号为文本型 
+		// 		Str +="xlSheet.cells("+(i+2)+","+(j+1)+")='"+LabResultStr.split('$')[j]+"';";
+		// 	}
+		// 	if (LabResultStr.split('$')[1]=="") {
+		// 		Str +="xlSheet.Range(xlSheet.Cells("+(i+2)+",1),xlSheet.Cells("+(i+2)+",10)).mergecells=true;"  //合并单元格
+		// 	}
+		// }
+		var ItemCount=0
+		while (ItemCount<parseFloat(Totle)) {
+			var LabResultObj=$.cm({
 				ClassName:"web.PilotProject.DHCDocPilotProject",
-				MethodName:"ProExportLabOneItem",
-				dataType:'text',  
+				MethodName:"ProExportLabItem",
 				UserID:session['LOGON.USERID'],
-				Job:Job,
-				Count:i
+				Job:Job
 			},false);
-			for (var j=0;j<LabResultStr.split('$').length;j++) {
-				Str +="xlSheet.Columns("+(j+1)+").NumberFormatLocal='@';"	//设置登记号为文本型 
-				Str +="xlSheet.cells("+(i+2)+","+(j+1)+")='"+LabResultStr.split('$')[j]+"';";
-			}
-			if (LabResultStr.split('$')[1]=="") {
-				Str +="xlSheet.Range(xlSheet.Cells("+(i+2)+",1),xlSheet.Cells("+(i+2)+",10)).mergecells=true;"  //合并单元格
-			}
-		}
-		var d=new Date();
-		var h=d.getHours();
-		var m=d.getMinutes();
-		var s=d.getSeconds();
-		var filename="检验结果记录"+h+m+s+".xls";
-		//Str +="Set WshShell=new ActiveXObject('Wscript.Shell');"
-		//Str +="Set strDesktop = WshShell.SpecialFolders('Desktop');"
-		//Str +="xlBook.SaveAs(strDesktop & '\\"+filename+"');"
+			LabResultObj.forEach(function(obj,index){
+				var LabResultStr=obj.Item;
+				if (LabResultStr==""){return true}
+				ItemCount=ItemCount+1
+				for (var j=0;j<LabResultStr.split('$').length;j++) {
+					Str +="xlSheet.Columns("+(j+1)+").NumberFormatLocal='@';"	//设置登记号为文本型 
+					Str +="xlSheet.cells("+(ItemCount+2)+","+(j+1)+")='"+LabResultStr.split('$')[j]+"';";
+				}
+				if (LabResultStr.split('$')[1]=="") {
+					Str +="xlSheet.Range(xlSheet.Cells("+(ItemCount+2)+",1),xlSheet.Cells("+(ItemCount+2)+",10)).mergecells=true;"  //合并单元格
+				}
+			})
+		} 
 		
-		Str += "var fname = xlApp.Application.GetSaveAsFilename('"+filename+"', 'Excel Spreadsheets (*.xls), *.xls');" 
 		Str += "xlBook.SaveAs(fname);"
 		Str +="xlApp.Visible = false;"
 		Str +="xlApp.UserControl = false;"

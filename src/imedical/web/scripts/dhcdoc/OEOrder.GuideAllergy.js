@@ -184,23 +184,46 @@ function InitGuide(){
 		var PatAllergInfo=SkinMsg.split("^")[1];
 		var SkinDesensitFlag=SkinMsg.split("^")[2];
 		var SkinNoTestFlag=SkinMsg.split("^")[3];
+		var DefNoTest=SkinMsg.split("^")[7];
+		var Title="";
+		//无阴性结果/用药记录可以开立治疗医嘱 
+		if ((ServerObj.EntryTreatOrdWhenNotHaveSkinOrd=="0")&&
+			((PatAllergType!="NegativeSkin")&&(PatAllergType.indexOf("Treat")==-1)&&(DefNoTest!="Y"))){
+			$('#TreatBtn').linkbutton('disable');
+			Title=$g("无阴性结果/用药记录");
+		}
 		//皮试结果阳性且不允许脱敏治疗时，禁用治疗按钮
 		if ((PatAllergType=="PositiveSkin")&&(SkinDesensitFlag!="Y")){
 			$('#TreatBtn').linkbutton('disable');
-			$("#TreatBtn").attr({title:"皮试结果阳性且不允许脱敏治疗"});
+			Title=$g("皮试结果阳性且不允许脱敏治疗");
+		}else{
+			//当维护成【无阴性结果/用药记录不可以开立治疗医嘱】，且药物允许脱敏时，
+			//-只要药物有任何使用记录或过敏记录或皮试结果记录，均可以开立治疗医嘱,治疗医嘱会强制置脱敏
+			if (((PatAllergType!="NoResultSkin")&&(PatAllergType!="NotSkinOrd"))&&(SkinDesensitFlag=="Y")) {
+				$HUI.linkbutton("#TreatBtn").enable();
+				Title="";
+			}
+			//当维护为【允许免试】且【默认免试】时，如果没有直接的皮试阳性结果和直接的过敏记录，则默认免试
+			if ((DefNoTest=="Y")&&((PatAllergType!="PositiveSkin")&&(PatAllergType!="PAAllergy"))){
+				if(ServerObj.EntryTreatOrdWhenNotHaveSkinOrd=="0"){
+					$('#TreatBtn').linkbutton('disable');
+				}else{
+					$('#TreatBtn').linkbutton('enable');
+				}
+				$HUI.checkbox("#MSCheck").enable();
+				$("#MSCheck").checkbox('setValue',true);
+			}
 		}
-		//无阴性结果/用药记录可以开立治疗医嘱 
-		if ((ServerObj.EntryTreatOrdWhenNotHaveSkinOrd=="0")&&((PatAllergType!="NegativeSkin")&&(PatAllergType.indexOf("Treat")==-1))){
-			$('#TreatBtn').linkbutton('disable');
-			$("#TreatBtn").attr({title:"无阴性结果/用药记录"});
-		}
+		$("#TreatBtn").attr({title:Title});
 		//无皮试医嘱且允许免试的情况下，才放开免试勾选的控制
 		if ((PatAllergType=="NotSkinOrd")&&(SkinNoTestFlag=="Y")){
 			$HUI.checkbox("#MSCheck").enable();
 		}else{
-			$("#MSCheck").next().attr({title:"无皮试医嘱且配置允许免试的情况时才允许使用免试选项"});
+			if ($("#MSCheck").checkbox('getValue')==false){
+				$("#MSCheck").next().attr({title:$g("无皮试医嘱且配置允许免试的情况时才允许使用免试选项")});
+			}
 		}
-		$("#PatAllergInfo").html(PatAllergInfo);
+		$("#PatAllergInfo").html($g(PatAllergInfo));
 		//初始化简易表格列表
 		var Length=AllergyTableJson.GuideAllergyTable.length;
 		for (var i=0;i<Length;i++){

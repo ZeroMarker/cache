@@ -7,6 +7,10 @@ var array=""
 initPrivCheckBox()
 
 $(function(){
+	$("#TextRequestReason").attr("placeholder",emrTrans("在此录入申请原因"));
+	$("#searchInput").validatebox({
+		placeholder:emrTrans("输入名称搜索!")
+	});
     //var buttons = '申请内容<div class="hisui-layout" style="overflow:hidden;padding:5px;"><a href="#" class="hisui-linkbutton" id="selectall" data-options="iconCls:' + "'" + 'icon-all-select' + "'" + ',plain:true">全选</a></div>';
     /*
     var buttons = '申请内容';
@@ -16,16 +20,39 @@ $(function(){
         iconCls:'icon-add-note'
     });
     */
-   
-    $('#emrTree').tree({
-        url: '../EMRservice.Ajax.auth.request.cls?Action=gettree&EpisodeID=' + episodeID + '&selectedDocID=' + userID + '&selecteddocCTLocID=' + userLocID + '&selecteddocSSGroupID=' + userSSGroupID,
-        method: 'get',
-        animate: true,
-        checkbox: true,
-        onlyLeafCheck:true,
-        cascadeCheck: false
-    });
-if(flag == "false"){
+	//初始化申请原因
+    $('#TextRequestReasonDiv').hide();
+	$('#cbxRequestReason').combogrid({
+	    width:305,
+	    idField:'id',
+	    textField:'text',
+	    panelHeight:340,
+		panelWidth:530,
+	    editable:false,
+		striped: true,
+		data: eval("(" + RequestReasonsData + ")"),
+		showHeader: false,
+		fitColumns: true,
+		mode: 'local',
+		columns: [[
+			{ field: 'id', title: 'id', width: 80, hidden:true},
+			{ field: 'num', title: '序号', width: 20},
+			{ field: 'text', title: '描述', width: 250 }
+		]],
+	    onSelect: function(rowIndex, rowData){
+			if (rowData.id == "other")
+			{
+				$("#TextRequestReasonDiv").show();
+			}
+			else
+			{
+				$("#TextRequestReasonDiv").hide();
+			}
+	    }
+	});
+	//getEmrTreeData('searchInput');
+	getEmrTreeData("searchInput");	
+	if(flag == "false"){
     	allActionChange("",false);
 	   $('#emrTree').tree({
     		onLoadSuccess: function(){
@@ -73,13 +100,19 @@ if(flag == "false"){
 })
 
 function selectall(){
-    var rootNode = $('#emrTree').tree('find', 'RT00');
-    $('#emrTree').tree('check', rootNode.target);
+ 	var nodesChecked = $('#emrTree').tree('find', 'INS').children;
+	for(var i=0;i<nodesChecked.length;i++)
+	{
+		$('#emrTree').tree('check',nodesChecked[i].target)
+	}
 }
 
 function unselectall(){
-    var rootNode = $('#emrTree').tree('find', 'RT00');
-    $('#emrTree').tree('uncheck', rootNode.target);
+	var nodesChecked = $('#emrTree').tree('find', 'INS').children;
+	for(var i=0;i<nodesChecked.length;i++)
+	{
+		$('#emrTree').tree('uncheck',nodesChecked[i].target)
+	}
 }
 
 function expandall(){
@@ -90,7 +123,7 @@ function expandall(){
 function collapseall(){
 	var nodes = $('#emrTree').tree('getChildren', 'RT00');
 	for (var i = 0; i < nodes.length; i++) {
-		if (nodes[i]["attributes"]["type"] == "cg")
+		if ((nodes[i]["attributes"]["type"] == "cg")||(nodes[i]["attributes"]["type"] == "zdy"))
 		{
 	    	$('#emrTree').tree('collapse', nodes[i].target);
 		}
@@ -143,7 +176,7 @@ function initPrivCheckBox()
 }
 function privCheckBox(obj,index,arr)
 {
-	var div=$("<div></div>")
+	var div=$("<div class='checkBoxDiv'></div>")
 	var input = $('<input class="hisui-checkbox" type="checkbox" data-options="onCheckChange:function(event,value){selectCheckBox(event,value)}">')
 	$(input).attr("id",obj.id);
 	$(input).attr("label",obj.name);
@@ -267,7 +300,17 @@ function commit(){
 	}
     
     //没有申请原因
-    var requestReason = $('#requestReason').val();
+	var requestReason = "";
+    var requestReasonID = $('#cbxRequestReason').combobox('getValue');
+	if (requestReasonID == "other")
+	{
+		requestReason = $('#TextRequestReason').val();
+	}
+	else
+	{
+		requestReason = $('#cbxRequestReason').combobox('getText');
+	}
+	
     var beforeRequestContent = $('#beforeRequestContent').val();
     var afterRequestContent = $('#afterRequestContent').val();
     var requestNumber = $('#requestNumber').val();
@@ -295,7 +338,22 @@ function commit(){
         $.messager.alert('操作提示', '修改后内容 至少' + LimitMust[2] + '个字');
         return;
     }
-    
+    if (requestReason.length>1000){
+        $.messager.alert('操作提示', '请将申请原因控制在1000字以内');
+        return;	    
+	}
+    if (beforeRequestContent.length>1000){
+        $.messager.alert('操作提示', '请将修改前内容控制在1000字以内');
+        return;	    
+	}
+    if (afterRequestContent.length>1000){
+        $.messager.alert('操作提示', '请将修改后内容控制在1000字以内');
+        return;	    
+	}
+    if (requestNumber.length>1000){
+        $.messager.alert('操作提示', '请将申请人电话控制在1000字以内');
+        return;	    
+	}
     //增加对特殊字符的过滤，不允许填写特殊字符  add by niucaicai 2016-12-27
 	if (requestReason.indexOf("@") != -1 || requestReason.indexOf("#") != -1 || requestReason.indexOf("$") != -1 || requestReason.indexOf("%") != -1 || requestReason.indexOf("^") != -1 || requestReason.indexOf("&") != -1 || requestReason.indexOf("*") != -1 || requestReason.indexOf("-") != -1 || requestReason.indexOf("/") != -1 || requestReason.indexOf("\\") != -1)
 	{
@@ -322,7 +380,7 @@ function commit(){
     
 //病历已打印 申请权限时提示
 jQuery.ajax({
-    	type: "get",
+    	type: "POST",
     	dataType: "text",
     	async: true,
    		url: '../EMRservice.Ajax.auth.request.cls',
@@ -447,7 +505,7 @@ function getPrivilege(requestCateCharpter,actionString)
 {
 	var result = "";
 	jQuery.ajax({
-		type: "GET",
+		type: "POST",
 		dataType: "text",
 		url: "../EMRservice.Ajax.privilege.cls",
 		async: false,
@@ -468,6 +526,50 @@ function getPrivilege(requestCateCharpter,actionString)
 
 
 function cancel(){
-	var id = "authRequest";
+	var id = "dialogAuthRequest";
 	parent.closeDialog(id);
+}
+///查询//////////////////////////////////////////////////////////
+$('#searchRecord').searchbox({ 
+    searcher:function(value,name){ 
+    	getEmrTreeData("searchInput");
+    }          
+  });
+  
+///查询//////////////////////////////////////////////////////////
+/* $("#searchInput").keydown(function(){
+	if(event.keyCode == 13)
+	{
+		getEmrTreeData("searchInput");
+	}	
+});
+$('#searchRecord').click(function(){ 
+	getEmrTreeData("searchInput");
+}); */
+function getEmrTreeData(myid)
+{
+	//var selectValue = document.getElementById(myid).value;
+	//var defaultValue = document.getElementById(myid).defaultValue;
+	//if (selectValue == defaultValue) selectValue = "";
+	var selectValue = $('#searchRecord').searchbox('getValue') 
+	jQuery.ajax({
+		type : "GET",
+		dataType : "text",
+		url : "../EMRservice.Ajax.auth.request.cls",
+		async : true,
+		data : {"Action":"gettree","EpisodeID":episodeID,"selectedDocID":userID,"selecteddocCTLocID":userLocID,"selecteddocSSGroupID":userSSGroupID,"Condition":selectValue},
+		success : function(d) {
+           if ( d != "") 
+		   {
+			   $('#emrTree').tree({
+			        data: eval("("+d+")"),
+			        animate: true,
+			        checkbox: true,
+			        onlyLeafCheck:true,
+			        cascadeCheck: false
+			    });
+		   }
+		},
+		error : function(d) { alert("add kbTree error");}
+	});
 }

@@ -1,6 +1,6 @@
 ﻿/**
  * FileName: dhcbill.ipbill.uppatinfo.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-04-14
  * Description: 就诊信息修改查询
  */
@@ -11,7 +11,7 @@ $(function () {
 });
 
 function initQueryMenu() {
-	$(".datebox-f").datebox("setText", getDefStDate(0));
+	$(".datebox-f").datebox("setValue", CV.DefDate);
 	
 	$HUI.linkbutton("#btn-find", {
 		onClick: function () {
@@ -27,17 +27,21 @@ function initQueryMenu() {
 	//操作员
 	$("#guser").combobox({
 		panelHeight: 150,
-		url: $URL + '?ClassName=web.UDHCJFDepositSearch&QueryName=FindIPCashier&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
+		method: 'GET',
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QrySSUser&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
+		mode: 'remote',
 		valueField: 'id',
 		textField: 'text',
-		defaultFilter: 4,
+		blurValidValue: true,
+		onBeforeLoad: function (param) {
+			param.desc = param.q;
+		}
 	});
 	
 	$HUI.combogrid("#admList", {
 		panelWidth: 530,
 		panelHeight: 200,
 		striped: true,
-		editable: false,
 		idField: "admId",
 		textField: "admNo",
 		columns: [[{field: "admNo", title: "就诊号", width: 100},
@@ -63,52 +67,60 @@ function initUpdateList() {
 		striped: true,
 		border: false,
 		singleSelect: true,
-		fitColumns: true,
 		pagination: true,
 		rownumbers: true,
 		pageSize: 20,
-		columns: [[{title: '登记号', field: 'Tregno', width: 100},
-				   {title: '患者姓名', field: 'Tname', width: 80},
-				   {title: '入院时间', field: 'Tadmdate', width: 150,
-					formatter: function(value, row, index) {
-						if (value) {
-							return value + " " + row.Tadmtime;
-						}
+		className: "web.DHCIPBillReg",
+		queryName: "FindUpPatList",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["Tadmdate", "Tdischdate", "Tupdate", "Tadmward"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if (cm[i].field == "Tadmdep") {
+					cm[i].title = "科室病区";
+					cm[i].width = 160;
+					cm[i].showTip = true;
+					cm[i].tipWidth = 200;
+					cm[i].formatter = function (value, row, index) {
+						return value + " " + row.Tadmward;
 					}
-				   },
-				   {title: '出院时间', field: 'Tdischdate', width: 150,
-					formatter: function(value, row, index) {
-						if (value) {
-							return value + " " + row.Tdischdate;
-						}
+				}
+				if (cm[i].field == "Tadmtime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.Tadmdate + " " + value;
 					}
-				   },
-				   {title: '修改项目', field: 'Titmname', width: 80},
-				   {title: '旧记录', field: 'Tolddesc', width: 80},
-				   {title: '新记录', field: 'Tnewdesc', width: 80},
-				   {title: '修改时间', field: 'Tupdate', width: 150,
-					formatter: function(value, row, index) {
-						if (value) {
-							return value + " " + row.Tuptime;
-						}
+				}
+				if (cm[i].field == "Tdischtime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.Tdischdate + " " + value;
 					}
-				   },
-				   {title: '修改人', field: 'Tupuser', width: 80},
-				   {title: '科室', field: 'Tadmdep', width: 100},
-				   {title: '病区', field: 'Tadmward', width: 100},
-				   {title: '床号', field: 'Tbedno', width: 50},
-				   {title: '来源', field: 'Tflag', width: 50}
-			]],
+				}
+				if (cm[i].field == "Tuptime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.Tupdate + " " + value;
+					}
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if ($.inArray(cm[i].field, ["Tadmtime", "Tdischtime", "Tuptime"]) != -1) {
+						cm[i].width = 155;
+					}
+				}
+			}
+		},
 		url: $URL,
 		queryParams: {
 			ClassName: "web.DHCIPBillReg",
 			QueryName: "FindUpPatList",
 			stDate: getValueById("stDate"),
 			endDate: getValueById("endDate"),
-			patientId: getValueById("papmi"),
+			patientId: getValueById("PatientId"),
 			episodeId: $("#admList").combogrid("getValue"),
 			userId: getValueById("guser"),
-			patName: getValueById("patName")
+			patientName: getValueById("patientName"),
+			hospId: PUBLIC_CONSTANT.SESSION.HOSPID
 		}
 	});
 }
@@ -116,39 +128,26 @@ function initUpdateList() {
 function patientNoKeydown(e) {
 	var key = websys_getKey(e);
 	if (key == 13) {
-		var patientNo = $.trim(getValueById("patientNo"));
+		var patientNo = getValueById("patientNo");
 		if (!patientNo) {
 			return;
 		}
+		$(".combogrid-f").combogrid("clear").combogrid("grid").datagrid("loadData", {total: 0, rows: []});
+		patientNo = $.m({ClassName: "web.UDHCJFBaseCommon", MethodName: "regnocon", PAPMINo: patientNo}, false);
+		setValueById("patientNo", patientNo);
 		$.m({
 			ClassName: "web.DHCOPCashierIF",
 			MethodName: "GetPAPMIByNo",
 			PAPMINo: patientNo,
 			ExpStr: ""
-		}, function(papmi) {
-			if (papmi) {
-				$.m({
-					ClassName: "web.DHCOPCashierIF",
-					MethodName: "GetPatientByRowId",
-					PAPMI: papmi,
-					ExpStr: ""
-				}, function(rtn) {
-					var myAry = rtn.split("^");
-					setValueById("papmi", myAry[0]);
-					setValueById("patientNo", myAry[1]);
-					setValueById("patName", myAry[2]);
-					loadAdmList();
-				});
-			}else {
+		}, function(patientId) {
+			if (!patientId) {
 				$.messager.popover({msg: "登记号输入错误", type: "info"});
-				$.m({
-					ClassName: "web.UDHCJFBaseCommon",
-					MethodName: "regnocon",
-					PAPMINo: patientNo
-				}, function(patientNo) {
-					setValueById("patientNo", patientNo);
-				});
 			}
+			setValueById("PatientId", patientId);
+			var patientName = getPropValById("PA_PatMas", patientId, "PAPMI_Name");
+			setValueById("patientName", patientName);
+			loadAdmList();
 		});
 	}
 }
@@ -160,7 +159,7 @@ function loadAdmList() {
 	var queryParams = {
 		ClassName: "web.DHCIPBillReg",
 		QueryName: "FindAdmList",
-		papmi: getValueById("papmi"),
+		patientId: getValueById("PatientId"),
 		hospId: PUBLIC_CONSTANT.SESSION.HOSPID
 	}
 	loadComboGridStore("admList", queryParams);
@@ -172,11 +171,11 @@ function loadUpdateList() {
 		QueryName: "FindUpPatList",
 		stDate: getValueById("stDate"),
 		endDate: getValueById("endDate"),
-		patientId: getValueById("papmi"),
+		patientId: getValueById("PatientId"),
 		episodeId: $("#admList").combogrid("getValue"),
 		userId: getValueById("guser"),
-		patName: getValueById("patName"),
-		HospId: PUBLIC_CONSTANT.SESSION.HOSPID
+		patientName: getValueById("patientName"),
+		hospId: PUBLIC_CONSTANT.SESSION.HOSPID
 	};
 	loadDataGridStore("updateList", queryParams);
 }

@@ -199,7 +199,7 @@ function addrow(type){
 				runClassMethod("web.DHCEMPatSeat","AddRowtop",
 					        {'LocDr':LocDr,
 					         'Code':TDId,
-					         'type':type},
+					         'TypeModel':type},
 							function(data){
 								if(data==0)
 								{   //location.reload();
@@ -219,7 +219,7 @@ function addrow(type){
 				runClassMethod("web.DHCEMPatSeat","AddRowtop",
 					        {'LocDr':LocDr,
 					         'Code':TDId,
-					         'type':type},
+					         'TypeModel':type},
 							function(data){
 								if(data==0)
 								{   //location.reload();
@@ -250,7 +250,7 @@ function addcol(type){
 					runClassMethod("web.DHCEMPatSeat","AddColleft",
 						        {'LocDr':LocDr,
 						         'Code':TDId,
-						         'type':type},
+						         'TypeModel':type},
 								function(data){
 									if(data==0)
 										{   //location.reload();
@@ -273,7 +273,7 @@ function addcol(type){
 					runClassMethod("web.DHCEMPatSeat","AddColleft",
 						        {'LocDr':LocDr,
 						         'Code':TDId,
-						         'type':type},
+						         'TypeModel':type},
 								function(data){
 									if(data==0)
 										{   //location.reload();
@@ -609,7 +609,7 @@ function buttonIfUse(num){
 		$('.creat-btn').hide();				//生成表格
 		$('#m-n').hide();					//行和列
 		$('.clear-btn').show();			 	//清空重建按钮
-		$('.setSize-input').show();         //宽和高
+		//$('.setSize-input').show();         //宽和高
 		$('.oper-btn').show()				//功能按钮
 	}
 	return

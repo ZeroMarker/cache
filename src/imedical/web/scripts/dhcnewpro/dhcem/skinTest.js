@@ -2,41 +2,113 @@
 /// CreateDate: 2016-08-11
 ///  Descript: 皮试
 var LINK_CSP="dhcapp.broker.csp";
-var methodSel = [{ "id": "1", "text": "静注法" }, { "id": "2", "text": "结膜试验法" },{ "id": "3", "text": "点（挑）刺" }, { "id": "4", "text": "口含试验法" },{ "id": "5", "text": "划痕法" },{ "id": "6", "text": "皮内试验法" }, { "id": "7", "text": "点眼法" }];
+var methodSel = [{ "id": "1", "text": $g("静注法") }, { "id": "2", "text": $g("结膜试验法") },{ "id": "3", "text": $g("点（挑）刺") }, { "id": "4", "text": $g("口含试验法") },{ "id": "5", "text": "划痕法" },{ "id": "6", "text": "皮内试验法" }, { "id": "7", "text": $g("点眼法") }];
 $(document).ready(function() {
 	
 	initSetPage(); ///通过配置显示界面
-	
-	runClassMethod(
-	"web.DHCNurSkinTestList", 
-	"GetSkinRsData", 
-	{'oeoriId':oeoreId}, 
-	function(data){
-	 	var pddRs = data.split("#")[0];
-	 	var skinInfo = data.split("#")[1];
-	 	if(pddRs==0){
-		 	$("#pddDiv").find("input").attr("disabled",true)
-		}else{
-		 	$("#sTR0").attr("disabled",true)
-			$("#sTR1").attr("disabled",true)
-		}
-		
-		if((skinInfo!="")&&(skinInfo!=undefined)){
-			
-			var ret="";
-			var skinInfoArr = skinInfo.split("^");
-			var skinRsDesc ="";
-			if(skinInfoArr[0]=="-"){
-				skinRsDesc="阴性"
-			}
-			if(skinInfoArr[0]=="+"){
-				skinRsDesc="阳性"
-			}
-			ret = skinRsDesc+"  皮试人:"+skinInfoArr[1]+"  复核人:"+skinInfoArr[2];
-			$("#skinRs").html(ret);
-		}
-	},"text",false);
 
+	initPageValue();
+	
+	initMethod();
+	
+	if (Allgryflag==1){ //2016-10-27 控制提示语句显示
+		$('#allergymess').show();
+	}
+  	
+	//复选框分组
+	InitUIStatus();
+	
+	 //皮试方法
+	$('#TestMethodSel').combobox({
+		valueField:'id',
+		textField:'text',
+		data:methodSel
+	});  
+		 	
+	
+	
+    $('#skinTesttb').datagrid({
+	    fit:true,
+	    toolbar:[],//hxy 2023-01-05 st
+	    title:$g('PPD记录'),
+	    iconCls:"icon-paper",
+	    headerCls:'panel-header-gray',
+	    border:true, //false //ed
+	    pageSize:999,
+	    pageList:[999],
+	    pagination:true,
+        idField: 'id',
+        url: 'dhcapp.broker.csp?ClassName=web.DHCEMSkinTest&MethodName=ListPatHis&Ordid='+oeoreId,
+        columns: [[{
+            checkbox: true
+        },{
+			field: 'TestSkinSity',
+			title: '皮肤硬结',
+			align: 'center'
+		}, {
+			field: 'TestSkinVcl',
+			title: '局部水泡',
+			align: 'center'
+		}, {
+			field: 'TestSkinSwo',
+			title: '红肿',
+			align: 'center'
+		}, {
+			field: 'TestSkinNecrosis',
+			title: '坏死',
+			align: 'center'
+		}, {
+			field: 'TestSkinInflam',
+			title: '淋巴管炎',
+			align: 'center'
+		}, {
+			field: 'TestSkinSing',
+			title: '单个',
+			align: 'center'
+		},{
+			field: 'TestSkinSpora',
+			title: '散在',
+			align: 'center'
+		}, {
+			field: 'EpisodeID',
+			title: '就诊id',
+			align: 'center'
+		}, {
+			field: 'oeorid',
+			title: '医嘱id',
+			align: 'center'
+		},{
+			field: 'TestDate',
+			title: '日期',
+			align: 'center'
+		}, {
+			field: 'TestTime',
+			title: '时间',
+			align: 'center'
+		}, {
+			field: 'TestUser',
+			title: '记录人',
+			align: 'center'
+		}, {
+			field: 'id',
+			title: 'id',
+			align: 'center'
+		}, {
+			field: 'PDDResult',
+			title: 'PPD结果',
+			align: 'center'
+		}
+		]]
+    });
+	$("#ObserveDefine").focus(function(){
+		//$("input[type=radio][name=ObserveTime]").attr("checked",false);
+		$("input[name=ObserveTime]").radio('setValue',false)
+	});
+});
+
+function initMethod(){
+	$("#skinSize").on("keypress",skinSizePress);
+	
 	$("#pddDiv").find("input").on('keyup',function(){	
 		getPPD();	
 	})
@@ -48,117 +120,68 @@ $(document).ready(function() {
 	$("#AN11").on("click",function(){
 		getPPD();
 	})
-	if (Allgryflag==1){ //2016-10-27 控制提示语句显示
-		$('#allergymess').show();
-	}
-  	//复选框按钮事件
-	$("input[type=checkbox]").each(function(){
-		$(this).click(function(){
-			$(this).is(':checked');
-		});
-	});
-	//复选框分组
-	InitUIStatus();
-	 //皮试方法
-	$('#TestMethodSel').combobox({
-		valueField:'id',
-		textField:'text',
-		data:methodSel
-	});  
-		 	
+	
 	//复选框按钮事件
 	$("input[type=checkbox]").each(function(){
 		$(this).click(function(){
 			$(this).is(':checked');
 		});
 	});
- 	//当皮试时间勾选时，清空皮试时间输入框
+	
+	//复选框按钮事件
+	$("input[type=checkbox]").each(function(){
+		$(this).click(function(){
+			$(this).is(':checked');
+		});
+	});
+	
+	//当皮试时间勾选时，清空皮试时间输入框
+	$HUI.radio("[name='ObserveTime']",{
+        onChecked:function(e,value){
+		   $('#ObserveDefine').val("");
+        }
+  	});
+ 	/*/当皮试时间勾选时，清空皮试时间输入框
      $("input[type=checkbox][name=ObserveTime]").click(function(){
 		if($(this).is(':checked')){
 			$('#ObserveDefine').val("");
 		}
-	});
-	
-    $('#skinTesttb').datagrid({
-	    height:$(window).height()-350,
-	    pageSize:999,
-	    pageList:[999],
-	    pagination:true,
-        idField: 'id',
-        url: 'dhcapp.broker.csp?ClassName=web.DHCEMSkinTest&MethodName=ListPatHis&Ordid='+oeoreId,
-        columns: [[{
-            checkbox: true
-        },{
-		field: 'TestSkinSity',
-		title: '皮肤硬结',
-		align: 'center'
-		}, {
-		field: 'TestSkinVcl',
-		title: '局部水泡',
-		align: 'center'
-		}, {
-		field: 'TestSkinSwo',
-		title: '红肿',
-		align: 'center'
-		}, {
-		field: 'TestSkinNecrosis',
-		title: '坏死',
-		align: 'center'
-		}, {
-		field: 'TestSkinInflam',
-		title: '淋巴管炎',
-		align: 'center'
-		}, {
-		field: 'TestSkinSing',
-		title: '单个',
-		align: 'center'
-		},{
-		field: 'TestSkinSpora',
-		title: '散在',
-		align: 'center'
-		}, {
-		field: 'EpisodeID',
-		title: '就诊id',
-		align: 'center'
-		}, {
-		field: 'oeorid',
-		title: '医嘱id',
-		align: 'center'
-		},{
-		field: 'TestDate',
-		title: '日期',
-		align: 'center'
-		}, {
-		field: 'TestTime',
-		title: '时间',
-		align: 'center'
-		}, {
-		field: 'TestUser',
-		title: '记录人',
-		align: 'center'
-		}, {
-		field: 'id',
-		title: 'id',
-		align: 'center'
-		}, {
-		field: 'PDDResult',
-		title: 'PDD结果',
-		align: 'center'
+	});*/
+}
+
+function initPageValue(){
+	runClassMethod(
+	"web.DHCEMSkinTest", 
+	"GetSkinRsData", 
+	{'oeoriId':oeoreId}, 
+	function(data){
+	 	var pddRs = data.split("#")[0];
+	 	var skinInfo = data.split("#")[1];
+	 	if(pddRs==0){
+		 	$HUI.radio('#AN0').setDisable(true);
+			$HUI.radio('#AN1').setDisable(true);
+		 	$("#pddDiv").find("input").attr("disabled",true)
+		}else{
+		 	//$("#sTR0").attr("disabled",true)
+			//$("#sTR1").attr("disabled",true)
+			$HUI.radio('#sTR0').setDisable(true);
+			$HUI.radio('#sTR1').setDisable(true);
 		}
-		//,
-		//{
-		//field: 'op',
-		//title: '操作',
-		//formatter: 'opFormatter'
-		//}
-		]]
-    });
-	$("#ObserveDefine").focus(function(){
-		$("input[type=checkbox][name=ObserveTime]").attr("checked",false);;
-	});
-});
+		
+		if((skinInfo!="")&&(skinInfo!=undefined)){
+			
+			var ret="";
+			var skinInfoArr = skinInfo.split("^");
+			var skinRsDesc =skinInfoArr[3];
+			ret = $g("当前皮试结果")+":"+skinRsDesc+"  "+$g("皮试人")+":"+skinInfoArr[4]+"  "+$g("复核人")+":"+skinInfoArr[8];
+			$("#skinRs").html(ret);
+		}
+	},"text",false);	
+}
+
+
 function opFormatter(value, rowData){
-	return "<button class='btn btn-xs btn-danger btn-labeled fa fa-remove' type='button'  onclick='removeBTN(this);' data-Id='"+rowData.id+"'  >删除</button>" 
+	return "<button class='btn btn-xs btn-danger btn-labeled fa fa-remove' type='button'  onclick='removeBTN(this);' data-Id='"+rowData.id+"'  >"+$g("删除")+"</button>" 
 }
 function removeBTN(obj){
 	id=$(obj).attr("data-Id");
@@ -235,9 +258,20 @@ function StartSkinTest() {
 			return;
 		}
 		if (data == "0") {
-			window.opener.searchPatTest();
+			//window.opener.searchPatTest();
+			if(window.parent.frames["TRAK_main"]){ //hos
+				if(typeof window.parent.frames["TRAK_main"].searchPatTest ==="function"){
+					window.parent.frames["TRAK_main"].searchPatTest();
+				}
+			}
+//			if(window.top.frames[0]){
+//				if(typeof window.top.frames[0].searchPatTest ==="function"){
+//					window.top.frames[0].searchPatTest();
+//				}
+//			}
+			
 			$.messager.alert("提示","计时成功!","info",function(){
-				window.close();	
+				window.top.websys_showModal("close");
 			});	
 		}
 	},"json","true");
@@ -246,7 +280,7 @@ function StartSkinTest() {
 function GetObserveTime() {
 	var retTime = "";
 	var ObserveTime ="";
-    $("input[type=checkbox][name=ObserveTime]").each(function(){
+    $("input[name=ObserveTime]").each(function(){
 		if($(this).is(':checked')){
 			ObserveTime =this.value;
 		}
@@ -258,6 +292,7 @@ function GetObserveTime() {
 	if (ObserveTime=="2"){retTime = "20分钟";maxtime=20*60;}
 	if (ObserveTime=="3"){retTime = "48小时";maxtime=48*60*60;}
 	if (ObserveTime=="4"){retTime = "72小时";maxtime=72*60*60;}
+	if (ObserveTime=="5"){retTime = "30分钟";maxtime=30*60;}
 	if ((ObserveDefine>0)&&(isNaN(ObserveDefine)==false)){retTime = ObserveDefine+ "分钟";maxtime=ObserveDefine*60;}
 	return retTime;
 }
@@ -270,7 +305,7 @@ function butUpdateFn() {
 		TestOeoriDr = tmpTestOeoriDr[0] + "!!" + tmpTestOeoriDr[1];
 	}
 
-	data=serverCall("web.DHCEMSkinTest", "IfPatPSEnd", { 'Adm':TestAdmDr})
+	data=serverCall("web.DHCEMSkinTest", "IfPatPSEnd", { 'Adm':TestAdmDr,'oeoriId':oeoriStr})
 	 if (data == "1") {
 			$.messager.alert("提示","时间未到不能置皮试结果")
 			return;
@@ -280,12 +315,11 @@ function butUpdateFn() {
 		skinNote = "";
 	//皮试结果：Y 阳性  N 阴性
 	var skinTest ="";
-    $("input[type=checkbox][name=skinTestResult]").each(function(){
+    $("input[name=skinTestResult]").each(function(){
 		if($(this).is(':checked')){
 			skinTest =this.value;
 		}
 	})
-
 
 	var IfPPDOrder = 0,GetIfPPDOrder="";
 
@@ -318,7 +352,7 @@ function butUpdateFn() {
 		if (AbnormalNote1Text2!= "") skinNote = skinNote + "*" + AbnormalNote1Text2 + "mm";
 		//水泡分布  0 单个   1  散在    
 		var AbnormalNote ="";
-	    $("input[type=checkbox][name=AbnormalNote]").each(function(){
+	    $("input[name=AbnormalNote]").each(function(){
 			if($(this).is(':checked')){
 				AbnormalNote =this.value;
 			}
@@ -387,7 +421,7 @@ function butUpdateFn() {
 		}
 	}
 
-	data=serverCall("web.DHCEMSkinTest", "IfPatPSEnd", { 'Adm':TestAdmDr})
+	data=serverCall("web.DHCEMSkinTest", "IfPatPSEnd", { 'Adm':TestAdmDr,'oeoriId':oeoriStr})
 	if (Number(data)==1) {
 			$.messager.alert("提示","时间未到不能置皮试结果")
 			return;
@@ -411,16 +445,23 @@ function butUpdateFn() {
 			$.messager.alert("提示","请输入皮试用户密码");
 			return;
 		}
-		if (userCodeAudit == "") {
-			$.messager.alert("提示","请输入复核用户");
-			return;
+		if((SKINSIGNNUM==2)){
+			if (userCodeAudit == "") {
+				$.messager.alert("提示","请输入复核用户");
+				return;
+			}
+			if (passWordAudit == ""){
+				$.messager.alert("提示","请输入复核用户密码");
+				return;
+			}
+			if(SKINSINGTWOUSER!=1){
+				if(userCode.toUpperCase()==userCodeAudit.toUpperCase()){
+					$.messager.alert("提示","皮试用户和复核用户不允许为同一人");
+					return;
+				}	
+			}
 		}
-		if (passWordAudit == ""){
-			$.messager.alert("提示","请输入复核用户密码");
-			return;
-		}
-		
-		data=serverCall("web.DHCEMSkinTest", "ConfirmPassWord", { 'userCode':userCode,'passWord':passWord})
+		data=serverCall("web.DHCEMSkinTest", "ConfirmPassWord", { 'userCode':userCode,'passWord':passWord,'LocId':LgCtLocID})
 		if (data.split("^")[0] != 0) {
 			$.messager.alert("提示","皮试用户:" + data);
 			return;
@@ -428,14 +469,18 @@ function butUpdateFn() {
 			skinUserID = data.split("^")[1];   ///这个就是用户ID
 			skinUserCode=userCode;
 		}
-		
-		data=serverCall("web.DHCEMSkinTest", "ConfirmPassWord", { 'userCode':userCodeAudit,'passWord':passWordAudit})
-		if (data.split("^")[0] != 0) {
-			$.messager.alert("提示","复核用户:" + data);
-			return;
+		if(SKINSIGNNUM==2){
+			data=serverCall("web.DHCEMSkinTest", "ConfirmPassWord", { 'userCode':userCodeAudit,'passWord':passWordAudit,'LocId':LgCtLocID})
+			if (data.split("^")[0] != 0) {
+				$.messager.alert("提示","复核用户:" + data);
+				return;
+			}else{
+				skinAuditUserID = data.split("^")[1];   ///这个就是审核用户ID
+				skinAuditUserCode=userCodeAudit;
+			}
 		}else{
-			skinAuditUserID = data.split("^")[1];   ///这个就是审核用户ID
-			skinAuditUserCode=userCode;
+			skinAuditUserID=LgUserID;
+			skinAuditUserCode=LgUserCode;
 		}
 	}else{
 		skinUserID = LgUserID;   ///这个就是用户ID
@@ -447,9 +492,13 @@ function butUpdateFn() {
 	
 	///皮试批次
 	var skinSize = $('#skinSize').val();
+	if((ISSHOWATTACH==2)&&(skinSize=="")){
+		$.messager.alert("提示","请填写皮试批号");
+		return;
+	}
 	if(skinSize!=""){
-		skinSize ="批号:"+skinSize;
-		skinNote=skinNote==""?skinSize:skinSize+";"+skinNote;
+		skinSize =$g("批号")+":"+skinSize;
+		//skinNote=skinNote==""?skinSize:skinSize+";"+skinNote; 
 	}
 	
 	var savePDDInfo=getPDDDataInfo();
@@ -465,7 +514,8 @@ function butUpdateFn() {
 		'RegNo':RegNo,
 		'savePDDInfo':savePDDInfo,
 		'IfPPDOrder':IfPPDOrder,
-		'SKINAUTOEXE':SKINAUTOEXE
+		'skinSize':skinSize,
+		'lgParams':LgParams
 	}
 	
 	//置皮试结果
@@ -476,8 +526,13 @@ function butUpdateFn() {
 		$.messager.alert("提示","操作成功！","info",function(){
 			window.close()
 		});
-		window.opener.searchPatTest();
-		$("iframe:visible",window.opener.document).prop('contentWindow').search();
+		
+		if(parent.top.frames[0]!==undefined){
+			parent.top.frames[0].searchPatTest();
+			parent.top.frames[0].refreshAllergy(oeoriStr);
+			parent.top.frames[0].frames[0].search();
+			parent.top.frames[0].websys_showModal("close");
+		}
 		
 	 } else {
 		$.messager.alert("提示",retStr);
@@ -503,7 +558,7 @@ function getPDDDataInfo() {
     var TestSkinVclTwo=$('#AbnormalNote1Text2').val(); 
 	//水泡分布  0 单个   1  散在    
 	var AbnormalNote ="",TestSkinSing="",TestSkinSpora="";
-    $("input[type=checkbox][name=AbnormalNote]").each(function(){
+    $("input[name=AbnormalNote]").each(function(){
 		if($(this).is(':checked')){
 			AbnormalNote =this.value;
 		}
@@ -632,13 +687,17 @@ function getPPD(){
 		}
 
 		$("#PPDResult").val(retStr)
-		$("#sTR1").prop("checked",false)
-		$("#sTR0").prop("checked",false)
+		//$("#sTR1").prop("checked",false)
+		//$("#sTR0").prop("checked",false)
+		$HUI.radio('#sTR0').setValue(false);
+		$HUI.radio('#sTR1').setValue(false);
 		if(retStr!=""){
 			if("(-)"==retStr){
-				$("#sTR1").prop("checked",true)
+				//$("#sTR1").prop("checked",true)
+				$HUI.radio('#sTR1').setValue(true);
 			}else{
-				$("#sTR0").prop("checked",true)
+				//$("#sTR0").prop("checked",true)
+				$HUI.radio('#sTR0').setValue(true);
 			}
 		}
 		
@@ -665,7 +724,7 @@ function valiNumber(){
 }
 
 function initSetPage(){
-	if(ISSHOWATTACH==1){
+	if((ISSHOWATTACH==1)||(ISSHOWATTACH==2)){
 		$(".skinSizeItm").show();	
 	}
 	
@@ -674,12 +733,112 @@ function initSetPage(){
 		$("#passWord").attr("disabled",true);
 		$("#userCodeAudit").attr("disabled",true);
 		$("#passWordAudit").attr("disabled",true);
-		$("#userCode").val("不需签名");
-		$("#passWord").val("不需签名");
-		$("#userCodeAudit").val("不需签名");
-		$("#passWordAudit").val("不需签名");
+		$("#userCode").val($g("不需签名"));
+		$("#passWord").val($g("不需签名"));
+		$("#userCodeAudit").val($g("不需签名"));
+		$("#passWordAudit").val($g("不需签名"));
 	}else{
 		$('#userCode').val(LgUserCode);	
 	}
+	if(SKINSIGNNUM!=2){
+		$("#userCodeAudit").attr("disabled",true);
+		$("#passWordAudit").attr("disabled",true);
+		$("#userCodeAudit").val($g("不需复核"));
+		$("#passWordAudit").val($g("不需复核"));
+
+	}
+	$.m({ClassName:"web.DHCEMSkinTest",MethodName:"GetOrderInfo",OrdItmID:oeoreId},function(retData){
+		if (retData!=""){
+			retDataArr=retData.split("^");
+			$("#arciDesc").html($g("当前医嘱名称")+"："+retDataArr[0]);
+			var skinRs=retDataArr[1];
+			if(skinRs!=""){
+				$HUI.linkbutton("#btnStartSkinTest").disable();
+				$("#btnStartSkinTest").attr("title","已经出结果,不允许再次计时!");
+				if(skinRs=="Y"){
+					//$("#sTR0").attr("checked","checked");
+					$HUI.radio('#sTR0').setValue(true);
+				}else{
+					//$("#sTR1").attr("checked","checked");
+					$HUI.radio('#sTR1').setValue(true);
+				}
+			}
+			var ObserveTime=retDataArr[2];
+			var TestMethod=retDataArr[3];
+			if(TestMethod!=""){
+				$("#TestMethodSel").combobox("setText",TestMethod);	
+			}
+			if(ObserveTime!=""){
+				$("#ObserveDefine").val(parseFloat(ObserveTime));	
+			}
+			var ExecStatus=retDataArr[4];
+			if(ExecStatus=="Y"){
+				//$HUI.linkbutton("#updateBtn").disable();
+				//$("#userCode").attr("disabled",true);
+				//$("#passWord").attr("disabled",true);
+				//$("#userCodeAudit").attr("disabled",true);
+				//$("#passWordAudit").attr("disabled",true);
+				//$("#userCode").val(retDataArr[6]);
+				//$("#passWord").val(retDataArr[8]);
+				//$("#userCodeAudit").val(retDataArr[7]);
+				//$("#passWordAudit").val(retDataArr[9]);
+			}
+			var SkinSize=retDataArr[5];
+			$("#skinSize").val(SkinSize.replaceAll("批号:",""));
+		}
+	});
+	
+	
 	return;
+}
+
+
+
+
+function skinSizePress(e){
+	if(e.keyCode==13){
+		///皮试批次
+		var skinSize = $('#skinSize').val();
+		skinSize =$g("批号")+":"+skinSize;
+		//if((ISSHOWATTACH==1)&&(SKINNEEDPCMUST==1)&&(skinSize=="")){
+		if(((ISSHOWATTACH==1)||(ISSHOWATTACH==2))&&(skinSize=="")){
+			$.messager.alert("提示","皮试批次不能为空！");
+			return;
+		}
+		$cm({
+			ClassName:"web.DHCEMSkinTest",
+			MethodName:"UpdTestBatch",
+			dataType:"text",
+			"oeoriId":oeoreId,
+			"skinSize":skinSize
+		},function(retData){
+			if(retData==0){
+				$.messager.alert("提示","皮试批次保存成功！");
+			}else{
+				$.messager.alert("提示","皮试批次保存失败！");
+			}
+			return;
+		});		
+//		var skinNote="";
+//		if(skinSize!=""){
+//			var noteSkinSize ="批号:"+skinSize;
+//			skinNote=skinNote==""?noteSkinSize:noteSkinSize+";"+skinNote;
+//		}
+//		
+//		$cm({
+//			ClassName:"web.DHCEMSkinTest",
+//			MethodName:"UpdateOrderNote",
+//			dataType:"text",
+//			"oeoriId":oeoreId,
+//			"skinNote":skinNote,
+//			"skinSize":skinSize
+//		},function(retData){
+//			if(retData==0){
+//				$.messager.alert("提示","皮试批次保存成功！");
+//			}else{
+//				$.messager.alert("提示","皮试批次保存失败！");
+//			}
+//			return;
+//		});
+	}	
 }

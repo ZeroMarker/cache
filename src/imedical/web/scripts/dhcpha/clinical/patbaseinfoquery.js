@@ -1,6 +1,6 @@
 
 var url="dhcpha.clinical.action.csp";
-var statArray = [{ "value": "I", "text": "在院" },{ "value": "O", "text": "出院"}];
+var statArray = [{ "value": "I", "text": $g("在院") },{ "value": "O", "text": $g("出院")}];
 $(function(){
 	/* 初始化界面控件 */
 	InitComponent();
@@ -11,25 +11,25 @@ function InitComponent(){
 	//定义columns
 	var columns=[[
 		{field:"AdmDr",title:'AdmDr',width:90,hidden:true},
-		{field:'Ward',title:'病区',width:160},
-		{field:'PatNo',title:'登记号',width:80},
-		{field:'InMedicare',title:'病案号',width:80},
-		{field:'PatName',title:'姓名',width:80},
-		{field:'Bed',title:'床号',width:80},
-		{field:'PatSex',title:'性别',width:80},
-		{field:'PatAge',title:'年龄',width:80},
-		{field:'PatHeight',title:'身高',width:80},
-		{field:'PatWeight',title:'体重',width:80},
-		{field:'AdmLoc',title:'科室',width:150},
-		{field:'AdmDoc',title:'医生',width:80},
-		{field:'PatDiag',title:'诊断',width:180},
-		{field:'PatInDate',title:'入院时间',width:140},
-		{field:'PatOutDate',title:'出院时间',width:140},
-		{field:'OPer',title:'操作',width:100,align:'center',formatter:ShowPatMonInfo}
+		{field:'Ward',title:$g('病区'),width:160},
+		{field:'PatNo',title:$g('登记号'),width:80},
+		{field:'InMedicare',title:$g('病案号'),width:80},
+		{field:'PatName',title:$g('姓名'),width:80},
+		{field:'Bed',title:$g('床号'),width:80},
+		{field:'PatSex',title:$g('性别'),width:80},
+		{field:'PatAge',title:$g('年龄'),width:80},
+		{field:'PatHeight',title:$g('身高'),width:80},
+		{field:'PatWeight',title:$g('体重'),width:80},
+		{field:'AdmLoc',title:$g('科室'),width:150},
+		{field:'AdmDoc',title:$g('医生'),width:80},
+		{field:'PatDiag',title:$g('诊断'),width:180},
+		{field:'PatInDate',title:$g('入院时间'),width:140},
+		{field:'PatOutDate',title:$g('出院时间'),width:140},
+		{field:'OPer',title:$g('操作'),width:100,align:'center',formatter:ShowPatMonInfo}
 	]];
 	
 	/// 初始化 datagrid
-	var option = {title:'病人列表',singleSelect:true};
+	var option = {title:$g('病人列表'),singleSelect:true};
 	var mListComponent = new ListComponent('PatCompList', columns, '', option);
 	mListComponent.Init();
 	
@@ -76,7 +76,7 @@ function InitComponent(){
          });
 	
 	/// 查询按钮
-	$('a:contains("查询")').bind("click",Query);  //点击查询
+	$('a:contains('+$g("查询")+')').bind("click",Query);  //点击查询
 }
 
 //登记号查询  wangxuejian 2016-09-13
@@ -140,7 +140,7 @@ function SetPatNoLength(){
 /// 查看监护数据
 function  ShowPatMonInfo(value, rowData, rowIndex){
 
-   	return "<a href='#' mce_href='#' onclick='showPatMonWin("+rowData.AdmDr+");'>查看明细</a>";   //wangxuejian 2016-09-23   点击以后可以进行选取
+   	return "<a href='#' mce_href='#' onclick='showPatMonWin("+rowData.AdmDr+");'>"+$g("查看明细")+"</a>";   //wangxuejian 2016-09-23   点击以后可以进行选取
     
 }
 
@@ -154,8 +154,8 @@ function showPatMonWin(EpisodeID){
 		minimizable:false,					/// 隐藏最小化按钮
 		maximized:true						/// 最大化(qunianpeng 2018/5/2)
 	};
-	new WindowUX('病人药学监测信息查询', 'newItmWin', '950', '550', option).Init();
+	new WindowUX($g('病人药学监测信息查询'), 'newItmWin', '950', '550', option).Init();
 	
-	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.perpharservice.csp?EpisodeID='+EpisodeID+'"></iframe>';
+	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.perpharservice.csp?EpisodeID='+EpisodeID+'&MWToken='+websys_getMWToken()+'"></iframe>';
 	$("#newItmWin").html(iframe);  //csp 里面有
 }

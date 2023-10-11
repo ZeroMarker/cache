@@ -18,7 +18,9 @@ function initDocument()
 	initUserInfo();
     initMessage("MP"); 	//获取业务消息
     initLookUp(); 		//初始化放大镜
-    
+    // MZY0074	1850251		2021-04-30
+    var paramsFrom=[{"name":"Type","type":"2","value":"2"},{"name":"LocDesc","type":"1","value":"ARLocDR_CTLOCDesc"},{"name":"vgroupid","type":"2","value":""},{"name":"LocType","type":"2","value":"0101"},{"name":"notUseFlag","type":"2","value":""}];
+    singlelookup("ARLocDR_CTLOCDesc","PLAT.L.Loc",paramsFrom,"");
 	defindTitleStyle(); //hisui面板title样式定义
     initButton(); 		//按钮初始化
     //initPage(); 		//非通用按钮初始化
@@ -330,8 +332,11 @@ function GetAStockDetail(index,data)
 	
 	var quantityEdt = $('#DHCEQAReduce').datagrid('getEditor', {index:editIndex,field:'ARLQuantityNum'}); // 数量
 	$(quantityEdt.target).val(data.TStock);
-	var editor = $('#DHCEQAReduce').datagrid('getEditors', editIndex);
-	$(editor[0].target).combogrid("setValue",data.TDesc);
+	// MZY0057	1454499		2020-10-09	调整"配件名称"赋值方式
+	//var editor = $('#DHCEQAReduce').datagrid('getEditors', editIndex);
+	//$(editor[0].target).combogrid("setValue",data.TDesc);
+	var ARLDescEdt = $('#DHCEQAReduce').datagrid('getEditor', {index:editIndex,field:'ARLDesc'});
+	$(ARLDescEdt.target).combogrid("setValue",data.TDesc);
 	$('#DHCEQAReduce').datagrid('endEdit',editIndex);
 	$('#DHCEQAReduce').datagrid('beginEdit', editIndex);	// MZY0037	1400284		2020-07-06
 	bindGridEvent();
@@ -341,9 +346,11 @@ function GetReturnReason(index,data)
 {
 	var rowData = $('#DHCEQAReduce').datagrid('getSelected');
 	rowData.ARLHold1=data.TRowID;
-	
-	var editor = $('#DHCEQAReduce').datagrid('getEditors', editIndex);
-	$(editor[3].target).combogrid("setValue",data.TDesc);
+	// MZY0057	1454499		2020-10-09	调整"退货原因"赋值方式
+	//var editor = $('#DHCEQAReduce').datagrid('getEditors', editIndex);
+	//$(editor[3].target).combogrid("setValue",data.TDesc);
+	var ARLHold1RRDescEdt = $('#DHCEQAReduce').datagrid('getEditor', {index:editIndex,field:'ARLHold1_RRDesc'});
+	$(ARLHold1RRDescEdt.target).combogrid("setValue",data.TDesc);
 	$('#DHCEQAReduce').datagrid('endEdit',editIndex);
 	$('#DHCEQAReduce').datagrid('beginEdit', editIndex);	// MZY0037	1400284		2020-07-06
 	bindGridEvent();

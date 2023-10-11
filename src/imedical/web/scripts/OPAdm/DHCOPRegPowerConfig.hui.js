@@ -121,12 +121,14 @@ function InitLocListTabDataGrid(){
 			PageLogicObj.m_ResListTabDataGrid.datagrid("reload");
 			PageLogicObj.m_PoweredListTabDataGrid.datagrid("reload");
 		},onUncheckAll:function(rows){
-			if (PageLogicObj.m_ResListTabDataGrid!=""){
-				PageLogicObj.m_ResListTabDataGrid.datagrid("uncheckAll").datagrid('loadData', {"total":0,"rows":[]});
-			}
-			if (PageLogicObj.m_PoweredListTabDataGrid!=""){
-				PageLogicObj.m_PoweredListTabDataGrid.datagrid("uncheckAll").datagrid('reload');
-			}
+			 setTimeout(function() { 
+	        	if (PageLogicObj.m_ResListTabDataGrid!=""){
+					PageLogicObj.m_ResListTabDataGrid.datagrid("uncheckAll").datagrid('loadData', {"total":0,"rows":[]});
+				}
+				if (PageLogicObj.m_PoweredListTabDataGrid!=""){
+					PageLogicObj.m_PoweredListTabDataGrid.datagrid("uncheckAll").datagrid('reload');
+				}
+	        },500);
 		},
 		onCheckAll:function(){
 			if (PageLogicObj.m_ResListTabDataGrid=="") {
@@ -159,7 +161,8 @@ function InitResListTabDataGrid(){
 		onBeforeLoad:function(param){
 			$("#ResListTab").datagrid("uncheckAll");
 			var desc=$("#FindRes").searchbox('getValue'); 
-			param = $.extend(param,{GroupId:GetSelGroupId(),depstr:GetSelDeptStr(),docname:desc});
+			//新增院区ID
+			param = $.extend(param,{GroupId:GetSelGroupId(),depstr:GetSelDeptStr(),docname:desc,HospId:$HUI.combogrid('#_HospList').getValue()});
 		},
 		onLoadSuccess:function(data){
 			for (var i=0;i<data.rows.length;i++){
@@ -179,8 +182,8 @@ function InitPoweredListTabDataGrid(){
 		{field:'CTPCPDesc',title:'医生号别',width:110},
 		{field:'RESRowId',title:'操作',width:40,
 			formatter: function(value,row,index){
-				if (row["RESRowId"]!="") {
-					var btn = '<a class="editcls" onclick="CancelRegPower(\'' + row["RESRowId"] + '\')"><img src="../scripts_lib/hisui-0.1.0/dist/css/icons/edit_remove.png"/></a>';
+				if (row["RESRowId"]!="") { 
+					var btn = '<a class="editcls" onclick="CancelRegPower(\'' + row["LocId"] +'\',\''+ row["RESRowId"]+ '\')"><img src="../scripts_lib/hisui-0.1.0/dist/css/icons/edit_remove.png"/></a>';
 					return btn;
 				}
 			}
@@ -207,19 +210,38 @@ function InitPoweredListTabDataGrid(){
 	});
 	return PoweredListTabDataGrid;
 }
-function CancelRegPower(ResRowId){
+function CancelRegPower(LocId,ResRowId){
 	var GroupId=GetSelGroupId();
-	$.m({
-	    ClassName:"DHCDoc.DHCDocConfig.CommonFunction",
-	    MethodName:"DeleteGroupRes",
-	    GroupRowId:GroupId,
-	    ResRowId:ResRowId
-	},function(rtn){
-		if(rtn==0){
-			$.messager.popover({msg:'删除成功!',type:'success',timeout:1000});
-			PageLogicObj.m_PoweredListTabDataGrid.datagrid("reload");
-		}
-	})
+	var isShowDoc=$("#switch1").switchbox('getValue')?"Y":"N";
+	if (isShowDoc=="Y") {
+		$.m({
+		    ClassName:"DHCDoc.DHCDocConfig.CommonFunction",
+		    MethodName:"DeleteGroupRes",
+		    GroupRowId:GroupId,
+		    ResRowId:ResRowId,
+		    //新增院区ID
+	    	HospId:$HUI.combogrid('#_HospList').getValue()
+		},function(rtn){
+			if(rtn==0){
+				$.messager.popover({msg:'删除成功!',type:'success',timeout:1000});
+				PageLogicObj.m_PoweredListTabDataGrid.datagrid("reload");
+			}
+		})
+	}else{
+		$.m({
+		    ClassName:"DHCDoc.DHCDocConfig.CommonFunction",
+		    MethodName:"DeleteGroupResByLoc",
+		    GroupRowId:GroupId,
+		    LocId:LocId,
+		    //新增院区ID
+	    	HospId:$HUI.combogrid('#_HospList').getValue()
+		},function(rtn){
+			if(rtn==0){
+				$.messager.popover({msg:'删除成功!',type:'success',timeout:1000});
+				PageLogicObj.m_PoweredListTabDataGrid.datagrid("reload");
+			}
+		})
+	}
 }
 function GetSelDeptStr(){
 	var depstr=""; 
@@ -280,7 +302,9 @@ function BSavePowerClick(){
 	    MethodName:"SaveGroupRes",
 	    GroupRowId:GroupId,
 	    inPara:inPara,
-	    subPara:subPara
+	    subPara:subPara,
+	    ////新增院区ID
+	    HospId:$HUI.combogrid('#_HospList').getValue()
 	},function(rtn){
 		if(rtn==0){
 			$.messager.popover({msg:'授权保存成功',type:'success',timeout:1000});
@@ -323,7 +347,7 @@ function initRegRoomPowerWin(){
 		width:winW-40,
 		searcher:function(value){
 			var ResRowId=$('#reg-roompower-win-id').val();
-			$('#reg-roompower-win-list').datagrid('load',{ClassName:'web.DHCOPAdmPowerConfig',QueryName:'FindRoomByGroup',GroupId:GetSelGroupId(),Desc:value});
+			$('#reg-roompower-win-list').datagrid('load',{ClassName:'web.DHCOPAdmPowerConfig',QueryName:'FindRoomByGroup',GroupId:GetSelGroupId(),Desc:value,HospRowId:$HUI.combogrid('#_HospList').getValue()});
 		}
 	})
 	$('#reg-roompower-win-list').datagrid({
@@ -363,7 +387,9 @@ function saveRegRoomPower(){
 		MethodName:'SaveGroupRegRoomNew',
 		GroupRowId:GetSelGroupId(),
 		InResRoomStr:inStr,
-		OutResRoomStr:OutStr
+		OutResRoomStr:OutStr,
+		//新增院区ID
+		HospId:$HUI.combogrid('#_HospList').getValue()
 	},function(rtn){
 		if(rtn==0){
 			$.messager.popover({msg:'授权保存成功',type:'success',timeout:1000});

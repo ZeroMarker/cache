@@ -2,6 +2,7 @@
 function InitSuspScreeningWinEvent(obj){	
     
     obj.LoadEvent = function(args){ 
+        obj.gridScreeningLoad();
 	    //保存
 		$('#btnSave').on('click', function(){
 	     	obj.btnSave_click();
@@ -27,13 +28,41 @@ function InitSuspScreeningWinEvent(obj){
 		//检索框
 		$('#searchbox').searchbox({ 
 			searcher:function(value,name){ 
-				obj.gridScreening.load({
-					ClassName:'DHCMed.EPDService.SuspScreeningSrv',
-					QueryName:'QryScreenInfo',
-					aAlias:value
-				});
+				obj.gridScreeningLoad(value);
 			}	
 		});
+		//同步传染病字典别名
+		$('#btnSync').on('click', function(){
+			obj.SyncInfectionAlias();
+		});
+	}
+	
+		
+	//弹出加载层
+	function loadingWindow2() {	
+	    var left = ($(window).outerWidth(true)) / 2; 
+		var top = ($(window).height() - 35) / 2; 
+		var height = $(window).height() * 2; 
+ 		$("<div class=\"datagrid-mask\"></div>").css({ display: "block", width: "100%", height: height ,opacity: .7,'z-index': 5000}).appendTo("#divScreen"); 
+ 		$("<div class=\"datagrid-mask-msg\"></div>").html("数据同步中,请稍候...").appendTo("#divScreen").css({ display: "block", left: left, top: top }); 
+	}
+
+	//同步传染病字典别名
+	obj.SyncInfectionAlias = function(){
+		loadingWindow2();
+		window.setTimeout(function () {			
+			var Count= $m ({
+				ClassName:'DHCMed.EPDService.SuspScreeningSrv',
+				MethodName:'SyncInfectionAlias'
+			},false);
+			
+			if (Count>0) {
+				obj.gridScreeningLoad();
+			}
+			$.messager.popover({msg: '同步完成，共'+Count+'项',type:'success',timeout: 1000});
+			$(".datagrid-mask").remove();
+	   		$(".datagrid-mask-msg").remove(); 
+		}, 100); 		
 	}
 	
 	//窗体初始化
@@ -113,7 +142,7 @@ function InitSuspScreeningWinEvent(obj){
 			$HUI.dialog('#ScreeningEdit').close();
 			$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
 			$("#SuspScreening").datagrid('clearSelections');
-			obj.gridScreening.reload() ;//刷新当前页
+			obj.gridScreeningLoad();
 		}
 	}
 	//删除 
@@ -131,12 +160,17 @@ function InitSuspScreeningWinEvent(obj){
 				},false);
 
 				if (parseInt(flg) < 0) {
-					$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					if (parseInt(flg)=='-777') {
+						$.messager.alert("错误提示","-777：当前无删除权限，请启用删除权限后再删除记录!",'info');
+					}else {
+						$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					}
 					return;
 				} else {
 					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 					obj.RecRowID = "";
-					obj.gridScreening.reload() ;//刷新当前页
+					$("#SuspScreening").datagrid('clearSelections');
+					obj.gridScreeningLoad();
 				}
 			} 
 		});
@@ -197,6 +231,7 @@ function InitSuspScreeningWinEvent(obj){
 		}else{
 			obj.RecRowID = "";
 			$('#cboInfect').combobox('clear');
+			$('#cboType').combobox('clear');
 			$('#txtCondition').val('');
 			$('#txtNote').val('');
 			$('#txtIncludeKey').val('');
@@ -206,5 +241,18 @@ function InitSuspScreeningWinEvent(obj){
 			$('#chkIsActive').checkbox('setValue','');
 		}
 		$HUI.dialog('#ScreeningEdit').open();
+	}
+	
+	obj.gridScreeningLoad = function(aAlias){
+		$cm ({
+			ClassName:"DHCMed.EPDService.SuspScreeningSrv",
+			QueryName:"QryScreenInfo",
+			ResultSetType:"array",
+			aAlias:aAlias,
+			page:1,
+			rows:9999
+		},function(rows){
+			obj.gridScreening.loadData({"rows":rows});
+		});
 	}
 }

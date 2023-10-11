@@ -8,72 +8,81 @@ var EndDate=formatDate(0);  //系统的当前日期
 var StrParam="";
 var url = "dhcadv.repaction.csp";
 $(function(){ 
-	if(DateFormat=="4"){ 				//日期格式 4:"DMY" DD/MM/YYYY
-		StDate="01"+"/"+"01"+"/"+2018;  //当年开始日期
-	}else if(DateFormat=="3"){ 			//日期格式 3:"YMD" YYYY-MM-DD
-		StDate=2018+"-"+"01"+"-"+"01";  //当年开始日期
-	}else if(DateFormat=="1"){ 			//日期格式 1:"MDY" MM/DD/YYYY
-		StDate="01"+"/"+"01"+"/"+2018;  //当年开始日期
+	InitPageComponent(); 	  /// 初始化界面控件内容
+	InitPageButton();         /// 界面按钮控制
+	InitPageDataGrid();		  /// 初始化页面datagrid
+});
+// 初始化界面控件内容
+function InitPageComponent()
+{
+	var myDate = new Date();
+    var yearArr = [];//创建年度数组-近10年
+    for(year= parseInt(myDate.getFullYear())-10;year<=parseInt(myDate.getFullYear());year++)
+	{
+		yearArr.push({"value":year,"text":year});
 	}
-	$('#dept').combobox({ //  yangyongtao   2017-11-17
+	//加载下拉框
+	$("#year").combobox({
+		data:yearArr,
+        valueField:'value',
+        textField:'text'
+    });
+    $("#year").combobox("setValue", myDate.getFullYear()); 
+	$('#dept').combobox({ 
 		mode:'remote',  //必须设置这个属性
 		onShowPanel:function(){ 
 			$('#dept').combobox('reload',url+'?action=GetAllLocNewVersion&hospId='+LgHospID+'')
 		}
 	});
-	$('#FindByLoc').bind("click",Query);  	   				    //查询
-    $('#ExportByLoc').bind("click",ExportByMonths); 	 			//导出
-	$("#stdate").datebox("setValue", StDate);  
-	$("#enddate").datebox("setValue", EndDate); 
-	$("#reqList").height($(window).height()-245)//hxy 08-28 st
-	InitPatList();
-});
+	$("#reqList").height($(window).height()-245);
+}
+// 初始化界面按钮内容
+function InitPageButton()
+{
+	$('#FindByLoc').bind("click",Query);  //查询
+    $('#ExportByLoc').bind("click",ExportByMonths); //导出
+}
 
 //初始化报告列表
-function InitPatList()
+function InitPageDataGrid()
 {
 	//定义columns
 	var columns=[[
-	    {field:'locName',title:'上报科室',width:120},
-	    {field:'oneMonNum',title:'一月',width:60},
-	    {field:'TwoMonNum',title:'二月',width:60},
-	    {field:'ThreeMonNum',title:'三月',width:60},
-	    {field:'SpringMonNum',title:'一季度',width:60},
-	    {field:'FourMonNum',title:'四月',width:60},
-	    {field:'FiveMonNum',title:'五月',width:60},
-	    {field:'SixMonNum',title:'六月',width:60},
-	    {field:'SummerMonNum',title:'二季度',width:60},
-	    {field:'SevenMonNum',title:'七月',width:60},
-	    {field:'EightMonNum',title:'八月',width:60},
-	    {field:'NineMonNum',title:'九月',width:60},
-	    {field:'AutumnMonNum',title:'三季度',width:60},
-	    {field:'TenMonNum',title:'十月',width:60},
-	    {field:'ElevenMonNum',title:'十一月',width:60},
-	    {field:'TwelveMonNum',title:'十二月',width:60},
-	    {field:'WinterMonNum',title:'四季度',width:60},
-	    {field:'TotleNum',title:'合计',width:60}
+	    {field:'locName',title:$g('上报科室'),width:120},
+	    {field:'oneMonNum',title:$g('一月'),width:60},
+	    {field:'TwoMonNum',title:$g('二月'),width:60},
+	    {field:'ThreeMonNum',title:$g('三月'),width:60},
+	    {field:'SpringMonNum',title:$g('一季度'),width:60},
+	    {field:'FourMonNum',title:$g('四月'),width:60},
+	    {field:'FiveMonNum',title:$g('五月'),width:60},
+	    {field:'SixMonNum',title:$g('六月'),width:60},
+	    {field:'SummerMonNum',title:$g('二季度'),width:60},
+	    {field:'SevenMonNum',title:$g('七月'),width:60},
+	    {field:'EightMonNum',title:$g('八月'),width:60},
+	    {field:'NineMonNum',title:$g('九月'),width:60},
+	    {field:'AutumnMonNum',title:$g('三季度'),width:60},
+	    {field:'TenMonNum',title:$g('十月'),width:60},
+	    {field:'ElevenMonNum',title:$g('十一月'),width:60},
+	    {field:'TwelveMonNum',title:$g('十二月'),width:60},
+	    {field:'WinterMonNum',title:$g('四季度'),width:60},
+	    {field:'TotleNum',title:$g('合计'),width:60}
 	
 
 	]];
-	var StDate=$('#stdate').datebox('getValue');   //起始日期
-	var EndDate=$('#enddate').datebox('getValue'); //截止日期
-	var LocID=$('#dept').combobox('getValue');     //科室ID
-	if (LocID==undefined){LocID="";}
-	var StrParam=StDate +"^"+ EndDate +"^"+ LocID+"^"+LgHospID+"^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID ; //hxy 2020-02-26 4567
   
 	//定义datagrid
 	$('#maindg').datagrid({
 		toolbar: '#toolbar',
 		title:'',
 		method:'get',
-		url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=StatAllRepByLocMon'+'&StrParam='+StrParam,
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=StatAllRepByLocMon'+'&StrParam='+StrParam+'&LgParam='+LgParam,
 		fit:true,
 		rownumbers:true,
 		columns:columns,
 		pageSize:40,  			// 每页显示的记录条数
 		pageList:[40,80],   	// 可以设置每页记录条数的列表
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		nowrap:false,
 		//height:300,
@@ -92,15 +101,15 @@ function InitPatList()
 function Query()
 {
 	$('#maindg').datagrid('loadData', {total:0,rows:[]}); 
-	var StDate=$('#stdate').datebox('getValue');   //起始日期
-	var EndDate=$('#enddate').datebox('getValue'); //截止日期
+	var Year= $("#year").combobox("getValue") ; //年份
 	var LocID=$('#dept').combobox('getValue');     //科室ID
 	if (LocID==undefined){LocID="";}
-	var StrParam=StDate+"^"+EndDate+"^"+LocID
+	var StrParam=Year+"^"+ LocID ; 
 	$('#maindg').datagrid({
 		url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=StatAllRepByLocMon',	
 		queryParams:{
-			StrParam:StrParam}
+			StrParam:StrParam,
+			LgParam:LgParam}
 	});
 }
 
@@ -113,12 +122,11 @@ function ExportByMonths()
 {	
 	var strjLen=0; 
  	var strjData="";
- 	var StDate=$('#stdate').datebox('getValue');   //起始日期
-	var EndDate=$('#enddate').datebox('getValue'); //截止日期
+ 	var Year= $("#year").combobox("getValue") ; //年份
 	var LocID=$('#dept').combobox('getValue');     //科室ID
 	if (LocID==undefined){LocID="";}
-	var StrParam=StDate +"^"+ EndDate +"^"+ LocID+"^"+LgHospID+"^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID ; //hxy 2020-02-26 4567	
-	runClassMethod("web.DHCADVCOMMONPART","StatAllRepByLocMon",{"StrParam":StrParam},
+	var StrParam=Year+"^"+ LocID+"^"+LgHospID+"^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID ; //hxy 2020-02-26 4567	
+	runClassMethod("web.DHCADVCOMMONPART","StatAllRepByLocMon",{"StrParam":StrParam,"LgParam":LgParam},
 	function(data){ 
 		strjData=data.rows;
 		strjLen=data.total;
@@ -131,7 +139,6 @@ function ExportByMonths()
 	},'',false)
 	
 	xlsApp = new ActiveXObject("Excel.Application");
-	//alert(TemplatePath)
 	xlsBook = xlsApp.Workbooks.Add();
 	xlsSheet = xlsBook.ActiveSheet;
 	xlsSheet.PageSetup.LeftMargin=0;  
@@ -143,27 +150,25 @@ function ExportByMonths()
 	xlsSheet.cells(1,1).Font.Size =18;
 	xlsSheet.cells(1,1).HorizontalAlignment = -4108;
 	
-	runClassMethod("web.DHCEMRegister","gethHospitalName",{'locId':LgCtLocID},function(jsonString){
-		xlsSheet.cells(1,1) = jsonString;     //QQA  2016-10-16   
-	},'text',false)
-	xlsSheet.cells(2,1)="上报科室";  
-	xlsSheet.cells(2,2)="一月";
-   	xlsSheet.cells(2,3)="二月";
-    xlsSheet.cells(2,4)="三月";
-    xlsSheet.cells(2,5)="一季度";
-    xlsSheet.cells(2,6)="四月";
-    xlsSheet.cells(2,7)="五月";
-    xlsSheet.cells(2,8)="六月";
-    xlsSheet.cells(2,9)="二季度";
-    xlsSheet.cells(2,10)="七月";
-    xlsSheet.cells(2,11)="八月";
-    xlsSheet.cells(2,12)="九月";
-    xlsSheet.cells(2,13)="三季度";
-    xlsSheet.cells(2,14)="十月";
-    xlsSheet.cells(2,15)="十一月";
-    xlsSheet.cells(2,16)="十二月";
-    xlsSheet.cells(2,17)="四季度";
-    xlsSheet.cells(2,18)="合计";
+	xlsSheet.cells(1,1) = LgHospDesc;     
+	xlsSheet.cells(2,1)=$g("上报科室");  
+	xlsSheet.cells(2,2)=$g("一月");
+   	xlsSheet.cells(2,3)=$g("二月");
+    xlsSheet.cells(2,4)=$g("三月");
+    xlsSheet.cells(2,5)=$g("一季度");
+    xlsSheet.cells(2,6)=$g("四月");
+    xlsSheet.cells(2,7)=$g("五月");
+    xlsSheet.cells(2,8)=$g("六月");
+    xlsSheet.cells(2,9)=$g("二季度");
+    xlsSheet.cells(2,10)=$g("七月");
+    xlsSheet.cells(2,11)=$g("八月");
+    xlsSheet.cells(2,12)=$g("九月");
+    xlsSheet.cells(2,13)=$g("三季度");
+    xlsSheet.cells(2,14)=$g("十月");
+    xlsSheet.cells(2,15)=$g("十一月");
+    xlsSheet.cells(2,16)=$g("十二月");
+    xlsSheet.cells(2,17)=$g("四季度");
+    xlsSheet.cells(2,18)=$g("合计");
     for (i=1;i<=strjLen;i++)
     { 
     
@@ -188,8 +193,8 @@ function ExportByMonths()
 	    
  	 }
 	xlsSheet.Columns.AutoFit; 
-	succflag=xlsBook.SaveAs("按上报科室和月份查询.xls");
-	xlApp.Visible=true;
+	succflag=xlsBook.SaveAs(Year+"年按上报科室和月份查询.xls");
+	xlsApp.Visible=true;
      
 	xlsBook=null; 
 	xlsSheet=null;
@@ -205,10 +210,5 @@ function gridlist(objSheet,row1,row2,c1,c2)
 	objSheet.Range(objSheet.Cells(row1, c1), objSheet.Cells(row2,c2)).Borders(3).Weight=2
 	objSheet.Range(objSheet.Cells(row1, c1), objSheet.Cells(row2,c2)).Borders(4).LineStyle=1; 
 	objSheet.Range(objSheet.Cells(row1, c1), objSheet.Cells(row2,c2)).Borders(4).Weight=2
-}
-
-function $g(){	
-	if (arguments[0]== null || arguments[0]== undefined) return "" 
-	return arguments[0];
 }
 

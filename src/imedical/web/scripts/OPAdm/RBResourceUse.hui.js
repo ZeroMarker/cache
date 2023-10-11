@@ -4,8 +4,15 @@ var PageLogicObj={
 $(document).ready(function(){
 	Init();
 	InitEvent();
-	
+	InitCache();
 });
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function Init(){
 	//InitGHUser();
 	var hospComp = GenHospComp("DHCUserGroup");

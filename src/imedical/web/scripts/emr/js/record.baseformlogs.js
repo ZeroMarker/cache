@@ -73,8 +73,19 @@ function openDocumentLog(obj,ModelName)
 		var ConditionAndContent = Condition;
 		$.ajax({ 
 			type: "POST", 
+			dataType: "text",
 			url: "../EMRservice.Ajax.SetDataToEventLog.cls", 
-			data: "ModelName="+ ModelName + "&ConditionAndContent=" + ConditionAndContent + "&SecCode=" + SecCode
+			data: {
+				"ModelName":ModelName,
+				"ConditionAndContent":ConditionAndContent,
+				"SecCode":SecCode
+			},
+			success: function(d){
+				
+			},
+			error: function(d){
+				//alert("error" + d);
+			}
 		});
 	}
 }
@@ -109,8 +120,19 @@ function CreateDocumentLog(obj,ModelName)
 		var ConditionAndContent = Condition;
 		$.ajax({ 
 			type: "POST", 
+			dataType: "text",
 			url: "../EMRservice.Ajax.SetDataToEventLog.cls", 
-			data: "ModelName="+ ModelName + "&ConditionAndContent=" + ConditionAndContent + "&SecCode=" + SecCode
+			data: {
+				"ModelName":ModelName,
+				"ConditionAndContent":ConditionAndContent,
+				"SecCode":SecCode
+			},
+			success: function(d){
+				
+			},
+			error: function(d){
+				//alert("error" + d);
+			}
 		});
 	}	
 }
@@ -133,8 +155,19 @@ function CreateGroupDocumentLog(obj,ModelName)
 		var ConditionAndContent = Condition;
 		$.ajax({ 
 			type: "POST", 
+			dataType: "text",
 			url: "../EMRservice.Ajax.SetDataToEventLog.cls", 
-			data: "ModelName="+ ModelName + "&ConditionAndContent=" + ConditionAndContent + "&SecCode=" + SecCode
+			data: {
+				"ModelName":ModelName,
+				"ConditionAndContent":ConditionAndContent,
+				"SecCode":SecCode
+			},
+			success: function(d){
+				
+			},
+			error: function(d){
+				//alert("error" + d);
+			}
 		});
 	}	
 }
@@ -172,8 +205,19 @@ function setOperationLog(params,ModelName)
 		var ConditionAndContent = Condition;
 		$.ajax({ 
 			type: "POST", 
+			dataType: "text",
 			url: "../EMRservice.Ajax.SetDataToEventLog.cls", 
-			data: "ModelName="+ ModelName + "&ConditionAndContent=" + ConditionAndContent + "&SecCode=" + SecCode
+			data: {
+				"ModelName":ModelName,
+				"ConditionAndContent":ConditionAndContent,
+				"SecCode":SecCode
+			},
+			success: function(d){
+				
+			},
+			error: function(d){
+				//alert("error" + d);
+			}
 		});
 	}	
 }
@@ -191,11 +235,23 @@ function setLockToLog(id,docId,ModelName)
 		Condition = Condition + '"userName":"' + userName + '",';
 		Condition = Condition + '"userID":"' + userID + '",';
 		Condition = Condition + '"ipAddress":"' + ipAddress + '"}';
+		var ConditionAndContent = Condition;
 		$.ajax({ 
 			type: "POST", 
+			dataType: "text",
 			url: "../EMRservice.Ajax.SetDataToEventLog.cls", 
-			data: "ModelName="+ ModelName + "&ConditionAndContent=" + Condition + "&SecCode=" + SecCode
-		});	
+			data: {
+				"ModelName":ModelName,
+				"ConditionAndContent":ConditionAndContent,
+				"SecCode":SecCode
+			},
+			success: function(d){
+				
+			},
+			error: function(d){
+				//alert("error" + d);
+			}
+		});
 	}
 }
 
@@ -215,8 +271,51 @@ function setFavoritesLog()
 		var ConditionAndContent = Condition;
 		$.ajax({ 
 			type: "POST", 
+			dataType: "text",
 			url: "../EMRservice.Ajax.SetDataToEventLog.cls", 
-			data: "ModelName="+ ModelName + "&ConditionAndContent=" + ConditionAndContent + "&SecCode=" + SecCode
+			data: {
+				"ModelName":ModelName,
+				"ConditionAndContent":ConditionAndContent,
+				"SecCode":SecCode
+			},
+			success: function(d){
+				
+			},
+			error: function(d){
+				//alert("error" + d);
+			}
+		});
+	}	
+}
+
+///诊前问诊
+function setMedHistoryLog(ModelName)
+{
+	if (IsSetToLog == "Y")
+	{
+		var ipAddress = getIpAddress();
+		var Condition = "";
+		Condition = Condition + '{"patientID":"' + patientID + '",';
+		Condition = Condition + '"episodeID":"' + episodeID + '",';
+		Condition = Condition + '"userName":"' + userName + '",';
+		Condition = Condition + '"userID":"' + userID + '",';
+		Condition = Condition + '"ipAddress":"' + ipAddress + '"}';
+		var ConditionAndContent = Condition;
+		$.ajax({ 
+			type: "POST", 
+			dataType: "text",
+			url: "../EMRservice.Ajax.SetDataToEventLog.cls", 
+			data: {
+				"ModelName":ModelName,
+				"ConditionAndContent":ConditionAndContent,
+				"SecCode":SecCode
+			},
+			success: function(d){
+				
+			},
+			error: function(d){
+				//alert("error" + d);
+			}
 		});
 	}	
 }

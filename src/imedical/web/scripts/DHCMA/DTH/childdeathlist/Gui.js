@@ -11,14 +11,24 @@ function InitChildDeathList(){
 	$HUI.combobox('#cboSSHosp',{
 	    onSelect:function(rows){
 		    var HospID=rows["CTHospID"];
-		    obj.cboRepLoc = Common_ComboToLoc("cboRepLoc","","","",HospID);
+		    obj.cboRepLoc = Common_ComboToLoc("cboRepLoc","E|EM","","",HospID);
 	    }
     });
      var nowDate = new Date();
      nowDate.setMonth(nowDate.getMonth()-1);
     obj.txtStartDate = $('#txtStartDate').datebox('setValue', Common_GetDate(nowDate));// 日期初始赋值
     obj.txtEndDate = $('#txtEndDate').datebox('setValue', Common_GetDate(new Date()));
-
+	//报告状态
+	obj.cboRepStatus = Common_ComboToDic("cboRepStatus","DTHRunningState","1");
+	var DicInfo = $m({                   
+		ClassName:"DHCMed.SSService.DictionarySrv",
+		MethodName:"GetDicByDesc",
+		argType:"DTHRunningState",
+		argDesc:"待审",
+		argIsActive:"1"
+	},false);
+	$("#cboRepStatus").combobox('setValue',DicInfo.split("^")[0])
+	$("#cboRepStatus").combobox('setText',DicInfo.split("^")[2])
 	//日期类型
 	$('#cboDateType').combobox({      
 		valueField:'Code',    
@@ -65,25 +75,17 @@ function InitChildDeathList(){
 		loadMsg:'数据加载中...',
 		pageSize: 20,
 		pageList : [20,50,100,200],
-		url:$URL,
-	    queryParams:{
-		    ClassName:"DHCMed.DTHService.ReportChildSrv",
-			QueryName:"QryDeathPatients",
-			aDateType: $('#cboDateType').combobox('getValue'), 			
-			aDateFrom: $('#txtStartDate').datebox('getValue'), 
-			aDateTo: $('#txtEndDate').datebox('getValue'), 
-			aLocID: $('#cboRepLoc').combobox('getValue'),
-			aHospID:$('#cboSSHosp').combobox('getValue'),   
-			aExamConts: obj.GetExamConditions(),
-			aExamSepeare: "^"
-	    },
 		columns:[[
 			{field:'ReportID',title:'操作',width:45,align:'center',
 				formatter: function(value,row,index){
 					if (value=="") return "";
 					var ReportID = row["ReportID"];
 					var EpisodeID = row["Paadm"];
-					var btn = '<a href="#" class="btn_detail" onclick="objScreen.OpenDeathReport(\'' + EpisodeID + '\',\'' + ReportID + '\')"></a>';
+					if ((typeof HISUIStyleCode != 'undefined') && (HISUIStyleCode=="lite")) {
+						var btn = '<a href="#" class="icon icon-paper" onclick="objScreen.OpenDeathReport(\'' + EpisodeID + '\',\'' + ReportID + '\')"></a>';
+					} else {
+						var btn = '<a href="#" class="btn_detail" onclick="objScreen.OpenDeathReport(\'' + EpisodeID + '\',\'' + ReportID + '\')"></a>';
+					}
 					return btn;
 				}
 			}, 

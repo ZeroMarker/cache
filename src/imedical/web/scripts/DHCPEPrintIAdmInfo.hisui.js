@@ -16,25 +16,45 @@ $(function(){
     });
 	
 })
+
 function InitPrintIAdmInfoDataGrid(){
 	$HUI.datagrid("#dhcpeprintiadmlist",{
 		url:$URL,
-		nowrap:false,
+		fit : true,
+		border : false,
+		striped : false,
+		fitColumns : false,
+		autoRowHeight : true,
+		rownumbers:true,
+		pagination : true,  
+		pageSize: 20,
+		pageList : [20,100,200],
+		singleSelect: false,
+		checkOnSelect: true, //如果为false, 当用户仅在点击该复选框的时候才会被选中或取消
+		selectOnCheck: true,
 		queryParams:{
 			ClassName:"web.DHCPE.PrintIAdmInfo",
 			QueryName:"SearchPrintIAdmInfo", 
 			PAADM:IAdmId
 		},columns:[[
-			{field:'STation',width:'90',title:'科室'},
+			{field:'STation',width:'90',title:'站点'},
 			{field:'LabSpecNo',width:'160',title:'标本号'},
-			{field:'ARCIMDesc',width:'160',title:'项目'},
-			{field:'OrdName',width:'180',title:'检查项目'},
-			{field:'Str',title:'操作',width:'40',
-			formatter:function(value,row,index){
+			{field:'ARCIMDesc',width:'260',title:'医嘱名称'},
+			{field:'IsPrint',width:'200',title:'是否已打印',align:'center',
+				formatter:function(value,rowData,rowIndex){
+					var rvalue="",checked="";
+					if(value!=""){
+	   					if (value=="Y") {checked="checked=checked"}
+						else{checked=""}
+						var rvalue=rvalue+"<input type='checkbox'  disabled='true' "+checked+">"	
+						return rvalue;
+					}
+				
+				}},
+			{field:'Str',title:'打印',width:'60',
+				formatter:function(value,row,index){
 				if(value!=""){
-					return "<a href='#' onclick='PrintBarCodeTJ(\""+value+"\")'>\
-					<img src='../images/dhcpe/打印.png' border=0/>\
-					</a>";
+					return "<span style='cursor:pointer;' class='icon-print' title='打印条码' onclick='PrintBarCodeTJ(\""+value+"\")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";
 				}
 				}}
 		]]
@@ -44,10 +64,15 @@ function InitPrintIAdmInfoDataGrid(){
 	})
 }
 
-
+/*
 function PrintAllBarCode()
 {
-	
+	var Rows=$('#dhcpeprintiadmlist').datagrid('getRows');
+	 if(Rows.length=="0"){
+		 $.messager.alert("提示","没有待打印的数据","info");
+		 return false;
+	 } 
+
 	   var iTAdmId=IAdmId;
 	    var IADM=$.m({
 			"ClassName":"web.DHCPE.DHCPEIAdm",
@@ -69,11 +94,39 @@ function PrintAllBarCode()
 		return false;
 	}
 
-       BarCodePrintHISUI(iTAdmId,"1");
+       BarCodePrintHISUI(iTAdmId,"");
     
        SpecItemPrintLCT(iTAdmId);
 	
-   //window.location.reload();
+   return false;
+    
+}
+*/
+function PrintAllBarCode()
+{
+	 var Rows=$('#dhcpeprintiadmlist').datagrid('getRows');
+	 if(Rows.length=="0"){
+		 $.messager.alert("提示","没有待打印的数据","info");
+		 return false;
+	 } 
+
+	 var iTAdmId=IAdmId;
+	 var IADM=tkMakeServerCall("web.DHCPE.DHCPEIAdm","GetIAdmIdByPaadm",iTAdmId);
+	 if(IADM==""){
+		   	   return false;   
+	   }
+	 var flag=tkMakeServerCall("web.DHCPE.DHCPEIAdm","HaveNoPayedItem",IADM);
+	  
+      if (flag=="1"){
+			$.messager.alert("提示","存在未付费项目，不能打印！","info");
+			return false;
+		}else{
+
+       		BarCodePrintHISUI(iTAdmId,"");
+    
+       		SpecItemPrintLCT(iTAdmId);
+		}
+	
    return false;
     
 }
@@ -108,7 +161,7 @@ function BarCodePrintHISUI(iTAdmId,OrderFlag)
 		
 		//var Str=tkMakeServerCall("web.DHCPE.BarPrint","GetPatOrdItemInfoNew",InString,"Y","N",OrderFlag)
 		if(Str=="NoPayed"){
-			$.messager.alert("提示","未付费项目");
+			$.messager.alert("提示","存在未付费项目，不能打印！","info");
 		    return false;
 			
 		}
@@ -169,7 +222,7 @@ function BarPrintHISUI(value) {
 	}
 	if (value=="NoPayed")
 	{
-		$.messager.alert("提示","未付费项目");
+		$.messager.alert("提示","存在未付费项目，不能打印！","info");
 		return false;
 	}
 	var ArrStr=value.split("$$");
@@ -236,7 +289,7 @@ function PrintOneRisBarCode(IAdmId,OEORI)
 		
 		
 	if( IsRISFlag=="1"){PrintBarRis(Info);}
-	
+	if((IsPISFlag=="0")&&(IsRISFlag=="0")) {PrintBarRis(Info);}
 	var IsPISFlag=$.m({
 			"ClassName":"web.DHCPE.CRM.RisGateway",
 			"MethodName":"IsPISOrdItem",
@@ -333,7 +386,7 @@ function PrintOneLisBarCode(IAdmId,SpecNo,OeOroId)
 		}, false);
 		
 		if(Str=="NoPayed"){
-			$.messager.alert("提示","未付费项目","info");
+			$.messager.alert("提示","存在未付费项目，不能打印！","info");
 		    return false;
 			
 		}
@@ -371,7 +424,7 @@ function PrintOneLisBarCode(IAdmId,SpecNo,OeOroId)
 	
 	if (value=="NoPayed")
 	{
-		$.messager.alert("提示","未付费项目","info");
+		$.messager.alert("提示","存在未付费项目，不能打印！","info");
 		return false;
 	}
     
@@ -445,7 +498,7 @@ function PrintOneLisBarCode(IAdmId,SpecNo,OeOroId)
 	
 	if (value=="NoPayed")
 	{
-		$.messager.alert("提示","未付费项目","info");
+		$.messager.alert("提示","存在未付费项目，不能打印！","info");
 		return false;
 	}
     
@@ -456,7 +509,7 @@ function PrintOneLisBarCode(IAdmId,SpecNo,OeOroId)
 			QueryName:"SearchPrintIAdmInfo",
 			PAADM:IAdmId
 	});	
-	//window.location.reload();
+	
 	return;
 	
 		}	

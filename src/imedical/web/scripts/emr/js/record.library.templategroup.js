@@ -179,8 +179,6 @@ function setListTemplate(data)
 	    data:data,
 	    singleSelect:true,
 	    idField:'id',
-	    sortName:'text',
-	    sortOrder:'desc',
 	    remoteSort:false,
 	    nowrap:true,
 	    striped:true,

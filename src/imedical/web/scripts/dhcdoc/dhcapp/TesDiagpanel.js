@@ -2,9 +2,10 @@
 	function Init(){
 		LoadTestItemList();
 		LoadOtherInfo();
+		InitPageCheckBox();
 	}
 	function LoadTestItemList(){
-		$("#TesDiag").html('<tr style="height:0px;" ><td style="width:20px;"></td><td style="width:20px;"></td><td></td><td style="width:20px;"></td><td></td><td style="width:20px;"></td><td></td><td style="width:20px;"></td><td></td></tr>');
+		$("#TesDiag").html('<tr style="height:0px;" ><td style="width:30px;"></td><td></td><td style="width:30px;"></td><td></td><td style="width:30px;"></td><td></td><td style="width:30px;"></td><td></td></tr>');
 		runClassMethod("web.DHCAppPisMasterQuery","JsonTesDiag",{"HospID":LgHospID},function(jsonString){
 
 			if (jsonString != ""){
@@ -17,7 +18,7 @@
 		}
 	function InsTesItemRegion(itemobj){
 		var htmlstr = '';
-		htmlstr = '<tr style="height:30px"><td colspan="9" class=" tb_td_required" style="border:0px solid #ccc;font-weight:bold;">'+ itemobj.text +'</td></tr>';
+		//htmlstr = '<tr style="height:30px"><td colspan="9" class=" tb_td_required" style="border:0px solid #ccc;font-weight:bold;">'+ itemobj.text +'</td></tr>';
 		var itemArr = itemobj.items;
 		var itemhtmlArr = []; itemhtmlstr = "";
 		for (var j=1; j<=itemArr.length; j++){
@@ -25,14 +26,16 @@
 			if (itemArr[j-1].text == "其他"){
 			   InputHtml = '<input type="text" class="name-input-80" id="TesDiag'+ itemArr[j-1].value +'"></input>';
 			}
-			itemhtmlArr.push('<td style="width:30px;"><input id="'+ itemArr[j-1].value +'" name="'+ itemArr[j-1].name +'" type="checkbox" value="'+ itemArr[j-1].value +'"></input></td><td>'+ itemArr[j-1].text +InputHtml+'</td>');
 			if (j % 4 == 0){
-				itemhtmlstr = itemhtmlstr + '<tr><td></td>' + itemhtmlArr.join("") + '</tr>';
+				itemhtmlArr.push('<td style="width:30px;"><input id="'+ itemArr[j-1].value +'" name="'+ itemArr[j-1].name +'" type="checkbox" class="checkbox" value="'+ itemArr[j-1].value +'"></input></td><td style="border-right:none;">'+ itemArr[j-1].text +InputHtml+'</td>');
+				itemhtmlstr = itemhtmlstr + '<tr>' + itemhtmlArr.join("") + '</tr>';
 				itemhtmlArr = [];
-			}
+			}else{
+				itemhtmlArr.push('<td style="width:30px;"><input id="'+ itemArr[j-1].value +'" name="'+ itemArr[j-1].name +'" type="checkbox" class="checkbox" value="'+ itemArr[j-1].value +'"></input></td><td>'+ itemArr[j-1].text +InputHtml+'</td>');
+				}
 		}
 		if ((j-1) % 4 != 0){
-			itemhtmlstr = itemhtmlstr + '<tr><td></td>' + itemhtmlArr.join("") + '<td style="width:30px"></td><td></td></tr>';
+			itemhtmlstr = itemhtmlstr + '<tr>' + itemhtmlArr.join("") + '<td style="width:30px"></td><td></td></tr>';
 			itemhtmlArr = [];
 		}
 		$("#TesDiag").append(htmlstr+itemhtmlstr)
@@ -96,7 +99,7 @@
 		    if($("[value='"+TesDiagArr[j].value+"'][name=TesDiag]").is(':checked')){
 			    var TestItem = "";
 			    if ($('#'+TesDiagArr[j].id).parent().next().text() == "其他"){
-					TestItem = $("#SentOrder"+ TesDiagArr[j].id).val();
+					TestItem = $("#TesDiag"+ TesDiagArr[j].id).val();
 				}
 				mPisTesDiagArr.push(TesDiagArr[j].value+"^"+ TestItem);
 		    }
@@ -113,6 +116,9 @@
 	    for (var j=0; j < PatSpecArr.length; j++){
 		    if($("[value='"+PatSpecArr[j].value+"'][name^=TesDiag]").is(':checked')){
 			    var PisSpecDesc = $("[value='"+PatSpecArr[j].value+"'][name^=TesDiag]").parent().next().text();
+				if ($('#'+PatSpecArr[j].id).parent().next().text() == "其他"){
+					PisSpecDesc = $("#TesDiag"+ PatSpecArr[j].id).val();
+				}
 				if (PisReqSpec==""){
 					PisReqSpec = PisSpecDesc 
 				}else{

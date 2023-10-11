@@ -389,7 +389,8 @@ QRCode.createData = function(typeNumber, errorCorrectLevel, dataList) {
 	for (var i = 0; i < rsBlocks.length; i++) {
 		totalDataCount += rsBlocks[i].dataCount;
 	}
-
+	//modify by cjt 20221106 ÐèÇóºÅ2834987
+	/*
 	if (buffer.getLengthInBits() > totalDataCount * 8) {
 		throw new Error("code length overflow. ("
 			+ buffer.getLengthInBits()
@@ -397,7 +398,7 @@ QRCode.createData = function(typeNumber, errorCorrectLevel, dataList) {
 			+  totalDataCount * 8
 			+ ")");
 	}
-
+	*/
 	// end code
 	if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
 		buffer.put(0, 4);

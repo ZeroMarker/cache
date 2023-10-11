@@ -887,7 +887,8 @@ function saveCfg() {
 			MethodName:"SavePWDetail",
 			DDPWRowID: mainId,
 			PatDetail: InPara,
-			BCNote: content
+			BCNote: content,
+			Action:"Add"
 		},function (responseText){
 			if(responseText == 0) {
 				$.messager.alert('提示','新增成功',"info");
@@ -1078,6 +1079,7 @@ function editPatInfo () {
 	var PatName = selected["PatName"];
 	var BCItemId = selected["BCItemId"];
 	var src="dhcdoc.passwork.editpat.hui.csp?EpisodeID="+EpisodeID+"&BCItemId="+BCItemId+"&BCode="+BCode+"&PatName="+PatName+"&PatientID="+PatientID;
+	if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
 	createModalDialog("EditPatInfo","修改类型", 450, 345,"icon-w-edit","",$code,"");
 	
@@ -1112,6 +1114,7 @@ function LoadTPLURL (BCItemId,TplURL,EpisodeID,PatWorkType) {
 	var tplWidth = TPLArr[0];
 	var tplHeight = TPLArr[1];
 	var src=TplURL + "?BCItemId="+BCItemId+"&TplURL="+TplURL+"&EpisodeID="+EpisodeID;
+	if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
 	createModalDialog("TPLURL","修改交班内容", tplWidth, tplHeight,"icon-w-edit","",$code,"");
 	
@@ -1152,6 +1155,7 @@ function ReLoadTPLURL (BCItemId,TplURL,EpisodeID,PatWorkType) {
 	var tplHeight = TPLArr[1];
 	
 	var src=TplURL + "?BCItemId="+BCItemId+"&TplURL="+TplURL+"&EpisodeID="+EpisodeID;
+	if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
 	RecreateModalDialog("TPLURL","修改交班内容", tplWidth, tplHeight,"icon-w-edit","",$code,"");
 	
@@ -1218,6 +1222,7 @@ function NextOrPrev (action) {	//从0开始
 function seeLabDetail(EpisodeID) {
 	//epr.newfw.episodelistbrowser.csp
 	var lnk= "emr.record.browse.csp?"+"&EpisodeID="+EpisodeID;
+	if(typeof websys_writeMWToken=='function') lnk=websys_writeMWToken(lnk);
    	window.open(lnk,"htm",'toolbar=no,location=no,directories=no,resizable=yes,width=1000,height=1000');
 }
 

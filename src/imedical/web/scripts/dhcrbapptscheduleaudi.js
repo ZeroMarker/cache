@@ -7,12 +7,14 @@ var PageLogicObj={
 $(document).ready(function(){
 	var hospComp = GenUserHospComp();
 	hospComp.jdata.options.onSelect = function(e,t){
-		ClearClick();
 		InitLoc();
-		InitDoc();
-		InitSessType();
+		$HUI.combobox("#ComboDoc").setValue("");
+		$HUI.combobox("#ComboDoc").loadData("")
+		//$("#ComboDoc").combobox('loadData',[]);
+		$HUI.combobox("#ComboSessType").setValue("");
 		InitReason();
 		ApptScheduleAudiDataGridLoad();
+		ClearClick();
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){
 		//初始化
@@ -51,7 +53,7 @@ function InitLoc(){
 				},onChange:function(newValue, oldValue){
 					if (newValue==""){
 						$HUI.combobox("#ComboDoc").setValue("");
-						$HUI.combobox("#ComboDoc", {data: '[{}]',});
+						$HUI.combobox("#ComboDoc").loadData("");
 					}
 				}
 		 });
@@ -127,7 +129,6 @@ function InitAudiStat(){
 }
 
 function InitReason(){
-	$HUI.combobox("#ComboReason", {})
     $.cm({
 		ClassName:"web.DHCRBApptScheduleAudi",
 		QueryName:"FindAudiReason",
@@ -135,7 +136,7 @@ function InitReason(){
 		HospID:$HUI.combogrid('#_HospUserList').getValue(),
 		rows:99999
 	},function(Data){
-		var cbox = $HUI.combobox("#ComboReason", {
+		var cbox = $HUI.combobox("#ComboReason,#win_ComboReason", {
 				valueField: 'TAudiID',
 				textField: 'TAudiDesc', 
 				editable:true,
@@ -152,15 +153,21 @@ function InitEvent(){
     $('#btnClear').click(ClearClick);
     $('#btnCancelAll').click(CancelAllClick);
     $('#btnAll').click(AllClick);
+    $('#win_RefuseSure').click(RefuseSureHandle);
     $HUI.checkbox("#Check_QryByLoc",{
 		onChecked:function(e,val){
 			setTimeout("ApptScheduleAudiDataGridLoad();",10)	
 		},
 		onUnchecked:function(e,val){
 			setTimeout("ApptScheduleAudiDataGridLoad();",10)
-		},	
+		}	
 	})
 }
+
+function AllClick(){
+	
+}
+
 function BCheckAll_click(){
 	$('#tabApptScheduleAudi').datagrid("selectAll");
 	$('#tabApptScheduleAudi').datagrid("checkAll");
@@ -178,7 +185,6 @@ function CancelAllClick(){
 
 function ClearClick(){
 	$HUI.combobox("#ComboLoc").setValue("");
-	$HUI.combobox("#ComboDoc").setValue("");
 	$HUI.combobox("#ComboSessType").setValue("");
 	$HUI.combobox("#ComboAudiStatus").select("N");	
 	$HUI.datebox("#StartDate").setValue("");
@@ -189,6 +195,8 @@ function ClearClick(){
 	$HUI.checkbox("#Check_Replace").setValue(false);
 	$HUI.combobox("#ComboReason").setValue("");
 	$HUI.datebox("#ScheduleDate").setValue("");
+	$HUI.combobox("#ComboDoc").setValue("");
+	$HUI.combobox("#ComboDoc").loadData("");
 }
 
 function InitApptScheduleAudiDataGrid()
@@ -216,7 +224,7 @@ function InitApptScheduleAudiDataGrid()
 		columns :[[ 
 				{field:'RowCheck',checkbox:true
 				},
-				{field:'TRequestType',title:'申请类型',width:75,align:'center'}, 
+				{field:'TRequestType',title:'申请类型',width:85,align:'center'}, 
 				{field:'TRequestDate',title:'申请时间',width:100,align:'center'}, 
 				{field:'TRequestWaitTime',title:'等待时长',width:80,align:'center'}, 
 				{field:'TLocDesc',title:'科室',width:150,align:'center'},								
@@ -234,7 +242,7 @@ function InitApptScheduleAudiDataGrid()
 							}
 						}
 				}, 
-				{field:'TDate',title:'时间',width:100,align:'center'}, 
+				{field:'TDate',title:'出诊日期',width:100,align:'center'}, 
 				{field:'TTimeRange',title:'时段',width:50,align:'center'}, 
 				{field:'TSessionType',title:'号别',width:100,align:'center'}, 
 				{field:'TRegNum',title:'限额',width:150,align:'center'},
@@ -327,7 +335,7 @@ function CheckComboxSelData(id,selId){
 	     }else if (id=="ComboDoc"){
 			var CombValue=Data[i].rowid;
 		 	var CombDesc=Data[i].OPLocdesc;
-	     }else if (id=="ComboReason"){
+	     }else if ((id=="ComboReason")||(id=="win_ComboReason")){
 			var CombValue=Data[i].TAudiID;
 		 	var CombDesc=Data[i].TAudiDesc;
 	     }else{
@@ -446,13 +454,28 @@ function BRefuse_click()
 		$.messager.alert("提示","请点击行上的勾选框,选择您需要操作的数据");
 		return "";
 	}
-	var ReasonDr=$HUI.combobox("#ComboReason").getValue();
-	ReasonDr=CheckComboxSelData("ComboReason",ReasonDr);
-	if (ReasonDr==""){
-		$.messager.alert("提示","请选择拒绝原因.");
+	ShowReasonWin();
+}
+
+function ShowReasonWin(){
+	$("#reason-dialog").dialog("open");
+	$("#win_ComboReason").combobox('select',"");
+	$("#win_ComboReason").next('span').find('input').focus();
+}
+function RefuseSureHandle(){
+	var flag=CheckQryByLoc()
+	var IDs=GetSelectIDs(flag);
+	if (IDs==""){
+		$.messager.alert("提示","请点击行上的勾选框,选择您需要操作的数据");
 		return "";
 	}
-	//var ret=tkMakeServerCall("web.DHCRBApptSchedule","RefuseRBASRequest",IDs)
+	var ReasonDr=$HUI.combobox("#win_ComboReason").getValue();
+	ReasonDr=CheckComboxSelData("win_ComboReason",ReasonDr);
+	if (ReasonDr==""){
+		$.messager.alert("提示","请选择拒绝原因.");
+		return false;
+	}
+	
 	$.messager.confirm('确认',"是否确认拒绝?",function(r){
 		if (r){
 			$.m({
@@ -470,7 +493,8 @@ function BRefuse_click()
 					$.messager.alert("提示","存在"+ret+"个不能操作的数据");
 					ApptScheduleAudiDataGridLoad();
 				}else{
-					$.messager.show("提示","操作成功");
+					$.messager.popover({msg: '操作成功！',type:'success',timeout: 1000});
+					$("#reason-dialog").dialog("close");
 					ApptScheduleAudiDataGridLoad();
 				}			
 				
@@ -540,14 +564,15 @@ function ShowScheduleDetail(inde,loc){
 		pageList : [20,50,100],
 		columns :[[ 
 				//{field:'RowCheck',checkbox:true},
-				{field:'TRequestType',title:'申请类型',width:75,align:'center'}, 
+				{field:'TRequestType',title:'申请类型',width:85,align:'center'}, 
 				{field:'TRequestDate',title:'申请时间',width:100,align:'center'}, 
 				{field:'TRequestWaitTime',title:'等待时长',width:80,align:'center'}, 
 				{field:'TLocDesc',title:'科室',width:150,align:'center'},								
-				{field:'TDocDesc',title:'医生',width:100,align:'center',}, 
-				{field:'TDate',title:'时间',width:90,align:'center'}, 
+				{field:'TDocDesc',title:'医生',width:90,align:'center',}, 
+				{field:'TDate',title:'出诊日期',width:100,align:'center'}, 
 				{field:'TTimeRange',title:'时段',width:50,align:'center'}, 
 				{field:'TSessionType',title:'号别',width:100,align:'center'}, 
+				{field:'TNoLimitLoadFlag',title:'无限制号源',width:100,align:'center'},
 				{field:'TRegNum',title:'限额',width:150,align:'center'},
 				{field:'TReason',title:'停替诊原因',width:100,align:'center'},
 				//{field:'TRLocDesc',title:'替诊科室',width:120,align:'center'}, 

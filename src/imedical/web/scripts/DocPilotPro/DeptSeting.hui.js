@@ -1,5 +1,6 @@
 var PageLogicObj={
-	m_PilotProDeptSetTabDataGrid:""
+	m_PilotProDeptSetTabDataGrid:"",
+	v_CHosp:""
 };
 $(function(){
 	//页面数据初始化
@@ -11,6 +12,12 @@ $(function(){
 function InitEvent(){
 	$("#BFind").click(PilotProDeptSetTabDataGridLoad);
 	$("#BSave").click(SaveClickHandle);
+	$("#Loc").bind('keypress',function(event){
+    	if(event.keyCode == "13") {
+	    	PilotProDeptSetTabDataGridLoad();
+	    }
+            
+    });
 }
 function SaveClickHandle(){
 	var data=PageLogicObj.m_PilotProDeptSetTabDataGrid.datagrid('getData');
@@ -34,6 +41,7 @@ function SaveClickHandle(){
 	$.messager.alert("提示","保存成功!");
 }
 function Init(){
+	InitHospList();
 	PageLogicObj.m_PilotProDeptSetTabDataGrid=InitPilotProDeptSetTabDataGrid();
 }
 function InitPilotProDeptSetTabDataGrid(){
@@ -46,7 +54,7 @@ function InitPilotProDeptSetTabDataGrid(){
                 }
            }
          },
-		{field:'Desc',title:'科室',width:300},
+		{field:'Desc',title:'科室',width:400},
 		{field:'Code',title:'',hidden:true},
 		{field:'rowid',title:'',hidden:true},
 		{field:'Alias',title:'',hidden:true},
@@ -80,8 +88,28 @@ function PilotProDeptSetTabDataGridLoad(){
 	    ClassName : "web.PilotProject.DHCDocPPGroupSeting",
 	    QueryName : "LookUpAllLoc",
 	    Loc : Loc,
+	    InHosp:GetHospValue(),
 	    Pagerows:PageLogicObj.m_PilotProDeptSetTabDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
 		PageLogicObj.m_PilotProDeptSetTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
 	}); 
+}
+function InitHospList()
+{
+	var hospComp = GenHospComp("Doc_BaseConfig_CNMedCode");
+	hospComp.jdata.options.onSelect = function(rowIndex,data){
+		PageLogicObj.v_CHosp = data.HOSPRowId;
+		PilotProDeptSetTabDataGridLoad()
+	}
+	hospComp.jdata.options.onLoadSuccess= function(data){
+		//Init();
+	}
+}
+
+function GetHospValue() {
+	if (PageLogicObj.v_CHosp == "") {
+		return session['LOGON.HOSPID'];
+	}
+	
+	return PageLogicObj.v_CHosp
 }

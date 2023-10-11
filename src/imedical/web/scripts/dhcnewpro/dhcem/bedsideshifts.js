@@ -483,7 +483,11 @@ function ShowBedLisWin(){
 		iconCls:'icon-w-paper'
 	};
 	new WindowUX('交班列表窗口', 'BedLisWin', (window.screen.availWidth-100), (window.screen.availHeight-150), option).Init();
-	$("#LisFrame").attr("src","dhcem.bedsideshiftquery.csp?EmType="+EmType);
+	var url="dhcem.bedsideshiftquery.csp?EmType="+EmType;
+	if ('undefined'!==typeof websys_getMWToken){
+		url += "&MWToken="+websys_getMWToken();
+	}
+	$("#LisFrame").attr("src",url);
 }
 
 /// 关闭交班列表窗口

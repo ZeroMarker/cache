@@ -70,7 +70,7 @@ function InitViewScreenEvent(obj)
 		var icucvscDesc=obj.icucvscDesc.getValue();
 		var icucvcOptions=obj.icucvcOptions.getRawValue();
 		var icucvcDisplayByCat=obj.icucvcDisplayByCat.getValue();
-		      //alert(icucvcSummaryType)
+		      
 
 		var ret=_DHCICUCViewCat.InsertICUCViewCat(icucvcCode,icucvcDesc,icucvcVS,icucvcOrder,icucvcEvent,icucvcVPSite,icucvscDesc,icucvcDisplayByCat,icucvcTherapy,icucvcLab,icucvcSummaryType,icucvcOptions);
 		//alert(ret)

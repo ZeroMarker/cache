@@ -13,7 +13,7 @@ function BodyLoadHandler()
 	
 	if ($("ArcItemRowid").value=="")
 	{
-		alert("参数错误!");
+		alert("参数错误");
 		return;
 	}
 	
@@ -37,7 +37,7 @@ function BodyLoadHandler()
 		DeleteObj.onclick=Delete_click;
 	}
 	GetBookMethod();
-    //查询部位；
+    //鏌ヨ閮ㄤ綅锛?
     //QueryBodyPart();
     GetOrdBodyPart();
 }
@@ -107,25 +107,25 @@ function Add_click()
     */
     if (BodyPartSETID=="")
     {
-	    alert("请先选择部位！");
+	    alert("请先选择部位");
 	    return;
     }
 	
 	if ( AppointMethodId=="")
 	{
-		alert("请选择预约方式!");
+		alert("请选择预约方式");
 		return;
 	}
     var Info=ArcItemRowid+"^"+AppointMethodId+"^"+IsEmpty+"^"+ItemUseTime+"^"+BodyPartSETID+"^"+BodyPartSET;
     
-    //alert(Info);
+   
     SaveSet(Info,"I");
     /*
     var UpdateItemInfoFun=document.getElementById("UpdateItemInfo").value;
     var ret=cspRunServerMethod(UpdateItemInfoFun,Info);
     if (ret!="0")
     {
-         var Info="更新检查项目信息失败:SQLCODE="+ret;
+         var Info="鏇存柊妫?鏌ラ」鐩俊鎭け璐?SQLCODE="+ret;
         alert(Info);
     }
     else
@@ -207,7 +207,7 @@ function Update_click()
 	
 	if (( AppointMethodId=="" )|| (BodyPartSETID==""))
 	{
-		alert("请先选择一条记录!");
+		alert("请选择一条记录");
 		return;
 	}
 	
@@ -282,7 +282,7 @@ function Delete_click()
     
     if (( AppointMethodId=="" )|| (BodyPartSETID==""))
 	{
-		alert("请先选择一条记录!");
+		alert("请选择一条记录");
 		return;
 	}
 	
@@ -294,7 +294,7 @@ function Delete_click()
 }
 
 /*
-//查询部位
+//鏌ヨ閮ㄤ綅
 function QueryBodyPart()
 {
     BodyPartNameObj=document.getElementById("BodyPart");
@@ -343,7 +343,7 @@ function AddItem(ObjName, Info)
 
 function GetOrdBodyPart()
 {
-	//获取医嘱项目关注的部位
+	//鑾峰彇鍖诲槺椤圭洰鍏虫敞鐨勯儴浣?
     //var AdmLocFun=document.getElementById("GetItmServiceGroup").value;
     
 	//var Info1=cspRunServerMethod(AdmLocFun,$("PerRwoid").value);
@@ -352,7 +352,7 @@ function GetOrdBodyPart()
 }
 
 
-//函数
+//鍑芥暟
 function SaveSet(Info,OperateCode)
 {
 	//var SaveUserSetFun=$("SaveFun").value;
@@ -362,12 +362,12 @@ function SaveSet(Info,OperateCode)
 	{  
 		if ( value=="200")
 		{
-			alert("不能重复添加！");
+			alert("不能重复添加");
 			return;
 		}
 		if ( value=="300")
 		{
-			alert("请先选择一条记录！");
+			alert("请选择一条记录");
 			return;
 		}
 	     if(OperateCode=="I")
@@ -401,6 +401,34 @@ function GetBookMethod()
         combo("lBookedMethod");
     }
     
+}
+function cTrim(sInputString,iType)
+{
+  var sTmpStr = ' '
+  var i = -1
+
+  if(iType == 0 || iType == 1)
+  {
+     while(sTmpStr == ' ')
+     {
+       ++i
+       sTmpStr = sInputString.substr(i,1)
+     }
+     sInputString = sInputString.substring(i)
+  }
+
+  if(iType == 0 || iType == 2)
+  {
+    sTmpStr = ' '
+    i = sInputString.length
+    while(sTmpStr == ' ')
+    {
+       --i
+       sTmpStr = sInputString.substr(i,1)
+    }
+    sInputString = sInputString.substring(0,i+1)
+  }
+  return sInputString
 }
 function SelectRowHandler()
 {

@@ -22,6 +22,7 @@ function initDocument(){
 				pagination:true,
 				singleSelect:true,
 				fit:true,
+				border:false,
 				//pagesize:100,
 				//collapsible:true,
 				//height:400,
@@ -57,7 +58,7 @@ function initDocument(){
 					{title:'预留字串1',field:'Demo1',width:90},
 					{title:'预留字串2',field:'Demo2',width:90},
 					{title:'预留字串3',field:'Demo3',width:90},
-					{title:'预留字串4',field:'Demo4',width:90},
+					{title:'备注',field:'Demo4',width:90},
 					{title:'预留字串5',field:'Demo5',width:90},
 					{title:'收费项目编码',field:'TARICode',width:90},
 					{title:'收费项目名称',field:'TARIDesc',width:90},
@@ -214,4 +215,5 @@ function QueryPBRowid(){
 function clear_click() {
 	window.location.reload();
 }
+
 

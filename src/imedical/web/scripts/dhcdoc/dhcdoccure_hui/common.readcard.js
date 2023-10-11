@@ -122,16 +122,17 @@ function InitPatNoEvent(callBackFun){
     });
 }
 
-function PatNoHandle(callBackFun){
-	var patNo=$("#patNo").val();
+function PatNoHandle(callBackFun,Element){
+	if(typeof(Element)=="undefined"){Element="patNo";}
+	var patNo=$("#"+Element).val();
 	if(patNo!=""){
 		for (var i=(10-patNo.length-1); i>=0; i--) {
 			patNo="0"+patNo;
 		}
-		$("#patNo").val(patNo);
+		$("#"+Element).val(patNo);
 		var PatientID=tkMakeServerCall("DHCDoc.DHCDocCure.Config","GetPatientIDByNo",patNo)
 		if(PatientID==""){					
-			$("#patNo").val("");
+			$("#"+Element).val("");
 			$.messager.alert("提示","未找到该登记号对应患者",'error');
 			//alert("未找到该登记号对应患者");
 			return websys_cancel();

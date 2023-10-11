@@ -13,9 +13,9 @@ var ArcDr=""
 /// 页面初始化函数
 function initPageDefault(){
 	var hospStr=session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
-	var hospComp = GenHospComp("Doc_APP_Arccat",hospStr);
+	var hospComp = GenHospComp("DHC_AppArcCat",hospStr);
 	hospComp.jdata.options.onSelect = function(){
-		initItmlist();
+		findItmlist();
 		} 
 	InitDefault();
 	initItmlist();       	/// 初始页面DataGrid检查分类表
@@ -108,6 +108,15 @@ function initButton(){
 	///  删除检查分类
 	$('#delete').bind("click",deleteItmRow);
 	
+	$('#translateword').bind("click",function(){
+		var SelectedRow = $("#arccatlist").datagrid('getSelected');
+		if (!SelectedRow){
+		$.messager.alert("提示","请选择需要翻译的行!","info");
+		return false;
+		}
+		CreatTranLate("User.DHCAppArcCat","ACCatDesc",SelectedRow["catdesc"])
+		
+		});
 	///  增加医嘱子类
 	///$('#insertcat').bind("click",insertcatRow);	qunianpeng 2018/3/19 关联将医嘱子类提取成单独的js
 	
@@ -218,14 +227,15 @@ function deleteItmRow(){
 		$.messager.confirm("提示", "您确定要删除这些数据吗？", function (res) {//提示是否删除
 			if (res) {
 				runClassMethod("web.DHCAPPArcCat","DelArcCat",{"params":rowsData.acrowid},function(jsonString){
-					if (jsonString=="-5")
-					{
+					if (jsonString=="-5"){
 						$.messager.alert('提示','该分类存在关联的医嘱子类，不能删除！','warning');
-						}
-					if ((jsonString=="-1")||(jsonString=="-2")||(jsonString=="-3")||(jsonString=="-4"))
-					{
+					}
+					if ((jsonString=="-1")||(jsonString=="-2")||(jsonString=="-3")||(jsonString=="-4")){
 						$.messager.alert('提示','该分类正在使用，不能删除！','warning');
-						}
+					}
+					if (jsonString=="-6") {
+						$.messager.alert('提示','该分类存在关联的医嘱项目，不能删除！','warning');
+					}
 					$('#arccatlist').datagrid('reload'); //重新加载
 				})
 			}
@@ -378,7 +388,6 @@ function deletecatRow(){
 */
 /// 添加选项卡
 function addTab(tabTitle, tabUrl){
-
     $('#tabs').tabs('add',{
         title : tabTitle,
         content : createFrame(tabUrl,"")
@@ -389,10 +398,12 @@ function addTab(tabTitle, tabUrl){
 function createFrame(tabUrl, itmmastid){
 	tabUrl = tabUrl.split("?")[0];
 	if ((tabUrl=="dhcapp.catotheropt.csp")||(tabUrl=="dhcapp.prttemp.csp")){
-		var content = '<iframe scrolling="auto" frameborder="0" src="' +tabUrl+ '?cat='+ itmmastid +'" style="width:100%;height:100%;"></iframe>';
+		if(typeof websys_writeMWToken=='function') tabUrl=websys_writeMWToken(tabUrl+'?cat='+ itmmastid);
+		var content = '<iframe scrolling="auto" frameborder="0" src="' +tabUrl+'" style="width:100%;height:100%;"></iframe>';
 	}else{
-		var content = '<iframe scrolling="auto" frameborder="0" src="' +tabUrl+ '?itmmastid='+ itmmastid +'" style="width:100%;height:100%;"></iframe>';
-		}
+		if(typeof websys_writeMWToken=='function') tabUrl=websys_writeMWToken(tabUrl+'?itmmastid='+ itmmastid);
+		var content = '<iframe scrolling="auto" frameborder="0" src="' +tabUrl+'" style="width:100%;height:100%;"></iframe>';
+	}
 	return content;
 }
 function GetSelHospId(){

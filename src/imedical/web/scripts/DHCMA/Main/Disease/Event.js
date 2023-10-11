@@ -1,6 +1,11 @@
 ﻿//页面Event
 function InitviewScreenEvent(obj) {
 	obj.LoadEvent = function(args){ 
+		//查询
+		$('#btnQuery').on('click', function(){	
+			obj.QueryLoad();
+		});
+     	
 		//保存
 		$('#btnSave').on('click', function(){
 	     	obj.btnSave_click();
@@ -22,12 +27,7 @@ function InitviewScreenEvent(obj) {
 		$('#btnDel_two').on('click', function(){
 	     	obj.btnDel_two_click();
      	});
-		//状态选择事件
-		$HUI.combobox("#cboProduct", {
-			onSelect:function(){
-				obj.QueryLoad();
-			}
-		});
+		
     }
 
 	obj.openHandler_two = function(RowId){
@@ -173,7 +173,7 @@ function InitviewScreenEvent(obj) {
 				aDesc = RowData.IDICDDesc;
 				aExWords = RowData.IDExWords;
 			}
-			debugger
+		
 			if((typeof(aICD) == "undefined")||(!aICD)){
 				$.messager.alert("错误提示", "第"+(i+1)+"行数据ICD10为空", 'info');
 				return;	
@@ -343,6 +343,7 @@ function InitviewScreenEvent(obj) {
 			var IDDesc = rowData["IDDesc"];
 			var ICD = rowData["ICD10"];
 			var Cate = rowData["CateID"];
+			var CateDesc = rowData["CateDesc"];
 			var IsActive = rowData["IsActiveDesc"];
 			IsActive = (IsActive=="是"? true: false);
 			var Resume = rowData["Resume"];
@@ -351,6 +352,7 @@ function InitviewScreenEvent(obj) {
 			$('#txtDiseaseICD').val(ICD);
 			$('#txtDiseaseResume').val(Resume);
 			$('#cboCateg').combobox('setValue',Cate);
+			$('#cboCateg').combobox('setText',CateDesc);
 			$('#chkIsActive').checkbox('setValue',IsActive);
 		}
 	}
@@ -470,36 +472,31 @@ function InitviewScreenEvent(obj) {
 	//查询
 	obj.QueryLoad = function(){	
 		var ProductId = $('#cboProduct').combobox('getValue');
-		var objPro = obj.objById(ProductId);
-		var DisType = '';
-		objPro = JSON.parse(objPro);        //变成json串
-		obj.ClearFormItem1();
-		if (objPro) 
-		{ 
-			DisType1 = objPro.ProCode;	
-			DisType2 = objPro.ProCode+'DiseaseType';			
+		var CateID = $('#cboCateg').combobox('getValue');
+		var IsActive = $('#chkIsActive').checkbox('getValue');
+		var IDCode = $.trim($("#txtDiseaseCode").val());
+		if(IsActive){
+			IsActive='1';
+		}else{
+			IsActive='0';
 		}
-		//产品分类联动
-		obj.cboCateg = $HUI.combobox('#cboCateg', {              
-			url: $URL,
-			editable: true,
-			mode: 'remote',
-			valueField: 'myid',
-			textField: 'Description',
-			onBeforeLoad: function (param) {
-				param.ClassName = 'DHCMed.SSService.DictionarySrv';
-				param.QueryName = 'QryDictionary';
-				param.aType = DisType2;
-				param.aIsActive = 1;
-				param.ResultSetType = 'array';
-			}
-		});
+		var DiseaseDesc = $.trim($("#txtDiseaseDesc").val());
+		var DiseaseICD = $.trim($("#txtDiseaseICD").val());
+
+		if (DiseaseDesc) {
+			var Alias=DiseaseDesc;
+		}else if (DiseaseICD) {
+			var Alias=DiseaseICD;
+		}	
+	
 		obj.gridDisease.load({
 			ClassName:"DHCMed.SSService.DiseaseSrv",
 			QueryName:"QryDisease",	
 			aProductCode:DisType1,
-			aIsActive:""		//产品
-			//aCateID:$('#cboCateg').combobox('getValue')                                   //分类
+			aIsActive:IsActive,
+			aCateID:CateID,		
+			aAlias:Alias,
+			aIDCode:IDCode
 	    });	
     }
 	

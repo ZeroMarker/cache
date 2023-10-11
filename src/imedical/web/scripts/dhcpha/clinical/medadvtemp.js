@@ -3,9 +3,9 @@
 //  Descript: 用户用药建议模板
 
 var url="dhcpha.clinical.action.csp";
-var titleNotes='<span style="font-weight:bold;color:red;">[双击添加]</span>';
-var titleNotes2='<span style="font-weight:bold;color:red;">[双击删除]</span>';
-var dataArray = [{"val":"L","text":'科室'}, {"val":"U","text":'人员'}];
+var titleNotes='<span style="font-weight:bold;color:red;">['+$g("双击添加")+']</span>';
+var titleNotes2='<span style="font-weight:bold;color:red;">['+$g("双击删除")+']</span>';
+var dataArray = [{"val":"L","text":$g('科室')}, {"val":"U","text":$g('人员')}];
 var editparamRow="";
 
 $(function(){
@@ -13,13 +13,13 @@ $(function(){
 	// 定义columns
 	var columns=[[
 		{field:"ID",title:'ID',width:90,align:'center',hidden:true},
-		{field:"Code",title:'代码',width:100,editor:texteditor},
-		{field:'Desc',title:'描述',width:300,editor:texteditor}
+		{field:"Code",title:$g('代码'),width:100,editor:texteditor},
+		{field:'Desc',title:$g('描述'),width:300,editor:texteditor}
 	]];
 	
 	// 定义datagrid
 	$('#medadvdicdg').datagrid({
-		title:'用药建议字典'+titleNotes,
+		title:$g('用药建议字典')+titleNotes,
 		url:'',
 		fit:true,
 		rownumbers:true,
@@ -27,7 +27,7 @@ $(function(){
 		pageSize:40,  // 每页显示的记录条数
 		pageList:[40,80],   // 可以设置每页记录条数的列表
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		onDblClickRow:function(rowIndex, rowData){ 
 			/*
@@ -173,13 +173,13 @@ function InitAdrStatusParam()
 	var columns=[[
 		{field:"medAdvID",title:'medAdvID',width:90,align:'center',hidden:true},
 		{field:"ID",title:'ID',width:90,align:'center',hidden:true},
-		{field:"Code",title:'代码',width:100,editor:texteditor},
-		{field:'Desc',title:'描述',width:300,editor:texteditor}
+		{field:"Code",title:$g('代码'),width:100,editor:texteditor},
+		{field:'Desc',title:$g('描述'),width:300,editor:texteditor}
 	]];
 	
 	// 定义datagrid
 	$('#medadvtempdg').datagrid({
-		title:'科室/个人建议模板'+titleNotes2,
+		title:$g('科室/个人建议模板')+titleNotes2,
 		url:'',
 		fit:true,
 		rownumbers:true,

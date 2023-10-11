@@ -8,11 +8,39 @@ $(function(){
 	InitEvent();
 	//页面元素初始化
 	PageHandle();
-	//表格数据初始化
-	CardQryTabDataGridLoad();
+	
+	if (ServerObj.CardNo!=""){
+		$("#CardNo").val(ServerObj.CardNo);
+		setTimeout(function(){
+			CardQryTabDataGridLoad();
+		},500);
+		
+	}
 });
 function Init(){
 	PageLogicObj.m_CardQryTabDataGrid=InitCardQryTabDataGrid();
+	LoadCardStatus()
+}
+//w ##class(web.UDHCAccCardManage).GetCardTypeStatus()
+function LoadCardStatus(){
+
+	$.cm({
+		ClassName:"web.UDHCAccCardManage",
+		MethodName:"GetCardTypeStatus",
+		dataType:"text"
+	},function(ret){
+		//alert(ret)
+		var cbox = $HUI.combobox("#CardStatus", {
+					
+			//multiple:true,
+			valueField: 'id',
+			textField: 'text', 
+			//blurValidValue:true,
+			data: JSON.parse(ret)
+		})
+	})
+	
+	
 }
 function InitCardQryTabDataGrid(){
 	var Columns=[[ 
@@ -21,7 +49,7 @@ function InitCardQryTabDataGrid(){
 		{field:'PatName',title:'姓名',width:100},
 		{field:'PAPMNo',title:'登记号',width:100},
 		{field:'OperName',title:'操作员',width:90},
-		{field:'CardStatus',title:'当时卡状态',width:90},
+		{field:'CardStatus',title:'卡状态',width:90},
 		{field:'OperDate',title:'操作时间',width:150},
 		{field:'ComIP',title:'办理机器',width:180},
 		{field:'AppName',title:'申请人姓名',width:100},
@@ -53,6 +81,9 @@ function InitCardQryTabDataGrid(){
 }
 function InitEvent(){
 	$('#Bfind').click(CardQryTabDataGridLoad);
+	$("#BExport").click(function() {
+		exportPrintCommon("Export");
+	});
 }
 function PageHandle(){
 	$("#StDate,#EndDate").datebox('setValue',ServerObj.CurDay);
@@ -63,22 +94,43 @@ function CardQryTabDataGridLoad(){
 	    ClassName : "web.UDHCAccCardManage",
 	    QueryName : "ReadCardExInfo",
 	    CardNo:$("#CardNo").val(), UserCode:"", StDate:$("#StDate").datebox('getValue'), 
-	    EndDate:$("#EndDate").datebox('getValue'), CardStatus:"", UserCodeA:$("#UserCodeA").lookup('getText'),
+	    EndDate:$("#EndDate").datebox('getValue'),  UserCodeA:$("#UserCodeA").lookup('getText'),
+	    CardStatus:$("#CardStatus").combobox("getValue"),
 	    Pagerows:PageLogicObj.m_CardQryTabDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
 		PageLogicObj.m_CardQryTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
 	}); 
+}
+// 预约信息导出和打印的公共方法
+function exportPrintCommon(resultSetTypeDo) {
+	var rows = PageLogicObj.m_CardQryTabDataGrid.datagrid('getRows');
+	if ((!rows)||(rows.length==0)){
+		$.messager.alert("提示","请查询出数据后导出!");
+		return false;	
+	}
+	$cm({
+		localDir: resultSetTypeDo=="Export"?"Self":"",
+		ResultSetTypeDo: resultSetTypeDo,
+		ExcelName:  "卡管理查询",
+		ResultSetType:"ExcelPlugin",
+	    ClassName: "web.UDHCAccCardManage",
+	    QueryName: "ReadCardExInfo",
+	    CardNo:$("#CardNo").val(), UserCode:"", StDate:$("#StDate").datebox('getValue'), 
+	    EndDate:$("#EndDate").datebox('getValue'), UserCodeA:$("#UserCodeA").lookup('getText'),
+	    CardStatus:$("#CardStatus").combobox("getValue"),
+	    rows: 99999,
+	},false);
 }
 function InitUserCodeA(){
 	$("#UserCodeA").lookup({
         url:$URL,
         mode:'remote',
         method:"Get",
-        idField:'代码',
-        textField:'姓名',
+        idField:'ID',
+        textField:'USER',
         columns:[[  
-            {field:'代码',title:'',hidden:true},
-			{field:'姓名',title:'名称',width:350}
+            {field:'ID',title:'',hidden:true},
+			{field:'USER',title:'名称',width:350}
         ]], 
         pagination:true,
         panelWidth:400,
@@ -90,7 +142,7 @@ function InitUserCodeA(){
         queryParams:{ClassName: 'web.UDHCOPOtherLB',QueryName: 'ReadSSUser'},
         onBeforeLoad:function(param){
 	        var desc=param['q'];
-			param = $.extend(param,{CTCode:desc});
+			param = $.extend(param,{desc:desc,HospId:session['LOGON.HOSPID']});
 	    },
 	    onSelect:function(index, rec){
 		}

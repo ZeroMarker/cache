@@ -1,43 +1,49 @@
-﻿var toolbar = "";
-var resource = "";
+﻿var resource = "";
+var resourceFlag = false;
 $(function(){
 	//toolbar = window.frames["framRecordTool"];
 	//resource = window.frames["framResource"];
-	toolbar = document.getElementById("framRecordTool").contentWindow; 
 	resource = document.getElementById("framResource").contentWindow; 
 
 	initRecordToolbar();
 	initResource();
 	
-	$('#navtab').tabs({
-		onSelect:function(title,index){
-			if (title == "病历导航")
-			{
-				resize(320);
-			}
-			else if (title == "质控提示")
-			{
-				resize(500);
-			}
-			else if (title == "病历参考")
-			{
-				resize(650);
-			}
-			else
-			{
+    //设置病历导航宽度
+    resize("病历导航",navWidth);
+    $('#navtab').tabs({
+        onSelect:function(title,index){
+            if (title == "病历导航")
+            {
+                width = navWidth;
+            }
+            else if (title == "质控提示")
+            {
+                width = qualityWidth;
+            }
+            else if (title == "病历参考")
+            {
+                width = refWidth;
+            }else if (title == "病历资源"){
+                if (!resourceFlag)
+                {
+                    //首次进入资源区，添加fit:true属性
+                    resource.$('#resources').tabs({'fit':true});
+                    resourceFlag = true;
+                }
                 //先获取医生上次操作资源区宽度
                 var value = getUserConfigData(userID,userLocID,"RESOURCEWIDTH");
-				if (value !="")
-				{
-					resize(value);	
-				}
-				else
-				{
-					resize(580);
-				}
-			}
-		}
-});	
+                if (value !="")
+                {
+                    width = value;  
+                }
+                else
+                {
+                    width = resWidth;
+                }
+            }
+            resize(title,width);
+        }
+    }); 
 },0);
 
 function getResourceWidth()
@@ -49,8 +55,14 @@ function getResourceWidth()
 	return $("#main").layout('panel','west').panel('options').width; //获取资源区宽度
 }
 
-function resize(width)
+function resize(title,width)
 {
+    if (typeof(width) == "undefined"){
+        return;
+    }
+    if ((!resourceFlag)&&(title=="")){
+        return;
+    }
 	$("#main").layout('panel','west').panel('resize',{width:width}); //设置north panel 新高度
 	$('#main').layout('resize');
 }
@@ -60,12 +72,6 @@ function initResource()
 {
 	$("#framResource").attr("src","emr.ip.resource.csp?EpisodeID="+episodeID);
 }
-
-function initRecordToolbar()
-{
-	$("#framRecordTool").attr("src","emr.ip.toolbar.csp?EpisodeID="+episodeID+"&Position=record");
-}
-
 
 //关闭病历页面事件
 function savePrompt(instanceID)
@@ -166,7 +172,7 @@ function setMessage(message,type)
 	{
 		tmptype = "alert"
 	}
-	$.messager.popover({msg: message,type:tmptype,timeout:messageScheme[type],style:{top:20,left:document.documentElement.clientWidth/2}});	
+	top.$.messager.popover({msg: message,type:tmptype,timeout:messageScheme[type],style:{top:20,left:document.documentElement.clientWidth/2}});	
 }
 
 
@@ -253,7 +259,7 @@ function btnUnLock()
 	var lockId = $("#lock span").attr("lockId");
 	if (lockcode != undefined )
 	{
-		$.messager.confirm("提示信息", "确定解锁吗?", function (r) {
+		top.$.messager.confirm("提示信息", "确定解锁吗?", function (r) {
 			if (!r) 
 			{
 				return ;
@@ -263,7 +269,7 @@ function btnUnLock()
 				if (lockcode != userCode)
 				{
 					var arr = {"lockId":lockId};
-					var iframeContent = "<iframe id='iframeLock' scrolling='auto' frameborder='0' src='emr.userverification.csp?UserID="+lockcode+"&UserName="+base64encode(utf16to8(encodeURI(lockname)))+"&openWay=group' style='width:240px; height:200px; display:block;'></iframe>";
+					var iframeContent = "<iframe id='iframeLock' scrolling='auto' frameborder='0' src='emr.userverification.csp?UserID="+lockcode+"&UserName="+base64encode(utf16to8(encodeURI(lockname)))+"&openWay=group"+"&MWToken="+getMWToken()+"' style='width:240px; height:200px; display:block;'></iframe>";
 					createModalDialog("lockDialog","手工解锁","250","240","iframeLock",iframeContent,lockCallBack,arr)
 				}
 				else
@@ -289,7 +295,7 @@ function lockCallBack(returnValue,arr)
 	}
 	else if(returnValue == "0")
 	{
-		$.messager.alert("提示信息", "密码验证失败", 'info');
+		top.$.messager.alert("提示信息", "密码验证失败", 'info');
 	}
 }
 
@@ -303,7 +309,7 @@ function btnUnLockContent(lockId)
 	}
 	else
 	{
-		$.messager.alert("提示信息", "解锁失败", 'info');
+		top.$.messager.alert("提示信息", "解锁失败", 'info');
 	}
 }
 
@@ -359,3 +365,55 @@ function operateDocument(temparam)
 window.onunload = function(){  
 	unLockDocumnet();
 }  
+
+//点击首页按钮关闭病历页面事件
+function IsSavePrompt(instanceID)
+{
+    var returnValues = "";
+    parent.setSysMenuDoingSth(""); 
+    ///退出保存检查
+    if (plugin())
+    {
+        var modifyStatus = getModifyStatus(instanceID);
+        if (modifyStatus.Modified == "True")
+        {
+            var displayName = "";
+            if ((typeof(modifyStatus.InstanceID) != "undefined")&&(modifyStatus.InstanceID.length>0))
+            {
+                for (i=0;i<modifyStatus.InstanceID.length;i++ )
+                {
+                    var documentContext = getDocumentContext(modifyStatus.InstanceID[i]);
+                    
+                    //增加判定如果无保存权限，则退出保存检查
+                    if (documentContext.privelege.canSave != "1") return returnValues;
+                    
+                    if (displayName != "") {displayName = displayName + " "}
+                    displayName = displayName + documentContext.Title.NewDisplayName;
+                }
+            }
+            
+            var text = '病历 "' +displayName + '" 有修改是否保存';
+            var dialogID = "SavePromptDialog";
+            var tempFrame = "<iframe id='iframeSavePrompt' scrolling='auto' frameborder='0' src='emr.ip.prompt.csp?DialogID="+dialogID+"&PromptText="+text+"&MWToken="+getMWToken()+"' style='width:100%;height:100%;display:block;'></iframe>"
+            createModalDialog(dialogID,"保存提示","350","150","iframeSavePrompt",tempFrame,doPrompt);
+            returnValues = "1";
+        }
+    }
+    return returnValues;
+}
+
+function doPrompt(result){
+    if (result == "save")
+    {
+        saveDocument();
+    }else if(result == "unsave")
+    {
+        resetModifyState(param.id,"false");
+    }else
+    {
+        return;
+    }
+    var breakState = canBreake();
+    if (breakState == "false") return;
+    parent.showNav();
+}

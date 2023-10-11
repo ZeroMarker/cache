@@ -514,6 +514,10 @@ function InitViewScreenEvent(obj)
 	function ReloadItemPanelStore()
 	{
 		var ANCCTSource=obj.ANCCTSource.getValue();
+		obj.retGridItemPanel.getSelectionModel().clearSelections();//清除所有选择
+				
+	  	obj.retGridItemPanelStore.load({}); 
+		/*var ANCCTSource=obj.ANCCTSource.getValue();
 		if(ANCCTSource=="I")
 		{
 			obj.ANCCTIComOrdStoreProxy.on('beforeload', function(objProxy, param){
@@ -538,5 +542,6 @@ function InitViewScreenEvent(obj)
 		obj.retGridItemPanel.getSelectionModel().clearSelections();//清除所有选择
 		obj.retGridItemPanelStore.removeAll();
 	  	obj.retGridItemPanelStore.load({}); 
+		*/
 	}
 }

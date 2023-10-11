@@ -52,6 +52,10 @@ var init = function(){
 			param.Name = param.q;
 			
 		},
+		onShowPanel:function () {
+			var LocDesc=LocDescObj.getText();
+			$('#LocDesc').combogrid('grid').datagrid('reload',{q: LocDesc});
+    	},
 		columns:[[
 			{field:'RowId',title:'ฟฦสาID',width:50},
 			{field:'LocCode',title:'ฟฦสาด๚ย๋',width:130},

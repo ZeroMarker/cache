@@ -109,7 +109,7 @@ function InitFormItem()
 			mode:"remote",
 			multiple:true,
             url:$URL,
-            panelHeight:'auto',
+            //panelHeight:'auto',
    		 	queryParams:{
    				ClassName:"web.DHCClinicCom",
         		QueryName:"FindUserByLoc",
@@ -119,6 +119,17 @@ function InitFormItem()
 				{ field: "Id", checkbox:true,width:0},
     			{ field: "Name", title: "姓名",width:120}
             ]],
+            onHidePanel: function () {
+            	var t = $(this).combogrid('getValue');//获取combogrid的值
+				var g = $(this).combogrid('grid');	// 获取数据表格对象
+               	var r = g.datagrid('getSelected');	// 获取选择的行
+           		if (r == null || t != r.Id) {//没有选择或者选项不相等时清除内容
+                	$.messager.alert("提示","相关人员请从下拉框选择","error"); 
+               		$(this).combogrid('setValue', '');
+                } else {
+                }
+            }
+            /*
             onHidePanel: function() {  //判断从下拉框选择
             	var valueField = $(this).combobox("options").valueField;
             	var val = $(this).combobox("getValue");  //当前combobox的值
@@ -136,7 +147,8 @@ function InitFormItem()
                 	$.messager.alert("提示","相关人员请从下拉框选择","error");
                 	return;
             	}
-        },
+        	},
+        	*/
 	})			
 	var bedNoObj=$HUI.combobox("#bedNo",{
 			url:$URL+"?ClassName=web.DHCBPCBed&QueryName=FindBPCBed&ResultSetType=array",
@@ -172,7 +184,9 @@ function InitGroupData()
 	        param.BPCEBPCEquipModelDr=$("#equipType").combobox('getValue'),
 			param.PurchaseDate=$("#buyDate").datebox('getValue'),
 			param.BPCECode=$("#equipHosNo").val(),
-			param.BPCENo=$("#equipSeqNo").val()
+			param.BPCENo=$("#equipSeqNo").val(),
+			param.Status='',
+			param.hospId=session['LOGON.HOSPID']
         },
 		columns:[[
 		{field:"tBPCERowId",title:"系统号",width:50},
@@ -355,10 +369,29 @@ function saveEquipmaintain()
 	var	bpcEPurchaseDate=$("#buyDateDlg").datebox('getValue');
 	var	bpcEPurchaseAmount=$("#buyMoney").val();
 	var	bpcEWarrantyYear=$("#guarYears").val();
-	var	installPIn=$("#installPersonIn").combogrid('getValue');
+	//var installPIn=$("#installPersonIn").combogrid('getValues');
+	var installPIn="";
+	var	installPInArr=$("#installPersonIn").combogrid('getValues');
+	if (installPInArr!=undefined)
+	{
+		for(var i=0;i<installPInArr.length;i++){
+        	if (installPIn=="") installPIn=installPInArr[i];
+        	else installPIn+=","+installPInArr[i];
+    	}
+	}
 	var	installPInD=$("#installPersonIn").combogrid('getText');
 	var	installPOut=$("#installPersonOut").val();
-	var	takeCarePerson=$("#takeCarePerson").combogrid('getValue');
+	
+	//var	takeCarePerson=$("#takeCarePerson").combogrid('getValues');
+	var	takeCarePerson="";
+	var	takeCarePersonArr=$("#takeCarePerson").combogrid('getValues');
+	if (takeCarePersonArr!=undefined)
+	{
+		for(var i=0;i<takeCarePersonArr.length;i++){
+        	if (takeCarePerson=="") takeCarePerson=takeCarePersonArr[i];
+        	else takeCarePerson+=","+takeCarePersonArr[i];
+    	}
+	}
 	var	takeCarePersonD=$("#takeCarePerson").combogrid('getText');
 	var	bedNo=$("#bedNo").combobox('getValue');
 						
@@ -405,10 +438,13 @@ function saveEquipmaintain()
 		bpcEPurchaseDate:$("#buyDateDlg").datebox('getValue'),
 		bpcEPurchaseAmount:$("#buyMoney").val(),
 		bpcEWarrantyYear:$("#guarYears").val(),
-		installPersonIn:$("#installPersonIn").combogrid('getValue'),
+		installPersonIn:installPIn,
+		//installPersonIn:$("#installPersonIn").combogrid('getValues'),
 		installPersonOut:$("#installPersonOut").val(),
-		takeCarePerson:$("#takeCarePerson").combogrid('getValue'),
-		bedNo:$("#bedNo").combobox('getValue')
+		takeCarePerson:takeCarePerson,
+		//takeCarePerson:$("#takeCarePerson").combogrid('getValues'),
+		bedNo:$("#bedNo").combobox('getValue'),
+		hospId:session['LOGON.HOSPID']
     	},false);
     	if (datas==0)
     	{
@@ -441,10 +477,11 @@ function saveEquipmaintain()
 		bpcEPurchaseDate:$("#buyDateDlg").datebox('getValue'),
 		bpcEPurchaseAmount:$("#buyMoney").val(),
 		bpcEWarrantyYear:$("#guarYears").val(),
-		installPersonIn:$("#installPersonIn").combogrid('getValue'),
+		installPersonIn:$("#installPersonIn").combogrid('getValues'),
 		installPersonOut:$("#installPersonOut").val(),
-		takeCarePerson:$("#takeCarePerson").combogrid('getValue'),
-		bedNo:$("#bedNo").combobox('getValue')
+		takeCarePerson:$("#takeCarePerson").combogrid('getValues'),
+		bedNo:$("#bedNo").combobox('getValue'),
+		hospId:session['LOGON.HOSPID']
     	},false);
     	if (datas==0)
     	{
@@ -478,9 +515,27 @@ function editRow()
 		$("#equipName").val(selectRow.tBPCEMType);
 		$("#buyMoney").val(selectRow.tBPCEPurchaseAmount);
 		$("#guarYears").val(selectRow.tBPCEWarrantyYear);
-		$("#installPersonIn").combogrid('setValue',selectRow.installPerIdLtIn);
+		var arr = new Array();
+		var str = selectRow.installPerIdLtIn;
+		if (str!=undefined)
+		{
+			for (var i = 0; i < selectRow.installPerIdLtIn.split(',').length; i++) {
+				arr[i] = selectRow.installPerIdLtIn.split(',')[i];  
+			}
+			$("#installPersonIn").combogrid('setValues',arr);
+		}
+		//$("#installPersonIn").combogrid('setValue',selectRow.installPerIdLtIn);
 		$("#installPersonOut").val(selectRow.installPersonOut);
-		$("#takeCarePerson").combogrid('setValue',selectRow.keepPerIdList);
+		var arr1 = new Array();
+		var str1 = selectRow.keepPerIdList;
+		if (str1!=undefined)
+		{
+			for (var i = 0; i < selectRow.keepPerIdList.split(',').length; i++) {
+				arr1[i] = selectRow.keepPerIdList.split(',')[i];  
+			}
+			$("#takeCarePerson").combogrid('setValues',arr1);
+		}
+		//$("#takeCarePerson").combogrid('setValue',selectRow.keepPerIdList);
 		$("#note").val(selectRow.tBPCENote);
 		$("#bedNo").combobox('setValue',selectRow.tBPBEBedDr);   
         
@@ -809,10 +864,8 @@ var printHandlerBak=function(r){
 			sheet.Range("L3").Value=equipinfo.installPerNameLtIn;
 			sheet.Range("M3").Value=equipinfo.installPersonOut;
 			sheet.Range("N3").Value=equipinfo.keepPerNameList;
-			sheet.Range("O3").Value=equipinfo.tBPCENote;
-			
-			excel.Visible = true;
-			
+			sheet.Range("O3").Value=equipinfo.tBPCENote;			
+			excel.Visible = true;			
 			//var savefilename="D:\\"+getExcelFileName()+".xls";
 			//sheet.SaveAs(savefilename);
 			//alert("文件已导入"+savefilename);
@@ -825,6 +878,4 @@ var printHandlerBak=function(r){
 		}
 		//excel.Quit();
 		//excel=null;
-		
-		
 	}

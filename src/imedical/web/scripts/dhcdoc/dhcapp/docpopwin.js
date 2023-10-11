@@ -32,6 +32,8 @@ function initPageDefault(){
 /// 提交申请
 function TakPisNo(){
 	var WriteFlag = 0;
+	/// 删除保存的缓存数据，防止数据有缓存
+	runClassMethod("web.DHCDocAPPBL","ClearNewBLInformationDoc",{"Pid":pid},function(jsonString){},'',false)
 	/// 循环保存各个申请单
 	for (var i=0; i<frames.length; i++){
 		if (!frames[i].InsertDoc()) {

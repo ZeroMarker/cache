@@ -14,6 +14,7 @@ function BodyLoadHandler()
 	SetElement("Level",GetElementValue("LevelID"));
 	singlelookup("SourceDesc","PLAT.L.EQUser","",GetSourceID)  //modified by csj 20190524
 	SetComboboxRequired("SourceType")   //hisui modified by czf 20181120
+	initPanelHeaderStyle();
 }
 
 function InitButton(isselected)
@@ -259,7 +260,7 @@ function ReloadSourceDesc()
 	}
 	else if ((SourceType==2)||(SourceType==5)) //公司		//modified by czf 20200404
 	{
-		singlelookup("SourceDesc","PLAT.L.Vendor","",GetVendorID)
+		singlelookup("SourceDesc","PLAT.L.Vendor",[{name:"Name",type:1,value:"SourceDesc"},{name:"SourceType",type:2,value:5}],GetVendorID)
 	}
 	else if (SourceType==3) //3 生产厂商
 	{

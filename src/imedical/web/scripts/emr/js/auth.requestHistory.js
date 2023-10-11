@@ -6,7 +6,7 @@ function initDataGrid()
 {
 	$("#historyGrid").datagrid({ 
 		//title:"申请记录",
-		//headerCls:'panel-header-gray',
+		headerCls:'panel-header-gray',
 		//iconCls:'icon-paper',
 		pageSize:10,
 	    pageList:[10,20,30], 
@@ -17,6 +17,8 @@ function initDataGrid()
 		columns:[[
 			{field:'AppointID',title:'授权表ID',width:80,hidden:true},
 			{field:'IsAppointed',title:'授权状态',width:80,formatter: rendererIsAppointed},
+			{field:'AppointUser',title:'授权医师',width:80},
+			{field:'AppointDeptDesc',title:'授权科室',width:80},
 			{field:'IsActive',title:'是否过期',width:80,formatter: rendererIsActive},
 			{field:'Name',title:'患者姓名',width:80},
 			{field:'PapmiNo',title:'登记号',width:100},
@@ -34,7 +36,6 @@ function initDataGrid()
 			{field:'RequestDept',title:'申请科室',width:100},
 			{field:'RequestReason',title:'申请原因',width:160},
 			{field:'AuthLevelDesc',title:'授权级别',width:80},
-			{field:'AppointUser',title:'授权医师',width:80},
 			{field:'AppointType',title:'授权类型',width:80,formatter:getAppointType},
 			//{field:'AppointSpan',title:'授权剩余时间(小时)',width:150,formatter:rendererAppointSpan},
 			{field:'AppointDateTime',title:'授权/拒绝时间',width:150,formatter:rendererAppointDateTime},
@@ -284,7 +285,7 @@ function rendererRequestAction(val)
 	var detailObj = val.split('#');
 	for (var i = 0; i < detailObj.length; i++) {
 		var IDActionStatusStr = detailObj[i].split('^');
-		var actionDesc = IDActionStatusStr[1];
+		var actionDesc = emrTrans(IDActionStatusStr[1]);
 		if (actionStr == "")
 		{
 			actionStr = actionDesc;

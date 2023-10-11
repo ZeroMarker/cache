@@ -11,7 +11,7 @@ Ext.onReady(function(){
 	var gGroupId=session["LOGON.GROUPID"];
 	
 	var PhaLoc = new Ext.ux.LocComboBox({
-		fieldLabel : '<font color=blue>科室</font>',
+		fieldLabel : '<font color=blue>'+$g('科室')+'</font>',
 		id : 'PhaLoc',
 		name : 'PhaLoc',
 		anchor : '90%',
@@ -22,7 +22,7 @@ Ext.onReady(function(){
 	
 	// 起始日期
 	var StartDate = new Ext.ux.DateField({
-				fieldLabel : '<font color=blue>起始日期</font>',
+				fieldLabel : '<font color=blue>'+$g('起始日期')+'</font>',
 				id : 'StartDate',
 				name : 'StartDate',
 				anchor : '90%',
@@ -32,7 +32,7 @@ Ext.onReady(function(){
 
 	// 结束日期
 	var EndDate = new Ext.ux.DateField({
-				fieldLabel : '<font color=blue>结束日期</font>',
+				fieldLabel : '<font color=blue>'+$g('结束日期')+'</font>',
 				id : 'EndDate',
 				name : 'EndDate',
 				anchor : '90%',
@@ -40,22 +40,22 @@ Ext.onReady(function(){
 				value : new Date()
 			});
 	var StartTime=new Ext.form.TextField({
-		fieldLabel : '开始时间',
+		fieldLabel : $g('开始时间'),
 		id : 'StartTime',
 		name : 'StartTime',
 		anchor : '90%',
 		regex : /^(0\d{1}|1\d{1}|2[0-3]):[0-5]\d{1}:([0-5]\d{1})$/,
-		regexText:'时间格式错误，正确格式hh:mm:ss',
+		regexText:$g('时间格式错误，正确格式hh:mm:ss'),
 		width : 120
 	});	
 
 	var EndTime=new Ext.form.TextField({
-		fieldLabel : '截止时间',
+		fieldLabel : $g('截止时间'),
 		id : 'EndTime',
 		name : 'EndTime',
 		anchor : '90%',
 		regex : /^(0\d{1}|1\d{1}|2[0-3]):[0-5]\d{1}:([0-5]\d{1})$/,
-		regexText:'时间格式错误，正确格式hh:mm:ss',
+		regexText:$g('时间格式错误，正确格式hh:mm:ss'),
 		width : 120
 	});
 	//损益标志
@@ -64,18 +64,18 @@ Ext.onReady(function(){
 		columns:4,
 		itemCls: 'x-check-group-alt',
 		items:[
-			{boxLabel:'仅盘盈',name:'loss',id:'onlySurplus',inputValue:1,width:'100px'},
-			{boxLabel:'仅盘亏',name:'loss',id:'onlyLoss',inputValue:2},
-			{boxLabel:'仅无损益',name:'loss',id:'onlyBalance',inputValue:3},
-			{boxLabel:'仅有损益',name:'loss',id:'onlyNotBalance',inputValue:4},
-			{boxLabel:'全部',name:'loss',inputValue:0,id:'all',checked:true}
+			{boxLabel:$g('仅盘盈'),name:'loss',id:'onlySurplus',inputValue:1,width:'100px'},
+			{boxLabel:$g('仅盘亏'),name:'loss',id:'onlyLoss',inputValue:2},
+			{boxLabel:$g('仅无损益'),name:'loss',id:'onlyBalance',inputValue:3},
+			{boxLabel:$g('仅有损益'),name:'loss',id:'onlyNotBalance',inputValue:4},
+			{boxLabel:$g('全部'),name:'loss',inputValue:0,id:'all',checked:true}
 		]
 	});
 	
 	// 查询按钮
 	var QueryBT = new Ext.Toolbar.Button({
-				text : '查询',
-				tooltip : '点击查询',
+				text :$g( '查询'),
+				tooltip :$g( '点击查询'),
 				iconCls : 'page_find',
 				width : 70,
 				height : 30,
@@ -90,7 +90,7 @@ Ext.onReady(function(){
 		var EndDate=Ext.getCmp("EndDate").getValue()
 		if(StartDate==""||EndDate=="")
 		{
-			Msg.info("warning", "开始日期和截止日期不能空！");
+			Msg.info("warning", $g("开始日期和截止日期不能空！"));
 			return;
 		}
 		
@@ -99,16 +99,16 @@ Ext.onReady(function(){
 		var startTime=Ext.getCmp("StartTime").getRawValue();
 	    var endTime=Ext.getCmp("EndTime").getRawValue();
 	    if(StartDate==EndDate && startTime>endTime){
-				Msg.info("warning", "开始时间大于截止时间！");
+				Msg.info("warning", $g("开始时间大于截止时间！"));
 				return;
 		}
 		var PhaLoc = Ext.getCmp("PhaLoc").getValue();	
 		if(PhaLoc==""){
-			Msg.info("warning", "请选择盘点科室!");
+			Msg.info("warning", $g("请选择盘点科室!"));
 			return;
 		}
 		if(StartDate==""||EndDate==""){
-			Msg.info("warning", "请选择开始日期和截止日期!");
+			Msg.info("warning", $g("请选择开始日期和截止日期!"));
 			return;
 		}
 		var CompFlag='Y';
@@ -122,8 +122,8 @@ Ext.onReady(function(){
 	
 			//损益汇总
 	var CollectBT = new Ext.Toolbar.Button({
-		text : '损益汇总',
-		tooltip : '点击损益汇总',
+		text : $g('损益汇总'),
+		tooltip : $g('点击损益汇总'),
 		iconCls : 'page_gear',
 		width : 70,	
 		height:30,
@@ -136,12 +136,12 @@ Ext.onReady(function(){
 	{
 		var record=MasterInfoGrid.getSelectionModel().getSelected();
 		if(record==null){
-			Msg.info("warning","请选择某一盘点单进行汇总！");
+			Msg.info("warning",$g("请选择某一盘点单进行汇总！"));
 			return;
 		}
 		var inst=record.get("inst");
 		if(inst==null || inst==""){
-			Msg.info("warning","请选择某一盘点单进行汇总！");
+			Msg.info("warning",$g("请选择某一盘点单进行汇总！"));
 			return;
 		}
 		var varianceFlag=Ext.getCmp("VarianceFlag").getValue().getGroupValue();				//损益类型
@@ -154,13 +154,13 @@ Ext.onReady(function(){
 		if(StatFlag==1){
 			var p_URL = 'dhccpmrunqianreport.csp?reportName=instktkstat-detail.raq&qPar='+
 				sort +'&Inst=' +inst +'&Others='+varianceFlag+'&StartTime='+startTime+'&EndTime='+endTime;
-			var NewWin=(window.open(p_URL,"盘点损益明细","top=100,left=20,width="+document.body.clientWidth*0.8+",height="+(document.body.clientHeight-50)+",scrollbars=1,resizable=yes"));
+			var NewWin=(window.open(p_URL,$g("盘点损益明细"),"top=100,left=20,width="+document.body.clientWidth*0.8+",height="+(document.body.clientHeight-50)+",scrollbars=1,resizable=yes"));
 		} 
 		//名称汇总
 		else if(StatFlag==2){		
 			var p_URL = 'dhccpmrunqianreport.csp?reportName=instktkstat-inc.raq&qPar='+
 				sort +'&Inst=' +inst +'&Others='+varianceFlag+'&StartTime='+startTime+'&EndTime='+endTime;
-			var NewWin=(window.open(p_URL,"盘点损益汇总","top=100,left=20,width="+document.body.clientWidth*0.8+",height="+(document.body.clientHeight-50)+",scrollbars=1,resizable=yes"));
+			var NewWin=(window.open(p_URL,$g("盘点损益汇总"),"top=100,left=20,width="+document.body.clientWidth*0.8+",height="+(document.body.clientHeight-50)+",scrollbars=1,resizable=yes"));
 		}
 	}
 	
@@ -177,16 +177,16 @@ Ext.onReady(function(){
 	
 	function renderCompFlag(value){
 		if(value=='Y'){
-			return '完成';
+			return $g('完成');
 		}else{
-			return '未完成'
+			return $g('未完成')
 		}	
 	}
 	function renderManaFlag(value){
 		if(value=='Y'){
-			return '管理药';
+			return $g('管理药');
 		}else{
-			return '非管理药'
+			return $g('非管理药')
 		}	
 	}
 	
@@ -200,63 +200,63 @@ Ext.onReady(function(){
 				hidden : true,
 				hideable : false
 			}, {
-				header : "盘点单号",
+				header : $g("盘点单号"),
 				dataIndex : 'instNo',
 				width : 200,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "盘点日期",
+				header : $g("盘点日期"),
 				dataIndex : 'date',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '盘点时间',
+				header : $g('盘点时间'),
 				dataIndex : 'time',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '盘点人',
+				header : $g('盘点人'),
 				dataIndex : 'userName',
 				width : 70,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '调整完成标志',
+				header : $g('调整完成标志'),
 				dataIndex : 'adjComp',
 				width : 100,
 				align : 'center',
 				renderer:renderCompFlag,
 				sortable : true
 			}, {
-				header : '管理药标志',
+				header : $g('管理药标志'),
 				dataIndex : 'manFlag',
 				width : 100,
 				align : 'left',
 				renderer:renderManaFlag,
 				sortable : true
 			}, {
-				header : "类组",
+				header : $g("类组"),
 				dataIndex : 'scgDesc',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "库存分类",
+				header : $g("库存分类"),
 				dataIndex : 'scDesc',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "开始货位",
+				header : $g("开始货位"),
 				dataIndex : 'frSb',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "截止货位",
+				header : $g("截止货位"),
 				dataIndex : 'toSb',
 				width : 100,
 				align : 'left',
@@ -267,16 +267,16 @@ Ext.onReady(function(){
 		store : MasterInfoStore,
 		pageSize : PageSize,
 		displayInfo : true,
-		displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
+		displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
 		emptyMsg : "No results to display",
-		prevText : "上一页",
-		nextText : "下一页",
-		refreshText : "刷新",
-		lastText : "最后页",
-		firstText : "第一页",
-		beforePageText : "当前页",
-		afterPageText : "共{0}页",
-		emptyMsg : "没有数据"
+		prevText : $g("上一页"),
+		nextText : $g("下一页"),
+		refreshText : $g("刷新"),
+		lastText : $g("最后页"),
+		firstText : $g("第一页"),
+		beforePageText : $g("当前页"),
+		afterPageText : $g("共{0}页"),
+		emptyMsg : $g("没有数据")
 	});
 	var MasterInfoGrid = new Ext.grid.GridPanel({
 		id : 'MasterInfoGrid',
@@ -294,7 +294,7 @@ Ext.onReady(function(){
 	});
 	
 	var myForm=new Ext.FormPanel({
-		title:'盘点损益汇总',
+		title:$g('盘点损益汇总'),
 		frame:true,
 		labelWidth:60,
 		labelAlign : 'right',
@@ -303,7 +303,7 @@ Ext.onReady(function(){
 		items:[{
 			columnWidth:0.6,
 			xtype:'fieldset',
-			title:'查询条件',
+			title:$g('查询条件'),
 			//bodyStyle:'padding:7px',
 			layout:'column',
 			defaults:{border:false},
@@ -324,7 +324,7 @@ Ext.onReady(function(){
 			}]
 		},{
 			xtype:'fieldset',
-			title:'损益报表条件',
+			title:$g('损益报表条件'),
 			columnWidth:0.35,
 			bodyStyle:'padding:7px',
 			layout:'column',
@@ -350,7 +350,7 @@ Ext.onReady(function(){
 			frame:true,
 			
 			items:[{
-				title:'报表类型',		
+				title:$g('报表类型'),		
 				style:'padding:0px 0px 0px 10px',
 				xtype:'fieldset',
 				items:[{
@@ -358,8 +358,8 @@ Ext.onReady(function(){
 					column:2,
 					id:'OptReport',
 					items:[
-						{boxLabel:'损益明细',name:'OptStat',inputValue:1,checked:true},
-						{boxLabel:'名称汇总',name:'OptStat',inputValue:2}
+						{boxLabel:$g('损益明细'),name:'OptStat',inputValue:1,checked:true},
+						{boxLabel:$g('名称汇总'),name:'OptStat',inputValue:2}
 					]
 				}]
 				

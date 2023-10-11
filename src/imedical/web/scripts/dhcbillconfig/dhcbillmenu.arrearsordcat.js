@@ -3,7 +3,7 @@
  * User: TangTao
  * Date: 2014-04-10
  * Function: 控制级别医嘱分类
- * Description:
+ * Description: 
  */
  
 var winlastIndex = "";
@@ -41,6 +41,7 @@ function initArrearsOrdCatGrid() {
 						url: $URL + '?ClassName=DHCBILLConfig.DHCBILLArrears&QueryName=FindOrdCat&ResultSetType=array&CateFlag=OrdCat',
 						valueField: 'OrcRowid',
 						textField: 'OrdCat',
+						defaultFilter: 5,
 						onBeforeLoad: function (param) {
 							$.extend(param, {CateDr: "", HospId: winJFALHospID});
 							return true;
@@ -81,6 +82,7 @@ function initArrearsOrdCatGrid() {
 						url: $URL + '?ClassName=DHCBILLConfig.DHCBILLArrears&QueryName=FindOrdCat&ResultSetType=array&CateFlag=ArcItmCat',
 						valueField: 'OrcRowid',
 						textField: 'OrdCat',
+						defaultFilter: 5,
 						onBeforeLoad: function (param) {
 							$.extend(param, {CateDr: m_ArcItmCatDr, HospId:winJFALHospID});
 							return true;
@@ -102,13 +104,11 @@ function initArrearsOrdCatGrid() {
 			}
 		]];
 
-	// 初始化DataGrid
+	//初始化DataGrid
 	$('#tArrearsOrdCat').datagrid({
 		fit: true,
 		bodyCls: 'panel-body-gray',
-		striped: true,
 		singleSelect: true,
-		fitColumns: false,
 		pagination: true,
 		rownumbers: true,
 		pageSize: 20,
@@ -137,18 +137,18 @@ function initWinLoadGrid() {
 }
 
 $('#winAdd').bind('click', function () {
-	//$('#tArrearsOrdCat').datagrid('endEdit', winlastIndex);
-	winlastIndex = $('#tArrearsOrdCat').datagrid('getRows').length - 1;
+	//$("#tArrearsOrdCat").datagrid('endEdit', winlastIndex);
+	winlastIndex = $("#tArrearsOrdCat").datagrid('getRows').length - 1;
 	$('#tArrearsOrdCat').datagrid('selectRow', winlastIndex);
 	var selected = $('#tArrearsOrdCat').datagrid('getSelected');
 	if (selected) {
 		if (typeof(selected.winJFAOCRowID) == "undefined") {
-			$.messager.alert('提示', "不能同时添加多条", 'info');
+			$.messager.popover({msg: "不能同时添加多条", type: "info"});
 			return;
 		}
 	}
 	if (winEditIndex >= 0) {
-		$.messager.alert('提示', "一次只能修改一条记录", 'info');
+		$.messager.popover({msg: "一次只能修改一条记录", type: "info"});
 		return;
 	}
 	$('#tArrearsOrdCat').datagrid('appendRow', {
@@ -166,7 +166,7 @@ $('#winUpdate').bind('click', function () {
 	if (selected) {
 		var thisIndex = $('#tArrearsOrdCat').datagrid('getRowIndex', selected);
 		if ((winEditIndex != -1) && (winEditIndex != thisIndex)) {
-			$.messager.alert('提示', "一次只能修改一条记录", 'info');
+			$.messager.popover({msg: "一次只能修改一条记录", type: "info"});
 			return;
 		}
 		$('#tArrearsOrdCat').datagrid('beginEdit', thisIndex);
@@ -201,25 +201,28 @@ $('#winSave').bind('click', function () {
 				});
 			var thisArcCat = $(thisEd.target).combobox('getValue');
 			if ((thisOrdCat == "") && (thisArcCat == "")) {
-				$.messager.alert('提示', "医嘱大类和医嘱子类同时为空，不允许保存", 'info');
+				$.messager.popover({msg: "医嘱大类和医嘱子类同时为空，不允许保存", type: "info"});
 				winEditIndex = -1;
 				initWinLoadGrid();
 				return;
 			};
 			var ArrOrdCatStr = "" + "^" + thisOrdCat + "^" + thisArcCat + "^" + winJFALRowID;
-			$.cm({
-				ClassName: "DHCBILLConfig.DHCBILLArrears",
-				MethodName: "InsertArrOrdCat",
-				ArrOrdCatInfo: ArrOrdCatStr,
-				Guser: PUBLIC_CONSTANT.SESSION.USERID
-			}, function (rtn) {
-				if (rtn == "0") {
-					$.messager.alert('提示', "保存成功", 'success');
-				} else {
-					$.messager.alert('提示', "保存失败，错误代码：" + rtn, 'error');
+			$.messager.confirm("确认", "确认保存？", function(r) {
+				if (r) {
+					$.cm({
+						ClassName: "DHCBILLConfig.DHCBILLArrears",
+						MethodName: "InsertArrOrdCat",
+						ArrOrdCatInfo: ArrOrdCatStr,
+						Guser: PUBLIC_CONSTANT.SESSION.USERID
+					}, function (rtn) {
+						if (rtn == 0) {
+							$.messager.alert('提示', "保存成功", 'success');
+						} else {
+							$.messager.alert('提示', "保存失败，错误代码：" + rtn, 'error');
+						}
+						initWinLoadGrid();
+					});
 				}
-				winEditIndex = -1;
-				initWinLoadGrid();
 			});
 		} else {
 			$('#tArrearsOrdCat').datagrid('selectRow', winEditIndex);
@@ -235,25 +238,26 @@ $('#winSave').bind('click', function () {
 				});
 			var thisArcCat = $(thisEd.target).combobox('getValue');
 			if ((thisOrdCat == "") && (thisArcCat == "")) {
-				$.messager.alert('提示', "医嘱大类和医嘱子类同时为空，不允许保存", 'info');
+				$.messager.popover({msg: "医嘱大类和医嘱子类同时为空，不允许保存", type: "info"});
 				winEditIndex = -1;
 				initWinLoadGrid();
 				return;
 			};
 			var ArrOrdCatStr = selected.winJFAOCRowID + "^" + thisOrdCat + "^" + thisArcCat + "^" + winJFALRowID;
-			$.cm({
-				ClassName: "DHCBILLConfig.DHCBILLArrears",
-				MethodName: "UpdateArrOrdCat",
-				ArrOrdCatInfo: ArrOrdCatStr,
-				Guser: PUBLIC_CONSTANT.SESSION.USERID
-			}, function (rtn) {
-				if (rtn == "0") {
-					$.messager.alert('提示', "修改成功", 'success');
-				} else {
-					$.messager.alert('提示', "修改失败,错误代码:" + rtn, 'error');
-				}
-				winEditIndex = -1;
-				initWinLoadGrid();
+			$.messager.confirm("确认", "确认修改？", function(r) {
+				$.cm({
+					ClassName: "DHCBILLConfig.DHCBILLArrears",
+					MethodName: "UpdateArrOrdCat",
+					ArrOrdCatInfo: ArrOrdCatStr,
+					Guser: PUBLIC_CONSTANT.SESSION.USERID
+				}, function (rtn) {
+					if (rtn == 0) {
+						$.messager.alert('提示', "修改成功", 'success');
+					} else {
+						$.messager.alert('提示', "修改失败，错误代码:" + rtn, 'error');
+					}
+					initWinLoadGrid();
+				});
 			});
 		}
 	}
@@ -262,29 +266,30 @@ $('#winSave').bind('click', function () {
 $('#winDelete').bind('click', function () {
 	var selected = $('#tArrearsOrdCat').datagrid('getSelected');
 	if (!selected) {
-		$.messager.alert('提示', "请选择要删除的记录", 'info');
+		$.messager.popover({msg: "请选择要删除的记录", type: "info"});
 		return;
 	}
 	$.messager.confirm('确认', '您确认想要删除记录吗？', function (r) {
-		if (r) {
-			var selected = $('#tArrearsOrdCat').datagrid('getSelected');
-			if (selected) {
-				if (typeof(selected.winJFAOCRowID) != "undefined") {
-					var ArrOrdCatStr = selected.winJFAOCRowID + "^" + selected.winJFAOCOrderCat + "^" + selected.winJFAOCArcItmCat + "^" + winJFALRowID;
-					$.cm({
-						ClassName: "DHCBILLConfig.DHCBILLArrears",
-						MethodName: "DeleteArrOrdCat",
-						ArrOrdCatInfo: ArrOrdCatStr,
-						Guser: PUBLIC_CONSTANT.SESSION.USERID
-					}, function (rtn) {
-						if (rtn == "0") {
-							$.messager.alert('提示', "删除成功", 'success');
-						} else {
-							$.messager.alert('提示', "删除失败，错误代码:" + rtn, 'error');
-						}
-						initWinLoadGrid();
-					});
-				}
+		if (!r) {
+			return;
+		}
+		var selected = $('#tArrearsOrdCat').datagrid('getSelected');
+		if (selected) {
+			if (typeof(selected.winJFAOCRowID) != "undefined") {
+				var ArrOrdCatStr = selected.winJFAOCRowID + "^" + selected.winJFAOCOrderCat + "^" + selected.winJFAOCArcItmCat + "^" + winJFALRowID;
+				$.cm({
+					ClassName: "DHCBILLConfig.DHCBILLArrears",
+					MethodName: "DeleteArrOrdCat",
+					ArrOrdCatInfo: ArrOrdCatStr,
+					Guser: PUBLIC_CONSTANT.SESSION.USERID
+				}, function (rtn) {
+					if (rtn == 0) {
+						$.messager.alert('提示', "删除成功", 'success');
+					} else {
+						$.messager.alert('提示', "删除失败，错误代码：" + rtn, 'error');
+					}
+					initWinLoadGrid();
+				});
 			}
 		}
 	});

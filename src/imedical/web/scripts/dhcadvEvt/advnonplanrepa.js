@@ -56,7 +56,7 @@ function InitNonPlanReport(recordId)
 function SavePipeReport(flag)
 {
 	if($('#PatName').val()==""){
-		$.messager.alert("提示:","患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！");	
+		$.messager.alert($g("提示:"),$g("患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！"));	
 		return false;
 	} 
 	///保存前,对页面必填项进行检查
@@ -120,7 +120,7 @@ function RepOpeEnter(id){
 			if(event.keyCode == "13")    
 			{
 				if(EpisodeID==""){
-					$.messager.alert("提示:","请先选择患者就诊记录！");
+					$.messager.alert($g("提示:"),$g("请先选择患者就诊记录！"));
 					return;
 				}
 				if($("#admopegrid").length>0)
@@ -138,14 +138,14 @@ function GetOpeGridWin(EpisodeID,id){
 	Opename=id;
 	var input=input+'&StkGrpRowId=&StkGrpType=G&Locdr=&NotUseFlag=N&QtyFlag=0&HospID=' ;
 	var mycols = [[
-		{field:'OPSID',title:'手术申请ID',width:80},
-		{field:'AppCareProvDesc',title:'申请医生',width:60},
-		{field:'OperDesc',title:'手术描述',width:60}, 
+		{field:'OPSID',title:$g('手术申请ID'),width:80},
+		{field:'AppCareProvDesc',title:$g('申请医生'),width:60},
+		{field:'OperDesc',title:$g('手术描述'),width:60}, 
 		
-		{field:'SourceTypeDesc',title:'手术类型',width:120}, 
-		{field:'StatusDesc',title:'手术状态',width:80},
-		{field:'OperDate',title:'手术开始日期',width:70},
-		{field:'ROperDuration',title:'手术时长',width:70}
+		{field:'SourceTypeDesc',title:$g('手术类型'),width:120}, 
+		{field:'StatusDesc',title:$g('手术状态'),width:80},
+		{field:'OperDate',title:$g('手术开始日期'),width:70},
+		{field:'ROperDuration',title:$g('手术时长'),width:70}
 		
 		//{field:'Adm',title:'Adm',width:60,hidden:true} 
 	]];
@@ -189,11 +189,11 @@ function SetPatOpeVal(Data)
 	if(Opename=="NonPlanRepAgainOperName"){
 		var NonPlanRepaTheOperDate=$("#NonPlanRepaTheOperDate").datebox("getValue");
 		if(NonPlanRepaTheOperDate==""){
-			$.messager.alert("提示:","请先选择患者原手术记录！");
+			$.messager.alert($g("提示:"),$g("请先选择患者原手术记录！"));
 			return;
 		}
 		if((NonPlanRepaTheOperDate!="")&&(!compareSelTowTime(NonPlanRepaTheOperDate,OperDate))){
-			$.messager.alert("提示:","再次手术日期不能小于原手术日期！");
+			$.messager.alert($g("提示:"),$g("再次手术日期不能小于原手术日期！"));
 			return;
 		}
 		RepSetValue("NonPlanRepAgainOperName","input",OperDesc); 

@@ -18,7 +18,8 @@ function initPanel()
 //初始化查询头面板
 function initTopPanel()
 {
-	initButtonWidth();
+	//showBtnIcon('BFind',false); //modified by LMH 20230202 动态设置是否极简显示按钮图标
+	//initButtonWidth();  //modified by LMH 20230302 UI
 	jQuery('#BFind').on("click", BFind_Clicked);
 	defindTitleStyle();
 	initMessage("");   //Modefied by zc 2018-12-21  zc0047  修改弹出提示undefined
@@ -43,7 +44,7 @@ function initDHCEQCRiskItemValue()
 	    },
 	    //border : false,
 	    singleSelect:true,
-		fitColumns:true,
+		//fitColumns:true, //modified by LMH 20230202  列少时默认向左对齐
 		pagination:true,
     	columns:[[
 			{field:'TRowID',title:'TRowID',width:0,align:'center',hidden:true},
@@ -57,13 +58,13 @@ function initDHCEQCRiskItemValue()
 				iconCls:'icon-add',
 				text:'新增',
 				handler:function(){AddGridData();}
-			},'-----------------------------------',
+			},
 			{
 				id:"update",
 				iconCls:'icon-update',
 				text:'更新',
 				handler:function(){UpdateGridData();}
-			},'-----------------------------------',
+			},
 			{
 				id:"delete",
 				iconCls:'icon-cancel',  //modify by zc0062 2020-04-03 UI评审按钮图标调整

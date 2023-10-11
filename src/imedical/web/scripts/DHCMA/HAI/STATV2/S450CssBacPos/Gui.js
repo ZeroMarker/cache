@@ -10,7 +10,7 @@
 		valueField: 'ID',
 		textField: 'SESurvNumber',
 		onShowPanel:function(){
-			var url=$URL+"?ClassName=DHCHAI.IRS.INFCSSSrv&QueryName=QueryByCode&aHospIDs="+$.LOGON.HOSPID+"&ResultSetType=array";
+			var url=$URL+"?ClassName=DHCHAI.IRS.INFCSSSrv&QueryName=QueryByCode&aHospIDs="+$.LOGON.HOSPID+"&aFlag=1&ResultSetType=array";
 			$("#cboSurNum").combobox('reload',url);	
 		}
 	});

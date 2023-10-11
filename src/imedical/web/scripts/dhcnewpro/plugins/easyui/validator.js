@@ -36,7 +36,13 @@ $.extend($.fn.validatebox.defaults.rules, {
         validator: function (value, param) {
             return /^\d+$/.test(value);
         },
-        message: '请输入数字'
+        message: '请输入正整数'
+    },
+    money: {//value值为文本框中的值
+        validator: function (value) {
+          return /^\d+(\.\d+)?$/i.test(value);
+       },
+       message: '请输入正确的金额'
     }
 })
 
@@ -93,7 +99,7 @@ value：字符串
 */  
 var isMobile = function (value){  
 	var teleReg = /^((0\d{2,3})-)(\d{7,8})$/;  
-	var mobileReg =/^1[345789]\d{9}$/;   
+	var mobileReg =/^1[3456789]\d{9}$/;   
 	if (!teleReg.test(value) && !mobileReg.test(value)){  
 		return false;  
 	}else{  

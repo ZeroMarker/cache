@@ -1,4 +1,4 @@
-/*HISUI公共js*/
+﻿/*HISUI公共js*/
 var CHR_1 = String.fromCharCode(1);
 var CHR_2 = String.fromCharCode(2);
 var CHR_3 = String.fromCharCode(3);
@@ -7,6 +7,15 @@ var CHR_5 = String.fromCharCode(5);
 var CHR_6 = String.fromCharCode(6);
 var CHR_7 = String.fromCharCode(7);
 var CHR_8 = String.fromCharCode(8);
+
+var urlPath = window.document.location.href;  //浏览器显示地址 https://114.242.246.243:1443/imedical/web/csp/websys.csp?a=a&TMENU=59358&TPAGID=27304090
+var docPath = window.document.location.pathname; //文件在服务器相对地址 imedical/web/csp/websys.csp
+var index = urlPath.indexOf('/csp/');
+var cspPath = urlPath.substring(0, index)+'/csp/dhchai.ir.view.main.csp?';
+if ("undefined" !== typeof websys_getMWToken) {
+    cspPath+= "MWToken%253D" + websys_getMWToken();
+}
+cspPath = encodeURIComponent(cspPath); 
 
 //获得当前日期格式配置
 var dtformat = $m({                  
@@ -321,7 +330,7 @@ function Common_CheckboxToDic() {
 			var DicID = objStr[dicIndex].ID;
 			var DicDesc = objStr[dicIndex].DicDesc;
 		
-			listHtml += " <div style='float:left;width:"+per+"'><input id="+ItemCode+DicID+" type='checkbox' class='hisui-checkbox' label="+DicDesc+"  name="+ItemCode+"  value="+DicID+"></div>";  
+			listHtml += " <div style='float:left;width:"+per+"'><input id="+ItemCode+DicID+" type='checkbox' class='hisui-checkbox' label='"+DicDesc+"'  name="+ItemCode+"  value="+DicID+"></div>";  
 		} 
 		listHtml +="</div>"
 	}
@@ -520,6 +529,51 @@ function dispalyEasyUILoad() {
     $(".datagrid-mask-msg").remove();
 }
     
+//列排序方法(数字、日期类型)
+function Sort_int(a,b) {
+    if (a.length > b.length) return 1;
+    else if (a.length < b.length) return -1;
+    else if (a > b) return 1;
+    else return -1;
+}
+//列排序方法(年龄类型)
+function Sort_Age(a,b) {
+	var aYear=0,aMonth=0,aDay=0
+	if(a.indexOf("岁")>=0){aYear=parseInt(a.split("岁")[0]);a=a.split("岁")[1];}
+	if(a.indexOf("月")>=0){aMonth=parseInt(a.split("月")[0]);a=a.split("月")[1];}
+	if(a.indexOf("天")>=0){aDay=parseInt(a.split("天")[0]);}
+	var bYear=0,bMonth=0,bDay=0
+	if(b.indexOf("岁")>=0){bYear=parseInt(b.split("岁")[0]);b=b.split("岁")[1];}
+	if(b.indexOf("月")>=0){bMonth=parseInt(b.split("月")[0]);b=b.split("月")[1];}
+	if(b.indexOf("天")>=0){bDay=parseInt(b.split("天")[0]);}
+	
+	if(aYear>bYear){
+		return 1;
+	}
+	else if(aYear<bYear){
+		return -1;	
+	}	
+	else{
+		if(aMonth>bMonth){
+			return 1;
+		}
+		else if(aMonth<bMonth){
+			return -1;	
+		}	
+		else{
+			if(aDay>bDay){
+				return 1;
+			}
+			else if(aDay<bDay){
+				return -1;	
+			}	
+			else{
+			 	return -1;
+			}
+		}
+	}
+}
+
 // 分页数据的操作(查询界面导出功能用到)
 function pagerFilter(data) {
 	if (typeof data.length == 'number' && typeof data.splice == 'function') {	//  判断数据是否是数组
@@ -528,9 +582,41 @@ function pagerFilter(data) {
 			rows: data
 		}
 	}
+	
 	var dg = $(this);
 	var opts = dg.datagrid('options');
 	var pager = dg.datagrid('getPager');
+	var sortName = opts.sortName;
+    var sortOrder = opts.sortOrder;
+ 	
+ 	if (!data.originalRows) {
+        data.originalRows = data.rows;
+	}
+    if ((!opts.remoteSort)&& (sortName != null)) {	    
+        data.originalRows.sort(function (obj1, obj2) {
+            var val1 = obj1[sortName];
+            var val2 = obj2[sortName];
+            if (!isNaN(Number(val1)) && !isNaN(Number(val2))) {
+                val1 = Number(val1);
+                val2 = Number(val2);
+            }
+            var $sorter = dg.datagrid("getColumnOption", sortName).sorter;  //sorter排序方法
+            if ($sorter) {
+                return (sortOrder == "asc") ? $sorter(val1, val2) : $sorter(val2, val1);
+            } else {
+                if(val1<val2){
+                    return (sortOrder == "desc") ? 1 : -1;
+                } else if (val1 > val2) {
+                    return (sortOrder == "desc") ? -1 : 1;
+                } else {
+                    return 0
+                }
+            }
+        })
+    }
+     
+    if (!opts.pagination)    //是否分页
+        return data;
 	pager.pagination({
 		onSelectPage: function (pageNum, pageSize) {
 			opts.pageNumber = pageNum;
@@ -542,9 +628,7 @@ function pagerFilter(data) {
 			dg.datagrid('loadData', data);
 		}
 	});
-	if (!data.originalRows) {
-		data.originalRows = (data.rows);
-	}
+	
 	//翻页后查询数据变化，第一次显示空白问题处理
 	if (data.originalRows.length<=opts.pageSize) opts.pageNumber=1;  
 	if ((data.originalRows.length>opts.pageSize)&&(data.originalRows.length<=((opts.pageNumber-1)*opts.pageSize))) {
@@ -570,7 +654,29 @@ function Common_ComboToSSHosp(){
 	var ItemCode = arguments[0];
 	var LogHospID = arguments[1];
 	var isSetValue = arguments[2];
-
+	//医院列表
+	var HospList = $cm ({
+		ClassName:"DHCHAI.BTS.HospitalSrv",
+		QueryName:"QryHospListByLogon",
+		aLogonHospID:LogHospID
+	},false);
+	var HospData = HospList.rows;
+    
+    var cbox = $HUI.combobox("#"+ItemCode, {
+		valueField:'ID',
+		textField:'HospDesc',
+		editable:false,
+		data:HospData,
+		onLoadSuccess:function(){   //初始加载赋值
+			if (!isSetValue) {
+				var data=$(this).combobox('getData');
+				if (data.length>0){
+					$(this).combobox('select',data[0]['ID']);
+				}
+			}
+		}
+	});
+	/*
 	var cbox = $HUI.combobox("#"+ItemCode, {
 		url: $URL,
 		editable: true,
@@ -593,6 +699,44 @@ function Common_ComboToSSHosp(){
 			}
 		}
 	});
+	*/
+	return  cbox;
+}
+
+//加载多选医院公共方法
+function Common_ComboToMSHosp(){
+	var ItemCode = arguments[0];
+	var LogHospID = arguments[1];
+	var isSetValue = arguments[2];
+	//医院列表
+	var HospList = $cm ({
+		ClassName:"DHCHAI.BTS.HospitalSrv",
+		QueryName:"QryHospListByLogon",
+		aLogonHospID:LogHospID,
+		aIsShowAll:0
+	},false);
+	var HospData = HospList.rows;
+    
+    var cbox = $HUI.combobox("#"+ItemCode, {
+		valueField:'ID',
+		textField:'HospDesc',
+		multiple:true,
+		rowStyle:'checkbox', //显示成勾选行形式
+		selectOnNavigation:false,
+		editable:false,
+		data:HospData,
+		onLoadSuccess:function(data){   //初始加载全部
+			if (!isSetValue) {
+				var len = data.length;
+				var HospIDs= new Array();
+				for (var i=0;i<len;i++) {
+					HospIDs[i]=data[i]['ID'];
+				}
+				$(this).combobox('setValues',HospIDs);				
+			}
+		}
+	});
+	
 	return  cbox;
 }
 
@@ -607,7 +751,7 @@ function Common_ComboToLoc(){
 	var cbox = $HUI.combobox("#"+ItemCode, {
 		url: $URL,
 		editable: true,
-		allowNull: true, 
+		//allowNull: true, 
 		defaultFilter:4,     //text字段包含匹配或拼音首字母包含匹配 不区分大小写
 		valueField: 'ID',
 		textField: 'LocDesc2',
@@ -625,6 +769,35 @@ function Common_ComboToLoc(){
 	return ;
 }
 
+//加载多选科室/病区公共方法
+function Common_ComboToMSLoc(){
+	var ItemCode = arguments[0];
+	var HospIDs = arguments[1];
+	var Alias   = arguments[2];
+	var LocCate = arguments[3];
+	var LocType = arguments[4];
+
+	var cbox = $HUI.combobox("#"+ItemCode, {
+		url: $URL,
+		editable: true,
+		multiple:true,
+		rowStyle:'checkbox',
+		defaultFilter:4,     //text字段包含匹配或拼音首字母包含匹配 不区分大小写
+		valueField: 'ID',
+		textField: 'LocDesc2',
+		onBeforeLoad: function (param) {    //在请求加载数据之前触发，返回 false 则取消加载动作
+			param.ClassName = 'DHCHAI.BTS.LocationSrv';
+			param.QueryName = 'QryLoc';
+			param.aHospIDs = HospIDs;
+			param.aAlias = Alias;
+			param.aLocCate = LocCate;
+			param.aLocType = LocType;
+			param.aIsActive = 1;
+			param.ResultSetType = 'array';
+		}
+	});
+	return ;
+}
 //加载科室公共方法
 function Common_LookupToLoc() {
 	var ItemCode = arguments[0];
@@ -688,7 +861,6 @@ function Common_ComboToBact() {
 		onShowPanel: function () {
 			var url=$URL+"?ClassName=DHCHAI.DPS.LabBactSrv&QueryName=QryLabBacteria&ResultSetType=array&aAlias";
 			$("#"+ItemCode).combobox('reload',url);
-			aa;
 		}
 	});
 	return;
@@ -849,4 +1021,377 @@ function Common_Enable()
     }else if (className == 'hisui-searchbox') {  //查询框框
     	$this.searchbox('enable');	
     }
+}
+
+//***搜索框功能  只针对前台分页查询的正常展示列***//
+Array.prototype.contains = function(obj) {
+    var i = this.length;
+    while (i--) {
+        if (this[i] === obj) {
+            return true;
+        }
+    }
+    return false;
+};
+
+/*
+*1.searchText()方法支持前台分页查询方式的全部数据检索
+*2.如果检索的表格数据可能发生变化（有增、删、改功能），在重新加载数据前需清除初始数据
+*3.如果一个界面只有一个检索表格，清除数据可直接写originalData =""，如果是多个检索表格，清除数据需指明清除的表格名称：originalData["表格id"] =""
+*/
+var originalData =new Array();   //初始数据
+function searchText(dg,t,f){ //参数：$("#datagrid")   
+	var tempIndex=[];	   //匹配行	
+	var state = dg.data('datagrid');
+	var tmptable = state.options.id;   //查询的表格
+	if ((! originalData[tmptable])||((originalData[tmptable].length)=='0')) {
+	     var rows = state.data.originalRows||state.originalRows; 
+	   	 originalData[tmptable] = {
+			total: rows.length,
+			rows: rows
+		}
+    } else {
+	    var rows = originalData[tmptable].originalRows||originalData[tmptable].rows;
+    }
+
+    var columns = dg.datagrid('getColumnFields');
+    var fields = dg.datagrid('getColumnFields',true).concat(dg.datagrid('getColumnFields',false));
+	
+    var searchVal = t;
+	var noFormat=f;
+    if (searchVal) {
+	    for(var i=0;i<rows.length;i++){
+	        for(var j=0;j<columns.length;j++){
+		        var col = dg.datagrid('getColumnOption', fields[j]);
+		        if((col.hidden == true)||(col.checkbox == true)) {  //隐藏列、复选框列
+					continue;
+				}
+				if((!noFormat)&&(col.formatter)) {   //链接、格式化函数列
+					continue;
+				}	
+				if(!col.title) {  //无标题（非前台展示列）
+					continue;
+				}
+	            if((rows[i][columns[j]])&&(rows[i][columns[j]].indexOf(searchVal)>=0)){
+	                if(!tempIndex.contains(i)){
+	                    tempIndex.push(i);
+	                    break;
+	                }
+	            }
+	        }
+	    }
+	   var RowsData=[];
+	   for(var rowIndex=0;rowIndex<tempIndex.length;rowIndex++){  //匹配行
+		    var Index = tempIndex[rowIndex];
+		    var row = rows[Index];
+		    RowsData.push(row);   
+	    }
+	    data = {  //搜索数据
+			total: tempIndex.length,
+			rows: RowsData
+		}
+		dg.datagrid('loadData', data);
+	}else {
+		dg.datagrid('loadData', originalData[tmptable]);
+		originalData[tmptable]="";
+	}
+}
+function Common_CreateMonth() {
+	var domId = arguments[0];
+	var lastFlg = arguments[1];
+	var IsFisrt =1;
+	$("#" + domId).datebox({
+		validParams:"YM",
+        parser: function (s) {//配置parser，返回选择的日期
+            if (!s) return new Date();
+            var arr = s.split('-');
+            if ((lastFlg)&&(IsFisrt==1)) {
+				arr[1]=arr[1]-1;
+				IsFisrt=0;
+	        }         
+            return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+        }, 
+        formatter: function (d) {
+			var Month=parseInt(d.getMonth())+1;
+            return d.getFullYear() + '-' + (Month < 10 ? ('0' + Month) : Month);
+        }//配置formatter，只返回年月
+    });
+	var curr_time =new Date();
+        $("#" + domId).datebox("setValue",month_formatter(curr_time));
+}
+ //格式化日期，仅年月
+function month_formatter(date) {
+	//获取年份
+	var y = date.getFullYear();
+	//获取月份
+	var m = date.getMonth() + 1;
+	return y + '-' + m;
+}
+//快速选择日期(2021-06-02 ShenC)
+function Date_QuickSelect(){
+	var YearCode = arguments[0];
+	var MonthCode = arguments[1];
+	var DateFromCode = arguments[2];
+	var DateToCode = arguments[3];
+	
+	var Year = $('#'+YearCode).combobox('getValue');	//年
+	var Month 	= $('#'+MonthCode).combobox('getValue');	//月+季度
+	if((Year=="")||(Month=="")) return;
+		
+	if((Month>=1)&&(Month<=12)){	//月
+		$('#'+DateFromCode).datebox('setValue', Year+"-"+Month+"-01");    // 日期初始赋值
+		var todayDate = new Date(Year,Month,0)   
+		var Day=todayDate.getDate();    //31
+		$('#'+DateToCode).datebox('setValue', Year+"-"+Month+"-"+Day);    // 日期初始赋值
+	}
+	if(Month.indexOf("JD")>=0){
+		if(Month.indexOf("JD1")>=0){
+			$('#'+DateFromCode).datebox('setValue', Year+"-01-01");    // 日期初始赋值
+			$('#'+DateToCode).datebox('setValue', Year+"-03-31");    // 日期初始赋值
+		}
+		if(Month.indexOf("JD2")>=0){
+			$('#'+DateFromCode).datebox('setValue', Year+"-04-01");    // 日期初始赋值
+			$('#'+DateToCode).datebox('setValue', Year+"-06-30");    // 日期初始赋值
+		}
+		if(Month.indexOf("JD3")>=0){
+			$('#'+DateFromCode).datebox('setValue', Year+"-07-01");    // 日期初始赋值
+			$('#'+DateToCode).datebox('setValue', Year+"-09-30");    // 日期初始赋值
+		}
+		if(Month.indexOf("JD4")>=0){
+			$('#'+DateFromCode).datebox('setValue', Year+"-10-01");    // 日期初始赋值
+			$('#'+DateToCode).datebox('setValue', Year+"-12-31");    // 日期初始赋值
+		}
+	}
+	if(Month.indexOf("BN")>=0){
+		if(Month.indexOf("BN1")>=0){
+			$('#'+DateFromCode).datebox('setValue', Year+"-01-01");    // 日期初始赋值
+			$('#'+DateToCode).datebox('setValue', Year+"-06-30");    // 日期初始赋值
+		}
+		if(Month.indexOf("BN2")>=0){
+			$('#'+DateFromCode).datebox('setValue', Year+"-07-01");    // 日期初始赋值
+			$('#'+DateToCode).datebox('setValue', Year+"-12-31");    // 日期初始赋值
+		}
+	}
+	if(Month.indexOf("QN")>=0){
+		$('#'+DateFromCode).datebox('setValue', Year+"-01-01");    // 日期初始赋值
+		$('#'+DateToCode).datebox('setValue', Year+"-12-31");    // 日期初始赋值
+	}
+}
+// 打开页面[摘要][电子病历][院感报告]--以医为浏览器为准
+/// 格式:  1.页面关联url
+		///2.页面参数()
+		/// 第一个参数：  width
+		/// 第二个参数：  height
+function DHCCPM_Open(parameter) {
+	//use window.open so we can close this window, without closing everything
+	//format reportname(reportarg1=value;reportarg2=value)
+	var args = arguments.length
+	//1.宽度,2.高度(默认网页高度)
+	var Width=document.body.clientWidth*0.95;
+	var Height=(document.body.clientHeight-50)*0.95;	
+	
+	var strUrl = ""
+	//页面csp链接
+	if(args>=1){					
+		if (arguments[0]==""){
+			alert("请输入页面参数");
+			return;
+		}
+		strUrl=arguments[0];
+	}
+	if(args>=2){
+		if(arguments[1]!=""){
+			Width=arguments[1];
+		}
+	}
+	if(args>=3){
+		if(arguments[2]!=""){
+			Height=arguments[2];
+		}
+	}
+	var Left = (document.body.clientWidth - Width-10) / 2; 
+	var Top =(document.body.clientHeight-Height-50) / 2;
+	
+	//--打开页面
+	//var Page=window.open(strUrl,"",'height='+Height+',innerHeight='+Height+',width='+Width+',innerWidth='+Width+',top='+Top+',left='+Left+',status=no,toolbar=no,menubar=no,location=no,resizable=no,scrollbars=0,titlebar=no'); 
+	var Page=websys_createWindow(
+		strUrl,"",'height='+Height+',innerHeight='+Height+',width='+Width+',innerWidth='+Width+',top='+Top+',left='+Left+',status=no,toolbar=no,menubar=no,location=no,resizable=no,scrollbars=0,titlebar=no'
+	); 
+	return Page;
+}
+//多选文本 示例:Common_CheckboxToDic("chkStatusList","SPEStatus","");
+function Common_CheckTextboxToDic() {
+    var ItemCode = arguments[0];
+    var DicType = arguments[1];
+    var columns = arguments[2]? arguments[2] : 4;
+    var RemarkItem = arguments[3]? arguments[3] : false; //某个值时显示备注项
+    
+    var strDicList =$m({
+        ClassName:"DHCMA.Util.BTS.DictionarySrv",
+        MethodName:"GetDicsByType",
+        aTypeCode:DicType,
+        aActive:1
+    },false);
+    
+    var dicList = strDicList.split(String.fromCharCode(1));
+    var len =dicList.length;        
+    var count = parseInt(len/columns)+1;
+    var per = Math.round((1/columns) * 100) + '%';  //每列所在百分比，等比分布
+    
+    var listHtml=""
+    for (var index =0; index< count; index++) {
+        var chklen=(((index+1)*columns)<len) ? (index+1)*columns : len;
+        listHtml +="<div>"; 
+        for (var dicIndex = index*columns; dicIndex < chklen; dicIndex++) { 
+            var dicSubList = dicList[dicIndex].split(String.fromCharCode(2));
+            
+            var RemarkHtml = ((RemarkItem!=false)&&(RemarkItem==dicSubList[1])) ? "<input class='textbox' id='"+ItemCode+"Other' style='margin-left: 5px;'/>" : "";
+            
+            listHtml += " <div style='float:left;width:"+per+"'><input id="+ItemCode+dicSubList[0]+" type='checkbox' class='hisui-checkbox' "+(dicSubList[0]==1? "checked='true'":"")+" label="+dicSubList[1]+"  name="+ItemCode+"  value="+dicSubList[0]+">"+RemarkHtml+"</div>";  
+        } 
+        listHtml +="</div>"
+    }
+    $('#'+ItemCode).html(listHtml); 
+    $.parser.parse('#'+ItemCode);  //解析checkbox 
+    
+}
+//可控制显示列 单选文本
+function Common_RadioTextToDic() {
+    var ItemCode = arguments[0];
+    var DicType = arguments[1];
+    var columns = arguments[2]? arguments[2] : 4;
+    var RemarkItem = arguments[3]? arguments[3] : false; //某个值时显示备注项
+    
+    var strList =$m({              //使用同步加载方法，否则后台取值向前台赋值时赋值不上
+        ClassName:"DHCHAI.BTS.DictionarySrv",
+        QueryName:"QryDic",
+        ResultSetType:'array',
+        aTypeCode:DicType,
+        aActive:1
+    }, false);
+
+    var objStr = JSON.parse(strList);
+    var len = objStr.length;
+    var count = parseInt(len/columns)+1;
+    var per = Math.round((1/columns) * 100) + '%';   //每列所在百分比
+    var listHtml=""
+    for (var index =0; index< count; index++) {
+        var radlen=(((index+1)*columns)<len) ? (index+1)*columns : len;
+        listHtml +="<div>"; 
+        for (var dicIndex = index*columns; dicIndex < radlen; dicIndex++) { 
+            var DicID = objStr[dicIndex].ID;
+            var DicDesc = objStr[dicIndex].DicDesc;
+             var RemarkHtml = ((RemarkItem==true)||(RemarkItem==dicSubList[1])) ? "<input class='textbox' id='"+ItemCode+"Other'"+ objStr[dicIndex].DicCode+" style='margin-left: 5px;'/>" : "";
+            listHtml += "<div style='float:left;width:"+per+"'><input id="+ItemCode+DicID+" type='radio' class='hisui-radio' label=\""+DicDesc+"\" name="+ItemCode+" value="+DicID+">"+RemarkHtml+"</div>";
+        } 
+        listHtml +="</div>"
+    }
+    $('#'+ItemCode).html(listHtml); 
+    $.parser.parse('#'+ItemCode);  //解析radio
+}
+
+//ADD 2023-03-17 复选框样式下拉框
+function Common_ComboCkDicID() {
+	var ItemCode = arguments[0];
+	var DicType = arguments[1];
+	var IsValued= arguments[2];   //是否初始赋值
+	if (!IsValued) {
+		var cbox = $HUI.combobox("#"+ItemCode, {
+			editable: false,       //因测试组测试输入非字典内容，小字典统一不允许编辑
+			defaultFilter:4,       //text字段包含匹配或拼音首字母包含匹配 不区分大小写
+			allowNull: true,
+			multiple:true,
+			rowStyle:'checkbox',
+			valueField: 'ID',
+			textField: 'DicDesc', 
+			onShowPanel: function () {
+				var url=$URL+"?ClassName=DHCHAI.BTS.DictionarySrv&QueryName=QryDic&ResultSetType=array&aTypeCode="+DicType+"&aActive=1";
+			    $("#"+ItemCode).combobox('reload',url);
+			}
+		});	
+	} else {
+		var cbox = $HUI.combobox("#"+ItemCode, {
+			url:$URL+"?ClassName=DHCHAI.BTS.DictionarySrv&QueryName=QryDic&ResultSetType=array&aTypeCode="+DicType+"&aActive=1",
+			editable: false,       
+			defaultFilter:4,
+			allowNull: true, 
+			multiple:true,
+			rowStyle:'checkbox',   
+			valueField: 'ID',
+			textField: 'DicDesc'
+		});	
+	}	
+	return;
+}
+//取统计维度展示方式
+function ShowStatDimens() {
+	var ItemCode = arguments[0];
+	var LocType = arguments[1];
+	
+	//维度列表
+	var DimensList = $cm ({
+		ClassName:"DHCHAI.STATV2.AbstractComm",
+		QueryName:"QryStatDimens",
+		aType:LocType
+	},false);
+	var DimenspData = DimensList.rows;
+	var length=DimensList.total;
+	var cbox = $HUI.combobox("#"+ItemCode, {
+		editable: true,
+		defaultFilter:4,    
+		valueField: 'Code',
+		textField: 'Desc',
+		data:DimenspData,
+		onLoadSuccess:function(data){   //初始加载全部
+			if (length>0) {
+				for (var i=0;i<length;i++) {
+					if (data[i]['IsDefault']==1) {	
+						$(this).combobox('setValue',data[i]['Code']);
+					}
+				}					
+			}					
+		}
+	});
+	return;
+}
+
+function Append_Url(url) {
+	var p_URL = url;
+	p_URL += '&aStatDimens=' + $('#cboShowType').combobox('getValue');
+	p_URL += '&aLocIDs=' + $('#cboLoc').combobox('getValues').join(',');
+	p_URL += '&aPath=' + cspPath;	   //202211报表优化时添加
+	return p_URL;
+}
+function RemoveArr(arrRecord) {
+	var aStatDimens = $('#cboShowType').combobox('getValue');  //展示维度
+	var arrlength = 0;
+	var len = arrRecord.length;
+	for (var indRd = 0; indRd < len; indRd++) {
+		var rd = arrRecord[indRd];
+		console.log(rd);
+	
+		//去掉全院、医院、科室组、科室合计
+		if ((rd["DimensKey"].indexOf('-A-') > -1) || ((aStatDimens != "H") && (rd["DimensKey"].indexOf('-H-') > -1)) || ((aStatDimens != "G") && (aStatDimens != "HG") && (rd["DimensKey"].indexOf('-G-') > -1)) || (!rd["DimensKey"])) {
+			delete arrRecord[indRd];
+			arrlength = arrlength + 1;
+			continue;
+		}
+	}
+	arrRecord = arrRecord.sort(function(x, y){
+		return y.UseAntiCnt - x.UseAntiCnt
+	});
+	arrRecord.length = len - arrlength
+	return arrRecord;
+}
+//通过当前医院ID获取医院分组
+function GetGroupLinkHospForCSS(){
+	var arrHospID=$cm({
+		ClassName:"DHCHAI.BTS.HospitalSrv",
+		QueryName:"QryHospListByHis",
+		aLogonHospID:$.LOGON.HOSPID
+	},false);
+	if (arrHospID.total>0){
+		return arrHospID.rows[0].ID;
+	}
+	return "";
 }

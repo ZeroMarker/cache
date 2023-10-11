@@ -26,22 +26,9 @@ $(document).keydown(function(e) {
 	}
 })
 function InitItemDefaultListTabDataGrid(){
-	var toolbar=[{
-		text:"确定",
-		iconCls: 'icon-ok',
-		handler: function(){
-			var row=PageLogicObj.m_ItemDefaultListTabDataGrid.datagrid('getSelected');
-			if (websys_showModal("options").CallBackFunc) {
-				websys_showModal("options").CallBackFunc(row['Rowid']);
-			}else{
-				window.returnValue=row['Rowid'];
-	     		window.close();
-			}
-		}
-	}]
 	var Columns=[[ 
 		//{field:'Rowid',checkbox:true,width:400},
-		{field:'ArcimDesc',title:'科室',width:200},
+		{field:'ArcimDesc',title:'医嘱名称',width:200},
 		{field:'ContralType',title:'控制范围',width:70},
 		{field:'ContralDesc',title:'医生科室',width:100},
 		{field:'Priority',title:'医嘱类型',width:70},
@@ -57,7 +44,8 @@ function InitItemDefaultListTabDataGrid(){
 		},
 		{field:'SkinAction',title:'皮试备注',width:70},
 		//{field:'RelevanceNo',title:'关联ID',width:50},
-		{field:'PackQty',title:'医嘱数量',width:50}
+		{field:'PackQty',title:'医嘱数量',width:50},
+		{field:'PackUom',title:'数量单位',width:50}
     ]]
 	var ItemDefaultListTabDataGrid=$("#ItemDefaultListTab").datagrid({
 		fit : true,
@@ -72,7 +60,6 @@ function InitItemDefaultListTabDataGrid(){
 		pageList : [15,100,200],
 		idField:'Rowid',
 		columns :Columns,
-		toolbar:toolbar,
 		onSelect:function(index, row){
 		},
 		onDblClickRow:function(index, row){
@@ -101,11 +88,24 @@ function ItemDefaultListTabDataGridLoad(){
 	$.q({
 	    ClassName : "web.DHCDocItemDefault",
 	    QueryName : "FindByARCIIM",
-	    OrderRowid:ServerObj.OrderRowid, UserID:ServerObj.UserID, LogonLocDr:ServerObj.LogonLocDr,
+	    OrderRowid:ServerObj.OrderRowid, UserID:ServerObj.UserID, LogonLocDr:ServerObj.LogonLocDr,OrderPriorRowid:ServerObj.OrderPriorRowid,
 	    Pagerows:PageLogicObj.m_ItemDefaultListTabDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
 		PageLogicObj.m_ItemDefaultListTabDataGrid.datagrid('loadData',GridData);
 	})
+}
+function SelectRow(){
+	var row=PageLogicObj.m_ItemDefaultListTabDataGrid.datagrid('getSelected');
+	if(!row){
+		$.messager.popover({msg:'未选择有效内容',type:'alert'});
+		return;
+	}
+	if (websys_showModal("options").CallBackFunc) {
+		websys_showModal("options").CallBackFunc(row['Rowid']);
+	}else{
+		window.returnValue=row['Rowid'];
+		window.close();
+	}
 }
 $.extend($.fn.datagrid.methods,{
 	keyCtr : function (jq) {

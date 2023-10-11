@@ -22,11 +22,13 @@
 		});
    	}
    	obj.LoadRep = function(){
-		var aHospID 	= $('#cboHospital').combobox('getValue');
+		var aHospID 	= $('#cboHospital').combobox('getValues').join('|');
 		var aDateFrom 	= $('#dtDateFrom').datebox('getValue');
 		var aDateTo		= $('#dtDateTo').datebox('getValue');
 		var aLocType 	= Common_CheckboxValue('chkStatunit');
 		var aQryCon 	= $('#cboQryCon').combobox('getValue');
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
 		ReportFrame = document.getElementById("ReportFrame");
 		if(aDateFrom > aDateTo){
 			$.messager.alert("提示","开始日期应小于或等于结束日期！", 'info');
@@ -36,7 +38,12 @@
 			$.messager.alert("提示","请选择开始日期、结束日期！", 'info');
 			return;
 		}
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S160AntBacSub.raq&aHospIDs='+aHospID +'&aDateFrom=' + aDateFrom +'&aDateTo='+ aDateTo+'&aLocType='+aLocType+'&aQryCon='+aQryCon;	
+		if ((aStatDimens=="")){
+			$.messager.alert("提示","请选择展示维度！", 'info');
+			return;
+		}
+		
+		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S160AntBacSub.raq&aHospIDs='+aHospID +'&aDateFrom=' + aDateFrom +'&aDateTo='+ aDateTo+'&aLocType='+aLocType+'&aQryCon='+aQryCon+'&aStatDimens='+aStatDimens+'&aLocIDs='+aLocIDs+'&aPath='+cspPath;	
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
@@ -45,9 +52,18 @@
 		
 	}
 	obj.up=function(x,y){
-        return y.IsSubmissCnt-x.IsSubmissCnt		//根据抗感染药使用并送检人数排序
+		 if(obj.sortName=="抗菌药物使用并送检人数"){
+			return y.IsSubmissCnt-x.IsSubmissCnt;		//根据抗感染药使用并送检人数排序
+		}else if(obj.sortName=="治疗性使用抗菌药物并送检人数"){
+			return y.IsCureSubmissCnt-x.IsCureSubmissCnt;		
+		}else if(obj.sortName=="治疗性使用抗菌药物病原学送检率"){
+			return y.CureSubmissRatio-x.CureSubmissRatio;		
+		}else {
+			return y.SubmissRatio-x.SubmissRatio;
+		}	       
+        
     }
-	obj.option1 = function(arrViewLoc,arrIsSubmissCnt,arrSubmissRatio,endnumber){
+	obj.option1 = function(arrViewLoc,arrIsSubmissCnt,arrSubmissRatio,arrCureSubmissCnt,arrCureSubmissRatio,endnumber){
 		var option1 = {
 			title : {
 				text: '出院患者使用抗菌药物病原学送检率统计图',
@@ -65,7 +81,7 @@
 				containLabel:true
 			},
 			tooltip: {
-				trigger: 'axis',
+				trigger: 'axis'
 			},
 			toolbox: {
 				feature: {
@@ -76,7 +92,7 @@
 				}
 			},
 			legend: {
-				data:['抗菌药物使用并送检人数','抗菌药物病原学送检率'],
+				data:['抗菌药物使用并送检人数','治疗性使用抗菌药物并送检人数','抗菌药物病原学送检率','治疗性使用抗菌药物病原学送检率'],
 				x: 'center',
 				y: 30
 			},
@@ -92,31 +108,31 @@
 					type: 'category',
 					data: arrViewLoc,
 					axisLabel: {
-								margin:8,
-								rotate:45,
-								interval:0,
-								// 使用函数模板，函数参数分别为刻度数值（类目），刻度的索引
-								formatter: function (value, index) {
-									//处理标签，过长折行和省略
-									if(value.length>6 && value.length<11){
-										return value.substr(0,5)+'\n'+value.substr(5,5);
-									}else if(value.length>10&&value.length<16){
-										return value.substr(0,5)+'\n'+value.substr(5,5)+'\n'+value.substr(10,5);
-									}else if(value.length>15&&value.length<21){
-										return value.substr(0,5)+'\n'+value.substr(5,5)+'\n'+value.substr(10,5)+'\n'+value.substr(15,5);
-									}else{
-										return value;
-									}
-								}
+						margin:8,
+						rotate:45,
+						interval:0,
+						// 使用函数模板，函数参数分别为刻度数值（类目），刻度的索引
+						formatter: function (value, index) {
+							//处理标签，过长折行和省略
+							if(value.length>6 && value.length<11){
+								return value.substr(0,5)+'\n'+value.substr(5,5);
+							}else if(value.length>10&&value.length<16){
+								return value.substr(0,5)+'\n'+value.substr(5,5)+'\n'+value.substr(10,5);
+							}else if(value.length>15&&value.length<21){
+								return value.substr(0,5)+'\n'+value.substr(5,5)+'\n'+value.substr(10,5)+'\n'+value.substr(15,5);
+							}else{
+								return value;
 							}
+						}
+					}
 				}
 			],
 			yAxis: [
 				{
 					type: 'value',
-					name: '抗菌药物使用并\n'+'送检人数',
+					name: '抗菌药物使用并送检人数',
 					min: 0,
-					interval:Math.ceil(arrIsSubmissCnt[0]/10),
+					interval:10,
 					axisLabel: {
 						formatter: '{value} '
 					}
@@ -139,6 +155,12 @@
 					data:arrIsSubmissCnt
 				},
 				{
+					name:'治疗性使用抗菌药物并送检人数',
+					type:'bar',
+					barMaxWidth:50,
+					data:arrCureSubmissCnt
+				},
+				{
 					name:'抗菌药物病原学送检率',
 					type:'line',
 					yAxisIndex: 1,
@@ -147,7 +169,17 @@
 						show:true,
 						formatter:"{c}%"
 					}
-				}  
+				},
+				{
+					name:'治疗性使用抗菌药物病原学送检率',
+					type:'line',
+					yAxisIndex: 1,
+					data:arrCureSubmissRatio,
+					label: {
+						show:true,
+						formatter:"{c}%"
+					}
+				}   
 			]
 		};
 		return option1;
@@ -155,22 +187,26 @@
 	
     obj.echartLocInfRatio = function(runQuery){
 		if (!runQuery) return;
+		var aStatDimens = $('#cboShowType').combobox('getValue');  //展示维度
 		var arrViewLoc 		= new Array();
 		var arrIsSubmissCnt = new Array();		//抗感染药使用并送检人数
 		var arrSubmissRatio = new Array();
-		arrRecord 		= runQuery.record;
+		var arrCureSubmissCnt = new Array();	//治疗性抗感染药使用并送检人数
+		var arrCureSubmissRatio = new Array();
+		arrRecord 		= runQuery.rows;
 		
 		var arrlength		= 0;
 		for (var indRd = 0; indRd < arrRecord.length; indRd++){
 			var rd = arrRecord[indRd];
-			//去掉全院、医院、科室组
-			if ((rd["xDimensKey"].indexOf('-A-')>-1)||(rd["xDimensKey"].indexOf('-H-')>-1)||(rd["xDimensKey"].indexOf('-G-')>-1)) {
+			//去掉全院、医院、科室组、科室合计
+			if ((rd["xDimensKey"].indexOf('-A-')>-1)||((aStatDimens!="H")&&(rd["xDimensKey"].indexOf('-H-')>-1))||((aStatDimens!="G")&&(aStatDimens!="HG")&&(rd["xDimensKey"].indexOf('-G-')>-1))||(!rd["xDimensKey"])) {
 				delete arrRecord[indRd];
 				arrlength = arrlength + 1;
 				continue;
 			}
 			rd["DimensDesc"] 	= $.trim(rd["DimensDesc"]); //去掉空格
 			rd["SubmissRatio"] 	= parseFloat(rd["SubmissRatio"].replace('%','').replace('‰','')).toFixed(2);
+			rd["CureSubmissRatio"] 	= parseFloat(rd["CureSubmissRatio"].replace('%','').replace('‰','')).toFixed(2);
 		}
 		
 		arrRecord = arrRecord.sort(obj.up);
@@ -181,43 +217,57 @@
 			arrViewLoc.push(rd["DimensDesc"]);
 			arrIsSubmissCnt.push(rd["IsSubmissCnt"]);
 			arrSubmissRatio.push(parseFloat(rd["SubmissRatio"]).toFixed(2));
+			arrCureSubmissCnt.push(rd["IsCureSubmissCnt"]);
+			arrCureSubmissRatio.push(parseFloat(rd["CureSubmissRatio"]).toFixed(2));
 			
 		}
 		var endnumber = (14/arrViewLoc.length)*100;
 		// 使用刚指定的配置项和数据显示图表。
-		obj.myChart.setOption(obj.option1(arrViewLoc,arrIsSubmissCnt,arrSubmissRatio,endnumber),true);
+		obj.myChart.setOption(obj.option1(arrViewLoc,arrIsSubmissCnt,arrSubmissRatio,arrCureSubmissCnt,arrCureSubmissRatio,endnumber),true);
 	}
    	obj.ShowEChaert1 = function(){
 		obj.myChart.clear()
 		 //当月科室感染率图表
-		var aHospID 	= $('#cboHospital').combobox('getValue');
+		var aHospID 	= $('#cboHospital').combobox('getValues').join('|');
 		var aDateFrom 	= $('#dtDateFrom').datebox('getValue');
 		var aDateTo		= $('#dtDateTo').datebox('getValue');
 		var aLocType 	= Common_CheckboxValue('chkStatunit');
 		var aQryCon 	= $('#cboQryCon').combobox('getValue');
-		var dataInput 	= "ClassName=" + 'DHCHAI.STATV2.S160AntBacSub' + "&QueryName=" + 'QryAntBacSub' + "&Arg1=" + aHospID + "&Arg2=" + aDateFrom + "&Arg3=" + aDateTo +"&Arg4="+aLocType+"&Arg5="+aQryCon+"&ArgCnt=" + 5;
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
+		
+		obj.myChart.showLoading();	//隐藏加载动画
+		$cm({
+			ClassName:"DHCHAI.STATV2.S160AntBacSub",
+			QueryName:"QryAntBacSub",
+			aHospIDs:aHospID, 
+			aDateFrom:aDateFrom, 
+			aDateTo:aDateTo, 
+			aLocType:aLocType, 
+			aQryCon:aQryCon, 
+			aStatDimens:aStatDimens, 
+			aLocIDs:aLocIDs, 
+			page: 1,
+			rows: 999
+		},function(rs){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			obj.echartLocInfRatio(rs);
+			
+			obj.sortName="抗菌药物病原学送检率"; //初始化排序指标
+			obj.myChart.off('legendselectchanged'); //取消事件，避免事件绑定重复导致多次触发
+			obj.myChart.on('legendselectchanged', function(legObj){
+				//处理排序问题 
+				//如果是重复点击认为是需要执行隐藏处理,不想隐藏就不用判断了	
+				if(obj.sortName!=legObj.name){
+					obj.sortName=legObj.name;
+					obj.echartLocInfRatio(rs);
+				}else {
+					obj.sortName="";  //初始化
+				}
+			});
 
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 30000, //30秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				var tkclass="DHCHAI.STATV2.S160AntBacSub";
-				var tkQuery="QryAntBacSub";
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
 		});
+
 	}
 	
 }

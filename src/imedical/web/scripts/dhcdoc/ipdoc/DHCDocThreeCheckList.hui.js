@@ -17,7 +17,7 @@ function Init(){
 			valueField: 'id',
 			textField: 'text',
 			editable:false, 
-			data: [{"id":"MaterD","text":"主(副)任医师","selected":"true"},{"id":"UpD","text":"上级医师"}],
+			data: [{"id":"MaterD","text":$g("主(副)任医师"),"selected":"true"},{"id":"UpD","text":$g("上级医师")}],
 			onSelect: function (rec) {
 			}
 	   });
@@ -51,12 +51,12 @@ function InitEvent(){
 }
 function threechecklistDataDataGrid(){
 	var toobar=[{
-        text: '增加',
+        text: '新增',
         iconCls: 'icon-add',
         handler: function() {AddClickHandle(); }
     }, {
         text: '删除',
-        iconCls: 'icon-remove',
+        iconCls: 'icon-cancel',
         handler: function() {DelClickHandle();}
     }, {
         text: '更新',
@@ -74,8 +74,8 @@ function threechecklistDataDataGrid(){
 			editor:{
 				type:'switchbox',
 				options:{
-					onText:'已激活',
-	                offText:'激活',
+					onText:$g('已激活'),
+	                offText:$g('激活'),
 	                onClass:'primary',
 	                offClass:'gray',
 	                size:"small",
@@ -85,8 +85,29 @@ function threechecklistDataDataGrid(){
                 }
 			}
 		},
-		{field:'Defined',title:'护士分床时默认增加',width:100}
+		{field:'Defined',title:'护士分床时默认增加',
+			styler: function(value,row,index){
+			 				if (value=="Y"){
+				 				return '';
+				 			}else{
+					 			return '';
+					 		}
+		 			   },
+			 		   formatter:function(value,record){
+				 			if (value=="Y") return "是";
+				 			else  return "否";
+				 	   },width:130}
     ]]
+    if (ServerObj.EpisodeID==""){
+	    var Columns=[[ 
+			{field:'ThreeDocID',hidden:true,title:'ThreeDocID'},
+			{field:'ThreeDocAdmID',hidden:true,title:'ThreeDocAdmID'},
+			{field:'Type',title:'类型',width:100},
+			{field:'UserDesc',title:'医生',width:100},
+			{field:'UserID',hidden:true,title:'UserID'},
+			{field:'Defined',title:'护士分床时默认增加',width:100}
+	    ]]
+	    }
 	var threechecklistDataDataGrid=$("#tabthreechecklist").datagrid({
 		fit : true,
 		border : false,
@@ -113,7 +134,7 @@ function threechecklistDataDataGrid(){
 		},onLoadSuccess:function(data){
 			var Rows=PageLogicObj.m_threechecklistDataGrid.datagrid('getRows');
 			var ListData = PageLogicObj.m_threechecklistDataGrid.datagrid('getData');
-			if (ServerObj.CurrUserFlag!="1"){
+			if ((ServerObj.CurrUserFlag!="1")&&(ServerObj.EpisodeID!="")){
 				for (var i=Rows.length-1;i>=0;i--) {
 					PageLogicObj.m_threechecklistDataGrid.datagrid("beginEdit", i);
 					if (ListData.originalRows[i].ActiveFlag=="N"){var ActiveFlag=false;
@@ -149,6 +170,12 @@ function DocThreeCheckChange(e,val){
 	var ThreeDocID=ListData.originalRows[indexid].ThreeDocID
 	var ThreeDocAdmID=ListData.originalRows[indexid].ThreeDocAdmID
 	var Type=ListData.originalRows[indexid].Type
+	if (ServerObj.EpisodeID==""){
+		$.messager.alert("提示","请选择患者后维护","info");
+		var et = PageLogicObj.m_threechecklistDataGrid.datagrid('getEditor', {index:indexid,field:'ActiveFlag'});
+		$HUI.switchbox(et.target).setValue(false);
+		return
+		}
 	if (val.value==true){var DocType="Y"}else{var DocType="N"}
 	var CheckFlag=0
 	if (DocType=="Y"){
@@ -177,7 +204,7 @@ function DocThreeCheckChange(e,val){
 		Type:DocType, UpdateUserID:session['LOGON.USERID']
 	},function(GridData){
 		if (GridData!="0"){
-			$.messager.alert("提示","改变失败"+GridData,"info")
+			$.messager.alert("提示",$g("改变失败")+GridData,"info")
 		}
 		
 	});
@@ -209,11 +236,11 @@ function SaveDocClickHandle(){
 	},function(GridData){
 		if (GridData!="0"){
 			if (GridData==3){ 
-				var GridData="医生重复!";
+				var GridData=$g("医生重复!");
 			}else if(GridData==2){
-				var GridData="存在同一类型的医生已激活!";
+				var GridData=$g("存在同一类型的医生已激活!");
 			}
-			$.messager.alert("提示","保存失败!"+GridData,"info")
+			$.messager.alert("提示",$g("保存失败!")+GridData,"info")
 		}else{
 			threechecklistDataDataGridLoad();
 			$("#add-dialog").dialog("close");
@@ -228,7 +255,7 @@ function DelClickHandle(){
 		$.messager.alert("提示","请选择一行","info");
 		return false;
 	}
-	$.messager.confirm('提示', '是否删除您的所有患者对应的'+SelectedRow.Type+SelectedRow.UserDesc, function(r){
+	$.messager.confirm('提示', $g('是否删除您的所有患者对应的')+$g(SelectedRow.Type)+SelectedRow.UserDesc, function(r){
 		if (r){
 		    $.cm({
 				ClassName:"web.DHCDocThreeCheckListAdm",
@@ -236,7 +263,7 @@ function DelClickHandle(){
 				ID:SelectedRow.ThreeDocID
 			},function(GridData){
 				if (GridData!="0"){
-					$.messager.alert("提示","删除失败"+GridData)
+					$.messager.alert("提示",$g("删除失败")+GridData)
 				}else{
 					$.messager.popover({msg:"删除成功!",type:'success'});
 					threechecklistDataDataGridLoad();
@@ -253,7 +280,7 @@ function UpdateClickHandle(){
 	}
 	$("#add-dialog").dialog("open");
 	$HUI.combobox("#Doclist").setValue(SelectedRow.UserID);
-	if (SelectedRow.Type=="主(副)任医师"){var Type="MaterD"}else{var Type="UpD"}
+	if (SelectedRow.Type==$g("主(副)任医师")){var Type="MaterD"}else{var Type="UpD"}
 	$HUI.combobox("#DocTypeCode").setValue(Type);
 	if (SelectedRow.Defined=="Y"){var Defined=true}else{var Defined=false}
 	$HUI.checkbox("#DocDefined").setValue(Defined)

@@ -16,8 +16,8 @@ function PrintInPur(Parref,zbFlag)
 	var InpoDate=mainArr[4]
 	//alert(ZBFlag)
 	if (zbFlag==1){PzbFlag=""}
-	else if (zbFlag==2){PzbFlag="Ф▀⌡Ф═┤"}
-	else {PzbFlag="И²·Ф▀⌡Ф═┤"}
+	else if (zbFlag==2){PzbFlag="уп╠Й"}
+	else {PzbFlag="╥гуп╠Й"}
 	
 	//fileName="{DHCST_INPurPlan_Common.raq(Parref="+Parref+";InPurPlanLoc="+InPurPlanLoc+";InpoNo="+InpoNo+";user="+user+";InpoDate="+InpoDate+";PzbFlag="+PzbFlag+";HospDesc="+App_LogonHospDesc+")}";
 	fileName="{DHCST_INPurPlan_Common.raq(Parref="+Parref+";InpoNo="+InpoNo+";InpoDate="+InpoDate+";zbFlagIO="+zbFlag+")}";

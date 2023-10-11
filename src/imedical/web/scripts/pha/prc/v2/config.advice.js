@@ -6,9 +6,11 @@
 PHA_COM.App.Csp = "pha.prc.v2.config.advice.csp";
 PHA_COM.App.Name = "PRC.Config.Advice";
 PHA_COM.App.Load = "";
+var hospID = PHA_COM.Session.HOSPID;
 $(function () {
 	InitGridAdvice();
 	InitEvents();
+	InitHospCombo();
 });
 
 // ÊÂ¼þ
@@ -41,7 +43,8 @@ function InitGridAdvice() {
         url: $URL,
         queryParams: {
             ClassName: 'PHA.PRC.ConFig.Advice',
-            QueryName: 'SelectAdvice'
+            QueryName: 'SelectAdvice',
+            hospID: hospID
         },
         columns: columns,
         toolbar: "#gridAdviceBar",
@@ -124,6 +127,7 @@ function SaveAdvice(){
 		ClassName: 'PHA.PRC.ConFig.Advice',
 		MethodName: 'SaveComAdvice',
 		inputStr: inputStr,
+		hospID: hospID,
 		dataType: 'text'
 	}, false);
 	var saveArr = saveRet.split('^');
@@ -145,6 +149,14 @@ function ClearAdvice(){
 	
 }
 
-
+function InitHospCombo() {
+	var genHospObj = GenHospComp('DHC_PHCNTSADVICE');
+	if (typeof genHospObj ==='object'){
+        genHospObj.options().onSelect =  function(index, record) {	
+        	hospID = record.HOSPRowId;
+            $('#gridAdvice').datagrid('query', {hospID: hospID}); 
+        }
+    }
+}
 
 

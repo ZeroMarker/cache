@@ -18,6 +18,7 @@ $(function(){
 		BClear_click();		
         });
     
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEQualityManager.raq");
 })
 
 
@@ -28,7 +29,8 @@ function BClear_click(){
 	
 	$("#ShowFlag").combobox('setValue',"Err");
 	InitCombobox();
-	document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=DHCPEQualityManager.raq";
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEQualityManager.raq");
+	//document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=DHCPEQualityManager.raq";
 }
 
 
@@ -46,26 +48,37 @@ function BFind_click(){
 	else if (ShowFlag == "Create") reportName = "DHCPEQualityManager1.raq";
 	else { $.messager.alert("提示","请选择查询类型！","info");  return false;}
 	
-	var CTLOCID = session["LOGON.CTLOCID"];
+	var CurLoc = session["LOGON.CTLOCID"];
 	
 	var lnk = "&StartDate=" + BeginDate
 			+ "&EndDate=" + EndDate
 			+ "&VIPLevel=" + VIPLevel
-			+ "&CTLOCID=" + CTLOCID
+			+ "&CurLoc=" + CurLoc
 			;
 	
-	document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=" + reportName + lnk;
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=" + reportName + lnk);
+	//document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=" + reportName + lnk;
 
 }
 
 function InitCombobox(){
 	
+	/*
 	//VIP等级	
 	var VIPObj = $HUI.combobox("#VIPLevel",{
 		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindVIP&ResultSetType=array",
 		valueField:'id',
 		textField:'desc',
 		});
+	*/
+	
+	//VIP等级-多院区 
+	var VIPObj = $HUI.combobox("#VIPLevel",{
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindVIP&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
+		valueField:'id',
+		textField:'desc',
+	});
+
 	
 	// 查询类型
 	$HUI.combobox("#ShowFlag", {
@@ -74,9 +87,27 @@ function InitCombobox(){
 		panelHeight:"auto",
 		editable:false,
 		data:[
-			{id:'Err',text:'责任人',selected:true},
-			{id:'Create',text:'上报人'}
+			{id:'Err',text:$g('责任人'),selected:true},
+			{id:'Create',text:$g('上报人')}
 		]
 	});
 	
+}
+// 解决iframe中 润乾csp 跳动问题
+function ShowRunQianUrl(iframeId, url) {
+    var iframeObj = document.getElementById(iframeId)
+    if (iframeObj) {
+	    iframeObj.src=url;
+	    //debugger;
+	    $(iframeObj).hide();
+	    if (iframeObj.attachEvent) {
+		    iframeObj.attachEvent("onload", function(){
+		        $(this).show();
+		    });
+	    } else {
+		    iframeObj.onload = function(){
+		        $(this).show();
+		    };
+	    }
+    }
 }

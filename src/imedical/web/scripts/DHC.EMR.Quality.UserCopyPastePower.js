@@ -34,6 +34,7 @@ function InitAuthorityDataList()
 			idField:'rowID', 
 			rownumbers:true,
 			fit:true,
+			scrollbarSize:0,
 			columns:[[
 			    {field:'rowID',title:'RowID',hidden:true},  
 				{field:'SSGroup',title:'科室',width:80},

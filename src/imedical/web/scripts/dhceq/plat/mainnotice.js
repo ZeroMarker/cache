@@ -13,16 +13,21 @@ function initDocument()
 	initCheckbox();
 	//$('.div-all').empty()
 	$HUI.radio("#Month").setValue(true)
-	
+	jQuery('#BFind').on("click", BFind_Clicked);
+	if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+		$("#search")[0].style.height="26px";
+		
+		}
+		
 }
 
-function SearchHander(value,name)
+
+function BFind_Clicked()
 {
-	setElement("SearchAll",value);
+	var searchValue=getElementValue("search")
+	setElement("SearchAll",searchValue);
 	initInvoiceInfo("tSystemList");
-	
 }
-
 ///add by lmm 2020-04-20 增加业务，数据数据模板
 function initKeyWords()
 {
@@ -94,17 +99,17 @@ function initCheckbox()
             if (checkedRadioJObj.val()=="Month")
             {
 				var DateRange="Month"
-				var title="公告"
+				// var title="公告"
 				var InvoiceCatDR=""
 	         }
             else if (checkedRadioJObj.val()=="All")
             {
 				var DateRange=""
-				var title="公告"
+				// var title="公告"
 				var InvoiceCatDR=""
 	         }
 			setElement("DateRange",DateRange);
-			$('#west').panel('setTitle',title);
+			// $('#west').panel('setTitle',title);
 			initInvoiceInfo("tSystemList");
 	         
 				//window.setTimeout(function(){window.location.href="dhceq.plat.mainnotice.csp?&title="+title+"&InvoiceCatDR="+InvoiceCatDR+"&DateRange="+DateRange},50); 
@@ -129,6 +134,7 @@ function initInvoiceInfo(tableName)
 	        DateRange:getElementValue("DateRange"),
 	        SearchAll:getElementValue("SearchAll"),
 	        EffectiveFlag:"Y",
+	        GroupLimitFlag:"Y",  //add by lmm 2020-09-07 1481391
 	},
 	function(jsonData){
 		createInvoice(jsonData,tableName);
@@ -249,4 +255,3 @@ function VisitorLog(RowID)
 	
 	return
 }
-

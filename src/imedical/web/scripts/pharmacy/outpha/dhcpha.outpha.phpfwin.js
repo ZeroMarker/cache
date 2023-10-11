@@ -47,13 +47,13 @@ function InitDict(){
 
 function InitGrid(){
 	var gridColumns=[[
-		{field:'TLocDesc',title:'药房名称',width:250},
-		{field:'TPyWinDesc',title:'配药窗口',width:250},
-		{field:'TFyWinDesc',title:'发药窗口',width:250},
-		{field:'TPhlid',title:'门诊药房ID',width:200,hidden:true},
-		{field:'TPyWinID',title:'配药窗口ID',width:200,hidden:true},
-		{field:'TPhwid',title:'发药窗口ID',width:200,hidden:true},
-		{field:'TLocId',title:'科室ID',width:200,hidden:true}
+		{field:'TLocDesc',title:$g("药房名称"),width:250},
+		{field:'TPyWinDesc',title:$g("配药窗口"),width:250},
+		{field:'TFyWinDesc',title:$g("发药窗口"),width:250},
+		{field:'TPhlid',title:$g("门诊药房ID"),width:200,hidden:true},
+		{field:'TPyWinID',title:$g("配药窗口ID"),width:200,hidden:true},
+		{field:'TPhwid',title:$g("发药窗口ID"),width:200,hidden:true},
+		{field:'TLocId',title:$g("科室ID"),width:200,hidden:true}
 	]];
 	
 	var options={
@@ -82,27 +82,27 @@ function SearchHandler(){
 function AddHandler(){
 	var locId=$("#cmbPhLoc").combobox('getValue');
 	if(locId==""){
-		$.messager.alert('提示',"药房名称不能为空!","warning");
+		$.messager.alert($g("提示"),$g("药房名称不能为空!"),"warning");
 		return;
 	}
 	var fyWinId=$("#cmbFyWin").combobox('getValue');
 	if(fyWinId==""){
-		$.messager.alert('提示',"发药窗口不能为空!","warning");
+		$.messager.alert($g("提示"),$g("发药窗口不能为空!"),"warning");
 		return;
 	}
 	var pyWinId=$("#cmbPyWin").combobox('getValue');
 	if(pyWinId==""){
-		$.messager.alert('提示',"配药窗口不能为空!","warning");
+		$.messager.alert($g("提示"),$g("配药窗口不能为空!"),"warning");
 		return;
 	}
 	var saveRet=tkMakeServerCall("web.DHCOutPhCode","insertPhPyFyWin",locId,fyWinId,pyWinId);
 	if(saveRet==0){
-		$.messager.alert('成功提示',"增加成功!","info");
+		$.messager.alert($g("成功提示"),$g("增加成功!"),"info");
 		$("#grid-pfwin").datagrid('reload');
 	}else if(saveRet==-1){
-		$.messager.alert('提示',"您选择的发药窗口已经关联!","warning");
+		$.messager.alert($g("提示"),$g("您选择的发药窗口已经关联!"),"warning");
 	}else{
-		$.messager.alert('错误提示',"增加失败,错误代码:"+saveRet,"error");
+		$.messager.alert($g("错误提示"),$g("增加失败,错误代码:")+saveRet,"error");
 	}
 }
 
@@ -122,18 +122,18 @@ function ClearHandler(){
 function DeleteHandler(){
 	var seletcted = $("#grid-pfwin").datagrid("getSelected");
 	if (seletcted==null){
-		$.messager.alert('提示',"请先选中需删除的记录!","warning");
+		$.messager.alert($g("提示"),$g("请先选中需删除的记录!"),"warning");
 		return;
 	}
-	$.messager.confirm('提示','您确认删除吗？',function(r){
+	$.messager.confirm($g("提示"),$g("您确认删除吗？"),function(r){
 		if(r){
 			var pfWinId=seletcted.TPyWinID;
 			var delRet=tkMakeServerCall("web.DHCOutPhCode","DeletePyFyWin",pfWinId);
 			if(delRet==0){
-				$.messager.alert('成功提示',"删除成功!","info");
+				$.messager.alert($g("成功提示"),$g("删除成功!"),"info");
 				$("#grid-pfwin").datagrid('reload');
 			}else{
-				$.messager.alert('错误提示',"删除失败,错误代码:"+delRet,"error");
+				$.messager.alert($g("错误提示"),$g("删除失败,错误代码:")+delRet,"error");
 			}
 		}
 	});

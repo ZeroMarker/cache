@@ -30,6 +30,10 @@ $(function(){
     	UpdateData();
     });
     
+	// 职业病信息
+    $('#upd_occu_btn').click(function(){
+    	UpdOccuData();
+    });
    
     $("#PAPMINo").keydown(function(e) {
 		if(e.keyCode==13){
@@ -43,8 +47,25 @@ $(function(){
 		}		
     }); 
    
+      init();
    
 })
+
+function init(){
+	
+	var userId=session['LOGON.USERID'];
+	var LocID=session['LOGON.CTLOCID'];
+	var ReturnStr=tkMakeServerCall("web.DHCPE.CT.ChargeLimit","GetOPChargeLimitInfo",userId,LocID);
+	var OPflagOne=ReturnStr.split("^");
+	var OPFlag=OPflagOne[0];	
+	if(OPflagOne[0]=="N"){
+		$("#Rebate").attr("disabled",true);
+	}else{
+		$("#Rebate").attr("disabled",false);
+	}
+	
+}
+
 
 //输入编码 查找相应的信息
 function PAPMINoChange() {
@@ -186,8 +207,8 @@ function AddData()
 	
 	BCRequired();
 	
-	$("#PAPMINo").attr('disabled',false);
-	$("#Code").attr('disabled',false);
+	//$("#PAPMINo").attr('disabled',false);
+	$("#Code").attr('disabled',true);
 		  		   		
 	$("#myWin").show();
 	 
@@ -197,23 +218,25 @@ function AddData()
 			title:'新增',
 			modal:true,
 			buttonAlign : 'center',
-			buttons:[{
+			buttons:[
+				/*{
 				iconCls:'icon-w-card',
 				text:'读卡',
 				id:'ReadCard',
 				handler:function(){
 					ReadCard_Click()
 				}
-			},{
+			},*/
+				{
 				iconCls:'icon-w-save',
-				text:'保存',
+				text:$g('保存'),
 				id:'save_btn',
 				handler:function(){
 					SaveForm("")
 				}
 			},{
 				iconCls:'icon-w-close',
-				text:'关闭',
+				text:$g('关闭'),
 				handler:function(){
 					myWin.close();
 				}
@@ -289,14 +312,14 @@ SaveForm=function(id)
 
 	}
 	
-	if(!CheckTelOrMobile(iTel1,"Tel1","联系电话1")){	
+	if(!CheckTelOrMobile(iTel1,"Tel1",$g("联系电话1"))){	
 		websys_setfocus(obj.id);
 		return;
 	}
 	
 	 var iTel2=$("#Tel2").val();
 	 if(iTel2!=""){
-		if(!CheckTelOrMobile(iTel2,"Tel2","联系电话2")){
+		if(!CheckTelOrMobile(iTel2,"Tel2",$g("联系电话2"))){
 		websys_setfocus(obj.id);
 		return;
 			}
@@ -310,18 +333,37 @@ SaveForm=function(id)
 		
 	 var iFAX=$("#FAX").val();
 	 
-	
-	 
 	 var iRebate=$("#Rebate").val();
-	 if((iRebate!="")&&((iRebate<=0)||(iRebate>=100))){
-		   $.messager.alert('提示','输入的折扣率应大于0小于100',"info");
-		  return false;
-	 }
 
-	  if(!IsFloat(iRebate)){
-		  $.messager.alert('提示','输入的折扣率格式不正确',"info");
-		  return false;
-	  }
+	 if(iRebate!=""){
+
+		if((iRebate!="")&&((iRebate<=0)||(iRebate>=100))){
+			$.messager.alert('提示','输入的折扣率应大于0小于100',"info");
+			return false;
+		}
+
+		if(!IsFloat(iRebate)){
+			$.messager.alert('提示','输入的折扣率格式不正确',"info");
+			 return false;
+		}
+	  
+		var userId=session['LOGON.USERID'];
+		var LocID=session['LOGON.CTLOCID'];
+		var ReturnStr=tkMakeServerCall("web.DHCPE.CT.ChargeLimit","GetOPChargeLimitInfo",userId,LocID);
+		var OPflagOne=ReturnStr.split("^");
+		var DFLimit=OPflagOne[3];
+		if (DFLimit==0){
+			$.messager.alert("提示","没有打折权限","info");
+			return;
+		 }
+		if(+DFLimit>+iRebate){
+	  		 $.messager.alert("提示",$g("权限不足,您的折扣权限为")+":"+DFLimit+"%","info");
+			return;
+		}	
+	 
+	}
+
+    var TaxIDNum=$("#TaxIDNum").val();
 
 	 var iCardNo=$("#CardNo").val();
 
@@ -363,6 +405,7 @@ SaveForm=function(id)
 				+"^"+$.trim(iPAPMINo)		//登记号	14
 				+"^"+$.trim(iRebate)  //折扣率  15
 				+"^"+$.trim(iCardNo)  //CardNo
+				+"^"+$.trim(TaxIDNum) //纳税人识别号
 				;
 	
 	var flag=tkMakeServerCall("web.DHCPE.PreGBaseInfo","Save",'','',Instring);
@@ -403,7 +446,7 @@ SaveForm=function(id)
 				return false;
 			}
 			else {
-				$.messager.alert("操作提示","更新错误 错误号:"+flag,"error");
+				$.messager.alert($g("操作提示","更新错误 错误号")+":"+flag,"error");
 				return false;
 			}
 		    
@@ -445,23 +488,25 @@ function UpdateData()
 				resizable:true,
 				title:'修改',
 				modal:true,
-				buttons:[{
+				buttons:[
+					/*{
 				iconCls:'icon-w-card',
 				text:'读卡',
 				id:'ReadCard',
 				handler:function(){
 					ReadCard_Click()
 				}
-				},{
+				},*/
+				{
 					iconCls:'icon-w-save',
-					text:'保存',
+					text:$g('保存'),
 					id:'save_btn',
 					handler:function(){
 						SaveForm(ID)
 					}
 				},{
 					iconCls:'icon-w-close',
-					text:'关闭',
+					text:$g('关闭'),
 					handler:function(){
 						myWin.close();
 					}
@@ -543,8 +588,11 @@ function FindPatDetail(ID){
 			
 			iLLoop=iLLoop+1;
 			$("#CardNo").val(Data[iLLoop])
+		 
+		     //纳税人识别号
 		    iLLoop=iLLoop+1;
-		
+		    $("#TaxIDNum").val(Data[iLLoop])
+			
 			
 			var myCardDesc=""
 			myCardDesc=tkMakeServerCall("web.DHCPE.PreIBIUpdate","CardTypeByRegNo",PAPMINo)
@@ -700,24 +748,24 @@ function CheckTelOrMobile(telephone,Name,Type){
 	if (IsTel(telephone)) return true;
 	if (telephone.substring(0,1)==0){
 		if (telephone.indexOf('-')>=0){
-			$.messager.alert("提示",Type+": 固定电话长度错误,固定电话区号长度为【3】或【4】位,固定电话号码长度为【7】或【8】位,并以连接符【-】连接,请核实!","info",function(){
+			$.messager.alert("提示",Type+": "+$g("固定电话长度错误,固定电话区号长度为【3】或【4】位,固定电话号码长度为【7】或【8】位,并以连接符【-】连接,请核实!"),"info",function(){
 				$("#"+Name).focus();
 			})
 	        return false;
 		}else{
-			$.messager.alert("提示",Type+": 固定电话长度错误,固定电话区号长度为【3】或【4】位,固定电话号码长度为【7】或【8】位,请核实!","info",function(){
+			$.messager.alert("提示",Type+": "+$g("固定电话长度错误,固定电话区号长度为【3】或【4】位,固定电话号码长度为【7】或【8】位,请核实!"),"info",function(){
 				$("#"+Name).focus();
 			})
 	        return false;
 		}
 	}else{
 		if(telephone.length!=11){
-			$.messager.alert("提示",Type+": 联系电话电话长度应为【11】位,请核实!","info",function(){
+			$.messager.alert("提示",Type+": "+$g("联系电话电话长度应为【11】位,请核实!"),"info",function(){
 				$("#"+Name).focus();
 			})
 	        return false;
 		}else{
-			$.messager.alert("提示",Type+": 不存在该号段的手机号,请核实!","info",function(){
+			$.messager.alert("提示",Type+": "+$g("不存在该号段的手机号,请核实!"),"info",function(){
 				$("#"+Name).focus();
 			})
 	        return false;
@@ -770,3 +818,15 @@ function IsFloat(Value) {
 	
 }
 
+function UpdOccuData() {
+	var ID = $("#ID").val();
+	if (ID == "") {
+		$.messager.alert("提示", "请选择待修改的记录", "info");
+		return false;
+	}
+		
+	if (ID != "") {
+		var lnk = "dhcpe.occu.gbaseinfo.csp"+"?PGBIRowId=" + ID;
+		websys_lu(lnk, false, "iconCls=icon-book-green,width=1024,height=597,hisui=true,title="+$g("职业病信息"));
+	}
+}

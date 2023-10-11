@@ -14,7 +14,15 @@ var PageLogicObj = {
 	m_UPMZLLEVEL_Val:"",
 	m_UPMYF_Val: "",
 	m_UPMZL_Val: "",
-	m_Hosp: ""
+	m_Hosp: "",
+	v_Global: {
+		DEFAULTCONDEP1:"",DEFAULTCONDOC1:"",
+		DEFAULTCONDEP2:"",DEFAULTCONDOC2:"",
+		DEFAULTCONDEP3:"",DEFAULTCONDOC3:""
+	},
+    m_AuthFlag:tkMakeServerCall("DHCDoc.Interface.Inside.InvokeAuth","GetSwitch"),
+    AuthEntity:["OSKJ","ESKJ","ISKJ"]
+	//PageLogicObj.v_Global
 }
 
 $(function(){
@@ -26,8 +34,15 @@ $(function(){
 	
 	//页面元素初始化
 	PageHandle();
+	InitCache();
 })
-
+function InitCache () {
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function Init(){
 	
 	InitEasyUITool();
@@ -37,11 +52,12 @@ function Init(){
 	//LoadMultipleData("OETYPE", "OEType");
 	//InitData();
 	InitHospList();
-	
+	LoadAuthHtml();
 }
 
 function InitEvent(){
 	$("#i-save").click(SaveBSNormal)
+	$("#Gotop").click(Gotop_Handler)
 	$(window).resize(autoFit);
 }
 
@@ -64,6 +80,8 @@ function PageHandle(){
 		$("#UPMZLVAL").attr("disabled",true);
 	}
 	*/
+
+	
 }
 function InitEasyUITool () {
 	$.extend($.fn.validatebox.defaults.rules, {   
@@ -91,7 +109,28 @@ function InitData(inHosp) {
 	if (myXml!=""){
 		//alert(myXml);
 		SetInfoByXML(myXml,isIE);
+		// console.log(PageLogicObj.v_Global)
+		if (PageLogicObj.v_Global.DEFAULTCONDEP1 !="" ) {
+			PageLogicObj.m_DEFAULTCONDEP.select(PageLogicObj.v_Global.DEFAULTCONDEP1)
+			ReloadDefaultDoc("m_DEFAULTCONDOC",PageLogicObj.v_Global.DEFAULTCONDEP1,PageLogicObj.v_Global.DEFAULTCONDOC1)
+		}
+		if (PageLogicObj.v_Global.DEFAULTCONDEP2 !="" ) {
+			PageLogicObj.m_DEFAULTCONDEP2.select(PageLogicObj.v_Global.DEFAULTCONDEP2)
+			ReloadDefaultDoc("m_DEFAULTCONDOC2",PageLogicObj.v_Global.DEFAULTCONDEP2,PageLogicObj.v_Global.DEFAULTCONDOC2)
+		}
+		if (PageLogicObj.v_Global.DEFAULTCONDEP3 !="" ) {
+			PageLogicObj.m_DEFAULTCONDEP3.select(PageLogicObj.v_Global.DEFAULTCONDEP3)
+			ReloadDefaultDoc("m_DEFAULTCONDOC3",PageLogicObj.v_Global.DEFAULTCONDEP3,PageLogicObj.v_Global.DEFAULTCONDOC3)
+		}
 	}
+}
+
+function ReloadDefaultDoc (id,locid,docid) {
+	var url = $URL+"?ClassName=DHCAnt.KSS.MainInterface&QueryName=QryConsultationDoc&ctLocId="+locid+"&ResultSetType=array";
+	PageLogicObj[id].reload(url);
+	setTimeout(function () {
+		PageLogicObj[id].setValue(docid)
+	},10);
 }
 
 function SetInfoByXML(XMLStr,isIE){
@@ -162,7 +201,7 @@ function SetInfoByXML(XMLStr,isIE){
 		delete(xmlDoc);
 	} else {
 		var jsonData = $.parseJSON(XMLStr);
-		//console.log(jsonData)
+		// console.log(jsonData)
 		var myparseinfo = ServerObj.BSNoramlEntity;
 		var myary = myparseinfo.split("^");
 		for (var myIdx=1; myIdx<myary.length; myIdx++){
@@ -185,6 +224,7 @@ function SetInfoByXML(XMLStr,isIE){
 			
 			
 			if (_$id.hasClass("hisui-combobox")){
+					// console.log(cid+": "+myItemValue)
 					if (cid == "UPMYFLEVEL") {
 						PageLogicObj.m_UPMYFVAL = jsonData[0]["UPMYFVAL"];
 					}
@@ -193,7 +233,9 @@ function SetInfoByXML(XMLStr,isIE){
 					}
 					//console.log("myItemValue: "+myItemValue+"cid: "+cid)
 					//_$id.combobox("select",myItemValue);
-					
+					if (cid.indexOf("DEFAULT")>=0) {
+						PageLogicObj.v_Global[cid] = myItemValue
+					}
 					if (myItemValue!="") {
 						_$id.combobox("select",myItemValue);
 					} else {
@@ -248,6 +290,10 @@ function SaveBSNormal() {
 		$.messager.alert("提示", "请先选择院区！", "warning");
 		return false;
 	}
+    var AuthXML="";
+    if (PageLogicObj.m_AuthFlag==1){
+        AuthXML = GetBSNormalInfo("Y");
+    }
 	var BSNoramlXML = GetBSNormalInfo();
 	var passFlag = ValidateData();
 	if (!passFlag) {
@@ -260,39 +306,68 @@ function SaveBSNormal() {
 		dataType:"text",
 		BSNoramlXML:BSNoramlXML
 	},false);
-	if (result != 0) {
-		$.messager.alert("提示", "保存失败, "+ result, "error");
-		return false;
-	}
-	InitData(InHosp);
-	$.messager.alert("提示", "保存成功", "info");
-	return false;		
+    if (AuthXML==""){
+        if (result != 0) {
+            $.messager.alert("提示", "保存失败, "+ result, "error");
+            return false;
+        }
+        InitData(InHosp);
+        $.messager.alert("提示", "保存成功", "info");
+        return false;
+    }else{
+        var Rtn=$.cm({
+            ClassName:"DHCDoc.Interface.Inside.InvokeAuth",
+            MethodName:"InvokeAntFunConfigAuth",
+            Coninfo:AuthXML,
+            HospID:InHosp,
+            UserID:session["LOGON.USERID"],
+            dataType:"text"
+        },false)
+        var Arr=Rtn.split("^");
+        $.messager.alert("提示",Arr[1],"info",function(){
+            location.reload();
+        });
+    }
 }
 
 function ValidateData() {
 	var yfDays = $("#YFDRUGTIME").val();
-	if (yfDays <=0 ) {
-		$.messager.alert("提示", "预防天数必须大于0！", "warning");
-		return false
+	if  (yfDays!="") {
+		if (yfDays <=0 ) {
+			$.messager.alert("提示", "预防天数必须大于0！", "warning");
+			return false
+		}
 	}
+	var SMANYCONSULT=$("#SMANYCONSULT").checkbox("getValue");
+	if (SMANYCONSULT) {
+		var CONDEPNUM = PageLogicObj.m_CONDEPNUM.getValue()||"";
+		if (CONDEPNUM == "") {
+			$.messager.alert("提示", "请填写多科会诊科室个数！", "warning");
+			return false
+		}
+	}
+
 	return true;
 }
-function GetBSNormalInfo(){
+function GetBSNormalInfo(AuthFlag){
 	var myxml = "";
 	var myparseinfo = ServerObj.BSNoramlEntity;
-	var myxml = GetEntityClassInfoToXML(myparseinfo)
+	var myxml = GetEntityClassInfoToXML(myparseinfo,AuthFlag)
 	return myxml;
 }
 
-function GetEntityClassInfoToXML(ParseInfo) {
+function GetEntityClassInfoToXML(ParseInfo,AuthFlag) {
 	var myxmlstr="";
 	try{
 		var myary=ParseInfo.split("^");
 		var xmlobj=new XMLWriter();
 		xmlobj.BeginNode(myary[0]);
 		for(var myIdx=1;myIdx<myary.length;myIdx++){
-			xmlobj.BeginNode(myary[myIdx]);
 			var cid = myary[myIdx];
+            if (PageLogicObj.m_AuthFlag==1){
+                if ((AuthFlag=="Y")&&(!PageLogicObj.AuthEntity.includes(cid))) continue;
+                if ((AuthFlag!="Y")&&(PageLogicObj.AuthEntity.includes(cid))) continue;
+            }
 			var _$id=$("#"+myary[myIdx]);
 			if (_$id.length==0){
 				var node=myary[myIdx];
@@ -332,6 +407,7 @@ function GetEntityClassInfoToXML(ParseInfo) {
 					var myval=_$id.val();
 				}
 			}
+            xmlobj.BeginNode(myary[myIdx]);
 			xmlobj.WriteString(myval);
 			xmlobj.EndNode();
 		}
@@ -375,9 +451,11 @@ function InitCombox () {
 	});	
 	PageLogicObj.m_CONDEPNUM = $HUI.combobox("#CONDEPNUM", {
 		valueField:'id',
+		editable:false,
 		textField:'text',
+		disabled:true,
 		data:[
-			{id:'1',text:'1个'},
+			//{id:'1',text:'1个'},
 			{id:'2',text:'2个'},
 			{id:'3',text:'3个'}
 		]
@@ -454,7 +532,7 @@ function InitCombox () {
 		valueField:'id',
 		textField:'text',
 		data:[
-			{id:'LABLABOECATE',text:'医嘱子类方式'},
+			{id:'LABOECATE',text:'医嘱子类方式'},
 			{id:'LABARCIM',text:'医嘱项方式'}
 		]
 	});	
@@ -617,6 +695,12 @@ function clearData() {
 	$(".hisui-checkbox").checkbox("uncheck");
 }
 
+function Gotop_Handler () {
+	//document.getElementById("main-center").scrollTop = 0;
+	$("#main-center").animate({scrollTop:0},200);
+	
+}
+
 function InitHospList() {
 	PageLogicObj.m_Hosp = GenHospComp("Ant_Config_Func_BaseSet");
 	PageLogicObj.m_Hosp.jdata.options.onSelect = function(rowIndex,data){
@@ -649,8 +733,7 @@ function GetHosp() {
 function InitDeafultDep(inHosp) {
 	inHosp = inHosp||"";
 	if (inHosp == "") inHosp = GetHosp();
-	PageLogicObj.m_DEFAULTCONDEP = $HUI.combobox("#DEFAULTCONDEP", {
-		//url:$URL+"?ClassName=DHCAnt.KSS.Config.Authority&QueryName=QryGetdep&InHosp="+inHosp+"&ResultSetType=array",
+	PageLogicObj.m_DEFAULTCONDEP = $HUI.combobox("#DEFAULTCONDEP1", {
 		url:$URL+"?ClassName=DHCAnt.KSS.Config.BaseData&QueryName=QryConLoc&InHosp="+inHosp+"&ResultSetType=array",
 		valueField:'id',
 		textField:'text',
@@ -668,7 +751,6 @@ function InitDeafultDep(inHosp) {
 		onSelect:function(record) {
 			PageLogicObj.m_DEFAULTCONDOC.setValue("");
 			var locid = PageLogicObj.m_DEFAULTCONDEP.getValue()||""		//record.id;
-			//var url = $URL+"?ClassName=DHCAnt.KSS.Config.Authority&QueryName=QryDoctor&depid="+locid+"&ctcarptype=&docFlag=&ResultSetType=array";
 			var url = $URL+"?ClassName=DHCAnt.KSS.MainInterface&QueryName=QryConsultationDoc&ctLocId="+locid+"&ResultSetType=array";
 			PageLogicObj.m_DEFAULTCONDOC.reload(url);
 		},
@@ -676,7 +758,6 @@ function InitDeafultDep(inHosp) {
 			var locid = PageLogicObj.m_DEFAULTCONDEP.getValue()||"";
 			if (locid == "") {
 				PageLogicObj.m_DEFAULTCONDOC.setValue("");
-				//var url = $URL+"?ClassName=DHCAnt.KSS.Config.Authority&QueryName=QryDoctor&depid=&ctcarptype=&docFlag=1&ResultSetType=array";
 				var url = $URL+"?ClassName=DHCAnt.KSS.MainInterface&QueryName=QryConsultationDoc&ctLocId=&ResultSetType=array";
 				PageLogicObj.m_DEFAULTCONDOC.reload(url);
 			}
@@ -684,8 +765,7 @@ function InitDeafultDep(inHosp) {
 		
 	});	
 	
-	PageLogicObj.m_DEFAULTCONDOC = $HUI.combobox("#DEFAULTCONDOC", {
-		//url:$URL+"?ClassName=DHCAnt.KSS.Config.Authority&QueryName=QryDoctor&depid=&ctcarptype=&docFlag=1&ResultSetType=array",
+	PageLogicObj.m_DEFAULTCONDOC = $HUI.combobox("#DEFAULTCONDOC1", {
 		url:$URL+"?ClassName=DHCAnt.KSS.MainInterface&QueryName=QryConsultationDoc&ctLocId=&ResultSetType=array",
 		valueField:'id',
 		textField:'text',
@@ -700,6 +780,122 @@ function InitDeafultDep(inHosp) {
 		}
 		
 	});	
+
+	PageLogicObj.m_DEFAULTCONDEP2 = $HUI.combobox("#DEFAULTCONDEP2", {
+		url:$URL+"?ClassName=DHCAnt.KSS.Config.BaseData&QueryName=QryConLoc&InHosp="+inHosp+"&ResultSetType=array",
+		valueField:'id',
+		textField:'text',
+		mode: "local",
+		blurValidValue:true,
+		filter: function(q, row){
+			var ops = $(this).combobox('options');  
+			var mCode = false;
+			if (row.code) {
+				mCode = row.code.toUpperCase().indexOf(q.toUpperCase()) >= 0
+			}
+			var mValue = row[ops.textField].indexOf(q) >= 0;
+			return mCode||mValue;  
+		},
+		onSelect:function(record) {
+			PageLogicObj.m_DEFAULTCONDOC2.setValue("");
+			var locid = PageLogicObj.m_DEFAULTCONDEP2.getValue()||""		//record.id;
+			var url = $URL+"?ClassName=DHCAnt.KSS.MainInterface&QueryName=QryConsultationDoc&ctLocId="+locid+"&ResultSetType=array";
+			PageLogicObj.m_DEFAULTCONDOC2.reload(url);
+		},
+		onHidePanel:function() {
+			var locid = PageLogicObj.m_DEFAULTCONDEP2.getValue()||"";
+			if (locid == "") {
+				PageLogicObj.m_DEFAULTCONDOC2.setValue("");
+				var url = $URL+"?ClassName=DHCAnt.KSS.MainInterface&QueryName=QryConsultationDoc&ctLocId=&ResultSetType=array";
+				PageLogicObj.m_DEFAULTCONDOC2.reload(url);
+			}
+		}
+		
+	});	
 	
+	PageLogicObj.m_DEFAULTCONDOC2 = $HUI.combobox("#DEFAULTCONDOC2", {
+		url:$URL+"?ClassName=DHCAnt.KSS.MainInterface&QueryName=QryConsultationDoc&ctLocId=&ResultSetType=array",
+		valueField:'id',
+		textField:'text',
+		blurValidValue:true,
+		onSelect:function(record) {
+			var locid = PageLogicObj.m_DEFAULTCONDEP2.getValue()||"";
+			if (locid == "") {
+				$.messager.alert("提示","请先选择科室","warning");
+				PageLogicObj.m_DEFAULTCONDOC2.setValue("");
+				return false;
+			}
+		}
+		
+	});	
+
+	PageLogicObj.m_DEFAULTCONDEP3 = $HUI.combobox("#DEFAULTCONDEP3", {
+		url:$URL+"?ClassName=DHCAnt.KSS.Config.BaseData&QueryName=QryConLoc&InHosp="+inHosp+"&ResultSetType=array",
+		valueField:'id',
+		textField:'text',
+		mode: "local",
+		blurValidValue:true,
+		filter: function(q, row){
+			var ops = $(this).combobox('options');  
+			var mCode = false;
+			if (row.code) {
+				mCode = row.code.toUpperCase().indexOf(q.toUpperCase()) >= 0
+			}
+			var mValue = row[ops.textField].indexOf(q) >= 0;
+			return mCode||mValue;  
+		},
+		onSelect:function(record) {
+			PageLogicObj.m_DEFAULTCONDOC3.setValue("");
+			var locid = PageLogicObj.m_DEFAULTCONDEP3.getValue()||""		//record.id;
+			var url = $URL+"?ClassName=DHCAnt.KSS.MainInterface&QueryName=QryConsultationDoc&ctLocId="+locid+"&ResultSetType=array";
+			PageLogicObj.m_DEFAULTCONDOC3.reload(url);
+		},
+		onHidePanel:function() {
+			var locid = PageLogicObj.m_DEFAULTCONDEP3.getValue()||"";
+			if (locid == "") {
+				PageLogicObj.m_DEFAULTCONDOC3.setValue("");
+				var url = $URL+"?ClassName=DHCAnt.KSS.MainInterface&QueryName=QryConsultationDoc&ctLocId=&ResultSetType=array";
+				PageLogicObj.m_DEFAULTCONDOC3.reload(url);
+			}
+		}
+		
+	});	
+	
+	PageLogicObj.m_DEFAULTCONDOC3 = $HUI.combobox("#DEFAULTCONDOC3", {
+		url:$URL+"?ClassName=DHCAnt.KSS.MainInterface&QueryName=QryConsultationDoc&ctLocId=&ResultSetType=array",
+		valueField:'id',
+		textField:'text',
+		blurValidValue:true,
+		onSelect:function(record) {
+			var locid = PageLogicObj.m_DEFAULTCONDEP3.getValue()||"";
+			if (locid == "") {
+				$.messager.alert("提示","请先选择科室","warning");
+				PageLogicObj.m_DEFAULTCONDOC3.setValue("");
+				return false;
+			}
+		}
+	});	
 }
 
+function SMANYCONSULT_Change(selected) {
+	if (selected) {
+		PageLogicObj.m_CONDEPNUM.enable();
+	} else {
+		PageLogicObj.m_CONDEPNUM.clear();
+		PageLogicObj.m_CONDEPNUM.disable();
+	}
+}
+
+function LoadAuthHtml() {
+    $m({
+        ClassName: "BSP.SYS.SRV.AuthItemApply",
+        MethodName: "GetStatusHtml",
+        AuthCode: "HIS-DOCANT-FUNCONFIG"
+    }, function (rtn) {
+        if (rtn != "") {
+            $(rtn).insertAfter("[for='OSKJ']");
+            $(rtn).insertAfter("[for='ESKJ']");
+            $(rtn).insertAfter("[for='ISKJ']");
+        }
+    })
+}

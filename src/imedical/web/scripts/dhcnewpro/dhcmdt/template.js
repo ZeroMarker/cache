@@ -43,9 +43,13 @@ function InitPatList(){
 	///  定义datagrid
 	var option = {
 		//showHeader:false,
+		loadMsg:$g("正在加载信息"),
 		rownumbers : true,
 		singleSelect:false,
 		pagination: true,
+		iconCls:'icon-paper',
+		bodyCls:'panel-header-gray',
+		border:true,
 		onLoadSuccess:function(data){
 			$(".datagrid-header-check").html("");
 		},
@@ -71,7 +75,7 @@ function InitPatList(){
 	/// 就诊类型
 	//var Type = "";
 	var Type = DisGrpID;
-	var uniturl = $URL+"?ClassName=web.DHCMDTOpiTemp&MethodName=QryOpiTemp&Type="+DisGrpID+"&LgParam="+LgParam;
+	var uniturl = $URL+"?ClassName=web.DHCMDTOpiTemp&MethodName=QryOpiTemp&Type="+DisGrpID+"&LgParam="+LgParam+"&MWToken="+websys_getMWToken();
 	new ListComponent('main', columns, uniturl, option).Init(); 
 }
 

@@ -6,7 +6,7 @@
 	{
 		
 		//村失去焦点事件
-		$("#txtERCurrVillage").keyup(function(){
+		$("#txtERCurrVillage").bind('input propertychange',function(){
 			$('#txtERCurrAddress').val($('#cboERCurrProvince').combobox('getText')+$('#cboERCurrCity').combobox('getText')+$('#cboERCurrCounty').combobox('getText')+$('#cboERCurrTown').combobox('getText')+$('#txtERCurrVillage').val());
 		})
 		$("#btnSave").on("click",obj.btnSave_click);
@@ -36,7 +36,7 @@
 			}else{
 				$("#cboERAdmLoc").combobox("setValue",objLoc.Descs);
 			}
-			$("#txtERDoctorName").val(session['LOGON.USERNAME']);
+			$("#txtERDoctorName").val(DocName);
 			$("#txtERHospitalName").val(HospDesc);
 			if(PatientID!=""){
 				var objPat = $cm({                 
@@ -49,20 +49,23 @@
 				$("#txtERPatSex").val(objPat.Sex);
 				if(objPat.Age!="0"){					
 					$("#txtPatAge").val(objPat.Age);
-					$("#cboPatAgeDW").combobox("setValue","岁");
+					$("#cboPatAgeDW").combobox("setValue",$g("岁"));
 				}else if(objPat.AgeMonth!="0"){
 					$("#txtPatAge").val(objPat.AgeMonth);
-					$("#cboPatAgeDW").combobox("setValue","月");
+					$("#cboPatAgeDW").combobox("setValue",$g("月"));
 				}else{
 					$("#txtPatAge").val(objPat.AgeDay);
-					$("#cboPatAgeDW").combobox("setValue","天");
+					$("#cboPatAgeDW").combobox("setValue",$g("天"));
 				}
 				$("#txtERTelephone").val(objPat.Telephone);
 				$("#txtERCurrAddress").val(objPat.Address);	
 				var Address=obj.EpdInitAddressByLocalHospital.split("`")
-				$("#cboERCurrProvince").combobox("setValue",Address[0]);
-				$("#cboERCurrCity").combobox("setValue",Address[1]);
-				$("#cboERCurrCounty").combobox("setValue",Address[2]);
+				$("#cboERCurrProvince").combobox("setValue",Address[0].split("^")[0]);
+				$("#cboERCurrProvince").combobox("setText",Address[0].split("^")[1]);
+				$("#cboERCurrCity").combobox("setValue",Address[1].split("^")[0]);
+				$("#cboERCurrCity").combobox("setText",Address[1].split("^")[1]);
+				$("#cboERCurrCounty").combobox("setValue",Address[2].split("^")[0]);
+				$("#cboERCurrCounty").combobox("setText",Address[2].split("^")[1]);
 			}
 		}else{
 			var objRep=$m({                 
@@ -91,10 +94,15 @@
 			$("#txtERTelephone").val(arrRep[16]);
 			$("#txtERParent").val(arrRep[17]);
 			
-			$("#cboERCurrProvince").combobox("setValue",arrRep[11].split(CHR_1)[0])//,arrRep[11].split(CHR_1)[1]);
-			$("#cboERCurrCity").combobox("setValue",arrRep[12].split(CHR_1)[0])//,arrRep[12].split(CHR_1)[1]);
-			$("#cboERCurrCounty").combobox("setValue",arrRep[13].split(CHR_1)[0])//,arrRep[13].split(CHR_1)[1]);
-			$("#cboERCurrTown").combobox("setValue",arrRep[14].split(CHR_1)[0])//,arrRep[14].split(CHR_1)[1]);
+			
+			$("#cboERCurrProvince").combobox("setValue",arrRep[11].split(CHR_1)[0]);
+			$("#cboERCurrProvince").combobox("setText",arrRep[11].split(CHR_1)[1]);
+			$("#cboERCurrCity").combobox("setValue",arrRep[12].split(CHR_1)[0]);
+			$("#cboERCurrCity").combobox("setText",arrRep[12].split(CHR_1)[1]);
+			$("#cboERCurrCounty").combobox("setValue",arrRep[13].split(CHR_1)[0]);
+			$("#cboERCurrCounty").combobox("setText",arrRep[13].split(CHR_1)[1]);
+			$("#cboERCurrTown").combobox("setValue",arrRep[14].split(CHR_1)[0]);
+			$("#cboERCurrTown").combobox("setText",arrRep[14].split(CHR_1)[1]);
 			$("#txtERCurrVillage").val(arrRep[15]);
 			$("#txtERCurrAddress").val(arrRep[10]);
 			$("#cboERSpecimenType").combobox("setValue",arrRep[24].split(CHR_1)[0])//,arrRep[24].split(CHR_1)[1]);
@@ -158,6 +166,7 @@
 		}
 		if (tDHCMedMenuOper['Check']!=1) {
 			$('#btnCheck').hide();
+			$('#btnUnCheck').hide();
 		}
 		if (tDHCMedMenuOper['Print']!=1) {
 			$('#btnPrint').hide();   
@@ -210,10 +219,10 @@
 		},false);
 	
 		if(parseInt(ret)<=0){
-			$.messager.alert("错误","数据保存错误!"+ret);
+			$.messager.alert($g("错误"),$g("数据保存错误!")+ret,"info");
 			return;
 		}else{
-			$.messager.alert("提示","数据保存成功!");
+			$.messager.alert($g("提示"),$g("数据保存成功!"),"info");
 			obj.ReportID=ret;
 			obj.DisplayRepInfo();
 			obj.InitRepPowerByStatus();			
@@ -222,10 +231,10 @@
 	obj.btnDelete_click = function(){
 		
 		if(obj.ReportID==""){
-			$.messager.alert("错误","还未上报!");
+			$.messager.alert($g("错误"),$g("还未上报!"));
 			return;
 		}
-		$.messager.confirm("提示","请确认是否删除?",function(btn){
+		$.messager.confirm($g("提示"),$g("请确认是否删除?"),function(btn){
 			if(btn){
 				var DeleteStr=obj.ReportID;
 				DeleteStr=DeleteStr+"^"+3;    //为"3",删除状态
@@ -240,10 +249,10 @@
 				},false);
 				
 				if(parseInt(ret)<=0){
-					$.messager.alert("错误","删除失败!"+ret);
+					$.messager.alert($g("错误"),$g("删除失败!")+ret,"info");
 					return;
 				}else{
-					$.messager.alert("提示","报告删除成功!");
+					$.messager.alert($g("提示"),$g("报告删除成功!"),"info");
 					obj.InitRepPowerByStatus();			
 				}
 			}
@@ -252,7 +261,7 @@
 	};
 	obj.btnCheck_click = function(){
 		if(obj.ReportID==""){
-			$.messager.alert("错误","请先做【上报】操作");
+			$.messager.alert($g("错误"),$g("请先做【上报】操作"));
 			return;
 		}
 		var CheckStr=obj.ReportID;
@@ -267,18 +276,18 @@
 		},false);
 		
 		if(parseInt(ret)<=0){
-			$.messager.alert("错误","报告审核失败!"+ret);
+			$.messager.alert($g("错误"),$g("报告审核失败!")+ret,"info");
 			//return;
 		}else{
 			
-			$.messager.alert("提示","报告审核成功!");
+			$.messager.alert($g("提示"),$g("报告审核成功!"),"info");
 			obj.DisplayRepInfo();
 			obj.InitRepPowerByStatus();	
 		}
 	}
 	obj.btnUnCheck_click = function(){
 		if(obj.ReportID==""){
-			$.messager.alert("错误","请先做【上报】操作");
+			$.messager.alert($g("错误"),$g("请先做【上报】操作"),"info");
 			return;
 		}
 		var CheckStr=obj.ReportID;
@@ -293,18 +302,18 @@
 		},false);
 		
 		if(parseInt(ret)<=0){
-			$.messager.alert("错误","报告取消审核失败!"+ret);
+			$.messager.alert($g("错误"),$g("报告取消审核失败!")+ret,"info");
 			//return;
 		}else{
 			
-			$.messager.alert("提示","报告取消审核成功!");
+			$.messager.alert($g("提示"),$g("报告取消审核成功!"),"info");
 			obj.DisplayRepInfo();
 			obj.InitRepPowerByStatus();	
 		}
 	}
 	obj.btnExport_click = function(){
 		if(obj.ReportID==""){
-			$.messager.alert("错误","请先做【上报】操作");
+			$.messager.alert($g("错误"),$g("请先做【上报】操作"),"info");
 			return;
 		}
 		var ExportStr=obj.ReportID;
@@ -319,7 +328,7 @@
 		},false);
 		
 		if(parseInt(ret)<=0){
-			$.messager.alert("错误","报告导出失败!"+ret);
+			$.messager.alert($g("错误"),$g("报告导出失败!")+ret,"info");
 			return;
 		}else{
 			var cArguments=obj.ReportID;
@@ -330,7 +339,7 @@
 	}	
 	obj.btnPrint_click = function(){
 		if(obj.ReportID==""){
-			$.messager.alert("错误","请先做【上报】操作");
+			$.messager.alert($g("错误"),$g("请先做【上报】操作"));
 			return;
 		}
 		var PrintStr=obj.ReportID;
@@ -345,13 +354,14 @@
 		},false);
 		
 		if(parseInt(ret)<=0){
-			$.messager.alert("错误","报告打印失败!"+ret);
+			$.messager.alert($g("错误"),$g("报告打印失败!")+ret,"info");
 			return;
 		}else{
 			var cArguments=obj.ReportID;
 			//var flg=PrintDataToExcel("","","流感样病例标本登记表("+$("#txtERPatName").val()+")",cArguments);
-			var fileName="{DHCMA_EPD_PrintRepILI.raq(aReportID="+obj.ReportID+")}";
-			DHCCPM_RQDirectPrint(fileName);
+			//var fileName="{DHCMA_EPD_PrintRepILI.raq(aReportID="+obj.ReportID+")}";
+			var fileName="DHCMA_EPD_PrintRepILI.raq&aReportID="+obj.ReportID;
+			DHCCPM_RQPrint(fileName);
 		}
 	}
 	obj.btnCancle_click =function(){
@@ -361,43 +371,44 @@
 	//检查数据有效性
 	obj.CheckReport = function(){
 		var errStr = "";
-		if(!$('#txtERRegNo').val())errStr +=   "登记号不能为空!<br>";
-		if(!$('#txtERPatName').val())errStr +=   "姓名不能为空!<br>";
-		if(!$('#txtERPatSex').val())errStr +=   "性别不能为空!<br>";
-		if(!$('#cboERCurrProvince').combobox("getValue"))errStr +=   "省地址不能为空!<br>";
-		if(!$('#cboERCurrCity').combobox("getValue"))errStr +=   "市地址不能为空!<br>";
-		if(!$('#cboERCurrCounty').combobox("getValue"))errStr +=   "县地址不能为空!<br>";
-		if(!$('#cboERCurrTown').combobox("getValue"))errStr +=   "乡地址不能为空!<br>";
-		//errStr +=obj.ValidateControl(obj.txtERCurrVillage);    //村
-		if(!$('#txtERCurrAddress').val())errStr +=   "居住详细地址不能为空!<br>";
-		if(!$('#cboERSpecimenType').combobox("getValue"))errStr +=   "标本类型不能为空!<br>";
-		if(!$('#txtERSpecimenClnArea').val())errStr +=   "标本采集地不能为空!<br>";
-		if(!$('#cboERSpecimenSource').combobox("getValue"))errStr +=   "标本来源不能为空!<br>";
-		if(!$('#txtERSickDate').datebox("getValue"))errStr +=   "发病日期不能为空!<br>";
-		if(!$('#txtERAdmDate').datebox("getValue"))errStr +=   "就诊日期不能为空!<br>";
-		if(!$('#cboERAdmLoc').combobox("getValue"))errStr +=   "就诊科室不能为空!<br>";
-		if(!$('#txtERDoctorName').val())errStr +=   "就诊医生不能为空!<br>";
-		if((($("#cboPatAgeDW").combobox("getValue")!="岁")||($("#txtPatAge").val()<=14))&&($("#txtERParent").val()==""))errStr +=   "儿童患者家长姓名不能为空!<br>";
+		if(!$('#txtERRegNo').val())errStr +=   $g("登记号不能为空!")+"<br>";
+		if(!$('#txtERPatName').val())errStr +=   $g("姓名不能为空!")+"<br>";
+		if(!$('#txtERPatSex').val())errStr +=   $g("性别不能为空!")+"<br>";
+		if(!$('#cboERCurrProvince').combobox("getValue"))errStr +=   $g("省地址不能为空!")+"<br>";
+		if(!$('#cboERCurrCity').combobox("getValue"))errStr +=   $g("市地址不能为空!")+"<br>";
+		if(!$('#cboERCurrCounty').combobox("getValue"))errStr +=   $g("县地址不能为空!")+"<br>";
+		if(!$('#cboERCurrTown').combobox("getValue"))errStr +=   $g("乡地址不能为空!")+"<br>";
+		if(!$('#txtERCurrVillage').val())errStr +=   $g("村地址不能为空!")+"<br>";
+		//errStr +=obj.ValidateControl(obj.txtERCurrVillage));    //村
+		if(!$('#txtERCurrAddress').val())errStr +=   $g("居住详细地址不能为空!")+"<br>";
+		if(!$('#cboERSpecimenType').combobox("getValue"))errStr +=   $g("标本类型不能为空!")+"<br>";
+		if(!$('#txtERSpecimenClnArea').val())errStr +=   $g("标本采集地不能为空!")+"<br>";
+		if(!$('#cboERSpecimenSource').combobox("getValue"))errStr +=   $g("标本来源不能为空!")+"<br>";
+		if(!$('#txtERSickDate').datebox("getValue"))errStr +=   $g("发病日期不能为空!")+"<br>";
+		if(!$('#txtERAdmDate').datebox("getValue"))errStr +=   $g("就诊日期不能为空!")+"<br>";
+		if(!$('#cboERAdmLoc').combobox("getValue"))errStr +=   $g("就诊科室不能为空!")+"<br>";
+		if(!$('#txtERDoctorName').val())errStr +=   $g("就诊医生不能为空!")+"<br>";
+		if((($("#cboPatAgeDW").combobox("getValue")!=$g("岁"))||($("#txtPatAge").val()<=14))&&($("#txtERParent").val()==""))errStr +=   $g("儿童患者家长姓名不能为空!")+"<br>";
 		
 
 		var startDate =$('#txtERSickDate').datebox("getValue")
 		var endDate =$('#txtERAdmDate').datebox("getValue");
 		if(Common_CompareDate(startDate,endDate)>0){
-			errStr += "发病日期不能大于就诊日期!<br>"
+			errStr += $g("发病日期不能大于就诊日期!")+"<br>";
 		}
 		var endSickDate=$('#txtERRepDate').datebox("getValue");
 		if (Common_CompareDate(startDate,endSickDate)>0){
-			errStr += "发病日期不能大于上报日期!<br>"
+			errStr += $g("发病日期不能大于上报日期!")+"<br>";
 		}
 		if(Common_CompareDateToNum(startDate,endSickDate)<0){
-			errStr += "发病日期应在上报日期三天内!<br>"
+			errStr += $g("发病日期应在上报日期三天内!")+"<br>";
 			}
-		if(($('#cboERSpecimenSource').combobox("getText")=="流感样病例暴发监测")&&($('#txtERIncident').val() == "")){
-			errStr += "需填写爆发事件名称!"
+		if(($('#cboERSpecimenSource').combobox("getText")==$g("流感样病例暴发监测"))&&($('#txtERIncident').val() == "")){
+			errStr += $g("需填写暴发事件名称!")
 		}	
 		if(errStr != "")
 		{
-			$.messager.alert("提示", errStr, 'info');
+			$.messager.alert($g("提示"), errStr, 'info');
 			return false;
 		}
 		return true;

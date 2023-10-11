@@ -30,7 +30,8 @@ var defaultCallBack = function(rtn){
 * @cfg {Object} {getReq:{},insReq:{},...}   操作url
 * @cfg {String} activeColName  代表行记录激活与否的字段名
 * @cfg {String} border
-* @cfg {Array} beforeToolbar [{text:'前按钮'},{}]
+* @cfg {Array} beforeToolbar [{text:'前按钮'},...]
+* @cfg {Array} afterToolbar [{text:'后按钮'},...]
 * @event onAfterRender
 * @event {Function} delHandler
 * @event {Function} insOrUpdHandler
@@ -139,7 +140,16 @@ var createDatagridEdit = function(opts){
 						gridJObj.datagrid('beginEdit',oriEditIndex);
 						return ; 
 					}
-					opts.insOrUpdHandler(row[0]);
+					opts.insOrUpdHandler(row[0],function(flag,msg,data){
+							if (flag){
+								gridJObj.datagrid('load');
+								$.messager.popover({msg:msg||'成功',type:'success'});
+							}else{
+								$.messager.popover({msg:msg||'失败',type:'error'});
+								gridJObj.datagrid('beginEdit',oriEditIndex);
+								return ; 
+							}
+					});
 				}else{
 					gridJObj.datagrid('endEdit',currEditIndex); //acceptChanges
 				}
@@ -237,7 +247,7 @@ var createDatagridEdit = function(opts){
 
 (function ($){
 	$.fn.mgrid = function(opts){
-		var currEditIndex = -1;
+		//var currEditIndex = -1;
 		var gridId = this[0].id; //key+"Grid";
 		var key = gridId;
 		var cn = opts.className;
@@ -262,11 +272,11 @@ var createDatagridEdit = function(opts){
 			if (opts.beforeToolbar) _toolbar=opts.beforeToolbar;
 			if (!opts.insReq.hidden){
 				_toolbar.push({id:key+'AddBtn',iconCls:'icon-add',text:opts.addBtnText||'新增',handler:function(){
-					if (currEditIndex>-1){
+					if ($('#'+gridId).datagrid('options').currEditIndex>-1){
 						$.messager.popover({msg:'有正在编辑的项目',type:'info'});
 						return ;
 					}
-					if (currEditIndex === -1) {
+					if ($('#'+gridId).datagrid('options').currEditIndex === -1) {
 						var row = $('#'+gridId).datagrid("getRows");
 						var newRecord = opts.getNewRecord();
 						if (newRecord!==false){
@@ -288,7 +298,7 @@ var createDatagridEdit = function(opts){
 			if (!opts.updReq.hidden){
 				_toolbar.push({
 					id:key+'EditBtn',iconCls:'icon-write-order',text:opts.editBtnText||'修改',handler:function(){
-					if (currEditIndex==-1){
+					if ($('#'+gridId).datagrid('options').currEditIndex==-1){
 						//var gridId = $(this).closest(".datagrid").find('table.datagrid-f').attr('id');
 						//if (gridId!=""){
 						var grid = $('#'+gridId);
@@ -313,7 +323,7 @@ var createDatagridEdit = function(opts){
 								}
 							}
 						}
-						currEditIndex = curInd;
+						$('#'+gridId).datagrid('options').currEditIndex = curInd;
 						var inputObj = $("#"+gridId).datagrid('getPanel').find('.datagrid-row-editing input');
 						$.each(inputObj,function(index,item){
 							var _t = $(this);
@@ -329,6 +339,7 @@ var createDatagridEdit = function(opts){
 			if (!opts.saveReq.hidden){
 				_toolbar.push({
 					id:key+'SaveBtn',iconCls:'icon-save',text:opts.saveBtnText||'保存',handler:function(){
+					var currEditIndex = $('#'+gridId).datagrid('options').currEditIndex;
 					if (currEditIndex>-1){
 						var oriEditIndex = currEditIndex;
 						var gridJObj = $('#'+gridId);
@@ -355,7 +366,16 @@ var createDatagridEdit = function(opts){
 								gridJObj.datagrid('beginEdit',oriEditIndex);
 								return ; 
 							}
-							opts.insOrUpdHandler(row[0]);
+							opts.insOrUpdHandler(row[0],function(flag,msg,data){
+									if (flag){
+										gridJObj.datagrid('load');
+										$.messager.popover({msg:msg||'成功',type:'success'});
+									}else{
+										$.messager.popover({msg:msg||'失败',type:'error'});
+										gridJObj.datagrid('beginEdit',oriEditIndex);
+										return ; 
+									}
+							});
 						}else{
 							gridJObj.datagrid('endEdit',currEditIndex); //acceptChanges
 						}
@@ -373,22 +393,32 @@ var createDatagridEdit = function(opts){
 			}
 			_toolbar.push({
 				id:key+'CancelBtn',iconCls:'icon-undo',text:opts.cancelBtnText||'撤销',handler:function(){
+				var currEditIndex = $('#'+gridId).datagrid('options').currEditIndex;
 				if (currEditIndex>-1) {
 					var row = $('#'+gridId).datagrid('getRows')[currEditIndex];
-					if (row.ID=="") {
+					if (("undefined"==typeof row.ID && typeof codeField=="string" && row[codeField]=="")){
+						$('#'+gridId).datagrid('deleteRow',currEditIndex);
+					}else if(row.ID=="") {
 						$('#'+gridId).datagrid('deleteRow',currEditIndex);
 					}else{
 						$('#'+gridId).datagrid('cancelEdit',currEditIndex);
 					}
 				}
 			}});
+			if (opts.afterToolbar && opts.afterToolbar instanceof Array ) {
+				for(var a=0;a<opts.afterToolbar.length;a++){
+					_toolbar.push(opts.afterToolbar[a]);
+				}
+				
+			}
+
 			opts.onOriginLoadSuccess = opts.onLoadSuccess||null;
 			opts.onOriginClickRow = opts.onClickRow||null;
 			opts.onOriginDblClickRow = opts.onDblClickRow||null;
 			$.extend(opts,{
 				toolbar:_toolbar,
 				onBeforeEdit:function(rowIndex,rowData){
-					currEditIndex = rowIndex;
+					$('#'+gridId).datagrid('options').currEditIndex = rowIndex;
 					$("#"+key+"SaveBtn").linkbutton('enable');
 					$("#"+key+"EditBtn").linkbutton('disable');
 					$("#"+key+"AddBtn").linkbutton('disable');
@@ -397,7 +427,7 @@ var createDatagridEdit = function(opts){
 					$("#"+gridId).datagrid('selectRow', rowIndex);
 				},
 				onAfterEdit:function(rowIndex,rowData,changes){
-					currEditIndex=-1;	
+					$('#'+gridId).datagrid('options').currEditIndex=-1;	
 					$("#"+key+"AddBtn").linkbutton('enable');
 					$("#"+key+"EditBtn").linkbutton('enable');
 					$("#"+key+"DelBtn").linkbutton('enable');
@@ -405,7 +435,7 @@ var createDatagridEdit = function(opts){
 					$("#"+key+"CancelBtn").linkbutton('disable');
 				},
 				onCancelEdit:function(){
-					currEditIndex=-1;
+					$('#'+gridId).datagrid('options').currEditIndex=-1;
 					var selRow = $(this).datagrid('getSelected');
 					if (selRow["ID"]==""){ //增加空行后-cancel
 						$("#"+key+"DelBtn").linkbutton('disable');
@@ -419,8 +449,7 @@ var createDatagridEdit = function(opts){
 					$("#"+key+"CancelBtn").linkbutton('disable');
 				},
 				onLoadSuccess:function(data){
-					currEditIndex=-1;
-					
+					$('#'+gridId).datagrid('options').currEditIndex=-1;
 					$("#"+key+"AddBtn").linkbutton('enable');
 					$("#"+key+"EditBtn").linkbutton('disable');
 					$("#"+key+"DelBtn").linkbutton('disable');
@@ -429,6 +458,7 @@ var createDatagridEdit = function(opts){
 					if(opts.onOriginLoadSuccess) opts.onOriginLoadSuccess.call(this,data);
 				},
 				onClickRow:function(rowIndex,rowData){
+					var currEditIndex = $('#'+gridId).datagrid('options').currEditIndex;					
 					if (rowIndex!==currEditIndex){
 						if (currEditIndex==-1) $("#"+key+"EditBtn").linkbutton('enable');
 						$("#"+key+"DelBtn").linkbutton('enable');
@@ -437,7 +467,7 @@ var createDatagridEdit = function(opts){
 					if(opts.onOriginClickRow) opts.onOriginClickRow.call(this,rowIndex,rowData);
 				},
 				onDblClickRow:function(rowIndex,rowData){
-					if (rowIndex!==currEditIndex){
+					if (rowIndex!==$('#'+gridId).datagrid('options').currEditIndex){
 						$("#"+key+'CancelBtn').trigger('click');
 						$("#"+key+'EditBtn').trigger('click');
 					}
@@ -461,6 +491,7 @@ var createDatagridEdit = function(opts){
 	//$.fn.mgrid.parseOptions = function(){};
 	$.fn.mgrid.defaults = $.extend({},$.fn.datagrid.defaults,{
 		editGrid:false,
+		currEditIndex:-1, /*当前编辑行*/
 		headerCls:'panel-header-gray',
 		bodyCls:'panel-body-gray',
 		rownumbers:true,singleSelect:true,fit:true,pagination:true,showPageList:false,pageSize:50,

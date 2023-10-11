@@ -1,38 +1,41 @@
 
-// /描述: 付款单制单
+// /描述: 付款单管理
 // /编写者：gwj
 // /编写日期: 2012.09.24
 
 var payRowId="";
 var URL="dhcst.payaction.csp"
 var gGroupId=session['LOGON.GROUPID'];
+var APPName="DHCSTPURPLANAUDIT"
+var PurPlanParam=PHA_COM.ParamProp(APPName)
+
 
 // 入库科室
 var PhaLoc = new Ext.ux.LocComboBox({
-	fieldLabel : '采购科室',
+	fieldLabel : $g('采购科室'),
 	id : 'PhaLoc',
 	name : 'PhaLoc',
 	anchor:'90%',
 	width : 120,
-	emptyText : '采购科室...',
+	emptyText : $g('采购科室...'),
 	groupId:gGroupId
 });
 
 // 登录设置默认值
 //SetLogInDept(GetGroupDeptStore, "PhaLoc");
 
-// 供货厂商
+// 供货企业
 var Vendor = new Ext.ux.VendorComboBox({
-	fieldLabel : '供应商',
+	fieldLabel : $g('经营企业'),
 	id : 'Vendor',
 	name : 'Vendor',
 	anchor : '90%',
-	emptyText : '供应商...'
+	emptyText : $g('经营企业...')
 });
 			
 // 起始日期
 var StartDate = new Ext.ux.DateField({
-	fieldLabel : '起始日期',
+	fieldLabel : $g('起始日期'),
 	id : 'StartDate',
 	name : 'StartDate',
 	anchor : '90%',
@@ -40,7 +43,7 @@ var StartDate = new Ext.ux.DateField({
 });
 // 截止日期
 var EndDate = new Ext.ux.DateField({
-	fieldLabel : '截止日期',
+	fieldLabel : $g('截止日期'),
 	id : 'EndDate',
 	name : 'EndDate',
 	anchor : '90%',
@@ -49,8 +52,8 @@ var EndDate = new Ext.ux.DateField({
 	
 // 查询按钮
 var SearchBT = new Ext.Toolbar.Button({
-	text : '查询',
-	tooltip : '点击查询',
+	text : $g('查询'),
+	tooltip : $g('点击查询'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_find',
@@ -62,40 +65,39 @@ var SearchBT = new Ext.Toolbar.Button({
  * 查询方法
  */
 function Query() {
+	
+	//先清空明细列表
+	DetailGrid.store.removeAll();
+	DetailGrid.store.load({params:{start:0,limit:0}})
+	DetailGrid.getView().refresh();
+	
 	var phaLoc = Ext.getCmp("PhaLoc").getValue();
 	if (phaLoc == null || phaLoc.length <= 0) {
-		Msg.info("warning", "请选择采购科室!");
+		Msg.info("warning", $g("请选择采购科室!"));
 		return;
 	}
 	var vendor = Ext.getCmp("Vendor").getValue();
 	var startDate = Ext.getCmp("StartDate").getRawValue();
 	var endDate = Ext.getCmp("EndDate").getRawValue();
-	
-	
 	//var purno = Ext.getCmp("PurNo").getValue();
-	
-	
 	var CmpFlag = "Y";
-	//开始日期^截止日期^科室id^供应商id
+	//开始日期^截止日期^科室id^经营企业id
 	var ListParam=startDate+'^'+endDate+'^'+phaLoc+'^'+vendor;
 	var Page=GridPagingToolbar.pageSize;
 	//MasterStore.load({params:{start:0, limit:Page,strParam:ListParam}});
 	MasterStore.load();
 		MasterStore.on('load',function(){
-				if (MasterStore.getCount()>0){
-		      MasterGrid.getSelectionModel().selectFirstRow();
-		      MasterGrid.getView().focusRow(0);
-	        }
-				})
-	
-	//DetailGrid.store.removeAll();
-	//DetailGrid.getView().refresh();
+			if (MasterStore.getCount()>0){
+			      MasterGrid.getSelectionModel().selectFirstRow();
+			      MasterGrid.getView().focusRow(0);
+        		}
+			})
 }
 
 // 清空按钮
 var ClearBT = new Ext.Toolbar.Button({
-	text : '清屏',
-	tooltip : '点击清屏',
+	text : $g('清屏'),
+	tooltip : $g('点击清屏'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_clearscreen',
@@ -108,8 +110,10 @@ var ClearBT = new Ext.Toolbar.Button({
  * 清空方法
  */
 function clearData() {
-	Ext.getCmp("PhaLoc").setValue("");
+	SetLogInDept(PhaDeptStore, "PhaLoc");
 	Ext.getCmp("Vendor").setValue("");
+	Ext.getCmp("StartDate").setValue(new Date().add(Date.DAY, - 30));
+    Ext.getCmp("EndDate").setValue(new Date());
 	
 	MasterGrid.store.removeAll();
 	MasterGrid.store.load({params:{start:0,limit:0}})
@@ -123,8 +127,8 @@ function clearData() {
 // 采购确认按钮
 var Ack1BT = new Ext.Toolbar.Button({
 	id : "Ack1BT",
-	text : '采购确认',
-	tooltip : '点击确认',
+	text : $g('采购确认'),
+	tooltip : $g('点击确认'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_gear',
@@ -135,8 +139,8 @@ var Ack1BT = new Ext.Toolbar.Button({
 // 会计确认按钮
 var Ack2BT = new Ext.Toolbar.Button({
 	id : "Ack2BT",
-	text : '会计确认',
-	tooltip : '点击确认',
+	text : $g('会计确认'),
+	tooltip : $g('点击确认'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_gear',
@@ -153,28 +157,32 @@ function SetAck1() {
 	var PayId=rec.get('RowId');
 	if (PayId=='')  {return; }
 	
+	///检查预算项目
+	var ret = SendBusiData(PayId,"PAY","AUDIT")
+	if(!ret) return;
+
 	var url = URL	+ "?actiontype=SetAck1&PayId=" + PayId ;
 	Ext.Ajax.request({
 		url : url,
 		method : 'POST',
-		waitMsg : '更新中...',
+		waitMsg : $g('更新中...'),
 		success : function(result, request) {
 			var jsonData = Ext.util.JSON
 					.decode(result.responseText);
 			if (jsonData.success == 'true') {
 				// 确认单据
-				Msg.info("success", "确认成功!");
+				Msg.info("success", $g("确认成功!"));
 				Query();
 			} else {
 				var Ret=jsonData.info;
 				if(Ret==-2){
-					Msg.info("error", "此付款单未完成!");
+					Msg.info("error", $g("此付款单未完成!"));
 				}else if(Ret==-3){
-					Msg.info("error", "此付款单已经确认!");
+					Msg.info("error", $g("此付款单已经确认!"));
 				}else if(Ret==-1){
-					Msg.info("error", "未找到此付款单!");
+					Msg.info("error", $g("未找到此付款单!"));
 				}else{
-					Msg.info("error", "确认失败:");
+					Msg.info("error", $g("确认失败:"));
 				}
 			}
 		},
@@ -188,23 +196,23 @@ function ExecuteAck2(rowid,paymodeInfo)
 	Ext.Ajax.request({
 		url : url,
 		method : 'POST',
-		waitMsg : '更新中...',
+		waitMsg : $g('更新中...'),
 		success : function(result, request) {
 			var jsonData = Ext.util.JSON.decode(result.responseText);
 			if (jsonData.success == 'true') {
 				// 确认单据
-				Msg.info("success", "确认成功!");
+				Msg.info("success", $g("确认成功!"));
 				Query();
 			} else {
 				var Ret=jsonData.info;
 				if(Ret==-2){
-					Msg.info("error", "此付款单未完成!");
+					Msg.info("error", $g("此付款单未完成!"));
 				}else if(Ret==-3){
-					Msg.info("error", "此付款单已经确认!");
+					Msg.info("error", $g("此付款单已经确认!"));
 				}else if(Ret==-1){
-					Msg.info("error", "未找到此付款单!");
+					Msg.info("error", $g("未找到此付款单!"));
 				}else{
-					Msg.info("error", "确认失败:"+Ret);
+					Msg.info("error", $g("确认失败:"+Ret));
 				}
 			}
 		},
@@ -225,7 +233,7 @@ function SetAck2() {
 	
 	var IfAlReadyAck=tkMakeServerCall("web.DHCST.DHCPayQuery","GetPayInfo",payRowId).split("^")[1];
 	if(IfAlReadyAck=="Y"){
-		Msg.info("error", "此付款单会计已经确认!");
+		Msg.info("error", $g("此付款单会计已经确认!"));
 		return;
 	}
 	
@@ -286,50 +294,50 @@ var MasterCm = new Ext.grid.ColumnModel([nm, {
 		sortable : true,
 		hidden : true
 	}, {
-		header : "付款单号",
+		header : $g("付款单号"),
 		dataIndex : 'payNo',
 		width : 120,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "采购科室",
+		header : $g("采购科室"),
 		dataIndex : 'locDesc',
 		width : 120,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "供应商",
+		header : $g("经营企业"),
 		dataIndex : 'vendorName',
 		width : 190,
 		align : 'center',
 		sortable : true,
 		align:'left'
 	}, {
-		header : "制单日期",
+		header : $g("制单日期"),
 		dataIndex : 'payDate',
 		width : 90,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "制单时间",
+		header : $g("制单时间"),
 		dataIndex : 'payTime',
 		width : 90,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "制单人",
+		header : $g("制单人"),
 		dataIndex : 'payUserName',
 		width : 90,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "付款金额",
+		header : $g("付款金额"),
 		dataIndex : 'payAmt',
 		width : 90,
 		sortable : true,
 		align:'right'
 	},{
-		header : "完成标志",
+		header : $g("完成标志"),
 		dataIndex : 'completed',
 		width : 50,
 		align : 'center'
@@ -338,73 +346,73 @@ var MasterCm = new Ext.grid.ColumnModel([nm, {
 		//falseText:'否',
 		//trueText:'是'
 	}, {
-		header : "是否采购确认",
+		header : $g("是否采购确认"),
 		dataIndex : 'ack1Flag',
 		width : 100,
 		align : 'center',
 		sortable : true					
 	}, {
-		header : "采购确认人",
+		header : $g("采购确认人"),
 		dataIndex : 'ack1UserName',
 		width : 100,
 		align : 'left',
 		sortable : true
 		
 	}, {
-		header : "采购确认日期",
+		header : $g("采购确认日期"),
 		dataIndex : 'ack1Date',
 		width : 100,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "是否会计确认",
+		header : $g("是否会计确认"),
 		dataIndex : 'ack2Flag',
 		width : 100,
 		align : 'center',
 		sortable : true
 		
 	}, {
-		header : "会计确认人",
+		header : $g("会计确认人"),
 		dataIndex : 'ack2UserName',
 		width : 100,
 		align : 'left',
 		sortable : true
 		
 	}, {
-		header : "会计确认日期",
+		header : $g("会计确认日期"),
 		dataIndex : 'ack2Date',
 		width : 100,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "毒麻标志",
+		header : $g("毒麻标志"),
 		dataIndex : 'PoisonFlag',
 		width : 100,
 		align : 'left',
 		sortable : true
 		
 	}, {
-		header : "支付方式",
+		header : $g("支付方式"),
 		dataIndex : 'payMode',
 		width : 100,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "支付票据号",
+		header : $g("支付票据号"),
 		dataIndex : 'checkNo',
 		width : 100,
 		align : 'left',
 		sortable : true
 		
 	}, {
-		header : "支付票据日期",
+		header : $g("支付票据日期"),
 		dataIndex : 'checkDate',
 		width : 100,
 		align : 'left',
 		sortable : true
 		
 	}, {
-		header : "支付票据金额",
+		header : $g("支付票据金额"),
 		dataIndex : 'checkAmt',
 		width : 100,
 		align : 'left',
@@ -418,8 +426,8 @@ var GridPagingToolbar = new Ext.PagingToolbar({
 	store:MasterStore,
 	pageSize:PageSize,
 	displayInfo:true,
-	displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-	emptyMsg:"没有记录"
+	displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+	emptyMsg:$g("没有记录")
 });
 var MasterGrid = new Ext.grid.GridPanel({
 	title : '',
@@ -477,121 +485,121 @@ var DetailCm = new Ext.grid.ColumnModel([nm, {
 		sortable : true,
 		hidden : true
 	}, {
-		header : "入库退货Id",
+		header : $g("入库退货Id"),
 		dataIndex : 'pointer',
 		width : 80,
 		align : 'left',
 		sortable : true,
 		hidden : true
 	}, {
-		header : "药品Id",
+		header : $g("药品Id"),
 		dataIndex : 'INCI',
 		width : 80,
 		align : 'left',
 		sortable : true,
 		hidden : true
 	}, {
-		header : '药品代码',
+		header : $g('药品代码'),
 		dataIndex : 'inciCode',
 		width : 80,
 		align : 'left',
 		sortable : true
 	}, {
-		header : '药品名称',
+		header : $g('药品名称'),
 		dataIndex : 'inciDesc',
 		width : 180,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "规格",
+		header : $g("规格"),
 		dataIndex : 'spec',
 		width : 180,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "厂商",
+		header : $g("生产企业"),
 		dataIndex : 'manf',
 		width : 150,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "数量",
+		header :$g( "数量"),
 		dataIndex : 'qty',
 		width : 80,
 		align : 'right',
 		sortable : true
 	}, {
-		header : "单位",
+		header : $g("单位"),
 		dataIndex : 'uomDesc',
 		width : 80,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "进价",
+		header : $g("进价"),
 		dataIndex : 'rp',
 		width : 60,
 		align : 'right',
 		
 		sortable : true
 	}, {
-		header : "售价",
+		header : $g("售价"),
 		dataIndex : 'sp',
 		width : 60,
 		align : 'right',
 		
 		sortable : true
 	}, {
-		header : "进价金额",
+		header : $g("进价金额"),
 		dataIndex : 'rpAmt',
 		width : 100,
 		align : 'right',
 		
 		sortable : true
 	}, {
-		header : "售价金额",
+		header : $g("售价金额"),
 		dataIndex : 'spAmt',
 		width : 100,
 		align : 'right',
 		
 		sortable : true
 	}, {
-		header : "结清标志",
+		header : $g("结清标志"),
 		dataIndex : 'OverFlag',
 		width : 80,
 		align : 'center',
 		sortable : true
 	}, {
-		header : "发票号",
+		header : $g("发票号"),
 		dataIndex : 'invNo',
 		width : 100,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "发票日期",
+		header : $g("发票日期"),
 		dataIndex : 'invDate',
 		width : 100,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "发票金额",
+		header : $g("发票金额"),
 		dataIndex : 'invAmt',
 		width : 80,
 		align : 'right',
 		sortable : true
 	}, {
-		header : "批号",
+		header : $g("批号"),
 		dataIndex : 'batNo',
 		width : 80,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "效期",
+		header : $g("效期"),
 		dataIndex : 'ExpDate',
 		width : 100,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "类型",
+		header : $g("类型"),
 		dataIndex : 'TransType',
 		width : 100,
 		align : 'left',
@@ -601,8 +609,8 @@ var GridDetailPagingToolbar = new Ext.PagingToolbar({
 	store:DetailStore,
 	pageSize:PageSize,
 	displayInfo:true,
-	displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-	emptyMsg:"没有记录"
+	displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+	emptyMsg:$g("没有记录")
 });
 var DetailGrid = new Ext.grid.GridPanel({
 	title : '',
@@ -622,26 +630,32 @@ var HisListTab = new Ext.form.FormPanel({
 	tbar : [SearchBT, '-', ClearBT, '-', Ack1BT, '-', Ack2BT],
 	items:[{
 		xtype:'fieldset',
-		title:'查询条件',
+		title:$g('查询条件'),
 		layout:'column',
 		style:DHCSTFormStyle.FrmPaddingV,
 		items : [{ 				
-				columnWidth: 0.25,
+				columnWidth: 0.2,
 				layout:'form',
 				items: [PhaLoc]			
 			},{ 				
-				columnWidth: 0.35,
+				columnWidth: 0.2,
 				layout:'form',
 				items: [Vendor]
 			},{ 				
-				columnWidth: 0.2,
+				columnWidth: 0.15,
 				layout:'form',
 				items: [StartDate]				
 			},{ 				
-				columnWidth: 0.2,
+				columnWidth: 0.15,
 				layout:'form',
 				items: [EndDate]
-			}]	
+			},{ 				
+				columnWidth: 0.3,
+				layout:'form',
+				items: [BudgetProComb]
+			}
+			
+			]	
 	}]
 	  // Specifies that the items will now be arranged in columns
 });				
@@ -656,14 +670,14 @@ Ext.onReady(function(){
 		layout : 'border',
 		items : [            // create instance immediately
 			{   
-				title: '付款单管理',		
+				title: $g('付款单管理'),		
 				region: 'north',
 				height: DHCSTFormStyle.FrmHeight(1), // give north and south regions a height
 				layout: 'fit', // specify layout manager for items
 				items:HisListTab
 			}, {
 				region: 'center',
-				title: '付款单',			               
+				title: $g('付款单'),			               
 				layout: 'fit', // specify layout manager for items
 				items: MasterGrid       
 			   
@@ -674,7 +688,7 @@ Ext.onReady(function(){
 				minSize: 200,
 				maxSize: 350,
 				collapsible: true,
-				title: '付款单明细',
+				title: $g('付款单明细'),
 				layout: 'fit', // specify layout manager for items
 				items: DetailGrid       
 			   
@@ -682,5 +696,6 @@ Ext.onReady(function(){
 		],
 		renderTo : 'mainPanel'
 	});
+	SetBudgetPro(Ext.getCmp("PhaLoc").getValue(),"PAY",[3],"Ack1BT") //加载HRP预算项目
 });
 //===========模块主页面=============================================

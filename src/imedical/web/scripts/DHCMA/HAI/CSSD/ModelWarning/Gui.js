@@ -5,6 +5,12 @@ function InitAssRateWin(){
     var obj = objScreen;
     //医院
     obj.cboHospital = Common_ComboToSSHosp("cboHospital", $.LOGON.HOSPID);
+    // 日期初始赋值
+	var date=new Date()
+	date.setDate(1);
+	var DateFrom=Common_GetDate(date);	
+    obj.dtDateFrom = $('#StartDate').datebox('setValue', DateFrom);    // 日期初始赋值
+	obj.dtDateTo = $('#EndDate').datebox('setValue', Common_GetDate(new Date()));
 	var objStaDate = $('#StartDate').datebox('getValue');
 	var objEndDate = $('#EndDate').datebox('getValue');
 	var objBatchNumberS = $('#txtRegNo').val();

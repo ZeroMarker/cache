@@ -45,6 +45,18 @@
 		        if (data.rows.length==1) {
 			        $('#OperName').combogrid('setValue', data.rows[0].OPSID);
 			    }
+			    if (itemReqJsonStr!=""){
+					for (var i = 0; i < itemReqJsonStr.length; i++) {
+						var OneReqJson=itemReqJsonStr[i]
+						var ID=OneReqJson.ID
+						var Val=OneReqJson.Val
+						var Desc=OneReqJson.Desc
+						if (ID=="OperName"){
+							$('#OperName').combogrid('setValue', Val);
+							}
+						
+					}
+			    }
 		    }
 	    });
 

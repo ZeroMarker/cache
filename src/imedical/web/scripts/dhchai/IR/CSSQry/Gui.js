@@ -15,11 +15,15 @@ function InitPatFindWin(){
 		var text =data.text;
 		$("#cboLocation").data("param",id+"^^I|E^E^1");
 		$.form.SelectRender("cboLocation");  //渲染下拉框
+		$("#cboWard").data("param",id+"^^I|E^W^1");
+		$.form.SelectRender("cboWard");  //渲染下拉框
 		$("#cboSurvNumber").data("param","^"+id+"^1");
 		$.form.SelectRender("cboSurvNumber");  //渲染下拉框
 	});	
 	$("#cboLocation").data("param",$.form.GetValue("cboHospital")+"^^I|E^E^1");
 	$.form.SelectRender("cboLocation");  //渲染下拉框
+	$("#cboWard").data("param",$.form.GetValue("cboHospital")+"^^I|E^W^1");
+	$.form.SelectRender("#cboWard");  //渲染下拉框	
 	$("#cboSurvNumber").data("param","^"+$.form.GetValue("cboHospital")+"^1");
 	$.form.SelectRender("#cboSurvNumber");  //渲染下拉框	
 	//初始化高度
@@ -68,11 +72,12 @@ function InitPatFindWin(){
 			"data": function (d) {
 				var HospIDs 	= $("#cboHospital").val();
 				var LocationID  = $("#cboLocation").val();
+				var WardID	 	= $("#cboWard").val();
 				var SEID	 	= $("#cboSurvNumber").val();
 				var PatName 	= "";
 				var PapmiNo 	= "";  //$("#txtPapmiNo").val()
 				var MrNo 		= "";
-				var aInputs = HospIDs+'^'+LocationID+'^'+SEID+'^'+PatName+'^'+PapmiNo+'^'+MrNo;
+				var aInputs = HospIDs+'^'+LocationID+'^'+WardID+'^'+SEID+'^'+PatName+'^'+PapmiNo+'^'+MrNo;
 				d.ClassName = "DHCHAI.IRS.INFCSSSrv";
 				d.QueryName = "QryAdm";
 				d.Arg1 =aInputs;
@@ -80,7 +85,6 @@ function InitPatFindWin(){
 			}
 		},
 		"columns": [			
-			{"data": "EpisodeIDx"},
 			{"data":"AdmTimes"},
 			{"data":"AdmWardDesc"},
 			{
@@ -109,6 +113,7 @@ function InitPatFindWin(){
 								String.fromCharCode(2)+data:data;
 				}
 			},
+			{"data": "AdmDoc"},
 			{
 			"data": null,
 				render: function ( data, type, row ) {
@@ -148,7 +153,8 @@ function InitPatFindWin(){
 				}}
 			,{"data":"CuteType"}
 			,{"data":"AdmDate"}
-			,{"data":"DischDate"}			
+			,{"data":"DischDate"},
+			{"data": "EpisodeIDx"}			
 		]
 		,"fnDrawCallback": function (oSettings) {
 			$("#gridAdm_wrapper .dataTables_scrollBody").mCustomScrollbar({

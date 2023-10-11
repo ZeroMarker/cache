@@ -423,6 +423,7 @@ function key_edit (ac) {
 	}
 	var psRef = PageLogicObj.m_PageId;
 	var src="dhcdoc.config.pageset.key.csp?keyid="+keyid+"&psRef="+psRef;
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
 	createModalDialog("keyEditDiag","页面快捷键设置", 850, 445,"icon-w-edit","",$code,"");
 }
@@ -465,6 +466,7 @@ function ms_edit (ac) {
 	}
 	var psRef = PageLogicObj.m_PageId;
 	var src="dhcdoc.config.pageset.message.csp?msid="+msid+"&psRef="+psRef;
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
 	createModalDialog("msEditDiag","页面消息设置", 850, 445,"icon-w-edit","",$code,"");
 }
@@ -508,6 +510,7 @@ function ps_edit (ac) {
 	var psid = psid;
 	var psRef = PageLogicObj.m_PageId;
 	var src="dhcdoc.config.pageset.domset.csp?psid="+psid+"&psRef="+psRef;
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
 	createModalDialog("psEditDiag","页面DOM设置", 850, 445,"icon-w-edit","",$code,"");
 	

@@ -2,7 +2,7 @@
 	strXml = convertToXml(scheme);
 	var interface =$(strXml).find("interface").text();
 	
-	$("#comboxEpisode").hide();
+	$("#comboxEpisode").css("display","none");
 	initEpisodeList("#EpisodeList");
 	setDataGrid(interface);
 	$HUI.radio("[name='episode']",{
@@ -10,11 +10,11 @@
 	        var value = $(e.target).attr("value");
             if (value === "allEpisode")
             {
-				$("#comboxEpisode").show(); 
+				$("#comboxEpisode").css("display","inline"); 
 	        } 
 	        else
 	        {
-				$("#comboxEpisode").hide();
+				$("#comboxEpisode").css("display","none");
  				$("#EpisodeList").combogrid('hidePanel');
 				queryData();
 		    }      
@@ -44,6 +44,7 @@ function setDataGrid(interface)
 	    columns:getColumnScheme("scheme>show>item"),
 	    view : groupview,
 	    groupField : 'ConsultDep',
+	    border:false,
 		groupFormatter : function (value, rows) {
 			var groupText = value;
 			return groupText;

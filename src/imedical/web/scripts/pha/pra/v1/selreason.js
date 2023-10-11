@@ -21,7 +21,8 @@ function ReLoadPRASelReason(){
         ClassName: 'PHA.PRC.Com.Store',
         MethodName: 'GetPRCReasonTree',
         wayId: PRA_WAYID,
-        ParentId: ''
+        ParentId: '',
+        hospID: session['LOGON.HOSPID'],
     }, function (data) {
         $('#gridReason').tree({
             data: data
@@ -32,7 +33,7 @@ function ReLoadPRASelReason(){
         QueryName: 'SelOrdArcimData',
         Oeori: PRA_OEORI,
         PrescNo: PRA_PRESCNO, 
-        SelType: PRA_SELTYPE 
+        SelType: PRA_SELTYPE
 	},function(data){
 		$('#gridLinkOrder').datagrid('loadData', data);
 	})
@@ -66,6 +67,7 @@ function InitGridLinkOrd() {
         columns: columns,
         fitColumns: true,
         pagination: false,
+        onRowContextMenu:"",
         onDblClickRow: function (rowIndex, rowData) {
             OrderClickEvent(rowData.oeori, rowData.arcimDesc);
         }
@@ -79,6 +81,7 @@ function InitGridQuestion() {
         [{
                 field: "desc",
                 title: '描述',
+				wordBreak:"break-all",
                 width: 200
             },
             {
@@ -99,12 +102,16 @@ function InitGridQuestion() {
         columns: columns,
         pagination: false,
         fitColumns: true,
+        onRowContextMenu:"",
+        nowrap:false, 
         toolbar: [],
         onDblClickRow: function (rowIndex, rowData) {
 	        var reasonlevel=rowData.level;
 	        var rows =$("#gridQuestion").datagrid("getRows")
 	        var totalnum=rows.length;
-	        if (reasonlevel==""){
+	        var lastReasonLevel="";
+	        if(rowIndex>1) lastReasonLevel=rows[rowIndex-1].level ;
+	        if ((reasonlevel=="")&&((lastReasonLevel!="")||(rowIndex==0))){
 				for(var i=(rowIndex+1);i<totalnum;i++){
 	                var reasonlevel=rows[rowIndex+1].level ;
 					if (reasonlevel=="")
@@ -241,12 +248,12 @@ function GetSelReason() {
     var levelFlag = 0;
     var chkExistFlag = 0;
     var lastLevel = gridRows[rowsLen-1].level || "";
-    if (lastLevel != ""){
+    if ((lastLevel != "")||(PRA_ORDERREQUIRED != 1)){
 		chkExistFlag=1
 	}
 	if (chkExistFlag == 0) {
         PHA.Popover({
-            msg: '请原因后选择医嘱',
+            msg: '请先选择拒绝原因后选择医嘱',
             type: 'alert'
         });
         return "";

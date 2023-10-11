@@ -2,8 +2,8 @@
 // /描述: 编辑调价单
 // /编写者：zhangdongmei
 // /编写日期: 2012.02.06
-var rpdecimal=2;
-var spdecimal=2;
+var rpdecimal=8;
+var spdecimal=8;
 var colArr=[];
 Ext.onReady(function() {
 	var userId = session['LOGON.USERID'];
@@ -24,7 +24,7 @@ Ext.onReady(function() {
 		var StkGrpType=new Ext.ux.StkGrpComboBox({ 
 			id : 'StkGrpType',
 			name : 'StkGrpType',
-			fieldLabel:'<font color=blue>类　　组</font>',
+			fieldLabel:'<font color=blue>'+$g('类　　组')+'</font>',
 			StkType:App_StkTypeCode,     //标识类组类型
 			LocId:LocId,
 			UserId:userId,
@@ -34,7 +34,7 @@ Ext.onReady(function() {
 		
 		// 调价单号
 		var AdjSpNo = new Ext.form.TextField({
-					fieldLabel : '调价单号',
+					fieldLabel : $g('调价单号'),
 					id : 'AdjSpNo',
 					name : 'AdjSpNo',
 					//width : 160
@@ -44,14 +44,14 @@ Ext.onReady(function() {
 		var StartDate=new Ext.ux.DateField({
 			id:'StartDate',
 			name:'StartDate',
-			fieldLabel:'开始日期',
+			fieldLabel:$g('开始日期'),
 			value:new Date().add(Date.DAY,-1)
 		})
 		
 		var EndDate=new Ext.ux.DateField({
 			id:'EndDate',
 			name:'EndDate',
-			fieldLabel:'截止日期',
+			fieldLabel:$g('截止日期'),
 			value:new Date()
 		})
 		
@@ -64,7 +64,7 @@ Ext.onReady(function() {
 		var IncDesc=new Ext.form.TextField({
 			id:'IncDesc',
 			name:'IncDesc',
-			fieldLabel:'药品名称',
+			fieldLabel:$g('药品名称'),
 			width:250,
 			anchor:'90%',
 			listeners:{
@@ -95,8 +95,8 @@ Ext.onReady(function() {
 		// 查询
 		var SearchBT = new Ext.Toolbar.Button({
 				id : "SearchBT",
-				text : '查询',
-				tooltip : '点击查询',
+				text : $g('查询'),
+				tooltip : $g('点击查询'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_find',
@@ -125,8 +125,8 @@ Ext.onReady(function() {
 		// 清空按钮
 		var ClearBT = new Ext.Toolbar.Button({
 					id : "ClearBT",
-					text : '清屏',
-					tooltip : '点击清屏',
+					text : $g('清屏'),
+					tooltip : $g('点击清屏'),
 					width : 70,
 					height : 30,
 					iconCls : 'page_clearscreen',
@@ -166,7 +166,7 @@ Ext.onReady(function() {
 			//changeButtonEnable("1^1^1^1^1^0^0^0");
 		}
   var AddDetailBT=new Ext.Button({
-	text:'增加一条',
+	text:$g('增加一条'),
 	tooltip:'',
 	iconCls:'page_add',
 	handler:function()
@@ -176,7 +176,7 @@ Ext.onReady(function() {
 });
 
 var DelDetailBT=new Ext.Button({
-	text:'删除一条',
+	text:$g('删除一条'),
 	tooltip:'',
 	iconCls:'page_delete',
 	handler:function()
@@ -188,8 +188,8 @@ var DelDetailBT=new Ext.Button({
 		// 新建按钮
 		var AddBT = new Ext.Toolbar.Button({
 					id : "AddBT",
-					text : '新建',
-					tooltip : '点击新建',
+					text : $g('新建'),
+					tooltip : $g('点击新建'),
 					width : 70,
 					height : 30,
 					iconCls : 'page_add',
@@ -215,14 +215,14 @@ var DelDetailBT=new Ext.Button({
 				var rowData = DetailStore.data.items[rowCount - 1];
 				var data = rowData.get("InciId");
 				if (data == null || data.length <= 0) {
-					Msg.info("warning", "已存在新建行!");
+					Msg.info("warning", $g("已存在新建行!"));
 					return;
 				}
 				var aspno=rowData.get("AspNo");
 				var curaspno=Ext.getCmp("AdjSpNo").getValue();
 				aspRemark=rowData.get("Remark");
 				if(aspno!="" & aspno!=null & (curaspno==null || curaspno=="")){
-					Msg.info("warning","不能追加，请选择某一调价单进行追加，如果要新建调价单，请先清空！");
+					Msg.info("warning",$g("不能追加，请选择某一调价单进行追加，如果要新建调价单，请先清空！"));
 					return;
 				}
 				//默认调价原因
@@ -355,8 +355,8 @@ var DelDetailBT=new Ext.Button({
 		// 保存按钮
 		var SaveBT = new Ext.Toolbar.Button({
 					id : "SaveBT",
-					text : '保存',
-					tooltip : '点击保存',
+					text : $g('保存'),
+					tooltip : $g('点击保存'),
 					width : 70,
 					height : 30,
 					iconCls : 'page_save',
@@ -374,7 +374,7 @@ var DelDetailBT=new Ext.Button({
 		var rowCount = DetailGrid.getStore().getCount();
 		if (rowCount<=0) 
 			{ 
-				Msg.info("warning","没有调价记录!");	return false;}			
+				Msg.info("warning",$g("没有调价记录!"));	return false;}			
 		 
 		for (var i = 0; i < rowCount; i++) {
 			var rowData = DetailStore.getAt(i);
@@ -391,50 +391,53 @@ var DelDetailBT=new Ext.Button({
 				var freedrugflag=rowData.get('FreeDrugFlag');
 				
 				if((freedrugflag=="Y")&&((ResultRp!=0)||(ResultSp!=0))){
-					Msg.info("warning", "第"+(i+1)+"行免费药调后进价和调后售价都必须为0!");
+					Msg.info("warning", $g("第")+(i+1)+$g("行免费药调后进价和调后售价都必须为0!"));
 					return false;
 					break;
 				}
 				var unequalflag=CheckRpEqualSp(i);
 				if (unequalflag==false)
 				{	
-					Msg.info("warning","第"+(i+1)+"行药品为零加成,进售价不符,请核实！");
+					Msg.info("warning",$g("第")+(i+1)+$g("行药品为零加成,进售价不符,请核实！"));
 
 				}
 				if (ResultSp == null || ResultSp.length <= 0) {
-					Msg.info("warning", "第"+(i+1)+"行调后售价不能为空!");
+					Msg.info("warning", $g("第")+(i+1)+$g("行调后售价不能为空!"));
 					return false;
 					break;
 				}
 				
 				if (ResultSp == null || ResultSp.length <= 0) {
-					Msg.info("warning", "第"+(i+1)+"行调后售价不能为空!");
+					Msg.info("warning", $g("第")+(i+1)+$g("行调后售价不能为空!"));
 					return false;
 					break;
 				}
 				if ((ResultSp*1000)<(ResultRp*1000)) {
-					Msg.info("warning", "第"+(i+1)+"行调后售价小于调后进价!");
+					Msg.info("warning", $g("第")+(i+1)+$g("行调后售价小于调后进价!"));
 					return false;
 					break;
 				}
 				if (AdjSpUomId == null || AdjSpUomId.length <= 0) {
-					Msg.info("warning", "第"+(i+1)+"行单位不能为空!");
+					Msg.info("warning", $g("第")+(i+1)+$g("行单位不能为空!"));
 					return false;
 					break;
 				}
 				if (PriceFileDate == null || PriceFileDate.length <= 0) {
-					Msg.info("warning", "第"+(i+1)+"行计划生效日期不能为空!");
+					Msg.info("warning", $g("第")+(i+1)+$g("行计划生效日期不能为空!"));
 					return false;
 					break;
 				}
 				var nowdate = new Date();
 				if (PriceFileDate <= nowdate.format("Y-m-d")) {
-					Msg.info("warning", "第"+(i+1)+"行计划生效日期不能小于或等于当前日期!");
+					Msg.info("warning", $g("第")+(i+1)+$g("行计划生效日期不能小于或等于当前日期!"));
 					return false;
 					break;
 				}
 				if (AdjSpReasonId == null || AdjSpReasonId.length <= 0) {
-					Msg.info("warning", "第"+(i+1)+"行调价原因不能为空!");
+					Msg.info("warning", $g("第")+(i+1)+$g("行调价原因不能为空!"));
+					var newcolIndex = GetColIndex(DetailGrid, 'AdjReasonId');
+                	DetailGrid.startEditing(i, newcolIndex);
+					
 					return false;
 					break;
 				}
@@ -469,7 +472,7 @@ var DelDetailBT=new Ext.Button({
 			var AdjSpNo = Ext.getCmp("AdjSpNo").getValue();
 			var StkGrp=Ext.getCmp("StkGrpType").getValue();
 			if((StkGrp=="")&&(gParamCommon[9]=='N')){
-			    Msg.info("warning","当前参数设置类组不允许为空!");	
+			    Msg.info("warning",$g("当前参数设置类组不允许为空!"));	
 				return ;
 			}
 			var list="";
@@ -479,7 +482,7 @@ var DelDetailBT=new Ext.Button({
 			
 			if (rowCount==0) 
 			
-			{Msg.info("warning","没有调价记录!");	return ;}			
+			{Msg.info("warning",$g("没有调价记录!"));	return ;}			
 		 
 			for (var i = 0; i < rowCount; i++) {
 				var rowData = DetailStore.getAt(i);
@@ -528,22 +531,22 @@ var DelDetailBT=new Ext.Button({
 				}
 			}
 			if (list==""){
-				Msg.info("warning","没有需要保存的数据");
+				Msg.info("warning",$g("没有需要保存的数据"));
 				return;						
 			}
-			var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+			var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 			var url = DictUrl+ "inadjpriceaction.csp?actiontype=Save";
 			Ext.Ajax.request({
 				url : url,
 				method : 'POST',
 				params: {AspNo:AdjSpNo,StkGrp:StkGrp,LocId:LocId,list:list},
-				waitMsg : '保存中...',
+				waitMsg : $g('保存中...'),
 				success : function(result, request) {
 					var jsonData = Ext.util.JSON
 							.decode(result.responseText);
 					mask.hide();
 					if (jsonData.success == 'true') {
-						Msg.info("success","保存成功!");
+						Msg.info("success",$g("保存成功!"));
 						// 回传
 						if(AdjSpNo==""){
 							AdjSpNo = jsonData.info;
@@ -557,19 +560,19 @@ var DelDetailBT=new Ext.Button({
 						ret=arr[0];
 						var IncDesc=arr[1];
 						if(ret==-5){
-							Msg.info("error", IncDesc+"存在未生效的调价单，不能新建调价单！");
+							Msg.info("error", IncDesc+$g("存在未生效的调价单，不能新建调价单！"));
 						}else if(ret==-7){
-							Msg.info("error", IncDesc+"当天已调价，不能再建调价单！");
+							Msg.info("error", IncDesc+$g("当天已调价，不能再建调价单！"));
 						}else if(ret==-1){
-							Msg.info("error", "药品"+IncDesc+"Id不能为空！");
+							Msg.info("error", $g("药品")+IncDesc+$g("Id不能为空！"));
 						}else if(ret==-2){
-							Msg.info("error", "药品"+IncDesc+"无效！");
+							Msg.info("error", $g("药品")+IncDesc+$g("无效！"));
 						}else if(ret==-3){
-							Msg.info("error", "调价单号不能为空！");
+							Msg.info("error", $g("调价单号不能为空！"));
 						}else if(ret==-4){
-							Msg.info("error", "计划生效日期不能为空！");
+							Msg.info("error", $g("计划生效日期不能为空！"));
 						}else{
-							Msg.info("error", IncDesc+"保存失败："+jsonData.info);
+							Msg.info("error", IncDesc+$g("保存失败：")+jsonData.info);
 						}
 					}
 				},
@@ -585,7 +588,7 @@ var DelDetailBT=new Ext.Button({
 			
 			var cell = DetailGrid.getSelectionModel().getSelectedCell();
 			if (cell == null) {
-				Msg.info("warning", "没有选中行!");
+				Msg.info("warning", $g("没有选中行!"));
 				return;
 			}
 			// 选中行
@@ -597,8 +600,8 @@ var DelDetailBT=new Ext.Button({
 				DetailGrid.getView().refresh();
 			} else {
 				Ext.MessageBox.show({
-							title : '提示',
-							msg : '是否确定删除该药品调价信息',
+							title : $g('提示'),
+							msg : $g('是否确定删除该药品调价信息'),
 							buttons : Ext.MessageBox.YESNO,
 							fn : showResult,
 							icon : Ext.MessageBox.QUESTION
@@ -620,21 +623,21 @@ var DelDetailBT=new Ext.Button({
 				var url = DictUrl
 						+ "inadjpriceaction.csp?actiontype=DeleteAspItm&AspRowid="
 						+ AspRowId;
-               var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+               var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 				Ext.Ajax.request({
 							url : url,
 							method : 'POST',
-							waitMsg : '删除中...',
+							waitMsg : $g('删除中...'),
 							success : function(result, request) {
 								var jsonData = Ext.util.JSON
 										.decode(result.responseText);
 									mask.hide();
 								if (jsonData.success == 'true') {
-									Msg.info("success", "删除成功!");
+									Msg.info("success", $g("删除成功!"));
 									DetailGrid.getStore().remove(record);
 									DetailGrid.getView().refresh();
 								} else {
-									Msg.info("error", "删除失败："+jsonData.info);
+									Msg.info("error", $g("删除失败：")+jsonData.info);
 								}
 							},
 							scope : this
@@ -644,7 +647,7 @@ var DelDetailBT=new Ext.Button({
 	
 		// 单位
 		var CTUom = new Ext.form.ComboBox({
-					fieldLabel : '单位',
+					fieldLabel : $g('单位'),
 					id : 'CTUom',
 					name : 'CTUom',
 					anchor : '90%',
@@ -654,7 +657,7 @@ var DelDetailBT=new Ext.Button({
 					displayField : 'Description',
 					allowBlank : false,
 					triggerAction : 'all',
-					emptyText : '单位...',
+					emptyText : $g('单位...'),
 					selectOnFocus : true,
 					forceSelection : true,
 					minChars : 1,
@@ -665,7 +668,7 @@ var DelDetailBT=new Ext.Button({
 				
 		ReasonForAdjSpStore.load();
 		var AdjSpReason = new Ext.form.ComboBox({
-					fieldLabel : '调价原因',
+					fieldLabel : $g('调价原因'),
 					id : 'AdjSpReason',
 					name : 'AdjSpReason',
 					anchor : '90%',
@@ -675,7 +678,7 @@ var DelDetailBT=new Ext.Button({
 					displayField : 'Description',
 					allowBlank : false,
 					triggerAction : 'all',
-					emptyText : '调价原因...',
+					emptyText : $g('调价原因...'),
 					selectOnFocus : true,
 					forceSelection : true,
 					listWidth : 150,
@@ -716,7 +719,7 @@ var DelDetailBT=new Ext.Button({
 		});
 		
 		var ADJRSNComm = new Ext.form.ComboBox({
-			fieldLabel : '调价原因',
+			fieldLabel : $g('调价原因'),
 			id : 'ADJRSNComm',
 			name : 'ADJRSNComm',
 			anchor : '90%',
@@ -726,7 +729,7 @@ var DelDetailBT=new Ext.Button({
 			displayField : 'Description',
 			//allowBlank : false,
 			triggerAction : 'all',
-			emptyText : '调价原因...',
+			emptyText : $g('调价原因...'),
 			selectOnFocus : true,
 			forceSelection : true,
 			minChars : 1,
@@ -770,7 +773,7 @@ var DelDetailBT=new Ext.Button({
 				var url=DictUrl+"inadjpriceaction.csp?actiontype=GetMtSp&InciId="+inci+"&UomId="+uomId+"&Rp="+Rp;
 				var sp=ExecuteDBSynAccess(url);
 				if(sp==0){
-					Msg.info("warning","调后售价为0，请检查该药品定价类型是否正确！");
+					Msg.info("warning",$g("调后售价为0，请检查该药品定价类型是否正确！"));
 				}
 				record.set("ResultSpUom",sp);
 			}
@@ -818,7 +821,7 @@ var DelDetailBT=new Ext.Button({
 					sortable : true,
 					hidden : true
 				}, {
-					header : "调价单号",
+					header : $g("调价单号"),
 					dataIndex : 'AspNo',
 					width : 120,
 					align : 'right',
@@ -831,13 +834,13 @@ var DelDetailBT=new Ext.Button({
 					sortable : true,
 					hidden : true
 				}, {
-					header : '药品代码',
+					header : $g('药品代码'),
 					dataIndex : 'InciCode',
 					width : 80,
 					align : 'left',
 					sortable : true
 				}, {
-					header : '药品名称',
+					header : $g('药品名称'),
 					dataIndex : 'InciDesc',
 					width : 230,
 					align : 'left',
@@ -859,7 +862,7 @@ var DelDetailBT=new Ext.Button({
 								}
 							}))
 				}, {
-					header : "调价单位",
+					header : $g("调价单位"),
 					dataIndex : 'AspUomId',
 					width : 80,
 					align : 'left',
@@ -867,19 +870,19 @@ var DelDetailBT=new Ext.Button({
 					editor : new Ext.grid.GridEditor(CTUom),
 					renderer : Ext.util.Format.comboRenderer2(CTUom,"AspUomId","AspUomDesc") // pass combo instance to reusable renderer					
 				}, {
-					header : "调前售价",
+					header : $g("调前售价"),
 					dataIndex : 'PriorSpUom',
 					width : 90,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "调前进价",
+					header : $g("调前进价"),
 					dataIndex : 'PriorRpUom',
 					width : 90,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "调后进价",
+					header : $g("调后进价"),
 					dataIndex : 'ResultRpUom',
 					width : 90,
 					align : 'right',
@@ -895,14 +898,14 @@ var DelDetailBT=new Ext.Button({
 									// 此类验证提示写blur就行
 									var resultRpNew = field.getValue();
 									if (resultRpNew == null || resultRpNew.length <= 0) {
-										Msg.info("warning", "调后进价不能为空!");
+										Msg.info("warning", $g("调后进价不能为空!"));
 										return;
 									}
 									var cell = DetailGrid.getSelectionModel().getSelectedCell();
 									var rowData = DetailStore.getAt(cell[0]);
 									var freedrugflag=rowData.get('FreeDrugFlag');
 									if((freedrugflag=="Y")&&(resultRpNew!=0)){
-										Msg.info("warning","第"+(cell[0]+1)+"行免费药调后进价必须为0!");
+										Msg.info("warning",$g("第")+(cell[0]+1)+$g("行免费药调后进价必须为0!"));
 										return;
 									}
 								},
@@ -937,7 +940,7 @@ var DelDetailBT=new Ext.Button({
 						}
 					}))
 				}, {
-					header : "调后售价",
+					header : $g("调后售价"),
 					dataIndex : 'ResultSpUom',
 					width : 80,
 					align : 'right',
@@ -952,7 +955,7 @@ var DelDetailBT=new Ext.Button({
 							'change' : function(field, newValue,oldValue) {
 									var resultSpNew = field.getValue();
 									if (resultSpNew == null || resultSpNew.length <= 0) {
-										Msg.info("warning", "调后售价不能为空!");
+										Msg.info("warning", $g("调后售价不能为空!"));
 										return;
 									}
 									var cell = DetailGrid.getSelectionModel().getSelectedCell();
@@ -966,7 +969,7 @@ var DelDetailBT=new Ext.Button({
 							'blur':function(field,e){
 									var resultSpNew = field.getValue();
 									if (resultSpNew == null || resultSpNew.length <= 0) {
-										Msg.info("warning", "调后售价不能为空!");
+										Msg.info("warning", $g("调后售价不能为空!"));
 										return;
 									}
 									var cell = DetailGrid.getSelectionModel().getSelectedCell();
@@ -975,16 +978,16 @@ var DelDetailBT=new Ext.Button({
 					                var ResultRp = rowData.get("ResultRpUom");
 					                var freedrugflag=rowData.get('FreeDrugFlag');
 									if((freedrugflag=="Y")&&(ResultSp!=0)){
-										Msg.info("warning", "第"+(cell[0]+1)+"行免费药调后售价必须为0!");
+										Msg.info("warning", $g("第")+(cell[0]+1)+$g("行免费药调后售价必须为0!"));
 										return;
 									}
 					                var MaxSp= rowData.get("MaxSp");
 					                if((ResultSp<ResultRp)&(MaxSp!="")){
-					                	Msg.info("warning", "第"+(cell[0]+1)+"行调后售价小于调后进价!");
+					                	Msg.info("warning",$g( "第")+(cell[0]+1)+$g("行调后售价小于调后进价!"));
 					                	return;
 				                    }
 					                if((MaxSp<ResultSp)&(MaxSp!="")){
-					                 	Msg.info("warning", "第"+(cell[0]+1)+"行调后售价大于最高售价!");
+					                 	Msg.info("warning", $g("第")+(cell[0]+1)+$g("行调后售价大于最高售价!"));
 				                        return;
 				                     }
 				                     var colindex=GetColIndex(DetailGrid,"ResultSpUom");
@@ -992,7 +995,7 @@ var DelDetailBT=new Ext.Button({
 				                    var unequalflag=CheckRpEqualSp(cell[0]);
 									if (unequalflag==false)
 									{	
-										Msg.info("warning","该药品为零加成,进售价不符,请核实!");
+										Msg.info("warning",$g("该药品为零加成,进售价不符,请核实!"));
 									}		
 							},
 							'specialkey': function(field, e) {
@@ -1007,7 +1010,7 @@ var DelDetailBT=new Ext.Button({
 									}
 									var MaxSp=record.get("MaxSp")
 									if((MaxSp!="")&&(MaxSp<ResultSp)){
-										Msg.info("warning", "调后售价大于最高售价!");
+										Msg.info("warning", $g("调后售价大于最高售价!"));
 										return;
 									}								
 									if(setEnterSort(DetailGrid,colArr)){
@@ -1018,26 +1021,26 @@ var DelDetailBT=new Ext.Button({
 						}
 					}))
 				}, {
-					header : "差价(售价)",
+					header : $g("差价(售价)"),
 					dataIndex : 'DiffSpUom',
 					width : 90,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "差价(进价)",
+					header : $g("差价(进价)"),
 					dataIndex : 'DiffRpUom',
 					width : 90,
 					align : 'right',
 			
 					sortable : true
 				}, {
-					header : "最高售价",
+					header : $g("最高售价"),
 					dataIndex : 'MaxSp',
 					width : 80,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "计划生效日期",
+					header : $g("计划生效日期"),
 					dataIndex : 'PreExecuteDate',
 					align : 'right',
 					sortable : true,
@@ -1052,14 +1055,14 @@ var DelDetailBT=new Ext.Button({
 									
 									var expDate = field.getValue();
 									if (expDate == null || expDate.length <= 0) {
-										Msg.info("warning", "计划生效日期不能为空!");
+										Msg.info("warning", $g("计划生效日期不能为空!"));
 										return;
 									}
 
 									var nowdate = new Date();
 									if (expDate.format("Y-m-d") <= nowdate
 											.format("Y-m-d")) {
-										Msg.info("warning", "计划生效日期不能小于或等于当前日期!");
+										Msg.info("warning", $g("计划生效日期不能小于或等于当前日期!"));
 										return;
 									}
 									///addNewRow();
@@ -1078,26 +1081,26 @@ var DelDetailBT=new Ext.Button({
 						}
 					})
 				}, {
-					header : "制单日期",
+					header : $g("制单日期"),
 					dataIndex : 'AdjDate',
 					width : 80,
 					align : 'right',
 					sortable : true,
 					renderer:Ext.util.Format.dateRenderer(App_StkDateFormat)					
 				}, {
-					header:'实际生效日期',
+					header:$g('实际生效日期'),
 					width : 80,
 					dataIndex:'ExeDate',
 					align : 'right',
 					renderer:Ext.util.Format.dateRenderer(App_StkDateFormat)
 				}, {
-					header : "定价类型",
+					header : $g("定价类型"),
 					dataIndex : 'MarkType',
 					width : 80,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "物价文件号",
+					header : $g("物价文件号"),
 					dataIndex : 'WarrentNo',
 					width : 80,
 					align : 'left',
@@ -1115,7 +1118,7 @@ var DelDetailBT=new Ext.Button({
 						}
                 	})
 				}, {
-					header : "物价文件日期",
+					header : $g("物价文件日期"),
 					dataIndex : 'WnoDate',
 					width : 80,
 					align : 'right',
@@ -1135,7 +1138,7 @@ var DelDetailBT=new Ext.Button({
 						}
 					})
 				}, {
-					header : "发票号",
+					header : $g("发票号"),
 					dataIndex : 'InvNo',
 					width : 80,
 					align : 'left',
@@ -1153,7 +1156,7 @@ var DelDetailBT=new Ext.Button({
 						}
                 	})
 				}, {
-					header : "发票日期",
+					header : $g("发票日期"),
 					dataIndex : 'InvDate',
 					width : 80,
 					align : 'left',
@@ -1171,7 +1174,7 @@ var DelDetailBT=new Ext.Button({
 						}
 					})
 				},{
-					header : "调价原因",
+					header : $g("调价原因"),
 					dataIndex : 'AdjReasonId',
 					width:80,
 		        	align:'left',
@@ -1179,19 +1182,19 @@ var DelDetailBT=new Ext.Button({
 					renderer:rendererReason,
 					editor:new Ext.grid.GridEditor(ADJRSNComm)
 				}, {
-					header : "调价人",
+					header : $g("调价人"),
 					dataIndex : 'AdjUserName',
 					width : 80,
 					align : 'left',
 					sortable : true
 				},{
-					header : "库存分类",
+					header : $g("库存分类"),
 					dataIndex : 'StkCatDesc',
 					width : 80,
 					align : 'left',
 					sortable : true
 				},{
-					header : "备注",
+					header : $g("备注"),
 					dataIndex : 'Remark',
 					width : 350,
 					align : 'left',
@@ -1210,7 +1213,7 @@ var DelDetailBT=new Ext.Button({
 						}
 					})
 				 }, {
-		            header: "免费药标识",
+		            header: $g("免费药标识"),
 		            dataIndex: 'FreeDrugFlag',
 		            width: 80,
 		            align: 'left',
@@ -1218,8 +1221,8 @@ var DelDetailBT=new Ext.Button({
 		        }
 			]);
 		var GridColSetBT = new Ext.Toolbar.Button({
-	      text:'列设置',
-          tooltip:'列设置',
+	      text:$g('列设置'),
+          tooltip:$g('列设置'),
           iconCls:'page_gear',
           //	width : 70,
          //	height : 30,
@@ -1229,7 +1232,7 @@ var DelDetailBT=new Ext.Button({
         });
 		var DetailGrid = new Ext.grid.EditorGridPanel({
 					id : 'DetailGrid',
-					title : '调价单明细',
+					title : $g('调价单明细'),
 					region:'center',
 					cm : DetailCm,
 					store : DetailStore,
@@ -1245,7 +1248,7 @@ var DelDetailBT=new Ext.Button({
 							if (e.field=='AdjReasonId'){
 								if (e.record.data['AdjReasonId']!='') ADJRSNComm.setValue(e.record.data['AdjReasonId']);
 							}
-							/*取配置,动态设置小数保留位数,yunhaibao201511224*/
+							/*取配置,动态设置小数保留位数,yunhaibao201511224
 							if((e.field=="ResultRpUom")||(e.field=="ResultSpUom")){
 								  var adjpriceuomid=e.record.get('AspUomId');
 								  var adjpriceinci=e.record.get('InciId');
@@ -1254,9 +1257,8 @@ var DelDetailBT=new Ext.Button({
 								  Ext.getCmp("ResultRpUomEditor").decimalPrecision=decimalarr[0];
 								  Ext.getCmp("ResultSpUomEditor").decimalPrecision=decimalarr[2];
 							}
+							*/
 						}
-					
-						
 					}
 				});
 
@@ -1279,7 +1281,7 @@ var DelDetailBT=new Ext.Button({
 			height:30,
 			items:[{
 				id:'delete',
-				text:'删除',
+				text:$g('删除'),
 				handler:deleteDrug
 			}]
 		});
@@ -1330,7 +1332,7 @@ var DelDetailBT=new Ext.Button({
 			var inciCode=record.get("InciCode");
 			var inciDesc=record.get("InciDesc");
 			if(CheckRepeatItm(inciDr)==true){
-				Msg.info("warning","该药品调价记录已经录入，不能重复录入");
+				Msg.info("warning",$g("该药品调价记录已经录入，不能重复录入"));
 				return;
 			}
 			var cell = DetailGrid.getSelectionModel().getSelectedCell();
@@ -1349,7 +1351,7 @@ var DelDetailBT=new Ext.Button({
 			Ext.Ajax.request({
 						url : url,
 						method : 'GET',
-						waitMsg : '查询中...',
+						waitMsg : $g('查询中...'),
 						success : function(result, request) {
 							var jsonData = Ext.util.JSON
 									.decode(result.responseText);
@@ -1481,7 +1483,7 @@ var DelDetailBT=new Ext.Button({
 		}
 		//悬浮提示
 		function formatQtip(data,metadata){   
-		    var title ="备注";  
+		    var title =$g("备注");  
 		    var tip =data;   
 		    metadata.attr = 'ext:qtitle="' + title + '"' + ' ext:qtip="' + tip + '"';    
 		    return data;    
@@ -1492,12 +1494,12 @@ var DelDetailBT=new Ext.Button({
 			region:"north",
 			labelWidth : 60,
 			labelAlign : 'right',
-			title:'调价单录入',
+			title:$g('调价单录入'),
 			frame : true,
 			tbar : [SearchBT, '-', ClearBT, '-', AddBT,	'-', SaveBT],
 			items : [{
 				xtype : 'fieldset',
-				title : '查询信息', //--<font color=blue>蓝色字体显示的项目既是查询条件也是调价录入限制条件</font>',
+				title : $g('查询信息'), //--<font color=blue>蓝色字体显示的项目既是查询条件也是调价录入限制条件</font>',
 				layout : 'column',
 				defaults:{border:false},
 				style: DHCSTFormStyle.FrmPaddingV,
@@ -1533,7 +1535,7 @@ var DelDetailBT=new Ext.Button({
 	
 	var RpRule=tkMakeServerCall("web.DHCSTCOMMPARA","GetRpRule",HospId)
 	if(RpRule==3){
-		Msg.info("warning","批次价模式请用批次价调价菜单!!!");
+		Msg.info("warning",$g("批次价模式请用批次价调价菜单!!!"));
 		SearchBT.setDisabled(true);
 		ClearBT.setDisabled(true);
 		AddBT.setDisabled(true);

@@ -4,6 +4,9 @@
 
 var AppType="SSYY";
 var url="dhcpha.clinical.action.csp";
+if ("undefined"!==typeof(websys_getMWToken)){
+	url += "?MWToken="+websys_getMWToken()
+	}
 var ItmID="";    //医嘱项ID  qunianpeng
 var HospID=session['LOGON.HOSPID']
 $(function(){
@@ -16,8 +19,8 @@ $(function(){
 	$('#dept').combobox({
 		mode:'remote',		
 		onShowPanel:function(){ //qunianpeng 2017/8/14 支持拼音码和汉字
-			$('#dept').combobox('reload',url+'?action=GetAllLocNewVersion&hospId='+HospID+'  ')
-			//$('#dept').combobox('reload',url+'?action=SelAllLoc')
+			$('#dept').combobox('reload',url+'&action=GetAllLocNewVersion&hospId='+HospID+'  ')
+			//$('#dept').combobox('reload',url+'&action=SelAllLoc')
 		}
 	}); 
 
@@ -25,8 +28,8 @@ $(function(){
 	$('#ward').combobox({
 		mode:'remote',	
 		onShowPanel:function(){ //qunianpeng 2017/8/14 支持拼音码和汉字
-			$('#ward').combobox('reload',url+'?action=GetAllWardNewVersion&hospId='+HospID+'  ')
-			//$('#ward').combobox('reload',url+'?action=SelAllWard')
+			$('#ward').combobox('reload',url+'&action=GetAllWardNewVersion&hospId='+HospID+'  ')
+			//$('#ward').combobox('reload',url+'&action=SelAllWard')
 		}
 	});
 
@@ -41,14 +44,14 @@ $(function(){
     //手术类别
 	$('#oper').combobox({
 		onShowPanel:function(){
-			$('#oper').combobox('reload',url+'?action=SelOperCateGory')
+			$('#oper').combobox('reload',url+'&action=SelOperCateGory')
 		}
 	});
 	
 	///回车事件 wangxuejian   2016/09/19  qunianpeng 引用
 	$('#phdesc').bind('keypress',function(event){
 		if(event.keyCode == "13"){
-			var unitUrl = url+'?action=QueryArcItmDetail&hospId='+HospID+'&Input='+$('#phdesc').val(); 
+			var unitUrl = url+'&action=QueryArcItmDetail&hospId='+HospID+'&Input='+$('#phdesc').val(); 
 			//var unitUrl =  "&Input="+$('#drug').val();
 			/// 调用医嘱项列表窗口
 			new ListComponentWin($('#phdesc'), "", "600px", "" , unitUrl, ArcColumns, setCurrEditRowCellVal).init();
@@ -72,8 +75,8 @@ function setCurrEditRowCellVal(rowObj){
 }
 
 ArcColumns = [[
-	    {field:'itmDesc',title:'医嘱项名称',width:220},
-	    {field:'itmCode',title:'医嘱项代码',width:100},
+	    {field:'itmDesc',title:$g('医嘱项名称'),width:220},
+	    {field:'itmCode',title:$g('医嘱项代码'),width:100},
 	    //{field:'itmPrice',title:'单价',width:100},
 		{field:'itmID',title:'itmID',width:80}
 	]];
@@ -101,7 +104,7 @@ function Query()
 	}
 	var params=StDate+"^"+EndDate+"^"+WardID+"^"+LocID+"^"+PatNo+"^"+AppType+"^"+OperID+"^"+ItmID+"^"+HospID;
 	$('#maindg').datagrid({
-		url:url+'?action=GetOperMedPatList',	
+		url:url+'&action=GetOperMedPatList',	
 		queryParams:{
 			params:params}
 	});
@@ -113,26 +116,26 @@ function InitPatList()
 {
 	//定义columns
 	var columns=[[
-		{field:'Ward',title:'病区',width:160},
-		{field:'PatNo',title:'登记号',width:120,formatter:SetCellUrl},
-		{field:'InMedicare',title:'病案号',width:80,hidden:true},
-		{field:'PatName',title:'姓名',width:80},
-		{field:'Bed',title:'床号',width:80},
-		{field:'PatSex',title:'性别',width:80},
-		{field:'PatAge',title:'年龄',width:80},
-		{field:'PatHeight',title:'身高',width:80},
-		{field:'PatWeight',title:'体重',width:80},
-		{field:'AdmLoc',title:'科室',width:160},
-		{field:'AdmDoc',title:'医生',width:80},
-		{field:'PatDiag',title:'诊断',width:180},
-		{field:'PatInDate',title:'入院时间',width:120},
-		{field:'ExpCause',title:'异常原因',width:200,formatter:showExpCause},
+		{field:'Ward',title:$g('病区'),width:160},
+		{field:'PatNo',title:$g('登记号'),width:120,formatter:SetCellUrl},
+		{field:'InMedicare',title:$g('病案号'),width:80,hidden:true},
+		{field:'PatName',title:$g('姓名'),width:80},
+		{field:'Bed',title:$g('床号'),width:80},
+		{field:'PatSex',title:$g('性别'),width:80},
+		{field:'PatAge',title:$g('年龄'),width:80},
+		{field:'PatHeight',title:$g('身高'),width:80},
+		{field:'PatWeight',title:$g('体重'),width:80},
+		{field:'AdmLoc',title:$g('科室'),width:160},
+		{field:'AdmDoc',title:$g('医生'),width:80},
+		{field:'PatDiag',title:$g('诊断'),width:180},
+		{field:'PatInDate',title:$g('入院时间'),width:120},
+		{field:'ExpCause',title:$g('异常原因'),width:200,formatter:showExpCause},
 		{field:"AdmDr",title:'AdmDr',width:90,hidden:true}
 	]];
 	
 	//定义datagrid
 	$('#maindg').datagrid({
-		title:'病人列表',    
+		title:$g('病人列表'),    
 		url:'',
 		fit:true,
 		rownumbers:true,
@@ -140,7 +143,7 @@ function InitPatList()
 		pageSize:40,  // 每页显示的记录条数
 		pageList:[40,80],   // 可以设置每页记录条数的列表
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true
 	});
 	
@@ -172,7 +175,7 @@ function SetPatNoLength()
 {
 	var PatNo=$('#patno').val();
 	if(PatNo!=""){
-	$.post(url+'?action=GetPatRegNoLen',function(PatNoLen){
+	$.post(url+'&action=GetPatRegNoLen',function(PatNoLen){
 		var PLen=PatNo.length; //输入登记号的长度
 		for (i=1;i<=PatNoLen-PLen;i++)
 		{

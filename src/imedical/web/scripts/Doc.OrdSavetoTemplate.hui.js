@@ -1,21 +1,22 @@
-ï»¿var PageLogicObj={
+var PageLogicObj={
 	m_selARCOSRowId:"",
 	m_AddTOArcosARCIMDatas:"",
-	pattern:new RegExp("[`~!@#$^&*()=|{}':;',\\[\\].<>/?~ï¼@#ï¿¥â€¦â€¦&*ï¼ˆï¼‰â€”â€”|{}ã€ã€‘â€˜ï¼›ï¼šâ€â€œ'ã€‚ï¼Œã€ï¼Ÿ]") 
+	pattern:new RegExp("[`~!@#$^&*()=|{}':;',\\[\\].<>/?~£¡@#£¤¡­¡­&*£¨£©¡ª¡ª|{}¡¾¡¿¡®£»£º¡±¡°'¡££¬¡¢£¿]") 
 }
 $(function(){
-	//äº‹ä»¶åˆå§‹åŒ–
+	ExtendHISUICombo();
+	//ÊÂ¼ş³õÊ¼»¯
 	InitEvent();
-	//é¡µé¢å…ƒç´ åˆå§‹åŒ–
+	//Ò³ÃæÔªËØ³õÊ¼»¯
 	PageHandle();
 })
 function InitEvent(){
 	$("#BAddARCOS").click(BAddARCOSClickHandle);
 	$("#BAddTabName").click(BAddTabNameClick);
 	$("#BAddTemplGroup").click(BAddTemplGroupClick);
-	//æ–°å¢æ¨¡æ¿ç»„ ä¿å­˜
+	//ĞÂÔöÄ£°å´óÀà ±£´æ
 	$("#BSaveGroup").click(BSaveGroupClickHandle);
-	//æ–°å¢æ¨¡æ¿å­è¡¨ ä¿å­˜
+	//ĞÂÔöÄ£°å×Ó·ÖÀàÀà ±£´æ
 	$("#BSaveTabName").click(BSaveTabNameClickHandle);
 	$("#BSave").click(BSaveClickHandle);
 	$("#ARCOSName").change(ARCOSNameChange);
@@ -51,7 +52,7 @@ function InitARCOSLookup(){
         textField:'ARCOSName',
         columns:[[  
             {field:'ArcimDr',title:'',hidden:true},
-			{field:'ARCOSName',title:'åŒ»å˜±å¥—åç§°',width:350}
+			{field:'ARCOSName',title:'Ò½ÖöÌ×Ãû³Æ',width:350}
         ]], 
         pagination:true,
         panelWidth:400,
@@ -60,7 +61,7 @@ function InitARCOSLookup(){
         minQueryLen:2,
         delay:'500',
         queryOnSameQueryString:false,
-        queryParams:{ClassName: 'web.DHCDocOrderEntry',QueryName: 'LookUpARCOS'},
+        queryParams:{ClassName: 'web.DHCDocOrderEntry',QueryName: 'LookUpARCOS',EditAuthFlag:1},
         onBeforeLoad:function(param){
 	        var desc=param['q'];
 			param = $.extend(param,{ARCOS:desc});
@@ -91,7 +92,7 @@ function InitCategory(){
 				}
 		 });
 		 for (var i=0;i<Data['rows'].length;i++){
-			 if (Data['rows'][i]['CombDesc'].indexOf("åŒ»å˜±å¥—")>=0){
+			 if (Data['rows'][i]['CombDesc'].indexOf($g("Ò½ÖöÌ×"))>=0){
 				 $("#Category").combobox('select',Data['rows'][i]['CombValue']);
 				 break;
 			 }
@@ -102,7 +103,7 @@ function InitSubCategory(CategoryId){
 	$.cm({
 		ClassName:"web.UDHCFavItemNew",
 		QueryName:"CombListFind",
-		CombName:"SubCategory",Inpute1:CategoryId,
+		CombName:"SubCategory",Inpute1:CategoryId,Inpute2:"XY",
 		rows:99999
 	},function(Data){
 		var cbox = $HUI.combobox("#SubCategory", {
@@ -121,102 +122,88 @@ function InitConditiones(){
 			valueField: 'id',
 			textField: 'text', 
 			editable:false,
-			data: [{"id":1,"text":"ä¸ªäºº"},{"id":2,"text":"ç§‘å®¤"},{"id":3,"text":"å…¨é™¢"}]
+			data: [{"id":1,"text":$g("¸öÈË")},{"id":2,"text":$g("¿ÆÊÒ")},{"id":3,"text":$g("È«Ôº")}]
 	 });
 }
 function InitTempl(){
 	InitTemplCategory();
+	InitTemplTabName();
+	InitTeplGroup();
 }
 function InitTemplCategory(){
 	var dataArr=new Array();
-	dataArr.push({"id":"User.SSUser","text":"ä¸ªäºº"});
+	dataArr.push({"id":"User.SSUser","text":$g("¸öÈË"),selected:true});
 	if(ServerObj.MenuAuthOrderOrgFav==1){
-		dataArr.push({"id":"User.CTLoc","text":"ç§‘å®¤"});
+		dataArr.push({"id":"User.CTLoc","text":$g("¿ÆÊÒ")});
 	}
-	$HUI.combobox("#TemplCategory", {
-			valueField: 'id',
-			textField: 'text', 
-			editable:false,
-			data: dataArr,
-			onSelect:function(rec){
-				InitTemplTabName(rec['id'],"");
-			},
-			onLoadSuccess:function(){
-				$(this).combobox('select','User.SSUser');
-			}
+	if(ServerObj.HospMenuAuthOrderOrgFav==1){
+		dataArr.push({"id":"User.CTHospital","text":$g("È«Ôº")});
+	}
+	$("#TemplCategory").combobox({
+		valueField: 'id',
+		textField: 'text', 
+		editable:false,
+		data: dataArr,
+		onSelect:function(){
+			$('#TemplTabName').combobox('reload');
+		},
+		onLoadSuccess:function(){
+			$('#TemplTabName').combobox('reload');
+		}
 	 });
 }
-//æ¨¡æ¿ç»„
-function InitTemplTabName(ObjectType,defTabName){
-	$.cm({
-		ClassName:"web.DHCUserFavItems",
-		MethodName:"GetTabNameListBroker",
-		JSFunName:"GetTabNameToHUIJson", ListName:"", UserID:session['LOGON.USERID'], Type:ServerObj.Type,
-		CTLOCID:session['LOGON.CTLOCID'], XCONTEXT:ServerObj.XCONTEXT,
-		ObjectType:ObjectType
-	},function(Data){
-		var cbox = $HUI.combobox("#TemplTabName", {
-				valueField: 'id',
-				textField: 'text', 
-				editable:false,
-				data: Data,
-				onSelect:function(rec){
-					InitTeplGroup(rec['id'],"");
-				},
-				onLoadSuccess:function(){
-					if (defTabName==""){
-						if (Data.length>0){
-							$(this).combobox('select',Data[0]['id']);
-						}
-					}else{
-						for (var i=0;i<Data.length;i++){
-							if (Data[i]['text']==defTabName){
-								$(this).combobox('select',Data[i]['id']);
-							}
-						}
-					}
-				}
-		 });
+//Ä£°å´óÀà
+function InitTemplTabName(){
+	$('#TemplTabName').combobox({
+		url:'websys.Broker.cls',
+		valueField: 'id',
+		textField: 'text', 
+		editable:false,
+		onSelect:function(rec){
+			if(rec) $("#TemplGroup").combobox('loadData',rec.children);
+			else $("#TemplGroup").combobox('loadData',[]);
+		},
+		onBeforeLoad:function(param){
+			var ObjectType=$("#TemplCategory").combobox('getValue');
+			$.extend(param,{
+				ClassName:"DHCDoc.Order.Fav",
+				MethodName:"GetFavData", 
+				Type:ObjectType,
+				CONTEXT:ServerObj.XCONTEXT, 
+				LocID:session['LOGON.CTLOCID'],
+				UserID:session['LOGON.USERID'],
+				OnlyCatNode:1
+			});
+			$(this).combobox('select','');
+			return true;
+		}
 	});
 }
-//æ¨¡æ¿å­è¡¨
-function InitTeplGroup(TabNameIndex,defGroupDesc){
-	$.cm({
-		ClassName:"web.DHCUserFavItems",
-		MethodName:"GetGroupDescListBroker",
-		JSFunName:"GetGroupToHUIJson", ListName:"", UserID:session['LOGON.USERID'], Type:ServerObj.Type,
-		TabNameIndex:TabNameIndex,
-		CTLOCID:session['LOGON.CTLOCID'], XCONTEXT:ServerObj.XCONTEXT,
-		ObjectType:$("#TemplCategory").combobox('getValue')
-	},function(Data){
-		var cbox = $HUI.combobox("#TemplGroup", {
-				valueField: 'id',
-				textField: 'text', 
-				data: Data,
-				onLoadSuccess:function(){
-					if (defGroupDesc!=""){
-						for (var i=0;i<Data.length;i++){
-							if (Data[i]['text']==defGroupDesc){
-								$(this).combobox('select',Data[i]['id']);
-							}
-						}
-					}else{
-						$(this).combobox('select',"");
-					}
-				}
-		 });
+//Ä£°å×Ó·ÖÀàÀà
+function InitTeplGroup(){
+	$("#TemplGroup").combobox({
+		valueField: 'id',
+		textField: 'text', 
+		data: [],
+		onLoadSuccess:function(data){
+			if(data.length){
+				$(this).combobox('select',data[0].id);
+			}else{
+				$(this).combobox('select','');
+			}
+		}
 	});
 }
 function BSaveGroupClickHandle(){
 	var AddTabName=$.trim($("#TemplTabNameDesc").val());
 	if (AddTabName==""){
-		$.messager.alert("æç¤º","æ¨¡æ¿ç»„æè¿°ä¸èƒ½ä¸ºç©º!","info",function(){
+		$.messager.alert("ÌáÊ¾","Ä£°å´óÀàÃèÊö²»ÄÜÎª¿Õ!","info",function(){
 			$("#TemplTabNameDesc").focus();
 		})
 		return false;
 	}
 	if (PageLogicObj.pattern.test(AddTabName)){
-		$.messager.alert("æç¤º","æ¨¡æ¿ç»„æè¿°ã€"+AddTabName+"ã€‘å«æœ‰éæ³•å­—ç¬¦!","info",function(){
+		$.messager.alert("ÌáÊ¾",$g("Ä£°å´óÀàÃèÊö¡¾")+AddTabName+$g("¡¿º¬ÓĞ·Ç·¨×Ö·û!"),"info",function(){
 			$("#TemplTabNameDesc").focus();
 		});
 		return false;
@@ -224,255 +211,104 @@ function BSaveGroupClickHandle(){
 	var data=$("#TemplTabName").combobox('getData');
 	for (var i=0;i<data.length;i++){
 		if (data[i]["text"]==AddTabName){
-			$.messager.alert("æç¤º",AddTabName+" å·²å­˜åœ¨!","info",function(){
+			$.messager.alert("ÌáÊ¾",AddTabName+$g(" ÒÑ´æÔÚ!"),"info",function(){
 				$("#TemplTabNameDesc").focus();
 			});
 			return false;
 		}
 	}
 	var ObjectType=$("#TemplCategory").combobox('getValue');
-	$.cm({
-		ClassName:"web.DHCUserFavItems",
-		MethodName:"AddTabName",
-		UserID:session['LOGON.USERID'], Type:ServerObj.Type, TabName:AddTabName, CTLOCID:session['LOGON.CTLOCID'],
-		XCONTEXT:ServerObj.XCONTEXT,
-		ObjectType:ObjectType,
-		dataType:"text"
-	},function(ret){
-		if (ret==0){
-			$.messager.alert("æç¤º","å¢åŠ æ¨¡æ¿ç»„æˆåŠŸ","info",function(){
-				InitTemplTabName(ObjectType,AddTabName);
-				$("#AddTabName-tr").hide();
-				$("#TemplTabNameDesc").val('');
-			})
-		}else{
-			$.messager.alert("æç¤º","å¢åŠ æ¨¡æ¿ç»„å¤±è´¥!");
-			return false;
-		}
-	});
+	var ret=$.cm({
+		ClassName:'DHCDoc.Order.Fav',
+		MethodName:'SaveCat',
+		Type:ObjectType,
+		CONTEXT:ServerObj.XCONTEXT, 
+		Name:AddTabName,
+		LocID:session['LOGON.CTLOCID'],
+		UserID:session['LOGON.USERID'],
+		ID:'',
+		dataType:'text'
+	},false);
+	if(ret.split('^')[0]=='0'){
+		$('#TemplTabName').combobox('reload');
+		$.messager.popover({msg:'±£´æ³É¹¦',type:'success'});
+		$("#AddTabName-tr").hide();
+		$("#TemplTabNameDesc").val('');
+		setTimeout(function(){$('#TemplTabName').combobox('setValueByText',AddTabName);},200);
+	}else{
+		$.messager.alert('ÌáÊ¾',ret,'warning',function(){$("#TemplTabNameDesc").select()});
+	}
 }
 function BSaveTabNameClickHandle(){
 	var AddGroupDesc=$.trim($("#TemplGroupDesc").val());
 	if (AddGroupDesc==""){
-		$.messager.alert("æç¤º","æ¨¡æ¿å­è¡¨æè¿°ä¸èƒ½ä¸ºç©º!","info",function(){
+		$.messager.alert("ÌáÊ¾","Ä£°å×Ó·ÖÀàÀàÃèÊö²»ÄÜÎª¿Õ!","info",function(){
 			$("#TemplGroupDesc").focus();
 		})
 		return false;
 	}
 	if (PageLogicObj.pattern.test(AddGroupDesc)){
-		$.messager.alert("æç¤º","æ¨¡æ¿å­è¡¨æè¿°ã€"+AddGroupDesc+"ã€‘å«æœ‰éæ³•å­—ç¬¦!","info",function(){
+		$.messager.alert("ÌáÊ¾","Ä£°å×Ó·ÖÀàÀàÃèÊö¡¾"+AddGroupDesc+"¡¿º¬ÓĞ·Ç·¨×Ö·û!","info",function(){
 			$("#TemplGroupDesc").focus();
 		});
 		return false;
 	}
-	var TabDesc=$("#TemplTabName").combobox('getValue');
-	if (TabDesc==""){
-		$.messager.alert("æç¤º","è¯·å…ˆé€‰æ‹©è¦åŠ å…¥çš„æ¨¡æ¿ç»„");
+	var CatID=$("#TemplTabName").combobox('getValue');
+	if (CatID==""){
+		$.messager.alert("ÌáÊ¾","ÇëÏÈÑ¡ÔñÒª¼ÓÈëµÄÄ£°å´óÀà");
 		return false;
 	}
-	
-	var data=$("#TemplGroup").combobox('getData');
-	for (var i=0;i<data.length;i++){
-		if (data[i]["text"]==AddGroupDesc){
-			$.messager.alert("æç¤º",AddGroupDesc+" å·²å­˜åœ¨!","info",function(){
-				$("#TemplGroupDesc").focus();
-			});
-			return false;
-		}
+	var ret=$.cm({
+		ClassName:'DHCDoc.Order.Fav',
+		MethodName:'SaveSubCat',
+		ID:'',
+		CatID:CatID,
+		Name:AddGroupDesc, 
+		UserID:session['LOGON.USERID'], 
+		dataType:'text'
+	},false);
+	if(ret.split('^')[0]=='0'){
+		var oldValue=$('#TemplTabName').combobox('getValue');
+		$('#TemplTabName').combobox('reload');
+		setTimeout(function(){$('#TemplTabName').combobox('select',oldValue);},200);
+		setTimeout(function(){$('#TemplGroup').combobox('setValueByText',AddGroupDesc);},300);
+		$("#AddGroup-tr").hide();
+		$("#TemplGroupDesc").val('');
+		$.messager.popover({msg:'±£´æ³É¹¦',type:'success'});
+		
+	}else{
+		$.messager.alert('ÌáÊ¾',ret,'warning',function(){$("#TemplGroupDesc").find('input').select()});
 	}
-	
-	var ObjectType=$("#TemplCategory").combobox('getValue');
-	$.cm({
-		ClassName:"web.DHCUserFavItems",
-		MethodName:"AddGroupDesc",
-		UserID:session['LOGON.USERID'], Type:ServerObj.Type, TabNameIndex:TabDesc, GroupDesc:AddGroupDesc,
-		CTLOCID:session['LOGON.CTLOCID'],
-		XCONTEXT:ServerObj.XCONTEXT,
-		ObjectType:ObjectType,
-		dataType:"text"
-	},function(ret){
-		if (ret==0){
-			$.messager.alert("æç¤º","å¢åŠ æ¨¡æ¿å­è¡¨æˆåŠŸ","info",function(){
-				InitTeplGroup(TabDesc,AddGroupDesc);
-				$("#AddGroup-tr").hide();
-				$("#TemplGroupDesc").val('');
-			})
-		}else{
-			$.messager.alert("æç¤º","å¢åŠ æ¨¡æ¿å­è¡¨å¤±è´¥!");
-			return false;
-		}
-	});
 }
 function BSaveClickHandle(){
 	var ARCOSDesc=$("#ARCOS").lookup('getText');
-	if (ARCOSDesc==""){
-		PageLogicObj.m_selARCOSRowId="";
+	if (ARCOSDesc=="") PageLogicObj.m_selARCOSRowId="";
+	var SubCatID=$('#TemplGroup').combobox('getValue');
+	var ARCOSName=$('#ARCOSName').val();
+	if((SubCatID=='')&&(PageLogicObj.m_selARCOSRowId=='')&&(ARCOSName=='')){
+		$.messager.popover({msg:'ÇëÑ¡ÔñÒ½ÖöÌ×»òÕßÄ£°å×ÓÀà',type:'alert'});
+		return;
 	}
-	var TemplTabName=getCombValue("TemplTabName","id");
-	var TemplGroup=getCombValue("TemplGroup","id");
-	//var TemplTabName=$("#TemplTabName").combobox('getValue');
-	//var TemplGroup=$("#TemplGroup").combobox('getValue');
-	var ARCOSDesc=$("#ARCOSName").val();
-	if ((TemplGroup=="")&&(PageLogicObj.m_selARCOSRowId=="")&&(ARCOSDesc=="")){
-		$.messager.alert("æç¤º","è¯·é€‰æ‹©åŒ»å˜±å¥—æˆ–æ¨¡æ¿å­è¡¨!")
-		return false;
-	}
-	if ((PageLogicObj.m_selARCOSRowId=="")&&($(".arcosnew").css("display")=="none")){
-		//ä¿å­˜åˆ°æ¨¡æ¿
-		SaveToTemplate();
-		return false;
-	}
-	if (PageLogicObj.m_selARCOSRowId==""){
-		//æ–°å¢åŒ»å˜±å¥—ä¿å­˜
-		var SubCategory=$("#SubCategory").combobox('getValue');
-		if (SubCategory==""){
-			$.messager.alert("æç¤º","åŒ»å˜±å¥—å­ç±»ä¸èƒ½ä¸ºç©º!");
-			return false;
-		}
-		var ARCOSName=$("#ARCOSName").val();
-		if (ARCOSName==""){
-			$.messager.alert("æç¤º","åŒ»å˜±å¥—åç§°ä¸èƒ½ä¸ºç©º!","info",function(){
-				$("#ARCOSName").focus();
-			});
-			return false;
-		}
-		var Code=$("#Code").val();
-		var ARCOSAlias=$("#ARCOSAlias").val();
-		if (ARCOSAlias==""){
-			$.messager.alert("æç¤º","åŒ»å˜±å¥—åˆ«åä¸èƒ½ä¸ºç©º!","info",function(){
-				$("#ARCOSAlias").focus();
-			});
-			return false;
-		}
-		var Conditiones=$("#Conditiones").combobox('getValue');
-		if (Conditiones==""){
-			$.messager.alert("æç¤º","æ¡ä»¶ä¸èƒ½ä¸ºç©º!");
-			return false;
-		}
-		var DocMedUnit="",HospID="";
-		//é»˜è®¤ä¸ºä¸ªäºº
-		if (Conditiones=="")   {Conditiones=1}
-		if (Conditiones=="1") {
-			var UserID=session['LOGON.USERID']; 
-			var FavDepList="";
-			var DocMedUnit="";
-			//åŒ»å˜±å¥—çš„åå­—è¦åŠ ä¸ŠCode
-			if (ARCOSName.indexOf("-")<0){
-				ARCOSName=session["LOGON.USERCODE"]+"-"+ARCOSName;
-			}
-		};
-		//ç§‘å®¤
-		if (Conditiones=="2"){
-			var UserID="";
-			var FavDepList=session['LOGON.CTLOCID'];
-			var DocMedUnit="";
-		}
-		if (Conditiones=="3") {
-			var UserID="";
-			var FavDepList="";
-			var DocMedUnit="";
-			HospID=session['LOGON.HOSPID'];
-		}
-		//if (Conditiones=="4") {var UserID=Guser;var FavDepList="";};
-		var ARCOSCatID=$("#Category").combobox('getValue');
-		var ret=$.cm({
-			ClassName:"web.DHCUserFavItems",
-			MethodName:"InsertUserARCOS",
-			UserRowid:UserID, ARCOSCode:Code, ARCOSDesc:ARCOSName, ARCOSCatID:ARCOSCatID,
-			ARCOSSubCatID:SubCategory,ARCOSEffectDate:"",ARCOSAlias:ARCOSAlias,UserID:session['LOGON.USERID'],
-			FavDepList:FavDepList,DocMedUnit:DocMedUnit,HospID:HospID,
-			dataType:"text"
-		},false);
-		if (ret=='-1') {
-			$.messager.alert("æç¤º","ä¿å­˜å¤±è´¥"+"  æ‚¨å¯èƒ½å¡«å†™äº†å·²ç»ä½¿ç”¨çš„ä»£ç ");
+	if(PageLogicObj.m_selARCOSRowId||(ARCOSName!='')){
+		if(!SaveArcosItem()){
 			return;
-		}else{
-			var FavRowid=mPiece(ret,String.fromCharCode(1),0);
-			var ARCOSRowid=mPiece(ret,String.fromCharCode(1),1);
-			var ARCOSCode=mPiece(ret,String.fromCharCode(1),2);
 		}
-        if ((FavRowid=="")||(FavRowid==" ")){
-	        $.messager.alert("æç¤º","  æ‚¨å¯èƒ½å¡«å†™äº†å·²ç»ä½¿ç”¨çš„ä»£ç ");
-			return false;
-	    }
-	    //å¦‚æœæ¨¡æ¿ç»„ã€æ¨¡æ¿å­è¡¨éƒ½ä¸ä¸ºç©ºï¼Œåˆ™æŠŠæ–°å¢çš„åŒ»å˜±å¥—ä¿å­˜è‡³åŒ»å˜±æ¨¡æ¿
-		if ((TemplTabName!="")&&(TemplGroup!="")){
-			var ObjectType=$("#TemplCategory").combobox('getValue');
-			var IDStr=$.cm({
-				ClassName:"web.DHCUserFavItems",
-				MethodName:"GetUserwebsysPreferencesID",
-				UserID:session['LOGON.USERID'], CTLoc:session['LOGON.CTLOCID'], XCONTEXT:ServerObj.XCONTEXT, ObjectType:ObjectType,
-				dataType:"text"
-			},false)
-			if (ServerObj.Type=="è¥¿è¯"){
-			    var ID=IDStr.split(",")[1];
-			}else{
-				var ID=IDStr.split(",")[2];
-			}
-			if (ID==""){
-			    $.messager.alert("æç¤º","æ²¡æœ‰æ‰¾åˆ°ç›¸å…³æ¨¡æ¿çš„ä½ç½®,ä¿å­˜åˆ°æ¨¡æ¿å¤±è´¥!");
-			    return false
-			}
-			var ret=$.cm({
-				ClassName:"web.DHCUserFavItems",
-				MethodName:"SaveToTemplate",
-				ID:ID, TabNameIndex:TemplTabName, groupnameIndex:TemplGroup, ARCOSRowid:ARCOSRowid, Type:"ARCOS",
-				dataType:"text"
-			},false);
-			if(ret!=0){
-				$.messager.alert("æç¤º","ä¿å­˜åˆ°æ¨¡æ¿å¤±è´¥!");
-			    return false
-			}
-		}
-		var ObjectType=$("#TemplCategory").combobox('getValue');
-		var value=ARCOSRowid+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+ObjectType;
-	    if(ARCOSRowid==""){
-		    /*window.returnValue=value
-			window.close();*/
-			websys_showModal("hide");
-			if (websys_showModal('options').CallBackFunc) {
-				websys_showModal('options').CallBackFunc(value);
-			}			
-			websys_showModal("close");
-		    return false
-		}
-		//ä¿å­˜åŒ»å˜±åˆ°åŒ»å˜±å¥—
-		SaveArcosItem(value);
-	}else{
-		//å¦‚æœæ¨¡æ¿ç»„ã€æ¨¡æ¿å­è¡¨éƒ½ä¸ä¸ºç©ºï¼Œåˆ™æŠŠé€‰æ‹©çš„åŒ»å˜±å¥—ä¿å­˜è‡³åŒ»å˜±æ¨¡æ¿
-		if ((TemplTabName!="")&&(TemplGroup!="")){
-			var ObjectType=$("#TemplCategory").combobox('getValue');
-			var IDStr=$.cm({
-				ClassName:"web.DHCUserFavItems",
-				MethodName:"GetUserwebsysPreferencesID",
-				UserID:session['LOGON.USERID'], CTLoc:session['LOGON.CTLOCID'], XCONTEXT:ServerObj.XCONTEXT, ObjectType:ObjectType,
-				dataType:"text"
-			},false)
-			if (ServerObj.Type=="è¥¿è¯"){
-			    var ID=IDStr.split(",")[1];
-			}else{
-				var ID=IDStr.split(",")[2];
-			}
-			if (ID==""){
-			    $.messager.alert("æç¤º","æ²¡æœ‰æ‰¾åˆ°ç›¸å…³æ¨¡æ¿çš„ä½ç½®,ä¿å­˜åˆ°æ¨¡æ¿å¤±è´¥!");
-			    return false
-			}
-			var ret=$.cm({
-				ClassName:"web.DHCUserFavItems",
-				MethodName:"SaveToTemplate",
-				ID:ID, TabNameIndex:TemplTabName, groupnameIndex:TemplGroup, ARCOSRowid:PageLogicObj.m_selARCOSRowId, Type:"ARCOS",
-				dataType:"text"
-			},false);
-			if(ret!=0){
-				$.messager.alert("æç¤º","ä¿å­˜åˆ°æ¨¡æ¿å¤±è´¥!");
-			    return false
-			}
-		}
-		//ä¿å­˜åŒ»å˜±åˆ°åŒ»å˜±å¥—
-		var ObjectType=$("#TemplCategory").combobox('getValue');
-		var value=PageLogicObj.m_selARCOSRowId+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+ObjectType;
-		SaveArcosItem(value);
 	}
+	if(SubCatID!=''){
+		if(!SaveToTemplate()){
+			return
+		}
+	}
+	$.messager.alert("ÌáÊ¾","±£´æ³É¹¦!","info",function(){
+		var ObjectType=$("#TemplCategory").combobox('getValue');
+		var value=""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+ObjectType;
+		websys_showModal("hide");
+		if (websys_showModal('options').CallBackFunc) {
+			websys_showModal('options').CallBackFunc(value);
+		}			
+		websys_showModal("close");
+		return true;
+	});
 }
 function ARCOSNameChange(){
 	var ARCOSName=$("#ARCOSName").val();
@@ -488,70 +324,128 @@ function mPiece(str,deli,index){
 	return str.split(deli)[index];
 }
 function SaveToTemplate(){
-	var TemplTabName=getCombValue("TemplTabName","id");
-	if (TemplTabName==""){
-		$.messager.alert("æç¤º","æ¨¡æ¿ç»„ä¸èƒ½ä¸ºç©º!");
+	var SubCatID=$('#TemplGroup').combobox('getValue');
+	if(SubCatID==''){
 		return false;
 	}
-	var TemplGroup=getCombValue("TemplGroup","id");
-	if (TemplGroup==""){
-		$.messager.alert("æç¤º","æ¨¡æ¿å­è¡¨ä¸èƒ½ä¸ºç©º!");
-		return false;
-	}
-	var ObjectType=$("#TemplCategory").combobox('getValue');
-	var IDStr=$.cm({
-		ClassName:"web.DHCUserFavItems",
-		MethodName:"GetUserwebsysPreferencesID",
-		UserID:session['LOGON.USERID'], CTLoc:session['LOGON.CTLOCID'], XCONTEXT:ServerObj.XCONTEXT, ObjectType:ObjectType,
-		dataType:"text"
-	},false)
-	if (ServerObj.Type=="è¥¿è¯"){
-	    var ID=IDStr.split(",")[1];
+	var itemArr=new Array();
+	if(!PageLogicObj.m_selARCOSRowId){
+		var arcimArr=PageLogicObj.m_AddTOArcosARCIMDatas.split(String.fromCharCode(3));
+		for(var i=0;i<arcimArr.length;i++){ 
+			var AddTOArcosARCIMDatasOneArcimArr=arcimArr[i].split("^");
+			var OrderARCIMRowid=AddTOArcosARCIMDatasOneArcimArr[0];
+			var OrderBodyPartLabel=AddTOArcosARCIMDatasOneArcimArr[18];
+			itemArr.push({'itemid':OrderARCIMRowid,note:'',partInfo:OrderBodyPartLabel});
+		}
 	}else{
-		var ID=IDStr.split(",")[2];
+		itemArr.push({'itemid':PageLogicObj.m_selARCOSRowId,note:'',partInfo:''});
 	}
-	if (ID==""){
-	    $.messager.alert("æç¤º","æ²¡æœ‰æ‰¾åˆ°ç›¸å…³æ¨¡æ¿çš„ä½ç½®,ä¿å­˜åˆ°æ¨¡æ¿å¤±è´¥!");
-	    return false
+	if(itemArr.length){
+		var ret=$.cm({ 
+			ClassName:"DHCDoc.Order.Fav",
+			MethodName:"InsertMultItem", 
+			FavItemStr:JSON.stringify(itemArr),
+			SubCatID:SubCatID,
+			UserID:session['LOGON.USERID'],
+			dataType:'text'
+		},false);
+		if(ret=='0'){
+			return true
+		}else{
+			$.messager.alert('ÌáÊ¾','±£´æÄ£°åÊ§°Ü:'+ret);
+			return false;
+		}
 	}
-	var AddTOArcosARCIMDatasOneArcimArrStr=PageLogicObj.m_AddTOArcosARCIMDatas.split(String.fromCharCode(3));
-	var len=AddTOArcosARCIMDatasOneArcimArrStr.length;
-	if (len<1) return;
-	for(var i=0;i<len;i++){ 
-	    //é—¨è¯Šçš„å·²ç»å®¡æ ¸ä½†æœªæ”¶è´¹ä¸ä¼šåœ¨å½•å…¥çš„åŒ»å˜±å¥—ä¸­
-	    var AddTOArcosARCIMDatasOneArcimArr=AddTOArcosARCIMDatasOneArcimArrStr[i].split("^");
-		var OrderARCIMRowid=AddTOArcosARCIMDatasOneArcimArr[0];
-		var OrderBodyPartLabel=AddTOArcosARCIMDatasOneArcimArr[18];
-		if (OrderBodyPartLabel!="") OrderARCIMRowid=OrderARCIMRowid+"*S*"+OrderBodyPartLabel;
+	return true;
+}
+function SaveArcosItem(){
+	if (PageLogicObj.m_selARCOSRowId==""){
+		//ĞÂÔöÒ½ÖöÌ×±£´æ
+		var SubCategory=$("#SubCategory").combobox('getValue');
+		if (SubCategory==""){
+			$.messager.alert("ÌáÊ¾","Ò½ÖöÌ××ÓÀà²»ÄÜÎª¿Õ!");
+			return false;
+		}
+		var ARCOSName=$("#ARCOSName").val();
+		if (ARCOSName==""){
+			$.messager.alert("ÌáÊ¾","Ò½ÖöÌ×Ãû³Æ²»ÄÜÎª¿Õ!","info",function(){
+				$("#ARCOSName").focus();
+			});
+			return false;
+		}
+		var Code=$("#Code").val();
+		var ARCOSAlias=$("#ARCOSAlias").val();
+		if (ARCOSAlias==""){
+			$.messager.alert("ÌáÊ¾","Ò½ÖöÌ×±ğÃû²»ÄÜÎª¿Õ!","info",function(){
+				$("#ARCOSAlias").focus();
+			});
+			return false;
+		}
+		var Conditiones=$("#Conditiones").combobox('getValue');
+		if (Conditiones==""){
+			$.messager.alert("ÌáÊ¾","Ìõ¼ş²»ÄÜÎª¿Õ!");
+			return false;
+		}
+		var DocMedUnit="",UserID=session['LOGON.USERID'],FavDepList=session['LOGON.CTLOCID'],HospID=session['LOGON.HOSPID'];
+		var ToType="User"
+		switch(Conditiones){
+			case "2":
+				if (!ServerObj.LocARCOSAuthority){
+					$.messager.alert("ÌáÊ¾","Ã»ÓĞÈ¨ÏŞÎ¬»¤¿ÆÊÒÒ½ÖöÌ×Ì×");
+					return false;
+				}
+				ToType="Loc";
+				break;
+			case "3":
+				if (!ServerObj.HospARCOSAuthority){
+					$.messager.alert("ÌáÊ¾","Ã»ÓĞÈ¨ÏŞÎ¬»¤È«ÔºÒ½ÖöÌ×");
+					return false;
+				}
+				ToType="Hosp";
+				break
+			default:
+				//¸öÈËÒ½ÖöÌ×µÄÃû×ÖÒª¼ÓÉÏCode
+				if (ARCOSName.indexOf("-")<0){
+					ARCOSName=session["LOGON.USERCODE"]+"-"+ARCOSName;
+				}
+				break;
+		}
+		var ARCOSCatID=$("#Category").combobox('getValue');
 		var ret=$.cm({
 			ClassName:"web.DHCUserFavItems",
-			MethodName:"SaveToTemplate",
-			ID:ID, TabNameIndex:TemplTabName, groupnameIndex:TemplGroup, ARCOSRowid:OrderARCIMRowid, Type:"ARCIM",
+			MethodName:"InsertUserARCOS",
+			UserRowid:UserID, ARCOSCode:Code, ARCOSDesc:ARCOSName, ARCOSCatID:ARCOSCatID,
+			ARCOSSubCatID:SubCategory,ARCOSEffectDate:"",ARCOSAlias:ARCOSAlias,UserID:session['LOGON.USERID'],
+			FavDepList:FavDepList,DocMedUnit:DocMedUnit,HospID:HospID,Type:ToType,
 			dataType:"text"
-		},false)
-	    if (ret!=0){
-	        $.messager.alert("æç¤º",ret.split("^")[1]);
-	        return false;
-	    }
+		},false);
+		if (ret=='-1') {
+			$.messager.alert("ÌáÊ¾","±£´æÒ½ÖöÌ×Ê§°Ü"+"  Äú¿ÉÄÜÌîĞ´ÁËÒÑ¾­Ê¹ÓÃµÄ´úÂë");
+			return false;
+		}else{
+			var FavRowid=mPiece(ret,String.fromCharCode(1),0);
+			var ARCOSRowid=mPiece(ret,String.fromCharCode(1),1);
+			var ARCOSCode=mPiece(ret,String.fromCharCode(1),2);
+			PageLogicObj.m_selARCOSRowId=ARCOSRowid;
+		}
 	}
-	if(ret==0){
-	     $.messager.alert("æç¤º","ä¿å­˜åˆ°æ¨¡æ¿æˆåŠŸ!","info",function(){
-		     var value=""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+ObjectType;
-		      /*window.returnValue=value;
-		      window.close();*/
-		      websys_showModal("hide");
-			  if (websys_showModal('options').CallBackFunc) {
-				 websys_showModal('options').CallBackFunc(value);
-			  }			
-			  websys_showModal("close");
-		      return true;
-		 })
+	var ARCOSType=$.cm({
+		ClassName:"web.DHCUserFavItems",
+		MethodName:"GetARCOSType",
+		ARCOSRowid:PageLogicObj.m_selARCOSRowId,
+		dataType:"text"
+	},false)
+	if ((ARCOSType=="Loc")&&(!ServerObj.LocARCOSAuthority)){
+		$.messager.alert("ÌáÊ¾","Ã»ÓĞÈ¨ÏŞÎ¬»¤¿ÆÊÒÒ½ÖöÌ×Ì×");
+		return false;
 	}
-}
-function SaveArcosItem(value){
+	if ((ARCOSType=="Hosp")&&(!ServerObj.HospARCOSAuthority)){
+		$.messager.alert("ÌáÊ¾","Ã»ÓĞÈ¨ÏŞ±£´æÈ«ÔºÒ½ÖöÌ×");
+		return false;
+	}
 	var OrderSeqNoArr = new Array();
-	var ARCOSRowid=value.split("^")[0];
-	var ArcosMaxLinkSeqNo=tkMakeServerCall("web.DHCARCOrdSets", "GetArcosMaxLinkSeqNo", ARCOSRowid) //è·å–ä¸é‡å¤çš„LinkNo
+	var ARCOSRowid=PageLogicObj.m_selARCOSRowId;
+	var ArcosMaxLinkSeqNo=tkMakeServerCall("web.DHCARCOrdSets", "GetArcosMaxLinkSeqNo", ARCOSRowid) //»ñÈ¡²»ÖØ¸´µÄLinkNo
 	if (ArcosMaxLinkSeqNo<0) {
 		ArcosMaxLinkSeqNo=1
 	}else {
@@ -559,8 +453,8 @@ function SaveArcosItem(value){
 	}
 	var AddTOArcosARCIMDatasOneArcimArrStr=PageLogicObj.m_AddTOArcosARCIMDatas.split(String.fromCharCode(3));
 	var len=AddTOArcosARCIMDatasOneArcimArrStr.length;
-    for(var i=0;i<len;i++){ 
-	    //é—¨è¯Šçš„å·²ç»å®¡æ ¸ä½†æœªæ”¶è´¹ä¸ä¼šåœ¨å½•å…¥çš„åŒ»å˜±å¥—ä¸­
+    for(var i=0;i<len;i++){
+	    //ÃÅÕïµÄÒÑ¾­ÉóºËµ«Î´ÊÕ·Ñ²»»áÔÚÂ¼ÈëµÄÒ½ÖöÌ×ÖĞ
 	    var AddTOArcosARCIMDatasOneArcimArr=AddTOArcosARCIMDatasOneArcimArrStr[i].split("^")
 		var OrderARCIMRowid=AddTOArcosARCIMDatasOneArcimArr[0];
 		var OrderPackQty=AddTOArcosARCIMDatasOneArcimArr[1];
@@ -601,11 +495,12 @@ function SaveArcosItem(value){
 		var OrderFreqWeekStr=AddTOArcosARCIMDatasOneArcimArr[20];
 		var OrderSkinTest=AddTOArcosARCIMDatasOneArcimArr[21];
 		var OrderActionRowid=AddTOArcosARCIMDatasOneArcimArr[22];
+		var NotifyClinician=AddTOArcosARCIMDatasOneArcimArr[23];
         var MustEnter="N";
         var ExpStr=OrderStageCode+"^"+MustEnter+"^"+OrderPackUOM;
         ExpStr=ExpStr+"^"+OrderSpeedFlowRate+"^"+OrderFlowRateUnitRowId+"^"+OrderBodyPartLabel;
         ExpStr=ExpStr+"^"+OrderSkinTest+"^"+OrderActionRowid;
-        ExpStr=ExpStr+"^^^"+OrderFreqTimeDoseStr+"^"+OrderFreqWeekStr;
+        ExpStr=ExpStr+"^"+NotifyClinician+"^^"+OrderFreqTimeDoseStr+"^"+OrderFreqWeekStr;
         var ret=$.cm({
 			ClassName:"web.DHCARCOrdSets",
 			MethodName:"InsertItem",
@@ -616,16 +511,7 @@ function SaveArcosItem(value){
 			dataType:"text"
 		},false)
 	}
-	$.messager.alert("æç¤º","ä¿å­˜åˆ°åŒ»å˜±å¥—æˆåŠŸ!","info",function(){
-		/*window.returnValue=value
-		window.close();*/
-		websys_showModal("hide");
-	  	if (websys_showModal('options').CallBackFunc) {
-		  websys_showModal('options').CallBackFunc(value);
-	    }			
-	    websys_showModal("close");
-		return;
-	});
+	return true;
 }
 function getCombValue(id,valueField){
 	var Find=0;
@@ -641,4 +527,21 @@ function getCombValue(id,valueField){
 	  }
 	  if (Find=="1") return selId
 	  return "";
+}
+function ExtendHISUICombo()
+{
+	$.extend($.fn.combobox.methods, {    
+	    setValueByText: function(jq, text){    
+	        return jq.each(function(){  
+	        	var opts=$(this).combobox('options');
+	        	var data=$(this).combobox('getData');
+	        	for(var i=0;i<data.length;i++){
+		        	if(data[i][opts.textField]==text){  
+	            		$(this).combobox('select', data[i][opts.valueField]);
+	            		break;
+		        	}
+	        	} 
+	        });    
+	    }    
+	});
 }

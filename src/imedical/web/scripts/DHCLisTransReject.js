@@ -135,7 +135,7 @@ var init=function(){
 	if (GV.ShowTransAdvice=="1") {
 		$('#TransAdvice').width($('#TransAdvice').closest('td').width()-20);
 	}else{
-		$('#TransAdvice-TR').hide();
+	//	$('#TransAdvice-TR').hide();
 	}
 	
 

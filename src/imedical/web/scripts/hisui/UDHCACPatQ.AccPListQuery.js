@@ -1,8 +1,5 @@
 /// UDHCACPatQ.AccPListQuery.js
 
-var m_SelectCardTypeRowID = "";
-var m_CardNoLength = 0;
-
 $(function () {
 	//账户明细表单 初始化
 	ini_UDHCACPatAccDataGrid();
@@ -25,31 +22,16 @@ $(function () {
 		}
 	});
 	
-	$("#CardNo").keydown(function(e) {
+	$("#CardNo").focus().keydown(function(e) {
 		CardNo_OnKeyDown(e);
-	});
-
-	$("#CardTypeDefine").combobox({
-		panelHeight: 'auto',
-		url: $URL + "?ClassName=web.DHCBillOtherLB&QueryName=QCardTypeDefineList&ResultSetType=array",
-		valueField: 'value',
-		textField: 'caption',
-		editable: false,
-		onChange: function(newVal, oldVal) {
-			CardTypeDefine_OnChange();
-		}
 	});
 });
 
 function Print_OnClick() {
 }
 
-function Query_OnClick() {
-	loadAccPList();
-}
-
 function Clear_OnClick() {
-	$("#CardTypeDefine").combobox("reload");
+	focusById("CardNo");
 	$(":text:not(.pagination-num)").val("");
 	$(".combobox-f").combobox("clear");
 	setValueById("AccRowID", "");
@@ -61,7 +43,8 @@ function loadAccPList() {
 	var queryParams = {
 		ClassName: "web.UDHCAccManageCLS",
 		QueryName: "ReadPatAccList",
-		AccRowID: getValueById("AccRowID")
+		AccRowID: getValueById("AccRowID"),
+		langId: getValueById("langId")
 	};
 	loadDataGridStore("tUDHCACPatQ_AccPListQuery", queryParams);
 }
@@ -74,7 +57,7 @@ function ReadPatAccInfo() {
 		return;
 	}
 	var encmeth = getValueById("ReadPAInfoEncrypt");	
-	var myrtn = cspRunServerMethod(encmeth, PAPMINo, CardNo, SecurityNo);
+	var myrtn = cspRunServerMethod(encmeth, PAPMINo, CardNo, SecurityNo, getValueById("langId"));
 	var myary = myrtn.split("^");
 	if (myary[0] == 0) {
 		WrtPatAccInfo(myrtn);
@@ -83,33 +66,45 @@ function ReadPatAccInfo() {
 	}
 }
 
-
 function ReadHFMagCard_Click() {
-	var myoptval =getValueById("CardTypeDefine");
-	var myrtn = DHCACC_GetAccInfo(m_SelectCardTypeRowID, myoptval);
-	var myary = myrtn.split("^");
-	var rtn = myary[0];
-	switch (rtn) {
-	case "0":
-		//rtn +"^"+myCardNo+"^" + myCheckNo +"^"+myLeftM+"^"+myPAPMI+"^"+myPAPMNo;
-		setValueById("CardNo", myary[1]);
-		setValueById("SecurityNo", myary[2]);
-		setValueById("PAPMINo", myary[5]);
-		ReadPatAccInfo();
-		Query_OnClick();
-		//Account Can Pay
-		break;
-	case "-200":
-		DHCWeb_HISUIalert(t["-200"]);
-		break;
-	case "-201":
-		DHCWeb_HISUIalert(t[rtn]);
-		break;
-	default:
-		//DHCWeb_HISUIalert("");
+	DHCACC_GetAccInfo7(magCardCallback);
+}
+
+function CardNo_OnKeyDown(e) {
+	var key = websys_getKey(e);
+	if (key == 13) {
+		var CardNo = getValueById("CardNo");
+		if (CardNo == "") {
+			return;
+		}
+		DHCACC_GetAccInfo("", CardNo, "", "", magCardCallback);
 	}
 }
 
+function magCardCallback(rtnValue) {
+	var myAry = rtnValue.split("^");
+	switch (myAry[0]) {
+	case "0":
+		setValueById("CardNo", myAry[1]);
+		setValueById("SecurityNo", myAry[2]);
+		setValueById("PAPMINo", myAry[5]);
+		setValueById("CardTypeRowId", myAry[8]);
+		ReadPatAccInfo();
+		loadAccPList();
+		break;
+	case "-200":
+		$.messager.alert("提示", "卡无效", "info", function () {
+			focusById("CardNo");
+		});
+		break;
+	case "-201":
+		$.messager.alert("提示", "账户无效", "info", function () {
+			focusById("CardNo");
+		});
+		break;
+	default:
+	}
+}
 
 function WrtPatAccInfo(myPAInfo) {
 	//s myPAInfo = rtn_"^"_myPAPMINO_"^"_myPatName_"^"_mySexDesc_"^"_myPatBD
@@ -132,72 +127,6 @@ function WrtPatAccInfo(myPAInfo) {
 	setValueById("AccRowID", myary[13]);
 }
 
-function CardNo_OnKeyDown(e) {
-	var key = websys_getKey(e);
-	if (key == 13) {
-		//Set Card No Length;
-		SetCardNOLength();
-		var myCardNo = getValueById("CardNo");
-		if (myCardNo == "") {
-			return;
-		}
-		var mySecurityNo = "";
-		var myrtn = DHCACC_GetAccInfo(m_SelectCardTypeRowID, myCardNo, mySecurityNo, "");
-		var myary = myrtn.split("^");
-		var rtn = myary[0];
-		switch (rtn) {
-			case "0":
-				setValueById("CardNo", myary[1]);
-				setValueById("SecurityNo", myary[2]);
-				setValueById("PAPMINo", myary[5]);
-				ReadPatAccInfo();
-				Query_OnClick();
-				break;
-			case "-200":
-				DHCWeb_HISUIalert(t["-200"]);
-				break;
-			case "-201":
-				DHCWeb_HISUIalert(t["-201"]);
-				break;
-			default:
-				//DHCWeb_HISUIalert("");
-		}
-	}
-}
-
-///格式化卡号
-function SetCardNOLength() {
-	var obj = document.getElementById('CardNo');
-	if (obj.value != '') {
-		if ((obj.value.length < m_CardNoLength) && (m_CardNoLength != 0)) {
-			for (var i = (m_CardNoLength - obj.value.length - 1); i >= 0; i--) {
-				obj.value = "0" + obj.value;
-			}
-		}
-	}
-}
-
-function CardTypeDefine_OnChange() {
-	var myoptval = getValueById("CardTypeDefine");
-	var myary = myoptval.split("^");
-	var myCardTypeDR = myary[0];
-	m_SelectCardTypeRowID = myCardTypeDR;
-	if (myCardTypeDR == "") {
-		return;
-	}
-	//Read Card Mode
-	if (myary[16] == "Handle") {
-		$("#CardNo").attr("readOnly", false);
-		disableById("ReadCard");
-		focusById("CardNo");
-	} else {
-		$("#CardNo").attr("readOnly", true);
-		enableById("ReadCard");
-		focusById("ReadCard");
-	}
-	m_CardNoLength = myary[17];
-}
-
 /**
 * 账户明细
 */
@@ -208,7 +137,7 @@ function ini_UDHCACPatAccDataGrid() {
 		if (item.field == "TDetails") {
 			item.formatter = function (value, row, index) {
 				if (row.Flag == "PL") {
-					return "<a href='javascript:;' onclick=\"orderDetail(\'" + row.PRowID + "', '" + "PRT" + "\')\">" + "明细" + "</a>";
+					return "<a href='javascript:;' onclick=\"orderDetail(\'" + row.PRowID + "', '" + row.InvType + "\')\">" + $g("明细") + "</a>";
 				}
 			}
 		}
@@ -220,7 +149,7 @@ function orderDetail(prtRowId, invType) {
 	var url = 'dhcbill.opbill.invoeitm.csp?&invRowId=' + prtRowId + '&invType=' + invType;
 	websys_showModal({
 		url: url,
-		title: '医嘱明细',
+		title: $g('医嘱明细'),
 		iconCls: 'icon-w-list'
 	});
 }

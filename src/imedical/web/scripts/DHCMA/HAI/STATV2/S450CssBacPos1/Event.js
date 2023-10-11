@@ -1,4 +1,4 @@
-﻿function InitS450cssbacpos1WinEvent(obj){
+function InitS450cssbacpos1WinEvent(obj){
    	obj.LoadEvent = function(args){	
 		$('#ReportFrame').css('display', 'block');
 		setTimeout(function(){
@@ -22,7 +22,7 @@
 		var SurNumID 	= $('#cboSurNum').combobox('getValue');	
 		var aLocType 	= Common_CheckboxValue('chkStatunit');
 		ReportFrame = document.getElementById("ReportFrame");
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S450CssBacPos1.raq&aSurNumID='+SurNumID +'&aInfType='+"0";
+		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S450CssBacPos1.raq&aSurNumID='+SurNumID +'&aInfType='+"0"+ '&aPath=' + cspPath;	;
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
@@ -32,13 +32,18 @@
 	
     obj.echartLocInfRatio = function(runQuery){
 		if (!runQuery) return;
+		if(runQuery.rows.length==0){
+			$.messager.alert("提示","查询无数据！", 'info');
+			return;	
+		}
 		var arrDesc		= new Array();		//感染部位
 		var arrCount	= new Array();		//感染例数
 		var arrBac		= new Array();		//病原体
 		var arrInfDiagCount = new Array();		//感染部位例数
 		var arrInfDiagDesc	= new Array();		//感染部位
 		var arrBacName		= new Array();		//病原体
-		arrRecord 		= runQuery.record;
+		arrRecord 		= runQuery.rows;
+		
 		for (var indRd = 0; indRd < arrRecord.length; indRd++){
 			var rd = arrRecord[indRd];
 			arrDesc.push(rd["InfDiagDesc"]);
@@ -118,10 +123,18 @@
 					},
 			        x:'center'
 			    },
+			toolbox: {
+				feature: {
+					dataView: {show: false, readOnly: false},
+					magicType: {show: false, type: ['line', 'bar']},
+					restore: {show: true},
+					saveAsImage: {show: true}
+				}
+			},/*
 		    backgroundColor: '#E1FFFF',
 		    color: [
 		        '#FF6347'
-		    ],
+		    ],*/
 		   dataZoom:[{
 				height:20,
 				fillerColor:"rgba(255,255,255,255)",
@@ -239,29 +252,28 @@
 	}
    	obj.ShowEChaert1 = function(){
 		obj.myChart.clear()
-		var SurNumID 	= $('#cboSurNum').combobox('getValue');		
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S450CSSPosBac' + "&QueryName=" + 'QryCSSBacInfPos' + "&Arg1=" + SurNumID + "&Arg2=" + "0" +"&ArgCnt=" + 2;
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 30000, //30秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				var tkclass="DHCHAI.STATV2.S450CSSPosBac";
-				var tkQuery="QryCSSBacInfPos";
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
-		});
+		var SurNumID 	= $('#cboSurNum').combobox('getValue');	
+			
+		obj.myChart.showLoading();		
+		var className="DHCHAI.STATV2.S450CSSPosBac";
+		var queryName="QryCSSBacInfPos";
+		$cm({
+		    ClassName: className,
+		    QueryName: queryName,
+		    aSurNumID: SurNumID,
+		    aInfType: 0,
+			page:1,    //可选项，页码，默认1
+			rows:999   //可选项，获取多少条数据，默认50
+		},
+		function(data){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			obj.echartLocInfRatio(data);
+		}
+		,function(XMLHttpRequest, textStatus, errorThrown){
+			alert("类" + className + ":" + queryName+ "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
+			obj.myChart.hideLoading();    //隐藏加载动画
+		}); 
+
 	}
 	
 }

@@ -16,8 +16,8 @@ function BodyLoadHandler()
 	initButtonWidth()  //hisui改造		Mozy0244 2020-1-20	1177453
 	// MZY0029	1340070		2020-05-29
 	if ((GetElementValue("RowID")=="")||(GetElementValue("CheckPrice")=="")||(GetElementValue("Hold3")!="")) hiddenObj("BCheckPrice",1);
-	// MZY0031	1358865		2020-06-08	增加隐藏【清屏】按钮
-	if ((GetElementValue("CheckPrice")==1)||(GetElementValue("Hold3")!=""))
+	// MZY0042	1436514		2020-8-4	增加复制操作过滤
+	if ((GetElementValue("AccessoryInfo")!=1)&&((GetElementValue("CheckPrice")==1)||(GetElementValue("Hold3")!="")))
 	{
 		hiddenObj("BClear",1);
 		hiddenObj("BUpdate",1);

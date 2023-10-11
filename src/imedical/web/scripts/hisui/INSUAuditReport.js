@@ -15,7 +15,8 @@ function BodyLoadHandler() {
 	init_Layout();
 	$HUI.combobox(('#UserName'),{
 		defaultFilter:'4',
-		valueField: 'TUsrRowid',
+		//valueField: 'TUsrRowid',
+		valueField: 'TUsrName', //+DingSH 2020907
 		textField: 'TUsrName',
 		url:$URL,
 		onSelect:function(){
@@ -34,15 +35,31 @@ function BodyLoadHandler() {
 		}		
 	})
 
-
+	var obj=document.getElementById("Find");
+	if(obj){obj.onclick=Find_onclick;}
+	setDefDateValue();
 }
+/**
+* 日期默认设置
+*/
+function setDefDateValue() {
+	var curDateTime =$.m({ClassName: "web.UDHCJFBaseCommon", MethodName: "FormDateTime"}, false);
+	var myAry = curDateTime.split(/\s+/);
+	setValueById("StartDate", myAry[0]); 
+	setValueById("EndDate", myAry[0]);
+}
+
 function InitDetails(){
 	var StartDate=getValueById("StartDate") ;
 	var EndDate=getValueById("EndDate") ;	
 	var UserName=getValueById("UserName") ;
+	var MWToken="";
+	if ("undefined"!==typeof websys_getMWToken){ var MWToken=websys_getMWToken() } 
 	var lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=INSUAuditReport&StartDate="+StartDate+"&EndDate="+EndDate+"&UserName="+UserName+"&HOSPID="+HOSPID+"&GROUPID="+GROUPID;
+	lnk+="&MWToken="+MWToken;
 	parent.frames['INSUAuditReport'].location.href=lnk;
 	var lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=INSUAuditRepDetails&UserDr="+""+"&StartDate="+""+"&EndDate="+""+"&Job="+"";
+	lnk+="&MWToken="+MWToken;
 	parent.frames['INSUAuditRepDetails'].location.href=lnk;
 	}
 
@@ -71,6 +88,7 @@ function SelectRowHandler(index,rowData)	{
 		var EndDate=getValueById("EndDate") ;
 	}
 	var lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=INSUAuditRepDetails&UserDr="+UserRowid+"&StartDate="+StartDate+"&EndDate="+EndDate+"&Job="+Job;
+	if ("undefined"!==typeof websys_getMWToken){ lnk += "&MWToken="+websys_getMWToken() } 
 	parent.frames['INSUAuditRepDetails'].location.href=lnk;
 }
 
@@ -230,6 +248,18 @@ function Export_Click() //增加打印功能 Lou 2011-10-22
 	//DHCWeb_HISUIalert("导出完成");
 	} 
 }
+
+function Find_onclick()
+{
+	
+	var lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=INSUAuditRepDetails&UserDr="+""+"&StartDate="+""+"&EndDate="+""+"&Job="+"";
+	if ("undefined"!==typeof websys_getMWToken){ lnk += "&MWToken="+websys_getMWToken() } 
+	parent.frames['INSUAuditRepDetails'].location.href=lnk;
+	//Query_click();
+
+}
+
+
 function init_Layout(){
 	$('.datagrid-sort-icon').text('')
 	$('td.i-tableborder>table').css("border-spacing","0px 8px");
@@ -238,4 +268,4 @@ function init_Layout(){
 	$('#PageContent').find('.panel-body-noheader').css('margin-top','1px');
 	
 }
-    document.body.onload = BodyLoadHandler;
+document.body.onload = BodyLoadHandler;

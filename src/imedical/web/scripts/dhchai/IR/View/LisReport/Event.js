@@ -7,7 +7,7 @@ function InitLisReportWinEvent(obj){
 	});
 	/*****搜索功能*****/
     $("#btnsearch").on('click', function(){
-       $('#gridLabVisitNumber').DataTable().search($('#search').val(),true,true).draw();
+       $('#gridLabVisitNumber').DataTable().search($('#search').val(),false,true).draw();
        
     });
 	
@@ -46,7 +46,7 @@ function InitLisReportWinEvent(obj){
 								html+="<tr>";
 								html+="<td style='border-top:0;'>"+ResuntSen.record[j].AntCode+"</td>";
 								html+="<td style='border-top:0;'>"+ResuntSen.record[j].AntDesc+"</td>";
-								html+="<td style='border-top:0;border-right-width:1px;'>"+ResuntSen.record[j].Sensitivity+"</td>";
+								html+="<td style='border-top:0;border-right-width:1px;'>"+ResuntSen.record[j].Sensitivity+ ((ResuntSen.record[j].IsInt==1) ? '<div style="display:inline;margin-left:3px;background-color:red;color:#fff;border-radius:3px;font-size:10px;padding:2px;width:18px;font-weight: 600;">天</div>' :'')+"</td>";
 								html+="</tr>";
 							}
 							//html+="<tfoot>"; 
@@ -101,6 +101,37 @@ function InitLisReportWinEvent(obj){
 			$("#gridLabHisRepResult tbody").html(bodyhtml1row+bodyhtml2row);
 			// 处理表体
 			var bodyhtml  = "";
+			for (var j=0;j<LabHisData.total;j++){ //先生成行列 ,再填充数据
+				var VisitReportID = LabHisData.record[j].VisitReportID;			
+				var TestDesc = LabHisData.record[j].TestDesc;
+				var TestCode = LabHisData.record[j].TestCode;
+				var Result = LabHisData.record[j].Result;
+				var AbFlag = LabHisData.record[j].AbFlag;		
+				
+				//异常提示
+				if (typeof obj.AbFlagBack[AbFlag] != "undefined"){
+					Result = '<div style="background:'+obj.AbFlagBack[AbFlag]+';width:100%;">'+AbFlag+ "&nbsp;&nbsp;" +Result+ '</div>';
+				}
+				
+				if (bodyhtml.indexOf("<tr id="+TestCode+">")<0){							
+					bodyhtml+="<tr id="+TestCode+"><td style='border-top:0;text-align:center;'>"+TestDesc+"</td></tr>";
+					var tmpbodyhtml="<tr id="+TestCode+"><td style='border-top:0;text-align:center;'>"+TestDesc+"</td></tr>";
+					$("#gridLabHisRepResult tbody").append(tmpbodyhtml);
+				}
+				
+				if (($("tr#"+TestCode+" td").length)<(ColCnt+1)){
+					var tmphtml="";
+					$("tr#"+TestCode+" td:not(:first-child)").html("");
+					for (var i=$("tr#"+TestCode+" td").length;i<(ColCnt+1);i++){
+						var ind = obj.HeadArray[i-1];
+						tmphtml+="<td id='td_"+TestCode+"_"+ind+"' style='border-top:0;text-align:center;'></td>";
+					}
+					$("tr#"+TestCode).append(tmphtml);
+				}
+			
+				$('#'+'td_'+TestCode+"_"+VisitReportID).html(Result);  //填充数据				
+			}
+			/*
 			for (var j=0;j<LabHisData.total;j++){
 				var TestDesc = LabHisData.record[j].TestDesc;
 				var TestCode = LabHisData.record[j].TestCode;
@@ -139,6 +170,7 @@ function InitLisReportWinEvent(obj){
 				}
 				$("tr#"+TestCode+" td").eq(ColIndex).html(Result);
 			}
+			*/
 			obj.Layer();
 			$("#gridLabHisRepResult tr").click(function(){
 		        $(this).css("background-color","#0088CC");

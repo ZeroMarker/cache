@@ -1,46 +1,38 @@
 ﻿
 //关闭窗口
 function closeWindow() {
-    window.opener = null;
-    window.open('', '_self');
-    window.close();
+    if (window.returnValue) {
+        if (window.parent.HisTools['hislinkWindow'].args.confirmCallback) {
+            window.parent.HisTools['hislinkWindow'].args.confirmCallback();
+        }
+    } else {
+        if (window.parent.HisTools['hislinkWindow'].args.cancelCallback) {
+            window.parent.HisTools['hislinkWindow'].args.cancelCallback();
+        }
+    }
+    if ((window.parent)&&(window.parent.closeDialog)){
+        window.parent.closeDialog(dialogId);
+    }
 }
 
 $(function () {
+    document.title = title;
 
-    var args = opener.HisTools.hislinkWindow.args;
-    //var args = window.HisTools.hislinkWindow.args;
-    document.title = args.title;
-
-    var isConfirm = false;
+    window.returnValue = false;
+    
     $('#confirm').bind('click', function () {
-        isConfirm = true;
-        //window.$('#'+args.id).window('close');
-        /*if (args.confirmCallback)
-            args.confirmCallback();*/
+        window.returnValue = true;
         closeWindow();
     });
     $('#cancel').bind('click', function () {
-        isConfirm = false;
-        //window.$('#'+args.id).window('close');
-        /*if (args.cancelCallback)
-            args.cancelCallback();*/
+        window.returnValue = false;
         closeWindow();
     });
 
-    window.onunload = function () {
-        if (isConfirm) {
-            if (args.confirmCallback)
-                args.confirmCallback();
-        } else {
-            if (args.cancelCallback)
-                args.cancelCallback();
-        }
-    };
 
-    if (null !== args.confirmCallback) {
+    if (null !== isConfirmCallback) {
         $('#confirm').show();
     }
-    $('#frameHIS').attr('src', args.lnk);
+    $('#frameHIS').attr('src', lnk);
 
 });

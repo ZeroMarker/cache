@@ -35,7 +35,10 @@ function InitCaseList()
 			{field:'Desc',title:'方案名称',width:400},
 			{field:'SaveUserID',title:'SaveUserID',width:80,hidden: true},
 			{field:'SaveUserName',title:'保存者',width:160}
-		]]
+		]],
+		onLoadSuccess:function(data){
+			$('#caseList').datagrid('clearSelections');
+		}
 	});
 }
 
@@ -90,11 +93,14 @@ function readQueryCase()
 				CaseID: caseID
 			},
 			success: function(d) {
-				parent.readAdvacedCondition(d);
-				readConditionFlag = "Y";
+				readConditionFlag = parent.readAdvacedCondition(d);
 			},
 			error : function(d) { $.messager.alert("简单提示", "error", 'info');}
 		});
+		if (readConditionFlag == "N")
+		{
+			return;
+		}
 		var readResultColsFlag = "N";
 		jQuery.ajax({
 			type: "post",
@@ -115,7 +121,7 @@ function readQueryCase()
 			closeWindow();
 		}
 	}
-	else
+	else if (selection == null)
 	{
 		$.messager.alert("提示信息", "请选择要读取的方案！","alert");
 		return;
@@ -165,7 +171,7 @@ function deleteQueryCase()
 			return;
 		}
 	}
-	else
+	else if (selection == null)
 	{
 		$.messager.alert("提示信息", "请选择要删除的方案！","alert");
 		return;

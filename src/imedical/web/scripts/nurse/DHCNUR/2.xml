@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.2 (Build 736U)" ts="2017-03-09 14:10:04">
+<Class name="EPRservice.BLL.BLOneStepPrintRecord">
+<ClassType/>
+<ProcedureBlock>0</ProcedureBlock>
+<Super>%RegisteredObject</Super>
+<TimeChanged>63094,70496.310475</TimeChanged>
+<TimeCreated>63169,55562.159608</TimeCreated>
+
+<Query name="GetPrintRecord">
+<Description>
+debug: do ##class(%ResultSet).RunQuery("EPRservice.BLL.BLOneStepPrintRecord","GetPrintRecord","1","20")</Description>
+<Type>%Query</Type>
+<FormalSpec>AStart:%String,ALimit:%String</FormalSpec>
+<Parameter name="ROWSPEC" value="PatientName:%String,UserID:%String,UserCTLocID:%String,EpisodeID:%String,PatientID:%String,PrintTempName:%String,FinishDate:%String,FinishTime:%String"/>
+</Query>
+
+<Method name="GetPrintRecordExecute">
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[&qHandle:%Binary,AStart:%String,ALimit:%String]]></FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	s repid=$I(^CacheTemp)
+	s qHandle=$lb(0,repid,0)
+ 	s ind=1
+ 	
+ 	s count = 0
+
+ 	s FinishDate = ""
+ 	for {
+		s FinishDate =  $o(^DHCEPRI.OneStepPrintRecordI("IdxFinishDateTimeAndUserID", FinishDate),-1)
+		q:(FinishDate = "")
+		s FinishTime = ""
+
+		for {
+			s FinishTime =  $o(^DHCEPRI.OneStepPrintRecordI("IdxFinishDateTimeAndUserID", FinishDate, FinishTime),-1)
+			q:(FinishTime = "")
+			s UserID = ""
+
+			for {
+				s UserID =  $o(^DHCEPRI.OneStepPrintRecordI("IdxFinishDateTimeAndUserID", FinishDate, FinishTime, " "_UserID))
+				s UserID = $tr(UserID, " ")
+				q:(UserID = "")	
+				s rowID = ""
+
+				for {
+					s rowID =  $o(^DHCEPRI.OneStepPrintRecordI("IdxFinishDateTimeAndUserID", FinishDate, FinishTime, " "_UserID, rowID))
+					q:(rowID = "")
+
+					s log = ##class(EPRinstance.OneStepPrintRecord).%OpenId(rowID)
+					continue:(log="")
+		
+					s count = count + 1
+					continue:(count < AStart)
+					q:(count > (AStart + ALimit - 1))
+		
+					s categoryID = log.CategoryID
+					s patientName = log.PatientName
+					s userID = log.UserID
+					s userCTLocID = log.UserCTLocID
+					s episodeID = log.EpisodeID
+					s patientID = log.PatientID
+					s printDocID = log.PrintDocID
+					s printTempName = ..GetEPRTemplateCategoryDesc(printDocID)
+					s finishDate = log.FinishDate
+					s finishTime = log.FinishTime
+		
+					s output = $LB(patientName,userID,userCTLocID,episodeID,patientID,printTempName,finishDate,finishTime)
+					s ^CacheTemp(repid, ind) = output
+					s ind = ind + 1 		
+				}
+				q:(count > (AStart + ALimit - 1))			
+			}
+			q:(count > (AStart + ALimit - 1))
+		}
+		q:(count > (AStart + ALimit - 1))
+ 	}	
+
+	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="GetPrintRecordFetch">
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[&qHandle:%Binary,&Row:%List,&AtEnd:%Integer=0]]></FormalSpec>
+<PlaceAfter>GetPrintRecordExecute</PlaceAfter>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+	Set AtEnd=$LIST(qHandle,1)
+ 	Set repid=$LIST(qHandle,2)
+ 	Set ind=$LIST(qHandle,3)
+ 	Set ind=$o(^CacheTemp(repid,ind))
+ 	If ind="" {				// if there are no more rows, finish fetching
+ 		Set AtEnd=1
+ 		Set Row=""
+ 		kill ^CacheTemp(repid)
+ 	}
+ 	Else      {				// fetch row
+ 		Set Row=^CacheTemp(repid,ind)
+ 	}
+ 	// Save QHandle
+ 	s qHandle=$lb(AtEnd,repid,ind)	
+	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="GetPrintRecordClose">
+<ClassMethod>1</ClassMethod>
+<FormalSpec><![CDATA[&qHandle:%Binary]]></FormalSpec>
+<PlaceAfter>GetPrintRecordExecute</PlaceAfter>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+    Set repid=$LIST(qHandle,2)
+ 	Kill ^CacheTemp(repid)
+	Quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="GetEPRTemplateCategoryDesc">
+<Description>
+Desc:	07病历文书下的模板目录的文字描述
+Input：	ACategoryChapterDocID - 模板目录ID	
+Output: ccDesc - 模板目录的文字描述</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>ACategoryChapterDocID:%String</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	s obj = ##Class(EPRmeta.EPRTemplateCategory).%OpenId(ACategoryChapterDocID)
+	q:(obj = "") ""
+	s ccDesc = obj.CategoryName
+	s ccDesc = $tr(ccDesc, $c(10), "")
+	s ccDesc = $tr(ccDesc, $c(13), "")
+	s ccDesc = $tr(ccDesc, "'", "")
+	
+	q ccDesc
+]]></Implementation>
+</Method>
+
+<Method name="GetRecordTotalCount">
+<Description>
+debug: w ##class(EPRservice.BLL.BLOneStepPrintRecord).GetRecordTotalCount()</Description>
+<ClassMethod>1</ClassMethod>
+<ReturnType>%Integer</ReturnType>
+<Implementation><![CDATA[
+	s count = 0
+	&sql(select COUNT(*) into :count from EPRinstance.OneStepPrintRecord)
+	q count
+]]></Implementation>
+</Method>
+
+<Method name="GetMRPrintRecord">
+<Description>
+debug: w ##class(EPRservice.BLL.BLOneStepPrintRecord).GetMRPrintRecord(201868,512)</Description>
+<ClassMethod>1</ClassMethod>
+<FormalSpec>AEpisodeID:%String,APrintDocID:%String</FormalSpec>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	s found = "false"
+	s rowID = ""
+	for {
+		s rowID = $o(^DHCEPRI.OneStepPrintRecordI("IdxEpisodeIDAndPrintDocID", " "_AEpisodeID, " "_APrintDocID, rowID))
+		q:(rowID = "")
+		
+		s obj = ##Class(EPRinstance.OneStepPrintRecord).%OpenId(rowID)
+		
+		s locID = obj.UserCTLocID
+		//w "locID"_locID,!
+		//病案室
+		s mrLocID=$o(^CTLOC(0,"Code",$Zcvt("病案室","U"),""))
+		//w "mrLocID"_mrUserLocID,!
+		
+		if ($zcvt(locID,"U")=$zcvt(mrLocID,"U"))
+		{
+			s found = "true"
+			q
+		}
+ 	}
+ 	q:(found = "true") "1"	
+ 	q "0"
+]]></Implementation>
+</Method>
+</Class>
+</Export>

@@ -29,7 +29,11 @@ function InitViewport(){
 					var ReportID = row["ReportID"];
 					var EpisodeID = row["EpisodeID"];
 					var PatientID = row["PatientID"];
-					var btn = '<a href="#" class="btn_detail" onclick="objScreen.OpenReport(\'' + ReportID + '\',\'' + EpisodeID + '\',\'' + PatientID + '\')"></a>';
+					if ((typeof HISUIStyleCode != 'undefined') && (HISUIStyleCode=="lite")) {
+						var btn = '<a href="#" class="icon icon-paper" onclick="objScreen.OpenReport(\'' + ReportID + '\',\'' + EpisodeID + '\',\'' + PatientID + '\')"></a>';
+					} else {
+						var btn = '<a href="#" class="btn_detail" onclick="objScreen.OpenReport(\'' + ReportID + '\',\'' + EpisodeID + '\',\'' + PatientID + '\')"></a>';
+					}
 					return btn;
 				}
 			}, 
@@ -40,7 +44,6 @@ function InitViewport(){
 			{field:'Birthday',title:'出生年月日',width:120},
 			{field:'FollowStaDesc',title:'随访状态',width:100},
 			{field:'FollowTimes',title:'随访次数',width:80},
-			{field:'IsDead',title:'是否死亡',width:80},
 			{field:'SurveyOrgan',title:'随访单位',width:150},
 			{field:'SurveyName',title:'随访人',width:100},
 			{field:'SurveyDate',title:'随访日期',width:120},

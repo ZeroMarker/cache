@@ -4,17 +4,26 @@ var editRow2=undefined;
 var ItemOrderQtyLimitDataGrid;
 var ItemConflictDataGrid;
 var ItemReplaceDataGrid;
-var DARCIMPartialStr=[{"code":"1","desc":"一个基本单位"},{"code":"2","desc":"半个基本单位"},{"code":"3","desc":"无限制"}];
+//var DARCIMPartialStr=[{"code":"1","desc":"一个基本单位"},{"code":"2","desc":"半个基本单位"},{"code":"3","desc":"无限制"}];
 var ConflictTypeArr=[{"code":"OW","desc":"单向"},{"code":"TW","desc":"双向"}];
 var dialog1;
 $(function(){
 	InitHospList();
     $("#BFind").click(LoadItemOrderQtyLimitDataGrid);
 });
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function InitHospList()
 {
 	var hospComp = GenHospComp("DHC_ItmMast");
 	hospComp.jdata.options.onSelect = function(e,t){
+		$('#Combo_Arcim').combogrid('setValue',"");
+		$('#Combo_Arcim').combogrid('grid').datagrid('load',{Alias:""});
 		LoadItemOrderQtyLimitDataGrid();
 		editRow=undefined;
 		editRow1=undefined;
@@ -23,6 +32,8 @@ function InitHospList()
 		InitArcimList();
 		InitItemOrderQtyLimitGrid();
 		LoadItemOrderQtyLimitDataGrid();
+		InittabItemReplaceDataGrid();
+		InitCache();
 	}
 }
 function InitItemOrderQtyLimitGrid()
@@ -54,6 +65,8 @@ function InitItemOrderQtyLimitGrid()
                     //cureItemDataGrid.datagrid('addEditor',LocDescEdit);
                     //给当前编辑的行赋值
                     editRow = 0;
+                    var editors = ItemOrderQtyLimitDataGrid.datagrid('getEditors', editRow); 
+                    editors[5].target.combobox('setValue','FU');
                 }
               
             }
@@ -145,17 +158,28 @@ function InitItemOrderQtyLimitGrid()
 				//if(IsCanCrossDay) IsCanCrossDay="Y";
 				//else {IsCanCrossDay="N"};
 				
-				var AllowOnlyOnce=editors[6].target.is(':checked');
+				var AllowOnlyOnce=editors[7].target.is(':checked');
 				if(AllowOnlyOnce) AllowOnlyOnce="Y";
 				else {AllowOnlyOnce="N"};
 				
 				var DARCIMConflictType=rows.DARCIMConflictTypeValue;
-				var PartialValue=rows.DARCIMPartialValue //editors[8].target.combobox('getValue');
-				var AutoInsertONEOrd=editors[8].target.is(':checked');
+				var PartialValue=editors[5].target.combobox('getValue'); //
+				var OrderType=$.m({
+					 ClassName:"web.DHCDocOrderCommon",
+					 MethodName:"GetArcimClassification",
+					 ArcimRowid:ArcimRowid,
+					 CurLogonHosp:session['LOGON.HOSPID']
+				},false);
+				///RW 西药/成药 RC 中草药,L 检验,E 检查,O 其他,""
+				if ((PartialValue=="")&&((OrderType=="RW")||(OrderType=="RC"))) {
+					$.messager.alert("提示", "请选择单次剂量计算偏好");
+					return false;
+				}
+				var AutoInsertONEOrd=editors[9].target.is(':checked');
 				if(AutoInsertONEOrd) AutoInsertONEOrd="Y";
 				else {AutoInsertONEOrd="N"};
 				
-				var SameFreqDifferentDoses=editors[9].target.is(':checked');
+				var SameFreqDifferentDoses=editors[10].target.is(':checked');
 				if(SameFreqDifferentDoses) SameFreqDifferentDoses="Y";
 				else {SameFreqDifferentDoses="N"};
 				
@@ -164,7 +188,24 @@ function InitItemOrderQtyLimitGrid()
 				else {CustomDescOrd="N"};
 				var OrdDateIsCanCrossDay=rows['DARCIMOrdDateCanCrossDay'] ;
 				if (!OrdDateIsCanCrossDay) OrdDateIsCanCrossDay="";
-				var ValStr=DARCIMRowid+"^"+ArcimRowid+"^"+MinQty+"^"+MaxQty+"^"+ShowOEMessage+"^"+RequireNote+"^"+NeedSkinTest+"^"+AlertStockQty+"^"+IPNeedBillQty+"^"+PartialValue+"^"+SttIsCanCrossDay+"^"+AllowOnlyOnce+"^"+DARCIMConflictType+"^"+AutoInsertONEOrd+"^"+SameFreqDifferentDoses+"^"+CustomDescOrd+"^"+OrdDateIsCanCrossDay;
+				var LabOrdDayAllowRepeat=editors[12].target.is(':checked');
+				if(LabOrdDayAllowRepeat) LabOrdDayAllowRepeat="Y";
+				else {LabOrdDayAllowRepeat="N"};
+				var DARCIMCountInButNotOutFlag=editors[13].target.is(':checked')?"Y":"N";
+				var DARCIMCountInButNotOutIPLongOrdRollSttTime=editors[14].target.timespinner('getValue');
+				if (DARCIMCountInButNotOutIPLongOrdRollSttTime!="") {
+					var time= /^([0-1]?[0-9]|2[0-3]):([0-5][0-9])$/;
+					if (time.test(DARCIMCountInButNotOutIPLongOrdRollSttTime) != true) {
+					    $.messager.alert("提示", "计入不记出医嘱-无频次长嘱滚动默认开始时间格式不正确!");
+						return false;
+					}
+					if (DARCIMCountInButNotOutIPLongOrdRollSttTime=="00:00") {
+						$.messager.alert("提示", "计入不记出医嘱-无频次长嘱滚动默认开始时间不能设置为00:00!");
+						return false;
+					}
+				}
+				var NotLimitQty=editors[15].target.is(':checked')?"Y":"N";
+				var ValStr=DARCIMRowid+"^"+ArcimRowid+"^"+MinQty+"^"+MaxQty+"^"+ShowOEMessage+"^"+RequireNote+"^"+NeedSkinTest+"^"+AlertStockQty+"^"+IPNeedBillQty+"^"+PartialValue+"^"+SttIsCanCrossDay+"^"+AllowOnlyOnce+"^"+DARCIMConflictType+"^"+AutoInsertONEOrd+"^"+SameFreqDifferentDoses+"^"+CustomDescOrd+"^"+OrdDateIsCanCrossDay+"^"+LabOrdDayAllowRepeat+"^"+DARCIMCountInButNotOutFlag+"^"+DARCIMCountInButNotOutIPLongOrdRollSttTime+"^"+NotLimitQty;
 				var value=$.m({
 					 ClassName:"DHCDoc.DHCDocConfig.ItemOrderQtyLimit",
 					 MethodName:"save",
@@ -202,10 +243,16 @@ function InitItemOrderQtyLimitGrid()
                 if (rows.length > 0) {
 					var ids = [];
 					for (var i = 0; i < rows.length; i++) {
-						ids.push(rows[i].DARCIMRowid);
+						if (rows[i].DARCIMRowid!=""){
+							ids.push(rows[i].DARCIMRowid);
+						}
 					}
 					var DARCIMRowid=ids.join(',')
 				}else{
+					$.messager.alert('提示',"请选择一条记录!");
+					return false;
+				}
+				if (DARCIMRowid==""){
 					$.messager.alert('提示',"请选择一条记录!");
 					return false;
 				}
@@ -227,76 +274,90 @@ function InitItemOrderQtyLimitGrid()
                 if (rows.length > 0) {
 					var ids = [];
 					for (var i = 0; i < rows.length; i++) {
-						ids.push(rows[i].DARCIMRowid);
+						if (rows[i].DARCIMRowid!=""){
+							ids.push(rows[i].DARCIMRowid);
+						}
 					}
 					var DARCIMRowid=ids.join(',')
 				}else{
 					$.messager.alert('提示',"请选择一条记录!");
 					return false;
 				}
-                $("#dialog-ItemReplace").css("display", ""); 
-				dialog1 = $("#dialog-ItemReplace" ).dialog({
-				  autoOpen: false,
-				  height: 500,
-				  width: 600,
-				  modal: true
-				});
-				dialog1.dialog( "open" );
+				if (DARCIMRowid==""){
+					$.messager.alert('提示',"请选择一条记录!");
+					return false;
+				}
+				$("#dialog-ItemReplace").dialog("open");
 				InittabItemReplaceDataGrid(DARCIMRowid);
             }
         },'-', {
             text: '导出EXCEL',
             iconCls: 'icon-export-data',
             handler: function() {
-                //获取Datagride的列  
-				var rows = ItemOrderQtyLimitDataGrid.datagrid('getRows'); 
-				var data=ItemOrderQtyLimitDataGrid.datagrid('getData');
-				var total=data.total+1
-				var columns = ItemOrderQtyLimitDataGrid.datagrid("options").columns[0]; 
-				var oXL = new ActiveXObject("Excel.Application"); //创建AX对象excel   
-				var oWB = oXL.Workbooks.Add(); //获取workbook对象   
-				var oSheet = oWB.ActiveSheet; //激活当前sheet 			
-				//设置工作薄名称  
-				oSheet.name = "医嘱项扩展设定";  
-				//设置表头  
-				for (var i = 0; i < columns.length; i++) {  
-						oSheet.Cells(1, i+1).value = columns[i].title;     
-				}
-				var num1=0
-				LoadItemOrderQtyLimitDataGrid()
-				for (var j=1; j<total; j++)
-				{
-					var objScope=$.m({
-						 ClassName:"DHCDoc.DHCDocConfig.ItemOrderQtyLimit",
-						 MethodName:"ItemOrderQtyLimitListExport1",
-						 num:j
-					},false);
-					objScope=eval("(" + objScope + ")");
+	            var xlsname="医嘱项扩展设定";
+	            var Str ="(function test(x){"
+					Str +="var xlApp = new ActiveXObject('Excel.Application');"
+					Str +="var xlBook = xlApp.Workbooks.Add();"
+					Str +="var xlSheet = xlBook.ActiveSheet;"
+					Str +="xlSheet.Columns.NumberFormatLocal = '@';"
+					//设置工作薄名称  
+					Str +="xlSheet.name = '"+xlsname+"DocItemDefault.xlsx';"; 
+					var columns = ItemOrderQtyLimitDataGrid.datagrid("options").columns[0];
+					Str +="xlSheet.cells("+(1)+","+(1)+")='ID';";
+					Str +="xlSheet.cells("+(1)+","+(2)+")='医嘱项ID';";
+					var columnCount=2;
+					for (var i=0;i<columns.length;i++) {
+						if (columns[i].hidden) continue;
+						Str +="xlSheet.cells("+(1)+","+(columnCount+1)+")='"+columns[i].title+"';";
+						columnCount++;
+					}
 					/*
-					DARCIMRowid_"^"_DARCIMARCIMDR_"^"_ARCIMDesc_"^"_DARCIMMinQty_"^" 0-3
-					_DARCIMMaxQty_"^"_DARCIMShowOEMessage_"^"_DARCIMRequireNote_"^"_ 4-6
-					DARCIMNeedSkinTest_"^"_DARCIMAlertStockQty_"^"_DARCIMIPNeedBillQty_"^"_DARCIMPartialValue_"^"_ 7-10
-					DARCIMPartial_"^"_DARCIMCanCrossDay_"^"_DARCIMAllowOnlyOnce_"^"_DARCIMConflictType_"^"_AutoInsertONEOrd 11-15
+					DARCIMRowid_"^"_DARCIMARCIMDR_"^"_ARCIMDesc_"^"_DARCIMShowOEMessage
+					_"^"_DARCIMRequireNote_"^"_DARCIMAlertStockQty_"^"_
+					DARCIMIPNeedBillQty_"^"_DARCIMPartial_"^"_
+					DARCIMSttCanCrossDay_"^"_AllowOnlyOnce_"^"_DARCIMConflictType
+					_"^"_AutoInsertONEOrd_"^"_SameFreqDifferentDoses_"^"_DARCIMOrdDateCanCrossDay
+					_"^"_LabOrdDayAllowRepeat_"^"_DARCIMCountInButNotOutFlag
+					_"^"_DARCIMCountInButNotOutIPLongOrdRollSttTime
 					*/
-					var value1=objScope.result
-					var rtnarry=value1.split("^")
-					num1=num1+1
-					oSheet.Cells(num1 + 1, 1).value = rtnarry[0];
-					oSheet.Cells(num1 + 1, 2).value = rtnarry[2];
-					oSheet.Cells(num1 + 1, 3).value = rtnarry[1]; 
-					oSheet.Cells(num1 + 1, 4).value = rtnarry[5]; 
-					oSheet.Cells(num1 + 1, 5).value = rtnarry[6]; 
-					oSheet.Cells(num1 + 1, 6).value = rtnarry[8]; 
-					oSheet.Cells(num1 + 1, 7).value = rtnarry[9]; 
-					oSheet.Cells(num1 + 1, 8).value = rtnarry[12];
-					oSheet.Cells(num1 + 1, 9).value = rtnarry[13];
-					oSheet.Cells(num1 + 1, 10).value = rtnarry[14];
-					oSheet.Cells(num1 + 1, 11).value = rtnarry[15];
-					oSheet.Cells(num1 + 1, 12).value = rtnarry[16];
-				}
-				oXL.Visible = true; //设置excel可见属性
+					LoadItemOrderQtyLimitDataGrid();
+					var data=ItemOrderQtyLimitDataGrid.datagrid('getData');
+					for (var i=1; i<(data.total+1); i++){
+						var objScope=$.m({
+							 ClassName:"DHCDoc.DHCDocConfig.ItemOrderQtyLimit",
+							 MethodName:"ItemOrderQtyLimitListExport1",
+							 num:i
+						},false);
+						objScope=eval("(" + objScope + ")");
+						var value1=objScope.result;
+						var rtnarry=value1.split("^");
+						for (var j=0;j<rtnarry.length;j++){
+							Str +="xlSheet.cells("+(i+1)+","+(j+1)+")='"+rtnarry[j]+"';";
+						}
+					}	
+					var filename=xlsname+".xls";
+					Str += "var fname = xlApp.Application.GetSaveAsFilename('"+filename+"', 'Excel Spreadsheets (*.xls), *.xls');" 
+					Str += "xlBook.SaveAs(fname);"
+					Str +="xlApp.Visible = false;"
+					Str +="xlApp.UserControl = false;"
+					Str +="xlBook.Close(savechanges=false);"
+					Str +="xlApp.Quit();"
+					Str +="xlSheet=null;"
+					Str +="xlBook=null;"
+					Str +="xlApp=null;"
+					Str +="return 1;}());";
+				//以上为拼接Excel打印代码为字符串
+				CmdShell.notReturn =1;   //设置无结果调用，不阻塞调用
+				var rtn =CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
 			}
-        }];
+        },'-',{
+			id:'tip',
+			iconCls: 'icon-help',
+			text:'互斥类型使用说明',
+			handler: function(){
+				$("#tip").popover('show');
+			}
+	    }];
 	ItemOrderQtyLimitColumns=[[    
                     { field: 'DARCIMRowid', title: 'ID', width: 1,hidden:true},
                     { field: 'ARCIMDesc', title: '名称', width: 250,
@@ -316,7 +377,9 @@ function InitItemOrderQtyLimitGrid()
 									fit: true,//自动大小   
 									pageSize: 10,//每页显示的记录条数，默认为10   
 									pageList: [10],//可以设置每页记录条数的列表  
-		                            url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
+									delay:500,
+		                            //url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
+		                            url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ItemOrderQtyLimit&QueryName=FindItem",
 		                            columns:[[
 		                                {field:'ArcimDesc',title:'名称',width:400,sortable:true},
 					                    {field:'ArcimRowID',title:'ID',width:120,sortable:true},
@@ -341,7 +404,7 @@ function InitItemOrderQtyLimitGrid()
 					{ field: 'DARCIMMaxQty', title: '最大量', width: 100, align: 'center', sortable: true,
 					  editor : {type : 'text',options : {}}
 					},*/
-					{ field: 'DARCIMShowOEMessage', title: '是否提示', width: 50,
+					{ field: 'DARCIMShowOEMessage', title: '是否提示', width: 70,
 					   editor : {
                             type : 'icheckbox',
                             options : {
@@ -361,7 +424,7 @@ function InitItemOrderQtyLimitGrid()
 				 			else  return "否";
 				 		}
 					},
-					{ field: 'DARCIMRequireNote', title: '需要备注(非草药)', width: 80,
+					{ field: 'DARCIMRequireNote', title: '需要备注(非草药)', width: 115,
 					   editor : {
                             type : 'icheckbox',
                             options : {
@@ -390,7 +453,7 @@ function InitItemOrderQtyLimitGrid()
                                 }
                        }
 					},*/
-					{ field: 'DARCIMAlertStockQty', title: '最小提示库存(待用)', width: 100,
+					{ field: 'DARCIMAlertStockQty', title: '最小提示库存(待用)', width: 130,
 					   editor : {type : 'text',options : {}}
 					},
 					{ field: 'DARCIMIPNeedBillQty', title: '住院用整数量', width: 100,
@@ -413,24 +476,29 @@ function InitItemOrderQtyLimitGrid()
 				 			else  return "否";
 				 		}
 					},
-					/*{ field: 'DARCIMPartialValue', title: '', hidden:true,
+					{ field: 'DARCIMPartialValue', title: '单次剂量计算偏好', width: 175,
 					   editor:{
 					        type:'combobox',
 					        options:{
 						      valueField:'code',
 						      textField:'desc',
 							  required:false,
-						      data:DARCIMPartialStr
+						      data:[
+						      		{"code":"A","desc":"按实际单次剂量计算"},
+						      		{"code":"H","desc":"偏好取半(即不足一半取半,足够一半取整)"},
+						      		{"code":"FD","desc":"偏好向下取整(即不为整数则向下取整，最小值不低于1)"},
+						      		{"code":"FU","desc":"偏好向上取整(即不为整数则向上取整)"}
+						      	   ]
 					        }
 				         },
 						  formatter:function(value, record){
 							  return record.DARCIMPartial;
 						 }
 					},
-					{ field: 'DARCIMPartial', title: '', hidden:true
+					/*{ field: 'DARCIMPartial', title: '', hidden:true
 					
 					},*/
-					{ field: 'DARCIMSttCanCrossDay', title: '修改医嘱开始日期时间权限', width: 100,
+					{ field: 'DARCIMSttCanCrossDay', title: '修改医嘱开始日期时间权限', width: 175,
 						editor:{
 					        type:'combobox',
 					        options:{
@@ -473,7 +541,7 @@ function InitItemOrderQtyLimitGrid()
                                     off : ''
                                 }
                        }*/
-					},{ field: 'AllowOnlyOnce', title: '只允许开一次', width: 80,
+					},{ field: 'AllowOnlyOnce', title: '只允许开一次(所有就诊)', width: 160,
 					   editor : {
                             type : 'icheckbox',
                             options : {
@@ -493,7 +561,7 @@ function InitItemOrderQtyLimitGrid()
 				 			else  return "否";
 				 		}
 					},
-					{ field: 'DARCIMConflictType', title: '医嘱互斥类型(仅西医)', width: 100,
+					{ field: 'DARCIMConflictType', title: '医嘱互斥类型(仅西医)', width: 150,
 					   editor:{
 					        type:'combobox',
 					        options:{
@@ -514,7 +582,7 @@ function InitItemOrderQtyLimitGrid()
 					},
 					/*{ field: 'DARCIMConflictTypeValue', title: '', width: 50, align: 'center', sortable: true,hidden:true
 					
-					},*/{ field: 'AutoInsertONEOrd', title: '长期自备医嘱自动插入取药医嘱', width: 120,
+					},*/{ field: 'AutoInsertONEOrd', title: '长期自备或嘱托自动插入取药医嘱', width: 220,
 					   editor : {
                             type : 'icheckbox',
                             options : {
@@ -534,7 +602,7 @@ function InitItemOrderQtyLimitGrid()
 				 			else  return "否";
 				 		}
 					},
-					{ field: 'SameFreqDifferentDoses', title: '同频次不同剂量医嘱', width: 120,
+					{ field: 'SameFreqDifferentDoses', title: '同频次不同剂量医嘱', width: 140,
 					   editor : {
                             type : 'icheckbox',
                             options : {
@@ -575,7 +643,7 @@ function InitItemOrderQtyLimitGrid()
 				 		}
 					}*/
 					,
-					{ field: 'DARCIMOrdDateCanCrossDay', title: '修改开医嘱日期时间权限', width: 100,
+					{ field: 'DARCIMOrdDateCanCrossDay', title: '修改开医嘱日期时间权限', width: 180,
 						editor:{
 					        type:'combobox',
 					        options:{
@@ -611,6 +679,67 @@ function InitItemOrderQtyLimitGrid()
 					 			return 'color:#f16e57;';
 					 		}
 		 				}
+					},{ field: 'LabOrdDayAllowRepeat', title: '检验医嘱同一天允许重复(仅门诊)', width: 230,
+					   editor : {
+                            type : 'icheckbox',
+                            options : {
+                                on : 'Y',
+                                off : ''
+                            }
+                       },
+                       styler: function(value,row,index){
+			 				if (value=="Y"){
+				 				return 'color:#21ba45;';
+				 			}else{
+					 			return 'color:#f16e57;';
+					 		}
+		 				},
+		 				formatter:function(value,record){
+				 			if (value=="Y") return "是";
+				 			else  return "否";
+				 		}
+					},{ field: 'DARCIMCountInButNotOutFlag', title: '计入不记出医嘱标识', width: 135,
+					   editor : {
+                            type : 'icheckbox',
+                            options : {
+                                on : 'Y',
+                                off : ''
+                            }
+                       },
+                       styler: function(value,row,index){
+			 				if (value=="Y"){
+				 				return 'color:#21ba45;';
+				 			}else{
+					 			return 'color:#f16e57;';
+					 		}
+		 				},
+		 				formatter:function(value,record){
+				 			if (value=="Y") return "是";
+				 			else  return "否";
+				 		}
+					},
+					{ field: 'DARCIMCountInButNotOutIPLongOrdRollSttTime', title: '计入不记出医嘱-无频次长嘱滚动默认开始时间', width: 295, align: 'center', sortable: true,
+					  editor : {type : 'timespinner',options : {}}
+					},
+					{ field: 'NotLimitQty', title: '检查检验不控制数量', width: 135,
+					   editor : {
+                            type : 'icheckbox',
+                            options : {
+                                on : 'Y',
+                                off : ''
+                            }
+                       },
+                       styler: function(value,row,index){
+			 				if (value=="Y"){
+				 				return 'color:#21ba45;';
+				 			}else{
+					 			return 'color:#f16e57;';
+					 		}
+		 				},
+		 				formatter:function(value,record){
+				 			if (value=="Y") return "是";
+				 			else  return "否";
+				 		}
 					}
     			 ]];
 	ItemOrderQtyLimitDataGrid=$('#tabItemOrderQtyLimit').datagrid({  
@@ -619,7 +748,7 @@ function InitItemOrderQtyLimitGrid()
 		border : false,
 		striped : true,
 		singleSelect : true,
-		fitColumns : true,
+		fitColumns : false,
 		autoRowHeight : false,
 		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ItemOrderQtyLimit&QueryName=ItemOrderQtyLimitList",
 		loadMsg : '加载中..',  
@@ -650,6 +779,7 @@ function InitItemOrderQtyLimitGrid()
 			editRow=undefined;
 		}
 	});
+	InitTip();
 };
 function LoadItemOrderQtyLimitDataGrid()
 { 
@@ -817,7 +947,9 @@ function InittabItemConflict(DARCIMRowid)
 									fit: true,//自动大小   
 									pageSize: 10,//每页显示的记录条数，默认为10   
 									pageList: [10],//可以设置每页记录条数的列表  
-		                            url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
+									delay: 500,  
+									url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ItemOrderQtyLimit&QueryName=FindItem",
+		                            //url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
 		                            columns:[[
 		                                {field:'ArcimDesc',title:'名称',width:400,sortable:true},
 					                    {field:'ArcimRowID',title:'ID',width:120,sortable:true},
@@ -875,7 +1007,8 @@ function InitArcimList()
 		panelHeight:400,
 		delay: 500,    
 		mode: 'remote',    
-		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
+		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ItemOrderQtyLimit&QueryName=FindItem",
+		//url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
 		fitColumns: true,   
 		striped: true,   
 		editable:true,   
@@ -1015,11 +1148,13 @@ function InittabItemReplaceDataGrid(DARCIMRowid)
 								ItemReplaceDataGrid.datagrid("rejectChanges");
 								//ItemReplaceDataGrid.datagrid("endEdit", editRow);
 								editRow2 = undefined;
-								ItemReplaceDataGrid.datagrid('load');
-								ItemReplaceDataGrid.datagrid('unselectAll');
+								ItemReplaceDataGrid.datagrid('unselectAll').datagrid('load');
 								$.messager.popover({msg:"保存成功!",type:'success'});
 							}else if(value=="-1"){
 								$.messager.alert('提示',"保存失败!记录重复!");
+								return false;
+							}else if(value=="-2"){
+								$.messager.alert('提示',"保存失败！替换项不能与被替换项一致！");
 								return false;
 							}else{
 								$.messager.alert('提示',"保存失败:"+value);
@@ -1060,7 +1195,9 @@ function InittabItemReplaceDataGrid(DARCIMRowid)
 									fit: true,//自动大小   
 									pageSize: 10,//每页显示的记录条数，默认为10   
 									pageList: [10],//可以设置每页记录条数的列表  
-		                            url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
+									delay: 500,  
+									url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ItemOrderQtyLimit&QueryName=FindItem",
+		                            //url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
 		                            columns:[[
 		                                {field:'ArcimDesc',title:'名称',width:400,sortable:true},
 					                    {field:'ArcimRowID',title:'ID',width:120,sortable:true},
@@ -1115,5 +1252,18 @@ function InittabItemReplaceDataGrid(DARCIMRowid)
 			$(this).datagrid('unselectAll');
 			editRow2=undefined;
 		}
+	});
+}
+function InitTip(){
+	var _content = "<ul class='tip_class'><li style='font-weight:bold'>医嘱互斥类型使用说明</li>" + 
+		'<li>以"一级护理"，互斥医嘱维护 二级护理、三级护理、特级护理 为例:</li>' +
+		'<li>1、单向： 录入"一级护理"后，互斥项里面的医嘱不能录入或录入后停止原"一级护理"，但不存在"一级护理"时互斥项里面的医嘱不进行相互互斥，即二级护理和三级护理、特级护理之间不进行互斥。</li>' +
+		'<li>2、双向(默认)：录入"一级护理"后,互斥项里面的医嘱不能录入或录入后停止原"一级护理"，且互斥项里面的医嘱也相互互斥,即二级护理和三级护理、特级护理相互之间互斥。</li>'
+		"</ul>" 
+		
+	$("#tip").popover({
+		width:500,
+		trigger:'hover',
+		content:_content
 	});
 }

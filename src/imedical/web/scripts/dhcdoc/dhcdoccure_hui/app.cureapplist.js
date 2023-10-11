@@ -462,6 +462,7 @@ function refreshTab(cfg){
     if(refresh_tab && refresh_tab.find('iframe').length > 0){  
 	    var _refresh_ifram = refresh_tab.find('iframe')[0];  
 	    var refresh_url = cfg.url?cfg.url:_refresh_ifram.src;   
+		if(typeof websys_writeMWToken=='function') refresh_url=websys_writeMWToken(refresh_url);   
 	    _refresh_ifram.contentWindow.location.href=refresh_url;  
     }  
 }

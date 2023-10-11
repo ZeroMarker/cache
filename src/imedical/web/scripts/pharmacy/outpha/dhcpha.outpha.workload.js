@@ -30,6 +30,10 @@ $(function () {
 	$("#btn-find").on("click", Query);
 	$("#btn-clear").on("click", ClearConditions);
 	$("#btn-print").on("click", BtnPrintHandler);
+	$("#btn-export").on('click',function(){
+		ExportAllToExcel("workloaddg")
+
+	});
 	/* 绑定按钮事件 end*/
 ;
 	$("#workloaddg").closest(".panel-body").height(GridCanUseHeight(1));
@@ -40,93 +44,119 @@ function InitWorkLoadList() {
 	//定义columns
 	var columns = [[{
 				field: 'TPhName',
-				title: '药房人员',
+				title: ("药房人员"),
 				align: 'center',
 				width: 125
 			}, {
 				field: 'TPYRC',
-				title: '配药处方',
+				title: ("配药处方"),
 				width: 120,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'TFYRC',
-				title: '发药处方',
+				title: ("发药处方"),
 				width: 120,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'TPYJE',
-				title: '配药金额',
+				title: ("配药金额"),
 				width: 120,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'TFYJE',
-				title: '发药金额',
+				title: ("发药金额"),
 				width: 120,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'TPYL',
-				title: '配药量',
+				title: ("配药量"),
 				width: 100,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'TFYL',
-				title: '发药量',
+				title: ("发药量"),
 				width: 100,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'TRetPresc',
-				title: '退药处方',
+				title: ("退药处方"),
 				width: 100,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'TRetMoney',
-				title: '退药金额',
+				title: ("退药金额"),
 				width: 100,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'TRetYL',
-				title: '退药量',
+				title: ("退药量"),
 				width: 110,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'TPyFS',
-				title: '配药付数',
+				title: ("配药付数"),
 				width: 120,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'TFyFS',
-				title: '发药付数',
+				title: ("发药付数"),
 				width: 100,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'TTyFS',
-				title: '退药付数',
+				title: ("退药付数"),
 				width: 100,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'TJYFS',
-				title: '煎药付数',
+				title: ("煎药付数"),
 				width: 120,
 				sortable: true,
 				hidden: true
 			}, {
 				field: 'TJYCF',
-				title: '煎药处方',
+				title: ("煎药处方"),
 				width: 120,
 				sortable: true,
 				hidden: true
+			}, {
+				field: 'TRetCancleAmt',
+				title: ("撤消退药金额"),
+				width: 120,
+				sortable: true
+			}, {
+				field: 'TRetCancleItmNum',
+				title: ("撤消退药量"),
+				width: 120,
+				sortable: true
+			}, {
+				field: 'TRetCanclePrescNum',
+				title: ("撤消退药处方数"),
+				width: 120,
+				sortable: true
+			}, {
+				field: 'TRetCancleCyFs',
+				title: ("撤消退药付数"),
+				width: 120,
+				sortable: true,
+				hidden: true
+			}, {
+				field: 'TSumAmt',
+				title: ("合计金额"),
+				width: 120,
+				sortable: true
 			}
 		]];
 	var dataGridOption = {
@@ -172,7 +202,7 @@ function ClearConditions() {
 function BtnPrintHandler() {
 	if ($('#workloaddg').datagrid('getData').rows.length == 0) //获取当面界面数据行数
 	{
-		dhcphaMsgBox.alert("页面没有数据！");
+		dhcphaMsgBox.alert($g("页面没有数据！"));
 		return;
 	}
 	var WorkLoaddgOption = $("#workloaddg").datagrid("options");

@@ -22,6 +22,7 @@ function initPageDefault(){
 	
 	InitMainList();    /// 初始化交班列表
 	InitDetList();     /// 初始化明细列表
+	find_click();	   /// 默认查询一遍
 }
 
 /// 初始化页面参数
@@ -74,7 +75,13 @@ function InitComponents(){
 	if (modeType == "T"){
 		$(".panel-south").hide();
 	}
-	
+	/// 极简ui样式修改  弹窗时背景色为#fff
+	if ((HISUIStyleCode==="lite")&&(modeType != "T")){
+		$(".background-warp").css('background','#F5F5F5');
+	}else{
+		$(".background-warp").css('background','#FFF');
+	}
+
 	if (EmType == "Nur"){
 		$("#MedGrp").next(".combo").hide();
 		$("#MedGrpLabel").hide();
@@ -102,8 +109,8 @@ function InitMainList(){
 		},
 		{field:'bsStatus',title:'状态',width:120,align:'center',formatter:
 			function (value, row, index){
-				if (value == "N"){return '<font style="color:#ff3d2c;font-weight:700;">未完成</font>'}
-				else {return '<font style="color:green;font-weight:700;">已完成</font>'}
+				if (value == "N"){return '<font style="color:#ff3d2c;font-weight:700;">'+$g("未完成")+'</font>'}
+				else {return '<font style="color:green;font-weight:700;">'+$g("已完成")+'</font>'}
 			}
 		}
 	]];
@@ -125,6 +132,7 @@ function InitMainList(){
 		},
 		onLoadSuccess:function(data){
 			if (typeof data.rows[0] != "undefined"){
+				$("#bmMainList").datagrid("selectRow", 0);
 				$("#bmDetList").datagrid("load",{"Params":data.rows[0].BsID});
 			}else{
 				$("#bmDetList").datagrid("load",{"Params":0});
@@ -170,6 +178,7 @@ function InitDetList(){
 	///  定义datagrid
 	var option = {
 		//showHeader:false,
+		toolbar:[],
 		rownumbers : true,
 		singleSelect : true,
 		pagination: true
@@ -183,7 +192,7 @@ function InitDetList(){
 /// 链接
 function SetCellLogUrl(value, rowData, rowIndex){
 	
-	var html = "<a href='#' onclick='log("+ rowData.EpisodeID +")' style='display:block;width:38px;background:#7dba56;padding:3px 6px;color:#fff;border-radius: 4px 4px 4px 4px;'>日志</a>";
+	var html = "<a href='#' onclick='log("+ rowData.EpisodeID +")' style='display:block;width:38px;background:#7dba56;padding:3px 6px;color:#fff;border-radius: 4px 4px 4px 4px;'>"+$g("日志")+"</a>";
 	return html;
 }
 
@@ -210,8 +219,12 @@ function print_click(){
 		$.messager.alert("提示:","请先选择要打印的交班记录！","warning");
 		return;
 	}
-	var jsonObjMain = "交班日期: " + rowsData.bsDate + "       医疗组: " + rowsData.bsMedGrp + "       留观区: " + rowsData.bsWard  + "       班次: " + rowsData.bsSchedule + "       交班人: " + rowsData.bsUser;
-	window.open("dhcem.bedsideshiftprint.csp?BsID="+ rowsData.BsID +"&jsonObjMain="+ jsonObjMain);
+	var jsonObjMain = $g("交班日期")+": " + rowsData.bsDate + "       "+$g("医疗组")+": " + rowsData.bsMedGrp + "       "+$g("留观区")+": " + rowsData.bsWard  + "       "+$g("班次")+": " + rowsData.bsSchedule + "       "+$g("交班人")+": " + rowsData.bsUser;
+	var link="dhcem.bedsideshiftprint.csp?BsID="+ rowsData.BsID +"&jsonObjMain="+ jsonObjMain;
+	if ('undefined'!==typeof websys_getMWToken){
+		link += "&MWToken="+websys_getMWToken();
+	}
+	window.open(link);
 	return;
 }
 
@@ -224,7 +237,10 @@ function export_click(){
 		return;
 	}
 	var jsonObjArr = rowsData;
-	
+	if(jsonObjArr.bsPatNum==0){
+		$.messager.alert("提示:","请选择有交班人数的交班记录！","warning");
+		return;
+	}
 	runClassMethod("web.DHCEMBedSideShift","GetExpEmShiftDetail",{"BsID":rowsData.BsID},function(jsonString){
 		
 		if (jsonString == null){
@@ -240,9 +256,12 @@ function export_click(){
 function log(EpisodeID){
 	
 	if (!hasLog(EpisodeID)) return;  /// 病人是否有交班日志 
-	
+	var link="dhcem.pattimeaxis.csp?PatientID=&EpisodeID="+ EpisodeID +"&EmType="+ EmType;
+	if ('undefined'!==typeof websys_getMWToken){
+		link += "&MWToken="+websys_getMWToken();
+	}
 	commonShowWin({
-		url:"dhcem.pattimeaxis.csp?PatientID=&EpisodeID="+ EpisodeID +"&EmType="+ EmType,
+		url:link,
 		title:"历次交班信息",
 		height: (window.screen.availHeight - 180)	
 	})
@@ -251,7 +270,8 @@ function log(EpisodeID){
 /// 导出交班记录
 function Export_Xml(jsonObjArr, jsonItemArr){
 	
-	var title = "交班日期: " + jsonObjArr.bsDate + "       医疗组: " + jsonObjArr.bsMedGrp + "       留观区: " + jsonObjArr.bsWard  + "       班次: " + jsonObjArr.bsSchedule + "       交班人: " + jsonObjArr.bsUser;
+	var title = $g("交班日期")+": " + jsonObjArr.bsDate + "       "+$g("医疗组")+": " + jsonObjArr.bsMedGrp + "       "+$g("留观区")+": " + jsonObjArr.bsWard  + "       "+$g("班次")+": " + jsonObjArr.bsSchedule + "       "+$g("交班人")+": " + jsonObjArr.bsUser;
+	if(EmType=="Nur") title=$g("交班日期")+": " + jsonObjArr.bsDate + "       "+$g("留观区")+": " + jsonObjArr.bsWard  + "       "+$g("班次")+": " + jsonObjArr.bsSchedule + "       "+$g("交班人")+": " + jsonObjArr.bsUser;
 	var str = '(function test(x){' +
 		'var xlApp = new ActiveXObject("Excel.Application");'  +
 		'var xlBook = xlApp.Workbooks.Add();' +
@@ -259,19 +279,19 @@ function Export_Xml(jsonObjArr, jsonItemArr){
 		
 		'xlApp.Range(xlApp.Cells(1,1),xlApp.Cells(1,11)).MergeCells = true;' + //合并单元格
 		'xlApp.Range(xlApp.Cells(2,1),xlApp.Cells(2,11)).MergeCells = true;' + //合并单元格
-		'objSheet.Cells(1, 1).value = "急诊交班本";'+		 
+		'objSheet.Cells(1, 1).value = "'+$g("急诊交班本")+'";'+		 
    		'objSheet.Cells(2, 1).value = "' + title +'";' +
-		'objSheet.Cells(3, 1).value = "床号";' +      /// 床号
-		'objSheet.Cells(3, 2).value = "姓名";' +      /// 姓名
-		'objSheet.Cells(3, 3).value = "登记号";' +    /// 登记号
-		'objSheet.Cells(3, 4).value = "年龄";' +      /// 年龄
-		'objSheet.Cells(3, 5).value = "性别";' +      /// 性别
-		'objSheet.Cells(3, 6).value = "就诊时间";' +  /// 就诊日期
-		'objSheet.Cells(3, 7).value = "滞留时间";' +  /// 滞留时间
-		'objSheet.Cells(3, 8).value = "诊断";' +      /// 诊断
-		'objSheet.Cells(3, 9).value = "背景";' +      /// 背景
-		'objSheet.Cells(3, 10).value = "评估";' +     /// 评估
-		'objSheet.Cells(3, 11).value = "建议";'       /// 建议
+		'objSheet.Cells(3, 1).value = "'+$g("床号")+'";' +      /// 床号
+		'objSheet.Cells(3, 2).value = "'+$g("姓名")+'";' +      /// 姓名
+		'objSheet.Cells(3, 3).value = "'+$g("登记号")+'";' +    /// 登记号
+		'objSheet.Cells(3, 4).value = "'+$g("年龄")+'";' +      /// 年龄
+		'objSheet.Cells(3, 5).value = "'+$g("性别")+'";' +      /// 性别
+		'objSheet.Cells(3, 6).value = "'+$g("就诊时间")+'";' +  /// 就诊日期
+		'objSheet.Cells(3, 7).value = "'+$g("滞留时间")+'";' +  /// 滞留时间
+		'objSheet.Cells(3, 8).value = "'+$g("诊断")+'";' +      /// 诊断
+		'objSheet.Cells(3, 9).value = "'+$g("背景")+'";' +      /// 背景
+		'objSheet.Cells(3, 10).value = "'+$g("评估")+'";' +     /// 评估
+		'objSheet.Cells(3, 11).value = "'+$g("建议")+'";'       /// 建议
 		str = str +setCellLine("",3,1,11);
 		for (var i=0; i<jsonItemArr.length; i++){
 			str = str +
@@ -297,13 +317,13 @@ function Export_Xml(jsonObjArr, jsonItemArr){
 		}
 		str = str +
 		"xlApp.Visible=true;" +
-		'xlBook.SaveAs("急诊科交班本.xlsx");' +
+		'xlBook.SaveAs("'+$g("急诊科交班本")+'.xlsx");' +
 		'xlApp=null;' +
 		'objSheet=null;' +
 		"return 1;}());";
 	//以上为拼接Excel打印代码为字符串
     CmdShell.notReturn = 1;   //设置无结果调用，不阻塞调用
-	var rtn = CmdShell.EvalJs(str);   //通过中间件运行打印程序 
+	var rtn = CmdShell.CurrentUserEvalJs(str);   //通过中间件运行打印程序 
 	return;
 	
 	/*	
@@ -384,6 +404,7 @@ function setCellLine(objSheet,row,startcol,colnum){
 function escape2Html(str) {
 	
 	str = str.trim().replace("\n", String.valueOf(10));
+	str = str.replace(/\s/g," ");
 	var arrEntities={'lt':'<','gt':'>','nbsp':' ','amp':'&','quot':'"'}; 
 	return str.replace(/&(lt|gt|nbsp|amp|quot);/ig,function(all,t){return arrEntities[t];}); 
 }

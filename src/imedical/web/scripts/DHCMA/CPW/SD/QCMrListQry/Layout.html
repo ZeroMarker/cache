@@ -5,17 +5,34 @@
 <!-- 主页面-->
 <div  class="hisui-panel" fit="true" style="padding:10px;border:0px;">
 	<div class="hisui-layout" data-options="fit:true">
-		<div data-options="region:'north'" style="height:125px;border:0;padding:0;fit:true;">
+		<div data-options="region:'north'" style="height:165px;border:0;padding:0;fit:true;">
 			<div class="hisui-panel" id="QryTitle" fit="true" data-options="title:'单病种查询',iconCls:'icon-search',headerCls:'panel-header-gray'" style="border-bottom:1px solid #ccc;border-radius:0;">
 				<table cellspacing ="10px" style="padding:0px;border:0px;">						
-					<tr style="margin-top:10px">
+					<tr>
 						<td style="text-align:right">院区</td>
 						<td>
 							<input id="Hospital" class="hisui-combobox textbox" placeholder='院区'/>
 						</td>
+						<td style="text-align:right;width:80px">管理病种</td>
+						<td>
+							<input class="hisui-combobox textbox" id="QCDic" >
+						</td>
 						<td  style="text-align:right;width:80px">管理科室</td>
 						<td>
 							<input id="LocDic" class="hisui-combobox textbox">
+						</td>
+						<td style="text-align:right;width:80px">管理医生</td>
+						<td>
+							<input id="DocDic" class="hisui-combobox textbox">
+						</td>
+						<td style="width:100px"> 
+							<a id="search" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">查询</a>
+						</td>
+					</tr>
+					<tr>
+						<td  style="text-align:right;width:80px">日期类型</td>
+						<td>
+							<input id="DateType" class="hisui-combobox textbox">
 						</td>
 						<td  style="text-align:right;width:80px">开始日期</td>
 						<td>
@@ -25,57 +42,53 @@
 						<td>
 							<input id="EDate" class="hisui-datebox textbox" data-options="required:true">
 						</td>
-					</tr>
-					<tr>
-						
-						<td style="text-align:right;width:80px">管理医生</td>
-						<td>
-							<input id="DocDic" class="hisui-combobox textbox">
-						</td>
-						<td style="text-align:right;width:80px">管理病种</td>
-						<td>
-							<input class="hisui-combobox textbox" id="QCDic" >
-						</td>
 						<td style="text-align:right;width:80px">当前状态</td>
 						<td>
 							<input class="hisui-combobox textbox" id="Status" ></select>
 						</td>
+						<td> 
+							<a id="Export"  class="hisui-linkbutton" data-options="iconCls:'icon-w-export',stopAllEventOnDisabled:true">导出</a>
+						</td>
+					</tr>
+					<tr>
 						<td style="text-align:right;width:80px">病案号</td>
 						<td>
-							<input class="textbox" id="MrNo" placeholder="病案号检索"></select>
+							<input class="textbox" id="MrNo" placeholder="病案号检索"></input>
+						</td>
+						<td colspan=6>
+							<span style="padding-left:10px;float:left;color:#1474AF;"><span class="icon icon-tip" style="margin-right:5px;">&nbsp;&nbsp;&nbsp;&nbsp;</span>提示信息：请双击行记录，打开单病种表单！</span>
 						</td>
 						<td> 
-							<a id="search" style="width:120px" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">查询</a>
-							<!--a id="updoAll" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true">一键上报</a-->
+							<a id="updoAll" class="hisui-linkbutton" data-options="iconCls:'icon-w-upload',stopAllEventOnDisabled:true">上报</a>
 						</td>
 					</tr>
 				</table>
 			</div>
 		</div>
-		<div data-options="region:'center'" style="padding:0px;border:1px solid #ccc;border-radius:0 0 4px 4px;">
+		<div data-options="region:'center'" style="padding:0px;border:1px solid #E2E2E2;border-radius:0 0 4px 4px;">
 				<table style="padding:0" data-options="border:false" id="gridQCMrList"></table>
 		</div>
 	</div>
 </div>
-<div id="winConfirmInfo" class="hisui-dialog" style="width:500px;border:none;overflow:auto;padding:0;">
-	<div style="padding:0;border:0px;" fit="true">
-		<table cellspacing ="10px" style="padding:0px;border:0px;width:100%;">
-			<tr >
-					<td style="text-align:right;width:60px;">依据原因</td>
-					<td >
-						<span id="RuleDic" style="width:100%"></span>
-					</td>
+<div id="winConfirmInfo" class="hisui-dialog" buttons="#dlgY-buttons" style="border:none;overflow:hidden;padding:0;">
+	<div style="height:auto;width:auto;padding:0;border:0px;" fit="true">
+		<table cellspacing ="10px" style="padding:0px;border:0px;width:100%;height:100%;">
+			<tr style="height:300px;">
+				<td style="text-align:right;vertical-align:top;width:60px;border:none;font-weight:bold;">依据原因</td>
+				<td style="border:none;vertical-align:top;">
+					<div id="RuleDic" style="width:100%;border:none;"></div>
+				</td>
 			</tr>
-			<tr >
-				<td  style="text-align:right;width:60px;">其他备注</td>
-				<td>
-					<textarea id="RuleResume" style="width:99%" class="textbox"></textarea>
+			<tr>
+				<td  style="font-weight:bold;vertical-align: top;border:none;">其他备注</td>
+				<td style="border:none;">
+					<textarea id="RuleResume" class="textbox" size="12" rows="2" style="width:500px;height:40px;"></textarea>
 				</td>
 			</tr>
 		</table>
-		<div style="text-align:center">
-			<a id="SaveRule" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">提交</a>
-		</div>
+	</div>
+	<div id="dlgY-buttons"  style="padding:10px;">
+		<a id="SaveRule" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
 	</div>	
 </div>
 

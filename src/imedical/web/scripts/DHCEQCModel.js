@@ -16,8 +16,11 @@ if (document.all) {
 var SelectedRow = 0;
 var rowid=0;
 function BodyLoadHandler() 
-{	
-    InitUserInfo(); //系统参数
+{
+	//modified by cjt 20230212 需求号3221958 UI页面改造
+	initPanelHeaderStyle();
+	initButtonColor();
+	InitUserInfo(); //系统参数
 	InitEvent();	
 	KeyUp("Item");	//清空选择
 	Muilt_LookUp("Item");
@@ -25,6 +28,8 @@ function BodyLoadHandler()
 	//Add by JDL 2011-08-30 JDL0095
 	InitPageNumInfo("DHCEQCModel.Model","DHCEQCModel");
 	InitPlayer();
+	initButtonWidth();  //hisui改造 add by MWZ 2018-08-28
+	setButtonText();	//HISUI改造 add by MWZ 2018-09-28
 	//SetItemFontSize("*","24px")
 }
 function InitEvent()
@@ -47,7 +52,10 @@ function BFind_Click()
 	val=val+"&Remark="+GetElementValue("Remark")
 	val=val+"&Item="+GetElementValue("Item")
 	val=val+"&ItemDR="+GetElementValue("ItemDR")
-	window.location.href="websys.default.csp?WEBSYS.TCOMPONENT=DHCEQCModel"+val;
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		val += "&MWToken="+websys_getMWToken()
+	}
+	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCModel"+val;
 }
 function BClear_Click() 
 {
@@ -63,17 +71,17 @@ function BAdd_Click() //增加
 	//alertShow("plist:"+plist);
 	var result=cspRunServerMethod(encmeth,'','',plist,'2');
 	result=result.replace(/\\n/g,"\n")
-	//alertShow("result"+result)
-	if(result=="")
-	{
-		alertShow(t[-3001])
-		return
-		}
 	if (result>0)
 	{
 		alertShow("操作成功!")
 		location.reload();
-	}	
+	}
+	else
+	{
+		if(result=="-3001") messageShow("","","",t[-3001])
+		else  alertShow("操作失败!错误代码:"+result)
+		return
+	}
 }	
 function CombinData()
 {
@@ -98,16 +106,16 @@ function BUpdate_Click()
 	var plist=CombinData(); //函数调用
 	var result=cspRunServerMethod(encmeth,'','',plist);
 	result=result.replace(/\\n/g,"\n")
-	//alertShow("result"+result)
-	if(result=="") 
-	{
-		alertShow(t[-3001]);
-		return
-	}
 	if (result>0)
 	{
 		alertShow("操作成功!")
 		location.reload();
+	}
+	else
+	{
+		if(result=="-3001") messageShow("","","",t[-3001])
+		else  alertShow("操作失败!错误代码:"+result)
+		return
 	}	
 }
 function BDelete_Click() 
@@ -118,8 +126,8 @@ function BDelete_Click()
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="") 
 	{
-	alertShow(t[-3001])
-	return;
+		messageShow("","","",t[-3001])
+		return;
 	}
 	var result=cspRunServerMethod(encmeth,'','',rowid,'1');
 	result=result.replace(/\\n/g,"\n")
@@ -129,34 +137,31 @@ function BDelete_Click()
 		location.reload();
 	}	
 }
-///选择表格行触发此方法
-function SelectRowHandler()
+///modify by lmm 2018-08-17
+///描述：hisui改造 更改值获取方式 并添加入参
+///入参：index 行号
+///      rowdata 行json数据
+function SelectRowHandler(index,rowdata)
 	{
-	var eSrc=window.event.srcElement;
-	var objtbl=document.getElementById('tDHCEQCModel');//+组件名 就是你的组件显示 Query 结果的部分
-	var rows=objtbl.rows.length;
-	
-	var lastrowindex=rows - 1;
-	
-	var rowObj=getRow(eSrc);
-	
-	var selectrow=rowObj.rowIndex;
-	//alertShow("selectrow"+selectrow)
-	if (!selectrow)	 return;
-	if (SelectedRow==selectrow)	{
+		
+	if (SelectedRow==index)	{
 		Clear();
-		disabled(true);//灰化	
-		SelectedRow=0;
+		disabled(true)//灰化		
+		SelectedRow=-1;
 		rowid=0;
 		SetElement("RowID","");
+		
+		$('#tDHCEQCModel').datagrid('unselectAll');  
+		
 		}
 	else{
-		SelectedRow=selectrow;
-		rowid=GetElementValue("TRowIDz"+SelectedRow);
+		SelectedRow=index;
+		rowid=rowdata.TRowID   
 		SetData(rowid);//调用函数
-		disabled(false);//反灰化
+		disabled(false)//反灰化
 		}
 }
+
 function Clear()
 {
 	SetElement("RowID","")
@@ -193,11 +198,11 @@ function SetData(rowid)
 }
 function ItemDR(value) // ItemDR
 {
-	//alertShow(value);
+	//messageShow("","","",value);
 	var obj=document.getElementById("ItemDR");
 	var val=value.split("^");	
 	if (obj) obj.value=val[1];
-	//alertShow(val[1]+"/"+val[2]);StatCatDR
+	//messageShow("","","",val[1]+"/"+val[2]);StatCatDR
 }
 function disabled(value)//灰化
 {

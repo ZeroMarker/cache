@@ -45,7 +45,7 @@
 		arrRecord 		= runQuery.record;
 		for (var indRd = 0; indRd < arrRecord.length; indRd++){
 			var rd = arrRecord[indRd];
-			if ((rd["DimensKey"].indexOf('-A-')>-1)) {
+			if ((rd["DimensKey"].indexOf('-W-')>-1)||(rd["DimensKey"].indexOf('-E-')>-1)) {
 				arrInfDiagDesc.push(rd["InfDiagDesc"]);
 				arrInfDiagCnt.push(rd["InfDiagCnt"]);
 				arrPosDesc.push(rd["PosDesc"]);

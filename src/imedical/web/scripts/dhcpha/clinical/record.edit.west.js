@@ -308,10 +308,10 @@ function ztOnClick(event, treeId, treeNode)
 		else{
 			if(tempParam.status!="NORMAL"){
 				///dws 2017-01-18 签名完成后控制头菜单权限，药历不可编辑，只读
-				parent.btnCanNot("disable");
+				/*parent.btnCanNot("disable");
 				parent.btnSaveCanNot();
 				lockDocument(tempParam);
-				setReadOnly(true,"");
+				setReadOnly(true,"");*/
 			}
 			else{
 				parent.btnCanNot("enable");
@@ -363,10 +363,10 @@ $("#InstanceTree.instance-item li").live('click',function(){
 		else{
 			if(tempParam.status!="NORMAL"){
 				///dws 2017-01-18 签名完成后控制头菜单权限，药历不可编辑，只读
-				parent.btnCanNot("disable");
+				/*parent.btnCanNot("disable");
 				parent.btnSaveCanNot();
 				lockDocument(tempParam);
-				setReadOnly(true,"");
+				setReadOnly(true,"");*/
 			}
 			else{
 				parent.btnCanNot("enable");

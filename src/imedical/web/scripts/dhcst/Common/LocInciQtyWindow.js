@@ -34,37 +34,37 @@ function ShowAllLocStkQtyWin(e,grid,ShowInCellIndex,desc,inci)
 		var AllLocStkNm = new Ext.grid.RowNumberer();
 		var AllLocStkCm = new Ext.grid.ColumnModel([AllLocStkNm, {
 					
-					header : "科室",
+					header : $g("科室"),
 					dataIndex : 'Loc',
 					width : 150,
 					align : 'left',
 					sortable : true
 				}, {
-					header : '单位',
+					header : $g('单位'),
 					dataIndex : 'Uom',
 					width : 60,
 					align : 'left',
 					sortable : true
 				}, {
-					header : '库存',
+					header : $g('库存'),
 					dataIndex : 'StkQty',
 					width : 80,
 					align : 'left',
 					sortable : true
 				}, {
-					header : '库存上限',
+					header : $g('库存上限'),
 					dataIndex : 'MaxQty',
 					width : 80,
 					align : 'left',
 					sortable : true
 				}, {
-					header : '库存下限',
+					header : $g('库存下限'),
 					dataIndex : 'MinQty',
 					width : 80,
 					align : 'left',
 					sortable : true
 				}, {
-					header : '标准库存',
+					header : $g('标准库存'),
 					dataIndex : 'RepQty',
 					width : 80,
 					align : 'left',
@@ -99,7 +99,7 @@ function ShowAllLocStkQtyWin(e,grid,ShowInCellIndex,desc,inci)
 
 			this.win = new Ext.Window({
 							id:'alllocwin',
-							title : '各科室库存',
+							title : $g('各科室库存'),
 							width : 650,
 							//autoHeight: true,
 							//layout : 'fit',

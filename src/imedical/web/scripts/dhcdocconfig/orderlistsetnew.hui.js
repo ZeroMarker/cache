@@ -171,6 +171,7 @@ function col_edit (ac) {
 		return false;
 	}
 	var src="dhcdoc.config.orderlistsetnew.edit.csp?id="+id+"&dgid="+dgid;
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
 	createModalDialog("colEditDiag","表格列设置", 850, 445,"icon-w-edit","",$code,"");
 }

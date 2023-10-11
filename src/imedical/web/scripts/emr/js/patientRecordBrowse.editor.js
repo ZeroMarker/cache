@@ -41,7 +41,7 @@ function loadDocument(tempParam)
                 break;
         }
     }
-    setDataToLog();
+    setDataToLog("EMR.Browse");
 }
 
 ///创建编辑器//////////////////////////////////////////////////////////////////////////////////////
@@ -200,6 +200,20 @@ function setWorkEnvironment()
 //建立数据库连接
 function setConnect(){
     var netConnect = "";
+	
+	var port = window.location.port;
+	var protocol = window.location.protocol.split(":")[0];
+	
+	if (protocol == "http")
+	{
+		port = port==""?"80":port;
+	}
+	else if (protocol == "https")
+	{
+		port = port==""?"443":port;
+	}
+	
+	
     $.ajax({
         type: 'Post',
         dataType: 'text',
@@ -209,7 +223,10 @@ function setConnect(){
         data: {
             "OutputType":"String",
             "Class":"EMRservice.BL.BLSysOption",
-            "Method":"GetNetConnectJson"
+            "Method":"GetNetConnectJson",
+			"p1":window.location.hostname,
+			"p2":port,
+			"p3":protocol
         },
         success: function (ret) {
 
@@ -241,6 +258,13 @@ function getPrivateDomains(InstanceId,groupId,operation)
     return cmdSyncExecute(argJson);
 }
 
+//打印文档
+function printDocument()
+{
+    var argJson = {action:"PRINT_DOCUMENT",args:{"actionType":"PrintDirectly"}}; 
+    cmdDoExecute(argJson);
+}
+
 ///脚本权限
 function getPrivilege(type,instanceId)
 {
@@ -259,7 +283,7 @@ function getPrivilege(type,instanceId)
         success: function(d) {
             if (d != "") result = eval("("+d+")");
         },
-        error : function(d) { alert(action + " error");}
+        error : function(d) { alert(type + " error");}
     });
     return result;
 }
@@ -273,6 +297,9 @@ function eventDispatch(commandJson)
     {
         //文档改变
         eventDocumentChanged(commandJson);
+    }else if (commandJson["action"] == "eventPrintDocument")
+    {
+        eventPrintDocument(commandJson);
     }
 }
 
@@ -302,11 +329,34 @@ function eventDocumentChanged(commandJson)
     selectListRecord(param.id);
 }
 
-function setDataToLog()
+//打印事件监听
+function eventPrintDocument(commandJson) {
+    if (commandJson.args.result == 'OK') {
+        if (commandJson.args.params.result == "OK") {
+            $.messager.popover({msg:'病历打印成功！', type:'success', style:{top:10,right:5}});
+            //修改病历目录
+            setListPrinted(commandJson.args.params.PrintInstanceIDs);
+            
+            //基础平台组审计和日志记录
+            setDataToLog("EMR.Print.OK");
+        }else if(commandJson["args"].params.result == "ERROR")
+        {
+            $.messager.alert('发生错误', '打印日志未记录,请检查网络连接！', 'warning');
+        }
+    }else if(commandJson["args"].result == "ERROR")
+    {
+        //插件返回值只有2个 
+        //OK 打印成功 
+        //ERROR，可能为取消打印，或网络原因导致打印失败。
+        //修改描述'打印日志未记录,请检查网络连接!' 为‘打印操作未完成’，增加友好度。
+        $.messager.alert('发生错误', '打印操作未完成！', 'error');
+    }
+}
+    
+function setDataToLog(ModelName)
 {
     if (IsSetToLog == "Y")
     {
-        var ModelName = "EMR.Browse";
         var Condition = "";
         Condition = Condition + '{"patientID":"' + patientID + '",';
         Condition = Condition + '"episodeID":"' + episodeID + '",';
@@ -317,6 +367,11 @@ function setDataToLog()
         Condition = Condition + '"pluginType":"' + param["pluginType"] + '",';
         Condition = Condition + '"chartItemType":"' + param["chartItemType"] + '",';
         Condition = Condition + '"emrDocId":"' + param["emrDocId"] + '",';
+        Condition = Condition + '"templateId":"' + param["templateId"] + '",';
+        Condition = Condition + '"categoryId":"' + param["categoryId"] + '",';
+        Condition = Condition + '"isLeadframe":"' + param["isLeadframe"] + '",';
+        Condition = Condition + '"isMutex":"' + param["isMutex"] + '",';
+        Condition = Condition + '"actionType":"' + param["actionType"] + '",';
         Condition = Condition + '"status":"' + param["status"] + '",';
         Condition = Condition + '"text":"' + param["text"] + '"}';
         var ConditionAndContent = Condition;

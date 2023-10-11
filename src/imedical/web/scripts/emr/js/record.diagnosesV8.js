@@ -326,7 +326,13 @@
 	function DiagRefFormatFromCacheDataWeb(selectedobj,operations)
     {
 
-	    debugger;
+		//判定诊断选中状态，使用filter函数。
+		var newselectedobj = selectedobj.filter(function filterFunction(obj){
+			return obj.SelRowFlag==1;
+		})
+		//如无勾选状态诊断，引用配置类型的全部诊断。
+	    newselectedobj = newselectedobj.length==0?selectedobj:newselectedobj
+	    
 	    var result="";
 	    if (operations.Url.name)
 		{
@@ -340,7 +346,7 @@
 		}
 		//医生站参数对象
 		var episodeid = ServerObj.EpisodeID;
-		var diagJsonString = JSON.stringify(selectedobj);
+		var diagJsonString = JSON.stringify(newselectedobj);
 	   	jQuery.ajax({
 			type: "post",
 			dataType: "text",
@@ -421,7 +427,6 @@
 	
 	if (FormatServer=="Web+Cache")
 	{
-		debugger ;
 		returnValue=DiagRefFormatFromCacheDataWeb(obj,operationsObj)
 		//处理后台数据未实现换行
 		returnValue = returnValue.replace(/\\n/g,"\n")

@@ -40,32 +40,10 @@ $(function() {
         prompt: '请输入...'
     });
     
-    //读卡按钮
-    /*$('#readCard').live('click', function () {
-        $('#cardNoSearch').searchbox('textbox').focus();
-		if(typeof DHCACC_GetAccInfobyJKK == "function"){
-			var myrtn=DHCACC_GetAccInfobyJKK();
-			var myary=myrtn.split("^");
-			var rtn=myary[0];
-    	}else{
-	    	var cardsLen = cards.length;
-	    	for(var i=0;i<cardsLen;i++){
-		    	var cardId =cards[i];
-		    	var myrtn=DHCHardComm_RandomCardEquip(cardId,"R", "23", "", "");
-				var myary=myrtn.split("^");
-				var rtn=myary[0];
-				if (rtn=="0"){
-					 break
-				}
-		    }
-		}
-		if (rtn=="0"){
-       	    CardNo=myary[1]  //就诊卡号
-			setSearchOptions('','',CardNo);	
-		}else{
-			alert("读卡失败")
-		}
-    });*/
+    //读卡按钮 ReadCardClickHandler
+    $('#readCard').live('click', function () {
+        DHCACC_GetAccInfo7(CardNoKeyDownCallBack);
+    });
     
     //查询按钮
     $('#doquery').live('click', function () {
@@ -104,13 +82,14 @@ $(function() {
         {
             return ;
         }
-        PrintALL();
+        var length = envVar.InsIDCount.length;
+        PrintALL(length);
     });
     
     initPatTable();
 
     //todo
-    data = ajaxDATA('String', 'EMRservice.BL.opPrintSearch', 'GetOPPatAllPrintList', '', '', '', '', '');
+    data = ajaxDATA('String', 'EMRservice.BL.opPrintSearch', 'GetOPPatAllPrintList', '', '', '', '', '', '');
     ajaxGET(data, function (ret) {
         if ('' != ret) {
             var patData = $.parseJSON(ret);
@@ -125,6 +104,28 @@ $(function() {
         hisLog = new HisLogEx(sysOption.IsSetToLog, patInfo);
     }
 });
+
+//读卡回调函数，固定入参
+function CardNoKeyDownCallBack(myrtn, errMsg){
+	var myary=myrtn.split("^");
+    var rtn=myary[0];
+	switch (rtn){
+		case "0": //卡有效有帐户
+			var PatientID=myary[4];
+			var PatientNo=myary[5];
+			var CardNo=myary[1];
+			setSearchOptions("", "", CardNo); 
+			break;
+		case "-200": //卡无效
+			alert("读卡失败，卡无效！");
+			return false;
+			break;
+		case "-201": //卡有效无帐户
+			alert("读卡失败，无账户信息！")
+			break;
+		default:
+	}
+}
 
 function initPatTable() {
     $('#patientPrintListData').datagrid({
@@ -275,7 +276,14 @@ function initPatTable() {
 function browse(EcID,InsID) {
 	var data = ajaxDATA('String', 'EMRservice.BL.opInterface','GetBrowseUrl', EcID, InsID);
         ajaxGET(data, function(ret) {
-            window.showModalDialog(ret, window, 'dialogHeight:630px;dialogWidth:1000px;resizable:no;status:no');
+            if (judgeIsIE()){
+                window.showModalDialog(ret, window, 'dialogHeight:630px;dialogWidth:1000px;resizable:no;status:no');
+            }else {
+                var dialogId = "browseDialog";
+                var iframeId = "opBrowse";
+                var iframeCotent = "<iframe id='"+iframeId+"' width='100%' height='100%' scrolling='auto' frameborder='0' src='"+ret+"'></iframe>";
+                createEasyUIModalDialog(dialogId,"浏览病历", 1000, 550,iframeId,iframeCotent,"","");
+            }
         }, function(ret) {
             alert('发生错误', '获取浏览相关Url失败' + ret);
         });
@@ -283,9 +291,17 @@ function browse(EcID,InsID) {
 
 //打印所选病历
 function print(EcID,InsID,PageNum) {
-    window.showModalDialog("emr.op.print.csp?IsWithTemplate=N&AutoPrint=Y&InstanceId="+EcID+'||'+InsID, window, 'dialogHeight:10px;dialogWidth:10px;resizable:no;status:no');
-    //alert("打印完成，此次共打印"+PageNum+"页！")
-    setQuery(_regNo, _name, _cardNo);
+    if (sysOption.isShowCloseBtn && judgeIsIE()){
+        window.showModalDialog("emr.op.print.csp?IsWithTemplate=N&AutoPrint=Y&InstanceId="+EcID+'||'+InsID, window, 'dialogHeight:10px;dialogWidth:10px;resizable:no;status:no');
+        //alert("打印完成，此次共打印"+PageNum+"页！")
+        setQuery(_regNo, _name, _cardNo);
+    }else {
+        var dialogId = "printDialog";
+        var iframeId = "opPrint";
+        var src = "emr.op.print.csp?IsWithTemplate=N&AutoPrint=Y&AutoClose=Y&InstanceId="+EcID+'||'+InsID;
+        var iframeCotent = "<iframe id='"+iframeId+"' width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>";
+        createEasyUIModalDialog(dialogId,"打印病历", 80, 20,iframeId,iframeCotent,doAfterPrint,"");
+    }
 }
 
 //默认获取当前日期范围（七天）
@@ -334,13 +350,17 @@ function setQuery(regNo, name, cardNo){
     _regNo = regNo;
     _name = name;
     _cardNo = cardNo;
+    var idCard = "";
+    if (document.getElementById("idCardSearch") != null ) {
+        idCard = $("#idCardSearch").searchbox('getValue');
+    }
     if (sysOption.PatientNoLength != "N") {
  	   regNo = setregNoLength(regNo,sysOption.PatientNoLength);	    
     }
     var startDate = $('#startDate').datebox('getText');
     var endDate = $('#endDate').datebox('getText');
     
-    var data = ajaxDATA('String', 'EMRservice.BL.opPrintSearch', 'GetOPPatAllPrintList', regNo, name, cardNo, startDate, endDate);
+    var data = ajaxDATA('String', 'EMRservice.BL.opPrintSearch', 'GetOPPatAllPrintList', regNo, name, cardNo, startDate, endDate, idCard);
     ajaxGET(data, function (ret) {
         if ('' != ret) {
             var patData = $.parseJSON(ret);
@@ -354,24 +374,36 @@ function setQuery(regNo, name, cardNo){
 }
 
 //查询打印调用
-function PrintALL(){
-    for (var i=0;i<envVar.InsIDCount.length;i++)
-    {
-        if (envVar.InsIDCount[i] !="")
+function PrintALL(length){
+    if (sysOption.isShowCloseBtn && judgeIsIE()){
+        for (var i=0;i<length;i++)
         {
-            window.showModalDialog("emr.op.print.csp?IsWithTemplate=N&AutoPrint=Y&InstanceId="+ envVar.InsIDCount[i], window, 'dialogHeight:10px;dialogWidth:10px;resizable:no;status:no');
-            envVar.InsIDCount[i] = ""
+            if (envVar.InsIDCount[i] !="")
+            {
+                window.showModalDialog("emr.op.print.csp?IsWithTemplate=N&AutoPrint=Y&InstanceId="+ envVar.InsIDCount[i], window, 'dialogHeight:10px;dialogWidth:10px;resizable:no;status:no');
+                envVar.InsIDCount[i] = "";
+            }
         }
+        //alert("打印完成，此次共打印"+envVar.PrintPageCount+"页！")
+        setQuery(_regNo, _name, _cardNo); 
+    }else {
+        if (length == 0) return doAfterPrint();
+        var num = envVar.InsIDCount.length - length;
+        var dialogId = "printDialog";
+        var iframeId = "opPrint";
+        var src = "emr.op.print.csp?IsWithTemplate=N&AutoPrint=Y&AutoClose=Y&InstanceId="+envVar.InsIDCount[num];
+        var iframeCotent = "<iframe id='"+iframeId+"' width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>";
+        length = length - 1;
+        createEasyUIModalDialog(dialogId,"打印病历", 80, 20,iframeId,iframeCotent,PrintALL,length);
+        envVar.InsIDCount[num] = "";
     }
-    //alert("打印完成，此次共打印"+envVar.PrintPageCount+"页！")
-    setQuery(_regNo, _name, _cardNo); 
       
 }
 
 //存储打印操作
 function insertSelfPrintLog(InstanceID) {
    var data = ajaxDATA('String', 'EMRservice.HISInterface.BOExternal', 'AddCustomSelfPrintLog', InstanceID, patInfo.IPAddress, patInfo.UserID);
-   ajaxGET(data, function(d) {
+   ajaxGETSync(data, function(d) {
           if (d != "0") {
                 // 同步待议
           }else {
@@ -380,4 +412,8 @@ function insertSelfPrintLog(InstanceID) {
     }, function(err) {
           alert('InsertCustomSelfPrintLog error:' + ret);
     });    
+}  
+
+function doAfterPrint(){
+    setQuery(_regNo, _name, _cardNo);
 }                

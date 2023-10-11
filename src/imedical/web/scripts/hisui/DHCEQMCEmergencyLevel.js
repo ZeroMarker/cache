@@ -6,7 +6,8 @@ function BodyLoadHandler()
 	$("#tDHCEQMCEmergencyLevel").datagrid({showRefresh:false,showPageList:false,afterPageText:'',beforePageText:''});   //Add By DJ 2018-10-12 hisui改造：隐藏翻页条内容
 	InitUserInfo(); //系统参数
 	InitEvent();
-	initButtonWidth();	//hisui改造 Add By DJ 2018-10-12	
+	initButtonWidth();	//hisui改造 Add By DJ 2018-10-12
+	initPanelHeaderStyle();//hisui改造 add by zyq 2023-02-02	
 	disabled(true);//灰化
 	
 }
@@ -46,7 +47,7 @@ function BAdd_Click() //增加
 	}
 	else
 	{
-		messageShow("","","",t[result]);
+		messageShow("","","",t[-3001]); //modified by sjh SJH0034 2020-09-16
 		return;
 	}	
 //**************************************

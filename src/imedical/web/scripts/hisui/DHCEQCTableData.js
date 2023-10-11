@@ -5,6 +5,7 @@ var varTableDR=""; //类型id
 
 function BodyLoadHandler() 
 {
+	initPanelHeaderStyle(); //added by LMH 20230211 UI 极简组件界面标题格式
 	document.body.scroll="no";	
 	InitUserInfo();	
 	$("#tDHCEQCTableData").datagrid({showRefresh:false,showPageList:false,afterPageText:'',beforePageText:''});   //add by lmm 2018-09-26 hisui改造：隐藏翻页条内容
@@ -26,6 +27,9 @@ function SelectRowHandler(selectrow,rowdata)
 		SelectedRow=selectrow;		
 		varTableDR=rowdata.TRowID;
 		lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCColumns&TableDR="+(varTableDR);
+	}
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		lnk += "&MWToken="+websys_getMWToken()
 	}
 	parent.DHCEQCColumns.location.href=lnk;
 }

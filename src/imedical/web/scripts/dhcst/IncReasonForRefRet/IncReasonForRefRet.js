@@ -47,7 +47,7 @@ var IncReasonForRefRetGridDs = new Ext.data.Store({
 var IncReasonForRefRetGridCm = new Ext.grid.ColumnModel([
 	new Ext.grid.RowNumberer(),
 	{
-		header: "名称",
+		header: $g("名称"),
 		dataIndex: 'Desc',
 		width: 300,
 		align: 'left',
@@ -69,8 +69,8 @@ var IncReasonForRefRetGridCm = new Ext.grid.ColumnModel([
 //初始化默认排序功能
 IncReasonForRefRetGridCm.defaultSortable = true;
 var addIncReasonForRefRet = new Ext.Toolbar.Button({
-	text: '新建',
-	tooltip: '新建',
+	text: $g('新建'),
+	tooltip: $g('新建'),
 	iconCls: 'page_add',
 	width: 70,
 	height: 30,
@@ -80,8 +80,8 @@ var addIncReasonForRefRet = new Ext.Toolbar.Button({
 });
 
 var saveIncReasonForRefRet = new Ext.Toolbar.Button({
-	text: '保存',
-	tooltip: '保存',
+	text: $g('保存'),
+	tooltip: $g('保存'),
 	iconCls: 'page_save',
 	width: 70,
 	height: 30,
@@ -94,7 +94,7 @@ var saveIncReasonForRefRet = new Ext.Toolbar.Button({
 			var desc = mr[i].data["Desc"].trim();
 			var rowNum = IncReasonForRefRetGridDs.indexOf(mr[i]) + 1;
 			if (desc == "") {
-				Msg.info("warning", "第" + rowNum + "行名称为空!");
+				Msg.info("warning", $g("第") + rowNum + $g("行名称为空!"));
 				return;
 			}
 			if (desc != "") {
@@ -108,10 +108,10 @@ var saveIncReasonForRefRet = new Ext.Toolbar.Button({
 		}
 
 		if (data == "") {
-			Msg.info("warning", "没有修改或添加新数据!");
+			Msg.info("warning", $g("没有修改或添加新数据!"));
 			return false;
 		} else {
-			var mask = ShowLoadMask(Ext.getBody(), "处理中请稍候...");
+			var mask = ShowLoadMask(Ext.getBody(), $g("处理中请稍候..."));
 			Ext.Ajax.request({
 				url: IncReasonForRefRetGridUrl + '?actiontype=save',
 				params: {
@@ -119,19 +119,19 @@ var saveIncReasonForRefRet = new Ext.Toolbar.Button({
 				},
 				failure: function (result, request) {
 					mask.hide();
-					Msg.info("error", "请检查网络连接!");
+					Msg.info("error", $g("请检查网络连接!"));
 					IncReasonForRefRetGridDs.commitChanges();
 				},
 				success: function (result, request) {
 					var jsonData = Ext.util.JSON.decode(result.responseText);
 					mask.hide();
 					if (jsonData.success == 'true') {
-						Msg.info("success", "保存成功!");
+						Msg.info("success", $g("保存成功!"));
 					} else {
 						if (jsonData.info == -2) {
-							Msg.info("warning", "名称重复!");
+							Msg.info("warning", $g("名称重复!"));
 						} else {
-							Msg.info("warning", "保存失败!");
+							Msg.info("warning", $g("保存失败!"));
 						}
 					}
 					IncReasonForRefRetGridDs.commitChanges();
@@ -145,43 +145,43 @@ var saveIncReasonForRefRet = new Ext.Toolbar.Button({
 
 
 var deleteIncReasonForRefRet = new Ext.Toolbar.Button({
-	text: '删除',
-	tooltip: '删除',
+	text: $g('删除'),
+	tooltip: $g('删除'),
 	iconCls: 'page_delete',
 	width: 70,
 	height: 30,
 	handler: function () {
 		var cell = IncReasonForRefRetGrid.getSelectionModel().getSelectedCell();
 		if (cell == null) {
-			Msg.info("warning", "请选择数据!");
+			Msg.info("warning", $g("请选择数据!"));
 			return false;
 		} else {
 			var record = IncReasonForRefRetGrid.getStore().getAt(cell[0]);
 			var RowId = record.get("RowId");
 			if (RowId != "") {
-				Ext.MessageBox.confirm('提示', '确定要删除选定的行?',
+				Ext.MessageBox.confirm($g('提示'), $g('确定要删除选定的行?'),
 					function (btn) {
 						if (btn == 'yes') {
-							var mask = ShowLoadMask(Ext.getBody(), "处理中请稍候...");
+							var mask = ShowLoadMask(Ext.getBody(), $g("处理中请稍候..."));
 							Ext.Ajax.request({
 								url: IncReasonForRefRetGridUrl + '?actiontype=delete&rowid=' + RowId,
-								waitMsg: '删除中...',
+								waitMsg: $g('删除中...'),
 								failure: function (result, request) {
 									mask.hide();
-									Msg.info("error", "请检查网络连接!");
+									Msg.info("error", $g("请检查网络连接!"));
 								},
 								success: function (result, request) {
 									var jsonData = Ext.util.JSON.decode(result.responseText);
 									mask.hide();
 									if (jsonData.success == 'true') {
-										Msg.info("success", "删除成功!");
+										Msg.info("success", $g("删除成功!"));
 										IncReasonForRefRetGridDs.remove(record);
 										IncReasonForRefRetGrid.getView().refresh();
 									} else {
 										if (jsonData.info == "-2") {
-											Msg.info("warning", "该原因已被使用,无法删除!");
+											Msg.info("warning", $g("该原因已被使用,无法删除!"));
 										} else {
-											Msg.info("error", "删除失败!");
+											Msg.info("error", $g("删除失败!"));
 										}
 									}
 								},
@@ -225,7 +225,7 @@ Ext.onReady(function () {
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 
 	var panel = new Ext.Panel({
-		title: '不可退药原因',
+		title: $g('不可退药原因'),
 		activeTab: 0,
 		region: 'center',
 		items: [IncReasonForRefRetGrid]

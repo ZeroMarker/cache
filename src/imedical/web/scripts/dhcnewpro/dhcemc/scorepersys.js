@@ -10,16 +10,20 @@ var LgHospID = session['LOGON.HOSPID'];  /// 医院ID
 
 /// 页面初始化函数
 function initPageDefault(){
-	
+
 	InitParams();      /// 初始化参数
 	InitDetList();     /// 初始化列表
 	InitComponent();   /// 初始化组件
-	GetPatBaseInfo();  /// 加载病人信息
+	InitPatInfoBanner(EpisodeID);
+	//initPatInfoBar();	/// 加载病人信息
 }
 
 /// 初始化页面参数
 function InitParams(){
-	
+	// 2023-03-09 HOS 患者列表弹出 st
+	hosNoPatOpenUrl = getParam("hosNoPatOpenUrl");
+	hosNoPatOpenUrl?hosOpenPatList(hosNoPatOpenUrl):'';
+	// 2023-03-09 HOS 患者列表弹出 ed
 	PatientID = getParam("PatientID");   /// 病人ID
 	EpisodeID = getParam("EpisodeID");   /// 就诊ID
 }
@@ -38,25 +42,11 @@ function InitComponent(){
 	$(".pf-nav-item-li").bind("click",function(){
 		$("#"+this.id).addClass("item-li-select").siblings().removeClass("item-li-select");
 		var LinkUrl = "dhcemc.scoretabreview.csp?ScoreID=&ScoreCode="+ $(this).attr("data-name") +"&EditFlag=2&EpisodeID="+ EpisodeID;
+		if ('undefined'!==typeof websys_getMWToken){
+			LinkUrl += "&MWToken="+websys_getMWToken();
+		}
 		$("#FormMain").attr("src", LinkUrl);
 	});
-}
-
-/// 病人就诊信息
-function GetPatBaseInfo(){
-	runClassMethod("web.DHCEMConsultQuery","GetPatEssInfo",{"PatientID":"", "EpisodeID":EpisodeID},function(jsonString){
-		var jsonObject = jsonString;
-		$('.ui-span-m').each(function(){
-			$(this).text(jsonObject[this.id]);
-			if (jsonObject.PatSex == "男"){
-				$("#PatPhoto").attr("src","../scripts/dhcnewpro/images/boy.png");
-			}else if (jsonObject.PatSex == "女"){
-				$("#PatPhoto").attr("src","../scripts/dhcnewpro/images/girl.png");
-			}else{
-				$("#PatPhoto").attr("src","../scripts/dhcnewpro/images/unman.png");
-			}
-		})
-	},'json',false)
 }
 
 /// 页面DataGrid初始定义已选列表
@@ -65,12 +55,13 @@ function InitDetList(){
 	///  定义columns
 	var columns=[[
 		{field:'ID',title:'ID',width:100,hidden:true},
-		{field:'ScoreLabel',title:'评分表',width:215,formatter:setCellLabel,align:'center'}
+		{field:'ScoreLabel',title:'评分表',width:215,formatter:setCellLabel,align:''}
 	]];
 	
 	///  定义datagrid
 	var option = {
 		//showHeader:false,
+		toolbar:"#tbtoolbar",
 		rownumbers : true,
 		singleSelect : true,
 		pagination: true,
@@ -83,12 +74,18 @@ function InitDetList(){
 			/// 表单类型
 			$(".pf-nav-item-li").removeClass("item-li-select");
 			var LinkUrl = "dhcemc.scoretabreview.csp?ScoreID="+ rowData.ScoreID +"&ID=" + rowData.ID +"&EditFlag=0";
+			if ('undefined'!==typeof websys_getMWToken){
+				LinkUrl += "&MWToken="+websys_getMWToken();
+			}
 			$("#FormMain").attr("src", LinkUrl);
         }
 	};
 	/// 就诊类型
 	var param = "^^^"+ EpisodeID+"^"+LgHospID; //hxy 2020-06-09 +"^"+LgHospID
 	var uniturl = $URL+"?ClassName=web.DHCEMCScoreQuery&MethodName=JsGetScore&Params="+param;
+	if ('undefined'!==typeof websys_getMWToken){
+		uniturl += "&MWToken="+websys_getMWToken();
+	}
 	new ListComponent('bmDetList', columns, uniturl, option).Init(); 
 }
 
@@ -96,7 +93,7 @@ function InitDetList(){
 function setCellLabel(value, rowData, rowIndex){
 
 	var htmlstr =  '<div class="celllabel"><h3 style="float:left;background-color:transparent;">'+ rowData.ScoreDesc +'</h3>';
-	htmlstr = htmlstr +'<h3 style="position:absolute;right:0;color:red;background-color:transparent;"><span style="font-size:17px;">'+ rowData.ScoreVal +'分</span></h3><br>';
+	htmlstr = htmlstr +'<h3 style="position:absolute;right:0;color:red;background-color:transparent;"><span style="font-size:17px;">'+ rowData.ScoreVal +$g('分')+'</span></h3><br>';
 	htmlstr = htmlstr + '<h4 style="float:left;background-color:transparent;">'+ rowData.Date +" "+ rowData.Time +'</h4>';
 	htmlstr = htmlstr + '<h4 style="float:right;background-color:transparent;">'+ rowData.User +'</h4><br>';
 	htmlstr = htmlstr + '<br>';
@@ -112,6 +109,9 @@ function review(ID, ScoreID){
 		return;
 	}
 	var link = "dhcemc.scoretabreview.csp?ScoreID="+ ScoreID +"&ID=" + ID +"&EditFlag=2";
+	if ('undefined'!==typeof websys_getMWToken){
+		link += "&MWToken="+websys_getMWToken();
+	}
 	window.open(link, '_blank', 'height='+ (window.screen.availHeight - 180) +', width=1200, top=50, left=300, toolbar=no, menubar=no, scrollbars=no, resizable=yes, location=no, status=no');
 }
 
@@ -147,7 +147,41 @@ function InvScoreCallBack(ScoreCode, scoreVal){
 function onresize_handler(){
 	
 }
-
+function initPatInfoBar(){
+	$.m({ClassName:"web.DHCDoc.OP.AjaxInterface",MethodName:"GetOPInfoBar",CONTEXT:"",EpisodeID:EpisodeID,PatientID:PatientID},function(html){
+		if (html!=""){
+			var TopBtnWid=30; //hxy 2023-01-09
+			var patInfoWi=$("#patInfo").width();
+			var whiteBaWi=$(".item-label").width()-30;
+			if(patInfoWi>whiteBaWi){
+				var Ellipsis='<div class="Ellipsis" style="width:'+TopBtnWid+'px;">...</div>';
+				$("#patInfo").html(reservedToHtml(html)+Ellipsis);
+			}else{
+				$("#patInfo").html(reservedToHtml(html));
+			}
+			$("#patInfo").mouseover(function(){
+				html=reservedToHtml(html).replace(/color:#589DDA/g, "");
+				layer.tips(html, '#patInfo', {
+    				tips: [1, '#3595CC'],
+    				area: ['800px', 'auto'],
+    				time: 0
+				});
+			});
+			$("#patInfo").mouseout(function(){
+				layer.closeAll()
+			});
+		}else{
+			$("#patInfo").html("获取病人信息失败。请检查【患者信息展示】配置。");
+		}
+	});		
+}
+function reservedToHtml(str){	
+	var replacements = {"&lt;":"<", "&#60;":"<", "&gt;":">", "&#62;":">", "&quot;":"\"", "&#34;":"\"", "&apos;":"'",
+	"&#39;":"'", "&amp;":"&", "&#38;":"&"};
+	return str.replace(/(&lt;)|(&gt;)|(&quot;)|(&apos;)|(&amp;)|(&#60;)|(&#62;)|(&#34;)|(&#39;)|(&#38;)/g,function(v){
+		return replacements[v];		
+	});
+}
 /// 页面全部加载完成之后调用(EasyUI解析完之后)
 function onload_handler() {
 
@@ -157,6 +191,9 @@ function onload_handler() {
 	
 	var thisobj = $(".pf-nav-item-li")[0];
 	var LinkUrl = "dhcemc.scoretabreview.csp?ScoreID=&ScoreCode="+ $(thisobj).attr("data-name") +"&EditFlag=2&EpisodeID="+ EpisodeID;
+	if ('undefined'!==typeof websys_getMWToken){
+		LinkUrl += "&MWToken="+websys_getMWToken();
+	}
 	$("#FormMain").attr("src", LinkUrl);
 }
 

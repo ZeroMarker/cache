@@ -266,7 +266,7 @@ function InitDispMainList() {
             },
             {
                 field: 'Tmname',
-                title: '厂商',
+                title: '生产企业',
                 width: 150,
                 align: 'left',
 				hidden:true

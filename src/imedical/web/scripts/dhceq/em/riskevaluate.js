@@ -18,7 +18,8 @@ function initPanel()
 function initTopPanel()
 {
 	initUserInfo()  ////Modiedy by zc0057 初始化会话变量
-	initButtonWidth();
+	//showBtnIcon('BEvaluate^BPreEvaluate^BReEvaluate',false); //modified by LMH 20230202 动态设置是否极简显示按钮图标
+	//initButtonWidth();  //modified by LMH 20230302 UI
 	jQuery('#BEvaluate').bind('click', BEvaluate_Clicked)
 	jQuery('#BReEvaluate').bind('click', BReEvaluate_Clicked)
 	jQuery('#BPreEvaluate').bind('click', BPreEvaluate_Clicked)
@@ -43,7 +44,7 @@ function initDHCEQRiskEvaluate()
 			RowID:getElementValue("RowID"),
 	    },
 	    singleSelect:true,
-		fitColumns:true,
+		//fitColumns:true,  //modified by LMH 20230203  列少时默认向左对齐
     	onClickRow: onClickRow,//点击单元格触发事件
 		columns:[[
 			{field:'TRiskEvaluationListDR',title:'TRiskEvaluationListDR',width:50,align:'center',hidden:true},
@@ -135,7 +136,11 @@ function BEvaluate_Clicked()
 	if(list[0]=="0") 
 	{
 		jQuery.messager.show({title: '提示',msg: '保存成功'});
-		window.location.href="dhceq.em.riskevaluate.csp?&ReadOnly=0&RowID="+list[1]+"&SourceType="+jQuery('#SourceType').val()+"&SourceID="+jQuery('#SourceID').val()+"&Name="+jQuery('#Name').val()
+		var url="dhceq.em.riskevaluate.csp?&ReadOnly=0&RowID="+list[1]+"&SourceType="+jQuery('#SourceType').val()+"&SourceID="+jQuery('#SourceID').val()+"&Name="+jQuery('#Name').val();
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
+		window.location.href=url;
 	} 
 	else
 	{
@@ -153,7 +158,11 @@ function BReEvaluate_Clicked()
 	if(list[0]=="0") 
 	{
 		jQuery.messager.show({title: '提示',msg: '保存成功'});
-		window.location.href="dhceq.em.riskevaluate.csp?&ReadOnly=0&RowID="+list[1]+"&SourceType="+jQuery('#SourceType').val()+"&SourceID="+jQuery('#SourceID').val()+"&Name="+jQuery('#Name').val()
+		"dhceq.em.riskevaluate.csp?&ReadOnly=0&RowID="+list[1]+"&SourceType="+jQuery('#SourceType').val()+"&SourceID="+jQuery('#SourceID').val()+"&Name="+jQuery('#Name').val();
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
+		window.location.href=url;
 	} 
 	else
 	{
@@ -263,7 +272,7 @@ function mergeCellsByField(tableID, colList) {
                 
                 tTable.datagrid("mergeCells", {
                     index: i - tmpA,
-                    field: ColArray[j],　　
+                    field: ColArray[j],
                     rowspan: tmpA,
                     colspan: null,
                 });

@@ -11,36 +11,15 @@ function ItemMastOn(itmmastid,TesItemDesc,arDefEmg){
 	runClassMethod("web.DHCAppPisMasterQuery","GetIsWriteFlagTCT",{"EpisodeID":EpisodeID},function(jsonString){
 		isWriteFlagTCT = jsonString;
 		if((isWriteFlagTCT != 0)&&(DocMainFlag != 1)){
-			$.messager.alert("提示:","只有成年女性才可填写妇科TCT检查申请！");
-			$('a:contains("保存")').linkbutton('disable');	
+			//$.messager.alert("建议:","成年女性才可填写妇科TCT检查申请！");
+			//$('a:contains("保存")').linkbutton('disable');	
 		}
 	},'json',false)
-	$("#TesItemID").val(itmmastid);
-	$("#TesItemDesc").val(TesItemDesc);
-	var LocID = ""; var LocDesc = "";
-	var OpenForAllHosp=0,LogLoc="";
-	var OrderOpenForAllHosp=parent.$HUI.checkbox("#OrderOpenForAllHosp").getValue();
-	var FindByLogDep=parent.$HUI.checkbox("#FindByLogDep").getValue();
-	if (OrderOpenForAllHosp==true){OpenForAllHosp=1}
-	if (FindByLogDep==true){LogLoc=session['LOGON.CTLOCID']}
-	runClassMethod("web.DHCAPPExaReportQuery","jsonItmDefaultRecLoc",{"EpisodeID":EpisodeID, "ItmmastID":itmmastid,"OrderDepRowId":LogLoc,"OpenForAllHosp":OpenForAllHosp},function(jsonString){
-		
-		if (jsonString != ""){
-			var jsonObjArr = jsonString;
-			LocID = jsonObjArr[0].value;
-			LocDesc = jsonObjArr[0].text;
-		}
-	},'json',false)
-
-	$("#recLoc").combobox("setValue",LocID);
-	$("#recLoc").combobox("setText",LocDesc);
+	ItemMastOn_Map.apply(null, arguments);
 	
 	}
 function ItemMastOff(itmmast){
-	$("#TesItemID").val("");
-	$("#TesItemDesc").val("");
-	$("#recLoc").combobox("setValue","");
-	$("#recLoc").combobox("setText","");
+	ItemMastOff_Map.apply(null, arguments);
 }
 function SaveOtherInfo(){
 	return ""
@@ -52,20 +31,20 @@ function GetIsWriteFlagTCT(){
 	
 	runClassMethod("web.DHCAppPisMasterQuery","GetIsWriteFlagTCT",{"EpisodeID":EpisodeID},function(jsonString){
 		isWriteFlagTCT = jsonString;
-		if((isWriteFlagTCT != 0)&&(DocMainFlag != 1)){
-			$.messager.alert("提示:","只有成年女性才可填写妇科TCT检查申请！");
-			$('a:contains("保存")').linkbutton('disable');	
+		if((isWriteFlagTCT != 0)){
+			websys_getTop().$.messager.alert("建议","只有成年女性才可填写妇科TCT检查申请！", 'info');
+			//$('a:contains("保存")').linkbutton('disable');	
 		}
 	},'json',false)
 }
 /// 病人就诊信息
 function GetPatBaseInfo(){
-	runClassMethod("web.DHCAppPisMasterQuery","GetPatEssInfo",{"PatientID":"", "EpisodeID":EpisodeID, "LocID":session['LOGON.CTLOCID'], "UserID":session['LOGON.USERID']},function(jsonString){
+	/*runClassMethod("web.DHCAppPisMasterQuery","GetPatEssInfo",{"PatientID":"", "EpisodeID":EpisodeID, "LocID":session['LOGON.CTLOCID'], "UserID":session['LOGON.USERID']},function(jsonString){
 		var jsonObject = jsonString;
 		if (jsonObject.PatSex == "男"){
 			$("label:contains('妇科信息')").parent().hide();
 		}
-	},'json',false)
+	},'json',false)*/
 }
 window.onbeforeunload = function(event) { 
 	if (PisID != ""){
@@ -83,12 +62,7 @@ window.onbeforeunload = function(event) {
 /// 是否允许填写申请单
 function GetIsWritePisFlag(){
 	
-	runClassMethod("web.DHCAppPisMasterQuery","GetIsWritePisFlag",{"LgGroupID":session['LOGON.GROUPID'],"LgUserID":session['LOGON.USERID'],"LgLocID":session['LOGON.CTLOCID'],"EpisodeID":EpisodeID},function(jsonString){
-		TakOrdMsg = jsonString;
-		if(TakOrdMsg != ""){
-			$.messager.alert("提示:",TakOrdMsg);
-		}
-	},'text',false)
+	GetIsWritePisFlag_Map.apply(null, arguments);
 }
 function CheckSaveInfo(){
 	if (ServerObj.TCTWomen=="0") return true;
@@ -96,7 +70,7 @@ function CheckSaveInfo(){
 	var UnknownFlag=$("#UnknownFlag").is(":checked") 
 	var PauFlag=$("#PauFlag").is(":checked") 
 	if ((MensDate=="")&&(UnknownFlag==false)&&(PauFlag==false)){
-		$.messager.alert("提示:","妇科信息必须填写");
+		websys_getTop().$.messager.alert("提示","妇科信息必须填写", 'info');
 		return false;
 		}
 	return true;

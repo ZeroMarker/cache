@@ -10,34 +10,34 @@ Ext.onReady(function() {
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 	
 	var PurNo = new Ext.form.TextField({
-				fieldLabel : '采购单号',
+				fieldLabel : $g('采购单号'),
 				id : 'PurNo',
 				name : 'PurNo',
 				anchor : '90%',
 				width : 120
 			});
 
-	// 供货厂商
+	// 供货生产企业
     var Vendor = new Ext.ux.VendorComboBox({
-				fieldLabel : '供货商',
+				fieldLabel : $g('经营企业'),
 				id : 'Vendor',
 				name : 'Vendor',
 				anchor : '90%',
-				emptyText : '供货厂商...'
+				emptyText : $g('经营企业...')
 	});
 
 	var PhaLoc = new Ext.ux.LocComboBox({
-				fieldLabel : '采购部门',
+				fieldLabel : $g('采购部门'),
 				id : 'PhaLoc',
 				name : 'PhaLoc',
 				anchor : '90%',
-				emptyText : '采购部门...',
+				emptyText : $g('采购部门...'),
 				groupId:session['LOGON.GROUPID']
 			});
 	
 		// 起始日期
 		var StartDate = new Ext.ux.DateField({
-					fieldLabel : '起始日期',
+					fieldLabel : $g('起始日期'),
 					id : 'StartDate',
 					name : 'StartDate',
 					anchor : '90%',
@@ -46,7 +46,7 @@ Ext.onReady(function() {
 				});
 		// 截止日期
 		var EndDate = new Ext.ux.DateField({
-					fieldLabel : '截止日期',
+					fieldLabel : $g('截止日期'),
 					id : 'EndDate',
 					name : 'EndDate',
 					anchor : '90%',
@@ -56,7 +56,7 @@ Ext.onReady(function() {
 
 			
 		var InciDesc = new Ext.form.TextField({
-			fieldLabel : '药品名称',
+			fieldLabel : $g('药品名称'),
 			id : 'InciDesc',
 			name : 'InciDesc',
 			anchor : '90%',
@@ -93,8 +93,8 @@ Ext.onReady(function() {
 		
 		// 查询按钮
 		var SearchBT = new Ext.Toolbar.Button({
-					text : '查询',
-					tooltip : '点击查询',
+					text : $g('查询'),
+					tooltip : $g('点击查询'),
 					width : 70,
 					height : 30,
 					iconCls:'page_find',
@@ -108,7 +108,7 @@ Ext.onReady(function() {
 		function Query() {
 			var phaLoc = Ext.getCmp("PhaLoc").getValue();
 			if (phaLoc == null || phaLoc.length <= 0) {
-				Msg.info("warning", "请选择采购部门!");
+				Msg.info("warning", $g("请选择采购部门!"));
 				return;
 			}
 			var VenId = Ext.getCmp("Vendor").getValue();
@@ -118,7 +118,7 @@ Ext.onReady(function() {
 			if(Ext.getCmp("InciDesc").getValue()==""){
 				gIncId="";
 			}
-			//科室id^开始日期^截止日期^计划单号^类组id^供应商id^药品id^完成标志^审核标志
+			//科室id^开始日期^截止日期^计划单号^类组id^经营企业id^药品id^完成标志^审核标志
 			var ListParam=phaLoc+'^'+startDate+'^'+endDate+'^'+PurNo+'^^'+VenId+'^'+gIncId+'^^^';
 			var Page=GridPagingToolbar.pageSize;
 			MasterStore.setBaseParam("strParam",ListParam);
@@ -138,8 +138,8 @@ Ext.onReady(function() {
 
 		// 清空按钮
 		var ClearBT = new Ext.Toolbar.Button({
-					text : '清屏',
-					tooltip : '点击清屏',
+					text : $g('清屏'),
+					tooltip : $g('点击清屏'),
 					width : 70,
 					height : 30,
 					iconCls : 'page_clearscreen',
@@ -161,6 +161,8 @@ Ext.onReady(function() {
 			MasterGrid.getView().refresh();
 			DetailGrid.store.removeAll();
 			DetailGrid.getView().refresh();
+			GridPagingToolbar.updateInfo();
+			
 		}
 
 		// 访问路径
@@ -195,49 +197,49 @@ Ext.onReady(function() {
 					sortable : true,
 					hidden : true
 				}, {
-					header : "计划单号",
+					header : $g("计划单号"),
 					dataIndex : 'PurNo',
 					width : 120,
 					align : 'left',
 					sortable : true
 				}, {
-					header : '采购科室',
+					header : $g('采购科室'),
 					dataIndex : 'Loc',
 					width : 120,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "计划单日期",
+					header : $g("计划单日期"),
 					dataIndex : 'Date',
 					width : 90,
 					align : 'center',
 					sortable : true
 				}, {
-					header : "采购员",
+					header : $g("采购员"),
 					dataIndex : 'User',
 					width : 120,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "是否已生成订单",
+					header : $g("是否已生成订单"),
 					dataIndex : 'PoFlag',
 					width : 120,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "完成标志",
+					header : $g("完成标志"),
 					dataIndex : 'CmpFlag',
 					width : 120,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "审批标志",
+					header : $g("审批标志"),
 					dataIndex : 'AuditFlag',
 					width : 90,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "类组",
+					header : $g("类组"),
 					dataIndex : 'StkGrp',
 					width : 100,
 					align : 'left',
@@ -248,8 +250,8 @@ Ext.onReady(function() {
 			store:MasterStore,
 			pageSize:PageSize,
 			displayInfo:true,
-			displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-			emptyMsg:"没有记录"
+			displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+			emptyMsg:$g("没有记录")
 		});
 		var MasterGrid = new Ext.grid.GridPanel({
 					title : '',
@@ -298,95 +300,95 @@ Ext.onReady(function() {
 				});
 		var nm = new Ext.grid.RowNumberer();
 		var DetailCm = new Ext.grid.ColumnModel([nm, {
-					header : "采购明细项RowId",
+					header : $g("采购明细项RowId"),
 					dataIndex : 'RowId',
 					width : 100,
 					align : 'left',
 					sortable : true,
 					hidden : true
 				}, {
-					header : "药品Id",
+					header : $g("药品Id"),
 					dataIndex : 'IncId',
 					width : 80,
 					align : 'left',
 					sortable : true,
 					hidden : true
 				}, {
-					header : '药品代码',
+					header : $g('药品代码'),
 					dataIndex : 'IncCode',
 					width : 80,
 					align : 'left',
 					sortable : true
 				}, {
-					header : '药品名称',
+					header : $g('药品名称'),
 					dataIndex : 'IncDesc',
 					width : 220,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "规格",
+					header : $g("规格"),
 					dataIndex : 'Spec',
 					width : 180,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "采购数量",
+					header : $g("采购数量"),
 					dataIndex : 'Qty',
 					width : 80,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "单位",
+					header : $g("单位"),
 					dataIndex : 'Uom',
 					width : 80,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "进价",
+					header : $g("进价"),
 					dataIndex : 'Rp',
 					width : 60,
 					align : 'right',
 					
 					sortable : true
 				}, {
-					header : "进价金额",
+					header : $g("进价金额"),
 					dataIndex : 'RpAmt',
 					width : 60,
 					align : 'right',
 					
 					sortable : true
 				}, {
-					header : "供应商",
+					header : $g("经营企业"),
 					dataIndex : 'Vendor',
 					width : 120,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "厂商",
+					header : $g("生产企业"),
 					dataIndex : 'Manf',
 					width : 120,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "配送商",
+					header : $g("配送企业"),
 					dataIndex : 'Carrier',
 					width : 120,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "申购科室",
+					header : $g("申购科室"),
 					dataIndex : 'ReqLoc',
 					width : 120,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "入库数量",
+					header : $g("入库数量"),
 					dataIndex : 'RecQty',
 					width : 80,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "未到货数量",
+					header : $g("未到货数量"),
 					dataIndex : 'LeftQty',
 					width : 100,
 					align : 'right',
@@ -411,7 +413,7 @@ Ext.onReady(function() {
 			tbar : [SearchBT, '-', ClearBT],			
 			items : [{
 				xtype:'fieldset',
-				title:'查询条件',
+				title:$g('查询条件'),
 				style : DHCSTFormStyle.FrmPaddingV,
 				layout: 'column',    // Specifies that the items will now be arranged in columns
 				defaults: {border:false},    // Default config options for child items
@@ -441,7 +443,7 @@ Ext.onReady(function() {
 					items : [            // create instance immediately
 			            {
 			                region: 'north',
-			                title:'采购单执行情况查询',
+			                title:$g('采购单执行情况查询'),
 			                height: DHCSTFormStyle.FrmHeight(2), // give north and south regions a height
 			                layout: 'fit', // specify layout manager for items
 			                items:HisListTab
@@ -452,13 +454,13 @@ Ext.onReady(function() {
                 			maxSize: document.body.clientWidth*0.8,
                 			collapsible: true,
                 			split:true,
-			                title: '采购单',			               
+			                title: $g('采购单'),			               
 			                layout: 'fit', // specify layout manager for items
 			                items: MasterGrid       
 			               
 			            }, {
 			                region: 'center',			               
-			                title: '采购单明细',
+			                title: $g('采购单明细'),
 			                layout: 'fit', // specify layout manager for items
 			                items: DetailGrid       
 			               

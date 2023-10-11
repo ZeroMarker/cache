@@ -8,7 +8,8 @@
  */
 var PageObj = {
 	m_Grid: "",
-	m_Hosp: ""
+	m_Hosp: "",
+    m_AuthFlag:tkMakeServerCall("DHCDoc.Interface.Inside.InvokeAuth","GetSwitch")
 }
 
 $(function(){
@@ -138,14 +139,15 @@ function InitGrid() {
 			{field:'id',title:'id',width:100,hidden:true},
 			{field:'action',title:'操作',width:50,align:'center',
 				formatter:function(value,row,index){
+                    var AuthHtml=LoadAuthHtml();
 					var listId = "#i-tab-process";
 					if (row.editing){
 						var s = '<span style="cursor:pointer;" onclick="ANT.saveGridRow(this,' + "'" + listId + "'" + ')"><img src="../scripts/dhcdocant/img/uicon/27-save.png" /></span>&nbsp;&nbsp;';
 						var c = '<span style="cursor:pointer;" onclick="ANT.cancelGridRow(this,' + "'" + listId + "'" + ')"><img src="../scripts/dhcdocant/img/uicon/26-no.png" /></span>';
-						return s + c;
+						return s + c + AuthHtml;
 					} else {
-						var e = '<span style="cursor:pointer;" onclick="ANT.editGridRow(this,' + "'" + listId + "'" + ')"><img src="../scripts/dhcdocant/img/uicon/28-edit.png" /></span> ';
-						return e;
+						var e = '<span id="editGridRow" style="cursor:pointer;" onclick="ANT.editGridRow(this,' + "'" + listId + "'" + ')"><img src="../scripts/dhcdocant/img/uicon/28-edit.png" /></span> ';
+						return e + AuthHtml;
 					}
 				}
 			}
@@ -218,26 +220,40 @@ function InitGrid() {
 				mcgValue = mcgValue + ",U"
 			}
 			//var rtn=$.InvokeMethod("DHCAnt.KSS.Config.Function","DBInsertProcessConfig", type, parCode, processStr, loc);
-			var result = $m({
-				ClassName:"DHCAnt.Base.MainConfigExcute",
-				MethodName:"SaveProcess",
-				mcgCode:mcgCode,
-				mcgValue:mcgValue,
-				mcgHosp:mcgHosp,
-				finalDep:finalDep,
-				id:id
-			},false);
-			
-			if (result == "1") {
-				layer.alert("保存成功！", {title:'提示',icon: 1}); 
-			} else {
-				layer.alert("保存失败！", {title:'提示',icon: 2});
-			};
+            if (PageObj.m_AuthFlag==1){
+                var Rtn=$.cm({
+                    ClassName:"DHCDoc.Interface.Inside.InvokeAuth",
+                    MethodName:"InvokeAntProcessAuth",
+                    id:id,
+                    mcgCode:mcgCode,
+                    mcgValue:mcgValue,
+                    mcgHosp:mcgHosp,
+                    finalDep:finalDep,
+                    UserID:session["LOGON.USERID"],
+                    dataType:"text"
+                },false)
+                var Arr=Rtn.split("^");
+                layer.alert(Arr[1], {title:'提示',icon: 1}); 
+            }else{
+                var result = $m({
+                    ClassName:"DHCAnt.Base.MainConfigExcute",
+                    MethodName:"SaveProcess",
+                    mcgCode:mcgCode,
+                    mcgValue:mcgValue,
+                    mcgHosp:mcgHosp,
+                    finalDep:finalDep,
+                    id:id
+                },false);
+                if (result == "1") {
+                    layer.alert("保存成功！", {title:'提示',icon: 1}); 
+                } else {
+                    layer.alert("保存失败！", {title:'提示',icon: 2});
+                };
+            }
 			//$(this).simpledatagrid('reload').simpledatagrid('clearSelections');
 			PageObj.m_Grid.reload()
 			PageObj.m_Grid.clearSelections();
 			return false;
-				
 		},
 		onCancelEdit:function(index,row){
 			row.editing = false;
@@ -275,4 +291,13 @@ function getHospValue () {
 		return session['LOGON.HOSPID'];
 	}
 	return hospId;
+}
+
+function LoadAuthHtml() {
+    var rtn=$m({
+        ClassName: "BSP.SYS.SRV.AuthItemApply",
+        MethodName: "GetStatusHtml",
+        AuthCode: "HIS-DOCANT-PROCESSCONFIG"
+    }, false);
+    return rtn;
 }

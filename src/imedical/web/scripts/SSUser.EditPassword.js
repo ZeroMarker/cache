@@ -65,8 +65,11 @@ function ValidateUpdate(e) {
 	var repassword = objConfirmPwd.value;
 	password = password.replace(/\t|\n|\s|\f|\r|\v/g,"");
 	repassword = repassword.replace(/\t|\n|\s|\f|\r|\v/g,"");
-	objNewPwd.value = dhc_cacheEncrypt(password);
-	objConfirmPwd.value = dhc_cacheEncrypt(repassword);
+	objNewPwd.value = dhc_genCacheBCrypt(password) ; //dhc_cacheEncrypt(password);
+	objConfirmPwd.value = dhc_genCacheBCrypt(repassword);
+	if (document.getElementById('SSUSRPIN')){ //pin²»ÐÞ¸Ä
+		document.getElementById('SSUSRPIN').value = dhc_cacheEncrypt(password);
+	}
 	return update1_click();
 }
 function PasswordChangeHandler(e) {

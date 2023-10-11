@@ -7,8 +7,16 @@ $(function(){
 		$("#btnSaveCase").attr("style","display:none;");
 		$("#btnModifyCase").attr("style","display:none;");
 	}
+	if ("undefined"==typeof HISUIStyleCode || HISUIStyleCode==""){
+	 // 炫彩版
+	 }else if (HISUIStyleCode=="lite"){
+	 // 极简版
+	 	$("#centerDiv").css("background-color", "#F5F5F5");
+	 }else{
+	// 炫彩版
+	}
 	
-	$("#btSimpleList").click(function(){
+/* 	$("#btSimpleList").click(function(){
 		$("#simpleString").css("display","none");
 		$("#simpleList").css("display","block");
 		
@@ -17,11 +25,25 @@ $(function(){
 		$("#simpleList").css("display","none");
 		$("#simpleString").css("display","block");
 		$("#btSimpleList").removeClass("focus");		
-	});	
+	});
+	*/
+	
+	$('#ListAndStringKeyWord').keywords({
+        singleSelect:true,
+        items:[
+            {text:emrTrans('简单条件'),id:'btSimpleList',selected:true},
+            {text:emrTrans('输入号串'),id:'btSimpleString'}
+        ],
+        onClick:function(v){
+            toggleBtn(v.id);
+        }
+    });
+		
 	initSmipleCondition()
 	initResultColums();
 	initAdvancedCondition();
 	initCombo();
+	initLocView();
 	//简单查询
 	document.getElementById("btnCommit").onclick = function(){
 		getResultData();
@@ -32,6 +54,8 @@ $(function(){
 	});
 	
 	document.getElementById("btnCommitAdvanced").onclick = function(){
+        //按钮只读，加载进度条
+		setQueryButtonStatus(false);
 		getAdvancedRequest();
 	}	
 	$("#resetSimpleCondition").click(function(){
@@ -44,28 +68,37 @@ $(function(){
 	//添加条件
 	$("#btAddCondition").click(function(){
 		//window.showModalDialog("epr.query.hisui.popwin.csp?Action=condition",window,"dialogHeight:500px;dialogWidth:608px;resizable:no;status:no");
-		var content = "<iframe id='addCondition' name='addCondition' scrolling='auto' frameborder='0' src='epr.query.hisui.popwin.csp?Action=condition&DialogId=dialogDiv' style='height:500px;width:608px;display:block;'></iframe>"
-		createModalDialog("dialogDiv","添加条件","614","560","addCondition",content);
+		var content = "<iframe id='addCondition' name='addCondition' scrolling='auto' frameborder='0' src='epr.query.hisui.popwin.csp?Action=condition&DialogId=dialogDiv&canViewAllLoc="+canViewAllLoc+"' style='height:100%;width:100%;display:block;'></iframe>"
+		createModalDialog("dialogDiv","添加条件","630","600","addCondition",content);
 	});	
 	//添加结果
 	$("#btAddResultCol").click(function(){
 		//returnValues = window.showModalDialog("epr.query.hisui.popwin.csp?Action=result",window,"dialogHeight:500px;dialogWidth:608px;resizable:no;status:no");
-		var content = "<iframe id='addResultCol' name='addResultCol' scrolling='auto' frameborder='0' src='epr.query.hisui.popwin.csp?Action=result&DialogId=dialogDiv' style='height:500px;width:608px;display:block;'></iframe>"
-		createModalDialog("dialogDiv","添加结果","614","560","addResultCol",content);
+		var content = "<iframe id='addResultCol' name='addResultCol' scrolling='auto' frameborder='0' src='epr.query.hisui.popwin.csp?Action=result&DialogId=dialogDiv' style='height:100%;width:100%;display:block;'></iframe>"
+		createModalDialog("dialogDiv","添加结果","630","600","addResultCol",content);
 	});
-		
+	//后台任务列表
+	$("#btnTaskList").click(function(){
+		var content = "<iframe id='taskList' scrolling='auto' frameborder='0' src='epr.query.hisui.tasklist.csp' style='height:100%;width:100%;display:block;'></iframe>"
+		createModalDialog("dialogTaskList","任务列表","1200","600","taskList",content);
+	});
+	//添加任务
+	$("#btnAddTask").click(function(){
+		var content = "<iframe id='addTask' scrolling='auto' frameborder='0' src='epr.query.hisui.taskaddrecord.csp' style='height:100%;width:100%;display:block;'></iframe>"
+		createModalDialog("dialogAddTask","添加任务","320","157","addTask",content,addTaskCallBack,"");
+	});
 	//打开方案列表弹出框
 	$("#btnSelectCase").click(function(){
 		//returnValues = window.showModalDialog("epr.query.hisui.popwincaselist.csp",window,"dialogHeight:500px;dialogWidth:608px;resizable:no;status:no");
-		var content = "<iframe id='selectCase' name='selectCase' scrolling='auto' frameborder='0' src='epr.query.hisui.popwincaselist.csp?DialogId=dialogDiv' style='height:500px;width:608px;display:block;'></iframe>"
+		var content = "<iframe id='selectCase' name='selectCase' scrolling='auto' frameborder='0' src='epr.query.hisui.popwincaselist.csp?DialogId=dialogDiv' style='height:100%;width:100%;display:block;'></iframe>"
 		createModalDialog("dialogDiv","选择已有方案","614","560","selectCase",content);
 	});
 	//打开保存方案弹出框
 	$("#btnSaveCase").click(function(){
 		//returnValues = window.showModalDialog("epr.query.hisui.popwincase.csp?saveType=save",window,"dialogHeight:500px;dialogWidth:608px;resizable:no;status:no");
-		var content = "<iframe id='saveCase' name='saveCase' scrolling='auto' frameborder='0' src='epr.query.hisui.popwincase.csp?saveType=save&DialogId=dialogDiv' style='height:500px;width:608px;display:block;'></iframe>"
+		var content = "<iframe id='saveCase' name='saveCase' scrolling='auto' frameborder='0' src='epr.query.hisui.popwincase.csp?saveType=save&DialogId=dialogDiv' style='height:100%;width:100%;display:block;'></iframe>"
 
-		createModalDialog("dialogDiv","保存方案","614","560","saveCase",content);
+		createModalDialog("dialogDiv","保存方案","1020","625","saveCase",content);
 	});
 	//打开修改方案弹出框
 	$("#btnModifyCase").click(function(){
@@ -80,15 +113,62 @@ $(function(){
 			}
 			else {
 				//returnValues = window.showModalDialog("epr.query.hisui.popwincase.csp?saveType=modify",window,"dialogHeight:500px;dialogWidth:608px;resizable:no;status:no");
-				var content = "<iframe id='modifyCase' name='modifyCase' scrolling='auto' frameborder='0' src='epr.query.hisui.popwincase.csp?saveType=modify&DialogId=dialogDiv' style='height:500px;width:608px;display:block;'></iframe>"
+				var content = "<iframe id='modifyCase' name='modifyCase' scrolling='auto' frameborder='0' src='epr.query.hisui.popwincase.csp?saveType=modify&DialogId=dialogDiv' style='height:100%;width:100%;display:block;'></iframe>"
 			
-				createModalDialog("dialogDiv","修改方案","614","560","modifyCase",content);
+				createModalDialog("dialogDiv","修改方案","1020","625","modifyCase",content);
 			}
+		}
+	});
+	
+	$('#txtValue0').combobox({
+		onSelect: function(record){
+			if (record.id == "I")
+			{
+				var data =[
+					{
+						"id":"O&EPR^AdmDate^AdmDate^date^1",
+						"text":emrTrans("就诊日期"),
+						"selected":true		
+					},
+					{
+						"id":"I&EPR^DischDate^DischDate^date^1",
+						"text":emrTrans("出院日期")		
+					}
+				]
+			}
+			else
+			{
+				var data =[
+					{
+						"id":"O&EPR^AdmDate^AdmDate^date^1",
+						"text":emrTrans("就诊日期"),
+						"selected":true		
+					}
+				]
+			}
+			$('#name1').combobox('loadData',data);
+			$('#name2').combobox('loadData',data);
 		}
 	});
 	
 },0);﻿
 
+///切换页签
+function toggleBtn(tabId)
+{
+    if (tabId == "btSimpleList")
+    {
+	  	$("#simpleString").css("display","none");
+		$("#simpleList").css("display","block");
+    }
+    else
+    {
+	  	$("#simpleList").css("display","none");
+		$("#simpleString").css("display","block");
+		$("#btSimpleList").removeClass("focus");
+    }
+    
+}
 function initCombo()
 {
 	$HUI.combobox("#cbxRegType",{width:'154'});
@@ -197,7 +277,7 @@ function initResultColums()
 
 function getStrResultColum(status,value,id,desc)
 {
-	var	item = '<div><input class="hisui-checkbox" type="checkbox" data-options="checked:true,disabled:'+status+'" value="'+value+'" id="'+id+'" label="'+desc+'"/></div>';
+	var	item = '<div class="resultcolum"><input class="hisui-checkbox" type="checkbox" data-options="checked:true,disabled:'+status+'" value="'+value+'" id="'+id+'" label="'+desc+'"/></div>';
 	return item;
 }
 
@@ -215,12 +295,17 @@ function setResultColums(items)
 		var itemID = "ResultColsCheck" + $("#divResultCols").find("input").length;
 		var code = item.cateType + "^" + item.code;
 		var title = item.cateName + "." + item.title;
-		var find = $("#divResultCols").find("input[value='"+code+"']");
+		//var find = $("#divResultCols").find("input[value='"+code+"']");
+		var find = $("#divResultCols").find("input[label='"+title+"']")
 		if (find.length <= 0)
 		{
 			var col = getStrResultColum(false,code,itemID,title);
 			$("#divResultCols").append(col);
 		}
+		else
+		{
+			$.messager.alert("简单提示", "添加的结果列有重复，已将其过滤！", 'info');
+		}		
 	})
 	$.parser.parse("#divResultCols");
 	setResultData();  
@@ -257,18 +342,17 @@ function setResultData()
 {
 	var cols = getResultCol();
 	$('#dgResultGrid').datagrid({
-		title:"查询结果",
 		headerCls:'panel-header-gray',
 		pagination:true,
 		rownumbers:true,
+		border:false,
 		pageSize:20,
 		total:1,
 		fit:true,
 		data:[], 
 	    columns:[cols.columns],
 	    onLoadSuccess:function(){
-		    $('#btnCommit').linkbutton('enable');
-			$('#btnCommitAdvanced').linkbutton('enable');
+		    setQueryButtonStatus(true);
 		} 
 	});	
 }
@@ -288,7 +372,14 @@ function getResultCol()
 			var style="display:block;width:100%;";
 			if (row["EpisodeID"]!="")
 			{
-				style += "background:url(../skin/default/images/read.png) center center no-repeat;"
+				if((HISUIStyleCode)&&(HISUIStyleCode=="lite"))
+				{
+					style += "background:url(../skin/default/images/read.png) center center no-repeat;"
+				}
+				else
+				{
+					style += "background:url(../skin/default/images/read.png) center center no-repeat;"
+				}
 				html = html + '<span title="'+title+'" style="'+style+'" onclick = recordBrowser(' + row["EpisodeID"] + ');>&nbsp;&nbsp;</span>';
 			}
 			
@@ -322,25 +413,28 @@ function recordBrowser(EpisodeID)
 	var winoption ="dialogHeight:"+sheight+"px;dialogWidth:"+ swidth +"px;status:yes;scroll:yes;resizable:yes;center:yes";
 	//var url = "websys.chartbook.hisui.csp?PatientListPanel=emr.browse.episodelist.csp&PatientListPage=emr.browse.patientlist.csp&SwitchSysPat=N&ChartBookName=DHC.Doctor.DHCEMRbrowse&EpisodeID="+EpisodeID
 	//window.showModalDialog(url,"",winoption);
-	var content = "<iframe id='patientBrowser' name='patientBrowser' scrolling='auto' frameborder='0' src='websys.chartbook.hisui.csp?PatientListPanel=emr.browse.episodelist.csp&PatientListPage=emr.browse.patientlist.csp&SwitchSysPat=N&ChartBookName=DHC.Doctor.DHCEMRbrowse&EpisodeID="+EpisodeID+"' style='width:"+swidth+"px;height:"+(sheight-80)+"px;display:block;'></iframe>"
+	var content = "<iframe id='patientBrowser' name='patientBrowser' scrolling='auto' frameborder='0' src='websys.chartbook.hisui.csp?PatientListPanel=emr.browse.episodelist.csp&PatientListPage=emr.browse.patientlist.csp&SwitchSysPat=N&ChartBookName=DHC.Doctor.DHCEMRbrowse&EpisodeID="+EpisodeID+"&MWToken="+getMWToken()+"' style='width:"+swidth+"px;height:"+(sheight-80)+"px;display:block;'></iframe>"
 	createModalDialog("DialogDiv","病历浏览",swidth,sheight,"patientBrowser",content);
 }
 
 function getNameData()
 {
-	var data =[ 
+	var data =[
+		{
+			"id":"O&EPR^AdmDate^AdmDate^date^1",
+			"text":emrTrans("就诊日期"),
+			"selected":true		
+		},
+		/*
 		{
 			"id":"I&EPR^AdmDate^AdmDate^date^1",
-			"text":emrTrans("入院日期"),
+			"text":"入院日期",
 			"selected":true
 		},
+		*/
 		{
 			"id":"I&EPR^DischDate^DischDate^date^1",
 			"text":emrTrans("出院日期")		
-		},
-		{
-			"id":"O&EPR^AdmDate^AdmDate^date^1",
-			"text":emrTrans("就诊日期")		
 		}
 	]
 	return data;
@@ -369,8 +463,19 @@ function getRelation()
 	]
 	return data;	
 }
-
-
+//高级查询固定就诊类型，需要“全部”选项
+function getAdmTypeData()
+{
+	var data = 
+	[
+		{"id":"I","text":emrTrans("住院")},
+		{"id":"O","text":emrTrans("门诊")},
+		{"id":"E","text":emrTrans("急诊")},
+		{"id":"ALL","text":emrTrans("全部")}
+	]
+	return data;
+}
+//简单查询就诊类型
 function getEpisodeType()
 {
 	var data = 
@@ -400,12 +505,13 @@ function getResultData()
 	if (param == "")
 	{
 		return;
-	} 
-	$('#btnCommit').linkbutton('disable');
-		jQuery.ajax({
+	}
+    //加载进度条
+    setQueryButtonStatus(false);
+	jQuery.ajax({
 		type: "post",
 		dataType: "json",
-		url: '../web.eprajax.query.basicquery.cls?frameType=HISUI',
+		url: '../web.eprajax.query.basicquery.cls?frameType=HISUI&canViewAllLoc=' + canViewAllLoc,
 		async: true,
 		data:param,
 		success: function(d) 
@@ -416,10 +522,11 @@ function getResultData()
 				hiddenGUID:d.GUID,
 				hiddenCols:cols.columnstr
 			}
-			$('#dgResultGrid').datagrid("options").url  = '../web.eprajax.query.basicquery.cls?frameType=HISUI';
+			$('#dgResultGrid').datagrid("options").url  = '../web.eprajax.query.basicquery.cls?frameType=HISUI&canViewAllLoc=' + canViewAllLoc;
 			$('#dgResultGrid').datagrid('load', girdParam);
+			//$('#btnCommit').linkbutton('enable');
 		},
-		error : function(d) { $.messager.alert("简单提示", "error", 'info');$('#btnCommit').linkbutton('enable');}
+		error : function(d) { $.messager.alert("简单提示", "error", 'info'); setQueryButtonStatus(true);}
 	});	
 }
 
@@ -448,6 +555,8 @@ function getSimpContions()
 		{
 		  submitValues.MedicareNo = $("#numbers").val();
 		}
+        
+        if (canViewAllLoc == "N") {submitValues.locID = ctLocID;}
 	}	
 	else
 	{
@@ -458,6 +567,7 @@ function getSimpContions()
 		submitValues.cbxRegType = $('#cbxRegType').combobox('getValue');
 		submitValues.txtDiagnose = $("#txtDiagnose").val();
 		submitValues.locID = $('#cbxLoc').combogrid('getValue');
+		if (canViewAllLoc == "N") {submitValues.locID = ctLocID;}
 		submitValues.wardID = $('#cbxWard').combogrid('getValue');
 		submitValues.dtAdmBeginDate = dateFormat($("#dtAdmBeginDate").datebox('getValue'));
 		submitValues.dtAdmEndDate = dateFormat($("#dtAdmEndDate").datebox('getValue'));
@@ -651,9 +761,11 @@ function DateCompare(Date1, Date2) {
 function initAdvancedCondition() 
 {
     var table = $('#tblCondition');
-	var tr = setTrCondition("0","true","str","","","select","","","str",">",emrTrans("大于"),"date");
+    var tr = setTrCondition("0","true","str","","","str",emrTrans("就诊类型"),"HIS^AdmType^AdmType^str^1","str","=",emrTrans("等于"),"selectAdmType")
 	$(table).append(tr);
-	var tr = setTrCondition("1","true","str","&&&",emrTrans("并且"),"select","","","str","<",emrTrans("小于"),"date");
+	var tr = setTrCondition("1","true","str","&&&",emrTrans("并且"),"select","","","str",">",emrTrans("大于"),"date");
+	$(table).append(tr);
+	var tr = setTrCondition("2","true","str","&&&",emrTrans("并且"),"select","","","str","<",emrTrans("小于"),"date");
 	$(table).append(tr);
 	$.parser.parse('#tblCondition');
 	$.parser.parse();
@@ -662,7 +774,8 @@ function initAdvancedCondition()
 function resetAdvancedCondition()
 {
 	//高级查询重置按钮事件
-	var trs = $("#tblCondition").find("input[name='condition']:not(:checked)").parents("tr").remove();
+	var trs = $("#tblCondition input").val("");
+	var trs = $("#tblCondition >div:nth-child(n+4)").remove();
 
 }
 
@@ -672,7 +785,7 @@ function addAdvacedCondition(conditions)
 	var table = $('#tblCondition');
 	var arrDic = new Array();
 	$.each(conditions, function(index,item) {
-		var curIndex = $("#tblCondition tr").length;
+		var curIndex = $("#tblCondition .row-item-big-long").length;
 		var code = item.code
 		var title = item.title;
 		var cateType = item.cateType;
@@ -709,7 +822,7 @@ function readAdvacedCondition(conditionStr)
 	var i=1,j=2,k=3,m=4,n=5;
 	for (i=1; i<=conditionNum;i=i+5)
 	{
-		var curIndex = $("#tblCondition tr").length;
+		var curIndex = $("#tblCondition .row-item-big-long").length;
 		
 		var setORCode = conditionStr.split(",")[i];
 		var setItemCode = conditionStr.split(",")[j];
@@ -718,24 +831,33 @@ function readAdvacedCondition(conditionStr)
 		var settxtValue = conditionStr.split(",")[n];
 		j=j+5,k=k+5,m=m+5,n=n+5;
 		
-		if (i < 10)
+		if (i < 15)
 		{
 			if (i == 1)
 			{
-				var tr = setTrCondition("0","true","str","","","select","","","str",">",emrTrans("大于"),"date");
+				var tr = setTrCondition(curIndex,"true","str","","","str",emrTrans("就诊类型"),"HIS^AdmType^AdmType^str^1","str","=",emrTrans("等于"),"selectAdmType")
 				$(table).append(tr);
 				$.parser.parse('#row'+curIndex);
+				$('#txtValue' + curIndex).combobox('setValue', settxtValue);
 			}
 			else if (i == 6)
 			{
-				var tr = setTrCondition("1","true","str","&&&",emrTrans("并且"),"select","","","str","<",emrTrans("小于"),"date");
+				var tr = setTrCondition(curIndex,"true","str","&&&",emrTrans("并且"),"select","","","str",">",emrTrans("大于"),"date");
 				$(table).append(tr);
 				$.parser.parse('#row'+curIndex);
+				$('#name' + curIndex).combobox('select',setItemCode);
+				$('#txtValue' + curIndex).datebox('setValue', settxtValue);
 			}
-			$('#name' + curIndex).combobox('select',setItemCode);
-			$('#txtValue' + curIndex).datebox('setValue', settxtValue);
+			else if (i == 11)
+			{
+				var tr = setTrCondition("2","true","str","&&&",emrTrans("并且"),"select","","","str","<",emrTrans("小于"),"date");
+				$(table).append(tr);
+				$.parser.parse('#row'+curIndex);
+				$('#name' + curIndex).combobox('select',setItemCode);
+				$('#txtValue' + curIndex).datebox('setValue', settxtValue);
+			}
 		}
-		else if (i>10)
+		else if (i>15)
 		{
 			var info = setItemCode.split("^");
 	        var valType = info[3];
@@ -769,6 +891,7 @@ function readAdvacedCondition(conditionStr)
 			}
 		}
 	}
+	return "Y";
 }
 
 function loadDics(arrDic)
@@ -780,49 +903,63 @@ function loadDics(arrDic)
 
 function setTrCondition(curIndex,checkboxStatus,relationType,relationCode,relationValue,nameType,nameValue,nameCode,opType,opCode,opValue,valueType)
 {
-	var tr = $('<tr id="row'+curIndex+'"></tr>');
-	$(tr).append('<td class="tdcheckbox"><input name="condition" class="hisui-checkbox" data-options="disabled:'+checkboxStatus+',checked:true" id="checkbox'+curIndex+'" type="checkbox"></td>');
-	if (relationType == "str")
+	var parDiv = $('<div class="row-item-big-long" id="row'+curIndex+'"></div>');
+	if ((canViewAllLoc == "N")&&((nameValue.indexOf("科室") != -1)||(nameValue.indexOf("病区") != -1)))
 	{
-		$(tr).append('<td class="tdrelation"><label id="relation'+curIndex+'" code="'+relationCode+'">'+relationValue+'</label></td>');
+		var tdcheckFlag = false;
+		checkboxStatus = true;
 	}
 	else
 	{
-		$(tr).append('<td class="tdrelation"><input id="relation'+curIndex+'" class="hisui-combobox" data-options="width:65,panelHeight:'+"'auto'"+',valueField:'+"'id'"+',textField:'+"'text'"+',data:getRelation()"></input></td>');		
+		var tdcheckFlag = true;
+	}
+	$(parDiv).append('<div class="tdcheckbox row-item-short-input1"><input name="condition" class="hisui-checkbox" data-options="disabled:'+checkboxStatus+',checked:'+tdcheckFlag+'" id="checkbox'+curIndex+'" type="checkbox"></div>');
+	
+	if (relationType == "str")
+	{
+		$(parDiv).append('<div class="tdrelation row-item-short-input2" style="padding-top:4px"><label id="relation'+curIndex+'" code="'+relationCode+'">'+relationValue+'</label></div>');
+	}
+	else
+	{
+		$(parDiv).append('<div class="tdrelation row-item-short-input2"><input id="relation'+curIndex+'" class="hisui-combobox" data-options="width:65,panelHeight:'+"'auto'"+',valueField:'+"'id'"+',textField:'+"'text'"+',data:getRelation()"></input></div>');		
 	}
 	if (nameType == "select")
 	{
-		$(tr).append('<td class="tdcolname"><input id="name'+curIndex+'" class="hisui-combobox colname" data-options="panelHeight:'+"'auto'"+',valueField:'+"'id'"+',textField:'+"'text'"+',data:getNameData()"></input></td>');
+		$(parDiv).append('<div class="tdcolname row-item-short-input3"><input id="name'+curIndex+'" class="hisui-combobox colname" data-options="panelHeight:'+"'auto'"+',valueField:'+"'id'"+',textField:'+"'text'"+',data:getNameData()"></input></div>');
 	}
 	else
 	{
-		$(tr).append('<td class="tdcolname"><label id="name'+curIndex+'" code="'+nameCode+'">'+nameValue+'</label></td>');
+		$(parDiv).append('<div class="tdcolname row-item-short-input3" style="padding-top:4px"><label id="name'+curIndex+'" code="'+nameCode+'">'+nameValue+'</label></div>');
 	}
 	if (opType == "str")
 	{
-		$(tr).append('<td class="tdop"><label id="op'+curIndex+'" code="'+opCode+'">'+opValue+'</label></td>');
+		$(parDiv).append('<div class="tdop row-item-short-input4" style="padding-top:4px"><label id="op'+curIndex+'" code="'+opCode+'">'+opValue+'</label></div>');
 	}
 	else
 	{
-		$(tr).append('<td class="tdop"><input id="op'+curIndex+'" class="hisui-combobox" data-options="width:70,panelHeight:'+"'auto'"+',valueField:'+"'id'"+',textField:'+"'text'"+',data:getOPData()"></input></td>');
+		$(parDiv).append('<div class="tdop row-item-short-input4"><input id="op'+curIndex+'" class="hisui-combobox" data-options="width:70,panelHeight:'+"'auto'"+',valueField:'+"'id'"+',textField:'+"'text'"+',data:getOPData()"></input></div>');
 	}
 	if (valueType == "date")
 	{
-		$(tr).append('<td ><input id="txtValue'+curIndex+'" class="hisui-datebox textbox value"/></td>');
+		$(parDiv).append('<div class="tdop row-item-short-input5"><input id="txtValue'+curIndex+'" class="hisui-datebox boxvalue"/></div>');
 	}
 	else if (valueType == "time")
 	{
-		$(tr).append('<td ><input id="txtValue'+curIndex+'" class="hisui-timespinner" data-options="width:146"/></td>');
+		$(parDiv).append('<div class="tdop row-item-short-input5"><input id="txtValue'+curIndex+'" class="hisui-timespinner boxvalue"/></div>');
 	}
 	else if (valueType == "select")
 	{
-		$(tr).append('<td ><input id="txtValue'+curIndex+'" class="hisui-combobox boxvalue"/></td>');
+		$(parDiv).append('<div class="row-item-short-input5"><input id="txtValue'+curIndex+'" class="hisui-combobox boxvalue"/></div>');
+	}
+	else if (valueType == "selectAdmType")
+	{
+		$(parDiv).append('<div class="row-item-short-input5"><input id="txtValue'+curIndex+'" class="hisui-combobox boxvalue" data-options="valueField:'+"'id'"+',textField:'+"'text'"+',data:getAdmTypeData()"></input></div>');
 	}
 	else
 	{
-		$(tr).append('<td ><input id="txtValue'+curIndex+'" class="textbox value"/></td>');
+		$(parDiv).append('<div class="row-item-short-input5"><input id="txtValue'+curIndex+'" class="textbox"/></div>');
 	}
-	return tr;
+	return parDiv;
 }
 
 
@@ -832,16 +969,17 @@ function getAdvancedRequest()
 	var arrAdvancedCondition = getAdvancedConditions();
 	if (!arrAdvancedCondition[0]) 
 	{
-		 $.messager.alert("提示信息", arrAdvancedCondition[1],"alert"); 
+		 $.messager.alert("提示信息", arrAdvancedCondition[1],"alert");
+		 setQueryButtonStatus(true);
 		 return;
 	}
 	var cols = getResultCol();
-	$('#btnCommitAdvanced').linkbutton('disable');
+	//$('#btnCommitAdvanced').linkbutton('disable');
 	var tmpGUID = ""
 	jQuery.ajax({
 		type: "post",
 		dataType: "json",
-		url: '../web.eprajax.query.advancedquery.cls?frameType=HISUI',
+		url: '../web.eprajax.query.advancedquery.cls?frameType=HISUI&canViewAllLoc=' + canViewAllLoc,
 		async: true,
 		data:{action: 'getGUID', hiddenGUID: $("#hiddenAdvancedGUID").text()},
 		success: function(d) 
@@ -853,30 +991,42 @@ function getAdvancedRequest()
 				var k=0;       
 				var curnum=0;  
 				querydataToTempGlobal(k,tmpGUID,arrAdvancedCondition,cols.columnstr);		
+				//记录日志
+				var resultColumnArr = cols.columnstr.split("&");
+				var resColDesc = "";
+				$.each(resultColumnArr,function(i,item)
+				{
+					var itemArr = item.split("^");
+					resColDesc = resColDesc+"/"+itemArr[3];
+				});	//获取结果列
+				if (arrAdvancedCondition[3] == "DischDate"){taskConditions = "出院日期"+taskConditions;}else{taskConditions = "入院日期"+taskConditions;}
+				setQueryLog("../web.eprajax.query.medicalquerytask.cls","EMR.Query.View",arrAdvancedCondition[3],taskConditions,resColDesc)	
 			}
 		},
-		error : function(d) { $.messager.alert("简单提示", "error", 'info');$('#btnCommitAdvanced').linkbutton('enable');}
+		error : function(d) { $.messager.alert("简单提示", "error", 'info'); setQueryButtonStatus(true);}
 	});	
 	
 }
 
-function getAdvancedConditions() {
+var taskConditions = "";
+function getAdvancedConditions(action) {
 	var resulstContion = new Array();
     resulstContion[0] = false;
     resulstContion[1] = "";    
-    var length = $("#tblCondition tr").length; 
-    var itemCode0 = $("#name0").combobox("getValue");
-    itemCode0 = itemCode0.substring(2);
-	var opCode0 = document.getElementById("op0").getAttribute("code");
-	var itemCode1 = $("#name1").combobox("getValue");
-	itemCode1 = itemCode1.substring(2); 
-    var relationCode1 = document.getElementById("relation1").getAttribute("code");
+    var length = $("#tblCondition .row-item-big-long").length;
+    var itemCode1 = $("#name1").combobox("getValue");
+    itemCode1 = itemCode1.substring(2);
+	var relationCode1 = document.getElementById("relation1").getAttribute("code");
 	var opCode1 = document.getElementById("op1").getAttribute("code");
-	var fromDate = $("#txtValue0").datebox('getValue');
+	var itemCode2 = $("#name2").combobox("getValue");
+	itemCode2 = itemCode2.substring(2); 
+	var relationCode2 = document.getElementById("relation2").getAttribute("code");
+	var opCode2 = document.getElementById("op2").getAttribute("code");
+	var fromDate = $("#txtValue1").datebox('getValue');
 	fromDate = dateFormat(fromDate);
-	var toDate = $("#txtValue1").datebox('getValue');
+	var toDate = $("#txtValue2").datebox('getValue');
 	toDate = dateFormat(toDate);    
-    var check = checkValue(length,fromDate,toDate,itemCode0,itemCode1);
+    var check = checkValue(length,fromDate,toDate,itemCode1,itemCode2);
     if (!check[0])
     {
         resulstContion[1] = check[1];
@@ -889,16 +1039,20 @@ function getAdvancedConditions() {
     resulstContion[0] = true;
     var tmpFromDate = fromDate;
     var i = 0;
+    taskConditions = "大于"+fromDate+"并且小于"+toDate;
     var tmpCondition = getCondition(length);
-    while(i<iEnd-1)
+    if (action !== "addTask")
     {
-		tmpToDate = stringDateAdd(tmpFromDate,selectGap-1);
-		resulstContion[2][i] = "$" + opCode0 + "$" + tmpFromDate + relationCode1 + "$" + opCode1 + "$" + tmpToDate + tmpCondition;
-		tmpFromDate = stringDateAdd(tmpToDate,1);
-		i = i + 1;		
-    }
-    resulstContion[2][i] = "$" + opCode0 + "$" + tmpFromDate + relationCode1 + "$" + opCode1 + "$" + toDate + tmpCondition;
-    resulstContion[3] = itemCode0.split("^")[1];
+	    while(i<iEnd-1)
+	    {
+			tmpToDate = stringDateAdd(tmpFromDate,selectGap-1);
+			resulstContion[2][i] = "$" + opCode1 + "$" + tmpFromDate + relationCode1 + "$" + opCode2 + "$" + tmpToDate + tmpCondition;
+			tmpFromDate = stringDateAdd(tmpToDate,1);
+			i = i + 1;		
+	    }    
+	}
+    resulstContion[2][i] = "$" + opCode1 + "$" + tmpFromDate + relationCode2 + "$" + opCode2 + "$" + toDate + tmpCondition;
+    resulstContion[3] = itemCode1.split("^")[1];
     return resulstContion;
 }
 ///检查数据
@@ -920,15 +1074,15 @@ function checkValue(length,fromDate,toDate,itemCode0,itemCode1){
     }	
 	var txtValue = "",itemCode = "", itemType = "";label = "";
 	arrCheck[0] = true;
-	for (var i = 0; i < length; i++) 
+	for (var i = 1; i < length; i++) 
 	{
 		if (!document.getElementById("checkbox" + i).checked) continue;
-		if (i == 0) 
+		if (i == 1) 
 		{
 			itemCode = itemCode0;
 			label = $("#name" + i).combobox("getText")
 			txtValue = fromDate; 
-		} else if (i==1)
+		} else if (i==2)
 		{
 			itemCode = itemCode1;
 			label = $("#name" + i).combobox("getText")
@@ -987,39 +1141,66 @@ function checkValue(length,fromDate,toDate,itemCode0,itemCode1){
 
 ///取条件
 function getCondition(length){ 
-    var strCondition = "";
+	var strCondition = "";
     var relationCode = "", itemCode = "", opCode = "", txtValue = "", itemType = "";    
-    for (var i = 2; i < length; i++) 
+    for (var i = 0; i < length; i++) 
     {
+	    if((i == 1)||(i == 2)) continue;
 		if(!document.getElementById("checkbox" + i).checked) continue;
-		relationCode = $("#relation" + i).combobox("getValue");
-		opCode = $("#op" + i).combobox("getValue");
-        itemCode = document.getElementById("name" + i).getAttribute("code");
-        var arrItiemCode = itemCode.split("^");
-        if (arrItiemCode[4] != 1)
-        {
-	        txtValue = $("#txtValue" + i).combobox("getText");
-	    }
-	    else
-	    {
-		    if (arrItiemCode[3] == "date")
-		    {
-			    txtValue = $("#txtValue" + i).datebox("getValue");
-			    txtValue = dateFormat(txtValue);
-			}
-			else if (arrItiemCode[3] == "time")
+		itemCode = document.getElementById("name" + i).getAttribute("code");
+		if (i == 0)
+		{
+			relationCode = "&&&";
+			opCode = "=";
+			txtValue = $("#txtValue" + i).combobox("getValue");
+			if (txtValue == "ALL")
 			{
-				txtValue = $("#txtValue" + i).timespinner("getValue");
-			}
-			else
-			{
-				txtValue = $("#txtValue" + i).val();
+				opCode = "<>";
 			}
 		}
-
-      	strCondition = strCondition + relationCode + itemCode + "$" + opCode + "$" + txtValue;
+		else
+		{
+			relationCode = $("#relation" + i).combobox("getValue");
+			opCode = $("#op" + i).combobox("getValue");
+	        var arrItiemCode = itemCode.split("^");
+	        if (arrItiemCode[4] != 1)
+	        {
+		        txtValue = $("#txtValue" + i).combobox("getText");
+		    }
+		    else
+		    {
+			    if (arrItiemCode[3] == "date")
+			    {
+				    txtValue = $("#txtValue" + i).datebox("getValue");
+				    txtValue = dateFormat(txtValue);
+				}
+				else if (arrItiemCode[3] == "time")
+				{
+					txtValue = $("#txtValue" + i).timespinner("getValue");
+				}
+				else
+				{
+					txtValue = $("#txtValue" + i).val();
+				}
+			}
+		}
+		if(i == 0)
+		{
+			taskConditions = taskConditions + "并且就诊类型等于" + $("#txtValue"+i).combobox("getText")
+		}
+		else
+		{
+			taskConditions = taskConditions+$("#relation"+i).combobox("getText")+document.getElementById("name" + i).innerText+$("#op"+i).combobox("getText")+txtValue;
+      	}
+		strCondition = strCondition + relationCode + itemCode + "$" + opCode + "$" + txtValue;
      }
-    return strCondition 
+     
+     if (canViewAllLoc == "N")
+     {
+	    strCondition = strCondition + "&&&HIS^AdmDept^AdmDept^str^S07$=$"+ ctLocDesc; 
+     }
+     
+     return strCondition 
 }
 
 function stringDateAdd(strValue,adddata ){     
@@ -1043,7 +1224,7 @@ function querydataToTempGlobal(k,tmpGUID,arrAdvancedCondition,resultStrCols)
 	jQuery.ajax({
 		type: "post",
 		dataType: "text",
-		url: '../web.eprajax.query.advancedquery.cls?frameType=HISUI',
+		url: '../web.eprajax.query.advancedquery.cls?frameType=HISUI&canViewAllLoc=' + canViewAllLoc,
 		async: true,
 		data:{
 			action: 'querydata', 
@@ -1067,7 +1248,7 @@ function querydataToTempGlobal(k,tmpGUID,arrAdvancedCondition,resultStrCols)
 				}
 			}
 		},
-		error : function(d) { $.messager.alert("简单提示", "advanced error", 'info');}
+		error : function(d) { $.messager.alert("简单提示", "advanced error", 'info'); setQueryButtonStatus(true);}
 	});		
 }
 
@@ -1081,12 +1262,13 @@ function getRusultStore(tmpGUID,resultStrCols)
 
 	$('#dgResultGrid').datagrid("options").url  = '../web.eprajax.query.advancedquery.cls?frameType=HISUI';
 	$('#dgResultGrid').datagrid('load', girdParam);
+	//$('#btnCommitAdvanced').linkbutton('enable');
 }
 
 function clearAdvancedCondition()
 {
 	//刷新时高级查询条件清空
-	var trs = $("#tblCondition").find("input[name='condition']").parents("tr").remove();
+	var trs = $("#tblCondition").find("input[name='condition']").parents(".row-item-big-long").remove();
 	
 }
 //回车不全登记号txtRegNo
@@ -1137,27 +1319,6 @@ function zeroPadding(event) {
 	console.log(event);
 }*/
 
-	
-$('#MedicareNo').bind('keypress', function(event) {
-	if (event.keyCode == "13") {
-		setMedicareNoLength();
-	}
-});
-///Desc:设置病案号长度 
-function setMedicareNoLength(){
-	var medicareNo = $("#MedicareNo").val();
-	if (medicareNo != '') 
-	{
-		if (medicareNo.length < 7) 
-		{
-			for (var i=(7-medicareNo.length-1); i>=0; i--)
-			{
-				medicareNo ="0"+ medicareNo;
-			}
-		}
-	}
-	$("#MedicareNo").val(medicareNo);
-}
 var type="all";
 //导出数据
 function exportData(){
@@ -1165,7 +1326,7 @@ function exportData(){
 	var ev=window.event;
 	var searchType =ev.currentTarget.id;
 	var date = new Date();
-	var title = userName+"-"+date.getTime();
+	var title = userCode+"-"+date.getTime();
 	
 			
 	if (searchType=="advanceExcel")
@@ -1255,6 +1416,8 @@ function selectHandler(obj){
 $("#main").tabs({
 	onSelect:function(title,index){
 		if (title=="高级查询"){
+			$("#simpleExportDiv")[0].style.display="none";
+			$("#advanceExportDiv")[0].style.display="block";
 			$HUI.combobox("#exportAdvance",{
 				valueField:'val', 
 				textField:'text', 
@@ -1267,10 +1430,138 @@ $("#main").tabs({
 					type=obj.val;	
 				},
 				onLoadSuccess:function(){
-						$HUI.combobox("#exportAdvance").setValue(emrTrans("导出所有"));
+						$HUI.combobox("#exportAdvance").setValue(emrTrans("导出全部"));
+						type="all";
+				}
+			});
+		}else{
+			$("#simpleExportDiv")[0].style.display="block";
+			$("#advanceExportDiv")[0].style.display="none";
+			$HUI.combobox("#exportSimple",{
+				valueField:'val', 
+				textField:'text', 
+				panelWidth:"80",
+				data:[
+					{val:"all",text:emrTrans("导出全部")},
+					{val:"current",text:emrTrans("导出当前页")}
+				],
+				onSelect:function(obj){
+					type=obj.val;	
+				},
+				onLoadSuccess:function(){
+						$HUI.combobox("#exportSimple").setValue(emrTrans("导出全部"));
 						type="all";
 				}
 			});
 		}	
 	}
 })
+
+function addTaskCallBack(returnValue,arr)
+{
+	if (returnValue == "") return;
+	jQuery.ajax({
+		type: "post",
+		dataType: "json",
+		url: '../web.eprajax.query.advancedquery.cls?frameType=HISUI',
+		async: true,
+		data:{action: 'getGUID', hiddenGUID: ""},
+		success: function(d) 
+		{
+			if (d.GUID != "")
+			{
+				var cols = getResultCol();
+				var arrAdvancedCondition = getAdvancedConditions("addTask");
+				if (!arrAdvancedCondition[0]) 
+				{
+					 $.messager.alert("提示信息", arrAdvancedCondition[1],"alert"); 
+					 return;
+				}
+				jQuery.ajax({
+					type: "post",
+					dataType: "text",
+					url: "../EMRservice.Ajax.common.cls",
+					async: true,
+					data: {
+						"OutputType":"",
+						"Class":"EPRservice.BLL.Query.BLMedicalQueryTasklist",
+						"Method":"InsertInfo",
+						"p1":returnValue,
+						"p2":userID,
+						"p3":userName,
+						"p4":d.GUID,
+						"p5":arrAdvancedCondition[2][0],
+						"p6":taskConditions,
+						"p7":cols.columnstr,
+						"p8":arrAdvancedCondition[3]
+					},
+				});
+				
+				//创建任务时记录日志
+				var resultColumnArr = cols.columnstr.split("&");
+				var resColDesc = "";
+				$.each(resultColumnArr,function(i,item)
+				{
+					var itemArr = item.split("^");
+					resColDesc = resColDesc+"/"+itemArr[3];
+				});	//获取结果列
+				var url = "../web.eprajax.query.medicalquerytask.cls";
+				if (arrAdvancedCondition[3] == "DischDate"){taskConditions = "出院日期"+taskConditions;}else{taskConditions = "入院日期"+taskConditions;}
+				setQueryLog(url,"EMR.Query.Task.Create",arrAdvancedCondition[3],taskConditions,resColDesc);
+			}
+		},
+		errot: function(){alert("getGUID ERROR!");}
+	})
+	
+	
+}
+
+//记录日志
+function setQueryLog(url,actionType,dateType,conditions,resultCol)
+{
+	var ipAddress = getIpAddress();
+	jQuery.ajax({
+		type : "GET",
+		dataType : "text",
+		url : url,
+		async : true,
+		data : {
+			"actionType":actionType,
+			"userID":userID,
+			"userName":userName,
+			"ipAddress":ipAddress,			//当前ip
+			"dateType":dateType,			//日期类型
+			"conditions":conditions,		//条件描述
+			"resultCol":resultCol			//结果列
+		}
+	});	
+}
+
+function initLocView()
+{
+	if (canViewAllLoc == "N")
+	{
+		$('#cbxLoc').combogrid('disable');
+		$('#cbxWard').combogrid('disable');
+	}
+}
+
+//显示、隐藏进度条，按钮控制是否只读
+function setQueryButtonStatus(flag) {
+	if (!flag){
+		$('#btnCommitAdvanced').linkbutton('disable');
+		$('#btnCommit').linkbutton('disable');
+		$.messager.progress({
+			title:"提示",
+			msg:"正在查询...",
+			text:"正在查询..."
+			
+		});	
+	}
+	else
+	{
+		$('#btnCommitAdvanced').linkbutton('enable');
+		$('#btnCommit').linkbutton('enable');
+		$.messager.progress("close");
+	}
+}

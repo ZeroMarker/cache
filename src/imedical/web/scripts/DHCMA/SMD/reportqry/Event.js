@@ -52,7 +52,7 @@ function InitReportQryWinEvent(obj){
 		if (rows>0) {
 			$('#SMDDQuery').datagrid('toExcel','精神疾病报告查询表.xls');
 		} else{
-			$.messager.alert("提示","请先查询再导出Excel！",'info');
+			$.messager.alert("提示","无数据记录,不允许导出！",'info');
 			return;
 		}
 	}
@@ -90,6 +90,12 @@ function InitReportQryWinEvent(obj){
 				$.messager.alert("提示信息", "请至少选中一行待审记录,再进行审核!",'info');
 				return;
 			}
+			$.messager.popover({
+				msg: '审核成功！',
+				type: 'success',
+				timeout: 2000, 		//0不自动关闭。3000s
+				showType: 'slide'  //show,fade,slide
+			});
 			obj.SMDDQueryLoad();
 			obj.gridSMDDQuery.clearSelections();  ;  //清除所有选择的行
 		} else {

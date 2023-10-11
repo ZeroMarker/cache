@@ -7,7 +7,7 @@ var dataArray = [{"value":"Y","text":'是'}, {"value":"N","text":'否'}];
 var HospID
 $(function(){
 	var hospStr=session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
-	var hospComp = GenHospComp("Doc_APP_Dispmedthod",hospStr);
+	var hospComp = GenHospComp("DHC_AppDispMedthod",hospStr);
 	hospComp.jdata.options.onSelect= function(){
 		findAdrStatus()
 		} 
@@ -106,7 +106,15 @@ $(function(){
 	$('#insert').bind('click',insertRow); 
     $('#delete').bind('click',deleteRow);
     $('#save').bind('click',saveRow);
-    
+    $('#translateword').bind("click",function(){
+		var SelectedRow = $("#medthodlist").datagrid('getSelected');
+		if (!SelectedRow){
+		$.messager.alert("提示","请选择需要翻译的行!","info");
+		return false;
+		}
+		CreatTranLate("User.DHCAppDispMedthod","ADDesc",SelectedRow["addesc"])
+		
+		});
     //同时给代码和描述绑定回车事件
     $('#code,#desc').bind('keypress',function(event){
         if(event.keyCode == "13")    
@@ -183,7 +191,8 @@ function saveRow(){
 		/// 验证当前行
 		if((rowsData[i].adcode=="")||(rowsData[i].addesc=="")){
 			$.messager.alert("提示","代码或描述不能为空!");
-			$('#medthodlist').datagrid('reload'); //重新加载			
+			//$('#medthodlist').datagrid('reload'); //重新加载	
+			$("#medthodlist").datagrid('beginEdit', i);		
 			return false;
 		}
 		/*if (rowsData[i].adhospdr==""){
@@ -321,4 +330,3 @@ function onClickRowMed(index,row){
 	var HospID=$HUI.combogrid('#_HospList').getValue();
 	$('#tardatagrid').datagrid('load',{type:TYPE,pointer:POINTER,hospid:HospID});
 }
-

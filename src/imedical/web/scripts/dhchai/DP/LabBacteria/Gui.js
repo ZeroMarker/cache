@@ -28,8 +28,12 @@ function InitLabBacteriaWin(){
 				"render": function (data, type, row) {
 					return (data == '1' ? '是' : '否');
 				}
+			},
+			{"data": "IsCommon", 
+				"render": function (data, type, row) {
+					return (data == '1' ? '是' : '否');
+				}
 			}
-			
 		],
 		drawCallback: function (settings) {
 			$("#btnAdd").removeClass('disabled');

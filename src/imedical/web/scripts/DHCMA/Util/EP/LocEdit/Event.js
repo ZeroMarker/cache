@@ -29,7 +29,20 @@ function InitHISUIWinEvent(obj){
 		$("#delIcon").on('click',function(){
 			obj.btnDelete_click();
 		});
+		$("#syncIcon").on('click',function(){
+			obj.btnSync_click(); 
+		});
 	};	
+	$('#searchbox').searchbox({ 
+		searcher:function(value,name){ 
+			obj.dictList.load({
+				ClassName:"DHCMA.Util.EPS.LocationSrv",
+				QueryName:"QryLocInfo",
+				aHospID:$("#cboSSHosp").combobox('getValue'),
+				aAlias:value
+			});
+		}
+	});
 	//双击编辑事件
 	obj.gridProduct_onDbselect = function(rd){
 		obj.layer(rd);
@@ -42,9 +55,11 @@ function InitHISUIWinEvent(obj){
 			obj.RecRowID="";
 			$("#editIcon").linkbutton("disable");
 			$("#delIcon").linkbutton("disable");
+			$("#syncIcon").linkbutton("enable");
 			obj.dictList.clearSelections();
 		} else {
 			obj.RecRowID = rowData["ID"];
+			$("#syncIcon").linkbutton("disable");
 			$("#editIcon").linkbutton("enable");
 			$("#delIcon").linkbutton("enable");
 		}
@@ -65,6 +80,7 @@ function InitHISUIWinEvent(obj){
 		var IsActive = $("#chkIsActive").checkbox('getValue');
 		IsActive = (IsActive==true ? 1 : 0);
 		var AdmType  = $("#txtAdmType").combobox('getValue');
+		var CPWIndNo = $("#txtCPWIndNo").val()
 		if (!BTCode) {
 			errinfo = errinfo + "代码为空!<br>";
 		}
@@ -87,6 +103,7 @@ function InitHISUIWinEvent(obj){
 		InputStr += CHR_1 + IsActive;
 		InputStr += CHR_1 + session['LOGON.USERID'];
 		InputStr += CHR_1 + AdmType
+		InputStr += CHR_1 + CPWIndNo
 		var flg = $m({
 			ClassName:"DHCMA.Util.EPx.Location",
 			MethodName:"Update",
@@ -104,6 +121,7 @@ function InitHISUIWinEvent(obj){
 		}else {
 			$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
 			obj.RecRowID = flg;
+			$HUI.dialog('#winProEdit').close();
 			obj.dictList.reload() ;//刷新当前页
 		}
 	}
@@ -143,6 +161,7 @@ function InitHISUIWinEvent(obj){
 			var RangeID = rd["RangeID"];
 			var IsActive = rd["IsActive"];
 			var AdmType = rd["AdmType"]
+			var CPWIndNo = parseInt(rd["CPWIndNo"]);
 			obj.txtAdmType.setValue(AdmType);
 			
 			$("#OID").val(OID);				
@@ -151,6 +170,7 @@ function InitHISUIWinEvent(obj){
 			$("#txtDesc2").val(Desc2);
 			$("#RangeID").val(RangeID);
 			$('#chkIsActive').checkbox('setValue',(IsActive=='1' ? true : false));
+			$("#txtCPWIndNo").val(CPWIndNo);
 			// 所属医院和科室类型的特殊处理方式
 			var HospIDs=rd["HospID"].split(",")
 			obj.txtHospDr.setValues(HospIDs);
@@ -168,6 +188,7 @@ function InitHISUIWinEvent(obj){
 			$("#txtDesc2").val('');
 			$("#RangeID").val('');
 			$('#chkIsActive').checkbox('setValue',false);
+			$("#txtCPWIndNo").val('');
 			// 所属医院和科室类型的特殊处理方式
 			obj.txtHospDr.setValues();
 			obj.txtType.setValues();
@@ -175,5 +196,25 @@ function InitHISUIWinEvent(obj){
 		}
 		$HUI.dialog('#winProEdit').open();
 	};
+	
+	//同步科室信息
+	obj.btnSync_click = function(){
+		var UserID = session['DHCMA.USERID']
+		
+		var ret = $m({
+			ClassName:"DHCMA.Util.EPy.LocationSrv",
+			MethodName:"SyncLocation",
+			aSYSDr:UserID!=""?UserID.split("!!")[1]:""
+		},false);
+		
+		if(parseInt(ret)>0){
+			$.messager.alert("提示", "同步科室信息成功!", 'info');
+			obj.dictList.reload() ;//刷新当前页
+			return;	
+		}else{
+			$.messager.alert("提示", "同步科室信息失败，请重试!", 'error');
+			return;	
+		}	
+	}
 }
 

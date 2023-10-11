@@ -19,7 +19,19 @@ function InitAllocPerStateTabDataGrid(){
         text: '保存',
         iconCls: 'icon-save',
         handler: function() { UpdateClickHandle();}
-    }];
+    }/*,{
+        text: '翻译',
+        iconCls: 'icon-translate-word',
+        handler: function() {
+         	var SelectedRow = PageLogicObj.m_AllocPerStateTabDataGrid.datagrid('getSelected');
+			if (!SelectedRow){
+			$.messager.alert("提示","请选择需要翻译的行!","info");
+			return false;
+			}
+			CreatTranLate("User.DHCPerState","PersShowName",SelectedRow["Tshowname"])
+        }
+     }*/
+	 ];
 	var Columns=[[ 
 		{field:'Tid',hidden:true,title:''},
 		{field:'Tcode',title:'代码',width:300},

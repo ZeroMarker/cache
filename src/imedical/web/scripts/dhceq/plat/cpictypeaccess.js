@@ -106,7 +106,8 @@ function ListData()
 		tmp=tmp+"^"+rows[i].TFileFlag
 		tmp=tmp+"^"+rows[i].TMustFlag  
 		tmp=tmp+"^"+rows[i].TApproveSetDR
-
+		tmp=tmp+"^"+rows[i].TSort
+        tmp=tmp+"^"+rows[i].TdefaultFlag //add by wy 2022-8-26 增加图片默认访问
 		dataList.push(tmp);
 	}
 	var ListData=dataList.join("#");
@@ -192,4 +193,33 @@ function checkboxMustFlagChange(TMustFlag,rowIndex)
 			}
 		})
 	}
+}
+//add by wy 2022-8-26 图片默认访问勾选
+function checkboxdefaultChange(TdefaultFlag,rowIndex)
+{
+		var rows = $('#menudatagrid').datagrid('getRows');
+		var row=rows[rowIndex];
+		if (row)
+		{
+			$.each(row,function(key,val){
+				if (TdefaultFlag==key)
+				{
+					if (((val=="N")||val==""))
+					{
+					    for(var i=0;i<rows.length;i++)
+					     {
+							if ((rows[i].TdefaultFlag=="Y")&&(i!=rowIndex))
+							 {
+								rows[i].TdefaultFlag="N"
+								$('#menudatagrid').datagrid('updateRow',{	
+						        index:i,
+						        row:rows[i]})
+							 }  
+					      }
+					      row.TdefaultFlag="Y"
+					}
+				  else row.TdefaultFlag="N"
+				}
+			})
+		}
 }

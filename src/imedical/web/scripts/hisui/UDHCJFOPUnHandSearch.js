@@ -8,6 +8,7 @@ $(function () {
 			PrtDetail();
 		}
 	});
+	
 	$HUI.linkbutton('#BFindDEtail', {
 		onClick: function () {
 			FindDetail();
@@ -33,19 +34,27 @@ function PrtDetail() {
 	var UserId = getValueById("UserDr");
 	var HospId = getValueById("HospId");
 	var fileName = "DHCBILL-OPBILL-UnHandDetail.rpx&UserDr=" + UserId + "&HospId=" + HospId;
-	DHCCPM_RQPrint(fileName, 1200, 800);
+	var width = $(window).width() * 0.8;
+	var height  = $(window).height() * 0.8;
+	DHCCPM_RQPrint(fileName, width, height);
 }
 
 function FindDetail() {
 	var row = $HUI.datagrid("#tUDHCJFOPUnHandSearch").getSelected();
 	if (!row) {
-		DHCWeb_HISUIalert("请选择一条记录");
+		$.messager.popover({msg: "请选择一条记录", type: "info"});
 		return;
 	}
 	var UserRowid = row.TUserRowid;
 	var Job = row.Tjob;
-	var str = 'websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCOPBillUnHanInvDetail&UserRowid=' + UserRowid + '&Job=' + Job;
-	DHCWeb_initDatagrid("", "发票明细", "icon-w-list", "880", "580", str, "", "", 2);
+	var url = 'websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCOPBillUnHanInvDetail&UserRowid=' + UserRowid + '&Job=' + Job;
+	websys_showModal({
+		url: url,
+		title: '发票明细',
+		iconCls: 'icon-w-list',
+		width: '80%',
+		height: '80%'
+	});
 }
 
 function init_Layout() {

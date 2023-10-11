@@ -1,11 +1,11 @@
 $(function(){
-	//node = {'id':'23','text':'µ¨Ê¯Ö¢','attributes':{'type':'KBNode','desc':'','isCommon':'Y','isInUse':'Y','isEmpty':'N'}};
+	//node = {'id':'23','text':'èƒ†çŸ³ç—‡','attributes':{'type':'KBNode','desc':'','isCommon':'Y','isInUse':'Y','isEmpty':'N'}};
 	init();
 });
 
-///´´½¨±à¼­Æ÷//////////////////////////////////////////////////////////////////////////////////////
+///åˆ›å»ºç¼–è¾‘å™¨//////////////////////////////////////////////////////////////////////////////////////
 
-//¹Ò½Ó²å¼ş\ÊÂ¼ş¼àÌı
+//æŒ‚æ¥æ’ä»¶\äº‹ä»¶ç›‘å¬
 function pluginAdd() {	
 	addEvent(plugin(), 'onFailure', function(command){
 		alert(command);
@@ -38,7 +38,7 @@ function pluginAdd() {
 	   }
     });
 }
-//Ìí¼Ó¼àÌıÊÂ¼ş
+//æ·»åŠ ç›‘å¬äº‹ä»¶
 function addEvent(obj, name, func)
 {
     if (obj.attachEvent) 
@@ -50,35 +50,54 @@ function addEvent(obj, name, func)
         obj.addEventListener(name, func, false); 
     }
 }
-//²éÕÒ²å¼ş
+//æŸ¥æ‰¾æ’ä»¶
 function plugin() {
 	return $("#plugin")[0];
 }
 
-///·½·¨////////////////////////////////////////////////////////////////////////////////////////
+///æ–¹æ³•////////////////////////////////////////////////////////////////////////////////////////
 
 function init()
 {
 	pluginAdd();
 	plugin().initWindow("iEditor");
-	//½¨Á¢Êı¾İÁ¬½Ó
-    setConnect();
-	//ÉèÖÃ¹¤×÷»·¾³
+	//å»ºç«‹æ•°æ®è¿æ¥
+    var nectresult = setConnect();
+    nectresult = typeof nectresult=="object"?nectresult:$.parseJSON(nectresult.replace(/\'/g, "\""));
+    if (nectresult != "" && nectresult.result != "OK")
+    {
+        alert('è®¾ç½®é“¾æ¥å¤±è´¥ï¼');
+        return;
+    } 
+	//è®¾ç½®å·¥ä½œç¯å¢ƒ
 	strJson = {"action":"SET_WORKSPACE_CONTEXT","args": "Composite"};
 	cmdDoExecute(strJson);
 	var strJson = {action:"SET_DEFAULT_FONTSTYLE",args:defaultFontStyle};
 	cmdDoExecute(strJson);		
 	setNodeInfo();
 	getDataBaseCatalog();
-	//»ñÈ¡°ó¶¨²¡ÀúÊı¾İÄ¿Â¼
+	//è·å–ç»‘å®šç—…å†æ•°æ®ç›®å½•
 	getDataEMRCatalog();
 	setFontData();
 	setFontSizeData();
 }
 
-//½¨Á¢Êı¾İ¿âÁ¬½Ó
+//å»ºç«‹æ•°æ®åº“è¿æ¥
 function setConnect(){
 	var netConnect = "";
+	
+	var port = window.location.port;
+	var protocol = window.location.protocol.split(":")[0];
+	
+	if (protocol == "http")
+	{
+		port = port==""?"80":port;
+	}
+	else if (protocol == "https")
+	{
+		port = port==""?"443":port;
+	}
+	
 	$.ajax({
 		type: 'Post',
 		dataType: 'text',
@@ -88,7 +107,10 @@ function setConnect(){
 		data: {
 			"OutputType":"String",
 			"Class":"EMRservice.BL.BLSysOption",
-			"Method":"GetNetConnectJson"
+			"Method":"GetNetConnectJson",
+			"p1":window.location.hostname,
+			"p2":port,
+			"p3":protocol
 		},
 		success: function (ret) {
 
@@ -106,7 +128,7 @@ function setConnect(){
 	return cmdSyncExecute(strJson);
 }
 
-//ÉèÖÃÖªÊ¶¿â½áµãĞÅÏ¢
+//è®¾ç½®çŸ¥è¯†åº“ç»“ç‚¹ä¿¡æ¯
 function setNodeInfo()
 {
 	$("#nodeText").val(node.text);
@@ -120,11 +142,11 @@ function setNodeInfo()
 	}
 	if (node.attributes.isInUse.toUpperCase() == "N")
 	{
-		$("#nodeStatus").text("ÆôÓÃ");
+		$("#nodeStatus").text("å¯ç”¨");
 	}
 	else
 	{
-		$("#nodeStatus").text("Í£ÓÃ");
+		$("#nodeStatus").text("åœç”¨");
 	}
 	$("#nodeDesc").val(node.desc);
 	if (node.attributes.isEmpty.toUpperCase() == "Y")
@@ -138,7 +160,7 @@ function setNodeInfo()
 	loadStructTree();
 }
 
-//½«MeteData json ×ª³Éeasyui tree±ê×¼json
+//å°†MeteData json è½¬æˆeasyui treeæ ‡å‡†json
 function convertToTreeJson(dataList,treeJson,path)
 {
 	var tempJson = "";
@@ -161,7 +183,7 @@ function convertToTreeJson(dataList,treeJson,path)
 		 }
 	}
 }
-//³õÊ¼»¯ÔªËØµ±Ç°×î´óÖµ(ÓÃÓÚ´´½¨ÏÂÒ»¸öÔªËØ)
+//åˆå§‹åŒ–å…ƒç´ å½“å‰æœ€å¤§å€¼(ç”¨äºåˆ›å»ºä¸‹ä¸€ä¸ªå…ƒç´ )
 function setMaxElementObj(code)
 {
 	var type = code.substring(0,1);
@@ -188,7 +210,7 @@ function setMaxElementObj(code)
 			break;  			
 	}
 }
-//»ñÈ¡ÔªËØ´úÂë
+//è·å–å…ƒç´ ä»£ç 
 function getNewCode(code)
 {
 	code = code + 1;
@@ -201,105 +223,105 @@ function getNewCode(code)
     return code;
 }
 
-//Òì²½Ö´ĞĞexecute
+//å¼‚æ­¥æ‰§è¡Œexecute
 function cmdDoExecute(argJson){
 	plugin().execute(JSON.stringify(argJson));
 };
 
-//Í¬²½Ö´ĞĞ
+//åŒæ­¥æ‰§è¡Œ
 function cmdSyncExecute(argJson){
 	return plugin().syncExecute(JSON.stringify(argJson));
 };
 
-//´´½¨ÖªÊ¶¿â
+//åˆ›å»ºçŸ¥è¯†åº“
 function createComposite()
 {
 	var strJson = {"action":"CREATE_COMPOSITE","args":{"Code":node.id,"DisplayName":node.text,"KBNodeID":node.id,"Instances":"0..1",
                   "BindKBBaseID":node.KBBaseID,"BindKBName":node.KBBaseName}};                   
 	cmdDoExecute(strJson);
 }
-//¼ÓÔØÖªÊ¶¿â
+//åŠ è½½çŸ¥è¯†åº“
 function loadComposite()
 {
 	var	strJson = {"action":"LOAD_DOCUMENT","args":{"params":{"action":"LOAD_COMPOSITE","KBNodeID":node.id}}};
 	cmdDoExecute(strJson);
 }
 
-//µ÷ÓÃ¼ÓÔØÖªÊ¶¿âÔªËØ½á¹¹
+//è°ƒç”¨åŠ è½½çŸ¥è¯†åº“å…ƒç´ ç»“æ„
 function loadStructTree()
 {
 	var strJson = {"action":"GET_METADATA_TREE","args":""}
 	cmdDoExecute(strJson);
 }
 
-//¶¨Î»ÔªËØ
+//å®šä½å…ƒç´ 
 function focusElement(path)
 {
 	var strJson = {action:"FOCUS_ELEMENT",args:{"Path":path,"actionType":"Select"}};
 	cmdDoExecute(strJson);
 }
 
-//Ìí¼ÓÔªËØ
+//æ·»åŠ å…ƒç´ 
 $(function(){  
     
-    //Ìí¼Óµ¥Ôª
-    //×Ö·ûµ¥Ôª
+    //æ·»åŠ å•å…ƒ
+    //å­—ç¬¦å•å…ƒ
     $('#MIString').bind('click', function(){  
         maxElementObj.MIString = getNewCode(+maxElementObj.MIString);
         var strJosn = {action:"APPEND_ELEMENT",args:{"ElemType":"MIString","Code":"L"+maxElementObj.MIString,
-            "DisplayName":"ĞÂ½¨×Ö·ûµ¥Ôª"+(+maxElementObj.MIString)}};
+            "DisplayName":"æ–°å»ºå­—ç¬¦å•å…ƒ"+(+maxElementObj.MIString)}};
         cmdDoExecute(strJosn);
     });  
     
-    //ÊıÖµµ¥Ôª
+    //æ•°å€¼å•å…ƒ
     $('#MINumber').bind('click', function(){  
         maxElementObj.MINumber = getNewCode(+maxElementObj.MINumber);
         var strJosn = {action:"APPEND_ELEMENT",args:{"ElemType":"MINumber","Code":"N"+maxElementObj.MINumber,
-            "DisplayName":"ĞÂ½¨Êı×Öµ¥Ôª"+(+maxElementObj.MINumber)}};
+            "DisplayName":"æ–°å»ºæ•°å­—å•å…ƒ"+(+maxElementObj.MINumber)}};
         cmdDoExecute(strJosn);
     });
     
-     //ÈÕÆÚµ¥Ôª
+     //æ—¥æœŸå•å…ƒ
     $('#MIDateTime').bind('click', function(){  
         maxElementObj.MIDateTime = getNewCode(+maxElementObj.MIDateTime);
         var strJosn = {action:"APPEND_ELEMENT",args:{"ElemType":"MIDateTime","Code":"D"+maxElementObj.MIDateTime,
-            "DisplayName":"ĞÂ½¨ÈÕÆÚµ¥Ôª"+(+maxElementObj.MIDateTime),"IncludeDate":"True","IncludeTime":"True",
+            "DisplayName":"æ–°å»ºæ—¥æœŸå•å…ƒ"+(+maxElementObj.MIDateTime),"IncludeDate":"True","IncludeTime":"True",
             "DateFormat":"yyyy-MM-dd","TimeFormat":"HH:mm:ss"}};
         cmdDoExecute(strJosn);
     });
 
-     //µ¥Ñ¡µ¥Ôª
+     //å•é€‰å•å…ƒ
     $('#MIMonoChoice').bind('click', function(){  
         maxElementObj.MIMonoChoice = getNewCode(+maxElementObj.MIMonoChoice);
         var strJosn = {action:"APPEND_ELEMENT",args:{"ElemType":"MIMonoChoice","Code":"O"+maxElementObj.MIMonoChoice,
-            "DisplayName":"ĞÂ½¨µ¥Ñ¡µ¥Ôª"+(+maxElementObj.MIMonoChoice)}};
+            "DisplayName":"æ–°å»ºå•é€‰å•å…ƒ"+(+maxElementObj.MIMonoChoice)}};
         cmdDoExecute(strJosn);
     });
     
-     //¶àÑ¡µ¥Ôª
+     //å¤šé€‰å•å…ƒ
     $('#MIMultiChoice').bind('click', function(){  
         maxElementObj.MIMultiChoice = getNewCode(+maxElementObj.MIMultiChoice);
         var strJosn = {action:"APPEND_ELEMENT",args:{"ElemType":"MIMultiChoice","Code":"M"+maxElementObj.MIMultiChoice,
-            "DisplayName":"ĞÂ½¨¶àÑ¡µ¥Ôª"+(+maxElementObj.MIMultiChoice)}};
+            "DisplayName":"æ–°å»ºå¤šé€‰å•å…ƒ"+(+maxElementObj.MIMultiChoice)}};
         cmdDoExecute(strJosn);
     });
     
-     //×Öµäµ¥Ôª
+     //å­—å…¸å•å…ƒ
     $('#MIDictionary').bind('click', function(){  
         maxElementObj.MIDictionary = getNewCode(+maxElementObj.MIDictionary);
         var strJosn = {action:"APPEND_ELEMENT",args:{"ElemType":"MIDictionary","Code":"I"+maxElementObj.MIDictionary,
-            "DisplayName":"ĞÂ½¨×Öµäµ¥Ôª"+(+maxElementObj.MIDictionary)}};
+            "DisplayName":"æ–°å»ºå­—å…¸å•å…ƒ"+(+maxElementObj.MIDictionary)}};
         cmdDoExecute(strJosn);
     });   
           
     $("#propertySave").on("click",function(){
 		var type = $("#Code").val().substring(0,1);
-		//±£´æxml
+		//ä¿å­˜xml
 		var strJson = {action:"UPDATE_ELEMENT",args:{"Path":currentPath,"Props":getElementPropty(type)}}
 		cmdDoExecute(strJson);
 	});
 	$("#publicSave").click(function(){
-		//±£´æxml
+		//ä¿å­˜xml
 		var strJson = {"action":"SAVE_DOCUMENT","args":{"params":{"action":"SAVE_COMPOSITE","KBNodeID":node.id}}};
 		cmdDoExecute(strJson);
 		
@@ -324,18 +346,18 @@ $(function(){
 		}
 		$("#BindCode").val(bindString);
 		$("#BindType").val(bindType);
-		$("#setPropty").accordion('select','»ù±¾ÊôĞÔ');
+		$("#setPropty").accordion('select','åŸºæœ¬å±æ€§');
 
 	});
 });
-/////¹¤¾ßÀ¸//////////////////////////////////////////////////////////////////
-//ÉèÖÃ×ÖÌåÊı¾İÔ´
+/////å·¥å…·æ //////////////////////////////////////////////////////////////////
+//è®¾ç½®å­—ä½“æ•°æ®æº
 function setFontData()
 {
-	var json=[{"value":"ËÎÌå","name":"ËÎÌå"},
-	          {"value":"·ÂËÎ","name":"·ÂËÎ"},
-	          {"value":"¿¬Ìå","name":"¿¬Ìå"},
-	          {"value":"ºÚÌå","name":"ºÚÌå"}
+	var json=[{"value":"å®‹ä½“","name":"å®‹ä½“"},
+	          {"value":"ä»¿å®‹","name":"ä»¿å®‹"},
+	          {"value":"æ¥·ä½“","name":"æ¥·ä½“"},
+	          {"value":"é»‘ä½“","name":"é»‘ä½“"}
 	         ]
 	$('#font').combobox({
 		textField:'name',
@@ -345,30 +367,30 @@ function setFontData()
 			$('#font').combobox('setValue',defaultFontStyle.fontFamily)
 			},
 		onSelect:function(){
-			//×ÖÌå¸Ä±ä
+			//å­—ä½“æ”¹å˜
 			    var strJson = {action:"FONT_FAMILY",args:$('#font').combobox('getValue')};
 				cmdDoExecute(strJson);	
 			}
 		})	
 }
-//ÉèÖÃ×ÖÌå´óĞ¡Êı¾İÔ´
+//è®¾ç½®å­—ä½“å¤§å°æ•°æ®æº
 function setFontSizeData()
 {
-	var json=[{"value":"42pt","name":"³õºÅ"},
-  		      {"value":"36pt","name":"Ğ¡³õºÅ"},
-	          {"value":"31.5pt","name":"´óÒ»ºÅ"},
-	          {"value":"28pt","name":"Ò»ºÅ"},
-	          {"value":"21pt","name":"¶şºÅ"},
-	          {"value":"18pt","name":"Ğ¡¶şºÅ"},
-	          {"value":"16pt","name":"ÈıºÅ"},
-	          {"value":"14pt","name":"ËÄºÅ"},
-	          {"value":"12pt","name":"Ğ¡ËÄºÅ"},
-	          {"value":"10.5pt","name":"ÎåºÅ"},
-	          {"value":"9pt","name":"Ğ¡ÎåºÅ"},
-	          {"value":"8pt","name":"ÁùºÅ"},
-	          {"value":"6.875pt","name":"Ğ¡ÁùºÅ"},
-	          {"value":"5.25pt","name":"ÆßºÅ"},
-	          {"value":"4.5pt","name":"°ËºÅ"},
+	var json=[{"value":"42pt","name":"åˆå·"},
+  		      {"value":"36pt","name":"å°åˆå·"},
+	          {"value":"31.5pt","name":"å¤§ä¸€å·"},
+	          {"value":"28pt","name":"ä¸€å·"},
+	          {"value":"21pt","name":"äºŒå·"},
+	          {"value":"18pt","name":"å°äºŒå·"},
+	          {"value":"16pt","name":"ä¸‰å·"},
+	          {"value":"14pt","name":"å››å·"},
+	          {"value":"12pt","name":"å°å››å·"},
+	          {"value":"10.5pt","name":"äº”å·"},
+	          {"value":"9pt","name":"å°äº”å·"},
+	          {"value":"8pt","name":"å…­å·"},
+	          {"value":"6.875pt","name":"å°å…­å·"},
+	          {"value":"5.25pt","name":"ä¸ƒå·"},
+	          {"value":"4.5pt","name":"å…«å·"},
 	          {"value":"5pt","name":"5"},
 	          {"value":"5.5pt","name":"5.5"},
 	          {"value":"6.5pt","name":"6.5"},
@@ -397,7 +419,7 @@ function setFontSizeData()
 }
 
 
-//ÊäÈë×ÖºÅ
+//è¾“å…¥å­—å·
 function changeFontSizeText()
 {
 	if(event.keyCode == 13)
@@ -409,98 +431,98 @@ function changeFontSizeText()
 	
 }
 
-//¹¤¾ßÀ¸
+//å·¥å…·æ 
 function toolButtonClick(type)
 {
 	var strJson = "";
 	if (type == "bold")
 	{
-		 strJson = {action:"BOLD",args:{path:""}}; //ÉèÖÃ´ÖÌå
+		 strJson = {action:"BOLD",args:{path:""}}; //è®¾ç½®ç²—ä½“
 	}
 	else if (type == "italic")
 	{
-		strJson = {action:"ITALIC",args:""};       //ÉèÖÃĞ±Ìå
+		strJson = {action:"ITALIC",args:""};       //è®¾ç½®æ–œä½“
 	} 
 	else if (type == "underline")
 	{
-		strJson = {action:"UNDER_LINE",args:""};   //ÉèÖÃÏÂ»®Ïß
+		strJson = {action:"UNDER_LINE",args:""};   //è®¾ç½®ä¸‹åˆ’çº¿
 	}
 	else if (type == "strike")
 	{
 		strJson = {action:"STRIKE",args:""};
 	}
-	else if (type == "super")                      //ÉèÖÃÉÏ±ê
+	else if (type == "super")                      //è®¾ç½®ä¸Šæ ‡
 	{
 		strJson = {action:"SUPER",args:""};
 	}
 	else if (type == "sub") 
 	{
-	    strJson = {action:"SUB",args:""};	      //ÉèÖÃÏÂ±ê
+	    strJson = {action:"SUB",args:""};	      //è®¾ç½®ä¸‹æ ‡
 	}
 	else if (type == "justify") 
 	{
-		strJson = {action:"ALIGN_JUSTIFY",args:""}; //ÉèÖÃÁ½¶Ë¶ÔÆë
+		strJson = {action:"ALIGN_JUSTIFY",args:""}; //è®¾ç½®ä¸¤ç«¯å¯¹é½
 	}
 	else if (type == "alignleft") 
 	{
-		strJson = {action:"ALIGN_LEFT",args:""};    //ÉèÖÃ×ó¶ÔÆë
+		strJson = {action:"ALIGN_LEFT",args:""};    //è®¾ç½®å·¦å¯¹é½
 	}
 	else if (type == "aligncenter") 
 	{
-		strJson = {action:"ALIGN_CENTER",args:""};  //ÉèÖÃ¾ÓÖĞ¶ÔÆë
+		strJson = {action:"ALIGN_CENTER",args:""};  //è®¾ç½®å±…ä¸­å¯¹é½
 	}
 	else if (type == "alignright") 
 	{
-		strJson = {action:"ALIGN_RIGHT",args:""};  //ÉèÖÃÓÒ¶ÔÆë
+		strJson = {action:"ALIGN_RIGHT",args:""};  //è®¾ç½®å³å¯¹é½
 	}
 	else if (type == "indent") 
 	{
-		strJson = {action:"INDENT",args:""};       //ÉèÖÃËõ½ø
+		strJson = {action:"INDENT",args:""};       //è®¾ç½®ç¼©è¿›
 	}
 	else if (type == "unindent") 
 	{
-		strJson = {action:"UNINDENT",args:""};    //ÉèÖÃ·´Ëõ½ø
+		strJson = {action:"UNINDENT",args:""};    //è®¾ç½®åç¼©è¿›
 	}
 	else if (type == "cut") 
 	{
-		strJson = {action:"CUT",args:""};       //¼ôÇĞ
+		strJson = {action:"CUT",args:""};       //å‰ªåˆ‡
 	}
 	else if (type == "copy") 
 	{
-		strJson = {action:"COPY",args:""};      //¸´ÖÆ
+		strJson = {action:"COPY",args:""};      //å¤åˆ¶
 	}
 	else if (type == "paste") 
 	{
-		strJson = {action:"PASTE",args:""};      //Õ³Ìù
+		strJson = {action:"PASTE",args:""};      //ç²˜è´´
 	}
 	else if (type == "undo") 
 	{
-		strJson = {action:"UNDO",args:""};      //³·Ïú
+		strJson = {action:"UNDO",args:""};      //æ’¤é”€
 	}
 	else if (type == "redo") 
 	{
-		strJson = {action:"REDO",args:""};      //ÖØ×ö
+		strJson = {action:"REDO",args:""};      //é‡åš
 	}
 	else if (type == "spechars")
 	{
 		
-		//ÒÔÇ°µÄÄ£Ì¬¿ò
+		//ä»¥å‰çš„æ¨¡æ€æ¡†
 //		var returnValues = window.showModalDialog("emr.ip.tool.spechars.csp","","dialogHeight:420px;dialogWidth:490px;resizable:no;center:yes;status:no");
-//		//HISUIÄ£Ì¬¿ò
+//		//HISUIæ¨¡æ€æ¡†
 		var iframeContent = '<iframe id="specharsIframe" scrolling="auto" frameborder="0" src="emr.ip.tool.spechars.csp" style="width:100%;height:100%;display:block;"></iframe>';
 		var callback = function(returnValues,arr){
 			strJson={action:"INSERT_STYLE_TEXT_BLOCK",args:returnValues};
 			if(strJson!="")	cmdDoExecute(strJson);
 	    }
-	    createModalDialog("dialogSpechars", "ÌØÊâ×Ö·û", 490, 450, "specharsIframe", iframeContent,callback,"");
+	    createModalDialog("dialogSpechars", "ç‰¹æ®Šå­—ç¬¦", 490, 450, "specharsIframe", iframeContent,callback,"");
 	}
 	if(strJson!="")	cmdDoExecute(strJson);
 }
 
 
-///ÊÂ¼ş¼àÌı///////////////////////////////////////////////////////////////////////////////
+///äº‹ä»¶ç›‘å¬///////////////////////////////////////////////////////////////////////////////
 
-//»ñµÃÄ£°åÔªËØ½á¹¹
+//è·å¾—æ¨¡æ¿å…ƒç´ ç»“æ„
 function eventGetMetaDataTree(commandJson)
 {
 	var json = commandJson.args.items;
@@ -513,7 +535,7 @@ function eventGetMetaDataTree(commandJson)
 		}
 	})
 }
-//ÔªËØ¸Ä±äÊÂ¼ş
+//å…ƒç´ æ”¹å˜äº‹ä»¶
 function eventElementChanged(commandJson)
 {
 	if (commandJson.args.Focus == "Get")
@@ -534,10 +556,10 @@ function eventAppendElement(commandJson)
 	}
 }
 
-//±à¼­Æ÷ÉÏÏÂÎÄ¸ĞÖª¹¦ÄÜ
+//ç¼–è¾‘å™¨ä¸Šä¸‹æ–‡æ„ŸçŸ¥åŠŸèƒ½
 function eventCaretContext(commandJson)
 {
-	//ÅĞ¶Ïµ±Ç°×ÖÌå
+	//åˆ¤æ–­å½“å‰å­—ä½“
 	if (typeof(commandJson.args.FONT_FAMILY) == "undefined") 
 	{
 		document.getElementById('font').value = "";
@@ -546,7 +568,7 @@ function eventCaretContext(commandJson)
 	{
 		$('#font').attr("value",commandJson.args.FONT_FAMILY);
 	}
-	//ÅĞ¶Ïµ±Ç°×ÖºÅ
+	//åˆ¤æ–­å½“å‰å­—å·
 	document.getElementById('fontSize').value = ""; 
 	if (typeof(commandJson.args.FONT_SIZE) == "undefined") 
 	{
@@ -573,42 +595,46 @@ function isExistOption(value)
 	return value;
 }
 
-//ÎÄµµ±£´æÊÂ¼ş¼àÌı
+//æ–‡æ¡£ä¿å­˜äº‹ä»¶ç›‘å¬
 function eventSaveDocument(commandJson)
 {
-	var flag = saveNodePropty();  //±£´æÊôĞÔ
+	var flag = saveNodePropty();  //ä¿å­˜å±æ€§
 	if (commandJson.args.result == "OK")
 	{
 		if (commandJson.args.params.result != "OK")
 		{
-			alert('±£´æÊ§°Ü');
+			alert('ä¿å­˜å¤±è´¥');
 		}
 		else
 		{
 			if (flag == "1")
 			{
-				alert('±£´æ³É¹¦');
+				alert('ä¿å­˜æˆåŠŸ');
 			}
 			else
 			{
-				alert('±£´æÊ§°Ü');
+				alert('ä¿å­˜å¤±è´¥');
 			}
 		}
 	}
+	else if (commandJson.args.result == "INVALID")
+    {
+		alert('ç—…å†å­˜åœ¨éæ³•å­—ç¬¦ï¼Œä¸èƒ½ä¿å­˜ã€‚'); 
+    }
 	else if (commandJson.args.result == "NONE")
 	{
 		if (flag == "1")
 		{
-			alert('±£´æ³É¹¦');
+			alert('ä¿å­˜æˆåŠŸ');
 		}
 		else
 		{
-			alert('±£´æÊ§°Ü');
+			alert('ä¿å­˜å¤±è´¥');
 		}
 	}
 }
 
-//ĞŞ¸ÄÔªËØ¼àÌı
+//ä¿®æ”¹å…ƒç´ ç›‘å¬
 function eventUpdateElement(commandJson)
 {
 	if (commandJson.args.result == "OK")
@@ -617,9 +643,9 @@ function eventUpdateElement(commandJson)
 	}
 }
 
-///ÊôĞÔÉèÖÃ/////////////////////////////////////////////////////////////////////////////
+///å±æ€§è®¾ç½®/////////////////////////////////////////////////////////////////////////////
 
-//ÉèÖÃµ¥ÔªÊôĞÔ
+//è®¾ç½®å•å…ƒå±æ€§
 function setProperty()
 {
 	var strJson = {"action":"GET_ELEMENT_CONTEXT", "args":{"Type":"MIElement"}}
@@ -652,7 +678,7 @@ function setProperty()
 		 setMIDictionary(elementContext);
 	}
 }
-//³õÊ¼»¯ÔªËØ»ù±¾ÊôĞÔ
+//åˆå§‹åŒ–å…ƒç´ åŸºæœ¬å±æ€§
 function initBasePropty()
 {
 	var strPropty = 
@@ -666,7 +692,7 @@ function initBasePropty()
 		+'<div>'+initFixedStructs()+'</div>'
 	return strPropty;
 }
-//ÉèÖÃÔªËØ»ù±¾ÊôĞÔ
+//è®¾ç½®å…ƒç´ åŸºæœ¬å±æ€§
 function setBasePropty(obj)
 {
 	setTabIndex(obj.Props.TabIndex);
@@ -702,7 +728,7 @@ function getBasePropty()
     return obj;
 }
 
-//×Ö·ûµ¥Ôª
+//å­—ç¬¦å•å…ƒ
 function setMIString(obj)
 {
 	if (!obj || obj == "") return;
@@ -717,7 +743,7 @@ function setMIString(obj)
 	setRegExp(obj.Props.RegExp);
 	setMaxLength(obj.Props.MaxLength);	
 }
-//ÉèÖÃÊı×Öµ¥Ôª
+//è®¾ç½®æ•°å­—å•å…ƒ
 function setMINumber(obj)
 {
 	if (!obj || obj == "") return;
@@ -738,7 +764,7 @@ function setMINumber(obj)
 	setIncludeMax(obj.Props.IncludeMax);
 	setDecimalPlace(obj.Props.DecimalPlace);	
 }
-//µ¥Ñ¡µ¥Ôª
+//å•é€‰å•å…ƒ
 function setMIMonoChoice(obj)
 {
 	if (!obj || obj == "") return;
@@ -752,7 +778,7 @@ function setMIMonoChoice(obj)
 	setChoices(obj.Props.Choices);
 }
 
-//¶àÑ¡µ¥Ôª
+//å¤šé€‰å•å…ƒ
 function setMIMultiChoice(obj)
 {
 	if (!obj || obj == "") return;
@@ -769,7 +795,7 @@ function setMIMultiChoice(obj)
 	setChoices(obj.Props.Choices);
 }
 
-//ÈÕÆÚµ¥Ôª
+//æ—¥æœŸå•å…ƒ
 function setMIDateTime(obj)
 {
 	if (!obj || obj == "") return;
@@ -787,7 +813,7 @@ function setMIDateTime(obj)
 	setTimeFormat(obj.Props.TimeFormat);
 }
 
-//×Öµäµ¥Ôª
+//å­—å…¸å•å…ƒ
 function setMIDictionary(obj)
 {
 	if (!obj || obj == "") return;
@@ -822,7 +848,7 @@ function setMIDictionary(obj)
 	setRegExp(obj.Props.RegExp);
 	setMaxLength(obj.Props.MaxLength);
 }
-//×Ö·ûÔªËØobj
+//å­—ç¬¦å…ƒç´ obj
 function getMIString()
 {
 	var obj = getBasePropty();
@@ -831,7 +857,7 @@ function getMIString()
 	obj.MaxLength = $("#MaxLength").val();
 	return obj;
 }
-//Êı×ÖÔªËØobj
+//æ•°å­—å…ƒç´ obj
 function getMINumber()
 {
 	var obj =  getBasePropty();
@@ -845,7 +871,7 @@ function getMINumber()
 	obj.DecimalPlace = $("#DecimalPlace").val();
 	return obj;
 }
-//µ¥Ñ¡µ¥Ôª
+//å•é€‰å•å…ƒ
 function getMIMonoChoice()
 {
 	var obj =  getBasePropty();
@@ -862,7 +888,7 @@ function getMIMonoChoice()
 	obj.Choices = Choices;
 	return obj;
 }
-//¶àÑ¡µ¥Ôª
+//å¤šé€‰å•å…ƒ
 function getMIMultiChoice()
 {
 	var obj =  getBasePropty();
@@ -878,7 +904,7 @@ function getMIMultiChoice()
 	obj.Choices = Choices;
 	return obj;
 }
-//ÈÕÆÚµ¥Ôª
+//æ—¥æœŸå•å…ƒ
 function getMIDateTime()
 {
 	var obj =  getBasePropty();
@@ -889,7 +915,7 @@ function getMIDateTime()
 	obj.TimeFormat = $("#TimeFormat").find("option:selected").text();
 	return obj;
 }
-//×Öµäµ¥Ôª
+//å­—å…¸å•å…ƒ
 function getMIDictionary()
 {
 	var obj =  getBasePropty();
@@ -909,7 +935,7 @@ function getMIDictionary()
 	obj.MaxLength = $("#MaxLength").val();
 	return obj;
 }
-//È¡ÔªËØÊôĞÔ
+//å–å…ƒç´ å±æ€§
 function getElementPropty(type)
 {
 	var obj = "";
@@ -941,294 +967,294 @@ function getElementPropty(type)
 }
 
 
-//¼òµ¥ÔªËØ±àÂë
+//ç®€å•å…ƒç´ ç¼–ç 
 function initCode()
 {
-	var str = '<span>ÔªËØ±àÂë</span>'
+	var str = '<span>å…ƒç´ ç¼–ç </span>'
 			 +'<span><input id="Code" type="text" disabled="true" style="width:200px;"></input></span>'
 	return str;
 }
-//¼òµ¥ÔªËØÃèÊö
+//ç®€å•å…ƒç´ æè¿°
 function initDisplayName()
 {
-	var str ='<span>ÔªËØÃèÊö</span>'
+	var str ='<span>å…ƒç´ æè¿°</span>'
 	 	 +'<span><textarea id="DisplayName" rows="2" cols="20" style="width:200px;"></textarea></span>'
 	return str;	
 }
-//¼òµ¥ÔªËØº¬ÒåÃèÊö
+//ç®€å•å…ƒç´ å«ä¹‰æè¿°
 function initDescription()
 {
-	var str ='<span>º¬ÒåÃèÊö</span>'
+	var str ='<span>å«ä¹‰æè¿°</span>'
 	 	 +'<span><textarea id="Description" rows="2" cols="20" style="width:200px;"></textarea></span>'
 	return str;	
 }
-//Êı¾İ°ó¶¨
+//æ•°æ®ç»‘å®š
 function initDataBind()
 {
-	var str ='<span>Êı¾İ°ó¶¨</span>'
+	var str ='<span>æ•°æ®ç»‘å®š</span>'
 	 	 +'<span><input id="BindCode" type="text" disabled="true" style="width:140px;"></input></span>'
 	 	 +'<span><input id="BindType" type="text" style="display:none;"></input></span>'
 	 	 +'<span><input id="clearBind" type="button" value="-"></input></span>'
 	return str;
 }
-//Í¬²½
+//åŒæ­¥
 function initSynch()
 {
-	var str ='<span><input id="Synch" type="checkbox" name="Synch">Í¬²½</input></span>'
+	var str ='<span><input id="Synch" type="checkbox" name="Synch">åŒæ­¥</input></span>'
 	return str;
 }
-//²»Îª¿Õ
+//ä¸ä¸ºç©º
 function initAllowNull()
 {
-	var str = '<span><input id="AllowNull" type="checkbox" name="AllowNull">·Ç±ØÌîÏî</input></span>'
+	var str = '<span><input id="AllowNull" type="checkbox" name="AllowNull">éå¿…å¡«é¡¹</input></span>'
 	return str;
 }
-//Ğ£ÑéÏûÏ¢
+//æ ¡éªŒæ¶ˆæ¯
 function initValidateMsg()
 {
-	var str ='<span>Ğ£ÑéÏûÏ¢</span>'
+	var str ='<span>æ ¡éªŒæ¶ˆæ¯</span>'
 	 	 +'<span><input id="ValidateMsg" type="text" style="width:200px;"></input></span>'
 	return str;
 }
-//ÕıÔò±í´ïÊ½
+//æ­£åˆ™è¡¨è¾¾å¼
 function initRegExp()
 {
-	var str ='<span>ÕıÔò±í´ïÊ½</span>'
+	var str ='<span>æ­£åˆ™è¡¨è¾¾å¼</span>'
 	 	 +'<span><input id="RegExp" type="text" style="width:190px;"></input></span>'
 	return str; 	 
 }
-//Ë³ĞòºÅ
+//é¡ºåºå·
 function initTabIndex()
 {
 	var str = '<span>TabIndex</span>'
 		     +'<span><input id="TabIndex" type="text" style="width:30px;"></input></span>'	
     return str;
 }
-//²»¿É¼û
+//ä¸å¯è§
 function initVisible()
 {
-	var str = '<span style="display:none;"><input id="Visible" type="checkbox" name="Visible">²»¿É¼û</input></span>'
+	var str = '<span style="display:none;"><input id="Visible" type="checkbox" name="Visible">ä¸å¯è§</input></span>'
 	return str;	
 }
-//Ö»¶Á
+//åªè¯»
 function initReadOnly()
 {
-	var str = '<span><input id="ReadOnly" type="checkbox" name="ReadOnly">Ö»¶Á</input></span>'
+	var str = '<span><input id="ReadOnly" type="checkbox" name="ReadOnly">åªè¯»</input></span>'
 	return str;
 }
-//»úÃÜ¼¶±ğ
+//æœºå¯†çº§åˆ«
 function initConfidentiality()
 {
-	var str ='<span>±£ÃÜ¼¶±ğ</span>'
+	var str ='<span>ä¿å¯†çº§åˆ«</span>'
 	 	 +'<span><select id="ConfidentialityCode" name="ConfidentialityCode" style="width:200px;"></select></span>'
 	return str; 	 
 }
-//¹Ì¶¨½á¹¹
+//å›ºå®šç»“æ„
 function initFixedStructs()
 {
-	var str = '<span><input id="FixedStructs" type="checkbox" name="FixedStructs">¹Ì¶¨½á¹¹</input></span>'
+	var str = '<span><input id="FixedStructs" type="checkbox" name="FixedStructs">å›ºå®šç»“æ„</input></span>'
 	return str;
 }
-//×î´ó³¤¶È(MIString)
+//æœ€å¤§é•¿åº¦(MIString)
 function initMaxLength()
 {
-	var str ='<span>×î´ó³¤¶È</span>'
+	var str ='<span>æœ€å¤§é•¿åº¦</span>'
 	 	 +'<span><input id="MaxLength" type="text" style="width:200px;"></input></span>'
 	return str; 	 
 }
-//×îĞ¡Öµ
+//æœ€å°å€¼
 function initMinVal()
 {
-	var str ='<span>×îĞ¡Öµ</span>'
+	var str ='<span>æœ€å°å€¼</span>'
 	 	 +'<span><input id="MinVal" type="text" style="width:30px;"></input></span>'
 	return str; 
 }
-//×î´óÖµ
+//æœ€å¤§å€¼
 function initMaxVal()
 {
-	var str ='<span>×î´óÖµ</span>'
+	var str ='<span>æœ€å¤§å€¼</span>'
 	 	 +'<span><input id="MaxVal" type="text" style="width:30px;"></input></span>'
 	return str; 
 	
 }
-//ÉèÖÃ×îĞ¡Öµ
+//è®¾ç½®æœ€å°å€¼
 function initHasMinVal()
 {
 	var str = '<span><input id="HasMinVal" type="checkbox" name="HasMinVal"></input></span>'
 	return str;
 }
-//ÉèÖÃ×î´óÖµ
+//è®¾ç½®æœ€å¤§å€¼
 function initHasMaxVal()
 {
 	var str = '<span><input id="HasMaxVal" type="checkbox" name="HasMaxVal"></input></span>'
 	return str;	
 }
-//ÊÇ·ñÊÇĞ¡ÓÚµÈÓÚ
+//æ˜¯å¦æ˜¯å°äºç­‰äº
 function initIncludeMin()
 {
-	var str = '<span><input id="IncludeMin" type="checkbox" name="IncludeMin">ÊÇ·ñĞ¡ÓÚµÈÓÚ</input></span>'
+	var str = '<span><input id="IncludeMin" type="checkbox" name="IncludeMin">æ˜¯å¦å°äºç­‰äº</input></span>'
 	return str;	
 }
-//ÊÇ·ñÊÇ´óÓÚµÈÓÚ
+//æ˜¯å¦æ˜¯å¤§äºç­‰äº
 function initIncludeMax()
 {
-	var str = '<span><input id="IncludeMax" type="checkbox" name="IncludeMax">ÊÇ·ñ´óÓÚµÈÓÚ</input></span>'
+	var str = '<span><input id="IncludeMax" type="checkbox" name="IncludeMax">æ˜¯å¦å¤§äºç­‰äº</input></span>'
 	return str;	
 }
-//Ğ¡ÊıµãÎ»Êı
+//å°æ•°ç‚¹ä½æ•°
 function initDecimalPlace()
 {
-	var str ='<span>Ğ¡ÊıÎ»Êı</span>'
+	var str ='<span>å°æ•°ä½æ•°</span>'
 	 	 +'<span><input id="DecimalPlace" type="text" style="width:50px;"></input></span>'
 	return str; 
 }
-//±¸Ñ¡Ïî¼¯ºÏ
+//å¤‡é€‰é¡¹é›†åˆ
 function initChoices()
 {
-	var str ='<span>ÔÚ¼¯ºÏÖĞÊäÈë±¸Ñ¡Ïî(Ã¿ĞĞÒ»¸ö Öµ|ID)</span>'
+	var str ='<span>åœ¨é›†åˆä¸­è¾“å…¥å¤‡é€‰é¡¹(æ¯è¡Œä¸€ä¸ª å€¼|ID)</span>'
 	 	 +'<span><textarea id="Choices" rows="6" cols="60" style="width:250px;"></textarea></span>'
 	return str;		
 }
-//·Ö¸ô·û
+//åˆ†éš”ç¬¦
 function initSeparator()
 {
-	var str ='<span>·Ö¸ô·û</span>'
+	var str ='<span>åˆ†éš”ç¬¦</span>'
 	 	 +'<span><input id="Separator" type="text" style="width:50px;"></input></span>'
 	return str; 	
 }
-//±¸Ñ¡ÏîÇ¿ÖÆ»»ĞĞ
+//å¤‡é€‰é¡¹å¼ºåˆ¶æ¢è¡Œ
 function initWrapChoice()
 {
-	var str = '<span><input id="WrapChoice" type="checkbox" name="WrapChoice">Ç¿ÖÆ»»ĞĞ</input></span>'
+	var str = '<span><input id="WrapChoice" type="checkbox" name="WrapChoice">å¼ºåˆ¶æ¢è¡Œ</input></span>'
 	return str;	
 }
 
-//°üº¬ÈÕÆÚ
+//åŒ…å«æ—¥æœŸ
 function initIncludeDate()
 {
-	var str = '<span><input id="IncludeDate" type="checkbox" name="IncludeDate">ÈÕÆÚ</input></span>'
+	var str = '<span><input id="IncludeDate" type="checkbox" name="IncludeDate">æ—¥æœŸ</input></span>'
 	return str;		
 }
 
-//°üº¬Ê±¼ä
+//åŒ…å«æ—¶é—´
 function initIncludeTime()
 {
-	var str = '<span><input id="IncludeTime" type="checkbox" name="IncludeTime">Ê±¼ä</input></span>'
+	var str = '<span><input id="IncludeTime" type="checkbox" name="IncludeTime">æ—¶é—´</input></span>'
 	return str;		
 }
-//ÈÕÆÚ¸ñÊ½
+//æ—¥æœŸæ ¼å¼
 function initDateFormat()
 {
-	var str ='<span style="padding-left:5px">ÈÕÆÚ¸ñÊ½</span>'
+	var str ='<span style="padding-left:5px">æ—¥æœŸæ ¼å¼</span>'
 	 	 +'<span><select id="DateFormat" name="DateFormat" style="width:150px;"></select></span>'
 	return str; 
 }
-//Ê±¼ä¸ñÊ½
+//æ—¶é—´æ ¼å¼
 function initTimeFormat()
 {
-	var str ='<span style="padding-left:5px">Ê±¼ä¸ñÊ½</span>'
+	var str ='<span style="padding-left:5px">æ—¶é—´æ ¼å¼</span>'
 	 	 +'<span"><select id="TimeFormat" name="TimeFormat" style="width:150px;"></select></span>'
 	return str; 
 }
-//×ÖµäÀàĞÍ
+//å­—å…¸ç±»å‹
 function initDictionaryType()
 {
-	var str ='<span>×ÖµäÀàĞÍ</span>'
+	var str ='<span>å­—å…¸ç±»å‹</span>'
 	 	 +'<span><select id="DictionaryType" name="DictionaryType" style="width:200px;"></select></span>'
 	return str; 		
 }
-//±ê×¼×ÖµäÃû³Æ
+//æ ‡å‡†å­—å…¸åç§°
 function initCodeSystem()
 {
-	var str ='<span>±ê×¼×Öµä</span>'
+	var str ='<span>æ ‡å‡†å­—å…¸</span>'
 	 	 +'<span><select id="CodeSystem" name="CodeSystem" style="width:200px;"></select></span>'
 	return str; 		
 }
-//×Ô¶¨Òå×ÖµäÃû³Æ
+//è‡ªå®šä¹‰å­—å…¸åç§°
 function initCustDicClassName()
 {
-	var str ='<span>×Ô¶¨Òå×Öµä</span>'
+	var str ='<span>è‡ªå®šä¹‰å­—å…¸</span>'
 	 	 +'<span><input id="CustDicClassName" type="text" style="width:190px;"></input></span>'
 	return str; 		
 }
-//×ÖµäÏÔÊ¾ÀàĞÍ
+//å­—å…¸æ˜¾ç¤ºç±»å‹
 function initDisplayType()
 {
-	var str ='<span>ÏÔÊ¾ÀàĞÍ</span>'
+	var str ='<span>æ˜¾ç¤ºç±»å‹</span>'
 	 	 +'<span><select id="DisplayType" name="DisplayType" style="width:115px;"></select></span>'
 	return str; 		
 }
-//¹ØÁªµÄ½á¹¹»¯µ¥Ôª
+//å…³è”çš„ç»“æ„åŒ–å•å…ƒ
 function initLinkCode()
 {
-	var str ='<span>¹ØÁªCode</span>'
+	var str ='<span>å…³è”Code</span>'
 	 	 +'<span><input id="LinkCode" type="text" style="width:80px;"></input></span>'
 	return str; 	
 }
-//Á´½Ó·½Ê½£ºAppend/Replace/Prefix
+//é“¾æ¥æ–¹å¼ï¼šAppend/Replace/Prefix
 function initLinkMethod()
 {
-	var str ='<span>Á´½Ó·½Ê½</span>'
+	var str ='<span>é“¾æ¥æ–¹å¼</span>'
 	 	 +'<span><select id="LinkMethod" name="DisplayType" style="width:70px;"></select></span>'
 	return str; 	
 }
-//ÔÊĞíÊ¹ÓÃ·Ç±ê×¼×Öµä´úÂë
+//å…è®¸ä½¿ç”¨éæ ‡å‡†å­—å…¸ä»£ç 
 function initAllowCodeNull()
 {
-	var str = '<span><input id="AllowCodeNull" type="checkbox" name="IncludeDate">ÔÊĞíÊ¹ÓÃ·Ç±ê×¼×Öµä´úÂë</input></span>'
+	var str = '<span><input id="AllowCodeNull" type="checkbox" name="IncludeDate">å…è®¸ä½¿ç”¨éæ ‡å‡†å­—å…¸ä»£ç </input></span>'
 	return str;		
 }
-//ÔÊĞíÊ¹ÓÃ·Ç±ê×¼×ÖµäÃèÊö
+//å…è®¸ä½¿ç”¨éæ ‡å‡†å­—å…¸æè¿°
 function initAllowValueNull()
 {
-	var str = '<span><input id="IncludeDate" type="checkbox" name="IncludeDate">ÔÊĞíÊ¹ÓÃ·Ç±ê×¼×ÖµäÃèÊö</input></span>'
+	var str = '<span><input id="IncludeDate" type="checkbox" name="IncludeDate">å…è®¸ä½¿ç”¨éæ ‡å‡†å­—å…¸æè¿°</input></span>'
 	return str;		
 }
-//²éÑ¯Ìõ¼şµ¥Ôª
+//æŸ¥è¯¢æ¡ä»¶å•å…ƒ
 function initAssociateItem()
 {
-	var str ='<span>²éÑ¯Ìõ¼şµ¥Ôª</span>'
+	var str ='<span>æŸ¥è¯¢æ¡ä»¶å•å…ƒ</span>'
 	 	 +'<span><input id="AssociateItem" type="text" style="width:180px;"></input></span>'
 	return str; 		
 }
-//¹ØÁªÔªËØÏÔÊ¾ÀàĞÍ
+//å…³è”å…ƒç´ æ˜¾ç¤ºç±»å‹
 function initLinkDisplayType()
 {
-	var str ='<span>¹ØÁªÔªËØÏÔÊ¾ÀàĞÍ</span>'
+	var str ='<span>å…³è”å…ƒç´ æ˜¾ç¤ºç±»å‹</span>'
 	 	 +'<span><select id="LinkDisplayType" name="LinkDisplayType" style="width:115px;"></select></span>'
 	return str; 	
 }
 
-//±£´æ
+//ä¿å­˜
 function initSave()
 {
-	var str ='<input id="propertySave" type="button" value="±£´æ" style="float:right" ></input>'
+	var str ='<input id="propertySave" type="button" value="ä¿å­˜" style="float:right" ></input>'
 	return str; 	
 }
 
 
-//¼òµ¥ÔªËØ±àÂë
+//ç®€å•å…ƒç´ ç¼–ç 
 function setCode(value)
 {
 	$("#Code").val(value);
 }
-//¼òµ¥ÔªËØÃèÊö
+//ç®€å•å…ƒç´ æè¿°
 function setDisplayName(value)
 {
 	$("#DisplayName").val(value);
 }
-//¼òµ¥ÔªËØº¬ÒåÃèÊö
+//ç®€å•å…ƒç´ å«ä¹‰æè¿°
 function setDescription(value)
 {
 	$("#Description").val(value);
 }
-//Êı¾İ°ó¶¨
+//æ•°æ®ç»‘å®š
 function setDataBind(codeValue,typeValue)
 {
 	$("#BindCode").val(codeValue);
 	$("#BindType").val(typeValue);
 }
-//Í¬²½
+//åŒæ­¥
 function setSynch(value)
 {
 	if (value.toUpperCase() == "TRUE")
@@ -1239,7 +1265,7 @@ function setSynch(value)
 		$("#Synch").attr("checked",false);	
 	}
 }
-//²»Îª¿Õ
+//ä¸ä¸ºç©º
 function setAllowNull(value)
 {
 	if (value.toUpperCase() == "TRUE")
@@ -1250,22 +1276,22 @@ function setAllowNull(value)
 		$("#AllowNull").attr("checked",false);	
 	}
 }
-//Ğ£ÑéÏûÏ¢
+//æ ¡éªŒæ¶ˆæ¯
 function setValidateMsg(value)
 {
 	$("#ValidateMsg").val(value)
 }
-//ÕıÔò±í´ïÊ½
+//æ­£åˆ™è¡¨è¾¾å¼
 function setRegExp(value)
 {
 	$("#RegExp").val(value);	 
 }
-//Ë³ĞòºÅ
+//é¡ºåºå·
 function setTabIndex(value)
 {
 	$("#TabIndex").val(value)
 }
-//²»¿É¼û
+//ä¸å¯è§
 function setVisible(value)
 {
 	if (value.toUpperCase() == "TRUE")
@@ -1276,7 +1302,7 @@ function setVisible(value)
 		$("#Visible").attr("checked",false);	
 	}
 }
-//Ö»¶Á
+//åªè¯»
 function setReadOnly(value)
 {
 	if (value.toUpperCase() == "TRUE")
@@ -1287,17 +1313,17 @@ function setReadOnly(value)
 		$("#ReadOnly").attr("checked",false);	
 	}
 }
-//±£ÃÜ¼¶±ğ
+//ä¿å¯†çº§åˆ«
 function setConfidentiality(value)
 {
-	var json = [{value:"N",name:"Õı³£"},{value:"R",name:"ÑÏ¸ñ"},{value:"V",name:"·Ç³£ÑÏ¸ñ"}]
+	var json = [{value:"N",name:"æ­£å¸¸"},{value:"R",name:"ä¸¥æ ¼"},{value:"V",name:"éå¸¸ä¸¥æ ¼"}]
 	for (var i=0;i<json.length;i++)  
 	{       
     	$('#ConfidentialityCode').append("<option value='" + json[i].value + "'>" + json[i].name + "</option>");
 		if (json[i].value == value){$("#ConfidentialityCode").val(value);}
 	}	
 }
-//¹Ì¶¨½á¹¹
+//å›ºå®šç»“æ„
 function setFixedStructs(value)
 {
 	if (value.toUpperCase() == "TRUE")
@@ -1308,22 +1334,22 @@ function setFixedStructs(value)
 		$("#FixedStructs").attr("checked",false);	
 	}
 }
-//×î´ó³¤¶È (MIString)
+//æœ€å¤§é•¿åº¦ (MIString)
 function setMaxLength(value)
 {
 	$("#MaxLength").val(value);	 
 }
-//×îĞ¡Öµ
+//æœ€å°å€¼
 function setMinVal(value)
 {
 	$("#MinVal").val(value);
 }
-//×î´óÖµ
+//æœ€å¤§å€¼
 function setMaxVal(value)
 {
 	$("#MaxVal").val(value);	
 }
-//ÉèÖÃ×îĞ¡Öµ
+//è®¾ç½®æœ€å°å€¼
 function setHasMinVal(value)
 {
 	if (value.toUpperCase() == "TRUE")
@@ -1337,7 +1363,7 @@ function setHasMinVal(value)
 		$("#IncludeMin").attr("disabled",true);	
 	}
 }
-//ÉèÖÃ×î´óÖµ
+//è®¾ç½®æœ€å¤§å€¼
 function setHasMaxVal(value)
 {
 	if (value.toUpperCase() == "TRUE")
@@ -1351,7 +1377,7 @@ function setHasMaxVal(value)
 		$("#IncludeMin").attr("disabled",true);	
 	}
 }
-//ÊÇ·ñÊÇĞ¡ÓÚµÈÓÚ
+//æ˜¯å¦æ˜¯å°äºç­‰äº
 function setIncludeMin(value)
 {
 	if (value.toUpperCase() == "TRUE")
@@ -1363,7 +1389,7 @@ function setIncludeMin(value)
 		$("#IncludeMin").attr("checked",false);	
 	}
 }
-//ÊÇ·ñÊÇ´óÓÚµÈÓÚ
+//æ˜¯å¦æ˜¯å¤§äºç­‰äº
 function setIncludeMax(value)
 {
 	if (value.toUpperCase() == "TRUE")
@@ -1375,12 +1401,12 @@ function setIncludeMax(value)
 		$("#IncludeMax").attr("checked",false);	
 	}
 }
-//Ğ¡ÊıµãÎ»Êı
+//å°æ•°ç‚¹ä½æ•°
 function setDecimalPlace(value)
 {
 	$("#DecimalPlace").val(value);
 }
-//±¸Ñ¡Ïî
+//å¤‡é€‰é¡¹
 function setChoices(value)
 {
 	var text = "";
@@ -1390,13 +1416,13 @@ function setChoices(value)
 	}
 	$("#Choices").val(text);
 }
-//·Ö¸ô·û
+//åˆ†éš”ç¬¦
 function setSeparator(value)
 {
 	$("#Separator").val(value);	
 }
 
-//±¸Ñ¡ÏîÇ¿ÖÆ»»ĞĞ
+//å¤‡é€‰é¡¹å¼ºåˆ¶æ¢è¡Œ
 function setWrapChoice(value)
 {
 	if (value.toUpperCase() == "TRUE")
@@ -1409,7 +1435,7 @@ function setWrapChoice(value)
 	}
 }
 
-//°üº¬ÈÕÆÚ
+//åŒ…å«æ—¥æœŸ
 function setIncludeDate(value)
 {
 	if (value.toUpperCase() == "TRUE")
@@ -1422,7 +1448,7 @@ function setIncludeDate(value)
 		$("#DateFormat").attr("disabled",true);
 	}
 }
-//°üº¬ÈÕÆÚ
+//åŒ…å«æ—¥æœŸ
 function setIncludeTime(value)
 {
 	if (value.toUpperCase() == "TRUE")
@@ -1435,10 +1461,10 @@ function setIncludeTime(value)
 		$("#TimeFormat").attr("disabled",true);
 	}
 }
-//ÈÕÆÚ¸ñÊ½
+//æ—¥æœŸæ ¼å¼
 function setDateFormat(value)
 {
-	var json = [{value:"1",name:"yyyy-MM-dd"},{value:"2",name:"yyyyÄêMMÔÂddÈÕ"}]
+	var json = [{value:"1",name:"yyyy-MM-dd"},{value:"2",name:"yyyyå¹´MMæœˆddæ—¥"}]
 	for (var i=0;i<json.length;i++)  
 	{       
     	$('#DateFormat').append("<option value='" + json[i].value + "'>" + json[i].name + "</option>");
@@ -1457,7 +1483,7 @@ function setDateFormat(value)
 		}
 	}	
 }
-//Ê±¼äÏÔÊ¾¸ñÊ½
+//æ—¶é—´æ˜¾ç¤ºæ ¼å¼
 function setTimeFormat(value)
 {
 	var json = [{value:"1",name:"HH:mm"},{value:"2",name:"HH:mm:ss"}]
@@ -1480,17 +1506,17 @@ function setTimeFormat(value)
 	}	
 }
 
-//×ÖµäÀàĞÍ
+//å­—å…¸ç±»å‹
 function setDictionaryType(value)
 {
-	var json = [{value:"STDDIC",name:"±ê×¼×Öµä"},{value:"CUSTDIC",name:"×Ô¶¨Òå×Öµä"}]
+	var json = [{value:"STDDIC",name:"æ ‡å‡†å­—å…¸"},{value:"CUSTDIC",name:"è‡ªå®šä¹‰å­—å…¸"}]
 	for (var i=0;i<json.length;i++)  
 	{       
     	$('#DictionaryType').append("<option value='" + json[i].value + "'>" + json[i].name + "</option>");
 		if (json[i].value == value){$("#DictionaryType").val(value);}
 	}	
 }
-//×Öµä´úÂë
+//å­—å…¸ä»£ç 
 function setCodeSystem(value,data)
 {
 	for (var i=0;i<data.length;i++)  
@@ -1499,37 +1525,37 @@ function setCodeSystem(value,data)
 		if (data[i].Code == value){$("#CodeSystem").val(value);}
 	}
 }
-//×Ô¶¨Òå×ÖµäÃû
+//è‡ªå®šä¹‰å­—å…¸å
 function setCustDicClassName(value)
 {
 	$("#CustDicClassName").val(value);
 }
-//ÏÔÊ¾ÀàĞÍ
+//æ˜¾ç¤ºç±»å‹
 function setDisplayType(value)
 {
-	var json = [{value:"Desc",name:"ÃèÊö"},{value:"Code",name:"´úÂë"}]
+	var json = [{value:"Desc",name:"æè¿°"},{value:"Code",name:"ä»£ç "}]
 	for (var i=0;i<json.length;i++)  
 	{       
     	$('#DisplayType').append("<option value='" + json[i].value + "'>" + json[i].name + "</option>");
 		if (json[i].value == value){$("#DisplayType").val(value);}
 	}	
 }
-//¹ØÁªµÄ½á¹¹»¯µ¥Ôª
+//å…³è”çš„ç»“æ„åŒ–å•å…ƒ
 function setLinkCode(value)
 {
 	$("#LinkCode").val(value);
 }
-//Á´½Ó·½Ê½
+//é“¾æ¥æ–¹å¼
 function setLinkMethod(value)
 {
-	var json = [{value:"Append",name:"×·¼Ó"},{value:"Replace",name:"Ìæ»»"},{value:"Prefix",name:"Ç°¼Ó"}]
+	var json = [{value:"Append",name:"è¿½åŠ "},{value:"Replace",name:"æ›¿æ¢"},{value:"Prefix",name:"å‰åŠ "}]
 	for (var i=0;i<json.length;i++)  
 	{       
     	$('#LinkMethod').append("<option value='" + json[i].value + "'>" + json[i].name + "</option>");
 		if (json[i].value == value){$("#LinkMethod").val(value);}
 	}		
 }
-//ÔÊĞíÊ¹ÓÃ·Ç±ê×¼×Öµä´úÂë 
+//å…è®¸ä½¿ç”¨éæ ‡å‡†å­—å…¸ä»£ç  
 function setAllowCodeNull(value)
 {
 	if (value.toUpperCase() == "TRUE")
@@ -1541,7 +1567,7 @@ function setAllowCodeNull(value)
 	}
 }
 
-//ÔÊĞíÊ¹ÓÃ·Ç±ê×¼×ÖµäÃèÊö
+//å…è®¸ä½¿ç”¨éæ ‡å‡†å­—å…¸æè¿°
 function setAllowValueNull(value)
 {
 	if (value.toUpperCase() == "TRUE")
@@ -1552,16 +1578,16 @@ function setAllowValueNull(value)
 		$("#AllowValueNull").attr("checked",false);	
 	}
 }
-//²éÑ¯Ìõ¼şµ¥Ôª
+//æŸ¥è¯¢æ¡ä»¶å•å…ƒ
 function setAssociateItem(value)
 {
 	$("#AssociateItem").val(value);
 }
 
-//¹ØÁªÔªËØÏÔÊ¾ÀàĞÍ
+//å…³è”å…ƒç´ æ˜¾ç¤ºç±»å‹
 function setLinkDisplayType(value)
 {
-	var json = [{value:"Desc",name:"ÃèÊö"},{value:"Code",name:"´úÂë"}]
+	var json = [{value:"Desc",name:"æè¿°"},{value:"Code",name:"ä»£ç "}]
 	for (var i=0;i<json.length;i++)  
 	{       
     	$('#LinkDisplayType').append("<option value='" + json[i].value + "'>" + json[i].name + "</option>");
@@ -1570,28 +1596,28 @@ function setLinkDisplayType(value)
 }
 
 $(function(){
-	//×îĞ¡ÖµÊÇ²»·ñÓĞĞ§
+	//æœ€å°å€¼æ˜¯ä¸å¦æœ‰æ•ˆ
 	$("#HasMinVal").on("change",function(){
 		var flag = true;
 		if ($("#HasMinVal").attr("checked")) flag = false;	
 		$("#MinVal").attr("disabled",flag);
 		$("#IncludeMax").attr("disabled",flag);	
 	});
-	//×î´óÖµÊÇ²»·ñÓĞĞ§
+	//æœ€å¤§å€¼æ˜¯ä¸å¦æœ‰æ•ˆ
 	$("#HasMaxVal").on("change",function(){
 		var flag = true;
 		if ($("#HasMaxVal").attr("checked")) flag = false;	
 		$("#MaxVal").attr("disabled",flag);
 		$("#IncludeMin").attr("disabled",flag);	
 	});
-	//ÊÇ·ñ°üº¬ÈÕÆÚ
+	//æ˜¯å¦åŒ…å«æ—¥æœŸ
 	$("#IncludeDate").on("change",function(){
 		var flag = true;
 		if ($("#IncludeDate").attr("checked")) flag = false;	
 		$("#DateFormat").attr("disabled",flag);
 	});
 	
-	//ÊÇ·ñ°üº¬Ê±¼ä
+	//æ˜¯å¦åŒ…å«æ—¶é—´
 	$("#IncludeTime").on("change",function(){
 		var flag = true;
 		if ($("#IncludeTime").attr("checked")) flag = false;	
@@ -1613,9 +1639,9 @@ $(function(){
 	});
 
 });
-///ºóÌ¨½»»¥///////////////////////////////////////////////////////////////
+///åå°äº¤äº’///////////////////////////////////////////////////////////////
 
-//È¡±ê×¼×ÖµäÊı¾İ
+//å–æ ‡å‡†å­—å…¸æ•°æ®
 function getCodeSystemData(value)
 {
 	jQuery.ajax({
@@ -1632,7 +1658,7 @@ function getCodeSystemData(value)
 	});
 }
 
-//±£´æÖªÊ¶¿âÊôĞÔ
+//ä¿å­˜çŸ¥è¯†åº“å±æ€§
 function saveNodePropty()
 {
 	var result = -1;
@@ -1641,10 +1667,10 @@ function saveNodePropty()
 	var IsCommon = "Y";
 	var IsInUse = "Y";
 	if (!$("#chkCommon")[0].status) IsCommon = "N";
-	if (!$("#nodeStatus").val() == "Í£ÓÃ") IsInUse = "N";
+	if (!$("#nodeStatus").val() == "åœç”¨") IsInUse = "N";
 	
 	var TextData = "";
-	//»ñÈ¡ÖªÊ¶¿âÎÄ±¾ÄÚÈİ add by Lina 2016-11-07
+	//è·å–çŸ¥è¯†åº“æ–‡æœ¬å†…å®¹ add by Lina 2016-11-07
 	var strJson = {"action":"GET_ELEMENT_TEXT","args":{"Path":"","Type":"Composite","RemoveHintText":"False"}};
 	var value = cmdSyncExecute(strJson);
 	value = value.replace(/(^\s*)|(\s*$)/g, "");
@@ -1673,13 +1699,13 @@ function saveNodePropty()
 	});	
 	return result;
 }
-//¼ÓÔØHIS°ó¶¨×Ö¶Î
+//åŠ è½½HISç»‘å®šå­—æ®µ
 function getDataBaseCatalog()
 {
 	$('#dataBaseCategory').datagrid({  
 		height: '200px',
 	    url:'../EMRservice.Ajax.databind.cls',  
-	    loadMsg:'Êı¾İ×°ÔØÖĞ......',
+	    loadMsg:'æ•°æ®è£…è½½ä¸­......',
 	    autoRowHeight: true,
 	    fitColumns: true,
 	    singleSelect:true,
@@ -1688,7 +1714,7 @@ function getDataBaseCatalog()
 	    fit:true,
 	    columns:[[  
 	        {field:'ID',title:'ID',width:100,hidden:true},  
-	        {field:'Name',title:'Ñ¡ÔñÏµÍ³±í',width:100},  
+	        {field:'Name',title:'é€‰æ‹©ç³»ç»Ÿè¡¨',width:100},  
 	        {field:'ClassName',title:'ClassName',width:100,hidden:true},
 	        {field:'QueryName',title:'QueryName',width:100,hidden:true}, 
 	        {field:'Description',title:'Description',width:100,hidden:true}, 
@@ -1708,7 +1734,7 @@ function getDataBaseDetial(id)
 {
 	$('#dataBaseDeital').datagrid({  
 	    url:'../EMRservice.Ajax.databind.cls',  
-	    loadMsg:'Êı¾İ×°ÔØÖĞ......',
+	    loadMsg:'æ•°æ®è£…è½½ä¸­......',
 	    autoRowHeight: true,
 	    fitColumns: true,
 	    singleSelect:true,
@@ -1717,7 +1743,7 @@ function getDataBaseDetial(id)
 	    fit:true,
 	    columns:[[  
 	        {field:'ID',title:'ID',width:100,hidden:true},  
-	        {field:'Name',title:'Ñ¡Ôñ×Ö¶Î',width:100},  
+	        {field:'Name',title:'é€‰æ‹©å­—æ®µ',width:100},  
 	        {field:'FieldName',title:'FieldName',width:100,hidden:true}, 
 	        {field:'FieldType',title:'FieldType',width:100,hidden:true}, 
 	        {field:'Description',title:'Description',width:100,hidden:true},
@@ -1731,7 +1757,7 @@ function getDataBaseDetial(id)
 	});	
 }
 
-///¼ÓÔØ°ó¶¨²¡ÀúÊı¾İÄ¿Â¼
+///åŠ è½½ç»‘å®šç—…å†æ•°æ®ç›®å½•
 function getDataEMRCatalog()
 {
 	$('#dataEMRCategory').tree({
@@ -1746,23 +1772,23 @@ function getDataEMRCatalog()
 			var type = node.attributes.type;
 			var text = node.text;
 			var id = node.id;
-			//Ñ¡ÖĞ²¡ÀúÄ£°åÔò»ñÈ¡Ä£°åxml
+			//é€‰ä¸­ç—…å†æ¨¡æ¿åˆ™è·å–æ¨¡æ¿xml
 			if(type == "Template")
 			{
 				getXml(id);
 			}
 		}
-		//ÕÛµşÈ«²¿
+		//æŠ˜å å…¨éƒ¨
 		//onLoadSuccess:function(node, data) {$('#dataEMRCategory').tree('collapseAll');},
 		//onLoadError: function(){ alert("EMRCatalogonLoadError");}
 	});	
 }
 
 
-/// Í£ÓÃÖªÊ¶¿â
+/// åœç”¨çŸ¥è¯†åº“
 $("#nodeStatus").on("click",function(){
 	
-	var IsInUse = ($("#nodeStatus").val() == "Í£ÓÃ")?"N":"Y";
+	var IsInUse = ($("#nodeStatus").val() == "åœç”¨")?"N":"Y";
 	jQuery.ajax({
 		type: "GET",
 		dataType: "text",
@@ -1770,7 +1796,7 @@ $("#nodeStatus").on("click",function(){
 		async: false,
 		data: {"ACTION":"StopOrStartKBNode","KBTreeID":node.id,"IsInUse":IsInUse},
 		success: function(d) {
-			var btText = (IsInUse == "N")?"ÆôÓÃ":"Í£ÓÃ";	
+			var btText = (IsInUse == "N")?"å¯ç”¨":"åœç”¨";	
 			$("#nodeStatus").text(btText);	
 			returnValues.NodeStatus = IsInUse;
 			window.returnValue = returnValues;

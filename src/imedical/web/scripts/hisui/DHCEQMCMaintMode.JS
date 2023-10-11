@@ -7,6 +7,7 @@ function BodyLoadHandler()
 	InitUserInfo(); //系统参数
 	InitEvent();
 	initButtonWidth();	//hisui改造 Add By DJ 2018-10-12	
+	initPanelHeaderStyle();//hisui改造 add by zyq 2023-02-02
 	disabled(true);//灰化	
 }
 function InitEvent()
@@ -29,6 +30,9 @@ function BFind_Click()
 	val=val+"&Code="+GetElementValue("Code");
 	val=val+"&Type="+GetElementValue("Type")
 	val=val+"&Remark="+GetElementValue("Remark")
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		val += "&MWToken="+websys_getMWToken()
+	}
 	window.location.href="websys.default.csp?WEBSYS.TCOMPONENT=DHCEQMCMaintMode"+val;
 }
 function BClear_Click() 
@@ -75,7 +79,7 @@ function BUpdate_Click()
 	}
 	else
 	{
-		messageShow("","","",t[result]);
+		messageShow("","","",t[-1001]); //modified by sjh BUG0035 2020-09-27
 	}
 
 }

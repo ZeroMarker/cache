@@ -14,6 +14,14 @@ var UserId = session['LOGON.USERID'];
 var HospId = session['LOGON.HOSPID'];
 var CtLocId = session['LOGON.CTLOCID'];
 var gGroupId=session['LOGON.GROUPID'];
+var gParam = GetParam(); 
+
+function GetParam(){
+	var GetParamStr=tkMakeServerCall("web.DHCST.DHCINScrap","GetParamProp",groupId,CtLocId,userId)
+	var gParamArr=GetParamStr.split('^');
+	return gParamArr;
+}
+
 
 //var arr = window.status.split(":");
 //var length = arr.length;
@@ -22,10 +30,10 @@ var colArr=[];
 
 var locField = new Ext.ux.LocComboBox({
 	id:'locField',
-	fieldLabel:'科室',
+	fieldLabel:$g('科室'),
 	//width:200,
 	listWidth:210,
-	emptyText:'科室...',
+	emptyText:$g('科室...'),
 	groupId:gGroupId,
 	anchor:'90%',
 	listeners : {
@@ -47,7 +55,7 @@ var dateField = new Ext.ux.DateField({
 	//width:200,
 	listWidth:200,
     allowBlank:false,
-	fieldLabel:'制单日期',
+	fieldLabel:$g('制单日期'),
 	anchor:'90%',
 	value:new Date(),
 	editable:false,
@@ -58,7 +66,7 @@ var timeField = new Ext.form.TextField({
 	id:'timeField',
 	//width:200,
     allowBlank:false,
-	fieldLabel:'制单时间',
+	fieldLabel:$g('制单时间'),
 	//format:'HH-MM-SS',
 	anchor:'90%',
 	//value:new Time(),
@@ -67,7 +75,7 @@ var timeField = new Ext.form.TextField({
 
 var userField = new Ext.form.TextField({
 	id:'adjUserField',
-	fieldLabel:'制单人',
+	fieldLabel:$g('制单人'),
 	width:200,
 	anchor:'90%',
 	disabled:true
@@ -75,11 +83,11 @@ var userField = new Ext.form.TextField({
 
 var inscrapNumField = new Ext.form.TextField({
 	id:'inscrapNumField',
-	fieldLabel:'报损单号',
+	fieldLabel:$g('报损单号'),
 	allowBlank:true,
 	//width:150,
 	listWidth:150,
-	emptyText:'报损单号...',
+	emptyText:$g('报损单号...'),
 	anchor:'90%',
 	selectOnFocus:true,
 	disabled:true
@@ -88,7 +96,7 @@ var inscrapNumField = new Ext.form.TextField({
 // 药品类组
 var groupField = new Ext.ux.StkGrpComboBox({
 	id:'groupField',
-	fieldLabel:'类组',
+	fieldLabel:$g('类组'),
 	//width:200,
 	anchor:'90%',
 	listWidth:200,
@@ -100,7 +108,7 @@ var groupField = new Ext.ux.StkGrpComboBox({
 // 报损原因
 var causeField = new Ext.form.ComboBox({
 	id:'causeField',
-	fieldLabel:'报损原因',
+	fieldLabel:$g('报损原因'),
 	//width:200,
 	anchor:'90%',
 	listWidth:200,
@@ -108,7 +116,7 @@ var causeField = new Ext.form.ComboBox({
 	store:ReasonForScrapurnStore,
 	valueField:'RowId',
 	displayField:'Description',
-	emptyText:'报损原因...',
+	emptyText:$g('报损原因...'),
 	triggerAction:'all',
 	emptyText:'',
 	minChars:1,
@@ -120,7 +128,7 @@ var causeField = new Ext.form.ComboBox({
 ReasonForAdjustMentStore.load();
 // 当页条数
 var NumAmount = new Ext.form.TextField({
-			emptyText : '当页条数',
+			emptyText : $g('当页条数'),
 			id : 'NumAmount',
 			name : 'NumAmount',
 			anchor : '90%',
@@ -128,7 +136,7 @@ var NumAmount = new Ext.form.TextField({
 		});	
 // 进价合计
 var RpAmount = new Ext.form.TextField({
-			emptyText : '进价合计',
+			emptyText : $g('进价合计'),
 			id : 'RpAmount',
 			name : 'RpAmount',
 			width:200,
@@ -136,7 +144,7 @@ var RpAmount = new Ext.form.TextField({
 		});			
 // 售价合计
 var SpAmount = new Ext.form.TextField({
-			emptyText : '售价合计',
+			emptyText : $g('售价合计'),
 			id : 'SpAmount',
 			name : 'SpAmount',
 			anchor : '90%',
@@ -164,15 +172,15 @@ function GetAmount(){
 		}
 	RpAmt=FormatGridRpAmount(RpAmt);
 	SpAmt=FormatGridSpAmount(SpAmt);
-	Count="当前条数:"+" "+Count	
-	RpAmt="进价合计:"+" "+RpAmt+" "+"元"
-	SpAmt="售价合计:"+" "+SpAmt+" "+"元"
+	Count=$g("当前条数:")+" "+Count	
+	RpAmt=$g("进价合计:")+" "+RpAmt+" "+$g("元")
+	SpAmt=$g("售价合计:")+" "+SpAmt+" "+$g("元")
 	Ext.getCmp("NumAmount").setValue(Count)	
 	Ext.getCmp("RpAmount").setValue(RpAmt)	
 	Ext.getCmp("SpAmount").setValue(SpAmt)	
 	}
 var AddDetailBT=new Ext.Button({
-	text:'增加一条',
+	text:$g('增加一条'),
 	tooltip:'',
 	iconCls:'page_add',
 	handler:function()
@@ -182,7 +190,7 @@ var AddDetailBT=new Ext.Button({
 });
 
 var DelDetailBT=new Ext.Button({
-	text:'删除一条',
+	text:$g('删除一条'),
 	tooltip:'',
 	iconCls:'page_delete',
 	handler:function()
@@ -194,18 +202,18 @@ var DelDetailBT=new Ext.Button({
 
 var remarkField = new Ext.form.TextArea({
 	id:'remarkField',
-	fieldLabel:'备注',
+	fieldLabel:$g('备注'),
 	allowBlank:true,
 	//width:200,
 	height:50,
-	emptyText:'备注...',
+	emptyText:$g('备注...'),
 	anchor:'90%',
 	selectOnFocus:true
 });
 
 var finshCK = new Ext.form.Checkbox({
 	id: 'finshCK',
-	boxLabel:'完成',
+	boxLabel:$g('完成'),
 	disabled:true,
 	allowBlank:true,
 	listeners:{
@@ -219,7 +227,7 @@ var finshCK = new Ext.form.Checkbox({
 
 var auditCK = new Ext.form.Checkbox({
 	id: 'auditCK',
-	boxLabel:'审核',
+	boxLabel:$g('审核'),
 	disabled:true,
 	allowBlank:true
 });
@@ -238,7 +246,7 @@ var CTUom = new Ext.form.ComboBox({
 	displayField : 'Description',
 	allowBlank : false,
 	triggerAction : 'all',
-	emptyText : '单位...',
+	emptyText : $g('单位...'),
 	selectOnFocus : true,
 	forceSelection : true,
 	minChars : 1,
@@ -289,7 +297,18 @@ CTUom.on('select', function(combo) {
 	var NewRp=Rp
 	var NewSp=Sp
 	var qty=record.get("qty");
+	var inclb =record.get("inclb");
 	if(value!=Uom){
+		var Inclb=record.get("inclb");
+		var QtyAndPriceInfo = tkMakeServerCall("web.DHCST.Util.DrugUtil","GetIncilbInfo",Inclb,value)
+		if (QtyAndPriceInfo=="") return;
+		var InfoArr = QtyAndPriceInfo.split("^")
+		record.set("sp", InfoArr[0] ); 
+		record.set("rp", InfoArr[1] );
+		record.set("inclbQty", InfoArr[2]);
+		record.set("avalbQty", InfoArr[4]);
+		
+		/*
 		if(value==BUom){
 			NewStkQty=BatStkQty*ConFac;
 			NewAvaStkQty=AvaStkQty*ConFac;
@@ -305,6 +324,7 @@ CTUom.on('select', function(combo) {
 		record.set("avalbQty",NewAvaStkQty)
 		record.set("rp",NewRp)
 		record.set("sp",NewSp)
+		*/
 	}
   
    //使页面的列中保留2位小数
@@ -391,13 +411,13 @@ var INScrapMGridCm = new Ext.grid.ColumnModel([
         sortable : true,
 		hidden : true
     },{
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'code',
         width:150,
         align:'left',
         sortable:true
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'desc',
         id:'desc',
         width:300,
@@ -417,31 +437,31 @@ var INScrapMGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"批次~效期",
+        header:$g("批次~效期"),
         dataIndex:'batNo',
         width:150,
         align:'left',
         sortable:true
     },{
-        header:"厂商",
+        header:$g("生产企业"),
         dataIndex:'manf',
         width:200,
         align:'left',
         sortable:true
     },{
-        header:"批次库存",
+        header:$g("批次库存"),
         dataIndex:'inclbQty',
         width:100,
         align:'right',
         sortable:true
     },{
-        header:"批次可用库存",
+        header:$g("批次可用库存"),
         dataIndex:'avalbQty',
         width:100,
         align:'right',
         sortable:true
     },{
-        header:"报损数量",
+        header:$g("报损数量"),
         dataIndex:'qty',
         id:'adjQty',
         width:100,
@@ -460,16 +480,33 @@ var INScrapMGridCm = new Ext.grid.ColumnModel([
 						var rowData = INScrapMGridDs.getAt(cell[0]);
 						var col=GetColIndex(INScrapMGrid,'qty');
 						var newqty=field.getValue();
+						
+						var buomId=rowData.get("buom")
+	                    var uom=rowData.get("uom")
+	                    var buomQty=newqty
+	                    var fac=rowData.get("confac")
+						
 						if(newqty>rowData.get('inclbQty')){
-							Msg.info("warning","报损数量不能大于批次库存!");
+							Msg.info("warning",$g("报损数量不能大于批次库存!"));
 							INScrapMGrid.startEditing(cell[0], col);
 							return;
 						}
 						else if(newqty>rowData.get('avalbQty')){
-							Msg.info("warning","报损数量不能大于批次可用库存!");			
+							Msg.info("warning",$g("报损数量不能大于批次可用库存!"));			
 							INScrapMGrid.startEditing(cell[0], col);
 							return;
-						}else{
+						}else if(gParam[0]!="Y")  ////新增报损数量是否允许小数判断 2021-04-17 yangsj 1 允许录入小数
+                		{
+	                		if(buomId!=uom)
+		                    {
+		                        buomQty=Number(fac).mul(newqty);
+		                    }
+		                    if((buomQty.toString()).indexOf(".")>=0)
+		                    {
+			                    Msg.info("warning", $g(" 报损数量换算成基本单位之后存在小数，不能调整！请核对库存调整配置!：报损数量换算为基本单位是否允许小数"));
+			                    return;
+		                    }
+                		}else{
 							//使页面的列中保留2位小数
 							//小数位数变量
 							//var pos = 2;
@@ -497,7 +534,7 @@ var INScrapMGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"单位",
+        header:$g("单位"),
         dataIndex:'uom',
         id:'uom',
         width:100,       
@@ -515,26 +552,26 @@ var INScrapMGridCm = new Ext.grid.ColumnModel([
 			}
 		}
     },{
-        header:"售价",
+        header:$g("售价"),
         dataIndex:'sp',
         width:100,
         align:'right',
         sortable:true
     },{
-        header:"售价金额",
+        header:$g("售价金额"),
         dataIndex:'spAmt',
         width:100,
         align:'right',
         sortable:true,
         renderer:FormatGridSpAmount
     },{
-        header:"进价",
+        header:$g("进价"),
         dataIndex:'rp',
         width:100,
         align:'right',
         sortable:true
     },{
-        header:"进价金额",
+        header:$g("进价金额"),
         dataIndex:'rpAmt',
         width:100,
         align:'right',
@@ -546,8 +583,8 @@ var INScrapMGridCm = new Ext.grid.ColumnModel([
 INScrapMGridCm.defaultSortable = true;
 
 var addINScrapM = new Ext.Toolbar.Button({
-	text:'新建',
-    tooltip:'新建',
+	text:$g('新建'),
+    tooltip:$g('新建'),
     iconCls:'page_add',
 	width : 70,
 	height : 30,
@@ -577,8 +614,8 @@ function newInscrap()
 		addNewRow();
 	}
 var findINScrapM = new Ext.Toolbar.Button({
-	text:'查询',
-    tooltip:'查询',
+	text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
 	width : 70,
 	height : 30,
@@ -620,8 +657,8 @@ function find()
 	}
 	
 var clearINScpM = new Ext.Toolbar.Button({
-	text:'清屏',
-    tooltip:'清屏',
+	text:$g('清屏'),
+    tooltip:$g('清屏'),
     iconCls:'page_clearscreen',
 	width : 70,
 	height : 30,
@@ -630,8 +667,8 @@ var clearINScpM = new Ext.Toolbar.Button({
 		if (isDataChanged())
 		{
 			Ext.Msg.show({
-				title:'提示',
-				msg: '已经对该单数据做了修改，继续执行将丢失掉修改，继续吗？',
+				title:$g('提示'),
+				msg: $g('已经对该单数据做了修改，继续执行将丢失掉修改，继续吗？'),
 				buttons: Ext.Msg.YESNO,
 				fn: function(btn){
 			   		if (btn=='yes') {clearPage();SetFormOriginal(formPanel);}
@@ -649,8 +686,8 @@ var clearINScpM = new Ext.Toolbar.Button({
 });
 
 var saveINScrapM = new Ext.Toolbar.Button({
-	text:'保存',
-    tooltip:'保存',
+	text:$g('保存'),
+    tooltip:$g('保存'),
     iconCls:'page_save',
 	width : 70,
 	height : 30,
@@ -664,37 +701,37 @@ var saveINScrapM = new Ext.Toolbar.Button({
 
 
 var deleteINScrapM = new Ext.Toolbar.Button({
-	text:'删除',
-    tooltip:'删除',
+	text:$g('删除'),
+    tooltip:$g('删除'),
     iconCls:'page_delete',
 	width : 70,
 	height : 30,
 	handler:function(){
 		var rowid=mainRowId;
 		if(rowid!=""){
-			Ext.MessageBox.confirm('提示','确定要删除当前报损单?',function(btn) {
+			Ext.MessageBox.confirm($g('提示'),$g('确定要删除当前报损单?'),function(btn) {
 				if(btn == 'yes'){
 					Ext.Ajax.request({
 						url : 'dhcst.inscrapaction.csp?actiontype=delete&inscrap='+mainRowId,
-						waitMsg:'删除中...',
+						waitMsg:$g('删除中...'),
 						failure: function(result, request) {
-							Msg.info("error", "请检查网络连接!");
+							Msg.info("error", $g("请检查网络连接!"));
 							return false;
 						},
 						success : function(result, request) {
 							var jsonData = Ext.util.JSON.decode(result.responseText);
 							if (jsonData.success == 'true') {
-								Msg.info("success", "删除成功!");
+								Msg.info("success", $g("删除成功!"));
 								clearPage();
 								//INScrapMGridDs.load({params:{inscrap:mainRowId}});
 							}else{
 								var ret=jsonData.info
 								if(ret==-1){
-									Msg.info("error", "报损单已经完成，不能删除!");
+									Msg.info("error", $g("报损单已经完成，不能删除!"));
 								}else if(ret==-2){
-									Msg.info("error", "报损单已经审核，不能删除!");
+									Msg.info("error", $g("报损单已经审核，不能删除!"));
 								}else{
-									Msg.info("error", "删除失败!"+ret);
+									Msg.info("error", $g("删除失败!"+ret));
 								}
 								return false;
 							}
@@ -706,7 +743,7 @@ var deleteINScrapM = new Ext.Toolbar.Button({
 				}
 			})
 		}else{
-			Msg.info('warning','没有报损单，请先查询。');
+			Msg.info('warning',$g('没有报损单，请先查询。'));
 			return;
 		}
 	}
@@ -714,16 +751,22 @@ var deleteINScrapM = new Ext.Toolbar.Button({
 
 var finshScp = new Ext.Toolbar.Button({
 	id:'finshScp',
-	text:'完成',
-    tooltip:'完成',
+	text:$g('完成'),
+    tooltip:$g('完成'),
     iconCls:'page_gear',
 	width : 70,
 	height : 30,
 	handler:function(){
+		var rowCount = INScrapMGrid.getStore().getCount();
+		if(rowCount==0)
+		{
+			Msg.info('error',$g('没有任何明细记录!'));
+			return false;
+		}
 		var finshCK = Ext.getCmp('finshCK').getValue();
         var mod = isDataChanged();
         if (mod && (!finshCK)) {
-            Ext.Msg.confirm('提示', '数据已发生改变,是否需要保存后完成?',
+            Ext.Msg.confirm($g('提示'), $g('数据已发生改变,是否需要保存后完成?'),
                 function(btn) {
                     if (btn == 'yes') {
                         return;
@@ -742,32 +785,32 @@ var finshScp = new Ext.Toolbar.Button({
      
 	function Complete(){
 		if((mainRowId=="")||(mainRowId==null)){
-			Msg.info("error", "报损单为空!请先查询.");
+			Msg.info("error", $g("报损单为空!请先查询"));
 			return false;
 		}else{
 			if (Ext.getCmp('finshCK').getValue()==true)	{	return;	}
 			
-			Ext.MessageBox.confirm('提示','确定要完成该报损单吗?',
+			Ext.MessageBox.confirm($g('提示'),$g('确定要完成该报损单吗?'),
 				function(btn) {
 					if(btn == 'yes'){
 						Ext.Ajax.request({
 							url:'dhcst.inscrapaction.csp?actiontype=finish&InscpId='+mainRowId,
-							waitMsg:'更新中...',
+							waitMsg:$g('更新中...'),
 							failure: function(result, request) {
-								Msg.info("error", "请检查网络连接!");
+								Msg.info("error", $g("请检查网络连接!"));
 							},
 							success: function(result, request) {
 								var jsonData = Ext.util.JSON.decode( result.responseText );
 								if (jsonData.success=='true') {
-									Msg.info("success", "报损单完成!");
+									Msg.info("success", $g("报损单完成!"));
 									selectInscrap(mainRowId);
 								}else{
 									if(jsonData.info==-1){
-										Msg.info("error", "报损单已经完成!");
+										Msg.info("error", $g("报损单已经完成!"));
 										return false;
 									}
 									if(jsonData.info==-3){
-										Msg.info("error", "操作失败!");
+										Msg.info("error", $g("操作失败!"));
 										return false;
 									}
 								}
@@ -781,43 +824,43 @@ var finshScp = new Ext.Toolbar.Button({
 			}
 	}
 var noFinshScp = new Ext.Toolbar.Button({
-	text:'取消完成',
-    tooltip:'取消完成',
+	text:$g('取消完成'),
+    tooltip:$g('取消完成'),
     iconCls:'page_gear',
 	width : 70,
 	height : 30,
 	handler:function(){
 		if((mainRowId=="")||(mainRowId==null)){
-			Msg.info("error", "报损单为空!请先查询.");
+			Msg.info("error", $g("报损单为空!请先查询"));
 			return false;
 		}else{
-			if (Ext.getCmp('finshCK').getValue()==false)	{Msg.info("error", "该报损单尚未完成!");return;	}
-			Ext.MessageBox.confirm('提示','确定要取消完成该报损单吗?',
+			if (Ext.getCmp('finshCK').getValue()==false)	{Msg.info("error", $g("该报损单尚未完成!"));return;	}
+			Ext.MessageBox.confirm($g('提示'),$g('确定要取消完成该报损单吗?'),
 				function(btn) {
 					if(btn == 'yes'){
 						Ext.Ajax.request({
 							url:'dhcst.inscrapaction.csp?actiontype=noFinish&InscpId='+mainRowId,
-							waitMsg:'处理中...',
+							waitMsg:$g('处理中...'),
 							failure: function(result, request) {
-								Msg.info("error", "请检查网络连接!");
+								Msg.info("error", $g("请检查网络连接!"));
 							},
 							success: function(result, request) {
 								var jsonData = Ext.util.JSON.decode( result.responseText );
 								if (jsonData.success=='true') {
-									Msg.info("success", "成功取消报损单完成状态!");
+									Msg.info("success", $g("成功取消报损单完成状态!"));
 									selectInscrap(mainRowId);
 									
 								}else{
 									if(jsonData.info==-1){
-										Msg.info("error", "报损单尚未完成!");
+										Msg.info("error", $g("报损单尚未完成!"));
 										return false;
 									}
 									if(jsonData.info==-2){
-										Msg.info("error", "报损单已经审核，不能取消完成!");
+										Msg.info("error", $g("报损单已经审核，不能取消完成!"));
 										return false;
 									}
 									if(jsonData.info==-3){
-										Msg.info("error", "操作失败!");
+										Msg.info("error", $g("操作失败!"));
 										return false;
 									}
 								}
@@ -834,14 +877,14 @@ var noFinshScp = new Ext.Toolbar.Button({
 });
 
 var printScp = new Ext.Toolbar.Button({
-	text : '打印',
-	tooltip : '打印报损单',
+	text : $g('打印'),
+	tooltip : $g('打印报损单'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_print',
 	handler : function() {
 		if (mainRowId ==null || mainRowId=="") {
-			Msg.info("warning", "没有需要打印的报损单!");
+			Msg.info("warning", $g("没有需要打印的报损单!"));
 			return;
 		}
 		PrintINScrap(mainRowId);
@@ -857,7 +900,7 @@ var formPanel = new Ext.form.FormPanel({
     tbar:[findINScrapM,'-',clearINScpM,'-',addINScrapM,'-',saveINScrapM,'-',finshScp,'-',noFinshScp,'-',printScp,'-',deleteINScrapM],
 	items : [{
 		xtype : 'fieldset',
-		title : '报损单信息',
+		title : $g('报损单信息'),
 		//defaultWidth:200,
 		autoHeight : true,
 		autoScroll:true,
@@ -900,8 +943,8 @@ var formPanel = new Ext.form.FormPanel({
  
 });
 var GridColSetBT = new Ext.Toolbar.Button({
-	text:'列设置',
-    tooltip:'列设置',
+	text:$g('列设置'),
+    tooltip:$g('列设置'),
     iconCls:'page_gear',
 	handler:function(){
 		GridColSet(INScrapMGrid,"DHCSTINSCRAP");
@@ -909,7 +952,7 @@ var GridColSetBT = new Ext.Toolbar.Button({
 });
 //表格
 INScrapMGrid = new Ext.grid.EditorGridPanel({
-	title:'明细记录',
+	title:$g('明细记录'),
 	store:INScrapMGridDs,
 	id:'INScrapMGrid',
 	cm:INScrapMGridCm,
@@ -937,7 +980,7 @@ var rightClick = new Ext.menu.Menu({
 		{ 
 			id: 'mnuDelete', 
 			handler: DeleteDetail, 
-			text: '删除' 
+			text: $g('删除' )
 		}
 	] 
 }); 
@@ -965,7 +1008,7 @@ function addNewRow() {
 
 	var scg = Ext.getCmp('groupField').getValue(); 
 	if(((scg=="")||(scg==null))&&(gParamCommon[9]=="N")){
-		Msg.info("error", "请选择类组!");
+		Msg.info("error", $g("请选择类组!"));
 		return ;
 	}
 	// 判断是否已经有添加行
@@ -1028,7 +1071,7 @@ function returnInfo(record) {
 	var rowData = INScrapMGrid.getStore().getAt(cell[0]);
 	var INCLBWARNFLAG= record.get("InclbWarnFlag");
 	if (INCLBWARNFLAG=="2"){
-		Msg.info("warning", "此药品该批次状态为不可用!");
+		Msg.info("warning", $g("此药品该批次状态为不可用!"));
 		return;
 	}
 	inciDr = record.get("InciDr");
@@ -1070,17 +1113,17 @@ function CheckDataBeforeSave(){
 	var user = UserId;
 	var locId = Ext.getCmp('locField').getValue();
 	if((locId=="")||(locId==null)){
-		Msg.info("error","请选择供应科室!");
+		Msg.info("error",$g("请选择供应科室!"));
 		return false;
 	}
 	var scg = Ext.getCmp('groupField').getValue();
 	if(((scg=="")||(scg==null))&&(gParamCommon[9]=="N")){
-		Msg.info("error","请选择类组!");
+		Msg.info("error",$g("请选择类组!"));
 		return false;
 	}
 	var scpReason = Ext.getCmp('causeField').getValue();
 	if((scpReason=="")||(scpReason==null)){
-		Msg.info("error","请选择报损原因!");
+		Msg.info("error",$g("请选择报损原因!"));
 		return false;
 	}
 	
@@ -1100,13 +1143,13 @@ function CheckDataBeforeSave(){
 				if (uom=='') continue;
 				var qty = rowData.get("qty");
 				if (qty=='') {
-					Msg.info("warning","第"+(i+1)+"行报损数量为空!");
+					Msg.info("warning",$g("第")+(i+1)+$g("行报损数量为空!"));
 					return;
 				}
 				rowCnt++;
 			}
 		}
-		if (rowCnt==0){Msg.info('warning','没有任何明细!禁止保存.');return false;}
+		if (rowCnt==0){Msg.info('warning',$g('没有任何明细!禁止保存.'));return false;}
 		// 判断重复输入药品
 		for (var i = 0; i < rowCount - 1; i++) {
 			for (var j = i + 1; j < rowCount; j++) {
@@ -1119,7 +1162,7 @@ function CheckDataBeforeSave(){
 						&& item_i == item_j ) {
 					changeBgColor(i, "yellow");
 					changeBgColor(j, "yellow");
-					Msg.info("warning", itemdesc+",第"+icnt+","+jcnt+"行"+"药品重复，请重新输入!");
+					Msg.info("warning", itemdesc+$g(",第")+icnt+","+jcnt+$g("行药品重复，请重新输入!"));
 					return false;
 				}
 			}
@@ -1150,6 +1193,11 @@ function save(){
 	if(tmpData!=""){
 		var ListDetail="";
 		var rowCount = INScrapMGrid.getStore().getCount();
+		if(rowCount==0)
+		{
+			Msg.info('error',$g('没有任何明细记录!'));
+			return false;
+		}
 		for (var i = 0; i < rowCount; i++) {
 			var rowData = INScrapMGridDs.getAt(i);	
 			//新增或数据发生变化时执行下述操作
@@ -1165,10 +1213,25 @@ function save(){
 				var avalbQty=rowData.get("avalbQty");
 				///if(qty>inclbQty){Msg.info("warning","报损数量不能大于批次库存");
 				///								return }
-				if(qty>avalbQty){Msg.info("warning","第"+(i+1)+"行报损数量不能大于批次可用库存");
+				if(qty>avalbQty){Msg.info("warning",$g("第")+(i+1)+$g("行报损数量不能大于批次可用库存"));
 												return }
-				if(qty<=0){Msg.info("warning","第"+(i+1)+"行报损数量必须大于0");
-												return }
+				if(qty<=0){Msg.info("warning",$g("第")+(i+1)+$g("行报损数量必须大于0"));return }
+												
+				var buomId=rowData.get("buom")
+	            var buomQty=qty
+	            var fac=rowData.get("confac")
+				if(gParam[0]!="Y")  ////新增报损数量是否允许小数判断 2020-02-20 yangsj 1 允许录入小数
+	    		{
+	        		if(buomId!=uom)
+	                {
+	                    buomQty=Number(fac).mul(qty);
+	                }
+	                if((buomQty.toString()).indexOf(".")>=0)
+	                {
+	                    Msg.info("warning", rowData.get("desc")+$g("报损数量换算成基本单位之后存在小数，不能调整！请核对库存调整配置：报损数量换算为基本单位是否允许小数!"));
+	                    return;
+	                }
+	    		}								
 				
 				var Rp = rowData.get("rp");
 				var rpAmt = rowData.get("rpAmt");
@@ -1191,14 +1254,14 @@ function save(){
 			url: INScrapMGridUrl+'?actiontype=save',
 			params: {inscrap:mainRowId,MainInfo:tmpData,ListDetail:ListDetail},
 			method : 'POST',
-			waitMsg : '处理中...',
+			waitMsg : $g('处理中...'),
 			failure: function(result,request) {
-				Msg.info("error","请检查网络连接!");
+				Msg.info("error",$g("请检查网络连接!"));
 			},
 			success: function(result,request) {
 				var jsonData = Ext.util.JSON.decode( result.responseText );			
 				if (jsonData.success=='true') {
-					Msg.info("success","保存成功!");
+					Msg.info("success",$g("保存成功!"));
 					mainRowId = jsonData.info;
 					
 					selectInscrap(mainRowId);
@@ -1206,11 +1269,11 @@ function save(){
 				if(jsonData.success=='false'){
 					var ret=jsonData.info;
 					if(ret==-8){
-						Msg.info("error", "报损单已经完成!");
+						Msg.info("error", $g("报损单已经完成!"));
 					}else if(ret==-9){
-						Msg.info("error", "报损单已经审核!");
+						Msg.info("error", $g("报损单已经审核!"));
 					}else{
-						Msg.info("error","保存失败!"+ret);
+						Msg.info("error",$g("保存失败!")+ret);
 					}
 				}
 			},
@@ -1235,7 +1298,7 @@ function getDetail(InscpRowid) {
 		params:{start:0,limit:999,inscrap:InscpRowid},
 		callback : function(r,options, success){
 			if(success==false){
-				Ext.MessageBox.alert("查询错误",this.reader.jsonData.Error); 
+				Ext.MessageBox.alert($g("查询错误"),this.reader.jsonData.Error); 
  			}
 		}		
 	});
@@ -1258,12 +1321,12 @@ function DeleteDetail() {
 	// 判断报损单是否已完成
 	var CmpFlag = Ext.getCmp("finshCK").getValue();
 	if (CmpFlag != null && CmpFlag != false) {
-		Msg.info("warning", "报损单已完成,禁止删除明细记录!");
+		Msg.info("warning", $g("报损单已完成,禁止删除明细记录!"));
 		return;
 	}
 	var cell = INScrapMGrid.getSelectionModel().getSelectedCell();
 	if (cell == null) {
-		Msg.info("warning", "请选择数据!");
+		Msg.info("warning", $g("请选择数据!"));
 		return;
 	}
 	// 选中行
@@ -1279,8 +1342,8 @@ function DeleteDetail() {
 		}			
 	} else {
 		Ext.MessageBox.show({
-			title : '提示',
-			msg : '是否确定删除该药品信息?',
+			title : $g('提示'),
+			msg : $g('是否确定删除该药品信息?'),
 			buttons : Ext.MessageBox.YESNO,
 			fn : showResult,
 			icon : Ext.MessageBox.QUESTION
@@ -1305,23 +1368,23 @@ function showResult(btn) {
 		Ext.Ajax.request({
 			url : url,
 			method : 'POST',
-			waitMsg : '删除中...',
+			waitMsg : $g('删除中...'),
 			success : function(result, request) {
 				var jsonData = Ext.util.JSON
 						.decode(result.responseText);
 				if (jsonData.success == 'true') {
-					Msg.info("success", "删除成功!");
+					Msg.info("success", $g("删除成功!"));
 					INScrapMGrid.getStore().remove(record);
 					INScrapMGrid.getView().refresh();
 					GetAmount();
 				} else {
 					var ret=jsonData.info;
 					if(ret==-1){
-						Msg.info("error", "报损单已经完成，不能删除!");
+						Msg.info("error", $g("报损单已经完成，不能删除!"));
 					}else if(ret==-2){
-						Msg.info("error", "报损单已经审核，不能删除!");
+						Msg.info("error", $g("报损单已经审核，不能删除!"));
 					}else{
-						Msg.info("error", "删除失败,请查看错误日志!");
+						Msg.info("error", $g("删除失败,请查看错误日志!"));
 					}
 				}
 				if (INScrapMGrid.getStore().getCount()==0){
@@ -1340,7 +1403,7 @@ function addDetailRow()
 	
 	if ((mainRowId!="")&&(Ext.getCmp('finshCK').getValue()==true))
 	{
-		Msg.info('warning','当前报损单已完成,禁止增加明细记录!');
+		Msg.info('warning',$g('当前报损单已完成,禁止增加明细记录!'));
 		return;
 	}
 	var rowCount =INScrapMGrid.getStore().getCount();
@@ -1348,7 +1411,7 @@ function addDetailRow()
 		var rowData = INScrapMGridDs.data.items[rowCount - 1];
 		var data=rowData.get("inci")
 		if(data=="" || data.length<=0){
-		    Msg.info("warning","已存在新建行") ;
+		    Msg.info("warning",$g("已存在新建行")) ;
 		    return;	  }
 		}	
 	addNewRow();
@@ -1449,7 +1512,7 @@ Ext.onReady(function(){
 		GetParamCommon();  //初始化公共参数配置
 	}	
 	var panel = new Ext.Panel({
-		title:'库存报损制单',
+		title:$g('库存报损制单'),
 		activeTab:0,
 		region:'north',
 		height:DHCSTFormStyle.FrmHeight(3),

@@ -2,17 +2,38 @@
 //不良事件模型
 //zhouxin
 //2019-05-29
+var HospDr="";
 $(function(){ 
-
+    //初始化医院 多院区改造 cy 2021-04-09
+    InitHosp(); 
 	document.onkeydown = function(e){ 
     var ev = document.all ? window.event : e;
     	if(ev.keyCode==13) {
-			commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})
+			Query();
      	}
 	}
 	initDataGrid();
-});
+	Query();
 
+});
+// 初始化医院 多院区改造 cy 2021-04-09
+function InitHosp(){
+	hospComp = GenHospComp("DHC_ADVModel"); 
+	HospDr=hospComp.getValue(); //cy 2021-04-09
+	hospComp.options().onSelect = function(){///选中事件
+		HospDr=hospComp.getValue(); //cy 2021-04-09
+		Query();
+	}
+	$("#_HospBtn").bind('click',function(){
+		var rowData = $("#datagrid").datagrid('getSelected');
+		if (!rowData){
+			$.messager.alert("提示","请选择一行！")
+			return false;
+		}
+		GenHospWin("DHC_ADVModel",rowData.ID);
+	})
+
+}
 function initDataGrid(){
 	$('#datagrid').datagrid({
 		toolbar:"#toolbar",
@@ -28,7 +49,9 @@ function initDataGrid(){
 			{field:'SubModelDesc',title:'子报表',width:100,align:'center',editor:{type:'validatebox'}},
 			{field:'FilterClass',title:'过滤函数类名',width:60,align:'center',editor:{type:'validatebox'}},
 			{field:'FilterFunc',title:'过滤函数方法名',width:60,align:'center',editor:{type:'validatebox'}},
-			{field:'Handler',title:'操作',width:40,align:'center',formatter:opRow}		
+			{field:'Handler',title:'操作',width:80,align:'center',formatter:opRow},
+			{field:'HospID',hidden:true,editor:{type:'validatebox'},hidden:true}
+	
 		 ]],
 		title:'数据模型<font color=red font-weight=bold font-size=12pt >【双击即可编辑】</font>',
 		headerCls:'panel-header-gray',
@@ -66,7 +89,7 @@ function dataGridBindEnterEvent(index){
 					divComponent({tarobj:$(ed.target),
 								  input:input,
 								  htmlType:'datagrid',
-								  url:LINK_CSP+'?ClassName=web.DHCADVFormName&MethodName=listGrid',
+								  url:LINK_CSP+'?ClassName=web.DHCADVFormName&MethodName=listGrid&queryName='+escape(input)+'&hosp='+HospDr,
 								  columns:[[
 								  	{field:'ID',hidden:true},
 								  	{field:'code',title:'表单代码',width:60},
@@ -97,7 +120,7 @@ function dataGridBindEnterEvent(index){
 					divComponent({tarobj:$(ed.target),
 								  input:input,
 								  htmlType:'datagrid',
-								  url:LINK_CSP+'?ClassName=web.DHCADVModel&MethodName=ListModel',
+								  url:LINK_CSP+'?ClassName=web.DHCADVModel&MethodName=ListModel&hosp='+HospDr,
 								  columns:[[
 								  	{field:'ID',hidden:true},
 								  	{field:'Code',title:'报表代码',width:60},
@@ -134,13 +157,13 @@ function onClickRow(index,row){
 	CommonRowClick(index,row,"#datagrid");
 }
 
-function addRow(){
-	commonAddRow({'datagrid':'#datagrid',value:{}})
+function addRow(){	
+	commonAddRow({'datagrid':'#datagrid',value:{'HospID':HospDr}})
 	dataGridBindEnterEvent(0);
 }
 
 function save(){
-	comSaveByDataGrid("User.DHCADVModel","#datagrid","","json")		
+	comSaveByDataGrid("User.DHCADVModel","#datagrid","","json",HospDr)		
 }
 
 
@@ -183,4 +206,8 @@ function report(code){
                 modal: false
 	});
 	$('#reportDia').dialog('open')
+}
+/// 查询 多院区改造 cy 2021-04-09
+function Query(){
+	commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})
 }

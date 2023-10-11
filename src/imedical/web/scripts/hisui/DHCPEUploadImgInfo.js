@@ -92,7 +92,8 @@ function BSave_click()
 	
 	SetWaitUploadInfo();
 }
-function BUpload_click()
+//// 公司要求ftps服务器 备份修改之前的上传方法
+function BUpload_clickbak20210902()
 {
 	var ImgPath="",ReadTxt="0",ItemName="",CurDate="";
 	var obj=document.getElementById("ImgPath");
@@ -158,7 +159,10 @@ function BUpload_click()
 		//alert(FTPFileName+"FTPFileName")
 		PEPhoto.PatientID = FTPFileName;  //eSrc.id;//PA_PatMas表的ID
 		var LastFileName=$("#LastFileName").val();
-		PEPhoto.SaveFile("jpg") //对于已经存在图片保存到数据库同时上传FTP的标志有效
+		var FileTypeDesc="jpg";
+		var obj=document.getElementById("LastFileName");
+		if (obj) FileTypeDesc=obj.value;
+		PEPhoto.SaveFile(FileTypeDesc);  //对于已经存在图片保存到数据库同时上传FTP的标志有效
 		try{
 			//if ((PicFileIsExist(FileName)=="False")||((!PicFileIsExist(FileName)))){
 			if ((PicFileIsExist(FileName)=="true")||((PicFileIsExist(FileName)))){
@@ -170,6 +174,7 @@ function BUpload_click()
 		if (ReadTxt=="1"){
 			var TxtFileName=ImgPath+"/"+ShortFileName.split(".")[0]+".txt";
 			if (PicFileIsExist(TxtFileName)){
+				if (("undefined"==typeof EnableLocalWeb)||(0==EnableLocalWeb )){
 				var fso=new ActiveXObject("Scripting.FileSystemObject");
 				var f=fso.opentextfile(TxtFileName,1,true,0);
 				var ResultStr="";
@@ -200,7 +205,50 @@ function BUpload_click()
 					var SuccessFlag=SuccessFlag+1;
 				}
 
+			}
+			else{
+				/// 启用中间件 谷歌
+				var TxtFileNameNew=TxtFileName.replace(/\\/g,"\\\\")
+			    var ResultStr="";
+			    var Str = "(function test(x){"+
+			    "var TestStr='';"+
+			    "var   fso,   s   =   '"+TxtFileNameNew+"';"+
+			    "var fso=new ActiveXObject('Scripting.FileSystemObject');"+
+			    "var f=fso.opentextfile(s,1,true,0);"+
+			    "TestStr=f.ReadAll();"+
+			    "f.close();"+
+			    "fso.DeleteFile(s,true); "+
+			    "return TestStr"+
+			    "}());";
+			     CmdShell.notReturn = 0;
+			     var rtn = CmdShell.EvalJs(Str);
+			    var TextStr= rtn.rtn; /// 至此取到txt里的全部内容
+			     var Char=String.fromCharCode(13,10);
+			     var length=TextStr.split(Char).length;
+			     for (i=0;i<length;i++){
+				     var LineStr=TextStr.split(Char)[i]; /// 每行数据
+				     
+			    	if (ItemName=="14碳呼气试验(各类呼气试验)"){
+						if (LineStr.split("检测结果 :DPM=").length>1) ResultStr=LineStr;
+					}else if(ItemName=="骨密度测定"){
+						if ((i=="18")||(i=="19")){
+							if (ResultStr==""){
+								ResultStr=LineStr;
+							}else{
+								ResultStr=ResultStr+"^"+LineStr;
+							}
+						}	
+					}		
+			    }
+			    if (ResultStr=="") continue;
+				var SaveRet=tkMakeServerCall("web.DHCPE.UploadImgInfo","SaveResultInfo",OEID,UserID,ResultStr);
+				if(SaveRet.indexOf("更新成功")>=0){
+					var SuccessFlag=SuccessFlag+1;
+				} 
 				
+				
+				
+				}
 			}
 		}
 	}
@@ -221,6 +269,227 @@ function BUpload_click()
 
 
 }
+function BUpload_click()
+{
+	var ImgPath="",ReadTxt="0",ItemName="",CurDate="";
+	var obj=document.getElementById("ImgPath");
+	if (obj) ImgPath=obj.value;
+	var CurOEID="";
+	var obj=document.getElementById("OEID");
+	if (obj) CurOEID=obj.value;
+	
+	if (CurOEID!=""){
+		var obj=document.getElementById("CurDate");
+		if (obj) CurDate=obj.value;
+		var ImgPath=ImgPath+"/"+CurDate;
+	}
+	if (CurOEID!=""){
+		var ListObj=document.getElementById("ErrFileName");
+	}else{
+		var ListObj=document.getElementById("UploadInfo");
+	}
+	var ListLength=ListObj.options.length;
+	
+	var HadListObj=document.getElementById("HadUploadInfo");
+	obj=document.getElementById("ReadTxt");
+	if (obj&&obj.checked) ReadTxt="1";
+	obj=document.getElementById("ItemName");
+	if (obj) ItemName=obj.value;
+	var UserID=session["LOGON.USERID"];
+	//alert(PhotoFtpInfo+"PhotoFtpInfo")
+	var FTPArr=PhotoFtpInfo.split("^");
+	var DeleteFlag="1";
+	var SuccessFlag=1;
+	if (ListLength==0){
+		$.messager.alert("提示","没有待上传数据","info");
+		return false;
+	}	
+	for (i=0;i<ListLength;i++){
+		var ShortFileName=ListObj.options[i].text;
+		var OEID=ListObj.options[i].value;
+		
+		//var FileName=ImgPath+"/"+ShortFileName;
+		var FileName=ImgPath+"\\"+ShortFileName;  /// 新版客户端路径
+		 
+		 /*  客户端可以判断文件是否存在
+		if ((PicFileIsExist(FileName)=="False")||((!PicFileIsExist(FileName)))){
+			//alert(图片不存在);
+			continue;
+			
+		}
+		*/
+		/*
+		PEPhoto.FileName = FileName; //保存图片的名称包括后缀
+		PEPhoto.AppName = FTPArr[4]+"/" //ftp目录
+		PEPhoto.DBFlag = "0" //是否保存到数据库  0  1
+		PEPhoto.FTPFlag = "1" //是否上传到ftp服务器  0  1
+		PEPhoto.DBConnectString = "CN_IPTCP:172.26.201.11[1972]:websrc" //数据库服务器
+		PEPhoto.FTPString = FTPArr[0]+"^"+FTPArr[1]+"^"+FTPArr[2]+"^"+FTPArr[3] //FTP服务器
+		*/
+		if (CurOEID!=""){
+			if (i>0) DeleteFlag="0";
+			FTPFileName=CurOEID+"-"+i
+			OEID=CurOEID;
+		}else{
+			var Sort=tkMakeServerCall("web.DHCPE.UploadImgInfo","GetOESort",OEID)
+			FTPFileName=OEID+"_"+Sort;
+		}
+		
+		//alert(FTPFileName+"FTPFileName")
+		//PEPhoto.PatientID = FTPFileName;  //eSrc.id;//PA_PatMas表的ID
+		var LastFileName=$("#LastFileName").val();
+		var FileTypeDesc="jpg";
+		var obj=document.getElementById("LastFileName");
+		if (obj) FileTypeDesc=obj.value;
+		//PEPhoto.SaveFile(FileTypeDesc);  //对于已经存在图片保存到数据库同时上传FTP的标志有效
+		
+		/// /// UploadFtpInfo: ftp://peftp:rkgkGFVv@172.18.18.138:2121/cs1
+		/// "172.18.18.150^peftp^GWBDLWHx^2121^dhccftp/peftp^300^200"
+		var UploadFtpInfo="ftp://" + FTPArr[1] + ":" + FTPArr[2] + "@" + FTPArr[0] +":" + FTPArr[3] + "/" + FTPArr[4];
+		var FileFrom=FileName;  //D:\\2.txt##D:\\1.gof
+		
+		var FileTo=FTPFileName+"."+FileTypeDesc;
+		exec(UploadFtpInfo,FileFrom,FileTo);
+		
+		
+		
+		
+		try{
+			//if ((PicFileIsExist(FileName)=="False")||((!PicFileIsExist(FileName)))){
+				/// 客户端异步回调可能需要修改客户端 先不判断文件是否存在了
+			//if ((PicFileIsExist(FileName)=="true")||((PicFileIsExist(FileName)))){
+				var SaveRet=tkMakeServerCall("web.DHCPE.UploadImgInfo","SaveUploadInfo",OEID,UserID,FTPFileName,DeleteFlag);
+				
+			//}
+			HadListObj.options[i]=ListObj.options[i];
+		}catch(e){}
+		if (ReadTxt=="1"){
+			var TxtFileName=ImgPath+"/"+ShortFileName.split(".")[0]+".txt";
+			if (PicFileIsExist(TxtFileName)){
+				if (("undefined"==typeof EnableLocalWeb)||(0==EnableLocalWeb )){
+				var fso=new ActiveXObject("Scripting.FileSystemObject");
+				var f=fso.opentextfile(TxtFileName,1,true,0);
+				var ResultStr="";
+				var Row=0
+				while (!f.AtEndOfStream) 
+				{ 
+					Row=Row+1;
+					var LineStr=f.Readline();
+					//alert(LineStr+"LineStr")
+					if (ItemName=="14碳呼气试验(各类呼气试验)"){
+						if (LineStr.split("检测结果 :DPM=").length>1) ResultStr=LineStr;
+					}else if(ItemName=="骨密度测定"){
+						if ((Row=="18")||(Row=="19")||(Row=="22")||(Row=="24")||(Row=="26")||(Row=="27")||(Row=="30")||(Row=="32")||(Row=="34")||(Row=="51")||(Row=="52")||(Row=="54")||(Row=="56")||(Row=="57")||(Row=="58")||(Row=="60")){
+							if (ResultStr==""){
+								ResultStr=LineStr;
+							}else{
+								ResultStr=ResultStr+"^"+LineStr;
+							}
+						}
+						
+					}
+				}
+				f.close();
+				if (ResultStr!="") fso.DeleteFile(TxtFileName,true); 
+				if (ResultStr=="") continue;
+				var SaveRet=tkMakeServerCall("web.DHCPE.UploadImgInfo","SaveResultInfo",OEID,UserID,ResultStr);
+				if(SaveRet.indexOf("更新成功")>=0){
+					var SuccessFlag=SuccessFlag+1;
+				}
+
+			}
+			else{
+				/// 启用中间件 谷歌
+				var TxtFileNameNew=TxtFileName.replace(/\\/g,"\\\\")
+			    var ResultStr="";
+			    var Str = "(function test(x){"+
+			    "var TestStr='';"+
+			    "var   fso,   s   =   '"+TxtFileNameNew+"';"+
+			    "var fso=new ActiveXObject('Scripting.FileSystemObject');"+
+			    "var f=fso.opentextfile(s,1,true,0);"+
+			    "TestStr=f.ReadAll();"+
+			    "f.close();"+
+			    "fso.DeleteFile(s,true); "+
+			    "return TestStr"+
+			    "}());";
+			     CmdShell.notReturn = 0;
+			     var rtn = CmdShell.EvalJs(Str);
+			    var TextStr= rtn.rtn; /// 至此取到txt里的全部内容
+			     var Char=String.fromCharCode(13,10);
+			     var length=TextStr.split(Char).length;
+			     for (i=0;i<length;i++){
+				     var LineStr=TextStr.split(Char)[i]; /// 每行数据
+				     
+			    	if (ItemName=="14碳呼气试验(各类呼气试验)"){
+						if (LineStr.split("检测结果 :DPM=").length>1) ResultStr=LineStr;
+					}else if(ItemName=="骨密度测定"){
+						if ((i=="18")||(i=="19")){
+							if (ResultStr==""){
+								ResultStr=LineStr;
+							}else{
+								ResultStr=ResultStr+"^"+LineStr;
+							}
+						}	
+					}		
+			    }
+			    if (ResultStr=="") continue;
+				var SaveRet=tkMakeServerCall("web.DHCPE.UploadImgInfo","SaveResultInfo",OEID,UserID,ResultStr);
+				if(SaveRet.indexOf("更新成功")>=0){
+					var SuccessFlag=SuccessFlag+1;
+				} 
+				
+				
+				
+				}
+			}
+		}
+	}
+	
+	/// 客户端异步回调方式 先提示操作完成
+	 $.messager.popover({msg: "操作完成", type: "info"});
+
+
+}
+/// UploadFtpInfo: ftp://peftp:rkgkGFVv@172.18.18.138:2121
+function exec(UploadFtpInfo,FileFrom,FileTo){
+	debugger; //
+	var filePaths = FileFrom
+	if(filePaths == ""){
+		$.messager.alert("提示","本地文件必填","info");
+		return;
+	}
+	var ftpParam ={
+		business : "UPLOAD",
+		transType : "FTPS",
+		files : filePaths,
+		fileNames : FileTo,
+		delAftUpload : 1,
+		serverPath : UploadFtpInfo 
+	};
+	
+	var json = JSON.stringify(ftpParam); 
+	//console.log("客户端入参："+json)
+	$("#ExecParam").html(json);
+	$("#RtnMsg").val('');
+	$PESocket.sendMsg(json,peSoceket_onMsg);
+}
+
+
+function peSoceket_onMsg(param,event)
+{
+	console.log(param)
+	console.log(event)
+	var paramObj = JSON.parse(param);
+	var FileName = paramObj.files;
+	$("#RtnMsg").val(event.data);
+	var retObj = JSON.parse(event.data);
+	if(retObj.code == "0"){
+
+	}else{
+		$.messager.alert("提示","【"+FileName+"】上传失败:<br><span style='color:red;font-weight:600;'>"+ retObj.msg+"</span>","info");
+	}
+}
+
 
 function ItemInfo(value) {
 	if (value=="") return;
@@ -383,6 +652,7 @@ function SetWaitUploadInfoNew()
            //console.log(Str)
       //以上为拼接Excel打印代码为字符串
        CmdShell.notReturn = 0;   //设置无结果调用，不阻塞调用
+	  // debugger; //
 		var rtn = CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
 		var FileNameStr=rtn.rtn
     if (FileNameStr=="") return false;

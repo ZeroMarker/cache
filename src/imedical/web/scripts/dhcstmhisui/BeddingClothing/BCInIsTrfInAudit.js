@@ -1,25 +1,30 @@
 
 var init = function() {
-	
 	$UI.linkbutton('#SearchBT', {
-		onClick: function(){
+		onClick: function() {
 			Query();
 		}
 	});
-	function Query(){
+	function Query() {
 		$UI.clear(DetailGrid);
 		$UI.clear(MasterGrid);
 		var ParamsObj = $UI.loopBlock('Conditions');
-		if(isEmpty(ParamsObj['ToLoc'])){
+		var StartDate = ParamsObj.StartDate;
+		var EndDate = ParamsObj.EndDate;
+		if (isEmpty(ParamsObj['ToLoc'])) {
 			$UI.msg('alert', '库房不可为空!');
 			return;
 		}
-		if(isEmpty(ParamsObj['StartDate'])){
+		if (isEmpty(StartDate)) {
 			$UI.msg('alert', '开始日期不能为空!');
 			return;
 		}
-		if(isEmpty(ParamsObj['EndDate'])){
+		if (isEmpty(EndDate)) {
 			$UI.msg('alert', '截止日期不能为空!');
+			return;
+		}
+		if (compareDate(StartDate, EndDate)) {
+			$UI.msg('alert', '截止日期不能小于开始日期!');
 			return;
 		}
 		ParamsObj['DateType'] = '1';
@@ -29,11 +34,12 @@ var init = function() {
 		MasterGrid.load({
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 			QueryName: 'DHCINIsTrfM',
+			query2JsonStrict: 1,
 			Params: Params
 		});
 	}
 	$UI.linkbutton('#ClearBT', {
-		onClick: function(){
+		onClick: function() {
 			$UI.clearBlock('Conditions');
 			$UI.clear(DetailGrid);
 			$UI.clear(MasterGrid);
@@ -41,9 +47,9 @@ var init = function() {
 		}
 	});
 	$UI.linkbutton('#PrintBT', {
-		onClick: function(){
+		onClick: function() {
 			var SelectedRow = MasterGrid.getSelected();
-			if(isEmpty(SelectedRow)){
+			if (isEmpty(SelectedRow)) {
 				$UI.msg('alert', '请选择需要打印的单据!');
 				return;
 			}
@@ -53,20 +59,16 @@ var init = function() {
 	});
 	
 	$UI.linkbutton('#AutitYesBT', {
-		onClick: function(){
+		onClick: function() {
 			var Sels = MasterGrid.getSelections();
-			if(isEmpty(Sels)){
+			if (isEmpty(Sels)) {
 				$UI.msg('alert', '请选择需要审核的单据!');
 				return;
 			}
-			$.messager.confirm('审核', '确定审核选取的单据?', function(r){
-				if(r){
-					TransInAuditYes();
-				}
-			});
+			$UI.confirm('确定审核选取的单据?', '', '', TransInAuditYes);
 		}
 	});
-	function TransInAuditYes(){
+	function TransInAuditYes() {
 		var Sel = MasterGrid.getSelected();
 		var Init = Sel['RowId'];
 		$.cm({
@@ -74,31 +76,27 @@ var init = function() {
 			MethodName: 'jsTransInAuditYes',
 			Init: Init,
 			UserId: gUserId
-		},function(jsonData){
-			if(jsonData.success === 0){
+		}, function(jsonData) {
+			if (jsonData.success === 0) {
 				$UI.msg('success', jsonData.msg);
 				Query();
-			}else{
+			} else {
 				$UI.msg('error', jsonData.msg);
 			}
 		});
 	}
 	
 	$UI.linkbutton('#AutitNoBT', {
-		onClick: function(){
+		onClick: function() {
 			var Sels = MasterGrid.getSelections();
-			if(isEmpty(Sels)){
+			if (isEmpty(Sels)) {
 				$UI.msg('alert', '请选择需要拒绝的单据!');
 				return;
 			}
-			$.messager.confirm('拒绝', '确定拒绝选取的单据?', function(r){
-				if(r){
-					TransInAuditNo();
-				}
-			});
+			$UI.confirm('确定拒绝选取的单据?', '', '', TransInAuditNo);
 		}
 	});
-	function TransInAuditNo(){
+	function TransInAuditNo() {
 		var Sel = MasterGrid.getSelected();
 		var Init = Sel['RowId'];
 		$.cm({
@@ -106,38 +104,40 @@ var init = function() {
 			MethodName: 'jsTransInAuditNo',
 			Init: Init,
 			UserId: gUserId
-		},function(jsonData){
-			if(jsonData.success === 0){
+		}, function(jsonData) {
+			if (jsonData.success === 0) {
 				$UI.msg('success', jsonData.msg);
 				Query();
-			}else{
-				$UI.msg('error', jsonData.msg); 
+			} else {
+				$UI.msg('error', jsonData.msg);
 			}
 		});
 	}
 
-	var FrLoc = $HUI.combobox('#FrLoc',{
+	var FrLoc = $HUI.combobox('#FrLoc', {
 		url: $URL
 			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
-			+ JSON.stringify(addSessionParams({Type:'All'})),
+			+ JSON.stringify(addSessionParams({ Type: 'All', Element: 'FrLoc' })),
 		valueField: 'RowId',
 		textField: 'Description'
 	});
 	
-	var ToLoc = $HUI.combobox('#ToLoc',{
+	var ToLoc = $HUI.combobox('#ToLoc', {
 		url: $URL
 			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
-			+ JSON.stringify(addSessionParams({Type:'Login'})),
+			+ JSON.stringify(addSessionParams({ Type: 'Login', Element: 'ToLoc' })),
 		valueField: 'RowId',
 		textField: 'Description'
 	});
 	$('#ToLoc').combobox('setValue', session['LOGON.CTLOCID']);
 
-	var MasterCm = [[{
+	var MasterCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
 			saveCol: true,
-			hidden: true
+			hidden: true,
+			width: 60
 		}, {
 			title: '单号',
 			field: 'InitNo',
@@ -198,32 +198,36 @@ var init = function() {
 	var MasterGrid = $UI.datagrid('#MasterGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
-			QueryName: 'DHCINIsTrfM'
+			QueryName: 'DHCINIsTrfM',
+			query2JsonStrict: 1
 		},
 		columns: MasterCm,
 		showBar: true,
-		onSelect: function(index, row){
+		onSelect: function(index, row) {
 			var Init = row['RowId'];
-			var ParamsObj = {Init:Init, InitType:'T'};
+			var ParamsObj = { Init: Init, InitType: 'T' };
 			$UI.clear(DetailGrid);
 			DetailGrid.load({
 				ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
 				QueryName: 'DHCINIsTrfD',
+				query2JsonStrict: 1,
 				Params: JSON.stringify(ParamsObj),
 				rows: 99999
 			});
 		},
-		onLoadSuccess: function(data){
-			if(data.rows.length > 0){
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
 				MasterGrid.selectRow(0);
 			}
 		}
 	});
 
-	var DetailCm = [[{
+	var DetailCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
-			hidden: true
+			hidden: true,
+			width: 60
 		}, {
 			title: '物资代码',
 			field: 'InciCode',
@@ -245,7 +249,7 @@ var init = function() {
 			field: 'BatExp',
 			width: 200
 		}, {
-			title: '厂商',
+			title: '生产厂家',
 			field: 'ManfDesc',
 			width: 160
 		}, {
@@ -313,22 +317,23 @@ var init = function() {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
 			QueryName: 'DHCINIsTrfD',
+			query2JsonStrict: 1,
 			rows: 99999
 		},
-		pagination:false,
+		pagination: false,
 		columns: DetailCm,
 		showBar: true,
 		remoteSort: false
 	});
 	
-	//设置缺省值
-	function SetDefaValues(){
+	// 设置缺省值
+	function SetDefaValues() {
 		$('#ToLoc').combobox('setValue', gLocId);
 		$('#StartDate').datebox('setValue', DefaultStDate());
-		$('#EndDate').datebox('setValue',  DefaultEdDate());
+		$('#EndDate').datebox('setValue', DefaultEdDate());
 	}
 	
 	SetDefaValues();
 	Query();
-}
+};
 $(init);

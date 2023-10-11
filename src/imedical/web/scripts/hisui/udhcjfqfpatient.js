@@ -1,4 +1,4 @@
-///UDHCJFQFPATIENT.js
+﻿/// UDHCJFQFPATIENT.js
 
 var Adm;
 
@@ -11,31 +11,31 @@ $(function () {
 
 	$HUI.linkbutton('#Print', {
 		onClick: function () {
-			Print_Click();
+			PrintClick();
 		}
 	});
 	
 	$HUI.linkbutton('#UPQFFlag', {
 		onClick: function () {
-			UPQFFlag_click();
+			UPQFFlagClick();
 		}
 	});
 	
 	$HUI.linkbutton('#UPCanQFFlag', {
 		onClick: function () {
-			UPCanQFFlag_click();
+			UPCanQFFlagClick();
 		}
 	});
 	
-	//���
+	//余额
 	$HUI.combobox("#LeftAmt", {
 		panelHeight: "auto",
 		editable: false,
 		valueField: 'id',
 		textField: 'text',
-		data:[{id: 'plus', text: '������0'},
-			  {id: 'equal', text: '������0'},
-			  {id: 'min', text: '���С��0', selected: true}
+		data:[{id: 'plus', text: '余额大于0'},
+			  {id: 'equal', text: '余额等于0'},
+			  {id: 'min', text: '余额小于0', selected: true}
 			  ],
 		onChange: function (newValue, oldValue) {
 			switch(newValue) {
@@ -59,14 +59,14 @@ $(function () {
 		}
 	});
 	
-	//��Ժ״̬
+	//在院状态
 	$HUI.combobox("#CurrentFlag", {
 		panelHeight: "auto",
 		editable: false,
 		valueField: "id",
 		textField: "text",
-		data:[{id: 'in', text: '��Ժ', selected: true},
-			  {id: 'out', text: '��Ժδ����'}
+		data:[{id: 'in', text: '在院', selected: true},
+			  {id: 'out', text: '出院未结算'}
 			 ],
 		onChange: function (newValue, oldValue) {
 			switch(newValue){
@@ -112,7 +112,7 @@ $(function () {
 	});
 });
 
-function Print_Click() {
+function PrintClick() {
 	var Stdate = getValueById('Stdate');
 	var Enddate = getValueById('Enddate');
 	var qf = getValueById('qf');
@@ -132,42 +132,54 @@ function SelectRowHandler(index, rowData) {
 	Adm = rowData.Tadmrowid;
 }
 
-function UPQFFlag_click() {
+function UPQFFlagClick() {
 	if (Adm == "") {
-		alert(t['Arrears00']);
+		$.messager.popover({msg: "请选择患者", type: "info"});
 		return;
 	}
 	var userid = session['LOGON.USERID'];
-	var flag = "1";
+	var flag = 1;
 	var AdmArrearsinfro = Adm + "^" + userid + "^" + flag;
-	var encmeth = getValueById('getUPQFFlag');
-	var retcode = cspRunServerMethod(encmeth, AdmArrearsinfro);
-	if (retcode == '0') {
-		alert(t['Arrears01']);
-	} else if (retcode == '1') {
-		alert(t['Arrears05']);
-	} else {
-		alert(t['Arrears03']);
-	}
+	$.m({
+		ClassName: "web.UDHCJFQFPATIENT",
+		MethodName: "UpAdmArrears",
+		AdmArrearsinfro: AdmArrearsinfro
+	}, function(rtn) {
+		if (rtn == 0) {
+			$.messager.popover({msg: "为患者置欠费标志成功", type: "success"});
+			return;
+		} 
+		if (rtn == 1) {
+			$.messager.popover({msg: "该患者已经欠费不需再置欠费标志", type: "error"});
+			return;
+		}
+		$.messager.popover({msg: "为患者置欠费标志失败", type: "error"});
+	});	
 }
 
-function UPCanQFFlag_click() {
+function UPCanQFFlagClick() {
 	if (Adm == "") {
-		alert(t['Arrears00']);
+		$.messager.popover({msg: "请选择患者", type: "info"});
 		return;
 	}
 	var userid = session['LOGON.USERID'];
-	var flag = "0";
+	var flag = 0;
 	var AdmArrearsinfro = Adm + "^" + userid + "^" + flag;
-	var encmeth = getValueById('getUPQFFlag');
-	var retcode = cspRunServerMethod(encmeth, AdmArrearsinfro);
-	if (retcode == '0') {
-		alert(t['Arrears03']);
-	} else if (retcode == '1') {
-		alert(t['Arrears06']);
-	} else {
-		alert(t['Arrears04']);
-	}
+	$.m({
+		ClassName: "web.UDHCJFQFPATIENT",
+		MethodName: "UpAdmArrears",
+		AdmArrearsinfro: AdmArrearsinfro
+	}, function(rtn) {
+		if (rtn == 0) {
+			$.messager.popover({msg: "取消欠费标志成功", type: "success"});
+			return;
+		}
+		if (rtn == 1) {
+			$.messager.popover({msg: "该患者已经取消欠费标志不需取消欠费标志", type: "error"});
+			return;
+		}
+		$.messager.popover({msg: "取消欠费标志失败", type: "error"});
+	});
 }
 
 function ini_LayoutStyle() {

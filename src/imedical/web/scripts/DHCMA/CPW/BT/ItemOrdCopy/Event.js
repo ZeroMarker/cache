@@ -37,7 +37,7 @@ function InitHISUIWinEvent(obj){
 			QueryName:"QryLocPathVer",
 			argNodeID:node.id,
 			argLocID:"",
-			argHospID:session['DHCMA.HOSPID'],
+			argHospID:CurrHosp,
 			ResultSetType:"array", 
 			page:1,    
 			rows:9999
@@ -54,7 +54,7 @@ function InitHISUIWinEvent(obj){
 	//加载树内容
 	obj.LoadPathTree =  function (AdmType)  {
 		$('#treeType').tree({
-			url:$URL+"?ClassName=DHCMA.CPW.BTS.PathFormSrv&QueryName=QryLocPathVer&argNodeID=-root&argLocID=0&argAdmType="+AdmType+"&argHospID="+session['DHCMA.HOSPID']+"&argDesc="+""+"&argKeyWords="+""+"&ResultSetType=array"	
+			url:$URL+"?ClassName=DHCMA.CPW.BTS.PathFormSrv&QueryName=QryLocPathVer&argNodeID=-root&argLocID=0&argAdmType="+AdmType+"&argHospID="+CurrHosp+"&argDesc="+""+"&argKeyWords="+""+"&ResultSetType=array"	
 			,onLoadSuccess:function(node,data)
 			{
 				//回调
@@ -102,7 +102,10 @@ function InitHISUIWinEvent(obj){
 						return false;
 					}
 				}
-			//参数重置
+				//参数重置
+				if (node){
+					$("#treeType").tree('options').url = $URL+"?ClassName=DHCMA.CPW.BTS.PathFormSrv&QueryName=QryLocPathVer&argNodeID="+node.id+"&argLocID=0&argAdmType="+obj.CurrAdmType+"&argHospID="+obj.cboHospValue+"&argDesc=&argKeyWords=&ResultSetType=array"
+				}
 			}
 			,onExpand:function(node)
 			{

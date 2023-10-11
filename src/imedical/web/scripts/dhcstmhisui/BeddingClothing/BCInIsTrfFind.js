@@ -1,50 +1,51 @@
-﻿//InOutFlag(转入转出标志:转入1,转出0), Fn
-var BCInIsTrfFind = function(InOutFlag,Fn){
-	$HUI.dialog('#FindWin',{width: gWinWidth, height: gWinHeight}).open();
+﻿// InOutFlag(转入转出标志:转入1,转出0), Fn
+var BCInIsTrfFind = function(InOutFlag, Fn) {
+	$HUI.dialog('#FindWin', { width: gWinWidth, height: gWinHeight }).open();
 	
-	$UI.linkbutton('#FQueryBT',{
-		onClick:function(){
+	$UI.linkbutton('#FQueryBT', {
+		onClick: function() {
 			FindQuery();
 		}
 	});
-	function FindQuery(){
+	function FindQuery() {
 		$UI.clear(FDetailGrid);
 		$UI.clear(FMasterGrid);
 		var ParamsObj = $UI.loopBlock('#FindConditions');
-		if(isEmpty(ParamsObj.StartDate)){
+		if (isEmpty(ParamsObj.StartDate)) {
 			$UI.msg('alert', '开始日期不能为空!');
 			return;
 		}
-		if(isEmpty(ParamsObj.EndDate)){
+		if (isEmpty(ParamsObj.EndDate)) {
 			$UI.msg('alert', '截止日期不能为空!');
 			return;
 		}
-		if(InOutFlag==0){
-			if(isEmpty(ParamsObj.FrLoc)){
+		if (InOutFlag == 0) {
+			if (isEmpty(ParamsObj.FrLoc)) {
 				$UI.msg('alert', '出库科室不能为空!');
 				return;
 			}
-		}else{
-			if(isEmpty(ParamsObj.ToLoc)){
+		} else {
+			if (isEmpty(ParamsObj.ToLoc)) {
 				$UI.msg('alert', '库房不能为空!');
 				return;
 			}
 		}
-		if(isEmpty(ParamsObj.Status)){
+		if (isEmpty(ParamsObj.Status)) {
 			ParamsObj.Status = '10,11,20,30';
 		}
 		var Params = JSON.stringify(ParamsObj);
 		FMasterGrid.load({
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 			QueryName: 'DHCINIsTrfM',
+			query2JsonStrict: 1,
 			Params: Params
 		});
 	}
 	
-	$UI.linkbutton('#FComBT',{
-		onClick: function(){
+	$UI.linkbutton('#FComBT', {
+		onClick: function() {
 			var Row = FMasterGrid.getSelected();
-			if(isEmpty(Row)){
+			if (isEmpty(Row)) {
 				$UI.msg('alert', '请选择要返回的单据!');
 			}
 			Fn(Row['RowId']);
@@ -52,72 +53,73 @@ var BCInIsTrfFind = function(InOutFlag,Fn){
 		}
 	});
 	
-	$UI.linkbutton('#FClearBT',{
-		onClick:function(){
+	$UI.linkbutton('#FClearBT', {
+		onClick: function() {
 			Clear();
 		}
 	});
-	function Clear(){
+	function Clear() {
 		$UI.clearBlock('#FindConditions');
 		$UI.clear(FMasterGrid);
 		$UI.clear(FDetailGrid);
 		
-		if(InOutFlag==0){
-			var deflocObj = {RowId: $('#InitFrLoc').combobox('getValue'), Description: $('#InitFrLoc').combobox('getText')};
-			var Dafult = {
+		if (InOutFlag == 0) {
+			var deflocObj = { RowId: $('#InitFrLoc').combobox('getValue'), Description: $('#InitFrLoc').combobox('getText') };
+			var DefaultData = {
 				StartDate: DefaultStDate(),
 				EndDate: DefaultEdDate(),
 				FrLoc: deflocObj
 			};
-		}else{
-			var deflocObj = {RowId: $('#InitToLoc').combobox('getValue'), Description: $('#InitToLoc').combobox('getText')};
-			var Dafult = {
+		} else {
+			var deflocObj = { RowId: $('#InitToLoc').combobox('getValue'), Description: $('#InitToLoc').combobox('getText') };
+			var DefaultData = {
 				StartDate: DefaultStDate(),
 				EndDate: DefaultEdDate(),
 				ToLoc: deflocObj
 			};
 		}
-		$UI.fillBlock('#FindConditions', Dafult);
+		$UI.fillBlock('#FindConditions', DefaultData);
 	}
-	var FReqLocParams,FInitFrLocParams;
-	if(InOutFlag==0){
-		FReqLocParams=JSON.stringify(addSessionParams({Type:'All'}));
-		FInitFrLocParams=JSON.stringify(addSessionParams({Type:'Login'}));
-	}else{
-		FReqLocParams=JSON.stringify(addSessionParams({Type:'Login'}));
-		FInitFrLocParams=JSON.stringify(addSessionParams({Type:'All'}));
+	var FReqLocParams, FInitFrLocParams;
+	if (InOutFlag == 0) {
+		FReqLocParams = JSON.stringify(addSessionParams({ Type: 'All', Element: 'FReqLoc' }));
+		FInitFrLocParams = JSON.stringify(addSessionParams({ Type: 'Login', Element: 'FInitFrLoc' }));
+	} else {
+		FReqLocParams = JSON.stringify(addSessionParams({ Type: 'Login', Element: 'FReqLoc' }));
+		FInitFrLocParams = JSON.stringify(addSessionParams({ Type: 'All', Element: 'FInitFrLoc' }));
 	}
 	var FReqLocBox = $HUI.combobox('#FReqLoc', {
-		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+FReqLocParams,
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + FReqLocParams,
 		valueField: 'RowId',
 		textField: 'Description'
 	});
 	var FInitFrLocBox = $HUI.combobox('#FInitFrLoc', {
-		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+FInitFrLocParams,
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + FInitFrLocParams,
 		valueField: 'RowId',
 		textField: 'Description'
 	});
 	
 	var FStatusData;
-	if(InOutFlag==0){
+	if (InOutFlag == 0) {
 		FStatusData = [
-			{RowId: '', Description: ''},
-			{RowId: '10', Description: '未完成'},
-			{RowId: '11', Description: '已完成'},
-			{RowId: '20', Description: '出库审核不通过'}
+			{ RowId: '', Description: '' },
+			{ RowId: '10', Description: '未完成' },
+			{ RowId: '11', Description: '已完成' },
+			{ RowId: '20', Description: '出库审核不通过' }
 		];
-	}else{
+	} else {
 		FStatusData = [
-			{RowId: '', Description: ''},
-			{RowId: '10', Description: '未完成'},
-			{RowId: '30', Description: '拒绝接收'}
+			{ RowId: '', Description: '' },
+			{ RowId: '10', Description: '未完成' },
+			{ RowId: '30', Description: '拒绝接收' }
 		];
 	}
 	$('#FStatus').simplecombobox({
 		data: FStatusData
 	});
 	
-	var FMasterCm = [[{
+	var FMasterCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
 			width: 50,
@@ -126,7 +128,7 @@ var BCInIsTrfFind = function(InOutFlag,Fn){
 			title: '单号',
 			field: 'InitNo',
 			align: 'left',
-			editor : 'text',
+			editor: 'text',
 			width: 150,
 			sortable: true
 		}, {
@@ -183,31 +185,34 @@ var BCInIsTrfFind = function(InOutFlag,Fn){
 	var FMasterGrid = $UI.datagrid('#FMasterGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
-			QueryName: 'DHCINIsTrfM'
+			QueryName: 'DHCINIsTrfM',
+			query2JsonStrict: 1
 		},
 		columns: FMasterCm,
-		onSelect: function(index, row){
+		onSelect: function(index, row) {
 			var Init = row['RowId'];
-			var ParamsObj = {Init:Init, InitType:'T'};
+			var ParamsObj = { Init: Init, InitType: 'T' };
 			$UI.clear(FDetailGrid);
 			FDetailGrid.load({
 				ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
 				QueryName: 'DHCINIsTrfD',
+				query2JsonStrict: 1,
 				Params: JSON.stringify(ParamsObj)
 			});
 		},
-		onLoadSuccess: function(data){
-			if(data.rows.length > 0){
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
 				FMasterGrid.selectRow(0);
 			}
 		},
-		onDblClickRow: function(index, row){
+		onDblClickRow: function(index, row) {
 			Fn(row['RowId']);
 			$HUI.dialog('#FindWin').close();
 		}
 	});
 
-	var FDetailCm = [[{
+	var FDetailCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
 			width: 50,
@@ -229,7 +234,7 @@ var BCInIsTrfFind = function(InOutFlag,Fn){
 			field: 'BatExp',
 			width: 200
 		}, {
-			title: '厂商',
+			title: '生产厂家',
 			field: 'ManfDesc',
 			width: 160
 		}, {
@@ -296,7 +301,8 @@ var BCInIsTrfFind = function(InOutFlag,Fn){
 	var FDetailGrid = $UI.datagrid('#FDetailGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
-			QueryName: 'DHCINIsTrfD'
+			QueryName: 'DHCINIsTrfD',
+			query2JsonStrict: 1
 		},
 		columns: FDetailCm,
 		remoteSort: false
@@ -304,4 +310,4 @@ var BCInIsTrfFind = function(InOutFlag,Fn){
 	
 	Clear();
 	FindQuery();
-}
+};

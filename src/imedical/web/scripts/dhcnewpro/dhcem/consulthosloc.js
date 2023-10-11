@@ -47,6 +47,7 @@ function InitMainList(){
 	var HospEditor = {
 		type: 'combobox',//设置编辑格式
 		options:{
+			required: true, //hxy 2021-05-11
 			valueField: "value", 
 			textField: "text",
 			//url: $URL + "?ClassName=web.DHCEMConsDicItem&MethodName=jsonConsItem&mCode=HOS&HospID="+LgHospID, //hxy 2020-05-28 注释
@@ -76,6 +77,7 @@ function InitMainList(){
 	var LocEditor = {
 		type: 'combobox',//设置编辑格式
 		options:{
+			required: true, //hxy 2020-09-22
 			valueField: "value", 
 			textField: "text",
 			url: '',
@@ -141,13 +143,14 @@ function saveRow(){
 	var rowsData = $("#main").datagrid('getChanges');
 	if(rowsData.length<=0){
 		$.messager.alert("提示","没有待保存数据!");
+		$('#main').datagrid('reload'); //重新加载
 		return;
 	}
 	var dataList = [];
 	for(var i=0;i<rowsData.length;i++){
 		
-		if(rowsData[i].itmHosID == ""){
-			$.messager.alert("提示","医院不能为空!"); 
+		if((rowsData[i].itmHosID == "")||(rowsData[i].itmLocID == "")){
+			$.messager.alert("提示","医院和科室不能为空!"); 
 			return false;
 		}
 		var tmp=rowsData[i].ID +"^"+ rowsData[i].itmHosID +"^"+ rowsData[i].itmLocID;

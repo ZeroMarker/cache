@@ -1,27 +1,27 @@
-ï»¿/**
+/**
  * Created by TF on 2018/1/15.
  */
  function initShowImg(){
 var len = $("img[modal='zoomImg']").length;
-var arrPic = new Array(); //å®šä¹‰ä¸€ä¸ªæ•°ç»„
+var arrPic = new Array(); //¶¨ÒåÒ»¸öÊı×é
 for (var i = 0; i < len; i++) {
-    arrPic[i] = $("img[modal='zoomImg']").eq(i).prop("src"); //å°†æ‰€æœ‰imgè·¯å¾„å­˜å‚¨åˆ°æ•°ç»„ä¸­
+    arrPic[i] = $("img[modal='zoomImg']").eq(i).prop("src"); //½«ËùÓĞimgÂ·¾¶´æ´¢µ½Êı×éÖĞ
 }
 
 $("img[modal='zoomImg']").each(function () {
     $(this).on("click", function () {
-        //ç»™bodyæ·»åŠ å¼¹å‡ºå±‚çš„html
+        //¸øbodyÌí¼Óµ¯³ö²ãµÄhtml
         $("body").append("<div class=\"mask-layer\">" +
             "   <div class=\"mask-layer-black\"></div>" +
             "   <div class=\"mask-layer-container\">" +
             "       <div class=\"mask-layer-container-operate\">" +
-            "           <button class=\"mask-prev btn-default-styles\" style=\"float: left\">ä¸Šä¸€å¼ </button>" +
-            "           <button class=\"mask-out btn-default-styles\">æ”¾å¤§</button>" +
-            "           <button class=\"mask-in btn-default-styles\">ç¼©å°</button>" +
-            "           <button class=\"mask-clockwise btn-default-styles\">é¡ºæ—¶é’ˆ</button>" +
-            "           <button class=\"mask-counterclockwise btn-default-styles\">é€†æ—¶é’ˆ</button>" +
-            "           <button class=\"mask-close btn-default-styles\">å…³é—­</button>" +
-            "           <button class=\"mask-next btn-default-styles\" style=\"float: right\">ä¸‹ä¸€å¼ </button>" +
+            "           <button class=\"mask-prev btn-default-styles\" style=\"float: left\">"+$g("ÉÏÒ»ÕÅ")+"</button>" +
+            "           <button class=\"mask-out btn-default-styles\">"+$g("·Å´ó")+"</button>" +
+            "           <button class=\"mask-in btn-default-styles\">"+$g("ËõĞ¡")+"</button>" +
+            "           <button class=\"mask-clockwise btn-default-styles\">"+$g("Ë³Ê±Õë")+"</button>" +
+            "           <button class=\"mask-counterclockwise btn-default-styles\">"+$g("ÄæÊ±Õë")+"</button>" +
+            "           <button class=\"mask-close btn-default-styles\">"+$g("¹Ø±Õ")+"</button>" +
+            "           <button class=\"mask-next btn-default-styles\" style=\"float: right\">"+$g("ÏÂÒ»ÕÅ")+"</button>" +
             "       </div>" +
             "       <div class=\"mask-layer-imgbox auto-img-center\"></div>" +
             "   </div>" +
@@ -29,18 +29,18 @@ $("img[modal='zoomImg']").each(function () {
         );
 
         var $this = $(this);
-        var img_index = $this.attr("index"); //è·å–ç‚¹å‡»çš„ç´¢å¼•å€¼
+        var img_index = $this.attr("index"); //»ñÈ¡µã»÷µÄË÷ÒıÖµ
         var num = img_index;
 
         function showImg() {
             $(".mask-layer-imgbox").append("<p><img src=\"\" alt=\"\"></p>");
-            $(".mask-layer-imgbox img").prop("src", arrPic[num]); //ç»™å¼¹å‡ºæ¡†çš„Imgèµ‹å€¼
+            $(".mask-layer-imgbox img").prop("src", arrPic[num]); //¸øµ¯³ö¿òµÄImg¸³Öµ
 
-            //å›¾ç‰‡å±…ä¸­æ˜¾ç¤º
-            var box_width = $(".auto-img-center").width(); //å›¾ç‰‡ç›’å­å®½åº¦
-            var box_height = $(".auto-img-center").height();//å›¾ç‰‡é«˜åº¦é«˜åº¦
-            var initial_width = $(".auto-img-center img").width();//åˆå§‹å›¾ç‰‡å®½åº¦
-            var initial_height = $(".auto-img-center img").height();//åˆå§‹å›¾ç‰‡é«˜åº¦
+            //Í¼Æ¬¾ÓÖĞÏÔÊ¾
+            var box_width = $(".auto-img-center").width(); //Í¼Æ¬ºĞ×Ó¿í¶È
+            var box_height = $(".auto-img-center").height();//Í¼Æ¬¸ß¶È¸ß¶È
+            var initial_width = $(".auto-img-center img").width();//³õÊ¼Í¼Æ¬¿í¶È
+            var initial_height = $(".auto-img-center img").height();//³õÊ¼Í¼Æ¬¸ß¶È
             if (initial_width > initial_height) {
                 $(".auto-img-center img").css("width", box_width);
                 var last_imgHeight = $(".auto-img-center img").height();
@@ -51,39 +51,39 @@ $("img[modal='zoomImg']").each(function () {
                 $(".auto-img-center img").css("margin-left", -(last_imgWidth - box_width) / 2);
             }
 
-            //å›¾ç‰‡æ‹–æ‹½
+            //Í¼Æ¬ÍÏ×§
             var $div_img = $(".mask-layer-imgbox p");
-            //ç»‘å®šé¼ æ ‡å·¦é”®æŒ‰ä½äº‹ä»¶
+            //°ó¶¨Êó±ê×ó¼ü°´×¡ÊÂ¼ş
             $div_img.bind("mousedown", function (event) {
-                event.preventDefault && event.preventDefault(); //å»æ‰å›¾ç‰‡æ‹–åŠ¨å“åº”
-                //è·å–éœ€è¦æ‹–åŠ¨èŠ‚ç‚¹çš„åæ ‡
-                var offset_x = $(this)[0].offsetLeft;//xåæ ‡
-                var offset_y = $(this)[0].offsetTop;//yåæ ‡
-                //è·å–å½“å‰é¼ æ ‡çš„åæ ‡
+                event.preventDefault && event.preventDefault(); //È¥µôÍ¼Æ¬ÍÏ¶¯ÏìÓ¦
+                //»ñÈ¡ĞèÒªÍÏ¶¯½ÚµãµÄ×ø±ê
+                var offset_x = $(this)[0].offsetLeft;//x×ø±ê
+                var offset_y = $(this)[0].offsetTop;//y×ø±ê
+                //»ñÈ¡µ±Ç°Êó±êµÄ×ø±ê
                 var mouse_x = event.pageX;
                 var mouse_y = event.pageY;
-                //ç»‘å®šæ‹–åŠ¨äº‹ä»¶
-                //ç”±äºæ‹–åŠ¨æ—¶ï¼Œå¯èƒ½é¼ æ ‡ä¼šç§»å‡ºå…ƒç´ ï¼Œæ‰€ä»¥åº”è¯¥ä½¿ç”¨å…¨å±€ï¼ˆdocumentï¼‰å…ƒç´ 
+                //°ó¶¨ÍÏ¶¯ÊÂ¼ş
+                //ÓÉÓÚÍÏ¶¯Ê±£¬¿ÉÄÜÊó±ê»áÒÆ³öÔªËØ£¬ËùÒÔÓ¦¸ÃÊ¹ÓÃÈ«¾Ö£¨document£©ÔªËØ
                 $(".mask-layer-imgbox").bind("mousemove", function (ev) {
-                    // è®¡ç®—é¼ æ ‡ç§»åŠ¨äº†çš„ä½ç½®
+                    // ¼ÆËãÊó±êÒÆ¶¯ÁËµÄÎ»ÖÃ
                     var _x = ev.pageX - mouse_x;
                     var _y = ev.pageY - mouse_y;
-                    //è®¾ç½®ç§»åŠ¨åçš„å…ƒç´ åæ ‡
+                    //ÉèÖÃÒÆ¶¯ºóµÄÔªËØ×ø±ê
                     var now_x = (offset_x + _x ) + "px";
                     var now_y = (offset_y + _y ) + "px";
-                    //æ”¹å˜ç›®æ ‡å…ƒç´ çš„ä½ç½®
+                    //¸Ä±äÄ¿±êÔªËØµÄÎ»ÖÃ
                     $div_img.css({
                         top: now_y,
                         left: now_x
                     });
                 });
             });
-            //å½“é¼ æ ‡å·¦é”®æ¾å¼€ï¼Œæ¥è§¦äº‹ä»¶ç»‘å®š
+            //µ±Êó±ê×ó¼üËÉ¿ª£¬½Ó´¥ÊÂ¼ş°ó¶¨
             $(".mask-layer-imgbox").bind("mouseup", function () {
                 $(this).unbind("mousemove");
             });
 
-            //ç¼©æ”¾
+            //Ëõ·Å
             var zoom_n = 1;
             $(".mask-out").click(function () {
                 zoom_n += 0.1;
@@ -117,7 +117,7 @@ $("img[modal='zoomImg']").each(function () {
                     });
                 }
             });
-            //æ—‹è½¬
+            //Ğı×ª
             var spin_n = 0;
             $(".mask-clockwise").click(function () {
                 spin_n += 15;
@@ -139,7 +139,7 @@ $("img[modal='zoomImg']").each(function () {
                     "-webkit-transform":"rotate("+ spin_n +"deg)"
                 });
             });
-            //å…³é—­
+            //¹Ø±Õ
             $(".mask-close").click(function () {
                 $(".mask-layer").remove();
             });
@@ -149,7 +149,7 @@ $("img[modal='zoomImg']").each(function () {
         }
         showImg();
 
-        //ä¸‹ä¸€å¼ 
+        //ÏÂÒ»ÕÅ
         $(".mask-next").on("click", function () {
             $(".mask-layer-imgbox p img").remove();
             num++;
@@ -158,7 +158,7 @@ $("img[modal='zoomImg']").each(function () {
             }
             showImg();
         });
-        //ä¸Šä¸€å¼ 
+        //ÉÏÒ»ÕÅ
         $(".mask-prev").on("click", function () {
             $(".mask-layer-imgbox p img").remove();
             num--;
@@ -173,15 +173,15 @@ $("img[modal='zoomImg']").each(function () {
 }
 
 var LINK_CSP="dhcapp.broker.csp";
-//å½“å‰ç´¢å¼•
+//µ±Ç°Ë÷Òı
 var editIndex = undefined;
 /**
- * ç®€å•è¿è¡Œåå°æ–¹æ³•
+ * ¼òµ¥ÔËĞĞºóÌ¨·½·¨
  * @creater zhouxin
- * @param className ç±»åç§°
- * @param methodName æ–¹æ³•å
- * @param datas å‚æ•°{}
- * @param å›è°ƒå‡½æ•°
+ * @param className ÀàÃû³Æ
+ * @param methodName ·½·¨Ãû
+ * @param datas ²ÎÊı{}
+ * @param »Øµ÷º¯Êı
  * runClassMethod("web.DHCAPPPart","find",{'Id':row.ID,'Name':row.Name},function(data){ alert() },"json")	 
  */
 function runClassMethod(className,methodName,datas,successHandler,datatype,sync){

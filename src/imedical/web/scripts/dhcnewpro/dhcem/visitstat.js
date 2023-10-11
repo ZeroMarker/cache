@@ -16,6 +16,9 @@ function initPageDefault(){
     LoadEpisodeID();          /// 初始化就诊号
     InitParams();             /// 初始化参数
 	InitPageComponent(); 	  /// 初始化界面控件内容
+	if(EpisodeID == ""){	  ///用户大会
+	    return false;
+    } //2022-11-09
 	setEnableDisDom("");
 	LoadHandler();
 	GetPatBaseInfo();         /// 病人就诊信息
@@ -23,10 +26,15 @@ function initPageDefault(){
 	InitPageEditFlag();       /// 初始化页面默认组件
 }
 function LoadEpisodeID(){
+	
+	hosNoPatOpenUrl = getParam("hosNoPatOpenUrl"); //hxy 2011-10-24 st
+	hosNoPatOpenUrl?hosOpenPatList(hosNoPatOpenUrl):''; //ed
+	
 	var frm = dhcadvdhcsys_getmenuform();
 	if (frm) {
 	    EpisodeID = frm.EpisodeID.value;
 	}
+	EpisodeID=!EpisodeID?"":getParam("EpisodeID"); //用户大会
 }
 
 function InitParams(){
@@ -56,6 +64,7 @@ function InitPageComponent(){
 		//w ##Class(web.DHCADMVisitStat).GetUserAccessStat("E","4634")
 		valueField:'id',
 		textField:'text',
+		panelHeight:"150",
 		blurValidValue:true,
 		onSelect:function(option){
 			var ret = validitStat(option.id);
@@ -84,6 +93,7 @@ function InitPageComponent(){
 		textField:'text',
 		blurValidValue:true,
 		//panelHeight:"auto",
+		mode:'remote',
 		onSelect:function(option){
 	      
 	    }	
@@ -94,9 +104,11 @@ function InitPageComponent(){
 	runClassMethod("web.DHCADMVisitStat","GetPatCurStat",{"EpisodeID":EpisodeID},function(jsonString){
 		var stat=jsonString.split("^")
 		$("#CurState").val(stat[1]);
-		if(stat[1]=="离院"){
+		if(stat[0]=="Discharge"){ //if(stat[1]=="离院"){
 			$("#Cancel").css("display","inline");
 			$HUI.combobox("#State").disable();			
+		}else if((stat[0]=="Stay")||(stat[0]=="Salvage")){ //}else if((stat[1]=="留观")||(stat[1]=="抢救")){
+			$("#CancelObs").css("display","inline");
 		}
 	},'',false)
 	
@@ -132,7 +144,7 @@ function InitPageComponent(){
 	
 	if(DeceasedFlag=="Y"){
 		$("#patStatus").css("color","red");
-		$("#patStatus").html("(患者已故)");
+		$("#patStatus").html($g("(患者已故)"));
 	}
 }
 
@@ -144,24 +156,24 @@ function InitPageEditFlag(){
 
 function setDateTimeDesc(stateDesc){
 	if(stateDesc=="Discharge"){
-		$("#changeDateLab").text("离院日期");
-		$("#changeTimeLab").text("离院时间");
-		$("#updateNoteLab").text("离院原因");
+		$("#changeDateLab").text($g("离院日期"));
+		$("#changeTimeLab").text($g("离院时间"));
+		$("#updateNoteLab").text($g("离院原因"));
 	}else if(stateDesc=="Displace"){
-		$("#changeDateLab").text("转院日期");
-		$("#changeTimeLab").text("转院时间");
+		$("#changeDateLab").text($g("转院日期"));
+		$("#changeTimeLab").text($g("转院时间"));
 	}else if((stateDesc=="SalDeath")||(stateDesc=="Death")){    
-		$("#changeDateLab").text("死亡日期");
-		$("#changeTimeLab").text("死亡时间");
-		$("#updateNoteLab").text("死亡原因");
+		$("#changeDateLab").text($g("死亡日期"));
+		$("#changeTimeLab").text($g("死亡时间"));
+		$("#updateNoteLab").text($g("死亡原因"));
 	}else if(stateDesc=="DisplaceOrInHospital"){
-		$("#changeDateLab").text("转入院日期");
-		$("#changeTimeLab").text("转入院时间");
-		$("#updateNoteLab").text("转入院原因");
+		$("#changeDateLab").text($g("转入院日期"));
+		$("#changeTimeLab").text($g("转入院时间"));
+		$("#updateNoteLab").text($g("转入院原因"));
 	}else{
-		$("#changeDateLab").text("改变状态日期");
-		$("#changeTimeLab").text("时间");
-		$("#updateNoteLab").text("离院原因");
+		$("#changeDateLab").text($g("改变状态日期"));
+		$("#changeTimeLab").text($g("时间"));
+		$("#updateNoteLab").text($g("离院原因"));
 	}
 	
 	return true;
@@ -348,26 +360,6 @@ function Update(){
 		return; 
 	}
 
-	var isControl=0,abnOrdInfo="";
-	if(StatCode=="Discharge"){
-		var retInfo=serverCall("web.DHCEMPatChange","GetAbnormalOrder",{'EpisodeID':EpisodeID});
-		if(retInfo!=0){
-			isControl=retInfo.split(",")[0];
-			abnOrdInfo=retInfo.substring(2,retInfo.length);
-		}
-		if(abnOrdInfo!=""){
-			if(isControl!=0){
-				$.messager.alert("提示:","请先处理需关注医嘱！需关注医嘱信息:"+abnOrdInfo,"info",function(){
-					websys_createWindow("../csp/nur.hisui.orderNeedCare.csp?EpisodeID="+EpisodeID+"&defaultTypeCode=D","","width=99% height=99%");
-				});
-				return;
-			}
-		}
-	}
-	
-	
-	
-
 	///留观抢救判断
 	if ((StatCode == "Stay")||(StatCode == "Salvage")) {
 		var EmergencyDesc = $HUI.combobox("#EmWard").getValue();    
@@ -376,7 +368,7 @@ function Update(){
 			return;
 		}
 		var ret = tkMakeServerCall("web.DHCBillInterface", "GetnotPayOrderByRegno", "", EpisodeID)
-		if (ret == 1) {	
+		if ((ret == 1)&(isTakStayFlag == 0)) {	
 			$.messager.alert("提示:","病人存在未结算医嘱,不能办理留观");
 			return;
 		}
@@ -428,18 +420,62 @@ function Update(){
 	}
 	
 	
+	///参数
 	var params = EpisodeID+"^"+StatCode+"^"+DateStr+"^"+TimeStr+"^"+userId+"^"+wardDesc+"^"+emWardId+"^"+0+"^"+ctlocId
 	params = params+"^"+""+"^"+"" +"^"+ VsNote +"^"+ "";
 	
-	if((isControl==0)&&(abnOrdInfo!="")&&(StatCode=="Discharge")){			///需关注医嘱未配置管控，只提示。
-		$.messager.confirm('提示', '存在需处理医嘱，是否确定离院操作?', function(result){  
-        	if(result) {
-	        	InsertVis(params,LgParams);
-	        }
-	    })
-	}else{
-		InsertVis(params,LgParams);	
+	///需关注医嘱判断
+	if(StatCode=="Discharge"){
+		var retObject=[];
+		runClassMethod("web.DHCEMPatChange","GetAbnormalOrder",{'EpisodeID':EpisodeID,"LgParams":LgParams},function(jsonString){
+			retObject = jsonString;
+		},'json',false)
+		
+		if(retObject.length){
+		
+			var abnormalMsgs = retObject[0].abnormalMsgs;
+			var ifCanOper=retObject[0].ifCanOper;
+			var ifCanOper="",ifOtherCanOper="",tipMustSeeMsg="",tipOtherMsg="";
+			for (var k in abnormalMsgs){
+				var itmObj = abnormalMsgs[k];
+				if(itmObj["ifCanOper"]||itmObj["ifOtherCanOper"]){
+					itmObj["ifCanOper"]?ifCanOper=1:"";
+					itmObj["ifOtherCanOper"]?ifOtherCanOper=1:"";
+					tipMustSeeMsg+=((tipMustSeeMsg?";":"")+itmObj["abnormalMsg"]);
+				}else{
+					tipOtherMsg+=((tipOtherMsg?";":"")+itmObj["abnormalMsg"]);
+				}
+			}
+			
+			var tipHtml=(tipMustSeeMsg?"流程控制内容:<span style='color:red'>"+tipMustSeeMsg+"</span>":"")+
+						(tipOtherMsg?"提示内容:<span style='color:blue'>"+tipOtherMsg+"</span>":"");
+			if(ifOtherCanOper=="1"){
+				$.messager.alert("提示:",tipHtml,"info");
+			}else{
+				if(ifCanOper=="1"){
+					$.messager.alert("提示:",tipHtml,"info",function(){
+						websys_createWindow("../csp/nur.hisui.orderNeedCare.csp?EpisodeID="+EpisodeID+"&defaultTypeCode=D","","width=99% height=99%");
+					});	
+				}else{
+					///提示：可以选择是进入需处理医嘱，选择否直接通过
+					$.messager.defaults = { ok: $g("处理"), cancel: $g("忽略") };
+					$.messager.confirm("提示:", tipHtml, function (data) {
+					    if (data) {
+							websys_createWindow("../csp/nur.hisui.orderNeedCare.csp?EpisodeID="+EpisodeID+"&defaultTypeCode=D","","width=99% height=99%");
+							return;
+					    }else{
+						    InsertVis(params,LgParams);	
+							return;    
+						}
+					});
+				}
+			}
+			return;
+		}
 	}
+	
+	
+	InsertVis(params,LgParams);	
 	return;
 }
 
@@ -451,7 +487,7 @@ function InsertVis(params,LgParams){
 					if (retStr.indexOf("预交金") != -1){
 						$.messager.alert("提示:",retStr,"info",function(){
 							if(retStr.indexOf("预交金评估信息")){
-								window.open("dhcem.pay.advpayass.csp?EpisodeID="+EpisodeID);
+								OpenPayAdv(EpisodeID);
 							}
 						});
 					}else{
@@ -459,14 +495,27 @@ function InsertVis(params,LgParams){
 					}
 				}else {
 					$.messager.alert("提示:","操作成功!","info",function(){
-						if(window.opener.parentFlash){
-							window.opener.parentFlash();
-						}
-						window.location.reload();	
+						FlashPage();
 					});
 				}
 			}
 		},'')	
+}
+
+function OpenPayAdv(EpisodeID){
+	var url="dhcem.pay.advpayass.csp?EpisodeID="+EpisodeID;
+	websys_showModal({
+		url: url,
+		width: '97%',
+		height: '95%',
+		iconCls:"icon-w-paper",
+		title: $g('预交金评估'),
+		closed: true,
+		modal:true,
+		onClose:function(){
+			
+		}
+	});	
 }
 
 ///撤销结算
@@ -488,10 +537,7 @@ function UpdateUndo(){
 			if (retStr != 0) $.messager.alert("提示:",retStr); 
 			else {
 				$.messager.alert("提示:","操作成功!");
-				if(window.opener.parentFlash){
-					window.opener.parentFlash();
-				}
-				window.location.reload();
+				FlashPage();
 			}
 	},'')
 
@@ -529,16 +575,27 @@ function dhcadvdhcsys_getmenuform(){
 /// 病人就诊信息
 function GetPatBaseInfo(){
 	
-	runClassMethod("web.DHCEMConsultQuery","GetPatEssInfo",{"PatientID":"", "EpisodeID":EpisodeID},function(jsonString){
+	runClassMethod("web.DHCEMInComUseMethod","GetPatEssInfo",{"PatientID":"", "EpisodeID":EpisodeID},function(jsonString){
 		var jsonObject = jsonString;
 		$('.ui-span-m').each(function(){
-			$(this).text(jsonObject[this.id]);
-			if (jsonObject.PatSex == "男"){
-				$("#PatPhoto").attr("src","../scripts/dhcnewpro/images/boy.png");
-			}else if (jsonObject.PatSex == "女"){
-				$("#PatPhoto").attr("src","../scripts/dhcnewpro/images/girl.png");
+			$(this).html(jsonObject[this.id]);
+			if(HISUIStyleCode==="lite"){
+				if (jsonObject.PatSex == $g("男")){
+					$("#PatPhoto").attr("src","../images/man_lite.png");
+				}else if (jsonObject.PatSex == $g("女")){
+					$("#PatPhoto").attr("src","../images/woman_lite.png");
+				}else{
+					$("#PatPhoto").attr("src","../images/unman_lite.png");
+				}
 			}else{
-				$("#PatPhoto").attr("src","../scripts/dhcnewpro/images/unman.png");
+
+				if (jsonObject.PatSex == $g("男")){
+					$("#PatPhoto").attr("src","../scripts/dhcnewpro/images/boy.png");
+				}else if (jsonObject.PatSex == $g("女")){
+					$("#PatPhoto").attr("src","../scripts/dhcnewpro/images/girl.png");
+				}else{
+					$("#PatPhoto").attr("src","../scripts/dhcnewpro/images/unman.png");
+				}
 			}
 		})
 	},'json',false)
@@ -567,6 +624,7 @@ function InitPageDataGrid(){
 		singleSelect:true,
 		pagination:true,
 		fit:true,
+		toolbar:[],
 	    onLoadSuccess:function (data) { //数据加载完毕事件
 	    	
         }
@@ -576,6 +634,45 @@ function InitPageDataGrid(){
 	new ListComponent('visgrid', columns, uniturl, option).Init();
 }
 
+
+///撤销留观
+function UndoPatObs() {
+
+	var resStr = tkMakeServerCall("web.DHCEMVisitStat", "UndoPatObs", EpisodeID,LgParams)
+	if (resStr != "0") {
+		$.messager.alert("提示",resStr)
+	}else{
+		$.messager.alert("提示","撤销留观成功!","info",function(){
+			FlashPage();
+		})
+	}
+	return;
+}
+
+function FlashPage(){
+	try{
+		if(window.opener!=null){
+			if(typeof window.opener.parentFlash=="function"){
+				window.opener.parentFlash();
+			}
+		}
+		
+		///局部刷新：床位图弹出
+		if(window.parent.top){
+			if(window.parent.top.frames[0]){
+				if("function" === typeof window.parent.top.frames[0].localRefresh){
+					window.parent.top.frames[0].localRefresh();
+				}
+				window.parent.top.websys_showModal("close");
+			}		
+		}
+	}catch(err){
+		console.error(err);
+	}
+	
+	window.location.reload();
+	return;
+}
 
 /// JQuery 初始化页面
 $(function(){ initPageDefault(); })

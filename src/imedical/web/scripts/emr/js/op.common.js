@@ -349,7 +349,11 @@ var common = {
         var result = '';
         var data = ajaxDATA('String', 'EMRservice.BL.BLEMRSign', 'GetUserInfo', patInfo.UserCode, '', patInfo.UserLocID);
         ajaxGETSync(data, function (ret) {
-            result = $.parseJSON(ret.replace(/\'/g, "\""));
+            if (ret == ""){
+                alert('获取当前医师级别等信息为空，请检查基础信息维护！');
+            }else{
+                result = $.parseJSON(ret.replace(/\'/g, "\""));
+            }
         }, function (ret) {
             alert('GetUserInfo error:' + ret);
         });
@@ -494,10 +498,10 @@ var common = {
             alert('SetOPDisplay error:' + ret);
         });            
     },
-    getDefaultLoadId: function (templateCategoryId,locID) {
+    getDefaultLoadId: function (templateCategoryId,locID,templateID) {
         //获取多文档加载未创建时默认加载的titleCode
         var defaultLoadId = '';
-        var data = ajaxDATA('String', 'EMRservice.BL.BLTitleConfig', 'GetDefaultLoadTitleCode', templateCategoryId, locID);
+        var data = ajaxDATA('String', 'EMRservice.BL.BLTitleConfig', 'GetDefaultLoadTitleCode', templateCategoryId, locID,templateID);
         ajaxGETSync(data, function (ret) {
                 defaultLoadId = ret;
         }, function (ret) {
@@ -536,5 +540,19 @@ var common = {
             alert('GetRecodeParamByInsID error:' + ret);
         });
     },
+    //获取当前病历创建者code和name
+    getCreatorMessage:function(instanceId)
+	{
+		var result = "";
+		var data = ajaxDATA('String', 'EMRservice.BL.BLEMRLogs', 'GetCreatorMessage', instanceId);
+		ajaxGETSync(data, function (ret) {
+            if (ret !== ""){
+                result = $.parseJSON(ret.replace(/\'/g, "\""));
+            }
+        }, function (ret) {
+            alert('GetCreatorMessage error:' + ret);
+        });
+		return result;	
+	},
     foo: function () {}
 };

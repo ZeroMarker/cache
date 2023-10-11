@@ -52,6 +52,11 @@ function InitCheckQueryWin(){
 			{field:'ApplyDate',title:'申请日期',width:'100'}	
 		]],
 		onBeforeLoad: function (param) {
+			if (typeof HISUIStyleCode !== 'undefined'){
+				if (HISUIStyleCode=="lite"){
+					$("#center .hisui-panel").attr("style","border-color:#E2E2E2;border-top:0;border-radius:0 0 4px 4px;")
+				}
+			}
             var firstLoad = $(this).attr("firstLoad");
             if (firstLoad == "false" || typeof (firstLoad) == "undefined")
             {
@@ -59,6 +64,7 @@ function InitCheckQueryWin(){
                 return false;
             }
             return true;
+            
 		}
 	});
 	

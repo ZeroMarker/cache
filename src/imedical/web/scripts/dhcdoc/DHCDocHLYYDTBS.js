@@ -7,17 +7,23 @@
 * tanjishan
 * 封装合理用药系统方法，防止变量污染;修正该方法可以被医嘱录入和草药录入同时引用
 */
-
+///初始化
+function HLYYY_Init(){
+	
+}
 // 通用第三方药品知识库
-function HLYYYDTS_Click(){
+function HLYYYDTS_Click(rowid){
 	if (GlobalObj.HLYYLayOut=="OEOrd"){
 		//选中一行
-		var ids=$('#Order_DataGrid').jqGrid("getGridParam", "selarrrow"); 			
-		if(ids==null || ids.length==0 || ids.length > 1) {  
-			$.messager.alert("警告","请选择一条医嘱");  
-			return;  
+		if(!rowid){
+			var ids =$('#Order_DataGrid').jqGrid("getGridParam", "selarrrow");
+			if(!ids.length){
+				$.messager.alert("警告","请选择一条医嘱");  
+				return;
+			}
+			rowid=ids[0];
 		}
-		var OrderARCIMRowid = GetCellData(ids[0], "OrderARCIMRowid");
+		var OrderARCIMRowid = GetCellData(rowid, "OrderARCIMRowid");
 	}else{
 		var OrderARCIMRowid=$("#"+FocusRowIndex+"_OrderARCIMID"+FocusGroupIndex+"").val();
 	}

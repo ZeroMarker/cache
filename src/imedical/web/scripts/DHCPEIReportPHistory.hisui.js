@@ -10,18 +10,15 @@ $(function(){
 	 
 	InitIReportPHistoryDataGrid();
 	
-	
 	//查询
 	$("#BFind").click(function() {	
 		BFind_click();		
-        });
+	});
         
-   //导出
-     $("#BExport").click(function() {	
+	//导出
+	$("#BExport").click(function() {	
 		BExport_click();		
-        });
-     
-        
+	});
 })
 
 
@@ -134,11 +131,10 @@ function InitCombobox()
 {
 	// VIP等级	
 	var VIPObj = $HUI.combobox("#VIPLevel",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindVIP&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindVIP&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
 		valueField:'id',
 		textField:'desc'
-		
-		})
+	});
 	
 	//团体
 	var GroupNameObj = $HUI.combogrid("#GroupName",{
@@ -159,22 +155,28 @@ function InitCombobox()
 			{field:'TAdmDate',title:'日期',width:100}			
 			
 		]]
-		})
-		
-
+	});
+	
+	// 打印人
+	var UserObj = $HUI.combobox("#PUser",{
+		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindPEUser&Type=RPT&ResultSetType=array",
+		valueField:'UserID',
+		textField:'UserName'
+	});
 }
 
 //查询
 function BFind_click(){
 	
 	$("#IReportPHistoryQueryTab").datagrid('load',{
-			ClassName:"web.DHCPE.PrintIAdmInfo",
-			QueryName:"GetIPrtIAdmInfo",
-			PDateFrom:$("#PDateFrom").datebox('getValue'),
-			PDateTo:$("#PDateTo").datebox('getValue'),
-			GroupID:$("#GroupName").combogrid('getValue'),
-			VIPLevel:$("#VIPLevel").combobox('getValue'),
-			})
+		ClassName:"web.DHCPE.PrintIAdmInfo",
+		QueryName:"GetIPrtIAdmInfo",
+		PDateFrom:$("#PDateFrom").datebox('getValue'),
+		PDateTo:$("#PDateTo").datebox('getValue'),
+		GroupID:$("#GroupName").combogrid('getValue'),
+		VIPLevel:$("#VIPLevel").combobox('getValue'),
+		PUserId:$("#PUser").combobox('getValue')
+	});
 	
 }
 
@@ -200,24 +202,21 @@ function InitIReportPHistoryDataGrid(){
 			PDateTo:$("#PDateTo").datebox('getValue'),
 			GroupID:$("#GroupName").combogrid('getValue'),
 			VIPLevel:$("#VIPLevel").combobox('getValue'),
-				
+			PUserId:$("#PUser").combobox('getValue')
 		},
 		columns:[[
-		
 		    {field:'TPAPMINo',width:'150',title:'登记号'},
 			{field:'TName',width:'150',title:'姓名'},
 			{field:'TAge',width:'80',title:'年龄'},
 			{field:'TSex',width:'80',title:'性别'},
 			{field:'TPrtFlag',width:'150',title:'VIP等级'},
 			{field:'TGrpName',width:'200',title:'团体名称'},
-			{field:'TCheckDate',width:'150',title:'打印日期'},
 			{field:'TAuditDate',width:'150',title:'审核日期'},
 			{field:'TAuditOpr',width:'150',title:'审核人'},
-			
-					
+			{field:'TCheckDate',width:'150',title:'打印日期'},
+			{field:'TReportOpr',width:'150',title:'打印人'}
 		]]
-			
-	})
+	});
 		
 }
 

@@ -27,10 +27,13 @@ function PageHandle(){
 	InitDoc();
 	//时段
 	InitTimeRange();
+	$("#StartDate").datebox("setValue",ServerObj.CurrDate.split("^")[1])
+	$("#EndDate").datebox("setValue",ServerObj.CurrDate.split("^")[1])
 }
 function InitScheduleList(){
 	var ScheduleListColumns=[[    
             { field : 'ASRowId',title : '',width : 1,hidden:true  },
+            { field: 'ASDate', title: '出诊日期', width: 200,sortable: true, resizable: true},
 			{ field: 'ASRoom', title: '诊室名称', width: 200,sortable: true, resizable: true},
 			{ field : 'LocDesc',title : '科室',width : 200 ,sortable: true, resizable: true},
             { field : 'DocDesc',title : '医生',width : 200},
@@ -47,6 +50,7 @@ function InitScheduleList(){
 		pageSize: 15,
 		pageList : [15,100,200],
 		idField:'ASRowId',
+		remoteSort:false,
 		columns :ScheduleListColumns,
 		onDblClickRow:function(index, row){
 			onDblClickRow(row);
@@ -62,11 +66,13 @@ function LoadScheduleListGrid(){
     if (locDesc==""){PageLogicObj.m_selLocRowId=""};
     var docDesc=$("#Combo_Doc").lookup('getText');
     if (docDesc==""){PageLogicObj.m_selDocRowId=""};
+    var StartDate=$("#StartDate").datebox("getValue")
+	var EndDate=$("#EndDate").datebox("getValue")
 	$.q({
 	    ClassName : "web.DHCApptScheduleNew",
 	    QueryName : "GetApptSchedule",
-	    Loc:PageLogicObj.m_selLocRowId, Doc:PageLogicObj.m_selDocRowId, StDate:ServerObj.CurrDate.split("^")[0], 
-	    EnDate:ServerObj.CurrDate.split("^")[0], userid:"", groupid:"", ResID:"", ExaID:PageLogicObj.m_selZoonRowId,
+	    Loc:PageLogicObj.m_selLocRowId, Doc:PageLogicObj.m_selDocRowId, StDate:StartDate, 
+	    EnDate:EndDate, userid:"", groupid:"", ResID:"", ExaID:PageLogicObj.m_selZoonRowId,
 	    paraTimeRange:$("#Combo_TimeRange").combobox('getValue'), Type:1,
 	    Pagerows:PageLogicObj.m_ScheduleListDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
@@ -92,7 +98,23 @@ function InitZone(){
 					$("#Combo_Loc,#Combo_Doc").lookup('setText','');
 					PageLogicObj.m_selLocRowId="";
 					PageLogicObj.m_selDocRowId="";
-				}
+				},onLoadSuccess:function(){
+					if (GridData["rows"].length>0){
+						var DefaultZoneID="";
+						for (var i=0;i<GridData["rows"].length;i++){
+							if (GridData["rows"][i]["isDefault"]=="true"){
+								DefaultZoneID=GridData["rows"][i]["HIDDEN"];
+								break;
+							}
+						}
+						if (DefaultZoneID!=""){
+							$("#Combo_Zone").combobox('select',DefaultZoneID);
+						}else{
+							$("#Combo_Zone").combobox('select',GridData["rows"][0]["HIDDEN"]);
+						}
+					}
+				
+			},
 		 });
 	})
 }
@@ -171,7 +193,11 @@ function InitTimeRange(){
 				valueField: 'RowId',
 				textField: 'Desc', 
 				editable:true,
-				data: GridData["rows"]
+				data: GridData["rows"],
+				onLoadSuccess:function(){
+					LoadScheduleListGrid()
+					}
+				
 		 });
 	});
 }

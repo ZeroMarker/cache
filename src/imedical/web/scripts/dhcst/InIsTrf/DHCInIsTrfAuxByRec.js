@@ -13,17 +13,17 @@ Ext.onReady(function() {
 	
 	// 供给部门
 	var SupplyPhaLoc = new Ext.ux.LocComboBox({
-				fieldLabel : '供给部门',
+				fieldLabel : $g('供给部门'),
 				id : 'SupplyPhaLoc',
 				name : 'SupplyPhaLoc',
 				anchor : '80%',
-				emptyText : '供给部门...',
+				emptyText : $g('供给部门...'),
 				listWidth : 250,
 				groupId : session['LOGON.GROUPID']
 			});
 	// 起始日期
 	var StartDate = new Ext.ux.DateField({
-				fieldLabel : '起始日期',
+				fieldLabel : $g('起始日期'),
 				id : 'StartDate',
 				name : 'StartDate',
 				anchor : '80%',
@@ -32,7 +32,7 @@ Ext.onReady(function() {
 			});
 	// 截止日期
 	var EndDate = new Ext.ux.DateField({
-				fieldLabel : '截止日期',
+				fieldLabel : $g('截止日期'),
 				id : 'EndDate',
 				name : 'EndDate',
 				anchor : '80%',
@@ -41,7 +41,7 @@ Ext.onReady(function() {
 			});
 	
 	var TransStatus = new Ext.form.Checkbox({
-				fieldLabel : '包含已转移',
+				fieldLabel : $g('包含已转移'),
 				id : 'TransStatus',
 				name : 'TransStatus',
 				anchor : '90%',
@@ -49,9 +49,9 @@ Ext.onReady(function() {
 				checked : false,
 				disabled : false
 			});
-	// 供货厂商
+	// 经营企业
 	var Vendor = new Ext.ux.VendorComboBox({
-			fieldLabel : '供应商',
+			fieldLabel : $g('经营企业'),
 			id : 'Vendor',
 			name : 'Vendor',
 			anchor : '80%',			
@@ -61,8 +61,8 @@ Ext.onReady(function() {
 	// 查询转移单按钮
 	var SearchBT = new Ext.Toolbar.Button({
 				id : "SearchBT",
-				text : '查询',
-				tooltip : '点击查询入库单',
+				text : $g('查询'),
+				tooltip : $g('点击查询入库单'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_find',
@@ -75,8 +75,8 @@ Ext.onReady(function() {
 	// 清空按钮
 	var ClearBT = new Ext.Toolbar.Button({
 				id : "ClearBT",
-				text : '清屏',
-				tooltip : '点击清屏',
+				text : $g('清屏'),
+				tooltip : $g('点击清屏'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_clearscreen',
@@ -103,8 +103,8 @@ Ext.onReady(function() {
 	// 保存按钮
 	var SaveBT = new Ext.Toolbar.Button({
 				id : "SaveBT",
-				text : '保存',
-				tooltip : '点击保存',
+				text : $g('保存'),
+				tooltip : $g('点击保存'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_save',
@@ -119,11 +119,11 @@ Ext.onReady(function() {
 		Ext.QuickTips.init();
 		Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 		var RequestPhaLoc = new Ext.ux.LocComboBox({
-				fieldLabel : '请求部门',
+				fieldLabel : $g('请求部门'),
 				id : 'RequestPhaLoc',
 				name : 'RequestPhaLoc',
 				anchor : '80%',
-				emptyText : '请求部门...',
+				emptyText : $g('请求部门...'),
 				listWidth : 250,
 				defaultLoc:'',
 				relid:Ext.getCmp("SupplyPhaLoc").getValue(),
@@ -134,11 +134,11 @@ Ext.onReady(function() {
 			id:'ConfirmBT',
 			name:'ConfirmBT',
 			iconCls:'page_save',
-			text:'确定',
+			text:$g('确定'),
 			handler:function(){
 				var requestPhaLoc=Ext.getCmp("RequestPhaLoc").getValue();
 			    if(requestPhaLoc==null || requestPhaLoc.length<1){
-					Msg.info("warning", "请选择请求科室!");
+					Msg.info("warning",$g( "请选择请求科室!"));
 					return;
 				}
 				save(requestPhaLoc);
@@ -158,7 +158,7 @@ Ext.onReady(function() {
 		});
 		
 		var RequestPhaLocWin = new Ext.Window({
-			title : '请求部门',
+			title : $g('请求部门'),
 			width :350,
 			height : 130,
 			modal:true,
@@ -176,13 +176,13 @@ Ext.onReady(function() {
 	function save(requestPhaLoc) {
 		var selectRecords = MasterGrid.getSelectionModel().getSelections();
 		if(selectRecords=="" || selectRecords=='undefined'){
-			Msg.info("warning","没有选中的入库单!");
+			Msg.info("warning",$g("没有选中的入库单!"));
 			return;
 		}
 		var record = selectRecords[0];
 		var Status = record.get("Status");				
 		if (Status =="已转移") {
-			Msg.info("warning", "该入库单已经出库，不能再出库!");
+			Msg.info("warning", $g("该入库单已经出库，不能再出库!"));
 			
 			return;
 		}			
@@ -231,29 +231,29 @@ Ext.onReady(function() {
 					url : url,
 					params:{Rowid:'',MainInfo:MainInfo,ListDetail:ListDetail},
 					method : 'POST',
-					waitMsg : '处理中...',
+					waitMsg : $g('处理中...'),
 					success : function(result, request) {
 						var jsonData = Ext.util.JSON
 								.decode(result.responseText);
 						if (jsonData.success == 'true') {
 							// 刷新界面
 							var InitRowid = jsonData.info;
-							Msg.info("success", "保存成功!");
+							Msg.info("success", $g("保存成功!"));
 							// 跳转到出库制单界面
 							window.location.href='dhcst.dhcinistrf.csp?Rowid='+InitRowid+'&QueryFlag=1';
 
 						} else {
 							var ret=jsonData.info;
 							if(ret==-99){
-								Msg.info("error", "加锁失败,不能保存!");
+								Msg.info("error", $g("加锁失败,不能保存!"));
 							}else if(ret==-2){
-								Msg.info("error", "生成出库单号失败,不能保存!");
+								Msg.info("error", $g("生成出库单号失败,不能保存!"));
 							}else if(ret==-1){
-								Msg.info("error", "保存出库单失败!");
+								Msg.info("error", $g("保存出库单失败!"));
 							}else if(ret==-5){
-								Msg.info("error", "保存出库单明细失败!");
+								Msg.info("error", $g("保存出库单明细失败!"));
 							}else {
-								Msg.info("error", "部分明细保存不成功："+ret);
+								Msg.info("error", $g("部分明细保存不成功：")+ret);
 							}
 							
 						}
@@ -269,7 +269,7 @@ Ext.onReady(function() {
 		// 判断转移单是否已完成
 		var cell = DetailGrid.getSelectionModel().getSelectedCell();
 		if (cell == null) {
-			Msg.info("warning", "没有选中行!");
+			Msg.info("warning", $g("没有选中行!"));
 			return;
 		}
 		// 选中行
@@ -282,7 +282,7 @@ Ext.onReady(function() {
 
 	// 单位
 	var CTUom = new Ext.form.ComboBox({
-				fieldLabel : '单位',
+				fieldLabel : $g('单位'),
 				id : 'CTUom',
 				name : 'CTUom',
 				anchor : '90%',
@@ -292,7 +292,7 @@ Ext.onReady(function() {
 				displayField : 'Description',
 				allowBlank : false,
 				triggerAction : 'all',
-				emptyText : '单位...',
+				emptyText : $g('单位...'),
 				selectOnFocus : true,
 				forceSelection : true,
 				minChars : 1,
@@ -305,7 +305,7 @@ Ext.onReady(function() {
 	function Query() {
 		var supplyphaLoc = Ext.getCmp("SupplyPhaLoc").getValue();
 		if (supplyphaLoc =='' || supplyphaLoc.length <= 0) {
-			Msg.info("warning", "请选择供给部门!");
+			Msg.info("warning", $g("请选择供给部门!"));
 			return;
 		}
 		var startDate = Ext.getCmp("StartDate").getRawValue();
@@ -324,7 +324,7 @@ Ext.onReady(function() {
 			params:{start:0, limit:Page},
 			callback:function(r,options, success){
 				if(success==false){
-     				Msg.info("error", "查询错误，请查看日志!");
+     				Msg.info("error", $g("查询错误，请查看日志!"));
      			}else{
      				if(r.length>=1){
      					MasterGrid.getSelectionModel().selectFirstRow();
@@ -372,49 +372,49 @@ Ext.onReady(function() {
 				sortable : true,
 				hidden : true
 			}, {
-				header : "入库单号",
+				header : $g("入库单号"),
 				dataIndex : 'IngrNo',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "请求部门",
+				header : $g("请求部门"),
 				dataIndex : 'ReqLoc',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "供给部门",
+				header : $g("供给部门"),
 				dataIndex : 'RecLoc',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "入库日期",
+				header : $g("入库日期"),
 				dataIndex : 'CreateDate',
 				width : 90,
 				align : 'center',
 				sortable : true
 			}, {
-				header : "供应商",
+				header : $g("经营企业"),
 				dataIndex : 'Vendor',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "入库人",
+				header : $g("入库人"),
 				dataIndex : 'CreateUser',
 				width : 90,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "转移状态",
+				header : $g("转移状态"),
 				dataIndex : 'Status',
 				width : 80,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "类组",
+				header : $g("类组"),
 				dataIndex : 'StkGrpDesc',
 				width : 80,
 				align : 'right',
@@ -425,8 +425,8 @@ Ext.onReady(function() {
 		store:MasterStore,
 		pageSize:PageSize,
 		displayInfo:true,
-		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录"
+		displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+		emptyMsg:$g("没有记录")
 	});
 	var MasterGrid = new Ext.grid.GridPanel({
 				title : '',
@@ -497,58 +497,58 @@ Ext.onReady(function() {
 	
 	var nm = new Ext.grid.RowNumberer();
 	var DetailCm = new Ext.grid.ColumnModel([nm, {
-				header : "入库明细id",
+				header : $g("入库明细id"),
 				dataIndex : 'Ingri',
 				width : 100,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "药品RowId",
+				header : $g("药品RowId"),
 				dataIndex : 'IncId',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : '药品代码',
+				header : $g('药品代码'),
 				dataIndex : 'IncCode',
 				width : 80,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '药品名称',
+				header : $g('药品名称'),
 				dataIndex : 'IncDesc',
 				width : 230,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "批次RowId",
+				header : $g("批次RowId"),
 				dataIndex : 'Inclb',
 				width : 180,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "批号/效期",
+				header : $g("批号/效期"),
 				dataIndex : 'BatExp',
 				width : 150,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "生产厂商",
+				header : $g("生产企业"),
 				dataIndex : 'Manf',
 				width : 180,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "批次库存",
+				header : $g("批次库存"),
 				dataIndex : 'StkQty',
 				width : 90,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "转移数量",
+				header : $g("转移数量"),
 				dataIndex : 'TrQty',
 				width : 80,
 				align : 'right',
@@ -562,11 +562,11 @@ Ext.onReady(function() {
 								
 								var qty = field.getValue();
 								if (qty == null || qty.length <= 0) {
-									Msg.info("warning", "转移数量不能为空!");
+									Msg.info("warning", $g("转移数量不能为空!"));
 									return;
 								}
 								if (qty <= 0) {
-									Msg.info("warning", "转移数量不能小于或等于0!");
+									Msg.info("warning", $g("转移数量不能小于或等于0!"));
 									return;
 								}
 								var cell = DetailGrid.getSelectionModel()
@@ -580,7 +580,7 @@ Ext.onReady(function() {
 										salePriceAMT);
 								var AvaQty = record.get("AvaQty");
 								if (qty > AvaQty) {
-									Msg.info("warning", "转移数量不能大于可用库存数量!");
+									Msg.info("warning", $g("转移数量不能大于可用库存数量!"));
 									return;
 								}
 							}
@@ -588,7 +588,7 @@ Ext.onReady(function() {
 					}
 				})
 			}, {
-				header : "转移单位",
+				header : $g("转移单位"),
 				dataIndex : 'TrUomId',
 				width : 80,
 				align : 'left',
@@ -596,47 +596,47 @@ Ext.onReady(function() {
 				renderer : Ext.util.Format.comboRenderer(CTUom), // pass combo instance to reusable renderer					
 				editor : new Ext.grid.GridEditor(CTUom)
 			}, {
-				header : "进价",
+				header : $g("进价"),
 				dataIndex : 'Rp',
 				width : 60,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "售价",
+				header : $g("售价"),
 				dataIndex : 'Sp',
 				width : 60,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "占用数量",
+				header : $g("占用数量"),
 				dataIndex : 'DirtyQty',
 				width : 80,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "可用数量",
+				header : $g("可用数量"),
 				dataIndex : 'AvaQty',
 				width : 80,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "售价金额",
+				header : $g("售价金额"),
 				dataIndex : 'SpAmt',
 				width : 100,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "转换率",
+				header : $g("转换率"),
 				dataIndex : 'ConFacPur',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "基本单位",
+				header : $g("基本单位"),
 				dataIndex : 'BUomId',
 				width : 80,
 				align : 'left',
@@ -661,7 +661,7 @@ Ext.onReady(function() {
 		if(e.field=="TrQty"){
 			var rowData=MasterGrid.getSelectionModel().getSelected();
 			if(rowData!=null && rowData!=""){
-				if(rowData.get('Status')=='已转移'){
+				if(rowData.get('Status')==$g('已转移')){
 					e.cancel=true;	//已转移的单据,不可修改转移数量
 				}
 			}
@@ -678,7 +678,7 @@ Ext.onReady(function() {
 			{ 
 				id: 'mnuDelete', 
 				handler: deleteDetail, 
-				text: '删除' 
+				text: $g('删除' )
 			}
 		] 
 	}); 
@@ -755,7 +755,7 @@ Ext.onReady(function() {
 		items : [{
 			layout: 'column',    // Specifies that the items will now be arranged in columns
 			xtype:'fieldset',
-			title:'查询条件',
+			title:$g('查询条件'),
 			style : 'padding:5px 0px 0px 5px',
 			defaults: {width: 220, border:false},    // Default config options for child items
 			items:[{ 				
@@ -779,14 +779,14 @@ Ext.onReady(function() {
 				layout : 'border',
 					items : [            // create instance immediately
 		            {
-		            	title:'库存转移-依据入库单',
+		            	title:$g('库存转移-依据入库单'),
 		                region: 'north',
 		                height: DHCSTFormStyle.FrmHeight(2), // give north and south regions a height
 		                layout: 'fit', // specify layout manager for items
 		                items:HisListTab
 		            }, {
 		                region: 'west',
-		                title: '入库单',
+		                title: $g('入库单'),
 		                collapsible: true,
 		                split: true,
 		                width: document.body.clientWidth*0.3, // give east and west regions a width
@@ -798,7 +798,7 @@ Ext.onReady(function() {
 		               
 		            }, {
 		                region: 'center',
-		                title: '入库单明细',
+		                title: $g('入库单明细'),
 		                layout: 'fit', // specify layout manager for items
 		                items: DetailGrid       
 		               

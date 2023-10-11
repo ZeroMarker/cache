@@ -24,9 +24,10 @@ function InitAntCheckWinEvent(obj){
 		$('#btnExport').on('click', function(){
 			obj.gridAntMajorLoad();
 			obj.gridAntMinorLoad();
-			var rows = obj.gridMajor.getRows().length;
+			var rows = $('#AntCheck').datagrid("getRows").length;
 			if (rows>0) {
-			   ExportGridByCls(obj.gridMajor,obj.gridMinor,'抗菌用药审核表');
+				$('#AntCheck').datagrid('toExcel', '抗菌用药审核表.xls');
+			   //ExportGridByCls(obj.gridMajor,obj.gridMinor,'抗菌用药审核表');
 			}else {
 				$.messager.alert("确认", "无数据记录,不允许导出", 'info');
 			}

@@ -46,7 +46,8 @@ function GetDate(dateStr)
 // 打印口服、输液单、口服药单
 function PrintExecSheet()
 {
-	var  oeoreIdStr=checkSelectOrd();  //获取打印数据
+	var  oeoreIdStr=checkSelectOrd("1");  //获取打印数据
+	if(oeoreIdStr==""){return;}
 	var stDate=window.parent.StartDate;
 	var endDate=window.parent.EndDate;
 	
@@ -86,8 +87,36 @@ function SetPrintFlag(oeoriIdStr,flag)
         Wardid = serverCall("web.PACWard", "GetWardFromLoc", {loc:LgCtLocID}) //
 		PrintDateTime = serverCall("web.DHCNurCom", "SetPrintFlagNew", {wardId:Wardid, userId:LgUserID, queryTypeCode:queryTypeCode, oeoriIdStr:oeoriIdStr, dhcorePrinted:flag});
     }
-    search();  //打印标记置上之后刷新Table
+    //search();  //打印标记置上之后刷新Table
+    
+    ///改成updateRow
+	updateRowPrintData("execTable", oeoriIdStr);
 }
+
+function updateRowPrintData(tableId, oeoriIdStr) {
+	runClassMethod("web.DHCEMNurExe", "GetPrintedData", {
+		"OreDatas": oeoriIdStr
+	}, function(jsonString) {
+		if (!Object.keys(jsonString).length) return;
+		var forMatData = jsonString;
+
+		if ($("#" + tableId).length) {
+			var datas = $("#" + tableId).datagrid("getRows");
+			for (k in datas) {
+				var itemData = datas[k];
+				if(forMatData[itemData.oeoreId]){
+					$("#" + tableId).datagrid("updateRow",{
+						index:k,
+						row:forMatData[itemData.oeoreId]
+					})
+				}
+			}
+		}
+	})
+	
+	$("#" + tableId).datagrid("uncheckAll");
+}
+
 function DateDemo(){
     var d, s="";
     d = new Date();
@@ -162,11 +191,11 @@ function SetFrameData(queryTypeCode,printList,actRow,xlsSheet,xlsLeft,xlsTop,typ
 
     var str=serverCall("web.DHCCLCom","PatInfo",{curId:printList[0].oeoriId})
     var arr=str.split("^");//regNo_"^"_ctloc_"^"_room_"^"_sex_
-	var titleDesc2="日期:"+printList[0].createDateTime+"        "+"床号:"+arr[6]+"       "+"科室:"+arr[1] ;
-	var titleDesc="姓名:"+arr[4]+"   "+"登记号:"+arr[0]+"   "+"性别:"+arr[3] +"   "+"年龄:"+arr[7];
+	var titleDesc2=$g("日期")+":"+printList[0].createDateTime+"        "+$g("床号")+":"+arr[6]+"       "+$g("科室")+":"+arr[1] ;
+	var titleDesc=$g("姓名")+":"+arr[4]+"   "+$g("登记号")+":"+arr[0]+"   "+$g("性别")+":"+arr[3] +"   "+$g("年龄")+":"+arr[7];
 	var strdig=serverCall("web.DHCEmNurCom","GetDiagnosyy",{rowid:printList[0].oeoriId})
 
-	var titleDesc4="诊断:"+strdig;
+	var titleDesc4=$g("诊断")+":"+strdig;
 
 	xlsSheet.cells(2,1)=titleDesc2;
     xlsSheet.cells(3,1)=titleDesc;
@@ -201,7 +230,7 @@ function SetFrameData(queryTypeCode,printList,actRow,xlsSheet,xlsLeft,xlsTop,typ
 		//gridlistRow(xlsSheet,actRow,actRow-newPrintList.length-p,1,cols);
 	}
 	mergcell(xlsSheet,actRow+2,1,printDescList.length)
-	xlsSheet.cells(actRow+2,1)="医生:" +printList[0].ctcpDesc+"     "+ "打印日期:" + sysDate+" "+sysTime;
+	xlsSheet.cells(actRow+2,1)=$g("医生")+":" +printList[0].ctcpDesc+"     "+ $g("打印日期")+":" + sysDate+" "+sysTime;
 	actRow=eval(actRow)+1; //a blank line after frame
 	xlsSheet.Columns.AutoFit();
 	return actRow;
@@ -293,7 +322,7 @@ function PrintBar()//print barcode
 		
 		//判断检验科是否接受 add by linyuxu
 		var ifRecLab = serverCall("web.DHCLCNUREXCUTE", "ifLabReceive", {LabEpisode:labNo});
-		if (ifRecLab == 1) {
+		if ((PRINTREPEATT!=1)&&(ifRecLab == 1)) {  //检验科接受 还需判断 PRINTREPEATT 配置 已接受标本的检验条码是否可以重复打印（1：可以重复打印；其他：不可以重复打印）
 			if (recLab.indexOf(labNo) == -1) {
 				if (recLab == "") {
 					recLab = labNo;
@@ -499,6 +528,11 @@ function PrintTPQList() {
 		    }else{
 				disposeCodeStr = disposeCodeStr + "^" + disposeStatCode; 
 			}
+			
+			if((disposeStatCode=="SkinTest")&&(selectRowDatas[i].SkinTestPay!="")){
+				chargeflag="Y";
+			}
+			
 		}
 		if (notFyStr != "") {
 			alert(notFyStr);
@@ -519,6 +553,8 @@ function PrintTPQList() {
 	}
 	
 	if(chargeflag=="Y"){
+		parent.$.messager.alert('提示',"有未交费医嘱!不能打印!");  //hxy 2022-06-24 st 产品部要求
+        return; //ed
 		parent.$.messager.confirm('提示','包含未缴费的医嘱,是否继续打印',function(r){
 			if (r){
 				newPrintXmlMode(oeoriIdStr,seqNoStr,"T",queryTypeCode);
@@ -664,6 +700,7 @@ function SavePrintRecord(printType, queryTypeCode, OrderStr, UserId) {
 	var SecretCode = ""
 	var ret = serverCall("web.DHCCLCom", "SaveRecord", {ModelName:ModelName, ConditionStr:OrderStr, printType:printType, queryTypeCode:queryTypeCode, SecretCode:SecretCode, UserId:UserId})
 		//alert(ret)
+	$('#execTable').datagrid('reload');
 }
 
 ///封装clickonce调用方法

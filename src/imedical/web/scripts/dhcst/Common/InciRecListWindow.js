@@ -59,13 +59,13 @@ function ShowInciRecListWin(e,grid,ShowInCellIndex,desc,inci,phaloc)
 					align : 'left',
 					sortable : true
 				}, {
-					header : '供应商',
+					header : '经营企业',
 					dataIndex : 'Vendor',
 					width : 130,
 					align : 'left',
 					sortable : true
 				}, {
-					header : '厂家',
+					header : '生产企业',
 					dataIndex : 'Manf',
 					width : 90,
 					align : 'left',

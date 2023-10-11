@@ -83,7 +83,7 @@ function reportControl(){
 					
 					$("input[type=radio][id^='NurDepRecord-94470-94477-'][id$='."+rownum+"']").attr("disabled",true);
 				}
-				$('a:contains("删除")').parent().hide();
+				$('a:contains('+$g("删除")+')').parent().hide();
 			}
 			if(NurDepEvaFlag!="1"){
 				$("[id^='"+rowid+"'][id$='."+rownum+"']").attr("readonly",'readonly');
@@ -94,7 +94,7 @@ function reportControl(){
 					
 					$("input[type=radio][id^='NurDepRecord-94470-94477-'][id$='."+rownum+"']").attr("disabled",true);
 				}
-				$('a:contains("增加")').parent().hide();
+				$('a:contains('+$g("增加")+')').parent().hide();
 			}
 			
 			
@@ -105,6 +105,7 @@ function reportControl(){
 		"width":800,
 		"max-width":800
 	});
+	RepSetRead("NurDepParticipants","input",1);	
 	$("body").click(function(){ 
 		AllStyle("textarea","",100);
   		InitLabInputText(".lable-input");
@@ -166,18 +167,18 @@ function SaveAsse(flag)
 //检查界面勾选其他，是否填写输入框
 function checkother(){
 	//发生前防范措施落实情况 未落实 具体表现
-	var NurHeadBefPreventMeasures=0;   //id是以后面的字符串开头
-	$("input[type=radio][id^='NurHeadBefPreventMeasures-99890']").each(function(){
-		if($(this).is(':checked')){
-			if ($("#NurHeadBefPreventMeasures-99891").val()==""){
-				NurHeadBefPreventMeasures=-1;
+	var NurHeadBefPreventMeasures="";   //id是以后面的字符串开头
+	if($("#NurHeadBefPreventMeasures-99890").is(':checked')){
+		$("input[type=checkbox][id^='NurHeadBefPreMeaReason-']").each(function(){
+			if($(this).is(':checked')){
+				NurHeadBefPreventMeasures=this.value;
 			}
+		})
+		if(NurHeadBefPreventMeasures==""){
+			$.messager.alert($g("提示:"),"【"+$g("发生前防范措施落实情况")+"】"+$g("勾选")+$g('未落实')+"，"+$g("发生前防范措施未落实的原因-具体表现")+$g('内容')+"！");	
+			return false;
 		}
-	})
-	if(NurHeadBefPreventMeasures==-1){
-		$.messager.alert("提示:","【发生前防范措施落实情况】勾选'未落实'，请填写'具体表现'内容！");	
-		return false;
-	}
+	}	
 	
 	return true;
 }
@@ -207,30 +208,6 @@ function InitCheckRadio(){
 			$("input[type=radio][id='NurHeadBefPreventMeasures-99890']").prop("checked",true) ;
 		}
 	})
-	
-	//发生前防范措施落实情况 未落实 原因
-	$("input[type=radio][id^='NurHeadBefPreventMeasures-']").each(function(){
-		if ($(this).is(':checked')){
-			var id=this.id;
-			if (id=="NurHeadBefPreventMeasures-99890"){
-				$("#NurHeadBefPreventMeasures-99891").attr("readonly",false);
-				InitLabInputText("#NurHeadBefPreventMeasures-99891");
-			}else{
-				$("#NurHeadBefPreventMeasures-99891").val("");
-				$("#NurHeadBefPreventMeasures-99891").unbind('click').on('click',function(){
-				}); 
-				
-			}
-		}
-	})
-	
-	$("#NurHeadBefPreventMeasures-99891").bind('input propertychange ',function(){
-		if($("#NurHeadBefPreventMeasures-99891").val()!=""){
-			$("input[type=radio][id='NurHeadBefPreventMeasures-99890']").prop("checked",true) ;
-			InitLabInputText("#NurHeadBefPreventMeasures-99891");
-		}
-	})
-
 }
 
 function add_event(){
@@ -303,7 +280,7 @@ function StaffEnter()
 {
 	$('#staffwin').show();
 	$('#staffwin').window({
-		title:'科室人员信息',
+		title:$g('科室人员信息'),
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,
@@ -324,8 +301,8 @@ function InitStaffGrid()
 	//定义columns
 	var columns=[[
 	     {field:"ck",checkbox:'true',width:40},
-		 {field:'userCode',title:'用户Code',width:100},
-		 {field:'userName',title:'用户姓名',width:100}
+		 {field:'userCode',title:$g('用户Code'),width:100},
+		 {field:'userName',title:$g('用户姓名'),width:100}
 		]];
 	
 	//定义datagrid
@@ -355,7 +332,16 @@ function InitStaffGrid()
 		 {
 	       var userName = rowData.userName
 	       MeetMember(userName)
-		 },	
+		 },onLoadSuccess:function(data){  
+			if(userName!=""){
+				for(var i=0;i<data.rows.length;i++){
+					var Name = data.rows[i].userName+"，";
+					if(userName.indexOf(Name)>=0){
+						$("#user").datagrid("selectRow",i);
+					}
+				}
+			}
+		}	
 	});	
 	$("#UserNames").val($("#NurDepParticipants").val()); /// 给弹出的人员窗口里面人员赋值(表单的参会人员)
 	$(".datagrid-header-check input[type=checkbox]").on("click",function(){ ///2018-04-13 cy 评价界面

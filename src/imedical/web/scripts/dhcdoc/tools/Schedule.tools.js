@@ -1,4 +1,4 @@
-$.extend($.fn.combobox.defaults, {  
+/*$.extend($.fn.combobox.defaults, {  
     valueField:'id',
     textField:'text', 
     panelHeight:200, 
@@ -12,7 +12,7 @@ $.extend($.fn.combobox.defaults, {
         debugger;
         $.messager.alert('提示','Init Combo Error','error');
     }
-});
+});*/
 $.extend($.fn.datagrid.defaults, {    
     striped:true,
     fit:true,
@@ -26,7 +26,7 @@ $.extend($.fn.datagrid.defaults, {
         $.messager.alert('提示','Init Grid Error','error');
     }
 });
-$.extend($.fn.combogrid.defaults, {
+/*$.extend($.fn.combogrid.defaults, {
     idField:"id",
     treeField:"text",
     mode:'remote',
@@ -35,7 +35,7 @@ $.extend($.fn.combogrid.defaults, {
         debugger;
         $.messager.alert('提示','Init Grid Error','error');
     }
-});
+});*/
 $.extend($.fn.tree.defaults, {    
     url:'DHCDoc.Util.QueryToJSON.cls?JSONTYPE=Tree',
     onLoadError:function(){
@@ -81,6 +81,19 @@ $.extend($.fn.datagrid.defaults.editors, {
 $.fn.singleCombo = function(options){
     var ChangeTimer;
     $.extend(options,{
+	    valueField:'id',
+	    textField:'text', 
+	    panelHeight:200, 
+	    mode:"local",
+	    url:'DHCDoc.Util.QueryToJSON.cls?JSONTYPE=Combo',
+	    filter: function(q, row){
+	        var opts = $(this).combobox('options');
+	        return row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0;
+	    },
+	    onLoadError:function(){
+	        debugger;
+	        $.messager.alert('提示','Init Combo Error','error');
+	    },
         onChange:function(){
             clearTimeout(ChangeTimer);
             var target=this;
@@ -229,6 +242,7 @@ function ShowHISUIWindow(title,src,iconCls,width,height)
     if(!$('#ShowMode_Win').size()){
         $("body").append("<div id='ShowMode_Win' class='hisui-window'></div>");
     }
+    if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
     $('#ShowMode_Win').window({
         iconCls:iconCls,
         width:width,

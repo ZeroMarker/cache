@@ -3,7 +3,7 @@ var ListComponentWin = function(tarobj, input, width, height, url, columns, fn){
 	this.tarobj = tarobj;
 	this.width = width;
 	this.height = height;
-	this.url = url;
+	this.url = (typeof websys_writeMWToken=='function')?websys_writeMWToken(url):url;
 	this.columns = columns;
 	this.fn = fn;
 }
@@ -74,7 +74,7 @@ ListComponentWin.prototype.init=function(){
 		 //fn(rowData);
 		 //return;
 	}
-	
+	UnbindEvt();
     $("#mydiv").datagrid('getPanel').panel('panel').bind('keydown', function (e){
         switch (e.keyCode){
         	case 13: // enter
@@ -119,18 +119,25 @@ ListComponentWin.prototype.init=function(){
 		}
 	})
 	
-  //É¾³ýµ¯´°
-  function RemoveMyDiv(){
-	if($("#mydiv").length>0){
-	   $("#mydiv").remove(); 
-   	   $("#win").remove(); 
+  	//É¾³ýµ¯´°
+	function RemoveMyDiv(){
+		if($("#mydiv").length>0){
+			$("#mydiv").datagrid('getPanel').panel('panel').unbind();
+			$("#mydiv").remove(); 
+			$("#win").remove(); 
+		}
+	} 
+	function UnbindEvt(){
+		if($("#mydiv").length>0){
+			$("#mydiv").datagrid('getPanel').panel('panel').unbind(); 
+		}
 	}
-  } 
 }
 
 ListComponentWin.prototype.RemoveMyDiv=function(){
 	if($("#mydiv").length>0){
-	   $("#mydiv").remove(); 
-   	   $("#win").remove(); 
+		$("#mydiv").datagrid('getPanel').panel('panel').unbind();
+	   	$("#mydiv").remove(); 
+   	   	$("#win").remove(); 
 	}
 }

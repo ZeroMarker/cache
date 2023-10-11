@@ -238,7 +238,7 @@ function ajaxLogin(key, operate) {
 
     } catch (err) {}
 
-    var UsrCertCode = opener.GetUniqueID(cert);
+    var UsrCertCode = opener.GetUniqueID(cert,key);
     var certificateNo = opener.GetCertNo(key);
 
     $.ajax({
@@ -282,7 +282,7 @@ function getSignContent(usrInfo, insID) {
     // 获取原文(编辑器已经hash压缩)签名,服务器验证,通知编辑器保存SignID签名记录号
 function signContent(key, usrInfo, insID) {
     var result = ''; //返回错误信息
-    var UsrCertCode = opener.GetUniqueID(opener.GetSignCert(key));
+    var UsrCertCode = opener.GetUniqueID(opener.GetSignCert(key),key);
     if (!UsrCertCode || '' == UsrCertCode)
         return '用户唯一标示为空！';
     //debugger;

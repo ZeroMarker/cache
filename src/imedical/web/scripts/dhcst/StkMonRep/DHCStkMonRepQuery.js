@@ -20,7 +20,7 @@ Ext.onReady(function() {
 	var PhaLoc = new Ext.ux.LocComboBox({
 		id : 'PhaLoc',
 		name : 'PhaLoc',
-		fieldLabel : '科室',
+		fieldLabel : $g('科室'),
 		listWidth : 'auto',
 		groupId:gGroupId,
 		listeners : {
@@ -37,7 +37,7 @@ Ext.onReady(function() {
 
 
 	var StYear=new Ext.form.TextField({
-		fieldLabel:'月份',
+		fieldLabel:$g('月份'),
 		id:'StYear',
 		name:'StYear',
 		//anchor:'90%',
@@ -91,14 +91,14 @@ Ext.onReady(function() {
 		store:StkCatStore,
 		displayField:'Description',
 		valueField:'RowId',
-		emptyText:'库存分类',
+		emptyText:$g('库存分类'),
 		params:{StkGrpId:'StkGrpType'}
 	});
 	
 	var IncDesc=new Ext.form.TextField({
 		id:'IncDesc',
 		name:'IncDesc',
-		emptyText:'药品名称',
+		emptyText:$g('药品名称'),
 		width:220,
 		listeners:{
 			'specialkey':function(field,e){
@@ -111,7 +111,7 @@ Ext.onReady(function() {
 	});
 	var HelpBT = new Ext.Button({
 	　　　　id:'HelpBtn',
-			text : '帮助',
+			text : $g('帮助'),
 			width : 70,
 			height : 30,
 			renderTo: Ext.get("tipdiv"),
@@ -120,8 +120,8 @@ Ext.onReady(function() {
 		});
 		// 另存按钮
 	var SaveAsBT = new Ext.Toolbar.Button({
-				text : '另存',
-				tooltip : '另存为Excel',
+				text : $g('另存'),
+				tooltip : $g('另存为Excel'),
 				iconCls : 'page_export',
 				width : 70,
 				height : 30,
@@ -151,7 +151,7 @@ Ext.onReady(function() {
 			});
 	var Filter=new Ext.Toolbar.Button({
 		id:'filter',
-		text:'筛选',
+		text:$g('筛选'),
 		iconCls : 'page_find',
 		anchor:'90%',
 		handler:function(){
@@ -208,8 +208,8 @@ Ext.onReady(function() {
 		// 查询按钮
 	var SearchBT = new Ext.Toolbar.Button({
 				id : "SearchBT",
-				text : '查询',
-				tooltip : '点击查询',
+				text : $g('查询'),
+				tooltip : $g('点击查询'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_find',
@@ -220,8 +220,8 @@ Ext.onReady(function() {
 		// 打印月报明细
 var printBT = new Ext.Toolbar.Button({
 	id : "printBT",
-	text : '打印',
-	tooltip : '打印月报明细',
+	text :$g( '打印'),
+	tooltip : $g('打印月报明细'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_print',
@@ -241,7 +241,7 @@ function Query(){
 	var edDate=edYear+'-'+edMonth+'-'+'01';
 	var Loc=Ext.getCmp('PhaLoc').getValue();
 	if(Loc==""){
-		Msg.info("warning","请选择需要查询月报的科室!");
+		Msg.info("warning",$g("请选择需要查询月报的科室!"));
 		return;
 	}
 	DetailGrid.store.removeAll();
@@ -284,338 +284,338 @@ var DetailCm = new Ext.grid.ColumnModel([nm, {
 			sortable : true,
 			hidden : true
 		}, {
-			header : '药品代码',
+			header : $g('药品代码'),
 			dataIndex : 'inciCode',
 			width : 80,
 			align : 'left',
 			sortable : true
 		}, {
-			header : '药品名称',
+			header : $g('药品名称'),
 			dataIndex : 'inciDesc',
 			width : 220,
 			align : 'left',
 			sortable : true
 		}, {
-			header : '规格',
+			header : $g('规格'),
 			dataIndex : 'spec',
 			width : 100,
 			align : 'left',
 			sortable : true
 		}, {
-			header : "单位",
+			header : $g("单位"),
 			dataIndex : 'uomDesc',
 			width : 80,
 			align : 'left',
 			sortable : true
 		}, {
-			header : "本期结存数量",
+			header : $g("本期结存数量"),
 			dataIndex : 'qty',
 			width : 90,
 			align : 'right',
 			sortable : true
 		}, {
-			header : "本期结存金额",
+			header : $g("本期结存金额"),
 			dataIndex : 'amt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		},{
-			header:'上期结存数量',
+			header:$g('上期结存数量'),
 			dataIndex:'lastQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'上期结存金额',
+			header:$g('上期结存金额'),
 			dataIndex:'lastAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'入库数量',
+			header:$g('入库数量'),
 			dataIndex:'recQty',
 			width:100,
 			align:'right',
 			sortable:'true',
 			renderer:renderRecQty
 		},{
-			header:'入库金额',
+			header:$g('入库金额'),
 			dataIndex:'recAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'退货数量',
+			header:$g('退货数量'),
 			dataIndex:'retQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'退货金额',
+			header:$g('退货金额'),
 			dataIndex:'retAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'转出数量',
+			header:$g('转出数量'),
 			dataIndex:'trOutQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'转出金额',
+			header:$g('转出金额'),
 			dataIndex:'trOutAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'转入数量',
+			header:$g('转入数量'),
 			dataIndex:'trInQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'转入金额',
+			header:$g('转入金额'),
 			dataIndex:'trInAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'调整数量',
+			header:$g('调整数量'),
 			dataIndex:'adjQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'调整金额',
+			header:$g('调整金额'),
 			dataIndex:'adjAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'消耗数量',
+			header:$g('消耗数量'),
 			dataIndex:'csmQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'消耗金额',
+			header:$g('消耗金额'),
 			dataIndex:'csmAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'报损数量',
+			header:$g('报损数量'),
 			dataIndex:'disposeQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'报损金额',
+			header:$g('报损金额'),
 			dataIndex:'disposeAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'调价损益',
+			header:$g('调价损益'),
 			dataIndex:'aspAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'赠药入库数量',
+			header:$g('赠药入库数量'),
 			dataIndex:'giftRecQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'赠药入库金额',
+			header:$g('赠药入库金额'),
 			dataIndex:'giftRecAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'赠药出库数量',
+			header:$g('赠药出库数量'),
 			dataIndex:'giftTrOutQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'赠药出库金额',
+			header:$g('赠药出库金额'),
 			dataIndex:'giftTrOutAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'调价换票入库数量',
+			header:$g('调价换票入库数量'),
 			dataIndex:'chgRecQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'调价换票入库金额',
+			header:$g('调价换票入库金额'),
 			dataIndex:'chgRecAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'调价换票退货数量',
+			header:$g('调价换票退货数量'),
 			dataIndex:'chgRetQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'调价换票退货金额',
+			header:$g('调价换票退货金额'),
 			dataIndex:'chgRetAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},/*{   //项目特殊定制，暂无用，先屏蔽  yangsj 2020-01-13
-			header:'制剂入库数量',
+			header:$g('制剂入库数量',
 			dataIndex:'mRecQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'制剂入库金额',
+			header:$g('制剂入库金额',
 			dataIndex:'mRecAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},*/{
-			header:'盘点调整数量',
+			header:$g('盘点调整数量'),
 			dataIndex:'stktkAdjQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'盘点调整金额',
+			header:$g('盘点调整金额'),
 			dataIndex:'stktkAdjAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'制剂消耗数量',
+			header:$g('制剂消耗数量'),
 			dataIndex:'manuXQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'制剂消耗金额',
+			header:$g('制剂消耗金额'),
 			dataIndex:'manuXAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'制剂生成数量',
+			header:$g('制剂生成数量'),
 			dataIndex:'manuMQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'制剂生成金额',
+			header:$g('制剂生成金额'),
 			dataIndex:'manuMAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'住院发药数量',
+			header:$g('住院发药数量'),
 			dataIndex:'phaInDspQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'住院发药金额',
+			header:$g('住院发药金额'),
 			dataIndex:'phaInDspAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'住院退药数量',
+			header:$g('住院退药数量'),
 			dataIndex:'phaInRetQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'住院退药金额',
+			header:$g('住院退药金额'),
 			dataIndex:'phaInRetAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'门诊发药数量',
+			header:$g('门诊发药数量'),
 			dataIndex:'phaOutDspQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'门诊发药金额',
+			header:$g('门诊发药金额'),
 			dataIndex:'phaOutDspAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'门诊退药数量',
+			header:$g('门诊退药数量'),
 			dataIndex:'phaOutRetQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'门诊退药金额',
+			header:$g('门诊退药金额'),
 			dataIndex:'phaOutRetAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'入库损益(调价)',
+			header:$g('入库损益(调价)'),
 			dataIndex:'recAspAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'退货损益(调价)',
+			header:$g('退货损益(调价)'),
 			dataIndex:'retAspAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'转入损益(调价)',
+			header:$g('转入损益(调价)'),
 			dataIndex:'trInAspAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'门诊退药损益(调价)',
+			header:$g('门诊退药损益(调价)'),
 			dataIndex:'phaOutRetAspAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'住院退药损益(调价)',
+			header:$g('住院退药损益(调价)'),
 			dataIndex:'phaRetAspAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'门诊发药损益(调价)',
+			header:$g('门诊发药损益(调价)'),
 			dataIndex:'phaOutDispAspAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'住院发药损益(调价)',
+			header:$g('住院发药损益(调价)'),
 			dataIndex:'phaDispAspAmt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'数量差异',
+			header:$g('数量差异'),
 			dataIndex:'diffQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'金额差异',
+			header:$g('金额差异'),
 			dataIndex:'diffAmt',
 			width:100,
 			align:'right',
@@ -811,258 +811,258 @@ var DetailGridLB = new Ext.grid.GridPanel({
 	    }),
 	    //cls: 'grid-row-span',
 	cm:new Ext.grid.ColumnModel([new Ext.grid.RowNumberer({width:30}),  {
-			header : '药品代码',
+			header : $g('药品代码'),
 			dataIndex : 'incicode',
 			width : 80,
 			align : 'left',
 			sortable : true
 			//renderer:cellMerge  //yunhaibao,20151207注释,不如不合并效果好
 		}, {
-			header : '药品名称',
+			header : $g('药品名称'),
 			dataIndex : 'incidesc',
 			width : 220,
 			align : 'left',
 			sortable : true
 			//renderer:cellMerge
 		}, {
-			header : '规格',
+			header : $g('规格'),
 			dataIndex : 'spec',
 			width : 100,
 			align : 'left',
 			sortable : true
 			//renderer:cellMerge
 		},{
-			header : "单位",
+			header :$g( "单位"),
 			dataIndex : 'puomdesc',
 			width : 80,
 			align : 'left',
 			sortable : true
 			//renderer:cellMerge
 		}, {
-			header:'厂商',
+			header:$g('厂商'),
 			dataIndex : 'manf',
 			width : 80,
 			align : 'left',
 			sortable : true
 		},{
-			header : "批次",
+			header : $g("批次"),
 			dataIndex : 'IBNO',
 			width : 100,
 			align : 'left',
 			sortable : true
 		}, {
-			header : "本期结存数量",
+			header : $g("本期结存数量"),
 			dataIndex : 'qty',
 			width : 90,
 			align : 'right',
 			sortable : true
 		}, {
-			header : "本期结存金额",
+			header : $g("本期结存金额"),
 			dataIndex : 'amt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		},{
-			header:'上期结存数量',
+			header:$g('上期结存数量'),
 			dataIndex:'lastqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'上期结存金额',
+			header:$g('上期结存金额'),
 			dataIndex:'lastamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'入库数量',
+			header:$g('入库数量'),
 			dataIndex:'recqty',
 			width:100,
 			align:'right',
 			sortable:'true',
 			renderer:renderRecQty
 		},{
-			header:'入库金额',
+			header:$g('入库金额'),
 			dataIndex:'recamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'退货数量',
+			header:$g('退货数量'),
 			dataIndex:'retqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'退货金额',
+			header:$g('退货金额'),
 			dataIndex:'retamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'转出数量',
+			header:$g('转出数量'),
 			dataIndex:'trfoqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'转出金额',
+			header:$g('转出金额'),
 			dataIndex:'trfoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'转入数量',
+			header:$g('转入数量'),
 			dataIndex:'trfiqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'转入金额',
+			header:$g('转入金额'),
 			dataIndex:'trfiamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'调整数量',
+			header:$g('调整数量'),
 			dataIndex:'adjqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'调整金额',
+			header:$g('调整金额'),
 			dataIndex:'adjamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'报损数量',
+			header:$g('报损数量'),
 			dataIndex:'dispqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'报损金额',
+			header:$g('报损金额'),
 			dataIndex:'dispamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'调价损益',
+			header:$g('调价损益'),
 			dataIndex:'aspamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'住院发药数量',
+			header:$g('住院发药数量'),
 			dataIndex:'dspqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'住院发药金额',
+			header:$g('住院发药金额'),
 			dataIndex:'dspamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		} ,{
-			header:'住院退药数量',
+			header:$g('住院退药数量'),
 			dataIndex:'dspretqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'住院退药金额',
+			header:$g('住院退药金额'),
 			dataIndex:'dspretamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'门诊发药数量',
+			header:$g('门诊发药数量'),
 			dataIndex:'phaoutdispqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'门诊发药金额',
+			header:$g('门诊发药金额'),
 			dataIndex:'phaoutdispamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'门诊退药数量',
+			header:$g('门诊退药数量'),
 			dataIndex:'phaoutretqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'门诊退药金额',
+			header:$g('门诊退药金额'),
 			dataIndex:'phaoutretamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'盘点调整数量',
+			header:$g('盘点调整数量'),
 			dataIndex:'stktkqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'盘点调整金额',
+			header:$g('盘点调整金额'),
 			dataIndex:'stktkamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'入库损益',
+			header:$g('入库损益'),
 			dataIndex:'recaspamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'退货损益',
+			header:$g('退货损益'),
 			dataIndex:'retaspamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'转移入库损益',
+			header:$g('转移入库损益'),
 			dataIndex:'trfinaspamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'住院退药损益',
+			header:$g('住院退药损益'),
 			dataIndex:'pharetaspamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'门诊退药损益',
+			header:$g('门诊退药损益'),
 			dataIndex:'phaoutretaspamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'门诊发药损益',
+			header:$g('门诊发药损益'),
 			dataIndex:'phaoutdispaspamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'住院发药损益',
+			header:$g('住院发药损益'),
 			dataIndex:'phadispaspamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'数量差异',
+			header:$g('数量差异'),
 			dataIndex:'diffQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'金额差异',
+			header:$g('金额差异'),
 			dataIndex:'diffAmt',
 			width:100,
 			align:'right',
@@ -1092,242 +1092,242 @@ var DetailGridLBRp = new Ext.grid.GridPanel({
 			}
 	    }),
 	cm:new Ext.grid.ColumnModel([new Ext.grid.RowNumberer({width:30}),  {
-			header : '药品代码',
+			header : $g('药品代码'),
 			dataIndex : 'incicode',
 			width : 80,
 			align : 'left',
 			sortable : true
 		}, {
-			header : '药品名称',
+			header : $g('药品名称'),
 			dataIndex : 'incidesc',
 			width : 220,
 			align : 'left',
 			sortable : true
 		}, {
-			header : '规格',
+			header : $g('规格'),
 			dataIndex : 'spec',
 			width : 100,
 			align : 'left',
 			sortable : true
 		}, {
-			header:'厂商',
+			header:$g('厂商'),
 			dataIndex : 'manf',
 			width : 80,
 			align : 'left',
 			sortable : true
 		},{
-			header : "单位",
+			header : $g("单位"),
 			dataIndex : 'puomdesc',
 			width : 80,
 			align : 'left',
 			sortable : true
 		},{
-			header : "批次",
+			header : $g("批次"),
 			dataIndex : 'IBNO',
 			width : 100,
 			align : 'left',
 			sortable : true
 		}, {
-			header : "本期结存数量",
+			header : $g("本期结存数量"),
 			dataIndex : 'qty',
 			width : 90,
 			align : 'right',
 			sortable : true
 		}, {
-			header : "本期结存金额",
+			header :$g( "本期结存金额"),
 			dataIndex : 'coamt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		},{
-			header:'上期结存数量',
+			header:$g('上期结存数量'),
 			dataIndex:'lastqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'上期结存金额',
+			header:$g('上期结存金额'),
 			dataIndex:'lastcoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'入库数量',
+			header:$g('入库数量'),
 			dataIndex:'recqty',
 			width:100,
 			align:'right',
 			sortable:'true',
 			renderer:renderRecQty
 		},{
-			header:'入库金额',
+			header:$g('入库金额'),
 			dataIndex:'reccoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'退货数量',
+			header:$g('退货数量'),
 			dataIndex:'retqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'退货金额',
+			header:$g('退货金额'),
 			dataIndex:'retcoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'转出数量',
+			header:$g('转出数量'),
 			dataIndex:'trfoqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'转出金额',
+			header:$g('转出金额'),
 			dataIndex:'trfocoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'转入数量',
+			header:$g('转入数量'),
 			dataIndex:'trfiqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'转入金额',
+			header:$g('转入金额'),
 			dataIndex:'trficoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'调整数量',
+			header:$g('调整数量'),
 			dataIndex:'adjqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'调整金额',
+			header:$g('调整金额'),
 			dataIndex:'adjcoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'报损数量',
+			header:$g('报损数量'),
 			dataIndex:'dispqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'报损金额',
+			header:$g('报损金额'),
 			dataIndex:'dispcoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'调价损益',
+			header:$g('调价损益'),
 			dataIndex:'aspcoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'住院发药数量',
+			header:$g('住院发药数量'),
 			dataIndex:'dspqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'住院发药金额',
+			header:$g('住院发药金额'),
 			dataIndex:'dspcoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		} ,{
-			header:'住院退药数量',
+			header:$g('住院退药数量'),
 			dataIndex:'dspretqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'住院退药金额',
+			header:$g('住院退药金额'),
 			dataIndex:'dspretcoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'门诊发药数量',
+			header:$g('门诊发药数量'),
 			dataIndex:'phaoutdispqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'门诊发药金额',
+			header:$g('门诊发药金额'),
 			dataIndex:'phaoutdispcoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'门诊退药数量',
+			header:$g('门诊退药数量'),
 			dataIndex:'phaoutretqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'门诊退药金额',
+			header:$g('门诊退药金额'),
 			dataIndex:'phaoutretcoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'盘点调整数量',
+			header:$g('盘点调整数量'),
 			dataIndex:'stktkqty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'盘点调整金额',
+			header:$g('盘点调整金额'),
 			dataIndex:'stktkcoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'入库损益',
+			header:$g('入库损益'),
 			dataIndex:'recaspcoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'退货损益',
+			header:$g('退货损益'),
 			dataIndex:'retaspcoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'转移入库损益',
+			header:$g('转移入库损益'),
 			dataIndex:'trfinaspcoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'住院退药损益损益',
+			header:$g('住院退药损益损益'),
 			dataIndex:'pharetaspcoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'门诊退药损益',
+			header:$g('门诊退药损益'),
 			dataIndex:'phaoutretaspcoamt',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'数量差异',
+			header:$g('数量差异'),
 			dataIndex:'diffQty',
 			width:100,
 			align:'right',
 			sortable:'true'
 		},{
-			header:'金额差异',
+			header:$g('金额差异'),
 			dataIndex:'diffAmtRp',
 			width:100,
 			align:'right',
@@ -1357,103 +1357,103 @@ var DetailGridSCG = new Ext.grid.GridPanel({
 	trackMouseOver : true,
 	loadMask:true,
 	cm:new Ext.grid.ColumnModel([new Ext.grid.RowNumberer({width:30}), {
-			header : '类组',
+			header : $g('类组'),
 			dataIndex : 'grpDesc',
 			width : 80,
 			align : 'left',
 			sortable : true
 		}, {
-			header : '上期结存金额',
+			header : $g('上期结存金额'),
 			dataIndex : 'LastAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '本期结存金额',
+			header : $g('本期结存金额'),
 			dataIndex : 'Amt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '入库金额',
+			header : $g('入库金额'),
 			dataIndex : 'RecAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '退货金额',
+			header : $g('退货金额'),
 			dataIndex : 'RetAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '转出金额',
+			header : $g('转出金额'),
 			dataIndex : 'TroAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '转入金额',
+			header :$g( '转入金额'),
 			dataIndex : 'TriAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '调整金额',
+			header : $g('调整金额'),
 			dataIndex : 'AdjAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '消耗金额',
+			header : $g('消耗金额'),
 			dataIndex : 'ConAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '报损金额',
+			header : $g('报损金额'),
 			dataIndex : 'DisAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '发药金额',
+			header : $g('发药金额'),
 			dataIndex : 'DspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '调价损益金额',
+			header : $g('调价损益金额'),
 			dataIndex : 'AspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '患者退药金额',
+			header : $g('患者退药金额'),
 			dataIndex : 'PhaRetAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '赠品入库金额',
+			header : $g('赠品入库金额'),
 			dataIndex : 'GiftRecAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '赠品出库金额',
+			header : $g('赠品出库金额'),
 			dataIndex : 'giftTrfAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '调价换票入库金额',
+			header : $g('调价换票入库金额'),
 			dataIndex : 'chgRecAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '调价换票退货金额',
+			header : $g('调价换票退货金额'),
 			dataIndex : 'chgRetAmt',
 			width : 100,
 			align : 'right',
@@ -1465,73 +1465,73 @@ var DetailGridSCG = new Ext.grid.GridPanel({
 			align : 'right',
 			sortable : true
 		}, */{
-			header : '盘点调整金额',
+			header : $g('盘点调整金额'),
 			dataIndex : 'stktkAdjAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '制剂消耗金额',
+			header : $g('制剂消耗金额'),
 			dataIndex : 'manuXAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '制剂生成金额',
+			header : $g('制剂生成金额'),
 			dataIndex : 'manuMAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '退货损益',
+			header : $g('退货损益'),
 			dataIndex : 'RetAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '住院退药损益',
+			header : $g('住院退药损益'),
 			dataIndex : 'PhaRetAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '门诊退药损益',
+			header : $g('门诊退药损益'),
 			dataIndex : 'phoRetAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '转移入库损益',
+			header : $g('转移入库损益'),
 			dataIndex : 'trfIAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '入库损益',
+			header : $g('入库损益'),
 			dataIndex : 'recAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '门诊发药损益',
+			header : $g('门诊发药损益'),
 			dataIndex : 'phaOutDispAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '住院发药损益',
+			header : $g('住院发药损益'),
 			dataIndex : 'phaDispAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '增加',
+			header : $g('增加'),
 			dataIndex : 'In',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '减少',
+			header : $g('减少'),
 			dataIndex : 'Out',
 			width : 100,
 			align : 'right',
@@ -1548,115 +1548,115 @@ var DetailGridSCGRp = new Ext.grid.GridPanel({
 	trackMouseOver : true,
 	loadMask:true,
 	cm:new Ext.grid.ColumnModel([new Ext.grid.RowNumberer({width:30}), {
-			header : '类组',
+			header : $g('类组'),
 			dataIndex : 'grpDesc',
 			width : 80,
 			align : 'left',
 			sortable : true
 		}, {
-			header : '上期结存金额',
+			header : $g('上期结存金额'),
 			dataIndex : 'LastAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '本期结存金额',
+			header : $g('本期结存金额'),
 			dataIndex : 'Amt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '入库金额',
+			header : $g('入库金额'),
 			dataIndex : 'RecAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '退货金额',
+			header : $g('退货金额'),
 			dataIndex : 'RetAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '转出金额',
+			header : $g('转出金额'),
 			dataIndex : 'TroAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '转入金额',
+			header : $g('转入金额'),
 			dataIndex : 'TriAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '调整金额',
+			header : $g('调整金额'),
 			dataIndex : 'AdjAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '消耗金额',
+			header : $g('消耗金额'),
 			dataIndex : 'ConAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '报损金额',
+			header : $g('报损金额'),
 			dataIndex : 'DisAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '发药金额',
+			header : $g('发药金额'),
 			dataIndex : 'DspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '调价损益金额',
+			header : $g('调价损益金额'),
 			dataIndex : 'AspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '患者退药金额',
+			header : $g('患者退药金额'),
 			dataIndex : 'PhaRetAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '退货损益',
+			header : $g('退货损益'),
 			dataIndex : 'RetAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '住院退药损益',
+			header : $g('住院退药损益'),
 			dataIndex : 'PhaRetAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '赠品入库金额',
+			header : $g('赠品入库金额'),
 			dataIndex : 'GiftRecAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '赠品出库金额',
+			header : $g('赠品出库金额'),
 			dataIndex : 'giftTrfAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '调价换票入库金额',
+			header : $g('调价换票入库金额'),
 			dataIndex : 'chgRecAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '调价换票退货金额',
+			header : $g('调价换票退货金额'),
 			dataIndex : 'chgRetAmt',
 			width : 100,
 			align : 'right',
@@ -1668,49 +1668,49 @@ var DetailGridSCGRp = new Ext.grid.GridPanel({
 			align : 'right',
 			sortable : true
 		}, */{
-			header : '盘点调整金额',
+			header : $g('盘点调整金额'),
 			dataIndex : 'stktkAdjAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '制剂消耗金额',
+			header : $g('制剂消耗金额'),
 			dataIndex : 'manuXAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '制剂生成金额',
+			header : $g('制剂生成金额'),
 			dataIndex : 'manuMAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '门诊退药损益',
+			header :$g( '门诊退药损益'),
 			dataIndex : 'phoRetAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '转移入库损益',
+			header : $g('转移入库损益'),
 			dataIndex : 'trfIAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '入库损益',
+			header : $g('入库损益'),
 			dataIndex : 'recAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '增加',
+			header : $g('增加'),
 			dataIndex : 'In',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '减少',
+			header : $g('减少'),
 			dataIndex : 'Out',
 			width : 100,
 			align : 'right',
@@ -1739,187 +1739,187 @@ var DetailGridCat = new Ext.grid.GridPanel({
 	trackMouseOver : true,
 	loadMask:true,
 	cm:new Ext.grid.ColumnModel([new Ext.grid.RowNumberer({width:30}), {
-			header : '类组',
+			header : $g('类组'),
 			dataIndex : 'grpDesc',
 			width : 80,
 			align : 'left',
 			sortable : true
 		}, {
-			header : '分类',
+			header : $g('分类'),
 			dataIndex : 'catdesc',
 			width : 125,
 			align : 'left',
 			sortable : true
 		}, {
-			header : '上期结存金额',
+			header : $g('上期结存金额'),
 			dataIndex : 'LastAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '本期结存金额',
+			header : $g('本期结存金额'),
 			dataIndex : 'Amt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '入库金额',
+			header : $g('入库金额'),
 			dataIndex : 'RecAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '退货金额',
+			header :$g('退货金额'),
 			dataIndex : 'RetAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '转出金额',
+			header : $g('转出金额'),
 			dataIndex : 'TroAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '转入金额',
+			header : $g('转入金额'),
 			dataIndex : 'TriAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '调整金额',
+			header : $g('调整金额'),
 			dataIndex : 'AdjAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '消耗金额',
+			header : $g('消耗金额'),
 			dataIndex : 'ConAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '报损金额',
+			header : $g('报损金额'),
 			dataIndex : 'DisAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '发药金额',
+			header : $g('发药金额'),
 			dataIndex : 'DspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '调价损益金额',
+			header : $g('调价损益金额'),
 			dataIndex : 'AspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '患者退药金额',
+			header : $g('患者退药金额'),
 			dataIndex : 'PhaRetAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '退货损益',
+			header : $g('退货损益'),
 			dataIndex : 'RetAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '住院退药损益',
+			header : $g('住院退药损益'),
 			dataIndex : 'PhaRetAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '赠品入库金额',
+			header : $g('赠品入库金额'),
 			dataIndex : 'GiftRecAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '赠品出库金额',
+			header : $g('赠品出库金额'),
 			dataIndex : 'giftTrfAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '调价换票入库金额',
+			header : $g('调价换票入库金额'),
 			dataIndex : 'chgRecAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '调价换票退货金额',
+			header : $g('调价换票退货金额'),
 			dataIndex : 'chgRetAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		},/* {
-			header : '制剂入库金额',
+			header : $g('制剂入库金额',
 			dataIndex : 'mRecAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, */{
-			header : '盘点调整金额',
+			header : $g('盘点调整金额'),
 			dataIndex : 'stktkAdjAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '制剂消耗金额',
+			header : $g('制剂消耗金额'),
 			dataIndex : 'manuXAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '制剂生成金额',
+			header : $g('制剂生成金额'),
 			dataIndex : 'manuMAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '门诊退药损益',
+			header : $g('门诊退药损益'),
 			dataIndex : 'phoRetAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '转移入库损益',
+			header : $g('转移入库损益'),
 			dataIndex : 'trfIAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '入库损益',
+			header : $g('入库损益'),
 			dataIndex : 'recAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '门诊发药损益',
+			header : $g('门诊发药损益'),
 			dataIndex : 'phaOutDispAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '住院发药损益',
+			header : $g('住院发药损益'),
 			dataIndex : 'phaDispAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '增加',
+			header : $g('增加'),
 			dataIndex : 'In',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '减少',
+			header :$g( '减少'),
 			dataIndex : 'Out',
 			width : 100,
 			align : 'right',
@@ -1935,175 +1935,175 @@ var DetailGridCatRp = new Ext.grid.GridPanel({
 	trackMouseOver : true,
 	loadMask:true,
 	cm:new Ext.grid.ColumnModel([new Ext.grid.RowNumberer({width:30}), {
-			header : '类组',
+			header : $g('类组'),
 			dataIndex : 'grpDesc',
 			width : 80,
 			align : 'left',
 			sortable : true
 		}, {
-			header : '分类',
+			header : $g('分类'),
 			dataIndex : 'catdesc',
 			width : 125,
 			align : 'left',
 			sortable : true
 		}, {
-			header : '上期结存金额',
+			header : $g('上期结存金额'),
 			dataIndex : 'LastAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '本期结存金额',
+			header : $g('本期结存金额'),
 			dataIndex : 'Amt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '入库金额',
+			header :$g( '入库金额'),
 			dataIndex : 'RecAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '退货金额',
+			header : $g('退货金额'),
 			dataIndex : 'RetAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '转出金额',
+			header : $g('转出金额'),
 			dataIndex : 'TroAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '转入金额',
+			header : $g('转入金额'),
 			dataIndex : 'TriAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '调整金额',
+			header : $g('调整金额'),
 			dataIndex : 'AdjAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '消耗金额',
+			header : $g('消耗金额'),
 			dataIndex : 'ConAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '报损金额',
+			header :$g('报损金额'),
 			dataIndex : 'DisAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '发药金额',
+			header : $g('发药金额'),
 			dataIndex : 'DspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '调价损益金额',
+			header : $g('调价损益金额'),
 			dataIndex : 'AspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '患者退药金额',
+			header : $g('患者退药金额'),
 			dataIndex : 'PhaRetAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '退货损益',
+			header : $g('退货损益'),
 			dataIndex : 'RetAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '住院退药损益',
+			header : $g('住院退药损益'),
 			dataIndex : 'PhaRetAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '赠品入库金额',
+			header : $g('赠品入库金额'),
 			dataIndex : 'GiftRecAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '赠品出库金额',
+			header : $g('赠品出库金额'),
 			dataIndex : 'giftTrfAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '调价换票入库金额',
+			header : $g('调价换票入库金额'),
 			dataIndex : 'chgRecAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '调价换票退货金额',
+			header : $g('调价换票退货金额'),
 			dataIndex : 'chgRetAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		},/* {
-			header : '制剂入库金额',
+			header : $g('制剂入库金额'),
 			dataIndex : 'mRecAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		},*/ {
-			header : '盘点调整金额',
+			header :$g( '盘点调整金额'),
 			dataIndex : 'stktkAdjAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '制剂消耗金额',
+			header : $g('制剂消耗金额'),
 			dataIndex : 'manuXAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '制剂生成金额',
+			header : $g('制剂生成金额'),
 			dataIndex : 'manuMAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '门诊退药损益',
+			header : $g('门诊退药损益'),
 			dataIndex : 'phoRetAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '转移入库损益',
+			header : $g('转移入库损益'),
 			dataIndex : 'trfIAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '入库损益',
+			header : $g('入库损益'),
 			dataIndex : 'recAspAmt',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '增加',
+			header : $g('增加'),
 			dataIndex : 'In',
 			width : 100,
 			align : 'right',
 			sortable : true
 		}, {
-			header : '减少',
+			header : $g('减少'),
 			dataIndex : 'Out',
 			width : 100,
 			align : 'right',
@@ -2132,19 +2132,19 @@ var MainGrid=new Ext.grid.GridPanel({
 		align:'left',
 		hidden:true
 	},{
-		header:'科室',
+		header:$g('科室'),
 		dataIndex:'locDesc',
 		width:200,
 		align:'left',
 		sortable:true
 	},{
-		header:'月份',
+		header:$g('月份'),
 		dataIndex:'mon',
 		width:75,
 		align:'center',
 		sortable:true
 	},{
-		header:'月报起始日期',
+		header:$g('月报起始日期'),
 		dataIndex:'frDate',
 		width:150,
 		align:'center',
@@ -2154,7 +2154,7 @@ var MainGrid=new Ext.grid.GridPanel({
 			return StDateTime;
 		}
 	},{
-		header:'月报截止日期',
+		header:$g('月报截止日期'),
 		dataIndex:'toDate',
 		width:150,
 		align:'center',
@@ -2180,7 +2180,7 @@ MainGrid.addListener('rowclick',function(grid,rowindex,e){
 		items:[{
 			layout:'column',
 			xtype: 'fieldset',
-			title:'查询条件',
+			title:$g('查询条件'),
 			style:DHCSTFormStyle.FrmPaddingV,
 			items:[{
 				columnWidth: 1,
@@ -2198,13 +2198,13 @@ MainGrid.addListener('rowclick',function(grid,rowindex,e){
 							xtype: 'compositefield',						
 							items : [
 								StYear,
-								{ xtype: 'displayfield', value: '年'},
+								{ xtype: 'displayfield', value: $g('年')},
 								StMonth,
-								{ xtype: 'displayfield', value: ' －至－'},
+								{ xtype: 'displayfield', value: $g(' －至－')},
 								EdYear,
-								{ xtype: 'displayfield', value: '年'},
+								{ xtype: 'displayfield', value: $g('年')},
 								EdMonth,
-								{xtype:'displayfield',value:'月'}
+								{xtype:'displayfield',value:$g('月')}
 							 ]
 						}]
 					}
@@ -2218,14 +2218,14 @@ MainGrid.addListener('rowclick',function(grid,rowindex,e){
 	//SetStkMonStDate();
    var tabPanel=new Ext.TabPanel({
    		activeTab:0,
-   		tbar:new Ext.Toolbar({items:[StkGrpType,IncStkCat,IncDesc,Filter,'<font color=blue>&nbsp;&nbsp仅对明细进行筛选</font>']}),
+   		tbar:new Ext.Toolbar({items:[StkGrpType,IncStkCat,IncDesc,Filter,'<font color=blue>&nbsp;&nbsp'+$g('仅对明细进行筛选')+'</font>']}),
    		items:[{
-   			title:'月报明细(售价)',
+   			title:$g('月报明细(售价)'),
    			id:'ReportDetailSp',
    			layout:'fit',
    			items:[DetailGrid]
    		},{
-   			title:'月报明细(进价)',
+   			title:$g('月报明细(进价)'),
    			id:'ReportDetailRp',
    			layout:'fit',
    			items:[DetailGridRp]
@@ -2240,22 +2240,22 @@ MainGrid.addListener('rowclick',function(grid,rowindex,e){
    			layout:'fit',
    			items:[DetailGridLBRp]
    		}*/,{
-   			title:'类组汇总(进价)',
+   			title:$g('类组汇总(进价)'),
    			id:'ReportDetailSCGRp',
    			layout:'fit',
    			items:[DetailGridSCGRp]
    		},{
-   			title:'类组汇总(售价)',
+   			title:$g('类组汇总(售价)'),
    			id:'ReportDetailSCG',
    			layout:'fit',
    			items:[DetailGridSCG]
    		},{
-   			title:'分类汇总(售价)',
+   			title:$g('分类汇总(售价)'),
    			id:'ReportDetailCat',
    			layout:'fit',
    			items:[DetailGridCat]
    		},{
-   			title:'分类汇总(进价)',
+   			title:$g('分类汇总(进价)'),
    			id:'ReportDetailCatRp',
    			layout:'fit',
    			items:[DetailGridCatRp]
@@ -2302,7 +2302,7 @@ MainGrid.addListener('rowclick',function(grid,rowindex,e){
 			region:'north',
 			height:DHCSTFormStyle.FrmHeight(2)+28,
 			layout:'fit',
-			title:'月报明细查询',
+			title:$g('月报明细查询'),
 			layout: 'border', // specify layout manager for items
 			items: [{
 				region: 'west',
@@ -2328,7 +2328,7 @@ MainGrid.addListener('rowclick',function(grid,rowindex,e){
         width: 250,
         anchorOffset: 50,
 		hideDelay : 90000,
-        html: "<font size=2 color=#15428b ><p><b>增加:</b>各种业务数据金额为正的合计</p><p><b>减少:</b>各种业务数据金额为负的合计</p><p><b>差异:</b>上期结余+增加+减少-本期结余</p></font>"
+        html: "<font size=2 color=#15428b ><p><b>"+$g("增加")+":</b>"+$g("各种业务数据金额为正的合计")+"</p><p><b>"+$g("减少")+":</b>"+$g("各种业务数据金额为负的合计")+"</p><p><b>"+$g("差异")+":</b>"+$g("上期结余+增加+减少-本期结余")+"</p></font>"
    });
     Ext.getCmp('HelpBtn').focus('',100); //初始化页面给某个元素设置焦点	  
 }) 

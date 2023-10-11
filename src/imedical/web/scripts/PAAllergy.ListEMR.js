@@ -176,6 +176,7 @@ document.onkeydown=function(event){
 			var EpisodeID=document.getElementById("EpisodeID").value;
 			var url="websys.default.csp?WEBSYS.TCOMPONENT=DHC.PAAllergy.EditEMR&PARREF="+PatientID+"&PatientID="+PatientID+"&PatientBanner=0&EpisodeID="+EpisodeID;     
 			var params="top=100,left=200,width=650,height=400" ;  
+			if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
 		    window.open(url,"",params); //打开新窗口   
 	  }, 300);
      

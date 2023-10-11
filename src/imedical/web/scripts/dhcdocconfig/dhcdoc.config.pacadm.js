@@ -8,10 +8,18 @@ function InitHospList()
 {
 	var hospComp = GenHospComp("DHC_PACADM");
 	hospComp.jdata.options.onSelect = function(e,t){
-		InitPACADM();
+		 $('#tabPACADM').datagrid('reload');
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){
 		InitPACADM();
+		InitCache();
+	}
+}
+function InitCache(){
+	var hasCache = $.DHCDoc.hasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
 	}
 }
 function InitPACADM()
@@ -158,12 +166,15 @@ function InitPACADM()
 					  editor :{  
 							type:'combobox',  
 							options:{
-								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.PACADM&QueryName=GetCTSocialstatusList&HospId="+$HUI.combogrid('#_HospList').getValue(),
+								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.PACADM&QueryName=GetCTSocialstatusList"+"&rows=9999",
 								valueField:'SSRowId',
 								textField:'SSDesc',
 								required:false,
 								loadFilter: function(data){
 									return data['rows'];
+								},
+								onBeforeLoad:function(param){
+									$.extend(param,{HospId:$HUI.combogrid('#_HospList').getValue()});
 								}
 							  }
      					},
@@ -176,12 +187,15 @@ function InitPACADM()
 					  editor :{  
 							type:'combobox',  
 							options:{
-								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.CNMedCode&QueryName=FindBillTypeConfig&value=&HospId="+$HUI.combogrid('#_HospList').getValue(),
+								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.CNMedCode&QueryName=FindBillTypeConfig&value="+"&rows=9999",
 								valueField:'BillTypeRowid',
 								textField:'BillTypeDesc',
 								required:false,
 								loadFilter: function(data){
 									return data['rows'];
+								},
+								onBeforeLoad:function(param){
+									$.extend(param,{HospId:$HUI.combogrid('#_HospList').getValue()});
 								}
 							  }
      					  },
@@ -199,7 +213,7 @@ function InitPACADM()
 		singleSelect : true,
 		fitColumns : true,
 		autoRowHeight : false,
-		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.PACADM&QueryName=GetDHCPACADMList&HospId="+$HUI.combogrid('#_HospList').getValue(),
+		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.PACADM&QueryName=GetDHCPACADMList",
 		loadMsg : '加载中..',  
 		pagination : true,  //是否分页
 		rownumbers : true,  //
@@ -221,6 +235,10 @@ function InitPACADM()
        },
        onLoadSuccess:function(data){
 	       editRow = undefined;
+	   },
+	   onBeforeLoad:function(param){
+		   $('#tabPACADM').datagrid('unselectAll');
+		   param = $.extend(param,{HospId:$HUI.combogrid('#_HospList').getValue()});
 	   }
 
 	});

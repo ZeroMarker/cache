@@ -2,11 +2,15 @@
 var SelectedRow = -1;
 var rowid=0;
 function BodyLoadHandler() 
-{	
-    InitUserInfo(); //系统参数
+{
+	//modified by cjt 20230212 需求号3221967 UI页面改造
+	initPanelHeaderStyle();
+	initButtonColor();
+	InitUserInfo(); //系统参数
 	InitEvent();
 	disabled(true);//灰化
-	initButtonWidth();	//modified by czf 20180827 HISUI改造
+	//modified by cjt 20230327 UI页面改造
+	//initButtonWidth();	//modified by czf 20180827 HISUI改造
 	initFirmType();		//add by CZF0093 2020-03-17 begin
 	var FirmTypeDR=GetElementValue("FirmTypeDR");
 	if (FirmTypeDR.indexOf(",")>-1)
@@ -14,6 +18,12 @@ function BodyLoadHandler()
 		FirmTypeDR=FirmTypeDR.split(",")
 	}
 	$("#FirmType").combobox("setValues",FirmTypeDR);
+    ///add by ZY 2926611  20220915
+    if (FirmTypeDR!="")
+    {
+        //hiddenObj("FirmType",true)
+        //disableElement("FirmType",true)
+    }
 	setRequiredElements("FirmType")		//add by CZF0093 2020-03-17 end
 }
 function InitEvent()
@@ -35,6 +45,9 @@ function BFind_Click()
 	val=val+"&Tel="+GetElementValue("Tel")
 	val=val+"&ShName="+GetElementValue("ShName")
 	val=val+"&FirmTypeDR="+($("#FirmType").combobox("getValues"))		//add by CZF0093 2020-03-17
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		val += "&MWToken="+websys_getMWToken()
+	}
 	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCVendor"+val;
 }
 function BClear_Click() 
@@ -200,7 +213,16 @@ function SetData(rowid)
 	$("#FirmType").combobox("setValues",Hold3);	//Hold3 modified by CZF0093 2020-03-17  
 	SetElement("FirmTypeDR",Hold3);
 	SetElement("Hold4",list[22]);
-	SetElement("Hold5",list[23]);
+	///modified by ZY
+	if (list[23]=="Y") 
+	{
+		SetChkElement("Hold5",1);
+	}
+	else
+	{
+		SetChkElement("Hold5",0);
+	}
+	
 	SetElement("ExDesc",list[17]);	// Mozy0055	2011-7-7
 }
 function disabled(value)//灰化

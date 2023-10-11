@@ -35,6 +35,18 @@ $(function(){
         window.returnValue = "";
         closeWindow("signDialog");
     });
+	
+	//撤销签名
+	$("#revokeCheck").click(function(){
+		var userInfo = $("#hiddenUserInfo").val();
+		if (userInfo == "")
+		{ 
+			$.messager.alert("提示","用户名或密码错误");
+			return;
+		}
+		window.returnValue = '{"action":"revoke","userInfo":'+userInfo+'}';
+		closeWindow("signDialog");
+	});	
 });
 
 function init()
@@ -46,6 +58,14 @@ function init()
     txtUserChange();
     getIdentityVerifcation(); 
     $('#checkSure').focus();
+	if (opts.canRevokCheck == 1) 
+	{
+		$("#revokeCheck").show();
+	}
+	else
+	{
+		$("#revokeCheck").hide();
+	}
 }
 
 function checkSure()
@@ -53,7 +73,7 @@ function checkSure()
     var userInfo = $("#hiddenUserInfo").val();
     if (userInfo == "")
     { 
-        alert('用户名或密码错误');
+        $.messager.alert("提示","用户名或密码错误");
         return;
     }
     if(opts.callType == "office"){
@@ -96,7 +116,7 @@ function txtUserChange(){
                  $("#txtLevel").val("");
                  result = eval("("+d+")");
                  $("#divUserName")[0].innerText = result.UserName;
-                 $("#txtLevel").val(result.LevelDesc);
+                 $("#txtLevel").val(emrTrans(result.LevelDesc));
              }
         },
         error: function(d) {alert("error");}
@@ -113,10 +133,11 @@ function getIdentityVerifcation()
     {
         if (tmpPassword == "") 
         {
-            alert('请输入密码'); 
+           $.messager.alert("提示","请输入密码"); 
             return;	
         }
     }
+    tmpPassword = base64encode(tmpPassword);
     jQuery.ajax({
         type: "POST",
         dataType: "text",
@@ -133,12 +154,12 @@ function getIdentityVerifcation()
         success: function(d) {
              if (d == "")
              {
-                 alert('用户名密码错误'); 
+                $.messager.alert("提示","用户名密码错误"); 
              }
              else 
              {
                  result = eval("("+d+")");
-                 $("#txtLevel").val(result.LevelDesc);
+                 $("#txtLevel").val(emrTrans(result.LevelDesc));
                  $("#hiddenUserInfo").val(d);
              }
         },

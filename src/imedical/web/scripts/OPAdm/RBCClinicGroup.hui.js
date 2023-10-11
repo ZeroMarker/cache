@@ -9,6 +9,8 @@ $(function(){
 	InitEvent();
 	var hospComp = GenUserHospComp();
 	hospComp.jdata.options.onSelect = function(e,t){
+		$("#code,#name").val("");
+		$("#StartDate,#EndDate").datebox('setValue','');
 		RBCClinicGroupTabDataGridLoad();
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){
@@ -31,7 +33,23 @@ function InitRBCClinicGroupTabDataGrid(){
         text: '医院授权',
         iconCls: 'icon-house',
         handler: function() { ReHospitalHandle();}
-    }];
+    }, {
+        text: '挂号限制条件维护',
+        iconCls: 'icon-edit',
+        handler: function() { CliniclimitHandle();}
+    }/*,{
+        text: '翻译',
+        iconCls: 'icon-translate-word',
+        handler: function() {
+         		var SelectedRow = PageLogicObj.m_RBCClinicGroupTabDataGrid.datagrid('getSelected');
+				if (!SelectedRow){
+				$.messager.alert("提示","请选择需要翻译的行!","info");
+				return false;
+				}
+				CreatTranLate("User.RBCClinicGroup","CLGRPDesc",SelectedRow["CLGRPDesc"])
+				        }
+     }*/
+	 ];
     var Columns=[[ 
     	{field:'ID',hidden:true,title:''},
 		{field:'CLGRPCode',title:'代码',width:300},
@@ -70,7 +88,7 @@ function InitRBCClinicGroupTabDataGrid(){
 				}
 			}
 		}
-	}); 
+	}).datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}); 
 	return RBCClinicGroupTabDataGrid;
 }
 function SetSelRowData(row){
@@ -81,6 +99,7 @@ function SetSelRowData(row){
 }
 function InitEvent(){
 	$('#Bfind').click(RBCClinicGroupTabDataGridLoad);
+	$('#SaveLimit').click(SaveLimitHandler);
 }
 function RBCClinicGroupTabDataGridLoad(){
 	var CLGRPCode=$("#code").val();
@@ -92,9 +111,10 @@ function RBCClinicGroupTabDataGridLoad(){
 	    CLGRPCode:CLGRPCode,
 	    CLGRPDesc:CLGRPDesc,
 	    HospId:HospID,
+		AllFlag:1,
 	    Pagerows:PageLogicObj.m_RBCClinicGroupTabDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
-		PageLogicObj.m_RBCClinicGroupTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+		PageLogicObj.m_RBCClinicGroupTabDataGrid.datagrid('unselectAll').datagrid('loadData',GridData);
 	});
 }
 function AddClickHandle(){
@@ -348,4 +368,92 @@ function ReHospitaldelectClickHandle(){
 			LoadReHospitalDataGrid();
 	})
 	
+	}
+function CliniclimitHandle(){
+	var row=PageLogicObj.m_RBCClinicGroupTabDataGrid.datagrid('getSelected');
+	if ((!row)||(row.length==0)){
+		$.messager.alert("提示","请选择一行！")
+		return false
+	}
+	var ID=row["ID"]
+	LoadSex();
+	$("#Cliniclimit-dialog").dialog("open");
+	$.cm({
+		ClassName:"web.DHCRBCClinicGroup",
+		MethodName:"ShowLimit",
+		HospId:$HUI.combogrid('#_HospUserList').getValue(),
+		ClinicGroupID:ID,
+		dataType:"text"
+	},function(ret){
+		var rtnArr=ret.split(String.fromCharCode(1))
+		for (i=0;i<rtnArr[0].split(",").length;i++){
+				var sbox = $HUI.combobox("#NotSex");
+				if (rtnArr[0].split(",")[i]!="")  sbox.select(rtnArr[0].split(",")[i]);
+			}
+		$("#SamllAge").val(rtnArr[1])
+		$("#BigAge").val(rtnArr[2])
+	})
+	}
+function LoadSex(){
+	$.cm({
+		ClassName:"web.DHCRBCClinicGroup",
+		MethodName:"ReadSex",
+		JSFunName:"GetSexToHUIJson",
+		ListName:"",
+		HospId:$HUI.combogrid('#_HospUserList').getValue(),
+		dataType:"text"
+	},function(ret){
+		//alert(ret)
+		var cbox = $HUI.combobox("#NotSex", {
+			valueField: 'id',
+			textField: 'text', 
+			blurValidValue:true,
+			multiple:true,
+			rowStyle:'checkbox', //显示成勾选行形式
+			selectOnNavigation:false,
+			data: JSON.parse(ret)
+		})
+	})
+	}
+function SaveLimitHandler(){
+	
+	var row=PageLogicObj.m_RBCClinicGroupTabDataGrid.datagrid('getSelected');
+	if ((!row)||(row.length==0)){
+		$.messager.alert("提示","请选择一行！")
+		return false
+	}
+	var ID=row["ID"]
+	var NotSex=$("#NotSex").combobox("getValues")
+	var AgeSamll=$("#SamllAge").numberbox('getValue');
+	var AgeBig=$("#BigAge").numberbox('getValue');
+	if ((AgeSamll !="")&&(AgeBig !="")&&(+AgeBig < +AgeSamll)) {
+		$.messager.alert("提示","开始年龄不能大于结束年龄!","info",function(){
+			$("#AgeSamll").focus();
+		});
+		return;
+	}
+	if ((isNaN(AgeSamll))||(AgeSamll <0)) {
+		$.messager.alert("提示","开始年龄只能是大于等于0的数字!","info",function(){
+			$("#AgeSamll").focus();
+		});
+		return;
+	}
+	if ((isNaN(AgeBig))||(AgeBig <0)) {
+		$.messager.alert("提示","结束年龄只能是大于等于0的数字!","info",function(){
+			$("#AgeBig").focus();
+		});
+		return;
+	}
+	var Coninfo="NotSex"+"!"+NotSex+"^"+"SamllAge"+"!"+AgeSamll+"^"+"BigAge"+"!"+AgeBig
+	$.cm({
+		ClassName:"web.DHCRBCClinicGroup",
+		MethodName:"SaveLimit",
+		HospId:$HUI.combogrid('#_HospUserList').getValue(),
+		ClinicGroupID:ID,
+		Coninfo:Coninfo,
+		dataType:"text"
+	},function(ret){
+		$.messager.alert("提示","保存成功！")
+		$("#Cliniclimit-dialog").dialog("close");
+	})
 	}

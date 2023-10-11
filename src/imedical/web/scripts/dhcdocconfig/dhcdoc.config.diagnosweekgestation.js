@@ -17,13 +17,22 @@ $(function(){
 			 return false;
 		}
 	});
+	InitCache();
 })
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function InitHospList()
 {
 	var hospComp = GenHospComp("Doc_BaseConfig_DiagnosWeekGestation");
 	hospComp.jdata.options.onSelect = function(e,t){
 		datadefault();
-		InitWeekGestationDia();
+		//InitWeekGestationDia();
+		$("#tabWeekGestationDia").datagrid('reload');
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){
 		datadefault();
@@ -109,7 +118,7 @@ function InitWeekGestationDia(){
 		                $.messager.alert("提示", "请填写对应的周数", "error");
 						return false;
 	                }
-	                var RowData=ItmDiagnoseDataGrid.datagrid('getData'); 
+	                /*var RowData=ItmDiagnoseDataGrid.datagrid('getData'); 
 	                var RepeatFlag=0;
 	                for (var i=0;i<RowData.rows.length;i++) {
 		            	if ((RowData.rows[i].WeekNum==WeekNum)){
@@ -119,7 +128,7 @@ function InitWeekGestationDia(){
 	                if (RepeatFlag==1){
 		            	$.messager.alert("提示", "存在相同的周数，不能保存", "error");
 						return false;
-		            }
+		            }*/
 	                var value=$.m({
 						ClassName:"DHCDoc.DHCDocConfig.ItmDiagnose",
 						MethodName:"saveWeekDiagnose",
@@ -149,10 +158,10 @@ function InitWeekGestationDia(){
             }
         }];
     var ItmDiagnoseColumns=[[    
-                    { field: 'DiagnoseDR', title: '诊断', width: 100, align: 'center', sortable: true, resizable: true,hidden:true
+                    { field: 'DiagnoseDR', title: '诊断', width: 100, align: 'center', resizable: true,hidden:true
 					 
 					},
-					{ field: 'MRCIDDesc', title: '诊断', width: 100, align: 'center', sortable: true,
+					{ field: 'MRCIDDesc', title: '诊断', width: 100, align: 'center',
 					    editor:{
                          type:'combogrid',
                          options:{
@@ -189,7 +198,7 @@ function InitWeekGestationDia(){
                         }
                        }
 					},
-					{ field: 'WeekNum', title: '周数', width: 100, align: 'center', sortable: true, resizable: true,
+					{ field: 'WeekNum', title: '周数', width: 100, align: 'center', resizable: true,
 					  editor : {
                         type : 'text'
 					  }
@@ -203,7 +212,7 @@ function InitWeekGestationDia(){
 		singleSelect : true,
 		fitColumns : true,
 		autoRowHeight : false,
-		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ItmDiagnose&QueryName=GetWeekDiagnose&HospId="+$HUI.combogrid('#_HospList').getValue(),
+		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ItmDiagnose&QueryName=GetWeekDiagnose",
 		loadMsg : '加载中..',  
 		pagination : true,  //
 		rownumbers : true,  //
@@ -214,7 +223,11 @@ function InitWeekGestationDia(){
     	toolbar :ItmDiagnoseBar,
     	onLoadSuccess:function(data){
 	    	ItmDiagnoseDataGrid.datagrid("unselectAll");
-	    }
+	    },
+	    onBeforeLoad:function(queryParams){
+		    $("#tabWeekGestationDia").datagrid("unselectAll");
+		    queryParams.HospId=$HUI.combogrid('#_HospList').getValue();
+		}
 	});
 }
 function datadefault(){

@@ -1,6 +1,6 @@
 ﻿/**
  * FileName: dhcbill.ipbill.warrant.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-10-09
  * Description: 住院担保
  */
@@ -10,89 +10,98 @@ $.extend($.fn.validatebox.defaults.rules, {
 	    validator: function(value) {
 		    return value < 1000000000;
 		},
-		message: "金额输入过大"
+		message: $g("金额输入过大")
 	}
 });
 
-var GV = {
-	PatType: 'I'
-};
-
 $(function () {
-	$(document).keydown(function (e) {
-		banBackSpace(e);
-	});
 	initQueryMenu();
 	initWarrList();
 });
 
 function initQueryMenu() {
-	setValueById('stDate', getDefStDate(0));
+	setValueById("stDate", CV.DefDate);
 
-	$HUI.linkbutton('#btn-readCard', {
+	$HUI.linkbutton("#btn-readCard", {
 		onClick: function () {
 			readHFMagCardClick();
 		}
 	});
 
-	$HUI.linkbutton('#btn-add, #btn-update', {
+	$HUI.linkbutton("#btn-add, #btn-update", {
 		onClick: function () {
 			saveClick(this.id);
 		}
 	});
 	
-	$HUI.linkbutton('#btn-find', {
+	$HUI.linkbutton("#btn-find", {
 		onClick: function () {
 			loadWarrList();
 		}
 	});
 	
-	$HUI.linkbutton('#btn-clear', {
+	$HUI.linkbutton("#btn-appList", {
+		onClick: function () {
+			appListClick();
+		}
+	});
+	
+	if (getValueById("ReqFlag") != "Y") {
+		disableById("btn-appList");
+	}
+	
+	$HUI.linkbutton("#btn-clear", {
 		onClick: function () {
 			clearClick();
 		}
 	});
 
-	$HUI.linkbutton('#btn-print', {
+	$HUI.linkbutton("#btn-print", {
 		onClick: function () {
 			printClick();
 		}
 	});
-	
+
 	//卡号回车查询事件
-	$('#cardNo').keydown(function(e) {
+	$("#CardNo").focus().keydown(function(e) {
 		cardNoKeydown(e);
 	});
 
 	//登记号回车查询事件
-	$('#patientNo').keydown(function(e) {
-		patientNoKeyDown(e);
+	$("#patientNo").keydown(function(e) {
+		patientNoKeydown(e);
 	});
-
-	$HUI.combobox('#cardType', {
-		panelHeight: 'auto',
-		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QCardTypeDefineList&ResultSetType=array',
-		editable: false,
-		valueField: 'value',
-		textField: 'caption',
-		onChange: function (newValue, oldValue) {
-			initReadCard(newValue);
-		}
+	
+	//病案号回车查询事件
+	$("#medicareNo").keydown(function(e) {
+		medicareNoKeydown(e);
 	});
-
-	$HUI.combobox('#warrStatus', {
+	
+	$HUI.combobox("#warrStatus", {
 		panelHeight: 'auto',
-		multiple: false,
-		data: [{value: 'Y', text: '有效'},
-			   {value: 'N', text: '无效'}
+		data: [{value: 'Y', text: $g('有效'), selected: true},
+			   {value: 'N', text: $g('无效')}
 		],
 		editable: false,
 		valueField: 'value',
-		textField: 'text',
-		value: 'Y'
+		textField: 'text'
 	});
 
-	$HUI.combogrid('#admList', {
+	$HUI.combobox("#admStatus", {
+		panelHeight: 'auto',
+		valueField: 'value',
+		textField: 'text',
+		data: [{value: 'A', text: $g('在院')},
+			   {value: 'D', text: $g('出院')}
+		],
+		value: 'A',
+		onChange: function(newValue, oldValue) {
+			setValueById("EpisodeID", "");
+			loadAdmList();
+		}
+	});
+
+	$HUI.combogrid("#admList", {
 		panelWidth: 420,
 		panelHeight: 200,
 		striped: true,
@@ -109,46 +118,81 @@ function initQueryMenu() {
 				   {field: 'admDept', title: '就诊科室', width: 150}
 			]],
 		onLoadSuccess: function (data) {
-			$(this).combogrid('clear');
+			$(this).combogrid("clear");
 			if (data.total == 1) {
-				setValueById('admList', data.rows[0].adm);
+				setValueById("admList", data.rows[0].adm);
+			}else {
+				if (!getValueById("PatientID")) {
+					$(".patientInfo>[id]").text("");
+					loadWarrList();
+				}
+				setValueById("EpisodeID", "");
 			}
 		},
 		onSelect: function (index, row) {
-			var adm = row.adm;
-			setBannerPatPayInfo(adm);
-			setValueById('EpisodeID', adm);
+			setValueById("EpisodeID", row.adm);
+			setBannerPatPayInfo(row.adm);
+			loadWarrList();
 		}
+	});
+	
+	//担保人
+	$HUI.combobox("#warrtor", {
+		panelHeight: 150,
+		method: 'GET',
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QrySSUser&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
+		mode: 'remote',
+		valueField: 'id',
+		textField: 'text',
+		blurValidValue: true,
+		onBeforeLoad: function (param) {
+			param.desc = param.q;
+		}
+	});
+	
+	//担保物
+	$HUI.combobox("#warrItem", {
+		panelHeight: 150,
+		method: 'GET',
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryCredType&ResultSetType=array',
+		valueField: 'id',
+		textField: 'text',
+		defaultFilter: 5,
+		onLoadSuccess: function(data) {
+			$(this).combobox("clear");
+		}
+	});
+	
+	//担保原因
+	$HUI.combobox("#warrReason", {
+		panelHeight: 150,
+		method: 'GET',
+		url: $URL + '?ClassName=web.DHCEMDocGuarantee&MethodName=reasonCombox&ResultSetType=array&hosp=' + PUBLIC_CONSTANT.SESSION.HOSPID,
+		valueField: 'id',
+		textField: 'text',
+		defaultFilter: 5
 	});
 }
 
-/**
- * 初始化卡类型时卡号和读卡按钮的变化
- * @method initReadCard
- * @param {String} cardType
- * @author ZhYW
- */
-function initReadCard(cardType) {
-	try {
-		var cardTypeAry = cardType.split('^');
-		var readCardMode = cardTypeAry[16];
-		if (readCardMode == 'Handle') {
-			disableById('btn-readCard');
-			$('#cardNo').attr('readOnly', false);
-			focusById('cardNo');
-		} else {
-			enableById('btn-readCard');
-			setValueById('cardNo', '');
-			$('#cardNo').attr('readOnly', true);
-			focusById('btn-readCard');
-		}
-	} catch (e) {
+function appListClick() {
+	var patientId = getValueById("PatientID");
+	if (!patientId) {
+		$.messager.popover({msg: "请先查询患者", type: "info"});
+		return;
 	}
-}
-
-function reloadWarrList(episodeId) {
-	setValueById('EpisodeID', episodeId);
-	loadWarrList();
+	var url = "dhcem.gua.guarantee.csp?&GrossClass=" + getValueById("GrossClass") + "&PatientID=" + patientId;
+	url += "&PatType=" + CV.PatType;
+	websys_showModal({
+		url: url,
+		title: '申请列表',
+		iconCls: 'icon-w-edit',
+		width: '90%',
+		height: '90%',
+		callbackFunc: function(episodeId) {
+			setValueById("EpisodeID", episodeId);
+			loadAdmList();
+		}
+	});
 }
 
 /**
@@ -157,144 +201,132 @@ function reloadWarrList(episodeId) {
  * @author ZhYW
  */
 function readHFMagCardClick() {
-	try {
-		var cardType = getValueById('cardType');
-		var cardTypeAry = cardType.split('^');
-		var cardTypeDR = cardTypeAry[0];
-		var myRtn = '';
-		if (cardTypeDR == '') {
-			myRtn = DHCACC_GetAccInfo();
-		} else {
-			myRtn = DHCACC_GetAccInfo(cardTypeDR, cardType);
+	DHCACC_GetAccInfo7(magCardCallback);
+}
+
+function cardNoKeydown(e) {
+	var key = websys_getKey(e);
+	if (key == 13) {
+		var cardNo = getValueById("CardNo");
+		if (!cardNo) {
+			return;
 		}
-		var myAry = myRtn.toString().split('^');
-		var rtn = myAry[0];
-		switch (rtn) {
-		case '0':
-			setValueById('cardNo', myAry[1]);
-			setValueById('patientNo', myAry[5]);
-			getPatInfo();
-			break;
-		case '-200':
-			setValueById('PatientID', '');
-			$.messager.alert('提示', '卡无效', 'info', function() {
-				$('#btn-readCard').focus();
-			});
-			break;
-		case '-201':
-			setValueById('cardNo', myAry[1]);
-			setValueById('patientNo', myAry[5]);
-			getPatInfo();
-			break;
-		default:
-		}
-	} catch (e) {
+		DHCACC_GetAccInfo("", cardNo, "", "", magCardCallback);
 	}
 }
 
-function patientNoKeyDown(e) {
-	var key = websys_getKey(e);
-	if (key == 13) {
+function magCardCallback(rtnValue) {
+	var patientId = "";
+	var myAry = rtnValue.split("^");
+	switch (myAry[0]) {
+	case '0':
+		setValueById("CardNo", myAry[1]);
+		patientId = myAry[4];
+		setValueById("patientNo", myAry[5]);
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	case '-200':
+		$.messager.alert("提示", "卡无效", "info", function() {
+			$("#CardNo").focus();
+		});
+		break;
+	case '-201':
+		setValueById("CardNo", myAry[1]);
+		patientId = myAry[4];
+		setValueById("patientNo", myAry[5]);
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	default:
+	}
+	
+	if (patientId != "") {
 		getPatInfo();
 	}
 }
 
-function cardNoKeydown(e) {
-	try {
-		var key = websys_getKey(e);
-		if (key == 13) {
-			var cardNo = getValueById('cardNo');
-			if (!cardNo) {
-				return;
-			}
-			var cardType = getValueById('cardType');
-			cardNo = formatCardNo(cardType, cardNo);
-			var cardTypeAry = cardType.split('^');
-			var cardTypeDR = cardTypeAry[0];
-			var myRtn = DHCACC_GetAccInfo(cardTypeDR, cardNo, '', 'PatInfo');
-			var myAry = myRtn.toString().split('^');
-			var rtn = myAry[0];
-			switch (rtn) {
-			case '0':
-				setValueById('cardNo', myAry[1]);
-				setValueById('patientNo', myAry[5]);
-				getPatInfo();
-				break;
-			case '-200':
-				setValueById('PatientID', '');
-				setTimeout(function() {
-					$.messager.alert('提示', '卡无效', 'info', function() {
-						$('#cardNo').focus();
-					});
-				}, 300);
-				break;
-			case '-201':
-				setValueById('cardNo', myAry[1]);
-				setValueById('patientNo', myAry[5]);
-				getPatInfo();
-				break;
-			default:
-			}
-		}
-	} catch (e) {
+function patientNoKeydown(e) {
+	var key = websys_getKey(e);
+	if (key == 13) {
+		setValueById("medicareNo", "");
+		getPatInfo();
+	}
+}
+
+function medicareNoKeydown(e) {
+	var key = websys_getKey(e);
+	if (key == 13) {
+		setValueById("patientNo", "");
+		getPatInfo();
 	}
 }
 
 function getPatInfo() {
-	$('#admList').combogrid('clear');
-	setValueById('EpisodeID', '');
-	var patientNo = getValueById('patientNo');
-	setBannerPatInfo(patientNo);
-	$.m({
-		ClassName: 'web.DHCOPBillWarrant',
-		MethodName: 'GetPatInfoByRegNo',
-		patientNo: patientNo
-	}, function (rtn) {
-		var myAry = rtn.split('^');
-		setValueById('PatientID', myAry[0]);
-		setValueById('patientNo', myAry[1]);
-		if (!myAry[0]) {
-			$.messager.popover({msg: "登记号无效", type: "info"});
-		}else {
-			loadAdmList();
-			loadWarrList();
+	$("#admList").combogrid("clear");
+	setValueById("EpisodeID", "");
+	$.cm({
+		ClassName: "web.UDHCJFZYDB",
+		MethodName: "GetPatInfo",
+		patientNo: getValueById("patientNo"),
+		medicareNo: getValueById("medicareNo"),
+		hospId: PUBLIC_CONSTANT.SESSION.HOSPID
+	}, function (json) {		
+		setValueById("PatientID", json.PatientId);
+		setValueById("patientNo", json.PatientNo);
+		setValueById("medicareNo", json.MedicareNo);
+		if (!(json.PatientId > 0)) {
+			$.messager.popover({msg: "患者不存在", type: "info"});
 		}
+		setBannerPatInfo(json.PatientId);
+		loadAdmList();
 	});
 }
 
 function initWarrList() {
-	GV.WarrList = $HUI.datagrid('#warrList', {
+	GV.WarrList = $HUI.datagrid("#warrList", {
 		fit: true,
 		border: false,
-		striped: true,
 		singleSelect: true,
-		fitColumns: true,
 		pagination: true,
 		rownumbers: true,
 		pageSize: 20,
-		data: [],
-		columns: [[{field: 'regNo', title: '登记号', width: 100},
-				   {field: 'patName', title: '患者姓名', width: 80},
-				   {field: 'admDept', title: '就诊科室', width: 100},
-				   {field: 'warrDate', title: '担保时间', width: 150,
-				   formatter: function(value, row, index) {
-						return value + " " + row.warrTime;
+		className: "web.UDHCJFZYDB",
+		queryName: "FindWarrInfo",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["warrDate"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if ($.inArray(cm[i].field, ["warrtorDR", "papmi", "warrId", "credTypeDR", "guarantId", "warrReaId"]) != -1) {
+					cm[i].hidden = true;
+					continue;
+				}
+				if (cm[i].field == "warrTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.warrDate + " " + value;
 					}
-				   },
-				   {field: 'warrtor', title: '担保人', width: 80},
-				   {field: 'warrAmt', title: '担保金额', align: 'right', width: 100, formatter: formatAmt},
-				   {field: 'warrEndDate', title: '结束日期', width: 100},
-				   {field: 'status', title: '是否有效', width: 80,
-					formatter: function(value, row, index) {
-						return (value == 'Y') ? '<font color="#21ba45">是</font>' : '<font color="#f16e57">否</font>';
+				}
+				if (cm[i].field == "status") {
+					cm[i].title = '是否有效';
+					cm[i].formatter = function (value, row, index) {
+						var color = (value == "Y") ? "#21ba45" : "#f16e57";
+						return "<font color=\"" + color + "\">" + ((value == "Y") ? $g("是") : $g("否")) + "</font>";
 					}
-				   },
-				   {field: 'userName', title: '操作员', width: 100},
-				   {field: 'remark', title: '备注', width: 100},
-				   {field: 'adm', title: '就诊号', width: 70},
-				   {field: 'papmi', title: 'papmi', hidden: true},
-				   {field: 'warrId', title: 'warrId', hidden: true}
-			]],
+				}
+				if (cm[i].field == "userName") {
+					cm[i].title = '操作员';
+				}
+				if (cm[i].field == "remark") {
+					cm[i].title = '备注';
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if ($.inArray(cm[i].field, ["warrTime"]) != -1) {
+						cm[i].width = 160;
+					}
+				}
+			}
+		},
 		onSelect: function (index, row) {
 			selectRowHandler(row);
 		}
@@ -302,35 +334,21 @@ function initWarrList() {
 }
 
 function selectRowHandler(row) {
-	setValueById('patientNo', row.regNo);
-	setValueById('EpisodeID', row.adm);
-	setValueById('PatientID', row.papmi);
-	setValueById('stDate', row.warrDate);
-	setValueById('endDate', row.warrEndDate);
-	
-	loadAdmList();
-	
-	setValueById('warrAmt', row.warrAmt);
-	setValueById('warrtor', row.warrtor);
-	setValueById('remark', row.remark);
-	
-	setValueById('remark', row.remark);
-	setValueById('warrStatus', row.status);
-	setBannerPatInfo(row.regNo);
-}
+	setValueById("patientNo", row.regNo);
+	setValueById("PatientID", row.papmi);
+	setValueById("EpisodeID", row.adm);
+	setValueById("stDate", row.warrDate);
+	setValueById("endDate", row.warrEndDate);
 
-function loadWarrList() {
-	var queryParams = {
-		ClassName: 'web.DHCOPBillWarrant',
-		QueryName: 'FindWarrInfo',
-		stDate: getValueById('stDate'),
-		endDate: getValueById('endDate'),
-		episodeId: getValueById('EpisodeID'),
-		papmiId: getValueById('PatientID'),
-		patType: GV.PatType,
-		hospId: PUBLIC_CONSTANT.SESSION.HOSPID
-	};
-	loadDataGridStore('warrList', queryParams);
+	setValueById("warrAmt", row.warrAmt);
+	
+	var data = [{id: row.warrtorDR, name: row.warrtor, selected: true}];
+	$("#warrtor").combobox("loadData", data);
+	
+	setValueById("remark", row.remark);
+	setValueById("warrItem", row.credTypeDR);   //2022-09-14 Luan Zhenhui
+	setValueById("warrStatus", row.status);
+	setValueById("warrReason", row.warrReaId);
 }
 
 /**
@@ -340,132 +358,177 @@ function loadAdmList() {
 	var queryParams = {
 		ClassName: "web.UDHCJFZYDB",
 		QueryName: "FindAdmInfo",
-		papmiId: getValueById('PatientID'),
-		hospId: PUBLIC_CONSTANT.SESSION.HOSPID
+		patientId: getValueById("PatientID"),
+		episodeId: getValueById("EpisodeID"),
+		admStatus: getValueById("admStatus"),
+		sessionStr: getSessionStr()
 	}
 	loadComboGridStore("admList", queryParams);
 }
 
-function saveClick(btnId) {
-	var episodeId = getValueById('EpisodeID');
-	if (!episodeId) {
-		$.messager.popover({msg: "请选择就诊", type: "info"});
-		return;
-	}
-	
-	if (!checkData()) {
-		return;
-	}
-	
-	var warrStatus = getValueById('warrStatus');
-	var warrId = '';
-	var row = GV.WarrList.getSelected();
-	if (btnId == 'btn-update') {
-		if ((!row)||(!row.warrId)) {
-			$.messager.popover({msg: "请选择担保记录", type: "info"});
-			return;
-		}else {
-			warrId = row.warrId;
-			if (row.status == 'N') {
-				$.messager.popover({msg: "已失效的记录不能修改", type: "info"});
-				return;
-			}
-		}
-	}else {
-		if (warrStatus != 'Y') {
-			$.messager.popover({msg: "担保状态不能为无效", type: "info"});
-			return;
-		}
-	}
-	var warrAmt = getValueById('warrAmt');
-	var warrtor = $.trim(getValueById('warrtor'));
-	var stDate = getValueById('stDate');
-	var endDate = getValueById('endDate');
-	var remark = getValueById('remark');
-	var guarantId = "";
-	var warrItem = "";
-	var warrInfo = warrId + '&' + episodeId + '&' + stDate + '&' + endDate + '&' + warrtor + '&' + warrAmt + '&' + warrStatus;
-	warrInfo += '&' + remark + '&' + PUBLIC_CONSTANT.SESSION.USERID + '&' + GV.PatType + '&' + guarantId + '&' + warrItem;
-	warrInfo += '&' + PUBLIC_CONSTANT.SESSION.HOSPID;
-	if (warrInfo.indexOf('^') != -1) {
-		$.messager.alert('提示', '输入有特殊字符', 'info');
-		return;
-	}
-	var msg = "担保 <font style='color:red;'>" + warrAmt + "</font> 元，是否确认?";
-	if (warrId) {
-		msg = "是否确认修改?";
-	}
-	$.messager.confirm("确认", msg, function (r) {
-		if (r) {
-			$m({
-				ClassName: 'web.DHCOPBillWarrant',
-				MethodName: "SaveWarrant",
-				warrInfo: warrInfo,
-			}, function(rtn) {
-				var myAry = rtn.split('^');
-				$.messager.alert('提示', myAry[1], 'info');
-				if (myAry[0] == 0) {
-					setBannerPatPayInfo(episodeId);
-					
-					$('#warrAmt').numberbox('clear');
-					setValueById('warrStatus', 'Y');
-					setValueById('warrtor', '');
-					setValueById('remark', '');
-					
-					loadWarrList();
-				}
-			});
-		}
-	});
+function loadWarrList() {
+	var queryParams = {
+		ClassName: "web.UDHCJFZYDB",
+		QueryName: "FindWarrInfo",
+		episodeId: getValueById("EpisodeID")
+	};
+	loadDataGridStore("warrList", queryParams);
 }
 
-function checkData() {
-	var bool = true;
-	$(".validatebox-text").each(function(index, item) {
-		if (!$(this).validatebox("isValid")) {
-			bool = false;
-			return false;
-		}
-	});
-	if (!bool) {
-		return false;
+function saveClick(btnId) {
+	var _validate = function() {
+		return new Promise(function (resolve, reject) {
+			if (!episodeId) {
+				$.messager.popover({msg: "请选择就诊", type: "info"});
+				return reject();
+			}
+			var row = GV.WarrList.getSelected();
+			if (btnId == "btn-update") {
+				if (!row || !row.warrId) {
+					$.messager.popover({msg: "请选择担保记录", type: "info"});
+					return reject();
+				}
+				if (row.status == "N") {
+					$.messager.popover({msg: "已失效的记录不能修改", type: "info"});
+					return reject();
+				}
+				warrId = row.warrId;
+				guarantId = row.guarantId;
+			}else {
+				if (warrStatus != "Y") {
+					$.messager.popover({msg: "担保状态不能为无效", type: "info"});
+					return reject();
+				}
+			}
+			
+			var bool = true;
+			$(".validatebox-text").each(function(index, item) {
+				if (!$(this).validatebox("isValid")) {
+					bool = false;
+					return false;
+				}
+			});
+			if (!bool) {
+				return reject();
+			}
+			var id = "";
+			$("label.clsRequired").each(function(index, item) {
+				id = $($(this).parent().next().find("input"))[0].id;
+				if (!id) {
+					return true;
+				}
+				if (!getValueById(id)) {
+					bool = false;
+					$.messager.popover({msg: ("<font style=\"color:red;\">" + $(this).text() + "</font>" + $g("不能为空")), type: "info"});
+					return false;
+				}
+			});
+			if (!bool) {
+				return reject();
+			}
+			var visitStatus = getPropValById("PA_Adm", episodeId, "PAADM_VisitStatus");
+			if (visitStatus != "A") {
+				$.messager.popover({msg: ($g("患者不是在院状态，不能") + $("#" + btnId).text()), type: "info"});
+				return reject();
+			}
+
+			resolve();
+		});
+	};
+	
+	var _cfr = function() {
+		return new Promise(function (resolve, reject) {
+			var msg = $g("担保") + " <font style=\"color:red;\">" + warrAmt + "</font> " + $g("元，是否确认？");
+			if (warrId) {
+				msg = $g("是否确认修改？");
+			}
+			$.messager.confirm("确认", msg, function (r) {
+				return r ? resolve() : reject();
+			});
+		});
+	};
+	
+	var _save = function() {
+		return new Promise(function (resolve, reject) {
+			var warrInfo = warrId + "&" + episodeId + "&" + stDate + "&" + endDate + "&" + warrtor + "&" + warrAmt + "&" + warrStatus;
+			warrInfo += "&" + remark + "&" + PUBLIC_CONSTANT.SESSION.USERID + "&" + CV.PatType + "&" + guarantId + "&" + warrItem;
+			warrInfo += "&" + PUBLIC_CONSTANT.SESSION.HOSPID + "&" + reasonId;
+
+			$.m({
+				ClassName: "web.DHCOPBillWarrant",
+				MethodName: "SaveWarrant",
+				warrInfo: warrInfo
+			}, function(rtn) {
+				var myAry = rtn.split("^");
+				$.messager.popover({msg: myAry[1], type: ((myAry[0] == 0) ? "success" : "error")});
+				return (myAry[0] == 0) ? resolve() : reject();
+			});
+		});
+	};
+	
+	var _success = function() {
+		setBannerPatPayInfo(episodeId);
+		
+		$("#warrAmt").numberbox("clear");
+		$("#warrtor").combobox("clear").combobox("loadData", []);
+		setValueById("warrStatus", "Y");
+		setValueById("remark", "");
+		setValueById("stDate", CV.DefDate);
+		setValueById("endDate", "");
+		setValueById("warrItem", "");
+        setValueById("reasonId", "")
+        
+		loadWarrList();
+	};
+	
+	if ($("#" + btnId).linkbutton("options").disabled) {
+		return;
 	}
+	$("#" + btnId).linkbutton("disable");
 	
-	var id = "";
-	$("label.clsRequired").each(function(index, item) {
-		id = $($(this).parent().next().find("input"))[0].id;
-		if (!id) {
-			return true;
-		}
-		if (!getValueById(id)) {
-			bool = false;
-			$.messager.popover({msg: "请输入<font color=red>" + $(this).text() + "</font>", type: "info"});
-			return false;
-		}
-	});
-	
-	return bool;
+	var episodeId = getValueById("EpisodeID");
+	var warrStatus = getValueById("warrStatus");
+	var warrAmt = getValueById("warrAmt");
+	var warrtor = getValueById("warrtor");
+	var warrItem = getValueById("warrItem");
+	var stDate = getValueById("stDate");
+	var endDate = getValueById("endDate");
+	var remark = getValueById("remark");
+	var reasonId = getValueById("warrReason");
+	var warrId = "";
+	var guarantId = "";
+
+	var promise = Promise.resolve();
+	promise
+		.then(_validate)
+		.then(_cfr)
+		.then(_save)
+		.then(function () {
+			_success();
+			$("#" + btnId).linkbutton("enable");
+		}, function () {
+			$("#" + btnId).linkbutton("enable");
+		});
 }
 
 function clearClick() {
-	setValueById('PatientID', '');
-	setValueById('EpisodeID', '');
-	$(":text:not(.pagination-num)").val("");
+	setValueById("PatientID", "");
+	setValueById("EpisodeID", "");
+	focusById("CardNo");
+	$(":text:not(.pagination-num,.combo-text),textarea").val("");
 	$(".numberbox-f").numberbox("clear");
-	setValueById('warrStatus', 'Y');
-	$('#cardType').combobox('reload');
-	setValueById('stDate', getDefStDate(0));
-	setValueById('endDate', '');
+	$(".combobox-f").combobox("clear");
+	$("#warrtor").combobox("clear").combobox("loadData", []);
+	setValueById("warrStatus", "Y");
+	setValueById("admStatus", "A");
+	setValueById("stDate", CV.DefDate);
+	setValueById("endDate", "");
 	
-	$('#admList').combogrid('clear');
-	$(".datagrid-f").datagrid("loadData", {
-		total: 0,
-		rows: []
-	});
+	$("#admList").combogrid("clear");
+	$(".datagrid-f").datagrid("options").pageNumber = 1;   //跳转到第一页
+	$(".datagrid-f").datagrid("loadData", {total: 0, rows: []});
 
-	//清除banner
-	$('#bn-sex').removeClass();
-	$('.patientInfo>[id]').text('');
+	showPatSexBGImg();  //设置banner性别默认图片
 }
 
 /**
@@ -478,14 +541,14 @@ function printClick() {
 		return;
 	}
 	var warrStatus = row.status;
-	if (warrStatus != 'Y') {
+	if (warrStatus != "Y") {
 		$.messager.popover({msg: "担保无效，不能打印", type: "info"});
 		return;
 	}
 	
 	var warrId = row.warrId;
-	var fileName = 'DHCBILL-OPBILL-担保单.raq&warrId=' + warrId;
-	var maxWidth = $(window).width() || 1366;
-	var maxHeight = $(window).height() || 550;
+	var fileName = "DHCBILL-OPBILL-DBD.rpx&warrId=" + warrId;
+	var maxWidth = $(window).width() * 0.8;
+	var maxHeight = $(window).height() * 0.8;
 	DHCCPM_RQPrint(fileName, maxWidth, maxHeight);
 }

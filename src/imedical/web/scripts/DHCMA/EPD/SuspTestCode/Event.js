@@ -59,7 +59,16 @@ function InitSuspTestCodeWinEvent(obj){
 			obj.btnExtDelete_click();
 		});	
 		/************************检验项目**************************/
-		
+		$('#girdTestCode').datagrid('getPager').pagination({
+        	onRefresh:function (pageNumber, pageSize) {
+                obj.RecRowID2 = "";
+				$("#btnExtAdd").linkbutton("disable");
+				$("#btnExtEdit").linkbutton("disable");
+				$("#btnExtDelete").linkbutton("disable");
+                datagrid.datagrid("unselectAll");//取消勾选当前页中的所有行，解决刷新前全选，刷新后全选框没有取消问题
+                datagrid.datagrid("options").queryParams={};//清空查询所携带的参数，也可自己手动添加参数，参数类型为对象
+             }
+		});
 	}
 	
 	//窗体初始化
@@ -140,11 +149,17 @@ function InitSuspTestCodeWinEvent(obj){
 				},false);
 
 				if (parseInt(flg) < 0) {
-					$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					if (parseInt(flg)=='-777') {
+						$.messager.alert("错误提示","-777：当前无删除权限，请启用删除权限后再删除记录!",'info');
+					}else {
+						$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					}
+					return;
 				} else {
 					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 					obj.RecRowID1 = "";
 					obj.girdTestCode.reload() ;//刷新当前页
+					obj.girdTestCodeExt.reload() ;//刷新当前页
 				}
 			} 
 		});
@@ -202,10 +217,10 @@ function InitSuspTestCodeWinEvent(obj){
 	//保存
 	obj.btnExtSave_click = function(){
 		var errinfo = "";
-		var TestCode = $('#cbgTestCode').combogrid('getValue');
-		var TestDesc = $('#cbgTestCode').combogrid('getText');
-		var SpecCode = $('#cbgSpecimen').combogrid('getValue');
-		var SpecDesc = $('#cbgSpecimen').combogrid('getText');
+		var TestCode = $('#cbgTestCode').lookup('getValue');
+		var TestDesc = $('#cbgTestCode').lookup('getText');
+		var SpecCode = $('#cbgSpecimen').lookup('getValue');
+		var SpecDesc = $('#cbgSpecimen').lookup('getText');
 	    var ResultType = $('#cboResultType').combobox('getValue');
 		var ResultUnit = $('#txtResultUnit').val();
 		var ValueMax = $('#txtValueMax').val();
@@ -214,6 +229,7 @@ function InitSuspTestCodeWinEvent(obj){
 		var IsActive = $('#chkIsActive').checkbox('getValue')? '1':'0';
 		var UserID  = session['LOGON.USERID'];
 		var UserName  = session['LOGON.USERNAME'];
+	    var PatSex = $('#cboPatSex').combobox('getValue');
 		
 		if (!TestCode) {
 			errinfo = errinfo + "检验项目为空!<br>";
@@ -247,6 +263,7 @@ function InitSuspTestCodeWinEvent(obj){
 		inputStr = inputStr + CHR_1 + '';     
 		inputStr = inputStr + CHR_1 + '';     
 		inputStr = inputStr + CHR_1 + UserName;   
+		inputStr = inputStr + CHR_1 + PatSex;    
 	  
 		var flg = $m({
 			ClassName:"DHCMed.EPD.SuspTestCodeExt",
@@ -319,8 +336,8 @@ function InitSuspTestCodeWinEvent(obj){
 	obj.InitExtDialog = function(rd){
 		if(rd){
 			obj.RecRowID2 = rd["SubID"];
-			var TSDr = rd["TSDr"];
-			var TestSet = rd["TestSet"];
+			//var TSDr = rd["TSDr"];
+			//var TestSet = rd["TestSet"];
 			var TestCode = rd["TestCode"];
 			var TestDesc = rd["TestDesc"];
 			var SpecCode = rd["SpecCode"];
@@ -331,30 +348,37 @@ function InitSuspTestCodeWinEvent(obj){
 			var ValueMin = rd["CompValueMin"];
 			var Values = rd["CompValues"];
 			var IsActive = rd["IsActive"];
+			var PatSex = rd["PatSex"];
+			var PatSexDesc = rd["PatSexDesc"];
 		
-		    $('#cbgTestSet').combogrid('setValue',TSDr);
-			$('#cbgTestSet').combogrid('setText',TestSet);
-		    $('#cbgTestCode').combogrid('setValue',TestCode);
-			$('#cbgTestCode').combogrid('setText',TestDesc);
-		    $('#cbgSpecimen').combogrid('setValue',SpecCode);
-		    $('#cbgSpecimen').combogrid('setText',SpecDesc);
-	        $('#cboResultType').combobox('setValue',ResultType);
+		    $('#cbgTestSet').lookup('setValue',"");
+			$('#cbgTestSet').lookup('setText',"");
+		    $('#cbgTestCode').lookup('setValue',TestCode);
+			$('#cbgTestCode').lookup('setText',TestDesc);
+		    $('#cbgSpecimen').lookup('setValue',SpecCode);
+		    $('#cbgSpecimen').lookup('setText',SpecDesc);
+	        $('#cboResultType').combobox('setValue',ResultType).validatebox({required:true});
 		    $('#txtResultUnit').val(ResultUnit);
 		    $('#txtValueMax').val(ValueMax);
 		    $('#txtValueMin').val(ValueMin);
 		    $('#txtValues').val(Values);	
 		    $('#chkIsActive').checkbox('setValue',(IsActive==1? true : false));	
+	        $('#cboPatSex').combobox('setValue',PatSex);
+	        $('#cboPatSex').combobox('setText',PatSexDesc);
 		}else{
 			obj.RecRowID2 = "";
-			$('#cbgTestSet').combogrid('clear');
-			$('#cbgTestCode').combogrid('clear');
-		    $('#cbgSpecimen').combogrid('clear');
-	        $('#cboResultType').combobox('clear');
+			$('#cbgTestSet').lookup('clear');
+			$('#cbgTestCode').lookup('clear');
+		    $('#cbgSpecimen').lookup('clear');
+	        $('#cboResultType').combobox('setValue',"")
+	        //$('#cboResultType').combobox('clear')
+			$('#cboResultType').validatebox({required:true});
 		    $('#txtResultUnit').val('');
 		    $('#txtValueMax').val('');
 		    $('#txtValueMin').val('');
 		    $('#txtValues').val('');	
 		    $('#chkIsActive').checkbox('setValue','');
+	        $('#cboPatSex').combobox('setValue','');
 		}
 		$HUI.dialog('#TestCodeExtEdit').open();
 	}

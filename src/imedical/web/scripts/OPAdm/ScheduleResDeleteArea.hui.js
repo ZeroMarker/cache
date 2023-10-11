@@ -6,6 +6,7 @@ function InitHospList()
 {
 	var hospComp = GenUserHospComp();
 	hospComp.jdata.options.onSelect = function(e,t){
+		$("#Zone_Search").combobox('select',"");
 		LoadDocMarkComb();
 		Init();
 	}
@@ -105,7 +106,7 @@ function LoadDocMarkComb() {
 		QueryName:"FindDocMark",
 		ExaBorough:ExaBorough,
 		dataType:"json",
-		rows:999
+		rows:99999
 	},function(Data) {
 		$("#DocMark").combobox({
 			valueField:'MarkId',
@@ -219,13 +220,12 @@ function InitTabResource(){
 	}]
 	///RowId:%String,LocDesc:%String,DocDesc:%String,TRDesc
 	var TabResColumns=[[ 
-		{checkbox:true},
-		{field:'RowId',hidden:true},
+		{field:'RowId',checkbox:true},
 		{field:'LocDesc',title:"科室",width:300},
 		{field:'DocDesc',title:"号别",width:200},
+		{field:'SessionType',title:"职称",width:200},
 		{field:'TRDesc',title:"时段",width:200},
-		{field:'DOWDayDesc',title:"星期",width:200},
-		{field:'SessionType',title:"职称",width:200}
+		{field:'DOWDayDesc',title:"星期",width:200}
 		/*{field:'LocDesc',title:"科室",styler: function(value,row,index){
 				return 'min-width:400px;';
 		}},
@@ -237,6 +237,7 @@ function InitTabResource(){
 		}}*/
 	]]
 	TabResourceDataGrid=$("#tabResource").datagrid({
+		fit : true,
 		width:'auto',
 		border : false,
 		striped : true,
@@ -250,15 +251,6 @@ function InitTabResource(){
 		columns :TabResColumns,
 		toolbar :TabResourceToolBar,
 		onBeforeLoad:function(queryParams){
-			/*var ExaBorough="",WeekDay="";
-			if (TabWeekDataGrid.datagrid("getSelected")){
-				var WeekDay=TabWeekDataGrid.datagrid("getSelected").RowId;
-			}
-			if (WeekDay==undefined) {WeekDay="";}
-			if (TabAreaDataGrid.datagrid("getSelected")){
-				var ExaBorough=TabAreaDataGrid.datagrid("getSelected").RowId;
-			}
-			if (ExaBorough==undefined) {ExaBorough="";}*/
 			var ExaBorough=$("#Zone_Search").combobox('getValue');
 			var ScheduleLinesId=$("#ScheduleLines_Search").combobox('getValue');
 			var WeekDay=$("#Week_Search").combobox('getValue');
@@ -323,7 +315,6 @@ function UpdateClickHandler(){
 			dataType:"text"
 		},function (ret) {
 			if (ret=="0"){
-			
 			}else{
 				UpdateRet=ret
 				$.messager.alert('提示',"修改失败:"+ret);
@@ -332,8 +323,7 @@ function UpdateClickHandler(){
 		})
     })
     $("#UpdateWin").window("close")
-    TabResourceDataGrid.datagrid('reload');
-    TabResourceDataGrid.datagrid('unselectAll');
+    TabResourceDataGrid.datagrid('unselectAll').datagrid('reload');
     if (UpdateRet==0) $.messager.popover({msg:'修改成功!',type:'alert'});
 }
 function del(rows,DelScheduleFlag){
@@ -351,9 +341,7 @@ function del(rows,DelScheduleFlag){
 			$.messager.alert('提示',"删除失败:"+value);
 			return false;
 		}
-        
     }
-    TabResourceDataGrid.datagrid('load');
-    TabResourceDataGrid.datagrid('unselectAll');
+    TabResourceDataGrid.datagrid('unselectAll').datagrid('load');
     $.messager.popover({msg:'删除成功!',type:'alert'});
 }

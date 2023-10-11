@@ -77,71 +77,88 @@ $(function(){
 
 //粘贴
 function BSendAudit_click(){
-	  lnk="dhcpesendaudit.hisui.csp"
-	 //websys_lu(lnk,false,'width=1400,height=600,hisui=true,title=粘贴')  
-	 var wwidth=1430;
-	 var wheight=600;
-	 var xposition = 0;
-	 var yposition = ((screen.height - wheight) / 2)-10;
-
-	var nwin='toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=yes,copyhistory=yesheight='
-			+'height='+wheight+',width='+wwidth+',left='+xposition+',top='+yposition
-			;
-	
-	var cwin=window.open(lnk,"_blank",nwin)	
+	  //lnk="dhcpesendaudit.hisui.csp"
+	 //websys_lu(lnk,false,'width=1400,height=600,hisui=true,title=粘贴') 
+	lnk="dhcpesendaudit.new.hisui.csp"
+	$HUI.window("#SendAuditWin", {
+        title: "粘贴",
+        iconCls: "icon-w-edit",
+        collapsible: false,
+        minimizable: false,
+        maximizable: false,
+        resizable: false,
+        closable: true,
+        modal: true,
+        width: 1400,
+        height: 730,
+        content: '<iframe src="' + PEURLAddToken(lnk) + '" width="100%" height="100%" frameborder="0"></iframe>'
+    });
+		
 }
 
 //报告已完成
  function BReport_click(){
-	 //var lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCPESendReportMessage";
-	  var lnk="dhcpesendreportmessage.hiui.csp"
-	// websys_lu(lnk,false,'width=1400,height=600,hisui=true,title=报告已完成') 
-	 var wwidth=1430;
-	var wheight=600;
-	var xposition = 0;
-	 var yposition = ((screen.height - wheight) / 2)-10;
-
-	var nwin='toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=yes,copyhistory=yesheight='
-			+'height='+wheight+',width='+wwidth+',left='+xposition+',top='+yposition
-			;
 	
-	var cwin=window.open(lnk,"_blank",nwin)	  
+	// var lnk="dhcpesendreportmessage.hiui.csp"
+	// websys_lu(lnk,false,'width=1400,height=600,hisui=true,title=报告已完成') 
+	var lnk="dhcpesendreportmessage.new.hiui.csp"
+	$HUI.window("#ComReportWin", {
+        title: "报告已完成",
+        iconCls: "icon-w-edit",
+        collapsible: false,
+        minimizable: false,
+        maximizable: false,
+        resizable: false,
+        closable: true,
+        modal: true,
+        width: 1400,
+        height: 730,
+        content: '<iframe src="' + PEURLAddToken(lnk) + '" width="100%" height="100%" frameborder="0"></iframe>'
+    });  
 	 
  }
  
 //收表
 function BRec_click(){
-	
-	//var lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCPERecPaper";
+
 	var lnk="dhcperecpaper.hisui.csp";				
 	//websys_lu(lnk,false,'width=1400,height=800,hisui=true,title=收表')  
-	 var wwidth=1430;
-	var wheight=1430;
-	var xposition = 0;
-	 var yposition = 0;
-	var nwin='toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=yes,copyhistory=yesheight='
-			+'height='+wheight+',width='+wwidth+',left='+xposition+',top='+yposition
-			;
+	$HUI.window("#RecPaperWin", {
+        title: "收表",
+        iconCls: "icon-w-edit",
+        collapsible: false,
+        minimizable: false,
+        maximizable: false,
+        resizable: false,
+        closable: true,
+        modal: true,
+        width: 1400,
+        height: 730,
+        content: '<iframe src="' + PEURLAddToken(lnk) + '" width="100%" height="100%" frameborder="0"></iframe>'
+    });
 	
-	var cwin=window.open(lnk,"_blank",nwin)  
    
 }
 
 //取报告
 function BFetchReport_click(){
 	  
-	var lnk="dhcpefetchreport.hisui.csp";
+	//var lnk="dhcpefetchreport.hisui.csp";
 	//websys_lu(lnk,false,'width=1430,height=600,hisui=true,title=取报告') 
-	var wwidth=1430;
-	var wheight=600;
-	var xposition = 0;
-	 var yposition = ((screen.height - wheight) / 2)-10;
-
-	var nwin='toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=yes,copyhistory=yesheight='
-			+'height='+wheight+',width='+wwidth+',left='+xposition+',top='+yposition
-			;
-	
-	var cwin=window.open(lnk,"_blank",nwin)	
+	var lnk="dhcpefetchreport.new.hisui.csp";
+	$HUI.window("#FetchReportWin", {
+        title: "取报告",
+        iconCls: "icon-w-edit",
+        collapsible: false,
+        minimizable: false,
+        maximizable: false,
+        resizable: false,
+        closable: true,
+        modal: true,
+        width: 1400,
+        height: 730,
+        content: '<iframe src="' + PEURLAddToken(lnk) + '" width="100%" height="100%" frameborder="0"></iframe>'
+    });
 }
 
 //发短信
@@ -223,8 +240,9 @@ function BReportView_click(){
 
 	 var NewVerReportFlag=tkMakeServerCall("web.DHCPE.HISUICommon","GetSettingByLoc",session['LOGON.CTLOCID'],"NewVerReport");
 	if(NewVerReportFlag=="Word"){
-		calPEReportProtocol("BPrintView",PAADM);	
-	}if(NewVerReportFlag=="Lodop"){
+		//calPEReportProtocol("BPrintView",PAADM);	
+		websocoket_report("BPrintView",PAADM);	
+	}else if(NewVerReportFlag=="Lodop"){
 		if (PAADM==""){
 			$.messager.alert("提示","就诊ID不空","info");
 		    return false;
@@ -244,10 +262,30 @@ function BReportView_click(){
 	var nwin='toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=yes,copyhistory=yesheight='
 			+'height='+wheight+',width='+wwidth+',left='+xposition+',top='+yposition
 			;
-	var cwin=window.open(repUrl,"_blank",nwin)
+	var cwin=window.open(PEURLAddToken(repUrl),"_blank",nwin)
 	}
 	   
 }
+
+function websocoket_report(sourceID, jarPAADM) {    
+    var opType = (sourceID == "BPrint" || sourceID == "NoCoverPrint") ? "2" : (sourceID == "BPrintView" ? "5" : (sourceID == "BUploadReport" ? "4" : "1"));
+    var fileType = (sourceID == "BExportPDF") || (sourceID == "BUploadReport") ? "pdf" : (sourceID == "BExportHtml" ? "html" : "word");
+    var execParam = {
+        business: "REPORT", //报告固定为REPORT
+        admId: jarPAADM,
+        opType: opType,
+        fileType: fileType,
+        printType: "1" //1为个人报告
+    };
+    
+    //打印预览——增加水印
+	if(execParam.opType == "2") execParam.extStr="HS10322,"+session["LOGON.USERID"];
+	if(execParam.opType == "5") execParam.extStr="WaterMark:PreView";
+	
+    var json = JSON.stringify(execParam);
+    $PESocket.sendMsg(json, null);
+}
+
 
 function calPEReportProtocol(sourceID,jarPAADM){
 	var opType=(sourceID=="BPrint"||sourceID=="NoCoverPrint")?"2":(sourceID=="BPrintView"?"5":"1");
@@ -285,11 +323,28 @@ function BAddItem_click()
 	}
 	
 	var iRowId=selectrow[0].TPreIADM;
+	/*
 	var lnk="dhcpepreitemlist.main.hisui.csp"+"?AdmType=PERSON"
 			+"&AdmId="+iRowId+"&PreOrAdd="+PreOrAdd
 			;
-    
-	websys_lu(lnk,false,'width=1400,height=750,hisui=true,title=加项')
+	*/
+    var lnk="dhcpepreitemlist.main.new.hisui.csp"+"?AdmType=PERSON"
+			+"&AdmId="+iRowId+"&PreOrAdd="+PreOrAdd
+			;
+	//websys_lu(lnk,false,'width=1430,height=750,hisui=true,title=加项')
+	$HUI.window("#AddItemWin", {
+        title: "加项",
+        iconCls: "icon-w-edit",
+        collapsible: false,
+        minimizable: false,
+        maximizable: false,
+        resizable: false,
+        closable: true,
+        modal: true,
+        width: 1400,
+        height: 735,
+        content: '<iframe src="' + PEURLAddToken(lnk) + '" width="100%" height="100%" frameborder="0"></iframe>'
+    });
 }
 
 
@@ -338,13 +393,11 @@ function BClear_click(){
 	BFind_click();
 }
 
-//未完成项目
-function UComItemDetail(PAADM){
-	//lnk="dhcpeshowinfo.csp"
+//未完成项目弹窗
+function UComItemDetail(PAADM){	
      lnk="dhcpenocheckitemdetail.hisui.csp"
           +"?EpisodeID="+PAADM;
-	websys_lu(lnk,false,'width=900,height=260,hisui=true,title=未检项目详情') 
-   
+	websys_lu(lnk,false,'width=900,height=310,hisui=true,title='+$g("未检项目详情"));   
 }
 
 function InitCheckProgressGrid(){
@@ -384,12 +437,11 @@ function InitCheckProgressGrid(){
 			{field:'TUnCheckItems',width:100,title:'未完成项目',
 			    
 				formatter:function(value,rowData,rowIndex){	
-					if(value!=""){
-						return "<a href='#'  class='grid-td-text' onclick=UComItemDetail("+rowData.TPAADM+"\)>有</a>";
-			
+					if(value==$g("有")){
+						return "<a href='#'  class='grid-td-text' onclick=UComItemDetail("+rowData.TPAADM+"\)>"+$g("有")+"</a>";
 					}
-					if(value==""){
-						return "<a href='#' class='grid-td-text'>无</a>";
+					if(value==$g("无")){
+						return $g("无")
 					
 					}
 	
@@ -456,6 +508,15 @@ function InitCheckProgressGrid(){
 					return rvalue;
 				
 				}},
+			{field:'ReCheckFlag',width:50,title:'复查',
+				formatter:function(value,rowData,rowIndex){
+					var rvalue="",checked="";
+	   				if (value=="1") {checked="checked=checked"}
+					else{checked=""}
+					var rvalue=rvalue+"<input type='checkbox'  disabled='true' "+checked+">"	
+					return rvalue;
+				
+				}},
 			{field:'TAge',width:60,title:'年龄'},
 			{field:'PACCardDesc',width:90,title:'证件类型'},
 			{field:'IDCard',width:160,title:'证件号'}, 
@@ -486,12 +547,22 @@ function InitCheckProgressGrid(){
 function InitCombobox(){
 	
 	
+		/*
 	//VIP等级	
 	var VIPObj = $HUI.combobox("#VIPLevel",{
 		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindVIP&ResultSetType=array",
 		valueField:'id',
 		textField:'desc',
 		});
+	*/
+	
+	//VIP等级-多院区	
+	var VIPObj = $HUI.combobox("#VIPLevel",{
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindVIP&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
+		valueField:'id',
+		textField:'desc',
+	});
+		
 	
 	
 	//状态
@@ -500,13 +571,13 @@ function InitCombobox(){
 		textField:'text',
 		panelHeight:'240',
 		data:[
-            {id:'1',text:'未收表'},
-            {id:'2',text:'未粘贴'},
-            {id:'3',text:'未初检'},
-            {id:'4',text:'未复检'},
-            {id:'5',text:'未打印'},
-            {id:'6',text:'未取'},
-            {id:'7',text:'已取'},  
+            {id:'1',text:$g('未收表')},
+            {id:'2',text:$g('未粘贴')},
+            {id:'3',text:$g('未初检')},
+            {id:'4',text:$g('未复检')},
+            {id:'5',text:$g('未打印')},
+            {id:'6',text:$g('未取')},
+            {id:'7',text:$g('已取')},  
         ]
 
 	});	
@@ -517,8 +588,8 @@ function InitCombobox(){
 		textField:'text',
 		panelHeight:'80',
 		data:[
-            {id:'0',text:'非复查'},
-            {id:'1',text:'复查'},
+            {id:'0',text:$g('非复查')},
+            {id:'1',text:$g('复查')},
         ]
 
 	});	
@@ -528,8 +599,8 @@ function InitCombobox(){
 		textField:'text',
 		panelHeight:'80',
 		data:[
-            {id:'0',text:'无'},
-            {id:'1',text:'有'},
+            {id:'0',text:$g('无')},
+            {id:'1',text:$g('有')},
         ]
 
 	});

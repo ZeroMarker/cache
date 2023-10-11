@@ -15,6 +15,23 @@ function initDateBox(){
 
 function initMethod(){
 	$(".tdDiv").on("click",selOrdItm);
+	$('#RegNo').bind('keypress',function(event){
+        if(event.keyCode == "13")    
+        {
+            RegNoBlur();
+            commonQuery();
+        }
+    });
+    $('#ExeNur').bind('keypress',function(event){
+        if(event.keyCode == "13"){
+            commonQuery();
+        }
+    });	
+    $('#ArcDesc').bind('keypress',function(event){
+        if(event.keyCode == "13"){ 
+            commonQuery();
+        }
+    });	
 }
 
 function selOrdItm(){
@@ -46,7 +63,8 @@ function initDatagrid(){
 			stDate:$("#stDate").datebox("getValue"),
 			endDate:$("#endDate").datebox("getValue"),
 			lgParams:lgParams,
-			ordType:""
+			ordType:"",
+			Params:""
 		},
 		fit:true,
 		rownumbers:true,
@@ -55,7 +73,7 @@ function initDatagrid(){
 		pageSize:20,  
 		pageList:[20,35,50], 
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		//title:'<span id=\'ordDetail\'>医嘱明细-全部</span>',  
 		border:false,//hxy 2018-10-30
@@ -90,7 +108,8 @@ function commonQuery(){
 		stDate:$("#stDate").datebox("getValue"),
 		endDate:$("#endDate").datebox("getValue"),
 		lgParams:lgParams,
-		ordType:selOrdType
+		ordType:selOrdType,
+		Params:$("#RegNo").val()+"^"+$("#ExeNur").val()+"^"+$("#ArcDesc").val()
 	})	
 }
 
@@ -132,13 +151,13 @@ function serverCall(className,methodName,datas){
 function formAdmType(value){
 	var ret="";
 	if(value=="O"){
-		ret = "门诊";
+		ret = $g("门诊");
 	}
 	if(value=="E"){
-		ret = "急诊";
+		ret = $g("急诊");
 	}
 	if(value=="I"){
-		ret = "住院";
+		ret = $g("住院");
 	}
 	return ret;
 }
@@ -169,3 +188,19 @@ function formatDate(t){
 }
 
 /// 格式化日期  yangyongtao 2017-11-17
+
+///补零方法
+function RegNoBlur()
+{
+	var i;
+    var regno=$('#RegNo').val();
+    var oldLen=regno.length;
+    if (oldLen==8) return;
+	if (regno!="") {
+	    for (i=0;i<10-oldLen;i++)
+	    {
+	    	regno="0"+regno 
+	    }
+	}
+    $("#RegNo").val(regno);
+}

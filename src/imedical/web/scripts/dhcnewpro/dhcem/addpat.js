@@ -90,7 +90,7 @@ function GetPatBaseInfo(PatNo){
 		}
 		if (JSON.stringify(jsonObject) != '{}'){
 			$('.td-span-m').each(function(){
-				$(this).text(jsonObject[this.id]);
+				$(this).html(jsonObject[this.id]);
 			})
 		}else{
 			$.messager.alert('错误提示',"病人信息不存在或病人非留观病人，请核实后重试！");

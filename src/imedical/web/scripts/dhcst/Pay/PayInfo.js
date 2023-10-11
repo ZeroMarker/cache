@@ -13,7 +13,7 @@ function SetInfo(payInfo) {
 	
 	var payNOField = new Ext.form.TextField({
 		id:'payNOField',
-		fieldLabel:'付款单号',
+		fieldLabel:$g('付款单号'),
 		allowBlank:true,
 		width:120,
 		//emptyText:'付款单号...',
@@ -24,7 +24,7 @@ function SetInfo(payInfo) {
  
 	var VendorField = new Ext.form.TextField({
 		id:'VendorField',
-		fieldLabel:'供应商',
+		fieldLabel:$g('经营企业'),
 		allowBlank:true,
 		width:120,
 		emptyText:'',
@@ -36,7 +36,7 @@ function SetInfo(payInfo) {
 	
 	var payAmtField = new Ext.form.TextField({
 		id:'payAmtField',
-		fieldLabel:'付款金额',
+		fieldLabel:$g('付款金额'),
 		allowBlank:true,
 		width:120,
 		emptyText:'',
@@ -47,19 +47,19 @@ function SetInfo(payInfo) {
 	
 	var CheckAmtField = new Ext.ux.NumberField({
 		id:'CheckAmtField',
-		fieldLabel:'支付金额',
+		fieldLabel:$g('支付金额'),
 		allowBlank:false,
 		width:120,
 		emptyText:'',
 		anchor:'100%',
 		selectOnFocus:true,
-		allowNegative: false,
+		allowNegative: true,
 		formatType: 'FmtRA'
 	});	
 	
 	var CheckNoField = new Ext.form.TextField({
 		id:'CheckNoField',
-		fieldLabel:'支付单号',
+		fieldLabel:$g('支付单号'),
 		allowBlank:true,
 		width:120,
 		emptyText:'',
@@ -68,7 +68,7 @@ function SetInfo(payInfo) {
 	});	
 	
 	var PayDate = new Ext.ux.DateField({
-		fieldLabel : '日期',
+		fieldLabel : $g('日期'),
 		id : 'PayDate',
 		name : 'PayDate',
 		anchor : '100%',
@@ -88,7 +88,7 @@ function SetInfo(payInfo) {
 	
 	// 入库科室
 	var PayMode = new Ext.ux.ComboBox({
-		fieldLabel : '支付方式',
+		fieldLabel : $g('支付方式'),
 		id : 'PayMode',
 		name : 'PayMode',
 		anchor : '100%',
@@ -96,12 +96,12 @@ function SetInfo(payInfo) {
 		store : GetPaymodeStore,
 		valueField : 'RowId',
 		displayField : 'Description',
-		emptyText : '支付方式...'
+		emptyText : $g('支付方式...')
 	});
 	// 确定按钮
 	var returnBT = new Ext.Toolbar.Button({
-		text : '确定',
-		tooltip : '点击确定',
+		text :$g( '确定'),
+		tooltip : $g('点击确定'),
 		iconCls : 'page_goto',
 		handler : function() {
 			SelectData();
@@ -110,8 +110,8 @@ function SetInfo(payInfo) {
 
 	// 取消按钮
 	var cancelBT = new Ext.Toolbar.Button({
-		text : '取消',
-		tooltip : '点击取消',
+		text : $g('取消'),
+		tooltip : $g('点击取消'),
 		iconCls : 'page_delete',
 		handler : function() {
 			win.close();
@@ -122,17 +122,17 @@ function SetInfo(payInfo) {
 	function SelectData(){
 		var payMode =Ext.getCmp('PayMode').getValue() ;    //支付方式
 		if((payMode=="")||(payMode==null)){
-			Msg.info("error", "支付方式不能为空!");
+			Msg.info("error",$g( "支付方式不能为空!"));
 			return;
 		}
 		var checkAmt =Ext.getCmp('CheckAmtField').getRawValue() ;  //支付金额
 		if((checkAmt=="")||(checkAmt==null)){
-			Msg.info("error", "支付金额不能为空,可为0!");
+			Msg.info("error", $g("支付金额不能为空,可为0!"));
 			return;
 		}
 		var payAmt=Ext.getCmp('payAmtField').getValue() ;  		//付款金额
 		if(parseFloat(checkAmt)!=parseFloat(payAmt)){
-	        Ext.MessageBox.confirm('提示', '支付金额和付款金额不相等,是否继续确认?',
+	        Ext.MessageBox.confirm($g('提示'), $g('支付金额和付款金额不相等,是否继续确认?'),
 	        function(btn) {
 	            if (btn == 'no') {
 		            Ext.getCmp('CheckAmtField').focus(false, 100);
@@ -193,7 +193,7 @@ function SetInfo(payInfo) {
 	});
 	
 	var win = new Ext.Window({
-		title : '会计确认信息',
+		title : $g('会计确认信息'),
 		width : 800,
 		height : 150,
 		modal :true,

@@ -12,6 +12,7 @@ var selRowid="";
 var seldictype = ""; 
 var tmpselRow = -1;
 var PassWardFlag = "N";
+var PublicDataSwitchBox = "";
 $(function(){
 	
 	//GetjsonQueryUrl();
@@ -66,6 +67,7 @@ $(function(){
 					}
 				}else{disinput(false)}
 			}else(disinput(false))
+			clearform();
 			Querydic($('#diccbx').combogrid('grid').datagrid('getSelected'),selobj);
 		}
 	}); 
@@ -89,12 +91,13 @@ $(function(){
 		singleSelect: true,
 		autoRowHeight:false,
 		columns:[[
-			{field:'cType',title:'字典类别',width:55},
+			{field:'cType',title:'字典类别',width:80},
 			{field:'cCode',title:'代码',width:80},
 			{field:'cDesc',title:'名称',width:150},
 			{field:'cBill1',title:'医保代码',width:80},
 			{field:'cBill2',title:'医保描述',width:150},
-			{field:'cDemo',title:'备注',width:150,align:'center',showTip:true},
+			//{field:'cDemo',title:'备注',width:150,align:'center',showTip:true},
+			{field:'cDemo',title:'备注',width:150,showTip:true},
 			{field:'DicAuthorityFlag',title:'授权标志',width:50},
 			{field:'DicOPIPFlag',title:'门诊住院标志',width:50},
 			{field:'selected',title:'默认使用标志',width:50,formatter:function(val,index,rowdData){
@@ -137,7 +140,37 @@ $(function(){
         	//alert(rowIndex+"-"+rowData.itemid)
         }
 	});
+	// 同步刷新开关
+	$HUI.switchbox('#csconflg',{
+        onText:'是',
+        offText:'否',
+        onSwitchChange:function(e,obj){
+			if(obj.value){
+				var rtn = tkMakeServerCall("web.DHCBILLINSUCloudCommon","SetSessionData",""); //公有数据院区为空
+			}else{
+				var rtn = tkMakeServerCall("web.DHCBILLINSUCloudCommon","SetSessionData",PUBLIC_CONSTANT.SESSION.HOSPID);
+			}
+			selectHospCombHandle();
+        },
+        checked:false,
+        size:'small',
+    })
+	// 提示信息
+    $("#csconflg-tips").popover({
+	    trigger:'hover',
+	    placement:'top',
+	    content:'打开时操作公有数据',
+	    width :200,
+	    
+	});
 	
+	//登记号回车查询事件
+	$("#dicKey").keydown(function (e) {
+		var key = websys_getKey(e);
+		if (key == 13) {
+			Querydic();
+		}
+	});
 	//授权管理
 	if(BDPAutDisableFlag('btnAdd')!=true){$('btnAdd').linkbutton('disable');}
 	if(BDPAutDisableFlag('btnAddup')!=true){$('btnAddup').linkbutton('disable');}
@@ -146,15 +179,17 @@ $(function(){
 });
 
 //查询字典数据
-function Querydic(rec,selobj){
+function Querydic(){
+	$('#dg').datagrid('loadData',{total:0,rows:[]});
 	// tangzf 2020-6-17 使用HISUI接口 加载数据
 	var QueryParam={
 		ClassName:'web.INSUDicDataCom' ,
-		QueryName: 'QueryDic1',
-		Type :rec.INDIDDicCode, 
-		HospDr : PUBLIC_CONSTANT.SESSION.HOSPID,
+		QueryName: 'QueryDicByTypeOrCodeDesc',
+		Type :$('#diccbx').combobox('getValue'), 
+		dicKey :getValueById('dicKey'), 
+		HospDr : $('#csconflg').switchbox('getValue') ? "" : PUBLIC_CONSTANT.SESSION.HOSPID
 	}
-	seldictype=rec.INDIDDicCode
+	seldictype=$('#diccbx').combobox('getValue');
 	loadDataGridStore('dg',QueryParam);
 	
 }
@@ -245,7 +280,7 @@ function UpdateDic(){
 //删除记录
 function DelDic(){
 	//if(BDPAutDisableFlag('btnDelete')!=true){$.messager.alert('提示','您无权限,请联系管理员授权!');return;}
-	if(selRowid==""){$.messager.alert('提示','请选择要删除的记录!','info');return;}
+	if(selRowid=="" || selRowid<0 || !selRowid){$.messager.alert('提示','请选择要删除的记录!','info');return;}
 	$.messager.confirm('请确认','你确认要删除这条记录吗?',function(fb){
 		if(fb){
 			var savecode=tkMakeServerCall("web.INSUDicDataCom","Delete","","",selRowid)
@@ -379,6 +414,10 @@ function authorizeClick() {
 	}
 }
 function selectHospCombHandle(){
+	var PublicDataSwitchBox = $('#csconflg').switchbox('getValue');
+	if( PublicDataSwitchBox ){
+		var rtn = tkMakeServerCall("web.DHCBILLINSUCloudCommon","SetSessionData",""); 	
+	}
 	$('#editinfo').form('clear');
 	$('#diccbx').combogrid('grid').datagrid('unselectAll');
 	setValueById('diccbx','');
@@ -416,12 +455,15 @@ function selectHospCombHandle(){
 }
 $('.hisui-linkbutton').bind('click',function(){
 	 switch (this.id){ 
-	    case "btnUpdate" :
+	    case "btnUpdate" : // 保存
 	    	if(PassWardFlag == "N"){
 		    	$.messager.prompt("提示", "请输入密码", function (r) { // prompt 此处需要考虑为非阻塞的
 					if (r) {
 						PassWardFlag = tkMakeServerCall("web.INSUDicDataCom","CehckPassWard",r,"");
 						if(PassWardFlag=='Y') UpdateDic(); 
+						else{
+							$.messager.alert('错误','密码错误','error');	
+						}
 					} else {
 						return false;
 					}
@@ -430,12 +472,15 @@ $('.hisui-linkbutton').bind('click',function(){
 	    		UpdateDic(); 
 	    	}
 	    	break;
-	    case "btnDelete" :
+	    case "btnDelete" : //删除
 	    	if(PassWardFlag == "N"){
 		    	$.messager.prompt("提示", "请输入密码", function (r) { // prompt 此处需要考虑为非阻塞的
 					if (r) {
 						PassWardFlag = tkMakeServerCall("web.INSUDicDataCom","CehckPassWard",r,"");
 						if(PassWardFlag=='Y') DelDic(); 
+						else{
+							$.messager.alert('错误','密码错误','error');	
+						}
 					} else {
 						return false;
 					}
@@ -452,12 +497,3 @@ $('.hisui-linkbutton').bind('click',function(){
 	    }
 		
 }) 
-function CheckPassWard(){
-	$.messager.prompt("提示", "请输入密码", function (r) {
-		if (r) {
-			PassWardFlag = tkMakeServerCall("web.INSUDicDataCom","CehckPassWard",r,"");
-		} else {
-			return false;
-		}
-	})
-}

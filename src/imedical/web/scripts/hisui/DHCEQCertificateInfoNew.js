@@ -4,7 +4,11 @@ var SelectedRow = -1;
 var rowid=0;
 
 function BodyLoadHandler() 
-{	
+{
+	//modified by cjt 20230212 需求号3221988 UI页面改造
+	initPanelHeaderStyle();
+	initButtonColor();
+	hidePanelTitle();
 	var Request = new Object();
 	Request = GetRequest();
 	var SourceType,SourceDesc;
@@ -78,7 +82,9 @@ function BFind_Click()
 	val=val+"&AvailableDate="+GetElementValue("AvailableDate")
 	val=val+"&Remark="+GetElementValue("Remark")
 	val=val+"&SourceType="+GetElementValue("SourceType");   //modified by czf 399195
-	//modified by czf 20180827 HISUI改造
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		val += "&MWToken="+websys_getMWToken()
+	}
 	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCertificateInfoNew"+val;
 }
 function BUpdate_Click() 
@@ -96,7 +102,11 @@ function BUpdate_Click()
 	{	location.reload();	}
 	else
 	{
-		alertShow("SQLCODE="+result);
+		if (result=="-3003"){	//czf 2261290
+			messageShow("","","",t['-3003']);
+		}else{
+			alertShow("SQLCODE="+result);
+		}
 	}
 }
 

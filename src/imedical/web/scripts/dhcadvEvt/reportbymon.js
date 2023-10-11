@@ -3,45 +3,57 @@
 // Descript: 不良事件按月按季度统计
 var url = "dhcadv.repaction.csp";
 var MonQuartCompare=""
-var QuyTypeArr= [{"value":"MONTH","text":'按月统计'}, {"value":"QUART","text":'按季度统计'}];
+var QuyTypeArr= [{"value":"MONTH","text":$g('按月统计')}, {"value":"QUART","text":$g('按季度统计')}];
 $(function(){
-	$("#qrytype").combobox("setValue", "MONTH"); 
-	
-   //初始化combox	 
-   InitYearStr(); //获取年份字符串
-   //不良事件按月按季度统计
-   MonQuartCompare=echarts.init(document.getElementById('MonQuartCompare'));
-   $("#FindByMon").click(function(){
-	   query();
-   })
-   query(); 
-   
-    $("#ExportByMon").click(function(){
-	   Export();  //导出
-   })
-    
-   	//统计类型
+	InitPageComponent(); 	  /// 初始化界面控件内容
+	InitPageButton();         /// 界面按钮控制
+	InitPageDataGrid();		  /// 初始化页面datagrid
+})
+// 初始化界面控件内容
+function InitPageComponent(){
+	// 获取年份字符串
+	InitYearStr(); 
+	// 统计类型
 	$('#qrytype').combobox({
 		value:"MONTH",
-		text:"按月统计",
+		text:$g("按月统计"),
 		editable:false,
 		data:QuyTypeArr
 	});
-	
+	// 科室
 	$('#dept').combobox({ //  yangyongtao   2017-11-17
 		mode:'remote',  //必须设置这个属性
 		onShowPanel:function(){ 
 			$('#dept').combobox('reload',url+'?action=GetAllLocNewVersion&hospId='+LgHospID+'')
 		}
-	});
-	
-	//报告类型
+	});	
+	// 报告类型
 	$('#typeevent').combobox({
 		//panelHeight:"auto",  //设置容器高度自动增长
-		url:url+'?action=SelEventbyNew&param='+LgGroupID+"^"+LgCtLocID+"^"+LgUserID,
-		
+		url:url+'?action=SelEventbyNew&param='+LgParam
 	});
-})
+	$("#qrytype").combobox("setValue", "MONTH"); 
+}
+
+// 初始化界面按钮内容
+function InitPageButton()
+{
+	// 查询
+	$("#FindByMon").click(function(){
+		query();
+	})
+	// 导出
+    $("#ExportByMon").click(function(){
+		Export();  
+   })
+}
+// 初始化界面图表内容
+function InitPageDataGrid()
+{
+	//不良事件按月按季度统计
+	MonQuartCompare=echarts.init(document.getElementById('MonQuartCompare'));
+	query();
+}
 // 点击查询
 function query(){
 	
@@ -54,28 +66,28 @@ function query(){
 	var reptype=$('#typeevent').combobox('getValue');  //事件类型
 	var locStr=$('#dept').combobox('getValue');        //科室
 	var qrytype=$("#qrytype").combobox('getValue'); //统计类型
-	var params=LgHospID+"^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID; //hxy 2020-02-26
+	var params=LgParam; //hxy 2020-02-26
 	//var data=serverCall("web.DHCADVREPBYMON","GetAdvStat",{"yearstr":year,"reptype":reptype,"replocstr":locStr,"qrytype":qrytype});
     runClassMethod("web.DHCADVREPBYMON","GetAdvStat",{yearstr:yearStr,reptype:reptype,replocstr:locStr,qrytype:qrytype,params:params},function(data){
     var TempArr=[],YearArr=[],DataArr=[]
      var yeatArr=yearStr.split(",");
 		for(var i =0;i<yeatArr.length;i++){ 
            DataArr[i]=(data[yeatArr[i]]).split(",");  //字符串转数组
-			var obj={}
-			obj.name=yeatArr[i]
-			obj.type='line'
-			obj.data= DataArr[i]     
-			TempArr.push(obj)
-			YearArr.push(yeatArr[i])
+			var obj={};
+			obj.name=yeatArr[i];
+			obj.type='line';
+			obj.data= DataArr[i].slice(0,12);  // 2021-02-23 cy  slice(start,end) 返回一个新的数组，包含从 start 到 end （不包括该元素）的数组中的元素。 
+			TempArr.push(obj);
+			YearArr.push(yeatArr[i]);
 		}
 		if(qrytype=="MONTH"){
-		  InitMonthCompare(YearArr,TempArr) // 按月统计
-		  InitMonCompareTable(yearStr,data)
+		  InitMonthCompare(YearArr,TempArr); // 按月统计
+		  InitMonCompareTable(yearStr,data);
 
 		}
 		if(qrytype=="QUART"){
-		   InitQuartCompare(YearArr,TempArr)  //按季度统计
-		   InitQuartCompareTable(yearStr,data)
+		   InitQuartCompare(YearArr,TempArr);  //按季度统计
+		   InitQuartCompareTable(yearStr,data);
 		}
 		
 		
@@ -89,7 +101,7 @@ function InitMonthCompare(YearArr,TempArr){
 	option = {
 		//color: ['#003366', '#006699', '#4cabce', '#e5323e'],
     	title : {
-        	text:'按月份统计',
+        	text:$g('按月份统计'),
         	x:'center'
        
     	},
@@ -117,15 +129,15 @@ function InitMonthCompare(YearArr,TempArr){
     	calculable : true,
     	xAxis : [
         	{
-	        	name:"月份",
+	        	name:$g("月份"),
             	type : 'category',
-            	data : ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"]  //,"合计"
+            	data : [$g("1月"),$g("2月"),$g("3月"),$g("4月"),$g("5月"),$g("6月"),$g("7月"),$g("8月"),$g("9月"),$g("10月"),$g("11月"),$g("12月")]  //,"合计"
         	}
     	],
     	yAxis : [
         {
             type : 'value',
-            name:"发生例数",
+            name:$g("发生例数"),
             nameLocation:'middle',
             nameTextStyle:{
 	            padding: [10,10,20,10]
@@ -145,7 +157,7 @@ function InitQuartCompare(YearArr,TempArr){
 	option = {
 		//color: ['#003366', '#006699', '#4cabce', '#e5323e'],
     	title : {
-        	text:'按季度统计',
+        	text:$g('按季度统计'),
         	x:'center'
     	},
     	
@@ -172,15 +184,15 @@ function InitQuartCompare(YearArr,TempArr){
     	calculable : true,
     	xAxis : [
         	{
-	        	name:"季度",
+	        	name:$g("季度"),
             	type : 'category',
-            	data : ["第1季度","第2季度","第3季度","第4季度"]  //,"合计"
+            	data : [$g("第1季度"),$g("第2季度"),$g("第3季度"),$g("第4季度")]  //,"合计"
         	}
     	],
     	yAxis : [
         {
             type : 'value',
-            name:"发生例数",
+            name:$g("发生例数"),
             nameLocation:'middle',
             nameTextStyle:{
 	            padding: [10,10,20,10]
@@ -200,12 +212,12 @@ function InitMonCompareTable(yearStr,data){
 			var htmlStr="<table class='easyui-datagrid' style='width:100%'>";
 
 			htmlStr=htmlStr+"<tr>"
-			htmlStr=htmlStr+"<th style='background-color:#F0EDED'>年份</th>"
+			htmlStr=htmlStr+"<th style='background-color:#F0EDED'>"+$g("年份")+"</th>"
 			for(j=1;j<=13;j++){
 			    if(j==13){
-				    htmlStr=htmlStr+"<th style='background-color:#F0EDED;height:40px;'>"+"合计"+"</th>"	
+				    htmlStr=htmlStr+"<th style='background-color:#F0EDED;height:40px;'>"+$g("合计")+"</th>"	
 				}else{
-				     htmlStr=htmlStr+"<th style='background-color:#F0EDED;height:40px;'>"+[j]+"月"+"</th>"
+				     htmlStr=htmlStr+"<th style='background-color:#F0EDED;height:40px;'>"+$g(+[j]+"月")+"</th>"
 				}	
 
 			}	
@@ -233,12 +245,12 @@ function InitQuartCompareTable(yearStr,data){
 			var htmlStr="<table class='easyui-datagrid' style='width:100%'>";
 
 			htmlStr=htmlStr+"<tr>"
-			htmlStr=htmlStr+"<th style='background-color:#F0EDED'>年份</th>"
+			htmlStr=htmlStr+"<th style='background-color:#F0EDED'>"+$g("年份")+"</th>"
 			for(j=1;j<=5;j++){
 				if(j==5){
-				    htmlStr=htmlStr+"<th style='background-color:#F0EDED;height:40px;'>"+"合计"+"</th>"	
+				    htmlStr=htmlStr+"<th style='background-color:#F0EDED;height:40px;'>"+$g("合计")+"</th>"	
 			    }else{
-				    htmlStr=htmlStr+"<th style='background-color:#F0EDED;height:40px;'>"+"第"+[j]+"季度"+"</th>"	
+				    htmlStr=htmlStr+"<th style='background-color:#F0EDED;height:40px;'>"+$g("第"+[j]+"季度")+"</th>"	
 				}
 				
 			}	
@@ -281,7 +293,6 @@ function  InitYearStr(){
 	//加载下拉框复选框
 	$("#yearStr").combobox({
 		data:yearArr,
-        //url:url+'?action=SelEventbyNew',
         panelHeight:200,//设置为固定高度，combobox出现竖直滚动条
         valueField:'value',
         textField:'text',
@@ -334,7 +345,7 @@ function Export(){
 	var reptype=$('#typeevent').combobox('getValue');  //事件类型
 	var locStr=$('#dept').combobox('getValue');        //科室
 	var qrytype=$("#qrytype").combobox('getValue'); //统计类型
-	var params=LgHospID+"^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID; //hxy 2020-02-26
+	var params=LgParam; //hxy 2020-02-26
 	//var data=serverCall("web.DHCADVREPBYMON","GetAdvStat",{"yearstr":year,"reptype":reptype,"replocstr":locStr,"qrytype":qrytype});
     runClassMethod("web.DHCADVREPBYMON","GetAdvStat",{yearstr:yearStr,reptype:reptype,replocstr:locStr,qrytype:qrytype,params:params},function(data){
 
@@ -357,15 +368,15 @@ function InitMonExportTable(yearStr,data){
         var htmlStr="";
 		htmlStr=htmlStr+"<tr >"
 		htmlStr=htmlStr+"<td colspan=14 style='font-size:20px;font-weight:bold;text-align:center;'>"
-		htmlStr=htmlStr+"按月统计"
+		htmlStr=htmlStr+$g("按月统计")
 		htmlStr=htmlStr+"</td>"
 		htmlStr=htmlStr+"</tr>"
-		htmlStr=htmlStr+"<th>年份</th>"
+		htmlStr=htmlStr+"<th>"+$g("年份")+"</th>"
 		for(j=1;j<=13;j++){
 		    if(j==13){
-			      htmlStr=htmlStr+"<th >"+"合计"+"</th>"	
+			      htmlStr=htmlStr+"<th >"+$g("合计")+"</th>"	
 			}else{
-			     htmlStr=htmlStr+"<th>"+[j]+"月"+"</th>"
+			     htmlStr=htmlStr+"<th>"+$g(+[j]+"月")+"</th>"
 			}	
 		}	
 		htmlStr=htmlStr+"</tr>"
@@ -382,7 +393,7 @@ function InitMonExportTable(yearStr,data){
 		
 		htmlStr=htmlStr+"</tr>"
 		htmlStr=htmlStr+"</table>";
-        ExportTableToExcel("按月统计",htmlStr)
+        ExportTableToExcel($g("按月统计"),htmlStr)
 }
 
 
@@ -391,15 +402,15 @@ function InitQuartExportTable(yearStr,data){
         var htmlStr="";
 		htmlStr=htmlStr+"<tr >"
 		htmlStr=htmlStr+"<td colspan=6 style='font-size:20px;font-weight:bold;text-align:center;'>"
-		htmlStr=htmlStr+"按季度统计"
+		htmlStr=htmlStr+$g("按季度统计")
 		htmlStr=htmlStr+"</td>"
 		htmlStr=htmlStr+"</tr>"
-		htmlStr=htmlStr+"<th>年份</th>"
+		htmlStr=htmlStr+"<th>"+$g("年份")+"</th>"
 		for(j=1;j<=5;j++){
 			if(j==5){
-			    htmlStr=htmlStr+"<th>"+"合计"+"</th>"	
+			    htmlStr=htmlStr+"<th>"+$g("合计")+"</th>"	
 		    }else{
-			    htmlStr=htmlStr+"<th>"+"第"+[j]+"季度"+"</th>"	
+			    htmlStr=htmlStr+"<th>"+$g("第"+[j]+"季度")+"</th>"	
 			}
 			
 		}	
@@ -416,7 +427,7 @@ function InitQuartExportTable(yearStr,data){
 		}
 		
 		htmlStr=htmlStr+"</tr>"
-        ExportTableToExcel("按季度统计",htmlStr)
+        ExportTableToExcel($g("按季度统计"),htmlStr)
 }
 
 

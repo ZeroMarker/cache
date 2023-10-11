@@ -121,6 +121,7 @@ function getIdentityVerifcation()
 		alert('请输入密码'); 
 		return;	
 	}
+    tmpPassword = base64encode(tmpPassword);
 	jQuery.ajax({
 		type: "POST",
 		dataType: "text",

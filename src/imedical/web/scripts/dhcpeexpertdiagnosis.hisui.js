@@ -465,6 +465,8 @@ $(function(){
 			iconCls:'icon-add',
 			text:'新增',
 			handler: function(){
+
+				RelatedendEditing();
 				if(RelateditIndex != undefined)
 				{
 					$.messager.alert("提示","还有未保存的数据，请点击修改!","info");	
@@ -512,6 +514,7 @@ $(function(){
 					$("#DHCPEIDRelate").datagrid("load",{ClassName:"web.DHCPE.IllnessStandard",QueryName:"EDCondition",ParrefRowId:"",EDID:EDID}); 
 			
 				}
+				RelatedendEditing();
 				
 			}
 		}
@@ -875,6 +878,7 @@ var addExpertDiagnosis = function(){
 		modal:true
 	});
 	
+	$("#ExpertDiagnosis").datagrid('clearSelections'); //取消选中状态
 	var ret=tkMakeServerCall("web.DHCPE.DHCPEExpertDiagnosis","InitED","")
 	
 	var EDList=ret.split("^");
@@ -965,7 +969,7 @@ var PCExpertDiagnosis = function(){
 	});
 	
 	$("#PCExpertDiagnosisGrid").datagrid("load",{ClassName:"web.DHCPE.EDBlackBall",QueryName:"QueryAll",Parref:ParrefRowId}); 
-
+	PCeditIndex=undefined;
 }
 
 function BSave_click()

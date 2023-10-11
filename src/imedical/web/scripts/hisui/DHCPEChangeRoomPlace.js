@@ -153,8 +153,9 @@ function SelectRowHandler(index,rowdata) {
 		}else{
 
 	    setValueById("PreIADM",ID);
+		  var HospID=session['LOGON.HOSPID'];
 	   var encmeth=GetValue("GetOneMethod",1);
-	   var OneStr=cspRunServerMethod(encmeth,ID);
+	   var OneStr=cspRunServerMethod(encmeth,ID,HospID);
 	   var StrArr=OneStr.split("^");
 		SetValue("RegNo",StrArr[7],1);
 		SetValue("Name",StrArr[8],1);

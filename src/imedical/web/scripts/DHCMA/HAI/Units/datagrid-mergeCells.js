@@ -58,5 +58,71 @@ $.extend($.fn.datagrid.methods, {
                 });
             });
         });
+    },
+    autoMergeCellAndCells : function (jq, fields) {
+        return jq.each(function () {
+            var target = $(this);
+            if (!fields) {
+                fields = target.datagrid("getColumnFields");
+            }
+            var cfield = fields[0];
+            if (!cfield) {
+                return;
+            }
+            var rows = target.datagrid("getRows");
+            var i = 0,
+            j = 0,
+            temp = {};
+            for (i; i < rows.length; i++) {
+                var row = rows[i];
+                j = 0;
+                var tf = temp[cfield];
+                if (!tf) {
+                    tf = temp[cfield] = {};
+                    tf[row[cfield]] = [i];
+                
+                } else {
+                    var tfv = tf[row[cfield]];
+                    if (tfv) {
+                        tfv.push(i);
+                    } else {
+                        tfv = tf[row[cfield]] = [i];
+                        
+                    }
+                }
+            }
+            
+            $.each(temp, function (field, colunm) {
+                $.each(colunm, function () {
+                    var group = this;
+                    
+                    if (group.length > 1) {
+                        var before,
+                        after,
+                        megerIndex = group[0];
+                        for (var i = 0; i < group.length; i++) {
+                            before = group[i];
+                            after = group[i + 1];
+                            if (after && (after - before) == 1) {
+                                continue;
+                            }
+                            var rowspan = before - megerIndex + 1;
+                            if (rowspan > 1) {
+                                for(var j=0;j<fields.length;j++){
+                                    target.datagrid('mergeCells', {
+                                        index : megerIndex,
+                                        field : fields[j],
+                                        rowspan : rowspan
+                                   });
+                                }
+                            }
+                            if (after && (after - before) != 1) {
+                                megerIndex = after;
+                            }
+                        }
+                    }
+                });
+            });
+        });
     }
 });

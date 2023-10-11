@@ -28,8 +28,15 @@ function Init(){
 	}
 	
 	PageLogicObj.m_Grid = InitGrid();
+	InitCache();
 }
-
+function InitCache () {
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function InitEvent(){
 	$("#i-add").click(addOSPara);
 	$("#i-edit").click(editOSPara)

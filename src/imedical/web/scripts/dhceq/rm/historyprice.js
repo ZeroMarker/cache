@@ -41,7 +41,10 @@ function createResourceHistoryPrice(jsonData)
 		var statusFlag=0
 		var TFromDate="生效日期："+jsonData.rows[i].RHPFromDate
 		var TRequestInfo="计价方式："+jsonData.rows[i].RHPModeDesc+"  计价单位:"+jsonData.rows[i].RHPUomQuantity+"/"+jsonData.rows[i].RHPUOMDR_Desc+"  单价:"+jsonData.rows[i].RHPPrice+"元"
-		var YearMonth=jsonData.rows[i].RHPFromDate.split("-")[0]+'-'+jsonData.rows[i].RHPFromDate.split("-")[1]; 
+		//Modefied by zc0086 2020-11-11 日期格式转化 begin
+		//var YearMonth=jsonData.rows[i].RHPFromDate.split("-")[0]+'-'+jsonData.rows[i].RHPFromDate.split("-")[1]; 
+		var YearMonth=FormatDate(jsonData.rows[i].RHPFromDate,"","").split("-")[0]+'-'+FormatDate(jsonData.rows[i].RHPFromDate,"","").split("-")[1]; 
+		//Modefied by zc0086 2020-11-11 日期格式转化 end
 		var TToDate="失效日期："+jsonData.rows[i].RHPToDate
 		var section="";
 		var flag="";

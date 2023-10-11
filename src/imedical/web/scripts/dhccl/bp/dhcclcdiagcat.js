@@ -22,7 +22,8 @@ $(function(){
 								ClassName:"web.DHCCLCDiagCat",
 								MethodName:"InsertDiagCat",
 								Code:$("#code").val(),
-								Desc:$("#desc").val()
+								Desc:$("#desc").val(),
+								hospId:session['LOGON.HOSPID']
 							},function(success){
 								if(success==0)
 								{
@@ -72,7 +73,8 @@ $(function(){
 							MethodName:"UpdateDiagCat",
 							Rowid:id,
 							Code:$("#code").val(),
-							Desc:$("#desc").val()
+							Desc:$("#desc").val(),
+							hospId:session['LOGON.HOSPID']
 						},function(success){
 							if(success==0)
 							{
@@ -99,7 +101,8 @@ $(function(){
 		queryParams:{
 			ClassName:"web.DHCCLCDiagCat",
 			QueryName:"LookUpDiagCat",
-			Code:''
+			Code:'',
+			hospId:session['LOGON.HOSPID']
 			},
 		columns:[[
 			{ field: "rowId", title: "±àºÅ", width: 120},

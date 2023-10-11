@@ -1,8 +1,8 @@
-Ôªø/**
+/**
  * FileName: dhcbill.opbill.singleinvquery.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-12-13
- * Description: Èó®ËØäÊî∂ÊçÆÊü•ËØ¢
+ * Description: √≈’Ô ’æ›≤È—Ø
  */
 
 function initQueryMenu() {
@@ -33,49 +33,43 @@ function initQueryMenu() {
 		}
 	});
 
-	//Âç°Âè∑ÂõûËΩ¶Êü•ËØ¢‰∫ã‰ª∂
-	$("#cardNo").keydown(function (e) {
+	//ø®∫≈ªÿ≥µ≤È—Ø ¬º˛
+	$("#CardNo").focus().keydown(function (e) {
 		cardNoKeydown(e);
 	});
 
-	//ÁôªËÆ∞Âè∑ÂõûËΩ¶Êü•ËØ¢‰∫ã‰ª∂
+	//µ«º«∫≈ªÿ≥µ≤È—Ø ¬º˛
 	$("#patientNo").keydown(function (e) {
 		patientNoKeydown(e);
 	});
 
-	//ÂèëÁ•®ÂõûËΩ¶Êü•ËØ¢‰∫ã‰ª∂
+	//∑¢∆±ªÿ≥µ≤È—Ø ¬º˛
 	$("#invNo").keydown(function (e) {
 		invNoKeydown(e);
 	});
 	
-	$("#more-container").click(function () {
+	var $tb = $("#more-container");
+	if (HISUIStyleCode == "lite") {
+		$(".arrows-b-text").css("color", "#339EFF");
+		$tb.find(".spread-b-down").removeClass("spread-b-down").addClass("spread-l-down");
+	};
+	$tb.click(function () {
 		var t = $(this);
-		if (t.find('.arrows-b-text').text() == "Êõ¥Â§ö") {
-			t.find('.arrows-b-text').text("Êî∂Ëµ∑");
-			t.find('.spread-b-down').removeClass('spread-b-down').addClass('retract-b-up');
-			$('tr.display-more-tr').slideDown('normal', setHeight(40));
+		var ui = (HISUIStyleCode == "lite") ? "l" : "b";
+		if (t.find(".arrows-b-text").text() == $g("∏¸∂‡")) {
+			t.find(".arrows-b-text").text($g(" ’∆"));
+			t.find(".spread-" + ui + "-down").removeClass("spread-" + ui + "-down").addClass("retract-" + ui + "-up");
+			$("tr.display-more-tr").slideDown("normal", setHeight(40));
 		} else {
-			t.find('.arrows-b-text').text("Êõ¥Â§ö");
-			t.find('.retract-b-up').removeClass('retract-b-up').addClass('spread-b-down');
-			$('tr.display-more-tr').slideUp('fast', setHeight(-40));
-		}
-	});
-
-	//Âç°Á±ªÂûã
-	$HUI.combobox("#cardType", {
-		panelHeight: 'auto',
-		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QCardTypeDefineList&ResultSetType=array',
-		editable: false,
-		valueField: 'value',
-		textField: 'caption',
-		onChange: function (newValue, oldValue) {
-			initReadCard(newValue);
+			t.find(".arrows-b-text").text($g("∏¸∂‡"));
+			t.find(".retract-" + ui + "-up").removeClass("retract-" + ui + "-up").addClass("spread-" + ui + "-down");
+			$("tr.display-more-tr").slideUp("fast", setHeight(-40));
 		}
 	});
 }
 
 /**
- * ËØªÂç°
+ * ∂¡ø®
  * @method readHFMagCardClick
  * @author ZhYW
  */
@@ -83,36 +77,46 @@ function readHFMagCardClick() {
 	if ($("#btn-readCard").hasClass("l-btn-disabled")) {
 		return;
 	}
-	try {
-		var cardType = getValueById("cardType");
-		var cardTypeDR = cardType.split("^")[0];
-		var myRtn = "";
-		if (cardTypeDR == "") {
-			myRtn = DHCACC_GetAccInfo();
-		} else {
-			myRtn = DHCACC_GetAccInfo(cardTypeDR, cardType);
+	DHCACC_GetAccInfo7(magCardCallback);
+}
+
+function cardNoKeydown(e) {
+	var key = websys_getKey(e);
+	if (key == 13) {
+		var cardNo = getValueById("CardNo");
+		if (!cardNo) {
+			return;
 		}
-		var myAry = myRtn.toString().split("^");
-		var rtn = myAry[0];
-		switch (rtn) {
-		case "0":
-			setValueById("cardNo", myAry[1]);
-			setValueById("patientNo", myAry[5]);
-			loadInvList();
-			break;
-		case "-200":
-			$.messager.alert("ÊèêÁ§∫", "Âç°Êó†Êïà", "info", function () {
-				focusById("btn-readCard");
-			});
-			break;
-		case "-201":
-			setValueById("cardNo", myAry[1]);
-			setValueById("patientNo", myAry[5]);
-			loadInvList();
-			break;
-		default:
-		}
-	} catch (e) {
+		DHCACC_GetAccInfo("", cardNo, "", "", magCardCallback);
+	}
+}
+
+function magCardCallback(rtnValue) {
+	var patientId = "";
+	var myAry = rtnValue.split("^");
+	switch (myAry[0]) {
+	case "0":
+		setValueById("CardNo", myAry[1]);
+		patientId = myAry[4];
+		setValueById("patientNo", myAry[5]);
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	case "-200":
+		$.messager.alert("Ã· æ", "ø®Œﬁ–ß", "info", function () {
+			focusById("CardNo");
+		});
+		break;
+	case "-201":
+		setValueById("CardNo", myAry[1]);
+		patientId = myAry[4];
+		setValueById("patientNo", myAry[5]);
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	default:
+	}
+	
+	if (patientId != "") {
+		loadInvList();
 	}
 }
 
@@ -130,48 +134,8 @@ function patientNoKeydown(e) {
 	}
 }
 
-function cardNoKeydown(e) {
-	try {
-		var key = websys_getKey(e);
-		if (key == 13) {
-			var cardNo = getValueById("cardNo");
-			if (!cardNo) {
-				return;
-			}
-			var cardType = getValueById("cardType");
-			cardNo = formatCardNo(cardType, cardNo);
-			var cardTypeAry = cardType.split("^");
-			var cardTypeDR = cardTypeAry[0];
-			var myRtn = DHCACC_GetAccInfo(cardTypeDR, cardNo, "", "PatInfo");
-			var myAry = myRtn.toString().split("^");
-			var rtn = myAry[0];
-			switch (rtn) {
-			case "0":
-				setValueById("cardNo", myAry[1]);
-				setValueById("patientNo", myAry[5]);
-				loadInvList();
-				break;
-			case "-200":
-				setTimeout(function () {
-					$.messager.alert("ÊèêÁ§∫", "Âç°Êó†Êïà", "info", function () {
-						focusById("cardNo");
-					});
-				}, 300);
-				break;
-			case "-201":
-				setValueById("cardNo", myAry[1]);
-				setValueById("patientNo", myAry[5]);
-				loadInvList();
-				break;
-			default:
-			}
-		}
-	} catch (e) {
-	}
-}
-
 /**
- * ÂèëÁ•®Âè∑ÂõûËΩ¶Êü•ËØ¢
+ * ∑¢∆±∫≈ªÿ≥µ≤È—Ø
  */
 function invNoKeydown(e) {
 	var key = websys_getKey(e);
@@ -183,55 +147,30 @@ function invNoKeydown(e) {
 				recepitNo: $(e.target).val(),
 				hospId: PUBLIC_CONSTANT.SESSION.HOSPID
 			}, function (rtn) {
-				if (rtn == "0") {
-					$.messager.popover({msg: "ËØ•ÂèëÁ•®Âè∑‰∏çÂ≠òÂú®", type: "info"});
+				if (rtn == 0) {
+					$.messager.popover({msg: "∏√∑¢∆±∫≈≤ª¥Ê‘⁄", type: "info"});
 					return;
-				} else {
-					loadInvList();
 				}
+				loadInvList();
 			});
 		}
 	}
 }
 
 /**
- * ÂàùÂßãÂåñÂç°Á±ªÂûãÊó∂Âç°Âè∑ÂíåËØªÂç°ÊåâÈíÆÁöÑÂèòÂåñ
- * @method initReadCard
- * @param {String} cardType
- * @author ZhYW
- */
-function initReadCard(cardType) {
-	try {
-		var cardTypeAry = cardType.split("^");
-		var readCardMode = cardTypeAry[16];
-		if (readCardMode == "Handle") {
-			disableById("btn-readCard");
-			$("#cardNo").attr("readOnly", false);
-			focusById("cardNo");
-		} else {
-			enableById("btn-readCard");
-			setValueById("cardNo", "");
-			$("#cardNo").attr("readOnly", true);
-			focusById("btn-readCard");
-		}
-	} catch (e) {
-	}
-}
-
-/**
- * ÈáçÁΩÆlayoutÈ´òÂ∫¶
+ * ÷ÿ÷√layout∏ﬂ∂»
  * @method setHeight
  * @param {int} num
  * @author ZhYW
  */
 function setHeight(num) {
-	var l = $("#head-menu");
+	var l = $(".layout-panel-west .layout:eq(0)");
 	var n = l.layout("panel", "north");
 	var nh = parseInt(n.outerHeight()) + parseInt(num);
 	n.panel("resize", {
 		height: nh
 	});
-	if (+num > 0) {
+	if (num > 0) {
 		$("tr.display-more-tr").show();
 	} else {
 		$("tr.display-more-tr").hide();
@@ -253,23 +192,31 @@ function initInvList() {
 		pagination: true,
 		rownumbers: true,
 		pageSize: 20,
-		data: [],
-		columns: [[{title: 'ÂèëÁ•®Âè∑', field: 'TINVNO', width: 100},
-				   {title: 'ÁôªËÆ∞Âè∑', field: 'TPatID', width: 100},
-				   {title: 'ÊÇ£ËÄÖÂßìÂêç', field: 'TPatName', width: 80},
-				   {title: 'Ë¥πÁî®ÊÄªÈ¢ù', field: 'TotSum', align: 'right', width: 80},
-				   {title: 'Ëá™‰ªòÈáëÈ¢ù', field: 'TAcount', align: 'right', width: 80},
-				   {title: 'Êî∂Ë¥πÂëò', field: 'TUser', width: 70},
-				   {title: 'Êî∂Ë¥πÊó∂Èó¥', field: 'TDate', width: 155,
-					formatter: function (value, row, index) {
-						if (value) {
-							return value + " " + row.TTime;
-						}
+		className: "web.udhcOPQUERY",
+		queryName: "INVQUERY",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["TDate", "TAbort", "TRefund", "THandin", "TParkDate", "TParkTime", "TParUName"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if ($.inArray(cm[i].field, ["TINVRowid", "TabFlag", "IsStayInv"]) != -1) {
+					cm[i].hidden = true;
+					continue;
+				}
+				if (cm[i].field == "TTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.TDate + " " + value;
 					}
-				   },
-				   {title: 'TINVRowid', field: 'TINVRowid', hidden: true},
-				   {title: 'TabFlag', field: 'TabFlag', hidden: true}
-			]],
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if (cm[i].field == "TTime") {
+						cm[i].width = 155;
+					}
+				}
+			}
+		},
 		onLoadSuccess: function(data) {
 			if (data.total == 1) {
 				$(this).datagrid("selectRow", 0);
@@ -301,29 +248,15 @@ function loadInvList() {
 }
 
 /**
- * Ê∏ÖÂ±è
+ * «Â∆¡
  */
 function clearClick() {
-	$(":text:not(.pagination-num)").val("");
+	focusById("CardNo");
+	$(":text:not(.pagination-num,.combo-text)").val("");
 	$(".combobox-f").combobox("clear");
-	$("#cardType,#guser").combobox("reload");
 	var defDate = getDefStDate(0);
 	$(".datebox-f").datebox("setValue", defDate);
-	$HUI.datagrid("#invList").load({
-		ClassName: "web.udhcOPQUERY",
-		QueryName: "INVQUERY",
-		sFlag: "ALL",
-		ChargeUser: "",
-		ReceipNO: "",
-		PatientNO: "",
-		PatientName: "",
-		StartDate: "",
-		EndDate: "",
-		INVFlag: "N",
-		INVStatus: "N",
-		gLocDR: PUBLIC_CONSTANT.SESSION.GROUPID,
-		ULoadLocDR: PUBLIC_CONSTANT.SESSION.CTLOCID,
-		INVFootFlag: ""
-	});
+	$HUI.datagrid("#invList").options().pageNumber = 1;   //Ã¯◊™µΩµ⁄“ª“≥
+	$HUI.datagrid("#invList").loadData({total: 0, rows: []});
 	clearOrdItmList();
 }

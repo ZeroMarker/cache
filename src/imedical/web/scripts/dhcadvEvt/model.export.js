@@ -40,10 +40,12 @@ function exportExcel(JSONData, filename,title,filter) {//整个表格拷贝到EXCEL中
 
             //创建AX对象excel
             var oWB = oXL.Workbooks.Add();
+            var oSheet = oWB.ActiveSheet;
             //获取workbook对象
             var xlsheet = oWB.Worksheets(1);
             //激活当前sheet
             var sel = document.body.createTextRange();
+			oXL.Columns('A:Z').NumberFormatLocal = '@';
             sel.moveToElementText(curTbl);
             //把表格中的内容移到TextRange中
             sel.select;
@@ -130,10 +132,13 @@ var tableToExcel =function JSONToExcelConvertor(JSONData, FileName,title,filter)
 
 function createTable(arrData,title,filter) {
 	
-    var excel = '<table border="1" cellspacing="1" cellpadding="1"  id="table">';
+    var excel = '<table border="1" cellspacing="1" cellpadding="1"  id="table" style="vnd.ms-excel.numberformat:@">';
    
     //设置表头
-    var row=$(".dhc-table").find("thead").html()
+    var row=$(".dhc-table").find("thead").html();
+    if(row.indexOf("<th")){
+	    row=row.replace(/<th/g,"<th style='mso-number-format: \"\@\"; '");
+	}
     /**
     var row = "<tr>";
     if(title)

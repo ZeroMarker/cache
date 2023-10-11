@@ -27,7 +27,19 @@ function InitRBCASStatusDataGrid(){
         text: '更新',
         iconCls: 'icon-update',
         handler: function() { UpdateClickHandle();}
-    }];
+    }/*,{
+        text: '翻译',
+        iconCls: 'icon-translate-word',
+        handler: function() {
+	         var SelectedRow = PageLogicObj.m_RBCASStatusDataGrid.datagrid('getSelected');
+			if (!SelectedRow){
+			$.messager.alert("提示","请选择需要翻译的行!","info");
+			return false;
+			}
+			CreatTranLate("User.DHCRBCASStatus","ASSDesc",SelectedRow["Tname"])
+		}
+	}*/
+    ];
 	var Columns=[[ 
 		{field:'Tid',hidden:true,title:''},
 		{field:'Tcode',title:'代码',width:300},
@@ -130,6 +142,7 @@ function UpdateClickHandle(){
 					Tname: name,
 				}
 			});
+			PageLogicObj.m_RBCASStatusDataGrid.datagrid('uncheckAll');
 		}else{
 			$.messager.alert("提示","更新失败!代码重复!");
 			return false;

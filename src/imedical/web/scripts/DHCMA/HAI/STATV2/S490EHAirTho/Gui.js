@@ -5,13 +5,45 @@
 	//医院
 	obj.cboHospital = Common_ComboToSSHosp("cboHospital",$.LOGON.HOSPID);
 	// 日期赋初始值
-	obj.dtDateFrom = $('#dtDateFrom').datebox('setValue', Common_GetDate(new Date()));    // 日期初始赋值
-	obj.dtDateTo = $('#dtDateTo').datebox('setValue', Common_GetDate(new Date()));
-	//筛选条件
-	obj.cboConditions = Common_ComboDicCode("aQryCon","StatScreenCondition");
-	$('#aQryCon').combobox('setValue',1);
-	$('#aQryCon').combobox('setText',"显示全部病区(科室)");
-	$HUI.radio("#chkStatunit-Ward").setValue(true);
+	var YearList = $cm ({									//初始化年(最近十年)
+		ClassName:"DHCHAI.STATV2.AbstractComm",
+		QueryName:"QryYear"
+	},false);
+	$HUI.combobox("#cboYear",{
+		valueField:'ID',
+		textField:'Desc',
+		editable:false,
+		data:YearList.rows,
+		onSelect:function(rec){
+			Date_QuickSelect("cboYear","cboMonth","dtDateFrom","dtDateTo");	//更改开始-结束日期
+		}
+	});
+	var MonthList = $cm ({									//初始化月+季度+全年
+		ClassName:"DHCHAI.STATV2.AbstractComm",
+		QueryName:"QryMonth"
+	},false);
+	$HUI.combobox("#cboMonth",{
+		valueField:'ID',
+		textField:'Desc',
+		editable:false,
+		data:MonthList.rows,
+		onSelect:function(rec){
+			Date_QuickSelect("cboYear","cboMonth","dtDateFrom","dtDateTo");	//更改开始-结束日期
+		}
+	});
+	var NowDate=month_formatter(new Date());
+	var NowYear=NowDate.split("-")[0];	//当前年
+	var NowMonth=NowDate.split("-")[1]	//当前月
+	$('#cboYear').combobox('select',NowYear);
+	$('#cboMonth').combobox('select',NowMonth);
+	
+	//医院表格联动
+	$HUI.combobox('#cboHospital',{
+		onSelect:function(data){
+			var HospID = data.ID;
+			Common_ComboToLoc("cboLoc",HospID,"","","");
+		}
+	});
 	InitS021DayInfWinEvent(obj);
 	obj.LoadEvent(arguments);
 	

@@ -27,6 +27,10 @@ function InitEvent()
 		}		
 	});
 	//end modify by jyp 2018-08-17
+	//Modified By QW20211112 BUG:QW0155 begin
+	var ReadOnly=GetElementValue("ReadOnly");
+	if(ReadOnly=="1")  DisableBElement("BUpdate",true);
+	//Modified By QW20211112 BUG:QW0155 end 
 }
 
 function BUpdate_Click()
@@ -70,7 +74,7 @@ function BUpdate_Click()
 	result=result.replace(/\\n/g,"\n")
 	if(result<0) 
 	{
-		if ((result=="-1001")||(result=="-1002"))
+		if ((result=="-1001")||(result=="-1002")||(result=="-1003"))	//czf 2116352 2021-09-08
 		{
 			messageShow("","","",t[result])
 		}
@@ -179,8 +183,9 @@ function SelectRowHandler(index,rowdata)
 
 function disabled(value)
 {
-	//InitEvent();  	//modify by wl 2019-8-30 
-	DisableBElement("BDelete",value);
+	var ReadOnly=GetElementValue("ReadOnly");
+	if(ReadOnly=="1")  DisableBElement("BDelete",true);
+	else DisableBElement("BDelete",value);
 	AllotType_Change()
 }
 

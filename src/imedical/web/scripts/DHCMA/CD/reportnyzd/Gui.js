@@ -10,14 +10,14 @@ function InitReportWin(){
     }     
 	//联系地址
 	$('#cboPatAgeDW').combobox({});  //年龄单位
-	obj.cboProvince1 = Common_ComboToArea2("cboProvince1","1");            // 省
+	obj.cboProvince1 = Common_ComboToArea2("cboProvince1","1",1);            // 省
 	obj.RegCity = $HUI.combobox('#cboProvince1', {
 		onChange:function(newValue,oldValue){
 			$('#cboCity1').combobox('clear');
 			$('#cboCounty1').combobox('clear');
 			$('#cboVillage1').combobox('clear');
 			$('#txtCUN1').val('');
-			obj.cboCity1 = Common_ComboToArea2("cboCity1","cboProvince1");				// 市
+			obj.cboCity1 = Common_ComboToArea2("cboCity1","cboProvince1",2);				// 市
 		}		
 	});
 	obj.RegCounty = $HUI.combobox('#cboCity1', {
@@ -25,14 +25,14 @@ function InitReportWin(){
 			$('#cboCounty1').combobox('clear');
 			$('#cboVillage1').combobox('clear');
 			$('#txtCUN1').val('');
-			obj.cboCounty1 = Common_ComboToArea2("cboCounty1","cboCity1");             // 县
+			obj.cboCounty1 = Common_ComboToArea2("cboCounty1","cboCity1",3);             // 县
 		}
 	});
 	obj.RegVillage = $HUI.combobox('#cboCounty1', {
 		onChange:function(newValue,oldValue){
 			$('#cboVillage1').combobox('clear');
 			$('#txtCUN1').val('');
-			obj.cboVillage1 = Common_ComboToArea2("cboVillage1","cboCounty1");         // 乡
+			obj.cboVillage1 = Common_ComboToArea2("cboVillage1","cboCounty1",4);         // 乡
 		}
 	});
 	$HUI.combobox('#cboVillage1', {
@@ -58,11 +58,12 @@ function InitReportWin(){
 		$HUI.radio("[name='radZDZGList']",{
             onChecked:function(e,value){
                 var value = $(e.target).attr("label");   //当前选中的值
-				if (value=='其他') {		
+				if (value==$g('其他')) {		
 					$('#txtCRQTZG').removeAttr("disabled");			
 				}else{
+					$('#txtCRQTZG').attr('disabled','disabled');
 					$('#txtCRQTZG').val('');
-					$('#txtCRQTZG').attr('disabled','disabled');	
+						
 				}
             }
         });

@@ -4,7 +4,7 @@ var guser, username;
 var SelectRowId = "";
 var RowId;
 var flag;
-var Tuserid;
+var Tuserid = "";
 
 $.extend($.fn.validatebox.defaults.rules, {
 	integer: {    //校验非负整数
@@ -12,39 +12,34 @@ $.extend($.fn.validatebox.defaults.rules, {
 		    var reg = /^\d+$/;
 		    return reg.test(value);
 		},
-		message: "请输入数字"
+		message: $g("请输入数字")
 	}
 });
 
 $(function () {
     init_Layout();
-    flag = getValueById('flag');
+    flag = getValueById("flag");
     guser = session['LOGON.USERID'];
-    username = session['LOGON.USERNAME'];
-    
+    username = $.m({ClassName: "User.SSUser", MethodName: "GetTranByDesc", Prop: "SSUSRName", Desc: session['LOGON.USERNAME'], LangId: session['LOGON.LANGID']}, false);
+	setValueById("username", username);
+	setValueById("userid", guser);
+
     $HUI.linkbutton('#Update', {
 		onClick: function () {
 			Update_click();
 		}
 	});
 	
-    usernameobj = document.getElementById("username");
-    Tuserid = "";
-    SelectRowId = "";
-    if (usernameobj.value == "") {
-        usernameobj.value = username;
-        setValueById("userid", guser);
-    }
-
     $HUI.validatebox('#CurNo', {
 	    validType: 'integer'
 	});
 	
 	$HUI.combobox('#UserFlagS', {
-		data: [{id: 'Y', text: '可用', selected: true},
-       	 		{id: 'N', text: '已用完'},
-        		{id: '', text: '待用'}],
-        valueField: 'id',
+		data: [{value: 'Y', text: $g('可用'), selected: true},
+       	 		{value: 'N', text: $g('已用完')},
+        		{value: '', text: $g('待用')}
+        	  ],
+        valueField: 'value',
         textField: 'text',
         editable: false
     });
@@ -60,11 +55,11 @@ function SelectRowHandler(index, rowData) {
         var CurNo = rowData.TCurNo;
         var EndNo = rowData.TEndNo;
         var flag = rowData.TFlag;
-        if (flag == "可用") {
+        if (flag == $g("可用")) {
             flag = "Y";
-        } else if (flag == "待用") {
+        } else if (flag == $g("待用")) {
             flag = "";
-        } else if (flag == "已用完") {
+        } else if (flag == $g("已用完")) {
             flag = "N";
         }
      	setValueById('UserFlagS', flag);
@@ -78,7 +73,7 @@ function SelectRowHandler(index, rowData) {
         setValueById('EndNo', '');
         //setValueById('UseFlag', '');
         SelectRowId = "";
-        usernameobj.value = username;
+        setValueById("username", username);
         setValueById("userid", guser);
     }
 }
@@ -96,64 +91,68 @@ function Update_click() {
 	}
     var userid = getValueById('userid');
     if ((userid != Tuserid) && (Tuserid != "")) {
-        DHCWeb_HISUIalert(t['08']);
+	    $.messager.popover({msg: "操作员不正确不能更新", type: "info"});
         return;
     }
     var curno = getValueById('CurNo');
     var endno = getValueById('EndNo');
-    var flag = getValueById('UserFlagS');
     if (curno == "") {
-        DHCWeb_HISUIalert(t['02']);
+	    $.messager.popover({msg: "当前发票号不能为空", type: "info"});
         return;
     }
     if (endno == "") {
-        DHCWeb_HISUIalert(t['03']);
+	    $.messager.popover({msg: "结束发票号不能为空", type: "info"});
         return;
     }
     if (parseInt(curno, 10) > parseInt(endno, 10)) {
-        DHCWeb_HISUIalert(t['04']);
+	    $.messager.popover({msg: "当前发票号不能大于结束发票号", type: "info"});
         return;
     }
-    /*
-    if (eval(curno) > eval(endno)) {
-    	DHCWeb_HISUIalert(t['04']);
-    	return;
-    }
-	*/
+ 	var flag = getValueById('UserFlagS');
     if (parseInt(curno, 10) == parseInt(endno, 10)) {
         flag = "N";
     }
-
-    var encmeth = getValueById('UpdateInvNo');
-    var retval = cspRunServerMethod(encmeth, userid, RowId, curno, endno, flag);
-    if (retval == "GuserNull") {
-        DHCWeb_HISUIalert(t['GuserNull']);
-        return;
-    } else if (retval == "RowIdNull") {
-        DHCWeb_HISUIalert(t['RowIdNull']);
-        return;
-    } else if (retval == "CurNoNull") {
-        DHCWeb_HISUIalert(t['CurNoNull']);
-        return;
-    } else if (retval == "AlreadyUseUp") {
-        DHCWeb_HISUIalert(t['AlreadyUseUp']);
-        return;
-    } else if (retval == "StarLess") {
-        DHCWeb_HISUIalert(t['StarLess']);
-        return;
-    } else if (retval == "EndLess") {
-        DHCWeb_HISUIalert(t['EndLess']);
-        return;
-    } else if (retval == "CurLess") {
-        DHCWeb_HISUIalert(t['CurLess']);
-        return;
-    } else if (retval != 0) {
-        DHCWeb_HISUIalert(t['UpdateErr'])
-        return;
-    } else {
-        DHCWeb_HISUIalert(t['UpdateSucc']);
-        $("#Find").click();
-    }
+	$.messager.confirm("确认", "是否确认修改?", function (r) {
+		if (!r) {
+			return;
+		}
+		var encmeth = getValueById('UpdateInvNo');
+	    var rtn = cspRunServerMethod(encmeth, userid, RowId, curno, endno, flag);
+	    if (rtn == 0) {
+		    $.messager.popover({msg: "修改成功", type: "success"});
+	        $("#Find").click();
+	        return;
+		}
+		if (rtn == "GuserNull") {
+		    $.messager.popover({msg: t['GuserNull'], type: "info"});
+	        return;
+	    }
+	    if (rtn == "RowIdNull") {
+		    $.messager.popover({msg: t['RowIdNull'], type: "info"});
+	        return;
+	    }
+	    if (rtn == "CurNoNull") {
+		    $.messager.popover({msg: t['CurNoNull'], type: "info"});
+	        return;
+	    }
+	    if (rtn == "AlreadyUseUp") {
+		    $.messager.popover({msg: t['AlreadyUseUp'], type: "info"});
+	        return;
+	    }
+	    if (rtn == "StarLess") {
+		    $.messager.popover({msg: t['StarLess'], type: "info"});
+	        return;
+	    }
+	    if (rtn == "EndLess") {
+		  	$.messager.popover({msg: t['EndLess'], type: "info"});
+	        return;
+	    }
+	    if (rtn == "CurLess") {
+		    $.messager.popover({msg: t['CurLess'], type: "info"});
+	        return;
+	    }
+	    $.messager.popover({msg: "修改失败：" + rtn, type: "info"});
+	});
 }
 
 function init_Layout() {

@@ -1,47 +1,87 @@
 ﻿var PageLogicObj={
 	m_FreeOrdSetTabDataGrid:"",
-	m_PPFItmMastDR:""
+	m_PPFItmMastDR:"",
+	v_CHosp:""
 };
 $(function(){
 	Init();
 	//页面元素初始化
+	InitEvent();
 	PageHandle();
 	FreeOrdSetTabDataGridLoad();
 });
 function Init(){
 	PageLogicObj.m_FreeOrdSetTabDataGrid=InitFreeOrdSetTabDataGrid();
+	InitCombox();
+}
+function InitEvent() {
+	$("#BFind").click(FreeOrdSetTabDataGridLoad);
+	$("#Clear").click(Clear_Handle)
 }
 function PageHandle(){
 	InitPPFItmMast();
 }
+
+function InitCombox() {
+	PageLogicObj.m_Stage = $HUI.combobox("#PPFPrjStage", {
+		url:$URL+"?ClassName=web.PilotProject.Extend.Stage&QueryName=QryStage&PrjDR="+ServerObj.PPRowId+"&ResultSetType=array",
+		valueField:'id',
+		textField:'stageDesc',
+		//required:true,
+		blurValidValue:true
+	});
+	
+}
+
 function InitFreeOrdSetTabDataGrid(){
 	var toobar=[{
         text: '增加',
         iconCls: 'icon-add',
-        handler: function() {AddClickHandle(); }
-    },{
+        handler: function() {Add_Handle(); }
+    }/*,{
         text: '保存',
         iconCls: 'icon-save',
         handler: function() { UpdateClickHandle();}
+    }*/,{
+        text: '删除',
+        iconCls: 'icon-cancel',
+        handler: function() { DelClickHandle();}
+    },{
+        text: '复制',
+        iconCls: 'icon-copy',
+        handler: function() { CopyClickHandle();}
     }];
     /*
     ArcimRowId:%String,Arcimdesc:%String,Arcimcode:%String,PPFRowId:%String,PPFSttDate:%String,PPFSttTime,PPFEndDate,PPFEndTime,PPFFreeNum
     */
 	var Columns=[[ 
+		{field:'ck',checkbox:true},
 		{field:'PPFRowId',hidden:true,title:''},
-		{field:'Arcimdesc',title:'医嘱名称',width:200},
+		{field:'action',title:'操作',width:50,align:'center',
+			formatter:function(value,row,index){
+				var s = '<span style="color:#40A2DE;cursor:pointer;" onclick="Edit_Handle(' + "'" +row.PPFRowId+ "'"+ ')">修改</span>';
+				return s;
+			}
+		},
+		{field:'PPFStageDesc',title:'阶段',width:100},
+		{field:'Arcimdesc',title:'医嘱名称',width:250},
 		{field:'PPFFreeNum',title:'免费次数',width:100},
 		{field:'PPFSttDate',title:'开始日期',width:100},
 		{field:'PPFSttTime',title:'开始时间',width:100},
 		{field:'PPFEndDate',title:'结束日期',width:100},
 		{field:'PPFEndTime',title:'结束时间',width:100},
-		{field:'PPFLimitEntryAfterNoFreeNum',title:'免费次数用尽后限制录入',width:200}
+		{field:'PPFLimitEntryAfterNoFreeNum',title:'免费次数用尽后限制录入',width:180},
+		{field:'PPFAddUser',title:'添加人',width:100},
+		{field:'PPFAddLoc',title:'添加科室',width:100},
+		{field:'PPFAddDate',title:'添加日期',width:100},
+		{field:'PPFAddTime',title:'添加时间',width:100}
+		
     ]]
 	var FreeOrdSetTabDataGrid=$("#FreeOrdSetTab").datagrid({
 		fit : true,
 		border : false,
 		striped : true,
-		singleSelect : true,
+		singleSelect : false,
 		fitColumns : false,
 		autoRowHeight : false,
 		rownumbers:true,
@@ -51,8 +91,8 @@ function InitFreeOrdSetTabDataGrid(){
 		pageList : [20,100,200],
 		idField:'PPFRowId',
 		columns :Columns,
-		toolbar:toobar,
-		onCheck:function(index, row){
+		toolbar:toobar
+		/*onCheck:function(index, row){
 			SetSelRowData(row);
 		},
 		onUnselect:function(index, row){
@@ -67,22 +107,30 @@ function InitFreeOrdSetTabDataGrid(){
 					return false;
 				}
 			}
-		}
+		}*/
 	}); 
 	return FreeOrdSetTabDataGrid;
 }
+
 function FreeOrdSetTabDataGridLoad(){
+	var text = $("#PPFItmMastDR").lookup("getText")||"";
+	if (text=="") {
+		PageLogicObj.m_PPFItmMastDR = "";
+		}
 	$.q({
 	    ClassName : "web.PilotProject.DHCDocPilotProject",
 	    QueryName : "FindProFreeOrd",
-	    PPRowId:ServerObj.PPRowId, 
-	    Pagerows:PageLogicObj.m_FreeOrdSetTabDataGrid.datagrid("options").pageSize,rows:99999
+	    PPRowId: ServerObj.PPRowId, 
+	    InArcim: PageLogicObj.m_PPFItmMastDR,
+	    InStage: PageLogicObj.m_Stage.getValue()||"",
+	    Pagerows: PageLogicObj.m_FreeOrdSetTabDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
 		PageLogicObj.m_FreeOrdSetTabDataGrid.datagrid("uncheckAll");
 		PageLogicObj.m_FreeOrdSetTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
 	}); 
 }
 function InitPPFItmMast(){
+	var Form=session['LOGON.CTLOCID']+String.fromCharCode(3)+GetHospValue()
 	$("#PPFItmMastDR").lookup({
         url:$URL,
         mode:'remote',
@@ -100,11 +148,11 @@ function InitPPFItmMast(){
         minQueryLen:2,
         delay:'500',
         queryOnSameQueryString:true,
-        queryParams:{ClassName: 'web.DHCDocOrderEntry',QueryName: 'LookUpItem'},
+        queryParams:{ClassName: 'web.DHCDocOrderEntry',QueryName: 'LookUpItem','Form':Form},
         onBeforeLoad:function(param){
 	        var desc=param['q'];
 	        if (desc=="") return false;
-			param = $.extend(param,{Item:desc,TYPE:"L^SERVICE"});
+			param = $.extend(param,{Item:desc});	//TYPE:"L^SERVICE"
 	    },onSelect:function(ind,item){
 		    PageLogicObj.m_PPFItmMastDR=item['HIDDEN'];
 		}
@@ -113,6 +161,117 @@ function InitPPFItmMast(){
 function AddClickHandle(){
 	SaveData('');
 }
+function DelClickHandle () {
+	var selectArr = PageLogicObj.m_FreeOrdSetTabDataGrid.datagrid('getSelections');
+	if (selectArr.length == 0) {
+		$.messager.alert("提示","请选择要删除的记录！","warning")
+		return false;
+	}
+	
+	var ids=[];
+	for (var i=0; i<selectArr.length; i++) {
+		ids.push(selectArr[i].PPFRowId)	
+	}
+	ids = ids.join(",");
+	$.messager.confirm("提示", "确认删除？",function (r) {
+		if (r) {
+			$m({
+				ClassName:"web.PilotProject.CFG.FindGCP",
+				MethodName:"DelFreeOrder",
+				ids:ids
+			}, function(result){
+				if (result == 0) {
+					Clear();
+					$.messager.alert("提示", "删除成功！", "info");
+					FreeOrdSetTabDataGridLoad();
+					return true;
+				} else {
+					$.messager.alert("提示", "删除失败：" + result , "info");
+					return false;
+				}
+			});
+		}
+		
+	});
+	
+	
+}
+
+function Edit_Handle(id) {
+	if (id=="") {
+		$.messager.alert("提示","请选择一行记录！","warning")
+		return false;
+	}
+	var PW = 500,
+		PH = 400,
+		URL = "docpilotpro.cfg.freeord.edit.csp?id="+id+"&PPRowId="+ServerObj.PPRowId+"&InHosp="+GetHospValue();
+	websys_showModal({
+		url:URL,
+		iconCls: 'icon-w-edit',
+		title:'修改',
+		//maximizable:true,
+		//maximized:true,
+		width:PW,height:PH,
+		CallBackFunc:FreeOrdSetTabDataGridLoad
+	})
+}
+
+function Add_Handle() {
+	var id = "",
+		PW = 550,
+		PH = 500,
+		URL = "docpilotpro.cfg.freeord.edit.csp?id="+id+"&PPRowId="+ServerObj.PPRowId+"&InHosp="+GetHospValue();
+	websys_showModal({
+		url:URL,
+		iconCls: 'icon-w-add',
+		title:'增加',
+		//maximizable:true,
+		//maximized:true,
+		width:PW,height:PH,
+		CallBackFunc:function () {
+			$.messager.popover({msg: '保存成功!',type:'success'});
+			FreeOrdSetTabDataGridLoad();
+		}
+	})
+}
+
+function CopyClickHandle () {
+	var selectArr = PageLogicObj.m_FreeOrdSetTabDataGrid.datagrid('getSelections');
+	if (selectArr.length == 0) {
+		$.messager.alert("提示","请选择一行记录！","warning")
+		return false;
+	}
+	
+	var ids=[];
+	for (var i=0; i<selectArr.length; i++) {
+		ids.push(selectArr[i].PPFRowId)	
+	}
+	ids = ids.join(",")
+	
+	var URL = "docpilotpro.cfg.freeord.copy.csp?ids="+ids+"&PPRowId="+ServerObj.PPRowId;
+	websys_showModal({
+		url:URL,
+		iconCls: 'icon-w-copy',
+		title:'复制',
+		//maximizable:true,
+		//maximized:true,
+		width:320,height:310,
+		CallBackFunc:FreeOrdSetTabDataGridLoad
+	})
+	
+	
+}
+
+function Clear_Handle () {
+	PageLogicObj.m_FreeOrdSetTabDataGrid.datagrid('unselectAll');	
+	
+	$("#PPFItmMastDR").lookup('setText','');
+	PageLogicObj.m_Stage.clear();
+	PageLogicObj.m_PPFItmMastDR="";
+	FreeOrdSetTabDataGridLoad();
+	
+}
+
 function UpdateClickHandle(){
 	var row=PageLogicObj.m_FreeOrdSetTabDataGrid.datagrid('getSelected');
 	if(!row){
@@ -140,9 +299,9 @@ function SaveData(PPFRowId){
 		Clear();
 		FreeOrdSetTabDataGridLoad();
 	}else if(rtn==-1){
-		$.messager.alert("提示","保存失败!项目重复!");
+		$.messager.alert("提示","保存失败!项目重复!","warning");
 	}else{
-		$.messager.alert("提示","保存失败!");
+		$.messager.alert("提示","保存失败!","error");
 	}
 }
 function CheckBeforeUpdate(){
@@ -179,6 +338,7 @@ function CheckBeforeUpdate(){
 }
 function SetSelRowData(row){
 	$("#PPFItmMastDR").lookup('setText',row['Arcimdesc']);
+	PageLogicObj.m_Stage.setValue(row['PPFStageDr']);
 	PageLogicObj.m_PPFItmMastDR=row['ArcimRowId'];
 	$("#PPFSttDate").datebox('setValue',row['PPFSttDate']);
 	$("#PPFEndDate").datebox('setValue',row['PPFEndDate']);
@@ -193,6 +353,7 @@ function SetSelRowData(row){
 }
 function Clear(){
 	$("#PPFItmMastDR").lookup('setText','');
+	PageLogicObj.m_Stage.clear();
 	PageLogicObj.m_PPFItmMastDR="";
 	$("#PPFSttDate,#PPFEndDate").datebox('setValue','');
 	$("#PPFSttTime,#PPFEndTime").timespinner('setValue','');
@@ -276,4 +437,10 @@ function myparser(s){
 	} else {
 		return new Date();
 	}
+}
+
+function GetHospValue() {
+	PageLogicObj.v_CHosp = ServerObj.InHosp
+	
+	return PageLogicObj.v_CHosp
 }

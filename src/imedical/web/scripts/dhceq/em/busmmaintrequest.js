@@ -1,6 +1,8 @@
 var tableList=new Array();
 var tEvaluate=new Array();
 var CurApproveFlowID="";
+var FromDeptStr=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","503014")
+var MaintModeIDs=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","503005")	//add by zc0125 2022-11-14 获取自修ID串
 //界面入口
 jQuery(document).ready
 (
@@ -17,6 +19,37 @@ function initDocument()
 	initPage();			//放大镜及按钮初始化
 	initMRSourceTypeData();
 	var AssignDate=getElementValue("MRAssignDate");
+	//Modefied by zc 2022-4-8 begin
+	hiddenObj("RetrieveInfo",1)
+	hiddenObj("ReturnInfo",1)
+	$("#MRRetrieveFlag").checkbox({
+		onCheckChange:function(){
+			if(this.checked){
+				if (FromDeptStr=="")
+				{
+					hiddenObj("RetrieveInfo",1)
+				}
+				else
+				{
+					hiddenObj("RetrieveInfo",0)
+				}
+			}
+			else{
+				hiddenObj("RetrieveInfo",1)
+			}
+		}
+	})
+	$("#EmergencyFlag").checkbox({
+		onCheckChange:function(){
+			if(this.checked){
+				setElement("MREmergencyLevelDR",2);
+			}
+			else{
+				setElement("MREmergencyLevelDR","");
+			}
+		}
+	})
+	//Modefied by zc 2022-4-8 begin
 	//刷新数据
 	fillData()
 	totalFee_Change()
@@ -25,36 +58,72 @@ function initDocument()
 	initEditFields(getElementValue("ApproveSetDR"),getElementValue("CurRole"),getElementValue("Action"));
 	setElementEnabled();
 	initApproveButton();
-	initButtonWidth()
+	initButtonWidth(); //初始化按钮宽度
 	muilt_Tab()  //add by lmm 2020-06-29 回车下一输入框
 	var HiddenCostAllot=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","503007")		//modified by czf 1251797 begin
 	if ((HiddenCostAllot==0)||(HiddenCostAllot==""))
 	{
 		hiddenTab("tMaintTabs","tCostAllot");		//modified by czf 1251797 end
 	}
+	//Modefied by zc 2022-4-8 begin'
+	var EmergencyFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","503010")
+	if (EmergencyFlag=="0")
+	{
+		hiddenObj("cEmergencyFlag",1)	//add by ZY0308 20220725  2786508
+		hiddenObj("EmergencyInfo",1)
+	}
+	var RetrieveInfo=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","503013")//modified by zyq begin 2022-10-09
+	if (RetrieveInfo=="0")
+	{
+		hiddenObj("cMRRetrieveFlag",1)
+		hiddenObj("RetrieveFlag",1)
+	}
+	var ReplayInfo=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","503011")
+	if (ReplayInfo=="0")
+	{
+		hiddenObj("cMRReplaceFlag",1)
+		hiddenObj("ReplayInfo",1)
+	}
+	var DisusedInfo=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","503012")
+	if (DisusedInfo=="0")
+	{
+		hiddenObj("cMRDisuesdFlag",1)
+		hiddenObj("DisusedInfo",1)
+	}
+	if (FromDeptStr=="")
+	{
+		hiddenObj("RetrieveInfo",1)
+		hiddenObj("ReturnInfo",1)
+	}
+	//Modefied by zc 2022-4-8
 	//点击维修配件也签刷新
 	$HUI.tabs("#tMaintTabs",{
 		onSelect:function(title)
 		{
 			if (title=="维修配件")
 			{
-				var AccessorySrc="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQMMaintPart&MaintRequestDR="+getElementValue("RowID")+"&MaintItemDR="+getElementValue("MaintItemDR")+"&Status="+getElementValue("MRStatus")+"&MaintType="+getElementValue("MRMaintType");	//modified by CZF0075 2020-02-25
+				var AccessorySrc = "websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQMMaintPart&MaintRequestDR=" + getElementValue("RowID") + "&MaintItemDR=" + getElementValue("MaintItemDR") + "&Status=" + getElementValue("MRStatus") + "&MaintType=" + getElementValue("MRMaintType") + "&ReadOnly=" + getElementValue("ReadOnly") + "&MWToken=" + websys_getMWToken();	// MZY0080	1891466		2021-06-03
 				if ((getElementValue("Action")!="")&&(getElementValue("Action")!="WX_Maint"))
 				{
-					AccessorySrc="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQMMaintPart&MaintRequestDR="+getElementValue("RowID")+"&MaintItemDR="+getElementValue("MaintItemDR")+"&Status=0"+"&MaintType="+getElementValue("MRMaintType");		//modified by CZF0075 2020-02-25
+					AccessorySrc = "websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQMMaintPart&MaintRequestDR=" + getElementValue("RowID") + "&MaintItemDR=" + getElementValue("MaintItemDR") + "&Status=0" + "&MaintType=" + getElementValue("MRMaintType") + "&ReadOnly=" + getElementValue("ReadOnly") + "&MWToken=" + websys_getMWToken();	// MZY0080	1891466		2021-06-03
 				}
 				$('#Accessory').attr('src', AccessorySrc);
 			}
 			if(title=="维修图片")
 			{
-				$('#MaintPic').attr('src', 'dhceq.plat.picturemenu.csp?&CurrentSourceType=31&CurrentSourceID='+getElementValue("RowID")+'&Status='+getElementValue("MRStatus")+'&Action='+getElementValue("Action")+"&MaintType="+getElementValue("MRMaintType")+'&ReadOnly=');
+				// MZY0080	1891466		2021-06-03
+				var url='dhceq.plat.picturemenu.csp?&CurrentSourceType=31&CurrentSourceID='+getElementValue("RowID")+'&Status='+getElementValue("MRStatus")+'&Action='+getElementValue("Action")+"&MaintType="+getElementValue("MRMaintType")+'&ReadOnly=';
+				if (getElementValue("ReadOnly")=="Y") url=url+"1";
+				$('#MaintPic').attr('src', url);
 			}
 			if (title=="维修费用分摊")
 			{
-				var CostAllotSrc="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCostAllotNew&SourceID="+getElementValue("RowID")+"&Types=2"+"&EquipDR="+getElementValue("MRExObjDR_EQRowID")+"&Status="+getElementValue("MRStatus")+"&MaintType="+getElementValue("MRMaintType");	//addd by CZF0076 2020-02-26
+				//modified by ZY0297 修改分摊设置功能
+				//var CostAllotSrc="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCostAllotNew&SourceID="+getElementValue("RowID")+"&Types=2"+"&EquipDR="+getElementValue("MRExObjDR_EQRowID")+"&Status="+getElementValue("MRStatus")+"&MaintType="+getElementValue("MRMaintType")+"&ReadOnly="+getElementValue("ReadOnly");	// MZY0080	1891466		2021-06-03
+				var CostAllotSrc="dhceq.em.costallot.csp?&CAHold2="+getElementValue("RowID")+"&CATypes=2&Status="+getElementValue("MRStatus")+"&MaintType="+getElementValue("MRMaintType")+"&ReadOnly="+getElementValue("ReadOnly");	// MZY0080	1891466		2021-06-03
 				if ((getElementValue("Action")!="")&&(getElementValue("Action")!="WX_Maint"))
 				{
-					CostAllotSrc="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCostAllotNew&SourceID="+getElementValue("RowID")+"&Types=2"+"&EquipDR="+getElementValue("MRExObjDR_EQRowID")+"&Status=0"+"&MaintType="+getElementValue("MRMaintType");	
+					CostAllotSrc="dhceq.em.costallot.csp?&CAHold2="+getElementValue("RowID")+"&CATypes=2&Status=0&ReadOnly="+getElementValue("ReadOnly");	// MZY0080	1891466		2021-06-03	
 				}
 				$('#CostAllot').attr('src', CostAllotSrc);
 			}
@@ -83,6 +152,16 @@ function initDocument()
 			hiddenTab("tOtherTabs","tEvaluate")
 		}
 	}
+	if (getElementValue("Action")=="WX_Maint")	//add by wy 2022-1-23
+	{
+		disableElement("MRHold15",false)
+		if (getElementValue("MRAcceptUserDR")=="") //add by wy 2022-5-30 维修时维修人为空时取当前用户
+		{
+			setElement("MRAcceptUserDR",curUserID)}
+	}
+	if(getElementValue("Action")!="WX_Assign"){ //add by zyq 2022-11-07 不为派单步骤时，派单按钮不可使用
+		disableElement("BApprove1",true)
+		}
 	//加载审批进度
 	createApproveSchedule("ApproveSchedule","25",getElementValue("RowID"))
 	//加载维修历史,知识库
@@ -94,32 +173,99 @@ function initDocument()
 	{
 		if ((Status=="")||(Status==0))
 		{
-			setDisableElements("MRRequestDate^MRAssignDR_UserName^MRAssignDate^MREmergencyLevelDR_ELDesc^MRSeverityLevelDR_SLDesc^MRMaintGroupDR_MGDesc^MRAcceptUserDR_UserName^MREstimateWorkHour^MRAcceptDate^MRMaintModeDR_MMDesc^MRServiceDR_SVName^MRFaultTypeDR_FTDesc^MRInsurFlag^MRFaultReasonDR_FRDesc^MRDealMethodDR_DMDesc^MREndDate^MRMaintResultsDR_MRDesc^MRFaultReasonRemark^MRDealMethodRemark^MRWorkHour^MRMaintFee^MROtherFee^MRSaveCostFee^MRGuaranteePeriod^MRAccountDate^MRAssessment",false)
+			// MZY0080	1943263	
+			setDisableElements("MRRequestDate^MRAssignDR_UserName^MRAssignDate^MREmergencyLevelDR_ELDesc^MRSeverityLevelDR_SLDesc^MRMaintGroupDR_MGDesc^MRAcceptUserDR_UserName^MREstimateWorkHour^MRAcceptDate^MRMaintModeDR_MMDesc^MRServiceDR_SVName^MRFaultTypeDR_FTDesc^MRInsurFlag^MRFaultReasonDR_FRDesc^MRDealMethodDR_DMDesc^MREndDate^MRMaintResultsDR_MRDesc^MRFaultReasonRemark^MRDealMethodRemark^MRWorkHour^MRMaintFee^MRSaveCostFee^MRGuaranteePeriod^MRAccountDate^MRAssessment^MROtherFee",false) //modify by zyq 2023-02-13 配件费可以编辑
 			singlelookup("MRAssignDR_UserName","PLAT.L.EQUser","","")		//20200318
 		}
-		setRequiredElements("MRAcceptUserDR_UserName^MRAcceptDate^MRWorkHour^MREndDate^MRDealMethodRemark^MRFaultReasonRemark^MRMaintModeDR_MMDesc^MRFaultTypeDR_FTDesc^MRMaintFee")
+		setRequiredElements("MRAcceptUserDR_UserName^MRAcceptDate^MRWorkHour^MREndDate^MRDealMethodRemark^MRFaultReasonRemark^MRMaintModeDR_MMDesc^MRFaultTypeDR_FTDesc^MRMaintFee^MROtherFee")//modify by zyq 2023-02-13 配件费可以编辑
+	}
+	var LinkLocFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","992011");		//modified by czf 2020-08-21 begin 1476453
+	if (LinkLocFlag!=1)
+	{
+		$("#AllLocFalg").next().css("display","none");
+		hiddenObj("cAllLocFalg",1);
+	}
+	disableElement("AllLocFalg",false);
+	$("#AllLocFalg").click(function (e) {
+		if(getElementValue("AllLocFalg"))
+		{
+			singlelookup("MRObjLocDR_LocDesc","PLAT.L.Loc",[{name:'LocDesc',type:'4',value:'MRObjLocDR_LocDesc'}])
+		}
+		else
+		{
+			singlelookup("MRObjLocDR_LocDesc","PLAT.L.Loc",[{name:'LocDesc',type:'4',value:'MRObjLocDR_LocDesc'},{name:'LinkLocID',type:'4',value:'MRRequestLocDR'}])
+		}
+	})			
+	//modified by czf 2020-08-21 end 1476453
+	//add by csj 2020-09-29 需求号：1539976
+	var observer = new MutationObserver(function(mutations) {
+	    mutations.forEach(function(mutationRecord) {
+	        $("#tMaintTabs>div").width($("#tMaintTabs").width()-2)
+	    });    
+	});
+	var target = document.getElementById('tMaintTabs');
+	observer.observe(target, { attributes : true, attributeFilter : ['style'] });
+	// MZY0157	3220827		2023-03-29
+	if ((typeof(HISUIStyleCode)!="undefined")&&(HISUIStyleCode=="lite"))
+	{
+		jQuery("#DivPanel").attr("style","border-color: #e2e2e2");
 	}
 }
-
+//modified by 2022-4-12 MRSourceType关键字 begin
 function initMRSourceTypeData()
 {
-	var MRSourceType = $HUI.combobox('#MRSourceType',{
-		valueField:'id', textField:'text',panelHeight:"auto",
-		data:[{
-				id: '1',
-				text: '设备'
-			},{
-				id: '2',
-				text: '简易台账'
-			}],
-		onSelect : function(){
-			setElement("MRSourceTypeDR",getElementValue("MRSourceType")-1)
-			setElement("MRExObjDR_ExObj","")		//Modify DJ 2019-06-06
-			clearData("MRExObjDR_ExObj")			//Modify DJ 2019-06-06
-			}
-	});
-	setElement("MRSourceType","1");  // '1'为设备
-	setElement("MRSourceTypeDR",0);
+	var MaintType=getElementValue("MRMaintType");
+	if(MaintType=="2")
+	{
+		   var MRSourceType =$("#MRSourceType").keywords({
+			   singleSelect:true,
+               items:[{
+					id: '1',
+					text: '设备'
+				},{
+					id: '2',
+					text: '简易台账'
+				},{
+					id: '3',
+					text: '泛类设备'
+				}],
+				onClick : function(v){
+				var SourceType=v.id
+				setElement("FacilityFlag",SourceType-1)
+				if (SourceType==3){setElement("FacilityFlag",SourceType-2)}
+				setElement("MRExObjDR_ExObj","")		//Modify DJ 2019-06-06
+				clearData("MRExObjDR_ExObj")			//Modify DJ 2019-06-06
+	            var vParams=[{name:'Equip',type:'4',value:'MRExObjDR_ExObj'},{name:'VUseLoc',type:'4',value:'MRObjLocDR'},{name:'FacilityFlag',type:'4',value:'FacilityFlag'},{name:'vData',type:'2',value:"SSLocID=^SSGroupID=^SSUserID=^EquipAttribute=^vAllInFlag="+"^SourceType="+SourceType}]
+	            singlelookup("MRExObjDR_ExObj","EM.L.Equip",vParams)
+
+
+				}
+        });}
+        else{
+	          $("#MRSourceType").keywords({
+			   singleSelect:true,
+               items:[{
+					id: '1',
+					text: '设备',selected:true
+				},{
+					id: '3',
+					text: '泛类设备'
+				}],
+			    onClick : function(v){				    
+				var SourceType=v.id
+				setElement("FacilityFlag",SourceType-1)
+				if (SourceType==3){setElement("FacilityFlag",SourceType-2)}
+				setElement("MRExObjDR_ExObj","")		//Modify DJ 2019-06-06
+				clearData("MRExObjDR_ExObj")			//Modify DJ 2019-06-06
+				var vParams=[{name:'Equip',type:'4',value:'MRExObjDR_ExObj'},{name:'VUseLoc',type:'4',value:'MRObjLocDR'},{name:'FacilityFlag',type:'4',value:'FacilityFlag'},{name:'vData',type:'2',value:"SSLocID=^SSGroupID=^SSUserID=^EquipAttribute=^vAllInFlag="+"^MRSourceType="+SourceType}]
+	            singlelookup("MRExObjDR_ExObj","EM.L.Equip",vParams)
+
+				},
+
+	          })
+
+	        }
+
 }
 function initPage()
 {
@@ -133,8 +279,13 @@ function initPage()
 		jQuery("#BMaintUser").linkbutton({iconCls: 'icon-w-other'});  ///Modefidy by zc 2018-10-29 ZC0041  多人协助
 		jQuery("#BMaintUser").click(function(){BMaintUser_Click()});  ///Modefidy by zc 2018-10-29 ZC0041  多人协助
 	}
-	setElement("MRSourceType","1")
-	setRequiredElements("MRObjLocDR_LocDesc^MRSourceType^MRExObjDR_ExObj^MRFaultCaseRemark")
+	jQuery("#BSelfCancelSubmit").linkbutton({iconCls: 'icon-w-back'}); //Add By QW20210916 BUG:QW0150 增加图标
+	var obj=document.getElementById("BSelfCancelSubmit");  //add by mwz 2021-01-18 MWZ0048
+    if (obj) obj.onclick=BSelfCancelSubmit_Clicked;
+	//setElement("MRSourceType","1")	
+	
+	//setRequiredElements("MRObjLocDR_LocDesc^MRSourceType^MRExObjDR_ExObj^MRFaultCaseRemark")
+	setRequiredElements("MRExObjDR_ExObj^MRFaultCaseRemark")  //modified by wy 2022-4-8		
 	// Mozy0256		1221190		2020-3-13	初始化维修方式并增加默认参数Type
 	var paramsFrom=[{"name":"MaintMode","type":"1","value":"MRMaintModeDR_MMDesc"},{"name":"Type","type":"2","value":"3"}];
     singlelookup("MRMaintModeDR_MMDesc","EM.L.MaintMode",paramsFrom,"");
@@ -146,14 +297,47 @@ function initPage()
 	{
 		jQuery("#MROtherFee").change(function(){totalFee_Change()});
 	}
-}
+    var obj=document.getElementById("BEquipList");  //add by wy 2021-11-15 报修界面增加台帐编译界面
+    if (obj) obj.onclick=BEquipList_Clicked;
+    var obj=document.getElementById("BMaintProcess");//add by wy 2022-1-23 维修进度
+	if (obj) obj.onclick=MaintProcess; 
+		//Modefied by zc 2022-4-8  begin
+	if (jQuery("#RetrieveInfo").length>0)
+	{
+		jQuery("#RetrieveInfo").on("click", BRetrieve_Clicked);
+	}
+	if (jQuery("#ReturnInfo").length>0)
+	{
+		jQuery("#ReturnInfo").on("click", BReturn_Clicked);
+	}
+	//Modefied by zc 2022-4-8 end
+        
 
+}
+//Modefied by zc 2022-4-8 end
+//Modefied by zc 2022-4-8 
+function BRetrieve_Clicked()
+{
+	var url="dhceq.em.maintmoveinfo.csp?&MRowID=&SourceType=31&EventType=1&ObjType=1&SourceID="+getElementValue("RowID")+"&EquipDR="+getElementValue("MRExObjDR_EQRowID")+"&Action="+getElementValue("Action");
+	showWindow(url,"取回信息","600","380","icon-w-paper","modal","","","small");
+}
+//Modefied by zc 2022-4-8 
+function BReturn_Clicked()
+{
+	var url="dhceq.em.maintmoveinfo.csp?&MRowID=&SourceType=31&EventType=2&ObjType=1&SourceID="+getElementValue("RowID")+"&EquipDR="+getElementValue("MRExObjDR_EQRowID")+"&Action="+getElementValue("Action");
+	showWindow(url,"归还信息","600","380","icon-w-paper","modal","","","small");
+}
 function setSelectValue(vElementID,rowData)
 {
+	//modified by 2022-4-12 MRSourceType关键字
+	var SourceType=$("#MRSourceType").keywords("getSelected")
+	if ((SourceType!="")&&(SourceType!=undefined)) SourceType=SourceType[0].id
 	if (vElementID=="MRObjLocDR_LocDesc")
 	{
 		setElement("MRObjLocDR",rowData.TRowID)
 		setElement("MRRequestTel",rowData.TTel)
+		if ((SourceType=="1")||(SourceType=="2")){
+		setElement("MRExObjDR_ExObj","")}	// MZY0063	1580308		2020-12-11
 	}
 	else if (vElementID=="MRExObjDR_ExObj")
 	{
@@ -161,24 +345,30 @@ function setSelectValue(vElementID,rowData)
 		setElement("MRExObjDR_ExObj",rowData.TName);			//Modify DJ 2019-06-06
 		setElement("MRExObjDR_EQNo",rowData.TNo);
 		setElement("MRExObjDR_EQModel",rowData.TModel);
-		//setElement("MRObjLocDR_LocDesc",rowData.TUseLoc);		//Modify DJ 2019-06-06
-		//setElement("MRObjLocDR",rowData.TUseLocDR);			//Modify DJ 2019-06-06
+		if ((SourceType=="1")||(SourceType=="2")){
+		setElement("MRObjLocDR_LocDesc",rowData.TUseLoc);		//Modify DJ 2019-06-06  modified by wy 2021-5-6 1904435 选择设备带出使用科室
+		setElement("MRObjLocDR",rowData.TUseLocDR);			//Modify DJ 2019-06-06
+		}
 		//setElement("MRSourceType",rowData.TExType);			//Modify DJ 2019-06-06
 		setElement("MRExObjDR_EQOriginalFee",rowData.TOriginalFee);
-		setElement("MRPlace",rowData.TLocation);
+		setElement("MRLocationDR_LDesc", rowData.TLocation); //modify by zyq 2023-02-20
 		setElement("MRExObjDR_EQFileNo",rowData.TFileNo);
 		setElement("MRExObjDR_EQRowID",rowData.TRowID);
 		setElement("MRObjTypeDR",rowData.TTypeDR);
 		setElement("MREquipTypeDR",rowData.TEquipTypeDR);
 		setElement("MRExObjDR_EQClassFlag",rowData.TClassFlag);		//Modify DJ 2019-06-27
 		//来自设备时自动保存维护对象[待屏蔽]
-		if ((getElementValue("MRSourceType")=="1")||(getElementValue("MRSourceType")=="2"))			//Modify DJ 2019-06-06
+		if ((SourceType=="1")||(SourceType=="2")||(SourceType=="3"))			  //Modified By QW20211229 
 		{
 			var jsonData=tkMakeServerCall("web.DHCEQ.EM.BUSMMaintRequest","AutoSaveExObj",rowData.TRowID)
 			var jsonObj=JSON.parse(jsonData)
 			if (jsonObj.SQLCODE<0) {messageShow("","","",jsonObj.Data);return;}
 			setElement("MRExObjDR",jsonObj.Data)
 		}
+		//add by wy 2022-4-18 检测设备是否存在对照故障现象
+		var PParams=[{name:'FaultCase',type:'4',value:'MRFaultCaseDR_FCDesc'},{name:'Equip',type:'2',value:rowData.TRowID}]
+	    singlelookup("MRFaultCaseDR_FCDesc","EM.L.FaultCase",PParams)
+
 		var obj=document.getElementById("Banner");
 		if (obj){$("#Banner").attr("src",'dhceq.plat.banner.csp?&EquipDR='+rowData.TRowID)}
 	}
@@ -190,9 +380,32 @@ function setSelectValue(vElementID,rowData)
 		setElement("MRMaintGroupDR_MGDesc",rowData.TMaintGroup);
 	}
 	else if (vElementID=="MRAssignDR_UserName"){setElement("MRAssignDR",rowData.TRowID)}		//20200318
-	else if (vElementID=="MRRequestUserDR_UserName"){setElement("MRRequestUserDR",rowData.TRowID)}
+	else if (vElementID=="MRRequestUserDR_UserName"){  //Modified By QW20211229 
+		setElement("MRRequestUserDR",rowData.TRowID)
+		setElement("MRRequestLocDR",rowData.TUserLocDR)
+		setElement("MRRequestLocDR_LocDesc",rowData.TUserLoc)
+		setElement("MRRequestTel",rowData.TMobilePhone)
+	}
 	else if (vElementID=="MREquipStatusDR_ESDesc"){setElement("MREquipStatusDR",rowData.TRowID)}
-	else if (vElementID=="MRMaintModeDR_MMDesc"){setElement("MRMaintModeDR",rowData.TRowID)}
+	else if (vElementID=="MRMaintModeDR_MMDesc")
+	{
+		setElement("MRMaintModeDR",rowData.TRowID)
+		//add by zc0125 2022-11-14 维修方式为自修时，灰化勾选框（是否保内，现场返厂维修） begin
+		var MaintModeFlag=tkMakeServerCall("web.DHCEQCommon","IdInIds",rowData.TRowID,MaintModeIDs);
+		if ((MaintModeFlag=="1")&&(MaintModeIDs!=""))
+		{
+			disableElement("MRInsurFlag",true)
+			disableElement("MRReturnFlag",true)
+			setElement("MRInsurFlag","")
+			setElement("MRReturnFlag","")
+		}
+		else
+		{
+			disableElement("MRInsurFlag",false)
+			disableElement("MRReturnFlag",false)
+		}
+		//add by zc0125 2022-11-14 维修方式为自修时，灰化勾选框（是否保内，现场返厂维修） end
+	}
 	else if (vElementID=="MRServiceDR_SVName"){setElement("MRServiceDR",rowData.TRowID)}
 	else if (vElementID=="MRFaultTypeDR_FTDesc"){setElement("MRFaultTypeDR",rowData.TRowID)}
 	else if (vElementID=="MRFaultReasonDR_FRDesc"){setElement("MRFaultReasonDR",rowData.TRowID)}
@@ -203,25 +416,30 @@ function setSelectValue(vElementID,rowData)
 	else if (vElementID=="MRSeverityLevelDR_SLDesc"){setElement("MRSeverityLevelDR",rowData.TRowID)}
 	else if (vElementID=="MRFaultCaseDR_FCDesc"){setElement("MRFaultCaseDR",rowData.TRowID)}
 	else if (vElementID=="MRAccessoryOriginalDR_AODesc"){setElement("MRAccessoryOriginalDR",rowData.TRowID)}  //Modify by zx BUG ZX0077
+	else if (vElementID=="MRLocationDR_LDesc"){setElement("MRLocationDR",rowData.TRowID)} //add by zyq 2023-03-01
 }
 
 function clearData(vElementID)
 {
 	var DRElementName=vElementID.split("_")[0]
 	setElement(DRElementName,"")
+	//modified by 2022-4-12 MRSourceType关键字
+	var SourceType=$("#MRSourceType").keywords("getSelected")
+	if ((SourceType!="")&&(SourceType!=undefined)) SourceType=SourceType[0].id
 	if (vElementID=="MRObjLocDR_LocDesc") 
 	{
 		setElement("MRRequestTel","")
+		if (SourceType=="1"){
 		setElement("MRExObjDR_ExObj","");
 		setElement("MRExObjDR","");
-		clearData("MRExObjDR_ExObj")
+		clearData("MRExObjDR_ExObj")}
 	}
 	else if (vElementID=="MRExObjDR_ExObj") 
 	{
 		//setElement("MRExObjDR_EQNo","");		//Modify DJ 2019-06-06
 		//setElement("MRExObjDR_EQModel","");	//Modify DJ 2019-06-06
 		setElement("MRExObjDR_EQOriginalFee","");
-		//setElement("MRPlace","");				//Modify DJ 2019-06-06
+		setElement("MRLocationDR_LDesc","");				//Modify zyq 2023-03-01
 		setElement("MRExObjDR_EQFileNo","");
 		setElement("MRExObjDR_EQRowID","");
 		setElement("MRObjTypeDR","");
@@ -237,6 +455,10 @@ function clearData(vElementID)
 		setElement("MRAcceptUserDR_Initials","")
 		setElement("MRAcceptUserDR_UserName","");
 		setElement("MRAcceptUserDR","");
+	}
+	else if (vElementID == "MRRequestUserDR_UserName") {  //add by zyq 2023-02-15
+		setElement("MRRequestLocDR", (session['LOGON.CTLOCID']))
+		setElement("MRRequestLocDR_LocDesc", "")
 	}
 }
 
@@ -261,7 +483,8 @@ function fillData()
 				setElement("MRExObjDR_EQModel",jsonData.Data["EQModelDR_MDesc"]);
 				setElement("MRSourceType","1");  // '1'为设备
 				setElement("MRExObjDR_EQOriginalFee",jsonData.Data["EQOriginalFee"]);
-				setElement("MRPlace",jsonData.Data["EQLocationDR_LDesc"]);
+				setElement("MRLocationDR_LDesc", jsonData.Data["EQLocationDR_LDesc"]); //modify by zyq 2023-02-20
+				setElement("MRLocationDR", jsonData.Data["EQLocationDR"]); //modify by zyq 2023-03-01
 				setElement("MRExObjDR_EQFileNo",jsonData.Data["EQFileNo"]);
 				setElement("MRExObjDR_EQRowID",EquipDR);
 				setElement("MRObjTypeDR","1");  // '1'为设备
@@ -281,9 +504,11 @@ function fillData()
 	var Action=getElementValue("Action");
 	var Step=getElementValue("RoleStep");
 	var ApproveRoleDR=getElementValue("ApproveRoleDR");
-	var jsonData=tkMakeServerCall("web.DHCEQ.EM.BUSMMaintRequest","GetOneMaintRequest",RowID,ApproveRoleDR,Action,Step)
+	var CurRole=getElementValue("CurRole")  //modified by wy 2022-7-22 2767477 审批角色改取当前角色
+	var jsonData=tkMakeServerCall("web.DHCEQ.EM.BUSMMaintRequest","GetOneMaintRequest",RowID,CurRole,Action,Step)
 	var jsonObj=jQuery.parseJSON(jsonData)
 	if (jsonObj.SQLCODE<0) {messageShow("","","",jsonObj.Data);return;}
+	$("#MRSourceType").keywords("select",jsonObj.Data["MRSourceType"]); //modified by 2022-4-12 MRSourceType关键字
 	setElementByJson(jsonObj.Data)
 	$("#Banner").attr("src",'dhceq.plat.banner.csp?&EquipDR='+getElementValue("MRExObjDR_EQRowID"))
 	setContratByEquip(jsonObj.Data["MRExObjDR"])
@@ -335,13 +560,21 @@ function setEnabled()
 		disableElement("BSave",true)
 		disableElement("BSubmit",true)
 		disableElement("BDelete",true)
-		disableElement("BPicture",true)
+		//disableElement("BPicture",true)	// MZY0063	1580653		2020-12-11
+		disableElement("BSelfCancelSubmit",true)   // add by mwz 2021-01-18 MWZ0048
+		//Modefied by zc 2022-4-8 begin
+		if (getElementValue("MRRetrieveFlag")==true)
+		{
+			hiddenObj("ReturnInfo",0)
+		}
+		//Modefied by zc 2022-4-8 end
 	}
 	if(RowID=="")
 	{
 		disableElement("BSubmit",true)
 		disableElement("BDelete",true)
 		disableElement("BPicture",true)
+		disableElement("BAppendFile",true); 
 	}
 	if ((Status!=0)||((curRole!=0)&&(curRole!=nextRole)))
 	{
@@ -355,6 +588,15 @@ function setEnabled()
 		disableElement("BMaintDetail",true)
 		disableElement("BMaintUser",true)  ///Modefidy by zc 2018-10-29 ZC0041  多人协助
 	}
+	//Modefied by zc 2022-4-8  begin
+	if ((Action=="WX_Finish")||(Action=="WX_Return"))       //维修完成和归还时，可访问归还链接
+	{
+		if (getElementValue("MRRetrieveFlag")==true)
+		{
+			hiddenObj("ReturnInfo",0)
+		}
+	}
+	//Modefied by zc 2022-4-8  end
 	if (Status>0)
 	{
 		hiddenObj("BSave",1)
@@ -363,7 +605,8 @@ function setEnabled()
 	}
 	else
 	{
-		disableAllElements("MRObjLocDR_LocDesc^MRSourceType^MRExObjDR_ExObj^MREquipStatusDR_ESDesc^MRFaultCaseDR_FCDesc^MRFaultCaseRemark^MRStartDate^MRRequestUserDR_UserName^MRRequestTel^MRPlace^MRPackageState")  //modify by lmm 2019-08-28 989278
+		disableElement("BSelfCancelSubmit",true)   // add by mwz 2021-01-18 MWZ0048
+		disableAllElements("MRObjLocDR_LocDesc^MRSourceType^MRExObjDR_ExObj^MREquipStatusDR_ESDesc^MRFaultCaseDR_FCDesc^MRFaultCaseRemark^MRStartDate^MRRequestUserDR_UserName^MRRequestTel^MRLocationDR_LDesc^MRPackageState^MRAcceptUserDR_UserName^MRMaintModeDR_MMDesc^MRRetrieveFlag^MRReplaceFlag^MRDisuesdFlag^EmergencyFlag")  //modify by lmm 2019-08-28 989278   modify by zyq 2022-09-22 2827765  modify by zyq 2023-03-01 
 	}
 		if (Status!=2)
 	{
@@ -376,6 +619,11 @@ function setEnabled()
 		disableElement("BCancel",true)
 		disableElement("BPrint",true)
 	}
+	if (Status=="2")
+	{
+		disableElement("BSelfCancelSubmit",true)   // add by mwz 2021-01-18 MWZ0048
+	}
+	
 	//Moidefied by zc0066 2020-4-11  生命周期链接按钮灰化 end
 }
 
@@ -403,6 +651,8 @@ function setElementEnabled()
 		{
 			disableElement("MROtherFee",true)
 			disableElement("MRTotalFee",true)
+			disableElement("MREmergencyLevelDR_ELDesc",true)
+			disableElement("EmergencyFlag",false)  //Modefied by zc 2022-4-8 
 //			var result=getMaintNumForAffix();	//南方医院个性需求
 //			if (result!="")
 //			{
@@ -415,11 +665,13 @@ function setElementEnabled()
 			{
 				disableElement("MRAcceptDate",true)
 				setElement("MRAcceptDate",getElementValue("CurDate"));
+				disableElement("EmergencyFlag",true)  //Modefied by zc 2022-4-8
 			}
 			if ((Action=="WX_Finish")&&(getElementValue("EndDate")==""))
 			{
 				disableElement("MREndDate",true)
 				setElement("MREndDate",getElementValue("CurDate"));
+				disableElement("EmergencyFlag",true)  //Modefied by zc 2022-4-8 
 			}
 		}
 	}
@@ -459,8 +711,56 @@ function totalFee_Change()
 function BSave_Clicked()
 {
 	if (checkMustItemNull()) return
-	var ExObjDR=getElementValue("MRExObjDR")
-	var SourceTypeDR=getElementValue("MRSourceType")
+	// MZY0063	1580308		2020-12-11
+	//modified by 2022-4-12 MRSourceType关键字
+	var SourceType=$("#MRSourceType").keywords("getSelected")
+	if ((SourceType)||(SourceType!=undefined)) SourceType=SourceType[0].id
+	if (SourceType=="1")
+	{
+	var MRObjLocDR=getElementValue("MRObjLocDR")
+	if (MRObjLocDR=="")
+	{
+		messageShow("","","","使用科室不能为空,请选择科室!")
+		return
+	}
+	}
+	//add by wy 2022-4-23当泛类维修时，只输入设备名称即可以完成建单 begin
+	if (SourceType=="3")
+	{ 
+	     var ExObjDR=getElementValue("MRExObjDR")
+	     var ExObj=getElementValue("MRExObjDR_ExObj")
+	     if ((ExObjDR=="")&&(ExObj!=""))
+	     {   
+	           var EquipStr=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","503015")
+	           if (EquipStr=="") {return;}
+	           var list=EquipStr.split("^");
+	           var jsonData=tkMakeServerCall("web.DHCEQ.EM.BUSMMaintRequest","SaveExObj",ExObj,"","")
+	           jsonData=jQuery.parseJSON(jsonData);
+				if (jsonData.SQLCODE<0) {messageShow("","","",jsonData.Data);return;}
+				setElement("MRExObjDR",jsonData.Data)
+				setElement("MREquipTypeDR",list[0]);
+	      }
+		}  
+		//add by wy 2022-4-23当泛类维修时，只输入设备名称即可以完成建单 end 
+		var ExObjDR=getElementValue("MRExObjDR")
+		if (ExObjDR=="")
+		{
+			messageShow("","","","设备名称不能为空,请选择设备!")
+			return
+		}
+
+	// add by sjh SJH0035 2020-09-23 START 判断控制费用不能包含非数字类型字符串
+	var MaintFee=Number(getElementValue("MRMaintFee"))
+	var OtherFee=Number(getElementValue("MROtherFee"))
+	var SaveCostFee=Number(getElementValue("MRSaveCostFee"))
+	var MaintType=getElementValue("MRMaintType");
+	if(((isNaN(MaintFee))||(isNaN(OtherFee))||(isNaN(SaveCostFee)))&&(MaintType=="1"))
+	{
+		messageShow("","","","费用类型要为数值类型！")
+		return
+	} 
+	// add by sjh SJH0035 2020-09-23 END
+	var SourceTypeDR=SourceType     //getElementValue("MRSourceType")
 	//存储数据
 	var RowID=getElementValue("RowID")
 	var CheckValue=tkMakeServerCall("web.DHCEQ.EM.BUSMMaintRequest","CheckMaintProcess",SourceTypeDR,ExObjDR,RowID)
@@ -472,18 +772,39 @@ function BSave_Clicked()
 		CheckInfo=CheckInfo.replace("[RequestUser]",CheckObj.Data["RequestUser"]);
 		CheckInfo=CheckInfo.replace("[RequestDate]",CheckObj.Data["RequestDate"]);
 		CheckInfo=CheckInfo.replace("[RequestNo]",CheckObj.Data["RequestNo"]);
-		messageShow("confirm","info","提示",CheckInfo,"",bsavechecktrue,"");
+		messageShow("confirm","info","提示",CheckInfo,"",checkEquipStatus,"");
 	}
 	else
 	{
-		bsavechecktrue()
+		checkEquipStatus()
 	}
 }
-function bsavechecktrue()
+function checkEquipStatus()
+{
+	var MREquipStatus=getElementValue("MREquipStatusDR");
+	//add by wy 2021-5-6 1882906设备状态异常停用设备，先判断设备是否已停用
+	var EQRowID=getElementValue("MRExObjDR_EQRowID")
+	var EQClassFlag=getElementValue("MRExObjDR_EQClassFlag")
+	var GetStopEquipFlag=getElementValue("GetStopEquipFlag")
+	var GetEQStopStartFlag=tkMakeServerCall("web.DHCEQ.EM.BUSMMaintRequest","GetEQStopStartFlag","","",EQRowID,"2");
+	if ( (MREquipStatus>1)&&(GetEQStopStartFlag==1)&&(EQClassFlag!="Y"))
+	{
+		messageShow("confirm","info","提示","设备状态异常是否停用设备？","",function(){
+			bsavechecktrue("Y")
+			},function(){
+			bsavechecktrue("N")
+				})
+	}
+	else
+	{
+		bsavechecktrue("N")
+	}
+}
+function bsavechecktrue(MREquipStatusFlag)
 {
 	var combindata=getDataList();
 	var Evaluate=""	
-	var ReturnValue=tkMakeServerCall("web.DHCEQ.EM.BUSMMaintRequest","UpdateMaintRequest",combindata,Evaluate)
+	var ReturnValue=tkMakeServerCall("web.DHCEQ.EM.BUSMMaintRequest","UpdateMaintRequest",combindata,Evaluate,MREquipStatusFlag)
 	var ReturnObj=JSON.parse(ReturnValue)
 	if (ReturnObj.SQLCODE<0) 
 	{
@@ -492,17 +813,45 @@ function bsavechecktrue()
 	}
 	else
 	{
+		//Modified BY QW20211229 begin
+		/*var data={"URowID":getElementValue("MRRequestUserDR"),"UMobilePhone":getElementValue("MRRequestTel"),"UActiveFlag":"Y","ULoginName":getElementValue("MRRequestUserDR")}
+		data=JSON.stringify(data);
+		var jsonData=tkMakeServerCall("web.DHCEQ.Plat.CTUser","SaveData",data,"");
+		//Modified BY QW20211229 end
+		messageShow("","","",t[0])*/
+		//Modified BY WY 2022-4-19 生成设备与故障现象对照
+		if (getElementValue("MRFaultCaseDR")!="") {		
+		var EquipDR=getElementValue("MRExObjDR_EQRowID")
+		var jsonData=tkMakeServerCall("web.DHCEQ.EM.BUSEquip","GetOneEquip",EquipDR);
+		var jsonData=JSON.parse(jsonData)
+		var ItemDR=jsonData.Data["EQItemDR"]
+	   	var valList="^1^"+getElementValue("MRFaultCaseDR")+"^2^"+ItemDR+"^^^Y^^^^^"
+		var jsonData=tkMakeServerCall("web.DHCEQ.EM.KNMaint","SaveFaultEquipMapData",valList);
 		messageShow("","","",t[0])
+		}
+	
 	}
 	//刷新界面
 	//modifiedd by CZF0075 2020-02-25 begin
 	var MaintType=getElementValue("MRMaintType");
 	var src="dhceq.em.mmaintrequestsimple.csp?";
-	if (MaintType==1)
+	 //Modified BY QW20211229
+	var MRManageTypeDR=getElementValue("MRManageTypeDR");
+	var QXType=getElementValue("QXType")
+	if ((MRManageTypeDR==1)&&(QXType==1))
 	{
-		src="dhceq.em.mmaintrequest.csp?";
+		var src="dhceq.em.hardwaremaintsimple.csp?";
+	}else{
+		if (MaintType==1)
+		{
+			src="dhceq.em.mmaintrequest.csp?";
+		}
 	}
-	window.setTimeout(function(){window.location.href=src+"&RowID="+ReturnObj.Data+"&CurRole="+getElementValue("CurRole")+"&ApproveRoleDR="+getElementValue("ApproveRoleDR")+"&QXType="+getElementValue("QXType")+"&MaintType="+MaintType},50); 
+	var url=src+"&RowID="+ReturnObj.Data+"&CurRole="+getElementValue("CurRole")+"&ApproveRoleDR="+getElementValue("ApproveRoleDR")+"&QXType="+getElementValue("QXType")+"&MaintType="+MaintType;
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.setTimeout(function(){window.location.href=url},50); 
 	//modifiedd by CZF0075 2020-02-25 end
 }
 function BSubmit_Clicked()
@@ -510,11 +859,14 @@ function BSubmit_Clicked()
 	if (checkMustItemNull()) return
 	var IRowID=getElementValue("RowID");
 	if (IRowID=="")	{messageShow("","","",t[-9205]);return 0;}
-	var SourceTypeDR=getElementValue("MRSourceType")		//Modify DJ 2019-06-27
+	//modified by 2022-4-12 MRSourceType关键字
+	var SourceType=$("#MRSourceType").keywords("getSelected")
+	if ((SourceType)||(SourceType!=undefined)) SourceType=SourceType[0].id
+	var SourceTypeDR=SourceType  //getElementValue("MRSourceType")		//Modify DJ 2019-06-27
 	var EQClassFlag=getElementValue("MRExObjDR_EQClassFlag")
 	var GetStopEquipFlag=getElementValue("GetStopEquipFlag")
 	var GetEQStopStartFlag=tkMakeServerCall("web.DHCEQ.EM.BUSMMaintRequest","GetEQStopStartFlag","31",IRowID,"","2");
-	if (((SourceTypeDR!=2)||(EQClassFlag!="Y"))&&(GetEQStopStartFlag==1))		//除简易台账范类外处理停用启用 Modify DJ 2019-06-27
+	if (((SourceTypeDR==1)&&(EQClassFlag!="Y"))&&(GetEQStopStartFlag==1))		//除简易台账泛类外处理停用启用 Modify DJ 2019-06-27
 	{
 		if (GetStopEquipFlag==1)
 		{
@@ -557,11 +909,23 @@ function bsubmit()
 	//modifiedd by CZF0075 2020-02-25 begin
 	var MaintType=getElementValue("MRMaintType");
 	var src="dhceq.em.mmaintrequestsimple.csp?";
-	if ((MaintType==1)||(SimpleFlag==""))
+	 //Modified BY QW20211229
+	var MRManageTypeDR=getElementValue("MRManageTypeDR");
+	var QXType=getElementValue("QXType")
+	if ((MRManageTypeDR==1)&&(QXType==1)) 
 	{
-		src="dhceq.em.mmaintrequest.csp?";
+		var src="dhceq.em.hardwaremaintsimple.csp?";
+	}else{
+		if ((MaintType==1)||(SimpleFlag==""))
+		{
+			src="dhceq.em.mmaintrequest.csp?";
+		}
 	}
-	window.setTimeout(function(){window.location.href=src+"&RowID="+IRowID+"&CurRole="+getElementValue("CurRole")+"&MaintType="+MaintType},50); 
+	var url=src+"&RowID="+IRowID+"&CurRole="+getElementValue("CurRole")+"&QXType="+getElementValue("QXType")+"&MaintType="+MaintType;
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.setTimeout(function(){window.location.href=url},50); // modified by zyq 2022-10-09
 	//modifiedd by CZF0075 2020-02-25 end
 }
 function BDelete_Clicked()
@@ -584,11 +948,24 @@ function bdeletetrue()
 	//modifiedd by CZF0075 2020-02-25 begin
 	var MaintType=getElementValue("MRMaintType");
 	var src="dhceq.em.mmaintrequestsimple.csp?";
-	if (MaintType==1)
+	//Modified BY QW20211229
+	var MRManageTypeDR=getElementValue("MRManageTypeDR");
+	var QXType=getElementValue("QXType")
+	if ((MRManageTypeDR==1)&&(QXType==1)) 
 	{
-		src="dhceq.em.mmaintrequest.csp?";
+		var src="dhceq.em.hardwaremaintsimple.csp?";
+	}else
+	{
+		if (MaintType==1)
+		{
+			src="dhceq.em.mmaintrequest.csp?";
+		}
 	}
-	window.setTimeout(function(){window.location.href=src+"&RowID=&Status=0&MaintType="+MaintType},50); 
+	var url=src+"&RowID=&Status=0&MaintType="+MaintType;
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.setTimeout(function(){window.location.href=url},50); 
 	//modifiedd by CZF0075 2020-02-25 end
 }
 
@@ -596,11 +973,21 @@ function BCancelSubmit_Clicked()
 {
 	var RowID=getElementValue("RowID")
 	if (RowID=="")  {messageShow("","","",t[-9205]);	return;	}
-	var SourceTypeDR=getElementValue("MRSourceType")		//Modify DJ 2019-06-27
+	if (getElementValue("RejectReason")=="") //add by wy 2022-7-22 2766212 拒绝意见	 
+	{
+		setFocus("RejectReason");
+		messageShow('alert','error','提示',t[-9234])	
+		return
+	}
+	//modified by 2022-4-12 MRSourceType关键字
+	var SourceType=$("#MRSourceType").keywords("getSelected")
+	if ((SourceType!="")&&(SourceType!=undefined)) SourceType=SourceType[0].id
+
+	var SourceTypeDR=SourceType   //getElementValue("MRSourceType")		//Modify DJ 2019-06-27
 	var EQClassFlag=getElementValue("MRExObjDR_EQClassFlag")
 	var GetStopEquipFlag=getElementValue("GetStopEquipFlag")
 	var GetEQStopStartFlag=tkMakeServerCall("web.DHCEQ.EM.BUSMMaintRequest","GetEQStopStartFlag","31",RowID,"","1");
-	if (((SourceTypeDR!=2)||(EQClassFlag!="Y"))&&(GetEQStopStartFlag==1))		//除简易台账范类外处理停用启用 Modify DJ 2019-06-27
+	if (((SourceTypeDR!=2)||(EQClassFlag!="Y"))&&(GetEQStopStartFlag==1))		//除简易台账泛类外处理停用启用 Modify DJ 2019-06-27
 	{
 		if (GetStopEquipFlag==1)
 		{
@@ -678,7 +1065,11 @@ function bcancelsubmit()
     else
     {
 	    messageShow("","","",t[0])
-	    window.setTimeout(function(){window.location.href="dhceq.em.mmaintrequest.csp?&RowID="+RtnObj.Data+"&CurRole="+getElementValue("CurRole")},50); 
+	    var url="dhceq.em.mmaintrequest.csp?&RowID="+RtnObj.Data+"&CurRole="+getElementValue("CurRole");
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
+	    window.setTimeout(function(){window.location.href=url},50); 
     }
 }
 
@@ -703,6 +1094,11 @@ function BApprove_Clicked()
   	var FaultTypeDR=getFaultTypeRowID(GetFaultTypeOperMethod);
   	if (FaultTypeDR<0) return;
   	setElement("MRFaultTypeDR",FaultTypeDR);
+  	
+  	var type=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","201006")
+	var ServiceDR=getServiceRowID(type,"MRServiceDR","MRServiceDR_SVName")  //modified by wy 2022-9-28 2955208
+	if (ServiceDR<0){ServiceDR=""}
+  	setElement("MRServiceDR",ServiceDR);
 	//保存评价信息 Modify DJ 2015-08-28 DJ0159
 	var CurRole=getElementValue("CurRole")
   	if (CurRole=="") return;
@@ -712,13 +1108,16 @@ function BApprove_Clicked()
 	var RowID=getElementValue("RowID");
 	var ApproveTypeCode="25";
 	var Type="0";
-	var GotoType=tkMakeServerCall("web.DHCEQ.Plat.CTCApproveFlow","GetApproveFlowType",RowID,CurRole,ApproveTypeCode,Type,RoleStep)
-	var GotoTypeObj=JSON.parse(GotoType)
-	setElement("ApproveTypeCode","25");
-	setElement("Type","0");
-	if (GotoTypeObj.Data==2)
+	//Modefied by zc 2022-4-8 begin
+	if (getElementValue("MRDisuesdFlag")!=true) 
 	{
-		var vParams={
+		var GotoType=tkMakeServerCall("web.DHCEQ.Plat.CTCApproveFlow","GetApproveFlowType",RowID,CurRole,ApproveTypeCode,Type,RoleStep)
+		var GotoTypeObj=JSON.parse(GotoType)
+		setElement("ApproveTypeCode","25");
+		setElement("Type","0");
+		if (GotoTypeObj.Data==2)
+		{
+			var vParams={
 			ClassName:"web.DHCEQCApproveFlow",
 			QueryName:"GetUserApproves",
 			Arg1:getElementValue("RowID"),
@@ -728,17 +1127,19 @@ function BApprove_Clicked()
 			Arg5:getElementValue("RoleStep"),
 			ArgCnt:5
 			};
-		var vcolumns=[[
-		{field:'TRowID',title:'TRowID',width:50,align:'center',hidden:true},
-		{field:'TRoleDR',title:'TRoleDR',width:50,align:'center',hidden:true},
-		{field:'TRole',title:'TRole',width:50,align:'center',hidden:true},
-		{field:'TStep',title:'TStep',width:50,align:'center',hidden:true},
-		{field:'TAction',title:'动作',width:200,align:'center'},
-		]];
-		initApproveFlowGrid("ApproveFlowWin","tApproveFlowGrid",vParams,vcolumns,0)
-		jQuery('#ApproveFlowWin').window('open');
-		return;	
+			var vcolumns=[[
+			{field:'TRowID',title:'TRowID',width:50,align:'center',hidden:true},
+			{field:'TRoleDR',title:'TRoleDR',width:50,align:'center',hidden:true},
+			{field:'TRole',title:'TRole',width:50,align:'center',hidden:true},
+			{field:'TStep',title:'TStep',width:50,align:'center',hidden:true},
+			{field:'TAction',title:'动作',width:200,align:'center'},
+			]];
+			initApproveFlowGrid("ApproveFlowWin","tApproveFlowGrid",vParams,vcolumns,0)
+			jQuery('#ApproveFlowWin').window('open');
+			return;	
+		}
 	}
+	//Modefied by zc 2022-4-8 end
 	var EvaluatInfo=""
 	var GetCheckEvaluate=checkEvaluate("31",RowID,CurRole,"","","",Action)
 	setElement("CheckEvaluate",GetCheckEvaluate)
@@ -782,12 +1183,15 @@ function bapprovestartstop()
 {
 	var RowID=getElementValue("RowID")
 	if (RowID=="")  {messageShow("","","",t[-9205]);	return;	}
-	var SourceTypeDR=getElementValue("MRSourceType")
+	//modified by 2022-4-12 MRSourceType关键字
+	var SourceType=$("#MRSourceType").keywords("getSelected")
+	if ((SourceType!="")&&(SourceType!=undefined)) SourceType=SourceType[0].id
+	var SourceTypeDR=SourceType  //getElementValue("MRSourceType")
 	var EQClassFlag=getElementValue("MRExObjDR_EQClassFlag")
 	var GetStopEquipFlag=getElementValue("GetStopEquipFlag")
 	var Action=getElementValue("Action")
 	var GetEQStopStartFlag=tkMakeServerCall("web.DHCEQ.EM.BUSMMaintRequest","GetEQStopStartFlag","31",RowID,"","1");
-	if (((SourceTypeDR!=2)||(EQClassFlag!="Y"))&&(GetEQStopStartFlag==1)&&(Action=="WX_Finish"))		//除简易台账范类外处理停用启用 Modify DJ 2019-06-27
+	if (((SourceTypeDR!=2)||(EQClassFlag!="Y"))&&(GetEQStopStartFlag==1)&&(Action=="WX_Finish"))		//除简易台账泛类外处理停用启用 Modify DJ 2019-06-27
 	{
 		if (GetStopEquipFlag==1)
 		{
@@ -837,7 +1241,7 @@ function bapprove()
     else
     {
 	    messageShow("","","",t[0])
-		websys_showModal("options").mth();  //modify by lmm 2019-02-19
+		websys_showModal("options").mth("31");  //modify by zx 2022-04-11 bug ZX0144
 	    window.setTimeout(function(){window.location.reload()},50); 
     }
 }
@@ -852,6 +1256,10 @@ function getDataList()
 	if (DealMethodDR<0){DealMethodDR=""}
 	var FaultTypeDR=getFaultTypeRowID(getElementValue("GetFaultTypeOperMethod"))
 	if (FaultTypeDR<0){FaultTypeDR=""}
+	var ServiceDR=""
+  	var type=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","201006")
+	var ServiceDR=getServiceRowID(type,"MRServiceDR","MRServiceDR_SVName") //add by wy 2022-9-28 2955208
+	if (ServiceDR<0){ServiceDR=""}
 	var combindata="";
   	combindata=getElementValue("RowID") ;
 	combindata=combindata+"^"+getElementValue("MRRequestNo") ;
@@ -859,7 +1267,16 @@ function getDataList()
 	combindata=combindata+"^"+getElementValue("MREquipTypeDR") ;
 	combindata=combindata+"^"+getElementValue("MRObjTypeDR") ;
 	combindata=combindata+"^"+getElementValue("MRExObjDR") ;
-	combindata=combindata+"^"+getElementValue("MRObjLocDR") ;
+	//modified by 2022-4-12 MRSourceType关键字
+	var SourceType=$("#MRSourceType").keywords("getSelected")
+	if ((SourceType)||(SourceType!=undefined)) SourceType=SourceType[0].id
+	if ((SourceType=="3")&&(getElementValue("MRObjLocDR")==""))//modified by zyq 2022-09-28
+	 {
+		combindata=combindata+"^"+getElementValue("MRRequestLocDR") ;
+	 }
+	else {
+		combindata=combindata+"^"+getElementValue("MRObjLocDR");
+	}
 	combindata=combindata+"^"+getElementValue("MRRequestLocDR") ;
 	combindata=combindata+"^"+getElementValue("MRStartDate") ;
 	combindata=combindata+"^"+getElementValue("MRStartTime") ;	//10
@@ -875,7 +1292,7 @@ function getDataList()
 	combindata=combindata+"^"+getElementValue("MRRequestTime") ;	//20
 	combindata=combindata+"^"+getElementValue("MRRequestUserDR") ;
 	combindata=combindata+"^"+getElementValue("MRRequestTel") ;
-	combindata=combindata+"^"+getElementValue("MRPlace") ;
+	combindata=combindata+"^"+getElementValue("MRLocationDR") ; //modify by zyq 2023-03-01
 	combindata=combindata+"^"+FaultTypeDR;
 	combindata=combindata+"^"+getElementValue("MRAcceptDate") ;
 	combindata=combindata+"^"+getElementValue("MRAcceptTime") ;
@@ -913,7 +1330,7 @@ function getDataList()
 	combindata=combindata+"^"+getElementValue("MRTotalFee") ;
 	combindata=combindata+"^"+getElementValue("MREmergencyLevelDR") ;
 	combindata=combindata+"^"+getElementValue("MRSeverityLevelDR") ;
-	combindata=combindata+"^"+getElementValue("MRSourceType") ;
+	combindata=combindata+"^"+SourceType;    //getElementValue("MRSourceType") ;//modified by 2022-4-12 MRSourceType关键字
 	combindata=combindata+"^"+getElementValue("MRAssignDate") ;
 	combindata=combindata+"^"+getElementValue("MRPackageState") ;
 	combindata=combindata+"^"+getElementValue("MRInsurFlag") ;
@@ -925,9 +1342,11 @@ function getDataList()
 	combindata=combindata+"^"+getElementValue("MRAssessment") ;		//add by CZF0072 2020-02-25 end
 	combindata=combindata+"^"+getElementValue("MRMaintType") ;		//add by CZF0075 2020-02-25
 	combindata=combindata+"^"+getElementValue("MRMaintGroupDR") ;	//20200318
-	combindata=combindata+"^"+getElementValue("MRServiceDR") ;		//20200318
+	combindata=combindata+"^"+ServiceDR    //getElementValue("MRServiceDR") ;		//20200318
 	combindata=combindata+"^"+getElementValue("MRSaveCostFee") ;		//20200328
-	
+	combindata=combindata+"^"+getElementValue("MRRetrieveFlag") ; //add by zyq 20221106 begin
+	combindata=combindata+"^"+getElementValue("MRReplaceFlag") ; 
+	combindata=combindata+"^"+getElementValue("MRDisuesdFlag") ; //add by zyq 20221106 end
     return combindata;
 }
 
@@ -1015,7 +1434,7 @@ function buserapprove()
     else
     {
 	    messageShow("","","",t[0])
-		websys_showModal("options").mth();  //modify by lmm 2019-02-19
+		websys_showModal("options").mth("31");  //modify by zx 2022-04-11 bug ZX0144
 	    window.setTimeout(function(){window.location.reload()},50);
     }
 }
@@ -1034,8 +1453,12 @@ function getUserCancelApprove(Value)
     else
     {
 	    messageShow("","","",t[0])
-		websys_showModal("options").mth();  //modify by lmm 2019-02-19
-	    window.setTimeout(function(){window.location.href="dhceq.em.mmaintrequest.csp?&RowID="+RtnObj.Data+"&CurRole="+getElementValue("CurRole")},50);
+		websys_showModal("options").mth("31");  //modify by zx 2022-04-11 bug ZX0144
+		var url="dhceq.em.mmaintrequest.csp?&RowID="+RtnObj.Data+"&CurRole="+getElementValue("CurRole");
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
+	    window.setTimeout(function(){window.location.href=url},50);
     }
 }
 function getValueList()
@@ -1045,6 +1468,7 @@ function getValueList()
 	ValueList=ValueList+"^"+curUserID;
 	ValueList=ValueList+"^"+getElementValue("CancelToFlowDR");
 	ValueList=ValueList+"^"+getElementValue("EvaluateGroup");
+	ValueList=ValueList+"^^"+getElementValue("RejectReason"); //add by wy 2022-7-22 2766212 拒绝意见
 	
 	return ValueList;
 }
@@ -1095,7 +1519,7 @@ function BPicture_Clicked()
 {
 	var Status=getElementValue("MRStatus");
 	var str='dhceq.plat.picturemenu.csp?&CurrentSourceType=31&CurrentSourceID='+getElementValue("RowID")+'&Status='+Status;
-	if (Status==2) str=str+"&ReadOnly=1";
+	if ((Status==2)||(getElementValue("ReadOnly")=="Y")) str=str+"&ReadOnly=1";		// MZY0063	1580653		2020-12-11
 	var title="图片信息"
 	var width=""
 	var height=""
@@ -1114,12 +1538,18 @@ function BMaintDetail_Click()
 	}
     var str='websys.default.csp?WEBSYS.TCOMPONENT=DHCEQMMaintPart&MaintRequestDR='+getElementValue("RowID")+'&MaintItemDR='+getElementValue("MaintItemDR")+'&Status='+getElementValue("Status");
     if (getElementValue("RoleStep")!=6) var str='websys.default.csp?WEBSYS.TCOMPONENT=DHCEQMMaintPart&MaintRequestDR='+getElementValue("RowID")+'&MaintItemDR='+getElementValue("MaintItemDR")+'&Status=0';		//非维修选择配件步骤
+    if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		str += "&MWToken="+websys_getMWToken()
+	}
     window.open(str,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=1100,height=500,left=80,top=0')
 }
 ///保修
 function BSerContract_Click()
 {
 	var str="websys.default.csp?WEBSYS.TCOMPONENT=DHCEQSerContract&EquipDR="+getElementValue("MREXObjDR")+"&ReadOnly=1"
+    if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		str += "&MWToken="+websys_getMWToken()
+	}
     window.open(str,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0')
 }
 ///设备信息
@@ -1129,6 +1559,9 @@ function BEquipInfo_Click()
   	var EQNo=tkMakeServerCall("web.DHCEQEquip","GetEquipIDByNo",getElementValue("EQNo"));
 	if (EQNo=="") return;
 	var str="dhceqequiplistnew.csp?&ReadOnly=1&RowID="+EQNo;
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		str += "&MWToken="+websys_getMWToken()
+	}
 	window.open(str,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=980,height=800,left=200,top=10');
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1265,8 +1698,12 @@ function onBeforeShowPanel(vElementID)
 {
 	if (vElementID=="MRExObjDR_ExObj")
 	{
-		setElement("MRSourceTypeDR",0)
-		if (getElementValue("MRSourceType")!="1"){setElement("MRSourceTypeDR",1)}
+		//modified by 2022-4-12 MRSourceType关键字
+		var SourceType=$("#MRSourceType").keywords("getSelected")
+	    if ((SourceType)||(SourceType!=undefined)) SourceType=SourceType[0].id
+
+		setElement("FacilityFlag",0)
+		if ((SourceType=="2")||(SourceType=="3")){setElement("FacilityFlag",1)}
 		if (getElementValue("MRObjLocDR")=="")
 		{
 			var Info=t[-9202]
@@ -1285,11 +1722,19 @@ function BPrint_Clicked()
 	var RowID=getElementValue("RowID")
 	var fileName=""	
 	var HOSPDESC = getElementValue("GetHospitalDesc");
+	//Add By QW20210913 BUG:QW0147 标题增加补打标记	begin
+	var EQTitle="";
+	var PrintNumFlag=getElementValue("PrintNumFlag");
+	if(PrintNumFlag==1)  
+	{
+		var num=tkMakeServerCall("web.DHCEQ.Plat.BUSOperateLog","GetOperateTimes","31",RowID)
+		if(num>0) EQTitle="(补打)";
+	}
 	if(PreviewRptFlag==1)
 	{
 		var fileName="DHCEQMMaintRequestPrint.raq&RowID="+RowID
 			+"&HOSPDESC="+HOSPDESC
-			+"&USERNAME="+curUserName
+			+"&USERNAME="+curUserName+"&EQTitle="+EQTitle
 			DHCCPM_RQPrint(fileName);
 	}
 	if(PreviewRptFlag==0)
@@ -1297,9 +1742,12 @@ function BPrint_Clicked()
 		var fileName="{DHCEQMMaintRequestPrint.raq(RowID="+RowID
 			+";HOSPDESC="+HOSPDESC
 			+";USERNAME="+curUserName
-			+")}";
+			+";EQTitle="+EQTitle+")}"; 
 			DHCCPM_RQDirectPrint(fileName);
 	}	
+	var MaintRequestPrintOperateInfo="^31^"+RowID+"^^维修打印操作^0"
+	var PrintFlag=tkMakeServerCall("web.DHCEQ.Plat.BUSOperateLog","SaveData",MaintRequestPrintOperateInfo)
+	//Modified By QW20210913 BUG:QW0147 修改打印次数  end
 }
 
 function BEvaluate_Clicked()
@@ -1336,10 +1784,124 @@ function bcanceltrue()
 		messageShow("","","",RetObj.Data)
 		return;
 	}
-	messageShow("","","",RetObj.Data);
-	window.setTimeout(function(){window.location.href= "dhceq.em.mmaintrequestsimple.csp?&RowID=&Status=0"},50); 
+	websys_showModal("options").mth("31");  //modify by zx 2022-04-11 bug ZX0144
+	//Modeied by zc0094 2021-1-14 修正维修单作废页面问题 begin
+	window.setTimeout(function()
+	{	
+		if (getElementValue("MRMaintType")!="1")
+		{
+			var url="dhceq.em.hardwaremaintsimple.csp?&RowID=&Status=0";
+			if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+				url += "&MWToken="+websys_getMWToken()
+			}
+			if ((getElementValue("MRManageTypeDR")=="4")&&(getElementValue("QXType")==1)) //Modified BY QW20211229
+			{
+				window.location.href= url
+			}
+			else{
+				window.location.href= url
+			}
+		}
+		else
+		{
+			var url="dhceq.em.mmaintrequest.csp?&RowID=&Status=0&MaintType=1";
+			if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+				url += "&MWToken="+websys_getMWToken()
+			}
+			window.location.href= url
+		}
+	},50); 
+	//Modeied by zc0094 2021-1-14 修正维修单作废页面问题 end
 }
 function confirmselect(confirminfo)
 {
 	return messageShow("confirm","info","提示",confirminfo,"",selecttrue,selectfalse)
+}
+
+//add by mwz 2021-01-18 MWZ0048
+function BSelfCancelSubmit_Clicked()
+{
+	var RowID=getElementValue("RowID");
+	var Status=getElementValue("Status")
+	
+	if (Status>1)
+	{
+		messageShow('alert','error','提示',"该单据已审核完成,无法撤消");
+		return;
+		}
+	var combindata=RowID+"^"+getElementValue("RoleStep")+"^"+getElementValue("Action")   /// Modify by mwz 20210529 MWZ0050
+	var Rtn=tkMakeServerCall("web.DHCEQ.EM.BUSMMaintRequest","SelfCancelSubmitData",combindata,getElementValue("CurRole"));
+    var RtnObj=JSON.parse(Rtn)
+    if (RtnObj.SQLCODE==0)
+    {
+	  	messageShow("alert","info","提示","撤回成功");
+		var val="&RowID="+RowID+"&QXType="+getElementValue("QXType")+"&CurRole="+getElementValue("CurRole");
+		if (getElementValue("CurRole")=="")
+		{
+			if ((getElementValue("MRManageTypeDR")=="4")&&(getElementValue("QXType")==1)) //Modified BY QW20211229
+			{
+				url="dhceq.em.hardwaremaintsimple.csp?"+val;
+			}else{
+				url="dhceq.em.mmaintrequestsimple.csp?"+val;
+			}			
+		}
+		else
+		{
+			url="dhceq.em.mmaintrequest.csp?"+val;	
+		}
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
+		window.location.href= url;
+	}
+    else
+    {
+	     messageShow("alert","error","错误提示","错误信息:"+RtnObj.Data);
+    }
+  }
+///add by wy 2021-11-15 报修界面增加台帐编译界面
+function BEquipList_Clicked()
+{   
+	var RowID=getElementValue("RowID");
+	var jsonData=tkMakeServerCall("web.DHCEQ.EM.BUSMMaintRequest","GetOneMaintRequest",RowID,"","","")
+	var jsonObj=jQuery.parseJSON(jsonData)
+	var EquipDR=jsonObj.Data["MRExObjDR_EQRowID"]
+	var ReadOnly=getElementValue("ReadOnly");
+	var url="dhceq.em.equipedit.csp?RowID="+EquipDR+"&ReadOnly="+ReadOnly;
+	showWindow(url,"资产信息编辑","","15row","icon-w-paper","modal","","","large"); 
+}
+///add by wy 2021-11-15
+///描述:获取服务商录入方式 0:放大镜 1:手工录入,并自动检测更新服务商 2:
+function getServiceRowID(type,ElementID,ElementName)
+{
+	if((type=="0")||(type==""))
+	{
+		 var ServiceRowID=getElementValue(ElementID)  //modified by wy 2022-9-28 2955208
+	}
+	else
+	{
+		var ServiceRowID=""
+		var ServiceName=getElementValue(ElementName);
+		if (ServiceName=="") return "";
+		var FirmType=4
+	 	var val="^"+ServiceName+"^^^"+FirmType;		//2163109 czf
+		var ServiceRowID=tkMakeServerCall("web.DHCEQForTrak","UpdProvider",val);
+		//if (ServiceRowID>0) setElement(ElementID,ServiceRowID);
+	}
+	return ServiceRowID
+}
+function MaintProcess()
+{
+	var RowID=getElementValue("RowID");
+	var MaintProcess=getElementValue("MRHold15");
+	var Result=tkMakeServerCall("web.DHCEQ.EM.BUSMMaintRequest","UpdMaintProcess",RowID,MaintProcess);		
+	window.setTimeout(function(){window.location.reload()},50); 
+}
+
+function BAppendFile_Clicked()
+{
+	var RowID=getElementValue("RowID")
+	var Status=getElementValue("Status");
+	var str='dhceq.plat.appendfile.csp?&CurrentSourceType=31&CurrentSourceID='+RowID+'&Status='+Status+'&ReadOnly=';
+	showWindow(str,"电子资料","","","icon-w-paper","modal","","","large");
 }

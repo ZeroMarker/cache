@@ -11,15 +11,21 @@ $(function(){
 	$('#datagrid').datagrid({    
 		 onClickRow:function(rowIndex, rowData){
 	            $("#AOIOptParRef").val(rowData.ID);
-	            $('#subdatagrid').datagrid('load', {    
-				    AOIOptParRef: rowData.ID  
-				}); 
+	            
+	            Initsubdatagrid(rowData.AOType) 
+				
+				 setTimeout(function(){
+					 $('#subdatagrid').datagrid('load', {    
+					    AOIOptParRef: rowData.ID  
+					});
+					 },500)
          },onBeforeEdit:function(rowIndex,rowData){
 	         setTimeout(function(){reLoadReq();},200)
 	     }
 	});
 	HospID=$HUI.combogrid('#_HospList').getValue();
 	$('#datagrid').datagrid('load',{AOCode:"",AODesc:"",HospId:HospID}); 
+	Initsubdatagrid("Check");
 });
 
 //函数commonQuery 和 commonReload 说明
@@ -100,9 +106,11 @@ function addRowSub(){
 		return;
 	}
 	commonAddRow({'datagrid':'#subdatagrid',value:{AOIOptParRef:$("#AOIOptParRef").val()}})
+	subdataEditRow = 0;
 }
 function onClickRowSub(index,row){
 	CommonRowClick(index,row,"#subdatagrid");
+	subdataEditRow=index
 }
 function saveSub(){
 	saveByDataGrid("web.DHCAPPOtherOpt","saveSub","#subdatagrid",function(data){
@@ -117,10 +125,6 @@ function saveSub(){
 	});	
 
 }
-
-
-
-
 
 function cancelSub(){
 	
@@ -187,3 +191,85 @@ function reLoadReq(){
 	}
 	
 }
+var subdataEditRow=""
+function Initsubdatagrid(Type){
+	if (Type=="Order"){
+		 var Columns=[[   
+			{ field: 'AOIOptParRef', title: 'AOIOptParRef', width: 10,hidden:true },
+			{ field: 'ID', title: 'ID', width: 10,hidden:true },
+			{ field: 'ARCIMDesc', title: '医嘱名称', width: 20,
+            	editor:{
+              		type:'combogrid',
+                    options:{
+	                    enterNullValueClear:false,
+						required: true,
+						panelWidth:450,
+						panelHeight:350,
+						delay:500,
+						idField:'ArcimRowID',
+						textField:'ArcimDesc',
+						value:'',//缺省值 
+						mode:'remote',
+						pagination : true,//是否分页   
+						rownumbers:true,//序号   
+						collapsible:false,//是否可折叠的   
+						fit: true,//自动大小   
+						pageSize: 10,//每页显示的记录条数，默认为10   
+						pageList: [10],//可以设置每页记录条数的列表  
+						url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
+                        columns:[[
+                            {field:'ArcimDesc',title:'名称',width:310,sortable:true},
+			                {field:'ArcimRowID',title:'ID',width:100,sortable:true},
+			                {field:'selected',title:'ID',width:120,sortable:true,hidden:true}
+                         ]],
+						onSelect: function (rowIndex, rowData){
+							var rows=$('#subdatagrid').datagrid("selectRow",subdataEditRow).datagrid("getSelected");
+							rows.ARCIMRowid=rowData.ArcimRowID
+						},
+						onClickRow: function (rowIndex, rowData){
+							var rows=$('#subdatagrid').datagrid("selectRow",subdataEditRow).datagrid("getSelected");
+							rows.ARCIMRowid=rowData.ArcimRowID
+						},
+						onLoadSuccess:function(data){
+							$(this).next('span').find('input').focus();
+						},
+						onBeforeLoad:function(param){
+							if (param['q']) {
+								var desc=param['q'];
+							}
+							param = $.extend(param,{Alias:desc,HospId:$HUI.combogrid('#_HospList').getValue()});
+						}
+            		}
+    			  }
+			},
+			{ field: 'Number', title: '数量', width: 20,editor : {type : 'text',options : {}}},
+			{ field: 'ARCIMRowid', title: 'ARCIMRowid', width: 10,hidden:true }
+			
+		 ]];
+		}else{
+		var Columns=[[   
+			{ field: 'AOIOptParRef', title: 'AOIOptParRef', width: 10,hidden:true },
+			{ field: 'ID', title: 'ID', width: 10,hidden:true },
+			{ field: 'AOICode', title: '代码', width: 50,editor : {type : 'text',options : {required:true}}},
+			{ field: 'AOIDesc', title: '描述', width: 150,editor : {type : 'text',options : {required:true}}
+			}
+		 ]];
+		}
+		$('#subdatagrid').datagrid({  
+			headerCls:'panel-header-gray',
+			iconCls:'icon-paper',
+			title:"其它项目内容维护",
+			toolbar:'#subtoolbar',
+			columns :Columns,
+		    rownumbers:true,
+		    method:'get',
+		    fitColumns:true,
+		    singleSelect:true,
+		    pagination:true,
+		    nowrap: false,
+		    onDblClickRow:onClickRowSub,
+			url:'dhcapp.broker.csp?ClassName=web.DHCAPPOtherOpt&MethodName=listSub',
+			onClickRow:function(rowIndex, rowData){
+			}
+	});
+	}

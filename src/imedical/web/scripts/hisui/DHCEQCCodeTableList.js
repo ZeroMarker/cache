@@ -9,6 +9,13 @@ function BodyLoadHandler()
 {
 	document.body.scroll="no";	
 	InitUserInfo();	
+	initPanelHeaderStyle();
+	if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+		$('.hgt4').css('border-color','#E2E2E2');
+	}
+	else{
+		$('.hgt4').css('border-color','#CCCCCC');
+	}
 	$("#tDHCEQCCodeTableList").datagrid({showRefresh:false,showPageList:false,displayMsg:''});   //add by lmm 2019-02-19 hisui改造：隐藏翻页条内容
 }
 ///modify by lmm 2018-09-02
@@ -26,7 +33,11 @@ function Selected(selectrow,rowData)
 		varPreFix=""	
 		varType="1";
 		varReadOnly="";
-		parent.DHCEQCCodeTable.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCCodeTable"  //modify by lmm 2018-09-02 hisui改造：修改hisui默认csp   modify hly 20190801
+		var lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCCodeTable"
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			lnk += "&MWToken="+websys_getMWToken()
+		}
+		parent.DHCEQCCodeTable.location.href=lnk
 
 		//SetData();			
 		}
@@ -45,6 +56,9 @@ function SetData()	{
 	{
 		//标准代码表
 		var lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCCodeTable&TabName="+(varTabName)+"&PreFix="+(varPreFix)+"&ReadOnly="+(varReadOnly)+"&titleName="+(varTabNameStr); //modify by lmm 2018-09-02 hisui改造：修改hisui默认csp
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			lnk += "&MWToken="+websys_getMWToken()
+		}
 		parent.DHCEQCCodeTable.location.href=lnk;
 	}
 	else
@@ -57,14 +71,21 @@ function SetData()	{
 		}
 		if(varType=="2")
 		{
-			//非标准代码表				
-			parent.DHCEQCCodeTable.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=" + value[0] + value[1]+"&ReadOnly="+(varReadOnly);  //modify by lmm 2018-09-02 hisui改造：修改hisui默认csp
+			//非标准代码表
+			var lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=" + value[0] + value[1]+"&ReadOnly="+(varReadOnly);  //modify by lmm 2018-09-02 hisui改造：修改hisui默认csp
+			if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+				lnk += "&MWToken="+websys_getMWToken()
+			}				
+			parent.DHCEQCCodeTable.location.href=lnk
 			
 		}
 		else
 		{
 			//csp page
 			var varUrl=value[0] + value[1]+".csp?ReadOnly="+(varReadOnly);
+			if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+				varUrl += "&MWToken="+websys_getMWToken()
+			}
 			parent.DHCEQCCodeTable.location.href=varUrl;
 		}
 	}

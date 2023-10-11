@@ -11,7 +11,13 @@ $(function() {
     InitDispDetail();
     $('#btnFind').on("click", Query);
     $('#btnFindDetail').on("click", QueryDetail)
-    $('#btnPrint').on("click", Print);
+    $('#btnPrint').on("click", function(){
+		$.messager.confirm('提示', '您确认打印吗?', function (r) {
+            if (r) {
+	            Print();
+            }
+		});		
+	});
     $('#btnClear').on('click', Clear)
     $('#txtPatNo').on('keypress', function(event) {
         if (event.keyCode == "13") {
@@ -73,6 +79,7 @@ function InitGridWard() {
         singleSelect: false,
         onSelect: function(rowIndex, rowData) {},
         onLoadSuccess: function() {
+	        $(this).datagrid('uncheckAll');
             $("#gridDispDetail").datagrid("clear");
         }
     };
@@ -87,7 +94,7 @@ function InitDispDetail() {
             { field: 'incCode', title: '药品代码', width: 100 },
             { field: 'incDesc', title: '药品名称', width: 200 },
             { field: 'incSpec', title: '规格', width: 75 },
-            { field: 'phManfDesc', title: '厂家', width: 100 },
+            { field: 'phManfDesc', title: '生产企业', width: 100 },
             { field: 'bUomDesc', title: '单位', width: 50 },
             { field: 'dispQty', title: '发药数量', width: 75, align: 'right' },
             { field: 'dispSpAmt', title: '发药金额', width: 100, align: 'right' },

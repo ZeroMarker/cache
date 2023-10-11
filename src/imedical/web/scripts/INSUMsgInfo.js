@@ -8,22 +8,23 @@
 $(function(){
 	//回车事件    
 	key_enter();
-		
+	// 产品线
+	ini_ProductLine();	
 	//业务类型box
 	ini_YWLX();
-	
-	// 产品线
-	ini_ProductLine();
 	
 	//默认时间
 	setDateBox();
 	
 	// grid
 	init_dg();
+	
+	//  操作员
+	InitUser();
 });
 //数据面板
 function init_dg(){
-	var dgobj = $HUI.datagrid("#dg", {
+	$HUI.datagrid("#dg", {
 		fit: true,
 		border:false,
 		nowrap: true,
@@ -36,7 +37,7 @@ function init_dg(){
 		onDblClickCell: function (rowIndex, field, value) { doubleCell("Edit", rowIndex, field); },
 		columns: [[
 			{ title: '导航号', field: 'MsgInfoDr', width: 70, hidden: true },
-			{ title: '工号', field: 'OutUserCode', width: 70 },
+			{ title: '操作员', field: 'OutUserCode', width: 70 },
 			{ title: '登记号', field: 'OutRegNo', width: 90 },
 			{ title: '姓名', field: 'OutPaName', width: 70 },
 			{ title: '医保号', field: 'OutInsuNo', width: 80 },
@@ -90,7 +91,7 @@ function deleteMsg() {
 //查询
 function RunQuery() {
 	var YWLXobj = $HUI.combogrid("#YWLX")
-	var tmpurl = "&UserCode=" + $('#UserCode').val() + "&StrIp=" + $('#StrIp').val() + "&IPMAC=" + $('#IPMAC').val() + "&RegNo=" + $('#RegNo').val() + "&InsuNo=" + $('#InsuNo').val();
+	var tmpurl = "&UserCode=" + getValueById('UserCode') + "&StrIp=" + $('#StrIp').val() + "&IPMAC=" + $('#IPMAC').val() + "&RegNo=" + $('#RegNo').val() + "&InsuNo=" + $('#InsuNo').val();
 	tmpurl = tmpurl + "&AdmDr=" + $('#AdmDr').val() + "&InvPrtDr=" + $('#InvPrtDr').val() + "&PBDr=" + $('#PBDr').val() + "&StartDate=" + getValueById('StartDate') + "&EndDate=" + getValueById('EndDate') + "&DateFlag=" + $('#DateFlag').checkbox('getValue') + "&SolveFlag=" + $('#SolveFlag').checkbox('getValue') + "&YWLX=" + YWLXobj.getValue();
 	tmpurl = tmpurl + "&HospId=" + HospDr + "&ParamProductLine=" + $HUI.combogrid("#ProductLine").getValue();
 	$HUI.datagrid("#dg", {
@@ -165,13 +166,45 @@ function key_enter() {
 	});
 	$('#RegNo').keyup(function (event) {
 		if (event.keyCode == 13) {
-			RunQuery();
+			getPatInfo();
 		}
 	});
 	$('#AdmDr').keyup(function (event) {
 		if (event.keyCode == 13) {
 			RunQuery();
 		}
+	});
+}
+function getPatInfo() {
+	var patientNo = getValueById("RegNo");
+	if (patientNo) {
+		var expStr = "";
+		$.m({
+			ClassName: "web.DHCOPCashierIF",
+			MethodName: "GetPAPMIByNo",
+			PAPMINo: patientNo,
+			ExpStr: expStr
+		}, function(papmi) {
+			if (!papmi) {
+				$.messager.popover({msg: "登记号错误，请重新输入", type: "info"});
+				return;
+			}
+			var admStr = "";
+			setPatientInfo(papmi);
+		});
+	}
+}
+function setPatientInfo(papmi) {
+	var expStr = HospDr;
+	$.m({
+		ClassName: "web.DHCOPCashierIF",
+		MethodName: "GetPatientByRowId",
+		PAPMI: papmi,
+		ExpStr: expStr
+	}, function(rtn) {
+		var myAry = rtn.split("^");
+		setValueById("RegNo", myAry[1]);
+		RunQuery();
 	});
 }
 // 双击单元格
@@ -207,33 +240,62 @@ function doubleCell(Flag, rowindex, field) {
 //清屏
 function clear_click() {
 	$('.search-table').form('clear');
+	//业务类型box
+	ini_YWLX();
+	
+	// 产品线
+	ini_ProductLine();
+	
+	//默认时间
+	setDateBox();
+	
+	//  操作员
+	InitUser();
+	setValueById('DateFlag',true);
+	RunQuery();
+	
 }
 //业务类型
 function ini_YWLX() {
 	$HUI.combogrid("#YWLX", {
-		url: $URL + "?ClassName=web.INSUDicDataCom&QueryName=QueryDic&Type=INSUMsgYWLX"+'&HospDr='+HospDr,
+		url: $URL,
 		idField: "cCode",
 		textField: "cDesc",
 		singleSelect: true,
 		panelWidth: 430,
+		onBeforeLoad:function(param){
+			param.ClassName = 'web.INSUDicDataCom';
+			param.QueryName= 'QueryDic';
+			param.Type = 'INSUMsgYWLX';
+			param.ExpStr = 'N|' + $("#ProductLine").combobox('getValue');
+			param.HospDr = HospDr;
+			return true;
+
+		},
 		columns: [[
 			{ title: '代码', field: 'cCode', width: 200 },
-			{ title: '描述', field: 'cDesc', width: 200 },
+			{ title: '描述', field: 'cDesc', width: 200 }
 		]]
 	})
 }
 // 产品线
 function ini_ProductLine() {
 	$HUI.combogrid("#ProductLine", {
-		url: $URL + "?ClassName=web.INSUDicDataCom&QueryName=QueryDic&Type=INSUMsgProductLine"+'&HospDr='+HospDr,
+		url: $URL + "?ClassName=web.INSUDicDataCom&QueryName=QueryDic&Type=ProductLine"+'&HospDr='+HospDr+'&ExpStr=N',
 		idField: "cCode",
 		textField: "cDesc",
 		singleSelect: true,
 		panelWidth: 430,
 		columns: [[
 			{ title: '代码', field: 'cCode', width: 200 },
-			{ title: '描述', field: 'cDesc', width: 200 },
-		]]
+			{ title: '描述', field: 'cDesc', width: 200 }
+		]],
+		onLoadSuccess:function(data){
+					
+		},
+		onSelect:function(){
+			$('#YWLX').combogrid('grid').datagrid('reload');
+		}
 	})
 }
 /**
@@ -241,7 +303,7 @@ function ini_ProductLine() {
  * CreatDate: 2019-7-10
  * Description: 生成次级弹窗Modifydl
  * input:	msg : 提示内容
- * 			buttonType : 是否显示按钮 "Y" 显示
+ * 			buttonType : 是否显示按钮 "disable" 不显示
  * 			title : 弹窗标题
  */
 function openCellWindow(msg,buttonType,title){
@@ -249,6 +311,36 @@ function openCellWindow(msg,buttonType,title){
 	$('#Modifydl').panel({
     	title:title,
  	});
-	$("#saveBtn").linkbutton(buttonType);
+	$("#saveBtn").linkbutton("enable");
+	var tdeditCode=document.getElementById("editCode");
+	var tsaveBtn=document.getElementById("saveBtn");
+	if(buttonType=="disable"){
+		tsaveBtn.style.marginTop="0px";
+		$("#saveBtn").hide();
+		tdeditCode.style.height="320px";
+		
+	}else{
+		tsaveBtn.style.marginTop="10px";
+		$("#saveBtn").show();
+		tdeditCode.style.height="280px";
+	}
 	$('#Modifydl').window('open');	
 }
+function InitUser(){
+	$('#UserCode').combobox({
+		valueField: 'Desc',
+		textField: 'Desc',
+		url:$URL,
+		defaultFilter:'4',
+		onBeforeLoad:function(param){
+			param.ClassName = 'web.INSUReport';
+			param.QueryName= 'FindSSUser';
+			param.ResultSetType = 'array';
+			param.HospId = HospDr;
+		},onLoadSuccess:function(data){
+		},onLoadError:function(){
+		}	
+	});	
+}
+
+

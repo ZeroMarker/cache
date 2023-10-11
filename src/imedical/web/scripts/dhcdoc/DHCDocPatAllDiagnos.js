@@ -19,6 +19,11 @@ function Init(){
 function InitPageItemEvent(){
 	$("#BFind").click(LoadPatAllDiagTabDataGrid);
 	$("#BCopy").click(CopyDiag);
+	$('#searchDesc').keydown(function(e){
+		if(e.keyCode==13){
+			LoadPatAllDiagTabDataGrid();
+		}
+	});
 	$HUI.radio(".hisui-radio",{
         onChecked:function(e,value){
             LoadPatAllDiagTabDataGrid();
@@ -59,11 +64,12 @@ function InitPatAllDiagTabDataGrid(){
 		{field:'LastMRDIARowId',checkbox:'true',width:70},
 		{field:'GroupICDRowIDStr',title:'重复',width:90,
 			formatter:function(value,rec){  
-			   var btn = '<a class="editcls" onclick="diagRepeatDetailShow(\'' + rec.GroupICDRowIDStr +"'\,\'" +rec.Desc + '\')">记录'+rec.RepeatNum+'条</a>';
+			   var btn = '<a class="editcls" onclick="diagRepeatDetailShow(\'' + rec.GroupICDRowIDStr +"'\,\'" +rec.Desc + '\')">'+$g('记录')+rec.RepeatNum+$g('条')+'</a>';
 			   return btn;
             }
 		},
-		{field:'Desc',title:'诊断描述',width:150},
+		{field:'DiagType',title:'最新诊断类型',width:100},
+		{field:'Desc',title:'诊断描述',width:350},
 		{field:'LastDiagStatus',title:'最新诊断状态',width:100},
 		{field:'FirstMRDate',title:'最早诊断日期',width:100},
 		{field:'LastMRDate',title:'最新诊断日期',width:100},
@@ -71,6 +77,7 @@ function InitPatAllDiagTabDataGrid(){
 		{field:'LastDoctDesc',title:'最新诊断医生',width:100},
 		{field:'LastUpdateLoc',title:'最新诊断科室',width:150},
 		{field:'ICDCodeStr',title:'ICD代码',width:150},
+		{field:'SDSInfo',hidden:true}
     ]]
 	var PatAllDiagTabDataGrid=$("#PatAllDiagTab").datagrid({
 		fit : true,
@@ -95,7 +102,7 @@ function InitPatAllDiagTabDataGrid(){
 	return PatAllDiagTabDataGrid;
 }
 function LoadPatAllDiagTabDataGrid(){
-	var AdmTypeStr=$("input[name='AdmType']:checked")[0].value;
+	var AdmTypeStr=$("input[name='AdmType']:checked")[0]?$("input[name='AdmType']:checked")[0].value:'';
 	var kwSel=$("#diagCatkw").keywords("getSelected");
 	var diagCat="";
 	for (var i=0;i<kwSel.length;i++) {
@@ -120,20 +127,25 @@ function LoadPatAllDiagTabDataGrid(){
 function diagRepeatDetailShow(GroupICDRowIDStr,DiagDesc){
 	 websys_showModal({
 			url:"dhcdocpatrepeatdiag.csp?PatientID=" + ServerObj.PatientID+"&GroupICDRowIDStr="+GroupICDRowIDStr,
-			title:ServerObj.PatName+"患者的【"+DiagDesc+"】诊断重复列表",
+			title:ServerObj.PatName+$g("患者的【")+DiagDesc+$g("】诊断重复列表"),
 			width:'93%',height:'93%'
 	 });
 }
 function CopyDiag(){
 	var rows = PageLogicObj.m_PatAllDiagTabDataGrid.datagrid("getSelections");
     if (rows.length > 0) {
-        var ids = [];
+        var DiagIDs=[];
         for (var i = 0; i < rows.length; i++) {
-            ids.push(rows[i].GroupICDRowIDStr+String.fromCharCode(1)+rows[i].Desc+String.fromCharCode(1)+"");
+			var row=rows[i];
+			DiagIDs.push(row.LastMRDIARowId);
         }
-        var ID=ids.join(String.fromCharCode(2));
+		var CopyData=$.cm({
+			ClassName:"web.DHCDocDiagnosEntryV8",
+			MethodName:"CreateCopyItem",
+			MRDiagnosRowids:DiagIDs.join("^")
+		},false);
         websys_showModal("hide");
-		websys_showModal('options').AddCopyItemToList(ID,"CopyFromAllDiag");
+		websys_showModal('options').AddCopyDiagToList(CopyData);
 		websys_showModal("close");
     }else {
         $.messager.alert("提示", "请选择要复制的记录!");

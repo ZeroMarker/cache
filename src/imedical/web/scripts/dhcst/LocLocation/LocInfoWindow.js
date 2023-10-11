@@ -35,16 +35,16 @@ GetLocInfoWindow = function(Input,Fn) {
 				store : LocInfoStore,
 				pageSize : 15,
 				displayInfo : true,
-				displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
+				displayMsg :$g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
 				emptyMsg : "No results to display",
-				prevText : "上一页",
-				nextText : "下一页",
-				refreshText : "刷新",
-				lastText : "最后页",
-				firstText : "第一页",
-				beforePageText : "当前页",
-				afterPageText : "共{0}页",
-				emptyMsg : "没有数据"
+				prevText : $g("上一页"),
+				nextText : $g("下一页"),
+				refreshText : $g("刷新"),
+				lastText : $g("最后页"),
+				firstText : $g("第一页"),
+				beforePageText : $g("当前页"),
+				afterPageText : $g("共{0}页"),
+				emptyMsg : $g("没有数据")
 			});
 
 	var nm = new Ext.grid.RowNumberer();
@@ -60,14 +60,14 @@ GetLocInfoWindow = function(Input,Fn) {
 		}
 	});
 	var LocInfoCm = new Ext.grid.ColumnModel([nm, sm, {
-				header : "代码",
+				header : $g("代码"),
 				dataIndex : 'Code',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden:true
 			}, {
-				header : '名称',
+				header : $g('名称'),
 				dataIndex : 'Desc',
 				width : 400,
 				align : 'left',
@@ -77,8 +77,8 @@ GetLocInfoWindow = function(Input,Fn) {
 
 	// 返回按钮
 	var returnBT = new Ext.Toolbar.Button({
-				text : '返回',
-				tooltip : '点击返回',
+				text : $g('返回'),
+				tooltip : $g('点击返回'),
 				iconCls : 'page_goto',
 				handler : function() {
 					returnData();
@@ -90,9 +90,9 @@ GetLocInfoWindow = function(Input,Fn) {
 	function returnData() {
 		var selectRows = LocInfoGrid.getSelectionModel().getSelections();
 		if (selectRows.length == 0) {
-			Msg.info("warning", "请选择要返回的药品信息！");
+			Msg.info("warning", $g("请选择要返回的科室信息！"));
 		} else if (selectRows.length > 1) {
-			Msg.info("warning", "返回只允许选择一条记录！");
+			Msg.info("warning", $g("返回只允许选择一条记录！"));
 		} else {
 			flg = true;
 			window.close();
@@ -104,14 +104,34 @@ GetLocInfoWindow = function(Input,Fn) {
 
 	// 关闭按钮
 	var closeBT = new Ext.Toolbar.Button({
-				text : '关闭',
-				tooltip : '点击关闭',
+				text : $g('关闭'),
+				tooltip : $g('点击关闭'),
 				iconCls : 'page_delete',
 				handler : function() {
 					flg = false;
 					window.close();
 				}
 			});
+			
+	var OverHosp=new Ext.form.Checkbox({
+		boxLabel:$g('跨院'),
+		fieldLabel:$g('跨院'),
+		id:'OverHosp',
+		name:'OverHosp',
+		width:80,
+		disabled:false,
+		listeners : {
+            "check" : function(obj,ischecked){
+	            		var OverHospFlag="N"
+	            		if (ischecked== true)  OverHospFlag="Y" 
+	            		LocInfoStore.setBaseParam("OverHospFlag",OverHospFlag);
+                        LocInfoStore.removeAll();
+						LocInfoStore.load({params:{start:0,limit:15,Input:Input,OverHospFlag:OverHospFlag}});
+                        
+            }
+
+    	}
+	});
 
 	var LocInfoGrid = new Ext.grid.GridPanel({
 				cm : LocInfoCm,
@@ -120,7 +140,7 @@ GetLocInfoWindow = function(Input,Fn) {
 				stripeRows : true,
 				sm : sm, //new Ext.grid.CheckboxSelectionModel(),
 				loadMask : true,
-				tbar : [returnBT, '-', closeBT],
+				tbar : [returnBT, '-', closeBT,'->',OverHosp],
 				bbar : StatuTabPagingToolbar,
 				deferRowRender : false
 			});
@@ -137,7 +157,7 @@ GetLocInfoWindow = function(Input,Fn) {
 			});
 if(!window){
 	var window = new Ext.Window({
-				title : '科室信息',
+				title : $g('科室信息'),
 				width : 600,
 				height : 400,
 				layout : 'fit',
@@ -199,7 +219,7 @@ if(!window){
 			LocInfoStore.load({
 				callback : function(r, options, success) {
 					if (success == false) {
-						Msg.info('warning','没有任何符合的记录！');
+						Msg.info('warning',$g('没有任何符合的记录！'));
 			 	        if(window){window.close();}
 
 					} else {

@@ -46,7 +46,7 @@ function confirm_file()
 {
 	var fileList=$("#fileNew").filebox("files");
     if(fileList.length==0){
-    	$.messager.alert("提示","请选择模板！","info");
+    	$.messager.alert("提示",$g("请选择模板！"),"info");
     	return false;
     }
     getExcelJsonArr(fileList[0],0,function(excelArr){
@@ -64,7 +64,7 @@ function confirm_file()
  */
 function ReadInfoApp_new(excelArr,Type){
 	if(excelArr=="" || excelArr== "undefind" || excelArr.length==0){
-		$.messager.alert("提示","未读取到模板数据，请检查！","info");
+		$.messager.alert("提示",$g("未读取到模板数据，请检查！"),"info");
 		$('#Loading').fadeOut('fast');
 		return false;
 	}
@@ -76,13 +76,13 @@ function ReadInfoApp_new(excelArr,Type){
 	if (obj) GID = obj.value;
 
 	if ((GID == "") || (GID == "0")) {
-		$.messager.alert("提示", "还没有预约团体信息！", "info");
+		$.messager.alert("提示", $g("还没有预约团体信息！"), "info");
 		$('#Loading').fadeOut('fast');
 		return false;
 	}
 	var ret = tkMakeServerCall("web.DHCPE.ImportGInfo", "GetTeamStatus", GID);
 	if (ret == "") {
-		$.messager.alert("提示", "还没有分组信息！", "info");
+		$.messager.alert("提示", $g("还没有分组信息！"), "info");
 		$('#Loading').fadeOut('fast');
 		return false;
 	}
@@ -108,7 +108,7 @@ function ReadInfoApp_new(excelArr,Type){
 		if(obj.姓名) Name = StringIsNull(obj.姓名);
 		IInString = IInString + "^" + Name; 				//Name3
 		if(Name=""){
-			errMsg=errMsg+"\n第"+(i+2)+"行姓名为空";
+			errMsg=errMsg+$g("\n第")+(i+2)+$g("行姓名为空");
 			continue;
 		}
 		var IDCard="";
@@ -118,7 +118,7 @@ function ReadInfoApp_new(excelArr,Type){
 		IDCard = ReplaceStr(IDCard, String.fromCharCode(13), "")
 		var IsvalidIDCard = isCardID(IDCard);
 		if (IsvalidIDCard != true) {
-			errMsg=errMsg+"\n第"+(i+2)+"行"+IsvalidIDCard;
+			errMsg=errMsg+$g("\n第")+(i+2)+$g("行")+IsvalidIDCard;
 			continue;
 		}
 		IInString = IInString + "^" + IDCard; 				//IDCard4
@@ -129,7 +129,7 @@ function ReadInfoApp_new(excelArr,Type){
 		Birth = Arr[0];
 		if (Birth != "") {
 			if (!IsDate(Birth)) {
-				errMsg=errMsg+"\n第"+(i+2)+"行身份证录入的生日不对";
+				errMsg=errMsg+$g("\n第")+(i+2)+$g("行身份证录入的生日不对");
 				continue;
 			}
 			Sex = Arr[1];
@@ -137,7 +137,7 @@ function ReadInfoApp_new(excelArr,Type){
 		var ExcelDesc="";
 		if(obj.性别) ExcelDesc = StringIsNull(obj.性别);
 		if ((Sex != "") && (ExcelDesc != "") && (ExcelDesc != Sex)) {
-			errMsg=errMsg+"\n第"+(i+2)+"行身份证中的性别和模版录入的性别不一致";
+			errMsg=errMsg+&g("\n第")+(i+2)+$g("行身份证中的性别和模版录入的性别不一致");
 			continue;
 		}
 		if (Sex != "") ExcelDesc = Sex;
@@ -154,7 +154,7 @@ function ReadInfoApp_new(excelArr,Type){
 		}
 		if (ExcelBirth != "") {
 			if (!IsDate(ExcelBirth)) {
-				errMsg=errMsg+"\n第"+(i+2)+"行生日不正确";
+				errMsg=errMsg+$g("\n第")+(i+2)+$g("行生日不正确");
 				continue;
 			}
 		}
@@ -253,9 +253,9 @@ function ReadInfoApp_new(excelArr,Type){
 		if (ReturnValue != 0) {
 			var RetArr = ReturnValue.split("&");
 			if(ReturnValue.indexOf("&")>-1){
-				errMsg=errMsg+"\n第"+(i+2)+"行"+RetArr[0]+":"+RetArr[1];
+				errMsg=errMsg+$g("\n第")+(i+2)+$g("行")+RetArr[0]+":"+RetArr[1];
 			}else{
-				errMsg=errMsg+"\n第"+(i+2)+"行"+RetArr[0];
+				errMsg=errMsg+$g("\n第")+(i+2)+$g("行")+RetArr[0];
 			}
 
 			continue;
@@ -263,7 +263,7 @@ function ReadInfoApp_new(excelArr,Type){
 	}
 	$('#Loading').fadeOut('fast');
 	if(errMsg!=""){
-		$.messager.alert("提示","数据错误："+errMsg,"info");
+		$.messager.alert("提示",$g("数据错误：")+errMsg,"info");
 		return false;
 	}
 	if (Type == "Check") {
@@ -384,7 +384,7 @@ function ReadInfoApp(Type)
 			if (Birth != "") {
 
 				if (!IsDate(Birth)) {
-					xlsheet.cells(i, 34).Value = StringIsNull(xlsheet.cells(i, 34).Value) + "身份证录入的生日不对";
+					xlsheet.cells(i, 34).Value = StringIsNull(xlsheet.cells(i, 34).Value) + $g("身份证录入的生日不对");
 					xlsheet.Rows(i).Copy;
 
 					xlsheet1.Rows(2).Insert;
@@ -397,7 +397,7 @@ function ReadInfoApp(Type)
 
 			StrValue = StringIsNull(xlsheet.cells(i, 5).Value);
 			if ((Sex != "") && (StrValue != "") && (StrValue != Sex)) {
-				xlsheet.cells(i, 34).Value = StringIsNull(xlsheet.cells(i, 34).Value) + "身份证中的性别和模版录入的性别不一致";
+				xlsheet.cells(i, 34).Value = StringIsNull(xlsheet.cells(i, 34).Value) + $g("身份证中的性别和模版录入的性别不一致");
 				xlsheet.Rows(i).Copy;
 
 				xlsheet1.Rows(2).Insert;
@@ -417,7 +417,7 @@ function ReadInfoApp(Type)
 
 			if (StrValue != "") {
 				if (!IsDate(StrValue)) {
-					xlsheet.cells(i, 34).Value = StringIsNull(xlsheet.cells(i, 34).Value) + "生日不正确";
+					xlsheet.cells(i, 34).Value = StringIsNull(xlsheet.cells(i, 34).Value) + $g("生日不正确");
 					xlsheet.Rows(i).Copy;
 
 					xlsheet1.Rows(2).Insert;
@@ -545,11 +545,11 @@ function ImportInfo(GID,job)
 	if (Flag!=0)
 	{
 		if (Flag=="-119") Flag="团体名称重复";
-		$.messager.alert("提示","导入团体信息不成功.Error:"+Flag,"info");	
+		$.messager.alert("提示",$g("导入团体信息不成功.Error:")+Flag,"info");	
 	}
 	else
 	{
-		$.messager.alert("提示","导入团体信息成功,导入人数："+ReturnStr[3]+"，"+ReturnStr[2],"info");
+		$.messager.alert("提示",$g("导入团体信息成功,导入人数：")+ReturnStr[3]+"，"+ReturnStr[2],"info");
 	}
 	return ReturnStr[1];
 }

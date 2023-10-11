@@ -1,801 +1,967 @@
-var PageLogicObj = {
-    m_RowId: "",
-    m_CardRegDOMArr: new Array(),
-    //Ω®ø®“≥√Ê±ÿÃÓ–≈œ¢‘™Àÿ ±ÿ–Î“™π¥—°µƒ‘™Àÿ¡–±Ì
-    m_CardRegMustFillInArr: ["–’√˚", "–‘±", "≥ˆ…˙»’∆⁄", "ƒÍ¡‰", "ªº’ﬂ¿‡–Õ", "¡™œµµÁª∞"]
+Ôªøvar PageLogicObj={
+	m_RowId:"",
+	m_CardRegDOMArr:new Array(),
+	//Âª∫Âç°È°µÈù¢ÂøÖÂ°´‰ø°ÊÅØÂÖÉÁ¥† ÂøÖÈ°ªË¶ÅÂãæÈÄâÁöÑÂÖÉÁ¥†ÂàóË°®
+	m_CardRegMustFillInArr:["ÂßìÂêç","ÊÄßÂà´","Âá∫ÁîüÊó•Êúü","Âπ¥ÈæÑ","ÊÇ£ËÄÖÁ±ªÂûã","ËÅîÁ≥ªÁîµËØù"]
 }
-$(function () {
-    //≥ı ºªØ
-    Init();
-    // ¬º˛≥ı ºªØ
-    InitEvent()
-
+$(function(){
+	//ÂàùÂßãÂåñ
+	Init();
+	//‰∫ã‰ª∂ÂàùÂßãÂåñ
+	InitEvent();
+	isjQueryLoadend();
 })
-function Init() {
-    //≥ı ºªØ“Ω‘∫
-    var hospComp = GenHospComp("DHC_CardPATRegConfig");
-    hospComp.jdata.options.onSelect = function (e, t) {
-        var HospID = t.HOSPRowId;
-        $(".hisui-combobox").combobox('setValue', "");
-        $(".textbox").val("");
-        $(".hisui-lookup").lookup('setText', "");
-        DataListLoad();
-    }
-    hospComp.jdata.options.onLoadSuccess = function (data) {
-        //≥ı ºªØΩÁ√Ê…œComboBox
-        InitComboBox();
-        InitLookup();
-        InitDataGrid();
-        //≥ı ºªØø®∫≈ºÏÀ˜∑Ω Ω
-        InitSearchCardNoMode();
-        //≥ı ºªØ¡™œµ»À–≈œ¢±ÿÃÓ(ƒÍ¡‰)
-        InitForeignInfoByAge()
-        //◊¢≤·≈‰÷√º”‘ÿ ˝æ›
-        DataListLoad();
+//Âà§Êñ≠JQÊòØÂê¶Âä†ËΩΩÂÆåÊàêÊ≤°ÊúâÁöÑËØù ÁªßÁª≠Âà§Êñ≠
+function isjQueryLoadend(){
+    if (PageLogicObj.m_CardRegDOMArr.length > 0) {
+        InitCache();
+    } else {
+        setTimeout(isjQueryLoadend,1000)
     }
 }
-function InitEvent() {
-    $("#GlobalSet").click(GlobalSetHandle)
-    $("#SetSave").click(SetSaveHandle)
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
 }
-function GlobalSetHandle() {
-    $('#CardGlobalSet').dialog("open")
-    $('#CardGlobalSet').dialog("center")
-    $m({
-        ClassName: "web.DHCBL.CARD.CardTypeDef",
-        MethodName: "GetCardTypeSet",
-        HospId: $HUI.combogrid('#_HospList').getValue()
-    }, function (txtData) {
-        var txtDataArr = txtData.split("^")
-        $("#SearchCardNoMode").combobox("setValue", txtDataArr[0])
-        $("#AllowAgeNoCreadCard").val(txtDataArr[1])
-        var CanNoCread = txtDataArr[2]
-        var BuildAddrHomeByIDCard = txtDataArr[4]
-        var BuildAddrBirthByIDCard = txtDataArr[5]
-        var BuildAddrLookUpByIDCard = txtDataArr[6]
-        var BuildAddrHouseByIDCard = txtDataArr[7]
-        if (CanNoCread == "Y") {
-            $("#CanNoCread").switchbox("setValue", true)
-        } else {
-            $("#CanNoCread").switchbox("setValue", false)
-        }
-        $("#ForeignInfoByAge").combobox("setValue", txtDataArr[3])
-        BuildAddrHomeByIDCard = (BuildAddrHomeByIDCard == "Y") ? true : false
-        BuildAddrBirthByIDCard = (BuildAddrBirthByIDCard == "Y") ? true : false
-        BuildAddrLookUpByIDCard = (BuildAddrLookUpByIDCard == "Y") ? true : false
-        BuildAddrHouseByIDCard = (BuildAddrHouseByIDCard == "Y") ? true : false
-        $("#BuildAddrHomeByIDCard").switchbox("setValue", BuildAddrHomeByIDCard)
-        $("#BuildAddrBirthByIDCard").switchbox("setValue", BuildAddrBirthByIDCard)
-        $("#BuildAddrLookUpByIDCard").switchbox("setValue", BuildAddrLookUpByIDCard)
-        $("#BuildAddrHouseByIDCard").switchbox("setValue", BuildAddrHouseByIDCard)
-    }
-    )
-
+function Init(){
+	//ÂàùÂßãÂåñÂåªÈô¢
+	var hospComp = GenHospComp("DHC_CardPATRegConfig");
+	hospComp.jdata.options.onSelect = function(e,t){
+		var HospID=t.HOSPRowId;
+		$(".hisui-combobox").combobox('setValue',"");
+		$(".textbox").val("");
+		$(".hisui-lookup").lookup('setText',"");
+		DataListLoad();
+	}
+	hospComp.jdata.options.onLoadSuccess= function(data){
+		//ÂàùÂßãÂåñÁïåÈù¢‰∏äComboBox
+		InitComboBox();
+		InitLookup();
+		InitDataGrid();
+		//ÂàùÂßãÂåñÂç°Âè∑Ê£ÄÁ¥¢ÊñπÂºè
+		InitSearchCardNoMode();
+		//ÂàùÂßãÂåñËÅîÁ≥ª‰∫∫‰ø°ÊÅØÂøÖÂ°´(Âπ¥ÈæÑ)
+		InitForeignInfoByAge()
+		//Ê≥®ÂÜåÈÖçÁΩÆÂä†ËΩΩÊï∞ÊçÆ
+		DataListLoad();
+		//Âä†ËΩΩÂú∞ÂùÄÁ±ªÂûã
+		LoadAddrDefType()
+		//ÊÄßÂà´
+		LoadSex()
+		//ÂàùÂßãÂåñÊéíÂ∫èËÆæÁΩÆ
+		InitSortItem("User.CTNation","SortNation");
+		InitSortItem("User.CTMarital","SortMarital");
+		InitSortItem("User.CTOccupation","SortOccupation");
+		InitSortItem("User.CTRelation","SortRelation");
+	}
 }
-function InitForeignInfoByAge() {
-    var cbox = $HUI.combobox("#ForeignInfoByAge", {
-        valueField: 'Value',
-        textField: 'Desc',
-        editable: true,
-        data: [
-            { Value: "13", Desc: "13ÀÍ“‘œ¬" },
-            { Value: "14", Desc: "14ÀÍ“‘œ¬" },
-            { Value: "15", Desc: "15ÀÍ“‘œ¬" },
-            { Value: "16", Desc: "16ÀÍ“‘œ¬" },
-            { Value: "17", Desc: "17ÀÍ“‘œ¬" },
-            { Value: "18", Desc: "18ÀÍ“‘œ¬" }
-        ]
-    })
+function InitEvent(){
+	$("#GlobalSet").click(GlobalSetHandle)
+	$("#SetSave").click(SetSaveHandle)
+	$("#SortItemSet").click(SortItemSetClick)
+	$("#SortItemSetSave").click(SortItemSetSaveClick)
 }
-//≥ı ºªØø®∫≈ºÏÀ˜∑Ω Ω
-function InitSearchCardNoMode() {
-    $.cm({
-        ClassName: "web.DHCBL.UDHCCommFunLibary",
-        QueryName: "InitListObjectValueNew",
-        ClassName1: "User.DHCCardTypeDef",
-        PropertyName: "CTDSearchCardNoMode",
-        rows: 99999
-    }, function (GridData) {
-        var cbox = $HUI.combobox("#SearchCardNoMode", {
-            valueField: 'ValueList',
-            textField: 'DisplayValue',
-            editable: true,
-            data: GridData["rows"],
-            value: ServerObj.SearchCardNoMode,
-            onChange: function (newValue, oldValue) {
-
-            }
-        });
-    });
+function GlobalSetHandle(){
+	$('#CardGlobalSet').dialog("open")
+	$('#CardGlobalSet').dialog("center")
+	$m({
+			ClassName:"web.DHCBL.CARD.CardTypeDef",
+			MethodName:"GetCardTypeSet",
+			HospId:$HUI.combogrid('#_HospList').getValue()
+		},function(txtData){
+			var txtDataArr=	txtData.split("^")
+			$("#SearchCardNoMode").combobox("setValue",txtDataArr[0])
+			$("#AllowAgeNoCreadCard").val(txtDataArr[1])
+			var CanNoCread= txtDataArr[2] 
+			var BuildAddrHomeByIDCard= txtDataArr[4]
+			var BuildAddrBirthByIDCard= txtDataArr[5]
+			var BuildAddrLookUpByIDCard= txtDataArr[6]
+			var BuildAddrHouseByIDCard= txtDataArr[7]
+			var LimitBirthTimeByAge=txtDataArr[8]
+			var AutoFillUnitInfo=txtDataArr[9]
+			$("#LimitBirthTimeByAge").val(LimitBirthTimeByAge);
+			if(CanNoCread=="Y"){
+				$("#CanNoCread").switchbox("setValue",true)
+			}else{
+				$("#CanNoCread").switchbox("setValue",false)
+			}
+			$("#ForeignInfoByAge").combobox("setValue",txtDataArr[3])
+			BuildAddrHomeByIDCard=(BuildAddrHomeByIDCard=="Y")?true:false
+			BuildAddrBirthByIDCard=(BuildAddrBirthByIDCard=="Y")?true:false
+			BuildAddrLookUpByIDCard=(BuildAddrLookUpByIDCard=="Y")?true:false
+			BuildAddrHouseByIDCard=(BuildAddrHouseByIDCard=="Y")?true:false
+			AutoFillUnitInfo=(AutoFillUnitInfo=="Y")?true:false
+			$("#BuildAddrHomeByIDCard").switchbox("setValue",BuildAddrHomeByIDCard)
+			$("#BuildAddrBirthByIDCard").switchbox("setValue",BuildAddrBirthByIDCard)
+			$("#BuildAddrLookUpByIDCard").switchbox("setValue",BuildAddrLookUpByIDCard)
+			$("#BuildAddrHouseByIDCard").switchbox("setValue",BuildAddrHouseByIDCard)
+			$("#AutoFillUnitInfo").switchbox("setValue",AutoFillUnitInfo)
+			
+		}
+	)
+	
 }
-function SetSaveHandle() {
-    var SearchCardNoMode = $("#SearchCardNoMode").combobox("getValue")
-    var AllowAgeNoCreadCard = $("#AllowAgeNoCreadCard").val()
-    var CanNoCread = $("#CanNoCread").switchbox("getValue")
-    var ForeignInfoByAge = $("#ForeignInfoByAge").combobox("getValue")
-    var BuildAddrHomeByIDCard = $("#BuildAddrHomeByIDCard").switchbox("getValue")
-    var BuildAddrBirthByIDCard = $("#BuildAddrBirthByIDCard").switchbox("getValue")
-    var BuildAddrLookUpByIDCard = $("#BuildAddrLookUpByIDCard").switchbox("getValue")
-    var BuildAddrHouseByIDCard = $("#BuildAddrHouseByIDCard").switchbox("getValue")
-    if (!ForeignInfoByAge) ForeignInfoByAge = ""
-    CanNoCread = (CanNoCread ? 'Y' : 'N')
-    BuildAddrHomeByIDCard = BuildAddrHomeByIDCard ? "Y" : "N";
-    BuildAddrBirthByIDCard = BuildAddrBirthByIDCard ? "Y" : "N";
-    BuildAddrLookUpByIDCard = BuildAddrLookUpByIDCard ? "Y" : "N";
-    BuildAddrHouseByIDCard = BuildAddrHouseByIDCard ? "Y" : "N";
-    $m({
-        ClassName: "web.DHCBL.CARD.CardTypeDef",
-        MethodName: "SaveCardTypeSet",
-        SetStr: SearchCardNoMode + "^" + AllowAgeNoCreadCard + "^" + CanNoCread + "^" + ForeignInfoByAge + "^" + BuildAddrHomeByIDCard + "^" + BuildAddrBirthByIDCard + "^" + BuildAddrLookUpByIDCard + "^" + BuildAddrHouseByIDCard,
-        HospId: $HUI.combogrid('#_HospList').getValue()
-    }, function (txtData) {
-        $.messager.popover({ msg: '±£¥Ê≥…π¶!', type: 'success', timeout: 1000 });
-    })
+function InitForeignInfoByAge(){
+	var cbox=$HUI.combobox("#ForeignInfoByAge",{
+		valueField: 'Value',
+		textField: 'Desc', 
+		editable:true,
+		data: [
+			{Value:"13",Desc:"13Â≤Å‰ª•‰∏ã"},
+			{Value:"14",Desc:"14Â≤Å‰ª•‰∏ã"},
+			{Value:"15",Desc:"15Â≤Å‰ª•‰∏ã"},
+			{Value:"16",Desc:"16Â≤Å‰ª•‰∏ã"},
+			{Value:"17",Desc:"17Â≤Å‰ª•‰∏ã"},
+			{Value:"18",Desc:"18Â≤Å‰ª•‰∏ã"}
+		]
+	})
 }
-function InitDataGrid() {
-    var toolbar = [{
-        text: '–¬‘ˆ',
-        iconCls: 'icon-add',
-        handler: function () { AddClick(); }
-    }, {
-        text: '–ﬁ∏ƒ',
-        iconCls: 'icon-write-order',
-        handler: function () { UpdateClick(); }
-    }
-    ]
-    var Columns = [[
-        { field: 'ID', title: '', width: 1, hidden: true },
-        { field: 'Hosp', title: '“Ω‘∫', width: 120 },
-        {
-            field: 'SearchMasFlag', title: '∂¡ø® «∑Ò∂¡»°PA_PatMas–≈œ¢', width: 120,
-            formatter: function (value, row, index) {
-                if (value == "Y") {
-                    return "<span class='c-ok'> «</span>"
-                } else {
-                    return "<span class='c-no'>∑Ò</span>"
-                }
-            }
-        },
-        { field: 'SetFocusElement', title: '◊‘∂Øæ€Ωππ¶ƒ‹', width: 70 },
-        {
-            field: 'PatMasFlag', title: '–¥»Îªº’ﬂª˘±æ–≈œ¢±Í÷æ', width: 150,
-            formatter: function (value, row, index) {
-                if (value == "Y") {
-                    return "<span class='c-ok'> «</span>"
-                } else {
-                    return "<span class='c-no'>∑Ò</span>"
-                }
-            }
-        },
-        {
-            field: 'CardRefFlag', title: '–¥»Îø®–≈œ¢±Í÷æ', width: 70,
-            formatter: function (value, row, index) {
-                if (value == "Y") {
-                    return "<span class='c-ok'> «</span>"
-                } else {
-                    return "<span class='c-no'>∑Ò</span>"
-                }
-            }
-        },
-        {
-            field: 'AccManageFlag', title: '–¥»Îªº’ﬂ’Àªß–≈œ¢±Í÷æ', width: 100,
-            formatter: function (value, row, index) {
-                if (value == "Y") {
-                    return "<span class='c-ok'> «</span>"
-                } else {
-                    return "<span class='c-no'>∑Ò</span>"
-                }
-            }
-        },
-        { field: 'ParseTag', title: '∑÷Œˆ–≈œ¢Œ¨ª§ΩÁ√Ê”Î CacheΩ‚ÒÓ∫œ±Í÷æ', width: 70 },
-        { field: 'DefualtCoury', title: 'π˙º“', width: 100 },
-        { field: 'DefualtCouryDR', title: 'π˙º“', hidden: true },
-        { field: 'DefualtNation', title: '√Ò◊Â', width: 70 },
-        { field: 'DefualtNationDR', title: '√Ò◊Â', hidden: true },
-        { field: 'DefualtProvince', title: ' °∑›', width: 100 },
-        { field: 'DefualtProvinceDR', title: '', hidden: true },
-        { field: 'DefualtCity', title: '≥« –', width: 100 },
-        { field: 'DefualtCityDR', title: '', hidden: true },
-        {
-            field: 'CPRIsNotStructAddressFLag', title: ' «∑ÒΩ·ππªØµÿ÷∑', width: 100,
-            formatter: function (value, row, index) {
-                if (value == "Y") {
-                    return "<span class='c-ok'> «</span>"
-                } else {
-                    return "<span class='c-no'>∑Ò</span>"
-                }
-            }
-        },
-        { field: 'CPRCardRegMustFillIn', title: 'Ω®ø®“≥√Ê±ÿÃÓ–≈œ¢‘™Àÿ', width: 120, hidden: true },
-        { field: 'CPRCardRegJumpSeq', title: 'Ω®ø®“≥√Ê‘™ÀÿÃ¯◊™À≥–Ú', width: 120, hidden: true }
-    ]];
-    var dataGrid = $("#CardPATConfigList").datagrid({
-        fit: true,
-        border: false,
-        striped: true,
-        singleSelect: true,
-        fitColumns: false,
-        autoRowHeight: false,
-        pagination: true,
-        pageSize: 20,
-        idField: 'RowID',
-        columns: Columns,
-        toolbar: toolbar,
-        onSelect: function (index, rowData) {
-            PageLogicObj.m_RowId = rowData["ID"]
-            DataGridSelect(rowData["ID"])
-        }
-    });
-    dataGrid.datagrid('loadData', { 'total': '0', "rows": [] });
-    return dataGrid;
+//ÂàùÂßãÂåñÂç°Âè∑Ê£ÄÁ¥¢ÊñπÂºè
+function InitSearchCardNoMode(){
+	$.cm({
+			ClassName:"web.DHCBL.UDHCCommFunLibary",
+			QueryName:"InitListObjectValueNew",
+			ClassName1:"User.DHCCardTypeDef",
+			PropertyName:"CTDSearchCardNoMode",
+			rows:99999
+		},function(GridData){
+			var cbox = $HUI.combobox("#SearchCardNoMode", {
+				valueField: 'ValueList',
+				textField: 'DisplayValue', 
+				editable:true,
+				data: GridData["rows"],
+				value:ServerObj.SearchCardNoMode,
+				onChange:function(newValue, oldValue){
+					
+				}
+			});
+	});
 }
-function DataListLoad() {
-    $.cm({
-        ClassName: "web.DHCBL.CARD.CardPATRegConfig",
-        QueryName: "CardPatRegConfigQueryT",
-        HospId: $HUI.combogrid('#_HospList').getValue(),
-        rows: 99999
-    }, function (GridData) {
-        $("#CardPATConfigList").datagrid({ loadFilter: DocToolsHUI.lib.pagerFilter }).datagrid('loadData', GridData);
-        $("#CardPATConfigList").datagrid("clearSelections")
-    });
+function SetSaveHandle(){
+	var SearchCardNoMode=$("#SearchCardNoMode").combobox("getValue")
+	var AllowAgeNoCreadCard=$("#AllowAgeNoCreadCard").val()
+	var CanNoCread=$("#CanNoCread").switchbox("getValue")
+	var ForeignInfoByAge=$("#ForeignInfoByAge").combobox("getValue")
+	var BuildAddrHomeByIDCard=$("#BuildAddrHomeByIDCard").switchbox("getValue")
+	var BuildAddrBirthByIDCard=$("#BuildAddrBirthByIDCard").switchbox("getValue")
+	var BuildAddrLookUpByIDCard=$("#BuildAddrLookUpByIDCard").switchbox("getValue")
+	var BuildAddrHouseByIDCard=$("#BuildAddrHouseByIDCard").switchbox("getValue")
+	var AutoFillUnitInfo=$("#AutoFillUnitInfo").switchbox("getValue")
+	var LimitBirthTimeByAge=$("#LimitBirthTimeByAge").val();
+	var AddrDefType=$("#AddrDefType").combobox("getValues")
+	var DefaultSex=$("#Sex").combobox("getValue")
+	
+	if (!ForeignInfoByAge) ForeignInfoByAge=""
+	CanNoCread=(CanNoCread?'Y':'N')
+	BuildAddrHomeByIDCard=BuildAddrHomeByIDCard?"Y":"N";
+	BuildAddrBirthByIDCard=BuildAddrBirthByIDCard?"Y":"N";
+	BuildAddrLookUpByIDCard=BuildAddrLookUpByIDCard?"Y":"N";
+	BuildAddrHouseByIDCard=BuildAddrHouseByIDCard?"Y":"N";
+	AutoFillUnitInfo=AutoFillUnitInfo?"Y":"N";
+	$m({
+		ClassName:"web.DHCBL.CARD.CardTypeDef",
+		MethodName:"SaveCardTypeSet",
+		SetStr:SearchCardNoMode+"^"+AllowAgeNoCreadCard+"^"+CanNoCread+"^"+ForeignInfoByAge+"^"+BuildAddrHomeByIDCard+"^"+BuildAddrBirthByIDCard+"^"+BuildAddrLookUpByIDCard+"^"+BuildAddrHouseByIDCard+"^"+LimitBirthTimeByAge+"^"+AddrDefType+"^"+ DefaultSex+"^"+  AutoFillUnitInfo,
+		HospId:$HUI.combogrid('#_HospList').getValue()
+	},function(txtData){
+		$.messager.popover({msg: '‰øùÂ≠òÊàêÂäü!',type:'success',timeout: 1000});
+	})
 }
-function InitComboBox() {
-    ///≥ı ºªØ ∂¡ø® «∑Ò∂¡»°PA_PatMas–≈œ¢
-    $.cm({
-        ClassName: "web.DHCBL.UDHCCommFunLibary",
-        QueryName: "InitListObjectValueNew",
-        ClassName1: "User.DHCCardPATRegConfig",
-        PropertyName: "CPRSearchMasFlag",
-        rows: 99999
-    }, function (GridData) {
-        var cbox = $HUI.combobox("#SearchMasFlag", {
-            valueField: 'ValueList',
-            textField: 'DisplayValue',
-            editable: true,
-            data: GridData["rows"]
-        });
-    });
-    ///≥ı ºªØ –¥»Îªº’ﬂª˘±æ–≈œ¢±Í÷æ 
-    $.cm({
-        ClassName: "web.DHCBL.UDHCCommFunLibary",
-        QueryName: "InitListObjectValueNew",
-        ClassName1: "User.DHCCardPATRegConfig",
-        PropertyName: "CPRPatMasFlag",
-        rows: 99999
-    }, function (GridData) {
-        var cbox = $HUI.combobox("#PatMasFlag", {
-            valueField: 'ValueList',
-            textField: 'DisplayValue',
-            editable: true,
-            data: GridData["rows"]
-        });
-    });
-    ///≥ı ºªØ –¥»Îø®–≈œ¢±Í÷æ 
-    $.cm({
-        ClassName: "web.DHCBL.UDHCCommFunLibary",
-        QueryName: "InitListObjectValueNew",
-        ClassName1: "User.DHCCardPATRegConfig",
-        PropertyName: "CPRCardRefFlag",
-        rows: 99999
-    }, function (GridData) {
-        var cbox = $HUI.combobox("#CardRefFlag", {
-            valueField: 'ValueList',
-            textField: 'DisplayValue',
-            editable: true,
-            data: GridData["rows"]
-        });
-    });
-    ///≥ı ºªØ –¥»Îªº’ﬂ’Àªß–≈œ¢±Í÷æ 
-    $.cm({
-        ClassName: "web.DHCBL.UDHCCommFunLibary",
-        QueryName: "InitListObjectValueNew",
-        ClassName1: "User.DHCCardPATRegConfig",
-        PropertyName: "CPRAccManageFLag",
-        rows: 99999
-    }, function (GridData) {
-        var cbox = $HUI.combobox("#AccManageFLag", {
-            valueField: 'ValueList',
-            textField: 'DisplayValue',
-            editable: true,
-            data: GridData["rows"]
-        });
-    });
-    ///≥ı ºªØ  «∑ÒΩ·ππªØµÿ÷∑
-    $.cm({
-        ClassName: "web.DHCBL.UDHCCommFunLibary",
-        QueryName: "InitListObjectValueNew",
-        ClassName1: "User.DHCCardPATRegConfig",
-        PropertyName: "CPRIsNotStructAddressFLag",
-        rows: 99999
-    }, function (GridData) {
-        var cbox = $HUI.combobox("#IsNotStructAddress", {
-            valueField: 'ValueList',
-            textField: 'DisplayValue',
-            editable: true,
-            data: GridData["rows"]
-        });
-    });
-    ///≥ı ºªØ“Ω‘∫
-    /*$.cm({
-            ClassName:"DHCDoc.DHCDocConfig.InstrArcim",
-            QueryName:"GetHos",
-            rows:99999
-        },function(GridData){
-            var cbox = $HUI.combobox("#Hosp", {
-                editable:false,
-                valueField: 'HOSPRowId',
-                textField: 'HOSPDesc', 
-                data: GridData["rows"],
-                onLoadSuccess:function(){
-                    $("#Hosp").combobox('select','');
-                }
-             });
-    });*/
-    ///≥ı ºªØΩ®ø®“≥√Ê±ÿÃÓ–≈œ¢‘™Àÿ
-    var Hosp = $HUI.combogrid('#_HospList').getValue();
-    $.cm({
-        ClassName: "web.DHCBL.CARD.CardPATRegConfig",
-        MethodName: "GetCardRegDOMCache",
-        HospId: Hosp //session['LOGON.HOSPID']
-    }, function (data) {
-        for (var oe in data) {
-            var text = data[oe];
-            PageLogicObj.m_CardRegDOMArr.push({ "id": oe, "text": text });
-        }
-        var cbox = $HUI.combobox("#CardRegMustFillIn", {
-            editable: false,
-            multiple: true,
-            rowStyle: 'checkbox', //œ‘ æ≥…π¥—°–––Œ Ω
-            valueField: 'id',
-            textField: 'text',
-            data: PageLogicObj.m_CardRegDOMArr
-        });
-        var dataGrid = $("#CardRegDOMTab").datagrid({
-            title: 'Ω®ø®“≥√Ê‘™ÀÿÃ¯◊™À≥–Ú',
-            headerCls: 'panel-header-gray',
-            fit: true,
-            striped: true,
-            singleSelect: true,
-            fitColumns: false,
-            autoRowHeight: false,
-            pagination: false,
-            pageSize: 20,
-            idField: 'id',
-            toolbar: [{
-                iconCls: 'icon-arrow-top',
-                handler: function () { Move('up') }
-            }, {
-                iconCls: 'icon-arrow-bottom',
-                handler: function () { Move('down') }
-            }],
-            columns: [[
-                { field: 'id', title: 'DOM‘™ÀÿID', width: 100, hidden: true },
-                { field: 'text', title: 'DOM‘™Àÿ√˚≥∆', width: 180 },
+function InitDataGrid(){
+	var toolbar=[{
+		text: 'Êñ∞Â¢û',
+		iconCls: 'icon-add',
+		handler: function(){AddClick();}
+	},{
+		text: '‰øÆÊîπ',
+		iconCls: 'icon-write-order',
+		handler: function(){UpdateClick();}
+	}
+	]
+	var Columns=[[    
+        { field : 'ID',title : '',width : 1,hidden:true},
+        { field: 'Hosp', title: 'ÂåªÈô¢', width: 120},
+		{ field: 'SearchMasFlag', title: 'ËØªÂç°ÊòØÂê¶ËØªÂèñPA_PatMas‰ø°ÊÅØ', width: 205,
+			formatter:function(value,row,index){
+				if (value == "Y") {
+					return "<span class='c-ok'>ÊòØ</span>"
+				} else {
+					return "<span class='c-no'>Âê¶</span>"
+				}
+			}
+		},
+		{ field : 'SetFocusElement',title : 'Ëá™Âä®ËÅöÁÑ¶ÂäüËÉΩ',width : 110 },
+        { field : 'PatMasFlag',title : 'ÂÜôÂÖ•ÊÇ£ËÄÖÂü∫Êú¨‰ø°ÊÅØÊ†áÂøó',width : 165 ,
+			formatter:function(value,row,index){
+				if (value == "Y") {
+					return "<span class='c-ok'>ÊòØ</span>"
+				} else {
+					return "<span class='c-no'>Âê¶</span>"
+				}
+			}
+		},
+        { field : 'CardRefFlag',title : 'ÂÜôÂÖ•Âç°‰ø°ÊÅØÊ†áÂøó',width : 120,
+			formatter:function(value,row,index){
+				if (value == "Y") {
+					return "<span class='c-ok'>ÊòØ</span>"
+				} else {
+					return "<span class='c-no'>Âê¶</span>"
+				}
+			}
+		},
+        { field : 'AccManageFlag',title : 'ÂÜôÂÖ•ÊÇ£ËÄÖË¥¶Êà∑‰ø°ÊÅØÊ†áÂøó',width : 160,
+			formatter:function(value,row,index){
+				if (value == "Y") {
+					return "<span class='c-ok'>ÊòØ</span>"
+				} else {
+					return "<span class='c-no'>Âê¶</span>"
+				}
+			}
+		},
+        { field : 'ParseTag',title : 'ÂàÜÊûê‰ø°ÊÅØÁª¥Êä§ÁïåÈù¢‰∏é CacheËß£ËÄ¶ÂêàÊ†áÂøó',width : 260},
+        { field : 'DefualtCoury',title : 'ÂõΩÂÆ∂',width : 100 },
+		{ field : 'DefualtCouryDR',title : 'ÂõΩÂÆ∂',hidden:true },
+        { field : 'DefualtNation',title : 'Ê∞ëÊóè',width : 70 },
+        { field : 'DefualtNationDR',title : 'Ê∞ëÊóè',hidden:true},
+		{ field : 'DefualtProvince',title : 'ÁúÅ‰ªΩ',width : 100 },
+		{ field : 'DefualtProvinceDR',title : '',hidden:true},
+	    { field : 'DefualtCity',title : 'ÂüéÂ∏Ç',width : 100 },
+		{ field : 'DefualtCityDR',title : '',hidden:true},
+        { field : 'CPRIsNotStructAddressFLag',title : 'ÊòØÂê¶ÁªìÊûÑÂåñÂú∞ÂùÄ',width : 120,
+			formatter:function(value,row,index){
+				if (value == "Y") {
+					return "<span class='c-ok'>ÊòØ</span>"
+				} else {
+					return "<span class='c-no'>Âê¶</span>"
+				}
+			}
+		},
+        { field: 'CPRCardRegMustFillIn', title: 'Âª∫Âç°È°µÈù¢ÂøÖÂ°´‰ø°ÊÅØÂÖÉÁ¥†', width: 120, hidden:true},
+        { field: 'CPRCardRegJumpSeq', title: 'Âª∫Âç°È°µÈù¢ÂÖÉÁ¥†Ë∑≥ËΩ¨È°∫Â∫è', width: 120, hidden:true}
+	]];
+	var dataGrid=$("#CardPATConfigList").datagrid({
+		fit : true,
+		border : false,
+		striped : true,
+		singleSelect : true,
+		fitColumns : false,
+		autoRowHeight : false,
+		pagination : true,  
+		pageSize: 20,
+		idField:'RowID',
+		columns :Columns,
+		toolbar: toolbar,
+		onSelect:function(index,rowData){
+			PageLogicObj.m_RowId=rowData["ID"]
+			DataGridSelect(rowData["ID"])
+		}
+	}).datagrid({loadFilter:DocToolsHUI.lib.pagerFilter});
+	dataGrid.datagrid('loadData',{ 'total':'0',"rows":[] });
+	return dataGrid;
+}
+function DataListLoad(){
+	$.cm({
+	    ClassName : "web.DHCBL.CARD.CardPATRegConfig",
+	    QueryName : "CardPatRegConfigQueryT",
+	    HospId:$HUI.combogrid('#_HospList').getValue(),
+	    rows:99999
+	},function(GridData){
+		$("#CardPATConfigList").datagrid('loadData',GridData).datagrid("clearSelections")
+	});
+}
+function InitComboBox(){
+	///ÂàùÂßãÂåñ ËØªÂç°ÊòØÂê¶ËØªÂèñPA_PatMas‰ø°ÊÅØ
+	$.cm({
+			ClassName:"web.DHCBL.UDHCCommFunLibary",
+			QueryName:"InitListObjectValueNew",
+			ClassName1:"User.DHCCardPATRegConfig",
+			PropertyName:"CPRSearchMasFlag",
+			rows:99999
+		},function(GridData){
+			var cbox = $HUI.combobox("#SearchMasFlag", {
+					valueField: 'ValueList',
+					textField: 'DisplayValue', 
+					editable:true,
+					data: GridData["rows"]
+			 });
+	});
+	///ÂàùÂßãÂåñ ÂÜôÂÖ•ÊÇ£ËÄÖÂü∫Êú¨‰ø°ÊÅØÊ†áÂøó 
+	$.cm({
+			ClassName:"web.DHCBL.UDHCCommFunLibary",
+			QueryName:"InitListObjectValueNew",
+			ClassName1:"User.DHCCardPATRegConfig",
+			PropertyName:"CPRPatMasFlag",
+			rows:99999
+		},function(GridData){
+			var cbox = $HUI.combobox("#PatMasFlag", {
+					valueField: 'ValueList',
+					textField: 'DisplayValue', 
+					editable:true,
+					data: GridData["rows"]
+			 });
+	});
+	///ÂàùÂßãÂåñ ÂÜôÂÖ•Âç°‰ø°ÊÅØÊ†áÂøó 
+	$.cm({
+			ClassName:"web.DHCBL.UDHCCommFunLibary",
+			QueryName:"InitListObjectValueNew",
+			ClassName1:"User.DHCCardPATRegConfig",
+			PropertyName:"CPRCardRefFlag",
+			rows:99999
+		},function(GridData){
+			var cbox = $HUI.combobox("#CardRefFlag", {
+					valueField: 'ValueList',
+					textField: 'DisplayValue', 
+					editable:true,
+					data: GridData["rows"]
+			 });
+	});
+	///ÂàùÂßãÂåñ ÂÜôÂÖ•ÊÇ£ËÄÖË¥¶Êà∑‰ø°ÊÅØÊ†áÂøó 
+	$.cm({
+			ClassName:"web.DHCBL.UDHCCommFunLibary",
+			QueryName:"InitListObjectValueNew",
+			ClassName1:"User.DHCCardPATRegConfig",
+			PropertyName:"CPRAccManageFLag",
+			rows:99999
+		},function(GridData){
+			var cbox = $HUI.combobox("#AccManageFLag", {
+					valueField: 'ValueList',
+					textField: 'DisplayValue', 
+					editable:true,
+					data: GridData["rows"]
+			 });
+	});
+	///ÂàùÂßãÂåñ ÊòØÂê¶ÁªìÊûÑÂåñÂú∞ÂùÄ
+	$.cm({
+			ClassName:"web.DHCBL.UDHCCommFunLibary",
+			QueryName:"InitListObjectValueNew",
+			ClassName1:"User.DHCCardPATRegConfig",
+			PropertyName:"CPRIsNotStructAddressFLag",
+			rows:99999
+		},function(GridData){
+			var cbox = $HUI.combobox("#IsNotStructAddress", {
+					valueField: 'ValueList',
+					textField: 'DisplayValue', 
+					editable:true,
+					data: GridData["rows"]
+			 });
+	});
+	///ÂàùÂßãÂåñÂåªÈô¢
+	/*$.cm({
+			ClassName:"DHCDoc.DHCDocConfig.InstrArcim",
+			QueryName:"GetHos",
+			rows:99999
+		},function(GridData){
+			var cbox = $HUI.combobox("#Hosp", {
+				editable:false,
+				valueField: 'HOSPRowId',
+				textField: 'HOSPDesc', 
+				data: GridData["rows"],
+				onLoadSuccess:function(){
+					$("#Hosp").combobox('select','');
+				}
+			 });
+	});*/
+	///ÂàùÂßãÂåñÂª∫Âç°È°µÈù¢ÂøÖÂ°´‰ø°ÊÅØÂÖÉÁ¥†
+	var Hosp=$HUI.combogrid('#_HospList').getValue();
+	$.cm({
+			ClassName:"web.DHCBL.CARD.CardPATRegConfig",
+			MethodName:"GetCardRegDOMCache",
+			HospId:Hosp //session['LOGON.HOSPID']
+		},function(data){
+			for ( var oe in data) {
+				var text=data[oe];
+				PageLogicObj.m_CardRegDOMArr.push({"id":oe,"text":text});
+			}
+			var cbox = $HUI.combobox("#CardRegMustFillIn", {
+				editable:false,
+				multiple:true,
+				rowStyle:'checkbox', //ÊòæÁ§∫ÊàêÂãæÈÄâË°åÂΩ¢Âºè
+				valueField: 'id',
+				textField: 'text', 
+				data: PageLogicObj.m_CardRegDOMArr
+			 });
+			var dataGrid=$("#CardRegDOMTab").datagrid({
+				title:'Âª∫Âç°È°µÈù¢ÂÖÉÁ¥†Ë∑≥ËΩ¨È°∫Â∫è',
+				headerCls:'panel-header-gray',
+				fit : true,
+				striped : true,
+				singleSelect : true,
+				fitColumns : false,
+				autoRowHeight : false,
+				pagination : false,  
+				pageSize: 20,
+				idField:'id',
+				toolbar: [{
+					iconCls: 'icon-arrow-top',
+					handler: function(){Move('up')}
+				},{
+					iconCls: 'icon-arrow-bottom',
+					handler: function(){Move('down')}
+				}],
+				columns :[[    
+			        { field : 'id',title : 'DOMÂÖÉÁ¥†ID',width : 100,hidden:true},
+			        { field: 'text', title: 'DOMÂÖÉÁ¥†ÂêçÁß∞', width: 180},
+				]],
+		        data:{"total":PageLogicObj.m_CardRegDOMArr.length,"rows":PageLogicObj.m_CardRegDOMArr}
+			});
+			return dataGrid;
+	});
+}
+function InitLookup(){
+	//ÂàùÂßãÂåñ ÂõΩÂÆ∂
+	$("#Country").lookup({
+			url:$URL,
+            mode:'remote',
+			method:"Get",
+            idField:'ID',
+            textField:'Description',
+            columns:[[  
+                {field:'Description',title:'ÂõΩÂÆ∂',width:150}, 				
+                {field:'ID',title:'ID',width:50} 
             ]],
-            data: { "total": PageLogicObj.m_CardRegDOMArr.length, "rows": PageLogicObj.m_CardRegDOMArr }
-        });
-        return dataGrid;
+			pagination:true,
+			panelWidth:300,
+			panelHeight:300,
+			isCombo:true,
+			queryOnSameQueryString:true,
+			queryParams:{ClassName: 'web.CTCountryNew',QueryName: 'LookUp'},
+			onBeforeLoad:function(param){
+				var desc=param['q'];
+				//if (desc=="") return false;
+				param = $.extend(param,{desc:desc});
+			},
+            pagination:true,
+            onSelect:function(index,rowData){
+                $("#CountryId").val(rowData["ID"]);
+                $("#Province,#City").lookup('setText','');
+                $("#CityId,#ProvinceId").val('');
+            }
+    });
+	//ÂàùÂßãÂåñ ÁúÅ‰ªΩ
+	$("#Province").lookup({
+			url:$URL,
+            mode:'remote',
+			method:"Get",
+            idField:'HIDDEN',
+            textField:'Description',
+            columns:[[  
+                {field:'Description',title:'ÁúÅ‰ªΩ',width:150}, 				
+                {field:'HIDDEN',title:'ID',width:50} 
+            ]],
+			pagination:true,
+			panelWidth:300,
+			panelHeight:300,
+			isCombo:true,
+			queryOnSameQueryString:true,
+			queryParams:{ClassName: 'web.CTProvinceNew',QueryName: 'LookUp'},
+			onBeforeLoad:function(param){
+				var desc=param['q'];
+				var lookdefaultCountryId=$("#CountryId").val()
+				param = $.extend(param,{lookDefaultProvinceDR:desc,defaultCountryDR:lookdefaultCountryId});
+			},
+            pagination:true,
+            onSelect:function(index,rowData){
+                $("#ProvinceId").val(rowData["HIDDEN"]);
+                $("#City").lookup('setText','');
+                $("#CityId").val('');
+            }
+    });
+	//ÂàùÂßãÂåñ ÂüéÂ∏Ç
+	$("#City").lookup({
+			url:$URL,
+            mode:'remote',
+			method:"Get",
+            idField:'HIDDEN',
+            textField:'Description',
+            columns:[[  
+                {field:'Description',title:'ÂüéÂ∏Ç',width:150}, 				
+                {field:'HIDDEN',title:'ID',width:50} 
+            ]],
+			pagination:true,
+			panelWidth:300,
+			panelHeight:300,
+			isCombo:true,
+			queryOnSameQueryString:true,
+			queryParams:{ClassName: 'web.CTCity',QueryName: 'LookUpWithProv'},
+			onBeforeLoad:function(param){
+				var desc=param['q'];
+				//if (desc=="") return false;
+				var lookdefaultProvinceId=$("#ProvinceId").val()
+				param = $.extend(param,{desc:desc,ProvinceDR:lookdefaultProvinceId});
+			},
+            pagination:true,
+            onSelect:function(index,rowData){
+                $("#CityId").val(rowData["HIDDEN"])
+            }
+    });
+	//ÂàùÂßãÂåñ Ê∞ëÊóè
+	$("#Nation").lookup({
+			url:$URL,
+            mode:'remote',
+			method:"Get",
+            idField:'HIDDEN',
+            textField:'Description',
+            columns:[[  
+                {field:'Description',title:'Ê∞ëÊóè',width:150}, 				
+                {field:'HIDDEN',title:'ID',width:50} 
+            ]],
+			pagination:true,
+			panelWidth:300,
+			panelHeight:300,
+			isCombo:true,
+			queryOnSameQueryString:true,
+			queryParams:{ClassName: 'web.CTNationNew',QueryName: 'LookUp'},
+			onBeforeLoad:function(param){
+				var desc=param['q'];
+				param = $.extend(param,{lookDefaultNationDR:desc});
+			},
+            pagination:true,
+            onSelect:function(index,rowData){
+                $("#NationId").val(rowData["HIDDEN"])
+            }
     });
 }
-function InitLookup() {
-    //≥ı ºªØ π˙º“
-    $("#Country").lookup({
-        url: $URL,
-        mode: 'remote',
-        method: "Get",
-        idField: 'ID',
-        textField: 'Description',
-        columns: [[
-            { field: 'Description', title: 'π˙º“', width: 150 },
-            { field: 'ID', title: 'ID', width: 50 }
-        ]],
-        pagination: true,
-        panelWidth: 300,
-        panelHeight: 300,
-        isCombo: true,
-        queryOnSameQueryString: true,
-        queryParams: { ClassName: 'web.CTCountryNew', QueryName: 'LookUp' },
-        onBeforeLoad: function (param) {
-            var desc = param['q'];
-            //if (desc=="") return false;
-            param = $.extend(param, { desc: desc });
-        },
-        pagination: true,
-        onSelect: function (index, rowData) {
-            $("#CountryId").val(rowData["ID"]);
-            $("#Province,#City").lookup('setText', '');
-            $("#CityId,#ProvinceId").val('');
-        }
-    });
-    //≥ı ºªØ  °∑›
-    $("#Province").lookup({
-        url: $URL,
-        mode: 'remote',
-        method: "Get",
-        idField: 'HIDDEN',
-        textField: 'Description',
-        columns: [[
-            { field: 'Description', title: ' °∑›', width: 150 },
-            { field: 'HIDDEN', title: 'ID', width: 50 }
-        ]],
-        pagination: true,
-        panelWidth: 300,
-        panelHeight: 300,
-        isCombo: true,
-        queryOnSameQueryString: true,
-        queryParams: { ClassName: 'web.CTProvinceNew', QueryName: 'LookUp' },
-        onBeforeLoad: function (param) {
-            var desc = param['q'];
-            var lookdefaultCountryId = $("#CountryId").val()
-            param = $.extend(param, { lookDefaultProvinceDR: desc, defaultCountryDR: lookdefaultCountryId });
-        },
-        pagination: true,
-        onSelect: function (index, rowData) {
-            $("#ProvinceId").val(rowData["HIDDEN"]);
-            $("#City").lookup('setText', '');
-            $("#CityId").val('');
-        }
-    });
-    //≥ı ºªØ ≥« –
-    $("#City").lookup({
-        url: $URL,
-        mode: 'remote',
-        method: "Get",
-        idField: 'HIDDEN',
-        textField: 'Description',
-        columns: [[
-            { field: 'Description', title: '≥« –', width: 150 },
-            { field: 'HIDDEN', title: 'ID', width: 50 }
-        ]],
-        pagination: true,
-        panelWidth: 300,
-        panelHeight: 300,
-        isCombo: true,
-        queryOnSameQueryString: true,
-        queryParams: { ClassName: 'web.CTCity', QueryName: 'LookUpWithProv' },
-        onBeforeLoad: function (param) {
-            var desc = param['q'];
-            //if (desc=="") return false;
-            var lookdefaultProvinceId = $("#ProvinceId").val()
-            param = $.extend(param, { desc: desc, ProvinceDR: lookdefaultProvinceId });
-        },
-        pagination: true,
-        onSelect: function (index, rowData) {
-            $("#CityId").val(rowData["HIDDEN"])
-        }
-    });
-    //≥ı ºªØ √Ò◊Â
-    $("#Nation").lookup({
-        url: $URL,
-        mode: 'remote',
-        method: "Get",
-        idField: 'HIDDEN',
-        textField: 'Description',
-        columns: [[
-            { field: 'Description', title: '√Ò◊Â', width: 150 },
-            { field: 'HIDDEN', title: 'ID', width: 50 }
-        ]],
-        pagination: true,
-        panelWidth: 300,
-        panelHeight: 300,
-        isCombo: true,
-        queryOnSameQueryString: true,
-        queryParams: { ClassName: 'web.CTNationNew', QueryName: 'LookUp' },
-        onBeforeLoad: function (param) {
-            var desc = param['q'];
-            param = $.extend(param, { lookDefaultNationDR: desc });
-        },
-        pagination: true,
-        onSelect: function (index, rowData) {
-            $("#NationId").val(rowData["HIDDEN"])
-        }
-    });
+function SaveData(RowId){
+	if(!CheckData()) return false;
+	var dataJson={}
+	$.each(FieldJson,function(name,value){
+		if (name=="CPRCardRegMustFillIn"){
+			var MustFillInArr=new Array();
+			var vals=$("#"+value).combobox('getValues');
+			var texts=$("#"+value).combobox('getText');
+			for (var i=0;i<vals.length;i++){
+				MustFillInArr.push({"id":vals[i],"text":texts.split(",")[i]});
+			}
+			var val=JSON.stringify(MustFillInArr);
+			val=eval("('"+val+"')");
+			dataJson[name]=val;
+		}else if(name=="CPRCardRegJumpSeq"){
+			var JumpSeqNoArr=new Array();
+			var rows=$("#"+value).datagrid('getRows');
+			for (var i=0;i<rows.length;i++){
+				var id=rows[i]['id'];
+				var text=rows[i]['text'];
+				JumpSeqNoArr.push({"id":id,"text":text});
+			}
+			var val=JSON.stringify(JumpSeqNoArr);
+			val=eval("('"+val+"')");
+			dataJson[name]=val;
+		}else{
+			var val=getValue(value);
+			val='"'+val+'"';
+			eval("dataJson."+name+"="+val);
+		}
+	});
+	var jsonStr=JSON.stringify(dataJson)
+	$m({
+		ClassName:"web.DHCBL.CARD.CardPATRegConfig",
+		MethodName:"SaveByJson",
+		RowId:RowId,
+		JsonStr:jsonStr
+	},function(txtData){
+		if(txtData==0){
+			if(RowId==""){
+				$.messager.popover({msg: 'Êñ∞Â¢ûÊàêÂäüÔºÅ',type:'success',timeout: 1000});
+			}else{
+				$.messager.popover({msg: 'Êõ¥Êñ∞ÊàêÂäüÔºÅ',type:'success',timeout: 1000});
+				PageLogicObj.m_RowId="";
+			}
+			DataListLoad()
+			clear()
+		}else if(txtData=="Repeat"){
+			$.messager.alert("ÊèêÁ§∫","ËÆ∞ÂΩïÈáçÂ§ç!‰∏ÄÂÆ∂ÂåªÈô¢Âè™ËÉΩÁª¥Êä§‰∏ÄÊù°Êï∞ÊçÆ!");
+		}
+	});
 }
-function SaveData(RowId) {
-    if (!CheckData()) return false;
-    var dataJson = {}
-    $.each(FieldJson, function (name, value) {
-        if (name == "CPRCardRegMustFillIn") {
-            var MustFillInArr = new Array();
-            var vals = $("#" + value).combobox('getValues');
-            var texts = $("#" + value).combobox('getText');
-            for (var i = 0; i < vals.length; i++) {
-                MustFillInArr.push({ "id": vals[i], "text": texts.split(",")[i] });
-            }
-            var val = JSON.stringify(MustFillInArr);
-            val = eval("('" + val + "')");
-            dataJson[name] = val;
-        } else if (name == "CPRCardRegJumpSeq") {
-            var JumpSeqNoArr = new Array();
-            var rows = $("#" + value).datagrid('getRows');
-            for (var i = 0; i < rows.length; i++) {
-                var id = rows[i]['id'];
-                var text = rows[i]['text'];
-                JumpSeqNoArr.push({ "id": id, "text": text });
-            }
-            var val = JSON.stringify(JumpSeqNoArr);
-            val = eval("('" + val + "')");
-            dataJson[name] = val;
-        } else {
-            var val = getValue(value);
-            val = '"' + val + '"';
-            eval("dataJson." + name + "=" + val);
-        }
-    });
-    var jsonStr = JSON.stringify(dataJson)
-    $m({
-        ClassName: "web.DHCBL.CARD.CardPATRegConfig",
-        MethodName: "SaveByJson",
-        RowId: RowId,
-        JsonStr: jsonStr
-    }, function (txtData) {
-        if (txtData == 0) {
-            if (RowId == "") {
-                $.messager.popover({ msg: '–¬‘ˆ≥…π¶£°', type: 'success', timeout: 1000 });
-            } else {
-                $.messager.popover({ msg: '∏¸–¬≥…π¶£°', type: 'success', timeout: 1000 });
-                PageLogicObj.m_RowId = "";
-            }
-            DataListLoad()
-            clear()
-        } else if (txtData == "Repeat") {
-            $.messager.alert("Ã· æ", "º«¬º÷ÿ∏¥!“ªº““Ω‘∫÷ªƒ‹Œ¨ª§“ªÃı ˝æ›!");
-        }
-    });
-}
-function CheckData() {
-    var Hosp = $HUI.combogrid('#_HospList').getValue(); //getValue("Hosp");
-    if (Hosp == "") {
-        $.messager.alert("Ã· æ", "“Ω‘∫≤ªƒ‹Œ™ø’!", 'info');
-        return false
-    }
-    var CardRegMustFillInMsg = "";
-    var CardRegMustFillIn = $("#CardRegMustFillIn").combobox('getText');
-    for (var i = 0; i < PageLogicObj.m_CardRegMustFillInArr.length; i++) {
-        var name = PageLogicObj.m_CardRegMustFillInArr[i];
-        if (("," + CardRegMustFillIn + ",").indexOf(("," + name + ",")) >= 0) {
-            flag = false;
-        } else {
-            if (CardRegMustFillInMsg == "") CardRegMustFillInMsg = name;
-            else CardRegMustFillInMsg = CardRegMustFillInMsg + "," + name;
-        }
-    }
-    if (CardRegMustFillInMsg != "") {
-        $.messager.alert("Ã· æ", "Ω®ø®“≥√Ê±ÿÃÓ–≈œ¢‘™Àÿµƒ " + CardRegMustFillInMsg + " «±ÿ–Î“™π¥—°µƒ‘™Àÿ!", 'info');
-        return false;
-    }
-    /*if ((CardRegMustFillIn=="")||(!isContained(CardRegMustFillIn.split(","),PageLogicObj.m_CardRegMustFillInArr))){
-        $.messager.alert("Ã· æ", PageLogicObj.m_CardRegMustFillInArr+ " «±ÿ–Î“™π¥—°µƒ‘™Àÿ!", 'info');
-        return false
-    }*/
-    var Country = $("#Country").lookup("getText")
-    if (Country == "") {
-        $("#CountryId").val("")
-    }
-    var Province = $("#Province").lookup("getText")
-    if (Province == "") {
-        $("#ProvinceId").val("")
-    }
-    var City = $("#City").lookup("getText")
-    if (City == "") {
-        $("#CityId").val("")
-    }
-    var CountryId = $("#CountryId").val();
-    var ProvinceId = $("#ProvinceId").val();
-    var CityId = $("#CityId").val();
-    if ((CountryId == "") && ((ProvinceId != "") || (CityId != ""))) {
-        $.messager.alert("Ã· æ", " °∑›ªÚ≥« –≤ªŒ™ø’ ±,–Ë—°‘Òπ˙º“!", 'info', function () {
-            $("#Country").focus();
-        });
-        return false
-    }
-    if ((ProvinceId == "") && (CityId != "")) {
-        $.messager.alert("Ã· æ", "≥« –≤ªŒ™ø’ ±,–Ë—°‘Ò °∑›!", 'info', function () {
-            $("#Province").focus();
-        });
-        return false
-    }
-    var Nation = $("#Nation").lookup("getText")
-    if (Nation == "") {
-        $("#NationId").val("")
-    }
-    var SearchMasFlag = getValue("SearchMasFlag")
-    if (SearchMasFlag == "") {
-        $.messager.alert("Ã· æ", "∂¡ø® «∑Ò∂¡»°PA_PatMas–≈œ¢≤ªƒ‹Œ™ø’", 'info');
-        return false
-    }
-    var PatMasFlag = getValue("PatMasFlag")
-    if (PatMasFlag == "") {
-        $.messager.alert("Ã· æ", "–¥»Îªº’ﬂª˘±æ–≈œ¢±Í÷æ≤ªƒ‹Œ™ø’", 'info');
-        return false
-    }
-    var CardRefFlag = getValue("CardRefFlag")
-    if (CardRefFlag == "") {
-        $.messager.alert("Ã· æ", "–¥»Îø®–≈œ¢±Í÷æ≤ªƒ‹Œ™ø’", 'info');
-        return false
-    }
+function CheckData(){
+	var Hosp=$HUI.combogrid('#_HospList').getValue(); //getValue("Hosp");
+	if(Hosp==""){
+		$.messager.alert("ÊèêÁ§∫", "ÂåªÈô¢‰∏çËÉΩ‰∏∫Á©∫!", 'info');
+		return false
+	}
+	var CardRegMustFillInMsg="";
+	var CardRegMustFillIn=$("#CardRegMustFillIn").combobox('getText');
+	for (var i=0;i<PageLogicObj.m_CardRegMustFillInArr.length;i++){
+		var name=PageLogicObj.m_CardRegMustFillInArr[i];
+		if ((","+CardRegMustFillIn+",").indexOf((","+name+","))>=0){
+			flag=false;
+		}else{
+			if (CardRegMustFillInMsg=="") CardRegMustFillInMsg=name;
+			else  CardRegMustFillInMsg=CardRegMustFillInMsg+","+name;
+		}
+	}
+	if (CardRegMustFillInMsg!="") {
+		$.messager.alert("ÊèêÁ§∫", "Âª∫Âç°È°µÈù¢ÂøÖÂ°´‰ø°ÊÅØÂÖÉÁ¥†ÁöÑ "+CardRegMustFillInMsg+ "ÊòØÂøÖÈ°ªË¶ÅÂãæÈÄâÁöÑÂÖÉÁ¥†!", 'info');
+		return false;
+	}
+	/*if ((CardRegMustFillIn=="")||(!isContained(CardRegMustFillIn.split(","),PageLogicObj.m_CardRegMustFillInArr))){
+		$.messager.alert("ÊèêÁ§∫", PageLogicObj.m_CardRegMustFillInArr+ "ÊòØÂøÖÈ°ªË¶ÅÂãæÈÄâÁöÑÂÖÉÁ¥†!", 'info');
+		return false
+	}*/
+	var Country=$("#Country").lookup("getText")
+	if(Country==""){
+		$("#CountryId").val("")
+	}
+	var Province=$("#Province").lookup("getText")
+	if(Province==""){
+		$("#ProvinceId").val("")
+	}
+	var City=$("#City").lookup("getText")
+	if(City==""){
+		$("#CityId").val("")
+	}
+	var CountryId=$("#CountryId").val();
+	var ProvinceId=$("#ProvinceId").val();
+	var CityId=$("#CityId").val();
+	if ((CountryId=="")&&((ProvinceId!="")||(CityId!=""))){
+		$.messager.alert("ÊèêÁ§∫", "ÁúÅ‰ªΩÊàñÂüéÂ∏Ç‰∏ç‰∏∫Á©∫Êó∂,ÈúÄÈÄâÊã©ÂõΩÂÆ∂!", 'info',function(){
+			$("#Country").focus();
+		});
+		return false
+	}
+	if ((ProvinceId=="")&&(CityId!="")){
+		$.messager.alert("ÊèêÁ§∫", "ÂüéÂ∏Ç‰∏ç‰∏∫Á©∫Êó∂,ÈúÄÈÄâÊã©ÁúÅ‰ªΩ!", 'info',function(){
+			$("#Province").focus();
+		});
+		return false
+	}
+	var Nation=$("#Nation").lookup("getText")
+	if(Nation==""){
+		$("#NationId").val("")
+	}
+	var SearchMasFlag=getValue("SearchMasFlag")
+	if(SearchMasFlag==""){
+		$.messager.alert("ÊèêÁ§∫", "ËØªÂç°ÊòØÂê¶ËØªÂèñPA_PatMas‰ø°ÊÅØ‰∏çËÉΩ‰∏∫Á©∫", 'info');
+		return false
+	}
+	var PatMasFlag=getValue("PatMasFlag")
+	if(PatMasFlag==""){
+		$.messager.alert("ÊèêÁ§∫", "ÂÜôÂÖ•ÊÇ£ËÄÖÂü∫Êú¨‰ø°ÊÅØÊ†áÂøó‰∏çËÉΩ‰∏∫Á©∫", 'info');
+		return false
+	}
+	var CardRefFlag=getValue("CardRefFlag")
+	if(CardRefFlag==""){
+		$.messager.alert("ÊèêÁ§∫", "ÂÜôÂÖ•Âç°‰ø°ÊÅØÊ†áÂøó‰∏çËÉΩ‰∏∫Á©∫", 'info');
+		return false
+	}
 
-    return true
+	return true
 }
-function AddClick() {
-    SaveData("")
+function AddClick(){
+	SaveData("")
 }
-function UpdateClick() {
-    if (PageLogicObj.m_RowId == "") {
-        $.messager.alert("Ã· æ", "«Î—°‘Ò≈‰÷√ ˝æ›", 'info');
-        return
-    }
-    SaveData(PageLogicObj.m_RowId)
+function UpdateClick(){
+	if(PageLogicObj.m_RowId==""){
+		$.messager.alert("ÊèêÁ§∫", "ËØ∑ÈÄâÊã©ÈÖçÁΩÆÊï∞ÊçÆ", 'info');
+		return 
+	}
+	SaveData(PageLogicObj.m_RowId)
 }
-function DataGridSelect(RowId) {
-    $.cm({
-        ClassName: "web.DHCBL.CARD.CardPATRegConfig",
-        MethodName: "GetDataJson",
-        RowId: RowId,
-        jsonFiledStr: JSON.stringify(FieldJson)
-    }, function (JsonData) {
-        if (JsonData != "") {
-            $.each(JsonData, function (name, value) {
-                if (name == "CardRegMustFillIn") {
-                    $("#CardRegMustFillIn").combobox('loadData', PageLogicObj.m_CardRegDOMArr);
-                    if (value != "") {
-                        var arr = new Array();
-                        value = JSON.parse(value);
-                        for (var j = 0; j < value.length; j++) {
-                            arr.push(value[j]['id']);
-                        }
-                        $("#CardRegMustFillIn").combobox('setValues', arr);
-                    } else {
-                        $("#CardRegMustFillIn").combobox('setValues', []);
-                    }
-                } else if (name == "CardRegDOMTab") {
-                    $("#CardRegDOMTab").datagrid('uncheckAll')
-                    $("#CardRegDOMTab").datagrid('loadData', { 'total': PageLogicObj.m_CardRegDOMArr.length, 'rows': PageLogicObj.m_CardRegDOMArr });
-                    if (value != "") {
-                        var rows = $("#CardRegDOMTab").datagrid('getRows');
-                        var newArr = new Array();
-                        var value1 = JSON.parse(value);
-                        for (var i = value1.length - 1; i >= 0; i--) {
-                            var id = value1[i]['id'];
-                            var index = $("#CardRegDOMTab").datagrid('getRowIndex', id);
-                            if (index < 0) {
-                                value1.splice(i, 1);
-                                newArr.push(rows[index]);
-                            } else {
-                                //$("#CardRegDOMTab").datagrid('deleteRow',index);
-                            }
-                        }
-                        value1 = value1.concat(newArr); //$("#CardRegDOMTab").datagrid('getRows')
-                        $("#CardRegDOMTab").datagrid('loadData', { 'total': value1.length, 'rows': value1 });
-                    }
-                } else {
-                    setValue(name, value);
-                }
-            })
-        }
-    });
+function DataGridSelect(RowId){
+	$.cm({
+		ClassName:"web.DHCBL.CARD.CardPATRegConfig",
+		MethodName:"GetDataJson",
+		RowId:RowId,
+		jsonFiledStr:JSON.stringify(FieldJson)
+	},function(JsonData){
+		if(JsonData!=""){
+			$.each(JsonData,function(name,value){
+				if (name=="CardRegMustFillIn"){
+					$("#CardRegMustFillIn").combobox('loadData',PageLogicObj.m_CardRegDOMArr);
+					if (value!=""){
+						var arr=new Array();
+						value=JSON.parse(value);
+						for (var j=0;j<value.length;j++){
+							arr.push(value[j]['id']);
+						}
+						$("#CardRegMustFillIn").combobox('setValues',arr);
+					}else{
+						$("#CardRegMustFillIn").combobox('setValues',[]);
+					}
+				}else if(name=="CardRegDOMTab"){
+					$("#CardRegDOMTab").datagrid('uncheckAll')
+					$("#CardRegDOMTab").datagrid('loadData',{ 'total':PageLogicObj.m_CardRegDOMArr.length,'rows':PageLogicObj.m_CardRegDOMArr});
+					if (value!=""){
+						var rows=$("#CardRegDOMTab").datagrid('getRows');
+						var newArr=new Array();
+						var value1=JSON.parse(value);
+						for (var i=value1.length-1;i>=0;i--){
+							var id=value1[i]['id'];
+							var index=$("#CardRegDOMTab").datagrid('getRowIndex',id);
+							if (index<0){
+								value1.splice(i,1);
+								newArr.push(rows[index]);
+							}else{
+								//$("#CardRegDOMTab").datagrid('deleteRow',index);
+							}
+						}
+						value1=value1.concat(newArr); //$("#CardRegDOMTab").datagrid('getRows')
+						$("#CardRegDOMTab").datagrid('loadData',{ 'total':value1.length,'rows':value1});
+					}
+				}else{
+					setValue(name,value);
+				}
+			})
+		}
+	});
 }
 
-///∏˘æ›‘™ÀÿµƒclassnameªÒ»°‘™Àÿ÷µ
-function getValue(id) {
-    var className = $("#" + id).attr("class")
-    if (typeof className == "undefined") {
-        return $("#" + id).val()
-    }
-    if (className.indexOf("hisui-lookup") >= 0) {
-        var txt = $("#" + id).lookup("getText")
-        //»Áπ˚∑≈¥ÛæµŒƒ±æøÚµƒ÷µŒ™ø’,‘Ú∑µªÿø’÷µ
-        if (txt != "") {
-            var val = $("#" + id).val()
-        } else {
-            var val = ""
-            $("#" + id + "Id").val("")
-        }
-        return val
-    } else if (className.indexOf("hisui-combobox") >= 0) {
-        var val = $("#" + id).combobox("getValue")
-        if (typeof val == "undefined") val = ""
-        return val
-    } else if (className.indexOf("hisui-datebox") >= 0) {
-        return $("#" + id).datebox("getValue")
-    } else if (className.indexOf("combogrid-f") >= 0) {
-        return $("#" + id).combogrid("getValue")
-    } else {
-        return $("#" + id).val()
-    }
-    return ""
+///Ê†πÊçÆÂÖÉÁ¥†ÁöÑclassnameËé∑ÂèñÂÖÉÁ¥†ÂÄº
+function getValue(id){
+	var className=$("#"+id).attr("class")
+	if(typeof className =="undefined"){
+		return $("#"+id).val()
+	}
+	if(className.indexOf("hisui-lookup")>=0){
+		var txt=$("#"+id).lookup("getText")
+		//Â¶ÇÊûúÊîæÂ§ßÈïúÊñáÊú¨Ê°ÜÁöÑÂÄº‰∏∫Á©∫,ÂàôËøîÂõûÁ©∫ÂÄº
+		if(txt!=""){ 
+			var val=$("#"+id).val()
+		}else{
+			var val=""
+			$("#"+id+"Id").val("")
+		}
+		return val
+	}else if(className.indexOf("hisui-combobox")>=0){
+		var val=$("#"+id).combobox("getValue")
+		if(typeof val =="undefined") val=""
+		return val
+	}else if(className.indexOf("hisui-datebox")>=0){
+		return $("#"+id).datebox("getValue")
+	}else if(className.indexOf("combogrid-f")>=0){
+		return $("#"+id).combogrid("getValue")
+	}else{
+		return $("#"+id).val()
+	}
+	return ""
 }
-///∏¯‘™Àÿ∏≥÷µ
-function setValue(id, val) {
-    var className = $("#" + id).attr("class")
-    if (typeof className == "undefined") {
-        $("#" + id).val(val)
-        return
-    }
-    if (className.indexOf("hisui-combobox") >= 0) {
-        $("#" + id).combobox("setValue", val)
-    } else if (className.indexOf("hisui-datebox") >= 0) {
-        $("#" + id).datebox("setValue", val)
-    } else if (className.indexOf("hisui-combogrid") >= 0) {
-        $("#" + id).combogrid("setValue", val)
-    } else {
-        $("#" + id).val(val)
-    }
-    return ""
+///ÁªôÂÖÉÁ¥†ËµãÂÄº
+function setValue(id,val){
+	var className=$("#"+id).attr("class")
+	if(typeof className =="undefined"){
+		$("#"+id).val(val)
+		return 
+	}
+	if(className.indexOf("hisui-combobox")>=0){
+		$("#"+id).combobox("setValue",val)
+	}else if(className.indexOf("hisui-datebox")>=0){
+		$("#"+id).datebox("setValue",val)
+	}else if(className.indexOf("hisui-combogrid")>=0){
+		$("#"+id).combogrid("setValue",val)
+	}else{
+		$("#"+id).val(val)
+	}
+	return ""
 }
-///ø®¿‡–Õ±‡º≠¥∞ø⁄«Â∆¡
-function clear() {
-    $.each(FieldJson, function (name, value) {
-        if (value == "CardRegMustFillIn") {
-            $("#" + value).combobox('setValues', []);
-        } else if (value == "CardRegDOMTab") {
-            $("#" + value).datagrid('uncheckAll').datagrid('loadData', { 'total': PageLogicObj.m_CardRegDOMArr.length, 'rows': PageLogicObj.m_CardRegDOMArr });
-        } else {
-            setValue(value, "");
-        }
-    })
+///Âç°Á±ªÂûãÁºñËæëÁ™óÂè£Ê∏ÖÂ±è
+function clear(){
+	$.each(FieldJson,function(name,value){
+		if (value=="CardRegMustFillIn"){
+			$("#"+value).combobox('setValues',[]);
+		}else if(value=="CardRegDOMTab"){			
+			$("#"+value).datagrid('uncheckAll').datagrid('loadData',{ 'total':PageLogicObj.m_CardRegDOMArr.length,'rows':PageLogicObj.m_CardRegDOMArr});
+		}else{
+			setValue(value,"");
+		}
+	})
 }
 
-//ΩÁ√Ê‘™Àÿ∫Õ±Ì¿Ô◊÷∂Œ∂‘’’ 
-var FieldJson = {
-    CPRSearchMasFlag: "SearchMasFlag",
-    CPRSetFocusElement: "SetFocusElement",
-    CPRPatMasFlag: "PatMasFlag",
-    CPRCardRefFlag: "CardRefFlag",
-    CPRAccManageFLag: "AccManageFLag",
-    CPRParseTag: "ParseTag",
-    CPRIsNotStructAddressFLag: "IsNotStructAddress",
-    CPRDefaultCountryDR: "CountryId",
-    CPRDefaultNationDR: "NationId",
-    CPRDefaultProvinceDR: "ProvinceId",
-    CPRDefaultCityDR: "CityId",
-    CPRDefaultCountryDRDesc: "Country",
-    CPRDefaultNationDRDesc: "Nation",
-    CPRDefaultProvinceDRDesc: "Province",
-    CPRDefaultCityDRDesc: "City",
-    CPRHospDR: "_HospList",
-    CPRCardRegMustFillIn: "CardRegMustFillIn",
-    CPRCardRegJumpSeq: "CardRegDOMTab"
+//ÁïåÈù¢ÂÖÉÁ¥†ÂíåË°®ÈáåÂ≠óÊÆµÂØπÁÖß 
+var FieldJson={
+	CPRSearchMasFlag:"SearchMasFlag",
+	CPRSetFocusElement:"SetFocusElement",
+	CPRPatMasFlag:"PatMasFlag",
+	CPRCardRefFlag:"CardRefFlag",
+	CPRAccManageFLag:"AccManageFLag",
+	CPRParseTag:"ParseTag",
+	CPRIsNotStructAddressFLag:"IsNotStructAddress",
+	CPRDefaultCountryDR:"CountryId",
+	CPRDefaultNationDR:"NationId",
+	CPRDefaultProvinceDR:"ProvinceId",
+	CPRDefaultCityDR:"CityId",
+	CPRDefaultCountryDRDesc:"Country",
+	CPRDefaultNationDRDesc:"Nation",
+	CPRDefaultProvinceDRDesc:"Province",
+	CPRDefaultCityDRDesc:"City",
+	CPRHospDR:"_HospList",
+	CPRCardRegMustFillIn:"CardRegMustFillIn",
+	CPRCardRegJumpSeq:"CardRegDOMTab"
 }
-function Move(type) {
-    var _tab = $('#CardRegDOMTab');
-    var row = _tab.datagrid("getSelected");
-    if (!row) {
-        $.messager.alert("Ã· æ", "«Î—°‘Ò–Ë“™“∆∂Øµƒ––!");
-        return false;
-    }
-    var index = _tab.datagrid("getRowIndex", row);
-    var rows = _tab.datagrid("getRows");
-    if (type == "up") {
-        if (index != 0) {
-            var toup = _tab.datagrid('getData').rows[index];
+function Move(type){
+	var _tab=$('#CardRegDOMTab');
+	var row=_tab.datagrid("getSelected");
+	if (!row){
+		$.messager.alert("ÊèêÁ§∫","ËØ∑ÈÄâÊã©ÈúÄË¶ÅÁßªÂä®ÁöÑË°å!");
+		return false;
+	}
+	var index=_tab.datagrid("getRowIndex",row);
+	var rows=_tab.datagrid("getRows");
+	if (type=="up"){
+		if (index != 0) {
+			var toup = _tab.datagrid('getData').rows[index];
             var todown = _tab.datagrid('getData').rows[index - 1];
             _tab.datagrid('getData').rows[index] = todown;
             _tab.datagrid('getData').rows[index - 1] = toup;
             _tab.datagrid('refreshRow', index);
             _tab.datagrid('refreshRow', index - 1);
             _tab.datagrid('selectRow', index - 1);
-        }
-    } else {
-        if (index != (rows - 1)) {
-            var todown = _tab.datagrid('getData').rows[index];
+		}
+	}else{
+		if (index != (rows-1) ) {
+			var todown = _tab.datagrid('getData').rows[index];
             var toup = _tab.datagrid('getData').rows[index + 1];
             _tab.datagrid('getData').rows[index + 1] = todown;
             _tab.datagrid('getData').rows[index] = toup;
             _tab.datagrid('refreshRow', index);
             _tab.datagrid('refreshRow', index + 1);
             _tab.datagrid('selectRow', index + 1);
-        }
-    }
+		}
+	}
 }
-// «∑Ò±ª∞¸∫¨, «∑µªÿtrue,≤ª «∑µªÿfalse
-function isContained(a, b) {
-    if (!(a instanceof Array) || !(b instanceof Array)) return false;
-    if (a.length < b.length) return false;
+//ÊòØÂê¶Ë¢´ÂåÖÂê´,ÊòØËøîÂõûtrue,‰∏çÊòØËøîÂõûfalse
+function isContained (a, b){
+    if(!(a instanceof Array) || !(b instanceof Array)) return false;
+    if(a.length < b.length) return false;
     var aStr = a.toString();
-    for (var i = 0, len = b.length; i < len; i++) {
-        if (aStr.indexOf(b[i]) == -1) return false;
+    for(var i = 0, len = b.length; i < len; i++){
+      if(aStr.indexOf(b[i]) == -1) return false;
     }
     return true;
+}
+
+function SortItemSetClick() {
+	$("#SortItemSetWin").dialog("open");
+	$("#SortItemSetWin").dialog("center");
+	SetDefSortItemSet();
+}
+
+function SetDefSortItemSet() {
+	$.cm({
+		ClassName:"web.DHCBL.CARD.CardTypeDef",
+		MethodName:"GetSortItemSet",
+		HospId:$HUI.combogrid('#_HospList').getValue(),
+		dataType:"text"
+	},function(ConfigStr){
+		var ConfigStrArr=ConfigStr.split("^");
+		var SortNation=ConfigStrArr[0];
+		var SortMarital=ConfigStrArr[1];
+		var SortOccupation=ConfigStrArr[2];
+		var SortRelation=ConfigStrArr[3];
+		if ($.hisui.indexOfArray($("#SortNation").combobox('getData'),"SortType",SortNation) >=0) {
+			$("#SortNation").combobox("setText",SortNation);
+		}else{
+			$("#SortNation").combobox("setText","");
+		}
+		
+		if ($.hisui.indexOfArray($("#SortMarital").combobox('getData'),"SortType",SortMarital) >=0) {
+			$("#SortMarital").combobox("setText",SortMarital);
+		}else{
+			$("#SortMarital").combobox("setText","");
+		}
+		
+		if ($.hisui.indexOfArray($("#SortOccupation").combobox('getData'),"SortType",SortOccupation) >=0) {
+			$("#SortOccupation").combobox("setText",SortOccupation);
+		}else{
+			$("#SortOccupation").combobox("setText","");
+		}
+		
+		if ($.hisui.indexOfArray($("#SortRelation").combobox('getData'),"SortType",SortRelation) >=0) {
+			$("#SortRelation").combobox("setText",SortRelation);
+		}else{
+			$("#SortRelation").combobox("setText","");
+		}
+		
+		/*$("#SortNation").combobox("setText", SortNation);
+		$("#SortMarital").combobox("setText", SortMarital);
+		$("#SortOccupation").combobox("setText", SortOccupation);
+		$("#SortRelation").combobox("setText", SortRelation);*/
+		
+	})
+}
+
+function SortItemSetSaveClick() {
+	var SortNation=$("#SortNation").combobox("getText");
+	var SortMarital=$("#SortMarital").combobox("getText");
+	var SortOccupation=$("#SortOccupation").combobox("getText");
+	var SortRelation=$("#SortRelation").combobox("getText");
+	
+	var ConfigStr=SortNation+"^"+SortMarital+"^"+SortOccupation+"^"+SortRelation
+	$.cm({
+		ClassName:"web.DHCBL.CARD.CardTypeDef",
+		MethodName:"SaveSortItemSet",
+		SetStr:ConfigStr,
+		HospId:$HUI.combogrid('#_HospList').getValue(),
+		dataType:"text"
+	},function(ret){
+		if(ret=="0") {
+			$.messager.alert("ÊèêÁ§∫", "‰øùÂ≠òÊàêÂäü!","success",function(){
+				$("#SortItemSetWin").dialog("close");
+			});
+		}else{
+			$.messager.alert("ÊèêÁ§∫", "‰øùÂ≠òÂ§±Ë¥•!","error")
+		}
+	})
+}
+
+function InitSortItem(SQLTable, ItemID) {
+	$.q({
+		ClassName:"web.DHCBL.BDP.BDPSort",
+		QueryName:"GetDataForCmb1",
+		rowid:"",desc:"",
+		tableName:SQLTable,hospid:$HUI.combogrid('#_HospList').getValue(),
+		dataType:"json"
+	},function(Data){
+		$("#"+ItemID).combobox({
+			textField:"SortType",
+			valueField:"ID",
+			data:Data.rows,
+		})
+	})
+}
+function LoadAddrDefType(){
+
+	$.cm({
+		ClassName:"web.DHCBL.CARD.CardTypeDef",
+		MethodName:"GetAddrDefTypeJson",
+		HospId:$HUI.combogrid('#_HospList').getValue(),
+		dataType:"text"
+	},function(ret){
+		//alert(ret)
+		var cbox = $HUI.combobox("#AddrDefType", {
+					
+		//$HUI.combobox("#AddrDefType", {
+			valueField: 'id',
+			textField: 'text', 
+			multiple:true,
+			blurValidValue:true,
+			data: JSON.parse(ret), //[{"id":"Âá∫Áîü","text":"Âá∫Áîü"},{"id":"Áé∞‰Ωè","text":"Áé∞‰Ωè"}],
+		})
+	})
+	
+	
+}
+function LoadSex(){
+	
+	//##class(web.UDHCOPOtherLB).ReadSex("GetSexToHUIJson","")
+	$.cm({
+		ClassName:"web.UDHCOPOtherLB",
+		MethodName:"ReadSex",
+		JSFunName:"GetSexToHUIJson",
+		ListName:"",
+		HospId:$HUI.combogrid('#_HospList').getValue(),
+		dataType:"text"
+	},function(ret){
+		//alert(ret)
+		var cbox = $HUI.combobox("#Sex", {
+			valueField: 'id',
+			textField: 'text', 
+			blurValidValue:true,
+			data: JSON.parse(ret)
+		})
+	})
+	
+	
 }

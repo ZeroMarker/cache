@@ -1,65 +1,181 @@
-var CureReportDataGrid;
+var PageLogicObj={
+	CureReportDataGrid:"",
+	EChartObj:"",
+	HasGifDocList:new Array(),		//缓存是否有签名图片
+	cspName:"doccure.workreport.recordreport.hui.csp"
+}
 $(document).ready(function(){
 	Init();
 	InitEvent();
-	CureReportDataGridLoad();
 });
 function Init(){
-	InitDate();
+	InitDate(ServerObj.CurrentDate);
 	InitDoc(); 
+	InitComboAdm();
   	InitArcimDesc(); 
-  	InitCureReportDataGrid();	
+  	
+	var HospIdTdWidth=$("#HospIdTd").width()
+	var opt={width:HospIdTdWidth}
+	var hospComp = GenUserHospComp(opt);
+	hospComp.jdata.options.onSelect = function(e,t){
+		var HospID=t.HOSPRowId;
+		ClearHandle();
+		InitComboAdm();
+  		InitArcimDesc(); 
+		//PageLogicObj.CureReportDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',{total: 0, rows: []}); 
+		CureReportDataGridLoad();
+	}
+	hospComp.jdata.options.onLoadSuccess = function(e,t){
+		InitCureReportDataGrid();
+		CureReportDataGridLoad();
+	}
+}
+function InitEvent(){
+	$('#btnFind').click(function(){
+		if ($("#patNo").val()!=""){
+			PatNoHandle(CureReportDataGridLoad);
+		}else{
+			CureReportDataGridLoad();
+		}	
+	});
+	$('#btnClear').click(function(){
+		ClearHandle();
+	})
+	InitPatNoEvent(CureReportDataGridLoad);
+	$('#ApplyNo').bind('keydown', function(event){
+		if(event.keyCode==13)
+		{
+			CureReportDataGridLoad();
+		}
+	});
 }
 
-function InitEvent(){
-	$('#btnFind').bind('click', function(){
-		CureReportDataGridLoad();
-    });
-    
-    $('#btnExport').bind('click', function(){
-		ExportCureReport();
-    });
+function ClearHandle(){
+	$("#PatMedNo,#patNo,#PatientID,#ApplyNo,#PAAdmID").val("");
+	InitDate(ServerObj.CurrentDate);
+	PageSizeItemObj.m_SelectArcimID="";    
+	$("#ComboArcim").lookup('setText','');
+	$("#ComboAdm").lookup('setText','');
+	$("#ComboDoc").combobox('select','');	
 }
+
+function InitComboAdm()
+{
+	$("#ComboAdm").lookup({
+       	url:$URL,
+        mode:'remote',
+        method:"Get",
+        idField:'PaadmRowid',
+        textField:'PaadmNo',
+        columns:[[  
+        	{field:'PaadmRowid',title:'',width:100,hidden:true},
+			{field:'PatNo',title:'登记号',width:100},
+			{field:'PatName',title:'患者姓名',width:100,sortable:true},
+			{field:'Birth',title:'出生日期',width:95,sortable:true},
+			{field:'PatSex',title:'性别',width:40,sortable:true},
+			{field:'PaadmNo',title:'就诊号',width:120,sortable:true},
+			{field:'AdmTypeDesc',title:'就诊类型',width:80,sortable:true},
+			{field:'InPatFlag',title:'状态',width:80,sortable:true},
+			{field:'InPatLoc',title:'就诊科室',width:120,sortable:true}
+        ]], 
+        pagination:true,
+        panelWidth:600,
+        isCombo:true,
+        minQueryLen:1,
+        delay:'500',
+        queryOnSameQueryString:true,
+        queryParams:{ClassName: 'DHCDoc.DHCDocCure.WordReport',QueryName: 'patnamelookup'},
+        onBeforeLoad:function(param){
+	        var desc=param['q'];
+	        if (desc=="") return false;
+	        if(typeof(Util_GetSelHospID)=="function"){
+				var UserHospID=Util_GetSelHospID(); //common.util.js
+			}else{
+				var UserHospID=Util_GetSelUserHospID();	
+			}
+			var ExpStr=UserHospID+"^"+session['LOGON.LANGID']+"^"+PageLogicObj.cspName;
+			param = $.extend(param,{PatID:"",PatName:desc,HospDr:UserHospID,ExpStr:ExpStr});
+	    },
+	    onSelect:function(index, row){
+		    $("#PAAdmID").val(row['PaadmRowid']);
+		    CureReportDataGridLoad();
+		},onHidePanel:function(){
+            var gtext=$HUI.lookup("#ComboAdm").getText();
+            if((gtext=="")){
+	        	$("#PAAdmID").val("");
+	        }
+		}
+    });  
+};
 
 function InitCureReportDataGrid()
 {
-	CureReportDataGrid=$('#tabRecordReportList').datagrid({  
+	PageLogicObj.CureReportDataGrid=$('#tabRecordReportList').datagrid({  
 		fit : true,
 		width : 'auto',
 		border : false,
 		striped : true,
 		singleSelect : true,
-		fitColumns : true,
+		fitColumns : false,
 		autoRowHeight : false,
 		nowrap: false,
 		collapsible:false,
 		singleSelect:true,    
 		url : '',
 		loadMsg : '加载中..',  
-		pagination : true,  //
+		pagination : true,
 		rownumbers : true,
-		idField:"DCARowId",
+		idField:"OEORERowID",
 		pageSize : 20,
 		pageList : [20,50,100],
+		toolbar:[{
+			id:'btnPrintCure',
+			text:'治疗单打印',
+			iconCls:'icon-print',
+			handler:function(){
+				PrintCureReport();
+			}
+		},{
+			id:'btnExport',
+			text:'全部导出',
+			iconCls:'icon-export',
+			handler:function(){
+				ExportCureReport();
+			}
+		}],
 		columns :[[ 
 				{field:'PatientNo',title:'患者登记号',width:105,align:'left'},
 				{field:'PatientName',title:'患者姓名',width:85,align:'left'},
-				{field:'PatientTel',title:'联系电话',width:85,align:'left'},
+				{field:'PatientTel',title:'联系电话',width:100,align:'left'},
+				{field:'OrderDate',title:'申请日期',width:100,align:'left'},
+				{field:'ApplyNo',title:'申请单号',width:110,align:'left'},
 				{field:'ArcimDesc',title:'治疗项目',width:200,align:'left'},
-				{field:'OrderDate',title:'开单日期',width:100,align:'left'},
-				{field:'OrderLoc',title:'开单科室',width:100,align:'left'},
-				{field:'OrderRecLoc',title:'医嘱接收科室',width:115,align:'left'},   
 				{field:'FinishUser',title:'执行人',width:100,align:'left'},   
 				//{field:'CureDate',title:'治疗日期',width:100,align:'left'}, 
-				{field:'ExcuteRet',title:'治疗结果',width:150,align:'left'}, 	
-				{field:'CureDate',title:'治疗时间',width:100,align:'left'} ,
-        		{field:'DCRResponse',title:'治疗反应',width:150,align:'left'} ,
-        		{field:'DCREffect',title:'治疗效果',width:150,align:'left'} ,			
+				{field:'CureDate',title:'治疗时间',width:100,align:'left'},
+				{field:'DCRDetail',title:'治疗详情',width:80,align:'left',
+					formatter:function(value,row,index){
+						if(row.DCRRowID!=""){
+							return '<a href="###" '+'onclick=ShowCureDetail(\"'+row.DCRRowID+'\",\"'+row.DCRMapID+'\");>'+"<span class='fillspan-nosave'>"+$g("单击查看")+"</span>"+"</a>"
+						}else{
+							return "";	
+						}
+					}
+				},
+				{field:'ExcuteRet',title:'治疗记录结果',width:200,align:'left'}, 	
+        		{field:'DCRResponse',title:'治疗反应',width:200,align:'left'} ,
+        		{field:'DCREffect',title:'治疗效果',width:200,align:'left'} ,
+				{field:'OrderLoc',title:'开单科室',width:120,align:'left'},
+				{field:'OrderRecLoc',title:'医嘱接收科室',width:120,align:'left'},   			
 				{field:'UnitPrice',title:'单价(元)',width:80,align:'left'}, 
 				{field:'OrderQty',title:'执行数量',width:85,align:'left'}, 
 				{field:'OrdBillUOM',title:'单位',width:80,align:'left'}, 
 				{field:'OrdPrice',title:'总金额(元)',width:105,align:'right'}, 
-				{field:'Job',title:'Job',width:30,align:'left',hidden:true}   
+				{field:'Job',title:'Job',width:30,align:'left',hidden:true},   
+				{field:'Adm',title:'Adm',width:30,align:'left',hidden:true},
+				{field:'OEORERowID',title:'OEORERowID',width:30,align:'left',hidden:true},
+				{field:'DCRRowID',title:'DCRRowID',width:30,align:'left',hidden:true},
+				{field:'DCRMapID',title:'DCRMapID',width:30,align:'left',hidden:true}
 			 ]] 
 	});
 }
@@ -67,13 +183,18 @@ function CureReportDataGridLoad()
 {
 	var StartDate=$("#StartDate").datebox("getValue");
 	var EndDate=$("#EndDate").datebox("getValue");
-	var queryLoc=""; //$("#ComboLoc").combogrid("getValues");
-	var queryLocStr="";
+    var queryLoc=""; //$("#ComboLoc").combogrid("getValues");
+    var queryLocStr="";
 	var queryDoc=$("#ComboDoc").combogrid("getValue");
 	var gtext=$HUI.lookup("#ComboArcim").getText();
-	if(gtext=="")PageSizeItemObj.m_SelectArcimID="";
+	if(gtext==""){PageSizeItemObj.m_SelectArcimID=""};
 	var queryArcim=PageSizeItemObj.m_SelectArcimID;
-	var queryGroup=""; //$('#ResGroup').combobox('getValue');
+	var gtext=$HUI.lookup("#ComboAdm").getText();
+	if(gtext==""){$("#PAAdmID").val("")};
+	var queryAdmID=$("#PAAdmID").val();
+	var queryPatID=$("#PatientID").val();
+	var queryApplyNo=$("#ApplyNo").val();
+	var ExpStr=PageLogicObj.cspName+ "^" + com_Util.GetSessionStr();
 	$.cm({
 		ClassName:PageSizeItemObj.PUBLIC_WORKREPORT_CLASSNAME,
 		QueryName:"QryRecordReport",
@@ -83,27 +204,49 @@ function CureReportDataGridLoad()
 		'queryLoc':queryLocStr,
 		'queryDoc':queryDoc,
 		'queryArcim':queryArcim,
-		'queryGroup':queryGroup,
-		'queryExcuteRet':"",
-		Pagerows:CureReportDataGrid.datagrid("options").pageSize,
+		'queryAdmID':queryAdmID,
+		'queryPatID':queryPatID,
+		'queryApplyNo':queryApplyNo,
+		ExpStr:ExpStr,
+		Pagerows:PageLogicObj.CureReportDataGrid.datagrid("options").pageSize,
 		rows:99999
 	},function(GridData){
-		CureReportDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData); 
+		PageLogicObj.CureReportDataGrid.datagrid('unselectAll');
+		PageLogicObj.CureReportDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData); 
 	})	
-	CureReportDataGrid.datagrid('unselectAll');
 }
+
+function ShowCureDetail(DCRRowID,DCRMapID){
+	if(DCRRowID==""){
+		$.messager.alert('提示','未获取到治疗记录ID信息!','warning');
+		return false;
+	}
+	var argObj={
+		DHCDocCureRecordLinkPage:"", //ServerObj.DHCDocCureRecordLinkPage,
+		DCRRowId:DCRRowID,
+		DCATempId:DCRMapID,
+		PageShowFromWay:"ShowFromEmrList"
+	}
+	com_openwin.ShowCureRecordDiag(argObj);
+}
+
 function ExportCureReport(){
 	try{
-		var Title="治疗记录结果统计"
+		var Title="治疗记录单"
 		var StartDate=$("#StartDate").datebox("getValue");
 		var EndDate=$("#EndDate").datebox("getValue");
-		var queryLoc=""; //$("#ComboLoc").combogrid("getValues");
-		var queryLocStr="";
+        var queryLoc=""; //$("#ComboLoc").combogrid("getValues");
+        var queryLocStr="";
 		var queryDoc=$("#ComboDoc").combogrid("getValue");
 		var gtext=$HUI.lookup("#ComboArcim").getText();
-		if(gtext=="")PageSizeItemObj.m_SelectArcimID="";
+		if(gtext==""){PageSizeItemObj.m_SelectArcimID=""};
 		var queryArcim=PageSizeItemObj.m_SelectArcimID;
-		var queryGroup=""; //$('#ResGroup').combobox('getValue');
+		var gtext=$HUI.lookup("#ComboAdm").getText();
+		if(gtext==""){$("#PAAdmID").val("")};
+		var queryAdmID=$("#PAAdmID").val();
+		var queryPatID=$("#PatientID").val();
+		var queryApplyNo=$("#ApplyNo").val();
+		var ExpStr=PageLogicObj.cspName+ "^" + com_Util.GetSessionStr();
 		//导出
 		$cm({
 			//dataType:'text',
@@ -117,99 +260,121 @@ function ExportCureReport(){
 			'queryLoc':queryLocStr,
 			'queryDoc':queryDoc,
 			'queryArcim':queryArcim,
-			'queryGroup':queryGroup,
-			'queryExcuteRet':""
+			'queryAdmID':queryAdmID,
+			'queryPatID':queryPatID,
+			'queryApplyNo':queryApplyNo,
+			ExpStr:ExpStr
 		});
 		//location.href = rtn;		
 		return;
-		
-		var UserID=session['LOGON.USERID'];
-		var RowIDs=CureReportDataGrid.datagrid('getRows');
-		//if(RowIDs.length)
-		var RowNum=RowIDs.length;
-		if(RowNum==0){
-			$.messager.alert("提示","未有需要导出的数据");
-			return false;
-		}
-		CureReportDataGrid.datagrid('selectRow',0);
-		var ProcessNo=""
-		var row = CureReportDataGrid.datagrid('getSelected');
-		if (row){
-			ProcessNo=row.Job
-		}
-
-		if(ProcessNo==""){
-			$.messager.alert("提示","获取进程号错误");
-			return false;
-		}
-		var datacount=tkMakeServerCall("DHCDoc.DHCDocCure.WordReport","GetQryRecordReportNum",ProcessNo,UserID);
-		if(datacount==0){
-			$.messager.alert("提示","获取导出数据错误");
-			return false;
-		}
-	
-		var xlApp,xlsheet,xlBook;
-		var TemplatePath=ServerObj.PrintBath+"DHCDocCureRecordReport.xlsx";
-		xlApp = new ActiveXObject("Excel.Application");
-		xlBook = xlApp.Workbooks.Add(TemplatePath);
-	    
-	    xlsheet = xlBook.ActiveSheet;
-	    xlsheet.PageSetup.LeftMargin=0;  //lgl+
-	    xlsheet.PageSetup.RightMargin=0;
-    	
-    	var StartDate=$("#StartDate").datebox("getValue");
-    	//var StartDateArr=StartDate.split("/");
-    	//var StartDate=StartDateArr[2]+"-"+StartDateArr[0]+"-"+StartDateArr[1];
-		var EndDate=$("#EndDate").datebox("getValue");
-		//var EndDateArr=EndDate.split("/");
-    	//var EndDate=EndDateArr[2]+"-"+EndDateArr[0]+"-"+EndDateArr[1];
-    	var DateStr=StartDate+"至"+EndDate
-    	xlsheet.cells(2,3)=DateStr;
-    	var myret=tkMakeServerCall(PageSizeItemObj.PUBLIC_WORKREPORT_CLASSNAME,"GetLocDesc",session['LOGON.CTLOCID']);
-		var Title=myret+"治疗记录结果统计"
-    	xlsheet.cells(1,1)=Title;
-    	var xlsrow=3;
-	    for(var i=1;i<=datacount;i++){
-			var ret=tkMakeServerCall("DHCDoc.DHCDocCure.WordReport","GetQryRecordReportInfo",ProcessNo,i,UserID);
-			if(ret=="") return ;
-			//DCARowId_"^"_OrderReLoc_"^"_FinishUser_"^"_CureDate_"^"_ArcimDesc_"^"_UnitPrice
-			//_"^"_OrderQty_"^"_OrdBillUOM_"^"_OrdPrice_"^"_PatientNo_"^"_PatientName_"^"_OrderLoc_"^"_PatientTel_"^"_OrdDate
-			var arr=ret.split("^");
-			xlsrow=xlsrow+1;
-			var OrderReLoc=arr[1]
-			var FinishUser=arr[2]
-			var CureDate=arr[3]
-			var ArcimDesc=arr[4]
-			var UnitPrice=arr[5]
-			var OrderQty=arr[6]
-			var OrdBillUOM=arr[7]
-			var OrdPrice=arr[8]
-			var PatientNo=arr[9]
-			var PatientName=arr[10]
-			var OrderLoc=arr[11]
-			var OrdDate=arr[13]
-			var CureRecord=arr[14]
-			xlsheet.cells(xlsrow,1)=PatientNo;
-			xlsheet.cells(xlsrow,2)=PatientName;
-			xlsheet.cells(xlsrow,3)=ArcimDesc;
-			xlsheet.cells(xlsrow,4)=OrdDate;
-			xlsheet.cells(xlsrow,5)=OrderLoc;
-		    xlsheet.cells(xlsrow,6)=OrderReLoc;
-		    xlsheet.cells(xlsrow,7)=FinishUser;
-		    xlsheet.cells(xlsrow,8)=CureDate;
-		    xlsheet.cells(xlsrow,9)=CureRecord;
-		    //xlsheet.cells(xlsrow,5)=UnitPrice;
-		    xlsheet.cells(xlsrow,10)=UnitPrice;
-		    xlsheet.cells(xlsrow,11)=OrderQty+"/"+OrdBillUOM;
-		    xlsheet.cells(xlsrow,12)=OrdPrice;
-	    }
-	    //xlsheet.printout;
-	    gridlist(xlsheet,4,xlsrow,1,12)
-		xlBook.Close (savechanges=true);
-		xlApp.Quit();
-		xlApp=null;
-		xlsheet=null;
 	}catch(e){
-		alert(e.message);	
+		$.messager.alert("提示",e.message,"error");
 	}
+}
+
+function PrintCureReport(){
+    try{
+		var Title=$g("治疗记录单");
+		var StartDate=$("#StartDate").datebox("getValue");
+		var EndDate=$("#EndDate").datebox("getValue");
+        var queryLoc=""; //$("#ComboLoc").combogrid("getValues");
+        var queryLocStr="";
+		var queryDoc=$("#ComboDoc").combogrid("getValue");
+		var gtext=$HUI.lookup("#ComboArcim").getText();
+		if(gtext==""){PageSizeItemObj.m_SelectArcimID=""};
+		var queryArcim=PageSizeItemObj.m_SelectArcimID;
+		var gtext=$HUI.lookup("#ComboAdm").getText();
+		if(gtext==""){$("#PAAdmID").val("")};
+		var queryAdmID=$("#PAAdmID").val();
+		var queryPatID=$("#PatientID").val();
+		var queryApplyNo=$("#ApplyNo").val();		
+		var ExpStr=PageLogicObj.cspName+ "^" + com_Util.GetSessionStr();
+		var PrintNum = 1; //打印次数
+		var IndirPrint = "N"; //是否预览打印
+		var TaskName=Title; //打印任务名称
+		
+		var AdmArr=[];
+		var ListData = PageLogicObj.CureReportDataGrid.datagrid('getData');
+		for (i=0;i<ListData.originalRows.length;i++){
+			var AdmId=ListData.originalRows[i].Adm;
+			if(AdmArr.indexOf(AdmId)<0){
+				AdmArr.push(AdmId);
+			}
+		}
+				
+		for(var i=0;i<AdmArr.length;i++){
+			var queryAdmID=AdmArr[i];	
+			var GridData=$.cm({
+				ClassName:PageSizeItemObj.PUBLIC_WORKREPORT_CLASSNAME,
+				QueryName:"QryRecordReportExport",
+				'StartDate':StartDate,
+				'EndDate':EndDate,
+				'UserID':session['LOGON.USERID'],
+				'queryLoc':queryLocStr,
+				'queryDoc':queryDoc,
+				'queryArcim':queryArcim,
+				'queryAdmID':queryAdmID,
+				'queryPatID':queryPatID,
+				'queryApplyNo':queryApplyNo,
+				ExpStr:ExpStr,
+				Pagerows:PageLogicObj.CureReportDataGrid.datagrid("options").pageSize,
+				rows:99999
+			},false)	
+			var DetailData=GridData.rows; //明细信息
+			if (DetailData.length==0) {
+				$.messager.alert("提示","没有需要打印的数据!","warning");
+				return false;
+			}
+			var DetailData=getPrintInfo(DetailData);
+			//明细信息展示
+			var Cols=[
+				{field:"DCRCureDate",title:"日期",width:"8%",align:"center"},
+                {field:"DCRCureTime",title:"时间",width:"8%",align:"center"},
+                {field:"ArcimDesc",title:"治疗项目",width:"17%",align:"left"},
+				{field:"ExcuteRet",title:"治疗记录",width:"47%",align:"left"},
+				{field:"FinishUser",title:"医生签名",width:"10%",align:"center",imageFlag:true},
+				{field:"PatientNameT",title:"患者签名",width:"10%",align:"center"}
+			];	
+			//var SubText="科别:-  姓名:-  性别:-  床号:-  住院号:-";
+			var SubText=$g("就诊科别")+":-  "+$g("姓名")+":-  "+$g("性别")+":-  "+$g("床号")+":-  "+$g("登记号")+":-";
+			SubText=$.cm({
+				ClassName:PageSizeItemObj.PUBLIC_WORKREPORT_CLASSNAME,
+				MethodName:"GetSubText",
+				AdmID:queryAdmID,
+				SessionStr:com_Util.GetSessionStr(),
+				dataType:"text"
+			},false)	
+			PrintDocument(PrintNum,IndirPrint,TaskName,Title,Cols,DetailData,{
+				subText:SubText,
+				hospTitle:"Y"	
+			})
+		}
+		
+    }catch(e){
+		$.messager.alert("提示",e.message,"error");
+	}
+}
+
+function getPrintInfo(DetailData){
+	
+	for (var i=0;i<DetailData.length;i++){
+		var userID=DetailData[i].CreateUserDR;
+		if (userID!=""){
+			if (typeof PageLogicObj.HasGifDocList[userID] =="undefined"){
+				var GifFlag=getBase64Str(userID);
+				PageLogicObj.HasGifDocList[userID]=GifFlag;
+			}
+			if (PageLogicObj.HasGifDocList[userID]!=''){
+				DetailData[i].FinishUser=PageLogicObj.HasGifDocList[userID]; //"<img src='c://"+DetailData[i].CreateUserDR+".gif'>"
+			}
+		}
+	}
+	return DetailData;
+}
+function getBase64Str(USERID){
+	var ImgBase64=tkMakeServerCall("web.UDHCPrescript","GetDocGifCode",USERID);
+	if(ImgBase64!=""){
+		ImgBase64='data:image/png;base64,'+	ImgBase64; //用jpg IE报错
+	}
+	return ImgBase64
 }

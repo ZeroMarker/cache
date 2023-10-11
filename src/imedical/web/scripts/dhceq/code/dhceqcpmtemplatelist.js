@@ -92,8 +92,7 @@ function initPageID(){
 	return tmp;
 }
 //*************************************
-//加载面板
-
+// MZY0076	2021-05-25
 //列表面板
 function initPMTemplateListPanel(){
 	jQuery('#tPMTemplateList').datagrid({
@@ -101,9 +100,10 @@ function initPMTemplateListPanel(){
 			{field:'TRowID',title:'RowID',width:50,hidden:true},
 			{field:'TName',title:'模板名称',align:'center',width:100},
 			{field:'TCaption',title:'模板标题',align:'center',width:100,hidden:true},
-			{field:'TItem',title:'项目',align:'center',width:100},
-			{field:'TItemCat',title:'项目大类',align:'center',width:100,hidden:true}, 
-			{field:'TType',title:'类型',align:'center',width:100,hidden:true},
+			{field:'TType',title:'类型',align:'center',width:80},
+			{field:'TItemCat',title:'项目大类',align:'center',width:100}, 
+			{field:'TItemCode',title:'项目编码'},
+			{field:'TItem',title:'项目'},
 			{field:'TNote',title:'明细注释',align:'center',width:100},
 			{field:'TDefaultVal',title:'明细默认值',align:'center',width:100},
 			{field:'TSort',title:'排序',align:'center',width:100},
@@ -112,9 +112,9 @@ function initPMTemplateListPanel(){
     	singleSelect:true,
     	loadMsg:'数据加载中……',
     	pagination:true,
-		pageSize:10,
+		pageSize:20,
 		pageNumber:1,
-		pageList:[10,20,30,40,50], 
+		pageList:[20,40,60,80,100], 
     	rownumbers: true,  //如果为true，则显示一个行号列
 		onBeforeLoad: function(param) {
 			//目的是为了防止loadData时，设置url加载两次
@@ -325,6 +325,7 @@ function onSelectRow(rowIndex, rowData){
 			setElement("Sort","")							        		
             SelectedRowID = 0;
             preRowID=0;
+            jQuery('#tPMTemplateList').datagrid('unselectAll');	// MZY0096	2134929		2021-09-16
          }
      }	
 }
@@ -392,12 +393,9 @@ function setSelectValue(vElementID,rowData)
 	}
 	//setElement(vElementID+"DR",rowData.TRowID);
 	ElementObj.MaintItemDR=rowData.TRowID
-	
-	
 }
 function clearData(vElementID)
 {
-
 	//setElement(vElementID+"DR","");	
 	ElementObj.MaintItemDR=""
 }

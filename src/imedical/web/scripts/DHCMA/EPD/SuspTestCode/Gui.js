@@ -65,7 +65,8 @@ function InitSuspTestCodeWin(){
 			QueryName:'QryTestCodeExt'
 	    },
 		columns:[[
-			{field:'TestCode',title:'检验代码',width:80},
+			{field:'TestCode',title:'检验ID',width:80},
+			{field:'TCCode',title:'检验代码',width:80},
 			{field:'TestDesc',title:'检验名称',width:120},
 			{field:'SpecCode',title:'标本代码',width:80},
 			{field:'SpecDesc',title:'标本名称',width:100},
@@ -74,6 +75,7 @@ function InitSuspTestCodeWin(){
 			{field:'CompValueMax',title:'最大比较值',width:80},
 			{field:'CompValueMin',title:'最小比较值',width:80},
 			{field:'CompValues',title:'结果比较值',width:120},
+			{field:'PatSexDesc',title:'性别',width:120},
 			{field:'IsActDesc',title:'有效标志',width:80}, 
 			{field:'ActDate',title:'更新日期',width:100},
 			{field:'ActTime',title:'更新时间',width:80},
@@ -104,17 +106,14 @@ function InitSuspTestCodeWin(){
 	});
 		
 	//检验医嘱
-	obj.cbgTestSet = $HUI.combogrid('#cbgTestSet', {
-		panelWidth: 600,
+	obj.cbgTestSet = $('#cbgTestSet').lookup({
+		width:260,
+		panelWidth:600,
+		url:$URL+"?ClassName=DHCMA.Util.EPS.TestSetSrv&QueryName=QryTestSet&aIsActive=1", 
 		editable: true,
-	    pagination: true,
-		blurValidValue: true, //为true时，光标离开时，检查是否选中值,没选中则置空输入框的值
-		fitColumns: true,     //真正的自动展开/收缩列的大小，以适应网格的宽度，防止水平滚动条
-		mode:'remote',        //当设置为 'remote' 模式时，用户输入的值将会被作为名为 'q' 的 http 请求参数发送到服务器，以获取新的数据。
+		mode:'remote',      //当设置为 'remote' 模式时，用户输入的值将会被作为名为 'q' 的 http 请求参数发送到服务器，以获取新的数据。
 		idField: 'ID',
 		textField: 'BTDesc',
-		url: $URL,
-		queryParams:{ClassName: 'DHCMA.Util.EPS.TestSetSrv',QueryName: 'QryTestSet',aIsActive:1},
 		columns: [[
 			{field:'OID',title:'医嘱ID',width:100},
 			{field:'BTCode',title:'医嘱代码',width:100},
@@ -122,9 +121,10 @@ function InitSuspTestCodeWin(){
 			{field:'BTCode2',title:'医嘱代码2',width:120},
 			{field:'BTDesc2',title:'医嘱名称2',width:240}
 		]],
+		pagination:true,
 		onBeforeLoad:function(param){
 	        var desc=param['q'];
-	        //if (desc=="") return false;     //修复bug 876856 下拉选择时,8.3+版本 为空，8.3以下版本为undefined  
+	        //if (desc=="") return false;        
 			param = $.extend(param,{aAlias:desc}); //将参数q转换为类中的参数
 	    },
 		onSelect:function(rindex,rowData){
@@ -132,21 +132,23 @@ function InitSuspTestCodeWin(){
 				obj.RecRowID=rowData.ID;
 				obj.TestCodeLoad();
 			}
-		}
+		},
+		loadMsg:'正在查询',	
+		isCombo:true,             //是否输入字符即触发事件，进行搜索
+		minQueryLen:0            //isCombo为true时，可以搜索要求的字符最小长度
+		
 	});
+
 	obj.TestCodeLoad = function() {
 		//检验项目
-		obj.cbgTestCode = $HUI.combogrid('#cbgTestCode', {
-			panelWidth: 500,
+		obj.cbgTestCode = $('#cbgTestCode').lookup({
+			width:260,
+			panelWidth:600,
+			url:$URL+"?ClassName=DHCMA.Util.EPS.TestSetSrv&QueryName=QryTestCodeByTS&aTSID="+obj.RecRowID, 
 			editable: true,
-			pagination: true,
-			blurValidValue: true, //为true时，光标离开时，检查是否选中值,没选中则置空输入框的值
-			fitColumns: true,     //真正的自动展开/收缩列的大小，以适应网格的宽度，防止水平滚动条
-			mode:'remote',        //当设置为 'remote' 模式时，用户输入的值将会被作为名为 'q' 的 http 请求参数发送到服务器，以获取新的数据。
+			mode:'remote',      //当设置为 'remote' 模式时，用户输入的值将会被作为名为 'q' 的 http 请求参数发送到服务器，以获取新的数据。
 			idField: 'OID',
 			textField: 'BTDesc',
-			url: $URL,
-			queryParams:{ClassName: 'DHCMA.Util.EPS.TestSetSrv',QueryName: 'QryTestCodeByTS',aTSID:obj.RecRowID},
 			columns: [[
 				{field:'OID',title:'检验项目ID',width:100},
 				{field:'BTCode',title:'检验项目代码',width:100},
@@ -155,33 +157,46 @@ function InitSuspTestCodeWin(){
 			]],
 			onBeforeLoad:function(param){
 				var desc=param['q'];
+				if (obj.RecRowID==""){
+					$.messager.popover({msg: '请选择检验医嘱！',type:'error',timeout: 1000});
+					return
+				}
 				//if (desc=="") return false; //修复bug 876856 下拉选择时,8.3+版本 为空，8.3以下版本为undefined  
 				param = $.extend(param,{aAlias:desc}); //将参数q转换为类中的参数
-			}
+			},
+			
+			pagination:true,
+			loadMsg:'正在查询',	
+			isCombo:true,             //是否输入字符即触发事件，进行搜索
+			minQueryLen:0             //isCombo为true时，可以搜索要求的字符最小长度
 		});
 	}
+	obj.TestCodeLoad();
 	//送检标本
-	obj.cbgSpecimen = $HUI.combogrid('#cbgSpecimen', {
-		panelWidth: 450,
+	obj.cbgSpecimen = $('#cbgSpecimen').lookup({
+		width:260,
+		panelWidth:600,
+		url:$URL+"?ClassName=DHCMA.Util.EPS.SpecimenSrv&QueryName=QrySpecimen&aIsActive=1", 
 		editable: true,
-	    pagination: true,
-		blurValidValue: true, //为true时，光标离开时，检查是否选中值,没选中则置空输入框的值
-		fitColumns: true,     //真正的自动展开/收缩列的大小，以适应网格的宽度，防止水平滚动条
-		mode:'remote',        //当设置为 'remote' 模式时，用户输入的值将会被作为名为 'q' 的 http 请求参数发送到服务器，以获取新的数据。
+		mode:'remote',      //当设置为 'remote' 模式时，用户输入的值将会被作为名为 'q' 的 http 请求参数发送到服务器，以获取新的数据。
 		idField: 'OID',
 		textField: 'BTDesc',
-		url: $URL,
-		queryParams:{ClassName: 'DHCMA.Util.EPS.SpecimenSrv',QueryName: 'QrySpecimen',aIsActive:1},
 		columns: [[
 			{field:'OID',title:'标本ID',width:100},
 			{field:'BTCode',title:'标本代码',width:100},
 			{field:'BTDesc',title:'标本名称',width:200}
 		]],
 		onBeforeLoad:function(param){
-	        var desc=param['q'];
-	        //if (desc=="") return false;  //修复bug 876856 下拉选择时,8.3+版本 为空，8.3以下版本为undefined        
+			var desc=param['q'];
+			//if (desc=="") return false;  //修复bug 876856 下拉选择时,8.3+版本 为空，8.3以下版本为undefined        
 			param = $.extend(param,{aAlias:desc}); //将参数q转换为类中的参数
-	    }
+		},
+		
+		pagination:true,
+		loadMsg:'正在查询',	
+		isCombo:true,             //是否输入字符即触发事件，进行搜索
+		minQueryLen:0             //isCombo为true时，可以搜索要求的字符最小长度
+	
 	});
 	
 	//结果类型
@@ -199,6 +214,7 @@ function InitSuspTestCodeWin(){
 			Desc:'关键词'
 		}]
 	});  
+	obj.cboPatSex =Common_ComboDicCode("cboPatSex","EPDPetSex");  
 	
 	InitSuspTestCodeWinEvent(obj);
 	obj.LoadEvent(arguments);

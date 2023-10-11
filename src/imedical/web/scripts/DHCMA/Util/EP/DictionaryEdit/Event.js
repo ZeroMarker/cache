@@ -78,8 +78,8 @@ function InitDicEditWinEvent(obj){
 		inputStr = inputStr + CHR_1 + TypeDr;
 		inputStr = inputStr + CHR_1 + RangeDr;
 		inputStr = inputStr + CHR_1 + IsActive;
-		inputStr = inputStr + CHR_1 + ActDate;
-		inputStr = inputStr + CHR_1 + ActTime;
+		//inputStr = inputStr + CHR_1 + ActDate;
+		//inputStr = inputStr + CHR_1 + ActTime;
 		inputStr = inputStr + CHR_1 + ActUserID;
 		var flg = $m({
 			ClassName:"DHCMA.Util.EPS.DictionarySrv",
@@ -123,6 +123,7 @@ function InitDicEditWinEvent(obj){
 	
 	//配置窗体-初始化
 	obj.layer= function(rd){
+		obj.cboRanger.reload()
 		if(rd){
 			obj.RecRowID =rd["ID"];
 			var Code = rd["Code"];

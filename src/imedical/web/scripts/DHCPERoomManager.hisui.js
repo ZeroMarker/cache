@@ -293,10 +293,15 @@ function BRSave_click(Type)
 	if (IFBangding) {iBangdingFlag="Y";}
 	else{iBangdingFlag="N";}
 	var VIPLevel="";
-
-  
-	var Str=Parref+"^"+Code+"^"+Desc+"^"+Sort+"^"+Sex+"^"+Diet+"^"+Emiction+"^"+Station+"^"+Remark+"^"+Minute+"^"+DoctorDR+"^"+iActiveFlag+"^"+ShowNum+"^"+iBangdingFlag+"^"+VIPLevel;
 	
+	var MainManager=$("#MainManager").combobox('getValue');
+	
+	var PriorNum=$("#PriorNum").val();
+	
+	if (($("#MainManager").combobox('getValue')==undefined)||($("#MainManager").combobox('getValue')=="")){var MainManager="";}
+  
+	var Str=Parref+"^"+Code+"^"+Desc+"^"+Sort+"^"+Sex+"^"+Diet+"^"+Emiction+"^"+Station+"^"+Remark+"^"+Minute+"^"+DoctorDR+"^"+iActiveFlag+"^"+ShowNum+"^"+iBangdingFlag+"^"+VIPLevel+"^"+MainManager+"^"+PriorNum;
+	//debugger; // 2
 	
 	var rtn=tkMakeServerCall("web.DHCPE.RoomManager","UpdateRoom",RoomID,Str);
 	var Arr=rtn.split("^");
@@ -384,7 +389,10 @@ function InitRoomGrid(){
 			},
 			{field:'TMinute',width:'80',title:'时间'},
 			{field:'TDoctorDesc',width:'100',title:'医生'},
-			{field:'TRemark',width:'100',title:'备注'},
+			{field:'TMainManagerRoom',hidden: true},
+			{field:'TMainManagerRoomDesc',width:'100',title:'主队列'},
+			{field:'TPriorNum',width:'100',title:'优先人数'},
+			{field:'TRemark',width:'100',title:'备注'}
 				
 		]],
 		onSelect: function (rowIndex, rowData) {
@@ -411,8 +419,9 @@ function InitRoomGrid(){
 				}else{
 					$("#ActiveFlag").checkbox('setValue',false);
 				}			
-			
-								
+				//alert(rowData.TMainManagerRoom)
+				$("#MainManager").combobox('setValue',rowData.TMainManagerRoom);
+				$("#PriorNum").val(rowData.TPriorNum);				
 					
 		}
 
@@ -646,6 +655,13 @@ function InitCombobox(){
 		valueField:'id',
 		textField:'desc'
 		})
+		
+	// 主队列
+	var StationObj = $HUI.combobox("#MainManager",{
+		url:$URL+"?ClassName=web.DHCPE.RoomManager&QueryName=FindRoomNew&ResultSetType=array",
+		valueField:'TID',
+		textField:'TDesc'
+		})
 			
 	
 	//医生
@@ -658,6 +674,9 @@ function InitCombobox(){
 		textField:'DocName',
 		onBeforeLoad:function(param){
 			param.Desc = param.q;
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId=session['LOGON.HOSPID'];
+
 		},
 		columns:[[
 		    {field:'DocDr',title:'ID',width:40},

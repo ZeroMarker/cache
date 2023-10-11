@@ -1,36 +1,36 @@
-ï»¿/**
- * åº“å­˜è½¬ç§»åˆ¶å•-æŸ¥è¯¢ç•Œé¢
+/**
+ * ¿â´æ×ªÒÆÖÆµ¥-²éÑ¯½çÃæ
  */
 function StockTransferSearch(dataStore, Fn) {
     Ext.QuickTips.init();
     Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
-    //å–å‚æ•°é…ç½®
+    //È¡²ÎÊıÅäÖÃ
     if (gParam == null || gParam.length < 1) {
         GetParam();
     }
-    // è½¬ç§»å•å·
+    // ×ªÒÆµ¥ºÅ
     var InItNo2 = new Ext.form.TextField({
-        fieldLabel: 'è½¬ç§»å•å·',
+        fieldLabel: $g('×ªÒÆµ¥ºÅ'),
         id: 'InItNo2',
         name: 'InItNo2',
         anchor: '90%',
         width: 120
     });
 
-    // è¯·æ±‚éƒ¨é—¨
+    // ÇëÇó²¿ÃÅ
     var RequestPhaLoc2 = new Ext.ux.LocComboBox({
-        fieldLabel: 'è¯·æ±‚éƒ¨é—¨',
+        fieldLabel: $g('ÇëÇó²¿ÃÅ'),
         id: 'RequestPhaLoc2',
         name: 'RequestPhaLoc2',
         anchor: '90%',
         width: 120,
-        emptyText: 'è¯·æ±‚éƒ¨é—¨...',
+        emptyText: $g('ÇëÇó²¿ÃÅ...'),
         defaultLoc: {}
     });
 
-    // èµ·å§‹æ—¥æœŸ
+    // ÆğÊ¼ÈÕÆÚ
     var StartDate2 = new Ext.ux.DateField({
-        fieldLabel: 'èµ·å§‹æ—¥æœŸ',
+        fieldLabel:$g( 'ÆğÊ¼ÈÕÆÚ'),
         id: 'StartDate2',
         name: 'StartDate2',
         anchor: '90%',
@@ -38,9 +38,9 @@ function StockTransferSearch(dataStore, Fn) {
         value: DefaultStDate()
     });
 
-    // ç»“æŸæ—¥æœŸ
+    // ½áÊøÈÕÆÚ
     var EndDate2 = new Ext.ux.DateField({
-        fieldLabel: 'ç»“æŸæ—¥æœŸ',
+        fieldLabel: $g('½áÊøÈÕÆÚ'),
         id: 'EndDate2',
         name: 'EndDate3',
         anchor: '90%',
@@ -48,9 +48,9 @@ function StockTransferSearch(dataStore, Fn) {
         value: DefaultEdDate()
     });
 
-    // è¯·æ±‚å•å·
+    // ÇëÇóµ¥ºÅ
     var InRqNo2 = new Ext.form.TextField({
-        fieldLabel: 'è¯·æ±‚å•å·',
+        fieldLabel: $g('ÇëÇóµ¥ºÅ'),
         id: 'InRqNo2',
         name: 'InRqNo2',
         anchor: '90%',
@@ -60,15 +60,15 @@ function StockTransferSearch(dataStore, Fn) {
     var StatusStore = new Ext.data.SimpleStore({
         fields: ['RowId', 'Description'],
         data: [
-            ['10', 'æœªå®Œæˆ'],
-            ['11', 'å·²å®Œæˆ'],
-            ['20', 'å‡ºåº“å®¡æ ¸ä¸é€šè¿‡'],
-            ['30', 'æ‹’ç»æ¥æ”¶']
+            ['10', $g('Î´Íê³É')],
+            ['11', $g('ÒÑÍê³É')],
+            ['20', $g('³ö¿âÉóºË²»Í¨¹ı')],
+            ['30', $g('¾Ü¾ø½ÓÊÕ')]
         ]
     });
 
     var Status = new Ext.form.ComboBox({
-        fieldLabel: 'å•æ®çŠ¶æ€',
+        fieldLabel: $g('µ¥¾İ×´Ì¬'),
         id: 'Status',
         name: 'Status',
         anchor: '90%',
@@ -88,10 +88,10 @@ function StockTransferSearch(dataStore, Fn) {
     });
     Ext.getCmp("Status").setValue(10);
 
-    // æŸ¥è¯¢æŒ‰é’®
+    // ²éÑ¯°´Å¥
     var searchBT = new Ext.Toolbar.Button({
-        text: 'æŸ¥è¯¢',
-        tooltip: 'ç‚¹å‡»æŸ¥è¯¢è½¬ç§»ä¿¡æ¯',
+        text:$g( '²éÑ¯'),
+        tooltip: $g('µã»÷²éÑ¯×ªÒÆĞÅÏ¢'),
         iconCls: 'page_find',
         height: 30,
         width: 70,
@@ -103,7 +103,7 @@ function StockTransferSearch(dataStore, Fn) {
     function searchDurgData() {
         var SupplyPhaLoc = Ext.getCmp("SupplyPhaLoc").getValue();
         if (SupplyPhaLoc == null || SupplyPhaLoc.length <= 0) {
-            Msg.info("warning", "ä¾›ç»™éƒ¨é—¨ä¸èƒ½ä¸ºç©º,è¯·å…³é—­çª—ä½“é€‰æ‹©ä¾›ç»™éƒ¨é—¨ï¼");
+            Msg.info("warning", $g("¹©¸ø²¿ÃÅ²»ÄÜÎª¿Õ,Çë¹Ø±Õ´°ÌåÑ¡Ôñ¹©¸ø²¿ÃÅ£¡"));
             return;
         }
         var StartDate = Ext.getCmp("StartDate2").getValue();
@@ -111,7 +111,7 @@ function StockTransferSearch(dataStore, Fn) {
             StartDate = StartDate.format(App_StkDateFormat);
         }
         if ((StartDate == "") || (StartDate == null)) {
-            Msg.info("error", "è¯·é€‰æ‹©èµ·å§‹æ—¥æœŸ!");
+            Msg.info("error", $g("ÇëÑ¡ÔñÆğÊ¼ÈÕÆÚ!"));
             return;
         }
         var EndDate = Ext.getCmp("EndDate2").getValue();
@@ -119,7 +119,7 @@ function StockTransferSearch(dataStore, Fn) {
             EndDate = EndDate.format(App_StkDateFormat);
         }
         if ((EndDate == "") || (EndDate == null)) {
-            Msg.info("error", "è¯·é€‰æ‹©æˆªæ­¢æ—¥æœŸ!");
+            Msg.info("error", $g("ÇëÑ¡Ôñ½ØÖ¹ÈÕÆÚ!"));
             return;
         }
         var RequestPhaLoc = Ext.getCmp("RequestPhaLoc2").getValue();
@@ -138,7 +138,7 @@ function StockTransferSearch(dataStore, Fn) {
             params: { start: 0, limit: Page },
             callback: function(r, options, success) {
                 if (success == false) {
-                    Msg.info("error", "æŸ¥è¯¢é”™è¯¯ï¼Œè¯·æŸ¥çœ‹æ—¥å¿—!");
+                    Msg.info("error", $g("²éÑ¯´íÎó£¬Çë²é¿´ÈÕÖ¾!"));
                 } else {
                     if (r.length > 0) {
                         ItMasterInfoGrid.getSelectionModel().selectFirstRow();
@@ -150,10 +150,10 @@ function StockTransferSearch(dataStore, Fn) {
         });
     }
 
-    // é€‰å–æŒ‰é’®
+    // Ñ¡È¡°´Å¥
     var returnBT = new Ext.Toolbar.Button({
-        text: 'é€‰å–',
-        tooltip: 'ç‚¹å‡»é€‰å–',
+        text: $g('Ñ¡È¡'),
+        tooltip: $g('µã»÷Ñ¡È¡'),
         iconCls: 'page_goto',
         height: 30,
         width: 70,
@@ -162,22 +162,70 @@ function StockTransferSearch(dataStore, Fn) {
         }
     });
 
-    function returnData() {
+function returnData() {
         var selectRows = ItMasterInfoGrid.getSelectionModel().getSelections();
         if (selectRows.length == 0) {
-            Msg.info("warning", "è¯·é€‰æ‹©è¦è¿”å›çš„è½¬ç§»å•ä¿¡æ¯ï¼");
+            Msg.info("warning", $g("ÇëÑ¡ÔñÒª·µ»ØµÄ×ªÒÆµ¥ĞÅÏ¢£¡"));
             Fn("");
+            window.close();
         } else {
             var InitRowId = selectRows[0].get("init");
-            Fn(InitRowId);
+            //ÅĞ¶ÏÊÇ·ñÎª¾Ü¾ø½ÓÊÕ×´Ì¬£¬Èç¹ûÊÇÔòĞèÒª¹ıÂË¿â´æ²»×ãÒ©Æ·È»ºóÉú³ÉĞÂµÄ×ªÒÆµ¥
+            var ret=tkMakeServerCall("web.DHCST.DHCINIsTrf","GetNotEnoughStorByINIT",InitRowId)
+            if(ret=="") 
+            {
+	            Fn(InitRowId);
+	            window.close();
+            }
+            else
+            {
+	            //×ª»»ĞĞ·û£¬Ö±½ÓºóÌ¨´«\nÃ»µÃÓÃ
+	            var arrRet=ret.split("##")
+	            var len=arrRet.length
+	            var NewRetStr=""
+	            for(i=0;i<len;i++)
+	            {
+		            if (NewRetStr=="")  NewRetStr=arrRet[i]
+		            else NewRetStr=NewRetStr+"<br>"+"<font color='red'>"+arrRet[i]+"</font>"
+	            }
+	            //alert(NewRetStr)
+	             Ext.MessageBox.show({
+						title : $g('ÌáÊ¾'),
+						msg : NewRetStr,
+						buttons : Ext.MessageBox.YESNO,
+						fn : GetNewInti,
+						icon : Ext.MessageBox.QUESTION
+					});
+            }
         }
-        window.close();
+        //window.close();
     }
-
-    // æ¸…ç©ºæŒ‰é’®
+    
+    function GetNewInti(btn)
+    {
+	    if (btn == "yes") {
+			var selectRows = ItMasterInfoGrid.getSelectionModel().getSelections();
+            var InitRowId = selectRows[0].get("init");
+            var NewInti=tkMakeServerCall("web.DHCST.DHCINIsTrf","TransByRefuseINIT",InitRowId,session['LOGON.USERID'])
+            if(NewInti.split("^")[0]<0) 
+            {
+	            Msg.info("error", $g("×÷·ÏÖØ×ªÊ§°Ü:")+NewInti);
+	            return;
+            }
+            else
+            {
+	            Fn(NewInti);
+	            window.close();
+            }
+		}
+		
+    } 
+    
+	  
+    // Çå¿Õ°´Å¥
     var clearBT = new Ext.Toolbar.Button({
-        text: 'æ¸…å±',
-        tooltip: 'ç‚¹å‡»æ¸…å±',
+        text: $g('ÇåÆÁ'),
+        tooltip: $g('µã»÷ÇåÆÁ'),
         iconCls: 'page_clearscreen',
         height: 30,
         width: 70,
@@ -198,10 +246,10 @@ function StockTransferSearch(dataStore, Fn) {
         ItDetailInfoGrid.store.removeAll();
     }
 
-    // 3å…³é—­æŒ‰é’®
+    // 3¹Ø±Õ°´Å¥
     var closeBT = new Ext.Toolbar.Button({
-        text: 'å…³é—­',
-        tooltip: 'å…³é—­ç•Œé¢',
+        text: $g('¹Ø±Õ'),
+        tooltip: $g('¹Ø±Õ½çÃæ'),
         iconCls: 'page_close',
         height: 30,
         width: 70,
@@ -209,18 +257,18 @@ function StockTransferSearch(dataStore, Fn) {
             window.close();
         }
     });
-    // åˆ é™¤æŒ‰é’®
+    // É¾³ı°´Å¥
     var deleteBT = new Ext.Toolbar.Button({
         id: "deleteBT",
-        text: 'åˆ é™¤',
-        tooltip: 'ç‚¹å‡»åˆ é™¤',
+        text: $g('É¾³ı'),
+        tooltip: $g('µã»÷É¾³ı'),
         width: 70,
         height: 30,
         iconCls: 'page_delete',
         handler: function() {
             Ext.MessageBox.show({
-                title: 'æç¤º',
-                msg: 'æ˜¯å¦ç¡®å®šåˆ é™¤æ•´å¼ è½¬ç§»å•?',
+                title: $g('ÌáÊ¾'),
+                msg: $g('ÊÇ·ñÈ·¶¨É¾³ıÕûÕÅ×ªÒÆµ¥?'),
                 buttons: Ext.MessageBox.YESNO,
                 fn: DeleteHandler,
                 icon: Ext.MessageBox.QUESTION
@@ -232,13 +280,13 @@ function StockTransferSearch(dataStore, Fn) {
         if (btn == "yes") {
             var selectRows = ItMasterInfoGrid.getSelectionModel().getSelections();
             if (selectRows.length == 0) {
-                Msg.info("warning", "è¯·å…ˆé€‰æ‹©éœ€è¦åˆ é™¤çš„è½¬ç§»å•!");
+                Msg.info("warning", $g("ÇëÏÈÑ¡ÔñĞèÒªÉ¾³ıµÄ×ªÒÆµ¥!"));
                 return;
             }
             var initId = selectRows[0].get("init");
             var completeFlag = selectRows[0].get("comp");
             if (completeFlag == "Y") {
-                Msg.info("warning", "è½¬ç§»å•å·²å®Œæˆä¸èƒ½åˆ é™¤!");
+                Msg.info("warning", $g("Ö»ÓĞ±£´æ×´Ì¬µÄ×ªÒÆµ¥¿ÉÒÔÉ¾³ı£¬Çë¼ì²é×ªÒÆµ¥×´Ì¬!"));
                 return;
             }
             var url = DictUrl +
@@ -247,35 +295,35 @@ function StockTransferSearch(dataStore, Fn) {
             Ext.Ajax.request({
                 url: url,
                 method: 'POST',
-                waitMsg: 'åˆ é™¤å¤„ç†ä¸­...',
+                waitMsg: $g('É¾³ı´¦ÀíÖĞ...'),
                 success: function(result, request) {
                     var jsonData = Ext.util.JSON
                         .decode(result.responseText);
                     if (jsonData.success == 'true') {
-                        // åˆ é™¤å•æ®
-                        Msg.info("success", "è½¬ç§»å•åˆ é™¤æˆåŠŸ!");
+                        // É¾³ıµ¥¾İ
+                        Msg.info("success", $g("×ªÒÆµ¥É¾³ı³É¹¦!"));
                         searchDurgData();
                     } else {
-                        Msg.info("error", "è½¬ç§»å•åˆ é™¤å¤±è´¥:" + jsonData.info);
+                        Msg.info("error", $g("×ªÒÆµ¥É¾³ıÊ§°Ü:") + jsonData.info);
                     }
                 },
                 scope: this
             });
         }
     }
-    // è®¿é—®è·¯å¾„
+    // ·ÃÎÊÂ·¾¶
     var MasterInfoUrl = DictUrl + 'dhcinistrfaction.csp?actiontype=Query';
 
-    // é€šè¿‡AJAXæ–¹å¼è°ƒç”¨åå°æ•°æ®
+    // Í¨¹ıAJAX·½Ê½µ÷ÓÃºóÌ¨Êı¾İ
     var proxy = new Ext.data.HttpProxy({
         url: MasterInfoUrl,
         method: "POST"
     });
 
-    // æŒ‡å®šåˆ—å‚æ•°
+    // Ö¸¶¨ÁĞ²ÎÊı
     var fields = ["init", "initNo", "reqNo", "toLocDesc", "frLocDesc", "dd", "tt", "comp", "userName", "status", "StatusCode"];
 
-    // æ”¯æŒåˆ†é¡µæ˜¾ç¤ºçš„è¯»å–æ–¹å¼
+    // Ö§³Ö·ÖÒ³ÏÔÊ¾µÄ¶ÁÈ¡·½Ê½
     var reader = new Ext.data.JsonReader({
         root: 'rows',
         totalProperty: "results",
@@ -283,7 +331,7 @@ function StockTransferSearch(dataStore, Fn) {
         fields: fields
     });
 
-    // æ•°æ®é›†
+    // Êı¾İ¼¯
     var ItMasterInfoStore = new Ext.data.Store({
         proxy: proxy,
         reader: reader
@@ -298,55 +346,55 @@ function StockTransferSearch(dataStore, Fn) {
         sortable: true,
         hidden: true
     }, {
-        header: "è½¬ç§»å•å·",
+        header: $g("×ªÒÆµ¥ºÅ"),
         dataIndex: 'initNo',
         width: 150,
         align: 'left',
         sortable: true
     }, {
-        header: "è¯·æ±‚å•å·",
+        header: $g("ÇëÇóµ¥ºÅ"),
         dataIndex: 'reqNo',
         width: 150,
         align: 'left',
         sortable: true
     }, {
-        header: "è¯·æ±‚éƒ¨é—¨",
+        header: $g("ÇëÇó²¿ÃÅ"),
         dataIndex: 'toLocDesc',
         width: 200,
         align: 'left',
         sortable: true
     }, {
-        header: "ä¾›ç»™éƒ¨é—¨",
+        header: $g("¹©¸ø²¿ÃÅ"),
         dataIndex: 'frLocDesc',
         width: 200,
         align: 'left',
         sortable: true
     }, {
-        header: 'å®ŒæˆçŠ¶æ€',
+        header: $g('Íê³É×´Ì¬'),
         dataIndex: 'comp',
         width: 90,
         align: 'center',
         sortable: true
     }, {
-        header: 'å•æ®çŠ¶æ€',
+        header: $g('µ¥¾İ×´Ì¬'),
         dataIndex: 'StatusCode',
         width: 90,
         align: 'center',
         sortable: true
     }, {
-        header: 'æ—¥æœŸ',
+        header: $g('ÈÕÆÚ'),
         dataIndex: 'dd',
         width: 100,
         align: 'left',
         sortable: true
     }, {
-        header: "æ—¶é—´",
+        header: $g("Ê±¼ä"),
         dataIndex: 'tt',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: 'åˆ¶å•äºº',
+        header: $g('ÖÆµ¥ÈË'),
         dataIndex: 'userName',
         width: 100,
         align: 'left',
@@ -358,8 +406,8 @@ function StockTransferSearch(dataStore, Fn) {
         store: ItMasterInfoStore,
         pageSize: PageSize,
         displayInfo: true,
-        displayMsg: 'ç¬¬ {0} æ¡åˆ° {1}æ¡ ï¼Œä¸€å…± {2} æ¡',
-        emptyMsg: "æ²¡æœ‰è®°å½•"
+        displayMsg: $g('µÚ {0} Ìõµ½ {1}Ìõ £¬Ò»¹² {2} Ìõ'),
+        emptyMsg: $g("Ã»ÓĞ¼ÇÂ¼")
     });
 
     var ItMasterInfoGrid = new Ext.grid.GridPanel({
@@ -375,7 +423,7 @@ function StockTransferSearch(dataStore, Fn) {
         bbar: GridPagingToolbar
     });
 
-    // æ·»åŠ è¡¨æ ¼å•å‡»è¡Œäº‹ä»¶
+    // Ìí¼Ó±í¸ñµ¥»÷ĞĞÊÂ¼ş
     ItMasterInfoGrid.getSelectionModel().on('rowselect', function(sm, rowIndex, r) {
         var InIt = ItMasterInfoStore.getAt(rowIndex).get("init");
         ItDetailInfoStore.setBaseParam('Parref', InIt);
@@ -383,17 +431,17 @@ function StockTransferSearch(dataStore, Fn) {
         ItDetailInfoStore.load({ params: { start: 0, limit: GridDetailPagingToolbar.pageSize, sort: 'Rowid', dir: 'Desc' } });
     });
 
-    // è®¿é—®è·¯å¾„
+    // ·ÃÎÊÂ·¾¶
     var DetailInfoUrl = DictUrl +
         'dhcinistrfaction.csp?actiontype=QueryDetail';
 
-    // é€šè¿‡AJAXæ–¹å¼è°ƒç”¨åå°æ•°æ®
+    // Í¨¹ıAJAX·½Ê½µ÷ÓÃºóÌ¨Êı¾İ
     var proxy = new Ext.data.HttpProxy({
         url: DetailInfoUrl,
         method: "POST"
     });
 
-    // æŒ‡å®šåˆ—å‚æ•°
+    // Ö¸¶¨ÁĞ²ÎÊı
     var fields = ["initi", "inrqi", "inci", "inciCode",
         "inciDesc", "inclb", "batexp", "manf", "manfName",
         "qty", "uom", "sp", "status", "remark",
@@ -402,7 +450,7 @@ function StockTransferSearch(dataStore, Fn) {
         "spAmt", "rp", "rpAmt", "ConFac", "BUomId", "inclbDirtyQty", "inclbAvaQty", "TrUomDesc"
     ];
 
-    // æ”¯æŒåˆ†é¡µæ˜¾ç¤ºçš„è¯»å–æ–¹å¼
+    // Ö§³Ö·ÖÒ³ÏÔÊ¾µÄ¶ÁÈ¡·½Ê½
     var reader = new Ext.data.JsonReader({
         root: 'rows',
         totalProperty: "results",
@@ -410,7 +458,7 @@ function StockTransferSearch(dataStore, Fn) {
         fields: fields
     });
 
-    // æ•°æ®é›†
+    // Êı¾İ¼¯
     var ItDetailInfoStore = new Ext.data.Store({
         proxy: proxy,
         reader: reader
@@ -418,100 +466,100 @@ function StockTransferSearch(dataStore, Fn) {
 
     var nm = new Ext.grid.RowNumberer();
     var ItDetailInfoCm = new Ext.grid.ColumnModel([nm, {
-        header: "è½¬ç§»ç»†é¡¹RowId",
+        header: $g("×ªÒÆÏ¸ÏîRowId"),
         dataIndex: 'initi',
         width: 100,
         align: 'left',
         sortable: true,
         hidden: true
     }, {
-        header: 'è¯å“ä»£ç ',
+        header: $g('Ò©Æ·´úÂë'),
         dataIndex: 'inciCode',
         width: 100,
         align: 'left',
         sortable: true
     }, {
-        header: 'è¯å“åç§°',
+        header: $g('Ò©Æ·Ãû³Æ'),
         dataIndex: 'inciDesc',
         width: 200,
         align: 'left',
         sortable: true
     }, {
-        header: "æ‰¹æ¬¡~æ•ˆæœŸ",
+        header: $g("Åú´Î~Ğ§ÆÚ"),
         dataIndex: 'batexp',
         width: 200,
         align: 'left',
         sortable: true
     }, {
-        header: "ç”Ÿäº§å‚å•†",
+        header: $g("Éú²úÆóÒµ"),
         dataIndex: 'manfName',
         width: 180,
         align: 'left'
     }, {
-        header: "è½¬ç§»æ•°é‡",
+        header: $g("×ªÒÆÊıÁ¿"),
         dataIndex: 'qty',
         width: 80,
         align: 'right',
         sortable: true
     }, {
-        header: "è½¬ç§»å•ä½",
+        header: $g("×ªÒÆµ¥Î»"),
         dataIndex: 'TrUomDesc',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: "è¿›ä»·",
+        header: $g("½ø¼Û"),
         dataIndex: 'rp',
         width: 60,
         align: 'right',
 
         sortable: true
     }, {
-        header: "å”®ä»·",
+        header: $g("ÊÛ¼Û"),
         dataIndex: 'sp',
         width: 60,
         align: 'right',
 
         sortable: true
     }, {
-        header: "è¯·æ±‚æ•°é‡",
+        header: $g("ÇëÇóÊıÁ¿"),
         dataIndex: 'reqQty',
         width: 80,
         align: 'right',
         sortable: true
     }, {
-        header: "è´§ä½ç ",
+        header: $g("»õÎ»Âë"),
         dataIndex: 'stkbin',
         width: 100,
         align: 'left',
         sortable: true
     }, {
-        header: "æ‰¹æ¬¡å”®ä»·",
+        header: $g("Åú´ÎÊÛ¼Û"),
         dataIndex: 'newSp',
         width: 100,
         align: 'right',
 
         sortable: true
     }, {
-        header: "è§„æ ¼",
+        header: $g("¹æ¸ñ"),
         dataIndex: 'spec',
         width: 100,
         align: 'left',
         sortable: true
     }, {
-        header: "å¤„æ–¹é€šç”¨å",
+        header: $g("´¦·½Í¨ÓÃÃû"),
         dataIndex: 'gene',
         width: 120,
         align: 'left',
         sortable: true
     }, {
-        header: "å‰‚å‹",
+        header: $g("¼ÁĞÍ"),
         dataIndex: 'formDesc',
         width: 100,
         align: 'left',
         sortable: true
     }, {
-        header: "å”®ä»·é‡‘é¢",
+        header: $g("ÊÛ¼Û½ğ¶î"),
         dataIndex: 'spAmt',
         width: 100,
         align: 'right',
@@ -524,8 +572,8 @@ function StockTransferSearch(dataStore, Fn) {
         store: ItDetailInfoStore,
         pageSize: PageSize,
         displayInfo: true,
-        displayMsg: 'ç¬¬ {0} æ¡åˆ° {1}æ¡ ï¼Œä¸€å…± {2} æ¡',
-        emptyMsg: "æ²¡æœ‰è®°å½•"
+        displayMsg: $g('µÚ {0} Ìõµ½ {1}Ìõ £¬Ò»¹² {2} Ìõ'),
+        emptyMsg: $g("Ã»ÓĞ¼ÇÂ¼")
     });
 
     var ItDetailInfoGrid = new Ext.grid.GridPanel({
@@ -542,7 +590,7 @@ function StockTransferSearch(dataStore, Fn) {
         loadMask: true
     });
 
-    // åŒå‡»äº‹ä»¶
+    // Ë«»÷ÊÂ¼ş
     ItMasterInfoGrid.on('rowdblclick', function() {
         returnData();
     });
@@ -557,7 +605,7 @@ function StockTransferSearch(dataStore, Fn) {
         tbar: [searchBT, '-', returnBT, '-', clearBT, '-', deleteBT, '-', closeBT],
         items: [{
             xtype: 'fieldset',
-            title: 'æŸ¥è¯¢æ¡ä»¶',
+            title: $g('²éÑ¯Ìõ¼ş'),
             style: DHCSTFormStyle.FrmPaddingV,
             defaults: { border: false },
             layout: 'column',
@@ -578,16 +626,17 @@ function StockTransferSearch(dataStore, Fn) {
     });
 
     var window = new Ext.Window({
-        title: 'è½¬ç§»å•æŸ¥è¯¢',
+        title: $g('×ªÒÆµ¥²éÑ¯'),
         width: document.body.clientWidth * 0.9,
         height: document.body.clientHeight * 0.9,
         minWidth: document.body.clientWidth * 0.5,
         minHeight: document.body.clientHeight * 0.5,
         layout: 'border',
+        modal: true,
         items: [
             InfoForm3, {
                 region: 'center',
-                title: 'å‡ºåº“å•',
+                title: $g('³ö¿âµ¥'),
                 collapsible: true,
                 split: true,
                 minSize: 175,
@@ -597,7 +646,7 @@ function StockTransferSearch(dataStore, Fn) {
 
             }, {
                 region: 'south',
-                title: 'å‡ºåº“å•æ˜ç»†',
+                title: $g('³ö¿âµ¥Ã÷Ï¸'),
                 height: document.body.clientHeight * 0.9 * 0.4,
                 layout: 'fit',
                 items: ItDetailInfoGrid

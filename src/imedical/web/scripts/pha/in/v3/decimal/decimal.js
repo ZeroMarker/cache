@@ -22,6 +22,7 @@ function InitGridDeciFac(){
         	{ field: "FrDeciConFac", title: '开始值', width: 150,
         		editor: {
                     type: 'validatebox',
+                    required: true,
                     options: {
                         validType: 'PosNumber'
                     }
@@ -30,13 +31,15 @@ function InitGridDeciFac(){
             { field: "ToDeciConFac", title: '结束值', width: 150,
         		editor: {
                     type: 'validatebox',
+                    required: true,
                     options: {
 	                     validType: 'PosNumber'
 			        }
                 }
             },
-            { field: "FacVal", title: '显示值', width: 200,
+            { field: "FacVal", title: '显示值', width: 700,
         		editor: {
+	        		required: true,
                     type: 'validatebox'
         		}
             }
@@ -96,7 +99,7 @@ function SaveDeciFac(){
         var todeci=iData.ToDeciConFac || ""
         var FacVal=iData.FacVal || ""
         if((frdeci=="")||(frdeci=="")||(FacVal=="")){
-	        $.messager.alert("提示", "数据有误，请核对", "warning");
+	        $.messager.alert("提示", "请检查是否有单元格数据未填", "warning");
         	return;
 	    }
         var params =  (iData.RowId || "") + "^" + (iData.FrDeciConFac || "")+ "^" + (iData.ToDeciConFac || "")+ "^" + (iData.FacVal || "");

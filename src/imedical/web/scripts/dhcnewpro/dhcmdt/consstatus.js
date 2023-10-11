@@ -1,9 +1,13 @@
 /// author:    bianshuai
 /// date:      2016-04-11
 /// descript:  会诊申请状态字典维护
-
+var LgHospID = session['LOGON.HOSPID'];    /// 医院ID
+var LgHospDesc = session['LOGON.HOSPDESC'];  /// 医院
 var editRow = ""; editDRow = "";
 $(function(){
+    
+    //初始化医院 多院区改造 ylp 2023-02-23
+    InitHosp(); 
 
 	//初始化界面默认信息
 	InitDefault();
@@ -14,6 +18,31 @@ $(function(){
 	//初始化界面按钮事件
 	InitWidListener();
 })
+   
+ //初始化医院 多院区改造 ylp 2023-02-23
+function InitHosp(){
+	hospComp = GenHospComp("DHC_MDTConsStatus"); 
+	HospDr=hospComp.getValue(); //cy 2021-04-09
+	hospComp.options().onSelect = function(){///选中事件
+		HospDr=hospComp.getValue(); //cy 2021-04-09
+		
+		$("#dgMainList").datagrid('reload',{params:HospDr});
+		
+	}
+	$('#queryBTN').on('click',function(){
+		$("#dgMainList").datagrid('reload',{params:hospComp.getValue()});
+	 })
+	$("#_HospBtn").bind('click',function(){
+		var rowData = $("#dgMainList").datagrid('getSelected');
+		if (!rowData){
+			$.messager.alert("提示","请选择一行！");
+			return false;
+		}
+		GenHospWin("DHC_MDTConsStatus",rowData.ID);
+	})
+	
+
+}
 
 ///初始化界面默认信息
 function InitDefault(){
@@ -65,9 +94,9 @@ function InitDetList(){
 		//类别
 		type: 'combobox',//设置编辑格式
 		options: {
-			valueField: "value", 
+			valueField: "value",
 			textField: "text",
-			url:$URL+"?ClassName=web.DHCMDTCom&MethodName=GetHospDs",
+			url:$URL+"?ClassName=web.DHCMDTCom&MethodName=GetHospDs"+"&MWToken="+websys_getMWToken(),
 			//required:true,
 			panelHeight:"auto",  //设置容器高度自动增长
 			onSelect:function(option){
@@ -76,10 +105,34 @@ function InitDetList(){
 				$(ed.target).combobox('setValue', option.text);
 				var ed=$("#dgMainList").datagrid('getEditor',{index:editRow,field:'HospID'});
 				$(ed.target).val(option.value); 
-			} 
-	
+			}
 		}
 	}
+	
+	// 上一状态编辑格
+	var SupStateEditor={
+		type: 'combobox',//设置编辑格式
+		options:{
+			valueField: "value", 
+			textField: "text",
+			multiple:true,
+			enterNullValueClear:false,
+			url: $URL+"?ClassName=web.DHCMDTCom&MethodName=GetListMdtStatus&HospID="+LgHospID+"&MWToken="+websys_getMWToken(),
+			blurValidValue:true,
+			onChange:function() {
+				///设置类型值
+				var ed=$("#dgMainList").datagrid('getEditor',{index:editRow,field:'SupState'});
+				var SupStateArr=$(ed.target).combobox('getValues');
+				var ed=$("#dgMainList").datagrid('getEditor',{index:editRow,field:'SupStateID'});
+				$(ed.target).val(SupStateArr.join(","));	
+			},
+			onShowPanel:function(){
+				
+			}		   
+		}
+	}
+	
+	
 	/**
 	 * 定义columns
 	 */
@@ -90,7 +143,9 @@ function InitDetList(){
 		{field:'ActCode',title:'aitActCode',width:100,editor:textEditor,hidden:true},
 		{field:'ActDesc',title:'是否可用',width:100,editor:activeEditor},
 		{field:'HospID',title:'HospID',width:100,editor:textEditor,hidden:true},
-		{field:'HospDesc',title:'医院',width:300,editor:HospEditor}
+		{field:'HospDesc',title:'医院',width:300,editor:HospEditor,hidden:true},
+		{field:'SupState',title:'上一状态',width:300,editor:SupStateEditor},
+		{field:'SupStateID',title:'上一状态ID',width:100,editor:textEditor,hidden:true},
 	]];
 	
 	/**
@@ -105,12 +160,16 @@ function InitDetList(){
             if ((editRow != "")||(editRow == "0")) { 
                 $("#dgMainList").datagrid('endEdit', editRow); 
             } 
-            $("#dgMainList").datagrid('beginEdit', rowIndex); 
             editRow = rowIndex;
+            $("#dgMainList").datagrid('beginEdit', rowIndex); 
+            var ed=$("#dgMainList").datagrid('getEditor',{index:editRow,field:'SupStateID'});
+            var SupStateArr=$(ed.target).val().split(",");
+            var ed=$("#dgMainList").datagrid('getEditor',{index:editRow,field:'SupState'});
+			$(ed.target).combobox('setValues',SupStateArr);
         }
 	};
 	
-	var uniturl = $URL+"?ClassName=web.DHCMDTConsStatus&MethodName=QryEmConsStatus";
+	var uniturl = $URL+"?ClassName=web.DHCMDTConsStatus&MethodName=QryEmConsStatus"+"&params="+hospComp.getValue()+"&MWToken="+websys_getMWToken();
 	var dgMainListComponent = new ListComponent('dgMainList', columns, uniturl, option);
 	dgMainListComponent.Init();
 
@@ -139,7 +198,9 @@ function saveRow(){
 			$.messager.alert("提示","医院不能为空!"); 
 			return false;
 		}
-		var tmp=rowsData[i].ID +"^"+ rowsData[i].Code +"^"+ rowsData[i].Desc +"^"+ rowsData[i].ActCode +"^"+ rowsData[i].HospID;
+		var tmp=rowsData[i].ID +"^"+ rowsData[i].Code +"^"+ rowsData[i].Desc +"^"+ rowsData[i].ActCode +"^"+ rowsData[i].HospID +
+				"^"+rowsData[i].SupStateID;
+		
 		dataList.push(tmp);
 	}
 	
@@ -178,7 +239,7 @@ function insertRow(){
 	
 	$("#dgMainList").datagrid('insertRow', {
 		index: 0, // 行数从0开始计算
-		row: {ID:'', Code:'', Desc:'', ActCode:'Y', ActDesc:'是', HospID:'', HospDesc:''}
+		row: {ID:'', Code:'', Desc:'', ActCode:'Y', ActDesc:'是', HospID:hospComp.getValue(), HospDesc:""}
 	});
 	$("#dgMainList").datagrid('beginEdit', 0);//开启编辑并传入要编辑的行
 	editRow=0;

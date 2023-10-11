@@ -6,11 +6,12 @@ function initDocument()
 {
 	defindTitleStyle(); 
 	initLookUp();
-	initButtonWidth();   //add by lmm 2020-04-26 1292188
+	//initButtonWidth();   //add by lmm 2020-04-26 1292188  //modify by txr 2023-03-20
 	initButton();
 	jQuery("#BComputer").linkbutton({iconCls: 'icon-w-ok'});
 	jQuery("#BComputer").on("click", BComputer_Click);
-	
+	var  vData=GetLnk() //Modified By QW20211224
+		var vData="SSLocID=^SSGroupID=^SSUserID="+vData
 		$HUI.datagrid("#maintlimitequipdatagrid",{   
 	    url:$URL, 
 		idField:'TRowID', //主键   //add by lmm 2018-10-23
@@ -19,7 +20,7 @@ function initDocument()
 	    cache: false,
 	    fit:true,
 	    singleSelect:false,
-		//fitColumns:true,
+		fitColumns:true,  //modify by lmm 2021-05-23
 		pagination:true,
     	columns:columns, 
 	//add by lmm 2019-08-06 begin 972010 
@@ -37,7 +38,8 @@ function initDocument()
 	        IncludeBussFlag:'',
 	        VModelDR:'',   
 	        VEquipTypeDR:'',
-	        VNo:''
+	        VNo:'',
+	        vData:vData
 	    }, 
 	//add by lmm 2019-08-06 end 972010 
     	//modify by lmm 2019-10-28 1040240 LMM0048
@@ -67,6 +69,8 @@ function initDocument()
 //modify by lmm 2019-10-28 1040240 LMM0048
 function BFind_Clicked()
 {
+		var  vData=GetLnk()
+		var vData="^^"+vData
 		$HUI.datagrid("#maintlimitequipdatagrid",{   
 	    url:$URL, 
 	    queryParams:{
@@ -83,12 +87,23 @@ function BFind_Clicked()
 	        IncludeBussFlag:'',
 	        VModelDR:getElementValue("ModelDR"),   //modify by lmm 2019-05-29  919133
 	        VEquipTypeDR:getElementValue("EquipTypeDR"),
-	        VNo:getElementValue("No")
+	        VNo:getElementValue("No"),
+	        vData:vData
 	    },
 	});
 	jQuery('#maintlimitequipdatagrid').datagrid('unselectAll')   //modify by lmm 2019-08-27 1006842
 	
 }
+
+//Modified By QW20211224
+function GetLnk()
+{
+	var lnk="";
+	lnk=lnk+"^vAIncludeFlag=N";
+	lnk=lnk+"^EquipAttribute="+getElementValue("EquipAttribute")+"^";
+	return lnk
+}
+
 function setSelectValue(vElementID,item)
 {
 	setElement(vElementID+"DR",item.TRowID)
@@ -128,13 +143,16 @@ function BComputer_Click()
 	}
 	var SourceType=$('#SourceType').val()
 	var DataList="id1&"   //计量设备
-	var list = tkMakeServerCall("web.DHCEQ.EM.BUSEquipAttribute", "SaveSourIDInfoEquipAttribute",SourceType,EquipInfo,DataList);
+	//modified by cjt 20221208 需求号3111625 修改DataList代码逻辑
+	for(var i=1;i<rows.length;i++)
+	{
+		DataList=DataList+"id1&";
+	}
+	//Modified By QW20211224 begin
+	var  EquipAttribute=getElementValue("EquipAttribute") 
+	if (EquipAttribute!="") DataList=""
+	//Modified By QW20211224 end
+	var list = tkMakeServerCall("web.DHCEQ.EM.BUSEquipAttribute", "SaveSourIDInfoEquipAttribute",SourceType,EquipInfo,DataList,EquipAttribute);
 	websys_showModal("options").mth();
-	$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
-	
-	
-	
-	
+	$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});	
 }
-
-

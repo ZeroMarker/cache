@@ -288,7 +288,7 @@ function printNT(data){
 function printCom(arReqID){
 	
 	/// 取系统自动打印状态
-	if (GetAutoPrintFlag() != "1") return;
+	if (GetAutoPrintFlag("Exa") != "1") return;
 
 	var arReqArr=arReqID.split("^");
 	for (var i=0;i<arReqArr.length;i++){
@@ -359,17 +359,23 @@ function printReqLab(arReqID){
 
 ///  打印调用统一模板 检查/病理
 ///  bianshuai 2018-03-26
-function print(mListData){
-	
+function Commonprint(mListData){
 	/// 取系统自动打印状态
-	if (GetAutoPrintFlag() != 1) return;
-	var PrintSet=$.m({
+	//if (GetAutoPrintFlag() != 1) return;
+	/*var PrintSet=$.m({
 	    ClassName:"DHCDoc.DHCApp.BasicConfig",
 	    MethodName:"GetConfigNode",
 	    Node:"PrintSet"
+	},false);*/
+	var LgParam=session['LOGON.HOSPID'] +"^"+ session['LOGON.CTLOCID'] +"^"+ session['LOGON.USERID'] +"^"+ session['LOGON.GROUPID'];
+	var PrintSet=$.m({
+	    ClassName:"DHCDoc.DHCApp.BasicConfig",
+	    MethodName:"GetAppPrtSetConfig",
+	    AdmType:"",
+	    Type:"Pis",
+	    LgParam:LgParam
 	},false);
 	runClassMethod("web.DHCAPPPrintCom","GetJsonReqPrtObj",{"mListData": mListData},function(jsonObj){
-		
 		if (jsonObj == null){
 			$.messager.alert("提示:","打印异常！");
 		}else{
@@ -380,8 +386,17 @@ function print(mListData){
 						PrintPis_REQ(jsonObj[i].ID);
 					}
 				}else if (jsonObj[i].Type == "E") {
-					/// 打印检查申请单
-					ExaReqPrint(jsonObj[i].ID,"");
+					var AutoPrintFlag=GetAutoPrintFlag("Exa");
+					if(AutoPrintFlag==1){
+						/// 打印检查申请单
+						ExaReqPrint(jsonObj[i].ID,"");
+					}
+				}else if (jsonObj[i].Type == "L") {
+					var AutoPrintFlag=GetAutoPrintFlag("Lab");
+					if(AutoPrintFlag==1){
+						/// 打印检验申请单
+						printReqLab(jsonObj[i].ID);
+					}
 				}
 			}
 		}
@@ -510,14 +525,14 @@ function Print_Xml(ExaReqObj){
 }
 
 /// 取系统自动打印状态 AutoPrint
-function GetAutoPrintFlag(){
+function GetAutoPrintFlag(Type){
 	
 	var PrintFlag = "";
 	if (typeof GlobalObj != "undefined"){
 		EpisodeID = GlobalObj.EpisodeID
 	}
 	var LgParam = session['LOGON.HOSPID'] +"^"+ session['LOGON.CTLOCID'] +"^"+ session['LOGON.USERID'] +"^"+ session['LOGON.GROUPID'];
-	runClassMethod("web.DHCAPPExaReportQuery","GetAutoPrintFlag",{"EpisodeID":EpisodeID, "LgParam":LgParam},function(jsonString){
+	runClassMethod("web.DHCAPPExaReportQuery","GetAutoPrintFlag",{"EpisodeID":EpisodeID, "LgParam":LgParam,"Type":Type},function(jsonString){
 		
 		if (jsonString != null){
 			PrintFlag = jsonString;

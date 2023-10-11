@@ -81,6 +81,15 @@ opl.view=(function(){
 					return false;
 				}
 			},*/
+			rowStyler: function(index,row){
+				var tab = $('#emr-tabs').tabs('getSelected');
+				var TabIndex = $('#emr-tabs').tabs('getTabIndex',tab);
+				if (TabIndex=="2"){
+					if ((row.OverFlag=="是")&&(row.FinishDate=="")){
+						return 'color:red;';
+					}
+				}
+			},
 			onCheckAll:function(rows){
 				for (var i=0; i<rows.length; i++) {
 					if (rows[i]['ExecuteStatus']==$g("已执行")) {
@@ -241,7 +250,8 @@ opl.view=(function(){
 	function xhrRefresh(){
 		var tab = $('#emr-tabs').tabs('getSelected');
 		var index = $('#emr-tabs').tabs('getTabIndex',tab);
-		$('#emr-tabs').siblings("div").css('width','100%')
+		$('#emr-tabs').siblings("div").css('width','100%');
+		$('#emr-tabs .tabs-wrap').css('width','100%')
 		EmrQualityDataGrid.datagrid("resize");
 		RelaodEmrQualityDataGrid(index);
 		SetTabsTitle("");

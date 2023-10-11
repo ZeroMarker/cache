@@ -23,17 +23,17 @@ function patientList(){
 		panelHeight:100,
 		width:60,
 		data:[
-				{"id":"","text":"全部","selected":true},
-				{"id":"O","text":"门诊"},
-				{"id":"E","text":"急诊"},
-				{"id":"I","text":"住院"}
+				{"id":"","text":$g("全部"),"selected":true},
+				{"id":"O","text":$g("门诊")},
+				{"id":"E","text":$g("急诊")},
+				{"id":"I","text":$g("住院")}
 			 ]
 	}); 	
 	//就诊列表
 	$("#episodeList").datagrid({ 
 	    width:'100%',
 	    height:'100%', 
-	    loadMsg:'数据装载中......',
+	    loadMsg:$g('数据装载中......'),
 	    url:'../EMRservice.Ajax.hisData.cls?Action=GetEpisodeList&PatientID='+patientID,
 	    //url:url+'?action=GetAllEpisode',
 	    singleSelect:false,
@@ -44,14 +44,14 @@ function patientList(){
 	    fit:true,
 	    columns:[[  
 	    	{field:'ck',checkbox:true},
-	        {field:'EpisodeDate',title:'就诊日期',width:80},
-	        {field:'Diagnosis',title:'诊断',width:100}, 
-	        {field:'EpisodeType',title:'类型',width:60,formatter:formatColor}, 
-	        {field:'EpisodeDeptDesc',title:'科室',width:100},     
-	        {field:'MainDocName',title:'主治医生',width:80}, 
-	        {field:'DischargeDate',title:'出院日期',width:60},
-	        {field:'EpisodeID',title:'就诊号',width:40},
-	        {field:'EpisodeDeptID',title:'科室ID',width:40}
+	        {field:'EpisodeDate',title:$g('就诊日期'),width:80},
+	        {field:'Diagnosis',title:$g('诊断'),width:100}, 
+	        {field:'EpisodeType',title:$g('类型'),width:60,formatter:formatColor}, 
+	        {field:'EpisodeDeptDesc',title:$g('科室'),width:100},     
+	        {field:'MainDocName',title:$g('主治医生'),width:80}, 
+	        {field:'DischargeDate',title:$g('出院日期'),width:60},
+	        {field:'EpisodeID',title:$g('就诊号'),width:40},
+	        {field:'EpisodeDeptID',title:$g('科室ID'),width:40}
 	    ]],
 	    onClickRow:function(rowIndex,rowData){
 		   $("#episodeList").datagrid('unselectAll');
@@ -105,15 +105,15 @@ function patientList(){
 	
 	function formatColor(val,row)
 	{
-		if (row.EpisodeType == "住院")
+		if (row.EpisodeType == $g("住院"))
 		{
 			return '<span style="color:green;">'+val+'</span>';
 		}
-		else if (row.EpisodeType == "门诊")
+		else if (row.EpisodeType == $g("门诊"))
 		{
 			return '<span style="color:red;">'+val+'</span>';
 		}
-		else if (row.EpisodeType == "急诊")
+		else if (row.EpisodeType == $g("急诊"))
 		{
 			return '<span style="color:blue;">'+val+'</span>';
 		}	
@@ -126,7 +126,7 @@ function patientList(){
 		$("#episodeList").datagrid('load', {
 			Action: "GetEpisodeList",
 			PatientID: patientID,
-			QueryItem: (queryItem == "诊断内容")? "":queryItem,
+			QueryItem: (queryItem == $g("诊断内容"))? "":queryItem,
 			EpisodeType: $('#episodeType').combobox('getValue')
 		});	
 	}
@@ -169,13 +169,13 @@ function getPatinentInfo()
 //加载患者信息
 function setPatientInfo(patientInfo) {
 	var splitor = '&nbsp&nbsp|&nbsp&nbsp';
-	var htmlStr = '&nbsp<span class="spancolorleft">登记号:</span> <span class="spancolor">'
+	var htmlStr = '&nbsp<span class="spancolorleft">'+$g("登记号")+':</span> <span class="spancolor">'
 			+ patientInfo[0].papmiNo + '</span>';
 	htmlStr += splitor
-			+ '<span class="spancolorleft">病案号:</span><span class="spancolor">'
+			+ '<span class="spancolorleft">'+$g("病案号")+':</span><span class="spancolor">'
 			+ patientInfo[0].ipRecordNo + '</span>';
 	
-	if (HasPatEncryptLevel == "Y")
+	/*if (HasPatEncryptLevel == "Y")
 	{
 		htmlStr += splitor
 			+ '<span class="spancolorleft">病人密级:</span><span class="spancolor">'
@@ -184,28 +184,28 @@ function setPatientInfo(patientInfo) {
 		htmlStr += splitor
 			+ '<span class="spancolorleft">病人级别:</span><span class="spancolor">'
 			+ patientInfo[0].EmployeeFunction + '</span>';
-	}
+	}*/
 
 	htmlStr += splitor
-			+ '<span class="spancolorleft">床号:</span><span class="spancolor">'
+			+ '<span class="spancolorleft">'+$g("床号")+':</span><span class="spancolor">'
 			+ patientInfo[0].disBed + '</span>';
 	htmlStr += splitor
-			+ '<span class="spancolorleft">姓名:</span> <span class="spancolor">'
+			+ '<span class="spancolorleft">'+$g("姓名")+':</span> <span class="spancolor">'
 			+ patientInfo[0].name + '</span>';
 	htmlStr += splitor
-			+ '<span class="spancolorleft">性别:</span> <span class="spancolor">'
+			+ '<span class="spancolorleft">'+$g("性别")+':</span> <span class="spancolor">'
 			+ patientInfo[0].gender + '</span>';
 	htmlStr += splitor
-			+ '<span class="spancolorleft">年龄:</span> <span class="spancolor">'
+			+ '<span class="spancolorleft">'+$g("年龄")+':</span> <span class="spancolor">'
 			+ patientInfo[0].age + '</span>';
 	htmlStr += splitor
-			+ '<span class="spancolorleft">付费方式:</span><span class="spancolor">'
+			+ '<span class="spancolorleft">'+$g("付费方式")+':</span><span class="spancolor">'
 			+ patientInfo[0].payType + '</span>';
 	htmlStr += splitor
-			+ '<span class="spancolorleft">入院日期:</span> <span class="spancolor">'
+			+ '<span class="spancolorleft">'+$g("入院日期")+':</span> <span class="spancolor">'
 			+ patientInfo[0].admDate + '</span>';
 	htmlStr += splitor
-			+ '<span class="spancolorleft">诊断:</span> <span class="spancolor">'
+			+ '<span class="spancolorleft">'+$g("诊断")+':</span> <span class="spancolor">'
 			+ patientInfo[0].mainDiagnos + '</span>';
 	$('#patientInfo').append(htmlStr);
 	jQuery(".patientInfo").css("display", "inline-block");
@@ -242,7 +242,7 @@ function setViewForm()
 					"</div>"+
 					"<div id='BrowseCategory'  style='width:70%; scrolling:no;background-color:lightblue'></div>"+
 				"</div>"
-	addTab("tabBrowse","BrowseInEpisode","药历浏览",content1,false,true);
+	addTab("tabBrowse","BrowseInEpisode",$g("药历浏览"),content1,false,true);
 	$(".tabs-inner").hide(); //隐藏药历浏览tab头
 }
 
@@ -261,7 +261,7 @@ function loadHisDoc()
 				var data = eval(d);
 				for (var i=0;i<data.length;i++){
 					var url = formatUrl(data[i].url);
-					var countent = '<iframe id="iframeTabs" frameborder="0" src="'+url+'" style=" width:1320px; height:500px;scrolling:no;"></iframe>';
+					var countent = '<iframe id="iframeTabs" frameborder="0" src="'+url+'&MWToken='+websys_getMWToken()+'" style=" width:1320px; height:500px;scrolling:no;"></iframe>';
 					addTab("tabBrowse","his"+i,data[i].title,countent,false,false);
 				}
 			}
@@ -330,8 +330,8 @@ function setRecordList(data)
 		var content = "<iframe style='width:99%;height:700px'></iframe>";
 		$('#BrowseCategory').append(content);
 		$.messager.show({
-				title:'提示信息',
-				msg:'此次就诊没有药历!!'
+				title:$g('提示信息'),
+				msg:$g('此次就诊没有药历!!')
 			});
 		return;
 	}
@@ -409,7 +409,7 @@ function initRecord(obj)
 	tempParam = setTempParam(obj);
 	var src = "dhcpha.record.browse.browsform.editor.csp?id="+tempParam.id+"&text="+tempParam.text+"&chartItemType="+tempParam.chartItemType
         + "&pluginType="+tempParam.pluginType+"&emrDocId="+tempParam.emrDocId
-        + "&characteristic=1" + "&status=BROWSE" + "&episodeId=" + episodeID + "&patientId=" + patientID;	
+        + "&characteristic=1" + "&status=BROWSE" + "&episodeId=" + episodeID + "&patientId=" + patientID + "&MWToken="+websys_getMWToken();	
 	var content = "<iframe id='frameBrowseCategory' src='" + src + "' style='width:99%;height:700px;frameborder='0';scrolling='no''></iframe>";
 	$('#BrowseCategory').append(content);
 }
@@ -423,7 +423,7 @@ function loadRecords(obj)
 		tempParam = setTempParam(obj);
 		var src = "dhcpha.record.browse.browsform.editor.csp?id="+tempParam.id+"&text="+tempParam.text+"&chartItemType="+tempParam.chartItemType
         + "&pluginType="+tempParam.pluginType+"&emrDocId="+tempParam.emrDocId
-        + "&characteristic=1" + "&status=BROWSE" + "&episodeId=" + episodeID + "&patientId=" + patientID;
+        + "&characteristic=1" + "&status=BROWSE" + "&episodeId=" + episodeID + "&patientId=" + patientID + "&MWToken="+websys_getMWToken();
         
 		var contents="<iframe id='frameBrowseCategory' src='" + src + "' style='width:99%;height:700px;scrolling:no;frameborder:0'></iframe>";
 		$('#BrowseCategory').append(contents);
@@ -464,8 +464,8 @@ function setRecordLists(data)
 		var content = "<iframe style='width:99%;height:700px'></iframe>";
 		$('#BrowseCategorys').append(content);
 		$.messager.show({
-				title:'提示信息',
-				msg:'此次就诊没有病历!!'
+				title:$g('提示信息'),
+				msg:$g('此次就诊没有病历!!')
 			});
 		return;
 	}
@@ -518,7 +518,7 @@ function initRecords(obj)
 	tempParam = setTempParam(obj);
 	var src = "emr.record.browse.browsform.editor.csp?id="+tempParam.id+"&text="+tempParam.text+"&chartItemType="+tempParam.chartItemType
         + "&pluginType="+tempParam.pluginType+"&emrDocId="+tempParam.emrDocId
-        + "&characteristic=1" + "&status=BROWSE" + "&episodeId=" + episodeID + "&patientId=" + patientID;	
+        + "&characteristic=1" + "&status=BROWSE" + "&episodeId=" + episodeID + "&patientId=" + patientID + "&MWToken="+websys_getMWToken();	
 	var content = "<iframe id='frameBrowseCategorys' src='" + src + "' style='width:99%;height:700px;frameborder='0';scrolling='no''></iframe>";
 	$('#BrowseCategorys').append(content);
 }
@@ -532,7 +532,7 @@ function loadRecordss(obj)
 		tempParam = setTempParam(obj);
 		var src = "emr.record.browse.browsform.editor.csp?id="+tempParam.id+"&text="+tempParam.text+"&chartItemType="+tempParam.chartItemType
         + "&pluginType="+tempParam.pluginType+"&emrDocId="+tempParam.emrDocId
-        + "&characteristic=1" + "&status=BROWSE" + "&episodeId=" + episodeID + "&patientId=" + patientID;
+        + "&characteristic=1" + "&status=BROWSE" + "&episodeId=" + episodeID + "&patientId=" + patientID + "&MWToken="+websys_getMWToken();
         
 		var contents="<iframe id='frameBrowseCategorys' src='" + src + "' style='width:99%;height:700px;scrolling:no;frameborder:0'></iframe>";
 		$('#BrowseCategorys').append(contents);
@@ -561,9 +561,9 @@ function CollectTalk(){
 		//记录用户(收藏药历)行为
     	AddActionLog(userID,userLocID,"FavoritesAdd",""); 
 		var arr = {"userId":userID,"userLocId":userLocID};
-	    var tempFrame = "<iframe id='iframeFavAdd' scrolling='auto' frameborder='0' src='dhcpha.clinical.favorite.add.csp?EpisodeID="+episodeID+"&categoryId="+categoryId+"&templateId="+templateId+ "' style='width:450px; height:450px; display:block;'></iframe>";
+	    var tempFrame = "<iframe id='iframeFavAdd' scrolling='auto' frameborder='0' src='dhcpha.clinical.favorite.add.csp?EpisodeID="+episodeID+"&categoryId="+categoryId+"&templateId="+templateId+ "&MWToken="+websys_getMWToken()+"' style='width:450px; height:450px; display:block;'></iframe>";
 	    document.getElementById("browsepage").style.visibility="hidden";
-	    createDialog("dialogFavAdd","添加收藏","454","490","iframeFavAdd",tempFrame,favAddCallback,arr);
+	    createDialog("dialogFavAdd",$g("添加收藏"),"454","490","iframeFavAdd",tempFrame,favAddCallback,arr);
 	});
 	
 		//添加收藏回调记录日志
@@ -684,22 +684,22 @@ function buttonRightOrLeft()
 
 //点击tabs链接页面变化情况
 function selectTabsUrlTo(){
-	if(tabSelectName=="过敏史"){
+	if(tabSelectName==$g("过敏史")){
 		 tabUrl="epr.chart.csp?PatientID="+patientID+"&EpisodeID="+episodeID+"&EpisodeIDs=&mradm="+episodeID+"&ChartID=19&PAAdmTransactionID=&OperRoomID=&DischID=&CurrDischID=&DischEpisodes=&doctype=&TWKFL=&TWKFLI=&TimeLine=&ConsultID=&ConsultEpisodeID=981&copyOeoris=&copyTo="
 	}
-	if(tabSelectName=="检查报告"){
+	if(tabSelectName==$g("检查报告")){
 		tabUrl="epr.chart.csp?PatientID="+patientID+"&EpisodeID="+episodeID+"&EpisodeIDs=&mradm="+episodeID+"&ChartID=23&PAAdmTransactionID=&OperRoomID=&DischID=&CurrDischID=&DischEpisodes=&doctype=&TWKFL=&TWKFLI=&TimeLine=&ConsultID=&ConsultEpisodeID=981&copyOeoris=&copyTo="
 	}
-	if(tabSelectName=="检验报告"){
+	if(tabSelectName==$g("检验报告")){
 		tabUrl="websys.csp?TDIRECTPAGE=jquery.easyui.dhclaborder.csp&PatientID="+patientID+"&EpisodeID="+episodeID+"&EpisodeIDs=&mradm="+episodeID+"&ChartID=98&PAAdmTransactionID=&OperRoomID=&DischID=&CurrDischID=&DischEpisodes=&doctype=&TWKFL=&TWKFLI=&TimeLine=&ConsultID=&ConsultEpisodeID=161&copyOeoris=&copyTo="
 	}
-	if(tabSelectName=="病理"){
+	if(tabSelectName==$g("病理")){
 		tabUrl="epr.chart.csp?PatientID="+patientID+"&EpisodeID="+episodeID+"&EpisodeIDs=&mradm="+episodeID+"&ChartID=140&PAAdmTransactionID=&OperRoomID=&DischID=&CurrDischID=&DischEpisodes=&doctype=&TWKFL=&TWKFLI=&TimeLine=&ConsultID=&ConsultEpisodeID=613&copyOeoris=&copyTo="
 	}
-	if(tabSelectName=="医嘱"){
+	if(tabSelectName==$g("医嘱")){
 		tabUrl="websys.csp?TDIRECTPAGE=websys.default.csp&WEBSYS.TCOMPONENT=DHCFAdmOrder&PatientID="+patientID+"&EpisodeID="+episodeID+"&EpisodeIDs=&mradm="+episodeID+"&ChartID=22&PAAdmTransactionID=&OperRoomID=&DischID=&CurrDischID=&DischEpisodes=&doctype=&TWKFL=&TWKFLI=&TimeLine=&ConsultID=&ConsultEpisodeID=161&copyOeoris=&copyTo="
 	}
-	var countents = '<iframe id="iframeTabs" frameborder="0" src="'+tabUrl+'" style=" width:1320px; height:500px;scrolling:no;"></iframe>';
+	var countents = '<iframe id="iframeTabs" frameborder="0" src="'+tabUrl+'&MWToken='+websys_getMWToken()+'" style=" width:1320px; height:500px;scrolling:no;"></iframe>';
 	var tab = $('#tabBrowse').tabs('getSelected');
 		$('#tabBrowse').tabs('update', {
 			tab: tab,

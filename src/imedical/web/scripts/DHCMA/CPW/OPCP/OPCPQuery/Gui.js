@@ -65,16 +65,19 @@ function InitCheckQueryWin(){
 			{field:'CPWDesc',title:'路径名称',width:'250'}, 
 			{field:'CPWStatus',title:'路径状态',width:'50',
 				 styler: function(value,row,index){
-					if (value=="入径") {
-						retStr =  'color:blue;';
-					} else if (value=="完成") {
-						retStr = 'color:green;';
-					}else if (value=="出径") {
-						retStr = 'color:red;';
-					} else {
-						retStr = 'color:black;';
-					} 
-					return retStr;
+					if ((typeof HISUIStyleCode === 'undefined') || (HISUIStyleCode=="blue")){
+						if (value=="入径") {
+							retStr =  'color:blue;';
+						} else if (value=="完成") {
+							retStr = 'color:green;';
+						}else if (value=="出径") {
+							retStr = 'color:red;';
+						} else {
+							retStr = 'color:black;';
+						} 
+						return retStr;
+					}
+					
 				}
 			},  
 			//{field:'PatCost',title:'总费用',width:'100'}, 
@@ -97,6 +100,13 @@ function InitCheckQueryWin(){
                 return false;
             }
             return true;
+		},
+		onLoadSuccess:function(data){
+			if (typeof HISUIStyleCode !== 'undefined'){
+				if (HISUIStyleCode=="lite"){
+					$("#center .hisui-panel").attr("style","border-color:#E2E2E2;border-top:0;border-radius:0 0 4px 4px;")
+				}
+			}
 		}
 	});
 	obj.GetPathwayVisit = $HUI.datagrid("#PathVisitByaEpisodeID",{
@@ -117,14 +127,16 @@ function InitCheckQueryWin(){
 			{field:'DiagnoseF',title:'西医诊断',width:'150'}, 
 			{field:'CPWStatus',title:'状态',width:'80',
 				 styler: function(value,row,index){
-					if (value=="就诊入径") {
-						retStr =  'color:blue;';
-					}else if(value="未入径"){
-						retStr = 'color:red'
-					}else {
-						retStr = 'color:black;';
-					} 
-					return retStr;
+					 if ((HISUIStyleCode=="blue")||(typeof HISUIStyleCode === 'undefined')){
+						if (value=="就诊入径") {
+							retStr =  'color:blue;';
+						}else if(value="未入径"){
+							retStr = 'color:red'
+						}else {
+							retStr = 'color:black;';
+						} 
+						return retStr;
+					 }
 				}
 			}, 
 			//{field:'PatCost',title:'总费用',width:'80'}, 
@@ -142,6 +154,13 @@ function InitCheckQueryWin(){
                 return false;
             }
             return true;
+		},
+		onLoadSuccess:function(data){
+			if (typeof HISUIStyleCode !== 'undefined'){
+				if (HISUIStyleCode=="lite"){
+					$("#winPathVisit .hisui-panel").attr("style","border-color:#E2E2E2;border-radius:4px;")
+				}
+			}
 		}
 	});
 	obj.GridPathVisit = $HUI.datagrid("#GridPathVisit",{
@@ -164,14 +183,16 @@ function InitCheckQueryWin(){
 			{field:'DiagnoseF',title:'西医诊断',width:'100'}, 
 			{field:'CPWStatus',title:'状态',width:'80',
 				 styler: function(value,row,index){
-					if (value=="就诊入径") {
-						retStr =  'color:blue;';
-					} else if(value="未入径"){
-						retStr = 'color:red'
-					}else {
-						retStr = 'color:black;';
-					}  
-					return retStr;
+					 if ((HISUIStyleCode=="blue")||(typeof HISUIStyleCode === 'undefined')){
+						if (value=="就诊入径") {
+							retStr =  'color:blue;';
+						} else if(value="未入径"){
+							retStr = 'color:red'
+						}else {
+							retStr = 'color:black;';
+						}  
+						return retStr;
+					 }
 				}
 			}, 
 			//{field:'PatCost',title:'总费用',width:'80'},
@@ -189,6 +210,13 @@ function InitCheckQueryWin(){
                 return false;
             }
             return true;
+		},
+		onLoadSuccess:function(data){
+			if (typeof HISUIStyleCode !== 'undefined'){
+				if (HISUIStyleCode=="lite"){
+					$("#winGridPathVisit .hisui-panel").attr("style","border-color:#E2E2E2;border-radius:4px;")
+				}
+			}
 		}
 	});
 	

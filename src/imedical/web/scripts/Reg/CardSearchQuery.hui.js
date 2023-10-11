@@ -167,7 +167,7 @@ function RegReturnListTabDataGridLoad(){
 	    //NewInMedicareNo:"",
 	    InsuranceNo:$("#InsuranceNo").val(),
 	    EmMedicare:$("#EmMedicare").val(),
-	    ExpStr:EmployeeNo+"^"+Hospital+"^"+PatientNo,
+	    ExpStr:EmployeeNo+"^"+Hospital+"^"+PatientNo+"^^"+session['LOGON.HOSPID'],
 	    Pagerows:PageLogicObj.m_CardListTabDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
 		PageLogicObj.m_CardListTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
@@ -222,6 +222,9 @@ function CardNoKeyDownCallBack(myrtn){
 		var CardNo=myary[1]
 		$("#CardTypeRowID").val(myary[8]);
 		$("#CardNo").focus().val(CardNo);
+		if ($("#CardTypeNew").val()==""){
+			$("#CardTypeNew").val(CardTypeNew);	
+		}
 		RegReturnListTabDataGridLoad();
 	}else if(rtn=="-200"){
 		$.messager.alert("提示","卡无效!","info",function(){
@@ -286,6 +289,7 @@ function ReadRegInfoOnClick(){
 		$("#BirthDay").val(Birth);
 		$("#CredNo").val(CredNo);
 		$("#Name").val(Name);
+		BirthDayChange();
 		RegReturnListTabDataGridLoad();
 		}
 	}

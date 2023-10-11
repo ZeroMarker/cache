@@ -23,16 +23,21 @@
 /// 备注0:放大镜选择模式 1:手工录入模式,并自动更新机型表 2:两种均可
 /// -------------------------------
 
-//Add by jdl 2010-12-04 导入验收单的附件信息及发票信息
 var AffixInfos;
 var InvoiceInfos;
-//	Mozy0242	2020-01-02	1150896
 var inflag,outflag;
 var auditflag="Y";	//审核操作标志
-// Mozy0255	1190551		2020-3-6
 var TMPProviderDR="";
 var Timeout=2300;
-var setReqFlag=0	//modified by ZY0227 2020-05-06
+var setReqFlag=0
+var LocListFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","201015");
+var VendorFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo",201016);
+//Add By QW20210913 BUG:QW0147 增加补打标记	begin
+var PrintBuss=tkMakeServerCall("web.DHCEQCommon","GetSysInfo",990087);
+var PrintNumFlag=tkMakeServerCall("web.DHCEQCommon","Find",PrintBuss,"11","N");
+var ExclusiveType=""	///add by ZY 20220913 2907381、2907386、2907390
+//Add By QW20210913 BUG:QW0147 增加补打标记   end
+var OriginIDs=tkMakeServerCall("web.DHCEQCommon","GetSysInfo",990060);   //add by zc0125 2022-11-14 获取不计提折旧的设备来源
 function BodyLoadHandler() 
 {
 	var Status=GetElementValue("Status");
@@ -44,32 +49,37 @@ function BodyLoadHandler()
 	{
 		//tbl.deleteRow(Row2)
 	}
-	InitStyle("FileNo","7");
+	InitStyle("LeaveFactoryNo","7");
 	InitUserInfo();
+	
+	initEquipAttributeCat();	//设备属性分类 czf 2022-04-14
 	InitEvent();	//初始化
 	FillData();
 	SelfFunds_Change();
 	SetEnabled();
 	InitEditFields(GetElementValue("ApproveSetDR"),GetElementValue("CurRole")); //add by QW 2017-12-01 bug号:QW0009 增加验收可编辑字段
-	KeyUp("EquiCat^Unit^UseLoc^Currency^Service^PurposeType^Country^BuyType^Model^EquipType^PurchaseType^StatCat^Origin^FromDept^ManuFactory^Provider^Contract^InstallLoc^PackType^CheckType^StoreLoc^WorkLoadUnit^DepreMethod^Brand^SStruct^Location^Expenditures^id4Desc","N");	//清空选择 Modify by zx 2020-02-25 BUG ZX0077
-	Muilt_LookUp("EquiCat^Unit^UseLoc^Currency^Service^PurposeType^Country^BuyType^Model^EquipType^PurchaseType^StatCat^Origin^FromDept^Name^ManuFactory^Provider^Contract^InstallLoc^PackType^CheckType^StoreLoc^WorkLoadUnit^DepreMethod^Brand^SStruct^id4Desc");
+	KeyUp("EquiCat^Unit^UseLoc^Currency^Service^PurposeType^Country^BuyType^Model^EquipType^PurchaseType^StatCat^Origin^FromDept^ManuFactory^Provider^Contract^InstallLoc^PackType^CheckType^StoreLoc^WorkLoadUnit^DepreMethod^Brand^SStruct^Location^Expenditures^id4Desc^OCLAuthorizeDept^OCLBuyMode^OCLUseSubject","N");	//清空选择 Modify by zx 2020-02-25 BUG ZX0077
+	Muilt_LookUp("EquiCat^Unit^UseLoc^Currency^Service^PurposeType^Country^BuyType^Model^EquipType^PurchaseType^StatCat^Origin^FromDept^Name^ManuFactory^Provider^Contract^InstallLoc^PackType^CheckType^StoreLoc^WorkLoadUnit^DepreMethod^Brand^SStruct^id4Desc^OCLAuthorizeDept^OCLBuyMode^OCLUseSubject");
 	
 	Muilt_LookUp("OpenCheckDate^CheckDate^MakeDate^LeaveFactoryDate^Location^Expenditures");
 	Muilt_Tab("Code^Quantity^OriginalFee^NetRemainFee^LimitYearsNum^MemoryCode^ServiceTel^DesignWorkLoadNum^ContractNo^ProviderHandler^ProviderTel^Hold1");
 	//Muilt_Tab("PackageState^FileState^ConfigState^AffixState^RunningState^OpenState^CheckResult");
-	initButtonWidth("BOtherFunds,BMasterItem")  //hisui改造：修改界面按钮长度不一致 add by lmm 2018-08-20	//modif
-	//modify by lmm 2019-08-22 增加类组入参
+	initButtonColor();		//czf 2023-01-10 设置极简积极按钮颜色
+	showBtnIcon("BMasterItem^BOtherLoc^BOtherFunds",true); //czf 2023-01-10 设置显示按钮图标
+	initPanelHeaderStyle();
+	initButtonWidth("BOtherFunds,BMasterItem,BOtherLoc")  //hisui改造：修改界面按钮长度不一致 add by lmm 2018-08-20	//modif
 	InitName();			// Mozy003016		2020-04-24		初始化"设备名称"	singlelookup("Name","EM.L.GetMasterItem",[{name:"EquipTypeDR",type:4,value:"EquipTypeDR"},{name:"StatCatDR",type:2,value:''},{name:"Name",type:1,value:"Name"}],GetMasterItem)  //hisui改造：初始化设备项下拉框 add by lmm 2018-08-17
 	setButtonText();	////HISUI改造 add by lmm 20180928
 	var status=GetElementValue("Status")
 	hideButton(status);			//HISUI改造 add by lmm 20180928
 	//fixButton();   //HISUI改造 add by czf 20181119 
 	SetTableMarginbottom()	//HISUI改造 add by czf 20181211
-	document.getElementById("cEquipAttributeList").style.cssText = 'color:#017bce; border-left:4px #017bce solid; padding-left:3px;';	//czf 20200217  1195193
+	///modified by ZY20230321 bug:3163824
+	//document.getElementById("cEquipAttributeList").style.cssText = 'color:#017bce; border-left:4px #017bce solid; padding-left:3px;';	//czf 20200217  1195193
 	disableElement("Item",true);		//modified by czf 1218659
 	if (tkMakeServerCall("web.DHCEQCommon","GetSysInfo",990079)!=1) hiddenObj("BEquipConfig",1);	//Mozy003002	2020-03-18	屏蔽附属设备模块
-	//modified by ZY0227 2020-05-06
 	setUseLocRequired("")
+	if (LocListFlag!=1) hiddenObj("BOtherLoc",1);
 }
 ///add by czf 20190212
 ///描述：hisui改造 原值和数量变动时更新设备的自筹资金和其他资金
@@ -103,7 +113,6 @@ var throttle = function (fn, delay) {
 }
 throttle(BUpdate_Clicked)
 
-
 function InitEvent() //初始化
 {
 	var obj=document.getElementById("BUpdate");
@@ -133,19 +142,15 @@ function InitEvent() //初始化
 	if (obj) obj.onchange=ValueClear;
 	var obj=document.getElementById(GetLookupName("EquiCat")); //2010-05-25 党军 设备分类以树状结构显示
 	if (obj) obj.onclick=EquiCat_Click;
-	//hisui改造 modify by lmm 2018-08-18 begin 不调用
 	//var obj=document.getElementById(GetLookupName("Name"));
 	//if (obj) obj.onclick=Equip_Click;
-	//hisui改造 modify by lmm 2018-08-18 end
-
 	var ModelOperMethod=GetElementValue("GetModelOperMethod") //2009-07-09 党军 begin DJ0016
 	/*
 	if (ModelOperMethod==1) //1:手工录入 0:放大镜选择操作.
 	{
 		document.getElementById("ld"+GetElementValue("GetComponentID")+"iModel").removeNode(true)
-	} //2009-07-09 党军 end
+	}
 	*/
-	//2009-10-26 ZY begin ZY0013
 	var GetManuFactoryOperMethod=GetElementValue("GetManuFactoryOperMethod")
 	var GetProviderOperMethod=GetElementValue("GetProviderOperMethod")
 	var GetLocationOperMethod=GetElementValue("GetLocationOperMethod")
@@ -175,15 +180,20 @@ function InitEvent() //初始化
 	if (obj) obj.onclick=BPicture_Clicked; //2009-08-21 党军 end
 	var obj=document.getElementById("Configuration");
 	if (obj) obj.onclick=Configuration_Clicked;
-	//add by jdl 2009-9-12 JDL0029
 	var obj=document.getElementById(GetLookupName("Currency"));
 	if (obj) obj.onclick=Currency_Click;
-	//add by jdl 2010-4-19
 	var obj=document.getElementById("BPrint");
 	if (obj) obj.onclick=BPrint_Clicked; 
+	///add by zyq 2022-11-16 begin
+	var obj=document.getElementById("BPrintBar");
+	if (obj) obj.onclick=BPrintBar_Clicked;///add by zyq 2022-11-16 end
 	var obj=document.getElementById("BPayPlan"); //HISUI改造 add by czf 20190926
 	if (obj) obj.onclick=MenuPayPlan; 
-	
+	var obj=document.getElementById("BProxy"); 
+	if (obj) obj.onclick=BProxy_Clicked;   //授权资质
+	// MZY0156	3373159		2023-03-24
+	var obj=document.getElementById("BPrintConfig");
+	if (obj) obj.onclick=BPrintConfig_Clicked;
 	///Add by JDL 2010-11-22 JDL0060
 	///根据验收单模板信息导入验收单
 	var obj=document.getElementById("BImport");
@@ -210,21 +220,29 @@ function InitEvent() //初始化
 	if (obj) obj.onclick=BScan_Clicked;
 	var obj=document.getElementById("LeaveFactoryNo");      //Add By JYP 2017-04-15
 	if (obj) obj.onchange=LeaveFactoryNoChange;
-	//// Mozy0217  2018-11-01
 	var obj=document.getElementById("BEquipConfig");
 	if (obj) obj.onclick=BEquipConfig_Clicked;
 	var obj=document.getElementById("BConfig");		
 	if (obj) obj.onclick=BConfig_Clicked;
 	//var obj=document.getElementById("BConfigNew");		// Mozy  2019-5-30	取消该按钮事件
 	//if (obj) obj.onclick=BConfigNew_Clicked;
-	//add by lmm 2019-08-21 begin 打印入库单
 	var obj=document.getElementById("BInStockPrint");
 	if (obj) obj.onclick=BInStockPrint_Clicked;	
 	var obj=document.getElementById("BStoreMovePrint");
 	if (obj) obj.onclick=BStoreMovePrint_Clicked;	
-	//add by lmm 2019-08-21 end
 	var obj=document.getElementById("BMasterItem");		//add by czf 1218659
 	if (obj) obj.onclick=BMasterItem_Clicked;
+	var obj=document.getElementById("BSelfCancelSubmit");  //Add By wy 2020-8-18 1453189当前申请单撤回
+    if (obj) obj.onclick=BSelfCancelSubmit_Clicked;
+	var obj=document.getElementById("BOtherLoc");
+	if (obj) obj.onclick=BOtherLoc_Clicked;
+	var obj=document.getElementById("BEvaluate");
+	if (obj) obj.onclick=BEvaluate_Clicked;
+    ///add by ZY 20220913 2907381、2907386、2907390
+    var obj=document.getElementById("BExclusive");
+    if (obj) obj.onclick=BExclusive_Clicked;
+    	var obj=document.getElementById("BContract");	//czf 2022-09-26
+	if (obj) obj.onclick=BContract_Clicked;
 }
 
 function CheckNull()
@@ -243,7 +261,7 @@ function CheckNull()
 	}
 	if (CheckItemNull(1,"Name")) return true;
 	//Provider^ManuFactory^Model^Location不做必填项DR是否为空的验证 modified by czf 773715
-	if (CheckMustItemNull("Provider^ManuFactory^Model^Location")) return true;
+	if (CheckMustItemNull("Provider^ManuFactory^Model^Location^Brand")) return true;
 	
 	if (($("#Provider").attr("data-required")=="true"))
 	{
@@ -314,7 +332,7 @@ function BAudit_Clicked()
 	}
 	else if (inflag==2)
 	{
-		messageShow("confirm","","","是否进行自动入库操作?","",ConfirmInStock,DisConfirmInStock);
+		messageShow("confirm","","","验收审核完毕,是否进行自动入库操作?","",ConfirmInStock,DisConfirmInStock,"是","否");
 	}
 	else
 	{
@@ -372,6 +390,10 @@ function OptAudit()
     if (RtnObj.SQLCODE==0) //Modified By QW20200108 BUG:QW0035 end 解析返回值
     {
 	    alertShow("审核成功!");   // add by kdf 2018-01-17 需求号：517240、517270
+	    //modify by zx 2022-04-11 bug ZX0144
+		if (typeof(eval(websys_showModal("options").mth)) == "function") {
+			websys_showModal("options").mth("11");
+		}
 	    window.location.reload(true);
 	    //var url=window.location.href
 	    //if(url.indexOf("killcache=1")!=-1)  url=url.replace(/killcache=1/,"killcache=0") //GR0026 新窗口打开模态窗口,通过改变参数值解决预缓存问题？
@@ -380,31 +402,73 @@ function OptAudit()
 	}
     else
     {
-	    messageShow("","","",t["02"]);
+	    messageShow('alert','error','提示',RtnObj.Data);
     }
 }
 
+///modified by ZY 2826780 增加授权管理.
+///modified by ZY0271 20210616 提交的时候增加明细的校验提示.
 function BSubmit_Clicked()
 {
-	/*
-	//检测是否有资质信息
-  	var encmeth=GetElementValue("CheckEquipZZ")
-  	if (encmeth=="") return;
-  	var CheckListDR=GetElementValue("CheckListDR")
-	var CheckReturn=cspRunServerMethod(encmeth,CheckListDR,"DHCEQ0007");
-	if (CheckReturn==1)
+    ///验收提交是否使用授权管理维护功能 0:不启用1：启用提示，用户可选择是否维护代理授权 2：管控限制代理授权闭环
+    var ProxyFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","201017");
+    if (ProxyFlag>0)
+    {
+        ///检测是否有授权，如果没有
+        var rowid=GetElementValue("RowID"); 
+        var ProxyInfo=tkMakeServerCall("web.DHCEQ.Plat.CTProduct","GetProxyInfo","2",rowid);
+        if (ProxyInfo==0)
+        {
+            if (ProxyFlag==1)
+            {
+                messageShow("confirm","info","提示","产品没有授权,是否维护授权证书?","",function(){
+                        productProxyAuthorization()
+                    },function(){
+                        CheckLocList()
+                },"维护","放弃");
+            }
+            else
+            {
+                productProxyAuthorization()
+            }
+        }
+        else
+        {
+            CheckLocList()
+        }
+        
+    }
+    else
+    {
+        CheckLocList()
+    }
+}
+
+function CheckLocList()
+{
+	///modified by ZY0271 20210616 提交的时候增加明细的校验提示.
+	if (LocListFlag==1)
 	{
-		alertShow("请先确认所有资质是否齐全!")
-		return
+		var rowid=GetElementValue("RowID");	
+		var result=tkMakeServerCall("web.DHCEQ.EM.BUSOpenCheckListLoc","CheckOpenCheckListLoc", rowid);
+		if (result!="")
+		{
+			messageShow("confirm","info","提示",result+"不能自动出库,是否继续提交验收单?","",function(){
+					setUseLocRequired(1);
+				},function(){
+				return;
+			},"继续","修改");
+		}
+		else
+		{
+			setUseLocRequired(1);
+		}
 	}
-	*/
-	//add by ZY0213
-	//Add By QW 20190410 BUG:QW0027 资金来源核算项目及功能分类
-	//var ISModified = window.confirm("是否需要修改核算项目?");
-	//if (ISModified) return;
-	//End By QW 20190410 BUG:QW0027 资金来源核算项目及功能分类
-	//modified by ZY0227 2020-05-06
-	setUseLocRequired(1);		//modified by CZF0108 20200508 1311684
+	else
+	{
+		setUseLocRequired(1); //modified by CZF0108 20200508 1311684
+	}
+			
 }
 
 //add by CZF0108 20200508 1311684
@@ -413,7 +477,7 @@ function CheckFinanceItem()
 {
 	if (setReqFlag!=0)
 	{
-		alertShow("使用科室不能为空！") //modified by czf 2020-05-09 1313467
+		alertShow("使用部门不能为空！");    // MZY0161	3521356,3525932		2023-05-12
 		return;
 	}
 	var rowid=GetElementValue("RowID");	
@@ -424,7 +488,7 @@ function CheckFinanceItem()
 		//modified by CZF0107 20200507
 		messageShow("confirm","info","提示","资金来源类型对应的核算项目有空值,是否需要修改?","",function(){
 			return;
-		},CheckQuantityNum);	
+		},CheckQuantityNum,"是","否");	
 	}
 	else if (finaceItemMode==2)
 	{
@@ -467,9 +531,9 @@ function CheckQuantityNum()
 		else if (QuantityNum>=list[0])
 		{
 			//modified by CZF0107 20200507
-			messageShow("confirm","info","提示","该单据的设备数量大于"+list[0]+",是否继续操作?","",CheckFeeArea,function(){
+			messageShow("confirm","info","提示","该单据的设备数量大于"+list[0]+",是否忽略?","",CheckFeeArea,function(){
 				return;
-			});
+			},"忽略","修改");
 		}
 		else
 		{
@@ -537,9 +601,9 @@ function CheckLeaveFactoryNoUnique()
 		{	msg="已有验收单使用此出厂编号,重复编号:"+list[1];		}
 		
 		//modified by CZF0107 20200507
-		messageShow("confirm","info","提示",msg+",是否继续操作?","",CheckLeaveFactoryNoNum,function(){
+		messageShow("confirm","info","提示",msg+",是否忽略?","",CheckLeaveFactoryNoNum,function(){
 			return;
-		});
+		},"忽略","修改");
 	}
 	else
 	{
@@ -594,7 +658,7 @@ function CheckLeaveFactoryNoNum()
 				//modified by CZF0107 20200507
 				messageShow("confirm","info","提示",dialogue,"",CheckFileNoNum,function(){
 					return;
-				});
+				},"忽略","修改");
 			}
 			else
 			{
@@ -649,7 +713,7 @@ function CheckFileNoNum()
 				//modified by CZF0107 20200507
 				messageShow("confirm","info","提示",dialogue,"",CheckFileNoUniqueness,function(){
 					return;
-				});
+				},"忽略","修改");
 			}
 		}
 		else
@@ -687,14 +751,19 @@ function CheckFileNoUniqueness()
 			if (sysinfo==1)
 			{
 				//modified by CZF0107 20200507
-				messageShow("confirm","info","提示",msg+",是否继续操作?","",submitData,function(){
+				messageShow("confirm","info","提示",msg+",是否忽略?","",submitData,function(){
 					return;
-				});
+				},"忽略","修改");
 			}
-			if (sysinfo==2)
+			///modified by ZY0299 2022-03-09  缺少一种情况处理
+			else if (sysinfo==2)
 			{
 				messageShow("","","",msg+",请核对修正信息!");
 		    		return 0;
+			}
+			else
+			{
+				submitData();
 			}
 		}
 		else
@@ -712,6 +781,26 @@ function CheckFileNoUniqueness()
 //提交验收单
 function submitData()
 {
+	///Modefied by ZC0081 2020-09-07 判断业务是否存在必须上传的内容 begin
+	var PicMustRtn=tkMakeServerCall("web.DHCEQ.Plat.LIBPicture","CheckMustUpLoad",'11',GetElementValue("RowID"),'0')
+	var PicMustInfo=PicMustRtn.split("^");
+	var PicFlag=PicMustInfo[0]
+	var PicTyp=PicMustInfo[2]
+	if (PicFlag=="1")
+	{
+		alertShow("有必须上传的"+PicTyp+"图片没有上传!") 
+		return ;
+	}
+	var FileMustRtn=tkMakeServerCall("web.DHCEQ.Plat.LIBPicture","CheckMustUpLoad",'11',GetElementValue("RowID"),'1')
+	var FileMustInfo=FileMustRtn.split("^");
+	var FileFlag=FileMustInfo[0]
+	var FileTyp=FileMustInfo[2]
+	if (FileFlag=="1")
+	{
+		alertShow("有必须上传的"+FileTyp+"文件没有上传!") 
+		return ;
+	}
+	///Modefied by ZC0081 2020-09-07 判断业务是否存在必须上传的内容  end
 	//20170327 Mozy0184	自动入库出库
 	var combindata=GetElementValue("RowID")+"^"+GetOpinion();
 	var AutoInOutInfo=cspRunServerMethod(GetElementValue("GetAutoInOut"),combindata);
@@ -739,7 +828,7 @@ function submitData()
 		}
 		else if (inflag==2)
 		{
-			messageShow("confirm","","","是否进行自动入库操作?","",ConfirmInStock,DisConfirmInStock);
+			messageShow("confirm","","","验收审核完毕,是否进行自动入库操作?","",ConfirmInStock,DisConfirmInStock,"是","否");
 		}
 		else
 		{
@@ -766,53 +855,69 @@ function OptSubmit()
 	//	Mozy0242	2020-01-02	1150896	end
 	//var result=cspRunServerMethod(encmeth,'','',rowid,'3','',inflag,outflag);
 	var result=cspRunServerMethod(encmeth,rowid,inflag,outflag,AutoAuditFlag);   //add by zc 2019-12-02 zc0054 添加AutoAuditFlag  设备入库时录入验收信息自动审核
-	//Modified By QW20200108 BUG:QW0035 begin 解析返回值
 	var RtnObj=JSON.parse(result)
-    if (RtnObj.SQLCODE==0) //Modified By QW20200108 BUG:QW0035 end 解析返回值
+    if (RtnObj.SQLCODE==0)
 	{
-		alertShow("提交成功!")  //add by kdf 2018-01-17 需求号:517227
+		alertShow("提交成功!")
 		//add by lmm 2019-05-07 begin
 		if (websys_showModal("options"))
 		{
-			//modify by lmm 2019-10-17 begin 提交不刷新问题
-			if (websys_showModal("options").mth)
-			{
-				var rowid=GetElementValue("RowID");
-				var CheckListDR=GetElementValue("CheckListDR")
-				var data={"ISStatus":"N","OCRRowID":rowid,"OCLRowID":CheckListDR}
-				var index="OpenCheck"
-				websys_showModal("options").mth(index,data);  //modify by lmm 2019-02-20
-				closeWindow("modal")
-			}
-			else
-			{
-				window.location.reload();
-				
-			}
-			//modify by lmm 2019-10-17 end
+            if (websys_showModal("options").mth)
+            {
+                var rowid=GetElementValue("RowID");
+                var CheckListDR=GetElementValue("CheckListDR")
+                var data={"ISStatus":"N","OCRRowID":rowid,"OCLRowID":CheckListDR}
+                var index="OpenCheck"
+                var url=window.location.href
+                if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+					url += "&MWToken="+websys_getMWToken()
+				}
+                //add by cjt 20220923 需求号2889543 增加try,finally
+                try{websys_showModal("options").mth(index,data);}  //modify by lmm 2019-02-20
+                finally{window.location.href=url;} //modify by zyq 2023-04-20
+                //closeWindow("modal");
+            }
+            else
+            {
+                window.location.reload();
+                
+            }
+		}  //调整一下逻辑 modified  zy 20220913 
+		else
+		{
+			//add by lmm 2019-05-07 end
+			window.location.reload();
+			/*var url=window.location.href
+			if(url.indexOf("killcache=1")!=-1)  url=url.replace(/killcache=1/,"killcache=0") //GR0026 新窗口打开模态窗口,通过改变参数值解决预缓存问题？
+			else 								url=url.replace(/killcache=0/,"killcache=1")
+			window.location.href=url */
 		}
-		//add by lmm 2019-05-07 end
-		window.location.reload();
-		/*var url=window.location.href
-	    if(url.indexOf("killcache=1")!=-1)  url=url.replace(/killcache=1/,"killcache=0") //GR0026 新窗口打开模态窗口,通过改变参数值解决预缓存问题？
-	    else 								url=url.replace(/killcache=0/,"killcache=1")
-	    window.location.href=url */
 	}
 	else
 	{
-		messageShow("","","",EQMsg(t["02"],result));
+		messageShow('alert','error','提示',RtnObj.Data);
 	}
 }
 
 function BCancelSubmit_Clicked()
 {
 	var rowid=GetElementValue("RowID");
+	/*		//modified by czf 2020-07-21 begin
 	var reason=GetElementValue("RejectReason");
 	if (reason=="")
 	{
 		alertShow("请输入拒绝原因!");
 		SetFocus("RejectReason") 	//2011-02-19 ZY0062
 		return;
+	}
+	*/
+	var ApproveRole=GetElementValue("CurRole");
+	var CurStep=GetElementValue("RoleStep");
+  	var reason=GetElementValue("Opinion_"+ApproveRole+"_"+CurStep) ;
+	if (reason==""){
+		alertShow("请输入"+GetElementValue("cOpinion_"+ApproveRole+"_"+CurStep)+"拒绝意见!");
+		SetFocus("Opinion_"+ApproveRole+"_"+CurStep);
+		return;		//modified by czf 2020-07-21 end
 	}
 	//modified by zy ZY0191  20191010  拆分开的取消提交代码
 	var val=rowid+"^"+GetElementValue("CurRole")+"^^^^"+reason+"^"; //Modified By QW20200108 BUG:QW0035 begin 参数与Audit保持一致
@@ -868,38 +973,101 @@ function DeleteOpenCheck()
 	var ATRowID=GetElementValue("ATRowID");
 	//modified by zy ZY0191  20191010  拆分开的删除代码
 	var result=cspRunServerMethod(encmeth,rowid,'1',AssetType+"^"+ATRowID);
-	result=result.replace(/\\n/g,"\n")
-	if (result>0)
+	//result=result.replace(/\\n/g,"\n")
+	var jsonData=JSON.parse(result)
+	if (jsonData.SQLCODE==0)
 	{
 		//window.location.href= 'websys.default.csp?WEBSYS.TCOMPONENT='+GetElementValue("GetComponentName")+'&Type=0&RowID='+result+"&CheckTypeDR="+GetElementValue("CheckTypeDR");	/// 20150327  Mozy0153
 		var url=window.location.href//GR0026 新窗口打开模态窗口,通过改变参数值解决预缓存问题？
 	    if(url.indexOf("killcache=1")!=-1)
 	    {
-		    window.location.href= 'websys.default.hisui.csp?WEBSYS.TCOMPONENT='+GetElementValue("GetComponentName")+'&killcache=0&Type=0&RowID=';	// Mozy0238		1135868		2019-12-13
+		    window.location.href= 'websys.default.hisui.csp?WEBSYS.TCOMPONENT='+GetElementValue("GetComponentName")+'&killcache=0&Type=0&RowID='+'&CheckTypeDR='+GetElementValue("CheckTypeDR");	// MODIFY BY MWZ0043 	2020-12-22
 	    }
 	    else
 	    {
-		    window.location.href= 'websys.default.hisui.csp?WEBSYS.TCOMPONENT='+GetElementValue("GetComponentName")+'&killcache=1&Type=0&RowID=';	// Mozy0238		1135868		2019-12-13
+		    window.location.href= 'websys.default.hisui.csp?WEBSYS.TCOMPONENT='+GetElementValue("GetComponentName")+'&killcache=1&Type=0&RowID='+'&CheckTypeDR='+GetElementValue("CheckTypeDR");	// MODIFY BY MWZ0043	2020-12-22
 	    }
 	}
 	else
 	{
-		messageShow("","","",t["02"]+",错误代码:"+result);
+		messageShow('alert','error','提示',jsonData.Data);
 	}
 }
 
-///修改:ZY 2009-10-30  zy0014
-///描述:修改设备验收单的录入信息
+// MZY0069	1766407		2021-02-18
+///描述:修改设备验收单的保存方法处理
 function BUpdate_Clicked()  
 {
-	//add by lmm 2018-09-13 begin 693735
+	///add by ZY0304 20220616
+	if (!charLegalCheck("CommonName^Model^Code^ManuFactory^Provider^ProviderHandler^ProviderTel^Location^Service^ServiceHandler^ServiceTel")) return true;
+	
+	var RProvDR=GetProviderRowID(GetProviderOperMethod)
+    if ((RProvDR<=0)&&(GetElementValue("Provider")!=""))
+    {
+	    alertShow("供应商登记错误!")
+	    return
+    }
+    TMPProviderDR=RProvDR;
+    var Data=tkMakeServerCall("web.DHCEQ.EM.BUSOpenCheckRequest","CheckConfigProvider", GetElementValue("RowID"), TMPProviderDR);
+	if (Data!="0")
+	{
+		messageShow("confirm","info","提示","是否将验收单的供应商同步更新至其附属设备?","",UpdateConfigProvider,updateData);
+	}
+	else
+	{
+		updateData();
+	}
+}
+
+function updateData()
+{
+	if (GetElementValue("OriginalFee")==parseInt(GetElementValue("OriginalFee")))
+	{
+		//alertShow("整数")
+	}
+	else
+	{
+		//alert("小数")
+		if (GetElementValue("OriginalFee")==parseFloat(GetElementValue("OriginalFee")).toFixed(1))
+		{
+			//alert("1位小数")
+		}
+		else
+		{
+			//alert("2位小数")
+			if (GetElementValue("OriginalFee")==parseFloat(GetElementValue("OriginalFee")).toFixed(2))
+			{
+				
+			}
+			else
+			{
+				alert("设备原值只允许两位小数!")
+				$("#OriginalFee").focus();
+				return
+			}
+		}
+	}
 	var LimitYearsNum=+GetElementValue("LimitYearsNum");
 	if (IsValidateNumber(LimitYearsNum,1,0,0,1)==0)    //modify by mwz 2017-10-25 需求号467117
 	{
 		alertShow("使用年限数据异常，请修正.");
 		return;
 	}
-	//add by lmm 2018-09-13 end 693735
+	var GuaranteePeriodNum=+GetElementValue("GuaranteePeriodNum");
+	if (IsValidateNumber(GuaranteePeriodNum,1,1,0,1)==0)
+	{
+		alertShow("保修期需为数字格式，请修正.");
+		return;
+	}
+	//add by ZY0303 20220614  2656914
+	var Hold12=GetElementValue("Hold12");
+	if (IsValidateNumber(Hold12,1,0,0,1)==0)
+	{
+		alertShow("功率应为数字格式，不含单位.");//modified by cjt 2022-07-20 需求号2742374 修改提示信息
+		$("#Hold12").focus();
+		return;
+	}
+	
 	var ModelOperMethod=GetElementValue("GetModelOperMethod")
 	var GetManuFactoryOperMethod=GetElementValue("GetManuFactoryOperMethod")
 	var GetProviderOperMethod=GetElementValue("GetProviderOperMethod")
@@ -944,7 +1112,6 @@ function BUpdate_Clicked()
 		    return
 	    } //2010-10-26 DJ end
     }
-    //2013-01-17 DJ begin
     var RModelDR=GetModelRowID(ModelOperMethod)
     if ((RModelDR<=0)&&(GetElementValue("Model")!=""))
     {
@@ -957,7 +1124,7 @@ function BUpdate_Clicked()
 	    alertShow("供应商登记错误!")
 	    return
     }
-    // Mozy0255	1190551		2020-3-6
+    /*		MZY0069	1766407		2021-02-18	注释
     TMPProviderDR=RProvDR;
     var Data=tkMakeServerCall("web.DHCEQ.EM.BUSOpenCheckRequest","CheckConfigProvider", GetElementValue("RowID"), TMPProviderDR);
     if (Data!=0)
@@ -965,7 +1132,7 @@ function BUpdate_Clicked()
 		messageShow("confirm","","","是否将验收单的供应商同步更新至其附属设备?","",UpdateConfigProvider,DisUpdate);
 		Timeout=Timeout+4000;
 		setTimeout(function(){},4000);
-	}
+	}*/
     var RManuDR=GetManuFactoryRowID(GetManuFactoryOperMethod)
     if ((RManuDR<=0)&&(GetElementValue("ManuFactory")!=""))
     {
@@ -984,7 +1151,6 @@ function BUpdate_Clicked()
 	    alertShow("品牌登记操作!")
 	    return
     }
-     //2013-01-17 DJ End
     if(GetElementValue("AssetType")==4)
     {
 	    if(GetElementValue("Quantity")>1)
@@ -1008,6 +1174,13 @@ function BUpdate_Clicked()
 				return
 			}
 		}
+	}
+	var CheckDate= GetElementValue("CheckDate");
+	var currentDate=GetCurrentDate()	
+	if(currentDate<CheckDate)
+	{
+		messageShow('alert','info','提示',"验收日期不应晚于当前日期！");//modify by zyq 2023-05-08 3431285
+		return
 	}
 	var combindata="";
     combindata=GetElementValue("RowID") ; //1
@@ -1075,20 +1248,20 @@ function BUpdate_Clicked()
     combindata=combindata+"^"+GetElementValue("ItemDR"); //62
     combindata=combindata+"^"+GetElementValue("Status"); //63
     combindata=combindata+"^"+GetElementValue("LeaveFactoryNo"); //64
-    combindata=combindata+"^"+GetElementValue("Hold1"); //65
+    combindata=combindata+"^"+GetElementValue("Hold1"); //65 发票号
     combindata=combindata+"^"+GetElementValue("Hold2"); //66
     combindata=combindata+"^"+GetElementValue("Hold3"); //67
     combindata=combindata+"^"+BrandDR; //68		//Modify DJ 2016-07-21
     //combindata=combindata+"^"+GetElementValue("Hold5"); //69
     combindata=combindata+"^"+GetElementValue("ExpendituresDR"); //69	经费来源
-    combindata=combindata+"^"+GetChkElementValue("BenefitAnalyFlag");//65
-    combindata=combindata+"^"+GetChkElementValue("CommonageFlag");//66
-    combindata=combindata+"^"+GetChkElementValue("AutoCollectFlag");//67
-    combindata=combindata+"^"+GetElementValue("HSourceType");//68
-    combindata=combindata+"^"+GetElementValue("SourceID");//69
-    combindata=combindata+"^"+GetElementValue("WorkLoadPerMonth");//70
-    combindata=combindata+"^"+GetElementValue("RequestHold1");//76
-    combindata=combindata+"^"+GetElementValue("RequestHold2");//77
+    combindata=combindata+"^"+GetChkElementValue("BenefitAnalyFlag");//70
+    combindata=combindata+"^"+GetChkElementValue("CommonageFlag");//71
+    combindata=combindata+"^"+GetChkElementValue("AutoCollectFlag");//72
+    combindata=combindata+"^"+GetElementValue("HSourceType");//73
+    combindata=combindata+"^"+GetElementValue("SourceID");//74
+    combindata=combindata+"^"+GetElementValue("WorkLoadPerMonth");//75
+    combindata=combindata+"^"+GetElementValue("RequestHold1");//76 验收单号
+    combindata=combindata+"^"+curSSHospitalID	//GetElementValue("RequestHold2");//77 医院ID czf 2021-09-01
     combindata=combindata+"^"+GetElementValue("RequestHold3");//78
     combindata=combindata+"^"+GetElementValue("RequestHold4");//79
     combindata=combindata+"^"+GetElementValue("RequestHold5");//80
@@ -1105,18 +1278,41 @@ function BUpdate_Clicked()
     combindata=combindata+"^"+GetElementValue("Hold9");
     combindata=combindata+"^"+GetElementValue("Hold10");
     combindata=combindata+"^"+GetElementValue("FileNo");
-    // Mozy0217  2018-11-01
     combindata=combindata+"^"+GetElementValue("ServiceHandler");	//94
     combindata=combindata+"^"+GetElementValue("ServiceTel");		//95
     combindata=combindata+"^"+GetElementValue("MeasureDate");		//96
     combindata=combindata+"^"+GetElementValue("MeasureNos");		//97
     combindata=combindata+"^"+GetElementValue("SalesManager");		//98	Mozy	2018-5-15
     combindata=combindata+"^"+GetElementValue("SalesManagerTel");	//99	Mozy	2018-5-15
-    combindata=combindata+"^"+GetElementValue("Hold11");	//100	zy	2018-5-15
-    combindata=combindata+"^"+GetElementValue("Hold12");	//101	zy	2018-5-15
-    combindata=combindata+"^"+GetElementValue("Hold13");	//102	zy	2018-5-15
-    combindata=combindata+"^"+GetElementValue("Hold14");	//103	zy	2018-5-15
-    combindata=combindata+"^"+GetElementValue("Hold15");	//104	zy	2018-5-15
+    combindata=combindata+"^"+GetElementValue("Hold11");		//100 产地
+    combindata=combindata+"^"+GetElementValue("Hold12");	//101	功率
+    combindata=combindata+"^"+GetElementValue("KeeperDR");	//102	保管人 keeperDR 记录保管人id  QW20220712
+    combindata=combindata+"^"+GetElementValue("Hold14");	//103	招标编号
+    combindata=combindata+"^"+GetElementValue("IsInstall");		//104 是否安装
+    combindata=combindata+"^"+GetElementValue("MFHandler");
+    combindata=combindata+"^"+GetElementValue("MFTel");
+    combindata=combindata+"^"+GetElementValue("TempBar");	// MZY0074	1904154		2021-04-30
+	combindata=combindata+"^"+GetElementValue("OCLConfigLicense");
+	combindata=combindata+"^"+GetElementValue("OCLNewOldPercent");
+	combindata=combindata+"^"+GetElementValue("OCLVoltage");
+	combindata=combindata+"^"+GetElementValue("OCLElectriccurrent");
+	combindata=combindata+"^"+GetElementValue("OCLUseYearsNum");
+	combindata=combindata+"^"+GetElementValue("OCLNote");
+	combindata=combindata+"^"+GetElementValue("OCLMaintNote");
+	combindata=combindata+"^"+GetElementValue("OCLHold16");
+	combindata=combindata+"^"+GetElementValue("OCLHold17");
+	combindata=combindata+"^"+GetElementValue("OCLHold18");
+	combindata=combindata+"^"+GetElementValue("OCLHold19");	
+	combindata=combindata+"^"+GetElementValue("OCLHold20");	
+    //modified by ZY 2913588,2913589,2913590
+    combindata=combindata+"^"+GetElementValue("OCLAuthorizeDeptDR");
+    combindata=combindata+"^"+GetElementValue("OCLUseSubjectDR");
+    combindata=combindata+"^"+GetElementValue("OCLBuyModeDR"); 
+    combindata=combindata+"^"+GetElementValue("OCLAccountDate"); 	//123
+    combindata=combindata+"^"+GetElementValue("ManageUserDR"); 		//124
+    combindata=combindata+"^"+GetElementValue("PurchaseDate");	//购入日期 125
+	combindata=combindata+"^"+GetElementValue("ManageCate");  //管理类别 txr 20230406 126
+    
     var OriginalFee=parseFloat(GetElementValue("OriginalFee"));
     if (OriginalFee<0)
     {
@@ -1148,48 +1344,74 @@ function BUpdate_Clicked()
 	if (encmeth=="") return;
 	
     // 专属信息		Mozy0145	20141017
-    var Info=GetAssetTypeInfo();
+	///modified by ZY 20220913 2907381、2907386、2907390
+    //var Info=GetAssetTypeInfo();
+    var Info="";
     //begin add by jyp 2019-09-02 设备属性相关调整
     var SelectType=$("#EquipAttributeList").keywords("getSelected");
 	var i=SelectType.length;
 	var EquipAttributeString=""
-	for (var j=0;j<i;j++)
+	if(i>0) //modified by sjh SJH0035 2020-09-22 start   修改设备属性不能完全删除的问题
 	{
-		//Modify by zx 2020-02-21 BUG ZX0077 属性后拼接属性分类
-		if(EquipAttributeString=="")
+		for (var j=0;j<i;j++)
 		{
-			EquipAttributeString=SelectType[j].id+"&"+GetElementValue(SelectType[j].id+"DR");
-		}else
-		{
-			EquipAttributeString=EquipAttributeString+"^"+SelectType[j].id+"&"+GetElementValue(SelectType[j].id+"DR");
+			//Modify by zx 2020-02-21 BUG ZX0077 属性后拼接属性分类
+			if(EquipAttributeString=="")
+			{
+				EquipAttributeString=SelectType[j].id+"&"+GetElementValue(SelectType[j].id+"DR");
+			}else
+			{
+				EquipAttributeString=EquipAttributeString+"^"+SelectType[j].id+"&"+GetElementValue(SelectType[j].id+"DR");
+			}
 		}
 	}
-	//end add by jyp 2019-09-02 设备属性相关调整
+	else
+	{
+		EquipAttributeString=""	
+	}
+	var EquipAttributeStringCat=""
+	if ($("#IHTDesc").lengt>0) EquipAttributeStringCat=$("#IHTDesc").combogrid("getValues");
+	EquipAttributeStringCat=EquipAttributeStringCat.toString();
+	
+	//end add by jyp 2019-09-02 2020-09-22 设备属性相关调整
 	disableElement("BUpdate",true)	//add by csj 2020-03-10 表单校验后禁用
     //modified by zy ZY0191  20191010  拆分开的保存代码
-	var result=cspRunServerMethod(encmeth,combindata,'2',Info,EquipAttributeString);
-	result=result.replace(/\\n/g,"\n")
-    if (result>0)
-    {
+	var result=cspRunServerMethod(encmeth,combindata,'2',Info,EquipAttributeString,'','',EquipAttributeStringCat,GetElementValue("InventoryExceptionDR"));  //Modefied by zc0125 2022-12-12 添加盘盈id
+	//result=result.replace(/\\n/g,"\n")
+	var jsonData=JSON.parse(result)
+	if (jsonData.SQLCODE==0)
+	{
 		// Mozy0238		1134965		2019-12-13
 	   	//window.location.href= 'websys.default.csp?WEBSYS.TCOMPONENT='+GetElementValue("GetComponentName")+'&Type=0&RowID='+result
 	    var url=window.location.href //新窗口打开模态窗口,通过改变参数值解决预缓存问题
-	    var str="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+GetElementValue("GetComponentName")+"&killcache=0&Type=0&RowID="+result+"&InStockFlag="+GetElementValue("InStockFlag")+"&CheckInStockType="+GetElementValue("CheckInStockType");
-	    if(url.indexOf("killcache=1")==-1) str="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+GetElementValue("GetComponentName")+"&killcache=1&Type=0&RowID="+result+"&InStockFlag="+GetElementValue("InStockFlag")+"&CheckInStockType="+GetElementValue("CheckInStockType")
+	    var str="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+GetElementValue("GetComponentName")+"&killcache=0&Type=0&RowID="+jsonData.Data+"&InStockFlag="+GetElementValue("InStockFlag")+"&CheckInStockType="+GetElementValue("CheckInStockType");
+	    if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			str += "&MWToken="+websys_getMWToken()
+		}
 	    messageShow("popover","","","操作成功!");	//默认延迟2秒
-		setTimeout(function(){window.location.href=str},Timeout);	//延迟 Mozy0255	1190551		2020-3-6
+	    //modfied by ZY0306 保存后更新查询列表界面
+            if (websys_showModal("options"))
+            {
+                if (websys_showModal("options").mth)
+                {
+                    //add by cjt 20220923 需求号2889543 增加try,finally
+                    try{websys_showModal("options").mth();}  //modify by lmm 2019-02-20
+                    finally{setTimeout(function(){window.location.href=str},Timeout);}
+                }
+                else
+                {
+                    setTimeout(function(){window.location.href=str},Timeout);                
+                }
+            }
+            else
+            {
+                setTimeout(function(){window.location.href=str},Timeout);   //延迟 Mozy0255   1190551     2020-3-6
+            }
 	}
     else
     {
 	    disableElement("BUpdate",false)	//add by csj 2020-03-10 保存失败后启用
-	    if (result=="-1015")
-	    {
-		    messageShow("","","",t[result])
-	    }
-	    else
-	    {
-		    messageShow("","","",t["02"]);
-	    }
+	    messageShow('alert','error','提示',jsonData.Data);
     }
 }
 
@@ -1211,10 +1433,13 @@ function ValueClear()
 	SetElement("OriginalFee","");
 	SetElement("Quantity","");
 	SetElement("LimitYearsNum","");
-	SetElement("Provider","");
-	SetElement("ProviderDR","");
+	//MZY0075	1900157		2021-05-20
+	//SetElement("Provider","");
+	//SetElement("ProviderDR","");
 	SetElement("FileNo","");
 	SetElement("ContractNo","");
+	$("#EquipAttributeList").keywords("clearAllSelected")	//属性分类清除 czf 2022-04-14
+	setElement("IHTDesc","");	//属性分类 czf 2022-04-14
 	SelfFunds_Change()
 }
 
@@ -1242,6 +1467,56 @@ function SetContractEnabled()
 ///描述:修改设备验收单的录入信息
 function FillData()
 {
+	//Modefied by zc0125 2022-12-12 盘盈验收处理 begin
+	var InventoryExceptionDR=GetElementValue("InventoryExceptionDR")
+	if (InventoryExceptionDR!="")
+	{
+		var jsonData=tkMakeServerCall("web.DHCEQ.EM.BUSInventory","GetOneIException",InventoryExceptionDR)
+	    jsonData=jQuery.parseJSON(jsonData);
+		if (jsonData.SQLCODE<0) {$.messager.alert(jsonData.Data);return;}
+		SetElement("Name", jsonData.Data["IEEquipName"]);
+		SetElement("CommonName", jsonData.Data["IEEquipName"]);
+		SetElement("Quantity","1");
+		SetElement("OriginalFee",jsonData.Data["IEOriginalFee"]);
+		SetElement("Model",jsonData.Data["IEModel"]);
+		SetElement("LocationDR",jsonData.Data["IELocationDR"]);	
+		SetElement("Location",jsonData.Data["IELocationDR_LDesc"]);	
+		SetElement("EquipTypeDR", jsonData.Data["IEEquipTypeDR"]);
+		SetElement("EquipType",jsonData.Data["IEEquipTypeDR_ETDesc"]);
+		SetElement("ProviderDR", jsonData.Data["IEProviderDR"]);
+		SetElement("Provider", jsonData.Data["IEProviderDR_VDesc"]);
+		SetElement("ManuFactoryDR",jsonData.Data["IEManuFactoryDR"]);
+		SetElement("ManuFactory",jsonData.Data["IEManuFactoryDR_MFName"]);
+		SetElement("LeaveFactoryNo",jsonData.Data["IELeaveFactoryNo"]);
+		SetElement("UseLocDR", jsonData.Data["IEUserLocDR"]);
+		SetElement("UseLoc", jsonData.Data["IEUserLocDR_CTLOCDesc"]);
+		SetElement("Brand",jsonData.Data["IEBrand"]);
+		SetElement("TempBar",jsonData.Data["IEEquipNo"]);
+		SetElement("KeeperDR",jsonData.Data["IEKeeperDR"]); 
+		SetElement("Keeper",jsonData.Data["IEKeeperDR_SSUSRName"]); 
+		var encmeth=GetElementValue("GetItemInfo");
+		var ItemInfo=cspRunServerMethod(encmeth,jsonData.Data["IEEquipName"],jsonData.Data["IEEquipTypeDR"]);		
+		if (ItemInfo=="")
+		{
+			alertShow(jsonData.Data["IEEquipName"]+":尚未定义设备项,请先定义设备项!");
+		    return ;
+		}
+		else
+		{
+			var list=ItemInfo.split("^");
+			SetElement("StatCatDR", list[4]);
+			SetElement("StatCat", list[28]);
+			SetElement("EquiCatDR", list[3]);
+			SetElement("EquiCat", list[27]);
+			SetElement("UnitDR", list[6]);
+			SetElement("Unit", list[29]);
+			SetElement("LimitYearsNum",list[31]);
+			SetElement("ItemDR",list[34]);
+			SetElement("Item",list[0]);
+			SetElement("NameDR",list[34]);
+		}
+	}
+	//Modefied by zc0125 2022-12-12 盘盈验收处理 end
 	var obj=document.getElementById("RowID");
 	var RowID=obj.value;
 	if ((RowID=="")||(RowID<1)){
@@ -1253,6 +1528,7 @@ function FillData()
 	ReturnList=ReturnList.replace(/\\n/g,"\n");
 	
 	list=ReturnList.split("^");
+	
 	SetElement("CheckTypeDR", list[1]);
 	SetElement("CheckType", list[2]);
 	SetElement("EquipTypeDR", list[3]);
@@ -1395,10 +1671,49 @@ function FillData()
 	SetElement("SalesManagerTel",list[133]);	//Mozy	2018-5-15
 	SetElement("Hold11",list[134]);		//zy	2018-5-15
 	SetElement("Hold12",list[135]);		//zy	2018-5-15
-	SetElement("Hold13",list[136]);		//zy	2018-5-15
+	//SetElement("Hold13",list[136]);		//QW202201712 保管人
+	SetElement("KeeperDR",list[136]);       //QW202201712 保管人
 	SetElement("Hold14",list[137]);		//zy	2018-5-15
-	SetElement("Hold15",list[138]);		//zy	2018-5-15
+	SetElement("IsInstall",list[138]);		//zy	2018-5-15
 	SetElement("CancelFlag",list[145]);		//modified by czf 需求号：754351 20181119
+	// MZY0070	1756493		2021-02-20
+	SetElement("MFHandler",list[149]);
+	SetElement("MFTel",list[150]);
+	SetElement("TempBar",list[151]);	// MZY0074	1904154		2021-04-30
+	
+	//modified by ZY0307  2763246
+	SetElement("OCLConfigLicense",list[152]);
+	SetElement("OCLNewOldPercent",list[153]);
+	SetElement("OCLVoltage",list[154]);
+	SetElement("OCLElectriccurrent",list[155]);
+	SetElement("OCLUseYearsNum",list[156]);
+	SetElement("OCLNote",list[157]);
+	SetElement("OCLMaintNote",list[158]);
+	SetElement("OCLHold16",list[159]);
+	SetElement("OCLHold17",list[160]);
+	SetElement("OCLHold18",list[161]);
+	SetElement("OCLHold19",list[162]);	
+	SetElement("OCLHold20",list[163]);
+	
+	SetElement("Keeper",list[164]);       //QW202201712 保管人	
+	///add by ZY 20220913 2907381、2907386、2907390
+    SetElement("OCLAuthorizeDeptDR",list[165]);
+    SetElement("OCLUseSubjectDR",list[166]);
+    SetElement("OCLBuyModeDR",list[167]);  
+    SetElement("OCLAccountDate",list[168]);
+    SetElement("OCLAuthorizeDept",list[169]);
+    SetElement("OCLUseSubject",list[170]);
+    SetElement("OCLBuyMode",list[171]);
+    SetElement("ManageUserDR",list[172]);
+    SetElement("ManageUser",list[173]);
+    SetElement("PurchaseDate",list[174]);	//购入日期
+    SetElement("ManageCate",list[175]);  //管理类别 txr 20230406
+    var DepreMethodID=list[39];
+	if(DepreMethodID!=3){
+		setRequiredElements("LimitYearsNum",true);
+	}else{
+		setRequiredElements("LimitYearsNum",false);
+	}
 	// 专属信息		Mozy0145	20141017
 	encmeth=GetElementValue("GetInfoData");
 	if (encmeth=="") return;
@@ -1409,6 +1724,21 @@ function FillData()
 	InfoList=InfoList.replace(/\\n/g,"\n");
 	//messageShow("","","",InfoList)
 	FillAssetTypeInfo(InfoList);
+	var CheckListDR=list[111];
+	SetEquipAttributeCat(2,CheckListDR);
+}
+
+//czf 2022-04-14
+//设备属性分类
+function SetEquipAttributeCat(sourceType,sourceID)
+{
+	var catString=tkMakeServerCall("web.DHCEQ.EM.BUSAttributeCat","GetOneEquipAttributeCat",sourceType,sourceID)
+	if (catString!="")
+	{
+		var list=catString.split(",");
+		$('#IHTDesc').combogrid('setValues', list);
+	}
+	
 }
 
 function SetEnabled()
@@ -1419,12 +1749,20 @@ function SetEnabled()
 	var Status=GetElementValue("Status");
 	var Type=GetElementValue("Type");
 	var ReadOnly=GetElementValue("ReadOnly");
+	DisableElement("RejectReason",true);  //czf 20200722 
+	DisableBElement("BSelfCancelSubmit",true);   //Add By wy 2020-8-18 1453189
+	HiddenObj("BClear",true); //add by wy 2020-9-24 1532207
+	
+	var ContractDR=GetElementValue("ContractDR");	//czf 2022-09-26
+	if (ContractDR=="") HiddenObj("BContract",true);
+	else HiddenObj("BContract",false);
+	var ProxyFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","201017");
+	if (ProxyFlag==0) {DisableBElement("BProxy",true);}
 	if (Status=="0") //新增
 	{
 		DisableBElement("BAudit",true);
-		DisableBElement("BCancelSubmit",true);
-		DisableElement("RejectReason",true);  //add by kdf 2018-02-05 需求号：541048
-		
+		DisableBElement("BCancelSubmit",true); 
+		DisableBElement("BPrintBar",true); //add by zyq 2023-02-28 3310342 
 	}
 	if (Status=="1") //提交
 	{
@@ -1433,6 +1771,7 @@ function SetEnabled()
 		DisableBElement("BSubmit",true);
 		DisableBElement("BCheckItem",true);
 		DisableBElement("BImport",true);
+		DisableBElement("BPrintBar",true); //add by zyq 2023-02-28 3310342 
 	}
 	if (Status=="2") //审核
 	{
@@ -1443,6 +1782,7 @@ function SetEnabled()
 		DisableBElement("BCancelSubmit",true);
 		DisableBElement("BCheckItem",true);
 		DisableBElement("BImport",true);
+
 		var CancelOper=GetElementValue("CancelOper");
 		if (CancelOper=="Y")
 		{
@@ -1453,7 +1793,7 @@ function SetEnabled()
 	}
 	if (Status=="") //点击新增按钮
 	{
-
+		HiddenObj("BPrint",true);
 		DisableBElement("BDelete",true);
 		DisableBElement("BSubmit",true);
 		DisableBElement("BAudit",true);
@@ -1463,9 +1803,9 @@ function SetEnabled()
 		DisableBElement("BAffix",true);
 		DisableBElement("BDoc",true);
 		DisableBElement("BPicture",true);
-		DisableBElement("BCopy",true);
+		HiddenObj("BCopy",true);
 		DisableBElement("Configuration",true);
-		DisableBElement("BOtherFunds",true);  //modify by lmm 2018-09-18 hisui
+        //DisableBElement("BOtherFunds",true);  //modify by lmm 2018-09-18 hisui
 		//EQCommon_HiddenElement("BOtherFunds")  //modify by lmm 2018-09-18 hisui
 		DisableElement("RejectReason",true);  //add by kdf 2018-02-05 需求号：541048
 		DisableBElement("BPayPlan",true)	//add by czf 20180928 HISUI改造
@@ -1473,6 +1813,10 @@ function SetEnabled()
 		DisableBElement("BConfig",true);	// Mozy0217  2018-11-01
 		//DisableBElement("BConfigNew",true);	// Mozy  2019-5-30
 		DisableBElement("BAppendFile",true);   ///Modify by zc0076 2020-6-17 按钮灰化
+	    HiddenObj("BClear",false); //add by wy 2020-9-24 1532207
+		DisableBElement("BOtherLoc",true); 	//modified by ZY0256  20210301
+		DisableBElement("BEvaluate",true); //add by wy 2021-5-24
+		DisableBElement("BProxy",true);
 	}
 	if (Status=="3")		//作废单据
 	{
@@ -1492,6 +1836,8 @@ function SetEnabled()
 		DisableBElement("BEquipConfig",true);		// Mozy0217  2018-11-01
 		DisableBElement("BConfig",true);		// Mozy0217  2018-11-01
 		//DisableBElement("BConfigNew",true);		// Mozy  2019-5-30
+		DisableBElement("BProxy",true);
+
 	}
 	if (Type!="0")
 	{
@@ -1507,13 +1853,27 @@ function SetEnabled()
 		///当当前用户角色和下一步角色一致时方可操作
 		///如果工作流设置中该步骤可以取消则取消按钮可用
 		var CancelFlag=GetElementValue("CancelFlag");
+        //czf 2022-10-12 2844488 begin
+        var ApproveSetDR=GetElementValue("ApproveSetDR");
+        var ApproveFlowID=tkMakeServerCall("web.DHCEQCApproveFlow","GetAppFlowIDByStep",ApproveSetDR,RoleStep);
+        var ApproveFlowInfo=tkMakeServerCall("web.DHCEQCApproveFlow","GetOneApproveFlow",ApproveFlowID);
+        ApproveFlowInfo=ApproveFlowInfo.replace(/\\n/g,"\n");
+        var DefaultOpinion=ApproveFlowInfo.split("^")[20];
+        //czf 2022-10-12 2844488 end
 		if (Type=="1")
 		{
+			//midified by ZY0271 20210619
+			if(CurRole==2)
+			{
+				initElementVisit("EM.P.OpenCheckRequest","OriginalFee^Provider","")	
+			}
 			if ((CurRole==NextRole)&&(NextStep==RoleStep)&&(CancelFlag=="Y"))
 			{
 				var obj=document.getElementById("BCancelSubmit");
 				if (obj) obj.onclick=BCancelSubmit_Clicked;
-				ReadOnlyElement("RejectReason",false);		
+				//ReadOnlyElement("RejectReason",false);
+                SetElement("Opinion_"+CurRole+"_"+RoleStep,DefaultOpinion);   //czf 2022-10-12 审批流默认审批意见
+                setItemRequire("Opinion_"+CurRole+"_"+RoleStep,true);
 			}
 			else
 			{
@@ -1526,6 +1886,8 @@ function SetEnabled()
 					DisableBElement("BAudit",false);
 					var obj=document.getElementById("BAudit");
 					if (obj) obj.onclick=BAudit_Clicked;
+                    SetElement("Opinion_"+CurRole+"_"+RoleStep,DefaultOpinion);  //czf 2022-10-12 审批流默认审批意见
+                    setItemRequire("Opinion_"+CurRole+"_"+RoleStep,true);
 					DisableElement("Opinion_"+CurRole+"_"+RoleStep,false);	//midified by czf 20181020
 
 				}
@@ -1537,6 +1899,7 @@ function SetEnabled()
 			{
 				DisableBElement("BCancelSubmit",true);
 				DisableBElement("BAudit",true);
+
 			}
 		}
 	}
@@ -1545,18 +1908,26 @@ function SetEnabled()
 		DisableBElement("BAudit",true);
 		DisableBElement("BCancelSubmit",true);
 		DisableBElement("BCancel",true);
+
 	}
 	if (ReadOnly=="1")
 	{
 		//DisableBElement("BAffix",true);
 		//DisableBElement("BDoc",true);			//727324 modified by czf 20181019 
 		//DisableBElement("BPicture",true);
-		DisableBElement("BCopy",true);
+		//DisableBElement("BCopy",true);
 		DisableBElement("Configuration",true);
 		DisableBElement("BCancelSubmit",true);
 		DisableBElement("BAudit",true);
 		DisableBElement("BCancel",true);
+		DisableBElement("BSelfCancelSubmit",true);   //Add By wy 2020-8-18 1453189
+
 	}
+	//Add By wy 2020-8-18 1453189
+	if ((Status=="1")&&(Type=="0")){
+		DisableBElement("BSelfCancelSubmit",false);   
+		
+		}
 	//add by lmm 2019-09-04 begin
 	var rowid=GetElementValue("RowID");  //add by lmm 2019-10-17
 	var bussidinfo=tkMakeServerCall("web.DHCEQOpenCheckRequest","GetInStockIDByOpenCheckID",rowid)
@@ -1569,15 +1940,44 @@ function SetEnabled()
 	{
 		DisableBElement("BStoreMovePrint",true);		
 	}
-	
-	
-	//add by lmm 2019-09-04 end
-	//add by lmm 2019-10-23 1059752
+	if (GetElementValue("LifeInfoFlag")==1) HiddenObj("BCopy",true);	// MZY0154	3271045		2023-03-03
 	if(GetElementValue("InStockFlag")!="")
 	{
-		DisableElement("Provider",true);		
-		
+		DisableElement("Provider",true);
+		/*/ MZY0111	2388344		2022-01-14
+		if (GetElementValue("UseLocDR")!="")
+		{
+			DisableElement("UseLoc",true);
+		}*/
 	}
+	///modified by ZY0260 20210428
+	if (LocListFlag==1)
+	{
+		ReadOnlyElements("FileNo^LeaveFactoryNo",true)
+    }
+    ///add by ZY 20220913 2907381、2907386、2907390
+    var CheckListDR=GetElementValue("CheckListDR")
+    if (CheckListDR!="") ExclusiveType=tkMakeServerCall("web.DHCEQ.EM.BUSOpenCheckRequest","GetExclusiveType",0,CheckListDR)
+    if (ExclusiveType=="DHCEQLand")
+    {
+        jQuery("#BExclusive").linkbutton({text:'土地信息'});
+    }
+    else if (ExclusiveType=="DHCEQBuilding")
+    {
+        jQuery("#BExclusive").linkbutton({text:'房屋信息'});
+    }
+    else if (ExclusiveType=="DHCEQIntangibleAssets")
+    {
+        jQuery("#BExclusive").linkbutton({text:'无形资产信息'});
+    }
+    else if (ExclusiveType=="DHCEQVehicle")
+    {
+        jQuery("#BExclusive").linkbutton({text:'车辆信息'});
+    }
+    else
+    {
+        hiddenObj("BExclusive",true);
+    }
 }
 
 function GetPurchaseType (value)
@@ -1620,14 +2020,46 @@ function GetPurposeType (value)
 }
 function GetProvider(value)
 {
-	GetLookUpID("ProviderDR",value);
-	var list=value.split("^")
-	SetElement("ProviderHandler",list[4])
-	SetElement("ProviderTel",list[5])
+    GetLookUpID("ProviderDR",value);
+    var list=value.split("^")
+    ///modified by ZY 2826780  20220926
+    ///modified by ZY20221226  bug:2826780  20220926
+    if (list[10]=="Y")
+    {
+		if (VendorFlag==1)
+		{
+			messageShow("confirm","info","提示","当前供应商已经进入黑名单,是否忽略?","",
+			function(){
+				SetElement("ProviderHandler",list[4])
+				SetElement("ProviderTel",list[5])
+				return;
+			},
+			function(){
+				SetElement("ProviderDR","");
+				SetElement("Provider","");
+				return;
+			},"忽略","修改");
+		}
+		else if (VendorFlag==2)
+		{
+			SetElement("ProviderDR","");
+			SetElement("Provider","");
+			alertShow("当前供应商已经进入黑名单,不能使用!")
+			return;
+		}
+    }	
+    else
+    {
+        SetElement("ProviderHandler",list[4])
+        SetElement("ProviderTel",list[5])
+    }
 }
 function GetManuFactory(value)
 {
 	GetLookUpID("ManuFactoryDR",value);
+	var list=value.split("^")
+	SetElement("MFHandler",list[4]);
+	SetElement("MFTel",list[5]);
 }
 function GetService (value)
 {
@@ -1636,6 +2068,14 @@ function GetService (value)
 function GetOrigin(value)
 {
 	GetLookUpID("OriginDR",value);
+	//add by zc0125 2022-11-14 根据条件显示不同的折旧方法 begin
+	var OriginFlag=tkMakeServerCall("web.DHCEQCommon","IdInIds",GetElementValue("OriginDR"),OriginIDs);
+	if ((OriginFlag=="1")&&(OriginIDs!=""))
+	{
+		SetElement("DepreMethod","不计提折旧")
+		SetElement("DepreMethodDR","3")
+	}
+	//add by zc0125 2022-11-14 根据条件显示不同的折旧方法 end
 }
 function GetFromDept(value)
 {
@@ -1645,6 +2085,18 @@ function GetUser(value)
 {
 	GetLookUpID("UserDR",value);
 }
+function GetManageUser(value)
+{
+	GetLookUpID("ManageUserDR",value);
+}
+//Modefied by ZY0307 2022-07-13 新增保管人信息
+//QW202201712 保管人
+function GetKeeper(value)
+{
+	GetLookUpID("KeeperDR",value);
+}
+
+
 function GetStoreLoc(value)
 {
 	GetLookUpID("StoreLocDR",value);
@@ -1652,6 +2104,13 @@ function GetStoreLoc(value)
 function GetDepreMethodID(value)
 {
 	GetLookUpID("DepreMethodDR",value);
+	var valuelist=value.split("^");
+	var DepreMethodID=valuelist[1];
+	if(DepreMethodID!=3){
+		setRequiredElements("LimitYearsNum",true);
+	}else{
+		setRequiredElements("LimitYearsNum",false);
+	}
 }
 function GetPackType (value)
 {
@@ -1749,6 +2208,7 @@ function GetBuyPlan(item)
 	SetElement("HSourceType",GetElementValue("SourceType"));
 	
 	SetElement("LimitYearsNum",item.TLimitYears);	//Modified by jdl 2012-3-7 JDL0120
+	SetElement("OCLUseYearsNum",item.TLimitYears);  //Modified by ZY0307 20220712 
 	//SetElement("CommonName",item.TCommonName);	//2013-06-24 DJ0118
 	SetElement("CommonName",item.TCommonName);	//modified by czf 20180329	//modified by czf 1218659
 	SetElement("PurposeTypeDR",item.TPurposeTypeDR);  //Modefied by zc 2014-9-23 ZC0007
@@ -1796,6 +2256,14 @@ function GetMasterItem(item)
 	if (item.TDepreMethodDR!="") SetElement("DepreMethodDR",item.TDepreMethodDR);
 	if (item.TDepreMethodDR!="") SetElement("DepreMethod",item.TDepreMethod);
 	SetElement("LimitYearsNum",item.TLimitYearsNum);
+	SetElement("OCLUseYearsNum",item.TLimitYearsNum);  //Modified by ZY0307 20220712 
+	
+	var DepreMethodID=item.TDepreMethodDR;
+	if(DepreMethodID!=3){
+		setRequiredElements("LimitYearsNum",true);
+	}else{
+		setRequiredElements("LimitYearsNum",false);
+	}
 	
 	var obj=document.getElementById("Name");
 	if (obj) websys_nextfocusElement(obj);
@@ -1810,6 +2278,7 @@ function GetMasterItem(item)
 		$("#EquipAttributeList").keywords("select",list[j]);
 	}
 	//end add by jyp 2019-09-02 设备属性相关调整
+	if ($("#IHTDesc").lengt>0) SetEquipAttributeCat(1,item.TRowID);	//czf 2022-04-14 属性分类
 }
 ///modify by lmm 2018-08-18
 ///描述：hisui改造 设备名称选中行后数据赋值
@@ -1936,12 +2405,21 @@ function GetContractList(item)
 	SetElement("StatCat",val[30]); //2009-11-25 党军 DJ0037
 	
 	SetElement("LimitYearsNum",val[31]);	//Modified by jdl 2012-3-7 JDL0120
+	SetElement("OCLUseYearsNum",val[31]);  //Modified by ZY0307 20220712 
 	SetElement("ContractNo",val[32]); //2013-4-28 zy
 	//SetElement("CommonName",val[0]); //2013-06-24 DJ0118 modified by czf
 	SetElement("GuaranteePeriodNum",val[34]);	///20150825  Mozy0163	保修期
 	//modified by wy 2020-4-22 1286572
 	//SetElement("Hold2",val[35]); // add by sjh 2019-10-31 注册证号  BUG00016
 	SetElement("FileNo",val[35]);// add by sjh 2019-10-31 档案号 BUG00016
+	SetElement("UseLocDR",val[36]);// add by zy0273 20210705
+	SetElement("UseLoc",val[37]);// add by zy0273 20210705
+	//czf 2022-08-30 begin
+	var PurchaseTypeDR=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","301009")
+	var PurchaseType=tkMakeServerCall("web.DHCEQCommon","GetStandardDesc","DHCEQCPurchaseType",PurchaseTypeDR)
+	SetElement("PurchaseTypeDR",PurchaseTypeDR);
+	SetElement("PurchaseType",PurchaseType);
+	//czf 2022-08-30 end	
 	var obj=document.getElementById("Name");
 	if (obj) websys_nextfocusElement(obj);
 	//add by wy 2020-4-11 1267520 begin 判断是否存在设备项
@@ -2005,15 +2483,10 @@ function BPicture_Clicked()
 	var result=cspRunServerMethod(encmeth,GetElementValue("RowID"));
 	if (result<=0) return
 	
-	//GR0033
 	var Status=GetElementValue("Status");
-	if (Status!=0) {ReadOnly=1}	//786512 czf 20190304
+	if (Status>0) Status=0;
+	///modified by ZY20230320 bug:3242289
 	var str='dhceq.plat.picturemenu.csp?&CurrentSourceType=11&CurrentSourceID='+result+'&Status='+Status+'&ReadOnly='+ReadOnly;
-	/*
-	var str='websys.default.csp?WEBSYS.TCOMPONENT=DHCEQPicture&CheckListDR='+result
-	if (GetElementValue("Status")>0) str=str+"&ReadOnly=1";		/// 20150327  Mozy0153
-	window.open(str,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0')
-	*/
 	showWindow(str,"图片信息","","","icon-w-paper","modal","","","middle");	//modify by lmm 2020-06-04 UI
 }
 
@@ -2026,15 +2499,15 @@ function BCopy_Clicked()
 	var encmeth=GetElementValue("CopyOpenCheckRequest");
 	if (encmeth=="") return;
 	var result=cspRunServerMethod(encmeth,RowID);
-	result=result.replace(/\\n/g,"\n")
-    if ((result>0)&&(result!=100))
+	//result=result.replace(/\\n/g,"\n")
+	 if ((result>0)&&(result!=100))
     {
-           ///////modified by  ZY 2009-10-26  ZY0086
-	    //window.location.href= 'websys.default.csp?WEBSYS.TCOMPONENT='+GetElementValue("GetComponentName")+'&RowID='+result+'&CurRole='+GetElementValue("CurRole")+'&Type='+GetElementValue("Type")
-		var url=window.location.href //GR0026 新窗口打开模态窗口,通过改变参数值解决预缓存问题？
-	    if(url.indexOf("killcache=1")!=-1)  window.location.href='websys.default.csp?WEBSYS.TCOMPONENT='+GetElementValue("GetComponentName")+'&killcache=0&RowID='+result+'&CurRole='+GetElementValue("CurRole")+'&Type='+GetElementValue("Type")
-	    else 								window.location.href='websys.default.csp?WEBSYS.TCOMPONENT='+GetElementValue("GetComponentName")+'&killcache=1&RowID='+result+'&CurRole='+GetElementValue("CurRole")+'&Type='+GetElementValue("Type")
-	
+	   	//window.location.href= 'websys.default.csp?WEBSYS.TCOMPONENT='+GetElementValue("GetComponentName")+'&Type=0&RowID='+result
+	    var url=window.location.href //新窗口打开模态窗口,通过改变参数值解决预缓存问题
+	    var str="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+GetElementValue("GetComponentName")+"&killcache=0&Type=0&RowID="+result+'&CurRole='+GetElementValue("CurRole");
+	    if(url.indexOf("killcache=1")==-1) str="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+GetElementValue("GetComponentName")+"&killcache=1&Type=0&RowID="+result+'&CurRole='+GetElementValue("CurRole");
+	    alertShow("复制成功!");	//默认延迟2秒
+		setTimeout(function(){window.location.href=str},Timeout);	//延迟 Mozy0255	1190551		2020-3-6
 	}
     else
     {
@@ -2060,40 +2533,101 @@ function SetTreeDR(id,text) //
 	var obj=document.getElementById("Currency");
 	if (obj) obj.value=text;
 }
+/// 按出厂编码打印 add by zyq 2023-02-14 begin
+function BPrint_Clicked()
+{
+	var PrintFlag= tkMakeServerCall("web.DHCEQCommon","GetSysInfo","201020")
+	if (PrintFlag==0)
+	{
+		OptPrint("");
+	}
+	else if(PrintFlag==1)
+	{
+		messageShow("confirm","","","【确认】进行打印全部设备,【取消】按出厂编号打印单台设备.","",ConfirmPrint,DisConfirmPrint);
+	}
+	else if((+GetElementValue("OriginalFee")>PrintFlag)&&(PrintFlag!=0)&&(PrintFlag!=1))
+	{
+		messageShow("confirm","","","【确认】进行打印全部设备,【取消】按出厂编号打印单台设备.","",ConfirmPrint,DisConfirmPrint);
+	}
+	else
+	{
+		OptPrint("");
+	}
+}
+function ConfirmPrint()
+{
+	OptPrint("");
+}
+function DisConfirmPrint()
+{
+	LeaveFactoryNos=document.getElementById("LeaveFactoryNo").value
+	LeaveFactoryNos=LeaveFactoryNos.split(',')
+	var link=""
+	for (var i = 0; i < LeaveFactoryNos.length; i++) {
+        link=link+" <a href='javascript:void(0);' onclick=getVal('"+LeaveFactoryNos[i]+"')>"+LeaveFactoryNos[i]+"</a>"
+	}
+	messageShow("alert","","提示","请选择出厂编号:"+link);
+}
+function getVal(LeaveFactoryNo)
+{
+	if (LeaveFactoryNo=="")
+	{
+		alertShow("未输入出厂编号,操作完成!");
+	}
+	else
+	{
+		OptPrint(LeaveFactoryNo);
+	}
+}
+//add by zyq 2023-02-14 end
 ///HISUI改造需重新调整 曾超[元素:initRunQian,PrintFlag 继承:DHCCPMRQCommon.js]
 /// add by kdf 2017-12-28
 /// 增加系统参数控制，PrintFlag==0为excel打印，PrintFlag==1为润乾打印
-function BPrint_Clicked()
+function OptPrint(LeaveFactoryNo)
 {
 	var PrintFlag=GetElementValue("PrintFlag");
-	 var id=GetElementValue("RowID");
+    //modified by ZY20221107  2968017
+     //var id=GetElementValue("RowID");
+     var id=GetElementValue("CheckListDR");
 	 
 	 if((id=="")||(id<1))
 	 	return;
 	  
 	if(PrintFlag==0)
 	{
-		Print();   
+		Print(LeaveFactoryNo);   
 	}
 	if(PrintFlag==1)
 	{
 		var PreviewRptFlag=getElementValue("PreviewRptFlag"); //add by wl 2019-11-11 WL0010 begin   增加润乾预览标志
         var fileName=""	; 
+        //Add By QW20210913 BUG:QW0147 标题增加补打标记	begin
+		var EQTitle="";
+		if(PrintNumFlag==1)  
+		{
+			var num=tkMakeServerCall("web.DHCEQ.Plat.BUSOperateLog","GetOperateTimes","11",id)
+			if(num>0) EQTitle="(补打)";
+		}
+		//Add By QW20210913 BUG:QW0147 标题增加补打标记	end
         if(PreviewRptFlag==0)
         { 
-        fileName="{DHCEQOpenCheck.raq(TRowID="+id+")}";
+        fileName="{DHCEQOpenCheck.raq(TRowID="+id+";EQTitle="+EQTitle+";LeaveFactoryNo="+LeaveFactoryNo+")}"; //Modified By QW20210913 BUG:QW0147 标题增加补打标记
         DHCCPM_RQDirectPrint(fileName);
         }
         if(PreviewRptFlag==1)
         { 
-		fileName="DHCEQOpenCheck.raq&TRowID="+id;
+		fileName="DHCEQOpenCheck.raq&TRowID="+id+"&EQTitle="+EQTitle+"&LeaveFactoryNo="+LeaveFactoryNo; //Modified By QW20210913 BUG:QW0147 标题增加补打标记
 		DHCCPM_RQPrint(fileName); 
         }		//add by wl 2019-11-11 WL0010 end
 	}
+	//Modified By QW20210913 BUG:QW0147	begin
+	var OpenCheckOperateInfo="^11^"+id+"^^验收打印操作^0"
+	var PrintFlag=tkMakeServerCall("web.DHCEQ.Plat.BUSOperateLog","SaveData",OpenCheckOperateInfo)
+	//Modified By QW20210913 BUG:QW0147 end
 }
 
 //add by jdl 2010-4-19
-function Print()
+function Print(LeaveFactoryNo)
 {
 	var obj=document.getElementById("RowID");
 	var RowID=obj.value;
@@ -2116,6 +2650,17 @@ function Print()
 
 	    xlBook = xlApp.Workbooks.Add(Template);
     	xlsheet = xlBook.ActiveSheet;
+    	//Add By QW20210913 BUG:QW0147 标题增加补打标记	begin
+		if(PrintNumFlag==1)  
+		{
+			var num=tkMakeServerCall("web.DHCEQ.Plat.BUSOperateLog","GetOperateTimes","11",RowID)
+			if(num>0) 
+			{
+			    xlsheet.cells(2,1)="设备验收单(补打)"
+		    	
+			}
+		}
+		//Add By QW20210913 BUG:QW0147 标题增加补打标记	end
     	xlsheet.cells(3,2)=list[4];		//类组
     	xlsheet.cells(3,6)=curUserName;	//制单人	modified by csj 20190528	username全局变量被改为curUserName
     	xlsheet.cells(4,2)=list[68];	//名称
@@ -2132,7 +2677,17 @@ function Print()
     	xlsheet.cells(8,6)=list[32];	//用途
     	
     	xlsheet.cells(9,2)=list[92];  //序列号
-    	xlsheet.cells(10,2)=list[61];  //备注
+	//add by zyq 2023-02-14 begin
+	if (LeaveFactoryNo!="")
+	{
+		xlsheet.cells(10,2)="出厂编号:"+LeaveFactoryNo; //备注
+	}
+	else
+	{
+		xlsheet.cells(10,2)="出厂编号:"+document.getElementById("LeaveFactoryNo").value; 
+	}
+		//add by zyq 2023-02-14 end
+    	// xlsheet.cells(10,2)=list[61]//备注
     	
     	xlsheet.cells(11,2)=ChangeDateFormat(GetCurrentDate());  //打印日期
     	//xlsheet.cells(11,6)=;  //管理部门签字
@@ -2154,8 +2709,37 @@ function Print()
 		messageShow("","","",e.message);
 	}
 }
-
-
+///add by zyq 2022-11-16 begin 验收单打印条码
+function BPrintBar_Clicked()
+{
+	var OCLRowID=GetElementValue("CheckListDR");
+	if (OCLRowID=="") return;
+	printOpenCheckBars(OCLRowID);
+}
+// MZY0156	3373159		2023-03-24
+function BPrintConfig_Clicked()
+{
+	var RowID=GetElementValue("RowID");
+	if ((RowID=="")||(RowID<1)) return;
+	var CheckListDR=GetElementValue("CheckListDR");
+	if (CheckListDR=="") return;
+	var affixinfos=tkMakeServerCall("web.DHCEQConfig","GetConfigDRs",1,CheckListDR);
+	if (affixinfos=="") return;
+	var PreviewRptFlag=getElementValue("PreviewRptFlag");
+	var fileName="";
+	var curSSHospitalName=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","990003");
+    if(PreviewRptFlag==0)
+    {
+	    fileName="{DHCEQOCRConfigPrint.raq(RowID="+RowID+";HOSPDESC="+curSSHospitalName+";USERNAME="+curUserName+")}";
+	    DHCCPM_RQDirectPrint(fileName);
+    }
+    if(PreviewRptFlag==1)
+    { 
+		fileName="DHCEQOCRConfigPrint.raq&RowID="+RowID+"&HOSPDESC="+curSSHospitalName+"&USERNAME="+curUserName;
+		//fileName="DHCEQInStockPrint.raq&RowID="+80+"&USERNAME="+"&HOSPDESC="+curSSHospitalName+"&EQTitle=";
+	    DHCCPM_RQPrint(fileName);
+    }
+}
 //add by jdl 2010-7-19
 function SetCatNo(CatDR)
 {
@@ -2333,7 +2917,7 @@ function ImportCheck()
 		}
 	}
 	var list=ItemInfo.split("^");
-	var sort=22;
+	var sort=26;	// MZY0145	2969850		2022-11-30
 	ClearData();
 	
 	SetElement("EquipTypeDR",list[2]);
@@ -2666,6 +3250,13 @@ function SaveOpenCheckData()
 		    return 0;
 	    } //2010-10-26 DJ end
     }
+    var CheckDate= GetElementValue("CheckDate");
+	var currentDate=GetCurrentDate()	
+	if(currentDate<CheckDate)
+	{
+		messageShow('alert','info','提示',"验收日期不应晚于当前日期！");//modify by zyq 2023-05-08 3431285
+		return 
+	}
 	var combindata="";
     combindata=GetElementValue("RowID") ; //1
     combindata=combindata+"^"+GetElementValue("Name") ;//2
@@ -2831,19 +3422,33 @@ function SetLocation(value)
 ///Add By DJ 2011-04-28
 function BOtherFunds_Clicked()
 {
-	var ReadOnly=GetElementValue("ReadOnly")
-	var ID=GetElementValue("RowID")
-	if (ID=="") return;
-	var CheckListDR=GetElementValue("CheckListDR")
-	var OCRStatus=GetElementValue("Status")
-	var Type=GetElementValue("Type")
-	if ((OCRStatus!="0")||(Type==1))
-	{
-		ReadOnly=1
-	}
-	var FundsAmount=GetElementValue("OriginalFee")*GetElementValue("Quantity")
-	FundsAmount=parseFloat(FundsAmount).toFixed(2);		//20150713  Mozy0156
-	var str='websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQFunds&FromType=0&FromID='+CheckListDR+'&ReadOnly='+ReadOnly+'&FundsAmount='+FundsAmount //hisui改造：改调hisui默认csp add by lmm 2018-08-18
+    var ReadOnly=GetElementValue("ReadOnly")
+    var ID=GetElementValue("RowID")
+    //if (ID=="") return;
+    var CheckListDR=GetElementValue("CheckListDR")
+    if (CheckListDR=="") CheckListDR=GetElementValue("TmpSourceID")
+    var OCRStatus=GetElementValue("Status")
+    var Type=GetElementValue("Type")
+    //if ((OCRStatus!="0")||(Type==1))
+    if (Type==1)
+    {
+        ReadOnly=1
+    }
+    var OriginalFee=GetElementValue("OriginalFee")
+    var Quantity=GetElementValue("Quantity")
+    if (OriginalFee=="")
+    {
+        alertShow("设备原值不能为空!")
+        return
+    }
+    if (Quantity=="")
+    {
+        alertShow("数量不能为空!")
+        return
+    }
+    var FundsAmount=GetElementValue("OriginalFee")*GetElementValue("Quantity")
+    FundsAmount=parseFloat(FundsAmount).toFixed(2);     //20150713  Mozy0156
+    var str='websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQFunds&FromType=0&FromID='+CheckListDR+'&ReadOnly='+ReadOnly+'&FundsAmount='+FundsAmount //hisui改造：改调hisui默认csp add by lmm 2018-08-18
     //Modify by zx 2019-11-04
     //showWindow(str,"资金来源","980","570","icon-w-paper","modal");	//modified by czf 20181211 改为模态窗口
     //showWindow(str,"资金来源","96%","96%","icon-w-paper","modal","","","",SelfFunds_Change);	//modify by lmm 2019-02-19 增加回调
@@ -2879,7 +3484,7 @@ function SelfFunds_Change()
 		var encmeth=GetElementValue("GetSourceFunds");
 		if (encmeth=="") return;
 		///modified by ZY0233 20200612  资金来源的类文件改了位置。
-		var result=cspRunServerMethod(encmeth,"0",ID,Originalfee*QuantityNum,1);
+		var result=cspRunServerMethod(encmeth,"0",ID,Originalfee*QuantityNum,1,1);		//CZF 1983205 2021-06-11
 		var list=result.split("^");
 		if (result[0]<0)
 		{
@@ -2900,6 +3505,9 @@ function SelfFunds_Change()
 	tmpValue=tmpValue.toFixed(2)-SelfFunds;
 	SetElement("OtherFunds",tmpValue.toFixed(2))
 	tabflag=0   //add by lmm 2020-06-30
+	SetElement("TotalFee",(Originalfee*QuantityNum).toFixed(2));
+	tmpValue=100*tmpValue/(Originalfee*QuantityNum);
+	SetElement("Proportion",tmpValue.toFixed(2)+"%");
 }
 // Mozy0117	2014-1-27
 function GetCheckQuantityNum(QuantityNum)
@@ -3312,23 +3920,6 @@ function FillAssetTypeInfo(InfoList)
     }
 }
 
-//Add By DJ 2014-10-15
-function BAppendFile_Clicked()
-{
-	var SourceID=GetElementValue("RowID");
-	var SourceListID=GetElementValue("CheckListDR");
-	if (SourceListID>0)
-	{
-		var str="websys.default.csp?WEBSYS.TCOMPONENT=DHCEQAppendFile&&OriginalType=9&OriginalID="+SourceListID;
-    	window.open(str,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0')
-	}
-	else
-	{
-		alertShow("请先保存数据!")
-		return
-	}
-}
-
 function GetSStructDR(para)
 {
 	var Info=para.split("^");
@@ -3342,17 +3933,19 @@ function GetBDStructDR(para)
 	SetElement("BDStruct",Info[2]);
 	SetElement("BDStructDR",Info[0]);
 }
-//20150822  Mozy0162	增加清空按钮
+//20150822  Mozy0162	增加清空按钮	
+//add by wy 2020-9-24 1532207 调整清屏功能
 function BClear_Clicked()
 {
+
 	var url=window.location.href//GR0026 新窗口打开模态窗口,通过改变参数值解决预缓存问题
 	if(url.indexOf("killcache=1")!=-1)
 	{
-		window.location.href= "websys.default.csp?WEBSYS.TCOMPONENT="+GetElementValue("GetComponentName")+"&killcache=0&Type=0&RowID=&CheckTypeDR="+GetElementValue("CheckTypeDR");
+		window.location.href= "websys.default.hisui.csp?WEBSYS.TCOMPONENT="+GetElementValue("GetComponentName")+"&killcache=0&Type=0&RowID=&CheckTypeDR="+GetElementValue("CheckTypeDR");
 	}
 	else
 	{
-		window.location.href= "websys.default.csp?WEBSYS.TCOMPONENT="+GetElementValue("GetComponentName")+"&killcache=1&Type=0&RowID=&CheckTypeDR="+GetElementValue("CheckTypeDR");
+		window.location.href= "websys.default.hisui.csp?WEBSYS.TCOMPONENT="+GetElementValue("GetComponentName")+"&killcache=1&Type=0&RowID=&CheckTypeDR="+GetElementValue("CheckTypeDR");
 	}
 }
 function BAppendFile_Clicked()
@@ -3361,20 +3954,12 @@ function BAppendFile_Clicked()
 	if (encmeth=="") return;
 	var result=cspRunServerMethod(encmeth,GetElementValue("RowID"));
 	if (result<=0) return
-	
-	//GR0033
 	var Status=GetElementValue("Status");
-	//Modefied by zc0060 20200329 文件上传改造  begin
-	//var str='dhceq.process.appendfile.csp?&CurrentSourceType=11&CurrentSourceID='+result+'&Status='+Status
-	var str='dhceq.plat.appendfile.csp?&CurrentSourceType=11&CurrentSourceID='+result+'&Status='+Status+'&ReadOnly=';
-	//Modefied by zc0060 20200329 文件上传改造  end
-	window.open(str,'_blank','left='+ (screen.availWidth - 1150)/2 +',top='+ ((screen.availHeight>750)?(screen.availHeight-750)/2:0) +',width=1150,height=750,toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes')
-	
-	/*
-	var str='websys.default.csp?WEBSYS.TCOMPONENT=DHCEQPicture&CheckListDR='+result
-	if (GetElementValue("Status")>0) str=str+"&ReadOnly=1";		/// 20150327  Mozy0153
-	window.open(str,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0')
-	*/
+	//modified by ZY20230220 bug:3242289
+	var ReadOnly=GetElementValue("ReadOnly")
+	if (Status>0) Status=0;
+	var str='dhceq.plat.appendfile.csp?&CurrentSourceType=11&CurrentSourceID='+result+'&Status='+Status+'&ReadOnly='+ReadOnly;
+	showWindow(str,"电子资料","","","icon-w-paper","modal","","","large");
 }
 function BCancel_Clicked()
 {
@@ -3598,6 +4183,7 @@ function BStoreMovePrint_Clicked()
 $(function(){
 	SetEquipAttributeList("", 2);		// Mozy003018	1279498	2020-04-27		设置"设备属性"
 })
+
 //	Mozy0242	2020-01-02	1150896
 //自动入库
 function ConfirmInStock()
@@ -3610,23 +4196,67 @@ function ConfirmInStock()
 	}
 	else
 	{
-		inflag=1;
-		if(outflag==1)
+		if (LocListFlag==1)
 		{
-			ConfirmStoreMove();
-		}
-		else if(outflag==2)
-		{
-			messageShow("confirm","","","是否进行自动出库操作?","",ConfirmStoreMove,DisConfirmStoreMove);
+			///modified by ZY0260 20210428
+			var rowid=GetElementValue("RowID");	
+			var result=tkMakeServerCall("web.DHCEQ.EM.BUSOpenCheckListLoc","CheckOpenCheckListLoc", rowid);
+			if (result=="")
+			{
+				inflag=1;
+				if(outflag==1)
+				{
+					ConfirmStoreMove();
+				}
+				else if(outflag==2)
+				{
+					messageShow("confirm","","","是否进行自动出库操作?","",ConfirmStoreMove,DisConfirmStoreMove);
+				}
+				else
+				{
+					/*只自动入库*/
+					outflag=0;
+					if (auditflag=="Y")
+					{OptAudit();}
+					else
+					{OptSubmit();}
+				}
+			}
+			else
+			{
+				messageShow("confirm","info","提示",result+"不能自动出库,是否继续审核验收单,自动入库?","",function(){
+						inflag=1;
+						outflag=0;
+						if (auditflag=="Y")
+						{OptAudit();}
+						else
+						{OptSubmit();}
+					},function(){
+					return;
+				});
+			}
+			///modified end by ZY0260 20210428
 		}
 		else
 		{
-			/*只自动入库*/
-			outflag=0;
-			if (auditflag=="Y")
-			{OptAudit();}
+			inflag=1;
+			if(outflag==1)
+			{
+				ConfirmStoreMove();
+			}
+			else if(outflag==2)
+			{
+				messageShow("confirm","","","是否进行自动出库操作?","",ConfirmStoreMove,DisConfirmStoreMove);
+			}
 			else
-			{OptSubmit();}
+			{
+				/*只自动入库*/
+				outflag=0;
+				if (auditflag=="Y")
+				{OptAudit();}
+				else
+				{OptSubmit();}
+			}
 		}
 	}
 }
@@ -3647,16 +4277,20 @@ function ConfirmStoreMove()
 	var ReturnList=cspRunServerMethod(encmeth,GetElementValue("RowID"));
 	ReturnList=ReturnList.replace(/\\n/g,"\n");
 	Templist=ReturnList.split("^");
-	if (Templist[37]=="") 
+	///modified by ZY0256  20210301
+	if (LocListFlag!=1)
 	{
-		messageShow("alert","error","操作提示","未设置使用部门科室,不能办理自动出库.")
-		return;
-	}
-	//判断入库单中的科室类型是否属于库房
-	if (cspRunServerMethod(GetElementValue("CheckLocStock"),0,GetElementValue("UseLocDR"))<0)
-	{
-		messageShow("alert","error","操作提示","使用部门的科室类型错误,不能办理自动出库.")
-		return;
+		if (Templist[37]=="") 
+		{
+			messageShow("alert","error","操作提示","未设置使用部门科室,不能办理自动出库.")
+			return;
+		}
+		//判断入库单中的科室类型是否属于库房
+		if (cspRunServerMethod(GetElementValue("CheckLocStock"),0,GetElementValue("UseLocDR"))<0)
+		{
+			messageShow("alert","error","操作提示","使用部门的科室类型错误,不能办理自动出库.")
+			return;
+		}
 	}
 	outflag=1;
 	if (auditflag=="Y")
@@ -3705,6 +4339,7 @@ function GetMasterItemNew(value)
 	if (List[11]!="") SetElement("DepreMethodDR",List[11]);
 	if (List[11]!="") SetElement("DepreMethod",List[12]);
 	SetElement("LimitYearsNum",List[13]);
+	SetElement("OCLUseYearsNum",List[13]);  //Modified by ZY0307 20220712 
 	//var obj=document.getElementById("Name");
 	//if (obj) websys_nextfocusElement(obj);
 	CodeString=tkMakeServerCall("web.DHCEQ.EM.BUSEquipAttribute","GetOneEquipAttribute","1",List[1])
@@ -3720,11 +4355,13 @@ function GetMasterItemNew(value)
 
 //add by czf 2020-03-21 1218659
 //设备项维护
+// modified by sjh SJH0034 2020-09-16
 function BMasterItem_Clicked()
 {
-	//var str='websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCMasterItem';
-	var str='dhceqcmasteritem.csp'
-	showWindow(str,"设备项维护","","","icon-w-paper","modal","","","large");  //modify by lmm 2020-06-04
+	var Status=GetElementValue("Status")
+	var str='dhceq.plat.masteritem.csp?&ReadOnly='		//czf 2022-02-10
+	if ((Status>0)||(GetElementValue("ReadOnly")==1)) str=str+"1";
+	showWindow(str,"设备项维护","9col","","icon-w-paper","modal","","","large");  //modify by lmm 2020-06-04
 }
 
 //add by CZF0095
@@ -3736,15 +4373,24 @@ function GetProviderHandler(value)
 	SetElement("ProviderTel",List[2]);
 	tabflag=0   //add by lmm 2020-06-30
 }
-// Mozy0255	1190551		2020-3-6
+// MZY0070	1756493		2021-02-20
+//厂商联系人回调函数
+function GetMFHandler(value)
+{
+	var List=value.split("^")
+	SetElement("MFHandlerDR",List[1]);
+	SetElement("MFTel",List[2]);
+}
 function UpdateConfigProvider()
 {
 	tkMakeServerCall("web.DHCEQ.EM.BUSOpenCheckRequest","UpdateConfigProvider", GetElementValue("RowID"), TMPProviderDR);
+	updateData();		// MZY0069	1766407		2021-02-18
 }
-function DisUpdate()
+// MZY0069	1766407		2021-02-18	注释
+/*function DisUpdate()
 {
 	//
-}
+}*/
 // Mozy003016		2020-4-24		初始化"设备名称"
 function InitName()
 {
@@ -3754,18 +4400,21 @@ function InitName()
 		//设备项
 		singlelookup("Name","EM.L.GetMasterItem",[{name:"EquipTypeDR",type:4,value:"EquipTypeDR"},{name:"StatCatDR",type:2,value:''},{name:"Name",type:1,value:"Name"}],GetMasterItem)
 		disableElement("Item",true);
+		disableElement("ContractNo",false)		// MZY0053	1501982		2020-09-08
 	}
 	else if ((SourceType==2)||(SourceType==3)) //2.采购单 3,计划单
 	{
 		var params=[{name:'Name',type:1,value:'Name'},{name:'Type',type:4,value:'SourceType'},{name:"EquipTypeDR",type:4,value:"EquipTypeDR"}]
 		singlelookup("Name","EM.L.GetBPList",params,GetBuyPlan)
 		disableElement("Item",true);
+		disableElement("ContractNo",false)		// MZY0053	1501982		2020-09-08
 	}
 	else 	//1:采购合同,4:协议合同,5:投放合同
 	{
 		var params=[{name:'Name',type:1,value:'Name'},{name:'SourceType',type:4,value:'SourceType'},{name:'CheckDate',type:4,value:'CheckDate'},{name:"EquipTypeDR",type:4,value:"EquipTypeDR"}]
 		singlelookup("Name","EM.L.GetContractList",params,GetContractList)
 		disableElement("Item",true);
+		disableElement("ContractNo",true)		// MZY0053	1501982		2020-09-08
 	}
 }
 // Mozy003018	1279498	2020-04-27		设置"设备属性"
@@ -3783,10 +4432,12 @@ function SetEquipAttributeList(id, type)
 			disableElement(elementID+"Desc",false);
 			setElement(elementID+"Desc","");
 			setElement(elementID,"");
+			initEquipAttributeCat();	//czf 2022-04-14
 		},
 		onSelect:function(v){
 			var elementID=v.id;
 			disableElement(elementID+"Desc",true);
+			initEquipAttributeCat();	//czf 2022-04-14
 		}
     });
     // 属性分类赋值
@@ -3806,10 +4457,14 @@ function setUseLocRequired(initflag)
 	var AutoOut=tkMakeServerCall("web.DHCEQCommon","GetSysInfo",301010)		//0:入库后不自动出库 1:自动出库 2:提示用户选择
 	if (AutoOut==1)
 	{
-		setItemRequire("UseLoc",true)
-		if(GetElementValue("UseLocDR")=="")			//modified by czf 2020-05-09 1313467
+		///modified by ZY0256  20210301
+		if (LocListFlag!=1)
 		{
-			setReqFlag=1;
+			setItemRequire("UseLoc",true)
+			if(GetElementValue("UseLocDR")=="")			//modified by czf 2020-05-09 1313467
+			{
+				setReqFlag=1;
+			}
 		}
 		if (initflag==1)				//modified by CZF0108 2020-05-08 提交验收单 begin 1311684
 		{
@@ -3820,9 +4475,10 @@ function setUseLocRequired(initflag)
 	{
 		if (initflag==1)	
 		{
-			if(GetElementValue("UseLocDR")=="")
+			///modified by ZY0256  20210301
+			if((GetElementValue("UseLocDR")=="")&&(LocListFlag!=1))
 			{
-				messageShow("confirm","","","如果需要自动出库,需要填写'使用科室'.是否填写'使用科室'?","",confirmFun_UseLoc,CheckFinanceItem)
+				messageShow("confirm","","","如果需要自动出库,需要填写'使用部门'.是否填写'使用部门'?","",confirmFun_UseLoc,CheckFinanceItem)    // MZY0161	3521356,3525932		2023-05-12
 			}
 			else
 			{
@@ -3845,6 +4501,246 @@ function confirmFun_UseLoc()
 	setItemRequire("UseLoc",true)
 	setFocus("UseLoc")
 	setReqFlag=1
+}
+//add By wy 2020-8-18 1453189当前申请单撤回
+function BSelfCancelSubmit_Clicked() 
+{
+	var Status=GetElementValue("Status")
+	if (Status>1)
+	{
+		messageShow('alert','error','提示',"该单据已审核完成,无法撤消")
+		return;
+		}
+	var combindata=GetElementValue("RowID")+"^";
+  	var encmeth=GetElementValue("SelfCancelSubmitData");
+  	if (encmeth=="") return;
+	var rtn=cspRunServerMethod(encmeth,combindata,GetElementValue("CurRole"));
+	var RtnObj=JSON.parse(rtn)
+    if (RtnObj.SQLCODE==0) 
+    {
+		messageShow('alert','success','提示',"该单据撤消完成")
+		window.location.href= 'websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQOpenCheckRequest&RowID='+RtnObj.Data 
+	    window.opener.location.reload();  
+	}
+    else
+    {
+		messageShow('alert','error','提示',RtnObj.Data)   //modified by wy 2020-8-28 1453189
+		return;
+    }
+}
+
+//add by ZY0256  20210301
+//申购科室明细
+function BOtherLoc_Clicked()
+{
+	var ReadOnly=GetElementValue("ReadOnly")
+	var RowID=GetElementValue("RowID")
+	if (RowID=="") return;
+	var OpenCheckListID=GetElementValue("CheckListDR")
+	var OCRStatus=GetElementValue("Status")
+	var Type=GetElementValue("Type")
+	if ((OCRStatus!="0")||(Type==1))
+	{
+		ReadOnly=1
+	}
+	///处理修改合同来源数据后申购科室信息没有改变的问题
+	///modified by ZY0278 20210826
+	var SourceType=GetElementValue("SourceType")
+	var SourceID=GetElementValue("SourceID")
+	if (SourceType!=1)
+	{
+		SourceType=""
+		SourceID=""
+	}
+	var str='dhceq.em.openchecklistloc.csp?&ReadOnly='+ReadOnly+"&OpenCheckListID="+OpenCheckListID+"&SourceType="+SourceType+"&SourceID="+SourceID
+	showWindow(str,"科室明细","","","icon-w-paper","modal","","","middle",getLeaveFactoryAndFileNo);	///modified by ZY0261 20210511
+}
+///add by ZY0261 20210511
+function getLeaveFactoryAndFileNo()
+{
+	var OpenCheckListID=GetElementValue("CheckListDR")
+	var result=tkMakeServerCall("web.DHCEQ.EM.BUSOpenCheckListLoc","GetLeaveFactoryNoAndFileNo",OpenCheckListID)
+	result=result.replace(/\\n/g,"\n");
+	var list=result.split("^");
+	SetElement("LeaveFactoryNo",list[0]);
+	SetElement("FileNo",list[1]);
+}
+//add by wy 2021-5-24 按设备项做风险评估
+function BEvaluate_Clicked()
+{
+	var result=tkMakeServerCall("web.DHCEQ.Risk.BUSEvaluate","GetRecentRiskEvaluate","2",GetElementValue("ItemDR"));
+    var str= "dhceq.em.riskevaluate.csp?&ReadOnly=0&SourceType=2&SourceID="+GetElementValue("ItemDR")+"&Name="+GetElementValue("Item")+"&RowID="+result ; 
+	showWindow(str,"医疗设备风险等级评估","","","icon-w-paper","modal","","","large");  //modify by lmm 2020-06-04
+}
+
+//czf 20220414
+function initEquipAttributeCat()
+{
+	/*
+	var jsonData=tkMakeServerCall("web.DHCEQCMasterItem","GetEquipAttributeCat")
+	jsonData=jQuery.parseJSON(jsonData);
+	var string=eval('(' + jsonData.Data+ ')');
+    $("#EquipAttributeCat").keywords({
+       items:string
+    });
+    */
+    //设备属性相关调整
+	var SelectType=$("#EquipAttributeList").keywords("getSelected");
+	var i=SelectType.length;
+	var EquipAttributeString=""
+	if(i>0)  //修改设备属性不能完全删除的问题
+	{
+		for (var j=0;j<i;j++)
+		{
+			if(EquipAttributeString=="")
+			{
+				EquipAttributeString=SelectType[j].id.slice(2)
+			}else
+			{
+				EquipAttributeString=EquipAttributeString+"^"+SelectType[j].id.slice(2)
+			}
+		}
+	}
+	else
+	{
+		var EquipAttributeString=""
+	}
+    $HUI.combogrid('#IHTDesc',{   
+	    url:$URL, 
+	    queryParams:{
+	        ClassName:"web.DHCEQ.EM.BUSAttributeCat",
+	        QueryName:"GetAttributeCat",
+	        TypeIDStr:EquipAttributeString
+	    },
+	    idField:'TRowID',
+		textField:'TName',
+	    multiple: true,
+	    rowStyle:'checkbox', //显示成勾选行形式
+	    selectOnNavigation:false,
+	    fitColumns:true,
+	    fit:true,
+	    border:'true',
+	    //singleSelect: true,
+		//selectOnCheck: true,
+		//checkOnSelect: true
+	    columns:[[
+	    	{field:'check',checkbox:true},
+	    	{field:'TRowID',title:'TRowID',width:50,hidden:true},
+	        {field:'TName',title:'全选',width:150}
+	    ]]
+    });
+}
+///add by ZY 20220913 2907381、2907386、2907390
+function GetOCLAuthorizeDept(value)
+{
+    var List=value.split("^")
+    SetElement("OCLAuthorizeDeptDR",List[0]);
+    SetElement("OCLAuthorizeDept",List[2]);
+}
+///add by ZY 20220913 2907381、2907386、2907390
+function GetOCLUseSubject(value)
+{
+    var List=value.split("^")
+    SetElement("OCLUseSubjectDR",List[0]);
+    SetElement("OCLUseSubject",List[2]);
+}
+///add by ZY 20220913 2907381、2907386、2907390
+function GetOCLBuyMode(value)
+{
+    var List=value.split("^")
+    SetElement("OCLBuyModeDR",List[0]);
+    SetElement("OCLBuyMode",List[2]);
+}
+///add by ZY 20220913 2907381、2907386、2907390
+function BExclusive_Clicked()
+{
+    var SourceType=0
+    var SourceID=GetElementValue("CheckListDR")
+    var ReadOnly=GetElementValue("ReadOnly")
+    if (GetElementValue("Status")!=0) {ReadOnly=1}  // MZY0161	3521356,3525932		2023-05-12
+    if (ExclusiveType=="DHCEQLand")
+    {
+        var url="dhceq.em.land.csp?&LSourceType="+SourceType+"&LSourceID="+SourceID+"&ReadOnly="+ReadOnly
+        showWindow(url,"土地信息","3col","9row","icon-w-paper"); 
+    }
+    else if (ExclusiveType=="DHCEQBuilding")
+    {
+        var url="dhceq.em.building.csp?&BDSourceType="+SourceType+"&BDSourceID="+SourceID+"&ReadOnly="+ReadOnly
+        showWindow(url,"房屋信息","3col","10row","icon-w-paper");  
+    }
+    else if (ExclusiveType=="DHCEQIntangibleAssets")
+    {
+        var url="dhceq.em.intangibleassets.csp?&IASourceType="+SourceType+"&IASourceID="+SourceID+"&ReadOnly="+ReadOnly
+        showWindow(url,"无形资产信息","3col","6row","icon-w-paper");
+    }
+    else if (ExclusiveType=="DHCEQVehicle")
+    {
+        var url="dhceq.em.vehicle.csp?&VSourceType="+SourceType+"&VSourceID="+SourceID+"&ReadOnly="+ReadOnly
+        showWindow(url,"车辆信息","3col","8row","icon-w-paper");
+    }
+}
+
+///modified by ZY 2826780 增加授权管理.
+//验收维护产品授权书
+function productProxyAuthorization()
+{
+    var RowID=getElementValue("RowID");
+    var result=tkMakeServerCall("web.DHCEQ.Plat.CTProduct","SaveProductDataBySource","2",RowID);
+    var list=result.split("^");
+    if (list[0]==0)
+    {
+        var PMProductDR=list[1]
+        if (PMProductDR=="") return;
+        var url='dhceq.plat.proxyauthorization.csp?&PMProductDR='+PMProductDR+'&PMSourceType=2&PMSourceID='+RowID;
+        showWindow(url,"产品授权书维护","","700px","icon-w-paper","modal","","","large");
+        //showWindow(url,"产品授权书维护","","","icon-w-paper","modal","","","large");
+    }
+    else
+    {
+        messageShow("","","","产品库信息生成错误:"+list[0]+":"+list[1])
+        return
+    }
+    
+}
+
+//add by czf 2022-09-26
+//查看合同
+function BContract_Clicked()
+{
+	var ContractDR=GetElementValue("ContractDR");
+	if (ContractDR=="") return;
+	var Status=GetElementValue("Status");
+	var str='dhceq.con.contract.csp?&RowID='+ContractDR+'&ReadOnly=1&OCRFlag=1'	// MZY0153	3225463		2023-02-20	只读
+	showWindow(str,"合同详细","","","icon-w-paper","modal","","","large"); 
+}
+
+//点击授权资质
+function BProxy_Clicked()
+{
+    var RowID=getElementValue("RowID");
+	    var result=tkMakeServerCall("web.DHCEQ.Plat.CTProduct","GetProduct","","","","2",RowID);
+	    if(result!=""){
+		    var PMProductDR=result[0]
+		    var url='dhceq.plat.proxyauthorization.csp?&PMProductDR='+PMProductDR+'&PMSourceType=2&PMSourceID='+RowID;
+		    showWindow(url,"产品授权书维护","","700px","icon-w-paper","modal","","","large");
+		    }
+	    else{
+    		var result=tkMakeServerCall("web.DHCEQ.Plat.CTProduct","SaveProductDataBySource","2",RowID);
+    		var list=result.split("^");
+    		if (list[0]==0)
+    		{
+     	   		var PMProductDR=list[1]
+    	    	if (PMProductDR=="") return;
+     	   		var url='dhceq.plat.proxyauthorization.csp?&PMProductDR='+PMProductDR+'&PMSourceType=2&PMSourceID='+RowID;
+    	    	showWindow(url,"产品授权书维护","","700px","icon-w-paper","modal","","","large");
+    	    	//showWindow(url,"产品授权书维护","","","icon-w-paper","modal","","","large");
+   		 	}
+    		else
+   		 	{
+       		 	messageShow("","","","产品库信息生成错误:"+list[0]+":"+list[1])
+       		 	return
+   		 	}
+	    }
 }
 //定义页面加载方法
 document.body.onload = BodyLoadHandler;

@@ -4,7 +4,11 @@ var rowid=0;
 function BodyLoadHandler() 
 {
 	$("#tDHCEQEquipOperatorFind").datagrid({showRefresh:false,showPageList:false,afterPageText:'',beforePageText:''});
-
+	// MZY0156	3377013		2023-03-24
+	var Equip=document.getElementById('Equip');
+	if (Equip) Equip.onkeydown = Equip_keydown;
+	var Location=document.getElementById('Location');
+	if (Location) Location.onkeydown = Equip_keydown;
 }
 ///选择表格行触发此方法
 ///Modify By QW 2018-10-11 HISUI改造：点击选择行后，界面无法正常填充数据
@@ -25,5 +29,19 @@ function SelectRowHandler(index,rowdata)
 	parent.DHCEQUseRecord.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQUseRecord&SourceIDDR="+rowdata.TEquipDR
 	SetElement("EquipDR",rowdata.TEquipDR)
 }
-//定义页面加载方法
+// MZY0156	3377013		2023-03-24
+function Equip_keydown(e)
+{
+    var key=websys_getKey(e);
+    if (key==13)
+    {
+        var val="&EquipDR="+GetElementValue("EquipDR");
+		val=val+"&UserDR="+GetElementValue("UserDR");
+		val=val+"&Equip="+GetElementValue("Equip");
+		val=val+"&QXType="+GetElementValue("QXType");
+		val=val+"&Location="+GetElementValue("Location");
+		//alert(val)
+		window.location.href= 'websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQEquipOperatorFind'+val;
+    }
+}
 document.body.onload = BodyLoadHandler;

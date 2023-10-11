@@ -53,7 +53,7 @@ FSSubmitRemarks.Config = FSSubmitRemarks.Config || {
 			}
 			var info = "";
 			if ((remarks != "")||(selectedItems != "")) {
-				info = remarks + '#' + selectedItems;
+				info = remarks + '@' + selectedItems;
 			}
 			window.returnValue = info;
 			window.close();

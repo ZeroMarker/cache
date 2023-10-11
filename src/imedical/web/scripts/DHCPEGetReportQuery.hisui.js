@@ -57,7 +57,8 @@ function BFind_click(){
 			Name:$("#Name").val(),
 			StartDate:$("#StartDate").datebox('getValue'),
 			EndDate:$("#EndDate").datebox('getValue'),
-			IsGroup:IsGroup
+			IsGroup:IsGroup,
+			LocID:session['LOGON.CTLOCID']
 			
 			})
 	
@@ -90,7 +91,8 @@ function InitGetReportDataGrid(){
 			Name:$("#Name").val(),
 			StartDate:$("#StartDate").datebox('getValue'),
 			EndDate:$("#EndDate").datebox('getValue'),
-			IsGroup:IsGroup
+			IsGroup:IsGroup,
+			LocID:session['LOGON.CTLOCID']
 				
 		},
 		columns:[[

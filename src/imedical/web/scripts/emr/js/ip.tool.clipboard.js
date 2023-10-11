@@ -27,7 +27,7 @@ function getAllContent(){
 
 function insertText(text)
 {
-	parent.insertText(text);
+	parent.parent.insertText(text);
 }
 
 function setContent(content)
@@ -46,5 +46,5 @@ function deletelist(obj)
 //关闭窗口
 function closeWindow()
 {
-	parent.closeTab("剪贴板");
+	parent.parent.closeTab("剪贴板");
 }

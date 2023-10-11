@@ -9,7 +9,7 @@ function InStkTkSearch(Fn) {
 	var gGroupId=session['LOGON.GROUPID'];
 	var gStrParamS='';
 	var PhaLocS = new Ext.ux.LocComboBox({
-				fieldLabel : '科室',
+				fieldLabel : $g('科室'),
 				id : 'PhaLocS',
 				name : 'PhaLocS',
 				anchor : '95%',
@@ -19,7 +19,7 @@ function InStkTkSearch(Fn) {
 	
 	// 起始日期
 	var StartDateS = new Ext.ux.DateField({
-				fieldLabel : '起始日期',
+				fieldLabel : $g('起始日期'),
 				id : 'StartDateS',
 				name : 'StartDateS',
 				anchor : '90%',
@@ -29,7 +29,7 @@ function InStkTkSearch(Fn) {
 
 	// 结束日期
 	var EndDateS = new Ext.ux.DateField({
-				fieldLabel : '结束日期',
+				fieldLabel : $g('结束日期'),
 				id : 'EndDateS',
 				name : 'EndDateS',
 				anchor : '90%',
@@ -37,7 +37,7 @@ function InStkTkSearch(Fn) {
 				value : new Date()
 			});
 	var CompleteS=new Ext.form.Checkbox({
-		fieldLabel:'包含完成',
+		fieldLabel:$g('包含完成'),
 		id:'CompleteS',
 		name:'CompleteS',
 		width : 100,
@@ -51,7 +51,7 @@ var InfoFormS = new Ext.form.FormPanel({
 				id : "InfoFormS",
 				items:[{
 					xtype:'fieldset',
-					title:'查询条件',
+					title:$g('查询条件'),
 					layout: 'column',
 					style:"padding:5px 0px 5px 0px",
 					items : [{ 				
@@ -90,8 +90,8 @@ var InfoFormS = new Ext.form.FormPanel({
 
 	// 检索按钮
 	var searchBT = new Ext.Toolbar.Button({
-				text : '查询',
-				tooltip : '点击查询盘点单信息',
+				text : $g('查询'),
+				tooltip : $g('点击查询盘点单信息'),
 				iconCls : 'page_find',
 				height:30,
 				width:70,
@@ -107,11 +107,11 @@ var InfoFormS = new Ext.form.FormPanel({
 				.toString();
 		var PhaLoc = Ext.getCmp("PhaLocS").getValue();	
 		if(PhaLoc==""){
-			Msg.info("warning", "请选择盘点科室!");
+			Msg.info("warning", $g("请选择盘点科室!"));
 			return;
 		}
 		if(StartDate==""||EndDate==""){
-			Msg.info("warning", "请选择开始日期和截止日期!");
+			Msg.info("warning", $g("请选择开始日期和截止日期!"));
 			return;
 		}
 		var CompFlag='N';
@@ -129,8 +129,8 @@ var InfoFormS = new Ext.form.FormPanel({
 
 	// 选取按钮
 	var returnBT = new Ext.Toolbar.Button({
-				text : '选取',
-				tooltip : '点击选取',
+				text : $g('选取'),
+				tooltip : $g('点击选取'),
 				iconCls : 'page_goto',
 				height:30,
 				width:70,
@@ -141,8 +141,8 @@ var InfoFormS = new Ext.form.FormPanel({
 
 	// 清空按钮
 	var clearBT = new Ext.Toolbar.Button({
-				text : '清屏',
-				tooltip : '点击清屏',
+				text : $g('清屏'),
+				tooltip : $g('点击清屏'),
 				iconCls : 'page_clearscreen',
 				height:30,
 				width:70,
@@ -163,8 +163,8 @@ var InfoFormS = new Ext.form.FormPanel({
 
 	// 3关闭按钮
 	var closeBT = new Ext.Toolbar.Button({
-				text : '关闭',
-				tooltip : '关闭界面',
+				text : $g('关闭'),
+				tooltip : $g('关闭界面'),
 				iconCls : 'page_delete',
 				height:30,
 				width:70,
@@ -199,23 +199,23 @@ var InfoFormS = new Ext.form.FormPanel({
 			
 	function renderCompFlag(value){
 		if(value=='Y'){
-			return '完成';
+			return $g('完成');
 		}else{
-			return '未完成'
+			return $g('未完成')
 		}	
 	}
 	function renderManaFlag(value){
 		if(value=='Y'){
-			return '管理药';
+			return $g('管理药');
 		}else{
-			return '非管理药'
+			return $g('非管理药')
 		}	
 	}
 	function renderYesNo(value){
 		if(value=='Y'){
-			return '是';
+			return $g('是');
 		}else{
-			return '否'
+			return $g('否')
 		}	
 	}
 	var nm = new Ext.grid.RowNumberer();
@@ -228,90 +228,90 @@ var InfoFormS = new Ext.form.FormPanel({
 				hidden : true,
 				hideable : false
 			}, {
-				header : "盘点单号",
+				header : $g("盘点单号"),
 				dataIndex : 'instNo',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "盘点日期",
+				header : $g("盘点日期"),
 				dataIndex : 'date',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '盘点时间',
+				header : $g('盘点时间'),
 				dataIndex : 'time',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '盘点人',
+				header : $g('盘点人'),
 				dataIndex : 'userName',
 				width : 70,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '账盘完成标志',
+				header : $g('账盘完成标志'),
 				dataIndex : 'comp',
 				width : 80,
 				align : 'center',
 				renderer:renderCompFlag,
 				sortable : true
 			}, {
-				header : '管理药标志',
+				header : $g('管理药标志'),
 				dataIndex : 'manFlag',
 				width : 80,
 				align : 'left',
 				renderer:renderManaFlag,
 				sortable : true
 			}, {
-				header : "账盘单位",
+				header : $g("账盘单位"),
 				dataIndex : 'freezeUom',
 				width : 80,
 				align : 'left',
 				renderer:function(value){
 					if(value==1){
-						return '入库单位';
+						return $g('入库单位');
 					}else{
-						return '基本单位';
+						return $g('基本单位');
 					}
 				},
 				sortable : true
 			}, {
-				header : "包含不可用",
+				header : $g("包含不可用"),
 				dataIndex : 'includeNotUse',
 				width : 80,
 				align : 'center',
 				renderer:renderYesNo,
 				sortable : true
 			}, {
-				header : "仅不可用",
+				header : $g("仅不可用"),
 				dataIndex : 'onlyNotUse',
 				renderer:renderYesNo,
 				width : 80,
 				align : 'center',
 				sortable : true
 			}, {
-				header : "类组",
+				header : $g("类组"),
 				dataIndex : 'scgDesc',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "库存分类",
+				header : $g("库存分类"),
 				dataIndex : 'scDesc',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "开始货位",
+				header : $g("开始货位"),
 				dataIndex : 'frSb',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "截止货位",
+				header : $g("截止货位"),
 				dataIndex : 'toSb',
 				width : 100,
 				align : 'left',
@@ -322,16 +322,16 @@ var InfoFormS = new Ext.form.FormPanel({
 					store : MasterInfoStore,
 					pageSize : PageSize,
 					displayInfo : true,
-					displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
+					displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
 					emptyMsg : "No results to display",
-					prevText : "上一页",
-					nextText : "下一页",
-					refreshText : "刷新",
-					lastText : "最后页",
-					firstText : "第一页",
-					beforePageText : "当前页",
-					afterPageText : "共{0}页",
-					emptyMsg : "没有数据",
+					prevText : $g("上一页"),
+					nextText : $g("下一页"),
+					refreshText : $g("刷新"),
+					lastText : $g("最后页"),
+					firstText : $g("第一页"),
+					beforePageText : $g("当前页"),
+					afterPageText : $g("共{0}页"),
+					emptyMsg : $g("没有数据"),
 					doLoad:function(C){
 						var B={},
 						A=this.getParams();
@@ -367,10 +367,11 @@ var InfoFormS = new Ext.form.FormPanel({
 
 	
 	var window = new Ext.Window({
-				title : '盘点单',
+				title : $g('盘点单'),
 				width : document.body.clientWidth*0.88,
 				height : document.body.clientHeight*0.88,
 				layout : 'border',
+				modal: true,
 				items : [            // create instance immediately
 		            {
 		                region: 'north',
@@ -401,7 +402,7 @@ var InfoFormS = new Ext.form.FormPanel({
 	function returnData() {
 		var selectRows = MasterInfoGrid.getSelectionModel().getSelections();
 		if (selectRows.length == 0) {
-			Msg.info("warning","请选择要返回的盘点单信息！");
+			Msg.info("warning",$g("请选择要返回的盘点单信息！"));
 		} else {
 			
 			//getInGrInfoByInGrRowId(InGrRowId, selectRows[0]);

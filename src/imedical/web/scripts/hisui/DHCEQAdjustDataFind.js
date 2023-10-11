@@ -7,6 +7,8 @@ function BodyLoadHandler()
     InitElementValue();
 	InitUserInfo(); //系统参数
 	InitEvent();
+	initPanelHeaderStyle();
+	initButtonColor();//cjc 2023-01-18 设置极简积极按钮颜色
 }
 function InitEvent()
 {
@@ -39,7 +41,11 @@ function BFind_Click()
     val=val+"&EndDate="+GetElementValue("EndDate") ;
     val=val+"&ReportFlag="+GetChkElementValue("ReportFlag") 
     val=val+"&RequestUser="+GetElementValue("RequestUser") 
+    val=val+"&vType="+GetElementValue("vType");   //add by wy 2021-3-8 1790838
 	val='websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQAdjustDataFind'+val;  //hisui 改造 add by wy 2019-10-28
+    if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		val += "&MWToken="+websys_getMWToken()
+	}
     window.location.href=val
 }
 //hisui改造 add wy 2019-10-30
@@ -56,8 +62,13 @@ function BAdd_Click()
 			Component="DHCEQAdjustDataC"
 		}
 	}
+
 	url="websys.default.hisui.csp?WEBSYS.TCOMPONENT="+Component+"&UserFlag="+UserFlag+"&vType="+vType
-	showWindow(url,"数据调整","","9row","icon-w-paper","modal","","","large");
+	if(Component=="DHCEQAdjustDataA"){
+		showWindow(url,"数据调整","","300px","icon-w-paper","modal","","","large");
+	}else{
+		showWindow(url,"数据调整","","9row","icon-w-paper","modal","","","large");//modify  by cjc ui评审 20230208
+	}
 	
 }
 document.body.onload = BodyLoadHandler;

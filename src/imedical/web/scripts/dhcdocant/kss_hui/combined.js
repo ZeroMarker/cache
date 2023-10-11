@@ -6,7 +6,7 @@
  * CREATED BY QP 2018-05-04
  * 
  */
-$(function () {
+ $(function () {
 	//提示信息
     var Chrflag = false;
     var Curflag = false;
@@ -20,16 +20,19 @@ $(function () {
         Chrflag = true;
     };
     if (Curflag) {
-		var tipInfo = "<span style='font-size:12px;'>需要填写联用原因</span><span style='margin-left:30px;color:#000;font-size:12px;'>不需要填写变更原因</span>";
-		$("#i-fill-content").html(tipInfo);
+		var tipInfo = "<span style='font-size:12px;background:#FFE3E3;'>"+$g("需要填写联用原因")+"</span><span style='margin-left:30px;color:#000;font-size:12px;background:#FFE3E3;'>"+$g("不需要填写变更原因")+"</span>";
+		var tipInfoNew = "<span class='c-m-r20'>需要填写联用原因</span><span>不需要填写变更原因</span>"
+		$("#i-fill-content2").html(tipInfoNew);
 	};
     if (Chrflag) {
-		var tipInfo = "<span style='color:#000;font-size:12px;'>不需要填写联用原因</span><span style='margin-left:30px;font-size:12px;'>需要填写变更原因</span>";
-		$("#i-fill-content").html(tipInfo);
+		var tipInfo = "<span style='color:#000;font-size:12px;background:#FFE3E3;'>"+$g("不需要填写联用原因")+"</span><span style='margin-left:30px;font-size:12px;background:#FFE3E3;'>"+$g("需要填写变更原因")+"</span>";
+		var tipInfoNew = "<span class='c-m-r20'>不需要填写联用原因</span><span>需要填写变更原因</span>"
+		$("#i-fill-content2").html(tipInfoNew);
 	};
     if ( Curflag && Chrflag) {
-		var tipInfo = "<span style='font-size:12px;'>需要填写联用原因</span><span style='margin-left:30px;font-size:12px;'>需要填写变更原因</span>";
-		$("#i-fill-content").html(tipInfo);
+		var tipInfo = "<span style='font-size:12px;background:#FFE3E3;'>"+$g("需要填写联用原因")+"</span><span style='margin-left:30px;font-size:12px;background:#FFE3E3;'>"+$g("需要填写变更原因")+"</span>";
+		var tipInfoNew = "<span class='c-m-r20'>需要填写联用原因</span><span>需要填写变更原因</span>"
+		$("#i-fill-content2").html(tipInfoNew);
 	};
 	
 	//联用原因
@@ -86,9 +89,9 @@ $(function () {
 			ArgCnt:2
 		},
 		columns:[[
-			{field:'ArcItm',title:'医嘱名称',width:100},
-			{field:'Priority',title:'医嘱分类',width:100},
-			{field:'Status',title:'医嘱状态',width:100},
+			{field:'ArcItm',title:'医嘱名称',width:100,sortable:true},
+			{field:'Priority',title:'医嘱分类',width:100,sortable:true},
+			{field:'Status',title:'医嘱状态',width:100,sortable:true},
 		]]
 	});
 	
@@ -111,9 +114,9 @@ $(function () {
 			ArgCnt:2
 		},
 		columns:[[
-			{field:'Status',title:'医嘱状态',width:100},
-			{field:'ArcItm',title:'药品名称',width:100},
-			{field:'StopDate',title:'停医嘱时间',width:100},
+			{field:'Status',title:'医嘱状态',width:100,sortable:true},
+			{field:'ArcItm',title:'药品名称',width:100,sortable:true},
+			{field:'StopDate',title:'停医嘱时间',width:100,sortable:true},
 		]]
 	});
 	
@@ -130,18 +133,18 @@ $(function () {
 		var ret = $.InvokeMethod("DHCAnt.KSS.Combined","SaveCombinedInfo",PARAOBJ.EpisodeId, PARAOBJ.ParrAllInfo, CurInfo, ChrInfo,session['LOGON.HOSPID']);
         if (ret!=0) {
 			//$.messager.alert('提示','保存成功!','info');
-			$.messager.alert('提示','保存成功!','info', function () {
+			websys_getTop().$.messager.alert('提示','保存成功!','info', function () {
 				closeWin(true);
 			});
 		} else {
-			$.messager.alert('提示','保存失败!','info');
+			websys_getTop().$.messager.alert('提示','保存失败!','info');
 			return;
 		};
 				
 	});
 	//取消
 	$("#i-btn-cancel").on("click", function() {
-		$.messager.confirm('提示', '登记表未保存,是否继续退出?', function(r){
+		websys_getTop().$.messager.confirm('提示', '登记表未保存,是否继续退出?', function(r){
 			if (r){
 				closeWin("");
 			}
@@ -165,14 +168,14 @@ $(function () {
 		if(CurRearet.split("|")[0] > 1){	//QP 20170622
 			var CombinedReasonValue = $("#i-caim-reason").simplecombobox('getValue');
 			if (CombinedReasonValue == "") {
-				$.messager.alert('提示','联用原因不能为空!','info');
+				websys_getTop().$.messager.alert('提示','联用原因不能为空!','info');
 				return false;
 			}
 		}
 		if(Chrret!=0){
 			var ChangeKssReasonValue = $('#i-caim-changereason').simplecombobox('getValue');
 			if (ChangeKssReasonValue == "") {
-				$.messager.alert('提示','变更原因不能为空!','info');
+				websys_getTop().$.messager.alert('提示','变更原因不能为空!','info');
 				return false;  
 			}
 		}

@@ -1,4 +1,4 @@
-Ôªø//È°µÈù¢Event
+//“≥√ÊEvent
 function InitWinEvent(obj){
 	obj.RecPRowID=""
 	obj.LoadEvent=function() {
@@ -17,16 +17,9 @@ function InitWinEvent(obj){
 			var EDate=Common_GetDate(date)
 			Common_SetValue('SDate',SDate);
 			Common_SetValue('EDate',EDate);	
+			obj.RefreshMrList()
 		})
 	}
-	$('#winFormShow').dialog({
-		title: 'ÂçïÁóÖÁßçÂ°´Êä•',
-		iconCls:"icon-edit",
-		closed: true,
-		modal: true,
-		isTopZindex:true
-		
-	});	
 	$('#MrNo').on('keydown',function (e) {
                 if (e.keyCode == 13) {
 	                var aMrNo=Common_GetValue('MrNo')
@@ -41,8 +34,12 @@ function InitWinEvent(obj){
                    obj.RefreshMrList();
                 }
             });
+    var length=10;
     $('#RegNo').on('keydown',function (e) {
                 if (e.keyCode == 13) {
+	                obj.RegNo = $("#RegNo").val();
+					if(!obj.RegNo) return;
+					$("#RegNo").val((Array(length).join('0') + obj.RegNo).slice(-length)); 
                    obj.RefreshMrList();
                 }
             });
@@ -55,21 +52,26 @@ function InitWinEvent(obj){
 	$('#search').on('click',function(){obj.RefreshMrList()});
 	obj.RefreshMrList=function(){
 		var hosType=$('input:radio[name="hosType"]:checked').val();	
+		if (Common_GetValue('Hospital')!=""){
+			obj.HospID=Common_GetValue('Hospital')
+		}
 		obj.gridQCMrList.reload({
 				ClassName:"DHCMA.CPW.SDS.QCMrListSrv",
 				QueryName:"QryPatientByDate",
 				aDateFrom:Common_GetValue('SDate'),
 				aDateTo	:Common_GetValue('EDate'),
 				aLoc 	:Common_GetValue('DishLoc'),
-				aHospID :Common_GetValue('Hospital'),
+				aHospID :obj.HospID,
 				aMrNo	:Common_GetValue('MrNo'),
 				aRegNo	:Common_GetValue('RegNo'),
 				aPatName:Common_GetValue('PatName'),
 				StaType	:hosType
 			})	
 		}
-	obj.layer=function(rd){
-		title="ÁóÖÁßçÂêçÁß∞Ôºö"+rd.QCEntityDesc+" /ÁóÖÊ°àÂè∑Ôºö"+rd.MrNo+" /ÂßìÂêçÔºö"+rd.PatName+" /Âá∫Èô¢Êó•ÊúüÔºö"+rd.DisDate+" /Êä•ÂëäÁä∂ÊÄÅÔºö"+rd.QCCurrStatus;
+	obj.layer=function(rowindx){
+		obj.gridQCMrList.selectRow(rowindx);
+		var rd=obj.gridQCMrList.getSelected()
+		title="<div id ='CurrStatus'>"+$g("≤°÷÷√˚≥∆")+"£∫"+rd.QCEntityDesc+" /"+$g("≤°∞∏∫≈")+"£∫"+rd.MrNo+" /"+$g("–’√˚")+"£∫"+rd.PatName+" /"+$g("≥ˆ‘∫»’∆⁄")+"£∫"+rd.DisDate+" /"+$g("±®∏Ê◊¥Ã¨")+"£∫"+$g(rd.QCCurrStatus)+"</div>";
 		url="./dhcma.cpw.sd.qcformshow.csp?MrListID=" + rd.MrListID + "&random="+Math.random();
 		websys_showModal({
 			url:url,
@@ -77,38 +79,50 @@ function InitWinEvent(obj){
 			iconCls:'icon-w-epr',
 			originWindow:window,
 			isTopZindex:true,
-			onBeforeClose:function(){}
+			onBeforeClose:function(){ 
+				//ªÒ»°≤°¿˝µ±«∞◊¥Ã¨–≈œ¢
+				var StatusStr=$m({
+					ClassName:'DHCMA.CPW.SDS.QCMrListSrv',
+					MethodName:'GetStatusByMrListID',
+					aMrListID:rd.MrListID
+				},false)
+				// µœ÷◊¥Ã¨∏¸–¬
+				var RowIndex=$('#gridQCMrList').datagrid('getRowIndex',rd)
+				$("#gridQCMrList").datagrid("updateRow",{  
+            	       index:RowIndex, //––À˜“˝  
+                	   row:{  
+                    		QCCurrStatus:StatusStr.split('^')[1]
+                    	  }  
+     		 		})	
+			}
 		});
-		}
+	}
 	obj.CreatSDRule=function(QCID){
 			if (QCID>0) {
 				Common_CheckboxToSDRule("RuleDic",QCID,1,1);
 			}
 		}
-	obj.InSDManager=function(rd){
-					//ÂºπÁ™óÂ°´ÂÜôÂÖ•ÁªÑÁêÜÁî±
-					$('#RuleDic').html("")
-					Common_SetValue("RuleResume","");
-					obj.LocID=rd.AdmLoc
-					 $("#QCDic").combobox({
-						url:$URL+'?ClassName=DHCMA.CPW.SDS.QCEntitySrv&QueryName=QryQCEntity&ResultSetType=Array&aLocOID='+obj.LocID,
-						valueField:'BTID',
-						textField:'BTDesc'
-						 ,onSelect: function () {
-							 var DicID=Common_GetValue('QCDic');
-							 obj.CreatSDRule(DicID);
-						 }
-					 })
-					obj.EpisodeID=rd.EpisodeID
-					
-					$('#winConfirmInfo').dialog({
-						title: 'ÂÖ•ÂçïÁóÖÁßçÁÆ°ÁêÜ„Äê‰ø°ÊÅØÂΩïÂÖ•„Äë',
-						height: 300
-					})
-					obj.value="I";
-					$HUI.dialog('#winConfirmInfo').open();	
-		}
-	
+	obj.InSDManager=function(rowindx){
+		obj.gridQCMrList.selectRow(rowindx);
+		var rd=obj.gridQCMrList.getSelected()
+		//µØ¥∞ÃÓ–¥»Î◊È¿Ì”…
+		$('#RuleDic').html("")
+		Common_SetValue("RuleResume","");
+		obj.LocID=rd.AdmLoc
+		 $("#QCDic").combobox({
+			url:$URL+'?ClassName=DHCMA.CPW.SDS.QCEntitySrv&QueryName=QryQCEntity&ResultSetType=Array&aLocOID='+obj.LocID,
+			valueField:'BTID',
+			textField:'BTDesc',
+			defaultFilter:2
+			 ,onSelect: function () {
+				 var DicID=Common_GetValue('QCDic');
+				 obj.CreatSDRule(DicID);
+			 }
+		 })
+		obj.EpisodeID=rd.EpisodeID
+		obj.value="I";
+		$HUI.dialog('#winConfirmInfo').open();	
+	}
 	$('#SaveRule').on('click',function () {
 				if (session['DHCMA.CTLOCID']==undefined) {
 					var InLocID=session['LOGON.CTLOCID']
@@ -120,6 +134,16 @@ function InitWinEvent(obj){
 				}else{
 					var InUserID=session['DHCMA.USERID']
 				}
+				if (Common_GetValue('QCDic')=="") {
+					$.messager.alert($g("¥ÌŒÛÃ· æ"),$g("«Î—°‘Ò»Î◊È≤°÷÷"), 'error');
+					return;
+				}
+				var RuleStr=Common_CheckboxValue('RuleDic')
+				var Resume=$('#RuleResume').val()
+				if ((RuleStr=="")&&(Resume=="")) {
+						$.messager.alert($g("¥ÌŒÛÃ· æ"),$g("»Î◊È‘≠“Ú∫Õ±∏◊¢◊Ó…ŸÃÓ–¥“ªœÓ"), 'info');
+						return;
+					}
 				var MInputStr=obj.EpisodeID+"^^"+Common_GetValue('QCDic')+"^"+InUserID+"^"+InLocID
 				var Mflg = $m({
 							ClassName :"DHCMA.CPW.SDS.QCMrListSrv",
@@ -127,15 +151,9 @@ function InitWinEvent(obj){
 							aInputStr :MInputStr
 						},false);
 				if (parseInt(Mflg)<1) {
-						$.messager.alert("ÈîôËØØÊèêÁ§∫","ÂÖ•ÂçïÁóÖÁßçÂ§±Ë¥•!Error=" + Mflg, 'info');	
-					 	return; //Â¶ÇÊûú‰∏ªËÆ∞ÂΩï‰øùÂ≠òÂ§±Ë¥•  ÈÄÄÂá∫
+						$.messager.alert($g("¥ÌŒÛÃ· æ"),$g("»Îµ•≤°÷÷ ß∞‹")+":" + Mflg, 'info');	
+					 	return; //»Áπ˚÷˜º«¬º±£¥Ê ß∞‹  ÕÀ≥ˆ
 				}
-				var RuleStr=Common_CheckboxValue('RuleDic')
-				var Resume=$('#RuleResume').val()
-				if ((RuleStr=="")&&(Resume=="")) {
-						$.messager.alert("ÈîôËØØÊèêÁ§∫","ÂÖ•ÁªÑÂéüÂõ†ÂíåÂ§áÊ≥®ÊúÄÂ∞ëÂ°´ÂÜô‰∏ÄÈ°πÔºÅ", 'info');
-						return;
-					}
 				var RuleInputStr=Mflg+"^I^"+session['LOGON.USERID']+"^"+RuleStr+"^"+Resume
 				var flg = $m({
 							ClassName:"DHCMA.CPW.SDS.QCMrListStateSrv",
@@ -143,9 +161,9 @@ function InitWinEvent(obj){
 							aInput:RuleInputStr
 						},false);
 						if (parseInt(flg) < 0) {
-							$.messager.alert("ÈîôËØØÊèêÁ§∫","Êìç‰ΩúÂ§±Ë¥•!Error=" + flg, 'info');	
+							$.messager.alert($g("¥ÌŒÛÃ· æ"),$g("≤Ÿ◊˜ ß∞‹")+":" + flg, 'info');	
 						} else {
-							$.messager.popover({msg: 'Êìç‰ΩúÊàêÂäüÔºÅ',type:'success',timeout: 1000});
+							$.messager.popover({msg: $g('≤Ÿ◊˜≥…π¶'),type:'success',timeout: 1000});
 							$('#gridQCMrList').datagrid('reload');
 							
 						}
@@ -161,8 +179,8 @@ function InitWinEvent(obj){
 		var strUrl = "./emr.browse.csp?EpisodeID=" + EpisodeID + "&PatientID=" + PatientID + "&2=2";
 		var r_width = window.screen.availWidth-50;
 		var r_height = window.screen.availHeight-100;
-		var v_left = (window.screen.availWidth - 10 - r_width) / 2;		// Ëé∑ÂæóÁ™óÂè£ÁöÑÊ∞¥Âπ≥‰ΩçÁΩÆ;
-		var v_top = (window.screen.availHeight - 30 - r_height) / 2;	// Ëé∑ÂæóÁ™óÂè£ÁöÑÂûÇÁõ¥‰ΩçÁΩÆ;
+		var v_left = (window.screen.availWidth - 10 - r_width) / 2;		// ªÒµ√¥∞ø⁄µƒÀÆ∆ΩŒª÷√;
+		var v_top = (window.screen.availHeight - 30 - r_height) / 2;	// ªÒµ√¥∞ø⁄µƒ¥π÷±Œª÷√;
 		var r_params = "left=" + v_left +
 						",top=" + v_top + 
 						",width=" + r_width + 
@@ -171,7 +189,7 @@ function InitWinEvent(obj){
 		window.open(strUrl, "_blank", r_params);
 	}
 	**/
-	//ÁóÖÂéÜÊµèËßàÊñ∞ÁïåÈù¢
+	//≤°¿˙‰Ø¿¿–¬ΩÁ√Ê
 	obj.DisplayEPRView=function(EpisodeID,PatientID)
 		{
 		if (!EpisodeID) return;
@@ -180,7 +198,7 @@ function InitWinEvent(obj){
 		var strUrl = cspUrl+"&PatientID=" + PatientID+"&EpisodeID="+EpisodeID + "&2=2";
 		websys_showModal({
 			url:strUrl,
-			title:'ÁóÖÂéÜÊµèËßà',
+			title:$g('≤°¿˙‰Ø¿¿'),
 			iconCls:'icon-w-epr',  
 	        originWindow:window,
 			width:'98%',

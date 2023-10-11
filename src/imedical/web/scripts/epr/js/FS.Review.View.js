@@ -1,32 +1,45 @@
-//È«¾Ö
+ï»¿//å…¨å±€
 var FSReviewView = FSReviewView || {
     SelectEpisode: "",
     Back2Doc: "0",
     Back2Nur: "0",
 
-    //¹«ÓĞ·½·¨ÉùÃ÷
+    //å…¬æœ‰æ–¹æ³•å£°æ˜
     QCBack: null
 };
 
-//ÅäÖÃºÍ¾²Ì¬
+//é…ç½®å’Œé™æ€
 FSReviewView.Config = FSReviewView.Config || {
-    ERROR_INFO: "´íÎó",
-    ERROR_INFO_EPISODEINFO: "»ñÈ¡»¼ÕßĞÅÏ¢Ê§°Ü£¡",
-    ERROR_INFO_REVIEW: "¸´ºËÊ§°Ü£¬ÇëÖØĞÂ³¢ÊÔ»òÁªÏµ¹ÜÀíÔ±",
-    ERROR_INFO_QCBACK: "ÍË»ØÊ§°Ü£¬ÇëÖØĞÂ³¢ÊÔ»òÁªÏµ¹ÜÀíÔ±",
-    LOADING_INFO: "Êı¾İ×°ÔØÖĞ......"
+    ERROR_INFO: "é”™è¯¯",
+    ERROR_INFO_EPISODEINFO: "è·å–æ‚£è€…ä¿¡æ¯å¤±è´¥ï¼",
+    ERROR_INFO_REVIEW: "å¤æ ¸å¤±è´¥ï¼Œè¯·é‡æ–°å°è¯•æˆ–è”ç³»ç®¡ç†å‘˜",
+    ERROR_INFO_QCBACK: "é€€å›å¤±è´¥ï¼Œè¯·é‡æ–°å°è¯•æˆ–è”ç³»ç®¡ç†å‘˜",
+    LOADING_INFO: "æ•°æ®è£…è½½ä¸­......"
 };
 
 (function (win) {
     $(function () {
 
-        //³õÊ¼»¯¹«ÓĞ·½·¨
+        //åˆå§‹åŒ–å…¬æœ‰æ–¹æ³•
         FSReviewView.QCBack = qcback;
 
-        //ÉèÖÃ»¼ÕßĞÅÏ¢
-        setPatInfo();
+		var actionCode = window.dialogArguments.ActionCode;
 
-        //¹Ø±ÕÊ±µ÷ÓÃ¸¸Ò³ÃæË¢ĞÂÁĞ±í
+        //è®¾ç½®æ‚£è€…ä¿¡æ¯
+        setPatInfo();
+		//var flag="true";
+		var iframeWidth = document.body.clientWidth;
+		var iframeHeight = document.body.clientHeight - 85;
+		var url = "";
+		if (flag == "true") {
+			url = './dhc.epr.fs.check.index35percent.csp?EpisodeID=' + episodeID;
+		}
+		else {
+			url = './dhc.epr.fs.check.index.csp?EpisodeID=' + episodeID;
+		}
+		document.getElementById("iframeDIV").innerHTML = "<iframe id='pdfiframe' src=\'" + url + "\' frameBorder=0 scrolling=no style='z-index:-1;height:" + iframeHeight + ";width:" + iframeWidth + "'></iframe>";
+
+        //å…³é—­æ—¶è°ƒç”¨çˆ¶é¡µé¢åˆ·æ–°åˆ—è¡¨
         window.onbeforeunload = onbeforeunload_handler;
         function onbeforeunload_handler() {
             searchEpisode();
@@ -35,33 +48,48 @@ FSReviewView.Config = FSReviewView.Config || {
 
         //------------------------------------------------------------------------------------------------------------------
 
-        //¹Ø±Õ
+        //å…³é—­
         $('#windowCloseBtn').on('click', function () {
             FSReviewCommon.CloseWebPage();
         });
 
-        //¸´ºËÍ¨¹ı
+        //å¤æ ¸é€šè¿‡
         $('#passBtn').on('click', function () {
             getSelectEpisode();
             var obj = $.ajax({
-                url: "../DHCEPRFS.web.eprajax.AjaxReview.cls?Action=reviewpass&EpisodeID=" + FSReviewView.SelectEpisode + "&UserID=" + userID,
+				url: reviewUrl = "../DHCEPRFS.web.eprajax.AjaxReview.cls?Action=reviewpass&ActionCode=" + actionCode + "&EpisodeID=" + FSReviewView.SelectEpisode + "&UserID=" + userID,
                 type: 'post',
                 async: false
             });
 
             FSReviewView.SelectEpisode = "";
             var ret = obj.responseText;
-            if (ret !== "1") {
-                $.messager.alert(FSReviewView.Config.ERROR_INFO, FSReviewView.Config.ERROR_INFO_REVIEW, 'error');
-                return;
-            }
-            else {
-                searchEpisode();
-                FSReviewCommon.CloseWebPage();
-            }
+			if (ret == "-10")
+			{
+				if (actionCode == "1")
+				{
+					alert('è´¨æ§ç§‘å¤æ ¸æœªé€šè¿‡ï¼Œä¸èƒ½è¿›è¡Œæ“ä½œï¼');
+				}
+				else if (actionCode == "3")
+				{
+					
+					alert('ç—…æ¡ˆå®¤å¤æ ¸æœªé€šè¿‡ï¼Œä¸èƒ½è¿›è¡Œæ“ä½œï¼');
+				}
+			}
+			else
+			{
+				if (ret !== "1") {
+					alert(FSReviewView.Config.ERROR_INFO_REVIEW);
+					return;
+				}
+				else {
+					searchEpisode();
+					FSReviewCommon.CloseWebPage();
+				}
+			}
         });
 
-        //ÍË»ØÒ½Éú
+        //é€€å›åŒ»ç”Ÿ
         $('#back2DocBtn').on('click', function () {
             FSReviewView.Back2Doc = "1";
             FSReviewView.Back2Nur = "0";
@@ -69,7 +97,7 @@ FSReviewView.Config = FSReviewView.Config || {
             FSReviewCommon.OpenBackWin(FSReviewView.QCBack);
         });
 
-        //ÍË»Ø»¤Ê¿
+        //é€€å›æŠ¤å£«
         $('#back2NurBtn').on('click', function () {
             FSReviewView.Back2Doc = "0";
             FSReviewView.Back2Nur = "1";
@@ -77,7 +105,7 @@ FSReviewView.Config = FSReviewView.Config || {
             FSReviewCommon.OpenBackWin(FSReviewView.QCBack);
         });
 
-        //È«²¿ÍË»Ø
+        //å…¨éƒ¨é€€å›
         $('#back2AllBtn').on('click', function () {
             FSReviewView.Back2Doc = "1";
             FSReviewView.Back2Nur = "1";
@@ -85,7 +113,7 @@ FSReviewView.Config = FSReviewView.Config || {
             FSReviewCommon.OpenBackWin(FSReviewView.QCBack);
         });
 		
-		//µç×Ó²¡ÀúÁ´½Ó
+		//ç”µå­ç—…å†é“¾æ¥
         $('#viewEPRBtn').on('click', function () {
 			openEPR2Win();
         });
@@ -93,9 +121,9 @@ FSReviewView.Config = FSReviewView.Config || {
         //------------------------------------------------------------------------------------------------------------------
 
 		function openEPR2Win() {
-            var iWidth = screen.availWidth - 10;                         //µ¯³ö´°¿ÚµÄ¿í¶È;
-            var iHeight = screen.availHeight - 30;                       //µ¯³ö´°¿ÚµÄ¸ß¶È;
-            var iTop = 0;       //»ñµÃ´°¿ÚµÄ´¹Ö±Î»ÖÃ;
+            var iWidth = screen.availWidth - 10;                         //å¼¹å‡ºçª—å£çš„å®½åº¦;
+            var iHeight = screen.availHeight - 30;                       //å¼¹å‡ºçª—å£çš„é«˜åº¦;
+            var iTop = 0;       //è·å¾—çª—å£çš„å‚ç›´ä½ç½®;
             var iLeft = 0;
             var url = 'epr.newfw.main.csp?EpisodeID=' + episodeID;
             window.showModalDialog(url, "", 'dialogHeight=' + iHeight + 'px;dialogWidth=' + iWidth + 'px;dialogTop=' + iTop + 'px;dialogLeft=' + iLeft + 'px;center=yes;help=no;resizable=yes;scroll=no;status=no;edge=sunken');
@@ -123,16 +151,16 @@ FSReviewView.Config = FSReviewView.Config || {
                 var disLoc = arr[9];
 
                 var splitor = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp';
-                var htmlStr = '&nbsp<div style="margin:3px">';
-                htmlStr += '<span style="font-family:Î¢ÈíÑÅºÚ;font-size:14px;">²¡°¸ºÅ£º</span><span style="font-family:Î¢ÈíÑÅºÚ;color:#008b8b;font-size:14px;">' + medRecordNo + '</span>' + splitor;
-                htmlStr += '<span style="font-family:Î¢ÈíÑÅºÚ;font-size:14px;">µÇ¼ÇºÅ£º</span><span style="font-family:Î¢ÈíÑÅºÚ;color:#008b8b;font-size:14px;">' + regNo + '</span>' + splitor;
-                htmlStr += '<span style="font-family:Î¢ÈíÑÅºÚ;font-size:14px;">ĞÕÃû£º</span><span style="font-family:Î¢ÈíÑÅºÚ;color:#008b8b;font-size:14px;">' + name + '</span>' + splitor;
-                htmlStr += '<span style="font-family:Î¢ÈíÑÅºÚ;font-size:14px;">ĞÔ±ğ£º</span><span style="font-family:Î¢ÈíÑÅºÚ;color:#008b8b;font-size:14px;">' + gender + '</span>' + splitor;
+                var htmlStr = '<div style="margin:3px;padding:2px">';
+                htmlStr += '<span style="font-family:å¾®è½¯é›…é»‘;font-size:14px;">ç—…æ¡ˆå·ï¼š</span><span style="font-family:å¾®è½¯é›…é»‘;color:#008b8b;font-size:14px;">' + medRecordNo + '</span>' + splitor;
+                htmlStr += '<span style="font-family:å¾®è½¯é›…é»‘;font-size:14px;">ç™»è®°å·ï¼š</span><span style="font-family:å¾®è½¯é›…é»‘;color:#008b8b;font-size:14px;">' + regNo + '</span>' + splitor;
+                htmlStr += '<span style="font-family:å¾®è½¯é›…é»‘;font-size:14px;">å§“åï¼š</span><span style="font-family:å¾®è½¯é›…é»‘;color:#008b8b;font-size:14px;">' + name + '</span>' + splitor;
+                htmlStr += '<span style="font-family:å¾®è½¯é›…é»‘;font-size:14px;">æ€§åˆ«ï¼š</span><span style="font-family:å¾®è½¯é›…é»‘;color:#008b8b;font-size:14px;">' + gender + '</span>' + splitor;
                 //htmlStr += '</div><div style="margin:3px">';
-                htmlStr += '<span style="font-family:Î¢ÈíÑÅºÚ;font-size:14px;">ÈëÔºÈÕÆÚ£º</span><span style="font-family:Î¢ÈíÑÅºÚ;color:#008b8b;font-size:14px;">' + admDate + '</span>' + splitor;
-                htmlStr += '<span style="font-family:Î¢ÈíÑÅºÚ;font-size:14px;">³öÔºÈÕÆÚ£º</span><span style="font-family:Î¢ÈíÑÅºÚ;color:#008b8b;font-size:14px;">' + disDate + '</span>' + splitor;
-                htmlStr += '<span style="font-family:Î¢ÈíÑÅºÚ;font-size:14px;">ÈëÔº¿ÆÊÒ£º</span><span style="font-family:Î¢ÈíÑÅºÚ;color:#008b8b;font-size:14px;">' + admLoc + '</span>' + splitor;
-                htmlStr += '<span style="font-family:Î¢ÈíÑÅºÚ;font-size:14px;">³öÔº¿ÆÊÒ£º</span><span style="font-family:Î¢ÈíÑÅºÚ;color:#008b8b;font-size:14px;">' + disLoc + '</span>' + splitor;
+                htmlStr += '<span style="font-family:å¾®è½¯é›…é»‘;font-size:14px;">å…¥é™¢æ—¥æœŸï¼š</span><span style="font-family:å¾®è½¯é›…é»‘;color:#008b8b;font-size:14px;">' + admDate + '</span>' + splitor;
+                htmlStr += '<span style="font-family:å¾®è½¯é›…é»‘;font-size:14px;">å‡ºé™¢æ—¥æœŸï¼š</span><span style="font-family:å¾®è½¯é›…é»‘;color:#008b8b;font-size:14px;">' + disDate + '</span>' + splitor;
+                htmlStr += '<span style="font-family:å¾®è½¯é›…é»‘;font-size:14px;">å…¥é™¢ç§‘å®¤ï¼š</span><span style="font-family:å¾®è½¯é›…é»‘;color:#008b8b;font-size:14px;">' + admLoc + '</span>' + splitor;
+                htmlStr += '<span style="font-family:å¾®è½¯é›…é»‘;font-size:14px;">å‡ºé™¢ç§‘å®¤ï¼š</span><span style="font-family:å¾®è½¯é›…é»‘;color:#008b8b;font-size:14px;">' + disLoc + '</span>' + splitor;
                 htmlStr += '</div>';
                 $('#infoPanel').append(htmlStr);
             }
@@ -147,7 +175,7 @@ FSReviewView.Config = FSReviewView.Config || {
 
         function qcback(reason) {
             var obj = $.ajax({
-                url: "../DHCEPRFS.web.eprajax.AjaxReview.cls?Action=qcback&EpisodeID=" + FSReviewView.SelectEpisode + "&UserID=" + userID + "&Reason=" + encodeURI(reason) + "&Back2Nur=" + FSReviewView.Back2Nur + "&Back2Doc=" + FSReviewView.Back2Doc,
+				url: "../DHCEPRFS.web.eprajax.AjaxReview.cls?Action=qcback&ActionCode=" + actionCode + "&EpisodeID=" + FSReviewView.SelectEpisode + "&UserID=" + userID + "&Reason=" + encodeURI(reason) + "&Back2Nur=" + FSReviewView.Back2Nur + "&Back2Doc=" + FSReviewView.Back2Doc,
                 type: 'post',
                 async: false
             });
@@ -157,14 +185,31 @@ FSReviewView.Config = FSReviewView.Config || {
             FSReviewView.SelectEpisode = "";
 
             var ret = obj.responseText;
-            if (ret != "1") {
-                $.messager.alert(FSReviewView.Config.ERROR_INFO, FSReviewView.Config.ERROR_INFO_QCBACK, 'error');
-                return;
-            }
-            else {
-                searchEpisode();
-                FSReviewCommon.CloseWebPage();
-            }
+			if (ret == "-10")
+			{
+				if (actionCode == "1")
+				{
+					alert('è´¨æ§ç§‘å¤æ ¸æœªé€šè¿‡ï¼Œä¸èƒ½è¿›è¡Œæ“ä½œï¼');
+				}
+				else
+				{
+					if (actionCode == "3")
+					{
+						alert('ç—…æ¡ˆå®¤å¤æ ¸æœªé€šè¿‡ï¼Œä¸èƒ½è¿›è¡Œæ“ä½œï¼');
+					}
+				}
+			}
+			else
+			{
+				if (ret != "1") {
+					alert(FSReviewView.Config.ERROR_INFO_QCBACK);
+					return;
+				}
+				else {
+					searchEpisode();
+					FSReviewCommon.CloseWebPage();
+				}
+			}
         }
 
         function searchEpisode() {
@@ -173,7 +218,3 @@ FSReviewView.Config = FSReviewView.Config || {
 
     });
 }(window));
-
-
-
-      

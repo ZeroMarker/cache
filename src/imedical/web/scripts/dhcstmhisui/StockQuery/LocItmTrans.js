@@ -1,17 +1,18 @@
-function TransQuery(Incil,Date){	
-	$UI.linkbutton('#FQueryBT',{
-		onClick:function(){
-			var ParamsObj=$UI.loopBlock('#FindConditions');
-			var Params=JSON.stringify(ParamsObj);
+function TransQuery(Incil, Date) {
+	$UI.linkbutton('#FQueryBT', {
+		onClick: function() {
+			var ParamsObj = $UI.loopBlock('#FindConditions');
+			var Params = JSON.stringify(ParamsObj);
 			FDetailInfoGrid.load({
 				ClassName: 'web.DHCSTMHUI.LocItmTransMove',
 				MethodName: 'LocItmStkMoveDetail',
-				ParamStr:Params,
-				INCIL:Incil
+				ParamStr: Params,
+				INCIL: Incil
 			});
 		}
 	});
-	var DetailInfoCm = [[{
+	var DetailInfoCm = [[
+		{
 			title: 'TrId',
 			field: 'TrId',
 			width: 50,
@@ -21,7 +22,7 @@ function TransQuery(Incil,Date){
 		}, {
 			title: '业务RowId',
 			field: 'TrPointer',
-			width: 150,
+			width: 50,
 			hidden: true
 		}, {
 			title: '日期',
@@ -35,22 +36,29 @@ function TransQuery(Incil,Date){
 		}, {
 			title: '单位',
 			field: 'PurUom',
-			width: 150
+			width: 50
+		}, {
+			title: '高值条码',
+			field: 'HVBarCode',
+			width: 200
 		}, {
 			title: '售价',
 			field: 'Sp',
-			width: 150,
+			width: 70,
 			align: 'right'
 		}, {
 			title: '进价',
 			field: 'Rp',
-			width: 80,
+			width: 70,
 			align: 'right'
 		}, {
 			title: '结余数量',
 			field: 'EndQtyUom',
-			width: 70,
-			align: 'right'
+			width: 70
+		}, {
+			title: '批次结余',
+			field: 'EndQtyUomInclb',
+			width: 70
 		}, {
 			title: '数量',
 			field: 'TrQtyUom',
@@ -73,7 +81,7 @@ function TransQuery(Incil,Date){
 		}, {
 			title: '处理人',
 			field: 'TrAdm',
-			width: 150
+			width: 70
 		}, {
 			title: '摘要',
 			field: 'TrMsg',
@@ -81,51 +89,59 @@ function TransQuery(Incil,Date){
 		}, {
 			title: '结余金额(进价)',
 			field: 'EndRpAmt',
-			width: 150,
+			width: 100,
 			align: 'right'
 		}, {
 			title: '结余金额(售价)',
 			field: 'EndSpAmt',
-			width: 150,
+			width: 100,
 			align: 'right'
 		}, {
 			title: '供应商',
 			field: 'Vendor',
-			width: 150
+			width: 120
 		}, {
-			title: '厂商',
+			title: '生产厂家',
 			field: 'Manf',
-			width: 150
+			width: 120
 		}, {
 			title: '操作人',
 			field: 'OperateUser',
-			width: 150
+			width: 60
 		}
 	]];
 	var FDetailInfoGrid = $UI.datagrid('#FDetailInfoGrid', {
-		lazy:true,
+		lazy: true,
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.LocItmTransMove',
 			MethodName: 'LocItmStkMoveDetail'
 		},
 		columns: DetailInfoCm,
-		showBar:true
+		showBar: true,
+		navigatingWithKey: true,
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
+				$(this).datagrid('selectRow', 0);
+			}
+		}
 	});
-	$HUI.dialog('#TransMoveInfoWin',{
-		onOpen: function(){
-			var Dafult = {
-			StartDate:Date,
-			EndDate:Date			
+	$HUI.dialog('#TransMoveInfoWin', {
+		height: gWinHeight,
+		width: gWinWidth,
+		onOpen: function() {
+			var DefaultData = {
+				StartDate: Date,
+				EndDate: Date
 			};
-		$UI.fillBlock('#FindConditions', Dafult);
-		var ParamsObj=$UI.loopBlock('#FindConditions');
-		var Params=JSON.stringify(ParamsObj);
-		FDetailInfoGrid.load({
-			ClassName: 'web.DHCSTMHUI.LocItmTransMove',
-			MethodName: 'LocItmStkMoveDetail',
-			ParamStr:Params,
-			INCIL:Incil
-		});
-	}
+			$UI.fillBlock('#FindConditions', DefaultData);
+			var ParamsObj = $UI.loopBlock('#FindConditions');
+			var Params = JSON.stringify(ParamsObj);
+			FDetailInfoGrid.load({
+				ClassName: 'web.DHCSTMHUI.LocItmTransMove',
+				MethodName: 'LocItmStkMoveDetail',
+				ParamStr: Params,
+				INCIL: Incil
+			});
+		}
 	}).open();
 }

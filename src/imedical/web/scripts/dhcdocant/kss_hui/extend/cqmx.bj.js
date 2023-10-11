@@ -61,7 +61,10 @@ function fillCqmx () {
 	var ApplyDr = selected.aaid;
 	var Cqmxid = selected.Cqmxid;
 	var src="dhcant.cqmx.bj.detail.csp?EpisodeID="+ServerObj.EpisodeID+"&ArcimDr="+ArcimDr+"&AimDr="+AimDr+"&ApplyDr="+ApplyDr+"&Cqmxid="+Cqmxid;
-	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
+	if ('undefined'!==typeof websys_getMWToken){
+        src += "&MWToken="+websys_getMWToken();
+    }
+    var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
 	createModalDialog("EditCQMXInfo","碳青霉烯类及替加环素详情", PW, PH,"icon-w-edit","",$code,"");
 	
 }

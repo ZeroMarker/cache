@@ -1,9 +1,9 @@
-ï»¿var PageLogicObj={
+var PageLogicObj={
 }
 $(function(){
-	//äº‹ä»¶åˆå§‹åŒ–
+	//ÊÂ¼ş³õÊ¼»¯
 	InitEvent();
-	//é¡µé¢å…ƒç´ åˆå§‹åŒ–
+	//Ò³ÃæÔªËØ³õÊ¼»¯
 	PageHandle();
 })
 function InitEvent(){
@@ -39,8 +39,11 @@ function PageHandle(){
     if (frm) {
     	MenuAdm = frm.EpisodeID.value;
     }
+	if (MenuAdm==""){
+	   MenuAdm = ServerObj.MenuEpisodeID; 
+	    }
     if (MenuAdm!=""){
-	    //æœ‰å¯èƒ½æ˜¯æ£€ç´¢çš„å…¶ä»–å°±è¯Šè®°å½•çš„åŒ»å˜±è¿›è¡Œçš„å¤åˆ¶ï¼ŒæŒ‰ç…§menuä¸Šçš„å°±è¯Šè¿›è¡Œåˆ¤æ–­æ˜¯å¦å±•ç¤ºè™šæ‹Ÿé•¿æœŸæŒ‰é’®
+	    //ÓĞ¿ÉÄÜÊÇ¼ìË÷µÄÆäËû¾ÍÕï¼ÇÂ¼µÄÒ½Öö½øĞĞµÄ¸´ÖÆ£¬°´ÕÕmenuÉÏµÄ¾ÍÕï½øĞĞÅĞ¶ÏÊÇ·ñÕ¹Ê¾ĞéÄâ³¤ÆÚ°´Å¥
 		var UserEMVirtualtLong=$.cm({
 		    ClassName : "web.DHCDocOrderVirtualLong",
 		    MethodName : "GetUserEMVirtualtLong",
@@ -108,7 +111,7 @@ function CheckChange(e,value){
    }
 }
 function InitCombobox(){
-	//ä¸‹åŒ»å˜±ç§‘å®¤
+	//ÏÂÒ½Öö¿ÆÊÒ
 	$("#DocUserDep").combobox({
 		url:$URL+"?ClassName=web.DHCDocOrderCommon&QueryName=ctloclookup&rows=99999&LogonHospDr="+session['LOGON.HOSPID'],
         mode:'remote',
@@ -129,7 +132,7 @@ function InitCombobox(){
 			loadOrdTableData();
 		}
 	});
-	//åŒ»å˜±åŒ»ç”Ÿ
+	//Ò½ÖöÒ½Éú
 	var cbox = $HUI.combobox("#DocName", {
 		valueField: 'DocID',
 		textField: 'DocDesc',
@@ -138,19 +141,19 @@ function InitCombobox(){
 			loadOrdTableData();
 		}
     });
-    //åŒ»å˜±ç±»å‹
+    //Ò½ÖöÀàĞÍ
 	var jsonData=$.q({
-	    ClassName:"web.OECPriority",
-	    QueryName:"LookUp",
-	    desc:"",
+	    ClassName:"web.DHCDocItemDefault",
+	    QueryName:"FindGlobal",
+	    GlobalName:"^OECPR(",
 	    page:1,  
 	    rows:99999
 	},false);
 	var data=jsonData.rows;
-	data.unshift({"Description":"å…¨éƒ¨","HIDDEN":"","Code":""})
+	data.unshift({"Desc":$g("È«²¿"),"RowId":""})
 	var cbox = $HUI.combobox("#OrdPrior", {
-		valueField: 'HIDDEN',
-		textField: 'Description', 
+		valueField: 'RowId',
+		textField: 'Desc', 
 		data: data,
 		onSelect:function(record){
 			//if ($(".seleted-a").length==0) return;
@@ -252,13 +255,13 @@ function createPatAdmTimeLine(data){
 			$($(".adm-list li a")[1]).prev().addClass('selectdot');
 			loadOrdTableData();
 		}else{
-			if ($("a[id^='"+ServerObj.EpisodeID+"']").length==0){
+			if ($("a[id^='"+ServerObj.EpisodeID+"_"+"']").length==0){
 				$($(".adm-list li a")[1]).addClass("seleted-a");
 				$($(".adm-list li a")[1]).prev().addClass('selectdot');
 				loadOrdTableData();
 			}else{
-				$("a[id^='"+ServerObj.EpisodeID+"']").addClass("seleted-a");
-				$("a[id^='"+ServerObj.EpisodeID+"']").prev().addClass('selectdot');
+				$("a[id^='"+ServerObj.EpisodeID+"_"+"']").addClass("seleted-a");
+				$("a[id^='"+ServerObj.EpisodeID+"_"+"']").prev().addClass('selectdot');
 				loadOrdTableData();
 			}
 		}
@@ -284,9 +287,13 @@ function loadOrdTableData(){
 	    $("#frameIPOrdList").show();
 	    if ($("#frameIPOrdList").attr('src')=="about:blank"){
 		    if (ServerObj.isNurseLogin=="1"){
-		    	$("#frameIPOrdList").attr('src',"ipdoc.patorderviewnurse.csp?PageShowFromWay=ShowFromOrdCopy&EpisodeID=" +episodeID+"&DefaultOrderPriorType=S");
+				var url="ipdoc.patorderviewnurse.csp?PageShowFromWay=ShowFromOrdCopy&EpisodeID=" +episodeID+"&DefaultOrderPriorType=S";
+				if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
+		    	$("#frameIPOrdList").attr('src',url);
 		    }else{
-			    $("#frameIPOrdList").attr('src',"ipdoc.patorderview.csp?PageShowFromWay=ShowFromOrdCopy&EpisodeID=" +episodeID+"&DefaultOrderPriorType=S");
+				var url="ipdoc.patorderview.csp?PageShowFromWay=ShowFromOrdCopy&EpisodeID=" +episodeID+"&DefaultOrderPriorType=S";
+				if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
+			    $("#frameIPOrdList").attr('src',url);
 			}
 		}else{
 			var mradm=id.split("_")[3];
@@ -584,7 +591,7 @@ function SetCopyData(type){
 			var OrderType=data.OrderType;
 			if((type==5)&&(OrderType!="R")){
 				Outflag=true;
-				$.messager.alert("æç¤º","éè¯å“åŒ»å˜±ä¸å…è®¸å¤åˆ¶ä¸ºå‡ºé™¢å¸¦è¯åŒ»å˜±");
+				$.messager.alert("ÌáÊ¾","·ÇÒ©Æ·Ò½Öö²»ÔÊĞí¸´ÖÆÎª³öÔº´øÒ©Ò½Öö");
 			}
 			var OrderPrior=data.OrderPrior;
 			var OrderPriorRowid=data.OrderPriorRowid;
@@ -650,6 +657,7 @@ function SetCopyData(type){
 			ITMFreqWeekStr=ITMFreqWeekStr.replace(/@/g,String.fromCharCode(2));
 			var ExceedReasonID=data.ExceedReasonID;
 			var ExceedReason=data.ExceedReason;
+			var ItemSpecCode=data.ItemSpecCode;
 			var ItemData=code+"!"+OrderSeqNo+"!"+OrderDoseQty+String.fromCharCode(1)+OrderDoseUOM+String.fromCharCode(1)+OrderDoseUOMRowid;
 			ItemData=ItemData+"^"+OrderFreq+String.fromCharCode(1)+OrderFreqRowid+String.fromCharCode(1)+OrderFreqFactor+String.fromCharCode(1)+OrderFreqInterval;
 			ItemData=ItemData+"^"+OrderInstr+String.fromCharCode(1)+OrderInstrRowid;
@@ -658,20 +666,20 @@ function SetCopyData(type){
 			ItemData=ItemData+"^"+OrderPrior+String.fromCharCode(1)+OrderPriorRowid+String.fromCharCode(1)+"";
 			ItemData=ItemData+"^"+"";
 			ItemData=ItemData+"^^"+""+"^"+OrderDepProcNote+"^"+""+"^"+"";
-			ItemData=ItemData+"^"+OrderNotifyClinician+"^^^^"+OrdSpeedFlowRate+String.fromCharCode(1)+OrderFlowRateUnitdesc+String.fromCharCode(1)+OrderFlowRateUnit+"^"+OrderBodyPartLabel;
+			ItemData=ItemData+"^"+OrderNotifyClinician+"^^"+ItemSpecCode+"^^"+OrdSpeedFlowRate+String.fromCharCode(1)+OrderFlowRateUnitdesc+String.fromCharCode(1)+OrderFlowRateUnit+"^"+OrderBodyPartLabel;
 			
-			//ItemData=ItemData+"^^^^^^"+OrderBodyPartLabel; //12-- åŠ æ€¥ 16-SpeedFlowRate_$C(1)_FlowRateUnit_$C(1)_FlowRateUnitRowid
+			//ItemData=ItemData+"^^^^^^"+OrderBodyPartLabel; //12-- ¼Ó¼± 16-SpeedFlowRate_$C(1)_FlowRateUnit_$C(1)_FlowRateUnitRowid
 			ItemData=ItemData+"^"+OrderActionRowid+"^"+OrderAction+"^"+OrderSkinTest;
-			ItemData=ItemData+"^"; //è®¡è´¹ç»„å¥—é¤æ˜ç»†ç¼–å·
-			ItemData=ItemData+"^"+OrdFreqTimeDoseQtyStr+"^"+ITMFreqWeekStr; //åŒé¢‘æ¬¡ä¸åŒå‰‚é‡ã€å‘¨é¢‘æ¬¡
-			ItemData=ItemData+"^"+ExceedReasonID+String.fromCharCode(1)+ExceedReason; //ç–—ç¨‹è¶…é‡åŸå› 
+			ItemData=ItemData+"^"; //¼Æ·Ñ×éÌ×²ÍÃ÷Ï¸±àºÅ
+			ItemData=ItemData+"^"+OrdFreqTimeDoseQtyStr+"^"+ITMFreqWeekStr; //Í¬Æµ´Î²»Í¬¼ÁÁ¿¡¢ÖÜÆµ´Î
+			ItemData=ItemData+"^"+ExceedReasonID+String.fromCharCode(1)+ExceedReason; //ÁÆ³Ì³¬Á¿Ô­Òò
 			ItemData=ItemData+"^"	//ViewBindSource
 			ItemData=ItemData+"^"+VirtualtLongFlag;
 			ItemData=ItemData+"!"+OrderType+"!"+OrderBillTypeRowId+"!"+"Order";
 			Copyary[Copyary.length]=ItemData; //
 		}
 	}
-	if (!IsSelectFlag) {$.messager.alert("æç¤º","è¯·é€‰æ‹©è¦å¤åˆ¶çš„åŒ»å˜±");return false;}
+	if (!IsSelectFlag) {$.messager.alert("ÌáÊ¾","ÇëÑ¡ÔñÒª¸´ÖÆµÄÒ½Öö");return false;}
 	if (Outflag) return false;
 	/*var par_win=window.opener;
 	if ((par_win)&&(Copyary.length!=0)){
@@ -753,7 +761,7 @@ function PatientnoKeydown(e){
 			dataType:"text"
 		},function(PatientID){ 
 		    if (PatientID==""){
-			    $.messager.alert("æç¤º","æ­¤ç™»è®°å·ä¸å­˜åœ¨!","info",function(){
+			    $.messager.alert("ÌáÊ¾","´ËµÇ¼ÇºÅ²»´æÔÚ!","info",function(){
 				    $("#Patientno").focus();
 				});
 				return false;
@@ -784,7 +792,7 @@ function BSaveOrdItemClickHandler(){
 		}
 	}
 	if (str==""){
-		$.messager.alert("æç¤º","è¯·é€‰æ‹©åŒ»å˜±åå†ä¿å­˜");
+		$.messager.alert("ÌáÊ¾","ÇëÑ¡ÔñÒ½ÖöºóÔÙ±£´æ");
 		return false;
 	}
 	var AddTOArcosARCIMDatas=$.cm({
@@ -798,15 +806,16 @@ function BSaveOrdItemClickHandler(){
 function UDHCOEOrderSaveToTemplate(AddTOArcosARCIMDatas)
 {
     var XCONTEXT="WNewOrderEntry"
-    var lnk="doc.ordsavetotemplate.hui.csp?Type="+"è¥¿è¯"+"&AddTOArcosARCIMDatas="+escape(AddTOArcosARCIMDatas)+"&XCONTEXT="+escape(XCONTEXT);
+    var lnk="doc.ordsavetotemplate.hui.csp?Type="+"Î÷Ò©"+"&AddTOArcosARCIMDatas="+escape(AddTOArcosARCIMDatas)+"&XCONTEXT="+escape(XCONTEXT);
     var obj=new Object();  
     obj.name=AddTOArcosARCIMDatas; 
     /*var RtnStr=window.showModalDialog(lnk,obj,"dialogwidth:811px;dialogheight:396px;help:no;status:no;center:1;resizable:no");
     //var RtnStr=window.open(lnk,"UDHCOEOrderSaveToTemplate","dialogwidth:100;dialogheight:200;help:no;status:no;center:1;resizable:no");   
     return  RtnStr*/
     websys_showModal({
+		iconCls:'icon-w-batch-add',
 		url:lnk,
-		title:'ä¿å­˜è‡³åŒ»å˜±æ¨¡æ¿',
+		title:$g('±£´æÖÁÒ½ÖöÄ£°å'),
 		width:810,height:440,
 		paraObj:obj
 	})

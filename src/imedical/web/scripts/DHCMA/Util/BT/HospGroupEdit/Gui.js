@@ -23,7 +23,11 @@ function InitHISUIWin(){
 		columns:[[
 			{field:'ID',title:'ID',width:50},
 			{field:'Code',title:'医院分组代码',sortable:true,width:200},
-			{field:'Desc',title:'医院分组名称',sortable:true,width:400}
+			{field:'Desc',title:'医院分组名称',sortable:true,width:400},
+			{field:'IsActive',title:'是否有效',sortable:false,width:100,formatter:function(v,r,i){
+				if(v=='1') return '是';
+				else return '否';
+			}}
 		]],
 		onSelect:function(rowIndex,rowData){
 			if (rowIndex>-1) {

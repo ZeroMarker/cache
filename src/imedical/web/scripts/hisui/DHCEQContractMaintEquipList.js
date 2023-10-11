@@ -1,6 +1,8 @@
 /// GR0054 保修合同设备查询 从DHCEQContractFind.js独立出来，方便日后与采购合同业务分开
 function BodyLoadHandler()
 {
+	//modified by cjt 20230210 需求号3220640 UI页面改造
+	initPanelHeaderStyle();
 	InitPage();
 	fillData();
 	RefreshData();
@@ -37,6 +39,9 @@ function InitPage()
 function BFind_Click()
 {
 	var val="&vData="+GetVData();
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		val += "&MWToken="+websys_getMWToken()
+	}
 	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQContractMaintEquipList"+val;
 }
 //add by csj 20180329

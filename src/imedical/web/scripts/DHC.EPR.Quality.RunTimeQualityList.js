@@ -1,24 +1,30 @@
-﻿var i = 1;
-var x = 0;
-var msg = "";
+﻿$(function(){
+	var i = 1;
+	var x = 0;
+	var msg = "";
 
-var qualityData = qualityCheck(key)	
-//alert(qualityData);
-var m = qualityData.split(";");
-while(i<m.length) {
-	if(m[x][1]!= "^"){
-		msg += '<div id="test">'+m[x]+'</div>';
-		i++;
-		x++;
-	}else{
-		msg += '<div id="test">'+m[x].slice(2,m[x].length)+'</div>';
+	var qualityData = qualityCheck(key)	
+	//alert(qualityData);
+	var m = qualityData.split(";");	
+	while(i<m.length) {
+		var setredcode = m[x].split("#");
+		msg += '<div id='+setredcode[1]+' onclick="javascript:setred(this)" class="textmessage">'+setredcode[0]+'</div>';
 		i++;
 		x++;
 	}
+	//alert(msg);
+	var el = document.getElementById('messages');
+	el.innerHTML = msg;
+	
+	
+	
+});
+
+function setred(obj)
+{
+	//alert(obj.id);
+	parent.qualityMarkRequiredObjects(obj.id);
 }
-//alert(msg);
-var el = document.getElementById('messages');
-el.innerHTML = msg;
 
 //质控
 function qualityCheck(key)

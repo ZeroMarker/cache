@@ -11,11 +11,11 @@ Ext.onReady(function() {
 	var gUserId=session['LOGON.USERID'];
 	var UserName=session['LOGON.USERNAME'];
 	var PhaLoc=new Ext.ux.LocComboBox({
-		fieldLabel : '<font color=blue>科室</font>',
+		fieldLabel : '<font color=blue>'+$g('科室')+'</font>',
 		id : 'PhaLoc',
 		name : 'PhaLoc',
 		anchor : '90%',
-		emptyText : '科室...',
+		emptyText : $g('科室...'),
 		groupId:gGroupId,
 		listeners : {
 			'select' : function(e) {
@@ -30,7 +30,7 @@ Ext.onReady(function() {
 	});
 	
 	var DateFrom = new Ext.ux.DateField({
-		fieldLabel : '<font color=blue>开始日期</font>',
+		fieldLabel : '<font color=blue>'+$g('开始日期')+'</font>',
 		id : 'DateFrom',
 		name : 'DateFrom',
 		anchor : '90%',
@@ -48,13 +48,13 @@ Ext.onReady(function() {
 	});
 	*/
 	var StartTime=new Ext.form.TextField({
-		fieldLabel : '开始时间',
+		fieldLabel : $g('开始时间'),
 		id : 'StartTime',
 		name : 'StartTime',
 		anchor : '90%',
 		//value :DefaultEdTime(),
 		regex : /^(0\d{1}|1\d{1}|2[0-3]):[0-5]\d{1}:([0-5]\d{1})$/,
-		regexText:'时间格式错误，正确格式hh:mm:ss',
+		regexText:$g('时间格式错误，正确格式hh:mm:ss'),
 		width : 120,
 		//value :DefaultEdTime(),
 		listeners : {
@@ -89,12 +89,12 @@ Ext.onReady(function() {
 	 
 	 if (datelength<1)
 	 {
-	 	alert("请输入时间！")
+	 	alert($g("请输入时间！"))
 	 	return  ;
 	 	}
 		if (Hdate>24)
 		{
-			alert("输入的小时格式错误，应在0~24之间...")
+			alert($g("输入的小时格式错误，应在0~24之间..."))
 			return ;
 			}
 		if (Hdate.length<2){
@@ -103,7 +103,7 @@ Ext.onReady(function() {
 		
 		if (Mdate>60)
 		{
-			alert("输入的分钟格式错误，应在0~60之间...")
+			alert($g("输入的分钟格式错误，应在0~60之间..."))
 			return ;
 			}
 		if (Mdate.length<1){
@@ -115,7 +115,7 @@ Ext.onReady(function() {
 		
 			if (Sdate>60)
 		{
-			alert("输入的秒格式错误，应在0~60之间...")
+			alert($g("输入的秒格式错误，应在0~60之间..."))
 			return ;
 			}
 		if (Sdate.length<1){
@@ -132,7 +132,7 @@ Ext.onReady(function() {
 	}
 	//-----------------给时间设定正确的格式 add by myq 20140420 	
 	var DateTo = new Ext.ux.DateField({
-		fieldLabel : '<font color=blue>截止日期</font>',
+		fieldLabel : '<font color=blue>'+$g('截止日期')+'</font>',
 		id : 'DateTo',
 		name : 'DateTo',
 		anchor : '90%',
@@ -150,13 +150,13 @@ Ext.onReady(function() {
 	});
 	*/
 	var EndTime=new Ext.form.TextField({
-		fieldLabel : '截止时间',
+		fieldLabel : $g('截止时间'),
 		id : 'EndTime',
 		name : 'EndTime',
 		anchor : '90%',
 		//value :DefaultEdTime(),
 		regex : /^(0\d{1}|1\d{1}|2[0-3]):[0-5]\d{1}:([0-5]\d{1})$/,
-		regexText:'时间格式错误，正确格式hh:mm:ss',
+		regexText:$g('时间格式错误，正确格式hh:mm:ss'),
 		width : 120,
 		//value :DefaultEdTime(),
 		listeners : {
@@ -184,21 +184,21 @@ Ext.onReady(function() {
 		
 		
 	var InciDr = new Ext.form.TextField({
-				fieldLabel : '药品RowId',
+				fieldLabel : $g('药品RowId'),
 				id : 'InciDr',
 				name : 'InciDr',
 				valueNotFoundText : ''
 			});
 
 	var InciCode = new Ext.form.TextField({
-				fieldLabel : '药品编码',
+				fieldLabel : $g('药品编码'),
 				id : 'InciCode',
 				name : 'InciCode',
 				anchor : '90%',
 				valueNotFoundText : ''
 			});
 	var InciDesc = new Ext.form.TextField({
-				fieldLabel : '药品名称',
+				fieldLabel : $g('药品名称'),
 				id : 'InciDesc',
 				name : 'InciDesc',
 				anchor : '90%',
@@ -239,7 +239,7 @@ Ext.onReady(function() {
 	}
 		
 	var DHCStkCatGroup = new Ext.ux.ComboBox({
-		fieldLabel : '库存分类',
+		fieldLabel : $g('库存分类'),
 		id : 'DHCStkCatGroup',
 		name : 'DHCStkCatGroup',
 		store : StkCatStore,
@@ -256,7 +256,7 @@ Ext.onReady(function() {
 				
 	// 药学大类
 	var PhcCat = new Ext.ux.ComboBox({
-		fieldLabel : '药学大类',
+		fieldLabel : $g('药学大类'),
 		id : 'PhcCat',
 		name : 'PhcCat',
 		store : PhcCatStore,
@@ -272,7 +272,7 @@ Ext.onReady(function() {
 
 	// 药学子类
 	var PhcSubCat = new Ext.ux.ComboBox({
-		fieldLabel : '药学子类',
+		fieldLabel : $g('药学子类'),
 		id : 'PhcSubCat',
 		name : 'PhcSubCat',
 		store : PhcSubCatStore,
@@ -287,7 +287,7 @@ Ext.onReady(function() {
 
 	// 药学小类
 	var PhcMinCat = new Ext.ux.ComboBox({
-		fieldLabel : '药学小类',
+		fieldLabel :$g( '药学小类'),
 		id : 'PhcMinCat',
 		name : 'PhcMinCat',
 		store : PhcMinCatStore,
@@ -296,7 +296,7 @@ Ext.onReady(function() {
 		params:{PhcSubCatId:'PhcSubCat'}
 	});
 var PHCCATALL = new Ext.form.TextField({
-	fieldLabel : '药学分类',
+	fieldLabel : $g('药学分类'),
 	id : 'PHCCATALL',
 	name : 'PHCCATALL',
 	width: 70,
@@ -315,14 +315,14 @@ function GetAllCatNew(catdescstr,newcatid){
 
 var PHCCATALLButton = new Ext.Button({
 	id:'PHCCATALLButton',
-	text : '药学分类维护',
+	text :$g( '药学分类维护'),
 	handler : function() {	
        PhcCatNewSelect(gNewCatId,GetAllCatNew)
 
     }
 });
 	var PHCDFPhcDoDR = new Ext.ux.ComboBox({
-		fieldLabel : '管制分类',
+		fieldLabel : $g('管制分类'),
 		id : 'PHCDFPhcDoDR',
 		name : 'PHCDFPhcDoDR',
 		store : PhcPoisonStore,
@@ -331,7 +331,7 @@ var PHCCATALLButton = new Ext.Button({
 	});
 
 	var PhManufacturer = new Ext.ux.ComboBox({
-		fieldLabel : '厂商',
+		fieldLabel : $g('生产企业'),
 		id : 'PhManufacturer',
 		name : 'PhManufacturer',
 		store : PhManufacturerStore,
@@ -341,7 +341,7 @@ var PHCCATALLButton = new Ext.Button({
 	});
 
 	var PHCDOfficialType = new Ext.ux.ComboBox({
-		fieldLabel : '医保类别',
+		fieldLabel :$g( '医保类别'),
 		id : 'PHCDOfficialType',
 		name : 'PHCDOfficialType',
 		store : OfficeCodeStore,
@@ -350,7 +350,7 @@ var PHCCATALLButton = new Ext.Button({
 	});
 
 	var PHCForm = new Ext.ux.ComboBox({
-		fieldLabel : '剂型',
+		fieldLabel : $g('剂型'),
 		id : 'PHCForm',
 		name : 'PHCForm',
 		store : PhcFormStore,
@@ -361,10 +361,10 @@ var PHCCATALLButton = new Ext.Button({
 
 	var PublicBiddingStore = new Ext.data.SimpleStore({
 				fields : ['RowId', 'Description'],
-				data : [['1', '招标'], ['0', '非招标']]
+				data : [['1', $g('招标')], ['0', $g('非招标')]]
 			});
 	var PublicBidding = new Ext.form.ComboBox({
-				fieldLabel : '招标',
+				fieldLabel : $g('招标'),
 				id : 'PublicBidding',
 				name : 'PublicBidding',
 				anchor : '90%',
@@ -380,7 +380,7 @@ var PHCCATALLButton = new Ext.Button({
 			});
 
 		var INFOPBLevel = new Ext.ux.ComboBox({
-					fieldLabel : '招标级别',
+					fieldLabel : $g('招标级别'),
 					id : 'INFOPBLevel',
 					name : 'INFOPBLevel',
 					store : INFOPBLevelStore,
@@ -389,21 +389,21 @@ var PHCCATALLButton = new Ext.Button({
 				});
 
 		var RetFlag = new Ext.form.Checkbox({
-					boxLabel : '是否包含退货',
+					boxLabel : $g('是否包含退货'),
 					id : 'RetFlag',
 					name : 'RetFlag',
 					anchor : '90%',
 					checked : true
 				});
 		var SpFlag = new Ext.form.Checkbox({
-					boxLabel : '批次售价不等于售价',
+					boxLabel : $g('批次售价不等于售价'),
 					id : 'SpFlag',
 					name : 'SpFlag',
 					anchor : '90%',
 					checked : false
 				});
               var INFOBasicDrug = new Ext.form.Checkbox({
-			           boxLabel : '基本药物标志',
+			           boxLabel : $g('基本药物标志'),
 		                  id : 'INFOBasicDrug',
 		                  name : 'INFOBasicDrug',
 		                  anchor : '90%',
@@ -411,7 +411,7 @@ var PHCCATALLButton = new Ext.Button({
 		                });
 		MarkTypeStore.load();
 		var INFOMT = new Ext.ux.ComboBox({
-					fieldLabel : '定价类型',
+					fieldLabel : $g('定价类型'),
 					id : 'INFOMT',
 					name : 'INFOMT',
 					store : MarkTypeStore,
@@ -421,7 +421,7 @@ var PHCCATALLButton = new Ext.Button({
 		
 				// 入库类型
 		var OperateInType = new Ext.ux.ComboBox({
-					fieldLabel : '入库类型',
+					fieldLabel : $g('入库类型'),
 					id : 'OperateInType',
 					name : 'OperateInType',
 					store : OperateInTypeStore,
@@ -432,10 +432,10 @@ var PHCCATALLButton = new Ext.Button({
 		
 	var ImportStore = new Ext.data.SimpleStore({
 		fields : ['RowId', 'Description'],
-		data : [['国产', '国产'], ['进口', '进口'], ['合资', '合资']]
+		data : [[$g('国产'), $g('国产')], [$g('进口'), $g('进口')], [$g('合资'), $g('合资')]]
 	});
 	var INFOImportFlag = new Ext.form.ComboBox({
-			fieldLabel : '进口标志',
+			fieldLabel : $g('进口标志'),
 			id : 'INFOImportFlag',
 			name : 'INFOImportFlag',
 			anchor : '90%',
@@ -450,7 +450,7 @@ var PHCCATALLButton = new Ext.Button({
 			forceSelection : true
 		});
 	var InvNo = new Ext.form.TextField({
-				fieldLabel : '发票号',
+				fieldLabel : $g('发票号'),
 				id : 'InvNo',
 				name : 'InvNo',
 				anchor : '90%',
@@ -485,7 +485,7 @@ var PHCCATALLButton = new Ext.Button({
 	
 		// 入库单列表
 		var FlagImportDetail = new Ext.form.Radio({
-					boxLabel : '入库单列表',
+					boxLabel : $g('入库单列表'),
 					id : 'FlagImportDetail',
 					name : 'ReportType',
 					anchor : '80%',
@@ -493,64 +493,64 @@ var PHCCATALLButton = new Ext.Button({
 				});
 		// 单品汇总
 		var FlagItmStat = new Ext.form.Radio({
-					boxLabel : '单品汇总',
+					boxLabel : $g('单品汇总'),
 					id : 'FlagItmStat',
 					name : 'ReportType',
 					anchor : '80%'
 				});
-		// 供应商汇总
+		// 经营企业汇总
 		var FlagVendorStat = new Ext.form.Radio({
-					boxLabel : '供应商汇总',
+					boxLabel : $g('经营企业汇总'),
 					id : 'FlagVendorStat',
 					name : 'ReportType',
 					anchor : '80%'
 				});
-		// 供应商明细汇总
+		// 经营企业明细汇总
 		var FlagVendorItmStat = new Ext.form.Radio({
-					boxLabel : '供应商明细汇总',
+					boxLabel : $g('经营企业明细汇总'),
 					id : 'FlagVendorItmStat',
 					name : 'ReportType',
 					anchor : '80%'
 				});	
-		// 供应商类组汇总
+		// 经营企业类组汇总
 		var FlagVendorStkGrpStat = new Ext.form.Radio({
-					boxLabel : '供应商类组汇总',
+					boxLabel : $g('经营企业类组汇总'),
 					id : 'FlagVendorStkGrpStat',
 					name : 'ReportType',
 					anchor : '80%'
 				});
 		// 类组汇总
 		var FlagStkGrpStat = new Ext.form.Radio({
-					boxLabel : '类组汇总',
+					boxLabel : $g('类组汇总'),
 					id : 'FlagStkGrpStat',
 					name : 'ReportType',
 					anchor : '80%'
 				});	
 		// 库存分类汇总
 		var FlagStockStat = new Ext.form.Radio({
-					boxLabel : '库存分类汇总',
+					boxLabel : $g('库存分类汇总'),
 					id : 'FlagStockStat',
 					name : 'ReportType',
 					anchor : '80%'
 				});				
 	   // 入库单汇总
 		var FlagRecItmSumStat = new Ext.form.Radio({
-					boxLabel : '入库单汇总',
+					boxLabel : $g('入库单汇总'),
 					id : 'FlagRecItmSumStat',
 					name : 'ReportType',
 					anchor : '80%'
 				});	
 	   // 入库单(进价)汇总
 		var FlagRpItmSumStat = new Ext.form.Radio({
-					boxLabel : '入库单(进价)汇总',
+					boxLabel : $g('入库单(进价)汇总'),
 					id : 'FlagRpItmSumStat',
 					name : 'ReportType',
 					anchor : '80%'
 				});	
 	var ClearBT = new Ext.Toolbar.Button({
 				id : "ClearBT",
-				text : '清屏',
-				tooltip : '点击清屏',
+				text : $g('清屏'),
+				tooltip : $g('点击清屏'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_clearscreen',
@@ -577,8 +577,8 @@ var PHCCATALLButton = new Ext.Button({
 		// 统计按钮
 		var OkBT = new Ext.Toolbar.Button({
 					id : "OkBT",
-					text : '统计',
-					tooltip : '点击统计',
+					text : $g('统计'),
+					tooltip : $g('点击统计'),
 					width : 70,
 					iconCls : 'page_find',
 					height : 30,
@@ -594,7 +594,7 @@ var PHCCATALLButton = new Ext.Button({
 			var EndDate=Ext.getCmp("DateTo").getValue()
 			if(StartDate==""||EndDate=="")
 			{
-				Msg.info("warning", "开始日期和截止日期不能空！");
+				Msg.info("warning",$g( "开始日期和截止日期不能空！"));
 				return;
 			}
 			var StartDate=Ext.getCmp("DateFrom").getValue().format(App_StkDateFormat).toString();;
@@ -602,7 +602,7 @@ var PHCCATALLButton = new Ext.Button({
 		    var startTime=Ext.getCmp("StartTime").getRawValue();
 			var endTime=Ext.getCmp("EndTime").getRawValue();
 			if(StartDate==EndDate && startTime>endTime){
-				Msg.info("warning", "开始时间大于截止时间！");
+				Msg.info("warning", $g("开始时间大于截止时间！"));
 				return;
 			}
 			var LocId=Ext.getCmp("PhaLoc").getValue();
@@ -631,24 +631,25 @@ var PHCCATALLButton = new Ext.Button({
 			var PhcCatId=Ext.getCmp("PhcCat").getValue();				//药学大类id
 			var PhcSubCatId=Ext.getCmp("PhcSubCat").getValue();			//药学子类id
 			var PhcMinCatId=Ext.getCmp("PhcMinCat").getValue();			//药学小类id
-			var ManfId=Ext.getCmp("PhManufacturer").getValue();			//生产厂商id
+			var ManfId=Ext.getCmp("PhManufacturer").getValue();			//生产企业id
 			var Form=Ext.getCmp("PHCForm").getValue();					//剂型
 			var InsuType=Ext.getCmp("PHCDOfficialType").getValue();		//医保类型
 			var PosionCat=Ext.getCmp("PHCDFPhcDoDR").getValue();		//管制分类
-			var VendorId=Ext.getCmp("Vendor").getValue();				//供应商id
+			var VendorId=Ext.getCmp("Vendor").getValue();				//经营企业id
 			var OperateType=Ext.getCmp("OperateInType").getValue();		//入库类型
 			var MinSp=Ext.getCmp("MinSp").getValue();				//最低售价
 			var MaxSp=Ext.getCmp("MaxSp").getValue();				//最高售价
 			var MinRp=Ext.getCmp("MinRp").getValue();				//最低进价
 			var MaxRp=Ext.getCmp("MaxRp").getValue();				//最高进价
 			var InvNo=Ext.getCmp("InvNo").getValue();				//发票号
-			var SpFlag=Ext.getCmp("SpFlag").getValue();				//批次售价不等于售价标志
-			if(SpFlag==true){
+			
+			var SpFlag=0 //Ext.getCmp("SpFlag").getValue();				//批次售价不等于售价标志
+			/*if(SpFlag==true){
 				SpFlag=1;
 			}
 			else{
 				SpFlag=0;
-			}
+			}*/
 			var INFOBasicDrug=Ext.getCmp("INFOBasicDrug").getValue();				//批次售价不等于售价标志
 			if(INFOBasicDrug==true){
 				INFOBasicDrug=1;
@@ -660,12 +661,12 @@ var PHCCATALLButton = new Ext.Button({
 			var FlagImportDetail=Ext.getCmp("FlagImportDetail").getValue();
 			var FlagItmStat=Ext.getCmp("FlagItmStat").getValue();
 			var FlagVendorStat=Ext.getCmp("FlagVendorStat").getValue();
-			var FlagVendorItmStat=Ext.getCmp("FlagVendorItmStat").getValue(); //供应商明细汇总
+			var FlagVendorItmStat=Ext.getCmp("FlagVendorItmStat").getValue(); //经营企业明细汇总
 			var FlagStkGrpStat=Ext.getCmp("FlagStkGrpStat").getValue();        //类组汇总
 			var FlagStockStat=Ext.getCmp("FlagStockStat").getValue();       //库存分类汇总
 			var FlagRecItmSumStat=Ext.getCmp("FlagRecItmSumStat").getValue();       //入库单汇总
 			var FlagRpItmSumStat=Ext.getCmp("FlagRpItmSumStat").getValue();      //入库单(进价)汇总 
-			var FlagVendorStkGrpStat=Ext.getCmp("FlagVendorStkGrpStat").getValue(); //供应商类组 
+			var FlagVendorStkGrpStat=Ext.getCmp("FlagVendorStkGrpStat").getValue(); //经营企业类组 
 			var RQDTFormat=App_StkRQDateFormat+" "+App_StkRQTimeFormat;
 			var Others=GrpType+"^"+StkCatId+"^"+IncRowid+"^"+MarkType+"^"+ImpFlag+"^"+BatNo+"^"+PbFlag
 			+"^"+PbLevel+"^"+PhcCatId+"^"+PhcSubCatId+"^"+PhcMinCatId+"^"+ManfId+"^"+Form+"^"+InsuType+"^"+PosionCat
@@ -687,13 +688,13 @@ var PHCCATALLButton = new Ext.Button({
 				p_URL = 'dhccpmrunqianreport.csp?reportName=importitmstat.raq&StartDate='+
 					StartDate +'&EndDate=' +EndDate +'&LocId='+ LocId+'&RetFlag='+RetFlag+'&Others='+Others+'&StartTime='+startTime+'&EndTime='+endTime+'&HospDesc='+App_LogonHospDesc+'&UserName='+UserName+'&RQDTFormat='+RQDTFormat;
 			}
-			//供应商汇总
+			//经营企业汇总
 			else if(FlagVendorStat==true){
 				
 				p_URL = 'dhccpmrunqianreport.csp?reportName=importvendorstat.raq&StartDate='+
 					StartDate +'&EndDate=' +EndDate +'&LocId='+ LocId+'&RetFlag='+RetFlag+'&Others='+Others+'&StartTime='+startTime+'&EndTime='+endTime+'&HospDesc='+App_LogonHospDesc+'&UserName='+UserName+'&RQDTFormat='+RQDTFormat;
 			}
-			//供应商明细汇总
+			//经营企业明细汇总
 			else if(FlagVendorItmStat==true){
 				p_URL = 'dhccpmrunqianreport.csp?reportName=importvendoitmrstat.raq&StartDate='+
 					StartDate +'&EndDate=' +EndDate +'&LocId='+ LocId+'&RetFlag='+RetFlag+'&Others='+Others+'&StartTime='+startTime+'&EndTime='+endTime+'&HospDesc='+App_LogonHospDesc+'&UserName='+UserName+'&RQDTFormat='+RQDTFormat;
@@ -718,7 +719,7 @@ var PHCCATALLButton = new Ext.Button({
 				p_URL = 'dhccpmrunqianreport.csp?reportName=importrpitmsumstat.raq&StartDate='+
 					StartDate +'&EndDate=' +EndDate +'&LocId='+ LocId+'&RetFlag='+RetFlag+'&Others='+Others+'&StartTime='+startTime+'&EndTime='+endTime+'&HospDesc='+App_LogonHospDesc+'&UserName='+UserName+'&RQDTFormat='+RQDTFormat;
 			}
-			//供应商类组汇总
+			//经营企业类组汇总
 			else if(FlagVendorStkGrpStat==true){
 				p_URL = 'dhccpmrunqianreport.csp?reportName=importvendorstkgrpstat.raq&StartDate='+
 					StartDate +'&EndDate=' +EndDate +'&LocId='+ LocId+'&RetFlag='+RetFlag+'&Others='+Others+'&StartTime='+startTime+'&EndTime='+endTime+'&HospDesc='+App_LogonHospDesc+'&UserName='+UserName+'&RQDTFormat='+RQDTFormat;
@@ -737,16 +738,16 @@ var PHCCATALLButton = new Ext.Button({
 			tbar : [OkBT,'-',ClearBT],
 			items : [{
 						xtype : 'fieldset',
-						title : '查询条件',					
+						title : $g('查询条件'),					
 						items : [PhaLoc,DateFrom,StartTime,DateTo,EndTime,Vendor,StkGrpType,DHCStkCatGroup,{xtype:'compositefield',items:[PHCCATALL,PHCCATALLButton]},
 							PhManufacturer,PHCForm,PHCDFPhcDoDR,InciDesc,INFOMT,OperateInType,
 							INFOImportFlag,PublicBidding,INFOPBLevel,InvNo,
-							{xtype:'compositefield',fieldLabel:'售价范围',items:[MinSp,{xtype:'displayfield',value:'-'},MaxSp]},
-							{xtype:'compositefield',fieldLabel:'进价范围',items:[MinRp,{xtype:'displayfield',value:'-'},MaxRp]},
-							RetFlag,SpFlag,INFOBasicDrug]
+							{xtype:'compositefield',fieldLabel:$g('售价范围'),items:[MinSp,{xtype:'displayfield',value:'-'},MaxSp]},
+							{xtype:'compositefield',fieldLabel:$g('进价范围'),items:[MinRp,{xtype:'displayfield',value:'-'},MaxRp]},
+							RetFlag,INFOBasicDrug]  //,SpFlag
 					}, {
 						xtype : 'fieldset',
-						title : '报表类型',
+						title : $g('报表类型'),
 						items : [FlagImportDetail,FlagItmStat,FlagVendorStat,FlagVendorItmStat,FlagVendorStkGrpStat,FlagStkGrpStat,FlagStockStat,FlagRecItmSumStat,FlagRpItmSumStat]
 					}]
 		});
@@ -761,7 +762,7 @@ var PHCCATALLButton = new Ext.Button({
 				layout : 'border',
 				items : [{
 					region:'west',
-					title:"入库汇总",
+					title:$g("入库汇总"),
 					width:300,
 					split:true,
 					collapsible:true,

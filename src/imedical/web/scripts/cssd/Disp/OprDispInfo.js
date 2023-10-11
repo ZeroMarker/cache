@@ -1,452 +1,887 @@
-////ÊÖÊõ°ü·¢·Å
-//É¾³ıÃ÷Ï¸
-function deleteItem(ItemRowId){
-	if (isEmpty(ItemRowId)) {
-			$UI.msg('alert','ÇëÑ¡ÔñÒªÉ¾³ıµÄµ¥¾İ!');
-			return false;
+ï»¿// æ¶ˆæ¯’åŒ…å‘æ”¾
+var MainListGrid, ItemListGrid;
+var tabTitle = 'å‘æ”¾è¯¦æƒ…';
+var CurrMainId;// å½“å‰ä¸»å•id(å…¨å±€å˜é‡)
+var DocType = '0';
+// æäº¤
+function submitOrder(mainRowId) {
+	var ParamsObj = $UI.loopBlock('#MainCondition');
+	if (isEmpty(mainRowId)) {
+		$UI.msg('alert', 'è¯·é€‰æ‹©è¦æäº¤çš„å•æ®!');
+		return false;
+	}
+	ParamsObj.mainRowId = mainRowId;
+	var Params = JSON.stringify(ParamsObj);
+	showMask();
+	$.cm({
+		ClassName: 'web.CSSDHUI.PackageDisp.Disp',
+		MethodName: 'jsSubmitOrder',
+		Params: Params
+	}, function(jsonData) {
+		hideMask();
+		if (jsonData.success == 0) {
+			$UI.msg('success', jsonData.msg);
+			CurrMainId = mainRowId;
+			$('#MainList').datagrid('reload');
+			// $('#ItemList').datagrid('reload');
+		} else {
+			$UI.msg('error', jsonData.msg);
 		}
-	var requiredDelete = RequiredDelete();
-	if (requiredDelete == "Y") {
-		$.messager.confirm("²Ù×÷ÌáÊ¾","ÄúÈ·¶¨ÒªÖ´ĞĞÉ¾³ı²Ù×÷Âğ£¿",function(data){
-			if(data){
-				$.cm({
-					ClassName:'web.CSSDHUI.Disp.DispItem',
-					MethodName:'jsDelete',
-					rowId:ItemRowId
-				},function(jsonData){
-					if(jsonData.success==0){
-						$UI.msg('success',jsonData.msg);
-						$('#ItemList').datagrid('reload');
-					}else{
-						$UI.msg('error',jsonData.msg);
+	});
+}
+// æ’¤é”€
+function cancelOrder(mainRowId) {
+	if (isEmpty(mainRowId)) {
+		$UI.msg('alert', 'è¯·é€‰æ‹©è¦æ’¤é”€çš„å•æ®!');
+		return false;
+	}
+	if (DispParamObj.RequiredCancel == 'Y') {
+		$.messager.confirm('æ“ä½œæç¤º', 'æ‚¨ç¡®å®šè¦æ‰§è¡Œæ’¤é”€æ“ä½œå—ï¼Ÿ', function(data) {
+			if (data) {
+				Cancel(mainRowId);
+			}
+		});
+	} else {
+		Cancel(mainRowId);
+	}
+}
+
+function Cancel(mainRowId) {
+	var ParamsObj = $UI.loopBlock('#MainCondition');
+	ParamsObj.mainRowId = mainRowId;
+	var Params = JSON.stringify(ParamsObj);
+	showMask();
+	$.cm({
+		ClassName: 'web.CSSDHUI.PackageDisp.Disp',
+		MethodName: 'jsCancelOrder',
+		Params: Params
+	}, function(jsonData) {
+		hideMask();
+		if (jsonData.success == 0) {
+			$UI.msg('success', jsonData.msg);
+			CurrMainId = mainRowId;
+			$('#MainList').datagrid('reload');
+		} else {
+			$UI.msg('error', jsonData.msg);
+		}
+	});
+}
+var init = function() {
+	// è·å–é¡µé¢ä¼ å‚
+	function getQueryVariable(variable) {
+		var query = window.location.search.substring(1);
+		var vars = query.split('&');
+		for (var i = 0; i < vars.length; i++) {
+			var pair = vars[i].split('=');
+			if (pair[0] === variable) {
+				return pair[1];
+			}
+		}
+		return (false);
+	}
+	// å‘æ”¾ç§‘å®¤
+	var ReqLocParams = JSON.stringify(addSessionParams({ Type: 'Login', BDPHospital: gHospId }));
+	$HUI.combobox('#fromLocDr', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + ReqLocParams,
+		valueField: 'RowId',
+		textField: 'Description',
+		onSelect: function(record) {
+			$HUI.combobox('#fromUserDr').clear();
+			var FrUserParams = JSON.stringify(addSessionParams({ BDPHospital: gHospId, LocId: record.RowId }));
+			var url = $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetAllUser&ResultSetType=array&Params=' + FrUserParams;
+			$HUI.combobox('#fromUserDr').reload(url);
+		}
+	});
+	// æ¥æ”¶ç§‘å®¤
+	var SupLocParams = JSON.stringify(addSessionParams({ Type: 'RecLoc', BDPHospital: gHospId }));
+	$HUI.combobox('#toLocDr', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + SupLocParams,
+		valueField: 'RowId',
+		textField: 'Description'
+	});
+	// è®¾ç½®é»˜è®¤ç§‘å®¤
+	$HUI.checkbox('#LocDefaultFlag', {
+		onCheckChange: function(e, value) {
+			if (value) {
+				$('#toLocDr').combobox('setValue', '');
+				var LocObj = GetDefaultLoc('RecLoc', gHospId);
+				if (isEmpty(LocObj.RowId)) {
+					$('#LocDefaultFlag').checkbox('setValue', false);
+					$UI.msg('alert', 'æœªè®¾ç½®é»˜è®¤ç§‘å®¤');
+					return;
+				} else {
+					AddComboData($('#toLocDr'), LocObj.RowId, LocObj.Description);
+					$('#toLocDr').combobox('setValue', LocObj.RowId);
+				}
+			} else {
+				$('#toLocDr').combobox('setValue', '');
+			}
+		}
+	});
+	
+	// å‘æ”¾äºº
+	var ParamsTB = JSON.stringify(addSessionParams({ BDPHospital: gHospId }));
+	$HUI.combobox('#fromUserDr', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetAllUser&ResultSetType=array&Params=' + ParamsTB,
+		valueField: 'RowId',
+		textField: 'Description',
+		enterNullValueClear: false,
+		spellField: 'Code'
+	});
+	$('#fromUserDr').combobox('textbox').keyup(function(event) {
+		if (event.keyCode == 13) {
+			var userCode = $('#fromUserDr').combobox('getText');
+			if (userCode != '') {
+				var UserObj = $.cm({
+					ClassName: 'web.CSSDHUI.Common.Dicts',
+					MethodName: 'GetUserByCodeJson',
+					userCode: userCode,
+					Params: ParamsTB
+				}, false);
+				if (UserObj['RowId'] === '') {
+					$UI.msg('alert', 'æœªè·å–å®¡æ ¸äººç›¸å…³ä¿¡æ¯ï¼');
+					$('#fromUserDr').combobox('clear');
+					$('#fromUserDr').combobox('setValue', '').combobox('hidePanel');
+					$('#fromUserDr').combobox('textbox').focus();
+					return;
+				}
+				$('#fromUserDr').combobox('clear');
+				$('#fromUserDr').combobox('setValue', UserObj['RowId']).combobox('hidePanel');
+			}
+		}
+	});
+
+	var PkgParams = JSON.stringify(addSessionParams({ BDPHospital: gHospId, AttributeCode: '1,2,7' }));
+	$HUI.combobox('#packageDesc', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPkg&ResultSetType=array&Params=' + PkgParams,
+		valueField: 'RowId',
+		textField: 'Description'
+	});
+	
+	// æ‰¹é‡æäº¤
+	function submitAll() {
+		$.messager.confirm('æ“ä½œæç¤º', 'æ‚¨ç¡®å®šè¦æ‰§è¡Œæ‰¹é‡æäº¤æ“ä½œå—ï¼Ÿ', function(data) {
+			if (data) {
+				var Rows = MainListGrid.getChecked();
+				if (isEmpty(Rows)) {
+					$UI.msg('alert', 'è¯·é€‰æ‹©éœ€è¦æäº¤å•æ®');
+					return;
+				}
+				var MainIdStr = '';
+				for (var i = 0, Len = Rows.length; i < Len; i++) {
+					var MainId = Rows[i]['RowId'];
+					var ComplateFlag = Rows[i]['ComplateFlag'];
+					if (ComplateFlag === 'Y') {
+						$UI.msg('alert', 'å­˜åœ¨å·²æäº¤å•æ®ï¼');
+						return;
 					}
-				});
+					if (MainIdStr === '') {
+						MainIdStr = MainId;
+					} else {
+						MainIdStr = MainIdStr + ',' + MainId;
+					}
+				}
+				submitOrder(MainIdStr);
 			}
 		});
 	}
-	if (requiredDelete != "Y") {
+	// æ‰“å°å•æ®
+	function Print() {
+		var Detail = MainListGrid.getChecked();
+		if (isEmpty(Detail)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©éœ€è¦æ‰“å°å•æ®');
+			return;
+		}
+		var DispStr = '';
+		for (var i = 0; i < Detail.length; i++) {
+			var DispId = Detail[i].RowId;
+			if (DispStr == '') {
+				DispStr = DispId;
+			} else {
+				DispStr = DispStr + '^' + DispId;
+			}
+		}
+		if (DispStr == '') {
+			$UI.msg('alert', 'è¯·é€‰æ‹©éœ€è¦æ‰“å°çš„ä¿¡æ¯!');
+			return false;
+		}
+		PrintDispMain(DispStr);
+	}
+	
+	function PrintSum() {
+		var Detail = MainListGrid.getChecked();
+		if (isEmpty(Detail)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©éœ€è¦æ‰“å°å•æ®');
+			return;
+		}
+		var DetailIds = '';
+		if (!isEmpty(Detail)) {
+			$.each(Detail, function(index, item) {
+				if (DetailIds == '') {
+					DetailIds = item.RowId;
+				} else {
+					DetailIds = DetailIds + ',' + item.RowId;
+				}
+			});
+		}
+		var RaqName = 'CSSD_HUI_DispPrintSum.raq';
+		PrintINDispSum(RaqName, DetailIds);
+	}
+	
+	$UI.linkbutton('#SaveBT', {
+		onClick: function() {
+			saveMast();
+		}
+	});
+	
+	function saveMast() {
+		var MainObj = $UI.loopBlock('#MainCondition');
+		if (MainObj.fromLocDr == MainObj.toLocDr) {
+			$UI.msg('alert', 'å‘æ”¾ç§‘å®¤å’Œæ¥æ”¶ç§‘å®¤ä¸èƒ½ç›¸åŒ');
+			return;
+		}
+		if (DispParamObj['RequiredDispUser'] === 'Y' && isEmpty(MainObj.fromUserDr)) {
+			$UI.msg('alert', 'å‘æ”¾äººä¸èƒ½ä¸ºç©º');
+			return false;
+		} else {
+			if (isEmpty(MainObj.fromUserDr)) {
+				MainObj.fromUserDr = gUserId;
+			}
+		}
+		if (isEmpty(MainObj.fromUserDr)) {
+			$UI.msg('alert', 'å›æ”¶äººä¸èƒ½ä¸ºç©º');
+			return;
+		}
+		if (isEmpty(MainObj.toLocDr)) {
+			$UI.msg('alert', 'æ¥æ”¶ç§‘å®¤ä¸èƒ½ä¸ºç©º');
+			return;
+		}
+		MainObj.Type = 'Y';
+		showMask();
 		$.cm({
-			ClassName : 'web.CSSDHUI.Disp.DispItem',
-			MethodName : 'jsDelete',
-			rowId : ItemRowId
+			ClassName: 'web.CSSDHUI.PackageDisp.DispScan',
+			MethodName: 'jsSave',
+			Params: JSON.stringify(MainObj)
 		}, function(jsonData) {
-			if (jsonData.success == 0) {
+			hideMask();
+			if (jsonData.success === 0) {
 				$UI.msg('success', jsonData.msg);
-				$('#ItemList').datagrid('reload');
+				$('#fromUserDr').val('');
+				$('#fromUserDr').combobox('setValue', '').combobox('hidePanel');
+				$('#toLocDr').combobox('setValue', '');
+				CurrMainId = jsonData.rowid;
+				query(jsonData.rowid);
+				$('#BarCode').focus();
 			} else {
 				$UI.msg('error', jsonData.msg);
 			}
 		});
 	}
-}
-//É¾³ıÖ÷±íµ¥¾İ
-
-function deleteMain(mainRowId){
-	if (isEmpty(mainRowId)) {
-			$UI.msg('alert','ÇëÑ¡ÔñÒªÉ¾³ıµÄµ¥¾İ!');
-			return false;
-		}
-	$.messager.confirm("²Ù×÷ÌáÊ¾","ÄúÈ·¶¨ÒªÖ´ĞĞÉ¾³ı²Ù×÷Âğ£¿",function(data){
-		if(data){
-			$.cm({
-				ClassName:'web.CSSDHUI.Disp.Disp',
-				MethodName:'jsDelete',
-				mainRowId:mainRowId
-			},function(jsonData){
-				if(jsonData.success==0){
-					$UI.msg('success',jsonData.msg);
-					$('#MainList').datagrid('reload');
-					$('#ItemList').datagrid('reload');
-				}else{
-					$UI.msg('error',jsonData.msg);
-				}
-			});
-		}
-	});
-}
-//Ìá½»
-function submitOrder(mainRowId){
-	if (isEmpty(mainRowId)) {
-			$UI.msg('alert','ÇëÑ¡ÔñÒªÌá½»µÄµ¥¾İ!');
-			return false;
-		}
-		$.cm({
-			ClassName:'web.CSSDHUI.Disp.Disp',
-			MethodName:'jsSubmitOrder',
-			MainId:mainRowId,
-			gUser:gUserId
-		},function(jsonData){
-			if(jsonData.success==0){
-				$UI.msg('success',jsonData.msg);
-				$('#MainList').datagrid('reload');
-				$('#ItemList').datagrid('reload');
-			}else{
-				$UI.msg('error',jsonData.msg);
-			}
-		});
-}
-//³·Ïú
-function cancelOrder(mainRowId){
-	if (isEmpty(mainRowId)) {
-			$UI.msg('alert','ÇëÑ¡ÔñÒª³·ÏúµÄµ¥¾İ!');
-			return false;
-		}
-	var requiredCancel = RequiredCancel();
-	if (requiredCancel == "Y") {
-		$.messager.confirm("²Ù×÷ÌáÊ¾","ÄúÈ·¶¨ÒªÖ´ĞĞ³·Ïú²Ù×÷Âğ£¿",function(data){	
-			if(data){
-				$.cm({
-					ClassName:'web.CSSDHUI.Disp.Disp',
-					MethodName:'jsCancelOrder',
-					MainId:mainRowId
-				},function(jsonData){
-					if(jsonData.success==0){
-						$UI.msg('success',jsonData.msg);
-						$('#MainList').datagrid('reload');
-					}else{
-						$UI.msg('error',jsonData.msg);
-					}
-				});
-			}
-		});
-	}
-}
-
-var init = function() {
-	//·¢·Å¿ÆÊÒ
-	var ReqLocParams=JSON.stringify(addSessionParams({Type:"SupLoc"}));
-	var ReqLocBox = $HUI.combobox('#fromLocDr', {
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+ReqLocParams,
-		valueField: 'RowId',
-		textField: 'Description',
-		onLoadSuccess: function (data) {   //Ä¬ÈÏµÇÂ¼¿ÆÊÒ
-			$("#fromLocDr").combobox('setValue',gLocId);
-		}
-	});
-	//½ÓÊÕ¿ÆÊÒ
-	var SupLocParams=JSON.stringify(addSessionParams({Type:"All"}));
-	var SupLocBox = $HUI.combobox('#toLocDr', {
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+SupLocParams,
-		valueField: 'RowId',
-		textField: 'Description'
-	});
-	//·¢·ÅÈË
-	$("#fromUser").keypress(function(event) {
-		if ( event.which == 13 ) {
-			var v=$("#fromUser").val();
-			var Ret = tkMakeServerCall('web.CSSDHUI.Common.Dicts', 'GetPersonInfo',v);
-			if(Ret.split('^')[0]=="Y"){
-				$("#fromUser").val(Ret.split('^')[2]);
-				$("#fromUserDr").val(Ret.split('^')[1]);
-				//saveMast();
-			}else{
-				$UI.msg('alert','Î´ÕÒµ½Ïà¹ØĞÅÏ¢!');
-				$("#fromUser").val("");
-				$("#fromUser").focus();
-			}
-		}
-	});
-	var Dafult={
-			FStartDate:DefaultStDate(),
-			FEndDate:DefaultEdDate
-	}
-	$UI.fillBlock('#MainCondition',Dafult)
 	
-	function Clear(){
-		SupLocBox.reload();
-		$UI.fillBlock('#MainCondition',Dafult);
-		$UI.clear(MainListGrid);
-		$UI.clear(ItemListGrid);
-	}
-	
-	//±£´æµ¥¾İ
-	$UI.linkbutton('#SaveBT',{ 
-		onClick:function(){
-			saveMast()
-		}
-	});
-	//´òÓ¡µ¥¾İ
-	$UI.linkbutton('#Print', {
-		onClick: function () {
-			var Detail = MainListGrid.getChecked();
-			var DetailParams = JSON.stringify(Detail);
-			if (isEmpty(Detail)) {
-				$UI.msg('alert', 'ÇëÑ¡ÔñĞèÒª´òÓ¡µ¥¾İ');
-			}
-			if (!isEmpty(Detail)) {
-				$.each(Detail, function (index, item) {
-					PrintINDispReq(item.RowId);
-				});
-			}
-			
-		}
-	});
-	function saveMast(){
-		var MainObj = $UI.loopBlock('#MainCondition');
-		if(MainObj.fromLocDr==MainObj.toLocDr){
-			$UI.msg('alert',"·¢·Å¿ÆÊÒºÍ½ÓÊÕ¿ÆÊÒ²»ÄÜÏàÍ¬");
-			return;
-		}
-		if(ParamObj['RequiredDispUser']=="Y"&&isEmpty(MainObj.fromUserDr)){
-			$UI.msg('alert',"·¢·ÅÈË²»ÄÜÎª¿Õ");
-			return false;
-		}else{
-			if(isEmpty(MainObj.fromUserDr)){
-				MainObj.fromUserDr=gUserId;
-			}
-		}
-		if( isEmpty(MainObj.fromUserDr)){
-			$UI.msg('alert',"»ØÊÕÈË²»ÄÜÎª¿Õ");
-			return;
-		}
-		if(isEmpty(MainObj.toLocDr)){
-			$UI.msg('alert',"½ÓÊÕ¿ÆÊÒ²»ÄÜÎª¿Õ");
-			return;
-		}
-		$.cm({
-			ClassName: 'web.CSSDHUI.Disp.Disp',
-			MethodName: 'jsSave',
-			Params: JSON.stringify(MainObj)
-		},function(jsonData){
-			if(jsonData.success === 0){
-				$UI.msg('success',jsonData.msg);
-				FindNew(jsonData.rowid);
-				//alert(jsonData.success);
-				$("#BarCode").focus(); //ÌõÂë»ñÈ¡µ½½¹µã
-				MainListGrid.reload();
-			}else{
-				alert("fail");
-				$UI.msg('error', jsonData.msg);
-			}
-		});
-	}
-	
-	//²éÑ¯
-	$UI.linkbutton('#QueryBT',{ 
-		onClick:function(){
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
 			$UI.clear(MainListGrid);
 			$UI.clear(ItemListGrid);
 			query();
-			//Clear();
 		}
 	});
-	 function query(ParamsObj){ 
-	 	var Params = JSON.stringify($UI.loopBlock('#UomTB'));
+	function query(RowId) {
+		var ParamsObj = $UI.loopBlock('#MainCondition');
+		var fromlocdr = ParamsObj.fromLocDr;
+		if (isEmpty(fromlocdr)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©å‘æ”¾ç§‘å®¤ï¼');
+			return;
+		}
+		if (isEmpty(ParamsObj.FStartDate)) {
+			$UI.msg('alert', 'èµ·å§‹æ—¥æœŸä¸èƒ½ä¸ºç©ºï¼');
+			return;
+		}
+		if (isEmpty(ParamsObj.FEndDate)) {
+			$UI.msg('alert', 'æˆªæ­¢æ—¥æœŸä¸èƒ½ä¸ºç©ºï¼');
+			return;
+		}
+		ParamsObj.RowId = RowId;
+		ParamsObj.DocType = DocType;
+		
+		if (ParamsObj.FComplateFlag != 'Y') {
+			SetLocalStorage('CompleteFlag', ParamsObj.FComplateFlag);
+		}
+
 		MainListGrid.load({
-			ClassName: 'web.CSSDHUI.Disp.Disp',
+			ClassName: 'web.CSSDHUI.PackageDisp.DispScan',
 			QueryName: 'SelectAll',
-			parame: Params
+			Params: JSON.stringify(ParamsObj)
 		});
 	}
-//========================Ö÷±ístart===================	
-	//ÉÏÃæÊäÈë¿òµÄ»Ø³µÊÂ¼ş´¦Àí end
+
 	var MainCm = [[
 		{
 			title: '',
 			field: 'ck',
 			checkbox: true,
+			frozen: true,
 			width: 50
-		}, 
-		{
-		field:'operate',
-		title:'²Ù×÷',
-		align:'center',
-		width:100,
-		formatter:function(value, row, index){
-			if(row.ComplateFlag=="Y"){
-				var str = '<a href="#" name="operaM" class="easyui-linkbutton" disabled title="É¾³ı" onclick="deleteMain('+row.RowId+')"></a>';
-				var str =str+ '<a href="#" name="operaR" class="easyui-linkbutton" title="³·Ïú" onclick="cancelOrder('+row.RowId+')"></a>';
-			}else {
-				var str = '<a href="#" name="operaM" class="easyui-linkbutton" title="É¾³ı" onclick="deleteMain('+row.RowId+')"></a>';
-				var str =str+ '<a href="#" name="operaC" class="easyui-linkbutton" title="Ìá½»" onclick="submitOrder('+row.RowId+')"></a>';
+		}, {
+			field: 'operate',
+			title: 'æ“ä½œ',
+			frozen: true,
+			align: 'center',
+			width: 90,
+			allowExport: false,
+			formatter: function(value, row, index) {
+				var str = '';
+				if (row.ComplateFlag === 'Y') {
+					str = '<div class="col-icon icon-back" href="#" title="' + $g('æ’¤é”€') + '" onclick="cancelOrder(' + row.RowId + ')"></div>';
+				} else {
+					str = '<div class="col-icon icon-cancel" href="#" title="' + $g('åˆ é™¤') + '" onclick="MainListGrid.commonDeleteRow(true,' + index + ');"></div>'
+							+ '<div class="col-icon icon-submit" href="#" title="' + $g('æäº¤') + '" onclick="submitOrder(' + row.RowId + ')"></div>';
+				}
+				if (row.LevelFlag === '1') {
+					str = str + '<div class="col-icon icon-emergency" href="#" title="' + $g('ç´§æ€¥') + '"></div>';
+				}
+				return str;
 			}
-			return str;
-		}
-	},{
+		}, {
 			title: 'RowId',
 			field: 'RowId',
-			width:50,
+			width: 50,
 			hidden: true
 		}, {
-			title: '·¢·Åµ¥ºÅ',
+			title: 'å‘æ”¾å•å·',
 			field: 'No',
-			width:120,
-			fitColumns:true
+			width: 120
 		}, {
-			title: '·¢·Å¿ÆÊÒ',
-			field: 'FromLocDesc',
-			width:100,
-			fitColumns:true
-		}, {
-			title: '½ÓÊÕ¿ÆÊÒ',
+			title: 'æ¥æ”¶ç§‘å®¤',
 			field: 'ToLocDesc',
-			width:100,
-			fitColumns:true
+			width: 100
 		}, {
-			title: '·¢·ÅÈË',
+			title: 'å‘æ”¾äºº',
 			field: 'FromUserDesc',
-			width:100,
-			fitColumns:true
+			width: 100
 		}, {
-			title: '·¢·ÅÊ±¼ä',
+			title: 'åˆ¶å•æ—¶é—´',
 			field: 'DispDate',
-			width:150,
-			fitColumns:true
+			width: 160
 		}, {
-			title: 'Ìá½»ÈË',
-			field: 'DispCHKUserDesc',
-			width:100,
-			fitColumns:true
-		}, {
-			title: 'Ìá½»Ê±¼ä',
-			field: 'DispCHKDate',
-			width:150,
-			fitColumns:true
-		}, {
-			title: 'Íê³É±êÖ¾',
+			title: 'æäº¤æ ‡å¿—',
 			field: 'ComplateFlag',
-			width:100,
-			fitColumns:true
+			hidden: true,
+			align: 'center',
+			width: 80
+		}, {
+			title: 'æäº¤äºº',
+			field: 'DispCHKUserDesc',
+			width: 100
+		}, {
+			title: 'æäº¤æ—¶é—´',
+			field: 'DispCHKDate',
+			width: 160
+		}, {
+			title: 'å‘æ”¾ç§‘å®¤',
+			field: 'FromLocDesc',
+			width: 100
+		}, {
+			title: 'ç´§æ€¥çŠ¶æ€',
+			field: 'LevelFlag',
+			width: 50,
+			hidden: true
+		}, {
+			title: 'ToLocDR',
+			field: 'ToLocDR',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'æ¥æ”¶æ ‡è®°',
+			field: 'IsRec',
+			align: 'center',
+			width: 80
 		}
 	]];
 	
-	//var map = {};
-	var Params = JSON.stringify($UI.loopBlock('#UomTB'));
-	var MainListGrid = $UI.datagrid('#MainList', {
+	MainListGrid = $UI.datagrid('#MainList', {
 		queryParams: {
-			ClassName: 'web.CSSDHUI.Disp.Disp',
-			QueryName: 'SelectAll',
-			parame:Params
+			ClassName: 'web.CSSDHUI.PackageDisp.DispScan',
+			QueryName: 'SelectAll'
+		},
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.PackageDisp.DispScan',
+			MethodName: 'jsDelete'
 		},
 		columns: MainCm,
-		toolbar: '#UomTB',
-		lazy:false,
-		selectOnCheck: false,
-		onLoadSuccess:function(data){
-			$("a[name='operaM']").linkbutton({text:'',plain:true,iconCls:'icon-cancel'});
-			$("a[name='operaC']").linkbutton({text:'',plain:true,iconCls:'icon-upload'});
-			$("a[name='operaR']").linkbutton({text:'',plain:true,iconCls:'icon-back'});
-			if(data.rows.length>0){
-				$('#MainList').datagrid("selectRow", 0);
-				FindItemByF(data.rows[0].RowId);
-				/* for(var i=0;i< data.rows.length;i++){
-					map[i] = false;
-				} */
-			}	
-		},
-		/* onClickRow: function (rowIndex, rowData) {
-			if (map[rowIndex]) {
-				map[rowIndex]=false;
-				$("#MainList").datagrid("unselectRow", rowIndex);
-			}else{
-				map[rowIndex]=true;
-				$("#MainList").datagrid("selectRow", rowIndex);
-			}
-		}, */
-		onClickCell: function(index, filed ,value){
-			var Row=MainListGrid.getRows()[index]
-			var Id = Row.RowId;
-			if(!isEmpty(Id)){
-				FindItemByF(Id);
-			}	
-			MainListGrid.commonClickCell(index,filed)
-		}
-})
-///=============================Ö÷±íend===================
-///=============================×Ó±ístart======================
-		//É¨Âë¶¯×÷
- $("#BarCode").keypress(function(event) {
-		if ( event.which == 13 ) {
-			var v=$("#BarCode").val();
-			var row = $('#MainList').datagrid('getSelected');
-			if(isEmpty(row)){
-				$UI.msg('alert','ÇëÑ¡ÔñĞèÒªÌí¼ÓµÄ·¢·Åµ¥¾İ!');
-				return;
-			}
-			if(isEmpty(row.RowId)){
-				$UI.msg('alert','²ÎÊı´íÎó!');
-				return;
-			}
-			if(isEmpty(v)){
-				$UI.msg('alert','ÌõÂëÂ¼ÈëÎª¿Õ!');
-				return;
-			}
-			$.cm({
-				ClassName:'web.CSSDHUI.Disp.DispItem',
-				MethodName:'jsSaveDetail',
-				mainId:row.RowId,
-				barCode:v
-			},function(jsonData){
-				if(jsonData.success==0){
-					$UI.msg('success',jsonData.msg);
-					//$("#BarCodeInfo").val(jsonData.msg)
-					ItemListGrid.reload();
-				}else{
-					$UI.msg('error',jsonData.msg);
+		sortOrder: 'desc',
+		sortName: 'RowId',
+		toolbar: [
+			{
+				id: 'submitAll',
+				text: 'æ‰¹é‡æäº¤',
+				iconCls: 'icon-paper-submit',
+				handler: function() {
+					submitAll();
 				}
-				$("#BarCode").val("").focus();
-			});
+			}, {
+				text: 'æ‰“å°',
+				iconCls: 'icon-print',
+				handler: function() {
+					Print();
+				}
+			}, {
+				text: 'æ±‡æ€»æ‰“å°',
+				iconCls: 'icon-print-box',
+				handler: function() {
+					PrintSum();
+				}
+			}
+		],
+		selectOnCheck: false,
+		onLoadSuccess: function(data) {
+			$UI.clear(ItemListGrid);
+			$UI.clear(UnDispGrid);
+			if (data.rows.length > 0) {
+				var GridListIndex = '';
+				if (!isEmpty(CurrMainId)) {
+					var Rows = $('#MainList').datagrid('getRows');
+					$.each(Rows, function(index, item) {
+						if (item.RowId == CurrMainId) {
+							GridListIndex = index;
+							return false;
+						}
+					});
+					CurrMainId = '';
+				} else if (CommParObj.SelectFirstRow == 'Y') {
+					GridListIndex = 0;
+				}
+				if (!isEmpty(GridListIndex)) {
+					$('#MainList').datagrid('selectRow', GridListIndex);
+				}
+			}
+		},
+		onClickRow: function(index, row) {
+			MainListGrid.commonClickRow(index, row);
+		},
+		onSelect: function(index, rowData) {
+			var Id = rowData.RowId;
+			if (!isEmpty(Id)) {
+				quertItm();
+			}
 		}
 	});
-	var ItemCm = [[
-		{field:'operate',title:'²Ù×÷',align:'center',width:120,
-		formatter:function(value, row, index){
-			var rowMain = $('#MainList').datagrid('getSelected');
-			if(rowMain.ComplateFlag=="Y"){
-				var str = '<a href="#" name="opera"  disabled  class="easyui-linkbutton" title="É¾³ı" onclick="deleteItem('+row.RowId+')"></a>';
-			}else{
-				var str = '<a href="#" name="opera"    class="easyui-linkbutton" title="É¾³ı" onclick="deleteItem('+row.RowId+')"></a>';
+
+	$HUI.tabs('#DispTabs', {
+		onSelect: function(title, index) {
+			tabTitle = title;
+			quertItm();
+		}
+	});
+	
+	function quertItm() {
+		var row = $('#MainList').datagrid('getSelected');
+		var Id = row.RowId;
+		if (tabTitle === 'å‘æ”¾è¯¦æƒ…') {
+			$UI.clear(ItemListGrid);
+			ItemListGrid.load({
+				ClassName: 'web.CSSDHUI.PackageDisp.DispItm',
+				QueryName: 'SelectByF',
+				MainId: Id,
+				sort: 'RowId',
+				order: 'desc',
+				rows: 9999
+			});
+		} else if (tabTitle === 'å‘æ”¾æ±‡æ€»') {
+			$UI.clear(DispItmSumGrid);
+			DispItmSumGrid.load({
+				ClassName: 'web.CSSDHUI.PackageDisp.DispItm',
+				QueryName: 'DispItmSum',
+				DispId: Id,
+				rows: 9999
+			});
+		}
+	}
+	// æŸ¥è¯¢å¾…å‘æ”¾
+	$UI.linkbutton('#SelReqSearchBT', {
+		onClick: function() {
+			FindUnDispItmByF();
+		}
+	});
+	// æ‰¹é‡æ·»åŠ æ ‡ç­¾
+	$UI.linkbutton('#SelReqAddBT', {
+		onClick: function() {
+			var Rows = UnDispGrid.getChecked();
+			if (isEmpty(Rows)) {
+				$UI.msg('alert', 'æœªè·å–åˆ°æ ‡ç­¾ä¿¡æ¯!');
+				return;
 			}
-			return str;
-	}},{
+			for (var i = 0, Len = Rows.length; i < Len; i++) {
+				var Label = Rows[i]['Label'];
+				AddDispItem(Label);
+			}
+		}
+	});
+	// æ‰«ç åŠ¨ä½œ
+	$('#BarCode').keyup(function(event) {
+		if (event.which == 13) {
+			var Label = $('#BarCode').val();
+			AddDispItem(Label);
+		}
+	}).focus(function(event) {
+		$('#BarCode').val('');
+		$('#BarCodeHidden').val('');
+		var ReadOnly = $('#BarCode').attr('readonly');
+		if (ReadOnly == 'readonly') {
+			$('#BarCodeHidden').focus();
+		}
+		InitScanIcon();
+	}).blur(function(event) {
+		InitScanIcon();
+	});
+	$('#BarCodeHidden').keyup(function(event) {
+		if (event.which == 13) {
+			var HiddenVal = $('#BarCodeHidden').val();
+			$('#BarCode').val(HiddenVal);
+			$('#BarCodeHidden').val('');
+			AddDispItem(HiddenVal);
+		}
+	}).focus(function(enent) {
+		InitScanIcon();
+	}).blur(function(event) {
+		InitScanIcon();
+	});
+	// æ§åˆ¶æ ‡ç­¾æ˜¯å¦å…è®¸ç¼–è¾‘
+	$('#BarCodeSwitchBT').linkbutton({
+		onClick: function() {
+			var ReadOnly = $('#BarCode').attr('readonly');		// åªè¯»æ—¶,æ­¤å€¼ä¸º'readonly'
+			if (ReadOnly == 'readonly') {
+				$('#BarCode').attr({ readonly: false });
+				SetLocalStorage('BarCodeHidden', '');
+			} else {
+				$('#BarCode').attr({ readonly: true });
+				SetLocalStorage('BarCodeHidden', 'Y');
+			}
+			$('#BarCode').focus();
+		}
+	});
+	// æ§åˆ¶æ‰«ç å›¾æ ‡
+	function InitScanIcon() {
+		var ElementId = document.activeElement.id;
+		var ReadOnly = $('#BarCode').attr('readonly');
+		if (ElementId == 'BarCodeHidden') {
+			// æ‰«æicon
+			$('#UseBarCodeBT').linkbutton({ iconCls: 'icon-scanning' });
+		} else if (ReadOnly == 'readonly') {
+			// åªè¯»icon
+			$('#UseBarCodeBT').linkbutton({ iconCls: 'icon-gray-edit' });
+		} else {
+			// å¯ç¼–è¾‘icon
+			$('#UseBarCodeBT').linkbutton({ iconCls: 'icon-blue-edit' });
+		}
+	}
+	if (GetLocalStorage('BarCodeHidden') == 'Y') {
+		$('#BarCode').attr({ 'readonly': true });
+	} else {
+		$('#BarCode').attr({ 'readonly': false });
+	}
+	InitScanIcon();
+	
+	// å‚æ•°ä¸ºLabelå­—ç¬¦ä¸², æˆ–è€…Arrayç±»å‹æ•°æ®
+	function AddDispItem(Label) {
+		var row = $('#MainList').datagrid('getSelected');
+		if (isEmpty(row)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©éœ€è¦æ·»åŠ çš„å‘æ”¾å•æ®!');
+			return;
+		}
+		if (isEmpty(row.RowId)) {
+			$UI.msg('alert', 'æ²¡æœ‰å¯æ·»åŠ æ¶ˆæ¯’åŒ…çš„å‘æ”¾å•æ®!');
+			return;
+		}
+		if (isEmpty(Label)) {
+			$UI.msg('alert', 'æ ‡ç­¾å½•å…¥ä¸ºç©º!');
+			return;
+		}
+		var LabelArr = Label;
+		if (typeof Label !== 'object') {
+			LabelArr = [{ Label: Label }];
+		}
+		
+		var Params = JSON.stringify(LabelArr);
+		var MainParams = JSON.stringify(addSessionParams({ MainId: row.RowId }));
+		$('#BarCode').attr('disabled', 'disabled');
+		$.cm({
+			ClassName: 'web.CSSDHUI.PackageDisp.DispDetail',
+			MethodName: 'jsSaveDetail',
+			MainParams: MainParams,
+			Params: Params
+		}, function(jsonData) {
+			if (jsonData.success === 0) {
+				playSuccess();
+				$UI.msg('success', jsonData.msg);
+				ItemListGrid.reload();
+				UnDispGrid.reload();
+			} else {
+				playWarn();
+				$UI.msg('error', jsonData.msg);
+			}
+			$('#BarCode').removeAttr('disabled');
+			$('#BarCode').val('').focus();
+		});
+	}
+	var ItemCm = [[
+		{
+			field: 'ck',
+			checkbox: true,
+			frozen: true
+		}, {
+			field: 'operate',
+			title: 'æ ‡è¯†',
+			frozen: true,
+			align: 'center',
+			width: 40,
+			allowExport: false,
+			formatter: function(value, row, index) {
+				var str = '';
+				if (row.LevelFlag === '1') {
+					str = str + '<div class="col-icon icon-emergency" href="#" title="' + $g('ç´§æ€¥') + '"></div>';
+				}
+				return str;
+			}
+		}, {
 			title: 'RowId',
 			field: 'RowId',
-			width:100,
+			width: 100,
 			hidden: true
-		},{
-			title: 'ÌõÂë',
+		}, {
+			title: 'æ ‡ç­¾',
 			field: 'Label',
-			width:150
-		},{
-			title: 'Ïû¶¾°üÃû³Æ',
+			width: 180
+		}, {
+			title: 'æ¶ˆæ¯’åŒ…',
 			field: 'PackageName',
-			width:200
-		},{
-			title: 'ÊıÁ¿',
+			width: 150,
+			showTip: true,
+			tipWidth: 200
+		}, {
+			title: 'æ•°é‡',
 			field: 'Qty',
-			align:'right',
-			width:80
+			align: 'right',
+			width: 50,
+			hidden: true
+		}, {
+			title: 'ç´§æ€¥çŠ¶æ€',
+			field: 'LevelFlag',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'DispDetailId',
+			field: 'DispDetailId',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'åŒ…DR',
+			field: 'PackageDR',
+			width: 100,
+			hidden: true
 		}
 	]];
-
-	var ItemListGrid = $UI.datagrid('#ItemList', {
-			queryParams: {
-				ClassName: 'web.CSSDHUI.Disp.DispItem',
-				MethodName: 'SelectByF'
-			},
-			columns: ItemCm,
-			toolbar: '#InputTB',
-			pagination:false,
-			singleSelect:false,
-			onLoadSuccess:function(data){
-				$("a[name='opera']").linkbutton({text:'',plain:true,iconCls:'icon-cancel'});
+	ItemListGrid = $UI.datagrid('#ItemList', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.PackageDisp.DispItm',
+			MethodName: 'SelectByF'
+		},
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.PackageDisp.DispItm',
+			MethodName: 'jsDelete'
+		},
+		columns: ItemCm,
+		pagination: false,
+		singleSelect: false,
+		showDelItems: true,
+		beforeDelFn: function() {
+			var rowItem = $('#ItemList').datagrid('getSelected');
+			if (isEmpty(rowItem)) {
+				$UI.msg('alert', 'è¯·é€‰æ‹©è¦åˆ é™¤çš„å‘æ”¾å•æ˜ç»†!');
+				return false;
 			}
-	});	
-	function FindItemByF(Id) {
-		ItemListGrid.load({
-			ClassName: 'web.CSSDHUI.Disp.DispItem',
-			QueryName: 'SelectByF',
-			MainId:Id
-		});
-	}
-	function FindNew(Id){
-		MainListGrid.load({
-		ClassName: 'web.CSSDHUI.Disp.Disp',
-		QueryName: 'FindNew',
-		ID:Id
+			var MainObj = $('#MainList').datagrid('getSelected');
+			if (MainObj.ComplateFlag === 'Y') {
+				$UI.msg('alert', 'å‘æ”¾å•å·²æäº¤ä¸èƒ½åˆ é™¤æ˜ç»†!');
+				return false;
+			}
+		},
+		afterDelFn: function() {
+			FindUnDispItmByF();
+		}
+	});
+
+	var ItemSumCm = [[
+		{
+			title: 'æ¶ˆæ¯’åŒ…Id',
+			field: 'PackageId',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'æ¶ˆæ¯’åŒ…',
+			field: 'PackageName',
+			width: 150,
+			showTip: true,
+			tipWidth: 200
+		}, {
+			title: 'åˆè®¡æ•°é‡',
+			field: 'Qty',
+			align: 'right',
+			width: 80
+		}
+	]];
+	var DispItmSumGrid = $UI.datagrid('#DispItmSumGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.PackageDisp.DispItm',
+			QueryName: 'DispItmSum'
+		},
+		columns: ItemSumCm,
+		fitColumns: false,
+		pagination: false
+	});
+	
+	var UnDispCm = [[
+		{
+			title: '',
+			field: 'ck',
+			checkbox: true,
+			frozen: true,
+			width: 50
+		}, {
+			title: 'RowId',
+			field: 'RowId',
+			saveCol: true,
+			width: 50,
+			sortable: true,
+			hidden: true
+		}, {
+			field: 'operate',
+			title: 'æ ‡è¯†',
+			align: 'center',
+			width: 40,
+			formatter: function(value, row, index) {
+				var str = '';
+				if (row.LevelFlag == '1') {
+					str = str + '<div class="icon-emergency col-icon" href="#" title="' + $g('ç´§æ€¥') + '"></div>';
+				}
+				return str;
+			}
+		}, {
+			title: 'æ ‡ç­¾',
+			field: 'Label',
+			width: 180,
+			sortable: true
+		}, {
+			title: 'æ¶ˆæ¯’åŒ…',
+			field: 'PackageName',
+			width: 150,
+			sortable: true
+		}, {
+			title: 'åŒ…è£…ææ–™',
+			align: 'left',
+			field: 'PackMaterial',
+			width: 80
+		}, {
+			title: 'æ¶ˆæ¯’åŒ…å±æ€§Dr',
+			field: 'PackageTypeDetail',
+			width: 100,
+			align: 'left',
+			sortable: true,
+			hidden: true
+		}, {
+			title: 'æ¶ˆæ¯’åŒ…å±æ€§',
+			field: 'PackageTypeDetailName',
+			width: 100,
+			align: 'left',
+			sortable: true
+		}, {
+			title: 'æ—¥æœŸ',
+			field: 'CSSDTDate',
+			width: 100,
+			sortable: true
+		}, {
+			title: 'å¤±æ•ˆæ—¥æœŸ',
+			field: 'ExpDate',
+			width: 100,
+			sortable: true
+		}, {
+			title: 'ç§‘å®¤',
+			field: 'LocDesc',
+			width: 120,
+			sortable: true
+		}, {
+			title: 'ç´§æ€¥çŠ¶æ€',
+			field: 'LevelFlag',
+			width: 60,
+			hidden: true
+		}
+	]];
+	
+	var UnDispGrid = $UI.datagrid('#UnDispGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.PackageDisp.DispDetail',
+			QueryName: 'SelectAllSter'
+		},
+		columns: UnDispCm,
+		singleSelect: false,
+		pagination: false,
+		onDblClickRow: function(index, row) {
+			var Label = row['Label'];
+			if (isEmpty(Label)) {
+				$UI.msg('alert', 'æœªè·å–åˆ°æ ‡ç­¾ä¿¡æ¯!');
+				return;
+			}
+			AddDispItem(Label);
+		}
+	});
+	
+	function FindUnDispItmByF() {
+		var ParamsObj = $UI.loopBlock('#UnDispConditions');
+		var Params = JSON.stringify(ParamsObj);
+		ParamsObj.Type = 'opr';
+		UnDispGrid.load({
+			ClassName: 'web.CSSDHUI.PackageDisp.DispDetail',
+			QueryName: 'SelectAllSter',
+			Params: Params,
+			rows: 9999
 		});
 	}
 	
+	function Default() {
+		var StartDate = getQueryVariable('StartDate');
+		var DefaultData = {
+			fromLocDr: gLocObj,
+			FStartDate: DefaultStDate(),
+			FEndDate: DefaultEdDate(),
+			FComplateFlag: GetLocalStorage('CompleteFlag') || ''
+		};
+		$UI.fillBlock('#MainCondition', DefaultData);
+		$('#fromLocDr').combobox('setValue', gLocId);
+		$UI.clearBlock('#UnDispConditions');
+		var UnDispStartDate;
+		if (StartDate == false) {
+			UnDispStartDate = DateFormatter(DateAdd(new Date(), 'd', parseInt(-180)));
+		} else {
+			UnDispStartDate = StartDate;
+		}
+		var UnDispDefault = {
+			StartDate: UnDispStartDate,
+			EndDate: DefaultEdDate()
+		};
+		$UI.fillBlock('#UnDispConditions', UnDispDefault);
+	}
 	
-}
+	function AdjustLayoutSize() {
+		var NorthWidth = $(window).width() - 620;
+		var DispWestWidth = NorthWidth * 0.5;
+		$('#DispLayout').layout('panel', 'east').panel('resize', { width: DispWestWidth });
+		$('#DispLayout').layout();
+	}
+	window.onresize = function() {
+		AdjustLayoutSize();
+	};
+	AdjustLayoutSize();
+	Default();
+	query();
+	FindUnDispItmByF();
+};
 $(init);

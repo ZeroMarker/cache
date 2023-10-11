@@ -1,4 +1,5 @@
 //DHCRisExamGroupSet.js
+
 var SelectedRow="-1"
 
 var $=function(Id){
@@ -98,11 +99,48 @@ function getParam()
 function Add_click()
 {
 	
-	//alert(param);
-	var param = getParam();
-	if ( param=="") return;
+	
+	/*
+	var selRowid=trim($("selRowid").value);
+	if ( selRowid=="") 
+	{
+		//alert("Id不能为空");
+		return ;
+	}
+	*/
+	var groupName=trim ($("name").value);
+	
+	if ( groupName=="") {
+		alert("名称不能为空");
+		return ;
+	}
+	var groupID=trim($("ID").value);
+	var itmMastDr=trim($("itmMastDr").value);
+	//var itmMast=$("itmMast").value;
+	var itemCatDr=trim($("itemCatDr").value);
+	//var itemCat=$("itemCat").value;
+	
+	if ( (itmMastDr!="")&&(itemCatDr!=""))
+	{
+		alert("不能同时选择检查项目和医嘱子类!!");
+		return "";
+	}
+	
+	if ( (itmMastDr=="")&&(itemCatDr==""))
+	{
+		//alert("请选择检查项目或医嘱子类!!");
+		//return "";
+	}
+	var relationShip="";
+	if ( $("exclusive").checked)
+	 	relationShip="out";
+	else if($("inclusive").checked)
+		relationShip="in";
+		
+	var param=selRowid+"^"+groupName+"^"+groupID+"^"+itmMastDr+"^"+itemCatDr+"^"+relationShip;
+	
 	var operateFunction=$("operateFunction").value;
-	//alert(addFunction);
+	
 	var ret=cspRunServerMethod(operateFunction,param,"A");
 	if ( ret == "0")
 	{

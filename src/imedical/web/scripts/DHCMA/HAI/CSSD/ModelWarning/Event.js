@@ -24,11 +24,24 @@ function InitAssRateWinEvent(obj) {
         });
         //打印
         obj.btnPrint = function () {
-            $('#AssessRate').datagrid('print', '器械追溯预警');
+	        var rows=$("#AssessRate").datagrid('getRows').length;
+			if (rows>0) {
+				$('#AssessRate').datagrid('print', '器械追溯预警');
+			}else {
+				$.messager.alert("确认", "无数据记录,不允许打印", 'info');
+				return;
+			} 
+            
         }
         //导出
         obj.btnexport = function () {
-            $('#AssessRate').datagrid('toExcel', '器械追溯预警.xls');
+        	var rows=$("#AssessRate").datagrid('getRows').length;
+			if (rows>0) {
+				$("#AssessRate").datagrid('toExcel', '器械追溯预警.xls');
+			}else {
+				$.messager.alert("确认", "无数据记录,不允许导出", 'info');
+				return;
+			}            
         }
         //查询
         obj.btnQuery_click = function () {

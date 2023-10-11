@@ -34,14 +34,12 @@ function InitHISUIWin(){
 		onSelect:function(rowIndex,rowData){
 			if (rowIndex>-1) {
 				obj.dictList_onSelect();
-				var temp_selected = rowData;
 			}
 		},
 		onDblClickRow:function(rowIndex,rowData){
-			if(rowIndex>-1){
+			/* 	if(rowIndex>-1){
 				obj.gridProduct_onDbselect(rowData);
-				var temp_selected = rowData;
-			}
+			} */
 		},
 		onLoadSuccess:function(data){
 			$("#editIcon").linkbutton("disable");

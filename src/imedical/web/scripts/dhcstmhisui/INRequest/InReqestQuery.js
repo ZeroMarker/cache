@@ -1,230 +1,257 @@
-var init = function() {
-	var Clear=function(){
+ï»¿var init = function() {
+	var Clear = function() {
 		$UI.clearBlock('#Conditions');
 		$UI.clear(RequestMainGrid);
 		$UI.clear(RequestDetailGrid);
-		var Dafult={
-			StartDate:DefaultStDate(),
-			EndDate:DefaultEdDate(),
-			ReqLoc:gLocObj
-			}
-		$UI.fillBlock('#Conditions',Dafult)
+		var DefaultData = {
+			StartDate: DefaultStDate(),
+			EndDate: DefaultEdDate(),
+			ReqLoc: gLocObj
+		};
+		$UI.fillBlock('#Conditions', DefaultData);
 	};
-	$UI.linkbutton('#QueryBT',{
-		onClick:function(){
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
 			Query();
 		}
 	});
-	function Query(){
+	function Query() {
 		$UI.clear(RequestDetailGrid);
 		$UI.clear(RequestMainGrid);
-		var ParamsObj=$UI.loopBlock('#Conditions')
-		if(isEmpty(ParamsObj.StartDate)){
-			$UI.msg('alert','¿ªÊ¼ÈÕÆÚ²»ÄÜÎª¿Õ!');
+		var ParamsObj = $UI.loopBlock('#Conditions');
+		var StartDate = ParamsObj.StartDate;
+		var EndDate = ParamsObj.EndDate;
+		if (isEmpty(ParamsObj.ReqLoc)) {
+			$UI.msg('alert', 'è¯·æ±‚ç§‘å®¤ä¸èƒ½ä¸ºç©º!');
 			return;
 		}
-		if(isEmpty(ParamsObj.EndDate)){
-			$UI.msg('alert','½ØÖ¹ÈÕÆÚ²»ÄÜÎª¿Õ!');
+		if (isEmpty(StartDate)) {
+			$UI.msg('alert', 'å¼€å§‹æ—¥æœŸä¸èƒ½ä¸ºç©º!');
 			return;
 		}
-		if(isEmpty(ParamsObj.ReqLoc)){
-			$UI.msg('alert','ÇëÇó¿ÆÊÒ²»ÄÜÎª¿Õ!');
+		if (isEmpty(EndDate)) {
+			$UI.msg('alert', 'æˆªæ­¢æ—¥æœŸä¸èƒ½ä¸ºç©º!');
 			return;
 		}
-		var Params=JSON.stringify(ParamsObj);
+		if (compareDate(StartDate, EndDate)) {
+			$UI.msg('alert', 'æˆªæ­¢æ—¥æœŸä¸èƒ½å°äºå¼€å§‹æ—¥æœŸ!');
+			return;
+		}
+		var Params = JSON.stringify(ParamsObj);
 		RequestMainGrid.load({
 			ClassName: 'web.DHCSTMHUI.INRequestQuery',
 			QueryName: 'INReq',
-			Params:Params
+			query2JsonStrict: 1,
+			Params: Params
 		});
 	}
-	$UI.linkbutton('#ClearBT',{
-		onClick:function(){
-			Clear()
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
+			Clear();
 		}
 	});
-	var ReqLocParams=JSON.stringify(addSessionParams({Type:INREQUEST_LOCTYPE}));
+	var ReqLocParams = JSON.stringify(addSessionParams({ Type: INREQUEST_LOCTYPE, Element: 'ReqLoc' }));
 	var ReqLocBox = $HUI.combobox('#ReqLoc', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+ReqLocParams,
-			valueField: 'RowId',
-			textField: 'Description'
-		});
-	var SupLocParams=JSON.stringify(addSessionParams({Type:'All'}));
-	var SupLocBox = $HUI.combobox('#SupLoc', {
-		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+SupLocParams,
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + ReqLocParams,
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-	var RequestMainCm = [[{
+	var SupLocParams = JSON.stringify(addSessionParams({ Type: 'All', Element: 'SupLoc' }));
+	var SupLocBox = $HUI.combobox('#SupLoc', {
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + SupLocParams,
+		valueField: 'RowId',
+		textField: 'Description'
+	});
+	var RequestMainCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
-			hidden: true
+			hidden: true,
+			width: 60
 		}, {
-			title: 'ÇëÇóµ¥ÀàĞÍ',
+			title: 'è¯·æ±‚å•ç±»å‹',
 			field: 'ReqType',
-			width:100,
-			formatter:function(v){
-				if (v=='O') {return "ÇëÇóµ¥";}
-				if (v=='C') {return 'ÉêÁì¼Æ»®';}
-				return 'ÆäËû';
+			width: 100,
+			formatter: function(v) {
+				if (v == 'O') { return 'ä¸´æ—¶è¯·æ±‚'; }
+				if (v == 'C') { return 'ç”³é¢†è®¡åˆ’'; }
+				return 'å…¶ä»–';
 			}
 		}, {
-			title: 'ÇëÇóµ¥ºÅ',
+			title: 'è¯·æ±‚å•å·',
 			field: 'ReqNo',
-			width:200
+			width: 200
 		}, {
-			title: 'ÇëÇó²¿ÃÅ',
+			title: 'è¯·æ±‚éƒ¨é—¨',
 			field: 'ToLocDesc',
-			width:150
+			width: 150
 		}, {
-        	title: "¹©¸ø²¿ÃÅ",
-       		field:'FrLocDesc',
-        	width:150
-    	}, {
-	        title:"ÇëÇóÈË",
-	        field:'UserName',
-	        width:70
-	    }, {
-	        title:"ÇëÇó·½ÉóºËÈË",
-	        field:'AuditUser',
-	        width:90
-	    }, {
-	        title:"¹©Ó¦·½ÉóºËÈË",
-	        field:'AuditUserProv',
-	        width:90
-	    }, {
-	        title:"ÈÕÆÚ",
-	        field:'ReqDate',
-	        width:90,
-	        align:'right'
+			title: 'ä¾›ç»™éƒ¨é—¨',
+			field: 'FrLocDesc',
+			width: 150
 		}, {
-	        title:"Ê±¼ä",
-	        field:'ReqTime',
-	        width:80,
-	        align:'right'
-	    }, {
-	        title:"Íê³É×´Ì¬",
-	        field:'Complete',
-	        width:60
-	    }, {
-	        title:"×ªÒÆ×´Ì¬",
-	        field:'TransStatus',
-	        width:80,
-	        align:'right',
-	        formatter:function(value){
-				var status="";
-				if(value==0){
-					status="Î´×ªÒÆ";
-				}else if(value==1){
-					status="²¿·Ö×ªÒÆ";
-				}else if(value==2){
-					status="È«²¿×ªÒÆ";
+			title: 'è¯·æ±‚äºº',
+			field: 'UserName',
+			width: 70
+		}, {
+			title: 'è¯·æ±‚æ–¹å®¡æ ¸äºº',
+			field: 'AuditUser',
+			width: 95
+		}, {
+			title: 'ä¾›åº”æ–¹å®¡æ ¸äºº',
+			field: 'AuditUserProv',
+			width: 95
+		}, {
+			title: 'æ—¥æœŸ',
+			field: 'ReqDate',
+			width: 90,
+			align: 'right'
+		}, {
+			title: 'æ—¶é—´',
+			field: 'ReqTime',
+			width: 80,
+			align: 'right'
+		}, {
+			title: 'å®ŒæˆçŠ¶æ€',
+			field: 'Complete',
+			width: 80,
+			formatter: BoolFormatter
+		}, {
+			title: 'è½¬ç§»çŠ¶æ€',
+			field: 'TransStatus',
+			width: 80,
+			align: 'right',
+			formatter: function(value) {
+				var status = '';
+				if (value == 0) {
+					status = 'æœªè½¬ç§»';
+				} else if (value == 1) {
+					status = 'éƒ¨åˆ†è½¬ç§»';
+				} else if (value == 2) {
+					status = 'å…¨éƒ¨è½¬ç§»';
 				}
 				return status;
 			}
-	    }
+		}
 	]];
 	var RequestMainGrid = $UI.datagrid('#RequestMainGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.INRequest',
-			QueryName: 'INReqM'
+			QueryName: 'INReqM',
+			query2JsonStrict: 1
 		},
 		columns: RequestMainCm,
-		onSelect:function(index, row){
-			var ParamsObj={RefuseFlag:1}
-			var Params=JSON.stringify(ParamsObj)
+		showBar: true,
+		onSelect: function(index, row) {
+			var ParamsObj = { RefuseFlag: 1 };
+			var Params = JSON.stringify(ParamsObj);
 			RequestDetailGrid.load({
 				ClassName: 'web.DHCSTMHUI.INReqItm',
 				QueryName: 'INReqD',
+				query2JsonStrict: 1,
 				Req: row.RowId,
-				Params:Params,
-				rows: 99999
+				Params: Params,
+				rows: 99999,
+				totalFooter: '"Description":"åˆè®¡"',
+				totalFields: 'SpAmt'
 			});
+		},
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
+				RequestMainGrid.selectRow(0);
+			}
 		}
-	})
+	});
 
-	var RequestDetailCm = [[{
+	var RequestDetailCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
-			hidden: true
+			hidden: true,
+			width: 80
 		}, {
-			title: 'Îï×Ê´úÂë',
+			title: 'ç‰©èµ„ä»£ç ',
 			field: 'Code',
-			width:120
+			width: 120
 		}, {
-			title: 'Îï×ÊÃû³Æ',
+			title: 'ç‰©èµ„åç§°',
 			field: 'Description',
-			width:150
+			width: 150
 		}, {
-        	title: "¹æ¸ñ",
-       		field:'Spec',
-        	width:100
-    	}, {
-	        title:"¾ßÌå¹æ¸ñ",
-	        field:'SpecDesc',
-	        width:100
-	    }, {
-	        title:"³§ÉÌ",
-	        field:'Manf',
-	        width:100
+			title: 'è§„æ ¼',
+			field: 'Spec',
+			width: 100
 		}, {
-	        title:"ÇëÇóÊıÁ¿",
-	        field:'Qty',
-	        width:100,
-	        align:'right'
-	    }, {
-			title : "¹©Ó¦·½¿â´æ",
-			field : 'StkQty',
-			width : 80,
-			align : 'right'
+			title: 'å…·ä½“è§„æ ¼',
+			field: 'SpecDesc',
+			width: 100,
+			hidden: CodeMainParamObj.UseSpecList == 'Y' ? false : true
 		}, {
-			title : "ÒÑ×ªÒÆÊıÁ¿",
-			field : 'TransQty',
-			width : 80,
-			align : 'right'
+			title: 'ç”Ÿäº§å‚å®¶',
+			field: 'Manf',
+			width: 100
 		}, {
-			title : "Î´×ªÒÆÊıÁ¿",
-			field : 'NotTransQty',
-			width : 80,
-			align : 'right'
+			title: 'è¯·æ±‚æ•°é‡',
+			field: 'Qty',
+			width: 100,
+			align: 'right'
 		}, {
-	        title:"µ¥Î»",
-	        field:'UomDesc',
-	        width:80
-	    }, {
-	        title:"ÊÛ¼Û",
-	        field:'Sp',
-	        width:100,
-	        align:'right'
-	    }, {
-	        title:"ÊÛ¼Û½ğ¶î",
-	        field:'SpAmt',
-	        width:100,
-	        align:'right'
-	    }, {
-	        title:"ÇëÇó±¸×¢",
-	        field:'ReqRemarks',
-	        width:100
-	    }, {
-	        title:"ÊÇ·ñ¾Ü¾ø",
-	        field:'RefuseFlag',
-	        width:60,
-	        align:'center'
-	    }
+			title: 'ä¾›åº”æ–¹åº“å­˜',
+			field: 'StkQty',
+			width: 80,
+			align: 'right'
+		}, {
+			title: 'å·²è½¬ç§»æ•°é‡',
+			field: 'TransQty',
+			width: 80,
+			align: 'right'
+		}, {
+			title: 'æœªè½¬ç§»æ•°é‡',
+			field: 'NotTransQty',
+			width: 80,
+			align: 'right'
+		}, {
+			title: 'å•ä½',
+			field: 'UomDesc',
+			width: 80
+		}, {
+			title: 'å”®ä»·',
+			field: 'Sp',
+			width: 100,
+			align: 'right'
+		}, {
+			title: 'å”®ä»·é‡‘é¢',
+			field: 'SpAmt',
+			width: 100,
+			align: 'right'
+		}, {
+			title: 'è¯·æ±‚å¤‡æ³¨',
+			field: 'ReqRemarks',
+			width: 100
+		}, {
+			title: 'æ˜¯å¦æ‹’ç»',
+			field: 'RefuseFlag',
+			width: 60,
+			align: 'center'
+		}
 	]];
 
 	var RequestDetailGrid = $UI.datagrid('#RequestDetailGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.INReqItm',
 			QueryName: 'INReqD',
-			rows: 99999
+			query2JsonStrict: 1,
+			rows: 99999,
+			totalFooter: '"Description":"åˆè®¡"',
+			totalFields: 'SpAmt'
 		},
-		pagination:false,
-		columns: RequestDetailCm
-	})
+		showFooter: true,
+		pagination: false,
+		columns: RequestDetailCm,
+		showBar: true
+	});
 
 	Clear();
 	Query();
-
-}
+};
 $(init);

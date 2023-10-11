@@ -8,7 +8,12 @@
 				return true;
 			}
 		});
-			
+		$('#MensDate').datebox().datebox('calendar').calendar({
+			validator: function(date){
+				var now = new Date();
+				return date<=now;
+			}
+		});	
 		/// 胎数
 		$("#PreTimes").keyup(function(){
 		    var PreTimes = $("#PreTimes").val();  /// 胎数
@@ -42,7 +47,15 @@
 		if (MapCode=="TCTN"){
 			$("#WomenCk").hide();
 			if (ServerObj.TCTWomen!="0"){
-			$("label[for=WomenCk]").html("<label style='font-weight:bold;'>妇科信息<font color='red'>(必填项)</font></label>")
+			//$("label[for=WomenCk]").html("<label style='font-weight:bold;'>"+$g("妇科信息")+"<font color='red'>"+$g("(必填项)")+"</font></label>")
+			//$("#WomenCkpanel").attr("title","<label style='font-weight:bold;'>"+$g("妇科信息")+"<font color='red'>"+$g("(必填项)")+"</font></label>");
+			}else{
+				$(".panel-title").each(function(){
+					if($(this).text()=="妇科信息(必填项)"){
+						$(this).html($g("妇科信息"))
+						}
+				})
+				
 			}
 		}else{
 			$("#WomenCk").nextAll().css("display","none");	

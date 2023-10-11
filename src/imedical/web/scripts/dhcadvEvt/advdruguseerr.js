@@ -86,7 +86,7 @@ function InitReport(recordId)
 function SaveReport(flag)
 {
 	if($('#PatName').val()==""){
-		$.messager.alert("提示:","患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！");	
+		$.messager.alert($g("提示:"),$g("患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！"));	
 		return false;
 	}
 	///保存前,对页面必填项进行检查
@@ -116,7 +116,7 @@ function checkother(){
 		}
 	})
 	if(dosetimeerr==-1){
-		$.messager.alert("提示:","【错误类型】勾选'给药时间错误'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【错误类型】勾选'给药时间错误'，请填写内容！"));	
 		return false;
 	}
 	//错误类型 给药途径错误
@@ -129,7 +129,7 @@ function checkother(){
 		}
 	})
 	if(dosewayerr==-1){
-		$.messager.alert("提示:","【错误类型】勾选'给药途径错误'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【错误类型】勾选'给药途径错误'，请填写内容！"));	
 		return false;
 	}
 	//错误类型 遗漏给药
@@ -142,7 +142,7 @@ function checkother(){
 		}
 	})
 	if(missdose==-1){
-		$.messager.alert("提示:","【错误类型】勾选'遗漏给药'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【错误类型】勾选'遗漏给药'，请填写内容！"));	
 		return false;
 	}
 	//错误类型 输液速度错误
@@ -155,7 +155,7 @@ function checkother(){
 		}
 	})
 	if(infusionspeed==-1){
-		$.messager.alert("提示:","【错误类型】勾选'输液速度错误'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【错误类型】勾选'输液速度错误'，请填写内容！"));	
 		return false;
 	}
 	//错误类型 剂量错误
@@ -168,7 +168,7 @@ function checkother(){
 		}
 	})
 	if(dosageerr==-1){
-		$.messager.alert("提示:","【错误类型】勾选'剂量错误'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【错误类型】勾选'剂量错误'，请填写内容！"));	
 		return false;
 	}
 	//错误类型 剂型错误
@@ -181,7 +181,7 @@ function checkother(){
 		}
 	})
 	if(dosageformerr==-1){
-		$.messager.alert("提示:","【错误类型】勾选'剂型错误'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【错误类型】勾选'剂型错误'，请填写内容！"));	
 		return false;
 	}
 	//错误类型 药物错误
@@ -194,7 +194,7 @@ function checkother(){
 		}
 	})
 	if(drugerr==-1){
-		$.messager.alert("提示:","【错误类型】勾选'药物错误'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【错误类型】勾选'药物错误'，请填写内容！"));	
 		return false;
 	}
 	

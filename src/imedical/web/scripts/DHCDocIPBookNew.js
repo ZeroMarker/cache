@@ -590,6 +590,7 @@ function btnStateList() {
         return;
     }
     var strURL = "websys.default.csp?WEBSYS.TCOMPONENT=DHCDocIPBookStateList&BookID=" + objCurrentBook.RowID;
+	if(typeof websys_writeMWToken=='function') strURL=websys_writeMWToken(strURL);
     window.open(strURL, "_blank", "height=300,width=700,status=yes,toolbar=no,menubar=no,location=no,top=50,left=100");
 }
 
@@ -599,7 +600,8 @@ function cboTemplateListIndexChange() {
     if (objCurrentBook != null)
         BookID = objCurrentBook.RowID;
     var strURL = "websys.default.csp?WEBSYS.TCOMPONENT=DHCDocIPBookExtra&BookID=" + BookID + "&TemplateID=" + TemplateID+ "&IPBKFlag=" + IPBKFlagVal;
-    window.parent.frames["RPExtra"].location.href = strURL;
+    if(typeof websys_writeMWToken=='function') strURL=websys_writeMWToken(strURL);
+	window.parent.frames["RPExtra"].location.href = strURL;
 }
 
 
@@ -675,7 +677,7 @@ function InitForm() {
 	//DHCC_ClearList("AdmCondition");
 	//var encmeth=DHCWebD_GetObjValue("GetSelectInsuTrad");
 	var rtn=tkMakeServerCall("web.DHCDocIPBookingCtl","GetAdmCondition","DHCWeb_AddToList","AdmCondition")
-	//objBook所用发法web.DHCDocIPBookingCtl.GetIPBookByPaadm通过门诊的Paadm取得住院证信息
+	//objBook所用发法?]web.DHCDocIPBookingCtl.GetIPBookByPaadm通过门诊的Paadm取得住院证信息?^
    	var RowID = getElementValue("RowID");
 	var objBook = GetDHCDocIPBookingByPaadm("MethodGetDHCDocIPBookingByPaadm", EpisodeID, RowID);
     for (var i = 0; i < arryStateDic.length; i++) {

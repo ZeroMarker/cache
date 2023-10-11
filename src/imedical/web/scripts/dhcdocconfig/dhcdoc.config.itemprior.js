@@ -1,24 +1,35 @@
-Ôªøvar ItemPriorDataGrid;
-$(function(){
-	InitHospList();
-	$('#Confirm').click(SaveOutOrderOtherContral)
+var ItemPriorDataGrid;
+var node = "";
+nodeId = "" //±Í ∂¿˝Õ‚¡–µ„ª˜––
+var IsCellCheckFlag = false; //±Í æ¿˝Õ‚ø∆ “ «∑Òµ„ª˜
+$(function() {
+    InitHospList();
+    //$('#Confirm').click(SaveOutOrderOtherContral);
+    $('#SaveutOrderNotPoison').click(SaveutOrderNotPoison);
+    $('#SaveutOutOrderNotItemCat').click(SaveutOutOrderNotItemCat);
+    $('#SaveutOutOrderNotFreq').click(SaveutOutOrderNotFreq);
+    $('#BSaveLessLoc').click(BSaveLessLoc);
 })
-function InitHospList()
-{
-	var hospComp = GenHospComp("Doc_BaseConfig_ItemPrior");
-	hospComp.jdata.options.onSelect = function(e,t){
-		Init();
-	}
-	hospComp.jdata.options.onLoadSuccess= function(data){
-		Init();
-	}
+
+function InitHospList() {
+    var hospComp = GenHospComp("Doc_BaseConfig_ItemPrior");
+    hospComp.jdata.options.onSelect = function(e, t) {
+        Init();
+    }
+    hospComp.jdata.options.onLoadSuccess = function(data) {
+        Init();
+    }
 }
-function Init(){
-	InitListPoison("List_Poison","OutOrderNotPoison");
-	InitListItemCat("List_ItemCat","OutOrderNotItemCat")
-	InittabItemPrior();
+
+function Init() {
+    //InitListPoison("List_Poison","OutOrderNotPoison");
+    //InitListItemCat("List_ItemCat","OutOrderNotItemCat")
+    InittabItemPrior();
+    InitPoisonListTab();
+    InitItemCatListTab();
+    InitFreqListTab();
 }
-function InitListPoison(param1,param2)
+/*function InitListPoison(param1,param2)
 {
 	$("#"+param1+"").find("option").remove();
 	var objScope=$.cm({
@@ -63,222 +74,326 @@ function InitListItemCat(param1,param2)
 				$("#"+param1+"").get(0).options[j-1].selected = true;
 			}
 	}
-}
-function InittabItemPrior(){
-	var ItemPriorToolBar = [{
-            text: 'Â¢ûÂä†',
-            iconCls: 'icon-add',
-            handler: function() { //Ê∑ªÂä†ÂàóË°®ÁöÑÊìç‰ΩúÊåâÈíÆÊ∑ªÂä†,‰øÆÊîπ,Âà†Èô§Á≠â
-                if (editRow != undefined) {
-                    //ItemPriorDataGrid.datagrid("endEdit", editRow);
-                    return;
-                }else{
-	                 //Ê∑ªÂä†Êó∂Â¶ÇÊûúÊ≤°ÊúâÊ≠£Âú®ÁºñËæëÁöÑË°åÔºåÂàôÂú®datagridÁöÑÁ¨¨‰∏ÄË°åÊèíÂÖ•‰∏ÄË°å
-                    ItemPriorDataGrid.datagrid("insertRow", {
-                        index: 0,
-                        // index start with 0
-                        row: {
+}*/
+function InittabItemPrior() {
+    var ItemPriorToolBar = [{
+        text: '‘ˆº”',
+        iconCls: 'icon-add',
+        handler: function() { //ÃÌº”¡–±Ìµƒ≤Ÿ◊˜∞¥≈•ÃÌº”,–ﬁ∏ƒ,…æ≥˝µ»
+            if (editRow != undefined) {
+                //ItemPriorDataGrid.datagrid("endEdit", editRow);
+                return;
+            } else {
+                //ÃÌº” ±»Áπ˚√ª”–’˝‘⁄±‡º≠µƒ––£¨‘Ú‘⁄datagridµƒµ⁄“ª––≤Â»Î“ª––
+                ItemPriorDataGrid.datagrid("insertRow", {
+                    index: 0,
+                    // index start with 0
+                    row: {
 
-						}
-                    });
-                    //Â∞ÜÊñ∞ÊèíÂÖ•ÁöÑÈÇ£‰∏ÄË°åÂºÄÊà∑ÁºñËæëÁä∂ÊÄÅ
-                    ItemPriorDataGrid.datagrid("beginEdit", 0);
-                    //cureItemDataGrid.datagrid('addEditor',LocDescEdit);
-                    //ÁªôÂΩìÂâçÁºñËæëÁöÑË°åËµãÂÄº
-                    editRow = 0;
-                }
-              
+                    }
+                });
+                //Ω´–¬≤Â»Îµƒƒ«“ª––ø™ªß±‡º≠◊¥Ã¨
+                ItemPriorDataGrid.datagrid("beginEdit", 0);
+                //cureItemDataGrid.datagrid('addEditor',LocDescEdit);
+                //∏¯µ±«∞±‡º≠µƒ––∏≥÷µ
+                editRow = 0;
             }
-        },{
-            text: 'Âà†Èô§',
-            iconCls: 'icon-cancel',
-            handler: function() {
-                //Âà†Èô§Êó∂ÂÖàËé∑ÂèñÈÄâÊã©Ë°å
-                var rows = ItemPriorDataGrid.datagrid("getSelections");
-                //ÈÄâÊã©Ë¶ÅÂà†Èô§ÁöÑË°å
-                if (rows.length > 0) {
-                    $.messager.confirm("ÊèêÁ§∫", "‰Ω†Á°ÆÂÆöË¶ÅÂà†Èô§Âêó?",
+
+        }
+    }, {
+        text: '…æ≥˝',
+        iconCls: 'icon-cancel',
+        handler: function() {
+            //…æ≥˝ ±œ»ªÒ»°—°‘Ò––
+            var rows = ItemPriorDataGrid.datagrid("getSelections");
+            //—°‘Ò“™…æ≥˝µƒ––
+            if (rows.length > 0) {
+                $.messager.confirm("Ã· æ", "ƒ„»∑∂®“™…æ≥˝¬?",
                     function(r) {
                         if (r) {
                             var ids = [];
                             for (var i = 0; i < rows.length; i++) {
                                 ids.push(rows[i].rowid);
                             }
-                            //Â∞ÜÈÄâÊã©Âà∞ÁöÑË°åÂ≠òÂÖ•Êï∞ÁªÑÂπ∂Áî®,ÂàÜÈöîËΩ¨Êç¢ÊàêÂ≠óÁ¨¶‰∏≤Ôºå
-                            //Êú¨‰æãÂè™ÊòØÂâçÂè∞Êìç‰ΩúÊ≤°Êúâ‰∏éÊï∞ÊçÆÂ∫ìËøõË°å‰∫§‰∫íÊâÄ‰ª•Ê≠§Â§ÑÂè™ÊòØÂºπÂá∫Ë¶Å‰º†ÂÖ•ÂêéÂè∞ÁöÑid
+                            //Ω´—°‘ÒµΩµƒ––¥Ê»Î ˝◊È≤¢”√,∑÷∏Ù◊™ªª≥…◊÷∑˚¥Æ£¨
+                            //±æ¿˝÷ª ««∞Ã®≤Ÿ◊˜√ª”–”Î ˝æ›ø‚Ω¯––Ωªª•À˘“‘¥À¥¶÷ª «µØ≥ˆ“™¥´»Î∫ÛÃ®µƒid
                             //console.info(ids);
-                            var rowid=ids.join(',');
-                            if (rowid==""){
-	                            editRow = undefined;
-				                ItemPriorDataGrid.datagrid("rejectChanges");
-				                ItemPriorDataGrid.datagrid("unselectAll");
-				                return;
-	                        }
-                            var value=$.m({
-								 ClassName:"DHCDoc.DHCDocConfig.ItemPrior",
-								 MethodName:"delete",
-								 RowId:rowid
-							},false);
-							if(value=="0"){
-								ItemPriorDataGrid.datagrid('load');
-	           					ItemPriorDataGrid.datagrid('unselectAll');
-	           					$.messager.show({title:"ÊèêÁ§∫",msg:"Âà†Èô§ÊàêÂäü"});
-							}else{
-								$.messager.alert('ÊèêÁ§∫',"Âà†Èô§Â§±Ë¥•:"+value);
-							}
-							editRow = undefined;
+                            var rowid = ids.join(',');
+                            if (rowid == "") {
+                                editRow = undefined;
+                                ItemPriorDataGrid.datagrid("rejectChanges");
+                                ItemPriorDataGrid.datagrid("unselectAll");
+                                return;
+                            }
+                            var value = $.m({
+                                ClassName: "DHCDoc.DHCDocConfig.ItemPrior",
+                                MethodName: "delete",
+                                RowId: rowid
+                            }, false);
+                            if (value == "0") {
+                                ItemPriorDataGrid.datagrid('load');
+                                ItemPriorDataGrid.datagrid('unselectAll');
+                                $.messager.show({ title: "Ã· æ", msg: "…æ≥˝≥…π¶" });
+                            } else {
+                                $.messager.alert('Ã· æ', "…æ≥˝ ß∞‹:" + value);
+                            }
+                            editRow = undefined;
                         }
                     });
+            } else {
+                $.messager.alert("Ã· æ", "«Î—°‘Ò“™…æ≥˝µƒ––", "error");
+            }
+        }
+    }, {
+        text: '±£¥Ê',
+        iconCls: 'icon-save',
+        handler: function() {
+            //±£¥Ê ±Ω· ¯µ±«∞±‡º≠µƒ––£¨◊‘∂Ø¥•∑¢onAfterEdit ¬º˛»Áπ˚“™”Î∫ÛÃ®Ωªª•ø…Ω´ ˝æ›Õ®π˝AjaxÃ·Ωª∫ÛÃ®
+            var rows = ItemPriorDataGrid.datagrid("getSelections");
+            if (editRow != undefined) {
+                var rows = ItemPriorDataGrid.datagrid("selectRow", editRow).datagrid("getSelected");
+                if (rows.rowid) {
+                    var rowid = rows.rowid
                 } else {
-                    $.messager.alert("ÊèêÁ§∫", "ËØ∑ÈÄâÊã©Ë¶ÅÂà†Èô§ÁöÑË°å", "error");
+                    var rowid = ""
                 }
-            }
-        },{
-            text: '‰øùÂ≠ò',
-            iconCls: 'icon-save',
-            handler: function() {
-                //‰øùÂ≠òÊó∂ÁªìÊùüÂΩìÂâçÁºñËæëÁöÑË°åÔºåËá™Âä®Ëß¶ÂèëonAfterEdit‰∫ã‰ª∂Â¶ÇÊûúË¶Å‰∏éÂêéÂè∞‰∫§‰∫íÂèØÂ∞ÜÊï∞ÊçÆÈÄöËøáAjaxÊèê‰∫§ÂêéÂè∞
-              var rows = ItemPriorDataGrid.datagrid("getSelections");
-                if (editRow != undefined)
-                {
-                	var editors = ItemPriorDataGrid.datagrid('getEditors', editRow);      
-					var BillTypeRowid =  editors[0].target.combobox('getValue');
-					if (!BillTypeRowid){
-						$.messager.alert('ÊèêÁ§∫',"ËØ∑ÈÄâÊã©Ë¥πÂà´!")
-						return false;
-					}
-					var ItemCatRowid =  editors[1].target.combobox('getValue');
-					if (!ItemCatRowid){
-						$.messager.alert('ÊèêÁ§∫',"ËØ∑ÈÄâÊã©ÂåªÂò±Â≠êÁ±ª!")
-						return false;
-					}
-					var DurationRowid =  editors[2].target.combobox('getValue');
-					if (!DurationRowid){
-						$.messager.alert('ÊèêÁ§∫',"ËØ∑ÈÄâÊã©ÁñóÁ®ã‰∏çËÉΩ‰∏∫Á©∫!")
-						return false;
-					}
-					var Drugspecies=editors[3].target.val();
-					if (Drugspecies!=""){
-						if (isNaN(Number(Drugspecies))==true){
-							$.messager.alert('ÊèêÁ§∫',"ËçØÂìÅÁßçÁ±ªËØ∑Â°´ÂÜôÊï∞Â≠ó!")
-							return false;
-						}
-					}
-					var Para=ItemCatRowid+"^"+BillTypeRowid+"^"+DurationRowid+"^"+Drugspecies;
-					var value=$.m({
-						 ClassName:"DHCDoc.DHCDocConfig.ItemPrior",
-						 MethodName:"insert",
-						 Para:Para,
-						 HospId:$HUI.combogrid('#_HospList').getValue()
-					},false);
-					if(value==0){
-						ItemPriorDataGrid.datagrid("endEdit", editRow);
-            			editRow = undefined;
-						ItemPriorDataGrid.datagrid('load');
-       					ItemPriorDataGrid.datagrid('unselectAll');
-       					//$.messager.alert({title:"ÊèêÁ§∫",msg:"‰øùÂ≠òÊàêÂäü"});           					
-					}else{
-						$.messager.alert('ÊèêÁ§∫',"‰øùÂ≠òÂ§±Ë¥•:"+value);
-						return false;
-					}
-					editRow = undefined;
-            	}
-            }
-        },{
-            text: 'ÂèñÊ∂àÁºñËæë',
-            iconCls: 'icon-redo',
-            handler: function() {
-                //ÂèñÊ∂àÂΩìÂâçÁºñËæëË°åÊääÂΩìÂâçÁºñËæëË°åÁΩ¢undefinedÂõûÊªöÊîπÂèòÁöÑÊï∞ÊçÆ,ÂèñÊ∂àÈÄâÊã©ÁöÑË°å
+                var editors = ItemPriorDataGrid.datagrid('getEditors', editRow);
+                var BillTypeRowid = rows.BillTypeRowid; //editors[0].target.combobox('getValue');
+                if (!BillTypeRowid) {
+                    $.messager.alert('Ã· æ', "«Î—°‘Ò∑—±!")
+                    return false;
+                }
+                var ItemCatRowid = rows.ItemCatRowid; //editors[1].target.combobox('getValue');
+                if (!ItemCatRowid) {
+                    $.messager.alert('Ã· æ', "«Î—°‘Ò“Ω÷ˆ◊”¿‡!")
+                    return false;
+                }
+                var DurationRowid = rows.DurationRowid; //editors[2].target.combobox('getValue');
+                if (!DurationRowid) {
+                    $.messager.alert('Ã· æ', "«Î—°‘Ò¡∆≥Ã≤ªƒ‹Œ™ø’!")
+                    return false;
+                }
+                var Drugspecies = editors[3].target.val();
+                if (Drugspecies != "") {
+                    if (isNaN(Number(Drugspecies)) == true) {
+                        $.messager.alert('Ã· æ', "“©∆∑÷÷¿‡«ÎÃÓ–¥ ˝◊÷!")
+                        return false;
+                    }
+                }
+                var Para = rowid + "^" + ItemCatRowid + "^" + BillTypeRowid + "^" + DurationRowid + "^" + Drugspecies;
+                var value = $.m({
+                    ClassName: "DHCDoc.DHCDocConfig.ItemPrior",
+                    MethodName: "save",
+                    Para: Para,
+                    HospId: $HUI.combogrid('#_HospList').getValue()
+                }, false);
+                if (value == 0) {
+                    ItemPriorDataGrid.datagrid("endEdit", editRow);
+                    editRow = undefined;
+                    ItemPriorDataGrid.datagrid('load').datagrid('unselectAll');
+                } else if (value == "repeat") {
+                    $.messager.alert('Ã· æ', "±£¥Ê ß∞‹!º«¬º÷ÿ∏¥!");
+                    return false;
+                } else {
+                    $.messager.alert('Ã· æ', "±£¥Ê ß∞‹:" + value);
+                    return false;
+                }
                 editRow = undefined;
-                ItemPriorDataGrid.datagrid("rejectChanges");
-                ItemPriorDataGrid.datagrid("unselectAll");
             }
-        }];
-    var ItemPriorColumns=[[    
-        			{ field: 'rowid', title: '', width: 100,hidden:true},
-					{
-                      field : 'BillTypeRowid',title : 'Ë¥πÂà´',width : 100,
-					  editor :{  
-							type:'combobox',  
-							options:{
-								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.CNMedCode&QueryName=FindBillTypeConfig&value=&HospId="+$HUI.combogrid('#_HospList').getValue(),
-								valueField:'BillTypeRowid',
-								textField:'BillTypeDesc',
-								required:false,
-								loadFilter:function(data){
-								    return data['rows'];
-								}
-							  }
-     					  },
-						formatter:function(BillTypeRowid,record){
-							  return record.BillType;
-						}
-                    },
-                     { field : 'BillType',title : '',width : 120,hidden:true   
-                     },
-					 { field: 'ItemCatRowid', title: 'ÂåªÂò±Â≠êÁ±ª', width: 250,
-					   editor :{  
-							type:'combobox',  
-							options:{
-								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ItemPrior&QueryName=FindCatList&value=&HospId="+$HUI.combogrid('#_HospList').getValue(),
-								valueField:'ARCICRowId',
-								textField:'ARCICDesc',
-								required:false,
-								loadFilter:function(data){
-								    return data['rows'];
-								}
-							  }
-     					  },
-						formatter:function(id,record){
-							  return record.ItemCat;
-						}
-					 },
-					 { field: 'ItemCat', title: 'ItemCat', width: 100, align: 'center', sortable: true, hidden: true},
-					 { field: 'DurationRowid', title: 'ÈôêÂÆöÁñóÁ®ã', width: 100, align: 'center', sortable: true,
-					    editor :{  
-							type:'combobox',  
-							options:{
-								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.SubCatContral&QueryName=FindDurList&value=&Type=XY",
-								valueField:'DurRowId',
-								textField:'DurCode',
-								required:false,
-								loadFilter:function(data){
-								    return data['rows'];
-								}
-							  }
-     					  },
-						formatter:function(id,record){
-							  return record.Duration;
-						}
-					 },
-					 { field: 'Duration', title: '', width: 100,hidden: true},
-					 { field: 'Drugspecies', title: 'ÈôêÂÆöËçØÂìÅÁßçÁ±ª', width: 100,
-					   editor : {type : 'text',options : {}}
-					 }
-    			 ]];
-	ItemPriorDataGrid=$("#tabItemPrior").datagrid({  
-		fit : true,
-		width : 'auto',
-		border : false,
-		striped : true,
-		singleSelect : true,
-		fitColumns : true,
-		autoRowHeight : false,
-		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ItemPrior&QueryName=Find&Alias=&HospId="+$HUI.combogrid('#_HospList').getValue(),
-		loadMsg : 'Âä†ËΩΩ‰∏≠..',  
-		pagination : true,  //
-		rownumbers : true,  //
-		idField:"InstrArcimId",
-		pageSize:15,
-		pageList : [15,50,100,200],
-		columns :ItemPriorColumns,
-    	toolbar :ItemPriorToolBar,
-    	onLoadSuccess:function(data){
-	    	editRow = undefined;
-	    }
-	});
+        }
+    }, {
+        text: '»°œ˚±‡º≠',
+        iconCls: 'icon-redo',
+        handler: function() {
+            //»°œ˚µ±«∞±‡º≠––∞—µ±«∞±‡º≠––∞’undefinedªÿπˆ∏ƒ±‰µƒ ˝æ›,»°œ˚—°‘Òµƒ––
+            editRow = undefined;
+            ItemPriorDataGrid.datagrid("rejectChanges").datagrid("unselectAll");
+        }
+    }];
+    var ItemPriorColumns = [
+        [
+            { field: 'rowid', title: '', width: 100, hidden: true },
+            { field: 'BillTypeRowid', title: '', hidden: true },
+            {
+                field: 'BillType',
+                title: '∑—±',
+                width: 100,
+                editor: {
+                    type: 'combobox',
+                    options: {
+                        url: $URL + "?ClassName=DHCDoc.DHCDocConfig.CNMedCode&QueryName=FindBillTypeConfig&value=&HospId=" + $HUI.combogrid('#_HospList').getValue(),
+                        valueField: 'BillTypeRowid',
+                        textField: 'BillTypeDesc',
+                        required: false,
+                        loadFilter: function(data) {
+                            return data['rows'];
+                        },
+                        onSelect: function(rec) {
+                            var rows = $("#tabItemPrior").datagrid("selectRow", editRow).datagrid("getSelected");
+                            rows.BillTypeRowid = rec.BillTypeRowid;
+                        },
+                        onChange: function(newValue, oldValue) {
+                            if (newValue == "") {
+                                var rows = $("#tabItemPrior").datagrid("selectRow", editRow).datagrid("getSelected");
+                                rows.BillTypeRowid = "";
+                            }
+                        },
+                        onHidePanel: function() {
+                            var rows = $("#tabItemPrior").datagrid("selectRow", editRow).datagrid("getSelected");
+                            if (!$.isNumeric($(this).combobox('getValue'))) return;
+                            rows.BillTypeRowid = $(this).combobox('getValue');
+                        }
+                    }
+                }
+            },
+            { field: 'ItemCatRowid', title: '', hidden: true },
+            {
+                field: 'ItemCat',
+                title: '“Ω÷ˆ◊”¿‡',
+                width: 250,
+                editor: {
+                    type: 'combobox',
+                    options: {
+                        url: $URL + "?ClassName=DHCDoc.DHCDocConfig.ItemPrior&QueryName=FindCatList&value=&HospId=" + $HUI.combogrid('#_HospList').getValue() + "&rows=99999",
+                        valueField: 'ARCICRowId',
+                        textField: 'ARCICDesc',
+                        required: false,
+                        loadFilter: function(data) {
+                            return data['rows'];
+                        },
+                        onSelect: function(rec) {
+                            var rows = $("#tabItemPrior").datagrid("selectRow", editRow).datagrid("getSelected");
+                            rows.ItemCatRowid = rec.ARCICRowId;
+                        },
+                        onChange: function(newValue, oldValue) {
+                            if (newValue == "") {
+                                var rows = $("#tabItemPrior").datagrid("selectRow", editRow).datagrid("getSelected");
+                                rows.ItemCatRowid = "";
+                            }
+                        },
+                        onHidePanel: function() {
+                            var rows = $("#tabItemPrior").datagrid("selectRow", editRow).datagrid("getSelected");
+                            if (!$.isNumeric($(this).combobox('getValue'))) return;
+                            rows.ItemCatRowid = $(this).combobox('getValue');
+                        }
+                    }
+                }
+            },
+            { field: 'DurationRowid', title: '', width: 100, hidden: true },
+            {
+                field: 'Duration',
+                title: 'œﬁ∂®¡∆≥Ã',
+                width: 100,
+                align: 'center',
+                sortable: true,
+                editor: {
+                    type: 'combobox',
+                    options: {
+                        url: $URL + "?ClassName=DHCDoc.DHCDocConfig.SubCatContral&QueryName=FindDurList&value=&Type=XY",
+                        valueField: 'DurRowId',
+                        textField: 'DurCode',
+                        required: false,
+                        loadFilter: function(data) {
+                            return data['rows'];
+                        },
+                        onSelect: function(rec) {
+                            var rows = $("#tabItemPrior").datagrid("selectRow", editRow).datagrid("getSelected");
+                            rows.DurationRowid = rec.DurRowId;
+                        },
+                        onChange: function(newValue, oldValue) {
+                            if (newValue == "") {
+                                var rows = $("#tabItemPrior").datagrid("selectRow", editRow).datagrid("getSelected");
+                                rows.DurationRowid = "";
+                            }
+                        },
+                        onHidePanel: function() {
+                            var rows = $("#tabItemPrior").datagrid("selectRow", editRow).datagrid("getSelected");
+                            if (!$.isNumeric($(this).combobox('getValue'))) return;
+                            rows.DurationRowid = $(this).combobox('getValue');
+                        }
+                    }
+                }
+            },
+            {
+                field: 'Drugspecies',
+                title: 'œﬁ∂®“©∆∑÷÷¿‡',
+                width: 100,
+                editor: { type: 'text', options: {} }
+            }
+        ]
+    ];
+    ItemPriorDataGrid = $("#tabItemPrior").datagrid({
+        fit: true,
+        width: 'auto',
+        border: false,
+        striped: true,
+        singleSelect: true,
+        fitColumns: true,
+        autoRowHeight: false,
+        url: $URL + "?ClassName=DHCDoc.DHCDocConfig.ItemPrior&QueryName=Find&Alias=&HospId=" + $HUI.combogrid('#_HospList').getValue(),
+        loadMsg: 'º”‘ÿ÷–..',
+        pagination: true, //
+        rownumbers: true, //
+        idField: "rowid",
+        pageSize: 15,
+        pageList: [15, 50, 100, 200],
+        columns: ItemPriorColumns,
+        toolbar: ItemPriorToolBar,
+        onLoadSuccess: function(data) {
+            editRow = undefined;
+        },
+        onDblClickRow: function(rowIndex, rowData) {
+            if (editRow !== undefined) {
+                $.messager.alert("Ã· æ", "”–’˝‘⁄±‡º≠µƒ––,«Î—°±£¥ÊªÚ»°œ˚±‡º≠!");
+                return false;
+            }
+            editRow = rowIndex;
+            $("#tabItemPrior").datagrid("beginEdit", rowIndex);
+        },
+        onBeforeLoad: function(param) {
+            $("#tabItemPrior").datagrid('unselectAll');
+        }
+    });
 }
-function SaveOutOrderOtherContral()
+
+function SaveutOrderNotPoison() {
+    var PoisonStr = ""
+    var rows = $("#PoisonListTab").datagrid('getSelections');
+    for (var i = 0; i < rows.length; i++) {
+        var PHCPORowId = rows[i].PHCPORowId;
+        if (PoisonStr == "") PoisonStr = PHCPORowId;
+        else PoisonStr = PoisonStr + "^" + PHCPORowId;
+    }
+    $.m({
+        ClassName: "DHCDoc.DHCDocConfig.ItemPrior",
+        MethodName: "SaveConfig",
+        node: "OutOrderNotPoison",
+        value: PoisonStr,
+        HospId: $HUI.combogrid('#_HospList').getValue()
+    }, function(rtn) {
+        $.messager.popover({ msg: '±£¥Ê≥…π¶£°', type: 'success', timeout: 1000 });
+    });
+}
+
+function SaveutOutOrderNotItemCat() {
+    var CatStr = "";
+    var rows = $("#ItemCatListTab").datagrid('getSelections');
+    for (var i = 0; i < rows.length; i++) {
+        var ARCICRowId = rows[i].ARCICRowId;
+        if (CatStr == "") CatStr = ARCICRowId;
+        else CatStr = CatStr + "^" + ARCICRowId;
+    }
+    $.m({
+        ClassName: "DHCDoc.DHCDocConfig.ItemPrior",
+        MethodName: "SaveConfig",
+        node: "OutOrderNotItemCat",
+        value: CatStr,
+        HospId: $HUI.combogrid('#_HospList').getValue()
+    }, function() {
+        $.messager.popover({ msg: '±£¥Ê≥…π¶£°', type: 'success', timeout: 1000 });
+    });
+}
+/*function SaveOutOrderOtherContral()
 {
    var PoisonStr=""
    var size = $("#List_Poison" + " option").size();
@@ -312,5 +427,320 @@ function SaveOutOrderOtherContral()
 		 value:CatStr,
 		 HospId:$HUI.combogrid('#_HospList').getValue()
 	},false);
-	$.messager.show({title:"ÊèêÁ§∫",msg:"‰øùÂ≠òÊàêÂäü"});
+	$.messager.show({title:"Ã· æ",msg:"±£¥Ê≥…π¶"});
+}*/
+function InitPoisonListTab() {
+    var Columns = [
+        [
+            { field: 'PHCPORowId', checkbox: true },
+            { field: 'PHCPODesc', title: 'π‹÷∆∑÷¿‡', width: 100 },
+            {
+                field: 'id',
+                title: '¡–≤Ÿ◊˜',
+                width: 50,
+                formatter: function(v, rec) {
+                    return '<a href="#this" class="editcls1" onclick="OutOrderNotPoisonLessLoc(' + (rec.PHCPORowId) + ')">¿˝Õ‚ø∆ “</a>';
+                }
+            }
+        ]
+    ];
+    PoisonListTabDataGrid = $("#PoisonListTab").datagrid({
+        fit: true,
+        border: false,
+        striped: true,
+        singleSelect: false,
+        fitColumns: true,
+        autoRowHeight: false,
+        url: $URL + "?ClassName=DHCDoc.DHCDocConfig.ItemPrior&QueryName=FindPoison&value=OutOrderNotPoison&HospId=" + $HUI.combogrid('#_HospList').getValue() + "&rows=99999",
+        loadMsg: 'º”‘ÿ÷–..',
+        pagination: false, //
+        rownumbers: false, //
+        idField: "PHCPORowId",
+        columns: Columns,
+        onLoadSuccess: function(data) {
+            for (var i = 0; i < data.total; i++) {
+                if (data.rows[i].selected) {
+                    $("#PoisonListTab").datagrid('selectRow', i);
+                }
+            }
+        },
+        onBeforeSelect: function(index, row) {
+            if (IsCellCheckFlag == true) return false;
+        },
+        onBeforeUnselect: function(index, row) {
+            if (IsCellCheckFlag == true) return false;
+        },
+        onBeforeLoad: function(param) {
+            $("#PoisonListTab").datagrid('unselectAll');
+        }
+    });
+}
+
+function OutOrderNotPoisonLessLoc(PHCPORowId) {
+    node = "OutOrderNotPoison";
+    nodeId = PHCPORowId;
+    ShowHolidaysRecSetWin();
+    IsCellCheckFlag = true;
+    setTimeout(function() {
+        IsCellCheckFlag = false;
+    })
+}
+
+function InitItemCatListTab() {
+    var Columns = [
+        [
+            { field: 'ARCICRowId', checkbox: true },
+            { field: 'ARCICDesc', title: '◊”¿‡√˚≥∆', width: 100 },
+            {
+                field: 'id',
+                title: '¡–≤Ÿ◊˜',
+                width: 50,
+                formatter: function(v, rec) {
+                    return '<a href="#this" class="editcls1" onclick="OutOrderNotItemCatLessLoc(' + (rec.ARCICRowId) + ')">¿˝Õ‚ø∆ “</a>';
+                }
+            }
+        ]
+    ];
+    PoisonListTabDataGrid = $("#ItemCatListTab").datagrid({
+        fit: true,
+        border: false,
+        striped: true,
+        singleSelect: false,
+        fitColumns: true,
+        autoRowHeight: false,
+        url: $URL + "?ClassName=DHCDoc.DHCDocConfig.ItemPrior&QueryName=FindCatList&value=OutOrderNotItemCat&HospId=" + $HUI.combogrid('#_HospList').getValue() + "&rows=99999",
+        loadMsg: 'º”‘ÿ÷–..',
+        pagination: false, //
+        rownumbers: false, //
+        idField: "ARCICRowId",
+        columns: Columns,
+        onLoadSuccess: function(data) {
+            for (var i = 0; i < data.total; i++) {
+                if (data.rows[i].selected) {
+                    $("#ItemCatListTab").datagrid('selectRow', i);
+                }
+            }
+        },
+        onBeforeSelect: function(index, row) {
+            if (IsCellCheckFlag == true) return false;
+        },
+        onBeforeUnselect: function(index, row) {
+            if (IsCellCheckFlag == true) return false;
+        },
+        onBeforeLoad: function(param) {
+            $("#ItemCatListTab").datagrid('unselectAll');
+        }
+    });
+}
+
+function OutOrderNotItemCatLessLoc(ARCICRowId) {
+    node = "OutOrderNotItemCat";
+    nodeId = ARCICRowId;
+    ShowHolidaysRecSetWin();
+    IsCellCheckFlag = true;
+    setTimeout(function() {
+        IsCellCheckFlag = false;
+    })
+}
+
+function ShowHolidaysRecSetWin() {
+    if ($("#LocWin").hasClass('window-body')) {
+        $('#LocWin').window('open');
+    } else {
+        $('#LocWin').window({
+            title: '¿˝Õ‚ø∆ “',
+            zIndex: 9999,
+            iconCls: 'icon-w-edit',
+            inline: false,
+            minimizable: false,
+            maximizable: false,
+            collapsible: false,
+            closable: true
+        });
+    }
+    LoadLoc();
+}
+
+function BSaveLessLoc() {
+    var LocStr = "";
+    var recobj = $("#List_Dept").find("option:selected");
+    for (var j = 0; j < recobj.length; j++) {
+        if (LocStr == "") LocStr = recobj[j].value;
+        else LocStr = LocStr + "^" + recobj[j].value;
+    }
+    var rtn = $.cm({
+        ClassName: "DHCDoc.DHCDocConfig.ItemPrior",
+        MethodName: "SaveLessLocConfig",
+        node: node,
+        nodeId: nodeId,
+        value: LocStr,
+        HospId: $HUI.combogrid('#_HospList').getValue(),
+        dataType: "text"
+    }, false);
+    $("#LocWin").window('close');
+}
+
+function LoadLoc() {
+    $("#List_Dept").find("option").remove();
+    $('#SearchLoc').searchbox('setValue', "")
+    $.cm({
+        ClassName: "DHCDoc.DHCDocConfig.ItemPrior",
+        QueryName: "GetLocList",
+        HospId: $HUI.combogrid('#_HospList').getValue(),
+        rows: "99999",
+    }, function(objScope) {
+        var vlist = "";
+        var selectlist = "";
+        jQuery.each(objScope.rows, function(i, n) {
+            selectlist = selectlist + "^" + n.selected
+            vlist += "<option title=" + n.PYFristStr + " value=" + n.LocRowID + ">" + n.LocDesc + "</option>";
+        });
+        if ($("#List_Dept option").length == 0) {
+            $("#List_Dept").append(vlist);
+        }
+        $.cm({
+            ClassName: "DHCDoc.DHCDocConfig.ItemPrior",
+            MethodName: "GetLessLocConfig",
+            node: node,
+            nodeId: nodeId,
+            HospId: $HUI.combogrid('#_HospList').getValue(),
+            dataType: "text"
+        }, function(locStr) {
+            for (var i = 0; i < locStr.split("^").length; i++) {
+                var locId = locStr.split("^")[i];
+                $("#List_Dept").find("option[value='" + locId + "']").attr("selected", true);
+            }
+        });
+    });
+}
+
+function InitFreqListTab() {
+    var Columns = [
+        [
+            { field: 'FreqID', checkbox: true },
+            { field: 'FreqDesc', title: '∆µ¥Œ', width: 100 },
+            {
+                field: 'id',
+                title: '¡–≤Ÿ◊˜',
+                width: 50,
+                formatter: function(v, rec) {
+                    return '<a href="#this" class="editcls1" onclick="OutOrderNotFreqLessLoc(' + (rec.FreqID) + ')">¿˝Õ‚ø∆ “</a>';
+                }
+            }
+        ]
+    ];
+    $("#FreqListTab").datagrid({
+        fit: true,
+        border: false,
+        striped: true,
+        singleSelect: false,
+        fitColumns: true,
+        autoRowHeight: false,
+        url: $URL + "?ClassName=DHCDoc.DHCDocConfig.ItemPrior&QueryName=FindFreq&value=OutOrderNotFreq&HospId=" + $HUI.combogrid('#_HospList').getValue() + "&rows=99999",
+        loadMsg: 'º”‘ÿ÷–..',
+        pagination: false, //
+        rownumbers: false, //
+        idField: "FreqID",
+        columns: Columns,
+        onLoadSuccess: function(data) {
+            for (var i = 0; i < data.total; i++) {
+                if (parseFloat(data.rows[i].selected)) {
+                    $(this).datagrid('selectRow', i);
+                }
+            }
+        },
+        onBeforeSelect: function(index, row) {
+            if (IsCellCheckFlag == true) return false;
+        },
+        onBeforeUnselect: function(index, row) {
+            if (IsCellCheckFlag == true) return false;
+        },
+        onBeforeLoad: function(param) {
+            $(this).datagrid('unselectAll');
+        }
+    });
+}
+
+function OutOrderNotFreqLessLoc(FreqID) {
+    node = "OutOrderNotFreq";
+    nodeId = FreqID;
+    ShowHolidaysRecSetWin();
+    IsCellCheckFlag = true;
+    setTimeout(function() {
+        IsCellCheckFlag = false;
+    })
+}
+
+function SaveutOutOrderNotFreq() {
+    var FreqIDStr = "";
+    var rows = $("#FreqListTab").datagrid('getSelections');
+    for (var i = 0; i < rows.length; i++) {
+        if (FreqIDStr == "") FreqIDStr = rows[i].FreqID;
+        else FreqIDStr = FreqIDStr + "^" + rows[i].FreqID;
+    }
+    $.m({
+        ClassName: "DHCDoc.DHCDocConfig.ItemPrior",
+        MethodName: "SaveConfig",
+        node: "OutOrderNotFreq",
+        value: FreqIDStr,
+        HospId: $HUI.combogrid('#_HospList').getValue()
+    }, function() {
+        $.messager.popover({ msg: '±£¥Ê≥…π¶£°', type: 'success', timeout: 1000 });
+    });
+}
+var FindLocNo = ""
+var SearchLocCFflag = ""
+
+function SearchLessLoc() {
+    var SearchLoc = $('#SearchLoc').searchbox('getValue')
+    if ((FindLocNo != "") && (typeof(FindLocNo) != "undefined")) {
+        $("#List_Dept").find("option")[FindLocNo].className = ""
+    }
+    if (SearchLoc == "") return "";
+    var ListDeplen = $("#List_Dept").find("option").length
+    var startNo = 0
+    if (SearchLocCFflag == SearchLoc) {
+        startNo = FindLocNo + 1
+    }
+    FindLocNo = ""
+    var SearchLocPY = GetLocPY(SearchLoc)
+    for (var i = startNo; i < ListDeplen; i++) {
+        var locname = $("#List_Dept").find("option")[i].innerHTML
+        var locnamePY = $("#List_Dept").find("option")[i].title
+        if ((locname.indexOf(SearchLoc) != -1) && (SearchLocPY > 0)) {
+            FindLocNo = i
+            break
+        } else if (locnamePY.indexOf(SearchLocPY) != -1) {
+            FindLocNo = i
+            break
+        }
+    }
+    if (FindLocNo == "") return "";
+    $("#List_Dept").find("option")[FindLocNo].className = "optioncolor"
+    $("#List_Dept").animate({ scrollTop: 18.49 * parseFloat(FindLocNo) }, "slow");
+    SearchLocCFflag = SearchLoc
+}
+
+function GetLocPY(locname) {
+    if (chkstrlen(locname) > 0) {
+        return 10;
+    }
+    var value = $.m({
+        ClassName: "web.DHCINSUPort",
+        MethodName: "GetCNCODE",
+        HANZIS: locname,
+        FLAG: "4",
+        HospId: $HUI.combogrid('#_HospList').getValue()
+    }, false);
+    return value
+
+}
+
+function chkstrlen(str) {
+    var strlen = 0;
+    for (var i = 0; i < str.length; i++) {
+        if (str.charCodeAt(i) > 255) //»Áπ˚ «∫∫◊÷£¨‘Ú◊÷∑˚¥Æ≥§∂»º”2
+            strlen += 1;
+    }
+    return strlen;
 }

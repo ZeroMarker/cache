@@ -11,10 +11,17 @@ var UserId = session['LOGON.USERID'];
 var HospId = session['LOGON.HOSPID'];
 var CtLocId = session['LOGON.CTLOCID'];
 var gGroupId=session['LOGON.GROUPID'];
+var APPName="DHCSTPURPLANAUDIT"
+var PurPlanParam=PHA_COM.ParamProp(APPName)
+
+
 //var arr = window.status.split(":");
 //var length = arr.length;
 var inciDr = "";
-var Msg_LostModified='数据已录入或修改，你当前的操作将丢失这些结果，是否继续?';
+var colArr = [];
+var Msg_LostModified=$g('数据已录入或修改，你当前的操作将丢失这些结果，是否继续?');
+
+var gParamIngd = PHA_COM.ParamProp("DHCSTIMPORT")
 
 if(gParam.length<1){
 	GetParam();
@@ -22,27 +29,54 @@ if(gParam.length<1){
 if(gParamCommon.length<1){
 	GetParamCommon();  
 }
+
+/// 检查管控药品  Y :管控 N:不管控
+function CheckPoisonLimit(Vendor,inci,inciDesc){
+	if (!Vendor || !inci) return "N";
+	var limitFalg = "N"
+	var VendorPoisonLimit = gParamIngd.VendorPoisonLimit
+	if (VendorPoisonLimit){
+		var poisonFlag = tkMakeServerCall("web.DHCST.Common.DrugInfoCommon","CheckPoisonForVendor",inci)
+           if (poisonFlag == "Y") {
+	           var vendorPoisonFlag = tkMakeServerCall("PHA.IN.Vendor.Query","GetVendorPoisonLimit",Vendor)
+               var vendorPoisonObj = JSON.parse(vendorPoisonFlag)
+               if(vendorPoisonObj.PoisonCFlag != "Y" && vendorPoisonObj.PoisonPFlag != "Y"){
+	               Msg.info("warning", $g(inciDesc+"为麻醉精一药品，而经营企业无麻醉精一药品录入权限!"));
+	               if(VendorPoisonLimit == 2) 
+	                {
+	                    limitFalg = "Y"
+	                }
+               }
+           }
+	}
+	return limitFalg;
+}
+
+
 function getDrugList2(record) {
 	if (record == null || record == "") {
 		return false;
 	}
 	inciDr = record.get("InciDr");
 	// 选中行
-	var rowrecord = PlanGrid.getSelectionModel().getSelected();
-	var row = PlanGridDs.indexOf(rowrecord)
+	//var rowrecord = PlanGrid.getSelectionModel().getSelected();
+	//var row = PlanGridDs.indexOf(rowrecord)
+	 var cell = PlanGrid.getSelectionModel().getSelectedCell();
+     var row = cell[0];
 	var findIndex=PlanGridDs.findExact ('IncId',inciDr,0);
 	
 	if(findIndex>=0 && findIndex!=row){
-		Msg.info("warning","药品重复录入!");
+		Msg.info("warning",$g("药品重复录入!"));
 		var col=GetColIndex(PlanGrid,"Qty");
 		PlanGrid.startEditing(row, col);
 	}
 	
 	var rowData = PlanGrid.getStore().getAt(row);
+	var InciDesc = record.get("InciDesc")
 	rowData.set("IncId",inciDr);
 	rowData.set("IncCode",record.get("InciCode"));
-	rowData.set("IncDesc",record.get("InciDesc"));
-	//供应商id^供应商名称^产地id^产地名称^配送商id^配送商名称^入库单位id^入库单位^进价^售价^申购科室库存量^库存上限^库存下限^通用名^商品名^剂型^规格
+	rowData.set("IncDesc",InciDesc);
+	//经营企业id^经营企业名称^产地id^产地名称^配送企业id^配送企业名称^入库单位id^入库单位^进价^售价^申购科室库存量^库存上限^库存下限^通用名^商品名^剂型^规格
 	//{success:'true',info:'7^GAYY-北京广安医药联合中心^61^bjymzy-北京益民制药厂^^^26^盒[20片]^0^0^0^^^艾司唑仑片^^普通片剂^[1mg*20]'}
 	//取其它药品信息
 	var locId = Ext.getCmp('locField').getValue();
@@ -51,15 +85,23 @@ function getDrugList2(record) {
 		Ext.Ajax.request({
 			url : 'dhcst.inpurplanaction.csp?actiontype=GetItmInfo&lncId='+ inciDr+'&Params='+Params,
 			method : 'POST',
-			waitMsg : '查询中...',
+			waitMsg : $g('查询中...'),
 			success : function(result, request) {
 				var jsonData = Ext.util.JSON.decode(result.responseText.replace(/\r/g,"").replace(/\n/g,""));
 				if (jsonData.success == 'true') {
 					var data=jsonData.info.split("^");
 					var VenId = data[0];
 					var Vendor = data[1];
+					/// 检查麻醉精一药品管控
+					var Ret = CheckPoisonLimit(Vendor,inciDr,InciDesc)
+					if (Ret == "Y"){
+						rowData.set("IncId","");
+						rowData.set("IncCode","");
+						rowData.set("IncDesc","");
+						return;
+					}
 					addComboData(Ext.getCmp("Vendor").getStore(),VenId,Vendor);
-					rowData.set("VenId", VenId);    //供应商
+					rowData.set("VenId", VenId);    //经营企业
 					var ManfId = data[2];
 					var Manf = data[3];
 					
@@ -68,7 +110,7 @@ function getDrugList2(record) {
 					var CarrierId = data[4];
 					var Carrier = data[5];
 					addComboData(CarrierStore,CarrierId,Carrier);
-					rowData.set("CarrierId", CarrierId);    //配送商
+					rowData.set("CarrierId", CarrierId);    //配送企业
 					var UomId=data[6];
 					var Uom=data[7];
 					addComboData(ItmUomStore,UomId,Uom);
@@ -84,110 +126,32 @@ function getDrugList2(record) {
 					rowData.set("Spec", data[16]); 
 					rowData.set("BUomId", data[17]); 
 					rowData.set("ConFacPur", data[18]); 
+					rowData.set("FreeDrugFlag", data[20]);
+					
 				    //===========判断资质信息===========
 				    var inci=record.get("InciDr")
 				    var DataList=VenId+"^"+inci+"^"+ManfId
 				    //alert(DataList)
 				   // var urldh = DictUrl+ "ingdrecaction.csp?actiontype=Check&DataList="+ DataList
-				               
-			        Ext.Ajax.request({
-						url : 'dhcst.inpurplanaction.csp?actiontype=Check&DataList='+ DataList,
-						method : 'POST',
-						waitMsg : '查询中...',
-						success : function(result, request) {
-							var jsonData = Ext.util.JSON
-									.decode(result.responseText);
-							if (jsonData.success == 'true') {
-								var ret=jsonData.info
-								//alert("data="+data)
-								if(ret==1)  
-								{Msg.info("warning", "供应商工商执照将在30天内过期!");
-										return;}
-								if(ret==3)  
-								{Msg.info("warning", "供应商税务登记号将在30天内过期!");
-										return;}
-							    if(ret==4)  
-								{Msg.info("warning", "供应商药品经营许可证将在30天内过期!");
-										return;}
-										
-								if(ret==5)  
-								{Msg.info("warning", "供应商医疗器械经营许可证将在30天内过期!");
-										return;}
-								if(ret==6)  
-								{Msg.info("warning", "供应商医疗器械注册证将在30天内过期!");
-										return;}
-								if(ret==7)  
-								{Msg.info("warning", "供应商卫生许可证将在30天内过期!");
-										return;}
-								if(ret==8)  
-								{Msg.info("warning", "供应商组织机构代码将在30天内过期!");
-										return;}
-								if(ret==9)  
-								{Msg.info("warning", "供应商GSP认证将在30天内过期!");
-										return;}
-								if(ret==10)  
-								{Msg.info("warning", "供应商医疗器械生产许可证将在30天内过期!");
-										return;}
-								if(ret==11)  
-								{Msg.info("warning", "供应商生产制造认可表将在30天内过期!");
-										return;}
-								if(ret==12)  
-								{Msg.info("warning", "供应商进口医疗器械注册证将在30天内过期!");
-										return;}
-								if(ret==13)  
-								{Msg.info("warning", "供应商进口注册登记表将在30天内过期!");
-										return;}
-								if(ret==14)  
-								{Msg.info("warning", "供应商代理销售授权书将在30天内过期!");
-										return;}
-								if(ret==15)  
-								{Msg.info("warning", "供应商质量承诺书将在30天内过期!");
-										return;}
-								if(ret==16)  
-								{Msg.info("warning", "供应商业务员授权书将在30天内过期!");
-										return;}
-								if(ret==19)  
-								{Msg.info("warning", "厂商药品生产许可证将在30天内过期!");
-										return;}
-								if(ret==20)  
-								{Msg.info("warning", "厂商物资生产许可证将在30天内过期!");
-										return;}
-								if(ret==21)  
-								{Msg.info("warning", "厂商工商执照在30天内过期!");
-										return;}
-								if(ret==22)  
-								{Msg.info("warning", "厂商工商注册号将在30天内过期!");
-										return;}
-								if(ret==23)  
-								{Msg.info("warning", "厂商组织机构代码将在30天内过期!");
-										return;}																																							
-								if(ret==24)		
-								{Msg.info("warning", "厂商器械经营许可证将在30天内过期!");
-										return;}
-								if(ret==26)		
-								{Msg.info("warning", "物资批准文号将在30天内过期!");
-										return;}
-							    if(ret==27)		
-								{Msg.info("warning", "物资进口注册证将在30天内过期!");
-										return;}
-							 
-								
-							} 
-						},
-						scope : this
-					});  
+				    
+				     if (setEnterSort(PlanGrid, colArr)) {
+                                addNewRow();
+                            }
+				    var CertExpDateInfo = tkMakeServerCall("PHA.IN.Cert.Query","CheckExpDate",VenId,ManfId)
+                    if (CertExpDateInfo != ""){
+	                  	Msg.info("warning", CertExpDateInfo);
+	                    return;  
+                    }         
+ 
 				    //===========判断资质信息===========	
 				} 
 			},
 			scope : this
 		});
 	}else{
-		Msg.info("error", "请选择科室!");
+		Msg.info("error", $g("请选择科室!"));
 	}
-	var col=GetColIndex(PlanGrid,'Qty');
-	var rowrecord = PlanGrid.getSelectionModel().getSelected();
-	var recordrow = PlanGridDs.indexOf(rowrecord)
-	PlanGrid.startEditing(recordrow,col);
+	
 }
 	
 function GetPhaOrderInfo2(item, group) {
@@ -210,8 +174,8 @@ var dateField = new Ext.ux.DateField({
 // 打印采购按钮
 var PrintBT = new Ext.Toolbar.Button({
 	id : "PrintBT",
-	text : '打印',
-	tooltip : '点击打印采购单',
+	text : $g('打印'),
+	tooltip : $g('点击打印采购单'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_print',
@@ -223,7 +187,7 @@ var PrintBT = new Ext.Toolbar.Button({
 });
  //复制按钮
 var CopyBT = new Ext.Toolbar.Button({
-			text : '复制采购计划',
+			text : $g('复制采购计划'),
 			width : 70,
 			height : 30,
 			iconCls : 'page_copy',
@@ -234,8 +198,8 @@ var CopyBT = new Ext.Toolbar.Button({
 // 按照科室库存生成采购计划单
 var ConWinBT = new Ext.Toolbar.Button({
 	id : "ConWinBT",
-	text : '生成采购计划单',
-	tooltip : '生成采购计划单',
+	text : $g('生成采购计划单'),
+	tooltip : $g('生成采购计划单'),
 	iconCls : 'page_goto',
 	width : 70,
 	height : 30,
@@ -245,9 +209,9 @@ var ConWinBT = new Ext.Toolbar.Button({
 });
 var planNumField = new Ext.form.TextField({
 	id:'planNum',
-	fieldLabel:'计划单号',
+	fieldLabel:$g('计划单号'),
 	allowBlank:true,
-	emptyText:'计划单号...',
+	emptyText:$g('计划单号...'),
 	disabled:true,
 	anchor:'90%',
 	selectOnFocus:true
@@ -264,11 +228,11 @@ var groupField=new Ext.ux.StkGrpComboBox({
 		
 var locField = new Ext.ux.LocComboBox({
 	id:'locField',
-	fieldLabel:'科室',
+	fieldLabel:$g('科室'),
 	anchor:'90%',
 	listWidth:210,
 	allowBlank:true,
-	emptyText:'科室...',
+	emptyText:$g('科室...'),
 	groupId:gGroupId,
 	listeners : {
 			'select' : function(e) {
@@ -284,21 +248,21 @@ var locField = new Ext.ux.LocComboBox({
 
 		   // 招标
 		var ZBFlag = new Ext.form.Radio({
-			boxLabel : '招标',
+			boxLabel : $g('招标'),
 			id : 'ZBFlag',
 			name : 'ZBType',
 			anchor : '80%'
 				});
 					   // 非招标
 		var NotZBFlag = new Ext.form.Radio({
-			boxLabel : '非招标',
+			boxLabel : $g('非招标'),
 			id : 'NotZBFlag',
 			name : 'ZBType',
 			anchor : '80%'
 				});
 					   // 全部
 		var AllFlag = new Ext.form.Radio({
-			boxLabel : '全部',
+			boxLabel : $g('全部'),
 			id : 'AllFlag',
 			name : 'ZBType',
 			anchor : '80%',
@@ -307,14 +271,14 @@ var locField = new Ext.ux.LocComboBox({
 		
 //====================================================
 var Uom = new Ext.form.ComboBox({
-	fieldLabel : '单位',
+	fieldLabel : $g('单位'),
 	id : 'Uom',
 	name : 'Uom',
 	anchor : '90%',
 	store : ItmUomStore,
 	valueField : 'RowId',
 	displayField : 'Description',
-	emptyText : '单位...',
+	emptyText : $g('单位...'),
 	triggerAction : 'all',
 	forceSelection : true,
 	allowBlank : false,
@@ -323,19 +287,18 @@ var Uom = new Ext.form.ComboBox({
 	listeners:{
 		specialKey:function(field, e) {
 			if (e.getKey() == Ext.EventObject.ENTER) {
-				var rowrecord = PlanGrid.getSelectionModel().getSelected();
-				var row = PlanGridDs.indexOf(rowrecord)
-				var col=GetColIndex(PlanGrid,"Qty");
-				PlanGrid.startEditing(row, col);		
+				if (setEnterSort(PlanGrid, colArr)) {
+                                addNewRow();
+                            }		
 			}
 		},
 		'focus':function(field){
-			var rowrecord = PlanGrid.getSelectionModel().getSelected();
-			var row = PlanGridDs.indexOf(rowrecord)
+			var cell = PlanGrid.getSelectionModel().getSelectedCell();
+     		var row = cell[0];
 			var record = PlanGrid.getStore().getAt(row);
 			var ItmId=record.get("IncId");
 			if(ItmId==null||ItmId==""){
-				Msg.info("warning","请先录入药品名称!");
+				Msg.info("warning",$g("请先录入药品名称!"));
 				return;
 			}		
 			ItmUomStore.removeAll();
@@ -346,8 +309,8 @@ var Uom = new Ext.form.ComboBox({
 	}
 });		
 ItmUomStore.on("load",function(store){
-	var rowrecord = PlanGrid.getSelectionModel().getSelected();
-	var row = PlanGridDs.indexOf(rowrecord);
+	var cell = PlanGrid.getSelectionModel().getSelectedCell();
+     var row = cell[0];
 	var record = PlanGrid.getStore().getAt(row);
 	var UomId=record.get("UomId");	
 	Uom.setValue(UomId);
@@ -356,8 +319,8 @@ ItmUomStore.on("load",function(store){
  * 单位展开事件
  */
 Uom.on('beforequery', function(combo) {
-			var rowrecord = PlanGrid.getSelectionModel().getSelected();
-			var row = PlanGridDs.indexOf(rowrecord);
+			var cell = PlanGrid.getSelectionModel().getSelectedCell();
+    		var row = cell[0];
 			var record = PlanGrid.getStore().getAt(row);
 			var ItmId = record.get("IncId");
 			var UomId=record.get("UomId");		
@@ -367,8 +330,8 @@ Uom.on('beforequery', function(combo) {
 			});
 		});
 Uom.on('select', function(combo) {
-	var rowrecord = PlanGrid.getSelectionModel().getSelected();
-	var row = PlanGridDs.indexOf(rowrecord)
+	var cell = PlanGrid.getSelectionModel().getSelectedCell();
+    var row = cell[0];
 	var rowData = PlanGrid.getStore().getAt(row);
 	var qty = rowData.get('Qty');
 	if((qty=="")||(qty==null)){
@@ -398,53 +361,96 @@ Uom.on('select', function(combo) {
 });
 
 var Vendor = new Ext.ux.VendorComboBox({
-	fieldLabel : '供应商',
+	fieldLabel : $g('经营企业'),
 	id : 'Vendor',
 	name : 'Vendor',
 	anchor : '90%',
-	emptyText : '供应商...',
+	emptyText : $g('经营企业...'),
 	listWidth : 250,
 	listeners:{
 		specialkey:function(field,e){
 			if (e.getKey() == Ext.EventObject.ENTER) {
-				addNewRow();		
+				 if (setEnterSort(PlanGrid, colArr)) {
+                                addNewRow();
+                            }		
 			}
+		},
+		select:function(field,record,index){
+			var vendor = record.id
+			var cell = PlanGrid.getSelectionModel().getSelectedCell();
+     		var row = cell[0];
+	 		var rowData = PlanGrid.getStore().getAt(row);
+	 		var Inci = rowData.data.IncId;
+	 		var InciDesc = rowData.data.IncDesc;
+	 		var Ret = CheckPoisonLimit(vendor,Inci,InciDesc)
+	 		if (Ret == "Y" ){
+		 		Ext.getCmp("Vendor").setValue("");
+	 		}
+	 		
+			
 		}
 	}
 });		
 
 var Carrier = new Ext.ux.ComboBox({
-	fieldLabel : '配送商',
+	fieldLabel : $g('配送企业'),
 	id : 'Carrier',
 	name : 'Carrier',
 	store : CarrierStore,
 	valueField : 'RowId',
 	displayField : 'Description',
-	emptyText : '配送商...',
-	filterName:'CADesc'
+	emptyText : $g('配送企业...'),
+	filterName:'CADesc',
+	listeners:{
+		specialkey:function(field,e){
+			if (e.getKey() == Ext.EventObject.ENTER) {
+				 if (setEnterSort(PlanGrid, colArr)) {
+                                addNewRow();
+                            }		
+			}
+		}
+	}
 });		
 			
 var Manf = new Ext.ux.ComboBox({
-	fieldLabel : '厂商',
+	fieldLabel : $g('生产企业'),
 	id : 'Manf',
 	name : 'Manf',
 	store : PhManufacturerStore,
 	valueField : 'RowId',
 	displayField : 'Description',
-	emptyText : '厂商...',
-	filterName:'PHMNFName'
+	emptyText : $g('生产企业...'),
+	filterName:'PHMNFName',
+	listeners:{
+		specialkey:function(field,e){
+			if (e.getKey() == Ext.EventObject.ENTER) {
+				 if (setEnterSort(PlanGrid, colArr)) {
+                                addNewRow();
+                            }		
+			}
+		}
+	}
 });		
 
 var ReqLoc = new Ext.ux.LocComboBox({
-	fieldLabel : '申购科室',
+	fieldLabel : $g('申购科室'),
 	id : 'ReqLoc',
 	name : 'ReqLoc',
-	defaultLoc:''//,
+	defaultLoc:'',
      //disabled:true
+	listeners:{
+		specialkey:function(field,e){
+			if (e.getKey() == Ext.EventObject.ENTER) {
+				 if (setEnterSort(PlanGrid, colArr)) {
+                                addNewRow();
+                            }		
+			}
+		}
+	}
 });	
 
 var Complete=new Ext.form.Checkbox({
-	fieldLabel : '完成',
+	fieldLabel : $g('完成'),
 	id : 'Complete',
 	name : 'Complete',
 	anchor : '90%',
@@ -467,7 +473,7 @@ function addNewRow() {
 		var data=rowData.get("IncId")
 		if(data=="" || data.length<=0){
 			var col=GetColIndex(PlanGrid,'IncDesc');
-			PlanGrid.getSelectionModel().selectRow(PlanGridDs.getCount() - 1)
+			//PlanGrid.getSelectionModel().selectRow(PlanGridDs.getCount() - 1)
 			PlanGrid.startEditing(PlanGridDs.getCount() - 1, col);
 			return;
 		}
@@ -560,7 +566,10 @@ function addNewRow() {
 		}, {
 			name : 'CurStkQty',
 			type : 'string'
-		}, 
+		}, {
+            name: 'FreeDrugFlag',
+            type: 'string'
+        }
 	]);
 	
 	var NewRecord = new record({
@@ -592,11 +601,13 @@ function addNewRow() {
 		MaxQty:'',
 		MinQty:'',
 		ProPurQty:'',
-		CurStkQty:''
+		CurStkQty:'',
+		FreeDrugFlag:'',
+		DispQty:''
 	});
 					
 	PlanGridDs.add(NewRecord);
-	PlanGrid.getSelectionModel().selectRow(PlanGridDs.getCount() - 1);
+	//PlanGrid.getSelectionModel().selectRow(PlanGridDs.getCount() - 1);
 	var col=GetColIndex(PlanGrid,'IncDesc');
 	PlanGrid.startEditing(PlanGridDs.getCount() - 1, col);
 }
@@ -612,8 +623,8 @@ var PlanGridDs = new Ext.data.Store({
 		totalProperty:'results'
     }, [
 	/*
-	子表Rowid^库存项id^代码^名称^规格^厂商id^厂商^数量^单位id^单位
-/// ^进价^售价^进价金额^售价金额^供应商id^供应商^配送商id^配送商^通用名^商品名^剂型^订单RowId
+	子表Rowid^库存项id^代码^名称^规格^生产企业id^生产企业^数量^单位id^单位
+/// ^进价^售价^进价金额^售价金额^经营企业id^经营企业^配送企业id^配送企业^通用名^商品名^剂型^订单RowId
 /// ^申购科室id^申购科室名称^申购科室库存量^库存上限^库存下限
 */
 		{name:'RowId'},
@@ -647,6 +658,9 @@ var PlanGridDs = new Ext.data.Store({
 		{name:'ConFacPur'},
 		{name:'ProPurQty'},
 		{name:'CurStkQty'},
+		{name:'FreeDrugFlag'},
+		{name:'DispQty'},
+		
 	]),
     remoteSort:true,
     pruneModifiedRecords:true,
@@ -666,13 +680,13 @@ var PlanGridCm = new Ext.grid.ColumnModel([
         hidden:true,
         sortable:true
     }, {
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'IncCode',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'IncDesc',
         id:'IncDesc',
         width:250,
@@ -691,7 +705,7 @@ var PlanGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"单位",
+        header:$g("单位"),
         dataIndex:'UomId',
         id:'UomId',
         width:80,
@@ -699,7 +713,7 @@ var PlanGridCm = new Ext.grid.ColumnModel([
 		editor : new Ext.grid.GridEditor(Uom),
 		renderer : Ext.util.Format.comboRenderer2(Uom,"UomId","Uom")
     },{
-        header:"采购数量",
+        header:$g("采购数量"),
         dataIndex:'Qty',
         id:'Qty',
         width:80,
@@ -712,15 +726,18 @@ var PlanGridCm = new Ext.grid.ColumnModel([
 			listeners:{
 				specialKey:function(field, e) {
 					if (e.getKey() == Ext.EventObject.ENTER) {
-						var col=GetColIndex(PlanGrid,"VenId")
+						/*var col=GetColIndex(PlanGrid,"VenId")
 						var rowrecord = PlanGrid.getSelectionModel().getSelected();
 						var row = PlanGridDs.indexOf(rowrecord)
-						PlanGrid.startEditing(row, col);	
+						PlanGrid.startEditing(row, col);*/
+						 if (setEnterSort(PlanGrid, colArr)) {
+                                addNewRow();
+                            }	
 					}
 				},
 				'change':function() { 
-					var rowrecord = PlanGrid.getSelectionModel().getSelected();
-					var row = PlanGridDs.indexOf(rowrecord)
+					var cell = PlanGrid.getSelectionModel().getSelectedCell();
+     				var row = cell[0];
 					var rowData = PlanGrid.getStore().getAt(row);
 					var qty = rowData.get('Qty');
 					rowData.set("RpAmt", rowData.get('Rp')*qty); //购入金额
@@ -729,7 +746,7 @@ var PlanGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"进价",
+        header:$g("进价"),
         dataIndex:'Rp',
         id:'Rp',
         width:80,
@@ -743,49 +760,62 @@ var PlanGridCm = new Ext.grid.ColumnModel([
 				specialkey : function(field, e) {
 					if (e.getKey() == Ext.EventObject.ENTER) {
 						var cost = field.getValue();
-						if ((cost == null || cost=="" || cost==0)&(gParam[0].trim()=="Y")) {
-							Msg.info("warning", "进价不能为空或零!");
+						var cell = PlanGrid.getSelectionModel().getSelectedCell();
+    					 var row = cell[0];
+						var rowData = PlanGrid.getStore().getAt(row);
+						var FreeDrugFlag = rowData.get('FreeDrugFlag');
+						if(cost==0&&FreeDrugFlag!="Y") {
+							Msg.info("warning", $g("非免费药进价不能为零"));
 							return;
 						}
+						else if (cost!=0&&FreeDrugFlag=="Y"){
+							Msg.info("warning", $g("免费药进价必须为零"));
+							return;
+						}
+						else if ((cost == null || cost=="" || cost==0)&(gParam[0].trim()=="Y")&&(FreeDrugFlag!="Y")) {
+							Msg.info("warning", $g("进价不能为空或零!"));
+							return;
+						}
+
 						if (cost < 0) {
-							Msg.info("warning",
-									"进价不能小于0!");
+							Msg.info("warning",$g("进价不能小于0!"));
 							return;
 						}
 					
 					
 						// 计算指定行的进货金额
-						var rowrecord = PlanGrid.getSelectionModel().getSelected();
-						var row = PlanGridDs.indexOf(rowrecord)
-						var rowData = PlanGrid.getStore().getAt(row);
+						
 						var spcost = rowData.get('Sp');
+						/* 采购不是最终进价，无需判断进售价关系
 						if (Number(cost)>Number(spcost)){
-						   Msg.info("warning","进价不能大于售价!");
+						   Msg.info("warning",$g("进价不能大于售价!"));
 						   var colIndex=GetColIndex(PlanGrid,"Rp");
 						   PlanGrid.startEditing(row, colIndex);
 						   rowData.set("Rp","");
 						   return;
 							}
+							*/
 						
 						var qty = rowData.get('Qty');
 						rowData.set("RpAmt", Number(cost).mul(qty)); //购入金额
 						
 						// 新增一行
-						var col=GetColIndex(PlanGrid,"VenId")
-						PlanGrid.startEditing(row, col);	
+						 if (setEnterSort(PlanGrid, colArr)) {
+                                addNewRow();
+                            }	
 					}
 				}
 			}
 		})
 
     },{
-        header:"售价",
+        header:$g("售价"),
         dataIndex:'Sp',
         width:80,
         align:'right',
         sortable:true
     },{
-        header:"供应商",
+        header:$g("经营企业"),
         dataIndex:'VenId',
         id:'VenId',
         width:250,
@@ -794,7 +824,7 @@ var PlanGridCm = new Ext.grid.ColumnModel([
 		editor : new Ext.grid.GridEditor(Vendor),
 		renderer : Ext.util.Format.comboRenderer2(Vendor,"VenId","Vendor")
     },{
-        header:"配送商",
+        header:$g("配送企业"),
         dataIndex:'CarrierId',
         id:'CarrierId',
         width:200,
@@ -803,7 +833,7 @@ var PlanGridCm = new Ext.grid.ColumnModel([
 		editor : new Ext.grid.GridEditor(Carrier),
 		renderer : Ext.util.Format.comboRenderer2(Carrier,"CarrierId","Carrier")
     },{
-        header:"厂商",
+        header:$g("生产企业"),
         dataIndex:'ManfId',
         id:'ManfId',
         width:200,
@@ -812,7 +842,7 @@ var PlanGridCm = new Ext.grid.ColumnModel([
 		editor : new Ext.grid.GridEditor(Manf),
 		renderer : Ext.util.Format.comboRenderer2(Manf,"ManfId","Manf")
     },{
-        header:"申购科室",
+        header:$g("申购科室"),
         dataIndex:'ReqLocId',
         id:'ReqLocId',
         width:150,
@@ -821,69 +851,82 @@ var PlanGridCm = new Ext.grid.ColumnModel([
 		editor : new Ext.grid.GridEditor(ReqLoc),
 		renderer : Ext.util.Format.comboRenderer2(ReqLoc,"ReqLocId","ReqLoc")
     },{
-        header:"规格",
+        header:$g("规格"),
         dataIndex:'Spec',
         width:120,
         align:'left'
     },{
-        header:"库存下限",
+        header:$g("库存下限"),
         dataIndex:'MinQty',
         width:100,
         align:'right'
     },{
-        header:"库存上限",
+        header:$g("库存上限"),
         dataIndex:'MaxQty',
         width:100,
         align:'right'
     },{
-        header:"处方通用名",
+        header:$g("处方通用名"),
         dataIndex:'Gene',
         width:150,
         align:'left'
     },{
-        header:"购入金额",
+        header:$g("购入金额"),
         dataIndex:'RpAmt',
         width:120,
         align:'right',
         renderer: FormatGridRpAmount
     },{
-        header:"零售金额",
+        header:$g("零售金额"),
         dataIndex:'SpAmt',
         width:120,
         align:'right', 
         renderer: FormatGridSpAmount 
     },{
-        header:"商品名",
+        header:$g("商品名"),
         dataIndex:'GoodName',
         width:150,
         align:'left'
     },{
-    	header:"建议采购量",
+    	header:$g("建议采购量"),
     	dataIndex:'ProPurQty',
     	width:100,
     	align:'right',
     	sortable:true
     },{
-    	header:"申购科室库存",
+    	header:$g("消耗数量"),
+    	dataIndex:'DispQty',
+    	width:100,
+    	align:'right',
+    	sortable:true
+    },{
+    	header:$g("申购科室库存"),
     	dataIndex:'StkQty',
     	width:100,
     	align:'right',
     	sortable:true
     },{
-    	header:"采购科室库存",
+    	header:$g("采购科室库存"),
     	dataIndex:'CurStkQty',
     	width:100,
     	align:'right',
     	sortable:true
-    }
+    }, {
+            header: $g("免费药标识"),
+            dataIndex: 'FreeDrugFlag',
+            width: 80,
+            align: 'left',
+            sortable: true
+        }
+    
 ]);
 //初始化默认排序功能
 //PlanGridCm.defaultSortable = true;
 
 var findPlan = new Ext.Toolbar.Button({
 	id:'findbtn',
-	text:'查询',
-    tooltip:'查询',
+	text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
 	width : 70,
 	height : 30,
@@ -893,15 +936,15 @@ var findPlan = new Ext.Toolbar.Button({
 });
 
 var addPlan = new Ext.Toolbar.Button({
-	text:'增加一条',
-    tooltip:'增加一条',
+	text:$g('增加一条'),
+    tooltip:$g('增加一条'),
     iconCls:'page_add',
 	width : 70,
 	height : 30,
 	handler:function(){
 		var v = Ext.getCmp('locField').getValue();
 		if((v=="")||(v==null)){
-			Msg.info("error","请选择科室!");
+			Msg.info("error",$g("请选择科室!"));
 		}else{
 			groupField.setDisabled(true);
 			addNewRow();
@@ -910,8 +953,8 @@ var addPlan = new Ext.Toolbar.Button({
 });
 
 var savePlan = new Ext.Toolbar.Button({
-	text:'保存',
-    tooltip:'保存',
+	text:$g('保存'),
+    tooltip:$g('保存'),
     iconCls:'page_save',
 	width : 70,
 	height : 30,
@@ -919,10 +962,16 @@ var savePlan = new Ext.Toolbar.Button({
 		if(PlanGrid.activeEditor != null){
 			PlanGrid.activeEditor.completeEdit();
 		} 
+		var rowCount =PlanGridDs.getCount();
+		if(rowCount==0) 
+		{
+			Msg.info('warning',$g('明细数据为空，请核对明细!'))
+			return;
+		}
 		var mod=Modified();
 		if (mod==false)
 		{
-			Msg.info('warning','没有需要保存的数据!')
+			Msg.info('warning',$g('没有需要保存的数据!'))
 			return;
 		}
 		var purNo = Ext.getCmp('planNum').getValue();
@@ -930,49 +979,65 @@ var savePlan = new Ext.Toolbar.Button({
 		var stkGrpId = Ext.getCmp('groupField').getValue();
 		var userId = UserId;
 		if(locId==null || locId==""){
-			Msg.info("warning","科室不可为空!");
+			Msg.info("warning",$g("科室不可为空!"));
 			return;
 		}
 		if((stkGrpId==null || stkGrpId=="")&(gParamCommon[9]=="N")){
-			Msg.info("warning","类组不可为空!");
+			Msg.info("warning",$g("类组不可为空!"));
 			return;
 		}
-		var rowCount =PlanGridDs.getCount();
+		
 		//获取所有的新记录
 		var mr=PlanGridDs.getModifiedRecords();
 		var data="";
 		for(var i=0;i<mr.length;i++){
 			var rowid = mr[i].data["RowId"];
 			var incId = mr[i].data["IncId"];
+			var InciDesc = mr[i].data["IncDesc"];
 			var qty = mr[i].data["Qty"];
 			var uomId = mr[i].data["UomId"];
 			var vendorId = mr[i].data["VenId"];
-			if(incId!="" && vendorId==""){Msg.info("warning","第"+(PlanGridDs.indexOf(mr[i])+1)+"行中供应商为空!");
+			if(incId!="" && vendorId==""){Msg.info("warning",$g("第")+(PlanGridDs.indexOf(mr[i])+1)+$g("行中经营企业为空!"));
 							return}
+							
+		    var Ret = CheckPoisonLimit(vendorId,incId,InciDesc)
+	 		if (Ret == "Y" ){
+		 		return;
+	 		}
 			var rp = mr[i].data["Rp"];
 			var sp = mr[i].data["Sp"];
 			var desc=mr[i].data["IncDesc"]
+			var FreeDrugFlag=mr[i].data["FreeDrugFlag"]
 			if(incId!=""){
-				if ((rp == null || rp=="" || rp==0)&(gParam[0].trim()=="Y")) {
-					Msg.info("warning", "进价不能为空或零!");
+				if(rp==0&&FreeDrugFlag!="Y") {
+					Msg.info("warning", $g("非免费药进价不能为零"));
+					return;
+				}
+				else if (rp!=0&&FreeDrugFlag=="Y"){
+					Msg.info("warning", $g("免费药进价必须为零"));
+					return;
+				}
+				else if ((rp == null || rp=="" || rp==0)&(gParam[0].trim()=="Y")&&(FreeDrugFlag!="Y")) {
+					Msg.info("warning", $g("进价不能为空或零!"));
 					return;
 				}
 				if (rp<0){
-					Msg.info("warning","进价不能小于0");
+					Msg.info("warning",$g("进价不能小于0"));
 					return;
 				}
 			}
+			/* 采购时并不能确定进价，去掉判断
 			if(Number(rp)>Number(sp)){
-				Msg.info("warning",desc+",进价不能大于售价!");
+				Msg.info("warning",desc+$g(",进价不能大于售价!"));
 				return;
-			}							
+			}*/						
 							
 							
 			var manfId = mr[i].data["ManfId"];
 			var carrierId = mr[i].data["CarrierId"];
 			var reqLocId = mr[i].data["ReqLocId"];
 			if(incId!="" && qty==""){
-				Msg.info("warning","第"+(PlanGridDs.indexOf(mr[i])+1)+"行采购数量为空!");
+				Msg.info("warning",$g("第")+(PlanGridDs.indexOf(mr[i])+1)+$g("行采购数量为空!"));
 				return;
 			}
 			if(qty!="" && incId!=""){
@@ -983,7 +1048,7 @@ var savePlan = new Ext.Toolbar.Button({
 					data = data+xRowDelim()+dataRow;
 				}
 			}
-			// 判断重复输入药品,供应商&厂家&药品名称,需判断所有,yunhaibao20151117
+			// 判断重复输入药品,经营企业&厂家&药品名称,需判断所有,yunhaibao20151117
 			var mrrow=PlanGridDs.indexOf(mr[i])
 			for (var j =0; j < rowCount; j++) {
 				if (j==mrrow){continue;}
@@ -995,51 +1060,56 @@ var savePlan = new Ext.Toolbar.Button({
 				if (item_inci == incId && item_manf == manfId && item_vendor == vendorId) {
 					changeBgColor(mrrow, "yellow");
 					changeBgColor(j, "yellow");
-					Msg.info("warning", incidesc+",第"+(mrrow+1)+","+(j+1)+"行"+"药品相关信息录入重复，请重新输入!");
+					Msg.info("warning", incidesc+$g(",第")+(mrrow+1)+","+(j+1)+$g("行药品相关信息录入重复，请重新输入!"));
 					return;
 				}
 			}
 			
 		}
 		if ((data=="")&& (mod==false) ){
-			Msg.info("warning","没有需要保存的数据!");
+			Msg.info("warning",$g("没有需要保存的数据!"));
 			return;
 		}
+		//验证预算数据
+		var ret = CheckSaveBudget(purNo,data)
+		if(!ret) return;
+
 	//	if(data!=""){  //alert(stkGrpId);
 			Ext.Ajax.request({
 				url: PlanGridUrl+'?actiontype=save',
 				params:{purNo:purNo,locId:locId,stkGrpId:stkGrpId,userId:userId,data:data},
 				failure: function(result, request) {
-					Msg.info("error","请检查网络连接!");
+					Msg.info("error",$g("请检查网络连接!"));
 				},
 				success: function(result, request) {
 					var jsonData = Ext.util.JSON.decode( result.responseText );
 					if (jsonData.success=='true') {
-						Msg.info("success","保存成功!");
+						Msg.info("success",$g("保存成功!"));
 						purId=jsonData.info;
 						Select(purId);
+						SendBusiData(purId,"PURPLAN","SAVE")
 						
 					}else{
 						if(jsonData.info==-1){
-							Msg.info("error","科室或人员为空!");
+							Msg.info("error",$g("科室或人员为空!"));
 						}else if(jsonData.info==-99){
-							Msg.info("error","加锁失败!");
+							Msg.info("error",$g("加锁失败!"));
 						}else if(jsonData.info==-2){
-							Msg.info("error","生成计划单号失败!");
+							Msg.info("error",$g("生成计划单号失败!"));
 						}else if(jsonData.info==-3){
-							Msg.info("error","保存计划单失败!");
+							Msg.info("error",$g("保存计划单失败!"));
 						}else if(jsonData.info==-4){
-							Msg.info("error","未找到需更新的计划单!");
+							Msg.info("error",$g("未找到需更新的计划单!"));
 						}else if(jsonData.info==-5){
-							Msg.info("error","保存计划单明细失败,不能生成计划单!");
+							Msg.info("error",$g("保存计划单明细失败,不能生成计划单!"));
 						}else if(jsonData.info==-7){
-							Msg.info("error","失败药品：部分明细保存不成功，提示不成功的药品!");
+							Msg.info("error",$g("失败药品：部分明细保存不成功，提示不成功的药品!"));
 						}else if(jsonData.info==-8){
-							Msg.info("error","采购计划已完成!");
+							Msg.info("error",$g("采购计划已完成!"));
 						}else if(jsonData.info==-9){
-							Msg.info("error","采购计划已审核!");
+							Msg.info("error",$g("采购计划已审核!"));
 						}else{
-							Msg.info("error","保存失败!");
+							Msg.info("error",$g("保存失败!"));
 						}
 					}
 				},
@@ -1049,22 +1119,60 @@ var savePlan = new Ext.Toolbar.Button({
     }
 });
 
+
+function CheckSaveBudget(purNo,data){
+	if (_BudgetSaveFlag != "LIMIT" && _BudgetSaveFlag != "WARN") return true;
+	var locId = Ext.getCmp('locField').getValue();
+	var locDesc = Ext.getCmp('locField').getRawValue();
+	var budgetId = Ext.getCmp('BudgetProComb').getRawValue();
+	if(!budgetId) {
+		Msg.info("warning","保存数据需核对HRP预算系统，请选择一个预算项目!");
+		return false;
+	}
+	var MianObj={
+		project_id : "", //项目id
+		project_desc: "", //项目名称
+		loc_id : locId, //科室id
+		loc_desc : locDesc, //科室名称
+		business : "PURPLAN", //业务类型
+		businode : "SAVE", //业务节点
+		main_id : "", //业务主表id
+		main_no : purNo, //业务单号
+		operate : "INSERT", //操作类型
+		Detail : data //明细数据
+	}
+	var BusiData = JSON.stringify(MianObj)
+	var ret = tkMakeServerCall("PHA.IN.Budget.Client.Interface","SendBusiData",BusiData)
+	var RetJson = JSON.parse(ret);
+	if(RetJson.code < 0 )
+	{
+		Msg.info("error",RetJson.msg);
+		return false;
+	}
+	else if(RetJson.code == 1)
+	{
+		Msg.info("warning",RetJson.msg);
+	}
+	return true;
+}
+
+
 var deletePlan = new Ext.Toolbar.Button({
-	text:'删除',
-    tooltip:'删除',
+	text:$g('删除'),
+    tooltip:$g('删除'),
     iconCls:'page_delete',
 	width : 70,
 	height : 30,
 	handler:function(){
 		if(purId==null || purId==""){
-			Msg.info("warning","请选择要删除的计划单!");
+			Msg.info("warning",$g("请选择要删除的计划单!"));
 			return;
 		}
 		var compFlag=Ext.getCmp('Complete').getValue();
 		var mod=Modified();
 		if  ( (mod) &&(!compFlag) ) {
 				Ext.Msg.show({
-				   title:'提示',
+				   title:$g('提示'),
 				   msg: Msg_LostModified,
 				   buttons: Ext.Msg.YESNO,
 				   fn: function(b,t,o){
@@ -1081,35 +1189,35 @@ var deletePlan = new Ext.Toolbar.Button({
 
 function Delete()
 {
-	Ext.MessageBox.confirm('提示','确定要删除该采购计划单?',
+	Ext.MessageBox.confirm($g('提示'),$g('确定要删除该采购计划单?'),
 		function(btn) {
 			if(btn == 'yes'){
 				Ext.Ajax.request({
 					url:PlanGridUrl+'?actiontype=delete&rowid='+purId,
-					waitMsg:'删除中...',
+					waitMsg:$g('删除中...'),
 					failure: function(result, request) {
-						Msg.info("error", "请检查网络连接!");
+						Msg.info("error", $g("请检查网络连接!"));
 					},
 					success: function(result, request) {
 						var jsonData = Ext.util.JSON.decode( result.responseText );
 						if (jsonData.success=='true') {
-							Msg.info("success", "删除成功!");
+							Msg.info("success", $g("删除成功!"));
 							clearData();									
 						}else{
 							if(jsonData.info==-1){
-								Msg.info("error", "订单已经完成，不能删除!");
+								Msg.info("error", $g("订单已经完成，不能删除!"));
 								return false;
 							}
 							if(jsonData.info==-2){
-								Msg.info("error", "订单已经审核，不能删除!");
+								Msg.info("error", $g("订单已经审核，不能删除!"));
 								return false;
 							}
 							if(jsonData.info==-3){
-								Msg.info("error", "删除计划单主表失败!");
+								Msg.info("error", $g("删除计划单主表失败!"));
 								return false;
 							}
 							if(jsonData.info==-4){
-								Msg.info("error", "删除计划单明细失败!");
+								Msg.info("error", $g("删除计划单明细失败!"));
 								return false;
 							}
 						}
@@ -1126,14 +1234,14 @@ function FinishPurPlan()
 {
 	var completeFlag=Ext.getCmp('Complete').getValue();
 	if (completeFlag==true) {	
-		Msg.info('error','当前采购计划单已经完成!')
+		Msg.info('error',$g('当前采购计划单已经完成!'))
 		return;
 	}
 
 	//获取所有的新记录
 	var mr=PlanGridDs.getCount();
 	if(mr<1){
-		Msg.info('warning','采购计划明细无数据,无需完成!')
+		Msg.info('warning',$g('采购计划明细无数据,无需完成!'))
 		return;
 	}
 	var data="";
@@ -1144,34 +1252,52 @@ function FinishPurPlan()
 	    var incId = record.get("IncId");
            var vendorId = record.get("VenId");
            var rp = record.get("Rp");
+           var FreeDrugFlag = record.get('FreeDrugFlag');
            var icnt=i+1
-           if(incId!="" && vendorId==""){Msg.info("warning","第"+icnt+"行中供应商为空!");
+           if(incId!="" && vendorId==""){Msg.info("warning",$g("第")+icnt+$g("行中经营企业为空!"));
 							return}
 			if(incId!=""){
-				if ((rp == null || rp=="" || rp==0)&(gParam[0].trim()=="Y")) {
-					Msg.info("warning", "进价不能为空或零!");
+				
+				
+				
+				if(rp==0&&FreeDrugFlag!="Y") {
+					Msg.info("warning", $g("非免费药进价不能为零"));
 					return;
 				}
-				if (rp<0){
-					Msg.info("warning","进价不能小于0");
+				else if (rp!=0&&FreeDrugFlag=="Y"){
+					Msg.info("warning", $g("免费药进价必须为零"));
 					return;
 				}
+				else if ((rp == null || rp=="" || rp==0)&(gParam[0].trim()=="Y")&&(FreeDrugFlag!="Y")) {
+					Msg.info("warning", $g("进价不能为空或零!"));
+					return;
+				}
+
+				if (rp < 0) {
+					Msg.info("warning",$g("进价不能小于0!"));
+					return;
+				}
+				
+				
 			}
 							
 	}		
-	Ext.MessageBox.confirm('提示','确定要完成该计划单吗?',
+	Ext.MessageBox.confirm($g('提示'),$g('确定要完成该计划单吗?'),
 		function(btn) {
 			if(btn == 'yes'){
+				var ret = SendBusiData(purId,"PURPLAN","COMP")
+				if(!ret) return;
+
 				Ext.Ajax.request({
 					url:PlanGridUrl+'?actiontype=finsh&rowid='+purId,
-					waitMsg:'处理中...',
+					waitMsg:$g('处理中...'),
 					failure: function(result, request) {
-						Msg.info("error", "请检查网络连接!");
+						Msg.info("error", $g("请检查网络连接!"));
 					},
 					success: function(result, request) {
 						var jsonData = Ext.util.JSON.decode( result.responseText );
 						if (jsonData.success=='true') {
-							Msg.info("success", "计划单完成!");
+							Msg.info("success", $g("计划单完成!"));
 							Ext.getCmp("Complete").setValue(true);
 							addPlan.setDisabled(true);   //不可增加
 							savePlan.setDisabled(true);   //不可保存
@@ -1180,13 +1306,13 @@ function FinishPurPlan()
 							Select(purId);
 						}else{
 							if(jsonData.info==-1){
-								Msg.info("error", "计划单已经完成!");
+								Msg.info("error", $g("计划单已经完成!"));
 								return false;
 							}else if(jsonData.info==-4){
-								Msg.info("error", "自动审批失败!");
+								Msg.info("error", $g("自动审批失败!"));
 								return false;
 							}else{
-								Msg.info("error", "操作失败:"+jsonData.info);
+								Msg.info("error", $g("操作失败:")+jsonData.info);
 								return false;
 							}
 						}
@@ -1200,29 +1326,35 @@ function FinishPurPlan()
 	)
 }
 var finishPlan = new Ext.Toolbar.Button({
-	text:'完成',
-    tooltip:'完成',
+	text:$g('完成'),
+    tooltip:$g('完成'),
     iconCls:'page_gear',
 	width : 70,
 	height : 30,
 	disabled:true,
 	handler:function(){
 		if((purId=="")||(purId==null)){
-			Msg.info("error", "计划单为空!");
+			Msg.info("error", $g("计划单为空!"));
 			return false;
 		}else{
+			var rowCount =PlanGridDs.getCount();
+			if(rowCount==0) 
+			{
+				Msg.info('warning',$g('明细数据为空，请核对明细!'))
+				return;
+			}
 			var mod=Modified();
 			if (mod) {
 				Ext.Msg.show({
-			        title: '提示',
-			        msg: "数据已发生改变，请先保存!",
+			        title: $g('提示'),
+			        msg: $g("数据已发生改变，请先保存!"),
 			        buttons: Ext.Msg.OK,
 			        icon: Ext.MessageBox.INFO
 			    });
 			    return;
 			    
 				Ext.Msg.show({
-				   title:'提示',
+				   title:$g('提示'),
 				   msg: Msg_LostModified,
 				   buttons: Ext.Msg.YESNO,
 				   fn: function(b,t,o){
@@ -1244,24 +1376,24 @@ function CancelFinish()
 {
 	var completeFlag=Ext.getCmp('Complete').getValue();
 	if (completeFlag==false) 
-	{	Msg.info('error','当前采购计划单尚未完成!')
+	{	Msg.info('error',$g('当前采购计划单尚未完成!'))
 		return;
 	}
 	
 	
-	Ext.MessageBox.confirm('提示','确定要取消完成该计划单吗?',
+	Ext.MessageBox.confirm($g('提示'),$g('确定要取消完成该计划单吗?'),
 		function(btn) {
 			if(btn == 'yes'){
 				Ext.Ajax.request({
 					url:PlanGridUrl+'?actiontype=noFinsh&rowid='+purId,
 					waitMsg:'处理中...',
 					failure: function(result, request) {
-						Msg.info("error", "请检查网络连接!");
+						Msg.info("error", $g("请检查网络连接!"));
 					},
 					success: function(result, request) {
 						var jsonData = Ext.util.JSON.decode( result.responseText );
 						if (jsonData.success=='true') {
-							Msg.info("success", "成功取消计划单完成状态!");
+							Msg.info("success", $g("成功取消计划单完成状态!"));
 							Ext.getCmp('Complete').setValue(false);
 							finishPlan.setDisabled(false);   //完成
 							savePlan.setDisabled(false);
@@ -1269,15 +1401,15 @@ function CancelFinish()
 							addPlan.setDisabled(false);
 						}else{
 							if(jsonData.info==-1){
-								Msg.info("error", "计划单尚未完成!");
+								Msg.info("error",$g( "采购计划单尚未完成!"));
 								return false;
 							}
 							if(jsonData.info==-2){
-								Msg.info("error", "订单已经审核，不能取消完成!");
+								Msg.info("error", $g("采购计划单已经审核，不能取消完成!"));
 								return false;
 							}
 							if(jsonData.info==-3){
-								Msg.info("error", "操作失败!");
+								Msg.info("error", $g("操作失败!"));
 								return false;
 							}
 						}
@@ -1292,20 +1424,20 @@ function CancelFinish()
 
 }
 var noFinshPlan = new Ext.Toolbar.Button({
-	text:'取消完成',
-    tooltip:'取消完成',
+	text:$g('取消完成'),
+    tooltip:$g('取消完成'),
     iconCls:'page_gear',
 	width : 70,
 	height : 30,
 	handler:function(){
 		if((purId=="")||(purId==null)){
-			Msg.info("error", "计划单为空!");
+			Msg.info("error", $g("计划单为空!"));
 			return false;
 		}else{
 			var mod=Modified();
 			if (mod) {
 				Ext.Msg.show({
-				   title:'提示',
+				   title:$g('提示'),
 				   msg: Msg_LostModified,
 				   buttons: Ext.Msg.YESNO,
 				   fn: function(b,t,o){
@@ -1323,8 +1455,8 @@ var noFinshPlan = new Ext.Toolbar.Button({
 // 清空按钮
 var ClearBT = new Ext.Toolbar.Button({
 	id : "ClearBT",
-	text : '清屏',
-	tooltip : '点击清屏',
+	text : $g('清屏'),
+	tooltip : $g('点击清屏'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_clearscreen',
@@ -1333,7 +1465,7 @@ var ClearBT = new Ext.Toolbar.Button({
 		var mod=Modified();
 		if  ( mod&&(!compFlag) ) {
 			Ext.Msg.show({
-			   title:'提示',
+			   title:$g('提示'),
 			   msg: Msg_LostModified,
 			   buttons: Ext.Msg.YESNO,
 			   fn: function(b,t,o){
@@ -1350,6 +1482,14 @@ var ClearBT = new Ext.Toolbar.Button({
 
 
 function clearData(){
+	SetLogInDept(locField.getStore(),'locField');
+	
+	groupField.getStore().removeAll();
+    groupField.getStore().setBaseParam("locId",Ext.getCmp("locField").getValue())
+    groupField.getStore().setBaseParam("userId",UserId)
+    groupField.getStore().setBaseParam("type",App_StkTypeCode)
+    groupField.getStore().load();
+                          
 	Ext.getCmp("dateField").setValue(new Date());
 	Ext.getCmp("planNum").setValue("");
 	Ext.getCmp("Complete").setValue(false);
@@ -1376,17 +1516,17 @@ function Copy(purid){
 		url: PlanGridUrl+'?actiontype=Copy',
 		params:{parref:purid,userId:UserId},
 		failure: function(result, request) {
-			Msg.info("error","请检查网络连接!");
+			Msg.info("error",$g("请检查网络连接!"));
 		},
 		success: function(result, request) {
 			var jsonData = Ext.util.JSON.decode( result.responseText );
 			if (jsonData.success=='true') {
-				Msg.info("success","复制成功!");
+				Msg.info("success",$g("复制成功!"));
 				purId=jsonData.info;
 				Select(purId);
 				
 			}else{
-				Msg.info("success","复制失败!");
+				Msg.info("success",$g("复制失败!"));
 				}
 		}
 	})
@@ -1402,7 +1542,7 @@ var formPanel = new Ext.form.FormPanel({
 	items : [{
 			layout : 'column',		
 			xtype : 'fieldset',
-			title : '采购信息',
+			title : $g('采购信息'),
 			defaults:{border:false},
 			style:DHCSTFormStyle.FrmPaddingV,
 			items : [{				
@@ -1412,7 +1552,7 @@ var formPanel = new Ext.form.FormPanel({
 				}, {
 					columnWidth : .25,
 					xtype : 'fieldset',
-					items : [planNumField] //,ZBFlag]
+					items : [planNumField,BudgetProComb] //,ZBFlag]
 				},{
 					columnWidth : .25,
 					xtype : 'fieldset',
@@ -1438,8 +1578,8 @@ var PlanPagingToolbar = new Ext.PagingToolbar({
     store:PlanGridDs,
 	pageSize:PlanPageSize,
     displayInfo:true,
-    displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-    emptyMsg:"没有记录"
+    displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+    emptyMsg:$g("没有记录")
 });
 
 //翻页之前，先检查有没有需要保存的数据
@@ -1448,7 +1588,7 @@ PlanPagingToolbar.on("beforechange",function(toolbar,params){
 	var records=PlanGridDs.getModifiedRecords();
 	if(records!=null){
 		if(records.length>0){
-			Msg.info("warning","当前页数据已经发生变化，请进行保存或刷新！");
+			Msg.info("warning",$g("当前页数据已经发生变化，请进行保存或刷新！"));
 			return false;
 		}
 	}
@@ -1459,8 +1599,8 @@ PlanPagingToolbar.on("beforechange",function(toolbar,params){
 var DelItmBT=new Ext.Toolbar.Button({
 	id:'DelItmBT',
 	iconCls:'page_delete',
-	tooltip:'删除选中记录',
-	text:'删除记录',
+	tooltip:$g('删除选中记录'),
+	text:$g('删除记录'),
 	width : 70,
 	height : 30,
 	handler:function(){
@@ -1468,8 +1608,8 @@ var DelItmBT=new Ext.Toolbar.Button({
 	}
 });
 var GridColSetBT = new Ext.Toolbar.Button({
-	text:'列设置',
-    tooltip:'列设置',
+	text:$g('列设置'),
+    tooltip:$g('列设置'),
     iconCls:'page_gear',
     //	width : 70,
     //	height : 30,
@@ -1551,13 +1691,13 @@ var newsm = new Ext.grid.CheckboxSelectionModel({
 //表格
 PlanGrid = new Ext.grid.EditorGridPanel({
 	store:PlanGridDs,
-	title:'采购计划单明细',
+	title:$g('采购计划单明细'),
 	cm:PlanGridCm,
 	trackMouseOver:true,
 	region:'center',
 	height:650,
 	stripeRows:true,
-	sm : newsm,
+	sm :new Ext.grid.CellSelectionModel({}),// newsm,
 	loadMask:true,
 	bbar:PlanPagingToolbar,
 	tbar:[addPlan,'-',DelItmBT,'-',GridColSetBT],
@@ -1568,7 +1708,7 @@ PlanGrid.on('beforeedit',function(e){
 	if(e.field=="UomId"){
 		var inci=e.record.get("IncId");
 		if(inci==null || inci==""){
-			Msg.info("warning","请先录入药品!");
+			Msg.info("warning",$g("请先录入药品!"));
 			e.cancel=true;
 		}
 	}
@@ -1589,61 +1729,59 @@ PlanGrid.on('headerclick',function(grid,columnIndex ,e)
 function DeleteItem(){	
 		var completedFlag=Ext.getCmp('Complete').getValue();
 		if (completedFlag) {
-			Msg.info('error','当前采购计划单已"完成"，禁止删除');
+			Msg.info('error',$g('当前采购计划单已"完成"，禁止删除'));
 			return;
 		}
-		var selectlist=PlanGrid.getSelectionModel().getSelections();
-		if ((selectlist.length==null)||(selectlist.length<0)){
-			Msg.info("error","请选择数据!");
+		
+		var cell = PlanGrid.getSelectionModel().getSelectedCell();
+		if (cell==null){
+			Msg.info("error",$g("请选择数据!"));
 			return false;
 		}
-		else{
-			Ext.MessageBox.confirm('提示','确定要删除记录?',
-				function(btn) {
-					if(btn == 'yes'){
-						var selectlength=selectlist.length
-						for (var selecti=0;selecti<selectlength;selecti++){
-							var selectrecord=selectlist[selecti];
-							var planItm = selectrecord.data['RowId'];
-							if ((planItm!="")&&(planItm!=null)){  //不用异步,否则refresh不起作用).
-					            var deleteret=tkMakeServerCall("web.DHCST.INPurPlanItm","Delete",planItm);
-					            if (deleteret=="0")
-					            {
-									PlanGridDs.remove(selectrecord);
-					            }
-					            else
-					            {
-						            if  (deleteret=="-1"){
-						            	Msg.info("error","采购计划已完成!");
-						            }
-						            else if (deleteret=="-2"){
-							            Msg.info("error","采购计划已审核!");							            
-							        }
-							        else if (deleteret=="-4"){
-							            Msg.info("error","删除采购计划单失败!");							            
-							        }
-							        else{
-								    	Msg.info("error","删除失败!");
-								    }
-						        	return false;
-						        }
-							}
-							else{
+		var recordrow = cell[0];
+		var selectrecord = PlanGridDs.getAt(recordrow);	
+		Ext.MessageBox.confirm($g('提示'),$g('确定要删除记录?'),
+			function(btn) {
+				if(btn == 'yes'){
+						var planItm = selectrecord.data['RowId'];
+						if ((planItm!="")&&(planItm!=null)){  //不用异步,否则refresh不起作用).
+				            var deleteret=tkMakeServerCall("web.DHCST.INPurPlanItm","Delete",planItm);
+				            if (deleteret=="0")
+				            {
 								PlanGridDs.remove(selectrecord);
-							}
-				
+				            }
+				            else
+				            {
+					            if  (deleteret=="-1"){
+					            	Msg.info("error",$g("采购计划已完成!"));
+					            }
+					            else if (deleteret=="-2"){
+						            Msg.info("error",$g("采购计划已审核!"));							            
+						        }
+						        else if (deleteret=="-4"){
+						            Msg.info("error",$g("删除采购计划单失败!"));							            
+						        }
+						        else{
+							    	Msg.info("error",$g("删除失败!"));
+							    }
+					        	return false;
+					        }
 						}
-						PlanGrid.getView().refresh();
-					    //界面只有一条删除主表后清空条件！
-						var rowCount =PlanGridDs.getCount();
-						if(rowCount<1){
-							if(purId) //存在采购单删除最后一条明细才删除主表
-								Delete();
+						else{
+							PlanGridDs.remove(selectrecord);
 						}
+			
+					
+					PlanGrid.getView().refresh();
+				    //界面只有一条删除主表后清空条件！
+					var rowCount =PlanGridDs.getCount();
+					if(rowCount<1){
+						if(purId) //存在采购单删除最后一条明细才删除主表
+							Delete();
 					}
 				}
-			 )
 			}
+		 )
 	}
 
 //zdm,2013-03-1,查询采购单主信息
@@ -1651,7 +1789,7 @@ function Select(purid){
 	Ext.Ajax.request({
 		url : 'dhcst.inpurplanaction.csp?actiontype=select&purId='+purid,
 		method : 'POST',
-		waitMsg : '查询中...',
+		waitMsg : $g('查询中...'),
 		success : function(result,request) {
 			var jsonData = Ext.util.JSON.decode(result.responseText);
 			var arr = jsonData.info.split("^");
@@ -1699,7 +1837,7 @@ Ext.onReady(function(){
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 	
 	var panel = new Ext.Panel({
-		title:'采购计划制单',
+		title:$g('采购计划制单'),
 		activeTab:0,
 		region:'north',
 		height:DHCSTFormStyle.FrmHeight(2),
@@ -1714,6 +1852,8 @@ Ext.onReady(function(){
 	});
 	setZBflag(); //add wyx 2013-09-24
 	RefreshGridColSet(PlanGrid,"DHCSTPURPLANAUDIT");   //根据自定义列设置重新配置列	
+	colArr = sortColoumByEnterSort(PlanGrid);
+	SetBudgetPro(Ext.getCmp("locField").getValue(),"PURPLAN",[1,2],"savePlan") //加载HRP预算项目
 });
 //===========模块主页面=============================================
 //对一个grid中的可编辑列(editor不为null的列)进行编辑设定。

@@ -4,7 +4,7 @@
  */
 var ListCombobox = function(id, url, data, option){
 	this.id = id;
-	this.url= url;
+	this.url= (typeof websys_writeMWToken=='function')?websys_writeMWToken(url):url;
 	this.data = data;
 	this.option = option;
 	}
@@ -27,7 +27,7 @@ ListCombobox.prototype.init = function(){
  */
 var ListComponent = function(id, columns, url, option){
  	this.id = id;
-	this.url = url;
+	this.url = (typeof websys_writeMWToken=='function')?websys_writeMWToken(url):url;
 	this.option = option;
 	this.columns = columns;
 }
@@ -124,7 +124,7 @@ ListComponent.prototype.Init = function(){
  
  var CusTreeUX = function(id, url, option){
  	 this.id = id;
- 	 this.url = url;
+ 	 this.url = (typeof websys_writeMWToken=='function')?websys_writeMWToken(url):url;
  	 this.option = option;
  }
  

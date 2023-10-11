@@ -6,23 +6,9 @@ function InitAssRateWinEvent(obj){
 	     	obj.btnQuery_click();
      	});
 		
-	   	$HUI.combogrid('#cbgModel',{
-			onSelect:function(index, row){		
-				var ModelID = row.ID;
-				var AdmStatus = row.AdmStatus;
-				if (AdmStatus) {
-					$HUI.radio('#radAdmStatus-'+AdmStatus).setValue(true);
-				}
-				objSttDate = row.SttDate;
-				objEndDate = row.EndDate;
-						
-				$('#dtDateFrom').datebox('setValue',objSttDate);
-				$('#dtDateTo').datebox('setValue',objEndDate);
-			
-				obj.btnQuery_click();
-			}
-		});
-	
+		$('#btnCompare').on('click', function(){
+	     	obj.btnCompare_click();
+     	});
 	}
 	
 	//查询
@@ -35,7 +21,7 @@ function InitAssRateWinEvent(obj){
 			return;
 		}
 		var errinfo = "";
-		if ((Common_CompareDate(objSttDate,aDateFrom)>0)||(Common_CompareDate(aDateTo,objEndDate)>0)){
+		if ((Common_CompareDate(obj.SttDate,aDateFrom)>0)||(Common_CompareDate(aDateTo,obj.EndDate)>0)){
 			errinfo = errinfo + "开始日期、结束日期需在评估模型时段内!<br>";
 		}
 		if (Common_CompareDate(aDateFrom,aDateTo)>0){
@@ -54,13 +40,30 @@ function InitAssRateWinEvent(obj){
 			aDateTo:aDateTo
 	    });
 	}
-	
+	//对比
+	obj.btnCompare_click  = function(){
+		var t=new Date();
+		t=t.getTime();
+		var strUrl = "./dhcma.hai.stat.comparison.csp?" + t;
+		websys_showModal({
+			url:strUrl,
+			title:'评估模型对比',
+			iconCls:'icon-w-paper',  
+			width:1200,
+			height:'95%'
+		});
+	}
 	//窗体初始化
 	obj.OpenDtl = function(aType){
 		if (aType==1) var title ='总人数明细数据';
 		if (aType==2) var title ='感染人数明细数据';
-		if (aType==3) var title ='漏筛人数明细数据';
-		if (aType==3) var title ='自报人数明细数据';
+		if (aType==3) var title ='疑似人数明细数据';
+		if (aType==4) var title ='确诊人数明细数据';
+		if (aType==5) var title ='排除人数明细数据';
+		if (aType==6) var title ='感染疑似人数明细数据';
+		if (aType==7) var title ='感染非疑似人数明细数据';
+		if (aType==8) var title ='疑似非感染人数明细数据';
+		if (aType==9) var title ='非疑似感染人数明细数据';
 		
 		var ModelID =$('#cbgModel').combogrid('getValue');
 		var aDateFrom = $('#dtDateFrom').datebox('getValue');
@@ -85,7 +88,7 @@ function InitAssRateWinEvent(obj){
 			isTopZindex:true
 		});
 	}
-	
+		
 	//摘要信息
 	obj.OpenView = function(aEpisodeID){
 		var t=new Date();

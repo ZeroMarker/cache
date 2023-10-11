@@ -7,6 +7,12 @@ var PageObj={
 	m_CONTEXT:"",
 	m_refreshTimeout:120000
 }
+if (websys_isIE==true) {
+	 var script = document.createElement('script');
+	 script.type = 'text/javaScript';
+	 script.src = '../scripts/dhcdoc/tools/bluebird.min.js';  // bluebird 文件地址
+	 document.getElementsByTagName('head')[0].appendChild(script);
+}
 function Init(){
 	var frm = dhcsys_getmenuform();
 	if((frm) &&(ServerObj.EpisodeID=="")){
@@ -52,19 +58,25 @@ function InitEvent(){
 		},
 		onBeforeSelect : function(title,newWhich){
 			var oldTab = $(this).tabs("getSelected");
-			if (oldTab==null) return ; //点chart的x		
+			if (oldTab==null) return ; //点chart的x	
+			var oldTabTile=oldTab.panel("options").title;	
 			var oldIframe = oldTab.find("iframe").get(0);	
 			if ( oldIframe ){
 				var chartOnBlur = getFrameFun(oldIframe,"chartOnBlur");
 				if(chartOnBlur) {
 					//如果返回false,不切换Chart
 					var blurRtn = true;
-					try{chartOnBlur();}catch(e){alert("离开当前页判断时出错："+e.message);}
-					if (!blurRtn){return false;};	
+					try{blurRtn=chartOnBlur();}catch(e){dhcsys_alert("离开当前页判断时出错："+e.message);}
+					if (!blurRtn){
+						refreshProBarStatus(oldTabTile);
+						return false;
+					};	
 			    }			
 			}	
 		}	
 	});
+	// 避免click重复多次绑定
+	$("#InPatListBtn").unbind("click");
 	$("#InPatListBtn").click(showPatListWin);
 }
 /**
@@ -125,7 +137,11 @@ function InitAdmProcedureBar(){
 			   }else{
 				    a.click(fun);
 			   }
-			   if (i==0) $('#'+config["id"]).trigger("click");
+			   if(ServerObj.NewDocGotoWhere!=""){
+				   $('#'+ServerObj.NewDocGotoWhere).trigger("click");
+			   }else{
+			   		if (i==0) $('#'+config["id"]).trigger("click");
+			   }
 		   }
 		}
 		var str = '<iframe frameborder="0" tabindex="-1" src="javascript:false;" style="display:block;position:absolute;z-index:-1;filter:Alpha(Opacity=0);opacity:0;';
@@ -315,6 +331,9 @@ function hrefRefresh(forceRefresh){
 	}
 }
 function refreshProBarStatus(selTabText){
+	var curTab = $('#tabsReg').tabs('getSelected');
+	var curTabTile=curTab.panel("options").title;
+	if (selTabText !=curTabTile) return;
 	$(".sel-line").removeClass("sel-line");
 	$(".sel-li-a").removeClass("sel-li-a");
 	$(".oldsel-li-a").removeClass("oldsel-li-a");
@@ -517,8 +536,8 @@ function PreCardBillClickHandle(){
 			    	var insType = "";
 					var oeoriIDStr = "";
 					var guser = session['LOGON.USERID'];
-					var rtn = checkOut(CardNo,ServerObj.PatientID,ServerObj.EpisodeID,insType,oeoriIDStr,guser,groupDR,locDR,hospDR);
-					CardBillAfterReload();
+					var rtn = checkOut(CardNo,ServerObj.PatientID,ServerObj.EpisodeID,insType,oeoriIDStr,guser,groupDR,locDR,hospDR,CardBillAfterReload);
+					//CardBillAfterReload();
 				}
 			});
         	return;
@@ -973,7 +992,9 @@ function onOpenPatListWin(){
 		patListJObj.window('resize', {left:$(document.body).width()-1090-10,top:38, width:1090, height:$(document.body).height()-45 });
 	}
 	//$(".window-mask.alldom").show();
-	window.frames['patlistframe'].ResizePatListWindow();
+	if (window.frames['patlistframe'].ResizePatListWindow) {
+		window.frames['patlistframe'].ResizePatListWindow();
+	}
 }
 function onClosePatListWin(){
 	$(".window-mask.alldom").hide();
@@ -988,13 +1009,19 @@ function switchPatient(patientId,episodeId,mradm,WalkStatus){
 	refreshBar();
 	if (PageObj.m_admProBardJson!=""){
 		if (WalkStatus=="等候"){
+			//等候患者直接把页签定位到门诊病例界面，不需要再单独刷新门诊病例
+			var ItemId=PageObj.m_admProBardJson[0]['id'];
 			var name=PageObj.m_admProBardJson[0]['Name'];
 			var curTab = $('#tabsReg').tabs('getSelected');
 			var title=curTab.panel("options").title;
 			if (title==name){
 				hrefRefresh();
 			}else{
-				$('#tabsReg').tabs('select',name);
+				if (!$('#tabsReg').tabs('exists',name)) {
+					$('#'+ItemId).trigger("click");
+				}else{
+					$('#tabsReg').tabs('select',name);
+				}
 			}
 			refreshProBarStatus(name);
 		}else{
@@ -1092,4 +1119,19 @@ function ReshOrder(){
 	if ($(".sel-li-a").text()==text){
 		hrefRefresh("")
 	}
+}
+function GetCurframeObj(){
+	var curTab = $('#tabsReg').tabs('getSelected');
+	var curTabOpts=curTab.panel('options');
+	var ilink = curTab.panel("options").ilink;
+	var valueExp = curTab.panel("options").valueExp||"";
+	var oneTimeValueExp = curTab.panel("options").oneTimeValueExp||"";
+	var curIframe = curTab.find("iframe").get(0);
+	var curNewIframe=window.frames[curIframe.name];
+	var CurframeObj={
+		frameName:curIframe.name,
+		frameId:curIframe.id,
+		frameDesc:curTabOpts.title
+	};
+	return CurframeObj;
 }

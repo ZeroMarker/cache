@@ -2,16 +2,17 @@
 function InitMED1001WinEvent(obj){
 	// 默认加载报表文件
 	ReportFrame = document.getElementById("reportFrame");
-	p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.CPW.STA.MonthLoc.raq&aDateFrom=&aDateTo=&aLocID=&aHospID=';	
+	p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.CPW.STA.DayLocNew.raq&aDateFrom=&aDateTo=&aLocID=&aHospID=';	
 	ReportFrame.src = p_URL;
 	
 	//查询按钮
 	$("#btnQueryLoc").on('click',function(){
 		var aHospID  = $("#cboHospital").combobox("getValue");
 	    var DateFrom = $("#DateFrom").datebox("getValue");
-		var DateTo 	 = $("#DateTo").datebox("getValue");		
+		var DateTo 	 = $("#DateTo").datebox("getValue");	
+		var StatTime = Common_CheckboxValue('chkStatTime');
 		var LocID 	 = ($("#cboLocation").combobox("getValue")==null||undefined)?"":$("#cboLocation").combobox("getValue");
-		var EntityID = ($("#cboPathEntity").combobox("getValue")==null||undefined)?"":$("#cboPathEntity").combobox("getValue");
+		var ScreenType = Common_GetValue('cboScreenType');
     	if(obj.IsAdmin<1) LocID=session['DHCMA.CTLOCID'];
 		
 		if ((DateFrom=="")||(DateTo==""))
@@ -21,23 +22,22 @@ function InitMED1001WinEvent(obj){
 		}
 		else
 		{
-			var DateFromNum=parseInt(DateFrom.replace('-',''))
-			var DateToNum=parseInt(DateTo.replace('-',''))
-			if(DateFromNum > DateToNum){
-				$.messager.alert("错误提示",'开始月份不能大于结束月份！','info');
+			if(Common_CompareDate(DateFrom,DateTo)){
+				$.messager.alert("错误提示",'开始日期不能大于结束日期！','info');
 			return;
 			}
 		}
 		
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.CPW.STA.MonthLoc.raq&aDateFrom=' + DateFrom +'&aDateTo='+ DateTo +'&aLocID='+ LocID+'&aHospID='+aHospID+'&aSDID='+EntityID;	
+		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.CPW.STA.DayLocNew.raq&aDateFrom=' + DateFrom +'&aDateTo='+ DateTo +'&aLocID='+ LocID+'&aHospID='+aHospID+'&aStatTime='+StatTime+'&aScreenType='+ScreenType+'&aSDID='+"";	
 		ReportFrame.src = p_URL;
 	});
 	$("#btnQuerySD").on('click',function(){
 		var aHospID  = $("#cboHospital").combobox("getValue");
 	    var DateFrom = $("#DateFrom").datebox("getValue");
-		var DateTo 	 = $("#DateTo").datebox("getValue");		
+		var DateTo 	 = $("#DateTo").datebox("getValue");	
+		var StatTime = Common_CheckboxValue('chkStatTime');
 		var LocID 	 = ($("#cboLocation").combobox("getValue")==null||undefined)?"":$("#cboLocation").combobox("getValue");
-		var EntityID = ($("#cboPathEntity").combobox("getValue")==null||undefined)?"":$("#cboPathEntity").combobox("getValue");
+		var ScreenType = Common_GetValue('cboScreenType');
 		if(obj.IsAdmin<1) LocID=session['DHCMA.CTLOCID'];
 		
 		if ((DateFrom=="")||(DateTo==""))
@@ -50,12 +50,12 @@ function InitMED1001WinEvent(obj){
 			var DateFromNum=parseInt(DateFrom.replace('-',''))
 			var DateToNum=parseInt(DateTo.replace('-',''))
 			if(DateFromNum > DateToNum){
-				$.messager.alert("错误提示",'开始月份不能大于结束月份！','info');
+				$.messager.alert("错误提示",'开始日期不能大于结束日期！','info');
 			return;
 			}
 		}
-		
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.CPW.STA.MonthSD.raq&aDateFrom=' + DateFrom +'&aDateTo='+ DateTo +'&aLocID='+ LocID+'&aHospID='+aHospID+'&aSDID='+EntityID;	
+		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.CPW.STA.DaySDNew.raq&aDateFrom=' + DateFrom +'&aDateTo='+ DateTo +'&aLocID='+ LocID+'&aHospID='+aHospID+'&aStatTime='+StatTime+'&aScreenType='+ScreenType+'&aSDID='+"";
+		//p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.CPW.STA.DaySDNew.raq&aDateFrom=' + DateFrom +'&aDateTo='+ DateTo +'&aLocID='+ LocID+'&aHospID='+aHospID+'&aSDID='+EntityID;	
 		ReportFrame.src = p_URL;
 	});
 	/* $("#btnSync").on('click',function(){

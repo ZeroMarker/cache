@@ -13,8 +13,8 @@ function ReserveQtyQuery(Incil, Inclb, IncInfo, Fn) {
     Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
     // 查询按钮
     var ClrResBT = new Ext.Toolbar.Button({
-        text: '清除在途数',
-        tooltip: '点击清除选中的在途',
+        text: $g('清除在途数'),
+        tooltip: $g('点击清除选中的在途'),
         iconCls: 'page_clearscreen',
         width: 70,
         height: 30,
@@ -28,63 +28,63 @@ function ReserveQtyQuery(Incil, Inclb, IncInfo, Fn) {
     });
     var Cm = new Ext.grid.ColumnModel([nm, newSM,
         {
-            header: "科室库存项ID",
+            header: $g("科室库存项ID"),
             dataIndex: 'incilRowId',
             width: 80,
             align: 'left',
             sortable: true,
             hidden: true
         }, {
-            header: "指针",
+            header: $g("指针"),
             dataIndex: 'pointer',
             width: 80,
             align: 'left',
             sortable: true,
             hidden: true
         }, {
-            header: '登记号',
+            header: $g('登记号'),
             dataIndex: 'patNo',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: '姓名',
+            header: $g('姓名'),
             dataIndex: 'patName',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: '医嘱科室',
+            header: $g('医嘱科室'),
             dataIndex: 'orderDept',
             width: 200,
             align: 'left',
             sortable: true
         }, {
-            header: '处方号',
+            header: $g('处方号'),
             dataIndex: 'prescNo',
             width: 125,
             align: 'left',
             sortable: true
         }, {
-            header: "剩余在途数",
+            header: $g("剩余在途数"),
             dataIndex: 'resQty',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: "单位",
+            header: $g("单位"),
             dataIndex: 'uomDesc',
             width: 90,
             align: 'left',
             sortable: true
         }, {
-            header: '日期',
+            header: $g('日期'),
             dataIndex: 'oeDspDate',
             width: 100,
             align: 'right',
             sortable: true
         }, {
-            header: "时间",
+            header: $g("时间"),
             dataIndex: 'oeDspTime',
             width: 100,
             align: 'left',
@@ -125,8 +125,8 @@ function ReserveQtyQuery(Incil, Inclb, IncInfo, Fn) {
         pageSize: 50,
         id: 'ReserveQtyPagingToolbar',
         displayInfo: true,
-        displayMsg: '第 {0} 条到 {1}条 ，一共 {2} 条',
-        emptyMsg: "没有记录"
+        displayMsg: $g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+        emptyMsg: $g("没有记录")
     });
 
     var ReserveQtyGrid = new Ext.grid.GridPanel({
@@ -141,7 +141,7 @@ function ReserveQtyQuery(Incil, Inclb, IncInfo, Fn) {
     });
 
     var window = new Ext.Window({
-        title: '在途数查询',
+        title: $g('在途数查询'),
         width: document.body.clientWidth * 0.75,
         height: document.body.clientHeight * 0.9,
         layout: 'fit',
@@ -166,10 +166,10 @@ function ReserveQtyQuery(Incil, Inclb, IncInfo, Fn) {
     function ClearResQty() {
         var selectlist = ReserveQtyGrid.getSelectionModel().getSelections();
         if (selectlist == "") {
-            Msg.info("warning", "请选择数据!");
+            Msg.info("warning", $g("请选择数据!"));
             return false;
         } else {
-            Ext.MessageBox.confirm('提示', '确定要删除记录?',
+            Ext.MessageBox.confirm($g('提示'), $g('确定要删除记录?'),
                 function (btn) {
                     if (btn == 'yes') {
                         var pointeArr = []
@@ -183,7 +183,7 @@ function ReserveQtyQuery(Incil, Inclb, IncInfo, Fn) {
                         }
                         var pointerStr = pointeArr.join("^");
                         if (pointerStr == "") {
-                            Msg.info("warning", "没有可清除数据");
+                            Msg.info("warning", $g("没有可清除数据"));
                             return;
                         }
                         var ret = tkMakeServerCall("PHA.COM.Reserve", "ClrReserveByPointerMulti", pointerStr);

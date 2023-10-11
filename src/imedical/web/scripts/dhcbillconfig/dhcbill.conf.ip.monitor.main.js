@@ -1,6 +1,6 @@
 ﻿/**
  * FileName: dhcbill.conf.ip.monitor.main.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2020-01-07
  * Description: 住院费用监控配置主界面
  */
@@ -8,10 +8,6 @@
 var GV = {};
 
 $(function() {
-	$(document).keydown(function (e) {
-		banBackSpace(e);
-	});
-	
 	var tableName = "Bill_IP_MonitorPoint";
 	var defHospId = $.m({
 		ClassName: "web.DHCBL.BDP.BDPMappingHOSP",
@@ -81,20 +77,24 @@ $(function() {
 		pagination: true,
 		pageSize: 20,
 		displayMsg: '',
-		data: [],
 		toolbar: toolbar,
 		idField: 'id',
 		columns: [[{title: 'id', field: 'id', hidden: true},
 				   {title: 'code', field: 'code', hidden: true},
-				   {title: '描述', field: 'desc', width: 300},
+				   {title: '描述', field: 'desc', width: 240},
 				   {title: '是否启用', field: 'active', width: 70,
+					formatter: function (value, row, index) {
+						return (value == "Y") ? "<font color='#21ba45'>是</font>" : "<font color='#f16e57'>否</font>";
+					}
+				   },
+				   {title: '能否审核', field: 'reviewed', width: 70,
 					formatter: function (value, row, index) {
 						return (value == "Y") ? "<font color='#21ba45'>是</font>" : "<font color='#f16e57'>否</font>";
 					}
 				   }
 			]],
 		onLoadSuccess: function(data) {
-			$("#montList").datagrid("unselectAll");
+			GV.MontList.unselectAll();
 			$(".layout:first").layout("panel", "center").panel("setTitle", "配置");
 			$("iframe").attr("src", "dhcbill.nodata.warning.csp");
 		},
@@ -139,19 +139,14 @@ function save(row) {
 		dlgIconCls = "icon-w-edit";
 		dlgTitle = "修改";
 		id = row.id;
-		$.cm({
-			ClassName: "web.DHCBillCommon",
-			MethodName: "GetClsPropValById",
-			clsName: "User.DHCBillMonitorPointConfig",
-			id: id
-		}, function (jsonObj) {
-			setValueById("edit-code", jsonObj.MPCCode);
-			setValueById("edit-desc", jsonObj.MPCDesc);
-			setValueById("edit-type", jsonObj.MPCType);
-			setValueById("edit-explain", serverToHtml(jsonObj.MPCExplain));
-			setValueById("edit-active", (jsonObj.MPCActiveFlag == "Y"));
-			$(".validatebox-text").validatebox("validate");
-		});
+		var jsonObj = getPersistClsObj("User.DHCBillMonitorPointConfig", id);
+		setValueById("edit-code", jsonObj.MPCCode);
+		setValueById("edit-desc", jsonObj.MPCDesc);
+		setValueById("edit-type", jsonObj.MPCType);
+		setValueById("edit-explain", serverToHtml(jsonObj.MPCExplain));
+		setValueById("edit-active", (jsonObj.MPCActiveFlag == "Y"));
+		setValueById("edit-reviewed", (jsonObj.MPCReviewedFlag == "Y"));
+		$(".validatebox-text").validatebox("validate");
 	}
 	
 	var editDlgObj = $HUI.dialog("#edit-Dlg", {
@@ -182,25 +177,27 @@ function save(row) {
 						Explain: htmlToServer(getValueById("edit-explain")),
 						Active: getValueById("edit-active") ? "Y" : "N",
 						Type: getValueById("edit-type"),
-						HospId: getValueById("hospital")
+						HospId: getValueById("hospital"),
+						Reviewed: getValueById("edit-reviewed") ? "Y" : "N",
 					};
 
 					$.messager.confirm("确认", "确认保存？", function(r) {
-						if (r) {
-							$.cm({
-								ClassName: "web.DHCIPBillCostMonitorConfig",
-								MethodName: "SaveMonitor",
-								jsonStr: JSON.stringify(jsonObj)
-							}, function (rtn) {
-								if (rtn.success == "0") {
-									$.messager.popover({msg: rtn.msg, type: "success"});
-									editDlgObj.close();
-									GV.MontList.reload();
-								} else {
-									$.messager.popover({msg: rtn.msg, type: "error"});
-								}
-							});
+						if (!r) {
+							return;
 						}
+						$.cm({
+							ClassName: "web.DHCIPBillCostMonitorConfig",
+							MethodName: "SaveMonitor",
+							jsonStr: JSON.stringify(jsonObj)
+						}, function (rtn) {
+							if (rtn.success == 0) {
+								$.messager.popover({msg: rtn.msg, type: "success"});
+								editDlgObj.close();
+								GV.MontList.reload();
+								return;
+							}
+							$.messager.popover({msg: rtn.msg, type: "error"});
+						});
 					});
 				}
 			}, {
@@ -224,27 +221,28 @@ function deleteClick() {
 	}
 	var id = row.id;
 	$.messager.confirm("确认", "确认删除？", function(r) {
-		if (r) {
-			$.cm({
-				ClassName: "web.DHCIPBillCostMonitorConfig",
-				MethodName: "DeleteMonitor",
-				id: id
-			}, function (rtn) {
-				var type = (rtn.success == "0") ? "success" : "error";
-				$.messager.popover({msg: rtn.msg, type: type});
-				GV.MontList.reload();
-			});
+		if (!r) {
+			return;
 		}
+		$.cm({
+			ClassName: "web.DHCIPBillCostMonitorConfig",
+			MethodName: "DeleteMonitor",
+			id: id
+		}, function (rtn) {
+			var type = (rtn.success == 0) ? "success" : "error";
+			$.messager.popover({msg: rtn.msg, type: type});
+			GV.MontList.reload();
+		});
 	});
 }
 
 function loadConfPage(id, code) {
 	var url = "dhcbill.nodata.warning.csp";
-	if (new Array('01', '02', '03').indexOf(code) != -1) {
+	if (['01', '02', '03'].indexOf(code) != -1) {
 		url = "dhcbill.conf.ip.monitor.fir.csp";
-	}else if (new Array('04').indexOf(code) != -1) {
+	}else if (['04'].indexOf(code) != -1) {
 		url = "dhcbill.conf.ip.monitor.sec.csp";
-	}else if (new Array('12').indexOf(code) != -1) {
+	}else if (['12'].indexOf(code) != -1) {
 		url = "dhcbill.conf.ip.monitor.fou.csp";
 	}else {
 		url = "dhcbill.conf.ip.monitor.thir.csp";

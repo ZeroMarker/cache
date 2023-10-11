@@ -1,3 +1,10 @@
+if (websys_isIE==true) {
+	 var script = document.createElement('script');
+	 script.type = 'text/javaScript';
+	 script.src = '../scripts/dhcdoc/tools/bluebird.min.js';  // bluebird 文件地址
+	 document.getElementsByTagName('head')[0].appendChild(script);
+}
+
 var PageLogicObj = {
 	maxListGroupNum:5,
 	websysPrefId:"",
@@ -9,7 +16,8 @@ var PageLogicObj = {
 	groupitemDelim:String.fromCharCode(28),
 	tabgroupDelim:String.fromCharCode(1),
 	m_LastType:"",
-	pattern:new RegExp("[`~!@#$^&*()=|{}':;',\\[\\].<>/?~！@#￥……&*（）——|{}【】‘；：”“'。，、？]") 
+	pattern:new RegExp("[`~!@#$^&*()=|{}':;',\\[\\].<>/?~！@#￥……&*（）——|{}【】‘；：”“'。，、？]"),
+	MACAddress:""
 }
 $(window).load(function() {
 	ReSetWidth();
@@ -58,16 +66,16 @@ function InitEvent(){
 	})
 	$("#AddTable").click(AddTableClickHandle);
 	$("#DeleteTable").click(DeleteTableClickHandle);
+	$("#ChangeTableName").click(ChangeTableNameClickHandle);
 	$("#MoveUpTable").click(function(){
 		listbox_move("MoveUpTable","TempTableNameList","up");
-		UpdateClickHandle();
 	});
 	$("#MoveDownTable").click(function(){
 		listbox_move("MoveDownTable","TempTableNameList","down");
-		UpdateClickHandle();
 	});
-	
-	$("#Update").click(UpdateClickHandle);
+	$("#Update").click(function(){
+		UpdateClickHandle("Update")
+	});
 	$("#DeleteOrdItem").click(DeleteOrdItemHandle);
 	$("#MoveUpOrdItem").click(function(){
 		var id="ListGroup_"+PageLogicObj.listGroupSelectIndex;
@@ -99,6 +107,7 @@ function InitEvent(){
 		NameGroupClickHandle(this.id);
 	})
 	$("#ChangeOrdItemNotes").click(ChangeOrdItemNotes);
+	$("#templateNameSave").click(templateNameSaveclickhanlder);
 	$(document.body).bind("keydown",BodykeydownHandler)
 }
 function PageHandle(){
@@ -112,45 +121,56 @@ function Init(){
 	SetSaveParamText();
 	SetSaveParaTip();
 	LoadTempData();
+	InitIPMac();
 }
-function UpdateClickHandle(){
-	if ($("#Update").hasClass('l-btn-disabled')){
+
+function UpdateClickHandle(id){
+	if ($("#"+id).hasClass('l-btn-disabled')){
 		return false;
 	}
-	var updateobj = document.getElementById("Update");
-	if (updateobj) {
-        $(updateobj).bind("click", function() { return false })
-        updateobj.disabled = true;
-    }
+	DisableBtn(id,true);
+	new Promise(function(resolve,rejected){
+    	UpdateClickHandleNew(resolve);
+	}).then(function(ret){
+		DisableBtn(id,false);
+	})
+}
+
+function UpdateClickHandleNew(callBackFun){
 	var selNum=0,selIndex=0;
 	var nameObj=$("#TempTableNameList")[0];
 	for (var i=0;i<nameObj.length;i++){
 		if (nameObj[i].selected==true){
 			selNum=parseInt(selNum)+1;
 			selIndex=i;
+			NewTableName=nameObj.options[i].text;
 		}
 	}
 	if (selNum>1){
 		$.messager.alert("提示","只能选择一个表进行修改!");
+		callBackFun(false);
 		return false;
 	}else if(selNum==0){
 		$.messager.alert("提示","请选中需要修改的表名!");
+		callBackFun(false);
 		return false;
 	}
-	var NewTableName=$.trim($("#selTabName").val());
+	/*var NewTableName=$.trim($("#selTabName").val());
 	if (NewTableName===""){
 		$.messager.alert("提示","修改后的表名不能为空!","info",function(){
 			$("#selTabName").focus();
 		});
+		callBackFun(false);
 		return false;
 	}else{
 		if (PageLogicObj.pattern.test(NewTableName)){
 			$.messager.alert("提示","修改后的表名【"+NewTableName+"】含有非法字符!","info",function(){
 				$("#selTabName").focus();
 			});
+			callBackFun(false);
 			return false;
 		}
-	}
+	}*/
 	var NameGroupRepeatFlag=0;
 	var arrLstItems = new Array(PageLogicObj.maxListGroupNum);
 	for (var i=1;i<=PageLogicObj.maxListGroupNum;i++){
@@ -173,11 +193,13 @@ function UpdateClickHandle(){
 					break;
 				}
 			}
+			if (NameGroupRepeatFlag==1){break;}
 		}else{
 			if (PageLogicObj.pattern.test(NameGroup)){
 				$.messager.alert("提示","表名【"+NameGroup+"】含有非法字符!","info",function(){
 					$("#NameGroup_"+i).focus();
 				});
+				callBackFun(false);
 				return false;
 			}
 		}
@@ -185,6 +207,7 @@ function UpdateClickHandle(){
 	}
 	if (NameGroupRepeatFlag==1){
 		$.messager.alert("提示",NameGroup+" 列名重复!");
+		callBackFun(false);
 		return false;
 	}
 	var UpdateVal = arrLstItems.join(PageLogicObj.tabgroupDelim);
@@ -207,6 +230,7 @@ function UpdateClickHandle(){
 		$.messager.alert("提示",NewTableName+" 表名重复!","info",function(){
 			$("#selTabName").focus();
 		});
+		callBackFun(false);
 		return false;
 	}
     TableNameList=TableNameList.join("!!");
@@ -245,9 +269,9 @@ function UpdateClickHandle(){
 			PageLogicObj.websysPrefId=id;
 			LoadTempData(selIndex);
 		}else{
-			$.messager.alert("提示","更新失败!");
+			$.messager.alert("提示","更新失败!"+rtn);
 		}
-		updateobj.disabled = false;
+		callBackFun(true);
 	});
 }
 function DeleteOrdItemHandle(){
@@ -295,64 +319,22 @@ function CopyOrdItemHandle(){
 	 	$.messager.alert("提示","请选择需要复制的项目!");
 	 	return false;
     }
-    $.cm({
-	    ClassName:"web.DHCDocPrefTabs",
-	    MethodName:"SetTemplClipBoradrData",
-	    UserID:session['LOGON.USERID'],
-	    ClipBoradrData:DiagnosStr,
-	    dataType:"text"
-	},function(){
-		$.messager.alert("提示","复制成功!","info",function(){
-	        if ($("#CMTemp_Radio").checkbox('getValue')){
-		        PageLogicObj.m_LastType="CM";
-		    }else{
-			    PageLogicObj.m_LastType="";
-			}
-		});
-	});
-	/*if(window.clipboardData) {   
-        window.clipboardData.clearData();   
-        window.clipboardData.setData("Text", DiagnosStr);
-        $.messager.alert("提示","复制成功!","info",function(){
-	        if ($("#CMTemp_Radio").checkbox('getValue')){
-		        PageLogicObj.m_LastType="CM";
-		    }else{
-			    PageLogicObj.m_LastType="";
-			}
-	    });
-        
-    }*/
+    SaveCopyData(DiagnosStr);
+
 }
 function PasteOrdItemHandle(){
 	if ($("#PasteOrdItem").hasClass('l-btn-disabled')){
 		return false;
 	}
-	var value=$("#CMTemp_Radio").checkbox('getValue');
-	if (value){
-		if (PageLogicObj.m_LastType!="CM"){
-			$.messager.alert("提示","复制的是西医模板不能粘贴到草药模板!");
-			return false;
-		}
-	}else{
-		if (PageLogicObj.m_LastType!=""){
-			$.messager.alert("提示","复制的是草药模板不能粘贴到西医模板!");
-			return false;
-		}
-	}
-	var PasteText=$.cm({
-	    ClassName:"web.DHCDocPrefTabs",
-	    MethodName:"GetTemplClipBoradrData",
-	    UserID:session['LOGON.USERID'],
-	    dataType:"text"
-	},false);
-	 //var PasteText=window.clipboardData.getData("text");
+
+	var PasteText=GetCopyData();
+	if (PasteText=="") return false;
 	 var PasteArray=PasteText.split("@@");
 	 if (PasteArray[0]!='DHCCA'){
 		 $.messager.alert("提示","粘贴板里面的内容不是使用<复制医嘱>获得的数据");
 		 return false;
 	 }
 	 for(var i=1;i<PasteArray.length;i++){
-		 debugger;
 		var lu=PasteArray[i].split("^");
 		var Desc=lu[0];
 		var value=lu[1];
@@ -405,55 +387,15 @@ function CopyAllOrdItemHandle(){
 		}
 		DiagnosStr = DiagnosStr + "DHCCBDHCCA";
 	}
-	$.cm({
-	    ClassName:"web.DHCDocPrefTabs",
-	    MethodName:"SetTemplClipBoradrData",
-	    UserID:session['LOGON.USERID'],
-	    ClipBoradrData:DiagnosStr,
-	    dataType:"text"
-	},function(){
-		$.messager.alert("提示","复制成功!","info",function(){
-	        if ($("#CMTemp_Radio").checkbox('getValue')){
-		        PageLogicObj.m_LastType="CM";
-		    }else{
-			    PageLogicObj.m_LastType="";
-			}
-		});
-	});
-	/*if(window.clipboardData) {   
-         window.clipboardData.clearData();   
-         window.clipboardData.setData("Text", DiagnosStr);
-         $.messager.alert("提示","复制成功");
-         if ($("#CMTemp_Radio").checkbox('getValue')){
-	        PageLogicObj.m_LastType="CM";
-	    }else{
-		    PageLogicObj.m_LastType="";
-		}
-    }*/
+	SaveCopyData(DiagnosStr);
 }
 function PasteAllOrdItemHandle(){
 	if ($("#PasteAllOrdItem").hasClass('l-btn-disabled')){
 		return false;
 	}
-	var value=$("#CMTemp_Radio").checkbox('getValue');
-	if (value){
-		if (PageLogicObj.m_LastType!="CM"){
-			$.messager.alert("提示","复制的是西医模板不能粘贴到草药模板!");
-			return false;
-		}
-	}else{
-		if (PageLogicObj.m_LastType!=""){
-			$.messager.alert("提示","复制的是草药模板不能粘贴到西医模板!");
-			return false;
-		}
-	}
-	var PasteText=$.cm({
-	    ClassName:"web.DHCDocPrefTabs",
-	    MethodName:"GetTemplClipBoradrData",
-	    UserID:session['LOGON.USERID'],
-	    dataType:"text"
-	},false);
-	//var PasteText=window.clipboardData.getData("text");
+
+	var PasteText=GetCopyData();
+	if (PasteText=="") return false;	
 	var PasteHead=PasteText.split("DHCCC");
 	if (PasteText.indexOf('DHCCCDHCCA')==-1){
 		$.messager.alert("提示","粘贴板里面的内容不是使用<复制全部医嘱>获得的数据");
@@ -689,6 +631,37 @@ function DeleteTableClickHandle(){
 		}
 	});
 }
+function ChangeTableNameClickHandle(){
+	if ($("#ChangeTableName").hasClass('l-btn-disabled')){
+		return false;
+	}
+	var SelTabIndex="";
+	var selValArr=$("#TempTableNameList").val();
+	var length=selValArr.length;
+	if (length==0){
+		$.messager.alert("提示","请选中需要修改的表名!");
+		return false;
+	}
+	var SelTabIndex="";
+	var NameStr=""
+	var nameListObj=$("#TempTableNameList")[0];
+	var ChangeMulit=0
+	for (var i=0;i<nameListObj.length;i++){
+		if (nameListObj.options[i].selected == true) {
+			var index=parseInt(i)+1;
+			if (SelTabIndex=="") SelTabIndex=index;
+			else SelTabIndex=SelTabIndex+"^"+index;
+			NameStr=nameListObj.options[i].text;
+			ChangeMulit=parseFloat(ChangeMulit) +1
+		}
+	}
+	if (ChangeMulit>=2){
+		$.messager.alert("提示","请选中需要一个的表名进行修改!");
+		return false;
+		}
+	$("#templateName").val(NameStr)
+	$("#templateNames-dialog").dialog("setTitle","表名修改").dialog("open");
+	}
 function listbox_move(id,listID,direction){
 	if ($("#"+id).hasClass('l-btn-disabled')){
 		return false;
@@ -716,7 +689,10 @@ function listbox_move(id,listID,direction){
     listbox.options[selIndex + increment].value = selValue;
     listbox.options[selIndex + increment].text = selText;
     listbox.options[selIndex + increment].title = selText;
-    listbox.selectedIndex = selIndex + increment
+    listbox.selectedIndex = selIndex + increment;
+    if ((id == "MoveUpTable")||(id =="MoveDownTable")) {
+	   UpdateClickHandle(id)
+	}
 }
 function listboxMoveacross(id,sourceID, destID) { 
 	if ($("#"+id).hasClass('l-btn-disabled')){
@@ -1195,9 +1171,9 @@ function ReSetWidth(){
 	$("#selTabName").css('width',ww/5-21-34);
 	$("#OrdCategory").combobox('resize',ww/5-21-33);
 	$("#OrdSubCategory").combobox('resize',ww/5-21-48);
-	$("#EditTip").parent().css('width',ww-55)
+	$("#EditTip").parent().css('width',ww-205)
 	$("#TempTableNameList").css('height',$(window).height()-280);
-	$(".list-group").css('height',$(window).height()-262);
+	$(".list-group").css('height',$(window).height()-302);
 }
 function ChangeStatus(disabled){
 	if (disabled){
@@ -1343,3 +1319,136 @@ function ChangeOrdItemNotes(){
 	}
 	OpenOrdItemNotesDialog(selObj);
 }
+function InitIPMac(){
+	//获取电脑信息
+	var rtn = getClientIP();
+	if (rtn==404){
+		installWebsysServer();
+		return false;
+	}
+	if (rtn){
+		var arr = rtn.split("^");
+		PageLogicObj.MACAddress=arr[2];
+	}
+	return 	
+}
+
+function SaveCopyData(CopyData){
+	if (PageLogicObj.MACAddress==""){
+		$.messager.alert("提示","请先启用IMedical插件")
+		return false;
+	}
+	var LastType="XY";
+    if ($("#CMTemp_Radio").checkbox('getValue')){ LastType="CM";}
+	var CopyData=LastType+"##"+CopyData;
+	var Rtn=$.cm({
+	    ClassName:"web.DHCDocPrefTabs",
+	    MethodName:"SetTemplClipBoradrData",
+	    MACAddress:PageLogicObj.MACAddress,
+	    ClipBoradrData:CopyData,
+	    dataType:"text"
+	},false)
+	if (Rtn==0){
+		$.messager.alert("提示","复制成功!")
+		return true;
+	}else{
+		$.messager.alert("提示","复制失败!")
+		return false;
+	}
+	return true
+}
+
+function GetCopyData(){
+	if (PageLogicObj.MACAddress==""){
+		$.messager.alert("提示","请先启用IMedical插件")
+		return "";
+	}	
+	var CopyData=$.cm({
+	    ClassName:"web.DHCDocPrefTabs",
+	    MethodName:"GetTemplClipBoradrData",
+	    MACAddress:PageLogicObj.MACAddress,
+	    dataType:"text"
+	},false);
+	if (CopyData!=""){
+		var DataType=CopyData.split("##")[0];
+		var PasteText=CopyData.split("##")[1];
+		var LastType="XY";
+    	if ($("#CMTemp_Radio").checkbox('getValue')){ LastType="CM";}
+		if (LastType=="XY"){
+			if (DataType!="XY"){
+				$.messager.alert("提示","复制的是草药模板不能粘贴到西医模板!");
+				return "";
+			}
+		}else{
+			if (DataType!="CM"){
+				$.messager.alert("提示","复制的是西医模板不能粘贴到草药模板!");
+				return "";
+			}
+		}
+		return PasteText;
+	}else{
+		$.messager.alert("提示","请先复制数据");
+		return "";
+	}
+	return "";
+}
+function DisableBtn(id,disabled){
+	if (disabled){
+		$HUI.linkbutton("#"+id).disable();
+	}else{
+		$HUI.linkbutton("#"+id).enable();
+	}
+}
+function templateNameSaveclickhanlder(){
+	
+	var SelTabIndex="";
+	var NameStr=""
+	var nameListObj=$("#TempTableNameList")[0];
+	var ChangeMulit=0
+	for (var i=0;i<nameListObj.length;i++){
+		if (nameListObj.options[i].selected == true) {
+			var index=parseInt(i)+1;
+			if (SelTabIndex=="") SelTabIndex=index;
+			else SelTabIndex=SelTabIndex+"^"+index;
+			NameStr=nameListObj.options[i].text;
+		}else{
+			if (nameListObj.options[i].text	==$("#templateName").val()){
+				ChangeMulit=1
+				}
+			}
+	}
+	if (ChangeMulit==1){
+		$.messager.alert("提示","表名不能重复");
+		return false;
+		}
+	if ($("#templateName").val()==""){
+		$.messager.alert("提示","表名不能为空");
+		return false;
+		}
+	if (PageLogicObj.pattern.test($("#templateName").val())){
+		$.messager.alert("提示","修改后的表名【"+$("#templateName").val()+"】含有非法字符!","info",function(){
+			$("#templateName").focus();
+		});
+		return false;
+	}
+	$.m({
+		    ClassName:"web.DHCDocPrefTabs",
+		    MethodName:"websysChangeOETabsName",
+		    id:PageLogicObj.websysPrefId,
+		    SelTabIndex:SelTabIndex,
+		    Name:$("#templateName").val()
+		},function(val){
+			if (val=="0"){
+				$.messager.alert("提示","修改成功!");
+				$("#selTabName").val("");
+				$("#EditTip")[0].innerHTML="";
+				$("#templateNames-dialog").dialog("close");
+				ClearListGroupData();
+				LoadTempData(parseInt(SelTabIndex)-1);
+				
+			}else{
+				$.messager.alert("提示","修改失败!");
+				return false;
+			}
+		});
+	}

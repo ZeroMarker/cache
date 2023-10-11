@@ -4,7 +4,7 @@
 	    $('.page-footer').css('display','none');
     } 
 	if (EpisodeID=="" || PatientID=="") {
-		$.messager.alert("提示", "患者信息不存在!",'info');
+		$.messager.alert($g("提示"), $g("患者信息不存在!"),'info');
 		return;
 	}
 	
@@ -54,7 +54,7 @@
 					var IsExist = ParrefList.indexOf(objTmp6.Code); 
 					if (IsExist<1) { //不存在
 						htmlStr += '<div class="td-quarter">'
-						if (objTmp6.ExtraTypeDesc !="无") {
+						if (objTmp6.ExtraTypeDesc !=$g("无")) {
 							htmlStr += '<input id=chk'+objTmp6.ID+' type="checkbox" class="hisui-checkbox" '+(objTmp6.Impl==1? 'checked="checked"':"")+' label='+objTmp6.Desc+' name="chkList"  value='+objTmp6.chkID+'>'
 							htmlStr += '<input id=txt'+objTmp6.ID+' class="textbox text-resume" name="txtList" value='+objTmp6.ExtraText+'>'+objTmp6.ExtraUnit
 						}else {
@@ -124,7 +124,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId=1";
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId=1"+ "&aFlag=1";
 		   	 	$('#cboCurrProvince').combobox('reload',url);
 			}, onChange:function(newValue,oldValue){		
 				$('#cboCurrCity').combobox('clear');
@@ -142,7 +142,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboCurrProvince').combobox('getValue');
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboCurrProvince').combobox('getValue')+ "&aFlag=2";
 		   	 	$('#cboCurrCity').combobox('reload',url);
 			}, onChange:function(newValue,oldValue){
 				$('#cboCurrCounty').combobox('clear');
@@ -158,7 +158,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboCurrCity').combobox('getValue');
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboCurrCity').combobox('getValue')+ "&aFlag=3";
 		   	 	$('#cboCurrCounty').combobox('reload',url);
 			}, onChange:function(newValue,oldValue){
 				$('#cboCurrVillage').combobox('setValue','');
@@ -174,7 +174,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboCurrCounty').combobox('getValue');
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboCurrCounty').combobox('getValue')+ "&aFlag=4";
 		   	 	$('#cboCurrVillage').combobox('reload',url);
 			},
 			onSelect:function(record){
@@ -189,7 +189,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId=1";
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId=1"+ "&aFlag=1";
 		   	 	$('#cboRegProvince').combobox('reload',url);
 			}, onChange:function(newValue,oldValue){		
 				$('#cboRegCity').combobox('clear');
@@ -207,7 +207,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboRegProvince').combobox('getValue');
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboRegProvince').combobox('getValue')+ "&aFlag=2";
 		   	 	$('#cboRegCity').combobox('reload',url);
 			}, onChange:function(newValue,oldValue){
 				$('#cboRegCounty').combobox('clear');
@@ -223,7 +223,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboRegCity').combobox('getValue');
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboRegCity').combobox('getValue')+ "&aFlag=3";
 		   	 	$('#cboRegCounty').combobox('reload',url);
 			}, onChange:function(newValue,oldValue){
 				$('#cboRegVillage').combobox('setValue','');
@@ -239,7 +239,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboRegCounty').combobox('getValue');
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboRegCounty').combobox('getValue')+ "&aFlag=4";
 		   	 	$('#cboRegVillage').combobox('reload',url);
 			},
 			onSelect:function(record){

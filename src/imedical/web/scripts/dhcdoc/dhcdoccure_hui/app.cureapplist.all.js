@@ -1,51 +1,70 @@
-ï»¿var PageAppListAllObj={
+var CureApplyDataGrid="";
+var PageAppListAllObj={
 	m_SelectArcimID:"",
 	_SELECT_DCAROWID:"",
 	_SELECT_DCARecLOCROWID:"",
-	DATE_FORMAT:""
+	m_CureAppScheduleListDataGrid:"",
+	m_CurePatientDataGrid:"",
+	m_PrePageNumber:"",
+	m_NotReloadAppDataGrid:"",
+	m_selTabTitle:"",
+	m_LoadTabTimer:"",
+	m_CureSingleAppoint:"",
+	m_SameServiceGroup:["Ô¤Ô¼","·ÖÅä"],
+	PatCondition:[{id:"PatNo",desc:$g("µÇ¼ÇºÅ")},{id:"PatMedNo",desc:$g("×¡ÔººÅ")},{id:"PatName",desc:$g("»¼ÕßĞÕÃû")}],
+	dw:$(window).width(),
+	dh:$(window).height(),
+	MainSreenFlag:websys_getAppScreenIndex()
 }
-var CureApplyDataGrid="";
+
+$(window).load(function(){
+	InitOrderLoc();
+	InitOrderDoc();
+	InitArcimDesc();
+	InitPatCondition();
+	InitOthChkCondition();
+	CureApplyDataGridLoad();
+})
+
 $(document).ready(function(){	
 	Init();
 	InitEvent();
 	PageHandle();		
-	CureApplyDataGridLoad();
-	if (ServerObj.DateFormat=="4"){
-		//DD/MM/YYYY
-        PageAppListAllObj.DATE_FORMAT= new RegExp("(((0[1-9]|[12][0-9]|3[01])/((0[13578]|1[02]))|((0[1-9]|[12][0-9]|30)/(0[469]|11))|(0[1-9]|[1][0-9]|2[0-8])/(02))/([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3}))|(29/02/(([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00)))");
-	}else if(ServerObj.DateFormat=="3"){
-		//YYYY-MM-DD
-    	PageAppListAllObj.DATE_FORMAT= new RegExp("(([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})-(((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)-(0[1-9]|[12][0-9]|30))|(02-(0[1-9]|[1][0-9]|2[0-8]))))|((([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))-02-29)");
-	}
 });
 
 function Init(){
-	//ç”³è¯·å•åˆ—è¡¨Init
-	//å¡ç±»å‹åˆ—è¡¨
-    //InitCardType();
-	InitOrderLoc();
-	InitArcimDesc();
+	InitSingleAppointMode();
 	InitCureApplyDataGrid();
-	if(ServerObj.myTriage!="Y"){
-		InitExecDate();
-		InitExecEvent();
-		InitCureExecDataGrid();
-	}
-	if(ServerObj.DocCureUseBase=="0"){
-		if(ServerObj.myTriage=="Y"){
-			//åˆ†è¯Šèµ„æºç•Œé¢Init
-			InitTriageLoc();
-			InitCureRBCResListDataGrid();
-		
-			//åˆ†è¯Šåˆ—è¡¨ç•Œé¢
-			InitCureTriageListDataGrid();			
-		}else{
-			//é¢„çº¦èµ„æºç•Œé¢Init
-			InitDate();
-			InitCureRBCResSchduleDataGrid();
-			//é¢„çº¦åˆ—è¡¨Init
-			InitCureApplyAppDataGrid();
+	PageAppListAllObj.m_CurePatientDataGrid=com_Util.InitCurePatientDataGrid(CureApplyDataGridLoad);
+	$("#StartDate").datebox('setValue',ServerObj.CurrentDate);	
+	$("#EndDate").datebox('setValue',ServerObj.CurrentDate);	
+	if(ServerObj.myTriage=="Y"){
+		if(ServerObj.DocCureUseBase=="0"){	
+			//·ÖÕï×ÊÔ´½çÃæInit
+			appList_triageResListObj.InitTriageLoc();
+			appList_triageResListObj.InitCureRBCResListDataGrid();
+			//·ÖÕïÁĞ±í½çÃæ
+			appList_triageListObj.InitCureTriageListDataGrid();		
 		}
+	}else{
+		if(ServerObj.LayoutConfig!=""){
+			appList_execObj.InitExecDate();
+			appList_execObj.InitExecEvent();
+			appList_execObj.InitCureExecDataGrid();
+	
+			if(ServerObj.DocCureUseBase=="0"){
+				//Ô¤Ô¼×ÊÔ´½çÃæInit
+				appList_appResListObj.InitScheduleTab("");
+				//Ô¤Ô¼ÁĞ±íInit
+				appList_appListObj.InitCureApplyAppDataGrid();
+			}
+			
+			if($("#Apply_Asslist").length>0){
+				//ÆÀ¹ÀÁĞ±íInit
+				workList_AssListObj.InitCureAssessmentDataGrid();	
+			}
+		}
+		InitAppScheduleListComb();
 	}
 }
 
@@ -53,14 +72,26 @@ function InitEvent(){
 	InitCureAppListEvent();	
 	if(ServerObj.DocCureUseBase=="0"){
 		if(ServerObj.myTriage=="Y"){
-			InitCureTriageListEvent();
-			
-			InitTriageResListEvent();
+			appList_triageResListObj.InitTriageResListEvent();
+			appList_triageListObj.InitCureTriageListEvent();
 		}else{
-			InitApplyResListEvent();
-			InitApplyAppListEvent();	
+			appList_appResListObj.InitApplyResListEvent();
+			appList_appListObj.InitApplyAppListEvent();	
 		}
 	}
+	
+	if($('#apptabs-dialog').length>0){
+		$('#apptabs-dialog').window({
+			onClose:function(){
+				RefreshDataGrid();	
+			}	
+		})	
+	}
+	$('#appschedulelist-dialog').window({
+		onClose:function(){
+			RefreshDataGrid();	
+		}	
+	})	
 }
 
 function InitCureAppListEvent(){
@@ -71,11 +102,8 @@ function InitCureAppListEvent(){
 	$('#btnClear').bind('click', function(){
 		ClearHandle();
 	});
-	$('#patName').bind('keydown', function(event){
-		if(event.keyCode==13)
-		{
-			CureApplyDataGridLoad();
-		}
+	$('#btnSearchAppSchedule').click(function(){
+		CureAppScheduleListDataGridLoad();
 	});
 	$('#ApplyNo').bind('keydown', function(event){
 		if(event.keyCode==13)
@@ -83,216 +111,358 @@ function InitCureAppListEvent(){
 			CureApplyDataGridLoad();
 		}
 	});
-	$HUI.checkbox("#OPCheck",{
-		onCheckChange:function(e,value){
-			setTimeout("CureApplyDataGridLoad();",10)
-		}
-	})
-	$HUI.checkbox("#IPCheck",{
+	$HUI.checkbox("#LongOrdPriority",{
 		onCheckChange:function(e,value){
 			setTimeout("CureApplyDataGridLoad();",10)
 		}
 	})
 	
+	$('#PatConditionVal').bind('keydown', function(event){
+		if(event.keyCode==13)
+		{
+			var PatCondition=$("#PatCondition").combobox("getValue");
+			if(PatCondition=="PatNo"){
+				PatNoHandle(EventApplyDataGridLoad,this.id);	
+				if ($(this).val()==""){
+					$("#PatientID").val("");
+				}
+			}else{
+				EventApplyDataGridLoad();
+			}
+		}
+	});
+	$('#PatConditionVal').bind('change', function(){
+		var PatCondition=$("#PatCondition").combobox("getValue");
+		if(PatCondition=="PatNo"){
+			if ($(this).val()==""){
+				$("#PatientID").val("");
+			}
+		}
+    });
+	$HUI.radio("[name='SortType']",{
+        onChecked:function(e,value){
+            setTimeout("CureApplyDataGridLoad();",10)
+        }
+    });
+	
 	//common.readcard.js
-	InitPatNoEvent(CureApplyDataGridLoad);
-	InitCardNoEvent(CureApplyDataGridLoad); 
+	//InitPatNoEvent(CureApplyDataGridLoad);
+	InitCardNoEvent(EventApplyDataGridLoad); 
 }
 
 function PageHandle(){
-	if(ServerObj.myTriage=="Y"){
-		$HUI.checkbox("#Distributed",{
-			onCheckChange:function(e,value){
-				var cbox=$HUI.checkbox("#Distributed");
-				if (cbox.getValue()){
-					$HUI.checkbox("#ALLDis").uncheck();
-				}
-				setTimeout("CureApplyDataGridLoad();",10)
-			}
-		})
-		$HUI.checkbox("#ALLDis",{
-			onCheckChange:function(e,value){
-				var cbox=$HUI.checkbox("#ALLDis");
-				if (cbox.getValue()){
-					$HUI.checkbox("#Distributed").uncheck();
-				}
-				setTimeout("CureApplyDataGridLoad();",10)
-			}
-		})		
-	}else{
-		$HUI.checkbox("#CancelDis",{
-			onCheckChange:function(e,value){
-				var cbox=$HUI.checkbox("#CancelDis");
-				if (cbox.getValue()){
-					$HUI.checkbox("#FinishDis").uncheck();
-				}
-				setTimeout("CureApplyDataGridLoad();",10)
-			}
-		})
-		$HUI.checkbox("#FinishDis",{
-			onCheckChange:function(e,value){
-				var cbox=$HUI.checkbox("#FinishDis");
-				if (cbox.getValue()){
-					$HUI.checkbox("#CancelDis").uncheck();
-				}
-				setTimeout("CureApplyDataGridLoad();",10)
-			}
-		})	
-		$HUI.checkbox("#LongOrdPriority",{
-			onCheckChange:function(e,value){
-				setTimeout("CureApplyDataGridLoad();",10)
-			}
-		})	
-		ControlButton(true);
+	if(ServerObj.myTriage!="Y"){	
 		if(ServerObj.DocCureUseBase=="1"){
-			$("#applist_panel").panel({title: 'æ²»ç–—æ‰§è¡Œ-ç”³è¯·å•åˆ—è¡¨'})
+			$("#applist_panel").panel({title: $g('ÖÎÁÆÖ´ĞĞ-ÉêÇëµ¥ÁĞ±í')})
+		}else{
+			if(ServerObj.CureAppVersion!="V1"){
+				$("#applist_panel").panel({title: $g('ÖÎÁÆÖ´ĞĞ-ÉêÇëµ¥ÁĞ±í')})
+			}
+			resizePanel();
 		}
+	}
+	if(ServerObj.DocCureUseBase=="0"){
+		resizePanel();
 	}	
 }
 
-function ClearHandle(){
-	InitCardType();
-	$("#CardNo,#patNo,#patName,#PatientID,#ApplyNo,#CardTypeNew").val("");
-	$("#StartDate,#EndDate").datebox("setValue","");	
-	$("#CancelDis,#FinishDis,#Distributed,#ALLDis,#LongOrdPriority,#OPCheck,#IPCheck").checkbox('uncheck');
-	PageAppListAllObj.m_SelectArcimID=""; 
-	$("#ComboArcim").lookup('setText','');
-	$("#ComboOrderLoc").combobox('select','');
+function InitPatCondition(){
+	$HUI.combobox("#PatCondition", {
+		valueField: 'id',
+		textField: 'desc', 
+		editable:false,
+		data: PageAppListAllObj.PatCondition,
+		onSelect:function(){
+	    	$("#PatConditionVal").val("");
+	    	$("#PatientID").val("");
+	    }
+	});
 }
-function ControlButton(val){
-	return true;
-	if(val==true){
-		$('#btnExecOrd').linkbutton({    
-		    disabled: true  
-		}); 
-		$('#btnExecOrd').unbind()
+function InitOthChkCondition(){
+	if(ServerObj.myTriage=="Y"){
+		var OthChkConditionAry=[{id:"FinishDis",desc:$g("ÉêÇë×´Ì¬-È«²¿ÓĞĞ§")},{id:"CancelDis",desc:$g("ÉêÇë×´Ì¬-ÒÑ·ÖÅä")}]
 	}else{
-		$('#btnExecOrd').linkbutton({    
-		    disabled: false  
-		}); 
-		$('#btnExecOrd').unbind();
-		$('#btnExecOrd').bind('click', function(){
-			UpdateExecOrd();	
-    	});	
+		//Ô¤Ô¼Î´Íê³É£º¿ÉÔ¤Ô¼Êı>0µÄÉêÇëµ¥
+		var OthChkConditionAry=[{id:"FinishDis",desc:$g("ÉêÇë×´Ì¬-ÒÑÍê³É")},{id:"CancelDis",desc:$g("ÉêÇë×´Ì¬-ÒÑ³·Ïú")},{id:"ANF",desc:$g("Ô¤Ô¼Î´Íê³É"),title:"¿ÉÔ¤Ô¼Êı´óÓÚ0µÄÉêÇëµ¥"}]
+	}
+	var myAry=[{id:"OPCheck",desc:$g("»¼ÕßÀàĞÍ-ÃÅ¼±Õï")},{id:"IPCheck",desc:$g("»¼ÕßÀàĞÍ-×¡Ôº")},{id:"ChkCurrLoc",desc:$g("±¾¿Æ¾ÍÕï»¼Õß")}]
+	OthChkConditionAry.push.apply(OthChkConditionAry,myAry);
+	$HUI.combobox("#ComboOtherChk", {
+		valueField: 'id',
+		textField: 'desc', 
+		editable:false,
+		multiple:true,
+		//rowStyle:'checkbox',
+		selectOnNavigation:false,
+		panelHeight:"auto",
+		data: OthChkConditionAry,
+		formatter: function(row){
+            var opts = $(this).combobox('options');
+            var value=row[opts.valueField];
+            var text=row[opts.textField];
+            var title=row.title;
+            if(row.selected==true){
+				var rhtml = text+"<span id='i"+value+"' class='icon icon-ok'></span>";
+			}else{
+				var rhtml = text+"<span id='i"+value+"' class='icon'></span>";
+			}
+            if(value=='ANF'){
+                return '<div title='+title+'>'+rhtml+'<\/div>';    
+            }else{
+	            return rhtml;
+	        }
+		},
+		onChange:function(newval,oldval){
+			$(this).combobox("panel").find('.icon').removeClass('icon-ok');
+			for (var i=0;i<newval.length;i++){
+				$(this).combobox("panel").find('#i'+newval[i]).addClass('icon-ok');
+			}
+		}
+	});
+}
+
+/**
+	@µ¥ÉêÇëµ¥Ô¤Ô¼Ä£Ê½
+	@	Ò³Ç©Õ¹Ê¾ÒµÎñ²Ù×÷ÁĞ±í²Ù×÷Ä£Ê½ÏÂÓĞĞ§
+	@	ÆôÓÃºóÖÎÁÆÔ¤Ô¼½çÃæÔ¤Ô¼Ê±±¾´ÎÔ¤Ô¼³É¹¦ºóÈôÈÔ´æÔÚ¿ÉÔ¤Ô¼µÄÊıÁ¿£¬Ôò¿Éµ¯³öÈÕÆÚÑ¡Ôñ¿ò¼ÌĞø°´ÕÕ±¾´ÎÔ¤Ô¼µÄ×ÊÔ´¡¢Ê±¶Î¡¢·şÎñ×é½øĞĞÔ¤Ô¼£¬µ«ÉêÇëµ¥Ö»ÄÜµ¥Ñ¡Ò»Ìõ¼ÇÂ¼.
+*/
+function InitSingleAppointMode(){
+	if(ServerObj.LayoutConfig=="1"){
+		var SingleAppointMode="0";
+		if(ServerObj.UIConfigObj!=""){
+			var data = eval('(' + ServerObj.UIConfigObj + ')');
+			if ((!data['DocCure_SingleAppointMode'])||(data['DocCure_SingleAppointMode']=="")){
+				SingleAppointMode="0";
+			}else{
+				SingleAppointMode=data['DocCure_SingleAppointMode'];
+			}
+		}
+		PageAppListAllObj.m_CureSingleAppoint=SingleAppointMode;
 	}
 }
+
+function ClearHandle(){
+	//InitCardType();
+	$('.search-table input[class*="validatebox"]').val("");
+	$('.search-table input[type="checkbox"]').checkbox('uncheck');
+	$("#StartDate,#EndDate").datebox("setValue","");	
+	PageAppListAllObj.m_SelectArcimID=""; 
+	$("#ComboArcim").lookup('setText','');
+	$("#ComboOrderLoc,#ComboOrderDoc,#PatCondition").combobox('select','');
+	$("#ComboOtherChk").combobox('setValues','');
+	$("#StartDate").datebox('setValue',ServerObj.CurrentDate);	
+	$("#EndDate").datebox('setValue',ServerObj.CurrentDate);	
+}
+
+function LoadCurePatientDataGridData(GridData){
+	var originalRows=GridData.originalRows;	
+	var len=originalRows.length;
+	var PatLen=0;
+	var PatArray=[];
+	var Ids=[];
+	for(var i=0;i<len;i++){
+		var originalRow=originalRows[i];
+		var PatientID=originalRow.PatientID;
+		var PatientName=originalRow.PatName;
+		var PatientNo=originalRow.PatNo;
+		var PatOther=originalRow.PatOther;
+		var PatOtherArr=PatOther.split("|")
+		PatOtherArr.pop();
+		var PatOther=PatOtherArr.join(" ");
+		var mobj={
+			PatientID:PatientID,
+			PatientName:PatientName,
+			PatientNo:PatientNo,
+			PatOther:PatOther	
+		}
+		if(Ids.indexOf(PatientID)<0){
+			PatArray.push(mobj);
+			Ids.push(PatientID);
+			PatLen++;
+		}
+	}
+	
+	var dataobj={
+		rows:[],
+		total:0,
+		curPage:1	
+	}
+	dataobj.total=PatLen;
+	dataobj.rows=PatArray;
+	PageAppListAllObj.m_CurePatientDataGrid.datagrid('clearSelections').datagrid({loadFilter:pagerFilter}).datagrid('loadData',dataobj); 
+}
+
 function InitCureApplyDataGrid()
 {
 	// Toolbar
 	if(ServerObj.myTriage=="Y"){
-		var fitcolumnval=true;
 		var cureApplyToolBar = [{
-		id:'BtnDetailView',
-			text:'ç”³è¯·å•æµè§ˆ', 
-			iconCls:'icon-funnel-eye',  
-			handler:function(){
-				OpenApplyDetailDiag();
-			}
-		}
-		];	
-	}else{
-		var fitcolumnval=false;
-		var cureApplyToolBar = [/*{
-			id:'BtnCall',
-			text:'å«å·',
-			iconCls:'icon-add',
-			handler:function(){
-				FormMatterPatName();		 
-			}
-		},'-',*/{
 			id:'BtnDetailView',
-			text:'ç”³è¯·å•æµè§ˆ', 
+			text:'ÉêÇëµ¥ä¯ÀÀ', 
+			iconCls:'icon-eye',  
+			handler:function(){
+				OpenApplyDetailDiag();
+				}
+			}
+		];
+		if((ServerObj.LayoutConfig=="2")&&(ServerObj.DocCureUseBase=="0")){
+			cureApplyToolBar.push("-");
+			cureApplyToolBar.push({
+				id:'Apply_TriageReslist',
+				text:'·ÖÅä', 
+				iconCls:'icon-book',  
+				handler:function(){
+					Apply_Click("Apply_TriageReslist");
+				}
+			})
+			cureApplyToolBar.push({
+				id:'Apply_Triagelist',
+				text:'·ÖÅäÁĞ±í', 
+				iconCls:'icon-sample-stat',  
+				handler:function(){
+					Apply_Click("Apply_Triagelist");
+				}
+			})
+		}
+	}else{
+		var cureApplyToolBar = [{
+			id:'BtnCall',
+			text:'½ĞºÅ',
+			iconCls:'icon-ring-blue',
+			handler:function(){
+				DHCDocCure_CureCall.CureCallHandle(CureApplyDataGrid,CureApplyDataGridLoad);
+			}
+		},{
+			id:'BtnPass',
+			text:'¹ıºÅ',
+			iconCls:'icon-skip-no',
+			handler:function(){
+				DHCDocCure_CureCall.SkipCallHandle(CureApplyDataGrid,CureApplyDataGridLoad);		 
+			}
+		},'-',{
+			id:'BtnDetailView',
+			text:'ÉêÇëµ¥ä¯ÀÀ', 
 			iconCls:'icon-funnel-eye',  
 			handler:function(){
 				OpenApplyDetailDiag();
 			}
-		}/*
-		//æ‰§è¡Œæ”¹ä¸ºä¸‹æ–¹é¡µç­¾ï¼Œä¸åœ¨æŒ‰é’®å¼¹å‡º
-		,"-",{
-			id:'btnExecOrd',
-			text:'æ‰§è¡Œ', 
-			iconCls:'icon-exe-order',  
-			handler:function(){
-				//ExecOrdClick();
-			}
-		}*/,"-",{
+		}/*,"-",{
 			id:'BtnFinish',
-			text:'å®Œæˆç”³è¯·å•', 
+			text:'Íê³ÉÉêÇëµ¥', 
 			iconCls:'icon-ok',  
 			handler:function(){
 				FinishApplyClick("F");
 			}
 		},{
 			id:'BtnFinish',
-			text:'æ’¤é”€å®Œæˆç”³è¯·å•', 
+			text:'³·ÏúÍê³ÉÉêÇëµ¥', 
 			iconCls:'icon-cancel',  
 			handler:function(){
 				FinishApplyClick("CF");
 			}
-		},"-",{
-			id:'BtnAssessment',
-			text:'æ²»ç–—è¯„ä¼°', 
-			iconCls:'icon-paper-table',  
+		},'-'*/,{
+			id:'AddOrderBtn',
+			text:'·ÑÓÃ²¹Â¼', 
+			iconCls:'icon-write-order',  
 			handler:function(){
-				UpdateAssessment();
+				AddOrderClick();
 			}
+		}];
+		
+		if(ServerObj.LayoutConfig=="2"){
+			cureApplyToolBar.push("-");
+			cureApplyToolBar.push({
+				id:'Apply_Execlist',
+				text:'Ö±½ÓÖ´ĞĞ', 
+				iconCls:'icon-mutpaper-tri',  
+				handler:function(){
+					Apply_Click("Apply_Execlist");
+				}
+			})
+			if(ServerObj.DocCureUseBase=="0" && ServerObj.CureAppVersion=="V1"){
+				cureApplyToolBar.push({
+					id:'Apply_Reslist',
+					text:'Ô¤Ô¼', 
+					iconCls:'icon-book',  
+					handler:function(){
+						Apply_Click("Apply_Reslist");
+					}
+				})
+			}
+			cureApplyToolBar.push({
+				id:'Apply_Asslist',
+				text:'ÖÎÁÆÆÀ¹À', 
+				iconCls:'icon-paper-table',  
+				handler:function(){
+					Apply_Click("Apply_Asslist");
+				}
+			})
 		}
-		];
+	}
+	var hiddenColumn=false;
+	if((ServerObj.myTriage=="Y")||(ServerObj.DocCureUseBase=="1")||(ServerObj.CureAppVersion!="V1")){
+		hiddenColumn=true;	
 	}
 	var cureApplyColumn=[[ 
-		{field:'RowCheck',checkbox:true},     
-		{field:'ApplyNo',title:'ç”³è¯·å•å·',width:110,align:'left', resizable: true},  
-		{field:'ServiceGroup',title:'æœåŠ¡ç»„',width:80,align:'left', resizable: true}, 
-		{ field: 'ApplyExec', title: 'æ˜¯å¦å¯é¢„çº¦', width: 80, align: 'left',resizable: true,hidden:(ServerObj.myTriage=="Y")?true:false
-			,styler: function(value,row,index){
-				if (value.indexOf("ç›´æ¥æ‰§è¡Œ")>=0){
-					return 'color:#FF6347;';
+		{field:'ServiceGroup',title:'·şÎñ×é',width:88,align:'left', resizable: true}, 
+		{field:'PatOther',title:'»¼ÕßÆäËûĞÅÏ¢',width:200,align:'left'},
+		{field:'OrdOtherInfo',title:'Ò½ÖöÆäËûĞÅÏ¢',width:150,align:'left',
+			formatter: function (value, rowData, rowIndex) {
+				if(value==""){
+					value = $g("Ò½ÖöÃ÷Ï¸ĞÅÏ¢");
+				}
+				return "<a href='javascript:void(0)' title='"+$g("Ò½ÖöÃ÷Ï¸ĞÅÏ¢")+"'  onclick='com_openwin.ordDetailInfoShow(\""+rowData.OrderId+"\")'>"+value+"</a>";
+			}
+		}, 
+		{field:'OrdBilled',title:'ÊÇ·ñ½É·Ñ',width:80,align:'left', resizable: true,
+			formatter:function(value,row,index){
+				if (value == $g("·ñ")){
+					return "<span class='fillspan-nobilled'>"+value+"</span>";
+				}else{
+					return "<span class='fillspan'>"+value+"</span>";
 				}
 			}
 		},
-		{field:'PatNo',title:'ç™»è®°å·',width:100,align:'left', resizable: true},   
-		{field:'PatName',title:'å§“å',width:60,align:'left', resizable: true
-		},   
-		{field:'PatOther',title:'æ‚£è€…å…¶ä»–ä¿¡æ¯',width:200,align:'left', resizable: true},
-		{field:'ArcimDesc',title:'æ²»ç–—é¡¹ç›®',width:200,align:'left', resizable: true},
-		{field:'OrdOtherInfo',title:'åŒ»å˜±å…¶ä»–ä¿¡æ¯',width:150,align:'left', resizable: true}, 
-		{field:'OrdBilled',title:'æ˜¯å¦ç¼´è´¹',width:70,align:'left', resizable: true,
-			styler: function(value,row,index){
-				if (value == "å¦"){
-					return 'background-color:#ffee00;color:red;';
+		{field:'OrdQty',title:'ÊıÁ¿',width:60,align:'left', resizable: true}, 
+		{field:'OrdBillUOM',title:'µ¥Î»',width:60,align:'left', resizable: true}, 
+		{field:'OrdUnitPrice',title:'µ¥¼Û',width:60,align:'left', resizable: true}, 
+		{field:'OrdPrice',title:'×Ü½ğ¶î',width:60,align:'left', resizable: true}, 
+		{field:'ApplyNoAppTimes',title:'Î´Ô¤Ô¼ÊıÁ¿',width:80,align:'left', resizable: true,hidden:hiddenColumn
+			,formatter:function(value,row,index){
+				var NumVal=Number(value);
+				if ((NumVal == 0 ||typeof NumVal != 'number' || isNaN(NumVal))) {
+					return "<span>"+value+"</span>";
+				}else {
+					return '<a href="javascript:void(0)" id= "'+row["DCARowId"]+'"'+' onclick=ShowAppSchedule('+row.DCARowId+','+row.ServiceGroupID+');>'+"<span class='fillspan-nosave'>"+value+"</span>"+"</a>"
 				}
 			}
 		},
-		{field:'OrdQty',title:'æ•°é‡',width:50,align:'left', resizable: true}, 
-		{field:'OrdBillUOM',title:'å•ä½',width:50,align:'left', resizable: true}, 
-		{field:'OrdUnitPrice',title:'å•ä»·',width:50,align:'left', resizable: true}, 
-		{field:'OrdPrice',title:'æ€»é‡‘é¢',width:60,align:'left', resizable: true}, 
-		{field:'ApplyAppedTimes',title:'å·²é¢„çº¦æ¬¡æ•°',width:80,align:'left', resizable: true,hidden:((ServerObj.myTriage=="Y")||(ServerObj.DocCureUseBase=="1"))?true:false},
-		{field:'ApplyNoAppTimes',title:'æœªé¢„çº¦æ¬¡æ•°',width:80,align:'left', resizable: true,hidden:((ServerObj.myTriage=="Y")||(ServerObj.DocCureUseBase=="1"))?true:false},
-		{field:'ApplyFinishTimes',title:'å·²æ²»ç–—æ¬¡æ•°',width:80,align:'left', resizable: true,hidden:((ServerObj.myTriage=="Y")||(ServerObj.DocCureUseBase=="1"))?true:false},
-		{field:'ApplyNoFinishTimes',title:'æœªæ²»ç–—æ¬¡æ•°',width:80,align:'left', resizable: true,hidden:((ServerObj.myTriage=="Y")||(ServerObj.DocCureUseBase=="1"))?true:false},
-		{field:'OrdReLoc',title:'æ¥æ”¶ç§‘å®¤',width:80,align:'left', resizable: true},   
-		{field:'HistoryTriRes',title:'ä¸Šæ¬¡åˆ†é…',width:80,align:'left', resizable: true,hidden:(ServerObj.myTriage=="Y")?false:true},
-		{field:'ApplyStatus',title:'ç”³è¯·çŠ¶æ€',width:80,align:'left', resizable: true},
+		{field:'ApplyAppedTimes',title:'ÒÑÔ¤Ô¼ÊıÁ¿',width:80,align:'left', resizable: true,hidden:hiddenColumn},
+		{field:'ApplyFinishTimes',title:'ÒÑÖÎÁÆÊıÁ¿',width:80,align:'left', resizable: true,hidden:((ServerObj.myTriage=="Y")||(ServerObj.DocCureUseBase=="1"))?true:false},
+		{field:'ApplyNoFinishTimes',title:'Î´ÖÎÁÆÊıÁ¿',width:80,align:'left', resizable: true,hidden:((ServerObj.myTriage=="Y")||(ServerObj.DocCureUseBase=="1"))?true:false},
+		{field:'CallStatus', title: 'ºô½Ğ×´Ì¬', width: 80, align: 'left',resizable: true,hidden:((ServerObj.myTriage=="Y")||(ServerObj.DocCureUseBase=="1"))?true:false}, 
+		{field:'OrdReLoc',title:'½ÓÊÕ¿ÆÊÒ',width:120,align:'left', resizable: true},   
+		{field:'HistoryTriRes',title:'ÉÏ´Î·ÖÅä',width:100,align:'left', resizable: true,hidden:(ServerObj.myTriage=="Y")?false:true},
+		{field:'ApplyStatus',title:'ÉêÇë×´Ì¬',width:80,align:'left', resizable: true},
 		{field:'ApplyStatusCode',title:'ApplyStatusCode',width:80,align:'left', resizable: true,hidden:true},
-		{field:'ApplyUser',title:'ç”³è¯·åŒ»ç”Ÿ',width:80,align:'left', resizable: true},
-		{field:'ApplyDateTime',title:'ç”³è¯·æ—¶é—´',width:80,align:'left', resizable: true},
-		//{field:'ServiceGroup',title:'æœåŠ¡ç»„',width:30,align:'left',hidden:(HiddenLoc.indexOf(session['LOGON.CTLOCID'])<0)?true:false}, //HiddenLoc.indexOf(session['LOGON.CTLOCID'])
-		//{ field: 'CallStatus', title: 'å‘¼å«çŠ¶æ€', width: 30, align: 'left',resizable: true},
-		{field:'ServiceGroupID',title:'æœåŠ¡ç»„id',width:80,align:'left',hidden:true},
-		{field:'ControlFlag',title:'',width:10,align:'left',hidden:true},
-		{field:'OrdFreqCode',title:'åŒ»å˜±é¢‘æ¬¡',width:50,align:'left',hidden:true},
-		{field:'OrdStatusCode',title:'åŒ»å˜±çŠ¶æ€',width:50,align:'left',hidden:true},
+		{field:'ApplyUser',title:'ÉêÇëÒ½Éú',width:100,align:'left', resizable: true},
+		{field:'ApplyDateTime',title:'ÉêÇëÊ±¼ä',width:120,align:'left', resizable: true},
+		//{field:'ServiceGroup',title:'·şÎñ×é',width:30,align:'left',hidden:(HiddenLoc.indexOf(session['LOGON.CTLOCID'])<0)?true:false}, //HiddenLoc.indexOf(session['LOGON.CTLOCID'])
+		{field:'ServiceGroupID',title:'·şÎñ×éid',width:80,align:'left',hidden:true},
+		{field:'ApplyExecFlag',title:'',width:10,align:'left',hidden:true},
+		{field:'OrdFreqCode',title:'Ò½ÖöÆµ´Î',width:50,align:'left',hidden:true},
+		{field:'OrdStatusCode',title:'Ò½Öö×´Ì¬',width:50,align:'left',hidden:true},
 		{field:'OrderId',title:'OrderId',width:50,align:'left',hidden:true},
+		{field:'DCAAdmID',title:'DCAAdmID',width:50,align:'left',hidden:true},
+		{field:'PatientID',title:'PatientID',width:50,align:'left',hidden:true},
 		{field:'DCARowId',title:'DCARowId',width:30,hidden:true}  	
 			   
 	 ]]
-	var mypageSize=5;
-	if(ServerObj.DocCureUseBase==1){
-    	mypageSize=10;
-    	var fitcolumnval=true;
+	var mypageSize=10;
+	if(ServerObj.LayoutConfig=="2"){
+    	mypageSize=20;
     }
-	// æ²»ç–—è®°å½•ç”³è¯·å•Grid
+	// ÖÎÁÆ¼ÇÂ¼ÉêÇëµ¥Grid
 	CureApplyDataGrid=$('#tabCureApplyList').datagrid({  
 		fit : true,
 		width : 'auto',
@@ -300,67 +470,145 @@ function InitCureApplyDataGrid()
 		striped : true,
 		singleSelect : false,
 		checkOnSelect:true,
-		fitColumns : fitcolumnval,
+		fitColumns : false,
 		autoRowHeight : false,
 		nowrap: false,
 		collapsible:false,
 		url : '',
-		loadMsg : 'åŠ è½½ä¸­..',  
-		pagination : true,  //
-		rownumbers : true,  //
+		loadMsg : '¼ÓÔØÖĞ..',  
+		pagination : true,
+		rownumbers : true,
 		idField:"DCARowId",
-		//pageNumber:0,
 		pageSize : mypageSize,
-		pageList : [5,10,50,100],
-		//frozenColumns : FrozenCateColumns,
+		pageList : [5,10,20,50],
+		frozenColumns : [
+			[
+				{field:'RowCheck',checkbox:true},     
+				{field:'ApplyNo',title:'ÉêÇëµ¥ºÅ',width:110,align:'left', resizable: true},  
+				{ field: 'ApplyExec', title: 'ÊÇ·ñ¿ÉÔ¤Ô¼', width: 80, align: 'left',resizable: true,hidden:(ServerObj.myTriage=="Y")?true:false
+					,formatter:function(value,row,index){
+						if (row.ApplyExecFlag=="Y"){
+							return "<span class='fillspan-exec'>"+value+"</span>";
+						}else {
+							return "<span class='fillspan-app'>"+value+"</span>";
+						}
+					}
+				},
+				{field:'PatNo',title:'µÇ¼ÇºÅ',width:100,align:'left', resizable: true},   
+				{field:'PatName',title:'ĞÕÃû',width:60,align:'left', resizable: true},   
+				{field:'ArcimDesc',title:'ÖÎÁÆÏîÄ¿',width:200,align:'left', resizable: true,
+					formatter: function (value, rowData, rowIndex) {
+						var retStr=value;
+						if(value!=""){
+							retStr = "<a href='#' title='"+$g("Ò½Öö¼°°ó¶¨ĞÅÏ¢")+"'  onclick='com_openwin.applyAppenditemShow(\""+rowData.OrderId+"\")'>"+value+"</a>"
+						}
+						return retStr;
+					}
+				}
+			]
+		],
 		columns : cureApplyColumn,
     	toolbar : cureApplyToolBar,
 		onClickRow:function(rowIndex, rowData){
 			var msg=true;
-			var ret=CheckSelectedRow(rowIndex, rowData,msg);
+			var ret=true;
+			if(ServerObj.LayoutConfig=="1"){
+				ret=CheckSelectedRow(rowIndex, rowData,msg);
+			}
 			if(ret){
 				loadTabData();
+                //Õ¹Ê¾¸±ÆÁÊı¾İ
+				if (PageAppListAllObj.MainSreenFlag==0){
+					var DCARowId=rowData["DCARowId"];
+			        if (DCARowId==""){
+			        	var Obj={PatientID:rowData.PatientID,EpisodeID:rowData.DCAAdmID,mradm:"",PageShowFromWay:"ApplyEntry"};
+						websys_emit("onOpenCureInterface",Obj);
+						return;
+			        }
+				    var Obj={DCARowId:DCARowId,EpisodeID:rowData["DCAAdmID"]};
+					websys_emit("onOpenCureAppInfo",Obj);
+				}
+			}
+		},
+        onDblClickRow: function(index,row) {
+			var DCARowId=row["DCARowId"];
+			if (DCARowId=="") return;
+	        if (PageAppListAllObj.MainSreenFlag==0){
+			    var Obj={DCARowId:DCARowId,EpisodeID:row["DCAAdmID"]};
+				websys_emit("onOpenCureAppInfo",Obj);
 			}
 		},
 		onRowContextMenu:function(e, rowIndex, rowData){
 			ShowGridRightMenu(e,rowIndex, rowData,"Ord");
 		},
 		onCheck:function(rowIndex, rowData){
-			var msg=false;
-			var ret=CheckSelectedRow(rowIndex, rowData);
+			var ret=true;
+			if(ServerObj.LayoutConfig=="1"){
+				ret=CheckSelectedRow(rowIndex, rowData);
+			}
 			if(ret){
 				loadTabData();
 			}
+		},onCheckAll:function(rows){
+			var load=true;
+			if(ServerObj.LayoutConfig=="1"){
+				for(var index=0;index<rows.length;index++){
+					var ret=CheckSelectedRow(index, rows[index]);
+					if(!ret){
+						load=false;
+						break;	
+					}
+				}
+			}
+			if(load){
+				loadTabData();
+			}else{
+				$(this).datagrid("uncheckAll").datagrid("unselectAll");
+			}
+		},onUncheckAll:function(rows){
+			loadTabData();
 		},
 		onUncheck:function(rowIndex, rowData){
 			loadTabData();
 		},
-		rowStyler:function(index,row){   
-	        if (row.CallStatus=="æ­£åœ¨å‘¼å«"){   
-	            return 'background-color:green;';   
-	        }   
+		rowStyler:function(index,row){ 
+			if(ServerObj.myTriage!="Y"){  
+		        if (row.CallStatus=="ÕıÔÚºô½Ğ"){   
+		            return 'background-color: #21ba45 !important;color:#fff !important;'; //#00DC00
+		        }else if (row.CallStatus=="¹ıºÅ"){   
+		            return 'background-color: #d2eafe  !important;color:#000 !important;';
+		        }   
+			}else{
+				return "";	
+			}
 	    },
-	    onLoadSuccess: function () {   //éšè—è¡¨å¤´çš„checkbox
-	    	$("#btnExecOrd").linkbutton("disable")
-            $(this).parent().find("div .datagrid-header-check")
-                .children("input[type=\"checkbox\"]").eq(0)
-                .attr("style", "display:none;");
+	    onLoadSuccess: function () {   //Òş²Ø±íÍ·µÄcheckbox
+            //var headchkobj=$(this).parent().find("div .datagrid-header-check")
+            //    .children("input[type=\"checkbox\"]").eq(0);
+            //headchkobj.attr("style", "display:none;");
+            if(ServerObj.DHCDocCureUseCall==0){
+				$("#BtnCall,#BtnPass").linkbutton("disable");
+			}
         },onSelect:function(index, row){
 			var frm=dhcsys_getmenuform();
 			if (frm){
-				var DCARowId=row["DCARowId"];
-				var Info=$.cm({
-					ClassName:"DHCDoc.DHCDocCure.Common",
-					MethodName:"GetPatAdmIDByDCA",
-					DCARowId:DCARowId,
-					dataType:"text"
-				},false); 
-				if(Info!=""){
-					var PatientID=Info.split("^")[1];
-					var EpisodeID=Info.split("^")[0]
-					frm.PatientID.value=PatientID;
-					frm.EpisodeID.value=EpisodeID;
+				var DCARowId=row.DCARowId;
+				var EpisodeID=row.DCAAdmID;
+				var PatientID=row.PatientID;
+				if(EpisodeID==""){
+					var Info=$.cm({
+						ClassName:"DHCDoc.DHCDocCure.Common",
+						MethodName:"GetPatAdmIDByDCA",
+						DCARowId:DCARowId,
+						dataType:"text"
+					},false); 
+					if(Info!=""){
+						PatientID=Info.split("^")[1];
+						EpisodeID=Info.split("^")[0]
+					}
 				}
+				frm.PatientID.value=PatientID;
+				frm.EpisodeID.value=EpisodeID;
 			}
 		},
 		onBeforeSelect:function(index, row){
@@ -377,83 +625,106 @@ function InitCureApplyDataGrid()
 			}
             } 
 	});
-	$('#tabs').tabs({
-       onSelect: function(title,index){
-	     loadTabData()
-       }
-    });
 
 }
- 
-function CheckSelectedRow(rowIndex, rowData,msg){
-	var tabsObj=GetSelTabsObj();
-	if(tabsObj.index==0){
+
+/**
+	@¼ì²âĞĞÊı¾İÑ¡Ôñ£º
+	@Ô¤Ô¼¡¢·ÖÅäÊ±ÏŞÖÆÃ¿´ÎÑ¡ÔñÏàÍ¬·şÎñ×é¡¢½ÓÊÕ¿ÆÊÒµÄÉêÇëµ¥
+	@µ¥ÉêÇëµ¥Ô¤Ô¼Ä£Ê½ÏÂ£¬Ñ¡ÔñÔ¤Ô¼Ò³Ç©,µ¥ÉêÇëÔ¤Ô¼Ä£Ê½ÏÂ½«datagridĞĞÑ¡Ôñ¸ÄÎªµ¥Ñ¡Ä£Ê½
+	@µ¥ÉêÇëµ¥Ô¤Ô¼Ä£Ê½ÏÂ£¬´ÓÆäËûÒ³Ç©¶àÑ¡ÁËÉêÇëµ¥¼ÇÂ¼ºó£¬ÇĞµ½Ô¤Ô¼Ò³Ç©Ê±£¬×Ô¶¯È¡Ïû¹´Ñ¡³ıµÚÒ»Ìõ¼ÇÂ¼µÄÆäËû¼ÇÂ¼CheckSelectRow·½·¨ÖĞÊµÏÖ
+	@Input:
+		rowIndex µ±Ç°Ñ¡ÔñĞĞË÷Òı
+		rowData  µ±Ç°Ñ¡ÔñĞĞµÄ¼ÇÂ¼
+		noMsgTip ÊÇ·ñµ¯´°ÌáÊ¾ trueµ¯´°ÌáÊ¾
+		tabTitle Ñ¡ÔñµÄÒ³Ç©,Î´´«ÔòÈ¡tabs getSelectedµÄÒ³Ç©
+*/
+function CheckSelectedRow(rowIndex, rowData,noMsgTip,tabTitle){
+	if(typeof(tabTitle)=="undefined"){tabTitle=""}
+	if(tabTitle==""){
+		var tabsObj=GetSelTabsObj();
+		tabTitle=tabsObj.title;
+	}
+	
+	var opts=CureApplyDataGrid.datagrid("options");
+	if(tabTitle=="Ô¤Ô¼"){
+		//Ñ¡ÔñÔ¤Ô¼Ò³Ç©,µ¥ÉêÇëÔ¤Ô¼Ä£Ê½ÏÂ½«datagridĞĞÑ¡Ôñ¸ÄÎªµ¥Ñ¡Ä£Ê½
+		if(PageAppListAllObj.m_CureSingleAppoint=="1"){
+			if(!opts.singleSelect){
+				opts.singleSelect=true;
+			}
+		}else{
+			if(opts.singleSelect){
+				opts.singleSelect=false;
+			}
+		}
+	}else{
+		if(opts.singleSelect){
+			opts.singleSelect=false;
+		}
+	}
+	
+	if(PageAppListAllObj.m_SameServiceGroup.indexOf(tabTitle)==-1){
 		return true;	
 	}
-	var selected=CureApplyDataGrid.datagrid('getRows'); 
-	var SelServiceGroup=selected[rowIndex].ServiceGroup;
-	var SelOrdReLocId=selected[rowIndex].OrdReLocId;
+	
+	var SelServiceGroup=rowData.ServiceGroup;
+	var SelOrdReLocId=rowData.OrdReLocId;
+	var ApplyExec=rowData.ApplyExec;
 	var rows = CureApplyDataGrid.datagrid("getSelections");
-	var ApplyExec=selected[rowIndex].ApplyExec;
 	var length=rows.length;
-	var finflag=0;
+	var findFlag=0;
 	for(var i=0;i<length;i++){
 		var MyServiceGroup="";
 		var MyServiceGroup=rows[i].ServiceGroup;
 		var MyOrdReLocId=rows[i].OrdReLocId;
 		if ((SelServiceGroup!=MyServiceGroup)||(SelOrdReLocId!=MyOrdReLocId)){
-			if(!msg){
-				$.messager.alert("æç¤º","ä¸€æ¬¡é€‰æ‹©åªèƒ½é€‰ä¸­ç›¸åŒæœåŠ¡ç»„å’Œæ¥æ”¶ç§‘å®¤çš„ç”³è¯·å•ï¼",'err')
+			if(!noMsgTip){
+				$.messager.alert("ÌáÊ¾","ÊÜ"+tabTitle+"Ê±½öÏŞÏàÍ¬·şÎñ×éÏŞÖÆ,Ò»´ÎÑ¡ÔñÖ»ÄÜÑ¡ÖĞÏàÍ¬·şÎñ×éºÍ½ÓÊÕ¿ÆÊÒµÄÉêÇëµ¥£¬ÇëÖØĞÂÑ¡Ôñ£¡",'warning')
 			}
 			CureApplyDataGrid.datagrid("uncheckRow",rowIndex);
 			CureApplyDataGrid.datagrid("unselectRow",rowIndex);
-			finflag=1;
+			findFlag=1;
 			break;		
 		}
 	}
-	if(finflag==1)return false;
+	if(findFlag==1)return false;
 	return true;
 }
 
-function loadTabData()
-{
+function loadTabData() {
 	var rows = CureApplyDataGrid.datagrid("getSelections");
-	var DCARowId="";
+	var idAry=[];
 	var DCARowIdStr="";
 	var OrdReLocId="";
-	var ControlVal=0;
 	for(var i=0;i<rows.length;i++){
-		var DCARowIds=rows[i].DCARowId;
-		var ApplyExec=rows[i].ApplyExec;
-		var Billed=rows[i].OrdBilled;
-		//var ControlVal=rows[i].ControlFlag;
-		if(rows[i].ControlFlag==1){
-			ControlVal=1;	
-		}
-		if(DCARowIdStr==""){
-			DCARowIdStr=DCARowIds;
-		}else{
-			DCARowIdStr=DCARowIdStr+"!"+DCARowIds;
-		}
+		idAry.push(rows[i].DCARowId);
 		OrdReLocId=rows[i].OrdReLocId;
 	}
-	if(ControlVal==1){
-		ControlButton(false);
-	}else{
-		ControlButton(true);	
-	}
+	DCARowIdStr=idAry.join("!");
 	PageAppListAllObj._SELECT_DCAROWID=DCARowIdStr;
 	PageAppListAllObj._SELECT_DCARecLOCROWID=OrdReLocId;
-	// æ›´æ–°é€‰æ‹©çš„é¢æ¿çš„æ–°æ ‡é¢˜å’Œå†…å®¹
-	var title = $('.tabs-selected').text();
-	var seltab = $('#tabs').tabs('getSelected');
-	setTimeout(function(){DataGridLoad(title);},100)
+	if(ServerObj.LayoutConfig=="1"){
+		clearTimeout(PageAppListAllObj.m_LoadTabTimer);
+		if(PageAppListAllObj.m_NotReloadAppDataGrid!="Y"){
+			var tabsObj=GetSelTabsObj();
+			PageAppListAllObj.m_LoadTabTimer=setTimeout(function(){
+				DataGridLoad(tabsObj.title);
+			},100)
+		}else{
+			if($("#Apply_Reslist").length>0){
+				PageAppListAllObj.m_LoadTabTimer=setTimeout(function(){
+					DataGridLoad("Ô¤Ô¼ÁĞ±í");
+				},100)
+			}
+		}
+	}
 }
 
 function GetSelTabsObj(){
 	var tabsObj={};
-	var title = $('.tabs-selected').text();
 	var seltab = $('#tabs').tabs('getSelected');
+	var title = seltab.panel('options').title;
 	var index = $('#tabs').tabs('getTabIndex',seltab);
 	tabsObj={
 		title:title,
@@ -462,50 +733,83 @@ function GetSelTabsObj(){
 	return tabsObj
 }
 
-function CureApplyDataGridLoad()
+function EventApplyDataGridLoad(){
+	$("#StartDate,#EndDate").datebox('setValue',"");	
+	CureApplyDataGridLoad();
+}
+
+function CureApplyDataGridLoad(NotClearFlag,PreDCAIDArr,CallBackFun,argObj)
 {
+	var mArgObj=$.extend({
+			NotReloadPatData:""
+	},argObj);
 	var tabsobj=GetSelTabsObj()
 	var ExecFlag="N";
-	if(tabsobj.index==0){
+	if(tabsobj.title=="Ö±½ÓÖ´ĞĞ"){
 		ExecFlag="Y";
+		if(ServerObj.DHCDocCureAppointAllowExec==1){
+			ExecFlag="";
+		}
 	}
-	if(ServerObj.DHCDocCureAppQryNotWithTab==1){
+	if((tabsobj.title=="ÖÎÁÆÆÀ¹À")||(ServerObj.DHCDocCureAppQryNotWithTab==1)){
 		ExecFlag="";
 	}
+	
+	PageAppListAllObj.m_PrePageNumber="";
+	PageAppListAllObj.m_NotReloadAppDataGrid="";
+	if(NotClearFlag=="Y"){
+		var pageopt=CureApplyDataGrid.datagrid('getPager').data("pagination").options;
+		PageAppListAllObj.m_PrePageNumber=pageopt.pageNumber;
+		PageAppListAllObj.m_NotReloadAppDataGrid="Y";
+	}else{
+		PageAppListAllObj._SELECT_DCAROWID="";
+		PageAppListAllObj._SELECT_DCARecLOCROWID="";	
+	}
+	CureApplyDataGrid.datagrid("clearSelections").datagrid("clearChecked");
 	var PatientID=$("#PatientID").val();
-	var patName=$("#patName").val()
+	//var patName=$("#patName").val()
 	var StartDate=$("#StartDate").datebox("getValue");
 	var EndDate=$("#EndDate").datebox("getValue");
 	var TriageFlag=ServerObj.myTriage;
 	var ApplyNo=$("#ApplyNo").val()
-	
-	var DisCancelFlag="";
-	var FinishDisFlag="";
-	var LongOrdPriorityFlag="";
-	if(TriageFlag=="Y"){
-		var Distributed=$HUI.checkbox("#Distributed").getValue()
-		if (Distributed){DisCancelFlag="Y"}
-		var ALLDis=$HUI.checkbox("#ALLDis").getValue()
-		if (ALLDis){FinishDisFlag="Y"}
-	}else{
-		var CancelDis=$HUI.checkbox("#CancelDis").getValue()
-		if (CancelDis){DisCancelFlag="Y"}
-		var FinishDis=$HUI.checkbox("#FinishDis").getValue()
-		if (FinishDis){FinishDisFlag="Y"}
-		var LongOrdPriority=$HUI.checkbox("#LongOrdPriority").getValue()
-		if (LongOrdPriority){LongOrdPriorityFlag="Y"}
-	}
-	var CheckAdmType="";
-	var OPCheckObj=$HUI.checkbox("#OPCheck").getValue()
-	if (OPCheckObj){CheckAdmType="O"};
-	var IPCheckObj=$HUI.checkbox("#IPCheck").getValue()
-	if (IPCheckObj){CheckAdmType="I"};
-	if ((OPCheckObj)&&(IPCheckObj)){CheckAdmType=""};
 	var gtext=$HUI.lookup("#ComboArcim").getText();
 	if (gtext=="")PageAppListAllObj.m_SelectArcimID="";
 	var queryArcim=PageAppListAllObj.m_SelectArcimID;
 	var queryOrderLoc=$("#ComboOrderLoc").combobox("getValue");
-	queryOrderLoc=CheckComboxSelData("ComboOrderLoc",queryOrderLoc);
+	queryOrderLoc=com_Util.CheckComboxSelData("ComboOrderLoc",queryOrderLoc);
+	var queryOrderDoc=$("#ComboOrderDoc").combobox("getValue");
+	queryOrderDoc=com_Util.CheckComboxSelData("ComboOrderDoc",queryOrderDoc);
+	
+	var PatName="",PatMedNo=""; 
+	var PatCondition=$("#PatCondition").combobox("getValue");
+	var PatConditionVal=$("#PatConditionVal").val();
+	if(PatCondition=="PatName"){
+		PatName=PatConditionVal;
+	}else if(PatCondition=="PatMedNo"){
+		PatMedNo=PatConditionVal;
+	}
+	var SortType="A"; //Ä¬ÈÏÊ±¼äÕıĞò
+	var chkRadioJObj = $("input[name='SortType']:checked");
+	if(chkRadioJObj.length>0){SortType=chkRadioJObj.val();}
+	var DisCancelFlag="",FinishDisFlag="",LongOrdPriorityFlag="",CheckAdmType="",ChkCurrLocFlag="";
+	var ANFFlag="";
+	if($("#ComboOtherChk").length>0){
+		var OtherChkAry=$("#ComboOtherChk").combobox("getValues");
+		if($.hisui.indexOfArray(OtherChkAry,"FinishDis")>-1){FinishDisFlag="Y"}
+		if($.hisui.indexOfArray(OtherChkAry,"CancelDis")>-1){DisCancelFlag="Y"}
+		if($.hisui.indexOfArray(OtherChkAry,"OPCheck")>-1){CheckAdmType="O"}
+		if($.hisui.indexOfArray(OtherChkAry,"IPCheck")>-1){CheckAdmType="I"}
+		if($.hisui.indexOfArray(OtherChkAry,"ChkCurrLoc")>-1){ChkCurrLocFlag="Y"}
+		if($.hisui.indexOfArray(OtherChkAry,"ANF")>-1){ANFFlag="Y"}
+		if($.hisui.indexOfArray(OtherChkAry,"OPCheck")>-1 && $.hisui.indexOfArray(OtherChkAry,"IPCheck")>-1){CheckAdmType=""}
+	}
+	if($("#LongOrdPriority").length>0){
+		var LongOrdPriority=$HUI.checkbox("#LongOrdPriority").getValue()
+		if (LongOrdPriority){LongOrdPriorityFlag="Y"}
+	}
+	
+	var QueryExpStr=session['LOGON.HOSPID']+"^"+ChkCurrLocFlag+"^"+queryOrderDoc+"^"+PatMedNo+"^"+SortType;
+	var QueryExpStr=QueryExpStr+"^^"+ANFFlag;
 	$.cm({
 		ClassName:"DHCDoc.DHCDocCure.Apply",
 		QueryName:"FindAllCureApplyListHUI",
@@ -514,7 +818,7 @@ function CureApplyDataGridLoad()
 		'EndDate':EndDate,
 		'outCancel':DisCancelFlag,
 		'FinishDis':FinishDisFlag,
-		'PatName':patName,
+		'PatName':PatName,
 		'TriageFlag':TriageFlag,
 		'LogLocID':session['LOGON.CTLOCID'],
 		'LogUserID':session['LOGON.USERID'],
@@ -524,17 +828,50 @@ function CureApplyDataGridLoad()
 		'queryArcim':queryArcim,
 		'queryOrderLoc':queryOrderLoc,
 		'ExecFlag':ExecFlag,
+		'queryExpStr':QueryExpStr,
 		Pagerows:CureApplyDataGrid.datagrid("options").pageSize,
 		rows:99999
 	},function(GridData){
 		CureApplyDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData); 
-		CureApplyDataGrid.datagrid("clearSelections");
-		CureApplyDataGrid.datagrid("clearChecked");	
+		if(mArgObj.NotReloadPatData!="Y"){
+			LoadCurePatientDataGridData(GridData);
+		}
+		if(NotClearFlag=="Y"){
+			if(typeof PreDCAIDArr!='undefined'){
+				SelectCheckPreDCA(PreDCAIDArr);
+			}
+			if(typeof CallBackFun=='function'){
+				CallBackFun();
+			}
+		}
 	})
-	
-	PageAppListAllObj._SELECT_DCAROWID="";
-	PageAppListAllObj._SELECT_DCARecLOCROWID="";
-	ControlButton(true);
+}
+
+function SelectCheckPreDCA(PreDCAIDArr){
+	if(PreDCAIDArr.length>0){
+		var ListData = CureApplyDataGrid.datagrid('getData');
+		var opts = CureApplyDataGrid.datagrid('options');
+		var start = (opts.pageNumber-1)*parseInt(opts.pageSize);
+		var end = start + parseInt(opts.pageSize);
+		for(var k=0;k<PreDCAIDArr.length;k++){
+			var DCAID=PreDCAIDArr[k];
+			for (i=0;i<ListData.originalRows.length;i++){
+				var DCARowId=ListData.originalRows[i].DCARowId;
+				if(DCAID==DCARowId){
+					var NextRowIndex=i;
+					
+					var NeedPageNum=Math.ceil((NextRowIndex+1)/parseInt(opts.pageSize));
+					if (opts.pageNumber!=NeedPageNum){
+						CureApplyDataGrid.datagrid('getPager').pagination('select',NeedPageNum);
+					}
+					NextRowIndex=(NextRowIndex)%parseInt(opts.pageSize);
+					CureApplyDataGrid.datagrid('checkRow',NextRowIndex);
+						
+					break;
+				}
+			}
+		}
+	}
 }
 
 function OpenApplyDetailDiag()
@@ -543,200 +880,73 @@ function OpenApplyDetailDiag()
 	if(DCARowId==""){
 		return;	
 	}
-	var href="doccure.apply.update.hui.csp?DCARowId="+DCARowId;
-	/*var ReturnValue=window.showModalDialog(href,"","dialogwidth:1200px;dialogheight:35em;status:no;center:1;resizable:yes");
-	if (ReturnValue !== "" && ReturnValue !== undefined) 
-    {
-		if(ReturnValue){
-			CureApplyDataGridLoad();	
-		}
-    }*/
-    websys_showModal({
-		url:href,
-		title:'ç”³è¯·å•æµè§ˆ',
-		width:"900px",
-		height:window.screen.availHeight-180,
-		//onBeforeClose:function(){CureApplyDataGridLoad();},
-		CureApplyDataGridLoad:CureApplyDataGridLoad
-	});
+	
+	com_openwin.ShowApplyDetail(DCARowId,ServerObj.DHCDocCureLinkPage,CureApplyDataGridLoad);
 }
 function refreshTab(cfg){  
     var refresh_tab = cfg.tabTitle?$('#tabs').tabs('getTab',cfg.tabTitle):$('#tabs').tabs('getSelected');  
     if(refresh_tab && refresh_tab.find('iframe').length > 0){  
 	    var _refresh_ifram = refresh_tab.find('iframe')[0];  
-	    var refresh_url = cfg.url?cfg.url:_refresh_ifram.src;   
+	    var refresh_url = cfg.url?cfg.url:_refresh_ifram.src;
+		if(typeof websys_writeMWToken=='function') refresh_url=websys_writeMWToken(refresh_url);   
 	    _refresh_ifram.contentWindow.location.href=refresh_url;  
     }  
 }
 
-function UpdateExecOrd(){
-	var rows = CureApplyDataGrid.datagrid("getSelections");
-	if (rows.length==0) 
-	{
-		$.messager.alert("æç¤º","è¯·é€‰æ‹©ä¸€ä¸ªç”³è¯·å•","warning");
-		return false;
-	}
-	var DCARowId="";
-	var DCARowIdStr=""
-	
-	for(var i=0;i<rows.length;i++){
-		var DCARowIds=rows[i].DCARowId;
-		var OrdBilled=rows[i].OrdBilled;
-		var ApplyExec=rows[i].ApplyExec;
-		var rowIndex = CureApplyDataGrid.datagrid("getRowIndex", rows[i]);
-		if((ApplyExec.indexOf("ç›´æ¥æ‰§è¡Œ")<0)||(OrdBilled=="å¦")){
-			//CureApplyDataGrid.datagrid("uncheckRow",rowIndex);
-			//continue;
-		}else{
-			if(DCARowIdStr==""){
-				DCARowIdStr=DCARowIds;
-			}else{
-				DCARowIdStr=DCARowIdStr+"!"+DCARowIds;
-			}
-		}
-	}	
-	if(DCARowIdStr==""){
-		$.messager.alert('æç¤º','æœªæœ‰å¯æ‰§è¡Œçš„ç”³è¯·',"warning");
-		return false;	
-	}
-	var ExecType="";
-	var DefaultNum=1;
-	if(ExecType=="E"){
-		//DefaultNum=selected[rowIndex].OrdQty;
-	}
-	var href="doccure.exec.hui.csp?ExecType="+ExecType+"&DefaultNum="+DefaultNum+"&DCARowIdStr="+DCARowIdStr;
-	//var ReturnValue=window.showModalDialog(href,"","dialogWidth:1200px;dialogHeight:650px;status:no;center:1;resizable:yes");
- 	websys_showModal({
-		url:href,
-		title:'æ²»ç–—æ‰§è¡Œ',
-		width:"1200px",height:"650px",
-		onBeforeClose:function(){CureApplyDataGridLoad();},
-	});
- 	return true;
- } 
- 
- function FormMatterPatName(val,row){
-	//ä»¥ä¸‹ç¨‹åºä»…æ”¯æŒä¸œåå«å·æ¥å£
-	var rows = CureApplyDataGrid.datagrid("getSelections");
-	var DCAARowId="",DCARowId="",DCAOEOREDR=""
-	if (rows.length>=1)
-	{
-		var succsss=true;
-		for(var i=0;i<rows.length;i++){
-			var rowIndex = CureApplyDataGrid.datagrid("getRowIndex", rows[i]);
-			var selected=CureApplyDataGrid.datagrid('getRows'); 
-			var DCARowId=selected[rowIndex].DCARowId;
-			//DCAOEOREDR=selected[rowIndex].OEOREDR;
-			var PatName=selected[rowIndex].PatName;
-			var treatID=selected[rowIndex].ServiceGroupID;
-			//alert(DCAARowId)
-			//return;
-			/*
-			æ·±åœ³å¸‚ä¸­åŒ»é™¢  æ²»ç–—å®¤ å«å·æ¥å£
-			web.DHCVISVoiceCall.InsertVoiceQueue(callinfo,user,computerIP,"A","LR","N",callinfo,callinfo,"",treatID)
-			callinfo          è¯· å¼ ä¸‰ è¿›å…¥æ²»ç–—å®¤
-			user              userID
-			computerIP        è®¡ç®—æœºIP
-			treatID           æ²»ç–—ç±»å‹ID   
-			*/
-			var callinfo="è¯·"+PatName+"è¿›å…¥æ²»ç–—å®¤";
-			var computerIP=GetComputerIp()
-			var loguser=session['LOGON.USERID'];
-			var logloc=session['LOGON.CTLOCID'];
-			var ret="0"; 
-			//alert(callinfo+";"+loguser+";"+computerIP+";"+callinfo+";"+logloc+";"+treatID);
-			var ret=tkMakeServerCall("web.DHCVISVoiceCall","InsertVoiceQueue",callinfo,loguser,computerIP,"A","LR","N",callinfo,logloc,"",treatID)
-			//alert("InsertVoiceQueue+"+ret)
-			if(ret=="0"){
-				var callret=tkMakeServerCall("DHCDoc.DHCDocCure.Appointment","UpdateTreatCallStatus",DCARowId,"Y")
-				if(callret!=0){
-					var errmsg=PatName+"æ›´æ–°å‘¼å«çŠ¶æ€å¤±è´¥";
-					$.messager.alert("é”™è¯¯", errmsg, 'error')
-					succsss=false;
-					return false;
-				}else{
-					//alert("å‘¼å«æˆåŠŸ")
-					//$.messager.alert("æç¤º", "å‘¼å«æˆåŠŸ")
-				}
-			}else{
-				var errmsg=PatName+"å‘¼å«å¤±è´¥:"+ret
-				$.messager.alert("é”™è¯¯", errmsg, 'error')
-				succsss=false;
-				return false;
-			}
-		}
-		if(succsss==true){
-			$.messager.alert("æç¤º", "å‘¼å«æˆåŠŸ")		
-		}
-	}else{
-		$.messager.alert("é”™è¯¯", "è¯·é€‰æ‹©ä¸€ä½ç—…äººå†å‘¼å«.", 'error')
-		 return false;
-	}
-}
-
-function GetComputerIp() 
-{
-   var ipAddr="";
-   var locator = new ActiveXObject ("WbemScripting.SWbemLocator");  
-   var service = locator.ConnectServer("."); //è¿æ¥æœ¬æœºæœåŠ¡å™¨
-   var properties = service.ExecQuery("SELECT * FROM Win32_NetworkAdapterConfiguration");  //æŸ¥è¯¢ä½¿ç”¨SQLæ ‡å‡† 
-   var e = new Enumerator (properties);
-   var p = e.item ();
-
-   for (;!e.atEnd();e.moveNext ())  
-   {
-  	var p = e.item ();  
- 	//document.write("IP:" + p.IPAddress(0) + " ");//IPåœ°å€ä¸ºæ•°ç»„ç±»å‹,å­ç½‘ä¿ºç åŠé»˜è®¤ç½‘å…³äº¦åŒ
-	ipAddr=p.IPAddress(0); 
-	if(ipAddr) break;
-	}
-
-	return ipAddr;
-}
-
-function RefreshDataGrid(){
+function RefreshDataGrid(NotClearFlag,PreDCAIDArr,CallBackFun){
 	if(CureApplyDataGrid){
-		CureApplyDataGridLoad();
-
-		CureApplyDataGrid.datagrid("clearSelections");
-		CureApplyDataGrid.datagrid("clearChecked");	
+		CureApplyDataGridLoad(NotClearFlag,PreDCAIDArr,CallBackFun);
 	}
 }
 
-
-function FinishApplyClick(Type)
-{
+function RefreshDataColGrid(){
 	var DCARowId=GetSelectRow();
 	if(DCARowId==""){
 		return;	
 	}
-	if(Type=="F"){var msg="è¯·ç¡®è®¤è¯¥ç”³è¯·æ²»ç–—å·²å®Œæˆ,æ˜¯å¦ç¡®è®¤å®Œæˆè¯¥ç”³è¯·?";}
-	else{var msg="æ˜¯å¦ç¡®è®¤æ’¤æ¶ˆå®Œæˆè¯¥ç”³è¯·?"}
-	$.messager.confirm('ç¡®è®¤',msg,function(r){
-		if (r){
-			$.m({
-				ClassName:"DHCDoc.DHCDocCure.Apply",
-				MethodName:"FinishCureApply",
-				'DCARowId':DCARowId,
-				'UserID':session['LOGON.USERID'],
-				'Type':Type,
-			},function testget(value){
-				if(value == "0"){
-					$.messager.show({title:"æç¤º",msg:"ç¡®è®¤æˆåŠŸ"});
-					RefreshDataGrid();
-				}else{
-					if(value.indexOf("^")>0){
-						var msg=value.split("^")[1];
-					}else{
-						var msg=value;	
-					}
-					$.messager.alert("æç¤º","ç¡®è®¤å¤±è´¥,"+msg);
-				}				
-				
+	$.cm({
+		ClassName:"DHCDoc.DHCDocCure.Apply",
+		MethodName:"GetCureApply",
+		dataType:"text",
+		DCARowId:DCARowId
+	},function(CureInfo){
+		if(CureInfo!=""){
+			var CureInfoAry=CureInfo.split(String.fromCharCode(1));
+			var CureApplyAry=CureInfoAry[1].split("^");
+			var ApplyStatus=CureApplyAry[6];
+			var ApplyStatusCode=CureApplyAry[35];
+			var ApplyFinishTimes=CureApplyAry[11];
+			var ApplyNoFinishTimes=CureApplyAry[12];
+			var selRow = CureApplyDataGrid.datagrid('getSelected');
+			var selIndex = CureApplyDataGrid.datagrid('getRowIndex', selRow);
+
+			CureApplyDataGrid.datagrid('updateRow',{
+				index: selIndex,
+				row: {
+					ApplyStatus: ApplyStatus,
+					ApplyStatusCode: ApplyStatusCode,
+					ApplyFinishTimes: ApplyFinishTimes,
+					ApplyNoFinishTimes: ApplyNoFinishTimes
+				}
 			});
 		}
-	})
-	
+	});
+}
+
+function FinishApplyClick(Type)
+{
+	if(typeof Type=="undefined"){Type="F"};
+	var DCARowId=GetSelectRow();
+	if(DCARowId==""){
+		return;	
+	}
+	com_withApplyFun.FinishApplyClick(Type,DCARowId);
+}
+function CancelFinishHandler(){
+	FinishApplyClick("CF");
+}
+function FinishHandler(){
+	FinishApplyClick("F");
 }
 function InitArcimDesc()
 {
@@ -748,7 +958,7 @@ function InitArcimDesc()
         idField:'ArcimRowID',
         textField:'ArcimDesc',
         columns:[[  
-            {field:'ArcimDesc',title:'åç§°',width:320,sortable:true},
+            {field:'ArcimDesc',title:'Ãû³Æ',width:320,sortable:true},
 			{field:'ArcimRowID',title:'ID',width:100,sortable:true},
 			{field:'selected',title:'ID',width:120,sortable:true,hidden:true}
         ]],
@@ -783,66 +993,35 @@ function InitArcimDesc()
     });  
 };
 function InitOrderLoc(){
-	$HUI.combobox("#ComboOrderLoc", {})
-    $.cm({
-		ClassName:"DHCDoc.DHCDocCure.Config",
-		QueryName:"FindLoc",
-		'Loc':"",
-		'CureFlag':"",
-		'Hospital':session['LOGON.HOSPID'],
-		dataType:"json",
-		rows:99999
-	},function(Data){
-		var cbox = $HUI.combobox("#ComboOrderLoc", {
-				valueField: 'LocRowID',
-				textField: 'LocDesc', 
-				editable:true,
-				data: Data["rows"],
-				filter: function(q, row){
-					return (row["LocDesc"].toUpperCase().indexOf(q.toUpperCase()) >= 0)||(row["LocContactName"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
-				}
-		 });
-	});
+	var obj=com_withLocDocFun.InitComboDoc("ComboOrderDoc");
+	com_withLocDocFun.InitComboLoc("ComboOrderLoc",obj);
 }
-function CheckComboxSelData(id,selId){
-	var Find=0;
-	var Data=$("#"+id).combobox('getData');
-	for(var i=0;i<Data.length;i++){
-		if (id=="ComboOrderLoc"){
-			var CombValue=Data[i].LocRowID;
-			var CombDesc=Data[i].LocDesc;
-		}else if(id=="RESSessionType"){
-			var CombValue=Data[i].ID  
-			var CombDesc=Data[i].Desc
-		}else{
-			var CombValue=Data[i].value  
-			var CombDesc=Data[i].desc
-		}
-		if(selId==CombValue){
-			selId=CombValue;
-			Find=1;
-			break;
-		}
-	}
-	if (Find=="1") return selId
-	return "";
+function InitOrderDoc(LocID){
+	/*
+	$HUI.combobox("#ComboOrderDoc",{
+		valueField:'TDocRowid',   
+    	textField:'TResDesc',
+    	filter: function(q, row){
+			return (row["TResDesc"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
+		}	
+	})
+	*/
 }
 
 function UpdateAssessment(){
 	var rows = CureApplyDataGrid.datagrid("getSelections");
 	if (rows.length==0) 
 	{
-		$.messager.alert("æç¤º","è¯·é€‰æ‹©ä¸€ä¸ªç”³è¯·å•","warning");
+		$.messager.alert("ÌáÊ¾","ÇëÑ¡ÔñÒ»¸öÉêÇëµ¥","warning");
 		return false;
 	}
 	var DCARowIdStr=""
 	for(var i=0;i<rows.length;i++){
 		var DCARowIds=rows[i].DCARowId;
 		var OrdBilled=rows[i].OrdBilled;
-		var ApplyExec=rows[i].ApplyExec;
 		var ApplyStatusCode=rows[i].ApplyStatusCode;
 		var rowIndex = CureApplyDataGrid.datagrid("getRowIndex", rows[i]);
-		if((OrdBilled!="å¦")&&(ApplyStatusCode!="C")){
+		if((OrdBilled!=$g("·ñ"))&&(ApplyStatusCode!="C")){
 			if(DCARowIdStr==""){
 				DCARowIdStr=DCARowIds;
 			}else{
@@ -851,161 +1030,28 @@ function UpdateAssessment(){
 		}
 	}	
 	if(DCARowIdStr==""){
-		$.messager.alert('æç¤º','æœªæœ‰å¯è¿›è¡Œè¯„ä¼°çš„æ²»ç–—ç”³è¯·,è¯·ç¡®è®¤ç”³è¯·æ˜¯å¦å·²ç¼´è´¹æˆ–æ˜¯å¦å·²æ’¤æ¶ˆ!',"warning");
+		$.messager.alert('ÌáÊ¾','Î´ÓĞ¿É½øĞĞÆÀ¹ÀµÄÖÎÁÆÉêÇë,ÇëÈ·ÈÏÉêÇëÊÇ·ñÒÑ½É·Ñ»òÊÇ·ñÒÑ³·Ïû!',"warning");
 		return false;	
 	}
-	var OperateType="";
-	var href="doccure.cureassessmentlist.csp?OperateType="+OperateType+"&DCARowIdStr="+DCARowIdStr;
-    websys_showModal({
-		url:href,
-		title:'æ²»ç–—è¯„ä¼°',
-		width:screen.availWidth-200,height:screen.availHeight-200
-	});
 }
 
 function GetSelectRow(){
 	var rows = CureApplyDataGrid.datagrid("getSelections");
 	if (rows.length==0) 
 	{
-		$.messager.alert("æç¤º","è¯·é€‰æ‹©ä¸€ä¸ªç”³è¯·å•!","warning");
+		$.messager.alert("ÌáÊ¾","ÇëÑ¡ÔñÒ»¸öÉêÇëµ¥!","warning");
 		return "";
 	}else if (rows.length>1){
-     	$.messager.alert("é”™è¯¯","æ‚¨é€‰æ‹©äº†å¤šä¸ªç”³è¯·å•!","warning")
+     	$.messager.alert("´íÎó","ÄúÑ¡ÔñÁË¶à¸öÉêÇëµ¥!","warning")
      	return "";
      }
 	var DCARowId=rows[0].DCARowId;
 	if(DCARowId=="")
 	{
-		$.messager.alert('æç¤º','è¯·é€‰æ‹©ä¸€æ¡ç”³è¯·å•',"warning");
+		$.messager.alert('ÌáÊ¾','ÇëÑ¡ÔñÒ»ÌõÉêÇëµ¥',"warning");
 		return "";
 	}	
 	return DCARowId;
-}
-
-function destroyDialog(id){
-   $("body").remove("#"+id); //ç§»é™¤å­˜åœ¨çš„Dialog
-   $("#"+id).dialog('destroy');
-}
-
-function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,_event){
-   if(_btntext==""){
-	   var buttons=[{
-		   text:'å…³é—­',
-			iconCls:'icon-w-close',
-			handler:function(){
-   				destroyDialog(id);
-			}
-	   }]
-   }else{
-	   var buttons=[{
-			text:_btntext,
-			iconCls:_icon,
-			handler:function(){
-				if(_event!="") eval(_event);
-			}
-		},{
-			text:'å…³é—­',
-			iconCls:'icon-w-close',
-			handler:function(){
-   				destroyDialog(id);
-			}
-		}]
-   }
-    $("body").append("<div id='"+id+"' class='hisui-dialog'></div>");
-    if (_width == null)
-        _width = 800;
-    if (_height == null)
-        _height = 500;
-
-    $("#"+id).dialog({
-        title: _title,
-        width: _width,
-        height: _height,
-        cache: false,
-        iconCls: _icon,
-        //href: _url,
-        collapsible: false,
-        minimizable:false,
-        maximizable: false,
-        resizable: false,
-        modal: true,
-        closed: false,
-        closable: false,
-        content:_content,
-        buttons:buttons
-    });
-
-}
-
-function MulOrdDealWithCom(type){
-   var date="",time="";
-   var ExpStr=session['LOGON.USERID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.GROUPID'];
-   var pinNum="";
-   if(type=="Addexec"){
-	   var date = $('#winRunOrderDate').datebox('getValue');
-	   if (date==""){
-		   $.messager.alert("æç¤º","è¦æ±‚æ‰§è¡Œæ—¥æœŸä¸èƒ½ä¸ºç©º!");
-		   $('#winRunOrderDate').next('span').find('input').focus();
-		   return false;
-	   }
-	   if(!PageAppListAllObj.DATE_FORMAT.test(date)){
-		   $.messager.alert("æç¤º","è¦æ±‚æ‰§è¡Œæ—¥æœŸæ ¼å¼ä¸æ­£ç¡®!");
-		   return false;
-	   }
-	   var time=$('#winRunOrderTime').combobox('getValue');
-	   if (time==""){
-		   $.messager.alert("æç¤º","è¦æ±‚æ‰§è¡Œæ—¶é—´ä¸èƒ½ä¸ºç©º!");
-		   $('#winRunOrderTime').next('span').find('input').focus();
-		   return false;
-	   }
-	   if (!IsValidTime(time)){
-		   $.messager.alert("æç¤º","è¦æ±‚æ‰§è¡Œæ—¶é—´æ ¼å¼ä¸æ­£ç¡®! æ—¶:åˆ†:ç§’,å¦‚11:05:01");
-		   return false;
-	   }
-   }
-   var ReasonId="",Reasoncomment="";
-   ExpStr=ExpStr+"^"+ReasonId+"^"+Reasoncomment;
-   if ($("#winPinNum").length>0){
-	   pinNum=$("#winPinNum").val();
-	   if (pinNum==""){
-		   $.messager.alert("æç¤º","å¯†ç ä¸èƒ½ä¸ºç©º!");
-		   $("#winPinNum").focus();
-		   return false;
-	   }
-   }
-   var SelOrdRowStr=GetSelOrdRowStr();
-   $.m({
-	    ClassName:"web.DHCDocInPatPortalCommon",
-	    MethodName:"MulOrdDealWithCom",
-	    OrderItemStr:SelOrdRowStr,
-	    date:date,
-	    time:time,
-	    type:type,
-	    pinNum:pinNum,
-	    ExpStr:ExpStr
-	},function(val){
-		if (val=="0"){
-			if (type=="Addexec"){
-				CureExecDataGridLoad();
-			}
-			destroyDialog("CureOrdDiag");
-		}else{
-			$.messager.alert("æç¤º",val);
-			return false;
-		}
-	});
-}
-
-function IsValidTime(time){
-	if (time.split(":").length==3){
-	   var TIME_FORMAT=/^(0\d{1}|1\d{1}|2[0-3]):[0-5]\d{1}:([0-5]\d{1})$/;
-	}else if(time.split(":").length==2){
-	   var TIME_FORMAT=/^(0\d{1}|1\d{1}|2[0-3]):([0-5]\d{1})$/;  
-	}else{
-	   return false;
-	}
-	if(!TIME_FORMAT.test(time)) return false;
-	return true;
 }
 
 function GetSelOrdRowStr(){
@@ -1023,24 +1069,31 @@ function GetSelOrdRowStr(){
 
 function ShowGridRightMenu(e,rowIndex, rowData){
 	if($("#RightKeyMenu").length==0){return}
-	e.preventDefault(); //é˜»æ­¢æµè§ˆå™¨æ•è·å³é”®äº‹ä»¶
-   	$("#RightKeyMenu").empty(); //	æ¸…ç©ºå·²æœ‰çš„èœå•
+	e.preventDefault(); //×èÖ¹ä¯ÀÀÆ÷²¶»ñÓÒ¼üÊÂ¼ş
+	$("#RightKeyMenu").empty(); //	Çå¿ÕÒÑÓĞµÄ²Ëµ¥
 	CureApplyDataGrid.datagrid("clearSelections"); 
 	CureApplyDataGrid.datagrid("checkRow", rowIndex);
 	//if (rowData.OrdFreqCode!="PRN") return false;
-	var RightMenu="{'id':'DOCCureOrder', 'text':'æ²»ç–—ç”³è¯·å•','handler':'', 'displayHandler':'', 'iconCls':'',menu:{items:[{'id':'PRNOrderAddExecOrder', 'text':'å¢åŠ æ‰§è¡Œè®°å½•','handler':'addExecOrderHandler', 'displayHandler':'addExecOrderShowHandler', 'iconCls':''}]}}"
-    var RightMenu=eval("("+RightMenu+")");
-    if ($.isEmptyObject(RightMenu)) return false;
-    var RightMenuArr=RightMenu.menu.items;
-    for (var i=0;i<RightMenuArr.length;i++){
-        var title="";
-        var displayHandler=RightMenuArr[i].displayHandler;
-        if (displayHandler!=""){
-            title=eval(displayHandler)(rowIndex,rowData);
-        }
-        if (RightMenuArr[i].handler=="") continue;
-        $('#RightKeyMenu').menu('appendItem', {
-            id:RightMenuArr[i].id,
+	var RightMenu="{'id':'DOCCureOrder', 'text':'ÖÎÁÆÉêÇëµ¥','handler':'', 'displayHandler':'', 'iconCls':'',menu:{items:["
+	RightMenu=RightMenu+"{'id':'R_DetailView', 'text':'ÉêÇëµ¥ä¯ÀÀ','handler':'OpenApplyDetailDiag', 'displayHandler':'', 'iconCls':''}"
+	RightMenu=RightMenu+",{'id':'PRNOrderAddExecOrder', 'text':'Ôö¼ÓÖ´ĞĞ¼ÇÂ¼','handler':'addExecOrderHandler', 'displayHandler':'addExecOrderShowHandler', 'iconCls':''}"
+	if(ServerObj.myTriage!="Y"){
+		RightMenu=RightMenu+",{'id':'R_Finish', 'text':'Íê³ÉÉêÇëµ¥','handler':'FinishHandler', 'displayHandler':'', 'iconCls':''}"
+		RightMenu=RightMenu+",{'id':'R_CancelFinish', 'text':'³·ÏúÍê³ÉÉêÇëµ¥','handler':'CancelFinishHandler', 'displayHandler':'', 'iconCls':''}"
+	}
+	RightMenu=RightMenu+"]}}"
+	var RightMenu=eval("("+RightMenu+")");
+	if ($.isEmptyObject(RightMenu)) return false;
+	var RightMenuArr=RightMenu.menu.items;
+	for (var i=0;i<RightMenuArr.length;i++){
+	    var title="";
+	    var displayHandler=RightMenuArr[i].displayHandler;
+	    if (displayHandler!=""){
+	        title=eval(displayHandler)(rowIndex,rowData);
+	    }
+	    if (RightMenuArr[i].handler=="") continue;
+	    $('#RightKeyMenu').menu('appendItem', {
+	        id:RightMenuArr[i].id,
 			text:RightMenuArr[i].text,
 			iconCls: RightMenuArr[i].iconCls, //'icon-ok' 
 			onclick: eval(RightMenuArr[i].handler)
@@ -1051,86 +1104,411 @@ function ShowGridRightMenu(e,rowIndex, rowData){
 			$("#"+RightMenuArr[i].id+"").addClass("hisui-tooltip");
 			$("#"+RightMenuArr[i].id+"").attr("title",title);
 	    }
-    }
-    $('#RightKeyMenu').menu('show', {  
-        left: e.pageX,         //åœ¨é¼ æ ‡ç‚¹å‡»å¤„æ˜¾ç¤ºèœå•
-        top: e.pageY
-    });
-   
+	}
+	$('#RightKeyMenu').menu('show', {  
+	    left: e.pageX,         //ÔÚÊó±êµã»÷´¦ÏÔÊ¾²Ëµ¥
+	    top: e.pageY
+	});
 }
 function addExecOrderHandler(){
-	destroyDialog("CureOrdDiag");
-   	var html="<div id='DiagWin' style=''>"
-		html +="	<table class='search-table' cellpadding='5' style='margin:0 auto;border:none;'>"
-		html +="	 <tr>"
-		html +="	 <td class='r-label'>"
-		html +="	 "+"è¦æ±‚æ‰§è¡Œæ—¥æœŸ"
-		html +="	 </td>"
-		html +="	 <td>"
-		html +="	 <input id='winRunOrderDate' type='text' class='hisui-datebox' required='required'></input>"
-		html +="	 </td>"
-		html +="	 </tr>"
-		html +="	 <tr>"
-		html +="	 <td class='r-label'>"
-		html +="	 "+"è¦æ±‚æ‰§è¡Œæ—¶é—´"
-		html +="	 </td>"
-		html +="	 <td>"
-		html +="	 <input id='winRunOrderTime' class='hisui-combobox'/> "
-		html +="	 </td>"
-		html +="	 </tr>"
-		html +="	 </tr>"
-	   	html +="	</table>"
-   		html += "</div>"	
-	var iconCls="icon-w-ok";
-    createModalDialog("CureOrdDiag","å¢åŠ æ‰§è¡ŒåŒ»å˜±", 380, 260,iconCls,"ç¡®å®š",html,"MulOrdDealWithCom('Addexec')");
-    var o=$HUI.datebox('#winRunOrderDate');
-    o.setValue(ServerObj.CurrentDate);
-    var cbox = $HUI.combobox("#winRunOrderTime", {
-	    width:'151',
-		editable: true,
-		multiple:false,
-		mode:"remote",
-		method: "GET",
-		selectOnNavigation:true,
-	  	valueField:'id',
-	  	textField:'text',
-	  	data:eval("("+ServerObj.IntervalTimeListJson+")"),
-	  	onLoadSuccess:function(){
-			var sbox = $HUI.combobox("#winRunOrderTime");
-			sbox.setValue("");
-		}
-	});
-    $('#winRunOrderTime').next('span').find('input').focus();
+	com_withApplyFun.addExecOrderHandler()
 }
 function addExecOrderShowHandler(rowIndex,record){
-	var title="";
-	var orderStatus = record.OrdStatusCode;
-	var PHFreqCode = record.OrdFreqCode;
-	var ApplyStatus= record.ApplyStatus ;
-	var ApplyExec= record.ApplyExec;
-	var ApplyOrdQty= record.OrdQty;
-	var ApplyAppedTimes= record.ApplyAppedTimes;
-	var ApplyFinishTimes= record.ApplyFinishTimes;
-	var ApplyNoFinishTimes= record.ApplyNoFinishTimes;
-	var ApplyStatusCode=record.ApplyStatusCode;
-	if((orderStatus != "V")&&(orderStatus != "E")) {
-		title = "åŒ»å˜±éæ ¸å®çŠ¶æ€,ä¸èƒ½å¢åŠ !";
-		return title;
-	}else if(ApplyStatusCode== "C"){
-		title = "æ²»ç–—ç”³è¯·å·²æ’¤é”€,ä¸èƒ½å¢åŠ !";
-		return title ;
-	}else if(ApplyStatusCode== "F"){
-		title = "æ²»ç–—ç”³è¯·å·²å®Œæˆ,ä¸èƒ½å¢åŠ !";
-		return title ;
-	}else if(PHFreqCode.toLocaleUpperCase() != "PRN"){
-		title = "prnåŒ»å˜±æ‰èƒ½å¢åŠ !";
-		return title ;
-	}else if(ApplyExec.indexOf("ç›´æ¥æ‰§è¡Œ")<0){
-		title = "éç›´æ¥æ‰§è¡ŒåŒ»å˜±ï¼Œä¸èƒ½å¢åŠ !";
-		return title ;
-	}else if(parseInt(ApplyOrdQty)<=parseInt(ApplyAppedTimes+ApplyFinishTimes+ApplyNoFinishTimes)){
-		title = "å·²è¾¾ç”³è¯·æ•°é‡ä¸Šé™,ä¸èƒ½ç»§ç»­å¢åŠ !";
-		return title ;
+	return com_withApplyFun.addExecOrderShowHandler(rowIndex,record);
+}
+function AddOrderClick(){
+	com_withApplyFun.AddOrderClick(CureApplyDataGrid);
+}
+
+function CheckSelectRow(tabTitle){
+	if(typeof(tabTitle)=="undefined"){tabTitle=""}
+	if(PageAppListAllObj._SELECT_DCAROWID!=""){
+		var PreDCAIDArr=PageAppListAllObj._SELECT_DCAROWID.split("!");
+		var ListData = CureApplyDataGrid.datagrid('getData');
+		var opts = CureApplyDataGrid.datagrid('options');
+		var load=true;
+		for(var k=0;k<PreDCAIDArr.length;k++){
+			var DCAID=PreDCAIDArr[k];
+			for (i=0;i<ListData.originalRows.length;i++){
+				var DCARowId=ListData.originalRows[i].DCARowId;
+				if(DCAID==DCARowId){
+					var checkRowIndex=(i)%parseInt(opts.pageSize);
+					var ret=CheckSelectedRow(checkRowIndex, ListData.originalRows[i],"",tabTitle);
+					if(!ret){
+						load=false;
+						break;	
+					}
+				}
+			}
+			if(!load){
+				break;		
+			}
+		}
+		if(load){
+			if((PageAppListAllObj.m_CureSingleAppoint=="1")&&(PreDCAIDArr.length>1)){
+				CureApplyDataGrid.datagrid("clearSelections").datagrid("clearChecked");
+				$.messager.popover({msg: 'µ¥ÉêÇëµ¥Ô¤Ô¼Ä£Ê½ÏÂÒÑ×Ô¶¯È¡Ïû¹´Ñ¡³ıµÚÒ»Ìõ¼ÇÂ¼µÄÆäËû¼ÇÂ¼',type:'info',timeout: 3000})
+				SelectCheckPreDCA([PreDCAIDArr[0]]);
+			}
+			loadTabData();
+		}else{
+			CureApplyDataGrid.datagrid("clearSelections").datagrid("clearChecked");
+			PageAppListAllObj._SELECT_DCAROWID="";
+			if($('#apptabs-dialog').length>0){
+				$('#apptabs-dialog').window('close');
+			}
+			return false;
+		}
 	}
-	return title;	
+	return true;
+}
+
+function getConfigUrl(userId,groupId,ctlocId){
+	return com_Util.getConfigUrl(userId,groupId,ctlocId);
+}
+function resizePanel(){
+	if(ServerObj.LayoutConfig=="1"){
+		var AppListScale=60;
+		if(ServerObj.UIConfigObj!=""){
+			var data = eval('(' + ServerObj.UIConfigObj + ')');
+			if ((!data['DocCure_AppListScale'])||(data['DocCure_AppListScale']=="")){
+				AppListScale=60;
+			}else{
+				AppListScale=data['DocCure_AppListScale'];
+			}
+		}
+		AppListScale=parseFloat(AppListScale/100);
+			
+		$('#main_layout').layout('panel', 'north').panel('resize',{
+			height:PageAppListAllObj.dh*AppListScale
+		})
+		$('#main_layout').layout("resize");
+	}
+}
+
+/**
+	@TypeĞèÒªÓëcspÖĞ¶¨ÒåµÄÒ³Ç©div idÒ»ÖÂ,¼´¶¨ÒåµÄ¹¤¾ß°´Å¥idĞèÒªÓëÒ³Ç©div idÒ»ÖÂ
+*/
+function Apply_Click(Type){
+	if(PageAppListAllObj._SELECT_DCAROWID==""){
+		$.messager.alert("ÌáÊ¾","ÇëÑ¡ÔñÉêÇëµ¥¼ÇÂ¼.","info");
+		return false;
+	}
+	var obj=$("#"+Type);
+	if(obj.length=0){
+		$.messager.alert("ÌáÊ¾","Î´·¢ÏÖ¶¨ÒåµÄ¶ÔÓ¦µÄ½çÃæ","info");
+		return false;
+	}else{
+		var tabTitle=obj[0].innerText;
+		tabTitle=$.trim(tabTitle);
+		
+		var ret=CheckSelectRow(tabTitle);
+		if(!ret){
+			return;
+		}
+	
+		var dhwid=$(document.body).width()-50;
+		var dhhei=$(document.body).height()-100;
+		$('#apptabs-dialog').window('open').window('resize',{
+			width:dhwid,
+			height:dhhei,
+			top:50,
+			left:25
+		});
+		if(PageAppListAllObj.m_selTabTitle==tabTitle){
+			DataGridLoad(tabTitle);
+			if(tabTitle=="Ô¤Ô¼"){
+				appList_appResListObj.InitDate();
+			}
+		}else{
+			$("#tabs").tabs("select",tabTitle);
+			if(PageAppListAllObj.m_selTabTitle==""){
+				DataGridLoad(tabTitle);
+			}
+			if(tabTitle=="Ô¤Ô¼"){
+				appList_appResListObj.InitDate();
+			}
+		}
+		PageAppListAllObj.m_selTabTitle=tabTitle;
+	}
+}
+function ShowAppSchedule(DCARowID,ServiceGroupID){
+	var dhwid=$(document.body).width()-100;
+	var dhhei=$(document.body).height()-150;
+	var ApplyNoAppTimes=$.cm({
+		ClassName:"DHCDoc.DHCDocCure.Appointment",
+		MethodName:"GetAppointLeftCount",
+		'DCARowId':DCARowID,
+		dataType:"text"
+	},false)
+	if(ApplyNoAppTimes>0){
+		$('#appschedulelist-dialog').window('open').window('resize',{width:dhwid,height:dhhei,top: 50,left:45});
+		SetLogLocID();
+		InitTimeRangeSearch(ServiceGroupID);
+		$HUI.datebox('#SttDate_Search').setValue(ServerObj.CurrentDate);
+		$HUI.datebox('#EndDate_Search').setValue(ServerObj.AppEndDate);
+		var SessionStr=session['LOGON.HOSPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.USERID'];
+		var DataGrid=$('#tabCureAppScheduleList').datagrid({  
+			fit : true,
+			width : 'auto',
+			border : false,
+			striped : true,
+			singleSelect : false,
+			checkOnSelect:true,
+			fitColumns : true,
+			autoRowHeight : false,
+			nowrap: false,
+			collapsible:false,
+			url : $URL+'?ClassName=DHCDoc.DHCDocCure.RBCResSchdule&QueryName=QueryAvailResApptSchdule&SessionStr='+SessionStr,
+			loadMsg : '¼ÓÔØÖĞ..',  
+			pagination : true,
+			rownumbers : true,
+			idField:"Rowid",
+			pageSize : 20,
+			pageList : [20,50],
+			columns :[[   
+				{ field: 'RowCheck',checkbox:true},     
+				{ field: 'Rowid', title: 'ID', width: 1, align: 'left', sortable: true,hidden:true
+				}, 
+				{ field: 'DDCRSDate', title:'ÈÕÆÚ', width: 30, align: 'left', sortable: true, resizable: true  
+				},
+				{ field: 'LocDesc', title:'¿ÆÊÒ', width: 50, align: 'left', sortable: true, resizable: true  
+				},
+				{ field: 'ResourceDesc', title: '×ÊÔ´', width: 30, align: 'left', sortable: true, resizable: true
+				},
+				{ field: 'TimeDesc', title: 'Ê±¶Î', width: 30, align: 'left', sortable: true, resizable: true
+				},
+				{ field: 'StartTime', title: '¿ªÊ¼Ê±¼ä', width: 30, align: 'left', sortable: true,resizable: true
+				},
+				{ field: 'EndTime', title: '½áÊøÊ±¼ä', width: 30, align: 'left', sortable: true,resizable: true
+				},
+				{ field: 'ServiceGroupDesc', title: '·şÎñ×é', width: 30, align: 'left', sortable: true,resizable: true
+				},
+				{ field: 'DDCRSStatus', title: '×´Ì¬', width: 20, align: 'left', sortable: true,resizable: true
+				},
+				{ field: 'AppedLeftNumber', title: 'Ê£Óà¿ÉÔ¤Ô¼Êı', width: 30, align: 'left', sortable: true,resizable: true,
+					formatter:function(value,row,index){
+						value=parseFloat(value)
+						var MaxNumber=parseFloat(row.MaxNumber)*0.5;
+						if (value ==0){
+							return "<span class='fillspan-nonenum'>"+value+"</span>";
+						}else if((value >0)&&(value<MaxNumber)){
+							return "<span class='fillspan-nofullnum'>"+value+"</span>";
+						}else{
+							return "<span class='fillspan-fullnum'>"+value+"</span>";
+						}
+					}
+				},
+				{ field: 'AppedNumber', title: 'ÒÑÔ¤Ô¼Êı', width: 20, align: 'left', sortable: true,resizable: true
+				},
+				{ field: 'MaxNumber', title: '×î´óÔ¤Ô¼Êı', width: 30, align: 'left', sortable: true,resizable: true
+				},
+				{ field: 'EndAppointTime', title: '½ØÖ¹Ô¤Ô¼Ê±¼ä', width: 30, align: 'left', sortable: true,resizable: true
+				}
+			 ]],
+			 toolbar : [{
+				id:'BtnGenAppoint',
+				text:'Ô¤Ô¼',
+				iconCls:'icon-book',
+				handler:function(){
+					GenAppoint(DCARowID);
+				}
+			}],
+			onBeforeLoad:function(param){
+				var SearchExpStr="";
+				var SearchLocID=$HUI.combobox('#Loc_Search').getValue();
+				var SearchDocID=$HUI.combobox('#Doc_Search').getValue();
+				var SearchTimeRangeID=$HUI.combobox('#TimeRange_Search').getValue();
+				SearchExpStr=SearchLocID+"^"+SearchDocID+"^"+SearchTimeRangeID;
+				var StartDate=$HUI.datebox('#SttDate_Search').getValue();
+				var EndDate=$HUI.datebox('#EndDate_Search').getValue();
+				$.extend(param,{DCARowId:DCARowID,StartDate:StartDate,EndDate:EndDate,SearchExpStr:SearchExpStr});
+			},onClickRow: function(rowIndex, rowData){
+				var RowObj=$(this).parent().find("div .datagrid-cell-check")
+                .children("input[type=\"checkbox\"]");
+			    RowObj.each(function(index, el){
+			        if (el.style.display == "none") {
+			            PageAppListAllObj.m_CureAppScheduleListDataGrid.datagrid('unselectRow', index);
+			        }
+			    })
+			},onBeforeSelect:function(rowIndex, rowData){
+				var rows = PageAppListAllObj.m_CureAppScheduleListDataGrid.datagrid("getSelections");
+				var length=rows.length;
+				if(length>=ApplyNoAppTimes){
+					PageAppListAllObj.m_CureAppScheduleListDataGrid.datagrid('unselectRow', rowIndex);
+					return false
+				}
+			},onBeforeCheck:function(rowIndex, rowData){
+				var rows = PageAppListAllObj.m_CureAppScheduleListDataGrid.datagrid("getSelections");
+				var length=rows.length;
+				if(length>=ApplyNoAppTimes){
+					PageAppListAllObj.m_CureAppScheduleListDataGrid.datagrid('unselectRow', rowIndex);
+					return false
+				}
+			},onLoadSuccess:function(data){
+				PageAppListAllObj.m_CureAppScheduleListDataGrid.datagrid("clearSelections").datagrid("clearChecked");
+				var headchkobj=$(this).parent().find("div .datagrid-header-check")
+                .children("input[type=\"checkbox\"]").eq(0);
+            	headchkobj.attr("style", "display:none;");
+            	
+				var RowObj=$(this).parent().find("div .datagrid-cell-check")
+                .children("input[type=\"checkbox\"]");
+			    for (var i = 0; i < data.rows.length; i++) {
+			        if (data.rows[i].AppedLeftNumber==0) {
+			            RowObj.eq(i).attr("style", "display:none");
+			        }
+			    }
+			}
+		});
+		PageAppListAllObj.m_CureAppScheduleListDataGrid=DataGrid;
+		//CureAppScheduleListDataGridLoad();
+	}else{
+		$.messager.alert("ÌáÊ¾","¸ÃÖÎÁÆÉêÇë¿ÉÔ¤Ô¼ÊıÁ¿²»×ã.","warning");
+		return false;	
+	}
+}
+
+function GenAppoint(DCARowID){
+	if(DCARowID==""){
+		$.messager.alert("ÌáÊ¾", "»ñÈ¡ÉêÇëµ¥ĞÅÏ¢´íÎó.", "warning");	
+		return false;
+	}
+	var rows = PageAppListAllObj.m_CureAppScheduleListDataGrid.datagrid("getSelections");
+	var length=rows.length;
+	if(length==0){
+		$.messager.alert("ÌáÊ¾", "ÇëÑ¡ÔñĞèÒªÔ¤Ô¼µÄ×ÊÔ´.", "warning");	
+		return false;
+	}
+	var ids = [];
+	for (var i = 0; i < length; i++) {
+		ids.push(rows[i].Rowid);
+	}
+	var ID=ids.join(String.fromCharCode(1));
+	var Para=DCARowID+"^"+ID+"^"+"M"+"^"+session['LOGON.USERID']+"^"+session['LOGON.HOSPID'];
+	var InsExpStr=session['LOGON.HOSPID']+"^"+session['LOGON.LANGID'];
+	var ret=$.cm({
+		ClassName:"DHCDoc.DHCDocCure.Appointment",
+		MethodName:"AppInsertBroker",
+		Para:Para,
+		InsExpStr:InsExpStr,
+		dataType:"text"
+	},false);
+	if(ret!=""){
+		$.messager.alert("ÌáÊ¾", ret, "warning");
+	}else{
+		$.messager.popover({msg: 'Ô¤Ô¼³É¹¦£¡',type:'success',timeout: 3000});
+		PageAppListAllObj.m_CureAppScheduleListDataGrid.datagrid("reload");
+	}
+}
+
+function InitLocSearch(){
+	InitDocSearch();
+    $HUI.combobox("#Loc_Search", {
+		valueField: 'LocId',
+		textField: 'LocDesc', 
+		editable:true,
+		url :$URL+"?ClassName=DHCDoc.DHCDocCure.Config&QueryName=QueryCureLoc&HospID="+session['LOGON.HOSPID']+"&ResultSetType=array",
+		filter: function(q, row){
+			return (row["LocDesc"].toUpperCase().indexOf(q.toUpperCase()) >= 0)||(row["LocContactName"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
+		},onSelect:function(record){
+			var locId=record.LocId;
+			var url = $URL+"?ClassName=DHCDoc.DHCDocCure.Config&QueryName=QueryResource&LocID="+locId+"&ResultSetType=array";
+			var obj=$HUI.combobox('#Doc_Search');
+			obj.clear();
+			obj.reload(url);
+		},onLoadSuccess:function(data){
+			SetLogLocID();
+		}  
+	 });
+}
+
+function SetLogLocID(){
+	var m_LogLocID=session['LOGON.CTLOCID'];
+	var data=$("#Loc_Search").combobox("getData");
+	for(var i=0;i<data.length;i++){
+    	if(data[i].LocId==m_LogLocID){
+	    	$("#Loc_Search").combobox("select",m_LogLocID);
+	    }
+    }
+    $("#Doc_Search").combobox("select","");
+}
+
+function InitDocSearch(){
+	$HUI.combobox('#Doc_Search',{      
+		valueField:'TRowid',   
+		textField:'TResDesc',
+		//url:$URL+"?ClassName=DHCDoc.DHCDocCure.Config&QueryName=QueryResource&LocID="+session['LOGON.CTLOCID']+"&ResultSetType=array",
+		onSelect:function(record){
+			//PageAppListAllObj.m_CureAppScheduleListDataGrid.datagrid("reload");
+		},onChange:function(newValue, oldValue){
+			//if((newValue=="")||(newValue=='undefined')){
+			//	$(this).select("");
+			//	PageAppListAllObj.m_CureAppScheduleListDataGrid.datagrid("reload");
+			//}
+		},onLoadSuccess:function(data){
+			$(this).combobox("select","");
+		}  
+	});
+}
+function InitTimeRangeSearch(SGRowID){
+	$HUI.combobox('#TimeRange_Search',{ 
+		valueField:'Rowid',   
+		textField:'Desc',
+		url:$URL+"?ClassName=DHCDoc.DHCDocCure.RBCResPlan&QueryName=QueryBookTime&SGRowID="+SGRowID+"&HospID="+session['LOGON.HOSPID']+"&ExpStr="+session['LOGON.LANGID']+"&ResultSetType=array",
+		onSelect:function(record){
+		} 
+	});
+}
+function InitAppScheduleListComb(){
+	InitLocSearch();
+	//InitTimeRangeSearch();
+}
+
+function CureAppScheduleListDataGridLoad(){
+	PageAppListAllObj.m_CureAppScheduleListDataGrid.datagrid("reload");
+}
+
+function togglePanelExpand(){
+	var wp = $("#CenterPanel").layout("panel", "west");
+	var cp = $("#CenterPanel").layout("panel", "center");
+	$(wp).panel({
+		onExpand:function(){
+			IFrameReSizeWidth("FormMain",-200)
+		},
+		onCollapse:function(){
+			IFrameReSizeWidth("FormMain",200)
+		}	
+	})	
+}
+function toggleMoreInfo(ele){
+	if ($(ele).hasClass('expanded')){  //ÒÑ¾­Õ¹¿ª Òş²Ø
+		$(ele).removeClass('expanded');
+		$("#moreBtn")[0].innerText=$g("¸ü¶à");
+    	$("tr.display-more-tr").slideUp("fast", setHeight(-40));
+	}else{
+		$(ele).addClass('expanded');
+		$("#moreBtn")[0].innerText=$g("Òş²Ø");
+    	$("tr.display-more-tr").slideDown("'normal", setHeight(40));
+	}
+	
+
+	function setHeight(num) {
+		var l = $("#search-applist-layout");
+		var n = l.layout("panel", "north");
+		var nh = parseInt(n.outerHeight()) + parseInt(num);
+		n.panel("resize", {
+			height: nh
+		});
+		if (num > 0) {
+			$("tr.display-more-tr").show();
+		} else {
+			$("tr.display-more-tr").hide();
+		}
+		var c = l.layout("panel", "center");
+		var ch = parseInt(c.panel("panel").outerHeight()) - parseInt(num);
+		c.panel("resize", {
+			height: ch,
+			top: nh
+		});
+	}
 }

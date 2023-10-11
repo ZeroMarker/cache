@@ -1,29 +1,23 @@
-//window.onbeforeunload = BeforeClose;
+ï»¿/*
+window.onbeforeunload = BeforeClose;
 function BeforeClose(e){
 	e = e || window.event;
 
 	if($('#CPWVarOrder').datagrid("getRows").length != 0){
-		//É¾³ıÒÑ¾­Ìí¼ÓµÄ±äÒìÔ­Òò
+		//åˆ é™¤å·²ç»æ·»åŠ çš„å˜å¼‚åŸå› 
 		var ret=$m({ClassName:"DHCMA.CPW.CPS.InterfaceSrv",MethodName:"DeleteTmpVarOrd",aFlg:"Y"},false)
-		if (websys_showModal("options").CallBackFunc) {
-			websys_showModal("options").CallBackFunc(false);
-		}else{
-			window.returnValue = false;	//·µ»Ø¸øÒ½ÉúÕ¾
-		}
+		window.returnValue = false;	//è¿”å›ç»™åŒ»ç”Ÿç«™
 	}else{
-		//Çå³ıÁÙÊ±Êı¾İ
+		//æ¸…é™¤ä¸´æ—¶æ•°æ®
 		var ret=$m({ClassName:"DHCMA.CPW.CPS.InterfaceSrv",MethodName:"DeleteTmpVarOrd",aFlg:"N"},false)
-		if (websys_showModal("options").CallBackFunc) {
-			websys_showModal("options").CallBackFunc(true);
-		}else{
-			window.returnValue = true;	//·µ»Ø¸øÒ½ÉúÕ¾
-		}
+		window.returnValue = true;	//è¿”å›ç»™åŒ»ç”Ÿç«™
 	}
 }
+*/
 
 var objVar = new Object();	
 function ShowMakeOrderDialog(){
-	$.parser.parse(); // ½âÎöÕû¸öÒ³Ãæ 
+	$.parser.parse(); // è§£ææ•´ä¸ªé¡µé¢ 
 	InitVCPWInfo();
 	
 	$m({
@@ -36,7 +30,7 @@ function ShowMakeOrderDialog(){
 		$('#VarTree').tree({
 			data: dataArr,
 			formatter:function(node){
-				//formatter  ´ËÊ±isLeaf·½·¨»¹ÎŞ·¨ÅĞ¶ÏÊÇ²»ÊÇÒ¶×Ó½Úµã ¿ÉÍ¨¹ıchildren
+				//formatter  æ­¤æ—¶isLeafæ–¹æ³•è¿˜æ— æ³•åˆ¤æ–­æ˜¯ä¸æ˜¯å¶å­èŠ‚ç‚¹ å¯é€šè¿‡children
 				if (node.children){
 					return node.text;
 				}else{
@@ -51,7 +45,7 @@ function ShowMakeOrderDialog(){
 						+"<div style='height:20px;line-height:20px;color:gray'>"+(new Date()).toLocaleString()+"</div>"
 						+"<div style='height:20px;line-height:20px;'>"+node.text+"</div>"
 						+"</div>";
-					//Í¬Ê±¸ø´ËÊ÷ÏÂµÄtree-node ¼ÓÉÏposition: relative;   ÒÔÊµÏÖĞ¡Í¼±ê¿¿ÓÒ */
+					//åŒæ—¶ç»™æ­¤æ ‘ä¸‹çš„tree-node åŠ ä¸Šposition: relative;   ä»¥å®ç°å°å›¾æ ‡é å³ */
 				}
 				
 			},
@@ -62,14 +56,14 @@ function ShowMakeOrderDialog(){
 		})
 	});	
 	
-	//¹ØÁªÒ½Öö
+	//å…³è”åŒ»å˜±
 	objVar.CPWVarOrder = $HUI.datagrid("#CPWVarOrder",{
 		fit: true,
-		pagination: false, //Èç¹ûÎªtrue, ÔòÔÚDataGrid¿Ø¼şµ×²¿ÏÔÊ¾·ÖÒ³¹¤¾ßÀ¸
-		rownumbers: false, //Èç¹ûÎªtrue, ÔòÏÔÊ¾Ò»¸öĞĞºÅÁĞ
+		pagination: false, //å¦‚æœä¸ºtrue, åˆ™åœ¨DataGridæ§ä»¶åº•éƒ¨æ˜¾ç¤ºåˆ†é¡µå·¥å…·æ 
+		rownumbers: false, //å¦‚æœä¸ºtrue, åˆ™æ˜¾ç¤ºä¸€ä¸ªè¡Œå·åˆ—
 		singleSelect: false,
-		autoRowHeight: false, //¶¨ÒåÊÇ·ñÉèÖÃ»ùÓÚ¸ÃĞĞÄÚÈİµÄĞĞ¸ß¶È¡£ÉèÖÃÎª false£¬Ôò¿ÉÒÔÌá¸ß¼ÓÔØĞÔÄÜ
-		loadMsg:'Êı¾İ¼ÓÔØÖĞ...',
+		autoRowHeight: false, //å®šä¹‰æ˜¯å¦è®¾ç½®åŸºäºè¯¥è¡Œå†…å®¹çš„è¡Œé«˜åº¦ã€‚è®¾ç½®ä¸º falseï¼Œåˆ™å¯ä»¥æé«˜åŠ è½½æ€§èƒ½
+		loadMsg:$g('æ•°æ®åŠ è½½ä¸­...'),
 		//pageSize: 20,
 		//pageList : [20,50,100,200],
 		url:$URL,
@@ -83,10 +77,10 @@ function ShowMakeOrderDialog(){
 	    },
 		columns:[[
 			{field:'checkOrd',checkbox:'true',align:'center',width:30,auto:false},
-			{field:'ind',title:'ĞòºÅ',align:'center',width:''},
-			{field:'ARCIMDesc',title:'Ò½ÖöÃèÊö',width:'300'},
-			//{field:'VariatCat',title:'±äÒì·ÖÀà',width:'200'},
-			{field:'VariatTxt',title:'¾ßÌåÔ­Òò',width:'200',editor:'text'}
+			{field:'ind',title:'åºå·',align:'center',width:''},
+			{field:'ARCIMDesc',title:'åŒ»å˜±æè¿°',width:'300'},
+			//{field:'VariatCat',title:'å˜å¼‚åˆ†ç±»',width:'200'},
+			{field:'VariatTxt',title:'å…·ä½“åŸå› ',width:'200',editor:'text'}
 		]],
 		onBeforeLoad: function (param) {
             var firstLoad = $(this).attr("firstLoad");
@@ -113,17 +107,17 @@ function ShowMakeOrderDialog(){
 		}
 	});
 	
-	//Â·¾¶ÍâÒ½Öö±£´æ±äÒìĞÅÏ¢
+	//è·¯å¾„å¤–åŒ»å˜±ä¿å­˜å˜å¼‚ä¿¡æ¯
 	$('#Var-Order-Save').on('click', function(){
 		SaveOrderVar();
 	})
-	//Â·¾¶ÍâÒ½Öö³·Ïú±äÒìĞÅÏ¢
+	//è·¯å¾„å¤–åŒ»å˜±æ’¤é”€å˜å¼‚ä¿¡æ¯
 	$('#Var-Order-Cancel').on('click', function(){
 		CancelOrderVar();
 	})
 		
 }
-//Â·¾¶ĞÅÏ¢
+//è·¯å¾„ä¿¡æ¯
 InitVCPWInfo = function(){
 	$m({
 		ClassName:"DHCMA.CPW.CPS.ImplementSrv",
@@ -152,6 +146,17 @@ SaveOrderVar = function(){
 		var IsLeaf=$('#VarTree').tree('isLeaf',Node.target)
 		if(IsLeaf){
 			var rows = $('#CPWVarOrder').datagrid("getSelections");
+			if (rows.length == 0) {
+				$.messager.popover({
+					msg: $g('è¯·é€‰æ‹©åŒ»å˜±'),
+					type: 'error',
+					style: {
+						top: 150,
+						left: 450
+					}
+				});
+				return;
+			}
 			for (var ind=0,len=rows.length;ind<len;ind++){
 				var RowIndex=$('#CPWVarOrder').datagrid("getRowIndex",rows[ind]);
 				var ed = $('#CPWVarOrder').datagrid('getEditor', { index: RowIndex, field: 'VariatTxt' });
@@ -160,7 +165,7 @@ SaveOrderVar = function(){
 				var rowData = rows[ind]
 				var Node=$('#VarTree').tree('getSelected');
 				var EpisID=objVar.PathwayID+"||"+objVar.EpisID;
-				var ImplID="";	//Â·¾¶ÍâÒ½ÖöÃ»ÓĞ¹ØÁªÏîÄ¿
+				var ImplID="";	//è·¯å¾„å¤–åŒ»å˜±æ²¡æœ‰å…³è”é¡¹ç›®
 				var OrdDID=rowData['ARCIMID'];
 				var VarID=""
 				
@@ -176,9 +181,10 @@ SaveOrderVar = function(){
 				}
 			}
 			$('#VarTree').find('.tree-node-selected').removeClass('tree-node-selected');
+			//window.close();			//8.3åŠæ›´æ—©ç‰ˆæœ¬ä¸‹ä¿å­˜åè‡ªåŠ¨å…³é—­
 		}else{
 			$.messager.popover({
-					msg: '²»ÄÜÑ¡ÔñÔ­Òò·ÖÀà',
+					msg: $g('ä¸èƒ½é€‰æ‹©åŸå› åˆ†ç±»'),
 					type:'error',
 					style:{
 						top:150,
@@ -189,7 +195,7 @@ SaveOrderVar = function(){
 		}
 	}else{
 		$.messager.popover({
-			msg: 'ÇëÑ¡Ôñ±äÒìÔ­Òò',
+			msg: $g('è¯·é€‰æ‹©å˜å¼‚åŸå› '),
 			type:'error',
 			style:{
 				top:150,
@@ -199,7 +205,8 @@ SaveOrderVar = function(){
 		return;
 	}
 	var OrdItemList = $('#CPWVarOrder').datagrid("getRows").length;
-	websys_showModal("options").onBeforeClose(OrdItemList);
+	websys_showModal("options").onOptionFun(OrdItemList);
+	if (OrdItemList==0) websys_showModal("close");
 }
 CancelOrderVar = function(){
 	var rows = $('#CPWVarOrder').datagrid("getSelections");

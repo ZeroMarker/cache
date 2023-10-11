@@ -7,7 +7,15 @@ $(function(){
 	//页面元素初始化
 	PageHandle();
 	ExaBoroughUserTabDataGridLoad();
+	InitCache();
 });
+function InitCache(){
+	var hasCache = $.DHCDoc.hasCache();
+	if (hasCache!=1) {
+		//$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function PageHandle(){
 	var HospID=$HUI.combogrid('#_HospList').getValue();
 	//初始化诊区
@@ -56,6 +64,8 @@ function Init(){
 	var hospComp = GenHospComp("DHCBorUser");
 	hospComp.jdata.options.onSelect = function(e,t){
 		var HospID=t.HOSPRowId;
+		$("#ExaBord,#User").combobox('select','');
+		$("#isDefault").checkbox('setValue',false);
 		PageHandle();
 		ExaBoroughUserTabDataGridLoad();
 	}

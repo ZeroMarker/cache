@@ -8,6 +8,7 @@ var WardId="";
 var CurrState="";
 var PatAllStatus="";   //患者状态
 var PAAdmWard="";    //患者当前所在病区
+var HOSWINDOWID=""; //用户大会
 /// 页面初始化函数
 function initPageDefault(){
     LoadEpisodeID();          /// 初始化就诊号
@@ -19,8 +20,11 @@ function initPageDefault(){
 	InitPageDataGrid();		  /// 初始化页面datagrid
 }
 function LoadEpisodeID(){
+	HOSWINDOWID = getParam("windowId"); //用户大会 st
+	hosNoPatOpenUrl = getParam("hosNoPatOpenUrl");
+	hosNoPatOpenUrl?hosOpenPatList(hosNoPatOpenUrl):''; //ed
 	EpisodeID = getParam("EpisodeID");
-	
+
 }
 
 ///验证患者是否能进行转移
@@ -43,7 +47,7 @@ function PatIsDea(){
 
 /// 初始化界面控件内容
 function InitPageComponent(){
-	
+	if(EpisodeID=="")return; //用户大会
 	$("#disPatWin-disStDate").datebox("setValue",formatDate(0));
 	$('#disPatWin-disStTime').timespinner('setValue',curTime());
 	///急诊病区
@@ -57,7 +61,7 @@ function InitPageComponent(){
 	      	$("#EmBed").combogrid('grid').datagrid('load',{WardId:WardId,HospID:LgHospID})
 	      	var ret = tkMakeServerCall("web.DHCADMVisitStat", "GetStayStatus", EpisodeID)
 			if(ret==-1){
-				 $.messager.alert("提示","该病人为输液病人,不能转移！");
+				 $.messager.alert("提示","该患者非留观抢救患者,不能转移！");
 			     return false;
 			 }
 	      	
@@ -114,7 +118,7 @@ function initCombogrid()
 	
 	$('#EmBed').combogrid({
 			url:url,
-			editable:false,
+			//editable:false,
 			panelHeight:260,   
 		    panelWidth:500,
 		    idField:'BedId',
@@ -128,7 +132,12 @@ function initCombogrid()
 			        $.messager.alert("提示","该床位已有病人，请选择其他床位！");
 		    		$('#EmBed').combogrid('setValue',"");
 		        }
-        	}
+        	},
+			onChange:function(newValue, oldValue){
+				if (newValue == ""){
+					$('#EmBed').combogrid('setValue',"");
+				}
+			}
 	});
 }
 ///安排转床35000212---------------------------
@@ -165,18 +174,18 @@ function Update()
 	//var param =LgUserID+"^"+BedId+"^"+WardId+"^"+EpisodeID+"^"+stDate+"^"+stTime+"^"+""+"^"+"";
 	if((PAAdmWard=="")||((PAAdmWard!="")&&(PAAdmWard!=WardDesc)))
 	{
-		if(WardDesc=="急诊观察室")
+		if(WardDesc==$g("急诊观察室"))
 		{
 			var StatCode="InObservationRoom";
 			changestatus(BedId,WardId,WardDesc,StatCode);    ///改变患者状态并安排床位
 			insertGroupReceipt();//
-		}else if(WardDesc=="急诊监护室")
+		}else if(WardDesc==$g("急诊监护室"))
 			{
 				var StatCode="InMonitoringRoom";
 				changestatus(BedId,WardId,WardDesc,StatCode);    ///改变患者状态并安排床位
 				insertGroupReceipt();//
 			}
-		if(WardDesc=="急诊初诊室(红区)")
+		if(WardDesc==$g("急诊初诊室(红区)"))
 		{
 			changepatBed(BedId,WardId);      ///分配床位
 		}
@@ -295,26 +304,51 @@ function TransPatWardBed(BedId,WardId){
 
   var ret = tkMakeServerCall("web.DHCADMVisitStat", "GetStayStatus", EpisodeID)
    if(ret==-1){
-	   $.messager.alert("提示","该病人为输液病人,不能转移！");
+	   $.messager.alert("提示","该患者非留观抢救患者,不能转移！");
 		return false;
 	  
     }
 	runClassMethod("web.DHCADTTransaction","MoveAdm",{"EpisodeID":EpisodeID,"userId":LgUserID,"wardDescOrId":WardId,"bedId":BedId,"editPreTrans":"Y"},
 		function(data){
 			if (data==="0") {
-				if (window.opener){
-					//window.opener.postMessage("刷新急诊床位图","http://172.21.235.1");
-					window.opener.postMessage("刷新急诊床位图","http://"+window.location.host);
+				try{ //用户大会
+					if (window.opener){
+						//window.opener.postMessage("刷新急诊床位图","http://172.21.235.1");
+						window.opener.postMessage($g("刷新急诊床位图"),"http://"+window.location.host);
+					}
+					
+					///局部刷新：床位图弹出
+					if(window.parent.top){
+						if(window.parent.top.frames[0]){
+							if("function" === typeof window.parent.top.frames[0].localRefresh){
+								window.parent.top.frames[0].localRefresh();
+							}
+						}		
+					}
+					
+					$.messager.alert("提示","安排成功！","",function(){
+						window.parent.top.websys_showModal("close");
+						HOSWINDOWID?closeWindow():'';
+					});
+				}catch(err){
+					$.messager.alert("提示","安排成功！","",function(){
+						window.location.reload();
+						HOSWINDOWID?closeWindow():'';
+					});	
 				}
-				$.messager.alert("提示","安排成功！","",function(){
-					window.parent.top.frames[0].location.reload();
-					window.parent.top.websys_showModal("close");
-				});
 			}else{
 					$.messager.alert("提示",data+"！");
 					return;
 				}
 		},'text',false)
+}
+
+function closeWindow(){
+	
+	//<button onclick="myClick('windowMinimum')">最小化</button>
+	//<button onclick="myClick('windowChange')">最大化</button>
+	//<button onclick="myClick('windowClose')">关闭</button>
+	hosCloseWindow(HOSWINDOWID);
 }
 
 /// 安排转床  bianshuai 2019-01-24
@@ -356,16 +390,28 @@ function TrsWardBed(){
 /// 病人就诊信息
 function InitPatBaseBar(){
 	
-	runClassMethod("web.DHCEMConsultQuery","GetPatEssInfo",{"PatientID":"", "EpisodeID":EpisodeID},function(jsonString){
+	runClassMethod("web.DHCEMInComUseMethod","GetPatEssInfo",{"PatientID":"", "EpisodeID":EpisodeID},function(jsonString){
 		var jsonObject = jsonString;
 		$('.ui-span-m').each(function(){
-			$(this).text(jsonObject[this.id]);
-			if (jsonObject.PatSex == "男"){
+			$(this).html(jsonObject[this.id]);
+			if ((jsonObject.PatSex == $g("男"))||(jsonObject.ChPatSex=="男")){
+				if(HISUIStyleCode=="lite"){
+					$("#PatPhoto").attr("src","../images/man_lite.png");
+				}else{
 				$("#PatPhoto").attr("src","../scripts/dhcnewpro/images/boy.png");
-			}else if (jsonObject.PatSex == "女"){
+				}
+			}else if ((jsonObject.PatSex == $g("女"))||(jsonObject.ChPatSex=="女")){
+				if(HISUIStyleCode=="lite"){
+					$("#PatPhoto").attr("src","../images/woman_lite.png");
+				}else{
 				$("#PatPhoto").attr("src","../scripts/dhcnewpro/images/girl.png");
+				}
 			}else{
+				if(HISUIStyleCode=="lite"){
+					$("#PatPhoto").attr("src","../images/unman_lite.png");
+				}else{
 				$("#PatPhoto").attr("src","../scripts/dhcnewpro/images/unman.png");
+				}
 			}
 		})
 	},'json',false)
@@ -388,11 +434,12 @@ function InitPageDataGrid(){
 	///  定义datagrid
 	var option = {
 		//showHeader:false,
-		fitColumn:true,
+		fitColumns:true,
 		rownumbers:false,
 		singleSelect:true,
 		pagination:true,
 		fit:true,
+		toolbar:[],
 	    onLoadSuccess:function (data) { //数据加载完毕事件
 	    	
         }
@@ -404,11 +451,11 @@ function InitPageDataGrid(){
 
 //hxy 2020-02-20
 function setCellLabel(value){
-	if(value.indexOf("1级")>-1){value="Ⅰ级";}
-	if(value.indexOf("2级")>-1){value="Ⅱ级";}
-	if(value.indexOf("3级")>-1){value="Ⅲ级";}
-	if(value.indexOf("4级")>-1){value="Ⅳa级";}
-	if(value.indexOf("5级")>-1){value="Ⅳb级";}
+	if(value.indexOf("1级")>-1){value=$g("Ⅰ级");}
+	if(value.indexOf("2级")>-1){value=$g("Ⅱ级");}
+	if(value.indexOf("3级")>-1){value=$g("Ⅲ级");}
+	if(value.indexOf("4级")>-1){value=$g("Ⅳa级");}
+	if(value.indexOf("5级")>-1){value=$g("Ⅳb级");}
 	return value;
 }
 

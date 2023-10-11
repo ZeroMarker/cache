@@ -76,6 +76,8 @@ function PageHandle(){
 	LoadStartUser();
 }
 function LoadStartUser(){
+	
+	/*
 	var Data=$.cm({
 		ClassName:"web.PilotProject.DHCDocPilotProject",
 		QueryName:"Finduse",
@@ -83,6 +85,35 @@ function LoadStartUser(){
 		Desc:"",
 		rows:99999
 	},false); 
+	*/
+	
+	var Data=$.cm({
+		ClassName:"web.PilotProject.DHCDocPilotProject",
+		QueryName:"FindStartUser",
+		dataType:"json",
+		PPStartUser:"",
+		InHosp:session['LOGON.HOSPID'],
+		rows:99999
+	},false); 
+	
+	var cbox = $HUI.combobox("#UserName", {
+			valueField: 'Hidden',
+			textField: 'Desc', 
+			editable:true,
+			data: Data["rows"],
+			onChange:function(newValue,OldValue){
+				if (newValue==""){
+					var cbox = $HUI.combobox("#PPStartUser");
+					cbox.select("");
+				}
+			},
+			filter: function(q, row){
+				q=q.toUpperCase();
+				return (row["Desc"].toUpperCase().indexOf(q) >= 0)||(row["SSUSRInitials"].toUpperCase().indexOf(q) >= 0);
+			}
+	 });
+	
+	/* 
 	var cbox = $HUI.combobox("#UserName", {
 			valueField: 'SSUSR_RowId',
 			textField: 'SSUSR_Name', 
@@ -99,6 +130,7 @@ function LoadStartUser(){
 				return (row["SSUSR_Name"].toUpperCase().indexOf(q) >= 0)||(row["SSUSR_Initials"].toUpperCase().indexOf(q) >= 0);
 			}
 	 });
+	 */
 }
 function Init(){
 	PageLogicObj.m_PilotProListTabDataGrid=InitPilotProListTabDataGrid();
@@ -158,6 +190,8 @@ function PilotProListTabDataGridLoad(){
 	var myArray=$.cm({
 		ClassName:"web.PilotProject.DHCDocPilotProject",
 		MethodName:"GetProjectStrSelf",
+		InHosp:session['LOGON.HOSPID'],
+		UserID:session['LOGON.USERID'],
 		dataType:"text"
 	},false);
 	for (var i=0;i<myArray.split("^").length;i++){
@@ -186,12 +220,12 @@ function InitPilotProCareListTabDataGrid(){
     }];
 	var Columns=[[ 
 		{field:'UserDr',hidden:true,title:''},
-		{field:'UserName',title:'参与者',width:200},
-		{field:'ContactTel',title:'联系电话',width:200},
-		{field:'ContactFlag',title:'是否联系人',width:200,
+		{field:'UserName',title:'参与者',width:350},
+		{field:'ContactTel',title:'联系电话',width:350},
+		{field:'ContactFlag',title:'是否联系人',width:268,
 			formatter:function(value,record){
-	 			if (value=="Y") return "是";
-	 			else  return "否";
+	 			if (value=="Y") return $g("是");
+	 			else  return $g("否");
 	 		},styler: function(value,row,index){
  				if (value=="Y"){
 	 				return 'color:#21ba45;';
@@ -451,26 +485,33 @@ function DelClickHandle(){
 		$.messager.alert("提示","已选择用户删除后,该项目没有联系人,请增加其他联系人后,再删除!")
 		return;
 	}
-	for (var i=rows.length-1;i>=0;i--){
-		var UserDr=rows[i]["UserDr"];
-		var myrtn=$.cm({
-			ClassName:"web.PilotProject.DHCDocPilotProject",
-			MethodName:"DeleteProjectCare",
-			PPRowId:PPRowId,
-			UserRowId:UserDr,
-			dataType:"text"
-		},false);
-		if (myrtn=="0"){
-			var index=PageLogicObj.m_PilotProCareListTabDataGrid.datagrid('getRowIndex',UserDr);
-			PageLogicObj.m_PilotProCareListTabDataGrid.datagrid('deleteRow',index);
-			$("#ContactTel").val('');
-			$("#ContactFlag").checkbox('uncheck').checkbox('disable');
-			$("#UserName").prop("disabled",true);
-		}else{
-			$.messager.alert("提示","删除失败! 错误代码:"+myrtn);
+	$.messager.confirm("提示", "确认删除？",function (r) {
+		if (r) {
+			for (var i=rows.length-1;i>=0;i--){
+				var UserDr=rows[i]["UserDr"];
+				var myrtn=$.cm({
+					ClassName:"web.PilotProject.DHCDocPilotProject",
+					MethodName:"DeleteProjectCare",
+					PPRowId:PPRowId,
+					UserRowId:UserDr,
+					dataType:"text"
+				},false);
+				if (myrtn=="0"){
+					var index=PageLogicObj.m_PilotProCareListTabDataGrid.datagrid('getRowIndex',UserDr);
+					PageLogicObj.m_PilotProCareListTabDataGrid.datagrid('deleteRow',index);
+					$("#ContactTel").val('');
+					$("#ContactFlag").checkbox('uncheck').checkbox('disable');
+					$("#UserName").prop("disabled",true);
+				}else{
+					$.messager.alert("提示","删除失败! 错误代码:"+myrtn);
+				}
+			}
+			$.messager.alert("提示","删除成功!");
 		}
-	}
-	$.messager.alert("提示","删除成功!");
+		
+	});
+	
+	
 }
 function AddClickHandle(){
 	var UserRowId=$("#UserName").combobox("getValue");
@@ -517,8 +558,10 @@ function CheckComboxSelData(id,selId){
 	 var Data=$("#"+id).combobox('getData');
 	 for(var i=0;i<Data.length;i++){
 		 if (id=="UserName"){
-			var CombValue=Data[i].SSUSR_RowId;
-		 	var CombDesc=Data[i].SSUSR_Name;
+			//var CombValue=Data[i].SSUSR_RowId;
+		 	//var CombDesc=Data[i].SSUSR_Name;
+		 	var CombValue=Data[i].Hidden;
+		 	var CombDesc=Data[i].Desc;
 	     }else{
 		    var CombValue=Data[i].rowid  
 		 	var CombDesc=Data[i].Desc

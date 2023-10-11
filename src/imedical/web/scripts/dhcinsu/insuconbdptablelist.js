@@ -7,6 +7,8 @@
  */
 var PassWardFlag = 'N';
  $(function () { 
+ 	//
+ 	var Insert = tkMakeServerCall("web.INSUDicDataCom","CheckAddINSUConBDPTableList");
 	//
 	init_dg(); 
 	
@@ -64,7 +66,7 @@ function init_wdg(){
 					</a>";
 				}
 			}
-		]],
+		]]
 	});
 		
 }
@@ -81,7 +83,12 @@ function checkPassward(index,rowData){
 			    	$.messager.prompt("提示", "请输入密码", function (r) { // prompt 此处需要考虑为非阻塞的
 						if (r) {
 							PassWardFlag = tkMakeServerCall("web.INSUDicDataCom","CehckPassWard",r,"");
-							if(PassWardFlag=='Y') SaveCon(index,rowData,selectedRow); 
+							if(PassWardFlag=='Y'){ 
+								SaveCon(index,rowData,selectedRow)
+							}else{
+								$.messager.alert('提示','密码错误!','info')
+								return false;
+							};
 						} else {
 							return false;
 						}
@@ -91,7 +98,26 @@ function checkPassward(index,rowData){
 				}		
 			}	
 		})	
+	}else{
+		if(PassWardFlag == "N"){
+			$.messager.prompt("提示", "请输入密码", function (r) { // prompt 此处需要考虑为非阻塞的
+				if (r) {
+					PassWardFlag = tkMakeServerCall("web.INSUDicDataCom","CehckPassWard",r,"");
+					if(PassWardFlag=='Y'){ 
+						SaveCon(index,rowData,selectedRow)
+					}else{
+						$.messager.alert('提示','密码错误!','info')
+						return false;
+					}; 
+				} else {
+					return false;
+				}
+			})
+		}else{
+			SaveCon(index,rowData,selectedRow);  
+		}	
 	}
+	
 	
 }
 function SaveCon(index,rowData,selectedRow){

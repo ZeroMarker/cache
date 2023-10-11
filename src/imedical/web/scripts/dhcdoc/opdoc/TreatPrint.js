@@ -1,4 +1,4 @@
-ï»¿var treeData;
+var treeData;
 var rightSegmentPanel = null;
 var OETableConfig = {
 	"tableConfig" : {}
@@ -8,7 +8,8 @@ var printDeviceCom=null;
 var $paperSize=null;
 var allOEArr=new Array;
 var waitCancelOEArr=new Array;
-var m_IDCredTypePlate="01"; //èº«ä»½è¯ä»£ç å­—æ®µ
+var m_IDCredTypePlate="01"; //Éí·İÖ¤´úÂë×Ö¶Î
+var OrderPrescNo=""
 function Init(){
 	rightSegmentPanel = $("#rightSegmentPanel");
 	InitPrintItemTree();
@@ -22,19 +23,19 @@ function InitPrintItemTree(){
 			var treeDataArr=new Array();
 			for (var i=0;i<treeData.length;i++){
 				var oneJsonData=treeData[i];
-				var pId=oneJsonData["pId"]; //çˆ¶ç›®å½•id
+				var pId=oneJsonData["pId"]; //¸¸Ä¿Â¼id
 				if (pId!=targetId) continue;
 				var id=oneJsonData["id"];
 				var name=oneJsonData["name"];
-				var nocheck=oneJsonData["nocheck"]; //æœ‰æ— å¤é€‰æ¡†
-				var checked=oneJsonData["checked"]; //æ˜¯å¦é€‰ä¸­
+				var nocheck=oneJsonData["nocheck"]; //ÓĞÎŞ¸´Ñ¡¿ò
+				var checked=oneJsonData["checked"]; //ÊÇ·ñÑ¡ÖĞ
 				if (checked=="1") checked=true;
 				else checked=false;
-				var urlStyle=oneJsonData["urlStyle"]; //é“¾æ¥ç±»å‹
-				var expandMethodForLoadingTable=oneJsonData["expandMethodForLoadingTable"]; //å±•å¼€äº‹ä»¶ 
-				var urlObject=oneJsonData["urlObject"]; //é“¾æ¥
+				var urlStyle=oneJsonData["urlStyle"]; //Á´½ÓÀàĞÍ
+				var expandMethodForLoadingTable=oneJsonData["expandMethodForLoadingTable"]; //Õ¹¿ªÊÂ¼ş 
+				var urlObject=oneJsonData["urlObject"]; //Á´½Ó
 				var value=oneJsonData["value"];
-				var clickevent=oneJsonData["clickevent"]; //ç‚¹å‡»äº‹ä»¶
+				var clickevent=oneJsonData["clickevent"]; //µã»÷ÊÂ¼ş
 				var previewxmlname=oneJsonData["previewxmlname"];
 				var printmethod=oneJsonData["printmethod"];
 				var state='open';
@@ -48,7 +49,7 @@ function InitPrintItemTree(){
 				parent: node.target,
 				data:treeDataArr
 			});
-			//èŠ‚ç‚¹åŠ è½½å®Œä¹‹åæ‰èƒ½åˆ·æ–°å³ä¾§æ•°æ®
+			//½Úµã¼ÓÔØÍêÖ®ºó²ÅÄÜË¢ĞÂÓÒ²àÊı¾İ
 			LoadRightPanelPage(node);
 		},
 		onClick:function(node){
@@ -95,10 +96,14 @@ function InitPrintItemTree(){
 		}
 	});
 }
-//å·¦ä¾§checkboxå‹¾é€‰/å–æ¶ˆå‹¾é€‰
-function TreeOnCheck(e){
+//×ó²àcheckbox¹´Ñ¡/È¡Ïû¹´Ñ¡
+function TreeOnCheck(e,nodeid){
 	var indexMap = OETableConfig["Index"];
-	var ckId=e.target.id;
+	if (e!=""){
+		var ckId=e.target.id;
+	}else{
+		var ckId=nodeid+"_check"
+	}
 	var $ck=$("#"+ckId);
 	var node= $('#PrintItemTree').tree('find', ckId.split("_")[0]);
 	var nodeV = node["value"];
@@ -112,7 +117,7 @@ function TreeOnCheck(e){
 	}
 	for ( var oe in indexMap) {
 		if (indexMap[oe][nodeV] == undefined) continue;
-		//å¦‚æœå·²ç»æ‰“å°è¿‡äº†ï¼Œåˆ™æŒ‰ç…§æœªå‹¾é€‰å¤„ç†
+		//Èç¹ûÒÑ¾­´òÓ¡¹ıÁË£¬Ôò°´ÕÕÎ´¹´Ñ¡´¦Àí
 		var tid=indexMap[oe]["tableId"];
 		indexMap[oe][nodeV] = checkFlag ? 1 : 0;
 		if ((OETableConfig["tableConfig"][tid]["menuOEConfig"][nodeV])&&(OETableConfig["tableConfig"][tid]["menuOEConfig"][nodeV][oe]>=1)){
@@ -146,7 +151,7 @@ function TreeOnCheck(e){
 	}
 }
 function LoadRightPanelPage(node){
-	if (node["urlStyle"] == "iframe") { //é“¾æ¥ç±»å‹
+	if (node["urlStyle"] == "iframe") { //Á´½ÓÀàĞÍ
 		loadIframe(node, true);
 	} else {
 		loadHtmlSegment(node["urlObject"], true, function() {
@@ -178,17 +183,17 @@ function LoadPrintItemTree(){
 			var oneJsonData=jsonData.rows[i];
 			var id=oneJsonData["id"];
 			var name=oneJsonData["name"];
-			var nocheck=oneJsonData["nocheck"]; //æœ‰æ— å¤é€‰æ¡†
-			var checked=oneJsonData["checked"]; //æ˜¯å¦é€‰ä¸­
+			var nocheck=oneJsonData["nocheck"]; //ÓĞÎŞ¸´Ñ¡¿ò
+			var checked=oneJsonData["checked"]; //ÊÇ·ñÑ¡ÖĞ
 			if (checked=="1") checked="true";
 			else checked="false";
-			var urlStyle=oneJsonData["urlStyle"]; //é“¾æ¥ç±»å‹
-			var pId=oneJsonData["pId"]; //çˆ¶ç›®å½•id
-			var expandMethodForLoadingTable=oneJsonData["expandMethodForLoadingTable"]; //å±•å¼€äº‹ä»¶ 
-			var urlObject=oneJsonData["urlObject"]; //é“¾æ¥
+			var urlStyle=oneJsonData["urlStyle"]; //Á´½ÓÀàĞÍ
+			var pId=oneJsonData["pId"]; //¸¸Ä¿Â¼id
+			var expandMethodForLoadingTable=oneJsonData["expandMethodForLoadingTable"]; //Õ¹¿ªÊÂ¼ş 
+			var urlObject=oneJsonData["urlObject"]; //Á´½Ó
 			var value=oneJsonData["value"];
-			var clickevent=oneJsonData["clickevent"]; //ç‚¹å‡»äº‹ä»¶
-			var open=oneJsonData["open"]; //æ˜¯å¦å±•å¼€
+			var clickevent=oneJsonData["clickevent"]; //µã»÷ÊÂ¼ş
+			var open=oneJsonData["open"]; //ÊÇ·ñÕ¹¿ª
 			if (open=="1") defId=id;
 			var previewxmlname=oneJsonData["previewxmlname"];
 			var printmethod=oneJsonData["printmethod"];
@@ -208,7 +213,7 @@ function LoadPrintItemTree(){
 		tbox.select(node.target);
 	});
 }
-//å±•å¼€äº‹ä»¶ åŠ è½½tableæ•°æ®
+//Õ¹¿ªÊÂ¼ş ¼ÓÔØtableÊı¾İ
 function loadOrdTableData(id) {
 	var tbox=$HUI.tree("#PrintItemTree");
 	var $checkbox=$("[id$='_check']");
@@ -223,13 +228,15 @@ function loadOrdTableData(id) {
 		}
 	}
 	$("#previewBtn,#printBtn,#BFind,#BCancel").unbind('click');
-	//é¢„è§ˆäº‹ä»¶
+	//Ô¤ÀÀÊÂ¼ş
 	$("#previewBtn").click(preview);
-	//æ‰“å°äº‹ä»¶
+	//´òÓ¡ÊÂ¼ş
 	$("#printBtn").click(function(){print("Y")});
-	// æ’¤é”€åŒ»å˜± 
+	// ³·ÏúÒ½Öö 
 	$("#BCancel").click(CancelOrdClick); 
-	$("#BFind").click(loadOrdTableData); //æŸ¥è¯¢äº‹ä»¶
+	$("#BFind").click(loadOrdTableData); //²éÑ¯ÊÂ¼ş
+	var selObj=$("#OrdComStatusKeyWord").keywords("getSelected");
+	var OrdComStatus=selObj[0].id;
 	var args = {
 		"episodeID" : ServerObj.EpisodeID,
 		"menuItems" : selectedItems.join(",")
@@ -240,11 +247,13 @@ function loadOrdTableData(id) {
 		episodeID:args.episodeID,
 		menuItems:args.menuItems,
 		StDate:$("#StDate").datebox('getValue'),
-		EndDate:$("#EndDate").datebox('getValue')
+		EndDate:$("#EndDate").datebox('getValue'),
+		OrdComStatus:OrdComStatus
 	},function(jsonData){
 		removeTable();
 		OETableConfig["Index"] = {};
 		OETableConfig["Index2"] = {};
+		OETableConfig["tableConfig"] = {};
 		/*for (var i=0;i<jsonData.length;i++){
 			buildTable(jsonData[i]);
 		}
@@ -254,22 +263,24 @@ function loadOrdTableData(id) {
 			$(".ImageButton").click(imgpreview);
 		}*/
 		var len=jsonData.length;
-		var RanderTable=function (i){
-				setTimeout(function(){
-					buildTable(jsonData[i]);
-					i++;
-					if (i<len){
-						RanderTable(i);
-					}else{
-						tabledrawCallBack();
-						indexOETableConfig();
-						if ($(".ImageButton").length>=1){
-							$(".ImageButton").click(imgpreview);
+		if (len>0) {
+			var RanderTable=function (i){
+					setTimeout(function(){
+						buildTable(jsonData[i]);
+						i++;
+						if (i<len){
+							RanderTable(i);
+						}else{
+							tabledrawCallBack();
+							indexOETableConfig();
+							if ($(".ImageButton").length>=1){
+								$(".ImageButton").click(imgpreview);
+							}
 						}
-					}
-				})
-		}
-		RanderTable(0);		
+					})
+			}
+			RanderTable(0);
+		}		
 	});
 }
 function loadIframe(node, isReplacePanelBody, callback) {
@@ -277,6 +288,7 @@ function loadIframe(node, isReplacePanelBody, callback) {
 		rightSegmentPanel.empty();
 	}
 	var lnk=replaceLinkParams(node["urlObject"]);
+	if(typeof websys_writeMWToken=='function') lnk=websys_writeMWToken(lnk);
 	var temp="<iframe id='"+node["id"] + "_printItemIframe"+"' width='100%' height='100%' scrolling='auto' frameborder='0' src='"+lnk+"'></iframe>"
 	rightSegmentPanel.append(temp);
 	if (callback) callback();
@@ -295,6 +307,7 @@ function loadHtmlSegment(url, isReplacePanelBody, callback) {
 		if (callback) callback();
 		return false;
 	}
+	if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
 	$.ajax(url, {
 		"type" : "GET",
 		"dataType" : "html",
@@ -313,7 +326,29 @@ function loadHtmlSegment(url, isReplacePanelBody, callback) {
 				formatter:myformatter,
 				parser:myparser
 			});
+			var _$label = $("label[for=StDate]");
+				if (_$label.length > 0){
+				   domName = _$label[0].innerHTML;
+				    _$label[0].innerHTML=$g(domName);
+				}
+			var _$label = $("label[for=EndDate]");
+				if (_$label.length > 0){
+				   domName = _$label[0].innerHTML;
+				    _$label[0].innerHTML=$g(domName);
+				}
 			$("#StDate").datebox('setValue',ServerObj.StartDate);
+			$("#OrdComStatusKeyWord").keywords({
+			    singleSelect:true,
+			    //labelCls:'red',
+			    items:[
+			        {text:'È«²¿',id:'All'},
+			        {text:'Î´ÊÕ·Ñ',id:'UnPay',selected:true},
+			        {text:'ÒÑÊÕ·Ñ',id:'Payed'}
+			    ],
+			    onClick:function(v){
+					loadOrdTableData();
+				}
+			});
 			if (callback) callback();
 		}
 	});
@@ -337,7 +372,7 @@ function buildTable(data){
 	tool.attr("id",data["id"]+"Panle");
 	OETableConfig["tableConfig"][data["id"]] = data["config"];
 	panel.append(tool);
-	var oneHeight=47; 
+	var oneHeight=57; 
 	var dataLen=data["rows"].length;
 	if (dataLen<=1){
 		var PanelMaxHeight=oneHeight*3;
@@ -346,11 +381,12 @@ function buildTable(data){
 	}
 	var config=data["config"];
 	if (data.titleClass.indexOf("cmpresc-head")>=0){
-		if (config["IsDMPresc"]) {
+		/*if (config["IsDMPresc"]) {
 			var PanelMaxHeight=145;
 		}else{
 			var PanelMaxHeight=105;
-		}
+		}*/
+		var PanelMaxHeight=105;
 	}
 	tool.height(PanelMaxHeight);
 	var selectConsistent=config["selectConsistent"];
@@ -392,7 +428,7 @@ function buildTable(data){
 				}else if(field=="ReportLinkInfo"){
 					columns.push({"field":field,"title":title,formatter:function(value,rec){
 						if (value!=""){
-							var btn = '<a class="editcls" onclick="OpenReportLink(\'' + rec.ReportLinkInfo + '\')">æŸ¥çœ‹æŠ¥å‘Š</a>';
+							var btn = '<a class="editcls" onclick="OpenReportLink(\'' + rec.ReportLinkInfo + '\')">²é¿´±¨¸æ</a>';
 						    return btn;
 					    }else{
 						    return "";
@@ -410,15 +446,16 @@ function buildTable(data){
 	tool.append(content);
 	if (data["titleClass"]=="") data["titleClass"]="panel-header-gray";
 	var title=data["title"];
+	var OrderPrescNo=data.rows[0].OrderPrescNo
 	if (config["IsDMPresc"]) {
-		title=title+'<a href="#" class="ImageButton">'+$g("æ‚£è€…åŠä»£ç†äººä¿¡æ¯")+'</a>';
+		title=title+'<a href="#" title ="'+OrderPrescNo+'" class="ImageButton">'+$g("»¼Õß¼°´úÀíÈËĞÅÏ¢")+'</a>';
 	}
 	if (data.titleClass.indexOf("cmpresc-head")>=0){
-		title=title+'<a href="#" onClick=CMPrescDetailClick(\''+data["id"]+'\') class="toggle-btn">'+$g("å¤„æ–¹æ˜ç»†")+'</a>';
+		title=title+'<a href="#" onClick=CMPrescDetailClick(\''+data["id"]+'\') class="toggle-btn">'+$g("´¦·½Ã÷Ï¸")+'</a>';
 	}
 	var type=data["id"].split("_")[0];
 	if ((type!="L")&&(type!="S")&&(type!="O")&&(config["IsNeedLinkDiagPresc"])){
-		title=title+'<a href="#" onClick=PrescLinkDiagClick(\''+data["id"]+'\') class="toggle-btn">'+$g("å…³è”è¯Šæ–­")+'</a>';
+		title=title+'<a href="#" onClick=PrescLinkDiagClick(\''+data["id"]+'\') class="toggle-btn">'+$g("¹ØÁªÕï¶Ï")+'</a>';
 	}
 	var tableId=data["id"];
 	$("#"+data["id"]).simplydatagrid({
@@ -429,6 +466,15 @@ function buildTable(data){
 	   columns: newcolumns,
 	   data:data["rows"],
 	   border:false,
+       onClickRow:function(index, row){
+		var OrderId=row.OEItemID;
+		if (OrderId.indexOf("||")>-1){
+			var MainSreenFlag=websys_getAppScreenIndex();
+			if (MainSreenFlag==0){
+				websys_emit("onSelectOrdInDoc",{OrderId:OrderId});
+			}
+		}	
+     },
 	   onCheck:function(index, row){
 		   if (row['ReqID']!=""){
 				var GridData=$("#"+data["id"]).simplydatagrid("getRows");
@@ -506,14 +552,15 @@ function CMPrescDetailClick(tableId){
 		var oneHeight=47; 
 		var PanelMaxHeight=oneHeight*(rows.length-1)+100;
 	}
-	destroyDialog("tabCMPrescDetail");
-	var Content="<table id='tabCMPrescDetail' style='margin:5px;border:none;width:300px;'></table>";
+	destroyDialog("tabCMPrescDetailPanel");
+	//var Content="<table id='tabCMPrescDetail' style='margin:5px;border:none;width:300px;'></table>";
+	var Content=initDiagDivHtml("tabCMPrescDetail");
 	var iconCls="icon-w-list";
-	createModalDialog("tabCMPrescDetail",tableId.split("_")[0]+$g("è‰è¯å¤„æ–¹åŒ»å˜±æ˜ç»†"), 800, 400,iconCls,"",Content,"",true);
+	createModalDialog("tabCMPrescDetailPanel",tableId.split("_")[0]+$g("²İÒ©´¦·½Ò½ÖöÃ÷Ï¸"), 800, 400,iconCls,"",Content,"",true);
 	$("#tabCMPrescDetail").datagrid({  
-		height:400,
+		height:330,
 		border : false,
-		striped : true,
+		striped : false,
 		singleSelect : false,
 		fitColumns : true,
 		autoRowHeight : true,
@@ -533,14 +580,28 @@ function removeTable(){
 		$table.remove();
 }
 function imgpreview(){
-	$.ajax("opdoc.treatprintimage.csp", {
+	OrderPrescNo=this.title
+	$.ajax("opdoc.treatprintimage.csp"+((typeof websys_getMWToken=='function')?("?MWToken="+websys_getMWToken()):""), {
 		"type" : "GET",
 		"dataType" : "html",
 		"success" : function(data, textStatus) {
 			var $code = $(data);
-			createModalDialog("PatSupplyInfo",$g("æ‚£è€…åŠä»£ç†äººä¿¡æ¯"), 570, 310,"icon-w-save","ä¿å­˜",$(data),"SaveSupplyInfo()",true);
-			InitTextFile();
-			$('#Save').click(SaveSupplyInfo)
+			createModalDialog("PatSupplyInfo",$g("»¼Õß¼°´úÀíÈËĞÅÏ¢"), 615, 340,"icon-w-save","±£´æ",$(data),"SaveSupplyInfo(OrderPrescNo)",true);
+			InitTextFile(OrderPrescNo);
+			//$('#Save').click(SaveSupplyInfo(OrderPrescNo))
+			//var OrderPrescNo=""
+			var domIdStr="PAPMICredType^PatCredNo^AgencyCredType^SupplyCredNo^SupplyName^AgencyTel^PatAddress^PatWeight"
+			for (var i=0; i< domIdStr.split("^").length; i++){
+				var domId = domIdStr.split("^")[i]
+				if (domId == "") {
+					continue;
+				}
+				var _$label = $("label[for="+domId+"]");
+				if (_$label.length > 0){
+				   domName = _$label[0].innerHTML;
+				    _$label[0].innerHTML=$g(domName);
+				}
+			}
 		},
 
 		"error" : function(XMLHttpRequest, textStatus, errorThrown) {
@@ -548,7 +609,8 @@ function imgpreview(){
 		}
 	});
 }
-function SaveSupplyInfo() {
+function SaveSupplyInfo(OrderPrescNo) {
+	//alert(OrderPrescNo)
 	var PatAddress = $("#PatAddress").val();
 	var Weight=$("#PatWeight").val();
 	var PatCredNo = $("#PatCredNo").val();
@@ -556,7 +618,7 @@ function SaveSupplyInfo() {
 	var SupplyCredNo = $("#SupplyCredNo").val();
 	var SupplyAgencyTel =  $("#AgencyTel").val();
 	if((PatCredNo=="")&&((SupplyCredNo=="")||(SupplyName=="")||(SupplyAgencyTel==""))){
-		if ((needPrintConfig)&&(needPrintConfig["menuNodes"])&&((needPrintConfig["menuNodes"]["CFD"])||(needPrintConfig["menuNodes"]["CFZ"]))){
+		/*if ((needPrintConfig)&&(needPrintConfig["menuNodes"])&&((needPrintConfig["menuNodes"]["CFD"])||(needPrintConfig["menuNodes"]["CFZ"]))){
 			var printDMPrescFlag=0;
 			var dangerTab=$(".danger-head");
 			for (var m=0;m<dangerTab.length;m++){
@@ -568,12 +630,16 @@ function SaveSupplyInfo() {
 				}
 			}
 			if (printDMPrescFlag==1){
-				$.messager.alert("æç¤º","ä¿¡æ¯ä¸å®Œæ•´,è¯·å¡«å†™å®Œæ•´ä¿¡æ¯","info",function(){
+				$.messager.alert("ÌáÊ¾","ĞÅÏ¢²»ÍêÕû,ÇëÌîĞ´ÍêÕûĞÅÏ¢","info",function(){
 					$("#PatCredNo").focus();
 				});
 				return false;
 			}
-		}
+		}*/
+		$.messager.alert("ÌáÊ¾","ĞÅÏ¢²»ÍêÕû,ÇëÌîĞ´ÍêÕûĞÅÏ¢","info",function(){
+			$("#PatCredNo").focus();
+		});
+		return false;
 	}
 	
 	var IsDPatCredNo=true,IsIdCardNo=true;
@@ -586,14 +652,14 @@ function SaveSupplyInfo() {
 			var IDNoInfoStr=DHCWeb_GetInfoFromId(PatCredNo)
 			var IDBirthday=IDNoInfoStr[2]  
 			if (ServerObj.PatDobDate!=IDBirthday){
-				$.messager.alert("æç¤º","å‡ºç”Ÿæ—¥æœŸä¸èº«ä»½è¯ä¿¡æ¯ä¸ç¬¦!","info",function(){
+				$.messager.alert("ÌáÊ¾","³öÉúÈÕÆÚÓëÉí·İÖ¤ĞÅÏ¢²»·û!","info",function(){
 					$("#SupplyCredNo").focus();
 				});
 	   		    return false;
 			}
 			var IDSex=IDNoInfoStr[3]
 			if(ServerObj.PatSex!=IDSex){
-				$.messager.alert("æç¤º","èº«ä»½è¯å·:"+PatCredNo+"å¯¹åº”çš„æ€§åˆ«æ˜¯ã€"+IDSex+"ã€‘,ä¸æ‚£è€…æœ¬äººæ€§åˆ«ä¸åŒ!","info",function(){
+				$.messager.alert("ÌáÊ¾","Éí·İÖ¤ºÅ:"+PatCredNo+"¶ÔÓ¦µÄĞÔ±ğÊÇ¡¾"+IDSex+"¡¿,Óë»¼Õß±¾ÈËĞÔ±ğ²»Í¬!","info",function(){
 					$('#SupplyCredNo').next('span').find('input').focus();
 				});
 				return false;
@@ -602,7 +668,7 @@ function SaveSupplyInfo() {
 			var myage=getAge(PatCredNo);
 			if ((!isNaN(myage))&&(myage!="")){
 				if (parseInt(myage)>=parseInt(176)){
-					$.messager.alert("æç¤º","æœ¬äººå¹´é¾„ä¸èƒ½è¶…è¿‡176å²!","info",function(){
+					$.messager.alert("ÌáÊ¾","±¾ÈËÄêÁä²»ÄÜ³¬¹ı176Ëê!","info",function(){
 						$("#SupplyCredNo").focus();
 					});
 					return false;
@@ -618,7 +684,7 @@ function SaveSupplyInfo() {
 			var myage=getAge(SupplyCredNo);
 			if ((!isNaN(myage))&&(myage!="")){
 				if (parseInt(myage)>=parseInt(176)){
-					$.messager.alert("æç¤º","ä»£åŠäººå¹´é¾„ä¸èƒ½è¶…è¿‡176å²!","info",function(){
+					$.messager.alert("ÌáÊ¾","´ú°ìÈËÄêÁä²»ÄÜ³¬¹ı176Ëê!","info",function(){
 						$("#SupplyCredNo").focus();
 					});
 					return false;
@@ -627,7 +693,7 @@ function SaveSupplyInfo() {
 		}
 	}
 	if (SupplyAgencyTel!=""){
-		if (!CheckTelOrMobile(SupplyAgencyTel,"AgencyTel","ä»£åŠäººè”ç³»ç”µè¯")) return false;
+		if (!CheckTelOrMobile(SupplyAgencyTel,"AgencyTel","´ú°ìÈËÁªÏµµç»°")) return false;
 	}
 	if((IsIdCardNo)&&(IsDPatCredNo)){
 		var PAPMICredType=$("#PAPMICredType").combobox('getValue');
@@ -640,10 +706,16 @@ function SaveSupplyInfo() {
 		ClassName:"web.DHCDocCheckPoison",
 		MethodName:"UpdateAgencyInfo",
 		dataType:"text",
+		OrderPrescNo:OrderPrescNo,
 		EpisodeID:ServerObj.EpisodeID,
 		PatInfo:PatInfo
 	},false);
-	if (PatAddress!=""){
+	if (rtn!="0"){
+		$.messager.alert("ÌáÊ¾",rtn+"±£´æĞÅÏ¢Ê§°Ü£¡","info",function(){});
+		return false;
+		
+	}
+	//if (PatAddress!=""){
 		var rtn=$.cm({
 			ClassName:"DHCDoc.OPDoc.AjaxPatientAgentInfor",
 			MethodName:"SavePatAddress",
@@ -651,8 +723,8 @@ function SaveSupplyInfo() {
 			PatientID:ServerObj.PatientID,
 			PatAddress:PatAddress
 		},false);
-	}
-	if (Weight!=""){
+	//}
+	//if (Weight!=""){
 		var rtn=$.cm({
 			ClassName:"web.UDHCPrescript",
 			MethodName:"SaveWeight",
@@ -660,15 +732,17 @@ function SaveSupplyInfo() {
 			MRAdmID:ServerObj.mradm,
 			Weight:Weight
 		},false);
-	}
+	//}
+	$.messager.popover({msg: '±£´æĞÅÏ¢³É¹¦!',type:'success'});
 	destroyDialog("PatSupplyInfo");
 }
-function InitTextFile() {
+function InitTextFile(OrderPrescNo) {
 	LoadCredType();
 	$.cm({
 		ClassName:"web.DHCDocCheckPoison",
 		MethodName:"GetSupplyMethod",
 		dataType:"text",
+		OrderPrescNo:OrderPrescNo,
 		EpisodeID:ServerObj.EpisodeID
 	},function(PatSupplyInfo){ 
 		var PatSupplyInfoArr = PatSupplyInfo.split("^")
@@ -722,7 +796,7 @@ function LoadCredType(){
 			editable:false,
 			data:Data 
 	 });
-	 //é»˜è®¤è¯ä»¶ç±»å‹ä¸ºèº«ä»½è¯
+	 //Ä¬ÈÏÖ¤¼şÀàĞÍÎªÉí·İÖ¤
 	 var selData=$("#PAPMICredType").combobox('getValue');
 	 if (selData){
 		 var code=selData.split("^")[1];
@@ -773,7 +847,7 @@ function indexOETableConfig(){
 				oeConfig["tableId"] = tid;
 				if (!menuItemValueMap[mv]) continue;
 				oeConfig[mv] = !menuItemValueMap[mv]["ischecked"] ? 0 : 1;
-				//å¦‚æœå·²ç»æ‰“å°è¿‡äº†ï¼Œåˆ™æŒ‰ç…§æœªå‹¾é€‰å¤„ç†
+				//Èç¹ûÒÑ¾­´òÓ¡¹ıÁË£¬Ôò°´ÕÕÎ´¹´Ñ¡´¦Àí
 				if ((OETableConfig["tableConfig"][tid]["menuOEConfig"][mv])&&(OETableConfig["tableConfig"][tid]["menuOEConfig"][mv][oe]>=1)){
 					oeConfig[mv] = 0;
 				}
@@ -849,7 +923,7 @@ function tabledrawCallBack(){
 				_$ck[j].disabled=true;
 			}
 			if ((IsCMPresType==1)&&(j>0)){
-				//éšè—è‰è¯è¡Œ
+				//Òş²Ø²İÒ©ĞĞ
 				//$(db.getPanel().find('tr')[j+1]).addClass('tr-hide');
 				$(_$tr[j]).addClass('tr-hide');
 			}
@@ -859,19 +933,38 @@ function tabledrawCallBack(){
 			hck._propAttr("checked", true);
 		}
 		if(selectConsistent) {
-			opts.checkOnSelect=false; //æ§åˆ¶é€‰ä¸­è¡Œä¸è¿›è¡Œå‹¾é€‰
-			//db.options().checkOnSelect=false; //æ§åˆ¶é€‰ä¸­è¡Œä¸è¿›è¡Œå‹¾é€‰
+			opts.checkOnSelect=false; //¿ØÖÆÑ¡ÖĞĞĞ²»½øĞĞ¹´Ñ¡
+			//db.options().checkOnSelect=false; //¿ØÖÆÑ¡ÖĞĞĞ²»½øĞĞ¹´Ñ¡
 		}
 	}
+	$("#printItemIframeTemplate .panel-header").on({
+		mouseenter:function(){
+			var thisWidth = $(this).width(); // div µÄ¿í¶È
+			var wordWidth = $(this).children()[0].scrollWidth; // ÏÈ×ªÎªjs¶ÔÏó; ÎÄ×ÖµÄ¿í¶È
+			if(wordWidth <= thisWidth){
+				return;
+			}
+			$(this).webuiPopover({
+				width:$(this).width(),
+				content:function(){ 
+					return $(this).children()[0].innerHTML;
+				},
+				trigger:'hover',
+				placement:'bottom',
+				cache:false
+			});
+			$(this).webuiPopover('show');
+		}
+	});
 }
 function preview(){
-	$.ajax("opdoc.treatprintpreview.csp", {
+	$.ajax("opdoc.treatprintpreview.csp"+((typeof websys_getMWToken=='function')?("?MWToken="+websys_getMWToken()):""), {
 		"type" : "GET",
 		"dataType" : "html",
 		"async": false,
 		"success" : function(data, textStatus) {
 			var $code = $(data);
-			createModalDialog("PrintDataPreView",$g("æ‰“å°æ•°æ®é¢„è§ˆ"), 800, dh,"icon-w-print",$g("æ‰“å°"),$(data),"print('Y')",true);
+			createModalDialog("PrintDataPreView",$g("´òÓ¡Êı¾İÔ¤ÀÀ"), 800, dh,"icon-w-print",$g("´òÓ¡"),$(data),"print('Y')",true);
 			prepareHandle(renderPrivewPanel,"PreView");
 			$("input[id*='-CK']").click(function(e){
 				var ckId=e.target.id;
@@ -888,6 +981,18 @@ function preview(){
 					for (var i=0;i<$("input[id*='"+type+"-CK']").length;i++){
 						var id=$("input[id*='"+type+"-CK']")[i].id;
 						if (id!=ckId){
+							if (checkFlag) {
+								$("#"+id).prop("checked",true);
+							}else{
+								$("#"+id).prop("checked",false);
+							}
+						}
+					}
+				}else if(type=="BLDMZ"){
+					for (var i=0;i<$("input[id*='"+type+"-CK']").length;i++){
+						var id=$("input[id*='"+type+"-CK']")[i].id;
+						var listrowid=$("#"+id).attr("listrowid");
+						if (listRowId==$("#"+id).attr("listrowid")){
 							if (checkFlag) {
 								$("#"+id).prop("checked",true);
 							}else{
@@ -929,7 +1034,7 @@ function checkLocType(){
 			PatWeight=PatSupplyInfoArr[5];
 		}
 		if (PatWeight==""){
-			$.messager.alert("æç¤º","å„¿ç§‘å¿…é¡»å¡«å†™ä½“é‡!","info",function(){
+			$.messager.alert("ÌáÊ¾","¶ù¿Æ±ØĞëÌîĞ´ÌåÖØ!","info",function(){
 				imgpreview();
 			})
 			return false;
@@ -981,10 +1086,14 @@ function print(printFlag){
 	}
 	if (printFlag=="Y"){
 		if (rtn!=false){
-			needPrintConfig={}; //æ‰“å°ä¹‹åæ¸…ç©ºéœ€è¦æ‰“å°é…ç½®
+			needPrintConfig={}; //´òÓ¡Ö®ºóÇå¿ÕĞèÒª´òÓ¡ÅäÖÃ
 			destroyDialog('PrintDataPreView');
 			loadOrdTableData();
-			parent.window.CompleteRecAdm();
+			if (parent.window.CompleteRecAdm) {
+				parent.window.CompleteRecAdm();
+			}else if(parent.window.PrintAllAfterClick){
+				parent.window.PrintAllAfterClick();
+			}
 		}
 	}
 }
@@ -1001,7 +1110,9 @@ function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,
 			}
 		}]
    }
-    $("body").append("<div id='"+id+"' class='hisui-dialog'></div>");
+   if(!$('#'+id).size()){
+    	$("body").append("<div id='"+id+"' class='hisui-dialog'></div>");
+   }
     if (_width == null)
         _width = 800;
     if (_height == null)
@@ -1028,7 +1139,12 @@ function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,
     });
 }
 function destroyDialog(id){
-   $("body").remove("#"+id); //ç§»é™¤å­˜åœ¨çš„Dialog
+	try{
+		$("#"+id).dialog('close');
+	}catch(e){
+	}
+	return
+   $("body").remove("#"+id); //ÒÆ³ı´æÔÚµÄDialog
    $("#"+id).dialog('destroy');
 }
 var needPrintConfig={};
@@ -1036,7 +1152,7 @@ function prepareHandle(callBack,type,printFlag){
 	needPrintConfig=getNeedPrint();
 	if ($.isEmptyObject(needPrintConfig["selectedOE"])){
 		if (!needPrintConfig["menuNodes"]["MZBL"]){
-			$.messager.alert("æç¤º","è¯·é€‰æ‹©åŒ»å˜±!");
+			$.messager.alert("ÌáÊ¾","ÇëÑ¡ÔñÒ½Öö!");
 			if (type=="PreView") {
 				$("#PrintDataPreView").dialog('close');
 			}
@@ -1055,14 +1171,14 @@ function prepareHandle(callBack,type,printFlag){
 		ClassName:"web.DHCDocPrescript",
 		MethodName:"GetXMLTemplateId",
 		dataType:"text",
-		XMLTemplateName:"DHCOutPrescCY" //è‰è¯å¤„æ–¹xmlæ¨¡æ¿
+		XMLTemplateName:"DHCOutPrescCY" //²İÒ©´¦·½xmlÄ£°å
 	},false);*/
 	for(var mv in needPrintConfig["menuNodes"]){
 		var menuNode=needPrintConfig["menuNodes"][mv];
 		var noeValue=menuNode['value'];
 		var printmethod=menuNode['printmethod'];
 		if (noeValue!="MZBL"){
-				if ((type=="PreView")||(printFlag=="N")) { //printFlag ä¸ºNä»£è¡¨ æ˜¯ç›´æ¥ç‚¹å‡»æ‰“å°æŒ‰é’®å¼¹å‡ºç—…å†ç•Œé¢
+				if ((type=="PreView")||(printFlag=="N")) { //printFlag ÎªN´ú±í ÊÇÖ±½Óµã»÷´òÓ¡°´Å¥µ¯³ö²¡Àú½çÃæ
 					//needPrintConfig["selectedListRowId"]={};
 					var printmethod=resolveConfigMethod(menuNode["printmethod"],menuNode,needPrintConfig["menuOEMap"][mv],{},type);
 				}else{
@@ -1073,7 +1189,7 @@ function prepareHandle(callBack,type,printFlag){
 				for(var a in printmethod["args"]){
 					argN=argN+1;
 				}
-				//é…ç½®xmlå¯¹åº”ID
+				//ÅäÖÃxml¶ÔÓ¦ID
 				var tempId=$.cm({
 					ClassName:"web.DHCDocPrescript",
 					MethodName:"GetXMLTemplateId",
@@ -1084,10 +1200,10 @@ function prepareHandle(callBack,type,printFlag){
 					node:menuNode,
 					"templateId":tempId
 				};
-				$.ajax("opdoc.request.method.csp",{
+				$.ajax("opdoc.request.method.csp"+((typeof websys_getMWToken=='function')?("?MWToken="+websys_getMWToken()):""),{
 					type : "POST",
 					dataType:"JSON",
-					async: false, //æ­¤å¤„å¿…é¡»è®¾ç½®ä¸ºåŒæ­¥ï¼Œå¦åˆ™é¢„è§ˆæ ‡é¢˜ä¸æ­£æ–‡ä¸ç¬¦
+					async: false, //´Ë´¦±ØĞëÉèÖÃÎªÍ¬²½£¬·ñÔòÔ¤ÀÀ±êÌâÓëÕıÎÄ²»·û
 					data:opdoc.util.genQueryArg({
 						ClassName : printmethod["class"],//"DHCDoc.OPDoc.TreatPrint",
 						MethodName : printmethod["method"]//"PrintOrder"
@@ -1102,7 +1218,7 @@ function prepareHandle(callBack,type,printFlag){
 								}
 								var Onepagenum=1;
 								options["ReadyJson"]=respData[i];
-							    //è‹¥åå°è¿”å›çš„xmlæ¨¡æ¿åä¸ä¸ºç©º,åˆ™æ ¹æ®è¿”å›æ¨¡æ¿å±•ç¤º
+							    //ÈôºóÌ¨·µ»ØµÄxmlÄ£°åÃû²»Îª¿Õ,Ôò¸ù¾İ·µ»ØÄ£°åÕ¹Ê¾
 								if ((respData[i]["templateId"]!="")&&(respData[i]["templateId"]!=undefined)){
 									options["templateId"]=respData[i]["templateId"];
 								}else if ((respData[i]["PrintTemp"]!="")&&(respData[i]["PrintTemp"]!=undefined)){
@@ -1118,7 +1234,7 @@ function prepareHandle(callBack,type,printFlag){
 								}
 								if (options['node']['value'].indexOf("CF")>=0){
 									if (respData[i]["PrintTemp"].indexOf("Ver")<0){
-										var Onepagenum=12; //å¤„æ–¹æ‰“å°ä¸€é¡µæ‰“å°è¡Œæ•°
+										var Onepagenum=12; //´¦·½´òÓ¡Ò»Ò³´òÓ¡ĞĞÊı
 									}else{
 										var Onepagenum=16;
 									}
@@ -1144,7 +1260,7 @@ function prepareHandle(callBack,type,printFlag){
 				var InstancePrintedStatus=GetInstancePrintedStatus();
 				if (JSON.parse(InstancePrintedStatus).hasNoPrinted==0){
 					if (Object.keys(needPrintConfig["menuNodes"]).length==1) {
-						$.messager.alert("æç¤º","æ²¡æœ‰éœ€è¦æ‰“å°çš„ç—…å†,è¯·æ ¸å®ç—…å†æ˜¯å¦ç­¾åæˆ–å·²æ‰“å°!");
+						$.messager.alert("ÌáÊ¾","Ã»ÓĞĞèÒª´òÓ¡µÄ²¡Àú,ÇëºËÊµ²¡ÀúÊÇ·ñÇ©Ãû»òÒÑ´òÓ¡!");
 						if (type=="PreView") {
 							$("#PrintDataPreView").dialog('close');
 						}
@@ -1240,18 +1356,25 @@ function renderPrivewPanel(options){
 	var ckId=opdoc.util.genEleNewId(options["node"]["value"]+"-CK");
 	var PanelTitle="<input class='hisui-checkbox' listRowId='"+options["ReadyJson"]["listRowId"]+"' checked type='checkbox' id='"+ckId+"'>";
 	PanelTitle=PanelTitle+options["node"]["text"]+(!options["ReadyJson"]["checkTitle"]?"":options["ReadyJson"]["checkTitle"]);
+	var width=(HISUIStyleCode=="lite")?773:765		//¼«¼òºÍìÅ²Ê¿í¶ÈÒ½Õş£¬µ«Ğ§¹û²»Ò»Ñù(Ó¦ÓĞ»ù´¡Æ½Ì¨Í³Ò»)
 	$('#'+PanelId).panel({
-		width:765,
+		width:width,
 		title: PanelTitle,
 		headerCls:'panel-header-gray',
 		bodyCls:"preview-panel"
 	});
+	var PrescBgColor=!options["ReadyJson"]["PrescBgColor"]?"":options["ReadyJson"]["PrescBgColor"];
+	if (PrescBgColor) {
+		$('#'+PanelId).prev().css("background",PrescBgColor);
+		$('#'+PanelId).css("background",PrescBgColor);
+	}
 	needPrintConfig["selectedListRowId"][options["ReadyJson"]["listRowId"]]=true;
 	options["$targetPanel"]=$temp;
 	if (options["node"]["value"]=="MZBL"){
 		$("input[id^='MZBL-CK']").prop('disabled',true);
 		$temp.height(790);
-		$temp.append('<iframe id="framePrintList" src="'+options["newurl"]+'" width="100%" height="100%"'+
+		var url=(typeof websys_writeMWToken=='function')?websys_writeMWToken(options["newurl"]):options["newurl"];
+		$temp.append('<iframe id="framePrintList" src="'+url+'" width="100%" height="100%"'+
                      'marginheight="0" marginwidth="0" scrolling="no" align="middle" ></iframe>');
 	}else{
 		options["ReadyJson"]=options["ReadyJson"]["data"];
@@ -1289,18 +1412,18 @@ function getAge(pId){
 function CheckTelOrMobile(telephone,Name,Type){
 	if (DHCC_IsTelOrMobile(telephone)) return true;
 	if (telephone.indexOf('-')>=0){
-		$.messager.alert("æç¤º",Type+",å›ºå®šç”µè¯é•¿åº¦é”™è¯¯,å›ºå®šç”µè¯åŒºå·é•¿åº¦ä¸ºã€3ã€‘æˆ–ã€4ã€‘ä½,å›ºå®šç”µè¯å·ç é•¿åº¦ä¸ºã€7ã€‘æˆ–ã€8ã€‘ä½,å¹¶ä»¥è¿æ¥ç¬¦ã€-ã€‘è¿æ¥,è¯·æ ¸å®!","info",function(){
+		$.messager.alert("ÌáÊ¾",Type+",¹Ì¶¨µç»°³¤¶È´íÎó,¹Ì¶¨µç»°ÇøºÅ³¤¶ÈÎª¡¾3¡¿»ò¡¾4¡¿Î»,¹Ì¶¨µç»°ºÅÂë³¤¶ÈÎª¡¾7¡¿»ò¡¾8¡¿Î»,²¢ÒÔÁ¬½Ó·û¡¾-¡¿Á¬½Ó,ÇëºËÊµ!","info",function(){
 			$("#"+Name).focus();
 		})
         return false;
 	}else{
 		if(telephone.length!=11){
-			$.messager.alert("æç¤º",Type+",é•¿åº¦åº”ä¸ºã€11ã€‘ä½,è¯·æ ¸å®!","info",function(){
+			$.messager.alert("ÌáÊ¾",Type+",³¤¶ÈÓ¦Îª¡¾11¡¿Î»,ÇëºËÊµ!","info",function(){
 				$("#"+Name).focus();
 			})
 	        return false;
 		}else{
-			$.messager.alert("æç¤º",Type+",ä¸å­˜åœ¨è¯¥å·æ®µçš„æ‰‹æœºå·,è¯·æ ¸å®!","info",function(){
+			$.messager.alert("ÌáÊ¾",Type+",²»´æÔÚ¸ÃºÅ¶ÎµÄÊÖ»úºÅ,ÇëºËÊµ!","info",function(){
 				$("#"+Name).focus();
 			})
 	        return false;
@@ -1309,51 +1432,111 @@ function CheckTelOrMobile(telephone,Name,Type){
 	return true;
 }
 function LoadEMRInfo(){
+	$("#EMRInfo").empty();
+    var EMRTabName=GetEMRTabName();
+    if(!EMRTabName){
+		$("#EMRInfo").hide();
+		return;
+	}
 	$.cm({
 		ClassName:"EMRservice.HISInterface.BOExternal",
 		MethodName:"GetSavedInstanceByEpisodeID",
-		dataType:"text",
 		AEpisodeID:ServerObj.EpisodeID
 	},function(Data){
-		Data=JSON.parse(Data);
-		var title="",firstId="";
-		for (var i=0;i<Data.length;i++){
-			var id=Data[i]["InstanceId"];
-			if (i==0) firstId=id;
-			title=title+'<a href="#" class="emrlistbn" onclick="GetScatterData(\''+id+'\')" id="'+id+'">'+Data[i]["Text"]+'</a>';
+		if(!Data.length){
+			$("#EMRInfo").html('<div class="emr-warn" onclick="GoEMRSignTab()">'+$g("Î´¼ìË÷µ½²¡ÀúĞÅÏ¢,ÇëÏÈ±£´æ²¡Àú!")+'</div>');
+			return;
 		}
-		if (title!=""){
-			var valbox = $HUI.panel("#EMRInfo",{
-				title:title,
-				height:'auto',
-				style:{"margin":"5px"},
-				headerCls:'panel-header-gray'
+		$.each(Data,function(index,row){
+			var $btn=$('<a></a>').css('width','75px').linkbutton({
+				text:row.IsSigned=='1'?$g("ÒÑÇ©Ãû"):$g("Ç©Ãû"),
+				disabled:row.IsSigned=='1',
+				stopAllEventOnDisabled:true,
+				onClick:function(){
+					GoEMRSign(row.InstanceId,row.CategoryName);
+				}
 			});
-		}else{
-			//$("#EMRInfo").parent().hide();
-		}
-		if (firstId!=""){
-			GetScatterData(firstId);
-		}
+			$('<div class="emr-item"></div>').append($btn).append('<span class="emr-title">'+row.Text+'</span>').appendTo('#EMRInfo');
+		});
 	})
 }
-function GetScatterData(id){
-	$.cm({
-		ClassName:"EMRservice.HISInterface.BOExternal",
-		MethodName:"ScatterDataForOPToMedic",
-		dataType:"text",
-		AEpisodeID:ServerObj.EpisodeID, AInstanceID:id
-	},function(Data){
-		$(".emrinfo-div").remove();
-		if (Data==""){return}
-		Data=JSON.parse(Data.replace(/\n/g,"<br/>").replace(/\r/g,"<br/>"))
-		for (var k=0;k<Data.length;k++){
-			var title=Data[k]["Name"];
-			var text=Data[k]["Text"];
-			$("#EMRInfo").append("<div class='emrinfo-div' style='padding:5px;line-height:25px;'><span style='display:block;clear:both;float:left;font-weight:bold;'>"+$g(title)+":</span> <div style='float:left;'>"+$g(text)+"</div></div>");
+function GetScatterData(InstanceId){
+	var url="emr.browse.html.csp?actType=test&instanceId="+InstanceId;
+	websys_showModal({
+		iconCls:'icon-w-list',
+		url:url,
+		title:$g("²¡ÀúÔ¤ÀÀ"),
+		width:950,
+		height:800
+	});
+	return;
+}
+
+function GoEMRSign(InstanceID,CategoryName){
+	if(ServerObj.PAAdmType=='O') CategoryName="";
+	return  GoEMRSignTab({InstanceID:InstanceID},CategoryName);
+
+	var url="emr.interface.ip.main.csp?InstanceID="+InstanceID+"&EpisodeID="+ServerObj.EpisodeID;
+	var width="95%"; //document.body.clientWidth;
+	var height="95%"; //document.body.clientHeight;
+	websys_showModal({
+		iconCls:'icon-w-list',
+		url:url,
+		title:$g("²¡Àúä¯ÀÀ"),
+		width:width,
+		height:height,
+		onClose:function(){
+			LoadEMRInfo();
 		}
 	});
+	return;
 }
+
+function GoEMRSignTab(cfg,EMRTabName){
+	if(!EMRTabName){
+		var EMRTabName=GetEMRTabName();
+		if(!EMRTabName){
+			$.messager.alert("ÌáÊ¾",$g("Î´ÉèÖÃ²¡Àú²Ëµ¥!"))
+			return;
+		}
+	}
+	parent.switchTabByEMR(EMRTabName,cfg);
+}
+
+function GetEMRTabName(){
+    var EMRTabName="";
+    var EMRTabArr=['ÃÅÕï²¡Àú','ÃÅ¼±Õï²¡Àú¼ÇÂ¼']; 
+    var DefaultTab="";
+    if(parent.$('#menuStep').length>0){
+        var data=parent.$('#menuStep').marystep('getData');
+        for(var i=0;i<data.length;i++){
+            var menuTitle=data[i].text;
+            if($.inArray(menuTitle,EMRTabArr)>-1){
+                EMRTabName=menuTitle
+                break;
+            }
+            if((DefaultTab=="")&&(menuTitle.indexOf('²¡Àú')>-1)){
+                DefaultTab=menuTitle
+            }
+        }
+    }else if(parent.$("#menuGroupReg").length>0){
+        parent.$("#menuGroupReg ul.i-menugroup li a").each(function(){
+            var menuItemHtml = $(this).html();
+            var menuTitle = menuItemHtml.split("<span")[0];
+            menuTitle=$.trim(menuTitle);
+            if($.inArray(menuTitle,EMRTabArr)>-1){
+                EMRTabName=menuTitle
+                return false;
+            }
+            if((DefaultTab=="")&&(menuTitle.indexOf('²¡Àú')>-1)){
+                DefaultTab=menuTitle
+            }
+        })
+    }
+    EMRTabName=EMRTabName?EMRTabName:DefaultTab;
+    return EMRTabName;
+}
+
 function LoadDiagnosInfo(){
 	$.cm({
 		ClassName:"web.DHCMRDiagnos",
@@ -1361,14 +1544,16 @@ function LoadDiagnosInfo(){
 		dataType:"text",
 		MRAdmRowid:ServerObj.mradm, DelimStr:";"
 	},function(diagnodesc){
-		$("#DiagnosInfo").html($g("è¯Šæ–­: ")+diagnodesc);
+		$("#DiagnosInfo").html($g("Õï¶Ï: ")+diagnodesc);
 	});
 }
 function ordDetailInfoShow(OrdRowID){
 		websys_showModal({
 			url:"dhc.orderdetailview.csp?ord=" + OrdRowID,
-			title:'åŒ»å˜±æ˜ç»†',
-			width:400,height:screen.availHeight-200
+			title:'Ò½ÖöÃ÷Ï¸',
+			iconCls:'icon-w-list',
+			width:400,
+			height:screen.availHeight-200
 		});
 }
 function OpenReportLink(){
@@ -1377,8 +1562,9 @@ function OpenReportLink(){
 	var Param=ReportLinkInfoArr[1];
 	if (ReportType=="L"){
 		var src="jquery.easyui.dhclabreport.csp?VisitNumberReportDR=" + Param;
+		if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
 		var $code ="<iframe width='99%' height='99%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
-		createModalDialog("ReportLink",$g("æ£€éªŒæŠ¥å‘Šç»“æœ"), $(window).width()-400, $(window).height()-100,"icon-write-order","",$code,"",true);
+		createModalDialog("ReportLink",$g("¼ìÑé±¨¸æ½á¹û"), $(window).width()-400, $(window).height()-100,"icon-write-order","",$code,"",true);
 	}else if (ReportType=="Ris") {
 			$.cm({
 			ClassName:"web.DHCRisCommFunctionEx",
@@ -1388,8 +1574,9 @@ function OpenReportLink(){
 			if (RptParm!=""){
 				var Item=RptParm.split(":")
 			    if (Item[0]=="http"){
+					if(typeof websys_writeMWToken=='function') RptParm=websys_writeMWToken(RptParm);
 				    var $code ="<iframe width='99%' height='99%' scrolling='auto' frameborder='0' src='"+RptParm+"'></iframe>" ;
-					createModalDialog("ReportLink",$g("æ£€æŸ¥æŠ¥å‘Šç»“æœ"), $(window).width()-400, $(window).height()-100,"icon-write-order","",$code,"",true);
+					createModalDialog("ReportLink",$g("¼ì²é±¨¸æ½á¹û"), $(window).width()-400, $(window).height()-100,"icon-write-order","",$code,"",true);
 			    }else{
 				 	var curRptObject = new ActiveXObject("wscript.shell");
 					curRptObject.run(RptParm);
@@ -1406,12 +1593,12 @@ function ordWaitCancel(tabId,OrdRowID){
 	//var OrdBilled=_$tab.datagrid('getRows')[index]['OrdBilled'];
 	var index=_$tab.simplydatagrid("getRowIndex",OrdRowID); 
 	var OrdBilled=_$tab.simplydatagrid('getRows')[index]['OrdBilled'];
-	if (text=="å¾…æ’¤é”€"){
+	if (text==$g("´ı³·Ïú")){
 		var newOrdBilled=waitCancelOEArr[OrdRowID];
 		delete waitCancelOEArr[OrdRowID];
 		_$id.removeClass("waitbillccancel");
 	}else{
-		var newOrdBilled="å¾…æ’¤é”€";
+		var newOrdBilled=$g("´ı³·Ïú");
 		_$id.addClass("waitbillccancel");
 		waitCancelOEArr[OrdRowID]=OrdBilled;
 	}
@@ -1425,7 +1612,7 @@ function CancelOrdClick(){
 		}
 	}
 	if (OrdListArr.length==0){
-		$.messager.alert("æç¤º","æ²¡æœ‰éœ€è¦æ’¤é”€çš„åŒ»å˜±!");
+		$.messager.alert("ÌáÊ¾","Ã»ÓĞĞèÒª³·ÏúµÄÒ½Öö!");
 		return false;
     }
     var OrdListStr=OrdListArr.join("^");
@@ -1439,12 +1626,12 @@ function CancelOrdClick(){
 	    ExpStr:session['LOGON.USERID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.GROUPID']+"^^"
 	},false);
     if (rtn!=0){
-	   $.messager.alert("æç¤º",rtn);
+	   $.messager.alert("ÌáÊ¾",rtn);
 	   return false;
     }
     ShowInputPinNum();
     function ShowInputPinNum(){
-	    $.messager.prompt('æç¤º', 'è¯·è¾“å…¥å¯†ç ', function(PinNum){
+	    $.messager.prompt('ÌáÊ¾', 'ÇëÊäÈëÃÜÂë', function(PinNum){
 			if ((PinNum!="")&&(PinNum!=undefined)){
 				var ExpStr=session['LOGON.USERID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.GROUPID']+"^^";
 				$.m({
@@ -1459,23 +1646,23 @@ function CancelOrdClick(){
 				},function(rtn){ 
 					var rtnCode=rtn.split("^")[0];
 					if (rtnCode==0){
-						$.messager.popover({msg: 'æ’¤é”€åŒ»å˜±æˆåŠŸ!',type:'success'});
+						$.messager.popover({msg: '³·ÏúÒ½Öö³É¹¦!',type:'success'});
 						waitCancelOEArr=[];
 						loadOrdTableData();
 						SaveOrderToEMR();
 					}else{
-						if (rtn.indexOf("å¯†ç ")>=0){
-							$.messager.alert("æç¤º","æ’¤é”€åŒ»å˜±å¤±è´¥!å¯†ç é”™è¯¯!","info",function(){
+						if (rtn.indexOf("ÃÜÂë")>=0){
+							$.messager.alert("ÌáÊ¾","³·ÏúÒ½ÖöÊ§°Ü!ÃÜÂë´íÎó!","info",function(){
 								ShowInputPinNum();
 							});
 						}else{
-							$.messager.alert("æç¤º","æ’¤é”€åŒ»å˜±å¤±è´¥!"+rtn);
+							$.messager.alert("ÌáÊ¾","³·ÏúÒ½ÖöÊ§°Ü!"+rtn);
 						}
 					}
 				})
 			}
 			if (PinNum==""){
-				$.messager.alert("æç¤º","è¯·è¾“å…¥å¯†ç !","info",function(){
+				$.messager.alert("ÌáÊ¾","ÇëÊäÈëÃÜÂë!","info",function(){
 					ShowInputPinNum();
 				});
 				return false;
@@ -1524,13 +1711,13 @@ function myparser(s){
 	}
 }
 function onlyPreviewMZBL(){
-	$.ajax("opdoc.treatprintpreview.csp", {
+	$.ajax("opdoc.treatprintpreview.csp"+((typeof websys_getMWToken=='function')?("?MWToken="+websys_getMWToken()):""), {
 		"type" : "GET",
 		"dataType" : "html",
 		"async": false,
 		"success" : function(data, textStatus) {
 			var $code = $(data);
-			createModalDialog("PrintDataPreView","æ‰“å°æ•°æ®é¢„è§ˆ", 800, dh,"icon-w-print","æ‰“å°",$(data),"print('EMR')",true);
+			createModalDialog("PrintDataPreView","´òÓ¡Êı¾İÔ¤ÀÀ", 800, dh,"icon-w-print","´òÓ¡",$(data),"print('EMR')",true);
 			$("#PrintDataPreView").dialog('options').closable=false;
 			var tbox=$HUI.tree("#PrintItemTree");
 			var $checkbox=$("[id$='_check']");
@@ -1547,7 +1734,7 @@ function onlyPreviewMZBL(){
 							var InstancePrintedStatus=GetInstancePrintedStatus();
 							if (JSON.parse(InstancePrintedStatus).hasNoPrinted==0){
 								if (Object.keys(needPrintConfig["menuNodes"]).length==1) {
-									$.messager.alert("æç¤º","æ²¡æœ‰éœ€è¦æ‰“å°çš„ç—…å†,è¯·æ ¸å®ç—…å†æ˜¯å¦ç­¾åæˆ–å·²æ‰“å°!");
+									$.messager.alert("ÌáÊ¾","Ã»ÓĞĞèÒª´òÓ¡µÄ²¡Àú,ÇëºËÊµ²¡ÀúÊÇ·ñÇ©Ãû»òÒÑ´òÓ¡!");
 									$("#PrintDataPreView").dialog('close');
 									break;
 								}
@@ -1584,11 +1771,11 @@ function SaveOrderToEMR(){
 	var CMOrdList = tkMakeServerCall("EMRservice.BL.opInterface", "getOeordXH", ServerObj.EpisodeID,"CHMED")
 	var OrdList = tkMakeServerCall("EMRservice.BL.opInterface", "getOeordXH", ServerObj.EpisodeID)
 	if (typeof(parent.invokeChartFun) === 'function') {
-	    parent.invokeChartFun('é—¨è¯Šç—…å†', 'updateEMRInstanceData', "oeord", OrdList,function(){
+	    parent.invokeChartFun('ÃÅÕï²¡Àú', 'updateEMRInstanceData', "oeord", OrdList,function(){
 		    
-		    parent.invokeChartFun('é—¨è¯Šç—…å†', 'updateEMRInstanceData', "oeordCN", CMOrdList,"",ServerObj.EpisodeID);
+		    parent.invokeChartFun('ÃÅÕï²¡Àú', 'updateEMRInstanceData', "oeordCN", CMOrdList,"",ServerObj.EpisodeID);
 		},ServerObj.EpisodeID);
-	    parent.invokeChartFun('é—¨æ€¥è¯Šç—…å†è®°å½•', 'updateEMRInstanceData', "oeord", OrdList,"",ServerObj.EpisodeID);
+	    parent.invokeChartFun('ÃÅ¼±Õï²¡Àú¼ÇÂ¼', 'updateEMRInstanceData', "oeord", OrdList,"",ServerObj.EpisodeID);
 	}
     return OrdList;
 }
@@ -1596,9 +1783,40 @@ function PrescLinkDiagClick(tableId){
 	var prescNo=tableId.split("_")[0];
 	var url="dhcdocdiagnoseselect.hui.csp?EpisodeID="+ServerObj.EpisodeID+"&PrescNoStr="+prescNo+"&ExitFlag="+"Y";
 	websys_showModal({
+		iconCls:'icon-w-list',
 		url:url,
-		title:prescNo+"å…³è”è¯Šæ–­",
-		width:$(window).width()-150,
+		title:prescNo+$g("¹ØÁªÕï¶Ï"),
+		width:"95%",    //$(window).width()-150,
 		height:$(window).height()-50
 	});
 }
+function ChangeTreeCheck(value) {
+	var Childrens = $HUI.tree("#PrintItemTree").getChildren();
+	for ( var i = 0; i < Childrens.length; i++) {  
+		if (Childrens[i].children!=undefined) continue  //²éÕÒ×Ó½Úµã
+		var $checkId=$("#"+ Childrens[i].id+"_check");
+		$checkId.prop("checked",value);	
+		TreeOnCheck("",Childrens[i].id);
+	} 
+	return;
+}
+function initDiagDivHtml(ShowType){
+	var html="";
+	var Obj={"ShowType":ShowType};
+		   	
+	$.ajax("opdoc.treatprintpresc.csp"+((typeof websys_getMWToken=='function')?("?MWToken="+websys_getMWToken()):""),{
+		type : "POST",
+		dataType:"html",
+		async: false, 
+		data:Obj,
+		success:function(data) {
+			debugger
+			html=data.replace(/\r\n/g,"");
+		},
+		"error" : function(XMLHttpRequest, textStatus, errorThrown) {
+			console.log(textStatus);
+		}
+	})
+	return html
+}
+

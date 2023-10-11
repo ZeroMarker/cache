@@ -1,39 +1,34 @@
-/// UDHCACRefundAPI.js
+ï»¿/// UDHCACRefundAPI.js
 
 var m_YBConFlag = "0";   //default not Connection YB
 var m_InsType = "";
 var m_Admsource = "";
 
 $(function () {
-	$('td.i-tableborder>table').css("border-spacing", "0px 8px");
+	if (websys_isIE) {
+		$.getScript("../scripts/dhcbill/plugin/browser/browser-polyfill.min.js");
+	}
+
+	$("td.i-tableborder>table").css("border-spacing", "0px 8px");
 	
-	$("#ReceiptNO").keydown(function (e) {
-		ReceiptNO_OnKeyPress(e);
+	$("#ReceiptNO").focus().keydown(function (e) {
+		receiptNOKeydown(e);
 	});
 	
-	$HUI.linkbutton("#Abort", {
+	$HUI.linkbutton("#Cancel", {
 		disabled: true,
 		onClick: function () {
-			Abort_OnClick();
-		}
-	});
-	
-	$HUI.linkbutton("#Refund", {
-		disabled: true,
-		onClick: function () {
-			Refund_OnClick();
+			cancelClick();
 		}
 	});
 	
 	$HUI.linkbutton("#Clear", {
 		onClick: function () {
-			Clear_OnClick();
+			clearClick();
 		}
 	});
 
 	IntDoc();
-
-	focusById("ReceiptNO");
 });
 
 function IntDoc() {
@@ -58,7 +53,7 @@ function IntDoc() {
 	var myary = myrtn.split("^");
 	m_YBConFlag = myary[9];
 	
-	$('#PayModeList').combobox({
+	$("#PayModeList").combobox({
 		url: $URL + '?ClassName=web.UDHCOPOtherLB&QueryName=ReadCTPayMode&ResultSetType=array',
 		disabled: true,
 		valueField: 'CTPM_RowId',
@@ -66,29 +61,115 @@ function IntDoc() {
 	});
 }
 
-function Abort_OnClick() {
-	$.messager.confirm("È·ÈÏ", "È·ÈÏ³·Ïú£¿", function(r) {
-		if (r) {
-			RefundSaveInfo("A");
-		}
-	});
+function cancelClick() {
+	var _cfmCancel = function () {
+		return new Promise(function (resolve, reject) {
+			$.messager.confirm("ç¡®è®¤", "æ˜¯å¦ç¡®è®¤æ’¤é”€ï¼Ÿ", function(r) {
+				return r ? resolve() : reject();
+			});
+		});
+	};
+	
+	var _validCancel = function() {
+		return new Promise(function (resolve, reject) {
+			var payModeDR = getValueById("PayModeList");
+			var payModeCode = "";
+			if (payModeDR) {
+				payModeCode = getPropValById("CT_PayMode", payModeDR, "CTPM_Desc");
+			}
+			var AccLeft = getValueById("AccLeft");
+			var YBPaySum = getValueById("YBPaySum");
+			if (!(insuDivId > 0)) {
+				return resolve();
+			}
+			if (payModeCode == "CPP") {
+				$.messager.popover({msg: "è¯·åˆ°ã€é€€è´¹ã€‘ç•Œé¢é€€è´¹", type: "info"});
+				return reject();
+			}
+			$.messager.alert("æç¤º", "è¯·æ³¨æ„æ”¶å–ï¼š<font color=\"red\">" + YBPaySum + "</font> å…ƒ", "info", function() {
+				return resolve();
+			});
+			return;
+		});
+	};
+	
+	/**
+	* åŒ»ä¿é€€è´¹
+	*/
+	var _insuPark = function() {
+		return new Promise(function (resolve, reject) {
+			if (!(insuDivId > 0)) {
+				return resolve();
+			}
+			/*
+			var encmeth = getValueById('JudgeAPIDate');
+			var flag = cspRunServerMethod(encmeth, accPInvId);
+			if (flag == -1) {
+				$.messager.popover({msg: 'å‘ç¥¨å·²è·¨æœˆï¼Œä¸å…è®¸é€€è´¹', type: 'info'});
+				return reject();
+			}
+			*/
+			if (m_YBConFlag == 0) {
+				$.messager.popover({msg: 'é€€æ­¤å‘ç¥¨éœ€è¦è¿æ¥åŒ»ä¿', type: 'info'});   //Require YB Connection
+				return reject();
+			}
+			var myYBHand = "0";
+			var ExpStr = "^^^^";
+			var InsuType = m_InsType;
+			var CPPFlag = "N";
+			var rtn = InsuOPDivideStrike(myYBHand, session['LOGON.USERID'], insuDivId, m_Admsource, m_InsType, ExpStr, CPPFlag);
+			if (rtn != 0) {
+				$.messager.popover({msg: "åŒ»ä¿é€€è´¹å¤±è´¥ï¼š" + rtn, type: "error"});
+				return resolve();
+			}
+			return resolve();
+		});
+	};
+	
+	/**
+	* æ’¤é”€
+	*/
+	var _cancel = function() {
+		$.m({
+			ClassName: "web.udhcOPRefEditIF",
+			MethodName: "WriteOffAPI",
+			AccPInvId: accPInvId,
+			UserId: session['LOGON.USERID']
+		}, function(rtn) {
+			var myAry = rtn.split("^");
+			if (myAry[0] == 0) {
+				$.messager.popover({msg: "æ’¤é”€æˆåŠŸ", type: "success"});
+				return;
+			}
+			$.messager.popover({msg: "æ’¤é”€å¤±è´¥ï¼š" + (myAry[1] || myAry[0]), type: "error"});
+		});
+	};
+	
+	if ($("#Cancel").hasClass("l-btn-disabled")) {
+		return;
+	}
+	$("#Cancel").linkbutton("disable");
+
+	var accPInvId = getValueById("OldAccPayINVRowID");
+	var insuDivId = getValueById("INSDivDR");
+	
+	var promise = Promise.resolve();
+	promise
+		.then(_cfmCancel)
+		.then(_validCancel)
+		.then(_insuPark)
+		.then(_cancel, function () {
+			$("#Cancel").linkbutton("enable");
+		})
 }
 
-function Refund_OnClick() {
-	$.messager.confirm("È·ÈÏ", "È·ÈÏ³·Ïú£¿", function(r) {
-		if (r) {
-			RefundSaveInfo("S");
-		}
-	});
-}
-
-function Clear_OnClick() {
+function clearClick() {
 	$(":text:not(.pagination-num)").val("");
 	IntDoc();
 	SetACRefOEOrder("");
 }
 
-function ReceiptNO_OnKeyPress(e) {
+function receiptNOKeydown(e) {
 	var key = websys_getKey(e);
 	var myReceiptNO = getValueById("ReceiptNO");
 	if ((myReceiptNO != "") && (key == 13)) {
@@ -97,15 +178,14 @@ function ReceiptNO_OnKeyPress(e) {
 		var HospId = session['LOGON.HOSPID'];
 		var myrtn = cspRunServerMethod(encmeth, myReceiptNO, myUser, HospId);
 		var rtn = myrtn.split("^")[0];
-		if (rtn != "0") {
-			$.messager.popover({msg: t['06'], type: 'info'});
+		if (rtn != 0) {
+			$.messager.popover({msg: 'æ­¤å‘ç¥¨å·ä¸å­˜åœ¨æˆ–éé›†ä¸­æ‰“å°å‘ç¥¨', type: 'info'});
 			websys_setfocus('ReceiptNO');
 			return websys_cancel();
-		} else {
-			WrtRefundMain(myrtn);
-			var myAPIRowID = getValueById("OldAccPayINVRowID");
-			SetACRefOEOrder(myAPIRowID);
 		}
+		WrtRefundMain(myrtn);
+		var accPInvId = getValueById("OldAccPayINVRowID");
+		SetACRefOEOrder(accPInvId);
 	}
 }
 
@@ -138,120 +218,21 @@ function WrtRefundMain(AccINVInfo) {
 	m_InsType = myary[19];
 	m_Admsource = myary[20];
 	
-	$("#Abort, #Refund").linkbutton('disable');
+	disableById("Cancel");
+	//$("#Abort, #Refund").linkbutton('disable');
 	if (myary[15] != "N") {
-		$.messager.popover({msg: t[myary[15] + "01"], type: 'info'});
+		var msg = "æ­¤å‘ç¥¨å·²ç»è¢«" + ((myary[15] == "A") ? "ä½œåºŸ" : "çº¢å†²");
+		$.messager.popover({msg: msg, type: 'info'});
 		return;
 	}
 	//Check Account Status
 	if (myary[10] == "F") {
-		$.messager.popover({msg: t["AccFootTip"], type: 'info'});
+		$.messager.popover({msg: 'è´¦æˆ·å·²ç»ç»“ç®—ï¼Œè¯·æ¿€æ´»è´¦æˆ·åå†åŠç†é€€è´¹', type: 'info'});
 		return;
 	}
-	switch (myBtnFlag) {
-	case "S":
-		enableById("Refund");
-		break;
-	case "P":
-		enableById("Abort");
-		break;
-	default:
-		$.messager.popover({msg: 'ÇëÏÈ×öÍË·ÑÉóºË»òµ½Ò©·¿ÍËÒ©', type: 'alert'});
-	}
-}
-
-function RefundSaveInfo(RefundFlag) {
-	$("#Abort, #Refund").linkbutton('disable');
-	var payModeDR = getValueById("PayModeList");
-	var payModeCode = "";
-	if (payModeDR) {
-		var jsonObj = $.cm({ClassName: "web.DHCBillCommon", MethodName: "GetClsPropValById", clsName: "User.CTPayMode", id: payModeDR}, false);
-		payModeCode = jsonObj.CTPMCode;
-	}
-	var AccLeft = getValueById("AccLeft");
-	var YBPaySum = getValueById("YBPaySum");
-	var myINSDivDR = getValueById("INSDivDR");
-	if (myINSDivDR != "") {
-		if (payModeCode == 'CPP') {
-			$.messager.popover({msg: 'Çëµ½¡¾ÍË·Ñ¡¿½çÃæÍË·Ñ', type: 'info'});
-			return;
-		}else {
-			$.messager.alert('ÌáÊ¾', 'Çë×¢ÒâÊÕÈ¡£º<font color="red">' + YBPaySum + '</font> Ôª', 'info', function() {
-				_refund();
-			});
-		}
+	if ($.inArray(myBtnFlag, ["S", "P"]) != -1) {
+		enableById("Cancel");
 	}else {
-		_refund();
+		$.messager.popover({msg: 'è¯·å…ˆåšé€€è´¹å®¡æ ¸æˆ–åˆ°è¯æˆ¿é€€è¯', type: 'info'});
 	}
-	
-	function _refund() {
-		var rtn = CardYBPark();
-		if (!rtn) {
-			return rtn;
-		}
-		var myAPIRowID = getValueById("OldAccPayINVRowID");
-		var myUser = session['LOGON.USERID'];
-		var encmeth = getValueById("SaveParkDataEncrypt");
-		if (encmeth != "") {
-			var rtn = cspRunServerMethod(encmeth, myAPIRowID, myUser, RefundFlag);
-			if (rtn == "0") {
-				$.messager.popover({msg: '³·Ïú³É¹¦', type: 'success'});
-			} else {
-				$.messager.popover({msg: '³·ÏúÊ§°Ü£º' + rtn, type: 'error'});
-			}
-		}
-	}
-}
-
-function CardYBPark() {
-	var myINSDivDR = getValueById("INSDivDR");
-	if (myINSDivDR == "") {
-		return true;
-	}
-	/*
-	var encmeth = getValueById('JudgeAPIDate');
-	var myAPIRowID = getValueById("OldAccPayINVRowID");
-	var Flag = cspRunServerMethod(encmeth, myAPIRowID);
-	if(Flag=="-1") {
-		$.messager.popover({msg: '·¢Æ±ÒÑ¿çÔÂ£¬²»ÔÊĞíÍË·Ñ!', type: 'info'});
-		return false;
-	}
-	*/
-	if ((myINSDivDR != "") && (m_YBConFlag == "0")) {
-		$.messager.popover({msg: t["ReqYBTip"], type: 'info'});   //Require YB Connection
-		return false;
-	}
-	var myrtn = QueryYBsysStrik(myINSDivDR);
-	if (myrtn == "0") {
-		return true;
-	} else {
-		$.messager.popover({msg: t["YBParErr"], type: 'error'});
-		return false;
-	}
-}
-
-function QueryYBsysStrik(myINSDivDR) {
-	/*
-	if (insuINSUFlag != "Y") {
-		$.messager.popover({msg: 'No YB Client!', type: 'error'});
-		return "-1";
-	}
-	if (insuDLLFlag != "Y") {
-		$.messager.popover({msg: 'No Intial', type: 'error'});
-		return "-1";
-	}
-	if (insudHandle <= 0) {
-		$.messager.popover({msg: 'dHandle = ' + insudHandle, type: 'error'});
-		return "-1";
-	}
-	*/
-	
-	var OutString = "";
-	var insudHandle = "0";
-	var myUser = session['LOGON.USERID'];
-	var ExpStr = "";
-	var InsuType = m_InsType;
-	var CPPFlag = "N";
-	OutString = InsuOPDivideStrike(insudHandle, myUser, myINSDivDR, m_Admsource, InsuType, ExpStr, CPPFlag);
-	return OutString;
 }

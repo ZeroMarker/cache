@@ -30,7 +30,7 @@ VendorItmBatWindow =function(Input, StkGrpRowId, StkGrpType, Locdr, Vendor,Vendo
 	
 	/*药品窗口------------------------------*/
 	var PhaOrderUrl = 'dhcst.drugutil.csp?actiontype=GetPhaOrderItemForDialog&Input='
-			+ Input + '&StkGrpRowId=' + StkGrpRowId + '&StkGrpType='
+			+ encodeURI(Input) + '&StkGrpRowId=' + StkGrpRowId + '&StkGrpType='
 			+ StkGrpType + '&Locdr=' + Locdr + '&NotUseFlag=' + NotUseFlag
 			+ '&QtyFlag=' + QtyFlag + '&HospID=' + HospID + '&start=' + 0
 			+ '&limit=' + 15;
@@ -125,7 +125,7 @@ VendorItmBatWindow =function(Input, StkGrpRowId, StkGrpType, Locdr, Vendor,Vendo
 				align : 'left',
 				sortable : true
 			}, {
-				header : "厂商",
+				header : "生产企业",
 				dataIndex : 'ManfName',
 				width : 180,
 				align : 'left',
@@ -253,7 +253,7 @@ VendorItmBatWindow =function(Input, StkGrpRowId, StkGrpType, Locdr, Vendor,Vendo
 		}
 	}); 
 	
-	//库存项目的供应商列表 Store
+	//库存项目的经营企业列表 Store
 	var VendorForIncItmStore = new Ext.data.JsonStore({
 		autoDestroy: true,
 		url:RetURL	+ '?actiontype=selectVendor',
@@ -266,7 +266,7 @@ VendorItmBatWindow =function(Input, StkGrpRowId, StkGrpType, Locdr, Vendor,Vendo
 	});	
 	
 	
-	//科室库存项目的供应商入库记录
+	//科室库存项目的经营企业入库记录
 	var VendorRecItmStore = new Ext.data.Store({
 		autoDestroy: true,
 		url:RetURL	+ '?actiontype=selectBatch',
@@ -274,7 +274,7 @@ VendorItmBatWindow =function(Input, StkGrpRowId, StkGrpType, Locdr, Vendor,Vendo
 			root : 'rows',
 			totalProperty : "results" ,
 			id:'INGRI',
-			fields:["code","desc","mnf","batch","expdate","recqty","uom","uomDesc","stkqty","INGRI","pp","sven","idate","rp","sp","INCLB","iniflag","Drugform","invNo","invDate","invAmt","venid","buom","confac"]
+			fields:["code","desc","mnf","batch","expdate","recqty","uom","uomDesc","stkqty","INGRI","pp","sven","idate","rp","sp","INCLB","iniflag","Drugform","invNo","invDate","invAmt","venid","buom","confac","CurRp","CurSp","InsuCode","InsuDesc"]
 		})	
 	});	
 	
@@ -314,7 +314,7 @@ VendorItmBatWindow =function(Input, StkGrpRowId, StkGrpType, Locdr, Vendor,Vendo
 		align : '',
 		hidden:true
 	},{
-		header : "厂商",
+		header : "生产企业",
 		dataIndex : 'mnf',
 		width : 100,
 		align : ''
@@ -332,7 +332,7 @@ VendorItmBatWindow =function(Input, StkGrpRowId, StkGrpType, Locdr, Vendor,Vendo
 		header : "入库数",
 		dataIndex : 'recqty',
 		width : 100,
-		align : ''
+		align : 'right'
 	},{
 		header : "单位rowid",
 		dataIndex : 'uom',
@@ -348,36 +348,48 @@ VendorItmBatWindow =function(Input, StkGrpRowId, StkGrpType, Locdr, Vendor,Vendo
 		header : "库存数",
 		dataIndex : 'stkqty',
 		width : 100,
-		align : ''
+		align : 'right'
 	},{
 		header : "入库明细rowid",
 		dataIndex : 'INGRI',
 		width : 100,
-		align : '',
+		align : 'right',
 		hidden : true
 	},{
 		header : "批价",
 		dataIndex : 'pp',
 		width : 100,
-		align : ''
+		align : 'right',
+		hidden: true
 	},{
-		header : "供应商名称",
+		header : "经营企业名称",
 		dataIndex : 'sven',
 		width : 100,
 		align : '',
 		hidden:true
 	},{
-		header : "进价",
+		header : "入库进价",
 		dataIndex : 'rp',
 		width : 100,
-		align : ''
+		align : 'right'
 	},{
-		header : "售价",
+		header : "当前进价",
+		dataIndex : 'CurRp',
+		width : 100,
+		align : 'right',
+		renderer:RpRenderer
+	},{
+		header : "入库售价",
 		dataIndex : 'sp',
 		width : 100,
-		align : ''
-	},
-	{
+		align : 'right'
+	},{
+		header : "当前售价",
+		dataIndex : 'CurSp',
+		width : 100,
+		align : 'right',
+		renderer:SpRenderer
+	},{
 		header : "批次rowid",
 		dataIndex : 'INCLB',
 		width : 100,
@@ -415,7 +427,7 @@ VendorItmBatWindow =function(Input, StkGrpRowId, StkGrpType, Locdr, Vendor,Vendo
 		align : '',
 		hidden : false
 	},{
-		header : "供应商rowid",
+		header : "经营企业rowid",
 		dataIndex : 'venid',
 		width : 100,
 		align : '',
@@ -432,7 +444,40 @@ VendorItmBatWindow =function(Input, StkGrpRowId, StkGrpType, Locdr, Vendor,Vendo
 		width : 100,
 		align : '',
 		hidden : true
-	}]);
+	},{
+		header : "国家医保编码",
+		dataIndex : 'InsuCode',
+		width : 100,
+		align : '',
+		hidden : true
+	},{
+		header : "国家医保名称",
+		dataIndex : 'InsuDesc',
+		width : 100,
+		align : '',
+		hidden : true
+	}
+	]);
+	
+	
+	function RpRenderer(val,meta,record){
+		var rp = record.data.rp
+		if(val != rp){
+			monthcolor = 'classYellow';
+			meta.css   = monthcolor;
+		}
+		return val; 
+	}
+	
+	function SpRenderer(val,meta,record){
+		var sp = record.data.sp
+		if(val != sp){
+			monthcolor = 'classYellow';
+			meta.css   = monthcolor;
+		}
+		return val; 
+	}
+	
 	
 	var VendorRecItmGrid = new Ext.grid.GridPanel({
 		//cm : ItmLcBtCm,
@@ -468,7 +513,7 @@ VendorItmBatWindow =function(Input, StkGrpRowId, StkGrpType, Locdr, Vendor,Vendo
 	});
 
 	var RetVendor=new Ext.form.ComboBox({
-		fieldLabel : '选择退货供应商',
+		fieldLabel : '退货经营企业',
 		id : 'RetVendor',
 		anchor : '90%',
 		width : 210,
@@ -479,7 +524,7 @@ VendorItmBatWindow =function(Input, StkGrpRowId, StkGrpType, Locdr, Vendor,Vendo
 		editable:false,
 		allowBlank : true,
 		triggerAction : 'all',
-		emptyText : '选择供应商',
+		emptyText : '选择经营企业',
 		selectOnFocus : true,
 		forceSelection : true,
 		minChars : 1,
@@ -528,7 +573,7 @@ VendorItmBatWindow =function(Input, StkGrpRowId, StkGrpType, Locdr, Vendor,Vendo
 		}
 	});
 
-	//设置供应商
+	//设置经营企业
 	function setVendor(Vendor,VendorName)
 	{
 		if ((Vendor!='')&&(VendorName!=''))
@@ -545,7 +590,7 @@ VendorItmBatWindow =function(Input, StkGrpRowId, StkGrpType, Locdr, Vendor,Vendo
 		}
 	}
 	
-	//检索供应商入库明细记录
+	//检索经营企业入库明细记录
 	function queryIngri()
 	{
 		var loc='';
@@ -564,7 +609,7 @@ VendorItmBatWindow =function(Input, StkGrpRowId, StkGrpType, Locdr, Vendor,Vendo
 	}
 	
 	
-	if (Vendor!='')	{setVendor(Vendor,VendorName);}  //设定供应商
+	if (Vendor!='')	{setVendor(Vendor,VendorName);}  //设定经营企业
 	
 	var window = new Ext.Window({
 		title : '科室库存项批次信息',

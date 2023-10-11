@@ -3,14 +3,24 @@
 /// -------------------------------
 function BodyLoadHandler()
 {
-	
 	SetElement("ProviderCHeck",GetElementValue("ProviderCHeckID"));//Add By QW-2014-10-20
 	InitPage();
 	SetStatus();
-	Muilt_LookUp("StoreLoc^EquipType^EquipCat^StatCat^Provider^Model^UseLoc","N");
+	KeyUp("StoreLoc^EquipType^EquipCat^StatCat^Provider^Model^UseLoc^Hospital^MakeUser","N"); //Modied By QW20210629 BUG:QW0131 院区
+	Muilt_LookUp("StoreLoc^EquipType^EquipCat^StatCat^Provider^Model^UseLoc^Hospital^MakeUser","N"); //Modied By QW20210629 BUG:QW0131 院区
 	fillData();
-	RefreshData();	
+	//RefreshData();	
 	HiddenTableIcon("DHCEQCheckDetailFind","TRowID","TOpenCheckRequest");   //add by czf 需求号：348761
+	initButtonWidth()  //hisui改造 add by czf 20180929
+	$('#tDHCEQCheckDetailFind').datagrid('options').view.onAfterRender = ReLoadGrid;
+	initButtonColor();//cjc 2023-01-18 设置极简积极按钮颜色
+	initPanelHeaderStyle();//cjc 2023-01-17 初始化极简面板样式
+}
+
+function ReLoadGrid()
+{
+	creatToolbar();
+	fixTGrid();
 }
 
 function SetStatus()
@@ -19,9 +29,7 @@ function SetStatus()
 }
 
 function InitPage()
-{	
-	KeyUp("StoreLoc^EquipType^EquipCat^StatCat^Provider^Model^UseLoc","N");
-	
+{
 	var obj=document.getElementById(GetLookupName("EquipCat"));
 	if (obj) obj.onclick=EquipCat_Click;
 	
@@ -29,18 +37,44 @@ function InitPage()
 	if (obj) obj.onclick=BPrint_Click;
 	var obj=document.getElementById("BFind");
 	if (obj) obj.onclick=BFind_Click;
+	//Add By QW20210629 BUG:QW0131 院区 begin
+	var HosCheckFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","990051");
+	if(HosCheckFlag=="0")
+	{
+		hiddenObj("cHospital",1);
+		hiddenObj("Hospital",1);
+	}
+	//Add By QW20210629 BUG:QW0131 院区 end
 }
 
 ///Modified By HZY 2012-04-20
 ///Desc:改用最新的通用打印函数(当有'导出列设置'时使用):PrintDHCEQEquipNew .
 function BPrint_Click()
 {
-	var ObjTJob=document.getElementById("TJobz1");
-	if (ObjTJob)  TJob=ObjTJob.value;
+	//modify by lmm 2020-02-25 LMM0060
+	var objtbl=$("#tDHCEQCheckDetailFind").datagrid('getRows');
+	var rows=objtbl.length;
+	var TJob=objtbl[1].TJob 
 	if (TJob=="")  return;
-	//function  PrintDHCEQEquipNew(TableName,SaveOrPrint,job,vData,TempNode)
-	PrintDHCEQEquipNew("OpenCheckList",1,TJob,GetElementValue("vData"),"CheckDetail");
+	//Modefied by zc0093  润乾导出修改 2021-01-07 begin
+	var PrintFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo",'990062');
+	if (PrintFlag=="1")
+	{
+		// MZY0114	2446191		2022-01-27
+		if (!CheckColset("OpenCheckList"))
+		{
+			messageShow('popover','alert','提示',"导出数据列未设置!")
+			return ;
+		}
+		var url="dhccpmrunqianreport.csp?reportName=DHCEQOpenCheckExport.raq&CurTableName=OpenCheckList&CurUserID="+session['LOGON.USERID']+"&CurGroupID="+session['LOGON.GROUPID']+"&Job="+TJob
+    	window.open(url,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0');   //
+	}
+	else
+	{
+		PrintDHCEQEquipNew("OpenCheckList",1,TJob,GetElementValue("vData"),"CheckDetail");
+	}
 	return;
+	//Modefied by zc0093  润乾导出修改 2021-01-07 end
 	
 	/*
 	//0                1                 2          3          4         5          6          7             8            9                   10            11         12               13      14             15              16             17         18             19            20          21                 22      23            24 
@@ -123,7 +157,7 @@ function BPrint_Click()
 	} 
 	catch(e)
 	{
-		alertShow(e.message);
+		messageShow("","","",e.message);
 	}
 	*/
 } 
@@ -181,7 +215,11 @@ function BFind_Click()
 {
 	var val="&vData="
 	val=val+GetVData();
-	window.location.href="websys.default.csp?WEBSYS.TCOMPONENT=DHCEQCheckDetailFind"+val;
+	val=val+"&QXType="+GetElementValue("QXType")
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		val += "&MWToken="+websys_getMWToken()
+	}
+	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCheckDetailFind"+val;
 }
 
 function GetVData()
@@ -209,6 +247,9 @@ function GetVData()
 	//End By QW-2014-10-20
 	val=val+"^EquipNo="+GetElementValue("EquipNo");    //Modify By QW0004-2015-01-02 设备编号
 	//val=val+"^ManuFactoryDR="+GetElementValue("ManuFactoryDR");	//生产商
+	val=val+"^HospitalDR="+GetElementValue("HospitalDR"); //Add By QW20210629 BUG:QW0131 院区
+	val=val+"^MakeUserDR="+GetElementValue("MakeUserDR");
+	val=val+"^UseLocDR="+GetElementValue("UseLocDR");
 	return val;
 }
 
@@ -236,6 +277,9 @@ function fillData()
 	val=val+"statcat=StatCat="+GetElementValue("StatCatDR")+"^";
 	val=val+"equiptype=EquipType="+GetElementValue("EquipTypeDR")+"^";
 	val=val+"model=Model="+GetElementValue("ModelDR")+"^";
+	val=val+"hos=Hospital="+GetElementValue("HospitalDR")+"^"; //Add By QW20210629 BUG:QW0131 院区
+	val=val+"user=MakeUser="+GetElementValue("MakeUserDR")+"^";
+	val=val+"dept=UseLoc="+GetElementValue("UseLocDR")+"^";
 	var encmeth=GetElementValue("GetDRDesc");
 	var result=cspRunServerMethod(encmeth,val);
 	var list=result.split("^");
@@ -258,6 +302,41 @@ function BodyUnLoadHandler()
 	var encmeth=GetElementValue("KillTempGlobal");
 	cspRunServerMethod(encmeth,"CheckDetail");
 }
+//Add By QW20210629 BUG:QW0131 院区
+function GetHospital(value)
+{
+	GetLookUpID("HospitalDR",value); 			
+}
 
+//czf 2022-06-06
+//显示合计行
+function creatToolbar()
+{
+	var currentobj=$("#tDHCEQCheckDetailFind").datagrid('getRows');
+	if (currentobj.length>0)
+	{
+		var TJob=currentobj[0]['TJob'];
+		if (TJob=="")  return;
+        //modified by ZY 20221011 修改合计行取值位置
+        //var Data = tkMakeServerCall("web.DHCEQOpenCheckRequest","GetSumInfo",TJob); 
+        var Data = tkMakeServerCall("web.DHCEQ.Plat.LIBCommon","GetTempGlobalTotalInfo",'CheckDetail','',TJob,''); 
+		$("#sumTotal").html(Data);
+	} 
+}
+
+function GetMakeUser(value)
+{
+	var user=value.split("^");
+	var obj=document.getElementById("MakeUserDR");
+	obj.value=user[1];
+}
+
+function GetUseLoc(value) {
+	var user=value.split("^");
+	var obj=document.getElementById("UseLocDR");
+	obj.value=user[1];
+}
+
+//定义页面加载方法
 document.body.onload = BodyLoadHandler;
 document.body.onunload = BodyUnLoadHandler;

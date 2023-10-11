@@ -1,10 +1,19 @@
-var LINK_CSP="dhcapp.broker.csp";
+﻿var LINK_CSP="dhcapp.broker.csp";
 
 $(function(){
 	
 	initParams();
 	
-	initCombox();	
+	window.frames["nurOrderFrame"].onload  = function(){
+		
+		winDoc=window.frames["nurOrderFrame"];	
+		
+		initDom();
+		
+		initCombox();
+	}
+	
+	//initCombox();	
 })
 
 function initParams(){
@@ -15,20 +24,52 @@ function initParams(){
 	}	
 }
 
+function initDom(){
+	var domHtml=""
+	domHtml=domHtml+"<div style='width:300px;height:20px;position: absolute;right: 0px;top:40px'>";
+	domHtml=domHtml+	"<span>选择就诊</span><input id='histAdm' class='hisui-combobox' style='width:220px'></input>";
+	domHtml=domHtml+"</div>"
+	
+	winDoc.$("body").append(domHtml);
+	return;
+}
+
 function initCombox(){
-	$HUI.combobox("#histAdm",{
+	winDoc.$HUI.combobox("#histAdm",{
 		url:LINK_CSP+"?ClassName=web.DHCEMInComUseMethod&MethodName=JsonAdms&PatID="+PatientID,
 		valueField:'value',
 		textField:'text',
 		onSelect:function(option){
-	        EpisodeID = option.value;
-	        setEprMenuForm(EpisodeID,PatientID);
-	        flashNurOrderFrame();
-	    }	
+	        parent.comboboxSelect(option);
+	    },
+	    onLoadSuccess:function(){
+		    parent.comboboxLoadSuccess();
+		}	
 	})
-	if(EpisodeID!=""){
-		$HUI.combobox("#histAdm").setValue(EpisodeID);	
-	}
+	
+}
+
+function comboboxSelect(option){
+	EpisodeID = option.value;
+	flash(EpisodeID,PatientID);	
+}
+
+function comboboxLoadSuccess(){
+	if(EpisodeID==""){
+		var AllData=winDoc.$HUI.combobox("#histAdm").getData();
+		if(AllData.length>0){
+			EpisodeID=AllData[0].value
+			winDoc.$HUI.combobox("#histAdm").setValue(AllData[0].value);
+			flash(EpisodeID,PatientID);	
+		}
+	}else{
+		winDoc.$HUI.combobox("#histAdm").setValue(EpisodeID);	
+	}	
+}
+
+function flash(EpisodeID,PatientID){
+	setEprMenuForm(EpisodeID,PatientID);
+	flashNurOrderFrame();
 }
 
 
@@ -43,6 +84,6 @@ var setEprMenuForm = function(adm,papmi){
 }
 
 function flashNurOrderFrame(){
-	$('#nurOrderFrame').attr('src', $('#nurOrderFrame').attr('src'));	
+	window.location.reload();	
 	return;
 }

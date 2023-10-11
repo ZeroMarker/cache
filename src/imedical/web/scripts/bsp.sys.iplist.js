@@ -1,4 +1,11 @@
 var init = function(){
+	var HospData = [];
+	var Data = $q({
+           ClassName:"web.CTHospital",
+           QueryName:"LookUp",
+           rows:20000	
+	},false);
+	HospData = Data.rows;
 	$("#grid").mgrid({
 		width:500,
 		fitColumns:false,
@@ -9,6 +16,7 @@ var init = function(){
 		columns:[[
 			{field:'ID',title:'ID',width:'30',hidden:true},
 			{field:'Name',title:'名称',width:'100',editor:{type:'text'}},
+			{field:'Alias',title:'别名',width:'100',editor:{type:'text'}},
 			{field:'LanIP',title:'内网IP',width:'150',editor:{type:'text'}},
 			{field:'WanIP',title:'外网IP',width:'150',editor:{type:'text'}},
 			{field:'Type',title:'类型服务',width:'150',editor:{
@@ -26,6 +34,17 @@ var init = function(){
 			},
 			formatter: function(value,row,index){
 				return row.TypeDesc;
+			}},
+			{field:'HospDr',title:'所属医院',width:'250',editor:{
+				type:'combobox',
+				options:{
+					valueField:'HIDDEN',
+					textField:'Description',
+					data:HospData
+				}
+			},
+			formatter: function(value,row,index){
+				return row.HospDesc;
 			}},
 			{field:'Active',title:'激活',width:'70',editor:{
 				type:'combobox',
@@ -67,11 +86,11 @@ var init = function(){
 			}else{
 				param = $.extend(_t.updReq,{"dto.iplist.id":row.ID});
 			}
-			$.extend(param,{"dto.iplist.Name":row.Name,"dto.iplist.LanIP":row.LanIP,"dto.iplist.WanIP":row.WanIP,"dto.iplist.Type":row.Type,"dto.iplist.Active":row.Active});
+			$.extend(param,{"dto.iplist.Name":row.Name,"dto.iplist.Alias":row.Alias,"dto.iplist.LanIP":row.LanIP,"dto.iplist.WanIP":row.WanIP,"dto.iplist.Type":row.Type,"dto.iplist.Active":row.Active,"dto.iplist.HospDr":row.HospDr});
 			$cm(param,defaultCallBack);
 		},
 		getNewRecord:function(){
-			return {ID:"",Name:"",LanIP:"",WanIP:"",Type:"",Active:1};	
+			return {ID:"",Name:"",Alias:"",LanIP:"",WanIP:"",Type:"",Active:1};	
 		}
 	});
 	var bType = $HUI.combobox("#boxType",{

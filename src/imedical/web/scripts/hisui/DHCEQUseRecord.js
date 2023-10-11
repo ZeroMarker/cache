@@ -10,6 +10,7 @@ function BodyLoadHandler() {
 	Muilt_LookUp("Model^ServiceItem");
 	filldata();
 	SetEnabled();
+	setRequiredElements("StartTime^EndTime");	// MZY0128	2663563,2663598		2022-06-23
 }
 
 function InitEvent() //初始化
@@ -112,6 +113,10 @@ function filldata()
 		var gbldata=cspRunServerMethod(encmeth,'','',GetElementValue("RowID"));
 		gbldata=gbldata.replace(/\\n/g,"\n"); //"\n"转换为回车符
 		var list=gbldata.split("^");
+		///modified by ZY0282 修改表结构,界面赋值变化.
+		///modified by ZY0253 修改表结构,界面赋值变化.
+		//var sort=67
+		var sort=73
 		SetElement("SourceType",list[1]) ; //来源类型
 	  	SetElement("SourceIDDR",list[2]) ; //来源名
 	  	SetElement("UseDate",list[3]) ; //开始日期
@@ -134,11 +139,11 @@ function filldata()
 	  	SetElement("Remark",list[21]) ; //备注
 	  	SetElement("ModelDR",list[28]) ; //机型
 			//modified by zy 2011-02-15 zy0053	
-	  	SetElement("SourceID",list[53]) ; //来源名             //modified by czf 386584 begin
-	  	SetElement("WorkLoadUnit",list[54]) ; //工作量单位
-	  	SetElement("UseLoc",list[55]) ; //使用科室
-	  	SetElement("ServiceItem",list[56]) ; //服务
-	  	SetElement("Model",list[57]) ; //机型                   //modified by czf 386584 end
+	  	SetElement("SourceID",list[sort+0]) ; //来源名             //modified by czf 386584 begin
+	  	SetElement("WorkLoadUnit",list[sort+1]) ; //工作量单位
+	  	SetElement("UseLoc",list[sort+2]) ; //使用科室
+	  	SetElement("ServiceItem",list[sort+3]) ; //服务
+	  	SetElement("Model",list[sort+4]) ; //机型                   //modified by czf 386584 end
   		var encmeth=GetElementValue("GetSourceInfo");
 		if (encmeth=="") return;
 		var gbldata=cspRunServerMethod(encmeth,'','',GetElementValue("SourceIDDR"));
@@ -187,9 +192,9 @@ function BAudit_Click()
 	var encmeth=GetElementValue("AuditUseRecord");
 	if (encmeth=="")  return;
 	var result=cspRunServerMethod(encmeth,rowid,GetElementValue("UserDR")); 
-	var obj=parent.document.frames["DHCEQEquipOperatorFind"].document.getElementById("EquipDR")
+	var obj=parent.DHCEQEquipOperatorFind.document.getElementById("EquipDR") //modified by csj 2020-10-30 需求号 1578204
 	var SourceID=obj.value
-	var obj=parent.document.frames["DHCEQEquipServiceFind"].document.getElementById("ServiceDR")
+	var obj=parent.DHCEQEquipServiceFind.document.getElementById("ServiceDR") //modified by csj 2020-10-30 需求号 1578204
 	var ServiceDR=obj.value
 	var today=GetElementValue("Today")
 	var userdr=GetElementValue("UserDR")
@@ -264,9 +269,9 @@ function BSubmit_Click()
 	var encmeth=GetElementValue("OperUseRecord");
 	if (encmeth=="")  return;
 	var result=cspRunServerMethod(encmeth,rowid,"1"); 
-	var obj=parent.document.frames["DHCEQEquipOperatorFind"].document.getElementById("EquipDR")
+	var obj=parent.document.DHCEQEquipOperatorFind.document.getElementById("EquipDR") //modified by csj 2020-10-30 需求号 1578204
 	var SourceID=obj.value
-	var obj=parent.document.frames["DHCEQEquipServiceFind"].document.getElementById("ServiceDR")
+	var obj=parent.document.DHCEQEquipServiceFind.document.getElementById("ServiceDR") //modified by csj 2020-10-30 需求号 1578204
 	var ServiceDR=obj.value
 	var today=GetElementValue("Today")
 	var userdr=GetElementValue("UserDR")
@@ -296,10 +301,11 @@ function confirmFun()
 	var encmeth=GetElementValue("OperUseRecord");
 	if (encmeth=="") return;
 	var result=cspRunServerMethod(encmeth,rowid,"4"); 
-	var obj=parent.document.frames["DHCEQEquipOperatorFind"].document.getElementById("EquipDR")
-	var SourceID=obj.value
-	var obj=parent.document.frames["DHCEQEquipServiceFind"].document.getElementById("ServiceDR")
-	var ServiceDR=obj.value
+	// MZY0128	2663563,2663598		2022-06-23
+	//var obj=parent.document.frames["DHCEQEquipOperatorFind"].document.getElementById("EquipDR")
+	var SourceID=GetElementValue("SourceIDDR")
+	//var obj=parent.document.frames["DHCEQEquipServiceFind"].document.getElementById("ServiceDR")
+	var ServiceDR=GetElementValue("ServiceItemDR")
 	var today=GetElementValue("Today")
 	var userdr=GetElementValue("UserDR")
 	result=result.replace(/\\n/g,"\n")

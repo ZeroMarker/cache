@@ -37,7 +37,7 @@ $(function(){
 		checkSure();
 	  }
 	});	
- 	
+ 	document.getElementById("txtUser").focus();
  	//开始签名
 	$("#checkSure").click(function(){
 		checkSure();
@@ -51,6 +51,7 @@ $(function(){
 	
 	//撤销签名
 	$("#revokeCheck").click(function(){
+		if("false"==getIdentityVerifcation()) return
 		var userInfo = $("#hiddenUserInfo").val();
 		if (userInfo == "")
 		{ 
@@ -98,13 +99,10 @@ function checkSure()
 		$.messager.alert("提示","用户名或密码错误");
 		return;
 	}
-	if (isEnableSelectUserLevel == "Y")
-	{
-		 var result = eval("("+$("#hiddenUserInfo").val()+")");
-		 result.UserLevel = $('#txtLevel').combobox('getValue');
-		 result.LevelDesc = $("#txtLevel").combobox('getText');
-		 userInfo = JSON.stringify(result);
-	}
+	var result = eval("("+$("#hiddenUserInfo").val()+")");
+	result.characterCode = $('#txtLevel').combobox('getValue');
+	result.characterDesc = $("#txtLevel").combobox('getText');
+	userInfo = JSON.stringify(result);
 	window.returnValue = '{"action":"sign","userInfo":'+userInfo+'}';
 	closeWindow();		
 }
@@ -117,6 +115,12 @@ function txtUserChange(){
 		$("#divPwd").css('display','none');
 		getIdentityVerifcation();
 	}
+	var oriSignatureLevel = ""
+	if (typeof(opts.oriSignatureLevel) != "undefined")
+	{
+		oriSignatureLevel = opts.oriSignatureLevel;
+	}
+	
 	jQuery.ajax({
 		type: "POST",
 		dataType: "text",
@@ -132,7 +136,8 @@ function txtUserChange(){
 			"p4":"",
 			"p5":"inpatient",
 			"p6":episodeId,
-			"p7":hospitalID
+			"p7":hospitalID,
+			"p8":oriSignatureLevel
 		},
 		success: function(d) {
 			 if (d == "")
@@ -144,18 +149,10 @@ function txtUserChange(){
 				 $("#txtLevel").val("");
 				 result = eval("("+d+")");
 				 $("#divUserName")[0].innerText = result.UserName;
-				 $("#txtLevel").val(result.LevelDesc);
-				 if (isEnableSelectUserLevel == "Y")
+				 $("#txtLevel").val(result.characterDesc);
+				 if (result.characterRange != "")
 				 {
-				 	if (result.UserLevel != "")
-				 	{
-				 		initUserLevel(result.UserLevel);
-				 	}
-				 	else
-				 	{
-					 	$('#txtLevel').combobox('loadData', {});
-					 	$('#txtLevel').combobox('setValue', "");
-				 	}
+				 	setLevelRange(eval("("+result.characterRange+")"),result.characterCode);
 				 }
 			 }
 		},
@@ -179,6 +176,12 @@ function getIdentityVerifcation()
 			return;	
 		}
 	}
+    tmpPassword = base64encode(tmpPassword);
+	var oriSignatureLevel = ""
+	if (typeof(opts.oriSignatureLevel) != "undefined")
+	{
+		oriSignatureLevel = opts.oriSignatureLevel;
+	}
 	jQuery.ajax({
 		type: "POST",
 		dataType: "text",
@@ -194,7 +197,8 @@ function getIdentityVerifcation()
 			"p4":"",
 			"p5":"inpatient",
 			"p6":episodeId,
-			"p7":hospitalID
+			"p7":hospitalID,
+			"p8":oriSignatureLevel
 		},
 		success: function(d) {
 			 if (d == "")
@@ -205,7 +209,7 @@ function getIdentityVerifcation()
 			 else 
 			 {
 				 result = eval("("+d+")");
-				 $("#txtLevel").val(result.LevelDesc);
+				 //$("#txtLevel").val(result.LevelDesc);
 				 $("#hiddenUserInfo").val(d);
 			 }
 		},
@@ -214,35 +218,12 @@ function getIdentityVerifcation()
 	return result
 }
 
-function initUserLevel(userlevel)
-{
-	jQuery.ajax({
-		type: "Post",
-		dataType: "text",
-		url: "../EMRservice.Ajax.common.cls",
-		async: false,
-		data: {
-			"OutputType":"String",
-			"Class":"EMRservice.BL.BLUserLevel",
-			"Method":"GetUserLevelRangeJson",
-			"p1":userlevel
-		},
-		success: function(d) {
-			if(d != "") setLevelRange(eval("["+d+"]"),userlevel);
-			else isEnableSelectUserLevel="N";
-		},
-		error : function(d) { 
-			alert("initUserLevel error");
-		}
-	});
-}
-
 function setLevelRange(data,userlevel)
 {
 	$("#txtLevel").combobox({
 		valueField:'LevelCode',                        
 		textField:'LevelDesc',
-		width:275,
+		width:270,
 		panelHeight:120,
 		data:data,
 		onSelect:function(record)
@@ -250,8 +231,8 @@ function setLevelRange(data,userlevel)
 			if ($("#hiddenUserInfo").val() != "")
 			{
 				 var result = eval("("+$("#hiddenUserInfo").val()+")");
-				 result.UserLevel = $('#txtLevel').combobox('getValue');
-				 result.LevelDesc = $("#txtLevel").combobox('getText');
+				 result.characterCode = $('#txtLevel').combobox('getValue');
+				 result.characterDesc = $("#txtLevel").combobox('getText');
 				 $("#hiddenUserInfo").val(JSON.stringify(result));
 			}
 		},
@@ -268,6 +249,8 @@ function clearCheckWindow()
 	$("#txtPwd").val("");
 	$("#txtLevel").val("");
 	$("#hiddenUserInfo").val("");
+	$('#txtLevel').combobox('loadData', {});
+	$('#txtLevel').combobox('setValue', "");
 }
 //关闭窗口
  function closeWindow()

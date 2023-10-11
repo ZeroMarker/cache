@@ -4,13 +4,20 @@
 function Init(){
 	$HUI.tabs("#config-tabs",{
 		onSelect:function(title,index){
+            var src="";
 			if(index==0){
-				$("iframe").attr("src","opadm.dhcopregpowerconfig.hui.csp");
+				src="opadm.dhcopregpowerconfig.hui.csp";
 			}else if(index==1){
-				$("iframe").attr("src","opadm.dhcopschedulepowerconfig.hui.csp");
+				src="opadm.dhcopschedulepowerconfig.hui.csp";
 			}else if(index==2){
-				$("iframe").attr("src","opadm.dhcoprespowerconfig.hui.csp");
+				src="opadm.dhcoprespowerconfig.hui.csp";
+			}else if(index==3){
+				src="opadm.dhcopregsetconfig.hui.csp";
 			}
+            if(src!=""){
+                src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
+                $("iframe").attr("src",src);
+            }
 		}
 	});
 }

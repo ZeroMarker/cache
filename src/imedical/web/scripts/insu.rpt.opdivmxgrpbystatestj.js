@@ -147,7 +147,11 @@ function InitInsuCenterCmb(OPIPFlag)
 	    	param.ClassName="web.INSUDicDataCom";
 	    	param.QueryName="QueryDic";
 	    	param.ResultSetType="array";
-	    	param.Type=("YAB003"+getValueById('cbInsuType'));
+	    	if($("#cbInsuType").combobox("getText").indexOf("¹ú¼Ò")!="-1"){
+				param.Type=("admdvs"+getValueById('cbInsuType'));
+			}else{
+				param.Type=("YAB003"+getValueById('cbInsuType'));
+			} ;	    	
 	    	param.HospDr=INSURPT_CONSTANT.SESSION.HOSP_ROWID;
 	    	param.Code="";
 	    },

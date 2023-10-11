@@ -1,4 +1,4 @@
-﻿var detailview = $.extend({}, $.fn.datagrid.defaults.view, {
+var detailview = $.extend({}, $.fn.datagrid.defaults.view, {
 	render: function(target, container, frozen){
 		var state = $.data(target, 'datagrid');
 		var opts = state.options;

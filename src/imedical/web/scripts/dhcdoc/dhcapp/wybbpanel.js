@@ -63,6 +63,7 @@
 			rownumbers : false,
 			singleSelect : true,
 			pagination: false,
+			toolbar:[],
 		    onDblClickRow: function (rowIndex, rowData) {
 				
 				if (isPageEditFlag == 0) return;
@@ -191,9 +192,9 @@
 			    var TmpData = item.No +"^"+ item.ID +"^"+ item.Name +"^"+ item.Part +"^"+ item.Qty +"^"+ item.SliType +"^"+ item.PisNo;
 			    PisSpecArr.push(TmpData);
 			    if (PisReqSpec==""){
-					PisReqSpec = item.No+"#"+item.Name +"#"+ item.Qty +"#"+ item.Part +"#"+ item.PisNo+ "#"+ item.SliType;
+					PisReqSpec = item.No+String.fromCharCode(1)+item.Name +String.fromCharCode(1)+ item.SliType +String.fromCharCode(1)+ item.Qty +String.fromCharCode(1)+ item.PisNo;
 				}else{
-					PisReqSpec = PisReqSpec+"@"+item.No+"#"+item.Name +"#"+ item.Qty +"#"+ item.Part +"#"+ item.PisNo+ "#"+ item.SliType;	
+					PisReqSpec = PisReqSpec+String.fromCharCode(2)+item.No+String.fromCharCode(1)+item.Name +String.fromCharCode(1)+ item.SliType +String.fromCharCode(1)+ item.Qty +String.fromCharCode(1)+ item.PisNo;	
 				}
 			}
 		})

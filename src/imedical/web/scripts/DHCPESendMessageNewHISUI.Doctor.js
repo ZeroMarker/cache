@@ -16,7 +16,7 @@ var init = function(){
 	$("#Sex").val(Info.split("^")[1])
 	
 	var HighRiskObj = $HUI.combobox("#HighRisk",{
-		url:$URL+"?ClassName=web.DHCPE.SendMessage&QueryName=FindAdviceByOrder&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindAdviceByOrder&ResultSetType=array",
 		valueField:'AdviceInfo',
 		textField:'AdviceInfo',
 		onBeforeLoad:function(param){

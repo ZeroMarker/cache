@@ -74,13 +74,30 @@ function initArcItemList(){
 			required: true  	/// 设置编辑规则属性
 		}
 	}
-	
+	var ArcSingleFlageditor={			/// 设置其为可编辑
+		type: 'combobox',			/// 设置编辑格式
+		options: {
+			data:FrostArray,
+			valueField: "value", 
+			textField: "text",
+			panelHeight:"auto",		/// 设置容器高度自动增长
+			onSelect:function(option){
+				///设置类型值
+				var ed=$("#arcItemList").datagrid('getEditor',{index:editRow,field:'ArcSingleFlag'});
+				$(ed.target).combobox('setValue', option.value);  //设置是否可用
+				$(ed.target).combobox('setText', option.text);
+				//var ed=$("#arcItemList").datagrid('getEditor',{index:editRow,field:'ReqCode'});
+				//$(ed.target).val(option.value); 
+			} 
+		}
+	}
 	///  定义columns
 	var columns=[[
 		{field:'ArcDr',title:'医嘱项ID',width:100,align:'center',hidden:true,editor:textEditor},
 		{field:'ArcCode',title:'医嘱项代码',width:150,align:'center',editor:textEditor},
 		{field:'ArcDesc',title:'医嘱项',width:240,align:'center',editor:textEditor},
-		{field:'FrostFlag',title:'冰冻标志',width:100,align:'center',editor:FrostFlageditor},		
+		{field:'ArcSingleFlag',title:'检查单独申请单',width:150,align:'center',editor:ArcSingleFlageditor},	
+		//{field:'FrostFlag',title:'冰冻标志',width:100,align:'center',editor:FrostFlageditor},		
 		{field:"AcRowId",title:'ID',hidden:true,editor:textEditor}
 	]];
 	
@@ -89,7 +106,6 @@ function initArcItemList(){
 		rownumbers : true,
 		singleSelect : true,
 	    onDblClickRow: function (rowIndex, rowData) {	/// 双击选择行编辑
-	    
             if ((editRow != "")||(editRow == "0")) { 
                 $("#arcItemList").datagrid('endEdit', editRow); 
             } 
@@ -122,7 +138,7 @@ function insertArcItmRow()
 	 
 	$("#arcItemList").datagrid('insertRow', {			/// 在指定行添加数据，appendRow是在最后一行添加数据
 		index: 0, 										/// 行数从0开始计算
-		row: { ArcDr:'', ArcDesc:'',FrostFlag:'Y'}
+		row: { ArcDr:'', ArcDesc:'',ArcSingleFlag:'N'}
 	});
 	$("#arcItemList").datagrid('beginEdit', 0);			/// 开启编辑并传入要编辑的行
 	editRow=0;	
@@ -151,7 +167,7 @@ function saveArcItmRow(){
 			$.messager.alert("提示","请选择医嘱项!");
 			return false;
 		} 
-		var tmp=rowsData[i].AcRowId  +"^"+ rowsData[i].ArcDr +"^"+ catID +"^"+ rowsData[i].FrostFlag;
+		var tmp=rowsData[i].AcRowId  +"^"+ rowsData[i].ArcDr +"^"+ catID +"^否^"+rowsData[i].ArcSingleFlag; //rowsData[i].FrostFlag
 		dataList.push(tmp);
 	} 
 	var params=dataList.join("&&");

@@ -7,6 +7,8 @@
 DHCPHA_CONSTANT.VAR.INVROWID = "";
 DHCPHA_CONSTANT.VAR.RETURNROWID = "";
 DHCPHA_CONSTANT.DEFAULT.CYFLAG = "";
+
+var PHAOUT_NEEDREQ=""
 $(function () {
 	CheckPermission();
 	/* 初始化插件 start*/
@@ -82,7 +84,8 @@ $(function () {
 		var prescNo = $("#sel-prescno").val();
 		var patno = $("#txt-patno").val();
 		if((patno=="")||(patno=null)){
-			dhcphaMsgBox.alert("请输入登记号或卡号后,再查询!");
+			dhcphaMsgBox.alert($g("请输入登记号或卡号后,再查询!"));
+			
 			return;
 		}
 		if (prescNo == null) {
@@ -91,13 +94,15 @@ $(function () {
 			QueryGridReturn();
 		}
 	});
-	$("#btn-return").on("click", DoReturn);
+	$("#btn-return").on("click", function(){
+		CACert("PHAOPReturn",DoReturn);
+	}); 
 	$("#btn-refusereturn").on("click", DoRefuseReturn);
 	$("#btn-cancelrefuse").on("click", DoCancelRefuseReturn);
 	$("#btn-readcard").on("click", BtnReadCardHandler); //读卡
 	$("#btn-print").on("click", function () {
 		if (DHCPHA_CONSTANT.VAR.RETURNROWID == "") {
-			dhcphaMsgBox.alert("请先退药后,再打印!");
+			dhcphaMsgBox.alert($g("请先退药后,再打印!"));
 			return;
 		}
 		PrintReturn(DHCPHA_CONSTANT.VAR.RETURNROWID, "")
@@ -107,7 +112,6 @@ $(function () {
 ;
 	InitBodyStyle();
 	ResizeReturn();
-	
 })
 // 处方号下拉
 function InitSelectPrescNo() {
@@ -115,14 +119,14 @@ function InitSelectPrescNo() {
 		width: 280,
 		url: DHCPHA_CONSTANT.URL.COMMON_OUTPHA_URL +
 		'?action=GetPrescForRet',
-		placeholder: "请选择处方",
+		placeholder: $g("请选择处方"),
 		minimumResultsForSearch: Infinity,
 		templateResult: function (state) {
 			if (!state.id) {
 				return state.text;
 			}
 			var stateText = state.text;
-			if (stateText.indexOf("申请") >= 0) {
+			if ((stateText.indexOf("申请") >= 0)||(stateText.indexOf("Request") >= 0)) {
 				stateText = $('<span style="font-weight:bold">' + stateText + '</span>')
 					// var stateTextArr=stateText.split("  ");
 					// stateText=$('<span>'+stateTextArr[0]+"  "+stateTextArr[1]+"  "+'</span><span style="color:green;font-weight:bold">'+stateTextArr[2]+'</span>')
@@ -136,7 +140,19 @@ function InitSelectPrescNo() {
 			var enddate=$("#date-end").val();
 			var daterange=stdate+" - "+enddate
 			var patNo = $("#txt-patno").val();
-			var inputStr = DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID + "^" + patNo + "^" + daterange;
+			var freeDrgFlag=""
+			if ($("#chk-freeDrg").is(':checked')) {
+				freeDrgFlag = "Y";
+			}
+			if(PHAOUT_NEEDREQ=="Y"){
+				if(freeDrgFlag!="Y"){
+					dhcphaMsgBox.alert($g("除免费药外，退药需要根据退药申请!"));
+					$("#sel-prescno").select2("close");
+					return {};
+				}
+			}else{freeDrgFlag = "";}
+			
+			var inputStr = DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID + "^" + patNo + "^" + daterange + "^" +  freeDrgFlag ;
 			return {
 				combotext: params.term,
 				inputStr: inputStr
@@ -154,17 +170,17 @@ function InitGridRequest() {
 	var columns = [{
 			index: 'reqNo',
 			name: 'reqNo',
-			header: '申请单号',
+			header: ("申请单号"),
 			width: 100
 		}, {
 			index: 'prescNo',
 			name: 'prescNo',
-			header: '处方号',
+			header: ("处方号"),
 			width: 115
 		}, {
 			index: 'reqUser',
 			name: 'reqUser',
-			header: '申请人',
+			header: ("申请人"),
 			width: 100
 		}, {
 			index: 'reqRowId',
@@ -179,9 +195,15 @@ function InitGridRequest() {
 			width: 100,
 			hidden: true
 		}, {
+			index: 'prescCYFlag',
+			name: 'prescCYFlag',
+			header: 'prescCYFlag',
+			width: 100,
+			hidden: true
+		}, {
 			index: 'reqReasonDesc',
 			name: 'reqReasonDesc',
-			header: '申请原因',
+			header: ("申请原因"),
 			width: 100,
 			hidden: false
 		},
@@ -206,7 +228,7 @@ function InitGridRequest() {
 		loadComplete: function () {
 			var grid_records = $(this).getGridParam('records');
 			if (grid_records == 0) {
-				$("#grid-return").clearJqGrid();
+				//$("#grid-return").clearJqGrid();
 			} else {
 				$(this).jqGrid('setSelection', 1);
 			}
@@ -219,13 +241,13 @@ function InitGirdReturn() {
 	var columns = [{
 			index: 'TRefuse',
 			name: 'TRefuse',
-			header: '拒退原因',
+			header: ("拒退原因"),
 			width: 100,
 			align: 'left'
 		}, {
 			index: 'TPhdesc',
 			name: 'TPhdesc',
-			header: '药品名称',
+			header: ("药品名称"),
 			width: 225,
 			align: 'left',
 			cellattr: function (rowId, val, rawObject, cm, rdata) {
@@ -238,31 +260,31 @@ function InitGirdReturn() {
 		}, {
 			index: 'TPhUom',
 			name: 'TPhUom',
-			header: '药品单位',
+			header: ("药品单位"),
 			width: 80,
 			align: 'left'
 		}, {
 			index: 'TPrice',
 			name: 'TPrice',
-			header: '药品单价',
+			header: ("药品单价"),
 			width: 100,
 			align: 'right'
 		}, {
 			index: 'TDispQty',
 			name: 'TDispQty',
-			header: '发药数量',
+			header: ("发药数量"),
 			width: 80,
 			align: 'right'
 		}, {
 			index: 'TDispMoney',
 			name: 'TDispMoney',
-			header: '发药金额',
+			header: ("发药金额"),
 			width: 100,
 			align: 'right'
 		}, {
 			index: 'TRetQty',
 			name: 'TRetQty',
-			header: '退药数量',
+			header: ("退药数量"),
 			width: 100,
 			align: 'center',
 			editable: true,
@@ -270,25 +292,25 @@ function InitGirdReturn() {
 		}, {
 			index: 'TRetMoney',
 			name: 'TRetMoney',
-			header: '退药金额',
+			header: ("退药金额"),
 			width: 100,
 			align: 'right'
 		}, {
 			index: 'TPhgg',
 			name: 'TPhgg',
-			header: '规格',
+			header: ("规格"),
 			width: 100,
 			align: 'left'
 		}, {
 			index: 'TIncDispBatCode',
 			name: 'TIncDispBatCode',
-			header: '发药批号',
+			header: ("发药批号"),
 			width: 100,
 			align: 'left'
 		}, {
 			index: 'TIncRetBatCode',
 			name: 'TIncRetBatCode',
-			header: '退药批号',
+			header: ("退药批号"),
 			width: 100,
 			align: 'left',
 			editable: true,
@@ -296,7 +318,7 @@ function InitGirdReturn() {
 		}, {
 			index: 'TInvNo',
 			name: 'TInvNo',
-			header: '发票号',
+			header: ("发票号"),
 			width: 100,
 			align: 'left'
 		}, {
@@ -320,30 +342,30 @@ function InitGirdReturn() {
 		}, {
 			index: 'TPhdLbRowId',
 			name: 'TPhdLbRowId',
-			header: '发药子表ID',
+			header: ("发药子表ID"),
 			width: 100,
 			hidden: true
 		}, {
 			index: 'TDodisBatch',
 			name: 'TDodisBatch',
-			header: '打包子表ID',
+			header: ("打包子表ID"),
 			width: 100,
 			hidden: true
 		}, {
 			index: 'TCantRetReason',
 			name: 'TCantRetReason',
-			header: '不可退药原因',
+			header: ("不可退药原因"),
 			width: 100
 		}, {
 			index: 'TCyFlag',
 			name: 'TCyFlag',
-			header: '草药处方标志',
+			header: ("草药处方标志"),
 			width: 30,
 			hidden: true
 		}, {
 			index: 'TRefuseFlag',
 			name: 'TRefuseFlag',
-			header: '拒绝标志',
+			header: ("拒绝标志"),
 			width: 30,
 			hidden: true
 		}
@@ -361,7 +383,7 @@ function InitGirdReturn() {
 				return;
 			}
 			var DispBatCode = iddata.TIncDispBatCode;
-			if (DispBatCode.indexOf("欠药") >-1) {
+			if (DispBatCode.indexOf($g("欠药")) >-1) {
 				return;
 			}
 			if ((JqGridCanEdit == false) && (LastEditSel != "") && (LastEditSel != id)) {
@@ -386,7 +408,7 @@ function InitGirdReturn() {
 						}
 						var reg = /^[0-9]\d*$/;
 						if (!reg.test(this.value)) {
-							dhcphaMsgBox.message("第" + id + "行的实发数量只能为整数!")
+							dhcphaMsgBox.message($g("第") + id + $g("行的退药数量只能为整数!"))
 							$("#grid-return").jqGrid('restoreRow', id);
 							JqGridCanEdit = false;
 							return false;
@@ -394,7 +416,7 @@ function InitGirdReturn() {
 						var iddata = $('#grid-return').jqGrid('getRowData', id);
 						var dispedqty = iddata.TDispQty;
 						if (parseFloat(this.value * 1000) > parseFloat(dispedqty * 1000)) {
-							dhcphaMsgBox.message("第" + id + "行退药数量大于发药数量!")
+							dhcphaMsgBox.message($g("第") + id + $g("行退药数量大于发药数量!"))
 							$("#grid-return").jqGrid('restoreRow', id);
 							JqGridCanEdit = false;
 							return false;
@@ -416,7 +438,11 @@ function InitGirdReturn() {
 function QueryGridReturn() {
 	var patno = $("#txt-patno").val();
 	var prescno = $("#sel-prescno").select2('data')[0].id || "";
-	var params = prescno + "^" + DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID;
+	var freeDrgFlag=""
+	if ($("#chk-freeDrg").is(':checked')) {
+		freeDrgFlag = "Y";
+	}
+	var params = prescno + "^" + DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID+ "^" + freeDrgFlag;
 	$("#grid-return").setGridParam({
 		datatype: 'json',
 		url: DHCPHA_CONSTANT.URL.COMMON_OUTPHA_URL + '?action=GetNeedReturnList',
@@ -432,20 +458,26 @@ function QueryGridReturn() {
 }
 //查询退药申请列表
 function QueryGridRequest() {
+	var prescNo = $("#sel-prescno").val()||"";
+	if(prescNo!=""){return;}
 	var patno = $("#txt-patno").val();
-	var params = DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID + "^" + patno;
+			var stdate=$("#date-start").val();
+			var enddate=$("#date-end").val();
+			
+	var params = DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID + "^" + patno+ "^" + stdate+ "^" +enddate ;
 	$("#grid-request").setGridParam({
 		datatype: 'json',
 		postData: {
 			'params': params
 		}
 	}).trigger("reloadGrid");
+	$("#grid-return").clearJqGrid();
 	return true
 }
 //执行退药
 function DoReturn() {
 	if (DHCPHA_CONSTANT.VAR.RETURNROWID != "") {
-		dhcphaMsgBox.alert("本次记录已退药,请核查!");
+		dhcphaMsgBox.alert($g("本次记录已退药,请核查!"));
 		return;
 	}
 	if (DhcphaGridIsEmpty("#grid-return") == true) {
@@ -467,19 +499,19 @@ function CheckDataBeforeDoReturn() {
 	var returnrowdata = $("#grid-return").jqGrid('getRowData');
 	var detailgridrows = returnrowdata.length;
 	if (detailgridrows <= 0) {
-		dhcphaMsgBox.alert("没有明细数据!");
+		dhcphaMsgBox.alert($g("没有明细数据!"));
 		return false;
 	}
 	for (var rowi = 0; rowi < detailgridrows; rowi++) {
 		var cyflag = returnrowdata[rowi].TCyFlag;
 		var refuseflag = returnrowdata[rowi].TRefuseFlag;
 		if ((cyflag == "Y") && (refuseflag == "Y")) {
-			dhcphaMsgBox.alert("该草药处方药品:" + returnrowdata[rowi]["TPhdesc"] + "</br>存在拒绝退药记录，不能部分退!");
+			dhcphaMsgBox.alert($g("该草药处方药品")+":" + returnrowdata[rowi]["TPhdesc"] + "</br>"+$g("存在拒绝退药记录，不能部分退!"));
 			return false;
 		}
 		var cantretreason = returnrowdata[rowi].TCantRetReason;
 		if ((cyflag == "Y") && (cantretreason != "")) {
-			dhcphaMsgBox.alert("该草药处方药品:" + returnrowdata[rowi]["TPhdesc"] + "</br>维护了不可退药原因，不能部分退!");
+			dhcphaMsgBox.alert($g("该草药处方药品")+":" + returnrowdata[rowi]["TPhdesc"] + "</br>"+$g("维护了不可退药原因，不能部分退!"));
 			return false;
 		}else if (cantretreason!=""){
 			lastcantretreason=cantretreason;
@@ -489,7 +521,7 @@ function CheckDataBeforeDoReturn() {
 		var preColFlag = tkMakeServerCall("PHA.OP.Return.OperTab","GetPreColFlag",phdLbRowId)
 		//alert("phdLbRowId:"+phdLbRowId+"  preColFlag:"+preColFlag)
 		if (preColFlag == "1"){
-			dhcphaMsgBox.alert("药品:" + returnrowdata[rowi]["TPhdesc"] + "</br>所在处方已在煎药室收方，不允许退药!");
+			dhcphaMsgBox.alert($g("药品")+":" + returnrowdata[rowi]["TPhdesc"] + "</br>"+$g("所在处方已在煎药室收方，不允许退药!"));
 			return false;
 		}
 		var retqty = returnrowdata[rowi].TRetQty;
@@ -509,11 +541,11 @@ function CheckDataBeforeDoReturn() {
 			continue;
 		}
 		if (parseFloat(retqty) < 0) {
-			dhcphaMsgBox.alert("药品:" + returnrowdata[rowi]["TPhdesc"] + "</br>退药数量不能小于0!");
+			dhcphaMsgBox.alert($g("药品")+":" + returnrowdata[rowi]["TPhdesc"] + "</br>"+$g("退药数量不能小于0!"));
 			return;
 		}
 		if (isNaN(retqty) == true) {
-			dhcphaMsgBox.alert("药品:" + returnrowdata[rowi]["TPhdesc"] + "</br>退药数量不能为非数字!");
+			dhcphaMsgBox.alert($g("药品")+":" + returnrowdata[rowi]["TPhdesc"] + "</br>"+$g("退药数量不能为非数字!"));
 			canreturn = false;
 			return;
 		}
@@ -521,12 +553,12 @@ function CheckDataBeforeDoReturn() {
 		returninfo = 1;
 	}
 	if (lastrefusereason != "") {
-		dhcphaMsgBox.alert("该退药申请存在拒绝退药记录!");
+		dhcphaMsgBox.alert($g("该退药申请存在拒绝退药记录!"));
 	} else if (canreturn == false) {
 		if(lastcantretreason!=""){
-			dhcphaMsgBox.alert("药品维护了不可退原因！</br>如："+lastcantretreason);
+			dhcphaMsgBox.alert($g("药品维护了不可退原因！")+"</br>"+$g("如：")+lastcantretreason);
 		}else{
-			dhcphaMsgBox.alert("请检查退药数量!");
+			dhcphaMsgBox.alert($g("请检查退药数量!"));
 		}
 	}
 	return canreturn;
@@ -565,30 +597,30 @@ function ExecuteReturn(returnreason) {
 			return true;
 		}
 		if (isNaN(retqty) == true) {
-			dhcphaMsgBox.alert("药品:" + rowdata["TPhdesc"] + "</br>退药数量不能为非数字!");
+			dhcphaMsgBox.alert($g("药品")+":" + rowdata["TPhdesc"] + "</br>"+$g("退药数量不能为非数字!"));
 			canreturn = false;
 			return false;
 		}
 		if (parseFloat(retqty) < 0) {
-			dhcphaMsgBox.alert("药品:" + rowdata["TPhdesc"] + "</br>退药数量不能小于0!");
+			dhcphaMsgBox.alert($g("药品")+":" + rowdata["TPhdesc"] + "</br>"+$g("退药数量不能小于0!"));
 			canreturn = false;
 			return false;
 		}
 		if (parseFloat(retqty * 1000) > parseFloat(dispedqty * 1000)) {
-			dhcphaMsgBox.alert("药品:" + rowdata["TPhdesc"] + "</br>退药数量大于发药数量!");
+			dhcphaMsgBox.alert($g("药品")+":" + rowdata["TPhdesc"] + "</br>"+$g("退药数量大于发药数量!"));
 			canreturn = false;
 			return false;
 		}
-		if ((retqty > 0) && (batno != "欠药")) {
-			var checkret = tkMakeServerCall("PHA.OP.Return.Query", "CheckRetQty", phdlbrowid, retqty);
+		if ((retqty > 0) && (batno != $g("欠药"))) {
+			var checkret = tkMakeServerCall("PHA.OP.Return.Query", "CheckRetQty", phdlbrowid, retqty, retuomid);
 			if (checkret == "-1") {
 				checkretsum = checkretsum + 1;
 				canreturn = false;
-				dhcphaMsgBox.alert("药品:" + rowdata["TPhdesc"] + "</br>退药数量大于剩余未退数量!");
+				dhcphaMsgBox.alert($g("药品")+":" + rowdata["TPhdesc"] + "</br>"+$g("退药数量大于剩余未退数量!"));
 				return false;
 			}
 		}
-		if (batno == "欠药") {
+		if (batno == $g("欠药")) {
 			oweflag = 1;
 		}
 		var onereturn = "";
@@ -608,7 +640,7 @@ function ExecuteReturn(returnreason) {
 		return;
 	}
 	if (returninfo == "") {
-		dhcphaMsgBox.alert("界面数据,没有可退药品!");
+		dhcphaMsgBox.alert($g("界面数据,没有可退药品!"));
 		return;
 	}
 	var reqrowid = "";
@@ -624,10 +656,10 @@ function ExecuteReturn(returnreason) {
 		var oweresult = tkMakeServerCall("PHA.OP.Owe.OperTab", "DoChowReturn", reqrowid, DHCPHA_CONSTANT.SESSION.GUSER_ROWID, returninfo);
 		var oweret = oweresult.split("^")[0];
 		if (oweret != 0) {
-			dhcphaMsgBox.alert("欠药退药失败！</br>错误代码:" + oweresult.split("^")[1], "error");
+			dhcphaMsgBox.alert($g("欠药退药失败！")+"</br>"+$g("错误代码")+":" + oweresult.split("^")[1], "error");
 			return;
 		} else {
-			dhcphaMsgBox.alert("欠药退药成功!", "success");
+			dhcphaMsgBox.alert($g("欠药退药成功!"), "success");
 			return;
 		}
 	} else {
@@ -638,19 +670,31 @@ function ExecuteReturn(returnreason) {
 		var retval = retresult.split("^")[0];
 		var retmessage = retresult.split("^")[1];
 		if (retval < 0) {
-			dhcphaMsgBox.alert(retmessage);
+			dhcphaMsgBox.alert($g(retmessage));
 			return;
 		} else {
 			DHCPHA_CONSTANT.VAR.RETURNROWID=retval;
-			dhcphaMsgBox.alert("退药成功!请到收费处退费!", "success");
+			dhcphaMsgBox.alert($g("退药成功!"), "success");
 		}
 	}
 
 }
 //拒绝退药
 function DoRefuseReturn() {
+	
+	var reqselectid = $("#grid-request").jqGrid('getGridParam', 'selrow');
+	var reqselectdata = $('#grid-request').jqGrid('getRowData', reqselectid);
+	
+	// MaYuqiang 20210311 草药拒绝退药
+	var prescCYFlag = reqselectdata.prescCYFlag ;
+	if (prescCYFlag == "Y"){
+		DoHERBRefuseReturn() ;
+		return ;
+	}
+	
+	
 	if (DHCPHA_CONSTANT.VAR.RETURNROWID != "") {
-		dhcphaMsgBox.alert("本次记录已退药,请核查!");
+		dhcphaMsgBox.alert($g("本次记录已退药,请核查!"));
 		return;
 	}
 	if (DhcphaGridIsEmpty("#grid-return") == true) {
@@ -663,73 +707,161 @@ function DoRefuseReturn() {
 	var retselectdata = $('#grid-return').jqGrid('getRowData', retselectid);
 	var reqitm = retselectdata.TReqItm;
 	var refuse = retselectdata.TRefuse;
+	
 	if ((reqitm == "") || (reqitm == undefined)) {
-		dhcphaMsgBox.alert("仅根据退药申请退药时允许拒绝!");
+		dhcphaMsgBox.alert($g("仅根据退药申请退药时允许拒绝!"));
 		return;
 	}
 	if ((refuse != "") && (refuse != undefined)) {
-		dhcphaMsgBox.alert("该记录已拒绝!");
+		dhcphaMsgBox.alert($g("该记录已拒绝!"));
 		return;
 	}
 	
 	$("#sel-retrefreason").val("")
 	$("#modal-outpharetrefreason").modal('show');
 }
+
+// MaYuqiang 20210311 草药拒绝退药
+function DoHERBRefuseReturn(){
+	var reqselectid = $("#grid-request").jqGrid('getGridParam', 'selrow');
+	var reqselectdata = $('#grid-request').jqGrid('getRowData', reqselectid);
+	var reqRowId = reqselectdata.reqRowId ;
+	if ((reqRowId == "") || (reqRowId == undefined)) {
+		dhcphaMsgBox.alert($g("草药处方依据退药申请退药时才允许拒绝退药!"));
+		return;
+	}
+	$("#sel-retrefreason").val("")
+	$("#modal-outpharetrefreason").modal('show');
+	
+}
+
+
 //撤消拒绝
 function DoCancelRefuseReturn() {
+	
+	var reqselectid = $("#grid-request").jqGrid('getGridParam', 'selrow');
+	var reqselectdata = $('#grid-request').jqGrid('getRowData', reqselectid);
+	
+	// MaYuqiang 20210311 草药撤消拒绝退药
+	var prescCYFlag = reqselectdata.prescCYFlag ;
+	if (prescCYFlag = "Y"){
+		var reqRowId = reqselectdata.reqRowId ; 
+		DoHERBCancelRefuse(reqRowId) ;
+		return ;
+	}
+	
+	
 	var retselectid = $("#grid-return").jqGrid('getGridParam', 'selrow');
 	if (retselectid == null) {
-		dhcphaMsgBox.alert("请先选中数据,再进行操作!");
+		dhcphaMsgBox.alert($g("请先选中数据,再进行操作!"));
 		return;
 	}
 	var retselectdata = $('#grid-return').jqGrid('getRowData', retselectid);
 	var reqitm = retselectdata.TReqItm;
 	var refuse = retselectdata.TRefuse;
 	if ((reqitm == "") || (reqitm == undefined)) {
-		dhcphaMsgBox.alert("仅根据退药申请退药时允许撤消拒绝!");
+		dhcphaMsgBox.alert($g("仅依据退药申请退药时才允许撤消拒绝!"));
 		return;
 	}
 	if ((refuse == "") || (refuse == undefined)) {
-		dhcphaMsgBox.alert("该记录不需要撤消拒绝!");
+		dhcphaMsgBox.alert($g("该记录不需要撤消拒绝!"));
 		return;
 	}
-	var refuseret = tkMakeServerCall("PHA.OP.Return.OperTab", "CancelRefuseReason", reqitm)
+	var refuseret = tkMakeServerCall("PHA.OP.Return.OperTab", "CancelRefuseReason", reqitm,DHCPHA_CONSTANT.SESSION.GUSER_ROWID)
 		if (refuseret == 0) {
-			dhcphaMsgBox.alert("撤消拒绝退药成功", "success");
+			dhcphaMsgBox.alert($g("撤消拒绝退药成功"), "success");
 			var newdata = {
 				TRefuse: '',
 				TRefuseFlag: ''
 			}
 			$('#grid-return').jqGrid('setRowData', retselectid, newdata);
 		} else {
-			dhcphaMsgBox.alert("撤销拒绝失败!错误代码:" + refuseret, "error");
+			dhcphaMsgBox.alert($g("撤消拒绝失败!错误代码:") + refuseret, "error");
 		}
 }
 //仅支持单条拒绝
 function ExecuteRefuseReturn(retrefarr) {
+	
+	var reqselectid = $("#grid-request").jqGrid('getGridParam', 'selrow');
+	var reqselectdata = $('#grid-request').jqGrid('getRowData', reqselectid);
+	// MaYuqiang 20210311 草药拒绝退药
+	var prescCYFlag = reqselectdata.prescCYFlag ;
+	if (prescCYFlag = "Y"){
+		var reqRowId = reqselectdata.reqRowId ;
+		DoHERBExecuteRefuse(retrefarr, reqRowId) ;
+		return ;
+	}
+		
 	var retselectid = $("#grid-return").jqGrid('getGridParam', 'selrow');
 	var retselectdata = $('#grid-return').jqGrid('getRowData', retselectid);
 	var reqitm=retselectdata.TReqItm;
 	var refuse=retselectdata.TRefuse;
 	if ((reqitm=="")||(reqitm==undefined)){
-		dhcphaMsgBox.alert("仅根据退药申请退药时允许拒绝!");
+		dhcphaMsgBox.alert($g("仅依据退药申请退药时才允许拒绝!"));
 		return;
 	}
 	if ((refuse!="")&&(refuse!=undefined)){
-		dhcphaMsgBox.alert("该记录已拒绝!");
+		dhcphaMsgBox.alert($g("该记录已拒绝!"));
 		return;
 	}
-	var refuseret = tkMakeServerCall("PHA.OP.Return.OperTab", "RefuseReason", retrefarr.id, reqitm)
+	var refuseret = tkMakeServerCall("PHA.OP.Return.OperTab", "RefuseReason", retrefarr.id, reqitm,DHCPHA_CONSTANT.SESSION.GUSER_ROWID)
 		if (refuseret == 0) {
-			dhcphaMsgBox.alert("拒绝退药成功", "success");
+			dhcphaMsgBox.alert($g("拒绝退药成功"), "success");
 			var newdata = {
 				TRefuse: retrefarr.text,
 				TRefuseFlag: "Y"
 			}
 			$('#grid-return').jqGrid('setRowData', retselectid, newdata);
 		} else {
-			dhcphaMsgBox.alert("拒绝失败!错误代码:" + refuseret, "error");
+			dhcphaMsgBox.alert($g("拒绝失败!错误代码:") + refuseret, "error");
 		}
+}
+
+/// MaYuqiang 20210311
+/// 执行草药处方的拒绝退药
+function DoHERBExecuteRefuse(retrefarr, reqRowId){
+	
+	var refuseret = tkMakeServerCall("PHA.OP.Return.OperTab", "HerbRefuseRet", retrefarr.id, reqRowId,DHCPHA_CONSTANT.SESSION.GUSER_ROWID)
+	if (refuseret == 0) {
+		dhcphaMsgBox.alert($g("拒绝退药成功"), "success");
+		var newdata = {
+			TRefuse: retrefarr.text,
+			TRefuseFlag: "Y"
+		}
+		var rows = $("#grid-return").getGridParam('records');
+	    if (rows == 0) {
+	        return;
+	    }
+	    for (var i = 1; i <= rows; i++) {
+			$('#grid-return').jqGrid('setRowData', i, newdata);
+	    }
+	} else {
+		dhcphaMsgBox.alert($g("拒绝失败!错误代码:") + refuseret, "error");
+	}
+}
+
+/// MaYuqiang 20210311
+/// 执行草药处方的撤消拒绝退药
+function DoHERBCancelRefuse(reqRowId){
+	
+	var refuseret = tkMakeServerCall("PHA.OP.Return.OperTab", "HerbCancelRefuseRet", reqRowId,DHCPHA_CONSTANT.SESSION.GUSER_ROWID)
+	if (refuseret == 0) {
+		dhcphaMsgBox.alert($g("撤消拒绝退药成功"), "success");
+		var newdata = {
+			TRefuse: '',
+			TRefuseFlag: ''
+		}
+		var rows = $("#grid-return").getGridParam('records');
+	    if (rows == 0) {
+	        return;
+	    }
+	    for (var i = 1; i <= rows; i++) {
+			$('#grid-return').jqGrid('setRowData', i, newdata);
+	    }
+	} else {
+		dhcphaMsgBox.alert($g("撤消拒绝失败!错误代码:") + refuseret, "error");
+	}
+	
 }
 
 function ClearConditions() {
@@ -750,6 +882,7 @@ function ClearConditions() {
 	$("#grid-request").clearJqGrid();
 	$("#grid-return").clearJqGrid();
 	$("#sel-prescno").empty();
+	$('#chk-freeDrg').iCheck('uncheck');
 	JqGridCanEdit = true;
 }
 function InitReturnModal() {
@@ -773,7 +906,7 @@ function InitReturnModal() {
 	$("#btn-retreason-sure").on("click", function () {
 		var returnreason = $("#sel-retreason").val();
 		if ((returnreason == "") || (returnreason == null)) {
-			dhcphaMsgBox.alert("请选择退药原因!");
+			dhcphaMsgBox.alert($g("请选择退药原因!"));
 			return;
 		}
 		$("#modal-outpharetreason").modal('hide');
@@ -797,7 +930,7 @@ function InitReturnModal() {
 			text: returnrefreasondesc
 		}
 		if ((returnrefreason == "") || (returnrefreason == null)) {
-			dhcphaMsgBox.alert("请选择拒绝退药原因!");
+			dhcphaMsgBox.alert($g("请选择拒绝退药原因!"));
 			return;
 		}
 		$("#modal-outpharetrefreason").modal('hide');
@@ -851,7 +984,6 @@ function ReadCardReturn() {
 	AppendPatientBasicInfo(patoptions);
 	QueryGridRequest();
 }
-
 //权限验证
 function CheckPermission() {
 	$.ajax({
@@ -864,16 +996,42 @@ function CheckPermission() {
 			var retjson = JSON.parse(data);
 			var retdata = retjson[0];
 			DHCPHA_CONSTANT.DEFAULT.CYFLAG = retdata.phcy;
+			var permissioninfo = "",permissionmsg = "";
+			//增加验证，add by zhaoxinlong 2022.05.10
+			if (retdata.phloc == "") {
+				permissionmsg = $g("药房科室")+":" + DHCPHA_CONSTANT.DEFAULT.LOC.text;
+				permissioninfo = $g("尚未在门诊药房科室维护中维护!")
+			}
+			if (permissioninfo != "") {
+				$('#modal-dhcpha-permission').modal({
+					backdrop: 'static',
+					keyboard: false
+				}); //点灰色区域不关闭
+				$('#modal-dhcpha-permission').on('show.bs.modal', function () {
+					$("#lb-permission").text(permissionmsg)
+					$("#lb-permissioninfo").text(permissioninfo)
+
+				})
+				$("#modal-dhcpha-permission").modal('show');
+			} else {
+				var returnNeedReq=retdata.ReturnNeedReq;
+				PHAOUT_NEEDREQ=returnNeedReq
+				if(returnNeedReq=="Y"){
+					//$("#divPrescNo").css("display","none");
+				}else{
+					$("#divFreeDrg").css("display","none");
+				}
+			}
 		},
-		error: function () {}
+		error: function () {
+		}
 	})
 }
 
 window.onresize = ResizeReturn;
 
 function ResizeReturn() {
-
-    
+   
     var titleheight = $("#gview_grid-return .ui-jqgrid-hbox").height();
     var gridheight = DhcphaJqGridHeight(1, 1)  ;  //+32
     $("#grid-return").setGridHeight(gridheight).setGridWidth("");

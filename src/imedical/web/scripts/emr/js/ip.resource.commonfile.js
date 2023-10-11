@@ -2,7 +2,7 @@
 function initEpisodeList(comboName)
 {
 	$(comboName).combogrid({  
-	    panelWidth:450,  
+	    panelWidth:390,  
 	    multiple: true,
 	    idField:'EpisodeID',  
 	    textField:'EpisodeID', 
@@ -45,11 +45,13 @@ function getColumnScheme(path)
 	    var colwidth = $(this).find("width").text();
 	        colwidth = (colwidth=="")?80:colwidth;
 		var check = $(this).find("check").text()=="N"?false:true; 
-	    if (sortable){
-		    columns.push({field:code,title:desc,width:colwidth,hidden:hidden,sortable:sortable,sorter:Sort,check:check});
+        columns.push({field:code,title:desc,width:colwidth,hidden:hidden,sortable:sortable,check:check,formatter:function(value,row,index){return '<div style="word-break:break-all;word-wrap:break-word;white-space:pre-wrap;">'+value+'</div>'}});
+	    //自行实现的Sort方法导致前端排序异常，暂时屏蔽
+        /*if (sortable){
+		    columns.push({field:code,title:desc,width:colwidth,hidden:hidden,sortable:sortable,sorter:Sort,check:check,formatter:function(value,row,index){return '<div style="word-break:break-all;word-wrap:break-word;white-space:pre-wrap;">'+value+'</div>'}});
 		}else{
-			columns.push({field:code,title:desc,width:colwidth,hidden:hidden,sortable:sortable,check:check});
-		}
+			columns.push({field:code,title:desc,width:colwidth,hidden:hidden,sortable:sortable,check:check,formatter:function(value,row,index){return '<div style="word-break:break-all;word-wrap:break-word;white-space:pre-wrap;">'+value+'</div>'}});
+		}*/
     });
     return [columns];
 }

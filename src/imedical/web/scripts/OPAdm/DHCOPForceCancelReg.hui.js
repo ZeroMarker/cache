@@ -9,15 +9,19 @@ $(document).ready(function(){
 function Init(){
 	PageLogicObj.m_DHCOPForceCancelRegDataGrid=InitDHCOPForceCancelRegDataGrid();
 	InitGroup();
+	InitCache();
 };
 function InitEvent(){
-	$('#BFind').click(function() {
-		DHCOPForceCancelRegDataGridLoad();	
-	})
-	
-	$(document.body).bind("keydown",BodykeydownHandler)
+	$('#BFind').click(DHCOPForceCancelRegDataGridLoad);
+	$(document.body).bind("keydown",BodykeydownHandler);
 }
-
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function InitDHCOPForceCancelRegDataGrid(){
 	var toobar=[{
         text: '±£´æ',

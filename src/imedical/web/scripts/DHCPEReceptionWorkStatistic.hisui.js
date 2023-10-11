@@ -1,5 +1,5 @@
 //名称	DHCPEReceptionWorkStatistic.hisui.js
-//功能	体检前台工作量统计
+//功能	体检中心工作量统计
 //创建	2019.08.21
 //创建人  ln
 
@@ -18,6 +18,7 @@ $(function(){
 		BClear_click();		
         });
     
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEReceptionWorkStatistic2.raq");
 })
 
 
@@ -30,7 +31,8 @@ function BClear_click(){
 	
 	$("#ShowFlag").combobox('setValue',"User");
 	InitCombobox();
-	document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=DHCPEReceptionWorkStatistic2.raq";
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEReceptionWorkStatistic2.raq");
+	//document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=DHCPEReceptionWorkStatistic2.raq";
 }
 
 
@@ -51,25 +53,60 @@ function BFind_click(){
 	else if (ShowFlag == "Date") reportName = "DHCPEEveryDateWorkStatistic.raq";
 	else { alert("请选择查询类型！"); return false;}
 	
+	var CurLoc = session["LOGON.CTLOCID"];	
+	var CurGroup = session['LOGON.GROUPID'];
+	var CurUser = session["LOGON.USERID"];
+	
 	var lnk = "&BeginDate=" + BeginDate
 			+ "&EndDate=" + EndDate
 			+ "&GroupDR=" + GroupDR
 			+ "&VIPLevel=" + VIPLevel
 			+ "&ShowFlag=" + ShowFlag
+			+ "&CurLoc=" + CurLoc
+			+ "&CurGroup=" + CurGroup
+			+ "&CurUser=" + CurUser
 			;
 	
-	document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=" + reportName + lnk;
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=" + reportName + lnk);
+	//document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=" + reportName + lnk;
 
 }
-
+// 解决iframe中 润乾csp 跳动问题
+function ShowRunQianUrl(iframeId, url) {
+    var iframeObj = document.getElementById(iframeId)
+    if (iframeObj) {
+	    iframeObj.src=url;
+	    //debugger;
+	    $(iframeObj).hide();
+	    if (iframeObj.attachEvent) {
+		    iframeObj.attachEvent("onload", function(){
+		        $(this).show();
+		    });
+	    } else {
+		    iframeObj.onload = function(){
+		        $(this).show();
+		    };
+	    }
+    }
+}
 function InitCombobox(){
 	
+		
+	/*
 	//VIP等级	
 	var VIPObj = $HUI.combobox("#VIPLevel",{
 		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindVIP&ResultSetType=array",
 		valueField:'id',
 		textField:'desc',
 		});
+		*/
+		
+	//VIP等级-多院区	
+	var VIPObj = $HUI.combobox("#VIPLevel",{
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindVIP&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
+		valueField:'id',
+		textField:'desc',
+	});
 	
 	//团体
 	var GroupNameObj = $HUI.combogrid("#GroupName",{
@@ -105,8 +142,8 @@ function InitCombobox(){
 		panelHeight:"auto",
 		editable:false,
 		data:[
-			{id:'User',text:'按人员查询',selected:true},
-			{id:'Date',text:'按日期查询'}
+			{id:'User',text:$g('按人员查询'),selected:true},
+			{id:'Date',text:$g('按日期查询')}
 		]
 	});
 	

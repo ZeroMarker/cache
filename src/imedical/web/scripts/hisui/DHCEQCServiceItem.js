@@ -135,18 +135,28 @@ function BUpdate_Click() //修改
 	var plist=CombinData(); //函数调用
 	var result=cspRunServerMethod(encmeth,'','',plist);
 	result=result.replace(/\\n/g,"\n")
-	if(result=="") 
-	{
-		messageShow("","","",t["03"]);
-		return
-	}
-	if (result>0) 
+	//modified by ZY0286 返回值处理
+	if (result>0)
 	{
 		//add by HHM 20150910 HHM0013
 		//添加操作成功是否提示
 		ShowMessage();
 		//****************************
 		location.reload();	
+	}
+	else
+	{
+		///modified by ZY0257 20210325
+		if(result=="-1001") 
+		{
+			messageShow("","","",t[-1001]);
+			return
+		}
+		else
+		{
+			messageShow("","","",t["03"]);
+			return
+		}
 	}
 }
 function BAdd_Click() //添加
@@ -163,26 +173,26 @@ function BAdd_Click() //添加
 	var plist=CombinData(); //函数调用
 	var result=cspRunServerMethod(encmeth,'','',plist,'2');
 	result=result.replace(/\\n/g,"\n")
-	if(result=="")
+	//modified by ZY0286 返回值处理
+	if (result>0)
 	{
-		messageShow("","","",t["03"])
+		//add by HHM 20150910 HHM0013
+		//添加操作成功是否提示
+		ShowMessage();
+		//****************************
+		location.reload();	
+	}
+	else
+	{
+		alertShow("错误信息:"+t[result]);
 		return
 	}
-	if (result>0)location.reload();	
 }
 
 function CombinData()
 {
 	var combindata="";
-  	var flag=GetChkElementValue("ImportFlag")
-  	if (flag==false)
-  	{
-	  	flag="N"
-  	}
-  	else
-  	{
-	  	flag="Y"
-  	}
+	///modified by ZY0257 20210325
     combindata=GetElementValue("RowID") ;//1
 	combindata=combindata+"^"+GetElementValue("Desc") ;//代码
   	combindata=combindata+"^"+GetElementValue("Code") ; //描述
@@ -191,13 +201,22 @@ function CombinData()
   	combindata=combindata+"^"+GetElementValue("ExType") ; //扩展类型
   	combindata=combindata+"^"+GetElementValue("ExID") ; //扩展ID
   	combindata=combindata+"^"+GetElementValue("Remark") ; //扩展ID
-  	combindata=combindata+"^"+flag ; //导入标识
+  	combindata=combindata+"^"+GetElementValue("ImportFlag") ; //导入标识///modified by ZY0257 20210325
   	combindata=combindata+"^"+GetElementValue("MinMinutes") ; //最小分钟数
   	combindata=combindata+"^"+GetElementValue("MinutesPerTimes") ; //每次分钟数
   	combindata=combindata+"^"+GetElementValue("MaxMinutes") ; //最大分钟数
   	combindata=combindata+"^^^"+GetElementValue("ExDesc") ; //扩展描述
-
-
+	///modified by ZY0257 20210325
+  	var SingleFlag=getElementValue("SingleFlag")
+  	if (SingleFlag==false)
+  	{
+	  	SingleFlag="N"
+	}
+	else
+	{
+	  	SingleFlag="Y"
+	}
+  	combindata=combindata+"^"+SingleFlag; //单一使用
   	return combindata;
 }
 ///选择表格行触发此方法
@@ -233,8 +252,9 @@ function Clear()
 	SetElement("MinMinutes","");
 	SetElement("MinutesPerTimes","");
 	SetElement("MaxMinutes","");
-	SetChkElement("ImportFlag",0);
+	SetElement("ImportFlag",0);	///modified by ZY0257 20210325
 	SetElement("ExDesc","");
+	setElement("SingleFlag",0);	///modified by ZY0257 20210325
 	changeExDesc();
 }
 	
@@ -251,13 +271,18 @@ function SetData(rowid)
 		flag=1
 		DisableElement("ExType",true)
 		DisableBElement("BAdd",true)
-		DisableBElement("BUpdate",true)
+		DisableBElement("BUpdate",false)
 		DisableBElement("BDelete",true)
 		///add by QW 2018-10-08 
 		///描述：hisui改造 隐藏/放开放大镜
 		/// Modified BY QW20181029 需求号:590075
 		$("#ExDesc").lookup({hasDownArrow:false,disable:true})
-		
+		///modified by ZY0257 20210325
+		disableElement("Code",true)
+		disableElement("Desc",true)
+		disableElement("Price",true)
+		disableElement("Unit",true)
+		disableElement("ExDesc",true)
 	}
 	else
 	{
@@ -272,6 +297,12 @@ function SetData(rowid)
 			///描述：hisui改造 隐藏/放开放大镜
 			/// Modified BY QW20181029 需求号:590075
 			$("#ExDesc").lookup({hasDownArrow:true,disable:false})
+			///modified by ZY0257 20210325
+			disableElement("Code",false)
+			disableElement("Desc",false)
+			disableElement("Price",false)
+			disableElement("Unit",false)
+			disableElement("ExDesc",false)
 		}
 		else
 		{
@@ -295,12 +326,15 @@ function SetData(rowid)
 	SetElement("ExTypeDR",list[5]);   //add by mwz 2017-11-17需求号468808
 	SetElement("ExID",list[6]);
 	SetElement("Remark",list[7]);
+	SetElement("ImportFlag",list[8]);	///modified by ZY0257 20210325
 	SetElement("MinMinutes",list[9]);
 	SetElement("MinutesPerTimes",list[10]);
 	SetElement("MaxMinutes",list[11]);
-	SetChkElement("ImportFlag",flag);
-	SetElement("Unit",list[15]);
+	///modified by ZY0257 20210325
 	SetElement("ExDesc",list[14]);
+	setElement("SingleFlag",list[15]);	///modified by ZY0257 20210325
+	SetElement("Unit",list[16]);	///modified by ZY0259 20210420
+	
 	InitEvent();
 }
 
@@ -310,12 +344,40 @@ function GetUnit(value) {
 	obj.value=type[1];
 }
 
+//modified by ZY0286
 function disabled(value)//灰化
 {
 	InitEvent();
 	DisableBElement("BUpdate",value)
 	DisableBElement("BDelete",value)	
 	DisableBElement("BAdd",!value)
+	///modified by ZY0257 20210325
+	disableElement("Code",!value)
+	disableElement("Desc",!value)
+	disableElement("Price",!value)
+	disableElement("Unit",!value)
+	DisableElement("ExType",!value)
+	disableElement("ExDesc",!value)
+	if (value==true)
+	{
+		var obj=document.getElementById("BAdd");
+		if (obj) obj.onclick=BAdd_Click;
+		//hisui改造:放大镜隐藏后触发 add by QW 2018-10-08 
+		$('#ExDesc').lookup('options').onHidePanel= function(){
+			ExDesc_Click();
+		};
+		///add by QW 2018-10-08 描述：hisui改造 隐藏/放开放大镜
+		$('#ExDesc').lookup('options').onBeforeShowPanel= function(){
+	 			return $("#ExDesc").lookup('options').hasDownArrow
+		};
+	}
+	else
+	{
+		var obj=document.getElementById("BUpdate");
+		if (obj) obj.onclick=BUpdate_Click;
+		var obj=document.getElementById("BDelete");
+		if (obj) obj.onclick=BDelete_Click;
+	}
 }
 function condition()//条件
 {

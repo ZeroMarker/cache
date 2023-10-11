@@ -9,7 +9,10 @@ function BodyLoadHandler()
 		DisableBElement("BDelete",true);
 	}	
 	InitButton(false);
-	initButtonWidth()  //hisui改造：修改界面按钮长度不一致 add by czf2018-08-31
+	//initButtonWidth()  //hisui改造：修改界面按钮长度不一致 add by czf2018-08-31
+	initPanelHeaderStyle();
+	initButtonColor();//cjc 2023-01-18 设置极简积极按钮颜色
+	hidePanelTitle();//cjc 2023-02-01 隐藏标题面版
 }
 
 function InitButton(isselected)
@@ -131,7 +134,7 @@ function SelectRowHandler(index,rowdata)	{
 		rowid=0;
 		SetElement("RowID","");
 		InitButton(false);//灰化
-		$('#tDHCEQAffix').datagrid('unselectAll'); 
+		$('#tDHCEQDoc').datagrid('unselectAll'); //modified by sjh SJH0044 2020-01-18
 		return;
 		}
 	rowid=rowdata.TRowID;
@@ -270,7 +273,7 @@ function Clear()
 	SetElement("UpdateDate","");
 	SetElement("UpdateTime","");
 	SetElement("Equip","");
-	SetElement("EquipDR","");
+	//SetElement("EquipDR",""); //modified by sjh SJH0045 2020-01-28
 	SetElement("DocType","");//add by HHM 20150914 HHM0020
 }
 

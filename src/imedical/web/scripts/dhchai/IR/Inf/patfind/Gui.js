@@ -8,7 +8,14 @@ function InitPatFindWin(){
 	$("#cboLocation").data("param",$.form.GetValue("cboHospital")+"^^I|E^E^1");
 	$.form.SelectRender("cboLocation");  //渲染下拉框
 	$("#cboWard").data("param",$.form.GetValue("cboHospital")+"^^I|E^W^1");
-	$.form.SelectRender("#cboWard");  //渲染下拉框	
+	$.form.SelectRender("#cboWard");  //渲染下拉框
+	$.form.SelectRender("cboItems");  //渲染下拉框
+	$("#cboItems").select2({
+		multiple: true
+		,placeholder: "--请选择--",
+		placeholderOption: "first",
+		allowClear: true
+	});	
 	//给select2赋值change事件
 	$("#cboHospital").on("select2:select", function (e) { 
 		//获得选中的医院
@@ -38,6 +45,13 @@ function InitPatFindWin(){
 		$("#divPanel").height(wh-65);
 	});
 	
+	$("#divPanel").mCustomScrollbar({
+		//scrollButtons: { enable: true },
+		//autoHideScrollbar: true,
+		theme: "dark-thick",
+		axis: "y",
+		scrollInertia: 100
+	});
 	$("#divLeft").mCustomScrollbar({
 		//scrollButtons: { enable: true },
 		//autoHideScrollbar: true,
@@ -79,7 +93,25 @@ function InitPatFindWin(){
 				var PatName 	= $("#txtPatName").val();
 				var PapmiNo 	= $("#txtPapmiNo").val();
 				var MrNo 		= $("#txtMrNo").val();
-				var aInputs = HospIDs+'^'+DateType+'^'+DateFrom+'^'+DateTo+'^'+LocationID+'^'+WardID+'^'+PatName+'^'+PapmiNo+'^'+MrNo;
+				var reslist	 	= $("#cboItems").select2("data");
+				var Items = "";
+				for(var i = 0;i<reslist.length;i++){
+					var dataObj = reslist[i];
+					var id = dataObj.id;
+					if(id!="")
+					{
+						if(Items=="")
+						{
+							Items = id;
+						}
+						else
+						{
+							Items = Items +"|"+id;
+						}
+					}
+				}
+				
+				var aInputs = HospIDs+'^'+DateType+'^'+DateFrom+'^'+DateTo+'^'+LocationID+'^'+WardID+'^'+PatName+'^'+PapmiNo+'^'+MrNo+'^'+Items;
 				d.ClassName = "DHCHAI.DPS.PAAdmSrv";
 				d.QueryName = "QryAdm";
 				d.Arg1 = aInputs;

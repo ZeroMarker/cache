@@ -19,6 +19,7 @@ var repStatusArr = [{"value":"V","text":$g('ºËÊµ')}, {"value":"D","text":$g('Í£Ö
 var PyType="";
 var PatType="";   /// ¾ÍÕïÀàÐÍ
 var PracticeFlag=""
+var NotBindLabFee="";	//¼ìÑé²»°ó¶¨·ÑÓÃ±êÖ¾,Y²»°ó¶¨
 
 /// 1¡¢¹Ø±Õµ±Ç°µ¯´°²¢Ë¢ÐÂÒ½ÖöÒ³Ãæ(Ò½ÉúÕ¾)
 /// 2¡¢¹Ø±Õµ±Ç°µ¯´°(µç×Ó²¡Àú)
@@ -34,6 +35,9 @@ var SendFlag = "";       /// ÊÇ·ñ·¢ËÍ
 var PPRowId = "";        /// ÁÙ´²¿ÆÑÐID
 var PPFlag = "";         /// ÁÙ´²¿ÆÑÐ±êÊ¶
 var IsPatDead="";
+var EmConsultItm="";     /// »áÕï×Ó±íID
+var LeaveSelect="";		/// Àë¿ª½çÃæÊÂ¼þÑ¡Ôñ±êÊ¶
+
 /// Ò³Ãæ³õÊ¼»¯º¯Êý
 function initPageDefault(){
 		
@@ -50,7 +54,7 @@ function initPageDefault(){
 	LoadPageBaseInfo();   ///  ³õÊ¼»¯¼ÓÔØ»ù±¾Êý¾Ý
 	initPatNotTakOrdMsg(); /// ÑéÖ¤²¡ÈËÊÇ·ñÔÊÐí¿ªÒ½Öö
 	
-	switchMainSrc("E","","","","");
+	switchMainSrc("L","","","","");
 	//³õÊ¼»¯Âý²¡²¡ÖÖLookUp
     InitChronicDiagLookUp();
 	treeTypeClick();	  ///  ¿ì½Ý°´Å¥µã»÷ÊÂ¼þÏìÓ¦
@@ -64,7 +68,7 @@ function initShowBillType(){
 
 	var billBtnHtml="";
 	if (EpisodeID!="") {
-		var billInfo = $.m({ClassName:"web.DHCAPPExaReportQuery",MethodName:"GetBillInfo",EpisodeID:EpisodeID,PPFlag:PPFlag},false);
+		var billInfo = $.m({ClassName:"web.DHCAPPExaReportQuery",MethodName:"GetBillInfo",EpisodeID:EpisodeID,PPFlag:PPFlag,InHosp:session['LOGON.HOSPID']},false);
 		BillTypeID=billInfo.split("^")[0];   /// ·Ñ±ðÖ¸Õë
 		BillType=billInfo.split("^")[1];
 		PatType=billInfo.split("^")[2];      /// ¾ÍÕïÀàÐÍ
@@ -75,7 +79,8 @@ function initShowBillType(){
 	}
 	
 	if(PPFlag=="Y"){
-		 billBtnHtml = billBtnHtml+"<li class='pf-nav-item-li item-li item-li-select' id='"+BillTypeID+"'><span>"+BillType+"</span></li>"
+		 //billBtnHtml = billBtnHtml+"<li class='pf-nav-item-li item-li item-li-select' id='"+BillTypeID+"'><span>"+BillType+"</span></li>"
+		billBtnHtml = billBtnHtml+" <li data-type='' id='"+BillTypeID+"' ><a href='#' >"+BillType+"</a></li>"
 	}else{
 		var PrescriptTypeStr = $.m({ClassName:"web.DHCDocOrderCommon",MethodName:"GetPrescriptTypeInfo",BillTypeID:BillTypeID,PAAdmType:PatType},false);
 		var PrescriptTypeArr = PrescriptTypeStr.split("^");
@@ -85,20 +90,19 @@ function initShowBillType(){
 			BillTypeID=DefTypes.split(":")[0];
 			BillType=DefTypes.split(":")[1];
 		}
-		runClassMethod("web.DHCDocOrderCommon","GetInsurFlag",{"BillType":BillTypeID, "PAAdmType":""},function(jsonString){
-			if (jsonString=="1"){
-				$HUI.checkbox("#InsurFlag").setValue(true)
-			}
-		},'',false)
+		InitInsurFlag(BillTypeID)
+		
 		var PresTypesArr = PresTypes.split(";");
 		for(i in PresTypesArr){
 		   var BillTypeList=PresTypesArr[i];
 		   var TypeID=BillTypeList.split(":")[0];
 		   var BillTypeDesc=BillTypeList.split(":")[1];
 		   if(BillTypeList!=DefTypes){
-			   billBtnHtml = billBtnHtml+"<li class='pf-nav-item-li item-li' id='"+TypeID+"'><span>"+BillTypeDesc+"</span></li>";
+			   //billBtnHtml = billBtnHtml+"<li class='pf-nav-item-li item-li' id='"+TypeID+"'><span>"+BillTypeDesc+"</span></li>";
+			   billBtnHtml = billBtnHtml+" <li class='' id='"+TypeID+"'><a href='#' >"+BillTypeDesc+"</a></li>"
 		   }else{
-			  billBtnHtml = billBtnHtml+"<li class='pf-nav-item-li item-li item-li-select' id='"+TypeID+"'><span>"+BillTypeDesc+"</span></li>"
+			  //billBtnHtml = billBtnHtml+"<li class='pf-nav-item-li item-li item-li-select' id='"+TypeID+"'><span>"+BillTypeDesc+"</span></li>"
+			  billBtnHtml = billBtnHtml+" <li class='selected' id='"+TypeID+"' ><a href='#' >"+BillTypeDesc+"</a></li>"
 		   }
 		}
 	}
@@ -144,12 +148,7 @@ function reservedToHtml(str){
 /// Ò³Ãæ¼æÈÝÅäÖÃ
 function initVersionMain(){
 
-    <!-- ÐÂ¾É°æ±¾¼æÈÝÅäÖÃ -->
-    if (version == 1){
-		initCheckPartTreeNew();  ///  ³õÊ¼»¯¼ì²é²¿Î»Ê÷
-	}else{
-		initCheckPartTree();     ///  ³õÊ¼»¯¼ì²é²¿Î»Ê÷
-	}
+    initCheckPartTree();
 }
 
 /// ³õÊ¼»¯¼ÓÔØ²¡ÈË¾ÍÕïID
@@ -162,25 +161,21 @@ function InitPatEpisodeID(){
 	PPRowId = getParam("PPRowId");    /// ÁÙ´²²¡ÀíID
 	PPFlag = PPRowId==""?"N":"Y";
 	PracticeFlag=getParam("PracticeFlag");  
-	opdoc.patinfobar.view.InitPatInfo(EpisodeID);
+	EmConsultItm=getParam("EmConsultItm");
+	NotBindLabFee=getParam("NotBindLabFee");
+	if (ParaType!="SideMenu"){
+		if(typeof InitPatInfoBanner){
+			InitPatInfoBanner(EpisodeID,PatientID);
+		}
+	}
+	ShowSecondeWin("onOpenDHCEMRbrowse");
 }
 
 ///  ³õÊ¼»¯¼ÓÔØ»ù±¾Êý¾Ý
 function LoadPageBaseInfo(){
 	
-	/// ³õÊ¼»¯¼ÓÔØÊý
-	<!-- ÐÂ¾É°æ±¾¼æÈÝÅäÖÃ -->
-	var uniturl = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCatByNodeID&id=0&HospID='+LgHospID;
-	if (version == 1){
-		uniturl = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCatByNodeIDNew&id=0&HospID='+LgHospID;
-	}
-
-	if ((version == 1)&(expFlag == 1)){
-		uniturl = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCat&HospID='+LgHospID;
-	}
-
-	$('#CheckPart').tree('options').url = uniturl;
-	$('#CheckPart').tree('reload');
+	/// ³õÊ¼»¯Ê÷
+	findExaItmTree();
 	
 }
 
@@ -201,11 +196,8 @@ function GetPatBaseInfo(){
 		if (BillType == ""){
 			BillTypeID = jsonObject.BillTypeID;  /// ·Ñ±ðID
 			BillType = jsonObject.BillType;  /// ·Ñ±ð
-			runClassMethod("web.DHCDocOrderCommon","GetInsurFlag",{"BillType":BillTypeID, "PAAdmType":""},function(jsonString){
-				if (jsonString=="1"){
-					$HUI.checkbox("#InsurFlag").setValue(true)
-					}
-			},'',false)
+			InitInsurFlag(BillTypeID)
+			
 			
 		}
 		PatType = jsonObject.PatType;  		/// ¾ÍÕïÀàÐÍ
@@ -217,7 +209,7 @@ function initDataGrid(){
 	
 	///  ¶¨Òåcolumns
 	var columns=[[
-		{field:'PatLabel',title:'ÉêÇëµ¥',width:182,formatter:setCellLabel,align:'center'}
+		{field:'PatLabel',title:'ÉêÇëµ¥',width:217,formatter:setCellLabel,align:'center'}
 	]];
 	
 	///  ¶¨Òådatagrid
@@ -316,7 +308,7 @@ function setCellLabel(value, rowData, rowIndex){
 			} */
 
 			htmlstr = htmlstr + '<h4 style="float:left;background-color:transparent;"><span style="width:50%;padding-bottom: 0px;padding-top: 0px;color:'+FontColor+'" name="'+TempCText+'">'+ TempCArr[1] +'</span></h4>';
-			htmlstr = htmlstr + '<h4 style="float:right;background-color:transparent;"><span style="width:50%;padding-bottom: 0px;padding-top: 0px" name="1">';
+			htmlstr = htmlstr + '<h4 style="float:right;background-color:transparent;padding-right: 10px;"><span style="width:50%;padding-bottom: 0px;padding-top: 0px" name="1">';
 			/// ÊÇ·ñÐèÒªÔ¤Ô¼
 			if (TempCArr[3] == "Y"){
 				htmlstr = htmlstr + '<a href="#" onclick="showItmDetWin('+rowData.arRepID+')"><img src="../scripts/dhcnewpro/images/app.png"></a>';
@@ -370,28 +362,6 @@ function SetCellCheckBox(value, rowData, rowIndex){
 
 /// ³õÊ¼»¯¼ì²é²¿Î»Ê÷
 function initCheckPartTree(){
-
-	var url = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCat&HospID='+LgHospID;
-	var option = {
-		multiple: true,
-		lines:true,
-		animate:true,
-        onClick:function(node, checked){
-	        var isLeaf = $("#CheckPart").tree('isLeaf',node.target);   /// ÊÇ·ñÊÇÒ¶×Ó½Úµã
-	        if (isLeaf){
-		        var itemCatID = node.id; 		/// ¼ì²é·ÖÀàID
-				var params = itemCatID;
-				$("#itemList").datagrid("load",{"params":params});
-	        }else{
-		    	$("#CheckPart").tree('toggle',node.target);   /// µã»÷ÏîÄ¿Ê±,Ö±½ÓÕ¹¿ª/¹Ø±Õ
-		    }
-	    }
-	};
-	new CusTreeUX("CheckPart", '', option).Init();
-}
-
-/// ³õÊ¼»¯¼ì²é²¿Î»Ê÷
-function initCheckPartTreeNew(){
 
 	var url = ""; //$URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCat&HospID='+LgHospID;
 	var option = {
@@ -533,7 +503,20 @@ function initBlButton(){
 	$("#ExaCatCode").bind("keyup",findExaItmTree);
 
 	/// ·Ñ±ðÀàÐÍÊÂ¼þ
-	$(".pf-nav-item-li").bind("click",BillTypeEvt);
+	//$("#billTyp").bind("click",BillTypeEvt);
+	$("#billTyp.kw-section-list>li").click(function(){
+		var LeaveFlag=true;
+		if (LeaveFlag){	
+			var btnObj = $(this);
+			$("#billTyp.kw-section-list>li").removeClass('selected');
+			btnObj.addClass('selected');
+			BillTypeID =  this.id;       /// ·Ñ±ðID 
+			BillType = $(this).text();   /// ·Ñ±ð
+			InitInsurFlag(BillTypeID)
+			
+		}else{
+		}				
+	});	
 }
 
 /// ·Ñ±ðÀàÐÍÊÂ¼þ
@@ -542,11 +525,8 @@ function BillTypeEvt(){
 	$("#"+this.id).addClass("item-li-select").siblings().removeClass("item-li-select");
 	BillTypeID =  this.id;       /// ·Ñ±ðID 
 	BillType = $(this).text();   /// ·Ñ±ð
-	runClassMethod("web.DHCDocOrderCommon","GetInsurFlag",{"BillType":BillTypeID, "PAAdmType":""},function(jsonString){
-		if (jsonString=="1"){
-				$HUI.checkbox("#InsurFlag").setValue(true)
-				}
-	},'',false)
+	InitInsurFlag(BillTypeID)
+	
 }
 
 /// ³õÊ¼»¯²¡ÈËÀúÊ·¾ÍÕï¼ÇÂ¼
@@ -588,6 +568,7 @@ function initCombogrid(){
             
             /// ÇÐ»»¾ÍÕï¼ÇÂ¼Ê±,Í¬Ê±Ë¢ÐÂÉêÇëµ¥ÄÚÈÝÇø
             switchMainSrc("E","","","","");
+            ShowSecondeWin("onOpenDHCEMRbrowse");
         }
 	});
 }
@@ -611,18 +592,23 @@ function findExaItemList(event){
 function findExaItmTree(event){
 	
 	var PyCode=$.trim($("#ExaCatCode").val());	
-	
+	if ((PyCode=="")&&(event)) {PyCode=event}
 	if ((PyCode == "")&&(PyType == "")){
 		<!-- ÐÂ¾É°æ±¾¼æÈÝÅäÖÃ -->
 	    if (version != 1){
 			/// ¾É°æ
-			var url = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCatByNodeID&id=0&HospID='+LgHospID;
+			if (expFlag==1) {
+				//TODO
+				var url = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCatOld&HospID='+LgHospID;
+			}else{
+				var url = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCatByNodeID&id=0&HospID='+LgHospID+'&PyType='+PyType;
+			}
 		}else{
 			/// ÐÂ°æ
 			if (expFlag==1) {
-				var url = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCat&HospID='+LgHospID;
+				var url = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCat&HospID='+LgHospID+"&LocID="+LgCtLocID;
 			}else{
-				var url = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCatByNodeIDNew&id=0&HospID='+LgHospID+'&PyType='+PyType;
+				var url = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCatByNodeIDNew&id=0&HospID='+LgHospID+'&PyType='+PyType+"&LocID="+LgCtLocID;;
 			}
 		}
 	}else{			
@@ -631,10 +617,10 @@ function findExaItmTree(event){
 		<!-- ÐÂ¾É°æ±¾¼æÈÝÅäÖÃ -->
 	    if (version != 1){
 		    /// ¾É°æ
-			var url = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCatByPyCode&PyCode='+PyCode+'&HospID='+LgHospID;
+			var url = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCatByPyCode&PyCode='+PyCode+'&HospID='+LgHospID+'&PyType='+PyType+"&LocID="+LgCtLocID;;
 		}else{
 			/// ÐÂ°æ
-			var url = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCatByPyCodeNew&PyCode='+PyCode+'&HospID='+LgHospID+'&PyType='+PyType;
+			var url = $URL+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonCheckCatByPyCodeNew&PyCode='+PyCode+'&HospID='+LgHospID+'&PyType='+PyType+"&LocID="+LgCtLocID;;
 		}
 	}
 	
@@ -654,10 +640,9 @@ function initPatNotTakOrdMsg(){
 
 /// ÑéÖ¤²¡ÈËÊÇ·ñÔÊÐí¿ªÒ½Öö
 function GetPatNotTakOrdMsg(){
-
 	var NotTakOrdMsg = "";
 	/// ÑéÖ¤²¡ÈËÊÇ·ñÔÊÐí¿ªÒ½Öö
-	runClassMethod("web.DHCAPPExaReport","GetPatNotTakOrdMsg",{"LgGroupID":LgGroupID,"LgUserID":LgUserID,"LgLocID":LgCtLocID,"EpisodeID":EpisodeID},function(jsonString){
+	runClassMethod("web.DHCAPPExaReport","GetPatNotTakOrdMsg",{"LgGroupID":LgGroupID,"LgUserID":LgUserID,"LgLocID":LgCtLocID,"EpisodeID":EpisodeID,"EmConsultItm":EmConsultItm},function(jsonString){
 
 		if (jsonString != ""){
 			NotTakOrdMsg = jsonString;
@@ -672,12 +657,13 @@ function switchMainSrc(TypeFlag, itemCatID, arRepID, repEmgFlag, itemCatCode){
 	
 	var LinkUrl = "";
 	if (TypeFlag == "E"){
-		LinkUrl = "dhcapp.reportreq.csp?EpisodeID="+ EpisodeID +"&itemCatID="+itemCatID +"&repEmgFlag="+repEmgFlag+"&itemReqID="+arRepID;
+		LinkUrl = "dhcapp.reportreq.csp?EpisodeID="+ EpisodeID +"&itemCatID="+itemCatID +"&repEmgFlag="+repEmgFlag+"&itemReqID="+arRepID+"&EmConsultItm="+EmConsultItm;
 		//ÔÚÐÂÒ³ÃæµÄwindow.onload ¶ÔmMainSrc ½øÐÐ¸³Öµ£¬·ÀÖ¹Á¬ÐøÁ½´Îµã»÷¼ì²éµÄ×ÓÀàµÚ¶þ´Îµã»÷Ò³Ãæ¼ÓÔØ´íÎó
 		//mMainSrc = TypeFlag; /// µ±Ç°×ÊÔ´ÀàÐÍ
 	}else if (TypeFlag == "L"){
-		LinkUrl = "dhcapp.labreportreq.csp?EpisodeID="+ EpisodeID +"&itemCatID="+itemCatID +"&repEmgFlag="+repEmgFlag+"&itemReqID="+arRepID+"&PatType="+PatType;
+		LinkUrl = "dhcapp.labreportreq.csp?EpisodeID="+ EpisodeID +"&itemCatID="+itemCatID +"&repEmgFlag="+repEmgFlag+"&itemReqID="+arRepID+"&PatType="+PatType+"&EmConsultItm="+EmConsultItm;
 		//mMainSrc = TypeFlag; /// µ±Ç°×ÊÔ´ÀàÐÍ
+		LinkUrl+='&NotBindLabFee='+NotBindLabFee;
 	}else if (TypeFlag == "P"){
 		/// È¡²¡ÀíÀàÐÍ´úÂë
 		if (arRepID == ""){
@@ -689,31 +675,32 @@ function switchMainSrc(TypeFlag, itemCatID, arRepID, repEmgFlag, itemCatCode){
 		}
 		
 		if (itemCatCode == "HPV"){
-			LinkUrl = "dhcapp.pismaster.csp?&EpisodeID=" +EpisodeID+"&itemReqID="+arRepID;	
+			LinkUrl = "dhcapp.pismaster.csp?&EpisodeID=" +EpisodeID+"&itemReqID="+arRepID+"&EmConsultItm="+EmConsultItm;	
 		}
 		else if (itemCatCode == "CYT"){
-			LinkUrl = "dhcapp.piscytexn.csp?&EpisodeID=" +EpisodeID+"&itemReqID="+arRepID;	
+			LinkUrl = "dhcapp.piscytexn.csp?&EpisodeID=" +EpisodeID+"&itemReqID="+arRepID+"&EmConsultItm="+EmConsultItm;	
 		}
 		else if (itemCatCode == "MOL"){
-			LinkUrl = "dhcapp.pismolecular.csp?&EpisodeID=" +EpisodeID+"&itemReqID="+arRepID;	
+			LinkUrl = "dhcapp.pismolecular.csp?&EpisodeID=" +EpisodeID+"&itemReqID="+arRepID+"&EmConsultItm="+EmConsultItm;	
 		}
 		else if (itemCatCode == "CON"){
-			LinkUrl = "dhcapp.pisoutcourt.csp?&EpisodeID=" +EpisodeID+"&itemReqID="+arRepID;	
+			LinkUrl = "dhcapp.pisoutcourt.csp?&EpisodeID=" +EpisodeID+"&itemReqID="+arRepID+"&EmConsultItm="+EmConsultItm;	
 		}
 		else if (itemCatCode == "TCT"){
-			LinkUrl = "dhcapp.piswontct.csp?&EpisodeID=" +EpisodeID+"&itemReqID="+arRepID;	
+			LinkUrl = "dhcapp.piswontct.csp?&EpisodeID=" +EpisodeID+"&itemReqID="+arRepID+"&EmConsultItm="+EmConsultItm;	
 		}
 		else if (itemCatCode == "APY"){
-			LinkUrl = "dhcapp.pisautopsy.csp?&EpisodeID=" +EpisodeID+"&itemReqID="+arRepID;	
+			LinkUrl = "dhcapp.pisautopsy.csp?&EpisodeID=" +EpisodeID+"&itemReqID="+arRepID+"&EmConsultItm="+EmConsultItm;	
 		}
 		else if (itemCatCode == "LIV"){
-			LinkUrl = "dhcapp.pislivcells.csp?&EpisodeID=" +EpisodeID+"&itemReqID="+arRepID;	
+			LinkUrl = "dhcapp.pislivcells.csp?&EpisodeID=" +EpisodeID+"&itemReqID="+arRepID+"&EmConsultItm="+EmConsultItm;	
 		}else{
-			LinkUrl = "docapp.blmapshow.hui.csp?&EpisodeID=" +EpisodeID+"&itemReqID="+arRepID+"&MapCode="+itemCatCode;	
-			}
+			LinkUrl = "docapp.blmapshow.hui.csp?&EpisodeID=" +EpisodeID+"&itemReqID="+arRepID+"&MapCode="+itemCatCode+"&EmConsultItm="+EmConsultItm;	
+		}
 		mMainSrc = itemCatCode; /// µ±Ç°×ÊÔ´ÀàÐÍ
 	}
 	if (LinkUrl != ""){
+		if(typeof websys_writeMWToken=='function') LinkUrl=websys_writeMWToken(LinkUrl);
 		$("#TabMain").attr("src", LinkUrl);
 	}
 }
@@ -790,7 +777,7 @@ function LogPopUpWin(){
 		}
 	}
 	/// µ÷ÓÃÒ½ÖöÏîÁÐ±í´°¿Ú
-	new WindowUX("ÉêÇëÈÕÖ¾","PopUpWin", "700", "300" , option).Init();
+	new WindowUX("ÉêÇëÈÕÖ¾","PopUpWin", "900", "300" , option).Init();
 	InitLogList();
 }
 
@@ -804,7 +791,8 @@ function InitLogList(){
 		{field:'ItmDate',title:'ÈÕÆÚ',width:100,align:"center"},
 		{field:'ItmTime',title:'Ê±¼ä',width:100,align:"center"},
 		{field:'ItmUser',title:'²Ù×÷Ô±',width:100,align:"center"},
-		{field:'ItmReason',title:'³·Ïú/ÉêÇë²¿Î»ÐÅÏ¢',width:200} //±¸×¢
+		{field:'ItmReason',title:'³·Ïú/ÉêÇë²¿Î»ÐÅÏ¢',width:200}, //±¸×¢
+		{field:'ItemDesc',title:'Ò½ÖöÃû³Æ',width:200} 
 	]];
 	
 	///  ¶¨Òådatagrid
@@ -829,18 +817,35 @@ function InitLogList(){
 /// ¿ì½Ý°´Å¥Í¨¹ýÀàÐÍ¼ìË÷Ê÷  qunianpeng 2018/2/1
 function treeTypeClick(){
 	
-	$(".treetype li").removeClass("active").filter("[data-type='E,L,P']").addClass("active");
-	$(".treetype li").click(function(){
-		var btnObj = $(this);
-		$(".treetype li").removeClass('active');
-		btnObj.addClass('active');
-		PyType = btnObj.data("type");		
-		findExaItmTree();  
+	$("#Typelist.kw-section-list>li").removeClass("selected").filter("[data-type='E,L,P']").addClass("selected");
+	$("#Typelist.kw-section-list>li").click(function(){
+		var LeaveFlag=true;
+		if (typeof(window.frames['TabMain'].onbeforeunload_handler) === 'function') {
+			var UnSaveData=window.frames['TabMain'].onbeforeunload_handler();
+			if (UnSaveData){
+				LeaveFlag=dhcsys_confirm('ÓÐÎ´±£´æµÄÊý¾Ý£¬ÊÇ·ñÈ·ÈÏÇÐ»»£¿');
+				LeaveSelect="Y";
+			}
+		}
+		if (LeaveFlag){	
+			var btnObj = $(this);
+			$("#Typelist.kw-section-list>li").removeClass('selected');
+			btnObj.addClass('selected');
+			PyType = btnObj.data("type");		
+			findExaItmTree(); 
+			if (PyType=="E"){
+				switchMainSrc("E","","","","");
+			}else if (PyType=="L"){
+				switchMainSrc("L","","","","");	
+			}	
+		}else{
+			LeaveSelect="";
+		}				
 	});	
 }
 
 /// ¼ì²éÉêÇëµ¯³ö²¿Î»´°Ìå
-function OpenPartWin(arExaCatID,arExaItmID){
+function OpenPartWin(arExaCatID,arExaItmID,GlobaPartID,EpisodeID){
 	
 	if($('#nPartWin').is(":visible")){return;}  //´°Ìå´¦ÔÚ´ò¿ª×´Ì¬,ÍË³ö
 	$('body').append('<div id="nPartWin"></div>');
@@ -858,9 +863,9 @@ function OpenPartWin(arExaCatID,arExaItmID){
 			frames[0].clrItmChkFlag();   	  ///  È¡Ïû¼ì²éÏîÄ¿Ñ¡ÖÐ×´Ì¬
 		}
 	};
-
-	var linkUrl = "dhcapp.appreppartwin.csp?itmmastid="+arExaItmID +"&arExaCatID="+ arExaCatID +"&InvFlag=1";
-	var iframe='<iframe scrolling="no" width=100% height=560px  frameborder="0" src="'+linkUrl+'"></iframe>';
+	if(!EpisodeID) EpisodeID="";
+	var linkUrl = "dhcapp.appreppartwin.csp?itmmastid="+arExaItmID +"&arExaCatID="+ arExaCatID +"&InvFlag=1"+"&GlobaPartID="+GlobaPartID+"&EpisodeID="+EpisodeID;
+	var iframe='<iframe scrolling="no" width=100% height=558px  frameborder="0" src="'+linkUrl+'"></iframe>';
 	new WindowUX('¸½¼ÓÐÅÏ¢', 'nPartWin', '1200', '600', option).Init();
 	
 	$("#nPartWin").html(iframe);
@@ -897,12 +902,23 @@ function InvokeChartFun(string){
 	
 	var TabName = "ÃÅÕï²¡Àú";
 	if (PatType == "E"){ TabName = "ÃÅ¼±Õï²¡Àú¼ÇÂ¼"; }
-	if(window.top.opener.frames["TRAK_main"]){
-		window.top.opener.frames["TRAK_main"].invokeChartFun(TabName,"updateEMRInstanceData","oeord",string);
-	}else{
+	var win1 = null;
+	try{
+		win1 = window.top.opener.frames['TRAK_main'];
+	}catch(ex){
+		win1 = window.top.opener.frames('TRAK_main');
+	}
+	if (!win1){
 		//Ë«»÷Â¼Èë
-		window.top.opener.top.frames["TRAK_main"].invokeChartFun(TabName,"updateEMRInstanceData","oeord",string);
-	}	
+		try{
+			win1 = window.top.opener.top.frames["TRAK_main"];
+		}catch(ex){
+			win1 = window.top.opener.top.frames('TRAK_main');
+		}
+	}
+	if(win1){
+		win1.invokeChartFun(TabName,"updateEMRInstanceData","oeord",string);
+	}
 }
 
 /// µ¯³öÕï¶Ï´°¿Ú
@@ -941,6 +957,10 @@ function GetItmLimitMsg(arExaItmID){
 	return LimitMsg;
 }
 function InitChronicDiagLookUp(){
+	if (PatType =="I") {
+		$("#ChronicDiag").hide();
+		return;
+	}
 	if ($("#ChronicDiag").length==0){return}
 	$("#ChronicDiag").lookup({
         url:$URL,
@@ -974,6 +994,7 @@ function InitChronicDiagLookUp(){
 	});
 }
 function GetChronicDiagCode(){
+	if (PatType =="I") return "";
 	var ChronicDiagCode="";
 	if ($("#ChronicDiag").length>0){
 		if ($("#ChronicDiag").lookup("getText")!=""){
@@ -998,28 +1019,29 @@ function GetList_pnp(){
 }
 
 /// Êý×ÖÇ©Ãû ¿ªÉêÇëµ÷ÓÃ
-function TakeDigSign(mReqID, Type){
-
-	if (CAInit == 0) return;   /// Ç©ÃûÊÇ·ñ¿ªÆô
+function TakeDigSign(mReqID, Type, UpdateObj){
+	if (UpdateObj.caIsPass==1){
 	runClassMethod("web.DHCAPPExaReportQuery","GetExaReqOeori",{"mReqID":mReqID, "Type":Type},function(jsonString){
 
 		if (jsonString != ""){
-			InsDigitalSign(jsonString, "A");  /// µ÷ÓÃÊý×ÖÇ©Ãû
+			//InsDigitalSign(jsonString, "A");  /// µ÷ÓÃÊý×ÖÇ©Ãû
+			if (UpdateObj.caIsPass==1) CASignObj.SaveCASign(UpdateObj.CAObj, jsonString, "A");
 		}
 	},'',false)
+	}
 }
 
 
 /// Êý×ÖÇ©Ãû ³·ÏúÉêÇë
-function TakeDigSignRev(mReqID, Type){
-	
-	if (CAInit == 0) return;   /// Ç©ÃûÊÇ·ñ¿ªÆô
+function TakeDigSignRev(mReqID, Type,UpdateObj){
+	if (UpdateObj.caIsPass==1){
 	runClassMethod("web.DHCAPPExaReportQuery","GetRevOeori",{"mReqID":mReqID, "Type":Type},function(jsonString){
 
 		if (jsonString != ""){
-			InsDigitalSign(jsonString, "S");  /// µ÷ÓÃÊý×ÖÇ©Ãû
+			if (UpdateObj.caIsPass==1) CASignObj.SaveCASign(UpdateObj.CAObj, jsonString, "S");
 		}
 	},'',false)
+	}
 }
 
 
@@ -1125,12 +1147,47 @@ function GetIsPatDeadFlag(){
 }
 /// ==============================================ÒÔÉÏCAÊý×ÖÇ©Ãû=============================================
 
+///ÐÞ¸ÄÒ½±£±êÊ¶Ä¬ÈÏÖµ Í³Ò»µ½Ò»¸ö·½·¨ÀïÃæ
+function InitInsurFlag(BillTypeID){
+	runClassMethod("web.DHCDocOrderCommon","GetDefInsurFlag",{"BillType":BillTypeID, "PAAdmType":""},function(jsonString){
+			if (jsonString=="1"){
+				$HUI.checkbox("#InsurFlag").setValue(true)
+			}else{
+				$HUI.checkbox("#InsurFlag").setValue(false)
+				}
+		},'',false)	
+	
+}
+
+/// Õ¹Ê¾µÚ¶þ¸±ÆÁ
+function ShowSecondeWin(Flag){
+    if (websys_getAppScreenIndex()==0){
+	    var Obj={PatientID:PatientID,EpisodeID:EpisodeID,mradm:mradm};
+	    if (Flag=="onOpenIPTab"){
+		    //ÐÅÏ¢×ÜÀÀ
+		}
+		if (Flag=="onOpenDHCEMRbrowse"){
+			var JsonStr=$.m({
+				ClassName:"DHCDoc.Util.Base",
+				MethodName:"GetMenuInfoByName",
+				MenuCode:"DHC.Seconde.DHCEMRbrowse"
+			},false)
+			if (JsonStr=="{}") return false;
+			var JsonObj=JSON.parse(JsonStr);
+			$.extend(Obj,JsonObj);
+		}
+		websys_emit(Flag,Obj);
+	}
+}
+
 /// Ò³Ãæ¹Ø±ÕÖ®Ç°µ÷ÓÃ
 function onbeforeunload_handler() {
 
     if (CloseFlag == 1){
 		window.returnValue = SendFlag;
 	}
+	//½â³ý»¼ÕßËø
+    tkMakeServerCall("web.DHCDocOrderCommon","OrderEntryClearLock");
 }
 window.onbeforeunload = onbeforeunload_handler;
 

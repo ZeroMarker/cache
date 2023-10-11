@@ -12,7 +12,7 @@ Ext.onReady(function(){
 	var gGroupId=session['LOGON.GROUPID'];
 	var gUserName=session['LOGON.USERNAME'];
 	var InciDr = new Ext.form.TextField({
-				fieldLabel : '药品RowId',
+				fieldLabel : $g('药品RowId'),
 				id : 'InciDr',
 				name : 'InciDr',
 				anchor : '90%',
@@ -22,7 +22,7 @@ Ext.onReady(function(){
 			});
 
 	var ItmDesc = new Ext.form.TextField({
-				fieldLabel : '药品名称',
+				fieldLabel : $g('药品名称'),
 				id : 'ItmDesc',
 				name : 'ItmDesc',
 				anchor : '90%',
@@ -56,7 +56,7 @@ Ext.onReady(function(){
 	}
 	// 调价单号
 	var AdjSpNo = new Ext.form.TextField({
-				fieldLabel : '调价单号',
+				fieldLabel : $g('调价单号'),
 				id : 'AdjSpNo',
 				name : 'AdjSpNo',
 				anchor : '90%',
@@ -65,7 +65,7 @@ Ext.onReady(function(){
 
 	// 起始日期
 	var StartDate = new Ext.ux.DateField({
-			fieldLabel : '<font color=blue>起始日期</font>',
+			fieldLabel : '<font color=blue>'+$g('起始日期')+'</font>',
 			id : 'StartDate',
 			name : 'StartDate',
 			anchor : '90%',
@@ -75,7 +75,7 @@ Ext.onReady(function(){
 
 	// 结束日期
 	var EndDate= new Ext.ux.DateField({
-			fieldLabel : '<font color=blue>结束日期</font>',
+			fieldLabel : '<font color=blue>'+$g('结束日期')+'</font>',
 			id : 'EndDate',
 			name : 'EndDate',
 			anchor : '90%',
@@ -84,43 +84,43 @@ Ext.onReady(function(){
 		});
 		
 	var StartTime=new Ext.form.TextField({
-		fieldLabel : '开始时间',
+		fieldLabel : $g('开始时间'),
 		id : 'StartTime',
 		name : 'StartTime',
 		anchor : '90%',
 		regex : /^(0\d{1}|1\d{1}|2[0-3]):[0-5]\d{1}:([0-5]\d{1})$/,
-		regexText:'时间格式错误，正确格式hh:mm:ss',
+		regexText:$g('时间格式错误，正确格式hh:mm:ss'),
 		width : 120
 	});	
 
 	var EndTime=new Ext.form.TextField({
-		fieldLabel : '截止时间',
+		fieldLabel : $g('截止时间'),
 		id : 'EndTime',
 		name : 'EndTime',
 		anchor : '90%',
 		regex : /^(0\d{1}|1\d{1}|2[0-3]):[0-5]\d{1}:([0-5]\d{1})$/,
-		regexText:'时间格式错误，正确格式hh:mm:ss',
+		regexText:$g('时间格式错误，正确格式hh:mm:ss'),
 		width : 120
 	});
 	
 	// 科室
 	var Loc=new Ext.ux.LocComboBox({
-		fieldLabel : '科室',
+		fieldLabel : $g('科室'),
 		id : 'Loc',
 		name : 'Loc',
 		anchor : '90%',
 		width : 120,
-		emptyText : '科室...',
+		emptyText : $g('科室...'),
 		groupId:gGroupId
 	});
 	
 	ReasonForAdjSpStore.load();
 	var AspReason=new Ext.form.ComboBox({
 		id:'AspReason',
-		fieldLabel:'调价原因',
+		fieldLabel:$g('调价原因'),
 		name:'AspReason',
 		width:100,
-		emptyText:'调价原因',
+		emptyText:$g('调价原因'),
 		store:ReasonForAdjSpStore,
 		valueField : 'RowId',
 		displayField : 'Description'
@@ -131,9 +131,9 @@ Ext.onReady(function(){
 		columns:1,
 		itemCls: 'x-check-group-alt',
 		items:[
-			{boxLabel:'全部',name:'type',inputValue:0,checked:true},
-			{boxLabel:'差额为正',name:'type',inputValue:1},
-			{boxLabel:'差额为负',name:'type',inputValue:-1}
+			{boxLabel:$g('全部'),name:'type',inputValue:0,checked:true},
+			{boxLabel:$g('差额为正'),name:'type',inputValue:1},
+			{boxLabel:$g('差额为负'),name:'type',inputValue:-1}
 		]
 	});
 	
@@ -147,8 +147,8 @@ Ext.onReady(function(){
 	// 确定按钮
 	var OkBT = new Ext.Toolbar.Button({
 				id : "OkBT",
-				text : '统计',
-				tooltip : '点击统计',
+				text : $g('统计'),
+				tooltip : $g('点击统计'),
 				width : 70,
 				iconCls : 'page_find',
 				height : 30,
@@ -168,7 +168,7 @@ Ext.onReady(function(){
 		var EndDate=Ext.getCmp("EndDate").getValue()
 		if(StartDate==""||EndDate=="")
 		{
-			Msg.info("warning", "开始日期和截止日期不能空！");
+			Msg.info("warning", $g("开始日期和截止日期不能空！"));
 			return;
 		}
 		
@@ -177,7 +177,7 @@ Ext.onReady(function(){
 		var startTime=Ext.getCmp("StartTime").getRawValue();
 	    var endTime=Ext.getCmp("EndTime").getRawValue();
 	    if(StartDate==EndDate && startTime>endTime){
-				Msg.info("warning", "开始时间大于截止时间！");
+				Msg.info("warning", $g("开始时间大于截止时间！"));
 				return;
 		}
 		var LocId=Ext.getCmp("Loc").getValue();
@@ -199,7 +199,7 @@ Ext.onReady(function(){
 				p_URL='dhccpmrunqianreport.csp?reportName=aspamountstat-inc.raq&StartDate='+
 				StartDate +'&EndDate=' +EndDate +'&Others='+Others+'&StartTime='+startTime+'&EndTime='+endTime+'&UserName='+gUserName+'&HospDesc='+App_LogonHospDesc+'&RQDTFormat='+RQDTFormat;
 			}
-			var NewWin=(window.open(p_URL,"调价损益单品汇总","top=100,left=20,width="+document.body.clientWidth*0.8+",height="+(document.body.clientHeight-50)+",scrollbars=1,resizable=yes"));
+			var NewWin=(window.open(p_URL,$g("调价损益单品汇总"),"top=100,left=20,width="+document.body.clientWidth*0.8+",height="+(document.body.clientHeight-50)+",scrollbars=1,resizable=yes"));
 		} 
 		//单品科室汇总
 		else if(StatFlag==2){
@@ -211,9 +211,9 @@ Ext.onReady(function(){
 				p_URL = 'dhccpmrunqianreport.csp?reportName=aspamountstat-incloc.raq&StartDate='+
 				StartDate +'&EndDate=' +EndDate +'&Others='+Others+'&StartTime='+startTime+'&EndTime='+endTime+'&UserName='+gUserName+'&HospDesc='+App_LogonHospDesc+'&RQDTFormat='+RQDTFormat;
 			}
-			var NewWin=open(p_URL,"调价损益单品科室汇总","top=100,left=20,width="+document.body.clientWidth*0.8+",height="+(document.body.clientHeight-50)+",scrollbars=1");
+			var NewWin=open(p_URL,$g("调价损益单品科室汇总"),"top=100,left=20,width="+document.body.clientWidth*0.8+",height="+(document.body.clientHeight-50)+",scrollbars=1");
 		}
-		//供应商汇总
+		//经营企业汇总
 		else if(StatFlag==3){
 			if (gParamCommon[7]==3){ //批次价
 				var Others=LocId+"^"+AspNo+"^"+AspReasonId+"^"+OptType+"^"+InciId+"^"+"^"+VenId;
@@ -225,18 +225,18 @@ Ext.onReady(function(){
 				p_URL = 'dhccpmrunqianreport.csp?reportName=aspamountstat-vendor.raq&StartDate='+
 					StartDate +'&EndDate=' +EndDate +'&Others='+Others+'&StartTime='+startTime+'&EndTime='+endTime+'&UserName='+gUserName+'&HospDesc='+App_LogonHospDesc+'&RQDTFormat='+RQDTFormat;
 			}
-			var NewWin=open(p_URL,"调价损益供应商汇总","top=100,left=20,width="+document.body.clientWidth*0.8+",height="+(document.body.clientHeight-50)+",scrollbars=1");
+			var NewWin=open(p_URL,$g("调价损益经营企业汇总"),"top=100,left=20,width="+document.body.clientWidth*0.8+",height="+(document.body.clientHeight-50)+",scrollbars=1");
 		}
 	}
 		
 	var FormPanel=new Ext.FormPanel({
-		title:'调价损益汇总',
+		title:$g('调价损益汇总'),
 		frame:true,
 		tbar:[OkBT],
 		items:[{
 			layout:'column',
 			xtype:'fieldset',
-			title:'查询条件',
+			title:$g('查询条件'),
 			style:'padding:10px 10px 10px 10px',
 			defaults:{border:false},
 			items:[{
@@ -268,15 +268,15 @@ Ext.onReady(function(){
 			region:'center',
 			frame:true,
 			items:[{
-				title:'报表类型',		
+				title:$g('报表类型'),		
 				style:'padding:10px',
 				xtype:'fieldset',
 				items:[{
 				xtype:'radiogroup',
 				id:'StatType',
-				items:[{boxLabel:'单品汇总',name:'OptStat',inputValue:1,checked:true},
-					{boxLabel:'单品科室汇总',name:'OptStat',inputValue:2},
-					{boxLabel:'供应商汇总',name:'OptStat',inputValue:3}]
+				items:[{boxLabel:$g('单品汇总'),name:'OptStat',inputValue:1,checked:true},
+					{boxLabel:$g('单品科室汇总'),name:'OptStat',inputValue:2},
+					{boxLabel:$g('经营企业汇总'),name:'OptStat',inputValue:3}]
 				}]
 			}]
 		}]

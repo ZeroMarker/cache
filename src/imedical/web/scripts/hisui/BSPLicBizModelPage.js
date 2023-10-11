@@ -1,4 +1,5 @@
 // BSP.Lic.BizModelPage.js
+var mystyle = '<style>body .filebox{border:0px;}</style>';
 var html = '<div style="width:100%;height:600px;">\
 	<div class="hisui-layout" data-options="fit:true,border:false">\
 		<div data-options="region:\'north\',split:true,bodyCls:\'panel-body-gray\',border:false" style="height:100px">\
@@ -19,12 +20,13 @@ $.extend($.fn.datagrid.defaults.view,{
 	}
 });
 var init = function(){
+	$(mystyle).appendTo("body");
 	//$(html).appendTo("body");
 	//$.parser.parse();
 	$("#Find").click(function(){
 		$("#bizModelPageGrid").datagrid("load");
 	});
-	$("#ImportLic").filebox({
+	$("#ImportLic").addClass("showicon").filebox({
 			width:116,
 			buttonText:"导入许可",
 			buttonIcon:'icon-w-line-key',
@@ -65,6 +67,8 @@ var init = function(){
 		columns:[[
 			{field:'ID',hidden:true},
 			{field:"Sort",title:"序号",width:60,editor:{type:"text"}},
+			{field:'ProTeam',title:'产品组',width:100,editor:{type:'text'}},
+			{field:'Note',title:'备注',width:100,editor:{type:'text'}},
 			{field:'ProLineCode',title:'产品线代码',width:150,editor:{type:'text'}},
 			{field:'ProLineName',title:'产品线名称',width:150,editor:{type:'text'}},
 			{field:'ModelCode',title:'模块代码',width:150,editor:{type:'text'}},
@@ -81,6 +85,7 @@ var init = function(){
 			param.ModelCode = $('#BizModelCode').val();
 			param.CSPName = $('#CSPName').val();
 			param.CompName = $('#CompName').val();
+			param.ProTeam = $('#ProTeam').val();
 		},
 		insOrUpdHandler:function(row){
 			var param ;
@@ -104,13 +109,14 @@ var init = function(){
 				"dto.bizModelPage.ModelName":row.ModelName,
 				"dto.bizModelPage.PageName":row.PageName,
 				"dto.bizModelPage.CompName":row.CompName,
-				"dto.bizModelPage.Sort":row.Sort
-				
+				"dto.bizModelPage.Sort":row.Sort,
+				"dto.bizModelPage.ProTeam":row.ProTeam,
+				"dto.bizModelPage.Note":row.Note
 			});
 			$cm(param,defaultCallBack);
 		},
 		getNewRecord:function(){
-			return {ID:"",Sort:"",ProLineCode:"",ProLineName:"",ModelCode:"",ModelName:"",PageName:"",CompName:"",Access:"0",AddUser:session['LOGON.USERNAME'],AddDate:"",AddTime:""};
+			return {ID:"",Sort:"",ProLineCode:"",ProLineName:"",ModelCode:"",ModelName:"",PageName:"",CompName:"",Access:"0",AddUser:session['LOGON.USERNAME'],AddDate:"",AddTime:"",ProTeam:"",Note:""};
 		},
 		delHandler:function(row){
 			var _t = this;

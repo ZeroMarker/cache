@@ -6,6 +6,8 @@ var CstID = "";     /// 会诊ID
 var DisGrpID = "";  /// 疑难病种ID
 var editIndex=-1;
 var editGrpRow = -1;
+var editExpRow = -1;
+var isEditFlag = 0;     /// 页面是否可编辑
 var LType = "CONSULT";  /// 会诊科室代码
 var LgUserID = session['LOGON.USERID'];  /// 用户ID
 var LgLocID = session['LOGON.CTLOCID'];  /// 科室ID
@@ -18,6 +20,9 @@ $(function(){
 	initDatagrid();
 	
 	InitLocGrpGrid();
+	
+	/// 初始化页面datagrid
+	InitOuterExpGrid();
 })
 
 function initParams(){
@@ -41,7 +46,7 @@ function InitLocGrpGrid(){
 	var PrvTpEditor={  //设置其为可编辑
 		type: 'combobox',//设置编辑格式
 		options: {
-			url: $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonPrvTp",
+			url: $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonPrvTp"+"&MWToken="+websys_getMWToken(),
 			valueField: "value", 
 			textField: "text",
 			enterNullValueClear:false,
@@ -50,29 +55,29 @@ function InitLocGrpGrid(){
 			onSelect:function(option){
 				var tr = $(this).closest("tr.datagrid-row");
 				var modRowIndex = tr.attr("datagrid-row-index");
-				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'LocID'});
+				var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'LocID'});
 				if ($(ed.target).val() == ""){
-					var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'PrvTp'});
+					var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'PrvTp'});
 					$(ed.target).combobox('setValue', "");
 					$.messager.alert("提示","请先确定专家科室！","warning");
 					return;
 				}
-				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'PrvTpID'});
+				var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'PrvTpID'});
 				$(ed.target).val(option.value);
-				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'PrvTp'});
+				var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'PrvTp'});
 				$(ed.target).combobox('setValue', option.text);
 
 				///设置级联指针
-				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'UserID'});
+				var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'UserID'});
 				$(ed.target).val();
-				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'UserName'});
+				var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'UserName'});
 				$(ed.target).combobox('setValue', "");
 			},
 			onChange:function(newValue, oldValue){
 				var tr = $(this).closest("tr.datagrid-row");
 				var modRowIndex = tr.attr("datagrid-row-index");
 				if (newValue == ""){
-					var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'PrvTpID'});
+					var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'PrvTpID'});
 					$(ed.target).val("");
 				}
 			}
@@ -87,35 +92,36 @@ function InitLocGrpGrid(){
 			textField: "text",
 			mode:'remote',
 			enterNullValueClear:false,
-			url: $URL +"?ClassName=web.DHCMDTCom&MethodName=JsonLoc&HospID"+session['LOGON.HOSPID'],
+			url: $URL +"?ClassName=web.DHCMDTCom&MethodName=JsonLoc&HospID="+session['LOGON.HOSPID']+"&MWToken="+websys_getMWToken(),
 			blurValidValue:true,
 			onSelect:function(option) {
 				var tr = $(this).closest("tr.datagrid-row");
 				var modRowIndex = tr.attr("datagrid-row-index");
-				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'LocDesc'});
+				var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'LocDesc'});
 				$(ed.target).combobox('setValue', option.text);
 				
-				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'LocID'});
+				var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'LocID'});
 				$(ed.target).val(option.value);
 				
 				///清空医生
-				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'UserID'});
+				var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'UserID'});
 				$(ed.target).val("");
-				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'UserName'});
+				var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'UserName'});
 				$(ed.target).combobox('setValue', "");
 				
 				/// 清空职称
-				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'PrvTpID'});
+				var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'PrvTpID'});
 				$(ed.target).val("");
-				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'PrvTp'});
+				var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'PrvTp'});
 				$(ed.target).combobox('setValue', "");
 				
 			},
 			onShowPanel:function(){
+				return true;
 				var tr = $(this).closest("tr.datagrid-row");
 				var modRowIndex = tr.attr("datagrid-row-index");
-				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'LocDesc'});
-				var unitUrl = $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonGrpLoc&DisGrpID="+DisGrpID;
+				var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'LocDesc'});
+				var unitUrl = $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonGrpLoc&DisGrpID="+DisGrpID+"&MWToken="+websys_getMWToken();
 				$(ed.target).combobox('reload',unitUrl);
 			}		   
 		}
@@ -134,9 +140,9 @@ function InitLocGrpGrid(){
 			onSelect:function(option){
 				var tr = $(this).closest("tr.datagrid-row");
 				var modRowIndex = tr.attr("datagrid-row-index");
-				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'UserID'});
+				var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'UserID'});
 				$(ed.target).val(option.value);
-				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'UserName'});
+				var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'UserName'});
 				$(ed.target).combobox('setValue', option.text);
 
 				$m({
@@ -145,9 +151,9 @@ function InitLocGrpGrid(){
 					CareProvID:option.value
 				},function(txtData){
 					var ctpcpCtInfo = txtData;
-					var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'PrvTp'});
+					var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'PrvTp'});
 					$(ed.target).combobox('setValue', ctpcpCtInfo.split("^")[1]);
-					var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'PrvTpID'});
+					var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'PrvTpID'});
 					$(ed.target).val(ctpcpCtInfo.split("^")[0]);
 				});
 			},
@@ -155,13 +161,14 @@ function InitLocGrpGrid(){
 				var tr = $(this).closest("tr.datagrid-row");
 				var modRowIndex = tr.attr("datagrid-row-index");
 			    
-				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'LocID'});
+				var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'LocID'});
 				var LocID = $(ed.target).val();
-				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'PrvTpID'});
+				var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'PrvTpID'});
 				var PrvTpID = $(ed.target).val();
 				///设置级联指针
-				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'UserName'});
-				var unitUrl=$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonLocCareProv&LocID="+ LocID+"&PrvTpID="+ PrvTpID+"&DisGrpID="+ DisGrpID;
+				var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'UserName'});
+				//var unitUrl=$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonLocCareProv&LocID="+ LocID+"&PrvTpID="+ PrvTpID+"&DisGrpID="+ DisGrpID;
+				var unitUrl=$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonLocCareProv&LocID="+ LocID+"&PrvTpID="+ PrvTpID+"&DisGrpID="+"&MWToken="+websys_getMWToken();
 				$(ed.target).combobox('reload',unitUrl);
 			
 			},
@@ -169,7 +176,7 @@ function InitLocGrpGrid(){
 				var tr = $(this).closest("tr.datagrid-row");
 				var modRowIndex = tr.attr("datagrid-row-index");
 				if (newValue == ""){
-					var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'UserID'});
+					var ed=$("#bmDocList").datagrid('getEditor',{index:modRowIndex,field:'UserID'});
 					$(ed.target).val();
 				}
 			}
@@ -195,7 +202,7 @@ function InitLocGrpGrid(){
 			}
 		},
 		{field:'RefReason',title:'回复意见',width:530},
-		{field:'IsConssignIn',title:'已经签到',width:120,align:'center',hidden:true,formatter:function(value){
+		{field:'IsConssignIn',title:'已经签到',width:120,align:'center',hidden:false,formatter:function(value){
 			if(value==1) return "√";
 			if(value!=1) return "";
 		}},
@@ -204,331 +211,76 @@ function InitLocGrpGrid(){
 	///  定义datagrid
 	var option = {
 		//showHeader:false,
-		title:'组内科室',
+		title:'院内专家',
 		fit:true,
-		fitColumns:false,
+		fitColumns:true,
 		rownumbers : false,
 		singleSelect : true,
 		pagination: false,
 		iconCls:'icon-paper',
+		border:true,
+		bodyCls:'panel-header-gray',
 		headerCls:'panel-header-gray',
 	    onDblClickRow: function (rowIndex, rowData) {
 			
 			if ((editIndex != -1)||(editIndex == 0)) { 
-                $("#mainList").datagrid('endEdit', editIndex); 
+                $("#bmDocList").datagrid('endEdit', editIndex); 
             }
             
-            if ((editGrpRow != -1)||(editGrpRow == 0)) { 
-                $("#LocGrpList").datagrid('endEdit', editGrpRow); 
+            if ((editExpRow != -1)||(editExpRow == 0)) { 
+                $("#OuterExpList").datagrid('endEdit', editExpRow); 
             }
-            $("#LocGrpList").datagrid('beginEdit', rowIndex); 
+            
+            var isConssignIn = rowData.IsConssignIn;
+			if(isConssignIn==1){
+				$.messager.alert('提示','已经签到，不能修改！');
+				return;
+			}
+            
+            $("#bmDocList").datagrid('beginEdit', rowIndex); 
 			
-            editGrpRow = rowIndex;          
+            editIndex = rowIndex;          
         }
 	};
 	/// 就诊类型
 	
-	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsonQryConsult&ID="+CstID+"&Type=I";
-	new ListComponent('LocGrpList', columns, uniturl, option).Init();
-}
-
-// 添加科室
-function AddLocWin(){
-    
-    if (TakGrpLocModel == 1){
-	   	/// 插入空行
-    	var rowObj={PrvTpID:'', PrvTp:'', LocID:'', LocDesc:'', UserID:'', UserName:'', TelPhone:''};
-		$("#LocGrpList").datagrid('appendRow',rowObj);
-   }else{
-	   var Link = "dhcmdt.makresloc.csp?DisGrpID="+DisGrpID;
-	   mdtPopWin1(2, Link); /// 弹出MDT会诊处理窗口
-   }
-}
-
-/// 弹出MDT会诊处理窗口
-function mdtPopWin1(WidthFlag, Link){
-	var option = {
-		collapsible:false,
-		minimizable:false,
-		maximizable:false,
-		border:true,
-		iconCls:'icon-paper',
-		closed:"true"
-	};
-	$("#mdtFrames").attr("src",Link);
-	if(WidthFlag == 2){
-		new WindowUX('会诊专家组', 'mdtWin', 880, 480, option).Init();
-	}
+	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=ListDocList&ID="+CstID+"&MWToken="+websys_getMWToken();
+	new ListComponent('bmDocList', columns, uniturl, option).Init();
 }
 
 /// 清空
 function Clear(FlagCode){
 	
-	if (FlagCode == "G"){
-		/// 组内科室
-		$("#LocGrpList").datagrid("reload",{"QueFlg":'','ID':''});
-	}else{
-		/// 院内科室
-		$("#mainList").datagrid("reload",{"QueFlg":'','ID':''});
-		
-	}
 }
 
 function initDatagrid(){
-	/// 编辑格
-	var texteditor={
-		type: 'text',//设置编辑格式
-		options: {
-			required: true //设置编辑规则属性
-		}
-	}
 	
-	var HosTypeArr = [{"value":"I","text":'组内'}, {"value":"O","text":'院内'}];
-	//设置其为可编辑
-	var HosEditor={
-		type: 'combobox',     //设置编辑格式
-		options: {
-			data: HosTypeArr,
-			valueField: "value",
-			textField: "text",
-			panelHeight:"auto",  //设置容器高度自动增长
-			onSelect:function(option){
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'HosID'});
-				$(ed.target).val(option.value);  //设置value
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'HosType'});
-				$(ed.target).combobox('setValue', option.text);  //设置Desc
-				
-				/// 清空职称
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'PrvTp'});
-				$(ed.target).combobox('setValue', "");
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'PrvTpID'});
-				$(ed.target).val("");
-				
-				///清空医生
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'UserID'});
-				$(ed.target).val("");
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'UserName'});
-				$(ed.target).combobox('setValue', "");
-				
-				///清空科室
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'LocDesc'});
-				$(ed.target).combobox('setValue', "");
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'LocID'});
-				$(ed.target).val("");
-			}
-		}
-	}
 	
-	// 职称编辑格
-	var PrvTpEditor={  //设置其为可编辑
-		type: 'combobox',//设置编辑格式
-		options: {
-			url: $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonPrvTp",
-			valueField: "value", 
-			textField: "text",
-			enterNullValueClear:false,
-			//panelHeight:"auto",  //设置容器高度自动增长
-			blurValidValue:true,
-			onSelect:function(option){
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'PrvTpID'});
-				$(ed.target).val(option.value);
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'PrvTp'});
-				$(ed.target).combobox('setValue', option.text);
-				
-				///设置级联指针
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'UserID'});
-				$(ed.target).val("");
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'UserName'});
-				$(ed.target).combobox('setValue', "");
-				
-			},
-			onChange:function(newValue, oldValue){
-				if (newValue == ""){
-					var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'PrvTpID'});
-					$(ed.target).val("");
-				}
-			}
-		}
-	}
-	
-	// 科室编辑格
-	var LocEditor={
-		type: 'combobox',//设置编辑格式
-		options:{
-			valueField: "value", 
-			textField: "text",
-			mode:'remote',
-			enterNullValueClear:false,
-			url: '',
-			blurValidValue:true,
-			onSelect:function(option) {
-				
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'LocDesc'});
-				$(ed.target).combobox('setValue', option.text);
-				
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'LocID'});
-				$(ed.target).val(option.value);
-
-				///设置级联指针
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'UserName'});
-				$(ed.target).combobox('setValue', "");
-				/// 清空职称
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'PrvTp'});
-				$(ed.target).combobox('setValue', "");
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'PrvTpID'});
-				$(ed.target).val("");
-				
-			},
-			onShowPanel:function(){
-				/// 组内
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'HosID'});
-				var HosID = $(ed.target).val();
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'LocDesc'});
-				var unitUrl = "";
-				if (HosID == "I"){
-					var unitUrl = $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonGrpLoc&DisGrpID="+DisGrpID;
-				}else{
-					var unitUrl = $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonLoc&HospID="+LgHospID;
-				}
-				//var unitUrl = $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonLocList&LType="+LType+"&LocID="+LgLocID+"&HospID="+LgHospID;
-				$(ed.target).combobox('reload',unitUrl);
-			}		   
-		}
-	}
-		
-	// 医师编辑格
-	var DocEditor={  //设置其为可编辑
-		type: 'combobox',//设置编辑格式
-		options: {
-			url: "",
-			valueField: "value", 
-			textField: "text",
-			enterNullValueClear:false,
-			blurValidValue:true,
-			mode:'remote',
-			onSelect:function(option){
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'UserID'});
-				$(ed.target).val(option.value);
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'UserName'});
-				$(ed.target).combobox('setValue', option.text);
-				
-				$m({
-					ClassName:"web.DHCMDTCom",
-					MethodName:"GetPrvTpIDByCareProvID",
-					CareProvID:option.value
-				},function(txtData){
-					var ctpcpCtInfo = txtData;
-					var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'PrvTp'});
-					$(ed.target).combobox('setValue', ctpcpCtInfo.split("^")[1]);
-					var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'PrvTpID'});
-					$(ed.target).val(ctpcpCtInfo.split("^")[0]);
-				});
-			},
-			onShowPanel:function(){
-				
-				/// 组内
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'HosID'});
-				var HosID = $(ed.target).val();
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'LocID'});
-				var LocID = $(ed.target).val();
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'PrvTpID'});
-				var PrvTpID = $(ed.target).val();
-				///设置级联指针
-				var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'UserName'});
-				var GrpID = HosID=="I"?DisGrpID:"";
-				var unitUrl=$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonLocCareProv&LocID="+ LocID+"&PrvTpID="+ PrvTpID+"&DisGrpID="+ GrpID;
-				$(ed.target).combobox('reload',unitUrl);
-			},
-			onChange:function(newValue, oldValue){
-				if (newValue == ""){
-					var ed=$("#mainList").datagrid('getEditor',{index:editIndex,field:'UserID'});
-					$(ed.target).val("");
-				}
-			}
-		}
-	}
-	
-	///  定义columns
-	var columns=[[
-		{field:'itmID',title:'ID',width:100,editor:texteditor,hidden:true},
-		{field:'HosID',title:'HosID',width:100,editor:texteditor,hidden:true},
-		{field:'HosType',title:'院内院外',width:110,editor:HosEditor,hidden:true},
-		{field:'LocID',title:'科室ID',width:100,editor:texteditor,hidden:true},
-		{field:'LocDesc',title:'科室',width:230,editor:LocEditor},
-		{field:'UserID',title:'医生ID',width:110,editor:texteditor,hidden:true},
-		{field:'UserName',title:'医生',width:120,editor:DocEditor},
-		{field:'PrvTpID',title:'职称ID',width:100,editor:texteditor,hidden:true},
-		{field:'PrvTp',title:'职称',width:160,editor:PrvTpEditor,hidden:false},
-		{field:'AcceptFlag',title:'接收',width:100,align:'center',formatter:
-			function (value, row, index){
-				if (value == 1){
-					return '<font style="color:green;font-weight:bold;">是</font>';
-				}else {
-					return '<font style="color:red;font-weight:bold;">否</font>';
-				}
-			}
-		},
-		{field:'RefReason',title:'回复意见',width:530},
-		{field:'IsConssignIn',title:'已经签到',width:120,align:'center',hidden:true,formatter:function(value){
-			if(value==1) return "√";
-			if(value!=1) return "";
-		}},
-		
-	]];
-	
-		///  定义datagrid
-	var option = {
-		//showHeader:false,
-		fit:true,
-		title:'院内科室',
-		fitColumns:false,
-		rownumbers : false,
-		singleSelect : true,
-		pagination: false,
-		iconCls:'icon-paper',
-		headerCls:'panel-header-gray',
-		onDblClickRow: function (rowIndex, rowData) {
-		
-            if ((editIndex != -1)||(editIndex == 0)) { 
-                $("#mainList").datagrid('endEdit', editIndex); 
-            }
-            $("#mainList").datagrid('beginEdit', rowIndex); 
-			
-            editIndex = rowIndex;
-        },
-	    onLoadSuccess: function (data) { //数据加载完毕事件
-            $("a[name='AddRow']").not("#"+(data.rows.length - 1)).hide();
-        }
-	};
-	
-	/// 就诊类型
-	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsonQryConsult&ID="+CstID+"&Type=O";
-	new ListComponent('mainList', columns, uniturl, option).Init();
 }
 
 function addRow(){
-	commonAddRow({'datagrid':'#mainList'})
+	commonAddRow({'datagrid':'#bmDocList'})
 }
 //双击编辑
 function onClickRow(index,row){
-	CommonRowClick(index,row,"#mainList");
+	CommonRowClick(index,row,"#bmDocList");
 }
 
 function save(){
 	
 	/// 结束编辑
 	if ((editIndex != -1)||(editIndex == 0)) { 
-        $("#mainList").datagrid('endEdit', editIndex); 
+        $("#bmDocList").datagrid('endEdit', editIndex); 
     }
 	var LocArr = [];
 	var ConsDetArr=[];
 	var TmpCarePrv = ""; /// 专家
 	var CarePrvArr = [];
-	var rowData = $('#LocGrpList').datagrid('getRows');
+	var rowData = $('#bmDocList').datagrid('getRows');
 	for (var m = 0; m < rowData.length; m++){
 		var item = rowData[m];
 		if(trim(item.LocDesc) != ""){
-		    var TmpData = item.LocID +"^"+ item.UserID +"^"+ item.PrvTpID +"^";
+		    var TmpData = item.LocID +"^"+ item.UserID +"^"+ item.PrvTpID +"^^"+ item.itmID;
 		    ConsDetArr.push(TmpData);
 		    if ($.inArray(item.LocID +"^"+ item.UserID,LocArr) == -1){
 				LocArr.push(item.LocID +"^"+ item.UserID);
@@ -540,11 +292,11 @@ function save(){
 			CarePrvArr.push(item.UserID);
 		}
 	}
-	var rowData = $('#mainList').datagrid('getRows');
+	var rowData = $('#bmDocList').datagrid('getRows');
 	for (var n = 0; n < rowData.length; n++){
 		var item = rowData[n];
 		if(trim(item.LocDesc) != ""){
-		    var TmpData = item.LocID +"^"+ item.UserID +"^"+ item.PrvTpID +"^";
+		    var TmpData = item.LocID +"^"+ item.UserID +"^"+ item.PrvTpID +"^^"+ item.itmID;
 		    ConsDetArr.push(TmpData);
 		    if ($.inArray(item.LocID +"^"+ item.UserID,LocArr) == -1){
 				LocArr.push(item.LocID +"^"+ item.UserID);
@@ -572,10 +324,32 @@ function save(){
 	if (makLocParams == ""){
 		$.messager.alert("提示:","会诊科室不能为空！","warning");
 		return;	
-	}	
+	}
+	
+	/// 外院专家
+	var repExpArr = [];
+	var LocExpArr = [];
+	var OuterExpList = "";
+	var rowData = $('#OuterExpList').datagrid('getRows');
+	$.each(rowData, function(index, item){
+		if(trim(item.LocDesc) != ""){
+			var TmpData = item.UserID +"^"+ item.UserName +"^"+ item.LocID +"^"+ item.PrvTpID +"^"+ item.TelPhone;
+			LocExpArr.push(TmpData);
+		    if ($.inArray(item.UserID, repExpArr) == -1){
+				repExpArr.push(item.UserID);
+			}else{
+				TmpCarePrv = item.UserName;
+			}
+		}
+	})
+	if (TmpCarePrv != ""){
+		$.messager.alert("提示","会诊专家："+ TmpCarePrv +"，重复添加！","warning");
+		return;	
+	}
+	var makOuterExp = LocExpArr.join("@");	
 
 	/// 保存
-	runClassMethod("web.DHCMDTConsult","InsMakResss",{"CstID":CstID, "makLocParams":makLocParams},function(jsonString){
+	runClassMethod("web.DHCMDTConsult","InsMakResss",{"CstID":CstID, "makLocParams":makLocParams, "makOuterExp":makOuterExp},function(jsonString){
 		if (jsonString == -1){
 			$.messager.alert("提示:","申请单非待安排状态，不允许进行安排操作！","warning");
 			return;
@@ -590,33 +364,6 @@ function save(){
 	},'',false)			
 }
 
-function saves(){
-	var LocArr = [];
-	var ConsDetArr=[];
-	var rowsData = $("#mainList").datagrid('getRows');
-	if(rowsData.length<=0){
-		$.messager.alert("提示","没有待保存数据!");
-		return;
-	}
-	for(var i=0;i<rowsData.length;i++){
-		if ($.inArray(rowsData[i].LocID,LocArr) == -1){
-			LocArr.push(item.LocID);
-		}
-	} 
-	saveByDataGrid("web.DHCMDTConsult","SaveItms","#mainList",function(data){
-			if(data==0){
-				//$.messager.alert("提示","保存成功!");
-				$("#mainList").datagrid('reload')
-			}else if(data==1){
-				$.messager.alert("提示","代码已存在,不能重复保存!"); 
-				$("#mainList").datagrid('reload')
-			}else{	
-				$.messager.alert('提示','保存失败:'+data)
-				
-			}
-		},"",{CstID:CstID});				
-}
-
 /// 关闭
 function TakClsWin(){
 	
@@ -625,11 +372,11 @@ function TakClsWin(){
 
 function cancelLocGrp(){
 	
-	if ($("#LocGrpList").datagrid('getSelections').length != 1) {
+	if ($("#bmDocList").datagrid('getSelections').length != 1) {
 		$.messager.alert('提示','请选一个删除');
 		return;
 	}
-	var row =$("#LocGrpList").datagrid('getSelected'); 
+	var row =$("#bmDocList").datagrid('getSelected'); 
 	var isConssignIn = row.IsConssignIn;
 	if(isConssignIn==1){
 		$.messager.alert('提示','已经签到，不能删除！');
@@ -638,18 +385,18 @@ function cancelLocGrp(){
 	$.messager.confirm('确认','您确认想要删除记录吗？',function(r){    
     if (r){
 	        
-		 runClassMethod("web.DHCMDTConsult","RemoveCstItm",{'CstItmID':row.itmID},function(data){ $('#LocGrpList').datagrid('load'); })
+		 runClassMethod("web.DHCMDTConsult","RemoveCstItm",{'CstItmID':row.itmID},function(data){ $('#bmDocList').datagrid('load'); })
     }    
 }); 
 }
 
 function cancel(){
 	
-	if ($("#mainList").datagrid('getSelections').length != 1) {
+	if ($("#bmDocList").datagrid('getSelections').length != 1) {
 		$.messager.alert('提示','请选一个删除');
 		return;
 	}
-	var row =$("#mainList").datagrid('getSelected'); 
+	var row =$("#bmDocList").datagrid('getSelected'); 
 	var isConssignIn = row.IsConssignIn;
 	if(isConssignIn==1){
 		$.messager.alert('提示','已经签到，不能删除！');
@@ -658,58 +405,228 @@ function cancel(){
 	$.messager.confirm('确认','您确认想要删除记录吗？',function(r){    
     if (r){
 	        
-		 runClassMethod("web.DHCMDTConsult","RemoveCstItm",{'CstItmID':row.itmID},function(data){ $('#mainList').datagrid('load'); })
+		 runClassMethod("web.DHCMDTConsult","RemoveCstItm",{'CstItmID':row.itmID},function(data){ $('#bmDocList').datagrid('load'); })
     }    
 }); 
 }
 
 /// 删除操作
-function delRow(){
+function delGrpRow(){
 	
 	/// 结束编辑
 	if ((editIndex != -1)||(editIndex == 0)) { 
-        $("#mainList").datagrid('endEdit', editIndex); 
+        $("#bmDocList").datagrid('endEdit', editIndex); 
     }
     
-	var rowData = $('#mainList').datagrid('getSelected');
+	var rowData = $('#bmDocList').datagrid('getSelected');
 	if (rowData == null){
 		$.messager.alert('提示','请先选择待删除行！','warning');
 		return;
 	}
 	// 获取选中行的Index的值
-	var rowIndex=$('#mainList').datagrid('getRowIndex',rowData);
-    $('#mainList').datagrid('deleteRow',rowIndex);
-    var rows = $('#mainList').datagrid("getRows");  //重新获取数据生成行号
-    $('#mainList').datagrid("loadData", rows);
+	var rowIndex=$('#bmDocList').datagrid('getRowIndex',rowData);
+    $('#bmDocList').datagrid('deleteRow',rowIndex);
+    var rows = $('#bmDocList').datagrid("getRows");  //重新获取数据生成行号
+    $('#bmDocList').datagrid("loadData", rows);
 }
 
 /// 删除操作
 function delLocRow(){
 	
-	var rowData = $('#LocGrpList').datagrid('getSelected');
+	var rowData = $('#bmDocList').datagrid('getSelected');
 	if (rowData == null){
 		$.messager.alert('提示','请先选择待删除行！','warning');
 		return;
 	}
-	// 获取选中行的Index的值
-	var rowIndex=$('#LocGrpList').datagrid('getRowIndex',rowData);
-    $('#LocGrpList').datagrid('deleteRow',rowIndex);
+	
+	var itmID = rowData.itmID;
+	
+	$cm({
+		"ClassName":"web.DHCMDTConsult",
+		"MethodName":"DeletConsItm",
+		"CstItmID":itmID,
+		"dataType":"text"
+	},function(ret){
+		if(ret!=0){
+			$.messager.alert('提示',ret,'warning');
+			return;	
+		}else{
+			$("#bmDocList").datagrid("reload");	
+		}
+	})
+	
 }
 
 function TakPreTime(){
 	
 	/// 全院科室列表 结束编辑
     if ((editIndex != -1)||(editIndex == 0)) { 
-        $("#mainList").datagrid('endEdit', editIndex); 
+        $("#bmDocList").datagrid('endEdit', editIndex); 
     }
     
-    /// 组内科室列表 结束编辑
-    if ((editGrpRow != -1)||(editGrpRow == 0)) { 
-        $("#LocGrpList").datagrid('endEdit', editGrpRow); 
+    /// 外院专家列表 结束编辑
+    if ((editExpRow != -1)||(editExpRow == 0)) { 
+        $("#OuterExpList").datagrid('endEdit', editExpRow); 
     }
     
 	save(); 
 }
+
+/// 初始化外院专家列表
+function InitOuterExpGrid(){
+	
+	/// 编辑格
+	var texteditor={
+		type: 'text',//设置编辑格式
+		options: {
+			required: true //设置编辑规则属性
+		}
+	}
+	
+	/// 编辑格
+	var numbereditor={
+		type: 'numberbox',//设置编辑格式
+		options: {
+			//required: true //设置编辑规则属性
+		}
+	}
+	
+	// 职称编辑格
+	var PrvTpEditor={  //设置其为可编辑
+		type: 'combobox',//设置编辑格式
+		options: {
+			url: $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonPrvTp"+"&MWToken="+websys_getMWToken(),
+			valueField: "value", 
+			textField: "text",
+			enterNullValueClear:false,
+			//panelHeight:"auto",  //设置容器高度自动增长
+			blurValidValue:true,
+			onSelect:function(option){
+				var tr = $(this).closest("tr.datagrid-row");
+				var modRowIndex = tr.attr("datagrid-row-index");
+				var ed=$("#OuterExpList").datagrid('getEditor',{index:modRowIndex,field:'PrvTpID'});
+				$(ed.target).val(option.value);
+				var ed=$("#OuterExpList").datagrid('getEditor',{index:modRowIndex,field:'PrvTp'});
+				$(ed.target).combobox('setValue', option.text);
+			},
+			onChange:function(newValue, oldValue){
+				var tr = $(this).closest("tr.datagrid-row");
+				var modRowIndex = tr.attr("datagrid-row-index");
+				if (newValue == ""){
+					var ed=$("#OuterExpList").datagrid('getEditor',{index:modRowIndex,field:'PrvTpID'});
+					$(ed.target).val("");
+				}
+			}
+		}
+	}
+	
+	/// 科室
+	var LocEditor={  //设置其为可编辑
+		//类别
+		type: 'combobox',//设置编辑格式
+		options: {
+			valueField: "value", 
+			textField: "text",
+			url:$URL+"?ClassName=web.DHCMDTDicItem&MethodName=jsonParDicItem&mCode=OutLoc&HospID="+ LgHospID+"&MWToken="+websys_getMWToken(),
+			//required:true,
+			panelHeight:"auto",  //设置容器高度自动增长
+			onSelect:function(option){
+				var tr = $(this).closest("tr.datagrid-row");
+				var modRowIndex = tr.attr("datagrid-row-index");
+				///设置类型值
+				var ed=$("#OuterExpList").datagrid('getEditor',{index:modRowIndex,field:'LocDesc'});
+				$(ed.target).combobox('setValue', option.text);
+				var ed=$("#OuterExpList").datagrid('getEditor',{index:modRowIndex,field:'LocID'});
+				$(ed.target).val(option.value); 
+			}
+		}
+	}
+	
+	///  定义columns
+	var columns=[[
+		{field:'LocID',title:'科室ID',width:100,align:'left',hidden:true,editor:texteditor},
+		{field:'LocDesc',title:'科室',width:200,align:'left',editor:LocEditor},
+		{field:'UserID',title:'医生ID',width:110,align:'left',hidden:true,editor:texteditor},
+		{field:'UserName',title:'医生',width:120,align:'left',editor:texteditor},
+		{field:'TelPhone',title:'联系方式',width:100,align:'left',editor:numbereditor},
+		{field:'PrvTpID',title:'职称ID',width:100,align:'left',hidden:true,editor:texteditor},
+		{field:'PrvTp',title:'职称',width:160,align:'left',hidden:false,editor:PrvTpEditor}
+	]];
+	
+	///  定义datagrid
+	var option = {
+		//showHeader:false,
+		title:'外院专家',
+		fitColumns:true,
+		rownumbers : false,
+		singleSelect : true,
+		pagination: false,
+		fit : true,
+		iconCls:'icon-paper',
+		headerCls:'panel-header-gray',
+		border:true,
+		bodyCls:'panel-header-gray',
+	    onClickRow: function (rowIndex, rowData) {
+			
+			if (rowData.ID) return;
+		
+            if ((editExpRow != -1)||(editExpRow == 0)) { 
+                $("#OuterExpList").datagrid('endEdit', editExpRow); 
+            }
+            
+            $("#OuterExpList").datagrid('beginEdit', rowIndex); 
+			
+            editExpRow = rowIndex;
+            return;
+		  
+        }
+	};
+	/// 就诊类型
+	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsGetBatModExpOutDet&mdtIDs="+CstID+"&MWToken="+websys_getMWToken();
+	new ListComponent('OuterExpList', columns, uniturl, option).Init();
+}
+
+/// 插入空行
+function insExpRow(){
+	
+	if (isEditFlag == 1) return;
+			
+    var rowObj={ID:'', UserID:'', UserName:''};
+	$("#OuterExpList").datagrid('appendRow',rowObj);
+}
+
+ /// 删除行
+function delOutExpRow(rowIndex, id){
+	
+	/// 结束编辑
+	if ((editIndex != -1)||(editIndex == 0)) { 
+        $("#OuterExpList").datagrid('endEdit', editIndex); 
+    }
+    
+	var rowData = $('#OuterExpList').datagrid('getSelected');
+	if (rowData == null){
+		$.messager.alert('提示','请先选择待删除行！','warning');
+		return;
+	}
+	
+	/// 保存
+	runClassMethod("web.DHCMDTConsult","DeleteOuterExpert",{"ID":rowData.ID},function(jsonString){
+		if (jsonString < 0){
+			$.messager.alert("提示","删除失败，失败原因:"+jsonString,"warning");
+		}else{
+			$('#OuterExpList').datagrid("reload");
+		}
+	},'',false)
+	
+	return;
+	
+	// 获取选中行的Index的值
+	var rowIndex=$('#OuterExpList').datagrid('getRowIndex',rowData);
+    $('#OuterExpList').datagrid('deleteRow',rowIndex);
+    var rows = $('#OuterExpList').datagrid("getRows");  //重新获取数据生成行号
+    $('#OuterExpList').datagrid("loadData", rows);
+}
+
 /**
  * 保存datagrid数据
  * @creater qqa:重写
@@ -747,3 +664,290 @@ function saveByDataGrid(className,methodName,gridid,handle,datatype,parObj){
 }
 
 
+/// 外院专家快捷方式
+function shortcut_selOuterExp(){
+	
+	if (DisGrpID == "") {
+		$.messager.alert("提示","疑难病种不能为空！","warning");
+		return;
+	}
+	
+	var Link = "dhcmdt.makresloc.csp?DisGrpID="+ DisGrpID +"&Type=E"+"&MWToken="+websys_getMWToken();
+	mdtPopWin1(3, Link); /// 弹出MDT会诊处理窗口
+
+}
+
+/// 插入空行
+function insRow(){
+    var rowObj={itmID:'', LocID:'', LocDesc:'', UserID:'', UserName:'', PrvTpID:'', PrvTp:'', AcceptFlag:'', RefReason:'', IsConssignIn:''};
+	$("#bmDocList").datagrid('appendRow',rowObj);
+}
+
+
+/// 删除操作
+function delRow(){
+	
+	/// 结束编辑
+	if ((editIndex != -1)||(editIndex == 0)) { 
+        $("#bmDocList").datagrid('endEdit', editIndex); 
+    }
+    
+	var rowData = $('#bmDocList').datagrid('getSelected');
+	if (rowData == null){
+		$.messager.alert('提示','请先选择待删除！','warning');
+		return;
+	}
+	
+	var rowIndex=$('#bmDocList').datagrid('getRowIndex',rowData);
+	if(!rowData.itmID){
+		$('#bmDocList').datagrid('deleteRow',rowIndex);
+		return;
+	}
+	
+	$cm({
+		"ClassName":"web.DHCMDTConsult",
+		"MethodName":"DeletConsItm",
+		"CstItmID":rowData.itmID,
+		"dataType":"text"
+	},function(ret){
+		if(ret!=0){
+			$.messager.alert('提示',ret,'warning');
+			return;	
+		}else{
+			$("#bmDocList").datagrid("reload");	
+		}
+	})
+}
+
+/// 保存行
+function saveRow(){
+	
+	/// 结束编辑
+	if ((editIndex != -1)||(editIndex == 0)) { 
+        $("#bmDocList").datagrid('endEdit', editIndex); 
+    }
+    
+    if ((editExpRow != -1)||(editExpRow == 0)) { 
+        $("#OuterExpList").datagrid('endEdit', editExpRow); 
+    }
+
+	/// 人员重复检查
+	var TmpCarePrv = ""; /// 专家
+	var CarePrvArr = [];
+	var rowData = $('#bmDocList').datagrid('getRows');
+	for (var i = 0; i < rowData.length; i++){
+		var item = rowData[i];
+		if(trim(item.LocDesc) != ""){
+			/// 人员重复检查
+			if ($.inArray(item.UserID, CarePrvArr) != -1){
+				TmpCarePrv = item.UserName;
+			}
+			CarePrvArr.push(item.UserID);
+		}
+	}
+	if (TmpCarePrv != ""){
+		$.messager.alert("提示:","会诊专家："+ TmpCarePrv +"，重复添加！","warning");
+		return;	
+	}
+	
+	var LocArr=[]; isEmptyFlag=0;
+	var rowData = $('#bmDocList').datagrid('getChanges');
+	for (var m = 0; m < rowData.length; m++){
+		var item = rowData[m];
+		if(trim(item.LocDesc) != ""){
+		    var TmpData = item.LocID +"^"+ item.UserID +"^"+ item.PrvTpID +"^"+"^"+item.itmID;
+		    LocArr.push(TmpData);
+		}
+		if (item.UserID == "") isEmptyFlag = 1;
+	}
+	
+	if (isEmptyFlag == 1){
+		$.messager.alert("提示","专家不能为空！","warning");
+		return;	
+	}
+	
+	/// 外院人员重复检查
+	var TmpExpCarePrv = ""; /// 专家
+	var CareExpPrvArr = [];
+	var rowData = $('#OuterExpList').datagrid('getRows');
+	for (var i = 0; i < rowData.length; i++){
+		var item = rowData[i];
+		if(trim(item.LocDesc) != ""){
+			/// 人员重复检查
+			var masIndex=item.LocID+","+item.PrvTpID+","+item.UserName;
+			if ($.inArray(masIndex, CareExpPrvArr) != -1){
+				TmpExpCarePrv = item.UserName;
+			}
+			CareExpPrvArr.push(masIndex);
+		}
+	}
+	if (TmpExpCarePrv != ""){
+		$.messager.alert("提示:","会诊专家："+ TmpExpCarePrv +"，重复添加！","warning");
+		return;	
+	}
+	
+	var LocExpArr=[]; isExpEmptyFlag=0;
+	var rowData = $('#OuterExpList').datagrid('getChanges');
+	for (var m = 0; m < rowData.length; m++){
+		var item = rowData[m];
+		if(trim(item.LocDesc) != ""){
+		    var TmpData = item.UserID +"^"+ item.UserName +"^"+ item.LocID +"^"+ item.PrvTpID +"^"+ item.TelPhone +"^"+ item.ID;
+		    LocExpArr.push(TmpData);
+		}
+		if (item.UserName == "") isExpEmptyFlag = 1;
+	}
+	
+	if (isExpEmptyFlag == 1){
+		$.messager.alert("提示","外院专家姓名不能为空！","warning");
+		return;	
+	}
+	
+	
+	/// 科室
+	var mLocParams = LocArr.join("@");
+	/// 外院科室
+	var makOuterExp = LocExpArr.join("@");	
+	
+	if ((mLocParams == "")&&(makOuterExp=="")){
+		$.messager.alert("提示","未检查到待增加记录！","warning");
+		return;	
+	}
+	
+	/// 保存
+	runClassMethod("web.DHCMDTConsult","InsLocParams",{"mdtIds":CstID, "mLocParams":mLocParams,"makOuterExp":makOuterExp},function(jsonString){
+		if (jsonString < 0){
+			$.messager.alert("提示","保存失败，失败原因:"+jsonString,"warning");
+		}else{
+			$.messager.alert("提示","保存成功！","success",function(){
+				$("#bmDocList").datagrid('reload');
+				$("#OuterExpList").datagrid("reload");
+			});
+		}
+	},'',false)
+}
+
+///保存专家
+function saveLoc(){
+	
+	/// 结束编辑
+	if ((editIndex != -1)||(editIndex == 0)) { 
+        $("#bmDocList").datagrid('endEdit', editIndex); 
+    }
+   
+	/// 人员重复检查
+	var TmpCarePrv = ""; /// 专家
+	var CarePrvArr = [];
+	var rowData = $('#bmDocList').datagrid('getRows');
+	for (var i = 0; i < rowData.length; i++){
+		var item = rowData[i];
+		if(trim(item.LocDesc) != ""){
+			/// 人员重复检查
+			if ($.inArray(item.UserID, CarePrvArr) != -1){
+				TmpCarePrv = item.UserName;
+			}
+			CarePrvArr.push(item.UserID);
+		}
+	}
+	if (TmpCarePrv != ""){
+		$.messager.alert("提示:","会诊专家："+ TmpCarePrv +"，重复添加！","warning");
+		return;	
+	}
+	
+	var LocArr=[]; isEmptyFlag=0;
+	var rowData = $('#bmDocList').datagrid('getChanges');
+	for (var m = 0; m < rowData.length; m++){
+		var item = rowData[m];
+		if(trim(item.LocDesc) != ""){
+		    var TmpData = item.LocID +"^"+ item.UserID +"^"+ item.PrvTpID +"^"+"^"+item.itmID;
+		    LocArr.push(TmpData);
+		}
+		if (item.UserID == "") isEmptyFlag = 1;
+	}
+	
+	if (isEmptyFlag == 1){
+		$.messager.alert("提示","专家不能为空！","warning");
+		return;	
+	}
+	
+	/// 科室
+	var mLocParams = LocArr.join("@");
+
+	if (mLocParams == ""){
+		$.messager.alert("提示","未检查到待增加记录！","warning");
+		return;	
+	}
+	
+	/// 保存
+	runClassMethod("web.DHCMDTConsult","InsLocParams",{"mdtIds":CstID, "mLocParams":mLocParams,"makOuterExp":""},function(jsonString){
+		if (jsonString < 0){
+			$.messager.alert("提示","保存失败，失败原因:"+jsonString,"warning");
+		}else{
+			$.messager.alert("提示","保存成功！","success",function(){
+				$("#bmDocList").datagrid('reload');
+			});
+		}
+	},'',false)
+}
+
+///保存外院专家
+function saveOuterLoc(){
+	
+	if ((editExpRow != -1)||(editExpRow == 0)) { 
+        $("#OuterExpList").datagrid('endEdit', editExpRow); 
+    }
+	
+	/// 外院人员重复检查
+	var TmpExpCarePrv = ""; /// 专家
+	var CareExpPrvArr = [];
+	var rowData = $('#OuterExpList').datagrid('getRows');
+	for (var i = 0; i < rowData.length; i++){
+		var item = rowData[i];
+		if(trim(item.LocDesc) != ""){
+			/// 人员重复检查
+			var masIndex=item.LocID+","+item.PrvTpID+","+item.UserName;
+			if ($.inArray(masIndex, CareExpPrvArr) != -1){
+				TmpExpCarePrv = item.UserName;
+			}
+			CareExpPrvArr.push(masIndex);
+		}
+	}
+	if (TmpExpCarePrv != ""){
+		$.messager.alert("提示:","会诊专家："+ TmpExpCarePrv +"，重复添加！","warning");
+		return;	
+	}
+	
+	var LocExpArr=[]; isExpEmptyFlag=0;
+	var rowData = $('#OuterExpList').datagrid('getChanges');
+	for (var m = 0; m < rowData.length; m++){
+		var item = rowData[m];
+		if(trim(item.LocDesc) != ""){
+		    var TmpData = item.UserID +"^"+ item.UserName +"^"+ item.LocID +"^"+ item.PrvTpID +"^"+ item.TelPhone +"^"+ item.ID;
+		    LocExpArr.push(TmpData);
+		}
+		if (item.UserName == "") isExpEmptyFlag = 1;
+	}
+	
+	if (isExpEmptyFlag == 1){
+		$.messager.alert("提示","外院专家姓名不能为空！","warning");
+		return;	
+	}
+	
+	/// 外院科室
+	var makOuterExp = LocExpArr.join("@");	
+	
+	if (makOuterExp == ""){
+		$.messager.alert("提示","未检查到待增加记录！","warning");
+		return;	
+	}
+	
+	/// 保存
+	runClassMethod("web.DHCMDTConsult","InsLocParams",{"mdtIds":CstID, "mLocParams":"","makOuterExp":makOuterExp},function(jsonString){
+		if (jsonString < 0){
+			$.messager.alert("提示","保存失败，失败原因:"+jsonString,"warning");
+		}else{
+			$.messager.alert("提示","保存成功！","success",function(){
+				$("#OuterExpList").datagrid("reload");
+			});
+		}
+	},'',false)
+}

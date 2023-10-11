@@ -133,7 +133,7 @@ $(function () {
 
             } catch (err) {}
 
-            var UsrCertCode = GetUniqueID(cert);
+            var UsrCertCode = GetUniqueID(cert,key);
             var certificateNo = GetCertNo(key);
 
             var loginInfo;
@@ -223,7 +223,7 @@ $(function () {
         /// 提交服务器，验签名，返回signID
         function serverSign(signValue, contentHash) {
             var result;
-            var UsrCertCode = GetUniqueID(GetSignCert(strKey)) || '';
+            var UsrCertCode = GetUniqueID(GetSignCert(strKey),strKey) || '';
             if ('' === UsrCertCode) {
                 alert('用户唯一标示为空！');
                 return;
@@ -268,6 +268,17 @@ $(function () {
                 // 获取原文(编辑器已经hash压缩)签名,服务器验证,通知编辑器保存SignID签名记录号
                 var fnSign = function () {
                     try {
+                        //如果是三级医师审核时，传入签名级别为医师级别
+                        var signlevel = signProperty.SignatureLevel;
+                        if (signProperty.OriSignatureLevel === 'Check') {
+                            signlevel = loginInfo.Level;
+                        }
+                        
+                        if ('' === signlevel) {
+                            alert('用户签名级别为空，请检查系统配置！');
+                            return;
+                        }
+                        
                         //文档签名
                         var signInfo = getSignContent(loginInfo, insID, checkresult, signProperty);
                         var contentHash = signInfo.Digest || '';
@@ -287,16 +298,6 @@ $(function () {
                             return;
                         }
 
-                        //如果是三级医师审核时，传入签名级别为医师级别
-                        var signlevel = signProperty.SignatureLevel;
-                        if (signProperty.OriSignatureLevel === 'Check') {
-                            signlevel = loginInfo.Level;
-                        }
-                        
-                        if (('' === signlevel) && (signProperty.OriSignatureLevel !== "All")) {
-                            alert('用户签名级别为空！');
-                            return;
-                        }
                         var saveRet = iEmrPlugin.SAVE_SIGNED_DOCUMENT({
                                 SignUserID: loginInfo.UserID,
                                 SignID: signID,

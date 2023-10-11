@@ -30,7 +30,7 @@ IncItmBatWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag,
 
     /*药品窗口------------------------------*/
     var PhaOrderUrl = 'dhcst.drugutil.csp?actiontype=GetPhaOrderItemForDialog&Input=' +
-        Input + '&StkGrpRowId=' + StkGrpRowId + '&StkGrpType=' +
+        encodeURI(Input) + '&StkGrpRowId=' + StkGrpRowId + '&StkGrpType=' +
         StkGrpType + '&Locdr=' + Locdr + '&NotUseFlag=' + NotUseFlag +
         '&QtyFlag=' + QtyFlag + '&HospID=' + HospID + '&start=' + 0 +
         '&limit=' + 15+'&ReqLocDr='+ReqLoc;
@@ -46,7 +46,7 @@ IncItmBatWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag,
         "ManfName", "PuomDesc", "pRp", "pSp", "PuomQty", "BuomDesc", "bRp",
         "bSp", "BuomQty", "BillUomDesc", "BillSp", "BillRp", "BillUomQty",
         "PhcFormDesc", "GoodName", "GeneName", { name: 'NotUseFlag', type: 'bool' }, "PuomDr",
-        "PFac", "Manfdr", "MaxQty", "MinQty", "StockQty", "Remark","ReqStockQty","StkBin"
+        "PFac", "Manfdr", "MaxQty", "MinQty", "StockQty", "Remark","ReqStockQty","StkBin","InsuCode","InsuDesc"
     ];
 
     // 支持分页显示的读取方式
@@ -67,16 +67,16 @@ IncItmBatWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag,
         store: PhaOrderStore,
         pageSize: 15,
         displayInfo: true,
-        displayMsg: '当前记录 {0} -- {1} 条 共 {2} 条记录',
+        displayMsg: $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
         emptyMsg: "No results to display",
-        prevText: "上一页",
-        nextText: "下一页",
-        refreshText: "刷新",
-        lastText: "最后页",
-        firstText: "第一页",
-        beforePageText: "当前页",
-        afterPageText: "共{0}页",
-        emptyMsg: "没有数据"
+        prevText: $g("上一页"),
+        nextText: $g("下一页"),
+        refreshText: $g("刷新"),
+        lastText: $g("最后页"),
+        firstText: $g("第一页"),
+        beforePageText: $g("当前页"),
+        afterPageText: $g("共{0}页"),
+        emptyMsg: $g("没有数据")
     });
 
     var nm = new Ext.grid.RowNumberer();
@@ -100,122 +100,137 @@ IncItmBatWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag,
 
     // the check column is created using a custom plugin
     var ColumnNotUseFlag = new Ext.grid.CheckColumn({
-        header: '不可用',
+        header:$g( '不可用'),
         dataIndex: 'NotUseFlag',
         width: 45
     });
     var PhaOrderCm = new Ext.grid.ColumnModel([nm, sm, {
-        header: "代码",
+        header: $g("代码"),
         dataIndex: 'InciCode',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: '名称',
+        header: $g('名称'),
         dataIndex: 'InciDesc',
         width: 200,
         align: 'left',
         sortable: true
     }, {
-        header: "规格",
+        header: $g("规格"),
         dataIndex: 'Spec',
         width: 100,
         align: 'left',
         sortable: true
     }, {
-        header: "厂商",
+        header: $g("生产企业"),
         dataIndex: 'ManfName',
         width: 180,
         align: 'left',
         sortable: true
     }, {
-        header: '入库单位',
+        header: $g('入库单位'),
         dataIndex: 'PuomDesc',
         width: 70,
         align: 'left',
         sortable: true
     }, {
-        header: "售价(入库单位)",
+        header: $g("售价(入库单位)"),
         dataIndex: 'pSp',
         width: 100,
         align: 'right',
 
         sortable: true
     }, {
-        header: "数量(入库单位)",
+        header: $g("数量(入库单位)"),
         dataIndex: 'PuomQty',
         width: 100,
         align: 'right',
         sortable: true
     }, {
-        header: "请求方库存",
+        header: $g("请求方库存"),
         dataIndex: 'ReqStockQty',
         width: 100,
         align: 'right',
-        sortable: true
+        sortable: true,
+        hidden:ReqLoc==""?true:false
     }, {
-        header: "基本单位",
+        header: $g("基本单位"),
         dataIndex: 'BuomDesc',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: "售价(基本单位)",
+        header: $g("售价(基本单位)"),
         dataIndex: 'bSp',
         width: 100,
         align: 'right',
 
         sortable: true
     }, {
-        header: "数量(基本单位)",
+        header: $g("数量(基本单位)"),
         dataIndex: 'BuomQty',
         width: 100,
         align: 'right',
         sortable: true
     }, {
-        header: "计价单位",
+        header: $g("计价单位"),
         dataIndex: 'BillUomDesc',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: "售价(计价单位)",
+        header: $g("售价(计价单位)"),
         dataIndex: 'BillSp',
         width: 100,
         align: 'right',
 
         sortable: true
     }, {
-        header: "数量(计价单位)",
+        header: $g("数量(计价单位)"),
         dataIndex: 'BillUomQty',
         width: 100,
         align: 'right',
         sortable: true
     }, {
-        header: "剂型",
+        header: $g("剂型"),
         dataIndex: 'PhcFormDesc',
         width: 60,
         align: 'left',
         sortable: true
     }, {
-        header: "商品名",
+        header: $g("商品名"),
         dataIndex: 'GoodName',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: "处方通用名",
+        header: $g("处方通用名"),
         dataIndex: 'GeneName',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: "货位码",
+        header: $g("货位码"),
         dataIndex: 'StkBin',
         width: 100,
         align: 'left',
         sortable: true
-    },ColumnNotUseFlag]);
+    }, {
+        header: $g("国家医保编码"),
+        dataIndex: 'InsuCode',
+        width: 100,
+        align: 'left',
+        sortable: true
+    }, {
+        header: $g("国家医保名称"),
+        dataIndex: 'InsuDesc',
+        width: 100,
+        align: 'left',
+        sortable: true
+    }
+    
+    ,ColumnNotUseFlag]);
     
     PhaOrderCm.defaultSortable = true;
     
@@ -258,7 +273,7 @@ IncItmBatWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag,
                 params: { start: 0, limit: pagesize },
                 callback: function(r, options, success) {
                     if (success == false) {
-                        Msg.info('warning', '没有任何记录！');
+                        Msg.info('warning', $g('没有任何记录！'));
                         if (window) {
                             window.focus();
                         }
@@ -280,7 +295,7 @@ IncItmBatWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag,
     PhaOrderStore.load({
         callback: function(r, options, success) {
             if (success == false) {
-                Msg.info('warning', '没有任何符合的记录！');
+                Msg.info('warning', $g('没有任何符合的记录！'));
                 if (window) { window.hide(); }
             } else {
                 PhaOrderGrid.getSelectionModel().selectFirstRow(); // 选中第一行并获得焦点
@@ -308,7 +323,7 @@ IncItmBatWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag,
         idProperty: "Inclb",
         fields: ["Inclb", "BatExp", "Manf", "InclbQty", "PurUomDesc", "Sp", "ReqQty",
             "BUomDesc", "Rp", "StkBin", "SupplyStockQty", "RequrstStockQty", "IngrDate",
-            "PurUomId", "BUomId", "ConFac", "DirtyQty", "AvaQty", "BatSp", "InclbWarnFlag"
+            "PurUomId", "BUomId", "ConFac", "DirtyQty", "AvaQty", "BatSp", "InclbWarnFlag","InsuCode","InsuDesc"
         ],
         baseParams: {
             IncId: '',
@@ -322,16 +337,16 @@ IncItmBatWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag,
         store: ItmLcBtStore,
         pageSize: 15,
         displayInfo: true,
-        displayMsg: '当前记录 {0} -- {1} 条 共 {2} 条记录',
+        displayMsg: $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
         emptyMsg: "No results to display",
-        prevText: "上一页",
-        nextText: "下一页",
-        refreshText: "刷新",
-        lastText: "最后页",
-        firstText: "第一页",
-        beforePageText: "当前页",
-        afterPageText: "共{0}页",
-        emptyMsg: "没有数据"
+        prevText: $g("上一页"),
+        nextText: $g("下一页"),
+        refreshText: $g("刷新"),
+        lastText: $g("最后页"),
+        firstText: $g("第一页"),
+        beforePageText: $g("当前页"),
+        afterPageText: $g("共{0}页"),
+        emptyMsg: $g("没有数据")
     });
 
     var nm2 = new Ext.grid.RowNumberer();
@@ -345,115 +360,115 @@ IncItmBatWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag,
         sortable: true,
         hidden: true
     }, {
-        header: "批次/效期",
+        header: $g("批次/效期"),
         dataIndex: 'BatExp',
         width: 180,
         align: 'left',
         sortable: true,
         renderer: InclbQuickTips
     }, {
-        header: "批次库存",
+        header: $g("批次库存"),
         dataIndex: 'InclbQty',
         width: 90,
         align: 'right',
         sortable: true
     }, {
-        header: "单位",
+        header: $g("单位"),
         dataIndex: 'PurUomDesc',
         width: 80,
         align: 'left',
         sortable: true,
         hidden:true
     }, {
-        header: "批次售价(入库)",
+        header: $g("批次售价(入库)"),
         dataIndex: 'BatSp',
         width: 60,
         align: 'right',
 
         sortable: true
     }, {
-        header: "请求数量",
+        header: $g("请求数量"),
         dataIndex: 'ReqQty',
         width: 80,
         align: 'right',
         sortable: true,
         hidden:true
     }, {
-        header: "基本单位RowId",
+        header: $g("基本单位RowId"),
         dataIndex: 'BUomId',
         width: 80,
         align: 'left',
         sortable: true,
         hidden: true
     }, {
-        header: "基本单位",
+        header: $g("基本单位"),
         dataIndex: 'BUomDesc',
         width: 80,
         align: 'left',
         sortable: true,
         hidden:true
     }, {
-        header: "售价",
+        header: $g("售价"),
         dataIndex: 'Sp',
         width: 60,
         align: 'right',
 
         sortable: true
     }, {
-        header: "进价",
+        header: $g("进价"),
         dataIndex: 'Rp',
         width: 60,
         align: 'right',
 
         sortable: true
     }, {
-        header: "货位码",
+        header: $g("货位码"),
         dataIndex: 'StkBin',
         width: 100,
         align: 'left',
         sortable: true,
         hidden:true
     }, {
-        header: "供应方库存",
+        header:$g("供应方库存"),
         dataIndex: 'SupplyStockQty',
         width: 100,
         align: 'right',
         sortable: true,
         hidden:true
     }, {
-        header: "请求方库存",
+        header: $g("请求方库存"),
         dataIndex: 'RequrstStockQty',
         width: 100,
         align: 'right',
         sortable: true,
         hidden:true
     }, {
-        header: "入库日期",
+        header: $g("入库日期"),
         dataIndex: 'IngrDate',
         width: 90,
         align: 'center',
         sortable: true
     }, {
-        header: "转换率",
+        header: $g("转换率"),
         dataIndex: 'ConFac',
         width: 100,
         align: 'left',
         sortable: true,
         hidden:true
     }, {
-        header: "占用库存",
+        header: $g("占用库存"),
         dataIndex: 'DirtyQty',
         width: 90,
         align: 'right',
         sortable: true
     }, {
-        header: "可用库存",
+        header: $g("可用库存"),
         dataIndex: 'AvaQty',
         width: 90,
         align: 'right',
         sortable: true
     }, {
-        header: "警示级别",
+        header: $g("警示级别"),
         dataIndex: 'InclbWarnFlag',
         width: 90,
         align: 'right',
@@ -461,12 +476,28 @@ IncItmBatWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag,
         hidden: true
 
     }, {
-        header: "生产厂商",
+        header: $g("生产企业"),
         dataIndex: 'Manf',
         width: 180,
         align: 'left',
         sortable: true
-    }]);
+    }, {
+        header: $g("国家医保编码"),
+        dataIndex: 'InsuCode',
+        width: 180,
+        align: 'left',
+        sortable: true,
+        hidden:true
+    }, {
+        header: $g("国家医保名称"),
+        dataIndex: 'InsuDesc',
+        width: 180,
+        align: 'left',
+        sortable: true,
+        hidden:true
+    }
+    
+    ]);
     ItmLcBtCm.defaultSortable = true;
     var ItmLcBtGrid = new Ext.grid.GridPanel({
         cm: ItmLcBtCm,
@@ -497,9 +528,9 @@ IncItmBatWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag,
         var qtipinfo = "";
         var InciWarnFlag = record.get("InclbWarnFlag");
         if (InciWarnFlag == "1") {
-            qtipinfo = "批次已过期!";
+            qtipinfo = $g("批次已过期!");
         } else if (InciWarnFlag == "2") {
-            qtipinfo = "批次不可用!";
+            qtipinfo = $g("批次不可用!");
         } else {
             return data;
         }
@@ -521,8 +552,8 @@ IncItmBatWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag,
 
     // 返回按钮
     var returnBT = new Ext.Toolbar.Button({
-        text: '返回',
-        tooltip: '点击返回',
+        text: $g('返回'),
+        tooltip: $g('点击返回'),
         iconCls: 'page_goto',
         handler: function() {
             returnData();
@@ -533,9 +564,9 @@ IncItmBatWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag,
     function returnData() {
         var selectRows = ItmLcBtGrid.getSelectionModel().getSelections();
         if (selectRows.length == 0) {
-            Msg.info("warning", "请选择一条批次信息！");
+            Msg.info("warning", $g("请选择一条批次信息！"));
         } else if (selectRows.length > 1) {
-            Msg.info("warning", "只能选择一条批次信息！");
+            Msg.info("warning", $g("只能选择一条批次信息！"));
         } else {
             flg = true;
             window.close();
@@ -544,8 +575,8 @@ IncItmBatWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag,
 
     // 关闭按钮
     var closeBT = new Ext.Toolbar.Button({
-        text: '关闭',
-        tooltip: '点击关闭',
+        text: $g('关闭'),
+        tooltip: $g('点击关闭'),
         iconCls: 'page_delete',
         handler: function() {
             flg = false;
@@ -555,7 +586,7 @@ IncItmBatWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag,
 
     if (!window) {
         var window = new Ext.Window({
-            title: '科室库存项批次信息',
+            title: $g('科室库存项批次信息'),
             width: document.body.clientWidth * 0.7,
             height: document.body.clientHeight * 0.9,
             layout: 'border',

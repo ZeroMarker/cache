@@ -129,7 +129,7 @@ function InitReport(recordId)
 function SaveReport(flag)
 {
 	if($('#PatName').val()==""){
-		$.messager.alert("提示:","患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！");	
+		$.messager.alert($g("提示:"),$g("患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！"));	
 		return false;
 	} 
 	///保存前,对页面必填项进行检查
@@ -147,33 +147,49 @@ function InitPatInfo(EpisodeID)
 {
 	if(EpisodeID==""){return;}
 	InitPatInfoCom(EpisodeID);
+	// 2021-05-25 cy str
+	runClassMethod("web.DHCADVCOMMON","GetNurMarkInfo",{'EpisodeID':EpisodeID},
+	function(Data){ 
+		if(Data!=""){
+			var dataarr=Data.replace(/(^\s*)|(\s*$)/g,"").split("$$");
+			var HospScoreList=dataarr[2]; // 入院时压疮分析评分表 ^ 评分
+			var OccScoreList=dataarr[3]; // 发生时压疮分析评分表 ^ 评分
+			var UseUlcerRiskpointtab=HospScoreList.split("^")[0];				// 压疮风险评分表
+			if((UseUlcerRiskpointtab!="")&&(UseUlcerRiskpointtab!=undefined)){
+				RepSetValue("UseUlcerRiskpointtab","radio",UseUlcerRiskpointtab);
+				RepSetRead("UseUlcerRiskpointtab","radio",1);
+			}else {
+				RepSetValue("UseUlcerRiskpointtab","radio","");
+				RepSetRead("UseUlcerRiskpointtab","radio",0);
+			}
+				
+			var HospUlcerRiskScore=HospScoreList.split("^")[1];					// 入院时压疮评分
+	      	if((HospUlcerRiskScore!="")&&(HospUlcerRiskScore!=undefined)){
+				RepSetValue("HospUlcerRiskScore","input",HospUlcerRiskScore);
+				RepSetRead("HospUlcerRiskScore","input",1);	
+				ChkHospUlcerRiskLev(HospUlcerRiskScore);
+			}else {
+				RepSetValue("HospUlcerRiskScore","input","");
+				RepSetRead("HospUlcerRiskScore","input",0);		
+			}	
+			var OccurUlcerRiskScore=OccScoreList.split("^")[1];					// 发生时压疮评分
+	      	if((OccurUlcerRiskScore!="")&&(OccurUlcerRiskScore!=undefined)){
+				RepSetValue("OccurUlcerRiskScore","input",OccurUlcerRiskScore);
+				RepSetRead("OccurUlcerRiskScore","input",1);		
+				ChkOccurUlcerRiskLev(OccurUlcerRiskScore);
+			}else {
+				RepSetValue("OccurUlcerRiskScore","input","");
+				RepSetRead("OccurUlcerRiskScore","input",0);		
+			}
+		}	
+	
+	},"text",false);
+	// 2021-05-25 cy end
 	$("#from").form('validate'); 
 	InitCheckRadio();
 }
 //检查界面勾选其他，是否填写输入框
 function checkother(){
-	
-	/* var UlcerPartDate="",UlcerDateErr="";
-	//发现日期
-	 $("input[id^='UlcerPart-95158-95162-95192']").each(function(){
-		if((this.id.split("-").length==4)){
-			UlcerPartDate=$("input[id^='"+this.id+"']").datebox("getValue");
-			if (UlcerPartDate!=""){
-				UlcerDateErr=1;
-			}else if(!compareSelTimeAndCurTime(UlcerPartDate)){
-				UlcerDateErr=-2;
-				return ;	
-			} 
-		}
-	}) 
-	if ((UlcerDateErr!="1")&&(UlcerDateErr!="-2")){
-		$.messager.alert("提示:","【压疮部位发现日期】未填写，请填写相应内容！");	
-		return false;
-	}
-	if (UlcerDateErr=="-2"){
-		$.messager.alert("提示:","【压疮部位发现日期】不能大于当前日期，请填写相应内容！");	
-		return false;
-	} */
 	
 	//压疮部位  来源 院外带入 labelUlcerPart-95158-95163-95170
 	var PatOrign="",PatOrignList="",OrignErr="";
@@ -197,7 +213,7 @@ function checkother(){
 					}
 				});
 				if((radiorowid=="UlcerPart-95158-95163-95171")&&(PatOrignList=="")){
-					$.messager.alert("提示:","【压疮来源】勾选【院外带入】，请勾选院外相应内容！");	
+					$.messager.alert($g("提示:"),$g("【压疮来源】勾选【院外带入】，请勾选院外相应内容！"));	
 					OrignErr=-1;
 					return false;
 				}		
@@ -206,7 +222,7 @@ function checkother(){
 		}
 	});
 	if (PatOrign==""){
-		$.messager.alert("提示:","【压疮来源】未勾选，请勾选相应内容！");	
+		$.messager.alert($g("提示:"),$g("【压疮来源】未勾选，请勾选相应内容！"));	
 		OrignErr=-1;
 		return false;
 	}
@@ -228,12 +244,12 @@ function checkother(){
 					}
 				});
 				if((PatReason=="title")&&($("input[name$='.93932."+radiorownum+"'][class='lable-input']").val()=="")){ //UlcerPart-95158-95166-95182
-					$.messager.alert("提示:","【压疮部位】勾选其他，请填写相应内容！");	
+					$.messager.alert($g("提示:"),$g("【压疮部位】勾选其他，请填写相应内容！"));	
 					PartErr=-1;
 					return false;
 				}		
 				if ((PatReason!="枕部")&&(PatReason!="骶尾部")&&(PatReason!="title")&&(PatReasonList=="")){
-					$.messager.alert("提示:","【压疮部位】勾选'"+PatReason+"'，请勾选相应内容！");	
+					$.messager.alert($g("提示:"),$g("【压疮部位】勾选'"+PatReason+"'，请勾选相应内容！"));	
 					PartErr=-1;
 					return false;
 				}
@@ -245,7 +261,7 @@ function checkother(){
 		return false;
 	}
 	if(PatReason==""){
-		$.messager.alert("提示:","【压疮部位】未勾选内容，请勾选相应内容！");	
+		$.messager.alert($g("提示:"),$g("【压疮部位】未勾选内容，请勾选相应内容！"));	
 		return false;
 	}
 	
@@ -436,154 +452,20 @@ function CheckTimeorNum(){
 	chknum("UlcerPart-95158-95189-94247",1);
 	chknum("UlcerPart-95158-95189-94249",1);
 	chknum("UlcerPart-95158-95189-94251",1);
-	//入院时ADL得分
-	chknum("PatAdmADLScore",1,0,100);
-	$('#PatAdmADLScore').live("keyup",function(){
-		RepSetRead("PatSelfCareAbility-","radio",0);  //自我照顾能力
-		if((this.value>100)||(this.value=="")){
-			$("input[type=radio][id^='PatSelfCareAbility-']").removeAttr("checked");
-		}else if((this.value>40)||(this.value<100)){
-			$("input[type=radio][id^='PatSelfCareAbility-94346']").click();	
-		}
-		if(((this.value>0)||(this.value==0))&&((this.value<40)||(this.value==40))&&(this.value!="")){
-			$("input[type=radio][id^='PatSelfCareAbility-94347']").click();	
-		}
-		if(this.value==100){
-			$("input[type=radio][id^='PatSelfCareAbility-94345']").click();	
-		}
-		RepSetRead("PatSelfCareAbility-","radio",1);  //自我照顾能力
-	})
+	
 	// 手术 小时
 	chknum("OpeDuration",1,0);
 	// 使用压疮风险评分表  
 	// 入院压疮风险评分 
 	chknum("HospUlcerRiskScore",0);
 	$('#HospUlcerRiskScore').live("keyup",function(){
-		RepSetRead("HospUlcerRiskLev-","radio",0);
-		if($("input[type=radio][id='UseUlcerRiskpointtab-94929']").is(':checked')){  // Braden
-			if((this.value>18)||(this.value=="")||(this.value<1)){
-				$("input[type=radio][id^='HospUlcerRiskLev-']").removeAttr("checked");
-				if(this.value!=""){
-					$.messager.alert("提示:","【使用压疮风险评分表】勾选'Braden' ，请输入1-18的整数");
-				}
-				RepSetValue("HospUlcerRiskScore","input","");
-			}else if((this.value<=9)){
-				$("input[type=radio][id^='HospUlcerRiskLev-94936']").click();	// 极高危
-			}
-			if((this.value>=10)&&(this.value<=12)){
-				$("input[type=radio][id^='HospUlcerRiskLev-94937']").click();  // 高危	
-			}
-			if((this.value>=13)&&(this.value<=14)){
-				$("input[type=radio][id^='HospUlcerRiskLev-94938']").click();	 // 中危
-			}
-			if((this.value>=15)&&(this.value<=18)){
-				$("input[type=radio][id^='HospUlcerRiskLev-94939']").click();	 // 轻危
-			}
-			RepSetRead("HospUlcerRiskLev-","radio",1);
-		}else if($("input[type=radio][id='UseUlcerRiskpointtab-94930']").is(':checked')){  // Norton 
-			if((this.value>14)||(this.value=="")||(this.value<1)){
-				$("input[type=radio][id^='HospUlcerRiskLev-']").removeAttr("checked");
-				if(this.value!=""){
-					$.messager.alert("提示:","【使用压疮风险评分表】勾选'Norton' ，请输入1-14的整数");
-				}
-				RepSetValue("HospUlcerRiskScore","input","");
-			}else if((this.value<=8)){
-				$("input[type=radio][id^='HospUlcerRiskLev-94936']").click();	// 极高危
-			}
-			if((this.value>8)&&(this.value<=12)){
-				$("input[type=radio][id^='HospUlcerRiskLev-94937']").click();  // 高危	
-			}
-			if((this.value>12)&&(this.value<=14)){
-				$("input[type=radio][id^='HospUlcerRiskLev-94939']").click();	 // 轻危
-			}
-			RepSetRead("HospUlcerRiskLev-","radio",1);
-		}else if($("input[type=radio][id='UseUlcerRiskpointtab-94931']").is(':checked')){  // Waterlow 
-			if((this.value>100)||(this.value=="")||(this.value<1)){
-				$("input[type=radio][id^='HospUlcerRiskLev-']").removeAttr("checked");
-				if(this.value!=""){
-					$.messager.alert("提示:","【使用压疮风险评分表】勾选'Waterlow' ，请输入1-100的整数");
-				}
-				RepSetValue("HospUlcerRiskScore","input","");
-			}else if((this.value>=20)){
-				$("input[type=radio][id^='HospUlcerRiskLev-94936']").click();	// 极高危
-			}
-			if((this.value>=15)&&(this.value<=19)){
-				$("input[type=radio][id^='HospUlcerRiskLev-94937']").click();  // 高危	
-			}
-			if((this.value>=1)&&(this.value<=14)){
-				$("input[type=radio][id^='HospUlcerRiskLev-94939']").click();	 // 轻危
-			}
-			RepSetRead("HospUlcerRiskLev-","radio",1);
-		}else if($("input[type=radio][id='UseUlcerRiskpointtab-94932']").is(':checked')){  // 其他
-			
-		}else{
-			$.messager.alert("提示:","请勾选【使用压疮风险评分表】");
-		}
+		ChkHospUlcerRiskLev(this.value);
 	})
 		
 	// 发生压疮时风险评分
 	chknum("OccurUlcerRiskScore",0);
 	$('#OccurUlcerRiskScore').live("keyup",function(){
-		RepSetRead("OccurUlcerRiskLev-","radio",0);
-		if($("input[type=radio][id='UseUlcerRiskpointtab-94929']").is(':checked')){  // Braden
-			if((this.value>18)||(this.value=="")||(this.value<1)){
-				$("input[type=radio][id^='OccurUlcerRiskLev-']").removeAttr("checked");
-				if(this.value!=""){
-					$.messager.alert("提示:","【使用压疮风险评分表】勾选'Braden' ，请输入1-18的整数");
-				}
-				RepSetValue("OccurUlcerRiskScore","input","");
-			}else if((this.value<=9)){
-				$("input[type=radio][id^='OccurUlcerRiskLev-94943']").click();	// 极高危
-			}
-			if((this.value>=10)&&(this.value<=12)){
-				$("input[type=radio][id^='OccurUlcerRiskLev-94944']").click();  // 高危	
-			}
-			if((this.value>=13)&&(this.value<=14)){
-				$("input[type=radio][id^='OccurUlcerRiskLev-94945']").click();	 // 中危
-			}
-			if((this.value>=15)&&(this.value<=18)){
-				$("input[type=radio][id^='OccurUlcerRiskLev-94946']").click();	 // 轻危
-			}
-			RepSetRead("OccurUlcerRiskLev-","radio",1);
-		}else if($("input[type=radio][id='UseUlcerRiskpointtab-94930']").is(':checked')){  // Norton 
-			if((this.value>14)||(this.value=="")||(this.value<1)){
-				$("input[type=radio][id^='OccurUlcerRiskLev-']").removeAttr("checked");
-				if(this.value!=""){
-					$.messager.alert("提示:","【使用压疮风险评分表】勾选'Norton' ，请输入1-14的整数");
-				}
-				RepSetValue("OccurUlcerRiskScore","input","");
-			}else if((this.value<=8)){
-				$("input[type=radio][id^='OccurUlcerRiskLev-94943']").click();	// 极高危
-			}
-			if((this.value>8)&&(this.value<=12)){
-				$("input[type=radio][id^='OccurUlcerRiskLev-94944']").click();  // 高危	
-			}
-			if((this.value>12)&&(this.value<=14)){
-				$("input[type=radio][id^='OccurUlcerRiskLev-94946']").click();	 // 轻危
-			}
-			RepSetRead("OccurUlcerRiskLev-","radio",1);
-		}else if($("input[type=radio][id='UseUlcerRiskpointtab-94931']").is(':checked')){  // Waterlow 
-			if((this.value>100)||(this.value=="")||(this.value<1)){
-				$("input[type=radio][id^='OccurUlcerRiskLev-']").removeAttr("checked");
-				if(this.value!=""){
-					$.messager.alert("提示:","【使用压疮风险评分表】勾选'Waterlow' ，请输入1-100的整数");
-				}
-				RepSetValue("OccurUlcerRiskScore","input","");
-			}else if((this.value>=20)){
-				$("input[type=radio][id^='OccurUlcerRiskLev-94943']").click();	// 极高危
-			}
-			if((this.value>=15)&&(this.value<=19)){
-				$("input[type=radio][id^='OccurUlcerRiskLev-94944']").click();  // 高危	
-			}
-			if((this.value>=1)&&(this.value<=14)){
-				$("input[type=radio][id^='OccurUlcerRiskLev-94946']").click();	 // 轻危
-			}
-			RepSetRead("OccurUlcerRiskLev-","radio",1);
-		}else if($("input[type=radio][id='UseUlcerRiskpointtab-94932']").is(':checked')){  // 其他
-			
-		}else{
-			$.messager.alert("提示:","请勾选【使用压疮风险评分表】");
-		}
+		ChkOccurUlcerRiskLev(this.value);
 	})
 
 }
@@ -679,6 +561,9 @@ function checkTableRequired(){
 		if(str5.length==0){
 			rowMsg=rowMsg+"气味,"
 		}
+		if((str.length==0)&&(str1.length==0)&&(str2.length==0)&&(str3.length==0)&&(str4.length==0)&&(str5.length==0)){
+			rowMsg="";
+		}
 		if(rowMsg!=""){
 			errMsg=errMsg+"\n"+rowMsg+"不能为空."
 		}	
@@ -686,7 +571,7 @@ function checkTableRequired(){
 	})
 	if(errMsg!=""){
 		//$("html,body").stop(true);$("html,body").animate({scrollTop: $("#UlcerPart").offset().top}, 1000);
-		$.messager.alert("提示:",errMsg);
+		$.messager.alert($g("提示:"),errMsg);
 	}
 	return errMsg;
 }
@@ -952,4 +837,128 @@ function SetPatOutcomInfo(data)
 	});
 	$('#FormPatOutcom').val(List);
 
+}
+function ChkHospUlcerRiskLev(value){
+	RepSetRead("HospUlcerRiskLev-","radio",0);
+	if($("input[type=radio][id='UseUlcerRiskpointtab-94929']").is(':checked')){  // Braden
+		if((value>18)||(value=="")||(value<1)){
+			$("input[type=radio][id^='HospUlcerRiskLev-']").removeAttr("checked");
+			if(value!=""){
+				$.messager.alert($g("提示:"),$g("【使用压疮风险评分表】勾选'Braden' ，请输入1-18的整数"));
+			}
+			RepSetValue("HospUlcerRiskScore","input","");
+		}else if((value<=9)){
+			$("input[type=radio][id^='HospUlcerRiskLev-94936']").click();	// 极高危
+		}
+		if((value>=10)&&(value<=12)){
+			$("input[type=radio][id^='HospUlcerRiskLev-94937']").click();  // 高危	
+		}
+		if((value>=13)&&(value<=14)){
+			$("input[type=radio][id^='HospUlcerRiskLev-94938']").click();	 // 中危
+		}
+		if((value>=15)&&(value<=18)){
+			$("input[type=radio][id^='HospUlcerRiskLev-94939']").click();	 // 轻危
+		}
+		RepSetRead("HospUlcerRiskLev-","radio",1);
+	}else if($("input[type=radio][id='UseUlcerRiskpointtab-94930']").is(':checked')){  // Norton 
+		if((value>14)||(value=="")||(value<1)){
+			$("input[type=radio][id^='HospUlcerRiskLev-']").removeAttr("checked");
+			if(value!=""){
+				$.messager.alert($g("提示:"),$g("【使用压疮风险评分表】勾选'Norton' ，请输入1-14的整数"));
+			}
+			RepSetValue("HospUlcerRiskScore","input","");
+		}else if((value<=8)){
+			$("input[type=radio][id^='HospUlcerRiskLev-94936']").click();	// 极高危
+		}
+		if((value>8)&&(value<=12)){
+			$("input[type=radio][id^='HospUlcerRiskLev-94937']").click();  // 高危	
+		}
+		if((value>12)&&(value<=14)){
+			$("input[type=radio][id^='HospUlcerRiskLev-94939']").click();	 // 轻危
+		}
+		RepSetRead("HospUlcerRiskLev-","radio",1);
+	}else if($("input[type=radio][id='UseUlcerRiskpointtab-94931']").is(':checked')){  // Waterlow 
+		if((value>100)||(value=="")||(value<1)){
+			$("input[type=radio][id^='HospUlcerRiskLev-']").removeAttr("checked");
+			if(value!=""){
+				$.messager.alert($g("提示:"),$g("【使用压疮风险评分表】勾选'Waterlow' ，请输入1-100的整数"));
+			}
+			RepSetValue("HospUlcerRiskScore","input","");
+		}else if((value>=20)){
+			$("input[type=radio][id^='HospUlcerRiskLev-94936']").click();	// 极高危
+		}
+		if((value>=15)&&(value<=19)){
+			$("input[type=radio][id^='HospUlcerRiskLev-94937']").click();  // 高危	
+		}
+		if((value>=1)&&(value<=14)){
+			$("input[type=radio][id^='HospUlcerRiskLev-94939']").click();	 // 轻危
+		}
+		RepSetRead("HospUlcerRiskLev-","radio",1);
+	}else if($("input[type=radio][id='UseUlcerRiskpointtab-94932']").is(':checked')){  // 其他
+		
+	}else{
+		$.messager.alert($g("提示:"),$g("请勾选【使用压疮风险评分表】"));
+	}
+}
+function ChkOccurUlcerRiskLev(value){
+	RepSetRead("OccurUlcerRiskLev-","radio",0);
+	if($("input[type=radio][id='UseUlcerRiskpointtab-94929']").is(':checked')){  // Braden
+		if((value>18)||(value=="")||(value<1)){
+			$("input[type=radio][id^='OccurUlcerRiskLev-']").removeAttr("checked");
+			if(value!=""){
+				$.messager.alert($g("提示:"),$g("【使用压疮风险评分表】勾选'Braden' ，请输入1-18的整数"));
+			}
+			RepSetValue("OccurUlcerRiskScore","input","");
+		}else if((value<=9)){
+			$("input[type=radio][id^='OccurUlcerRiskLev-94943']").click();	// 极高危
+		}
+		if((value>=10)&&(value<=12)){
+			$("input[type=radio][id^='OccurUlcerRiskLev-94944']").click();  // 高危	
+		}
+		if((value>=13)&&(value<=14)){
+			$("input[type=radio][id^='OccurUlcerRiskLev-94945']").click();	 // 中危
+		}
+		if((value>=15)&&(value<=18)){
+			$("input[type=radio][id^='OccurUlcerRiskLev-94946']").click();	 // 轻危
+		}
+		RepSetRead("OccurUlcerRiskLev-","radio",1);
+	}else if($("input[type=radio][id='UseUlcerRiskpointtab-94930']").is(':checked')){  // Norton 
+		if((value>14)||(value=="")||(value<1)){
+			$("input[type=radio][id^='OccurUlcerRiskLev-']").removeAttr("checked");
+			if(value!=""){
+				$.messager.alert($g("提示:"),$g("【使用压疮风险评分表】勾选'Norton' ，请输入1-14的整数"));
+			}
+			RepSetValue("OccurUlcerRiskScore","input","");
+		}else if((value<=8)){
+			$("input[type=radio][id^='OccurUlcerRiskLev-94943']").click();	// 极高危
+		}
+		if((value>8)&&(value<=12)){
+			$("input[type=radio][id^='OccurUlcerRiskLev-94944']").click();  // 高危	
+		}
+		if((value>12)&&(value<=14)){
+			$("input[type=radio][id^='OccurUlcerRiskLev-94946']").click();	 // 轻危
+		}
+		RepSetRead("OccurUlcerRiskLev-","radio",1);
+	}else if($("input[type=radio][id='UseUlcerRiskpointtab-94931']").is(':checked')){  // Waterlow 
+		if((value>100)||(value=="")||(value<1)){
+			$("input[type=radio][id^='OccurUlcerRiskLev-']").removeAttr("checked");
+			if(value!=""){
+				$.messager.alert($g("提示:"),$g("【使用压疮风险评分表】勾选'Waterlow' ，请输入1-100的整数"));
+			}
+			RepSetValue("OccurUlcerRiskScore","input","");
+		}else if((value>=20)){
+			$("input[type=radio][id^='OccurUlcerRiskLev-94943']").click();	// 极高危
+		}
+		if((value>=15)&&(value<=19)){
+			$("input[type=radio][id^='OccurUlcerRiskLev-94944']").click();  // 高危	
+		}
+		if((value>=1)&&(value<=14)){
+			$("input[type=radio][id^='OccurUlcerRiskLev-94946']").click();	 // 轻危
+		}
+		RepSetRead("OccurUlcerRiskLev-","radio",1);
+	}else if($("input[type=radio][id='UseUlcerRiskpointtab-94932']").is(':checked')){  // 其他
+		
+	}else{
+		$.messager.alert($g("提示:"),$g("请勾选【使用压疮风险评分表】"));
+	}
 }

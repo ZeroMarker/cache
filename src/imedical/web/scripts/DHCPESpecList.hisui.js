@@ -30,5 +30,6 @@ function ShowSpecList(e) {
 	var DateStr = e.id;
 	var lnk = "dhcpespecdetail.hisui.csp?BeginDate=" + DateStr + "&EndDate=" + DateStr + "&Type=Item";
 	//alert(lnk)
-	websys_lu(lnk,false,'width=1100,height=700,hisui=true,title = 标本采集信息')
+	
+	websys_lu(lnk,false,'top=120,left=260,width=1100,height=700,hisui=true,title=标本采集信息')
 }

@@ -7,27 +7,27 @@ creator:yunhaibao
 var HospId = session['LOGON.HOSPID'];
 var editRow = ''; //当前编辑行号
 var url = 'dhcpha.outpha.returnrefusereason.action.csp';
-var titleNotes = '<span style="font-weight:bold;font-size:14px;font-family:Mictosoft YaHei;color:#800000;"><双击行即可编辑></span>';
+var titleNotes = '<span style="font-weight:bold;font-size:14px;font-family:Mictosoft YaHei;color:#800000;"><'+$g("双击行即可编辑")+'></span>';
 $(function () {
     // 定义columns
     var columns = [
         [
             { field: 'ID', title: 'ID', width: 90, align: 'center', hidden: true },
-            { field: 'Code', title: '代码', width: 160, editor: texteditor },
-            { field: 'Desc', title: '描述', width: 300, editor: texteditor }
+            { field: 'Code', title: $g("代码"), width: 160, editor: texteditor },
+            { field: 'Desc', title: $g("描述"), width: 300, editor: texteditor }
         ]
     ];
 
     // 定义datagrid
     $('#reasongrid').datagrid({
-        title: '拒绝退药原因维护' + titleNotes,
+        title: $g("拒绝退药原因维护") + titleNotes,
         url: url + '?action=QueryReason&hosp=' + HospId,
         fit: true,
         striped: true,
         rownumbers: true,
         columns: columns,
         singleSelect: true,
-        loadMsg: '正在加载信息...',
+        loadMsg: $g("正在加载信息")+"...",
         onDblClickRow: function (rowIndex, rowData) {
             //双击选择行编辑
             if (editRow != '' || editRow == '0') {
@@ -70,7 +70,7 @@ function insertRow() {
 function deleteRow() {
     var rows = $('#reasongrid').datagrid('getSelections'); //选中要删除的行
     if (rows.length > 0) {
-        $.messager.confirm('提示', '您确定要删除这些数据吗？', function (res) {
+        $.messager.confirm($g("提示"), $g("您确定要删除这些数据吗？"), function (res) {
             //提示是否删除
             if (res) {
                 $.post(url + '?action=DeleteReason', { params: rows[0].ID, hosp:HospId }, function (data) {
@@ -79,7 +79,7 @@ function deleteRow() {
             }
         });
     } else {
-        $.messager.alert('提示', '请选择要删除的项', 'warning');
+        $.messager.alert($g("提示"), $g("请选择要删除的项"), 'warning');
         return;
     }
 }
@@ -91,22 +91,22 @@ function saveRow() {
     }
     var rows = $('#reasongrid').datagrid('getChanges');
     if (rows.length <= 0) {
-        $.messager.alert('提示', '没有待保存数据!');
+        $.messager.alert($g("提示"), $g("没有待保存数据!"));
         return;
     }
     var dataList = [];
     for (var i = 0; i < rows.length; i++) {
         if (rows[i].Code == '' || rows[i].Desc == '') {
-            $.messager.alert('提示', '代码或描述不能为空!');
+            $.messager.alert($g("提示"), $g("代码或描述不能为空!"));
             return false;
         }
         var tmp = rows[i].ID + '^' + rows[i].Code + '^' + rows[i].Desc;
         var existret = tkMakeServerCall('PHA.OP.CfRefRes.Query', 'CheckRefuseReason', rows[i].ID, rows[i].Code, rows[i].Desc, HospId);
         if (existret == '-1') {
-            $.messager.alert('提示', rows[i].Code + ',代码已存在,不能维护重复数据!', 'info');
+            $.messager.alert($g("提示"), rows[i].Code + ','+$g("代码已存在,不能维护重复数据!"), 'info');
             return false;
         } else if (existret == '-2') {
-            $.messager.alert('提示', rows[i].Desc + ',描述已存在,不能维护重复数据!', 'info');
+            $.messager.alert($g("提示"), rows[i].Desc + ','+$g("描述已存在,不能维护重复数据!"), 'info');
             return false;
         }
         dataList.push(tmp);

@@ -3,7 +3,7 @@
 	m_CardToSaveTabDataGrid:"",
 	dw:$(window).width()-20,
 	dh:$(window).height()-100,
-	NewPatientID:""
+	NewPatientID:"",
 }
 $(function(){
 	//初始化
@@ -19,6 +19,7 @@ function Init(){
 function InitEvent(){
 	$("#BFind").click(RegReturnListTabDataGridLoad);
 	$('#PatNo').keydown(PatNoKeydownHandler);
+	
 }
 function PageHandle(){
 }
@@ -38,7 +39,48 @@ function PatNoKeydownHandler(e){
 		RegReturnListTabDataGridLoad();
 	}
 }
+function SelectAll(){
+	var rows=PageLogicObj.m_PatCardListDataGrid.datagrid("getRows");
+	if (!rows) {
+		return false;
+	}
+	
+	if ($("#Select")[0].innerText.indexOf("取消全选")>=0){
+		for (var i=0; i<rows.length; i++) {
+			if (PageLogicObj.NewPatientID==rows[i].TPatientID) continue ;
+			PlayPatCardUnShowAll(rows[i].TPatientID)
+		}
+	}
+	else{
+		if (PageLogicObj.NewPatientID==""){
+			$.messager.alert("提示","请先选择合并到的卡信息！");
+			return false;
+		}
+		for (var i=0; i<rows.length; i++) {
+			if (PageLogicObj.NewPatientID==rows[i].TPatientID) continue ;
+			PlayPatCardShowAll(rows[i].TPatientID)
+		}
+	}
+	var icon="icon-all-unselect"
+	var innerText="取消全选"
+	if ($("#Select")[0].innerText.indexOf("取消全选")>=0){
+		innerText="全选"
+		icon="icon-all-select"
+	}
+	
+	var innerHTML='<span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">'+innerText+'</span><span class="l-btn-icon '+icon+'">&nbsp;</span></span>'
+	$("#Select")[0].innerHTML=innerHTML
+	
+}
 function InitPatCardListDataGrid(){
+	var toobar=[{
+        text: '全选',
+        iconCls: 'icon-all-select',
+        id:"Select",
+        handler: function() { 
+        	SelectAll()
+        }
+    }];
 	var Columns=[[ 
 		{field:'TPatientID',hidden:true,title:''},
 		{field:'TPapmiNo',title:'登记号',width:100},
@@ -59,10 +101,46 @@ function InitPatCardListDataGrid(){
                 }
          },
 		{field:'AdmInfo',title:'就诊信息',width:100, formatter:function(value,rec){  
-	            var btn = '<a class="editcls"  onclick="PatCardPayDetail(\'' + rec.TPatientID + '\')">就诊信息</a>';
+	            var btn = '<a class="editcls"  onclick="PatCardPayDetail(\'' + rec.TPatientID + '\',\'' +  "" + '\')">就诊信息</a>';
 				return btn;
              }
-        }
+        },
+        {field:'IsInHos',title:'是否在院',width:105,
+			styler: function(value,row,index){
+				if (value == "是"){
+					return 'background-color:red;color:white;';
+				}
+			}},
+        {field:'HaveRegNum',title:'就诊次数',width:105},
+        {field:'InHosNum',title:'住院次数',width:105},
+        {field:'NeedRegNum',title:'待诊就诊数',width:105, formatter:function(value,rec){
+	        	if (value>0){  
+	            	var btn = '<a class="editcls"  onclick="PatCardPayDetail(\'' + rec.TPatientID + '\',\'' +  "Reg" + '\')">'+value+'</a>';
+					return btn;
+	        	}
+	        	else {
+		        	return value;
+		        }
+             },
+             styler: function(value,row,index){
+				if (value>0){
+					return 'background-color:red;color:white;';
+				}
+			}
+        },
+        {field:'NeedAppNum',title:'待取预约数',width:105, formatter:function(value,rec){  
+        		if (value>0){
+	            	var btn = '<a class="editcls"  onclick="PatCardPayDetail(\'' + rec.TPatientID + '\',\'' +  "App" + '\')">'+value+'</a>';
+					return btn;
+        		}else {
+		        	return value;
+		        }
+        	},styler: function(value,row,index){
+				if (value>0){
+					return 'background-color:red;color:white;';
+				}
+			}
+        },
     ]]
 	var PatCardListTabDataGrid=$("#PatCardListTab").datagrid({
 		fit : true,
@@ -78,6 +156,7 @@ function InitPatCardListDataGrid(){
 		pageList : [20,100,200],
 		idField:'TPatientID',
 		columns :Columns,
+		toolbar:toobar,
 		onSelect:function(index, row){
 		},
 		onRowContextMenu:function(e, index, row){
@@ -117,17 +196,19 @@ function RegReturnListTabDataGridLoad(){
 	    //NewOutMedicareNo:"",
 	    //NewInMedicareNo:"",
 	    InsuranceNo:$("#InsuranceN").val(),
-	    EmMedicare:"",
+	    EmMedicare:"^Unite",
 	    ExpStr:ExpStr,
 	    Pagerows:PageLogicObj.m_PatCardListDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
 		$("#div_demo").empty();
 		PageLogicObj.m_PatCardListDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
 		$("#PatNo").val(PatNo);
+		PageLogicObj.NewPatientID=""
 	}); 
 }
 function PlayPatCardOffShow(PatientID){
 	if($("#"+PatientID).length>0){
+		
 		$("#PlayPatOff"+PatientID).css({"background-color": "","color":"#017bce"});
 		$("#"+PatientID).remove();
 		$("#PlayPatOn"+PatientID).css({"background-color": "","color":"#017bce"});
@@ -150,6 +231,7 @@ function PlayPatCardOffShow(PatientID){
 				$("#PlayPatOff"+PatientID).css({"background-color": "#f16e57","color":"#fff"});
 				PageLogicObj.NewPatientID=PatientID;
 				$("#BSave").click(SaveClickHandler);
+				$('#BFill').click(BFillClickHandler);
 				$HUI.switchbox('#switch2',{
                     onText:'隐藏相同',
                     offText:'显示所有',
@@ -160,16 +242,21 @@ function PlayPatCardOffShow(PatientID){
                         HideSameswitche(val.value);
                     }
                 })
-                $("#switch2").css({"left": "15px"});  
+                $("#switch2").css({"left": "5px"});  
                 HideSameswitche(true);
+                InitUnitReason();
 			}	
+		}else {
+			PageLogicObj.NewPatientID=""	
 		}
 	}else{
 		if (PageLogicObj.NewPatientID!=PatientID){
 			$("#PlayPatOff"+PageLogicObj.NewPatientID).css({"background-color": "","color":"#017bce"});
 			$("#"+PageLogicObj.NewPatientID).remove();
 			Changedemocsswidth("remove")
-			}
+		}else{
+			PageLogicObj.NewPatientID=""
+		}
 		var PatientStr=$.cm({
 			ClassName:"web.DHCPATCardUnite",
 			MethodName:"GetPatInfoByPatientID",
@@ -184,6 +271,7 @@ function PlayPatCardOffShow(PatientID){
 			$("#PlayPatOff"+PatientID).css({"background-color": "#f16e57","color":"#fff"});
 			PageLogicObj.NewPatientID=PatientID;
 			$("#BSave").click(SaveClickHandler);
+			$('#BFill').click(BFillClickHandler);
 			$HUI.switchbox('#switch2',{
                     onText:'隐藏相同',
                     offText:'显示所有',
@@ -194,12 +282,58 @@ function PlayPatCardOffShow(PatientID){
                         HideSameswitche(val.value);
                     }
                 })
-            $("#switch2").css({"left": "15px"});  
+            $("#switch2").css({"left": "5px"});  
             HideSameswitche(true);
             InitUnitReason();
 		}	
 	}	
 }
+function PlayPatCardUnShowAll(PatientID){
+	
+	if($("#"+PatientID).length>0){
+		$("#PlayPatOn"+PatientID).css({"background-color": "","color":"#017bce"});
+		$("#"+PatientID).remove();
+		Changedemocsswidth("remove")
+	}
+	ReSettableWid()
+	CheckShowFillBtn()
+}
+function PlayPatCardShowAll(PatientID){
+	
+	if($("#"+PatientID).length>0){
+		
+	}else{
+		var PatientStr=$.cm({
+			ClassName:"web.DHCPATCardUnite",
+			MethodName:"GetPatInfoByPatientID",
+			dataType:"text",
+			papmiID:PatientID,
+			inforType:"Old"
+		},false);
+		if (PatientStr!=""){
+			var PatientStr=eval(PatientStr);
+			var Amount=PatientStr[0].OldAmount;
+			/*if ((Amount!="")&&(Amount!=0)){
+				$.messager.alert("提示","被合并的账户不是空,不允许被合并");
+				return false;
+			}*/
+			Changedemocsswidth("Addoff")
+			//document.getElementById('demoinsertcard').style.cssText = 'overflow-x:scroll;height: '+($(window).height()-450) +"px;"
+			$("#demo").tmpl(PatientStr).appendTo('#div_demo');
+			$("#PlayPatOn"+PatientID).css({"background-color": "#2ab66a","color":"#fff"});
+			$("[id='CopyOld']").click(function(e){CopyOldToNew(e);})
+			$("[id='CancleOld']").click(function(e){CancleOld(e)});
+			HideSameswitche(false);
+			var val=$HUI.switchbox('#switch2').getValue();
+			HideSameswitche(val);
+		}	
+	}
+	ReSettableWid()
+	CheckShowFillBtn()
+	
+}
+
+
 function PlayPatCardOnShow(PatientID){
 	if (PageLogicObj.NewPatientID==PatientID){
 		$("#PlayPatOff"+PatientID).css({"background-color": "","color":"#017bce"});
@@ -222,10 +356,10 @@ function PlayPatCardOnShow(PatientID){
 		if (PatientStr!=""){
 			var PatientStr=eval(PatientStr);
 			var Amount=PatientStr[0].OldAmount;
-			if ((Amount!="")&&(Amount!=0)){
+			/*if ((Amount!="")&&(Amount!=0)){
 				$.messager.alert("提示","被合并的账户不是空,不允许被合并");
 				return false;
-			}
+			}*/
 			Changedemocsswidth("Addoff")
 			//document.getElementById('demoinsertcard').style.cssText = 'overflow-x:scroll;height: '+($(window).height()-450) +"px;"
 			$("#demo").tmpl(PatientStr).appendTo('#div_demo');
@@ -235,8 +369,14 @@ function PlayPatCardOnShow(PatientID){
 			HideSameswitche(false);
 			var val=$HUI.switchbox('#switch2').getValue();
 			HideSameswitche(val);
+			
 		}	
 	}
+	if (PageLogicObj.NewPatientID!=""){
+		ReSettableWid()
+		CheckShowFillBtn()
+	}
+	
 }
 function Changedemocsswidth(type){
 	var Number=0
@@ -249,30 +389,41 @@ function Changedemocsswidth(type){
 			}
 		}
 	})
-	var Alreadywidth=Number*289
+	var Alreadywidth=Number*310
 	if (type="Add"){
 		var Alreadywidth=Alreadywidth+370
 	}
 	if (type="Addoff"){
-		var Alreadywidth=Alreadywidth+289
+		var Alreadywidth=Alreadywidth+310
 	} 
 	if (type="remove"){
 	}
 	if (PageLogicObj.dw>Alreadywidth){
-		$('#democsss').width(PageLogicObj.dw-150); 
+		$('#democsss').width(PageLogicObj.dw-20); 
 	}else{
 		$('#democsss').width(Alreadywidth); 	
 	}
 
 }
-function CopyOldToNew(e){
-	var value = $(e.target).parents("tr").children("td").eq(1).children().val(); ///.children("input").value();
-	var id = $(e.target).parents("tr").children("td").eq(1).children().attr("id"); 
+function CopyOldToNew(e,Oldid){
+	var AddAlert=""
+	if ((typeof(Oldid) !="undefined")&&(Oldid!="")){
+		var id=Oldid
+		var value=$("#"+Oldid).val()
+		AddAlert="，只填充空白信息，请手动修改！"
+	}else {
+		var value = $(e.target).parents("tr").children("td").eq(1).children().val(); ///.children("input").value();
+		var id = $(e.target).parents("tr").children("td").eq(1).children().attr("id"); 
+	}
 	if (id=="OldIDCard"){
 		var NewCredType=$("#NewCredType").val();
-		var OldCredType=$(e.target).parents("tr").parents("tbody").find("tr").eq(8).children("td").eq(1).children().val();
+		if ((typeof(Oldid) !="undefined")&&(Oldid!="")){
+			var OldCredType=$("#OldCredType").val();
+		}else {
+			var OldCredType=$(e.target).parents("tr").parents("tbody").find("tr").eq(8).children("td").eq(1).children().val();
+		}
 		if (OldCredType!=NewCredType){
-			$.messager.alert("提示","证件类型不一致,证件号码不能复制");
+			$.messager.alert("提示","证件类型不一致,证件号码不能复制"+AddAlert);
 			return false;
 		}
 		if (NewCredType.indexOf("身份证")>=0){
@@ -284,9 +435,13 @@ function CopyOldToNew(e){
 	}
 	if (id=="OldForeignIDCard") {
 		var NewCredType=$("#NewForeignCredType").val();
-		var OldCredType=$(e.target).parents("tr").parents("tbody").find("tr").eq(38).children("td").eq(1).children().val();
+		if ((typeof(Oldid) !="undefined")&&(Oldid!="")){
+			var OldCredType=$("#OldForeignCredType").val();
+		}else {
+			var OldCredType=$(e.target).parents("tr").parents("tbody").find("tr").eq(38).children("td").eq(1).children().val();
+		}
 		if (OldCredType!=NewCredType){
-			$.messager.alert("提示","联系人证件类型不一致,联系人证件号码不能复制");
+			$.messager.alert("提示","联系人证件类型不一致,联系人证件号码不能复制"+AddAlert);
 			return false;
 		}
 		if (NewCredType.indexOf("身份证")>=0){
@@ -296,17 +451,87 @@ function CopyOldToNew(e){
 			}
 		}
 	}
+	if ((id.indexOf("City")>=0)){
+		if (Parentid=="OldProvincehouse"){ Parentid="OldProvinceHouse"}
+		else var Parentid=id.replace(/City/, "Province")
+		var NewParentid=Parentid.replace(/Old/, "New")
+		if ($("#"+NewParentid).val()!=$("#"+Parentid).val()){
+			var CityDesc=""
+			switch (id) 
+			{ 
+				case "OldCityHome":CityDesc="市(籍贯)"; 
+				break; 
+				case "OldCityBirth":CityDesc="市(出生)"; 
+				break; 
+				case "OldCity":CityDesc="市(现住)"; 
+				break; 
+				case "OldCityhouse":CityDesc="市(户口)"; 
+				break; 
+			}
+			$.messager.alert("提示",CityDesc+"对应的省份不一致，请核实"+AddAlert);
+			return false;
+		}
+	}
+	if ((id.indexOf("Area")>=0)){
+		if (Parentid=="OldCityHouse"){ Parentid="OldCityhouse"}
+		else var Parentid=id.replace(/Area/, "City")
+		var NewParentid=Parentid.replace(/Old/, "New")
+		if ($("#"+NewParentid).val()!=$("#"+Parentid).val()){
+			var AreaDesc=""
+			switch (Parentid) 
+			{ 
+				case "OldCityHome": AreaDesc="县(籍贯)"; 
+				break; 
+				case "OldCityBirth": AreaDesc="县(出生)"; 
+				break; 
+				case "OldCity": AreaDesc="县(现住)"; 
+				break; 
+				case "OldCityhouse": AreaDesc="县(户口)"; 
+				break; 
+			}
+			$.messager.alert("提示",AreaDesc+"对应的城市不一致，请核实"+AddAlert);
+			return false;
+		}
+
+	}
+	if ((id.indexOf("Street")>=0)){
+		if (id=="OldStreetNow") var Parentid="OldArea"
+		else var Parentid=id.replace(/Street/, "Area")
+		var NewParentid=Parentid.replace(/Old/, "New")
+		if ($("#"+NewParentid).val()!=$("#"+Parentid).val()){
+			var StreetDesc=""
+			switch (id) 
+			{ 
+				case "OldStreetHome": StreetDesc="街道(籍贯)"; 
+				break; 
+				case "OldStreetBirth": StreetDesc="街道(出生)"; 
+				break; 
+				case "OldStreet": StreetDesc="街道(现住)"; 
+				break; 
+				case "OldStreetHouse": StreetDesc="街道(户口)"; 
+				break; 
+			}
+			$.messager.alert("提示",StreetDesc+"对应的县级不一致，请核实"+AddAlert);
+			return false;
+		}
+
+	}
 	var Newid=id.replace(/Old/, "New")
 	if($("#"+Newid).length>0){
 		$("#"+Newid).val(value)
 	}
+	return true;
 }
 function CancleOld(e){
 	var PatientID =$(e.target).parents("tr").parents("table").attr("id"); 
 	$("#"+PatientID).remove();
 	$("#PlayPatOn"+PatientID).css({"background-color": "","color":"#017bce"});
 	Changedemocsswidth("remove")
-	}
+	//改变界面布局
+	ReSettableWid()
+	//判断是否显示一键填充按钮
+	CheckShowFillBtn()
+}
 function SaveClickHandler(){
 	var checkflag=CheckbeforeupDate();
 	if (checkflag==false) return;
@@ -441,6 +666,13 @@ function UpdateclickHandle(){
 	var PoliticalLevel=GetElementValue("NewPoliticalLevel","1");
 	var SecretLevel=GetElementValue("NewSecretLevel","1");
 	var IDCard=GetElementValue("NewIDCard","0"); //证件号码
+	var StreetNow=GetElementValue("NewStreetNow","1");
+	var StreetBirth=GetElementValue("NewStreetBirth","1");
+	var StreetHouse=GetElementValue("NewStreetHouse","1");
+    var AreaHome = GetElementValue("NewAreaHome", "1");
+    
+    var RegisterPlace = $("#NewRegisterPlace").val(); 
+    var AddressBirth = $("#NewAddressBirth").val() 
 	if (CredType.indexOf("身份证")>=0) {
 		var myIsID=DHCWeb_IsIdCardNo(IDCard);
 		if (!myIsID){
@@ -466,6 +698,7 @@ function UpdateclickHandle(){
 	OtherInfo=OtherInfo+"^"+Cityhouse+"^"+AreaHouse+"^"+PostCodeHouse+"^"+Province+"^"+City+"^"+Area+"^"+Address
 	OtherInfo=OtherInfo+"^"+Zip+"^"+Vocation+"^"+Company+"^"+OfficeTel+"^"+ForeignName+"^"+Relation+"^"+ForeignAddress
 	OtherInfo=OtherInfo+"^"+ForeignPhone+"^"+ForeignIDCard+"^"+PoliticalLevel+"^"+SecretLevel+"^"+IDCard+"^"+ForeignCredType;
+    OtherInfo = OtherInfo + "^" + StreetNow + "^" + StreetBirth + "^" + StreetHouse + "^" + AreaHome + "^" + AddressBirth + "^" + RegisterPlace
 	var flag=$.cm({
 		ClassName:"web.DHCPATCardUnite",
 		MethodName:"CardUniteNew",
@@ -475,15 +708,19 @@ function UpdateclickHandle(){
 		SelectCard:SelectCard,
 		OtherInfo:OtherInfo,
 		LogonHospDR:session['LOGON.HOSPID'],
-		UnitReason:UnitReason
+		UnitReason:UnitReason,
+		ComputerIP:ClientIPAddress
 	},false);
 	if (flag!=""){
 		 $.messager.alert("提示","更新失败,错误信息为:"+flag);
 		return false;
 	}else{
-		 $.messager.alert("提示","调整卡信息完成");
-		$("#Card-dialog").dialog("close");
-		location.reload();
+		 $.messager.alert("提示","调整卡信息完成","",function(){
+			 $("#Card-dialog").dialog("close");
+			 location.reload();
+			 
+		});
+		
 	}
 }
 function GetElementValue(ElementName,DRFlag)
@@ -542,10 +779,18 @@ function CheckbeforeupDate(){
 	}
 	return true;
 }
-function PatCardPayDetail(PatientID){
-	var src="reg.dhcpatcardunitenopaydetail.hui.csp?PatientID="+PatientID;
+function PatCardPayDetail(PatientID,Code){
+	var src="reg.dhcpatcardunitenopaydetail.hui.csp?PatientID="+PatientID+"&Code="+Code;
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
-	createModalDialog("Project","就诊信息明细", 1100, 620,"icon-w-list","",$code,"");
+	var title="就诊信息明细"
+	if (Code=="Reg"){
+		var title="待诊就诊信息明细"
+	}
+	if (Code=="App"){
+		var title="待取预约信息明细"
+	}
+	createModalDialog("Project",title, 1100, 620,"icon-w-list","",$code,"");
 }
 function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,_event){
     $("body").append("<div id='"+id+"' class='hisui-dialog'></div>");
@@ -594,6 +839,7 @@ function HideSameswitche(value){
 		HideEmi("OldNation")
 		HideEmi("OldProvinceHome")
 		HideEmi("OldCityHome")
+        HideEmi("OldAreaHome")
 		HideEmi("OldProvinceBirth")
 		HideEmi("OldCityBirth")
 		HideEmi("OldAreaBirth")
@@ -618,6 +864,11 @@ function HideSameswitche(value){
 		HideEmi("OldPoliticalLevel")
 		HideEmi("OldSecretLevel")
 		HideEmi("OldForeignCredType")
+		HideEmi("OldStreetNow")
+		HideEmi("OldStreetBirth")
+		HideEmi("OldStreetHouse")
+		HideEmi("OldAddressBirth")
+		HideEmi("OldRegisterPlace")
 	}else{
 		ShowEmi("OldMarital")
 		ShowEmi("OldTel")
@@ -632,6 +883,7 @@ function HideSameswitche(value){
 		ShowEmi("OldNation")
 		ShowEmi("OldProvinceHome")
 		ShowEmi("OldCityHome")
+        ShowEmi("OldAreaHome")
 		ShowEmi("OldProvinceBirth")
 		ShowEmi("OldCityBirth")
 		ShowEmi("OldAreaBirth")
@@ -656,6 +908,11 @@ function HideSameswitche(value){
 		ShowEmi("OldPoliticalLevel")
 		ShowEmi("OldSecretLevel")
 		ShowEmi("OldForeignCredType")
+		ShowEmi("OldStreetNow")
+		ShowEmi("OldStreetBirth")
+		ShowEmi("OldStreetHouse")
+		ShowEmi("OldAddressBirth")
+		ShowEmi("OldRegisterPlace")
 	}
 }
 function HideEmi(Oldid){
@@ -710,4 +967,83 @@ function InitUnitReason(){
 		    $("#PrescNotes").val(item.Desc);
 		}
     });
+	ReSettableWid()
+	CheckShowFillBtn()
+}
+function ReSettableWid(){
+	if ($(".search-table").length>3){
+		$("#Unittd")[0].style="padding-left:20px"
+	}
+	else{
+		if ($(window).width()>1200){
+			$("#Unittd")[0].style="padding-left:260px"
+		}
+		if ($(window).width()<1200){
+			$("#Unittd")[0].style="padding-left:170px"
+		}
+	}
+}
+///获取被合并的patientid串
+function GetOldPapmiIDStr(){
+	var OldPapmiID=""
+	var PapmiID=PageLogicObj.NewPatientID
+	$("table").each(function(){
+		//$("table").attr("id")
+		var id=$(this).attr('id')
+		if (id){
+			if ((!isNaN(id))&&(PapmiID!=id)){
+				if (OldPapmiID==""){OldPapmiID=id}else{OldPapmiID=OldPapmiID+"^"+id}
+			}
+		}
+	})
+	return OldPapmiID
+}
+function CheckShowFillBtn(){
+	//注册配置->全局配置->卡合并自动填充为空的信息
+	if (ServerObj.AutoFillUnitInfo!="Y"){
+		$('#BFill').hide()
+		return ;
+	}
+	var OldPapmiID=""
+	var PapmiID=PageLogicObj.NewPatientID
+	var OldPapmiID=GetOldPapmiIDStr()
+	//不满足条件隐藏一键合并按钮
+	//1.多个被合并的患者不允许一键合并；2.未选择被合并信息不显示。
+	if ((OldPapmiID.indexOf("^")>=0)||(OldPapmiID=="")){
+		$('#BFill').hide()
+	}else {
+		if (PapmiID==OldPapmiID){
+			$('#BFill').hide()
+	   	}else{
+			$('#BFill').show()
+		}
+	}
+}
+function BFillClickHandler(){
+	var FillStr="Marital^Tel^Mobile^MedicalUnionNo^CredType^IDCard^YBCode^MedicalNo^PatType^Country^Nation^ProvinceHome^CityHome^AreaHome^ProvinceBirth^CityBirth^AreaBirth^Province^City^Area^Address^Zip^Vocation^Company^OfficeTel^CompanyPostCode^ProvinceHouse^Cityhouse^AreaHouse^PostCodeHouse^ForeignName^Relation^ForeignAddres^ForeignPhone^ForeignIDCard^PoliticalLevel^SecretLevel^ForeignCredType^StreetNow^StreetBirth^StreetHouse^AddressBirth^RegisterPlace"
+	var FillStrArr=FillStr.split("^")
+	for(var i = 0; i < FillStrArr.length; i++) {
+        var item=FillStrArr[i]
+		var Newval=$("#New"+item).val();
+		if (Newval!="") continue;
+		var Oldval=$("#Old"+item).val();
+		if (Oldval=="") continue;
+		if (!CopyOldToNew("","Old"+item)) break;
+		//不符合合并的条件时直接退出，防止无限弹窗不友好
+      }
+ }
+ function ShowFillPopover(that) {
+    var content = "填充“被合并”患者的信息到“合并到”患者的空白信息；选择多个被合并的患者信息不使用一键合并！"
+    
+    $(that).webuiPopover({
+        title: '',
+        content: content,
+        trigger: 'hover',
+        //style:'inverse',
+		placement: "bottom",
+		width:"220px",
+        height: 'auto'
+
+    });
+    $(that).webuiPopover('show');
 }

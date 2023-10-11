@@ -39,7 +39,6 @@ function setDataGrid(interface)
 	    pageList:[10,20,30], 
 	    loadMsg:'数据装载中......',
 	    autoRowHeight: true,
-	    //fitColumns: true,
 	    url:'../EMRservice.Ajax.diagnos.cls?InterFace='+encodeURI(encodeURI(interface)), 
 	    singleSelect:true,
 	    queryParams:param,

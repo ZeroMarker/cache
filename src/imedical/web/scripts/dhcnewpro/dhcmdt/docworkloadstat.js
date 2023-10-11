@@ -39,6 +39,14 @@ function InitComponents(){
 		$HUI.datebox("#StartDate").setValue(mdtParams.split("@")[0]);
 		$HUI.datebox("#EndDate").setValue(mdtParams.split("@")[1]);
 	}
+	$HUI.combobox("#doctor",{
+		valueField:'value',
+		textField:'text',
+		url:$URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsonLocCareProvAll",
+		mode:'remote',
+		
+		})
+	
 }
 
 /// 初始化加载交班列表
@@ -69,7 +77,7 @@ function InitMainList(){
 	};
 	/// 就诊类型
 	var param = mdtParams;
-	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsGetMdtDocMap&Params="+param+ "&pid="+pid;
+	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsGetMdtDocMap&Params="+param+ "&pid="+pid+"&MWToken="+websys_getMWToken();
 	new ListComponent('bmMainList', columns, uniturl, option).Init(); 
 }
 
@@ -84,7 +92,7 @@ function SetCellUrl(value, rowData, rowIndex){
 /// 弹窗
 function Pop_Win(mdtMonth){
 	
-	var Link = "dhcmdt.disgroupstat.csp?mdtMonth="+ mdtMonth;
+	var Link = "dhcmdt.disgroupstat.csp?mdtMonth="+ mdtMonth+"&MWToken="+websys_getMWToken();
 	window.open(Link, '_blank', 'height='+ (window.screen.availHeight-200) +', width='+ (window.screen.availWidth-200) +', top=100, left=100, toolbar=no, menubar=no, scrollbars=no, resizable=yes, location=no, status=no');
 }
 
@@ -94,6 +102,8 @@ function find_click(){
 	var StartDate = $HUI.datebox("#StartDate").getValue(); /// 开始日期
 	var EndDate = $HUI.datebox("#EndDate").getValue();     /// 结束日期
 	var params = StartDate +"@"+ EndDate;
+	var doctor = $HUI.combobox("#doctor").getValue(); /// 会诊医生
+	params=params+"@@@@"+doctor
 	$("#bmMainList").datagrid("load",{"Params":params, "pid":pid});
 }
 
@@ -109,6 +119,11 @@ function InitDisGrpChart(){
 		
 		if (jsonString != null){
 			var ListDataObj = jsonString; ///jQuery.parseJSON(jsonString);
+			
+			for (var i in ListDataObj){
+				ListDataObj[i].group = $g(ListDataObj[i].group);
+			}
+			
 			var option = ECharts.ChartOptionTemplates.Bars(ListDataObj); 
 			option.title ={
 				text: '',    ///'审查指标趋势图',
@@ -149,7 +164,7 @@ function onbeforeunload_handler() {
 
 /// 自动设置页面布局
 function onresize_handler(){
-	
+	$("#bmMainList").datagrid("resize");
 }
 
 /// 页面全部加载完成之后调用(EasyUI解析完之后)

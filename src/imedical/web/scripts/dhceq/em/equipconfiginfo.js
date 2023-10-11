@@ -20,10 +20,18 @@ function initDocument()
 				id:'close',
                 handler: function(){
                      closeWindow("modal");
-                }
+                },
+        },{
+    			iconCls: 'icon-add',
+                text:'新增',
+				id:'addconfig',
+                handler: function(){
+                     BAddConfig();
+                },
         }],
 		//rownumbers: true,  //如果为true则显示一个行号列
 		//singleSelect:true,
+		nowrap:false,
 		fit:true,
 		striped : true,
 	    cache: false,
@@ -45,4 +53,23 @@ function setSelectValue(elementID,rowData)
 function clearData(str)
 {
 	return;
+}
+
+function BAddConfig()
+{
+	var RowID=getElementValue("EquipDR");
+	if (RowID=="")
+	{
+		alertShow("设备ID不能为空!")
+		return
+	}
+	
+	var ReadOnly=getElementValue("ReadOnly");
+	var str='dhceq.process.confignew.csp?&OpenFlag=N&SourceType=2&SourceID='+RowID+'&ReadOnly='+ReadOnly;
+	showWindow(str,"台账附属设备","","","icon-w-paper","modal","","","large",reloadGrid);
+}
+
+function reloadGrid()
+{
+	$("#DHCEQConfigInfo").datagrid('reload');
 }

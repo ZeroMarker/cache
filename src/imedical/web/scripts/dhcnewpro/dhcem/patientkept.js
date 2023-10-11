@@ -49,25 +49,35 @@ function initDateBox(){
 function initTable(){
 
     var columns= [[
-		{field: 'Num',title: '序号'},
-		{field: 'Date',title: '日期'}, 
-		{field: 'Time',title: '时间'},
-		{field: 'Department',title: '号别'},
-		{field: 'Sex',title: '性别'},
-		{field: 'Age',title: '年龄'},
-		{field: 'BedNum',title: '床号'},
-		{field: 'Name',title: '姓名'},
-		{field: 'MRDiagnos',title: '诊断'},
-		{field: 'CurregNo',title: '登记号'},
-		{field: 'ObsDoc',title: '入观用户'},
-		{field: 'GoDate',title: '离院日期'},
-		{field: 'GoTime',title: '离院时间'},
-		{field: 'DisDoc',title: '离院用户'},
-		{field: 'LGTime',title: '留观时间'},
-		{field: 'OrdAction',title: '联系电话'},
-		{field: 'PatLocDesc',title: '科室'},
-		{field: 'Where',title: '病人去向'},
-		{field: 'Apache',title: 'Apache评分'}
+		{field: 'Num',title: '序号',width:50},
+		{field: 'Date',title: '日期',width:100}, 
+		{field: 'Time',title: '时间',width:80},
+		{field: 'Department',title: '号别',width:100},
+		{field: 'Sex',title: '性别',width:50},
+		{field: 'Age',title: '年龄',width:50},
+		{field: 'BedNum',title: '床号',width:50},
+		{field: 'Name',title: '姓名',width:100},
+		{field: 'MRDiagnos',title: '诊断',width:100},
+		{field: 'CurregNo',title: '登记号',width:100},
+		{field: 'IPBKRowID',title: '转入院',width:60, formatter:function(value,row,index){
+				var ret="";
+				if(row.IPBKRowID){
+					row.InHospWardDesc?ret="是":"";
+				}
+				return ret;
+			}
+		},
+		{field: 'InHospWardDesc',title: '转入病区',width:100},
+		{field: 'ObsDoc',title: '入观用户',width:100},
+		{field: 'GoDate',title: '离院日期',width:100},
+		{field: 'GoTime',title: '离院时间',width:80},
+		{field: 'DisDoc',title: '离院用户',width:100},
+		{field: 'LGTime',title: '留观时间',width:100},
+		{field: 'OrdAction',title: '联系电话',width:100},
+		{field: 'PatLocDesc',title: '科室',width:100},
+		{field: 'Where',title: '病人去向',width:80},
+		{field: 'Notes',title: '备注',width:100},
+		{field: 'Apache',title: 'Apache评分',width:100}
 		]];
 	
 	$HUI.datagrid('#keptPatTable',{
@@ -77,13 +87,13 @@ function initTable(){
 		columns:columns,
 		pageSize:60,  
 		pageList:[30,60,90], 
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		rownumbers : false,
 		pagination:true,
 		singleSelect:true,
 		selectOnCheck: false,
 		checkOnSelect: false,
-		title:'留观登记查询', //hxy 2018-10-19 st
+		title:$g('留观登记查询'), //hxy 2018-10-19 st
 		toolbar:'#toolbar',
 		iconCls:'icon-paper',
 		headerCls:'panel-header-gray', //ed
@@ -106,7 +116,14 @@ function initTable(){
 function initMethod(){
 	$('#searchBtn').on('click',flashTable);
 
-	$('#exportBtn').on('click',expExcelAjax)
+	$('#exportBtn').on('click',expExcelAjax);
+	
+	$('#patName').bind('keypress',function(event){
+        if(event.keyCode == "13") {
+            flashTable()
+        }
+    });	
+	
 }
 
 ///导出	
@@ -214,8 +231,8 @@ function expExcelNew(itbl)
 	"xlsBook = xlsExcel.Workbooks.Add();"+
 	"xlsSheet = xlsBook.ActiveSheet;"+
 	"xlsExcel.Visible = true;"+
-	"xlsExcel.Range(xlsSheet.Cells(1,1),xlsSheet.Cells(1,20)).MergeCells = true;"+
-	"xlsExcel.Range(xlsSheet.Cells(2,1),xlsSheet.Cells(2,20)).MergeCells = true;"+
+	"xlsExcel.Range(xlsSheet.Cells(1,1),xlsSheet.Cells(1,19)).MergeCells = true;"+
+	"xlsExcel.Range(xlsSheet.Cells(2,1),xlsSheet.Cells(2,19)).MergeCells = true;"+
 	"xlsSheet.cells(2).NumberFormatLocal='@';"+
 	"xlsSheet.cells(4).NumberFormatLocal='@';"+
 	"xlsSheet.cells(11).NumberFormatLocal='@';"+
@@ -249,12 +266,12 @@ function expExcelNew(itbl)
 	"xlsSheet.cells(3,12)='离院时间';"+
 	"xlsSheet.cells(3,13)='留观时间';"+
 	"xlsSheet.cells(3,14)='联系电话';"+
-	"xlsSheet.cells(3,15)='科室';"+
-	"xlsSheet.cells(3,16)='号别';"+
-	"xlsSheet.cells(3,17)='病人去向';"+
-	"xlsSheet.cells(3,18)='入观用户';"+
-	"xlsSheet.cells(3,19)='离院用户';"+
-	"xlsSheet.cells(3,20)='Apache评分';";
+	//"xlsSheet.cells(3,15)='科室';"+
+	"xlsSheet.cells(3,15)='号别';"+
+	"xlsSheet.cells(3,16)='病人去向';"+
+	"xlsSheet.cells(3,17)='入观用户';"+
+	"xlsSheet.cells(3,18)='离院用户';"+
+	"xlsSheet.cells(3,19)='Apache评分';";
    
     if (itbl.length==0) {
 	    $.messager.alert("提示","没有选中数据！"); 
@@ -273,20 +290,20 @@ function expExcelNew(itbl)
 	    "xlsSheet.cells("+(i+4)+",8)='"+itbl[i].PatLocDesc+"';"+
 	    "xlsSheet.cells("+(i+4)+",9)='"+itbl[i].BedNum+"';"+                   //床号 
 	    "xlsSheet.cells("+(i+4)+",10).WrapText=true;"+ 
-	    "xlsSheet.cells("+(i+4)+",10)='"+itbl[i].MRDiagnos+"';"+ 
+	    "xlsSheet.cells("+(i+4)+",10)='"+formatHtmlToValue(itbl[i].MRDiagnos)+"';"+ 
 	    "xlsSheet.cells("+(i+4)+",11)='"+itbl[i].GoDate+"';"+
 	    "xlsSheet.cells("+(i+4)+",12)='"+itbl[i].GoTime+"';"+   
 	    "xlsSheet.cells("+(i+4)+",13)='"+itbl[i].LGTime+"';"+  
 	    "xlsSheet.cells("+(i+4)+",14)='"+itbl[i].OrdAction+"';"+ 
-	    "xlsSheet.cells("+(i+4)+",15)='"+itbl[i].PatLocDesc+"';"+  
-	    "xlsSheet.cells("+(i+4)+",16)='"+itbl[i].Department+"';"+  	     
-	    "xlsSheet.cells("+(i+4)+",17)='"+itbl[i].Where+"';"+ 
-	    "xlsSheet.cells("+(i+4)+",18)='"+itbl[i].ObsDoc+"';"+ 
-	    "xlsSheet.cells("+(i+4)+",19)='"+itbl[i].DisDoc+"';"+ 
-	    "xlsSheet.cells("+(i+4)+",20)='"+itbl[i].Apache+"';";
+	    //"xlsSheet.cells("+(i+4)+",15)='"+itbl[i].PatLocDesc+"';"+  
+	    "xlsSheet.cells("+(i+4)+",15)='"+itbl[i].Department+"';"+  	     
+	    "xlsSheet.cells("+(i+4)+",16)='"+itbl[i].Where+"';"+ 
+	    "xlsSheet.cells("+(i+4)+",17)='"+itbl[i].ObsDoc+"';"+ 
+	    "xlsSheet.cells("+(i+4)+",18)='"+itbl[i].DisDoc+"';"+ 
+	    "xlsSheet.cells("+(i+4)+",19)='"+itbl[i].Apache+"';";
  	}
 	
-	var row1=3,row2=itbl.length+3,c1=1,c2=20;
+	var row1=3,row2=itbl.length+3,c1=1,c2=19;
 	Str=Str+"xlsSheet.Range(xlsSheet.Cells("+row1+","+c1+"),xlsSheet.Cells("+row2+","+c2+")).Borders(1).LineStyle=1;"+
 	"xlsSheet.Range(xlsSheet.Cells("+row1+","+c1+"),xlsSheet.Cells("+row2+","+c2+")).Borders(1).Weight=2;"+
 	"xlsSheet.Range(xlsSheet.Cells("+row1+","+c1+"),xlsSheet.Cells("+row2+","+c2+")).Borders(2).LineStyle=1;"+
@@ -307,7 +324,7 @@ function expExcelNew(itbl)
 	
 	//以上为拼接Excel打印代码为字符串
 	CmdShell.notReturn = 1;   //设置无结果调用，不阻塞调用
-	var rtn = CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
+	var rtn = CmdShell.CurrentUserEvalJs(Str);   //通过中间件运行打印程序 
 	return;
 	//$.messager.alert("提示","文件成功导出,D:\\留观病人统计.xls.注意如果D盘中含有该文件，不会覆盖！");
 	
@@ -321,11 +338,14 @@ function flashTable(){
 	var obsLocID="";
 	if(initFlag==1) obsLocID=GetObsLocID();
 	if(initFlag!=1) obsLocID=$HUI.combobox('#obsLoc').getValue();
-	
+	var patName=$("#patName").val();
+	var transInHosp=$HUI.checkbox("#transInHospCheckBox").getValue()?"Y":"";
+	var otherParams=patName+"^"+transInHosp;
 	$HUI.datagrid('#keptPatTable').load({
 		startDate:$HUI.datebox("#startDate").getValue(),
         endDate:$HUI.datebox("#endDate").getValue(),
-        Loc:obsLocID
+        Loc:obsLocID,
+        otherParams:otherParams
 	})
 	return;
 }
@@ -361,4 +381,11 @@ function myFormatDate(date){
 	}else{
 		return date;	
 	}
+}
+
+
+function formatHtmlToValue(text){
+	text = text.replace(new RegExp('&nbsp;',"g"),' '); //text.replaceAll("&nbsp;"," ");
+	text = text.replace(new RegExp('&nbsp',"g"),' '); //text.replaceAll("&nbsp"," ");
+	return text;
 }

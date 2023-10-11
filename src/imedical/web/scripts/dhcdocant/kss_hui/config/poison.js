@@ -18,8 +18,15 @@ function Init(){
 	InitCombox();
 	InitGrid();
 	InitHospList();
+	InitCache();
 }
-
+function InitCache () {
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function InitEvent () {
 	$("#i-find").click(findConfig);
 	$("#i-add").click(addConfig);

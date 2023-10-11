@@ -1,5 +1,8 @@
 ﻿$(function() {
     setDataGrid();
+    if(pageType=='KESY'){
+		$('.pad-div').css({'width':'1178px','border':'1px solid #ccc','border-top':'0'})  
+	}
 
 });
 //设置数据
@@ -15,48 +18,53 @@ function setDataGrid() {
         singleSelect: false,
         fitColumns: true,
         fit: true,
+        scrollbarSize :0,
+        nowrap:false,
         columns: [
             [{
                 field: 'Name',
                 title: '姓名',
-                halign: 'center',
-                align: 'center',
-                width: 40
+                halign: 'left',
+                align: 'left',
+                width: 100
             }, {
                 field: 'StructName',
                 title: '病历文书',
-                halign: 'center',
-                width: 150
+                halign: 'left',
+                width: 540
             }, {
                 field: 'StrDate',
                 title: '起始时间',
-                halign: 'center',
-                align: 'center',
-                width: 70
+                halign: 'left',
+                align: 'left',
+                width: 100
             }, {
                 field: 'EndDate',
                 title: '截止时间',
-                halign: 'center',
-                align: 'center',
-                width: 70
+                halign: 'left',
+                align: 'left',
+                width: 100
             }, {
                 field: 'Hours',
                 title: '剩余时间(小时)',
-                halign: 'center',
-                align: 'center',
-                width: 40
+                halign: 'left',
+                align: 'left',
+                width: 120
             }, {
                 field: 'FinishDate',
                 title: '完成时间',
-                halign: 'center',
-                align: 'center',
-                width: 70
+                halign: 'left',
+                align: 'left',
+                width: 100
             }, {
                 field: 'OverFlag',
                 title: '超时',
-                halign: 'center',
-                align: 'center',
-                width: 40
+                halign: 'left',
+                align: 'left',
+                width: 80,
+                formatter:function(value){
+	                return $g(value)
+	            }
             }]
         ],
         view: groupview,

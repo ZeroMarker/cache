@@ -39,6 +39,9 @@ function initFrameSrc(){
 //		EpisodeID = frm.EpisodeID.value;
 //	}
 	var link ="dhcem.quote.csp?PatientID="+ PatientID +"&EpisodeID="+ EpisodeID +"&Type=2";
+	if ('undefined'!==typeof websys_getMWToken){ //hxy 2023-02-11 Token改造
+		link += "&MWToken="+websys_getMWToken()
+	}
 	$("#QuoteFrame").attr("src",link);
 }
 
@@ -58,7 +61,19 @@ function SaveData(){
 	    	window.parent.InsQuote(resQuote ,Flag);      /// 插入引用内容
 	    }
 	}
-	commonParentCloseWin();  /// 关闭窗体
+	//commonParentCloseWin();  /// 关闭窗体 //2020-10-13 st
+	if (websys_showModal("options")) { 
+		if (websys_showModal("options").InsQuote) {
+			websys_showModal("options").InsQuote(resQuote ,Flag);
+			websys_showModal("close"); //hxy 2021-04-13 盲改上移 住院医生-信息总览-会诊申请-病情摘要\会诊理由及要求-引用-维护内容点击【确定】后，将会诊申请界面也关闭了
+		}else{
+			commonParentCloseWin();
+		}
+		//websys_showModal("close"); //hxy 2021-04-13 注释 住院医生-信息总览-会诊申请-病情摘要\会诊理由及要求-引用-维护内容点击【确定】后，将会诊申请界面也关闭了
+	}else{
+		commonParentCloseWin();  /// 关闭窗体
+	}//ed
+
     		
 //	if (!isIE()){
 //		var resQuote = $("#EditPanel").val();  /// 引用内容

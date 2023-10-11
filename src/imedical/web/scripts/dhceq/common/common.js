@@ -1,11 +1,15 @@
+var HospFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","990051")		//CZF0138 2021-06-06 多院区
+
 ///去掉两端空格
 function trim(s)
 { 
 	return s.replace(/(^\s*)|(\s*$)/g, ""); 
 } 
 
-///Mozy		929782	2019-06-13	格式化处理日期
-function GetCurrentDate()			
+/// Mozy		929782	2019-06-13	格式化处理日期
+/// modified by czf 2022-01-22 增加时间处理
+/// format=2返回datetime，format=3返回time，format=其他返回date
+function GetCurrentDate(format)			
 {
 	var yy, mm, dd, s="";
    	var d = new Date();							// 创建对象Date
@@ -27,9 +31,19 @@ function GetCurrentDate()
 	{
 	   	s = yy + "-" + mm + "-" + dd;
 	}
-   return(s);                                // 返回日期
+	var hour = d.getHours();//时
+	var minu = d.getMinutes();//分
+	var sec = d.getSeconds();//秒
+	var t = hour + ":" + minu + ":" + sec;
+	if(format==1){
+		return s;
+	}else if(format==2){
+		return s+ " "+t;
+	}else if(format==3){
+		return t;
+	}
+	return s;
 }
-
 /*****************************************************
 取指定对象的x坐标
 *****************************************************/
@@ -560,19 +574,46 @@ function Standard_KeyUp()
 	objDR.value="";
 }
 
+///add by czf 2022-11-01
+///lookup改变时清空DR的值
+///Value:SMFromLocDR_CTLocDesc^SMToLocDR_CTLocDesc
+function KeyUpNew(Value)
+{
+	var value=Value.split("^")
+	for (var i=0;i<value.length;i++)
+	{
+		var elementName=value[i];
+		var elementID=elementName.split("_")[0];
+		$('#'+elementName).bind("input propertychange change",function(event){setElement(elementID,"");})
+	}
+}
+
 /// add by zx session值处理
 function initUserInfo()
 {
 	 //modify by lmm 2018-10-24 重定义系统会话变量：以curSS做前缀
 	 //前面加var不可做全局变量
 	curSSUserID=session['LOGON.USERID']; 
-	curSSLocID=session['LOGON.CTLOCID'];      
+	curSSLocID=session['LOGON.CTLOCID']; 
+	curSSLocDesc=session['LOGON.CTLOCDESC'];
     curSSHospitalID=session['LOGON.HOSPID'];  //modify by wl 2019-11-11 WL0010 修正错误赋值
     var jsonData=tkMakeServerCall("web.DHCEQ.Plat.LIBCommon","GetMapIDBySource",curSSUserID,curSSLocID,curSSHospitalID);
     jsonData=jQuery.parseJSON(jsonData);
+    //czf 2021-04-21 同步登录科室 1878102
+	if (jsonData.Data["MapLocID"]=="")
+	{
+		result = tkMakeServerCall("web.DHCEQ.Plat.CTDepartment","SyncDeptSingle",curSSLocID)
+		eval("result="+result)
+		if(result.SQLCODE!="0"){
+			var ErrStr=curSSLocDesc+"同步科室错误,错误信息:"+result.Data
+			messageShow("popover","","",ErrStr,"")
+		}
+	}
+	
     //add by csj 2020-03-16 登录人员信息与HIS不一致提示同步
     if (jsonData.Data["SyncFlag"]=="Y"&&localStorage.getItem("SyncFlag")!="N"){
-	    messageShow("confirm","","","是否同步当前人员信息？","",confirmFun,cancelFun)
+	    confirmFun()
+	    //messageShow("confirm","","","是否同步当前人员信息？","",confirmFun,cancelFun)  // czf 20210421 不提示直接同步
 	}
     curUserID=jsonData.Data["MapUserID"];
 	curUserCode=jsonData.Data["MapUserCode"];
@@ -651,8 +692,16 @@ function getInputList()
 /// 	showType:显示样式  'slide','fade','show' popover和show选择参数
 /// 	confirmFun: 确认点击调用函数
 /// 	cancelFun: 取消点击调用函数
-function messageShow(alertType,type,title,msg,showType,confirmFun,cancelFun)
+/// Modify by zx 2021-04-28 增加按钮文本参数 BUG ZX0131
+///     confirmButtonText 'Ok'按钮文本描述
+///     cancelButtonText 'cancel'按钮文本描述
+function messageShow(alertType,type,title,msg,showType,confirmFun,cancelFun,confirmButtonText,cancelButtonText)
 {
+	//Modify by zx 2021-04-28 增加按钮文本处理
+	//按钮默认宽度只支持两个文字,修改宽度无效
+	confirmButtonText=(confirmButtonText==""||confirmButtonText==undefined||confirmButtonText==null)?"确认":confirmButtonText;
+	cancelButtonText=(cancelButtonText==""||cancelButtonText==undefined||cancelButtonText==null)?"取消":cancelButtonText;
+	$.messager.defaults = { ok: confirmButtonText, cancel: cancelButtonText};
 	//默认赋值
 	if(alertType=="") alertType="alert";
 	if(type=="") type="info";
@@ -801,4 +850,530 @@ function filepath(oldpath,findstr,replacestr)
 		oldpath=oldpath.substr(1,oldpath.length)
 	}
 	return newpath
+}
+
+///CZF0138 2021-05-08
+///重写基础平台数据关联医院
+function genHospWinNew(objectName,objectId,callback,opt){
+	if ($("#_HospListWin").length==0){
+		$("<div id=\"_HospListWin\" />").prependTo("body");
+	}
+	var singleSelect = false;
+	if (opt){
+		singleSelect = opt.singleSelect||false;
+	}
+	var gridObj = "";
+	var obj = $HUI.dialog('#_HospListWin',{
+		width:550,
+		modal:true,
+		height:350,
+		title:'医院权限分配',
+		content:'<table id="_HospListGrid"></table>',
+		buttons:[{
+			text:'确定',
+			handler:function(){
+				var HospIDs = "";
+				var rows = gridObj.getData().rows;
+				var checkRow = gridObj.getChecked();
+				if (rows.length>0){
+					for(var i=0;i<rows.length;i++){
+						if ($.hisui.indexOfArray(checkRow,"HOSPRowId",rows[i]["HOSPRowId"])==-1){
+							HospIDs +="^"+rows[i]["HOSPRowId"]+"$N"; 
+						}else{
+							HospIDs +="^"+rows[i]["HOSPRowId"]+"$Y";
+						}
+					}
+				}
+				//保存医院关联
+				$cm({
+					ClassName:"web.DHCEQ.Util.BDPCommonUtil",
+					MethodName:"UpdateHOSP",
+					tableName:objectName,
+					dataid:objectId,
+					HospIDs:HospIDs,
+					dataType:'text'
+				},function(rtn){
+					if(rtn==1){
+						if ("function" == typeof callback) callback(checkRow);
+						$HUI.dialog("#_HospListWin").close();
+					}else{
+						if (rtn.split("^").length>0){
+							$.messager.popover({msg:rtn.split("^")[1],type:'alert',timeout: 2000});
+						}else{
+							$.messager.popover({msg:rtn,type:'alert',timeout: 2000});
+						}
+					}
+				});
+			}
+		},{
+			text:'取消',
+			handler:function(){
+				$HUI.dialog("#_HospListWin").close();
+			}
+		}],
+		onOpen:function(){
+			gridObj = $HUI.datagrid("#_HospListGrid",{
+				mode: 'remote',
+				fit:true,
+				border:false,
+				pagination:false,
+				showPageList:false,
+				showRefresh:false,
+				singleSelect:singleSelect,
+				queryParams:{ClassName:_BDPHOSPCLS,QueryName: 'GetHospDataForCloud',tablename:objectName,dataid:objectId},
+				url: $URL,
+				columns: [[
+					{field:"LinkFlag",title:"授权情况",align:"center",width:100,checkbox:true},
+					{field:"HOSPRowId",title:"HOSPRowId",align:"left",hidden:true,width:100},
+					{field:"HOSPDesc",title:"医院名称",align:"left",width:300},
+					{field:"MappingID",title:"ObjectId",align:"left",hidden:true,width:100}
+				]],
+				onLoadSuccess:function(row){               
+		                var rowData = row.rows;
+		                $.each(rowData,function(idx,val){
+		                      if(val.LinkFlag=="Y"){
+		                        $("#_HospListGrid").datagrid("selectRow", idx);
+		                      }
+		                });              
+		            }
+				})
+		}
+	});
+	return gridObj;
+}
+
+///CZF0138 2021-05-08
+//是否开启平台医院授权
+function initBDPHospComponent(TableName)
+{
+	if (HospFlag==2)
+	{
+		if ((TableName=="")||(TableName==null)||(TableName==undefined)) return;
+		hospComp = GenHospComp(TableName);		//初始化平台医院 CZF0138 begin
+		HospBT=GenHospWinButton(TableName);	//初始化数据关联医院按钮
+		hospComp.options().onSelect = function(){		//医院选择事件
+			onBDPHospSelectHandler();
+		}
+		if (jQuery("#_HospListLabel").length>0)
+		{
+			jQuery("#_HospListLabel").hide();
+		}
+		var TableType=tkMakeServerCall("web.DHCEQ.Util.BDPCommonUtil","GetTableType",TableName)
+		if (TableType!="C")
+		{
+			jQuery("#_HospBtn").hide();
+		}
+		else
+		{
+			//管控类型绑定数据关联医院按钮事件
+			if (jQuery("#_HospBtn").length>0)		//数据关联医院点击事件定义
+			{
+				jQuery("#_HospBtn").linkbutton({iconCls: 'icon-w-key'});
+				jQuery("#_HospBtn").on("click", HospitalHandle);
+				jQuery("#_HospBtn").linkbutton({text:'数据关联医院'});
+			}		
+		}
+	}
+	else
+	{
+		if ($("#_HospListLabel").length!=0){
+			$("#_HospListLabel").hide();
+		}
+		if (jQuery("#_HospBtn").length>0)
+		{
+			jQuery("#_HospBtn").hide();
+		}
+		if (jQuery("#c_HospList").length>0)
+		{
+			$('#c_HospList').hide();
+		}
+		if (jQuery("#_HospList").length>0)
+		{
+			$('#_HospList').hide();
+			$('#_HospList').next(".combo").hide();
+		}
+		if (jQuery("#_HospListLabel").length>0)
+		{
+			jQuery("#_HospListLabel").hide();
+		}
+	}
+}
+
+///CZF0138 2021-05-08
+//获取平台医院ID
+function GetBDPHospValue(Element)
+{
+	var BDPHospDR=""
+	if (HospFlag==2)
+	{
+		BDPHospDR=$("#"+Element).combogrid('getValue');
+	}
+	else
+	{
+		BDPHospDR=getElementValue(Element);
+	}
+	return BDPHospDR
+}
+
+/// Add by czf
+/// 获取月份天数
+/// YearMonth:yyyy-mm格式
+function GetMonthEndDate(YearMonth)
+{
+	var EndDay=""
+	if(YearMonth)
+	{
+		var Year=YearMonth.split("-")[0];
+		var Month=YearMonth.split("-")[1];
+		if ((Month=="01")||(Month=="03")||(Month=="05")||(Month=="07")||(Month=="08")||(Month=="10")||(Month=="12"))
+		{
+			EndDay="31"
+		}
+		else if ((Month=="04")||(Month=="06")||(Month=="09")||(Month=="11"))
+		{
+			EndDay="30"
+		}
+		else (Month=="02")
+		{
+			if ((Year%400==0)||((Year%4==0) && (Year%100!=0)))	//闰年
+			{
+				EndDay="29"
+			}
+			else
+			{
+				EndDay="28"
+			}
+		}
+	}
+	return EndDay
+}
+///add by mwz 20211115 mwz0053 
+///增加Chrome浏览器多页签导入公共方法
+///入参：excelName：excel名称 ;  async 0:同步  1 异步 ; sheetNames：页签名称：""，isText 是否文本格式
+function EQReadExcel(excelName, async, sheetNames,isText) 
+{
+	//if (getElementValue("ChromeFlag")==1)
+	//{
+	//	if (!websys_isIE) return ChromeReadExcel(excelName, async, sheetNames,isText) ;
+	//}
+	//return IEReadExcel(excelName, async, sheetNames,isText) ;
+	return ChromeReadExcel(excelName, async, sheetNames,isText) ;
+}
+
+function ChromeReadExcel(excelName, async, sheetNames,isText)
+{ 
+    var async = 0;
+	var isText=false;
+    var strArr = [];
+    strArr.push('Function vbs_Test');
+    strArr.push('Set xlApp = CreateObject("Excel.Application")');
+    if (excelName == "") { ;
+        strArr.push('fName=xlApp.GetSaveAsFilename ("","Excel xlsx (*.xlsx), *.xlsx,Excel xls (*.xls), *.xls",,"' + websys_unicode_trans.selectImportFile + '")');
+        strArr.push("If fName=False Then");
+        strArr.push(" xlApp.Quit");
+        strArr.push(" Set xlApp=Nothing");
+        strArr.push(" vbs_Test=0");
+        strArr.push(" Exit Function");
+        strArr.push("End If");
+        strArr.push('Set xlBook = xlApp.Workbooks.Open(fName)');
+    } else { ;
+        strArr.push('Set xlBook = xlApp.Workbooks.Open("' + excelName + '")');
+    };
+    strArr.push(' sheetNames = "'+sheetNames+'"');
+    strArr.push(' Arrr = Split(sheetNames,",")');
+    strArr.push(' Arrlen = UBound(Arrr)');
+    strArr.push('rtnstr = "["');
+    strArr.push('for i=0 To Arrlen');
+    strArr.push('Set xlsheet =xlBook.Worksheets(Arrr(i))');
+    strArr.push('rtn = "["');
+    strArr.push('rc=xlSheet.UsedRange.Rows.Count');
+    strArr.push('cc=xlSheet.UsedRange.Columns.Count');
+    if (false === isText) {
+        strArr.push('arr = xlSheet.Range(xlSheet.Cells(1,1),xlSheet.Cells(rc,cc)).Value2');
+    }
+    strArr.push('For ri = 1 To rc');
+    strArr.push(' rowstr = "["');
+    strArr.push(' For ci = 1 To cc');
+    if (isText) {
+        strArr.push('  cellVal = xlSheet.Cells(ri,ci).Text');
+    } else {
+        strArr.push('  cellVal = arr(ri,ci)');
+    }
+    strArr.push('  colstr="""" & Replace(cellVal,"""","\\""") & """"');
+    strArr.push('    If rowstr <> "[" Then');
+    strArr.push('        rowstr = rowstr & ","');
+    strArr.push('     End If');
+    strArr.push('       rowstr = rowstr & colstr');
+    strArr.push(' Next');
+    strArr.push(' rowstr = rowstr & "]"');
+    strArr.push(' If rtn = "[" Then');
+    strArr.push('    rtn = rtn & rowstr');
+    strArr.push(' Else');   
+    strArr.push('    rtn = rtn & "," & rowstr');
+    strArr.push(' End If');
+    strArr.push('Next');
+    strArr.push('rtn = rtn & "]"');
+    strArr.push(' If rtnstr = "[" Then');
+    strArr.push('    rtnstr = rtnstr & rtn');
+    strArr.push(' Else');
+    strArr.push('    rtnstr = rtnstr & "," & rtn');
+    strArr.push(' End If');
+    strArr.push('Next');   
+    strArr.push('rtnstr = rtnstr & "]"');
+    strArr.push('rtn = rtnstr');
+    strArr.push('xlBook.Close(False)');
+    strArr.push('xlApp.Quit');
+    strArr.push('Set xlSheet= Nothing');
+    strArr.push('Set xlBook= Nothing');
+    strArr.push('Set xlApp=Nothing');
+    strArr.push('vbs_Test=rtn');
+    strArr.push('End Function\n');
+    var rtn = "";
+    var exec = strArr.join("\n");
+    //alert(exec)
+    var o;
+    if (websys_isIE) {
+        var IECmdShell = new ActiveXObject("MSScriptControl.ScriptControl");
+        IECmdShell.Language = 'VBScript';
+        IECmdShell.Timeout = 10 * 60 * 1000;
+        IECmdShell.AddCode(exec);
+        try {
+	      
+            rtn = IECmdShell.Run("vbs_Test");
+            eval("var o=(" + rtn + ")");
+        } catch (e) {
+            o = [];
+            alert(e.message);
+        }
+    } else {
+        CmdShell.notReturn = async;
+        rtn = CmdShell.EvalJs(exec, "VBScript");
+        if (rtn.status == 200) {
+            eval("var o=(" + rtn.rtn + ")");
+        } else {
+            o = [];
+            alert(rtn.msg);
+        }
+    };
+    return o || [];
+}
+//add by mwz 20211115 mwz0053 
+//增加IE浏览器多页签导入公共方法
+//预留方法暂不使用
+function IEReadExcel(excelName, async, sheetNames,isText)
+{
+	var FileName=GetFileName();
+	if (FileName=="") {return 0;}
+	var xlApp,xlsheet,xlBook
+	xlApp = new ActiveXObject("Excel.Application");
+	xlBook = xlApp.Workbooks.Add(FileName);
+	xlsheet =xlBook.Worksheets(sheetNames);
+	xlsheet = xlBook.ActiveSheet;
+
+}
+
+///Add By ZY0304 20220616
+///描述:保存前校验填写的字符串是否合规,先把全角符号转换成半角符号,再判断括号等是否匹配
+///入参:Value  传一个元素串 例如"BuyLoc^Loc"
+///返回值:true/false   true :合规  false  ：不合规
+function charLegalCheck(Value)
+{
+	var value=Value.split("^");
+	var i=0;
+	for (i=0;i<value.length;i++)
+	{
+		var obj=document.getElementById(value[i]);
+		if (obj)
+		{
+			var curValue=obj.value;
+			curValue=halfChar2fullChar(curValue);
+			var isMatch=bracketMatch(curValue)
+			if (isMatch==true)
+			{
+				obj.value=curValue
+			}
+			else
+			{
+                var CValue=getElementValue("c"+value[i]);
+				messageShow("","","",CValue+"符号不匹配");
+				return false;
+			}
+		}
+	}
+	return true
+}
+///Add By ZY0304 20220616
+///描述:全角转半角
+///入参:str  字符串
+///返回值:result
+function fullChar2halfChar(str)
+{
+	var result = '';
+	for (i=0 ; i<str.length; i++)
+	{
+		code = str.charCodeAt(i);//获取当前字符的unicode编码
+		if (code >= 65281 && code <= 65373)//在这个unicode编码范围中的是所有的英文字母已经各种字符
+		{
+			result += String.fromCharCode(str.charCodeAt(i) - 65248);//把全角字符的unicode编码转换为对应半角字符的unicode码
+		}else if (code == 12288)//空格
+		{
+			result += String.fromCharCode(str.charCodeAt(i) - 12288 + 32);
+		}else
+		{
+			result += str.charAt(i);
+		}
+	}
+	return result;
+}
+
+///Add By ZY0304 20220616
+///描述:全角转半角
+///入参:str  字符串
+///返回值:result
+function halfChar2fullChar(str)
+{
+    var result = '';
+    for (i=0 ; i<str.length; i++)
+    {
+        code = str.charCodeAt(i);//获取当前字符的unicode编码
+        ///modified by ZY20221115 buy:3081922
+        if ((code >= 33 && code <= 47)||(code >= 58 && code <= 63))//在这个unicode编码范围中的是所有的英文字母已经各种字符
+        {
+            result += String.fromCharCode(str.charCodeAt(i) + 65248);//把半角字符的unicode编码转换为对应全角字符的unicode码
+        }else if (code == 32)//空格
+        {
+            //result += String.fromCharCode(str.charCodeAt(i) - 12288 + 32);
+            result += String.fromCharCode(str.charCodeAt(i) + 12288);
+        }else
+        {
+            result += str.charAt(i);
+        }
+    }
+    return result;
+}
+///Add By ZY0304 20220616
+///描述:判断双符号(（[{'是否完整
+///入参:str  字符串
+///返回值:result
+///返回值:true/false   true :合规  false  ：不合规
+function bracketMatch(str) 
+{
+    var length = str.length;
+    if (length === 0) return true
+    var stack = []; // 借助数组模拟栈
+    var leftBracket = "(（[{'"; // 定义左括号
+    var rightBracket = ")）]}'"; // 定义右括号
+    for (var index = 0; index < length; index++) 
+    {
+        var s = str[index];
+        //ie不兼容includes函数
+        //if (leftBracket.includes(s)) 
+        if (leftBracket.indexOf(s)!= -1) 
+        {
+            // 如果出现左括号，压栈
+            stack.push(s)
+        //} else if (rightBracket.includes(s)) 
+        } else if (rightBracket.indexOf(s)!= -1) 
+        {
+            // 如果出现右括号，需要判断栈顶元素与之是否匹配，是否需要出栈
+            var top = stack[stack.length - 1]; // 栈顶元素
+            // 左右括号是否匹配
+            if (isEQMatch(top, s))
+	        {
+	    		stack.pop(); // 出栈，注意这儿没有压栈操作
+        	}
+      	}
+    }
+    return stack.length === 0; // 长度为 0 代表括号匹配
+}
+///modified by ZY20221115 bug:  避免函数重名
+///Add By ZY0304 20220616
+///描述:判断左右括号是否匹配
+///入参:str  字符串
+///返回值:true/false   true :匹配  false  ：不匹配
+function isEQMatch(left, right) 
+{
+    if (left === '{' && right === '}') {
+      return true;
+    } else if (left === '（' && right === '）') {
+      return true;
+    } else if (left === '[' && right === ']') {
+      return true;
+    } else if (left === '(' && right === ')') {
+      return true;
+    } else if (left === "'" && right === "'") {
+      return true;
+    } else {
+      return false
+    }
+}
+
+/**
+ * lodop打印公共函数
+ * @author add by ZY 2023-02-23  bug: 3295367
+ */
+/**
+*@author : wanghc 
+
+*@param : {DLLObject} LODOP 
+*		   expample: var LODOP = getLodop();
+
+*@param : {String}   inpara 
+*          expample: name_$c(2)_zhangsha^patno_$c(2)_000009
+*
+*@param : {String}   inlist 
+*         expample: DrugName^Price^DrugUnit^Qty^PaySum_$c(1)_img_$c(2)_DrugName2^Price2^DrugUnit2^Qty2^PaySum2
+*
+*@param : {Object} jsonArr
+*         expample: [
+					{type:"invoice",PrtDevice:"pdfprinter"},
+					{type:"line",sx:1,sy:1,ex:100,ey:100},
+					{type:"text",name:"patno",value:"1024988919",x:10,y:10,isqrcode:true,lineHeigth:5},
+					{type:"text",name:"invno",value:"1024988919",x:140,y:12,width:24,height:11,barcodetype:"128C"}
+					]
+*        <text>=>name,value,x,y is require
+*@param : {String}  reportNote     print task name,  example: PrintText
+*
+*@param : {Object}  otherCfg  
+          example: {LetterSpacing:-2,printListByText:false,tdnowrap:true, preview:0,PrtDevice:'强制打印机名称',onPrintEnd:myPrintEnd,onCreatePDFBase64:mypdfBase64,pdfPath:'C:\\imedical\\xmlprint\\'}
+		  listHtmlTableWordWrapFlag:true; 打印 list 使用HTML打印的时候，文字自动根据宽度换行。宽度由两列的X坐标差决定。
+		  listHtmlTableBorder:1; 打印 list 使用HTML打印的时候，table的border大小。是否有边框。
+		  tdnowrap:true ---> not break line 
+		  pdfDownload:false 
+		  onCreatePDFBase64:undefined
+		  PFlag:"打印模板的ID" // 1、可以不调用加载模板的方法了。2、一次打印多个模板的时候，避免模板覆盖，必须送这个，避免风险。
+		  rightMarginNum:打印区域相对于纸张的右边距,已毫米为单位，请送数字，不带单位的。产品组反馈，定义右边距，可以自动调整列宽，均匀分布列。
+		  DHC_PrintByLodop("","","",[],"YKYZLYYPrescriptPrint",{onCreatePDFBase64:function(b){console.log(b);}});
+*
+*/
+function printByLodop(xmlName,inpara,inlist,jsonArr,reportNote,otherCfg)
+{
+	if ((xmlName=="")||(xmlName=="undifend"))
+	{
+		alertShow("打印模板不能为空!");
+		return;
+	}
+	DHCP_GetXMLConfig("InvPrintEncrypt",xmlName);
+	var LODOP = getLodop();
+	DHC_PrintByLodop(LODOP,inpara,inlist,jsonArr,reportNote,otherCfg)
+}
+
+///add by ZY20230307 bug:3297547
+///desc:用于检测输入的数据中是否包含特殊符号
+function checkLegalChar(elments)
+{
+    var re =/[`~!@#$%^&*_+<>{}\/'[\]]/im;
+    var elments=elments.split("^")
+    var i=0;
+    for (i=0;i<elments.length;i++)
+    {
+        var valueStr=getElementValue(elments[i]);
+        if (re.test(valueStr))
+        {
+            var cName=$("label[for='"+elments[i]+"']").html()
+            alert('"'+cName+'"存在特殊字符');
+            return false;
+        }
+    }
+    return true;
 }

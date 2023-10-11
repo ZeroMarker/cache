@@ -8,10 +8,15 @@ function InitHospList()
 {
 	var hospComp = GenHospComp("Doc_BaseConfig_SplitPrescriptSetting");
 	hospComp.jdata.options.onSelect = function(e,t){
-		InitOther();
+		LoadSplitPrescTypeDetail("");
+		$('#tabSplitPrescType').datagrid('reload');
+		//初始化右侧界面
+		InitPrescTypeDetail("");
+		LoadPrompt();
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){
 		InitOther();
+		InitCache();
 	}
 }
 function InitOther(){
@@ -20,6 +25,13 @@ function InitOther(){
 	//初始化右侧界面
 	InitPrescTypeDetail("");
 	LoadPrompt();
+}
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
 }
 function SaveDetailsClickHandle(){
 	var rows = SplitPrescTypeDataGrid.datagrid("getSelections");
@@ -70,7 +82,8 @@ function SaveDetailsClickHandle(){
 	var EPLinkDiag=$("#Check_EPLinkDiag").checkbox('getValue')?1:0;
 	var IPOneAndOutLinkDiag=$("#Check_IPOneAndOutLinkDiag").checkbox('getValue')?1:0;
 	var IPNotOneAndOutLinkDiag=$("#Check_IPNotOneAndOutLinkDiag").checkbox('getValue')?1:0;
-	var PrescNoLinkDiag= OPLinkDiag+"^"+EPLinkDiag+"^"+IPOneAndOutLinkDiag+"^"+IPNotOneAndOutLinkDiag;
+	var LinkDiagNumber=$("#LinkDiagNumber").val();
+	var PrescNoLinkDiag= OPLinkDiag+"^"+EPLinkDiag+"^"+IPOneAndOutLinkDiag+"^"+IPNotOneAndOutLinkDiag+"^"+LinkDiagNumber;
 	
 	var spit=String.fromCharCode(1)
 	var OtherInfo=GroupSum+"^"+Single+"^"+MajorAttr+"^"+DMJPrescNo+"^"+SingleB;
@@ -113,7 +126,7 @@ function LoadSplitPrescTypeDetail(Code){
 	SetCheckFlag("Check_EPLinkDiag",PrescNoLinkDiag[1]);
 	SetCheckFlag("Check_IPOneAndOutLinkDiag",PrescNoLinkDiag[2]);
 	SetCheckFlag("Check_IPNotOneAndOutLinkDiag",PrescNoLinkDiag[3]);
-	
+	$("#LinkDiagNumber").val(PrescNoLinkDiag[4]);
 	LoadPrompt();
 }
 function LoadPrompt(){
@@ -225,7 +238,14 @@ function InittabSplitPrescType(){
 		onSelect : function(rowIndex, rowData) {
 			var Code=rowData.Code;
 			LoadSplitPrescTypeDetail(Code);
-		}
+		},
+		onLoadSuccess:function(data){
+			SplitPrescTypeEditRow=undefined;
+		},
+		onBeforeLoad:function(param){
+		   SplitPrescTypeEditRow=undefined;
+		   $('#tabSplitPrescType').datagrid('unselectAll');
+	   }
 	});
 }
 function LoadListData(param1,param2){

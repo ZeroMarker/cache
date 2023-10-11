@@ -5,8 +5,8 @@
  */
 function DrugImportGrSCI(Fn) {
     Ext.Msg.show({
-        title: '注意',
-        msg: "尚未开启接口,可联系工程师了解详细内容!",
+        title: $g('注意'),
+        msg: $g("尚未开启接口,可联系工程师了解详细内容!"),
         buttons: Ext.Msg.OK,
         icon: Ext.MessageBox.INFO
     });
@@ -20,28 +20,28 @@ function DrugImportGrSCI(Fn) {
     
     // 供应商
     var SCIVendor = new Ext.ux.VendorComboBox({
-        fieldLabel: '供应商',
+        fieldLabel: $g('供应商'),
         id: 'SCIVendor',
         name: 'SCIVendor',
         anchor: '90%',
-        emptyText: '供应商...'
+        emptyText: $g('供应商...')
             //disabled : true
     });
 
     // 入库部门
     var SCIRecLoc = new Ext.ux.LocComboBox({
-        fieldLabel: '入库部门',
+        fieldLabel: $g('入库部门'),
         id: 'SCIRecLoc',
         name: 'SCIRecLoc',
         anchor: '90%',
-        emptyText: '入库部门...',
+        emptyText: $g('入库部门...'),
         groupId: session['LOGON.GROUPID']
             //disabled : true
     });
 
     // 起始日期
     var SCIStartDate = new Ext.ux.EditDate({
-        fieldLabel: '起始日期',
+        fieldLabel:$g( '起始日期'),
         id: 'SCIStartDate',
         name: 'SCIStartDate',
         anchor: '90%',
@@ -52,7 +52,7 @@ function DrugImportGrSCI(Fn) {
 
     // 截止日期
     var SCIEndDate = new Ext.ux.EditDate({
-        fieldLabel: '截止日期',
+        fieldLabel: $g('截止日期'),
         id: 'SCIEndDate',
         name: 'SCIEndDate',
         anchor: '90%',
@@ -76,13 +76,13 @@ function DrugImportGrSCI(Fn) {
     var SCIImportStatStore = new Ext.data.SimpleStore({
         fields: ['RowId', 'Description'],
         data: [
-            ['N', '未入库'],
-            ['Y', '已入库']
+            ['N', $g('未入库')],
+            ['Y', $g('已入库')]
         ]
     });
     
     var SCIImportStat = new Ext.form.ComboBox({
-        fieldLabel: '入库状态',
+        fieldLabel: $g('入库状态'),
         id: 'SCIImportStat',
         name: 'SCIImportStat',
         store: SCIImportStatStore,
@@ -97,7 +97,7 @@ function DrugImportGrSCI(Fn) {
     });
 
     var SCISxNo = new Ext.form.TextField({
-        fieldLabel: '随行单号',
+        fieldLabel: $g('随行单号'),
         id: 'SCISxNo',
         name: 'SCISxNo',
         anchor: '90%',
@@ -118,7 +118,7 @@ function DrugImportGrSCI(Fn) {
         items: [{
             layout: 'column', // Specifies that the items will now be arranged in columns
             xtype: 'fieldset',
-            title: '查询条件',
+            title: $g('查询条件'),
             style: 'padding:5px 0px 0px 0px',
             defaults: { border: false }, // Default config options for child items
             items: [{
@@ -151,24 +151,24 @@ function DrugImportGrSCI(Fn) {
     
     var SCISynRecBT = new Ext.Toolbar.Button({
         id: "SCISynRecBT",
-        text: '提取云平台数据',
-        tooltip: '提取云平台数据',
+        text: $g('提取云平台数据'),
+        tooltip: $g('提取云平台数据'),
         iconCls: 'world_link',
         height: 30,
         width: 70,
         handler: function() {
             var SCISXNo = Ext.getCmp("SCISxNo").getValue();
             if (SCISXNo == "") {
-                Msg.info("warning", "随行单号为空!");
+                Msg.info("warning", $g("随行单号为空!"));
                 return;
             }
             var ret = tkMakeServerCall("web.DHCST.SCI.Method.Interface", "GetRecData", SCISXNo, gUserId)
             if (ret == 0) {
-                Msg.info("success", "提取成功!");
+                Msg.info("success", $g("提取成功!"));
             } else {
                 var msginfo = ret.split("|@|")[1];
                 Ext.Msg.show({
-                    title: '注意',
+                    title: $g('注意'),
                     msg: msginfo,
                     buttons: Ext.Msg.OK,
                     icon: Ext.MessageBox.INFO
@@ -179,8 +179,8 @@ function DrugImportGrSCI(Fn) {
     
     // 检索按钮
     var SCISearchBT = new Ext.Toolbar.Button({
-        text: '查询',
-        tooltip: '点击查询供应链需要入库的信息',
+        text: $g('查询'),
+        tooltip: $g('点击查询供应链需要入库的信息'),
         iconCls: 'page_find',
         height: 30,
         width: 70,
@@ -207,7 +207,7 @@ function DrugImportGrSCI(Fn) {
             params: { start: 0, limit: Page },
             callback: function(r, options, success) {
                 if (success == false) {
-                    Ext.MessageBox.alert("查询错误",SCIMasterInfoStore.reader.jsonData.Error);  
+                    Ext.MessageBox.alert($g("查询错误"),SCIMasterInfoStore.reader.jsonData.Error);  
                 } else {
                     if (r.length > 0) {
                         SCIMasterInfoGrid.getSelectionModel().selectFirstRow();
@@ -221,8 +221,8 @@ function DrugImportGrSCI(Fn) {
 
     // 选取按钮
     var SCICommitBT = new Ext.Toolbar.Button({
-        text: '提交入库',
-        tooltip: '点击生成HIS入库单',
+        text: $g('提交入库'),
+        tooltip: $g('点击生成HIS入库单'),
         iconCls: 'page_goto',
         height: 30,
         width: 70,
@@ -233,8 +233,8 @@ function DrugImportGrSCI(Fn) {
 
     // 清空按钮
     var SCIClearBT = new Ext.Toolbar.Button({
-        text: '清空',
-        tooltip: '点击清空',
+        text: $g('清空'),
+        tooltip: $g('点击清空'),
         iconCls: 'page_clearscreen',
         height: 30,
         width: 70,
@@ -255,8 +255,8 @@ function DrugImportGrSCI(Fn) {
 
     // 关闭按钮
     var SCICloseBT = new Ext.Toolbar.Button({
-        text: '关闭',
-        tooltip: '关闭界面',
+        text: $g('关闭'),
+        tooltip: $g('关闭界面'),
         iconCls: 'page_delete',
         height: 30,
         width: 70,
@@ -295,38 +295,38 @@ function DrugImportGrSCI(Fn) {
     var nm = new Ext.grid.RowNumberer();
     
     var SCIMasterInfoCm = new Ext.grid.ColumnModel([nm, {
-            header: "SCI单号",
+            header: $g("SCI单号"),
             dataIndex: 'SCIOrderNo',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: "供应商",
+            header: $g("供应商"),
             dataIndex: 'VendorDesc',
             width: 125,
             align: 'left',
             sortable: true
         }, {
-            header: "入库科室",
+            header: $g("入库科室"),
             dataIndex: 'LocDesc',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: "单据日期",
+            header: $g("单据日期"),
             dataIndex: 'SCIRecDate',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: "供应商ID",
+            header: $g("供应商ID"),
             dataIndex: 'VendorId',
             width: 20,
             align: 'left',
             sortable: true,
             hidden: true
         }, {
-            header: "科室ID",
+            header: $g("科室ID"),
             dataIndex: 'LocId',
             width: 20,
             align: 'left',
@@ -348,8 +348,8 @@ function DrugImportGrSCI(Fn) {
         store: SCIMasterInfoStore,
         pageSize: PageSize,
         displayInfo: true,
-        displayMsg: '第 {0} 条到 {1}条 ，一共 {2} 条',
-        emptyMsg: "没有记录"
+        displayMsg: $g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+        emptyMsg: $g("没有记录")
     });
     
     var SCIMasterInfoGrid = new Ext.grid.GridPanel({
@@ -368,7 +368,7 @@ function DrugImportGrSCI(Fn) {
                     	params: { start: 0, limit: 999, sort: '', dir: '' },
 			           	callback: function(r, options, success) {
 			                if (success == false) {
-			                    Ext.MessageBox.alert("查询错误",SCIDetailInfoStore.reader.jsonData.Error);  
+			                    Ext.MessageBox.alert($g("查询错误"),SCIDetailInfoStore.reader.jsonData.Error);  
 			                };
 			            }                     
                     });
@@ -424,7 +424,7 @@ function DrugImportGrSCI(Fn) {
             hideable: false
         },
         {
-            header: '直送科室',
+            header: $g('直送科室'),
             dataIndex: 'ReqLocDesc',
             width: 120,
             align: 'left',
@@ -433,94 +433,94 @@ function DrugImportGrSCI(Fn) {
             hidden:true
         },
         {
-            header: '药品代码',
+            header: $g('药品代码'),
             dataIndex: 'IncCode',
             width: 80,
             align: 'left',
             sortable: true
         }, {
-            header: '药品名称',
+            header: $g('药品名称'),
             dataIndex: 'IncDesc',
             width: 230,
             align: 'left',
             sortable: true
         }, {
-            header: "厂商",
+            header: $g("生产企业"),
             dataIndex: 'Manf',
             width: 180,
             align: 'left',
             sortable: true
         }, {
-            header: "批号",
+            header: $g("批号"),
             dataIndex: 'BatchNo',
             width: 90,
             align: 'left',
             sortable: true
         }, {
-            header: "有效期",
+            header: $g("有效期"),
             dataIndex: 'ExpDate',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: "单位",
+            header: $g("单位"),
             dataIndex: 'IngrUom',
             width: 80,
             align: 'left',
             sortable: true
         }, {
-            header: "数量",
+            header: $g("数量"),
             dataIndex: 'RecQty',
             width: 80,
             align: 'right',
             sortable: true
         }, {
-            header: "进价",
+            header: $g("进价"),
             dataIndex: 'Rp',
             width: 60,
             align: 'right',
 
             sortable: true
         }, {
-            header: "售价",
+            header: $g("售价"),
             dataIndex: 'Sp',
             width: 60,
             align: 'right',
 
             sortable: true
         }, {
-            header: "发票号",
+            header: $g("发票号"),
             dataIndex: 'InvNo',
             width: 80,
             align: 'left',
             sortable: true
         }, {
-            header: "发票日期",
+            header: $g("发票日期"),
             dataIndex: 'InvDate',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: "进价金额",
+            header: $g("进价金额"),
             dataIndex: 'RpAmt',
             width: 100,
             align: 'left',
 
             sortable: true
         }, {
-            header: "售价金额",
+            header: $g("售价金额"),
             dataIndex: 'SpAmt',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: "发票金额",
+            header: $g("发票金额"),
             dataIndex: 'InvMoney',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: "规格",
+            header: $g("规格"),
             dataIndex: 'Spec',
             width: 100,
             align: 'left',
@@ -546,8 +546,8 @@ function DrugImportGrSCI(Fn) {
         store: SCIDetailInfoStore,
         pageSize: 9999,
         displayInfo: true,
-        displayMsg: '第 {0} 条到 {1}条 ，一共 {2} 条',
-        emptyMsg: "没有记录"
+        displayMsg: $g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+        emptyMsg: $g("没有记录")
     });
     
     var SCIDetailInfoGrid = new Ext.grid.GridPanel({
@@ -570,7 +570,7 @@ function DrugImportGrSCI(Fn) {
     });
 
     var window = new Ext.Window({
-        title: '供应链接口入库',
+        title: $g('供应链接口入库'),
         width: document.body.clientWidth * 0.98,
         height: document.body.clientHeight * 0.98,
         layout: 'border',
@@ -583,7 +583,7 @@ function DrugImportGrSCI(Fn) {
                 items: SCIFormS
             }, {
                 region: 'west',
-                title: '供应链入库单',
+                title: $g('供应链入库单'),
                 collapsible: true,
                 split: true,
                 width: 400,
@@ -595,7 +595,7 @@ function DrugImportGrSCI(Fn) {
 
             }, {
                 region: 'center',
-                title: '供应链入库单明细',
+                title: $g('供应链入库单明细'),
                 layout: 'fit',
                 items: SCIDetailInfoGrid
 
@@ -611,14 +611,14 @@ function DrugImportGrSCI(Fn) {
         var selectRows = SCIMasterInfoGrid.getSelectionModel().getSelections();
         if (selectRows.length == 0) {
             Ext.Msg.show({
-                title: '错误',
-                msg: '请选择供应链入库信息！',
+                title: $g('错误'),
+                msg: $g('请选择供应链入库信息！'),
                 buttons: Ext.Msg.OK,
                 icon: Ext.MessageBox.ERROR
             });
         } else {
             var HHImport = selectRows[0].get("HHImport");
-            var loadMask = new Ext.LoadMask(Ext.getBody(), { msg: "系统正在处理数据，请稍候...", removeMask: true });
+            var loadMask = new Ext.LoadMask(Ext.getBody(), { msg: $g("系统正在处理数据，请稍候..."), removeMask: true });
             loadMask.show();
             var url = DictUrl + "hhimportaction.csp?actiontype=CommitImport";
             Ext.Ajax.request({
@@ -630,14 +630,14 @@ function DrugImportGrSCI(Fn) {
                     if (jsonData.success == 'false') {
                         ret = jsonData.info;
                         Ext.Msg.show({
-                            title: '错误',
+                            title: $g('错误'),
                             msg: ret,
                             buttons: Ext.Msg.OK,
                             icon: Ext.MessageBox.ERROR
                         });
                     } else {
                         var ImportId = jsonData.info;
-                        Msg.info("success", "提交入库成功!");
+                        Msg.info("success", $g("提交入库成功!"));
                         window.close();
                         Fn(ImportId);
                     }

@@ -175,7 +175,11 @@ function InitYLLBCmb(OPIPFlag)
 	    	param.ClassName="web.INSUDicDataCom"
 	    	param.QueryName="QueryDic"
 	    	param.ResultSetType="array";
-	    	param.Type=("AKA130"+getValueById('cbInsuType'))
+	    	if($("#cbInsuType").combobox("getText").indexOf("国家")!="-1"){
+				param.Type=("med_type"+getValueById('cbInsuType'));
+			}else{
+				param.Type=("AKA130"+getValueById('cbInsuType'));
+			} ;
 	    	param.HospDr=INSURPT_CONSTANT.SESSION.HOSP_ROWID;
 	    	param.Code=""
 	    },
@@ -237,7 +241,7 @@ function InitPatTypeCmb(OPIPFlag)
 	    	var j=0
 	    	newdata=new Array() 
 			for(var i in data){
-				if (((data[i].DicOPIPFlag==OPIPFlag)||(""==OPIPFlag))&&(data[i].cCode != "")){
+				if (((data[i].DicOPIPFlag==OPIPFlag)||(""==OPIPFlag))&&(data[i].cCode != "")&&(typeof(data[i].cCode) != "undefined")){
 					newdata.push(data[i])
 					if (data[i].DicDefaultFlag=="Y"){
 						indexed=j;
@@ -270,10 +274,10 @@ function InitStatesCmb(OPIPFlag)
 	var indexed=-1
 	$HUI.combobox("#cbStates",{
 		url:$URL,
-		editable:false,
+		editable:true,
 		valueField:'cCode',
     	textField:'cDesc',
-    	panelHeight:'auto',
+    	panelHeight:150,  //'auto',
     	multiple:true, 
     	rowStyle:'checkbox', 
     	method:"GET",
@@ -282,7 +286,12 @@ function InitStatesCmb(OPIPFlag)
 	    	param.ClassName="web.INSUDicDataCom";
 	    	param.QueryName="QueryDic";
 	    	param.ResultSetType="array";
-	    	param.Type=("YAB003"+getValueById('cbInsuType'));
+	    	if($("#cbInsuType").combobox("getText").indexOf("国家")!="-1"){
+				param.Type=("admdvs"+getValueById('cbInsuType'));
+			}else{
+				param.Type=("YAB003"+getValueById('cbInsuType'));
+			} 
+	    	//param.Type=("YAB003"+getValueById('cbInsuType'));
 	    	param.HospDr=INSURPT_CONSTANT.SESSION.HOSP_ROWID;
 	    	param.Code=""
 	    },
@@ -291,7 +300,7 @@ function InitStatesCmb(OPIPFlag)
 	    	var j=0
 	    	newdata=new Array() 
 			for(var i in data){
-				if (((data[i].DicOPIPFlag==OPIPFlag)||(""==OPIPFlag))&&(data[i].cCode != "")){
+				if (((data[i].DicOPIPFlag==OPIPFlag)||(""==OPIPFlag))&&(data[i].cCode != "")&&(typeof(data[i].cCode) != "undefined")){
 					newdata.push(data[i])
 					if (data[i].DicDefaultFlag=="Y"){
 						indexed=j;

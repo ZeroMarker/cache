@@ -1,4 +1,4 @@
-/**
+﻿/**
  * portal - jQuery EasyUI
  * 
  * Licensed under the GPL:
@@ -11,11 +11,11 @@
  *   panel
  * 
  */
-(function($){
+(function($) {
 	/**
 	 * initialize the portal
 	 */
-	function init(target){
+	function init(target) {
 		$(target).addClass('portal');
 		var table = $('<table border="0" cellspacing="0" cellpadding="0"><tr></tr></table>').appendTo(target);
 		var tr = table.find('tr');
@@ -24,28 +24,28 @@
 		var totalWidth = 0;
 		$(target).children('div:first').addClass('portal-column-left');
 		$(target).children('div:last').addClass('portal-column-right');
-		$(target).find('>div').each(function(){	// each column panel
+		$(target).find('>div').each(function() {	// each column panel
 			var column = $(this);
 			totalWidth += column.outerWidth();
 			columnWidths.push(column.outerWidth());
 			
-			var td = $('<td class="portal-column-td"></td>').appendTo(tr)
+			var td = $('<td class="portal-column-td"></td>').appendTo(tr);
 			column.addClass('portal-column').appendTo(td);
-			column.find('>div').each(function(){	// each portal panel
+			column.find('>div').each(function() {	// each portal panel
 				var p = $(this).addClass('portal-p').panel({
-					doSize:false,
-					cls:'portal-panel'
+					doSize: false,
+					cls: 'portal-panel'
 				});
 				makeDraggable(target, p);
 			});
 		});
-		for(var i=0; i<columnWidths.length; i++){
+		for (var i = 0; i < columnWidths.length; i++) {
 			columnWidths[i] /= totalWidth;
 		}
 		
-		$(target).bind('_resize', function(){
+		$(target).bind('_resize', function() {
 			var opts = $.data(target, 'portal').options;
-			if (opts.fit == true){
+			if (opts.fit == true) {
 				setSize(target);
 			}
 			return false;
@@ -54,38 +54,38 @@
 		return columnWidths;
 	}
 
-	function initCss(){
-		if (!$('#easyui-portal-style').length){
+	function initCss() {
+		if (!$('#easyui-portal-style').length) {
 			$('head').append(
-				'<style id="easyui-portal-style">' +
-				'.portal{padding:0;margin:0;overflow:auto;border:1px solid #99bbe8;}' +
-				'.portal-noborder{border:0;}' +
-				'.portal .portal-panel{margin-bottom:10px;}' +
-				'.portal-column-td{vertical-align:top;}' +
-				'.portal-column{padding:10px 0 10px 10px;overflow:hidden;}' +
-				'.portal-column-left{padding-left:10px;}' +
-				'.portal-column-right{padding-right:10px;}' +
-				'.portal-proxy{opacity:0.6;filter:alpha(opacity=60);}' +
-				'.portal-spacer{border:3px dashed #eee;margin-bottom:10px;}' +
-				'</style>'
+				'<style id="easyui-portal-style">'
+				+ '.portal{padding:0;margin:0;overflow:auto;border:1px solid #99bbe8;}'
+				+ '.portal-noborder{border:0;}'
+				+ '.portal .portal-panel{margin-bottom:10px;}'
+				+ '.portal-column-td{vertical-align:top;}'
+				+ '.portal-column{padding:10px 0 10px 10px;overflow:hidden;}'
+				+ '.portal-column-left{padding-left:10px;}'
+				+ '.portal-column-right{padding-right:10px;}'
+				+ '.portal-proxy{opacity:0.6;filter:alpha(opacity=60);}'
+				+ '.portal-spacer{border:3px dashed #eee;margin-bottom:10px;}'
+				+ '</style>'
 			);
 		}
 	}
 	
-	function setSize(target){
+	function setSize(target) {
 		var t = $(target);
 		var opts = $.data(target, 'portal').options;
-		if (opts.fit){
-			var p = t.parent();
-			opts.width = p.width();
-			opts.height = p.height();
+		if (opts.fit) {
+			var parent = t.parent();
+			opts.width = parent.width();
+			opts.height = parent.height();
 		}
-		if (!isNaN(opts.width)){
+		if (!isNaN(opts.width)) {
 			t._outerWidth(opts.width);
 		} else {
 			t.width('auto');
 		}
-		if (!isNaN(opts.height)){
+		if (!isNaN(opts.height)) {
 			t._outerHeight(opts.height);
 		} else {
 			t.height('auto');
@@ -97,18 +97,18 @@
 		var leftWidth = 0;
 		
 		// calculate and set every column size
-		for(var i=0; i<columnWidths.length; i++){
-			var p = t.find('div.portal-column:eq('+i+')');
+		for (var i = 0; i < columnWidths.length; i++) {
+			var p = t.find('div.portal-column:eq(' + i + ')');
 			var w = Math.floor(width * columnWidths[i]);
-			if (i == columnWidths.length - 1){
-//				w = width - leftWidth - (hasScroll == true ? 28 : 10);
+			if (i == columnWidths.length - 1) {
+				//				w = width - leftWidth - (hasScroll == true ? 28 : 10);
 				w = width - leftWidth - (hasScroll == true ? 18 : 0);
 			}
 			p._outerWidth(w);
 			leftWidth += p.outerWidth();
 			
 			// resize every panel of the column
-			p.find('div.portal-p').panel('resize', {width:p.width()});
+			p.find('div.portal-p').panel('resize', { width: p.width() });
 		}
 		opts.onResize.call(target, opts.width, opts.height);
 	}
@@ -116,11 +116,11 @@
 	/**
 	 * set draggable feature for the specified panel
 	 */
-	function makeDraggable(target, panel){
+	function makeDraggable(target, panel) {
 		var spacer;
 		panel.panel('panel').draggable({
-			handle:'>div.panel-header>div.panel-title',
-			proxy:function(source){
+			handle: '>div.panel-header>div.panel-title',
+			proxy: function(source) {
 				var p = $('<div class="portal-proxy">proxy</div>').insertAfter(source);
 				p.width($(source).width());
 				p.height($(source).height());
@@ -128,18 +128,18 @@
 				p.find('div.portal-p').removeClass('portal-p');
 				return p;
 			},
-			onBeforeDrag:function(e){
+			onBeforeDrag: function(e) {
 				e.data.startTop = $(this).position().top + $(target).scrollTop();
 			},
-			onStartDrag:function(e){
+			onStartDrag: function(e) {
 				$(this).hide();
 				spacer = $('<div class="portal-spacer"></div>').insertAfter(this);
 				setSpacerSize($(this).outerWidth(), $(this).outerHeight());
 			},
-			onDrag:function(e){
+			onDrag: function(e) {
 				var p = findPanel(e, this);
-				if (p){
-					if (p.pos == 'up'){
+				if (p) {
+					if (p.pos == 'up') {
 						spacer.insertBefore(p.target);
 					} else {
 						spacer.insertAfter(p.target);
@@ -147,8 +147,8 @@
 					setSpacerSize($(p.target).outerWidth());
 				} else {
 					var c = findColumn(e);
-					if (c){
-						if (c.find('div.portal-spacer').length == 0){
+					if (c) {
+						if (c.find('div.portal-spacer').length == 0) {
 							spacer.appendTo(c);
 							setSize(target);
 							setSpacerSize(c.width());
@@ -156,7 +156,7 @@
 					}
 				}
 			},
-			onStopDrag:function(e){
+			onStopDrag: function(e) {
 				$(this).css('position', 'static');
 				$(this).show();
 				spacer.hide();
@@ -173,24 +173,24 @@
 		/**
 		 * find which panel the cursor is over
 		 */
-		function findPanel(e, source){
+		function findPanel(e, source) {
 			var result = null;
-			$(target).find('div.portal-p').each(function(){
+			$(target).find('div.portal-p').each(function() {
 				var pal = $(this).panel('panel');
-				if (pal[0] != source){
+				if (pal[0] != source) {
 					var pos = pal.offset();
 					if (e.pageX > pos.left && e.pageX < pos.left + pal.outerWidth()
-							&& e.pageY > pos.top && e.pageY < pos.top + pal.outerHeight()){
-						if (e.pageY > pos.top + pal.outerHeight() / 2){
+							&& e.pageY > pos.top && e.pageY < pos.top + pal.outerHeight()) {
+						if (e.pageY > pos.top + pal.outerHeight() / 2) {
 							result = {
-								target:pal,
-								pos:'down'
+								target: pal,
+								pos: 'down'
 							};
 						} else {
 							result = {
-								target:pal,
-								pos:'up'
-							}
+								target: pal,
+								pos: 'up'
+							};
 						}
 					}
 				}
@@ -201,12 +201,12 @@
 		/**
 		 * find which portal column the cursor is over
 		 */
-		function findColumn(e){
+		function findColumn(e) {
 			var result = null;
-			$(target).find('div.portal-column').each(function(){
+			$(target).find('div.portal-column').each(function() {
 				var pal = $(this);
 				var pos = pal.offset();
-				if (e.pageX > pos.left && e.pageX < pos.left + pal.outerWidth()){
+				if (e.pageX > pos.left && e.pageX < pos.left + pal.outerWidth()) {
 					result = pal;
 				}
 			});
@@ -216,24 +216,23 @@
 		/**
 		 * set the spacer size
 		 */
-		function setSpacerSize(width, height){
+		function setSpacerSize(width, height) {
 			spacer._outerWidth(width);
-			if (height){
+			if (height) {
 				spacer._outerHeight(height);
 			}
 		}
 	}
 	
-	
-	$.fn.portal = function(options, param){
-		if (typeof options == 'string'){
+	$.fn.portal = function(options, param) {
+		if (typeof options === 'string') {
 			return $.fn.portal.methods[options](this, param);
 		}
 		
 		options = options || {};
-		return this.each(function(){
+		return this.each(function() {
 			var state = $.data(this, 'portal');
-			if (state){
+			if (state) {
 				$.extend(state.options, options);
 			} else {
 				state = $.data(this, 'portal', {
@@ -241,7 +240,7 @@
 					columnWidths: init(this)
 				});
 			}
-			if (state.options.border){
+			if (state.options.border) {
 				$(this).removeClass('portal-noborder');
 			} else {
 				$(this).addClass('portal-noborder');
@@ -252,12 +251,12 @@
 	};
 	
 	$.fn.portal.methods = {
-		options: function(jq){
+		options: function(jq) {
 			return $.data(jq[0], 'portal').options;
 		},
-		resize: function(jq, param){
-			return jq.each(function(){
-				if (param){
+		resize: function(jq, param) {
+			return jq.each(function() {
+				if (param) {
 					var opts = $.data(this, 'portal').options;
 					if (param.width) opts.width = param.width;
 					if (param.height) opts.height = param.height;
@@ -265,48 +264,48 @@
 				setSize(this);
 			});
 		},
-		getPanels: function(jq, columnIndex){
+		getPanels: function(jq, columnIndex) {
 			var c = jq;	// the panel container
-			if (columnIndex >= 0){
+			if (columnIndex >= 0) {
 				c = jq.find('div.portal-column:eq(' + columnIndex + ')');
 			}
 			var panels = [];
-			c.find('div.portal-p').each(function(){
+			c.find('div.portal-p').each(function() {
 				panels.push($(this));
 			});
 			return panels;
 		},
-		add: function(jq, param){	// param: {panel,columnIndex}
-			return jq.each(function(){
+		add: function(jq, param) {	// param: {panel,columnIndex}
+			return jq.each(function() {
 				var c = $(this).find('div.portal-column:eq(' + param.columnIndex + ')');
 				var p = param.panel.addClass('portal-p');
 				p.panel('panel').addClass('portal-panel').appendTo(c);
 				makeDraggable(this, p);
-				p.panel('resize', {width:c.width()});
+				p.panel('resize', { width: c.width() });
 			});
 		},
-		remove: function(jq, panel){
-			return jq.each(function(){
+		remove: function(jq, panel) {
+			return jq.each(function() {
 				var panels = $(this).portal('getPanels');
-				for(var i=0; i<panels.length; i++){
+				for (var i = 0; i < panels.length; i++) {
 					var p = panels[i];
-					if (p[0] == $(panel)[0]){
+					if (p[0] == $(panel)[0]) {
 						p.panel('destroy');
 					}
 				}
 			});
 		},
-		disableDragging: function(jq, panel){
+		disableDragging: function(jq, panel) {
 			panel.panel('panel').draggable('disable');
 			return jq;
 		},
-		enableDragging: function(jq, panel){
+		enableDragging: function(jq, panel) {
 			panel.panel('panel').draggable('enable');
 			return jq;
 		}
 	};
 	
-	$.fn.portal.parseOptions = function(target){
+	$.fn.portal.parseOptions = function(target) {
 		var t = $(target);
 		return {
 			width: (parseInt(target.style.width) || undefined),
@@ -317,11 +316,11 @@
 	};
 	
 	$.fn.portal.defaults = {
-		width:'auto',
-		height:'auto',
-		border:true,
-		fit:false,
-		onResize:function(width,height){},
-		onStateChange:function(panel){}
+		width: 'auto',
+		height: 'auto',
+		border: true,
+		fit: false,
+		onResize: function(width, height) {},
+		onStateChange: function(panel) {}
 	};
 })(jQuery);

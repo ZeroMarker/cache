@@ -220,10 +220,9 @@ function InitPatOper()
         fitColumns:true,
         singleSelect: true,
         rownumbers: true,
-        
-         headerCls:'panel-header-gray',
-         showHeader:false,
-         url:$URL,
+        headerCls:'panel-header-gray',
+        showHeader:false,
+        url:$URL,
         queryParams:{
             ClassName:"web.DHCANOPArrangeHISUI",
             QueryName:"GetOpList"
@@ -269,13 +268,55 @@ function InitPatOper()
         },
         columns: [
             [
-                { field: "operDesc", title: "手术名称", width: 230 },
+                { field: "operDesc", title: "手术名称", width: 240 },
                 { field: "surgeon", title: "主刀", width: 80 },
-                {field: "operId", title: "手术名称Id", width: 1, hidden: true },
-                {field: "surgeonId", title: "surgeonId", width: 1, hidden: true },
-                {field: "opSub", title: "opSub", width: 1, hidden: true }
+                { field: "operId", title: "手术名称Id", width: 1, hidden: true },
+                { field: "surgeonId", title: "surgeonId", width: 1, hidden: true },
+                { field: "opSub", title: "opSub", width: 1, hidden: true }
          ]
-        ]
+        ],
+        onLoadSuccess:function(data){
+	       	if(data.total>0)
+			{
+				$("#operationBox").datagrid('selectRow',0);
+				var selectRow=$("#operationBox").datagrid("getSelected");
+		    	if(selectRow)
+		    	{
+					$('#OperListBox').datagrid('clearSelections');
+					lastoperSubIndex=selectRow.opSub;
+					if((operSubIndex!=lastoperSubIndex))
+					{
+						var frm =dhcsys_getmenuform();
+						if (frm) { 				
+						if (frm.AnaestOperationID)
+								{frm.AnaestOperationID.value = selectRow.opSub;}
+							}
+							operSubIndex=lastoperSubIndex;
+							$('#OperListBox').datagrid('selectRow',0);
+					}
+					else
+					{
+						$('#operationBox').datagrid({	
+						queryParams:{
+						ClassName:"web.DHCANOPArrangeHISUI",
+						QueryName:"GetOpList"
+						},
+						onBeforeLoad:function(param)
+						{
+							param.opaId=opaId;
+						}})
+					   var frm =dhcsys_getmenuform();
+						if (frm) { 				
+						if (frm.AnaestOperationID)
+							{frm.AnaestOperationID.value = "";}
+						} 
+						operSubIndex=0;
+						lastoperSubIndex=0;
+					}
+			
+		    	}
+			}
+        }
     });
 
 }

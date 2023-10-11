@@ -4,6 +4,18 @@
  * @DateTime 2019-07-07
  */
 
+$.extend($.fn.validatebox.defaults.rules, {
+	checkCodeExist:{
+		validator: function(value){
+			var url=$URL;  
+			var data={ClassName:'web.DHCHM.QuestionnaireSet',MethodName:'CheckSubjectCodeExist',ParRef:$("#QuestionDR").val(),Code:value,ID:$("#SubjectDR").val()};
+			var rtn=$.ajax({ url: url, async: false, cache: false, type: "post" ,data:data}).responseText;
+			return rtn==0;
+		},
+		message: '代码已存在'
+	}
+});
+
 var SubjectDataGrid = $HUI.datagrid("#SubjectList",{
 		url:$URL,
 		bodyCls:'panel-body-gray',
@@ -14,6 +26,7 @@ var SubjectDataGrid = $HUI.datagrid("#SubjectList",{
 			ParRef:$("#QuestionDR").val()
 		},
 		onSelect:function(rowIndex,rowData){
+			QDetail_clean();
 			$("#SubjectDR").val(rowData.QSID);
 			$("#SCode").val(rowData.QSCode);
 			$("#SDesc").val(rowData.QSDesc);
@@ -99,24 +112,57 @@ function subject_clean(){
 	$("#SRemark").val("");
 	$("#SOrder").val("");
 	$("#SActive").checkbox("check");
+	 SubjectDataGrid.load({ClassName:"web.DHCHM.QuestionnaireSet",QueryName:"FindQSubject",ParRef:$("#QuestionDR").val()});
+	  QDetailDataGrid.load({ClassName:"web.DHCHM.QuestionnaireSet",QueryName:"FindCSDLink",ParRef:$("#SubjectDR").val()});
 }
 
 
 function suject_save(){
 	var ID=$("#SubjectDR").val();
 	var Code=$("#SCode").val();
+	if(Code==""){
+		$.messager.alert("提示","编码不能为空","info",function(){ 
+			$("#SCode").focus();
+		});
+		return false;
+	}
+	if(!$("#SCode").validatebox("isValid")){
+		$.messager.alert("提示","代码已存在","info");
+		return false;
+	}
 	var Desc=$("#SDesc").val();
+	if(Desc==""){
+		$.messager.alert("提示","描述不能为空","info",function(){ 
+			$("#SDesc").focus();
+		});
+		return false;
+		
+	}
+
 	var Remark=$("#SRemark").val();
 	var Order=$("#SOrder").val();
+	if (Order==""){
+		$.messager.alert("提示","顺序不能为空","info",function(){ 
+			$("#SOrder").focus();
+		});
+
+		return false;
+	}else{
+		   if((!(isInteger(Order)))||(Order<=0)) 
+		   {
+			   $.messager.alert("提示","顺序只能是正整数","info");
+			    return false; 
+		   }
+
+	}
+
+
 	var QuesDr=$("#QuestionDR").val();
 	var Active="N";
 	if($("#SActive").checkbox("getValue")){
 		Active="Y";
 	}
-	if(Code==""){
-		$.messager.alert("提示","编码不能为空","info");
-		return false;
-	}
+	
 	var property = 'QSActive^QSCode^QSDesc^QSOrder^QSParRef^QSRemark';
 	var valList=Active+"^"+Code+"^"+Desc+"^"+Order+"^"+QuesDr+"^"+Remark;
 	try{
@@ -136,6 +182,16 @@ function suject_save(){
 	}
 }
 	
+function isInteger(num) {
+   if (!isNaN(num) && num % 1 === 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+
 function QDetail_clean()
 {
 	$("#SDLDR").val("");
@@ -143,10 +199,25 @@ function QDetail_clean()
 	$("#QDActive").checkbox("check");
 	$("#QDetailDR").combogrid("setValue","");
 	initQuestionCombogrid("");
+	QDetailDataGrid.load({ClassName:"web.DHCHM.QuestionnaireSet",QueryName:"FindCSDLink",ParRef:$("#SubjectDR").val()});
 }	
 	
 function QDetail_save(){
 	var ID=$("#SDLDR").val();
+
+	var ParRef=$("#SubjectDR").val();	
+	if(ParRef==""){
+		$.messager.alert("提示","未选择主题","info");
+		return false;
+	}
+
+    var DetailDr=$("#QDetailDR").combogrid("getValue");
+	if(DetailDr==""||DetailDr=="undefined"){
+		$.messager.alert("提示","问卷内容不能为空","info");
+		return false;
+	}
+
+	
 	var Order=$("#QDOrder").val();
 	if(Order==""){
 		$.messager.alert("提示","显示顺序不能为空","info");
@@ -156,16 +227,8 @@ function QDetail_save(){
 	if($("#QDActive").checkbox("getValue")){
 		Active="Y";
 	}
-	var ParRef=$("#SubjectDR").val();	
-	if(ParRef==""){
-		$.messager.alert("提示","未选择主题","info");
-		return false;
-	}
-	var DetailDr=$("#QDetailDR").combogrid("getValue");
-	if(DetailDr==""||DetailDr=="undefined"){
-		$.messager.alert("提示","问卷内容不能为空","info");
-		return false;
-	}
+	
+	
 	var property = 'SDLActive^SDLOrder^SDLParRef^SDLQuestionsDetailDR';
 	var valList=Active+"^"+Order+"^"+ParRef+"^"+DetailDr;
 	try{
@@ -190,14 +253,13 @@ function initQuestionCombogrid(Desc){
         idField: 'SDLQuestionsDetailDR',
         textField: 'QDDesc',
         method: 'get',
+        blurValidValue: true,
         url:$URL+'?ClassName=web.DHCHM.QuestionnaireSet&QueryName=FindQD',
         onBeforeLoad:function(param){
-        	if(Desc!==""){
-        		param.Desc = Desc;
-        	}else{
-        		param.Desc=param.q;
+        	if(param.q  && param.q!==""){
+        		Desc=param.q;
         	}
-			
+        	param.Desc = Desc;	
 		},
 		mode:'remote',
 		delay:200,

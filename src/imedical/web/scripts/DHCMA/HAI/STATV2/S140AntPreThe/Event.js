@@ -21,11 +21,13 @@
 		});
    	}
    	obj.LoadRep = function(){
-		var aHospID 	= $('#cboHospital').combobox('getValue');
+		var aHospID 	= $('#cboHospital').combobox('getValues').join('|');
 		var aDateFrom 	= $('#dtDateFrom').datebox('getValue');
 		var aDateTo		= $('#dtDateTo').datebox('getValue');
 		var aLocType 	= Common_CheckboxValue('chkStatunit');
 		var aQryCon 	= $('#cboQryCon').combobox('getValue');
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
 		ReportFrame = document.getElementById("ReportFrame");
 		if(aDateFrom > aDateTo){
 			$.messager.alert("提示","开始日期应小于或等于结束日期！", 'info');
@@ -35,7 +37,11 @@
 			$.messager.alert("提示","请选择开始日期、结束日期！", 'info');
 			return;
 		}
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S140AntPreThe.raq&aHospIDs='+aHospID +'&aDateFrom=' + aDateFrom +'&aDateTo='+ aDateTo+'&aLocType='+aLocType+'&aQryCon='+aQryCon;	
+		if ((aStatDimens=="")){
+			$.messager.alert("提示","请选择展示维度！", 'info');
+			return;
+		}
+		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S140AntPreThe.raq&aHospIDs='+aHospID +'&aDateFrom=' + aDateFrom +'&aDateTo='+ aDateTo+'&aLocType='+aLocType+'&aQryCon='+aQryCon+'&aStatDimens='+aStatDimens+'&aLocIDs='+aLocIDs+'&aPath='+cspPath;	
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
@@ -44,7 +50,15 @@
 		
 	}
 	obj.up=function(x,y){
-        return y.UseAntiCnt-x.UseAntiCnt
+        if(obj.sortName=="抗菌药物治疗使用人数"){
+			return y.CureUseAntiCnt-x.CureUseAntiCnt;
+		}else if(obj.sortName=="抗菌药物预防使用人数"){
+			return y.PreUseAntiCnt-x.PreUseAntiCnt;
+		}else if(obj.sortName=="抗菌药物预防使用率"){
+			return y.PreUseAntiRatio-x.PreUseAntiRatio;
+		}else{
+			return y.CureUseAntiRatio-x.CureUseAntiRatio;
+		}	   
     }
 	obj.option1 = function(arrViewLoc,arrUseAntiCnt,arrCureUseAntiCnt,arrPreUseAntiCnt,arrUseAntiRatio,arrCureUseAntiRatio,arrPreUseAntiRatio,endnumber){
 		var option = {
@@ -64,7 +78,7 @@
 				containLabel:true
 			},
 			legend: {
-				dimensions: ['product','抗菌药物治疗使用人数', '抗菌药物预防使用人数','抗菌药物治疗使用率','抗菌药物预防使用率'],
+				dimensions: ['抗菌药物治疗使用人数', '抗菌药物预防使用人数','抗菌药物治疗使用率','抗菌药物预防使用率'],
 				x: 'center',
 				y: 30
 			
@@ -77,7 +91,7 @@
 				end: endnumber
 			}],
 			tooltip: {
-				trigger: 'axis',
+				trigger: 'axis'
 			},
 			toolbox: {
 				feature: {
@@ -115,7 +129,7 @@
 					type: 'value',
 					name: '使用人数',
 					min: 0,
-					interval:Math.ceil(arrUseAntiCnt[0]/10),
+					interval:10,
 					axisLabel: {
 						formatter: '{value} '
 					}
@@ -186,6 +200,7 @@
 	
     obj.echartLocInfRatio = function(runQuery){
 		if (!runQuery) return;	
+		var aStatDimens = $('#cboShowType').combobox('getValue');  //展示维度
 		var arrViewLoc 			= new Array();
 		var arrUseAntiCnt 		= new Array();		//同期全身应用抗菌药物的人数	
 		var arrCureUseAntiCnt 	= new Array();
@@ -193,13 +208,13 @@
 		var arrUseAntiRatio		= new Array();
 		var arrCureUseAntiRatio	= new Array();
 		var arrPreUseAntiRatio	= new Array();
-		arrRecord 		= runQuery.record;
+		arrRecord 		= runQuery.rows;
 		
 		var arrlength		= 0;
 		for (var indRd = 0; indRd < arrRecord.length; indRd++){
 			var rd = arrRecord[indRd];
-			//去掉全院、医院、科室组
-			if ((rd["xDimensKey"].indexOf('-A-')>-1)||(rd["xDimensKey"].indexOf('-H-')>-1)||(rd["xDimensKey"].indexOf('-G-')>-1)) {
+			//去掉全院、医院、科室组、科室合计
+			if ((rd["xDimensKey"].indexOf('-A-')>-1)||((aStatDimens!="H")&&(rd["xDimensKey"].indexOf('-H-')>-1))||((aStatDimens!="G")&&(aStatDimens!="HG")&&(rd["xDimensKey"].indexOf('-G-')>-1))||(!rd["xDimensKey"])) {
 				delete arrRecord[indRd];
 				arrlength = arrlength + 1;
 				continue;
@@ -234,33 +249,44 @@
    	obj.ShowEChaert1 = function(){
 		obj.myChart.clear()
 		 //当月科室感染率图表
-		var aHospID = $('#cboHospital').combobox('getValue');
-		var aDateFrom = $('#dtDateFrom').datebox('getValue');
-		var aDateTo= $('#dtDateTo').datebox('getValue');
-		var aLocType = Common_CheckboxValue('chkStatunit');
+		var aHospID     = $('#cboHospital').combobox('getValues').join('|');
+		var aDateFrom   = $('#dtDateFrom').datebox('getValue');
+		var aDateTo     = $('#dtDateTo').datebox('getValue');
+		var aLocType    = Common_CheckboxValue('chkStatunit');
 		var aQryCon 	= $('#cboQryCon').combobox('getValue');
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S140AntPreThe' + "&QueryName=" + 'QryHospAntPreThe' + "&Arg1=" + aHospID + "&Arg2=" + aDateFrom + "&Arg3=" + aDateTo +"&Arg4="+aLocType+"&Arg5="+aQryCon+"&ArgCnt=" + 5;
+        var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
+		
+		obj.myChart.showLoading();	//隐藏加载动画
+		$cm({
+			ClassName:"DHCHAI.STATV2.S140AntPreThe",
+			QueryName:"QryHospAntPreThe",
+			aHospIDs:aHospID, 
+			aDateFrom:aDateFrom, 
+			aDateTo:aDateTo, 
+			aLocType:aLocType, 
+			aQryCon:aQryCon, 
+			aStatDimens:aStatDimens, 
+			aLocIDs:aLocIDs, 
+			page: 1,
+			rows: 999
+		},function(rs){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			obj.echartLocInfRatio(rs);
+			
+			obj.sortName="抗菌药物治疗使用率"; //初始化排序指标
+			obj.myChart.off('legendselectchanged'); //取消事件，避免事件绑定重复导致多次触发
+			obj.myChart.on('legendselectchanged', function(legObj){
+				//处理排序问题 
+				//如果是重复点击认为是需要执行隐藏处理,不想隐藏就不用判断了	
+				if(obj.sortName!=legObj.name){
+					obj.sortName=legObj.name;
+					obj.echartLocInfRatio(rs);
+				}else {
+					obj.sortName="";  //初始化
+				}
+			});
 
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 30000, //30秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				var tkclass = "DHCHAI.STATV2.S140AntPreThe";
-				var tkQuery = "QryHospAntPreThe";
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
 		});
 	}
 	

@@ -68,7 +68,7 @@ function InitFormItem()
         url:$URL+"?ClassName=web.DHCClinicCom&QueryName=FindUserByLoc&ResultSetType=array",
         valueField:"Id",
         textField:"Name",
-        panelHeight:'auto',
+        //panelHeight:'auto',
         onBeforeLoad:function(param)
         {
 	        param.locId=logonCtlocId;
@@ -228,7 +228,7 @@ function InitBPDiag()
 	$("#winIsQualified").combobox('setValue',"");
 	$("#winParticipants").combobox('setValue',"");
 	$("#winSpecimenNo").val("");
-	$("#winNote").val("");
+	$("#winNote").val("");	
 }
 //新增
 function appendRow()
@@ -290,7 +290,7 @@ function saveDetect()
     	{
 	    	$.messager.alert("提示", datas, 'error');
         	return;
-	    }
+	    }	    
     }
     else
     {
@@ -310,8 +310,9 @@ function saveDetect()
         	return;
 	    }
     }
-     $("#detectionListData").datagrid("reload");
-	$HUI.dialog("#detectionDlg").close();	
+    $("#detectionListData").datagrid("reload");
+	$HUI.dialog("#detectionDlg").close();
+	$("#EditDetection").val("");
 }
 function editRow()
 {

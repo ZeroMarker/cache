@@ -1,4 +1,4 @@
-var arcimObj=new Object();
+ï»¿var arcimObj=new Object();
 FileReader.prototype.readAsBinaryString = function (fileData) {
 	var binary = "";
 	var pt = this;
@@ -10,7 +10,7 @@ FileReader.prototype.readAsBinaryString = function (fileData) {
 	        binary += String.fromCharCode(bytes[i]);
 	    }
 	    pt.content = binary;
-	    pt.onload(pt); //Ò³ÃæÄÚdataÈ¡pt.contentÎÄ¼şÄÚÈİ
+	    pt.onload(pt); //é¡µé¢å†…dataå–pt.contentæ–‡ä»¶å†…å®¹
 	  }
 	  reader.readAsArrayBuffer(fileData);
 }
@@ -23,10 +23,27 @@ $(function(){
     	
 	});  
 	$("#KPICode").change(function(){getKPIInfo();});
-
+	loadDicHtml();
 
 
 })
+
+function loadDicHtml()
+{
+	runClassMethod("DtPortal.Configure.DataRuleDictionaries","getDataRuleByCode",{'code':'HISEDITION'},function(data){ 
+		var DicData = JSON.parse(data);
+		var html="";
+		arcimObj.DicData=DicData;
+		for (var i=0;i<DicData.length;i++)
+		{
+			html+=DicData[i].desc+'<input name="IsIMPSub" type="radio" value="'+DicData[i].value+'" />&nbsp;&nbsp';
+		}
+		html+=' å¦<input name="IsIMPSub" type="radio" value="N" checked="true"/>';
+		$("#dicHtml").html(html);
+		 
+	},"text",false);
+}
+
 function myformatter(date){
 	var y = date.getFullYear();
 	var m = date.getMonth()+1;
@@ -59,13 +76,13 @@ function loadTable()
 	    url:'dhcapp.broker.csp?ClassName=DtPortal.Configure.arcim&MethodName=qureyArcimConfigure',    
 	    columns:[[    
 	        {field:'rowID',hidden:true}, 
-	        {field:'ArcimCode',title:'ÏîÄ¿CODE',width:parseInt(0.15*tabFuWisth1)-1},    
-	        {field:'ArcimDesc',title:'ÏîÄ¿ÃèÊö',width:parseInt(0.13*tabFuWisth1)-1},
-	        {field:'ArcimGro',title:'Ò½Öö×é',width:parseInt(0.1*tabFuWisth1)-1},
-	        {field:'ArcimIsActive',title:'ÊÇ·ñÓĞĞ§',width:parseInt(0.1*tabFuWisth1)-1},
-	        {field:'ArcimIsToItmMast',title:'ÊÇ·ñ¹ØÁªÒ½Öö',width:parseInt(0.16*tabFuWisth1)-1},
-	         {field:'ArcimIsShowWard',title:'¡¾µ±ÈÕÒ½Öö¡¿ÏÔÊ¾',width:parseInt(0.18*tabFuWisth1)-1},
-	        {field:'ArcimIsLoadZB',title:'Éú³ÉÖ¸±êÊı¾İ',width:parseInt(0.18*tabFuWisth1)-1}      
+	        {field:'ArcimCode',title:'é¡¹ç›®CODE',width:parseInt(0.15*tabFuWisth1)-1},    
+	        {field:'ArcimDesc',title:'é¡¹ç›®æè¿°',width:parseInt(0.13*tabFuWisth1)-1},
+	        {field:'ArcimGro',title:'åŒ»å˜±ç»„',width:parseInt(0.1*tabFuWisth1)-1},
+	        {field:'ArcimIsActive',title:'æ˜¯å¦æœ‰æ•ˆ',width:parseInt(0.1*tabFuWisth1)-1},
+	        {field:'ArcimIsToItmMast',title:'æ˜¯å¦å…³è”åŒ»å˜±',width:parseInt(0.16*tabFuWisth1)-1},
+	         {field:'ArcimIsShowWard',title:'ã€å½“æ—¥åŒ»å˜±ã€‘æ˜¾ç¤º',width:parseInt(0.18*tabFuWisth1)-1},
+	        {field:'ArcimIsLoadZB',title:'ç”ŸæˆæŒ‡æ ‡æ•°æ®',width:parseInt(0.18*tabFuWisth1)-1}      
 	    ]],
 	   	onClickRow:function(rowIndex, rowData){
 			arcimRowClick(rowIndex, rowData);
@@ -90,9 +107,9 @@ function loadTable()
 	    url:'dhcapp.broker.csp?ClassName=DtPortal.Configure.arcimItem&MethodName=qureyArcimItem&arcimID=',    
 	    columns:[[    
 	        {field:'arcimSubID',hidden:true},    
-	        {field:'ItmMastID',title:'Ò½ÖöID',width:(parseInt(0.2*tabFuWisth2)-1)},    
-	        {field:'ItmMastCode',title:'Ò½ÖöCODE',width:(parseInt(0.2*tabFuWisth2)-1)},	        
-	        {field:'ItmMastDesc',title:'Ò½ÖöÃèÊö',width:(parseInt(0.6*tabFuWisth2)-1)}
+	        {field:'ItmMastID',title:'åŒ»å˜±ID',width:(parseInt(0.2*tabFuWisth2)-1)},    
+	        {field:'ItmMastCode',title:'åŒ»å˜±CODE',width:(parseInt(0.2*tabFuWisth2)-1)},	        
+	        {field:'ItmMastDesc',title:'åŒ»å˜±æè¿°',width:(parseInt(0.6*tabFuWisth2)-1)}
 	    ]],
 	   	onClickRow:function(rowIndex, rowData){
 			arcimSubRowClick(rowIndex, rowData);
@@ -102,14 +119,14 @@ function loadTable()
 
 	
 }
-//±£´æÒ½ÖöÎ¬»¤
+//ä¿å­˜åŒ»å˜±ç»´æŠ¤
 function saveArcim(){
 	
 	if($("#arcimCode").val()==""){
-		$.messager.alert('ÌáÊ¾','ÇëÌîĞ´CODE');
+		$.messager.alert('æç¤º','è¯·å¡«å†™CODE');
 		return;
 	}else if($("#arcimDesc").val()==""){
-		$.messager.alert('ÌáÊ¾','ÇëÌîĞ´ÃèÊö');
+		$.messager.alert('æç¤º','è¯·å¡«å†™æè¿°');
 		return;
 	}
 	var ID=arcimObj.arcimID;
@@ -135,15 +152,18 @@ function saveArcim(){
 		isLoadflag="Y"
 	}) 
 	if((toItmMastFlag=="N")&&(isLoadflag=="Y")){
-		$.messager.alert('ÌáÊ¾','²»¹ØÁªÒ½ÖöÎŞ·¨Éú³ÉÖ¸±êÊı¾İ£¡');
+		$.messager.alert('æç¤º','ä¸å…³è”åŒ»å˜±æ— æ³•ç”ŸæˆæŒ‡æ ‡æ•°æ®ï¼');
 		return;
 	}
 	
+	var arcimCodeSS= htmlEncode($("#arcimCode").val());
+	var arcimDescSS= htmlEncode($("#arcimDesc").val());
+	var arcimGroSS= htmlEncode($("#arcimGro").val());
 	var str="";
 	str=str+ID+"^";
-	str=str+$("#arcimCode").val()+"^";
-	str=str+$("#arcimDesc").val()+"^";
-	str=str+$("#arcimGro").val()+"^";
+	str=str+arcimCodeSS+"^";
+	str=str+arcimDescSS+"^";
+	str=str+arcimGroSS+"^";
 	str=str+activeflag+"^";
 	str=str+toItmMastFlag+"^";
 	str=str+isShowflag+"^";
@@ -155,9 +175,9 @@ function saveArcim(){
 						if(data>0){
 		       				formClearArcim();
 						}else if(data==0){
-							$.messager.alert("ÌáÊ¾","ÏîÄ¿ÅäÖÃÒÑ´æÔÚ,²»ÄÜÖØ¸´±£´æ!"); 
+							$.messager.alert("æç¤º","é¡¹ç›®é…ç½®å·²å­˜åœ¨,ä¸èƒ½é‡å¤ä¿å­˜!"); 
 						}else{	
-							$.messager.alert('ÌáÊ¾','±£´æÊ§°Ü:'+data)
+							$.messager.alert('æç¤º','ä¿å­˜å¤±è´¥:'+data)
 				
 						} 
 					 });
@@ -165,22 +185,22 @@ function saveArcim(){
 	
 }
 
-//±£´æÏîÄ¿Î¬»¤
+//ä¿å­˜é¡¹ç›®ç»´æŠ¤
 function saveArcimSub(){
 	if (($("#arcimSelect").combobox('getText')=="")&&(arcimObj.ArcimIsToItmMast=="Y")) $("#arcimSelect").combobox('setValue',"")
 	if(arcimObj.arcimID==undefined)
 	{
-		$.messager.alert('ÌáÊ¾','ÇëÑ¡Ôñ×ó±ßÏîÄ¿');
+		$.messager.alert('æç¤º','è¯·é€‰æ‹©å·¦è¾¹é¡¹ç›®');
 		return;
 	}
 	var arcimConfigure=$('#arcimSelect').combogrid('getValue');
 	var otherfigure=$('#otherConfigure').val();
 	if((arcimConfigure=="")&&(arcimObj.ArcimIsToItmMast=="Y")){
-		$.messager.alert('ÌáÊ¾','ÇëÑ¡ÔñÒ½Öö');
+		$.messager.alert('æç¤º','è¯·é€‰æ‹©åŒ»å˜±');
 		return;
 	}
 	if((otherfigure=="")&&(arcimObj.ArcimIsToItmMast=="N")){
-		$.messager.alert('ÌáÊ¾','ÇëÌîĞ´ÅäÖÃ');
+		$.messager.alert('æç¤º','è¯·å¡«å†™é…ç½®');
 		return;
 	}
 	
@@ -206,9 +226,9 @@ function saveArcimSub(){
 	       				 $("#arcimSubTable").datagrid('load');
 	       				 $("#arcimSelect").combogrid('setText','').combogrid('setValue','');
 						}else if(data==0){
-							$.messager.alert("ÌáÊ¾","Ò½ÖöÏîÒÑ´æÔÚ,²»ÄÜÖØ¸´±£´æ!"); 
+							$.messager.alert("æç¤º","åŒ»å˜±é¡¹å·²å­˜åœ¨,ä¸èƒ½é‡å¤ä¿å­˜!"); 
 						}else{	
-							$.messager.alert('ÌáÊ¾','±£´æÊ§°Ü:'+data)
+							$.messager.alert('æç¤º','ä¿å­˜å¤±è´¥:'+data)
 				
 						} 
 	});
@@ -216,14 +236,14 @@ function saveArcimSub(){
 }
 
 
-//É¾³ıÏîÄ¿Î¬»¤
+//åˆ é™¤é¡¹ç›®ç»´æŠ¤
 function deleteArcim()
 {
 	if ($("#arcimTable").datagrid('getSelections').length != 1) {
-		$.messager.alert('ÌáÊ¾','ÇëÑ¡Ò»¸öÉ¾³ı');
+		$.messager.alert('æç¤º','è¯·é€‰ä¸€ä¸ªåˆ é™¤');
 		return;
 	}
-	$.messager.confirm('È·ÈÏ','ÄúÈ·ÈÏÏëÒªÉ¾³ı¼ÇÂ¼Âğ£¿',function(r){    
+	$.messager.confirm('ç¡®è®¤','æ‚¨ç¡®è®¤æƒ³è¦åˆ é™¤è®°å½•å—ï¼Ÿ',function(r){    
     if (r){
 	    var row =$("#arcimTable").datagrid('getSelected');     
 		 runClassMethod("DtPortal.Configure.arcim","DeleteById",{'ID':row.ID},function(data){ 
@@ -234,18 +254,18 @@ function deleteArcim()
     }); 
 }
 
-//É¾³ıÒ½ÖöÎ¬»¤
+//åˆ é™¤åŒ»å˜±ç»´æŠ¤
 function deleteArcimSub()
 {
 	if(arcimObj.arcimID==undefined)
 	{
-		$.messager.alert('ÌáÊ¾','ÇëÑ¡Ôñ×ó±ßÏîÄ¿');
+		$.messager.alert('æç¤º','è¯·é€‰æ‹©å·¦è¾¹é¡¹ç›®');
 		return;
 	}else if($("#arcimSubTable").datagrid('getSelections').length != 1) {
-		$.messager.alert('ÌáÊ¾','ÇëÑ¡Ò»¸öÉ¾³ı');
+		$.messager.alert('æç¤º','è¯·é€‰ä¸€ä¸ªåˆ é™¤');
 		return;
 	}
-	$.messager.confirm('È·ÈÏ','ÄúÈ·ÈÏÏëÒªÉ¾³ı¼ÇÂ¼Âğ£¿',function(r){    
+	$.messager.confirm('ç¡®è®¤','æ‚¨ç¡®è®¤æƒ³è¦åˆ é™¤è®°å½•å—ï¼Ÿ',function(r){    
     if (r){
 	    var row =$("#arcimSubTable").datagrid('getSelected'); 
 		runClassMethod("DtPortal.Configure.arcimItem","DeleteById",{'ID':row.ID},function(data){ 
@@ -255,17 +275,18 @@ function deleteArcimSub()
     }    
     }); 
 }
-//Çå¿ÕÏîÄ¿Î¬»¤
+//æ¸…ç©ºé¡¹ç›®ç»´æŠ¤
 function formClearArcim()
 {
 	arcimObj.arcimID=""
 	$('#arcimForm').form('clear');	
 	$("#arcimTable").datagrid('load');
+	$('#arcimSubTable').datagrid('loadData', { total: 0, rows: [] });
 	$("#activeFlag").attr("checked","true");
 	$("#toItmMastFlag").attr("checked","true");
 }
 
-//Çå¿ÕÒ½ÖöÎ¬»¤
+//æ¸…ç©ºåŒ»å˜±ç»´æŠ¤
 function formClearArcimSub()
 {	
 	arcimObj.arcimSubID=""
@@ -274,7 +295,7 @@ function formClearArcimSub()
 }
 
 
-//Î¬»¤ÏîÄ¿±í¸ñµ¥»÷ÊÂ¼ş,¸øform¸³Öµ
+//ç»´æŠ¤é¡¹ç›®è¡¨æ ¼å•å‡»äº‹ä»¶,ç»™formèµ‹å€¼
 function arcimRowClick(rowIndex,rowData)
 {
 
@@ -326,14 +347,14 @@ function arcimRowClick(rowIndex,rowData)
 	
 }
 
-//Ò½ÖöÎ¬»¤±í¸ñµ¥»÷ÊÂ¼ş,¸øform¸³Öµ
+//åŒ»å˜±ç»´æŠ¤è¡¨æ ¼å•å‡»äº‹ä»¶,ç»™formèµ‹å€¼
 function arcimSubRowClick(rowIndex, rowData)
 {
 	arcimObj.arcimSubID=rowData.arcimSubID;
 	$("#arcimSelect").combogrid('setText',rowData.ItmMastDesc).combogrid('setValue',rowData.ItmMastID);
 }
 
-//Ò½ÖöÎ¬»¤±í¸ñË«»÷ÊÂ¼ş,¼ÓÔØÏîÄ¿Î¬»¤Ä£¿é
+//åŒ»å˜±ç»´æŠ¤è¡¨æ ¼åŒå‡»äº‹ä»¶,åŠ è½½é¡¹ç›®ç»´æŠ¤æ¨¡å—
 function arcimRowDblClick(rowIndex,rowData)
 {	
 	$("#itmMastConfigure").css("display","none");
@@ -361,7 +382,7 @@ function arcimRowDblClick(rowIndex,rowData)
 		    url:'dhcapp.broker.csp?ClassName=DtPortal.Configure.arcimItem&MethodName=qureyArcimItem&arcimID='+rowData.ID,    
 		    columns:[[    
 		        {field:'arcimSubID',hidden:true},    	             
-		        {field:'ItmOtherText',title:'ÆäËûÅäÖÃ',width:(parseInt(0.6*tabFuWisth2)-1)},	    
+		        {field:'ItmOtherText',title:'å…¶ä»–é…ç½®',width:(parseInt(0.6*tabFuWisth2)-1)},	    
 		    ]],
 		   	onClickRow:function(rowIndex, rowData){
 				arcimSubRowClick(rowIndex, rowData);
@@ -376,9 +397,9 @@ function arcimRowDblClick(rowIndex,rowData)
 		    url:'dhcapp.broker.csp?ClassName=DtPortal.Configure.arcimItem&MethodName=qureyArcimItem&arcimID='+rowData.ID,    
 		    columns:[[    
 		        {field:'arcimSubID',hidden:true},    
-		        {field:'ItmMastID',title:'Ò½ÖöID',width:(parseInt(0.2*tabFuWisth2)-1)},    
-		        {field:'ItmMastCode',title:'Ò½ÖöCODE',width:(parseInt(0.2*tabFuWisth2)-1)},	        
-		        {field:'ItmMastDesc',title:'Ò½ÖöÃèÊöÃèÊö',width:(parseInt(0.6*tabFuWisth2)-1)}	    
+		        {field:'ItmMastID',title:'åŒ»å˜±ID',width:(parseInt(0.2*tabFuWisth2)-1)},    
+		        {field:'ItmMastCode',title:'åŒ»å˜±CODE',width:(parseInt(0.2*tabFuWisth2)-1)},	        
+		        {field:'ItmMastDesc',title:'åŒ»å˜±æè¿°æè¿°',width:(parseInt(0.6*tabFuWisth2)-1)}	    
 		    ]],
 		   	onClickRow:function(rowIndex, rowData){
 				arcimSubRowClick(rowIndex, rowData);
@@ -388,7 +409,7 @@ function arcimRowDblClick(rowIndex,rowData)
 
 }
 
-//»ñÈ¡Êı×éÖĞÔªËØµÄÏÂ±ê(indexof²»Æğ×÷ÓÃ)
+//è·å–æ•°ç»„ä¸­å…ƒç´ çš„ä¸‹æ ‡(indexofä¸èµ·ä½œç”¨)
 function getIndexOfAaary(arry,str)
 {
 	var ret=-1
@@ -435,31 +456,31 @@ function buildDataStart()
 {
 	if ((arcimObj.KPIID=="")||(arcimObj.KPIID==undefined))
 	{
-		$.messager.alert('ÌáÊ¾','ÇëÌîĞ´Ö¸±ê±àÂë£¬¶à¸öÒÔ","·Ö¸ô£¡');
+		$.messager.alert('æç¤º','è¯·å¡«å†™æŒ‡æ ‡ç¼–ç ï¼Œå¤šä¸ªä»¥","åˆ†éš”ï¼');
 		return;
 	}
 	var starDate=$("#starDate").datebox('getValue');
 	var endDate=$("#endDate").datebox('getValue');
 	if ((starDate=="")||(starDate==undefined))
 	{
-		$.messager.alert('ÌáÊ¾','ÇëÑ¡Ôñ¿ªÊ¼ÈÕÆÚ£¡');
+		$.messager.alert('æç¤º','è¯·é€‰æ‹©å¼€å§‹æ—¥æœŸï¼');
 		return;
 	}
 	if ((endDate=="")||(endDate==undefined))
 	{
-		$.messager.alert('ÌáÊ¾','ÇëÑ¡Ôñ½áÊøÈÕÆÚ£¡');
+		$.messager.alert('æç¤º','è¯·é€‰æ‹©ç»“æŸæ—¥æœŸï¼');
 		return;
 	}
 	
 	runClassMethod("DtPortal.Configure.arcim","buidZbData",{'starDate':starDate,'endDate':endDate,'KPIID':arcimObj.KPIID},function(data){ 
-		$.messager.alert('Êı¾İÉú³É½á¹û',data);
+		$.messager.alert('æ•°æ®ç”Ÿæˆç»“æœ',data);
 		 
 	},"text",false);
 
 }
 
 
-//Êı¾İµ¼³ö
+//æ•°æ®å¯¼å‡º
 function formExp()
 {
 	var mb = myBrowser();
@@ -470,29 +491,34 @@ function formExp()
 		}
 		catch (e)
 		{
-	        $.messager.alert('ÌáÊ¾','ÇëÔÚ[internetÑ¡Ïî]-[°²È«]-[ÊÜĞÅÈÎµÄÕ¾µã]-[Õ¾µã]ÖĞÌí¼Ó¿ªÊ¼½çÃæµ½¿ÉĞÅÈÎµÄÕ¾µã£¬È»ºóÔÚ[×Ô¶¨Òå¼¶±ğ]ÖĞ¶Ô[Ã»ÓĞ±ê¼ÇÎª°²È«µÄActiveX¿Ø¼ş½øĞĞ³õÊ¼»¯ºÍ½Å±¾ÔËĞĞ]ÕâÒ»ÏîÉèÖÃÎªÆôÓÃ!');
+	        $.messager.alert('æç¤º','è¯·åœ¨[interneté€‰é¡¹]-[å®‰å…¨]-[å—ä¿¡ä»»çš„ç«™ç‚¹]-[ç«™ç‚¹]ä¸­æ·»åŠ å¼€å§‹ç•Œé¢åˆ°å¯ä¿¡ä»»çš„ç«™ç‚¹ï¼Œç„¶ååœ¨[è‡ªå®šä¹‰çº§åˆ«]ä¸­å¯¹[æ²¡æœ‰æ ‡è®°ä¸ºå®‰å…¨çš„ActiveXæ§ä»¶è¿›è¡Œåˆå§‹åŒ–å’Œè„šæœ¬è¿è¡Œ]è¿™ä¸€é¡¹è®¾ç½®ä¸ºå¯ç”¨!');
 	        return;
 		}
-		$.messager.progress({   //Êı¾İµ¼ÈëÌáÊ¾
-			title:'ÇëÉÔºó', 
-			msg:'Êı¾İÕıÔÚµ¼³öÖĞ...' 
+		$.messager.progress({   //æ•°æ®å¯¼å…¥æç¤º
+			title:'è¯·ç¨å', 
+			msg:'æ•°æ®æ­£åœ¨å¯¼å‡ºä¸­...' 
 		}); 
 		xlApp.Visible=false;
 		xlApp.DisplayAlerts = false;
-		xlApp.SheetsInNewWorkbook = 3 //'ÉèÖÃ´´½¨¼¸¸ö¹¤×÷±í
+		xlApp.SheetsInNewWorkbook = 5; //'è®¾ç½®åˆ›å»ºå‡ ä¸ªå·¥ä½œè¡¨
 		
-		var hisNum=2,HisName="ÀÏ°æÒ½ÖöÏîÅäÖÃ"
-		if (arcimObj.hisEdition==3){hisNum=3;HisName="iMedical8.3Ò½ÖöÏîÅäÖÃ"}
 		
 		var xlBook=xlApp.Workbooks.Add();
 		var xlSheet=xlBook.Worksheets(1);	
-		var xlSheet2=xlBook.Worksheets(hisNum);	
-		xlSheet2.Name=HisName;
-		var title1="Ò½ÖöÅäÖÃcode^Ò½ÖöÅäÖÃÃèÊö^Ò½Öö×éÅäÖÃ^ÊÇ·ñÓĞĞ§^ÊÇ·ñ¹ØÁªÒ½Öö^µ±ÈÕÒ½ÖöÊÇ·ñÏÔÊ¾^ÊÇ·ñÉú³ÉÖ¸±êÊı¾İ";
+		xlSheet.Name="åŒ»å˜±é¡¹";	
+		var xlSheet1=xlBook.Worksheets(2);	
+		xlSheet1.Name="iMedical 8.0.0";	
+		var xlSheet2=xlBook.Worksheets(3);	
+		xlSheet2.Name="iMedical 8.2.0";	
+		var xlSheet3=xlBook.Worksheets(4);	
+		xlSheet3.Name="iMedical 8.3.0";	
+		var xlSheet4=xlBook.Worksheets(5);	
+		xlSheet4.Name="iMedical 8.4.0";	;
+		var title1="åŒ»å˜±é…ç½®code^åŒ»å˜±é…ç½®æè¿°^åŒ»å˜±ç»„é…ç½®^æ˜¯å¦æœ‰æ•ˆ^æ˜¯å¦å…³è”åŒ»å˜±^å½“æ—¥åŒ»å˜±æ˜¯å¦æ˜¾ç¤º^æ˜¯å¦ç”ŸæˆæŒ‡æ ‡æ•°æ®";
 		var titleArr1=title1.split("^");
 		
-		var titleHis="Ò½ÖöÅäÖÃcode^Ò½ÖöÅäÖÃÃèÊö^Ò½ÖöÏîID^Ò½ÖöÏîÃèÊö^·Ç¹ØÁªÒ½ÖöÅäÖÃ";
-		var title2="Ò½ÖöÅäÖÃcode^Ò½ÖöÅäÖÃÃèÊö^Ò½ÖöÏîID^Ò½ÖöÏîÃèÊö^·Ç¹ØÁªÒ½ÖöÅäÖÃ";
+		var titleHis="åŒ»å˜±é…ç½®code^åŒ»å˜±é…ç½®æè¿°^åŒ»å˜±é¡¹ID^åŒ»å˜±é¡¹æè¿°^éå…³è”åŒ»å˜±é…ç½®";
+		var title2="åŒ»å˜±é…ç½®code^åŒ»å˜±é…ç½®æè¿°^åŒ»å˜±é¡¹ID^åŒ»å˜±é¡¹æè¿°^éå…³è”åŒ»å˜±é…ç½®";
 		var titleArr2=title2.split("^");
 		
 		for (i=0;i<titleArr1.length;i++)
@@ -501,7 +527,10 @@ function formExp()
 		}
 		for (i=0;i<titleArr2.length;i++)
 		{
+			xlSheet1.Cells(1,i+1).Value=titleArr2[i];
 			xlSheet2.Cells(1,i+1).Value=titleArr2[i];
+			xlSheet3.Cells(1,i+1).Value=titleArr2[i];
+			xlSheet4.Cells(1,i+1).Value=titleArr2[i];
 		}
 		
 		var ret=""
@@ -521,19 +550,63 @@ function formExp()
 			xlSheet.Cells(i+2,6).Value=jsonStr[i].ArcimIsShowWard;
 			xlSheet.Cells(i+2,7).Value=jsonStr[i].ArcimIsLoadZB;
 			
-			for (j=0;j<jsonStr[i].subData.length;j++)
+			if (arcimObj.hisEdition=="1")
 			{
-				xlSheet2.Cells(subNum+2,1).Value=jsonStr[i].subData[j].ArcimCode;
-				xlSheet2.Cells(subNum+2,2).Value=jsonStr[i].subData[j].ArcimDesc;
-				xlSheet2.Cells(subNum+2,3).Value=jsonStr[i].subData[j].ItmMastID;
-				xlSheet2.Cells(subNum+2,4).Value=jsonStr[i].subData[j].ItmMastDesc;
-				xlSheet2.Cells(subNum+2,5).Value=jsonStr[i].subData[j].ItmOtherText;
-				subNum=subNum+1
-				
+				for (j=0;j<jsonStr[i].subData.length;j++)
+				{
+					xlSheet1.Cells(subNum+2,1).Value=jsonStr[i].subData[j].ArcimCode;
+					xlSheet1.Cells(subNum+2,2).Value=jsonStr[i].subData[j].ArcimDesc;
+					xlSheet1.Cells(subNum+2,3).Value=jsonStr[i].subData[j].ItmMastID;
+					xlSheet1.Cells(subNum+2,4).Value=jsonStr[i].subData[j].ItmMastDesc;
+					xlSheet1.Cells(subNum+2,5).Value=jsonStr[i].subData[j].ItmOtherText;
+					subNum=subNum+1
+					
+				}
 			}
+			if (arcimObj.hisEdition=="2")
+			{
+				for (j=0;j<jsonStr[i].subData.length;j++)
+				{
+					xlSheet2.Cells(subNum+2,1).Value=jsonStr[i].subData[j].ArcimCode;
+					xlSheet2.Cells(subNum+2,2).Value=jsonStr[i].subData[j].ArcimDesc;
+					xlSheet2.Cells(subNum+2,3).Value=jsonStr[i].subData[j].ItmMastID;
+					xlSheet2.Cells(subNum+2,4).Value=jsonStr[i].subData[j].ItmMastDesc;
+					xlSheet2.Cells(subNum+2,5).Value=jsonStr[i].subData[j].ItmOtherText;
+					subNum=subNum+1
+					
+				}
+			}
+			if (arcimObj.hisEdition=="3")
+			{
+				for (j=0;j<jsonStr[i].subData.length;j++)
+				{
+					xlSheet3.Cells(subNum+2,1).Value=jsonStr[i].subData[j].ArcimCode;
+					xlSheet3.Cells(subNum+2,2).Value=jsonStr[i].subData[j].ArcimDesc;
+					xlSheet3.Cells(subNum+2,3).Value=jsonStr[i].subData[j].ItmMastID;
+					xlSheet3.Cells(subNum+2,4).Value=jsonStr[i].subData[j].ItmMastDesc;
+					xlSheet3.Cells(subNum+2,5).Value=jsonStr[i].subData[j].ItmOtherText;
+					subNum=subNum+1
+					
+				}
+			}
+			if (arcimObj.hisEdition=="4")
+			{
+				for (j=0;j<jsonStr[i].subData.length;j++)
+				{
+					xlSheet4.Cells(subNum+2,1).Value=jsonStr[i].subData[j].ArcimCode;
+					xlSheet4.Cells(subNum+2,2).Value=jsonStr[i].subData[j].ArcimDesc;
+					xlSheet4.Cells(subNum+2,3).Value=jsonStr[i].subData[j].ItmMastID;
+					xlSheet4.Cells(subNum+2,4).Value=jsonStr[i].subData[j].ItmMastDesc;
+					xlSheet4.Cells(subNum+2,5).Value=jsonStr[i].subData[j].ItmOtherText;
+					subNum=subNum+1
+					
+				}
+			}
+			
+			
 		}
 
-	 	 $.messager.progress('close')//Êı¾İµ¼ÈëÍê³É¹Ø±Õ¼ÓÔØ¿ò
+	 	 $.messager.progress('close')//æ•°æ®å¯¼å…¥å®Œæˆå…³é—­åŠ è½½æ¡†
 	 	
 	 	  
 		try
@@ -543,17 +616,17 @@ function formExp()
 				 var ss = xlBook.SaveAs(fileName);   
 			 	if (ss==false)
 				{
-					 $.messager.alert('ÌáÊ¾','µ¼³öÊ§°Ü£¡') ;
+					 $.messager.alert('æç¤º','å¯¼å‡ºå¤±è´¥ï¼') ;
 				}else{
-					 $.messager.alert('ÌáÊ¾','µ¼³ö³É¹¦£¡') ;
+					 $.messager.alert('æç¤º','å¯¼å‡ºæˆåŠŸï¼') ;
 				}
 			}else{
-				$.messager.alert('ÌáÊ¾','µ¼³öÈ¡Ïû£¡') ;
+				$.messager.alert('æç¤º','å¯¼å‡ºå–æ¶ˆï¼') ;
 			}
 			
 		}
 		catch(e){
-			  $.messager.alert('ÌáÊ¾','µ¼³öÊ§°Ü£¡') ;
+			  $.messager.alert('æç¤º','å¯¼å‡ºå¤±è´¥ï¼') ;
 		}
 
 
@@ -580,26 +653,40 @@ function formExp()
         var ctx = "";
         var workbookXML = "";
         var worksheetsXML = "";
+        var rowsXML = "";
         var rowsXML1 = "";
         var rowsXML2 = "";
         var rowsXML3 = "";
+        var rowsXML4 = "";
         
-        var hisNum=2,HisName="ÀÏ°æÒ½ÖöÏîÅäÖÃ"
-		if (arcimObj.hisEdition==3){hisNum=3;HisName="iMedical8_3Ò½ÖöÏîÅäÖÃ"}
+        var HisName="åŒ»å˜±é¡¹é…ç½®"
 		
-		var title1="Ò½ÖöÅäÖÃcode^Ò½ÖöÅäÖÃÃèÊö^Ò½Öö×éÅäÖÃ^ÊÇ·ñÓĞĞ§^ÊÇ·ñ¹ØÁªÒ½Öö^µ±ÈÕÒ½ÖöÊÇ·ñÏÔÊ¾^ÊÇ·ñÉú³ÉÖ¸±êÊı¾İ";
+		
+		var title1="åŒ»å˜±é…ç½®code^åŒ»å˜±é…ç½®æè¿°^åŒ»å˜±ç»„é…ç½®^æ˜¯å¦æœ‰æ•ˆ^æ˜¯å¦å…³è”åŒ»å˜±^å½“æ—¥åŒ»å˜±æ˜¯å¦æ˜¾ç¤º^æ˜¯å¦ç”ŸæˆæŒ‡æ ‡æ•°æ®";
 		var titleArr1=title1.split("^");
 		
-		var titleHis="Ò½ÖöÅäÖÃcode^Ò½ÖöÅäÖÃÃèÊö^Ò½ÖöÏîID^Ò½ÖöÏîÃèÊö^·Ç¹ØÁªÒ½ÖöÅäÖÃ";
-		var title2="Ò½ÖöÅäÖÃcode^Ò½ÖöÅäÖÃÃèÊö^Ò½ÖöÏîID^Ò½ÖöÏîÃèÊö^·Ç¹ØÁªÒ½ÖöÅäÖÃ";
+		var titleHis="åŒ»å˜±é…ç½®code^åŒ»å˜±é…ç½®æè¿°^åŒ»å˜±é¡¹ID^åŒ»å˜±é¡¹æè¿°^éå…³è”åŒ»å˜±é…ç½®";
+		var title2="åŒ»å˜±é…ç½®code^åŒ»å˜±é…ç½®æè¿°^åŒ»å˜±é¡¹ID^åŒ»å˜±é¡¹æè¿°^éå…³è”åŒ»å˜±é…ç½®";
 		var titleArr2=title2.split("^");
 		
-		rowsXML1 += '<Row>';
+		rowsXML += '<Row>';
 		for (i=0;i<titleArr1.length;i++)
 		{
 			ctx = {  attributeStyleID: ''
                     , nameType: 'String'
                     , data:titleArr1[i]
+                    , attributeFormula: ''
+                  };
+            rowsXML += format(tmplCellXML, ctx);
+		}
+		rowsXML += '</Row>'
+		
+		rowsXML1 += '<Row>';
+		for (i=0;i<titleArr2.length;i++)
+		{
+			ctx = {  attributeStyleID: ''
+                    , nameType: 'String'
+                    , data:titleArr2[i]
                     , attributeFormula: ''
                   };
             rowsXML1 += format(tmplCellXML, ctx);
@@ -630,6 +717,18 @@ function formExp()
 		}
 		rowsXML3 += '</Row>'
 		
+		rowsXML4 += '<Row>';
+		for (i=0;i<titleArr2.length;i++)
+		{
+			ctx = {  attributeStyleID: ''
+                    , nameType: 'String'
+                    , data:titleArr2[i]
+                    , attributeFormula: ''
+                  };
+            rowsXML4 += format(tmplCellXML, ctx);
+		}
+		rowsXML4 += '</Row>'
+		
 		var ret=""
 		ret=serverCall("DtPortal.Configure.arcim","locIndexExp",{})
 		var jsonStr=JSON.parse(ret);
@@ -637,50 +736,50 @@ function formExp()
 		var subNum=0
 		for (i=0;i<jsonStr.length;i++)
 		{
-			rowsXML1 += '<Row>';
+			rowsXML += '<Row>';
 			ctx = {  attributeStyleID: ''
                     , nameType: 'String'
                     , data:jsonStr[i].ArcimCode
                     , attributeFormula: ''
                   };
-            rowsXML1 += format(tmplCellXML, ctx);
+            rowsXML += format(tmplCellXML, ctx);
             ctx = {  attributeStyleID: ''
                     , nameType: 'String'
                     , data:jsonStr[i].ArcimDesc
                     , attributeFormula: ''
                   };
-            rowsXML1 += format(tmplCellXML, ctx);
+            rowsXML += format(tmplCellXML, ctx);
             ctx = {  attributeStyleID: ''
                     , nameType: 'String'
                     , data:jsonStr[i].ArcimGro
                     , attributeFormula: ''
                   };
-            rowsXML1 += format(tmplCellXML, ctx);
+            rowsXML += format(tmplCellXML, ctx);
             ctx = {  attributeStyleID: ''
                     , nameType: 'String'
                     , data:jsonStr[i].ArcimIsActive
                     , attributeFormula: ''
                   };
-            rowsXML1 += format(tmplCellXML, ctx);
+            rowsXML += format(tmplCellXML, ctx);
             ctx = {  attributeStyleID: ''
                     , nameType: 'String'
                     , data:jsonStr[i].ArcimIsToItmMast
                     , attributeFormula: ''
                   };
-            rowsXML1 += format(tmplCellXML, ctx);
+            rowsXML += format(tmplCellXML, ctx);
             ctx = {  attributeStyleID: ''
                     , nameType: 'String'
                     , data:jsonStr[i].ArcimIsShowWard
                     , attributeFormula: ''
                   };
-            rowsXML1 += format(tmplCellXML, ctx);
+            rowsXML += format(tmplCellXML, ctx);
             ctx = {  attributeStyleID: ''
                     , nameType: 'String'
                     , data:jsonStr[i].ArcimIsLoadZB
                     , attributeFormula: ''
                   };
-            rowsXML1 += format(tmplCellXML, ctx);
-            rowsXML1 += '</Row>'
+            rowsXML += format(tmplCellXML, ctx);
+            rowsXML += '</Row>'
 			
 			var rowsXMLX="";
 			for (j=0;j<jsonStr[i].subData.length;j++)
@@ -718,26 +817,39 @@ function formExp()
             	rowsXMLX += format(tmplCellXML, ctx);
             	rowsXMLX += '</Row>'
 			}
-			if (arcimObj.hisEdition==3)
+			if (arcimObj.hisEdition==1)
 			{
-				rowsXML3+=rowsXMLX;
-			}else
+				rowsXML1+=rowsXMLX;
+			}
+			if (arcimObj.hisEdition==2)
 			{
 				rowsXML2+=rowsXMLX;
 			}
+			if (arcimObj.hisEdition==3)
+			{
+				rowsXML3+=rowsXMLX;
+			}
+			if (arcimObj.hisEdition==4)
+			{
+				rowsXML4+=rowsXMLX;
+			}
 		}
 	
-		 ctx = {rows: rowsXML1, nameWS:  'Ò½ÖöÅäÖÃ'|| 'Sheet' + 1};
+		 ctx = {rows: rowsXML, nameWS:  'åŒ»å˜±é…ç½®'|| 'Sheet' + 1};
          worksheetsXML += format(tmplWorksheetXML, ctx);
-         ctx = {rows: rowsXML2, nameWS: 'ÀÏ°æÒ½ÖöÏîÅäÖÃ' || 'Sheet' + 2};
+         ctx = {rows: rowsXML1, nameWS: 'iMedical 8.0.0' || 'Sheet' + 2};
          worksheetsXML += format(tmplWorksheetXML, ctx);
-         ctx = {rows: rowsXML3, nameWS: 'iMedical8_3Ò½ÖöÏîÅäÖÃ' || 'Sheet' + 3};
+          ctx = {rows: rowsXML2, nameWS: 'iMedical 8.2.0' || 'Sheet' + 2};
+         worksheetsXML += format(tmplWorksheetXML, ctx);
+          ctx = {rows: rowsXML3, nameWS: 'iMedical 8.3.0' || 'Sheet' + 2};
+         worksheetsXML += format(tmplWorksheetXML, ctx);
+         ctx = {rows: rowsXML4, nameWS: 'iMedical 8.4.0' || 'Sheet' + 3};
          worksheetsXML += format(tmplWorksheetXML, ctx);
             
         ctx = {created: (new Date()).getTime(), worksheets: worksheetsXML};
         workbookXML = format(tmplWorkbookXML, ctx);
  
-		//²é¿´ºóÌ¨µÄ´òÓ¡Êä³ö
+		//æŸ¥çœ‹åå°çš„æ‰“å°è¾“å‡º
         //console.log(workbookXML);
  
 		var link = document.createElement("A");
@@ -750,7 +862,7 @@ function formExp()
 	}
 	
 }
-//Êı¾İÈë´ò¿ª
+//æ•°æ®å…¥æ‰“å¼€
 function openFormImp()
 {
 	$('#formImpDiv').dialog('open');
@@ -760,10 +872,11 @@ function openFormImp()
 	});
 }
 
-//Êı¾İµ¼Èë
+//æ•°æ®å¯¼å…¥
 function formImp(){
-  var IsIMPSub=$("input[name='IsIMPSub']:checked").val();	//ÊÇ·ñµ¼ÈëÓÒ²àÒ½Öö
+  var IsIMPSub=$("input[name='IsIMPSub']:checked").val();	//æ˜¯å¦å¯¼å…¥å³ä¾§åŒ»å˜±
   if(!$("#filepath").get(0).files[0]) {
+	  $.messager.alert("æ“ä½œæç¤º", "è¯·é€‰æ‹©è¦å¯¼å…¥çš„æ–‡ä»¶ï¼"); 
       return;
   }
   var fileE=$("#filepath").val();
@@ -776,7 +889,7 @@ function formImp(){
 	  var data = data.content;
 	  try {
 	    if(rABS) {
-		    wb = XLSX.read(btoa(this.fixdata(data)), { //ÊÖ¶¯×ª»¯
+		    wb = XLSX.read(btoa(this.fixdata(data)), { //æ‰‹åŠ¨è½¬åŒ–
 		        type: 'base64'
 		    });
 		  } else {
@@ -785,27 +898,36 @@ function formImp(){
 		    });
 		  }
 	  } catch (e) {
-	        console.log('ÎÄ¼şÀàĞÍ²»ÕıÈ·');
+	        console.log('æ–‡ä»¶ç±»å‹ä¸æ­£ç¡®');
 	        return;
 	  }
 	  
-	  //wb.SheetNames[0]ÊÇ»ñÈ¡SheetsÖĞµÚÒ»¸öSheetµÄÃû×Ö
-	  //wb.Sheets[SheetÃû]»ñÈ¡µÚÒ»¸öSheetµÄÊı¾İ
+	  //wb.SheetNames[0]æ˜¯è·å–Sheetsä¸­ç¬¬ä¸€ä¸ªSheetçš„åå­—
+	  //wb.Sheets[Sheetå]è·å–ç¬¬ä¸€ä¸ªSheetçš„æ•°æ®
 	  tempArr1 = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-	  if (IsIMPSub=="8.3")
+	   if (IsIMPSub=="1")
 	  {
-		  tempArr2 = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[2]]);
-	  }else
+		   tempArr2 = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[1]]);
+	  }
+	   if (IsIMPSub=="2")
 	  {
-		  tempArr2 = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[1]]);
+		   tempArr2 = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[2]]);
+	  }
+	   if (IsIMPSub=="3")
+	  {
+		   tempArr2 = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[3]]);
+	  }
+	   if (IsIMPSub=="4")
+	  {
+		   tempArr2 = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[4]]);
 	  }
 	 
 
 	  console.log(tempArr1);
-		var title1="Ò½ÖöÅäÖÃcode^Ò½ÖöÅäÖÃÃèÊö^Ò½Öö×éÅäÖÃ^ÊÇ·ñÓĞĞ§^ÊÇ·ñ¹ØÁªÒ½Öö^µ±ÈÕÒ½ÖöÊÇ·ñÏÔÊ¾^ÊÇ·ñÉú³ÉÖ¸±êÊı¾İ";
+		var title1="åŒ»å˜±é…ç½®code^åŒ»å˜±é…ç½®æè¿°^åŒ»å˜±ç»„é…ç½®^æ˜¯å¦æœ‰æ•ˆ^æ˜¯å¦å…³è”åŒ»å˜±^å½“æ—¥åŒ»å˜±æ˜¯å¦æ˜¾ç¤º^æ˜¯å¦ç”ŸæˆæŒ‡æ ‡æ•°æ®";
 		var titleArr1=title1.split("^");
 			
-		var title2="Ò½ÖöÅäÖÃcode^Ò½ÖöÅäÖÃÃèÊö^Ò½ÖöÏîID^Ò½ÖöÏîÃèÊö^·Ç¹ØÁªÒ½ÖöÅäÖÃ";
+		var title2="åŒ»å˜±é…ç½®code^åŒ»å˜±é…ç½®æè¿°^åŒ»å˜±é¡¹ID^åŒ»å˜±é¡¹æè¿°^éå…³è”åŒ»å˜±é…ç½®";
 		var titleArr2=title2.split("^");
 
 	    for (var i = 0; i < tempArr1.length; i++) {
@@ -899,7 +1021,7 @@ function formImp(){
 	    runClassMethod("DtPortal.Configure.arcim","locIndexInport",
 							{'inpotData':inpotData},
 			function(data){									
-				$.messager.progress('close')//Êı¾İµ¼ÈëÍê³É¹Ø±Õ¼ÓÔØ¿ò
+				$.messager.progress('close')//æ•°æ®å¯¼å…¥å®Œæˆå…³é—­åŠ è½½æ¡†
 				var retStr=data.split("^")
 				var isOk=retStr[0];
 				var errMsg=retStr[1];
@@ -918,18 +1040,18 @@ function formImp(){
 				if(isOk>0){
 					 if (showMsg!="")
 					 {
-						 showMsg=showMsg+"||"+"µ¼Èë³É¹¦"+isOk+"ÌõÊı¾İ!!!"
+						 showMsg=showMsg+"||"+"å¯¼å…¥æˆåŠŸ"+isOk+"æ¡æ•°æ®!!!"
 					 }else
 					 {
-						 showMsg="µ¼Èë³É¹¦"+isOk+"ÌõÊı¾İ!!!"
+						 showMsg="å¯¼å…¥æˆåŠŸ"+isOk+"æ¡æ•°æ®!!!"
 					 }
 				     
 				}
 				
 				if(subIsOK>0){
-				     showMsg=showMsg+"||"+"Ò½ÖöÏîµ¼Èë³É¹¦"+subIsOK+"ÌõÊı¾İ!!!"
+				     showMsg=showMsg+"||"+"åŒ»å˜±é¡¹å¯¼å…¥æˆåŠŸ"+subIsOK+"æ¡æ•°æ®!!!"
 				}
-				$.messager.confirm("²Ù×÷ÌáÊ¾", showMsg, function (data) {  
+				$.messager.confirm("æ“ä½œæç¤º", showMsg, function (data) {  
 			        }); 
 			 }
 		)
@@ -944,7 +1066,7 @@ function formImp(){
 	
 }
 
-//Çå¿ÕÎÄ¼şÉÏ´«µÄÂ·¾¶ 
+//æ¸…ç©ºæ–‡ä»¶ä¸Šä¼ çš„è·¯å¾„ 
 function clearFiles (){
      var file = $("#filepath");
       file.after(file.clone().val(""));      
@@ -952,24 +1074,45 @@ function clearFiles (){
 	
 }
 
-//ÅĞ¶Ïä¯ÀÀÆ÷
+//åˆ¤æ–­æµè§ˆå™¨
 function myBrowser(){
-    var userAgent = navigator.userAgent; //È¡µÃä¯ÀÀÆ÷µÄuserAgent×Ö·û´®
+    var userAgent = navigator.userAgent; //å–å¾—æµè§ˆå™¨çš„userAgentå­—ç¬¦ä¸²
     var isOpera = userAgent.indexOf("Opera") > -1;
     if (isOpera) {
         return "Opera"
-    }; //ÅĞ¶ÏÊÇ·ñOperaä¯ÀÀÆ÷
+    }; //åˆ¤æ–­æ˜¯å¦Operaæµè§ˆå™¨
     if (userAgent.indexOf("Firefox") > -1) {
         return "FF";
-    } //ÅĞ¶ÏÊÇ·ñFirefoxä¯ÀÀÆ÷
+    } //åˆ¤æ–­æ˜¯å¦Firefoxæµè§ˆå™¨
     if (userAgent.indexOf("Chrome") > -1){
  		 return "Chrome";
  	}
     if (userAgent.indexOf("Safari") > -1) {
         return "Safari";
-    } //ÅĞ¶ÏÊÇ·ñSafariä¯ÀÀÆ÷
-   	//ÅĞ¶ÏÊÇ·ñIEä¯ÀÀÆ÷
+    } //åˆ¤æ–­æ˜¯å¦Safariæµè§ˆå™¨
+   	//åˆ¤æ–­æ˜¯å¦IEæµè§ˆå™¨
 	if (!!window.ActiveXObject || "ActiveXObject" in window) {
    		return "IE";
 	}; 
+}
+
+
+/**
+ *  æŠŠhtmlè½¬ä¹‰æˆHTMLå®ä½“å­—ç¬¦
+ * @param str
+ * @returns {string}
+ * @constructor
+ */
+function htmlEncode(str) {
+  var s = "";
+  if (str.length === 0) {
+    return "";
+  }
+  s = str.replace(/&/g, "&amp;");
+  s = s.replace(/</g, "&lt;");
+  s = s.replace(/>/g, "&gt;");
+  s = s.replace(/ /g, "&nbsp;");
+  s = s.replace(/\'/g, "&#39;");//IEä¸‹ä¸æ”¯æŒå®ä½“åç§°
+  s = s.replace(/\"/g, "&quot;");
+  return s;
 }

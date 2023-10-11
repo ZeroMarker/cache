@@ -1,22 +1,27 @@
 /// DHCEQCertificateInfoNew.js
-var SelectedRow = 0;
+//modified by czf 20180827 HISUI改造
+var SelectedRow = -1;
 var rowid=0;
 
 function BodyLoadHandler() 
-{	
+{
+	//modified by cjt 20230212 需求号3221988 UI页面改造
+	initPanelHeaderStyle();
+	initButtonColor();
+	hidePanelTitle();
 	var Request = new Object();
 	Request = GetRequest();
 	var SourceType,SourceDesc;
 	SourceType=Request["SourceType"];     //需求号：371907 2017-05-08 by mwz 
-	SourceDesc=Request["SourceDesc"];	
+	SourceDesc=GetElementValue("SourceDesc");	//modified by czf 20180827 HISUI改造 Request方式获取汉字乱码
 	SourceID=Request["SourceID"];
-	//SetElement("SourceType",0);
-	document.getElementById('SourceType').value=SourceType;
-	document.getElementById('SourceDesc').value=SourceDesc;
-	document.getElementById('SourceID').value=SourceID;
+	SetElement("SourceType",SourceType);
+	SetElement("SourceDesc",SourceDesc);
+	SetElement("SourceID",SourceID);
 	SetElement("Level",GetElementValue("LevelID"));        //modified by czf 
 	InitMessage();			//20140228  Mozy0120
 	InitButton(false);
+	initButtonWidth();	//modified by czf 20180827 HISUI改造
 	KeyUp("SourceDesc^CertificateType","N");
 	Muilt_LookUp("SourceDesc^CertificateType");
 }
@@ -43,27 +48,6 @@ function InitButton(isselected)
 	DisableBElement("BDelete",!isselected);
 	DisableBElement("BDisuse",!isselected);
 	DisableBElement("BPicture",!isselected);
-}
-
-function Selected(selectrow)
-{
-	if (SelectedRow==selectrow)
-	{
-		Clear();
-		SelectedRow=0;
-		rowid=0;
-		SetElement("RowID","");
-		InitButton(false);
-	}
-	else
-	{
-		SelectedRow=selectrow;
-		rowid=GetElementValue("TRowIDz"+SelectedRow);
-		if (rowid=="") return;
-		SetElement("RowID",rowid);
-		SetData(rowid);
-		InitButton(true);
-	}
 }
 function Clear()
 {
@@ -98,7 +82,10 @@ function BFind_Click()
 	val=val+"&AvailableDate="+GetElementValue("AvailableDate")
 	val=val+"&Remark="+GetElementValue("Remark")
 	val=val+"&SourceType="+GetElementValue("SourceType");   //modified by czf 399195
-	window.location.href="websys.default.csp?WEBSYS.TCOMPONENT=DHCEQCertificateInfoNew"+val;
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		val += "&MWToken="+websys_getMWToken()
+	}
+	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCertificateInfoNew"+val;
 }
 function BUpdate_Click() 
 {
@@ -106,17 +93,20 @@ function BUpdate_Click()
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="")
 	{
-		alertShow(t[-4001]);
+		messageShow("","","",t[-4001]);
 		return;
 	}
 	var plist=CombinData();
-	//alertShow(plist)
 	var result=cspRunServerMethod(encmeth,plist,"0");
 	if (result>0)
 	{	location.reload();	}
 	else
 	{
-		alertShow("SQLCODE="+result);
+		if (result=="-3003"){	//czf 2261290
+			messageShow("","","",t['-3003']);
+		}else{
+			alertShow("SQLCODE="+result);
+		}
 	}
 }
 
@@ -125,7 +115,7 @@ function BDelete_Click()
 	rowid=GetElementValue("RowID");
 	if (rowid=="")
 	{
-		alertShow(t['-3002']);
+		messageShow("","","",t['-3002']);
 		return;
 	}
 	var truthBeTold = window.confirm(t['-3001']);
@@ -133,30 +123,32 @@ function BDelete_Click()
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="")
 	{
-		alertShow(t[-4001]);
+		messageShow("","","",t[-4001]);
 		return;
 	}
 	var result=cspRunServerMethod(encmeth,rowid+"^"+"",'1');
-	//alertShow(result)
+	//messageShow("","","",result)
 	if (result>0)
 	{	location.reload();	}
 }
-
+//modified by csj 20190301 改为新图片上传界面模态窗
 function BPicture_Click()
 {
-	//alertShow("功能完善中!")
-	//var str='websys.default.csp?WEBSYS.TCOMPONENT=DHCEQPicture&SourceType=4&SourceID='+GetElementValue("RowID");
-	//window.open(str,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0');
 	var SourceType=GetElementValue("SourceType")   //modified by czf 399195
-	if (SourceType==2)
+	if ((SourceType==2)||(SourceType==5))		//modified by czf 20200404
 	{
-		var str='dhceq.process.picturemenu.csp?&CurrentSourceType=63-1&CurrentSourceID='+GetElementValue("RowID")+'&Status=0';
+		var str='dhceq.plat.picturemenu.csp?&CurrentSourceType=63-1&CurrentSourceID='+GetElementValue("RowID")+'&Status=0';
 	}
 	else if (SourceType==3)
 	{
-		var str='dhceq.process.picturemenu.csp?&CurrentSourceType=63-2&CurrentSourceID='+GetElementValue("RowID")+'&Status=0';
+		var str='dhceq.plat.picturemenu.csp?&CurrentSourceType=63-2&CurrentSourceID='+GetElementValue("RowID")+'&Status=0';
 	}
-	window.open(str,'_blank','left='+ (screen.availWidth - 1150)/2 +',top='+ ((screen.availHeight>750)?(screen.availHeight-750)/2:0) +',width=1150,height=750,toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes');
+	var title="图片信息"
+	var width=""
+	var height=""
+	var icon="icon-w-edit"
+	var showtype=""
+	showWindow(str,title,width,height,icon,showtype,"","","middle")  //modify by lmm 2020-06-05 UI
 }
 function BClose_Click()
 {
@@ -197,7 +189,7 @@ function SetData(rowid)
 	var sort=18;
 	var gbldata=cspRunServerMethod(encmeth,rowid);
 	var list=gbldata.split("^");
-	//alertShow(gbldata)
+	//messageShow("","","",gbldata)
 	SetElement("SourceType",list[0]);
 	SetElement("SourceID",list[1]);
 	SetElement("SourceDesc",list[sort+0]);
@@ -215,18 +207,26 @@ function SetData(rowid)
 	SetElement("Hold4",list[16]);
 	SetElement("Hold5",list[17]);
 }
-
-function SelectRowHandler()
+//modified by czf 20180827 HISUI改造
+function SelectRowHandler(index,rowdata)
 {
-	var eSrc=window.event.srcElement;
-	var objtbl=document.getElementById('tDHCEQCertificateInfoNew');
-	var rows=objtbl.rows.length;
-	var lastrowindex=rows - 1;
-	var rowObj=getRow(eSrc);
-	var selectrow=rowObj.rowIndex;
-	//alertShow(selectrow+"/"+rows)
-	if (!selectrow) return;
-	Selected(selectrow);
+	if (SelectedRow==index)
+	{
+		Clear();
+		SelectedRow=-1;
+		rowid=0;
+		SetElement("RowID","");
+		InitButton(false);
+	}
+	else
+	{
+		SelectedRow=index;
+		rowid=rowdata.TRowID;
+		if (rowid=="") return;
+		SetElement("RowID",rowid);
+		SetData(rowid);
+		InitButton(true);
+	}
 }
 function GetCertificateType(value)
 {
@@ -258,7 +258,7 @@ function BSourceDesc_Click()
 }
 function GetSourceID(value) 
 {
-	//alertShow(value)
+	//messageShow("","","",value)
 	var list=value.split("^");
 	SetElement('SourceDesc',list[0]);
 	SetElement('SourceID',list[1]);

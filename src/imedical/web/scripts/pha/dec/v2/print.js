@@ -66,6 +66,12 @@ var DEC_PRINT = {
 			var xmlPrtObj=DHCSTXMLPrint_JsonToXml(jsonData);	
 			DHCSTGetXMLConfig(xmlPrtObj.xmlTemplet);
 			DHCSTPrintFun(xmlPrtObj.xmlPara,xmlPrtObj.xmlList);
+		},
+		// 煎药信息打印
+		DecInfoPrint:function(_opts){
+			var jsonData = DEC_PRINT.Data(_opts);
+			if(jsonData==null) return;
+			LodopPrtDecInfo(jsonData);
 		}
 	},
 	/**
@@ -86,7 +92,15 @@ var DEC_PRINT = {
 		var prescHtml = DHCSTXMLPrint_Preview.JsonToHtml(jsonData);
 		$("#" + _id).html(prescHtml);
 		return this
-	}
+	},
+	PRINTBoxLabel: {
+		//lodop打印
+		LodopPrint: function(_opts){
+			var jsonData = DEC_PRINT.Data(_opts);
+			if(jsonData==null) return;
+			LodopPrtLabel(jsonData, _opts.Num);
+		}
+	},
 }
 
 /**
@@ -95,50 +109,84 @@ var DEC_PRINT = {
  * @param 需打印数据
  */
 function LodopPrtLabel(param, labNum){
-	if(typeof(labNum)=="undefined") {labNum = "";}
+
+	if(typeof(labNum)=="undefined") {
+		labNum = "";
+	}
 	var jsonData = param;
-	var htmlStr = "";
-	htmlStr += "<style>table,td,th {border: 1px solid black;border-style: solid;border-collapse: collapse;font-size:19px;font-family:Microsoft Yahei} table{table-layout:fixed;display:table;} tfoot,th{ border:none;font-size:19px;text-align:left} tfoot,th,tr,td{font-weight:normal}</style><table>";
-	htmlStr += "<tbody>";
-	htmlStr += "<tr>";
-	htmlStr += "<td>" + "登记号" +"</td>";
-	htmlStr += "<td>" + jsonData.Para.PatNo +"</td>";
-	htmlStr += "<td>" + " 姓名" +"</td>";
-	htmlStr += "<td>" + jsonData.Para.PatName +"</td>";
-	htmlStr += "</tr>";
-	htmlStr += "<tr>";
-	htmlStr += "<td>" + "科&nbsp;&nbsp;&nbsp;室" +"</td>";
+	LabNum = labNum || jsonData.Para.LabNum;
+	var prescNo = jsonData.Para.PrescNo;
+	var patNo = jsonData.Para.PatNo;
+	var patName = jsonData.Para.PatName;
 	var deptLoc = jsonData.Para.DeptLoc
 	if(jsonData.Para.TypeCode=="I"){
 		var deptLoc = deptLoc + "(床位:"+jsonData.Para.BedNo+")"
 	}
-	htmlStr += "<td colspan='3'>" + deptLoc +"</td>";
-	/*if(jsonData.Para.TypeCode=="I"){
-		htmlStr += "<td>" + " 床位" +"</td>";
-		htmlStr += "<td>" + "10床" +"</td>";
-	}*/
-	htmlStr += "</tr>";
-	htmlStr += "<tr>";
-	htmlStr += "<td  colspan='4'>" + jsonData.Para.QueInfo +"</td>";
-	htmlStr += "</tr>";
-	
-	htmlStr += "</tbody>";
-	
-	DECLODOP = getLodop();
-	LabNum = labNum || jsonData.Para.LabNum;
+	var decInfo = jsonData.Para.QueInfo;
+
+	var prtJson = {};
+		prtJson.Para = {
+			"PrescNo": prescNo,
+			"PatNo": patNo,
+			"PatName": patName,
+			"OrdLocDesc": deptLoc,
+			"DecInfo":decInfo
+		}
 	for(var i = 0; i < LabNum; i++){
-		DECLODOP.PRINT_INIT("煎药标签");
-		DECLODOP.SET_PRINT_STYLE("FontName", "Microsoft Yahei");
-	    DECLODOP.SET_PRINT_PAGESIZE(1, "500mm", "300mm", "");
-	    DECLODOP.SET_PRINT_STYLEA(0, "FontName", "Microsoft Yahei");
-	    DECLODOP.SET_PRINT_STYLEA(0, "FontSize", 14);
-	    DECLODOP.SET_PRINT_STYLEA(0, "Alignment", 2);
-	    DECLODOP.SET_PRINT_STYLEA(0, "ItemType", 1);
-	    // 二维码
-	    DECLODOP.ADD_PRINT_BARCODE("5mm", "3mm", "30mm", "30mm", "QRCode", jsonData.Para.PrescNo);
-	    DECLODOP.SET_PRINT_STYLEA(0, "ItemType", 1);
-	    DECLODOP.SET_PRINT_STYLEA(0, "Alignment", 3);
-	    DECLODOP.ADD_PRINT_TABLE("6mm", "26mm", "200mm", "40mm" , htmlStr);
-    	DECLODOP.PRINT();
+		PRINTCOM.XML({
+			printBy: 'lodop',
+			XMLTemplate: "PHADECPrescLabel",
+			data: prtJson
+		});
 	}
+	
+}
+
+/// MaYuqiang 20210303
+// 打印煎药室封箱贴
+function PrintBoxLabel(BoxId, ReprintFlag) {
+	if (typeof(ReprintFlag) == "undefined") {
+		var ReprintFlag = "";
+	} else {
+		ReprintFlag = "【补】";
+	}
+	var PrintInfoStr = tkMakeServerCall("PHA.DEC.Com.Print", "GetBoxLabelInfo", BoxId);
+	var PrintArr = PrintInfoStr.split("^");
+	
+	// boxNo _"^"_ frLocDesc _"^"_ toLocDesc _"^"_ boxDateTime _"^"_ prescNum
+	// 物流箱信息
+	var BoxNo = PrintArr[0];
+	var FrLocDesc = PrintArr[1];
+	var ToLocDesc = PrintArr[2];
+	var BoxDate = PrintArr[3];
+	var BoxTime = PrintArr[4];
+	var PrescNum = PrintArr[5];
+	var PrescFacNum = PrintArr[6];
+	
+	var prtJson = {};
+	prtJson.Para = {
+		"BoxNoCode": BoxNo,
+		"BoxNo": BoxNo,
+		"ReprintFlag": ReprintFlag,
+		"FormLocDesc": "发放科室：" + FrLocDesc,
+		"ToLocDesc": "接收科室：" + ToLocDesc,
+		"BoxDate": "装箱日期：" + BoxDate,
+		"BoxTime": "装箱时间：" + BoxTime,
+		"PrescNum": "装箱付数："+PrescFacNum
+	}
+	PRINTCOM.XML({
+		printBy: 'lodop',
+		XMLTemplate: "PHADECBoxLabel",
+		data: prtJson
+	});
+}
+
+/// MaYuqiang 20220613
+// 打印煎药信息
+function LodopPrtDecInfo(param){
+	PRINTCOM.XML({
+		printBy: 'lodop',
+		XMLTemplate: "PHADecPrtLabel",
+		data: param
+	});
 }

@@ -32,7 +32,7 @@ $(function () {
         }
     })
     InitPhaLoc();
-    InitPhaWard();
+    InitPhaWard(DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID);
     InitDispCat(DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID);
     InitPoisonCat();
     InitThisLocInci(DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID);
@@ -83,13 +83,15 @@ function InitPhaLoc() {
         $("#sel-locinci").empty();
         InitThisLocInci($(this).val());
         InitDispCat($(this).val());
+        $("#sel-phaward").empty();
+        InitPhaWard($(this).val());
     });
 }
 //初始化病区
-function InitPhaWard() {
+function InitPhaWard(locid) {
     var selectoption = {
         url: DHCPHA_CONSTANT.URL.COMMON_INPHA_URL +
-            "?action=GetWardLocDs&style=select2",
+            "?action=GetWardLocDsByRecLoc&style=select2"+"&reclocId="+ locid,
         placeholder: "病区...",
         width: '15em'
     }

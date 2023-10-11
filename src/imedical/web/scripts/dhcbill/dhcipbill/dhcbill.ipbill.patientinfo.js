@@ -1,93 +1,139 @@
 ﻿/**
  * FileName: dhcbill.ipbill.patientinfo.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-04-14
  * Description: 患者信息查询
  */
 
 $(function () {
 	initQueryMenu();
-	initPatInfoList();
+	initPatList();
 });
 
 function initQueryMenu() {
-	setValueById("name", ascTransChar(GV.Name));
-	setValueById("IDNo", GV.IDNo);
-	setValueById("birthDate", GV.BirthDate);
-	setValueById("healthFundNo", GV.HealthFundNo);
+	setValueById("name", ascTransChar(CV.Name));
 	
 	$HUI.linkbutton("#btn-find", {
 		onClick: function () {
-			loadPatInfoList();
+			loadPatList();
 		}
+	});
+	
+	$HUI.linkbutton("#btn-clear", {
+		onClick: function () {
+			clearClick();
+		}
+	});
+	
+	//登记号回车查询事件
+	$("#patientNo").keydown(function (e) {
+		patientNoKeydown(e);
 	});
 	
 	$HUI.combobox("#sex", {
 		panelHeight: "auto",
 		url: $URL + "?ClassName=web.UDHCOPOtherLB&MethodName=ReadSex&JSFunName=GetSexToHUIJson",
-		valueField: "id",
-		textField: "text",
+		valueField: 'id',
+		textField: 'text',
 		blurValidValue: true,
-		defaultFilter: 4,
+		defaultFilter: 5,
 		onLoadSuccess: function(data) {
 			$(this).combobox("clear");
 		}
 	});
 }
 
-function initPatInfoList() {
-	$HUI.datagrid("#patInfoList", {
+function initPatList() {
+	GV.PatList = $HUI.datagrid("#patList", {
 		fit: true,
 		striped: true,
 		border: false,
 		singleSelect: true,
-		fitColumns: true,
 		pagination: true,
 		rownumbers: true,
 		pageSize: 20,
-		columns: [[{title: '登记号', field: 'TPAPERNo', width: 100},
-				   {title: '患者姓名', field: 'TPAPERName', width: 100},
-				   {title: '性别', field: 'TSex', width: 60},
-				   {title: '出生日期', field: 'TPAPERDob', width: 100},
-				   {title: '身份证号', field: 'TPAPERID', width: 150},
-				   {title: '住址', field: 'TAddress', width: 150},
-				   {title: '病案号', field: 'TIPMedicare', width: 80},
-				   {title: '工作单位', field: 'TCompany', width: 100},
-				   {title: '联系电话', field: 'TTelephone', width: 100},
-				   {title: '手机', field: 'TMobile', width: 100},
-				   {title: '工作电话', field: 'TWorkTel', width: 100},
-				   {title: '联系人', field: 'TForeignId', width: 80},
-				   {title: '联系人电话', field: 'TTForeignTel', width: 100},
-				   {title: '医保手册号', field: 'TInsuNo', width: 90}
-			]],
+		className: "web.DHCIPBillPAPERInfo",
+		queryName: "CheckPatInfo",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if (!cm[i].width) {
+					cm[i].width = 100;
+				}
+			}
+		},
 		url: $URL,
 		queryParams: {
 			ClassName: "web.DHCIPBillPAPERInfo",
 			QueryName: "CheckPatInfo",
+			PAPERNo: getValueById("patientNo"),
 			PAPERName: getValueById("name"),
-			PAPERNo: GV.PatientNo,
 			SexID: getValueById("sex"),
 			PAPERID: getValueById("IDNo"),
 			BirthDate: getValueById("birthDate"),
-			InsuNo: getValueById("healthFundNo")
+			InsuNo: getValueById("healthFundNo"),
+			HospId: PUBLIC_CONSTANT.SESSION.HOSPID
 		},
-		onDblClickRow: function (rowIndex, rowData) {
-			websys_showModal("options").originWindow.switchPatient(rowData.TPAPERNo);
+		onDblClickRow: function (index, row) {
+			websys_showModal("options").callbackFunc(row.TPAPERNo);
 			websys_showModal("close");
 		}
 	});
 }
 
-function loadPatInfoList() {
+function loadPatList() {
 	var queryParams = {
 		ClassName: "web.DHCIPBillPAPERInfo",
 		QueryName: "CheckPatInfo",
+		PAPERNo: getValueById("patientNo"),
 		PAPERName: getValueById("name"),
-		PAPERNo: GV.PatientNo,
 		SexID: getValueById("sex"),
 		PAPERID: getValueById("IDNo"),
 		BirthDate: getValueById("birthDate"),
-		InsuNo: getValueById("healthFundNo")
+		InsuNo: getValueById("healthFundNo"),
+		HospId: PUBLIC_CONSTANT.SESSION.HOSPID
 	};
-	loadDataGridStore("patInfoList", queryParams);
+	loadDataGridStore("patList", queryParams);
+}
+
+function clearClick() {
+	$(":text:not(.pagination-num,.combo-text)").val("");
+	$(".combobox-f").combobox("clear");
+	$(".datebox-f").datebox("clear");
+	loadPatList();
+}
+
+function patientNoKeydown(e) {
+	var key = websys_getKey(e);
+	if (key == 13) {
+		if (!$(e.target).val()) {
+			return;
+		}
+		$.cm({
+			ClassName: "web.DHCIPBillReg",
+			MethodName: "GetRegInfo",
+			type: "GET",
+			patientNo: $(e.target).val(),
+			medicareNo: "",
+			IPBookId: "",
+			sessionStr: getSessionStr()
+		}, function (json) {
+			if (json.success == 0) {
+				setPatInfo(JSON.parse(json.PatInfo));
+			}
+		});
+	}
+}
+
+function setPatInfo(patJson) {
+	if (patJson.success != 0) {
+		$.messager.popover({msg: patJson.msg, type: "info"});
+		return;
+	}
+	setValueById("patientNo", patJson.PatientNo);
+	setValueById("name", patJson.Name);
+	setValueById("sex", patJson.Sex);
+	setValueById("IDNo", patJson.IDNo);             //身份证号
+	setValueById("birthDate", patJson.BirthDate);   //出生日期
+	setValueById("healthFundNo", patJson.HealthFundNo);      //医保手册号
+	loadPatList();
 }

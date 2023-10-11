@@ -31,6 +31,10 @@ $(function(){
 		});
 	}
 	downShadow();
+    if ((PARAMObj.ShowTabStr=="Apply,Consult")&&(websys_getAppScreenIndex()==0)){
+		var Obj={EpisodeID:PARAMObj.PAADMRowid,ApplyId:"",PageShowFromWay:"Apply"};
+		websys_emit("onOpenKSSInterface",Obj);
+	}
 	//保存与取消
 	$("#i-btn-submit").on('click', function(){
 		//$(this).linkbutton("disable");
@@ -202,12 +206,12 @@ $(function(){
 		
 		if (resultArr[0] == 1) {
 			//alert("保存成功！");
-			$.messager.alert('提示','保存成功！','info',function () {
+			websys_getTop().$.messager.alert('提示','保存成功！','info',function () {
 				closeSubWin(1,resultArr[1],resultArr[2],useaimMainObj,applyMainObj);
 			});
 		} else {
-			alert("保存失败！");
-			$.messager.alert('提示','保存失败！','info');
+			//alert("保存失败！");
+			websys_getTop().$.messager.alert('提示','保存失败！','info');
 		};
 		return false;
 	});
@@ -233,7 +237,7 @@ $(function(){
 		}
 		websys_showModal({
 			url:url,
-			title:'病历引用',
+			title:$g('病历引用'),
 			width:1300,height:600,
 			CallBackFunc:function(result){
 				websys_showModal("close");
@@ -291,7 +295,7 @@ $(function(){
 				if (_$id.length==0){
 					//todo
 				} else {
-					if (_$id.hasClass("hisui-combobox")){
+					if ((_$id.hasClass("hisui-combobox"))||(_$id.hasClass("combo-f"))) {
 						var myval=_$id.combobox("getValue");
 					} else if(_$id.hasClass("hisui-checkbox")){
 						var myval="0";

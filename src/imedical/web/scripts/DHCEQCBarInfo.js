@@ -23,6 +23,9 @@ function BodyLoadHandler()
 	Muilt_LookUp("BorderStyle^BarStyle^CorrectLevel");
 	//SetFocus("Desc");
 	document.getElementById("cEQTitle").innerHTML = "条码配置 ("+GetElementValue("VersionInfo")+")"
+	// MZY0069	1726270,1726281,1726345		2021-02-18
+	//EQCommon_HiddenElement("BExportData");
+	//EQCommon_HiddenElement("BImportData");
 }
 function InitPage()
 {
@@ -92,7 +95,8 @@ function FillData()
 	SetElement("BarLine",list[26]);
 	SetElement("WordCount",list[31]);
 	SetElement("Hold1",list[32]);
-	SetElement("Hold2",list[33]);
+	SetElement("Hold1Desc",list[sort+3]);
+	SetChkElement("Hold2",list[33]);
 	SetElement("Hold3",list[34]);
 	SetElement("Hold4",list[35]);
 	SetElement("Hold5",list[36]);
@@ -137,7 +141,8 @@ function BSave_Clicked()
 	combindata=combindata+"^"+GetElementValue("PrtName");
 	combindata=combindata+"^"+GetElementValue("BarLine");
 	combindata=combindata+"^"+GetElementValue("WordCount");
-	
+	combindata=combindata+"^"+GetElementValue("Hold1");		//30
+	combindata=combindata+"^"+GetChkElementValue("Hold2");
   	var valList=GetTableInfo();
   	if (valList=="-1") return;
   	var DelRowid=tableList.toString();
@@ -429,6 +434,11 @@ function GetCorrectLevel(value)
 {
     GetLookUpID("CorrectLevelDR",value);
 }
+function GetHold1(value)
+{
+	var list=value.split("^");
+	SetElement('Hold1',list[1]);
+}
 function LookUpFormatList(vClickEventFlag)
 {
 	selectrow=GetTableCurRow();
@@ -523,7 +533,7 @@ function BImportData_Clicked()
 {
 	var truthBeTold = window.confirm("每次只能导入一条配置信息!继续吗?");
 	if (!truthBeTold) return;
-	var FileName=GetFileName();
+	var FileName=GetFileNameNew();		// MZY0140	2612987		2022-10-31
     if (FileName=="") return 1;
     var xlApp,xlsheet,xlBook
     xlApp = new ActiveXObject("Excel.Application");
@@ -645,6 +655,9 @@ function BImportData_Clicked()
 	var BIHold1=xlsheet.cells(Row,Col++).value;		//BI_Hold1
 	if (BIHold1==undefined) BIHold1="";
 	combindata=combindata+"^"+BIHold1;
+	var BIHold2=xlsheet.cells(Row,Col++).value;		//BI_Hold2
+	if (BIHold2==undefined) BIHold2="";
+	combindata=combindata+"^"+BIHold2;
 	//Modiedy by zc0057 增加标签打印限定条件   end
 	xlsheet =xlBook.Worksheets("条码元素");
 	var MaxRow=xlsheet.UsedRange.Cells.Rows.Count;
@@ -779,6 +792,7 @@ function BImportData_Clicked()
     xlsheet=null;
     return 0
 }
+// MZY0099	2152554		2021-11-13	调整修正导出为IE和Chrome方式
 // 条码配置数据导出
 function BExportData_Clicked()
 {
@@ -787,6 +801,19 @@ function BExportData_Clicked()
 		alert("无条码配置信息!");
 		return
 	}
+	var ChromeFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo",991109);
+	if (ChromeFlag=="1")
+	{
+		BExport_Chrome();
+	}
+	else
+	{
+		BExport_IE();
+	}
+}
+// MZY0099	2152554		2021-11-13
+function BExport_IE()
+{	
 	var encmeth=GetElementValue("GetRepPath");
 	if (encmeth=="") return;
 	var	TemplatePath=cspRunServerMethod(encmeth);
@@ -843,12 +870,12 @@ function BExportData_Clicked()
 		xlsheet.cells(3,26)=InfoList[25]; //BI_PrtName
 		xlsheet.cells(3,27)=InfoList[26]; //BI_BarLine
 		xlsheet.cells(3,28)=InfoList[31]; //WordCount
+		xlsheet.cells(3,29)=InfoList[32]; //BI_Hold1
+		xlsheet.cells(3,30)=InfoList[33]; //BI_Hold2
 		/*xlsheet.cells(3,28)=InfoList[27]; //BI_InvalidFlag
 		xlsheet.cells(3,29)=InfoList[28]; //BI_UpdateUserDR
 		xlsheet.cells(3,30)=InfoList[29]; //BI_UpdateDate
 		xlsheet.cells(3,31)=InfoList[30]; //BI_UpdateTime
-		xlsheet.cells(3,32)=InfoList[32]; //BI_Hold1
-		xlsheet.cells(3,33)=InfoList[33]; //BI_Hold2
 		xlsheet.cells(3,34)=InfoList[34]; //BI_Hold3
 		xlsheet.cells(3,35)=InfoList[35]; //BI_Hold4
 		xlsheet.cells(3,36)=InfoList[36]; //BI_Hold5*/
@@ -889,7 +916,7 @@ function BExportData_Clicked()
 			//xlsheet.cells(row,25)=tmplist[25]; //BD_Hold4
 			//xlsheet.cells(row,26)=tmplist[26]; //BD_Hold5
 		}
-		var savepath=GetFileName();
+		var savepath=GetFileNameNew();		// MZY0099	2152554		2021-11-13
 		xlBook.SaveAs(savepath);
 	    xlBook.Close (savechanges=false);
 	    xlsheet.Quit;
@@ -915,4 +942,160 @@ function GetBarDetailKey(value)
 	var list=value.split("^");
 	SetElement('TKeyz'+selectrow,list[2]);
 	SetElement('TCaptionz'+selectrow,list[3]);
+}
+// MZY0099	2152554		2021-11-13
+function BExport_Chrome()
+{
+	var FileName=GetFileNameNew();
+	if (FileName=="") {return;}
+	var NewFileName=filepath(FileName,"\\","\\\\")
+	var NewFileName=NewFileName.substr(0,NewFileName.length-4)
+	var encmeth=GetElementValue("GetRepPath");
+	if (encmeth=="") return;
+	var	TemplatePath=cspRunServerMethod(encmeth);
+	var encmeth=GetElementValue("GetPrintBarInfo");
+	if (encmeth=="") return;
+	var Listall=cspRunServerMethod(encmeth, -1, GetElementValue("BarInfoDR"));
+	var splitChar=GetElementValue("SplitRowCode");
+	
+	// Chrome兼容性处理
+	var Str ="(function test(x){"
+	Str +="var xlApp,xlsheet,xlBook;"
+	Str +="var Template='"+TemplatePath+"DHCEQCBarInfo.xls';"
+	Str +="xlApp = new ActiveXObject('Excel.Application');"
+	Str +="xlBook = xlApp.Workbooks.Add(Template);"
+	
+	Str +="var ListallStr='"+Listall+"';"
+	Str +="var Lists=ListallStr.split('"+splitChar+"');"
+	Str +="var InfoList=Lists[0].split('^');"
+	
+	//Str +="xlsheet = xlBook.ActiveSheet;"
+	Str +="xlsheet = xlBook.Worksheets('条码列表');"
+	Str +="xlsheet.cells(3,1)=InfoList[0];"
+	Str +="xlsheet.cells(3,2)=InfoList[1];"
+	Str +="xlsheet.cells(3,3)=InfoList[2];"
+	Str +="xlsheet.cells(3,4)=InfoList[3];"
+	Str +="xlsheet.cells(3,5)=InfoList[4];"
+	Str +="xlsheet.cells(3,6)=InfoList[5];"
+	Str +="xlsheet.cells(3,7)=InfoList[6];"
+	Str +="xlsheet.cells(3,8)=InfoList[7];"
+	Str +="xlsheet.cells(3,9)=InfoList[8];"
+	Str +="xlsheet.cells(3,10)=InfoList[9];"
+	Str +="xlsheet.cells(3,11)=InfoList[10];"
+	Str +="xlsheet.cells(3,12)=InfoList[11];"
+	Str +="xlsheet.cells(3,13)=InfoList[12];"
+	Str +="xlsheet.cells(3,14)='N';"
+	Str +="if (InfoList[13]=='Y') xlsheet.cells(3,14)='Y';"
+	Str +="xlsheet.cells(3,15)=InfoList[14];"
+	Str +="xlsheet.cells(3,16)=InfoList[15];"
+	Str +="xlsheet.cells(3,17)=InfoList[16];"
+	Str +="xlsheet.cells(3,18)=InfoList[17];"
+	Str +="xlsheet.cells(3,19)=InfoList[18];"
+	Str +="xlsheet.cells(3,20)=InfoList[19];"
+	Str +="xlsheet.cells(3,21)=InfoList[20];"
+	Str +="xlsheet.cells(3,22)=InfoList[21];"
+	Str +="xlsheet.cells(3,23)=InfoList[22];"
+	Str +="xlsheet.cells(3,24)=InfoList[23];"
+	Str +="xlsheet.cells(3,25)='N';"
+	Str +="if (InfoList[24]=='Y') xlsheet.cells(3,25)='Y';"
+	Str +="xlsheet.cells(3,26)=InfoList[25];"
+	Str +="xlsheet.cells(3,27)=InfoList[26];"
+	Str +="xlsheet.cells(3,28)=InfoList[31];"
+	Str +="xlsheet.cells(3,29)=InfoList[32];"
+	Str +="xlsheet.cells(3,30)=InfoList[33];"
+	
+	Str +="xlsheet = xlBook.Worksheets('条码元素');"
+	Str +="for (var i=1;i<Lists.length;i++){"
+	Str +="var row=2+i;"
+	Str +="var tmplist=Lists[i].split('^');"
+	Str +="xlsheet.cells(row,1)=tmplist[1];"
+	Str +="xlsheet.cells(row,2)=tmplist[2];"
+	Str +="xlsheet.cells(row,3)=tmplist[3];"
+	Str +="xlsheet.cells(row,4)=tmplist[4];"
+	Str +="xlsheet.cells(row,5)=tmplist[5];"
+	Str +="xlsheet.cells(row,6)=tmplist[6];"
+	Str +="xlsheet.cells(row,7)=tmplist[7];"
+	Str +="xlsheet.cells(row,8)=tmplist[8];"
+	Str +="xlsheet.cells(row,9)=tmplist[9];"
+	Str +="xlsheet.cells(row,10)=tmplist[10];"
+	Str +="xlsheet.cells(row,11)=tmplist[11];"
+	Str +="xlsheet.cells(row,12)=tmplist[12];"
+	Str +="xlsheet.cells(row,13)=tmplist[13];"
+	Str +="xlsheet.cells(row,14)=tmplist[14];"
+	Str +="xlsheet.cells(row,15)=tmplist[15];"
+	Str +="xlsheet.cells(row,16)=tmplist[16];"
+	Str +="xlsheet.cells(row,17)=tmplist[17];"
+	Str +="xlsheet.cells(row,18)=tmplist[18];"
+	Str +="xlsheet.cells(row,19)=tmplist[19];"
+	Str +="xlsheet.cells(row,20)=tmplist[20];"
+	Str +="xlsheet.cells(row,21)=tmplist[21];"
+	Str +="xlsheet.cells(row,22)=tmplist[22];}"
+	
+	Str +="xlBook.SaveAs('"+NewFileName+"');"
+	Str +="xlBook.Close (savechanges=false);"
+	Str +="xlApp.Quit();"
+	Str +="xlApp=null;"
+	Str +="xlsheet.Quit;"
+	Str +="xlsheet=null;"
+	Str +="return 1;}());";
+	//以上为拼接Excel打印代码为字符串
+	CmdShell.notReturn = 0;
+	//alert(Str)
+	var rtn = CmdShell.EvalJs(Str);
+	if (rtn.rtn==1)
+	{
+	    alert("导出完成!");
+	}
+}
+function GetFileNameNew()
+{
+	var ChromeFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo",991109);
+	if (ChromeFlag=="1")
+	{
+		var Str ="(function test(x){"
+		Str +="var xlApp = new ActiveXObject('Excel.Application');"
+		Str +="var fName = xlApp.GetSaveAsFilename('','Excel File(*.xls),*.xls');"
+		Str +="if (fName==false){return ''}"
+		Str += "return fName}());";
+		CmdShell.notReturn =0;   			//设置无结果调用不阻塞调用
+		var rtn = CmdShell.EvalJs(Str);   	//通过中间件运行
+		return rtn.rtn
+	}
+	else
+	{
+		try
+		{
+			var xls = new ActiveXObject("Excel.Application");
+			var fName = xls.GetSaveAsFilename("","Excel File(*.xls),*.xls")
+			if (fName==false)
+			{
+			 fName=""
+			}
+			return fName
+		}
+		catch(e)
+		{
+			return "";
+		}
+	}
+}
+function filepath(oldpath,findstr,replacestr)
+{
+	if (oldpath=="") return ""
+	var newpath=""
+	var pathcount=oldpath.length
+	for (var i=0;i<pathcount;i++)
+	{
+		var curchar=oldpath.substr(0,1)
+		if (curchar==findstr)
+		{
+			newpath=newpath+replacestr
+		}
+		else
+		{
+			newpath=newpath+curchar
+		}
+		oldpath=oldpath.substr(1,oldpath.length)
+	}
+	return newpath
 }

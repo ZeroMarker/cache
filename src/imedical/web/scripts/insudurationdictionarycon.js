@@ -305,10 +305,10 @@ function SaveHisDicConDoALL(HisSelRowData, InsuRowData){
 function SaveHisDicConDo(HisSelRowData, InsuRowData){
 	var KeyCode=DicCode;                                                     //字典类型识别码
 	var InsuType=$('#InsuTypeBox').combobox('getValue');     //医保类型
-	var HospitalNo="";
-	if($("#hospitalDiv").is(":hidden")==false){
+	var HospitalNo=PUBLIC_CONSTANT.SESSION.HOSPID; 
+	/*if($("#hospitalDiv").is(":hidden")==false){
 		HospitalNo=$('#HospitalBox').combobox('getValue');   //医院编码
-	}
+	}*/
 	var HisCode=HisSelRowData.HisCode;          //HIS编码
 	var HisDesc=HisSelRowData.HisDesc;          //HIS描述
 	var diccode=InsuRowData.diccode             //医保编码
@@ -377,7 +377,7 @@ function reloadInsuDicGV(loadType){
 	var InsuType=$('#InsuTypeBox').combobox('getValue');     //医保类型
 	//var SearchKey=$('#SearchMedBox').val();                          //检索关键字
 	var SearchKey=$('#SearchMedBox').searchbox('getValue');   //检索关键字
-	var ExtStr=SearchKey;
+	var ExtStr=SearchKey+"^"+PUBLIC_CONSTANT.SESSION.HOSPID;;
 	//alert("KeyCode="+KeyCode+"|ExtStr"+ExtStr);
 	
 	//重新加载查询结果
@@ -402,10 +402,10 @@ function reloadHisDicConGV(loadType){
 	}
 
 	var InsuType=$('#InsuTypeBox').combobox('getValue');     //医保类型
-	var HospitalNo="";
-	if($("#hospitalDiv").is(":hidden")==false){
+	var HospitalNo=PUBLIC_CONSTANT.SESSION.HOSPID; 
+	/*if($("#hospitalDiv").is(":hidden")==false){
 		HospitalNo=$('#HospitalBox').combobox('getValue');   //医院编码
-	}
+	}*/
 	//var SearchKey=$('#SearchHisBox').val();                    //检索关键字
 	var SearchKey=$('#SearchHisBox').searchbox('getValue');   //检索关键字
 	
@@ -431,16 +431,17 @@ function Import()
 {
 	var KeyCode=DicCode;
 	var InsuType=$('#InsuTypeBox').combobox('getValue');     //医保类型
-	var HospitalNo="";
-	if($("#hospitalDiv").is(":hidden")==false){
+	var HospitalNo=PUBLIC_CONSTANT.SESSION.HOSPID; 
+	/*if($("#hospitalDiv").is(":hidden")==false){
 		HospitalNo=$('#HospitalBox').combobox('getValue');   //医院编码
-	}
+	}*/
 	importData(KeyCode,InsuType,HospitalNo);		 //insuimportdictionarycon.js
 	reloadHisDicConGV('reload');
 }
 function selectHospCombHandle(){
 	$('#InsuTypeBox').combobox('clear');
-	$('#InsuTypeBox').combobox('options').url = APP_PATH+"/INSUDictionaryContrast/GetDicDataList&DicKey=DLLType&ExtStr=";
+	var ExtStr = PUBLIC_CONSTANT.SESSION.HOSPID;  //增加院区 20230314  JinS1010
+	$('#InsuTypeBox').combobox('options').url = APP_PATH+"/INSUDictionaryContrast/GetDicDataList&DicKey=DLLType&ExtStr="+ExtStr;
 	$('#InsuTypeBox').combobox('reload');
 	//RefushGridViews();
 	setTimeout(function(){

@@ -22,9 +22,13 @@ function BodyLoadHandler(){
 	InitPage();
 	disabled(true);//add
 	//modified by GR0012 2014-09-11 end
-	KeyUp("SourceID^Model^UOM^WorkLoadUOM");
-	Muilt_LookUp("SourceID^Model^UOM^WorkLoadUOM");
+	KeyUp("SourceID^Model^UOM");   //Modefied by zc0100 2021-3-15  重新定义WorkLoadUOM检索
+	Muilt_LookUp("SourceID^Model^UOM");  //Modefied by zc0100 2021-3-15  重新定义WorkLoadUOM检索
 	initButtonWidth();//add by csj 20181009 问题60：HISUI统一按钮宽度
+	//Modefied by zc0100 2021-3-15 单位根据计价方式进行检索 begin
+	var paramsFrom=[{"name":"Desc","type":"1","value":"WorkLoadUOM"},{"name":"Type","type":"2","value":"3"}];
+    singlelookup("WorkLoadUOM","PLAT.L.UOM",paramsFrom,GetWorkLoadUOMID);
+	//Modefied by zc0100 2021-3-15 单位根据计价方式进行检索 end
 }
 
 function InitPage()
@@ -249,9 +253,13 @@ function disabled(value)//灰化
 //add by wy 2017-8-18 工作量单位
 function GetWorkLoadUOMID(value)
 {   
-	var val=value.split("^");
-	SetElement("WorkLoadUOM",val[0]);
-	SetElement("WorkLoadUOMDR",val[1]);
+	//Modefied by zc0101 2021-5-13 工作量单位选择不关闭与保存不了 begin
+	//var val=value.split("^");
+	//SetElement("WorkLoadUOM",val[0]);
+	//SetElement("WorkLoadUOMDR",val[1]);
+	SetElement("WorkLoadUOM",value.TName);
+	SetElement("WorkLoadUOMDR",value.TRowID);
+	//Modefied by zc0101 2021-5-13 工作量单位选择不关闭与保存不了 end
 }	
 function GetUOM(value)
 {
@@ -351,4 +359,32 @@ function BAddAllItem_Click()
 		location.reload();
 	}
 }
+//Modefied by zc0100 2021-3-15 单位根据计价方式进行检索 begin
+ $("#Mode").combobox({
+	onChange:function(n,o){ValueUOMClear()},//add by csj 20181010 //add by csj 20181010下拉列表清空时设备也清空 需求号:681501
+    onSelect: function () {
+	    Mode = GetElementValue("Mode");
+	    if (Mode=="1")
+		{
+			var paramsFrom=[{"name":"Desc","type":"1","value":"WorkLoadUOM"},{"name":"Type","type":"2","value":"3"}];
+		}
+		else if (Mode=="2")
+		{
+			var paramsFrom=[{"name":"Desc","type":"1","value":"WorkLoadUOM"},{"name":"Type","type":"2","value":"1"}];
+		}
+		singlelookup("WorkLoadUOM","PLAT.L.UOM",paramsFrom,GetWorkLoadUOMID);
+
+    }
+ })
+ function ValueUOMClear()
+{
+	setElement("WorkLoadUOM","");
+	setElement("WorkLoadUOMDR","");
+}
+//Modefied by zc0113 2022-01-19 修改选择来源为设备项,放大镜点不开
+function getParam(ID)
+{
+	if (ID=="EquipTypeDR"){return ""}
+}
+//Modefied by zc0100 2021-3-15 单位根据计价方式进行检索 end
 document.body.onload = BodyLoadHandler;

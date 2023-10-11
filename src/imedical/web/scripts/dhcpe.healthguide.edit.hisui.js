@@ -4,7 +4,8 @@ var PrinterName="";
 var init = function(){
 		var myeditor = CKEDITOR.replace( 'edcontent', {
 		width: "100%",
-		height: "500",
+		height: "572",
+		fit:true,
 		//resize_dir: 'both',
 		//resize_minWidth: 480,
 		//resize_minHeight: 320,

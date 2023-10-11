@@ -11,7 +11,7 @@ Ext.onReady(function() {
 	var gUserName=session['LOGON.USERNAME'];
 	
 	var DateFrom = new Ext.ux.DateField({
-		fieldLabel : '<font color=blue>开始日期</font>',
+		fieldLabel : '<font color=blue>'+$g('开始日期')+'</font>',
 		id : 'DateFrom',
 		name : 'DateFrom',
 		anchor : '90%',
@@ -19,7 +19,7 @@ Ext.onReady(function() {
 	});
 	
 	var DateTo = new Ext.ux.DateField({
-		fieldLabel : '<font color=blue>截止日期</font>',
+		fieldLabel : '<font color=blue>'+$g('截止日期')+'</font>',
 		id : 'DateTo',
 		name : 'DateTo',
 		anchor : '90%',
@@ -27,14 +27,14 @@ Ext.onReady(function() {
 	});
 	
 	var InciDr = new Ext.form.TextField({
-				fieldLabel : '药品RowId',
+				fieldLabel : $g('药品RowId'),
 				id : 'InciDr',
 				name : 'InciDr',
 				valueNotFoundText : ''
 			});
 
 	var InciDesc = new Ext.form.TextField({
-				fieldLabel : '药品名称',
+				fieldLabel : $g('药品名称'),
 				id : 'InciDesc',
 				name : 'InciDesc',
 				anchor : '90%',
@@ -49,7 +49,7 @@ Ext.onReady(function() {
 			});
 	//管制分类
 	var PHCDFPhcDoDR = new Ext.ux.ComboBox({
-			fieldLabel : '管制分类',
+			fieldLabel : $g('管制分类'),
 			id : 'PHCDFPhcDoDR',
 			name : 'PHCDFPhcDoDR',
 			store : PhcPoisonStore,
@@ -58,7 +58,7 @@ Ext.onReady(function() {
 			});
 	// 逐日消耗
 	var PoisonStat = new Ext.form.Radio({
-				boxLabel : '逐日消耗(本科室)',
+				boxLabel : $g('逐日消耗(本科室)'),
 				id : 'PoisonStat',
 				name : 'ReportType',
 				anchor : '80%',
@@ -66,7 +66,7 @@ Ext.onReady(function() {
 			});
 	// 处方统计
 	var PoisonDetail = new Ext.form.Radio({
-				boxLabel : '处方统计(本科室)',
+				boxLabel : $g('处方统计(本科室)'),
 				id : 'PoisonDetail',
 				name : 'ReportType',
 				anchor : '80%',
@@ -75,7 +75,7 @@ Ext.onReady(function() {
 			
 	// 门诊基本药物占比
 	var BasiOutStat = new Ext.form.Radio({
-				boxLabel : '门诊基本药物占比',
+				boxLabel : $g('门诊基本药物占比'),
 				id : 'BasiOutStat',
 				name : 'ReportType',
 				anchor : '80%',
@@ -83,7 +83,7 @@ Ext.onReady(function() {
 			});
 	// 住院基本药物药占比
 	var BasiInStat = new Ext.form.Radio({
-				boxLabel : '住院基本药物占比',
+				boxLabel : $g('住院基本药物占比'),
 				id : 'BasiInStat',
 				name : 'ReportType',
 				anchor : '80%',
@@ -119,8 +119,8 @@ Ext.onReady(function() {
 
 	var ClearBT = new Ext.Toolbar.Button({
 				id : "ClearBT",
-				text : '清空',
-				tooltip : '点击清空',
+				text : $g('清空'),
+				tooltip : $g('点击清空'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_clearscreen',
@@ -137,8 +137,8 @@ Ext.onReady(function() {
 		// 统计按钮
 		var OkBT = new Ext.Toolbar.Button({
 					id : "OkBT",
-					text : '统计',
-					tooltip : '点击统计',
+					text : $g('统计'),
+					tooltip : $g('点击统计'),
 					width : 70,
 					iconCls : 'page_find',
 					height : 30,
@@ -153,7 +153,7 @@ Ext.onReady(function() {
 			var EndDate=Ext.getCmp("DateTo").getValue()
 			if(StartDate==""||EndDate=="")
 			{
-				Msg.info("warning", "开始日期和截止日期不能空！");
+				Msg.info("warning", $g("开始日期和截止日期不能空！"));
 				return;
 			}
 			var StartDate=Ext.getCmp("DateFrom").getValue().format(App_StkDateFormat).toString();
@@ -177,12 +177,12 @@ Ext.onReady(function() {
 			var PHCDFPhcDoDR = Ext.getCmp("PHCDFPhcDoDR").getValue();
 			var PoisonDesc=Ext.getCmp("PHCDFPhcDoDR").getRawValue();
 			if((PoisonStat==true)&&(PHCDFPhcDoDR=="")){
-				Msg.info("warning", "逐日消耗管制分类不能为空！");
+				Msg.info("warning", $g("逐日消耗管制分类不能为空！"));
 				Ext.getCmp("PHCDFPhcDoDR").focus();
 				return;
 				}
 			if((PoisonDetail==true)&&(PHCDFPhcDoDR=="")){
-				Msg.info("warning", "处方统计管制分类不能为空！");
+				Msg.info("warning", $g("处方统计管制分类不能为空！"));
 				Ext.getCmp("PHCDFPhcDoDR").focus();
 				return;
 				}
@@ -224,11 +224,11 @@ Ext.onReady(function() {
 			tbar : [OkBT,'-',ClearBT],
 			items : [{
 						xtype : 'fieldset',
-						title : '查询条件',					
+						title : $g('查询条件'),					
 						items : [DateFrom,DateTo,PHCDFPhcDoDR,InciDesc]   //StkGrpType,
 					}, {
 						xtype : 'fieldset',
-						title : '报表类型',
+						title : $g('报表类型'),
 						items : [PoisonStat,PoisonDetail,BasiOutStat,BasiInStat]
 					}]
 		});
@@ -243,7 +243,7 @@ Ext.onReady(function() {
 					layout : 'border',
 					items : [{
 						region:'west',
-						title:"管制药品分类统计",
+						title:$g("管制药品分类统计"),
 						width:300,
 						split:true,
 						collapsible:true,

@@ -12,6 +12,7 @@ $(function(){
 function Init(){
 	//初始化界面上ComboBox
 	InitComboBox()
+	InitClassNameCombo()
 	InitDataGrid()
 	$("#datefrom").datebox("setValue",ServerObj.CurrentDate);
 	//InitLookup()
@@ -74,7 +75,7 @@ function DataListLoad(){
 	$.cm({
 	    ClassName : PageLogicObj.m_ClassName,
 	    QueryName : "GetOperateLogList",
-		ClassN:$("#ClassName").val(),
+		ClassN:$("#ClassName").combobox('getValue'),
 		OBJDESC:$("#ObjectDesc").val(),
 		UserDR:$("#UpdateUserDR").val(),
 		datefrom:$("#datefrom").datebox('getValue'),
@@ -103,4 +104,22 @@ function InitComboBox(){
 		    "text":"修改" 
 		}] 
    });
+}
+
+function InitClassNameCombo(){
+	var cbox = $HUI.combobox("#ClassName", {
+		valueField: 'ClassName',
+		textField: 'ClassName', 
+		editable:true,
+		delay:"500",
+		mode:"local",       //"remote",
+		url:$URL+"?ClassName=web.DHCDocDataChangeLog&QueryName=GetClassNameList&rows=999999",
+		filter: function(q, row){
+            var opts = $(this).combobox('options');
+            return row[opts.textField].indexOf(q) == 0;
+        },
+		loadFilter:function(data){
+		    return data['rows'];
+		}
+ 	});
 }

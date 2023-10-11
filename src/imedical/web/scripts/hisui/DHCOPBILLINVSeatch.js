@@ -20,8 +20,8 @@ $(function () {
         valueField: 'id',
         textField: 'text',
         editable: false,
-        data: [{id: 'O', text: '门诊', selected: true},
-        	   {id: 'I', text: '住院'}
+        data: [{id: 'O', text: $g('门诊'), selected: true},
+        	   {id: 'I', text: $g('住院')}
         ]
     });
 });
@@ -44,7 +44,7 @@ function Find_click() {
 	    setValueById("Voidnum", myAry[3]);
 	    setValueById("VoidSum", myAry[4]);
 	    setValueById("TotalAcount", myAry[6]);
-	});    
+	});
 }
 
 function Print_OnClick() {
@@ -52,8 +52,8 @@ function Print_OnClick() {
     var ReSum = getValueById('ReSum');
     var VoidSum = getValueById('VoidSum');
     var TotalAcount = getValueById('TotalAcount');
-    if ((NormSum == '' || NormSum == 0) && (ReSum == '' || ReSum == 0) && (VoidSum == '' || VoidSum == 0) && ((TotalAcount == '' || TotalAcount == 0))) {
-        $.messager.alert('提示', '没有打印的数据', 'info');
+    if (!((NormSum > 0) || (ReSum > 0) || (VoidSum > 0) || (TotalAcount > 0))) {
+        $.messager.popover({msg: '没有打印的数据', type: 'info'});
         return;
     }
     var StInv = getValueById("StInv");
@@ -62,7 +62,9 @@ function Print_OnClick() {
     var AdmType = getValueById("Type");
     fileName = "DHCBILL-INVSearch.rpx&StInv=" + StInv + "&EnInv=" + EnInv + "&AdmType=" + AdmType + "&Exp=" + Exp;
     fileName += "&HospId=" + session['LOGON.HOSPID'];
-    DHCCPM_RQPrint(fileName, 1200, 800);
+    var width = $(window).width() * 0.8;
+	var height  = $(window).height() * 0.8;
+    DHCCPM_RQPrint(fileName, width, height);
 }
 
 function init_Layout() {

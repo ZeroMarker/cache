@@ -9,17 +9,7 @@ var SId=getParam("SAAId"); //add liyarong
 ///add liyarong 按下shift+q弹出授权类型窗口
  $(document).keypress(function(event){ 
     if(event.shiftKey && event.keyCode==81){
-	     addSecFlag(); 
-		  var row =$("#datagrid1").datagrid('getSelected');
-	      runClassMethod("web.DHCEMSysItmAut","QuerySecFlag",{"SID":row.ID},function(jsonString){
-              	if (jsonString != null){
-	              	var sysObj = jsonString;
-	              	var sysFlagsArr = sysObj.secflags.split("#")
-	              	for (var i=0;i<sysFlagsArr.length;i++){
-		              $(window.frames["sysIframe"].document).find('input[name="secflag"][value="'+sysFlagsArr[i]+'"]').attr("checked","checked") ;
-		              	}   
-	              	}      
-		  	});  
+	     addSecFlag();
 	  }
   });
 
@@ -76,10 +66,6 @@ $(function(){
             commonQuery({'datagrid':'#datagrid','formid':'#queryForm'}); //调用查询
         }
     });
-	    //add  liyarong 保存授权类型
-         $("#saveBtn").on('click',function(){
-	         saveSecFlag();  	     
-	     });
      
     $('#SAHospDrID').combobox({ //hxy 2019-07-18 st
 	 	url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
@@ -91,63 +77,52 @@ $(function(){
 	 $('#queryBTN').on('click',function(){
 		 commonQuery({'datagrid':'#datagrid2','formid':'#toolbar2'}); //调用查询
 	 }) //hxy ed
-   
-});
-//保存授权类型  add liyarong 2017-03-01
-function saveSecFlag(){
-	
-	var secflags ="";
-	$("input[name='secflag']:checked").each(function(){
-		secflags+=this.value+"#";
-
-	});	
-    var param=secflags+"$"+SId;	
-    runClassMethod("web.DHCEMSysItm","updFlag",{'params':param},function(data){ 
-		if(data==0){
-			parent.$.messager.alert('提示',"保存成功");	
-			$("#datagrid").datagrid('load')
-			$("#datagrid2").datagrid('load')
-			parent.$("#sysWin").window('close');		
-		}else{
-			if(data="null"){
-				parent.$.messager.alert('提示',"未选类型保存失败");
-		    }else{
-			    parent.$.messager.alert('提示',"保存失败");
-			    parent.$("#sysWin").window('close');
-			   }	
-			}
-		
-		  });
-    	
+	 
+	 //代码描述绑定回车事件 2021-04-03 st
+     $('#SYICode,#SYIDesc').bind('keypress',function(event){
+        if(event.keyCode == "13")    
+        {
+            commonQuery({'datagrid':'#datagrid1','formid':'#queryForm1'}); //调用查询
+        }
+     }); //ed
+	// 菜单传入参数-产品表标识赋值
+	if(SYGroupNameFlag!=""){
+		$('#SYGroupNameFlag').val(SYGroupNameFlag);
+		commonQuery({'datagrid':'#datagrid','formid':'#queryForm'});
 	}
+});
 
 /// 新增可授权标识
 function addSecFlag(){
-		if ($("#datagrid").datagrid('getSelections').length != 1) {
+	if ($("#datagrid").datagrid('getSelections').length != 1) {
 		$.messager.alert('提示','请先选择 产品表');
 		return;
-	 }
-	   if ($("#datagrid1").datagrid('getSelections').length != 1) {
+	}
+	if ($("#datagrid1").datagrid('getSelections').length != 1) {
 		$.messager.alert('提示','请先选择 产品功能表');
 		return;
-	   }
-	  var row =$("#datagrid1").datagrid('getSelected');
-	  if(row){
-        $('#sysWin').window({
-             title:'授权类型',
-             collapsible:true,
-             border:true,
-             closed:'true',
-             width:'220',
-             height:300
-        });
-      
-      var iframe='<iframe scrolling="yes" width=100% height=100%  id="sysIframe" frameborder="0" src="dhcem.sysWin.csp?SAAId='+row.ID+'"></iframe>';   
-      $('#sysWin').html(iframe);       
-      $('#sysWin').window('open');   
-     
-			}    
 	}
+	var row =$("#datagrid1").datagrid('getSelected');
+	if(row){
+		$('#sysWin').window({
+		     title:'授权类型',
+		     collapsible:false,
+		     minimizable:false,
+		     maximizable:false,
+		     border:true,
+		     closed:'true',
+		     width:'220',
+		     height:300
+		});
+		var CurToken=""; //hxy 2023-02-23 st
+		if ('undefined'!==typeof websys_getMWToken){
+			CurToken="&MWToken="+websys_getMWToken()
+		}
+		var iframe='<iframe scrolling="yes" width=100% height=100%  id="sysIframe" frameborder="0" src="dhcem.sysWin.csp?SAAId='+row.ID+CurToken+'"></iframe>'; //ed
+		$('#sysWin').html(iframe);       
+		$('#sysWin').window('open');   
+	}    
+}
 
 
 ///csp中孙表类型值调用
@@ -169,8 +144,13 @@ function onClickRowSys(index,row){
 function ClickRowSys(){
 	var row =$("#datagrid").datagrid('getSelected');
 	SAId=row.ID; ///父id
+	$("#labelInfo").html("");
+	
 	$('#datagrid1').datagrid({    
-		url:'dhcapp.broker.csp?ClassName=web.DHCEMSysItm&MethodName=ListSysItm&SAId='+SAId
+		url:'dhcapp.broker.csp?ClassName=web.DHCEMSysItm&MethodName=ListSysItm&SAId='+SAId,
+		queryParams:{
+			LabelDesc:""	
+		}
 	});
 	$('#datagrid2').datagrid({  //add hxy 2016-08-06
 		url:'dhcapp.broker.csp?ClassName=web.DHCEMSysItmAut&MethodName=ListSysItmAutNull'
@@ -307,7 +287,7 @@ function addRowSysItmAut(index){
 	var rows =$("#datagrid").datagrid('getSelected');
 	HospDr=rows.SYHospDrID; ///父表医院id
 	  
-	commonAddRow({'datagrid':'#datagrid2',value:{'SAHospDr':LgHospID,'SAParRefDr':SAid}}) //hxy 2019-07-26//,'SAHospDr':HospDr
+	commonAddRow({'datagrid':'#datagrid2',value:{'SAHospDr':LgHospDesc,'SAHospDrID':LgHospID,'SAParRefDr':SAid}}) //hxy 2019-07-26//,'SAHospDr':HospDr ///cy 2021-02-08 医院描述与id字段分开
 	//SAtypeID="G";
     
     var rowIndex=$('#datagrid2').datagrid('getRowIndex',$('#datagrid2').datagrid('getSelected'))
@@ -362,6 +342,9 @@ function saveSysItmAut(){
 			}else if(data==2){
 				$.messager.alert("提示","手动录入无效,请上拉选择!"); 
 				$("#datagrid2").datagrid('load')
+			}else if(data==3){
+				$.messager.alert("提示","请按要求维护!"); 
+				$("#datagrid2").datagrid('load')
 			}else{	
 				$.messager.alert('提示','保存失败:'+data)
 				
@@ -390,10 +373,81 @@ function reloadTypeList()
 	var typeEditor = $('#datagrid2').datagrid('getEditor', { index: editIndex, field: 'SAType' });
 	var SAtypeID=$(typeEditor.target).combobox('getValue');
 	var typevalEditor = $('#datagrid2').datagrid('getEditor', { index: editIndex, field: 'PointerDesc' });
-	var hospEditor = $('#datagrid2').datagrid('getEditor', { index: editIndex, field: 'SAHospDr' });
-	var HospDr=$(hospEditor.target).combobox('getValue');
+	var hospEditor = $('#datagrid2').datagrid('getEditor', { index: editIndex, field: 'SAHospDrID' }); ///cy 2021-02-08 医院描述与id字段分开
+	var HospDr=$(hospEditor.target).val();//$(hospEditor.target).combobox('getValue'); ///cy 2021-02-08 医院描述与id字段分开
 	var SAtypeID=$(typeEditor.target).combobox('getValue');
 	$(typevalEditor.target).combogrid( { 
 		url:'dhcapp.broker.csp?ClassName=web.DHCEMSysItmAut&MethodName=ListGroup&type='+SAtypeID+'&HospDr='+HospDr
     })
 }
+
+///重置按钮功能 //add hxy 2021-04-03
+function ReloadItm(){
+	$('#SYICode').val("");
+	$('#SYIDesc').val("");
+	commonQuery({'datagrid':'#datagrid1','formid':'#queryForm1'}); //调用查询
+}
+
+/// 授权类型
+function AutTypeWin(){
+	addSecFlag();
+	return;
+}
+
+function formatLabel(value,row,index){
+	
+	return value;
+	
+	var itmHtml=""
+	+"<div class='labelDiv'>"
+		+"<span class='labelItm'>"
+			+"<span class='labelSpan' onClick='sysUpdLabel(this)'>标签1</span>"
+			+"<span onClick='deleteUpdLabel(this)'>×</span>"
+		+"</span>"
+		+"<span class='addLabel' onClick='sysAddLabel(this)'>+</span>"
+	+"</div>";
+	return itmHtml;
+}
+
+function sysAddLabel(_this){
+	
+}
+
+
+function showThisLabel(_this){
+	if(!$(_this).hasClass("checkLabel")){
+		$(".checkLabel").length?$(".checkLabel").removeClass("checkLabel"):"";
+	}
+	$(_this).toggleClass("checkLabel");
+	var labelDesc=($(".checkLabel").length?$(".checkLabel").html():"")
+	$HUI.datagrid('#datagrid1').load({
+		SYICode:$("#SYICode").val(),
+		SYIDesc:$("#SYIDesc").val(),
+		SAId:"",
+		LabelDesc:labelDesc
+	})
+	return;
+}
+
+function SysItmSuccess(jsonData){
+	showLabelItm(jsonData.labelList);
+}
+
+function showLabelItm(labelList){
+	if($("#SYICode").val()) return;
+	if($("#SYIDesc").val()) return;
+	if($(".checkLabel").length) return;
+	
+	var allLabelHtml="";
+	for (i in labelList){
+		var labelItm=labelList[i];
+		var itmHtml=""
+			+"<span class='sysLabel' onClick='showThisLabel(this)'>"
+			+	labelItm.SYLabel
+			+"</span>"
+		allLabelHtml+=itmHtml;
+	}
+	$("#labelInfo").html(allLabelHtml);
+}
+
+			      	

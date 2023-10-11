@@ -127,7 +127,7 @@ function InitMdlRoleListWinEvent(obj){
 			errinfo = errinfo + "名称为空!<br>";
 		}	
 		if (!ProductID){
-			errinfo = errinfo + "所属产品为空!<br>";
+			errinfo = errinfo + "产品线为空!<br>";
 		}
 		var IsCheck = $m({
 			ClassName:"DHCMA.Util.BTS.MdlDefSrv",
@@ -242,7 +242,12 @@ function InitMdlRoleListWinEvent(obj){
 				},false);
 
 				if (parseInt(flg) < 0) {
-					$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					if (parseInt(flg)=='-777') {
+						$.messager.alert("错误提示","-777：当前无删除权限，请启用删除权限后再删除记录!",'info');
+					}else {
+						$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					}
+					return;
 				} else {
 					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 					obj.RecRowID = "";
@@ -267,7 +272,12 @@ function InitMdlRoleListWinEvent(obj){
 				},false);
 
 				if (parseInt(flg) < 0) {
-					$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					if (parseInt(flg)=='-777') {
+						$.messager.alert("错误提示","-777：当前无删除权限，请启用删除权限后再删除记录!",'info');
+					}else {
+						$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					}
+					return;
 				} else {
 					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 					obj.RecRowID = "";

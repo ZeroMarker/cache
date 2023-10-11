@@ -2,7 +2,7 @@
 // 编写日期:2017-07-27
 
 var ActiveFlag = new Ext.grid.CheckColumn({
-    header: '启用',
+    header: $g('启用'),
     align: 'center',
     dataIndex: 'ActiveFlag',
     width: 80,
@@ -37,7 +37,7 @@ var PublicBiddingDetailGridCm = new Ext.grid.ColumnModel([
         hidden: true
     },
     {
-        header: '代码',
+        header: $g('代码'),
         dataIndex: 'Code',
         width: 100,
         sortable: true,
@@ -54,7 +54,7 @@ var PublicBiddingDetailGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '名称',
+        header: $g('名称'),
         dataIndex: 'Desc',
         width: 200,
         sortable: false,
@@ -71,7 +71,7 @@ var PublicBiddingDetailGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '代理机构名称',
+        header: $g('代理机构名称'),
         dataIndex: 'Tenderee',
         width: 200,
         sortable: true,
@@ -88,7 +88,7 @@ var PublicBiddingDetailGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '招标日期',
+        header: $g('招标日期'),
         dataIndex: 'Date',
         width: 100,
         align: 'center',
@@ -106,7 +106,7 @@ var PublicBiddingDetailGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '开始日期',
+        header: $g('开始日期'),
         dataIndex: 'EfficDateFrom',
         width: 100,
         align: 'center',
@@ -125,7 +125,7 @@ var PublicBiddingDetailGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '结束日期',
+        header: $g('结束日期'),
         dataIndex: 'EfficDateTo',
         width: 100,
         align: 'center',
@@ -145,7 +145,7 @@ var PublicBiddingDetailGridCm = new Ext.grid.ColumnModel([
     },
     ActiveFlag,
     {
-        header: '备注',
+        header: $g('备注'),
         dataIndex: 'Remark',
         width: 100,
         sortable: false,
@@ -184,8 +184,8 @@ var PublicBiddingDetailGridCm = new Ext.grid.ColumnModel([
 PublicBiddingDetailGridCm.defaultSortable = true;
 
 var AddBT = new Ext.Toolbar.Button({
-    text: '增加',
-    tooltip: '增加',
+    text: $g('增加'),
+    tooltip: $g('增加'),
     iconCls: 'page_add',
     width: 70,
     height: 30,
@@ -195,8 +195,8 @@ var AddBT = new Ext.Toolbar.Button({
 });
 
 var SaveBT = new Ext.Toolbar.Button({
-    text: '保存',
-    tooltip: '保存',
+    text: $g('保存'),
+    tooltip: $g('保存'),
     iconCls: 'page_save',
     width: 70,
     height: 30,
@@ -206,8 +206,8 @@ var SaveBT = new Ext.Toolbar.Button({
 });
 
 var DelBT = new Ext.Toolbar.Button({
-    text: '删除',
-    tooltip: '删除',
+    text: $g('删除'),
+    tooltip: $g('删除'),
     iconCls: 'page_delete',
     width: 70,
     height: 30,
@@ -224,7 +224,7 @@ function AddNewRow() {
     if (rowCount > 0) {
         var rowData = PublicBiddingDetailGridDs.data.items[rowCount - 1];
         if (rowData.get('RowID') == '') {
-            Msg.info('warning', '已存在新建行!');
+            Msg.info('warning', $g('已存在新建行!'));
             return;
         }
     }
@@ -296,7 +296,7 @@ function AddNewRow() {
 ///保存
 function SaveRow() {
     if (HospId == '') {
-        Msg.info('warning', '请先选择医院!');
+        Msg.info('warning', $g('请先选择医院!'));
         return false;
     }
     //获取所有的新记录
@@ -320,7 +320,7 @@ function SaveRow() {
             efficdateto = Ext.util.Format.date(efficdateto, App_StkDateFormat);
         }
         if (efficdatetob != '' && efficdatefromb != '' && efficdatetob < efficdatefromb) {
-            Msg.info('warning', desc + ',结束日期小于开始日期!');
+            Msg.info('warning', desc + $g(',结束日期小于开始日期!'));
             return;
         }
         var type = mr[i].data['Type'].trim();
@@ -333,29 +333,29 @@ function SaveRow() {
         }
     }
     if (ListData == '') {
-        Msg.info('warning', '没有修改或添加新数据!');
+        Msg.info('warning',$g( '没有修改或添加新数据!'));
         return false;
     } else {
-        var mask = ShowLoadMask(Ext.getBody(), '处理中请稍候...');
+        var mask = ShowLoadMask(Ext.getBody(), $g('处理中请稍候...'));
         Ext.Ajax.request({
             url: Url + '?actiontype=SavePublicBidding',
             params: { ListData: ListData },
             failure: function(result, request) {
                 mask.hide();
-                Msg.info('error', '请检查网络连接!');
+                Msg.info('error', $g('请检查网络连接!'));
             },
             success: function(result, request) {
                 var jsonData = Ext.util.JSON.decode(result.responseText);
                 mask.hide();
                 if (jsonData.success == 'true') {
-                    Msg.info('success', '保存成功!');
+                    Msg.info('success', $g('保存成功!'));
                     PublicBiddingDetailGridDs.load({ params: { start: 0, limit: 30 } });
                 } else {
                     var errMsg = jsonData.info;
                     if (errMsg.indexOf('^') >= 0) {
                         errMsg = errMsg.split('^')[1];
                     }
-                    Msg.info('error', '保存失败,' + errMsg);
+                    Msg.info('error', $g('保存失败,') + errMsg);
                     //PublicBiddingDetailGridDs.load({params:{start:0,limit:30}});
                 }
             },
@@ -367,35 +367,35 @@ function SaveRow() {
 ///删除
 function DelRow() {
     if (HospId == '') {
-        Msg.info('warning', '请先选择医院!');
+        Msg.info('warning', $g('请先选择医院!'));
         return false;
     }
     var cell = PublicBiddingDetailGrid.getSelectionModel().getSelectedCell();
     if (cell == null) {
-        Msg.info('warning', '请选择数据!');
+        Msg.info('warning', $g('请选择数据!'));
         return false;
     } else {
         var record = PublicBiddingDetailGrid.getStore().getAt(cell[0]);
         var RowId = record.get('RowID');
         if (RowId != '') {
-            Ext.MessageBox.confirm('提示', '确定要删除选定的行?', function(btn) {
+            Ext.MessageBox.confirm($g('提示'), $g('确定要删除选定的行?'), function(btn) {
                 if (btn == 'yes') {
-                    var mask = ShowLoadMask(Ext.getBody(), '处理中请稍候...');
+                    var mask = ShowLoadMask(Ext.getBody(), $g('处理中请稍候...'));
                     Ext.Ajax.request({
                         url: Url + '?actiontype=DelPublicBidding&RowId=' + RowId,
-                        waitMsg: '删除中...',
+                        waitMsg: $g('删除中...'),
                         failure: function(result, request) {
                             mask.hide();
-                            Msg.info('error', '请检查网络连接!');
+                            Msg.info('error', $g('请检查网络连接!'));
                         },
                         success: function(result, request) {
                             var jsonData = Ext.util.JSON.decode(result.responseText);
                             mask.hide();
                             if (jsonData.success == 'true') {
-                                Msg.info('success', '删除成功!');
+                                Msg.info('success', $g('删除成功!'));
                                 PublicBiddingDetailGridDs.load({ params: { start: 0, limit: 30 } });
                             } else {
-                                Msg.info('error', '删除失败!');
+                                Msg.info('error', $g('删除失败!'));
                             }
                         },
                         scope: this
@@ -403,7 +403,7 @@ function DelRow() {
                 }
             });
         } else {
-            Ext.MessageBox.confirm('提示', '确定要删除选定的行?', function(btn) {
+            Ext.MessageBox.confirm($g('提示'), $g('确定要删除选定的行?'), function(btn) {
                 if (btn == 'yes') {
                     PublicBiddingDetailGridDs.remove(record);
                 }
@@ -431,7 +431,7 @@ PublicBiddingDetailGridDs.load({
     params: { start: 0, limit: 30  },
     callback: function(o, response, success) {
         if (success == false) {
-            Ext.MessageBox.alert('查询错误', PublicBiddingDetailGridDs.reader.jsonData.Error);
+            Ext.MessageBox.alert($g('查询错误'), PublicBiddingDetailGridDs.reader.jsonData.Error);
         }
     }
 });
@@ -449,7 +449,7 @@ Ext.onReady(function() {
     
     var panel = new Ext.Panel({
 	    id:"panel",
-        title: '招标名称维护',
+        title: $g('招标名称维护'),
         activeTab: 0,
         region: 'center',
         items: [PublicBiddingDetailGrid]

@@ -90,7 +90,6 @@ function InitViewScreenEvent(obj)
 		obj.retGridPanelStore.load({
 			params : {
 				start:0
-				,limit:20
 			}
 		}); 
 		//ClearReItemData(obj);
@@ -111,7 +110,6 @@ function InitViewScreenEvent(obj)
 			obj.retGridPanelStore.load({
 				params : {
 					start:0
-					,limit:20
 				}});
 		}
 		else ExtTool.alert("提示","激活失败!"+ret);	
@@ -132,7 +130,6 @@ function InitViewScreenEvent(obj)
 			obj.retGridPanelStore.load({
 				params : {
 					start:0
-					,limit:20
 				}});
 		}
 		else ExtTool.alert("提示","删除失败!");	
@@ -290,7 +287,6 @@ function InitViewScreenEvent(obj)
             obj.retGridPanelStore.load({
 				params : {
 					start:0
-					,limit:20
 				}});
 		}
 		else ExtTool.alert("提示","更新失败!");
@@ -438,7 +434,6 @@ function InitViewScreenEvent(obj)
 			obj.retGridPanelStore.load({
 				params : {
 					start:0
-					,limit:20
 				}});
 		}
 		else ExtTool.alert("提示","添加失败!"+ret);		
@@ -487,6 +482,7 @@ function InitViewScreenEvent(obj)
 			obj.ICUCRIDataFormat.setValue(selectObj.get("tICUCRIDataFormat"));
 			obj.ICUCRIDataField.setValue(selectObj.get("tICUCRIDataField"));
 			obj.ICUCRITemplateICUCRIDr.setValue(selectObj.get("tICUCRITemplateICUCRIDr"));
+			obj.ICUCRITemplateICUCRIDr.setRawValue(selectObj.get("tICUCRITemplateICUCRI"));
 			//alert(selectObj.get("tICUCRITemplateSubICUCRIDr"))
 			//alert(selectObj.get("tICUCRITemplateSubICUCRI"))
             var TempSubIdlist=(selectObj.get("tICUCRITemplateSubICUCRIDr")).split("|");

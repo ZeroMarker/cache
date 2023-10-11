@@ -1,14 +1,14 @@
 ﻿/**
  * FileName: dhcbill.opbill.charge.oelist.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-06-03
  * Description: 门诊收费
  */
 
-function initOEListPanel() {
+$(function () {
 	initOEListMenu();
 	initOrdItmList();
-}
+});
 
 function initOEListMenu() {
 	//新增
@@ -32,7 +32,27 @@ function initOEListMenu() {
 		}
 	});
 	
-	initAdmDoc();
+	//就诊医生
+	$HUI.combobox("#admDoc", {
+		panelHeight: 150,
+		method: 'GET',
+		mode: 'remote',
+		valueField: 'id',
+		textField: 'text',
+		delay: 300,
+		blurValidValue: true,
+		defaultFilter: 5,
+		onBeforeLoad: function (param) {
+			if ($.trim(param.q).length > 1) {
+				$("#admDoc").combobox("options").url = $URL;
+				param.ClassName = "web.DHCOPCashier";
+				param.QueryName = "FindCTCareProv";
+				param.ResultSetType = "array";
+				param.desc = param.q;
+				param.sessionStr = getSessionStr()
+			}
+		}
+	});
 }
 
 function initOrdItmList() {
@@ -40,19 +60,68 @@ function initOrdItmList() {
 	var prescClsObj = {};
 	GV.OEItmList = $HUI.datagrid("#ordItmList", {
 		fit: true,
-		striped: true,
-		title: '医嘱明细',
-		iconCls: 'icon-paper',
-		headerCls: 'panel-header-gray',
+		border: false,
 		singleSelect: true,
-		checkOnSelect: false,   //如果为false, 当用户仅在点击该复选框的时候才会被选中或取消
+		checkOnSelect: false,
 		selectOnCheck: false,
-		rownumbers: false,
+		rownumbers: true,
 		pageSize: 999999999,
+		sortName: 'InsuDicDesc',   //按病种排序
 		toolbar: '#ordlist-tb',
-		columns: [[{title: 'ck', field: 'ck', checkbox: true},
+		view: detailview,
+		detailFormatter: function(rowIndex, rowData) {
+			return "<div style=\"padding:2px;\"><table class=\"ddv\"></table></div>"
+		},
+		onExpandRow: function(rowIndex, rowData) {
+			var $ddv = GV.OEItmList.getRowDetail(rowIndex).find("table.ddv");
+			$ddv.datagrid({
+				width: 610,
+				height: 'auto',
+				bodyCls: 'panel-body-gray',
+				singleSelect: true,
+				loadMsg: '',
+				rownumbers: true,
+				pageList: [3, 5],
+				pageSize: 3,
+				pagination: true,
+				columns: [[{title: 'tarId', field: 'tarItmId', hidden: true},
+						   {title: '收费项', field: 'tarItmDesc', width: 180},
+						   {title: '单位', field: 'uomDesc', width: 80},
+						   {title: 'price', field: 'price', hidden: true},
+						   {title: 'discPrice', field: 'discPrice', hidden: true},
+						   {title: 'payorPrice', field: 'payorPrice', hidden: true},
+						   {title: '单价', field: 'patPrice', width: 100, align: 'right'},
+						   {title: '数量', field: 'qty', width: 80},
+						   {title: '总金额', field: 'totalAmt', hidden: true},
+						   {title: '折扣金额', field: 'discAmt', hidden: true},
+						   {title: '记账金额', field: 'payorAmt', hidden: true},
+						   {title: '金额', field: 'patAmt', width: 120, align: 'right'}
+				]],
+				url: $URL,
+				queryParams: {
+					ClassName: "web.DHCOPCashier",
+					QueryName: "QryOrdTarItmList",
+					oeitm: rowData.OrdRowId,
+					insTypeId: getSelectedInsType(),
+					sessionStr: getSessionStr()
+				},
+				onLoadSuccess: function(data) {
+					setTimeout(function() {
+						GV.OEItmList.fixDetailRowHeight(rowIndex);    //用来固定当详细内容加载时的行高度
+					}, 0);
+				}
+			});
+			GV.OEItmList.fixDetailRowHeight(rowIndex);    //用来固定当详细内容加载时的行高度
+		},
+		columns: [[{field: 'ck', checkbox: true},
 				   {title: 'TGroup', field: 'TGroup', hidden: true},
 				   {title: '医嘱', field: 'OPOrdItemDesc', width: 180,
+				    formatter: function (value, row, index) {
+						if (row.UnBillReason) {
+							return "<a onmouseover='showUnBillReason(this, " + JSON.stringify(row) + ")' style='text-decoration:none;color:#000000;'>" + value + "</a>";
+						}
+						return value;
+					},
 				   	editor: {
 						type: 'combogrid',
 						options: {
@@ -63,32 +132,29 @@ function initOrdItmList() {
 							idField: 'ARCIMastRowID',
 							textField: 'ARCIMastDesc',
 							mode: 'remote',
-							data: [],
+							url: $URL + '?ClassName=web.DHCOPItemMast&QueryName=ARCIMastList',
 							delay: 500,
+							lazy: true,
 							enterNullValueClear: false,
 							selectOnNavigation: false,
 							columns: [[{field: 'ARCIMastDesc', title: '医嘱名称', width: 180},
 									   {field: 'ARCIMastRowID', title: 'ARCIMastRowID', hidden: true},
 								   	   {field: 'ARCSubCat', title: '子类', width: 80},
-								   	   {field: 'subcatordtype', title: 'subcatordtype', hidden: true},
-									   {field: 'phuomdesc', title: '单位', width: 80},
+								   	   {field: 'SubCatOrderType', title: 'SubCatOrderType', hidden: true},
+								   	   {field: 'UOMID', title: 'UOMID', hidden: true},
+									   {field: 'UOMDesc', title: '单位', width: 80},
 									   {field: 'ItemPrice', title: '价格', width: 120, align: 'right'},
-									   {field: 'phFreqCode', title: 'phFreqCode', hidden: true},
 									   {field: 'ARCType', title: 'ARCType', hidden: true}
 							]],
 							onBeforeLoad: function (param) {
-								$(this).datagrid("options").url = null;   //加这句是因为删除内容时会再发起一次请求
 								var adm = getValueById("episodeId");
-								if (adm && param.q && ($.trim(param.q).length > 1)) {
-									$(this).datagrid("options").url = $URL;
-									param.ClassName = "web.DHCOPItemMast";
-									param.QueryName = "ARCIMastList";
-									param.ARCCATCode = "";
-									param.ItemMCode = param.q;
-									param.UGroupRowID = PUBLIC_CONSTANT.SESSION.GROUPID;
-									param.HospID = PUBLIC_CONSTANT.SESSION.HOSPID;
-									param.adm = adm;
+								if (!adm) {
+									return false;
 								}
+								param.ItemMCode = param.q;
+								param.ARCCATCode = "";
+								param.EpisodeID = adm;
+								param.SessionStr = getSessionStr();
 							},
 							onSelect: function(index, row) {
 								onSelectArcimHandler(row);
@@ -98,21 +164,7 @@ function initOrdItmList() {
 				   },
 				   {title: '单位', field: 'OPOrdUnit', width: 80},
 				   {title: '单价', field: 'OPOrdPrice', width: 100, align: 'right', editor: 'text'},
-				   {title: '数量', field: 'OPOrdQty', width: 80,
-				   	 editor: {
-					   	 type: 'numberbox',
-					   	 options: {
-						 	min: 1,
-						 	isKeyupChange: true,
-						 	onChange: function(newValue, oldValue) {
-							 	var row = GV.OEItmList.getRows()[GV.EditRowIndex];
-							 	if (row) {
-								 	row.OPOrdQty = newValue;
-								}
-							}
-						 }
-					 }
-				   },
+				   {title: '数量', field: 'OPOrdQty', width: 80, editor: 'text'},
 				   {title: '金额', field: 'OPOrdBillSum', width: 120, align: 'right'},
 				   {title: '接收科室', field: 'OPOrdItemRecLoc', width: 150,
 				   	editor: {
@@ -142,7 +194,6 @@ function initOrdItmList() {
 						}
 					}
 				   },
-				   {title: 'TOrdSubCat', field: 'TOrdSubCat', hidden: true},
 				   {title: 'PrescriptionNo', field: 'PrescriptionNo', hidden: true},
 				   {title: 'OrdRowId', field: 'OrdRowId', hidden: true},
 				   {title: 'OPOrdItemRecLocRID', field: 'OPOrdItemRecLocRID', hidden: true},
@@ -155,7 +206,7 @@ function initOrdItmList() {
 				   {title: 'OPOrdBillFlag', field: 'OPOrdBillFlag', hidden: true},
 				   {title: 'OPOrdItemRowID', field: 'OPOrdItemRowID', hidden: true},
 				   {title: 'LimitItmFlag', field: 'LimitItmFlag', hidden: true},
-				   {title: 'OEORIDR', field: 'OEORIDR', hidden: true},
+				   {title: 'OEORIDR', field: 'OEORIDR',hidden: true},
 				   {title: '处方金额', field: 'OPOrdPrescSum', width: 120, align: 'right'},
 				   {title: '检验容器', field: 'OPLabPlacerCode', width: 100,
 				   	styler: function(value, row, index) {
@@ -176,20 +227,25 @@ function initOrdItmList() {
 				   {title: 'PayorAmt', field: 'PayorAmt', hidden: true},
 				   {title: 'BillSubType', field: 'BillSubType', hidden: true},
 				   {title: 'InsuDicCode', field: 'InsuDicCode', hidden: true},
-				   {title: '病种', field: 'InsuDicDesc', width: 160},
+				   {title: '病种', field: 'InsuDicDesc', width: 160, sortable: true},
+				   {title: '是否重收', field: 'IsReChged', width: 80,
+				    formatter: function (value, row, index) {
+						return (value == 1) ? ('<font color="#21ba45">' + $g('是') + '</font>') : ('<font color="#f16e57">' + $g('否') + '</font>');
+					}
+				   },
+				   {title: 'OPOrdUOMID', field: 'OPOrdUOMID', hidden: true}
 			]],
 		onLoadSuccess: function (data) {
-			$("#actualMoney, #change").numberbox("clear");    //清空实付，找零
-			$(this).datagrid("clearChecked");
 			GV.EditRowIndex = undefined;
 			loadSuccess = false;
 			prescClsObj = {};
+			$(this).datagrid("clearChecked");
 			var hasDisabledRow = false;
 			$.each(data.rows, function (index, row) {
 				if (!row.OrdRowId) {
 					return true;
 				}
-				if (+row.OPOrdBillFlag == 1) {
+				if (row.OPOrdBillFlag == 1) {
 					GV.OEItmList.checkRow(index);
 				}else {
 					GV.OEItmList.uncheckRow(index);
@@ -197,17 +253,17 @@ function initOrdItmList() {
 				if (row.LimitItmFlag == "Y") {
 					hasDisabledRow = true;
 				}
-				$("#ordItmList").parent().find(".datagrid-row[datagrid-row-index=" + index + "] input:checkbox")[0].disabled = (row.LimitItmFlag == "Y");
+				GV.OEItmList.getPanel().find(".datagrid-row[datagrid-row-index=" + index + "] input:checkbox")[0].disabled = (row.LimitItmFlag == "Y");
 			});
 			//有disabled行时,表头也disabled
-			$("#ordItmList").parent().find(".datagrid-header-row input:checkbox")[0].disabled = hasDisabledRow;
+			GV.OEItmList.getPanel().find(".datagrid-header-row input:checkbox")[0].disabled = hasDisabledRow;
 			loadSuccess = true;
 			calcAdm();
 		},
 		rowStyler: function(index, row) {
 			if (row.PrescriptionNo) {
 				if (!prescClsObj[row.PrescriptionNo]) {
-					var modeNum = ((Object.keys(prescClsObj).length + 1) % GV.PrescClsCount) || GV.PrescClsCount;
+					var modeNum = ((Object.keys(prescClsObj).length + 1) % CV.PrescClsCount) || CV.PrescClsCount;
 					prescClsObj[row.PrescriptionNo] = "OPOELPrescNo" + modeNum;
 				}
 				return {class: prescClsObj[row.PrescriptionNo]};
@@ -221,9 +277,9 @@ function initOrdItmList() {
 			if (GV.SelOrdRowIdx !== undefined) {
 				return;
 			}
-			prescLink(rowIndex, rowData);     //处方勾选同步
-			regFeeLink(rowIndex, rowData);    //挂号医嘱勾选同步
+			ctrlOrdLink(rowIndex, rowData);
 			calcAdm();
+			reloadCateList();
 		},
 		onUncheck: function (rowIndex, rowData) {
 			pushUnBillOrder(rowData.OrdRowId);
@@ -233,9 +289,9 @@ function initOrdItmList() {
 			if (GV.SelOrdRowIdx !== undefined) {
 				return;
 			}
-			prescLink(rowIndex, rowData);    //处方取消勾选同步
-			regFeeLink(rowIndex, rowData);   //挂号医嘱取消勾选同步			
+			ctrlOrdLink(rowIndex, rowData);
 			calcAdm();
+			reloadCateList();
 		},
 		onCheckAll: function (rows) {
 			if (!loadSuccess) {
@@ -252,6 +308,7 @@ function initOrdItmList() {
 				spliceUnBillOrder(row.OrdRowId);
 			});
 			calcAdm();
+			reloadCateList();
 		},
 		onUncheckAll: function (rows) {
 			if (!loadSuccess) {
@@ -264,18 +321,29 @@ function initOrdItmList() {
 				pushUnBillOrder(row.OrdRowId);
 			});
 			calcAdm();
+			reloadCateList();
 		},
-		onBeginEdit: function(index, row) {
-			onBeginEditHandler(index, row);
+		onBeginEdit: function(rowIndex, rowData) {
+			onBeginEditHandler(rowIndex, rowData);
     	},
-		onDblClickRow: function(index, row) {
-			onDblClickRowHandler(index, row);
+		onDblClickRow: function(rowIndex, rowData) {
+			onDblClickRowHandler(rowIndex, rowData);
 		},
-		onEndEdit: function(index, row, changes) {
-			onEndEditHandler(index, row);
+		onEndEdit: function(rowIndex, rowData, changes) {
+			onEndEditHandler(rowIndex, rowData);
 		}
 	});
-	GV.OEItmList.loadData({"rows": [], "total": 0});
+	
+	GV.OEItmList.loadData({rows: [], total: 0});
+}
+
+/**
+* 控制医嘱同步勾选
+*/
+function ctrlOrdLink(rowIndex, rowData) {
+	prescLink(rowIndex, rowData);     //处方勾选同步
+	groupLink(rowIndex, rowData);     //成组医嘱勾选同步
+	regFeeLink(rowIndex, rowData);    //挂号医嘱勾选同步
 }
 
 function prescLink(rowIndex, rowData) {
@@ -287,7 +355,24 @@ function prescLink(rowIndex, rowData) {
 		if ((rowIndex == index) || (rowData.TPreOeoriPrescno != row.TPreOeoriPrescno)) {
 			return true;
 		}
-		_linkItm(checked, index);
+		linkItm(checked, index);
+	});
+}
+
+function groupLink(rowIndex, rowData) {
+	if (!rowData.OEORIDR) {
+		return;
+	}
+	if (!CV.IsTgtChrgGroupOrd) {
+		//成组医嘱是否一起收费
+		return;
+	}
+	var checked = GV.OEItmList.getPanel().find(".datagrid-view2 tr.datagrid-row[datagrid-row-index=" + rowIndex + "]").hasClass("datagrid-row-checked");
+	$.each(GV.OEItmList.getRows(), function (index, row) {
+		if ((rowIndex == index) || (rowData.OEORIDR != row.OEORIDR)) {
+			return true;
+		}
+		linkItm(checked, index);
 	});
 }
 
@@ -300,11 +385,11 @@ function regFeeLink(rowIndex, rowData) {
 		if ((rowIndex == index) || (rowData.BillSubType != row.BillSubType)) {
 			return true;
 		}
-		_linkItm(checked, index);
+		linkItm(checked, index);
 	});
 }
 
-function _linkItm(checked, index) {
+function linkItm(checked, index) {
 	if (GV.OEItmList.getPanel().find(".datagrid-row[datagrid-row-index=" + index + "] input:checkbox")[0].disabled) {
 		return;
 	}
@@ -315,31 +400,6 @@ function _linkItm(checked, index) {
 		GV.OEItmList.uncheckRow(index);
 	}
 	delete GV.SelOrdRowIdx;
-}
-
-/**
-* 就诊医生
-*/
-function initAdmDoc() {
-	$HUI.combobox("#admDoc", {
-		panelHeight: 150,
-		method: 'GET',
-		mode: 'remote',
-		valueField: 'id',
-		textField: 'text',
-		delay: 300,
-		blurValidValue: true,
-		defaultFilter: 4,
-		onBeforeLoad: function (param) {
-			if ($.trim(param.q).length > 1) {
-				$("#admDoc").combobox("options").url = $URL;
-				param.ClassName = "web.DHCOPCashier";
-				param.QueryName = "FindCTCareProv";
-				param.ResultSetType = "array";
-				param.desc = param.q;
-			}
-		}
-	});
 }
 
 function labPlacerStyle(value) {
@@ -382,6 +442,17 @@ function labPlacerStyle(value) {
 	return 'background-color:' + bgColor + ';color:' + color;
 }
 
+/**
+* 显示不能收费原因
+*/
+function showUnBillReason(that, row) {
+	$(that).popover({
+		title: "<font color=\"#FF0000\">" + row.OPOrdItemDesc + "</font>" + "不能收费原因",
+		trigger: 'hover',
+		content: row.UnBillReason
+	}).popover("show");
+}
+
 function loadOrdItmList(adm) {
 	if (!adm) {
 		return;
@@ -395,11 +466,10 @@ function loadOrdItmList(adm) {
 	var queryParams = {
 		ClassName: "web.DHCOPAdmFind",
 		QueryName: "GetADMOrder",
-		PAADMRowid: adm,
-		AdmInsType: curInsType,
-		unBillStr: unBillStr,
-		gLoc: PUBLIC_CONSTANT.SESSION.GROUPID,
-		UloadDR: PUBLIC_CONSTANT.SESSION.CTLOCID,
+		AdmStr: adm,
+		InsTypeId: curInsType,
+		UnBillStr: unBillStr,
+		SessionStr: getSessionStr(),
 		rows: 99999999
 	}
 	loadDataGridStore("ordItmList", queryParams);
@@ -426,13 +496,13 @@ function saveOrdToServer() {
 			if (!row.OrdRowId) {
 				saveFlag = true;
 				var isHerb = $.m({ClassName: "web.DHCOPCashier", MethodName: "IsHerb", Arcim: row.OPOrdItemRowID, HospId: PUBLIC_CONSTANT.SESSION.HOSPID}, false);
-				var multNum = (isHerb == "1") ? (getValueById("multNum") || 1) : 1;
+				var multNum = (isHerb == 1) ? (getValueById("multNum") || 1) : 1;
 				
 				myStr = row.OPOrdItemRowID + "^";
 				myStr += (row.OPOrdQty * multNum) + "^";
 				myStr += row.OPOrdItemRecLocRID + "^";
 				myStr += row.OPOrdPrice + "^";
-				myStr += row.OPOrdUnit + "^";
+				myStr += row.OPOrdUOMID + "^";
 				myStr += row.OPOrdInsRowId + "^";
 				ordItmStrAry.push(myStr);
 				ordRowIndexAry.push(index);
@@ -440,17 +510,9 @@ function saveOrdToServer() {
 		});
 		if (ordItmStrAry.length > 0) {
 			var ordItmStr = ordItmStrAry.join(PUBLIC_CONSTANT.SEPARATOR.CH1);
-			var rtn = $.m({
-				ClassName: "web.DHCOPCashier",
-				MethodName: "CashierInsertOrdItem",
-				Adm: adm,
-				OrdItemStr: ordItmStr,
-				User: PUBLIC_CONSTANT.SESSION.USERID,
-				Loc: PUBLIC_CONSTANT.SESSION.CTLOCID,
-				DocUserId: docUserId
-			}, false);
+			var rtn = $.m({ClassName: "web.DHCOPCashierIF", MethodName: "CashierInsertOrdItem", Adm: adm, OrdItemStr: ordItmStr, User: PUBLIC_CONSTANT.SESSION.USERID, Loc: PUBLIC_CONSTANT.SESSION.CTLOCID, DocUserId: docUserId}, false);
 			//医生站接口返回0或100说明保存医嘱失败
-			if ((rtn != "0") && (rtn != "100")) {
+			if (["0", "100"].indexOf(rtn) == -1) {
 				var myAry = rtn.split("^");
 				var tmpAry = [];
 				var rowIndex;
@@ -474,17 +536,7 @@ function saveOrdToServer() {
 			}
 		}
 		if (saveFlag) {
-			$.m({
-				ClassName: "web.DHCOPCashier",
-				MethodName: "CreatePrescNo",
-				Adm: adm,
-				UserID: PUBLIC_CONSTANT.SESSION.USERID,
-				LocID: PUBLIC_CONSTANT.SESSION.CTLOCID
-			}, function(rtn) {
-				if (rtn != "0") {
-					throw getErrObj("Run Error at Cache: General PresNo");
-				}
-			});
+			$.m({ClassName: "web.DHCOPCashierIF", MethodName: "CreatePrescNo", wantreturnval: 0, Adm: adm, UserId: PUBLIC_CONSTANT.SESSION.USERID}, false);
 		}
 	}catch(e){
 		$.messager.popover({msg: e.message, type: "error"});
@@ -502,19 +554,9 @@ function  getErrObj(msg) {
 * 判断医嘱是否已保存
 */
 function checkSaveOrder() {
-	var saveFlag = true;
-	try {
-		$.each(GV.OEItmList.getRows(), function (index, row) {
-			if (!row.OrdRowId) {
-				saveFlag = false;
-				return false;
-			}
-		});
-	} catch (e) {
-		$.messager.popover({msg: e.message, type: "error"});
-		return false;
-	}
-	return saveFlag;
+	return !(GV.OEItmList.getRows().some(function (row) {
+		return !row.OrdRowId;
+	}));
 }
 
 function calcAdm() {
@@ -523,44 +565,40 @@ function calcAdm() {
 	var payorAmt = 0;
 	var patPayAmt = 0;
 	$.each(GV.OEItmList.getChecked(), function (index, row) {
-		totalAmt = numCompute(totalAmt, numCompute(row.OPOrdQty, row.OPOrdPrice, "*"), "+");
-		discAmt = numCompute(discAmt, row.DiscAmt, "+");
-		payorAmt = numCompute(payorAmt, row.PayorAmt, "+");
-		patPayAmt = numCompute(patPayAmt, row.OPOrdBillSum, "+");
+		totalAmt = Number(totalAmt).add(Number(row.OPOrdQty).mul(row.OPOrdPrice)).toFixed(2);
+		discAmt = Number(discAmt).add(row.DiscAmt).toFixed(2);
+		payorAmt = Number(payorAmt).add(row.PayorAmt).toFixed(2);
+		patPayAmt = Number(patPayAmt).add(row.OPOrdBillSum).toFixed(2);
 	});
 	setValueById("curDeptShare", patPayAmt);
-	setValueById("curDeptRoundShare", getRoundAmt(patPayAmt));
 
 	var selAdmListRow = GV.AdmList.getSelected();
 	if (selAdmListRow) {
 		var rowIndex = GV.AdmList.getRowIndex(selAdmListRow);
-		GV.AdmList.updateRow({
-			index: rowIndex,
-			row: {
-				admTotalSum: totalAmt.toString(),
-				admDiscSum: discAmt.toString(),
-				admPayOrSum: payorAmt.toString(),
-				admPatSum: patPayAmt.toString(),
-			}
-		});
+		if (rowIndex >= 0) {
+			GV.AdmList.updateRow({
+				index: rowIndex,
+				row: {
+					admTotalSum: Number(totalAmt).toFixed(2),
+					admDiscSum: Number(discAmt).toFixed(2),
+					admPayOrSum: Number(payorAmt).toFixed(2),
+					admPatSum: Number(patPayAmt).toFixed(2)
+				}
+			});
+		}
 	}
+	
 	var totalSum = 0;
 	var discSum = 0;
 	var payorSum = 0;
 	var patShareSum = 0;
 	$.each(GV.AdmList.getRows(), function (index, row) {
-		totalSum = numCompute(totalSum, row.admTotalSum, "+");
-		discSum = numCompute(discSum, row.admDiscSum, "+");
-		payorSum = numCompute(payorSum, row.admPayOrSum, "+");
-		patShareSum = numCompute(patShareSum, row.admPatSum, "+");
+		totalSum = Number(totalSum).add(row.admTotalSum).toFixed(2);
+		discSum = Number(discSum).add(row.admDiscSum).toFixed(2);
+		payorSum = Number(payorSum).add(row.admPayOrSum).toFixed(2);
+		patShareSum = Number(patShareSum).add(row.admPatSum).toFixed(2);
 	});
 	setValueById("patShareSum", patShareSum);
-	setValueById("patRoundSum", getRoundAmt(patShareSum));
-}
-
-function getRoundAmt(amt) {
-	var expStr = getValueById("paymode");
-	return $.m({ClassName: "web.DHCBillConsIF", MethodName: "OPCRound", MSum: amt, HospId: PUBLIC_CONSTANT.SESSION.HOSPID, ExpStr: expStr}, false);
 }
 
 function pushUnBillOrder(oeitm) {
@@ -569,12 +607,11 @@ function pushUnBillOrder(oeitm) {
 	}
 	var adm = getValueById("episodeId");
 	if (adm) {
-		var index = GV.UnBillOrdObj[adm.toString()].indexOf(oeitm);
+		var index = GV.UnBillOrdObj[adm].indexOf(oeitm);
 		if (index == -1) {
-			GV.UnBillOrdObj[adm.toString()].push(oeitm);
+			GV.UnBillOrdObj[adm].push(oeitm);
 		}
 	}
-	return;
 }
 
 function spliceUnBillOrder(oeitm) {
@@ -583,25 +620,24 @@ function spliceUnBillOrder(oeitm) {
 	}
 	var adm = getValueById("episodeId");
 	if (adm) {
-		var index = GV.UnBillOrdObj[adm.toString()].indexOf(oeitm);
+		var index = GV.UnBillOrdObj[adm].indexOf(oeitm);
 		if (index != -1) {
-			GV.UnBillOrdObj[adm.toString()].splice(index, 1);
+			GV.UnBillOrdObj[adm].splice(index, 1);
 		}
 	}
-	return;
 }
 
 function getUnBillOrderStr() {
 	var unBillOrderStr = "";
+	var splitter = "";
 	var myStr = "";
 	$.each(GV.UnBillOrdObj, function(key, val) {
+		if (val.length == 0) {
+			return true;
+		}
 		splitter = PUBLIC_CONSTANT.SEPARATOR.CH2 + key + PUBLIC_CONSTANT.SEPARATOR.CH2;
 		myStr = splitter + "^" + val.join("^") + "^" + splitter;
-		if (!unBillOrderStr) {
-			unBillOrderStr = myStr;
-		}else {
-			unBillOrderStr += myStr;
-		}
+		unBillOrderStr += myStr;
 	});
 	return unBillOrderStr;
 }
@@ -610,6 +646,13 @@ function addClick() {
 	var adm = getValueById("episodeId");
 	if (!adm) {
 		return;
+	}
+	if (GV.EditRowIndex !== undefined) {
+		var row = GV.OEItmList.getRows()[GV.EditRowIndex];
+		if (!row || !row.OPOrdItemRowID) {
+			focusOrdItem(GV.EditRowIndex);
+			return;
+		}
 	}
 	appendEditRow();
 }
@@ -622,21 +665,22 @@ function deleteClick() {
 	}
 	var rowIndex = GV.OEItmList.getRowIndex(row);
 	$.messager.confirm("确认", "是否确认删除医嘱?", function (r) {
-		if (r) {
-			var ordItmId = row.OrdRowId;
-			var oldUserId = $.m({ClassName: "web.DHCOPItemMast", MethodName: "GetOrdUser", OrdItem: ordItmId, NewUserRowId: PUBLIC_CONSTANT.SESSION.USERID}, false);
-			if (oldUserId != PUBLIC_CONSTANT.SESSION.USERID) {
-				$.messager.popover({msg: "不是本人开的医嘱不允许删除", type: "info"});
-				return;
-			}
-			var stopOrdInfo = PUBLIC_CONSTANT.SESSION.USERID + "^";
-			var rtn = stopOrdItem(ordItmId, stopOrdInfo);
-			if (rtn) {
-				GV.EditRowIndex = undefined;
-				$.messager.popover({msg: "删除成功", type: "success"});
-				GV.OEItmList.uncheckRow(rowIndex);
-				GV.OEItmList.deleteRow(rowIndex);
-			}
+		if (!r) {
+			return;
+		}
+		var ordItmId = row.OrdRowId;
+		var oldUserId = $.m({ClassName: "web.DHCOPItemMast", MethodName: "GetOrdUser", OrdItem: ordItmId, NewUserRowId: PUBLIC_CONSTANT.SESSION.USERID}, false);
+		if (oldUserId != PUBLIC_CONSTANT.SESSION.USERID) {
+			$.messager.popover({msg: "非本人开的医嘱不允许删除", type: "info"});
+			return;
+		}
+		var stopOrdInfo = PUBLIC_CONSTANT.SESSION.USERID + "^";
+		var rtn = stopOrdItem(ordItmId, stopOrdInfo);
+		if (rtn) {
+			GV.EditRowIndex = undefined;
+			$.messager.popover({msg: "删除成功", type: "success"});
+			GV.OEItmList.uncheckRow(rowIndex);
+			GV.OEItmList.deleteRow(rowIndex);
 		}
 	});
 }
@@ -648,12 +692,11 @@ function stopOrdItem(ordItmId, stopOrdInfo) {
 	try {
 		if (!ordItmId) {
 			return true;
-		}else {
-			var encmeth = getValueById("OPOrdStopItemEncrypt");
-			var rtn = cspRunServerMethod(encmeth, ordItmId, stopOrdInfo);
-			if (rtn != 0) {
-				throw getErrObj("停医嘱失败：" + rtn + "，入参串：" + ordItmId + "~" + stopOrdInfo);
-			}
+		}
+		var encmeth = getValueById("OPOrdStopItemEncrypt");
+		var rtn = cspRunServerMethod(encmeth, ordItmId, stopOrdInfo);
+		if (rtn != 0) {
+			throw getErrObj("停医嘱失败：" + rtn + "，入参串：" + ordItmId + "~" + stopOrdInfo);
 		}
 	}catch(e) {
 		$.messager.popover({msg: e.message, type: "error"});
@@ -682,6 +725,7 @@ function saveClick() {
 	if (rtn) {
 		$.messager.popover({msg: "保存成功", type: "success"});
 		loadOrdItmList(adm);
+		loadCateList(adm);
 	}
 }
 
@@ -689,16 +733,22 @@ function onSelectArcimHandler(row) {
 	if (!row) {
 		return;
 	}
+	var tableName = "";
 	switch(row.ARCType) {
 	case "ARCIM":
+		tableName = "User.ARCItmMast";
 		setOrdItem(row);
 		break;
 	case "ARCOS":
-		var itemDesc = "";
-		var ordRowIdString = "";
-		arcositemListOpen(row.ARCIMastRowID, itemDesc, "YES", "", ordRowIdString);
+		tableName = "User.ARCOrdSets";
+		arcositemListOpen(row);
 		break;
 	default:
+	}
+	
+	//记录基础代码数据使用次数
+	if (tableName) {
+		BILL_INF.saveCTUseCount(tableName, row.ARCIMastRowID);     //dhcbill.interface.js
 	}
 }
 
@@ -708,15 +758,15 @@ function setOrdItem(row) {
 		return;
 	}
 	editRow.OPOrdItemRowID = row.ARCIMastRowID;
-	editRow.OPOrdType = row.subcatordtype;
+	editRow.OPOrdType = row.SubCatOrderType;
 	
-	var ed = GV.OEItmList.getEditor({index: GV.EditRowIndex, field: "OPOrdQty"});
-	var ordQty = (ed ? $(ed.target).val() : 1) || 1;
+	var ordQty = 1;
 	setGridCellValue(GV.EditRowIndex, "OPOrdQty", ordQty);
 	editRow.OPOrdQty = ordQty;
 	
-	setGridCellValue(GV.EditRowIndex, "OPOrdUnit", row.phuomdesc);
-	editRow.OPOrdUnit = row.phuomdesc;
+	setGridCellValue(GV.EditRowIndex, "OPOrdUnit", row.UOMDesc);
+	editRow.OPOrdUnit = row.UOMDesc;
+	editRow.OPOrdUOMID = row.UOMID;
 	
 	setGridCellValue(GV.EditRowIndex, "OPOrdPrice", row.ItemPrice);
 	editRow.OPOrdPrice = row.ItemPrice;
@@ -731,24 +781,26 @@ function setOrdItem(row) {
 	}
 
 	if (editRow.OPOrdType == "P") {
+		//自定义价格医嘱
 		setTimeout(function() {
 			var ed = GV.OEItmList.getEditor({index: GV.EditRowIndex, field: "OPOrdPrice"});
 			if (ed) {
-				$(ed.target).focus().select();
+				$(ed.target).prop("disabled", false).focus().select();
 			}
 		}, 100);
-	}else {
-		var ed = GV.OEItmList.getEditor({index: GV.EditRowIndex, field: "OPOrdPrice"});
-		if (ed) {
-			$(ed.target).prop("disabled", true);
-		}
-		setTimeout(function() {
-			var ed = GV.OEItmList.getEditor({index: GV.EditRowIndex, field: "OPOrdQty"});
-			if (ed) {
-				$(ed.target).focus().select();
-			}
-		}, 100);
+		return;
 	}
+	
+	var ed = GV.OEItmList.getEditor({index: GV.EditRowIndex, field: "OPOrdPrice"});
+	if (ed) {
+		$(ed.target).prop("disabled", true);
+	}
+	setTimeout(function() {
+		var ed = GV.OEItmList.getEditor({index: GV.EditRowIndex, field: "OPOrdQty"});
+		if (ed) {
+			$(ed.target).focus().select();
+		}
+	}, 100);
 }
 
 function setGridCellValue(rowIndex, fieldName, value) {
@@ -790,40 +842,9 @@ function wrtOEOtherInfo(str) {
 	setGridCellValue(GV.EditRowIndex, "OPOrdPatPrice", myAry[3]);
 	row.OPOrdPatPrice = myAry[3];
 	
-	var ordBillSum = calcNew(row.OPOrdPrice, row.OPOrdDiscPrice, row.OPOrdInsPrice, row.OPOrdQty);
+	var ordBillSum = Number(row.OPOrdPrice).mul(row.OPOrdQty).sub(Number(row.OPOrdDiscPrice).mul(row.OPOrdQty)).sub(Number(row.OPOrdInsPrice).mul(row.OPOrdQty)).toFixed(2);  //总金额-折扣金额-记账金额
 	setGridCellValue(GV.EditRowIndex, "OPOrdBillSum", ordBillSum);
 	row.OPOrdBillSum = ordBillSum;
-}
-
-function calcNew(a, b, c, num) {
-	if (a && b && c && num) {
-		var mynuma1 = parseFloat(a);
-		if (isNaN(mynuma1)) {
-			var mynuma1 = 0;
-		}
-		var mynumb1 = parseFloat(b);
-		if (isNaN(mynumb1)) {
-			var mynumb1 = 0;
-		}
-		var mynumc1 = parseFloat(c);
-		if (isNaN(mynumc1)) {
-			var mynumc1 = 0;
-		}
-		var mynum2 = parseFloat(num);
-		if (isNaN(mynum2)) {
-			mynum2 = 0;
-		}
-		var a1 = mynuma1 * mynum2 + 0.0000001;
-		var b1 = mynumb1 * mynum2 + 0.0000001;
-		var c1 = mynumc1 * mynum2 + 0.0000001;
-		a1 = a1.toFixed(2);
-		b1 = b1.toFixed(2);
-		c1 = c1.toFixed(2);
-		var aa1 = a1 - b1;
-		aa1 = aa1.toFixed(2);
-		var myres = aa1 - c1;
-		return myres.toFixed(2);
-	}
 }
 
 function onDblClickRowHandler(index, row) {
@@ -832,14 +853,15 @@ function onDblClickRowHandler(index, row) {
 		$.messager.popover({msg: "已开医嘱不能修改", type: "info"});
 		return;
 	}
-	if (GV.EditRowIndex != index) {
-		if (endEditing()) {
-			beginEditing(index);
-			GV.EditRowIndex = index;
-		} else {
-			GV.OEItmList.selectRow(GV.EditRowIndex);
-		}
+	if (GV.EditRowIndex == index) {
+		return;
 	}
+	if (endEditing()) {
+		beginEditing(index);
+		GV.EditRowIndex = index;
+		return;
+	}
+	GV.OEItmList.selectRow(GV.EditRowIndex);
 }
 
 function onBeginEditHandler(index, row) {
@@ -851,14 +873,15 @@ function onBeginEditHandler(index, row) {
 	}
 	var ed = GV.OEItmList.getEditor({index: index, field: "OPOrdQty"});
 	if (ed) {
-		$(ed.target).keydown(function(e) {
+		$(ed.target)
+		.keyup(function(e) {
+		  	ordQtyKeyup(e);
+		})
+		.keydown(function(e) {
 		  	ordQtyKeydown(e);
 		});
 	}
-	var ed = GV.OEItmList.getEditor({index: index, field: "OPOrdItemDesc"});
-	if (ed) {
-		$(ed.target).next("span").find("input").focus();
-	}
+	focusOrdItem(index);   //光标定位到医嘱combogrid编辑器
 }
 
 function onEndEditHandler(index, row) {
@@ -893,16 +916,15 @@ function beginEditing(index) {
 }
 
 function endEditing() {
-	if (GV.EditRowIndex == undefined) {
+	if (GV.EditRowIndex === undefined) {
 		return true;
 	}
 	if (validateRow(GV.EditRowIndex)) {
 		GV.OEItmList.endEdit(GV.EditRowIndex);
 		GV.EditRowIndex = undefined;
 		return true;
-	} else {
-		return false;
 	}
+	return false;
 }
 
 function validateRow(index) {
@@ -920,14 +942,26 @@ function validateRow(index) {
 }
 
 function checkAddData(row) {
+	var arcimDesc = row.OPOrdItemDesc;
+	if (!arcimDesc && (GV.EditRowIndex !== undefined)) {
+		var ed = GV.OEItmList.getEditor({index: GV.EditRowIndex, field: "OPOrdItemDesc"});
+		if (ed) {
+			arcimDesc = $(ed.target).combogrid("getText");
+		}
+	}
 	var maxQty = checkARCIMMaxQty(row.OPOrdItemRowID, row.OPOrdQty);
-	if (maxQty != "0") {
-		$.messager.popover({msg: row.OPOrdItemDesc + "超过最大数量：" + maxQty, type: "info"});
+	if (maxQty != 0) {
+		$.messager.popover({msg: arcimDesc + "超过最大数量：" + maxQty, type: "info"});
 		return false;
 	}
 	var rtn = checkStock(row.OPOrdItemRowID, row.OPOrdQty, row.OPOrdItemRecLocRID);
 	if (rtn) {
-		$.messager.popover({msg: row.OPOrdItemDesc + "库存不足", type: "info"});
+		$.messager.popover({msg: arcimDesc + "库存不足", type: "info"});
+		return false;
+	}
+	var rtn = isAllowedDecimalQty(row.OPOrdItemRowID);
+	if (!rtn && !(/^[1-9]\d*$/).exec(row.OPOrdQty)) {
+		$.messager.popover({msg: arcimDesc + "只能录入正整数", type: "info"});
 		return false;
 	}
 	return true;
@@ -941,7 +975,7 @@ function ordPriceKeyup(e) {
 	if (!$(e.target).is(":focus")) {
 		return;
 	}
-	clearNoNum(e.target);
+	fixDecimal(e.target);
 	row.OPOrdPrice = $(e.target).val();
 	var key = websys_getKey(e);
 	if (key == 13) {
@@ -958,8 +992,15 @@ function ordPriceKeyup(e) {
 	}
 }
 
-function clearNoNum(obj) {
-	//先把非数字的都替换掉，除了数字和
+function fixInteger(obj) {
+	//把非数字的都替换掉
+	$(obj).val($(obj).val().replace(/[^\d]/g, ""));
+	//必须保证第一个非0
+	$(obj).val($(obj).val().replace(/^0/g, ""));
+}
+
+function fixDecimal(obj) {
+	//先把非数字的都替换掉，除了数字和.
 	$(obj).val($(obj).val().replace(/[^\d.]/g, ""));
 	//必须保证第一个为数字而不是.
 	$(obj).val($(obj).val().replace(/^\./g, ""));
@@ -967,6 +1008,19 @@ function clearNoNum(obj) {
 	$(obj).val($(obj).val().replace(/\.{2,}/g, "."));
 	//保证.只出现一次，而不能出现两次以上
 	$(obj).val($(obj).val().replace(".", "$#$").replace(/\./g,"").replace("$#$", "."));
+}
+
+function ordQtyKeyup(e) {
+	var row = GV.OEItmList.getRows()[GV.EditRowIndex];
+	if (!row || !row.OPOrdItemRowID) {
+		return;
+	}
+	if (isAllowedDecimalQty(row.OPOrdItemRowID)) {
+		fixDecimal(e.target);
+	}else {
+		fixInteger(e.target);
+	}
+	row.OPOrdQty = $(e.target).val();
 }
 
 function ordQtyKeydown(e) {
@@ -977,10 +1031,10 @@ function ordQtyKeydown(e) {
 			return;
 		}
 		var row = GV.OEItmList.getRows()[GV.EditRowIndex];
-		if (!row) {
+		if (!row || !row.OPOrdItemRowID) {
+			focusOrdItem(GV.EditRowIndex);
 			return;
 		}
-		row.OPOrdQty = $(e.target).val();
 		getOEOtherInfo(row);
 		appendEditRow();
 	}
@@ -1007,57 +1061,57 @@ function appendEditRow() {
 }
 
 /**
+* 光标定位到医嘱combogrid编辑器
+*/
+function focusOrdItem(index) {
+	if ((index | 0) === index) {   //判断是否是整数
+		var ed = GV.OEItmList.getEditor({index: index, field: "OPOrdItemDesc"});
+		if (ed) {
+			$(ed.target).next("span").find("input").focus();
+		}
+	}
+}
+
+/**
 * 判断库存
 */
 function checkStock(arcim, packQty, recLoc) {
+	var expStr = getValueById("episodeId") + "^" + PUBLIC_CONSTANT.SESSION.CTLOCID;
 	var encmeth = getValueById("OPOrdCheckStockEncrypt");
-	try {
-		var rtn = cspRunServerMethod(encmeth, arcim, packQty, recLoc);
-		if (+rtn <= 0) {
-			return true;
-		} else {
-			return false;
-		}
-	} catch (e) {
-		$.messager.popover({msg: e.message, type: "error"});
-		return false;
-	}
+	return (cspRunServerMethod(encmeth, arcim, packQty, recLoc, expStr) <= 0);
 }
 
 function checkARCIMMaxQty(arcimId, qty) {
-	var rtn = "0";
 	var encmeth = getValueById("GetARCIMMaxQty");
 	var maxQty = cspRunServerMethod(encmeth, arcimId);
-	if (parseFloat(maxQty) > 0) {
-		if (parseFloat(qty) > parseFloat(maxQty)) {
-			rtn = maxQty;
-		}
-	}
-	return rtn;
+	return (((+maxQty > 0) && (+qty > +maxQty)) ? maxQty : 0);
 }
 
-function arcositemListOpen(itemId, itemDesc, del, itemText, ordRowIdString) {
-	if (!ordRowIdString) {
-		ordRowIdString = "";
-	}
+/**
+* 医嘱数量是否可以录入小数
+*/
+function isAllowedDecimalQty(arcim) {
+	return ($.m({ClassName: "web.DHCOPCashier", MethodName: "IsAllowedDecimalQty", arcim: arcim, hospId: PUBLIC_CONSTANT.SESSION.HOSPID}, false) == 1);
+}
+
+function arcositemListOpen(row) {
+	var itemId = row.ARCIMastRowID;
 	var adm = getValueById("episodeId");
 	var insTypeId = getSelectedInsType();
-	var url = "dhcbill.opbill.arcositemlist.csp?&OrderSetId=" + itemId + "&HiddenDelete=" + del + "&ARCIMDesc=" + itemDesc + "&PatientID=" + getValueById("papmi") + "&EpisodeID=" + adm + "&OSOrderRowIDs=" + escape(ordRowIdString) + "&InsTypeID=" + insTypeId;
+	var url = "dhcbill.opbill.arcositemlist.csp?&OrderSetId=" + itemId + "&HiddenDelete=" + "YES";
+	url += "&PatientID=" + getValueById("patientId") + "&EpisodeID=" + adm + "&InsTypeID=" + insTypeId;
 	websys_showModal({
 		url: url,
 		title: '医嘱套录入',
 		iconCls: 'icon-w-list',
 		width: 780,
 		height: 450,
-		originWindow: window
+		callbackFuns: [addCopyItemToList, appendEditRow]
 	});
 }
 
 function addCopyItemToList(arcosItmRow) {
 	if (!arcosItmRow) {
-		return;
-	}
-	if (!endEditing()) {
 		return;
 	}
 	var row = {};
@@ -1076,4 +1130,22 @@ function addCopyItemToList(arcosItmRow) {
 	var index = GV.OEItmList.getRows().length - 1;
 	GV.OEItmList.checkRow(index);
 	GV.OEItmList.scrollTo(index);
+}
+
+/**
+* 2022-10-19
+* ZhYW
+* 根据所选病种勾选医嘱
+*/
+function checkOrdByChronicCode(chronicCode) {
+	$.each(GV.OEItmList.getRows(), function(index, row) {
+		if (GV.OEItmList.getPanel().find(".datagrid-row[datagrid-row-index=" + index + "] div.datagrid-cell-check>input:checkbox").prop("disabled")) {
+			return true;
+		}
+		if (row.InsuDicCode == chronicCode) {
+			GV.OEItmList.checkRow(index);
+			return true;
+		}
+		GV.OEItmList.uncheckRow(index);
+	});
 }

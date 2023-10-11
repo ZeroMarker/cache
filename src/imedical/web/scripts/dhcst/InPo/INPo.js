@@ -11,12 +11,17 @@ var parrefRowId = "";
 var UserId = session['LOGON.USERID'];
 var HospId = session['LOGON.HOSPID'];
 var CtLocId = session['LOGON.CTLOCID'];
+var gParamIngd= PHA_COM.ParamProp("DHCSTIMPORT")
+var APPName="DHCSTPURPLANAUDIT"
+var PurPlanParam=PHA_COM.ParamProp(APPName)
+
 //var arr = window.status.split(":");
 //var length = arr.length;
 var inciDr = "";
 var rpdecimal=2;
 var spdecimal=2;
 var GroupId=session['LOGON.GROUPID']
+var colArr = [];
 function addComboData(store, id, desc) {
 	var defaultData = {
 		RowId : id,
@@ -28,10 +33,10 @@ function addComboData(store, id, desc) {
 
 var locField = new Ext.ux.LocComboBox({
 	id:'locField',
-	fieldLabel:'订单科室',
+	fieldLabel:$g('订单科室'),
 	listWidth:210,
 	allowBlank:true,
-	emptyText:'订单科室...',
+	emptyText:$g('订单科室...'),
 	triggerAction:'all',
 	selectOnFocus:true,
 	forceSelection:true,
@@ -52,8 +57,8 @@ var locField = new Ext.ux.LocComboBox({
 // 打印订单按钮
 var PrintBT = new Ext.Toolbar.Button({
 	id : "PrintBT",
-	text : '打印',
-	tooltip : '点击打印订单',
+	text :$g( '打印'),
+	tooltip : $g('点击打印订单'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_print',
@@ -75,19 +80,49 @@ GetGroupDeptStore.on('load',function(ds,records,o){
 	}
 });	
 
+
+/// 检查管控药品  Y :管控 N:不管控
+function CheckPoisonLimit(inci,inciDesc){
+	var Vendor = Ext.getCmp('Vendor').getValue();
+	if (!Vendor || !inci) return "N";
+	var limitFalg = "N"
+	var VendorPoisonLimit = gParamIngd.VendorPoisonLimit
+	if (VendorPoisonLimit){
+		var poisonFlag = tkMakeServerCall("web.DHCST.Common.DrugInfoCommon","CheckPoisonForVendor",inci)
+           if (poisonFlag == "Y") {
+	           var vendorPoisonFlag = tkMakeServerCall("PHA.IN.Vendor.Query","GetVendorPoisonLimit",Vendor)
+               var vendorPoisonObj = JSON.parse(vendorPoisonFlag)
+               if(vendorPoisonObj.PoisonCFlag != "Y" && vendorPoisonObj.PoisonPFlag != "Y"){
+	               Msg.info("warning", $g(inciDesc+"为麻醉精一药品，而经营企业无麻醉精一药品录入权限!"));
+	               if(VendorPoisonLimit == 2) 
+	                {
+	                    limitFalg = "Y"
+	                }
+               }
+           }
+	}
+	return limitFalg;
+}
+
 function getDrugList2(record) {
 	if (record == null || record == "") {
 		return false;
 	}
 	inciDr = record.get("InciDr");
+	
 	var cell = INPoItmGrid.getSelectionModel().getSelectedCell();
 	// 选中行
 	var row = cell[0];
 	var rowData = INPoItmGrid.getStore().getAt(row);
+	/// 检查麻醉精一药品管控
+	var Ret = CheckPoisonLimit(inciDr,record.get("InciDesc"))
+	if (Ret == "Y"){
+		return;
+	}
 	rowData.set("IncId",inciDr);
 	rowData.set("IncCode",record.get("InciCode"));
 	rowData.set("IncDesc",record.get("InciDesc"));
-	//产地id^产地名称^配送商id^配送商名称^入库单位id^入库单位^进价^售价^申购科室库存量^库存上限^库存下限^通用名^商品名^剂型^规格
+	//产地id^产地名称^配送企业id^配送企业名称^入库单位id^入库单位^进价^售价^申购科室库存量^库存上限^库存下限^通用名^商品名^剂型^规格
 	//{success:'true',info:'7^GAYY-北京广安医药联合中心^61^bjymzy-北京益民制药厂^^^26^盒[20片]^0^0^0^^^艾司唑仑片^^普通片剂^[1mg*20]'}
 	//取其它药品信息
 	var locId = Ext.getCmp('locField').getValue();
@@ -96,7 +131,7 @@ function getDrugList2(record) {
 		Ext.Ajax.request({
 			url : INPoItmGridUrl+'?actiontype=GetItmInfo&IncId='+ inciDr+'&Params='+Params,
 			method : 'POST',
-			waitMsg : '查询中...',
+			waitMsg : $g('查询中...'),
 			success : function(result, request) {
 				var jsonData = Ext.util.JSON.decode(result.responseText.replace(/\r/g,"").replace(/\n/g,""));
 				if (jsonData.success == 'true') {
@@ -121,109 +156,28 @@ function getDrugList2(record) {
 					rowData.set("Spec", data[14]);
 					rowData.set("BUom", data[15]);
 					rowData.set("ConFac", data[16]);
+					rowData.set("FreeDrugFlag", data[17]);
+					
                     //==============资质判断==========
                     var venId = Ext.getCmp('Vendor').getValue();
                     var inci=record.get("InciDr")
                     var DataList=venId+"^"+inci+"^"+ManfId
-                    var urldh = INPoItmGridUrl+'?actiontype=Check&DataList='+ DataList
-                    Ext.Ajax.request({
-						url : urldh,
-						method : 'POST',
-						waitMsg : '查询中...',
-						success : function(result, request) {
-							var jsonData = Ext.util.JSON
-									.decode(result.responseText);
-							if (jsonData.success == 'true') {
-								var ret=jsonData.info
-								//alert("data="+data)
-								if(ret==1)  
-								{Msg.info("warning", "供应商工商执照将在30天内过期!");
-										return;}
-								if(ret==3)  
-								{Msg.info("warning", "供应商税务登记号将在30天内过期!");
-										return;}
-							    if(ret==4)  
-								{Msg.info("warning", "供应商药品经营许可证将在30天内过期!");
-										return;}
-										
-								if(ret==5)  
-								{Msg.info("warning", "供应商医疗器械经营许可证将在30天内过期!");
-										return;}
-								if(ret==6)  
-								{Msg.info("warning", "供应商医疗器械注册证将在30天内过期!");
-										return;}
-								if(ret==7)  
-								{Msg.info("warning", "供应商卫生许可证将在30天内过期!");
-										return;}
-								if(ret==8)  
-								{Msg.info("warning", "供应商组织机构代码将在30天内过期!");
-										return;}
-								if(ret==9)  
-								{Msg.info("warning", "供应商GSP认证将在30天内过期!");
-										return;}
-								if(ret==10)  
-								{Msg.info("warning", "供应商医疗器械生产许可证将在30天内过期!");
-										return;}
-								if(ret==11)  
-								{Msg.info("warning", "供应商生产制造认可表将在30天内过期!");
-										return;}
-								if(ret==12)  
-								{Msg.info("warning", "供应商进口医疗器械注册证将在30天内过期!");
-										return;}
-								if(ret==13)  
-								{Msg.info("warning", "供应商进口注册登记表将在30天内过期!");
-										return;}
-								if(ret==14)  
-								{Msg.info("warning", "供应商代理销售授权书将在30天内过期!");
-										return;}
-								if(ret==15)  
-								{Msg.info("warning", "供应商质量承诺书将在30天内过期!");
-										return;}
-								if(ret==16)  
-								{Msg.info("warning", "供应商业务员授权书将在30天内过期!");
-										return;}
-								if(ret==19)  
-								{Msg.info("warning", "厂商药品生产许可证将在30天内过期!");
-										return;}
-								if(ret==20)  
-								{Msg.info("warning", "厂商物资生产许可证将在30天内过期!");
-										return;}
-								if(ret==21)  
-								{Msg.info("warning", "厂商工商执照在30天内过期!");
-										return;}
-								if(ret==22)  
-								{Msg.info("warning", "厂商工商注册号将在30天内过期!");
-										return;}
-								if(ret==23)  
-								{Msg.info("warning", "厂商组织机构代码将在30天内过期!");
-										return;}																																							
-								if(ret==24)		
-								{Msg.info("warning", "厂商器械经营许可证将在30天内过期!");
-										return;}
-								if(ret==26)		
-								{Msg.info("warning", "物资批准文号将在30天内过期!");
-										return;}
-							    if(ret==27)		
-								{Msg.info("warning", "物资进口注册证将在30天内过期!");
-										return;}
-							 
-								
-							} 
-						},
-						scope : this
-					});  
+      				var CertExpDateInfo = tkMakeServerCall("PHA.IN.Cert.Query","CheckExpDate",venId,ManfId)
+                    if (CertExpDateInfo != ""){
+	                  	Msg.info("warning", CertExpDateInfo);
+	                    return;  
+                    }
 					//==============资质判断==========
 				} 
 			},
 			scope : this
 		});
 	}else{
-		Msg.info("error", "请选择!");
+		Msg.info("error", $g("请选择!"));
 	}
-	//光标跳到数量
-		var colindex=GetColIndex(INPoItmGrid,"PurQty");
-			INPoItmGrid.getSelectionModel().select(row,colindex);
-			INPoItmGrid.startEditing(row, colindex);
+	 if (setEnterSort(INPoItmGrid, colArr)) {
+                        addNewRow();
+                    }
 	
 }
 
@@ -239,21 +193,21 @@ function getDrugList2(record) {
 
 */
 var Uom = new Ext.form.ComboBox({
-	fieldLabel : '单位',
+	fieldLabel : $g('单位'),
 	id : 'Uom',
 	name : 'Uom',
 	anchor : '90%',
 	store : ItmUomStore,
 	valueField : 'RowId',
 	displayField : 'Description',
-	emptyText : '单位...',
+	emptyText : $g('单位...'),
 	mode:'local',
 	listeners:{
 		specialKey:function(field, e) {
 			if (e.getKey() == Ext.EventObject.ENTER) {
-				var cell=INPoItmGrid.getSelectionModel().getSelectedCell();
-				var col=GetColIndex(INPoItmGrid,"Qty");
-				INPoItmGrid.startEditing(cell[0], col);		
+				if (setEnterSort(INPoItmGrid, colArr)) {
+                        addNewRow();
+                    }	
 			}
 		},
 		'focus':function(field){
@@ -261,7 +215,7 @@ var Uom = new Ext.form.ComboBox({
 			var record = INPoItmGrid.getStore().getAt(cell[0]);
 			var ItmId=record.get("IncId");
 			if(ItmId==null||ItmId==""){
-				Msg.info("warning","请先录入药品名称!");
+				Msg.info("warning",$g("请先录入药品名称!"));
 				return;
 			}
 			ItmUomStore.removeAll();
@@ -331,18 +285,18 @@ var needDateField = new Ext.ux.DateField({
 	//width:210,
 	listWidth:210,
     //allowBlank:false,
-	fieldLabel:'要求到货日期',
+	fieldLabel:$g('要求到货日期'),
 	anchor:'90%',
 	value:new Date()
 });
 
 var inpoNoField = new Ext.form.TextField({
 	id:'inpoNoField',
-	fieldLabel:'订单号',
+	fieldLabel:$g('订单号'),
 	allowBlank:true,
 	//width:150,
 	listWidth:150,
-	emptyText:'订单号...',
+	emptyText:$g('订单号...'),
 	anchor:'90%',
 	selectOnFocus:true,
 	disabled:true
@@ -361,25 +315,74 @@ var groupField=new Ext.ux.StkGrpComboBox({
 var Vendor=new Ext.ux.VendorComboBox({
 		id : 'Vendor',
 		name : 'Vendor',
-		anchor : '90%'
-		//,
-		//width : 200
+		anchor : '90%',
+		listeners:{
+			select: function(combo,record,opts) {
+	            var startValue = combo.startValue
+	            var limitFalg = checkPoison();
+	            if (limitFalg == "Y") Ext.getCmp("Vendor").setValue(startValue);
+               
+            }
+		}
 	});
+	
+	 /// 判断是否符合麻醉精一药品控制 ： Y需要限制 N不需要限制
+    function checkPoison()
+    {
+	    var limitFalg = "N"
+	    var Vendor = Ext.getCmp("Vendor").getValue();
+	    var VendorPoisonLimit = gParamIngd.VendorPoisonLimit
+      	if (VendorPoisonLimit){
+            var vendorPoisonFlag = tkMakeServerCall("PHA.IN.Vendor.Query","GetVendorPoisonLimit",Vendor)
+            var vendorPoisonObj = JSON.parse(vendorPoisonFlag)
+            if(vendorPoisonObj.PoisonCFlag != "Y" && vendorPoisonObj.PoisonPFlag != "Y")
+            {
+	            var DetailPoisonFlag = CheckDetailPoison();
+	            if(DetailPoisonFlag != ""){
+	                Msg.info("warning", $g(DetailPoisonFlag+"为麻醉精一药品，而经营企业无麻醉精一药品录入权限!"));
+	                if(VendorPoisonLimit == 2) 
+	                {
+	                    limitFalg = "Y"
+	                }
+	            }
+            }
+        }
+        return limitFalg;
+    }
+    
+    ///判断订单明细中是否有麻醉精一药品
+    function CheckDetailPoison(){
+	   	var DetailPoisonFlag = ""
+	    var rowCount = INPoItmGrid.getStore().getCount();
+        for (var i = 0; i < rowCount; i++) {
+           var rowData = INPoItmGridDs.getAt(i);
+           var IncId = rowData.get("IncId"); 
+           if(!IncId) continue;
+           var InciDesc = rowData.get("IncDesc"); 
+           var poisonFlag = tkMakeServerCall("web.DHCST.Common.DrugInfoCommon","CheckPoisonForVendor",IncId)
+           if (poisonFlag == "Y") {
+	           DetailPoisonFlag = InciDesc 
+	           break;
+           }
+       }
+       return DetailPoisonFlag;
+    }
+
 
 var remarkField = new Ext.form.TextField({
 	id:'remarkField',
-	fieldLabel:'备注',
+	fieldLabel:$g('备注'),
 	allowBlank:true,
 	width:200,
 	listWidth:200,
-	emptyText:'备注...',
+	emptyText:$g('备注...'),
 	anchor:'90%',
 	selectOnFocus:true
 });
 
 var finishCK = new Ext.form.Checkbox({
 	id: 'finishCK',
-	fieldLabel:'完成',
+	fieldLabel:$g('完成'),
 	disabled:true,
 	allowBlank:true,
 	anchor:'90%',
@@ -417,7 +420,7 @@ function addNewRow() {
 
 	if ((mainRowId!="")&&(Ext.getCmp('finishCK').getValue()==true))
 	{
-		Msg.info('warning','当前订单已完成,禁止增加明细记录!');
+		Msg.info('warning',$g('当前订单已完成,禁止增加明细记录!'));
 		return;
 	}	
     var rowCount =INPoItmGrid.getStore().getCount();
@@ -483,7 +486,12 @@ function addNewRow() {
 		}, {
 			name : 'ConFac',
 			type : 'double'
+		}, {
+			name : 'FreeDrugFlag',
+			type : 'string'
 		}
+		
+		
 	]);
 	
 	var NewRecord = new record({
@@ -503,7 +511,8 @@ function addNewRow() {
 		spAmt:'',
 		pp:'',
 		ppAmt:'',
-		ConFac:''
+		ConFac:'',
+		FreeDrugFlag:''
 	});
 					
 	INPoItmGridDs.add(NewRecord);
@@ -517,7 +526,7 @@ function addNewRow() {
 
 //配置数据源
 var INPoItmGridUrl = 'dhcst.inpoaction.csp';
-var INPoItmGridProxy= new Ext.data.HttpProxy({url:INPoItmGridUrl+'?actiontype=QueryDetail',method:'GET'});
+var INPoItmGridProxy= new Ext.data.HttpProxy({url:INPoItmGridUrl+'?actiontype=QueryDetailAll',method:'GET'});
 var INPoItmGridDs = new Ext.data.Store({
 	proxy:INPoItmGridProxy,
     reader:new Ext.data.JsonReader({
@@ -541,7 +550,8 @@ var INPoItmGridDs = new Ext.data.Store({
 		{name:'pp'},
 		{name:'ppAmt'},
 		{name:'BUom'},
-		{name:'ConFac'}
+		{name:'ConFac'},
+		{name:'FreeDrugFlag'}
 	]),
     remoteSort:false,
     listeners:{
@@ -568,13 +578,13 @@ var INPoItmGridCm = new Ext.grid.ColumnModel([
         sortable : true,
 		hidden : true
     },{
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'IncCode',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"名称",
+        header:$g("名称"),
         id:'eIncDesc',
         dataIndex:'IncDesc',
         width:250,
@@ -592,16 +602,16 @@ var INPoItmGridCm = new Ext.grid.ColumnModel([
 							poNeeddate=poNeeddate.format("Y-m-d");
 						}
 						if((poLoc=="")||(poLoc==null)){
-							Msg.info("error","请选择订单科室!");
+							Msg.info("error",$g("请选择订单科室!"));
 							return false;
 						}
 						if((poNeeddate=="")||(poNeeddate==null)){
-							Msg.info("error","请选择到货日期") ;
+							Msg.info("error",$g("请选择到货日期")) ;
 							return false;
 						}
 						var venId = Ext.getCmp('Vendor').getValue();
 						if((venId=="")||(venId==null)){
-							Msg.info("error","请选择供应商!");
+							Msg.info("error",$g("请选择经营企业!"));
 							return false;
 						}
 						var group=Ext.getCmp("groupField").getValue();
@@ -611,7 +621,7 @@ var INPoItmGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"规格",
+        header:$g("规格"),
         dataIndex:'Spec',
         width:150,
         align:'left',
@@ -624,13 +634,13 @@ var INPoItmGridCm = new Ext.grid.ColumnModel([
         sortable : true,
 		hidden : true
     },{
-        header:"厂商",
+        header:$g("生产企业"),
         dataIndex:'Manf',
         width:150,
         align:'left',
         sortable:true
     },{
-        header:"数量",
+        header:$g("数量"),
         id:'ePurQty',
         dataIndex:'PurQty',
         width:100,
@@ -642,15 +652,15 @@ var INPoItmGridCm = new Ext.grid.ColumnModel([
 			listeners:{
 				specialKey:function(field,e){
 					if (e.getKey() == Ext.EventObject.ENTER) {
-						var cell=INPoItmGrid.getSelectionModel().getSelectedCell();
-						var colindex=GetColIndex(INPoItmGrid,"Rp");
-						INPoItmGrid.startEditing(cell[0],colindex);
+						if (setEnterSort(INPoItmGrid, colArr)) {
+                        addNewRow();
+                    }
 					}
 				}
 			}
         })
     },{
-        header:"单位",
+        header:$g("单位"),
         dataIndex:'PurUomId',
         id:'ePurUomId',
         width:100,
@@ -659,7 +669,7 @@ var INPoItmGridCm = new Ext.grid.ColumnModel([
          editor : new Ext.grid.GridEditor(Uom),
 		renderer : Ext.util.Format.comboRenderer2(Uom,"PurUomId","PurUom")       
      },{
-        header:"单位",
+        header:$g("单位"),
         dataIndex:'PurUom',
         width:100,
         align:'left',
@@ -677,7 +687,7 @@ var INPoItmGridCm = new Ext.grid.ColumnModel([
         align:'right',
         sortable:true
     },*/{
-        header:"进价",
+        header:$g("进价"),
         dataIndex:'Rp',
         id:'eRp',
         width:100,
@@ -693,17 +703,29 @@ var INPoItmGridCm = new Ext.grid.ColumnModel([
 				'specialkey': function(field, e) {
 					//enter键
 					if (e.getKey() == Ext.EventObject.ENTER) {
+						var cell = INPoItmGrid.getSelectionModel().getSelectedCell();
+    					var row = cell[0];
+						var rowData = INPoItmGrid.getStore().getAt(row);
+						var FreeDrugFlag = rowData.get('FreeDrugFlag');
 						var resultRpNew = field.getValue();
 						if (resultRpNew == null|| resultRpNew.length <= 0) {
-			               Msg.info("warning", "进价不能为空!");
+			               Msg.info("warning", $g("进价不能为空!"));
 			               return;
 	               		}
-			   			if (resultRpNew <= 0) {
-				   			Msg.info("warning",	"进价不能小于或等于0!");
+	               		else if(FreeDrugFlag=="Y"){
+		               		if(resultRpNew!=0){
+				   				Msg.info("warning",	$g("免费药的价格只能为零0!"));
+				    			return;
+		               		}
+			            }
+			   			else if (resultRpNew <=0) {
+				   			Msg.info("warning",	$g("进价不能小于或等于0!"));
 				    		return;
 			            }
 			            else{
-						    addNewRow();
+						    if (setEnterSort(INPoItmGrid, colArr)) {
+			                        addNewRow();
+			                    }
 						}
 					}
 				}
@@ -713,7 +735,7 @@ var INPoItmGridCm = new Ext.grid.ColumnModel([
 					
         //----------
     },{
-        header:"进价金额",
+        header:$g("进价金额"),
         dataIndex:'rpAmt',
         width:100,
         align:'right',
@@ -739,14 +761,21 @@ var INPoItmGridCm = new Ext.grid.ColumnModel([
         align:'right',
         sortable:true
     }*/
+    ,{
+        header: $g("免费药标识"),
+        dataIndex: 'FreeDrugFlag',
+        width: 80,
+        align: 'center',
+        sortable: true
+    }
 ]);
 		
 //初始化默认排序功能
 INPoItmGridCm.defaultSortable = true;
 
 var addINPoM = new Ext.Toolbar.Button({
-	text:'新建',
-    tooltip:'新建',
+	text:$g('新建'),
+    tooltip:$g('新建'),
     iconCls:'page_add',
 	width : 70,
 	height : 30,
@@ -758,8 +787,8 @@ var addINPoM = new Ext.Toolbar.Button({
 });
 
 var findINPoM = new Ext.Toolbar.Button({
-	text:'查询',
-    tooltip:'查询',
+	text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
 	width : 70,
 	height : 30,
@@ -770,8 +799,8 @@ var findINPoM = new Ext.Toolbar.Button({
 
 
 var clearINPoM = new Ext.Toolbar.Button({
-	text:'清屏',
-    tooltip:'清屏',
+	text:$g('清屏'),
+    tooltip:$g('清屏'),
     iconCls:'page_clearscreen',
 	width : 70,
 	height : 30,
@@ -781,8 +810,8 @@ var clearINPoM = new Ext.Toolbar.Button({
 });
 
 var saveINPoM = new Ext.Toolbar.Button({
-	text:'保存',
-    tooltip:'保存',
+	text:$g('保存'),
+    tooltip:$g('保存'),
     iconCls:'page_save',
 	width : 70,
 	height : 30,
@@ -798,17 +827,17 @@ function CheckDataBeforeSave(){
 		var user = UserId;
 		var locId = Ext.getCmp('locField').getValue();
 		if((locId=="")||(locId==null)){
-			Msg.info("error","请选择订单科室!");
+			Msg.info("error",$g("请选择订单科室!"));
 			return false;
 		}
 		var scg = Ext.getCmp('groupField').getValue();
 		if(((scg=="")||(scg==null))&(gParamCommon[9]=="N")){
-			Msg.info("error","请选择类组!");
+			Msg.info("error",$g("请选择类组!"));
 			return false;
 		}
 		var venId = Ext.getCmp('Vendor').getValue();
 		if((venId=="")||(venId==null)){
-			Msg.info("error","请选择供应商!");
+			Msg.info("error",$g("请选择经营企业!"));
 			return false;
 		}
 		return true;
@@ -838,7 +867,7 @@ function save(){
 						&& item_i == item_j) {
 					changeBgColor(i, "yellow");
 					changeBgColor(j, "yellow");
-					Msg.info("warning", "药品重复，请重新输入!");
+					Msg.info("warning", $g("药品重复，请重新输入!"));
 					return false;
 				}
 			}
@@ -853,17 +882,27 @@ function save(){
 				var uom = rowData.get("PurUomId");
 				var qty = rowData.get("PurQty");
 				if(qty==""){
-					Msg.info("error","请填写数量!");
+					Msg.info("error",$g("请填写数量!"));
 					var colindex=GetColIndex(INPoItmGrid,"PurQty");
 					INPoItmGrid.startEditing(i,colindex);
 					return false;
 				}
 				var Rp = rowData.get("Rp");
+				var FreeDrugFlag = rowData.get('FreeDrugFlag');
 				var icnt = i + 1;
-				if (Rp <= 0) {
-		   			Msg.info("warning",	"第"+icnt+"行进价不能小于或等于0!");
+				
+				if(FreeDrugFlag=="Y"){
+               		if(Rp!=0){
+		   				Msg.info("warning",$g("第")+icnt+	$g("行免费药的价格只能为零0!"));
+		    			return;
+               		}
+	            }
+	   			else if (Rp <=0) {
+		   			Msg.info("warning",	$g("第")+icnt+$g("行进价不能小于或等于0!"));
 		    		return;
 	            }
+				
+			
 				var reqQty=qty  ; //暂时使用购买数量
 				
 				var str = Inpoi + "^" + inci + "^"	+ uom + "^" + Rp+"^"+qty +"^"+ reqQty;
@@ -881,28 +920,33 @@ function save(){
 			//alert(mainRowId);
 			if (mainRowId=='')
 			{
-				Msg.info("error","没有明细!");
+				Msg.info("error",$g("没有明细!"));
 				return ;
 			}
  		}
-        var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+ 		var ret = CheckSaveBudget(mainRowId,ListDetail)
+ 		if(!ret) return;
+
+ 		
+        var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 		Ext.Ajax.request({
 		    url: INPoItmGridUrl+"?actiontype=Save",
 		    params:{Main:mainRowId,MainInfo:tmpData,ListDetail:ListDetail},
 			method : 'POST',
-			waitMsg : '处理中...',
+			waitMsg : $g('处理中...'),
 			failure: function(result,request) {
 				 mask.hide();
-				Msg.info("error","请检查网络连接!");
+				Msg.info("error",$g("请检查网络连接!"));
 			},
 			success: function(result,request) {				
 				var jsonData = Ext.util.JSON.decode( result.responseText );
 				if (jsonData.success=='true') {
-					Msg.info("success","保存成功!");
+					Msg.info("success",$g("保存成功!"));
 					mainRowId = jsonData.info;
 					Query(mainRowId);
+					SendBusiData(mainRowId,"INPO","SAVE")
 				}else{
-					Msg.info("error","保存失败!"+jsonData.info);
+					Msg.info("error",$g("保存失败!")+jsonData.info);
 				}
 				mask.hide();
 			},
@@ -910,6 +954,43 @@ function save(){
 		});
 	}
 }
+
+function CheckSaveBudget(mainRowId,data){
+	if (_BudgetSaveFlag != "LIMIT" && _BudgetSaveFlag != "WARN") return true;
+	var locId = Ext.getCmp('locField').getValue();
+	var locDesc = Ext.getCmp('locField').getRawValue();
+	var budgetId = Ext.getCmp('BudgetProComb').getRawValue();
+	if(!budgetId) {
+		Msg.info("warning","保存数据需核对HRP预算系统，请选择一个预算项目!");
+		return false;
+	}
+	var MianObj={
+		project_id : "", //项目id
+		project_desc: "", //项目名称
+		loc_id : locId, //科室id
+		loc_desc : locDesc, //科室名称
+		business : "INPO", //业务类型
+		businode : "SAVE", //业务节点
+		main_id : mainRowId, //业务主表id
+		main_no : "", //业务单号
+		operate : "INSERT", //操作类型
+		Detail : data //明细数据
+	}
+	var BusiData = JSON.stringify(MianObj)
+	var ret = tkMakeServerCall("PHA.IN.Budget.Client.Interface","SendBusiData",BusiData)
+	var RetJson = JSON.parse(ret);
+	if(RetJson.code < 0 )
+	{
+		Msg.info("error",RetJson.msg);
+		return false;
+	}
+	else if(RetJson.code == 1)
+	{
+		Msg.info("warning",RetJson.msg);
+	}
+	return true;
+}
+
 
 // 显示订单数据
 function Query(InpoRowid) {
@@ -986,12 +1067,12 @@ function deleteDetail() {
 	// 判断订单是否已完成
 	var CmpFlag = Ext.getCmp("finishCK").getValue();
 	if (CmpFlag != null && CmpFlag != false) {
-		Msg.info("warning", "当前订单已完成,禁止删除明细记录!");
+		Msg.info("warning", $g("当前订单已完成,禁止删除明细记录!"));
 		return;
 	}
 	var cell = INPoItmGrid.getSelectionModel().getSelectedCell();
 	if (cell == null) {
-		Msg.info("warning", "没有选中行!");
+		Msg.info("warning", $g("没有选中行!"));
 		return;
 	}
 	// 选中行
@@ -1003,8 +1084,8 @@ function deleteDetail() {
 		INPoItmGrid.getView().refresh();
 	} else {
 		Ext.MessageBox.show({
-			title : '提示',
-			msg : '是否确定删除该药品信息',
+			title : $g('提示'),
+			msg : $g('是否确定删除该药品信息'),
 			buttons : Ext.MessageBox.YESNO,
 			fn : showResult,
 			icon : Ext.MessageBox.QUESTION
@@ -1028,21 +1109,21 @@ function showResult(btn) {
 		Ext.Ajax.request({
 					url : url,
 					method : 'POST',
-					waitMsg : '删除中...',
+					waitMsg : $g('删除中...'),
 					success : function(result, request) {
 						var jsonData = Ext.util.JSON
 								.decode(result.responseText);
 								//alert("jsonData="+jsonData)
 						if (jsonData.success == 'true') {
-							Msg.info("success", "删除成功!");
+							Msg.info("success", $g("删除成功!"));
 							INPoItmGrid.getStore().remove(record);
 							INPoItmGrid.getView().refresh();
 						} else {
 							var ret=jsonData.info;
 							if(ret==-1){
-								Msg.info("error", "订单已经完成，不能删除!");
+								Msg.info("error", $g("订单已经完成，不能删除!"));
 							}else{
-								Msg.info("error", "删除失败,请查看错误日志!");
+								Msg.info("error", $g("删除失败,请查看错误日志!"));
 							}
 						}
 					},
@@ -1052,8 +1133,8 @@ function showResult(btn) {
 }
 
 var deleteINPoM = new Ext.Toolbar.Button({
-	text:'删除',
-    tooltip:'删除',
+	text:$g('删除'),
+    tooltip:$g('删除'),
     iconCls:'page_delete',
 	width : 70,
 	height : 30,
@@ -1066,33 +1147,33 @@ var deleteINPoM = new Ext.Toolbar.Button({
 			
 			var rowid = mainRowId
 			if(rowid!=""){
-				Ext.MessageBox.confirm('提示','确定要删除该订单?',
+				Ext.MessageBox.confirm($g('提示'),$g('确定要删除该订单?'),
 					function(btn) {
 							if(btn == "yes"){
 							Ext.Ajax.request({
 								//url : INPoItmGridUrl + "?actiontype=delete&InpoId=" +mainRowId,
 								url : INPoItmGridUrl + "?actiontype=delete&InpoId=" +rowid,
-								waitMsg:'删除中...',
+								waitMsg:$g('删除中...'),
 								failure: function(result, request) {
-									Msg.info("error", "请检查网络连接!");
+									Msg.info("error", $g("请检查网络连接!"));
 									return false;
 								},
 								success : function(result, request) {
 									var jsonData = Ext.util.JSON.decode(result.responseText);
 									if (jsonData.success == 'true') {
 										//INPoItmGridDs.load({params:{Parref:mainRowId}});
-										Msg.info("success", "订单删除成功!");
+										Msg.info("success", $g("订单删除成功!"));
 									    clearData();
 									}else{
 										var ret=jsonData.info;
 									if(ret==-1){
-										Msg.info("error", "订单已经完成，不能删除!");
+										Msg.info("error", $g("订单已经完成，不能删除!"));
 									}if(ret==-3){
-										Msg.info("error", "删除订单失败!");
+										Msg.info("error", $g("删除订单失败!"));
 									}if(ret==-4){
-										Msg.info("error", "删除订单附加表失败!");
+										Msg.info("error", $g("删除订单附加表失败!"));
 									}else{
-										Msg.info("error", "删除失败,请查看错误日志!");
+										Msg.info("error", $g("删除失败,请查看错误日志!"));
 									}
 									}
 								},
@@ -1104,7 +1185,7 @@ var deleteINPoM = new Ext.Toolbar.Button({
 					}
 				)
 			}else{
-				Msg.info("error", "订单Id为空,不允许删除!");
+				Msg.info("error", $g("订单Id为空,不允许删除!"));
 				return false;
 			}
 		//}
@@ -1127,28 +1208,28 @@ function clearData(){
 }
 
 var finshInpo = new Ext.Toolbar.Button({
-	text:'完成',
-    tooltip:'完成',
+	text:$g('完成'),
+    tooltip:$g('完成'),
     iconCls:'page_gear',
 	width : 70,
 	height : 30,
 	handler:function(){
 		if((mainRowId=="")||(mainRowId==null)){
-			Msg.info("error", "订单为空!");
+			Msg.info("error", $g("订单为空!"));
 			return false;
 		}else{
 			if(Ext.getCmp("finishCK").getValue()==true){
-				Msg.info("warning","该订单已经完成!")
+				Msg.info("warning",$g("该订单已经完成!"))
 				return;
 			}
 		   	
 		var count=INPoItmGrid.getStore().getCount();
-		if (count==0) {Msg.info("warning","该订单没有明细!");return;}	
+		if (count==0) {Msg.info("warning",$g("该订单没有明细!"));return;}	
 		    for (var i=0;i<count;i++){
 		    var rowData=INPoItmGrid.getStore().getAt(i);
 		     //新增或数据发生变化时执行下述操作
 		    if(rowData.data.newRecord || rowData.dirty){  
-		       Msg.info("warning","订单明细已发生改变,请先保存后完成!");
+		       Msg.info("warning",$g("订单明细已发生改变,请先保存后完成!"));
 		       return;
 		           }
 		       
@@ -1156,19 +1237,22 @@ var finshInpo = new Ext.Toolbar.Button({
 			
 			
 			
-			Ext.MessageBox.confirm('提示','确定要完成该订单吗?',
+			Ext.MessageBox.confirm($g('提示'),$g('确定要完成该订单吗?'),
 				function(btn) {
 					if(btn == 'yes'){
+						var ret = SendBusiData(mainRowId,"INPO","COMP")
+						if(!ret) return;
+
 						Ext.Ajax.request({
 							url:'dhcst.inpoaction.csp?actiontype=finish&InpoId='+mainRowId+'&Usr='+UserId,
-							waitMsg:'更新中...',
+							waitMsg:$g('更新中...'),
 							failure: function(result, request) {
-								Msg.info("error", "请检查网络连接!");
+								Msg.info("error", $g("请检查网络连接!"));
 							},
 							success: function(result, request) {
 								var jsonData = Ext.util.JSON.decode( result.responseText );
 								if (jsonData.success=='true') {
-									Msg.info("success", "订单设置为完成状态!");
+									Msg.info("success", $g("订单设置为完成状态!"));
 									Query(mainRowId);
 								}else{
 									
@@ -1189,41 +1273,55 @@ var finshInpo = new Ext.Toolbar.Button({
 		INPoItmGrid.getView().getRow(row).style.backgroundColor = color;
 	}
 var noFinshInpo = new Ext.Toolbar.Button({
-	text:'取消完成',
-    tooltip:'取消完成',
+	text:$g('取消完成'),
+    tooltip:$g('取消完成'),
     iconCls:'page_gear',
 	width : 70,
 	height : 30,
 	handler:function(){
 		if((mainRowId=="")||(mainRowId==null)){
-			Msg.info("error", "订单为空!");
+			Msg.info("error", $g("订单为空!"));
 			return false;
 		}else{
 			if(Ext.getCmp("finishCK").getValue()==false){
-				Msg.info("warning","该单据尚未完成!!")
+				Msg.info("warning",$g("该单据尚未完成!!"))
 				return;
 			}
-			Ext.MessageBox.confirm('提示','确定要取消完成该订单吗?',
+			//判断是否上传过医共体住院
+			var ret=tkMakeServerCall("web.DHCST.INPO","GetMainINPoId",mainRowId)
+			if(ret==2)
+			{
+				Msg.info("warning",$g("该单据已上传医共体主院，请先在订单到货查询界面取消上传!"))
+				return;
+			}
+			else if(ret==1)
+			{
+				Msg.info("warning",$g("该单据为子院上传订单，主院不允许修改!"))
+				return;
+			}
+			
+			
+			Ext.MessageBox.confirm($g('提示'),$g('确定要取消完成该订单吗?'),
 				function(btn) {
 					if(btn == 'yes'){
 						Ext.Ajax.request({
 							url:'dhcst.inpoaction.csp?actiontype=noFinish&InpoId='+mainRowId+'&Usr='+UserId,
-							waitMsg:'处理中...',
+							waitMsg:$g('处理中...'),
 							failure: function(result, request) {
-								Msg.info("error", "请检查网络连接!");
+								Msg.info("error",$g( "请检查网络连接!"));
 							},
 							success: function(result, request) {
 								var jsonData = Ext.util.JSON.decode( result.responseText );
 								if (jsonData.success=='true') {
-									Msg.info("success", "订单设置为未完成状态!");
+									Msg.info("success",$g( "订单设置为未完成状态!"));
 									Query(mainRowId);
 								}else{
 									if(jsonData.info==-2){
-										Msg.info("error", "该订单已经转入库,禁止修改状态!");
+										Msg.info("error", $g("该订单已经转入库,禁止修改状态!"));
 										return false;
 									}
 									if(jsonData.info==-3){
-										Msg.info("error", "操作失败!");
+										Msg.info("error", $g("操作失败!"));
 										return false;
 									}
 								}
@@ -1250,7 +1348,7 @@ var formPanel = new Ext.form.FormPanel({
     tbar:[findINPoM,'-',clearINPoM,'-',addINPoM,'-',saveINPoM,'-',finshInpo,'-',noFinshInpo,'-',PrintBT,'-',deleteINPoM],
 	items : [{
 		xtype : 'fieldset',
-		title : '订单主信息',
+		title : $g('订单主信息'),
 		layout : 'column',	
 		style:DHCSTFormStyle.FrmPaddingV,	
 		autoHeight : true,
@@ -1269,14 +1367,14 @@ var formPanel = new Ext.form.FormPanel({
 		}, {
 			columnWidth : .25,
 			layout : 'form',
-			items : [finishCK]
+			items : [finishCK,BudgetProComb]
 		}]
 	}]
 
 });
 
 var AddDetailBT=new Ext.Button({
-	text:'增加一条',
+	text:$g('增加一条'),
 	tooltip:'',
 	height:30,
 	width:70,
@@ -1288,7 +1386,7 @@ var AddDetailBT=new Ext.Button({
 });
 
 var DelDetailBT=new Ext.Button({
-	text:'删除一条',
+	text:$g('删除一条'),
 	tooltip:'',
 	height:30,
 	width:70,
@@ -1301,7 +1399,7 @@ var DelDetailBT=new Ext.Button({
 
 //表格
 INPoItmGrid = new Ext.grid.EditorGridPanel({
-	title:'订单明细',
+	title:$g('订单明细'),
 	store:INPoItmGridDs,
 	cm:INPoItmGridCm,
 	trackMouseOver:true,
@@ -1309,7 +1407,7 @@ INPoItmGrid = new Ext.grid.EditorGridPanel({
 	height:650,
 	stripeRows:true,
 	loadMask:true,
-	tbar:{items:[AddDetailBT,'-',DelDetailBT,'-',{text:'列设置',height:30,width:70,iconCls:'page_gear',handler:function(){	GridColSet(INPoItmGrid,"DHCSTPO");}}]},
+	tbar:{items:[AddDetailBT,'-',DelDetailBT,'-',{text:$g('列设置'),height:30,width:70,iconCls:'page_gear',handler:function(){	GridColSet(INPoItmGrid,"DHCSTPO");}}]},
 	clicksToEdit:1,
 	sm:new Ext.grid.CellSelectionModel({}),
 	listeners:{
@@ -1351,7 +1449,7 @@ INPoItmGrid = new Ext.grid.EditorGridPanel({
 			{ 
 				id: 'mnuDelete', 
 				handler: deleteDetail, 
-				text: '删除' 
+				text: $g('删除' )
 			}
 		] 
 	}); 
@@ -1371,7 +1469,7 @@ Ext.onReady(function(){
 		GetParamCommon();  
 	}
 	var panel = new Ext.Panel({
-		title:'订单录入',
+		title:$g('订单录入'),
 		activeTab:0,
 		region:'north',
 		height:DHCSTFormStyle.FrmHeight(2),
@@ -1385,6 +1483,8 @@ Ext.onReady(function(){
 		renderTo:'mainPanel'
 	});
 	RefreshGridColSet(INPoItmGrid,"DHCSTPO");   //根据自定义列设置重新配置列
+	colArr = sortColoumByEnterSort(INPoItmGrid);
+	SetBudgetPro(Ext.getCmp("locField").getValue(),"INPO",[1,2],"saveINPoM") //加载HRP预算项目
 });
 
 function setGridEditable(grid,b)

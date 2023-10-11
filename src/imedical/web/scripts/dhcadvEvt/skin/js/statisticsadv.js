@@ -65,15 +65,16 @@ function initDatagrid(){
         hidden:true
     },{
         field: 'StTempName',
-        title: '模板名称',
-        width: 100
+        title: $g('模板名称'),
+        width: 100,
+        formatter:setStTempName
     },{
         field: 'StatTypeXVal',
         title: 'XValue',
         hidden:true
     },{
         field: 'StatTypeXText',
-        title: '统计横向',
+        title: $g('统计横向'),
         width: 50
     },{
         field: 'StatTypeYVal',
@@ -81,7 +82,7 @@ function initDatagrid(){
         hidden:true
     },{
         field: 'StatTypeYText',
-        title: '统计纵向',
+        title: $g('统计纵向'),
         width: 50
     },{
         field: 'StatDataVal',
@@ -89,7 +90,7 @@ function initDatagrid(){
         hidden:true
     },{
         field: 'StatDatText',
-        title: '统计数据',
+        title: $g('统计数据'),
         width: 50
     },{
         field: 'StatTypeVal',
@@ -97,20 +98,20 @@ function initDatagrid(){
         hidden:true
     },{
         field: 'StatTypeText',
-        title: '统计类型',
+        title: $g('统计类型'),
         width: 50
     },{
 	 	field: 'delete1',
-        title: '操作',
+        title: $g('操作'),
         formatter:function(value, rowData, rowIndex){
-	    	return "<a href='#' onclick='deleteTemp(\""+rowData.StRowID+"\")'>删除</a>";    
+	    	return "<a href='#' onclick='deleteTemp(\""+rowData.StRowID+"\")'>"+$g('删除')+"</a>";    
 	    }   
 	 },{
 	 	field: 'cite1',
         title: '操作',
         formatter:function(value, rowData, rowIndex){
 	        var tempData = rowData.StatTypeXVal+"!!"+rowData.StatTypeYVal+"!!"+rowData.StatDataVal+"!!"+rowData.StatTypeVal;
-	    	return "<a href='#' onclick='setStatCombTemp(\""+tempData+"\")'>引用</a>";    
+	    	return "<a href='#' onclick='setStatCombTemp(\""+tempData+"\")'>"+$g('引用')+"</a>";    
 	    }   
 	 }]]
 
@@ -122,7 +123,7 @@ function initDatagrid(){
 		columns:columns,
 		pageSize:60,  
 		pageList:[60], 
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		rownumbers : false,
 		pagination:true,
 		singleSelect:true,
@@ -134,15 +135,22 @@ function initDatagrid(){
 		}
 	})		
 }
-
+// 模板名称 特殊字符替换
+function setStTempName(value, rowData, rowIndex)
+{   
+    return $_TrsTxtToSymbol(rowData.StTempName);
+}
 
 function deleteTemp(stRowId){
-	var ret=serverCall("web.DHCADVStatTemp","Delete",{"StRowID":stRowId});
-	if(ret!=0) $.messager.alert("提示","删除失败！");
-	if(ret==0) $.messager.alert("提示","删除成功！","info",function(){
-		$("#tmpDataTable").datagrid("reload");
-	});
-	return;
+	$.messager.confirm($g("提示"), $g("是否进行删除操作"), function (res) {//提示是否删除
+		if (res) {
+			var ret=serverCall("web.DHCADVStatTemp","Delete",{"StRowID":stRowId});
+			if(ret!=0) $.messager.alert($g("提示"),$g("删除失败！"));
+			if(ret==0) $.messager.alert($g("提示"),$g("删除成功！"),"info",function(){
+				$("#tmpDataTable").datagrid("reload");
+			});
+		}
+	})
 }
 
 function initDataGrid(params){
@@ -165,8 +173,7 @@ function initDataGrid(params){
 }
 
 function initMehtod(){
-	$("a:contains('生成报表')").on("click",initReportDatagrid);
-	
+	$("#creat").on('click',initReportDatagrid); // 生成报表
 	$(".statImgType").on("click",setSelImgType);
 	
 	$(".statImgType1").on("click",setSelImgType1);
@@ -233,7 +240,7 @@ function initCombobox(){
 		}
 	};
 	
-	var url = uniturl+"JsonGetRepotType";
+	var url = uniturl+"JsonGetRepotType"+"&HospId="+LgHospID;
 	new ListCombobox("reportType",url,'',option).init();	
 	
 	
@@ -397,7 +404,7 @@ function initAllReportTable(){
 	if(statTypeInfo!="") statTypeDesc=statTypeInfo.split("^")[0];    //最后一项
 	
 	if( statData.length==0){
-		$.messager.alert("提示","没有待统计数据,检查是否选择了报告类型！");
+		$.messager.alert($g("提示"),$g("没有待统计数据,检查是否选择了报告类型！"));
 		return;
 	}
 	
@@ -431,7 +438,7 @@ function initAllReportTable(){
 	if(statTypeY!="") statRadioYList = statAllDataObj.columnItm[statTypeY]==undefined?"":statAllDataObj.columnItm[statTypeY];   
 	
 	if((statTypeX==="")&&(statTypeX=="")){
-		$.messager.alert("提示","请先确定统计横向和统计纵向的项目！");
+		$.messager.alert($g("提示"),$g("请先确定统计横向和统计纵向的项目！"));
 		$("#statXLable").css("color","red");
 		$("#statYLable").css("color","red");
 		return;
@@ -707,12 +714,12 @@ function initReportTable(){
 	var statType = ($("#statType").combobox("getValue")==undefined?"":$("#statType").combobox("getValue"));
 	
 	if(formID==""){
-		$.messager.alert("提示","报告类型不能为空");
+		$.messager.alert($g("提示"),$g("报告类型不能为空"));
 		return ;
 	}
 	
 	if(statTypeX==""){
-		$.messager.alert("提示","统计X轴数据类型不能为空");
+		$.messager.alert($g("提示"),$g("统计X轴数据类型不能为空"));
 		return ;
 	}
 	
@@ -722,7 +729,7 @@ function initReportTable(){
 	//}
 	
 	if(statType=="") {
-		$.messager.alert("提示","统计类型不能为空");
+		$.messager.alert($g("提示"),$g("统计类型不能为空"));
 		return ;	
 	}
 	
@@ -882,21 +889,21 @@ function showDataTable(value){
 	var params = stDate+"^"+endDate+"^^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^"+value+"^^";
 	
 	var jsonColumn= [
-			{field:"RepStaus",title:'*报告状态',align:'left',hidden:false},
-			{field:'RepDate',title:'*报告日期',align:'left',type:'dateTime'},
+			{field:"RepStaus",title:$g('*报告状态'),align:'left',hidden:false},
+			{field:'RepDate',title:$g('*报告日期'),align:'left',type:'dateTime'},
 			//{field:'PatID',title:'*登记号',hidden:true},
-			{field:'AdmNo',title:'*病案号',align:'left'},
-			{field:'PatName',title:'*姓名',align:'left'},
-			{field:'PatSex',title:'*性别',align:'left'},
-			{field:'PatAge',title:'*年龄',align:'left'},
-			{field:'RepType',title:'*报告类型',align:'left'},
-			{field:'OccurDate',title:'*发生日期',align:'left',type:'dateTime'},
-			{field:'OccurLoc',title:'*发生科室',align:'left'},
-			{field:'RepLoc',title:'*报告科室',align:'left'},
-			{field:'LocDep',title:'*系统',align:'left'},	
-			{field:'RepUser',title:'*报告人',align:'left'}
+			{field:'AdmNo',title:$g('*病案号'),align:'left'},
+			{field:'PatName',title:$g('*姓名'),align:'left'},
+			{field:'PatSex',title:$g('*性别'),align:'left'},
+			{field:'PatAge',title:$g('*年龄'),align:'left'},
+			{field:'RepType',title:$g('*报告类型'),align:'left'},
+			{field:'OccurDate',title:$g('*发生日期'),align:'left',type:'dateTime'},
+			{field:'OccurLoc',title:$g('*发生科室'),align:'left'},
+			{field:'RepLoc',title:$g('*报告科室'),align:'left'},
+			//{field:'LocDep',title:$g('*系统'),align:'left',hidden:true},	
+			{field:'RepUser',title:$g('*报告人'),align:'left'}
 		]
-	if(value!=0) jsonColumn=[{field:'LocDep',title:'*系统',align:'left'}];
+	//if(value!=0) jsonColumn=[{field:'LocDep',title:$g('*系统'),align:'left',hidden:true}];
 	
 	if(value!==""){
 		runClassMethod("web.DHCADVStatisticsDhcadv","GetColumnsByFormNameID",{ForNameID:value},
@@ -914,7 +921,7 @@ function showDataTable(value){
 	//速度太慢，用table试试
 	$('#reportDataAll').easyTable({
 		columns:jsonColumn,
-		url:LINK_CSP+"?ClassName=web.DHCADVCOMMONPART&MethodName=QueryRepStatList", //huaxiaoying 2017-1-4 规范名字
+		url:LINK_CSP+"?ClassName=web.DHCADVCOMMONPART&MethodName=QueryRepStatList&LgParam="+LgParam, //huaxiaoying 2017-1-4 规范名字
 		singleSelect:true,
 		nowrap:true,
 		queryParams:{
@@ -1081,7 +1088,7 @@ function saveTemplate(){
 	
 	var formNameID = ($("#reportType").combobox("getValue")==undefined?"":$("#reportType").combobox("getValue"));
 	if(formNameID=="") {
-		$.messager.alert("提示","报告类型不能为空！");
+		$.messager.alert($g("提示"),$g("报告类型不能为空！"));
 		return;
 	}
 	
@@ -1090,7 +1097,7 @@ function saveTemplate(){
 	var statTypeXText = $("#statTypeX").combobox("getText");
 	var statTypeYText = $("#statTypeY").combobox("getText");
 	if((statTypeXInfo=="")&&(statTypeYInfo=="")) {
-		$.messager.alert("提示","请先确定统计横向和统计纵向的项目！");
+		$.messager.alert($g("提示"),$g("请先确定统计横向和统计纵向的项目！"));
 		return;
 	}
 	
@@ -1099,24 +1106,30 @@ function saveTemplate(){
 	var statDataText = $("#statData").combobox("getText");
 	var statTypeText = $("#statType").combobox("getText");
 	if(statType=="") {
-		$.messager.alert("提示","统计类型不能为空！");
+		$.messager.alert($g("提示"),$g("统计类型不能为空！"));
 		return;
 	}
 			
-	$.messager.prompt("提示","请输入模板的名字",function(tmpName){
+	$.messager.prompt($g("提示"),$g("请输入模板的名字"),function(tmpName){
 		if(tmpName==undefined) return;
 		if(tmpName=="") {
-			$.messager.alert("提示","模板名字不能为空！");
+			$.messager.alert($g("提示"),$g("模板名字不能为空！"));
 			return;
 		}
+		tmpName=$_TrsSymbolToTxt(tmpName); // 特殊字符替换
 		var params=""+"#$"+formNameID+"#$"+tmpName+"#$"+statTypeXInfo+"##"+statTypeXText;
 		params = params+"!!"+statTypeYInfo+"##"+statTypeYText+"!!"+statData+"##"+statDataText;
 		params = params+"!!"+statType+"##"+statTypeText;
 		var ret=serverCall("web.DHCADVStatTemp","Save",{"Params":params});
-		if(ret!=0) $.messager.alert("提示","保存失败！");
-		if(ret==0) $.messager.alert("提示","保存成功！","info",function(){
-			//relTempComb();	
-		});
+		if(ret==0){
+			$.messager.alert($g("提示"),$g("保存成功"));
+		}else{
+		 	if((ret==-1)){
+				$.messager.alert($g("提示"),$g("保存失败")+":"+$g("模板的名字已存在"))
+			}else{
+				$.messager.alert($g("提示"),$g("保存失败")+":"+ret)
+			}
+		}		
 		return;
 	})
 	
@@ -1130,7 +1143,7 @@ function exportExcelStat(exportData)
 	
 	var dataLen = exportData.length;
 	if(dataLen==0){
-		$.messager.alert("提示","没有导出数据,必须先生成需导出的报表!");
+		$.messager.alert($g("提示"),$g("没有导出数据,必须先生成需导出的报表!"));
 		return;
 	}
 	
@@ -1365,6 +1378,8 @@ function setStatCombTemp(tmpData){
 	$("#statTypeX").combobox("setValue",tmpDataArr[0]);
 	$("#statTypeY").combobox("setValue",tmpDataArr[1]);
 	$("#statData").combobox("setValue",tmpDataArr[2]);
+	/// 2021-06-29 cy 统计类型下拉数据加载
+	reloadComboboxDataType(tmpDataArr[2]);
 	$("#statType").combobox("setValue",tmpDataArr[3]);
 	$("#tmpWin").window("close");
 	return;
@@ -1373,7 +1388,7 @@ function setStatCombTemp(tmpData){
 function citeTemplate(){
 	var formNameID = ($("#reportType").combobox("getValue")==undefined?"":$("#reportType").combobox("getValue"));
 	if(formNameID==""){
-		$.messager.alert("提示","必须选中一个表单类型！");
+		$.messager.alert($g("提示"),$g("必须选中一个表单类型！"));
 		return;	
 	}
 	$("#tmpWin").window("open");

@@ -2,7 +2,6 @@
 /// Creator: congyue
 /// CreateDate: 2017-09-06
 var url="dhcadv.repaction.csp";
-var LgParam=LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+LgHospID;
 var RepID="",formId="",recordId="",RepStaus="",RepTypeDr="",StatusLast="",RepTypeCode="",RepType="";
 var EpisodeID="",patientID="",editFlag="",RepUser="";
 var adrNextLoc="";adrLocAdvice="";adrReceive="";
@@ -19,6 +18,7 @@ var editRow="";
 var winflag=""; /// 1 查询界面进入修改  2 审核界面进入修改  3 portal 窗口 进入修改
 var MKIOrdFlag="";  /// 手工输入医嘱标识
 var NextLocFlag=0;
+var OrdList="";  /// 医嘱ID串 2021-02-09 cy 保存绑定医嘱id
 $(document).ready(function(){
 	InitRepParam(); 	  	// 初始化界面参数内容
 	ReportControlCom();		// 表单控制  	
@@ -76,22 +76,22 @@ function InitRepParam(){
 
 // 表单控制
 function ReportControlCom(){
-	
+	$.messager.defaults = { ok: $g("确定"),cancel: $g("取消")};
 	if ((recordId=="")&&(freshflag==0)){
 		var frm = dhcadvdhcsys_getmenuform();
 		if (frm) {
 	        var adm = frm.EpisodeID.value;
 		    EpisodeID=adm;
-	        InitPatInfoCom(adm);//获取病人信息
+	        InitPatInfo(adm);//获取病人信息
 		}
 	}
 	if(freshflag==1)
 	{
 		EpisodeID=TmpEpisodeID
-		InitPatInfoCom(EpisodeID);//获取病人信息
+		InitPatInfo(EpisodeID);//获取病人信息
 	}
 	// 手工输入医嘱标识
-	runClassMethod("web.DHCADVCOMMON","GetEmSysConfig",{'AdvCode':'MKIORD','Params':LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+LgHospID},
+	runClassMethod("web.DHCADVCOMMON","GetEmSysConfig",{'AdvCode':'MKIORD','Params':LgParam},
 	function(data){
 		MKIOrdFlag=data;
 	},"text",false);
@@ -101,6 +101,12 @@ function ReportControlCom(){
 	chkcombobox("InOrOutHospLoc",locurl);
 	// 发生科室
 	chkcombobox("OccuLoc",locurl);
+	// 医疗类别 url
+	var socurl='dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=QuerySocialStatusCombo&hospId='+LgHospID+''
+	// 入院/门诊科室
+	chkcombobox("MedicalCategory",socurl);
+	
+	
 	
 	// 报告日期控制
 	chkdate("ReportDate");
@@ -111,7 +117,7 @@ function ReportControlCom(){
 	    onChange: function(){
 		    var date=$("#OccurDate").datebox("getValue");
 	        var DateType=QueryDateType(date);//日期类型
-			RepSetValue("DateType","input",DateType);
+			RepSetValue("DateType","input",$g(DateType));
 			RepSetRead("DateType","input",1);
 	    }
 	})
@@ -133,7 +139,7 @@ function ReportControlCom(){
 	$('#PatNo').bind("blur",function(){
 		var	PatNo=$('#PatNo').val();
 		if(isNaN(PatNo)){
-			$.messager.alert("提示:","请输入数字！");
+			$.messager.alert($g("提示")+":",$g("请输入数字")+"！");
 			$('#PatNo').val("");
 			return;
 		}
@@ -142,7 +148,7 @@ function ReportControlCom(){
 	$('#PatMedicalNo').bind("blur",function(){
 		var	PatMedicalNo=$('#PatMedicalNo').val();	
 		if(isNaN(PatMedicalNo)){
-			$.messager.alert("提示:","请输入数字！");
+			$.messager.alert($g("提示")+":",$g("请输入数字")+"！");
 			$('#PatMedicalNo').val("");
 			return;
 		}
@@ -163,55 +169,56 @@ function ReportControlCom(){
     //控制联系电话  sufan 2019-11-07
 	$("#HospPhone").on('keyup',function(){
 		if(isNaN($(this).val())){
-			$.messager.alert("提示","请录入正确的电话号码！")
+			$.messager.alert($g("提示")+":",$g("请录入正确的电话号码")+"！");
 			$(this).val("");
 		}
 	})
 	
 	// 填报人姓名 匿名控制
 	discover=$('#RepUserName').val();
-	if ((discover=="匿名")){
-		$('#RepUserName-label').append('<div id="switch-out" class="open-out"style="margin-left:15px;margin-right:10px;display:inline-block;" onclick="ClickTabs()"><div style="color:#FFFFFF;padding:5px 0 0 2px;">匿名</div><div id="switch-in" class="open-in"></div></div>');
-		$('#RepUserName').val("匿名");
+	if ((discover==$g("匿名"))){
+		$('#RepUserName-label').append('<div id="switch-out" class="open-out"style="margin-left:15px;margin-right:10px;display:inline-block;" onclick="ClickTabs()"><div style="color:#FFFFFF;padding:5px 0 0 2px;">'+$g("匿名")+'</div><div id="switch-in" class="open-in"></div></div>');
+		$('#RepUserName').val($g("匿名"));
 	}else {
-		$('#RepUserName-label').append('<div id="switch-out" class="close-out"style="margin-left:5px;margin-right:10px;display:inline-block;" onclick="ClickTabs()"><div style="color:#FFFFFF;padding:5px 0 0 2px;">匿名</div><div id="switch-in" class="close-in"></div></div>');
+		$('#RepUserName-label').append('<div id="switch-out" class="close-out"style="margin-left:5px;margin-right:10px;display:inline-block;" onclick="ClickTabs()"><div style="color:#FFFFFF;padding:5px 0 0 2px;">'+$g("匿名")+'</div><div id="switch-in" class="close-in"></div></div>');
 	}
+	ClickTabs();
 	$('#RepUserName').css("margin-left","0px");
 }
 //按钮控制与方法绑定
 function BtnControlCom(){
 	
 	// 评估标志
-	runClassMethod("web.DHCADVCOMMON","GetAssessAuthority",{'adrRepID':RepID,'params':LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+RepTypeCode},
+	runClassMethod("web.DHCADVCOMMON","GetAssessAuthority",{'RepTypeCode':RepTypeCode,'LgParam':LgParam},
 		function(data){
 			AssessFlag=data;
 		},"text",false);
 	// 科护士长评估标志
-	runClassMethod("web.DHCADVCOMMON","GetEmSysConfig",{'AdvCode':"LOCHEADNUREVAFLAG",'Params':LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+LgHospID},
+	runClassMethod("web.DHCADVCOMMON","GetEmSysConfig",{'AdvCode':"LOCHEADNUREVAFLAG",'Params':LgParam},
 		function(data){
 			LocHeadNurEvaFlag=data;
 		},"text",false);
 	// 护理部评估标志
-	runClassMethod("web.DHCADVCOMMON","GetEmSysConfig",{'AdvCode':"NURDEPEVAFLAG",'Params':LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+LgHospID},
+	runClassMethod("web.DHCADVCOMMON","GetEmSysConfig",{'AdvCode':"NURDEPEVAFLAG",'Params':LgParam},
 		function(data){
 			NurDepEvaFlag=data;
 		},"text",false);
 	EvaFlagList=AssessFlag+"^"+LocHeadNurEvaFlag+"^"+NurDepEvaFlag;
 	// 控制操作按钮显示与隐藏
-	if ((RepStaus!="")&&(RepStaus!="未提交")){
+	if ((RepStaus!="")&&(RepStaus!=$g("未提交"))){
 		$("#SubmitBut").hide();
 		if((winflag==2)||(winflag==3)){
 			if(StsusGrant=="1"){
 				// 报告操作归档按钮 不允许显示取消审核按钮 
-				if((FileFlag!="未归档")&&(FileFlag!="撤销归档")){
+				if((FileFlag!=$g("未归档"))&&(FileFlag!=$g("撤销归档"))){
 					$("#RepCancelAudit").hide(); 
 				}else{
 					$("#RepCancelAudit").show(); //撤销审核 
 				}
 				if(StatusLastID==""){ //2018-01-17
-					$('#RepCancelAudit').text(" 取消提交");
+					$('#RepCancelAudit').text($g("取消提交"));
 			    }else{
-					$('#RepCancelAudit').text(" 取消审核");            
+					$('#RepCancelAudit').text($g("取消审核"));            
 			    }
 			}
 			if(RepAppAuditFlag=="1"){
@@ -221,7 +228,7 @@ function BtnControlCom(){
 			}
 			if(SubUserflag=="1"){  ///转抄人标志
 				$("#Transcription").show(); // 转抄 
-				$('#Transcription').text("转抄回复");
+				$('#Transcription').text($g("转抄回复"));
 			}
 			if(AssessFlag.indexOf("Y")>=0){
 				$('#AssessmentBut').show(); //2019-01-22 评估按钮展现(医疗与没有原因分析的护理类型使用此评估)
@@ -231,16 +238,16 @@ function BtnControlCom(){
 		$('#PicUpLoad').show();
 		RepSetAudMessage();
 	}else{
-		$("#anchor>ul>li>a:contains(事件处理反馈信息)").parent().hide(); //hxy 2020-03-21
+		$("#anchor>ul>li>a:contains("+$g('事件处理反馈信息')+")").parent().hide(); //hxy 2020-03-21
 	}
-	// 上传图片标志
+	// 上传文件标志
 	runClassMethod("web.DHCADVFile","ChkRepUpload",{'RepId':RepID,'RepTypeDr':RepTypeDr},
 		function(data){
 			var UploadFlag=data;
 			if(UploadFlag=="1"){ 
-				$('#PicUpLoad').text(" 图片查看");
+				$('#PicUpLoad').text($g("文件查看"));
 		    }else{
-				$('#PicUpLoad').text(" 图片上传");            
+				$('#PicUpLoad').text($g("文件上传"));            
 		    }
 	},"text",false);
 	if (editFlag==-1){
@@ -278,7 +285,7 @@ function BtnControlCom(){
 	$("#AssessmentBut").on("click",function(){
 		assessmentRep();
 	})
-	// 图片上传
+	// 文件上传
 	$('#PicUpLoad').on("click",function(){
 		Uploadfy();
 	})
@@ -299,7 +306,20 @@ function CheckTimeorNumCom(){
 	chknum("RepUserWorkYears",1);
 	//发现人工作年限(年)
 	chknum("FindWorkYears",1);
-
+	//入院时ADL得分
+	if ($("#PatAdmADLScore").length > 0){
+		chknum("PatAdmADLScore",1,0,100);
+		$('#PatAdmADLScore').live("keyup",function(){
+			ChkPatSelfCareAbility(this.value);
+		})
+	}
+	//发生前ADL得分
+	if ($("#OccurADLScore").length > 0){
+		chknum("OccurADLScore",1,0,100);
+		$('#OccurADLScore').live("keyup",function(){
+			OccurPatSelfCareAbility(this.value);
+		})
+	}
 }
 //匿名开关
 function ClickTabs(){
@@ -309,9 +329,16 @@ function ClickTabs(){
 		if((RepUser!="")&&(RepUser!=LgUserName)){return false;}   //非本人不能修改 sufan 2019-11-07
 		div1.className=(div1.className=="close-out")?"open-out":"close-out";
 		div2.className=(div2.className=="close-in")?"open-in":"close-in";
-           var discovers=((discover=="")||(discover=="匿名"))?LgUserName:discover;
-           var discovers=(div1.className=="close-out")?discovers:"匿名";
+           var discovers=((discover=="")||(discover==$g("匿名")))?LgUserName:discover;
+           var discovers=(div1.className=="close-out")?discovers:$g("匿名");
 		$('#RepUserName').val(discovers);
+		// 报告人职称联动 
+		if(discovers==$g("匿名")){
+			RepSetRead("RepUserTitle","combobox",1);	
+			RepSetValue("RepUserTitle","combobox","匿名"); 
+		}else{
+			GetRepUserInfo(0);
+		}
 	}
          
 }
@@ -422,6 +449,42 @@ function InitPatInfoCom(EpisodeID)
       	RepSetRead("PatDiag","input",1);
       	var NurLevel=Data.NurLevel;				// 护理级别
 		RepSetValue("NursingLev","radio",NurLevel);
+		
+		var PatNational=Data.Nation;	// 民族
+		if(PatNational!==""){
+			RepSetValue("PatNational","input",PatNational);
+		}else{
+			RepSetValue("PatNational","input","");
+		}
+		RepSetRead("PatNational","input",1);
+      	var PatWeight=Data.Weight;			// 体重 
+      	if(PatWeight!=""){
+      		RepSetValue("PatWeight","input",PatWeight);
+      	}else {
+      		RepSetValue("PatWeight","input","");
+      	}
+      	RepSetRead("PatWeight","input",1);
+      	// 2021-05-25 cy str
+      	var PatAdmADLScore=Data.PatAdmADLScore;					// 入院时ADL得分
+      	if(PatAdmADLScore!=""){
+			RepSetValue("PatAdmADLScore","input",PatAdmADLScore);
+			RepSetRead("PatAdmADLScore","input",1);	
+			ChkPatSelfCareAbility(PatAdmADLScore);	
+		}else {
+			RepSetValue("PatAdmADLScore","input","");
+			RepSetRead("PatAdmADLScore","input",0);		
+		}
+		var OccurADLScore=Data.OccurADLScore;					// 发生时ADL得分
+      	if(OccurADLScore!=""){
+			RepSetValue("OccurADLScore","input",OccurADLScore);
+			RepSetRead("OccurADLScore","input",1);
+			OccurPatSelfCareAbility(OccurADLScore);		
+		}else {
+			RepSetValue("OccurADLScore","input","");
+			RepSetRead("OccurADLScore","input",0);		
+		}
+		//  2021-05-25 cy end
+
 	},"json",false);
 }
 
@@ -436,41 +499,46 @@ function SaveReportCom(flag)
 	if ((adrReceive==2)||(adrReceive==4)){
 		adrReceive=1;
 	}
-	if((adrReceive=="未接收")&&(WinUserId==RepUser)){adrReceive="";}  //sufan 20200320 解决本人提交的报告，本人编辑后会变成接收状态
+	if((adrReceive==$g("未接收"))&&(WinUserId==RepUser)){adrReceive="";}  //sufan 20200320 解决本人提交的报告，本人编辑后会变成接收状态
 	
 	//if((flag==1)&&(adrReceive!=2)){
-	RepAuditList=LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+adrNextLoc+"^"+adrLocAdvice+"^"+adrReceive;
 	//alert(RepAuditList)
 	//}
 
 	//数据保存/提交
 	var mesageShow=""
 	if(flag==0){
-		mesageShow="保存"
+		mesageShow=$g("保存");
 	}
 	if(flag==1){		
-		mesageShow="提交"		
+		mesageShow=$g("提交");
+		adrReceive="";	
 	}
 	if(LgCtLocID==""){
-		$.messager.alert("提示:","数据保存失败，请重新登陆页面!");
+		$.messager.alert($g("提示")+":",$g("数据保存失败，请重新登陆页面")+"!");
 		return ;	
 	}
-	$.messager.confirm("提示", "是否确认"+mesageShow+"数据", function (res) {//提示是否保存
+	RepAuditList=LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+adrNextLoc+"^"+adrLocAdvice+"^"+adrReceive;
+	$.messager.confirm($g("提示"), $g("是否确认")+mesageShow+$g("数据"), function (res) {//提示是否保存
 		if (res) {
 			var RepMaxNo="";
 			if($("#EventNum").val()==""){
 				runClassMethod("web.DHCADVCOMMONPART","GetAdrRepMaxNo",{'CurCode':'ADV','NoLen':4,'formId':""},
 				function(val){ 
 					RepMaxNo=val;
+					if(RepMaxNo.indexOf("msg")>=0){
+						return ;	
+					}
+					if((RepMaxNo=="")||(RepMaxNo==-100)){
+						$.messager.alert($g("提示")+":",$g("出错")+"!");
+						return ;	
+					}
 					RepSetRead("EventNum","input",0);
 					RepSetValue("EventNum","input",RepMaxNo);
 					RepSetRead("EventNum","input",1);
 					
 				},"text",false)
-				if((RepMaxNo=="")||(RepMaxNo==-100)){
-					$.messager.alert("提示:","出错!");
-					return ;	
-				}
+			
 			}
 			runClassMethod("web.DHCADVCOMMONPART","SaveRepInfo",
 			{
@@ -481,11 +549,13 @@ function SaveReportCom(flag)
 				'AuditList':RepAuditList,
 				'locdr':LgCtLocID ,
 				'EpisodeID':EpisodeID,
-				'flag':flag},
+				'flag':flag,
+				'order':OrdList,
+				'LgParam':LgParam},
 				function(val){ 
 					var data=val.replace(/(^\s*)|(\s*$)/g,"").split("^");
 					if (data[0]=="0") {
-						$.messager.alert("提示:",mesageShow+"成功!");
+						$.messager.alert($g("提示")+":",mesageShow+$g("成功")+"!");
 						RepID=data[1];
 						recordId=data[2];
 						RepTypeDr=data[3];
@@ -501,18 +571,20 @@ function SaveReportCom(flag)
 								window.parent.Query();
 							}
 						} 
-					}else
-					{
-	  	 			if(val==-1){
-							$.messager.alert("提示:","无权限");	
+					}else{
+					
+	  	 				if(val==-1){
+		  	 				$.messager.alert($g("提示")+":",$g("无权限")+"!");
 						}else if(val==-2){
-							$.messager.alert("提示:","已是最后一个权限");	
+							$.messager.alert($g("提示")+":",$g("已是最后一个权限")+"!");
 						}else if(val==-3){
-							$.messager.alert("提示:","无授权工作流");	
+							$.messager.alert($g("提示")+":",$g("无授权工作流")+"!");	
 						}else if(val==-4){
-							$.messager.alert("提示:","无配置子项");	
+							$.messager.alert($g("提示")+":",$g("无配置子项")+"!");
+						}else if(val.indexOf("msg")>=0){
+							$.messager.alert($g("提示")+":",$g("登录超时")+"，"+$g("请重新登录")+"!");
 						}else{
-							$.messager.alert("提示:","出错"+val);
+							$.messager.alert($g("提示")+":",$g("出错")+val+"!");
 						}
 					}
 				
@@ -524,16 +596,11 @@ function SaveReportCom(flag)
 function InitReportCom(recordId)
 {
 	if((recordId=="")||(recordId==undefined)){
-		RepSetRead("OccuLoc","combobox",1);			// 发生科室
-		RepSetValue("OccuLoc","combobox",LgCtLocDesc);			
-		RepSetValue("RepHospType","input",LgHospDesc);		// 报告单位
-		RepSetRead("RepHospType","input",1);
-		RepSetValue("RepUserName","input",LgUserName);		// 填报人姓名为登录人
-		RepSetRead("RepUserName","input",1);
 		RepSetRead("ReportDate","datebox",1);
 		RepSetValue("ReportDate","datebox",RepDate);		// 报告日期
 		RepSetRead("ReportTime","input",1);		// 报告时间
 		RepSetRead("PatName","input",1);		// 患者姓名
+		GetRepUserInfo(0);		
 	}else{
 		//病人信息
 		RepSetRead("PatNo","input",1);							// 登记号
@@ -565,22 +632,55 @@ function InitReportCom(recordId)
 		RepSetRead("ReportDate","datebox",1);						// 报告日期
 		RepSetValue("ReportDate","datebox",$('#ReportDate').datebox('getValue'));
 		RepSetRead("ReportTime","input",1);		// 报告时间		// 报告日期
-		RepSetRead("OccuLoc","combobox",1);
-		RepSetValue("OccuLoc","combobox",$('#OccuLoc').combobox('getValue')); 				// 发生科室
+		if($('#OccuLoc').combobox('getValue')!=""){
+			RepSetRead("OccuLoc","combobox",1);
+			RepSetValue("OccuLoc","combobox",$('#OccuLoc').combobox('getValue')); 				// 发生科室
+		}
 		RepSetRead("RepUserName","input",1);						// 填报人姓名为登录人
+		// 报告人职称
+		if($('#RepUserTitle').combobox('getValue')!=""){
+			RepSetRead("RepUserTitle","combobox",1);		
+			RepSetValue("RepUserTitle","combobox",$('#RepUserTitle').combobox('getValue')); 
+		}
+		
 		RepSetRead("RepHospType","input",1);						// 报告单位
+		GetRepUserInfo(1);		
 	}
 	RepSetRead("EventNum","input",1);								// 事件编号不可编辑
 	if(RepStaus==""){								// 事件编号不可编辑
-		RepSetValue("ReportCardSta","input","未提交"); //报告卡状态
+		RepSetValue("ReportCardSta","input",$g("未提交")); //报告卡状态
 		RepSetRead("ReportCardSta","input",1);							// 报告卡状态不可编辑	
 	}
 }
+function GetRepUserInfo(RepFlag){
 
+	// 获取登录人 信息
+	runClassMethod("web.DHCADVCOMMONPART","GetRepUserInfo",{'UserID':LgUserID,'LocID':LgCtLocID,'HospID':LgHospID,'GroupID':LgGroupID},
+	function(Data){ 
+      	if(RepFlag==0){
+			var CTCptDesc=Data.CTCptDesc;				// 填报人职称  
+			if(CTCptDesc!=""){
+				RepSetRead("RepUserTitle","combobox",1);		
+				RepSetValue("RepUserTitle","combobox",CTCptDesc); 
+			}
+			RepSetRead("OccuLoc","combobox",0);			// 发生科室
+			RepSetValue("OccuLoc","combobox",Data.LocDesc);			
+			RepSetValue("RepHospType","input",Data.HospDesc);		// 报告单位
+			RepSetRead("RepHospType","input",1);
+			RepSetValue("RepUserName","input",Data.User);		// 填报人姓名为登录人
+			RepSetRead("RepUserName","input",1);
+			LgGroupDesc=Data.GroupDesc;
+		}
+		if(RepFlag==1){
+			LgGroupDesc=Data.GroupDesc;
+			LgUserName=Data.User;
+		}
+	},"json",false);
+}
 //congyue 2017-09-06 点击首页图标，返回首页
 function Gologin(){
 	if((RepID=="")){   //sufan 就诊ID变了后，处理列表问题
-		$.messager.confirm("提示", "信息未保存,是否继续操作", function (res) {//提示是否删除
+		$.messager.confirm($g("提示"), $g("信息未保存,是否继续操作"), function (res) {//提示是否删除
 			if (res) {
 				location.href='dhcadv.homepage.csp';
 			}else{
@@ -608,7 +708,7 @@ function assessmentRep()
 	if($('#assessmentwin').is(":visible")){return;}  //窗体处在打开状态,退出
 	$('body').append('<div id="assessmentwin"></div>');
 	$('#assessmentwin').window({
-		title:'报告评估',
+		title:$g('报告评估'),
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,
@@ -690,7 +790,7 @@ function ReportEnter(){
 				patientNO=$('#PatMedicalNo').val();
 				if (patientNO=="")
 				{
-					$.messager.alert("提示:","病案号不能为空！");
+					$.messager.alert($g("提示")+":",$g("病案号不能为空")+"！");
 					return false;
 				}
 				if($("#admnogrid").length>0)
@@ -707,7 +807,7 @@ function ReportEnter(){
 				patientNO=$('#PatNo').val();
 				if (patientNO=="")
 				{
-					$.messager.alert("提示:","登记号不能为空！");
+					$.messager.alert($g("提示")+":",$g("登记号不能为空")+"！");
 					return false;
 				}
 				patientNO=getRegNo(patientNO); //登记号补0
@@ -726,11 +826,11 @@ function ReportEnter(){
 function GetGridWin(patientNO,id,actiontype,tableid){
 	var input=input+'&StkGrpRowId=&StkGrpType=G&Locdr=&NotUseFlag=N&QtyFlag=0&HospID=' ;
 	var mycols = [[
-		{field:'RegNo',title:'病人id',width:80},
-		{field:'AdmTypeDesc',title:'就诊类型',width:60}, 
-		{field:'AdmLoc',title:'就诊科室',width:120}, 
-		{field:'AdmDate',title:'就诊日期',width:80},
-		{field:'AdmTime',title:'就诊时间',width:70},
+		{field:'RegNo',title:$g('病人id'),width:80},
+		{field:'AdmTypeDesc',title:$g('就诊类型'),width:60}, 
+		{field:'AdmLoc',title:$g('就诊科室'),width:120}, 
+		{field:'AdmDate',title:$g('就诊日期'),width:80},
+		{field:'AdmTime',title:$g('就诊时间'),width:70},
 		{field:'Adm',title:'Adm',width:60,hidden:true} 
 	]];
 	var mydgs = {
@@ -750,7 +850,7 @@ function GetGridWin(patientNO,id,actiontype,tableid){
 function SetAdmIdTxtVal(rowData)
 {
 	if((rowData.Adm!=undefined)&&(EpisodeID!="")&&(rowData.Adm!=EpisodeID)){   //sufan 就诊ID变了后，处理列表问题
-		$.messager.confirm("提示", "信息未保存,是否继续操作", function (res) {//提示是否删除
+		$.messager.confirm($g("提示"), $g("信息未保存,是否继续操作"), function (res) {//提示是否删除
 			if (res) {
 				freshflag=1
 				EpisodeID=rowData.Adm==undefined?"":rowData.Adm;
@@ -761,13 +861,13 @@ function SetAdmIdTxtVal(rowData)
 				}
 				InitPatInfoCom(EpisodeID);	 */
 			}else{
-				InitPatInfoCom(EpisodeID);
+				InitPatInfo(EpisodeID);
 				return false;
 			}
 		})
 	}else{
 		EpisodeID=rowData.Adm==undefined?EpisodeID:rowData.Adm;
-		InitPatInfoCom(EpisodeID);
+		InitPatInfo(EpisodeID);
 	}
 }
 function bindEnter(){
@@ -778,8 +878,8 @@ function bindEnter(){
         suspectWin+='<table cellpadding="0" cellspacing="0" style="width:100%">'
 		suspectWin+='<tr>'
 		suspectWin+='<td style="text-align:left">'		
-		suspectWin+='<button  id="addDrg" class="dhcc-btn" style="margin-left:5px;margin-top:1px"">添加</button>';
-		suspectWin+='<button  class="dhcc-btn" style="margin-left:5px;margin-top:1px" onclick="clsDrgWin()">取消</button>';	
+		suspectWin+='<button  id="addDrg" class="dhcc-btn" style="margin-left:5px;margin-top:1px"">$g("添加")</button>';
+		suspectWin+='<button  class="dhcc-btn" style="margin-left:5px;margin-top:1px" onclick="clsDrgWin()">$g("取消")</button>';	
 		suspectWin+='</td>'			
 		suspectWin+='</tr>'		
 		suspectWin+='</table>'	
@@ -795,7 +895,7 @@ function bindEnter(){
 	var top=Math.round((window.screen.height-height)/2); 
     var left=Math.round((window.screen.width-width)/2);  
 	$('#mwin').window({
-		title:'用药列表',
+		title:$g('用药列表'),
 		collapsible:false,
 		collapsed:false, 
 		border:false,
@@ -813,7 +913,7 @@ function bindEnter(){
 		 if(event.keyCode == "13")    
 		 {
 		   if(EpisodeID==""){
-			   $.messager.alert('Warning','请先选择患者就诊记录！');
+			   $.messager.alert('Warning',$g('请先选择患者就诊记录')+'！');
 			   return;
 			   }
 		   drgname=$(this).attr("name")
@@ -824,7 +924,7 @@ function bindEnter(){
 		 if(event.keyCode == "13")    
 		 {
 		   if(EpisodeID==""){
-			   $.messager.alert('Warning','请先选择患者就诊记录！');
+			   $.messager.alert('Warning',$g('请先选择患者就诊记录')+'！');
 			   return;
 			 }
 		   drgname=$(this).attr("name")
@@ -849,25 +949,25 @@ function InitPatMedGrid()
 	var columns=[[
 		{field:"orditm",title:'orditm',width:90,hidden:true},
 		{field:'phcdf',title:'phcdf',width:80,hidden:true},
-		{field:'incidesc',title:'名称',width:140},
-		{field:'genenic',title:'通用名',width:140},
-	    {field:'batno',title:'生产批号',width:60,hidden:true},
-	    {field:'staDate',title:'开始日期',width:60,hidden:true},
-	    {field:'endDate',title:'结束日期',width:60,hidden:true},
+		{field:'incidesc',title:$g('名称'),width:140},
+		{field:'genenic',title:$g('通用名'),width:140},
+	    {field:'batno',title:$g('生产批号'),width:60,hidden:true},
+	    {field:'staDate',title:$g('开始日期'),width:60,hidden:true},
+	    {field:'endDate',title:$g('结束日期'),width:60,hidden:true},
 		{field:'genenicdr',title:'genenicdr',width:80,hidden:true},
-		{field:'dosage',title:'剂量',width:60},
+		{field:'dosage',title:$g('剂量'),width:60},
 		{field:'dosuomID',title:'dosuomID',width:80,hidden:true},
-		{field:'instru',title:'用法',width:80},
+		{field:'instru',title:$g('用法'),width:80},
 		{field:'instrudr',title:'instrudr',width:80,hidden:true},
-		{field:'freq',title:'频次',width:40},//priorty
-		{field:'priorty',title:'优先级',width:60},//priorty
+		{field:'freq',title:$g('频次'),width:40},//priorty
+		{field:'priorty',title:$g('优先级'),width:60},//priorty
 		{field:'freqdr',title:'freqdr',width:80,hidden:true},
-		{field:'duration',title:'疗程',width:40},
+		{field:'duration',title:$g('疗程'),width:40},
 		{field:'durId',title:'durId',width:80,hidden:true},
-		{field:'apprdocu',title:'批准文号',width:140},
-		{field:'manf',title:'厂家',width:140},
+		{field:'apprdocu',title:$g('批准文号'),width:140},
+		{field:'manf',title:$g('厂家'),width:140},
 		{field:'manfdr',title:'manfdr',width:80,hidden:true},
-		{field:'form',title:'剂型',width:80},
+		{field:'form',title:$g('剂型'),width:80},
 		{field:'formdr',title:'formdr',width:80,hidden:true}
 	]];
 	
@@ -881,7 +981,7 @@ function InitPatMedGrid()
 		pageSize:15,  // 每页显示的记录条数
 		pageList:[15,30,45],   // 可以设置每页记录条数的列表
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true
 	});
 	$('#medInfo').datagrid({
@@ -904,7 +1004,7 @@ function addDrg()
 {   
        var row = $('#medInfo').datagrid('getSelected');
 	   if(row==""){	
-	    $.messager.alert("warning","请选择待添加药品！");
+	    $.messager.alert("warning",$g("请选择待添加药品！"));
 		return;
 	    }
 	  clsDrgWin();
@@ -936,7 +1036,7 @@ function showAssessmentWin(AssWinCode,AssWinRecId)
 
 	$('body').append('<div id="assewin"></div>');
 	$('#assewin').window({
-		title:LgGroupDesc+'评价',
+		title:LgGroupDesc+$g('评价'),
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,
@@ -964,7 +1064,7 @@ function showPatOutcomWin(PatOutWinCode)
 
 	$('body').append('<div id="patoutwin"></div>');
 	$('#patoutwin').window({
-		title:'患者转归',
+		title:$g('患者转归'),
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,
@@ -1034,58 +1134,58 @@ function myRadioValue(param,data){
 function SetLocHeaNurInfo(data){
 	var List="";
 	var MeetDate=$getValue(data["MeetDate"]); //会议日期
-	if(MeetDate!=""){List=List+"\n会议日期："+MeetDate+"；";}
+	if(MeetDate!=""){List=List+"\n"+$g("会议日期")+"："+MeetDate+"；";}
 	var MeetTime=$getValue(data["MeetTime"]); //会议时间
-	if(MeetTime!=""){List=List+"会议时间："+MeetTime+"；";}
+	if(MeetTime!=""){List=List+$g("会议时间")+"："+MeetTime+"；";}
 	var MeetPlace=$getValue(data["MeetPlace"]); //会议地点
-	if(MeetPlace!=""){List=List+"会议地点："+MeetPlace+"；";}
+	if(MeetPlace!=""){List=List+$g("会议地点")+"："+MeetPlace+"；";}
 	var Participants=$getValue(data["Participants"]); //参会人员
-	if(Participants!=""){List=List+"参会人员："+Participants+"；";}
+	if(Participants!=""){List=List+$g("参会人员")+"："+Participants+"；";}
 	//案例管理评价 
 	var LocCaseTimeliness=radioValue("LocCaseTimeliness-94432,LocCaseTimeliness-94433",data); 
-	if(LocCaseTimeliness!=""){List=List+"\n科室案例分析及时性："+LocCaseTimeliness+"。";}
+	if(LocCaseTimeliness!=""){List=List+"\n"+$g("科室案例分析及时性")+"："+LocCaseTimeliness+"。";}
 	var FindReason=radioValue("FindReason-94434,FindReason-94435",data); 
-	if(FindReason!=""){List=List+"\n原因分析找到真因："+FindReason+"。";}
+	if(FindReason!=""){List=List+"\n"+$g("原因分析找到真因")+"："+FindReason+"。";}
 	var BefPreventMeasures=radioValue("BefPreventMeasures-94436,BefPreventMeasures-94437",data); 
-	if(BefPreventMeasures!=""){List=List+"\n发生前防范措施落实情况："+BefPreventMeasures+"。";}
+	if(BefPreventMeasures!=""){List=List+"\n"+$g("发生前防范措施落实情况")+"："+BefPreventMeasures+"。";}
 	var BefPreventMeasuresipt=$getValue(data["BefPreventMeasures-94439"]);  //具体表现
 	if ((BefPreventMeasuresipt!="")&&(BefPreventMeasures=="")){
-		List=List+"\n发生前防范措施落实情况：未落实具体表现："+BefPreventMeasuresipt+"。";
+		List=List+"\n"+$g("发生前防范措施落实情况")+"："+$g("未落实具体表现")+"："+BefPreventMeasuresipt+"。";
 	}
 	if ((BefPreventMeasuresipt!="")&&(BefPreventMeasures!="")){
-		List=List+"未落实具体表现："+BefPreventMeasuresipt+"。";
+		List=List+$g("未落实具体表现")+"："+BefPreventMeasuresipt+"。";
 	}
 	var BefPreMeaReason=radioValue("BefPreMeaReason-94441,BefPreMeaReason-94442,BefPreMeaReason-94443,BefPreMeaReason-94444,BefPreMeaReason-94445,BefPreMeaReason-94446,BefPreMeaReason-94447,BefPreMeaReason-94448",data); 
-	if(BefPreMeaReason!=""){List=List+"\n发生前防范措施未落实的原因：具体表现："+BefPreMeaReason+"。";}
+	if(BefPreMeaReason!=""){List=List+"\n"+$g("发生前防范措施未落实的原因")+"："+$g("具体表现")+"："+BefPreMeaReason+"。";}
 	var AftImpPertinence=radioValue("AftImpPertinence-94449,AftImpPertinence-94450",data); 
-	if(AftImpPertinence!=""){List=List+"\n事件发生后整改措施的针对性："+AftImpPertinence+"。";}
+	if(AftImpPertinence!=""){List=List+"\n"+$g("事件发生后整改措施的针对性")+"："+AftImpPertinence+"。";}
 	var AftImpTimeliness=radioValue("AftImpTimeliness-94451,AftImpTimeliness-94452",data); 
-	if(AftImpTimeliness!=""){List=List+"\n事件发生后整改措施落实的及时性："+AftImpTimeliness+"。";}
+	if(AftImpTimeliness!=""){List=List+"\n"+$g("事件发生后整改措施落实的及时性")+"："+AftImpTimeliness+"。";}
 	var HeadNurReformMark=radioValue("HeadNurReformMark-94453,HeadNurReformMark-94454",data); 
-	if(HeadNurReformMark!=""){List=List+"\n护士长整改落实的痕迹："+HeadNurReformMark+"。";}
+	if(HeadNurReformMark!=""){List=List+"\n"+$g("护士长整改落实的痕迹")+"："+HeadNurReformMark+"。";}
 	var ManaIfStandard=radioValue("ManaIfStandard-94455,ManaIfStandard-94456",data); 
-	if(ManaIfStandard!=""){List=List+"\n护理记录书写："+ManaIfStandard+"。";}
+	if(ManaIfStandard!=""){List=List+"\n"+$g("护理记录书写")+"："+ManaIfStandard+"。";}
 	var LocHeadView=$getValue(data["LocHeadView"]);  //大科意见
-	if(LocHeadView!=""){List=List+"\n大科意见："+LocHeadView+"。";}
+	if(LocHeadView!=""){List=List+"\n"+$g("大科意见")+"："+LocHeadView+"。";}
 
 	// 现场工作评价
 	var ListLocaleEvaluate=""                           //现场评价字体加粗
 	var LocHeadNurEvaluate=$getValue(data["LocHeadNurEvaluate"]);
 	var LocHeadNurEvaluatelen=LocHeadNurEvaluate.length; //科护士长评价个数
-	var LocHeadNurEvaluateList="科护士长效果评价：";
+	var LocHeadNurEvaluateList=$g("科护士长效果评价")+"：";
 	for(var k=0;k<LocHeadNurEvaluatelen;k++){
-		var LHNElist="\n<font style='font-Weight:bold;'>记录"+(k+1)+"</font>："
+		var LHNElist="\n<font style='font-Weight:bold;'>"+$g('记录')+(k+1)+"</font>："
 		//var LHNElist="\n记录"+(k+1)+"："
 		var LHNEdate=$getValue(LocHeadNurEvaluate[k]["LocHeadNurEvaluate-94416-94422-94427"]); //督查时间
-		if(LHNEdate!=""){LHNElist=LHNElist+"督查时间："+LHNEdate+"。";}
+		if(LHNEdate!=""){LHNElist=LHNElist+$g("督查时间")+"："+LHNEdate+"。";}
 		var LHNEobject=$getValue(LocHeadNurEvaluate[k]["LocHeadNurEvaluate-94416-94423-94428"]); //督查对象
-		if(LHNEobject!=""){LHNElist=LHNElist+"督查对象："+LHNEobject+"。";}
+		if(LHNEobject!=""){LHNElist=LHNElist+$g("督查对象")+"："+LHNEobject+"。";}
 		var LHNEcontent=$getValue(LocHeadNurEvaluate[k]["LocHeadNurEvaluate-94416-94424-94429"]); //督查内容
-		if(LHNEcontent!=""){LHNElist=LHNElist+"督查内容："+LHNEcontent+"。";}		
+		if(LHNEcontent!=""){LHNElist=LHNElist+$g("督查内容")+"："+LHNEcontent+"。";}		
 		var LHNEresult=$getValue(LocHeadNurEvaluate[k]["LocHeadNurEvaluate-94416-94425-94430"]); //督查结果
-		if(LHNEresult!=""){LHNElist=LHNElist+"督查结果："+LHNEresult+"。";}		
+		if(LHNEresult!=""){LHNElist=LHNElist+$g("督查结果")+"："+LHNEresult+"。";}		
 		var LHNEpeople=$getValue(LocHeadNurEvaluate[k]["LocHeadNurEvaluate-94416-94425-94431"]); //督查人
-		if(LHNEpeople!=""){LHNElist=LHNElist+"督查人："+LHNEpeople+"。";}		
+		if(LHNEpeople!=""){LHNElist=LHNElist+$g("督查人")+"："+LHNEpeople+"。";}		
 		LocHeadNurEvaluateList=LocHeadNurEvaluateList+LHNElist
 	}
 	if(LocHeadNurEvaluateList!=""){ListLocaleEvaluate=ListLocaleEvaluate+LocHeadNurEvaluateList;}
@@ -1109,75 +1209,75 @@ function SetLocHeaNurInfo(data){
 function SetNurDepInfo(data){
 	var List="";
 	var MeetDate=$getValue(data["MeetDate"]); //会议日期
-	if(MeetDate!=""){List=List+"\n会议日期："+MeetDate+"；";}
+	if(MeetDate!=""){List=List+"\n"+$g("会议日期")+"："+MeetDate+"；";}
 	var MeetTime=$getValue(data["MeetTime"]); //会议时间
-	if(MeetTime!=""){List=List+"会议时间："+MeetTime+"；";}
+	if(MeetTime!=""){List=List+$g("会议时间")+"："+MeetTime+"；";}
 	var MeetPlace=$getValue(data["MeetPlace"]); //会议地点
-	if(MeetPlace!=""){List=List+"会议地点："+MeetPlace+"；";}
+	if(MeetPlace!=""){List=List+$g("会议地点")+"："+MeetPlace+"；";}
 	var Participants=$getValue(data["Participants"]); //参会人员
-	if(Participants!=""){List=List+"参会人员："+Participants+"；";}
+	if(Participants!=""){List=List+$g("参会人员")+"："+Participants+"；";}
 	//案例管理评价 
 	
 	var RepLevel=radioValue("RepLevel-94496,RepLevel-94498,RepLevel-94499,RepLevel-94500,RepLevel-94501,RepLevel-94502",data); 
-	if(RepLevel!=""){List=List+"\n护理不良事件级别："+RepLevel+"。";}
+	if(RepLevel!=""){List=List+"\n"+$g("护理不良事件级别")+"："+RepLevel+"。";}
 	var MLocCaseTimeliness=radioValue("MLocCaseTimeliness-94503,MLocCaseTimeliness-94504",data); 
-	if(MLocCaseTimeliness!=""){List=List+"\n科室案例分析及时性："+MLocCaseTimeliness+"。";}
+	if(MLocCaseTimeliness!=""){List=List+"\n"+$g("科室案例分析及时性")+"："+MLocCaseTimeliness+"。";}
 	var HadeLocCaseTimeliness=radioValue("HadeLocCaseTimeliness-94505,HadeLocCaseTimeliness-94506",data); 
-	if(HadeLocCaseTimeliness!=""){List=List+"\n大科室案例分析："+HadeLocCaseTimeliness+"。";}
+	if(HadeLocCaseTimeliness!=""){List=List+"\n"+$g("大科室案例分析")+"："+HadeLocCaseTimeliness+"。";}
 	var FindReason=radioValue("FindReason-94434,FindReason-94435",data); 
-	if(FindReason!=""){List=List+"\n原因分析找到真因："+FindReason+"。";}
+	if(FindReason!=""){List=List+"\n"+$g("原因分析找到真因")+"："+FindReason+"。";}
 	var BefPreventMeasures=radioValue("BefPreventMeasures-94436,BefPreventMeasures-94437",data); 
-	if(BefPreventMeasures!=""){List=List+"\n发生前防范措施落实情况："+BefPreventMeasures+"。";}
+	if(BefPreventMeasures!=""){List=List+"\n"+$g("发生前防范措施落实情况")+"："+BefPreventMeasures+"。";}
 	var BefPreventMeasuresipt=$getValue(data["BefPreventMeasures-94439"]);  //具体表现
 	if ((BefPreventMeasuresipt!="")&&(BefPreventMeasures=="")){
-		List=List+"\n发生前防范措施落实情况：未落实具体表现："+BefPreventMeasuresipt+"。";
+		List=List+"\n"+$g("发生前防范措施落实情况")+"："+$g("未落实具体表现")+"："+BefPreventMeasuresipt+"。";
 	}
 	if ((BefPreventMeasuresipt!="")&&(BefPreventMeasures!="")){
-		List=List+"未落实具体表现："+BefPreventMeasuresipt+"。";
+		List=List+$g("未落实具体表现")+"："+BefPreventMeasuresipt+"。";
 	}
 	var BefPreMeaReason=radioValue("BefPreMeaReason-94441,BefPreMeaReason-94442,BefPreMeaReason-94443,BefPreMeaReason-94444,BefPreMeaReason-94445,BefPreMeaReason-94446,BefPreMeaReason-94447,BefPreMeaReason-94448",data); 
-	if(BefPreMeaReason!=""){List=List+"\n发生前防范措施未落实的原因：具体表现："+BefPreMeaReason+"。";}
+	if(BefPreMeaReason!=""){List=List+"\n"+$g("发生前防范措施未落实的原因")+"："+$g("具体表现")+"："+BefPreMeaReason+"。";}
 	var AftImpPertinence=radioValue("AftImpPertinence-94449,AftImpPertinence-94450",data); 
-	if(AftImpPertinence!=""){List=List+"\n事件发生后整改措施的针对性："+AftImpPertinence+"。";}
+	if(AftImpPertinence!=""){List=List+"\n"+$g("事件发生后整改措施的针对性")+"："+AftImpPertinence+"。";}
 	var AftImpTimeliness=radioValue("AftImpTimeliness-94451,AftImpTimeliness-94452",data); 
-	if(AftImpTimeliness!=""){List=List+"\n事件发生后整改措施落实的及时性："+AftImpTimeliness+"。";}
+	if(AftImpTimeliness!=""){List=List+"\n"+$g("事件发生后整改措施落实的及时性")+"："+AftImpTimeliness+"。";}
 	var HeadNurReformMark=radioValue("HeadNurReformMark-94453,HeadNurReformMark-94454",data); 
-	if(HeadNurReformMark!=""){List=List+"\n护士长整改落实的痕迹："+HeadNurReformMark+"。";}
+	if(HeadNurReformMark!=""){List=List+"\n"+$g("护士长整改落实的痕迹")+"："+HeadNurReformMark+"。";}
 	var LocHeadNurReformMark=radioValue("LocHeadNurReformMark-94507,LocHeadNurReformMark-94508",data); 
-	if(LocHeadNurReformMark!=""){List=List+"\n科护士长效果评价痕迹："+LocHeadNurReformMark+"。";}
+	if(LocHeadNurReformMark!=""){List=List+"\n"+$g("科护士长效果评价痕迹")+"："+LocHeadNurReformMark+"。";}
 	var ManaIfStandard=radioValue("ManaIfStandard-94455,ManaIfStandard-94456",data); 
-	if(ManaIfStandard!=""){List=List+"\n护理记录书写："+ManaIfStandard+"。";}
+	if(ManaIfStandard!=""){List=List+"\n"+$g("护理记录书写")+"："+ManaIfStandard+"。";}
 	
 	//事件定性与考评
 	var InSkiUlcQualita=radioValue("InSkiUlcQualita-94509,InSkiUlcQualita-94510",data); 
-	if(InSkiUlcQualita!=""){List=List+"\n院内压疮事件定性："+InSkiUlcQualita+"。";}
+	if(InSkiUlcQualita!=""){List=List+"\n"+$g("院内压疮事件定性")+"："+InSkiUlcQualita+"。";}
 	var DrugErrQualita=radioValue("DrugErrQualita-94511,DrugErrQualita-94512,DrugErrQualita-94513,DrugErrQualita-94514",data); 
-	if(DrugErrQualita!=""){List=List+"\n给药缺陷事件定性："+DrugErrQualita+"。";}
+	if(DrugErrQualita!=""){List=List+"\n"+$g("给药缺陷事件定性")+"："+DrugErrQualita+"。";}
 	var OthQualita=radioValue("OthQualita-94515,OthQualita-94516",data); 
-	if(OthQualita!=""){List=List+"\n其他事件定性："+OthQualita+"。";}
+	if(OthQualita!=""){List=List+"\n"+$g("其他事件定性")+"："+OthQualita+"。";}
 	var OverEvaluation=radioValue("OverEvaluation-94517,OverEvaluation-94518,OverEvaluation-94519",data); 
-	if(OverEvaluation!=""){List=List+"\n总体评价："+OverEvaluation+"。";}
+	if(OverEvaluation!=""){List=List+"\n"+$g("总体评价")+"："+OverEvaluation+"。";}
 	var NextStep=radioValue("NextStep-94520,NextStep-94521,NextStep-94522",data); 
-	if(NextStep!=""){List=List+"\n下一步要求："+NextStep+"。";}
+	if(NextStep!=""){List=List+"\n"+$g("下一步要求")+"："+NextStep+"。";}
 	var NurDepAdvice=$getValue(data["NurDepAdvice"]);  //护理部意见
-	if(NurDepAdvice!=""){List=List+"\n护理部意见："+NurDepAdvice+"。";}
+	if(NurDepAdvice!=""){List=List+"\n"+$g("护理部意见")+"："+NurDepAdvice+"。";}
 
 	// 护理部追踪记录
 	var ListTraRecord=""                           //追踪记录字体加粗
 	var NurDepRecord=$getValue(data["NurDepRecord"]);
 	var NurDepRecordlen=NurDepRecord.length; //科护士长评价个数
-	var NurDepRecordList="护理部追踪记录：";
+	var NurDepRecordList=$g("护理部追踪记录")+"：";
 	for(var k=0;k<NurDepRecordlen;k++){
 	//	var NDRlist="\n记录"+(k+1)+"："
-		var NDRlist="\n<font style='font-Weight:bold;'>记录"+(k+1)+"</font>：" 
+		var NDRlist="\n<font style='font-Weight:bold;'>"+$g("记录")+(k+1)+"</font>：" 
 		var NDRdate=$getValue(NurDepRecord[k]["NurDepRecord-94470-94476-94480"]); //日期
-		if(NDRdate!=""){NDRlist=NDRlist+"日期："+NDRdate+"。";}
+		if(NDRdate!=""){NDRlist=NDRlist+$g("日期")+"："+NDRdate+"。";}
 		var NDRmode=radioValue("NurDepRecord-94470-94477-94481,NurDepRecord-94470-94477-94482,NurDepRecord-94470-94477-94483,NurDepRecord-94470-94477-94484",data); //方式
-		if(NDRmode!=""){NDRlist=NDRlist+"方式："+NDRmode+"。";}
+		if(NDRmode!=""){NDRlist=NDRlist+$g("方式")+"："+NDRmode+"。";}
 		var NDRcontent=$getValue(NurDepRecord[k]["NurDepRecord-94470-94478-94485"]); //内容
-		if(NDRcontent!=""){NDRlist=NDRlist+"内容："+NDRcontent+"。";}		
+		if(NDRcontent!=""){NDRlist=NDRlist+$g("内容")+"："+NDRcontent+"。";}		
 		var NDRpeople=$getValue(NurDepRecord[k]["NurDepRecord-94470-94479-94486"]); //记录者
-		if(NDRpeople!=""){NDRlist=NDRlist+"记录者："+NDRpeople+"。";}		
+		if(NDRpeople!=""){NDRlist=NDRlist+$g("记录者")+"："+NDRpeople+"。";}		
 		NurDepRecordList=NurDepRecordList+NDRlist
 	}
 	if(NurDepRecordList!=""){ListTraRecord=ListTraRecord+NurDepRecordList;}
@@ -1201,16 +1301,16 @@ function SetNurDepInfo(data){
 function RepAudit()
 {
 	var RepFileFlag=""; //归档状态 2018-01-23
-	if (FileFlag=="已归档"){
+	if (FileFlag==$g("已归档")){
 		RepFileFlag="-1";
 	}
 	
 	if (RepFileFlag=="-1"){
-		$.messager.alert("提示:","所选报告存在已归档报告，不能驳回！");
+		$.messager.alert($g("提示")+":",$g("所选报告存在已归档报告")+"，"+$g("不能驳回")+"！");
 		return;
 	}
 	$('#Process').window({
-		title:'审核',
+		title:$g('审核'),
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,
@@ -1224,7 +1324,8 @@ function RepAudit()
 	});
 	//指向科室 2018-07-05 cy 指向科室即为分派科室
 	$('#matadrNextLoc').combobox({
-		url:url+'?action=QueryAuditLocList&RepID='+RepID+'&RepTypeCode='+RepTypeCode+'&CurStatusDR='+StatusNextID,
+		//url:url+'?action=QueryAuditLocList&RepID='+RepID+'&RepTypeCode='+RepTypeCode+'&CurStatusDR='+StatusNextID,
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMON&MethodName=QueryAuditLocList&RepID='+RepID+'&RepTypeCode='+RepTypeCode+'&CurStatusDR='+StatusNextID+'&HospId='+LgHospID,  // 2021-04-30 cy 多院区改造
 		onLoadSuccess:function(){
 			var NextLocdata=$("#matadrNextLoc").combobox('getData'); 
 			NextLocFlag=NextLocdata.length;
@@ -1246,18 +1347,18 @@ function RepConfirmAudit()
 {	
 	var NextLoc=$('#matadrNextLoc').combobox('getValue');
 	if ((NextLocFlag>0)&&(NextLoc=="")){
-		$.messager.alert("提示:","科室指向不能为空！");
+		$.messager.alert($g("提示")+":",$g("科室指向不能为空")+"！");
 		return;
 	}
 	var RecProgress=$.trim($('#matadrRecProgress').val());
 	if (RecProgress==""){
-		$.messager.alert("提示:","调查核实不能为空！");
+		$.messager.alert($g("提示")+":",$g("调查核实不能为空")+"！");
 		return;
 	}
 	RecProgress = $_TrsSymbolToTxt(RecProgress); /// 处理特殊符号	
 	var LocAdvice=$.trim($('#matadrLocAdvice').val());
 	if (LocAdvice==""){
-		$.messager.alert("提示:","处理意见不能为空！");
+		$.messager.alert($g("提示")+":",$g("处理意见不能为空")+"！");
 		return;
 	}
 	LocAdvice = $_TrsSymbolToTxt(LocAdvice); /// 处理特殊符号	
@@ -1266,11 +1367,21 @@ function RepConfirmAudit()
 	runClassMethod("web.DHCADVCOMMONPART","AuditMataReport",{'params':params,'LgParam':LgParam},
 	function(jsonString){ 
 		if(jsonString.ErrCode < 0){
-			$.messager.alert("提示:","审核错误,错误原因:"+"<font style='color:red;'>"+jsonString.ErrMsg+"</font>");   ///+"第"+errnum+"条数据"
+			$.messager.alert($g("提示")+":",$g("审核错误")+","+$g("错误原因")+":"+"<font style='color:red;'>"+$g(jsonString.ErrMsg)+"</font>");   ///+"第"+errnum+"条数据"
 		}
 		if(jsonString.ErrCode == 0){
+			if(editFlag==1){
+				runClassMethod("web.DHCADVFormRecord","SaveRecord",
+				{'user':LgUserID,'formId':formId,'formVersion':$("#formVersion").val(),'par':loopStr("#from"),'recordId':recordId},
+				function(datalist){ 
+					var data=datalist.replace(/(^\s*)|(\s*$)/g,"").split("^");
+					if (data[0]!="0") {
+						return;
+					}
+				},"text")
+			}
 			if(winflag==3){
-				$.messager.alert("提示:","审核成功！");   
+				$.messager.alert($g("提示")+":",$g("审核成功")+"！");   
 			}else{
 				window.parent.CloseWinUpdate();
 				window.parent.Query();
@@ -1285,18 +1396,18 @@ function RepCancelAuditBt()
 	var RecProgress="";
 	var LocAdvice=""; //$('#matadrLocAdvice').val();
 	if ((StaFistAuditUser!="")&(StaFistAuditUser!=LgUserName)){
-		$.messager.alert("提示:","报告为驳回报告，且未驳回给当前登录人，无权限撤销审核！");
+		$.messager.alert($g("提示")+":",$g("报告为驳回报告")+"，"+$g("且未驳回给当前登录人")+"，"+$g("无权限撤销审核")+"！" );
 		return;
 	}
 	var params=RepID+"^"+StatusLastID+"^"+LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+NextLoc+"^"+LocAdvice+"^"+adrReceive+"^"+RepTypeCode+"^"+RecProgress;   //参数串
 	var mesageShow="";
 	if(StatusLastID==""){ //2018-01-17
-		mesageShow="取消提交";
+		mesageShow=$g("取消提交");
     }else{
-		mesageShow="取消审核";            
+		mesageShow=$g("取消审核");            
     }
 	//保存数据
-	$.messager.confirm("提示", "是否确认"+mesageShow+"数据", function (res) {//提示是否保存
+	$.messager.confirm($g("提示")+":", $g("是否确认")+mesageShow+$g("数据"), function (res) {//提示是否保存
 	if (res) {
 
 		runClassMethod("web.DHCADVCOMMONPART","CancelAuditReport",{'params':params},
@@ -1304,11 +1415,11 @@ function RepCancelAuditBt()
 			//var resobj = jQuery.parseJSON(jsonString);
 			//var num=$('#maindg').datagrid("getRowIndex",item)+1; //2017-04-06  获取行数 区分哪一行操作出错
 			if(jsonString.ErrCode < 0){
-				$.messager.alert("提示:","撤销审核错误,错误原因:"+"<font style='color:red;'>"+jsonString.ErrMsg+"</font>");   ///+"第"+errnum+"条数据"
+				$.messager.alert($g("提示")+":",$g("撤销审核错误")+","+$g("错误原因")+":"+"<font style='color:red;'>"+$g(jsonString.ErrMsg)+"</font>");   ///+"第"+errnum+"条数据"
 			}
 			if(jsonString.ErrCode == 0){
 				if(winflag==3){
-					$.messager.alert("提示:","撤销审核成功！");   
+					$.messager.alert($g("提示")+":",$g("撤销审核成功")+"！");   
 				}else{
 					window.parent.CloseWinUpdate();
 					window.parent.Query();
@@ -1323,16 +1434,16 @@ function RepCancelAuditBt()
 function RejectWin()
 {
 	var RepFileFlag=""; //归档状态 2018-01-23
-	if (FileFlag=="已归档"){
+	if (FileFlag==$g("已归档")){
 		RepFileFlag="-1";
 	}
 	
 	if (RepFileFlag=="-1"){
-		$.messager.alert("提示:","所选报告存在已归档报告，不能驳回！");
+		$.messager.alert($g("提示")+":",$g("所选报告存在已归档报告")+"，"+$g("不能驳回")+"！");
 		return;
 	}
 	$('#RetWin').window({
-		title:'驳回',
+		title:$g('驳回'),
 		collapsible:false,
 		border:false,
 		closed:false,
@@ -1365,15 +1476,15 @@ function BackBt()
 	Retreason = $_TrsSymbolToTxt(Retreason); /// 处理特殊符号	
 	var RevStatus=$('#RevStatus').combobox('getValue');  //驳回指向
 	if (RevStatus==""){
-		$.messager.alert("提示:","请选择驳回指向！");
+		$.messager.alert($g("提示")+":",$g("请选择驳回指向")+"！");
 		return;
 	}
-	if ($('#RevStatus').combobox('getText')=="护理部审核"){
-		$.messager.alert("提示:","护理部未审核，驳回指向不能为护理部审核！");
+	if ($('#RevStatus').combobox('getText')==$g("护理部审核")){
+		$.messager.alert($g("提示")+":",$g("护理部未审核")+"，"+$g("驳回指向不能为护理部审核")+"！");
 		return;
 	}
 	if (Retreason==""){
-		$.messager.alert("提示:","请填写驳回意见！");
+		$.messager.alert($g("提示")+":",$g("请填写驳回理由")+"！");
 		/*var scrollTop=$('body').scrollTop(); //hxy 2020-03-21 chrome st
 		$("body").css("height",scrollTop);
 		$('#RetWin').panel('resize',{ 
@@ -1383,14 +1494,14 @@ function BackBt()
 		return;
 	}
 	var params=RepID+"^"+LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+NextLoc+"^"+LocAdvice+"^"+adrReceive+"^"+RepTypeCode+"^"+RepStausDr+"^"+Retreason+"^"+RevStatus;   //参数串
-	runClassMethod("web.DHCADVCOMMONPART","ReportBack",{'params':params},
+	runClassMethod("web.DHCADVCOMMONPART","ReportBack",{'params':params,'LgParam':LgParam},
 			function(jsonString){ 
 				if(jsonString.ErrCode < 0){
-					$.messager.alert("提示:","驳回错误,错误原因:"+"<font style='color:red;'>"+jsonString.ErrMsg+"</font>");   ///+"第"+errnum+"条数据"
+					$.messager.alert($g("提示")+":",$g("驳回错误")+"，"+$g("错误原因")+":"+"<font style='color:red;'>"+$g(jsonString.ErrMsg)+"</font>");   ///+"第"+errnum+"条数据"
 				}
 				if(jsonString.ErrCode == 0){
 					if(winflag==3){
-						$.messager.alert("提示:","驳回成功！");   
+						$.messager.alert($g("提示")+":",$g("驳回成功")+"！");
 					}else{
 						window.parent.CloseWinUpdate();
 						window.parent.Query();
@@ -1439,16 +1550,28 @@ function RepSetAudMessage(){
 	runClassMethod("web.DHCADVCOMMONPART","QueryAuditMesJson",{'ReportID':RepID,'TypeDr':RepTypeDr},
 	function(data){ 
 		var len=data.length;  //审批信息
-		var List="<div class='dhcc-panel-header'><div class='dhcc-panel-title'>事件处理反馈信息</div></div>  ";
+		var SubmitUser="";
+		if(len>0){
+			SubmitUser=data[0].AuditUser;
+		}
+		
+		var List="<div class='dhcc-panel-header'><div class='dhcc-panel-title'>"+$g('事件处理反馈信息')+"</div></div>  ";
 		for(var k=0;k<len;k++){
+			var UserList=data[k].AuditUser;
+			var ReceiveList=data[k].Receive;
+			var StausList=data[k].Status;
+			if((discover==$g("匿名"))&&(((ReceiveList==$g("撤销")))&&(SubmitUser==UserList))){
+				UserList=$g("匿名");
+			}
+			
 			List=List+"<table class='dhcadv-auditTable'>"
 			List=List+"<tr><th colspan='10'><img src='../scripts/dhcadvEvt/images/th-list.png'></img><span>"+data[k].Status+"</span></i></th></tr>"
-			List=List+"<tr><td>处理人</td><td>"+data[k].AuditUser+"</td></tr>"
-			List=List+"<tr><td>接收状态</td><td>"+data[k].Receive+"</td></tr>"
-			List=List+"<tr><td>处理时间</td><td>"+data[k].AuditDateTime+"</td></tr>"
-			List=List+"<tr><td>科室指向</td><td>"+data[k].NextLoc+"</td></tr>"
-			List=List+"<tr><td>调查核实</td><td>"+$_TrsTxtToSymbol(data[k].RecProgress)+"</td></tr>"
-			List=List+"<tr><td>科室意见</td><td>"+$_TrsTxtToSymbol(data[k].LocAdvice)+"</td></tr>"  ///data[k].LocAdvice
+			List=List+"<tr><td>"+$g('处理人')+"</td><td>"+UserList+"</td></tr>"
+			List=List+"<tr><td>"+$g('接收状态')+"</td><td>"+data[k].Receive+"</td></tr>"
+			List=List+"<tr><td>"+$g('处理时间')+"</td><td>"+data[k].AuditDateTime+"</td></tr>"
+			List=List+"<tr><td>"+$g('科室指向')+"</td><td>"+data[k].NextLoc+"</td></tr>"
+			List=List+"<tr><td>"+$g('调查核实')+"</td><td>"+$_TrsTxtToSymbol(data[k].RecProgress)+"</td></tr>"
+			List=List+"<tr><td>"+$g('科室意见')+"</td><td>"+$_TrsTxtToSymbol(data[k].LocAdvice)+"</td></tr>"  ///data[k].LocAdvice
 			List=List+"</table>"
 			
 			var TranMessdata=data[k].TranMess; //转抄信息
@@ -1456,14 +1579,14 @@ function RepSetAudMessage(){
 			var Sublist="";
 			for (var i=0;i<sublen;i++){
 				Sublist=Sublist+"<table class='dhcadv-auditTable'>"
-				Sublist=Sublist+"<tr><th colspan='10'><img src='../scripts/dhcadvEvt/images/th-list.png'></img><span>"+"转抄"+"</span></i></th></tr>"
-				Sublist=Sublist+"<tr><td>处理人</td><td>"+TranMessdata[i].MedIAuditUser+"</td></tr>"
-				Sublist=Sublist+"<tr><td>处理时间</td><td>"+TranMessdata[i].MedIAuditDateTime+"</td></tr>"
-				Sublist=Sublist+"<tr><td>科室指向</td><td>"+TranMessdata[i].MedINextLoc+"</td></tr>"
-				Sublist=Sublist+"<tr><td>科室意见</td><td>"+$_TrsTxtToSymbol(TranMessdata[i].MedILocAdvice)+"</td></tr>"
-				Sublist=Sublist+"<tr><td>人员指向</td><td>"+TranMessdata[i].MedINextUser+"</td></tr>"
-				Sublist=Sublist+"<tr><td>人员处理时间</td><td>"+TranMessdata[i].MedIReceiveDateTime+"</td></tr>"
-				Sublist=Sublist+"<tr><td>人员意见</td><td>"+$_TrsTxtToSymbol(TranMessdata[i].MedIUserAdvice)+"</td></tr>"
+				Sublist=Sublist+"<tr><th colspan='10'><img src='../scripts/dhcadvEvt/images/th-list.png'></img><span>"+$g("转抄")+"</span></i></th></tr>"
+				Sublist=Sublist+"<tr><td>"+$g('处理人')+"</td><td>"+TranMessdata[i].MedIAuditUser+"</td></tr>"
+				Sublist=Sublist+"<tr><td>"+$g('处理时间')+"</td><td>"+TranMessdata[i].MedIAuditDateTime+"</td></tr>"
+				Sublist=Sublist+"<tr><td>"+$g('科室指向')+"</td><td>"+TranMessdata[i].MedINextLoc+"</td></tr>"
+				Sublist=Sublist+"<tr><td>"+$g('科室意见')+"</td><td>"+$_TrsTxtToSymbol(TranMessdata[i].MedILocAdvice)+"</td></tr>"
+				Sublist=Sublist+"<tr><td>"+$g('人员指向')+"</td><td>"+TranMessdata[i].MedINextUser+"</td></tr>"
+				Sublist=Sublist+"<tr><td>"+$g('人员处理时间')+"</td><td>"+TranMessdata[i].MedIReceiveDateTime+"</td></tr>"
+				Sublist=Sublist+"<tr><td>"+$g('人员意见')+"</td><td>"+$_TrsTxtToSymbol(TranMessdata[i].MedIUserAdvice)+"</td></tr>"
 				Sublist=Sublist+"</table>"
 				
 			}
@@ -1472,7 +1595,7 @@ function RepSetAudMessage(){
 		$('#AuditMessage').html(List);
 		if(len==0){
 			$('#AuditMessage').hide();
-			$("#anchor>ul>li>a:contains(事件处理反馈信息)").parent().hide(); //hxy 2020-03-21
+			$("#anchor>ul>li>a:contains("+$g("事件处理反馈信息")+")").parent().hide(); //hxy 2020-03-21
 		}
 	},"json",false)
 
@@ -1482,7 +1605,7 @@ function getAgeBracket(age){
 	var rtnStr=""
 	
 	if(age==""){
-		rtnStr="不明";
+		rtnStr=$g("不明");
 		}
 	if(rtnStr!="")
 	return rtnStr;
@@ -1557,11 +1680,11 @@ function Transcription()
 	$("#tranReplyMess").val("");
 
 	if((checkTranPermiss() == -1)&&(SubUserflag!="1")){	//qunianpeng 2018/1/11 不能转抄则直接不打开转抄界面
-		$.messager.alert("提示:","<font style='color:red;'>"+"无审核权限不能进行转抄"+"</font>");
+		$.messager.alert($g("提示")+":","<font style='color:red;'>"+$g("无审核权限不能进行转抄")+"</font>");
 		return ;	
 	}
 	$('#TranWin').window({
-		title:'转抄',
+		title:$g('转抄'),
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,
@@ -1574,7 +1697,7 @@ function Transcription()
 	});
 	$('#TranWin').window('open');
 	ConWinSroll("TranWin");
-	var params=RepID+"^"+RepTypeCode+"^"+LgUserID;
+	var params=RepID+"^"+RepTypeCode+"^"+LgUserID+"^"+RepStausDr;
 	TranUserList(RepID,RepTypeCode,SubUserflag);//转抄指向人员
 	TranLocUserList(RepID,RepTypeCode,SubUserflag);//转抄科室人员意见信息
 	if(SubUserflag==0){
@@ -1593,6 +1716,9 @@ function Transcription()
 		$("#tranReplyMess").hide();	
 		$("#replyFlag").hide();//是否转抄回复
 
+	}
+	if(SubUserflag==1){
+		$("#tranLocDr").combobox({disabled:true});
 	}
 	$.ajax({
 		type: "POST",// 请求方式
@@ -1641,7 +1767,11 @@ function TranUserList(RepID,RepTypeCode,SubUserflag)
 {
 	//转抄科室
 	$('#tranLocDr').combobox({
-		url:url+'?action=GetQueryLoc&RepTypeCode='+RepTypeCode,
+		//url:url+'?action=GetQueryLoc&HospID='+LgHospID,
+		mode:'remote',  //必须设置这个属性
+		onShowPanel:function(){ 
+			$('#tranLocDr').combobox('reload',url+'?action=GetQueryLoc&HospID='+LgHospID+'');
+		},
 		onSelect:function(){
 			var tranLocDr=$('#tranLocDr').combobox('getValue');
 			$('#selectdg').datagrid({
@@ -1649,6 +1779,10 @@ function TranUserList(RepID,RepTypeCode,SubUserflag)
 				queryParams:{
 					params:RepTypeCode+"^"+tranLocDr}
 			});
+		},
+		onHidePanel : function() {
+			// 下拉框输入值校验--输入仅做检索使用，下拉框必须选择具体的数据 2021-0-6-25 cy
+			chkcomboxvalue(this);
 		}
 	}); 
 	//定义columns
@@ -1657,17 +1791,17 @@ function TranUserList(RepID,RepTypeCode,SubUserflag)
 		{field:"LocID",title:'LocID',width:90,hidden:true},
 		{field:"Locname",title:'Locname',width:90,hidden:true},
 		{field:"UserID",title:'UserID',width:90,hidden:true},
-		{field:'Username',title:'科室人员',width:120}
+		{field:'Username',title:$g('科室人员'),width:120}
 	]];
 	var titleNotes="";
 	if(SubUserflag==1){
-		titleNotes="";
+		titleNotes=$g("指向人员");
 	}else{
-		titleNotes="指向人员"+'<span style="font-size:10pt;font-family:华文楷体;color:red;">[双击行即可添加至转抄信息表]</span>';
+		titleNotes=$g("指向人员")+'<span style="font-size:10pt;font-family:华文楷体;color:red;">['+$g("双击行即可添加至转抄信息表")+']</span>';
 	}
 	$('#sldgtitle').html(titleNotes);
 	
-	var params=RepID+"^"+RepTypeCode;
+	var params=RepID+"^"+RepTypeCode+"^"+RepStausDr;
 	//定义datagrid
 	$('#selectdg').datagrid({
 		title:'' ,  ///'指向人员'+titleNotes,
@@ -1679,33 +1813,36 @@ function TranUserList(RepID,RepTypeCode,SubUserflag)
 		pageSize:40,  // 每页显示的记录条数
 		pageList:[40,80],   // 可以设置每页记录条数的列表
 	    singleSelect:false,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		onDblClickRow:function(rowIndex, rowData){ 
 			if((SubUserflag==1)){ //(SubUserflag==1)||(TranFlag==1)
-				$('#selectdg').datagrid({title:'指向人员'});
+				$('#sldgtitle').html($g('指向人员'));
 				return;
 			}else{
-				$('#selectdg').datagrid({title:'指向人员'+titleNotes});
+				$('#sldgtitle').html(titleNotes);
 				if ((editRow != "")||(editRow == "0")) {
 	            	$("#selectdg").datagrid('endEdit', editRow);
 				}
 				var LocID=rowData.LocID;
 				var UserID=rowData.UserID;
 				var Username=rowData.Username;
-			
+				if(UserID==LgUserID){
+					$.messager.alert("提示:","转抄人员不能为本人！");	
+					return;
+				}
 				var tranLocDr=$('#tranLocDr').combobox('getValue');
 				var tranLocDesc=$('#tranLocDr').combobox('getText');
 				//2017-11-23 cy 判断转抄科室为空不能添加人员
 				if(tranLocDesc==""){
-					$.messager.alert("提示:","转抄科室不能为空！");	
+					$.messager.alert($g("提示")+":",$g("转抄科室不能为空")+"！");	
 					return;
 				}
 				//2017-11-23 cy 判断添加人员不能重复添加
 				var  dataList=$('#tranmesdg').datagrid('getData'); 
 				for(var i=0;i<dataList.rows.length;i++){
 					if(UserID==dataList.rows[i].nameID){
-						$.messager.alert("提示","该人员已添加！"); 
+						$.messager.alert($g("提示")+":",$g("该人员已添加")+"！");	
 						return ;
 					}
 				}				
@@ -1731,28 +1868,28 @@ function TranLocUserList(RepID,RepTypeCode,SubUserflag)
 	//定义columns
 	var columns=[[
 		{field:"ID",title:'ID',width:90,hidden:true},
-		{field:"tranDateTime",title:'转抄时间',width:90,hidden:true},
-		{field:'tranuser',title:'转抄人',width:120,hidden:true},
+		{field:"tranDateTime",title:$g('转抄时间'),width:90,hidden:true},
+		{field:'tranuser',title:$g('转抄人'),width:120,hidden:true},
 		{field:"tranuserID",title:'tranuserID',width:90,hidden:true},
-		{field:'LocDesc',title:'科室',width:120},
+		{field:'LocDesc',title:$g('科室'),width:120},
 		{field:"LocDr",title:'LocDr',width:90,hidden:true},
-		{field:'name',title:'人员',width:80},
+		{field:'name',title:$g('人员'),width:80},
 		{field:"nameID",title:'nameID',width:90,hidden:true},
-		{field:'LocAdvice',title:'处理意见',width:100,formatter:transAdvice},
-		{field:'advice',title:'回复内容',width:100,formatter:transAdvice},
-		{field:'DutyFlag',title:'备注',width:200},
-		{field:"tranreceive",title:'接收状态',width:90,hidden:true},
-		{field:"tranrecedate",title:'接收日期',width:90,hidden:true},
-		{field:"trancompdate",title:'完成日期',width:90,hidden:true}
+		{field:'LocAdvice',title:$g('处理意见'),width:100,formatter:transAdvice},
+		{field:'advice',title:$g('回复内容'),width:100,formatter:transAdvice},
+		{field:'DutyFlag',title:$g('备注'),width:200},
+		{field:"tranreceive",title:$g('接收状态'),width:90,hidden:true},
+		{field:"tranrecedate",title:$g('接收日期'),width:90,hidden:true},
+		{field:"trancompdate",title:$g('完成日期'),width:90,hidden:true}
 	]];
 	var titleOpNotes="";
 	if(SubUserflag==1){
-		titleOpNotes="";
+		titleOpNotes=$g("转抄信息表");
 	}else{
-		titleOpNotes="转抄信息表"+'<span style="font-size:10pt;font-family:华文楷体;color:red;">[双击行即可清除此条数据]</span>';
+		titleOpNotes=$g("转抄信息表")+'<span style="font-size:10pt;font-family:华文楷体;color:red;">['+$g("双击行即可清除此条数据")+']</span>';
 	}
 	$('#trandgtitle').html(titleOpNotes);
-	var params=RepID+"^"+RepTypeCode;
+	var params=RepID+"^"+RepTypeCode+"^"+RepStausDr;
 	//定义datagrid
 	$('#tranmesdg').datagrid({
 		title:'' ,  ///'转抄信息表'+titleOpNotes,
@@ -1764,7 +1901,7 @@ function TranLocUserList(RepID,RepTypeCode,SubUserflag)
 		pageSize:40,  // 每页显示的记录条数
 		pageList:[40,80],   // 可以设置每页记录条数的列表
 	    singleSelect:false,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
         nowrap:false,
 		onDblClickRow:function(rowIndex, rowData){  //双击清除选中行
@@ -1774,7 +1911,7 @@ function TranLocUserList(RepID,RepTypeCode,SubUserflag)
 				if((rowData.LocAdvice==undefined)||(rowData.LocAdvice=="")){
 					$('#tranmesdg').datagrid('deleteRow',rowIndex);
 				}else{
-					$.messager.alert("提示","已转抄,不可删除！"); 
+					$.messager.alert($g("提示"),$g("已转抄")+","+$g("不可删除")+"！"); 
 					return ;
 				}
 			}
@@ -1786,7 +1923,7 @@ function TranLocUserList(RepID,RepTypeCode,SubUserflag)
 function TranSub(id) //hxy 2018-01-25 (id) ie8回车莫名调未写方法修复
 {
 	if(errflag==1){
-		$.messager.alert("提示:","非转抄被指向人员，无权限操作");
+		$.messager.alert($g("提示")+":",$g("非转抄被指向人员")+"，"+$g("无权限操作"));
 		return;
 	}
 	var tranLocDr=$('#tranLocDr').combobox('getValue');
@@ -1798,34 +1935,35 @@ function TranSub(id) //hxy 2018-01-25 (id) ie8回车莫名调未写方法修复
 	tranReplyMess=$_TrsSymbolToTxt(tranReplyMess);
 	var mediReceive="",mediRecDate="",mediRecTime="",mediCompleteDate="",mediCompleteTime="",medadrList="";	
 	if (RepID==""){
-		$.messager.alert("提示:","报告未提交，不允许转抄！");
+		$.messager.alert($g("提示")+":",$g("报告未提交")+"，"+$g("不允许转抄")+"！");
 		return;
 	}
-	medadrList=RepID+"^"+RepTypeCode+"^"+tranLocDr+"^"+tranLocAdvic+"^"+adrReceive+"^"+StatusNextID+"^"+LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+RepStausDr;   //参数串
+	medadrList=RepID+"^"+RepTypeCode+"^"+tranLocDr+"^"+tranLocAdvic+"^"+adrReceive+"^"+StatusNextID+"^"+LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+RepStausDr+"^"+RepType;   //参数串
 	var rows = $("#tranmesdg").datagrid('getChanges');
 	if(rows.length<=0){
-		$.messager.alert("提示","没有待保存数据!");
+		$.messager.alert($g("提示")+":",$g("没有待保存数据")+"！");
 		return;
 	}
 	var dataList = [];
 	for(var i=0;i<rows.length;i++)
 	{
 		if((rows[i].LocDr=="")||(rows[i].nameID=="")){
-			$.messager.alert("提示","科室指向或人员不能为空!"); 
+			$.messager.alert($g("提示")+":",$g("科室指向或人员不能为空")+"！"); 
 			return false;
 		}
 		if(tranLocAdvic==""){
-			$.messager.alert("提示","处理意见不能为空!"); 
+			$.messager.alert($g("提示")+":",$g("处理意见不能为空")+"！"); 
 			return false;
 		}
-		var List=rows[i].ID+"^"+LgUserID+"^"+rows[i].LocDr+"^"+rows[i].nameID+"^"+tranReplyMess+"^"+mediReceive+"^"+mediRecDate+"^"+mediRecTime+"^"+mediCompleteDate+"^"+mediCompleteTime+"^"+tranLocAdvic;
+		var List=rows[i].ID+"^"+LgUserID+"^"+rows[i].LocDr+"^"+rows[i].nameID+"^"+tranReplyMess+"^"+mediReceive+"^"+mediRecDate+"^"+mediRecTime+"^"+mediCompleteDate+"^"+mediCompleteTime; /// 去掉+"^"+tranLocAdvic
+	
 		dataList.push(List);
 	} 
 	var medadriList=dataList.join("&&");
 	var params="medadrList="+medadrList+"&medadriList="+medadriList; 
 
 	//保存数据
-	$.post(url+'?action=SaveTranMess',{"medadrList":medadrList,"medadriList":medadriList},function(jsonString){
+	$.post(url+'?action=SaveTranMess',{"medadrList":medadrList,"medadriList":medadriList,"LgParam":LgParam},function(jsonString){
 		var resobj = jQuery.parseJSON(jsonString);
 		if(resobj.ErrCode==0){
 			//TranFlag=1;
@@ -1833,7 +1971,7 @@ function TranSub(id) //hxy 2018-01-25 (id) ie8回车莫名调未写方法修复
      		closeDrgWindow();		
 		}
 		if(resobj.ErrCode < 0){
-			$.messager.alert("提示:","转抄提交错误,错误原因:"+"<font style='color:red;'>"+resobj.ErrMsg+"</font>");
+			$.messager.alert($g("提示")+":",$g("转抄提交错误")+"，"+$g("错误原因")+":"+"<font style='color:red;'>"+$g(resobj.ErrMsg)+"</font>");
 			return ;
 		}
 	});
@@ -1856,16 +1994,16 @@ function TranReply(Replyflag)
 	for(var i=0;i<rows.length;i++)
 	{
 		if((Replyflag==1)&&(rows[i].advice!="")&&(rows[i].nameID==LgUserID)){
-			$.messager.alert("提示:","已提交成功，请勿重复点击");
+			$.messager.alert($g("提示")+":",$g("已提交成功")+"，"+$g("请勿重复点击")+"！");
 			return false;
 		}
 		
 		if((Replyflag==0)&&(rows[i].tranrecedate!="")&&(rows[i].nameID==LgUserID)){
-			$.messager.alert("提示:","已接收成功，请勿重复点击");
+			$.messager.alert($g("提示")+":",$g("已接收成功")+"，"+$g("请勿重复点击")+"！");
 			return false;
 		}
 		if((Replyflag==0)&&(rows[i].advice!="")&&(rows[i].nameID==LgUserID)){
-			$.messager.alert("提示:","回复已提交，接收无效");
+			$.messager.alert($g("提示")+":",$g("回复已提交")+"，"+$g("接收无效")+"！");
 			return false;
 		}
 	} 
@@ -1883,19 +2021,19 @@ function TranReply(Replyflag)
 	} */
 	
 	if((errflag==1)&(Replyflag==0)){
-		$.messager.alert("提示:","非转抄被指向人员，无权限操作");
+		$.messager.alert($g("提示")+":",$g("非转抄被指向人员")+"，"+$g("无权限操作")+"！");
 		return;
 	}
 	if((Replyflag==1)&(tranReplyMess=="")){
-		$.messager.alert("提示:","回复提交操作，回复内容不能为空");
+		$.messager.alert($g("提示")+":",$g("回复提交操作")+"，"+$g("回复内容不能为空")+"！");
 		return;
 	}
 	if((Replyflag==0)&(tranReplyMess!="")){
-		$.messager.alert("提示:","接收操作，回复内容不填");
+		$.messager.alert($g("提示")+":",$g("接收操作")+"，"+$g("回复内容不填")+"！");
 		return;
 	}
 	if (RepID==""){
-		$.messager.alert("提示:","报告未提交，不允许转抄！");
+		$.messager.alert($g("提示")+":",$g("报告未提交")+"，"+$g("不允许转抄")+"！");
 		return;
 	}
 	medadrList=RepID+"^"+RepTypeCode+"^"+tranLocDr+"^"+tranLocAdvic+"^"+adrReceive+"^"+StatusNextID;   //参数串
@@ -1907,7 +2045,7 @@ function TranReply(Replyflag)
 			   closeDrgWindow();	
 		}
 		if(resobj.ErrCode < 0){
-			$.messager.alert("提示:","操作错误,错误原因:"+"<font style='color:red;'>"+resobj.ErrMsg+"</font>");
+			$.messager.alert($g("提示")+":",$g("操作错误")+"，"+$g("错误原因")+":"+"<font style='color:red;'>"+$g(resobj.ErrMsg)+"</font>");
 		}
 		
 	});
@@ -1923,7 +2061,7 @@ function checkTranPermiss(){
 	var ret=0;	
 	var paramss=RepID+"^"+RepTypeDr+"^"+LgUserID+"^"+LgCtLocID+"^"+LgGroupID;
 	$.ajax({  
-		url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMON&MethodName=CheckTranPermiss'+'&params='+paramss, 	        
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMON&MethodName=CheckTranPermiss'+'&params='+paramss+'&LgParam='+LgParam, 	        
         async : false,	 // 注意此处需要同步，因为返回完数据后，下面才能让结果的第一条selected  
         type : "POST",  
         success : function(data) {       
@@ -1995,7 +2133,10 @@ function ConLevInjury()
 		{
 			$("input[type=radio][id^='EventRepLevel-96426']").attr("checked",true);
 		}
-		
+		// 2021-02-02 cy 取消勾选严重程度动态取消勾选事件等级
+		if(!($('#'+this.id).is(':checked'))){
+			$("input[id^=EventRepLevel]").removeAttr("checked");
+		}
 	})
 }
  
@@ -2013,9 +2154,10 @@ function InitBasicInfoCom(RepID)
 		var ReportCardSta=Data.RepStaus;					// 报告卡状态
 		if(ReportCardSta!=""){
 			RepSetRead("ReportCardSta","input",0);								
-			RepSetValue("ReportCardSta","input",ReportCardSta); 
+			RepSetValue("ReportCardSta","input",$g(ReportCardSta)); 
 			RepSetRead("ReportCardSta","input",1);							// 报告卡状态不可编辑	
 		}
+		OrdList=Data.OrderList; ///2021-02-09 cy 保存绑定医嘱id
 	},"json",false);
 }
 // 2020-03-26 报告 键盘删除事件 控制ie浏览器在输入框只读情况下，点击删除键不会自动跳转上一页
@@ -2039,19 +2181,19 @@ function ReportBack(){
 	}; 
 }
 
-// 2020-04-07 图片上传
+// 2020-04-07 文件上传
 function Uploadfy(){
 		
 	if(recordId=="")
 	{
-		$.messager.alert("提示:","报告ID为空，不能上传图片！");
+		$.messager.alert($g("提示")+":",$g("报告ID为空")+"，"+$g("不能上传文件")+"！");
 		return;	
 	}
 	if($('#patoutwin').is(":visible")){return;}  //窗体处在打开状态,退出
 	$('body').append('<div id="patoutwin"></div>');
 	$('#patoutwin').window({
 		iconCls:"icon-w-paper",
-		title:'上传查看图片',
+		title:$g('上传查看文件'),
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,
@@ -2065,4 +2207,44 @@ function Uploadfy(){
 	$('#patoutwin').html(iframe);
 	$('#patoutwin').window('open');
 	
+}
+// 勾选 自我照顾能力等级（入院时）
+function ChkPatSelfCareAbility(value){
+	RepSetRead("PatSelfCareAbility-","radio",0);  //自我照顾能力
+	if((value>100)||(value=="")){
+		$("input[type=radio][id^='PatSelfCareAbility-']").removeAttr("checked");
+	}
+	if(((value>0)&&(value<41))||((value==0)&&(value!=""))){// 0-40 重度依赖
+		$("input[type=radio][id^='PatSelfCareAbility-94347']").click();	
+	}
+	if((value>40)&&(value<61)){ // 41-60 中度依赖
+		$("input[type=radio][id^='PatSelfCareAbility-99921']").click();	
+	}
+	if((value>60)&&(value<100)){// 61-99 轻度依赖
+		$("input[type=radio][id^='PatSelfCareAbility-94346']").click();	
+	}
+	if(value==100){//100 无需依赖
+		$("input[type=radio][id^='PatSelfCareAbility-94345']").click();	
+	}
+	RepSetRead("PatSelfCareAbility-","radio",1);  //自我照顾能力
+}
+// 勾选 自我照顾能力等级（发生时）
+function OccurPatSelfCareAbility(value){
+	RepSetRead("OccurPatSelfCareAbility-","radio",0);  //自我照顾能力
+	if((value>100)||(value=="")){
+		$("input[type=radio][id^='OccurPatSelfCareAbility-']").removeAttr("checked");
+	}
+	if(((value>0)&&(value<41))||((value==0)&&(this.value!=""))){// 0-40 重度依赖
+		$("input[type=radio][id^='OccurPatSelfCareAbility-94241']").click();	
+	}
+	if((value>40)&&(value<61)){ // 41-60 中度依赖
+		$("input[type=radio][id^='OccurPatSelfCareAbility-99922']").click();	
+	}
+	if((value>60)&&(value<100)){// 61-99 轻度依赖
+		$("input[type=radio][id^='OccurPatSelfCareAbility-94240']").click();	
+	}
+	if(value==100){//100 无需依赖
+		$("input[type=radio][id^='OccurPatSelfCareAbility-94239']").click();	
+	}
+	RepSetRead("OccurPatSelfCareAbility-","radio",1);  //自我照顾能力
 }

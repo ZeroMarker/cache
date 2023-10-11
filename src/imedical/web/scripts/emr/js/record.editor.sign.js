@@ -184,6 +184,10 @@ function eventSaveDocument(commandJson)
 	    	alert('保存失败');
 	    }
 	}
+	else if (commandJson["args"]["result"] == "INVALID")
+    {
+		alert('病历存在非法字符，不能保存。'); 
+    }
 	else if (commandJson["args"]["result"] != "NONE")
 	{
 		alert('文档没有发生改变');
@@ -289,7 +293,8 @@ function qualitySignDocument()
 		return result;
 	}
 	var ssgroupID = pInfo.ssgroupID;
-	var userLocID = pInfo.userLocID;	
+	var userLocID = pInfo.userLocID;
+	var episodeID = pInfo.episodeID; 		
 	var eventType = "Commit^" + ssgroupID + "^" + userLocID;
 	var qualityData = qualityCheck(episodeID,g_objParam.id,g_objParam.templateId,eventType)
 	if (qualityData != "")
@@ -333,7 +338,26 @@ function audit(signProperty)
 	if ('1' == CAServicvice) 
 	{
 		var signParam = {"topwin":window.parent,"canRevokCheck":canRevokCheck,"cellName":signProperty.Name};
-		var returnValues = window.showModalDialog("emr.record.signca.csp?UserID="+pInfo.userID+"&OpenFlag="+pInfo.openFlag+"&UserLocID="+pInfo.userLocID,signParam,"dialogHeight:150px;dialogWidth:300px;resizable:yes;status:no");
+		if (CAVersion == "2")
+		{
+			var ca_key = window.parent.ca_key;
+            if ((ca_key.SignType == "UKEY")||(ca_key.SignType == "FACE")){
+                var returnValues = window.showModalDialog("emr.record.signca.csp?UserID="+pInfo.userID+"&OpenFlag="+pInfo.openFlag+"&UserLocID="+pInfo.userLocID,signParam,"dialogHeight:150px;dialogWidth:300px;resizable:yes;status:no");
+            } else {
+                var certObj = ca_key.LoginForm({forceLogin:false,hisUserID:pInfo.userID});
+                if ((certObj.retCode == "0")&&(certObj.hisUserID != "")) {
+                    var userInfo = ajaxLoginCA(certObj,ca_key.VenderCode,ca_key.SignType);
+                    if (userInfo != "") {
+                        returnValues = '{"action":"sign","userInfo":'+userInfo+'}';
+                    }
+                }
+            }
+			returnValues = returnValues||"";
+		}
+		else
+		{
+			var returnValues = window.showModalDialog("emr.record.signca.csp?UserID="+pInfo.userID+"&OpenFlag="+pInfo.openFlag+"&UserLocID="+pInfo.userLocID,signParam,"dialogHeight:150px;dialogWidth:300px;resizable:yes;status:no");
+		}
 		if (returnValues != "" && returnValues != undefined)
 		{
 			returnValues = eval("("+returnValues+")");
@@ -350,7 +374,18 @@ function audit(signProperty)
 					alert('签名图片未维护，请维护');
 					return;
 				}	
-				caSign(signProperty,userInfo,tmpInstanceId);
+                if (CAVersion == "2")
+				{
+                    if ((ca_key.SignType == "UKEY")||(ca_key.SignType == "FACE")){
+						caSign(signProperty,userInfo,tmpInstanceId);
+					} else {
+                        caSignMobile(signProperty,userInfo,tmpInstanceId,certObj);
+                    }
+				}
+				else
+				{
+					caSign(signProperty,userInfo,tmpInstanceId);
+				}
 			}
 			else if (returnValues.action == "revoke")
 			{
@@ -415,6 +450,55 @@ function audit(signProperty)
 	}
 }
 
+//登录，返回用户名，和签名图片
+function ajaxLoginCA(certObj,venderCode,signType) {
+    var loginInfo = '';
+    
+	var strServerRan = "";
+	var UserSignedData = "";
+	
+	var cert = certObj.signCert;
+    var UsrCertCode = certObj.userCertCode;
+    var certificateNo = certObj.certNo;
+	var hisUserID = certObj.hisUserID;
+	$.ajax({
+        type: 'post',
+        dataType: 'json',
+        url: "../EMRservice.Ajax.common.cls",
+        async: false,
+        cache: false,
+        data: {
+        		"OutputType":"String",
+				"Class":"EMRservice.BL.BLEMRSign",
+				"Method":"CALogin",
+				"p1":strServerRan,
+				"p2":UsrCertCode,
+            	"p3":UserSignedData,
+            	"p4":certificateNo,
+            	"p5":cert,
+            	"p6":pInfo.userLocID,
+            	"p7":"inpatient",
+            	"p8":pInfo.episodeID,
+            	"p9":signType,
+            	"p91":venderCode
+        },
+        success: function(ret) 
+        {
+            if (ret && ret.Err) 
+            {
+                alert(ret.Err);
+            } 
+            else
+            {
+	            loginInfo = ret;
+	        }
+        },
+        error: function(ret) {}
+    });
+    
+    return JSON.stringify(loginInfo);
+}
+
 //数字签名
 function caSign(signProperty,userInfo,instanceId)
 {
@@ -424,8 +508,17 @@ function caSign(signProperty,userInfo,instanceId)
 
 	//开始签名
 	var cert = parent.GetSignCert(parent.strKey);
-    var UsrCertCode = parent.GetUniqueID(cert);
+    var UsrCertCode = parent.GetUniqueID(cert,parent.strKey);
     if (!UsrCertCode || '' == UsrCertCode) return '用户唯一标示为空！';
+    
+    if (CAVersion == "2")
+	{
+		var certNo = parent.GetCertNo(parent.strKey);
+	}
+	else
+	{
+		var certNo = ""
+	}
     
 	var signlevel = signProperty.SignatureLevel;
 	var actionType = checkresult.ationtype;
@@ -450,20 +543,111 @@ function caSign(signProperty,userInfo,instanceId)
 			"Method":"Sign",
 			"p1":UsrCertCode,
 			"p2":signValue,
-			"p3":signInfo.Digest
+			"p3":signInfo.Digest,
+            "p4":certNo
         },
         success: function(ret) {
             if (ret && ret.Err) 
             {
                 alert(ret.Err);
+                cmdUnsignDocument();
             } 
             else 
             {
-                cmdSaveSignDocument(instanceId,userInfo.UserID,signlevel,ret.SignID,signInfo.Digest,"CA",signInfo.Path,actionType)
+                cmdSaveSignDocument(instanceId,userInfo.UserID,signlevel,ret.SignID,signInfo.Digest,"CA",signInfo.Path,actionType);
             }
         },
         error: function(ret) {alert(ret);}
     });
+}
+
+//数字签名
+function caSignMobile(signProperty,userInfo,instanceId,certObj)
+{
+	//权限检查
+	var checkresult = checkPrivilege(userInfo,signProperty);
+	if(!checkresult.flag) return;
+
+	//开始签名
+	var cert = parent.GetSignCert(certObj.certContainer);
+    var UsrCertCode = parent.GetUniqueID(cert,certObj.certContainer);
+    if (!UsrCertCode || '' == UsrCertCode) return '用户唯一标示为空！';
+    
+	var signlevel = signProperty.SignatureLevel;
+	var actionType = checkresult.ationtype;
+    if (signProperty.OriSignatureLevel == "Check") signlevel = userInfo.UserLevel
+	var signInfo = cmdSignDocument(instanceId,userInfo.Type,signlevel,userInfo.UserID,userInfo.UserName,userInfo.Image,actionType,userInfo.LevelDesc,"","");
+
+    if (!signInfo.Digest || signInfo.Digest == "") 
+    {
+	    alert('签名原文为空！');
+	    return ;
+	}
+    
+    //获取病历信息传给CA展示
+    var recordInfo = GetRecordInfo(instanceId);
+	if (recordInfo != "") {
+		recordInfo = JSON.stringify({"subject":recordInfo.subject});
+	}
+    
+    var signValue = parent.SignedData(signInfo.Digest,certObj.certContainer,pInfo.episodeID,recordInfo);
+    $.ajax({
+        type: 'POST',
+        dataType: 'json',
+        url: "../EMRservice.Ajax.common.cls",
+        async: false,
+        cache: false,
+        data: {
+			"OutputType":"String",
+			"Class":"EMRservice.BL.BLEMRSign",
+			"Method":"Sign",
+			"p1":UsrCertCode,
+			"p2":signValue,
+			"p3":signInfo.Digest,
+			"p4":certObj.certNo
+        },
+        success: function(ret) {
+            if (ret && ret.Err) 
+            {
+                alert(ret.Err);
+                cmdUnsignDocument();
+            } 
+            else 
+            {
+                cmdSaveSignDocument(instanceId,userInfo.UserID,signlevel,ret.SignID,signInfo.Digest,"CA",signInfo.Path,actionType);
+            }
+        },
+        error: function(ret) {alert(ret);}
+    });
+}
+
+//病历信息
+function GetRecordInfo(instanceID) {
+    var info = '';
+    if ('' === instanceID) return '';
+	
+    $.ajax({
+        type: 'POST',
+        dataType: 'json',
+        url: "../EMRservice.Ajax.caKeySign.cls",
+        async: false,
+        cache: false,
+        data: {
+            func: 'GetRecordInfo',
+            InstanceDataID: instanceID
+        },
+        success: function(ret) {
+            if (ret && ret.Err) {
+                alert('GetRecordInfo' + ret.Err);
+            } else {
+                info = ret;
+            }
+        },
+        error: function(err) {
+            alert(err.message || err);
+        }
+    });
+    return info;
 }
 
 //系统签名
@@ -501,8 +685,30 @@ function checkPrivilege(userInfo,signProperty)
 	if (count >0 && signProperty.Id == userInfo.UserID)
 	{
 		result = {"flag":false,"ationtype":""};
-		alert('已签名,不必再签');
-	    return result;
+        if ('1' == CAServicvice){
+            var documentContext = cmdGetDocumentContext(signProperty.InstanceID);
+            var canRevokCheck = documentContext.privelege.canRevokCheck;
+            if (pluginType != "GRID") canRevokCheck =0;
+            if (canRevokCheck != 1) {
+                alert('已签名,不必再签');
+                return result;
+            }
+            //CA免密签名时提示是否撤销签名
+            if (confirm("已签名,不必再签,是否撤销当前签名")==true){
+                var ret = cmdRevokeSignElement(signProperty);
+                if (ret.result == "OK"){
+                    alert('撤销成功');
+                }else{
+                    alert('撤销失败');
+                }
+                return result;
+            }else{
+                return result;
+            }
+        }else{
+            alert('已签名,不必再签');
+            return result;
+        }
 	}
 	
 	var signArray = ["All","QCDoc","QCNurse","ChargeNurse","student","intern","Refresher","Coder"];
@@ -814,6 +1020,36 @@ function checkPrivilege(userInfo,signProperty)
 			result = {"flag":false,"ationtype":""};
 			alert("无权限签名");			
 		}		
+	}
+	else if (signProperty.OriSignatureLevel == "InCharge")
+	{
+		//住治医师签名可签上级
+		if ($.inArray(userInfo.UserLevel,["Attending","ViceChief","Chief"]) != -1)
+		{
+			if (count <=0)
+			{
+				//签名
+				result = {"flag":true,"ationtype":"Append"};		
+			}
+			else
+			{
+				//改签
+				if (confirm("已签名，是否改签")==true)
+				{
+					result = {"flag":true,"ationtype":"Replace"};
+				}
+				else
+				{
+					result = {"flag":false,"ationtype":""};
+				}	
+			}	
+		}
+		else
+		{
+			//无权限签
+			result = {"flag":false,"ationtype":""};
+			setMessage("无权限签名","forbid");			
+		}	
 	}
 	else 
 	{

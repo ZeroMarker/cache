@@ -49,6 +49,16 @@ function InitWidListener(){
 	        findUserInfo();
 	    }
     });
+    
+    // 点击事件  无权限控制
+    $('#ConType').on('click','[name="CstType"]',function(){
+		 if ($(this).attr("data-index") == "DOCNUR01"){
+	     	$HUI.checkbox('input:not([data-index^="DOCNUR01"])').setValue(false);
+	     }else{
+		 	$HUI.checkbox('input[data-index="DOCNUR01"]').setValue(false);
+		 	 //$HUI.checkbox("#"+this.id).disable();
+		 }
+	})
 }
 
 ///初始化病人列表

@@ -16,6 +16,14 @@ function InitDMReportListEvent(obj){
 			obj.btnExportDtl_click();
 		});
 		
+		$('#DTHLogDetail').dialog({
+			title: '死亡报告历史操作记录',
+			iconCls:'icon-w-paper',
+			closed: true,
+			modal: true,
+			isTopZindex:false
+		});
+		
 		//登记号回车查询事件
 		$('#txtRegNo').keydown(function (e) {
 			var e = e || window.event;
@@ -61,7 +69,8 @@ function InitDMReportListEvent(obj){
 				var Arg=aSttDate+"^"+aEndDate+"^"+aRepLoc+"^"+aHospital+"^"+aRepStatus+"^"+aPatName+"^"+aMrNo+"^"+aRegNo;
 				ExportDataToExcel("","","死亡证明书查询列表",Arg);
 			}else {
-				ExportToExcel();
+				//ExportToExcel();
+				$('#gridDeath').datagrid('toExcel','死亡证明书查询列表.xls');
 			}
 		}else {
 			$.messager.alert("确认", "无数据记录,不允许导出", 'info');
@@ -105,7 +114,7 @@ function InitDMReportListEvent(obj){
 			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
 			dataRow:{RowID:aReportID},
 			onBeforeClose:function(){
-				obj.gridDeathReport.reload();  //刷新当前页
+				obj.gridDeathReportLoad();  //刷新
 			} 
 		});
 	}
@@ -160,5 +169,32 @@ function InitDMReportListEvent(obj){
 			$('#gridDeath').datagrid({loadFilter:pagerFilter}).datagrid('loadData', rs);				
 		});
     }
-	
+	obj.OpenEMR =function(aEpisodeID,aPatientID) {
+		var strUrl = cspUrl+"&PatientID=" + aPatientID+"&EpisodeID="+aEpisodeID + "&2=2";
+		//var strUrl = "./emr.record.browse.csp?PatientID=" + aPatientID+"&EpisodeID="+aEpisodeID + "&2=2";
+	    websys_showModal({
+			url:strUrl,
+			title:'病历浏览',
+			iconCls:'icon-w-epr',  
+	        originWindow:window,
+			width:'98%',
+			height:'98%'
+		});
+	}
+	obj.OpenLog = function(aReportID) {
+		$HUI.dialog('#DTHLogDetail').open();
+		$cm ({
+			ClassName:"DHCMed.DTHService.ReportSrv",
+			QueryName:"QryDTHReportLog",
+			aReportID:aReportID,
+			aFromDate: "",
+			aToDate: "",
+			aHospital: "",
+			aLoc: "",
+			aStatusCode: ""
+		},function(rs){
+			$("#gridDTHLogInfo").datagrid("loaded");
+			$('#gridDTHLogInfo').datagrid({loadFilter:pagerFilter}).datagrid('loadData', rs);
+		});
+	}
 }

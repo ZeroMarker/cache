@@ -10,6 +10,7 @@ function InitPatFindWinEvent(obj){
 	{
 		$.form.SetValue('cboLocation',$.LOGON.LOCID,"");
 		$("#cboLocation").attr('disabled','disabled');
+		$("#cboWard").attr('disabled','disabled');
 		$("#cboHospital").attr('disabled','disabled');
 		//触发查询
 		$("#btnQuery").click();
@@ -143,6 +144,7 @@ function InitPatFindWinEvent(obj){
 	obj.reloadgridAdm = function(){
 		var HospIDs	    = $("#cboHospital").val();
 		var LocationID  = $("#cboLocation").val();
+		var WardID	 	= $("#cboWard").val();
 		var SurvNumber 	= $("#cboSurvNumber").val();
 		var PatName 	= "";  //$("#txtPatName").val()
 		var PapmiNo 	= "";
@@ -151,8 +153,8 @@ function InitPatFindWinEvent(obj){
 			layer.msg('请选择调查院区！');
 			return;
 		}
-		if (LocationID==""){
-			layer.msg('请选择调查科室！');
+		if ((LocationID=="")&&(WardID=="")){
+			layer.msg('请选择调查科室或病区！');
 			return;
 		}
 		if (SurvNumber==""){
@@ -175,6 +177,7 @@ function InitPatFindWinEvent(obj){
 	obj.btnClear_click = function(){
 		$.form.SetValue("cboHospital",'','');
 		$.form.SetValue("cboLocation",'','');
+		$.form.SetValue("cboWard",'','');
 		$.form.SetValue("cboSurvNumber",'','');
 		$.form.SetValue("txtPatName",'');
 		$.form.SetValue("txtPapmiNo",'');

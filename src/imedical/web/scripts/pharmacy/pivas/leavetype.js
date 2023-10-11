@@ -10,6 +10,9 @@ $(function () {
     });
     $('#btnSave').on('click', Save);
     $('#btnDelete').on('click', Delete);
+    $('.dhcpha-win-mask').remove();
+
+    // $('#btnFind').on('click', Query);
 });
 
 function InitGridLeaveType() {

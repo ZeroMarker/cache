@@ -1,25 +1,40 @@
 ﻿//页面初始化执行
 $(function(){
+	/*
 	//var selectedTeeth = window.dialogArguments || "";
+	alert("selectedToothObjStr:" + selectedToothObjStr);
 	if (selectedToothObjStr != "")
 	{
         if ((parent)&&(parent.getSelectedToothObj)){
             var selectedTeeth = parent.getSelectedToothObj();
         }else {
-			var selectedTeeth = JSON.parse(unescape(utf8to16(base64decode(selectedToothObjStr)))); 
+			//var selectedTeeth = JSON.parse(unescape(utf8to16(base64decode(selectedToothObjStr)))); 
+			var selectedTeeth = JSON.parse(selectedToothObjStr); 
         }
 	}else{
-		var selectedTeeth = "";
+		var selectedTeeth = ""; 
 	}
+	*/
+	getToothRepresentation();
 	getToothPosition();
 	getToothSurface();
-	$("#ToothPermanent").click();
-	InitOperedTooth(selectedTeeth);
+	
+	//var selectedToothObj = window.dialogArguments || "";
+	/*
+	var selectedToothObj = parent.selectedToothObj;
+	if (selectedToothObj !== "")
+	{
+		InitOperedTooth(selectedToothObj);
+	}
+	*/
+	//$("#ToothPermanent").click();
     $HUI.radio("[name='Radio']",{
         onChecked:function(e,value){
             var value = $(e.target).attr("value");
             if (value === "ToothPermanent")
             {
+	            //恒牙全选按钮
+	            $(".flagPermanent").css("display","");
 			    $("#ToothPermanent").attr("checked",true);
 				$("#ToothDeciduous").attr("checked",false);
 				$(".Deciduous").hide();
@@ -31,16 +46,18 @@ $(function(){
 				$(".box").css("height","85px");
 				$(".textSurface").css("height","60px");
 				$(".textTP").css("padding-top","5px");
-				$("#FlagRight").css("padding-top","100px");
-				$("#FlagLeft").css("padding-top","100px");
+				$("#FlagRight").css("padding-top","85px");
+				$("#FlagLeft").css("padding-top","85px");
 				$("#addToRecord").css("margin-top","25px");
 				
 				$(".Permanent").show();
 	        } 
 	        else if (value === "ToothAll")
 	        {
-		        $("#ToothPermanent").attr("checked",false);
+				$("#ToothPermanent").attr("checked",false);
 				$("#ToothDeciduous").attr("checked",false);
+		        $(".tdleftDeciduous").css("padding-left","182px");
+	            $(".flagPermanent").css("display","none");
 				$("#toothDIV").css("padding-left","10px");
 				
 				$("#ToothAll").attr("checked",true);
@@ -58,6 +75,10 @@ $(function(){
 		    }
 	        else
 	        {
+		        //恒牙全选按钮
+	            $(".flagPermanent").css("display","none");
+	            //去掉乳牙中的padding-left
+	            $(".tdleftDeciduous").css("padding-left",0);
 				$("#ToothPermanent").attr("checked",false);
 				$("#ToothDeciduous").attr("checked",true);
 				$(".Permanent").hide();
@@ -77,9 +98,86 @@ $(function(){
 		    }
         }
     });
-    //选中恒牙
-    $HUI.radio("#ToothPermanent").setValue(true);
+	if ((parent)&&(parent.getSelectedToothObj)){
+        var selectedToothObj = parent.getSelectedToothObj();
+		if (selectedToothObj !== "")
+		{
+			InitOperedTooth(selectedToothObj);
+		}else{
+			//选中恒牙
+    		setDefaultRadio();
+		}
+    }else{
+	    	//选中恒牙
+    		setDefaultRadio();
+	    }
 },0);
+    //根据科室配置选中对应的radio
+function setDefaultRadio(){ 
+	try{
+		var defaultRadioObj = JSON.parse(defaultRadio);
+		var allStr = defaultRadioObj.ToothAll;
+		var PStr = defaultRadioObj.ToothP;
+		var DStr = defaultRadioObj.ToothD;
+		var reg = new RegExp("\\b"+userLocID+"\\b","g");
+		if(PStr&&PStr.search(reg)!==-1){
+			//选中恒牙
+			$HUI.radio("#ToothPermanent").setValue(true);
+		}else if(DStr&&DStr.search(reg)!==-1){
+			//选中乳牙
+			$HUI.radio("#ToothDeciduous").setValue(true);			
+		}else if(allStr&&allStr.search(reg)!==-1){
+			//选中混合牙
+			$HUI.radio("#ToothAll").setValue(true);				
+		}else{
+			//选中恒牙
+			$HUI.radio("#ToothPermanent").setValue(true);			
+		}
+		
+	}catch(e){
+			//选中恒牙
+			$HUI.radio("#ToothPermanent").setValue(true);			
+	}	
+}
+function getToothRepresentation()
+{
+	$.ajax({ 
+        type: "POST", 
+        url: "../EMRservice.Ajax.Tooth.cls", 
+        data: "Action=TR", 
+        error: function(d)
+		{
+			alert("获取初始化牙位编码系统信息失败!");
+        }, 
+        success: function(d)
+		{
+			if (d == "-1")
+			{
+				alert("获取初始化牙位编码系统信息失败!");
+			}
+			else
+			{
+				var strJson = eval("("+d+")");
+            	setToothRepresentation(strJson);
+			}
+        }
+    });
+}
+
+function setToothRepresentation(strJson)
+{
+	var count = strJson.TotalCount;
+	var TRData = strJson.Data;
+	 
+	for (var i=0;i<count ;i++ )
+	{
+		ToothCodeSystem = TRData[i].Code;
+		ToothCodeSystemName = TRData[i].Name;
+		ToothSurfaceCodeSystem = TRData[i].Code;
+		ToothSurfaceCodeSystemName = TRData[i].Name;
+		$("#BSFText").html(emrTrans("当前：" + ToothCodeSystemName));
+	}
+}
 
 function getToothPosition(){
 	$.ajax({ 
@@ -108,10 +206,12 @@ function setToothPosition(strJson)
 		var TPCode = TPData[i].Code;
 		var TPDesc = TPData[i].Desc;
 		var TPDefine = TPData[i].Define;
+		var TPAreaType = TPData[i].Quadrant;
 		var ToothID = TPCode.replace('.','-');
 		var ToothObj = document.getElementById(ToothID);
 
 		$("#"+ToothID).attr("text",TPDefine);
+		$("#"+ToothID).attr("areatype",TPAreaType);
 		$("#tp-"+ToothID).html(TPDesc);
 	}
 }
@@ -152,26 +252,77 @@ function setToothSurface(strJson)
 
 //初始化有处置操作的牙位
 function InitOperedTooth(selectedTeeth) {
-	//双击病历中十字星牙位图片时,会有已选中的牙位数据,需要渲染到页面中;
+	//双击病历中十字星牙位图片时,会有已选中的牙位数据,需要渲染到页面中;、
+	//alert(selectedTeeth);
+	//alert("ShowMode:" + selectedTeeth.ShowMode);
+	//return;
 	if (selectedTeeth !== "")
 	{
 		var ShowMode = selectedTeeth.ShowMode;
 		if (ShowMode == "恒牙")
-		{
-			$("#ToothPermanent").attr("checked",true);
+        {
+		    $("#ToothPermanent").attr("checked",true);
 			$("#ToothDeciduous").attr("checked",false);
+			$("#ToothAll").attr("checked",false);
 			$(".Deciduous").hide();
-			$("#toothDIV").css("padding-left","65px");
+			$("#toothDIV").css("padding-left","10px");
+			$("#toothDIV").css("padding-top","40px");
+			$("#toothDIV").css("height","220px");
+			$(".box").css("height","85px");
+			$(".textSurface").css("height","60px");
+			$(".textTP").css("padding-top","5px");
+			$("#FlagRight").css("padding-top","85px");
+			$("#FlagLeft").css("padding-top","85px");
+			$("#addToRecord").css("margin-top","25px");
+			
 			$(".Permanent").show();
-		}
-		else if (ShowMode == "乳牙")
-		{
-			$("#ToothPermanent").attr("checked",false);
-			$("#ToothDeciduous").attr("checked",true);	
-			$(".Permanent").hide();
-			$("#toothDIV").css("padding-left","205px");
+			//选中恒牙
+    		$HUI.radio("#ToothPermanent").setValue(true);
+        } 
+        else if (ShowMode == "混合牙")
+        {
+	        $("#ToothPermanent").attr("checked",false);
+			$("#ToothDeciduous").attr("checked",false);
+			$("#ToothAll").attr("checked",true);
+			$("#toothDIV").css("padding-left","10px");
+			$(".tdleftDeciduous").css("padding-left","182px");
+			$("#ToothAll").attr("checked",true);
+			$("#toothDIV").css("padding-top","5px");
+			$("#toothDIV").css("height","310px");
+			$(".box").css("height","55px");
+			$(".textSurface").css("height","37px");
+			$(".textTP").css("padding-top","0px");
+			$("#FlagRight").css("padding-top","150px");
+			$("#FlagLeft").css("padding-top","150px");
+			$("#addToRecord").css("margin-top","0px");
+			
+			$(".Permanent").show();
 			$(".Deciduous").show();
-		}
+			//选中恒牙
+    		$HUI.radio("#ToothAll").setValue(true);
+	    }
+        else
+        {
+			$("#ToothPermanent").attr("checked",false);
+			$("#ToothDeciduous").attr("checked",true);
+			$("#ToothAll").attr("checked",false);
+			$(".Permanent").hide();
+			$("#toothDIV").css("padding-left","190px");
+			
+			
+			$("#toothDIV").css("padding-top","40px");
+			$("#toothDIV").css("height","220px");
+			$(".box").css("height","85px");
+			$(".textSurface").css("height","60px");
+			$(".textTP").css("padding-top","5px");
+			$("#FlagRight").css("padding-top","100px");
+			$("#FlagLeft").css("padding-top","100px");
+			$("#addToRecord").css("margin-top","25px");
+			
+			$(".Deciduous").show();
+			//选中恒牙
+    		$HUI.radio("#ToothDeciduous").setValue(true);
+	    }
 		//alert(JSON.stringify(selectedTeeth.UpLeftAreaTeeth));
 		var UpLeftAreaTeethObj = selectedTeeth.UpLeftAreaTeeth;
 		getToothInfo(UpLeftAreaTeethObj);
@@ -205,7 +356,7 @@ function InitOperedTooth(selectedTeeth) {
 //将每个象限的已选择牙位信息json对象解析出来
 function getToothInfo(selectedTeethJson)
 {
-	if ((selectedTeethJson !== "")||(selectedTeethJson.length !== 0))
+	if ((selectedTeethJson !== "")&&(selectedTeethJson !== undefined)&&(selectedTeethJson.length !== 0))
 	{
 		var ToothCount = selectedTeethJson.length;
 		for (var i=0;i<ToothCount ;i++ )
@@ -213,7 +364,7 @@ function getToothInfo(selectedTeethJson)
 			//获取牙位信息
 			var selectToothItem = selectedTeethJson[i];
 			//alert(selectToothItem);
-			var ToothCode = selectToothItem.ToothCode;
+			var ToothCode = selectToothItem.ToothInCode;
 			//alert(ToothCode);
 			var ToothValue = selectToothItem.ToothValue;
 			//alert(ToothValue);
@@ -221,8 +372,9 @@ function getToothInfo(selectedTeethJson)
 			//alert(ToothSurfaceValue);
 			//选中相应的牙位
 			var ToothID = ToothCode.replace('.','-');
+			//alert(ToothID);
 			selectTooth(ToothID);
-
+			//alert(selectToothItem.ToothSurfaceItems.length);
 			//获取牙面信息
 			var ToothSurfaceItems = selectToothItem.ToothSurfaceItems;
 			if ((ToothSurfaceItems.length !== "")||(ToothSurfaceItems.length !== 0))
@@ -231,9 +383,10 @@ function getToothInfo(selectedTeethJson)
 				for (var j=0;j<SurfaceCount ;j++ )
 				{
 					var SurfaceItem = ToothSurfaceItems[j];
-					var SurfaceCode = SurfaceItem.Code;
+					var SurfaceCode = SurfaceItem.InCode;
 					var SurfaceID = "Surface-" + SurfaceCode.split(".")[2];
 					//选中相应的牙位的牙面
+					//alert(SurfaceID);
 					selectSurface(ToothID,SurfaceID);
 				}
 			}
@@ -300,48 +453,114 @@ $("#ToothDeciduous").click(function(){
 		BuildCodeAndStr(currentPositionFlag,DSToothCode,flag);
 	}
 }*/
-
-//选择一颗牙事件
-function selectTooth(currentSelectToothID){
-	var currentSelectTooth = document.getElementById(currentSelectToothID);
+//象限点击全选
+function quadrantTooth(areaClass){
+	var toothMode = $("input[name='Radio']:checked").val();
+	//默认为空
+	var toothClass = "";
+	if(toothMode==="ToothPermanent"){
+		toothClass = "Permanent";
+	}else if(toothMode==="ToothDeciduous"){
+		toothClass = "Deciduous";
+		}
+	if(toothClass!==""){
+		$("."+toothClass+" ."+areaClass).children("div.box").each(function(){
+			//不选中8，智齿
+			if(this.id&&this.id.indexOf("8")===-1){
+				var checkFlag = $(event.target).prop("checked");
+				if(checkFlag)
+				{
+					if ($("#"+this.id).attr("name") == "unchecked")
+					{
+						checkTooth(this.id);
+					}	
+				}else{
+					if ($("#"+this.id).attr("name") == "checked")
+					{
+						uncheckTooth(this.id);
+					}
+				}				
+			}
+		});
+	}
+}
+//选中一颗牙事件
+function checkTooth(currentSelectToothID){
+	var flag = "push";
 	$("#"+currentSelectToothID).css("border","1px solid #017BCE");
-	if ($("#"+currentSelectToothID).attr("name") == "unchecked")
-	{
-		var flag = "push";
-		$("#"+currentSelectToothID).attr("name","checked");
-		$("#"+currentSelectToothID).css("color","#017BCE");
-		//暂不加自动取消未选牙面的牙位
-        /*if ((currentToothID !== "")&&(document.getElementById('text-Surface-'+currentToothID).innerHTML ==""))
-		{
-			$("#"+currentToothID).css("border","1px solid #CCCCCC");
-			$("#"+currentToothID).css("color","#666666");
-			$("#"+currentToothID).attr("name","unchecked");
-			BuildToothArray("delete",currentToothID);
-		}*/
-		currentToothID = currentSelectToothID;
-	}
-	else if ($("#"+currentSelectToothID).attr("name") == "checked")
-	{
-		var flag = "delete";
-		$("#"+currentSelectToothID).attr("name","unchecked");
-		$("#"+currentSelectToothID).css("color","#666666");
-		$("#"+currentSelectToothID).css("border","1px solid #CCCCCC");
-		document.getElementById('text-Surface-'+currentSelectToothID).innerHTML = "";
-        //暂不加自动取消未选牙面的牙位
-		/*if ((currentToothID !== "")&&(document.getElementById('text-Surface-'+currentToothID).innerHTML ==""))
-		{
-            $("#"+currentToothID).css("border","1px solid #CCCCCC");
-			$("#"+currentToothID).css("color","#666666");
-			$("#"+currentToothID).attr("name","unchecked");
-			BuildToothArray("delete",currentToothID);
-		}*/
-		currentToothID = "";
-	}
-
+	$("#"+currentSelectToothID).attr("name","checked");
+	$("#"+currentSelectToothID).css("color","#017BCE");
+	currentToothID = currentSelectToothID;
 	BuildToothArray(flag,currentSelectToothID);
 	//重置当前操作牙的牙面信息
 	ResetSurface(flag,currentSelectToothID);
-
+	resetCheckBox(currentSelectToothID);
+}
+//重置复选框
+function resetCheckBox(currentSelectToothID){
+	var parentItem = $("#"+currentSelectToothID).parent();
+	var checkflag = false,unCheckflag=false;
+	parentItem.children("div.box").each(function(){
+		var name = $(this).attr("name");
+		var id = $(this).attr("id");
+		if(id.indexOf("8")===-1){
+			if(name==="checked"){
+				checkflag = true;
+				}
+			if(name==="unchecked"){
+				unCheckflag = true;
+				}
+		}
+		});
+	var checkboxStatus = "";
+	if(!(checkflag&&unCheckflag)){
+		if(checkflag){
+			checkboxStatus = true;
+			}
+		if(unCheckflag){
+			checkboxStatus = false;
+			}
+		var areaClass = parentItem.attr("class");
+		if(areaClass.indexOf("check-right-top")!==-1){
+			//取消选中右上的复选框
+			$("#flagRightTop").checkbox("setValue",checkboxStatus);
+		}
+		else if(areaClass.indexOf("check-right-bottom")!==-1){
+			$("#flagRightBottom").checkbox("setValue",checkboxStatus);
+		}
+		else if(areaClass.indexOf("check-left-top")!==-1){
+			$("#flagLeftTop").checkbox("setValue",checkboxStatus);
+		}
+		else if(areaClass.indexOf("check-left-bottom")!==-1){
+			$("#flagLeftBottom").checkbox("setValue",checkboxStatus);
+		}	
+	}	
+}
+//取消选中一颗牙
+function uncheckTooth(currentSelectToothID){		
+	var flag = "delete";
+	$("#"+currentSelectToothID).attr("name","unchecked");
+	$("#"+currentSelectToothID).css("color","#666666");
+	$("#"+currentSelectToothID).css("border","1px solid #CCCCCC");
+	document.getElementById('text-Surface-'+currentSelectToothID).innerHTML = "";
+	currentToothID = "";
+	
+	BuildToothArray(flag,currentSelectToothID);
+	//重置当前操作牙的牙面信息
+	ResetSurface(flag,currentSelectToothID);
+	resetCheckBox(currentSelectToothID);
+}
+//选择一颗牙事件
+function selectTooth(currentSelectToothID){
+	var currentSelectTooth = document.getElementById(currentSelectToothID);
+	if ($("#"+currentSelectToothID).attr("name") == "unchecked")
+	{
+		checkTooth(currentSelectToothID);
+	}
+	else if ($("#"+currentSelectToothID).attr("name") == "checked")
+	{
+		uncheckTooth(currentSelectToothID);
+	}
 }
 
 //记录选中的牙位信息
@@ -354,35 +573,35 @@ function BuildToothArray(flag,currentSelectToothID)
 		switch (PositionFlag) {
 			case 'AUL':
 				AULArray.push(ToothNum);
-				AULArray.sort(sortNumberDown);
+				AULArray.sort(sortNumberUp);
 				break;
 			case 'AUR':
 				AURArray.push(ToothNum);
-				AURArray.sort(sortNumberUp);
+				AURArray.sort(sortNumberDown);
 				break;
 			case 'ALL':
 				ALLArray.push(ToothNum);
-				ALLArray.sort(sortNumberDown);
+				ALLArray.sort(sortNumberUp);
 				break;
 			case 'ALR':
 				ALRArray.push(ToothNum);
-				ALRArray.sort(sortNumberUp);
+				ALRArray.sort(sortNumberDown);
 				break;
 			case 'CUL':
 				CULArray.push(ToothNum);
-				CULArray.sort(sortNumberDown);
+				CULArray.sort(sortNumberUp);
 				break;
 			case 'CUR':
 				CURArray.push(ToothNum);
-				CURArray.sort(sortNumberUp);
+				CURArray.sort(sortNumberDown);
 				break;
 			case 'CLL':
 				CLLArray.push(ToothNum);
-				CLLArray.sort(sortNumberDown);
+				CLLArray.sort(sortNumberUp);
 				break;
 			case 'CLR':
 				CLRArray.push(ToothNum);
-				CLRArray.sort(sortNumberUp);
+				CLRArray.sort(sortNumberDown);
 				break;
 		}
 	}
@@ -729,32 +948,55 @@ function layoutStrToWindow(){
 }
 
 $("#addToRecord").click(function(){
-	var Permanent = $("#ToothPermanent").attr("checked");
+	//returnValue = toothJson;
+    returnValue = getToothData();
+	
+	closeWindow();
+});
+
+function getToothData()
+{
+    var Permanent = $("#ToothPermanent").attr("checked");
 	var Deciduous = $("#ToothDeciduous").attr("checked");
+	var ToothAll = $("#ToothAll").attr("checked");
 	var ShowMode = "恒牙";
 	if (Deciduous == "checked")
 	{
 		ShowMode = "乳牙";
+	}else if (ToothAll == "checked"){
+		ShowMode = "混合牙";
 	}
 	
-	//var toothJson = '{action:"INSERT_TEETH_IMAGE",args:{"InstanceID":"","ShowMode":"' + ShowMode + '","UpLeftAreaTeeth":' + getQuadrantJson("UL",ShowMode) + ',"UpRightAreaTeeth":' + getQuadrantJson("UR",ShowMode) + ',"DownLeftAreaTeeth":' + getQuadrantJson("LL",ShowMode) + ',"DownRightAreaTeeth":' + getQuadrantJson("LR",ShowMode) + '}}';
-	var toothJson = '{"InstanceID":"","ShowMode":"' + ShowMode + '","UpLeftAreaTeeth":' + getQuadrantJson("UR",ShowMode) + ',"UpRightAreaTeeth":' + getQuadrantJson("UL",ShowMode) + ',"DownLeftAreaTeeth":' + getQuadrantJson("LR",ShowMode) + ',"DownRightAreaTeeth":' + getQuadrantJson("LL",ShowMode) + '}';
+	//非标准化
+    //var toothJson = '{"InstanceID":"","ShowMode":"' + ShowMode + '","UpLeftAreaTeeth":' + getQuadrantJson("UR",ShowMode) + ',"UpRightAreaTeeth":' + getQuadrantJson("UL",ShowMode) + ',"DownLeftAreaTeeth":' + getQuadrantJson("LR",ShowMode) + ',"DownRightAreaTeeth":' + getQuadrantJson("LL",ShowMode) + '}';
+    //标准化
+    var toothJson = '{"InstanceID":"","ShowMode":"' + ShowMode + '","ToothCodeSystem":"' + ToothCodeSystem + '","ToothCodeSystemName":"' + ToothCodeSystemName + '","ToothSurfaceCodeSystem":"' + ToothSurfaceCodeSystem + '","ToothSurfaceCodeSystemName":"' + ToothSurfaceCodeSystemName + '","UpLeftAreaTeeth":' + getQuadrantJson("UR",ShowMode) + ',"UpRightAreaTeeth":' + getQuadrantJson("UL",ShowMode) + ',"DownLeftAreaTeeth":' + getQuadrantJson("LR",ShowMode) + ',"DownRightAreaTeeth":' + getQuadrantJson("LL",ShowMode) + '}';
+	
+    return toothJson;
+}
 
-	returnValue = toothJson;
-	closeWindow();
-});
+function GetPageDataForOut()
+{
+    var dataForOut = getToothData();
+    return dataForOut;
+}
 
 //获取象限Json数据
 function getQuadrantJson (QuadrantPosition,ShowMode)
 {
 	var quadrantJson = "";
+	var PositionFlag = "";
 	if (ShowMode == "恒牙")
 	{
-		var PositionFlag = "A" + QuadrantPosition;
+		PositionFlag = "A" + QuadrantPosition;
 	}
 	else if (ShowMode == "乳牙")
 	{
-		var PositionFlag = "C" + QuadrantPosition;
+		PositionFlag = "C" + QuadrantPosition;
+	}
+	else if (ShowMode == "混合牙")
+	{
+		PositionFlag = "A" + QuadrantPosition + "&C" + QuadrantPosition;
 	}
 	
 	switch (PositionFlag) {
@@ -782,7 +1024,56 @@ function getQuadrantJson (QuadrantPosition,ShowMode)
 		case 'CLR':
 			quadrantJson = getToothJson(CLRArray,PositionFlag);
 			break;
+		case 'AUL&CUL':
+			quadrantJson = getToothJson(AULArray,PositionFlag.split('&')[0]);
+			var CULJson = getToothJson(CULArray,PositionFlag.split('&')[1]);
+			if (CULJson != "")
+			{
+				if (quadrantJson != ""){
+					quadrantJson = quadrantJson + "," + CULJson;
+				}else{
+					quadrantJson = CULJson;
+				}
+			}
+			break;
+		case 'AUR&CUR':
+			quadrantJson = getToothJson(AURArray,PositionFlag.split('&')[0]);
+			var CURJson = getToothJson(CURArray,PositionFlag.split('&')[1]);
+			if (CURJson != "")
+			{
+				if (quadrantJson != ""){
+					quadrantJson = quadrantJson + "," + CURJson;
+				}else{
+					quadrantJson = CURJson;
+				}
+			}
+			break;
+		case 'ALL&CLL':
+			quadrantJson = getToothJson(ALLArray,PositionFlag.split('&')[0]);
+			var CULLJson = getToothJson(CLLArray,PositionFlag.split('&')[1]);
+			if (CULLJson != "")
+			{
+				if (quadrantJson != ""){
+					quadrantJson = quadrantJson + "," + CULLJson;
+				}else{
+					quadrantJson = CULLJson;
+				}
+			}
+			break;
+		case 'ALR&CLR':
+			quadrantJson = getToothJson(ALRArray,PositionFlag.split('&')[0]);
+			var CLRJson = getToothJson(CLRArray,PositionFlag.split('&')[1]);
+			if (CLRJson != "")
+			{
+				if (quadrantJson != ""){
+					quadrantJson = quadrantJson + "," + CLRJson;
+				}else{
+					quadrantJson = CLRJson;
+				}
+			};
+			break;
 	}
+	quadrantJson =  "[" + quadrantJson + "]";
 	
 	return quadrantJson;
 }
@@ -794,31 +1085,28 @@ function getToothJson(currArray,PositionFlag)
 	for (var i=0;i<currArray.length ;i++ )
 	{
 		var ToothID = PositionFlag + "-" + currArray[i];
-		//alert(ToothID);
 		var ToothItem =  document.getElementById(ToothID);
-		//alert(ToothItem);
-		var ToothCode = ToothID.replace('-','.');
-		//alert(ToothCode);
+		var ToothInCode = ToothID.replace('-','.');
+		var ToothValue = document.getElementById("tp-" + ToothID).innerText;
+		/*
 		if(isIE()){	
 			var ToothValue = ToothItem.innerText.substr(ToothItem.innerText.length-1,1);    //----P,L8  应为8
 		}else{
 			var ToothValue = ToothItem.innerText.substr(ToothItem.innerText.length-2,1);
 		}
-		//alert(ToothValue);
+		*/
 		var ToothText = $("#"+ToothID).attr("text");     //undefined    应为上颌左侧第三磨牙
-		//alert(ToothText);
-		if(isIE()){	
-			var ToothSurfaceValue = ToothItem.innerText.substr(0,ToothItem.innerText.length-1);
-		}else{
-			var ToothSurfaceValue = ToothItem.innerText.substr(0,ToothItem.innerText.length-3);
-		}
+		var ToothAreaType = $("#"+ToothID).attr("areatype");     //undefined    应为上颌左侧第三磨牙
+		var ToothSurfaceValue = $("#text-Surface-"+ToothID).val();
         //替换产生的回车换行符
         ToothSurfaceValue = ToothSurfaceValue.replace(/\r\n/g, '');
-		//var ToothSurfaceValue = $('#text-Surface-'+ToothID).val();    //空   应为P,L
+        ToothSurfaceValue = ToothSurfaceValue.replace(/,/g, '');
 		var ToothSurfaceIDStr = $('#text-Surface-'+ToothID).attr("text");    //空   应为Surface-P,Surface-L
-		//var tempToothJson = "{'ToothCode':'" + ToothCode + "','ToothValue':'" + ToothValue + "','ToothSurfaceValue':'" + ToothSurfaceValue + "','ToothSurfaceItems':" + getToothSurfaceJson(ToothID,ToothText,ToothSurfaceIDStr) + "}";
-		var tempToothJson = '{"ToothCode":"' + ToothCode + '","ToothValue":"' + ToothValue + '","ToothSurfaceValue":"' + ToothSurfaceValue + '","ToothSurfaceItems":' + getToothSurfaceJson(ToothID,ToothText,ToothSurfaceIDStr) + '}';
-		//var tempToothJson = {"ToothCode":ToothCode,"ToothValue":ToothValue,"ToothSurfaceValue":ToothSurfaceValue,"ToothSurfaceItems":[getToothSurfaceJson(ToothID,ToothText,ToothSurfaceIDStr)]};
+		
+		//非标准化
+        //var tempToothJson = '{"ToothCode":"' + ToothCode + '","ToothValue":"' + ToothValue + '","ToothSurfaceValue":"' + ToothSurfaceValue + '","ToothSurfaceItems":' + getToothSurfaceJson(ToothID,ToothText,ToothSurfaceIDStr) + '}';
+        //标准化
+        var tempToothJson = '{"ToothInCode":"' + ToothInCode + '","AreaType":"' + ToothAreaType + '","ToothCode":"' + ToothValue + '","ToothDisplayName":"' + ToothText +'","ToothValue":"' + ToothValue + '","ToothSurfaceValue":"' + ToothSurfaceValue + '","ToothSurfaceItems":' + getToothSurfaceJson(ToothID,ToothText,ToothSurfaceIDStr) + '}';
 		
 		if (toothJson == "")
 		{
@@ -829,26 +1117,30 @@ function getToothJson(currArray,PositionFlag)
 			toothJson = toothJson + "," + tempToothJson;
 		}
 	}
-	toothJson = "[" + toothJson + "]";
 	return toothJson;
 }
 
 //获取牙面Json数据       //AUL-8   //上颌左侧第三磨牙   ///Surface-P,Surface-L
 function getToothSurfaceJson(ToothID,ToothText,ToothSurfaceIDStr)
 {
+	if (ToothSurfaceIDStr == "")
+	{
+		return "[]";
+	}
 	var toothSurfaceJson = "";
-
 	var SurfaceItems = ToothSurfaceIDStr.split(",");
 	for (var i=0;i<SurfaceItems.length ;i++ )
 	{
 		var SurfaceID = SurfaceItems[i];
 		var SurfaceItem =  document.getElementById(SurfaceID);
-		var SurfaceCode = ToothID.replace('-','.') + "." + SurfaceID.split("-")[1];
-		//var SurfaceValue = ToothText + $("#"+SurfaceID).attr("text");
-		var SurfaceValue = ToothText + SurfaceItemObj[SurfaceID];
-		//var tempSurfaceJson = "{'Code':'" + SurfaceCode + "','Value':'" + SurfaceValue + "','ScriptMode':'SuperScript'}";
-		var tempSurfaceJson = '{"Code":"' + SurfaceCode + '","Value":"' + SurfaceValue + '","ScriptMode":"SuperScript"}';
-		//var tempSurfaceJson = {"Code":SurfaceCode,"Value":SurfaceValue,"ScriptMode":"SuperScript"};
+		var SurfaceInCode = ToothID.replace('-','.') + "." + SurfaceID.split("-")[1];
+        //非标准化
+        //var SurfaceValue = ToothText + SurfaceItemObj[SurfaceID];
+		//var tempSurfaceJson = '{"Code":"' + SurfaceCode + '","Value":"' + SurfaceValue + '","ScriptMode":"SuperScript"}';
+		//标准化
+        var SurfaceValue = SurfaceItemObj[SurfaceID];
+		var tempSurfaceJson = '{"InCode":"' + SurfaceInCode + '","Code":"' + SurfaceID.split("-")[1] + '","Value":"' + SurfaceID.split("-")[1] + '","ToothSurfaceDisplayName":"' + SurfaceValue + '","ScriptMode":"SuperScript"}';
+		
 		if (toothSurfaceJson == "")
 		{
 			toothSurfaceJson = tempSurfaceJson;
@@ -870,10 +1162,13 @@ function isIE() { //ie?
 
 //关闭窗口
 function closeWindow() {
+	//parent.$HUI.dialog('#toothDialog').destroy();
+	
     if((parent)&&(parent.closeDialog)){
-		parent.closeDialog("dialogTooth");
+		parent.closeDialog("toothDialog");
 	}
-	if ((window.parent)&&(window.parent.closeDialog)){
-        window.parent.closeDialog(dialogId);
-    }	
+	else if ((window.parent)&&(window.parent.closeDialog)){
+        window.parent.closeDialog("toothDialog");
+    }
+    
 }

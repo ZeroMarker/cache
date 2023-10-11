@@ -106,7 +106,8 @@ function InitTransLocDocListDataGrid(){
 					$.messager.alert("警告","您没有此权限,请核实后重试!");
 					return;
 				}
-				var UIConfigImgURL = "dhc.bdp.ext.default.csp?extfilename=App/Care/DHC_CTLoc_MedUnit"
+				var UIConfigImgURL = "dhc.bdp.ct.dhcctlocmedunit.csp?extfilename=App/Care/DHC_CTLoc_MedUnit"
+				if(typeof websys_writeMWToken=='function') UIConfigImgURL=websys_writeMWToken(UIConfigImgURL);
     			window.open(UIConfigImgURL, "", "status=1,scrollbars=1,top=100,left=100,width=1200,height=600");
 			}
 		},{
@@ -126,8 +127,12 @@ function InitTransLocDocListDataGrid(){
 				var defaultfalg="0";
 				if (SelectedRow.Tdefault=="是") var defaultfalg=1;
 				var UserID=Trowid.split("||")[0];
+				if (HISUIStyleCode=="lite"){
+					var $code='<div style="border:1px solid #E2E2E2;margin:10px;border-radius:4px;"><table id="UserLogonPermission"></table></div>'	
+				}else{
 				var $code='<div style="border:1px solid #ccc;margin:10px;border-radius:4px;"><table id="UserLogonPermission"></table></div>'
-				createModalDialog("Grid","它科轮转权限", 900, 520,"icon-w-paper","",$code,"LoadUserLogonPermissionGrid('"+defaultfalg+"','"+Trowid+"')");
+				}
+				createModalDialog("Grid",$g("它科轮转权限"), 900, 520,"icon-w-paper","",$code,"LoadUserLogonPermissionGrid('"+defaultfalg+"','"+Trowid+"')");
 				//var UIConfigImgURL = "Otherlogonpermission.csp?UserID="+UserID;
 			    //window.open(UIConfigImgURL, "", "status=1,scrollbars=1,top=100,left=100,width=1200,height=600");
 			}
@@ -355,7 +360,7 @@ function CancleDocLoc(){
 	var SelectedRow=PageLogicObj.m_TransLocDocList.datagrid("getSelected");
 	var Trowid=SelectedRow.Trowid;
 	var defaultfalg="";
-	if (SelectedRow.Tdefault=="是") var defaultfalg=1;
+	if (SelectedRow.Tdefault==$g("是")) var defaultfalg=1;
 	var rtn=$.cm({
 	    ClassName : "web.DHCSSDOCGROUPCONFIG",
 	    MethodName : "CheckUnSaveOrd",
@@ -364,40 +369,50 @@ function CancleDocLoc(){
 	    dataType:"text"
 	},false);			
 	if (rtn==1){
-		if (!dhcsys_confirm("该用户在出科的科室内存在未核实的医嘱"+",是否继续出科?")) return false;
-	}
-	var SSDocGoupID=SelectedRow.SSDocGoupID;
-	var EndDate=$HUI.datebox("#GroupEndDate").getValue();
-	if (EndDate==""){
-		$.messager.alert("警告","结束日期不能为空!");
-				return;
-		}
-	var rtn=$.cm({
-	    ClassName : "web.DHCSSDOCGROUPCONFIG",
-	    MethodName : "DelTDItmPlan",
-	    defaultfalg:defaultfalg,
-	    str:Trowid,
-	    EndDate:EndDate, 
-	    SSGroupID:SSDocGoupID ,
-	    UserID:session['LOGON.USERID'],
-	    dataType:"text"
-	},false)
-	/*var rtn=$.cm({
-	    ClassName : "web.DHCSSDOCGROUPCONFIG",
-	    MethodName : "DelTDItm",
-	    defaultfalg:defaultfalg,
-	    str:Trowid,
-	    dataType:"text"
-	},false)*/
-	if (rtn=="0"){
-		$("#OutLocDoc-dialog").dialog("close");
-		$.messager.alert("警告","出科成功");
-		$HUI.datebox("#GroupEndDate").setValue("");
+		$.messager.confirm('提示', $g("该用户在出科的科室内存在未核实的医嘱")+$g(",是否继续出科?"), function(r){
+			if (r){
+				Save()
+			}
+		});
 	}else{
-		$.messager.alert("警告","删除失败");
+		Save()
+		}
+	function Save(){
+		var SelectedRow=PageLogicObj.m_TransLocDocList.datagrid("getSelected");	
+		var SSDocGoupID=SelectedRow.SSDocGoupID;
+		var EndDate=$HUI.datebox("#GroupEndDate").getValue();
+		if (EndDate==""){
+			$.messager.alert("警告","结束日期不能为空!");
+					return;
+			}
+		var rtn=$.cm({
+		    ClassName : "web.DHCSSDOCGROUPCONFIG",
+		    MethodName : "DelTDItmPlan",
+		    defaultfalg:defaultfalg,
+		    str:Trowid,
+		    EndDate:EndDate, 
+		    SSGroupID:SSDocGoupID ,
+		    UserID:session['LOGON.USERID'],
+		    dataType:"text"
+		},false)
+		/*var rtn=$.cm({
+		    ClassName : "web.DHCSSDOCGROUPCONFIG",
+		    MethodName : "DelTDItm",
+		    defaultfalg:defaultfalg,
+		    str:Trowid,
+		    dataType:"text"
+		},false)*/
+		if (rtn=="0"){
+			$("#OutLocDoc-dialog").dialog("close");
+			$.messager.alert("警告","出科成功");
+			$HUI.datebox("#GroupEndDate").setValue("");
+		}else{
+			$.messager.alert("警告","删除失败");
+		}
+		var SelectedIndex=PageLogicObj.m_TransLocDocList.datagrid("getRowIndex",SelectedRow);
+		LoadTransLocDocListDataGrid();
 	}
-	var SelectedIndex=PageLogicObj.m_TransLocDocList.datagrid("getRowIndex",SelectedRow);
-	LoadTransLocDocListDataGrid();
+	
 	}
 function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,_event){
     $("body").append("<div id='"+id+"' class='hisui-dialog'></div>");

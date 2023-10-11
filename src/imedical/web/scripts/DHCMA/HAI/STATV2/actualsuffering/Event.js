@@ -2,10 +2,9 @@
 	obj.numbers = "ALL";
    	obj.LoadEvent = function(args){
 		$('#ReportFrame').css('display', 'block');
-   	    setTimeout(function () {
-   	        obj.LoadRep();
-   	    }, 50);
-
+		setTimeout(function(){
+			obj.LoadRep();
+		},50);
 		//图的点击事件
 		$('#btnSearchChart').on('click',function(e,value){
 			$('#EchartDiv').css('display', 'block');
@@ -27,7 +26,10 @@
 		var DateFrom = $('#dtDateFrom').datebox('getValue');
 		var DateTo= $('#dtDateTo').datebox('getValue');
 		var Statunit = Common_CheckboxValue('chkStatunit');
-		var Qrycon = $('#aQryCon').combobox('getText');
+		var Qrycon = $('#cboQryCon').combobox('getText');
+		var SubLocArr   = $('#cboLoc').combobox('getValues');
+		var aLocIDs = SubLocArr.join();
+		var aStatDimens = $('#cboShowType').combobox('getValue');
 		ReportFrame = document.getElementById("ReportFrame");
 		if(Qrycon==""){
 			$.messager.alert("提示","请选择筛选条件！", 'info');
@@ -48,7 +50,7 @@
 					aDesc:Qrycon
 				},
 		false);
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S030InfPre1.raq&aDateFrom=' + DateFrom +'&aDateTo='+ DateTo +'&aHospIDs='+aHospID +'&aLocIDs='+'' +'&aLocType='+ Statunit +'&aQryCon='+ objDic.BTCode;
+		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S410SHCssInf.raq&aDateFrom=' + DateFrom +'&aDateTo='+ DateTo +'&aHospIDs='+aHospID +'&aLocIDs='+aLocIDs +'&aLocType='+ Statunit +'&aQryCon='+ objDic.BTCode+'&aStatDimens='+aStatDimens+'&aPath='+cspPath;;
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
@@ -163,11 +165,14 @@
 		obj.myChart.setOption(option1,true);
 		
 		 //当月科室感染率图表
-		var HospID = $('#cboHospital').combobox('getValue');
+		var aHospID = $('#cboHospital').combobox('getValue');
 		var DateFrom = $('#dtDateFrom').datebox('getValue');
 		var DateTo= $('#dtDateTo').datebox('getValue');
-		var StaType = Common_CheckboxValue('chkStatunit');
-		var Qrycon = $('#aQryCon').combobox('getText');
+		var Statunit = Common_CheckboxValue('chkStatunit');
+		var Qrycon = $('#cboQryCon').combobox('getText');
+		var SubLocArr   = $('#cboLoc').combobox('getValues');
+		var aLocIDs = SubLocArr.join();
+		var aStatDimens = $('#cboShowType').combobox('getValue');
 		var objDic = $cm({
 		    ClassName: "DHCHAI.BT.Dictionary",
 		    MethodName: "GetObjByDesc",
@@ -175,49 +180,54 @@
 		    aDesc: Qrycon
 		},
 		false);
-
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S030InfPre' + "&QueryName=" + 'QryInfPre' + "&Arg1=" + DateFrom + "&Arg2=" + DateTo + "&Arg3=" + HospID + "&Arg4=" + "" + "&Arg5=" + StaType + "&Arg6=" + objDic.BTCode + "&ArgCnt=" + 6;
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 60000, //30秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
+		obj.myChart.showLoading();	
+		$cm({
+		    ClassName: "DHCHAI.STATV2.S410SHCssInf",
+		    QueryName: "QryInfPre1",
+		    aDateFrom: DateFrom,
+		    aDateTo: DateTo,
+			aHospIDs:aHospID,
+			aLocIDs:aLocIDs,
+			aLocType:Statunit,
+			aQryCon:objDic.BTCode,
+			aStatDimens:aStatDimens,
+			page:1,    //可选项，页码，默认1
+			rows:999   //可选项，获取多少条数据，默认50
+		},
+		function(data){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			
+			obj.echartLocInfRatio(data);
+		}
+		,function(XMLHttpRequest, textStatus, errorThrown){
+			alert("类" + "DHCHAI.STATV2.S410SHCssInf" + ":" + "QryInfPre1" + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
+			obj.myChart.hideLoading();    //隐藏加载动画
 		});
+		
 		
 	   obj.echartLocInfRatio = function(runQuery){
 			if (!runQuery) return;
+			var aStatDimens = $('#cboShowType').combobox('getValue');  //展示维度
 			var arrViewLoc 	= new Array();
 			var arrInfRatio = new Array();
 			var arrInfCount = new Array();
-			var arrRecord 	= runQuery.record;
+			var arrRecord 	= runQuery.rows;
 			
 			for (var indRd = 0; indRd < arrRecord.length; indRd++){
 				var rd = arrRecord[indRd];
 				//去掉全院、医院、科室组
-				if ((rd["DimenCode"].indexOf('-A-')>-1)||(rd["DimenCode"].indexOf('-H-')>-1)||(rd["DimenCode"].indexOf('-G-')>-1)) {
+				if ((rd["DimenCode"].indexOf('-A-')>-1)||((aStatDimens!="H")&&(rd["DimenCode"].indexOf('-H-')>-1))||((aStatDimens!="G")&&(aStatDimens!="HG")&&(rd["DimenCode"].indexOf('-G-')>-1))||(!rd["DimenCode"])) {
 					delete arrRecord[indRd];
 					continue;
 				}
 				rd["LocDesc"] = $.trim(rd["LocDesc"]); //去掉空格
-				rd["HAIRatio"] = parseFloat(parseFloat(rd["HAIRatio"].replace('%','').replace('‰','')).toFixed(2));
+				
+				rd["HAICount"] =parseInt(rd["HospInfCount"])+parseInt(rd["ComInfCount"])
+				rd["HAIRatio"] = parseFloat(parseFloat(rd["ComHAIRatio"].replace('%','').replace('‰',''))+parseFloat(rd["HAIRatio"].replace('%','').replace('‰',''))).toFixed(2);
 			}
 			
-			arrRecord = arrRecord.sort(Common_GetSortFun('desc','HAICount'));  //排序
-			
+			arrRecord = arrRecord.sort(Common_GetSortFun('desc','HospInfCount'));  //排序
+
 			if(obj.numbers=="ALL"){
 				obj.numbers = arrRecord.length;
 			}else{
@@ -230,6 +240,7 @@
 					continue;
 				}else{
 					arrViewLoc.push(rd["LocDesc"]);
+					
 					arrInfCount.push(rd["HAICount"]);
 					arrInfRatio.push(parseFloat(rd["HAIRatio"]).toFixed(2));
 				}

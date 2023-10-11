@@ -148,7 +148,7 @@ function gridToSection(episodeID) {
             timeout: 5000,
             params: { EpisodeID: episodeID, AppType: 'Appoint', EMRDept: record.get('deptID'), Times: hour},
             success: function(response, opts) {
-                var obj = eval(response.responseText);
+                var obj = eval('('+response.responseText+')');
                 if (obj = true)
 				{
 					var simpleStore = Ext.getCmp('gridToSection').getStore();
@@ -264,8 +264,7 @@ function gridStatus(){
             timeout: 5000,
             params: { EpisodeID: episodeID, AppType: 'Withdraw', EpisodeID: episodeID},
             success: function(response, opts) {
-                var obj = eval(response.responseText);
-                if (obj = true)
+                if (response.responseText == "Y")
 				{
 					var simpleStore = Ext.getCmp('gridStatus').getStore();
 					simpleStore.reload();

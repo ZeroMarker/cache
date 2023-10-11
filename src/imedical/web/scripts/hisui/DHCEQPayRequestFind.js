@@ -39,7 +39,7 @@ function BAdd_Click()
 function BFind_Click()
 {
 	if (!$(this).linkbutton('options').disabled){
-		$('#tDHCEQPayRequestFind').datagrid('load',{ComponentID:getValueById("GetComponentID"),PayRequestNo:getValueById("PayRequestNo"),InvoiceNo:getValueById("InvoiceNo"),LocDR:getValueById("LocDR"),StatusDR:getValueById("Status"),ProviderDR:getValueById("ProviderDR"),StartDate:getValueById("StartDate"),EndDate:getValueById("EndDate"),PayFromType:getValueById("PayFromType"),SourceType:getValueById("SourceType")});
+		$('#tDHCEQPayRequestFind').datagrid('load',{ComponentID:getValueById("GetComponentID"),PayRequestNo:getValueById("PayRequestNo"),InvoiceNo:getValueById("InvoiceNo"),LocDR:getValueById("LocDR"),StatusDR:getValueById("Status"),ProviderDR:getValueById("ProviderDR"),StartDate:getValueById("StartDate"),EndDate:getValueById("EndDate"),PayFromType:getValueById("PayFromType"),SourceType:getValueById("SourceType"),Type:getValueById("Type")});
 	}
 }
 document.body.onload = BodyLoadHandler;

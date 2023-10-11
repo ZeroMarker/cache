@@ -2,6 +2,7 @@
 
 var GV = {
 	USERID: session['LOGON.USERID'],
+	GROUPID: session['LOGON.GROUPID'],
 	HOSPID: session['LOGON.HOSPID'],
 	CurInvNo: '',
 	EndInvNo: '',
@@ -56,49 +57,54 @@ function determineClick() {
 	if (!bool) {
 		return;
 	}
+	if (!getValueById("AbortEndInvNo")) {
+		$.messager.popover({msg: '结束号码不能为空', type: 'info'});
+		return;
+	}
 	var currentInsType = getValueById("CurrentInsType");
 	var receiptType = getValueById("receiptType");
 	if (!receiptType) {
 		$.messager.popover({msg: '票据类型不能为空', type: 'info'});
-		return false;
+		return;
 	}
 	var abortNum = getValueById("AbortNum");
 	if (!abortNum) {
 		$.messager.popover({msg: '请输入作废张数', type: 'info'});
 		focusById('AbortNum');
-		return false;
+		return;
 	}
 	if (parseInt(GV.AbortEndInvNo, 10) < parseInt(GV.CurInvNo, 10)) {
 		$.messager.popover({msg: '结束号码不能小于开始号码', type: 'info'});
-		return false;
+		return;
 	}
 	if (((parseInt(GV.EndInvNo, 10) < parseInt(GV.AbortEndInvNo, 10)))) {
 		$.messager.popover({msg: '结束号码不能大于最大号码', type: 'info'});
-		return false;
+		return;
 	}
 	var voidReason = $.trim(getValueById("voidRea"));
 	if (!voidReason) {
 		$.messager.popover({msg: '作废原因不能为空', type: 'info'});
 		return;
 	}
-	var myExpStr = GV.USERID + "^" + getValueById("GroupID") + "^" + GV.CurInvNo + "^" + voidReason + "^" + GV.AbortEndInvNo + "^" + abortNum;
+	var myExpStr = GV.USERID + "^" + GV.GROUPID + "^" + GV.CurInvNo + "^" + voidReason + "^" + GV.AbortEndInvNo + "^" + abortNum;
 	myExpStr += "^" + GV.EndInvNo + "^" + GV.Title + "^" + currentInsType + "^" + receiptType + "^" + GV.HOSPID;
 	$.messager.confirm("确认", "是否确认跳号",function (r) {
-		if (r) {
-			$.m({
-				ClassName: "web.DHCBillSkipInvoice",
-				MethodName: "SkipInvoice",
-				expStr: myExpStr
-			}, function(rtn) {
-				if (rtn == "0") {
-					$.messager.alert("提示", "作废成功", "success", function(){
-						websys_showModal("close");
-					});
-				}else {
-					$.messager.alert("提示", "作废失败：" + rtn, "error");
-				}
-			});
+		if (!r) {
+			return;
 		}
+		$.m({
+			ClassName: "web.DHCBillSkipInvoice",
+			MethodName: "SkipInvoice",
+			expStr: myExpStr
+		}, function(rtn) {
+			if (rtn == 0) {
+				$.messager.alert("提示", "作废成功", "success", function(){
+					websys_showModal("close");
+				});
+				return;
+			}
+			$.messager.alert("提示", "作废失败：" + rtn, "error");
+		});
 	});
 }
 
@@ -106,26 +112,19 @@ function abortNumKeyup(e) {
 	if (!$(e.target).validatebox("isValid")) {
 		return;
 	}
-	var num = getValueById('AbortNum') || 1;
+	var num = $(e.target).val() || 1;
  	if(!new RegExp('^[1-9]\\d*$').test(num)) {
 		setValueById("AbortNum", "");
 	 	return;
 	}
-	var ssno = "";
-	var ssno1;
-	var slen;
-	var sslen;
 	var index = GV.CurInvNo.search(/\d/);      //+2018-02-12 ZhYW 取第一个数字在字符串中所在的位置
 	var snost = GV.CurInvNo.substring(0, index);
 	var snoend = GV.CurInvNo.substring(index);
-	if ((GV.CurInvNo != "") && new RegExp('^[0-9]\\d*$').test(snoend)) {
-		ssno1 = parseInt(snoend, 10) + parseInt(num, 10) - 1;
-		ssno = ssno1.toString();
-		slen = snoend.length;
-		sslen = ssno.length;
-		for (i = slen; i > sslen; i--) {
-			ssno = '0' + ssno;
-		}
+	if ((GV.CurInvNo != "") && new RegExp('^[0-9]\\d*$').test(snoend)) {		
+		var ssno1 = parseInt(snoend, 10) + parseInt(num, 10) - 1;
+		var ssno = String(ssno1);
+		var slen = snoend.length;
+		ssno = (Array(slen).join("0") + ssno).slice(-slen);
 		GV.AbortEndInvNo = snost + ssno;
 		setValueById("AbortEndInvNo", GV.Title + '[' + GV.AbortEndInvNo + ']');
 	}
@@ -137,7 +136,7 @@ function GetReceiptNo() {
 	switch(receiptType) {
 	case 'OP':
 		//门诊发票
-		var myExpStr = getValueById("GroupID") + "^" + "F" + "^" + GV.HOSPID;
+		var myExpStr = GV.GROUPID + "^" + "F" + "^" + GV.HOSPID;
 		$.m({
 			ClassName: "web.DHCBillSkipInvoice",
 			MethodName: "GetOPReceiptNo",
@@ -161,12 +160,13 @@ function GetReceiptNo() {
 		break;
 	case 'IP':
 		//住院发票
+		var myExpStr = GV.GROUPID + "^" + GV.HOSPID;
 		$.m({
 			ClassName: "web.DHCBillSkipInvoice",
 			MethodName: "GetIPReceiptNo",
 			userID: GV.USERID,
 			insType: currentInsType,
-			hospID: GV.HOSPID
+			expStr: myExpStr
 		}, function (rtn) {
 			SetReceipNO(rtn);
 		});

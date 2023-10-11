@@ -8,7 +8,7 @@ var mainRowId = "";
 var needCompleted="Y";
 var locField = new Ext.ux.LocComboBox({
 	id:'locField',
-	fieldLabel:'科室',
+	fieldLabel:$g('科室'),
 	name:'locField',
 	anchor:'90%',
 	groupId:gGroupId
@@ -20,7 +20,7 @@ var startDateField = new Ext.ux.DateField({
 //	width:100,
 	listWidth:100,
     allowBlank:false,
-	fieldLabel:'开始日期',
+	fieldLabel:$g('开始日期'),
 	value:new Date(),
 	anchor:'90%'
 });
@@ -30,13 +30,13 @@ var endDateField = new Ext.ux.DateField({
 	//width:100,
 	listWidth:100,
     allowBlank:false,
-	fieldLabel:'结束日期',
+	fieldLabel:$g('结束日期'),
 	value:new Date(),
 	anchor:'90%'
 });
 var includeAuditedCK = new Ext.form.Checkbox({
 	id: 'includeAuditedCK',
-	boxLabel:'已审核',
+	boxLabel:$g('已审核'),
 	anchor:'90%',
 	allowBlank:true
 });
@@ -80,7 +80,7 @@ var INScrapAuditGridDs = new Ext.data.Store({
 var INScrapAuditGridCm = new Ext.grid.ColumnModel([
 	 new Ext.grid.RowNumberer(),
 	 {
-        header:"主表RowId",
+        header:$g("主表RowId"),
         dataIndex:'inscp',
         hidden:true
     },/*{
@@ -90,13 +90,13 @@ var INScrapAuditGridCm = new Ext.grid.ColumnModel([
         align:'left',
         sortable:true
     },*/{
-        header:"科室名称",
+        header:$g("科室名称"),
         dataIndex:'locDesc',
         width:120,
         align:'left',
         sortable:true
     },{
-    	 header:"报损单号",
+    	 header:$g("报损单号"),
         dataIndex:'no',
         width:150,
         align:'center',
@@ -109,25 +109,25 @@ var INScrapAuditGridCm = new Ext.grid.ColumnModel([
         align:'left',
         sortable:true
     }*/,{
-        header:"制单人",
+        header:$g("制单人"),
         dataIndex:'userName',
         width:100,
         align:'left',
         sortable:true
     },	{
-        header:"制单日期",
+        header:$g("制单日期"),
         dataIndex:'date',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"制单时间",
+        header:$g("制单时间"),
         dataIndex:'time',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"完成标志",
+        header:$g("完成标志"),
         dataIndex:'completed',
         width:60,
         align:'left',
@@ -137,7 +137,7 @@ var INScrapAuditGridCm = new Ext.grid.ColumnModel([
 			return '<div class="x-grid3-check-col'+(((v=='Y')||(v==true))?'-on':'')+' x-grid3-cc-'+this.id+'">&#160;</div>';
 		}
     },{
-        header:"审核标志",
+        header:$g("审核标志"),
         dataIndex:'chkFlag',
         width:60,
         align:'left',
@@ -153,33 +153,33 @@ var INScrapAuditGridCm = new Ext.grid.ColumnModel([
         align:'left',
         sortable:true
     }*/,{
-        header:"审核人",
+        header:$g("审核人"),
         dataIndex:'chkUserName',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"审核日期",
+        header:$g("审核日期"),
         dataIndex:'chkDate',
         width:100,
         align:'left',
         sortable:true,
 		hidden:true
     },{
-        header:"审核时间",
+        header:$g("审核时间"),
         dataIndex:'chkTime',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"进价金额",
+        header:$g("进价金额"),
         dataIndex:'rpAmt',
         width:100,
         align:'right',
         sortable:true,
         renderer:FormatGridRpAmount
     },{
-        header:"售价金额",
+        header:$g("售价金额"),
         dataIndex:'spAmt',
         width:100,
         align:'right',
@@ -191,8 +191,8 @@ var INScrapAuditGridCm = new Ext.grid.ColumnModel([
 INScrapAuditGridCm.defaultSortable = true;
 
 var findINScrapAudit = new Ext.Toolbar.Button({
-	text:'查询',
-    tooltip:'查询',
+	text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
 	width : 70,
 	height : 30,
@@ -207,20 +207,20 @@ function query(){
 		if((startDate!="")&&(startDate!=null)){
 			startDate = startDate.format(App_StkDateFormat);
 		}else{
-			Msg.info("error","请选择起始日期!");
+			Msg.info("error",$g("请选择起始日期!"));
 			return false;
 		}
 		var endDate = Ext.getCmp('endDateField').getValue();
 		if((endDate!="")&&(endDate!=null)){
 			endDate = endDate.format(App_StkDateFormat);
 		}else{
-			Msg.info("error","请选择截止日期!");
+			Msg.info("error",$g("请选择截止日期!"));
 			return false;
 		}
 			
 		var locId = Ext.getCmp('locField').getValue();
 		if((locId=="")||(locId==null)){
-			Msg.info("error","请选择申请部门!");
+			Msg.info("error",$g("请选择申请部门!"));
 			return false;
 		}
 			
@@ -232,7 +232,7 @@ function query(){
 		INScrapAuditGridDs.load({params:{start:0,limit:InscrapAuditPagingToolbar.pageSize,sort:'NO',dir:'desc',strParam:strPar},
 		callback : function(r,options, success){
 			if(success==false){
-				Msg.info("error","查询错误!");}
+				Msg.info("error",$g("查询错误!"));}
 				else{
 					if(r.length>=1){
 						INScrapAuditGrid.getSelectionModel().selectFirstRow();
@@ -247,41 +247,41 @@ function query(){
 	
 	}
 var auditINScrapAudit = new Ext.Toolbar.Button({
-	text:'审核',
-    tooltip:'审核',
+	text:$g('审核'),
+    tooltip:$g('审核'),
     iconCls:'page_gear',
 	width : 70,
 	height : 30,
 	handler:function(){
 		var locId = Ext.getCmp('locField').getValue();
 		if((locId=="")||(locId==null)){
-			Msg.info("error","请选择申请部门!");
+			Msg.info("error",$g("请选择申请部门!"));
 			return false;
 		}
 		if((mainRowId!="")&&(mainRowId!=null)){
 			Ext.Ajax.request({
 				url: INScrapAuditGridUrl+'?actiontype=audit&inscrap='+mainRowId+'&userId='+UserId+'&locId='+locId,
 				failure: function(result, request) {
-					Msg.info("error","请检查网络连接!");
+					Msg.info("error",$g("请检查网络连接!"));
 				},
 				success: function(result, request) {
 					var jsonData = Ext.util.JSON.decode( result.responseText );
 					if (jsonData.success=='true') {
-						Msg.info("success","审核成功!");
+						Msg.info("success",$g("审核成功!"));
 						
 						//审核成功就刷新页面
 						var startDate = Ext.getCmp('startDateField').getValue();
 						if((startDate!="")&&(startDate!=null)){
 							startDate = startDate.format(App_StkDateFormat);
 						}else{
-							Msg.info("error","请选择起始日期!");
+							Msg.info("error",$g("请选择起始日期!"));
 							return false;
 						}
 						var endDate = Ext.getCmp('endDateField').getValue();
 						if((endDate!="")&&(endDate!=null)){
 							endDate = endDate.format(App_StkDateFormat);
 						}else{
-							Msg.info("error","请选择截止日期!");
+							Msg.info("error",$g("请选择截止日期!"));
 							return false;
 						}
 						var includeAudited = (Ext.getCmp('includeAuditedCK').getValue()==true?'Y':'N');
@@ -292,30 +292,30 @@ var auditINScrapAudit = new Ext.Toolbar.Button({
 						INScrapAuditDetailGridDs.removeAll();
 					}else{
 						if(jsonData.info==-1){
-							Msg.info("error","主表rowid为空!");
+							Msg.info("error",$g("主表rowid为空!"));
 						}else if(jsonData.info==-2){
-							Msg.info("error","登录用户rowid为空!");
+							Msg.info("error",$g("登录用户rowid为空!"));
 						}else if(jsonData.info==-3){
-							Msg.info("error","已经审核过!");
+							Msg.info("error",$g("已经审核过!"));
 						}else if(jsonData.info==-102){
-							Msg.info("error","库存处理出错!");
+							Msg.info("error",$g("库存处理出错!"));
 						}else if(jsonData.info==-103){
-							Msg.info("error","插入台账数据出错!");
+							Msg.info("error",$g("插入台账数据出错!"));
 						}else{
-							Msg.info("error","审核失败!");
+							Msg.info("error",$g("审核失败!"));
 						}
 					}
 				},
 				scope: this
 			});
 		}
-		else {Msg.info("warning","没有单据需要审核!");return false;}
+		else {Msg.info("warning",$g("没有单据需要审核!"));return false;}
     }
 });
 
 var clearINScrapAudit = new Ext.Toolbar.Button({
-	text:'清空',
-    tooltip:'清空',
+	text:$g('清空'),
+    tooltip:$g('清空'),
     iconCls:'page_clearscreen',
 	width : 70,
 	height : 30,
@@ -326,19 +326,22 @@ var clearINScrapAudit = new Ext.Toolbar.Button({
 		INScrapAuditGridDs.removeAll();
 		INScrapAuditDetailGridDs.removeAll();
 		mainRowId=""
+		SetLogInDept(locField.getStore(),'locField');
+		Ext.getCmp("startDateField").setValue(new Date());
+		Ext.getCmp("endDateField").setValue(new Date());
 	}
 });
 
 var printINScrapAudit = new Ext.Toolbar.Button({
-	text : '打印',
-	tooltip : '打印报损单',
+	text : $g('打印'),
+	tooltip : $g('打印报损单'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_print',
 	handler : function() {
 		var rowData=INScrapAuditGrid.getSelectionModel().getSelected();
 		if (rowData ==null) {
-			Msg.info("warning", "请选择需要打印的报损单!");
+			Msg.info("warning", $g("请选择需要打印的报损单!"));
 			return;
 		}
 		var inscrap = rowData.get("inscp");
@@ -356,7 +359,7 @@ var formPanel = new Ext.form.FormPanel({
     tbar:[findINScrapAudit,'-',clearINScrapAudit,'-',auditINScrapAudit,'-',printINScrapAudit],
 	items : [{
 		xtype : 'fieldset',
-		title : '条件选项',
+		title : $g('条件选项'),
 		layout : 'column',
 		style:DHCSTFormStyle.FrmPaddingV,
 		items : [{
@@ -389,8 +392,8 @@ var InscrapAuditPagingToolbar = new Ext.PagingToolbar({
 	store:INScrapAuditGridDs,
 	pageSize:15,
 	displayInfo:true,
-	displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-	emptyMsg:"没有记录"
+	displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+	emptyMsg:$g("没有记录")
 });
 
 //表格
@@ -461,67 +464,67 @@ var INScrapAuditDetailGridCm = new Ext.grid.ColumnModel([
         align:'left',
         sortable:true
     },*/{
-        header:"药品代码",
+        header:$g("药品代码"),
         dataIndex:'code',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'desc',
         width:200,
         align:'left',
         sortable:true
     },{
-        header:"规格",
+        header:$g("规格"),
         dataIndex:'spec',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"厂商",
+        header:$g("生产企业"),
         dataIndex:'manf',
         width:150,
         align:'left',
         sortable:true
     },{
-        header:"批号~效期",
+        header:$g("批号~效期"),
         dataIndex:'batNo',
         width:180,
         align:'left',
         sortable:true
     },{
-        header:"报损数量",
+        header:$g("报损数量"),
         dataIndex:'qty',
         width:100,
         align:'right',
         sortable:true
     },{
-        header:"单位",
+        header:$g("单位"),
         dataIndex:'uomDesc',
         width:75,
         align:'left'
     },{
-        header:"进价",
+        header:$g("进价"),
         dataIndex:'rp',
         width:75,
         align:'right',
         sortable:true
     },{
-        header:"售价",
+        header:$g("售价"),
         dataIndex:'sp',
         width:75,
         align:'right',
         sortable:true
     },{
-        header:"进价金额",
+        header:$g("进价金额"),
         dataIndex:'rpAmt',
         width:100,
         align:'right',
         sortable:true,
         renderer:FormatGridRpAmount
     },{
-        header:"售价金额",
+        header:$g("售价金额"),
         dataIndex:'spAmt',
         width:100,
         align:'right',
@@ -536,8 +539,8 @@ var InscrapAuditDetailPagingToolbar = new Ext.PagingToolbar({
 	store:INScrapAuditDetailGridDs,
 	pageSize:15,
 	displayInfo:true,
-	displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-	emptyMsg:"没有记录"
+	displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+	emptyMsg:$g("没有记录")
 });
 //表格
 INScrapAuditDetailGrid = new Ext.grid.EditorGridPanel({
@@ -567,7 +570,7 @@ Ext.onReady(function(){
 		GetParamCommon();  //初始化公共参数配置
 	}	
 	var panel = new Ext.Panel({
-		title:'库存报损单审核',
+		title:$g('库存报损单审核'),
 		activeTab:0,
 		region:'north',
 		height:DHCSTFormStyle.FrmHeight(1),

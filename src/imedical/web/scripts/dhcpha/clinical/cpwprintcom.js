@@ -203,8 +203,12 @@ function print_medEducation(medEduID){
 }
 
 PRINTCOM.jsRunServer = function(_options, successFn, errorFn){
+	var p_URL = "websys.Broker.cls"
+	if ("undefined"!==typeof(websys_getMWToken)){
+			p_URL += "?MWToken="+websys_getMWToken()
+		}
 	$.ajax({
-		url: "websys.Broker.cls",
+		url:p_URL ,
 		type: "post",
 		async: false,
 		dataType: "json",

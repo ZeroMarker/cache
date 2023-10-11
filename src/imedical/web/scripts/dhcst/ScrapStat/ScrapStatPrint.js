@@ -1,3 +1,4 @@
+var gUserId = session['LOGON.USERID'];
 function PrintScrapStat(ParStr)
 {
 	if(ParStr==null || ParStr==''){
@@ -12,9 +13,9 @@ function PrintScrapStat(ParStr)
 	var ReasonID=StrArr[5];
 	var StkGrpType=StrArr[6];
 	var LocDesc=StrArr[7];
-	var User=StrArr[8];
+	var User=StrArr[8];  //£»
 
-	fileName="{DHCST_ScrapStat.raq(StartDate="+StartDate+";EndDate="+EndDate+";StkType="+StkType+";StkGrpType="+StkGrpType+";Loc="+LocID+";ReasonDr="+ReasonID+";ItmDr="+InciID+";LocDesc="+LocDesc+";HospDesc="+App_LogonHospDesc+";User="+User+")}";
+	fileName="{DHCST_ScrapStat.raq(StartDate="+StartDate+";EndDate="+EndDate+";StkType="+StkType+";StkGrpType="+StkGrpType+";Loc="+LocID+";ReasonDr="+ReasonID+";ItmDr="+InciID+";USERID="+gUserId+")}";
 	DHCCPM_RQDirectPrint(fileName);
 }
 function ExportScrapStat(ParStr)
@@ -33,6 +34,6 @@ function ExportScrapStat(ParStr)
 	var LocDesc=StrArr[7];
 	var User=StrArr[8];
 
-	fileName="DHCST_ScrapStat.raq&StartDate="+StartDate+"&EndDate="+EndDate+"&StkType="+StkType+"&StkGrpType="+StkGrpType+"&Loc="+LocID+"&ReasonDr="+ReasonID+"&ItmDr="+InciID+"&LocDesc="+LocDesc+"&HospDesc="+App_LogonHospDesc+'&User='+User;
+	fileName="DHCST_ScrapStat.raq&StartDate="+StartDate+"&EndDate="+EndDate+"&StkType="+StkType+"&StkGrpType="+StkGrpType+"&Loc="+LocID+"&ReasonDr="+ReasonID+"&ItmDr="+InciID+'&USERID='+gUserId;
 	DHCCPM_RQPrint(fileName);
 }

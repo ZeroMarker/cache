@@ -15,12 +15,12 @@ function EntryBatQuery(Fn) {
        var gGroupId=session['LOGON.GROUPID']
        var gUserId = session['LOGON.USERID'];
 		var InciDesc = new Ext.form.TextField({
-					fieldLabel : '药品名称',
+					fieldLabel : $g('药品名称'),
 					id : 'InciDesc',
 					name : 'InciDesc',
 					anchor : '90%',
-					width : 140,
-					emptyText : '别名...',
+					width : 240,
+					emptyText : $g('别名...'),
 					selectOnfocus: true,
 					listeners : {
 						specialkey : function(field, e) {
@@ -67,7 +67,7 @@ function EntryBatQuery(Fn) {
 			Ext.Ajax.request({
 						url : url,
 						method : 'POST',
-						waitMsg : '查询中...',
+						waitMsg : $g('查询中...'),
 						success : function(result, request) {
 							var jsonData = Ext.util.JSON
 									.decode(result.responseText);
@@ -84,17 +84,17 @@ function EntryBatQuery(Fn) {
 			
 		// 单位
 		var CTUom = new Ext.form.ComboBox({
-					fieldLabel : '单位',
+					fieldLabel : $g('单位'),
 					id : 'CTUom',
 					name : 'CTUom',
 					anchor : '90%',
-					width : 140,
+					width : 240,
 					store : ItmUomStore,
 					valueField : 'RowId',
 					displayField : 'Description',
 					allowBlank : false,
 					triggerAction : 'all',
-					emptyText : '单位...',
+					emptyText : $g('单位...'),
 					selectOnFocus : true,
 					forceSelection : true,
 					minChars : 1,
@@ -114,17 +114,17 @@ function EntryBatQuery(Fn) {
 				})
 //批号效期
      var BatExDate = new Ext.form.ComboBox({
-		fieldLabel : '批号效期',
+		fieldLabel : $g('批号效期'),
 		id : 'BatExDate',
 		name : 'BatExDate',
 		anchor : '90%',
-		width : 140,
+		width : 240,
 		store : BatExDateStore,
 		valueField : 'RowId',
 		displayField : 'Description',
 		allowBlank : false,
 		triggerAction : 'all',
-		emptyText : '批号效期...',
+		emptyText : $g('批号效期...'),
 		selectOnFocus : true,
 		forceSelection : true,
 		minChars : 1,
@@ -145,17 +145,17 @@ function EntryBatQuery(Fn) {
  
 //货位
      var StkBinQ = new Ext.form.ComboBox({
-            fieldLabel : '货位',
+            fieldLabel : $g('货位'),
             id : 'StkBinQ',
             name : 'StkBinQ',
             anchor : '90%',
-            width : 140,
+            width : 240,
             store : LocStkBinQStore,
             valueField : 'RowId',
             displayField : 'Description',
             allowBlank : true,
             triggerAction : 'all',
-            emptyText : '货位...',
+            emptyText : $g('货位...'),
             selectOnFocus : true,
             forceSelection : true,
             minChars : 1,
@@ -178,25 +178,25 @@ function EntryBatQuery(Fn) {
     var InStkQty=new Ext.form.NumberField({
         id : 'InStkQty',
         name : 'InStkQty',
-        fieldLabel:'数量',
+        fieldLabel:$g('数量'),
         anchor:'90%',
-        emptyText : '数量...',
-        width:140
+        emptyText : $g('数量...'),
+        width:240
     });
     var InStkVen=new Ext.form.TextField({
         id : 'InStkVen',
         name : 'InStkVen',
-        fieldLabel:'厂家',
+        fieldLabel:$g('生产企业'),
         anchor:'90%',
-        emptyText : '厂家...',
-        width:140,
+        emptyText : $g('生产企业...'),
+        width:240,
         disabled:true
     });
 
 	// 保存按钮
 	var SaveBT = new Ext.Toolbar.Button({
-				text : '保存',
-				tooltip : '点击保存药品信息',
+				text : $g('保存'),
+				tooltip : $g('点击保存药品信息'),
 				iconCls : 'page_save',
 				handler : function() {
 				    if (CheckDataBeforeSave()==true){	 
@@ -207,28 +207,28 @@ function CheckDataBeforeSave(){
   var InciDescId = Ext.getCmp("InciDesc").getValue();
 			
   if((InciDescId==null || InciDescId=="")){
-    Msg.info("warning", "药品名称不能为空!");
+    Msg.info("warning", $g("药品名称不能为空!"));
     InciDesc.focus(true,true);
     return false;
   }	
   var BatExDateId = Ext.getCmp("BatExDate").getValue();
 			
  if((BatExDateId==null || BatExDateId=="")){
-    Msg.info("warning", "批次不能为空!");
+    Msg.info("warning", $g("批次不能为空!"));
     BatExDate.focus(true,true);
     return false;
   }
   var StkBinQId = Ext.getCmp("StkBinQ").getValue();
 			
  if((StkBinQId==null || StkBinQId=="")){
-    Msg.info("warning", "货位不能为空!");
+    Msg.info("warning", $g("货位不能为空!"));
     StkBinQ.focus(true,true);
     return false;
   }
   var InStkQtyId = Ext.getCmp("InStkQty").getValue();
 			
   if((InStkQtyId==null || InStkQtyId=="")){
-    Msg.info("warning", "数量不能为空!");
+    Msg.info("warning", $g("数量不能为空!"));
     InStkQty.focus(true,true);
     return false;
    }	
@@ -245,25 +245,25 @@ function saveData(){
    RetValue=RowId+"^"+Qty+"^"+InputUom
    }
  else{
-   Msg.info("warning", "没有数据！");  }
+   Msg.info("warning", $g("没有数据！"));  }
  window.close();
 	}
 
 			
 	// 取消按钮
 	var cancelBT = new Ext.Toolbar.Button({
-				text : '取消',
-				tooltip : '点击取消',
-				iconCls : 'cancel',
+				text : $g('取消'),
+				tooltip : $g('点击取消'),
+				iconCls : 'page_gear',
 				handler : function() {
-					window.hide();
+					window.close();
 				}
 			});			
 							
 	var HisListTab = new Ext.form.FormPanel({
 			labelwidth : 30,
 			region : 'center',
-			height : 160,
+			height : 140,
 			labelAlign : 'right',
 			frame : true,
 			autoScroll : true,
@@ -274,36 +274,16 @@ function saveData(){
 		    items:[{
 		    		xtype:'fieldset',
 		    		border:false,
-		    		items:[InciDesc]		    		
-		    	  },{
-		    		xtype:'fieldset',
-		    		border:false,
-		    		items:[CTUom]		    		
-		    	  },{
-		    		xtype:'fieldset',
-		    		border:false,
-		    		items:[BatExDate]		    		
-		    	  },{
-                            xtype:'fieldset',
-		    		border:false,
-		    		items:[StkBinQ] 
-			  },{
-                            xtype:'fieldset',
-		    		border:false,
-		    		items:[InStkQty] 
-			  },{
-                            xtype:'fieldset',
-		    		border:false,
-		    		items:[InStkVen] 
-			  }
-			    	  
+		    		items:[InciDesc,CTUom,BatExDate,StkBinQ,InStkQty,InStkVen]		    		
+		    	  }
 		    ]	
 		});
 
 	var window = new Ext.Window({
-				title : '录入实盘',
+				title : $g('录入实盘'),
 				width : 400,
-				height : 350,
+				height : 300,
+				modal:true,
 				layout:'border',
 				items : [HisListTab]
 			});

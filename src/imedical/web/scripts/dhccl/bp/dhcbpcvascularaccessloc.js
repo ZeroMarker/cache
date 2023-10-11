@@ -8,7 +8,11 @@ $(function(){
 				
 				var opts = $(this).combobox('options');
 				return row[opts.textField];
-				}
+			},
+			onBeforeLoad:function(param)
+        	{
+            	param.hospId=session['LOGON.HOSPID'];
+        	}
 			})			
 		var vasAccessObj=$HUI.combobox("#vasAccess",{
 			url:$URL+"?ClassName=web.DHCBPCVascularAccess&QueryName=FindVasAccess&ResultSetType=array",
@@ -49,7 +53,9 @@ $(function(){
 								ClassName:"web.DHCBPCVascularAccess",
 								MethodName:"InsertVasAccessLoc",
 								bpcVADr:$("#vasAccess").combobox('getValue'),
-								ctloc:$("#ctLoc").combobox('getValue')
+								ctloc:$("#ctLoc").combobox('getValue'),
+								bpcVAAliasDesc:$("#vasAccess").combobox('getText'),
+								hospId:session['LOGON.HOSPID']
 							},function(success){
 								if(success==0)
 								{
@@ -95,7 +101,9 @@ $(function(){
 							MethodName:"UpdateVasAccessLoc",
 							bpVALId:id,
 							BPVALBPCVADr:$("#vasAccess").combobox('getValue'),
-							ctloc:$("#ctLoc").combobox('getValue')
+							ctloc:$("#ctLoc").combobox('getValue'),
+							bpcVAAliasDesc:$("#vasAccess").combobox('getText'),
+							hospId:session['LOGON.HOSPID']
 						},function(success){
 							if(success==0)
 							{
@@ -124,7 +132,8 @@ $(function(){
 		url:$URL,
 		queryParams:{
 			ClassName:"web.DHCBPCVascularAccess",
-			QueryName:"FindVasAccessLoc"
+			QueryName:"FindVasAccessLoc",
+			hospId:session['LOGON.HOSPID']
 		},
         columns:[[
 			{ field: "tValRowId", title: "±àºÅ", width: 120 },

@@ -10,11 +10,14 @@ var logonLocId = session['LOGON.CTLOCID'];
 var logonUserId = session['LOGON.USERID'];
 var logonGrpId = session['LOGON.GROUPID'];
 var logonInfo = logonGrpId + '^' + logonLocId + '^' + logonUserId;
+PCntItmLogID = PCntItmLogID.trim();
+
 $(function () {
     InitDict();
     InitSetDefVal();
     InitGridOrdItm();
     InitGridCommentLog();
+    
     $('#btnFind').on('click', function () {
         QueryOrdInfo();
     });
@@ -38,7 +41,7 @@ function InitDict() {
             QueryOrdInfo();
         },
         data: [
-            { RowId: 0, Description: $g('不合格') },
+            { RowId: 0, Description: $g('不合理') },
             { RowId: 1, Description: $g('已接受') },
             { RowId: 2, Description: $g('已申诉') }
         ]
@@ -47,11 +50,10 @@ function InitDict() {
     $('#cmbComResult').combobox('setValue', 0);
 }
 
-/// 界面信息初始化
+// 界面信息初始化
 function InitSetDefVal() {
     //界面配置
-    $.cm(
-        {
+    $.cm({
             ClassName: 'PHA.PRC.Com.Util',
             MethodName: 'GetAppProp',
             UserId: logonUserId,
@@ -83,23 +85,33 @@ function InitGridOrdItm() {
             { field: 'mOeori', title: 'mOeori', width: 60, hidden: true }
         ]
     ];
+    
+    var startDate = $('#conStartDate').datebox('getValue') || '';
+    var endDate = $('#conEndDate').datebox('getValue') || '';
+    var state = $('#cmbComResult').combobox('getValue') || '';    
     var dataGridOption = {
         url: $URL,
         queryParams: {
             ClassName: 'PHA.PRC.Create.FindForDoctor',
             QueryName: 'SelectOrdDataForDoctor',
-            startDate: '',
-            endDate: '',
-            inputStr: '',
+            startDate: startDate,
+            endDate: endDate,
+            inputStr: logonUserId + '^'+ state,
             logonInfo: logonInfo
         },
         columns: columns,
-        toolbar: gridOrdItmBar,
-        onClickRow: function (rowIndex, rowData) {
+        toolbar: '#gridOrdItmBar',
+        onSelect: function (rowIndex, rowData) {
             if (rowData) {
                 QueryCommentLog();
             }
-        }
+        },
+        onLoadSuccess: function(data){
+	        console.log(data)
+	    	if(data.rows.length > 0){
+		    	$(this).datagrid('selectRow', 0);
+		    }
+	    }
     };
     PHA.Grid('gridOrdItm', dataGridOption);
 }
@@ -120,7 +132,7 @@ function InitGridCommentLog() {
             { field: 'comTime', title: '点评时间', width: 100 },
             { field: 'comUserName', title: '点评人', width: 80 },
             { field: 'comResult', title: '点评结果', width: 100 },
-            { field: 'comFactorDesc', title: '不合格警示值', width: 80, hidden: true },
+            { field: 'comFactorDesc', title: '不合理警示值', width: 80, hidden: true },
             { field: 'comAdviceDesc', title: '药师建议', width: 150 },
             { field: 'comDocAdviceDesc', title: '医生反馈', width: 100, hidden: true },
             { field: 'comPhNotes', title: '药师备注', width: 200 },
@@ -137,13 +149,16 @@ function InitGridCommentLog() {
             inputStr: ''
         },
         columns: columns,
-        toolbar: null,
+        toolbar: [],
         onClickRow: function (rowIndex, rowData) {
             if (rowData) {
             }
         }
     };
     PHA.Grid('gridCommentLog', dataGridOption);
+    
+    $('#panelCommentLog').css('border-bottom', '');
+    $('#panelCommentLog').parent().css('border-bottom', '1px solid #e2e2e2');
 }
 
 /// 查询不合理医嘱信息

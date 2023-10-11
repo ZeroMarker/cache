@@ -40,7 +40,7 @@ function InitPatEpisodeID(){
 	mdtID = getParam("ID");             /// 会诊单据类型
 	mdtMakResID = getParam("mdtMakResID");  /// 预约资源ID
 	if (mdtID != ""){
-		var Link = "dhcmdt.makeresources.csp?ID="+ mdtID +"&mdtMakResID="+mdtMakResID +"&DisGrpID="+ DisGrpID +"&EpisodeID="+ EpisodeID;
+		var Link = "dhcmdt.makeresources.csp?ID="+ mdtID +"&mdtMakResID="+mdtMakResID +"&DisGrpID="+ DisGrpID +"&EpisodeID="+ EpisodeID+"&MWToken="+websys_getMWToken();
 		$("#mdtFrame").attr("src",Link);
 	}
 }
@@ -54,7 +54,7 @@ function AddLocWin(){
     	var rowObj={PrvTpID:'', PrvTp:'', LocID:'', LocDesc:'', UserID:'', UserName:'', TelPhone:''};
 		$("#LocGrpList").datagrid('appendRow',rowObj);
    }else{
-	   var Link = "dhcmdt.makresloc.csp?DisGrpID="+DisGrpID;
+	   var Link = "dhcmdt.makresloc.csp?DisGrpID="+DisGrpID+"&MWToken="+websys_getMWToken();
 	   mdtPopWin1(2, Link); /// 弹出MDT会诊处理窗口
    }
 }
@@ -108,7 +108,7 @@ function InitLocGrpGrid(){
 	var PrvTpEditor={  //设置其为可编辑
 		type: 'combobox',//设置编辑格式
 		options: {
-			url: $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonPrvTp",
+			url: $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonPrvTp"+"&MWToken="+websys_getMWToken(),
 			valueField: "value", 
 			textField: "text",
 			enterNullValueClear:false,
@@ -154,7 +154,7 @@ function InitLocGrpGrid(){
 			textField: "text",
 			mode:'remote',
 			enterNullValueClear:false,
-			url: $URL +"?ClassName=web.DHCMDTCom&MethodName=JsonLoc&HospID"+session['LOGON.HOSPID'],
+			url: $URL +"?ClassName=web.DHCMDTCom&MethodName=JsonLoc&HospID"+session['LOGON.HOSPID']+"&MWToken="+websys_getMWToken(),
 			blurValidValue:true,
 			onSelect:function(option) {
 				var tr = $(this).closest("tr.datagrid-row");
@@ -186,7 +186,7 @@ function InitLocGrpGrid(){
 				var tr = $(this).closest("tr.datagrid-row");
 				var modRowIndex = tr.attr("datagrid-row-index");
 				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'LocDesc'});
-				var unitUrl = $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonGrpLoc&DisGrpID="+DisGrpID;
+				var unitUrl = $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonGrpLoc&DisGrpID="+DisGrpID+"&MWToken="+websys_getMWToken();
 				$(ed.target).combobox('reload',unitUrl);
 			}		   
 		}
@@ -236,7 +236,7 @@ function InitLocGrpGrid(){
 				var PrvTpID = $(ed.target).val();
 				///设置级联指针
 				var ed=$("#LocGrpList").datagrid('getEditor',{index:modRowIndex,field:'UserName'});
-				var unitUrl=$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonLocCareProv&LocID="+ LocID+"&PrvTpID="+ PrvTpID+"&DisGrpID="+ DisGrpID;
+				var unitUrl=$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonLocCareProv&LocID="+ LocID+"&PrvTpID="+ PrvTpID+"&DisGrpID="+ DisGrpID+"&MWToken="+websys_getMWToken();
 				$(ed.target).combobox('reload',unitUrl);
 			
 			},
@@ -293,7 +293,7 @@ function InitLocGrpGrid(){
 	};
 	/// 就诊类型
 	
-	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsonQryConsult&ID="+mdtID+"&Type=I";
+	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsonQryConsult&ID="+mdtID+"&Type=I"+"&MWToken="+websys_getMWToken();
 	new ListComponent('LocGrpList', columns, uniturl, option).Init();
 }
 
@@ -346,7 +346,7 @@ function InitbmDetList(){
 	var PrvTpEditor={  //设置其为可编辑
 		type: 'combobox',//设置编辑格式
 		options: {
-			url: $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonPrvTp",
+			url: $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonPrvTp"+"&MWToken="+websys_getMWToken(),
 			valueField: "value", 
 			textField: "text",
 			enterNullValueClear:false,
@@ -410,10 +410,10 @@ function InitbmDetList(){
 				var unitUrl = "";
 				if (HosID == "I"){
 					
-					var unitUrl = $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonGrpLoc&DisGrpID="+DisGrpID;
+					var unitUrl = $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonGrpLoc&DisGrpID="+DisGrpID+"&MWToken="+websys_getMWToken();
 				}else{
 					
-					var unitUrl = $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonLoc&HospID="+LgHospID;
+					var unitUrl = $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonLoc&HospID="+LgHospID+"&MWToken="+websys_getMWToken();
 				}
 				
 				$(ed.target).combobox('reload',unitUrl);
@@ -445,7 +445,7 @@ function InitbmDetList(){
 				var LocID = $(ed.target).val();
 				///设置级联指针
 				var ed=$("#bmDetList").datagrid('getEditor',{index:editSelRow,field:'MarDesc'});
-				var unitUrl=$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonSubMar&LocID="+ LocID;
+				var unitUrl=$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonSubMar&LocID="+ LocID+"&MWToken="+websys_getMWToken();
 				$(ed.target).combobox('reload',unitUrl);
 			}
 		}
@@ -493,7 +493,7 @@ function InitbmDetList(){
 				var ed=$("#bmDetList").datagrid('getEditor',{index:editSelRow,field:'UserName'});
 				//var GrpID = HosID="I"?DisGrpID:"";
 				var GrpID="";
-				var unitUrl=$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonLocCareProv&LocID="+ LocID+"&PrvTpID="+ PrvTpID+"&DisGrpID="+ GrpID;
+				var unitUrl=$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonLocCareProv&LocID="+ LocID+"&PrvTpID="+ PrvTpID+"&DisGrpID="+ GrpID+"&MWToken="+websys_getMWToken();
 				$(ed.target).combobox('reload',unitUrl);
 			
 			},
@@ -546,7 +546,7 @@ function InitbmDetList(){
 	/// 就诊类型
 	
 	//var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsonQryConsult&mdtID=&Type=O";
-	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsonQryConsult&ID="+mdtID+"&Type=O";
+	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsonQryConsult&ID="+mdtID+"&Type=O"+"&MWToken="+websys_getMWToken();
 	
 	new ListComponent('bmDetList', columns, uniturl, option).Init();
 }
@@ -674,6 +674,11 @@ function InsMdtCsMakRes(){
 		}
 	}
 	
+	if ((memControlFlag == 1)&(LocArr.length < 3)){
+		$.messager.alert("提示:","会诊专家组成员不允许少于3人！","warning");
+		return;	
+	}
+	
 	/// 院内
     if ((editSelRow != -1)||(editSelRow == 0)) { 
         $("#bmDetList").datagrid('endEdit', editSelRow); 
@@ -693,11 +698,6 @@ function InsMdtCsMakRes(){
 			}
 			CarePrvArr.push(item.UserID);
 		}
-	}
-	
-	if ((memControlFlag == 1)&(LocArr.length < 3)){
-		$.messager.alert("提示:","会诊专家组成员不允许少于3人！","warning");
-		return;	
 	}
 	
 	if (TmpCarePrv != ""){

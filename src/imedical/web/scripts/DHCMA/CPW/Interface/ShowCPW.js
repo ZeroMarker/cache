@@ -1,13 +1,14 @@
-var ShowSelectCPWDialog = function(){
-	$.parser.parse(); // ½âÎöÕû¸öÒ³Ãæ 
+ï»¿var ShowSelectCPWDialog = function(){
+	$.parser.parse(); // è§£ææ•´ä¸ªé¡µé¢ 
 	$('#NotInApply').css('display','none');
 	$('#InitText').css('display','block');
 	$('#Summary').css('display','none');
+	var canRun=true;	//é˜²æ­¢é‡å¤æäº¤
 	
 	var NotInReason = $HUI.combobox('#NotInReason', {
 		url: $URL,
 		editable: false,
-		placeholder:'ÇëÑ¡Ôñ',
+		placeholder:'è¯·é€‰æ‹©',
 		valueField: 'VarID',
 		textField: 'Desc',
 		onBeforeLoad: function (param) {
@@ -19,14 +20,16 @@ var ShowSelectCPWDialog = function(){
 		}
 	});
 	
-	var firstID="";		//µÚÒ»¸ö±íµ¥
-	var selectID="";	//Ñ¡ÔñµÄ±íµ¥
+	var firstID="";		//ç¬¬ä¸€ä¸ªè¡¨å•
+	var selectID="";	//é€‰æ‹©çš„è¡¨å•
+	var diagoper="";
 	var QCEntityID="";
+	var PCEntityID="";
 	var CPWArr=CPWStr.split(",");
 
-	firstID=CPWArr[0].split("^")[0]	//Ä¬ÈÏÈ¡µÚÒ»¸ö£¬±íÊ¾²»Èë¸ÃÂ·¾¶
+	firstID=CPWArr[0].split("^")[0]	//é»˜è®¤å–ç¬¬ä¸€ä¸ªï¼Œè¡¨ç¤ºä¸å…¥è¯¥è·¯å¾„
 	var CPWClass="";
-	var CPWHtml="<div id='CPW-NotIn' class='CPW-Select NotIn'>²»Èë¾¶ÉêÇë</div>";
+	var CPWHtml="<div id='CPW-NotIn' class='CPW-Select NotIn'>"+$g("ä¸å…¥å¾„ç”³è¯·")+"</div><hr style='border:0;margin:0 atuo;height:1px;background-color:#cccccc;'/>";
 	for(var ind = 0,len = CPWArr.length; ind < len; ind++){
 		var tmpCPW=CPWArr[ind];
 		/*
@@ -36,20 +39,24 @@ var ShowSelectCPWDialog = function(){
 			CPWClass="CPW-Select MayIn";
 		}*/
 		CPWClass="CPW-Select MayIn";
-		CPWHtml=CPWHtml+"<div id='CPW-"+tmpCPW.split("^")[0]+"' class='"+CPWClass+"'>"+tmpCPW.split("^")[1]+"</div>"
+		CPWHtml=CPWHtml+"<div id='CPW-"+tmpCPW.split("^")[0]+"' data-diagoper='"+tmpCPW.split("^")[2]+"' class='"+CPWClass+"'>"+tmpCPW.split("^")[1]+"</div>"
 	}
 	$('#CPWList').html(CPWHtml);
 	
 	$('#InCPWDialog').on('click','#CPW-NotIn',function(){
 		NotInApply(firstID);
 		selectID=firstID;
-		QCEntityID=""
+		diagoper="";
+		QCEntityID="";
+		PCEntityID="";
 	});
 	$('#InCPWDialog').on('click','.MayIn',function(){
 		$('.MayIn').removeClass("CPWactive")
 		$('#'+this.id).addClass("CPWactive");
 		selectID=this.id.split("-")[1];
-		QCEntityID=this.id.split("-")[2];
+		diagoper=$("#"+this.id).attr("data-diagoper");
+		if (this.id.split("-").length>2) QCEntityID=this.id.split("-")[2];
+		if (this.id.split("-").length>3) PCEntityID=this.id.split("-")[3];
 		SelectCPW(selectID);
 	});
 	
@@ -57,39 +64,33 @@ var ShowSelectCPWDialog = function(){
 		if(top.$ && top.$("#WinModalEasyUI").length>0) top.$("#WinModalEasyUI").window("close");
 	});	
 	$("#btnGetIn").on('click',function(){			
+		if(!canRun) return;		
 		var btnTxt=$('#btnGetIn .l-btn-text').text()
 		if (!selectID){
-			$.messager.alert("´íÎóÌáÊ¾", "ÇëÏÈµã»÷Òª½øÈëµÄÂ·¾¶»ò²»Èë¾¶ÉêÇëÔÙ½øĞĞ²Ù×÷£¡", "error");
+			$.messager.alert($g("é”™è¯¯æç¤º"), $g("è¯·å…ˆç‚¹å‡»è¦è¿›å…¥çš„è·¯å¾„æˆ–ä¸å…¥å¾„ç”³è¯·å†è¿›è¡Œæ“ä½œï¼"), "error");
 			return;	
 		}else{
-			if(btnTxt=="È·¶¨"){		//Èë¾¶
-				var ret =$m({
-					ClassName:"DHCMA.CPW.CPS.InterfaceSrv",
-					MethodName:"GetInCPW",
-					aEpisodeID:EpisodeID,
-					aInputs:selectID+"^"+session['DHCMA.USERID']+"^"+session['DHCMA.CTLOCID']+"^"+session['DHCMA.CTWARDID']+"^"+QCEntityID
-				}, false);
-				if(parseInt(ret)>0){
-					$.messager.popover({msg: 'Èë¾¶³É¹¦£¡',type:'info',timeout: 2000});
-				}else{
-					$.messager.popover({msg: 'Èë¾¶Ê§°Ü£¡',type:'info',timeout: 2000});
-				}
-			 		setTimeout(function(){
-					websys_showModal('close');
-				},2300)
-				//¹Ø±Õ´°¿Ú
-			}else if(btnTxt=="Ìá½»"){	//²»Èë¾¶
+			if(btnTxt==$g("ç¡®å®š")){		//å…¥å¾„
+				var aInputStr=selectID+"^"+session['DHCMA.USERID']+"^"+session['DHCMA.CTLOCID']+"^"+session['DHCMA.CTWARDID']+"^"+QCEntityID+"^"+PCEntityID+"^"+diagoper;
+				//CAç­¾åéªŒè¯
+				CASignLogonModal('CPW','GetInCPW',{
+					// ç­¾åæ•°æ®
+					signData: aInputStr,
+					dhcmaOperaType:'I'
+				},GetInCPWFun,EpisodeID,aInputStr);
+				
+			}else if(btnTxt==$g("æäº¤")){	//ä¸å…¥å¾„
 				var verID=Common_GetValue('NotInReason')
 				var verTxt=Common_GetValue('NotInText')
 			
 				if((verID == "")&&(verTxt == "")){
-					$.messager.alert("´íÎóÌáÊ¾", "ÇëÑ¡ÔñÔ­Òò²¢ÌîĞ´±¸×¢ĞÅÏ¢£¡", "error")
+					$.messager.alert($g("é”™è¯¯æç¤º"), $g("è¯·é€‰æ‹©åŸå› å¹¶å¡«å†™å¤‡æ³¨ä¿¡æ¯ï¼"), "error")
 					return;
 				}else if(verID == "") {
-					$.messager.alert("´íÎóÌáÊ¾", "ÇëÑ¡Ôñ²»Èë¾¶Ô­Òò£¡", "error")
+					$.messager.alert($g("é”™è¯¯æç¤º"), $g("è¯·é€‰æ‹©ä¸å…¥å¾„åŸå› ï¼"), "error")
 					return;
 				}else if(verTxt == "") {
-					$.messager.alert("´íÎóÌáÊ¾", "ÇëÌîĞ´±¸×¢ĞÅÏ¢£¡", "error")
+					$.messager.alert($g("é”™è¯¯æç¤º"), $g("è¯·å¡«å†™å¤‡æ³¨ä¿¡æ¯ï¼"), "error")
 					return;
 				}
 			
@@ -100,11 +101,12 @@ var ShowSelectCPWDialog = function(){
 					aInputs:selectID+"^"+session['DHCMA.USERID']+"^"+session['DHCMA.CTLOCID']+"^"+session['DHCMA.CTWARDID']+"^"+verID+"^"+verTxt
 				}, false);
 				if(parseInt(ret)>0){
-					$.messager.popover({msg:"ÉêÇë³É¹¦",type:'success',timeout: 2000,});
+					canRun=false;
+					$.messager.popover({msg:$g("ç”³è¯·æˆåŠŸ"),type:'success',timeout: 2000,});
 				}else{
-					$.messager.popover({msg:"ÉêÇëÊ§°Ü",type:'error',timeout: 2000,});
+					$.messager.popover({msg:$g("ç”³è¯·å¤±è´¥"),type:'error',timeout: 2000,});
 				}
-				//¹Ø±Õ´°¿Ú
+				//å…³é—­çª—å£
 			 	setTimeout(function(){
 					websys_showModal('close');
 				},2300)
@@ -115,15 +117,20 @@ var ShowSelectCPWDialog = function(){
 	});
 }
 var NotInApply = function(ID){
+	$('#CPW-NotIn').removeClass("NotIn");
+	$('#CPW-NotIn').addClass("NotIn-Select");
+	$('.MayIn').removeClass("CPWactive");
 	$('#NotInApply').css('display','block');
 	$('#InitText').css('display','none');
 	$('#Summary').css('display','none');
-	$('#btnGetIn .l-btn-text').text("Ìá½»")
-	$('#CPWDiag-right').panel("header").find('div.panel-title').text("ÉêÇë")
+	$('#btnGetIn .l-btn-text').text($g("æäº¤"))
+	$('#CPWDiag-right').panel("header").find('div.panel-title').text($g("ç”³è¯·"))
 }
 var SelectCPW = function(ID){
-	$('#btnGetIn .l-btn-text').text("È·¶¨")
-	$('#CPWDiag-right').panel("header").find('div.panel-title').text("Â·¾¶ËµÃ÷")
+	$('#CPW-NotIn').removeClass("NotIn-Select");
+	$('#CPW-NotIn').addClass("NotIn");
+	$('#btnGetIn .l-btn-text').text($g("ç¡®å®š"))
+	$('#CPWDiag-right').panel("header").find('div.panel-title').text($g("è·¯å¾„è¯´æ˜"))
 	$('#NotInApply').css('display','none');
 	$('#InitText').css('display','none');
 	$('#Summary').css('display','block');
@@ -132,6 +139,28 @@ var SelectCPW = function(ID){
 		MethodName:"GetCPWSummary",
 		aPathID:ID
 	},function(Summary){	
-		$('#Summary').html(Summary)
+		//$('#Summary').html(Summary)
+		$('#PathName').html(Summary.split("^")[0]);
+		$('#ApplyDoc').html(Summary.split("^")[1]);
+		$('#HelpDoc').html(Summary.split("^")[2]);
 	});
+}
+// æ‚£è€…å…¥å¾„äº‹ä»¶
+var GetInCPWFun = function(aEpisodeID,aInputStr){
+	var ret =$m({
+		ClassName:"DHCMA.CPW.CPS.InterfaceSrv",
+		MethodName:"GetInCPW",
+		aEpisodeID:aEpisodeID,
+		aInputs:aInputStr
+	}, false);
+	if(parseInt(ret)>0){
+		canRun=false;
+		$.messager.popover({msg: $g('å…¥å¾„æˆåŠŸï¼'),type:'info',timeout: 2000});
+	}else{
+		$.messager.popover({msg: $g('å…¥å¾„å¤±è´¥ï¼'),type:'info',timeout: 2000});
+	}
+ 	setTimeout(function(){			//å…³é—­çª—å£
+		websys_showModal('close');
+	},2300)
+	if(parseInt(ret)>0) return parseInt(ret);
 }

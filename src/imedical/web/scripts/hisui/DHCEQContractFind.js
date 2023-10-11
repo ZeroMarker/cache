@@ -5,13 +5,34 @@ function BodyLoadHandler()
 {
 	InitUserInfo();	
 	InitPage();
-	SetBEnable();		// 需求序号:	716778	Mozy	2018-11-8
+	SetBEnable();
 	//InitTblEvt();
 	initButtonWidth();
+	initPanelHeaderStyle();
+	initButtonColor();
+	if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+		if (jQuery("#BAdd1").length>0)
+		{
+			if (($("#BAdd1").attr('class')).indexOf("l-btn-disabled")==-1){
+				$("#BAdd1").css({"background-color":"#28ba05","color":"#ffffff"})
+			}else{
+				$("#BAdd1").css({'background-color':'#E5E5E5','color':'#999'})
+			}
+		}
+		if (jQuery("#BAddNew").length>0)
+		{
+			if (($("#BAddNew").attr('class')).indexOf("l-btn-disabled")==-1){
+				$("#BAddNew").css({"background-color":"#28ba05","color":"#ffffff"})
+			}else{
+				$("#BAddNew").css({'background-color':'#E5E5E5','color':'#999'})
+			}
+		}
+	}
 	// Mozy0253	1214408		2020-3-4	设置隐藏列
 	if (GetElementValue("ContractType")==2)
 	{
 		HiddenTblColumn("tDHCEQContractFind","TContractName");
+		HiddenTblColumn("tDHCEQContractFind","TQuantityNum");	// MZY0057	1497996		2020-10-09
 	}
 	else
 	{
@@ -40,11 +61,14 @@ function InitPage()
 		DisableBElement("BAdd",true);
 		DisableBElement("BAdd1",true);
 		EQCommon_HiddenElement("BImport");		// Mozy0245		1187444	2020-1-21
+		hiddenObj("BAddNew",1);		//czf 1914903 2021-05-22
 	}
 	var obj=document.getElementById("WaitAD");
 	if (obj) obj.onchange=CheckChange;
 	var obj=document.getElementById("ReplacesAD")
 	if (obj) obj.onchange=CheckChange;
+	var obj=document.getElementById("BAddNew")	//czf 1914903
+	if (obj) obj.onclick=BAddNew_Clicked;
 }
 function CheckChange()
 {
@@ -115,7 +139,8 @@ function TDetailHandler(rowdata,rowindex)
 function SetBEnable()
 {
 	var WaitAD=GetElementValue("WaitAD");
-	if (WaitAD!="off")
+	var CancelOper=GetElementValue("CancelOper");
+	if ((WaitAD!="off")||(CancelOper=="Y"))
 	{
 		//DisableBElement("BAdd1",true);
 		hiddenObj("BAdd1",1);
@@ -132,7 +157,7 @@ function BAdd_Clicked()
 	var ContractType=GetElementValue("ContractType");
 	var QXType=GetElementValue("QXType");
 	var Type=GetElementValue("Type");
-	var val="&ContractType="+ContractType+"&QXType="+QXType+"&Type="+Type;
+	var val="&ContractType="+ContractType+"&QXType="+QXType+"&Type="+Type+"&AuditType=1";	//czf 1914903 2021-05-22
 	url="dhceq.con.contract.csp?"+val;
 	var Title="采购合同";
 	if (ContractType==2) Title="协议采购合同";
@@ -161,6 +186,7 @@ function BImport_Chrome()
  	Str +="var ConInfo='';"
  	Str +="var ConListInfo='';"
  	Str +="var ConAffixInfo='';"
+ 	Str +="var ConLocInfoStr='';"   //add by cjc 2022/08/18
  	Str +="xlApp = new ActiveXObject('Excel.Application');"
  	Str +="xlBook = xlApp.Workbooks.Add('"+NewFileName+".xls');" 	
  	Str +="xlsheet =xlBook.Worksheets('采购合同');"
@@ -188,9 +214,18 @@ function BImport_Chrome()
  	Str +="OneInfo=OneInfo+'^'+xlsheet.cells(CurRow,CurCol).text;}"
  	Str +="ConAffixInfo=ConAffixInfo+'&'+OneInfo;}"
  	
-	Str +="return '1||'+ConInfo+'||'+ConListInfo+'||'+ConAffixInfo;}());";
-	CmdShell.notReturn =0;   //设置无结果调用，不阻塞调用
-	var rtn = CmdShell.EvalJs(Str);   //通过中间件运行打印程序
+	Str +="xlsheet =xlBook.Worksheets('合同使用科室明细');"  //add by cjc 2022/08/18 begin
+ 	Str +="ConRow=xlsheet.UsedRange.Cells.Rows.Count;"
+ 	Str +="ConCol=xlsheet.UsedRange.Cells.Columns.Count;"
+ 	Str +="for (CurRow=2;CurRow<=ConRow;CurRow++){"
+ 	Str +="var OneInfo='';"
+ 	Str +="for (CurCol=1;CurCol<=ConCol;CurCol++){"
+ 	Str +="OneInfo=OneInfo+'^'+xlsheet.cells(CurRow,CurCol).text;}"
+ 	Str +="ConLocInfoStr=ConLocInfoStr+'&'+OneInfo;}" //add by cjc 2022/08/18 end
+ 	
+	Str +="return '1||'+ConInfo+'||'+ConListInfo+'||'+ConAffixInfo+'||'+ConLocInfoStr;}());";//modify by cjc 2022/08/18 增加了ConLocInfoStr导入
+	CmdShell.notReturn =0;  //设置无结果调用，不阻塞调用
+	var rtn = CmdShell.EvalJs(Str);    //通过中间件运行打印程序  
 	var AllInfo=rtn.rtn
 	var OneInfo=AllInfo.split("||");
 	if (OneInfo[0]!=1)
@@ -201,12 +236,16 @@ function BImport_Chrome()
 	var ConInfoStr=OneInfo[1]
 	var ConListInfoStr=OneInfo[2]
 	var ConAffixInfoStr=OneInfo[3]
+	var ConLocInfoStr=OneInfo[4]  //add by wy 2021-11-08 WY0096
+	
 	var ConInfo=new Array();
 	var ConListInfo=new Array();
 	var ConAffixInfo=new Array();
+	var ConLocInfo=new Array();  //add by wy 2021-11-08 WY0096
 	var contractdata="";
 	var valList="";
 	var affixList="";
+	var LocList=""    //add by wy 2021-11-08 WY0096
 	//合同信息
 	var encmeth=GetElementValue("GetIDByDesc");
 	var ConRow=ConInfoStr.split("&")
@@ -240,7 +279,7 @@ function BImport_Chrome()
 		var SignLoc=trim(ConCol[Col++]);
 		if (SignLoc!="")
 		{
-			SignLocDR=cspRunServerMethod(encmeth,"CTLoc",SignLoc);
+			SignLocDR=tkMakeServerCall("web.DHCEQImportDataTool","GetUseLocID",SignLoc);	// MZY0055	1537698		2020-09-22
 			if (SignLocDR=="")
 			{
 				alertShow("采购合同:第"+CurRow+"行 签订部门的信息不正确:"+SignLoc);
@@ -256,13 +295,35 @@ function BImport_Chrome()
 		
 	    var ProviderTel=trim(ConCol[Col++]);
 	    var ProviderHandler=trim(ConCol[Col++]);
-	    var GuaranteePeriodNum=trim(ConCol[Col++]);
+	    //var GuaranteePeriodNum=trim(ConCol[Col++]);
+	    var BuyType=trim(ConCol[Col++]);   //add by wy 2021-11-08采购方式
+		var BuyTypeDR="";
+		if (BuyType!="")
+		{
+			BuyTypeDR=cspRunServerMethod(encmeth,"DHCEQCBuyType",BuyType);	// MZY0055	1537698		2020-09-22
+			if (BuyTypeDR=="")
+			{
+				alertShow("采购合同:第"+CurRow+"行 采购方式的信息不正确:"+BuyType);//modify by cjc 2022/08/18
+				return 0;
+			}
+		}
 	    var Remark=trim(ConCol[Col++]);
 	    var ArriveMonthNum=trim(ConCol[Col++]);
 	    var ServicePro=trim(ConCol[Col++]);
 	    var ServiceHandler=trim(ConCol[Col++]);
 	    var ServiceTel=trim(ConCol[Col++]);
-	    
+	    var BuyUser=trim(ConCol[Col++]); //modify by cjc 2022/08/18
+		var BuyUserDR="";
+	    if (BuyUser!="")
+		{
+			BuyUserDR=cspRunServerMethod(encmeth,"DHCEQCUser",BuyUser);	// MZY0055	1537698		2020-09-22
+			if (BuyUserDR=="")
+			{
+				alertShow("采购合同:第"+CurRow+"行 采购人的信息不正确:"+BuyUser);//modify by cjc 2022/08/18
+				return 0;
+			}
+		}
+
 		if(contractdata!="") contractdata=contractdata+"&";
 		contractdata=contractdata+ContractRow;
 		contractdata=contractdata+"^"+ContractName;
@@ -274,12 +335,14 @@ function BImport_Chrome()
 		contractdata=contractdata+"^"+Provider;
 		contractdata=contractdata+"^"+ProviderTel;
 		contractdata=contractdata+"^"+ProviderHandler;
-		contractdata=contractdata+"^"+GuaranteePeriodNum;
+		contractdata=contractdata+"^"   //+GuaranteePeriodNum;
 		contractdata=contractdata+"^"+Remark;	
 		contractdata=contractdata+"^"+ArriveMonthNum;
 		contractdata=contractdata+"^"+ServicePro;
 		contractdata=contractdata+"^"+ServiceHandler;
 		contractdata=contractdata+"^"+ServiceTel;
+		contractdata=contractdata+"^"+BuyTypeDR;
+		contractdata=contractdata+"^"+BuyUserDR;
 	}
 	//合同明细
 	var ConRow=ConListInfoStr.split("&")
@@ -316,6 +379,40 @@ function BImport_Chrome()
 				return 0;
 			}
 		}
+		//modified by wy 2021-9-2 WY0095 begin新增设备类型，分类导入
+		var EQStatCatDR="";
+		var EQStatCat=trim(ConCol[ListCol++]);
+		if (EQStatCat!="")
+		{
+			EQStatCatDR=cspRunServerMethod(encmeth,"DHCEQCStatCat",EQStatCat);
+			if (EQStatCatDR=="")
+			{
+				alertShow("合同明细:第"+CurRow+"行 设备类型的信息不正确:"+EQStatCat);//modify by cjc 2022/08/22
+				return 0;
+			}
+		}
+		var EQEquiCatDR="";
+		var EQEquiCat=trim(ConCol[ListCol++]);
+		if (EQEquiCat!="")
+		{
+			EQEquiCatDR=cspRunServerMethod(encmeth,"EquipCat",EQEquiCat);
+			if (EQEquiCatDR=="")
+			{
+				alertShow("合同明细:第"+CurRow+"行 设备分类的信息不正确:"+EQEquiCat);//modify by cjc 2022/08/18
+				return 0;
+			}
+		}
+		var UnitDR="";
+		var Unit=trim(ConCol[ListCol++]);
+		if (Unit!="")
+		{
+			UnitDR=cspRunServerMethod(encmeth,"DHCEQCUOM",Unit);
+			if (UnitDR=="")
+			{
+				alertShow("合同明细:第"+CurRow+"行 设备单位的信息不正确:"+Unit);//modify by cjc 2022/08/18
+				return 0;
+			}
+		}
 		var ItemDR="";
 		var Item=trim(ConCol[ListCol++]);
 		if (Item!="")
@@ -323,10 +420,16 @@ function BImport_Chrome()
 			ItemDR=cspRunServerMethod(encmeth,"DHCEQCMasterItem",Item,EquipTypeDR);
 			if (ItemDR=="")
 			{
-				alertShow("合同明细:第"+CurRow+"行 设备名称的信息不正确:"+Item);
-				return 0;
+			    var val="^"+Item+"^"+GetPYCode(Item)+"^"+EquipTypeDR+"^"+EQStatCatDR+"^"+EQEquiCatDR+"^^"+UnitDR+"^^^^^^^^"
+			    ItemDR=tkMakeServerCall("web.DHCEQCMasterItem","SaveData","","",val,"","");
+			    if (ItemDR=="")  
+			    {
+				    alertShow("合同明细:第"+CurRow+"行 设备项的信息不正确:"+Item);//modify by cjc 2022/08/18
+				    return 0;
+				    }
 			}
 		}
+		// modified by wy 2021-9-2 WY0095 end 
 		var Model=trim(ConCol[ListCol++]);
 		var ManuFactory=trim(ConCol[ListCol++]);
 		var PriceFee=trim(ConCol[ListCol++]);
@@ -342,8 +445,11 @@ function BImport_Chrome()
 	  	 	return 0;
 		}
 		var ListRemark=trim(ConCol[ListCol++]);
+	    var GuaranteePeriodNum=trim(ConCol[ListCol++]); // modifiy by cjc 2022/08/19
+	    var RegistrationNo=trim(ConCol[ListCol++]);	// modifiy by cjc 2022/08/19
+	    //var LeaveFactoryNos=trim(Clistxlsheet.cells(ListRow,ListCol++).text);	
 		if(valList!="") valList=valList+"&";			
-		valList=valList+ListContractRow+"^"+ContractListRow+"^"+ItemDR+"^"+Model+"^"+ManuFactory+"^"+PriceFee+"^"+QuantityNum+"^"+ListRemark;
+		valList=valList+ListContractRow+"^"+ContractListRow+"^"+ItemDR+"^"+Model+"^"+ManuFactory+"^"+PriceFee+"^"+QuantityNum+"^"+ListRemark+"^"+GuaranteePeriodNum+"^"+RegistrationNo;
 	}
 	//附件
 	var ConRow=ConAffixInfoStr.split("&")
@@ -394,10 +500,49 @@ function BImport_Chrome()
 		if(affixList!="") affixList=affixList+"&";			
 		affixList=affixList+AffixListRow+"^"+PartSpec+"^"+PartModel+"^"+PartManuFactory+"^"+AffixQuantityNum+"^"+Receiver+"^"+LeaveFacNo+"^"+LeaveDate+"^"+AffixPriceFee+"^"+Uom+"^"+AffixRemark+"^"+AffixProvider+"^"+InvoiceNo+"^"+RegistrationNo;
 	}
-	var Return=cspRunServerMethod(GetElementValue("ImportContractInfo"),contractdata,valList,affixList);
+	//合同使用科室明细 add by wy 2021-9-2 WY0096
+	var ConRow=ConLocInfoStr.split("&")
+	for (var CurRow=1;CurRow<ConRow.length;CurRow++)
+	{
+		ConLocInfo[CurRow]=new Array();
+		var RowInfoStr=ConRow[CurRow];
+		var ConCol=RowInfoStr.split("^");
+		var LocCol=1;
+		var LocListRow=trim(ConCol[LocCol++]);
+		if (LocListRow=="")
+		{
+			alertShow("使用科室:第"+CurRow+"行合同明细序号为空,请先补充!");// modifiy by cjc 2022/08/19
+			return 0;
+		}
+		var UseLocDR="";
+		var UseLoc=trim(ConCol[LocCol++]);
+		if (UseLoc!="")
+		{
+			UseLocDR=tkMakeServerCall("web.DHCEQImportDataTool","GetUseLocID",UseLoc);	
+			if (UseLocDR=="")
+			{
+				alertShow("采购合同:第"+LocListRow+"行 使用科室的信息不正确:"+UseLoc);
+				return 0;
+			}
+		}
+		var LocQuantityNum=trim(ConCol[LocCol++]);
+		var LeaveFactoryNo=trim(ConCol[LocCol++]);
+		if(LocList!="") LocList=LocList+"&";
+		LocList=LocList+LocListRow+"^"+UseLocDR+"^"+LocQuantityNum+"^"+LeaveFactoryNo; //modify by cjc 2022/08/18 将CLocListRow改为LocListRow
+
+	}
+	var Return=cspRunServerMethod(GetElementValue("ImportContractInfo"),contractdata,valList,affixList,LocList);
 	if (Return<0)
 	{
-		alertShow(Return+"   采购合同导入发生错误!");
+		// MZY0088	2021-08-16
+		if (Return==-119)
+		{
+			alertShow(Return+"   采购合同导入发生错误!请检查合同号是否已经存在(重复)!");
+		}
+		else
+		{
+			alertShow(Return+"   采购合同导入发生错误!");
+		}
 	}
 	else
 	{
@@ -422,6 +567,7 @@ function BImport_IE()
 	var contractdata="";
 	var valList="";
 	var affixList="";
+	var LocList=""    //add by wy 2021-11-08
 	//合同信息
 	var encmeth=GetElementValue("GetIDByDesc");
 	for (var Row=2;Row<=ContractRows;Row++)
@@ -447,7 +593,7 @@ function BImport_IE()
 		var SignLoc=trim(xlsheet.cells(Row,Col++).text);
 		if (SignLoc!="")
 		{
-			SignLocDR=cspRunServerMethod(encmeth,"CTLoc",SignLoc);
+			SignLocDR=tkMakeServerCall("web.DHCEQImportDataTool","GetUseLocID",SignLoc);	// MZY0055	1537698		2020-09-22
 			//alertShow(SignLoc+"->"+SignLocDR)
 			if (SignLocDR=="")
 			{
@@ -464,13 +610,34 @@ function BImport_IE()
 		
 	    var ProviderTel=trim(xlsheet.cells(Row,Col++).text);
 	    var ProviderHandler=trim(xlsheet.cells(Row,Col++).text);
-	    var GuaranteePeriodNum=trim(xlsheet.cells(Row,Col++).text);
+	    //var GuaranteePeriodNum=trim(xlsheet.cells(Row,Col++).text);  
+	    var BuyType=trim(xlsheet.cells(Row,Col++).text);    //add by wy 2021-11-08采购方式
+		var BuyTypeDR="";
+		if (BuyType!="")
+		{
+			BuyTypeDR=cspRunServerMethod(encmeth,"DHCEQCBuyType",BuyType);	// MZY0055	1537698		2020-09-22
+			if (BuyTypeDR=="")
+			{
+				alertShow("采购合同:第"+Row+"行 采购方式的信息不正确:"+BuyType);
+				return 0;
+			}
+		}
 	    var Remark=trim(xlsheet.cells(Row,Col++).text);
 	    var ArriveMonthNum=trim(xlsheet.cells(Row,Col++).text);
 	    var ServicePro=trim(xlsheet.cells(Row,Col++).text);
 	    var ServiceHandler=trim(xlsheet.cells(Row,Col++).text);
-	    var ServiceTel=trim(xlsheet.cells(Row,Col++).text);
-	    
+	    var ServiceTel=trim(xlsheet.cells(Row,Col++).text);	    
+	    var BuyUser=trim(xlsheet.cells(Row,Col++).text);
+		var BuyUserDR="";
+	    if (BuyUser!="")
+		{
+			BuyUserDR=cspRunServerMethod(encmeth,"DHCEQCUser",BuyUser);	// MZY0055	1537698		2020-09-22
+			if (BuyUserDR=="")
+			{
+				alertShow("采购合同:第"+Row+"行 采购人的信息不正确:"+BuyUser);
+				return 0;
+			}
+		}
 		if(contractdata!="") contractdata=contractdata+"&";
 		contractdata=contractdata+ContractRow;
 		contractdata=contractdata+"^"+ContractName;
@@ -482,12 +649,14 @@ function BImport_IE()
 		contractdata=contractdata+"^"+Provider;
 		contractdata=contractdata+"^"+ProviderTel;
 		contractdata=contractdata+"^"+ProviderHandler;
-		contractdata=contractdata+"^"+GuaranteePeriodNum;
+		contractdata=contractdata+"^"  //+GuaranteePeriodNum;
 		contractdata=contractdata+"^"+Remark;	
 		contractdata=contractdata+"^"+ArriveMonthNum;
 		contractdata=contractdata+"^"+ServicePro;
 		contractdata=contractdata+"^"+ServiceHandler;
 		contractdata=contractdata+"^"+ServiceTel;
+		contractdata=contractdata+"^"+BuyTypeDR;
+		contractdata=contractdata+"^"+BuyUserDR;
 	}
 	
 	//合同明细信息
@@ -520,6 +689,41 @@ function BImport_IE()
 				return 0;
 			}
 		}
+		
+		//modified by wy 2021-9-2 WY0096 begin新增设备类型，分类导入
+		var EQStatCatDR="";
+		var EQStatCat=trim(Clistxlsheet.cells(ListRow,ListCol++).text);
+		if (EQStatCat!="")
+		{
+			EQStatCatDR=cspRunServerMethod(encmeth,"DHCEQCStatCat",EQStatCat);
+			if (EQStatCatDR=="")
+			{
+				alertShow("合同明细:第"+ListRow+"行 设备类型的信息不正确:"+EQStatCat);
+				return 0;
+			}
+		}
+		var EQEquiCatDR="";
+		var EQEquiCat=trim(Clistxlsheet.cells(ListRow,ListCol++).text);
+		if (EQEquiCat!="")
+		{
+			EQEquiCatDR=cspRunServerMethod(encmeth,"EquipCat",EQEquiCat);
+			if (EQEquiCatDR=="")
+			{
+				alertShow("合同明细:第"+ListRow+"行 设备分类的信息不正确:"+EQEquiCat);
+				return 0;
+			}
+		}
+		var UnitDR="";
+		var Unit=trim(Clistxlsheet.cells(ListRow,ListCol++).text);
+		if (Unit!="")
+		{
+			UnitDR=cspRunServerMethod(encmeth,"DHCEQCUOM",Unit);
+			if (UnitDR=="")
+			{
+				alertShow("合同明细:第"+ListRow+"行 设备单位的信息不正确:"+Unit);
+				return 0;
+			}
+		}
 		var ItemDR="";
 		var Item=trim(Clistxlsheet.cells(ListRow,ListCol++).text);
 		if (Item!="")
@@ -527,10 +731,16 @@ function BImport_IE()
 			ItemDR=cspRunServerMethod(encmeth,"DHCEQCMasterItem",Item,EquipTypeDR);
 			if (ItemDR=="")
 			{
-				alertShow("合同明细:第"+ListRow+"行 设备名称的信息不正确:"+Item);
-				return 0;
+			    var val="^"+Item+"^"+GetPYCode(Item)+"^"+EquipTypeDR+"^"+EQStatCatDR+"^"+EQEquiCatDR+"^^"+UnitDR+"^^^^^^^^"
+			    ItemDR=tkMakeServerCall("web.DHCEQCMasterItem","SaveData","","",val,"","");
+			    if (ItemDR=="")  
+			    {
+				    alertShow("合同明细:第"+ListRow+"行 设备项的信息不正确:"+Item);
+				    return 0;
+				    }
 			}
 		}
+		// modified by wy 2021-9-2 WY0096 end 
 		var Model=trim(Clistxlsheet.cells(ListRow,ListCol++).text);
 		var ManuFactory=trim(Clistxlsheet.cells(ListRow,ListCol++).text);
 		var PriceFee=trim(Clistxlsheet.cells(ListRow,ListCol++).text);
@@ -546,8 +756,11 @@ function BImport_IE()
 	  	 	return 0;
 		}
 		var ListRemark=trim(Clistxlsheet.cells(ListRow,ListCol++).text);
+	    var GuaranteePeriodNum=trim(Clistxlsheet.cells(ListRow,ListCol++).text); // modified by wy 2021-9-2 WY0096
+	    var RegistrationNo=trim(Clistxlsheet.cells(ListRow,ListCol++).text);
+	    //var LeaveFactoryNos=trim(Clistxlsheet.cells(ListRow,ListCol++).text);	
 		if(valList!="") valList=valList+"&";			
-		valList=valList+ListContractRow+"^"+ContractListRow+"^"+ItemDR+"^"+Model+"^"+ManuFactory+"^"+PriceFee+"^"+QuantityNum+"^"+ListRemark;
+		valList=valList+ListContractRow+"^"+ContractListRow+"^"+ItemDR+"^"+Model+"^"+ManuFactory+"^"+PriceFee+"^"+QuantityNum+"^"+ListRemark+"^"+GuaranteePeriodNum+"^"+RegistrationNo;
 	}
 	
 	//合同明细附件信息
@@ -594,7 +807,35 @@ function BImport_IE()
 		if(affixList!="") affixList=affixList+"&";			
 		affixList=affixList+AffixListRow+"^"+PartSpec+"^"+PartModel+"^"+PartManuFactory+"^"+AffixQuantityNum+"^"+Receiver+"^"+LeaveFacNo+"^"+LeaveDate+"^"+AffixPriceFee+"^"+Uom+"^"+AffixRemark+"^"+AffixProvider+"^"+InvoiceNo+"^"+RegistrationNo;
 	}
-	//alertShow(affixList)
+	
+    //合同使用科室明细
+	CLocxlsheet =xlBook.Worksheets("使用科室");
+	var ContractLocListRows=CLocxlsheet.UsedRange.Cells.Rows.Count;
+	for (var LocListRow=2;LocListRow<=ContractLocListRows;LocListRow++)
+	{
+		var LocListCol=1;
+		var CLocListRow=trim(CLocxlsheet.cells(LocListRow,LocListCol++).text);
+		if (CLocListRow=="")
+		{
+			alertShow("使用科室:第"+LocListRow+"行合同明细序号为空,请先补充!");
+			return 0;
+		}
+		var UseLocDR="";
+		var UseLoc=trim(CLocxlsheet.cells(LocListRow,LocListCol++).text);
+		if (UseLoc!="")
+		{
+			UseLocDR=tkMakeServerCall("web.DHCEQImportDataTool","GetUseLocID",UseLoc);	
+			if (UseLocDR=="")
+			{
+				alertShow("采购合同:第"+LocListRow+"行 使用科室的信息不正确:"+UseLoc);
+				return 0;
+			}
+		}
+		var LocQuantityNum=trim(CLocxlsheet.cells(LocListRow,LocListCol++).text);
+		var LeaveFactoryNo=trim(CLocxlsheet.cells(LocListRow,LocListCol++).text);
+		if(LocList!="") LocList=LocList+"&";
+		LocList=LocList+CLocListRow+"^"+UseLocDR+"^"+LocQuantityNum+"^"+LeaveFactoryNo;
+	}
 	xlBook.Close (savechanges=false);
     xlApp.Quit();
     xlApp=null;
@@ -603,10 +844,18 @@ function BImport_IE()
     
 	var truthBeTold = window.confirm("是否继续导入该批合同信息?");
 	if (!truthBeTold) return 0;
-	var Return=cspRunServerMethod(GetElementValue("ImportContractInfo"),contractdata,valList,affixList);
+	var Return=cspRunServerMethod(GetElementValue("ImportContractInfo"),contractdata,valList,affixList,LocList);
 	if (Return<0)
 	{
-		alertShow(Return+"   采购合同导入发生错误!");
+		// MZY0088	2021-08-16
+		if (Return==-119)
+		{
+			alertShow(Return+"   采购合同导入发生错误!请检查合同号是否已经存在(重复)!");
+		}
+		else
+		{
+			alertShow(Return+"   采购合同导入发生错误!");
+		}
 	}
 	else
 	{
@@ -614,5 +863,18 @@ function BImport_IE()
 		//                           http://127.0.0.1/dthealth/web/csp/websys.csp?a=a&ContractType=0&StatusDR=0&Type=0&QXType=1&WaitAD=off&SignLocDR=153&StartDate=&EndDate=06/09/2019
 		window.location.href= 'websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQContractFind&ContractType=0&StatusDR=0&Type=0&QXType=1&WaitAD=off&SignLocDR'+GetElementValue("SignLocDR");
 	}
+}
+
+//czf 1914903 2021-05-22
+function BAddNew_Clicked()
+{
+	var ContractType=GetElementValue("ContractType");
+	var QXType=GetElementValue("QXType");
+	var Type=GetElementValue("Type");
+	var val="&ContractType="+ContractType+"&QXType="+QXType+"&Type="+Type+"&AuditType=2";
+	url="dhceq.con.contract.csp?"+val;
+	var Title="采购合同";
+	if (ContractType==2) Title="协议采购合同";
+	showWindow(url,Title,"","","icon-w-paper","modal","","","verylarge");
 }
 document.body.onload = BodyLoadHandler;

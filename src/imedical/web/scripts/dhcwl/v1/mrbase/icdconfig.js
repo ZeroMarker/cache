@@ -1,4 +1,4 @@
-function dataLoaderOfGrp(params,successcb,errorcb){
+ï»¿function dataLoaderOfGrp(params,successcb,errorcb){
     params.start=((params.page-1)*params.rows);
 	params.limit=params.rows;
 	$.ajax({
@@ -37,18 +37,18 @@ function dataLoaderOfDetail(params,successcb,errorcb){
 	});
 }
 var init = function(){
-	//ICD·Ö×édatagrid
+	//ICDåˆ†ç»„datagrid
 	var icdgrp = $HUI.datagrid("#icdconfig-icdgrp",{
 		url:$URL,
 		queryParams:{
 			ClassName:"web.DHCWL.V1.MRBase.ICDConfig",
 			////////////////////////////////////////////
-			//1¡¢Í¨¹ıqueryµÃµ½Êı¾İ
+			//1ã€é€šè¿‡queryå¾—åˆ°æ•°æ®
 			//QueryName:"MRICDCateData",	
 			//////////////////////////////////////////////////////
-			//MethodName:"getMRICDCateData",	//Í¨¹ı·½·¨µÃµ½gridÊı¾İ£¬Êı¾İÔÚ·µ»ØÖµÖĞ
+			//MethodName:"getMRICDCateData",	//é€šè¿‡æ–¹æ³•å¾—åˆ°gridæ•°æ®ï¼Œæ•°æ®åœ¨è¿”å›å€¼ä¸­
 			//////////////////////////////////////////////////////
-			MethodName:"GetMRICDCateData2",		//Í¨¹ı·½·¨µÃµ½gridÊı¾İ£¬²»´ø·µ»ØÖµ£¬Êı¾İÖ±½ÓÔÚ·½·¨ÖĞÊä³ö	
+			MethodName:"GetMRICDCateData2",		//é€šè¿‡æ–¹æ³•å¾—åˆ°gridæ•°æ®ï¼Œä¸å¸¦è¿”å›å€¼ï¼Œæ•°æ®ç›´æ¥åœ¨æ–¹æ³•ä¸­è¾“å‡º	
 			wantreturnval:0,
 			///////////////////////////////////////////////
 			filterRule:""
@@ -58,22 +58,22 @@ var init = function(){
 	    pageList:[5,10,15,20,50,100],
 		fit:true,
 		fitColumns:true,
-		//SelectÊÂ¼şÏìÓ¦·½·¨
+		//Selectäº‹ä»¶å“åº”æ–¹æ³•
 		onSelect:function(rowIndex,rowData){
 			if (rowIndex>-1){
 				var p = icdgrp.getPanel();
-				//enable ICD·Ö×éµÄÉ¾³ı°´Å¥
+				//enable ICDåˆ†ç»„çš„åˆ é™¤æŒ‰é’®
 				p.find("#delgrp").linkbutton("enable");
 				
 				var p = icddetail.getPanel();
-				//enable ICDÃ÷Ï¸µÄÉ¾³ı°´Å¥
+				//enable ICDæ˜ç»†çš„åˆ é™¤æŒ‰é’®
 				p.find("#delalldetail").linkbutton("enable");
-				//enable ICDÃ÷Ï¸µÄĞÂÔö°´Å¥
+				//enable ICDæ˜ç»†çš„æ–°å¢æŒ‰é’®
 				p.find("#adddetail").linkbutton("enable");
 				
 				var row = icdgrp.getSelected();
 				if (row){
-					//¼ÓÔØ ICDÃ÷Ï¸datagrid
+					//åŠ è½½ ICDæ˜ç»†datagrid
 					icddetail.load({ClassName:"web.DHCWL.V1.MRBase.ICDConfig",MethodName:"GetMRICDCateDetails",ICDCId:row.ICDCId,wantreturnval:0});
 				}
 				
@@ -87,33 +87,33 @@ var init = function(){
 				$("#delgrp").linkbutton("disable");
 				
 				$("#delalldetail").linkbutton("disable");
-				//enable ICDÃ÷Ï¸µÄĞÂÔö°´Å¥
+				//enable ICDæ˜ç»†çš„æ–°å¢æŒ‰é’®
 				$("#adddetail").linkbutton("disable");
 				$("#deldetail").linkbutton("disable");
 				$("#modifydetail").linkbutton("disable");
 				$('#icdconfig-icddetail').datagrid('loadData',{rows:[],total:0})							
 		}
 	});
-	//¶¯Ì¬Ôö¼Ó²éÑ¯¿ò£¬ÏÈ×¢ÊÍ
+	//åŠ¨æ€å¢åŠ æŸ¥è¯¢æ¡†ï¼Œå…ˆæ³¨é‡Š
   	//$col =$('<td  style="text-align:right"><span style="padding-left:10px;"></span><input id="searchText" class="hisui-searchbox" style="width:180px;"><span style="padding-left:10px;"></span></td>')
   	//$(".datagrid-toolbar>table>tbody>tr").append($col);	
 	
-	//ICD·Ö×é-Ôö¼Ó ÏìÓ¦·½·¨
+	//ICDåˆ†ç»„-å¢åŠ  å“åº”æ–¹æ³•
 	$("#addgrp").click(function (argument) {
 		saveGrpHandler("","","","");
 	});
-	//ICD·Ö×é-É¾³ı ÏìÓ¦·½·¨
+	//ICDåˆ†ç»„-åˆ é™¤ å“åº”æ–¹æ³•
 	$("#delgrp").click(function (argument) {
 		var detailRows=$("#icdconfig-icddetail").datagrid("getRows");
 		if(detailRows.length>0){
-			$.messager.alert("ÌáÊ¾","¸Ã·Ö×éÏÂÓĞICDÃ÷Ï¸£¬ÇëÏÈÉ¾³ıÃ÷Ï¸");
+			$.messager.alert("æç¤º","è¯¥åˆ†ç»„ä¸‹æœ‰ICDæ˜ç»†ï¼Œè¯·å…ˆåˆ é™¤æ˜ç»†");
 			return;
 		}
 		var row = icdgrp.getSelected();
 		if (row){
-			$.messager.confirm("È·ÈÏ","È·¶¨É¾³ı?",function(r){
+			$.messager.confirm("ç¡®è®¤","ç¡®å®šåˆ é™¤?",function(r){
 				if(r){
-					//µ÷ÓÃºóÌ¨·½·¨É¾³ı·Ö×é
+					//è°ƒç”¨åå°æ–¹æ³•åˆ é™¤åˆ†ç»„
 					$.cm({ClassName:'web.DHCMRTJService',MethodName:'DelICDCateData','ICDCRowid':row.ICDCId},
 					false,
 					function(data){
@@ -121,22 +121,62 @@ var init = function(){
 							icdgrp.load();
 							icddetail.load();
 						}else{
-							$.messager.alert("ÌáÊ¾",data.responseText);
+							$.messager.alert("æç¤º",data.responseText);
 						}
 					});
 				}
 			});
 		}
 	});
-		
-	//ICD·Ö×é-²éÑ¯ ÏìÓ¦·½·¨	
+	
+	//ICDåˆ†ç»„-åŒæ­¥æ•°æ®
+	$("#loadgrpData").click(function(){
+		var row = icdgrp.getSelected();
+		if (row){
+			$.messager.confirm("ç¡®è®¤","ç¡®å®šè¦åŒæ­¥ "+ row.ICDCCode + " åˆ†ç»„å¯¹ç…§è¡¨æ•°æ®ä¹ˆï¼Ÿ",function(r){
+				if(r){
+					$.messager.progress({
+						title: "æç¤º",
+						msg: 'æ­£åœ¨åŒæ­¥æ•°æ®,è¯·å‹¿å…³é—­æµè§ˆå™¨',
+						text: 'åŒæ­¥ä¸­....'
+					});
+					$.cm({ClassName:"web.QueryMrInfoNew",MethodName:"SynchronousDate",type:"onegrp",icdGroup:row.ICDCCode
+					},true,function(data){
+						$.messager.progress("close");
+						if("ok"==data.responseText){
+							$.messager.alert("æç¤º","åŒæ­¥æˆåŠŸ");
+						}else{
+							$.messager.alert("æç¤º","åŒæ­¥å¤±è´¥");
+						}
+					});
+				}
+			})
+		}else{
+			$.messager.confirm("ç¡®è®¤","ç¡®å®šè¦åŒæ­¥æ‰€æœ‰åˆ†ç»„çš„å¯¹ç…§è¡¨æ•°æ®ä¹ˆï¼Ÿ",function(r){
+				if(r){
+					$.cm({ClassName:"web.QueryMrInfoNew",MethodName:"SynchronousDate",type:"all",icdGroup:"",timeout:300000
+					},true,function(data){
+						$.messager.progress("close");
+						if("ok"==data.responseText){
+							$.messager.alert("æç¤º","åŒæ­¥è¯·æ±‚å·²å‘é€æˆåŠŸï¼Œç”±äºæ‰§è¡Œæ—¶é—´è¿‡é•¿ï¼Œå‰ç«¯æ— æ³•ç›‘æ§ï¼Œè¯·ä¸€æ®µæ—¶é—´ååç«¯ç¡®è®¤å¯¹ç…§è¡¨æ•°æ®");
+						}else{
+							$.messager.alert("æç¤º","åŒæ­¥å¤±è´¥");
+							//console.log("è¿™é‡Œæœ‰ä¸ªé”™è¯¯");
+						}
+					});
+				}
+			})
+		}
+	})
+	
+	//ICDåˆ†ç»„-æŸ¥è¯¢ å“åº”æ–¹æ³•	
 	$('#searchText').searchbox({
     	searcher:function(value){
 			icdgrp.load({ClassName:"web.DHCWL.V1.MRBase.ICDConfig",MethodName:"GetMRICDCateData2",filterRule:value,"wantreturnval":0}); 
     	}
 	});
 
-	//ICD·Ö×é-Ôö¼Ó ÏìÓ¦·½·¨
+	//ICDåˆ†ç»„-å¢åŠ  å“åº”æ–¹æ³•
 	var saveGrpHandler = function(Code,Desc,Cate,Remark){
 		$("#grpDlgICDCCode").val(Code);
 		$("#grpDlgICDCDesc").val(Desc);
@@ -152,18 +192,18 @@ var init = function(){
 				$('#grpDlgICDCCate').combobox("resize",newWidth);
 			},
 			buttons:[{
-				text:'±£´æ',
+				text:'ä¿å­˜',
 				handler:function(){
 					/*if ($("#grpDlgICDCCode").val()=="") {
-						$.messager.alert("ÌáÊ¾","±àÂë²»ÄÜÎª¿Õ£¡");
+						$.messager.alert("æç¤º","ç¼–ç ä¸èƒ½ä¸ºç©ºï¼");
 						return;
 					}*/
 					if (!$("#grpDlgICDCCode").validatebox("isValid")){
-						myMsg("±àÂëÖ»ÄÜÊÇÊı×ÖºÍ×ÖÄ¸µÄ×éºÏ");
+						myMsg("ç¼–ç åªèƒ½æ˜¯æ•°å­—å’Œå­—æ¯çš„ç»„åˆ");
 						return;
 					}
 					if ($("#grpDlgICDCDesc").val()=="") {
-						$.messager.alert("ÌáÊ¾","Ãû³Æ²»ÄÜÎª¿Õ£¡");
+						$.messager.alert("æç¤º","åç§°ä¸èƒ½ä¸ºç©ºï¼");
 						return;
 					}
 					var data = $.cm({ClassName:"web.DHCWL.V1.MRBase.ICDConfig",MethodName:"addMRICDCate",
@@ -173,12 +213,12 @@ var init = function(){
 								grpAddDlgObj.close();
 								icdgrp.load();
 							}else{
-								$.messager.alert("ÌáÊ¾",data.responseText);
+								$.messager.alert("æç¤º",data.responseText);
 							}
 						});
 				}
 			},{
-				text:'¹Ø±Õ',
+				text:'å…³é—­',
 				handler:function(){
 					grpAddDlgObj.close();
 				}
@@ -187,12 +227,12 @@ var init = function(){
 	}
 	
 	
-	//ICDÃ÷Ï¸datagrid
+	//ICDæ˜ç»†datagrid
 	var icddetail = $HUI.datagrid("#icdconfig-icddetail",{
 		url:$URL,
 		queryParams:{
 			ClassName:"web.DHCWL.V1.MRBase.ICDConfig",
-			MethodName:"GetMRICDCateDetails",		//Í¨¹ı·½·¨µÃµ½gridÊı¾İ£¬²»´ø·µ»ØÖµ£¬Êı¾İÖ±½ÓÔÚ·½·¨ÖĞÊä³ö	
+			MethodName:"GetMRICDCateDetails",		//é€šè¿‡æ–¹æ³•å¾—åˆ°gridæ•°æ®ï¼Œä¸å¸¦è¿”å›å€¼ï¼Œæ•°æ®ç›´æ¥åœ¨æ–¹æ³•ä¸­è¾“å‡º	
 			wantreturnval:0,
 			ICDCId:""
 		},
@@ -204,31 +244,31 @@ var init = function(){
 
 		toolbar:[{
 			iconCls:'icon-add',
-			text:'ĞÂÔö',
+			text:'æ–°å¢',
 			disabled:true,
 			id:'adddetail',
 			handler:function(){
-				saveDetailHandler("","","","icon-w-add","ĞÂÔö");
+				saveDetailHandler("","","","icon-w-add","æ–°å¢");
 			}
 		},{
 			iconCls:'icon-write-order',
-			text:'ĞŞ¸Ä',
+			text:'ä¿®æ”¹',
 			disabled:true,
 			id:'modifydetail',
 			handler:function(){
 				var row = icddetail.getSelected();
-				saveDetailHandler(row.ICDCDDesc,row.ICDCDICD,row.ICDCDId,"icon-w-edit","ĞŞ¸Ä");
+				saveDetailHandler(row.ICDCDDesc,row.ICDCDICD,row.ICDCDId,"icon-w-edit","ä¿®æ”¹");
 			}
 		},{
 			iconCls:'icon-cancel',
-			text:'É¾³ı',
+			text:'åˆ é™¤',
 			disabled:true,
 			id:'deldetail',
 			handler:function(){
 				var rowGrp =icdgrp.getSelected();
 				var row = icddetail.getSelected();
 				if (row){
-					$.messager.confirm("È·ÈÏ","È·¶¨É¾³ı?",function(r){
+					$.messager.confirm("ç¡®è®¤","ç¡®å®šåˆ é™¤?",function(r){
 						if(r){
 							$.cm({ClassName:'web.DHCMRTJService',MethodName:'DelMRICDCDetails','ICDCRowid':rowGrp.ICDCId,'ICDCDId':row.ICDCDId},
 							false,
@@ -240,7 +280,7 @@ var init = function(){
 									p.find("#deldetail").linkbutton("disable");
 									p.find("#modifydetail").linkbutton("disable");
 								}else{
-									$.messager.alert("ÌáÊ¾",data.responseText);
+									$.messager.alert("æç¤º",data.responseText);
 								}
 							});
 						}
@@ -249,13 +289,13 @@ var init = function(){
 			}
 		},{
 			iconCls:'icon-remove',
-			text:'È«²¿É¾³ı',
+			text:'å…¨éƒ¨åˆ é™¤',
 			disabled:true,
 			id:'delalldetail',
 			handler:function(){
 				var rowGrp =icdgrp.getSelected();
 				if (rowGrp){
-					$.messager.confirm("È·ÈÏ","È·¶¨É¾³ı?",function(r){
+					$.messager.confirm("ç¡®è®¤","ç¡®å®šåˆ é™¤?",function(r){
 						if(r){
 							$.cm({ClassName:'web.DHCMRTJService',MethodName:'DelMRICDCDetails','ICDCRowid':rowGrp.ICDCId,'ICDCDId':'A'},
 							false,
@@ -263,7 +303,7 @@ var init = function(){
 								if("ok"==data.responseText){
 									icddetail.load();
 								}else{
-									$.messager.alert("ÌáÊ¾",data.responseText);
+									$.messager.alert("æç¤º",data.responseText);
 								}
 							});
 						}
@@ -273,7 +313,7 @@ var init = function(){
 			
 		},{
 			iconCls:'icon-save',
-			text:'±£´æË³Ğò',
+			text:'ä¿å­˜é¡ºåº',
 			id:'saveorder',
 			handler:function(){
 				var pager=icddetail.getPager();
@@ -291,7 +331,7 @@ var init = function(){
 				}
 				
 				if (idStr == "") {
-					$.messager.alert("ÌáÊ¾","Ã»ÓĞ¿É¹©±£´æµÄÄÚÈİ!");
+					$.messager.alert("æç¤º","æ²¡æœ‰å¯ä¾›ä¿å­˜çš„å†…å®¹!");
 					return;
 				}				
 
@@ -303,7 +343,7 @@ var init = function(){
 						if("ok"==data.responseText){
 							icddetail.reload();
 						}else{
-							$.messager.alert("ÌáÊ¾",data.responseText);
+							$.messager.alert("æç¤º",data.responseText);
 						}
 					});
 				}				
@@ -318,14 +358,14 @@ var init = function(){
 		},
 		onLoadSuccess:function(data) {
 				//$("#delalldetail").linkbutton("disable");
-				//enable ICDÃ÷Ï¸µÄĞÂÔö°´Å¥
+				//enable ICDæ˜ç»†çš„æ–°å¢æŒ‰é’®
 				//$("#adddetail").linkbutton("disable");
 				$(this).datagrid('enableDnd');
 				$("#deldetail").linkbutton("disable");
 				$("#modifydetail").linkbutton("disable");							
 		}
 	});
-	//ICDÃ÷Ï¸-Ôö¼Ó ÏìÓ¦·½·¨
+	//ICDæ˜ç»†-å¢åŠ  å“åº”æ–¹æ³•
 	var saveDetailHandler = function(Desc,ICD,ICDCDId,iconCls,title){
 		$("#detailDlgICDCDDesc").val(Desc);
 		$("#detailDlgICDCDICD").val(ICD);
@@ -336,15 +376,15 @@ var init = function(){
 			resizable:true,
 			modal:true,
 			buttons:[{
-				text:'±£´æ',
+				text:'ä¿å­˜',
 				handler:function(){
 					
 					if ($("#detailDlgICDCDDesc").val()=="") {
-						$.messager.alert("ÌáÊ¾","ÃèÊö²»ÄÜÎª¿Õ£¡");
+						$.messager.alert("æç¤º","æè¿°ä¸èƒ½ä¸ºç©ºï¼");
 						return;
 					}
 					if ($("#detailDlgICDCDICD").val()=="") {
-						$.messager.alert("ÌáÊ¾","ICDÖµ²»ÄÜÎª¿Õ£¡");
+						$.messager.alert("æç¤º","ICDå€¼ä¸èƒ½ä¸ºç©ºï¼");
 						return;
 					}					
 					
@@ -359,13 +399,13 @@ var init = function(){
 								detailAddDlgObj.close();
 								icddetail.load();
 							}else{
-								$.messager.alert("ÌáÊ¾",data.responseText);
+								$.messager.alert("æç¤º",data.responseText);
 							}
 						});
 					
 				}
 			},{
-				text:'¹Ø±Õ',
+				text:'å…³é—­',
 				handler:function(){
 					detailAddDlgObj.close();
 				}

@@ -1,315 +1,404 @@
-/**
- * Ìå¼ìµÚÈı·½Ö§¸¶·şÎñ  DHCPEPayService.js
+ï»¿/*
+ * ä½“æ£€ç¬¬ä¸‰æ–¹æ”¯ä»˜æœåŠ¡  DHCPEPayService.js
  * @Author   wangguoying
  * @DateTime 2019-12-27
  */
 
 
 /**
- * ±¸×¢£ºµÚÈı·½Ö§¸¶·½Ê½°üº¬»¥ÁªÍø×éÉ¨Âë¸¶  ^DHCPESetting("DHCPE","ExtPayModeCode")="^MISPOS^SMF^"
- * 	 »¥ÁªÍø×éÉ¨Âë¸¶ ^DHCPESetting("DHCPE","DHCScanCode")="^SMF^"
+ * å¤‡æ³¨ï¼š
+ *
+ *    éœ€è¦è°ƒç”¨æ­¤æ–‡ä»¶çš„æ–¹æ³•æ—¶ï¼Œç•Œé¢åº”å¼•å…¥è®¡è´¹ç»„å¦‚ä¸‹å‡½æ•°ï¼š
+ *    1ã€DHCBillPayService.js
+ *    2ã€DHCBillMisPosPay.js
+ *    3ã€DHCBillPayByScanCode.js
+ *    4ã€DHCBillPayScanCodeService.js
+ * 
+ *    ç¬¬ä¸‰æ–¹æ”¯ä»˜æ–¹å¼åŒ…å«äº’è”ç½‘ç»„æ‰«ç ä»˜  ^DHCPESetting("DHCPE","ExtPayModeCode")="^MISPOS^SMF^"
+ *   äº’è”ç½‘ç»„æ‰«ç ä»˜ ^DHCPESetting("DHCPE","DHCScanCode")="^SMF^"
+ *   8.4ä¹‹ååº”è¯¥ä¸éœ€è¦å†åŒºåˆ†äº’è”ç»„æ”¯ä»˜äº†ï¼Œç»Ÿä¸€èµ°è®¡è´¹å‡½æ•°
+ *   è®¡è´¹å›è°ƒå‚æ•°å¯¹è±¡ï¼š  8.4ä¹‹åæ”¶è´¹å’Œé€€è´¹åšäº†æ ¼å¼ç»Ÿä¸€
+ *   var rtnValue = {
+        ResultCode: 0,
+        ResultMsg: "è¯¥æ”¯ä»˜æ–¹å¼ä¸éœ€è°ƒç”¨æ¥å£æ”¶è´¹",
+        ETPRowID: ""
+    };
  */
+
+
+var $PEPay = {};
+
 
 
 /**
- * [pePayRtn ·µ»Ø¶ÔÏó]
- * ResultCode£º½á¹û´úÂë				
- * 				-100£ºÒ½±£½áËãÊ§°Ü
- * 				-200£º½áËãÊ§°Ü£¬·¢Æ±Î´»Ø¹ö£¬ĞèÒªĞÅÏ¢¿Æ´¦Àí
- * 				-300£ºµÚÈı·½½áËãÊ§°Ü
- * 				-400:³ÌĞòÒì³£
- * 				-500:ÍË·ÑÊ§°Ü
- * ResultMsg£ºÃèÊö
- * ETPRowID£º¼Æ·Ñ×éµÄ½»Ò×¶©µ¥ID
- * PEBarCodePayStr£º»¥ÁªÍø½»Ò×ĞÅÏ¢
- * ExpStr:·µ»ØµÄÀ©Õ¹ĞÅÏ¢  ÈçÒ½±£½áËãĞè·µ»Ø  Ò½±£ID^×Ô·Ñ½ğ¶î
+ * [è¿”å›å¯¹è±¡]
+ * ResultCodeï¼šç»“æœä»£ç  
+ *                 0ï¼šæˆåŠŸ             
+ *              -100ï¼šåŒ»ä¿ç»“ç®—å¤±è´¥
+ *              -200ï¼šç»“ç®—å¤±è´¥ï¼Œå‘ç¥¨æœªå›æ»šï¼Œéœ€è¦ä¿¡æ¯ç§‘å¤„ç†
+ *              -300ï¼šç¬¬ä¸‰æ–¹ç»“ç®—å¤±è´¥
+ *              -400:ç¨‹åºå¼‚å¸¸
+ *              -500:é€€è´¹å¤±è´¥
+ * ResultMsgï¼šæè¿°
+ * ETPRowIDï¼šè®¡è´¹ç»„çš„äº¤æ˜“è®¢å•ID
+ * PEBarCodePayStrï¼šäº’è”ç½‘äº¤æ˜“ä¿¡æ¯
+ * ExpStr:è¿”å›çš„æ‰©å±•ä¿¡æ¯  å¦‚åŒ»ä¿ç»“ç®—éœ€è¿”å›  åŒ»ä¿ID^è‡ªè´¹é‡‘é¢
  */
-var pePayRtn = {
-	ResultCode: "0",
-	ResultMsg: "",
-	ETPRowID: "",
-	PEBarCodePayStr: "",
-	ExpStr: ""
+$PEPay.Result = {
+    ResultCode: "0",
+    ResultMsg: "",
+    ETPRowID: "",
+    PEBarCodePayStr: "",
+    ExpStr: ""
+}
+
+
+/**
+ * [æ”¯ä»˜å‚æ•°å¯¹è±¡ï¼Œç”¨äºè®¡è´¹å›è°ƒæ—¶ä½¿ç”¨]
+ *  Invprt: å‘ç¥¨ID
+ *  UserId: æ”¶è´¹å‘˜ID
+ *  InsuID: åŒ»ä¿ID
+ *  AdmSorce: åŒ»ç–—ç±»åˆ«
+ *  AdmReason: è´¹åˆ«
+ */
+$PEPay.Param = {
+    Invprt: "", //å‘ç¥¨ID
+    UserId: "", //æ”¶è´¹å‘˜ID
+    InsuID: "", //åŒ»ä¿ID
+    AdmSorce: "", //åŒ»ç–—ç±»åˆ«
+    AdmReason: "", //è´¹åˆ«
+    InvNoStr: "", //å‘ç¥¨å·^å‘ç¥¨åç§°^ä¸æ‰“å‘ç¥¨^è´¹åˆ«^çº³ç¨äººè¯†åˆ«å·
+    PayedInfo: "",
+    PeAdmType: "",
+    PeAdmId: "",
+    Amount: "",
+    CardAccID: ""
 };
 
 
 /**
- * [Ò½±£½áËã]
- * @param    {[int]}    invprt    [Ìå¼ì·¢Æ±Id]
- * @param    {[float]}    amount    [½ğ¶î]
- * @param    {[int]}    userId    [ÓÃ»§ID]
+ * è®¡è´¹å›è°ƒä¹‹åï¼Œéœ€è¦è°ƒç”¨ä½“æ£€çš„å›è°ƒå‡½æ•°ï¼ˆæ‰§è¡ŒçœŸæ­£ç»“ç®—åŠåç»­æ“ä½œï¼‰
+ */
+$PEPay.callback = undefined;
+
+
+/**
+ * [åŒ»ä¿ç»“ç®—]
+ * @param    {[int]}    invprt    [ä½“æ£€å‘ç¥¨Id]
+ * @param    {[float]}    amount    [é‡‘é¢]
+ * @param    {[int]}    userId    [ç”¨æˆ·ID]
  * @param    {[int]}    AdmSorce [Pac_admreason.rea_AdmSource]
  * @param    {[int]}    admReason [Pac_admreason.Rowid]
- * @return   {object}    pePayRtn
+ * @return   {object}    $PEPay.Result
  * @Author   wangguoying
  * @DateTime 2019-12-27
  */
-function insurancePay(invprt, amount, userId, AdmSorce, AdmReason) {
-	pePayRtn = {
-		ResultCode: "0",
-		ResultMsg: "",
-		ETPRowID: "",
-		PEBarCodePayStr: "",
-		ExpStr: ""
-	};
+$PEPay.insurancePay = function(invprt, amount, userId, AdmSorce, AdmReason) {
+    this.Result = {
+        ResultCode: "0",
+        ResultMsg: "",
+        ETPRowID: "",
+        PEBarCodePayStr: "",
+        ExpStr: ""
+    };
+    var StrikeFlag = "N";
+    var GroupID = session['LOGON.GROUPID'];
+    var HOSPID = session['LOGON.HOSPID'];
+    var InsuNo = ""; //åŒ»ä¿ä¸ªäººç¼–å·ã€åŒ»ä¿å¡å·ã€åŒ»ä¿å·çš„åŠ å¯†ä¸² ä¾›ç£å¡çš„åœ°æ–¹ç”¨ 
+    var CardType = ""; //æœ‰æ— åŒ»ä¿å¡
+    var YLLB = getValueById("YLLB"); //åŒ»ç–—ç±»åˆ«ï¼ˆæ™®é€šé—¨è¯Šã€é—¨è¯Šç‰¹ç—…ã€é—¨è¯Šå·¥ä¼¤ã€é—¨è¯Šç”Ÿè‚²ï¼‰
+    var DicCode = ""; //ç—…ç§ä»£ç 
+    var DicDesc = "";
+    var BillSource = "01"; //ç»“ç®—æ¥æº
+    var Type = "";
+    var MoneyType = "";
+    var TJPayMode = $("#PayMode").combogrid("getValue");
 
-	var StrikeFlag = "N";
-	var GroupID = session['LOGON.GROUPID'];
-	var HOSPID=session['LOGON.HOSPID'];
-	var InsuNo = ""; //Ò½±£¸öÈË±àºÅ¡¢Ò½±£¿¨ºÅ¡¢Ò½±£ºÅµÄ¼ÓÃÜ´® ¹©´Å¿¨µÄµØ·½ÓÃ 
-	var CardType = ""; //ÓĞÎŞÒ½±£¿¨
-	var YLLB = getValueById("YLLB"); //Ò½ÁÆÀà±ğ£¨ÆÕÍ¨ÃÅÕï¡¢ÃÅÕïÌØ²¡¡¢ÃÅÕï¹¤ÉË¡¢ÃÅÕïÉúÓı£©
-	var DicCode = ""; //²¡ÖÖ´úÂë
-	var DicDesc = "";
-	var BillSource = "01"; //½áËãÀ´Ô´
-	var Type = "";
-	var MoneyType = "";
-	var TJPayMode=$("#PayMode").combogrid("getValue");
-	
-	var ExpStr = StrikeFlag + "^" + GroupID + "^" + InsuNo + "^" + CardType + "^" + YLLB + "^" + DicCode + "^" + DicDesc + "^" + amount + "^" + BillSource + "^" + Type +"^^"+"^"+HOSPID+"^"+TJPayMode+ "!" + amount + "^" + MoneyType
-	
-	try {
-		//var ret = InsuPEDivide("0", userId, invprt, AdmSorce, AdmReason, ExpStr, "N"); //Ò½±£×éº¯Êı  DHCInsuPort.js
-		var ret = InsuPEDivide("0", userId, invprt, AdmSorce, AdmReason, ExpStr, "NotCPPFlag"); //Ò½±£×éº¯Êı DHCInsuPort.js
-		var InsuArr = ret.split("^");
-		var ret = InsuArr[0];
-		if ((ret == "-3") || (ret == "-4")) { //Ê§°Ü
-			//»Ø¹ö¸ÕÊÕ·ÑµÄ·¢Æ±
+    var ExpStr = StrikeFlag + "^" + GroupID + "^" + InsuNo + "^" + CardType + "^" + YLLB + "^" + DicCode + "^" + DicDesc + "^" + amount + "^" + BillSource + "^" + Type + "^^" + "^" + HOSPID + "^" + TJPayMode + "!" + amount + "^" + MoneyType
+
+    try {
+        //var ret = InsuPEDivide("0", userId, invprt, AdmSorce, AdmReason, ExpStr, "N"); //åŒ»ä¿ç»„å‡½æ•°  DHCInsuPort.js
+        var ret = InsuPEDivide("0", userId, invprt, AdmSorce, AdmReason, ExpStr, "NotCPPFlag"); //åŒ»ä¿ç»„å‡½æ•° DHCInsuPort.js
+        var InsuArr = ret.split("^");
+        var ret = InsuArr[0];
+        if ((ret == "-3") || (ret == "-4")) { //å¤±è´¥
+            //å›æ»šåˆšæ”¶è´¹çš„å‘ç¥¨
 
 
-			var Return = tkMakeServerCall("web.DHCPE.DHCPEBillCharge", "CancelCashie", invprt, userId);
-			if (Return == "") {
-				pePayRtn.ResultCode = -100;
-				pePayRtn.ResultMsg = "Ò½±£½áËãÊ§°Ü";
-				return pePayRtn;
-			} else {
-				pePayRtn.ResultCode = -200;
-				pePayRtn.ResultMsg = "»Ø¹öÊ§°Ü£¬ÇëÁªÏµĞÅÏ¢¿Æ£º" + Return;
-				return pePayRtn;
-			}
+            var Return = tkMakeServerCall("web.DHCPE.DHCPEBillCharge", "CancelCashier", invprt, userId);
+            if (Return == "") {
+                this.Result.ResultCode = -100;
+                this.Result.ResultMsg = "åŒ»ä¿ç»“ç®—å¤±è´¥";
+                return this.Result;
+            } else {
+                this.Result.ResultCode = -200;
+                this.Result.ResultMsg = "å›æ»šå¤±è´¥ï¼Œè¯·è”ç³»ä¿¡æ¯ç§‘ï¼š" + Return;
+                return this.Result;
+            }
 
-		} else if (ret == "-1") {
-			if (parent.parent.ALertWin) parent.parent.ALertWin.SetIAmount(amount);
-			pePayRtn.ExpStr = "^" + amount;
-			alert("Ò½±£½áËãÊ§°Ü,±¾´ÎÊÕ·ÑÎªÈ«×Ô·Ñ");
-		} else {
-			if (parent.parent.ALertWin) parent.parent.ALertWin.SetIAmount(InsuArr[2]);
-			pePayRtn.ExpStr = InsuArr[1] + "^" + amount;
-			alert("Ò½±£½áËã³É¹¦,²¡ÈË×Ô·Ñ½ğ¶îÎª:" + InsuArr[2]);
-		}
-	} catch (e) {
-		pePayRtn.ResultCode = -404;
-		pePayRtn.ResultMsg = "µ÷ÓÃÒ½±£Ê§°Ü^" + e.message;
-		return pePayRtn;
-	}
-	return pePayRtn;
+        } else if (ret == "-1") {
+            if (parent.parent.ALertWin) parent.parent.ALertWin.SetIAmount(amount);
+            this.Result.ExpStr = "^" + amount;
+            $.messager.alert("æç¤º", "åŒ»ä¿ç»“ç®—å¤±è´¥,æœ¬æ¬¡æ”¶è´¹ä¸ºå…¨è‡ªè´¹", "info");
+        } else {
+            if (parent.parent.ALertWin) parent.parent.ALertWin.SetIAmount(InsuArr[2]);
+            this.Result.ExpStr = InsuArr[1] + "^" + amount;
+            $.messager.alert("æç¤º", "åŒ»ä¿ç»“ç®—æˆåŠŸ,ç—…äººè‡ªè´¹é‡‘é¢ä¸º:" + InsuArr[2], "info");
+        }
+    } catch (e) {
+        this.Result.ResultCode = -404;
+        this.Result.ResultMsg = "è°ƒç”¨åŒ»ä¿å¤±è´¥^" + e.message;
+        return this.Result;
+    }
+    return this.Result;
 }
 
 /**
- * [µÚÈı·½Ö§¸¶]
- * @param    {[int]}    invprt    [·¢Æ±Id]
- * @param    {[int]}    userId    [ÓÃ»§id]
- * @param    {[int]}    InsuID    [Ò½±£½áËãid]
- * @param    {[int]}    AdmSorce [Pac_admreason.rea_AdmSource]
- * @param    {[int]}    admReason [Pac_admreason.Rowid]
- * @return   {object}    pePayRtn
+ * [ç¬¬ä¸‰æ–¹æ”¯ä»˜]
+ * @param   {[Func]} callback [æ”¯ä»˜å›è°ƒå‡½æ•°]                                 
+ * @return   {object}    $PEPay.Result
  * @Author   wangguoying
  * @DateTime 2019-12-27
  */
-function extPay(invprt, userId, InsuID, AdmSorce, admReason) {
-	pePayRtn = {
-		ResultCode: "0",
-		ResultMsg: "",
-		ETPRowID: "",
-		PEBarCodePayStr: "",
-		ExpStr: ""
-	};
-	var payInfo = tkMakeServerCall("web.DHCPE.CashierEx", "GetPayInfoByPayCode", invprt); //ÑéÖ¤ÊÇ·ñĞèÒªµÚÈı·½Ö§¸¶
-	if (payInfo == "") {
-		return pePayRtn;
-	}
-	var char1 = String.fromCharCode(1)
-	var baseInfo = payInfo.split(char1)[1];
-	var patId = baseInfo.split("^")[0];
-	var paadm = baseInfo.split("^")[1];
-	var scanFlag = baseInfo.split("^")[2];
-	if (scanFlag == "1") {
-		return scancodePay(payInfo, invprt, userId, InsuID, AdmSorce, admReason);
-	}
-	var payInfo = payInfo.split(char1)[0];
-	var payArr = payInfo.split("^");
-	var payDR = payArr[0];
-	var payCode = payArr[1];
-	var payAmt = payArr[2];
+$PEPay.extPay = function(callback) {
+    this.Result = {
+        ResultCode: "0",
+        ResultMsg: "",
+        ETPRowID: "",
+        PEBarCodePayStr: "",
+        ExpStr: ""
+    };
 
-	if (parseFloat(payAmt) <= 0) {
-		return pePayRtn;
-	}
-	//¿ÆÊÒ^°²È«×é^ÔºÇø^²Ù×÷Ô±ID^²¡ÈËID^¾ÍÕï^ÒµÎñ±íÖ¸Õë´®(ÒÔ!·Ö¸ô,¿ÉÎª¿Õ)
-	var expStr = session['LOGON.CTLOCID'] + "^" + session['LOGON.GROUPID'] + "^" + session['LOGON.HOSPID'] + "^" + session['LOGON.USERID'] + "^" + patId + "^" + paadm + "^^C^" + invprt;
-	var PayCenterRtn = PayService("PE", payDR, payAmt, expStr);
-	if (PayCenterRtn.ResultCode != "0") {
-		return cancelExtCashier(PayCenterRtn.ResultMsg, invprt, userId, InsuID, AdmSorce, admReason);
-	} else {
-		pePayRtn.ETPRowID = PayCenterRtn.ETPRowID;
-		//¼ÇÂ¼ÏÂ¼Æ·Ñ¶©µ¥ID£¬ºó±ßÕıÊ½½áËãÊ§°Ü»ò¹ØÁª¶©µ¥Ê§°ÜÊ±£¬¿ÉÒÔ¸ù¾İ·¢Æ±È¡µ½¶©µ¥IDÔÙµ½Òì³£´¦Àí½çÃæ½øĞĞÊÖ¹¤¹ØÁª
-		var relate = tkMakeServerCall("web.DHCPE.CashierEx", "SetRelationTrade", invprt, PayCenterRtn.ETPRowID);
-	}
-	return pePayRtn;
+    this.callback = callback;
+    var payInfo = tkMakeServerCall("web.DHCPE.CashierEx", "GetPayInfoByPayCode", this.Param.Invprt); //éªŒè¯æ˜¯å¦éœ€è¦ç¬¬ä¸‰æ–¹æ”¯ä»˜
+    if (payInfo == "") {
+        this.end();
+        return;
+    }
+    var char1 = String.fromCharCode(1)
+    var baseInfo = payInfo.split(char1)[1];
+    var patId = baseInfo.split("^")[0];
+    var paadm = baseInfo.split("^")[1];
+    var scanFlag = baseInfo.split("^")[2];
+    if (scanFlag == "1") {
+        return this.scancodePay(payInfo, this.Param.Invprt, this.Param.UserId, this.Param.InsuID, this.Param.AdmSorce, this.Param.admReason);
+    }
+    var payInfo = payInfo.split(char1)[0];
+    var payArr = payInfo.split("^");
+    var payDR = payArr[0];
+    var payCode = payArr[1];
+    var payAmt = payArr[2];
+
+    if (parseFloat(payAmt) <= 0) {
+        this.end();
+        return;
+    }
+    //ç§‘å®¤^å®‰å…¨ç»„^é™¢åŒº^æ“ä½œå‘˜ID^ç—…äººID^å°±è¯Š^ä¸šåŠ¡è¡¨æŒ‡é’ˆä¸²(ä»¥!åˆ†éš”,å¯ä¸ºç©º)
+    var expStr = session['LOGON.CTLOCID'] + "^" + session['LOGON.GROUPID'] + "^" + session['LOGON.HOSPID'] + "^" + session['LOGON.USERID'] + "^" + patId + "^" + paadm + "^^C^" + this.Param.Invprt;
+    PayService("PE", payDR, payAmt, expStr, this.extPay_callBack); //è°ƒç”¨è®¡è´¹å‡½æ•°
+
 }
 
 /**
- * [»¥ÁªÍøÉ¨Âë¸¶]
- * @param    {[String]}    payInfo   [Ö§¸¶ĞÅÏ¢]
- * @param    {[int]}    invprt    [·¢Æ±Id]
- * @param    {[int]}    userId    [ÓÃ»§id]
- * @param    {[int]}    InsuID    [Ò½±£½áËãid]
+ * [ç»“æŸæ—¶å›è°ƒ]
+ * @return   {[type]}    [description]
+ * @Author   wangguoying
+ * @DateTime 2020-12-22
+ */
+$PEPay.end = function() {
+    if (typeof this.callback == 'function') {
+        this.callback(this.Param, this.Result);
+    }
+    return;
+}
+
+
+
+/**
+ * [è®¡è´¹æ”¯ä»˜åå›è°ƒå‡½æ•°]
+ * @param    {[Objet]}    PayCenterRtn [{
+                                            ResultCode: "00",
+                                            ResultMsg: "è¯¥æ”¯ä»˜æ–¹å¼ä¸éœ€è°ƒç”¨æ¥å£æ”¶è´¹",
+                                            ETPRowID: ""
+                                        }]
+ * @Author   wangguoying
+ * @DateTime 2020-08-06
+ */
+$PEPay.extPay_callBack = function(PayCenterRtn) {
+    if (PayCenterRtn.ResultCode != 0) {
+        $PEPay.cancelExtCashier(PayCenterRtn.ResultMsg, $PEPay.Param.Invprt, $PEPay.Param.UserId, $PEPay.Param.InsuID, $PEPay.Param.AdmSorce, $PEPay.Param.AdmReason);
+    } else {
+        if (PayCenterRtn.ETPRowID != "") {
+            $PEPay.Result.ETPRowID = PayCenterRtn.ETPRowID;
+            //è®°å½•ä¸‹è®¡è´¹è®¢å•IDï¼Œåè¾¹æ­£å¼ç»“ç®—å¤±è´¥æˆ–å…³è”è®¢å•å¤±è´¥æ—¶ï¼Œå¯ä»¥æ ¹æ®å‘ç¥¨å–åˆ°è®¢å•IDå†åˆ°å¼‚å¸¸å¤„ç†ç•Œé¢è¿›è¡Œæ‰‹å·¥å…³è”
+            var relate = tkMakeServerCall("web.DHCPE.CashierEx", "SetRelationTrade", $PEPay.Param.Invprt, PayCenterRtn.ETPRowID);
+        }
+    }
+    $PEPay.end();
+    return;
+}
+
+
+/**
+ * [äº’è”ç½‘æ‰«ç ä»˜]
+ * @param    {[String]}    payInfo   [æ”¯ä»˜ä¿¡æ¯]
+ * @param    {[int]}    invprt    [å‘ç¥¨Id]
+ * @param    {[int]}    userId    [ç”¨æˆ·id]
+ * @param    {[int]}    InsuID    [åŒ»ä¿ç»“ç®—id]
  * @param    {[int]}    AdmSorce [Pac_admreason.rea_AdmSource]
  * @param    {[int]}    admReason [Pac_admreason.Rowid]
- * @return   {object}    pePayRtn
+ * @return   {object}    $PEPay.Result
  * @Author   wangguoying
  * @DateTime 2020-01-09
  */
-function scancodePay(payInfo, invprt, userId, InsuID, AdmSorce, admReason) {
-	pePayRtn = {
-		ResultCode: "0",
-		ResultMsg: "",
-		ETPRowID: "",
-		PEBarCodePayStr: "",
-		ExpStr: ""
-	};
-	var char1 = String.fromCharCode(1)
-	var baseInfo = payInfo.split(char1)[1];
-	var patId = baseInfo.split("^")[0];
-	var paadm = baseInfo.split("^")[1];
-	var scanFlag = baseInfo.split("^")[2];
-	if (scanFlag != "1") {
-		return pePayRtn;
-	}
-	var payInfo = payInfo.split(char1)[0];
-	var payArr = payInfo.split("^");
-	var payDR = payArr[0];
-	var payCode = payArr[1];
-	var payAmt = payArr[2];
-	if (parseFloat(payAmt) <= 0) {
-		return pePayRtn;
-	}
+$PEPay.scancodePay = function(payInfo, invprt, userId, InsuID, AdmSorce, admReason) {
+    this.Result = {
+        ResultCode: "0",
+        ResultMsg: "",
+        ETPRowID: "",
+        PEBarCodePayStr: "",
+        ExpStr: ""
+    };
+    var char1 = String.fromCharCode(1)
+    var baseInfo = payInfo.split(char1)[1];
+    var patId = baseInfo.split("^")[0];
+    var paadm = baseInfo.split("^")[1];
+    var scanFlag = baseInfo.split("^")[2];
+    if (scanFlag != "1") {
+        this.end();
+        return;
+    }
+    var payInfo = payInfo.split(char1)[0];
+    var payArr = payInfo.split("^");
+    var payDR = payArr[0];
+    var payCode = payArr[1];
+    var payAmt = payArr[2];
+    if (parseFloat(payAmt) <= 0) {
+        this.end();
+        return;
+    }
 
-	var groupId = session['LOGON.GROUPID'];
-	var locId = session['LOGON.CTLOCID'];
-	var expStr = userId + "^" + groupId + "^" + locId + "^" + session['LOGON.HOSPID'];
-	var str = "dhcbarcodepay.csp";
-	var payBarCode = window.showModalDialog(str, "", 'dialogWidth:300px;dialogHeight:150px;resizable:yes'); //HTMLÑùÊ½µÄÄ£Ì¬¶Ô»°¿ò
-	if ((payBarCode == "") || (payBarCode == "undefind")) {
-		return cancelExtCashier("Î´É¨Âë", invprt, userId, InsuID, AdmSorce, admReason);
-	}
-	var PEBarCodePayStr = tkMakeServerCall("MHC.BarCodePay", "PEBarCodePay", paadm, payBarCode, invprt, payAmt, payCode, expStr);
-	var rtnAry = PEBarCodePayStr.split("^");
-	if (rtnAry[0] != 0) {
-		return cancelExtCashier("»¥ÁªÍøÖ§¸¶Ê§°Ü", invprt, userId, InsuID, AdmSorce, admReason);
-	} else {
-		pePayRtn.PEBarCodePayStr = PEBarCodePayStr;
-	}
-	return pePayRtn;
+    var groupId = session['LOGON.GROUPID'];
+    var locId = session['LOGON.CTLOCID'];
+    var expStr = userId + "^" + groupId + "^" + locId + "^" + session['LOGON.HOSPID'];
+    var str = "dhcbarcodepay.csp";
+    var payBarCode = window.showModalDialog(str, "", 'dialogWidth:300px;dialogHeight:150px;resizable:yes'); //HTMLæ ·å¼çš„æ¨¡æ€å¯¹è¯æ¡†
+    if ((payBarCode == "") || (payBarCode == "undefind")) {
+        this.cancelExtCashier("æœªæ‰«ç ", invprt, userId, InsuID, AdmSorce, admReason);
+        this.end();
+        return;
+    }
+    var PEBarCodePayStr = tkMakeServerCall("MHC.BarCodePay", "PEBarCodePay", paadm, payBarCode, invprt, payAmt, payCode, expStr);
+    var rtnAry = PEBarCodePayStr.split("^");
+    if (rtnAry[0] != 0) {
+        this.cancelExtCashier("äº’è”ç½‘æ”¯ä»˜å¤±è´¥", invprt, userId, InsuID, AdmSorce, admReason);
+    } else {
+        this.Result.PEBarCodePayStr = PEBarCodePayStr;
+    }
+    this.end();
+    return;
 }
 
 
 
 /**
- * [³·ÏúÔ¤½áËã Ö§¸¶Ê§°ÜÊ±µ÷ÓÃ]
- * @param    {[String]}    msg       [ÌáÊ¾ĞÅÏ¢]
- * @param    {[int]}    userId    [ÓÃ»§id]
- * @param    {[int]}    InsuID    [Ò½±£½áËãid]
+ * [æ’¤é”€é¢„ç»“ç®— æ”¯ä»˜å¤±è´¥æ—¶è°ƒç”¨]
+ * @param    {[String]}    msg       [æç¤ºä¿¡æ¯]
+ * @param    {[int]}    userId    [ç”¨æˆ·id]
+ * @param    {[int]}    InsuID    [åŒ»ä¿ç»“ç®—id]
  * @param    {[int]}    AdmSorce [Pac_admreason.rea_AdmSource]
  * @param    {[int]}    admReason [Pac_admreason.Rowid]
- * @return   {object}    pePayRtn
+ * @return   {object}    $PEPay.Result
  * @Author   wangguoying
  * @DateTime 2020-01-09
  */
-function cancelExtCashier(msg, invprt, userId, InsuID, AdmSorce, AdmReason) {
-	pePayRtn = {
-		ResultCode: "-300",
-		ResultMsg: "µÚÈı·½Ö§¸¶Ê§°Ü:" + msg,
-		ETPRowID: "",
-		PEBarCodePayStr: "",
-		ExpStr: ""
-	};
-	var Return = tkMakeServerCall("web.DHCPE.DHCPEBillCharge", "CancelCashie", invprt, userId);
-	if (Return != "") {
-		pePayRtn.ResultCode = -200;
-		pePayRtn.ResultMsg = "µÚÈı·½Ö§¸¶Ê§°Ü,·¢Æ±Î´»Ø¹ö£¬ÇëÁªÏµĞÅÏ¢¿Æ£º" + Return;
-	}
-	//Èç¹ûÒ½±£³É¹¦£¬³·ÏúÒ½±£½áËã
-	if (InsuID != "") {
-		var insuStr = ""
-		try {
-			var insuRet = InsuPEDivideStrike("0", userId, InsuID, AdmSorce, AdmReason, insuStr, "N");
-			if (insuRet != "0") {
-				pePayRtn.ResultMsg = "½áËãÊ§°Ü,Ò½±£Î´ÍË·Ñ,ÇëºÍĞÅÏ¢ÖĞĞÄÁªÏµ";
-			}
-		} catch (e) {
-			pePayRtn.ResultMsg = "½áËãÊ§°Ü,Ò½±£Î´ÍË·Ñ,ÇëºÍĞÅÏ¢ÖĞĞÄÁªÏµ\n" + e.message;
-		}
-	}
+$PEPay.cancelExtCashier = function(msg, invprt, userId, InsuID, AdmSorce, AdmReason) {
+    this.Result = {
+        ResultCode: "-300",
+        ResultMsg: "ç¬¬ä¸‰æ–¹æ”¯ä»˜å¤±è´¥:" + msg,
+        ETPRowID: "",
+        PEBarCodePayStr: "",
+        ExpStr: ""
+    };
+    //å¦‚æœåŒ»ä¿æˆåŠŸï¼Œæ’¤é”€åŒ»ä¿ç»“ç®—
+    if (InsuID != "") {
+        var insuStr = ""
+        try {
+            var insuRet = InsuPEDivideStrike("0", userId, InsuID, AdmSorce, AdmReason, insuStr, "N");
+            if (insuRet != "0") {
+                this.Result.ResultMsg = "ç»“ç®—å¤±è´¥,åŒ»ä¿æœªé€€è´¹,è¯·å’Œä¿¡æ¯ä¸­å¿ƒè”ç³»";
+                return this.Result;
+            }
+        } catch (e) {
+            this.Result.ResultMsg = "ç»“ç®—å¤±è´¥,åŒ»ä¿æœªé€€è´¹,è¯·å’Œä¿¡æ¯ä¸­å¿ƒè”ç³»\n" + e.message;
+            return this.Result;
+        }
+    }
+    var Return = tkMakeServerCall("web.DHCPE.DHCPEBillCharge", "CancelCashier", invprt, userId);
+    if (Return != "") {
+        this.Result.ResultCode = -200;
+        this.Result.ResultMsg = "ç¬¬ä¸‰æ–¹æ”¯ä»˜å¤±è´¥,å‘ç¥¨æœªå›æ»šï¼Œè¯·è”ç³»ä¿¡æ¯ç§‘ï¼š" + Return;
+    }
+    
 
-	return pePayRtn;
+    return this.Result;
 }
 
 
 
 /**
- * [µÚÈı·½ÍË·Ñ]
- * @param    {[int]}    dropInvprt [±»ÍËµÄ·¢Æ±ID]
- * @param    {[int]}    oriInvprt [Ô­·¢Æ±ID]
- * @return   {object}    pePayRtn
+ * [ç¬¬ä¸‰æ–¹é€€è´¹]
+ * @param    {[int]}    dropInvprt [è¢«é€€çš„å‘ç¥¨ID]
+ * @param    {[int]}    oriInvprt [åŸå‘ç¥¨ID]
+ * @return   {object}    $PEPay.Result
  * @Author   wangguoying
  * @DateTime 2019-12-27
  */
-function extRefund(dropInvprt,oriInvprt){
-	pePayRtn = {
-		ResultCode:"0",
-		ResultMsg: "",
-		ETPRowID: "",
-		PEBarCodePayStr:"",
-		ExpStr:""
-	};
-	var refundInfo=tkMakeServerCall("web.DHCPE.CashierEx","GetPOSRefundPara","",dropInvprt,oriInvprt);
-	if (refundInfo == "") {
-		return pePayRtn;
-	}
-	var char1 = String.fromCharCode(1);
-	var PEBarCodePayStr = refundInfo.split(char1)[1]; //»¥ÁªÍøÉ¨Âë¸¶Ö§¸¶¼ÇÂ¼
-	refundInfo = refundInfo.split(char1)[0];
-	var refundDr = refundInfo.split("^")[1];
-	var refundAmt = parseFloat(refundInfo.split("^")[2]);
-	var oldETPRowID = refundInfo.split("^")[3];
-	var oldINvID = refundInfo.split("^")[4]; //ÕıÆ±
-	var dropInvID = refundInfo.split("^")[5]; //¸ºÆ±    			
-	var newInvID = refundInfo.split("^")[6] //ĞÂÆ±
-	var oriInvID = refundInfo.split("^")[7] //Ô­Ê¼ÕıÆ±
-	var paadm = refundInfo.split("^")[8];
-	var scanFlag = refundInfo.split("^")[9] //»¥ÁªÍøÉ¨Âë¸¶
+$PEPay.extRefund = function(dropInvprt, oriInvprt) {
+    this.Result = {
+        ResultCode: "0",
+        ResultMsg: "",
+        ETPRowID: "",
+        PEBarCodePayStr: "",
+        ExpStr: ""
+    };
+    var refundInfo = tkMakeServerCall("web.DHCPE.CashierEx", "GetPOSRefundPara", "", dropInvprt, oriInvprt);
+    if (refundInfo == "") {
+        return this.Result;
+    }
+    var char1 = String.fromCharCode(1);
+    var PEBarCodePayStr = refundInfo.split(char1)[1]; //äº’è”ç½‘æ‰«ç ä»˜æ”¯ä»˜è®°å½•
+    refundInfo = refundInfo.split(char1)[0];
+    var refundDr = refundInfo.split("^")[1];
+    var refundAmt = parseFloat(refundInfo.split("^")[2]);
+    var oldETPRowID = refundInfo.split("^")[3];
+    var oldINvID = refundInfo.split("^")[4]; //æ­£ç¥¨
+    var dropInvID = refundInfo.split("^")[5]; //è´Ÿç¥¨              
+    var newInvID = refundInfo.split("^")[6] //æ–°ç¥¨
+    var oriInvID = refundInfo.split("^")[7] //åŸå§‹æ­£ç¥¨
+    var paadm = refundInfo.split("^")[8];
+    var scanFlag = refundInfo.split("^")[9] //äº’è”ç½‘æ‰«ç ä»˜
 
 
-	if (scanFlag == "1") {
-		var updateRtn = tkMakeServerCall("MHC.BarCodePay", "updatePEBarCodePay", paadm, PEBarCodePayStr, "D", "");
-		if (updateRtn.split("^")[0] != "0") {
-			pePayRtn.ResultCode = -500;
-			pePayRtn.ResultMsg = "Ìå¼ìÍË·Ñ³É¹¦£¬µ÷ÓÃ»¥ÁªÍøÍË·Ñ½Ó¿ÚÊ§°Ü,Çë²¹½»Ò×£¡\n" + updateRtn;
-		} else {
-			//¼ÇÂ¼µÚÈı·½ÍË·Ñ³É¹¦ 
-			var record = tkMakeServerCall("web.DHCPE.CashierEx", "RecordPOSRefund", dropInvID);
-		}
-	} else {
-		var expStr = session['LOGON.CTLOCID'] + "^" + session['LOGON.GROUPID'] + "^" + session['LOGON.HOSPID'] + "^" + session['LOGON.USERID'] + "^^^^^D^";
-		var refRtn = RefundPayService("PE", oldINvID, dropInvID, newInvID, refundAmt, "PE", expStr);
-		if (refRtn.rtnCode != "0") {
-			pePayRtn.ResultCode = -500;
-			pePayRtn.ResultMsg = "Ìå¼ìÍË·Ñ³É¹¦£¬µ÷ÓÃµÚÈı·½ÍË·Ñ½Ó¿ÚÊ§°Ü,Çë²¹½»Ò×£¡\n" + refRtn.rtnMsg;
-		} else {
-			//¼ÇÂ¼µÚÈı·½ÍË·Ñ³É¹¦ 
-			var record = tkMakeServerCall("web.DHCPE.CashierEx", "RecordPOSRefund", dropInvID);
-		}
-	}
-	return pePayRtn;
+    if (scanFlag == "1") {
+        var updateRtn = tkMakeServerCall("MHC.BarCodePay", "updatePEBarCodePay", paadm, PEBarCodePayStr, "D", "");
+        if (updateRtn.split("^")[0] != "0") {
+            this.Result.ResultCode = -500;
+            this.Result.ResultMsg = "ä½“æ£€é€€è´¹æˆåŠŸï¼Œè°ƒç”¨äº’è”ç½‘é€€è´¹æ¥å£å¤±è´¥,è¯·è¡¥äº¤æ˜“ï¼\n" + updateRtn;
+        } else {
+            //è®°å½•ç¬¬ä¸‰æ–¹é€€è´¹æˆåŠŸ 
+            var record = tkMakeServerCall("web.DHCPE.CashierEx", "RecordPOSRefund", dropInvID);
+        }
+    } else {
+        var expStr = session['LOGON.CTLOCID'] + "^" + session['LOGON.GROUPID'] + "^" + session['LOGON.HOSPID'] + "^" + session['LOGON.USERID'];
+        var refRtn = RefundPayService("PE", oriInvID, dropInvID, newInvID, refundAmt, "PE", expStr);
+        if (refRtn.ResultCode != 0) {
+            this.Result.ResultCode = -500;
+            this.Result.ResultMsg = "ä½“æ£€é€€è´¹æˆåŠŸï¼Œè°ƒç”¨ç¬¬ä¸‰æ–¹é€€è´¹æ¥å£å¤±è´¥,è¯·è¡¥äº¤æ˜“ï¼\n" + refRtn.ResultMsg;
+        } else {
+            //è®°å½•ç¬¬ä¸‰æ–¹é€€è´¹æˆåŠŸ 
+            var record = tkMakeServerCall("web.DHCPE.CashierEx", "RecordPOSRefund", dropInvID);
+        }
+    }
+    return this.Result;
 }

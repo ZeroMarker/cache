@@ -4,8 +4,8 @@
 
 //定义Url
 var url="dhcpha.clinical.action.csp";
-var titleNotes='<span style="font-weight:bold;color:red;">[双击行添加]</span>';
-var statusArr = [{ "val": "10", "text": "建议" }, { "val": "20", "text": "申诉" },{ "val": "30", "text": "接受" },{ "val": "40", "text": "同意" }];
+var titleNotes='<span style="font-weight:bold;color:red;">'+$g("[双击行添加]")+'</span>';
+var statusArr = [{ "val": "10", "text": $g("建议") }, { "val": "20", "text": $g("申诉") },{ "val": "30", "text": $g("接受") },{ "val": "40", "text": $g("药师同意") }];
 var appType="P";
 //var medAdvID="";
 //var Status="";  // qunianpeng 2016/10/17
@@ -14,14 +14,14 @@ $(function(){
 	$("#EndDate").datebox("setValue", formatDate(0));     //Init结束日期
 	
 	$('#textarea').bind("focus",function(){
-		if(this.value=="请输入..."){
+		if(this.value==$g("请输入...")){
 			$('#textarea').val("");
 		}
 	});
 	
 	$('#textarea').bind("blur",function(){
 		if(this.value==""){
-			$('#textarea').val("请输入...");
+			$('#textarea').val($g("请输入..."));
 		}
 	});
 	
@@ -94,11 +94,11 @@ function InitPatList()
 {
 	//定义columns
 	var columns=[[
-		{field:'medAdvTime',title:'时间',width:120},
-		{field:'PatBed',title:'床号',width:60},
-		{field:'PatNo',title:'登记号',width:80},
-		{field:'PatName',title:'姓名',width:80},
-		{field:'CurStatus',title:'当前状态',width:70},
+		{field:'medAdvTime',title:$g('时间'),width:120},
+		{field:'PatBed',title:$g('床号'),width:60},
+		{field:'PatNo',title:$g('登记号'),width:80},
+		{field:'PatName',title:$g('姓名'),width:80},
+		{field:'CurStatus',title:$g('当前状态'),width:70},
 		{field:'PatientID',title:'PatientID',width:80},
 		{field:'AdmDr',title:'AdmDr',width:80},
 		{field:'medAdvID',title:'medAdvID',width:80}
@@ -115,7 +115,7 @@ function InitPatList()
 		pageSize:30, 	    // 每页显示的记录条数
 		pageList:[30,45],   // 可以设置每页记录条数的列表
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		onClickRow:function(rowIndex, rowData){ 
 			$('#medAdvDetID').html('');
@@ -170,11 +170,11 @@ function delMedAdv()
 				$.post(url,{action:"delPatMedAdv",AdvID:medAdvID},function(data,status){
 			       var retVal=data.replace(/(^\s*)|(\s*$)/g,"");
 			       if(retVal!="0"){
-					if(medAdvStatus=="已接受"){
+					if(medAdvStatus==$g("接受")){
 					  		$.messager.alert("提示","医生已接受,不能删除！");
-				       	}else  if(medAdvStatus=="申诉"){
+				       	}else  if(medAdvStatus==$g("申诉")){
 					  		$.messager.alert("提示","医生已申诉,不能删除！");
-				      	 }else  if(medAdvStatus=="药师同意"){
+				      	 }else  if(medAdvStatus==$g("药师同意")){
 					  		$.messager.alert("提示","药师已同意用药,不能删除！");
 				       }
 			       }else{
@@ -215,10 +215,10 @@ function InitMedAdivPanel(retVal)
 	//主信息
 	var medAdvMasArr=medAdvMasDateStr.split("^");
 	htmlstr=htmlstr+"<div style='font-size:13pt;border-bottom: 2px solid #95B8E7;background: none repeat scroll 0% 0% #FFFFFF;padding: 10px 10px 15px 15px;position: relative;border-radius: 5px;box-shadow: 0px 3px 3px 0px #CCC inset;' id="+AdvID+" >";
-	htmlstr=htmlstr+"<span style='font-weight:bold;'>有效期：</span><span>"+medAdvMasArr[0]+"</span><span style='font-weight:bold;margin-left:15px;margin-right:15px;'>至</span><span>"+medAdvMasArr[1]+"</span><span style='font-weight:bold;margin-left:30px;color:red;'>"+medAdvMasArr[2]+"</span>";
+	htmlstr=htmlstr+"<span style='font-weight:bold;'>"+$g('有效期：')+"</span><span>"+medAdvMasArr[0]+"</span><span style='font-weight:bold;margin-left:15px;margin-right:15px;'>"+$g('至')+"</span><span>"+medAdvMasArr[1]+"</span><span style='font-weight:bold;margin-left:30px;color:red;'>"+medAdvMasArr[2]+"</span>";
 	htmlstr=htmlstr+"<br>";
 	//医嘱
-	htmlstr=htmlstr+"<span style='font-weight:bold;'>原医嘱:</span>";
+	htmlstr=htmlstr+"<span style='font-weight:bold;'>"+$g('原医嘱:')+"</span>";
 	htmlstr=htmlstr+"<br>";
 	var medAdvDrgItmArr=medAdvDrgItmStr.split("||");
 	for(var k=0;k<medAdvDrgItmArr.length;k++)
@@ -228,7 +228,7 @@ function InitMedAdivPanel(retVal)
 	}
 	//建议
 	var medAdvContentArr=medAdvContentStr.split("||");
-	htmlstr=htmlstr+"<span style='font-weight:bold;'>用药建议:</span>";
+	htmlstr=htmlstr+"<span style='font-weight:bold;'>"+$g('用药建议:')+"</span>";
 	htmlstr=htmlstr+"<br>";
 	for(var k=0;k<medAdvContentArr.length;k++)
 	{
@@ -258,7 +258,7 @@ function appMedAdvDetail()
 		$.messager.alert("提示","请先选择病人信息！");
 		return;
 	}
-	if((medAdvDetailList=="请输入...")||(medAdvDetailList=="")){   //sufan 2016/09/09
+	if((medAdvDetailList==$g("请输入..."))||(medAdvDetailList=="")){   //sufan 2016/09/09
 		$.messager.alert("提示","请先输入意见,再进行提交！");
 		return;
 	}
@@ -324,8 +324,8 @@ function InitMedAdvList()
 		//定义columns
 	var columns=[[
 		{field:"ID",title:'ID',width:90,hidden:true},
-		{field:'Code',title:'代码',width:100},
-		{field:'Desc',title:'描述',width:600},
+		{field:'Code',title:$g('代码'),width:100},
+		{field:'Desc',title:$g('描述'),width:600},
 	]];
 	
 	//定义datagrid
@@ -338,11 +338,11 @@ function InitMedAdvList()
 		pageSize:40,        // 每页显示的记录条数
 		pageList:[40,80],   // 可以设置每页记录条数的列表
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		onDblClickRow:function(rowIndex, rowData){
 			var tmpDesc=rowData.Desc;
-			if(($('#textarea').val()=="请输入...")||($('#textarea').val()=="")){
+			if(($('#textarea').val()==$g("请输入..."))||($('#textarea').val()=="")){
 				$('#textarea').val("").val(tmpDesc);
 			}else{
 				$('#textarea').val($('#textarea').val()+","+tmpDesc);
@@ -359,12 +359,13 @@ function createMedAdvWin()
 {	
 
 	$('#medAdvWin').window({
-		title:'建议列表'+titleNotes,    
+		title:$g('建议列表')+titleNotes,    
 		collapsible:true,
 		border:true,
 		closed:"true",
 		width:800,
-		height:350
+		height:350,
+		minimizable:false
 	});
 
 	$('#medAdvWin').window('open');
@@ -386,21 +387,21 @@ function delMedAdvDetail()
 		$.messager.alert("提示","请选择要删除的记录！");
 		return;
 	}
-    if(Status=="申诉"){	//lbb   医生申诉、同意、接受不可删除	 
+    if(Status==$g("申诉")){	//lbb   医生申诉、同意、接受不可删除	 
 		$.messager.alert("提示","医生已申诉，不可删除");
 		return;
 	    } 
-	else if(Status=="已接受"){		 
+	else if(Status==$g("接受")){		 
 	    $.messager.alert("提示","医生已接受，不可删除");
 		return;
 	    } 
-	else if(Status=="药师同意"){		 
+	else if(Status==$g("药师同意")){		 
 		$.messager.alert("提示","药师已同意用药，不可删除");
 		return;
 		}
 	$.post(url,{action:"delPatMedAdvDetail",medAdvDetID:medAdvDetID},function(data,status){
 		var retVal=data.replace(/(^\s*)|(\s*$)/g,"");
-		if(retVal=="0"&&(Status=="建议")){ //lbb  建议状态允许被删除 
+		if(retVal=="0"&&(Status==$g("建议"))){ //lbb  建议状态允许被删除 
 			$('#'+medAdvDetID).remove();
 			$.messager.alert("提示","删除成功！");
 			return;
@@ -419,11 +420,11 @@ function agrMedAdv()
 {
 	var row=$('#patList').datagrid('getSelected');	
 	if(!row){
-		$.messager.alert("提示","请选择需要接受的记录！");
+		$.messager.alert("提示","请选择待处理建议列表数据！");
 		return;
 	}
 	var medAdvID=row.medAdvID;
-	if(Status!="申诉"){		//当状态为申诉时，药师方可操作同意按钮 qunianpeng 2016/10/17 
+	if(Status!=$g("申诉")){		//当状态为申诉时，药师方可操作同意按钮 qunianpeng 2016/10/17 
 		$.messager.alert("提示","医生未申诉，不可操作！");
 		return;
 	} 
@@ -444,12 +445,13 @@ function agrMedAdv()
 function medAdvTemp()
 {
 	$('#medAdvTempWin').window({
-		title:'用药建议模板维护',    
+		title:$g('用药建议模板维护'),    
 		collapsible:true,
 		border:true,
 		closed:"true",
 		width:1000,
-		height:500
+		height:500,
+		minimizable:false
 	});
 
 	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.medadvtemp.csp"></iframe>';

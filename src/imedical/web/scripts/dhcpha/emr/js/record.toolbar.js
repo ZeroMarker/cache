@@ -544,7 +544,7 @@ function setToolBarFontView(disableFont)
 			{
 				document.getElementById("fontSpan").style.display="none";
 			}
-			else
+			else if(document.getElementById(strs[i]))
 			{
 				document.getElementById(strs[i]).style.display="none";
 			}

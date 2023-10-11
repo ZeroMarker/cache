@@ -65,6 +65,13 @@
         //自动记录病例操作日志
         hisLog.operate('EMR.OP.LoadDoc',docParam);
     },
+	//打印
+    printDoc: function () {
+        iEmrPlugin.PRINT_DOCUMENT({
+            args: 'Print',
+            printMode: ''
+        });
+    },
     cleanDoc: function() {
         iEmrPlugin.CLEAN_DOCUMENT();
     },

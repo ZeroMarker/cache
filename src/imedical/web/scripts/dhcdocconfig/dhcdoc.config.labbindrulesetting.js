@@ -75,6 +75,7 @@ function Init(){
 		InitPlanList();
 	}
 	InitLabPlanAlgorithms();
+	InitMergeLabPlan();
 }
 function InitPlanList(){
 	$("#PlanList").combobox({
@@ -124,6 +125,23 @@ function InitLabPlanAlgorithms(){
 			}*/]
 	})
 }
+function InitMergeLabPlan(){
+	$("#MergeLabPlan").combobox({   
+		valueField:'id',   
+		textField:'text',
+		editable:false,
+		data:[{    
+			    "id":"AllOrder",    
+			    "text":"同就诊医嘱(分管时机：住院为护士条码打印、门诊为计费)",
+			    "selected":true 
+			},{    
+			    "id":"OnceInsertOrder",    
+			    "text":"仅合并一次审核的医嘱"   
+			}]
+	})
+}
+
+
 function InitplanTabDataGrid(){
 	var toolbar=[
 		{
@@ -362,6 +380,9 @@ function InitLabPlanLimitLoc(){
 	    	{field:'rowid',title:'',checkbox:true},    
 	        {field:'Desc',title:'科室名称',width:230}    
 	    ]],
+	    toolbar:[{
+	    	id:"LocSearchDesc"
+	    }],
 	    onBeforeLoad:function(param){
 		    $('#LabPlanLimitLoc').datagrid("uncheckAll");
 			var LabPlanHospId=GetHospId();
@@ -374,7 +395,8 @@ function InitLabPlanLimitLoc(){
 					else   AdmTypeStr=AdmTypeStr+"^"+AdmType;
 				}
 			}
-			param = $.extend(param,{curHospId:LabPlanHospId,AdmTypeStr:AdmTypeStr,rows:99999});
+			var Desc=$.trim($($(".searchbox-text")[0]).val());
+			param = $.extend(param,{curHospId:LabPlanHospId,AdmTypeStr:AdmTypeStr,Desc:Desc,rows:99999});
 		},
 		onLoadSuccess:function(data){
 			for (var i=0;i<PageLogicObj.m_selLocStr.split("^").length;i++) {
@@ -412,7 +434,12 @@ function LoadLabPlanLimit(PlanRowId){
 			if (LabPlanAlgorithms=="") {
 				LabPlanAlgorithms=1;
 			}
+			var MergeLabPlan=dataArr[6];
+			if (MergeLabPlan=="") {
+				MergeLabPlan="AllOrder";
+			}
 			$("#LabPlanAlgorithms").combobox('select',LabPlanAlgorithms);
+			$("#MergeLabPlan").combobox('select',MergeLabPlan);
 			$("#AgeFrom").val(LimitAgeFrom);
 			$("#AgeTo").val(LimitAgeTo);
 			for (var i=0;i<LimitAdmTypeStr.split("^").length;i++) {
@@ -529,7 +556,10 @@ function SaveLabPlanLimit(alertFlag){
 		return false;
 	}
 	var LabPlanAlgorithms=$("#LabPlanAlgorithms").combobox('getValue');
-	var saveStr=LocStr+String.fromCharCode(1)+AdmTypeStr+String.fromCharCode(1)+LimitAgeFrom+String.fromCharCode(1)+LimitAgeTo+String.fromCharCode(1)+SexStr+String.fromCharCode(1)+LabPlanAlgorithms;
+	var MergeLabPlan=$("#MergeLabPlan").combobox('getValue');
+	var saveStr=LocStr+String.fromCharCode(1)+AdmTypeStr+String.fromCharCode(1)+LimitAgeFrom+String.fromCharCode(1)+LimitAgeTo+String.fromCharCode(1)+SexStr
+	var saveStr=saveStr+String.fromCharCode(1)+LabPlanAlgorithms+String.fromCharCode(1)+MergeLabPlan;
+	
 	var saveLimitOrdStr="";
 	if (PageLogicObj.editRow2 != undefined){
 		var editors = PageLogicObj.m_LimitOrdTabDataGrid.datagrid('getEditors', PageLogicObj.editRow2); 
@@ -867,7 +897,8 @@ function InitunifyBloodFeeTabDataGrid(){
 					fit: true,//自动大小   
 					pageSize: 10,//每页显示的记录条数，默认为10   
 					pageList: [10],//可以设置每页记录条数的列表  
-					url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
+					//url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
+					url:$URL+"?ClassName=DHCDoc.DHCDocConfig.InstrArcim&QueryName=FindItem",
                     columns:[[
                         {field:'ArcimDesc',title:'名称',width:310,sortable:true},
 		                {field:'ArcimRowID',title:'ID',width:100,sortable:true},
@@ -1274,7 +1305,8 @@ function InittabSpecOrContainerItemListGrid(){
 					fit: true,//自动大小   
 					pageSize: 10,//每页显示的记录条数，默认为10   
 					pageList: [10],//可以设置每页记录条数的列表  
-					url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
+					//url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
+					url:$URL+"?ClassName=DHCDoc.DHCDocConfig.InstrArcim&QueryName=FindItem",
                     columns:[[
                         {field:'ArcimDesc',title:'名称',width:310,sortable:true},
 		                {field:'ArcimRowID',title:'ID',width:100,sortable:true},
@@ -1621,6 +1653,10 @@ function InitComboBloodFlag(){
 function AdmTypeCheckChang(){
 	if (PageLogicObj.m_LabPlanLimitLoc=="") {
 		PageLogicObj.m_LabPlanLimitLoc=InitLabPlanLimitLoc();
+		$('#LocSearchDesc').parent().html("<div id='LocSearchDesc'><span class='l-btn-left' ><span class='l-btn-text l-btn-empty'>&nbsp;</span></span></div>")
+		$('#LabPlanLimitLoc_toolbar').appendTo('#LocSearchDesc');
+
+    	$('#LocSearchDesc').find("span").eq(0).css("display","none");
 	}else{
 		PageLogicObj.m_LabPlanLimitLoc.datagrid("reload");
 	}

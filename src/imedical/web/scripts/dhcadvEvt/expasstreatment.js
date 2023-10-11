@@ -135,7 +135,7 @@ function SaveAsse(flag)
 //检查界面勾选其他，是否填写输入框
 function checkother(){
 	if((!compareSelTowTime(trsUndefinedToEmpty($("#PhaStartingDate").datebox('getValue')),trsUndefinedToEmpty($("#PhaEndingDate").datebox('getValue'))))&&(trsUndefinedToEmpty($("#PhaEndingDate").datebox('getValue'))!="")){
-		$.messager.alert("提示:","【开始用药时间】不能大于【停止用药时间】！");
+		$.messager.alert($g("提示"),$g("【开始用药时间】不能大于【停止用药时间】！"));
 		return false;
 	}
 	return true;

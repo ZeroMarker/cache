@@ -21,16 +21,18 @@ function BodyLoadHandler()
 }
 function BBatchResult_click()
 {
-	var encmeth="",ArrivedDate="",CheckDate="",DocID="",LocID="",GroupID="";
-	var obj=document.getElementById("BatchClass");
-	if (obj) encmeth=obj.value;
+	var ArrivedDate="",CheckDate="",DocID="",LocID="",GroupID="";
+
 	var ArrivedDate=getValueById("ArrivedDate");
+	
 	var CheckDate=getValueById("CheckDate");
 	
 	DocID=session['LOGON.USERID'];
 	LocID=session['LOGON.CTLOCID'];
 	GroupID=session['LOGON.GROUPID'];
-	var ret=cspRunServerMethod(encmeth,ArrivedDate,CheckDate,DocID,GroupID,LocID);
+	
+	var ret=tkMakeServerCall("web.DHCPE.DoctorBatchRecord","BatchSaveResult",ArrivedDate,CheckDate,DocID,GroupID,LocID);
+	
 	BFind_click();
 }
 
@@ -49,7 +51,7 @@ function BFind_click()
 			+"&CheckDate="+iCheckDate
 			+"&ShowErr="+ShowErr
 		    ;
-            //messageShow("","","",lnk)
+            //alert(lnk)
     location.href=lnk; 
    
 }

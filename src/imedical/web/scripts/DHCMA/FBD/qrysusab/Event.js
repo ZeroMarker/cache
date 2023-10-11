@@ -78,7 +78,7 @@ function InitSusAbQueryWinEvent(obj){
 		var strUrl = "./dhcma.fbd.susabrep.csp?1=1&EpisodeID=" + aEpisodeID+"&ReportID=" + aReportID+ "&LocFlag=" + LocFlag;
 	    websys_showModal({
 			url:strUrl,
-			title:'疑似食源性疾病报告',
+			title:'疑似食源性异常病例∕异常健康事件报告卡',
 			iconCls:'icon-w-epr',  
 	        originWindow:window,
 	        closable:false,
@@ -89,9 +89,7 @@ function InitSusAbQueryWinEvent(obj){
 			} 
 		});
 	}
-	obj.gridReport_rowdbclick = function() {
-		var rowData = obj.gridFBDQuery.getSelected();
-		var index = obj.gridFBDQuery.getRowIndex(rowData);  //获取当前选中行的行号(从0开始)
+	obj.gridReport_rowdbclick = function(rowData) {
 		
 		var strUrl = "./dhcma.fbd.susabrep.csp?1=1"
 		strUrl = strUrl + "&PatientID=" + rowData["PatientID"];
@@ -101,7 +99,7 @@ function InitSusAbQueryWinEvent(obj){
 		
 		websys_showModal({
 			url:strUrl,
-			title:'疑似食源性疾病报告',
+			title:'疑似食源性异常病例∕异常健康事件报告卡',
 			iconCls:'icon-w-epr',  
 	        originWindow:window,
 	        closable:false,

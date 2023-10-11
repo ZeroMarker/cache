@@ -31,9 +31,9 @@ $(function() {
 function InitDict() {
     
     // 药品
-    DHCST.ComboGrid.Init({ Id: 'cmgIncItm', Type: 'IncItm' }, { placeholder: "药品..." }); // width: 315
+    DHCST.ComboGrid.Init({ Id: 'cmgIncItm', Type: 'IncItm' },{}); // width: 315
      // 库存分类
-    DHCST.ComboBox.Init({ Id: 'cmbStkCat', Type: 'StkCat' }, { placeholder: "库存分类..." });
+    DHCST.ComboBox.Init({ Id: 'cmbStkCat', Type: 'StkCat' },{});
 	
 	GridCmgInc = DHCST.GridComboGrid.Init({ Type: "IncItm" }, {
         required: true,
@@ -144,14 +144,14 @@ function InitGridDrugInfo() {
     var columns = [
         [
         	{ field: "InciCode", title: '药品代码', width: 120 },
-            { field: "InciDesc", title: '药品名称', width: 250 },
+            { field: "InciDesc", title: '药品名称', width: 300 },
             { field: "Spec", title: '规格', width: 105 },
-            { field: "Manf", title: '厂商', width: 200},
+            { field: "Manf", title: '生产企业', width: 250},
             { field: "Sp", title: '售价', width: 70, halign: 'right', align: 'right'},
             { field: "Rp", title: '进价', width: 70, halign: 'right', align: 'right' },
             { field: "Uom", title: '单位', width: 70 },
             { field: "Form", title: '剂型', width: 80},
-            { field: "GenName", title: '处方通用名', width: 120 },
+            { field: "GenName", title: '处方通用名', width: 200 },
             { field: "StkCat", title: '库存分类', width: 120 },
             { field: "Inci", title: '库存id', width: 50,hidden: true }
         ]
@@ -579,6 +579,11 @@ function SaveInRecIngr(){
 function AddInRecIngr(){
 	var gridSelect=$('#gridInRcp').datagrid("getSelected");
 	if(gridSelect==null){
+		$.messager.alert("提示", "请选择制剂记录!", "warning");
+        return;
+	}
+	var InRec=(gridSelect.InRec || "")
+	if(InRec==""){
 		$.messager.alert("提示", "请选择制剂记录!", "warning");
         return;
 	}

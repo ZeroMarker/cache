@@ -1,141 +1,157 @@
-//Æ÷ĞµÎ¬»¤½çÃæjs
+ï»¿// å™¨æ¢°ç»´æŠ¤ç•Œé¢js
 var init = function() {
-	var UseFlagData = [{ "RowId":"Y", "Description":"Ê¹ÓÃ"},{ "RowId":"N", "Description":"Í£ÓÃ"}]
-	var UseFlagCombox = {
-		type: 'combobox',
-		options: {
-			data: UseFlagData,
-			valueField: 'RowId',
-			textField: 'Description'
+	var GridList;
+	var HospId = gHospId;
+	var TableName = 'CSSD_Item';
+	function InitHosp() {
+		var hospComp = InitHospCombo(TableName, gSessionStr);
+		if (typeof hospComp === 'object') {
+			HospId = $HUI.combogrid('#_HospList').getValue();
+			Query();
+			$('#_HospList').combogrid('options').onSelect = function(index, record) {
+				HospId = record.HOSPRowId;
+				Query();
+			};
+		} else {
+			Query();
 		}
-	} 
-	$UI.linkbutton('#SearchBT',{ 
-		onClick:function(){
-			var Params = JSON.stringify($UI.loopBlock('PackageItemTB'));
-			GridList.load({
-				ClassName: 'web.CSSDHUI.PackageInfo.PackageItem',
-				QueryName: 'SelectAll',
-				Params: Params
-			});
+	}
+	
+	var Query = function() {
+		var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+		var Params = JSON.stringify($UI.loopBlock('PkgItmTB'));
+		GridList.load({
+			ClassName: 'web.CSSDHUI.PackageInfo.PackageItem',
+			QueryName: 'SelectAll',
+			Params: Params,
+			Others: Others
+		});
+	};
+
+	$UI.linkbutton('#SearchBT', {
+		onClick: function() {
+			Query();
 		}
 	});
-	$UI.linkbutton('#ClearBT',{ 
-		onClick:function(){
-			$UI.clearBlock('PackageItemTB');
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
+			$UI.clearBlock('PkgItmTB');
 			$UI.clear(GridList);
 		}
 	});
-	$('#AddBT').on('click', function(){
-		GridList.commonAddRow();
-	});
-	$('#SaveBT').on('click', function(){
-		var Rows=GridList.getChangesData();
-		if(isEmpty(Rows)){
-			//$UI.msg('alert','Ã»ÓĞĞèÒª±£´æµÄĞÅÏ¢!');
-			return;
-		}
-		$.cm({
-			ClassName: 'web.CSSDHUI.PackageInfo.PackageItem',
-			MethodName: 'Save',
-			Params: JSON.stringify(Rows)
-		},function(jsonData){
-			$UI.msg('success',jsonData.msg);
-			if(jsonData.success==0){
-				GridList.reload();
-			}else{
-				$UI.msg('error',jsonData.msg);
-			 }
-		});
-	});
-	$UI.linkbutton('#DeleteBT',{ 
-		onClick:function (){
-			GridList.commonDeleteRow();
-			Delete();
-		}
-	});
-	
-	function Delete(){
-		var Rows=GridList.getSelectedData()
-		if(isEmpty(Rows)){
-			//$UI.msg('alert','Ã»ÓĞÑ¡ÖĞµÄĞÅÏ¢!')
-			return;
-		}
-		$.messager.confirm("²Ù×÷ÌáÊ¾","ÄúÈ·¶¨ÒªÖ´ĞĞÉ¾³ı²Ù×÷Âğ£¿",function(data){
-			if(data){
-				$.cm({
-					ClassName: 'web.CSSDHUI.PackageInfo.PackageItem',
-					MethodName: 'DeleteItem',
-					Params: JSON.stringify(Rows)
-					},function(jsonData){
-						if(jsonData.success==0){
-							$UI.msg('success',jsonData.msg);
-							GridList.reload()
-						}else{
-						 	$UI.msg('error',jsonData.msg);
-						}
-					});
-			}
-		});
-	}
-	
-	var Cm = [[{
+
+	var Cm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
+			width: 50,
 			hidden: true
 		}, {
-			title: 'Ãû³Æ',
-			field: 'Description',
-			width:250,
-			fitColumns:true,
-			editor:{type:'validatebox',options:{required:true}}
+			title: 'å™¨æ¢°',
+			field: 'ItmDesc',
+			width: 200,
+			editor: { type: 'validatebox', options: { required: true }}
 		}, {
-			title: '¹æ¸ñ',
-			field: 'Spec',
-			width:100,
-			fitColumns:true,
-			editor:{type:'validatebox',options:{required:false}}
+			title: 'åˆ«å',
+			field: 'ItmAlias',
+			width: 100,
+			editor: { type: 'validatebox' }
 		}, {
-			title: '¼Û¸ñ',
-			align:'right',
-			field: 'Price',
-			width:100,
-			fitColumns:true,
-			editor:{type:'numberbox',options:{required:false}}
+			title: 'å™¨æ¢°è§„æ ¼',
+			field: 'ItmSpec',
+			width: 200,
+			editor: { type: 'validatebox', options: { required: false }}
 		}, {
-			title: 'ÊÇ·ñ¿ÉÓÃ',
-			align:'center',
+			title: 'ä»·æ ¼',
+			align: 'right',
+			field: 'ItmPrice',
+			width: 100,
+			editor: { type: 'numberbox', options: { required: false }},
+			formatter: function(value, row, index) {
+				if (value !== '') {
+					return (parseFloat(value).toFixed(2) + '').replace(/\d{1,3}(?=(\d{3})+(\.\d*)?$)/g, '$&,');
+				}
+			}
+		}, {
+			title: 'æ˜¯å¦å¯ç”¨',
+			align: 'center',
 			field: 'UseFlag',
-			width:150,
-			fitColumns:true,
-			formatter: CommonFormatter(UseFlagCombox,'UseFlag','UseFlagDesc'),
-			editor:UseFlagCombox
+			width: 150,
+			editor: { type: 'checkbox', options: { on: 'Y', off: 'N' }},
+			formatter: BoolFormatter
 		}, {
-			title: '±¸×¢',
+			title: 'æ˜¯å¦æ¤å…¥ç‰©',
+			align: 'center',
+			field: 'ImplantsFlag',
+			width: 100,
+			editor: { type: 'checkbox', options: { on: 'Y', off: 'N' }},
+			formatter: BoolFormatter
+		}, {
+			title: 'ä¸€æ¬¡æ€§æ ‡å¿—',
+			align: 'center',
+			field: 'OneOffFlag',
+			width: 100,
+			editor: { type: 'checkbox', options: { on: 'Y', off: 'N' }},
+			formatter: BoolFormatter
+		}, {
+			title: 'å¤‡æ³¨',
 			field: 'Remarks',
-			width:250,
-			fitColumns:true,
-			editor:{type:'validatebox'}
+			width: 250,
+			editor: { type: 'validatebox' }
 		}
 	]];
 
-	var GridList = $UI.datagrid('#GridList', {
-		url: $URL,
+	GridList = $UI.datagrid('#GridList', {
 		queryParams: {
 			ClassName: 'web.CSSDHUI.PackageInfo.PackageItem',
-			QueryName: 'SelectAll'				
+			QueryName: 'SelectAll'
 		},
-		//deleteRowParams: {
-			//ClassName: 'web.CSSDHUI.PackageInfo.PackageItem',
-			//MethodName: 'DeleteItem'
-		//},
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.PackageInfo.PackageItem',
+			MethodName: 'jsDeleteItm'
+		},
+		navigatingWithKey: true,
 		columns: Cm,
-		toolbar: "#PackageItemTB",
-		//sortName: "Description",
-		lazy:false,
-		onClickCell: function(index, filed ,value){
-			var Row=GridList.getRows()[index]
-			GridList.commonClickCell(index,filed)
-		} 
-	})	
-}
+		checkField: 'ItmDesc',
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			GridList.commonClickRow(index, row);
+		},
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
+				$('#GridList').datagrid('selectRow', 0);
+			}
+		},
+		showAddSaveDelItems: true,
+		saveDataFn: function() {
+			var Rows = GridList.getChangesData();
+			var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows === false) {
+				$UI.msg('alert', 'å­˜åœ¨æœªå¡«å†™çš„å¿…å¡«é¡¹ï¼Œä¸èƒ½ä¿å­˜!');
+				return;
+			}
+			$.cm({
+				ClassName: 'web.CSSDHUI.PackageInfo.PackageItem',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows),
+				Others: Others
+			}, function(jsonData) {
+				$UI.msg('success', jsonData.msg);
+				if (jsonData.success === 0) {
+					GridList.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		beforeAddFn: function() {
+			var DefaultData = { UseFlag: 'Y' };
+			return DefaultData;
+		}
+	});
+	InitHosp();
+};
 $(init);

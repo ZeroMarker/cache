@@ -1,136 +1,195 @@
-///Õ≥º∆¥Ú∞¸π§◊˜¡ø
+Ôªø// ÂèëÊîæÂ∑•‰ΩúÈáèÁªüËÆ°
 var init = function() {
-	
-    var SupLocParams=JSON.stringify(addSessionParams({Type:"SupLoc"}));
-	var SupLocBox = $HUI.combobox('#Loc', {
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+SupLocParams,
+	var SupLocParams = JSON.stringify(addSessionParams({ Type: 'SupLoc', BDPHospital: gHospId }));
+	$HUI.combobox('#SupLoc', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + SupLocParams,
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-	var ReqLocParams=JSON.stringify(addSessionParams({Type:"All"}));
-	var ReqLocBox = $HUI.combobox('#SedLoc', {
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+ReqLocParams,
+
+	var RecLocParams = JSON.stringify(addSessionParams({ Type: 'All', BDPHospital: gHospId }));
+	$HUI.combobox('#RecLoc', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + RecLocParams,
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-	
-	//œ˚∂æ∞¸∑÷¿‡
-	var ReqLocBox = $HUI.combobox('#PackageClass', {
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPackageClass&ResultSetType=array',
+
+	$HUI.combobox('#SterTypeId', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetSterType&ResultSetType=array',
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-/* 	var PackageClassBox = $HUI.combobox('#PkgClass',{
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPackageClass&ResultSetType=array',
-		valueField: 'RowId',
-		textField: 'Description'
-	}); */
-	/*--∞¥≈• ¬º˛--*/
-	$UI.linkbutton('#QueryBT',{
-		onClick:function(){
-			var ParamsObj=$UI.loopBlock('#Conditions')
-			if(isEmpty(ParamsObj.StartDate)){
-				$UI.msg('alert','∆ º»’∆⁄≤ªƒ‹Œ™ø’!');
-				return;
-			}
-			if(isEmpty(ParamsObj.EndDate)){
-				$UI.msg('alert','Ωÿ÷π»’∆⁄≤ªƒ‹Œ™ø’!');
-				return;
-			}
-			
-			var Params=JSON.stringify(ParamsObj);
-			//alert(Params);
-			Params=encodeUrlStr(Params)
-			var CheckedRadioObj = $("input[name='ReportType']:checked");
-			var CheckedValue=CheckedRadioObj.val();
-			var CheckedTitle=CheckedRadioObj.attr("label")
-			var Conditions=GetConditions(ParamsObj)
-			var Url=CheckedUrl(CheckedValue,Params,Conditions)
-			AddTab(CheckedTitle,Url);
+
+	$HUI.datebox('#StartDate', {
+		onSelect: function(record) {
+			IsClearDataType();
 		}
 	});
-	///∆¥Ω”url
-	function CheckedUrl(Checked,Params,Conditions){
-		//»Îø‚µ•¡–±Ì
-		if('FlagPackage'==Checked){
-			p_URL = PmRunQianUrl+'?reportName=CSSD_HUI_CSSDDispByPackage.raq&Params='+Params+'&Conditions='+Conditions;
-		}else if('FlagLoc'==Checked){
-			//alert(1);
-			p_URL = PmRunQianUrl+'?reportName=CSSD_HUI_CSSDDispByLoc.raq&Params='+Params+'&Conditions='+Conditions;
+	$HUI.datebox('#EndDate', {
+		onSelect: function(record) {
+			IsClearDataType();
 		}
-		
-		return p_URL;
+	});
+	function IsClearDataType() {
+		var StartDate = $('#StartDate').datebox('getValue');
+		var EndDate = $('#EndDate').datebox('getValue');
+		var DateType = $('#DateType').combobox('getValue');
+		var Today = DateFormatter(new Date());
+		if (DateType === '1' && StartDate !== EndDate) {
+			$('#DateType').combobox('clear');
+		} else if (DateType === '2' && (StartDate !== getWeekStartDate() || EndDate !== Today)) {
+			$('#DateType').combobox('clear');
+		} else if (DateType === '3' && (StartDate !== getMonthStartDate() || EndDate !== Today)) {
+			$('#DateType').combobox('clear');
+		} else if (DateType === '4' && (StartDate !== getQuarterStartDate() || EndDate !== Today)) {
+			$('#DateType').combobox('clear');
+		} else if (DateType === '5' && (StartDate !== getYearStartDate() || EndDate !== Today)) {
+			$('#DateType').combobox('clear');
+		}
 	}
-	//◊È÷Ø≤È—ØÃıº˛
-	function GetConditions(ParamsObj){
-		//ªÒ»°≤È—ØÃıº˛¡–±Ì
-		var Conditions=""
-		if(ParamsObj.StartDate!=""){
-			Conditions=ParamsObj.StartDate+" "+ParamsObj.StartTime;
+
+	$HUI.combobox('#DateType', {
+		valueField: 'RowId',
+		textField: 'Description',
+		data: DateTypeData,
+		onSelect: function(record) {
+			var SelectTypeVal = record.RowId;
+			var startDate = '';
+			var endDate = DateFormatter(new Date());
+			if (SelectTypeVal === '1') {
+				startDate = DateFormatter(new Date());
+			} else if (SelectTypeVal === '2') {
+				startDate = getWeekStartDate();
+			} else if (SelectTypeVal === '3') {
+				startDate = getMonthStartDate();
+			} else if (SelectTypeVal === '4') {
+				startDate = getQuarterStartDate();
+			} else if (SelectTypeVal === '5') {
+				startDate = getYearStartDate();
+			}
+			$('#StartDate').datebox('setValue', startDate);
+			$('#EndDate').datebox('setValue', endDate);
 		}
-		if(ParamsObj.EndDate!=""){
-			Conditions=Conditions+"~"+ParamsObj.EndDate+" "+ParamsObj.EndTime
+	});
+
+	$HUI.combobox('#PkgClassId', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPackageClass&ResultSetType=array',
+		valueField: 'RowId',
+		textField: 'Description',
+		onSelect: function(record) {
+			var PkgClassId = record['RowId'];
+			$('#PkgDesc').combobox('clear');
+			var PkgParams = JSON.stringify(addSessionParams({ BDPHospital: gHospId, TypeDetail: '1,2,7', PkgClassId: PkgClassId }));
+			$('#PkgDesc').combobox('reload', $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPkg&ResultSetType=array&Params=' + PkgParams);
+		}
+	});
+	
+	var SpecParams = JSON.stringify(addSessionParams({ Type: 'All', BDPHospital: gHospId }));
+	$HUI.combobox('#PkgSpec', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPackageSpec&ResultSetType=array&Params=' + SpecParams,
+		valueField: 'RowId',
+		textField: 'Description'
+	});
+
+	// Ê†πÊçÆÈÄâÊã©Êä•Ë°®Á±ªÂûãËøáÊª§Êü•ËØ¢Êù°‰ª∂
+	$HUI.radio("[name='ReportType']", {
+		onChecked: function(e, value) {
+			if (($(e.target).attr('value') === 'ConsumeDispSum') || ($(e.target).attr('value') === 'DispSum')) {
+				$('#sttime').css('display', 'none');
+				$('#endtime').css('display', 'none');
+				$('#suploc').css('display', 'none');
+				$('#disploc').css('display', 'none');
+				$('#pkgclass').css('display', 'none');
+				$('#stertype').css('display', 'none');
+			} else {
+				$('#pkgclass').css('display', '');
+				$('#sttime').css('display', '');
+				$('#endtime').css('display', '');
+				$('#suploc').css('display', '');
+				$('#disploc').css('display', '');
+				$('#stertype').css('display', '');
+			}
+		}
+	});
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
+			var ParamsObj = $UI.loopBlock('#Conditions');
+			if (isEmpty(ParamsObj.StartDate)) {
+				$UI.msg('alert', 'Ëµ∑ÂßãÊó•Êúü‰∏çËÉΩ‰∏∫Á©∫!');
+				return;
+			}
+			if (isEmpty(ParamsObj.EndDate)) {
+				$UI.msg('alert', 'Êà™Ê≠¢Êó•Êúü‰∏çËÉΩ‰∏∫Á©∫!');
+				return;
+			}
+			var Params = JSON.stringify(ParamsObj);
+			Params = encodeUrlStr(Params);
+			var CheckedRadioObj = $("input[name='ReportType']:checked");
+			var CheckedValue = CheckedRadioObj.val();
+			var CheckedTitle = CheckedRadioObj.attr('label');
+			var Conditions = encodeUrlStr(GetConditions(ParamsObj));
+			var Url = CheckedUrl(CheckedValue, Params, Conditions);
+			AddStatTab(CheckedTitle, Url, '#DispTabs');
+		}
+	});
+	// /ÊãºÊé•url
+	function CheckedUrl(Checked, Params, Conditions) {
+		var FrameUrl = '';
+		if ('FlagPackage' === Checked) {
+			FrameUrl = PmRunQianUrl + '?reportName=CSSD_HUI_CSSDDispByPackage.raq&Params=' + Params + '&Conditions=' + Conditions;
+		} else if ('FlagLoc' === Checked) {
+			FrameUrl = PmRunQianUrl + '?reportName=CSSD_HUI_CSSDDispByLoc.raq&Params=' + Params + '&Conditions=' + Conditions;
+		} else if ('FlagItmDetail' === Checked) {
+			FrameUrl = PmRunQianUrl + '?reportName=CSSD_HUI_CSSDDispItmDetail.raq&Params=' + Params + '&Conditions=' + Conditions;
+		} else if ('FlagLocDispDetail' === Checked) {
+			FrameUrl = PmRunQianUrl + '?reportName=CSSD_HUI_CSSDLocDispDetail.raq&Params=' + Params + '&Conditions=' + Conditions;
+		} else if ('FlagConsumeDispSum' === Checked) {
+			FrameUrl = PmRunQianUrl + '?reportName=CSSD_HUI_CSSDConsumeDispSum.raq&Params=' + Params + '&Conditions=' + Conditions;
+		} else if ('FlagDispSum' === Checked) {
+			FrameUrl = PmRunQianUrl + '?reportName=CSSD_HUI_CSSDDispSum.raq&Params=' + Params + '&Conditions=' + Conditions;
+		}
+		return FrameUrl;
+	}
+	// ÁªÑÁªáÊü•ËØ¢Êù°‰ª∂
+	function GetConditions(ParamsObj) {
+		// Ëé∑ÂèñÊü•ËØ¢Êù°‰ª∂ÂàóË°®
+		var Conditions = '';
+		if (ParamsObj.StartDate !== '') {
+			Conditions = Conditions + ' ÁªüËÆ°Êó∂Èó¥: ' + ParamsObj.StartDate;
+			if (ParamsObj.StartTime !== '') {
+				Conditions = Conditions + ' ' + ParamsObj.StartTime;
+			}
+		}
+		if (ParamsObj.EndDate !== '') {
+			Conditions = Conditions + ' ~ ' + ParamsObj.EndDate;
+			if (ParamsObj.EndTime !== '') {
+				Conditions = Conditions + ' ' + ParamsObj.EndTime;
+			}
+		}
+		if (ParamsObj.PkgClassId !== '') {
+			Conditions = Conditions + ' ÂåÖÂàÜÁ±ª: ' + $('#PkgClassId').combobox('getText');
 		}
 		return Conditions;
 	}
-	function AddTab(title, url) {
-		if ($('#tabs').tabs('exists', title)) {
-			$('#tabs').tabs('select', title); //—°÷–≤¢À¢–¬
-			var currTab = $('#tabs').tabs('getSelected');
-			if (url != undefined && currTab.panel('options').title != '±®±Ì') {
-				$('#tabs').tabs('update', {
-					tab: currTab,
-					options: {
-						content: createFrame(url)
-					}
-				})
-			}
-		} else {
-			var content = createFrame(url);
-			$('#tabs').tabs('add', {
-				title: title,
-				content: content,
-				closable: true
-			});
-		}
-	}
-	function createFrame(url) {
-		var s = '<iframe scrolling="auto" frameborder="0" src="' + url + '" style="width:100%;height:98%;"></iframe>';
-		return s;
-	}
 	
-	$UI.linkbutton('#ClearBT',{
-		onClick:function(){
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
 			Default();
 		}
 	});
-	
-	/*--∞Û∂®øÿº˛--*/
-	
-	/*--…Ë÷√≥ı º÷µ--*/
-	var Default=function(){
+
+	/* --ËÆæÁΩÆÂàùÂßãÂÄº--*/
+	var Default = function() {
 		$UI.clearBlock('#Conditions');
 		$UI.clearBlock('#ReportConditions');
-		var DefaultValue={
-			StartDate:DateFormatter(new Date()),
-			EndDate:DateFormatter(new Date())
-			}
-		$UI.fillBlock('#Conditions',DefaultValue)
-		var Tabs=$('#tabs').tabs('tabs')
-		var Tiles = new Array();
-		var Len = Tabs.length;
-		if(Len>0){
-			for(var j=0;j<Len;j++){
-				var Title = Tabs[j].panel('options').title;
-				if(Title!='±®±Ì'){
-					Tiles.push(Title);
-				}
-			}
-			for(var i=0;i<Tiles.length;i++){
-				$('#tabs').tabs('close', Tiles[i]);
-			}
-		}
+		var DefaultValue = {
+			StartDate: DateFormatter(new Date()),
+			EndDate: DateFormatter(new Date())
+		};
+		$UI.fillBlock('#Conditions', DefaultValue);
+		CloseStatTab('#DispTabs');
+		GetReportStyle('#Report');
 	};
-	Default()
-}
+	Default();
+};
 $(init);

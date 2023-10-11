@@ -28,12 +28,17 @@ function debounce(func, wait, immediate) {
     return debounced;
 }
 
+if (typeof $g=='undefined') var $g=function(item){
+	return item;
+}
+
 /**
 * @param {String} url 链接路径 如: https://127.0.0.1/dthealth/web/csp/test.csp?EpisodeId=1&UserId=1
 * @param {Object} obj 直接对象 如: {"EpisodeId":2,OrderId:"2||1"}
 * @return {String} 组合后的url串 如:https://127.0.0.1/dthealth/web/csp/test.csp?EpisodeId=2&UserId=1&OrderId=2||1
 */
 function rewriteUrl(url, obj){
+	url = url||"";
 	var reg,flag, indexFlag = false;
 	var indexFlag = (url.indexOf("?")==-1);
 	if(indexFlag){
@@ -158,7 +163,7 @@ function getDateTextArray(date,limit){
 	var arr=[];
 	var D=new Date(date.replace(/-/g,"/"));
 	for (var i=0;i<limit;i++){
-		arr.push(websys_formatDate(D.format("yyyy-MM-dd"))+"（"+getWeekDay(D)+"）") ;
+		arr.push(websys_formatDate(D.format("yyyy-MM-dd"))+$g("（"+getWeekDay(D)+"）")) ; //add trans
 		D.setDate(D.getDate()+1);
 	}
 	return arr;
@@ -184,28 +189,28 @@ function GetDateAndWeekDayHour(episodeValue) {
     var weekDay = dt.getDay();
     var weekDayTxt = "";
     switch (weekDay) {
-        case 0: weekDayTxt = "(日)"; break;
-        case 1: weekDayTxt = "(一)"; break;
-        case 2: weekDayTxt = "(二)"; break;
-        case 3: weekDayTxt = "(三)"; break;
-        case 4: weekDayTxt = "(四)"; break;
-        case 5: weekDayTxt = "(五)"; break;
-        case 6: weekDayTxt = "(六)"; break;
+        case 0: weekDayTxt = $g("(日)"); break;
+        case 1: weekDayTxt = $g("(一)"); break;
+        case 2: weekDayTxt = $g("(二)"); break;
+        case 3: weekDayTxt = $g("(三)"); break;
+        case 4: weekDayTxt = $g("(四)"); break;
+        case 5: weekDayTxt = $g("(五)"); break;
+        case 6: weekDayTxt = $g("(六)"); break;
     }
     var hourTxt = nowEpisode.ActTime;
     var hour = parseInt(hourTxt.split(":")[0],10);
     var timeTxt = "";
     if (hour <= 5) {
-        timeTxt = "凌";
+        timeTxt = $g("凌");
     }
     else if (hour <= 12) {
-        timeTxt = "上";
+        timeTxt = $g("上");
     }
     else if (hour <= 18) {
-        timeTxt = "下";
+        timeTxt = $g("下");
     }
     else {
-        timeTxt = "晚";
+        timeTxt = $g("晚");
     }
     return websys_formatDate(dateTxt) + " " + weekDayTxt + " " + timeTxt+(nowEpisode.PAADMType=="E"?" [急]":"");
 }
@@ -338,6 +343,45 @@ function fillCurveBody(dom,config,data){
 }
 ///=============================折线图相关  END===============================
 
+
+
+
+var getTokenUrl=function(url){
+	
+	if(typeof url=='string' && url.indexOf('.csp')>-1) {
+		var token='';
+		if(typeof websys_getMWToken=='function' ){
+			token= websys_getMWToken();
+		}
+		
+		if (token) {
+			var arr=url.split('#');
+			ind=arr[0].indexOf('MWToken=')
+			if (ind>-1) {
+				var ind2=arr[0].indexOf('&',ind) //MWToken=后第一个&符
+				if(ind2>-1){
+					arr[0]=arr[0].slice(0,ind)+'MWToken='+token+arr[0].slice(ind2);
+				}else{
+					arr[0]=arr[0].slice(0,ind)+'MWToken='+token;
+				}
+				
+			}else{
+				arr[0]=arr[0]+(arr[0].indexOf('?')>-1?'&':'?')+'MWToken='+token; 
+			}
+			
+			url=arr.join('#');
+			
+		}
+		
+
+	}
+	
+	//alert('getTokenUrl:'+url)
+	
+	return url;
+}
+
+
 //打开窗口 本窗口可能是已经是一个window了，打开的要比现在的小一点 (套娃窗口)
 // opts.left  opts.top  偏移量
 function openRussianDollWin(url,opts){
@@ -352,7 +396,13 @@ function openRussianDollWin(url,opts){
 		y=(typeof pWin.screenY=="number")?pWin.screenY:pWin.screenTop; 
 		winWidth=pWin.$(pWin).width();
 		winHeight=pWin.$(pWin).height();
+	}else if(window.parent && window.parent!=window) {
+		var x=0,
+		left=0,
+		winWidth=screen.availWidth-20;
+		winHeight=screen.availHeight-40;
 	}
+	
 	var maxLeft=Math.max(parseInt((winWidth-500)/2),0);
 	var maxTop=Math.max(parseInt((winHeight-300)/2),0);
 	if (typeof opts.left=="undefined") opts.left="2%";
@@ -369,6 +419,17 @@ function openRussianDollWin(url,opts){
 	opts.height=winHeight-2*opts.top;
 	opts.top+=y;
 	opts.left+=x;
+	
+	if(typeof cefbound == 'object') { //医为浏览器
+		opts.left-=10;
+		opts.top-=31;
+		opts.width-=6;
+		opts.height-=113;
+		
+	}
+	
+	url=getTokenUrl(url);
+	
 	return window.open(url, opts.name||'', 'height='+opts.height+',width='+opts.width+',top='+opts.top+',left='+opts.left+',toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes');
 	
 }
@@ -385,7 +446,7 @@ function openRussianDollWin(url,opts){
 		bb.prev_more=appendBtn('prev_more');
 		bb.prev_one=appendBtn('prev_one');
 		if (opts.beforeText!=""){
-			$("<td><span >"+opts.beforeText+"</span></td>").appendTo(tr);
+			$('<td class="weekselector-bt-td"><span >'+opts.beforeText+'</span></td>').appendTo(tr);
 		}
         var wl = $("<select ></select>");
         wl.bind("change", function () {
@@ -419,7 +480,7 @@ function openRussianDollWin(url,opts){
         wl.wrap("<div class=\"weekselector-week-list\"></div>");
 		
 		if (opts.afterText!=""){
-			$("<td><span>"+opts.afterText+"</span></td>").appendTo(tr);
+			$('<td class="weekselector-at-td"><span>'+opts.afterText+'</span></td>').appendTo(tr);
 		}
 		bb.weeklist=wl;
 		bb.next_one=appendBtn('next_one');
@@ -431,9 +492,10 @@ function openRussianDollWin(url,opts){
 		selectDate(target,opts.currentDate);
 		function appendBtn(k){
 			var btn = opts.nav[k];
-			var a=$("<a href=\"javascript:void(0)\"></a>").appendTo(tr);
-			a.wrap("<td></td>");
-	        a.linkbutton({ iconCls: btn.iconCls, plain: true }).unbind(".weekselector").bind("click.weekselector", function () {
+			var a=$('<a class="weekselector-btn" href="javascript:void(0)"></a>').appendTo(tr);
+			a.wrap('<td class="weekselector-btn-td"></td>');
+	        a.addClass(btn.iconCls).unbind(".weekselector").bind("click.weekselector", function () {
+		        if($(this).hasClass('disabled')) return false;
 	            btn.handler.call(target);
 	        });
 	        return a ;
@@ -446,26 +508,26 @@ function openRussianDollWin(url,opts){
 		var bb=state.bb;
 		if (calDays(opts.startDate,opts.endDate)>6){
 			if (calDays(opts.startDate,date)>0){  //没超过最小的那个日期
-				bb.prev_more.linkbutton('enable');
-				bb.prev_one.linkbutton('enable');
+				bb.prev_more.removeClass('disabled');
+				bb.prev_one.removeClass('disabled');
 			}else{
-				bb.prev_more.linkbutton('disable');
-				bb.prev_one.linkbutton('disable');
+				bb.prev_more.addClass('disabled');
+				bb.prev_one.addClass('disabled');
 				date=opts.startDate;
 			}
 			if (calDays(opts.endDate,date)<0){  //没超过最小的那个日期
-				bb.next_more.linkbutton('enable');
-				bb.next_one.linkbutton('enable');
+				bb.next_more.removeClass('disabled');
+				bb.next_one.removeClass('disabled');
 			}else{
-				bb.next_more.linkbutton('disable');
-				bb.next_one.linkbutton('disable');
+				bb.next_more.addClass('disabled');
+				bb.next_one.addClass('disabled');
 				date=opts.endDate;
 			}
 		}else{
-			bb.prev_more.linkbutton('disable');
-			bb.prev_one.linkbutton('disable');
-			bb.next_more.linkbutton('disable');
-			bb.next_one.linkbutton('disable');
+			bb.prev_more.addClass('disabled');
+			bb.prev_one.addClass('disabled');
+			bb.next_more.addClass('disabled');
+			bb.next_one.addClass('disabled');
 			date=opts.startDate;
 		}
 
@@ -508,7 +570,9 @@ function openRussianDollWin(url,opts){
 	        jq.each(function(){
 		    	selectDate(this,date);
 		    })
-	    }
+	    },getValue:function(jq){  //value是date
+		    return $.data(jq[0], "weekselector").options.currentDate;
+		}
     };
     $.fn.weekselector.parseOptions = function (target) {
         var t = $(target);
@@ -579,9 +643,10 @@ function openRussianDollWin(url,opts){
 		select(target,opts.currentIndex);
 		function appendBtn(k){
 			var btn = opts.nav[k];
-			var a=$("<a href=\"javascript:void(0)\"></a>").appendTo(tr);
-			a.wrap("<td></td>");
-	        a.linkbutton({ iconCls: btn.iconCls, plain: true }).unbind(".arrayselector").bind("click.arrayselector", function () {
+			var a=$('<a class="arrayselector-btn" href=\"javascript:void(0)\"></a>').appendTo(tr);
+			a.wrap('<td class="arrayselector-btn-td"></td>');
+	        a.addClass(btn.iconCls).unbind(".arrayselector").bind("click.arrayselector", function () {
+	            if($(this).hasClass('disabled')) return false;
 	            btn.handler.call(target);
 	        });
 	        return a ;
@@ -594,26 +659,26 @@ function openRussianDollWin(url,opts){
 		
 		if (opts.data.length>7){
 			if (index>0){  //没超过最小的那个日期
-				bb.prev_more.linkbutton('enable');
-				bb.prev_one.linkbutton('enable');
+				bb.prev_more.removeClass('disabled');
+				bb.prev_one.removeClass('disabled');
 			}else{
-				bb.prev_more.linkbutton('disable');
-				bb.prev_one.linkbutton('disable');
+				bb.prev_more.addClass('disabled');
+				bb.prev_one.addClass('disabled');
 				index=0;
 			}
 			if (index<opts.data.length-7){  
-				bb.next_more.linkbutton('enable');
-				bb.next_one.linkbutton('enable');
+				bb.next_more.removeClass('disabled');
+				bb.next_one.removeClass('disabled');
 			}else{
-				bb.next_more.linkbutton('disable');
-				bb.next_one.linkbutton('disable');
+				bb.next_more.addClass('disabled');
+				bb.next_one.addClass('disabled');
 				index=opts.data.length-7;
 			}
 		}else{
-			bb.prev_more.linkbutton('disable');
-			bb.prev_one.linkbutton('disable');
-			bb.next_more.linkbutton('disable');
-			bb.next_one.linkbutton('disable');
+			bb.prev_more.addClass('disabled');
+			bb.prev_one.addClass('disabled');
+			bb.next_more.addClass('disabled');
+			bb.next_one.addClass('disabled');
 			index=0;
 		}
 		if (index!=opts.currentIndex){
@@ -649,7 +714,9 @@ function openRussianDollWin(url,opts){
 	        jq.each(function(){
 		    	select(this,index);
 		    })
-	    }
+	    },getValue:function(jq){  //value是数组index
+		    return $.data(jq[0], "arrayselector").options.currentIndex;
+		}
     };
     $.fn.arrayselector.parseOptions = function (target) {
         var t = $(target);
@@ -805,14 +872,18 @@ function openRussianDollWin(url,opts){
     };
 })(jQuery);
 
-function easyModal(title,url,width,height){
-	var $easyModal=$('#easyModal');
-	if ($easyModal.length==0){
-		$easyModal=$('<div id="easyModal" style="overflow:hidden;"><iframe name="easyModal" style="	width: 100%;height: 100%; margin:0; border: 0;" scroll="auto"></iframe></div>').appendTo('body');
-	}
+
+function easyModal(title,url,width,height,onClose){
 	var maxWidth=$(window).width(),maxHeight=$(window).height();
 	width=''+(width||'80%'),width=Math.min(maxWidth-20,(width.indexOf('%')>-1?parseInt(maxWidth*parseFloat(width)*0.01):parseInt(width)));
 	height=''+height||'80%',height=Math.min(maxHeight-20,(height.indexOf('%')>-1?parseInt(maxHeight*parseFloat(height)*0.01):parseInt(height)));
+	var $easyModal=$('#dhcmessage-easyModal');
+	if ($easyModal.length==0){
+		$easyModal=$('<div id="dhcmessage-easyModal" style="overflow:hidden;" ><iframe name="dhcmessage-easyModal" style="	width: 100%;height: 100%; margin:0; border: 0;" scroll="auto"></iframe></div>').appendTo('body');
+	}
+	
+	url=getTokenUrl(url);
+	
 	$easyModal.find('iframe').attr('src',url);
 	$easyModal.dialog({
 		iconCls:'icon-w-paper',
@@ -820,10 +891,49 @@ function easyModal(title,url,width,height){
 		title:title,
 		width:width,
 		height:height
+		,onClose:function(){
+			if (typeof onClose=='function'){
+				onClose();
+			}
+			$easyModal.find('iframe').attr('src','about:blank');
+		}
 	}).dialog('open').dialog('center');
 	
 }
 
 
+
+
+/// 采用window.open打开窗口
+function easyOriginWin(winname,url,width,height){
+	winname=winname||'_blank';
+	if (window.originWins && window.originWins[winname] && winname!='_blank' ) {
+		try{
+			window.originWins[winname].close();
+		}catch(e){}	
+	}
+	if (!window.originWins) window.originWins={};
+	
+	var maxWidth=screen.availWidth-20;
+	var maxHeight=screen.availHeight-40;
+	
+	width=''+(width||'80%'),width=Math.min(maxWidth-20,(width.indexOf('%')>-1?parseInt(maxWidth*parseFloat(width)*0.01):parseInt(width)));
+	height=''+(height||'80%'),height=Math.min(maxHeight-20,(height.indexOf('%')>-1?parseInt(maxHeight*parseFloat(height)*0.01):parseInt(height)));
+	var l=parseInt((maxWidth-width)/2),t=parseInt((maxHeight-height)/2);	
+	
+	if(typeof cefbound == 'object') { //医为浏览器
+		l-=10;
+		t-=31;
+		width-=6;
+		height-=113;
+	}
+			
+	var features='top='+t+',left='+l+',width='+width+',height='+height+',toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=no,resizable=yes,maximized=yes'
+	
+	url=getTokenUrl(url);
+	
+	window.originWins[winname]=window.open(url,winname,features);
+	return window.originWins[winname];
+}
 
 

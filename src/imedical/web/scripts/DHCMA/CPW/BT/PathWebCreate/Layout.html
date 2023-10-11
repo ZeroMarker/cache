@@ -1,0 +1,180 @@
+﻿<!-- 主页面-->
+<div class="hisui-panel" fit="true" style="padding:10px;border:0px;">
+	<div class="hisui-layout" data-options="fit:true" id="main"> 
+		<div id="dd" data-options="region:'west',title:'待完成路径列表',split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width:250px;padding:0;border-radius:0 0 4px 4px;">
+			<div class="hisui-panel" fit="true" style="padding:0;border:0px;fit:true;">
+				<table id="pathWebList" fit="true" data-options="toolbar:'#custtb'"></table>
+				<div id="custtb" style="padding:0px;" >
+					<a class="hisui-linkbutton" id="btnAddMast"  data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true"> 新增 </a>
+				</div>	
+			</div>	
+		</div>
+		<div data-options="region:'center'" data-options="fit:true" style="border:0px;padding:0px">
+			<div id ="workS" class="hisui-panel" data-options="fit:true,border:false">			
+				<div class="hisui-panel" fit="true" data-options="fit:'true'" style="display: flex;align-items: center;justify-content: center;overflow: hidden;border:1px solid #ccc;border-radius:4px;text-align:center;" >
+					<img id="dataPng"/>
+				</div>
+			</div>
+			<div id ="workD" class="hisui-layout" data-options="fit:true,border:false">	
+				<div data-options="region:'north',border:false,collapsible:false" style="padding-left:10px;padding-bottom:5px">
+					<div class="OCPWInfo" style="border-radius:4px 4px 0 0;">
+						<label>路径代码:</label>
+						<span id="WCPWCode" class="OInfocontent"></span>
+						<span class="OSeparate">/</span>
+						<label>路径名称:</label>
+						<span id="WCPWDesc" class="OInfocontent"></span>
+						<span class="OSeparate">/</span>
+						<label>路径类型:</label>
+						<span id="WCPWType" class="OInfocontent"></span>
+						<span class="OSeparate">/</span>
+						<label>病种路径:</label>
+						<span id="WCPWEntity" class="OInfocontent"></span>
+						<span class="OSeparate">/</span>
+						<label>是否合并症</label>
+						<span id="WCPWComEntity" class="OInfocontent"></span>
+					</div>
+					<div class="OCPWInfo" style="border-radius:0 0 4px 4px;">
+						<label>就诊类型:</label>
+						<span id="WCPWAdmType" class="OInfocontent"></span>
+						<span class="OSeparate">/</span>
+						<label>是否手术路径:</label>
+						<span id="WCPWOper" class="OInfocontent"></span>
+						<span class="OSeparate">/</span>
+						<label>创建人:</label>
+						<span id="WCPWUser" class="OInfocontent"></span>
+						<span class="OSeparate">/</span>
+						<label>创建科室:</label>
+						<span id="WCPWLoc" class="OInfocontent"></span>
+						<span class="OSeparate">/</span>
+						<label>创建时间:</label>
+						<span id="WCPWDTime" class="OInfocontent"></span>
+					</div>
+				</div>
+				
+				<div data-options="region:'center',border:false" id="PathInit" data-options="fit:true"  style="border:0px;padding-left:10px">
+					<div  class="hisui-panel" fit="true" data-options="fit:true" style="border:1px solid #ccc;">
+						<table id="pathInfoInit" data-options="border:false,headerCls:'panel-header-gray'"></table>
+					</div>
+				</div>
+				<div data-options="region:'south',border:false" data-options="fit:true" style="margin:10px 0;" >	
+					<div class="page-footer">
+						<a id="btnComplete" style="margin:0 10px 10px 0;" class="hisui-linkbutton">完成</a>
+						<a id="btnDel" style="margin:0 0px 10px 0;;" class="hisui-linkbutton">删除</a>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!--路径维护-->
+		<div id="winAddPathMast" class="hisui-dialog" style="border:none;overflow:hidden;padding-right:10px;">
+			<table class="search-table">
+				<tr>
+					<td style="text-align:right;width:80px;" class="r-label"><label for="cboKbTmp">引用模板</label></td>
+					<td><input class="textbox" id="cboKbTmp" style="width:207px;"><input class="textbox" style="display:none" id="txtKbTmp"></td>
+					
+					<td style="text-align:right;width:80px;" class="r-label"><span style="color:red;">*</span><label for="txtDesc">路径名称</label></td>
+					<td><input class="textbox" id="txtDesc" style="width:200px"></td>
+				</tr>
+				<tr>
+					<td class="r-label"><span style="color:red;">*</span><label for="txtCode">路径代码</label></td>
+					<td><input class="textbox" id="txtCode" style="width:200px"></td>
+					
+					<td class="r-label"><span style="color:red;">*</span><label for="cboType">路径类型</label></td>
+					<td><input class="hisui-combobox" id="cboType" style="width:207px"></td>
+				</tr>
+				<tr>
+					<td class="r-label"><label for="cboEntity">病种路径</label></td>
+					<td><input class="hisui-combobox" id="cboEntity" style="width:207px">
+						<span id="addEntity" title="新增病种" style="cursor:pointer;" class="icon-add">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+					</td>
+					<td class="r-label entity"><label for="txtEntityCode">新增病种代码</label></td>
+					<td class="entity"><input class="textbox" id="txtEntityCode" style="width:200px"></td>
+				</tr>
+				<tr>
+					<td class="r-label entity"><label for="txtEntityDesc">新增病种名称</label></td>
+					<td class="entity"><input class="textbox" id="txtEntityDesc" style="width:200px"></td>
+					<td class="r-label entity"><label for="cboEntityType">新增病种路径类型</label></td>
+					<td class="entity"><input class="hisui-combobox" id="cboEntityType" style="width:207px"></td>
+				</tr>
+				<tr>
+					<td class="r-label"><span style="color:red;">*</span><label for="cboIOType">就诊类型</label></td>
+					<td><input class="hisui-combobox" id="cboIOType" style="width:207px"></td>
+				</tr>
+				<tr>
+					<td colspan="2" align="center">
+						<input class='hisui-checkbox' type="checkbox" id="IsCompl" label="是否合并症" style="width:80px;">
+					</td>
+					<td colspan="1" align="center">
+						<input class='hisui-checkbox' type="checkbox" id="IsOper" label="手术病种" style="width:80px;"/>
+					</td>
+					<td colspan="1" align="center">
+						<input class='hisui-checkbox' type="checkbox" id="IsActive" label="是否有效" style="width:80px;" checked/>
+					</td>
+				</tr>
+				<tr>
+					<td colspan=4 align="center">
+						<a id="btnSaveMast" style="margin-right:10px" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+						<a id="btnCloseMast" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">关闭</a>
+					</td>
+				</tr>
+			</table>
+		</div>		
+		<!--阶段维护-->
+		<div id="winStep" class="hisui-dialog" style="border:none;overflow-x:hidden;padding-left:10px">     
+			<table class="search-table">
+				<tr>
+					<td class="r-label"><span style="color:red;">*</span><label for="txtStepDesc">描述</label></td>
+					<td><input class="textbox" id="txtStepDesc" style="width:200px"></td>
+				</tr>
+				<tr>
+					<td class="r-label"><span style="color:red;">*</span><label for="txtStepOthDesc">别名</label></td>
+					<td><input class="textbox" id="txtStepOthDesc" style="width:200px"></td>
+				</tr>
+				<tr>
+					<td class="r-label"><span style="color:red;">*</span><label for="txtStepDays">阶段天数</label></td>
+					<td><input class="textbox" id="txtStepDays" style="width:200px"></td>
+				</tr>	
+				<tr>
+					<td class="r-label"><label for="StepIsKey">是否关键</label></td>
+					<td><input class='hisui-checkbox' type="checkbox" id="StepIsKey"/></td>
+				</tr>		
+				<tr>
+					<td class="r-label"><label for="StepIsOperDay">是否手术日</label></td>
+					<td><input class='hisui-checkbox' type="checkbox" id="StepIsOperDay"/></td>
+				</tr>
+				<tr>
+					<td colspan=2 align="center">
+						<a id="btnSaveStep" style="margin-right:10px" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
+						<a id="btnCloseStep" class="hisui-linkbutton" data-options="iconCls:'icon-w-close'">关闭</a>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<!--阶段下项目维护-->
+		<div div id="winEpItem" class="hisui-dialog" style="width:800px;height:400px;overflow:hidden;padding:10px"> 			
+			<div id="EpItemBtn" style="padding:3px 0">
+				<div style="padding:10px 0 10px 10px;border-bottom:1px dashed #ccc">
+					<span style="padding:0 10px">引用项目</span><input class="textbox" id="cboEpItem" style="width:210px;">
+					<span style="padding:0 10px">维护阶段</span><input class="textbox" id="cboFromEp" style="width:200px">
+				</div>
+				<a class="hisui-linkbutton" id="btnAddEp"  data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true"> 添加 </a>
+				<a class="hisui-linkbutton" id="btnSaveEp" data-options="iconCls:'icon-save',plain:true,stopAllEventOnDisabled:true" disabled> 保存 </a>
+				<a class="hisui-linkbutton" id="btnDeleteEp"  data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" disabled> 删除 </a>
+			</div>
+			<table id="EpItemGrid" border=false toolbar="#EpItemBtn" data-options="border:false,headerCls:'panel-header-gray'"> </table>
+		</div>
+		
+		<div div id="winEpYZItem" class="hisui-dialog" style="width:850px;height:400px;overflow:hidden;padding:10px;"> 
+			<div id="YZEpItemBtn">
+				<div style="padding:10px 0 10px 10px;border-bottom:1px dashed #ccc">
+					<span style="padding:0 10px">引用项目</span><input class="textbox" id="cboYZEpItem" style="width:210px">
+					<span style="padding:0 10px">维护阶段</span><input class="textbox" id="cboFromYZEp" style="width:200px">
+				</div>
+				<a class="hisui-linkbutton" id="btnAddYZEp"  data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true"> 添加 </a>
+				<a class="hisui-linkbutton" id="btnSaveYZEp" data-options="iconCls:'icon-save',plain:true,stopAllEventOnDisabled:true" disabled> 保存 </a>
+				<a class="hisui-linkbutton" id="btnDeleteYZEp"  data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true" disabled> 删除 </a>
+			</div>
+			<table id="YZEpItemGrid" border=false toolbar="#YZEpItemBtn" data-options="border:false,headerCls:'panel-header-gray'"> </table>
+		</div>
+	</div>
+</div>

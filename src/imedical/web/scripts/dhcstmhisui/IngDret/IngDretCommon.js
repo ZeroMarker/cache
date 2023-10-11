@@ -3,12 +3,12 @@
 // /编写者：XuChao
 // /编写日期: 2018.5.25
 
-//保存参数值的object
+// 保存参数值的object
 /**
 DefStartDate: "-30",
 DefEndDate: "0",
-AllowModifyRp: "N",
-AllowModifySp: "N",
+//AllowModifyRp: "N",
+//AllowModifySp: "N",
 AllowReturnElse:"N"
 AllowSaveReasonEmpty:"N"
 AutoAuditAfterCompDRET:"N"
@@ -22,22 +22,23 @@ PrintNegative:"Y"
 PrintNum:"2"
  */
 var IngrtParamObj = GetAppPropValue('DHCSTRETURNM');
-///return:起始日期
-function DefaultStDate(){
+// 物资维护参数
+var CodeMainParamObj = GetAppPropValue('DHCSTDRUGMAINTAINM');
+function DefaultStDate() {
 	var Today = new Date();
 	var DefStartDate = IngrtParamObj.DefStartDate;
-	if(isEmpty(DefStartDate)){
-		return Today;
+	if (isEmpty(DefStartDate)) {
+		return DateFormatter(Today);
 	}
 	var EdDate = DateAdd(Today, 'd', parseInt(DefStartDate));
-	return DateFormatter(EdDate);	
-		
+	return DateFormatter(EdDate);
 }
-function DefaultEdDate(){
+
+function DefaultEdDate() {
 	var Today = new Date();
 	var DefEndDate = IngrtParamObj.DefEndDate;
-	if(isEmpty(DefEndDate)){
-		return Today;
+	if (isEmpty(DefEndDate)) {
+		return DateFormatter(Today);
 	}
 	var EdDate = DateAdd(Today, 'd', parseInt(DefEndDate));
 	return DateFormatter(EdDate);

@@ -58,7 +58,7 @@ var ItmPBLevelGridDs = new Ext.data.Store({
 var ItmPBLevelGridCm = new Ext.grid.ColumnModel([
 	 new Ext.grid.RowNumberer(),
 	 {
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'Code',
         width:180,
         align:'left',
@@ -75,7 +75,7 @@ var ItmPBLevelGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'Desc',
         width:300,
         align:'left',
@@ -92,7 +92,7 @@ var ItmPBLevelGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"起始日期",
+        header:$g("起始日期"),
         dataIndex:'DateFrom',
         width:180,
         align:'left',
@@ -112,7 +112,7 @@ var ItmPBLevelGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"截止日期",
+        header:$g("截止日期"),
         dataIndex:'DateTo',
         width:180,
         align:'left',
@@ -137,8 +137,8 @@ var ItmPBLevelGridCm = new Ext.grid.ColumnModel([
 //初始化默认排序功能
 ItmPBLevelGridCm.defaultSortable = true;
 var addItmPBLevel = new Ext.Toolbar.Button({
-	text:'新建',
-    tooltip:'新建',
+	text:$g('新建'),
+    tooltip:$g('新建'),
     iconCls:'page_add',
 	width : 70,
 	height : 30,
@@ -148,14 +148,14 @@ var addItmPBLevel = new Ext.Toolbar.Button({
 });
 
 var saveItmPBLevel = new Ext.Toolbar.Button({
-	text:'保存',
-    tooltip:'保存',
+	text:$g('保存'),
+    tooltip:$g('保存'),
     iconCls:'page_save',
 	width : 70,
 	height : 30,
 	handler:function(){
 		if(HospId==""){
-			Msg.info("warning","请先选择医院!");
+			Msg.info("warning",$g("请先选择医院!"));
 			return false;
 		}
 		//获取所有的新记录 
@@ -176,10 +176,10 @@ var saveItmPBLevel = new Ext.Toolbar.Button({
 				dateToB = dateTo.format('Y-m-d')
 				dateTo = dateTo.format(App_StkDateFormat);
 			}
-			if(code==""){Msg.info("warning","代码不能为空!");return;}
-			if(desc==""){Msg.info("warning","名称不能为空!");return;}
+			if(code==""){Msg.info("warning",$g("代码不能为空!"));return;}
+			if(desc==""){Msg.info("warning",$g("名称不能为空!"));return;}
 			if ((dateToB!="")&&(dateFromB!="")&&(dateToB<dateFromB)){
-				Msg.info("warning", desc+":起始日期大于截止日期!");
+				Msg.info("warning", desc+$g(":起始日期大于截止日期!"));
 				return;
 			}
 			if((code!="")&&(desc!="")){
@@ -193,32 +193,32 @@ var saveItmPBLevel = new Ext.Toolbar.Button({
 		}
 		
 		if(data==""){
-			Msg.info("error", "没有修改或添加新数据!");
+			Msg.info("error", $g("没有修改或添加新数据!"));
 			return false;
 		}else{
-			var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+			var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 			Ext.Ajax.request({
 				url: ItmPBLevelGridUrl+'?actiontype=save',
 				params:{data:data},
 				failure: function(result, request) {
 					 mask.hide();
-					Msg.info("error", "请检查网络连接!");
+					Msg.info("error", $g("请检查网络连接!"));
 					ItmPBLevelGridDs.commitChanges();
 				},
 				success: function(result, request) {
 					var jsonData = Ext.util.JSON.decode( result.responseText );
 					 mask.hide();
 					if (jsonData.success=='true') {
-						Msg.info("success", "保存成功!");
+						Msg.info("success", $g("保存成功!"));
 						ItmPBLevelGridDs.load();
 					}else{
 						ItmPBLevelGridDs.load();
 						if(jsonData.info==-1){
-							Msg.info("error", "代码重复!");
+							Msg.info("error", $g("代码重复!"));
 						}else if(jsonData.info==-2){
-							Msg.info("error", "名称重复!");
+							Msg.info("error", $g("名称重复!"));
 						}else{
-							Msg.info("error", "保存失败!");
+							Msg.info("error", $g("保存失败!"));
 						}
 					}
 					ItmPBLevelGridDs.commitChanges();
@@ -231,43 +231,43 @@ var saveItmPBLevel = new Ext.Toolbar.Button({
 
 
 var deleteItmPBLevel = new Ext.Toolbar.Button({
-	text:'删除',
-    tooltip:'删除',
+	text:$g('删除'),
+    tooltip:$g('删除'),
     iconCls:'page_delete',
 	width : 70,
 	height : 30,
 	handler:function(){
 		if(HospId==""){
-			Msg.info("warning","请先选择医院!");
+			Msg.info("warning",$g("请先选择医院!"));
 			return false;
 		}
 		var cell = ItmPBLevelGrid.getSelectionModel().getSelectedCell();
 		if(cell==null){
-			Msg.info("error", "请选择数据!");
+			Msg.info("error", $g("请选择数据!"));
 			return false;
 		}else{
 			var record = ItmPBLevelGrid.getStore().getAt(cell[0]);
 			var RowId = record.get("RowId");
 			if(RowId!=""){
-				Ext.MessageBox.confirm('提示','确定要删除选定的行?',
+				Ext.MessageBox.confirm($g('提示'),$g('确定要删除选定的行?'),
 					function(btn) {
 						if(btn == 'yes'){
-							var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+							var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 							Ext.Ajax.request({
 								url:ItmPBLevelGridUrl+'?actiontype=delete&rowid='+RowId,
-								waitMsg:'删除中...',
+								waitMsg:$g('删除中...'),
 								failure: function(result, request) {
 									 mask.hide();
-									Msg.info("error", "请检查网络连接!");
+									Msg.info("error", $g("请检查网络连接!"));
 								},
 								success: function(result, request) {
 									var jsonData = Ext.util.JSON.decode( result.responseText );
 									 mask.hide();
 									if (jsonData.success=='true') {
-										Msg.info("success", "删除成功!");
+										Msg.info("success", $g("删除成功!"));
 										ItmPBLevelGridDs.load();
 									}else{
-										Msg.info("error", "删除失败!");
+										Msg.info("error", $g("删除失败!"));
 									}
 								},
 								scope: this
@@ -276,7 +276,7 @@ var deleteItmPBLevel = new Ext.Toolbar.Button({
 					}
 				)
 			}else{
-				Msg.info("error", "数据有错,没有RowId!");
+				Msg.info("error", $g("数据有错,没有RowId!"));
 			}
 		}
     }
@@ -311,7 +311,7 @@ Ext.onReady(function(){
 	
 	var panel = new Ext.Panel({
 		id:"panel",
-		title:'招标级别',
+		title:$g('招标级别'),
 		activeTab:0,
 		region:'center',
 		layout:'fit',

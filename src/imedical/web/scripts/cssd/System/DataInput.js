@@ -1,343 +1,415 @@
-///wfg 2019-8-16  µ¼ÈëÊı¾İ
-//readAsBinaryString function is not defined in IE
-//Adding the definition to the function prototype
-if (!FileReader.prototype.readAsBinaryString) {
-	console.log('readAsBinaryString definition not found');
-	FileReader.prototype.readAsBinaryString = function (fileData) {
-		var binary = '';
-		var pk = this;
-		var reader = new FileReader();
-		reader.onload = function (e) {
-			var bytes = new Uint8Array(reader.result);
-			var length = bytes.byteLength;
-			for (var i = 0; i < length; i++) {
-				var a = bytes[i];
-				var b = String.fromCharCode(a)
-				binary += b;
-			}
-			pk.content = binary;
-			$(pk).trigger('onload');
-		}
-		reader.readAsArrayBuffer(fileData);
+ï»¿var init = function() {
+	// å…¼å®¹IE11å¯¹è±¡ä¸æ”¯æŒâ€œreadAsBinaryStringâ€å±æ€§æˆ–æ–¹æ³•
+	if (!FileReader.prototype.readAsBinaryString) {
+		FileReader.prototype.readAsBinaryString = function(fileData) {
+			var binary = '';
+			var pk = this;
+			var reader = new FileReader();
+			reader.onload = function(e) {
+				var bytes = new Uint8Array(reader.result);
+				var length = bytes.byteLength;
+				for (var i = 0; i < length; i++) {
+					var a = bytes[i];
+					var b = String.fromCharCode(a);
+					binary += b;
+				}
+				pk.content = binary;
+				$(pk).trigger('onload');
+			};
+			reader.readAsArrayBuffer(fileData);
+		};
 	}
-}
-var init = function() {
-	var ClearMain=function(){
+	
+	var HospId = gHospId;
+	function InitHosp(TableName) {
+		var hospComp = InitHospCombo(TableName, gSessionStr);
+		if (typeof hospComp === 'object') {
+			HospId = $HUI.combogrid('#_HospList').getValue();
+			$('#_HospList').combogrid('options').onSelect = function(index, record) {
+				HospId = record.HOSPRowId;
+			};
+		}
+	}
+	
+	var ClearMain = function() {
 		$UI.clearBlock('#Conditions');
 		$UI.clear(DataGrid);
 		$('#File').filebox('clear');
-		$('#Msg').panel({'content':" "});
-		ChangeButtonEnable({'#CheckBT':false,'#ImportBT':false,'#TestImportBT':false,'#ClearBT':false,'#ReadBT':true});
-	}
-	$('#File').filebox({
-		buttonText: 'Ñ¡Ôñ',
-		prompt:'ÇëÑ¡ÔñÒªµ¼ÈëµÄExcel',
-		accept:'application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-		width: 180
-		/**
-		onChange:function(nv,ov){
-			var wb;   //wookbook
-			var Type = $("input[name='Type']:checked").val();
-			if(isEmpty(Type)){
-				$UI.msg('alert','Êı¾İÀàĞÍ²»ÄÜÎª¿Õ!')
-				return;
-			}
-			var filelist=$('#File').filebox("files");
-			if(filelist.length==0){
-				$UI.msg('alert','ÇëÑ¡ÔñÒªµ¼ÈëµÄExcel!')
-				return 
-			}
-			showMask();
-			var file = filelist[0];
-      		var reader = new FileReader();
-	        reader.onload = function(e) {
-	            if (reader.result){reader.content = reader.result;}
-				//In IE browser event object is null
-				var data = e ? e.target.result : reader.content;
-				//var baseEncoded = btoa(data);
-				//var wb = XLSX.read(baseEncoded, {type: 'base64'});
-	            wb = XLSX.read(data, {
-	                    type: 'binary'
-	                });
-	            var json=to_json(wb)
-	            $("#DataGrid").datagrid("loadData",json);
-	            ChangeButtonEnable({'#CheckBT':true,'#ImportBT':false,'#ClearBT':true,'#ReadBT':true});
-	            hideMask();
-	            }
-        	reader.readAsBinaryString(file);
-		}
-		**/
-		
-	})	
-	$HUI.radio("[name='Type']",{
-        onChecked:function(e,value){
-            ChangeCm($(e.target).attr("value"));  //Êä³öµ±Ç°Ñ¡ÖĞµÄvalueÖµ
-        }
-    });
-	
-	function ChangeCm(CmType){
-		$UI.clear(DataGrid);
-    	$UI.datagrid('#DataGrid', {	
-        queryParams: {
-			ClassName: '',
-			QueryName: ''				
-		},
-		pagination:false,
-		toolbar:'#operatorBar',
-		remoteSort:false,
-		columns: CmObj[CmType]
-		}) 	
-	}
-	$UI.linkbutton('#LoadBT',{  //ÏÂÔØÄ£°å
-		onClick:function(){
-			window.open("../scripts/cssd/System/ExcelÄ£°å.zip", "_blank");
-		}
-	});	
-	$UI.linkbutton('#ReadBT',{  //¶ÁÈ¡Êı¾İ
-		onClick:function(){
-			var wb;   //wookbook
-			var Type = $("input[name='Type']:checked").val();
-			if(isEmpty(Type)){
-				$UI.msg('alert','Êı¾İÀàĞÍ²»ÄÜÎª¿Õ!')
-				return;
-			}
-			var filelist=$('#File').filebox("files");
-			if(filelist.length==0){
-				$UI.msg('alert','ÇëÑ¡ÔñÒªµ¼ÈëµÄExcel!')
-				return 
-			}
-			showMask();
-			var file = filelist[0];
-      		var reader = new FileReader();
-	        reader.onload = function(e) {
-	            if (reader.result){reader.content = reader.result;}
-				//In IE browser event object is null
-				var data = e ? e.target.result : reader.content;
-				//var baseEncoded = btoa(data);
-				//var wb = XLSX.read(baseEncoded, {type: 'base64'});
-	            wb = XLSX.read(data, {
-	                    type: 'binary'
-	                });
-	            var json=to_json(wb)
-	            $("#DataGrid").datagrid("loadData",json);
-	            ChangeButtonEnable({'#CheckBT':true,'#ImportBT':false,'#ClearBT':true,'#ReadBT':true});
-	            hideMask();
-	            }
-        	reader.readAsBinaryString(file);
-		}
-	});
-	function to_json(workbook) {
-		//È¡ µÚÒ»¸ösheet Êı¾İ
-	    var jsonData={};
-		var result = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-		jsonData.rows=result;
-		jsonData.total=result.length
-		return jsonData//JSON.stringify(jsonData);
+		$('#Msg').panel({ 'content': ' ' });
+		ChangeButtonEnable({ '#CheckBT': false, '#ImportBT': false, '#ClearBT': true, '#ReadBT': true });
 	};
-	$UI.linkbutton('#TestImportBT',{  //²âÊÔµ¼Èë
-		onClick:function(){
-			ChangeButtonEnable({'#CheckBT':false,'#TestImportBT':false,'#ImportBT':true,'#ClearBT':true,'#ReadBT':true});;
+	$('#File').filebox({
+		buttonText: 'é€‰æ‹©',
+		prompt: 'è¯·é€‰æ‹©è¦å¯¼å…¥çš„Excel',
+		accept: 'application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+		width: 180
+	});
+	
+	$('#Type').combobox({
+		data: [
+			{ 'RowId': 'CSSD_PackageClass', 'Description': '1-æ¶ˆæ¯’åŒ…åˆ†ç±»å¯¼å…¥' },
+			{ 'RowId': 'CSSD_Package', 'Description': '2-æ¶ˆæ¯’åŒ…æ•°æ®å¯¼å…¥' },
+			{ 'RowId': 'CSSD_Item', 'Description': '3-æ¶ˆæ¯’åŒ…æ˜ç»†å¯¼å…¥' },
+			{ 'RowId': 'CSSD_CodeDict', 'Description': '4-æ¶ˆæ¯’åŒ…æ ‡ç‰Œå¯¼å…¥' },
+			{ 'RowId': 'CSSD_PackagePack', 'Description': '5-éå¾ªç¯åŒ…æ ‡ç­¾å¯¼å…¥' }
+		],
+		valueField: 'RowId',
+		textField: 'Description',
+		onSelect: function(record) {
+			ChangeCm(record.RowId);
+			var TableName = record.RowId;
+			if (record.RowId === 'CSSD_PackagePack') {
+				TableName = 'CSSD_Package';
+			}
+			InitHosp(TableName);
 		}
 	});
-	$UI.linkbutton('#ImportBT',{  //µ¼Èë
-		onClick:function(){
+	
+	function ChangeCm(CmType) {
+		$UI.clear(DataGrid);
+		$('#File').filebox('clear');
+		$UI.datagrid('#DataGrid', {
+			queryParams: {
+				ClassName: '',
+				QueryName: ''
+			},
+			pagination: false,
+			toolbar: '#operatorBar',
+			remoteSort: false,
+			columns: CmObj[CmType]
+		});
+	}
+	$UI.linkbutton('#LoadBT', { 						// ä¸‹è½½æ¨¡æ¿
+		onClick: function() {
+			var Type = $HUI.combobox('#Type').getText();
+			if (isEmpty(Type)) {
+				$UI.msg('alert', 'è¯·å…ˆé€‰æ‹©æ•°æ®ç±»å‹!');
+				return;
+			}
+			var filename = Type + 'æ¨¡æ¿.xlsx';
+			window.open('../scripts/cssd/System/Excelæ¨¡æ¿/' + filename, '_blank');
+		}
+	});
+	
+	$UI.linkbutton('#ReadBT', { 						// è¯»å–æ•°æ®
+		onClick: function() {
+			var Type = $HUI.combobox('#Type').getValue();
+			if (isEmpty(Type)) {
+				$UI.msg('alert', 'æ•°æ®ç±»å‹ä¸èƒ½ä¸ºç©º!');
+				return;
+			}
+			var Filelist = $('#File').filebox('files');
+			if (Filelist.length == 0) {
+				$UI.msg('alert', 'è¯·é€‰æ‹©è¦å¯¼å…¥çš„Excel!');
+				return;
+			}
+			showMask();
+			var File = Filelist[0];
+			var reader = new FileReader();
+			reader.onload = function(e) {
+				if (reader.result) { reader.content = reader.result; }
+				var data = e ? e.target.result : reader.content;
+				var Data = XLSX.read(data, { type: 'binary' });
+				var json = ToJson(Data);
+				$('#DataGrid').datagrid('loadData', json);
+				ChangeButtonEnable({ '#CheckBT': true, '#ImportBT': false, '#ClearBT': true, '#ReadBT': true });
+				hideMask();
+			};
+			reader.readAsBinaryString(File);
+		}
+	});
+	function ToJson(workbook) {
+		// å–ç¬¬ä¸€ä¸ªsheet æ•°æ®
+		var result = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: null });
+		var jsonData = {};
+		jsonData.rows = result;
+		jsonData.total = result.length;
+		return jsonData;
+	}
+	$UI.linkbutton('#ImportBT', {
+		onClick: function() {
 			Save();
 		}
 	});
-	var Save=function(){
-		var Type=$("input[name='Type']:checked").val();
-		if(isEmpty(Type)){
-			$UI.msg('alert','Êı¾İÀàĞÍ²»ÄÜÎª¿Õ!')
+	var Save = function() {
+		var Type = $HUI.combobox('#Type').getValue();
+		var Rows = DataGrid.getRowsData();
+		var Params = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+		if (isEmpty(Type)) {
+			$UI.msg('alert', 'æ•°æ®ç±»å‹ä¸èƒ½ä¸ºç©º!');
 			return;
 		}
-		var RowsObject=DataGrid.getRows();		
-		var Rows=DataGrid.getRows();
-		if(Rows.length==0){
-			$UI.msg('alert','Ã»ÓĞĞèÒªÉÏ´«µÄÊı¾İ!')
+		if (Rows.length === 0) {
+			$UI.msg('alert', 'æ²¡æœ‰éœ€è¦å¯¼å…¥çš„æ•°æ®!');
 			return;
 		}
-		Rows=JSON.stringify(Rows)
-		//alert(Object.keys(RowsObject).length);
 		showMask();
 		$.cm({
 			ClassName: 'web.CSSDHUI.System.DataInput',
 			MethodName: 'DataInput',
-			Rows: Rows,
-			Type:Type,
-			RowsLength:Object.keys(RowsObject).length
-		},function(jsonData){
+			Rows: JSON.stringify(Rows),
+			Type: Type,
+			Params: Params
+		}, function(jsonData) {
 			hideMask();
-			if(jsonData.success==0){
-				$('#Msg').panel({'content':jsonData.msg})
-			}else{
-				$('#Msg').panel({'content':jsonData.msg})
-				//$UI.msg('error',jsonData.msg);		
-			}
+			var contenthtml = "<span style='padding:5px;'>" + jsonData.msg + '</span>';
+			$('#Msg').panel({ 'content': contenthtml });
 		});
-	}
-	$UI.linkbutton('#CheckBT',{  //¼ì²âÊı¾İ
-		onClick:function(){
-			var Type=$("input[name='Type']:checked").val();
-				if(isEmpty(Type)){
-					$UI.msg('alert','Êı¾İÀàĞÍ²»ÄÜÎª¿Õ!')
-					return;
-				}
+	};
+	// æ•°æ®æ ¡éªŒ
+	$UI.linkbutton('#CheckBT', {
+		onClick: function() {
+			var Type = $HUI.combobox('#Type').getValue();
+			if (isEmpty(Type)) {
+				$UI.msg('alert', 'æ•°æ®ç±»å‹ä¸èƒ½ä¸ºç©º!');
+				return;
+			}
 			showMask();
-			if(CheckObj()===false){
+			if (CheckObj() === false) {
 				hideMask();
-				$UI.msg('error','Êı¾İĞ£Ñé²»Í¨¹ı!');
+				$UI.msg('error', 'æ•°æ®æ ¡éªŒä¸é€šè¿‡!');
 				return;
 			}
 			hideMask();
-			$UI.msg('success','Êı¾İĞ£ÑéÍ¨¹ı!');
-			ChangeButtonEnable({'#CheckBT':true,'#TestImportBT':true,'#ImportBT':true,'#ClearBT':true,'#ReadBT':true});
+			$UI.msg('success', 'æ•°æ®æ ¡éªŒé€šè¿‡!');
+			ChangeButtonEnable({ '#CheckBT': true, '#ImportBT': true, '#ClearBT': true, '#ReadBT': true });
 		}
 	});
-	$UI.linkbutton('#ClearBT',{
-		onClick:function(){
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
 			ClearMain();
 		}
 	});
-	var CheckObj=function(){
+	var CheckObj = function() {
 		var CheckField = [];
-		var opt = DataGrid.options();
-		for (var i = 0; i < opt.columns[0].length; i++) {
-			if (opt.columns[0][i].checknull === true) {
-				CheckField.push(opt.columns[0][i].field);
+		var DataOptions = DataGrid.options();
+		for (var i = 0; i < DataOptions.columns[0].length; i++) {
+			if (DataOptions.columns[0][i].checknull === true) {
+				CheckField.push(DataOptions.columns[0][i].field);
 			}
 		}
 		var Rows = DataGrid.getRows();
-		var len = Rows.length;
+		var Len = Rows.length;
 		var CheckFlag = true;
 		var RecordArr = [];
-		for (var i = 0; i < len; i++) {
-			var Msg = "";
+		for (i = 0; i < Len; i++) {
+			var Msg = '';
 			var Record = Rows[i];
 			for (var j = 0; j < CheckField.length; j++) {
 				var val = Record[CheckField[j]];
 				if (isEmpty(val)) {
-					Msg = Msg + 'µÚ' + (i + 1) + 'ĞĞ' + CheckField[j] + "²»ÄÜÎª¿Õ!";
+					Msg = Msg + 'ç¬¬' + (i + 1) + 'è¡Œ' + CheckField[j] + 'ä¸èƒ½ä¸ºç©º!';
 					CheckFlag = false;
 				}
 			}
 			if (isEmpty(Msg)) {
-				Msg = "¡Ì";
+				Msg = 'âˆš';
 			} else {
 				$('#DataGrid').datagrid('highlightRow', i);
 			}
-			Record["Ğ£ÑéĞÅÏ¢"] = Msg;
+			Record['æ ¡éªŒä¿¡æ¯'] = Msg;
 			RecordArr.push(Record);
 		}
 		$('#DataGrid').datagrid('loadData', RecordArr);
 		return CheckFlag;
-		}
-	var CmObj={
-		Package:[[{
-			title: 'Ïû¶¾°ü±àÂë',
-			field: 'Ïû¶¾°ü±àÂë',
-			checknull:true,
-			width:100
-		}, {
-			title: 'Ïû¶¾°üÃû³Æ',
-			field: 'Ïû¶¾°üÃû³Æ',
-			checknull:true,
-			width:100
-		}, {
-			title: 'Ïû¶¾°ü±ğÃû',
-			field: 'Ïû¶¾°ü±ğÃû',
-			width:100
-		},{
-			title: 'Ïû¶¾°ü·ÖÀà',
-			field: 'Ïû¶¾°ü·ÖÀà',
-			checknull:true,
-			width:100
-		},{
-			title: '°üÀàĞÍ',
-			field: '°üÀàĞÍ',
-			checknull:true,
-			width:100
-		},{
-			title: 'Ïû¶¾°üÊôĞÔ',
-			field: 'Ïû¶¾°üÊôĞÔ',
-			checknull:true,
-			width:100
-		},{
-			title: '¼Û¸ñ',
-			field: '¼Û¸ñ',
-			width:100
-		},{
-			title: 'µ¥Î»',
-			field: 'µ¥Î»',
-			width:100
-		},{
-			title: 'Ãğ¾ú·½Ê½',
-			field: 'Ãğ¾ú·½Ê½',
-			checknull:true,
-			width:100
-		},{
-			title: 'Ê¹ÓÃ±êÖ¾',
-			field: 'Ê¹ÓÃ±êÖ¾',
-			width:100
-		},{
-			title: '½ÓÊÕ¿ÆÊÒ',
-			field: '½ÓÊÕ¿ÆÊÒ',
-			width:100
-		},{
-			title: 'Ïû¶¾°ü»ùÊı',
-			field: 'Ïû¶¾°ü»ùÊı',
-			width:100
-		},{
-			title: 'ÓĞĞ§ÆÚ',
-			field: 'ÓĞĞ§ÆÚ',
-			checknull:true,
-			width:100
-		}
+	};
+	var CmObj = {
+		CSSD_Package: [[
+			{
+				title: 'æ¶ˆæ¯’åŒ…ç¼–ç ',
+				field: 'æ¶ˆæ¯’åŒ…ç¼–ç ',
+				checknull: true,
+				width: 100
+			}, {
+				title: 'æ¶ˆæ¯’åŒ…åç§°',
+				field: 'æ¶ˆæ¯’åŒ…åç§°',
+				checknull: true,
+				width: 100
+			}, {
+				title: 'æ¶ˆæ¯’åŒ…åˆ«å',
+				field: 'æ¶ˆæ¯’åŒ…åˆ«å',
+				width: 100
+			}, {
+				title: 'åŒ…è£…ææ–™',
+				field: 'åŒ…è£…ææ–™',
+				checknull: true,
+				width: 100
+			}, {
+				title: 'æ¶ˆæ¯’åŒ…åˆ†ç±»',
+				field: 'æ¶ˆæ¯’åŒ…åˆ†ç±»',
+				checknull: true,
+				width: 100
+			}, {
+				title: 'æ¶ˆæ¯’åŒ…å±æ€§',
+				field: 'æ¶ˆæ¯’åŒ…å±æ€§',
+				checknull: true,
+				width: 100
+			}, {
+				title: 'ä»·æ ¼',
+				field: 'ä»·æ ¼',
+				align: 'center',
+				checknull: true,
+				width: 100
+			}, {
+				title: 'å•ä½',
+				field: 'å•ä½',
+				checknull: true,
+				width: 60
+			}, {
+				title: 'è§„æ ¼',
+				field: 'è§„æ ¼',
+				width: 60
+			}, {
+				title: 'ç­èŒæ–¹å¼',
+				field: 'ç­èŒæ–¹å¼',
+				checknull: true,
+				width: 100
+			}, {
+				title: 'æœ‰æ•ˆæœŸ',
+				field: 'æœ‰æ•ˆæœŸ',
+				width: 100
+			}, {
+				title: 'å¤–æ¥å™¨æ¢°æ ‡å¿—',
+				field: 'å¤–æ¥å™¨æ¢°æ ‡å¿—',
+				width: 150
+			}, {
+				title: 'æ¥æ”¶ç§‘å®¤',
+				field: 'æ¥æ”¶ç§‘å®¤',
+				width: 100
+			}, {
+				title: 'è‡ªåŠ¨ç”Ÿæˆæ ‡ç‰Œæ•°',
+				field: 'è‡ªåŠ¨ç”Ÿæˆæ ‡ç‰Œæ•°',
+				align: 'right',
+				width: 120
+			}, {
+				title: 'æ ¡éªŒä¿¡æ¯',
+				field: 'æ ¡éªŒä¿¡æ¯',
+				width: 160
+			}
 		]],
-		PackageItem:[[{
-			title: 'Ïû¶¾°üÃû³Æ',
-			field: 'Ïû¶¾°üÃû³Æ',
-			checknull:true,
-			width:100
-		}, {
-			title: 'Ïû¶¾Æ÷ĞµÃû³Æ',
-			field: 'Ïû¶¾Æ÷ĞµÃû³Æ',
-			checknull:true,
-			width:100
-		}, {
-			title: 'Ïû¶¾°üÆ÷Ğµ¹æ¸ñ',
-			field: 'Ïû¶¾°üÆ÷Ğµ¹æ¸ñ',
-			width:100
-		},{
-			title: 'Ïû¶¾°üÆ÷Ğµ¼Û¸ñ',
-			field: 'Ïû¶¾°üÆ÷Ğµ¼Û¸ñ',
-			width:100
-		},{
-			title: 'Ê¹ÓÃ±êÖ¾',
-			field: 'Ê¹ÓÃ±êÖ¾',
-			width:100
-		},{
-			title: 'Æ÷ĞµÊıÁ¿',
-			field: 'Æ÷ĞµÊıÁ¿',
-			checknull:true,
-			width:100
-		},{
-			title: '±¸×¢',
-			field: '±¸×¢',
-			width:100
-		}
+		CSSD_Item: [[
+			{
+				title: 'æ¶ˆæ¯’åŒ…åç§°',
+				field: 'æ¶ˆæ¯’åŒ…åç§°',
+				checknull: true,
+				width: 160
+			}, {
+				title: 'å™¨æ¢°åç§°',
+				field: 'å™¨æ¢°åç§°',
+				checknull: true,
+				width: 200
+			}, {
+				title: 'å™¨æ¢°æ•°é‡',
+				field: 'å™¨æ¢°æ•°é‡',
+				checknull: true,
+				align: 'right',
+				width: 80
+			}, {
+				title: 'å™¨æ¢°è§„æ ¼',
+				field: 'å™¨æ¢°è§„æ ¼',
+				width: 160
+			}, {
+				title: 'å™¨æ¢°åˆ«å',
+				field: 'å™¨æ¢°åˆ«å',
+				width: 160
+			}, {
+				title: 'å™¨æ¢°ä»·æ ¼',
+				field: 'å™¨æ¢°ä»·æ ¼',
+				align: 'right',
+				width: 110
+			}, {
+				title: 'ä¸€æ¬¡æ€§æ ‡å¿—',
+				field: 'ä¸€æ¬¡æ€§æ ‡å¿—',
+				align: 'center',
+				width: 100
+			}, {
+				title: 'å¤‡æ³¨',
+				field: 'å¤‡æ³¨',
+				width: 100
+			}, {
+				title: 'æ ¡éªŒä¿¡æ¯',
+				field: 'æ ¡éªŒä¿¡æ¯',
+				width: 160
+			}
+		]],
+		CSSD_PackagePack: [[
+			{
+				title: 'æ¶ˆæ¯’åŒ…åç§°',
+				field: 'æ¶ˆæ¯’åŒ…åç§°',
+				checknull: true,
+				width: 160
+			}, {
+				title: 'éå¾ªç¯åŒ…æ ‡ç­¾',
+				field: 'éå¾ªç¯åŒ…æ ‡ç­¾',
+				checknull: true,
+				width: 200
+			}, {
+				title: 'å¤±æ•ˆæ—¥æœŸ',
+				field: 'å¤±æ•ˆæ—¥æœŸ',
+				checknull: true,
+				width: 120
+			}, {
+				title: 'æ¥æ”¶ç§‘å®¤',
+				field: 'æ¥æ”¶ç§‘å®¤',
+				checknull: true,
+				width: 160
+			}, {
+				title: 'æ ¡éªŒä¿¡æ¯',
+				field: 'æ ¡éªŒä¿¡æ¯',
+				width: 160
+			}
+		]],
+		CSSD_PackageClass: [[
+			{
+				title: 'ä»£ç ',
+				field: 'ä»£ç ',
+				checknull: true,
+				width: 160
+			}, {
+				title: 'æè¿°',
+				field: 'æè¿°',
+				checknull: true,
+				width: 200
+			}, {
+				title: 'æ ¡éªŒä¿¡æ¯',
+				field: 'æ ¡éªŒä¿¡æ¯',
+				width: 160
+			}
+		]],
+		CSSD_CodeDict: [[
+			{
+				title: 'æ¶ˆæ¯’åŒ…åç§°',
+				field: 'æ¶ˆæ¯’åŒ…åç§°',
+				checknull: true,
+				width: 150
+			}, {
+				title: 'æ ‡ç‰Œç¼–ç ',
+				field: 'æ ‡ç‰Œç¼–ç ',
+				checknull: true,
+				width: 200
+			}, {
+				title: 'æ ‡ç‰Œåç§°',
+				field: 'æ ‡ç‰Œåç§°',
+				checknull: true,
+				width: 150
+			}, {
+				title: 'æ ¡éªŒä¿¡æ¯',
+				field: 'æ ¡éªŒä¿¡æ¯',
+				width: 160
+			}
 		]]
-	}
+	};
 	var DataGrid = $UI.datagrid('#DataGrid', {
 		queryParams: {
 			ClassName: '',
-			QueryName: ''				
+			QueryName: ''
 		},
-		toolbar:'#UomTB',
-		remoteSort:false,
-		pagination:false,
-		columns: CmObj.Package,
-		singleSelect:true
-	})
+		remoteSort: false,
+		pagination: false,
+		columns: CmObj.CSSD_Package,
+		singleSelect: false
+	});
 	ClearMain();
-}
+	InitHosp('CSSD_Package');
+};
 $(init);

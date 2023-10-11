@@ -59,6 +59,7 @@ function reportControl(){
 		"width":800,
 		"max-width":800
 	});
+	RepSetRead("HeadnurParticipants","input",1);	
 	$("body").click(function(){
 		AllStyle("textarea","",100);
   		InitLabInputText(".lable-input");
@@ -90,12 +91,12 @@ function reportControl(){
 			if ((this.value!="")){
 				$("[id^='"+rowid+"'][id$='"+rownum+"']").attr("readonly",'readonly');
 				$("input[id^='"+rowid+"'][id$='"+rownum+"']").datebox({"disabled":true});
-				$('a:contains("删除")').parent().hide();
+				$('a:contains('+$g("删除")+')').parent().hide();
 			}
 			if(LocHeadNurEvaFlag!="1"){
 				$("[id^='"+rowid+"'][id$='"+rownum+"']").attr("readonly",'readonly');
 				$("input[id^='"+rowid+"'][id$='"+rownum+"']").datebox({"disabled":true});
-				$('a:contains("增加")').parent().hide();
+				$('a:contains('+$g("增加")+')').parent().hide();
 			}
 			
 			
@@ -155,33 +156,18 @@ function SaveAsse(flag)
 //检查界面勾选其他，是否填写输入框
 function checkother(){
 	//发生前防范措施落实情况 未落实 具体表现
-	var BefPreventMeasures=0;   //id是以后面的字符串开头
-	$("input[type=radio][id^='BefPreventMeasures-94438']").each(function(){
-		if($(this).is(':checked')){
-			if ((this.value=="title")&&($("input[name$='.94439']").val()=="")){
-				BefPreventMeasures=-1;
+	var BefPreventMeasures="";   //id是以后面的字符串开头
+	if($("#BefPreventMeasures-94438").is(':checked')){
+		$("input[type=checkbox][id^='BefPreMeaReason-']").each(function(){
+			if($(this).is(':checked')){
+				BefPreventMeasures=this.value;
 			}
+		})
+		if(BefPreventMeasures==""){
+			$.messager.alert($g("提示:"),"【"+$g("发生前防范措施落实情况")+"】"+$g("勾选")+$g('未落实')+"，"+$g("发生前防范措施未落实的原因-具体表现")+$g('内容')+"！");	
+			return false;
 		}
-	})
-	if(BefPreventMeasures==-1){
-		$.messager.alert("提示:","【发生前防范措施落实情况】勾选'未落实'，请填写'具体表现'内容！");	
-		return false;
 	}
-	
-	//发生前防范措施未落实的原因
-	var BefPreMeaReason=0;   //id是以后面的字符串开头
-	$("input[type=radio][id^='BefPreMeaReason-94448']").each(function(){
-		if($(this).is(':checked')){
-			if ((this.value=="title")&&($("input[name$='.94448'][class='lable-input']").val()=="")){
-				BefPreMeaReason=-1;
-			}
-		}
-	})
-	if(BefPreMeaReason==-1){
-		$.messager.alert("提示:","【发生前防范措施未落实的原因】勾选'其他'，请填写内容！");	
-		return false;
-	}
-	
 	return true;
 }
 //页面初始加载checkbox,radio控制子元素不可以填写
@@ -282,7 +268,7 @@ function StaffEnter()
 {
 	$('#staffwin').show();
 	$('#staffwin').window({
-		title:'科室人员信息',
+		title:$g('科室人员信息'),
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,
@@ -303,8 +289,8 @@ function InitStaffGrid()
 	//定义columns
 	var columns=[[
 	     {field:"ck",checkbox:'true',width:40},
-		 {field:'userCode',title:'用户Code',width:100},
-		 {field:'userName',title:'用户姓名',width:100}
+		 {field:'userCode',title:$g('用户Code'),width:100},
+		 {field:'userName',title:$g('用户姓名'),width:100}
 		]];
 	
 	//定义datagrid
@@ -334,7 +320,16 @@ function InitStaffGrid()
 		 {
 	       var userName = rowData.userName
 	       MeetMember(userName)
-		 },	
+		 },onLoadSuccess:function(data){  
+			if(userName!=""){
+				for(var i=0;i<data.rows.length;i++){
+					var Name = data.rows[i].userName+"，";
+					if(userName.indexOf(Name)>=0){
+						$("#user").datagrid("selectRow",i);
+					}
+				}
+			}
+		}	
 	});	
 	$("#UserNames").val($("#HeadnurParticipants").val()); /// 给弹出的人员窗口里面人员赋值(表单的参会人员)
 	$(".datagrid-header-check input[type=checkbox]").on("click",function(){ ///2018-04-13 cy 评价界面

@@ -89,57 +89,6 @@ function compareSelTimeAndCurTime(SelDateTime)
 	return true;
 }
 
-//两个选择时间的相互比较 2017-03-06
-function compareSelTowTime(BefDate,AftDate)
-{
-	var BefSelDateArr="",BefSelYear="",BefSelMonth="",BefSelDate="",AftSelDateArr="",AftSelYear="",AftSelMonth="",AftSelDate="";
-	if(DateFormat=="4"){ //日期格式 4:"DMY" DD/MM/YYYY
-		BefSelDateArr=BefDate.split("/");
-		BefSelYear=BefSelDateArr[2];
-		BefSelMonth=(BefSelDateArr[1]);
-		BefSelDate=(BefSelDateArr[0]);
-
-		AftSelDateArr=AftDate.split("/");
-		AftSelYear=AftSelDateArr[2];
-		AftSelMonth=(AftSelDateArr[1]);
-		AftSelDate=(AftSelDateArr[0]);
-
-	}else if(DateFormat=="3"){ //日期格式 3:"YMD" YYYY-MM-DD
-		BefSelDateArr=BefDate.split("-");
-		BefSelYear=BefSelDateArr[0];
-		BefSelMonth=(BefSelDateArr[1]);
-		BefSelDate=(BefSelDateArr[2]);
-		
-		AftSelDateArr=AftDate.split("-");
-		AftSelYear=AftSelDateArr[0];
-		AftSelMonth=(AftSelDateArr[1]);
-		AftSelDate=(AftSelDateArr[2]);
-	
-	}else if(DateFormat=="1"){ //日期格式 1:"MDY" MM/DD/YYYY
-		BefSelDateArr=BefDate.split("/");
-		BefSelYear=BefSelDateArr[2];
-		BefSelMonth=(BefSelDateArr[0]);
-		BefSelDate=(BefSelDateArr[1]);
-		
-		AftSelDateArr=AftDate.split("/");
-		AftSelYear=AftSelDateArr[2];
-		AftSelMonth=(AftSelDateArr[0]);
-		AftSelDate=(AftSelDateArr[1]);
-	
-	}
-	
-	if(BefSelYear>AftSelYear){
-		return false;
-	}
-	if((BefSelYear==AftSelYear)&(BefSelMonth>AftSelMonth)){
-		return false;
-	}
-	if((BefSelYear==AftSelYear)&(BefSelMonth==AftSelMonth)&(BefSelDate>AftSelDate)){
-		return false;
-	}
-	
-	return true;
-}
 
 $(document).ready(function(){
 		$('textarea').keydown(function(e){

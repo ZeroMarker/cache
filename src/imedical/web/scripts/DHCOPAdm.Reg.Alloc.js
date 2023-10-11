@@ -365,6 +365,7 @@ function SetPatient_Sel(value) {
 			var CardNo=DHCC_GetElementData("CardNo");
 			var lnk = "websys.default.csp?WEBSYS.TCOMPONENT=DHCPatient&CardNo="+CardNo;
 			Clear_click();
+			if(typeof websys_writeMWToken=='function') lnk=websys_writeMWToken(lnk);
 			win=open(lnk,"ModPat","status=1,top=80,left=50,width=900,height=490,scrollbars=Yes");
 			websys_setfocus('CardNo');
 			return websys_cancel();
@@ -1585,6 +1586,7 @@ function RegExp_Click()
 	
 	//Clear_click();
 	var lnk = "websys.default.csp?WEBSYS.TCOMPONENT=UDHCCardPatInfoRegExp";
+	if(typeof websys_writeMWToken=='function') lnk=websys_writeMWToken(lnk);
 	win=open(lnk,"SwithOPReg","status=1,top=150,left=150,width=1200,height=650")
 }
 function CheckNeedReceiptNoMsg(){
@@ -1799,6 +1801,7 @@ function SetReceipNO(value) {
 function FindPat_click(){
   Clear_click();
 	var lnk = "websys.default.csp?WEBSYS.TCOMPONENT=DHCCardSearch";
+	if(typeof websys_writeMWToken=='function') lnk=websys_writeMWToken(lnk);
 	win=open(lnk,"FindPatReg","top=150,left=150,width=1000,height=600,status=yes,scrollbars=yes")
 }
 
@@ -1810,18 +1813,21 @@ function CacelReg_click(){
 function RegQuery_click(){
 
 	var lnk = "websys.default.csp?WEBSYS.TCOMPONENT=DHCOPDro";
+	if(typeof websys_writeMWToken=='function') lnk=websys_writeMWToken(lnk);
 	win=open(lnk,"RegQueryy","top=10,left=50,width=900,height=500");
 }
 
 function SwitchReg_Click(){
 	Clear_click();
 	var lnk = "websys.default.csp?WEBSYS.TCOMPONENT=DHCOPReturn";
+	if(typeof websys_writeMWToken=='function') lnk=websys_writeMWToken(lnk);
 	win=open(lnk,"SwitchReg","top=150,left=150,width=700,height=400")
 }
 
 function PatInfo_Click(){
 	Clear_click();
 	var lnk = "websys.default.csp?WEBSYS.TCOMPONENT=DHCPatient";
+	if(typeof websys_writeMWToken=='function') lnk=websys_writeMWToken(lnk);
 	win=open(lnk,"QueryReg","top=50,left=150,width=1000,height=700,status=yes,scrollbars=yes")
 }
 

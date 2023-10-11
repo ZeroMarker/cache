@@ -27,7 +27,8 @@
 		var aHospID = $('#cboHospital').combobox('getValue');
 		var DateFrom = $('#dtDateFrom').datebox('getValue');
 		var DateTo= $('#dtDateTo').datebox('getValue');
-		var Statunit = Common_CheckboxValue('chkStatunit');
+		var LocID = $("#cboLoc").combobox('getValue');
+		//var Statunit = Common_CheckboxValue('chkStatunit');
 		
 		ReportFrame = document.getElementById("ReportFrame");
 		
@@ -40,7 +41,7 @@
 			return;
 		}
 
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S480EHAirHun.raq&aHospIDs='+aHospID +'&aDateFrom=' + DateFrom +'&aDateTo='+ DateTo +'&aLocType='+ Statunit +'&aQryCon='+"";	
+		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S480EHAirHun.raq&aHospIDs='+aHospID +'&aDateFrom=' + DateFrom +'&aDateTo='+ DateTo +'&aMonitorLocID='+LocID;	
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
@@ -95,23 +96,23 @@
 						type: 'shadow'
 					} */
 					axisLabel: {
-								margin:8,
-								rotate:45,
-								interval:0,
-								// 使用函数模板，函数参数分别为刻度数值（类目），刻度的索引
-								formatter: function (value, index) {
-									//处理标签，过长折行和省略
-									if(value.length>6 && value.length<11){
-										return value.substr(0,5)+'\n'+value.substr(5,5);
-									}else if(value.length>10&&value.length<16){
-										return value.substr(0,5)+'\n'+value.substr(5,5)+'\n'+value.substr(10,5);
-									}else if(value.length>15&&value.length<21){
-										return value.substr(0,5)+'\n'+value.substr(5,5)+'\n'+value.substr(10,5)+'\n'+value.substr(15,5);
-									}else{
-										return value;
-									}
-								}
+						margin:8,
+						rotate:45,
+						interval:0,
+						// 使用函数模板，函数参数分别为刻度数值（类目），刻度的索引
+						formatter: function (value, index) {
+							//处理标签，过长折行和省略
+							if(value.length>6 && value.length<11){
+								return value.substr(0,5)+'\n'+value.substr(5,5);
+							}else if(value.length>10&&value.length<16){
+								return value.substr(0,5)+'\n'+value.substr(5,5)+'\n'+value.substr(10,5);
+							}else if(value.length>15&&value.length<21){
+								return value.substr(0,5)+'\n'+value.substr(5,5)+'\n'+value.substr(10,5)+'\n'+value.substr(15,5);
+							}else{
+								return value;
 							}
+						}
+					}
 				}
 			],
 			yAxis: [
@@ -161,27 +162,22 @@
 		var HospID = $('#cboHospital').combobox('getValue');
 		var DateFrom = $('#dtDateFrom').datebox('getValue');
 		var DateTo= $('#dtDateTo').datebox('getValue');
-		var StaType = Common_CheckboxValue('chkStatunit');
+		var LocID = $("#cboLoc").combobox('getValue');
+		//var StaType = Common_CheckboxValue('chkStatunit');
 		
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S480EHAirHun' + "&QueryName=" + 'QryEHAirHun' + "&Arg1=" + HospID + "&Arg2=" + DateFrom + "&Arg3=" + DateTo+ "&Arg4=" + StaType+"&Arg5=" +""+"&ArgCnt=" + 5;
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 30000, //30秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
+		obj.myChart.showLoading();	//隐藏加载动画
+		$cm({
+			ClassName:"DHCHAI.STATV2.S480EHAirHun",
+			QueryName:"QryEHAirHun",		
+			aHospIDs:HospID,
+			aDateFrom:DateFrom, 
+			aDateTo:DateTo, 
+			aMonitorLocID:LocID,
+			page: 1,
+			rows: 999
+		},function(rs){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			obj.echartLocInfRatio(rs);
 		});
 		
 	   obj.echartLocInfRatio = function(runQuery){
@@ -190,34 +186,28 @@
 			var arrInfRatio = new Array();
 			var arrInfCount = new Array();
 			obj.arrLocG= new Array();
-			var arrRecord = runQuery.record;
+			var arrRecord = runQuery.rows;
 			
 			for (var indRd = 0; indRd < arrRecord.length; indRd++){
 				var rd = arrRecord[indRd];
-				//去掉全院、医院、科室组
-				if ((rd["xDimensKey"].indexOf('-A-')>-1)||(rd["xDimensKey"].indexOf('-H-')>-1)||(rd["xDimensKey"].indexOf('-G-')>-1)) {
-					delete arrRecord[indRd];
-					continue;
-				}
-				rd["DimensDesc"] = $.trim(rd["DimensDesc"]); //去掉空格
+				
+				rd["LocDesc"] = $.trim(rd["LocDesc"]); //去掉空格
 				rd["StandardRatio"] = parseFloat(parseFloat(rd["StandardRatio"].replace('%','').replace('‰','')).toFixed(2));
 			}
 			arrRecord = arrRecord.sort(Common_GetSortFun('desc','StandardCnt'));  //排序
-			if(obj.numbers=="ALL"){
-				obj.numbers = arrRecord.length;
-			}else{
-				arrRecord.length=obj.numbers;
-			}
+
+			obj.numbers = arrRecord.length;
+			
 			for (var indRd = 0; indRd < arrRecord.length; indRd++){                     
 				var rd = arrRecord[indRd];
 				//console.log(rd);
 				if(rd==undefined){   //去掉全院、医院、科室组后,会有数据变为undefined
 					continue;
 				}else{
-					arrViewLoc.push(rd["DimensDesc"]);
+					arrViewLoc.push(rd["LocDesc"]);
 					arrInfCount.push(rd["StandardCnt"]);
 					arrInfRatio.push(parseFloat(rd["StandardRatio"]).toFixed(2));
-					obj.arrLocG.push(rd["xDimensKey"]);
+					
 				}
 			}
 			

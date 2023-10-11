@@ -1,90 +1,65 @@
-ï»¿/**
+/**
  * FileName: dhcbill.dailymaintabs.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2018-03-14
- * Description: åŠ è½½Tabs
+ * Description: ¼ÓÔØTabs
  */
 
 $(function () {
-	$HUI.tabs('#tabItem', {
+	loadSelTabsContent();  //ÔÚhtmlÖÐÉèÖÃÑ¡ÖÐÒ³Ç©Ê±£¬²»»á´¥·¢onSelectÊÂ¼þ£¬¹ÊÔÚ´ËÏÈµ÷ÓÃ»ñÈ¡Ñ¡ÖÐµÄÒ³Ç©
+	
+	$HUI.tabs("#tabItem", {
 		onSelect: function (title, index) {
 			loadSelTabsContent();
 		}
 	});
-	initTabs();
 });
-
-function initTabs() {
-	$.cm({
-		ClassName: 'web.DHCBillGroupConfig',
-		MethodName: 'GetGroupSettingTabs',
-		groupId: PUBLIC_CONSTANT.SESSION.GROUPID,
-		hospId: PUBLIC_CONSTANT.SESSION.HOSPID,
-		busiType: getParam('businessType')
-	}, function (jsonData) {
-		$.each(jsonData, function (index, item) {
-			$('#tabItem').tabs('add', {
-				id: item.id,
-				title: item.title,
-				fit: true,
-				closable: item.closable,
-				selected: item.selected
-			});
-		});
-	});
-}
 
 /**
  * Creator: ZhYW
- * CreatDate:2018-03-11
- * Description: åŠ è½½é€‰ä¸­çš„Tabså†…å®¹
+ * CreatDate: 2018-03-11
+ * Description: ¼ÓÔØÑ¡ÖÐµÄTabsÄÚÈÝ
  */
 function loadSelTabsContent() {
-	var tab = $('#tabItem').tabs('getSelected');
-	var tabId = "";
-	var tabTitle = "";
-	if (tab) {
-		var opts = tab.panel('options');
-		tabId = opts.id;
-		tabTitle = opts.title;
+	var tab = $("#tabItem").tabs("getSelected");
+	if (!tab) {
+		return;
 	}
-	$.m({
-		ClassName: 'web.DHCBillGroupConfig',
-		MethodName: 'GetBillTabsUrl',
-		tabId: tabId
-	}, function (url) {
-		switch (getParam('businessType')) {
-		case 'OPD':
-			loadDetailsList(tabId, tabTitle, url);
-			break;
-		case 'OPC':
-			loadCollectList(tabId, tabTitle, url);
-			break;
-		case 'IPD':
-			loadDetailsList(tabId, tabTitle, url);
-			break;
-		case 'IPC':
-			loadCollectList(tabId, tabTitle, url);
-			break;
-		case 'BOA':
-			loadReconciliationsList(tabId, tabTitle, url);
-			break;
-		default:
-		}
-	});
+	var tabId = tab.panel("options").id;
+	var url = $("#" + tabId).attr("data");
+	switch (CV.BusiType) {
+	case "OPD":
+		loadDetailsList(tabId, url);
+		break;
+	case "OPC":
+		loadCollectList(tabId, url);
+		break;
+	case "OPW":
+		loadWorkLoadList(tabId, url);
+		break;
+	case "IPD":
+		loadDetailsList(tabId, url);
+		break;
+	case "IPC":
+		loadCollectList(tabId, url);
+		break;
+	case "BOA":
+		loadReconciliationsList(tabId, url);
+		break;
+	default:
+	}
 }
 
-function loadDetailsList(tabId, title, url) {
+function loadDetailsList(tabId, url) {
 	var stDate = "";
 	var stTime = "";
 	var endDate = "";
 	var endTime = "";
 	var footId = "";
 	var guser = "";
-	var hospDR = PUBLIC_CONSTANT.SESSION.HOSPID;
-	if (getParam('linkFlag') != 'Y') {
-		var stDateTime = parent.$('#stDateTime').datetimebox('getValue');
-		var endDateTime = parent.$('#endDateTime').datetimebox('getValue');
+	if (CV.LinkFlag != "Y") {
+		var stDateTime = parent.$("#stDateTime").datetimebox("getValue");
+		var endDateTime = parent.$("#endDateTime").datetimebox("getValue");
 		if (stDateTime != "") {
 			var myAry = stDateTime.split(" ");
 			stDate = myAry[0];
@@ -95,51 +70,74 @@ function loadDetailsList(tabId, title, url) {
 			endDate = myAry[0];
 			endTime = myAry[1];
 		}
-		footId = parent.$('#footId').val();
+		footId = parent.$("#footId").val();
 		guser = PUBLIC_CONSTANT.SESSION.USERID;
 	} else {
-		stDate = getParam('stDate');
-		stTime = getParam('stTime');
-		endDate = getParam('endDate');
-		endTime = getParam('endTime');
-		footId = getParam('footId');
-		guser = getParam('guser');
+		stDate = getParam("stDate");
+		stTime = getParam("stTime");
+		endDate = getParam("endDate");
+		endTime = getParam("endTime");
+		footId = getParam("footId");
+		guser = getParam("guser");
 	}
 
-	var url = url + '&stDate=' + stDate + '&stTime=' + stTime;
-	url += '&endDate=' + endDate + '&endTime=' + endTime + '&footId=' + footId;
-	url += '&guser=' + guser + '&hospDR=' + hospDR;
+	var url = url + "&stDate=" + stDate + "&stTime=" + stTime;
+	url += "&endDate=" + endDate + "&endTime=" + endTime + "&footId=" + footId;
+	url += "&guser=" + guser + "&hospDR=" + PUBLIC_CONSTANT.SESSION.HOSPID;
 	refreshTab(tabId, url);
 }
 
-function loadCollectList(tabId, title, url) {
-	var stDate = parent.$('#stDate').datebox('getValue');
-	var endDate = parent.$('#endDate').datebox('getValue');
-	var guserAry = parent.$('#userCombo').combobox('getValues');
-	var guserStr = (guserAry.length > 0) ? guserAry.toString().split(',').join('^') : '';
-	var receId = parent.$('#receId').val();
-	var url = url + '&stDate=' + stDate + '&endDate=' + endDate + '&guserStr=' + guserStr;
-	url += '&receId=' + receId + '&hospDR=' + PUBLIC_CONSTANT.SESSION.HOSPID;
-	url += '&groupDR=' + PUBLIC_CONSTANT.SESSION.GROUPID;
+function loadCollectList(tabId, url) {
+	var stDate = parent.$("#stDate").datebox("getValue");
+	var endDate = parent.$("#endDate").datebox("getValue");
+	var guserAry = parent.$("#userCombo").combobox("getValues");
+	var guserStr = (guserAry.length > 0) ? String(guserAry).split(",").join("^") : "";
+	var receId = parent.$("#receId").val();
+	var verifyStatus = (parent.$("#verifyCombo").length > 0) ? parent.$("#verifyCombo").combobox("getValue") : "";
+	var url = url + "&stDate=" + stDate + "&endDate=" + endDate + "&guserStr=" + guserStr;
+	url += "&receId=" + receId + "&hospDR=" + PUBLIC_CONSTANT.SESSION.HOSPID;
+	url += "&groupDR=" + PUBLIC_CONSTANT.SESSION.GROUPID+ "&verifyStatus=" + verifyStatus;
 	refreshTab(tabId, url);
 }
 
-function loadReconciliationsList(tabId, title, url) {
-	var stDate = parent.$('#stDate').datebox('getValue');
-	var endDate = parent.$('#endDate').datebox('getValue');
-	var transType = parent.$('#transType').combobox('getValue');
-	var payChannel = parent.$('#payChannel').combobox('getValue');
-	var result = parent.$('#result').combobox('getValue');
-	var hospDR = parent.$('#hospital').combobox('getValue');
-	var url = url + '&stDate=' + stDate + '&endDate=' + endDate + '&transType=' + transType + '&payChannel=' + payChannel;
-	url += '&result=' + result + '&hospDR=' + hospDR;
+function loadReconciliationsList(tabId, url) {
+	var stDate = parent.$("#stDate").datebox("getValue");
+	var endDate = parent.$("#endDate").datebox("getValue");
+	var transType = parent.$("#transType").combobox("getValue");
+	var payChannel = parent.$("#payChannel").combobox("getValue");
+	var result = parent.$("#result").combobox("getValue");
+	var hospDR = parent.$("#hospital").combobox("getValue");
+	var url = url + "&stDate=" + stDate + "&endDate=" + endDate + "&transType=" + transType + "&payChannel=" + payChannel;
+	url += "&result=" + result + "&hospDR=" + hospDR;
 	refreshTab(tabId, url);
 }
 
+/**
+* 2023-02-08 ZhYW Ôö¼ÓToken
+*/
 function refreshTab(tabId, url) {
-	var iframeId = 'iframe_' + tabId;
-	var content = '<iframe id="' + iframeId + '" src="' + url + '" width="100%" height="100%" scrolling="auto" frameborder="0"></iframe>';
-	$('#' + tabId).css("overflow", "hidden").panel({
+	var iframeId = "iframe_" + tabId;
+	var content = "<iframe id=\"" + iframeId + "\" src=\"" + websys_writeMWToken(url) + "\" width=\"100%\" height=\"100%\" scrolling=\"auto\" frameborder=\"0\"></iframe>";
+	$("#" + tabId).css("overflow", "hidden").panel({
 		content: content
-	}).panel('refresh');
+	}).panel("refresh");
+}
+
+function loadWorkLoadList(tabId, url) {
+	var stDate = parent.$("#stDate").datebox("getValue");
+	var endDate = parent.$("#endDate").datebox("getValue");
+	var stTime = parent.$("#stTime").timespinner("getValue");
+	var endTime = parent.$("#endTime").timespinner("getValue");
+	var guserAry = [];
+	if (parent.$("#userCombo").combobox("options").multiple) {
+		guserAry = parent.$("#userCombo").combobox("getValues");
+	}else {
+		guserAry = parent.$("#userCombo").combobox("getValue");
+	}
+	var guserStr = (guserAry.length > 0) ? String(guserAry).split(",").join("^") : "";
+	var selType = parent.$("#selType").combobox("getValue");
+	var url = url + "&StDate=" + stDate + "&EndDate=" + endDate;
+	url += "&StartTime=" + stTime + "&EndTime=" + endTime + "&UserRowId=" + guserStr;
+	url += "&DateFlag=" +selType+ "&HOSPID=" + PUBLIC_CONSTANT.SESSION.HOSPID;
+	refreshTab(tabId, url);
 }

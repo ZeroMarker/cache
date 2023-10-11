@@ -1,0 +1,51 @@
+﻿///修改与查看
+
+function EditFun(mainRow){
+	if(mainRow.detailidid!=""){
+		if(mainRow.IsAuth==1){
+			CostTravelPage(mainRow,mainRow.detailid,"0","1")
+		}else{
+			CostTravelPage(mainRow,mainRow.detailid,"0","0")
+		}
+	}else{
+		if(mainRow.billstate!="新建"&&(mainRow.billstate!="撤销")){
+		  	$("#AddUserbox").combobox({"disabled":true});
+		  	$("#AddDeptbox").combobox({"disabled":true});
+		  	$("#AddYMbox").combobox({"disabled":true});
+		  	$("#AddPaybox").combobox({"disabled":true});
+		  	$("#contMethodbox").combobox({"disabled":true});
+		  	$("#itemCodebox").combobox({"disabled":true});
+		  	$("#ecoCodebox").combobox({"disabled":true});
+		  	$("#purCodebox").combobox({"disabled":true});
+		  	$("#AddNumberbox").attr("disabled",true);
+		  	$("#AddBankbox").attr("disabled",true);
+		  	$("#AddDescbox").attr("disabled",true);
+	        $("#FundApplybox").attr("disabled",true);  //借款单号 
+	        $("#PrePayBillbox").attr("disabled",true);  //预报销单号
+	        $("#ChargeAgst").checkbox("setDisable",true);//冲抵借款
+	        $("#PrePaybox").checkbox("setDisable",true);
+		  	$('#DelBt').linkbutton('disable');
+		  	$('#ClearBt').linkbutton('disable');
+		  	$('#printBt').linkbutton('disable');
+		  	addEditFun(mainRow);
+		}else{
+			$("#AddUserbox").combobox({"disabled":false});
+		  	$("#AddDeptbox").combobox({"disabled":false});
+		  	$("#AddYMbox").combobox({"disabled":false});
+		  	$("#AddPaybox").combobox({"disabled":false});
+		  	$("#contMethodbox").combobox({"disabled":false});
+		  	$("#itemCodebox").combobox({"disabled":false});
+		  	$("#ecoCodebox").combobox({"disabled":false});
+		  	$("#purCodebox").combobox({"disabled":false});
+		  	$("#AddNumberbox").attr("disabled",false);
+		  	$("#AddBankbox").attr("disabled",false);
+		  	$("#AddDescbox").attr("disabled",false);
+	        $("#ChargeAgst").checkbox("setDisable",false);//冲抵借款
+	        $("#PrePaybox").checkbox("setDisable",false);
+		  	$('#DelBt').linkbutton('enable');
+		  	$('#ClearBt').linkbutton('disable');
+		  	$('#printBt').linkbutton('enable');
+			addEditFun(mainRow);
+		}
+	}
+}

@@ -152,6 +152,12 @@
             case "发放":
                 colorCls = "dhcpha-tm-bus-bqjs";
                 break;
+            case "加工":
+                colorCls = "dhcpha-tm-bus-hd";
+                break;
+            case "储存":
+                colorCls = "dhcpha-tm-bus-pz";
+                break;    
             default:
                 colorCls = "dhcpha-tm-bus-default";
                 break;

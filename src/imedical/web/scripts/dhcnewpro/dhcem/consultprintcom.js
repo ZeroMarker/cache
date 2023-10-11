@@ -536,17 +536,68 @@ function PrintCstNew(CstItmIDs,LgHospID){
 		myPara=myPara+"^"+"PatName"+parLimit+itmData.PatName+"("+itmData.PatSex+")";
 		myPara=myPara+"^"+"PacWardDesc"+parLimit+itmData.PatLoc;
 		myPara=myPara+"^"+"PatBedDesc"+parLimit+itmData.PatBed;
+		myPara=myPara+"^"+"PatAge"+parLimit+itmData.PatAge; //hxy 2021-06-23
 		myPara=myPara+"^"+"AppConsDate"+parLimit+itmData.CstRDate+"  "+itmData.CstRTime;
-		myPara=myPara+"^"+"ConsTreProPurpose"+parLimit+"病情摘要:"+itmData.CstTrePro+"\r\n"+"会诊目的及要求："+itmData.CstPurpose;
+		//myPara=myPara+"^"+"ConsTreProPurpose"+parLimit+"病情摘要:"+"\r\n"+$_TrsTxtToSymbol(itmData.CstTrePro).replace(/\^/g,"Λ").replace(/\t/g,"   ")+"\r\n"+"会诊目的及要求："+"\r\n"+$_TrsTxtToSymbol(itmData.CstPurpose).replace(/\^/g,"Λ"); //hxy 2022-04-02 add ^ //hxy 2022-12-22 add 换行和\t
+		myPara=myPara+"^"+"ConsTreProPurpose"+parLimit+$_TrsTxtToSymbol(itmData.CstTrePro).replace(/\^/g,"Λ").replace(/\t/g,"   ");
+		myPara=myPara+"^"+"ConsPurpose"+parLimit+$_TrsTxtToSymbol(itmData.CstPurpose).replace(/\^/g,"Λ"); //hxy 2022-04-02 add ^ //hxy 2022-12-22 add 换行和\t
 		myPara=myPara+"^"+"ConsAppLoc"+parLimit+itmData.CstRLoc;
-		myPara=myPara+"^"+"ConsAppUser"+parLimit+itmData.CstRUser;
+		//myPara=myPara+"^"+"ConsAppUser"+parLimit+itmData.CstRUser; //hxy 2020-12-30 st
+		if(itmData.CstRUserImg!="") {
+			myPara=myPara+"^"+"CstRUserImg"+parLimit+itmData.CstRUserImg;
+		}else if(itmData.CstRUser!=""){
+			myPara=myPara+"^"+"ConsAppUser"+parLimit+itmData.CstRUser;
+		}//ed
 		myPara=myPara+"^"+"ConsDate"+parLimit+itmData.CstNDate+"  "+itmData.CstNTime;
-		myPara=myPara+"^"+"Opinion"+parLimit+itmData.CsOpinion;
+		//myPara=myPara+"^"+"Opinion"+parLimit+$_TrsTxtToSymbol(itmData.CsOpinion.replace(new RegExp("<br>","gm"),"\r\n")).replace(/\^/g,"Λ"); //hxy 2021-03-05 add replace(new RegExp("<br>","gm"),"\r\n")
+		myPara=myPara+"^"+"Opinion"+parLimit+$_TrsTxtToSymbol(itmData.CsOpinion.replace(new RegExp("<br>","gm"),"  ")).replace(/\^/g,"Λ"); //hxy 2021-03-05 add replace(new RegExp("<br>","gm"),"\r\n")
 		myPara=myPara+"^"+"ConsLoc"+parLimit+itmData.CsLocDesc;
-		myPara=myPara+"^"+"ConsUser"+parLimit+itmData.CsUser;
+		myPara=myPara+"^"+"CsProp"+parLimit+itmData.CsProp;
+		if(itmData.CsUserImg!="") { //hxy 20020-12-30 st
+			myPara=myPara+"^"+"CsUserImg"+parLimit+itmData.CsUserImg;
+		}else{//ed
+			if(itmData.CsUser!=""){
+				myPara=myPara+"^"+"ConsUser"+parLimit+itmData.ConsPrvTp+"-"+itmData.CsUser;
+			}
+		}
+		
 		myPara=myPara+"^"+"HospTile"+parLimit+itmData.LgHospName;
 		
-		DHC_CreateByXML(LODOP,myPara,"",[],"PRINT-CST-NT");  //MyPara 为xml打印要求的格式
+		/*if(itmData.OtherLocDoc!=""){ //hxy 2021-03-05 st
+			var OtherNum=itmData.OtherLocDoc.split(",").length; 
+			var OtherArr=itmData.OtherLocDoc.split(","); 
+			var OtherStr="";
+			if(OtherNum>0){
+				for (i = 0; i < OtherNum; i++) {
+					OtherStr=OtherStr+'会诊科室:'+OtherArr[i].split("@")[0];
+					OtherStr=OtherStr+'  会诊人:'+OtherArr[i].split("@")[1]+'  ';			
+				}
+			} 
+			myPara=myPara+"^"+"OtherLocDoc"+parLimit+OtherStr;
+		}//ed*/
+		
+		var ListInfo=""; //hxy 2021-06-04 st
+		if(itmData.OtherLocDoc!=""){
+			var OtherNum=itmData.OtherLocDoc.split("#").length; 
+			var OtherArr=itmData.OtherLocDoc.split("#"); 
+			if(OtherNum>0){
+				for (i = 0; i < OtherNum; i++) {
+					if(i==0){
+						ListInfo=ListInfo+'会诊科室:'+OtherArr[i].split("@")[0]+'^';
+					}else{
+						ListInfo=ListInfo+parLimit+'会诊科室:'+OtherArr[i].split("@")[0]+'^';	
+					}
+					if(OtherArr[i].split("@")[2]!=""){
+						ListInfo=ListInfo+'会诊人:^'+OtherArr[i].split("@")[2];
+					}else{
+						ListInfo=ListInfo+'会诊人:'+OtherArr[i].split("@")[1]+'^^';
+					}
+					
+				}
+			} 
+		}
+		DHC_CreateByXML(LODOP,myPara,ListInfo,[],"PRINT-CST-NT",{printListByText:true});  //MyPara 为xml打印要求的格式 //hxy 2021-06-04 add {printListByText:true} 是list支持base64的必须参数，因为封装里没默认上
+		//DHC_CreateByXML(LODOP,myPara,"",[],"PRINT-CST-NT");  //MyPara 为xml打印要求的格式 //ed
 		LODOP.NEWPAGE();
 	}
 	var printRet = LODOP.PRINT();

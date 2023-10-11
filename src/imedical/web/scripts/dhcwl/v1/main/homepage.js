@@ -52,7 +52,8 @@ function clickButton(obj){
 
 /*--根据用户点击打开相应的窗口--*/
 function openNewWindow(url,ID,title){
-	var realUrl = "dhcwlredirect.csp?url=" + url;
+	//var realUrl = "dhcwlredirect.csp?url=" + url;
+	var realUrl = "dhcwlredirect.csp?url=" + url + "&MWToken=" + document.location.href.split("MWToken=")[1];
 	if (productWindowOpen.hasOwnProperty(ID)){
 		obj = productWindowOpen[ID];
 		if (!obj.closed){

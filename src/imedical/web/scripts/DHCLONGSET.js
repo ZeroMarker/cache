@@ -90,6 +90,7 @@ function listSet()
 
   var ifLongReformNextPage=document.getElementById("ifLongReformNextPage");//长期医嘱单重整是换页
   var ifLongReformRedLine=document.getElementById("ifLongReformRedLine");//长期医嘱单重整是划线
+  var ifTranslate=document.getElementById("ifTranslate");//医嘱单是否翻译
   
   var arr=ret.split("!");
   //alert(ret)
@@ -126,6 +127,7 @@ function listSet()
   
   var ifLongReformNextPageVal=arr[24];//长期医嘱单重整是换页
   var ifLongReformRedLineVal=arr[25];//长期医嘱单重整是划线
+  var ifTranslateVal=arr[26];//医嘱单是否翻译
   
   for (i=0;i<locstr.length;i++)
   {
@@ -176,6 +178,8 @@ function listSet()
   
   ifLongReformNextPage.checked= ifLongReformNextPageVal=="true";//长期医嘱单产后是换页
   ifLongReformRedLine.checked=ifLongReformRedLineVal=="true";//长期医嘱单产后是划线
+  ifTranslate.checked=ifTranslateVal=="true"; //医嘱单是否翻译
+  
 }
 function addPri_Click()
 {  //add longtime order include priority
@@ -294,8 +298,9 @@ function Save_Click()
   
   var ifLongReformNextPage=document.getElementById("ifLongReformNextPage");//长期医嘱单重整是换页
   var ifLongReformRedLine=document.getElementById("ifLongReformRedLine");//长期医嘱单重整是划线
+  var ifTranslate=document.getElementById("ifTranslate");//医嘱单是否翻译
   
-  var resStr=cspRunServerMethod(SaveLongSet,longstr+"!"+temstr+"!"+medcat+"!"+NotLoc+"!"+NotOrdCat+"!"+NotSordCat+"!"+ifStop.checked+"!"+ifnur.checked+"!"+ifShowOrderGroupFlag.checked+"!"+dateType.value+"!"+timeType.value+"!"+ifLongNextPage.checked+"!"+ifLongRedLine.checked+"!"+ifTempNextPage.checked+"!"+ifTempRedLine.checked+"!"+ifLongOperNextPage.checked+"!"+ifLongOperRedLine.checked+"!"+ifTempOperNextPage.checked+"!"+ifTempOperRedLine.checked+"!"+OperOrderArcimDr.value+"!"+OperOrderArcim.value+"!"+ifLongDeliverNextPage.checked+"!"+ifLongDeliverRedLine.checked+"!"+ifTempDeliverNextPage.checked+"!"+ifTempDeliverRedLine.checked+"!"+DeliverOrderArcimDr.value+"!"+DeliverOrderArcim.value+"!"+ifLongReformNextPage.checked+"!"+ifLongReformRedLine.checked+"!"+CONST_HOSPID);
+  var resStr=cspRunServerMethod(SaveLongSet,longstr+"!"+temstr+"!"+medcat+"!"+NotLoc+"!"+NotOrdCat+"!"+NotSordCat+"!"+ifStop.checked+"!"+ifnur.checked+"!"+ifShowOrderGroupFlag.checked+"!"+dateType.value+"!"+timeType.value+"!"+ifLongNextPage.checked+"!"+ifLongRedLine.checked+"!"+ifTempNextPage.checked+"!"+ifTempRedLine.checked+"!"+ifLongOperNextPage.checked+"!"+ifLongOperRedLine.checked+"!"+ifTempOperNextPage.checked+"!"+ifTempOperRedLine.checked+"!"+OperOrderArcimDr.value+"!"+OperOrderArcim.value+"!"+ifLongDeliverNextPage.checked+"!"+ifLongDeliverRedLine.checked+"!"+ifTempDeliverNextPage.checked+"!"+ifTempDeliverRedLine.checked+"!"+DeliverOrderArcimDr.value+"!"+DeliverOrderArcim.value+"!"+ifLongReformNextPage.checked+"!"+ifLongReformRedLine.checked+"!"+CONST_HOSPID+"!"+ifTranslate.checked);
   if (resStr=="0")
   {
 	  alert("保存成功")

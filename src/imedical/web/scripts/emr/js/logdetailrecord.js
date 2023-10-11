@@ -29,16 +29,22 @@ function showLogDetail(getdata_url)
 			{field:'Action',title:'操作名称',width:90,sortable:true,
 				formatter: function(value,row,index){
 					if(row.CASignID != ""){
-						return "<a href='#' style='text-decoration:none;color:blue;' onclick='openSignDetail("+row.CASignID+")'>"+value+"</a>"
+						return "<a href='#' style='text-decoration:none;color:blue;' onclick='openSignDetail("+row.CASignID+")'>"+emrTrans(value)+"</a>"
 					}else{
-						return value	
+						return emrTrans(value)	
 					}
 				}
 			},
 			{field:'TplName',title:'模板名称',width:100,sortable:true,resizable: true},
 			{field:'TplCreateDate',title:'创建日期',width:100,sortable:true},
 			{field:'TplCreateTime',title:'创建时间',width:90,sortable:true},
-			{field:'ProductSource',title:'产品模块',width:75,sortable:true}
+            {field:'TplHappenDate',title:'记录日期',width:100,sortable:true},
+            {field:'TplHappenTime',title:'记录时间',width:90,sortable:true},
+			{field:'ProductSource',title:'产品模块',width:75,sortable:true,
+				formatter: function(value,row,index){
+						return emrTrans(value)				
+				}
+			}
 		]]
 	});
 }

@@ -15,23 +15,23 @@ Ext.onReady(function() {
 	var StDateField = new Ext.ux.DateField({
 		xtype: 'datefield',
 		format: 'Y-m-d',
-		fieldLabel: '开始日期',
+		fieldLabel: $g('开始日期'),
 		name: 'startdt',
 		id: 'startdt',
-		invalidText: '无效日期格式,正确格式是:日/月/年,如:15/02/2011',
+		invalidText: $g('无效日期格式,正确格式是:日/月/年,如:15/02/2011'),
 		anchor: '90%',
 		value: new Date
 	}) 
 	var EndDateField = new Ext.ux.DateField({
 		format: 'Y-m-d',
-		fieldLabel: '截止日期',
+		fieldLabel: $g('截止日期'),
 		name: 'enddt',
 		id: 'enddt',
 		anchor: '90%',
 		value: new Date
 	})
 	var PhaLoc = new Ext.ux.DispLocComboBox({
-		fieldLabel: '药房科室',
+		fieldLabel: $g('药房科室'),
 		id: 'PhaLoc',
 		name: 'PhaLoc',
 		anchor: '90%'
@@ -40,7 +40,7 @@ Ext.onReady(function() {
 	var StkGrpType = new Ext.ux.form.LovCombo({
 		id : 'StkGrpType',
 		name : 'StkGrpType',
-		fieldLabel : '类组',
+		fieldLabel : $g('类组'),
 		listWidth : 400,
 		anchor: '90%',
 		labelStyle : "text-align:right;width:100;",
@@ -54,7 +54,7 @@ Ext.onReady(function() {
 		displayField : 'Description',
 		triggerAction : 'all'
 	});
-	var FindTypeData = [['入库', '1'], ['门急诊', '2'], ['住院', '3']];
+	var FindTypeData = [[$g('入库'), '1'], [$g('门急诊'), '2'], [$g('住院'), '3']];
 	var FindTypeStore = new Ext.data.SimpleStore({
 		fields: ['typedesc', 'typeid'],
 		data: FindTypeData
@@ -66,15 +66,15 @@ Ext.onReady(function() {
 		anchor: '90%',
 		emptyText: '',
 		id: 'FindTypeCombo',
-		fieldLabel: '统计方式',
+		fieldLabel: $g('统计方式'),
 		valueField: 'typeid',
 		triggerAction: 'all'
 	});	
 	var FindButton = new Ext.Button({
 		width: 65,
 		id: "FindButton",
-		text: '统计',
-		tooltip: '统计数据',
+		text: $g('统计'),
+		tooltip: $g('统计数据'),
 		icon: "../scripts/dhcpha/img/find.gif",
 		listeners: {
 			"click": function() {
@@ -85,7 +85,7 @@ Ext.onReady(function() {
 	
 	var HelpBT = new Ext.Button({
 	　　　　id:'HelpBtn',
-			text : '帮助',
+			text : $g('帮助'),
 			width : 70,
 			height : 30,
 			renderTo: Ext.get("tipdiv"),
@@ -98,13 +98,13 @@ Ext.onReady(function() {
 		labelWidth: 90,
 		labelAlign: 'right',
 		region: 'north',
-		title: '合理用药监测网数据上报',
+		title: $g('合理用药监测网数据上报'),
 		frame: true,
 		height: 120,
 		tbar: [FindButton,'-',HelpBT],
 		items: [{
 			xtype : 'fieldset',
-			title : '查询条件',
+			title : $g('查询条件'),
 			style: 'padding-top:5px;padding-bottom:5px',
 			defaults:{border:false},
 			layout : 'column',	
@@ -148,7 +148,7 @@ Ext.onReady(function() {
 		margins: '3 3 3 0',
 		activeTab: 0,
 		items: [{
-			title: '统计列表',
+			title: $g('统计列表'),
 			id: 'list',
 			frameName: 'list',
 			html: '<iframe id="list" width=100% height=100% src= ></iframe>'
@@ -169,7 +169,7 @@ Ext.onReady(function() {
 		//GetStrParam();
 		var findtype = Ext.getCmp("FindTypeCombo").getValue();
 		if (findtype == "") {
-			Msg.info("error", "统计方式不能为空!");
+			Msg.info("error", $g("统计方式不能为空!"));
 			return;
 		}
 		var sdate = Ext.getCmp("startdt").getRawValue();
@@ -204,7 +204,7 @@ Ext.onReady(function() {
         width: 250,
         anchorOffset: 50,
 		hideDelay : 90000,
-        html: "<font size=2 color=blue ><b>1.入库：科室选填，不填则查询所有的科室有的药品;日期只过滤业务数据，不过滤科室当前所有库存项<br>2.门急诊、住院：科室必填；只统计科室发药数据</b></font>"
+        html: $g("<font size=2 color=blue ><b>1.入库：科室选填，不填则查询所有的科室有的药品;日期只过滤业务数据，不过滤科室当前所有库存项<br>2.门急诊、住院：科室必填；只统计科室发药数据</b></font>")
    });
     Ext.getCmp('HelpBtn').focus('',100); //初始化页面给某个元素设置焦点
 

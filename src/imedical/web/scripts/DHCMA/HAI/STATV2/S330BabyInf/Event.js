@@ -23,60 +23,87 @@
    	}
 
    	obj.LoadRep = function(){
-		var aHospID = $('#cboHospital').combobox('getValue');
-		var DateFrom = $('#dtDateFrom').datebox('getValue');
-		var DateTo= $('#dtDateTo').datebox('getValue');
-		var Statunit = Common_CheckboxValue('chkStatunit');
-		var Qrycon = $('#aQryCon').combobox('getValue');
+		var aHospID 	= $('#cboHospital').combobox('getValues').join('|');
+		var aDateFrom 	= $('#dtDateFrom').datebox('getValue');
+		var aDateTo		= $('#dtDateTo').datebox('getValue');
+		var aLocType 	= Common_CheckboxValue('chkStatunit');
+		var aQrycon 	= $('#cboQryCon').combobox('getValue');
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
+		
 		ReportFrame = document.getElementById("ReportFrame");
-		if(Qrycon==""){
-			$.messager.alert("提示","请选择筛选条件！", 'info');
-			return;	
-		}
-		if(DateFrom > DateTo){
+		if(aDateFrom > aDateTo){
 			$.messager.alert("提示","开始日期应小于或等于结束日期！", 'info');
 			return;
 		}
-		if ((DateFrom=="")||(DateTo=="")){
+		if ((aDateFrom=="")||(aDateTo=="")){
 			$.messager.alert("提示","请选择开始日期、结束日期！", 'info');
 			return;
 		}
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S330BabyInf.raq&aDateFrom=' + DateFrom +'&aDateTo='+ DateTo +'&aHospIDs='+aHospID+'&aLocIDs='+""+'&aLocType='+Statunit+'&aQrycon='+Qrycon ;
+		if ((aStatDimens=="")){
+			$.messager.alert("提示","请选择展示维度！", 'info');
+			return;
+		}
+		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S330BabyInf.raq&aHospIDs='+aHospID +'&aDateFrom=' + aDateFrom +'&aDateTo='+ aDateTo+'&aLocType='+aLocType+'&aQryCon='+aQrycon+'&aStatDimens='+aStatDimens+'&aLocIDs='+aLocIDs+'&aPath='+cspPath;	
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
 			ReportFrame.src = p_URL;
 		}	
 	}
+	obj.up=function(x,y){
+        if(obj.sortName=="感染例次数")
+		{
+			return y.InfPatCnt-x.InfPatCnt;
+		}
+		else
+		{
+			return y.InfPatRatio-x.InfPatRatio;
+		}
+    }
    	obj.ShowEChaert1 = function(){
 		obj.myChart.clear();
 		
-		
 		 //当月科室感染率图表
-		var HospID = $('#cboHospital').combobox('getValue');
-		var DateFrom = $('#dtDateFrom').datebox('getValue');
-		var DateTo= $('#dtDateTo').datebox('getValue');
-		var StaType = Common_CheckboxValue('chkStatunit');
-		var Qrycon = $('#aQryCon').combobox('getValue');
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S330BabyInf' + "&QueryName=" + 'QryInfPreBaby' + "&Arg1=" + DateFrom + "&Arg2=" + DateTo+  "&Arg3=" + HospID +"&Arg4=" +""+"&Arg5=" + StaType+"&Arg6=" +Qrycon+"&ArgCnt=" + 6;
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 30000, //30秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
+		var aHospID   = $('#cboHospital').combobox('getValues').join('|');
+		var aDateFrom = $('#dtDateFrom').datebox('getValue');
+		var aDateTo   = $('#dtDateTo').datebox('getValue');
+		var aLocType  = Common_CheckboxValue('chkStatunit');
+		var aQryCon   =  $('#cboQryCon').combobox('getValue');
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');
+			
+		obj.myChart.showLoading();
+		$cm({
+			ClassName:'DHCHAI.STATV2.S330BabyInf',
+			QueryName:'QryInfPreBaby',
+			aHospIDs:aHospID,
+			aDateFrom:aDateFrom,
+			aDateTo:aDateTo,
+			aLocType:aLocType,
+			aQryCon:aQryCon,
+			aStatDimens:aStatDimens,
+			aLocIDs:aLocIDs,
+			page:1,    //可选项，页码，默认1
+			rows:999   //可选项，获取多少条数据，默认50
+		},function(rs){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			obj.echartLocInfRatio(rs);
+			obj.sortName="感染例次率"; //初始化排序指标
+			obj.myChart.off('legendselectchanged'); //取消事件，避免事件绑定重复导致多次触发
+			obj.myChart.on('legendselectchanged', function(legObj){
+				//处理排序问题 
+				//如果是重复点击认为是需要执行隐藏处理,不想隐藏就不用判断了	
+				if(obj.sortName!=legObj.name)
+				{
+					obj.sortName=legObj.name;
+					obj.echartLocInfRatio(rs);
+				}
+				else
+				{
+					obj.sortName="";  //初始化
+				}
+			});
 		});
 		
 	   obj.echartLocInfRatio = function(runQuery){
@@ -85,19 +112,22 @@
 			var arrInfRatio = new Array();
 			var arrInfCount = new Array();
 			obj.arrLocG= new Array();
-			var arrRecord = runQuery.record;
-			
+			var arrRecord = runQuery.rows;
+			var arrlength		= 0;
 			for (var indRd = 0; indRd < arrRecord.length; indRd++){
 				var rd = arrRecord[indRd];
 				//去掉全院、医院、科室组
-				if ((rd["DimenCode"].indexOf('-A-')>-1)||(rd["DimenCode"].indexOf('-H-')>-1)||(rd["DimenCode"].indexOf('-G-')>-1)) {
+				if ((rd["xDimensKey"].indexOf('-A-')>-1)||(rd["xDimensKey"].indexOf('-H-')>-1)||(rd["xDimensKey"]=="")||(rd["xDimensKey"].indexOf('-G-')>-1)) {
 					delete arrRecord[indRd];
+					arrlength = arrlength + 1;
 					continue;
 				}
-				rd["LocDesc"] = $.trim(rd["LocDesc"]); //去掉空格
-				rd["INFCount"] = parseFloat(parseFloat(rd["INFCount"].replace('%','').replace('‰','')).toFixed(2));
+				rd["DimensDesc"] = $.trim(rd["DimensDesc"]); //去掉空格
+				rd["InfPatRatio"] = parseFloat(rd["InfPatRatio"].replace('%','').replace('‰','')).toFixed(2);
 			}
-			arrRecord = arrRecord.sort(Common_GetSortFun('desc','INFCount'));  //排序
+			//arrRecord = arrRecord.sort(Common_GetSortFun('desc','InfPatCnt'));  //排序
+			arrRecord = arrRecord.sort(obj.up);
+			arrRecord.length = arrRecord.length - arrlength;
 			if(obj.numbers=="ALL"){
 				obj.numbers = arrRecord.length;
 			}else{
@@ -109,10 +139,10 @@
 				if(rd==undefined){   //去掉全院、医院、科室组后,会有数据变为undefined
 					continue;
 				}else{
-					arrViewLoc.push(rd["LocDesc"]);
-					arrInfCount.push(rd["INFCount"]);
-					arrInfRatio.push(parseFloat(rd["INFRatio"]).toFixed(2));
-					obj.arrLocG.push(rd["DimenCode"]);
+					arrViewLoc.push(rd["DimensDesc"]);
+					arrInfCount.push(rd["InfPatCnt"]);
+					arrInfRatio.push(parseFloat(rd["InfPatRatio"]).toFixed(2));
+					obj.arrLocG.push(rd["xDimensKey"]);
 				}
 			}
 			

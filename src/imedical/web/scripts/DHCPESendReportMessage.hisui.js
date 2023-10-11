@@ -41,7 +41,17 @@ function BSendMessage_click()
 	var Content="";
 	var Type="RP"
 	var Content=$("#Content").val();
-	
+
+	if(Content==""){
+		$.messager.alert("提示","短信内容不能为空！","info");
+		return false;
+	}
+
+	if(selectrow.length=="0"){
+		$.messager.alert("提示","请选择待发送短信的人员！","info");
+		return false;
+	}
+
 	for(var i=0;i<selectrow.length;i++)
 	{
 		var ID=selectrow[i].TID;
@@ -152,6 +162,7 @@ function FindSendReportInfo()
 //就诊记录弹窗
 var openWin = function(PIADMs){
 	
+	$("#myWin").show();
 	
 	$HUI.window("#myWin",{
 		title:"就诊记录",
@@ -164,7 +175,7 @@ var openWin = function(PIADMs){
 	
 	
 	
-	var QryLisObj = $HUI.datagrid("#PIADMSQueryTab",{
+	var PIADMSQueryTabObj = $HUI.datagrid("#PIADMSQueryTab",{
 		url:$URL,
 		fit : true,
 		border : false,
@@ -200,6 +211,7 @@ var openWin = function(PIADMs){
 			{field:'BSendReport',title:'完成报告',width:80,align:'center',
 				formatter:function(value,rowData,rowIndex){
 					if(rowData.id!=""){
+						return "<span style='cursor:pointer;' class='icon-ok' title='完成报告' onclick='SendReport("+rowData.id+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";
 						return '<a><img style="padding:0 10px 0px 0px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/ok.png"  title="完成报告" border="0" onclick="SendReport('+rowData.id+')"></a>';
 					
 					}
@@ -242,7 +254,9 @@ function Info()
 	var VIPLevel=$("#VIPLevel").combobox('getValue');
 	if (($("#VIPLevel").combobox('getValue')==undefined)||($("#VIPLevel").combobox('getValue')=="")){var VIPLevel="";}
 	
-	var MessContent=tkMakeServerCall("web.DHCPE.FetchReport","GetContent",IFOLD,VIPLevel);
+	var LocID=session['LOGON.CTLOCID'];
+	var MessContent=tkMakeServerCall("web.DHCPE.FetchReport","GetContent",IFOLD,VIPLevel,LocID);
+
 	$("#Content").val(MessContent);
 }
 
@@ -338,6 +352,7 @@ function InitSendReportataGrid()
 			{field:'BCancelSendReport',title:'撤销',width:'80',align:'center',
 				formatter:function(value,rowData,rowIndex){
 					if((rowData.TID!="")&&(rowData.TSendUser!="")){
+						return "<span style='cursor:pointer;' class='icon-cancel' title='撤销' onclick='CancelSendReport("+rowData.TID+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";
 						return '<a><img style="padding:0 10px 0px 0px" src="../scripts_lib/hisui-0.1.0/dist/css/icons/cancel.png"  title="撤销" border="0" onclick="CancelSendReport('+rowData.TID+')"></a>';
 					
 					}
@@ -374,7 +389,7 @@ function InitCombobox()
 {
 	  // VIP等级	
 	var VIPObj = $HUI.combobox("#VIPLevel",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindVIP&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindVIP&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
 		valueField:'id',
 		textField:'desc'
 	})

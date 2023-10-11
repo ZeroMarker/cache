@@ -94,6 +94,7 @@ function Delete_Click()
 					ClassName: 'web.DHCPE.SpecialItemContral',
 					QueryName: 'SearcgSIContralDetail',
 					UserID: UserID,
+					hospId:session['LOGON.HOSPID']
 		
 				});
      
@@ -131,6 +132,7 @@ function Delete_Click()
 			ClassName:"web.DHCPE.SpecialItemContral",
 			QueryName:"SearcgSIContralDetail",
 			UserID:UserID,
+			hospId:session['LOGON.HOSPID']
 	        
 			});
 
@@ -158,6 +160,10 @@ function InitCombobox()
 		textField:'DocName',
 		onBeforeLoad:function(param){
 			param.Desc = param.q;
+			param.Type="B";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID'];
+
 		},
 		columns:[[
 		    {field:'DocDr',title:'ID',width:50},
@@ -223,6 +229,7 @@ function loadSpecItemContDetail(row) {
 		ClassName: 'web.DHCPE.SpecialItemContral',
 		QueryName: 'SearcgSIContralDetail',
 		UserID: row.UserID,
+		hospId:session['LOGON.HOSPID']
 		
 	});
      $('#UserID').val(row.UserID);
@@ -251,6 +258,7 @@ function  InitSpecItemContDetailDataGrid()
 			ClassName:"web.DHCPE.SpecialItemContral",
 			QueryName:"SearcgSIContralDetail",
 			UserID:$("#UserID").val(),
+			hospId:session['LOGON.HOSPID']
 		},
 		frozenColumns:[[
 			{title: 'Ñ¡Ôñ',field: 'Select',width: 60,checkbox:true},

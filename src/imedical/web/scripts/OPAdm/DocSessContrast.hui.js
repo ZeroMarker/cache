@@ -1,34 +1,46 @@
 var PageLogicObj={
 	m_CareTypeListDataGrid:"",
 	m_ResListDataGrid:"",
+	m_SessDeptListDataGrid:"",
+	m_LocListTabDataGrid:"",
 	editRow:-1,
 	editRowNew:-1,
+	editRowSessDept:undefined,
+	ShowDeptSessRowid:""
 };
-var SessObj={SessRowid:'',SessDesc:''};
-var ResObj={LocRowid:'',LocDesc:'',ResRowid:'',ResDesc:'',SessRowid:'',SessDesc:''};
+var PageTempObj={
+	SessObj:{SessRowid:'',SessDesc:''},
+	ResObj:{LocRowid:'',LocDesc:'',ResRowid:'',ResDesc:'',SessRowid:'',SessDesc:''},
+	SessDeptObj:{NoAuthDeptIDStr:'',AuthDeptIDStr:'',AuthDeptCount:'',SessRowid:'',SessDesc:''}
+}
 $(document).ready(function(){
 	var hospComp = GenHospComp("DHC_RBSessContrast");
 	hospComp.jdata.options.onSelect = function(e,t){
 		$('#Combo_CTLoc').combobox('reload');
 		$HUI.combobox('#Combo_CTLoc').setValue("");
-		LoadCareTypeListDataGridData();
-		LoadResListDataGridData();
+		LoadDataGridData();
 	}
 	Init();
 	InitEvent();
 })
 $(window).load(function(){
+	LoadDataGridData();
+});
+
+function LoadDataGridData(){
 	LoadCareTypeListDataGridData();
 	LoadResListDataGridData();
-});
+}
 
 function Init(){
 	InitFindLoc();
 	PageLogicObj.m_CareTypeListDataGrid=InitCareTypeListDataGrid();
 	PageLogicObj.m_ResListDataGrid=InitResListDataGrid();
+	PageLogicObj.m_SessDeptListDataGrid=InitSessDeptListDataGrid();
 }
 function InitEvent(){
 	$('#BFind').click(LoadResListDataGridData);
+	$('#BSave').click(SaveLocStrToDataGrid);
 	$(document.body).bind("keydown",BodykeydownHandler)
 }
 
@@ -60,8 +72,8 @@ function InitCareTypeListDataGrid(){
 	            var rowIndex=PageLogicObj.m_CareTypeListDataGrid.datagrid("getRowIndex",rowObj);
 	            //PageLogicObj.m_CareTypeListDataGrid.datagrid("rejectChanges");
 	            PageLogicObj.editRow=EditDataGridRow(PageLogicObj.m_CareTypeListDataGrid,rowIndex,PageLogicObj.editRow);
-	            SessObj.SessRowid=rowObj.SessRowid;
-				SessObj.SessDesc=rowObj.SessDesc;
+	            PageTempObj.SessObj.SessRowid=rowObj.SessRowid;
+				PageTempObj.SessObj.SessDesc=rowObj.SessDesc;
 	        }else
             	$.messager.alert("提示","请选择需要编辑的行","info");
         	}
@@ -82,13 +94,13 @@ function InitCareTypeListDataGrid(){
 							param.HospID=$HUI.combogrid('#_HospList').getValue();
 						},
 					onSelect:function(record){
-						SessObj.SessRowid=record.SessRowid;
-						SessObj.SessDesc=record.SessDesc;
+						PageTempObj.SessObj.SessRowid=record.SessRowid;
+						PageTempObj.SessObj.SessDesc=record.SessDesc;
 					},
 					onChange:function(newValue,oldValue){
 						if (newValue==""){
-							SessObj.SessRowid="";
-							SessObj.SessDesc="";
+							PageTempObj.SessObj.SessRowid="";
+							PageTempObj.SessObj.SessDesc="";
 						}
 					}
 				}
@@ -106,25 +118,28 @@ function InitCareTypeListDataGrid(){
 		rownumbers:true,
 		pagination : true,  
 		rownumbers : true,  
-		pageSize: 20,
-		pageList : [20,50,100],
+		pageSize: 10,
+		pageList : [10,20,50],
 		idField:'CareTpRowid',
 		columns :Columns,
 		toolbar:toobar,
+		onClickRow: function (rowIndex, row) {
+			LoadSessDeptDataGridData(row.CareTpRowid);
+		},
 		onDblClickRow: function (rowIndex, row) {
 			if (rowIndex!=PageLogicObj.editRow){
             	PageLogicObj.editRow=EditDataGridRow(CareTypeListDataGrid,rowIndex,PageLogicObj.editRow);
-            	SessObj.SessRowid=row.SessRowid;
-				SessObj.SessDesc=row.SessDesc;
+            	PageTempObj.SessObj.SessRowid=row.SessRowid;
+				PageTempObj.SessObj.SessDesc=row.SessDesc;
             }
         },onAfterEdit: function (rowIndex, rowData, changes) {
-	        //if(SessObj.SessRowid!=""){
+	        //if(PageTempObj.SessObj.SessRowid!=""){
 		        $(this).datagrid('updateRow',{
 					index:rowIndex,
-					row:SessObj
+					row:PageTempObj.SessObj
 				});
 	        //}
-			SessObj={SessRowid:'',SessDesc:''};
+			PageTempObj.SessObj={SessRowid:'',SessDesc:''};
             PageLogicObj.editRow = -1;
         }
 		
@@ -151,9 +166,10 @@ function LoadCareTypeListDataGridData(){
 		rows:99999
 	},function(GridData){
 		PageLogicObj.editRow=-1;
+		PageLogicObj.m_CareTypeListDataGrid.datagrid('clearSelections').datagrid('clearChecked'); 	
 		PageLogicObj.m_CareTypeListDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
-		PageLogicObj.m_CareTypeListDataGrid.datagrid('clearSelections').datagrid('clearChecked'); 
-	}); 	
+		LoadSessDeptDataGridData();
+	}); 
 }
 
 function SaveCareTypeClickHandle(){
@@ -186,7 +202,7 @@ function InitResListDataGrid(){
 			iconCls: 'icon-add',
 			handler: function() {
 				if(PageLogicObj.editRowNew!=-1){
-					$.messager.alert("提示", "有正在编辑的行，请先点击保存", "info");
+					$.messager.alert("提示", "有正在编辑的行，请先点击保存!", "info");
 		        	return false;	
 				}
 				if(!CheckResRequire()) return;
@@ -210,8 +226,8 @@ function InitResListDataGrid(){
 			text: '取消编辑',
 			iconCls: 'icon-edit',
 			handler: function() {
-                PageLogicObj.m_ResListDataGrid.datagrid("rejectChanges").datagrid("unselectAll");
-                //PageLogicObj.m_ResListDataGrid.datagrid("unselectAll");  
+                PageLogicObj.m_ResListDataGrid.datagrid("rejectChanges").datagrid("clearSelections");
+                //PageLogicObj.m_ResListDataGrid.datagrid("clearSelections");  
                 // rejectChanges没回滚???
                 LoadResListDataGridData();  
                 PageLogicObj.editRowNew = -1;
@@ -246,8 +262,8 @@ function InitResListDataGrid(){
 							param.HospID=$HUI.combogrid('#_HospList').getValue();
 						},
 						onSelect:function(record){
-							ResObj.LocRowid=record.LocRowid;
-							ResObj.LocDesc=record.LocDesc;
+							PageTempObj.ResObj.LocRowid=record.LocRowid;
+							PageTempObj.ResObj.LocDesc=record.LocDesc;
 							var rows=PageLogicObj.m_ResListDataGrid.datagrid("selectRow",PageLogicObj.editRowNew).datagrid("getSelected");
 	                        rows.LocRowid=record.LocRowid
 							//科室医生资源combobox联动
@@ -255,10 +271,10 @@ function InitResListDataGrid(){
 							if(obj){
 								var CareTarget=obj.target;
 								CareTarget.combobox('clear');
-								var url=$URL+"?ClassName=web.DHCDocSessContrast&QueryName=QueryLocRes&LocId="+ResObj.LocRowid+"&ResultSetType=array";
+								var url=$URL+"?ClassName=web.DHCDocSessContrast&QueryName=QueryLocRes&LocId="+PageTempObj.ResObj.LocRowid+"&ResultSetType=array";
 								CareTarget.combobox('reload',url);
 								CareTarget.combobox("select","");
-								ResObj.ResRowid="";
+								PageTempObj.ResObj.ResRowid="";
 								rows.ResRowid="";
 							}
 						},
@@ -267,8 +283,8 @@ function InitResListDataGrid(){
 						},
 						onChange:function(newValue,oldValue){
 							if (newValue==""){
-								ResObj.LocRowid="";
-								ResObj.LocDesc="";
+								PageTempObj.ResObj.LocRowid="";
+								PageTempObj.ResObj.LocDesc="";
 							}
 						}
 					}
@@ -290,23 +306,23 @@ function InitResListDataGrid(){
 					options:{
 						valueField:'ResRowid',
 						textField:'ResDesc',
-						url:$URL+"?ClassName=web.DHCDocSessContrast&QueryName=QueryLocRes&LocId="+ResObj.LocRowid+"&ResultSetType=array",
+						url:$URL+"?ClassName=web.DHCDocSessContrast&QueryName=QueryLocRes&LocId="+PageTempObj.ResObj.LocRowid+"&ResultSetType=array",
 						required:false,
 						editable:true,
 						panelHeight:'300',
 						onSelect:function(record){
 							var rows=PageLogicObj.m_ResListDataGrid.datagrid("selectRow",PageLogicObj.editRowNew).datagrid("getSelected");
 	                        rows.ResRowid=record.ResRowid
-							ResObj.ResRowid=record.ResRowid;
-							ResObj.ResDesc=record.ResDesc;
+							PageTempObj.ResObj.ResRowid=record.ResRowid;
+							PageTempObj.ResObj.ResDesc=record.ResDesc;
 						},
 						filter: function(q, row){
 							return (row["ResDesc"].toUpperCase().indexOf(q.toUpperCase()) >= 0)||(row["Alias"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
 						},
 						onChange:function(newValue,oldValue){
 							if (newValue==""){
-								ResObj.ResRowid="";
-								ResObj.ResDesc="";
+								PageTempObj.ResObj.ResRowid="";
+								PageTempObj.ResObj.ResDesc="";
 							}
 						}
 					}
@@ -329,16 +345,16 @@ function InitResListDataGrid(){
 						onSelect:function(record){
 							var rows=PageLogicObj.m_ResListDataGrid.datagrid("selectRow",PageLogicObj.editRowNew).datagrid("getSelected");
 	                        rows.SessRowid=record.SessRowid
-							ResObj.SessRowid=record.SessRowid;
-							ResObj.SessDesc=record.SessDesc;
+							PageTempObj.ResObj.SessRowid=record.SessRowid;
+							PageTempObj.ResObj.SessDesc=record.SessDesc;
 						},
 						filter: function(q, row){
 							return (row["SessDesc"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
 						},
 						onChange:function(newValue,oldValue){
 							if (newValue==""){
-								ResObj.SessRowid="";
-								ResObj.SessDesc="";
+								PageTempObj.ResObj.SessRowid="";
+								PageTempObj.ResObj.SessDesc="";
 							}
 						}
 					}
@@ -362,7 +378,7 @@ function InitResListDataGrid(){
 		toolbar :ResListBar,
 		onDblClickCell: function (rowIndex, field, value){
             if (PageLogicObj.editRowNew != -1) {
-				$.messager.alert("提示", "有正在编辑的行，请先点击保存", "info");
+				$.messager.alert("提示", "有正在编辑的行，请先点击保存!", "info");
 		        return false;
 			}
             PageLogicObj.editRowNew=EditResDataGridRow(rowIndex);
@@ -378,18 +394,18 @@ function InitResListDataGrid(){
 			}
 	    },
         onAfterEdit: function(rowIndex, rowData, changes) {
-	        if(ResObj.LocRowid!=""){
+	        if(PageTempObj.ResObj.LocRowid!=""){
 		        $(this).datagrid('updateRow',{
 					index:rowIndex,
-					row:ResObj
+					row:PageTempObj.ResObj
 				});
 	        }
-			ResObj={LocRowid:'',LocDesc:'',ResRowid:'',ResDesc:'',SessRowid:'',SessDesc:''};
+			PageTempObj.ResObj={LocRowid:'',LocDesc:'',ResRowid:'',ResDesc:'',SessRowid:'',SessDesc:''};
            // editRowNew=-1;
         },
         onLoadSuccess:function(){
 	        PageLogicObj.editRowNew=-1;
-	        PageLogicObj.m_ResListDataGrid.datagrid('unselectAll');
+	        PageLogicObj.m_ResListDataGrid.datagrid('clearSelections');
 	    }		
 	});
 	return ResListDataGrid;
@@ -401,7 +417,7 @@ function EditResDataGridRow(newRow)
 		PageLogicObj.m_ResListDataGrid.datagrid("endEdit", PageLogicObj.editRowNew);
 		PageLogicObj.m_ResListDataGrid.datagrid("cancelEdit", PageLogicObj.editRowNew);
 	}
-	ResObj=PageLogicObj.m_ResListDataGrid.datagrid("getData").rows[newRow];
+	PageTempObj.ResObj=PageLogicObj.m_ResListDataGrid.datagrid("getData").rows[newRow];
     PageLogicObj.m_ResListDataGrid.datagrid("beginEdit", newRow);
     return newRow;
 }
@@ -483,7 +499,7 @@ function DeleteResListData(){
 			dataType:"text",
 		},function(value){
 			if(value=="0"){
-				PageLogicObj.m_ResListDataGrid.datagrid('unselectAll');
+				PageLogicObj.m_ResListDataGrid.datagrid('clearSelections');
 				$.messager.show({title:"提示",msg:"删除成功"});
 				LoadResListDataGridData();
 			}else{
@@ -575,4 +591,374 @@ function CheckComboxSelData(id,selId){
 	  }
 	  if (Find=="1") return selId
 	  return "";
+}
+
+function InitSessDeptListDataGrid(){
+	var toobar=[{
+		text: '增加',
+		iconCls: 'icon-add',
+		handler: function() {
+			if(PageLogicObj.editRowSessDept!=undefined){
+				$.messager.alert("提示", "有正在编辑的行，请先点击保存!", "info");
+	        	return false;	
+			}
+			//if(!CheckResRequire()) return;
+			var rowObj=PageLogicObj.m_CareTypeListDataGrid.datagrid("getSelected");
+            if(rowObj){
+            }else{
+	        	$.messager.alert("提示", "请先在上方表格选择一行医护人员类型数据.", "warning");
+	        	return false;	
+	        }
+            PageLogicObj.m_SessDeptListDataGrid.datagrid("clearSelections");
+            PageLogicObj.m_SessDeptListDataGrid.datagrid("insertRow", {
+                index: 0,
+                row: {
+					SessRowid:"",
+					SessDesc:"",
+					AuthDeptCount:"",
+					AuthDeptIDStr:""	
+				}
+            });
+            PageLogicObj.m_SessDeptListDataGrid.datagrid("beginEdit", 0);
+            PageLogicObj.editRowSessDept = -1;
+			
+		}   
+	}, {
+		text: '取消编辑',
+		iconCls: 'icon-edit',
+		handler: function() {
+            PageLogicObj.m_SessDeptListDataGrid.datagrid("rejectChanges").datagrid("clearSelections");
+            LoadSessDeptDataGridData();  
+            PageLogicObj.editRowSessDept = undefined;
+		}   
+    },{
+		text: '删除',
+		iconCls: 'icon-remove',
+		handler: function() {
+			DeleteSessDeptListData();
+		}
+	}, {
+		text: '保存',
+		iconCls: 'icon-save',
+		handler: function() {
+			SaveSessDeptListData();
+		}
+    }]
+	var Columns=[[ 
+		{field:'SessDesc',title:'职称',width:200,
+			editor:{
+				type:'combobox',
+				options:{
+					valueField:'SessRowid',
+					textField:'SessDesc',
+					url:$URL+"?ClassName=web.DHCDocSessContrast&QueryName=QuerySessList&Desc=&HospID="+$HUI.combogrid('#_HospList').getValue()+"&ResultSetType=array",
+					editable:true,
+					panelHeight:'300',
+					onBeforeLoad:function(param){
+						param.HospID=$HUI.combogrid('#_HospList').getValue();
+					},
+					onSelect:function(record){
+						var GridData=PageLogicObj.m_SessDeptListDataGrid.datagrid("getData");
+						var data=GridData.originalRows;
+						var len=data.length;
+						for(var i=0;i<len;i++){
+							var onedata=data[i];
+							if(onedata.SessRowid==record.SessRowid){
+								$(this).combobox("clear");
+								PageTempObj.SessDeptObj.SessRowid="";
+								PageTempObj.SessDeptObj.SessDesc="";
+								$.messager.alert("提示", "该职称数据已维护,请确认.", "warning");
+								return false;
+							}
+						}
+						PageTempObj.SessDeptObj.SessRowid=record.SessRowid;
+						PageTempObj.SessDeptObj.SessDesc=record.SessDesc;
+					},
+					onChange:function(newValue,oldValue){
+						if (newValue==""){
+							PageTempObj.SessDeptObj.SessRowid="";
+							PageTempObj.SessDeptObj.SessDesc="";
+						}
+					}
+				}
+			}
+		},
+		{field:'SessRowid',hidden:true,title:''},
+		{field:'AuthDeptIDStr',hidden:true,title:''},
+		{field:'AuthDeptCount', title: '已维护科室数量',width:140,  align: 'left', sortable: false},
+		{field:'AuthDeptBtn', title:'科室', width: 100,align: 'left',
+			formatter:function(value,row,index){
+				var SessRowid=row.SessRowid;
+				if(SessRowid=="")SessRowid=-1;
+				return '<a href="###" id= "AuthDept'+index+'"'+' onclick=ShowAutoDept('+index+','+SessRowid+');>'+"<span class='fillspan'>配置科室</span>"+"</a>"
+			}
+		}
+    ]]
+	var SessDeptListDataGrid=$("#tabSessDeptList").datagrid({
+		fit : true,
+		border : false,
+		striped : false,
+		singleSelect : true,
+		fitColumns : true,
+		autoRowHeight : false,
+		rownumbers:true,
+		pagination : true,  
+		rownumbers : true,  
+		pageSize: 10,
+		pageList : [10,20,50],
+		idField:'SessRowid',
+		columns :Columns,
+		toolbar:toobar,
+		/*onDblClickRow: function (rowIndex, row) {
+			if (rowIndex!=PageLogicObj.editRowSessDept){
+            	PageLogicObj.editRowSessDept=EditDataGridRow(SessDeptListDataGrid,rowIndex,PageLogicObj.editRowSessDept);
+            	PageTempObj.SessDeptObj.SessRowid=row.SessRowid;
+				PageTempObj.SessDeptObj.SessDesc=row.SessDesc;
+            }
+        },*/onAfterEdit: function (rowIndex, rowData, changes) {
+			PageTempObj.SessDeptObj={SessRowid:'',SessDesc:''};
+            PageLogicObj.editRowSessDept = undefined;
+        }
+		
+	}); 
+	return SessDeptListDataGrid;
+}
+
+function ShowAutoDept(ind,SessRowid){
+	if((PageLogicObj.editRowSessDept!=undefined)&&(PageLogicObj.editRowSessDept!=ind)&&(SessRowid!=-1)){
+		$.messager.alert("提示", "有正在编辑的行，请先点击保存!", "info");
+    	return false;	
+	}
+	if(SessRowid==-1)SessRowid="";
+	PageLogicObj.m_SessDeptListDataGrid.datagrid("clearSelections");
+	
+	if((SessRowid=="")||(typeof(SessRowid)=='undefined')){
+		SessRowid=GetSessRowid();	
+	}
+	if(SessRowid==""){
+		$.messager.alert("提示", "请先选择职称!", "warning");
+		return false;
+	}
+	
+	$("#FindLoc").searchbox('setValue',""); 
+	$('#MulSessDeptWin').window('open');
+	if (PageLogicObj.m_LocListTabDataGrid==""){
+		PageLogicObj.m_LocListTabDataGrid=InitLocListTabDataGrid(SessRowid);
+	}
+	PageLogicObj.ShowDeptSessRowid=SessRowid;
+	LoadLocListTabGridData(SessRowid);
+}
+
+function LoadSessDeptDataGridData(CareTypeId){
+	if((CareTypeId=="")||(typeof(CareTypeId)=='undefined')){
+		var CareTypeId="";
+		var rowObj=PageLogicObj.m_CareTypeListDataGrid.datagrid("getSelected");
+		if(rowObj){
+			CareTypeId=rowObj.CareTpRowid;
+		}
+	}
+	$.cm({
+	    ClassName : "web.DHCDocSessContrast",
+	    QueryName : "QueryLocContrast",
+	    CareTypeId:CareTypeId,
+	    HospID:$HUI.combogrid('#_HospList').getValue(),
+	    Pagerows:PageLogicObj.m_SessDeptListDataGrid.datagrid("options").pageSize,rows:99999
+	},function(GridData){
+		PageLogicObj.m_SessDeptListDataGrid.datagrid("clearSelections");
+		PageLogicObj.editRowSessDept = undefined;
+		PageTempObj.SessDeptObj={NoAuthDeptIDStr:'',AuthDeptIDStr:'',AuthDeptCount:'',SessRowid:'',SessDesc:''};
+		PageLogicObj.m_SessDeptListDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+	}); 
+}
+
+function FindLocChange(){
+	//PageLogicObj.m_LocListTabDataGrid.datagrid("reload");
+	LoadLocListTabGridData(PageLogicObj.ShowDeptSessRowid);
+}
+function InitLocListTabDataGrid(SessRowid){
+	var Columns=[[ 
+		{field:'LocRowid',title:'',checkbox:true},
+		{field:'LocDesc',title:'科室',width:260},
+		{field:'AuthedFlag',title:'',hidden:true}
+    ]]
+	var LocListTabDataGrid=$("#LocListTab").datagrid({
+		fit : true,
+		border : false,
+		striped : true,
+		singleSelect : false,
+		fitColumns : false,
+		autoRowHeight : false,
+		pagination : false,  
+		rownumbers : false,  
+		idField:'LocRowid',
+		columns :Columns,
+		onLoadSuccess:function(data){
+			for (var i=0;i<data.rows.length;i++){
+				var AuthedFlag=data.rows[i].AuthedFlag;
+				if (AuthedFlag>0) {
+					PageLogicObj.m_LocListTabDataGrid.datagrid('selectRow',i);
+				}
+			}
+		},onBeforeCheck:function(index, row){
+			var CareTypeId="";
+			var rowObj=PageLogicObj.m_CareTypeListDataGrid.datagrid("getSelected");
+			if(rowObj){
+				CareTypeId=rowObj.CareTpRowid;
+			}
+			var SessRowid=GetSessRowid();
+			var AuthTypeDesc=$.cm({
+				ClassName:"web.DHCDocSessContrast",
+				MethodName:"CheckAuthedOtherFlag",
+				CareTypeId:CareTypeId,
+				SessRowId:SessRowid,
+				LocRowId:row.LocRowid,
+				HospID:$HUI.combogrid('#_HospList').getValue(),
+				dataType:"text"
+			},false)
+			if (AuthTypeDesc!="") {
+				var flag=dhcsys_confirm("该科室已对照["+AuthTypeDesc+"],确定将取消与["+AuthTypeDesc+"]的对照,是否继续?")
+				if (!flag) {
+					return false;
+				}
+			}
+		}
+	});
+	return LocListTabDataGrid;
+}
+
+function LoadLocListTabGridData(SessRowid){
+	var desc=$("#FindLoc").searchbox('getValue'); 
+	var CareTypeId="";
+	var rowObj=PageLogicObj.m_CareTypeListDataGrid.datagrid("getSelected");
+	if(rowObj){
+		CareTypeId=rowObj.CareTpRowid;
+	}
+	if((SessRowid=="")||(typeof(SessRowid)=='undefined')){
+		SessRowid=GetSessRowid();	
+	}
+	$.cm({
+	    ClassName : "web.DHCDocSessContrast",
+	    QueryName : "QueryLocList",
+	    Desc:desc,
+	    CareTypeId:CareTypeId,
+	    SessRowId:SessRowid,
+	    HospID:$HUI.combogrid('#_HospList').getValue(),
+	    Pagerows:PageLogicObj.m_LocListTabDataGrid.datagrid("options").pageSize,rows:99999
+	},function(GridData){
+		PageLogicObj.m_LocListTabDataGrid.datagrid("clearSelections").datagrid("clearChecked");;
+		PageLogicObj.m_LocListTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+	}); 
+}
+
+function SaveLocStrToDataGrid(){
+	if (PageLogicObj.m_LocListTabDataGrid=="") {
+		$.messager.alert("提示","没有需要保存的数据!","warning");
+		return false;
+	}
+	var rows=PageLogicObj.m_LocListTabDataGrid.datagrid('getRows');
+	if (rows.length==0) {
+		$.messager.alert("提示","没有需要保存的数据!","warning");
+		return false;
+	}
+	var GridSelectArr=PageLogicObj.m_LocListTabDataGrid.datagrid('getSelections');
+	var inPara="",subPara="";
+	for (var i=0;i<rows.length;i++){
+		var LocId=rows[i].LocRowid;
+		if ($.hisui.indexOfArray(GridSelectArr,"LocRowid",LocId)>=0) {
+			if (inPara == "") inPara = LocId;
+			else  inPara = inPara + "^" + LocId;
+		}else{
+			if (subPara == "") subPara = LocId;
+			else  subPara = subPara + "^" + LocId;
+		}
+	}
+	
+	$.extend(PageTempObj.SessDeptObj,{
+		NoAuthDeptIDStr:subPara,AuthDeptIDStr:inPara
+	})
+	if(PageLogicObj.editRowSessDept==undefined){
+		var rowObj=PageLogicObj.m_SessDeptListDataGrid.datagrid("getSelected");
+		var index=PageLogicObj.m_SessDeptListDataGrid.datagrid("getRowIndex",rowObj);
+		PageLogicObj.editRowSessDept=index;
+	}
+	PageLogicObj.ShowDeptSessRowid="";
+	$('#MulSessDeptWin').window('close');
+}
+
+function SaveSessDeptListData(){
+	var rowObj=PageLogicObj.m_CareTypeListDataGrid.datagrid("getSelected");
+	if(rowObj){
+		var SessRowid=GetSessRowid();
+		if(SessRowid==""){
+			$.messager.alert("提示", "未有需要保存的数据,请确认.", "warning");
+    		return false;
+		}
+		var AuthDeptIDStr=PageTempObj.SessDeptObj.AuthDeptIDStr;
+		if(AuthDeptIDStr==""){
+			$.messager.alert("提示", "科室对照数据未发生改变或未对照,请确认.", "warning");
+    		return false;	
+		}
+		$.cm({
+			ClassName:"web.DHCDocSessContrast",
+			MethodName:"SaveLocContrast",
+			CareTypeId:rowObj.CareTpRowid,
+			SessId:SessRowid,
+			ILocStr:PageTempObj.SessDeptObj.AuthDeptIDStr,
+			CLocStr:PageTempObj.SessDeptObj.NoAuthDeptIDStr,
+			HospID:$HUI.combogrid('#_HospList').getValue()
+		},function(ret){
+			if(ret==0){
+				LoadSessDeptDataGridData();
+			}else{
+				$.messager.alert("提示", "保存失败!", "warning");
+    			return false;
+			}
+		})
+    }else{
+    	$.messager.alert("提示", "请先在上方表格选择一行医护人员类型数据.", "warning");
+    	return false;	
+    }
+}
+
+function GetSessRowid(){
+	var SessRowid=PageTempObj.SessDeptObj.SessRowid;
+	if(SessRowid==""){
+		var rowObj=PageLogicObj.m_SessDeptListDataGrid.datagrid("getSelected");
+        if(rowObj){
+			SessRowid=rowObj.SessRowid;
+        }
+	}	
+	return SessRowid;
+}
+
+function DeleteSessDeptListData(){
+	var rowObj=PageLogicObj.m_CareTypeListDataGrid.datagrid("getSelected");
+	if(rowObj){
+		var SessRowid=GetSessRowid();
+		if(SessRowid==""){
+			$.messager.alert("提示", "未有需要删除的数据,请确认.", "warning");
+    		return false;
+		}
+		$.messager.confirm("提示","是否确认删除?",function(r){
+			if(r){
+				$.cm({
+					ClassName:"web.DHCDocSessContrast",
+					MethodName:"DelLocContrast",
+					CareTypeID:rowObj.CareTpRowid,
+					SessionTypeID:SessRowid,
+					HospID:$HUI.combogrid('#_HospList').getValue()
+				},function(ret){
+					if(ret==0){
+						LoadSessDeptDataGridData();
+					}else{
+						$.messager.alert("提示", "删除失败!", "warning");
+		    			return false;
+					}
+				})
+			}
+		},"info")
+	}else{
+		$.messager.alert("提示", "请选择一行医护人员类型.", "warning");
+		return false;
+	}
 }

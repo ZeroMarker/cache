@@ -5,16 +5,31 @@ function InitCheckQueryWin(){
     $.parser.parse(); // 解析整个页面  
     
     //初始查询条件
-    //obj.cboSSHosp = Common_ComboToSSHosp("cboSSHosp",SSHospCode,"CPW");
-    var aHospID = session['LOGON.HOSPID']+"!!1";
-    obj.cboSSHosp = Common_ComboToSSHosp2("cboSSHosp",aHospID,"");
-    //医院科室联动
-	$HUI.combobox('#cboSSHosp',{
-	    onSelect:function(rows){
-		    var HospID=rows["OID"].split("!!")[0];
-		    obj.cboLoc = Common_ComboToLoc("cboLoc","E","","I",HospID);
-	    }
-    });
+    obj.cboSSHosp = Common_ComboToSSHosp2("cboSSHosp",session['DHCMA.HOSPID'],"");
+	
+    //科室
+	obj.cboLoc = $HUI.combobox("#cboLoc",{
+		url:$URL,
+		onBeforeLoad:function(param){
+			param.ClassName="DHCMA.Util.EPS.LocationSrv",
+			param.QueryName="QryLocInfo",
+			param.aHospID=$("#cboSSHosp").combobox('getValue'),
+			param.aAdmType="I",
+			param.ResultSetType='array'	
+		},
+		editable: true,
+		valueField: 'OID',
+		textField: 'Desc',
+		defaultFilter:4,
+		onLoadSuccess:function(data){
+			//权限控制
+			if(tDHCMedMenuOper['admin']<1){
+				$("#cboLoc").combobox('select',session['DHCMA.CTLOCID']);	 
+				$('#cboSSHosp').combobox('disable');
+				$('#cboLoc').combobox('disable');
+			} 	
+		}
+	});
 	
 	obj.DateTo = $('#DateTo').datebox('setValue', Common_GetDate(new Date()));// 日期初始赋值
     obj.DateFrom = $('#DateFrom').datebox('setValue', Common_GetDate(new Date()));
@@ -79,18 +94,27 @@ function InitCheckQueryWin(){
 			{field:'CPWDesc',title:'路径名称',width:'250'}, 
 			{field:'CPWStatus',title:'状态',width:'50',
 				 styler: function(value,row,index){
-					if (value=="入径") {
-						retStr =  'color:blue;';
-					} else if (value=="完成") {
-						retStr = 'color:green;';
-					}else if (value=="出径") {
-						retStr = 'color:red;';
-					} else {
-						retStr = 'color:black;';
-					} 
-					return retStr;
-				}
+					if ((typeof HISUIStyleCode === 'undefined') || (HISUIStyleCode=="blue")){
+						if (value=="入径") {
+							retStr =  'color:blue;';
+						} else if (value=="完成") {
+							retStr = 'color:green;';
+						}else if (value=="出径") {
+							retStr = 'color:red;';
+						} else {
+							retStr = 'color:black;';
+						} 
+						return retStr;
+					}					
+				 }
 			}, 
+			{field:'ExecReasonList',title:'路径切换原因',width:'200',formatter:function(v,r,i){
+				var ReasonArr=v.split("^");
+				if (ReasonArr.length>0){
+					value=ReasonArr[ReasonArr.length-1]				//返回最新一次的路径切换原因
+				}
+				return value;
+			}}, 
 			//{field:'DiagnoseC',title:'中医诊断',width:'260'	}, 
 			//{field:'DiagnoseF',title:'西医诊断',width:'260'}, 
 			{field:'InHospDate',title:'住院天数',width:'80'}, 
@@ -116,10 +140,22 @@ function InitCheckQueryWin(){
                 return false;
             }
             return true;
+		},
+		onDblClickRow:function(rowIndex,rowData){
+			if(rowIndex>-1){
+				obj.GridCheckQuery_onDblClick(rowIndex,rowData);
+			}
+		},
+		onLoadSuccess:function(data){
+			if (typeof HISUIStyleCode !== 'undefined'){
+				if (HISUIStyleCode=="lite"){
+					$("#center .hisui-panel").attr("style","border-color:#E2E2E2;border-top:0;border-radius:0 0 4px 4px;")
+				}
+			}
 		}
 	});
 	DisplayEPRView = function(EpisodeID,PatientID){
-				var strUrl = "../csp/websys.csp?a=a&SwitchSysPat=N&TMENU=54653&ChartBookID=70+PatientID="+PatientID+"&EpisodeID="+EpisodeID+"&2=2";
+				var strUrl = cspUrl+"&PatientID="+PatientID+"&EpisodeID="+EpisodeID+"&2=2";
 					 websys_showModal({
 						url:strUrl,
 						title:'浏览病历',

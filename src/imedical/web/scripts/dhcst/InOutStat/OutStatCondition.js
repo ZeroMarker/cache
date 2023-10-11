@@ -13,11 +13,11 @@ Ext.onReady(function() {
 	var gUserId=session['LOGON.USERID'];
 	var UserName=session['LOGON.USERNAME'];
 	var PhaLoc=new Ext.ux.LocComboBox({
-		fieldLabel : '<font color=blue>出库科室</font>',
+		fieldLabel : '<font color=blue>'+$g('出库科室')+'</font>',
 		id : 'PhaLoc',
 		name : 'PhaLoc',
 		anchor : '90%',
-		emptyText : '科室...',
+		emptyText : $g('科室...'),
 		groupId:gGroupId,
 		listeners : {
 			'select' : function(e) {
@@ -32,16 +32,16 @@ Ext.onReady(function() {
 	});
 
 	var RecLoc = new Ext.ux.LocComboBox({
-		fieldLabel : '接收科室',
+		fieldLabel : $g('接收科室'),
 		id : 'RecLoc',
 		name : 'RecLoc',
-		emptyText : '接收科室...',
+		emptyText : $g('接收科室...'),
 		anchor : '90%',
 		defaultLoc:''
 	});
 
 	var DateFrom = new Ext.ux.DateField({
-		fieldLabel : '<font color=blue>开始日期</font>',
+		fieldLabel : '<font color=blue>'+$g('开始日期')+'</font>',
 		id : 'DateFrom',
 		name : 'DateFrom',
 		anchor : '90%',
@@ -49,13 +49,13 @@ Ext.onReady(function() {
 	});
 
 	var StartTime=new Ext.form.TextField({
-		fieldLabel : '开始时间',
+		fieldLabel : $g('开始时间'),
 		id : 'StartTime',
 		name : 'StartTime',
 		anchor : '90%',
 		//value :DefaultEdTime(),
 		regex : /^(0\d{1}|1\d{1}|2[0-3]):[0-5]\d{1}:([0-5]\d{1})$/,
-		regexText:'时间格式错误，正确格式hh:mm:ss',
+		regexText:$g('时间格式错误，正确格式hh:mm:ss'),
 		width : 120,
 		//value :DefaultEdTime(),
 		listeners : {
@@ -90,12 +90,12 @@ Ext.onReady(function() {
 	 
 	 if (datelength<1)
 	 {
-	 	alert("请输入时间！")
+	 	alert($g("请输入时间！"))
 	 	return  ;
 	 	}
 		if (Hdate>24)
 		{
-			alert("输入的小时格式错误，应在0~24之间...")
+			alert($g("输入的小时格式错误，应在0~24之间..."))
 			return ;
 			}
 		if (Hdate.length<2){
@@ -104,7 +104,7 @@ Ext.onReady(function() {
 		
 		if (Mdate>60)
 		{
-			alert("输入的分钟格式错误，应在0~60之间...")
+			alert($g("输入的分钟格式错误，应在0~60之间..."))
 			return ;
 			}
 		if (Mdate.length<1){
@@ -116,7 +116,7 @@ Ext.onReady(function() {
 		
 			if (Sdate>60)
 		{
-			alert("输入的秒格式错误，应在0~60之间...")
+			alert($g("输入的秒格式错误，应在0~60之间..."))
 			return ;
 			}
 		if (Sdate.length<1){
@@ -133,13 +133,13 @@ Ext.onReady(function() {
 	}
 	//-----------------给时间设定正确的格式 add by myq 20140420 	
 	var EndTime=new Ext.form.TextField({
-		fieldLabel : '截止时间',
+		fieldLabel : $g('截止时间'),
 		id : 'EndTime',
 		name : 'EndTime',
 		anchor : '90%',
 		//value :DefaultEdTime(),
 		regex : /^(0\d{1}|1\d{1}|2[0-3]):[0-5]\d{1}:([0-5]\d{1})$/,
-		regexText:'时间格式错误，正确格式hh:mm:ss',
+		regexText:$g('时间格式错误，正确格式hh:mm:ss'),
 		width : 120,
 		//value :DefaultEdTime(),
 		listeners : {
@@ -156,7 +156,7 @@ Ext.onReady(function() {
 	});
 	//--------------------add by myq 20140414 北京同仁亦庄
 	var DateTo = new Ext.ux.DateField({
-		fieldLabel : '<font color=blue>截止日期</font>',
+		fieldLabel : '<font color=blue>'+$g('截止日期')+'</font>',
 		id : 'DateTo',
 		name : 'DateTo',
 		anchor : '90%',
@@ -174,7 +174,7 @@ Ext.onReady(function() {
 	}); 
 
 	var InciDr = new Ext.form.TextField({
-		fieldLabel : '药品RowId',
+		fieldLabel : $g('药品RowId'),
 		id : 'InciDr',
 		name : 'InciDr',
 		anchor : '90%',
@@ -182,14 +182,14 @@ Ext.onReady(function() {
 	});
 
 	var InciCode = new Ext.form.TextField({
-		fieldLabel : '药品编码',
+		fieldLabel : $g('药品编码'),
 		id : 'InciCode',
 		name : 'InciCode',
 		anchor : '90%',
 		valueNotFoundText : ''
 	});
 	var InciDesc = new Ext.form.TextField({
-		fieldLabel : '药品名称',
+		fieldLabel : $g('药品名称'),
 		id : 'InciDesc',
 		name : 'InciDesc',
 		anchor : '90%',
@@ -231,7 +231,7 @@ Ext.onReady(function() {
 	}
 		
 	var DHCStkCatGroup = new Ext.ux.ComboBox({
-		fieldLabel : '库存分类',
+		fieldLabel : $g('库存分类'),
 		id : 'DHCStkCatGroup',
 		name : 'DHCStkCatGroup',
 		store : StkCatStore,
@@ -248,7 +248,7 @@ Ext.onReady(function() {
 				
 	// 药学大类
 	var PhcCat = new Ext.ux.ComboBox({
-		fieldLabel : '药学大类',
+		fieldLabel : $g('药学大类'),
 		id : 'PhcCat',
 		name : 'PhcCat',
 		store : PhcCatStore,
@@ -264,7 +264,7 @@ Ext.onReady(function() {
 
 	// 药学子类
 	var PhcSubCat = new Ext.ux.ComboBox({
-		fieldLabel : '药学子类',
+		fieldLabel : $g('药学子类'),
 		id : 'PhcSubCat',
 		name : 'PhcSubCat',
 		store : PhcSubCatStore,
@@ -279,7 +279,7 @@ Ext.onReady(function() {
 
 	// 药学小类
 	var PhcMinCat = new Ext.ux.ComboBox({
-		fieldLabel : '药学小类',
+		fieldLabel : $g('药学小类'),
 		id : 'PhcMinCat',
 		name : 'PhcMinCat',
 		store : PhcMinCatStore,
@@ -288,7 +288,7 @@ Ext.onReady(function() {
 		params:{PhcSubCatId:'PhcSubCat'}
 	});
 	var PHCCATALL = new Ext.form.TextField({
-	fieldLabel : '药学分类',
+	fieldLabel : $g('药学分类'),
 	id : 'PHCCATALL',
 	name : 'PHCCATALL',
 	width: 70,
@@ -307,7 +307,7 @@ function GetAllCatNew(catdescstr,newcatid){
 
 var PHCCATALLButton = new Ext.Button({
 	id:'PHCCATALLButton',
-	text : '药学分类维护',
+	text : $g('药学分类维护'),
 	handler : function() {	
        PhcCatNewSelect(gNewCatId,GetAllCatNew)
 
@@ -315,7 +315,7 @@ var PHCCATALLButton = new Ext.Button({
 });
 
 	var PHCDFPhcDoDR = new Ext.ux.ComboBox({
-		fieldLabel : '管制分类',
+		fieldLabel : $g('管制分类'),
 		id : 'PHCDFPhcDoDR',
 		name : 'PHCDFPhcDoDR',
 		store : PhcPoisonStore,
@@ -324,7 +324,7 @@ var PHCCATALLButton = new Ext.Button({
 	});
 
 	var PhManufacturer = new Ext.ux.ComboBox({
-		fieldLabel : '生产厂商',
+		fieldLabel : $g('生产企业'),
 		id : 'PhManufacturer',
 		name : 'PhManufacturer',
 		store : PhManufacturerStore,
@@ -344,7 +344,7 @@ var PHCCATALLButton = new Ext.Button({
 	});*/
 
 	var PHCForm = new Ext.ux.ComboBox({
-		fieldLabel : '剂型',
+		fieldLabel : $g('剂型'),
 		id : 'PHCForm',
 		name : 'PHCForm',
 		store : PhcFormStore,
@@ -355,10 +355,10 @@ var PHCCATALLButton = new Ext.Button({
 
 	var PublicBiddingStore = new Ext.data.SimpleStore({
 		fields : ['RowId', 'Description'],
-		data : [['1', '招标'], ['0', '非招标']]
+		data : [['1', $g('招标')], ['0', $g('非招标')]]
 	});
 	var PublicBidding = new Ext.form.ComboBox({
-		fieldLabel : '招标',
+		fieldLabel : $g('招标'),
 		id : 'PublicBidding',
 		name : 'PublicBidding',
 		anchor : '90%',
@@ -375,10 +375,10 @@ var PHCCATALLButton = new Ext.Button({
 
 	var TransferFlagStore = new Ext.data.SimpleStore({
 		fields : ['RowId', 'Description'],
-		data : [['0', '转出转入'], ['1', '转出'], ['2', '转入']]
+		data : [['0', $g('转出转入')], ['1', $g('转出')], ['2', $g('转入')],['3',$g('仅拒绝接收转入')]]
 	});
 	var TransferFlag = new Ext.form.ComboBox({
-		fieldLabel : '统计方式',
+		fieldLabel : $g('统计方式'),
 		id : 'TransferFlag',
 		name : 'TransferFlag',
 		anchor : '90%',
@@ -395,7 +395,7 @@ var PHCCATALLButton = new Ext.Button({
 	Ext.getCmp("TransferFlag").setValue("0");
 
 	var INFOPBLevel = new Ext.ux.ComboBox({
-		fieldLabel : '招标级别',
+		fieldLabel : $g('招标级别'),
 		id : 'INFOPBLevel',
 		name : 'INFOPBLevel',
 		anchor : '90%',
@@ -405,7 +405,7 @@ var PHCCATALLButton = new Ext.Button({
 	});
 
 	var SpFlag = new Ext.form.Checkbox({
-		boxLabel : '批次售价不等于售价',
+		boxLabel : $g('批次售价不等于售价'),
 		id : 'SpFlag',
 		name : 'SpFlag',
 		anchor : '90%',
@@ -413,7 +413,7 @@ var PHCCATALLButton = new Ext.Button({
 	});
 	MarkTypeStore.load();
 	var INFOMT = new Ext.ux.ComboBox({
-		fieldLabel : '定价类型',
+		fieldLabel : $g('定价类型'),
 		id : 'INFOMT',
 		name : 'INFOMT',
 		anchor : '90%',
@@ -424,7 +424,7 @@ var PHCCATALLButton = new Ext.Button({
 
 	// 入库类型
 	var OperateOutType = new Ext.ux.ComboBox({
-		fieldLabel : '出库类型',
+		fieldLabel :$g('出库类型'),
 		id : 'OperateOutType',
 		name : 'OperateOutType',
 		anchor : '90%',
@@ -462,10 +462,10 @@ var PHCCATALLButton = new Ext.Button({
 				
 	var ImportStore = new Ext.data.SimpleStore({
 		fields : ['RowId', 'Description'],
-		data : [['国产', '国产'], ['进口', '进口'], ['合资', '合资']]
+		data : [[$g('国产'), $g('国产')], [$g('进口'), $g('进口')], [$g('合资'), $g('合资')]]
 	});
 	var INFOImportFlag = new Ext.form.ComboBox({
-		fieldLabel : '进口标志',
+		fieldLabel : $g('进口标志'),
 		id : 'INFOImportFlag',
 		name : 'INFOImportFlag',
 		anchor : '90%',
@@ -483,8 +483,8 @@ var PHCCATALLButton = new Ext.Button({
 	// 确定按钮
 	var OkBT = new Ext.Toolbar.Button({
 				id : "OkBT",
-				text : '统计',
-				tooltip : '点击统计',
+				text : $g('统计'),
+				tooltip : $g('点击统计'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_find',
@@ -496,8 +496,8 @@ var PHCCATALLButton = new Ext.Button({
 	
 	var ClearBT = new Ext.Toolbar.Button({
 				id : "ClearBT",
-				text : '清屏',
-				tooltip : '点击清屏',
+				text : $g('清屏'),
+				tooltip : $g('点击清屏'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_clearscreen',
@@ -522,7 +522,7 @@ var PHCCATALLButton = new Ext.Button({
 			});
 	// 科室库存分类
 	var FlagLocStkcat = new Ext.form.Radio({
-				boxLabel : '科室/库存分类',
+				boxLabel : $g('科室/库存分类'),
 				id : 'FlagLocStkcat',
 				name : 'ReportType',
 				anchor : '70%',
@@ -530,49 +530,49 @@ var PHCCATALLButton = new Ext.Button({
 			});
 	// 科室金额
 	var FlagLoc = new Ext.form.Radio({
-				boxLabel : '科室金额',
+				boxLabel : $g('科室金额'),
 				id : 'FlagLoc',
 				name : 'ReportType',
 				anchor : '70%'
 			});
 	// 科室金额/分组统计
 	var FlagLocGrp = new Ext.form.Radio({
-				boxLabel : '科室金额/科室组',
+				boxLabel : $g('科室金额/科室组'),
 				id : 'FlagLocGrp',
 				name : 'ReportType',
 				anchor : '70%'
 			});
 	// 单品汇总
 	var FlagSum = new Ext.form.Radio({
-				boxLabel : '单品汇总',
+				boxLabel : $g('单品汇总'),
 				id : 'FlagSum',
 				name : 'ReportType',
 				anchor : '70%'
 			});
 	// 科室单品汇总
 	var FlagLocSum = new Ext.form.Radio({
-				boxLabel : '科室单品汇总',
+				boxLabel : $g('科室单品汇总'),
 				id : 'FlagLocSum',
 				name : 'ReportType',
 				anchor : '70%'
 			});
 	// 出库明细
 	var FlagDetail = new Ext.form.Radio({
-				boxLabel : '出库明细',
+				boxLabel : $g('出库明细'),
 				id : 'FlagDetail',
 				name : 'ReportType',
 				anchor : '70%'
 			});
   // 出库单汇总
 	var FlagTrf = new Ext.form.Radio({
-				boxLabel : '出库单汇总',
+				boxLabel : $g('出库单汇总'),
 				id : 'FlagTrf',
 				name : 'ReportType',
 				anchor : '70%'
 			});
 	// 库存分类
 	var FlagType = new Ext.form.Radio({
-				boxLabel : '库存分类',
+				boxLabel : $g('库存分类'),
 				id : 'FlagType',
 				name : 'ReportType',
 				anchor : '70%'
@@ -583,7 +583,7 @@ var PHCCATALLButton = new Ext.Button({
 			var EndDate=Ext.getCmp("DateTo").getValue()
 			if(StartDate==""||EndDate=="")
 			{
-				Msg.info("warning", "开始日期和截止日期不能空！");
+				Msg.info("warning",$g( "开始日期和截止日期不能空！"));
 				return;
 			}
 			var StartDate=Ext.getCmp("DateFrom").getValue().format(App_StkDateFormat).toString();;
@@ -591,7 +591,7 @@ var PHCCATALLButton = new Ext.Button({
 		    var startTime=Ext.getCmp("StartTime").getRawValue();
 			var endTime=Ext.getCmp("EndTime").getRawValue();
 			if(StartDate==EndDate && startTime>endTime){
-				Msg.info("warning", "开始时间大于截止时间！");
+				Msg.info("warning", $g("开始时间大于截止时间！"));
 				return;
 			}
 			var LocId=Ext.getCmp("PhaLoc").getValue();
@@ -700,16 +700,16 @@ var PHCCATALLButton = new Ext.Button({
 			tbar : [OkBT, "-", ClearBT],
 			items : [{
 				xtype : 'fieldset',
-				title : '查询条件',
+				title : $g('查询条件'),
 				items : [PhaLoc,DateFrom,StartTime,DateTo,EndTime,TransferFlag,RecLoc,StkGrpType,DHCStkCatGroup,{xtype:'compositefield',items:[PHCCATALL,PHCCATALLButton]},
 				PhManufacturer,PHCForm,PHCDFPhcDoDR,InciDesc,INFOMT,OperateOutType,Vendor,
 				PublicBidding,INFOPBLevel,INFOImportFlag,
-				{xtype:'compositefield',fieldLabel:'售价范围',items:[MinSp,{xtype:'displayfield',value:'-'},MaxSp]},
-				{xtype:'compositefield',fieldLabel:'进价范围',items:[MinRp,{xtype:'displayfield',value:'-'},MaxRp]}]
+				{xtype:'compositefield',fieldLabel:$g('售价范围'),items:[MinSp,{xtype:'displayfield',value:'-'},MaxSp]},
+				{xtype:'compositefield',fieldLabel:$g('进价范围'),items:[MinRp,{xtype:'displayfield',value:'-'},MaxRp]}]
 											
 			}, {
 				xtype : 'fieldset',
-				title : '报表类型',
+				title : $g('报表类型'),
 				labelWidth : 40,
 				items : [FlagLocStkcat,FlagLoc,FlagLocGrp,FlagSum,FlagLocSum,FlagDetail,FlagTrf,FlagType]
 			}]
@@ -726,7 +726,7 @@ var PHCCATALLButton = new Ext.Button({
 					layout : 'border',
 					items : [{
 						region:'west',
-						title:'出库汇总',
+						title:$g('出库汇总'),
 						width:300,
 						minSize:250,
 						maxSize:350,

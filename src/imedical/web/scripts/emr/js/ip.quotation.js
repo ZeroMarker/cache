@@ -1,4 +1,5 @@
 ﻿$(function(){
+	initBrowse();
 	//就诊类型
 	$('#episodeType').combobox({  
 		valueField:'id',  
@@ -84,7 +85,7 @@
 		var selectNode = $('#recordList').treegrid('getSelected');
 		if ((selectNode)&&(selectNode != ""))
 		{ 
-			var text= "病历模板可能有问题，是否继续引用？"
+			var text= emrTrans("病历模板可能有问题，是否继续引用？")
 			var id = selectNode.id.replace("_","||");
 			if((quatationCheckFlag=="1")&&(!quatationCheck(id))){
 				$.messager.confirm('Confirm',text,function(r){
@@ -153,7 +154,7 @@ function queryData()
 	$("#episodeList").datagrid('load', {
 		Action: "GetEpisodeList",
 		PatientID: patientID,
-		QueryItem: (queryItem == "诊断内容")? "":queryItem,
+		QueryItem: (queryItem == emrTrans("诊断内容"))? "":queryItem,
 		EpisodeType: $('#episodeType').combobox('getValue')
 	});	
 }
@@ -232,9 +233,6 @@ function my_blur(obj, myid)
 
 function windowClose()
 {
-	//window.opener=null;
-	//window.open('','_self');
-	//window.close();	
 	parent.closeDialog("quotationDialog");
 }
 //判断引用的病历和当前版本是否一致
@@ -262,4 +260,10 @@ function quatationCheck(instanceID){
 		}
 	});
 	return result
+}
+
+//初始化病历浏览
+function initBrowse()
+{
+	$("#framebrowse").attr("src","emr.record.browse.browsform.editor.csp?MWToken="+getMWToken());
 }

@@ -30,8 +30,15 @@ $(function(){
 		//事件初始化
 		InitEvent();
 	}
+	InitCache();
 })
-
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function Init(){
 	//科室
 	PageLogicObj.m_find_Loc = $HUI.combobox("#i-find-loc", {
@@ -61,7 +68,9 @@ function InitEvent(){
 function InitGrid(){
 	var columns = [[
 		{field:'PrintTypeDesc',title:'处方格式',width:100},
+		{field:'AgeGroup',title:'年龄段(岁)',width:50,align:"center"},
 		{field:'LocDesc',title:'科室',width:300},
+		
 		{field:'TLocID',title:'TLocID',width:60,hidden:true}
     ]]
 	var DurDataGrid = $HUI.datagrid("#i-durGrid", {
@@ -127,6 +136,8 @@ function opDialog(action) {
 		$('#i-dialog').removeClass("c-hidden");
 	};
 	
+	//$HUI.numberbox("#i-diag-agefrom", {})
+	//$HUI.numberbox("#i-diag-ageto", {})
 	//科室
 	PageLogicObj.m_dg_Loc = $HUI.combobox("#i-diag-loc", {
 		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.CommonFunctionE2&QueryName=QryOPLoc&ResultSetType=array&hospid="+$HUI.combogrid('#_HospUserList').getValue(),
@@ -154,10 +165,14 @@ function opDialog(action) {
 		PageLogicObj.m_dg_Loc.disable();
 		PageLogicObj.m_dg_Loc.setValue(selected.TLocID);
 		PageLogicObj.m_dg_presc.setValue(selected.PrintTypeID);
+		$("#i-diag-agefrom").numberbox('setValue',selected.AgeGroup.split(" ~ ")[0]);
+		$("#i-diag-ageto").numberbox('setValue',selected.AgeGroup.split(" ~ ")[1]);
 	} else {
 		PageLogicObj.m_dg_Loc.enable();
 		PageLogicObj.m_dg_Loc.clear();
 		PageLogicObj.m_dg_presc.clear();
+		$("#i-diag-agefrom").numberbox('setValue',"");
+		$("#i-diag-ageto").numberbox('setValue',"");
 	}
 	var cWin = $HUI.window('#i-dialog', {
 		title: _title,
@@ -203,6 +218,20 @@ function saveCfg() {
 	var action = $("#i-action").val();
 	var prescType = PageLogicObj.m_dg_presc.getValue()||"";
 	var loc = PageLogicObj.m_dg_Loc.getValue()||"";
+	var agefrom=$("#i-diag-agefrom").numberbox('getValue');
+	var ageto=$("#i-diag-ageto").numberbox('getValue');
+	if (parseFloat(agefrom)>parseFloat(ageto)){
+		$.messager.alert('提示','请核实处方年龄段信息！',"info");
+		return false;
+	}
+	if ((agefrom=="")&&(ageto!="")){
+		$.messager.alert('提示','请核实处方年龄段信息！',"info");
+		return false;
+	}
+	if ((agefrom!="")&&(ageto=="")){
+		$.messager.alert('提示','请核实处方年龄段信息！',"info");
+		return false;
+	}
 	if (prescType == "") {
 		$.messager.alert('提示','请选择处方格式！',"info");
 		return false;
@@ -211,25 +240,49 @@ function saveCfg() {
 		$.messager.alert('提示','请选择科室！',"info");
 		return false;
 	}
-	
-	$.m({
-		ClassName:"DHCDoc.DHCDocConfig.CommonFunctionE2",
-		MethodName:"DBSavePrescPrint",
-		LocID:loc,
-		PrintTypeID:prescType
-	},function (responseText){
-		if(responseText == 0) {
-			$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
-			PageLogicObj.m_Win.close();
-			PageLogicObj.m_Grid.reload();
-		} else if (responseText == "-2") {
-			$.messager.alert('提示','记录重复！' , "info");
-			return false;
-		} else {
-			$.messager.alert('提示','保存失败,错误代码: '+ responseText , "info");
-			return false;
-		}	
-	});
+	if (action =="add") {
+		$.m({
+			ClassName:"DHCDoc.DHCDocConfig.CommonFunctionE2",
+			MethodName:"CheckPrescPrint",
+			LocID:loc,
+			
+			PrintTypeID:prescType,
+		},function (OldPrintTypeID){
+			if (OldPrintTypeID=="repeat") {
+				$.messager.alert('提示','对照记录重复！',"info");
+				return false;
+			}else if (OldPrintTypeID !="") {
+				$.messager.confirm('确认',PageLogicObj.m_dg_Loc.getText()+" 已经对照了其他处方格式，保存则会覆盖原记录，是否继续?",function(r){    
+				    if (r){    
+				        save(); 
+				    }    
+				}); 
+			}else{
+				save();
+			}
+		})
+	}else{
+		save();
+	}
+	function save(){
+		$.m({
+			ClassName:"DHCDoc.DHCDocConfig.CommonFunctionE2",
+			MethodName:"DBSavePrescPrint",
+			LocID:loc,
+			AgeFrom:agefrom,
+			AgeTo:ageto,
+			PrintTypeID:prescType,
+		},function (responseText){
+			if(responseText == 0) {
+				$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
+				PageLogicObj.m_Win.close();
+				PageLogicObj.m_Grid.reload();
+			} else {
+				$.messager.alert('提示','保存失败！'+ responseText , "info");
+				return false;
+			}	
+		});
+	}
 }
 
 //查找

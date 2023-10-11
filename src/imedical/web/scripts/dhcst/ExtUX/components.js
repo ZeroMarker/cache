@@ -35,13 +35,13 @@ Ext.apply(Ext.form.ComboBox.prototype,{
 
     }
 });
-//供应商
+//经营企业
 Ext.ux.VendorComboBox=Ext.extend(Ext.form.ComboBox,{
-	fieldLabel : '供应商',
+	fieldLabel : $g('经营企业'),
 	anchor : '90%',
 	valueField : 'RowId',
 	displayField : 'Description',
-	emptyText : '供应商...',
+	emptyText : $g('经营企业...'),
 	selectOnFocus : true,
 	minChars : 3,
 	typeAhead:false,
@@ -78,7 +78,7 @@ Ext.ux.VendorComboBox=Ext.extend(Ext.form.ComboBox,{
 
 //科室：如果设置了groupId属性，装载安全组能访问的科室，否则装载所有科室
 Ext.ux.LocComboBox=Ext.extend(Ext.form.ComboBox,{
-	fieldLabel : '科室',
+	fieldLabel : $g('科室'),
 	anchor : '90%',
 	valueField : 'RowId',
 	displayField : 'Description',
@@ -87,7 +87,7 @@ Ext.ux.LocComboBox=Ext.extend(Ext.form.ComboBox,{
 	//===================
 	forceSelection : true,// 值为true时将限定选中的值为列表中的值，值为false则允许用户将任意文本设置到字段（默认为 false）。
 	//====================
-	emptyText : '科室...',
+	emptyText : $g('科室...'),
 	selectOnFocus : true,
 	//forceSelection : true,
 	minChars : 3,
@@ -174,7 +174,7 @@ Ext.ux.LocComboBox=Ext.extend(Ext.form.ComboBox,{
 });
 //煎药是人员combobox
 Ext.ux.MBCUserComboBox=Ext.extend(Ext.form.ComboBox,{
-	fieldLabel : '操作人',
+	fieldLabel : $g('操作人'),
 	anchor : '90%',
 	valueField : 'RowId',
 	displayField : 'Description',
@@ -183,7 +183,7 @@ Ext.ux.MBCUserComboBox=Ext.extend(Ext.form.ComboBox,{
 	//===================
 	forceSelection : true,// 值为true时将限定选中的值为列表中的值，值为false则允许用户将任意文本设置到字段（默认为 false）。
 	//====================
-	emptyText : '操作人...',
+	emptyText : $g('操作人...'),
 	selectOnFocus : true,
 	//forceSelection : true,
 	minChars : 3,
@@ -208,7 +208,7 @@ Ext.ux.MBCUserComboBox=Ext.extend(Ext.form.ComboBox,{
 			totalProperty:'results',
 			fields:['RowId','Description'],
 			baseParams:{
-				GrpDesc:'煎药',
+				GrpDesc:$g('煎药'),
 				mbcdesc:''
 			} 
 		});
@@ -303,15 +303,15 @@ Msg.show = function(type, msg) {
 	var title, icon;
 	switch (type) {
 		case 'error' :
-			title = "错误信息";
+			title = $g("错误信息");
 			icon = Ext.MessageBox.ERROR;
 			break;
 		case 'warn' :
-			title = "警告信息";
+			title = $g("警告信息");
 			icon = Ext.MessageBox.WARNING;
 			break;
 		default :
-			title = '提示信息';
+			title = $g('提示信息');
 			icon = Ext.MessageBox.INFO;
 	}
 	Ext.Msg.show({
@@ -417,7 +417,7 @@ Ext.ux.DateField=Ext.extend(Ext.form.DateField,{
 	anchor : '90%',
 	invalidClass:'',
 	invalidText:'',
-	regexText:'请输入正确的日期格式!',
+	regexText:$g('请输入正确的日期格式!'),
 	initComponent:function(){
 		var altFormats = 'j|d|md|ymd|Ymd'+'|Y-m|Y-n|y-m|y-n'+'|Y-m-d|Y-m-j|Y-n-d|Y-n-j|y-m-d|y-m-j|y-n-d|y-n-j';
 		var regex = /^(t|(t[\+\-]\d*)|\d{1,2}|\d{4}|\d{6}|\d{8}|((\d{4}|\d{2})\-\d{1,2}\-\d{1,2}))$/;
@@ -723,13 +723,13 @@ function Get_DateS(s )
 
 
 
-//供应商
+//经营企业
 Ext.ux.VendorComboBox=Ext.extend(Ext.form.ComboBox,{
-	fieldLabel : '供应商',
+	fieldLabel : $g('经营企业'),
 	anchor : '90%',
 	valueField : 'RowId',
 	displayField : 'Description',
-	emptyText : '供应商...',
+	emptyText : $g('经营企业...'),
 	selectOnFocus : true,
 	minChars : 3,
 	typeAhead:false,
@@ -765,11 +765,11 @@ Ext.ux.VendorComboBox=Ext.extend(Ext.form.ComboBox,{
 
 //招标
 Ext.ux.ZBComboBox=Ext.extend(Ext.form.ComboBox,{
-	fieldLabel : '是否招标',
+	fieldLabel : $g('是否招标'),
 	anchor : '90%',
 	valueField : 'rowid',
 	displayField : 'desc',
-	emptyText : '是否招标...',
+	emptyText : $g('是否招标...'),
 	selectOnFocus : true,
 	mode: 'local',
 	forceSelection : true,
@@ -777,7 +777,7 @@ Ext.ux.ZBComboBox=Ext.extend(Ext.form.ComboBox,{
 		
 		this.store=new Ext.data.SimpleStore({
 		fields: ['desc', 'rowid'],
-		data : [['全部','1'],['招标','2'],['非招标','3']]
+		data : [[$g('全部'),'1'],[$g('招标'),'2'],[$g('非招标'),'3']]
 		});
 		Ext.ux.ZBComboBox.superclass.initComponent.call(this);
 	}
@@ -787,7 +787,7 @@ Ext.ux.ZBComboBox=Ext.extend(Ext.form.ComboBox,{
 
 //科室：装载所有药房科室
 Ext.ux.DispLocComboBox=Ext.extend(Ext.form.ComboBox,{
-	fieldLabel : '药房科室',
+	fieldLabel : $g('药房科室'),
 	anchor : '90%',
 	valueField : 'RowId',
 	displayField : 'Description',
@@ -796,7 +796,7 @@ Ext.ux.DispLocComboBox=Ext.extend(Ext.form.ComboBox,{
 	//===================
 	forceSelection : true,// 值为true时将限定选中的值为列表中的值，值为false则允许用户将任意文本设置到字段（默认为 false）。
 	//====================
-	emptyText : '科室...',
+	emptyText : $g('科室...'),
 	selectOnFocus : true,
 	//forceSelection : true,
 	minChars : 3,
@@ -836,7 +836,7 @@ Ext.ux.DispLocComboBox=Ext.extend(Ext.form.ComboBox,{
 
 //科室：装载所有执行科室
 Ext.ux.ExeLocComboBox=Ext.extend(Ext.form.ComboBox,{
-	fieldLabel : '执行科室',
+	fieldLabel : $g('执行科室'),
 	anchor : '90%',
 	valueField : 'RowId',
 	displayField : 'Description',
@@ -845,7 +845,7 @@ Ext.ux.ExeLocComboBox=Ext.extend(Ext.form.ComboBox,{
 	//===================
 	forceSelection : true,// 值为true时将限定选中的值为列表中的值，值为false则允许用户将任意文本设置到字段（默认为 false）。
 	//====================
-	emptyText : '科室...',
+	emptyText : $g('科室...'),
 	selectOnFocus : true,
 	//forceSelection : true,
 	minChars : 3,
@@ -884,11 +884,11 @@ Ext.ux.ExeLocComboBox=Ext.extend(Ext.form.ComboBox,{
 });
 //病区
 Ext.ux.LocWardComboBox=Ext.extend(Ext.form.ComboBox,{
-	fieldLabel : '病区',
+	fieldLabel : $g('病区'),
 	anchor : '90%',
 	valueField : 'RowId',
 	displayField : 'Description',
-	emptyText : '病区...',
+	emptyText : $g('病区...'),
 	selectOnFocus : true,
 	minChars : 3,
 	typeAhead:false,
@@ -922,11 +922,11 @@ Ext.ux.LocWardComboBox=Ext.extend(Ext.form.ComboBox,{
 	
  //发药类别
  Ext.ux.DispTypeComboBox=Ext.extend(Ext.form.ComboBox,{
-	fieldLabel : '发药类别',
+	fieldLabel : $g('发药类别'),
 	anchor : '90%',
 	valueField : 'Type',
 	displayField : 'Description',
-	emptyText : '分类...',
+	emptyText : $g('分类...'),
 	selectOnFocus : true,
 	minChars : 3,
 	typeAhead:false,
@@ -960,11 +960,11 @@ Ext.ux.LocWardComboBox=Ext.extend(Ext.form.ComboBox,{
 });	
 //获取医生集合
 Ext.ux.DoctorDsComboBox=Ext.extend(Ext.form.ComboBox,{
-	fieldLabel : '医生',
+	fieldLabel : $g('医生'),
 	anchor : '90%',
 	valueField : 'RowId',
 	displayField : 'Description',
-	emptyText : '医生...',
+	emptyText : $g('医生...'),
 	selectOnFocus : true,
 	minChars : 3,
 	typeAhead:false,
@@ -1139,14 +1139,14 @@ Ext.reg('uxnumberfield',Ext.ux.NumberField);
 
 //医院：装载有授权的医院
 Ext.ux.HospComboBox=Ext.extend(Ext.form.ComboBox,{
-	fieldLabel : '医院',
+	fieldLabel : $g('医院'),
 	anchor : '90%',
 	valueField : 'RowId',
 	displayField : 'Description',
 	//===================
 	forceSelection : true,// 值为true时将限定选中的值为列表中的值，值为false则允许用户将任意文本设置到字段（默认为 false）。
 	//====================
-	emptyText : '医院...',
+	emptyText : $g('医院...'),
 	selectOnFocus : false,
 	minChars : 3,
 	pageSize : 20,

@@ -9,11 +9,11 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 		};
 	// 订购部门
 	var RequestLoc = new Ext.ux.LocComboBox({
-		fieldLabel : '请求部门',
+		fieldLabel : $g('请求部门'),
 		id : 'RequestLoc',
 		name : 'RequestLoc',
 		anchor : '90%',
-		emptyText : '请求部门...',
+		emptyText : $g('请求部门...'),
 		groupId:session['LOGON.GROUPID']
 	});
 	RequestLoc.on('select', function(e) {
@@ -21,11 +21,11 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 	    Ext.getCmp("ProLoc").setRawValue("");
 	});
 	var ProLoc = new Ext.ux.LocComboBox({
-		fieldLabel : '供给科室',
+		fieldLabel : $g('供给科室'),
 		id : 'ProLoc',
 		name : 'ProLoc',
 		anchor : '90%',
-		emptyText : '供给科室...',
+		emptyText : $g('供给科室...'),
 		defaultLoc:defaultData,
 		relid:Ext.getCmp("RequestLoc").getValue(),
 		protype:'RF',
@@ -36,7 +36,7 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 
 	// 起始日期
 	var StartDate = new Ext.ux.EditDate({
-		fieldLabel : '起始日期',
+		fieldLabel : $g('起始日期'),
 		id : 'StartDate',
 		name : 'StartDate',
 		anchor : '90%',
@@ -44,7 +44,7 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 	});
 	// 截止日期
 	var EndDate = new Ext.ux.EditDate({
-		fieldLabel : '截止日期',
+		fieldLabel : $g('截止日期'),
 		id : 'EndDate',
 		name : 'EndDate',
 		anchor : '90%',
@@ -52,28 +52,28 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 	});
 
 	var UseDays =new Ext.form.NumberField({
-		fieldLabel : '用药天数',
+		fieldLabel : $g('用药天数'),
 		id : 'UseDays',
 		name : 'UseDays',
 		anchor : '90%'
 	});
 		// 招标
 		var ZBFlag = new Ext.form.Radio({
-		boxLabel : '招标',
+		boxLabel : $g('招标'),
 		id : 'ZBFlag',
 		name : 'ZBType',
 		anchor : '80%'
 	});
 	// 非招标
 	var NotZBFlag = new Ext.form.Radio({
-		boxLabel : '非招标',
+		boxLabel : $g('非招标'),
 		id : 'NotZBFlag',
 		name : 'ZBType',
 		anchor : '80%'
 	});
 	// 全部
 	var AllFlag = new Ext.form.Radio({
-		boxLabel : '全部',
+		boxLabel : $g('全部'),
 		id : 'AllFlag',
 		name : 'ZBType',
 		anchor : '80%',
@@ -90,7 +90,7 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 	}); 
 	// 库存分类
 	var M_StkCat = new Ext.ux.ComboBox({
-		fieldLabel : '库存分类',
+		fieldLabel : $g('库存分类'),
 		id : 'M_StkCat',
 		name : 'M_StkCat',
 		store : StkCatStore,
@@ -99,7 +99,7 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 		params:{StkGrpId:'StkGrpType'}
 	});
 	var PFlag = new Ext.form.Checkbox({
-		boxLabel : '住院发药',
+		boxLabel : $g('住院发药'),
 		id : 'PFlag',
 		name : 'PFlag',
 		anchor : '90%',
@@ -108,7 +108,7 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 		checked : false
 	});
 	var YFlag = new Ext.form.Checkbox({
-		boxLabel : '住院退药',
+		boxLabel :$g( '住院退药'),
 		id : 'YFlag',
 		name : 'YFlag',
 		anchor : '90%',
@@ -117,7 +117,7 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 		checked : false
 	});
 	var FFlag = new Ext.form.Checkbox({
-		boxLabel : '门诊发药',
+		boxLabel : $g('门诊发药'),
 		id : 'FFlag',
 		name : 'FFlag',
 		anchor : '90%',
@@ -126,7 +126,7 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 		checked : false
 	});
 	var HFlag = new Ext.form.Checkbox({
-		boxLabel : '门诊退药',
+		boxLabel : $g('门诊退药'),
 		id : 'HFlag',
 		name : 'HFlag',
 		anchor : '90%',
@@ -135,7 +135,7 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 		checked : false
 	});
 	var TFlag = new Ext.form.Checkbox({
-		boxLabel : '转出',
+		boxLabel : $g('转出'),
 		id : 'TFlag',
 		name : 'TFlag',
 		anchor : '90%',
@@ -144,7 +144,7 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 		checked : false
 	});
 	var KFlag = new Ext.form.Checkbox({
-		boxLabel : '转入',
+		boxLabel : $g('转入'),
 		id : 'KFlag',
 		name : 'KFlag',
 		anchor : '90%',
@@ -155,7 +155,7 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 
 	// 关闭按钮
 	var closeBT = new Ext.Toolbar.Button({
-		text : '关闭',
+		text : $g('关闭'),
 		//tooltip : '点击关闭',
 		iconCls : 'page_close',
 		handler : function() {
@@ -165,7 +165,7 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 
 	// 确认按钮
 	var sureBT = new Ext.Toolbar.Button({
-		text : '确认',
+		text : $g('确认'),
 		id:'sure',
 		//tooltip : '点击确认',
 		iconCls:'page_save',
@@ -175,7 +175,7 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 	})
 	//遮罩
   var mask = new Ext.LoadMask(Ext.getBody(), {
-	  msg : '请稍后 ... ',                           
+	  msg : $g('请稍后 ... '),                           
 	  removeMask : true
   }); 
 
@@ -189,27 +189,27 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 	var UseDays = Ext.getCmp("UseDays").getValue();   //参考天数
 
 	if((UseDays=="")||(UseDays==null)||(UseDays<=0)){
-		Msg.info("warning", "请填写正确用药天数!");
+		Msg.info("warning", $g("请填写正确用药天数!"));
 		return false;
 	}
 	if((ProLoc=="")||(ProLoc==null)){
-		Msg.info("warning", "请选择供给部门!");
+		Msg.info("warning", $g("请选择供给部门!"));
 		return false;
 	}
 	if (RequestLoc == undefined || RequestLoc.length <= 0) {
-		Msg.info("warning", "请选择请求部门!");
+		Msg.info("warning", $g("请选择请求部门!"));
 		return;
 	}
 	if (ProLoc==RequestLoc){
-		Msg.info("warning", "供给部门与请求部门不能相同!");
+		Msg.info("warning", $g("供给部门与请求部门不能相同!"));
 		return;
 	}
 	if (startDate == undefined || startDate.length <= 0) {
-		Msg.info("warning", "请选择开始日期!");
+		Msg.info("warning", $g("请选择开始日期!"));
 		return;
 	}
 	if (endDate == undefined || endDate.length <= 0) {
-		Msg.info("warning", "请选择截止日期!");
+		Msg.info("warning", $g("请选择截止日期!"));
 		return;
 	}
 
@@ -266,7 +266,7 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 		}
 	}
 	if (TransType == null || TransType.length <= 0) {
-		Msg.info("warning", "请选择业务类型!");
+		Msg.info("warning", $g("请选择业务类型!"));
 		return;
 	}
 	//if(ConsumeLoc==""){ConsumeLoc=RequestLoc;}  //消耗科室为选择默认采购科室
@@ -279,25 +279,25 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 		url: DictUrl+'inrequestaction.csp?actiontype=CreateInRequest',
 		params:{strParam:StrParam},
 		failure: function(result, request) {
-			Msg.info("error","请检查网络连接!");
+			Msg.info("error",$g("请检查网络连接!"));
 		},
 		success: function(result, request) {
 			var jsonData = Ext.util.JSON.decode( result.responseText );
 			if (jsonData.success=='true') {
 				window.close();
-				Msg.info("success","保存成功!");
+				Msg.info("success",$g("保存成功!"));
 				mask.hide(); //遮盖隐藏
 				inqId=jsonData.info;
 				Fn(inqId);
 				//location.href="dhcst.inpurplan.csp?planNnmber="+jsonData.info+'&locId='+locId;
 			}else{
 				if(jsonData.info==""){
-					Msg.info("error","科室或人员为空!");
+					Msg.info("error",$g("科室或人员为空!"));
 				}else if(jsonData.info=="-1"){
-					Msg.info("warning","条件范围内无可用数据!");
+					Msg.info("warning",$g("条件范围内无可用数据!"));
 				}
 				else{
-					Msg.info("error","保存失败!");
+					Msg.info("error",$g("保存失败!"));
 				}
 				mask.hide(); //遮盖隐藏
 			}
@@ -316,7 +316,7 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 			autoHeight : true,
 			items : [{
 				xtype : 'fieldset',
-				title : '请求因子',
+				title : $g('请求因子'),
 				autoHeight : true,
 				items : [{
 					layout : 'column',
@@ -342,7 +342,7 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 			   }]
 			},{
 				xtype : 'fieldset',
-				title : '业务类型',
+				title : $g('业务类型'),
 				autoHeight : true,
 				items : [{
 					layout:'column',
@@ -371,7 +371,7 @@ InRequestConWin=function(Fn,prolocid,prolocdesc){
 	})
 
 	var window=new Ext.Window({
-		title:'按照科室库存生成申请单',
+		title:$g('按照科室库存生成申请单'),
 		width:document.body.clientWidth * 0.5,
 		height:330,
 		modal:true,

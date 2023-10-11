@@ -16,6 +16,10 @@ var init = function(){
 			param.Desc = param.q;
 			
 		},
+		onShowPanel:function () {
+			var ServerLinkLocName=DeptObj.getText();
+			$('#ServerLinkLoc').combogrid('grid').datagrid('reload',{q: ServerLinkLocName});
+    	},
 		columns:[[
 			{field:'CTRowId',title:'科室ID',width:90},
 			{field:'CTDesc',title:'科室',width:130}
@@ -37,6 +41,10 @@ var init = function(){
 			param.code = param.q;
 			
 		},
+		onShowPanel:function () {
+			var ServerLinkOtherLocName=ExaBoroughObj.getText();
+			$('#ServerLinkOtherLoc').combogrid('grid').datagrid('reload',{q: ServerLinkOtherLocName});
+    	},
 		columns:[[
 		    {field:'Tid',title:'Tid',width:50},
 		    {field:'Tcode',title:'Tcode',width:50},
@@ -206,6 +214,13 @@ var init = function(){
 		var ServerState=$("#ServerState").val();
 		var ServerVoiceTopIP=$("#ServerVoiceTopIP").val();      
 		var Notification=$("#Notification").val();
+		
+		if((isNaN(ServerScreenColorNo))&&(ServerScreenColorNo!="")){
+			
+			 $.messager.alert("提示信息","屏号颜色只能为数字！");
+			 return false;
+		}
+		
 		if($HUI.checkbox("#ServerActive").getValue()){
 			  var ServerActive="Y";
 		}
@@ -274,6 +289,14 @@ var init = function(){
 		var ServerState=$("#ServerState").val();
 		var ServerVoiceTopIP=$("#ServerVoiceTopIP").val();      
 		var Notification=$("#Notification").val();
+		
+		if((isNaN(ServerScreenColorNo))&&(ServerScreenColorNo!="")){
+			
+			 $.messager.alert("提示信息","屏号颜色只能为数字！");
+			 return false;
+		}
+		
+		
 		if($HUI.checkbox("#ServerActive").getValue()){
 			  var ServerActive="Y";
 		}

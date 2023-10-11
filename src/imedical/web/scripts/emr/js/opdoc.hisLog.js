@@ -113,41 +113,23 @@ function HisLogEx(IsSetToLog, patientInfo) {
         var condition = setCondition();
         setDataToEventLog(ModelName, JSON.stringify(condition), patientInfo.SecCode);
     }
-    //电子病历.手工解锁.解锁 'EMR.UnLock.UnLock'
-    this.unlock = function (lockListrow) {
+    //电子病历.门诊.锁.解锁 'EMR.OP.UnLock.UnLock'
+    this.unlock = function (LockID) {
         if (('' === patientInfo.EpisodeID)||('' === patientInfo.UserID)||(IsSetToLog !== 'Y')) return;
-        var ModelName = 'EMR.UnLock.UnLock';
-        var condition = {
-            LockID: lockListrow.ID,
-            LockUserID: lockListrow.UserID,
-            LockUserCode: lockListrow.UserCode,
-            LockUserName: lockListrow.UserName,
-            LockComputer: lockListrow.Computer,
-            LockDateTime: lockListrow.LockDateTime,
-            Action: lockListrow.Action,
-            episodeID: patientInfo.EpisodeID,
-            LockDocID: lockListrow.DocID,
-            LockDocName: lockListrow.DocName,
-            categoryId: lockListrow.CategoryID,
-            templateId: lockListrow.TemplateID,
-            userName: patientInfo.UserName,
-            userID: patientInfo.UserID,
-            ipAddress: patientInfo.IPAddress
-        };
+        var ModelName = 'EMR.OP.UnLock.UnLock';
+        var condition = setCondition();
+        condition['LockID'] = LockID;
         setDataToEventLog(ModelName, JSON.stringify(condition), patientInfo.SecCode);
     }
-    //电子病历.病历编辑.加锁 'EMR.UnLock.Lock'
-    this.lock = function (LockID, LockDocID) {
+    //电子病历.门诊.锁.加锁 'EMR.OP.UnLock.Lock'
+    this.lock = function (LockID, LockInsID) {
         if (('' === patientInfo.EpisodeID)||('' === patientInfo.UserID)||(IsSetToLog !== 'Y')) return;
-        var ModelName = 'EMR.UnLock.Lock';
-        var condition = {
-            LockID: LockID,
-            episodeID: patientInfo.EpisodeID,
-            LockDocID: LockDocID,
-            userName: patientInfo.UserName,
-            userID: patientInfo.UserID,
-            ipAddress: patientInfo.IPAddress
-        };
+        var ModelName = 'EMR.OP.UnLock.Lock';
+        
+        if (('' === patientInfo.EpisodeID)||('' === patientInfo.UserID)||(IsSetToLog !== 'Y')) return;
+        var condition = setCondition();
+        condition['id'] = LockInsID;
+        condition['LockID'] = LockID;
         setDataToEventLog(ModelName, JSON.stringify(condition), patientInfo.SecCode);
     }
     //电子病历.门诊.病历浏览 'EMR.OP.Browse'

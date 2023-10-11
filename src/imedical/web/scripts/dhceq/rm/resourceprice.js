@@ -12,14 +12,11 @@ function initDocument()
 	initLookUp();
 	defindTitleStyle();
 	initButton(); //按钮初始化
-	jQuery("#BAdd").linkbutton({iconCls: 'icon-w-add'});
-	jQuery("#BAdd").on("click", BAdd_Clicked);
-	initButtonWidth();
+	//initButtonWidth();
 	initRPSourceType();
 	initRHPMode();
-	var paramsFrom=[{"name":"Desc","type":"1","value":"RHPUOMDR_Desc"},{"name":"Type","type":"2","value":"1"}];
+	var paramsFrom=[{"name":"Desc","type":"1","value":"RHPUOMDR_Desc"},{"name":"Type","type":"2","value":"3"}];  //modify by zc0096 20210121 修改单位类型
     singlelookup("RHPUOMDR_Desc","PLAT.L.UOM",paramsFrom,"");
-	setRequiredElements("RPSource^RHPFromDate^RHPUomQuantity^RHPPrice"); //必填项
 	setEnabled();		//按钮控制
 	//table数据加载
 	$HUI.datagrid("#tDHCEQSResourcePrice",{
@@ -37,7 +34,7 @@ function initDocument()
 	    singleSelect:true,
 	    rownumbers: true,  //如果为true，则显示一个行号列
 	    columns:columns,
-	    fitColumns: true,
+	    //fitColumns: true, //modified by LMH 20230207 UI 列少时默认向左对齐
 		pagination:true,
 		pageSize:15,
 		pageNumber:1,
@@ -74,6 +71,8 @@ function initDocument()
 		bcolumn.title='设备类别';
 		$('#tDHCEQSResourcePrice').datagrid();                     
 	}
+    ///modified by ZY20230404 bug:3399951
+    setRequiredElements("RPSource^RHPFromDate^RHPUomQuantity^RHPPrice"); //必填项
 }
 
 function BFind_Clicked()
@@ -114,7 +113,11 @@ function BAdd_Clicked()
 	var jsonData=tkMakeServerCall("web.DHCEQ.RM.CTResourcePrice","SaveData",data,"2");
 	if (jsonData.SQLCODE<0) {messageShow("alert","error","错误提示",jsonData.Data);return;}
 	messageShow("alert","success","提示","新增成功！");
-	window.setTimeout(function(){window.location.href= "dhceq.rm.resourceprice.csp?&RPSourceType="+getElementValue("RPSourceType")},50);
+	var url="dhceq.rm.resourceprice.csp?&RPSourceType="+getElementValue("RPSourceType");
+    if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.setTimeout(function(){window.location.href= url},50);
 }
 function CheckDate()
 {
@@ -122,7 +125,7 @@ function CheckDate()
 	var CurDate=new Date(FormatDate(getElementValue("CurDate")).replace(/\-/g, "\/"))
 	if (FromDate<CurDate)    
 	{
-		messageShow('alert','error','提示',"生效日期不能晚于当前日期");
+		messageShow('alert','error','提示',"生效日期不能早于当前日期");   //Modefed  by zc0107 2021-11-14 修改弹出提示不对
 		return true
 	}
 	return false
@@ -137,7 +140,11 @@ function BSave_Clicked()
 	var jsonData=tkMakeServerCall("web.DHCEQ.RM.CTResourcePrice","SaveData",data,"");
 	if (jsonData.SQLCODE<0) {messageShow("alert","error","错误提示",jsonData.Data);return;}
 	messageShow("alert","success","提示","更新成功！");
-	window.setTimeout(function(){window.location.href= "dhceq.rm.resourceprice.csp?&RPSourceType="+getElementValue("RPSourceType")},50);
+	var url="dhceq.rm.resourceprice.csp?&RPSourceType="+getElementValue("RPSourceType");
+    if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.setTimeout(function(){window.location.href= url},50);
 }
 function BDelete_Clicked()
 {
@@ -152,7 +159,11 @@ function DeleteData()
 	var jsonData=tkMakeServerCall("web.DHCEQ.RM.CTResourcePrice","SaveData",data,"1");
 	if (jsonData.SQLCODE<0) {messageShow("alert","error","错误提示",jsonData.Data);return;}
 	messageShow("alert","success","提示","删除成功！");
-	window.setTimeout(function(){window.location.href= "dhceq.rm.resourceprice.csp?&RPSourceType="+getElementValue("RPSourceType")},50);
+	var url="dhceq.rm.resourceprice.csp?&RPSourceType="+getElementValue("RPSourceType");
+    if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.setTimeout(function(){window.location.href= url},50);
 }
 // Author add by zx 2019-12-19
 // Desc 初始化资源类型为combobox,默认value值为 '0'
@@ -209,7 +220,16 @@ function initRHPMode()
 			}],
 		onSelect: function () {
 	    	ValueClear()
-			var paramsFrom=[{"name":"Desc","type":"1","value":"RHPUOMDR_Desc"},{"name":"Type","type":"2","value":"1"}];
+			//modify by zc0096 20210121 修改单位类型 begin
+	    	if (getElementValue("RHPMode")=="1")
+	    	{
+				var paramsFrom=[{"name":"Desc","type":"1","value":"RHPUOMDR_Desc"},{"name":"Type","type":"2","value":"3"}];
+	    	}
+	    	else if (getElementValue("RHPMode")=="2")
+	    	{
+		    	var paramsFrom=[{"name":"Desc","type":"1","value":"RHPUOMDR_Desc"},{"name":"Type","type":"2","value":"1"}];
+		    }
+		    //modify by zc0096 20210121 修改单位类型  end
     		singlelookup("RHPUOMDR_Desc","PLAT.L.UOM",paramsFrom,"");
 
     }
@@ -322,7 +342,7 @@ function clearFormData()
 	setElement("RHPUOMDR_Desc","");
 	setElement("RHPPrice","");
 	setElement("RHPFromDate","");
-	var paramsFrom=[{"name":"Desc","type":"1","value":"RHPUOMDR_Desc"},{"name":"Type","type":"2","value":"1"}];
+	var paramsFrom=[{"name":"Desc","type":"1","value":"RHPUOMDR_Desc"},{"name":"Type","type":"2","value":"3"}];   //modify by zc0096 20210121 修改单位类型
     singlelookup("RHPUOMDR_Desc","PLAT.L.UOM",paramsFrom,"");
 }
 

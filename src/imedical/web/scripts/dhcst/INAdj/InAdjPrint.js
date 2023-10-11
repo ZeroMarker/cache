@@ -1,8 +1,8 @@
-//åº“å­˜è°ƒæ•´å•æ‰“å°
+//¿â´æµ÷Õûµ¥´òÓ¡
 
 /*
- * description:æ‰“å°å•ä¸ªåº“å­˜è°ƒæ•´å•ï¼ˆæ¶¦ä¹¾ï¼‰
- * params: inadj:åº“å­˜è°ƒæ•´ä¸»è¡¨id
+ * description:´òÓ¡µ¥¸ö¿â´æµ÷Õûµ¥£¨ÈóÇ¬£©
+ * params: inadj:¿â´æµ÷ÕûÖ÷±íid
  * return:
  * */
 function PrintInAdj(inadj){

@@ -24,7 +24,7 @@ $(function(){
 			{
 				//通过CA接口获取当前key的唯一编码
 				var certB64 = opts.topwin.GetSignCert(key);
-				var UsrCertCode = opts.topwin.GetUniqueID(certB64);
+				var UsrCertCode = opts.topwin.GetUniqueID(certB64,key);
 				//通过key的唯一编码获取关联UserID
 				var UsrIdByKey = GetUsrIdByKey(UsrCertCode);
 				var userlevel = getUserLevel(UsrIdByKey);
@@ -55,7 +55,7 @@ $(function(){
 			{
 				//通过CA接口获取当前key的唯一编码
 				var certB64 = opts.topwin.GetSignCert(key);
-				var UsrCertCode = opts.topwin.GetUniqueID(certB64);
+				var UsrCertCode = opts.topwin.GetUniqueID(certB64,key);
 				//通过key的唯一编码获取关联UserID
 				var UsrIdByKey = GetUsrIdByKey(UsrCertCode);
 				var userlevel = getUserLevel(UsrIdByKey);
@@ -85,7 +85,8 @@ $(function(){
 	    return;
 	}*/
 	
-	document.getElementById("password").focus();
+    if ($("#trPassword").is(":visible"))
+        document.getElementById("password").focus();
 	
 	document.onkeydown = function() {
 		var pwd = document.getElementById("password");
@@ -231,7 +232,7 @@ function GetList_pnp()
             var uniqueID = user.split('||')[1];
             //通过CA接口获取当前key的唯一编码
             var certB64 = opts.topwin.GetSignCert(uniqueID);
-            var UsrCertCode = opts.topwin.GetUniqueID(certB64);
+            var UsrCertCode = opts.topwin.GetUniqueID(certB64,uniqueID);
             //通过key的唯一编码获取关联UserID
             var UsrIdByKey = GetUsrIdByKey(UsrCertCode);            
 
@@ -271,7 +272,7 @@ function ajaxLogin(key) {
 	    } 
     } catch (err) {}
 
-    var UsrCertCode = opts.topwin.GetUniqueID(cert);
+    var UsrCertCode = opts.topwin.GetUniqueID(cert,key);
     var certificateNo = opts.topwin.GetCertNo(key);
 	
 	if (CAVersion == "2")

@@ -1,326 +1,443 @@
-ï»¿/**
-* dhcbill.ipbill.dischQuery.js
-*/
-
-var m_Adm = "";
+/**
+ * FileName: dhcbill.ipbill.dischQuery.js
+ * Author: LJJ
+ * Date: 2018-06-04
+ * Description: ³öÔº»¼Õß²éÑ¯
+ */
 
 $(function () {
 	initQueryMenu();
-	initCombobox();
-	initDataGrid();
+	initAdmList();
 });
 
-var initQueryMenu = function () {	
-	var curDate =  getDefStDate(0);
-	$("#Stdate, #EndDate").datebox('setValue', curDate);
+function initQueryMenu() {
+	$(".datebox-f").datebox("setValue", CV.DefDate);
 	
-	$HUI.linkbutton("#Clear", {
+	$HUI.linkbutton("#btn-clear", {
 		onClick: function () {
-			Clear_Click();
-		}
-	});
-	
-	$HUI.linkbutton("#Find", {
-		onClick: function () {
-			Find_Click();
-		}
-	});
-	$HUI.linkbutton("#outExp", {
-		onClick: function () {
-			outExp_Click();
+			clearClick();
 		}
 	});
 	
-	$HUI.linkbutton('#Printdetail', {
+	$HUI.linkbutton("#btn-find", {
 		onClick: function () {
-			PrtBillDetail();
+			loadAdmList();
 		}
 	});
 	
-	$("#regno").keydown(function(e) {
-		RegNo_keydown(e);
-	});
-}
-
-function initDataGrid() {
-	$HUI.datagrid('#tableList', {
-		fit: true,
-		border: false,
-		striped: true,
-		singleSelect: true,
-		selectOnCheck: false,
-		pagination: true,
-		rownumbers: true,
-		pageSize: 20,
-		data: [],
-		frozenColumns: [[{field: 'name', title: 'å§“å', width: 80},
-						 {field: 'Tregno', title: 'ç™»è®°å·', width: 100},
-						 {field: 'Tzyno', title: 'ä½é™¢å·', width: 80}
-			]],
-		columns: [[{field: 'Tloc', title: 'ç§‘å®¤', width: 120},
-		           {field: 'Tpatward', title: 'ç—…åŒº', width: 120},
-		           {field: 'Tsex', title: 'æ€§åˆ«', width: 50},
-		           {field: 'Tadmitdate', title: 'å…¥é™¢æ—¥æœŸ', width: 150},
-		           {field: 'TMRDiagnos', title: 'è¯Šæ–­', width: 180},
-		           {field: 'Tbed', title: 'åºŠä½', width: 50},
-		           {field: 'Tdecease', title: 'å‡ºé™¢çŠ¶æ€', width: 80},
-		           {field: 'Tpatfee', title: 'æœªç»“ç®—è´¹ç”¨', width: 100, align: 'right', formatter: formatAmt},
-		           {field: 'TPatShareAmt', title: 'è‡ªä»˜è´¹ç”¨', width: 100, align: 'right', formatter: formatAmt},
-		           {field: 'TPatAge', title: 'å¹´é¾„', width: 50},
-		           {field: 'Tadmreas', title: 'è´¹åˆ«', width: 100},
-		           {field: 'Tconfirmflag', title: 'å®¡æ ¸æ ‡å¿—', width: 80},
-		           {field: 'Tdisdate', title: 'å‡ºé™¢æ—¥æœŸ', width: 150},
-		           {field: 'Tdisc', title: 'æœ€ç»ˆç»“ç®—çŠ¶æ€', width: 100},
-		           {field: 'Tdeposit', title: 'æŠ¼é‡‘', width: 100, align: 'right', formatter: formatAmt},
-		           {field: 'Tremain', title: 'ä½™é¢', width: 100, align: 'right', formatter: formatAmt,
-					styler: function(value, row, index) {
-						if (+value < 0) {
-							return 'background-color:#ffee00; color:red;';
-						}
-					}
-				   },
-				   {field: 'AdmDoc', title: 'ç®¡åºŠåŒ»ç”Ÿ', width: 80},
-				   {field: 'Trcptno', title: 'æ”¶æ®å·', width: 100},
-				   {field: 'TAddress', title: 'å®¶åº­åœ°å€', width: 100},
-				   {field: 'TPaplinkphone', title: 'ç”µè¯', width: 100},
-				   {field: 'TPatNum', title: 'ä½é™¢æ¬¡æ•°', width: 80},
-				   {field: 'THomePlace', title: 'ç±è´¯', width: 100},
-				   {field: 'EpisodeID', title: 'EpisodeID', hidden: true},
-				   {field: 'TPatientID', title: 'TPatientID', hidden: true},
-				   {field: 'TBillno', title: 'TBillno', hidden: true}
-			]],
-		onSelect: function (rowIndex, rowData) {
-			SelectRowHandler(rowIndex, rowData);
+	$HUI.linkbutton("#btn-print", {
+		onClick: function () {
+			printClick();
 		}
 	});
-}
-
-function RegNo_keydown(e) {
-	var key = websys_getKey(e);
-	if (key == 13) {
-		$m({
-			ClassName: "web.UDHCJFBaseCommon",
-			MethodName: "regnocon",
-			PAPMINo: $('#regno').val(),
-		},function(txt) {
-			$("#regno").val(txt);
-			loadDataGrid();
-		});
-	}
-}
-
-function initCombobox() {
-	$HUI.combobox("#Ward", {
-		url: $URL + '?ClassName=web.UDHCJFDischQuery&QueryName=FindWard&ResultSetType=array',
-		mode: 'remote',
+	
+	//´òÓ¡Çåµ¥
+	$HUI.linkbutton('#btn-printDtl', {
+		onClick: function () {
+			printDtlClick();
+		}
+	});
+	
+	//Ò½±£×¡Ôº½áËãÃ÷Ï¸ 2022-11-10 LUANZH
+	$HUI.linkbutton("#btn-insu", {
+		onClick: function () {
+			printInsuClick();
+		}
+	});
+	
+	$("#patientNo").keydown(function(e) {
+		patientNoKeydown(e);
+	});
+	
+	$HUI.combobox("#ward", {
+		panelHeight: 180,
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryWard&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
 		valueField: 'id',
 		textField: 'text',
 		value: PUBLIC_CONSTANT.SESSION.WARDID,
-		onBeforeLoad: function (param) {
-			param.desc = param.q;
-			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
+		blurValidValue: true,
+		defaultFilter: 5,
+		filter: function(q, row) {
+			var opts = $(this).combobox("options");
+			var mCode = false;
+			if (row.contactName) {
+				mCode = row.contactName.toUpperCase().indexOf(q.toUpperCase()) >= 0
+			}
+			var mValue = row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0;
+			return mCode || mValue;
 		}
 	});
 
-	$HUI.combobox("#Loc", {
-		url: $URL + '?ClassName=web.UDHCJFQFPATIENT&QueryName=FindDept&ResultSetType=array',
+	$HUI.combobox("#dept", {
+		panelHeight: 180,
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryIPDept&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
+		valueField: 'id',
+		textField: 'text',
+		blurValidValue: true,
+		defaultFilter: 5,
+		multiple: (CV.DeptMulti == 1),
+		filter: function(q, row) {
+			var opts = $(this).combobox("options");
+			var mCode = false;
+			if (row.contactName) {
+				mCode = row.contactName.toUpperCase().indexOf(q.toUpperCase()) >= 0
+			}
+			var mValue = row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0;
+			return mCode || mValue;
+		}
+	});
+
+	$HUI.combobox("#doctor", {
+		panelHeight: 150,
 		mode: 'remote',
+		method: 'GET',
 		valueField: 'id',
 		textField: 'text',
+		delay: 300,
+		blurValidValue: true,
+		defaultFilter: 5,
 		onBeforeLoad: function (param) {
-			param.desc = param.q;
-			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
-		}
-	});
-
-	$HUI.combobox("#PCPName", {
-		url: $URL + '?ClassName=web.UDHCJFDischQuery&QueryName=FindCareProv&ResultSetType=array',
-		valueField: 'id',
-		textField: 'text',
-		defaultFilter: 4,
-		onBeforeLoad: function (param) {
-			param.PCPName = "";
-			param.HospId = PUBLIC_CONSTANT.SESSION.HOSPID;
+			if ($.trim(param.q).length > 1) {
+				$.extend($(this).combobox("options"), {url: $URL});
+				param.ClassName = "web.DHCBillOtherLB";
+				param.QueryName = "QryDoctor";
+				param.ResultSetType = "array";
+				param.desc = param.q;
+				param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID
+			}
 		}
 	});
 	
-	$HUI.combobox("#Patinstype", {
-		url: $URL + '?ClassName=web.UDHCJFDischQuery&QueryName=FindAdmReason&ResultSetType=array',
+	$HUI.combobox("#insType", {
+		panelHeight: 180,
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryAdmReason&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
 		valueField: 'id',
 		textField: 'text',
-		defaultFilter: 4,
+		defaultFilter: 5
+	});
+	
+	$HUI.combobox("#admStatus", {
+		panelHeight: 'auto',
+		editable: false,
+		valueField: 'value',
+		textField: 'text',
+		data:[{value: 'Nur', text: $g('»¤Ê¿È·ÈÏ'), selected: true},
+		      {value: 'Doc', text: $g('Ò½ÉúÈ·ÈÏ')},
+			  {value: 'Admit', text: $g('µ±Ç°ÔÚÔº')},
+		      {value: 'Pay', text: $g('²ÆÎñ½áËã')}
+		     ]
+	});
+	
+	//Õï¶Ï
+	$HUI.combobox("#diagnos", {
+		panelHeight: 180,
+		mode: 'remote',
+		method: 'GET',
+		delay: 300,
+		valueField: 'HIDDEN',
+		textField: 'desc',
+		blurValidValue: true,
 		onBeforeLoad: function (param) {
-			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
+			if ($.trim(param.q).length > 1) {
+				$.extend($(this).combobox("options"), {url: $URL})
+				param.ClassName = "web.DHCMRDiagnos";
+				param.QueryName = "LookUpWithAlias";
+				param.ResultSetType = "array";
+				param.desc = param.q;
+			}
+		}
+	});
+	
+	//Ò½±£µÇ¼Ç±êÊ¶
+	$HUI.combobox("#insuReg", {
+		panelHeight: 'auto',
+		valueField: 'value',
+		textField: 'text',
+		data: [{value: 'N', text: $g('Î´µÇ¼Ç')},
+		      {value: 'Y', text: $g('ÒÑµÇ¼Ç')}
+		     ]
+	});
+}
+
+function initAdmList() {
+	GV.DischAdmList = $HUI.datagrid("#dischAdmList", {
+		fit: true,
+		border: false,
+		singleSelect: true,
+		pagination: true,
+		rownumbers: true,
+		pageSize: 20,
+		className: 'web.UDHCJFDischQuery',
+		queryName: 'QryDisChgPatList',
+		frozenColumns: [[{field: 'TPatientNo', title: 'µÇ¼ÇºÅ', width: 100},
+						 {field: 'TMrNo', title: '²¡°¸ºÅ', width: 80},
+						 {field: 'TPatName', title: '»¼ÕßĞÕÃû', width: 80}
+			]],
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["TPatientNo", "TMrNo", "TPatName", "TWard", "TAdmDate", "TDischDate", "TMedDischDate"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if ($.inArray(cm[i].field, ["TEpisodeID", "TPatientID", "TBillID", "TPayDate", "TPayTime"]) != -1) {
+					cm[i].hidden = true;
+					continue;
+				}
+				if (cm[i].field == "TMRDiagnos") {
+					cm[i].showTip = true;
+				}
+				if (cm[i].field == "TDept") {
+					cm[i].title = '¿ÆÊÒ²¡Çø';
+					cm[i].showTip = true;
+					cm[i].formatter = function (value, row, index) {
+						return value + " " + row.TWard;
+					}
+				}
+				if (cm[i].field == "TAdmTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.TAdmDate + " " + value;
+					}
+				}
+				if (cm[i].field == "TDischTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.TDischDate + " " + value;
+					}
+				}
+				if (cm[i].field == "TMedDiscTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.TMedDischDate + " " + value;
+					}
+				}
+				if (cm[i].field == "TRemain") {
+					cm[i].styler = function(value, row, index) {
+						if (value < 0) {
+							return 'background-color:#ffee00; color:red;';
+						}
+					};
+				}
+				if (cm[i].field == "TIsInsuReg") {
+					cm[i].formatter = function (value, row, index) {
+						if (value) {
+							var color = (value == "Y") ? "#21ba45" : "#f16e57";
+							return "<font color=\"" + color + "\">" + ((value == "Y") ? $g("ÊÇ") : $g("·ñ")) + "</font>";
+						}
+					}
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if ($.inArray(cm[i].field, ["TSex", "TAge", "TBed"]) != -1) {
+						cm[i].width = 60;
+					}
+					if ($.inArray(cm[i].field, ["TAdmTime", "TDischTime", "TMedDiscTime"]) != -1) {
+						cm[i].width = 155;
+					}
+					if (cm[i].field == "TDept") {
+						cm[i].width = 160;
+					}
+					if (cm[i].field == "TMRDiagnos") {
+						cm[i].width = 180;
+					}
+				}
+				if (cm[i].field == "PersonId") {
+					cm[i].width = 180;
+					cm[i].hidden = false;
+				}
+			}
+		},
+		onSelect: function (index, row) {
+			selectRowHandler(index, row);
 		}
 	});
 }
 
-function Find_Click() {
-	loadDataGrid();
+function patientNoKeydown(e) {
+	var key = websys_getKey(e);
+	if (key == 13) {
+		if ($(e.target).val()) {
+			$.m({
+				ClassName: "web.UDHCJFBaseCommon",
+				MethodName: "regnocon",
+				PAPMINo: $(e.target).val()
+			},function(patientNo) {
+				$(e.target).val(patientNo);
+				loadAdmList();
+			});
+		}
+	}
 }
 
-function loadDataGrid() {
-	var expStr = PUBLIC_CONSTANT.SESSION.GROUPID + "!" + PUBLIC_CONSTANT.SESSION.CTLOCID + "!" + PUBLIC_CONSTANT.SESSION.HOSPID;
+function loadAdmList() {
+	var deptId = "";
+	if ($("#dept").combobox("options").multiple) {
+		deptId = $("#dept").combobox("getValues").join("^");
+	}else {
+		deptId = $("#dept").combobox("getValue");
+	}
+	var wardId = getValueById("ward");
+	var docId = getValueById("doctor");
+	var insTypeId = getValueById("insType");
+	var bed = getValueById("bedNo");
+	var diagId = getValueById("diagnos");
+	var isInsuReg = getValueById("insuReg");
+	var expStr = deptId + "!" + wardId + "!" + docId + "!" + insTypeId + "!" + bed + "!" + diagId + "!" + isInsuReg;
+	
 	var queryParams = {
 		ClassName: "web.UDHCJFDischQuery",
-		QueryName: "GetDisChgPatInfo",
-		Medval: $("#Medical").radio("getValue") ? 1 : 0,
-		Finalval: $("#Final").radio("getValue") ? 1 : 0,
-		Stdate: getValueById("Stdate"),
-		EndDate: getValueById("EndDate"),
-		locid: getValueById("Loc") || "",
-		wardid: getValueById("Ward") || "",
-		payflagvalue: $("#Payflag").radio("getValue") ? 1 : 0,
-		regno: getValueById("regno"),
-		MasterName: getValueById("MasterName"),
-		Patzyno: getValueById("Patzyno"),
-		CurAdm: $("#CurAdm").radio("getValue") ? 1 : 0,
-		DocID: getValueById("PCPName") || "",
-		Patinstypeid: getValueById("Patinstype") || "",
-		PatbedNo: getValueById("PatbedNo"),
-		ExpStr: expStr
+		QueryName: "QryDisChgPatList",
+		StDate: getValueById("stDate"),
+		EndDate: getValueById("endDate"),
+		PatientNo: getValueById("patientNo"),
+		PatientName: getValueById("patName"),
+		MedicareNo: getValueById("medicareNo"),
+		AdmStatus: getValueById("admStatus"),
+		ExpStr: expStr,
+		HospId: PUBLIC_CONSTANT.SESSION.HOSPID
 	};
-	loadDataGridStore("tableList", queryParams);
+	loadDataGridStore("dischAdmList", queryParams);
 }
 
-function outExp_Click() {
-	var Medval = ($("#Medical").radio("getValue")) ? 1 : 0;
-	var Finalval = ($("#Final").radio("getValue")) ? 1 : 0;
-	var Stdate = getValueById("Stdate");
-	var EndDate = getValueById("EndDate");
-	var locid = getValueById("Loc")  || "";
-	var wardid = getValueById("Ward")  || "";
-	var payflagvalue = ($("#Payflag").radio("getValue"))? 1 : 0;
-	var regno = getValueById("regno");
-	var MasterName = getValueById("MasterName");
-	var Patzyno = getValueById("Patzyno");
-	var CurAdm =  ($("#CurAdm").radio("getValue")) ? 1 : 0;
-	var DocID = getValueById("PCPName");
-	var Patinstypeid = getValueById("Patinstype") || "";
-	var ExpStr = PUBLIC_CONSTANT.SESSION.GROUPID + "!" + PUBLIC_CONSTANT.SESSION.CTLOCID + "!" + PUBLIC_CONSTANT.SESSION.HOSPID;
+function printClick() {
+	var stDate = getValueById("stDate");
+	var endDate = getValueById("endDate");
+	var deptId = "";
+	if ($("#dept").combobox("options").multiple) {
+		deptId = $("#dept").combobox("getValues").join("^");
+	}else {
+		deptId = $("#dept").combobox("getValue");
+	}
+	var wardId = getValueById("ward");
+	var patientNo = getValueById("patientNo");
+	var patName = getValueById("patName");
+	var medicareNo = getValueById("medicareNo");
+	var docId = getValueById("doctor");
+	var insTypeId = getValueById("insType");
+	var bed = getValueById("bedNo");
+	var admStatus = getValueById("admStatus");
+	var diagId = getValueById("diagnos");
+	var isInsuReg = getValueById("insuReg");
+	var expStr = deptId + "!" + wardId + "!" + docId + "!" + insTypeId + "!" + bed + "!" + diagId + "!" + isInsuReg;
 	
-	var fileName = "DHCBILL-IPBILL-CYHZTJ.rpx&Medval=" + Medval + "&Finalval=" + Finalval + "&Stdate=" + Stdate;
-	fileName += "&EndDate=" + EndDate + "&locid=" + locid + "&wardid=" + wardid + "&payflagvalue=" + payflagvalue;
-	fileName += "&regno=" + regno + "&MasterName=" + MasterName + "&Patzyno=" + Patzyno + "&CurAdm=" + CurAdm;
-	fileName += "&DocID=" + DocID + "&Patinstypeid=" + Patinstypeid + "&ExpStr=" + ExpStr;
+	var fileName = "DHCBILL-IPBILL-CYHZTJ.rpx" + "&StDate=" + stDate + "&EndDate=" + endDate;
+	fileName += "&PatientNo=" + patientNo + "&PatientName=" + patName + "&MedicareNo=" + medicareNo;
+	fileName += "&AdmStatus=" + admStatus + "&ExpStr=" + expStr + "&HospId=" + PUBLIC_CONSTANT.SESSION.HOSPID;
 	
-	var maxHeight = $(window).height() || 550;
-	var maxWidth = $(window).width() || 1366;
-	
+	var maxHeight = $(window).height() * 0.8;
+	var maxWidth = $(window).width() * 0.8;
 	DHCCPM_RQPrint(fileName, maxWidth, maxHeight);
 }
 
-function PrtBillDetail() {
-	var row = $("#tableList").datagrid("getSelected");
+function printDtlClick() {
+	var row = GV.DischAdmList.getSelected();
 	if (!row) {
 		return;
 	}
-	var adm = $.trim(row.EpisodeID);
-	if (adm == "") {
-		$.messager.alert('æç¤º', 'è¯·é€‰æ‹©æ‚£è€…', 'info');
+	var adm = row.TEpisodeID;
+	if (!adm) {
+		$.messager.popover({msg: 'ÇëÑ¡Ôñ»¼Õß', type: 'info'});
 		return;
 	}
-	var billNo = $.trim(row.TBillno);
-	if (billNo != "") {
-		var url = "dhcbill.ipbill.billdtl.csp?&EpisodeID=" + adm + "&BillRowId=" + billNo;
-		websys_showModal({
-			url: url,
-			title: 'è´¹ç”¨æ˜ç»†',
-			iconCls: 'icon-w-list',
-			width: '85%'
-		});
-	} else {
-		$m({
-			ClassName: "web.UDHCJFDischQuery",
-			MethodName: "JudgeBillNum",
-			PAADMRowID: adm
-		}, function (rtn) {
-			var myAry = rtn.split('^');
-			var billNum = myAry[0];
-			var billId = myAry[1];
-			if (parseInt(billNum) == 1) {
-				Bill(billId);
-			}else if (parseInt(billNum) > 1) {
-				var url = "dhcbill.ipbill.billselect.csp?&EpisodeID=" + adm;
-				websys_showModal({
-					url: url,
-					title: 'è´¦å•åˆ—è¡¨',
-					iconCls: 'icon-w-list',
-					height: 400,
-					width: 800
-				});
-			}
-		});
+	var billId = row.TBillID;
+	if (billId != "") {
+		showBillDtl(adm, billId);
+		return;
 	}
-}
-
-function Clear_Click() {
-	$("#Stdate, #EndDate").datebox('setValue', getDefStDate(0));
-	$("#regno, #Patzyno, #MasterName, #PatbedNo").val("");
-	$("#Loc, #Patinstype, #PCPName, #Ward").combobox("clear").combobox("reload");
-	$("#Medical, #Payflag, #CurAdm").radio({checked: false});
-	$("#Final").radio({checked: true});
-	$("#tableList").datagrid("loadData", {
-		total: 0,
-		rows: []
+	$.m({
+		ClassName: "web.UDHCJFDischQuery",
+		MethodName: "JudgeBillNum",
+		PAADMRowID: adm
+	}, function (rtn) {
+		var myAry = rtn.split("^");
+		var billNum = myAry[0];
+		var billId = myAry[1];
+		if (billNum == 1) {
+			billClick(billId);
+			return;
+		}
+		if (billNum > 1) {
+			showBillDtl(adm);
+		}
 	});
 }
 
-function SelectRowHandler(rowIndex, rowData) {
-	m_Adm = $.trim(rowData.EpisodeID);
-	var PatientID = rowData.TPatientID;
+function clearClick() {
+	$(":text:not(.pagination-num,.combo-text)").val("");
+	$(".combobox-f:not(#admStatus)").combobox("clear");
+	$("#admStatus").combobox("setValue", "Nur");
+	$(".datebox-f").datebox("setValue", CV.DefDate);
+	GV.DischAdmList.options().pageNumber = 1;   //Ìø×ªµ½µÚÒ»Ò³
+	GV.DischAdmList.loadData({total: 0, rows: []});
+}
+
+function selectRowHandler(index, row) {
+	var menuWin = websys_getMenuWin();
+	if (menuWin && menuWin.MainClearEpisodeDetails) {
+		menuWin.MainClearEpisodeDetails();
+	}
 	var frm = dhcsys_getmenuform();
 	if (frm) {
-		frm.EpisodeID.value = m_Adm;
-		frm.PatientID.value = PatientID;
+		frm.EpisodeID.value = row.TEpisodeID;
+		frm.PatientID.value = row.TPatientID;
 	}
 }
 
-function Bill(billId) {
-	if (m_Adm == "") {
-		$.messager.alert('æç¤º', 'è¯·é€‰æ‹©æ‚£è€…', 'info');
+function billClick(billId) {
+	var row = GV.DischAdmList.getSelected();
+	if (!row || !row.TEpisodeID) {
 		return;
 	}
-	var computerName = PUBLIC_CONSTANT.SESSION.USERNAME;
+	var adm = row.TEpisodeID;
 	$.m({
 		ClassName: "web.UDHCJFBaseCommon",
 		MethodName: "Bill",
-		itmjs: "",
-		itmjsex: "",
-		EpisodeID: m_Adm,
+		EpisodeID: adm,
 		UserRowID: PUBLIC_CONSTANT.SESSION.USERID,
 		BillNo: billId,
-		ComputerName: computerName,
+		ComputerName: ClientIPAddress
 	}, function (rtn) {
-		switch (rtn) {
-		case "0":
-			if (billId == "") {
-				$.messager.alert('æç¤º', 'è´¦å•ä¸ºç©º', 'info');
-				return;
-			}
-			$.m({
-				ClassName: 'web.UDHCJFDischQuery',
-				MethodName: "JudgePatfee",
-				PatientBillId: billId
-			},	function(balanceRtn) {
-				if (+balanceRtn != 0) {
-					$.messager.alert('æç¤º', 'æ‚£è€…å¸å•è´¹ç”¨ä¸å¹³', 'info');
-					return;
-				}
-				var url = 'dhcbill.ipbill.billdtl.csp?&EpisodeID=' + m_Adm + '&BillRowId=' + billId;
-				websys_showModal({
-					url: url,
-					title: 'è´¹ç”¨æ˜ç»†',
-					iconCls: 'icon-w-list',
-					width: '85%'
-				});
-			});
+		var myAry = rtn.split("^");
+		if (myAry[0] == 0) {
+			showBillDtl(adm, billId);
 			return;
-		case "2":
-			$.messager.alert('æç¤º', 'è¯¥æ‚£è€…æœ‰ä¸¤ä¸ªæœªç»“ç®—å¸å•ï¼Œä¸èƒ½å¸å•', 'info');
-			return;
-		default:
-			$.messager.alert('æç¤º', 'å¸å•å¤±è´¥', 'error');
 		}
+		$.messager.popover({msg: ($g("ÕËµ¥Ê§°Ü£º") + (myAry[1] || myAry[0])), type: "error"});
 	});
+}
+
+function showBillDtl(adm, billId) {
+	if (!billId) {
+		var url = "dhcbill.ipbill.billselect.csp?EpisodeID=" + adm;
+		websys_showModal({
+			url: url,
+			title: 'ÕËµ¥ÁĞ±í',
+			iconCls: 'icon-w-list',
+			height: 400,
+			width: 800
+		});
+		return;
+	}
+	
+	var url = "dhcbill.ipbill.billdtl.csp?EpisodeID=" + adm + "&BillID=" + billId;
+	websys_showModal({
+		url: url,
+		title: '·ÑÓÃÃ÷Ï¸',
+		iconCls: 'icon-w-list',
+		width: '85%'
+	});
+}
+
+/**
+* Ò½±£×¡Ôº½áËãÃ÷Ï¸
+*/
+function printInsuClick() {
+	var row = GV.DischAdmList.getSelected();
+	if (!row) {
+		$.messager.popover({msg: 'ÇëÑ¡Ôñ»¼Õß', type: 'info'});
+		return;
+	}
+	var adm = row.TEpisodeID;
+	var billId = row.TBillID;
+	var fileName = "DHCINSU.IP.DivideSubByAdm.rpx" + "&admDr=" + adm + "&QchrgitmLv00A=" +  "" + "&BillDr=" + billId + "&InsuKey=" + "" + "&TarItemKey" + "";
+	var width = $(window).width() * 0.8;
+	var height = $(window).height() * 0.8;
+    DHCCPM_RQPrint(fileName, width, height);
 }

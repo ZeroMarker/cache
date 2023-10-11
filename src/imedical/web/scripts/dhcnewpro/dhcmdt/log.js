@@ -61,7 +61,7 @@ function InitLogGrid(){
         }
 	};
 	
-	var uniturl = $URL+"?ClassName=web.DHCEMConsultQuery&MethodName=JsonCsLog&itmID="+CstItmID;
+	var uniturl = $URL+"?ClassName=web.DHCEMConsultQuery&MethodName=JsonCsLog&itmID="+CstItmID+"&MWToken="+websys_getMWToken();
 	new ListComponent('LogWin', columns, uniturl, option).Init();
 }
 

@@ -8,11 +8,11 @@ CreatLimtsConWin=function(Fn){
 	var gGroupId=session['LOGON.GROUPID'];  
     var gLocId=session['LOGON.CTLOCID'];
 	var curLoc = new Ext.ux.LocComboBox({
-		fieldLabel : '科室',
+		fieldLabel : $g('科室'),
 		id : 'curLoc',
 		name : 'curLoc',
 		anchor : '90%',
-		emptyText : '科室...',
+		emptyText : $g('科室...'),
 		groupId:session['LOGON.GROUPID'],
         listeners : {
 			'select' : function(e) {
@@ -29,7 +29,7 @@ CreatLimtsConWin=function(Fn){
 
 	// 起始日期
 	var StartDate = new Ext.ux.EditDate({
-		fieldLabel : '起始日期',
+		fieldLabel : $g('起始日期'),
 		id : 'StartDate',
 		name : 'StartDate',
 		anchor : '90%',
@@ -37,7 +37,7 @@ CreatLimtsConWin=function(Fn){
 	});
 	// 截止日期
 	var EndDate = new Ext.ux.EditDate({
-		fieldLabel : '截止日期',
+		fieldLabel : $g('截止日期'),
 		id : 'EndDate',
 		name : 'EndDate',
 		anchor : '90%',
@@ -45,21 +45,21 @@ CreatLimtsConWin=function(Fn){
 	});
 
 	var maxlimts =new Ext.form.NumberField({
-		fieldLabel : '上限系数',
+		fieldLabel : $g('上限系数'),
 		id : 'maxlimts',
 		name : 'maxlimts',
 		anchor : '90%',
 		value:1.25
 	});
 	var minlimts =new Ext.form.NumberField({
-		fieldLabel : '下限系数',
+		fieldLabel : $g('下限系数'),
 		id : 'minlimts',
 		name : 'minlimts',
 		anchor : '90%',
 		value:0.25
 	});	
 	var AllFlag = new Ext.form.Radio({
-		boxLabel : '全部',
+		boxLabel : $g('全部'),
 		id : 'AllFlag',
 		name : 'ZBType',
 		anchor : '80%',
@@ -78,7 +78,7 @@ CreatLimtsConWin=function(Fn){
 	}); 
 	
 	var PFlag = new Ext.form.Checkbox({
-		boxLabel : '住院发药',
+		boxLabel : $g('住院发药'),
 		id : 'PFlag',
 		name : 'PFlag',
 		anchor : '90%',
@@ -87,7 +87,7 @@ CreatLimtsConWin=function(Fn){
 		checked : true
 	});
 	var YFlag = new Ext.form.Checkbox({
-		boxLabel : '住院退药',
+		boxLabel : $g('住院退药'),
 		id : 'YFlag',
 		name : 'YFlag',
 		anchor : '90%',
@@ -96,7 +96,7 @@ CreatLimtsConWin=function(Fn){
 		checked : true
 	});
 	var FFlag = new Ext.form.Checkbox({
-		boxLabel : '门诊发药',
+		boxLabel : $g('门诊发药'),
 		id : 'FFlag',
 		name : 'FFlag',
 		anchor : '90%',
@@ -105,7 +105,7 @@ CreatLimtsConWin=function(Fn){
 		checked : true
 	});
 	var HFlag = new Ext.form.Checkbox({
-		boxLabel : '门诊退药',
+		boxLabel : $g('门诊退药'),
 		id : 'HFlag',
 		name : 'HFlag',
 		anchor : '90%',
@@ -114,7 +114,7 @@ CreatLimtsConWin=function(Fn){
 		checked : true
 	});
 	var TFlag = new Ext.form.Checkbox({
-		boxLabel : '转出',
+		boxLabel : $g('转出'),
 		id : 'TFlag',
 		name : 'TFlag',
 		anchor : '90%',
@@ -123,7 +123,7 @@ CreatLimtsConWin=function(Fn){
 		checked : false
 	});
 	var KFlag = new Ext.form.Checkbox({
-		boxLabel : '转入',
+		boxLabel : $g('转入'),
 		id : 'KFlag',
 		name : 'KFlag',
 		anchor : '90%',
@@ -134,7 +134,7 @@ CreatLimtsConWin=function(Fn){
 
 	// 关闭按钮
 	var closeBT = new Ext.Toolbar.Button({
-		text : '关闭',
+		text : $g('关闭'),
 		//tooltip : '点击关闭',
 		iconCls : 'page_close',
 		handler : function() {
@@ -144,7 +144,7 @@ CreatLimtsConWin=function(Fn){
 
 	// 确认按钮
 	var sureBT = new Ext.Toolbar.Button({
-		text : '确认',
+		text : $g('确认'),
 		id:'sure',
 		//tooltip : '点击确认',
 		iconCls:'page_save',
@@ -154,7 +154,7 @@ CreatLimtsConWin=function(Fn){
 	})
 	//遮罩
   var mask = new Ext.LoadMask(Ext.getBody(), {
-	  msg : '请稍后 ... ',                           
+	  msg : $g('请稍后 ... '),                           
 	  removeMask : true
   }); 
 
@@ -168,30 +168,30 @@ CreatLimtsConWin=function(Fn){
 	var minlimt=Ext.getCmp("minlimts").getValue();   //下限系数
 
 	if((maxlimt=="")||(maxlimt==null)||(maxlimt<=0)){
-		Msg.info("warning", "请填写正确上限系数!");
+		Msg.info("warning", $g("请填写正确上限系数!"));
 		return false;
 	}
 	if((minlimt=="")||(minlimt==null)||(minlimt<=0)){
-		Msg.info("warning", "请填写正确下限系数!");
+		Msg.info("warning", $g("请填写正确下限系数!"));
 		return false;
 	}
 	
 	if(minlimt>maxlimt){
-		Msg.info("warning", "上限系数不能小于下限系数!");
+		Msg.info("warning", $g("上限系数不能小于下限系数!"));
 		return false;
 	}
 	
 	if((curloc=="")||(curloc==null)){
-		Msg.info("warning", "请选科室!");
+		Msg.info("warning", $g("请选科室!"));
 		return false;
 	}
 	
 	if (startDate == undefined || startDate.length <= 0) {
-		Msg.info("warning", "请选择开始日期!");
+		Msg.info("warning", $g("请选择开始日期!"));
 		return;
 	}
 	if (endDate == undefined || endDate.length <= 0) {
-		Msg.info("warning", "请选择截止日期!");
+		Msg.info("warning", $g("请选择截止日期!"));
 		return;
 	}
 
@@ -248,7 +248,7 @@ CreatLimtsConWin=function(Fn){
 		}
 	}
 	if (TransType == null || TransType.length <= 0) {
-		Msg.info("warning", "请选择业务类型!");
+		Msg.info("warning", $g("请选择业务类型!"));
 		return;
 	}
 	
@@ -263,20 +263,20 @@ CreatLimtsConWin=function(Fn){
 		url: url,
 		params:{strParam:StrParam},
 		failure: function(result, request) {
-			Msg.info("error","请检查网络连接!");
+			Msg.info("error",$g("请检查网络连接!"));
 		},
 		success: function(result, request) {
 			var jsonData = Ext.util.JSON.decode( result.responseText );
 			if (jsonData.success=='true') {
 				window.close();
-				Msg.info("success","保存成功!");
+				Msg.info("success",$g("保存成功!"));
 				mask.hide(); //遮盖隐藏
 				
 				Fn();
 				//location.href="dhcst.inpurplan.csp?planNnmber="+jsonData.info+'&locId='+locId;
 			}else{
 				
-					Msg.info("error","保存失败!");
+					Msg.info("error",$g("保存失败!"));
 				
 				mask.hide(); //遮盖隐藏
 			}
@@ -296,7 +296,7 @@ CreatLimtsConWin=function(Fn){
 			autoHeight : true,
 			items : [{
 				xtype : 'fieldset',
-				title : '因子',
+				title : $g('因子'),
 				autoHeight : true,
 				items : [{
 					layout : 'column',
@@ -322,7 +322,7 @@ CreatLimtsConWin=function(Fn){
 			   }]
 			},{
 				xtype : 'fieldset',
-				title : '业务类型',
+				title : $g('业务类型'),
 				autoHeight : true,
 				items : [{
 					layout:'column',
@@ -351,7 +351,7 @@ CreatLimtsConWin=function(Fn){
 	})
 
 	var window=new Ext.Window({
-		title:'按照系数生成上下限',
+		title:$g('按照系数生成上下限'),
 		width:document.body.clientWidth * 0.5,
 		height:330,
 		modal:true,

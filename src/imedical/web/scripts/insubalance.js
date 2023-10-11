@@ -33,6 +33,8 @@ function initPanel(){
 	//医保结算数据面板
 	$HUI.datagrid("#InsuError",{
 		fit: true,
+		border:false,
+		toolbar:[],
 		striped: true, //是否显示斑马线效果
 		singleSelect: true,
 		selectOnCheck: false,
@@ -51,6 +53,7 @@ function initPanel(){
 			{field:'INSUFlag',title:'医保结算状态'},
 			{field:'DHCINVPRTDr',title:'INVPRTDr'},
 			{field:'INSUDivDr',title:'医保结算表Dr'},
+			{field:'PrtInsDivDr',title:'发票医保结算表Dr'},
 			{field:'INSUUser',title:'医保操作员'},
 			{field:'INSUAdmType',title:'医疗类别'},
 			{field:'InsuId',title:'医保号'},
@@ -58,7 +61,8 @@ function initPanel(){
 			{field:'INSUAmount',title:'总金额'},
 			//{field:'HISiDate',title:'HIS业务日期'},
 			//{field:'HISUser',title:'HIS操作员'},
-			{field:'AdmDr',title:'就诊表Dr'}
+			{field:'AdmDr',title:'就诊表Dr'},
+			
 		]],
 		data:[]
 	});
@@ -89,7 +93,7 @@ function Inquriy(){
 				titleTemp="普通门诊";
 				iconClsTemp="icon-add-note";
 				break;
-			case "INVPEDiv":
+			case "INVPE":
 				titleTemp="体检";
 				iconClsTemp="icon-add-note";
 				break;
@@ -134,6 +138,8 @@ function Inquriy(){
 function initTabDatagrid(id){
 	$HUI.datagrid("#"+id,{
 		fit:true,
+		border:false,
+		toolbar:[],
 		striped: true, //是否显示斑马线效果
 		singleSelect: true,
 		selectOnCheck: false,

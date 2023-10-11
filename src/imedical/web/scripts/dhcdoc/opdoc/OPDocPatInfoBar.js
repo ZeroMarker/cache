@@ -1,14 +1,18 @@
 var oprecadm=opdoc.lib.ns("opdoc.patinfobar");
 oprecadm.view=(function(){
-	function InitPatInfo(EpisodeID){
+	function InitPatInfo(EpisodeID,ItemWid){
+		if((ItemWid=="")||(typeof ItemWid=='undefined')){
+			//ItemWid=$(window).width()-250;	
+			ItemWid=$(".PatInfoItem").parent().width()-50;	
+		}
 		$.m({
 			ClassName:"web.DHCDoc.OP.AjaxInterface",
 			MethodName:"GetOPInfoBar",
 			EpisodeID:EpisodeID,
 			CONTEXT:session['CONTEXT']
 		},function(html){
-			$(".PatInfoItem").html(reservedToHtml(html)).css('width',$(window).width()-250);
-			//divå†…å®¹æº¢å‡º
+			$(".PatInfoItem").html(reservedToHtml(html)).css('width',ItemWid);
+			//divÄÚÈÝÒç³ö
 			if ($(".PatInfoItem")[0].offsetWidth<$(".PatInfoItem")[0].scrollWidth) {
 				InitPatInfoHover();
 			}
@@ -27,8 +31,10 @@ oprecadm.view=(function(){
 			trigger:'hover',
 			arrow:false,
 			style:'patinfo',
+			isTopZindex:true,
 			content:"<div class='patinfo-hover-content'>"+$(".PatInfoItem")[0].innerHTML+"</div>"
 		});
+		//$(".PatInfoItem").css({"margin-right":"20px"}).append('<div style="position:absolute;top:0px;right:0px;">...</div>')
 	}
 	return {
 		"InitPatInfo":InitPatInfo

@@ -7,10 +7,18 @@ $(function(){
 	//事件初始化
 	InitEvent();
 	DHCOPRegDepExpandTabDataGridLoad();
+	InitCache();
 });
 function InitEvent(){
 	$("#Search").click(DHCOPRegDepExpandTabDataGridLoad);
 	$("#Save").click(SaveClickHandle);
+}
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
 }
 function SaveClickHandle(){
 	var data=PageLogicObj.m_DHCOPRegDepExpandTabDataGrid.datagrid('getData');
@@ -87,7 +95,7 @@ function InitDHCOPRegDepExpandTabDataGrid(){
 	return DHCOPRegDepExpandTabDataGrid;
 }
 function DHCOPRegDepExpandTabDataGridLoad(){
-	var Loc=$("#desc").val();
+	var Loc=$("#desc").searchbox("getValue");
 	$.q({
 	    ClassName : "web.DHCOPRegConfig",
 	    QueryName : "Loclookup",

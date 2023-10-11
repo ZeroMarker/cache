@@ -7,31 +7,52 @@ function BodyLoadHandler()
 		var CatsID=GetElementValue("CatsID")
 		FindNodeByIds(CatsID);
 	}
+	//add by csj 2020-09-15 分类树hisui改造
+	$("#treeviewarea").html("<ul id='tDHCEQCTreeMap' data-options='animate:true'></ul>")
+	initTree()
+	
+}
+//add by csj 2020-09-15 分类树hisui改造
+function initTree()
+{
+	var EquipeCatTree =tkMakeServerCall("web.DHCEQ.Plat.LIBTree","GetTreeMapStr")
+	$('#tDHCEQCTreeMap').tree({
+		data:JSON.parse(EquipeCatTree),
+		onClick: function (node) {
+			NodeClickHandler(node)
+		},
+		lines:true,
+	})
 }
 
+//// MZY0094	2083132,2083148		2021-09-13 分类树hisui改造
 function NodeClickHandler(nod)
 {
 	var Type=GetElementValue("Type")
 	if (Type=="DHCEQCTreeMap"||Type=="")
 	{
-		var ParType=""
-		if (nod.ID!=0)
-		{
-			var obj=document.getElementById("fillData");
-			if (obj){var encmeth=obj.value} else {var encmeth=""};
-			var ReturnList=cspRunServerMethod(encmeth,nod.ID);
-			ReturnList=ReturnList.replace(/\\n/g,"\n");
-			list=ReturnList.split("^");
-			var ParType=list[1]
+		var lnk='websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCTreeMapEdit&Type=1&ParTreeDR='+nod.id;
+		if ('function'==typeof websys_getMWToken){
+			lnk += "&MWToken="+websys_getMWToken()
 		}
-		parent.frames["DHCEQCTreeMapEdit"].location.href='websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCTreeMapEdit&ParTreeDR='+nod.ID+'&Type='+ParType;
+		parent.frames["DHCEQCTreeMapEdit"].location.href=lnk;
+	}
+	if (Type=="DHCEQCTreeMapEdit")
+	{
+		var NodID=nod.id
+		if (NodID=="0") NodID=""
+		var lnk='websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQCTreeMapEdit&Data=^IsDisused=N^IsOut=N^EquipCatDR='+NodID+"^IncludeFlag=1&ReadOnly=1";
+		if ('function'==typeof websys_getMWToken){
+			lnk += "&MWToken="+websys_getMWToken()
+		}
+		parent.frames["DHCEQCTreeMapEdit"].location.href=lnk;
 	}
 	if (Type=="SelectTree")
 	{
-		if (nod.ID>0)
+		if (nod.id>0)
 		{
-			opener.SetTreeDR(nod.ID,nod.Text);
-			window.close();
+			websys_showModal("options").mth(nod.id,nod.text);  
+			closeWindow("modal")
 		}
 	}
 }

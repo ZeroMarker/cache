@@ -10,8 +10,8 @@ function initDocument()
 	initButton();
 	initLookUp();
 
-	jQuery("#BAdd").linkbutton({iconCls: 'icon-w-add'});
-	jQuery("#BAdd").on("click", BAdd_Clicked);
+	//jQuery("#BAdd").linkbutton({iconCls: 'icon-w-add'}); //modify by zyq 2022-12-21
+	//jQuery("#BAdd").on("click", BAdd_Clicked); 
 	$HUI.datagrid("#pnoticefinddatagrid",{   
 	   	url:$URL, 
 		idField:'TRowID', //Ö÷¼ü   //add by lmm 2018-10-23
@@ -53,10 +53,12 @@ function initDocument()
 		},{
 			id: '2',
 			text: 'ÉóºË'
-		},{
+		}
+		//modify by lmm 2021-03-05 1790786
+		/*,{
 			id: '3',
 			text: '×÷·Ï'
-		}],
+		}*/],
 		});
 	}
 		

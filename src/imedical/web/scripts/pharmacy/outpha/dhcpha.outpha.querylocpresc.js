@@ -6,6 +6,8 @@
 */
 var QUERYPID="";
 var GridSelect="";
+var changeFlag=0;
+var HttpSrc="";
 $(function(){
 	CheckPermission();
 	/* 初始化插件 start*/
@@ -21,6 +23,8 @@ $(function(){
 	}
 	$("#date-start").dhcphaDateRange(daterangeoptions);
 	$("#date-end").dhcphaDateRange(daterangeoptions);
+
+
 	//屏蔽所有回车事件
 	$("input[type=text]").on("keypress",function(e){
 		if(window.event.keyCode == "13"){
@@ -43,17 +47,36 @@ $(function(){
 			}	
 		}
 	});
+	//卡号回车事件
+	$('#txt-cardno').on('keypress', function (event) {
+		if (window.event.keyCode == "13") {
+			var cardno = $.trim($("#txt-cardno").val());	
+			if (cardno != "") {
+				BtnReadCardHandler();
+			}
+		}
+	});
+	
+	//屏蔽所有回车事件
+	$("input[type=text]").on("keypress", function (e) {
+		if (window.event.keyCode == "13") {
+			return false;
+		}
+	})
+	
 	/* 绑定按钮事件 start*/
 	$("#btn-find").on("click",Query);
 	$("#btn-clear").on("click",ClearConditions);
 	$("#btn-print").on("click",BPrintHandler);
+	$("#btn-readcard").on("click", BtnReadCardHandler); //读卡
 	$("#btn-export").on("click",function(){
 		ExportAllToExcel("locprescdg")
 	});
+	
+	
 	/* 绑定按钮事件 end*/;	
 	$("#locprescdg").closest(".panel-body").height(GridCanUseHeight(1)*0.5-20);	
 	$("#prescdetaildg").closest(".panel-body").height(GridCanUseHeight(1)*0.5-20);	
-	
 })
 
 //初始化科室
@@ -89,23 +112,27 @@ function InitPrescInfoList(){
 	//定义columns
 	var columns=[[
 		{field:'gridSelect', title:"",checkbox: true },
-        {field:'prescStat',title:'状态-todo',width:100,align:'center',hidden:true},
-        {field:'docLocDesc',title:'开单科室',width:140,align:'left'},
-        {field:'patNo',title:'登记号',width:90,align:'center'}, 
-		{field:'patName',title:'姓名',width:100,align:'left'},   
-		{field:'spAmt',title:'药费',width:75,align:'right'},
-        {field:'prescNo',title:'处方号',width:125,align:'center'},
-		{field:'prescType',title:'处方类别',width:75,align:'center'},
-		{field:'diagDesc',title:'诊断',width:200,align:'left'},
-		{field:'prtDate',title:'收费日期',width:90,align:'center'},
-		{field:'prtTime',title:'收费时间',width:90,align:'center'},
-		{field:'fyDate',title:'发药日期',width:90,align:'center'},
-		{field:'fyTime',title:'发药时间',width:90,align:'center'},
-		{field:'pyUserName',title:'配药人',width:90,align:'left'},
-		{field:'fyUserName',title:'发药人',width:90,align:'left'},
-		{field:'winDesc',title:'发药窗口',width:90,align:'left'},
-		{field:'encryptLevel',title:'病人密级',width:100,align:'left'},
-        {field:'patLevel',title:'病人级别',width:100,align:'left'}
+        {field:'prescStat',title:("状态-todo"),width:100,align:'center',hidden:true},
+        {field:'docLocDesc',title:("开单科室"),width:140,align:'left'},
+        {field:'patNo',title:("登记号"),width:90,align:'center',
+        	formatter:function(cellvalue, options, rowObject){
+			    return "<a style='text-decoration:underline;'>"+cellvalue+"</a>";
+			}},  
+		{field:'patName',title:("姓名"),width:100,align:'left'},   
+		{field:'spAmt',title:("药费"),width:75,align:'right'},
+        {field:'prescNo',title:("处方号"),width:125,align:'center'},
+		{field:'prescType',title:("处方类别"),width:75,align:'center'},
+		{field:'diagDesc',title:("诊断"),width:200,align:'left'},
+		{field:'prtDate',title:("收费日期"),width:90,align:'center'},
+		{field:'prtTime',title:("收费时间"),width:90,align:'center'},
+		{field:'fyDate',title:("发药日期"),width:90,align:'center'},
+		{field:'fyTime',title:("发药时间"),width:90,align:'center'},
+		{field:'pyUserName',title:("配药人"),width:90,align:'left'},
+		{field:'fyUserName',title:("发药人"),width:90,align:'left'},
+		{field:'winDesc',title:("发药窗口"),width:90,align:'left'},
+		{field:'encryptLevel',title:("病人密级"),width:100,align:'left',hidden:true},
+        {field:'patLevel',title:("病人级别"),width:100,align:'left',hidden:true},
+        {field:'admId',title:"admId",width:100,align:'left'}
          ]]; 
          
     var dataGridOption={
@@ -135,6 +162,21 @@ function InitPrescInfoList(){
 				KillTmpGlobal();	
 				$('#prescdetaildg').clearEasyUIGrid();     	 	
 	        }
+		},
+		onClickCell:function(rowIndex,field,value){
+			if(field=="patNo"){
+				var selecteddata=$(this).datagrid("getRows")[rowIndex]
+				var regNo=selecteddata["patNo"]
+				var PrescNo=selecteddata["prescNo"];
+				var admId=selecteddata["admId"];
+				var qOpts={
+					admId:admId,
+					prescNo:PrescNo
+				};
+		
+				ShowPatInfoWindow(qOpts);
+				
+			}
 		}
 	} 
    //定义datagrid	
@@ -146,7 +188,7 @@ function InitPrescInfoList(){
 function InitPrescDetailList(){
 	//定义columns
 	var columns=[[
-        {field:'oeoriStatDesc',title:'状态',width:60,align:'center',
+        {field:'oeoriStatDesc',title:("状态"),width:60,align:'center',
 	        styler: function(value, row, index) {
 	            var colorStyle = "";
 	            if ((value.indexOf("停止") >= 0)||(value.indexOf("作废") >= 0)) {
@@ -155,18 +197,18 @@ function InitPrescDetailList(){
 	            return colorStyle;
 	        }
         }, 
-	    {field:'arcItmDesc',title:'药品',width:200,align:'left'},  
-        {field:'oeoriQty',title:'医嘱数量',width:65,align:'right'},     
-        {field:'uomDesc',title:'单位',width:80,align:'center'},    
-        {field:'sp',title:'价格',width:80,align:'right'},
-        {field:'spAmt',title:'金额',width:80,align:'right'},
-        {field:'dosage',title:'剂量',width:80,align:'left'},    
-        {field:'freqDesc',title:'频次',width:80,align:'left'},
-        {field:'instrucDesc',title:'用法',width:80,align:'left'},    
-        {field:'duraDesc',title:'疗程',width:80,align:'left'},
-		{field:'dispQty',title:'已发药',width:50,align:'left'}, 
-        {field:'retQty',title:'已退药',width:50,align:'left'},    
-        {field:'oeoriRemark',title:'医嘱备注',width:120,align:'left'}
+	    {field:'arcItmDesc',title:("药品"),width:200,align:'left'},  
+        {field:'oeoriQty',title:("医嘱数量"),width:65,align:'right'},     
+        {field:'uomDesc',title:("单位"),width:80,align:'center'},    
+        {field:'sp',title:("价格"),width:80,align:'right'},
+        {field:'spAmt',title:("金额"),width:80,align:'right'},
+        {field:'dosage',title:("剂量"),width:80,align:'left'},    
+        {field:'freqDesc',title:("频次"),width:80,align:'left'},
+        {field:'instrucDesc',title:("用法"),width:80,align:'left'},    
+        {field:'duraDesc',title:("疗程"),width:80,align:'left'},
+		{field:'dispQty',title:("已发药"),width:50,align:'left'}, 
+        {field:'retQty',title:("已退药"),width:50,align:'left'},    
+        {field:'oeoriRemark',title:("医嘱备注"),width:120,align:'left'}
     ]];  
     var dataGridOption={
 		url:"/imedical/web/csp/DHCST.METHOD.BROKER.csp?ClassName=PHA.OP.PreBatPrt.Display&MethodName=EuiGetPrescItm",
@@ -193,9 +235,13 @@ function Query(){
 	var presctypedata=$("#sel-presctype").select2("data");
 	var presctype=(presctypedata=="")?"":presctypedata[0].text;
 	var pmino=$("#txt-patno").val();;
+	var dispFlag="";
+	if($("#chk-disp").is(':checked')){
+		dispFlag="Y";
+	}
 	var tmpSplit=DHCPHA_CONSTANT.VAR.SPLIT;	
 	KillTmpGlobal();
-	var params=startdate+tmpSplit+enddate+tmpSplit+ctloc+tmpSplit+pmino+tmpSplit+starttime+tmpSplit+endtime+tmpSplit+admloc+tmpSplit+presctype;
+	var params=startdate+tmpSplit+enddate+tmpSplit+ctloc+tmpSplit+pmino+tmpSplit+starttime+tmpSplit+endtime+tmpSplit+admloc+tmpSplit+presctype+tmpSplit+dispFlag;
 	$('#locprescdg').datagrid({
      	queryParams:{
 			InputStr:params,
@@ -209,7 +255,7 @@ function Query(){
 function QueryDetail(){
 	var selectdata=$("#locprescdg").datagrid("getSelected")
 	if (selectdata==null){
-		dhcphaMsgBox.alert("选中数据异常!");
+		dhcphaMsgBox.alert($g("选中数据异常!"));
 		return;
 	}
 	var prescno=selectdata.prescNo;	
@@ -226,6 +272,8 @@ function ClearConditions(){
 	$("#sel-loc").empty();
 	$("#sel-presctype").empty();
 	$("#txt-patno").val("");
+	$("#txt-cardno").val("");
+	$("#chk-disp").iCheck("check");
 	$("#date-start").data('daterangepicker').setStartDate(FormatDateT("T")+" "+"00:00:00");
 	$("#date-start").data('daterangepicker').setEndDate(FormatDateT("T")+" "+"00:00:00");
 	$("#date-end").data('daterangepicker').setStartDate(FormatDateT("T")+" "+"23:59:59");
@@ -239,7 +287,7 @@ function ClearConditions(){
 function BPrintHandler(){
     var gridChecked = $('#locprescdg').datagrid('getChecked');
     if (gridChecked == "") {
-        dhcphaMsgBox.alert("请勾选需要打印的数据!","info");
+        dhcphaMsgBox.alert($g("请勾选需要打印的数据!"),"info");
         return;
     }
     var cLen = gridChecked.length
@@ -263,6 +311,22 @@ function CheckPermission(){
 		error:function(){}  
 	})
 }
+
+//读卡
+function BtnReadCardHandler() {
+	var readcardoptions = {
+		CardTypeId: "txt-cardtype",
+		CardNoId: "txt-cardno",
+		PatNoId: "txt-patno"
+	}
+	DhcphaReadCardCommon(readcardoptions, ReadCardReturn)
+}
+//读卡返回操作
+function ReadCardReturn() {
+	Query();
+}
+
+
 // 清除临时global
 function KillTmpGlobal(){
 	tkMakeServerCall("PHA.OP.PreBatPrt.Global","Kill",QUERYPID);

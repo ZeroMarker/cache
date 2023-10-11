@@ -5,8 +5,8 @@ var oneFillData={};
 var Columns=getCurColumnsInfo('EM.G.DisuseSimpleList','','','')
 
 $(function(){
-	initDocument();
-	$(function(){$("#Loading").fadeOut("fast");});  // add by wy 2020-01-16 QW20200218 BUG:QW0040
+    initDocument();
+    $(function(){$("#Loading").fadeOut("fast");});  // add by wy 2020-01-16 QW20200218 BUG:QW0040
 });
 
 function initDocument()
@@ -31,6 +31,11 @@ function initDocument()
 	setEnabled();
 	initEditFields(getElementValue("ApproveSetDR"),getElementValue("CurRole"));     //add by jyp 2020-02-27  JYP0020  报废信息表添加可编辑字段
 	initApproveButton(); //初始化审批按钮
+	var obj=document.getElementById("BSelfCancelSubmit");  //add by mwz 2021-01-18 MWZ0048
+    if (obj) obj.onclick=BSelfCancelSubmit_Clicked;
+    //Modify by zx 2021-05-19 Bug 1897085
+    var obj=document.getElementById("BAppendFile");
+    if (obj) obj.onclick=BAppendFile_Clicked;
 	//table数据加载
 	$HUI.datagrid("#DHCEQDisuseRequestSimple",{
 		url:$URL,
@@ -162,25 +167,42 @@ function setEnabled()
 	var WaitAD=getElementValue("WaitAD");
 	disableElement("DRHold4",true);
 	disableElement("DRHold5",true);
+	hiddenObj("BClear",true); //add by wy 2020-9-24 1532207
 	///Modiedy by zc0058  报废打印按钮提交后不可操作问题的处理  begin
 	if ((Status=="")||(Status=="0"))
 	{
+		//Modify by zx 2021-05-19 Bug 1897085
+		if(Status=="") disableElement("BAppendFile",true);
+		if(Status=="") disableElement("BPicture",true);  //Add By By zy20221115 bug：3073937
+		disableElement("BSelfCancelSubmit",true) //add by mwz 2021-01-18 MWZ0048
 		disableElement("BDisusePrintBar",true);
 	}
-	///Modiedy by zc0058  报废打印按钮提交后不可操作问题的处理  end
 	if (Status!="0")
 	{
 		disableElement("BDelete",true);
 		disableElement("BSubmit",true);
 		///Modiedy by zc0058  报废打印按钮提交后不可操作问题的处理
 		//disableElement("BDisusePrintBar",true);   ///Modiedy by zc0057 报废打印标签影藏 
+	    hiddenObj("BClear",false);
 		if (Status!="")
 		{
 			disableElement("BSave",true);
+			hiddenObj("BClear",true); 
+		}
+		else
+		{
+			disableElement("Opinion",1)
+			disableElement("DRRejectReason",1)
 		}
 	}
+	else{
+		disableElement("Opinion",1)
+		disableElement("DRRejectReason",1)
+	}
 	//审核后才可打印及生成转移单
-	if (Status!="2")
+    //modified by ZY 20221107  3044786
+    //if (Status!="2")
+    if (Status<1)
 	{
 		disableElement("BPrint",true); //Modified by QW20191022 BUG:QW0032 打印按钮初始化
 		//disableElement("BPrintBar",true);
@@ -207,10 +229,14 @@ function setEnabled()
 		disableElement("BRecover",true);  
 		
 	}
-
-	// Add By QW20200218 begin BUG:QW0041 测试需求修改
+	if ((Status=="2")||(getElementValue("ReadOnly")==1))
+	{
+		hiddenObj("BSelfCancelSubmit",true)
+	}
+	var SelfFlag=getElementValue("SelfFlag");
+	var ApproveRole=getElementValue("CurRole"); 
+	if ((SelfFlag=="")&&(ApproveRole!="")) disableElement("BSelfCancelSubmit",true)  //Modified By QW20210729 BUG:QW0145
 }
-
 
 // modified by kdf 2019-01-10
 // 填充行数据
@@ -221,6 +247,7 @@ function getEquipList(index,data)
 	/// add by kdf 2019-05-27 begin 需求号：860203
 	var rows = $('#DHCEQDisuseRequestSimple').datagrid('getRows');
 		for(var i=0;i<rows.length;i++){
+			if(editIndex!=i) continue  //modified by csj 2020-11-10 需求号：1590562
 			if(data.TEquipDR!=="")
 			{
 				if((rows[i].DLSourceID!=="")&&(rows[i].DLSourceID==data.TEquipDR))
@@ -374,16 +401,14 @@ function setSelectValue(elementID,rowData)
 	if(elementID=="DRRequestLocDR_CTLOCDesc") {setElement("DRRequestLocDR",rowData.TRowID);}
 	else if(elementID=="DRUseLocDR_CTLOCDesc") {setElement("DRUseLocDR",rowData.TRowID);}
 	else if(elementID=="DRDisuseTypeDR_DRDesc") {setElement("DRDisuseTypeDR_DRDesc",rowData.TDesc);setElement("DRDisuseTypeDR",rowData.TRowID);} //Modified BY QW20200320 BUG:QW0050
-    else if(elementID=="DREquipTypeDR_ETDesc") 
-    	{
-		setElement("DREquipTypeDR",rowData.TRowID);
-		if(editIndex != undefined)
-		{
-			var sourceIDEdt = $("#DHCEQDisuseRequestSimple").datagrid('getEditor', {index:editIndex,field:'DLSource'});
-   			$(sourceIDEdt.target).combogrid('grid').datagrid('load');
-		}
+    else if(elementID=="DREquipTypeDR_ETDesc") {setElement("DREquipTypeDR",rowData.TRowID);}
+	/*
+	if(editIndex != undefined)
+	{
+		var sourceIDEdt = $("#DHCEQDisuseRequestSimple").datagrid('getEditor', {index:editIndex,field:'DLSource'});
+		$(sourceIDEdt.target).combogrid('grid').datagrid('load');
 	}
-	// modified by wy 2020-01-16 end QW20200218 BUG:QW0040
+	*/
 }
 
 function clearData(elementID)
@@ -445,6 +470,9 @@ function saveDataFromInStock(rowData)
 		var flag=getElementValue("flag");
 		var val="&RowID="+jsonData.Data+"&WaitAD="+WaitAD+"&QXType="+QXType+"&flag="+flag;
 		url="dhceq.em.storemove.csp?"+val;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.location.href= url;
 
 	}
@@ -507,6 +535,9 @@ function BSave_Clicked()
 
 		var val="&RowID="+jsonData.Data+"&WaitAD="+WaitAD+"&Type=0"+"&QXType="+QXType;
 		url="dhceq.em.disusesimlpe.csp?"+val;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.location.href= url;
 	}
 	else
@@ -540,6 +571,9 @@ function BDelete_Clicked()
          val=val+"&WaitAD=false"   //add by lmm 2019-02-17 826215
 	    
 		url="dhceq.em.disusesimlpe.csp?"+val
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.location.href= url;
 	}
 	else
@@ -549,9 +583,21 @@ function BDelete_Clicked()
     }
 }
 
-// modified by kdf 2019-01-22
-// 提交按钮事件
+// MZY0153	3295363		2023-02-20	增加净值判断
+///提交
 function BSubmit_Clicked()
+{
+	var Data = tkMakeServerCall("web.DHCEQ.EM.BUSDisuseRequest", "CheckEquipNetfee", getElementValue("DRRowID"));
+	if (Data != "")
+	{
+		messageShow("confirm", "info", "提示", Data+" 以上编号的设备净值不为0,是否继续提交报废?", "", SubmitRequest, "");
+	}
+	else
+	{
+		SubmitRequest();
+	}
+}
+function SubmitRequest()
 {
 	var DRRowID=getElementValue("DRRowID")
 	if (DRRowID=="")
@@ -559,10 +605,50 @@ function BSubmit_Clicked()
 		messageShow("alert","error","错误提示","没有单据可删除!");
 		return;
 	}
+	//add by wy 2021-4-23 批次报废增加停用功能 bug WY0088 begin
+	var NeedChange=tkMakeServerCall("web.DHCEQChangeInfo","NeedChange","34",DRRowID,"1");
+	var GetStopEquipFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","990037");
+	var CheckStoreLocDR=tkMakeServerCall("web.DHCEQBatchDisuseRequest","CheckStoreLocDR",getElementValue("DRUseLocDR"));   // add by kdf 2019-06-10 在库设备不提示停用 需求号920964
+	if ((NeedChange==1) && (GetStopEquipFlag==1) && (CheckStoreLocDR!=1))   // modified by kdf 2019-06-10 在库设备不提示停用 需求号920964
+	{
+		messageShow("confirm","","","当前报废设备是否停用?","",function(){
+			GetStopEquipFlag=2;
+			SubmitData(DRRowID,GetStopEquipFlag)
+			},
+			function(){
+				SubmitData(DRRowID,GetStopEquipFlag)
+				
+			});
+	}
+	else
+	{
+		SubmitData(DRRowID,GetStopEquipFlag)
+	}
+}
+function SubmitData(DRRowID,GetStopEquipFlag){
+	if (GetStopEquipFlag==2)
+	{
+		var result=tkMakeServerCall("web.DHCEQChangeInfo","StopEquipBySource","34",DRRowID,"1");
+		if (result!=0)
+		{
+			alertShow("设备停用失败!")
+			return;
+		}
+	}
 	
-	var jsonData=tkMakeServerCall("web.DHCEQ.EM.BUSDisuseRequest","SubmitData",DRRowID);
-	
-	
+	///Modefied by zc0110 2021-12-15 判断业务是否存在必须上传的内容 begin
+	var FileMustRtn=tkMakeServerCall("web.DHCEQ.Plat.LIBPicture","CheckMustUpLoad",'34',DRRowID,'1')
+	var FileMustInfo=FileMustRtn.split("^");
+	var FileFlag=FileMustInfo[0]
+	var FileTyp=FileMustInfo[2]
+	if (FileFlag=="1")
+	{
+		alertShow("有必须上传的"+FileTyp+"文件没有上传!") 
+		return ;
+	}
+	///Modefied by zc0110 2021-12-15 判断业务是否存在必须上传的内容 end
+	//add by wy 2021-4-23 批次报废增加停用功能 bug WY0088 end
+  var jsonData=tkMakeServerCall("web.DHCEQ.EM.BUSDisuseRequest","SubmitData",DRRowID);		
 	jsonData=JSON.parse(jsonData)
 	
 	if (jsonData.SQLCODE==0)
@@ -570,9 +656,11 @@ function BSubmit_Clicked()
 		var WaitAD=getElementValue("WaitAD"); 
 		var QXType=getElementValue("QXType");
 
-		var val="&RowID="+jsonData.Data+"&WaitAD="+WaitAD+"&Type=1"+"&QXType="+QXType;
+		var val="&RowID="+jsonData.Data+"&WaitAD="+WaitAD+"&Type=1"+"&QXType="+QXType+"&SelfFlag=1"; //Modifed By QW20210621 BUG:QW0125
 		url="dhceq.em.disusesimlpe.csp?"+val;
-		
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.location.href= url;
 	}
 	else
@@ -592,10 +680,54 @@ function BCancelSubmit_Clicked()
 		messageShow('alert','error','提示',"没有报废单取消!");
 		return;
 	}
+	// add by sjh SJH0034 2020-09-10 BEGIN
+	var DRRejectReason=getElementValue("DRRejectReason");
+	if (DRRejectReason=="")
+	{
+		messageShow('alert','error','提示',"没有填写退回原因!");
+		return
+	} 
+	// add by sjh SJH0034 2020-09-10 END
 	//add by wy 2020-05-06 1288746系统参数控制是否删除汇总报废单中的对应明细记录 begin
 	var RoleStep=getElementValue("RoleStep");
 	if(RoleStep=="1")
 	{
+	//add by wy 2021-4-23 批次报废增加停用功能 bug WY0088 begin
+	var NeedChange=tkMakeServerCall("web.DHCEQChangeInfo","NeedChange","34",DRRowID,"0");
+	var GetStopEquipFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","990037");
+	var CheckStoreLocDR=tkMakeServerCall("web.DHCEQBatchDisuseRequest","CheckStoreLocDR",getElementValue("DRUseLocDR"));   // add by kdf 2019-06-10 在库设备不提示停用 需求号920964
+	if ((NeedChange==1) && (GetStopEquipFlag==1) && (CheckStoreLocDR!=1))   // modified by kdf 2019-06-10 在库设备不提示停用 需求号920964
+	  {
+		messageShow("confirm","","","当前报废设备是否取消停用?","",function(){
+		GetStopEquipFlag=2;
+		CancelSubmitData(DRRowID,GetStopEquipFlag)
+			},
+			function(){
+				CancelSubmitData(DRRowID,GetStopEquipFlag)
+				
+			});
+	  }
+	else
+	   {
+		CancelSubmitData(DRRowID,GetStopEquipFlag)
+	   }
+	}
+	else{		
+		 BCancelData()
+		}
+
+}
+function CancelSubmitData(DRRowID,GetStopEquipFlag)
+{	
+		if (GetStopEquipFlag==2)
+		{
+			var result=tkMakeServerCall("web.DHCEQChangeInfo","StopEquipBySource","34",DRRowID,"0");
+			if (result!=0)
+			{
+				alertShow("设备取消停用失败!")
+				return;
+			}
+		}		
 		var vFlag=tkMakeServerCall("web.DHCEQBatchDisuseRequest","GetMergeOrderFlag",DRRowID);
 		var CheckFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","601006");
 		if ((CheckFlag==1)&&(vFlag==0))
@@ -605,16 +737,15 @@ function BCancelSubmit_Clicked()
 					},
 					function(){return;})	
 			}
+		else if ((CheckFlag!=1)&&(vFlag==0))   //Add By QW20210525  BUG:QW0114
+		{
+			messageShow("alert","error","提示","该报废单已存在与汇总单中,无法撤回!")
+			return
+		}
 		else {
 				BCancelData();
 			
-			 }
-		 
-    }
-    else{
-		BCancelData();
-    }
-
+			 }		//add by wy 2021-4-23 批次报废增加停用功能 bug WY0088 end
 }
 function BCancelData()
 {
@@ -639,12 +770,14 @@ function BCancelData()
 	    
 	    var val="&RowID="+RtnObj.Data+"&WaitAD="+WaitAD+"&Type=1"+"&QXType="+QXType;
 		url="dhceq.em.disusesimlpe.csp?"+val;
-		
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.location.href= url;
     }
 
 }
-	//add by wy 2020-05-06 1288746系统参数控制是否删除汇总报废单中的对应明细记录 end
+//add by wy 2020-05-06 1288746系统参数控制是否删除汇总报废单中的对应明细记录 end
 
 /// add by kdf 2019-01-23
 function GetOpinion()
@@ -653,14 +786,28 @@ function GetOpinion()
 	var CurStep=getElementValue("RoleStep");
 	var combindata=getElementValue("CurRole") ;
   	combindata=combindata+"^"+getElementValue("RoleStep") ;
-  	combindata=combindata+"^"+getElementValue("Opinion_"+ApproveRole+"_"+CurStep) ;
+  	combindata=combindata+"^"+getElementValue("Opinion") ;	// MZY0153	3188364		2023-02-20
   	combindata=combindata+"^"+getElementValue("OpinionRemark") ;
   	return combindata;
   	
 }
 
 /// add by kdf 2019-01-23 审核事件
+///modified by ZY0298 20220310  增加会计周期的判断提醒
 function BApprove_Clicked()
+{
+	var Rtn=tkMakeServerCall("web.DHCEQ.EM.BUSAccountPeriod","IsCurPeriod");
+    var RtnObj=JSON.parse(Rtn)
+    if (RtnObj.SQLCODE==0)
+    {
+		messageShow("confirm","info","提示","当前操作会内容会统计入会计周期:"+RtnObj.Data+"中<br>请确定是否要继续执行操作?","",BApprove,function(){return},"确定","取消");
+    }
+    else
+    {
+	    BApprove()
+	}
+}
+function BApprove()
 {
 	var RowID=getElementValue("DRRowID");
 	if (RowID=="")  return;
@@ -671,6 +818,12 @@ function BApprove_Clicked()
 	//end add  by jyp 2020-02-27  JYP0022  报废信息表添加可编辑字段
 	
 	var combindata=RowID+"^"+GetOpinion()+"^^"; //Modified By QW20200119 BUG:QW0039
+	//Add By By zy20221115 bug：3073937
+	if (getElementValue("Opinion")=="")
+	{
+	    messageShow("alert","error","错误提示","错误信息:审核意见不能为空!");
+	    return;
+	}
 	var Rtn=tkMakeServerCall("web.DHCEQ.EM.BUSDisuseRequest","AuditData",combindata,"",EditFieldsInfo);   //modify by jyp 2020-02-27  JYP0022  报废信息表添加可编辑字段	
     var RtnObj=JSON.parse(Rtn)
     if (RtnObj.SQLCODE==0)
@@ -679,8 +832,11 @@ function BApprove_Clicked()
 	    var WaitAD=getElementValue("WaitAD"); 
 		var QXType=getElementValue("QXType");
 	    
-	    var val="&RowID="+RtnObj.Data+"&WaitAD="+WaitAD+"&Type=1"+"&QXType="+QXType;
+	    var val="&RowID="+RtnObj.Data+"&WaitAD="+WaitAD+"&Type=1"+"&QXType="+QXType+"&SelfFlag=1&CurRole="+GetElementValue("CurRole"); //Modifed By QW20210701 BUG:QW0133
 		url="dhceq.em.disusesimlpe.csp?"+val;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.location.href= url;
 	}
     else
@@ -801,34 +957,134 @@ function BPrint_Clicked()
 	//modified by QW20191022 BUG:QW0032 增加润乾和excel打印
 	var PrintFlag=getElementValue("PrintFlag");
 	var DRRowID=getElementValue("DRRowID")
-    if ((DRRowID=="")||(DRRowID<1))  return;
-	if(PrintFlag==0)
+	if ((DRRowID=="")||(DRRowID<1))  return;
+	//add by ZY20230228 bug:3295367
+	var lodopBussIDs=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","990090")
+	if (lodopBussIDs.indexOf("34")!=-1)
 	{
-		 Print(DRRowID);
+		var c1=String.fromCharCode(1);
+		var c2=String.fromCharCode(2);
+		var inpara="title"+c2+session['LOGON.HOSPDESC']+"资产报废单";
+		inpara+="^DRRequestNo"+c2+GetShortName(oneFillData["DRRequestNo"],"-");
+		inpara+="^DRUseLocDR_CTLOCDesc"+c2+oneFillData["DRUseLocDR_CTLOCDesc"];  //使用科室
+		inpara+="^DREquipTypeDR_ETDesc"+c2+oneFillData["DREquipTypeDR_ETDesc"];
+		inpara+="^DRRequestDate"+c2+oneFillData["DRRequestDate"];
+		inpara+="^PrintDate"+c2+GetCurrentDate(2);
+		inpara+="^ApproveOpinon1"+c2+oneFillData["ApproveOpinon1"];
+		inpara+="^ApproveOpinon2"+c2+oneFillData["ApproveOpinon2"];
+		inpara+="^ApproveOpinon3"+c2+oneFillData["ApproveOpinon3"];
+		inpara+="^ApproveOpinon4"+c2+oneFillData["ApproveOpinon4"];
+		inpara+="^ApproveOpinon5"+c2+oneFillData["ApproveOpinon5"];
+		inpara+="^ApproveOpinon6"+c2+oneFillData["ApproveOpinon6"];
+		
+		
+		var jsonArr=[
+			{type:"img",name:"ApproveUser1",x:"52.381", y:"103.968",width:"20",height:"6",value:oneFillData["ApproveUser1"]},
+			{type:"img",name:"ApproveUser2",x:"52.381", y:"113.503",width:"20",height:"6",value:oneFillData["ApproveUser2"]},
+			{type:"img",name:"ApproveUser3",x:"52.381", y:"123.503",width:"20",height:"6",value:oneFillData["ApproveUser3"]},
+			{type:"img",name:"ApproveUser4",x:"52.381", y:"133.503",width:"20",height:"6",value:oneFillData["ApproveUser4"]},
+			{type:"img",name:"ApproveUser5",x:"52.381", y:"143.503",width:"20",height:"6",value:oneFillData["ApproveUser5"]},
+			{type:"img",name:"ApproveUser6",x:"52.381", y:"153.503",width:"20",height:"6",value:oneFillData["ApproveUser6"]},
+		]
+		
+		var gbldata=tkMakeServerCall("web.DHCEQBatchDisuseRequest","GetList",DRRowID);
+		var list=gbldata.split(getElementValue("SplitNumCode"));
+		var Listall=list[0];
+		var rows=list[1];
+		var PageRows=6;//每页固定行数
+		var Pages=parseInt(rows / PageRows); //总页数-1  
+		var ModRows=rows%PageRows; //最后一页行数
+		if (ModRows==0) {Pages=Pages-1;}
+		for (var i=0;i<=Pages;i++)
+    		{
+	    	
+			var inlist=""
+	    		var OnePageRow=PageRows;
+	   		if ((i==Pages)&&(ModRows!=0)) OnePageRow=ModRows;
+			for (var Row=1;Row<=OnePageRow;Row++)
+			{
+				var Lists=Listall.split(getElementValue("SplitRowCode"));
+				var Listl=Lists[i*PageRows+Row];
+				var List=Listl.split("^");
+				var cellRow=Row+4;
+				var oneRowStr=""
+				if (List[0]=='合计')
+				{
+					inpara+="^sum"+c2+List[0];//数量
+					inpara+="^sumQty"+c2+List[4];//数量
+					inpara+="^sumFee"+c2+List[6];//总价
+
+				}
+				else
+				{
+					oneRowStr=List[8];//编号
+					oneRowStr=oneRowStr+"^"+List[0];//设备名称
+					oneRowStr=oneRowStr+"^"+List[1];//机型
+					oneRowStr=oneRowStr+"^"+List[5];//数量
+					oneRowStr=oneRowStr+"^"+List[6];//原值
+					
+					oneRowStr=oneRowStr+"^"+List[9];//折旧年限
+					oneRowStr=oneRowStr+"^"+List[10];//使用年限
+					oneRowStr=oneRowStr+"^"+List[11];//报废原因
+				}
+				
+				if (inlist=="")
+				{
+					inlist=oneRowStr;
+				}
+				else
+				{
+					inlist=inlist+c1+c2+oneRowStr
+				}
+    			}
+    			printByLodop("DHCEQDisuseRequest",inpara,inlist,jsonArr,"",{printListByText:true})
+    		}
 	}
-	if(PrintFlag==1)
+	else
 	{
-		var RequestNo=oneFillData["DRRequestNo"];
-        var RequestLoc=oneFillData["DRRequestLocDR_CTLOCDesc"];
-        var EquipType=oneFillData["DREquipTypeDR_ETDesc"];
-        var RequestDate=oneFillData["DRRequestDate"];
-        var UseLoc=oneFillData["DRUseLocDR_CTLOCDesc"];
-        var UseLocCode=tkMakeServerCall("web.DHCEQCommon", "GetTrakNameByID","deptcode",oneFillData["DRUseLocDR"]);
-        var PreviewRptFlag=getElementValue("PreviewRptFlag"); //add by wl 2019-11-11 WL0010 begin   增加润乾预览标志
-		var HOSPDESC = getElementValue("GetHospitalDesc"); //Modified by sjh 2019-12-06 BUG00019 begin 增加医院参数
-        var fileName=""
-        if(PreviewRptFlag==0)
-        { 
-        fileName="{DHCEQDisuseRequestPrint.raq(RequestNo="+RequestNo+";RequestLoc="+RequestLoc+";RequestDate="+RequestDate+";UseLoc="+UseLoc+";EquipType="+EquipType+";UseLocCode="+UseLocCode+";HOSPDESC="+HOSPDESC+")}";
-        DHCCPM_RQDirectPrint(fileName);
-        }
-        if(PreviewRptFlag==1)
-        { 
-        fileName="DHCEQDisuseRequestPrint.raq&RequestNo="+RequestNo+"&RequestLoc="+RequestLoc+"&RequestDate="+RequestDate+"&UseLoc="+UseLoc+"&EquipType="+EquipType+"&UseLocCode="+UseLocCode+"&HOSPDESC="+HOSPDESC;
-        DHCCPM_RQPrint(fileName);//Modified by sjh 2019-12-06 BUG00019 end 增加医院参数
-        }												//add by wl 2019-11-11 WL0010 end
+		if(PrintFlag==0)
+		{
+			 Print(DRRowID);
+		}
+		else if(PrintFlag==1)
+		{
+			var RequestNo=oneFillData["DRRequestNo"];
+			var RequestLoc=oneFillData["DRRequestLocDR_CTLOCDesc"];
+			var EquipType=oneFillData["DREquipTypeDR_ETDesc"];
+			var RequestDate=oneFillData["DRRequestDate"];
+			var UseLoc=oneFillData["DRUseLocDR_CTLOCDesc"];
+			var UseLocCode=tkMakeServerCall("web.DHCEQCommon", "GetTrakNameByID","deptcode",oneFillData["DRUseLocDR"]);
+			var PreviewRptFlag=getElementValue("PreviewRptFlag"); //add by wl 2019-11-11 WL0010 begin   增加润乾预览标志
+			var HOSPDESC = getElementValue("GetHospitalDesc"); //Modified by sjh 2019-12-06 BUG00019 begin 增加医院参数
+		//modified by ZY20230215 增加审核人的打印
+		var DRAddUser=oneFillData["DRAddUserDR_UDesc"];
+		var DRSubmitUser=oneFillData["DRSubmitUserDR_UDesc"];
+		var DRAuditUser=oneFillData["DRAuditUserDR_UDesc"];
+			var fileName=""
+			//Add By QW20210913 BUG:QW0147 标题增加补打标记	begin
+			var EQTitle="";
+			var PrintNumFlag=getElementValue("PrintNumFlag");
+			if(PrintNumFlag==1)  
+			{
+				var num=tkMakeServerCall("web.DHCEQ.Plat.BUSOperateLog","GetOperateTimes","34",DRRowID)
+				if(num>0) EQTitle="(补打)";
+			}
+			if(PreviewRptFlag==0)
+			{ 
+        fileName="{DHCEQDisuseRequestPrint.raq(RequestNo="+RequestNo+";RequestLoc="+RequestLoc+";RequestDate="+RequestDate+";UseLoc="+UseLoc+";EquipType="+EquipType+";UseLocCode="+UseLocCode+";HOSPDESC="+HOSPDESC+";EQTitle="+EQTitle+";DRAddUser="+DRAddUser+";DRAuditUser="+DRAuditUser+")}"; 
+				DHCCPM_RQDirectPrint(fileName);
+			}
+			else if(PreviewRptFlag==1)
+			{ 
+        fileName="DHCEQDisuseRequestPrint.raq&RequestNo="+RequestNo+"&RequestLoc="+RequestLoc+"&RequestDate="+RequestDate+"&UseLoc="+UseLoc+"&EquipType="+EquipType+"&UseLocCode="+UseLocCode+"&HOSPDESC="+HOSPDESC+"&EQTitle="+EQTitle+"&DRAddUser="+DRAddUser+"&DRAuditUser="+DRAuditUser; 
+				DHCCPM_RQPrint(fileName);//Modified by sjh 2019-12-06 BUG00019 end 增加医院参数
+			}												//add by wl 2019-11-11 WL0010 end
+		}
 	}
 	//End by QW20191022 BUG:QW0032 增加润乾打印
+	var DisusePrintOperateInfo="^34^"+DRRowID+"^^报废打印操作^0"
+	var PrintFlag=tkMakeServerCall("web.DHCEQ.Plat.BUSOperateLog","SaveData",DisusePrintOperateInfo)
+	//Modified By QW20210913 BUG:QW0147 修改打印次数  end
 }
 //Add by QW20191022 BUG:QW0032 excel打印
 function Print(disuseid)
@@ -850,6 +1106,18 @@ function Print(disuseid)
 		   
 	    	xlBook = xlApp.Workbooks.Add(Template);
 	    	xlsheet = xlBook.ActiveSheet;
+	    	//Add By QW20210913 BUG:QW0147 标题增加补打标记	begin
+			var PrintNumFlag=getElementValue("PrintNumFlag");
+			if(PrintNumFlag==1)  
+			{
+				var num=tkMakeServerCall("web.DHCEQ.Plat.BUSOperateLog","GetOperateTimes","34",disuseid)
+				if(num>0) 
+				{
+				    xlsheet.cells(1,1)="[Hospital]设备报废单(补打)"
+			    	
+				}
+			}
+			//Add By QW20210913 BUG:QW0147 标题增加补打标记	end
 	    	xlsheet.cells.replace("[Hospital]",getElementValue("HospitalDesc"))
 	    	xlsheet.cells(2,2)="报废单号："+oneFillData["DRRequestNo"];//报废单号
 	    	xlsheet.cells(2,6)=oneFillData["DRRequestDate"];
@@ -1053,3 +1321,100 @@ function checkboxDLFlagChange(DLFlag,rowIndex)
 		})
 	}
 }
+//add by wy 2020-9-24 1532207增加业务清屏功能
+function BClear_Clicked()
+{
+		var WaitAD=getElementValue("WaitAD"); 
+		var QXType=getElementValue("QXType");
+		var val="&WaitAD="+WaitAD+"&Type=0"+"&QXType="+QXType;
+		url="dhceq.em.disusesimlpe.csp?"+val;
+	    window.location.href= url;
+}
+//add by mwz 2021-01-18 MWZ0048
+//业务单据自发撤回功能
+function BSelfCancelSubmit_Clicked()
+{
+	var DRRowID=getElementValue("DRRowID");
+	
+	if (DRRowID=="")
+	{
+		messageShow('alert','error','提示',"没有报废单取消!");
+		return;
+	}
+	var RoleStep=getElementValue("RoleStep");
+	if(RoleStep=="0")
+	{
+		var vFlag=tkMakeServerCall("web.DHCEQBatchDisuseRequest","GetMergeOrderFlag",DRRowID);
+		var CheckFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","601006");
+		if ((CheckFlag==1)&&(vFlag==0))
+			{
+				messageShow("confirm","","","继续操作还是取消(继续将无效汇总报废单中的对应明细记录)?","",function(){		
+					BSelfCancelData();
+					},
+					function(){return;})	
+			}
+			//add by mwz 2021-05-18 MWZ0049 begin
+		else if ((CheckFlag!=1)&&(vFlag==0)){
+			
+				messageShow('alert','error','提示',"该报废单已存在于汇总单中,无法撤回!");  
+				return;			
+			 }
+			 //add by mwz 2021-05-18 MWZ0049 end
+		else {
+				BSelfCancelData();
+			
+			 }
+		 
+    }
+    else{
+		BSelfCancelData();
+    }
+   }
+//add by mwz 2021-01-18 MWZ0048 
+///业务单据自发撤回功能
+function BSelfCancelData()
+{
+	var RowID=GetElementValue("RowID");
+	var Status=GetElementValue("Status")
+	var Type=GetElementValue("Type")
+	if (Status>1)
+	{
+		messageShow('alert','error','提示',"该单据已审核完成,无法撤消");
+		return;
+	}
+	var combindata=RowID+"^"+GetOpinion();
+	var Rtn=tkMakeServerCall("web.DHCEQ.EM.BUSDisuseRequest","SelfCancelSubmitData",combindata,GetElementValue("CurRole"));
+    var RtnObj=JSON.parse(Rtn)
+    if (RtnObj.SQLCODE==0)
+    {
+	  	messageShow("alert","info","提示","撤回成功");
+		var val="&RowID="+RowID+"&WaitAD=false"+"&Type=0"+"&QXType="+GetElementValue("QXType")+"&CurRole="+GetElementValue("CurRole");
+		url="dhceq.em.disusesimlpe.csp?"+val;	
+		 window.location.href= url;
+	}
+    else
+    {
+	     messageShow("alert","error","错误提示","错误信息:"+RtnObj.Data);
+    }
+}
+
+//Modify by zx 2021-05-19 Bug 1897085
+function BAppendFile_Clicked()
+{
+	var RowID=GetElementValue("RowID");
+	if (RowID=="") return;
+	var Status=GetElementValue("Status");
+	var str='dhceq.plat.appendfile.csp?&CurrentSourceType=34&CurrentSourceID='+RowID+'&Status='+Status+'&ReadOnly=';
+	showWindow(str,"电子资料","","","icon-w-paper","modal","","","large");
+
+}
+//Modify by zy 2022-11-07
+function BPicture_Clicked()
+{
+	var RowID=GetElementValue("RowID");
+	if (RowID=="") return;
+	var Status=GetElementValue("Status");
+	var str='dhceq.plat.picturemenu.csp?&CurrentSourceType=34&CurrentSourceID='+RowID+'&Status='+Status+'&ReadOnly=';
+	showWindow(str,"图片信息","","","icon-w-paper","modal","","","middle");
+}
+

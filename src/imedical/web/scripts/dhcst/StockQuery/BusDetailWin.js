@@ -15,7 +15,7 @@
 			
 			if(num<=1){
 				//mk.hide(); //关闭
-				return "<div align='center' style='color:#15428b; font-size:30px'>该时间范围内无业务数据！</div>";}
+				return "<div align='center' style='color:#15428b; font-size:30px'>"+$g("该时间范围内无业务数据！")+"</div>";}
 			///提取主信息
 			var mainstr=tkMakeServerCall("web.DHCST.LocItmTransMove","getTempPrintData",pid,"");
 			Ext.getCmp('LocStkLabel').setText('<p style="font-weight:bold; color:#15428b; font-size:17;">'+mainstr+'</p>',false);
@@ -31,7 +31,7 @@
 	
 			///设置列头
 	
-			htmlstr=htmlstr+"<tr align='center'><td bgcolor='#F0F0F0' height='25' width='30'>序号</td>";
+			htmlstr=htmlstr+"<tr align='center'><td bgcolor='#F0F0F0' height='25' width='30'>"+$g("序号")+"</td>";
 			for(var k=0;k<cellNum;k++)
 			{
 				if(k==0){width='70';}
@@ -82,11 +82,11 @@
 			width:30
 		})
 		var mk = new Ext.LoadMask(document.body, {  
-			msg: '正在查找数据，请稍候！',  
+			msg: $g('正在查找数据，请稍候！'),  
 			removeMask: true //完成后移除  
 		});
 		var window=new Ext.Window({
-			title:'业务单据明细',
+			title:$g('业务单据明细'),
 			width:document.body.clientWidth*0.77,
 			height:document.body.clientHeight*0.8,
 			resizable:false,

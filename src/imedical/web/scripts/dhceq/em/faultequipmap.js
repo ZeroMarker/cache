@@ -4,13 +4,15 @@ var columns=getCurColumnsInfo('EM.G.KN.Maint.FaultEquipMap','','','');
 $(document).ready(function()
 {
 	initDocument();
+	initButton();
 	defindTitleStyle();
 	initLookUp();
 	$HUI.datagrid("#tdhceqmcfaultequipmap",{   
     url:$URL, 
 	idField:'TRowID', //主键   
     border : false,
-	striped : true,
+	// striped : true,
+	fitColumns: true,
     cache: false,
     fit:true,
     singleSelect:true,
@@ -26,14 +28,9 @@ $(document).ready(function()
 				handler:function(){UpdateGridData();}
 			},
 			{
-				iconCls:'icon-cut',
+				iconCls:'icon-cancel',
 				text:'删除',
 				handler:function(){DeleteGridData();}
-			},
-			{
-				iconCls:'icon-search',
-				text:'查询',
-				handler:function(){FindGridData();}
 			}
 		], 
     queryParams:{
@@ -50,7 +47,7 @@ $(document).ready(function()
 	onClickRow:function(rowIndex,rowData){OnclickRow(rowIndex,rowData);},
 	});
 	
-	
+	setRequiredElements("MapType^ESourceType^ESourceID^FaultID")//add by zyq 2022-11-09
 	
 });
 function initDocument()
@@ -70,18 +67,23 @@ function initDocument()
 		},{
 			id: '3',
 			text: '故障解决方法'
+		},{
+			id: '4',
+			text: '故障类型'  //modified by WY 2022-9-15 增加故障类型的对照
 		}],
 		onChange:function(){
 			if (getElementValue("MapType")==1)
 			{
 				$("#cFaultID").html("故障现象")
 				setElement("FaultID","")
+				setRequiredElements("FaultID") //add by zyq 2022-11-09
                 singlelookup("FaultID","EM.L.FaultCase","","")
 			}
 			else if (getElementValue("MapType")==2)
 			{
 				$("#cFaultID").html("故障原因")
 				setElement("FaultID","")
+				setRequiredElements("FaultID") //add by zyq 2022-11-09
                 singlelookup("FaultID","EM.L.FaultReason","","")
 				
 			}
@@ -89,7 +91,15 @@ function initDocument()
 			{
 				$("#cFaultID").html("解决方法")
 				setElement("FaultID","")
+				setRequiredElements("FaultID") //add by zyq 2022-11-09
                 singlelookup("FaultID","EM.L.DealMethod","","")
+				
+			}
+			else if (getElementValue("MapType")==4)  //modified by WY 2022-9-15 增加故障类型的对照
+			{
+				$("#cFaultID").html("故障类型")
+				setElement("FaultID","")
+                singlelookup("FaultID","EM.L.FaultType","","")
 				
 			}
             },
@@ -114,14 +124,15 @@ function initDocument()
 			{
 				$("#cESourceID").html("设备分类")
 				setElement("ESourceID","")
+				setRequiredElements("ESourceID") //add by zyq 2022-11-09
                 singlelookup("ESourceID","EM.L.EquipCat","","")
 			}
 			else if (getElementValue("ESourceType")==2)
 			{
 				$("#cESourceID").html("设备项")
 				setElement("ESourceID","")
+				setRequiredElements("ESourceID") //add by zyq 2022-11-09
                 singlelookup("ESourceID","EM.L.GetMasterItem","","")
-				
 			}
 
             },
@@ -158,6 +169,9 @@ function OnclickRow(rowIndex,selected)
 				}
 			else if(getElementValue("MapType")==3){
 				document.getElementById('cFaultID').innerHTML="解决方法"
+				}
+			else if(getElementValue("MapType")==4){
+				document.getElementById('cFaultID').innerHTML="故障类型" //modified by WY 2022-9-15 增加故障类型的对照
 				}
 			if(getElementValue("ESourceTypeID")==1){
 				document.getElementById('cESourceID').innerHTML="设备分类"
@@ -245,18 +259,18 @@ function AddGridData()
 	if(getElementValue("ESourceIDDR")==""){$.messager.alert('提示','新增失败,来源ID不能为空！','warning');return;}
 	if((getElementValue("ESourceType")==1)&(getElementValue("ModelDR")!="")){$.messager.alert('提示','新增失败,设备分类无机型！','warning');return;}
 	
-	//modify by lmm 2018-11-28 begin
+	//modify by lmm 2018-11-28 begin modify by zyq 2023-02-10 begin
 	var Data=CombineData()
-	var data=tkMakeServerCall("web.DHCEQ.EM.KNMaint","SaveFaultEquipMapData",Data);
-	if(data>0)
+	var returnValue=tkMakeServerCall("web.DHCEQ.EM.KNMaint","SaveFaultEquipMapData",Data);
+	var returnObj=JSON.parse(returnValue)
+	if(returnObj.SQLCODE<0)
 	{
-		$.messager.show({title: '提示',msg: '保存成功'});
-		$('#tdhceqmcfaultequipmap').datagrid('reload');
-		ClearElement();
+		messageShow("","","",returnObj.Data);
+		return;
 	}
-	else
-		$.messager.alert('保存失败！','错误代码:'+data, 'warning');
-	//modify by lmm 2018-11-28 end
+	$('#tdhceqmcfaultequipmap').datagrid('reload');
+	ClearElement();
+	//modify by lmm 2018-11-28 end modify by zyq 2023-02-10 end
 		
 }
 
@@ -269,18 +283,18 @@ function UpdateGridData()
 	if(getElementValue("ESourceID")==""){$.messager.alert('提示','新增失败,来源ID不能为空！','warning');return;}
 	if((getElementValue("ESourceType")==1)&(getElementValue("ModelDR")!="")){$.messager.alert('提示','新增失败,设备分类无机型！','warning');return;}
 	
-	//modify by lmm 2018-11-28 begin
+	//modify by lmm 2018-11-28 begin modify by zyq 2023-02-10 begin
 	var Data=CombineData()
-	var data=tkMakeServerCall("web.DHCEQ.EM.KNMaint","SaveFaultEquipMapData",Data);
-	if(data>0)
+	var returnValue=tkMakeServerCall("web.DHCEQ.EM.KNMaint","SaveFaultEquipMapData",Data);
+	var returnObj=JSON.parse(returnValue);
+	if(returnObj.SQLCODE<0)
 	{
-		$.messager.show({title: '提示',msg: '更新成功'});
-		$('#tdhceqmcfaultequipmap').datagrid('reload');
-		ClearElement();
+		messageShow("","","",returnObj.Data);
+		return;
 	}
-	else
-		$.messager.alert('更新失败！','错误代码:'+data, 'warning');
-	//modify by lmm 2018-11-28 end
+	$('#tdhceqmcfaultequipmap').datagrid('reload');
+	ClearElement();
+	//modify by lmm 2018-11-28 end modify by zyq 2023-02-10 end
 }
 
 function DeleteGridData()
@@ -318,3 +332,16 @@ function clearData(vElementID)
 {
 	setElement(vElementID+"DR","")
 }
+//add by zyq 2022-10-10
+function getParam(vQueryParams)
+{
+	//alert(vQueryParams)
+}
+
+// 数据查询事件
+function BFind_Clicked()
+{
+	FindGridData();
+}
+function getParam() //add by zyq 2023-02-03 解决下拉框错位问题
+{}

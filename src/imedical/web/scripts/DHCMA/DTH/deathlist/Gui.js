@@ -10,7 +10,7 @@ function InitPatientAdm(){
 	$HUI.combobox('#cboSSHosp',{
 	    onSelect:function(rows){
 		    var HospID=rows["CTHospID"];
-		    obj.cboRepLoc = Common_ComboToLoc("cboRepLoc","","","",HospID);
+		    obj.cboRepLoc = Common_ComboToLoc("cboRepLoc","E|EM","","",HospID);
 	    }
     });
     
@@ -44,23 +44,13 @@ function InitPatientAdm(){
 		iconCls:'icon-apply-check',
 		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
 		rownumbers: true, //如果为true, 则显示一个行号列
-		singleSelect: true,
+		singleSelect:false,
 		autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
 		loadMsg:'数据加载中...',
 		pageSize: 20,
 		pageList : [20,50,100,200],
-		url:$URL,
-	    queryParams:{
-		    ClassName:"DHCMed.DTHService.ReportSrv",
-			QueryName:"QryDeathPatients",
-			argDateFrom: $('#txtDateFrom').datebox('getValue'), 
-			argDateTo: $('#txtDateTo').datebox('getValue'), 
-			arglocId: $('#cboRepLoc').combobox('getValue'),
-			hospId:$('#cboSSHosp').combobox('getValue'),   
-			argExamConts: obj.GetExamConditions(),
-			argExamSepeare: "^"
-	    },
 		columns:[[
+			{field:'checkOrd',checkbox:'true',align:'center',width:30,auto:false},
 			{field:'ReportID',title:'报告',width:'45',
 				formatter: function(value,row,index){
 					var PatientID=row["PatientID"];
@@ -70,14 +60,23 @@ function InitPatientAdm(){
 						LocID=session['LOGON.CTLOCID'];
 					}
 					var ReportID = row["ReportID"];
-					if (value) {
-						var strRet = '<a href="#" class="btn_detail" onclick="objScreen.OpenDeathReport(\'' + ReportID + '\',\'' + Paadm + '\',\'' + LocID + '\')"></a>';
+					if ((typeof HISUIStyleCode != 'undefined') && (HISUIStyleCode=="lite")) {
+						var strRet = '<a href="#" class="'+ (value ? 'icon icon-paper' : 'icon icon-add') +'" onclick="objScreen.OpenDeathReport(\'' + ReportID + '\',\'' + Paadm + '\',\'' + LocID + '\')"></a>';
 					} else {
-						var strRet = '<a href="#" class="btn_add" onclick="objScreen.OpenDeathReport(\'' + ReportID + '\',\'' + Paadm + '\',\'' + LocID + '\')"></a>';
+						var strRet = '<a href="#" class="'+ (value ? 'btn_detail' : 'btn_add') +'" onclick="objScreen.OpenDeathReport(\'' + ReportID + '\',\'' + Paadm + '\',\'' + LocID + '\')"></a>';
 					}
 					return strRet;
 				}
-			},		
+			},	
+			{field:'link',title:'病历浏览',width:80,align:'center',
+			  	formatter: function(value,row,index){
+					if(row["OldRepFlag"]==1){
+						return;
+					}else{
+						return " <a href='#' onclick='objScreen.OpenEMR(\"" + row.Paadm + "\",\"" + row.PatientID + "\");'>病历浏览</a>";
+					}
+			  	}
+			},			
 			{field:'RegNo',title:'登记号',width:'100'},
 			{field:'MrNo',title:'病案号',width:'100'},
 			{field:'PatientName',title:'姓名',width:'120'},
@@ -98,6 +97,9 @@ function InitPatientAdm(){
 			if (index>-1) {
 				obj.gridDeathPatient_click(row);
 			}
+		},onLoadSuccess:function(data){
+			//加载成功
+			dispalyEasyUILoad(); //隐藏效果
 		}
 	});
 

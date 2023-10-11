@@ -1,63 +1,48 @@
-var init = function () {
-	var VendorParams = JSON.stringify(addSessionParams({
-				APCType: "M",
-				RcFlag: "Y"
-			}));
+var init = function() {
+	var VendorParams = JSON.stringify(addSessionParams({ APCType: 'M' }));
 	var VendorBox = $HUI.combobox('#Vendor', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetVendor&ResultSetType=array&Params=' + VendorParams,
-			valueField: 'RowId',
-			textField: 'Description'
-		});
-	var EvalIndexParams=JSON.stringify(addSessionParams());
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetVendor&ResultSetType=array&Params=' + VendorParams,
+		valueField: 'RowId',
+		textField: 'Description'
+	});
+	var EvalIndexParams = JSON.stringify(addSessionParams());
 	var EvalIndexBox = $HUI.combobox('#EvalIndex', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.DHCVendorEvaluationIndex&QueryName=EvalIndex&ResultSetType=array&Params='+EvalIndexParams,
-			valueField: 'RowId',
-			textField: 'Desc'
-		});
+		url: $URL + '?ClassName=web.DHCSTMHUI.DHCVendorEvaluationIndex&QueryName=EvalIndex&ResultSetType=array&Params=' + EvalIndexParams,
+		valueField: 'RowId',
+		textField: 'Desc'
+	});
 
 	$UI.linkbutton('#QueryBT', {
-		onClick: function () {
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			if (isEmpty(ParamsObj.StartDate)) {
-				$UI.msg('alert','起始日期不能为空!');
+				$UI.msg('alert', '起始日期不能为空!');
 				return;
 			}
 			if (isEmpty(ParamsObj.EndDate)) {
-				$UI.msg('alert','截止日期不能为空!');
+				$UI.msg('alert', '截止日期不能为空!');
 				return;
 			}
 			var Params = JSON.stringify(ParamsObj);
-			Params=encodeUrlStr(Params);
+			Params = encodeUrlStr(Params);
 			var CheckedRadioObj = $("input[name='ReportType']:checked");
 			var CheckedValue = CheckedRadioObj.val();
-			var CheckedTitle = CheckedRadioObj.attr("label");
+			var CheckedTitle = CheckedRadioObj.attr('label');
 			var URL = CheckedURL(CheckedValue, Params);
-			AddTab(CheckedTitle, URL);
+			AddStatTab(CheckedTitle, URL, '#tabs');
 		}
 	});
 
 	$UI.linkbutton('#ClearBT', {
-		onClick: function () {
+		onClick: function() {
 			$UI.clearBlock('#Conditions');
-			var Tabs = $('#tabs').tabs('tabs');
-			var Tiles = new Array();
-			var Len = Tabs.length;
-			if (Len > 0) {
-				for (var j = 0; j < Len; j++) {
-					var Title = Tabs[j].panel('options').title;
-					if (Title != '报表') {
-						Tiles.push(Title);
-					}
-				}
-				for (var i = 0; i < Tiles.length; i++) {
-					$('#tabs').tabs('close', Tiles[i]);
-				}
-			}
+			CloseStatTab('#tabs');
 			SetDefaValues();
 		}
 	});
 
 	SetDefaValues();
+	GetReportStyle('#Report');
 };
 $(init);
 
@@ -66,36 +51,11 @@ function SetDefaValues() {
 	$('#EndDate').datebox('setValue', DateFormatter(new Date()));
 }
 function CheckedURL(CheckedValue, Params) {
-	var p_URL="";
+	var p_URL = '';
 	if ('FlagVendorIndexScore' == CheckedValue) {
 		p_URL = PmRunQianUrl + '?reportName=DHCSTM_HUI_VendorIndexScore.raq&Params=' + Params;
 	} else {
 		p_URL = PmRunQianUrl + '?reportName=DHCSTM_HUI_VendorIndexScore.raq&Params=' + Params;
 	}
 	return p_URL;
-}
-function AddTab(title, url) {
-	if ($('#tabs').tabs('exists', title)) {
-		$('#tabs').tabs('select', title); //选中并刷新
-		var currTab = $('#tabs').tabs('getSelected');
-		if (url != undefined && currTab.panel('options').title != '报表') {
-			$('#tabs').tabs('update', {
-				tab: currTab,
-				options: {
-					content: CreateFrame(url)
-				}
-			})
-		}
-	} else {
-		var content = CreateFrame(url);
-		$('#tabs').tabs('add', {
-			title: title,
-			content: content,
-			closable: true
-		});
-	}
-}
-function CreateFrame(url) {
-	var s = '<iframe scrolling="auto" frameborder="0"  src="' + url + '" style="width:100%;height:99.4%;"></iframe>';
-	return s;
 }

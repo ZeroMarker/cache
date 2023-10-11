@@ -2,7 +2,7 @@ var PageLogicObj={
 	m_MajorCTLocListDataGrid:"",
 	m_SelectLookup:false,
 	m_MinorCTLocListDataGrid:"",
-	editRow:undefined,
+	editRow:undefined
 };
 
 $(document).ready(function(){ 
@@ -13,13 +13,15 @@ $(document).ready(function(){
 
 function InitHospList()
 {
-	var hospComp = GenHospComp("DHC_CTLoc_Major");
+	var hospComp = GenHospComp("DHC_CTLocMajor");
 	hospComp.jdata.options.onSelect = function(e,t){
-		Init();
 		ClearData();
+		MajorCTLocListDataGridLoad();
+		InitSortType();
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){
 		Init();
+		InitSortType();
 	}
 }
 
@@ -31,6 +33,12 @@ function Init(){
 function InitEvent(){
 	$('#BClear').click(function() {
 		ClearData();	
+	})
+	$('#SaveMajorCTLocConfig').click(function() {
+		SaveConfigClick();	
+	})	
+	$('#SaveMinorCTLocConfig').click(function() {
+		SaveConfigSubClick();	
 	})	
 	
 	$(document.body).bind("keydown",BodykeydownHandler);
@@ -53,6 +61,58 @@ function InitMajorCTLocListDataGrid(){
         text: '二级科室维护',
         iconCls: 'icon-batch-cfg',
         handler: function() { MinorLocClickHandle();}
+    },"-",{
+        text: '一级科室排序',
+        iconCls: 'icon-sort',
+        handler: function() { SortBtn("User.DHCCTLocMajor");}
+    },{
+        text: '挂号界面排队方案选择',
+        iconCls: 'icon-filter',
+        handler: function() {
+    		SetDefConfig("MajorCTLocSort","MajorCTLocSort")
+			$("#MajorCTLoc-dialog").dialog("open");}
+    },"-",{
+        text: '二级科室排序',
+        iconCls: 'icon-sort',
+        handler: function() { SortBtnSub();}
+    },{
+        text: '挂号界面二级科室排队方案选择',
+        iconCls: 'icon-filter',
+        handler: function() {
+	        var rows = PageLogicObj.m_MajorCTLocListDataGrid.datagrid("getSelections");
+			if (rows.length > 0) {
+				var ids = [];
+				for (var i = 0; i < rows.length; i++) {
+					ids.push(rows[i].RowID);
+				}
+				var MastRowID=ids.join(',')
+			}else{
+				$.messager.alert('提示',"请选择一级科室记录!","info");
+				return false;
+			}
+			$.q({
+				ClassName:"web.DHCCTLocMajor", //web.DHCBL.BDP.BDPSort
+				QueryName:"GetDataForCmb1Sub",
+				rowid:"",desc:"",
+				tableName:"User.DHCCTLocMinor",hospid:"",MasterRowID:MastRowID,
+				dataType:"json"
+			},function(Data){
+				$("#MinorCTLocSort").combobox({
+					textField:"SortType",
+					valueField:"ID",
+					data:Data.rows,
+					OnChange:function(newValue,OldValue){
+						if (!newValue) {
+							$(this).combobox('setValue',"");
+						}
+					},
+					onLoadSuccess:function(){
+						SetDefConfig("MinorCTLocSort"+MastRowID,"MinorCTLocSort")
+						}
+				})
+			})
+			$("#MinorCTLoc-dialog").dialog("open");
+			}
     }];
 	var LocColumns=[[ 
 		//Code和Desc 原来EXT版本维护反了
@@ -72,6 +132,7 @@ function InitMajorCTLocListDataGrid(){
 		singleSelect : true,
 		fitColumns : true,
 		autoRowHeight : false,
+		remoteSort: false,
 		loadMsg : '加载中..',  
 		pagination : true,
 		rownumbers : true,
@@ -96,7 +157,7 @@ function InitMajorCTLocListDataGrid(){
 				}
 			}
 		}
-	});
+	}).datagrid({loadFilter:DocToolsHUI.lib.pagerFilter});
 	return MajorCTLocListDataGrid;	
 }
 
@@ -114,13 +175,17 @@ function AddClickHandle(){
 		Desc:GRPLocCode, 
 		StartDate:StartDate, 
 		EndDate:EndDate,
-		HospId:HospID
+		HospId:HospID,
+		dataType:"text"
 	},function(rtn){
 		if (rtn==1){
 			$.messager.show({title:"提示",msg:"新增成功"});
 			PageLogicObj.m_MajorCTLocListDataGrid.datagrid('uncheckAll');
 			ClearData();
 			MajorCTLocListDataGridLoad();
+		}else if(rtn=="repeat"){ 
+			$.messager.alert("提示","新增失败!一级科室代码或名称重复！","error");
+			return false;
 		}else{
 			$.messager.alert("提示","新增失败!","error");
 			return false;
@@ -149,12 +214,16 @@ function UpdateClickHandle(){
 		Desc:GRPLocCode, 
 		StartDate:StartDate, 
 		EndDate:EndDate, 
+		dataType:"text"
 	},function(rtn){
 		if (rtn==1){
 			$.messager.show({title:"提示",msg:"修改成功"});
 			PageLogicObj.m_MajorCTLocListDataGrid.datagrid('uncheckAll');
 			ClearData();
 			MajorCTLocListDataGridLoad();
+		}else if(rtn=="repeat"){ 
+			$.messager.alert("提示","修改失败!一级科室代码或名称重复！","error");
+			return false;
 		}else{
 			$.messager.alert("提示","修改失败!","error");
 			return false;
@@ -251,7 +320,7 @@ function MajorCTLocListDataGridLoad()
 		Pagerows:PageLogicObj.m_MajorCTLocListDataGrid.datagrid("options").pageSize,
 		rows:99999
 	},function(GridData){
-		PageLogicObj.m_MajorCTLocListDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+		PageLogicObj.m_MajorCTLocListDataGrid.datagrid('uncheckAll').datagrid('loadData',GridData);
 	})
 	
 };
@@ -661,4 +730,473 @@ function BodykeydownHandler(e){
         //e.preventDefault(); 
         return false;  
     }  
+}
+function InitFunLib(usertableName){
+	var indexs="";var sortstr="";
+	var sortWin='<div id="sortWin" style="width:570px;height:450px;"></div>';
+	var sortGrid='<table id="sortGrid"></table>';
+	var HospID=$HUI.combogrid('#_HospList').getValue();
+	$('body').append(sortWin);
+	$('#sortWin').append(sortGrid);
+	  var columns=[[
+	    {field:'SortId',title:'SortId',hidden:true},
+	    {field:'RowId',title:'对应表RowId',hidden:true},
+	    {field:'Desc',title:'描述',width:180},
+	    {field:'SortType',title:'排序类型',hidden:true},
+	    {field:'SortNum',title:'顺序号',editor:{'type':'numberbox'},width:180}
+	  ]];
+  var sortGrid=$HUI.datagrid('#sortGrid',{
+      url: $URL,
+      queryParams:{
+        ClassName:"web.DHCCTLocMajor",
+        QueryName:"GetList",
+        'tableName':usertableName,
+        'hospid':HospID
+      },
+      columns: columns,  //列信息
+      pagination: true,   //pagination  boolean 设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+      pageSize:20,
+      pageList:[5,10,14,15,20,25,30,50,75,100,200,300,500,1000],
+      singleSelect:true,
+      idField:'SortId',
+      fit:true,
+      rownumbers:true,    //设置为 true，则显示带有行号的列。
+      fitColumns:true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动
+      //remoteSort:false,  //定义是否从服务器排序数据。定义是否从服务器排序数据。true
+      //toolbar:'#mytbar'
+      toolbar:[],
+      onClickCell:function(index, field, value){
+        if(indexs!==""){
+           $(this).datagrid('endEdit', indexs);
+        }
+        $(this).datagrid('beginEdit', index);
+        indexs=index;
+      },
+      onAfterEdit:function(index, row, changes){
+        var type=$HUI.combobox('#TextSort').getText();
+        if(JSON.stringify(changes)!="{}"){
+          if(sortstr!==""){
+            sortstr=sortstr+'*'+usertableName+'^'+row.RowId+'^'+type+'^'+row.SortNum+'^'+row.SortId;
+          }
+          else{
+            sortstr=usertableName+'^'+row.RowId+'^'+type+'^'+row.SortNum+'^'+row.SortId;
+          }
+        }
+      },
+      onClickRow:function(index,row){
+      },
+      onDblClickRow:function(index, row){
+      }
+  });
+  var toolbardiv='<div id="Sortb">排序类型&nbsp;<input id="TextSort" style="width:207px"></input><a plain="true" id="SortRefreshBtn" >重置</a><a plain="true" id="SortSaveBtn" >保存</a><a plain="true" id="SortUpBtn" >升序</a><a plain="true" id="SortLowBtn" >降序</a></div>';
+
+  $('#sortWin .datagrid-toolbar tr').append(toolbardiv);
+  $('#SortRefreshBtn').linkbutton({
+      iconCls: 'icon-reload'
+  });
+  $('#SortSaveBtn').linkbutton({
+      iconCls: 'icon-save'
+  });
+  $('#SortUpBtn').linkbutton({
+      iconCls: 'icon-arrow-top'
+  });
+  $('#SortLowBtn').linkbutton({
+      iconCls: 'icon-arrow-bottom'
+  });
+  $('#SortRefreshBtn').click(function(event) {
+    //$('#TextSort').combobox('reload');
+    $HUI.combobox('#TextSort').reload();
+    $HUI.combobox('#TextSort').setValue();
+    GridLoad(usertableName,'','');
+  });
+
+  $('#SortUpBtn').click(function(event) {
+    var type=$HUI.combobox('#TextSort').getText();
+    GridLoad(usertableName,type,'ASC')
+  });
+  $('#SortLowBtn').click(function(event) {
+    var type=$HUI.combobox('#TextSort').getText();
+    GridLoad(usertableName,type,'DESC')
+  });
+  $('#SortSaveBtn').click(function(event){
+    var type=$HUI.combobox('#TextSort').getText();
+    if(type==""){
+      $.messager.alert('提示','排序类型不能为空！','error');
+      return
+    }
+    if(indexs!==""){
+      $('#sortGrid').datagrid('endEdit', indexs);
+    }
+    if(sortstr==""){
+      $.messager.alert('提示','没有修改排序顺序号数据无需保存！','error');
+      return
+    }
+    var NewSortArr=new Array();
+	for (var i=0;i<sortstr.split("*").length;i++){
+		var onesort=sortstr.split("*")[i];
+		var onesortArr=onesort.split("^");
+		onesortArr[2]=type;
+		NewSortArr.push(onesortArr.join("^"));
+	}
+	sortstr=NewSortArr.join("*");
+    $.ajax({
+      url:"../csp/dhc.bdp.ext.datatrans.csp?pClassName=web.DHCBL.BDP.BDPSort&pClassMethod=SaveData",
+      data:{
+            "sortstr":sortstr,
+            MWToken:('undefined'!==typeof websys_getMWToken)?websys_getMWToken():""
+      },
+      type:'POST',
+      success:function(data){
+        var data=eval('('+data+')');
+        if(data.success=='true'){
+            $.messager.popover({msg: '修改成功！',type:'success',timeout: 1000});
+          sortstr="";
+          var types=$HUI.combobox('#TextSort').getText();
+          GridLoad(usertableName,types,'')
+          //$HUI.combobox('#TextSort').reload();
+        }
+        else{
+          var errorMsg="修改失败！";
+          if(data.errorinfo){
+            errorMsg=errorMsg+'</br>错误信息:'+data.errorinfo
+          }
+          $.messager.alert('错误提示',errorMsg,'error')
+        }
+      }
+    });
+  });
+  
+};
+function SortBtn(usertableName){
+	 InitFunLib(usertableName)
+	var Sortwin=$HUI.dialog('#sortWin',{
+	  iconCls:'icon-w-list',
+	  resizeable:true,
+	  title:'排序(排序类型可手动录入)',
+	  modal:true,
+	  onClose:function(){
+		  InitSortType();
+	  }
+	});
+	GridLoad(usertableName,'','');
+	$('#TextSort').combobox({
+	  url:$URL+"?ClassName=web.DHCCTLocMajor&QueryName=GetDataForCmb1&ResultSetType=array",
+	  valueField:'SortType',
+	  textField:'SortType',
+	  onBeforeLoad:function(param){
+	    param.tableName=usertableName;
+	    param.hospid=$HUI.combogrid('#_HospList').getValue();
+	  },
+	  onLoadSuccess:function(data){
+	  },
+	  onSelect:function(record){
+	    var type=record.SortType;
+	    GridLoad(usertableName,type,'')
+	  }
+	});
+};
+function GridLoad (usertableName,type,dir){
+    sortstr="";
+    var HospID=$HUI.combogrid('#_HospList').getValue();
+    $('#sortGrid').datagrid('load',{
+      ClassName:"web.DHCCTLocMajor",
+      QueryName:"GetList",
+      'tableName':usertableName,
+      'type':type,
+      'dir':dir,
+      'hospid':HospID
+    });
+    $('#sortGrid').datagrid('unselectAll');
+  };
+
+function InitSortType(){
+	var HospID=$HUI.combogrid('#_HospList').getValue();
+	$.q({
+		ClassName:"web.DHCCTLocMajor", //web.DHCBL.BDP.BDPSort
+		QueryName:"GetDataForCmb1",
+		rowid:"",desc:"",
+		tableName:"User.DHCCTLocMajor",hospid:HospID,
+		dataType:"json"
+	},function(Data){
+		$("#MajorCTLocSort").combobox({
+			textField:"SortType",
+			valueField:"ID",
+			data:Data.rows,
+			OnChange:function(newValue,OldValue){
+				if (!newValue) {
+					$(this).combobox('setValue',"");
+				}
+			}
+		})
+	})
+}
+
+function SetDefConfig(Node1, TypeId) {
+	var HospId=$HUI.combogrid('#_HospList').getValue()
+	$.cm({
+		ClassName:"web.DHCOPRegConfig",
+		MethodName:"GetSpecConfigNode",
+		NodeName:Node1,
+		HospId:HospId,
+		dataType:"text"
+	},function(rtn) {
+		if ($.hisui.indexOfArray($("#"+TypeId).combobox('getData'),"SortType",rtn) >=0) {
+			$("#"+TypeId).combobox("setText",rtn);
+		}else{
+			$("#"+TypeId).combobox("setText","");
+		}
+	})
+	
+}
+function SaveConfigClick() {
+	var MajorCTLocSort=$("#MajorCTLocSort").combobox("getText");
+	if (($.hisui.indexOfArray($("#MajorCTLocSort").combobox('getData'),"SortType",MajorCTLocSort)<0)&&(MajorCTLocSort!="")) {
+		$.messager.alert("提示","请选择一级科室列表排序！","info",function(){
+			$("#MajorCTLocSort").next('span').find('input').focus();
+		});
+		return false;
+	}
+	var SortConfig="MajorCTLocSort"+"!"+MajorCTLocSort
+	SaveConfig(SortConfig)
+	
+	$.messager.show({title:"提示",msg:"保存成功"});
+	$("#MajorCTLoc-dialog").dialog("close")
+}
+function SaveConfig(SortConfig) {
+	var HospId=$HUI.combogrid('#_HospList').getValue()
+	$.cm({
+		ClassName:"web.DHCOPRegConfig",
+		MethodName:"SaveConfigHosp",
+		Coninfo:SortConfig,
+		HospID:HospId
+	},false)
+}
+function InitFunSubLib(){
+	var usertableName="User.DHCCTLocMinor"
+	var rows = PageLogicObj.m_MajorCTLocListDataGrid.datagrid("getSelections");
+    if (rows.length > 0) {
+		var ids = [];
+		for (var i = 0; i < rows.length; i++) {
+			ids.push(rows[i].RowID);
+		}
+		var MastRowID=ids.join(',')
+	}else{
+		$.messager.alert('提示',"请选择一级科室记录!","info");
+		return false;
+	}
+	var indexs="";var sortstr="";
+	var sortWin='<div id="sortWin" style="width:570px;height:450px;"></div>';
+	var sortGrid='<table id="sortGrid"></table>';
+	var HospID=$HUI.combogrid('#_HospList').getValue();
+	$('body').append(sortWin);
+	$('#sortWin').append(sortGrid);
+	  var columns=[[
+	    {field:'SortId',title:'SortId',hidden:true},
+	    {field:'RowId',title:'对应表RowId',hidden:true},
+	    {field:'Desc',title:'描述',width:180},
+	    {field:'SortType',title:'排序类型',hidden:true},
+	    {field:'SortNum',title:'顺序号',editor:{'type':'numberbox'},width:180}
+	  ]];
+  var sortGrid=$HUI.datagrid('#sortGrid',{
+      url: $URL,
+      queryParams:{
+        ClassName:"web.DHCCTLocMajor",
+        QueryName:"GetListSub",
+        'tableName':usertableName,
+        'hospid':HospID,
+        'MastRowID':MastRowID
+      },
+      columns: columns,  //列信息
+      pagination: true,   //pagination  boolean 设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+      pageSize:20,
+      pageList:[5,10,14,15,20,25,30,50,75,100,200,300,500,1000],
+      singleSelect:true,
+      idField:'SortId',
+      fit:true,
+      rownumbers:true,    //设置为 true，则显示带有行号的列。
+      fitColumns:true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动
+      //remoteSort:false,  //定义是否从服务器排序数据。定义是否从服务器排序数据。true
+      //toolbar:'#mytbar'
+      toolbar:[],
+      onClickCell:function(index, field, value){
+        if(indexs!==""){
+           $(this).datagrid('endEdit', indexs);
+        }
+        $(this).datagrid('beginEdit', index);
+        indexs=index;
+      },
+      onAfterEdit:function(index, row, changes){
+        var type=$HUI.combobox('#TextSort').getText();
+        if(JSON.stringify(changes)!="{}"){
+          if(sortstr!==""){
+            sortstr=sortstr+'*'+usertableName+'^'+row.RowId+'^'+type+'^'+row.SortNum+'^'+row.SortId;
+          }
+          else{
+            sortstr=usertableName+'^'+row.RowId+'^'+type+'^'+row.SortNum+'^'+row.SortId;
+          }
+        }
+      },
+      onClickRow:function(index,row){
+      },
+      onDblClickRow:function(index, row){
+      }
+  });
+  var toolbardiv='<div id="Sortb">排序类型&nbsp;<input id="TextSort" style="width:207px"></input><a plain="true" id="SortRefreshBtn" >重置</a><a plain="true" id="SortSaveBtn" >保存</a><a plain="true" id="SortUpBtn" >升序</a><a plain="true" id="SortLowBtn" >降序</a></div>';
+
+  $('#sortWin .datagrid-toolbar tr').append(toolbardiv);
+  $('#SortRefreshBtn').linkbutton({
+      iconCls: 'icon-reload'
+  });
+  $('#SortSaveBtn').linkbutton({
+      iconCls: 'icon-save'
+  });
+  $('#SortUpBtn').linkbutton({
+      iconCls: 'icon-arrow-top'
+  });
+  $('#SortLowBtn').linkbutton({
+      iconCls: 'icon-arrow-bottom'
+  });
+  $('#SortRefreshBtn').click(function(event) {
+    //$('#TextSort').combobox('reload');
+    $HUI.combobox('#TextSort').reload();
+    $HUI.combobox('#TextSort').setValue();
+    GridSubLoad(usertableName,'','',MastRowID);
+  });
+
+  $('#SortUpBtn').click(function(event) {
+    var type=$HUI.combobox('#TextSort').getText();
+    GridSubLoad(usertableName,type,'ASC',MastRowID)
+  });
+  $('#SortLowBtn').click(function(event) {
+    var type=$HUI.combobox('#TextSort').getText();
+    GridSubLoad(usertableName,type,'DESC',MastRowID)
+  });
+  $('#SortSaveBtn').click(function(event){
+    var type=$HUI.combobox('#TextSort').getText();
+    if(type==""){
+      $.messager.alert('提示','排序类型不能为空！','error');
+      return
+    }
+    if(indexs!==""){
+      $('#sortGrid').datagrid('endEdit', indexs);
+    }
+    if(sortstr==""){
+      $.messager.alert('提示','没有修改排序顺序号数据无需保存！','error');
+      return
+    }
+    var NewSortArr=new Array();
+	for (var i=0;i<sortstr.split("*").length;i++){
+		var onesort=sortstr.split("*")[i];
+		var onesortArr=onesort.split("^");
+		onesortArr[2]=type;
+		NewSortArr.push(onesortArr.join("^"));
+	}
+	sortstr=NewSortArr.join("*");
+    $.ajax({
+      url:"../csp/dhc.bdp.ext.datatrans.csp?pClassName=web.DHCBL.BDP.BDPSort&pClassMethod=SaveData",
+      data:{
+            "sortstr":sortstr,
+            MWToken:('undefined'!==typeof websys_getMWToken)?websys_getMWToken():""
+        },
+      type:'POST',
+      success:function(data){
+        var data=eval('('+data+')');
+        if(data.success=='true'){
+            $.messager.popover({msg: '修改成功！',type:'success',timeout: 1000});
+          sortstr="";
+          var types=$HUI.combobox('#TextSort').getText();
+          //GridLoad(usertableName,types,'')
+          GridSubLoad(usertableName,type,'',MastRowID)
+          //$HUI.combobox('#TextSort').reload();
+        }
+        else{
+          var errorMsg="修改失败！";
+          if(data.errorinfo){
+            errorMsg=errorMsg+'</br>错误信息:'+data.errorinfo
+          }
+          $.messager.alert('错误提示',errorMsg,'error')
+        }
+      }
+    });
+  });
+}
+function GridSubLoad(usertableName,type,dir,MastRowID){
+	sortstr="";
+    var HospID=$HUI.combogrid('#_HospList').getValue();
+    $('#sortGrid').datagrid('load',{
+      ClassName:"web.DHCCTLocMajor",
+      QueryName:"GetListSub",
+      'tableName':usertableName,
+      'type':type,
+      'dir':dir,
+      'hospid':HospID,
+      'MastRowID':MastRowID
+    });
+    $('#sortGrid').datagrid('unselectAll');
+}
+function SortBtnSub(){
+	var rows = PageLogicObj.m_MajorCTLocListDataGrid.datagrid("getSelections");
+    if (rows.length > 0) {
+		var ids = [];
+		for (var i = 0; i < rows.length; i++) {
+			ids.push(rows[i].RowID);
+		}
+		var MastRowID=ids.join(',')
+	}else{
+		$.messager.alert('提示',"请选择一级科室记录!","info");
+		return false;
+	}
+	var usertableName="User.DHCCTLocMinor"
+	InitFunSubLib();
+	var Sortwin=$HUI.dialog('#sortWin',{
+		  iconCls:'icon-w-list',
+		  resizeable:true,
+		  title:'排序(排序类型可手动录入)',
+		  modal:true,
+		  onClose:function(){
+			  InitSortType();
+		  }
+	});
+	GridSubLoad(usertableName,'','',MastRowID);
+	$('#TextSort').combobox({
+		  url:$URL+"?ClassName=web.DHCCTLocMajor&QueryName=GetDataForCmb1Sub&ResultSetType=array",
+		  valueField:'SortType',
+		  textField:'SortType',
+		  onBeforeLoad:function(param){
+		    param.tableName=usertableName;
+		    param.hospid=$HUI.combogrid('#_HospList').getValue();
+		    param.MasterRowID=MastRowID
+		  },
+		  onLoadSuccess:function(data){
+		  },
+		  onSelect:function(record){
+		    var type=record.SortType;
+		    GridSubLoad(usertableName,type,'',MastRowID)
+		  }
+	});
+};
+function SaveConfigSubClick() {
+	var rows = PageLogicObj.m_MajorCTLocListDataGrid.datagrid("getSelections");
+	if (rows.length > 0) {
+		var ids = [];
+		for (var i = 0; i < rows.length; i++) {
+			ids.push(rows[i].RowID);
+		}
+		var MastRowID=ids.join(',')
+	}else{
+		$.messager.alert('提示',"请选择一级科室记录!","info");
+		return false;
+	}
+	var MinorCTLocSort=$("#MinorCTLocSort").combobox("getText");
+	if (($.hisui.indexOfArray($("#MinorCTLocSort").combobox('getData'),"SortType",MinorCTLocSort)<0)&&(MinorCTLocSort!="")) {
+		$.messager.alert("提示","请选择科室列表排序！","info",function(){
+			$("#MajorCTLocSort").next('span').find('input').focus();
+		});
+		return false;
+	}
+	var SortConfig="MinorCTLocSort"+MastRowID+"!"+MinorCTLocSort
+	SaveConfig(SortConfig)
+	
+	$.messager.show({title:"提示",msg:"保存成功"});
+	$("#MinorCTLoc-dialog").dialog("close")
 }

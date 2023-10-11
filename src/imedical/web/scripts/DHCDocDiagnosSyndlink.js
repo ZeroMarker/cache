@@ -258,8 +258,8 @@ function SyndList()
 }
 function LinkSyndSignCreat()
 { 
-	
-		var lnk="websys.default.csp?WEBSYS.TCOMPONENT=DHCDocDiagnosSignSymptom";
-        var NewWin=open(lnk,"udhcopbillif","status=1,scrollbars=1,resizable=no,top=6,left=6,width=1000,height=680");
+	var lnk="websys.default.csp?WEBSYS.TCOMPONENT=DHCDocDiagnosSignSymptom";
+	if(typeof websys_writeMWToken=='function') lnk=websys_writeMWToken(lnk);
+	var NewWin=open(lnk,"udhcopbillif","status=1,scrollbars=1,resizable=no,top=6,left=6,width=1000,height=680");
 }	
 document.body.onload = BodyLoadHandler;

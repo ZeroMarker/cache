@@ -23,50 +23,61 @@ var PrtXMLName = "";
  *提示消息
  */
 var MSG = {
-	CARDINVALID_ERROR: '卡无效',
-	NOACCOUNT_ERROR: '此卡无有效账户',
-	CARDNO_NULL: '卡号不能为空.',
-	READCARD_ERROR: '卡验证错误!',
-	DIFF_PATIENTID_ERROR: '该卡对应的病人和界面上的病人不一致',
-	CARD_ERROR: '卡验证错误.',
-	LACK_MONEY: '账户余额不足.',
-	TP_STATUS_ERROR: '有预结算异常数据,请先处理.',
-	NO_CHARGE_DATA: '无结算数据.',
-	AMT_MIS_MATCH: '金额不符',
-	PAID_MODE_ERROR: '支付方式错误.',
-	PARAMETER_ERROR: '入参错误.',
-	OEORISTRING_ERROR: '传入的医嘱串格式错误.',
-	OTHER_ERROR: '结算错误.',
-	COMPLETE_FAILED: '确认完成失败.',
-	SUCCESS: '结算成功.',
-	REGFEE_ERROR: '挂号医嘱与收费医嘱不能同时结算',
-	EXSIT_TP_DATA: '有预结算记录，请先撤销后再结算'
+	CARDINVALID_ERROR: $g('卡无效'),
+	NOACCOUNT_ERROR: $g('此卡无有效账户'),
+	CARDNO_NULL: $g('卡号不能为空'),
+	READCARD_ERROR: $g('卡验证错误'),
+	DIFF_PATIENTID_ERROR: $g('该卡对应的病人和界面上的病人不一致'),
+	CARD_ERROR: $g('卡验证错误'),
+	LACK_MONEY: $g('账户余额不足'),
+	TP_STATUS_ERROR: $g('有异常收费记录，请先撤销后再结算'),
+	NO_CHARGE_DATA: $g('无结算数据'),
+	AMT_MIS_MATCH: $g('金额不符'),
+	PAID_MODE_ERROR: $g('支付方式错误'),
+	PARAMETER_ERROR: $g('入参错误'),
+	OEORISTRING_ERROR: $g('传入的医嘱串格式错误'),
+	OTHER_ERROR: $g('结算错误'),
+	COMPLETE_FAILED: $g('确认完成失败'),
+	SUCCESS: $g('结算成功'),
+	REGFEE_ERROR: $g('挂号医嘱与收费医嘱不能同时结算'),
+	PAYMODE_ERROR: $g('未配置的支付方式'),
+	MULTHOSP_AUTH: $g('本院未授予结算该患者医嘱权限')
 };
 
 /**
- *结算
- *参数：
- *	cardNO:卡号,不能为空
- *	patientID:登记号Rowid，不能为空
- *	episodeID:就诊号，可以为空（注：为空时，OeoriIDStr不能为空）
+ * 结算
+ * 参数：
+ *	cardNO: 卡号,不能为空
+ *	patientID: 登记号Rowid，不能为空
+ *	episodeID: 就诊号，可以为空（注：为空时，OeoriIDStr不能为空）
  *	insType：费别，可以为空
  *	oeoriIDStr：结算的医嘱串，可以为空(注：为空时，EpisodeID不能为空)
- *	guser：操作员Rowid，不能为空
- *	groupDR：安全组Rowid，不能为空
- *	locDR：登录科室Rowid，不能为空
- *	hospDR：院区Rowid，可以为空(为空时，根据登录科室取院区)
+ *	userId：操作员Rowid，不能为空
+ *	groupId：安全组Rowid，不能为空
+ *	ctLocId：登录科室Rowid，不能为空
+ *	hospId：院区Rowid，可以为空(为空时，根据登录科室取院区)
  */
 
-function checkOut(cardNO, patientID, episodeID, insType, oeoriIDStr, guser, groupDR, locDR, hospDR) {
-	var checkOutInfoExpStr = guser + "^" + locDR + "^" + groupDR + "^" + hospDR;
-	
+function checkOut(cardNO, patientID, episodeID, insType, oeoriIDStr, userId, groupId, ctLocId, hospId, callbackFun) {
 	var isTP = tkMakeServerCall("web.DHCOPBillChargExcepiton", "CheckTPFlagByEpisodeID", episodeID, "");
-	if (isTP == 1){
-		$.messager.alert("提示", MSG.EXSIT_TP_DATA, "info");
+	if (isTP == 1) {
+		$.messager.alert("提示", MSG.TP_STATUS_ERROR, "info");
 		return;
 	}
 	
-	var checkOutInfo = tkMakeServerCall("web.udhcOPBillIF", "GetLocCheckOutInfo", episodeID, insType, oeoriIDStr, checkOutInfoExpStr);
+	var sessionStr = userId + "^" + groupId + "^" + ctLocId + "^" + hospId;
+	var hasAuth = tkMakeServerCall("web.udhcOPBill1", "HasHospChgAuth", episodeID, sessionStr);
+	if (hasAuth == 0) {
+		$.messager.alert("提示", MSG.MULTHOSP_AUTH, "info");
+		return;
+	}
+	//+2023-03-17 ZhYW 判断安全组是否与结算用户对照，未对照不允许结算
+	var footUserId = tkMakeServerCall("web.DHCOPCashier", "GetGrupContFootUser", groupId, hospId);
+	if (!(footUserId > 0)) {
+		$.messager.alert("提示", "该安全组未对照结算操作员，不能结算，请联系信息中心维护对照", "info");
+		return;
+	}
+	var checkOutInfo = tkMakeServerCall("web.udhcOPBillIF", "GetLocCheckOutInfo", episodeID, insType, oeoriIDStr, sessionStr);
 	var tmpList = checkOutInfo.split("!");
 	if (tmpList.length < 4) {
 		$.messager.alert("提示", MSG.NO_CHARGE_DATA, "info");
@@ -80,108 +91,107 @@ function checkOut(cardNO, patientID, episodeID, insType, oeoriIDStr, guser, grou
 		$.messager.alert("提示", MSG.NO_CHARGE_DATA, "info");
 		return;
 	}
-	//卡校验
-	var obj = document.getElementById("CardBillCardTypeValue");
-	if (obj) {
-		var CardTypeValue = obj.value;
-		var temparr = CardTypeValue.split("^");
-		var CardTypeRowId = temparr[0];
-		m_CCMRowID = temparr[14];
-		m_ReadCardMode = temparr[16];
-		var retStr = DHCACC_CheckMCFPay(patPaySum, cardNO, episodeID, CardTypeRowId);
-	} else {
-		var retStr = DHCACC_CheckMCFPay3(patPaySum, patientID);
-	}
 
-	tmpList = retStr.split("^");
-	var tmpFlag = tmpList[0];
-	var accManId = tmpList[1];  //账户RowID
+	new Promise(function (resolve, reject) {
+		//卡校验
+		var CardTypeValue = $("#CardBillCardTypeValue").val();
+		if (CardTypeValue) {
+			var temparr = CardTypeValue.split("^");
+			var CardTypeRowId = temparr[0];
+			m_CCMRowID = temparr[14];
+			m_ReadCardMode = temparr[16];
+			DHCACC_CheckMCFPay(patPaySum, cardNO, episodeID, CardTypeRowId, "", resolve);
+		} else {
+			var retStr = DHCACC_CheckMCFPay3(patPaySum, patientID);
+			resolve(retStr);
+		}
+    }).then(function (retStr) {
+	    var tmpList = retStr.split("^");
+		var tmpFlag = tmpList[0];
+		var accManId = tmpList[1];  //账户RowID
 
-	if (tmpFlag == "-206") {
-		$.messager.alert("提示", tmpFlag + " : " + MSG.CARD_ERROR, "info");
-		return;
-	}
-	if (tmpFlag == "-207") {
-		$.messager.alert("提示", tmpFlag + " : " + MSG.DIFF_PATIENTID_ERROR, "info");
-		return;
-	}
-	if (tmpFlag == "-205") {
-		var myBalance = tmpList[4];
-		$.messager.alert("提示", tmpFlag + " : " + MSG.LACK_MONEY + " 差额<font color='red'>" + myBalance + "</font>元", "info");
-		return;
-	}
-	if (tmpFlag == "-200") {
-		$.messager.alert("提示", tmpFlag + " : " + MSG.CARDINVALID_ERROR, "info");
-		return;
-	}
-	if (tmpFlag == "-201") {
-		$.messager.alert("提示", tmpFlag + " : " + MSG.NOACCOUNT_ERROR, "info");
-		return;
-	}
-	if (tmpFlag != "0") {
-		$.messager.alert("提示", tmpFlag + " : " + MSG.READCARD_ERROR, "info");
-		return;
-	}
+		if (tmpFlag == -206) {
+			$.messager.alert("提示", tmpFlag + " : " + MSG.CARD_ERROR, "info");
+			return;
+		}
+		if (tmpFlag == -207) {
+			$.messager.alert("提示", tmpFlag + " : " + MSG.DIFF_PATIENTID_ERROR, "info");
+			return;
+		}
+		if (tmpFlag == -205) {
+			$.messager.alert("提示", tmpFlag + " : " + MSG.LACK_MONEY + " 差额<font color='red'>" + Number(tmpList[4]).toFixed(2) + "</font>元", "info");
+			return;
+		}
+		if (tmpFlag == -200) {
+			$.messager.alert("提示", tmpFlag + " : " + MSG.CARDINVALID_ERROR, "info");
+			return;
+		}
+		if (tmpFlag == -201) {
+			$.messager.alert("提示", tmpFlag + " : " + MSG.NOACCOUNT_ERROR, "info");
+			return;
+		}
+		if (tmpFlag != 0) {
+			$.messager.alert("提示", tmpFlag + " : " + MSG.READCARD_ERROR, "info");
+			return;
+		}
 
-	//结算
-	var expStr = "";
-	var retStr = tkMakeServerCall("web.udhcOPBillIF", "OPOEORDBILLINL", papmiId, admIdStr, oeoriIdStr, patPaySum, guser, groupDR, locDR, accManId, expStr);
-	tmpList = retStr.split(String.fromCharCode(2));
-
-	var err = tmpList[0];
-	if (tmpList.length > 1) {
-		if (err == "101") {
-			$.messager.alert("提示", "(" + err + ")" + MSG.NO_CHARGE_DATA, "error");
+		//结算
+		var rtnValue = tkMakeServerCall("web.udhcOPBillIF", "OPOEORDBILLINL", papmiId, admIdStr, oeoriIdStr, patPaySum, accManId, sessionStr);
+		var myAry = rtnValue.split("^");
+		if (myAry[0] != 0) {
+			var rtnAry = rtnValue.split(String.fromCharCode(3));
+			var errAry = rtnAry[0].split("^");   //错误代码^失败消息
+			var msg = $g(String(errAry.slice(1)) || errAry[0]);
+			$.messager.alert("提示", $g("预结算失败") + "：" + $g(msg), "error");
 			return;
 		}
-		if (err == "102") {
-			$.messager.alert("提示", "(" + err + ")" + MSG.AMT_MIS_MATCH, "error");
-			return;
-		}
-		if (err == "105") {
-			$.messager.alert("提示", "(" + err + ")" + MSG.PAID_MODE_ERROR, "error");
-			return;
-		}
-		if (err == "120") {
-			$.messager.alert("提示", "(" + err + ")" + MSG.TP_STATUS_ERROR, "error");
-			return;
-		}
-		if (err == "2620") {
-			$.messager.alert("提示", "(" + err + ")" + MSG.PARAMETER_ERROR, "error");
-			return;
-		}
-		if (err == "2621") {
-			$.messager.alert("提示", "(" + err + ")" + MSG.OEORISTRING_ERROR, "error");
-			return;
-		}
-		if (err == "130") {
-			$.messager.alert("提示", "(" + err + ")" + MSG.REGFEE_ERROR, "error");
-			return;
-		}
-		if (err != 0) {
-			$.messager.alert("提示", "(" + err + ")" + MSG.OTHER_ERROR, "error");
-			return;
-		}
+		var myPRTStr = myAry.filter(function (item) {
+	        return (item > 0);
+	    }).join("^");
+		var myPayInfo = buildPayStr(myPRTStr, accManId);
+		//门诊收费确认完成		
+		var isRequiredInv = "N";
+		var fairType = "F";
+		var actualMoney = "";
+		var changeAmt = "";
+		var roundErr = "";
+		var chgInsTypeId = "";
+		var stayFlag = "";       //留观标识
+		var checkOutMode = 1;
+		var insuDicCode = "";    //病种编码
+		var isDiagPay = 1;       //+2023-03-17 ZhYW 是否诊间消费标识
 		
-		if (tmpList[0] == "0") {
-			var myPRTStr = tmpList[1];
-	
-			var myPayInfo = buildPayStr(myPRTStr,accManId);
-			
-			//门诊收费确认完成
-			var compExpStr = groupDR + "^" + locDR + "^" + accManId + "^N^F^^^^^";
-			var rtn = tkMakeServerCall("web.DHCBillConsIF", "CompleteCharge", "8", guser, "", myPRTStr, "0", "", compExpStr,myPayInfo);
-			if (rtn != "0") {
-				$.messager.alert("提示", MSG.COMPLETE_FAILED, "error");
-				return;
-			}else {
-				var myLeft = tkMakeServerCall("web.UDHCAccManageCLS", "getAccBalance", accManId);  //取账户余额  add zhangli  17.7.26
-				var msg = MSG.SUCCESS + " 本次消费<font style='color:red'>" + patPaySum + "</font>元，余额<font style='color:red'>" + myLeft + "</font>元";
-				$.messager.alert("提示", msg, "success");
-				BillPrintTaskListNew(tmpList[1]);
-			}
+		var myAry = [];
+		myAry.push(groupId);             //1
+		myAry.push(ctLocId);             //2
+		myAry.push(accManId);            //3
+		myAry.push(isRequiredInv);       //4
+		myAry.push(fairType);            //5
+		myAry.push(actualMoney);         //6
+		myAry.push(changeAmt);           //7
+		myAry.push(roundErr);            //8
+		myAry.push(chgInsTypeId);        //9
+		myAry.push(ClientIPAddress);     //10
+		myAry.push(stayFlag);            //11
+		myAry.push(checkOutMode);        //12
+		myAry.push(insuDicCode);         //13
+		myAry.push(footUserId);          //14
+		var expStr = myAry.join("^");
+
+		var rtnValue = tkMakeServerCall("web.DHCBillConsIF", "CompleteCharge", "3", userId, "", myPRTStr, "0", "", expStr, myPayInfo);
+		var myAry = rtnValue.split("^");
+		if (myAry[0] == 0) {
+			var myLeft = tkMakeServerCall("web.UDHCAccManageCLS", "getAccBalance", accManId);  //取账户余额  add zhangli  17.7.26
+			var msg = $g(MSG.SUCCESS) + "，" + $g("本次消费") + "<font style=\"color:red\">" + patPaySum + "</font>" + $g("元") + "，" + $g("余额") + "<font style=\"color:red\">" + myLeft + "</font>" + $g("元");
+			$.messager.alert("提示", msg, "success", function() {
+				if (callbackFun) callbackFun();
+				BillPrintTaskListNew(myPRTStr);
+			});
+			return;
 		}
-	}
+		var msg = $g(String(myAry.slice(1)) || myAry[0]);
+		$.messager.alert("提示", $g("确认完成失败") + ": " + $g(msg), "error");
+    });
 }
 
 function BillPrintTaskListNew(INVstr) {
@@ -195,18 +205,13 @@ function BillPrintTaskListNew(INVstr) {
 			DHCP_GetXMLConfig("InvPrintEncrypt", PrtXMLName);
 		}
 	}
-
 	var myOldXmlName = PrtXMLName;
-	var myTaskList = "";
-	var obj = document.getElementById("ReadPrtList");
-	if (obj) {
-		myTaskList = obj.value;
-	}
-	var myary = myTaskList.split(String.fromCharCode(1));
+	var myTaskList = $("#ReadPrtList").val();
+	var myary = myTaskList ? myTaskList.split(String.fromCharCode(1)) : "N";
 	if (myary[0] == "Y") {
 		BillPrintTaskList(myary[1], INVstr);
 		PrtXMLName = myOldXmlName;
-		DHCP_GetXMLConfig("InvPrintEncrypt", PrtXMLName); //INVPrtFlag
+		DHCP_GetXMLConfig("InvPrintEncrypt", PrtXMLName);  //INVPrtFlag
 	} else {
 		//BillPrintNew(INVstr);
 	}
@@ -278,8 +283,8 @@ function BillPrintNew(INVstr) {
 			var Guser = session['LOGON.USERID'];
 			var sUserCode = session['LOGON.USERCODE'];
 			var myExpStr = "";
-			var myPreDep = $("#Actualmoney").val();
-			var myCharge = $("#Change").val();
+			var myPreDep = "";
+			var myCharge = "";
 			var myCurGroupDR = session['LOGON.GROUPID'];
 			var myExpStr = myPreDep + "^" + myCharge + "^" + myCurGroupDR;
 			var Printinfo = cspRunServerMethod(encmeth, "InvPrintNew", PrtXMLName, INVtmp[invi], sUserCode, PayMode, myExpStr);
@@ -293,13 +298,12 @@ function InvPrintNew(TxtInfo, ListInfo) {
 }
 
 function buildPayStr(prtRowIdStr, accMRowId) {
-	var payStr = "";
 	var payMCode = "CPP";
 	var payMInfo = tkMakeServerCall("web.DHCBillCommon", "GetPayModeByCode", payMCode);
 	var paymode = payMInfo.split("^")[0];
 	var myPayCard = accMRowId;
-	var patUnit = ""
-	var myBankDR = ""
+	var patUnit = "";
+	var myBankDR = "";
 	var myCheckNo = "";
 	var myChequeDate = "";
 	var myPayAccNo = "";
@@ -310,7 +314,7 @@ function buildPayStr(prtRowIdStr, accMRowId) {
 	var actualMoney = "";   //实收
 	var backChange = "";    //找零
 	
-	payStr = paymode + "^" + myBankDR + "^" + myCheckNo + "^" + myPayCard + "^" + patUnit + "^" + myChequeDate + "^" + myPayAccNo + "^" + mySelfPayAmt + "^" + myInvRoundErrDetails + "^" + actualMoney + "^" + backChange ;
+	var payStr = paymode + "^" + myBankDR + "^" + myCheckNo + "^" + myPayCard + "^" + patUnit + "^" + myChequeDate + "^" + myPayAccNo + "^" + mySelfPayAmt + "^" + myInvRoundErrDetails + "^" + actualMoney + "^" + backChange ;
 	payStr = payStr.replace(/undefined/g, "");    //替换所有的undefined
 
 	return payStr;
@@ -324,14 +328,4 @@ function buildPayStr(prtRowIdStr, accMRowId) {
 function getPatSelfPayAmt(prtRowIdStr){
 	var patSelfPayAmt = tkMakeServerCall("web.DHCBillConsIF", "GetPatSelfPayAmt", prtRowIdStr);
 	return patSelfPayAmt;
-}
-
-/**
-* 2020-06-08
-* Lid
-* 计算分币误差
-*/
-function calcInvPayMAmtRound(prtRowIdStr, payAmt){
-	var invRoundInfo = tkMakeServerCall("web.DHCBillConsIF", "GetManyInvRoundErrAmt", prtRowIdStr, payAmt);
-	return invRoundInfo;
 }

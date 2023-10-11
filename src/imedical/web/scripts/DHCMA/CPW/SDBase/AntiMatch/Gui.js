@@ -51,9 +51,9 @@ function InitviewScreen(){
 		MethodName:"GetCatJsonTree"
 	},false);
 	if (jsonData=="") return;
-	var jsonData=eval('(' + jsonstr + ')');
+	var jsonData=eval('[' + jsonstr + ']');
 	$('#mytt').tree({
-		data: [jsonData],
+		data: jsonData,
 		formatter:function(node){
 				return node.text;
 		},
@@ -100,6 +100,9 @@ function InitviewScreen(){
 		onDblClickRow:function(rowIndex,rowData){	
 		},
 		onLoadSuccess:function(data){
+				$("#btnAdd").linkbutton("disable");
+			$("#btnSave").linkbutton("disable");
+			$("#btnDelete").linkbutton("disable");
 		}
 	});
 	obj.gridAntiItemDicMatch = $HUI.datagrid("#gridAntiItemDicMatch",{
@@ -202,6 +205,9 @@ function InitviewScreen(){
 		}
 	function onClickRow(index){
 				if (editIndex!=index) {
+					$('#btnAdd').linkbutton("disable");
+					$("#btnSave").linkbutton("enable");
+					$("#btnDelete").linkbutton('enable');
 					if (obj.endEditing()){
 						$('#gridAntiItemDicMatch').datagrid('selectRow', index)
 								.datagrid('beginEdit', index);
@@ -210,6 +216,10 @@ function InitviewScreen(){
 						$('#gridAntiItemDicMatch').datagrid('selectRow', editIndex);
 					}
 				}else{
+					$("#btnAdd").linkbutton('enable');
+					$("#btnSave").linkbutton('disable');
+					$("#btnDelete").linkbutton('disable');
+					$('#gridAntiItemDicMatch').datagrid('unselectRow', index)
 					obj.endEditing();
 					}
 			}

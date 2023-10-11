@@ -3,7 +3,6 @@
 var m_AbortPop = 0;
 var m_RefundPop = 0;
 var PrtXMLName = "";
-var m_YBConFlag = "0";
 var listobj = parent.frames["udhcOPRefundyccl_Order"];
 var SuccessFlag = "Y";
 
@@ -12,31 +11,24 @@ $(function() {
 	
 	$HUI.combobox('#RefundPayMode',{
 		disabled: true,
-		url: $URL + '?ClassName=web.UDHCOPGSConfig&QueryName=ReadGSINSPMList&ResultSetType=array',
-		method: 'GET',
+		url: $URL + '?ClassName=web.UDHCOPOtherLB&MethodName=ReadPayModeBroker&JSFunName=GetPayModeToHUIJson',
 		editable: false,
-		valueField: 'CTPMRowID',
-		textField: 'CTPMDesc',
-		onBeforeLoad: function(param) {
-			param.GPRowID = session['LOGON.GROUPID'];
-			param.HospID = session['LOGON.HOSPID'];
-			param.TypeFlag = "FEE";
-		}
+		valueField: 'id',
+		textField: 'text'
 	});
 
 	IntDoc();
 	
-	$("#ReceipNO").keydown(function(e) {
+	$("#ReceipNO").focus().keydown(function(e) {
 		ReceipNO_KeyDown(e);
 	});
-	disableById("Abort");
-	disableById("Refund");
 	
 	$HUI.linkbutton("#RefClear", {
 		onClick: function () {
 			RefundClear_Click();
 		}
 	});
+	
 	$HUI.linkbutton("#BtnQuery", {
 		onClick: function () {
 			INVQuery_Click();
@@ -47,6 +39,7 @@ $(function() {
 			ReadCardQuery_OnClick();
 		}
 	});
+	
 	$HUI.linkbutton("#ReadPos", {
 		onClick: function () {
 			ReadPosQuery_OnClick();
@@ -65,14 +58,6 @@ $(function() {
 		}
 	});
 	
-	var encmeth = getValueById("ReadOPBaseEncrypt");
-	if (encmeth != ""){
-		var myrtn = cspRunServerMethod(encmeth, session['LOGON.HOSPID']);
-		var myary = myrtn.split("^");
-		m_YBConFlag = myary[12];
-	}
-	
-	focusById("ReceipNO");
 });
 
 function IntDoc() {
@@ -83,8 +68,6 @@ function IntDoc() {
 	}
 	var myary = myrtn.split("^");
 	if (myary[0] == 0){
-		//_"^"_GSRowID_"^"_FootFlag_"^"_RecLocFlag_"^"_PrtINVFlag
-		//foot Flag
 		m_AbortPop = myary[7];
 		m_RefundPop = myary[8];
 		//Get PrtXMLName
@@ -179,17 +162,17 @@ function ReceipNO_KeyDown(e) {
 			return;
 		}
 	  	var encmeth = getValueById("getReceipID");
-		var rtn = cspRunServerMethod(encmeth, 'SetReceipID', '', ReceipNo,"",session['LOGON.HOSPID']);
+		var rtn = cspRunServerMethod(encmeth, "SetReceipID", "", ReceipNo, session['LOGON.HOSPID']);
 		var ReceipID = getValueById("ReceipID");
 	  	if (ReceipID == "") {
 		  	$("#ReTrade").linkbutton('disable');
-			listobj.NoHideAlert(t['06']);
+			listobj.NoHideAlert("发票号错误: 非收费发票");
 			focusById('ReceipNO');
 			return websys_cancel();
 		} else {
 		   	var ReceipID = getValueById("ReceipID");
 		   	var encmeth = getValueById("getReceiptinfo");
-		   	var rtn = cspRunServerMethod(encmeth, "SetReceipInfo", "", ReceipID,session['LOGON.HOSPID']);
+		   	var rtn = cspRunServerMethod(encmeth, "SetReceipInfo", "", ReceipID, session['LOGON.HOSPID']);
 		   	if (rtn == '-1') {
 			   	$("#ReTrade").linkbutton('disable');
 			   	listobj.NoHideAlert("此发票不存在！");
@@ -374,8 +357,6 @@ function SetReceipInfo(value) {
 	setValueById("Sum", parseFloat(Split_Value[3]).toFixed(2));
 	setValueById("INSDivDR", Split_Value[13]);
 	setValueById("InsType", Split_Value[17]);
-	disableById("Abort");
-	disableById("Refund");
 	if (Split_Value[9] != "") {
 		setValueById("RefundPayMode", Split_Value[17]);
 	}
@@ -407,17 +388,13 @@ function SetReceipInfo(value) {
 		return websys_cancel();
 	}
 	if ((Split_Value[6] == GUser)&&(Split_Value[7] == "")) {
-		if (m_AbortPop == "1") {
-			enableById("Abort");
-		}else{
+		if (m_AbortPop != 1) {
 			listobj.NoHideAlert(t["NoAbortPop"]);
 			SuccessFlag = "N";
 		}
 	} else {
-	   	if (m_RefundPop == "1") {
-			enableById("Refund");
-	   	}else{
-		   	listobj.NoHideAlert(t["NoRefundPop"]);
+	   	if (m_RefundPop != 1) {
+			listobj.NoHideAlert(t["NoRefundPop"]);
 		   	SuccessFlag = "N";
 	   	}
    	}

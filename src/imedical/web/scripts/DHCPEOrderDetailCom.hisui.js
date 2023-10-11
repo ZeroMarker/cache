@@ -429,7 +429,9 @@ function DelData()
 			
 			$.m({ ClassName:"web.DHCPE.OrderDetail", MethodName:"Delete", itmjs:'',itmjsex:'',ParRef:ParRef,ChildSub:ChildSub },function(ReturnValue){
 				if (ReturnValue!='0') {
-					$.messager.alert("提示","删除失败","error");  
+					if(ReturnValue=="Err 07"){$.messager.alert("提示","删除失败:该细项已和大项关联","error")}
+					else{$.messager.alert("提示","删除失败","error"); } 
+ 
 				}else{
 					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 					$("#ID").val(""); 

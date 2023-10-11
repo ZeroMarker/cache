@@ -60,7 +60,7 @@
 			});
 		},
 	});
-	obj.refreshNode = function(node)
+	obj.refreshNode = function(node,desc)
 	{
 		//加载子节点数据				
 		var subNodes = [];
@@ -69,7 +69,7 @@
 			var tmp = $('#treeType').tree('getNode',this);
 			subNodes.push(tmp);
 		});
-		
+		console.log(subNodes);
 		for(var i=0;i<subNodes.length;i++)
 		{
 			$('#treeType').tree('remove',subNodes[i].target);
@@ -79,6 +79,7 @@
 			ClassName:"DHCMed.SSService.TreeService",
 			QueryName:"QryDictionaryTree",
 			aType:node.id,
+			aDesc:desc,
 			ResultSetType:"array", 
 			page:1,    
 			rows:9999
@@ -96,17 +97,16 @@
 		var  valArr =idVal.split("-");
 		obj.CurrDicType=valArr[1];	
 		obj.CurrNode=node;
-		 if(idVal.indexOf("dicType-")>-1)
-		{
+		 if(idVal.indexOf("dicType-")>-1) {
 			//第二层 项目
 			type=valArr[1]
 		}
 		obj.gridItems.load({
-				ClassName:"DHCMed.SSService.DictionarySrv",
-				QueryName:"QryDictionary",
-				aType:type,
-				aIsActive:''
-			})
+			ClassName:"DHCMed.SSService.DictionarySrv",
+			QueryName:"QryDictionary",
+			aType:type,
+			aIsActive:''
+		})
 		$('#treeType').tree('toggle', node.target);	
 	};
 		
@@ -124,8 +124,7 @@
 		pageSize: 20,
 		pageList : [10,20,50,100,200],
 		url:$URL,
-		queryParams:{
-			 
+		queryParams:{		 
 			ClassName:"DHCMed.SSService.DictionarySrv",
 			QueryName:"QryDictionary",
 			aType:'',//'EpdemicType',//objNode.id.split("-")[1]
@@ -134,26 +133,29 @@
 		columns:[[
 			{field:'Code',title:'代码',width:'150'},
 			{field:'Description',title:'描述',width:'280'}, 
-			{field:'Active',title:'是否有效',width:'80',formatter: function(value,row,index){
-				if (row.Active=="Yes"){
-					return "是";
-				} else {
-					return "否";
+			{field:'Active',title:'是否有效',width:'80',
+				formatter: function(value,row,index){
+					if (row.Active=="Yes"){
+						return "是";
+					} else {
+						return "否";
+					}
 				}
-			}
-		},
+			},
 			{field:'HispsDescs',title:'医院',width:'280'},
-			]],
-			onDblClickRow:function(rowIndex,rowData){
-				if(rowIndex>-1){
-					obj.gridItems_onDbselect(rowData);
-				}
+			{field:'InNo',title:'排序码',width:'120'}
+		]],
+		onDblClickRow:function(rowIndex,rowData){
+			if(rowIndex>-1){
+				obj.gridItems_onDbselect(rowData);
 			}
-		});
+		}
+	});
 	//加载医院和产品下拉框
 	var ComboHosp = $HUI.combobox("#cboHosp", {
 		url: $URL,
 		editable: true,
+		allowNull: true,
 		valueField: 'rowid',
 		textField: 'hosName',
 		onBeforeLoad: function (param) {    //在请求加载数据之前触发，返回 false 则取消加载动作

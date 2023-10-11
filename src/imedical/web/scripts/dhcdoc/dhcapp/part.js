@@ -68,7 +68,8 @@ function save(){
 			$.messager.alert('提示','保存失败','warning')
 			return;
 		}
-		$("#datagrid").datagrid('reload'); $('#partTree').tree('reload'); 
+		$("#datagrid").datagrid('reload');
+		$('#partTree').tree('reload'); 
 	});	
 }
 
@@ -79,12 +80,12 @@ function addRow(){
 
 function addCurRow(){
 	 runClassMethod(
-	 				"web.DHCAPPPart",
-	 				"find",
-	 				{'Id':curnode},
-	 				function(data){
-	 					commonAddRow({'datagrid':'#datagrid',value:{'APActiveFlag':'Y','APParPDr':data}}) 
-	 				})
+		"web.DHCAPPPart",
+		"find",
+		{'Id':curnode},
+		function(data){
+			commonAddRow({'datagrid':'#datagrid',value:{'APActiveFlag':'Y','APParPDr':data}}) 
+		})
 }
 
 
@@ -232,10 +233,12 @@ function initPartWin(){
 	var option = {
 		collapsible:true,
 		border:true,
-		closed:"true"
+		closed:"true",
+		minimizable:false,
+		maximizable:false,
+		collapsible:false
 	};
-	
-	new WindowUX('别名窗体', 'PartWin', '600', '300', option).Init();
+	new WindowUX('别名', 'PartWin', '600', '300', option).Init();
 }
 
 /// DataGrid 定义
@@ -357,12 +360,15 @@ function saveRow(){
 	}
 	var dataList = [];
 	for(var i=0;i<rowsData.length;i++){
-		
 		if($.trim(rowsData[i].ItemLabel) == "") continue;
-		dataList.push(rowsData[i].ItemLabel.toUpperCase());
+		var text=rowsData[i].ItemLabel.toUpperCase();
+		if (("/"+dataList.join("/")+"/").indexOf("/"+text+"/")>=0) {
+			$.messager.alert('提示','别名:'+text+" 重复！",'warning');
+			return;	
+		}
+		dataList.push(text);
 	} 
 	var params=dataList.join("/");
-
 	//保存数据
 	runClassMethod("web.DHCAPPPart","SavePartAlias",{"PartID":PartID,"PartAlias":params},function(jsonString){
 
@@ -370,10 +376,10 @@ function saveRow(){
 			$.messager.alert('提示','保存失败！','warning');
 			return;	
 		}
-		$("#datagrid").datagrid(
-			{
-				url:partUrl+"&parentId="+PartID	
-			});    //sufan  2017-05-23  保存后，加载保存后的别名数据
+		$("#datagrid").datagrid({
+			url:partUrl+"&parentId="+PartID	
+		});    //sufan  2017-05-23  保存后，加载保存后的别名数据
+		$("#dgPartList").datagrid('reload');
 	})
 }
 
@@ -612,3 +618,11 @@ function movedown()
 		}
 	})
 }
+function translateword(){
+	var SelectedRow = $('#datagrid').datagrid('getSelected');
+	if (!SelectedRow){
+	$.messager.alert("提示","请选择需要翻译的行!","info");
+	return false;
+	}
+	CreatTranLate("User.DHCAppPart","APDesc",SelectedRow["APDesc"])
+	}

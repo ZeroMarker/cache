@@ -43,7 +43,8 @@ function InitGridWay() {
         url: $URL,
         queryParams: {
             ClassName: 'PHA.PRC.ConFig.Way',
-            QueryName: 'SelectWay'
+            QueryName: 'SelectWay',
+            queryMenu: "secgrp"
         },
         columns: columns,
         onClickRow:function(rowIndex,rowData){

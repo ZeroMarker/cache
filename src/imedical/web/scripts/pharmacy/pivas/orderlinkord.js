@@ -3,50 +3,65 @@
  * 编写日期:2018-03-13
  * 编写人:  yunhaibao
  */
-var HospId=session["LOGON.HOSPID"];
-var SessionLoc = session["LOGON.CTLOCID"];
-var SessionUser = session["LOGON.USERID"];
+var HospId = session['LOGON.HOSPID'];
+var SessionLoc = session['LOGON.CTLOCID'];
+var SessionUser = session['LOGON.USERID'];
 var ConfirmMsgInfoArr = [];
 var GridCmgArc;
 var GridCmbLinkOrdPack;
 var GridCmbSeqFlag;
-$(function() {
-	InitHospCombo();
+$(function () {
+    InitHospCombo();
     InitGridDict();
     InitGridOrderLink();
     InitGridOrdLinkOrd();
     InitGridFeeRule();
     //收费设置
-    $("#btnAddPolo").on("click", AddNewRow);
-    $("#btnSavePolo").on("click", SaveOrdLinkOrd);
-    $("#btnDelPolo").on("click", DeletelPolo);
+    $('#btnAddPolo').on('click', AddNewRow);
+    $('#btnSavePolo').on('click', SaveOrdLinkOrd);
+    $('#btnDelPolo').on('click', DeletelPolo);
     // 关联收费规则
-    $("#btnSaveFeeRule").on("click", SaveFeeRule);
-	$('.dhcpha-win-mask').remove();
+    $('#btnAddFeeRule,#btnDeleteFeeRule').on('click', function () {
+        var saveType = this.id === 'btnAddFeeRule' ? 'ADD' : 'DELETE';
+        SaveFeeRule(saveType);
+    });
+
+    $('#tabsOrdLink').tabs({
+        onSelect: function (title, index) {
+            if (index === 1) {
+                $('#lyFeeRule').layout();
+                ResizePanel();
+            }
+        }
+    });
+
+    setTimeout(function () {
+        ResizePanel();
+        $('.dhcpha-win-mask').remove();
+    }, 100);
 });
 
 function InitGridDict() {
     GridCmgArc = PIVAS.GridComboGrid.Init(
         {
-            Type: "ArcItmMast"
+            Type: 'ArcItmMast'
         },
         {
             required: true,
-            idField: "arcItmId",
-            textField: "arcItmDesc",
-	    	onBeforeLoad: function(param){
-				param.HospId = HospId;
-				param.filterText=param.q;
-				
-			}
+            idField: 'arcItmId',
+            textField: 'arcItmDesc',
+            onBeforeLoad: function (param) {
+                param.HospId = HospId;
+                param.filterText = param.q;
+            }
         }
     );
     GridCmbLinkOrdPack = PIVAS.GridComboBox.Init(
         {
-            Type: "LinkOrdPack"
+            Type: 'LinkOrdPack'
         },
         {
-            panelHeight: "auto",
+            panelHeight: 'auto',
             editable: false
             //required: true
         }
@@ -56,22 +71,22 @@ function InitGridDict() {
             data: {
                 data: [
                     {
-                        RowId: "A",
-                        Description: "全部"
+                        RowId: 'A',
+                        Description: $g('全部')
                     },
                     {
-                        RowId: "Y",
-                        Description: "关联医嘱"
+                        RowId: 'Y',
+                        Description: $g('关联医嘱')
                     },
                     {
-                        RowId: "N",
-                        Description: "非关联医嘱"
+                        RowId: 'N',
+                        Description: $g('非关联医嘱')
                     }
                 ]
             }
         },
         {
-            panelHeight: "auto",
+            panelHeight: 'auto',
             editable: false
             //required: true
         }
@@ -83,14 +98,14 @@ function InitGridOrderLink() {
     var columns = [
         [
             {
-                field: "polId",
-                title: "polId",
+                field: 'polId',
+                title: 'polId',
                 hidden: true,
-                align: "center"
+                align: 'center'
             },
             {
-                field: "polDesc",
-                title: "配液大类",
+                field: 'polDesc',
+                title: '配液大类',
                 width: 100
             }
         ]
@@ -98,31 +113,32 @@ function InitGridOrderLink() {
     var dataGridOption = {
         url: $URL,
         queryParams: {
-            ClassName: "web.DHCSTPIVAS.OrderLink",
-            QueryName: "QueryOrderLink"
+            ClassName: 'web.DHCSTPIVAS.OrderLink',
+            QueryName: 'QueryOrderLink',
+            pNeedTrans: 'Y'
         },
         pagination: false,
         fitColumns: true,
         fit: true,
         rownumbers: false,
         columns: columns,
-        toolbar: [],
-        onClickRow: function(rowIndex, rowData) {
+        toolbar: '#gridOrdLinkBar',
+        onClickRow: function (rowIndex, rowData) {
             if (rowData) {
                 QueryGridOrdLinkOrd();
                 QueryGridFeeRule();
             }
         },
-        onLoadSuccess: function() {
-            $("#gridOrdLinkOrd").datagrid("clear");
-            $("#gridFeeRule").datagrid("clear");
+        onLoadSuccess: function () {
+            $('#gridOrdLinkOrd').datagrid('clear');
+            $('#gridFeeRule').datagrid('clear');
         },
-    	onBeforeLoad: function(param){
-			param.HospId = HospId
-		}
+        onBeforeLoad: function (param) {
+            param.HospId = HospId;
+        }
     };
-    DHCPHA_HUI_COM.Grid.Init("gridOrderLink", dataGridOption);
-    $("#gridOrderLink class[name=datagrid-header]").css("display", "none");
+    DHCPHA_HUI_COM.Grid.Init('gridOrderLink', dataGridOption);
+    $('#gridOrderLink class[name=datagrid-header]').css('display', 'none');
 }
 
 /// 初始化医嘱项表格
@@ -130,81 +146,81 @@ function InitGridOrdLinkOrd() {
     var columns = [
         [
             {
-                field: "poloId",
-                title: "poloId",
+                field: 'poloId',
+                title: 'poloId',
                 hidden: true
             },
             {
-                field: "arcItmDesc",
-                title: "医嘱项描述",
+                field: 'arcItmDesc',
+                title: '医嘱项描述',
                 hidden: true
             },
             {
-                field: "arcItmCode",
-                title: "医嘱项代码",
+                field: 'arcItmCode',
+                title: '医嘱项代码',
                 width: 100
             },
             {
-                field: "arcItmId",
-                title: "医嘱项名称",
+                field: 'arcItmId',
+                title: '医嘱项名称',
                 width: 200,
                 editor: GridCmgArc,
-                descField: "arcItmDesc",
-                formatter: function(value, row, index) {
+                descField: 'arcItmDesc',
+                formatter: function (value, row, index) {
                     return row.arcItmDesc;
                 }
             },
             {
-                field: "arcItmQty",
-                title: "数量",
+                field: 'arcItmQty',
+                title: '数量',
                 width: 50,
-                align: "center",
+                align: 'center',
                 editor: {
-                    type: "numberbox",
+                    type: 'numberbox',
                     options: {
                         required: true
                     }
                 }
             },
             {
-                field: "linkOrdPackDesc",
-                title: "类型描述",
+                field: 'linkOrdPackDesc',
+                title: '类型描述',
                 width: 200,
                 hidden: true
             },
             {
-                field: "linkOrdPack",
-                title: "类型",
+                field: 'linkOrdPack',
+                title: '类型',
                 width: 75,
-                align: "center",
+                align: 'center',
                 editor: GridCmbLinkOrdPack,
-                descField: "linkOrdPackDesc",
-                formatter: function(value, row, index) {
+                descField: 'linkOrdPackDesc',
+                formatter: function (value, row, index) {
                     return row.linkOrdPackDesc;
                 }
             },
             {
-                field: "linkOrdSeqDesc",
-                title: "关联医嘱描述",
+                field: 'linkOrdSeqDesc',
+                title: '关联医嘱描述',
                 width: 200,
                 hidden: true
             },
             {
-                field: "linkOrdSeq",
-                title: "关联医嘱",
+                field: 'linkOrdSeq',
+                title: '关联医嘱',
                 width: 75,
-                align: "center",
+                align: 'center',
                 editor: GridCmbSeqFlag,
-                descField: "linkOrdSeqDesc",
-                formatter: function(value, row, index) {
+                descField: 'linkOrdSeqDesc',
+                formatter: function (value, row, index) {
                     return row.linkOrdSeqDesc;
                 }
             },
             {
-                field: "batNo",
-                title: "批次",
+                field: 'batNo',
+                title: '批次',
                 width: 50,
-                halign: "center",
+                halign: 'center',
                 hidden: true
             }
         ]
@@ -212,8 +228,8 @@ function InitGridOrdLinkOrd() {
     var dataGridOption = {
         url: $URL,
         queryParams: {
-            ClassName: "web.DHCSTPIVAS.OrderLink",
-            QueryName: "QueryOrdLinkOrd"
+            ClassName: 'web.DHCSTPIVAS.OrderLink',
+            QueryName: 'QueryOrdLinkOrd'
         },
         pagination: false,
         fitColumns: true,
@@ -221,116 +237,122 @@ function InitGridOrdLinkOrd() {
         rownumbers: false,
         columns: columns,
         nowrap: false,
-        toolbar: "#gridOrdLinkOrdBar",
-        onClickRow: function(rowIndex, rowData) {
-            $(this).datagrid("endEditing");
+        toolbar: '#gridOrdLinkOrdBar',
+        onClickRow: function (rowIndex, rowData) {
+            $(this).datagrid('endEditing');
         },
-        onLoadSuccess: function() {}
+        onLoadSuccess: function () {}
     };
-    DHCPHA_HUI_COM.Grid.Init("gridOrdLinkOrd", dataGridOption);
+    DHCPHA_HUI_COM.Grid.Init('gridOrdLinkOrd', dataGridOption);
 }
 
 /// 增加一行
 function AddNewRow() {
     var polId = GetSelectPolId();
-    if (polId == "") {
+    if (polId == '') {
         return;
     }
-    $("#gridOrdLinkOrd").datagrid("addNewRow", {
-        editField: "arcItmId"
+    $('#gridOrdLinkOrd').datagrid('addNewRow', {
+        editField: 'arcItmId'
     });
 }
 
 /// 保存医嘱项
 function SaveOrdLinkOrd() {
     var polId = GetSelectPolId();
-    if (polId == "") {
+    if (polId == '') {
         return;
     }
-    $("#gridOrdLinkOrd").datagrid("endEditing");
-    var gridChanges = $("#gridOrdLinkOrd").datagrid("getChanges");
+    $('#gridOrdLinkOrd').datagrid('endEditing');
+    var gridChanges = $('#gridOrdLinkOrd').datagrid('getChanges');
     var gridChangeLen = gridChanges.length;
     if (gridChangeLen == 0) {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: "没有需要保存的数据",
-            type: "alert"
+            msg: '没有需要保存的数据',
+            type: 'alert'
         });
         return;
     }
-    var paramsStr = "";
+    var paramsStr = '';
     for (var i = 0; i < gridChangeLen; i++) {
         var iData = gridChanges[i];
-        var params = polId + "^" + (iData.arcItmId || "") + "^" + (iData.arcItmQty || "") + "^" + (iData.linkOrdPack || "") + "^" + (iData.linkOrdSeq || "");
-        paramsStr = paramsStr == "" ? params : paramsStr + "!!" + params;
+        var params = polId + '^' + (iData.arcItmId || '') + '^' + (iData.arcItmQty || '') + '^' + (iData.linkOrdPack || '') + '^' + (iData.linkOrdSeq || '');
+        paramsStr = paramsStr == '' ? params : paramsStr + '!!' + params;
     }
-    var saveRet = tkMakeServerCall("web.DHCSTPIVAS.OrderLink", "SaveOrdLinkOrdMulti", paramsStr);
-    var saveArr = saveRet.split("^");
+    var saveRet = tkMakeServerCall('web.DHCSTPIVAS.OrderLink', 'SaveOrdLinkOrdMulti', paramsStr);
+    var saveArr = saveRet.split('^');
     var saveVal = saveArr[0];
     var saveInfo = saveArr[1];
     if (saveVal < 0) {
-        $.messager.alert("提示", saveInfo, "warning");
+        $.messager.alert('提示', saveInfo, 'warning');
     }
-    $("#gridOrdLinkOrd").datagrid("query", {});
+    $('#gridOrdLinkOrd').datagrid('query', {});
 }
 
 /// 获取医嘱项列表
 function QueryGridOrdLinkOrd() {
-    var gridPOLSelect = $("#gridOrderLink").datagrid("getSelected");
-    var polId = gridPOLSelect.polId || "";
-    $("#gridOrdLinkOrd").datagrid("query", {
+    var gridPOLSelect = $('#gridOrderLink').datagrid('getSelected');
+    var polId = gridPOLSelect.polId || '';
+    $('#gridOrdLinkOrd').datagrid('query', {
         inputStr: polId
     });
 }
 
 function QueryGridFeeRule() {
-    var gridPOLSelect = $("#gridOrderLink").datagrid("getSelected");
-    var polId = gridPOLSelect.polId || "";
-    $("#gridFeeRule").datagrid("query", {
+    var gridPOLSelect = $('#gridOrderLink').datagrid('getSelected');
+    polId = gridPOLSelect.polId || '';
+    $('#gridFeeRule').datagrid('query', {
         POLIID: polId,
-		HospId:HospId
+        HospId: HospId,
+        LinkFlag: 1
+    });
+    $('#gridFeeRuleDict').datagrid('query', {
+        POLIID: polId,
+        HospId: HospId,
+        LinkFlag: 0
     });
 }
 /// 删除医嘱项
 function DeletelPolo() {
-    var gridSelect = $("#gridOrdLinkOrd").datagrid("getSelected");
+    var gridSelect = $('#gridOrdLinkOrd').datagrid('getSelected');
     if (gridSelect == null) {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: "请选择需要删除的记录",
-            type: "alert"
+            msg: '请选择需要删除的记录',
+            type: 'alert'
         });
 
         return;
     }
-    $.messager.confirm("确认对话框", "您确定删除吗？", function(r) {
+    $.messager.confirm('确认对话框', '您确定删除吗？', function (r) {
         if (r) {
-            var poloId = gridSelect.poloId || "";
-            if (poloId == "") {
-                var rowIndex = $("#gridOrdLinkOrd").datagrid("getRowIndex", gridSelect);
-                $("#gridOrdLinkOrd").datagrid("deleteRow", rowIndex);
+            var poloId = gridSelect.poloId || '';
+            if (poloId == '') {
+                var rowIndex = $('#gridOrdLinkOrd').datagrid('getRowIndex', gridSelect);
+                $('#gridOrdLinkOrd').datagrid('deleteRow', rowIndex);
             } else {
-                var delRet = tkMakeServerCall("web.DHCSTPIVAS.OrderLink", "DeletePIVAOrderLinkOrder", poloId);
-                $("#gridOrdLinkOrd").datagrid("query", {});
+                var delRet = tkMakeServerCall('web.DHCSTPIVAS.OrderLink', 'DeletePIVAOrderLinkOrder', poloId);
+                $('#gridOrdLinkOrd').datagrid('query', {});
             }
         }
     });
 }
 
 function GetSelectPolId() {
-    var gridSelect = $("#gridOrderLink").datagrid("getSelected");
+    var gridSelect = $('#gridOrderLink').datagrid('getSelected');
     if (gridSelect == null) {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: "请先选中需要增加规则的配液大类记录",
-            type: "alert"
+            msg: '请先选中需要增加规则的配液大类记录',
+            type: 'alert'
         });
-        return "";
+        return '';
     }
-    var polId = gridSelect.polId || "";
-    if (polId == "") {
+    var polId = gridSelect.polId || '';
+    if (polId == '') {
         DHCPHA_HUI_COM.Msg.popover({
-            msg: "请先选中需要增加规则的配液大类记录",
-            type: "alert"
+            msg: '请先选中需要增加规则的配液大类记录',
+            type: 'alert'
         });
-        return "";
+        return '';
     }
     return polId;
 }
@@ -340,33 +362,35 @@ function InitGridFeeRule() {
     var columns = [
         [
             {
-                field: "ruleID",
-                title: "ruleID",
+                field: 'ruleID',
+                title: 'ruleID',
                 hidden: true,
-                align: "center"
+                align: 'center'
             },
             {
-                field: "ruleChk",
+                field: 'ruleChk',
                 checkbox: true
             },
             {
-                field: "ruleDesc",
-                title: "收费规则",
-                width: 100
+                field: 'ruleDesc',
+                title: '收费规则',
+                width: 150
             },
             {
-                field: "ruleItmData",
-                title: "关联关系",
-                width: 200
+                field: 'ruleItmData',
+                title: '关联关系',
+                width: 200,
+                hidden: true
             },
             {
-                field: "ruleLinkData",
-                title: "收费医嘱项",
-                width: 200
+                field: 'ruleLinkData',
+                title: '收费医嘱项',
+
+                hidden: false
             },
             {
-                field: "linked",
-                title: "已关联",
+                field: 'linked',
+                title: '已关联',
                 width: 200,
                 hidden: true
             }
@@ -375,80 +399,148 @@ function InitGridFeeRule() {
     var dataGridOption = {
         url: $URL,
         queryParams: {
-            ClassName: "web.DHCSTPIVAS.OrderLink",
-            QueryName: "OrderLinkFeeRule"
+            ClassName: 'web.DHCSTPIVAS.OrderLink',
+            QueryName: 'OrderLinkFeeRule'
         },
         pagination: false,
-        fitColumns: true,
+        fitColumns: false,
         fit: true,
         rownumbers: false,
         columns: columns,
         singleSelect: false,
-        toolbar: "#gridFeeRuleBar",
+        toolbar: [],
         nowrap: false,
-        onLoadSuccess: function(data) {
-            $(this).datagrid("uncheckAll");
-            var row0Data = data.rows[0];
-            if (row0Data) {
-                var rows = $(this).datagrid("getRows");
-                var rowsLen = rows.length;
-                for (var index = rowsLen - 1; index >= 0; index--) {
-                    var rowData = rows[index];
-                    var linked = rowData.linked;
-                    if (linked == "Y") {
-                        $(this).datagrid("checkRow", index);
+        onLoadSuccess: function (data) {
+            $(this).datagrid('uncheckAll');
+        },
+        onBeforeLoad: function (param) {
+            param.HospId = HospId;
+        }
+    };
+    DHCPHA_HUI_COM.Grid.Init('gridFeeRule', dataGridOption);
+    DHCPHA_HUI_COM.Grid.Init('gridFeeRuleDict', dataGridOption);
+}
+function SaveFeeRule(saveType) {
+    var ruleChked = $('#gridFeeRule').datagrid('getChecked') || '';
+    var dictChked = $('#gridFeeRuleDict').datagrid('getChecked') || '';
+
+    var rows = $('#gridFeeRule').datagrid('getRows');
+    if (saveType === 'DELETE') {
+        if (ruleChked.length === 0) {
+            DHCPHA_HUI_COM.Msg.popover({
+                msg: '请选择需要删除的已关联的数据',
+                type: 'alert'
+            });
+            return;
+        }
+    } else if ((saveType = 'ADD')) {
+        if (dictChked.length === 0) {
+            DHCPHA_HUI_COM.Msg.popover({
+                msg: '请选择需要增加的未关联的数据',
+                type: 'alert'
+            });
+            return;
+        }
+    }
+    $.messager.confirm('温馨提示', '您确认' + (saveType === 'ADD' ? '增加' : '删除') + '吗?', function (r) {
+        if (r) {
+            var ruleIDArr = [];
+            var ruleID = '';
+            for (var i = 0, length = rows.length; i < length; i++) {
+                ruleIDArr.push(rows[i].ruleID);
+            }
+            if (saveType === 'DELETE') {
+                for (var j = 0, length = ruleChked.length; j < length; j++) {
+                    ruleID = ruleChked[j].ruleID;
+                    var ruleIndex = ruleIDArr.indexOf(ruleID);
+                    if (ruleIndex >= 0) {
+                        ruleIDArr.splice(ruleIndex, 1);
+                    }
+                }
+            } else if (saveType === 'ADD') {
+                for (var k = 0, length = dictChked.length; k < length; k++) {
+                    ruleID = dictChked[k].ruleID;
+                    if (ruleIDArr.indexOf(ruleID) < 0) {
+                        ruleIDArr.push(ruleID);
                     }
                 }
             }
-        },
-    	onBeforeLoad: function(param){
-			param.HospId = HospId
-		}
-    };
-    DHCPHA_HUI_COM.Grid.Init("gridFeeRule", dataGridOption);
+            var poliID = GetSelectPolId();
+            if (poliID == '') {
+                return;
+            }
+            var ruleIDStr = ruleIDArr.join(',');
+            var saveRet = $.cm(
+                {
+                    ClassName: 'web.DHCSTPIVAS.OrderLink',
+                    MethodName: 'SaveOrderFeeRule',
+                    POLIID: poliID,
+                    FeeRuleIDStr: ruleIDStr,
+                    dataType: 'text'
+                },
+                false
+            );
+            var saveArr = saveRet.split('^');
+            var saveVal = saveArr[0];
+            var saveInfo = saveArr[1];
+            if (saveVal < 0) {
+                $.messager.alert('提示', saveInfo, 'warning');
+            }
+            QueryGridFeeRule();
+        }
+    });
 }
-function SaveFeeRule() {
-    var rows = $("#gridFeeRule").datagrid("getChecked");
-    var rowsLen = rows.length;
-    var ruleIDArr = [];
-    for (var index = 0; index < rowsLen; index++) {
-        var rowData = rows[index];
-        var ruleID = rowData.ruleID;
-        ruleIDArr.push(ruleID);
+function InitHospCombo() {
+    var genHospObj = PIVAS.AddHospCom({ tableName: 'PIVA_OrderLink' }, { width: 265 });
+    if (typeof genHospObj === 'object') {
+        //增加选择事件
+        genHospObj.options().onSelect = function (index, record) {
+            var newHospId = record.HOSPRowId;
+            if (newHospId != HospId) {
+                HospId = newHospId;
+                $('#gridOrderLink').datagrid('load');
+                $('#gridFeeRule').datagrid('clear');
+                $('#gridFeeRuleDict').datagrid('clear');
+               
+                
+            }
+        };
     }
-    var poliID = GetSelectPolId();
-    if (poliID == "") {
-        return;
-    }
-    var ruleIDStr = ruleIDArr.join(",");
-    var saveRet = $.cm(
+    var defHosp = $.cm(
         {
-            ClassName: "web.DHCSTPIVAS.OrderLink",
-            MethodName: "SaveOrderFeeRule",
-            POLIID: poliID,
-            FeeRuleIDStr: ruleIDStr,
-            dataType: "text"
+            dataType: 'text',
+            ClassName: 'web.DHCBL.BDP.BDPMappingHOSP',
+            MethodName: 'GetDefHospIdByTableName',
+            tableName: 'PIVA_OrderLink',
+            HospID: HospId
         },
         false
     );
-    var saveArr = saveRet.split("^");
-    var saveVal = saveArr[0];
-    var saveInfo = saveArr[1];
-    if (saveVal < 0) {
-        $.messager.alert("提示", saveInfo, "warning");
-    }
-    $("#gridFeeRule").datagrid("reload");
+    HospId = defHosp;
 }
-function InitHospCombo(){
-	var genHospObj=PIVAS.AddHospCom({tableName:'PIVA_OrderLink'});
-	if (typeof genHospObj ==='object'){
-		//增加选择事件
-		genHospObj.options().onSelect =  function(index, record) {	
-			var newHospId=record.HOSPRowId;		
-			if(newHospId!=HospId){
-				HospId=newHospId;
-				$('#gridOrderLink').datagrid('load');
-			}
-		};
-    }
+
+var ResizeHandler = function (seconds) {
+    var timer; // 定时器
+    return function () {
+        // 定时器还在，退出，说明上次的还没处理完
+        if (timer) {
+            return;
+        }
+        // 定时器，延时处理
+        timer = setTimeout(function () {
+            ResizePanel();
+            clearTimeout(timer);
+
+            timer = null;
+        }, seconds);
+    };
+};
+function ResizePanel() {
+    var panelWidth = $('#lyFeeRule').width();
+    var lyWidth = panelWidth / 2 - 40;
+    $('#lyFeeRule').layout('panel', 'east').panel('resize', { width: lyWidth });
+    $('#lyFeeRule').layout('panel', 'west').panel('resize', { width: lyWidth });
+    $('#lyFeeRule').layout('resize');
 }
+
+window.onresize = ResizeHandler(1000);

@@ -106,8 +106,8 @@ function gridPatList() {
 		rownumbers: true, //如果为true, 则显示一个行号列
 		singleSelect: true,
 		remoteSort:false,   //本地数据排序必须设置为false
-		sortName:'CurrLoc',
-		sortOrder:'desc',
+		//sortName:'CurrLoc',
+		//sortOrder:'desc',
 		loadMsg:'数据加载中...',
 		columns:[[
 			{field:'CurrLoc',title:'科室名称',width:120},
@@ -132,7 +132,7 @@ function gridPatList() {
 					}
 				}	
 			},	
-			{field:'NeedRepCnt',title:'需上报',width:55,align:'center'},
+			{field:'NeedRepCnt',title:'需报<br>例次',width:55,align:'center'},
 			{field:'VisitStatus',title:'状态',width:50,align:'center'}
 		]]
 		,rowStyler: function(index,row){

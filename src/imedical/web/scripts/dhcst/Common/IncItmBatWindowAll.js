@@ -113,7 +113,7 @@ IncItmBatWindowAll =function(Input, StkGrpRowId,LocId, StkGrpType, NotUseFlag,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "厂商",
+				header : "生产企业",
 				dataIndex : 'ManfName',
 				width : 180,
 				align : 'left',

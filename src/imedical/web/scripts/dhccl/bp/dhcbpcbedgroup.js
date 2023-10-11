@@ -34,7 +34,8 @@ $(function(){
 		},
 		onBeforeLoad:function(param)
         {
-            	param.desc=param.q;
+            param.desc=param.q;
+            param.hospId=session['LOGON.HOSPID'];
         }
         ,mode:'remote',
         onHidePanel: function () {
@@ -90,7 +91,8 @@ $(function(){
 						Code:$("#BedGroupCode").val(),
 						Desc:$("#BedGroupDesc").val(),
 						BPCBGWardDr:$('#Ward0').combobox('getValue'),
-						BPCBGIsolated:$('#BPCBGIsolated').combobox('getValue')
+						BPCBGIsolated:$('#BPCBGIsolated').combobox('getValue'),
+						hospId:session['LOGON.HOSPID']
 						},function(success){
 							if(success==0)
 							{
@@ -139,7 +141,8 @@ $(function(){
 						Code:$("#BedGroupCode").val(),
 						Desc:$("#BedGroupDesc").val(),
 						BPCBGWardDr:$('#Ward0').combobox('getValue'),
-						BPCBGIsolated:$('#BPCBGIsolated').combobox('getValue')
+						BPCBGIsolated:$('#BPCBGIsolated').combobox('getValue'),
+						hospId:session['LOGON.HOSPID']
 					},function(success){
 						if(success==0)
 						{
@@ -168,7 +171,8 @@ $(function(){
 		queryParams:{
 			ClassName:"web.DHCBPCBedGroup",
 			QueryName:"FindBPCBedGroup",
-			locId:''
+			locId:'',
+			hospId:session['LOGON.HOSPID']
 		},
         columns:[[
 			{ field: "tRowId", title: "±àºÅ", width: 80 },

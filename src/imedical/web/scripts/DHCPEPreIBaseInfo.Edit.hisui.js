@@ -447,6 +447,13 @@ function LoadCard()
 			}
 		});
 		CardTypeKeydownHandler();
+
+		/***根据卡类型获取对应的默认证件类型 start***/
+	    var CardTypeID=$HUI.combobox("#CardType").getValue();
+    	var DefCardTypeID=tkMakeServerCall("web.DHCPE.HISUICommon","GetDefCardType",CardTypeID);
+   		$("#PAPMICardType_DR_Name").combobox('setValue',DefCardTypeID);
+       /***根据卡类型获取对应的默认证件类型 end***/
+
 		});
 	
 	
@@ -870,14 +877,14 @@ function CardNoChangeAppHISUI(RegNoElement,CardElement,AppFunction,AppFunctionCl
 */
 
 function RegNoChange() {
-        
+       var CTLocID=session['LOGON.CTLOCID']
 		var obj;
 		var iPAPMINo=$("#PAPMINo").val();
 		if (iPAPMINo!="") { 
-			iPAPMINo=RegNoMask(iPAPMINo)
+			iPAPMINo=RegNoMask(iPAPMINo,CTLocID)
 		}
 		else { return false; }
-		var iPAPMINo=tkMakeServerCall("web.DHCPE.DHCPECommon","RegNoMask",iPAPMINo);
+		var iPAPMINo=tkMakeServerCall("web.DHCPE.DHCPECommon","RegNoMask",iPAPMINo,CTLocID);
 		$("#PAPMINo").val(iPAPMINo);
 		var flag=tkMakeServerCall("web.DHCPE.PreIADM","JudgeIGByRegNo",iPAPMINo)
 		if(flag=="G"){ 
@@ -989,6 +996,7 @@ function SetPatient_Sel(value) {
 		*/
 	return true;
 }
+
 function InitPicture()
 {
 	var PAPMINo=""; 
@@ -1004,6 +1012,7 @@ function InitPicture()
 	PEShowPicByPatientID(PatientID,"imgPic")  //DHCPECommon.js
   
 }
+
 function SetDefault()
 {
 	
@@ -1020,11 +1029,18 @@ function SetDefault()
 	$("#Sex_DR_Name").combobox('setValue',SexNV[1]);
 	//类型
 	$("#PatType_DR_Name").combobox('setValue',SexNV[0]);
+
 	//证件类型
-    $("#PAPMICardType_DR_Name").combobox('setValue',SexNV[4]);
-  
-   var VIPApprove=tkMakeServerCall("web.DHCPE.PreIBIUpdate","GetVIPLevel");
-	$("VIPLevel").combobox('setValue',VIPApprove);	
+    //$("#PAPMICardType_DR_Name").combobox('setValue',SexNV[4]);
+    
+	/***根据卡类型获取对应的默认证件类型 start***/
+	 var CardTypeID=$HUI.combobox("#CardType").getValue();
+	 var DefCardTypeID=tkMakeServerCall("web.DHCPE.HISUICommon","GetDefCardType",CardTypeID);
+	 $("#PAPMICardType_DR_Name").combobox('setValue',DefCardTypeID);
+     /***根据卡类型获取对应的默认证件类型 end***/
+
+   // var VIPApprove=tkMakeServerCall("web.DHCPE.PreIBIUpdate","GetVIPLevel",session['LOGON.CTLOCID']);
+	//$("#VIPLevel").combobox('setValue',VIPApprove);	
 }
 
 function iniForm(){
@@ -1082,18 +1098,14 @@ function Clear_click(Type,RegNo) {
 
 
 function Update_click() {	
-
-		 
-
-	//iHospitalCode=getValueById("HospitalCode");
-
+	 
 	//PIBI_RowId
 	var iRowId=$("#RowId").val();
 	
 	//PIBI_PAPMINo	登记号	1	
 	var iPAPMINo=$("#PAPMINo").val();
 	if(iPAPMINo!=""){
-			var iPAPMINo=tkMakeServerCall("web.DHCPE.DHCPECommon","RegNoMask",iPAPMINo);
+			var iPAPMINo=tkMakeServerCall("web.DHCPE.DHCPECommon","RegNoMask",iPAPMINo,LocID);
 			$("#PAPMINo").val(iPAPMINo)
    		 var flag=tkMakeServerCall("web.DHCPE.PreIADM","JudgeIGByRegNo",iPAPMINo);
 		if(flag=="G"){
@@ -1107,16 +1119,16 @@ function Update_click() {
 	
 	// 姓名必须
 	if (""==iName) {
-			$.messager.alert("提示","姓名不能为空!","info",function(){$("#Name").focus();});
-			return false
+		$.messager.alert("提示","姓名不能为空!","info",function(){$("#Name").focus();});
+		return false
 	}
 
 	//	PIBI_Sex_DR	性别	3
 	var iSex_DR=$("#Sex_DR_Name").combobox('getValue');
    // 性别必须
 	if (""==iSex_DR) {
-			$.messager.alert("提示","性别不能为空!","info",function(){$("#Sex_DR_Name").focus();});
-			return false
+		$.messager.alert("提示","性别不能为空!","info",function(){$("#Sex_DR_Name").focus();});
+		return false
 	}
 
 	//	PIBI_IDCard	身份证号	9
@@ -1198,8 +1210,6 @@ function Update_click() {
 		if (!CheckTelOrMobile(iMobilePhone,"MobilePhone","")) return false;
 	}
 	
-	
-
 	//	PIBI_Tel1	电话号码1	6
 	var iTel1=$("#Tel1").val();
 	iTel1=trim(iTel1);
@@ -1210,7 +1220,6 @@ function Update_click() {
 	//	PIBI_Vocation	职业	10
 	var iVocation=$("#Vocation").combobox('getValue');
 	
-
 	//	PIBI_Position	职位	11
 	var iPosition=$("#Position").val();
 
@@ -1234,10 +1243,9 @@ function Update_click() {
 	//	PIBI_Email	电子邮件	16
 	var iEmail=$("#Email").val();
 	 if(!IsEMail(iEmail)){
- 
 		 $("#Email").focus();
 			return;
-		}
+	}
 
 	//	PIBI_Married	婚姻状况	17
 	var iMarriedDR=$("#Married_DR_Name").combobox('getValue');
@@ -1249,7 +1257,8 @@ function Update_click() {
 	var iUpdateDate='';
  
    	//VIP
- 	var iVIPLevel=$("#VIPLevel").combobox('getValue');
+ 	//var iVIPLevel=$("#VIPLevel").combobox('getValue');
+	var iVIPLevel='';
 
 	//	PIBI_UpdateUser_DR	更新人	20
 	var iUpdateUserDR=session['LOGON.USERID'];
@@ -1329,10 +1338,10 @@ function Update_click() {
 		return false;
 	    
 	    }
-	    
-	    
-	   
-	
+	        
+	    //体检特殊客户类型
+	var iSpecialType=$("#SpecialType").combobox('getValue'); 
+
 	var Instring=$.trim(iRowId)			//			1 
 				+"^"+$.trim(iPAPMINo)			//登记号		2
 				+"^"+$.trim(iName)			//姓名		3
@@ -1361,23 +1370,52 @@ function Update_click() {
 				+"^"+$.trim(iVIPLevel)
 				+"^"+$.trim(iMedicareCode)
 				+"^"+$.trim(iPAPMICardType)
+				+"^"+iSpecialType
 				+";"+FIBIUpdateModel
-				
 				;
+
 				
-			//alert(Instring)
-		var flag=tkMakeServerCall("web.DHCPE.PreIBIUpdate","Save",'','',Instring);
-	  
+	if(TeamID!=""){
+		var TeamParRef=TeamID.split("||")[0];
+		var TeamSub=TeamID.split("||")[1];
+		var TeamInfo=tkMakeServerCall("web.DHCPE.PreGTeam","GetPreGTeam",TeamParRef,TeamSub,"^");
+    	var TeamSexDR=TeamInfo.split("^")[14]; //分组性别
+    	var TeamSex="";
+    	if(TeamSexDR=="F"){var TeamSex="男";}
+    	if(TeamSexDR=="F"){var TeamSex="女";}
+    	 var Sex=tkMakeServerCall("web.DHCPE.DHCPECommon","GetSexDescByID",iSex_DR);
+    	 
+			if(((Sex="男")&&(TeamSex=="女"))||((Sex=="女")&&(TeamSex="男"))){
+				$.messager.confirm("确认", "性别与分组性别不一致，是否继续更新？", function(data){  
+        			if (data) {
+	        			SavePreIBInfo(Instring);
+    				}else{
+                		return false;
+            		}
+        		});
+			}else{
+				SavePreIBInfo(Instring);
+			}
+        			
+	  }else{
+		   SavePreIBInfo(Instring);
+	  }
+				
 	
-		var Data=flag.split("^");
-		flag=Data[0];
-		iRowId=Data[1];
-		iRegNo=Data[2];
+}
+
+//更新个人基本信息
+function SavePreIBInfo(Instring){
 	
+	var flag=tkMakeServerCall("web.DHCPE.PreIBIUpdate","Save",'','',Instring);
 	
-		
+	var Data=flag.split("^");
+	flag=Data[0];
+	iRowId=Data[1];
+	iRegNo=Data[2];
+	
 	if (flag=='0') {
-			$.messager.alert("提示","更新成功!","info"); 
+			$.messager.popover({msg: '更新成功！',type:'success',timeout: 1000});
 			 var iCardNo=$("#CardNo").val();
 			var myCardTypeDR="";
 			var CardTypeStr=$HUI.combobox("#CardType").getValue();
@@ -1385,27 +1423,22 @@ function Update_click() {
 			if (iCardNo!="") iCardNo=iCardNo+"$"+myCardTypeDR;
 			if((OverWriteFlag=="Y")&&(CardPAPMINo=="")){ 
 				var myrtn=WrtCard(); //注册医疗卡写校验码
-					//alert("myrtn:"+myrtn)
 				var SecurityNo=	myrtn.split("^")[1]; //校验码
-				//alert("iCardNo:"+iCardNo+",SecurityNo:"+SecurityNo)
 				//更新卡表DHC_CardRef校验码字段CF_SecurityNO
 				var ret=tkMakeServerCall("web.DHCPE.PreIBIUpdate","UpdateCardSecurityNo",iCardNo,SecurityNo)
-				//alert("ret:"+ret)
 			}
 			if($("#RowId").val()==""){
 		   		$("#RowId").val(iRowId);
-		   		}
+		   	}
 
 		Clear_click(1,iRegNo);
 		return;
-		}
-		else {
-			$.messager.alert("提示","更新错误，错误号："+flag,"error");
-			return false;
+	}else {
+		$.messager.alert("提示","更新错误，错误号："+flag,"error");
+		return false;
 		
 	}
 }
-
 
 ///给注册医疗卡写校验码
 function WrtCard(){
@@ -1443,25 +1476,37 @@ function InitCombobox()
 		valueField:'id',
 		textField:'sex'
 		})
-	
-	 //VIP等级  
+	/*
+	  //VIP等级  
 		var VIPObj = $HUI.combobox("#VIPLevel",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindVIP&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindVIP&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
 		valueField:'id',
 		textField:'desc',
 		})
+		*/
+
 	//婚姻  
 		var MarriedObj = $HUI.combobox("#Married_DR_Name",{
 		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindMarried&ResultSetType=array",
 		valueField:'id',
 		textField:'married'
 		})
-	//证件类型
-		var PAPMICardTypeObj = $HUI.combobox("#PAPMICardType_DR_Name",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindPAPMICardType&ResultSetType=array",
-		valueField:'id',
-		textField:'type'
-		})
+
+	 //证件类型
+        var PAPMICardTypeObj = $HUI.combobox("#PAPMICardType_DR_Name",{
+        url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindPAPMICardType&ResultSetType=array",
+        valueField:'id',
+        textField:'type',
+        onBeforeLoad: function(param) {
+            param.Card = $HUI.combobox("#CardType").getValue()
+        },
+        onShowPanel:function()
+        {
+            $("#PAPMICardType_DR_Name").combobox("clear");
+            $("#PAPMICardType_DR_Name").combobox("reload");
+            }
+        })
+        
 		
 	//职业
 		var VocationObj = $HUI.combobox("#Vocation",{
@@ -1480,7 +1525,7 @@ function InitCombobox()
 		
 	//类型
 		var PatTypeObj = $HUI.combobox("#PatType_DR_Name",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindPatType&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindPatType&ResultSetType=array&HospID="+session['LOGON.HOSPID'],
 		valueField:'id',
 		textField:'desc'
 		})
@@ -1492,7 +1537,13 @@ function InitCombobox()
 		textField:'desc'
 		})
 		
-	
+	 //特殊客户类型 
+		var SpecialTypeObj = $HUI.combobox("#SpecialType",{
+		url:$URL+"?ClassName=web.DHCPE.SpecialType&QueryName=FindSPType&ResultSetType=array",
+		valueField:'id',
+		textField:'Desc'
+		})
+
 	
 }
 

@@ -29,7 +29,7 @@ var CtLocEditor = {
 			var locId=$(this).combobox("getValue");
 			var winSelect = $("#grid-phwin").datagrid('getSelected');
 			if (winSelect == null) {
-				$.messager.alert("提示", "请先选择药房窗口!", "info")
+				$.messager.alert($g("提示"), $g("请先选择药房窗口!"), "info")
 				return;
 			}
 			var phwId = winSelect.TPhwid;
@@ -40,7 +40,7 @@ var CtLocEditor = {
 				$.messager.alert('提示', retMessage, "warning");
 				return;
 			} else {
-				$.messager.alert('提示', "指定科室增加成功!", "info");
+				$.messager.alert($g("提示"), $g("指定科室增加成功!"), "info");
 				$('#grid-locwin').datagrid('reload');
 			}
 		}
@@ -79,23 +79,23 @@ function InitGrid() {
 	///窗口定义
 	var gridColumns = [[{
 				field: 'TLocDesc',
-				title: '药房名称',
+				title: $g("药房名称"),
 				width: 200
 			}, {
 				field: 'TWinType',
-				title: '窗口类型',
+				title: $g("窗口类型"),
 				width: 150
 			}, {
 				field: 'TWinDesc',
-				title: '窗口名称',
+				title: $g("窗口名称"),
 				width: 200
 			}, {
 				field: 'TPyPerDesc',
-				title: '预配人员',
+				title: $g("预配人员"),
 				width: 100
 			}, {
 				field: 'TFyPerDesc',
-				title: '预发人员',
+				title: $g("预发人员"),
 				width: 100
 			}, {
 				field: 'TPyPer',
@@ -109,23 +109,23 @@ function InitGrid() {
 				hidden: true
 			}, {
 				field: 'TSureFlag',
-				title: '默认',
+				title: $g("默认"),
 				width: 150,
 				width: 75,
 				align: 'center',
 				formatter: function (value, row, index) {
-					if (value == "是") {
+					if (value == $g("是")) {
 						return '<i class="fa fa-check" aria-hidden="true" style="color:#17A05D;font-size:18px"></i>';
 					}
 				}
 			}, {
 				field: 'TNoUseFlag',
-				title: '无效',
+				title: $g("无效"),
 				width: 150,
 				width: 75,
 				align: 'center',
 				formatter: function (value, row, index) {
-					if (value == "是") {
+					if (value == $g("是")) {
 						return '<i class="fa fa-check" aria-hidden="true" style="color:#17A05D;font-size:18px"></i>';
 					}
 				}
@@ -161,7 +161,7 @@ function InitGrid() {
 		rownumbers: true,
 		singleSelect: true,
 		striped: true,
-		title: "药房窗口",
+		title: $g("药房窗口"),
 	        queryParams:{
 		        StrParams: "|@|"+HospId
 		    },
@@ -175,8 +175,8 @@ function InitGrid() {
 			$("#cmbPhLoc").combobox('setText', rowData.TLocDesc);
 			$("#cmbPhWinType").combobox('setValue', rowData.TWinTypeId);
 			$("#txtPhWinDesc").val(rowData.TWinDesc);
-			$("#chkDefault").prop("checked", rowData.TSureFlag == '是' ? true : false);
-			$("#chkNoUse").prop("checked", rowData.TNoUseFlag == '是' ? true : false);
+			$("#chkDefault").prop("checked", rowData.TSureFlag == $g("是") ? true : false);
+			$("#chkNoUse").prop("checked", rowData.TNoUseFlag == $g("是") ? true : false);
 			
 			$("#cmbPhPyPer").combobox('setValue', rowData.TPyPer);
 			$("#cmbPhPyPer").combobox('setText', rowData.TPyPerDesc);
@@ -211,7 +211,7 @@ function InitGrid() {
 				}
 			}, {
 				field: 'Tloc',
-				title: '科室',
+				title: $g("科室"),
 				editor: CtLocEditor,
 				width: 200
 			}, {
@@ -234,7 +234,7 @@ function InitGrid() {
 		columns: gridColumns,
 		singleSelect: true,
 		striped: true,
-		title: "指定科室",
+		title: $g("指定科室"),
 		pagination: false
 	}
 	$('#grid-locwin').dhcstgrideu(options);
@@ -261,17 +261,17 @@ function QueryParams(getType) {
 	var params = "";
 	var locId = $("#cmbPhLoc").combobox('getValue');
 	if ((getType != "") && (locId == "")) {
-		$.messager.alert('提示', "药房名称不能为空!", "warning");
+		$.messager.alert($g("提示"), $g("药房名称不能为空!"), "warning");
 		return "";
 	}
 	var winTypeId = $("#cmbPhWinType").combobox('getValue');
 	if ((getType != "") && (winTypeId == "")) {
-		$.messager.alert('提示', "窗口类型不能为空!", "warning");
+		$.messager.alert($g("提示"), $g("窗口类型不能为空!"), "warning");
 		return "";
 	}
 	var winDesc = $("#txtPhWinDesc").val();
 	if ((getType != "") && (winDesc == "")) {
-		$.messager.alert('提示', "窗口名称不能为空!", "warning");
+		$.messager.alert($g("提示"), $g("窗口名称不能为空!"), "warning");
 		return "";
 	}
 	var defaultFlag = $("#chkDefault").prop("checked") == true ? '1' : '0';
@@ -293,10 +293,10 @@ function AddHandler() {
 	var retCode = saveRet.split("^")[0];
 	var retMessage = saveRet.split("^")[1];
 	if (retCode != 0) {
-		$.messager.alert('提示', retMessage, "warning");
+		$.messager.alert($g("提示"), retMessage, "warning");
 		return;
 	} else {
-		$.messager.alert('提示', "增加成功!", "info");
+		$.messager.alert($g("提示"), $g("增加成功!"), "info");
 		$("#grid-phwin").datagrid("reload");
 	}
 }
@@ -304,7 +304,7 @@ function AddHandler() {
 function UpdateHandler() {
 	var seletcted = $("#grid-phwin").datagrid("getSelected");
 	if (seletcted == null) {
-		$.messager.alert('提示', "请先选中需修改的行!", "warning");
+		$.messager.alert($g("提示"), $g("请先选中需修改的行!"), "warning");
 		return;
 	}
 	var params = QueryParams(1);
@@ -316,7 +316,7 @@ function UpdateHandler() {
 	var rowId = seletcted.TPhwid;
 	var paramsArr = params.split("^");
 	if (ctLocId != paramsArr[0]) {
-		$.messager.alert('提示', "不允许修改药房!", "warning");
+		$.messager.alert($g("提示"), $g("不允许修改药房!"), "warning");
 		return;
 	}
 	var PhPerStr=paramsArr[5]+ "^" + paramsArr[6];
@@ -324,10 +324,10 @@ function UpdateHandler() {
 	var retCode = saveRet.split("^")[0];
 	var retMessage = saveRet.split("^")[1];
 	if (retCode != 0) {
-		$.messager.alert('提示', retMessage, "warning");
+		$.messager.alert($g("提示"), retMessage, "warning");
 		return;
 	} else {
-		$.messager.alert('提示', "修改成功!", "info");
+		$.messager.alert($g("提示"), $g("修改成功!"), "info");
 		$("#grid-phwin").datagrid("reload");
 	}
 }
@@ -360,7 +360,7 @@ function AddWinLoc() {
 }
 
 function DeleteWinLoc(rowIndex) {
-	$.messager.confirm('提示', '您确认删除吗？', function (r) {
+	$.messager.confirm($g("提示"), $g("您确认删除吗？"), function (r) {
 		if (r) {
 			var locWinData = $("#grid-locwin").datagrid('getData').rows[rowIndex];
 			var locWinId = locWinData.Trowid;
@@ -372,10 +372,10 @@ function DeleteWinLoc(rowIndex) {
 			var retCode = delRet.split("^")[0];
 			var retMessage = delRet.split("^")[1];
 			if (retCode != 0) {
-				$.messager.alert('提示', retMessage, "warning");
+				$.messager.alert($g("提示"), retMessage, "warning");
 				return;
 			} else {
-				$.messager.alert('提示', "删除指定科室成功!", "info");
+				$.messager.alert($g("提示"), $g("删除指定科室成功!"), "info");
 				$("#grid-locwin").datagrid('reload');
 			}
 		}
@@ -417,7 +417,7 @@ function InitHospCombo(){
 				        		return "<a href='#' onclick='DeleteWinLoc("+index+")'><i class='fa fa-minus' aria-hidden='true' style='color:#DE5145;font-size:18px'></i></a>";
 				        }
 			        },
-					{field:'Tloc',title:'科室',editor:CtLocEditor,width:200},
+					{field:'Tloc',title:$g("科室"),editor:CtLocEditor,width:200},
 					{field:'Trowid',title:'Trowid',width:200,hidden:true},
 					{field:'TLocId',title:'TLocId',width:200,hidden:true}
 				]];	

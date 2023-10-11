@@ -100,12 +100,12 @@ function reportControl(){
 			if ((this.value!="")){
 				$("[id^='"+rowid+"'][id$='"+rownum+"']").attr("readonly",'readonly');
 				$("input[id^='"+rowid+"'][id$='"+rownum+"']").datebox({"disabled":true});
-				$('a:contains("删除")').parent().hide();
+				$('a:contains('+$g("删除")+')').parent().hide();
 			}
 			if(AssessFlag!="Y"){
 				$("[id^='"+rowid+"'][id$='"+rownum+"']").attr("readonly",'readonly');
 				$("input[id^='"+rowid+"'][id$='"+rownum+"']").datebox({"disabled":true});
-				$('a:contains("增加")').parent().hide();
+				$('a:contains('+$g("增加")+')').parent().hide();
 			}
 		})
 		/* //护士长评价 督查日期 不可编辑
@@ -128,6 +128,7 @@ function reportControl(){
 		"width":800,
 		"max-width":800
 	});
+	RepSetRead("Participants","input",1);	
 	//晨会内容 sufan 2019-06-18 表单统一去掉晨会部分
 	/*$('#MornRepMeetContent').css({
 		"width":800,
@@ -201,58 +202,58 @@ function setManImprove()
 		if($(this).is(':checked')){
 			if(this.id.indexOf("PersonCause-94275-94404")>=0){	
 				i=i+1;
-				PersonCause=i+"、"+"护士因素——医嘱处理："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				PersonCause=i+"、"+$g("护士因素")+"——"+$g("医嘱处理")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				PersonCauselist=PersonCauselist+PersonCause;
 			}
 			if(this.id.indexOf("PersonCause-94275-94516")>=0){	
 				i=i+1;
-				PersonCause=i+"、"+"护士因素——药物领药："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				PersonCause=i+"、"+$g("护士因素")+"——"+$g("药物领药")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				PersonCauselist=PersonCauselist+PersonCause;
 			}		
 			if(this.id.indexOf("PersonCause-94275-94517")>=0){	
 				i=i+1;
-				PersonCause=i+"、"+"护士因素——药物配制："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				PersonCause=i+"、"+$g("护士因素")+"——"+$g("药物配制")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				PersonCauselist=PersonCauselist+PersonCause;
 			}
 			if(this.id.indexOf("PersonCause-94275-94518-94531")>=0){	
 				i=i+1;
-				PersonCause=i+"、"+"护士因素————执行给药——非抢救状态执行："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				PersonCause=i+"、"+$g("护士因素")+"——"+$g("执行给药")+"——"+$g("非抢救状态执行")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				PersonCauselist=PersonCauselist+PersonCause;
 			}
 			if(this.id.indexOf("PersonCause-94275-94518-94532")>=0){	
 				i=i+1;
-				PersonCause=i+"、"+"护士因素——执行给药——抢救状态执行："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				PersonCause=i+"、"+$g("护士因素")+"——"+$g("执行给药")+"——"+$g("抢救状态执行")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				PersonCauselist=PersonCauselist+PersonCause;
 			}
 			if(this.id.indexOf("PersonCause-94275-94519")>=0){	
 				i=i+1;
-				PersonCause=i+"、"+"护士因素——护理人员因专业知识缺乏致给药错误："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				PersonCause=i+"、"+$g("护士因素")+"——"+$g("护理人员因专业知识缺乏致给药错误")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				PersonCauselist=PersonCauselist+PersonCause;
 			}
 			if(this.id.indexOf("PersonCause-94275-94520")>=0){	
 				i=i+1;
-				PersonCause=i+"、"+"护士因素："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				PersonCause=i+"、"+$g("护士因素")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				PersonCauselist=PersonCauselist+PersonCause;
 			}
 			if(this.id.indexOf("PersonCause-94276")>=0){	
 				i=i+1;
-				PersonCause=i+"、"+"医生因素："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				PersonCause=i+"、"+$g("医生因素")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				PersonCauselist=PersonCauselist+PersonCause;
 			}	
 			if(this.id.indexOf("PersonCause-94402")>=0){	
 				i=i+1;
-				PersonCause=i+"、"+"药剂人员因素："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				PersonCause=i+"、"+$g("药剂人员因素")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				PersonCauselist=PersonCauselist+PersonCause;
 			}			
 			if(this.id.indexOf("PersonCause-94403")>=0){	
 				i=i+1;
-				PersonCause=i+"、"+"患者因素："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				PersonCause=i+"、"+$g("患者因素")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				PersonCauselist=PersonCauselist+PersonCause;
 			}									
 		}
 	});
 	if(PersonCauselist!=""){
-		list=list+"\n"+"一、人员因素"+"\n"+PersonCauselist;
+		list=list+"\n"+$g("一、人员因素")+"\n"+PersonCauselist;
 	}
 
 	$("input[id^='DeviceCause']").each(function(){
@@ -263,7 +264,7 @@ function setManImprove()
 		}
 	});
 	if(DeviceCauselist!=""){
-		list=list+"\n"+"二、设备因素（机）"+"\n"+DeviceCauselist;
+		list=list+"\n"+$g("二、设备因素（机）")+"\n"+DeviceCauselist;
 	}
 
 	$("input[id^='goodsCase']").each(function(){
@@ -274,7 +275,7 @@ function setManImprove()
 		}
 	});
 	if(goodsCaselist!=""){
-		list=list+"\n"+"三、物品因素（物）"+"\n"+goodsCaselist;
+		list=list+"\n"+$g("三、物品因素（物）")+"\n"+goodsCaselist;
 	}
 
 	$("input[id^='ManaCase']").each(function(){
@@ -285,7 +286,7 @@ function setManImprove()
 		}
 	});
 	if(ManaCaselist!=""){
-		list=list+"\n"+"四、管理因素（法）"+"\n"+ManaCaselist;
+		list=list+"\n"+$g("四、管理因素（法）")+"\n"+ManaCaselist;
 	}
 
 	$("input[id^='EveCause']").each(function(){
@@ -297,7 +298,7 @@ function setManImprove()
 		
 	});
 	if(EveCauselist!=""){
-		list=list+"\n"+"五、环境因素"+"\n"+EveCauselist;
+		list=list+"\n"+$g("五、环境因素")+"\n"+EveCauselist;
 	}
 	var Caserow=0
 	var CaseList=list.split("\n")
@@ -358,7 +359,7 @@ function checkother(){
 		}
 	})
 	if(DocAdvice==-1){
-		$.messager.alert("提示:","【护士因素-医嘱处理】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("护士因素")+"-"+$g("医嘱处理")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -373,7 +374,7 @@ function checkother(){
 		}
 	})
 	if(DruReceive==-1){
-		$.messager.alert("提示:","【护士因素-药物领取】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("护士因素")+"-"+$g("药物领取")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -389,7 +390,7 @@ function checkother(){
 		}
 	})
 	if(DruAlloc==-1){
-		$.messager.alert("提示:","【护士因素-药物配制】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("护士因素")+"-"+$g("药物配制")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -404,7 +405,7 @@ function checkother(){
 		}
 	})
 	if(NoRescue==-1){
-		$.messager.alert("提示:","【护士因素-执行给药-非抢救状态执行】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("护士因素")+"-"+$g("执行给药")+"-"+$g("非抢救状态执行")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -419,7 +420,7 @@ function checkother(){
 		}
 	})
 	if(Rescue==-1){
-		$.messager.alert("提示:","【护士因素-执行给药-抢救状态执行】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("护士因素")+"-"+$g("执行给药")+"-"+$g("抢救状态执行")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -434,7 +435,7 @@ function checkother(){
 		}
 	})
 	if(DoseError==-1){
-		$.messager.alert("提示:","【护士因素-护理人员因专业知识缺乏致给药错误】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("护士因素")+"-"+$g("护理人员因专业知识缺乏致给药错误")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -449,7 +450,7 @@ function checkother(){
 		}
 	})
 	if(NurFactor==-1){
-		$.messager.alert("提示:","【护士因素-其他】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("护士因素")+"-"+$g("其他")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 		
@@ -464,7 +465,7 @@ function checkother(){
 		}
 	})
 	if(DocFactor==-1){
-		$.messager.alert("提示:","【医生因素-其他】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("医生因素")+"-"+$g("其他")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -479,7 +480,7 @@ function checkother(){
 		}
 	})
 	if(PhaFactor==-1){
-		$.messager.alert("提示:","【药剂人员因素-其他】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("药剂人员因素")+"-"+$g("其他")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -494,7 +495,7 @@ function checkother(){
 		}
 	})
 	if(PatFactor==-1){
-		$.messager.alert("提示:","【患者因素-其他】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("患者因素")+"-"+$g("其他")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -510,7 +511,7 @@ function checkother(){
 		}
 	})
 	if(EquFactor==-1){
-		$.messager.alert("提示:","【设备因素-其他】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("设备因素")+"-"+$g("其他")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -525,7 +526,7 @@ function checkother(){
 		}
 	})
 	if(GoodsFactor==-1){
-		$.messager.alert("提示:","【物品因素-其他】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("物品因素")+"-"+$g("其他")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 		
@@ -540,7 +541,7 @@ function checkother(){
 		}
 	})
 	if(EnvFactor==-1){
-		$.messager.alert("提示:","【环境因素-其他】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("环境因素")+"-"+$g("其他")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -551,7 +552,7 @@ function checkother(){
 			if((this.value=="title")&&($("input[name$='.96082'][class='lable-input']").val()=="")){
 				ManaImprovementoth=-1;
 			}
-			if((this.value=="制度、流程及规范制定或修订")){
+			if((this.value==$g("制度、流程及规范制定或修订"))){
 				if(!($("#ManaImprovement-94378-94949").is(':checked'))&&!($("#ManaImprovement-94378-94950").is(':checked'))){
 					ManaImprovementoth=-2;
 				}
@@ -562,11 +563,11 @@ function checkother(){
 		}	
 	})
 	if(ManaImprovementoth==-2){
-		$.messager.alert("提示:","【管理改进】勾选'制度、流程及规范制定或修订'，请勾选和填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("管理改进")+"】"+$g("勾选")+$g('制度、流程及规范制定或修订')+"，"+$g("请勾选和填写内容")+"！");	
 		return false;
 	}
 	if(ManaImprovementoth==-1){
-		$.messager.alert("提示:","【管理改进】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("管理改进")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -580,7 +581,7 @@ function checkother(){
 		}
 	})
 	if(AftImpMeasures==-1){
-		$.messager.alert("提示:","【事件发生后整改措施落实效果】勾选'未落实'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("事件发生后整改措施落实效果")+"】"+$g("勾选")+$g('未落实')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	return true;
@@ -686,7 +687,7 @@ function StaffEnter()
 {
 	$('#staffwin').show();
 	$('#staffwin').window({
-		title:'科室人员信息',
+		title:$g('科室人员信息'),
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,
@@ -707,8 +708,8 @@ function InitStaffGrid()
 	//定义columns
 	var columns=[[
 	     {field:"ck",checkbox:'true',width:40},
-		 {field:'userCode',title:'用户Code',width:100},
-		 {field:'userName',title:'用户姓名',width:100}
+		 {field:'userCode',title:$g('用户Code'),width:100},
+		 {field:'userName',title:$g('用户姓名'),width:100}
 		]];
 	
 	//定义datagrid
@@ -738,7 +739,16 @@ function InitStaffGrid()
 		 {
 	       var userName = rowData.userName
 	       MeetMember(userName)
-		 },	
+		 },onLoadSuccess:function(data){  
+			if(userName!=""){
+				for(var i=0;i<data.rows.length;i++){
+					var Name = data.rows[i].userName+"，";
+					if(userName.indexOf(Name)>=0){
+						$("#user").datagrid("selectRow",i);
+					}
+				}
+			}
+		}	
 	});	
 	$("#UserNames").val($("#Participants").val()); /// 给弹出的人员窗口里面人员赋值(表单的参会人员)
 	$(".datagrid-header-check input[type=checkbox]").on("click",function(){ ///2018-04-13 cy 评价界面
@@ -833,7 +843,7 @@ function getInputValue(id){
 		inputvalue="";
 	}
 	if((inputvalue!="无")&&(inputvalue!="")){
-		inputvalue="整改措施："+inputvalue;
+		inputvalue=$g("整改措施：")+inputvalue;
 	}
 	return inputvalue;
 	

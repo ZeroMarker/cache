@@ -8,7 +8,7 @@ $(function(){
 	LoadPatRepeatDiagTabDataGrid();
 });
 function Init(){
-	InitdiagCatkw();
+	//InitdiagCatkw();
 	PageLogicObj.m_PatRepeatDiagTabDataGrid=InitPatRepeatDiagTabDataGrid();
 	InitPageItemEvent();
 }
@@ -75,10 +75,10 @@ function InitPatRepeatDiagTabDataGrid(){
 		{field:'HasEMRRecord',title:'病历',width:70,align:'center',
 			formatter: function(value,row,index){
 				if (row["HasEMRRecord"]=="1") {
-					var btn = '<a class="editcls" onclick="BAdmEMRInfo(\'' + row["PAAdmRowId"] + '\')">病历记录</a>';
+					var btn = '<a class="editcls" onclick="BAdmEMRInfo(\'' + row["PAAdmRowId"] + '\')">'+$g('病历记录')+'</a>';
 					return btn;
 				}else{
-					return "无";
+					return $g("无");
 				}
 			}
 		},
@@ -104,13 +104,13 @@ function InitPatRepeatDiagTabDataGrid(){
 	return PatRepeatDiagTabDataGrid;
 }
 function LoadPatRepeatDiagTabDataGrid(){
-	var AdmTypeStr=$("input[name='AdmType']:checked")[0].value;
-	var kwSel=$("#diagCatkw").keywords("getSelected");
+	var AdmTypeStr=$("input[name='AdmType']:checked").length?$("input[name='AdmType']:checked")[0].value:'';
+	//var kwSel=$("#diagCatkw").keywords("getSelected");
 	var diagCat="";
-	for (var i=0;i<kwSel.length;i++) {
+	/*for (var i=0;i<kwSel.length;i++) {
 		if (diagCat==="") diagCat=kwSel[i].id;
 		else diagCat=diagCat+"^"+kwSel[i].id;
-	}
+	}*/
 	$.q({
 	    ClassName : "web.DHCDocPatAllDiagnos",
 	    QueryName : "GetPatRepeatDiag",
@@ -118,6 +118,7 @@ function LoadPatRepeatDiagTabDataGrid(){
 	    diagCat:diagCat,
 	    AdmTypeStr:AdmTypeStr,
 	    paraGroupICDRowIDStr:ServerObj.GroupICDRowIDStr,
+	    DiagRowids:ServerObj.DiagRowids,
 	    Pagerows:PageLogicObj.m_PatRepeatDiagTabDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
 		PageLogicObj.m_PatRepeatDiagTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
@@ -260,7 +261,7 @@ function LoadOrderListGrid(Ord){
 }
 function BAdmEMRInfo(EpisodeID){
 	websys_showModal({
-			url:"emr.browse.csp?EpisodeID=" + EpisodeID,
+			url:"emr.bs.browse.csp?EpisodeID=" + EpisodeID,	//emr.browse.csp
 			title:"病历记录",
 			width:'93%',height:'93%'
 	 });

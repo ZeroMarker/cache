@@ -1,16 +1,16 @@
-﻿// /名称: StkGrpComboBox.js
-// /描述: 封装类组下拉框
-// /编写者：zhangdongmei
-// /编写日期: 2012.04.10
+// /����: StkGrpComboBox.js
+// /����: ��װ����������
+// /��д�ߣ�zhangdongmei
+// /��д����: 2012.04.10
 
 Ext.ux.StkGrpComboBox = Ext.extend(Ext.form.ComboBox, { 
-	fieldLabel : '类&nbsp;&nbsp;&nbsp;&nbsp;组',  // 标题名称 
-	StkType:null,						//新加属性，标识类组类型
-	LocId:null,					//新加属性，科室id
-	UserId:null,				//新加属性，人员id
-	emptyText : '类组...',                            
- 	forceSelection : true,  // 值为true时将限定选中的值为列表中的值，值为false则允许用户将任意文本设置到字段（默认为 false）。                            
- 	selectOnFocus : true,// 值为 ture                            // 时表示字段获取焦点时自动选择字段既有文本(默认为                            // false)。                            
+	fieldLabel : $g('��&nbsp;&nbsp;&nbsp;&nbsp;��'),  // �������� 
+	StkType:null,						//�¼����ԣ���ʶ��������
+	LocId:null,					//�¼����ԣ�����id
+	UserId:null,				//�¼����ԣ���Աid
+	emptyText : $g('����...'),                            
+ 	forceSelection : true,  // ֵΪtrueʱ���޶�ѡ�е�ֵΪ�б��е�ֵ��ֵΪfalse�������û��������ı����õ��ֶΣ�Ĭ��Ϊ false����                            
+ 	selectOnFocus : true,// ֵΪ ture                            // ʱ��ʾ�ֶλ�ȡ����ʱ�Զ�ѡ���ֶμ����ı�(Ĭ��Ϊ                            // false)��                            
  	//mode : 'local',                                            
  	editable : true, 
  	allowBlank : true,

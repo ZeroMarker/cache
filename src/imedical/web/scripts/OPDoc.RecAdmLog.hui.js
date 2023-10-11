@@ -1,5 +1,7 @@
 var PageLogicObj={
-	m_OPDocLogTabDataGrid:""
+	m_OPDocLogTabDataGrid:"",
+	NotShowColTitleStr:"^操作^证件号^证件类型^传染病^ICD^地址^登记号^费别^就诊日期^流感样^就诊^病案号^发病日期^医生工号^就诊时间(医嘱)^职业^" 
+	//导出或者打印 通过indexOf判断不需要显示的列 title用^分割
 }
 $(function(){
 	//初始化
@@ -41,17 +43,24 @@ function InitEvent(){
 function InitOPDocLogTabDataGrid(){
 	var Columns=[[ 
 		{field:'xuhao',title:'序号',width:40,align:'center'},
+		{field:"patOperBtn", title:'操作', width:90, align:'center',
+			formatter: function(value, row, index) {
+				var operDiv = '<div id="patOperBtn_'  + index + '" style="width:100%;height:100%"></div>'
+				return operDiv
+			}
+		},
 		{field:'paadmrowid',hidden:true,title:''},
 		{field:'PatientID',hidden:true,title:''},
 		{field:'papmiCardNo',title:'登记号',width:100,
 			formatter:function(value,row,index){
-	    		var btn = '<a style="text-decoration: underline;" onclick="OpenOrderView(\''+row.paadmrowid +'\')">'+value+'\</a>';
+	    		var btn = '<a style="text-decoration: underline;color:#339eff" onclick="OpenOrderView(\''+row.paadmrowid +'\')">'+value+'\</a>';
 	    		return btn;
 	    	}
 		},
 		{field:'papminame',title:'姓名',width:110},
 		{field:'papmigender',title:'性别',width:50},
 		{field:'papmiage',title:'年龄',width:50},
+		{field:'AdmReason',title:'费别',width:80},
 		{field:'TPAPMICardType',title:'证件类型',width:130},
 		{field:'papmicredno',title:'证件号',width:150},
 		{field:'papmiwork',title:'地址',width:150},
@@ -66,7 +75,7 @@ function InitOPDocLogTabDataGrid(){
         },
         {field:'IliFlag',title:'流感样',width:60,align:'center',
 			formatter: function(value,row,index){
-	        	if (value=="on"){value="是"}else{value="否"}
+	        	if (value=="on"){value=$g("是")}else{value=$g("否")}
 				return value;
 			}
         },
@@ -98,7 +107,7 @@ function InitOPDocLogTabDataGrid(){
 	var OPDocLogTabDataGrid=$("#OPDocLogTab").datagrid({
 		fit : true,
 		border : false,
-		striped : true,
+		striped : false,
 		singleSelect : true,
 		fitColumns : false,
 		autoRowHeight : false,
@@ -107,12 +116,9 @@ function InitOPDocLogTabDataGrid(){
 		//pageList : [20,100,200],
 		idField:'paadmrowid',
 		columns :Columns,
-		onLoadSuccess:function(data){
-			/*for (var i=0;i<data.rows.length;i++){
-				PageLogicObj.m_OPDocLogTabDataGrid.datagrid('beginEdit',i);
-			}*/
-		},
 		onSelect:function(index, row){
+			var menuWin=websys_getMenuWin();
+			if ((menuWin) &&(menuWin.MainClearEpisodeDetails)) menuWin.MainClearEpisodeDetails();
 			var frm=dhcsys_getmenuform();
 			if (frm){
 				frm.PatientID.value=row["PatientID"];
@@ -130,6 +136,39 @@ function InitOPDocLogTabDataGrid(){
 					frm.EpisodeID.value="";
 				}
 				return false;
+			}
+		},
+		onResizeColumn: function(field, width) {
+			// 列宽改变，按钮区随之变化
+			if (field == "patOperBtn") {
+				$(this).datagrid('getPanel').find('td[field="patOperBtn"]').find('.shortcutbar-list-x').panel('resize')
+			}
+		},
+		onLoadSuccess: function(data) {
+			// 处理行高太小
+			$(this).datagrid('getPanel').find('div.datagrid-body tr').find('td[field="patOperBtn"]').children("div").css({   
+				"height": "40px" 
+			})
+			// 处理序号高度
+			$(this).datagrid('getPanel').find('.datagrid-td-rownumber').css({   
+				"height": "40px"
+			})
+			if (data.total > 0) {
+				data.rows.forEach(function(value, index, array) {
+					$('#patOperBtn_' + index).marybtnbar({
+						barCls: 'background:none;padding:5px 0px;',
+						queryParams: {ClassName:'DHCDoc.OPDoc.MainFrame',QueryName:'QueryBtnCfg',url:'opdoc.recadmlog.hui.csp'},
+						onBeforeLoad: function(param){
+							param.EpisodeID=value.paadmrowid;
+						},
+						onClick: function(jq,cfg){
+							jq.tooltip('hide');
+							$("#OPDocLogTab").datagrid("unselectAll")
+							$("#OPDocLogTab").datagrid("selectRow", index)
+							jumpMenu(cfg)
+						}
+					})
+				});
 			}
 		}
 	});
@@ -217,7 +256,7 @@ function LoadDept(){
 function LoadDoc(){
 	$.cm({
 		ClassName:"web.DHCUserGroup",
-		QueryName:"FindLogonLocDoc",
+		QueryName:"FindLogonLocDocNew",
 	   	LogLoc:$("#LocQuery").combobox('getValue'), Desc:"",
 		rows:99999  
 	},function(GridData){
@@ -255,11 +294,12 @@ function IntMRDiagnos(){
         textField:'desc',
         columns:[[  
             {field:'desc',title:'诊断名称',width:300,sortable:true},
-			{field:'code',title:'code',width:120,sortable:true},
+			{field:'code',title:'code',width:150,sortable:true},
 			{field:'HIDDEN',title:'HIDDEN',width:120,sortable:true,hidden:true}
         ]], 
         pagination:true,
         panelWidth:500,
+	fitColumns:true,
         isCombo:true,
         minQueryLen:2,
         delay:'500',
@@ -548,8 +588,9 @@ function AmountClickHandle(){
 	if(InfectStr=="") InfectStr="0^0";*/
 	var InfectStr="";
 	var src="opdoc.recadmlogamount.hui.csp?InfectStr="+InfectStr;
+	if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
-	createModalDialog("Amount","门诊日志汇总", 800, 460,"icon-w-list","",$code,"");
+	createModalDialog("Amount","门诊日志汇总", 650, 460,"icon-w-list","",$code,"");
 }
 function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,_event){
     $("body").append("<div id='"+id+"' class='hisui-dialog'></div>");
@@ -586,7 +627,8 @@ function OpenOrderView(EpisodeID){
 	websys_showModal({
 		url:"oeorder.opbillinfo.csp?EpisodeID="+EpisodeID,
 		title:'医嘱查看',
-		width:'90%',height:'90%'
+		width:'90%',height:'90%',
+		iconCls:'icon-w-paper'
 	});
 }
 function myformatter(date){
@@ -617,6 +659,18 @@ function myparser(s){
 	}
 }
 function ExportPrintCommon(ResultSetTypeDo){
+	var data=PageLogicObj.m_OPDocLogTabDataGrid.datagrid('getData');
+	if(data.rows.length==0){
+		$.messager.alert("提示","请先查询出数据,以便统计.");
+		return false;
+	}
+	if (ResultSetTypeDo=="Print") {
+		PageLogicObj.m_OPDocLogTabDataGrid.datagrid('print','门诊病人统计表');
+		return ;
+	}
+	PageLogicObj.m_OPDocLogTabDataGrid.datagrid('toExcel','门诊病人统计表.xls');
+	return ;
+	//excel导出打印经常出问题换成Datagird导出打印
 	var TemplatePath=$.cm({
 		ClassName:"web.UDHCJFCOMMON",
 		MethodName:"getpath",
@@ -676,4 +730,73 @@ function ExportPrintCommon(ResultSetTypeDo){
 	//以上为拼接Excel打印代码为字符串
 	CmdShell.notReturn =1;   //设置无结果调用，不阻塞调用
 	var rtn =CmdShell.EvalJs(Str);   //通过中间件运行打印程序
+}
+
+/**
+ * 患者列表按钮跳转菜单
+ * @param {*} cfg 
+ */
+function jumpMenu(cfg) {
+	var menuCodeStr = cfg.url
+	if (menuCodeStr == "") {
+		var msg = "请前往 <font style='font-weight:bold;color:red;'>医生站配置-显示信息配置-门诊功能区按钮配置 门/急诊日志行按钮</font> 的链接 配置 对应菜单代码！"
+		$.messager.alert("提示", msg, "info")
+		return false
+	}
+	var top = websys_getMenuWin()
+	if(top) {
+		var matchMenu = getMatchMenu(top.menuJson.records, menuCodeStr, null)
+		// console.log(matchMenu)
+		if (matchMenu != null) {
+			var link = ""
+			var newwin = ""
+			if (matchMenu.target == "_blank") {
+				newwin = matchMenu.blankOpt
+			}
+			// 医生站配置-显示信息配置-门诊功能区按钮配置 患者查询行按钮 单击事件，配置打开新窗口的参数，不需要的可不配置，按原有菜单打开方式处理
+			// Ex: "top=6%,left=2%,width=96%,height=105%"
+			if (cfg.handler != "") {
+				newwin = cfg.handler
+			}
+			if (matchMenu.link.indexOf("javascript:") > -1) {
+				link = matchMenu.link.split("'")[1]
+			} else {
+				link = matchMenu.link
+			}
+			top.PassDetails(link, newwin)
+		} else {
+			$.messager.alert("提示", "您没有权限打开当前按钮对应菜单！", "info")
+			return false
+		}
+	} else {
+		$.messager.alert("提示", "未能获取头菜单 “top”, 请联系基础平台支持！", "info")
+		return false
+	}
+}
+
+/**
+ * 递归获取按钮对应菜单（目前应该主要是头菜单）
+ * @param {*} menuArr 
+ * @param {*} menuCodeStr 
+ * @param {*} matchMenu 
+ * @returns 
+ */
+function getMatchMenu(menuArr, menuCodeStr, matchMenu) {
+	for (var i = 0; i < menuArr.length; i++) {
+		if (menuArr[i].link != "#") {
+			// replaceAll() 不兼容医为浏览器
+			// var menuCode = menuArr[i].code.replaceAll("_", ".")
+			var menuCode = menuArr[i].code.replace(/_/g, ".")
+			if ((";" + menuCodeStr + ";").indexOf(";" + menuCode + ";") > -1) {
+				matchMenu = menuArr[i]
+				return matchMenu
+			}
+		} else {
+			var matchMenu = getMatchMenu(menuArr[i].children, menuCodeStr, matchMenu)
+			if (matchMenu) {
+				return matchMenu
+			}
+		}
+	}
+	return matchMenu
 }

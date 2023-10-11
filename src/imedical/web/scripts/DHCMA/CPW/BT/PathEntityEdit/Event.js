@@ -8,7 +8,14 @@ function InitPathEntityListWinEvent(obj){
 		closed: true,
 		modal: true,
 		isTopZindex:true
-	});
+	});	
+	
+	// 检查删除按钮是否允许删除，若否则隐藏该按钮
+	if(!chkDelBtnIsAble("DHCMA.CPW.BT.PathEntity")){
+		$("#btnDelete").hide();	
+	}else{
+		$("#btnDelete").show();	
+	}
 	
 	obj.LoadEvent = function(args){ 
 		//保存
@@ -104,7 +111,8 @@ function InitPathEntityListWinEvent(obj){
 			ClassName:"DHCMA.CPW.BT.PathEntity",
 			MethodName:"Update",
 			aInputStr:inputStr,
-			aSeparete:CHR_1
+			aSeparete:CHR_1,
+			aHospID: $("#cboSSHosp").combobox('getValue')
 		},false);
 		if (parseInt(flg) <= 0) {
 			if (parseInt(flg) == 0) {
@@ -133,10 +141,15 @@ function InitPathEntityListWinEvent(obj){
 				var flg = $m({
 					ClassName:"DHCMA.CPW.BT.PathEntity",
 					MethodName:"DeleteById",
-					aId:rowID
+					aId:rowID,
+					aHospID: $("#cboSSHosp").combobox('getValue')
 				},false);
 				if (parseInt(flg) < 0) {
-					$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					if (parseInt(flg)==-777) {
+						$.messager.alert("错误提示","系统参数配置不允许删除！", 'info');
+					} else {
+						$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					}
 				} else {
 					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 					obj.gridPathEntity.reload() ;//刷新当前页

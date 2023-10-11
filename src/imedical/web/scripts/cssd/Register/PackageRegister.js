@@ -1,134 +1,121 @@
+var MainGridList;
+var init = function() {
+	var frm = dhcsys_getmenuform();
+	var Adm = frm.EpisodeID.value;
+	function Default() {
+		if (!isEmpty(Adm)) {
+			var PatInfo = tkMakeServerCall('web.CSSDHUI.PackageRegister.PkgRegister', 'ByAdmGetPatInfo', Adm);
+			if (!isEmpty(PatInfo)) {
+				$('#RegNo').text(PatInfo.split('^')[0]);
+				$('#patientname').text(PatInfo.split('^')[1]);
+				$('#LocName').text(PatInfo.split('^')[2]);
+				$('#Code').focus();
+			}
+		} else {
+			$UI.msg('alert', '请选择患者!');
+			$('#Code').attr('disabled', 'disabled');
+			return;
+		}
+	}
+	function query() {
+		MainGridList.load({
+			ClassName: 'web.CSSDHUI.PackageRegister.PkgRegister',
+			QueryName: 'GetPatientInfo',
+			Adm: Adm,
+			rows: 99999
+		});
+	}
 
-//删除登记过的标签
-function Del(index) {
-    $('#RegData').datagrid('selectRow', index); // 关键在这里
-    var row = $('#RegData').datagrid('getSelected');
-    if (row) {
-        $.cm({
-            ClassName: "web.CSSDHUI.PackageRegister.PkgRegister",
-            MethodName: "Delete",
-            RowID: row.rowid
-        }, function (txtData) {
-            if (txtData.success == 0) {
-                $('#RegData').datagrid('reload');
-            }
+	var ItemCm = [[
+		{
+			field: 'RowId',
+			title: 'RowId',
+			width: 100,
+			hidden: true
+		}, {
+			field: 'opt',
+			title: '操作',
+			width: 50,
+			frozen: true,
+			allowExport: false,
+			formatter: function(val, row, index) {
+				var btn = '<div class="col-icon icon-cancel" href="#" title="删除" onclick="MainGridList.commonDeleteRow(false,' + index + ')"></div>';
+				return btn;
+			}
+		}, {
+			field: 'RegNo',
+			title: '登记号',
+			width: 100
+		}, {
+			field: 'PatName',
+			title: '患者',
+			width: 100
+		}, {
+			field: 'PatLoc',
+			title: '科室',
+			width: 100
+		}, {
+			field: 'Label',
+			title: '标签',
+			width: 100
+		}, {
+			field: 'PkgDesc',
+			title: '包名',
+			width: 100
+		}, {
+			field: 'CountNurseName',
+			title: '操作人',
+			width: 100
+		}, {
+			field: 'CountNurseTime',
+			title: '操作时间',
+			width: 100
+		}
+	]];
+	MainGridList = $UI.datagrid('#RegData', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.PackageRegister.PkgRegister',
+			QueryName: 'GetPatientInfo',
+			Adm: Adm,
+			rows: 99999
+		},
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.PackageRegister.PkgRegister',
+			MethodName: 'jsDelete'
+		},
+		columns: ItemCm,
+		sortName: 'RowId',
+		sortOrder: 'asc',
+		fitColumns: true,
+		pagination: true
+	});
 
-        });
-    }
-}
-var init = function () {
-    var userCode = session['LOGON.USERCODE'];
-    var userdr = session['LOGON.USERID'];
-    var frm = dhcsys_getmenuform();
-    var Adm = frm.EpisodeID.value;
-        $.cm({
-            ClassName: "web.CSSDHUI.PackageRegister.PkgRegister",
-            MethodName: "ByAdmGetPatInfo",
-            Adm: Adm
-        }, function (jsonData) {
-            if (jsonData.success == 0) {
-                //alert(jsonData.rowid);
-                var vs = jsonData.rowid.split('^');
-                $('#RegNo').text(vs[0]);
-                $('#patientname').text(vs[1]);
-                $('#LocName').text(vs[2]);
-                $('#Code').focus();
-                MainGridObj.commonReload();
-            } else {
-                $UI.msg('alert', jsonData.msg);
-                $('#Code').attr("disabled", "disabled");
-                return;
-            }
-
-        });
-
-    var MainGridObj = $UI.datagrid("#RegData", {
-            url: $URL,
-            queryParams: {
-                ClassName: 'web.CSSDHUI.PackageRegister.PkgRegister',
-                QueryName: 'GetPatientInfo',
-                Adm: Adm
-            },
-            columns: [[{
-                        field: 'RegNo',
-                        title: '登记号',
-                        width: 100
-                    }, {
-                        field: 'PatName',
-                        title: '病人',
-                        width: 100
-                    }, {
-                        field: 'PatLoc',
-                        title: '科室',
-                        width: 100
-                    }, {
-                        field: 'label',
-                        title: '标签',
-                        width: 100
-                    }, {
-                        field: 'packageName',
-                        title: '包名',
-                        width: 100
-                    }, {
-                        field: 'CountNurseDr',
-                        title: '操作人',
-                        width: 100
-                    }, {
-                        field: 'CountNurseTime',
-                        title: '操作时间',
-                        width: 100
-                    }, {
-                        field: 'rowid',
-                        title: '操作',
-                        align: 'center',
-                        hidden: true
-                    }, {
-                        field: 'opt',
-                        title: '操作',
-                        width: 100,
-                        formatter: function (val, row, index) {
-                            var btn = '<a href="#"   class="Del" onclick=Del(' + index + ') >删除</a>';
-                            return btn;
-                        }
-                    }
-
-                ]],
-            onLoadSuccess: function (data) {
-                $(".Del").linkbutton({
-                    text: '',
-                    plain: true,
-                    iconCls: 'icon-cancel'
-                });
-            }
-
-        });
-
-    $("#Code").keydown(function (e) {
-        var curKey = e.which;
-        if (curKey == 13) {
-            if ($("#Code").val() != "") {
-                $.cm({
-                    ClassName: "web.CSSDHUI.PackageRegister.PkgRegister",
-                    MethodName: "Insert",
-                    Label: $("#Code").val(),
-                    Adm: Adm,
-                    UserId: userdr
-                }, function (jsonData) {
-                    if (jsonData.success == 0) {
-                        $("#Code").val("");
-                        $('#Code').focus();
-                        MainGridObj.commonReload();
-                    } else {
-                        $UI.msg('alert', jsonData.msg);
-                        $("#Code").val("");
-                        $('#Code').focus();
-                        return;
-                    }
-
-                });
-            }
-        }
-
-    });
-}
+	$('#Code').keyup(function(e) {
+		var curKey = e.which;
+		var Label = $('#Code').val();
+		var Params = JSON.stringify(addSessionParams({ Adm: Adm, Label: Label }));
+		if (curKey == 13) {
+			if ($('#Code').val() !== '') {
+				$.cm({
+					ClassName: 'web.CSSDHUI.PackageRegister.PkgRegister',
+					MethodName: 'jsSaveRegister',
+					Params: Params
+				}, function(jsonData) {
+					if (jsonData.success == 0) {
+						$('#Code').val('');
+						$('#Code').focus();
+						MainGridList.commonReload();
+					} else {
+						$UI.msg('alert', jsonData.msg);
+						$('#Code').val('');
+						$('#Code').focus();
+						return;
+					}
+				});
+			}
+		}
+	});
+	Default();
+	query();
+};
 $(init);

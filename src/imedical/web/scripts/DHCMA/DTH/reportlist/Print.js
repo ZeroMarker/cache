@@ -207,7 +207,7 @@ function toDtlHtml(newArr){
     var data = ['<table border="1" rull="all" style="border-collapse:collapse">'];
   	//标题
     var trStyle = 'height:32px';
-    var tdStyle0 = 'vertical-align:middle;text-align:center;padding:0 4px;';
+    //var tdStyle0 = 'vertical-align:middle;text-align:center;padding:0 4px;';
     data.push('<tr style="'+trStyle+'">');
     //表头
    	data.push('<th>报告卡ID</th>');
@@ -218,7 +218,7 @@ function toDtlHtml(newArr){
 	data.push('<th>死者姓名</th>');
 	data.push('<th>性别编码</th>');
 	data.push('<th>性别</th>');
-	data.push('<th>身份证号码</th>');
+	data.push('<th>证件号码</th>');
 	data.push('<th>出生日期</th>');
 	data.push('<th>年龄</th>');
 	data.push('<th>民族编码</th>');
@@ -295,6 +295,7 @@ function toDtlHtml(newArr){
     for(var i=0; i<newArr.length; i++){	    
         data.push('<tr style="'+trStyle+'">');
 		$.each(newArr[i],function(key,value) {
+			var tdStyle0 = 'vertical-align:middle;text-align:center;padding:0 4px;';
 			if ((value)&&(!isNaN(value))) { //判断字符串是否为纯数字
 				 tdStyle0 = tdStyle0 +';mso-number-format:\@';  //解决纯数字列导出没有0或变成科学style="mso-number-format:'\@';"   
 			}
@@ -310,26 +311,35 @@ function toDtlHtml(newArr){
 }
 
 //导出明细
-function ExportDtlToExcel(){	
+function ExportDtlToExcel(){
+	var status=$('#cboRepStatus').combobox('getValue')
+	if(status!=""){
+		status=$m({
+			ClassName:"DHCMed.SSService.DictionarySrv",
+			MethodName:"GetCodeByRowId",
+			rowid:status
+			
+		},false)	
+	}
 	//查询界面
     var strDTHList =$m({
 		ClassName:"DHCMed.DTHService.ReportInterface",
 		QueryName:"QryReportInfo",	
 		ResultSetType:'array',	
-		aSttDate: $('#txtStartDate').datebox('getValue'), 
-		aEndDate: $('#txtEndDate').datebox('getValue'), 
-		aRepLoc: $('#cboRepLoc').combobox('getValue'), 
-		aHospital:$('#cboSSHosp').combobox('getValue'),   
-		aRepStatus: $('#cboRepStatus').combobox('getValue'),
-		aPatName: $('#txtPatName').val(),
-		aMrNo: $('#txtMrNo').val(),	
-		aRegNo: $('#txtRegNo').val()
+		startDate: $('#txtStartDate').datebox('getValue'), 
+		endDate: $('#txtEndDate').datebox('getValue'), 
+		locId: $('#cboRepLoc').combobox('getValue'), 
+		hospId:$('#cboSSHosp').combobox('getValue'),   
+		status: status,
+		argPatName: $('#txtPatName').val(),
+		argMrNo: $('#txtMrNo').val(),	
+		argRegNo: $('#txtRegNo').val()
 	}, false);
 	var DTHArray = JSON.parse(strDTHList);
 	var DTHlen = DTHArray.length;
 	if (DTHlen<1) return;
 			    
-    var table = toDtlHtml(DTHArray);
+   /* var table = toDtlHtml(DTHArray);
     var uri = 'data:application/vnd.ms-excel;base64,'
     , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>{table}</body></html>'
     , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
@@ -348,7 +358,29 @@ function ExportDtlToExcel(){
         alink[0].click();
         alink.remove();
     }
-    
+    */
+     var table = toDtlHtml(DTHArray);
+    // console.log(table.length)
+     //console.log(table)
+    // table='"<table border="1" rull="all" style="border-collapse:collapse"><tr><td colspan="11" style="height:40pt;text-align:center;font-size:24px;font-weight:bold;">死亡病例网络直报日登记</td></tr><tr style="height:32px"><th style="width:200px">网号</th><th style="width:180px">报告状态</th><th style="width:180px">死者姓名</th><th style="width:100px">性别</th><th style="width:100px">年龄</th><th style="width:200px">职业</th><th style="width:400px;">根本死因</th><th style="width:400px;">户口地址</th><th style="width:100px">死亡日期</th><th style="width:100px">填卡日期</th><th style="width:150px">填报科室</th><tr style="height:32px"></tr><tr style="height:32px"></tr><tr style="height:32px"></tr><tr style="height:32px"></tr><tr style="height:32px"></tr><tr style="height:32px"></tr><tr style="height:32px"></tr><tr style="height:32px"></tr><tr style="height:32px"></tr><tr style="height:32px"></tr><tr style="height:32px"></tr><tr style="height:32px"></tr><tr style="height:32px"></tr><tr style="height:32px"></tr><tr style="height:32px"></tr></table>"'
+    var uri = 'data:application/vnd.ms-excel;base64,'
+    , template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><meta http-equiv="content-type" content="application/vnd.ms-excel; charset=UTF-8"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>{table}</body></html>'
+    , base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))) }
+    , format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }) }
+
+    var ctx = { worksheet: 'Worksheet', table: table };
+    var data = base64(format(template, ctx));
+
+    if (window.navigator.msSaveBlob){
+        var blob = b64toBlob(data);
+        window.navigator.msSaveBlob(blob, '死亡报告明细表.xls');
+    } else {
+        var alink = $('<a style="display:none"></a>').appendTo('body');
+        alink[0].href = uri + data;
+        alink[0].download = '死亡报告明细表.xls';
+        alink[0].click();
+        alink.remove();
+    }
 }
 
 

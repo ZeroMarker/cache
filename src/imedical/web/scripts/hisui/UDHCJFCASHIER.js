@@ -12,10 +12,7 @@ var Tinvno, billstatus;
 
 $(function(){
 	init_Layout();
-	$(document).keydown(function (e) {
-		banBackSpace(e);
-	});
-	initCardType();
+
 	DHCP_GetXMLConfig("InvPrintEncrypt", "DHCJFIPReceipt");
 	billnoobj = document.getElementById('BillNo');
 	depositobj = document.getElementById('Deposit');
@@ -111,6 +108,7 @@ $(function(){
 	});
 
 	focusById('Regno');
+	setValueById("EndDate", getDefStDate(0));
 });
 
 function getpat(e) {
@@ -122,20 +120,10 @@ function getpat(e) {
 
 function clearClick() {
 	$(":text:not(.pagination-num)").val("");
-	$(".combobox-f:not(#OPCardType)").combobox("setValue", "");
-	$("#OPCardType").combobox("reload");
+	$(".combobox-f").combobox("setValue", "");
 	$('#Find').click();
-	getenddate();
 	$("#CurrentFlag").combobox("select", 'disch');
-}
-
-function getenddate() {
-	var encmeth = getValueById('getenddate');
-	if (cspRunServerMethod(encmeth, 'setdate_val', '', '') == '1') {}
-}
-
-function setdate_val(value) {
-	setValueById('EndDate', value);
+	setValueById("EndDate", getDefStDate(0));
 }
 
 function getdeposit(Adm) {
@@ -150,18 +138,12 @@ function SelectRowHandler(index, rowData) {
 	}
 	if (selectrow != SelectedRow) {
 		//+2015-3-23 hujunbin 将就诊ID和账单ID传到头菜单
-		var episodeObj = document.getElementById('Tadmz' + selectrow);
-		var billObj = document.getElementById('Tbillrowidz' + selectrow);
 		var frm = parent.parent.document.forms['fEPRMENU'];
 		if (typeof(frm) != "undefined") {
 			var frmEpisodeID = frm.EpisodeID;
 			var frmBillID = frm.BillRowIds;
-			if (billObj){
-				frmBillID.value =rowData.Tbillrowid;
-			}
-			if (episodeObj){
-				frmEpisodeID.value =rowData.Tadm;
-			}
+			frmBillID.value = rowData.Tbillrowid;
+			frmEpisodeID.value =rowData.Tadm;
 		}
 		Adm = rowData.Tadm;
 		setValueById('Adm', Adm);
@@ -207,7 +189,7 @@ function SelectRowHandler(index, rowData) {
 		setValueById('decease',rowData.Tdischargestatus);
 		//setValueById('Loc', rowData.Tloc);
 		patzynoobj.value = rowData.Tpatzyno;
-		setValueById('patmedicare',rowData.Tpatzyno);
+		setValueById('patmedicare', rowData.Tpatzyno);
 		//+2018-01-15 ZhYW 
 		var deceaseObj = websys_$("decease");
 		if (decease != t['23']) {
@@ -242,7 +224,7 @@ function SelectRowHandler(index, rowData) {
 
 function LinkBillDetail() {
 	if ((BillNo == "") || (BillNo == " ")) {
-		DHCWeb_HISUIalert("请选择患者");
+		$.messager.popover({msg: '请选择患者', type: 'info'});
 		return;
 	}
 	var url = "dhcbill.ipbill.billdtl.csp?&EpisodeID=" + Adm + "&BillRowId=" + BillNo;
@@ -272,16 +254,16 @@ function LinkAddDeposit() {
 
 function LinkRefundDeposit() {
 	if (Adm == "") {
-		DHCWeb_HISUIalert(t['03']);
+		$.messager.popover({msg: '请选择患者', type: 'info'});
 		return;
 	}
 	//+2018-07-11 ZhYW 
 	var rtn = tkMakeServerCall("web.DHCBillPreIPAdmTrans", "CheckRefDeposit", Adm);
-	if (+rtn == 1) {
-		DHCWeb_HISUIalert('该患者的预住院医嘱存在有效医嘱,不能退押金.');
+	if (rtn == 1) {
+		$.messager.popover({msg: '该患者的预住院医嘱存在有效医嘱，不能退押金', type: 'info'});
 		return;
-	}else if (+rtn == 2) {
-		DHCWeb_HISUIalert('该患者由预住院转入门诊的费用未结清,不能退押金.');
+	}else if (rtn == 2) {
+		$.messager.popover({msg: '该患者由预住院转入门诊的费用未结清，不能退押金', type: 'info'});
 		return;
 	};
 	var url = "dhcbill.ipbill.deposit.refund.if.csp?EpisodeID=" + Adm;
@@ -310,7 +292,6 @@ function getPatInfo() {
 			}
 			var myAry = rtn.split("^");
 			papnoobj.value = myAry[0];
-			nameobj.value = myAry[1];
 			setValueById('Name', myAry[1]);
 			setValueById('Adm', myAry[2]);
 			Adm = myAry[2];
@@ -412,73 +393,12 @@ function selectTabBar(preId, newId) {
 	}
 }
 
-function init_Layout(){
+function init_Layout() {
 	// 布局
 	$('td.i-tableborder>table').css("border-spacing", "0px 8px");
 	$('.first-col').parent().parent().parent().css('margin-top', '1px');
 	$('#PageContent').find('.panel-body-noheader').css('margin-top', '2px');
 	$('#cStDate').parent().parent().css('width','72px');
-	//固定列头
-	$('#tUDHCJFCASHIER').datagrid({
-		fitColumns:false,
-		autoRowHeight:false,
-		frozenColumns:[[
-			{
-				field:'Tregno',
-				title:'登记号',
-			}, {
-				field:'Tname',
-				title:'姓名',
-			},
-		]],
-		onLoadSuccess:function(data){
-			$('.datagrid-sort-icon').text(''); // 金额列 文字和金额右对齐
-			$('.datagrid-view2').find('td[field=Tregno]').hide();
-			$('.datagrid-view2').find('td[field=Tname]').hide();
-		}
-	});
-	
-	setValueById("EndDate", getDefStDate(0));
-	$('#locator').hide();
-	$('#foo').hide();
-}
-
-/**
-* 初始化卡类型
-*/
-function initCardType() {
-	$HUI.combobox("#OPCardType", {
-		panelHeight: 'auto',
-		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QCardTypeDefineList&ResultSetType=array',
-		editable: false,
-		valueField: 'value',
-		textField: 'caption',
-		onChange: function (newValue, oldValue) {
-			initReadCard(newValue);
-		}
-	});
-}
-
-/**
- * 初始化卡类型时卡号和读卡按钮的变化
- * @method initReadCard
- * @param {String} cardType
- * @author ZhYW
- */
-function initReadCard(cardType) {
-	try {
-		var cardTypeAry = cardType.split("^");
-		var readCardMode = cardTypeAry[16];
-		if (readCardMode == "Handle") {
-			disableById("readcard");
-			$("#opcardno").attr("readOnly", false);
-		} else {
-			enableById("readcard");
-			setValueById("opcardno", "");
-			$("#opcardno").attr("readOnly", true);
-		}
-	} catch (e) {
-	}
 }
 
 /**
@@ -487,78 +407,48 @@ function initReadCard(cardType) {
  * @author ZhYW
  */
 function readHFMagCardClick() {
-	try {
-		var cardType = getValueById("OPCardType");
-		var cardTypeDR = cardType.split("^")[0];
-		var myRtn = "";
-		if (cardTypeDR == "") {
-			myRtn = DHCACC_GetAccInfo();
-		} else {
-			myRtn = DHCACC_GetAccInfo(cardTypeDR, cardType);
-		}
-		var myAry = myRtn.toString().split("^");
-		var rtn = myAry[0];
-		switch (rtn) {
-		case "0":
-			setValueById("opcardno", myAry[1]);
-			setValueById("Regno", myAry[5]);
-			getPatInfo();
-			break;
-		case "-200":
-			$.messager.alert("提示", "读卡失败,卡无效", "info", function() {
-				focusById("readcard");
-			});
-			break;
-		case "-201":
-			setValueById("opcardno", myAry[1]);
-			setValueById("Regno", myAry[5]);
-			getPatInfo();
-			break;
-		default:
-		}
-	} catch (e) {
-	}
+	DHCACC_GetAccInfo7(magCardCallback);
 }
 
 /**
 * 卡号回车事件
 */
 function cardNoKeydown(e) {
-	try {
-		var key = websys_getKey(e);
-		if (key == 13) {
-			var cardNo = getValueById("opcardno");
-			if (!cardNo) {
-				return;
-			}
-			var cardType = getValueById("OPCardType");
-			cardNo = formatCardNo(cardType, cardNo);
-			var cardTypeAry = cardType.split("^");
-			var cardTypeDR = cardTypeAry[0];
-			var myRtn = DHCACC_GetAccInfo(cardTypeDR, cardNo, "", "PatInfo");
-			var myAry = myRtn.toString().split("^");
-			var rtn = myAry[0];
-			switch (rtn) {
-			case "0":
-				setValueById("opcardno", myAry[1]);
-				setValueById("Regno", myAry[5]);
-				getPatInfo();
-				break;
-			case "-200":
-				setTimeout(function () {
-					$.messager.alert("提示", "卡无效", "info", function() {
-						focusById("opcardno");
-					});
-				}, 10);
-				break;
-			case '-201':
-				setValueById("opcardno", myAry[1]);
-				setValueById("Regno", myAry[5]);
-				getPatInfo();
-				break;
-			default:
-			}
+	var key = websys_getKey(e);
+	if (key == 13) {
+		var cardNo = getValueById("opcardno");
+		if (!cardNo) {
+			return;
 		}
-	} catch (e) {
+		DHCACC_GetAccInfo("", cardNo, "", "", magCardCallback);
+	}
+}
+
+function magCardCallback(rtnValue) {
+	var patientId = "";
+	var myAry = rtnValue.split("^");
+	switch (myAry[0]) {
+	case "0":
+		setValueById("opcardno", myAry[1]);
+		patientId = myAry[4];
+		setValueById("Regno", myAry[5]);
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	case "-200":
+		$.messager.alert("提示", "卡无效", "info", function() {
+			focusById("opcardno");
+		});
+		break;
+	case "-201":
+		setValueById("opcardno", myAry[1]);
+		patientId = myAry[4];
+		setValueById("Regno", myAry[5]);
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	default:
+	}
+	
+	if (patientId != "") {
+		getPatInfo();
 	}
 }

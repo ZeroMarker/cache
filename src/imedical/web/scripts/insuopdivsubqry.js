@@ -43,7 +43,8 @@ function initHisInv(){
 	 	cache:true,
 	 	loadMsg:'Loading',
 	 	rownumbers:true,
-	 	scrollbarSize:20,	
+	 	scrollbarSize:20,
+		toolbar:[],	
 		columns:[[
 			//初始化his门诊发票基本信息
 			{title:'序号',field:'Ind',hidden:true},
@@ -53,7 +54,7 @@ function initHisInv(){
 			{title:'发票金额',field:'PrtAcount',width:100,},
 			{title:'发票号码',field:'InvNo',width:120},
 			{title:'发票日期',field:'PRTdate',width:120},
-			{title:'发票状态',field:'InvFlag',width:100},
+			{title:'发票状态',field:'InvFlag',width:738},
 			{title:'就诊Dr',field:'PAADMDr',hidden:true},
 			{title:'医保结算Dr',field:'PRTInsDivDR',hidden:true}			
 		]]
@@ -79,6 +80,7 @@ function initIndis(){
 		collapsible:true,
 		height:400,
 		border:false,
+		toolbar:[],
 		columns:[[
 			//初始化医保结算明细表所有字段
 			{title:'序号',field:'ind',hidden:true},
@@ -185,4 +187,5 @@ function setDateBox() {
 	setValueById('StDate',getDefStDate(0));
 	setValueById('EndDate',getDefStDate(0));
 }
+
 

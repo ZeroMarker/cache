@@ -13,8 +13,10 @@ function BodyLoadHandler()
 	$("#enddate").datebox("setValue", formatDate(0));  
 	
 	$('#admLoc').combobox({
+		mode:"remote",
 		onShowPanel:function(){
-			$('#admLoc').combobox('reload',url+'?action=SelAllLoc')
+			//$('#admLoc').combobox('reload',url+'?action=SelAllLoc')
+			$('#admLoc').combobox('reload',url+'?action=GetAllLocNewVersion')
 		}
 	}); 
 	
@@ -124,6 +126,7 @@ function Reset()
 	$('#levelMan').combobox('setValue',"");
 	$('#label').combobox('setValue',"");
 	$('#admLoc').combobox('setValue',"");
-	
+	$('#label').combobox('setText',"全部"); //设置combobox默认值
+	Query();
 }
 

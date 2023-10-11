@@ -12,10 +12,10 @@ var CtLocId = session['LOGON.CTLOCID'];
 
 // 请求部门
 var LocField= new Ext.ux.LocComboBox({
-	fieldLabel:'请求部门',
+	fieldLabel:$g('请求部门'),
 	id : 'LocField',
 	name : 'LocField',
-	emptyText:'请求部门...',
+	emptyText:$g('请求部门...'),
 	groupId:gGroupId,
 	width:180,
 	listeners : {
@@ -37,9 +37,9 @@ LocField.on('select', function(e) {
 });
 var supplyLocField = new Ext.ux.LocComboBox({
 	id:'supplyLocField',
-	fieldLabel:'供给部门',
+	fieldLabel:$g('供给部门'),
 	listWidth:210,
-	emptyText:'供给部门...',
+	emptyText:$g('供给部门...'),
 	groupId:gGroupId,
 	defaultLoc:{},
 	width:180,
@@ -62,7 +62,7 @@ var startDateField = new Ext.ux.DateField({
 	width:100,
 	listWidth:100,
     allowBlank:true,
-	fieldLabel:'开始日期',
+	fieldLabel:$g('开始日期'),
 	anchor:'90%',
 	value:new Date()
 });
@@ -72,14 +72,14 @@ var endDateField = new Ext.ux.DateField({
 	width:100,
 	listWidth:100,
     allowBlank:true,
-	fieldLabel:'结束日期',
+	fieldLabel:$g('结束日期'),
 	anchor:'90%',
 	value:new Date()
 });
 
 var days = new Ext.form.NumberField({
 	id:'days',
-	fieldLabel:'参考天数',
+	fieldLabel:$g('参考天数'),
 	allowBlank:true,
 	width:200,
 	listWidth:200,
@@ -91,25 +91,25 @@ var days = new Ext.form.NumberField({
 
 var isInt = new Ext.form.Checkbox({
 	id: 'isInt',
-	boxLabel:'建议请求量取整',
+	boxLabel:$g('建议请求量取整'),
 	allowBlank:true
 });
 
 var isIncludeZero = new Ext.form.Checkbox({
 	id:'isIncludeZero',
-	boxLabel:'包含请求量=0',
+	boxLabel:$g('包含请求量=0'),
 	allowBlank:true
 });
 
 var useInt = new Ext.form.Checkbox({
 	id: 'useInt',
-	boxLabel:'使用建议请求量',
+	boxLabel:$g('使用建议请求量'),
 	allowBlank:true
 });
 
 var isCheckKC = new Ext.form.Checkbox({
 	id:'isCheckKC',
-	boxLabel:'检查部门库存',
+	boxLabel:$g('检查部门库存'),
 	allowBlank:true
 });
 
@@ -143,56 +143,56 @@ var INRequestAuxByTransferGridDs = new Ext.data.Store({
 var INRequestAuxByTransferGridCm = new Ext.grid.ColumnModel([
 	 new Ext.grid.RowNumberer(),
 	 {
-        header:"药品rowid",
+        header:$g("药品rowid"),
         dataIndex:'inci',
         width:80,
         align:'left',
         sortable:true,
 		hidden:true
     },{
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'code',
         width:80,
         align:'left',
         sortable:true
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'desc',
         width:200,
         align:'left',
         sortable:true
     },{
-        header:"单位",
+        header:$g("单位"),
         dataIndex:'uomDesc',
         width:80,
         align:'left',
         sortable:true
     },{
-        header:"库存量",
+        header:$g("库存量"),
         dataIndex:'stkQty',
         width:70,
         align:'right',
         sortable:true
     },{
-        header:"可用量",
+        header:$g("可用量"),
         dataIndex:'avaQty',
         width:120,
         align:'right',
         sortable:true
     },{
-        header:"需求量",
+        header:$g("需求量"),
         dataIndex:'dailyDispQty',
         width:100,
         align:'right',
         sortable:true
     },{
-        header:"建议申请量",
+        header:$g("建议申请量"),
         dataIndex:'applyQty',
         width:100,
         align:'right',
         sortable:true
     },{
-        header:"实际申请量",
+        header:$g("实际申请量"),
         dataIndex:'ActualQty',
         width:150,
         align:'right',
@@ -205,8 +205,8 @@ var INRequestAuxByTransferGridCm = new Ext.grid.ColumnModel([
 ]);
 
 var find = new Ext.Toolbar.Button({
-	text:'查询',
-    tooltip:'查询',
+	text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
 	width:70,
 	height:30,
@@ -214,13 +214,13 @@ var find = new Ext.Toolbar.Button({
 		//供给部门
 		var frLoc = Ext.getCmp('supplyLocField').getValue(); 
 		if((frLoc=="")||(frLoc==null)){
-			Msg.info("error", "请选择供给部门!");
+			Msg.info("error", $g("请选择供给部门!"));
 			return false;
 		}
 		//请求部门
 		var toLoc = Ext.getCmp('LocField').getValue(); 
 		if((toLoc=="")||(toLoc==null)){
-			Msg.info("error", "请选择请求部门!");
+			Msg.info("error", $g("请选择请求部门!"));
 			return false;
 		}
 		//开始日期
@@ -228,7 +228,7 @@ var find = new Ext.Toolbar.Button({
 		if((startDate!="")&&(startDate!=null)){
 			startDate = startDate.format(App_StkDateFormat);
 		}else{
-			Msg.info("error", "请选择开始日期!");
+			Msg.info("error", $g("请选择开始日期!"));
 			return false;
 		}
 		//结束日期
@@ -236,13 +236,13 @@ var find = new Ext.Toolbar.Button({
 		if((endDate!="")&&(endDate!=null)){
 			endDate = endDate.format(App_StkDateFormat);
 		}else{
-			Msg.info("error", "请选择结束日期!");
+			Msg.info("error", $g("请选择结束日期!"));
 			return false;
 		}
 		//参考天数
 		var day = Ext.getCmp('days').getValue();
 		if((day=="")||(day==null)){
-			Msg.info("error", "请填写参考天数!");
+			Msg.info("error", $g("请填写参考天数!"));
 			return false;
 			}
 		//类组
@@ -266,8 +266,8 @@ var find = new Ext.Toolbar.Button({
 });
 
 var productReqOrder = new Ext.Toolbar.Button({
-	text:'生成请求单',
-    tooltip:'生成请求单',
+	text:$g('生成请求单'),
+    tooltip:$g('生成请求单'),
     iconCls:'page_add',
 	width : 70,
 	height : 30,
@@ -275,26 +275,26 @@ var productReqOrder = new Ext.Toolbar.Button({
 		var frLoc = Ext.getCmp('supplyLocField').getValue(); 
 		var frLocName = Ext.getCmp('supplyLocField').getRawValue();
 		if((frLoc=="")||(frLoc==null)){
-			Msg.info("error", "请选择供给部门!");
+			Msg.info("error", $g("请选择供给部门!"));
 			return false;
 		}
 		//请求部门
 		var toLoc = Ext.getCmp('LocField').getValue(); 
 		var toLocName = Ext.getCmp('LocField').getRawValue();
 		if((toLoc=="")||(toLoc==null)){
-			Msg.info("error", "请选择请求部门!");
+			Msg.info("error", $g("请选择请求部门!"));
 			return false;
 		}
 		//类组
 		var scg = Ext.getCmp('groupField').getValue();
 		var scgName = Ext.getCmp('groupField').getRawValue();		
 		if((scg=="")||(scg==null)){
-			Msg.info("error", "请选择类组!");
+			Msg.info("error", $g("请选择类组!"));
 			return false;
 		}
 		var count = INRequestAuxByTransferGridDs.getCount();
 		if(count==0){
-			Msg.info("error","没有出库请求明细,禁止保存!");
+			Msg.info("error",$g("没有出库请求明细,禁止保存!"));
 			return false;
 		}else{
 			var str = "";
@@ -317,38 +317,38 @@ var productReqOrder = new Ext.Toolbar.Button({
 					}
 				}
 			}
-			if(str==""){Msg.info("error", "没有内容需要保存!");return false;};
+			if(str==""){Msg.info("error", $g("没有内容需要保存!"));return false;};
 			var req = "";
 			var status = "";
-			var remark = "转移入库";
+			var remark = $g("转移入库");
 			var reqInfo = frLoc+"^"+toLoc+"^"+UserId+"^"+scg+"^"+status+"^"+remark;
 			
 			Ext.Ajax.request({
 				url : 'dhcst.inrequestaction.csp?actiontype=save',
 				params:{req:req,reqInfo:reqInfo,data:str},
 				method : 'POST',
-				waitMsg : '查询中...',
+				waitMsg : $g('查询中...'),
 				success : function(result, request) {
 					var jsonData = Ext.util.JSON.decode(result.responseText);
 					if (jsonData.success == 'true') {
-						Msg.info("success", "保存成功!");
+						Msg.info("success", $g("保存成功!"));
 						req = jsonData.info;
 						location.href="dhcst.inrequest.csp?reqByabConsume="+req;
 					}else{
 						if(jsonData.info==-1){
-							Msg.info("error", "主表保存失败!");
+							Msg.info("error",$g("主表保存失败!"));
 						}else if(jsonData.info==-99){
-							Msg.info("error", "主表加锁失败!");
+							Msg.info("error", $g("主表加锁失败!"));
 						}else if(jsonData.info==-2){
-							Msg.info("error", "主表解锁失败!");
+							Msg.info("error", $g("主表解锁失败!"));
 						}else if(jsonData.info==-5){
-							Msg.info("error", "明细保存失败!");
+							Msg.info("error", $g("明细保存失败!"));
 						}else if(jsonData.info==-4){
-							Msg.info("error", "主表单号设置失败!");
+							Msg.info("error", $g("主表单号设置失败!"));
 						}else if(jsonData.info==-3){
-							Msg.info("error", "主表保存失败!");
+							Msg.info("error", $g("主表保存失败!"));
 						}else{
-							Msg.info("error", "保存失败!"+jsonData.info);
+							Msg.info("error", $g("保存失败!")+jsonData.info);
 						}
 					}
 				},
@@ -403,11 +403,11 @@ Ext.onReady(function(){
 		labelAlign : 'right',
 		frame : true,
 		autoScroll : false,
-		title:'辅助请求(依据<转移入库>)',
+		title:$g('辅助请求(依据<转移入库>)'),
 		tbar:[find,'-',productReqOrder],
 		items : [{
 			xtype:'fieldset',
-			title:'查询条件',
+			title:$g('查询条件'),
 			style : DHCSTFormStyle.FrmPaddingV,
 			layout: 'column',    // Specifies that the items will now be arranged in columns
 			defaults: {border:false}, 		

@@ -61,12 +61,16 @@ function initPageMainGrid(){
 		{field:'TakFlag',title:'TakFlag',width:100,hidden:true},
 		{field:'TakTime',title:'授权时间(小时)',width:120,editor:numbereditor,align:'center'},
 		{field:'TakOrdFlag',title:'TakOrdFlag',editor:texteditor,width:100,hidden:true},
-		{field:'TakOrd',title:'权限名称',editor:TakOrdEditor,width:100},
+		{field:'TakOrd',title:'权限名称',editor:TakOrdEditor,width:100,formatter:SetCellTakOrd},
 		{field:'OperButton',title:'操作',width:140,align:'center',formatter:SetCellOperLink}
 	]];
 	
 	///  定义datagrid
 	var option = {
+		toolbar:[],//hxy 2023-02-08 st
+		title:$g("授权列表"),
+		iconCls:'icon-paper',
+		headerCls:'panel-header-gray',//ed
 		fitColumn:true,
 		rownumbers:false,
 		singleSelect:false,
@@ -77,6 +81,8 @@ function initPageMainGrid(){
 			var rowsData=$("#main").datagrid('getRows');
 			$.each(rowsData, function(rowIndex, selItem){
 				$("#main").datagrid('beginEdit', rowIndex);
+				var ed=$("#main").datagrid('getEditor',{index:rowIndex,field:'TakOrd'});
+				$(ed.target).combobox('setValue', $g($(ed.target).combobox('getValue')));  //设置Desc
 				return;
 				//$("#main").datagrid("selectRow", rowIndex); //根据索引选中该行		
 			})
@@ -92,11 +98,23 @@ function SetCellOperLink(value, rowData, rowIndex){
 	
 	var html = "";
 	if (rowData.TakFlag == "N"){
-		html = "<a href='#' onclick='OpenAuthorize("+rowIndex+")'>"+$g('开启')+"</a>";
+		html = "<a href='#' class='icon-accept a-icon' onclick='OpenAuthorize("+rowIndex+")'>"+"</a>"; //$g('开启')+ hxy 2023-02-08 ui让用图标
 	}else{
-		html = "<a href='#' onclick='CloseAuthorize("+rowIndex+")'>"+$g('关闭')+"</a>";
+		html = "<a href='#' class='icon-no a-icon' onclick='CloseAuthorize("+rowIndex+")'>"+"</a>"; //$g('关闭')+ hxy 2023-02-08 ui让用图标
 	}
     return html;
+}
+
+/// 列操作按钮
+function SetCellTakOrd(value, rowData, rowIndex){
+	
+	var res = "";
+	if (rowData.TakOrd == "医嘱"){
+		res = $g('医嘱');
+	}else{
+		res = $g('病历');
+	}
+    return res;
 }
 
 /// 开启授权
@@ -112,6 +130,12 @@ function OpenAuthorize(rowIndex){
 
 	if(rowData.TakTime==0){
 		$.messager.alert("提示:","时间必须为大于0的整数","warning");
+		$("#main").datagrid('beginEdit', rowIndex);
+		return;
+	}
+		
+	if(rowData.TakTime>720){ //hxy 2021-05-17 200000000时日期$zd报错
+		$.messager.alert("提示:","请检查授权时间(小时)合理性，已超30天","warning");
 		$("#main").datagrid('beginEdit', rowIndex);
 		return;
 	}
@@ -174,7 +198,7 @@ function initPageItemGrid(){
 		{field:'TakFlag',title:'状态',width:100,align:'center',formatter:SetCellColor},
 		{field:'LocDesc',title:'科室',width:260},
 		{field:'mUser',title:'医生',width:100},
-		{field:'TakOrd',title:'权限描述',width:100,align:'center'},
+		{field:'TakOrd',title:'权限描述',width:100,align:'center',formatter:SetCellTakOrd},
 		{field:'StartDate',title:'授权开始日期',width:120,align:'center'},
 		{field:'StartTime',title:'授权开始时间',width:120,align:'center'},
 		{field:'EndDate',title:'授权结束日期',width:120,align:'center'},
@@ -183,6 +207,11 @@ function initPageItemGrid(){
 	
 	///  定义datagrid
 	var option = {
+		toolbar:[],//hxy 2023-02-08 st
+		border:true,
+		title:$g("授权历史"),
+		iconCls:'icon-paper',
+		headerCls:'panel-header-gray',//ed
 		fitColumn:false,
 		rownumbers:true,
 		singleSelect:true,

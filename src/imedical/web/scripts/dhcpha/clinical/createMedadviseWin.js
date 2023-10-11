@@ -11,7 +11,7 @@ function createMedAdviseWin(adm)
 	$('#win').append('<div id="ptab"></div>');
 
 	$('#win').window({
-		title:'用药建议',
+		title:$g('用药建议'),
 		collapsible:true,
 		border:true,
 		closed:"true",

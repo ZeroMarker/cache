@@ -1,83 +1,85 @@
 var ManfCm, ManfGrid;
-var HospId=gHospId;
-var TableName="PH_Manufacturer";
-var init = function () {
+var HospId = gHospId;
+var TableName = 'PH_Manufacturer';
+var init = function() {
 	function InitHosp() {
-		var hospComp=InitHospCombo(TableName,gSessionStr);
-		if (typeof hospComp ==='object'){
-			HospId=$HUI.combogrid('#_HospList').getValue();
-			Query();
-			$('#_HospList').combogrid("options").onSelect=function(index,record){
-				HospId=record.HOSPRowId;
+		var hospComp = InitHospCombo(TableName, gSessionStr);
+		if (typeof hospComp === 'object') {
+			HospId = $HUI.combogrid('#_HospList').getValue();
+			$('#_HospList').combogrid('options').onSelect = function(index, record) {
+				HospId = record.HOSPRowId;
 				Query();
 			};
 		}
+		Query();
 	}
-	function Query(){
+	function Query() {
 		GetScgTree();
-		var SessionParmas=addSessionParams({BDPHospital:HospId});
-		var Paramsobj=$UI.loopBlock('#MainConditions');
-		var Params=JSON.stringify(jQuery.extend(true,Paramsobj,SessionParmas));
+		var SessionParmas = addSessionParams({ BDPHospital: HospId });
+		var Paramsobj = $UI.loopBlock('#MainConditions');
+		var Params = JSON.stringify(jQuery.extend(true, Paramsobj, SessionParmas));
 		ManfGrid.load({
 			ClassName: 'web.DHCSTMHUI.ItmManfNew',
 			QueryName: 'ItmManf',
+			query2JsonStrict: 1,
 			Params: Params,
-			rows:99999
+			rows: 99999
 		});
 	}
-	ManfCm = [[{
-				field: 'ck',
-				checkbox: true
-			}, {
-				title: 'RowId',
-				field: 'RowId',
-				width: 50,
-				saveCol: true,
-				hidden: true
-			}, {
-				title: '代码',
-				field: 'ManfCode',
-				width: 150
-			}, {
-				title: '名称',
-				field: 'ManfDesc',
-				width: 200
-			}
-		]];
+	ManfCm = [[
+		{
+			field: 'ck',
+			checkbox: true
+		}, {
+			title: 'RowId',
+			field: 'RowId',
+			width: 50,
+			saveCol: true,
+			hidden: true
+		}, {
+			title: '代码',
+			field: 'ManfCode',
+			width: 150
+		}, {
+			title: '名称',
+			field: 'ManfDesc',
+			width: 200
+		}
+	]];
 
 	ManfGrid = $UI.datagrid('#ManfGrid', {
-			lazy: false,
-			queryParams: {
-				ClassName: 'web.DHCSTMHUI.ItmManfNew',
-				QueryName: 'ItmManf',
-				rows:99999
-			},
-			columns: ManfCm,
-			checkOnSelect: false,
-			pagination: false,
-			singleSelect: false,
-			onSelect: function (Index, Row) {
-				var Manf = Row.RowId;
-				GetAuthorDetail(Manf);
-			},
-			onLoadSuccess: function (data) {
-				if (data.rows.length > 0) {
-					ManfGrid.selectRow(0);
-				}
+		queryParams: {
+			ClassName: 'web.DHCSTMHUI.ItmManfNew',
+			QueryName: 'ItmManf',
+			query2JsonStrict: 1,
+			rows: 99999
+		},
+		columns: ManfCm,
+		checkOnSelect: false,
+		pagination: false,
+		singleSelect: false,
+		onSelect: function(Index, Row) {
+			var Manf = Row.RowId;
+			GetAuthorDetail(Manf);
+		},
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
+				ManfGrid.selectRow(0);
 			}
-		});
+		}
+	});
 
 	$('#ScgTree').tree({
 		lines: true,
 		checkbox: true,
-		onBeforeCheck: function (node, checked) {
+		onBeforeCheck: function(node, checked) {
 			var IsLeaf = $(this).tree('isLeaf', node.target);
 			if (node.id.indexOf('SCG') >= 0 && IsLeaf) {
 				$UI.msg('alert', '未关联库存分类,不允许授权!');
 				return false;
 			}
 		},
-		onCheck: function (node, checked) {
+		onCheck: function(node, checked) {
 			if (node.id.indexOf('INCSC') >= 0) {
 				var Parent = $(this).tree('getParent', node.target);
 				if (checked) {
@@ -90,13 +92,13 @@ var init = function () {
 	});
 
 	$UI.linkbutton('#QueryBT', {
-		onClick: function () {
+		onClick: function() {
 			Query();
 		}
 	});
 
 	$UI.linkbutton('#ClearBT', {
-		onClick: function () {
+		onClick: function() {
 			$UI.clearBlock('#MainConditions');
 			$UI.clear(ManfGrid);
 			GetScgTree();
@@ -104,24 +106,24 @@ var init = function () {
 	});
 
 	$UI.linkbutton('#SaveBT', {
-		onClick: function () {
+		onClick: function() {
 			SaveAuthor();
 		}
 	});
 
 	InitHosp();
-}
+};
 $(init);
 
 function GetScgTree() {
-	var Params=JSON.stringify(addSessionParams({BDPHospital:HospId}));
+	var Params = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
 	$.cm({
 		wantreturnval: 0,
 		ClassName: 'web.DHCSTMHUI.MulStkCatGroup',
 		MethodName: 'GetScg',
 		ParScg: '',
-		Params :Params
-	}, function (data) {
+		Params: Params
+	}, function(data) {
 		$('#ScgTree').tree({
 			data: data
 		});
@@ -156,7 +158,7 @@ function GetAuthorDetail(Manf) {
 function SaveAuthor() {
 	var Rows = ManfGrid.getSelections();
 	if (Rows.length <= 0) {
-		$UI.msg('alert', '请选择要授权的厂商!');
+		$UI.msg('alert', '请选择要授权的生产厂家!');
 		return;
 	}
 	var ManfStr = ManfGrid.getSelectedData();
@@ -188,7 +190,7 @@ function SaveAuthor() {
 		MethodName: 'SaveAuthorData',
 		ManfStr: JSON.stringify(ManfStr),
 		ScgStr: Str
-	}, function (jsonData) {
+	}, function(jsonData) {
 		if (jsonData.success == 0) {
 			$UI.msg('success', jsonData.msg);
 		} else {

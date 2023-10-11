@@ -60,8 +60,8 @@
 				  columns:[[  
 
 				  {field:'rowid',title:'rowid',hidden:true},
-				  {field:'date',title:'记录日期',width:100},
-				  {field:'user',title:'记录人',width:100}
+				  {field:'date',title:$g('记录日期'),width:100},
+				  {field:'user',title:$g('记录人'),width:100}
 				  ]],
 				  url:url,
 				  queryParams: {

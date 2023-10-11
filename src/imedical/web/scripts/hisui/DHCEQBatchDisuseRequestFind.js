@@ -6,28 +6,91 @@
 /// 创    建:ZY  2009-08-16  No.ZY0009
 /// 修改描述:设备批量报废查找
 /// --------------------------------
+var checkedItems=[];
 function BodyLoadHandler(){
-	
 	InitUserInfo();
 	fillData();	
 	InitPage();
 	//InitTblEvt();
 	initButtonWidth()  //hisui改造 add by lmm 2018-08-20
+	initButtonColor();		//初始化极简积极按钮颜色   add by jyp 2023-02-06
+	initPanelHeaderStyle();  //初始化极简面板标题样式    add by jyp 2023-02-06
+	
+	//czf 2022-12-28 begin
+	$('#tDHCEQBatchDisuseRequestFind').datagrid({
+		onLoadSuccess:function(data){
+			DHCEQBatchDisuseRequestFindRowData = data;
+			var o = $('#tDHCEQBatchDisuseRequestFind');
+			if (data.rows && data.rows.length>0){
+				for(var i=0; i<data.rows.length; i++){
+					o.datagrid('beginEdit', i)
+					var rowData=data.rows[i];
+					var TRowID=rowData.TRowID;
+					//绑定checkbox点击事件
+					var obj = getEditorCell(i, 'TFlag','tDHCEQBatchDisuseRequestFind');
+				    obj.bind('click',function(e){
+					    var rtn = $(this).prop("checked");
+					    var CheckedRowID = $(this).parents('td[field=TFlag]').parent().children('td[field=TRowID]').text();
+					    if(rtn) addcheckItem(CheckedRowID);
+					    else removeSingleItem(CheckedRowID);
+				    })
+				    //初始化checkbox选择
+				    for (var j = 0; j < checkedItems.length; j++) {  
+				        var CheckdRowID = checkedItems[j];	//获取行号
+				    	if(TRowID==CheckdRowID){
+					    	obj.prop("checked",true);
+					    	break;
+					    }
+				    } 
+				}
+			}
+		},
+	});
+	$('#tDHCEQBatchDisuseRequestFind').datagrid('options').view.onAfterRender = function () {
+		fixTGrid();
+		SetBackGroupColor('tDHCEQBatchDisuseRequestFind');
+	};
+	//czf 2022-12-28 end
+}
+
+//czf 2022-12-28         
+function findCheckedItem(ID) {  
+    for (var i = 0; i < checkedItems.length; i++) {  
+        if (checkedItems[i] == ID) return i;  
+    }  
+    return -1;  
+}  
+
+//czf 2022-12-28
+function addcheckItem(ID) {    
+    if (findCheckedItem(ID) == -1) {  
+        checkedItems.push(ID);  
+    }  
+} 
+
+//czf 2022-12-28
+function removeSingleItem(ID) {  
+	var k = findCheckedItem(ID);  
+	if (k != -1) {  
+	    checkedItems.splice(k, 1);  
+	}  
 }
 
 function InitPage()
 {
-	KeyUp("RequestLoc^EquipType^Status^PurchaseType^Equip^UseLoc","N") //2011-10-27 DJ DJ0097
-	Muilt_LookUp("RequestLoc^EquipType^Status^PurchaseType^Equip^UseLoc"); //2011-10-27 DJ DJ0097
+	KeyUp("RequestLoc^EquipType^Status^PurchaseType^Equip^UseLoc^Hospital","N") //清空选择
+	Muilt_LookUp("RequestLoc^EquipType^Status^PurchaseType^Equip^UseLoc^Hospital");  //回车选择	
 	var Type=GetElementValue("Type");
 	if (Type!="0")
 	{
 		DisableBElement("BAdd",true);
 		DisableBElement("BAddSimple",true);
+		EQCommon_HiddenElement("BBatchDelete");   /// add by txr 2023-04-28 3463074
 	}
 	else
 	{
 		EQCommon_HiddenElement("BBatchApprove")  // modified by kdf 2019-04-03 新增界面隐藏批量审核按钮 需求号：866131
+		EQCommon_HiddenElement("BBatchCancel");  //add by txr 20230426 3462873
 		EQCommon_HiddenElement("cWaitAD");
 		$("#WaitAD").parent().empty()	//Mozy	1015142	2019-9-14
 		//HiddenCheckBox("WaitAD");  //hisui改造 add by lmm 2018-08-09
@@ -61,6 +124,27 @@ function InitPage()
 
 	var obj=document.getElementById("BBatchApprove");
 	if (obj) obj.onclick=BBatchApprove_Clicked;
+	//add by txr 20230426 3462873 begin
+	var obj=document.getElementById("BBatchCancel");
+	if (obj) obj.onclick=BBatchCancel_Clicked;
+	var obj=document.getElementById("BBatchDelete");
+	if (obj) obj.onclick=BBatchDelete_Clicked;
+	/// add by txr 2023-04-28 3463074 end
+	//Add By QW20201223 BUG: QW0085 报废汇总批量申请 begin
+	var obj=document.getElementById("BMergeOrder");
+	if (obj) obj.onclick=BMergeOrder_Clicked;
+	var MergeOrderMode=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","601007")
+	var Action=GetElementValue("Action")
+	if(MergeOrderMode!=Action)EQCommon_HiddenElement("BMergeOrder")
+	//Add By QW20201223 BUG: QW0085 报废汇总批量申请 end
+	//Add By QW20210629 BUG:QW0131 院区 begin
+	var HosCheckFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","990051");
+	if(HosCheckFlag=="0")
+	{
+		hiddenObj("cHospital",1);
+		hiddenObj("Hospital",1);
+	}
+	//Add By QW20210629 BUG:QW0131 院区 end
 }
 ///add by lmm 2018-08-09
 ///描述：hisui改造 隐藏勾选框
@@ -118,7 +202,11 @@ function BFind_Clicked()
 	var val="&vData="
 	val=val+GetVData();
 	val=val+"&TMENU="+GetElementValue("TMENU");
-	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQBatchDisuseRequestFind"+val;  //hisui改造 modify by lmm 2018-08-17
+	var url="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQBatchDisuseRequestFind"+val;  //hisui改造 modify by lmm 2018-08-17
+    if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.location.href=url;
 }
 
 function GetVData()
@@ -134,7 +222,7 @@ function GetVData()
 	val=val+"^PurchaseTypeDR="+GetElementValue("PurchaseTypeDR");	
 	val=val+"^StartDate="+GetElementValue("StartDate");
 	val=val+"^EndDate="+GetElementValue("EndDate");
-	val=val+"^WaitAD="+GetElementValue("WaitAD");
+	val=val+"^WaitAD="+(GetElementValue("WaitAD")==""?"false":GetElementValue("WaitAD")); //modified by csj 2020-11-24 勾选框隐藏获取的值是空串 需求号：1590702
 	val=val+"^QXType="+GetElementValue("QXType");
 	val=val+"^Name="+GetElementValue("Name");
 	val=val+"^UseLocDR="+GetElementValue("UseLocDR");
@@ -145,6 +233,8 @@ function GetVData()
 	val=val+"^StartInDate="+GetElementValue("StartInDate");
 	val=val+"^EndInDate="+GetElementValue("EndInDate");
 	val=val+"^EquipNo="+GetElementValue("EquipNo");		//20141202  Mozy0147
+	val=val+"^Action="+GetElementValue("Action");  //Add By QW202101121 BUG:QW0087 需求号:1703209 已经审核的汇总单，点击全部不显示报废设备。
+	val=val+"^HospitalDR="+GetElementValue("HospitalDR");   //Add By QW20210629 BUG:QW0131 院区
 	return val;
 }
 
@@ -191,6 +281,7 @@ function fillData()
 	val=val+"purchase=PurchaseType="+GetElementValue("PurchaseTypeDR")+"^";
 	val=val+"dept=RequestLoc="+GetElementValue("RequestLocDR")+"^";
 	val=val+"dept=UseLoc="+GetElementValue("UseLocDR")+"^"; //2011-20-27 DJ DJ0097
+	val=val+"hos=Hospital="+GetElementValue("HospitalDR")+"^"; //Add By QW20210629 BUG:QW0131 院区
 	var encmeth=GetElementValue("GetDRDesc");
 	var result=cspRunServerMethod(encmeth,val);
 	var list=result.split("^");
@@ -253,7 +344,11 @@ function BAddSimple_Clicked1()
     val=val+"&DType="+GetElementValue("DType");
     val=val+"&Type="+GetElementValue("Type");
     //window.location.href= 'websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQDisuseRequestSimple&RowID=&ApproveSetDR='+val  //hisui改造 modify by lmm 2018-08-17
-     window.location.href= 'dhceq.em.disusesimlpe.csp?WEBSYS.TCOMPONENT=DHCEQDisuseRequestSimple&RowID=&ApproveSetDR='+val  //hisui改造 modify by lmm 2018-08-17
+    var url='dhceq.em.disusesimlpe.csp?WEBSYS.TCOMPONENT=DHCEQDisuseRequestSimple&RowID=&ApproveSetDR='+val  //hisui改造 modify by lmm 2018-08-17
+    if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+     window.location.href= url;
 }
 
 ///modified by kdf 2019-01-22 
@@ -296,28 +391,42 @@ function TDetailHandler(rowData,rowIndex)
 function BBatchApprove_Clicked()
 {
 	var ValueList="";
-	var objtbl = $("#tDHCEQBatchDisuseRequestFind").datagrid('getRows'); //HISUI改造 add by MWZ 2018-10-10
-    var rows=objtbl.length
+    var ApproveFlag=0;
+    
+    //czf 2022-12-28 begin
+    var CurRole=GetElementValue("ApproveRole");
+  	if (CurRole == "") return;
+  	var RoleStepencmeth=GetElementValue("GetRoleStep");
+  	if (RoleStepencmeth == "") return;
+  	var encmeth=GetElementValue("AuditData");
+  	if (encmeth == "") return;
+  	
+	var rows = checkedItems.length;
+	if (rows<1)
+	{
+		messageShow('alert','info','提示','未选择单据记录!');
+		return;
+	}
 	for (var i=0;i<rows;i++)
 	{
-		var TRowID=objtbl[i].TRowID
-		if (TRowID=="") return;
-		var ValueList = TRowID+"^"+curUserID
-		var TFlag=getColumnValue(i,"TFlag")  //modified  by kdf 2019-03-06  需求号：836864
-		if (TFlag==1) //true
-		{
-			var CurRole=GetElementValue("ApproveRole")
-		  	if (CurRole=="") return;
-		  	var RoleStepencmeth=GetElementValue("GetRoleStep")
-		  	var RoleStep=cspRunServerMethod(RoleStepencmeth,TRowID,CurRole);
-		  	var valuelist=TRowID+"^"+CurRole+"^"+RoleStep+"^"+"同意"
-		  	if (RoleStep=="") return;
-		  	var encmeth=GetElementValue("AuditData")
-		  	if (encmeth=="") return;
-			var Rtn=cspRunServerMethod(encmeth,valuelist);
-		}			
+		var TRowID=checkedItems[i];
+		if (TRowID=="") continue;
+		var RoleStep=cspRunServerMethod(RoleStepencmeth,TRowID,CurRole);
+	  	var valuelist = TRowID+"^"+CurRole+"^"+RoleStep+"^"+"同意";
+	  	if (RoleStep == "") return;
+		var ValueList = TRowID+"^"+curUserID;
+		var Rtn=cspRunServerMethod(encmeth,valuelist);
+		ApproveFlag=1;
 	}
-	 window.location.reload();
+	//czf 2022-12-28 end
+	if (ApproveFlag==0)
+	{
+		messageShow('alert','info','提示','未选择单据记录!');
+	}
+	else
+	{
+		window.location.reload();
+	}
 }
 
 /// modified by kdf 2019-03-06 
@@ -337,7 +446,143 @@ function SelectAll_Clicked(value)
 	for (var i=0;i<rows;i++)
 	{
 		setColumnValue(i,"TFlag",SelectAll);
+		//czf 2022-12-28 begin
+		if(SelectAll){
+			//选中
+			addcheckItem(objtbl[i].TRowID);
+	    }else{
+		    //取消选中
+		    removeSingleItem(objtbl[i].TRowID);
+		}
+		//czf 2022-12-28 end
 	}
+}
+//Add By QW20201223 BUG: QW0085 报废汇总批量申请按钮链接
+function BMergeOrder_Clicked()
+{
+		var url="dhceq.em.mergeorder.csp?&RowID=&SourceType=34&SubType=1"
+	showWindow(url,"汇总申请","","","icon-w-paper","modal","","","large"); 
+}
+//Add By QW20210629 BUG:QW0131 院区
+function GetHospital(value)
+{
+	GetLookUpID("HospitalDR",value); 			
+}
+
+/// 批量退回
+/// add by txr 2023-04-28 3462873
+function BBatchCancel_Clicked()
+{
+	var objtbl = $("#tDHCEQBatchDisuseRequestFind").datagrid('getRows');
+	var rows=objtbl.length
+	for (var i=0;i<rows;i++)
+	{
+		var TRowID=objtbl[i].TRowID
+		if (TRowID=="") continue; 
+		var TFlag=getColumnValue(i,"TFlag")
+		if (TFlag==1)
+		{
+			var CurRole=GetElementValue("ApproveRole")
+		  	if (CurRole=="") return;
+		  	var RoleStepencmeth=GetElementValue("GetRoleStep")
+		  	var RoleStep=cspRunServerMethod(RoleStepencmeth,TRowID,CurRole);
+		  	if(RoleStep==1)
+			{
+				//批量默认取消停用
+				CancelSubmitData(TRowID)
+			}
+			else 
+			{
+				var vFlag=tkMakeServerCall("web.DHCEQBatchDisuseRequest","GetMergeOrderFlag",TRowID);
+				var CheckFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","601006");
+				if ((CheckFlag==1)&&(vFlag==0))
+				{
+					messageShow("confirm","","","继续操作还是取消(继续将无效汇总报废单中的对应明细记录)?","",function(){		
+						BCancelSubmitData(TRowID);
+					},
+					function(){return;})	
+				}
+				else if ((CheckFlag!=1)&&(vFlag==0))
+				{
+					messageShow("alert","error","提示","该报废单已存在与汇总单中,无法撤回!")
+					return
+				}
+				else {	
+					BCancelSubmitData(TRowID);
+			 	}
+			}
+		}			
+	}
+	window.location.reload();
+}
+
+/// add by txr 2023-04-28 3462873
+function CancelSubmitData(RowID)
+{	
+	var result=tkMakeServerCall("web.DHCEQChangeInfo","StopEquipBySource","34",RowID,"0");
+	if (result!=0)
+	{
+		alertShow("设备取消停用失败!")
+		return;
+	}
+	var vFlag=tkMakeServerCall("web.DHCEQBatchDisuseRequest","GetMergeOrderFlag",RowID);
+	var CheckFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","601006");
+	if ((CheckFlag==1)&&(vFlag==0))
+	{
+		messageShow("confirm","","","继续操作还是取消(继续将无效汇总报废单中的对应明细记录)?","",function(){		
+			BCancelSubmitData(RowID);
+		},
+		function(){return;})	
+	}
+	else if ((CheckFlag!=1)&&(vFlag==0))
+	{
+		messageShow("alert","error","提示","该报废单已存在与汇总单中,无法撤回!")
+		return
+	}
+	else {
+		BCancelSubmitData(RowID);
+	}
+}
+
+/// add by txr 2023-04-28 3462873
+function BCancelSubmitData(RowID)
+{
+	var RejectReason="批量退回"
+	var CurRole=GetElementValue("ApproveRole")
+	if (CurRole=="") return;
+	var combindata=RowID+"^"+RejectReason+"^"+CurRole;
+	var rtn=tkMakeServerCall("web.DHCEQBatchDisuseRequest","CancelSubmit",combindata);
+	if (rtn!=0)
+    {
+	    var list=rtn.split("^");
+	    messageShow("","","",EQMsg(list[1],list[0]));
+    }	
+	
+}
+
+/// 批量删除
+/// add by txr 2023-04-28 3463074
+function BBatchDelete_Clicked()
+{
+	var objtbl = $("#tDHCEQBatchDisuseRequestFind").datagrid('getRows');
+	var rows=objtbl.length
+	for (var i=0;i<rows;i++)
+	{
+		var TRowID=objtbl[i].TRowID
+		if (TRowID=="") continue;
+		var TFlag=getColumnValue(i,"TFlag")
+		if (TFlag==1) //true
+		{
+			var rtn=tkMakeServerCall("web.DHCEQBatchDisuseRequest","SaveDisuseRequest",TRowID,"","","1","",curUserID);
+			var list=rtn.split("^");
+			if (list[0]!=0)
+			{
+				messageShow("","","",EQMsg(list[1],list[0]));
+				return -1;
+			}
+		}			
+	}
+	 window.location.reload();
 }
 
 

@@ -14,7 +14,7 @@ function InitOrdListTabDataGrid(){
 	if (ServerObj.PracticeFlag!=1){
 		toobar.push({
 			text:'审核实习医嘱',
-			iconCls: 'icon-ok',
+			iconCls: 'icon-save-sure',
 			handler: function() {UpdateClickHandler();}
 		});
 	}

@@ -14,7 +14,15 @@ $(function(){
 	PageHandle();
 	//表格数据初始化
 	ExaBoroughMarkTabDataGridLoad();
+	InitCache();
 });
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function PageHandle(){
 	var HospID=$HUI.combogrid('#_HospList').getValue();
 	//初始化诊区
@@ -194,9 +202,13 @@ function InitExaBoroughRoomTabDataGrid(){
 			if (PageLogicObj.m_ExaListTabDataGrid==""){
 				PageLogicObj.m_ExaListTabDataGrid=InitExaListTabDataGrid();
 			}else{
-				PageLogicObj.m_ExaListTabDataGrid.datagrid('options').url=$URL+"?ClassName=web.DHCExaBorough&QueryName=FindExaBorough&borname=&HospId="+$HUI.combogrid('#_HospList').getValue();
-				PageLogicObj.m_ExaListTabDataGrid.datagrid("reload");
+				PageLogicObj.m_ExaListTabDataGrid.datagrid("unselectAll");
+				setTimeout(function(){
+					PageLogicObj.m_ExaListTabDataGrid.datagrid('options').url=$URL+"?ClassName=web.DHCExaBorough&QueryName=FindExaBorough&borname=&HospId="+$HUI.combogrid('#_HospList').getValue();
+					PageLogicObj.m_ExaListTabDataGrid.datagrid("reload");
+				},500)
 			}
+			
 		}
 	}/*,'-',{
         text: '挂号授权',

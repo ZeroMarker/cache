@@ -9,7 +9,7 @@ var mainRowId = "";
 var locField = new Ext.ux.LocComboBox({
 	id:'locField',
 	name:'locField',
-	fieldLabel:'科室',
+	fieldLabel:$g('科室'),
 	anchor:'90%',
 	groupId:gGroupId
 	});
@@ -20,7 +20,7 @@ var startDateField = new Ext.ux.DateField({
 	//width:100,
 	listWidth:100,
     allowBlank:false,
-	fieldLabel:'开始日期',
+	fieldLabel:$g('开始日期'),
 	value:new Date(),
 	anchor:'90%'
 });
@@ -30,21 +30,21 @@ var endDateField = new Ext.ux.DateField({
 	width:100,
 	listWidth:100,
     allowBlank:false,
-	fieldLabel:'结束日期',
+	fieldLabel:$g('结束日期'),
 	value:new Date(),
 	anchor:'90%'
 });
 
 var AuditedCK = new Ext.form.Checkbox({
 	id: 'AuditedCK',
-	boxLabel:'已审核',
+	boxLabel:$g('已审核'),
 	anchor:'90%',
 	allowBlank:true
 });
 var CancelAuditBT = new Ext.Toolbar.Button({
 			id:'CancelAuditBT',
-			text : '取消审核',
-			tooltip : '点击取消库存调整审核确认',
+			text : $g('取消审核'),
+			tooltip : $g('点击取消库存调整审核确认'),
 			width : 70,
 			height : 30,
 			//disabled:true,
@@ -124,37 +124,37 @@ var InadjAuditGridCm = new Ext.grid.ColumnModel([
         hidden:true
     },
 	 {
-        header:"调整单号",
+        header:$g("调整单号"),
         dataIndex:'no',
         width:200,
         align:'left',
         sortable:true
     },{
-        header:"科室名称",
+        header:$g("科室名称"),
         dataIndex:'locDesc',
         width:120,
         align:'left',
         sortable:true
     },{
-        header:"制单人",
+        header:$g("制单人"),
         dataIndex:'userName',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"制单日期",
+        header:$g("制单日期"),
         dataIndex:'date',
         width:100,
         align:'center',
         sortable:true
     },{
-        header:"制单时间",
+        header:$g("制单时间"),
         dataIndex:'time',
         width:100,
         align:'center',
         sortable:true
     },{
-        header:"完成",
+        header:$g("完成"),
         dataIndex:'comp',
         width:60,
         align:'left',
@@ -164,7 +164,7 @@ var InadjAuditGridCm = new Ext.grid.ColumnModel([
 			return '<div class="x-grid3-check-col'+(((v=='Y')||(v==true))?'-on':'')+' x-grid3-cc-'+this.id+'">&#160;</div>';
 		}
     },{
-        header:"审核",
+        header:$g("审核"),
         dataIndex:'chkFlag',
         width:60,
         align:'left',
@@ -180,44 +180,44 @@ var InadjAuditGridCm = new Ext.grid.ColumnModel([
         align:'left',
         sortable:true
     }*/,{
-        header:"审核人",
+        header:$g("审核人"),
         dataIndex:'chkUserName',
         width:100,
         align:'center',
         sortable:true
     },{
-        header:"审核日期",
+        header:$g("审核日期"),
         dataIndex:'chkDate',
         width:100,
         align:'center',
         sortable:true
     },{
-        header:"审核时间",
+        header:$g("审核时间"),
         dataIndex:'chkTime',
         width:100,
         align:'center',
         sortable:true
     },{
-        header:"进价金额",
+        header:$g("进价金额"),
         dataIndex:'rpAmt',
         width:100,
         align:'right',
         sortable:true,
         renderer:FormatGridRpAmount
     },{
-        header:"售价金额",
+        header:$g("售价金额"),
         dataIndex:'spAmt',
         width:100,
         align:'right',
         sortable:true,
         renderer:FormatGridSpAmount
     },{
-        header:"调整原因",
+        header:$g("调整原因"),
         dataIndex:'adjReason',
         width:100,
         align:'left'
     },{
-        header:"备注",
+        header:$g("备注"),
         dataIndex:'adjRemark',
         width:100,
         align:'left'
@@ -227,8 +227,8 @@ var InadjAuditGridCm = new Ext.grid.ColumnModel([
 InadjAuditGridCm.defaultSortable = true;
 
 var findInadjAudit = new Ext.Toolbar.Button({
-	text:'查询',
-    tooltip:'查询',
+	text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
 	width : 70,
 	height : 30,
@@ -242,20 +242,20 @@ function query()
 		if((startDate!="")&&(startDate!=null)){
 			startDate = startDate.format(App_StkDateFormat);
 		}else{
-			Msg.info("error","请选择起始日期!");
+			Msg.info("error",$g("请选择起始日期!"));
 			return false;
 		}
 		var endDate = Ext.getCmp('endDateField').getValue();
 		if((endDate!="")&&(endDate!=null)){
 			endDate = endDate.format(App_StkDateFormat);
 		}else{
-			Msg.info("error","请选择截止日期!");
+			Msg.info("error",$g("请选择截止日期!"));
 			return false;
 		}
 			
 		var locId = Ext.getCmp('locField').getValue();
 		if((locId=="")||(locId==null)){
-			Msg.info("error","请选择申请部门!");
+			Msg.info("error",$g("请选择申请部门!"));
 			return false;
 		}
 
@@ -264,15 +264,15 @@ function query()
 	
 	}
 var auditInadjAudit = new Ext.Toolbar.Button({
-	text:'审核',
-    tooltip:'审核',
+	text:$g('审核'),
+    tooltip:$g('审核'),
     iconCls:'page_gear',
 	width : 70,
 	height : 30,
 	handler:function(){
 		var locId = Ext.getCmp('locField').getValue();
 		if((locId=="")||(locId==null)){
-			Msg.info("error","请选择申请部门!");
+			Msg.info("error",$g("请选择申请部门!"));
 			return false;
 		}
 		//alert(mainRowId);
@@ -280,26 +280,26 @@ var auditInadjAudit = new Ext.Toolbar.Button({
 			Ext.Ajax.request({
 				url: InadjAuditGridUrl+'?actiontype=audit&adj='+mainRowId+'&userId='+UserId,
 				failure: function(result, request) {
-					Msg.info("error","请检查网络连接!");
+					Msg.info("error",$g("请检查网络连接!"));
 				},
 				success: function(result, request) {
 					var jsonData = Ext.util.JSON.decode( result.responseText );
 					if (jsonData.success=='true') {
-						Msg.info("success","审核成功!");
+						Msg.info("success",$g("审核成功!"));
 						
 						//审核成功就刷新页面
 						var startDate = Ext.getCmp('startDateField').getValue();
 						if((startDate!="")&&(startDate!=null)){
 							startDate = startDate.format(App_StkDateFormat);
 						}else{
-							Msg.info("error","请选择起始日期!");
+							Msg.info("error",$g("请选择起始日期!"));
 							return false;
 						}
 						var endDate = Ext.getCmp('endDateField').getValue();
 						if((endDate!="")&&(endDate!=null)){
 							endDate = endDate.format(App_StkDateFormat);
 						}else{
-							Msg.info("error","请选择截止日期!");
+							Msg.info("error",$g("请选择截止日期!"));
 							return false;
 						}
 						var Audited = (Ext.getCmp('AuditedCK').getValue()==true?'Y':'N');
@@ -310,16 +310,16 @@ var auditInadjAudit = new Ext.Toolbar.Button({
 						InadjAuditDetailGridDs.removeAll();
 					}else{
 						if(jsonData.info==-1){
-							Msg.info("error","已审核!");
+							Msg.info("error",$g("已审核!"));
 						}else if(jsonData.info==-2){
-							Msg.info("error","登录用户rowid为空!");
+							Msg.info("error",$g("登录用户rowid为空!"));
 						}else if(jsonData.info==-102){
-							Msg.info("error","库存处理出错!");
+							Msg.info("error",$g("库存处理出错!"));
 						}else if(jsonData.info==-103){
-							Msg.info("error","插入台账数据出错!");
+							Msg.info("error",$g("插入台账数据出错!"));
 						}else{
 						Ext.Msg.show({
-							title:'错误提示',
+							title:$g('错误提示'),
 							msg:jsonData.info,
 							buttons: Ext.Msg.OK,
 							icon:Ext.MessageBox.ERROR
@@ -337,14 +337,14 @@ function CancelAudit()
 	var rowObj = InadjAuditGrid.getSelectionModel().getSelections(); 
 	var len = rowObj.length;
 	if(len < 1){
-		Ext.Msg.show({title:'注意',msg:'请选择需要取消审核的数据!',buttons: Ext.Msg.OK,icon:Ext.MessageBox.WARNING});
+		Ext.Msg.show({title:$g('注意'),msg:$g('请选择需要取消审核的数据!'),buttons: Ext.Msg.OK,icon:Ext.MessageBox.WARNING});
 		return false;
 	}else{
 		var audited=rowObj[0].get('chkFlag');
-		if (audited!='Y'){Msg.info('warning','库存调整单尚未审核,无法取消!');return;}
+		if (audited!='Y'){Msg.info('warning',$g('库存调整单尚未审核,无法取消!'));return;}
 		var inadj = rowObj[0].get("adj");
-		if ((inadj==null)||(inadj=="")){Msg.info('warning','请选择需要取消审核的数据!');return;}
-		Ext.MessageBox.confirm('提示','取消审核将处理当前库存,请谨慎操作!是否继续?',
+		if ((inadj==null)||(inadj=="")){Msg.info('warning',$g('请选择需要取消审核的数据!'));return;}
+		Ext.MessageBox.confirm($g('提示'),$g('取消审核将处理当前库存,请谨慎操作!是否继续?'),
 			function(btn) {
 				if(btn == 'yes'){
 					Ext.Ajax.request({
@@ -352,7 +352,7 @@ function CancelAudit()
 						success: function(result, request) {
 							var jsonData = Ext.util.JSON.decode( result.responseText );
 							if (jsonData.success=='true') {
-								Ext.MessageBox.confirm('提示','取消审核成功,是否删除库存调整单?',
+								Ext.MessageBox.confirm($g('提示'),$g('取消审核成功,是否删除库存调整单?'),
 									function(btn) {
 										if(btn == 'yes'){
 											Ext.Ajax.request({
@@ -360,10 +360,10 @@ function CancelAudit()
 												success: function(result, request) {
 													var jsonData = Ext.util.JSON.decode( result.responseText );
 													if (jsonData.success=='true') {
-														Msg.info('success','删除成功!')
+														Msg.info('success',$g('删除成功!'))
 													}
 													else{
-														Msg.info('error',"删除失败!"+jsonData.info)
+														Msg.info('error',$g("删除失败!")+jsonData.info)
 													}
 												}
 											})
@@ -387,17 +387,39 @@ function CancelAudit()
 		);
 	}
 }
+
+var clearINAdjAudit = new Ext.Toolbar.Button({
+	text:$g('清空'),
+    tooltip:$g('清空'),
+    iconCls:'page_clearscreen',
+	width : 70,
+	height : 30,
+	handler:function(){
+		Ext.getCmp('AuditedCK').setValue(false);
+		InadjAuditGridDs.load({params:{start:0,limit:0}})
+		InadjAuditDetailGridDs.load({params:{start:0,limit:0}})
+		InadjAuditGridDs.removeAll();
+		InadjAuditDetailGridDs.removeAll();
+		mainRowId=""
+		SetLogInDept(locField.getStore(),'locField');
+		Ext.getCmp("startDateField").setValue(new Date());
+		Ext.getCmp("endDateField").setValue(new Date());
+		
+	}
+});
+
+
 var printInadjAudit = new Ext.Toolbar.Button({
 	id : "printInadjAudit",
-	text : '打印',
-	tooltip : '打印调整单',
+	text : $g('打印'),
+	tooltip : $g('打印调整单'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_print',
 	handler : function() {
 		var rowData=InadjAuditGrid.getSelectionModel().getSelected();
 		if (rowData ==null) {
-			Msg.info("warning", "请选择需要打印的调整单!");
+			Msg.info("warning", $g("请选择需要打印的调整单!"));
 			return;
 		}
 		var inadj = rowData.get("adj");
@@ -412,10 +434,10 @@ var formPanel = new Ext.form.FormPanel({
 	autoHeight : true,
 	frame : true,
 	//layout : 'fit',
-    tbar:[findInadjAudit,'-',auditInadjAudit,'-',CancelAuditBT,'-',printInadjAudit],
+    tbar:[findInadjAudit,'-',clearINAdjAudit,'-',auditInadjAudit,'-',CancelAuditBT,'-',printInadjAudit],
 	items : [{	
 		xtype : 'fieldset',
-		title : '条件选项',		
+		title : $g('条件选项'),		
 		autoHeight : true,
 		style:DHCSTFormStyle.FrmPaddingV,
 		items : [{
@@ -450,8 +472,8 @@ var InadjAuditPagingToolbar = new Ext.PagingToolbar({
 	store:InadjAuditGridDs,
 	pageSize:15,
 	displayInfo:true,
-	displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-	emptyMsg:"没有记录",
+	displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+	emptyMsg:$g("没有记录"),
 	doLoad:function(C){
 		var B={},
 		A=this.getParams();
@@ -544,43 +566,43 @@ var InadjAuditDetailGridCm = new Ext.grid.ColumnModel([
 			sortable:true,
 			align: 'center'
 		},*/{
-			header: '代码',
+			header: $g('代码'),
 			dataIndex: 'code',
 			width: 100,
 			//sortable:true,
 			align: 'center'
 		},{
-			header: '名称',
+			header: $g('名称'),
 			dataIndex: 'desc',
 			width: 200,
 			//sortable:true,
 			align: 'left'
 		},{
-			header:'规格',
+			header:$g('规格'),
 			dataIndex:'spec',
 			align:'left',
 			width:100,
 			//sortable:true
 		},{
-			header: "厂商",
+			header: $g("生产企业"),
 			dataIndex: 'manf',
 			width: 100,
 			align: 'left',
 			//sortable: true
 		},{
-			header: "批次~效期",
+			header: $g("批次~效期"),
 			dataIndex: 'batNo',
 			width: 200,
 			align: 'left',
 			//sortable: true
 		},{
-			header: "调整数量",
+			header: $g("调整数量"),
 			dataIndex: 'qty',
 			width: 100,
 			align: 'right',
 			//sortable: true
 		},{
-			header:'单位',
+			header:$g('单位'),
 			dataIndex:'uomDesc',
 			align:'right',
 			width:80,
@@ -592,26 +614,26 @@ var InadjAuditDetailGridCm = new Ext.grid.ColumnModel([
 			width:80,
 			sortable:true
 		}*/,{
-			header:'进价',
+			header:$g('进价'),
 			dataIndex:'rp',
 			align:'right',
 			width:80,
 			//sortable:true
 		},{
-			header:'进价金额',
+			header:$g('进价金额'),
 			dataIndex:'rpAmt',
 			align:'right',
 			width:100,
 			//sortable:true,
 			renderer:FormatGridRpAmount
 		},{
-			header:'售价',
+			header:$g('售价'),
 			dataIndex:'sp',
 			align:'right',
 			width:80,
 			//sortable:true
 		},{
-			header:'售价金额',
+			header:$g('售价金额'),
 			dataIndex:'spAmt',
 			align:'right',
 			width:100,
@@ -626,8 +648,8 @@ var InadjAuditItmPagingToolbar = new Ext.PagingToolbar({
 	store:InadjAuditDetailGridDs,
 	pageSize:15,
 	displayInfo:true,
-	displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-	emptyMsg:"没有记录"
+	displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+	emptyMsg:$g("没有记录")
 });
 
 //表格
@@ -660,7 +682,7 @@ Ext.onReady(function(){
 		GetParamCommon();  //初始化公共参数配置
 	}	
 	var panel = new Ext.Panel({
-		title:'库存调整单审核',
+		title:$g('库存调整单审核'),
 		activeTab:0,
 		region:'north',
 		height:DHCSTFormStyle.FrmHeight(1),

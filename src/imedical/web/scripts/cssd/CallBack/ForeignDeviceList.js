@@ -1,564 +1,445 @@
-﻿//外来器械登记界面js
-function deleteMain(mainRowId,PackageType){
-	if (isEmpty(mainRowId)) {
-		$UI.msg('alert','请选择要删除的单据!');
-		return false;
-	}
-	$.messager.confirm("操作提示","您确定要执行删除操作吗？",function(data){	
-		if(data){
-			$.cm({
-				ClassName:'web.CSSDHUI.PackageInfo.Package',
-				MethodName:'DeleteMain',
-				mainRowId:mainRowId,
-				PackageType:PackageType
-			},function(jsonData){
-				if(jsonData.success==0){
-					$UI.msg('success',jsonData.msg);
-					$('#PackageList').datagrid('reload');
-				}else{
-					$UI.msg('error',jsonData.msg);
-				}
-			});
-		}
-	});
-}
-
-var init = function () {
-	$UI.linkbutton('#QueryBT',{ 
-		onClick:function(){
-			var Params = JSON.stringify($UI.loopBlock('ForeignDeviceTB'));
-			MainGrid.load({
-				ClassName: "web.CSSDHUI.PackageCallBack.ForeignDeviceRegister",
-				QueryName: "GetDeviceRegister",
-				Params:Params
-			});
-		}
-	});
-	$UI.linkbutton('#AddBT',{ 
-		onClick:function(){
-            AddWin(saveMast);
-		}
-	});
-	//保存单据
-    $UI.linkbutton('#SaveBT',{ 
-        onClick:function(){
-            saveMastRows()
-        }
-    });
-    function saveMast(){
-		var Params = JSON.stringify($UI.loopBlock('ForeignDeviceTB'));
-		MainGrid.load({
-			ClassName: "web.CSSDHUI.PackageCallBack.ForeignDeviceRegister",
-			QueryName: "GetDeviceRegister",
-			Params:Params
-		});
-    }
-	
-	function saveMastRows(){
-		var Rows=MainGrid.getChangesData();
-		if(isEmpty(Rows)){
-			//$UI.msg('alert','没有需要保存的信息!');
-			return;
-		}
-        $.cm({
-			ClassName: 'web.CSSDHUI.PackageCallBack.ForeignDeviceRegister',
-			MethodName: 'jsUpdate',
-			Params: JSON.stringify(Rows)
-		},function(jsonData){
-			if(jsonData.success==0){
-				$UI.msg('success',jsonData.msg);
-				MainGrid.reload();
-			}else{
-				$UI.msg('error',jsonData.msg);
-			}
-		});
-    }
-	
-	//默认日期设置
-	var Today = new Date();
-	var Dafult={
-		RecDateValue:Today
-	}
-	$UI.fillBlock('#ForeignDeviceTB',Dafult)
-	
-	$UI.linkbutton('#QueryBT',{ 
-		onClick:function(){
-			var Params = JSON.stringify($UI.loopBlock('ForeignDeviceTB'));
-			MainGrid.load({
-				ClassName: "web.CSSDHUI.PackageCallBack.ForeignDeviceRegister",
-				QueryName: "GetDeviceRegister",
-				Params:Params
-			});
-		}
-	});
-	$UI.linkbutton('#ClearBT',{ 
-		onClick:function(){
-			$UI.clearBlock('ForeignDeviceTB');
-			$UI.clear(MainGrid);
-		}
-	});
-	
-	$UI.linkbutton('#DeleteBT',{ 
-		onClick:function(){
-			MainGrid.commonDeleteRow();
-			Delete();
-		}
-	});
-	//回收人
-	$("#Transfer").keypress(function(event) {
-		if ( event.which == 13 ) {
-			var v=$("#Transfer").val();
-			var Ret = tkMakeServerCall('web.CSSDHUI.Common.Dicts', 'GetPersonInfo',v);
-			if(Ret.split('^')[0]=="Y"){
-				$("#Transfer").val(Ret.split('^')[2]);
-				$("#TransferDr").val(Ret.split('^')[1]);
-				$("#TransferRec").focus();
-			}else{
-				$UI.msg('alert','未找到相关信息!');
-				$("#Transfer").val("");
-				$("#Transfer").focus();
-			}
-		}
-	});
-	//移交
-	$UI.linkbutton('#TransferBT',{ 
-		onClick:function(){
-			var Params = $UI.loopBlock('ForeignDeviceTB');
-			if(isEmpty(Params.Transfer)){
-				$UI.msg('alert','请输入移交人！');
-				$("#Transfer").focus();
-				return;
-			}
-			if(isEmpty(Params.TransferRec)){
-				$UI.msg('alert','请输入移交接收人！');
-				$("#TransferRec").focus();
-				return;
-			}
-			var flag=false;
-			var rows = MainGrid.getChecked();
-			for (var i=0;i<rows.length;i++)
-			{ 
-				if(rows[i].IsTransfer=="是"){
-					flag=true;
-				}
-			}
-			if(flag==true){
-				$UI.msg('alert','所选的器械包中存在已移交的器械，请核对后移交！');
-				return;
-			}
-			$.cm({
-				ClassName: 'web.CSSDHUI.PackageCallBack.ForeignDeviceRegister',
-				MethodName: 'UpdateTransfer',
-				Params: JSON.stringify(rows),
-				ParamsTB: JSON.stringify(Params)
-				},function(jsonData){
-					if(jsonData.success==0){
-						$UI.msg('success',jsonData.msg);
-						MainGrid.reload();
-						$("#Transfer").val("");
-						$("#TransferDr").val("");
-						$("#TransferRec").val("");
-					}else{
-						$UI.msg('error',jsonData.msg);
-					}
-				});
-		}
-	});
-	function Delete(){
-		var Rows=MainGrid.getSelectedData()
-		if(isEmpty(Rows)){
-			//$UI.msg('alert','没有选中的信息!')
-			return;
-		}
-		$.messager.confirm("操作提示","您确定要执行删除操作吗？",function(data){
-			if(data){
-				$.cm({
-					ClassName: 'web.CSSDHUI.PackageCallBack.ForeignDeviceRegister',
-					MethodName: 'DeleteForeignDevice',
-					Params: JSON.stringify(Rows)
-					},function(jsonData){
-						if(jsonData.success==0){
-							$UI.msg('success',jsonData.msg);
-							MainGrid.reload()
-						}else{
-						 	$UI.msg('error',jsonData.msg);
-						}
-					});
-			}
-		});
-	}
-	
-	var NotUseFlagData=[{
-		"RowId":"Y",
-		"Description":"是"
-	},{
-		"RowId":"N",
-		"Description":"否"   
-	}]
-	        
-	var NotUseFlagCombox= {
-	    type: 'combobox',
-	    options: {
-	        data:NotUseFlagData,
-	        valueField: 'RowId',
-	        textField: 'Description',
-			required:true,
-	        editable:true
-	    }
-	};
-	
-	var OperatorTypeData=[{
-		"RowId":"1",
-		"Description":"急诊手术"
-	},{
-		"RowId":"2",
-		"Description":"择期手术"   
-	}]
-	        
-	var OperatorTypeCombox= {
-	    type: 'combobox',
-	    options: {
-	        data:OperatorTypeData,
-	        valueField: 'RowId',
-	        textField: 'Description',
-	        editable:true
-	    }
-	};
-
-	var SexData=[{
-		"RowId":"1",
-		"Description":"男"
-	},{
-		"RowId":"0",
-		"Description":"女"   
-	}]
-	        
-	SexCombox= {
-	    type: 'combobox',
-	    options: {
-	        data:SexData,
-	        valueField: 'RowId',
-	        textField: 'Description',
-	        editable:true
-	    }
-	};
-	///获取使用科室数据
-	var UseLocParams=JSON.stringify(addSessionParams({Type:"All"}));
-	var UseLocCombox = {
-		type: 'combobox',
-		options: {
-			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + UseLocParams,
-			valueField: 'RowId',
-			textField: 'Description',
-			onLoadSuccess: function (data) {
-				//$(this).combobox('setValue',gLocId);
-			},
-			onSelect: function (record) {
-				var rows = MainGrid.getRows();
-				var row = rows[MainGrid.editIndex];
-				row.ExtLocDesc = record.Description;
-			}
-		}
-	};
-	///厂商下拉数据
-	var FirmBox = {
-		type: 'combobox',
-		options: {
-			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetFirm&ResultSetType=array',
-			valueField: 'RowId',
-			textField: 'Description',
-			required:true,
-			onLoadSuccess: function (data) {
-				//$(this).combobox('setValue',gLocId);
-			},
-			onSelect: function (record) {
-				var rows = MainGrid.getRows();
-				var row = rows[MainGrid.editIndex];
-				row.FirmName = record.Description;
-			}
-		}
-	};
-
-	var typeDetial=""
-	//消毒包下拉数据
-	var PackageBox = $HUI.combobox('#package', {
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPackage&ResultSetType=array&typeDetial=' + typeDetial+'&packageClassDr='+packageClassDr+'&Hospital='+gHospId,
+﻿// 外来器械登记界面js
+var init = function() {
+	// 消毒包下拉数据
+	var PkgParams = JSON.stringify(addSessionParams({ BDPHospital: gHospId, ExtFlag: 'Y' }));
+	$HUI.combobox('#package', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPkg&ResultSetType=array&Params=' + PkgParams,
 		valueField: 'RowId',
-		textField: 'Description',
-		onSelect: function (record) {
-			var rows = MainGrid.getRows();
-			var row = rows[MainGrid.editIndex];
-			row.InstruName = record.Description;
+		textField: 'Description'
+	});
+	
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
+			Query();
 		}
-	});	
+	});
+	function Query() {
+		var ParamsObj = $UI.loopBlock('ForeignDeviceTB');
+		if (isEmpty(ParamsObj.RecDateValue) || isEmpty(ParamsObj.RecEndDateValue)) {
+			$UI.msg('alert', '接收日期不能为空!');
+			return;
+		}
+		MainGrid.load({
+			ClassName: 'web.CSSDHUI.CallBack.ForeignPkgRegister',
+			QueryName: 'GetDeviceRegister',
+			Params: JSON.stringify(ParamsObj)
+		});
+	}
+	// 外来器械新增
+	function Add() {
+		if (CallBackParamObj.ExtAddType == '2') {
+			EditDetailWin('', Query);
+		} else {
+			BatchAddWin(Query);
+		}
+	}
+
+	var Default = function() {
+		$UI.clearBlock('ForeignDeviceTB');
+		$UI.clearBlock('ConditionTransfer');
+		$UI.clear(MainGrid);
+		var DefaultData = {
+			RecDateValue: DefaultBeforeDate(),
+			RecEndDateValue: DefaultEdDate()
+		};
+		$UI.fillBlock('#ForeignDeviceTB', DefaultData);
+	};
+
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
+			Default();
+		}
+	});
+
+	$UI.linkbutton('#UpdateTransferBT', {
+		onClick: function() {
+			CheckUpdateTransfer();
+		}
+	});
+	
+	// 移交,默认医院移交人为当前登录人
+	function CheckUpdateTransfer() {
+		var Params = $UI.loopBlock('ConditionTransfer');
+		if (isEmpty(Params.TransferRec)) {
+			$UI.msg('alert', '请输入外来器械厂商接收人！');
+			$('#TransferRec').focus();
+			return;
+		}
+		var CBLabelStr = '';
+		var Isflag = false;
+		var CheckState = true;
+		var rows = MainGrid.getChecked();
+		if (rows.length <= 0) {
+			$UI.msg('alert', '请选择需要移交的外来器械！');
+			return;
+		}
+		for (var i = 0; i < rows.length; i++) {
+			if (rows[i].IsTransfer == 'Y') {
+				Isflag = true;
+			}
+			if ((rows[i].NowStatus != 'SW') && (rows[i].NowStatus != 'SS') && (rows[i].NowStatus != 'C')) {
+				CheckState = false;
+			}
+			if (rows[i].NowStatus == 'C') {
+				CBLabelStr = CBLabelStr + ',' + rows[i].Label;
+			}
+		}
+		if (Isflag == true) {
+			$UI.msg('alert', '所选的器械包中存在已移交的器械，请核对后移交！');
+			return;
+		}
+		if (CheckState == false) {
+			$UI.msg('alert', '所选的器械包中存在未二次清洗、高水平消毒或回收！');
+			return;
+		}
+		if (!isEmpty(CBLabelStr)) {
+			var CheckFlag = tkMakeServerCall('web.CSSDHUI.CallBack.ForeignPkgRegister', 'CheckUse', CBLabelStr);
+			if (CheckFlag == 'Y') {
+				$UI.msg('alert', '存在已使用过器械包，必须进行二次清洗或高水平消毒后才能移交！');
+				return;
+			} else {
+				$UI.confirm('没有二次清洗或高水平消毒，是否移交?', '', '', UpdateTransfer, '', '', '', '', '');
+			}
+		} else {
+			UpdateTransfer();
+		}
+	}
+	function UpdateTransfer() {
+		var Params = $UI.loopBlock('ConditionTransfer');
+		var rows = MainGrid.getChecked();
+		showMask();
+		$.cm({
+			ClassName: 'web.CSSDHUI.CallBack.ForeignPkgRegister',
+			MethodName: 'jsUpdateTransfer',
+			Detail: JSON.stringify(rows),
+			Main: JSON.stringify(Params)
+		}, function(jsonData) {
+			hideMask();
+			if (jsonData.success == 0) {
+				$UI.msg('success', jsonData.msg);
+				MainGrid.reload();
+				$('#TransferRec').val('');
+			} else {
+				$UI.msg('error', jsonData.msg);
+			}
+		});
+	}
+
+	function flagColor(val, row, index) {
+		if (val === '0') {
+			return 'color:white;background:' + GetColorCode('green');
+		} else {
+			return 'color:white;background:' + GetColorCode('red');
+		}
+	}
+	
+	// 器械患者信息打印
+	function Print() {
+		var row = $('#ExtralList').datagrid('getSelected');
+		if (isEmpty(row)) {
+			$UI.msg('alert', '请选择需要打印的信息！');
+		}
+		var InstruName = row.InstruName;
+		var InstruCode = row.InstruCode;
+		var ExtLocDesc = row.ExtLocDesc;
+		var RecNum = row.RecNum;
+		var SickerName = row.SickerName;
+		var BedNo = row.BedNo;
+		var HospitalNo = row.HospitalNo;
+		var UseDate = row.UseDate;
+		printInfo(InstruName, InstruCode, ExtLocDesc, RecNum, SickerName, BedNo, HospitalNo, UseDate);
+	}
+
+	$UI.linkbutton('#ViewPicBT', {
+		onClick: function() {
+			var Row = MainGrid.getSelected();
+			if (isEmpty(Row)) {
+				$UI.msg('alert', '请选择登记记录！');
+				return;
+			}
+			var RowId = Row.RowId;
+			ViewPic('Ext', RowId);
+		}
+	});
+
+	// 拍照
+	$UI.linkbutton('#TakePhotoBT', {
+		onClick: function() {
+			var Row = MainGrid.getSelected();
+			if (isEmpty(Row)) {
+				$UI.msg('alert', '请选择登记记录！');
+				return;
+			}
+			var RowId = Row.RowId;
+			TakePhotoWin('Ext', RowId);
+		}
+	});
 
 	var MainCm = [[
 		{
-			title : '',
-			field : 'ck',
-			checkbox : true,
-			width : 50
+			title: '',
+			field: 'ck',
+			checkbox: true,
+			width: 50
 		}, {
 			title: 'id',
 			field: 'RowId',
-			align: 'left',
-			width:100,
+			width: 100,
 			hidden: true
 		}, {
-			title: '消毒包名称',
-			field: 'InstruDr',
-			align: 'left',
-			width:150,
+			title: '消毒包',
+			field: 'InstruName',
+			width: 150,
 			sortable: true,
-			formatter: CommonFormatter(PackageBox, 'InstruDr', 'InstruName'),
-			editor: PackageBox
+			showTip: true,
+			tipWidth: 200
 		}, {
-			title: '包标牌编码',
+			title: '标牌',
 			field: 'InstruCode',
-			align: 'left',
-			width:100,
+			width: 100,
+			sortable: true
+		}, {
+			title: '当前状态',
+			field: 'NowStatus',
+			width: 80,
 			sortable: true,
-			editor:{options:{required:true}}
+			formatter: PkgStatusRenderer
 		}, {
 			title: '使用科室',
-			field: 'ExtLocDr',
-			align: 'left',
-			width:100,
-			sortable: true,
-			formatter: CommonFormatter(UseLocCombox, 'ExtLocDr', 'ExtLocDesc'),
-			editor: UseLocCombox
+			field: 'ExtLocDesc',
+			width: 100,
+			sortable: true
 		}, {
 			title: '接收数量',
 			field: 'RecNum',
 			align: 'right',
-			width:80,
-			sortable: true,
-			editor:{type:'numberbox',options:{required:true,min:0}}
-		},{
+			width: 80,
+			sortable: true
+		}, {
 			title: '接收日期',
 			field: 'RecDate',
 			align: 'left',
-			width:100,
+			width: 100,
 			sortable: true
-		},{
-			title: '接收人Dr',
-			field: 'RecManDr',
-			align: 'left',
-			width:100,
-			sortable: true,
-			hidden: true
-		},{
+		}, {
 			title: '接收人',
 			field: 'RecManName',
-			align: 'left',
-			width:100,
+			width: 70,
 			sortable: true
 		}, {
 			title: '器械数量',
 			field: 'InstruNum',
 			align: 'right',
-			width:80,
-			sortable: true,
-			editor:{type:'numberbox',options:{min:0}}
-		},{
-			title: '是否植入物',
+			width: 70,
+			sortable: true
+		}, {
+			title: '植入物件数',
 			field: 'Implants',
-			width:80,
-			align: 'center',
-			sortable: true,
-			formatter: CommonFormatter(NotUseFlagCombox, 'Implants', 'ImplantsDesc'),
-			editor: NotUseFlagCombox
+			width: 80,
+			align: 'right',
+			sortable: true
 		}, {
 			title: '收费单号',
 			field: 'Receipt',
-			align: 'left',
-			width:100,
-			sortable: true,
-			editor:{type:'validatebox'}
+			width: 100,
+			sortable: true
 		}, {
-			title: '病人姓名',
-			field: 'SickerName',
-			align: 'left',
-			width:80,
+			title: '是否移交',
+			field: 'IsTransfer',
+			align: 'center',
+			width: 80,
 			sortable: true,
-			editor:{type:'validatebox'}
+			formatter: UseFlagRenderer
+		}, {
+			title: '患者姓名',
+			field: 'SickerName',
+			width: 80,
+			sortable: true
 		}, {
 			title: '床号',
 			field: 'BedNo',
-			align: 'right',
-			width:50,
-			sortable: true,
-			editor:{type:'numberbox',options:{min:1}}
+			width: 50,
+			sortable: true
 		}, {
 			title: '登记号',
 			field: 'HospitalNo',
-			align: 'right',
-			width:80,
+			width: 100,
 			sortable: true
-		},{
+		}, {
+			title: '患者性别',
+			field: 'PatientSex',
+			width: 70,
+			sortable: true,
+			formatter: SexRenderer
+		}, {
+			title: '患者年龄',
+			field: 'PatientAge',
+			width: 70,
+			sortable: true
+		}, {
 			title: '手术类型',
 			field: 'OperatorType',
-			width:80,
+			width: 80,
 			align: 'center',
 			sortable: true,
-			formatter: CommonFormatter(OperatorTypeCombox, 'OperatorType', 'OperatorTypeDesc'),
-			editor: OperatorTypeCombox
+			formatter: OperatorTypRenderer,
+			styler: flagColor
 		}, {
 			title: '手术医生',
 			field: 'UseDoctor',
-			align: 'left',
-			width:100,
-			sortable: true,
-			editor:{type:'validatebox'}
-		}, {
-			title: '使用日期',
-			field: 'UseDate',
-			align: 'left',
-			width:100,
+			width: 100,
 			sortable: true
-		},{
+		}, {
+			title: '使用时间',
+			field: 'UseDate',
+			width: 150,
+			sortable: true
+		}, {
 			title: '厂商',
-			field: 'FirmDr',
-			align: 'left',
-			width:100,
-			sortable: true,
-			formatter: CommonFormatter(FirmBox, 'FirmDr', 'FirmName'),
-			editor: FirmBox
+			field: 'FirmName',
+			width: 130,
+			sortable: true
 		}, {
 			title: '电话',
 			field: 'Tel',
-			align: 'right',
-			width:100,
+			width: 100,
 			sortable: true
-		},{
+		}, {
 			title: '送包人',
 			field: 'SerMan',
-			align: 'left',
-			width:100,
+			width: 100,
 			sortable: true
 		}, {
 			title: '动力器械',
 			field: 'PowerInstru',
-			align: 'left',
-			width:100,
-			sortable: true,
-			editor:{type:'validatebox'}
+			width: 80,
+			sortable: true
 		}, {
 			title: '医院Dr',
 			field: 'HospitalDr',
-			align: 'left',
-			width:100,
+			width: 100,
 			sortable: true,
 			hidden: true
 		}, {
 			title: '医院',
 			field: 'HospitalName',
-			align: 'left',
-			width:100,
+			width: 100,
 			sortable: true,
 			hidden: true
 		}, {
 			title: '器械功能检查',
 			field: 'FunctionalCheck',
-			align: 'left',
-			width:100,
+			align: 'center',
+			width: 100,
 			sortable: true,
-			editor:{type:'validatebox'},
-			hidden: true
-		}, {
-			title: '病人性别',
-			field: 'PatientSex',
-			align: 'left',
-			width:80,
-			sortable: true,
-			formatter: CommonFormatter(SexCombox, 'PatientSex', 'PatientSexDesc'),
-			editor: SexCombox
-		}, {
-			title: '病人年龄',
-			field: 'PatientAge',
-			align: 'left',
-			width:80,
-			sortable: true,
-			editor:{type:'numberbox',options:{min:0}}
+			formatter: function(value) {
+				var Desc = value;
+				if (value === '1') {
+					Desc = $g('完好');
+				} else if (value === '2') {
+					Desc = $g('异常');
+				}
+				return Desc;
+			}
 		}, {
 			title: '灭菌参数',
 			field: 'SterParameter',
-			align: 'left',
-			width:100,
+			width: 100,
 			sortable: true,
 			hidden: true
 		}, {
 			title: '高温选项',
 			field: 'SterTemp',
-			align: 'left',
-			width:100,
+			width: 100,
 			sortable: true,
 			hidden: true
 		}, {
 			title: '是否反洗',
 			field: 'BackWash',
-			align: 'left',
-			width:100,
+			align: 'center',
+			width: 100,
 			sortable: true,
 			hidden: true
 		}, {
 			title: '标签',
 			field: 'Label',
-			align: 'left',
-			width:150,
+			width: 150,
 			sortable: true
 		}, {
 			title: '移交人',
 			field: 'Transfer',
-			align: 'left',
-			width:80,
+			width: 80,
 			sortable: true
 		}, {
 			title: '移交接收人',
 			field: 'TransferRec',
-			align: 'left',
-			width:90,
+			width: 90,
 			sortable: true
 		}, {
 			title: '移交日期',
 			field: 'TransferDate',
-			align: 'left',
-			width:150,
-			sortable: true
-		}, {
-			title: '是否移交',
-			field: 'IsTransfer',
-			align: 'left',
-			width:80,
+			width: 150,
 			sortable: true
 		}, {
 			title: '备注',
 			field: 'Remark',
-			align: 'left',
-			width:100,
-			sortable: true,
-			editor:{type:'validatebox'}
+			width: 100,
+			sortable: true
 		}
 	]];
-	var Params = JSON.stringify($UI.loopBlock('ForeignDeviceTB'));
-    var MainGrid = $UI.datagrid('#ExtralList', {
-        queryParams: {
-			ClassName: "web.CSSDHUI.PackageCallBack.ForeignDeviceRegister",
-			QueryName: "GetDeviceRegister",
-			Params:Params
-        },
-		lazy:false,
-        columns: MainCm,
-		selectOnCheck: false,
-		toolbar: '#ForeignDeviceTB',
-		onClickCell: function(index, filed ,value){
-            MainGrid.commonClickCell(index,filed)
-        },
-		onBeforeEdit:function(){
-			var rowMain = $('#ExtralList').datagrid('getSelected');
-			if(rowMain.IsTransfer=="是") return false;
-		}
-    });
 
-}
+	var MainGrid = $UI.datagrid('#ExtralList', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.CallBack.ForeignPkgRegister',
+			QueryName: 'GetDeviceRegister'
+		},
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.CallBack.ForeignPkgRegister',
+			MethodName: 'jsDelete'
+		},
+		navigatingWithKey: true,
+		columns: MainCm,
+		singleSelect: false,
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
+				$('#ExtralList').datagrid('selectRow', 0);
+			}
+		},
+		toolbar: [{
+			text: '新增',
+			iconCls: 'icon-add',
+			handler: function() {
+				Add();
+			}
+		}, {
+			text: '删除',
+			iconCls: 'icon-cancel',
+			handler: function() {
+				MainGrid.commonDeleteRow(true);
+			}
+		}, {
+			text: '打印',
+			iconCls: 'icon-print',
+			handler: function() {
+				Print();
+			}
+		}],
+		sortName: 'RowId',
+		sortOrder: 'desc',
+		onClickRow: function(index, row) {
+			MainGrid.commonClickRow(index, row);
+		},
+		onDblClickRow: function(index, row) {
+			var RowId = row.RowId;
+			var NowStatus = row.NowStatus;
+			if (NowStatus != 'B') {
+				$UI.msg('alert', '非登记状态，不能修改');
+				return;
+			}
+			EditDetailWin(RowId, Query);
+		}
+	});
+	Default();
+	Query();
+};
 $(init);

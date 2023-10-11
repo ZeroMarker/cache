@@ -40,9 +40,7 @@ var SCDataGrid = $HUI.datagrid("#SCList",{
 		},
 		onSelect:function(rowIndex,rowData){
 			if (rowIndex>-1){
-				ClearBtn_onclick();
-				QClear_onclick();
-				QRDataGrid.load({ClassName:"web.DHCHM.BaseDataSet",QueryName:"GetCSCQLink",theid:rowData.ID});
+				
 				$("#SCID").val(rowData.ID);
 				$("#Code").val(rowData.SCCode);
 				$("#Desc").val(rowData.SCDesc);
@@ -53,7 +51,9 @@ var SCDataGrid = $HUI.datagrid("#SCList",{
 					$("#Active").checkbox("check");
 				}else{
 					$("#Active").checkbox("uncheck");
-				}		
+				}	
+				QClear_onclick();
+				QRDataGrid.load({ClassName:"web.DHCHM.BaseDataSet",QueryName:"GetCSCQLink",theid:$("#SCID").val()});
 			}
 		},
 		onDblClickRow:function(index,row){														
@@ -125,6 +125,8 @@ function ClearBtn_onclick(){
 	$("#Months").val("");
 	$("#Remark").val("");
 	$("#Active").checkbox("check");
+	QClear_onclick();
+	QRDataGrid.load({ClassName:"web.DHCHM.BaseDataSet",QueryName:"GetCSCQLink",theid:$("#SCID").val()});
 }
 
 /**
@@ -144,11 +146,15 @@ function SaveBtn_onclick(){
 		Active="Y";
 	}
 	if(Code==""){
-		$.messager.alert("提示","代码不能为空","info");
+		$.messager.alert("提示","编码不能为空","info");
 		return false;
 	}
 	if(Desc==""){
 		$.messager.alert("提示","描述不能为空","info");
+		return false;
+	}
+	if(!$("#Remark").validatebox("isValid")){
+		$.messager.alert("提示","备注超长","info");
 		return false;
 	}
 	var proStr="SCActive^SCCode^SCDesc^SCMonths^SCPrice^SCRemark";
@@ -179,6 +185,8 @@ function QClear_onclick(){
 	$("#Questionnaire").combobox("setValue","");
 	$("#QSeq").val("");
 	$("#QRemark").val("");
+	
+
 }
 /**
  * 保存关联问卷
@@ -213,8 +221,9 @@ function QSave_onclick(){
 			return false;
         }else {
         	$.messager.alert("成功","保存成功","success");      	
-            QRDataGrid.load({ClassName:"web.DHCHM.BaseDataSet",QueryName:"GetCSCQLink",theid:SCID});
+           // QRDataGrid.load({ClassName:"web.DHCHM.BaseDataSet",QueryName:"GetCSCQLink",theid:SCID});
             QClear_onclick();
+            QRDataGrid.load({ClassName:"web.DHCHM.BaseDataSet",QueryName:"GetCSCQLink",theid:$("#SCID").val()});
         }
 	}catch(err){
 		$.messager.alert("错误","保存失败："+err.description,"error");
@@ -243,8 +252,9 @@ function QDeleter_onclick(){
 					return false;
 		        }else {
 		        	$.messager.alert("成功","删除成功","success");      	
-		            QRDataGrid.load({ClassName:"web.DHCHM.BaseDataSet",QueryName:"GetCSCQLink",theid:SCID});
+		            //QRDataGrid.load({ClassName:"web.DHCHM.BaseDataSet",QueryName:"GetCSCQLink",theid:SCID});
 		            QClear_onclick();
+		            QRDataGrid.load({ClassName:"web.DHCHM.BaseDataSet",QueryName:"GetCSCQLink",theid:$("#SCID").val()});
 		        }
 			}catch(err){
 				$.messager.alert("错误","删除失败："+err.description,"error");

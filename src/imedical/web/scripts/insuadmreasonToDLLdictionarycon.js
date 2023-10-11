@@ -232,10 +232,10 @@ function SaveHisDicConDoALL(HisSelRowData, InsuRowData){
 function SaveHisDicConDo(HisSelRowData, InsuRowData){
 	var KeyCode=DicCode;                                                     //字典类型识别码
 	var InsuType="";    //医保类型
-	var HospitalNo="";
-	if($("#hospitalDiv").is(":hidden")==false){
+	var HospitalNo=PUBLIC_CONSTANT.SESSION.HOSPID; 
+	/*if($("#hospitalDiv").is(":hidden")==false){
 		HospitalNo=$('#HospitalBox').combobox('getValue');   //医院编码
-	}
+	}*/
 	var HisCode=HisSelRowData.HisCode;          //HIS编码
 	var HisDesc=HisSelRowData.HisDesc;          //HIS描述
 	var diccode=InsuRowData.diccode             //医保编码
@@ -303,7 +303,7 @@ function reloadInsuDicGV(loadType){
 	//var Type=DicCode;                     //字典类型识别码
 	var Type="DLLType";
 	var SearchKey=$('#SearchMedBox').searchbox('getValue');   //检索关键字
-	var ExtStr=SearchKey;
+	var ExtStr=SearchKey+"^"+PUBLIC_CONSTANT.SESSION.HOSPID;  //增加院区 20230314 ;
 	//alert("DLLType="+DLLType+"|ExtStr"+ExtStr);
 	
 	//重新加载查询结果
@@ -326,10 +326,10 @@ function reloadHisDicConGV(loadType){
 	}
 
 	var InsuType=""     //医保类型
-	var HospitalNo="";
-	if($("#hospitalDiv").is(":hidden")==false){
+	var HospitalNo=PUBLIC_CONSTANT.SESSION.HOSPID; 
+	/*if($("#hospitalDiv").is(":hidden")==false){
 		HospitalNo=$('#HospitalBox').combobox('getValue');   //医院编码
-	}
+	}*/
 	var SearchKey=$('#SearchHisBox').searchbox('getValue');   //检索关键字
 	
 	var InsuConType=$('#InsuConTypeBox').combobox('getValue');     //医保对照类型     add by xubaobao 2019 03 28
@@ -351,10 +351,10 @@ function Import()
 {
 	var KeyCode=DicCode;
 	var InsuType=""     //医保类型
-	var HospitalNo="";
-	if($("#hospitalDiv").is(":hidden")==false){
+	var HospitalNo=PUBLIC_CONSTANT.SESSION.HOSPID; 
+	/*if($("#hospitalDiv").is(":hidden")==false){
 		HospitalNo=$('#HospitalBox').combobox('getValue');   //医院编码
-	}
+	}*/
 	importData(KeyCode,InsuType,HospitalNo);		 //insuimportdictionarycon.js
 	reloadHisDicConGV('reload');
 }

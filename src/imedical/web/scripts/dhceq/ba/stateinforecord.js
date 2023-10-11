@@ -1,56 +1,64 @@
-//Modified By QW20181031 需求号:628427 
-var Columns=getCurColumnsInfo('BA.G.StateInfo.StateList','','','')
-$.extend($.fn.datagrid.defaults.view,{  
-	onAfterRender:function(target){	
-	var h = $(window).height();
-	var offset = $(target).closest('.datagrid').offset();
-	$(target).datagrid('resize',{height:parseInt(h-offset.top-13)});
+var Columns=getCurColumnsInfo('BA.G.StateInfo.StateList','','','');
+$.extend($.fn.datagrid.defaults.view,{
+	onAfterRender:function(target){
+		var h = $(window).height();
+		var offset = $(target).closest('.datagrid').offset();
+		$(target).datagrid('resize',{height:parseInt(h-offset.top-13)});
 	}
 });
-//End By QW20181031 需求号:628427 
 $(function(){
 	initMessage("");
 	defindTitleStyle(); //默认Style
 	initDocument();
 });
 
-
-function initDocument(){
-	jQuery("#BClear").linkbutton({iconCls: 'icon-w-clean'});
-	jQuery("#BClear").on("click", BClear_Clicked);
-   	initButton(); //按钮初始化
+function initDocument()
+{
+   	initButton(); 			//按钮初始化
     initButtonWidth();
-    initLookUp(); //初始化放大镜
+    InitEvent();
+    initLookUp(); 			//初始化放大镜
+    initSINoType();
+    initSIOrigin();
+    //initSISex();
+    
+    setRequiredElements("SIStartDate"); //必填项
+    setElement("SIStartDate",GetCurrentDate());
+    setElement("SIOrigin",0);
+    setElement("SINoType",0);
    	$HUI.datagrid("#stateinfodatagrid",{
 		url:$URL,
 		queryParams:{
-		    	ClassName:"web.DHCEQStateInfo",
+		    	ClassName:"web.DHCEQ.BA.BUSStateInfo",
 	        	QueryName:"GetStateInfo"
 		},
 	    toolbar:[{
-    			iconCls: 'icon-add',
-                text:'新增',  
-				id:'add',        
-                handler: function(){
-                    AddGridData();
-                }},'----------',
+	                iconCls: 'icon-save',
+	                text:'保存',
+	                handler: function(){
+	                    UpdateGridData();
+	                }
+                },'----------',
                 {
-                iconCls: 'icon-save',
-                text:'保存',
-                handler: function(){
-                    UpdateGridData();
-                }},'----------',
+	                iconCls: 'icon-cancel',
+	                text:'删除',
+					id:'delete',
+	                handler: function(){
+	                   DeleteGridData();
+	                }
+                },'----------',
                 {
-                iconCls: 'icon-cancel',    //modify by lmm 2020-04-09
-                text:'删除',
-				id:'delete',
-                handler: function(){
-                   DeleteGridData();
-                }}
-                ],
-        //Modified By QW20181031 需求号:628427 
+	                iconCls: 'icon-stamp',
+	                text:'提交审核',
+					id:'audit',
+	                handler: function(){
+	                   AuditGridData();
+	                }
+                }
+        ],
 		cache: false,
 		columns:Columns,
+		striped : true,
 		border:false,
 		pagination:true,
 		pageSize:10,
@@ -58,128 +66,166 @@ function initDocument(){
 		pageList:[10,20,30,40,50],
    		singleSelect:false,
 		onSelect:function (rowIndex, rowData) {onSelect(rowIndex,rowData);},
+		onDblClickRow :function(rowIndex,rowData){onDblSelect(rowIndex,rowData);},		//双击事件
 		onUnselect:function (rowIndex, rowData) { onUnselect(rowIndex, rowData)},
-		//End By QW20181031 需求号:628427 
 		onLoadSuccess:function(){
-			
+			creatToolbar();
 		}
 	});
-	
+	disableElement("delete",true);
+	disableElement("audit",true);
 }
-//Add By QW20181031 需求号:628427 
+function InitEvent() //初始化
+{
+	jQuery("#BClear").linkbutton({iconCls: 'icon-w-clean'});
+	jQuery("#BClear").on("click", BClear_Clicked);
+	jQuery("#BCheckEQ").linkbutton({iconCls: 'icon-w-find'});
+	jQuery("#BCheckEQ").on("click", BCheckEQ_Clicked);
+	jQuery("#BCheckNo").linkbutton({iconCls: 'icon-w-find'});
+	jQuery("#BCheckNo").on("click", BCheckNo_Clicked);
+	jQuery("#BCheckTMPFileNo").linkbutton({iconCls: 'icon-w-find'});
+	jQuery("#BCheckTMPFileNo").on("click", BCheckTMPFileNo_Clicked);
+}
+function initSINoType()
+{
+	var SINoType = $HUI.combobox('#SINoType',{
+		valueField:'id', textField:'text',panelHeight:"auto",
+		data:[{id: '0',text: '登记号'}],	// ,{id: '1',text: '就诊号'},{id: '2',text: '病案号'},{id: '3',text: '住院号'},{id: '4',text: '门诊号'},{id: '5',text: '标本号'},{id: '6',text: '医技号'}	MZY0117	2528189,2528299		2022-03-21	注释未实现的查询类型
+		onSelect : function(){}
+	});
+}
+function initSIOrigin()
+{
+	var SIOrigin = $HUI.combobox('#SIOrigin',{
+		valueField:'id', textField:'text',panelHeight:"auto",
+		data:[{id: '0',text: 'DHC_PC'},{id: '1',text: 'DHC_PDA'},{id: '2',text: 'DHC_WChat'},{id: '3',text: 'GreatWall_PDA'}],
+		onSelect : function(){}
+	});
+}
+/*function initSISex()
+{
+	var SISex = $HUI.combobox('#SISex',{
+		valueField:'id', textField:'text',panelHeight:"auto",
+		data:[{id: '1',text: '男'},{id: '2',text: '女'}],
+		onSelect : function(){}
+	});
+}*/
 function onSelect(index,selected)
 {
-	 if (selected.TStartDate=="")
-    {
-       
-        setElement("StartDate",GetCurrentDate());
-    }
-    else
-    {
-         setElement("StartDate",selected.TStartDate);
-    }
-    if (selected.TEndDate=="")
-    {
-        setElement("EndDate",GetCurrentDate());
-    }
-    else
-    {
-    	setElement("EndDate",selected.TEndDate);
-    }
-    setElement("UseContent",selected.TUseContent);
-    setElement("EndStateInfo",selected.TEndStateInfo);
-    setElement("UserDR",selected.TUserDR);
-	setElement("User",selected.TUser);
+	disableElement("delete",false);
+	disableElement("audit",false);
+}
+function onDblSelect(index,selected)
+{
+	if (selected.SIRowID=="") return;
+	var jsonData=tkMakeServerCall("web.DHCEQ.BA.BUSStateInfo","GetOneStateInfo",selected.SIRowID);
+	//alertShow(jsonData)
+	jsonData=jQuery.parseJSON(jsonData);
+	if (jsonData.SQLCODE<0)
+	{
+		messageShow('alert','error','错误提示',jsonData.Data)
+		return;
+	}
+	setElementByJson(jsonData.Data);
 	SelectedRow=index;
 }
-//Add By QW20181031 需求号:628427 
 function onUnselect(index,selected)
 {        				
      BClear_Clicked();
      SelectedRow = -1;
-}
-
-//查询
-//Modified By QW20181031 需求号:628427 
-function BFind_Clicked()
-{
-	$HUI.datagrid("#stateinfodatagrid",{    
-    url:$URL, 
-    queryParams:{
-        ClassName:"web.DHCEQStateInfo",
-        QueryName:"GetStateInfo",
-        PFileNo:getElementValue("FileNo"),
-        PNo:getElementValue("No"),
-        PName:getElementValue("Name")
-    }
-    });
-}
-
-/// 新增AddGridData方法
-function AddGridData()
-{
-	var EquipDRStr="";
-	var checkedItems = $('#stateinfodatagrid').datagrid('getChecked');
-	for(var i=0;i<checkedItems.length;i++)
-	{
-		//获取每一行的数据
-		if (EquipDRStr!="") EquipDRStr=EquipDRStr+",";
-		EquipDRStr=EquipDRStr+checkedItems[i].TEquipDR;
-	}
-	if (EquipDRStr=="")
-	{
-        jQuery.messager.alert("错误", "未选择设备!", 'error');
-        return false;
-    }
-    var Info=EquipDRStr+"&^"+getElementValue("Type")+"^^^"+getElementValue('StartDate')+"^"+getElementValue('StartTime')+"^"+getElementValue('EndDate')+"^"+getElementValue('EndTime')+"^"+getElementValue('UseContent')+"^^^^"+getElementValue('EndStateInfo')+"^"+getElementValue('UserDR')
-	var data=tkMakeServerCall("web.DHCEQStateInfo","SaveStateInfo",Info,0)
-    var list=data.split("^");
-    if (list[0] ==0)
-	{
-				$('#stateinfodatagrid').datagrid('reload'); 
-            	messageShow("","","",t[0]);
-    }   
-     else
+     var checkedItems = $('#stateinfodatagrid').datagrid('getChecked');
+     if (checkedItems.length==0)
      {
-               messageShow("","","",t[-9200]);
-               	return;
-    }
+	     disableElement("delete",true);
+	     disableElement("audit",true);
+     }
+}
+function creatToolbar()
+{
+	var lable_innerText="<h2 style='color:red'>不显示已审核记录, 双击获取记录运行信息!</h2>"; // background-color:red
+	$("#notice").html(lable_innerText);
+}
+//查询
+function BCheckEQ_Clicked()
+{
+	$HUI.datagrid("#stateinfodatagrid",{
+	    url:$URL,
+	    queryParams:{
+	        ClassName:"web.DHCEQ.BA.BUSStateInfo",
+	        QueryName:"GetStateInfo",
+	        PFileNo:getElementValue("EQFileNo"),
+	        PNo:getElementValue("EQNo"),
+	        PName:getElementValue("EQName")
+	    }
+    });
+    disableElement("delete",true);
+    disableElement("audit",true);
 }
 
-///修改
+function BCheckTMPFileNo_Clicked()
+{
+	$HUI.datagrid("#stateinfodatagrid",{
+	    url:$URL,
+	    queryParams:{
+	        ClassName:"web.DHCEQ.BA.BUSStateInfo",
+	        QueryName:"GetStateInfo",
+	        TMPFileNo:getElementValue("TMPFileNo")
+	    }
+    });
+	disableElement("delete",true);
+    disableElement("audit",true);
+}
+
+/// 保存
 function UpdateGridData()
 {
-	var RowIDStr="";
+	if ((getElementValue("SIStartDate")=="")||(getElementValue("SIStartTime")==""))
+	{
+		messageShow('alert','error','错误提示','开机日期时间不能为空!');
+		return;
+	}
+	var SIRowIDStr="";
+	var EquipDRStr="";
+	var TMPFileNo=getElementValue("SITMPFileNo").replace(/,/g, "");
 	var checkedItems = $('#stateinfodatagrid').datagrid('getChecked');
 	for(var i=0;i<checkedItems.length;i++)
 	{
-		//Modified By QW20181031 需求号:628427 
-		if (checkedItems[i].TRowID!="")
+		if (checkedItems[i].SIRowID!="")
 		{
-			if (RowIDStr!="") RowIDStr=RowIDStr+",";
-			RowIDStr=RowIDStr+checkedItems[i].TRowID;
+			if (SIRowIDStr!="") SIRowIDStr=SIRowIDStr+",";
+			SIRowIDStr=SIRowIDStr+checkedItems[i].SIRowID;
 		}
-		//End By QW20181031 需求号:628427 
+		else
+		{
+			if (checkedItems[i].SIEquipDR!="")
+			{
+				if (EquipDRStr!="") EquipDRStr=EquipDRStr+",";
+				EquipDRStr=EquipDRStr+checkedItems[i].SIEquipDR;
+			}
+		}
 	}
-	if (RowIDStr=="")
+	if ((SIRowIDStr=="")&&(EquipDRStr=="")&&(TMPFileNo==""))
 	{
-        jQuery.messager.alert("错误", "未选择设备!", 'error');
+        jQuery.messager.alert("操作错误!", "请填写设备运行信息或选择设备(运行记录)!", 'error');
         return false;
     }
-	var Info=RowIDStr+"&^"+getElementValue("Type")+"^^^"+getElementValue('StartDate')+"^"+getElementValue('StartTime')+"^"+getElementValue('EndDate')+"^"+getElementValue('EndTime')+"^"+getElementValue('UseContent')+"^^^^"+getElementValue('EndStateInfo')+"^"+getElementValue('UserDR')
-	var data=tkMakeServerCall("web.DHCEQStateInfo","SaveStateInfo",Info,1)
-    var list=data.split("^");
-    if (list[0] ==0)
+    var data=getInputList();
+	data=JSON.stringify(data);
+	//alert(EquipDRStr+","+SIRowIDStr+","+TMPFileNo)
+	var jsonData=tkMakeServerCall("web.DHCEQ.BA.BUSStateInfo","SaveData",data,EquipDRStr,SIRowIDStr,TMPFileNo);
+	jsonData=JSON.parse(jsonData)
+	if (jsonData.SQLCODE==0)
 	{
-				$('#stateinfodatagrid').datagrid('reload'); 
-            	messageShow("","","",t[0]);
-    }   
-     else
-     {
-               messageShow("","","",t[-9200]);
-               	return;
+		$('#stateinfodatagrid').datagrid('reload');
+		messageShow("","","",t[0]);
+	}
+	else
+    {
+		messageShow('alert','error','错误提示',jsonData.Data);
+		return
     }
 }
+/// 删除
 function DeleteGridData()
 {
 	var RowIDStr="";
@@ -187,21 +233,18 @@ function DeleteGridData()
 	for(var i=0;i<checkedItems.length;i++)
 	{
 		//获取每一行的数据
-		//Modified By QW20181031 需求号:628427 
-		if (checkedItems[i].TRowID!="")
+		if (checkedItems[i].SIRowID!="")
 		{
 			if (RowIDStr!="") RowIDStr=RowIDStr+",";
-			RowIDStr=RowIDStr+checkedItems[i].TRowID;
+			RowIDStr=RowIDStr+checkedItems[i].SIRowID;
 		}
-		//End By QW20181031 需求号:628427 
-		
 	}
 	if (RowIDStr=="")
 	{
         jQuery.messager.alert("错误", "未选择设备!", 'error');
         return false;
     }
-    jQuery.messager.confirm('请确认', '您确定要删除所选的行？',
+    jQuery.messager.confirm('请确认', '您确定要删除所选的行?',
         function (b)
         { 
 	        if (b==false)
@@ -210,43 +253,165 @@ function DeleteGridData()
 	        }
 	        else
 	        {
-		        	var data=tkMakeServerCall("web.DHCEQStateInfo","DeleteStateInfo",RowIDStr)
-				    var list=data.split("^");
-				    if (list[0] ==0)
-					{
-								$('#stateinfodatagrid').datagrid('reload'); 
-				            	messageShow("","","",t[0]);
-				    }   
-				     else
-				     {
-				               messageShow("","","",t[-9200]);
-				               	return;
-				    }
+		        var jsonData=tkMakeServerCall("web.DHCEQ.BA.BUSStateInfo","DeleteStateInfo",RowIDStr)
+				jsonData=JSON.parse(jsonData);
+				if (jsonData.SQLCODE==0)
+				{
+					$('#stateinfodatagrid').datagrid('reload');
+					messageShow("","","",t[0]);
+				}
+				else
+			    {
+					messageShow('alert','error','错误提示',jsonData.Data);
+					return
+			    }
 	        }
     	}
     )
 }
-
+/// 提交审核
+function AuditGridData()
+{
+	var RowIDStr="";
+	var checkedItems = $('#stateinfodatagrid').datagrid('getChecked');
+	for(var i=0;i<checkedItems.length;i++)
+	{
+		//获取每一行的数据
+		if (checkedItems[i].SIRowID!="")
+		{
+			if (RowIDStr!="") RowIDStr=RowIDStr+",";
+			RowIDStr=RowIDStr+checkedItems[i].SIRowID;
+		}
+	}
+	if (RowIDStr=="")
+	{
+        jQuery.messager.alert("错误", "未选择设备!", 'error');
+        return false;
+    }
+    jQuery.messager.confirm('请确认', '您确定要提交审核所选的行?',
+        function (b)
+        { 
+	        if (b==false)
+	        {
+	             return;
+	        }
+	        else
+	        {
+		        var jsonData=tkMakeServerCall("web.DHCEQ.BA.BUSStateInfo","AuditStateInfo",RowIDStr);
+		        jsonData=JSON.parse(jsonData);
+				if (jsonData.SQLCODE==0)
+				{
+					$('#stateinfodatagrid').datagrid('reload');
+					messageShow("","","",t[0]);
+				}
+				else
+			    {
+					messageShow('alert','error','错误提示',jsonData.Data);
+					return
+			    }
+	        }
+    	}
+    )
+}
 /// 描述:清空函数
 function BClear_Clicked()
 {
-	setElement("RowID","");
-	setElement("EquipDR","");
-	setElement("StartDate","");
-	setElement("StartTime","");
-	setElement("EndDate","");
-	setElement("EndTime","");
-	setElement("UseContent","");
-	setElement("EndStateInfo","");
-	setElement("UserDR","");
-	setElement("User","");
+	setElement("SIStartDate",GetCurrentDate());
+	setElement("SIStartTime","");
+	setElement("SIEndDate","");
+	setElement("SIEndTime","");
+	setElement("SIEndState","");
+	setElement("SIUserDR","");
+	setElement("SIUserDR_SSUSRName","");
+	setElement("SIUseContent","");
+	setElement("SIRemark","");
+	setElement("SIEQName","");
+	setElement("SIModelDR","");
+	setElement("SIModelDR_MDesc","");
+	setElement("SIStoreLocDR","");
+	setElement("SIStoreLocDR_CTLOCDesc","");
+	setElement("SITMPFileNo","");
+	setElement("SISnNumber","");
+	setElement("SILocation","");
+	setElement("SITemperature","");
+	setElement("SIHumidity","");
+	setElement("SIDisinfectFlag",0);
+	setElement("SIDisinfector","");
+	setElement("SIOrigin",0);
+	ClearPatientInfo();
 }
 
-function setSelectValue(vElementID,item)
+function setSelectValue(elementID,rowData)
 {
-	setElement(vElementID+"DR",item.TRowID)
+	setDefaultElementValue(elementID,rowData)
 }
-function clearData(vElementID)
+function clearData(elementID)
 {
-	setElement(vElementID+"DR","")
+	var elementName=elementID.split("_")[0];
+	setElement(elementName,"");
+	return;
+}
+function BCheckNo_Clicked()
+{
+	//alert("BCheckNo_Clicked:"+getElementValue("No"));		0000000017	0000000047
+	if (getElementValue("No")=="")
+	{
+		messageShow("alert",'info',"提示","请输入查询号!");
+		return
+	}
+	ClearPatientInfo();
+	// 0:登记号1:就诊号 2:病案号 3:住院号4:门诊号5:标本号6:医技号
+	if (+getElementValue("SINoType")==0)
+	{
+		var jsonData=tkMakeServerCall("web.DHCEQ.BA.BUSStateInfo","getPatWristInfo", getElementValue("No"));
+		//alert(jsonData)
+		jsonData=JSON.parse(jsonData)
+		if (jsonData.msg=="成功")
+		{
+			setElement("SINo", getElementValue("No"));
+			setElement("SIPatientID", jsonData.patInfo.patientID);
+			setElement("SIPatientName", jsonData.patInfo.name);
+			setElement("SIBedNo", jsonData.patInfo.bedCode);
+			setElement("SINurse", jsonData.patInfo.mainNurse);
+			//setElement("SISex", 1);			// 男
+			//if (jsonData.patInfo.sex=="女") setElement("SISex", 2);
+			setElement("SISex", jsonData.patInfo.sex);
+			setElement("SIAgeYr", jsonData.patInfo.age);	// MZY0123	2668211		2022-05-12
+			//setElement("SIAgeMth", jsonData.patInfo.);
+			//setElement("SIAgeDay", jsonData.patInfo.);
+			// MZY0117	2528299,2528299		2022-03-21
+			setElement("SIWardCode", jsonData.WardCode);
+			setElement("SIWardName", jsonData.patInfo.wardDesc);
+			setElement("SIUseLocDR", jsonData.CTDepartmentID);
+			setElement("SIUseLocDR_CTLOCDesc", jsonData.patInfo.ctLocDesc);
+		}
+		else
+		{
+			jQuery.messager.alert("错误", "未查询到该患者信息!", 'error');
+		}
+	}
+	else if (getElementValue("SINoType")==1)
+	{
+		
+	}
+	else if (getElementValue("SINoType")==2)
+	{
+		
+	}
+}
+function ClearPatientInfo()
+{
+	setElement("SINo","");
+	setElement("SIPatientID","");
+	setElement("SIPatientName","");
+	setElement("SIBedNo","");
+	setElement("SINurse","");
+	setElement("SISex","");
+	setElement("SIAgeYr","");
+	setElement("SIAgeMth","");
+	setElement("SIAgeDay","");
+	setElement("SIWardCode","");
+	setElement("SIWardName","");
+	setElement("SIUseLocDR_CTLOCDesc","");
+	setElement("SIUseLocDR","");
 }

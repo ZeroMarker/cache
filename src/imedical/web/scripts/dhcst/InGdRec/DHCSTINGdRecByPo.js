@@ -12,11 +12,11 @@ Ext.onReady(function() {
 		GetParam();  //初始化参数配置
 	}
 	var PhaLoc = new Ext.ux.LocComboBox({
-				fieldLabel : '科室',
+				fieldLabel : $g('科室'),
 				id : 'PhaLoc',
 				name : 'PhaLoc',
 				anchor : '90%',
-				emptyText : '订购科室...',
+				emptyText : $g('订购科室...'),
 				groupId:session['LOGON.GROUPID']
 			});
 	OperateInTypeStore.load();
@@ -34,7 +34,7 @@ Ext.onReady(function() {
 	  }
 	// 起始日期
 	var StartDate = new Ext.ux.DateField({
-				fieldLabel : '起始日期',
+				fieldLabel : $g('起始日期'),
 				id : 'StartDate',
 				name : 'StartDate',
 				anchor : '90%',
@@ -43,7 +43,7 @@ Ext.onReady(function() {
 			});
 	// 截止日期
 	var EndDate = new Ext.ux.DateField({
-				fieldLabel : '截止日期',
+				fieldLabel : $g('截止日期'),
 				id : 'EndDate',
 				name : 'EndDate',
 				anchor : '90%',
@@ -52,7 +52,7 @@ Ext.onReady(function() {
 			});
 	
 	var NotImp = new Ext.form.Checkbox({
-				fieldLabel : '未入库',
+				fieldLabel : $g('未入库'),
 				id : 'NotImp',
 				name : 'NotImp',
 				anchor : '90%',
@@ -60,7 +60,7 @@ Ext.onReady(function() {
 				checked : true
 			});
 	var PartlyImp = new Ext.form.Checkbox({
-		fieldLabel : '部分入库',
+		fieldLabel : $g('部分入库'),
 		id : 'PartlyImp',
 		name : 'PartlyImp',
 		anchor : '90%',
@@ -77,9 +77,9 @@ Ext.onReady(function() {
 		checked : false
 	});
 	*/
-	// 供货厂商
+	// 经营企业
 	var Vendor = new Ext.ux.VendorComboBox({
-			fieldLabel : '供货厂商',
+			fieldLabel : $g('经营企业'),
 			id : 'Vendor',
 			name : 'Vendor',
 			anchor : '90%'
@@ -88,8 +88,8 @@ Ext.onReady(function() {
 	// 查询订单按钮
 	var SearchBT = new Ext.Toolbar.Button({
 				id : "SearchBT",
-				text : '查询',
-				tooltip : '点击查询订单',
+				text : $g('查询'),
+				tooltip : $g('点击查询订单'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_find',
@@ -102,8 +102,8 @@ Ext.onReady(function() {
 	// 清空按钮
 	var ClearBT = new Ext.Toolbar.Button({
 				id : "ClearBT",
-				text : '清屏',
-				tooltip : '点击清屏',
+				text : $g('清屏'),
+				tooltip : $g('点击清屏'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_clearscreen',
@@ -132,8 +132,8 @@ Ext.onReady(function() {
 	// 保存按钮
 	var SaveBT = new Ext.Toolbar.Button({
 				id : "SaveBT",
-				text : '保存',
-				tooltip : '点击保存',
+				text :$g( '保存'),
+				tooltip : $g('点击保存'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_save',
@@ -151,20 +151,20 @@ Ext.onReady(function() {
 		var nowdate = new Date();
 		var record = MasterGrid.getSelectionModel().getSelected();
 		if(record==null){
-			Msg.info("warning", "没有需要保存的数据!");				
+			Msg.info("warning", $g("没有需要保存的数据!"));				
 			return false;
 		}
 		
 		var Status = record.get("PoStatus");				
 		if (Status ==2) {
-			Msg.info("warning", "该订单已经全部入库，不能再入库!");				
+			Msg.info("warning", $g("该订单已经全部入库，不能再入库!"));				
 			return false;
 		}			
 		
 		// 判断入库部门和供货商是否为空
 		var phaLoc = Ext.getCmp("PhaLoc").getValue();
 		if (phaLoc == null || phaLoc.length <= 0) {
-			Msg.info("warning", "请选择入库部门!");
+			Msg.info("warning",$g("请选择入库部门!"));
 			return false;
 		}
 		
@@ -179,7 +179,7 @@ Ext.onReady(function() {
 			}
 		}
 		if (rowCount <= 0 || count <= 0) {
-			Msg.info("warning", "请输入入库明细!");
+			Msg.info("warning", $g("请输入入库明细!"));
 			return false;
 		}
 		// 2.重新填充背景
@@ -195,7 +195,7 @@ Ext.onReady(function() {
 						&& item_i == item_j) {
 					changeBgColor(i, "yellow");
 					changeBgColor(j, "yellow");
-					Msg.info("warning", "药品重复，请重新输入!");
+					Msg.info("warning", $g("药品重复，请重新输入!"));
 					return false;
 				}
 			}
@@ -209,7 +209,7 @@ Ext.onReady(function() {
 			var freedrugflag=DetailStore.getAt(i).get('FreeDrugFlag');
 			
 			if ((item != "")	&& (ExpDate.format("Y-m-d") <= nowdate.format("Y-m-d"))) {
-				Msg.info("warning", incDesc+"，有效期不能小于或等于当前日期!");
+				Msg.info("warning", incDesc+$g("，有效期不能小于或等于当前日期!"));
 				var cell = DetailGrid.getSelectionModel().getSelectedCell();
 				DetailGrid.getSelectionModel().select(cell[0], 1);
 				changeBgColor(i, "yellow");
@@ -218,7 +218,7 @@ Ext.onReady(function() {
 			
 			var qty = DetailStore.getAt(i).get("PurQty");
 			if ((item != "") && (qty == null || qty <= 0)) {
-				Msg.info("warning", incDesc+"，入库数量不能小于或等于0!");
+				Msg.info("warning", incDesc+$g("，入库数量不能小于或等于0!"));
 				var cell = DetailGrid.getSelectionModel().getSelectedCell();
 				DetailGrid.getSelectionModel().select(cell[0], 1);
 				changeBgColor(i, "yellow");
@@ -227,12 +227,12 @@ Ext.onReady(function() {
 			var realPrice = DetailStore.getAt(i).get("Rp");
 			var sPrice = DetailStore.getAt(i).get("Sp");
 			if(sPrice==0&&gParam[15]==1){
-				Msg.info("warning", incDesc+"，请维护定价类型!");
+				Msg.info("warning", incDesc+$g("，请维护定价类型!"));
 				return false;
 			}
 			if (freedrugflag!="Y"){
 				if((item != "")&&(realPrice == null || realPrice <= 0)) {
-					Msg.info("warning", incDesc+"，入库进价不能小于或等于0!");
+					Msg.info("warning", incDesc+$g("，入库进价不能小于或等于0!"));
 					var cell = DetailGrid.getSelectionModel().getSelectedCell();
 					DetailGrid.getSelectionModel().select(cell[0], 1);
 					changeBgColor(i, "yellow");
@@ -240,7 +240,7 @@ Ext.onReady(function() {
 				}
 			}else{
 				if((item != "")&&(realPrice == null || realPrice < 0)){
-					Msg.info("warning", incDesc+"，入库进价不能小于0!");
+					Msg.info("warning", incDesc+$g("，入库进价不能小于0!"));
 					var cell = DetailGrid.getSelectionModel().getSelectedCell();
 					DetailGrid.getSelectionModel().select(cell[0], 1);
 					changeBgColor(i, "yellow");
@@ -248,7 +248,7 @@ Ext.onReady(function() {
 				}
 			}
 			if ((item != "")&& (Number(realPrice))>Number(sPrice)) {
-				Msg.info("warning", incDesc+"，入库进价不能大于售价!");
+				Msg.info("warning", incDesc+$g("，入库进价不能大于售价!"));
 				var cell = DetailGrid.getSelectionModel()
 						.getSelectedCell();
 				//DetailGrid.getSelectionModel().select(cell[0], 1);
@@ -258,7 +258,7 @@ Ext.onReady(function() {
 			var expDate = DetailStore.getAt(i).get("ExpDate").format('Y-m-d');
 			var flag=ExpDateValidator(expDate);									
 			if(flag==false){
-				Msg.info('warning',incDesc+'，该药品距离失效期少于'+gParam[2]+'天!');								    	
+				Msg.info('warning',incDesc+$g('，该药品距离失效期少于'+gParam[2]+'天!'));								    	
 				var cell = DetailGrid.getSelectionModel()
 						.getSelectedCell();
 				//DetailGrid.getSelectionModel().select(cell[0], 1);
@@ -266,7 +266,7 @@ Ext.onReady(function() {
 				return false;
 				 }
 			//新增入库数量是否允许小数判断 2020-02-21 yangsj
-            if(gParam[19]!=1)  //1 允许录入小数
+            if(gParam[19]!="Y")  //1 允许录入小数
             {
         		var record = DetailStore.getAt(i)
                 var buomId=record.get("BUomId")
@@ -279,7 +279,7 @@ Ext.onReady(function() {
                 }
                 if((buomQty.toString()).indexOf(".")>=0)
                 {
-                    Msg.info("warning", record.get("IncDesc")+"入库数量换算成基本单位之后存在小数，不能入库！请核对入库配置：入库数量换算为基本单位是否允许小数!");
+                    Msg.info("warning", record.get("IncDesc")+$g("入库数量换算成基本单位之后存在小数，不能入库！请核对入库配置：入库数量换算为基本单位是否允许小数!"));
                     return;
                 }
                 
@@ -352,7 +352,7 @@ Ext.onReady(function() {
 						if (jsonData.success == 'true') {
 							// 刷新界面
 							var IngrRowid = jsonData.info;
-							Msg.info("success", "保存成功!");
+							Msg.info("success", $g("保存成功!"));
 							// 7.显示入库单数据
 							// 跳转到入库制单界面
 							window.location.href='dhcst.ingdrec.csp?Rowid='+IngrRowid+'&QueryFlag=1';
@@ -360,17 +360,17 @@ Ext.onReady(function() {
 						} else {
 							var ret=jsonData.info;
 							if(ret==-99){
-								Msg.info("error", "加锁失败,不能保存!");
+								Msg.info("error", $g("加锁失败,不能保存!"));
 							}else if(ret==-2){
-								Msg.info("error", "生成入库单号失败,不能保存!");
-							}else if(ret==-3){
-								Msg.info("error", "保存入库单失败!");
+								Msg.info("error", $g("生成入库单号失败,不能保存!"));
+							}else if(ret==-3){$g(
+								Msg.info("error", "保存入库单失败!"));
 							}else if(ret==-4){
-								Msg.info("error", "未找到需更新的入库单,不能保存!");
+								Msg.info("error", $g("未找到需更新的入库单,不能保存!"));
 							}else if(ret==-5){
-								Msg.info("error", "保存入库单明细失败!");
+								Msg.info("error", $g("保存入库单明细失败!"));
 							}else {
-								Msg.info("error", "部分明细保存不成功："+ret);
+								Msg.info("error", $g("部分明细保存不成功：")+ret);
 							}
 							
 						}
@@ -387,7 +387,7 @@ Ext.onReady(function() {
 		// 判断转移单是否已完成
 		var cell = DetailGrid.getSelectionModel().getSelectedCell();
 		if (cell == null) {
-			Msg.info("warning", "没有选中行!");
+			Msg.info("warning", $g("没有选中行!"));
 			return;
 		}
 		// 选中行
@@ -400,7 +400,7 @@ Ext.onReady(function() {
 
 	// 单位
 	var CTUom = new Ext.form.ComboBox({
-				fieldLabel : '单位',
+				fieldLabel : $g('单位'),
 				id : 'CTUom',
 				name : 'CTUom',
 				anchor : '90%',
@@ -410,7 +410,7 @@ Ext.onReady(function() {
 				displayField : 'Description',
 				allowBlank : false,
 				triggerAction : 'all',
-				emptyText : '单位...',
+				emptyText : $g('单位...'),
 				selectOnFocus : true,
 				forceSelection : true,
 				minChars : 1,
@@ -419,9 +419,9 @@ Ext.onReady(function() {
 				valueNotFoundText : ''
 			});
 
-	// 生产厂商
+	// 生产生产企业
 	var Phmnf = new Ext.form.ComboBox({
-				fieldLabel : '厂商',
+				fieldLabel : $g('生产企业'),
 				id : 'Phmnf',
 				name : 'Phmnf',
 				anchor : '90%',
@@ -431,7 +431,7 @@ Ext.onReady(function() {
 				displayField : 'Description',
 				allowBlank : false,
 				triggerAction : 'all',
-				emptyText : '厂商...',
+				emptyText : $g('生产企业...'),
 				selectOnFocus : true,
 				forceSelection : true,
 				minChars : 1,
@@ -458,7 +458,7 @@ Ext.onReady(function() {
 	function Query() {
 		var phaLoc = Ext.getCmp("PhaLoc").getValue();
 		if (phaLoc =='' || phaLoc.length <= 0) {
-			Msg.info("warning", "请选择订购部门!");
+			Msg.info("warning", $g("请选择订购部门!"));
 			return;
 		}
 		var startDate = Ext.getCmp("StartDate").getRawValue();
@@ -469,7 +469,7 @@ Ext.onReady(function() {
 		var Status=notimp+","+partlyimp;
 		var Vendor = Ext.getCmp("Vendor").getValue();
 
-		//开始日期^截止日期^订单号^供应商id^科室id^完成标志^审核标志^订单状态(未入库，部分入库，全部入库)
+		//开始日期^截止日期^订单号^经营企业id^科室id^完成标志^审核标志^订单状态(未入库，部分入库，全部入库)
 		var ListParam=startDate+'^'+endDate+'^^'+Vendor+'^'+phaLoc+'^Y^^'+Status;
 		var Page=GridPagingToolbar.pageSize;
 		MasterStore.removeAll();
@@ -479,7 +479,7 @@ Ext.onReady(function() {
 			params:{start:0, limit:Page},
 			callback : function(r,options, success){
 				if(success==false){
-     				Msg.info("error", "查询错误，请查看日志!");
+     				Msg.info("error", $g("查询错误，请查看日志!"));
      			}else{
      				if(r.length>0){
 	     				MasterGrid.getSelectionModel().selectFirstRow();
@@ -504,11 +504,11 @@ Ext.onReady(function() {
 	function renderPoStatus(value){
 		var PoStatus='';
 		if(value==0){
-			PoStatus='未入库';			
+			PoStatus=$g('未入库');			
 		}else if(value==1){
-			PoStatus='部分入库';
+			PoStatus=$g('部分入库');
 		}else if(value==2){
-			PoStatus='全部入库';
+			PoStatus=$g('全部入库');
 		}
 		return PoStatus;
 	}
@@ -542,32 +542,32 @@ Ext.onReady(function() {
 				sortable : true,
 				hidden : true
 			}, {
-				header : "订单号",
+				header : $g("订单号"),
 				dataIndex : 'PoNo',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "订购科室",
+				header : $g("订购科室"),
 				dataIndex : 'PoLoc',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "供应商",
+				header : $g("经营企业"),
 				dataIndex : 'Vendor',
 				width : 120,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "订单状态",
+				header : $g("订单状态"),
 				dataIndex : 'PoStatus',
 				width : 90,
 				align : 'left',
 				sortable : true,
 				renderer:renderPoStatus
 			}, {
-				header : "订单日期",
+				header : $g("订单日期"),
 				dataIndex : 'PoDate',
 				width : 80,
 				align : 'right',
@@ -578,8 +578,8 @@ Ext.onReady(function() {
 		store:MasterStore,
 		pageSize:PageSize,
 		displayInfo:true,
-		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录"
+		displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+		emptyMsg:$g("没有记录")
 	});
 	var MasterGrid = new Ext.grid.GridPanel({
 				title : '',
@@ -640,7 +640,7 @@ Ext.onReady(function() {
 						});
 		CTUomStore.load();
 		
-		//装载所有厂商
+		//装载所有生产企业
 		PhManufacturerStore.reload({
 			params : {
 						start : 0,
@@ -652,33 +652,33 @@ Ext.onReady(function() {
 	
 	var nm = new Ext.grid.RowNumberer();
 	var DetailCm = new Ext.grid.ColumnModel([nm, {
-				header : "订单明细id",
+				header : $g("订单明细id"),
 				dataIndex : 'PoItmId',
 				width : 100,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "药品RowId",
+				header : $g("药品RowId"),
 				dataIndex : 'IncId',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : '药品代码',
+				header : $g('药品代码'),
 				dataIndex : 'IncCode',
 				width : 80,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '药品名称',
+				header : $g('药品名称'),
 				dataIndex : 'IncDesc',
 				width : 230,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "数量",
+				header : $g("数量"),
 				dataIndex : 'AvaQty',
 				width : 80,
 				align : 'right',
@@ -693,11 +693,11 @@ Ext.onReady(function() {
 								
 								var qty = field.getValue();
 								if (qty == null || qty.length <= 0) {
-									Msg.info("warning", "数量不能为空!");
+									Msg.info("warning", $g("数量不能为空!"));
 									return;
 								}
 								if (qty <= 0) {
-									Msg.info("warning", "数量不能小于或等于0!");
+									Msg.info("warning", $g("数量不能小于或等于0!"));
 									return;
 								}
 								
@@ -716,7 +716,7 @@ Ext.onReady(function() {
 		                            }
 		                            if((buomQty.toString()).indexOf(".")>=0)
 		                            {
-			                            Msg.info("warning", "入库数量换算成基本单位之后存在小数，不能入库！请核对入库配置：入库数量换算为基本单位是否允许小数!");
+			                            Msg.info("warning", $g("入库数量换算成基本单位之后存在小数，不能入库！请核对入库配置：入库数量换算为基本单位是否允许小数!"));
 		                                return;
 		                            }
 		                            
@@ -727,7 +727,7 @@ Ext.onReady(function() {
 					}
 				})
 			}, {
-				header : "单位",
+				header : $g("单位"),
 				dataIndex : 'PurUomId',
 				width : 80,
 				align : 'left',
@@ -735,7 +735,7 @@ Ext.onReady(function() {
 				renderer :  Ext.util.Format.comboRenderer2(CTUom,"PurUomId","PurUom"), // pass combo instance to reusable renderer					
 				editor : new Ext.grid.GridEditor(CTUom)
 			}, {
-				header : "进价",
+				header : $g("进价"),
 				dataIndex : 'Rp',
 				width : 60,
 				align : 'right',
@@ -750,12 +750,12 @@ Ext.onReady(function() {
 										var cost = field.getValue();
 										if (cost == null
 												|| cost.length <= 0) {
-											Msg.info("warning", "进价不能为空!");
+											Msg.info("warning", $g("进价不能为空!"));
 											return;
 										}
 										if (cost <= 0) {
 											Msg.info("warning",
-													"进价不能小于或等于0!");
+													$g("进价不能小于或等于0!"));
 											return;
 										}
 										
@@ -766,14 +766,14 @@ Ext.onReady(function() {
 							}
 				})
 			}, {
-				header : "售价",
+				header : $g("售价"),
 				dataIndex : 'Sp',
 				width : 60,
 				align : 'right',
 				
 				sortable : true
 			},{
-				header : "厂商",
+				header :$g( "生产企业"),
 				dataIndex : 'ManfId',
 				width : 180,
 				align : 'left',
@@ -781,7 +781,7 @@ Ext.onReady(function() {
 				editor : new Ext.grid.GridEditor(Phmnf),
 				renderer : Ext.util.Format.comboRenderer2(Phmnf,"ManfId","Manf") // pass combo instance to reusable renderer					
 			}, {
-				header : "批号",
+				header : $g("批号"),
 				dataIndex : 'BatNo',
 				width : 90,
 				align : 'left',
@@ -795,7 +795,7 @@ Ext.onReady(function() {
 								
 								var batchNo = field.getValue();
 								if (batchNo == null || batchNo.length <= 0) {
-									Msg.info("warning", "批号不能为空!");
+									Msg.info("warning", $g("批号不能为空!"));
 									return;
 								}
 								var cell = DetailGrid.getSelectionModel()
@@ -806,7 +806,7 @@ Ext.onReady(function() {
 					}
 				}))
 			}, {
-				header : "有效期",
+				header : $g("有效期"),
 				dataIndex : 'ExpDate',
 				width : 100,
 				align : 'center',
@@ -820,19 +820,19 @@ Ext.onReady(function() {
 							if (e.getKey() == Ext.EventObject.ENTER) {
 								var expDate = field.getValue();
 								if (expDate == null || expDate.length <= 0) {
-									Msg.info("warning", "有效期不能为空!");
+									Msg.info("warning", $g("有效期不能为空!"));
 									return;
 								}
 								var nowdate = new Date();
 								if (expDate.format("Y-m-d") <= nowdate
 										.format("Y-m-d")) {
-									Msg.info("warning", "有效期不能小于或等于当前日期!");
+									Msg.info("warning", $g("有效期不能小于或等于当前日期!"));
 									return;
 								}
 									var expDate = field.getValue().format('Y-m-d');
 									var flag=ExpDateValidator(expDate);									
 								    if(flag==false){
-								    	Msg.info('warning','该药品距离失效期少于'+gParam[2]+'天!');								    	
+								    	Msg.info('warning',$g('该药品距离失效期少于')+gParam[2]+$g('天!'));								    	
 								    }
 																
 							}
@@ -841,33 +841,33 @@ Ext.onReady(function() {
 				})
 				
 			}, {
-				header : "订购数量",
+				header :$g( "订购数量"),
 				dataIndex : 'PurQty',
 				width : 80,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "已入库数量",
+				header : $g("已入库数量"),
 				dataIndex : 'ImpQty',
 				width : 80,
 				align : 'left',
 				sortable : true
 			},{
-				header : "转换率",
+				header : $g("转换率"),
 				dataIndex : 'ConFac',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "基本单位",
+				header : $g("基本单位"),
 				dataIndex : 'BUomId',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-	            header: "免费药标识",
+	            header: $g("免费药标识"),
 	            dataIndex: 'FreeDrugFlag',
 	            width: 80,
 	            align: 'left',
@@ -877,15 +877,15 @@ Ext.onReady(function() {
 					store : DetailStore,
 					pageSize : RecByPoPageSize,
 					displayInfo : true,
-					displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
-					prevText : "上一页",
-					nextText : "下一页",
-					refreshText : "刷新",
-					lastText : "最后页",
-					firstText : "第一页",
-					beforePageText : "当前页",
-					afterPageText : "共{0}页",
-					emptyMsg : "没有数据"
+					displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
+					prevText : $g("上一页"),
+					nextText :$g( "下一页"),
+					refreshText : $g("刷新"),
+					lastText : $g("最后页"),
+					firstText : $g("第一页"),
+					beforePageText : $g("当前页"),
+					afterPageText : $g("共{0}页"),
+					emptyMsg : $g("没有数据")
 				});
 	var DetailGrid = new Ext.grid.EditorGridPanel({
 				id : 'DetailGrid',
@@ -911,7 +911,7 @@ Ext.onReady(function() {
 			{ 
 				id: 'mnuDelete', 
 				handler: deleteDetail, 
-				text: '删除' 
+				text: $g('删除' )
 			}
 		] 
 	}); 
@@ -968,7 +968,7 @@ Ext.onReady(function() {
 
 	var HisListTab = new Ext.form.FormPanel({
 		labelWidth : 60,
-		title:'入库制单-依据订单',
+		title:$g('入库制单-依据订单'),
 		labelAlign : 'right',
 		autoHeight:true,
 		frame : true,
@@ -976,7 +976,7 @@ Ext.onReady(function() {
 		items : [{
 			layout: 'column',    // Specifies that the items will now be arranged in columns
 			xtype:'fieldset',
-			title:'查询条件',
+			title:$g('查询条件'),
 			style:DHCSTFormStyle.FrmPaddingV,
 			defaults: {border:false},    // Default config options for child items
 			items:[{ 				
@@ -1009,7 +1009,7 @@ Ext.onReady(function() {
 		                items:HisListTab
 		            }, {
 		                region: 'west',
-		                title: '订单',
+		                title: $g('订单'),
 		                collapsible: true,
 		                split: true,
 		                width: document.body.clientWidth*0.3, // give east and west regions a width
@@ -1021,7 +1021,7 @@ Ext.onReady(function() {
 		               
 		            }, {
 		                region: 'center',
-		                title: '订单明细',
+		                title: $g('订单明细'),
 		                layout: 'fit', // specify layout manager for items
 		                items: DetailGrid       
 		               

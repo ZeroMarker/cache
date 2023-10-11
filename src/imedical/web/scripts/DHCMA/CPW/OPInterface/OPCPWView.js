@@ -27,7 +27,7 @@ var ShowOPCPWView = function(){
 		MethodName: "CheckIsNowDayVisit",
 		aEpisodeID: EpisodeID
 	}, function (ret) {
-		if(ret!="1"){
+		if(ret!="0"){				//返回0表示在有效期内
 			$("#btnGetIn").hide();
 		}
 	})
@@ -51,7 +51,7 @@ var ShowOPCPWView = function(){
 			  }
 		}
 	}else{
-		$.messager.alert("错误提示", "该科室没有维护路径信息！", "error");
+		$.messager.alert($g("错误提示"), $g("该科室没有维护路径信息！"), "error");
 		return;	
 	}
 
@@ -71,41 +71,32 @@ var ShowOPCPWView = function(){
 	$("#btnGetIn").on('click',function(){			
 		var btnTxt=$('#btnGetIn .l-btn-text').text();
 		if (!selectID){
-			$.messager.alert("错误提示", "请先点击要进入的路径或不入径申请再进行操作！", "error");
+			$.messager.alert($g("错误提示"), $g("请先点击要进入的路径或不入径申请再进行操作！"), "error");
 			return;	
 		}else{
-			if(btnTxt=="进入路径"){		//入径
+			if(btnTxt==$g("进入路径")){		//入径
 				var retCheck = $m({
 					ClassName:"DHCMA.CPW.OPCPS.InterfaceSrv",
 					MethodName:"CheckIsInOPCPW",
 					aEpisodeID:EpisodeID,
 					dataType:"text"
-					}, false)
+				}, false)
 				if(retCheck==""){
-					var ret =$m({
-						ClassName:"DHCMA.CPW.OPCPS.InterfaceSrv",
-						MethodName:"GetInOPCPW",
-						aEpisodeID:EpisodeID,
-						aInputs:selectID+"^"+session['DHCMA.USERID']+"^"+session['DHCMA.CTLOCID']+"^"+session['DHCMA.CTWARDID']+"^"+visitID+"^"+diagnos,
-						aBtnType:"btnGetIn"
-					}, false);
-					if(parseInt(ret)>0){
-						$.messager.popover({msg: '入径成功！',type:'info',timeout: 2000});
-						$("#btnGetIn").hide();
-					}else{
-						$.messager.popover({msg: '入径失败！',type:'info',timeout: 2000});
-					}
+					var aInputStr=selectID+"^"+session['DHCMA.USERID']+"^"+session['DHCMA.CTLOCID']+"^"+session['DHCMA.CTWARDID']+"^"+visitID+"^"+diagnos;
+					//CA签名验证
+					CASignLogonModal('OPCPW','GetInOPCPW',{
+						signData: aInputStr,		// 签名数据
+						dhcmaOperaType:'I'
+					},GetInOPCPWFun,EpisodeID,aInputStr);
+				}else{
+					$.messager.alert($g("错误提示"), retCheck, "error");
 					setTimeout(function(){
 						websys_showModal('close');
 					},2300)
-				}else{
-					$.messager.alert("错误提示", retCheck, "error");
-					return;
 				}
 			}
-			setTimeout(function(){
-				websys_showModal('close');
-			},2300)
+			
+			
 		}
 	});
 		
@@ -114,18 +105,21 @@ var ShowOPCPWView = function(){
 		$('#'+obj.id).addClass("CPWactive");
 		selectID=obj.id.split("-")[1];
 		visitID=obj.getAttribute("visit");
-		$('#CPWDiag-right').panel("header").find('div.panel-title').text("路径说明")
+		$('#CPWDiag-right').panel("header").find('div.panel-title').text($g("路径说明"))
 		$('#InitText').css('display','none');
 		$('#CPWName').css('display','block');
 		var parentSelectorId=$('#'+obj.id).parent().attr('id');
 		
 		if(parentSelectorId=="CurEpInCPW"){
-			$('#LastPathInfo').css('display','block');			
+			//$('#LastPathInfo').css('display','block');
+			$('#LastPathInfo').show();			
 		}else{
 			if(visitID!=""){
-				$('#LastPathInfo').css('display','block');
+				//$('#LastPathInfo').css('display','block');
+				$('#LastPathInfo').show();
 			}else{
-				$('#LastPathInfo').css('display','none');
+				//$('#LastPathInfo').css('display','none');
+				$('#LastPathInfo').hide();
 			}
 		}
 		
@@ -149,6 +143,28 @@ var ShowOPCPWView = function(){
 			$('#ApplyPerson').html(retArr[5]);
 			$('#HelpDoc').html(retArr[6]);
 		});
+	}
+	
+	// 入径方法
+	GetInOPCPWFun = function(aEpisodeID,aInputStr){
+		var ret =$m({
+			ClassName:"DHCMA.CPW.OPCPS.InterfaceSrv",
+			MethodName:"GetInOPCPW",
+			aEpisodeID:aEpisodeID,
+			aInputs:aInputStr,
+			aBtnType:"btnGetIn"
+		}, false);
+		if(parseInt(ret)>0){
+			$.messager.popover({msg: '入径成功！',type:'info',timeout: 2000});
+			$("#btnGetIn").hide();
+		}else{
+			$.messager.popover({msg: '入径失败！',type:'info',timeout: 2000});
+		}
+		
+		setTimeout(function(){
+			websys_showModal('close');
+		},2300)
+		if(parseInt(ret)>0) return parseInt(ret); 
 	}
 	
 }

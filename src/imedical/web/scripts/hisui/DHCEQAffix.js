@@ -21,9 +21,21 @@ function BodyLoadHandler()
 	$('#tDHCEQAffix').datagrid('options').view.onAfterRender = function(){
 	   	HiddenTableIcon("DHCEQAffix","TRowID","TFunds");
 	    HiddenTableIcon("DHCEQAffix","TRowID","TSplitFlag");
+	    fixTGrid()  //add by lmm 2020-08-24
 	}	
+	initPanelHeaderStyle();
+	initButtonColor();//cjc 2023-01-18 设置极简积极按钮颜色
+	hidePanelTitle();//cjc 2023-02-01 隐藏标题面版
 }
-
+//add by lmm 2020-08-24
+function fixTGrid(){
+	if ($('#tDHCEQAffix').length==0) return ;
+	var h = $(window).height();
+	var offset = $('#tDHCEQAffix').closest('.datagrid').offset();
+ if (!offset) return ;
+	$('#tDHCEQAffix').datagrid('resize',{height:parseInt(h-offset.top-13)});
+ $('#tDHCEQAffix').datagrid('options').view.onAfterRender = function(){}
+}
 	 /*
 // Mozy003008	1267690,1268548		2020-04-09 注释
 ///begin add by czf 20180831 Hisui改造：原BodyLoadHandler()方法无法获取当前页行数
@@ -129,12 +141,14 @@ function BAdd_Click()
 		}
 		if (result>0)
 		{
-			var equipdr=GetElementValue("EquipDR");
-			var str="dhceqchangeaccount.csp?RowID="+equipdr;
-			showWindow(str,"设备调账",1100,"96%","icon-w-paper","modal","","","",refreshWindow);  //modify by lmm 2019-08-05 941349
+			// MZY0153	3248096		2023-02-20	跳转新界面
+			//var str="dhceqchangeaccount.csp?RowID="+GetElementValue("EquipDR");
+			var str="dhceq.em.changeaccount.csp?RowID="+GetElementValue("EquipDR")+"&ReadOnly="+GetElementValue("ReadOnly");
+			showWindow(str,"设备调账",1100,"96%","icon-w-paper","modal","","","",refreshWindow);
 		}
 		else
 		{
+			if (result==-1003) alert("该设备有未审核的调账记录,不能自动新增调整原值,请手动增加.");	// MZY0154	3248212		2023-03-03
 			location.reload();
 		}
 	}
@@ -258,6 +272,8 @@ function CombinData()
 	combindata=combindata+"^"+GetElementValue("LeaveFacNoInfo");
 	combindata=combindata+"^"+GetElementValue("InvoiceNo");		//InvoiceNo	//Mozy	2019-7-12
 	combindata=combindata+"^"+GetElementValue("LeaveDate");		//LeaveDate	//Mozy	2019-7-12
+	combindata=combindata+"^"+GetElementValue("RegisterNo");	//医疗注册证
+	combindata=combindata+"^"+GetElementValue("LimitYears");	//使用年限
   	return combindata;
 }
 
@@ -325,6 +341,8 @@ function SetData(rowid)
 	SetElement("LeaveFacNoInfo",list[sort+8]);
 	SetElement("InvoiceNo",list[27]);		//Mozy	2019-7-12
 	SetElement("LeaveDate",list[28]);
+	SetElement("RegisterNo",list[30]);	//注册证号
+	SetElement("LimitYears",list[31]);
 }
 ///HISUI改造 add by czf 20180831
 function SelectRowHandler(index,rowdata)	{
@@ -401,6 +419,8 @@ function Clear()
 	SetElement("LeaveFacNoInfo","");
 	SetElement("InvoiceNo","");		//Mozy	2019-7-12
 	SetElement("LeaveDate","");
+	SetElement("RegisterNo","");	//注册证号
+	SetElement("LimitYears","");
 }
 
 function GetCurrencyID(value)

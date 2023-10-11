@@ -1,10 +1,10 @@
 ﻿<!-- 主页面-->
 <div class="hisui-layout" data-options="fit:true" id="main">
 	<div data-options="region:'west',border:false" style="width:360px;padding:10px;padding-right:0px;">
-<!-- 		<div id="toolSearch" style="width: 60px;cursor: pointer;">
-			<div id="btnPathSearch" class="panel-icon icon-search" title="筛查"></div>
-			<div id="btnPathReload" class="panel-icon icon-reload" title="刷新" style="left: 40px;"></div>
-		</div> -->
+		<div id="toolSearch" style="width: 60px;cursor: pointer;">
+			<a id="btnPathSearch" class="icon panel-icon icon-search"  title="点击按条件进行筛查" style="width:16px;"></a>
+			<a id="btnPathReload" class="icon panel-icon icon-reload"  title="点击显示当前登录院区可用全部路径" style="left: 35px;width:16px;"></a>
+		</div>
 		<div id="cpwTypeTab" class="hisui-tabs tabs-gray" style="width:300px;padding:0px;" data-options="tools:'#toolSearch',isBrandTabs:true,fit:true">
 			<div title="临床路径列表" data-options="iconCls:'icon-resort'"></div>
 			<div id="InCPW" title="住院路径" style="padding:10px;">
@@ -39,6 +39,7 @@
 										<a class="hisui-linkbutton btnEpItemAdd" id="addIconMrgl" data-options="iconCls:'icon-add',plain:true,stopAllEventOnDisabled:true">新增</a>	
 										<a class="hisui-linkbutton itemSEdit" id="editIconMrgl"  data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true">修改</a>				 
 										<a class="hisui-linkbutton itemSDel" id="delIconMrgl" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true">删除</a>
+										<span style="margin-top:3px;float:right;color:#1474AF;"><span class="icon icon-tip" style="margin-right:5px;">&nbsp;&nbsp;&nbsp;&nbsp;</span>提示信息：双击一行数据，关联模板ID！</span>
 									</div>
 								</div>
 							</div>   
@@ -62,6 +63,7 @@
 										<a class="hisui-linkbutton itemSEdit" id="editIconMrgz"  data-options="iconCls:'icon-write-order',plain:true,stopAllEventOnDisabled:true">修改</a>				 
 										<a class="hisui-linkbutton itemSDel" id="delIconMrgz" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true">删除</a>
 										<a class="hisui-linkbutton itemSync hisui-tooltip" id="syncIconMrgz" title="同步后，后续阶段中描述相同的项目将自动关联相同医嘱，切勿重复操作" data-options="iconCls:'icon-save',plain:true,stopAllEventOnDisabled:true,position:'bottom'">同步关联医嘱</a>
+										<a class="hisui-linkbutton itemSplit" id="splitOrdMrgz" data-options="iconCls:'icon-split',plain:true,stopAllEventOnDisabled:true">医嘱分组</a>
 										<span style="margin-top:3px;float:right;color:#1474AF;"><span class="icon icon-tip" style="margin-right:5px;">&nbsp;&nbsp;&nbsp;&nbsp;</span>提示信息：双击一行数据，关联医嘱！</span>
 									</div>
 								</div>
@@ -72,14 +74,18 @@
 			</div>
 			
 			<div id="mm" class="hisui-menu" style="width:130px;">
+				<div id="btnPubApply" data-options="iconCls:'icon-submit',stopAllEventOnDisabled:true">申请</div>
 				<div id="btnPubForm" data-options="iconCls:'icon-ok',stopAllEventOnDisabled:true">发布</div>
 				<div id="btnDelForm" data-options="iconCls:'icon-remove',stopAllEventOnDisabled:true">作废</div>
 				<div id="btnCopyPath" data-options="iconCls:'icon-copy-drug',stopAllEventOnDisabled:true">复制为新路径</div>
 				<div id="btnExportForm" data-options="iconCls:'icon-excel',stopAllEventOnDisabled:true">导出表单</div>
+				<div id="btnExportOrd" data-options="iconCls:'icon-excel',stopAllEventOnDisabled:true">导出医嘱</div>
+				<div id="btnViewForm" data-options="iconCls:'icon-eye',stopAllEventOnDisabled:true">表单预览</div>
+				<div id="btnCalcCost" data-options="iconCls:'icon-fee',stopAllEventOnDisabled:true">测算费用</div>
 			</div>
 		</div>
 		<div id ="workP" class="hisui-layout" data-options="fit:true,border:false">			
-			<div id="" data-options="region:'north',border:false,collapsible:false">
+			<div id="" data-options="region:'north',border:false,collapsible:false" style="padding-bottom:10px;">
 				<div id="divBase" title="路径信息维护" class="hisui-panel" data-options="border:true,iconCls:'icon-resort',fit:true,headerCls:'panel-header-gray'" style="overflow: hidden;">
 					<table style="width:100%;border-collapse:separate;border-spacing:10px">
 						<tr>
@@ -105,11 +111,25 @@
 						</tr>
 						<tr>
 							<td style="text-align:right">
+								<label>参考费用</label>
+							</td>
+							<td id="" style="">
+								<input class="textbox" id="txtFormCost" style="width:150px;"/>
+							</td>
+							<td style="text-align:right">
+								<label>参考天数</label>
+							</td>
+							<td style="">
+								<input class="textbox" id="txtFormDays" style="width:200px"/>
+							</td>
+							<td style="text-align:right">
 								<label>病种路径</label>
 							</td>
 							<td id="" style="">
 								<input id="cboEntityDr" style="width:157px;"/>
 							</td>
+						</tr>
+						<tr style="display:none;">
 							<td style="text-align:right">
 								<label>付费病种</label>
 							</td>
@@ -122,27 +142,32 @@
 							<td id="">
 								<input id="cboQCEntityDr" style="width:157px;"/>
 							</td>
-						</tr>
+							<td>
+							</td>
+						</tr>						
 						<tr>
 							<td style="text-align:right">
-								<label>参考费用</label>
+								<label>合并症路径</label>
 							</td>
-							<td id="" style="">
-										<input class="textbox" id="txtFormCost" style="width:150px;"/>
+							<td id="">
+								<div id="txtIsCompl" class="hisui-switchbox" style="width:80px;" data-options="onText:'是',offText:'否',
+									size:'small',animated:true,onClass:'primary',offClass:'gray'">
+								</div>
 							</td>
 							<td style="text-align:right">
-								<label>参考天数</label>
+								<label>手术路径</label>
 							</td>
-							<td style="">
-								<input class="textbox" id="txtFormDays" style="width:200px"/>
+							<td id="">
+								<div id="txtIsOper" class="hisui-switchbox" style="width:80px;" data-options="onText:'是',offText:'否',
+									size:'small',animated:true,onClass:'primary',offClass:'gray'">
+								</div>
 							</td>
 							<td style="text-align:right">
 								<label>是否有效</label>
 							</td>
 							<td id="">
-								<!-- <input class="textbox" id="txtIsActiveDesc" style="width:200px;"/> -->
 								<div id="txtIsActive" class="hisui-switchbox" style="width:80px;" data-options="onText:'是',offText:'否',
-									size:'small',animated:true,onClass:'primary',offClass:'gray',onSwitchChange:function(event,value){console.log(event);}">
+									size:'small',animated:true,onClass:'primary',offClass:'gray'">
 								</div>
 							</td>
 						</tr>
@@ -150,18 +175,35 @@
 							<td colspan = "6" style="">
 								<div class="hisui-panel" data-options="border:false" style="height:65px;text-align:center;">
 									<a id="btnSaveInfo" class="hisui-linkbutton" data-options="iconCls:'icon-w-save'">保存</a>
-									<a id="btnEditNote" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">编辑适用文档</a>
+									<a id="btnEditNote" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">编辑帮助文档</a>
 									<a id="btnInitVer" class="hisui-linkbutton" data-options="iconCls:'icon-w-copy'">新增版本</a>
 								</div>
 							</td>
 						</tr>
 					</table>
 				</div>
+			</div> 
+			<div id="div-east" data-options="region:'east',title:'排除信息',collapsed:true,split:true,headerCls:'panel-header-gray',iconCls:'icon-paper'" style="width:420px;">
+				<div id="tabs" class="hisui-tabs tabs-gray" data-options="split:true,fit:true,border:false" style="border:false">
+					<div title="排除诊断详情" style="border:false;">
+						<div id="Mcusttb">
+							<a class="hisui-linkbutton" id="btnMDFin" data-options="iconCls:'icon-compare-yes',plain:true,stopAllEventOnDisabled:true"> 已维护排除诊断</a>
+							<input id="MdiagSearch" data-options="prompt:'输入ICD/名称查询'" class="hisui-searchbox"/>
+						</div>
+						<table id="gridSlectMDiagOrds" data-options="toolbar:'#Mcusttb',border:false"></table>
+					</div>
+					<div title="排除手术详情">
+						<div id="Ocusttb">
+							<a class="hisui-linkbutton" id="btnOpFin" data-options="iconCls:'icon-compare-yes',plain:true,stopAllEventOnDisabled:true"> 已维护排除手术</a>
+							<input id="OperSearch" data-options="prompt:'输入ICD/名称查询'" class="hisui-searchbox"/>
+						</div>
+						<table id="gridSlectOperOrds" data-options="toolbar:'#Ocusttb',border:false"></table>
+					</div>
+				</div>
 			</div>
-			
 			<!-- 准入信息维护+中药方剂维护 -->
-			<div id="div-south" data-options="region:'center',border:false" style="padding-top:10px;overflow: hidden;">
-				<div id="tabs" class="hisui-tabs tabs-gray" data-options="fit:true" style="border:false;">
+			<div id="div-south" data-options="region:'center',border:false" style="overflow: hidden;">
+				<div id="tabsw" class="hisui-tabs tabs-gray" data-options="fit:true" style="border:false;">
 					<div title="准入信息维护" style="border:false;">
 						<table id="gridPathAdmit" data-options="border:false">
 						</table>
@@ -176,9 +218,8 @@
 							</div>
 						</div>
 					</div>
-				</div>
+				</div>				
 			</div>
-			
 		</div>
 	</div>
 </div>
@@ -234,6 +275,7 @@
 				<input class='hisui-checkbox' type="checkbox" id="chkEpIsOperDay">
 			</td>
 		</tr>
+		<!--
 		<tr>
 			<td class="r-label">
 				<label for="chkActive">是否第一天</label>		
@@ -242,6 +284,7 @@
 				<input class='hisui-checkbox' type="checkbox" id="chkEpIsFirstDay">
 			</td>
 		</tr>
+		-->
 		<tr>
 			<td class="r-label">
 				<label for="chkActive">是否有效</label>		
@@ -292,7 +335,7 @@
 		</tr>
 		<tr>
 			<td class="r-label">
-				<label for="chkActive">是否可选</label>		
+				<label for="chkActive">是否必选</label>		
 			</td>
 			<td style="padding-left:0px;">
 				<input class='hisui-checkbox' type="checkbox" id="chkItemIsOption">
@@ -331,6 +374,7 @@
 	<a class="hisui-linkbutton" id="cancelIconMrg" data-options="iconCls:'icon-cancel',plain:true,stopAllEventOnDisabled:true">取消编辑</a>
 	<a class="hisui-linkbutton" id="editIconMrg" data-options="iconCls:'icon-save',plain:true,stopAllEventOnDisabled:true">保存</a>
 	<a class="hisui-linkbutton" id="delIconMrg" data-options="iconCls:'icon-delete',plain:true,stopAllEventOnDisabled:true">删除</a>
+	<a id="admitTip" style="cursor:pointer;margin-top:5px;margin-right:5px;float:right;color:#1474AF;"><span class="icon icon-help" style="padding:5px 12px;"></span>操作说明</a>
 </div>
 
 <!-- 方剂证型维护 编辑页面 -->
@@ -371,7 +415,7 @@
 	</table>
 </div>
 
-<div id="winPathSearch" class="hisui-dialog" title="表单筛查" style="width:340px;height:360px;"　
+<div id="winPathSearch" class="hisui-dialog" title="表单筛查" style="width:600px;height:530px;"　
 data-options="closed:true,iconCls:'icon-search',resizable:true,modal:true,buttons:[{
 		text:'按条件筛查',
 		handler:function(){SearchPath()}
@@ -379,20 +423,73 @@ data-options="closed:true,iconCls:'icon-search',resizable:true,modal:true,button
 	<table class="search-table">
 		<tr>
 			<td class="r-label">
-				<label>院区</label>
+				<label>院区选择</label>
 			</td>
 			<td>
-				<input class="hisui-combobox textbox" id="cboHosp" style="width:250px;">					
+				<input class="hisui-combobox textbox" id="cboSSHosp" style="width:350px;">					
 			</td>
 		</tr>
 		<tr>
 			<td class="r-label">
-				<label>描述</label>
+				<label>路径关键字</label>
 			</td>
 			<td>
-				<input id="DescSearch" href="#" class="hisui-searchbox" style="width:250px;"/>
+				<input id="DescSearch" class="hisui-validatebox textbox" type="text" style="width:343px;"/>
+			</td>
+		</tr>
+		<tr>
+			<td class="r-label">
+				<label>版本选择</label>
+			</td>
+			<td>
+				<input id="PathVer" class="hisui-combobox textbox" style="width:350px;"/><a id="VerTip" class="icon icon-tip" style="padding-left:25px;"></a>
 			</td>
 		</tr>
 	</table>
-	<div id="kwSearch" style="padding:0 10px;"></div>
+	
+
+	<div id="kwApplyStatus" style="padding:0 10px;"></div>
+	<div id="kwPubStatus" style="padding:0 10px;"></div>
+	<div id="kwVersion" style="padding:0 10px"></div>
+	<div id="kwPath" style="padding:0 10px;"></div>	
+</div>
+
+<!-- 显示审核意见 -->
+<div id="winShowMsgOpinion"  class="hisui-dialog" title="查看审核详情" style="width:1200px;height:500px;"	
+data-options="closed:true,iconCls:'icon-paper-info',resizable:true,modal:true,buttons:'#bb-MsgDialog'">
+	<div id="pubMsgInfo" style="padding:10px;">
+		<div id="pubStep" style="height: 120px;"></div>
+		<div>当前选中：<label id="currStep" style="font-weight:bold;"></label></div>
+		<div id="msgContent" ></div>
+	</div>
+</div>
+<div id="bb-MsgDialog">
+	<a href="#" class="hisui-linkbutton" data-options="stopAllEventOnDisabled:true" id="btnMsgExport">导出</a>
+</div>
+
+<!-- 准入规则操作说明 -->
+<div id="winAdmitTipInfo"  class="hisui-dialog" title="操作说明" style="width:850px;height:600px;"	
+data-options="closed:true,iconCls:'icon-w-paper',resizable:true,modal:true">
+	<div style="margin:5px 20px;line-height:25px;">
+		<p style="color:#40A2DE"><b>检查模式</b></p>
+		<p >
+		【诊断符合】：临床医生保存诊断时，匹配患者当日诊断是否符合准入规则，符合提示入径；<br/>
+		【手术符合】：临床医生保存手术申请后，检查当此申请中拟施手术是否符合准入规则，符合提示入径；<br/>
+		【诊断手术同时符合】：需将准入信息维护中”诊断手术组合“维护为是，诊断保存或手术申请保存后，检查当日诊断和最新申请中拟施手术是否同时符合准入规则，符合则提示入径；<br/>
+		【中西医诊断同时符合】：需将准入信息维护中”中西诊断组合“维护为是，诊断保存时，需至少一个中医诊断、一个西医诊断同时符合才算诊断符合；<br/>
+		【诊断匹配模式】：支持多种诊断匹配方式，a.诊断保存时只检查主诊断，不考虑诊断类型；b. 严格按照准入信息维护的诊断类型匹配临床诊断优先级；c.检查当日所开所有诊断，既不考虑是否主诊断，也不考虑诊断类型。以上三种诊断匹配模式可通过修改配置参数”CPWIsOnlyCheckMainDiag“实现。
+		</p>
+	</div>
+	<div style="margin:5px 20px;line-height:25px;">
+		<p style="color:#40A2DE"><b>维护规则</b></p>
+		<p>
+		维护诊断/手术的代码和关键字时：<br/>
+		若存在多个诊断或关键字，可使用英文逗号“,”进行分隔，符合该符号分隔的其一且不属于排除内容的即表示符合准入规则，英文逗号“,”表示“或者”的含义，如：a,b,c,d,e。<br/>
+		在英文逗号分隔的内容中，如需同时满足多个条件，使用“&”进行连接，该符号表示“并且”的含义，如：a,b&c,d,e。</br>
+		诊断代码或手术代码维护时，支持维护到类目或亚目或细目均可，存在范围时，使用短横线“-”进行连接，短横线“-”可以表示范围，如：a&b,c-d,e。<br/>
+		注意：规则维护中，不支持括号的使用。</br>
+		</br>
+		有排除的诊断和手术可先选择左侧某条规则记录，针对该记录添加需要排除的诊断和手术。
+		</p>
+	</div>
 </div>

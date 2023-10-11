@@ -127,31 +127,26 @@ function InitInstrRecLoc(){
 	                var InstrRecLocRowid=rows["InstrRecLocRowid"];
 	                if (!InstrRecLocRowid) InstrRecLocRowid="";
                 	var editors = InstrRecLocDataGrid.datagrid('getEditors', editRow);
-					var OrdDep = rows.OrdDepDr; //editors[0].target.combobox('getValue');
-					if(!OrdDep){
-						OrdDep="";
-						//$.messager.alert('提示',"请选择病人所在科室!");
-						//return false;
-					}
+					//var OrdDepListDr = rows.OrdDepListDr; //editors[0].target.combobox('getValue');
 					var RecLoc =  rows.RecLocDr; //editors[1].target.combobox('getValue');
 					if(!RecLoc){
 						$.messager.alert('提示',"请选择接收科室!");
 						return false;
 					}
-					var Default =  editors[2].target.is(':checked');
+					var Default =  editors[1].target.is(':checked');
 					if (Default) Default=1;
 					else Default=0;
 	                var OrdCat=rows.OrdSubCat; //editors[3].target.combobox('getValue');
 	                if (!OrdCat) OrdCat="";
 					var PriorDr=rows.OrdPrior; //editors[4].target.combobox('getValue');
 					if (!PriorDr) PriorDr="";
-					var OrdTimeStart=editors[5].target.val();
+					var OrdTimeStart=editors[4].target.val();
 					var time=/^([0-1]?[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/ 
 			        if ((time.test(OrdTimeStart) != true)&&(OrdTimeStart!="")) {
 		             $.messager.alert("提示", "开始时间格式不正确,正确格式为:12:00:00", "error");
 				     return false;
 				    }
-					var OrdTimeEnd=editors[6].target.val();
+					var OrdTimeEnd=editors[5].target.val();
 			        if ((time.test(OrdTimeEnd) != true)&&(OrdTimeEnd!="")) {
 		              $.messager.alert("提示", "结束时间格式不正确,正确格式为:12:00:00", "error");
 				      return false;
@@ -159,7 +154,10 @@ function InitInstrRecLoc(){
 					var TimeRange=OrdTimeStart+"~"+OrdTimeEnd;
 					var Hos=$HUI.combogrid('#_HospList').getValue(); //editors[7].target.combobox('getValue');
 					if (!Hos) Hos="";
-					var RecLocStr=OrdDep+"!"+RecLoc+"!"+Default+"!"+OrdCat+"!"+PriorDr+"!"+TimeRange+"!"+Hos+"!"+InstrRecLocRowid;
+					var OnlyChemotherapeuticAndTPN= editors[6].target.is(':checked');
+					if (OnlyChemotherapeuticAndTPN) OnlyChemotherapeuticAndTPN="Y";
+					else OnlyChemotherapeuticAndTPN="N";
+					var RecLocStr="!"+RecLoc+"!"+Default+"!"+OrdCat+"!"+PriorDr+"!"+TimeRange+"!"+Hos+"!"+InstrRecLocRowid+"!"+OnlyChemotherapeuticAndTPN;
 					var value=$.m({ 
 						ClassName:"DHCDoc.DHCDocConfig.InstrRecloc", 
 						MethodName:"Save",
@@ -192,20 +190,63 @@ function InitInstrRecLoc(){
                 InstrRecLocDataGrid.datagrid("rejectChanges");
                 InstrRecLocDataGrid.datagrid("unselectAll");
             }
-        }];
+        },{
+			text: '浏览/关联患者所在科室',
+			iconCls: 'icon-barbell',
+			handler: function() {
+				var rows =InstrRecLocDataGrid.datagrid("getSelections");
+				if (rows.length!=1){
+					$.messager.alert('提示',"请选中一行数据");
+					return false;
+				}
+				var HospID=$HUI.combogrid('#_HospList').getValue();
+				if ((!HospID)||(HospID=="")) {
+					HospID=session['LOGON.HOSPID'];
+				}
+				if (!rows[0].InstrRecLocRowid){
+					$.messager.alert('提示',"请先保存此行数据");
+					return false;
+				}
+				var InstrRecLocRowid=rows[0].InstrRecLocRowid;
+				var OrdDepListDr=rows[0].OrdDepListDr;
+				
+				websys_showModal({
+					url:"dhcdoc.util.tablelist.csp?TableName=CT_Loc&IDList=" + OrdDepListDr + "&HospDr="+HospID+"&Filter=DHCDoc.DHCDocConfig.InstrRecloc.CheckActiveAdmLoc",	//DisplayType=Search&
+					title:'关联患者所在科室',
+					width:400,height:610,
+					closable:false,
+					CallBackFunc:function(result){
+						websys_showModal("close");
+						if ((typeof result==="undefined")||(result===false)){
+							return;
+						}
+						var value=tkMakeServerCall("DHCDoc.DHCDocConfig.InstrRecloc","SaveOrdDep",InstrRecLocRowid,result)
+						if(value.split("^")[0]=="0"){
+							InstrRecLocDataGrid.datagrid('load');
+							InstrRecLocDataGrid.datagrid('unselectAll');
+							$.messager.show({title:"提示",msg:"保存成功"});        					
+						}else{
+							$.messager.alert('提示',"保存失败:"+value);
+							return false;
+						}
+					}
+				})
+			}
+		}];
     var InstrRecLocColumns=[[    
 	                { field : 'InstrRecLocRowid',title : '',width : 1,hidden:true  
                     },
-                    { field: 'OrdDepDr', title: '', width: 100,hidden:true},
-        			{ field: 'OrdDep', title: '患者所在科室', width: 120,
-        			  editor :{  
+                    { field: 'OrdDepListDr', title: '', width: 100,hidden:true},
+        			{ field: 'OrdDepList', title: '患者所在科室', width: 240},
+					{ field : 'RecLoc',title : '接收科室',width : 120 , align: 'center', sortable: true, resizable: true, 
+                        editor :{  
 							type:'combobox',  
 							options:{
 								mode:"remote",
-								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.InstrRecloc&QueryName=GetOrdDep&desc=rows=99999",
+								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.DocConfig&QueryName=FindDep&value=",
 								valueField:'CTLOCRowID',
 								textField:'CTLOCDesc',
-								//required:true,
+								required:true,
 								loadFilter: function(data){
 									return data['rows'];
 								},
@@ -216,35 +257,6 @@ function InitInstrRecLoc(){
 										var desc="";
 									}
 									param = $.extend(param,{desc:desc,HospId:$HUI.combogrid('#_HospList').getValue()});
-								},
-								onSelect:function(rec){
-									var rows=InstrRecLocDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
-	                                rows.OrdDepDr=rec.CTLOCRowID;
-								},
-								onChange:function(newValue, oldValue){
-									if (!newValue){
-										var rows=InstrRecLocDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
-	                                    rows.OrdDepDr="";
-									}
-								},
-								onHidePanel:function(){
-									var rows=InstrRecLocDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
-									if (!$.isNumeric($(this).combobox('getValue'))) return;
-									rows.OrdDepDr=$(this).combobox('getValue');
-								}
-							  }
-     					  }
-        			},
-					{ field : 'RecLoc',title : '接收科室',width : 100 , align: 'center', sortable: true, resizable: true, 
-                        editor :{  
-							type:'combobox',  
-							options:{
-								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.DocConfig&QueryName=FindDep&value=",
-								valueField:'CTLOCRowID',
-								textField:'CTLOCDesc',
-								required:true,
-								loadFilter: function(data){
-									return data['rows'];
 								},
 								onSelect:function(rec){
 									var rows=InstrRecLocDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
@@ -274,12 +286,12 @@ function InitInstrRecLoc(){
                                 }
                             }
                      },
-					{ field: 'OrdSubCat', title: '', width: 100,hidden:true},
-					{ field: 'OrdSubCatDesc', title: '医嘱子类', width: 100, align: 'center',
+					{ field: 'OrdSubCat', title: '', width: 120,hidden:true},
+					{ field: 'OrdSubCatDesc', title: '医嘱子类', width: 120, align: 'center',
 						editor :{  
 							type:'combobox',  
 							options:{
-								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.SubCatContral&QueryName=FindCatList&value=",
+								url:$URL+"?ClassName=DHCDoc.DHCDocConfig.SubCatContral&QueryName=FindCatList&value=&rows=99999",
 								valueField:'ARCICRowId',
 								textField:'ARCICDesc',
 								required:false,
@@ -307,8 +319,8 @@ function InitInstrRecLoc(){
 							  }
      					  }
 					},
-                    { field: 'OrdPrior', title: '', width: 100, align: 'center',hidden:true},
-					{ field: 'OrdPriorDesc', title: '医嘱类型', width: 100, align: 'center',
+                    { field: 'OrdPrior', title: '', width: 120, align: 'center',hidden:true},
+					{ field: 'OrdPriorDesc', title: '医嘱类型', width: 120, align: 'center',
 						editor :{  
 							type:'combobox',  
 							options:{
@@ -337,7 +349,7 @@ function InitInstrRecLoc(){
 							  }
      					  }
 					},
-					{ field: 'OrdTimeRangeFrom', title: '医嘱开始时间', width: 100, align: 'center', sortable: true,
+					{ field: 'OrdTimeRangeFrom', title: '医嘱开始时间', width: 120, align: 'center', sortable: true,
 					  editor : {
                         type : 'text',
                         options : {
@@ -345,7 +357,7 @@ function InitInstrRecLoc(){
                        }
 					  }
 					},
-					{ field: 'OrdTimeRangeTo', title: '医嘱结束时间', width: 100, align: 'center', sortable: true, resizable: true,
+					{ field: 'OrdTimeRangeTo', title: '医嘱结束时间', width: 120, align: 'center', sortable: true, resizable: true,
 					  editor : {
                         type : 'text',
                         options : {
@@ -353,7 +365,7 @@ function InitInstrRecLoc(){
                        }
 					  }
 					},	
-                    { field: 'HospitalDesc', title: '医院', width: 100, align: 'center', sortable: true, resizable: true/*,
+                    { field: 'HospitalDesc', title: '医院', width: 200, align: 'center', sortable: true, resizable: true/*,
 					  editor :{  
 							type:'combobox',  
 							options:{
@@ -381,15 +393,27 @@ function InitInstrRecLoc(){
 								}
 							  }
      					  }*/
-					}					
+					},	
+					{
+						field : 'OnlyChemotherapeuticAndTPN',title : '只接收化疗药/TPN',width : 200,
+							editor : {
+								type : 'icheckbox',
+								options : {
+									on : 'Y',
+									off : ''
+								}
+							}
+					},
+					
+					
     			 ]];
 	InstrRecLocDataGrid=$("#tabInstrRecLocList").datagrid({  
 		fit : true,
-		width : 'auto',
+		//width : 2000,	//'auto',
 		border : false,
 		striped : true,
 		singleSelect : true,
-		fitColumns : true,
+		fitColumns : false,
 		autoRowHeight : false,
 		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.InstrRecloc&QueryName=GetInstrLinkRecLoc&InstrRowId=&HospId="+$HUI.combogrid('#_HospList').getValue(),
 		loadMsg : '加载中..',  
@@ -427,7 +451,8 @@ function loadInstrRecLocDataGrid(InstrRowID)
 	var opts = InstrRecLocDataGrid.datagrid("options");
 	opts.url = $URL
 	InstrRecLocDataGrid.datagrid('load', queryParams);
-	editRow2 = undefined;	
+	editRow = undefined;
+	InstrRecLocDataGrid.datagrid("unselectAll");
 }
 function InitInstr(){
 	///用法列表columns

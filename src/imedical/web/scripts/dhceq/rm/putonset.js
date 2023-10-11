@@ -18,7 +18,7 @@ function initDocument()
 		setElement("POSLocDR",curLocID);
 		disableElement("POSLocDR_DeptDesc",true);
 		setElement("DRUseLocDR",curLocID); //设备放大镜参数
-		setRequiredElements("POSShareType^POSItemDR_MIDesc"); //必填项
+		setRequiredElements("POSShareType^POSItemDR_MIDesc^POSManageLocDR_DeptDesc"); //必填项 //modified by LMH 20220929 2676683
 	}
 	else
 	{
@@ -30,12 +30,14 @@ function initDocument()
 	defindTitleStyle();
 	$("#BCancel").on("click", BCancel_Clicked);
 	initButton(); //按钮初始化
-	initButtonWidth();
+	initApproveButtonNew(); //初始化审批按钮 UI调整 added by LMH 20230203
+	//showBtnIcon('BSave^BAudit^BFind^BCancel',true); //modified by LMH 20230203 动态设置是否极简显示按钮图标
+	//initButtonWidth();
 	initShareType();
 	initOuterType();
 	initStatus(); //Add by QW20200427
 	SetDisabled(3,"") //Add by QW20200512
-	setElement("POSFromDate",GetCurrentDate());
+	setElement("POSFromDate",getElementValue("NoCurDateFlag")==""?GetCurrentDate():"");	//Add by CSJ 2020-07-03 不使用当前日期标志 需求号：1396144
 	
 	//table数据加载
 	$HUI.datagrid("#tDHCEQPutOnSet",{
@@ -56,7 +58,7 @@ function initDocument()
 			FromDate:getElementValue("POSFromDate"),
 			ToDate:getElementValue("POSToDate"),
 			POSShareItemDR:getElementValue("POSShareItemDR"),//Add by QW20200512
-			Status:'' //Add by QW20200512
+			Status:getElementValue("POSStatus") //modified by csj 2020-07-02
 		},
 		toolbar:[{}], //Modified by QW20200427
 		fitColumns : true, //Add by QW20200427
@@ -77,14 +79,14 @@ function initDocument()
 				fillData(rowData,rowIndex);//Modified by QW20200506 Bug:QW0060 需求号:1293289
 			}
 	});
-	
+	//modified by LMH 20230307 3217055
 	//Modify by zx 2020-06-09 Bug ZX0100
-	$("#POSShareItemDR_SIDesc").lookup({
+	/*$("#POSShareItemDR_SIDesc").lookup({
         onSelect:function(index,rowData){
 	        setElement("POSShareItemDR",rowData.TRowID); //Modified by QW20200624 Bug:QW0067 -资源共享-资源上架设置-保存数据提示错误信息
             initMasterItem(rowData.TRowID);
         },
-   });
+   });*/
 }
 
 function BFind_Clicked()
@@ -139,10 +141,7 @@ function initOuterType()
 {
 	var Status = $HUI.combobox('#POSOuterType',{
 		valueField:'id', textField:'text',panelHeight:"auto",value:"0",
-		data:[{
-				id: '',
-				text: '全部'
-			},{
+		data:[{		//MZY0141	2974578		2022-11-02	去掉'全部'选项
 				id: '0',
 				text: '院内共享'
 			},{
@@ -153,6 +152,7 @@ function initOuterType()
 				text: '院外共享'
 			}]
 	});
+	setElement("POSOuterType",getElementValue("OuterTypeAllFlag")=="Y"?"":"0"); //Add by CSJ 2020-07-03 共享方式全部标志 需求号：1396144
 }
 
 // Author add by zx 2019-12-19
@@ -204,6 +204,12 @@ function setSelectValue(elementID,rowData)
 			if(result=="") $("#ShareItemWarn").html("当前设置内容无关联‘资源项目’！");
 		}
 	}//Modified by QW20200624 Bug:QW0067 end
+	//added by LMH 20230307 3217055 
+	else if(elementID === 'POSShareItemDR_SIDesc')
+	{
+	    setElement("POSShareItemDR",rowData.TRowID); //Modified by QW20200624 Bug:QW0067 -资源共享-资源上架设置-保存数据提示错误信息
+        initMasterItem(rowData.TRowID);
+	}
 }
 
 function disableElementByEquip(value)
@@ -267,13 +273,21 @@ function clearData(elementID)
 // Output 无
 function saveData(type)
 {
+	//Modefied by zc0107 2021-11-14  begin
+	var result=tkMakeServerCall("web.DHCEQ.RM.BUSPutOnSet","GetShareItem",getElementValue("POSItemDR"));
+	if(result=="") 
+	{
+		messageShow('alert','info','提示',"当前设置内容无关联‘资源项目’！");  //Modify by zx 2022-05-16 BUG 2612995
+		return;
+	}
+	//Modefied by zc0107 2021-11-14  end
 	//检测是否已被包含在其他设置
 	if (type!="1")
 	{
 		var rtData=tkMakeServerCall("web.DHCEQ.RM.BUSShareResource","CheckIsInPutOnSet",getElementValue("POSEquipDR"),getElementValue("POSItemDR"),getElementValue("POSModelDR"),getElementValue("POSLocDR"));
 		if((rtData!="0")&&(rtData!=getElementValue("POSRowID")))
 		{
-			messageShow('alert','error','提示',"此条设置范围被其他设置涵盖！");
+			messageShow('alert','info','提示',"此条设置范围被其他设置涵盖！");  //Modify by zx 2022-05-16 BUG 2612995
 			return;
 		}
 		if (checkMustItemNull()) return; //Modified by QW20200506 Bug:QW0061 需求号:1293262
@@ -283,7 +297,7 @@ function saveData(type)
 	//Add by QW20200506 Bug:QW0061 需求号:1293262 begin
 	if ((type=="1")&&(data.POSRowID=="")) 
 	{
-		messageShow('alert','error','提示',"错误信息:未选中数据行"); 
+		messageShow('alert','info','提示',"错误信息:未选中数据行");  //Modify by zx 2022-05-16 BUG 2612995
 		return;
 	}
 	//Add by QW20200506 Bug:QW0061 需求号:1293262 end
@@ -315,11 +329,14 @@ function saveDataCall(data,type)
 	if (jsonData.SQLCODE==0)
 	{
 		url="dhceq.rm.putonset.csp?StatusDR="+getElementValue("StatusDR"); //Modified By QW20200529 BUG:QW0064
+	    if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.location.href= url;
 	}
 	else
     {
-		messageShow('alert','error','提示',"错误信息:"+jsonData.Data);
+		messageShow('alert','info','提示',"错误信息:"+jsonData.Data); //Modify by zx 2022-05-16 BUG 2612995
 		return
     }
 }
@@ -432,6 +449,7 @@ function initStatus()
 				text: '已生效'
 			}]
 	});
+	setElement("POSStatus",getElementValue("StatusDR"));//add by csj 2020-07-02 默认值
 }
 //添加“合计”信息
 //Add by QW20200508

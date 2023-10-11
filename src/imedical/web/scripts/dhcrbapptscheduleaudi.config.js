@@ -5,15 +5,24 @@ var arrayObj = new Array(
 	  new Array("Check_CancelStopSchedule","AudiCancelStopSchedule"),
 	  new Array("Check_ReplaceSchedule","AudiReplaceSchedule")
 );
-
+var PageLogicObj={
+	m_AuthFlag:tkMakeServerCall("DHCDoc.Interface.Inside.InvokeAuth","GetSwitch"),
+	m_AuthLoad:0
+}
 var AudiReasonDataGrid;
 
 $(document).ready(function(){
 	Init();
 	InitEvent();
+	InitCache();
 });
-
-
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function Init(){
 	var hospComp = GenHospComp("Doc_OPAdm_ScheduleAudit");
 	InitAudiReasonDataGrid();
@@ -29,6 +38,7 @@ function Init(){
 		LoadLocData();
 		AudiReasonDataGridLoad();
 	}
+	LoadAuthHtml();
 }
 
 function LoadCheckData(){
@@ -151,6 +161,12 @@ function SaveConfigData()
 		GroupDataStr="AudiNotLimitedGroupStr"+String.fromCharCode(1)+GroupDataStr
 	}
 	
+	var AuthGroupStr="";
+	if (PageLogicObj.m_AuthFlag==1){
+		AuthGroupStr=GroupDataStr;
+		GroupDataStr=""
+	}
+	
 	var CheckStr="";
 	for(var i=0;i<arrayObj.length;i++){
 		var paramid=arrayObj[i][0];
@@ -169,18 +185,31 @@ function SaveConfigData()
 	}
 
 	var DataStr=LocDataStr+String.fromCharCode(2)+CheckStr+String.fromCharCode(2)+GroupDataStr;
-	$.m({
+	var ret=$.m({
 		ClassName:"web.DHCDocConfig",
 		MethodName:"SaveConfig",
 		Coninfo:DataStr,
 		HospId:$HUI.combogrid('#_HospList').getValue()
-	},function(value){
-		if(value=="0"){
-			$.messager.show({title:"提示",msg:"保存成功"});					
-		}else{
-			$.messager.show({title:"提示",msg:"保存失败"});		
-		}
-	});
+	},false);
+	if(ret=="0"){
+		$.messager.show({title:"提示",msg:"保存成功"});					
+	}else{
+		$.messager.show({title:"提示",msg:"保存失败"});		
+	}
+	if (PageLogicObj.m_AuthFlag==1){
+		var ret=$.m({
+			ClassName:"DHCDoc.Interface.Inside.InvokeAuth",
+			MethodName:"InvokeScheduleAudiAuth",
+			Coninfo:AuthGroupStr,
+			HospID:$HUI.combogrid('#_HospList').getValue(),
+			UserID:session["LOGON.USERID"],
+		},false);
+		var Arr=ret.split("^");
+        $.messager.alert("提示",Arr[1],"info",function(){
+            //location.reload();
+            LoadAuthHtml();
+        });
+	}
 }
 
 function InitAudiReasonDataGrid(){
@@ -195,7 +224,7 @@ function InitAudiReasonDataGrid(){
 		}
 	},{
 		text:'更新',
-		iconCls:'icon-edit',
+		iconCls:'icon-update',
 		handler:function(){
 			UpdateGridData();
 		}	
@@ -327,5 +356,17 @@ function UpdateGridData(){
      }else{
 	     $.messager.alert("错误","请选择一行！",'err')
      }
-
+}
+function LoadAuthHtml() {
+	if (PageLogicObj.m_AuthLoad==1) return false;		//只加载一次
+    $m({
+        ClassName: "BSP.SYS.SRV.AuthItemApply",
+        MethodName: "GetStatusHtml",
+        AuthCode: "HIS-DOC-SCHEDULEAUDI"
+    }, function (rtn) {
+        if (rtn != "") {
+	        PageLogicObj.m_AuthLoad=1;
+	        $('#Panel_AudiNotLimitedGroup').panel('setTitle',"<label>不受限制的安全组</label>"+rtn);
+        }
+    })
 }

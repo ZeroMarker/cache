@@ -2,8 +2,6 @@
 /// Lid
 /// 2014-07-08
 
-var m_CCMRowID = "";
-var m_SelectCardTypeRowID = "";
 var m_YBConFlag = 0;
 var PrtXMLName = "";
 var listobj = parent.frames["DHCOPBillInvInsuList"];
@@ -27,7 +25,7 @@ $(function() {
 		PAPMINo_KeyPress(e);
 	});
 	
-	$("#CardNo").keydown(function (e) {
+	$("#CardNo").focus().keydown(function (e) {
 		cardNoKeyDown(e);
 	});
 	
@@ -39,27 +37,17 @@ $(function() {
 
 	$HUI.combobox("#InsType", {
 		panelHeight: 150,
-		url: $URL + '?ClassName=web.UDHCJFCASHIER&QueryName=FindAdmReason&ResultSetType=array',
+		url: $URL + '?ClassName=web.UDHCOPOtherLB&MethodName=ReadPatType&JSFunName=GetPatTypeToHUIJson',
 		valueField: 'id',
 		textField: 'text',
 		editable: false,
 		disabled: true,
 		onBeforeLoad: function(param) {
-			param.hospId= session['LOGON.HOSPID'];
-		}
-	});
-	$HUI.combobox("#CardTypeDefine", {
-		panelHeight: "auto",
-		url: $URL + "?ClassName=web.DHCBillOtherLB&QueryName=QCardTypeDefineList&ResultSetType=array",
-		editable: false,
-		valueField: "value",
-		textField: "caption",
-		onChange: function (newValue, oldValue) {
-			initReadCard(newValue);
+			param.hospId = session['LOGON.HOSPID'];
 		}
 	});
 	
-	$HUI.checkbox('#SelAll',{
+	$HUI.checkbox('#SelAll', {
 		onCheckChange:function(){
 			SelAll_OnClick();
 		}
@@ -134,10 +122,10 @@ function IntDocument() {
 	if (encmeth != "") {
 		var myrtn = cspRunServerMethod(encmeth, session['LOGON.GROUPID'], session['LOGON.HOSPID']);
 	}
-	var myary = myrtn.split("^");
-	if (myary[0] == 0) {
-		mPrtINVFlag = myary[4];
-		var myPrtXMLName = myary[11];
+	var myAry = myrtn.split("^");
+	if (myAry[0] == 0) {
+		mPrtINVFlag = myAry[4];
+		var myPrtXMLName = myAry[11];
 	}
 	PrtXMLName = myPrtXMLName;
 	DHCP_GetXMLConfig("InvPrintEncrypt", PrtXMLName);
@@ -146,8 +134,8 @@ function IntDocument() {
 	if (encmeth != "") {
 		var myrtn = cspRunServerMethod(encmeth, session['LOGON.HOSPID']);
 	}
-	var myary = myrtn.split("^");
-	m_YBConFlag = myary[9];
+	var myAry = myrtn.split("^");
+	m_YBConFlag = myAry[9];
 }
 
 function SelAll_OnClick() {
@@ -161,11 +149,11 @@ function PAPMINo_KeyPress(e) {
 	var key = websys_getKey(e);
 	if (key == 13) {
 		setValueById('CardNo', '');
-		getPatinfo();
+		getPatInfo();
 	}
 }
 
-function getPatinfo() {
+function getPatInfo() {
 	var PAPMINo = getValueById("PAPMINo");
 	if (PAPMINo == "") {
 		return;
@@ -174,10 +162,10 @@ function getPatinfo() {
 	var SecurityNo = "";
 	var encmeth = getValueById("ReadPatInfo");
 	var myrtn = cspRunServerMethod(encmeth, PAPMINo, CardNo, SecurityNo);
-	var myary = myrtn.split("^");
-	setValueById("PAPMIRowID", myary[19]);
-	var myary = myrtn.split("^");
-	if (myary[0] == 0) {
+	var myAry = myrtn.split("^");
+	setValueById("PAPMIRowID", myAry[19]);
+	var myAry = myrtn.split("^");
+	if (myAry[0] == 0) {
 		WrtPatAccInfo(myrtn);
 		var myrtn = CheckPRTFlag();
 		if (!myrtn) {
@@ -190,6 +178,7 @@ function getPatinfo() {
 }
 
 function ClearWin_Click() {
+	focusById("CardNo");
 	setValueById("AccRowID", "");
 	setValueById("PAPMIRowID", "");
 	PatAccInfoClr();
@@ -203,11 +192,11 @@ function ReadPatAccInfo() {
 	var SecurityNo = getValueById("SecurityNo");
 	var encmeth = getValueById("ReadPAInfoEncrypt");
 	var myrtn = (cspRunServerMethod(encmeth, PAPMINo, CardNo, SecurityNo));
-	var myary = myrtn.split("^");
-	if (myary[0] == -201) {
-		myary[0] = 0;
+	var myAry = myrtn.split("^");
+	if (myAry[0] == -201) {
+		myAry[0] = 0;
 	}
-	if (myary[0] == 0) {
+	if (myAry[0] == 0) {
 		WrtPatAccInfo(myrtn);
 		/*
 		var myrtn = CheckPRTFlag();
@@ -222,23 +211,21 @@ function ReadPatAccInfo() {
 }
 
 function WrtPatAccInfo(myPAInfo) {
-	var myary = myPAInfo.split("^");
-	setValueById("PAPMINo", myary[1]);
-	setValueById("PAName", myary[2]);
-	setValueById("PatSex", myary[3]);
-	setValueById("PatAge", myary[4]);
-	setValueById("CredType", myary[5]);
-	setValueById("CredNo", myary[6]);
-	setValueById("AccLeft", myary[7]);
-	setValueById("AccStatus", myary[8]);
-	setValueById("AccNo", myary[9]);
-	setValueById("AccOCDate", myary[10]);
-	setValueById("BadPrice", myary[11]);
-	setValueById("AccDep", myary[12]);
-	setValueById("AccRowID", myary[13]);
-	var myPatType = myary[16];
-	
-	setValueById("InsType", myPatType);
+	var myAry = myPAInfo.split("^");
+	setValueById("PAPMINo", myAry[1]);
+	setValueById("PAName", myAry[2]);
+	setValueById("PatSex", myAry[3]);
+	setValueById("PatAge", myAry[4]);
+	setValueById("CredType", myAry[5]);
+	setValueById("CredNo", myAry[6]);
+	setValueById("AccLeft", myAry[7]);
+	setValueById("AccStatus", myAry[8]);
+	setValueById("AccNo", myAry[9]);
+	setValueById("AccOCDate", myAry[10]);
+	setValueById("BadPrice", myAry[11]);
+	setValueById("AccDep", myAry[12]);
+	setValueById("AccRowID", myAry[13]);
+	setValueById("InsType", myAry[16]);
 }
 
 function CheckPRTFlag() {
@@ -298,125 +285,53 @@ function init_Layout(){
 }
 
 /**
- * 初始化卡类型时卡号和读卡按钮的变化
- * @method initReadCard
- * @param {String} cardType
- * @author ZhYW
- */
-function initReadCard(cardType) {
-	try {
-		var cardTypeAry = cardType.split("^");
-		var readCardMode = cardTypeAry[16];
-		if (readCardMode == "Handle") {
-			disableById("ReadCard");
-			$("#CardNo").attr("readOnly", false);
-		} else {
-			enableById("ReadCard");
-			setValueById("CardNo", "");
-			$("#CardNo").attr("readOnly", true);
-		}
-	} catch (e) {
-	}
-}
-
-/**
  * 读卡
  * @method readHFMagCardClick
  * @author ZhYW
  */
 function readHFMagCardClick() {
-	try {
-		var cardType = getValueById("CardTypeDefine");
-		var cardTypeDR = cardType.split("^")[0];
-		var myRtn = "";
-		if (cardTypeDR == "") {
-			myRtn = DHCACC_GetAccInfo();
-		} else {
-			myRtn = DHCACC_GetAccInfo(cardTypeDR, cardType);
-		}
-		var myAry = myRtn.toString().split("^");
-		var rtn = myAry[0];
-		switch (rtn) {
-		case "0":
-			setValueById("CardNo", myAry[1]);
-			setValueById("PAPMINo", myAry[5]);
-			getPatinfo();
-			break;
-		case "-200":
-			listobj.NoHideAlert('卡无效');
-			break;
-		case "-201":
-			setValueById("CardNo", myAry[1]);
-			setValueById("PAPMINo", myAry[5]);
-			getPatinfo();
-			break;
-		default:
-		}
-	} catch (e) {
-	}
+	DHCACC_GetAccInfo7(magCardCallback);
 }
 
 /**
 * 卡号回车事件
 */
 function cardNoKeyDown(e) {
-	try {
-		var key = websys_getKey(e);
-		if (key == 13) {
-			var cardNo = getValueById("CardNo");
-			if (!cardNo) {
-				return;
-			}
-			var cardType = getValueById("CardTypeDefine");
-			cardNo = FormatCardNo(cardNo);
-			var cardTypeAry = cardType.split("^");
-			var cardTypeDR = cardTypeAry[0];
-			var myRtn = DHCACC_GetAccInfo(cardTypeDR, cardNo, "", "PatInfo");
-			var myAry = myRtn.toString().split("^");
-			var rtn = myAry[0];
-			switch (rtn) {
-			case "0":
-				setValueById("CardNo", myAry[1]);
-				setValueById("PAPMINo", myAry[5]);
-				setValueById("SecurityNo", myAry[2]);
-				setValueById("PAPMIRowID", myAry[4]);
-				ReadPatAccInfo();
-				break;
-			case "-200":
-				listobj.NoHideAlert("卡无效")
-				break;
-			case '-201':
-				setValueById("CardNo", myAry[1]);
-				setValueById("PAPMINo", myAry[5]);
-				setValueById("SecurityNo", myAry[2]);
-				setValueById("PAPMIRowID", myAry[4]);
-				ReadPatAccInfo();
-				break;
-			default:
-			}
+	var key = websys_getKey(e);
+	if (key == 13) {
+		var cardNo = getValueById("CardNo");
+		if (!cardNo) {
+			return;
 		}
-	} catch (e) {
+		DHCACC_GetAccInfo("", cardNo, "", "", magCardCallback);
 	}
 }
 
-function FormatCardNo(CardNo) {
-	if (CardNo != "") {
-		var CardNoLength = GetCardNoLength();
-		if ((CardNo.length < CardNoLength) && (CardNoLength != 0)) {
-			for (var i = (CardNoLength - CardNo.length - 1); i >= 0; i--) {
-				CardNo = "0" + CardNo;
-			}
-		}
+function magCardCallback(rtnValue) {
+	var patientId = "";
+	var myAry = rtnValue.split("^");
+	switch (myAry[0]) {
+	case "0":
+		setValueById("CardNo", myAry[1]);
+		setValueById("PAPMINo", myAry[5]);
+		setValueById("SecurityNo", myAry[2]);
+		patientId = myAry[4];
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	case "-200":
+		listobj.NoHideAlert("卡无效")
+		break;
+	case '-201':
+		setValueById("CardNo", myAry[1]);
+		setValueById("PAPMINo", myAry[5]);
+		setValueById("SecurityNo", myAry[2]);
+		patientId = myAry[4];
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	default:
 	}
-	return CardNo;
-}
-
-function GetCardNoLength() {
-	var CardNoLength = "";
-	var CardTypeValue = getValueById("CardTypeDefine");
-	if (CardTypeValue != "") {
-		var CardTypeArr = CardTypeValue.split("^");
-		CardNoLength = CardTypeArr[17];
+	setValueById("PAPMIRowID", patientId);
+	if (patientId != "") {
+		ReadPatAccInfo();
 	}
-	return CardNoLength;
 }

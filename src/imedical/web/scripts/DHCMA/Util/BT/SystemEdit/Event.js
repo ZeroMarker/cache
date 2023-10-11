@@ -127,7 +127,12 @@ function InitSystemListWinEvent(obj){
 					aId:RowID
 				},false);
 				if (parseInt(flg) < 0) {
-					$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					if (parseInt(flg)=='-777') {
+						$.messager.alert("错误提示","-777：当前无删除权限，请启用删除权限后再删除记录!",'info');
+					}else {
+						$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					}
+					return;
 				} else {
 					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 					obj.RecRowID = ""

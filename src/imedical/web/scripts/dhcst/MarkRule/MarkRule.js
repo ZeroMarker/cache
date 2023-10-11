@@ -23,7 +23,7 @@ SDCommStore.on('beforeload', function (ds, o) {
 });
 
 var SDComm = new Ext.form.ComboBox({
-    fieldLabel: '小数规则',
+    fieldLabel: $g('小数规则'),
     id: 'SDComm',
     name: 'SDComm',
     anchor: '90%',
@@ -33,7 +33,7 @@ var SDComm = new Ext.form.ComboBox({
     displayField: 'Description',
     allowBlank: false,
     triggerAction: 'all',
-    emptyText: '小数规则...',
+    emptyText: $g('小数规则...'),
     selectOnFocus: true,
     forceSelection: true,
     minChars: 1,
@@ -88,7 +88,7 @@ var SDCommStoreList = new Ext.data.Store({
 
 SDCommStoreList.load();
 var SDCommList = new Ext.form.ComboBox({
-    fieldLabel: '小数规则',
+    fieldLabel: $g('小数规则'),
     id: 'SDCommList',
     name: 'SDCommList',
     anchor: '90%',
@@ -98,7 +98,7 @@ var SDCommList = new Ext.form.ComboBox({
     displayField: 'Description',
     allowBlank: false,
     triggerAction: 'all',
-    emptyText: '小数规则...',
+    emptyText: $g('小数规则...'),
     selectOnFocus: true,
     forceSelection: true,
     minChars: 1,
@@ -123,7 +123,7 @@ MTCommStore.on('beforeload', function (ds, o) {
 });
 
 var MTComm = new Ext.form.ComboBox({
-    fieldLabel: '定价类型',
+    fieldLabel: $g('定价类型'),
     id: 'MTComm',
     name: 'MTComm',
     anchor: '90%',
@@ -133,7 +133,7 @@ var MTComm = new Ext.form.ComboBox({
     displayField: 'Description',
     allowBlank: false,
     triggerAction: 'all',
-    emptyText: '定价类型...',
+    emptyText: $g('定价类型...'),
     selectOnFocus: true,
     forceSelection: true,
     minChars: 1,
@@ -189,7 +189,7 @@ var MTCommStoreList = new Ext.data.Store({
 
 MTCommStoreList.load();
 var MTCommList = new Ext.form.ComboBox({
-    fieldLabel: '定价类型',
+    fieldLabel: $g('定价类型'),
     id: 'MTCommList',
     name: 'MTCommList',
     anchor: '90%',
@@ -199,7 +199,7 @@ var MTCommList = new Ext.form.ComboBox({
     displayField: 'Description',
     allowBlank: false,
     triggerAction: 'all',
-    emptyText: '定价类型...',
+    emptyText: $g('定价类型...'),
     selectOnFocus: true,
     forceSelection: true,
     minChars: 1,
@@ -209,7 +209,7 @@ var MTCommList = new Ext.form.ComboBox({
 });
 
 var UFlag = new Ext.grid.CheckColumn({
-    header: '是否使用',
+    header: $g('是否使用'),
     dataIndex: 'UseFlag',
     width: 100,
     sortable: true,
@@ -346,7 +346,7 @@ var MarkRuleGridDs = new Ext.data.Store({
 var MarkRuleGridCm = new Ext.grid.ColumnModel([
     new Ext.grid.RowNumberer(),
     {
-        header: '代码',
+        header: $g('代码'),
         dataIndex: 'Code',
         width: 80,
         align: 'left',
@@ -365,7 +365,7 @@ var MarkRuleGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '名称',
+        header: $g('名称'),
         dataIndex: 'Desc',
         width: 80,
         align: 'left',
@@ -384,7 +384,7 @@ var MarkRuleGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '规则下限',
+        header: $g('规则下限'),
         dataIndex: 'MinRp',
         width: 80,
         align: 'right',
@@ -404,7 +404,7 @@ var MarkRuleGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '规则上限',
+        header:$g( '规则上限'),
         dataIndex: 'MaxRp',
         width: 80,
         align: 'right',
@@ -424,7 +424,7 @@ var MarkRuleGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '加成率',
+        header: $g('加成率'),
         dataIndex: 'Margin',
         width: 80,
         align: 'right',
@@ -444,7 +444,7 @@ var MarkRuleGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '加成额',
+        header: $g('加成额'),
         dataIndex: 'MPrice',
         width: 80,
         align: 'right',
@@ -464,7 +464,7 @@ var MarkRuleGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '最高加成率',
+        header: $g('最高加成率'),
         dataIndex: 'MaxMargin',
         width: 80,
         align: 'right',
@@ -484,7 +484,7 @@ var MarkRuleGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '最高加成额',
+        header: $g('最高加成额'),
         dataIndex: 'MaxMPrice',
         width: 80,
         align: 'right',
@@ -504,7 +504,7 @@ var MarkRuleGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '小数规则',
+        header:$g( '小数规则'),
         //dataIndex:'SdDesc',
         dataIndex: 'SdDr',
         width: 80,
@@ -514,7 +514,7 @@ var MarkRuleGridCm = new Ext.grid.ColumnModel([
         editor: new Ext.grid.GridEditor(SDComm)
     },
     {
-        header: '定价类型',
+        header: $g('定价类型'),
         //dataIndex:'MtDesc',
         dataIndex: 'MtDr',
         width: 80,
@@ -525,7 +525,7 @@ var MarkRuleGridCm = new Ext.grid.ColumnModel([
     },
     UFlag,
     {
-        header: '备注',
+        header: $g('备注'),
         dataIndex: 'Remark',
         width: 100,
         align: 'left',
@@ -549,8 +549,8 @@ var MarkRuleGridCm = new Ext.grid.ColumnModel([
 MarkRuleGridCm.defaultSortable = true;
 
 var addMarkRule = new Ext.Toolbar.Button({
-    text: '新建',
-    tooltip: '新建',
+    text: $g('新建'),
+    tooltip: $g('新建'),
     iconCls: 'page_add',
     width: 70,
     height: 30,
@@ -560,8 +560,8 @@ var addMarkRule = new Ext.Toolbar.Button({
 });
 
 var saveMarkRule = new Ext.Toolbar.Button({
-    text: '保存',
-    tooltip: '保存',
+    text: $g('保存'),
+    tooltip: $g('保存'),
     iconCls: 'page_save',
     width: 70,
     height: 30,
@@ -589,24 +589,24 @@ var saveMarkRule = new Ext.Toolbar.Button({
                 var rows = MarkRuleGridDs.indexOf(mr[i]) + 1;
 
                 if (parseFloat(minRp) > parseFloat(maxRp)) {
-                    Ext.Msg.alert('提示：', '第' + rows + '行规则上限不能小于规则下线！');
+                    Ext.Msg.alert($g('提示：'), $g('第') + rows + $g('行规则上限不能小于规则下限！'));
                     break;
                 }
                 if (code == '' || desc == '') {
-                    Ext.Msg.alert('提示：', '第' + rows + '行代码和名称不能为空！');
+                    Ext.Msg.alert($g('提示：'),$g( '第') + rows + $g('行代码和名称不能为空！'));
                     break;
                 }
                 if (sd == '' || mt == '') {
-                    Ext.Msg.alert('提示：', '第' + rows + '行小数规则和定价类型不能为空！');
+                    Ext.Msg.alert($g('提示：'), $g('第') + rows + $g('行小数规则和定价类型不能为空！'));
                     break;
                 }
 
                 if (parseFloat(margin) > parseFloat(maxMargin)) {
-                    Msg.info('warning', '第' + rows + '行加成率不能高于最高加成率！！');
+                    Msg.info('warning', $g('第') + rows + $g('行加成率不能高于最高加成率！！'));
                     break;
                 }
                 if (parseFloat(mPrice) > parseFloat(maxMPrice)) {
-                    Msg.info('warning', '第' + rows + '行加成额不能高于最高加成额！');
+                    Msg.info('warning', $g('第') + rows + $g('行加成额不能高于最高加成额！'));
                     break;
                 }
                 var remark = mr[i].data['Remark'].trim();
@@ -623,22 +623,22 @@ var saveMarkRule = new Ext.Toolbar.Button({
             }
 
             if (data != '') {
-                var mask = ShowLoadMask(Ext.getBody(), '处理中请稍候...');
+                var mask = ShowLoadMask(Ext.getBody(), $g('处理中请稍候...'));
                 Ext.Ajax.request({
                     url: MarkRuleGridUrl + '?actiontype=save',
                     params: { data: data },
                     failure: function (result, request) {
                         mask.hide();
-                        Msg.info('error', '请检查网络连接!');
+                        Msg.info('error', $g('请检查网络连接!'));
                     },
                     success: function (result, request) {
                         var jsonData = Ext.util.JSON.decode(result.responseText);
                         mask.hide();
                         if (jsonData.success == 'true') {
-                            Msg.info('success', '保存成功!');
+                            Msg.info('success', $g('保存成功!'));
                             MarkRuleGridDs.reload();
                         } else {
-                            Msg.info('error', '保存失败!');
+                            Msg.info('error', $g('保存失败!'));
                         }
                     },
                     scope: this
@@ -671,13 +671,13 @@ function CheckDataBeforeSave() {
             if (Code_i == Code_j) {
                 changeBgColor(i, 'yellow');
                 changeBgColor(j, 'yellow');
-                Msg.info('warning', Code_i + ',第' + icnt + ',' + jcnt + '行' + '规则代码重复，请重新输入!');
+                Msg.info('warning', Code_i + $g(',第') + icnt + ',' + jcnt + $g('行规则代码重复，请重新输入!'));
                 return false;
             }
             if (Desc_i == Desc_j) {
                 changeBgColor(i, 'yellow');
                 changeBgColor(j, 'yellow');
-                Msg.info('warning', Desc_i + ',第' + icnt + ',' + jcnt + '行' + '规则名称重复，请重新输入!');
+                Msg.info('warning', Desc_i + $g(',第') + icnt + ',' + jcnt + $g('行规则名称重复，请重新输入!'));
                 return false;
             }
         }
@@ -692,40 +692,40 @@ function changeChildBgColor(row, color) {
     MarkRuleAddGrid.getView().getRow(row).style.backgroundColor = color;
 }
 var deleteMarkRule = new Ext.Toolbar.Button({
-    text: '删除',
-    tooltip: '删除',
+    text: $g('删除'),
+    tooltip: $g('删除'),
     iconCls: 'page_delete',
     width: 70,
     height: 30,
     handler: function () {
         var cell = MarkRuleGrid.getSelectionModel().getSelectedCell();
         if (cell == null) {
-            Msg.info('error', '请选择数据!');
+            Msg.info('error', $g('请选择数据!'));
             return false;
         } else {
             var record = MarkRuleGrid.getStore().getAt(cell[0]);
             var RowId = record.get('RowId');
             //alert(RowId);
             if (RowId != '') {
-                Ext.MessageBox.confirm('提示', '确定要删除选定的行?', function (btn) {
+                Ext.MessageBox.confirm($g('提示'), $g('确定要删除选定的行?'), function (btn) {
                     if (btn == 'yes') {
-                        var mask = ShowLoadMask(Ext.getBody(), '处理中请稍候...');
+                        var mask = ShowLoadMask(Ext.getBody(), $g('处理中请稍候...'));
                         Ext.Ajax.request({
                             url: MarkRuleGridUrl + '?actiontype=delete&rowid=' + RowId,
-                            waitMsg: '删除中...',
+                            waitMsg: $g('删除中...'),
                             failure: function (result, request) {
                                 mask.hide();
-                                Msg.info('error', '请检查网络连接!');
+                                Msg.info('error', $g('请检查网络连接!'));
                             },
                             success: function (result, request) {
                                 var jsonData = Ext.util.JSON.decode(result.responseText);
                                 mask.hide();
                                 if (jsonData.success == 'true') {
-                                    Msg.info('success', '删除成功!');
+                                    Msg.info('success', $g('删除成功!'));
                                     MarkRuleGridDs.load();
                                     MarkRuleAddGridDs.reload();
                                 } else {
-                                    Msg.info('error', '删除失败!');
+                                    Msg.info('error',$g( '删除失败!'));
                                 }
                             },
                             scope: this
@@ -758,7 +758,7 @@ MarkRuleGrid = new Ext.grid.EditorGridPanel({
     bbar: [
         {
             xtype: 'label',
-            text: '售价=进价*加成; 加成=1+进销差率; 规则上下限:计算售价所依据的进价区间范围; 上限、下限、加成率、加成额、最高加成率、最高加成额为0表示不限制',
+            text: $g("售价计算规则：如果不维护[定价规则明细],则售价=进价*(1+加成率)+加成额"),
             align: 'center'
         }
     ],
@@ -783,7 +783,7 @@ MarkRuleGrid.on('rowclick', function (grid, rowIndex, columnIndex, e) {
     MarkRuleAddGridDs.load({ params: { parref: mrId } });
 });
 var UseFlag = new Ext.grid.CheckColumn({
-    header: '是否使用',
+    header: $g('是否使用'),
     dataIndex: 'UseFlag',
     width: 100,
     sortable: true,
@@ -861,7 +861,7 @@ var MarkRuleAddGridDs = new Ext.data.Store({
 var MarkRuleAddGridCm = new Ext.grid.ColumnModel([
     new Ext.grid.RowNumberer(),
     {
-        header: '代码',
+        header: $g('代码'),
         dataIndex: 'Code',
         width: 80,
         align: 'left',
@@ -880,7 +880,7 @@ var MarkRuleAddGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '名称',
+        header: $g('名称'),
         dataIndex: 'Desc',
         width: 80,
         align: 'left',
@@ -899,7 +899,7 @@ var MarkRuleAddGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '下限',
+        header: $g('下限'),
         dataIndex: 'MinRp',
         width: 80,
         align: 'right',
@@ -919,7 +919,7 @@ var MarkRuleAddGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '上限',
+        header: $g('上限'),
         dataIndex: 'MaxRp',
         width: 80,
         align: 'right',
@@ -939,7 +939,7 @@ var MarkRuleAddGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '加成',
+        header: $g('加成率'),
         dataIndex: 'Margin',
         width: 80,
         align: 'right',
@@ -959,7 +959,7 @@ var MarkRuleAddGridCm = new Ext.grid.ColumnModel([
         })
     },
     {
-        header: '备注',
+        header: $g('备注'),
         dataIndex: 'Remark',
         width: 80,
         align: 'left',
@@ -984,21 +984,21 @@ var MarkRuleAddGridCm = new Ext.grid.ColumnModel([
 MarkRuleGridCm.defaultSortable = true;
 
 var addMarkRuleAdd = new Ext.Toolbar.Button({
-    text: '新建',
-    tooltip: '新建',
+    text: $g('新建'),
+    tooltip: $g('新建'),
     iconCls: 'page_add',
     width: 70,
     height: 30,
     handler: function () {
         var cell = MarkRuleGrid.getSelectionModel().getSelectedCell();
         if (cell == null) {
-            Msg.info('warning', '请先选中上方定价规则数据!');
+            Msg.info('warning',$g( '请先选中上方定价规则数据!'));
             return;
         }
         var record = MarkRuleGrid.getStore().getAt(cell[0]);
         var RowId = record.get('RowId') || '';
         if (RowId == '') {
-            Msg.info('warning', '请先保存上方定价规则，再进行新建！');
+            Msg.info('warning', $g('请先保存上方定价规则，再进行新建！'));
             return;
         }
         addRow();
@@ -1006,8 +1006,8 @@ var addMarkRuleAdd = new Ext.Toolbar.Button({
 });
 
 var saveMarkRuleAdd = new Ext.Toolbar.Button({
-    text: '保存',
-    tooltip: '保存',
+    text: $g('保存'),
+    tooltip: $g('保存'),
     iconCls: 'page_save',
     width: 70,
     height: 30,
@@ -1029,21 +1029,21 @@ var saveMarkRuleAdd = new Ext.Toolbar.Button({
 
                 row = MarkRuleAddGridDs.indexOf(mr[i]) + 1;
                 if (code == '') {
-                    Msg.info('warning', '第' + row + '行代码不能为空！');
+                    Msg.info('warning', $g('第') + row + $g('行代码不能为空！'));
                     break;
                 } else if (desc == '') {
-                    Msg.info('warning', '第' + row + '行名称不能为空！');
+                    Msg.info('warning', $g('第') + row + $g('行名称不能为空！'));
                     break;
                 } else if (parseFloat(minRp) > parseFloat(maxRp)) {
-                    Msg.info('warning', '第' + row + '行下限不能高于上限！');
+                    Msg.info('warning', $g('第') + row + $g('行下限不能高于上限！'));
                     break;
                 }
                 if (minRp === '') {
-                    Msg.info('warning', '第' + row + '行下限不能为空!');
+                    Msg.info('warning', $g('第') + row + $g('行下限不能为空!'));
                     break;
                 }
                 if (maxRp === '') {
-                    Msg.info('warning', '第' + row + '行上限不能为空!');
+                    Msg.info('warning', $g('第') + row + $g('行上限不能为空!'));
                     break;
                 }
                 var dataRow = rowid + '^' + mrId + '^' + code + '^' + desc + '^' + maxRp + '^' + minRp + '^' + margin + '^' + remark + '^' + useFlag;
@@ -1055,22 +1055,22 @@ var saveMarkRuleAdd = new Ext.Toolbar.Button({
             }
         }
         if (data != '') {
-            var mask = ShowLoadMask(Ext.getBody(), '处理中请稍候...');
+            var mask = ShowLoadMask(Ext.getBody(), $g('处理中请稍候...'));
             Ext.Ajax.request({
                 url: MarkRuleGridUrl + '?actiontype=saveChild',
                 params: { data: data },
                 failure: function (result, request) {
                     mask.hide();
-                    Msg.info('error', '请检查网络连接!');
+                    Msg.info('error', $g('请检查网络连接!'));
                 },
                 success: function (result, request) {
                     var jsonData = Ext.util.JSON.decode(result.responseText);
                     mask.hide();
                     if (jsonData.success == 'true') {
-                        Msg.info('success', '保存成功!');
+                        Msg.info('success', $g('保存成功!'));
                         MarkRuleAddGridDs.load({ params: { parref: mrId } });
                     } else {
-                        Msg.info('error', '保存失败!');
+                        Msg.info('error', $g('保存失败!'));
                     }
                 },
                 scope: this
@@ -1101,13 +1101,13 @@ function CheckChildDataBeforeSave() {
             if (Code_i == Code_j) {
                 changeChildBgColor(i, 'yellow');
                 changeChildBgColor(j, 'yellow');
-                Msg.info('warning', Code_i + ',第' + icnt + ',' + jcnt + '行' + '规则明细代码重复，请重新输入!');
+                Msg.info('warning', Code_i + $g(',第') + icnt + ',' + jcnt + $g('行规则明细代码重复，请重新输入!'));
                 return false;
             }
             if (Desc_i == Desc_j) {
                 changeChildBgColor(i, 'yellow');
                 changeChildBgColor(j, 'yellow');
-                Msg.info('warning', Desc_i + ',第' + icnt + ',' + jcnt + '行' + '规则明细名称重复，请重新输入!');
+                Msg.info('warning', Desc_i + $g(',第') + icnt + ',' + jcnt + $g('行规则明细名称重复，请重新输入!'));
                 return false;
             }
         }
@@ -1115,38 +1115,38 @@ function CheckChildDataBeforeSave() {
     return true;
 }
 var deleteMarkRuleAdd = new Ext.Toolbar.Button({
-    text: '删除',
-    tooltip: '删除',
+    text: $g('删除'),
+    tooltip: $g('删除'),
     iconCls: 'page_delete',
     width: 70,
     height: 30,
     handler: function () {
         var cell = MarkRuleAddGrid.getSelectionModel().getSelectedCell();
         if (cell == null) {
-            Msg.info('error', '请选择数据!');
+            Msg.info('error', $g('请选择数据!'));
             return false;
         } else {
             var record = MarkRuleAddGrid.getStore().getAt(cell[0]);
             var RowId = record.get('RowId');
             if (RowId != '') {
-                Ext.MessageBox.confirm('提示', '确定要删除选定的行?', function (btn) {
+                Ext.MessageBox.confirm($g('提示'), $g('确定要删除选定的行?'), function (btn) {
                     if (btn == 'yes') {
-                        var mask = ShowLoadMask(Ext.getBody(), '处理中请稍候...');
+                        var mask = ShowLoadMask(Ext.getBody(), $g('处理中请稍候...'));
                         Ext.Ajax.request({
                             url: MarkRuleGridUrl + '?actiontype=deleteChild&rowid=' + RowId,
-                            waitMsg: '删除中...',
+                            waitMsg: $g('删除中...'),
                             failure: function (result, request) {
                                 mask.hide();
-                                Msg.info('error', '请检查网络连接!');
+                                Msg.info('error', $g('请检查网络连接!'));
                             },
                             success: function (result, request) {
                                 var jsonData = Ext.util.JSON.decode(result.responseText);
                                 mask.hide();
                                 if (jsonData.success == 'true') {
-                                    Msg.info('success', '删除成功!');
+                                    Msg.info('success', $g('删除成功!'));
                                     MarkRuleAddGridDs.load({ params: { parref: mrId } });
                                 } else {
-                                    Msg.info('error', '删除失败!');
+                                    Msg.info('error', $g('删除失败!'));
                                 }
                             },
                             scope: this
@@ -1164,6 +1164,7 @@ var deleteMarkRuleAdd = new Ext.Toolbar.Button({
 
 //表格
 MarkRuleAddGrid = new Ext.grid.EditorGridPanel({
+	title:$g("定价规则明细"),
     store: MarkRuleAddGridDs,
     cm: MarkRuleAddGridCm,
     trackMouseOver: true,
@@ -1178,7 +1179,7 @@ MarkRuleAddGrid = new Ext.grid.EditorGridPanel({
     bbar: [
         {
             xtype: 'label',
-            text: '阶梯加成规则：售价=进价*加成; 加成=1+进销差率; 规则上下限:计算售价所依据的进价区间范围; 上限、下限、加成为0表示不限制',
+            text: $g('若维护了[定价规则明细],则使用阶梯加成规则：售价=阶梯1部分金额*(1+阶梯1加成率)+阶梯2部分金额*(1+阶梯2加成率)+阶梯3部分金额*(1+阶梯3加成率)+...'),
             align: 'center'
         }
     ],
@@ -1215,7 +1216,7 @@ Ext.onReady(function () {
         id: 'MarkRulePanel',
         layout: 'border',
         region: 'center',
-        title: '定价规则',
+        title: $g('定价规则'),
         activeTab: 0,
         items: [MarkRuleGrid, MarkRuleAddGrid]
     });

@@ -13,26 +13,46 @@ function BodyLoadHandler(){
 	SetStatus();
 	SetElement("MoveType",GetElementValue("MoveTypeID"))
 	var obj=document.getElementById("BFind");
+	//add by hyy 2023-02-03 ui改造
+	initPanelHeaderStyle();
+	initButtonColor();
 	if (obj) obj.onclick=BFind_Click;
 	
 	// add by ZX 2018-11-03 hisui调整
 	var obj=document.getElementById("BAddNew");
 	if (obj) obj.onclick=BAdd_Clicked;
+	if (jQuery("#BAddNew").length>0)
+	{
+		if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+			// 极简版
+			if (($("#BAddNew").attr('class')).indexOf("l-btn-disabled")==-1){
+				$("#BAddNew").css({"background-color":"#28ba05","color":"#ffffff"})
+			}else{
+				$("#BAddNew").css({'background-color':'#E5E5E5','color':'#999'})
+			}
+		}
+	}
 }
-
 function SetStatus()
 {
 	SetElement("Status",GetElementValue("GetStatu"))
 }
 function InitPage()
 {
-	KeyUp("FromLoc^ToLoc");
-	Muilt_LookUp("FromLoc^ToLoc");
+	KeyUp("FromLoc^ToLoc^Hospital");  //清空选择 Modied By QW20210629 BUG:QW0131 院区
+	Muilt_LookUp("FromLoc^ToLoc^Hospital");  //回车选择 Modied By QW20210629 BUG:QW0131 院区
 	///zy 2009-07-15 BugNo.ZY0007
 	var obj=document.getElementById("MoveType");
 	if (obj) obj.onchange=MoveType;
 	////////////////////
-
+	//Add By QW20210629 BUG:QW0131 院区 begin
+	var HosCheckFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo","990051");
+	if(HosCheckFlag=="0")
+	{
+		hiddenObj("cHospital",1);
+		hiddenObj("Hospital",1);
+	}
+	//Add By QW20210629 BUG:QW0131 院区 end
 }
 function GetFromLoc(value)
 {
@@ -88,5 +108,11 @@ function BAdd_Clicked()
 		url="dhceq.em.storemove.csp?"+val;
 		showWindow(url,"转移申请单","","","icon-w-paper","modal","","","large");  //modify by lmm 2020-06-04 UI
 	}
+}
+
+//Add By QW20210629 BUG:QW0131 院区
+function GetHospital(value)
+{
+	GetLookUpID("HospitalDR",value); 			
 }
 document.body.onload = BodyLoadHandler;

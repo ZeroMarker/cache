@@ -2,23 +2,36 @@
 /// date:       2020-02-20
 /// descript:   不良事件表单元素对照界面JS
 
-var editRow = "";
+var editRow = "",HospDr="";
 var ConArray = [{"value":"0","text":'统计'}, {"value":"1","text":'接口'}];
 
 $(function(){
-	
+    InitHosp(); 	//初始化医院 多院区改造 cy 2021-04-09
 	InitCombobox()			//初始化下拉框
 	
 	InitdgMainList();		//初始化对照关系列表
 	
 	initBlButton();			//初始化界面按钮事件
 })
+// 初始化医院 多院区改造 cy 2021-04-09
+function InitHosp(){
+	hospComp = GenHospComp("DHC_AdvDicContrast"); 
+	HospDr=hospComp.getValue(); 
+	//$HUI.combogrid('#_HospList',{value:"11"})
+	hospComp.options().onSelect = function(){///选中事件
+		HospDr=hospComp.getValue();
+		$("#formname").combobox('setValue',""); 
+		search(); 
+		var url='dhcapp.broker.csp?ClassName=web.DHCADVDicContrast&MethodName=jsonForm&HospID='+HospDr;
+		$("#formname").combobox('reload',url);  
+	}
+}
 ///初始化下拉框数据
 function InitCombobox()
 {
-	//抢救病区
+	// 表单类型
 	$('#formname').combobox({
-		url:$URL+"?ClassName=web.DHCADVDicContrast&MethodName=jsonForm",
+		url:$URL+"?ClassName=web.DHCADVDicContrast&MethodName=jsonForm&HospID="+HospDr,
 		valueField: 'value',
 		textField: 'text',
 		blurValidValue:true
@@ -80,12 +93,14 @@ function InitdgMainList(){
 				/// 元素代码
 				var ed=$("#dgMainList").datagrid('getEditor',{index:editRow,field:'ConFlagCode'});
 				$(ed.target).val(option.value);
-				
 				///一下加载下拉grid数据
-				var ed=$("#dgMainList").datagrid('getEditor',{index:editRow,field:'FieldDesc'});
-				$(ed.target).combogrid('grid').datagrid('load', {
-                    type: option.value,
+				 var ed=$("#dgMainList").datagrid('getEditor',{index:editRow,field:'FieldDesc'});
+				$ (ed.target).combogrid('grid').datagrid('load', {
+					type:option.value,
+					HospDr:HospDr
 				});
+				
+				
 			}
 		}
 	}
@@ -101,12 +116,26 @@ function InitdgMainList(){
 			panelWidth:500,
 			textField:'DicDesc',
 			mode:'remote',
-			url:$URL+'?ClassName=web.DHCADVDicContrast&MethodName=QueryAllFormItem',
+			url:$URL+'?ClassName=web.DHCADVDicContrast&MethodName=QueryAllFormItem&HospDr'+HospDr,
 			columns:dicclonms,
-				onSelect:function(rowIndex, rowData) {
-   					setAttrEditRowCellVal(rowData);
-				}		   
+			onSelect:function(rowIndex, rowData) {
+				setAttrEditRowCellVal(rowData);
+			},
+			keyHandler: {  
+	            query: function (keyword) {     //【动态搜索】处理 
+					/// 元素代码
+					var ed=$("#dgMainList").datagrid('getEditor',{index:editRow,field:'ConFlagCode'});
+					var type=$(ed.target).val();
+					var ed=$("#dgMainList").datagrid('getEditor',{index:editRow,field:'FieldDesc'});
+					$ (ed.target).combogrid('grid').datagrid('load', {
+						type:type,
+						HospDr:HospDr,
+						q:keyword
+					});
+					$(ed.target).combogrid("setValue", keyword);
+	            }
 			}
+		}
 	}
 	
 	/// 表单Combobox
@@ -116,7 +145,7 @@ function InitdgMainList(){
 		options: {
 			valueField: "value", 
 			textField: "text",
-			url:LINK_CSP+"?ClassName=web.DHCADVDicContrast&MethodName=jsonForm",
+			url:LINK_CSP+"?ClassName=web.DHCADVDicContrast&MethodName=jsonForm&HospID="+HospDr,
 			mode:'remote',
 			onSelect:function(option){
 				///设置类型值
@@ -170,8 +199,8 @@ function InitdgMainList(){
 		{field:'FormNameCode',title:'表单代码',width:100,editor:textEditor,hidden:true},
 		{field:'FormNameDesc',title:'表单名称',width:220,editor:FormEditor},
 		{field:'FormFieldCode',title:'事件元素代码',width:120,editor:textEditor},
-		{field:'FormFieldDesc',title:'事件元素',width:180,editor:FormFieldEditor}
-		
+		{field:'FormFieldDesc',title:'事件元素',width:180,editor:FormFieldEditor},
+		{field:'ConHsopDr',title:'ConHsopDr',width:100,hidden:true}
 	]];
 	/**
 	 * 定义datagrid
@@ -191,7 +220,7 @@ function InitdgMainList(){
 	      
 	    }
 	};
-	var uniturl = $URL+"?ClassName=web.DHCADVDicContrast&MethodName=QueryDicContrast&param=";
+	var uniturl = $URL+"?ClassName=web.DHCADVDicContrast&MethodName=QueryDicContrast&param="+"&HospDr="+HospDr;
 	new ListComponent('dgMainList', columns, uniturl, option).Init(); 
 }
 
@@ -223,7 +252,7 @@ function saveRow(){
 			return false;
 		}
 		
-		var tmp=rowsData[i].ID +"^"+ rowsData[i].FieldCode +"^"+ rowsData[i].FormNameCode +"^"+ rowsData[i].FormFieldCode +"^"+ rowsData[i].ConFlagCode;
+		var tmp=rowsData[i].ID +"^"+ rowsData[i].FieldCode +"^"+ rowsData[i].FormNameCode +"^"+ rowsData[i].FormFieldCode +"^"+ rowsData[i].ConFlagCode+"^"+ rowsData[i].ConHospDr;
 		dataList.push(tmp);
 	}
 	
@@ -257,10 +286,17 @@ function insertRow(){
 	
 	$("#dgMainList").datagrid('insertRow', {
 		index: 0, // 行数从0开始计算
-		row: {ID:'', FieldCode:'', FieldDesc:'', FormNameCode:'', FormNameDesc:'',FormFieldCode:'', FormFieldDesc:'', FormDicCode:'', ConFlag:''}
+		row: {ID:'', FieldCode:'', FieldDesc:'', FormNameCode:'', FormNameDesc:'',FormFieldCode:'', FormFieldDesc:'', FormDicCode:'', ConFlag:'',ConHospDr:HospDr}
 	});
 	$("#dgMainList").datagrid('beginEdit', 0);//开启编辑并传入要编辑的行
 	editRow=0;
+	
+	
+	// 多院区改造 cy 2021-04-13 根据医院重新加载 表单名称下拉数据
+	var FormNameDesced=$("#dgMainList").datagrid('getEditor',{index:editRow,field:'FormNameDesc'});
+	var url="dhcapp.broker.csp?ClassName=web.DHCADVDicContrast&MethodName=jsonForm&HospID="+HospDr;
+	$(FormNameDesced.target).combobox('reload',url);  
+
 }
 
 /// 删除选中行
@@ -301,7 +337,7 @@ function search()
 	var desc=$('#desc').val();
 	var formname=$("#formname").combobox('getValue');
 	var param=code+"^"+desc+"^"+formname;
-	$('#dgMainList').datagrid('load',{param:param}); 
+	$('#dgMainList').datagrid('load',{param:param,HospDr:HospDr}); 
 }
 
 ///重置
@@ -310,5 +346,5 @@ function reset()
 	$('#code').val("");
 	$('#desc').val("");
 	$("#formname").combobox('setValue',"");
-	$('#dgMainList').datagrid('load',{param:""});
+	$('#dgMainList').datagrid('load',{param:"",HospDr:HospDr});
 }

@@ -117,8 +117,11 @@ function InitSusAbQueryWin(){
 					if (value=="") return "";
 					var ReportID = row["ID"];
 					var EpisodeID = row["EpisodeID"];
-					
-					var btn = '<a href="#" class="btn_detail" onclick="objScreen.OpenFBDSusReport(\'' + ReportID + '\',\'' + EpisodeID + '\')"></a>';
+					if ((typeof HISUIStyleCode != 'undefined') && (HISUIStyleCode=="lite")){
+						var btn = '<a href="#" class="icon icon-paper" onclick="objScreen.OpenFBDSusReport(\'' + ReportID + '\',\'' + EpisodeID + '\')"></a>';
+					}else{
+						var btn = '<a href="#" class="btn_detail" onclick="objScreen.OpenFBDSusReport(\'' + ReportID + '\',\'' + EpisodeID + '\')"></a>';
+					}
 					return btn;
 				}
 			}, 
@@ -146,7 +149,7 @@ function InitSusAbQueryWin(){
 			{field:'PatName',title:'姓名',width:80},
 			{field:'Sex',title:'性别',width:60},
 			{field:'PatAge',title:'年龄',width:50},
-			{field:'AdmTypeDesc',title:'上报位置',width:80},
+			{field:'AdmTypeDesc',title:'报告位置',width:80},
 			{field:'CardTypeDesc',title:'证件类型',width:120},  
 			{field:'Identify',title:'证件号',width:160},
 			{field:'Contactor',title:'联系人',width:100},
@@ -171,7 +174,7 @@ function InitSusAbQueryWin(){
 			{field:'CheckTime',title:'审核时间',width:80},
 			{field:'ReportLocDesc',title:'上报科室',width:120},
 			{field:'PreDiagnosDrs',title:'初步诊断',width:120},
-			{field:'SusAbCaseDrs',title:'可疑病因',width:120},
+			{field:'SusCauseList',title:'可疑病因',width:120},
 			{field:'MainSym',title:'主要症状',width:120},
 			{field:'OtherSym',title:'其他症状',width:120},
 			{field:'MainSign',title:'主要体征',width:120},
@@ -186,6 +189,7 @@ function InitSusAbQueryWin(){
 		},onLoadSuccess:function(data){
 			//加载成功
 			dispalyEasyUILoad(); //隐藏效果
+			$('#FBDSusQuery').datagrid('unselectAll');//清除所有选中
 		}
 		
 	});

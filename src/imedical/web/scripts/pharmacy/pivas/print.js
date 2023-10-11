@@ -6,7 +6,7 @@
  */
 var PIVASLODOP = '';
 var PIVASPRINT = {
-	CallBack:'',
+    CallBack: '',
     // 当前打印病区液体的组数总数
     WardPogNum: '',
     /**
@@ -30,7 +30,7 @@ var PIVASPRINT = {
             {
                 ClassName: 'web.DHCSTPIVAS.PrintCom',
                 MethodName: 'LabelsJsonByPogsNo',
-                pogsNo: pogsNo,
+                pogsNoStr: pogsNo,
                 prtWayStr: sortWay
             },
             function (retJson) {
@@ -52,6 +52,8 @@ var PIVASPRINT = {
      */
     LabelsJsonByPogStr: function (_options) {
         var pogStr = _options.pogStr || '';
+        var rePrintFlag = _options.rePrintFlag || '';
+        rePrintFlag = rePrintFlag !== 'N' ? '补' : '';
         if (pogStr == undefined) {
             return '';
         }
@@ -64,7 +66,7 @@ var PIVASPRINT = {
             function (retJson) {
                 var retLen = retJson.length;
                 if (retLen > 0) {
-                    PIVASLABEL.Print(retJson, '补');
+                    PIVASLABEL.Print(retJson, rePrintFlag);
                 } else {
                     $.messager.progress('close');
                 }
@@ -139,13 +141,16 @@ var PIVASPRINT = {
         if (isPreview == 1) {
             fileName = raqName + '&RQDTFormat=' + rqDTFormat + '&' + params;
             if (isPath == 1) {
+                if (typeof websys_writeMWToken !== 'undefined') {
+                    return websys_writeMWToken('dhccpmrunqianreport.csp?reportName=' + fileName);
+                }
+
                 return 'dhccpmrunqianreport.csp?reportName=' + fileName;
             } else {
                 DHCCPM_RQPrint(fileName, window.screen.availWidth * 0.5, window.screen.availHeight);
             }
         } else {
             fileName = '{' + raqName + '(' + params + ';RQDTFormat=' + rqDTFormat + ')}';
-            alert(fileName);
             DHCCPM_RQDirectPrint(fileName);
         }
     },
@@ -161,7 +166,7 @@ var PIVASPRINT = {
         // 病区交接单
         WardBat: function () {
             var paramsArr = new Array(28);
-            paramsArr[8] = '1'; // 执行记录状态
+            paramsArr[8] = ''; // 执行记录状态
             paramsArr[21] = 'N'; // 执行记录状态
             return paramsArr;
         }
@@ -184,18 +189,18 @@ var PIVASPRINT = {
      * lodop坐标参数 : top left width height
      */
     MakeLodopLabel: function (pogLabelData, pageNo, pageNumbers, rePrint) {
-        var pogLabelArr = pogLabelData.split('|@|');
-        var pogMainData = pogLabelArr[0];
-        var pogDetailData = pogLabelArr[1];
-        var pogMainArr = pogMainData.split('^');
-        var pogDetailArr = pogDetailData.split('||');
-        var pogDetailLen = pogDetailArr.length;
+        PIVASLODOP.SET_PRINT_STYLE('FontName', '宋体');
+        var rows = pogLabelData.rows;
+        var pogDetailLen = rows.length;
+
         // 只要打印就是NewPageA
         var widthMM = '70mm';
         var heightMM = '70mm';
-        var bottomTop = 47; // 底部签字距顶部距离,mm
+        var lineLeft = 1;
+        var lineRight = 69;
+        var bottomTop = 53; // 底部签字距顶部距离,mm
         // 每页固定几个药
-        var incCnt = 3;
+        var incCnt = 4;
         var pageLen = Math.ceil(pogDetailLen / incCnt);
         // 页眉部分每页单独写,不能使用SET_PRINT_STYLEA(0, "ItemType", 1),每次都是输出重叠,因此可更加灵活控制每页输出内容
         for (var pageI = 0; pageI < pageLen; pageI++) {
@@ -209,167 +214,173 @@ var PIVASPRINT = {
             // 截取每页数据
             var st = pageI * incCnt;
             var ed = pageI * incCnt + pageICnt;
-            var detailArr = pogDetailArr.slice(st, ed);
+            var detailData = rows.slice(st, ed);
             PIVASLODOP.NewPageA();
             // top坐标
             var topMM = 0;
             // 医院抬头
             topMM += 1;
-            PIVASLODOP.ADD_PRINT_TEXTA('hospName', topMM + 'mm', '1mm', widthMM, 15, pogMainArr[36] + '输液签' + rePrint);
-            PIVASLODOP.SET_PRINT_STYLEA(0, 'Alignment', 2);
+            var title = pogLabelData.phaLocDesc + '输液签';
+            if (rePrint !== '') {
+                title += '(补-' + pogLabelData.printTimes + ')';
+            }
+            // 页码
+            var pageInfo = pageNo + '-' + (pageI + 1) + '/' + pageNumbers;
+            title += '　' + pageInfo;
+
+            PIVASLODOP.ADD_PRINT_TEXTA('hospName', topMM + 'mm', '1mm', '60mm', 1, title);
+            PIVASLODOP.SET_PRINT_STYLEA(0, 'FontSize', 8);
             // 标签PNo
-            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '59mm', '10mm', 15, pogMainArr[5]);
+            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '60mm', '9mm', 15, pogLabelData.pNo);
             PIVASLODOP.SET_PRINT_STYLEA(0, 'Alignment', 3);
             PIVASLODOP.SET_PRINT_STYLEA(0, 'Bold', 1);
+            PIVASLODOP.SET_PRINT_STYLEA(0, 'FontSize', 8);
             // 病区
             topMM += 3;
-            PIVASLODOP.ADD_PRINT_TEXTA('wardDesc', topMM + 'mm', '1mm', '40mm', 15, pogMainArr[3]);
-            PIVASLODOP.SET_PRINT_STYLEA(0, 'FontSize', 12);
+            PIVASLODOP.ADD_PRINT_TEXTA('wardDesc', topMM + 'mm', '1mm', '45mm', 1, pogLabelData.wardDesc);
+            PIVASLODOP.SET_PRINT_STYLEA(0, 'FontSize', 11);
             PIVASLODOP.SET_PRINT_STYLEA(0, 'Bold', 1);
-            // 批次(打包)-医嘱优先级
-            var batNo = pogMainArr[6];
-            var priDesc = pogMainArr[9];
-            var packFlag = pogMainArr[23];
-            if (packFlag != '') {
-                batNo = batNo + '(' + packFlag + ')';
+            // 床号
+            PIVASLODOP.ADD_PRINT_TEXTA('wardDesc', topMM + 4 + 'mm', '1mm', '20mm', 1, pogLabelData.bedNo);
+            PIVASLODOP.SET_PRINT_STYLEA(0, 'FontSize', 11);
+            PIVASLODOP.SET_PRINT_STYLEA(0, 'Bold', 1);
+            //            PIVASLODOP.SET_PRINT_STYLEA(0, 'Alignment', 2);
+            // 姓名
+            PIVASLODOP.ADD_PRINT_TEXTA('wardDesc', topMM + 8 + 'mm', '1mm', '20mm', 1, pogLabelData.patName);
+            PIVASLODOP.SET_PRINT_STYLEA(0, 'FontSize', 11);
+            PIVASLODOP.SET_PRINT_STYLEA(0, 'Bold', 1);
+            //            PIVASLODOP.SET_PRINT_STYLEA(0, 'Alignment', 2);
+            // 大类 - 批次 - 打包
+            var batNo = pogLabelData.batNo;
+            var priDesc = pogLabelData.priDesc;
+            var packFlag = pogLabelData.packFlag;
+            var pivaCat = pogLabelData.pivaCat;
+            var batInfo = '';
+            if (pivaCat !== '') {
+                batInfo += pivaCat;
             }
-            if (priDesc != '') {
-                batNo = batNo + '-' + priDesc;
+            batInfo += ' ' + batNo;
+            if (packFlag !== '') {
+                batInfo += ' ' + packFlag;
             }
-            PIVASLODOP.ADD_PRINT_TEXTA('batNo', topMM + 'mm', '40mm', '30mm', 15, batNo);
-            PIVASLODOP.SET_PRINT_STYLEA(0, 'FontSize', 12);
+
+            PIVASLODOP.ADD_PRINT_TEXTA('batNo', topMM + 'mm', '40mm', '29mm', 15, batInfo);
+            PIVASLODOP.SET_PRINT_STYLEA(0, 'FontSize', 11);
             PIVASLODOP.SET_PRINT_STYLEA(0, 'Alignment', 3);
             PIVASLODOP.SET_PRINT_STYLEA(0, 'Bold', 1);
-            // 二维码
-            topMM += 4.5;
-            var barCode = pogMainArr[31];
-            // 二维码不能再小于13mm
-            PIVASLODOP.ADD_PRINT_BARCODE(topMM + 'mm', '1mm', '13mm', '13mm', 'QRCode', barCode);
-            // 床号 姓名 年龄 性别
-            var bedNo = pogMainArr[25];
-            var patName = pogMainArr[26];
-            var patAge = pogMainArr[28];
-            var patSex = pogMainArr[29];
-            PIVASLODOP.ADD_PRINT_TEXTA('patInfo', topMM + 'mm', '13mm', '40mm', 15, bedNo + ' ' + patName + ' ' + patAge + ' ' + patSex);
-            PIVASLODOP.SET_PRINT_STYLEA(0, 'FontSize', 10);
-            PIVASLODOP.SET_PRINT_STYLEA(0, 'Bold', 1);
-            // 配液大类 工作组
-            var pivaCat = pogMainArr[30];
-            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '41mm', '28mm', 15, pivaCat);
-            PIVASLODOP.SET_PRINT_STYLEA(0, 'FontSize', 10);
-            PIVASLODOP.SET_PRINT_STYLEA(0, 'Alignment', 3);
-            PIVASLODOP.SET_PRINT_STYLEA(0, 'Bold', 1);
-            // 用法 皮试 No.登记号
+
+            // 用药时间 用法 频次 医嘱优先级
+            topMM += 5;
+            var ordInfo = '';
+            ordInfo += ' ' + pogLabelData.doseDateTime;
+            ordInfo += ' ' + pogLabelData.instrucDesc;
+            ordInfo += ' ' + pogLabelData.freqDesc;
+            ordInfo += ' ' + pogLabelData.priDesc;
+            PIVASLODOP.ADD_PRINT_TEXTA('ordInfo', topMM + 'mm', '20mm', '100mm', 15, ordInfo); // 显示到底就写长
+            // 年龄 性别 登记号
             topMM += 4;
-            var instrucDesc = pogMainArr[11];
-            var skinTest = pogMainArr[41];
-            var patNo = pogMainArr[27];
-            PIVASLODOP.ADD_PRINT_TEXTA('instruc', topMM + 'mm', '13mm', '55mm', 15, instrucDesc + ' ' + skinTest + ' ' + patNo);
-            PIVASLODOP.SET_PRINT_STYLEA(0, 'FontSize', 10);
-            PIVASLODOP.SET_PRINT_STYLEA(0, 'Bold', 1);
-            // 二维码内容 单号+条码
-            topMM += 4;
-            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '13mm', '50mm', 10, pogMainArr[4] + '    ' + barCode);
-            // PIVASLODOP.SET_PRINT_STYLEA(0, "FontSize", 7);
+            var patInfo = '';
+            patInfo += ' ' + pogLabelData.patAge;
+            patInfo += ' ' + pogLabelData.patSex;
+            patInfo += ' ' + pogLabelData.patNo;
+            patInfo += ' ' + pogLabelData.orderSkin;
+            PIVASLODOP.ADD_PRINT_TEXTA('patInfo', topMM + 'mm', '20mm', '100mm', 15, patInfo);
             // 停 拒 退 标识 - 绝对定位
-            var specStat = pogMainArr[17];
-            if (specStat != '') {
-                PIVASLODOP.ADD_PRINT_TEXT('5mm', '38mm', 15, 15, specStat);
-                PIVASLODOP.SET_PRINT_STYLEA(0, 'FontSize', 25);
-                PIVASLODOP.SET_PRINT_STYLEA(0, 'Bold', 1);
-                PIVASLODOP.ADD_PRINT_ELLIPSE('4mm', '37.5mm', '10mm', '10mm', 0, 3);
-                // PIVASLODOP.SET_PRINT_STYLEA(0, "Bold", 1);
+            var specType = pogLabelData.specType;
+            if (specType !== '') {
+                PIVASLODOP.ADD_PRINT_TEXT('3mm', '40mm', 15, 15, specType);
+                PIVASLODOP.SET_PRINT_STYLEA(0, 'FontSize', 24);
+                PIVASLODOP.SET_PRINT_STYLEA(0, 'Bold', 0);
+                PIVASLODOP.ADD_PRINT_ELLIPSE('4mm', '39mm', '10mm', '10mm', 0, 2);
             }
-            // 横线
-            topMM += 4;
-            PIVASLODOP.ADD_PRINT_LINE(topMM + 'mm', '1mm', topMM + 'mm', '69mm', 0, 1);
             // 表格标题
-            topMM += 1;
-            // 药品+厂家+规格
-            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '1mm', '50mm', 15, '药品        厂家   规格');
-            // 剂量
-            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '55mm', '20mm', 15, '剂量 数量');
-            // 横线
             topMM += 4;
-            PIVASLODOP.ADD_PRINT_LINE(topMM + 'mm', '1mm', topMM + 'mm', '69mm', 0, 1);
+            PIVASLODOP.ADD_PRINT_LINE(topMM + 'mm', lineLeft + 'mm', topMM + 'mm', lineRight + 'mm', 0, 1);
             topMM += 1;
-            // 药品,每个药品占两行
-            var detailLen = detailArr.length;
+            PIVASLODOP.SET_PRINT_STYLE('FontSize', 8);
+            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '1mm', '30mm', 1, '药品');
+            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '20mm', '20mm', 1, '规格');
+            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '35mm', '20mm', 1, '生产企业');
+            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '50mm', '10mm', 1, '剂量');
+            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '63mm', '100mm', 1, '数量');
+            topMM += 4;
+            PIVASLODOP.ADD_PRINT_LINE(topMM + 'mm', lineLeft + 'mm', topMM + 'mm', lineRight + 'mm', 0, 1);
+            topMM += 1;
+            PIVASLODOP.SET_PRINT_STYLE('FontSize', 9);
+            // 药品明细 每个药品占两行
+            var detailLen = detailData.length;
             for (var detailI = 0; detailI < detailLen; detailI++) {
-                var iData = detailArr[detailI];
-                var iDataArr = iData.split('^');
+                var iData = detailData[detailI];
                 if (detailI > 0) {
-                    topMM += 8;
+                    topMM += 7;
                 }
-                // 剂量不满满整支
-                var dosageFlag = iDataArr[3]; // 0\1
-                // 溶媒超包装
-                var qtyFlag = iDataArr[5]; // 0\1                // 药品+厂家+规格
-                PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '1mm', '53mm', '10mm', iDataArr[0] + iDataArr[7] + iDataArr[2]);
-                PIVASLODOP.SET_PRINT_STYLEA(0, 'LineSpacing', '-1mm'); // 文本行间距
-                if (dosageFlag == 0) {
+                var compFlag = iData.compFlag; // ! 不满整支
+                var moreFlag = iData.moreFlag; // ! 超包装
+                PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '1mm', '50mm', 15, iData.inciDesc);
+                // PIVASLODOP.SET_PRINT_STYLEA(0, 'LineSpacing', '-1mm'); // 文本行间距
+                if (compFlag === 'Y') {
                     PIVASLODOP.SET_PRINT_STYLEA(0, 'Underline', 1);
                 }
-                if (qtyFlag == 1) {
+                if (moreFlag === 'Y') {
                     PIVASLODOP.SET_PRINT_STYLEA(0, 'Bold', 1);
                 }
                 // 剂量
-                PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '55mm', '20mm', 15, iDataArr[1]);
-                if (dosageFlag == 0) {
+                PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '50mm', '15mm', 1, iData.dosage);
+                if (compFlag === 'Y') {
                     PIVASLODOP.SET_PRINT_STYLEA(0, 'Underline', 1);
                 }
-                if (qtyFlag == 1) {
+                if (moreFlag === 'Y') {
                     PIVASLODOP.SET_PRINT_STYLEA(0, 'Bold', 1);
                 }
                 // 数量
-                PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '65mm', '10mm', 15, iDataArr[4]);
-                if (dosageFlag == 0) {
+                PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '63mm', '10mm', 15, iData.qty);
+                // PIVASLODOP.SET_PRINT_STYLEA(0, 'Alignment', 3);
+                if (moreFlag === 'Y') {
                     PIVASLODOP.SET_PRINT_STYLEA(0, 'Underline', 1);
                 }
-                if (qtyFlag == 1) {
+                if (moreFlag === 'Y') {
                     PIVASLODOP.SET_PRINT_STYLEA(0, 'Bold', 1);
                 }
+                // 生产企业规格
+                PIVASLODOP.ADD_PRINT_TEXT(topMM + 3.5 + 'mm', '15mm', '100mm', 15, iData.spec);
+                PIVASLODOP.SET_PRINT_STYLEA(0, 'FontSize', 7.5);
+                PIVASLODOP.ADD_PRINT_TEXT(topMM + 3.5 + 'mm', '35mm', '30mm', 15, iData.manfDesc);
+                PIVASLODOP.SET_PRINT_STYLEA(0, 'FontSize', 7.5);
             }
+            PIVASLODOP.SET_PRINT_STYLE('FontSize', 7);
             // 底部开始高度,重新计算高度
             var topMM = bottomTop;
             // 横线
-            PIVASLODOP.ADD_PRINT_LINE(topMM + 'mm', '1mm', topMM + 'mm', '69mm', 0, 1);
-            // 医嘱用药说明(用药时间 滴速 )
+            PIVASLODOP.ADD_PRINT_LINE(topMM + 'mm', lineLeft + 'mm', topMM + 'mm', lineRight + 'mm', 0, 1);
+            // 备注(医嘱备注 药师备注等)
             topMM += 1;
-            var doseDateTime = pogMainArr[12];
-            var ivgSpeed = pogMainArr[35];
-            var freq = pogMainArr[10];
-            var ordInfo = '用药:' + doseDateTime + ' ' + freq + ' ' + ivgSpeed;
-            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '1mm', '69mm', 15, ordInfo);
-            PIVASLODOP.SET_PRINT_STYLEA(0, 'Bold', 1);
-            // 说明 (用药说明 储存条件)
-            topMM += 4;
-            var drugInfo = pogMainArr[33];
-            var storeInfo = pogMainArr[34];
-            var useInfo = '说明:' + drugInfo + ' ' + storeInfo;
-            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '1mm', '69mm', 15, useInfo);
+            var ordInfoStr = pogLabelData.ordRemark;
+            if (pogLabelData.phaLabelRemark !== '') {
+                ordInfoStr = ordInfoStr === '' ? pogLabelData.phaLabelRemark : ordInfoStr + ';' + pogLabelData.phaLabelRemark;
+            }
+            var ordInfo = '备注: ' + ordInfoStr;
+            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '1mm', '50mm', 10, ordInfo);
+            // 说明 (用药说明 储存条件等)
+            topMM += 3;
+            var useInfo = '说明: ' + pogLabelData.useInfo + ' ' + pogLabelData.storeInfo;
+            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '1mm', '50mm', 10, useInfo);
             // 横线
-            topMM += 4;
-            PIVASLODOP.ADD_PRINT_LINE(topMM + 'mm', '1mm', topMM + 'mm', '69mm', 0, 1);
+            topMM += 3;
+            PIVASLODOP.ADD_PRINT_LINE(topMM + 'mm', lineLeft + 'mm', topMM + 'mm', lineRight - 18 + 'mm', 0, 1);
             // 签字(审方 排药 核对)
             topMM += 1;
-            var user30Name = pogMainArr[38];
-            if (pogMainArr[37] != '') {
-                user30Name = pogMainArr[37];
-            }
-            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '1mm', '23mm', 15, '打签:' + session['LOGON.USERNAME']);
-            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '24mm', '23mm', 15, '排药:' + user30Name);
-            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '47mm', '23mm', 15, '审核:' + pogMainArr[19]);
-            // 签字(配液 复核 医生)
-            topMM += 4;
-            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '1mm', '23mm', 15, '配液:');
-            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '24mm', '23mm', 15, '复核:');
-            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '47mm', '23mm', 15, '医生:' + pogMainArr[22]);
-            // 横线
-            topMM += 4;
-            PIVASLODOP.ADD_PRINT_LINE(topMM + 'mm', '1mm', topMM + 'mm', '69mm', 0, 1);
-            // 打印时间
-            topMM += 1;
+            var user30Name = pogLabelData.ps30UserName !== '' ? pogLabelData.ps30UserName : pogLabelData.user30Name;
+            // 签字(医生\审方\打签), 按流程顺序
+            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '1mm', '20mm', 1, '医生:' + pogLabelData.docName);
+            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '17mm', '20mm', 1, '审方:' + pogLabelData.passUserName);
+            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '34mm', '20mm', 1, '打签:' + session['LOGON.USERNAME']);
+            // 签字(核对\配置\复核)
+            topMM += 3;
+            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '1mm', '20mm', 1, '核对:');
+            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '17mm', '20mm', 1, '配置:');
+            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '34mm', '20mm', 1, '复核:');
+            // 打印时间 单号 二维码
+            topMM += 2;
             var fmtDT = 'TIME:yyyy-mm-dd hh:mm:ss';
             if (dtformat) {
                 if (dtformat.indexOf('DMY') >= 0) {
@@ -377,11 +388,12 @@ var PIVASPRINT = {
                 }
             }
             var nowTime = PIVASLODOP.FORMAT(fmtDT, 'now');
-            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '1mm', '35mm', 15, nowTime);
-            // 页码
-            var pageInfo = pageNo + '-' + (pageI + 1) + ' / ' + pageNumbers;
-            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '36mm', '30mm', 15, pageInfo);
-            PIVASLODOP.SET_PRINT_STYLEA(0, 'Alignment', 3);
+            // PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '1mm', '35mm', 1, nowTime + ' ' + pogLabelData.prtNo);
+            PIVASLODOP.ADD_PRINT_BARCODE(bottomTop + 1 + 'mm', '53mm', '20mm', '20mm', 'QRCode', pogLabelData.barCode);
+            PIVASLODOP.SET_PRINT_STYLEA(0, 'QRCodeVersion', 3);
+            PIVASLODOP.SET_PRINT_STYLEA(0, 'QRCodeErrorLevel', 'M');
+            topMM += 1;
+            PIVASLODOP.ADD_PRINT_TEXT(topMM + 'mm', '1mm', '50mm', 10, pogLabelData.prtNo + '　' + pogLabelData.barCode.split('-').slice(0, 3).join('-'));
         }
     },
     /**
@@ -435,10 +447,10 @@ var PIVASPRINT = {
             }
 
             PIVASLODOP.PRINT_INIT('配液中心排药单');
-            PIVASLODOP.SET_PRINT_STYLE('FontName', 'Microsoft Yahei');
+            PIVASLODOP.SET_PRINT_STYLE('FontName', '宋体');
             PIVASLODOP.SET_PRINT_PAGESIZE(1, 0, 0, 'A4');
             PIVASLODOP.ADD_PRINT_TEXT('5mm', '0mm', '100%', '5mm', title);
-            PIVASLODOP.SET_PRINT_STYLEA(0, 'FontName', 'Microsoft Yahei');
+            PIVASLODOP.SET_PRINT_STYLEA(0, 'FontName', '宋体');
             PIVASLODOP.SET_PRINT_STYLEA(0, 'FontSize', 14);
             PIVASLODOP.SET_PRINT_STYLEA(0, 'Alignment', 2);
             PIVASLODOP.SET_PRINT_STYLEA(0, 'ItemType', 1);
@@ -454,14 +466,14 @@ var PIVASPRINT = {
             var html =
                 '<style>table,td,th {border: 1px solid black;border-style: solid;border-collapse: collapse;font-size:' +
                 HtmlZoom.val_pt('10.5') +
-                ';font-family:Microsoft Yahei} table{table-layout:fixed;display:table;} tfoot,th{ border:none;font-size:' +
+                ';font-family:宋体} table{table-layout:fixed;display:table;} tfoot,th{ border:none;font-size:' +
                 HtmlZoom.val_pt('10.5') +
                 ';text-align:left} tfoot,th,tr,td{font-weight:normal}</style><table>';
             html += "<thead style='font-weight:bold;'>";
             html += "<td style='width:" + HtmlZoom.val_mm('20mm') + "'>" + ' 货位' + '</td>';
             html += "<td style='width:" + HtmlZoom.val_mm('60mm') + "'>" + ' 药品名称' + '</td>';
             html += "<td style='width:" + HtmlZoom.val_mm('20mm') + "'>" + ' 规格' + '</td>';
-            html += "<td style='width:" + HtmlZoom.val_mm('30mm') + "'>" + ' 厂家' + '</td>';
+            html += "<td style='width:" + HtmlZoom.val_mm('30mm') + "'>" + ' 生产企业' + '</td>';
             html += "<td style='width:" + HtmlZoom.val_mm('15mm') + ";text-align:center'>" + '数量' + '</td>';
             html += "<td style='width:" + HtmlZoom.val_mm('15mm') + "'>" + ' 单位' + '</td>';
             html += "<td style='width:" + HtmlZoom.val_mm('40mm') + "'>" + ' 各批次数量' + '</td></tr>';
@@ -589,13 +601,21 @@ var PIVASPRINT = {
             return;
         }
         data.Para.prtUser = session['LOGON.USERNAME'];
+        data.List.unshift({
+            stkBin: '货位码',
+            inciDesc: '药品',
+            spec: '规格',
+            manfDesc: '生产企业',
+            qty: '数量',
+            uomDesc: '单位'
+        });
         PRINTCOM.XML({
             printBy: 'lodop', // inv or lodop, default is lodop
             XMLTemplate: 'PHAPIVASARRANGE',
             data: data,
             preview: false,
             //aptListFields: ["label6", "printUserName", "label8", "printDate"],
-            listBorder: { style: 2, startX: 1, endX: 193 },
+            listBorder: { style: 4, startX: 1, endX: 193 },
             page: {
                 x: 170,
                 y: 3,
@@ -605,9 +625,101 @@ var PIVASPRINT = {
                 format: '页码:{1}/{2}'
             }
         });
+        if (typeof App_MenuCsp !== 'undefined') {
+            if (pogsNo !== '') {
+                PHA_LOG.Operate({
+                    operate: 'P',
+                    logInput: JSON.stringify({ pogsNo: pogsNo }),
+                    // logInput: logParams,
+                    type: 'User.PIVAOrdGrpState.Arrange',
+                    pointer: pogsNo,
+                    origData: '',
+                    remarks: App_MenuName + ' - 排药单'
+                });
+            } else {
+                PHA_LOG.Operate({
+                    operate: 'P',
+                    logInput: JSON.stringify({ pogIdStr: pogIdStr.substr(0, 30) }),
+                    // logInput: logParams,
+                    type: 'page',
+                    pointer: App_MenuCsp,
+                    origData: '',
+                    remarks: App_MenuName + ' - 排药单'
+                });
+            }
+        }
         setTimeout(function () {
             $.messager.progress('close');
         }, 1000);
+    },
+    WardBat: {
+        /**
+         * 病区交接单打印, 使用csp建立模板,通过handlebars解析,调用Lodop
+         * TIPS: 默认如下每个循环只打印一个病区的单据, 如果需要打印多个需要调整二维码的生成方式
+         * @param {object[]} pJson
+         * @param {array}  pJson.pogsNoArr 单号, 传数组
+         * @param {string} pJson.loc 配液中心ID
+         * @param {string} pJson.rePrint 补打标志 Y
+         * @param {string} pJson.printType 打印的单据类型
+         */
+        Handler: function (pJson) {
+            var prtData = tkMakeServerCall('web.DHCSTPIVAS.PrintWardBat', 'GetData', JSON.stringify(pJson));
+
+            var prtArr = JSON.parse(prtData);
+            for (var i = 0; i < prtArr.length; i++) {
+                var prtJson = prtArr[i];
+                this[pJson.printType](prtJson);
+            }
+        },
+        Total: function (prtJson) {
+            var template = PIVAS.GetFileContent('dhcpha.pivas.temp.wardbat.total.csp');
+
+            var handler = Handlebars.compile(template);
+            var printHtml = handler([prtJson]);
+            var WBLODOP = getLodop();
+            WBLODOP.ADD_PRINT_HTML('1mm', '1mm', '100%', '100%', printHtml);
+            WBLODOP.ADD_PRINT_BARCODE('2mm', '2mm', '23mm', '23mm', 'QRCode', prtJson.pogsNo);
+            WBLODOP.SET_PRINT_STYLEA(0, 'QRCodeVersion', 4);
+            WBLODOP.SET_PRINT_STYLEA(0, 'QRCodeErrorLevel', 'Q');
+            WBLODOP.SET_PRINT_PAGESIZE(3, '200mm', '10mm', '');
+            // WBLODOP.PREVIEW();
+            WBLODOP.PRINT();
+            if (typeof App_MenuName !== 'undefined') {
+                PHA_LOG.Operate({
+                    operate: 'P',
+                    logInput: JSON.stringify({ pogsNo: prtJson.pogsNo }),
+                    // logInput: logParams,
+                    type: 'User.PIVAOrdGrpState.WardBatTotal',
+                    pointer: prtJson.pogsNo,
+                    origData: '',
+                    remarks: App_MenuName + ' - 交接单 - 病区批次合计'
+                });
+            }
+        },
+        Inci: function (prtJson) {
+            var template = PIVAS.GetFileContent('dhcpha.pivas.temp.wardbat.inci.csp');
+            var handler = Handlebars.compile(template);
+            var printHtml = handler([prtJson]);
+            var WBLODOP = getLodop();
+            WBLODOP.ADD_PRINT_HTML('1mm', '1mm', '100%', '100%', printHtml);
+            WBLODOP.ADD_PRINT_BARCODE('2mm', '2mm', '23mm', '23mm', 'QRCode', prtJson.pogsNo);
+            WBLODOP.SET_PRINT_STYLEA(0, 'QRCodeVersion', 4);
+            WBLODOP.SET_PRINT_STYLEA(0, 'QRCodeErrorLevel', 'Q');
+            WBLODOP.SET_PRINT_PAGESIZE(3, '200mm', '10mm', '');
+            // WBLODOP.PREVIEW();
+            WBLODOP.PRINT();
+            if (typeof App_MenuName !== 'undefined') {
+                PHA_LOG.Operate({
+                    operate: 'P',
+                    logInput: JSON.stringify({ pogsNo: prtJson.pogsNo }),
+                    // logInput: logParams,
+                    type: 'User.PIVAOrdGrpState.WardBatTotal',
+                    pointer: prtJson.pogsNo,
+                    origData: '',
+                    remarks: App_MenuName + ' - 交接单 - 药品数量汇总'
+                });
+            }
+        }
     }
 };
 // 标签打印
@@ -654,7 +766,7 @@ var PIVASLABEL = {
                         .find('div.messager-p-msg')
                         .text(labelCnt + 1 + ' / ' + dataLen);
                     $.messager.progress('bar').progressbar('setValue', parseInt(((labelCnt + 1) / dataLen) * 100));
-                    if (labelCnt + 1 === dataLen) {
+                    if (labelCnt + 1 >= dataLen) {
                         $.messager.progress('close');
                     }
                 }, 50);
@@ -692,7 +804,7 @@ var PIVASLABEL = {
         };
         var makeLabel = function (rePrint) {
             getCurLabel();
-            PIVASPRINT.MakeLodopLabel(labelJson.LabelData, labelCnt + 1, dataLen, rePrint);
+            PIVASPRINT.MakeLodopLabel(labelJson, labelCnt + 1, dataLen, rePrint);
         };
         var toPrint = function () {
             if (needPrint()) {

@@ -69,7 +69,7 @@ function InitMainList(){
 	};
 	/// 就诊类型
 	var param = mdtParams;
-	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsGetMdtReqLocMap&Params="+param+ "&pid="+pid;
+	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsGetMdtReqLocMap&Params="+param+ "&pid="+pid+"&MWToken="+websys_getMWToken();
 	new ListComponent('bmMainList', columns, uniturl, option).Init(); 
 }
 
@@ -84,7 +84,7 @@ function SetCellUrl(value, rowData, rowIndex){
 /// 弹窗
 function Pop_Win(mdtParams){
 	
-	var Link = "dhcmdt.docworkloadstat.csp?mdtParams="+ mdtParams;
+	var Link = "dhcmdt.docworkloadstat.csp?mdtParams="+ mdtParams+"&MWToken="+websys_getMWToken();
 	window.open(Link, '_blank', 'height='+ (window.screen.availHeight-200) +', width='+ (window.screen.availWidth-200) +', top=100, left=100, toolbar=no, menubar=no, scrollbars=no, resizable=yes, location=no, status=no');
 }
 
@@ -109,6 +109,9 @@ function InitDisGrpChart(){
 		
 		if (jsonString != null){
 			var ListDataObj = jsonString; ///jQuery.parseJSON(jsonString);
+			for (var i in ListDataObj){
+				ListDataObj[i].name = $g(ListDataObj[i].name);
+			}
 			var option = ECharts.ChartOptionTemplates.Bars(ListDataObj); 
 			option.title ={
 				text: '',    ///'审查指标趋势图',
@@ -149,7 +152,7 @@ function onbeforeunload_handler() {
 
 /// 自动设置页面布局
 function onresize_handler(){
-	
+	$("#bmMainList").datagrid("resize");
 }
 
 /// 页面全部加载完成之后调用(EasyUI解析完之后)

@@ -27,6 +27,12 @@ function initBussLifeInfo()
 function createLifeInfo(jsonData)
 {
 	var curYear=""
+	//add by lmm 2021-05-28 begin
+	if ((jsonData.rows.length!=0)&&($("#DefaultImage")))
+	{
+		$("#DefaultImage").css("display","none");
+	}
+	//add by lmm 2021-05-28 end
 	$("#MaintHistoryListView").empty(); //每次加载之前移除样式
 	//按时间倒序,从最大值遍历
 	for (var i=jsonData.rows.length-1;i>=0;i--)
@@ -43,8 +49,8 @@ function createLifeInfo(jsonData)
 		var sourceID=jsonData.rows[i].TRowID;
 		var maintUser=jsonData.rows[i].TMaintUser;	//维护人
 		var usedFee=jsonData.rows[i].TTotalFee;	//总维护费用
-		var year=""
-		if(maintDate!="") year=maintDate.substring(0,4);
+		var year=jsonData.rows[i].TMaintYear;	//czf 1730995 2021-01-22
+		//if(maintDate!="") year=maintDate.substring(0,5);  //modified by sjh SJH0039 2020-11-13 修改截取日期字符串长度
 		//var keyInfo=maintDate+" "+maintTime+", "+maintUser+" "+maintType+", 费用："+usedFee；
 		
 		var section="";
@@ -91,21 +97,19 @@ function lifeInfoDetail(sourceType,sourceID)
 		showWindow(url,"业务详情","","","icon-w-paper","modal","","","large");   //modify by lmm 2020-06-05 UI
 		
 	}
-	//add by lmm 2020-05-14
+	//add by lmm 2020-09-03 1485684
 	else if(sourceType=="72-1")
 	{
-		showWindow(url,"计量记录","","10row","icon-w-paper","modal","","","middle");   //modify by lmm 2020-06-17 UI
+		showWindow(url,"计量记录","4col","11row","icon-w-paper","modal","","","middle");   //modify by lmm 2020-06-17 UI
 		
 	}
 	else if(sourceType=="32")
 	{
-		showWindow(url,"保养记录","","10row","icon-w-paper","modal","","","middle");   //modify by lmm 2020-06-17 UI
-		
+		showWindow(url,"保养记录","","","icon-w-paper","modal","","","large");   // MZY0147	3118218		2022-12-20
 	}
 	else if(sourceType=="33")
 	{
-		showWindow(url,"检查记录","","10row","icon-w-paper","modal","","","middle");   //modify by lmm 2020-06-17 UI
-		
+		showWindow(url,"检查记录","","","icon-w-paper","modal","","","large");   // MZY0147	3118218		2022-12-20
 	}
 	//add by lmm 2020-05-14
 	else

@@ -18,6 +18,7 @@ $(function(){
 		BClear_click();		
         });
     
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEStationWorkStatistic.raq");
 })
 
 
@@ -60,6 +61,8 @@ function BFind_click(){
 	else if (ShowFlag == "Coll") reportName = "DHCPEStationWorkCollStatistic.raq";
 	else { alert("请选择查询类型！"); return false;}
 	
+	var CurLoc = session["LOGON.CTLOCID"];	
+	
 	var lnk = "&BeginDate=" + BeginDate
 			+ "&EndDate=" + EndDate
 			+ "&GroupDR=" + GroupDR
@@ -68,16 +71,18 @@ function BFind_click(){
 			+ "&VIPLevel=" + VIPLevel
 			+ "&PayFlag=" + PayFlag
 			+ "&ShowFlag=" + ShowFlag
+			+ "&CurLoc=" + CurLoc
 			;
 
-	document.getElementById('ReportFile').src="dhccpmrunqianreport.csp?reportName=" + reportName + lnk;
+    ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=" + reportName + lnk);
+	//document.getElementById('ReportFile').src="dhccpmrunqianreport.csp?reportName=" + reportName + lnk;
 }
 
 function InitCombobox(){
 	
 	//VIP等级	
 	var VIPObj = $HUI.combobox("#VIPLevel",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindVIP&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindVIP&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
 		valueField:'id',
 		textField:'desc',
 		});
@@ -113,7 +118,7 @@ function InitCombobox(){
 	var LocDescObj = $HUI.combogrid("#LocDesc",{
 		panelWidth:450,
 		panelHeight:243,
-		url:$URL+"?ClassName=web.DHCPE.Report.StationWorkStatistic&QueryName=SearchLoc",
+		url:$URL+"?ClassName=web.DHCPE.Report.StationWorkStatistic&QueryName=SearchLocNew",
 		mode:'remote',
 		delay:200,
 		pagination:true,
@@ -126,6 +131,10 @@ function InitCombobox(){
 		textField:'CTLOC_Desc',	
         onBeforeLoad:function(param){
 			param.Desc = param.q;
+			param.Type="F";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID'];
+
 		},		
 		columns:[[
 			{field:'CTLOC_Code',title:'编码',width:100},
@@ -151,6 +160,10 @@ function InitCombobox(){
 		textField:'desc',
         onBeforeLoad:function(param){
 			param.Desc = param.q;
+			param.Type="F";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID'];
+
 		},		
 		columns:[[
 			{field:'Code',title:'编码',width:80},
@@ -166,9 +179,9 @@ function InitCombobox(){
 		panelHeight:"auto",
 		editable:false,
 		data:[
-		    {id:'',text:'不限',selected:true},
-			{id:'Y',text:'已付费'},
-			{id:'N',text:'未付费'}
+		    {id:'',text:$g('不限'),selected:true},
+			{id:'Y',text:$g('已付费')},
+			{id:'N',text:$g('未付费')}
 		]
 	});
 	
@@ -179,9 +192,27 @@ function InitCombobox(){
 		panelHeight:"auto",
 		editable:false,
 		data:[
-			{id:'Item',text:'按医嘱显示',selected:true},
-			{id:'Coll',text:'只显示汇总'}
+			{id:'Item',text:$g('按医嘱显示'),selected:true},
+			{id:'Coll',text:$g('只显示汇总')}
 		]
 	});
 	
+}
+// 解决iframe中 润乾csp 跳动问题
+function ShowRunQianUrl(iframeId, url) {
+    var iframeObj = document.getElementById(iframeId)
+    if (iframeObj) {
+	    iframeObj.src=url;
+	    //debugger;
+	    $(iframeObj).hide();
+	    if (iframeObj.attachEvent) {
+		    iframeObj.attachEvent("onload", function(){
+		        $(this).show();
+		    });
+	    } else {
+		    iframeObj.onload = function(){
+		        $(this).show();
+		    };
+	    }
+    }
 }

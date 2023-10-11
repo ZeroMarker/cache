@@ -142,7 +142,7 @@ function InitExaBoroughRoomTabDataGrid(){
 				}
 			}
 		}
-	});
+	}).datagrid({loadFilter:DocToolsHUI.lib.pagerFilter});
 	return ChgDepMarkSetTabDataGrid;
 }
 function SetSelRowData(row){
@@ -256,10 +256,12 @@ function ClearData(){
 	cbox.select("");
 	var cbox=$HUI.combobox("#MarkSource"); 
 	cbox.select("");
+	cbox.loadData([]);
 	var cbox=$HUI.combobox("#DepTarget"); 
 	cbox.select("");
 	var cbox=$HUI.combobox("#MarkTarget"); 
 	cbox.select("");
+	cbox.loadData([]);
 }
 function CheckDataValid(){
 	var cbox=$HUI.combobox("#DepSource"); 
@@ -323,6 +325,6 @@ function ChgDepMarkSetTabDataGridLoad(){
 	    HospID:$HUI.combogrid('#_HospList').getValue(),
 	    Pagerows:PageLogicObj.m_ChgDepMarkSetTabDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
-		PageLogicObj.m_ChgDepMarkSetTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+		PageLogicObj.m_ChgDepMarkSetTabDataGrid.datagrid('unselectAll').datagrid('loadData',GridData);
 	}); 
 }

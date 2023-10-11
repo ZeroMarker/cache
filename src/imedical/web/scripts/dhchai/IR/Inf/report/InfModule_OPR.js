@@ -15,8 +15,7 @@
 						d.QueryName = "QryINFOPSByRep";
 						d.Arg1 = ReportID;
 						d.Arg2 = '';
-						d.Arg3 = 0;
-						d.ArgCnt = 3;
+						d.ArgCnt = 2;
 					}
 				},
 				columns: [
@@ -68,24 +67,23 @@
 	}
 	obj.refreshgridINFOPS();
 
-	var IsHist = 0;
-	function refreshgridINFOPSSync() {
+
+	function refreshgridINFOPSSync(){
 		if(obj.gridINFOPSSync==undefined)
 		{
-		    obj.gridINFOPSSync = $("#gridINFOPSSync").DataTable({
-		        dom: 'rt',
-		        paging:false,
-		        select: 'single',
-		        ordering: false,
-		        ajax: {
-		            "url": "dhchai.query.datatables.csp",
-		            "data": function (d) {
-		                d.ClassName = "DHCHAI.IRS.INFOPSSrv";
-		                d.QueryName = "QryINFOPSByRep";
-		                d.Arg1 = '';
-		                d.Arg2 = EpisodeID;
-		                d.Arg3 = IsHist;
-						d.ArgCnt = 3;
+			obj.gridINFOPSSync = $("#gridINFOPSSync").DataTable({
+				dom: 'rt',
+				paging:false,
+				select: 'single',
+				ordering: false,
+				ajax: {
+					"url": "dhchai.query.datatables.csp",
+					"data": function (d) {
+						d.ClassName = "DHCHAI.IRS.INFOPSSrv";
+						d.QueryName = "QryINFOPSByRep";
+						d.Arg1 = '';
+						d.Arg2 = EpisodeID;
+						d.ArgCnt = 2;
 					}
 				},
 				columns: [
@@ -124,10 +122,7 @@
 	}
 
 	// 弹出手术信息提取框
-	function OpenINFOPSSync() {
-	    IsHist = 0;
-	    $("#MoreOPR").css({ 'background-color': 'white' });
-	    $("#OPRInfo").css({ 'background-color': '#8dd3e4' });
+	function OpenINFOPSSync(){
 		refreshgridINFOPSSync();
 		obj.LayerOpenINFOPSSync = layer.open({
 				type: 1,
@@ -136,33 +131,17 @@
 				title: "手术信息-提取<span class='text-red'>[双击数据进行编辑]<span>", 
 				area: '75%',
 				content: $('#LayerOpenINFOPSSync')
-		});
-        //点击手术查询当次信息
-		$("#MoreOPR").on('click', function () {
-		    $("#MoreOPR").css({ 'background-color': '#8dd3e4' });
-		    $("#OPRInfo").css({ 'background-color': 'white' });
-		    IsHist = 1;
-		    refreshgridINFOPSSync();
-		});
-	    //点击更多手术查询往次信息
-		$("#OPRInfo").on('click', function () {
-		    $("#MoreOPR").css({ 'background-color': 'white' });
-		    $("#OPRInfo").css({ 'background-color': '#8dd3e4' });
-		    IsHist = 0;
-		    refreshgridINFOPSSync();
-		});
+		});	
 	}
-	
 	// 弹出手术信息弹框
 	function OpenINFOPSEdit(d,r){
-		$("#cboInfType").attr('disabled','disabled');
-	    $('#chkIsOperInf + .iCheck-helper').click(function(){
-		    $.form.SetValue("cboInfType","","");
-			if ($("#chkIsOperInf").parent().hasClass("checked")){
-				$("#cboInfType").removeAttr("disabled");
-			}else {
-				$("#cboInfType").attr('disabled','disabled');
-			}
+		$("#cboInfType").attr("disabled","disabled");
+		$("#chkIsOperInf").on('ifChecked', function(event){
+			$("#cboInfType").removeAttr("disabled");
+		});
+		$("#chkIsOperInf").on('ifUnchecked', function(event){
+			$.form.SetValue("cboInfType","","");
+			$("#cboInfType").attr('disabled','disabled');
 		});
 		obj.LayerOpenINFOPSEdit = layer.open({
 				type: 1,
@@ -180,7 +159,7 @@
 				,success: function(layero){
 					InitINFOPSEditData(d);
 				}
-		});	
+		});
 	}
 
 	// 添加手术信息到列表

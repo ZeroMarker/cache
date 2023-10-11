@@ -156,6 +156,7 @@ function onClickRow(index)
 			$('#DHCEQAInStock').datagrid('selectRow', index).datagrid('beginEdit', index);
 			editIndex = index;
 			modifyBeforeRow = $.extend({},$('#DHCEQAInStock').datagrid('getRows')[editIndex]);
+			setElement("AISLRowID", $('#DHCEQAInStock').datagrid('getSelected').AISLRowID)	//MZY0040	1408950		2020-7-21
 			bindGridEvent();  //编辑行监听响应
 		} else {
 			$('#DHCEQAInStock').datagrid('selectRow', editIndex);
@@ -329,10 +330,25 @@ function GetAccessoryList(index,data)
 	rowData.AISLManuFactoryDR_MDesc=data.TManuFactory;
 	rowData.AISLHold1=data.THold1;
 	rowData.AISLHold2=data.THold2;
-	
-	var editor = $('#DHCEQAInStock').datagrid('getEditors', editIndex);
-	$(editor[0].target).combogrid("setValue",data.TDesc);
+	// MZY0057	1454499		2020-10-09	调整"配件名称"赋值方式
+	//var editor = $('#DHCEQAInStock').datagrid('getEditors', editIndex);
+	//$(editor[0].target).combogrid("setValue",data.TDesc);
 	//$(editor[1].target).combogrid("setValue",data.TBaseUOM);
+	// MZY0040	1408950		2020-7-21
+	rowData.AISLHold5=data.TCTLRowID;
+	rowData.TContractNo=data.TContractNo;
+	
+	// MZY0057	1454499		2020-10-09
+	var AISLDescEdt = $('#DHCEQAInStock').datagrid('getEditor', {index:editIndex,field:'AISLDesc'});
+	$(AISLDescEdt.target).combogrid("setValue",data.TDesc);
+	if (rowData.AISLHold5!="")
+	{
+		var quantityEdt = $('#DHCEQAInStock').datagrid('getEditor', {index:editIndex,field:'AISLQuantityNum'}); // 数量
+		$(quantityEdt.target).val(data.TQuantityNum);
+		// MZY0060	1568642		2020-11-3
+		rowData.AISLAmount=data.TCurBPrice*data.TQuantityNum;
+		rowData.TTotalFee=rowData.AISLAmount;
+	}
 	$('#DHCEQAInStock').datagrid('endEdit',editIndex);
 	if ((rowData.TMRRowID=="")||(rowData.TMRRowID==undefined)) $("#MRequestz"+editIndex).hide();	//Add by Mozy	1064176	2019-10-26	Mozy0227
 	$('#DHCEQAInStock').datagrid('beginEdit', editIndex);	// MZY0037	1400284		2020-07-06
@@ -541,7 +557,7 @@ function BPrint_Clicked()
 { 
 	var PrintFlag = getElementValue("PrintFlag");	 //打印方式标志位 excel：0  润乾:1   
 	var PreviewRptFlag = getElementValue("PreviewRptFlag"); //润乾预览标志 不预览 :0  预览 :1	
-	var HOPDESC = curSSHospitalName;
+	var HOSPDESC = getElementValue("HospitalDesc");
 	var filename="";
 	//Excel打印方式
 	if(PrintFlag==0)  
@@ -554,7 +570,7 @@ function BPrint_Clicked()
 		if(PreviewRptFlag==0)
 		{ 
 		    fileName="{DHCEQAInstockList.raq(AISRowID="+AISRowID
-		    +";HOPDESC="+HOPDESC
+		    +";HOPDESC="+HOSPDESC
 		    +";curUserName="+curUserName
 		    +")}";
 	        DHCCPM_RQDirectPrint(fileName);		
@@ -562,7 +578,7 @@ function BPrint_Clicked()
 		if(PreviewRptFlag==1)
 		{ 
 			fileName="DHCEQAInstockList.raq&AISRowID="+AISRowID
-		    +"&HOPDESC="+HOPDESC
+		    +"&HOPDESC="+HOSPDESC
 		    +"&curUserName="+curUserName	 
 			DHCCPM_RQPrint(fileName);
 		}

@@ -3,11 +3,14 @@ function BodyLoadHandler()
 	$("body").parent().css("overflow-y","hidden");  //Add By DJ 2018-10-12 hiui-改造 去掉y轴 滚动条
 	$("#tDHCEQMMaintRequestDetail").datagrid({showRefresh:false,showPageList:false,afterPageText:'',beforePageText:''});   //Add By DJ 2018-10-12 hisui改造：隐藏翻页条内容
 	InitUserInfo();	
-	KeyUp("ExObj^RequestLoc^AcceptUser");
+	KeyUp("ExObj^RequestLoc^AcceptUser^ObjLoc"); //modify by zyq 2022-12-09
 	Muilt_LookUp("ExObj^RequestLoc^AcceptUser");
 	SetStatus();
 	SetTableItem();		//Add By DJ 2016-11-24
 	initButtonWidth();	//hisui改造 Add By DJ 2018-10-12
+	initButtonColor(); //hisui改造 add by zyq 2023-01-31
+	initPanelHeaderStyle();//hisui改造 add by zyq 2023-01-31
+	initKeywords();	//Add by QW2021518 BUG:QW0111 增加状态进度
 	var obj=document.getElementById("BFind");
 	if (obj) obj.onclick=BFind_Clicked;
 	var obj=document.getElementById("BImport");		//add by CZF0073 2020-02-24
@@ -17,13 +20,78 @@ function BodyLoadHandler()
 	var obj=document.getElementById("BColSet");		//add by CSJ 2020-05-28
 	if (obj) obj.onclick=BColSet_Click;
 	
+}
+//Add by QW2021518 BUG:QW0111 增加状态进度
+function initKeywords()
+{
+	if(getElementValue("ActionItemString")!="")
+	{ 
+		var arr=new Array()
+		var  CurData=getElementValue("ActionItemString");
+		var SplitNumCode=",";
+		arr= CurData.split(SplitNumCode);
+		for(var i=0 ;i <arr.length;i++)
+		{ 
+			$("#ActionItemDetail").keywords("select",arr[i])
+		}
+	}
+ }
+///Add By QW2021518 BUG:QW0111 获取 状态进度
+function getKeywordsData()
+{ 
+	var SelectType=$("#ActionItemDetail").keywords("getSelected");
+	var ActionItemString=""
+	for (var j=0;j<SelectType.length;j++)
+	{
+		if(ActionItemString=="")
+		{
+			ActionItemString=SelectType[j].id
+		}else
+		{
+			ActionItemString=ActionItemString+","+SelectType[j].id
+		}
+	}
+	return ActionItemString;
 	
+}
+///Add By QW2021518 BUG:QW0111 初始化 状态进度
+$(function(){
+	initActionItem();
+})
+
+
+///Add By QW2021518 BUG:QW0111 初始化 状态进度
+function initActionItem()
+{
+	var ActionItem = [];
+	var Vallist=tkMakeServerCall("web.DHCEQCommon","GetBussApproveFlow","31")
+	Vallist=Vallist.replace(/\\n/g,"\n");
+	
+	ActionItem.push({text:'不限',id:'0'});
+	var list=Vallist.split("&");
+	for (var i=0;i<=list.length-1;i++)
+	{
+		var id=list[i].split(",")[0];
+		var text=list[i].split(",")[2]
+		ActionItem.push({text:text,id:id});
+	}
+
+    $("#ActionItemDetail").keywords({
+	    	singleSelect:true,
+	    	//Modify by zx 2021-07-07 BUG ZX0136 避免换行
+	    	items:ActionItem
+	});
 }
 
 function RequestLoc(value)		//Modify DJ 2016-11-30
 {
 	GetLookUpID('RequestLocDR',value);
 }
+function ObjLoc(value)		//add by zyq 2022-12-09
+{
+	GetLookUpID('ObjLocDR',value);
+}
+
 function GetExObj(value)
 {
 	GetLookUpID('ExObjDR',value);
@@ -76,13 +144,14 @@ function BEvaluate_Click()
     window.open(str,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0')
 }
 //modified by csj 2020-05-28 参数超长处理并添加维修完成日期查询
-function BFind_Clicked()
+//modified by sjh 2020-09-29 参数超长处理,Status传值问题
+/* function BFind_Clicked()
 {
 	var CurGroupStr=GetElementValue("CurGroupID")
 	var CurGroupInfo=CurGroupStr.split("^")
 	var val="";
-	val="&Status="+GetElementValue("Status");
-	val=val+"&ExObjDR="+GetElementValue("ExObjDR");
+	//val="&Status="+GetElementValue("Status");
+	val="&ExObjDR="+GetElementValue("ExObjDR");
 	val=val+"&RequestLocDR="+GetElementValue("RequestLocDR");
 	val=val+"&StartDate="+GetElementValue("StartDate");
 	val=val+"&EndDate="+GetElementValue("EndDate");
@@ -112,8 +181,45 @@ function BFind_Clicked()
 	val=val+"&vData=^CurGroupID="+CurGroupInfo[0]+"^"+CurGroupInfo[1]+"^"+CurGroupInfo[2]+"^"+GetElementValue("Status")+"^"+GetElementValue("WaitAD");
 	val=val+"^FinishStartDate="+GetElementValue("FinishStartDate")
 	val=val+"^FinishEndDate="+GetElementValue("FinishEndDate")
-
+	val=val+"^Status="+GetElementValue("Status")
 	window.location.href= 'websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQMMaintRequestDetail'+val;
+} */
+
+//modified by sjh SJH0044 2021-01-26 修改查询方式
+function BFind_Clicked()
+{
+	if (!$(this).linkbutton('options').disabled){
+		
+		var CurGroupStr=GetElementValue("CurGroupID");
+		var CurGroupInfo=CurGroupStr.split("^");
+		if (GetChkElementValue("InvalidFlag")==true)
+		{
+			var invalidflag="Y";
+		}
+		else
+		{
+			var invalidflag="N";
+		}
+		//modified by wy 2022-5-5 WY0099 维修明细查询参数取值
+		var curGroupID="^vCurGroupID="+CurGroupInfo[0]+"^vCurRole="+CurGroupInfo[1]+"^vEvaluateGroup="+CurGroupInfo[2]+"^vStatus="+GetElementValue("Status")+"^WaitAD="+GetElementValue("WaitAD");
+		var vdata=curGroupID+"^FinishStartDate="+GetElementValue("FinishStartDate")+"^FinishEndDate="+GetElementValue("FinishEndDate");	
+		//Add By QW2021518 BUG:QW0111  状态进度 Begin
+		if (GetElementValue("ActionItemString")=="")
+		{
+			vdata=vdata+"^ActionItemString="+getKeywordsData();
+		}
+		else
+		{
+			vdata=vdata+"^ActionItemString="+GetElementValue("ActionItemString")
+			
+		}
+		vdata=vdata+"^ApproveSDate="+GetElementValue("ApproveSDate");
+		vdata=vdata+"^ApproveEDate="+GetElementValue("ApproveEDate");
+		vdata=vdata+"^FeeType="+GetElementValue("FeeType");  /// Modefied by zc0125 2022-11-18 增加费用类型查询条件
+		vdata=vdata+"^RequestUserDR="+GetElementValue("RequestUserDR");  /// Modefied by zc0125 2022-11-18 增加报修人查询条件
+		//modified by zyq 2022-12-09
+		$('#tDHCEQMMaintRequestDetail').datagrid('load',{ComponentID:getValueById("GetComponentID"),ExObjDR:getValueById("ExObjDR"),RequestLocDR:getValueById("RequestLocDR"),StartDate:$('#StartDate').datebox("getValue"),EndDate:$('#EndDate').datebox("getValue"),QXType:getValueById("QXType"),RequestNo:getValueById("RequestNo"),InvalidFlag:invalidflag,AcceptUserDR:getValueById("AcceptUserDR"),CurUser:getValueById("CurUser"),ExObj:getValueById("ExObj"),FinishFlag:getValueById("FinishFlag"),LeaderFlag:getValueById("LeaderFlag"),UserLocDR:getValueById("UserLocDR"),CurLocID:curLocID,WaitAD:getValueById("WaitAD"),AcceptUser:getValueById("AcceptUser"),TMENU:getValueById("TMENU"),ObjLocDR:getValueById("ObjLocDR"),vData:vdata});
+	}
 }
 
 //add by CZF0073 2020-02-24
@@ -443,5 +549,18 @@ function BColSet_Click() //导出数据列设置
 	showWindow(url,"导出列设置","","","icon-w-paper","","","","middlelonger")     //modify by lmm 2020-01-16 999286
 	//Modefidy by zc0046 修改弹窗在不同分辨率弹窗覆盖问题
 	//Modefied by zc0044 2018-11-22 修改弹窗大小
+}
+/// Modefied by zc0125 2022-11-18 增加报修人查询 begin
+function GetRequestUser(value)
+{
+	GetLookUpID('RequestUserDR',value);
+	
+}
+/// Modefied by zc0125 2022-11-18 增加报修人查询 end
+//modified by ZY20230215 bug:3267241
+function GetEquipType(value)
+{
+	GetLookUpID('EquipTypeDR',value);
+	
 }
 document.body.onload = BodyLoadHandler;

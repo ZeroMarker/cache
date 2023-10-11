@@ -10,7 +10,7 @@ function createMedRecordWin(EpisodeID,PatientID,drugSearchLocID)
 	$('#win').append('<div id="ptab"></div>');
 
 	$('#win').window({
-		title:'药历书写',
+		title:$g('药历书写'),
 		collapsible:true,
 		border:true,
 		closed:"true",

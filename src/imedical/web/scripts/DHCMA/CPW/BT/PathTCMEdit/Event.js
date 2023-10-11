@@ -25,6 +25,18 @@ function InitPathTCMListWinEvent(obj){
 		isTopZindex:true
 	});	
 	
+	// 检查删除按钮是否允许删除，否则隐藏该按钮
+	if(!chkDelBtnIsAble("DHCMA.CPW.BT.PathTCM")){
+		$("#btnDelete").hide();	
+	}else{
+		$("#btnDelete").show();	
+	}
+	if(!chkDelBtnIsAble("DHCMA.CPW.BT.PathTCMExt")){
+		$("#btnSubDelete").hide();	
+	}else{
+		$("#btnSubDelete").show();	
+	}
+	
     obj.LoadEvent = function(args){ 
      	//保存
 		$('#btnSave').on('click', function(){
@@ -96,7 +108,7 @@ function InitPathTCMListWinEvent(obj){
 		if($("#btnEdit").hasClass("l-btn-disabled")) obj.RecRowID1="";
 		var rowData = obj.gridPathTCM.getSelected();
 		
-		if (rowData["BTID"] == obj.RecRowID1) {
+		if (rowData==null || (rowData && (rowData["BTID"] == obj.RecRowID1))) {
 			$("#btnAdd").linkbutton("enable");
 			$("#btnEdit").linkbutton("disable");
 			$("#btnDelete").linkbutton("disable");
@@ -106,7 +118,7 @@ function InitPathTCMListWinEvent(obj){
 			$("#btnSubEdit").linkbutton("disable");
 			$("#btnSubDelete").linkbutton("disable");
 			obj.RecRowID1="";
-			//obj.PathTCMExtLoad();
+			obj.PathTCMExtLoad();
 			obj.gridPathTCM.clearSelections();  //清除选中行
 		} else {
 			obj.RecRowID1 = rowData["BTID"];
@@ -196,7 +208,8 @@ function InitPathTCMListWinEvent(obj){
 			ClassName:"DHCMA.CPW.BT.PathTCM",
 			MethodName:"Update",
 			aInputStr:inputStr,
-			aSeparete:CHR_1
+			aSeparete:CHR_1,
+			aHospID: $("#cboSSHosp").combobox('getValue')
 		},false);
 		if (parseInt(flg) <= 0) {
 			if (parseInt(flg) == 0) {
@@ -223,10 +236,15 @@ function InitPathTCMListWinEvent(obj){
 				var flg = $m({
 					ClassName:"DHCMA.CPW.BT.PathTCM",
 					MethodName:"DeleteById",
-					aId:rowID
+					aId:rowID,
+					aHospID: $("#cboSSHosp").combobox('getValue')
 				},false);
 				if (parseInt(flg) < 0) {
-					$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');	
+					if (parseInt(flg)==-777) {
+						$.messager.alert("错误提示","系统参数配置不允许删除！", 'info');
+					} else {
+						$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					}	
 				} else {
 					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 					obj.RecRowID1="";
@@ -247,7 +265,7 @@ function InitPathTCMListWinEvent(obj){
 		var SPriority 	= Common_GetValue('SPriority')?1:0;
 		var ArcResume 	= $('#comArcResume').combobox('getValue');
 		if (!BTOrdMastID) {
-			errinfo = errinfo + "医嘱项为空!<br>";
+			errinfo = errinfo + "医嘱项不能为空!<br>";
 		}
 		if(BTTypeDr==""){
 			errinfo = errinfo + "类型不能为空!<br>";
@@ -320,7 +338,11 @@ function InitPathTCMListWinEvent(obj){
 					aId:obj.RecRowID1+"||"+rowDataID
 				},false);		
 				if (parseInt(flg) < 0) {
-					$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					if (parseInt(flg)==-777) {
+						$.messager.alert("错误提示","当前无删除权限，请启用删除权限后再删除记录！", 'info');
+					} else {
+						$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					}
 					return;
 				} else {
 					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});

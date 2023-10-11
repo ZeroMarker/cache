@@ -8,6 +8,9 @@ PHA_COM.App.Name = "PRC.Create.Allot";
 PHA_COM.App.Load = "";
 var logonLocId = session['LOGON.CTLOCID'];
 var logonUserId = session['LOGON.USERID'];
+var NOW_SELECTED_ROWID = null;
+var hospID = PHA_COM.Session.HOSPID;
+
 $(function () {
 	InitDict();
 	InitGridComment();
@@ -61,15 +64,15 @@ function InitGridComment() {
     var columns = [
         [
             { field: "pcntId", title: 'rowid',width: 100, hidden: true },
-            { field: "pcntNo", title: '单号',width: 120, },
-            { field: 'pcntDate', title: '日期', width: 100},
-            { field: "pcntTime", title: '时间' ,width: 100},
+            { field: "pcntNo", title: '单号',width: 220, },
+            { field: 'pcntDate', title: '日期', width: 120},
+            { field: "pcntTime", title: '时间' ,width: 120},
             { field: "pcntUserName", title: '制单人',width: 120  },
-            { field: "typeDesc", title: '类型',width: 80, },
-            { field: 'wayDesc', title: '方式', width: 120},
-            { field: "itmNum", title: '所抽明细数量' ,width: 120},
-            { field: 'unAllotNum', title: '可分配数量', width: 100},
-            { field: "pcntText", title: '查询条件' ,width: 120, hidden:true}
+            { field: "typeDesc", title: '类型',width: 120, },
+            { field: 'wayDesc', title: '方式', width: 200},
+            { field: "itmNum", title: '所抽明细数量' ,width: 150},
+            { field: 'unAllotNum', title: '可分配数量', width: 150},
+            { field: "pcntText", title: '查询条件' ,width: 220, hidden:true}
         ]
     ];
     var dataGridOption = {
@@ -90,7 +93,13 @@ function InitGridComment() {
 			$("#gridPhaDetail").datagrid("query", {
 				pcntId: rowData.pcntId
 			});
-		}   
+		},
+		onLoadSuccess:function(data){
+			if(NOW_SELECTED_ROWID){
+				$(this).datagrid("selectRow", NOW_SELECTED_ROWID);
+				NOW_SELECTED_ROWID = null;
+			}
+		}  
     };
     PHA.Grid("gridComment", dataGridOption);
 }
@@ -107,12 +116,7 @@ function InitGridPha() {
             { field: "prescNum", 
 				title: '分配数量',
 				width: 200 ,
-				editor: {
-					type: 'validatebox',
-					options: {
-						required: false
-					}
-				}
+				editor: PHA_GridEditor.ValidateBox({})
 			}
         ]
     ];
@@ -122,20 +126,26 @@ function InitGridPha() {
             ClassName: 'PHA.PRC.ConFig.Pharmacist',
             QueryName: 'SelectPharmacist',
 			input: '',
-			groupDesc:''
+			groupDesc:'',
+			hospID: hospID
         },
         columns: columns,
         toolbar: "#gridPhaBar",
 		enableDnd: false,
+		allowEnd: true,
+		isAutoShowPanel: true,
+		gridSave: false,
+		editFieldSort: ['prescNum'],
         onClickRow: function (rowIndex, rowData) {
 			$(this).datagrid('endEditing');
 		},
 		onDblClickCell: function (rowIndex, field, value) {
-			$(this).datagrid('beginEditCell', {
+			PHA_GridEditor.Edit({
+				gridID: 'gridPha',
 				index: rowIndex,
 				field: field
 			});
-		}  
+		} 
     };
     PHA.Grid("gridPha", dataGridOption);
 }
@@ -156,9 +166,7 @@ function InitGridPhaDetail() {
 			pcntId: ''
         },
         columns: columns,
-        onClickRow:function(rowIndex,rowData){
-	        
-		}   
+        onClickRow:function(rowIndex,rowData){}
     };
     PHA.Grid("gridPhaDetail", dataGridOption);
 }
@@ -175,8 +183,6 @@ function Query(){
 		logonLocId: logonLocId,
 		searchFlag: '0'
 	});
-	
-	
 }
 
 function Save(){
@@ -190,6 +196,7 @@ function Save(){
 		$.messager.alert('提示',"没有获取到点评单Id，请重新选择后重试!","info");
 		return;
 	}
+	NOW_SELECTED_ROWID = $("#gridComment").datagrid('getRowIndex', gridSelect);
 	$('#gridPha').datagrid('endEditing');
 	var gridChanges = $('#gridPha').datagrid('getChanges');
 	var gridChangeLen = gridChanges.length;
@@ -200,6 +207,7 @@ function Save(){
 		});
 		return;
 	}
+	var allPrescNum = 0;
 	var inputStrArr = [];
 	for (var counter = 0; counter < gridChangeLen; counter++) {
 		var allotData = gridChanges[counter];
@@ -217,7 +225,7 @@ function Save(){
 			var params = phaUserId + "^" + allotNum ;
 			inputStrArr.push(params)
 		}
-		
+		allPrescNum += parseInt(allotNum);
 	}
 	var inputStrArr = inputStrArr.toString() ;
 	var saveRet = $.cm({
@@ -238,9 +246,8 @@ function Save(){
 			msg: '保存成功',
 			type: 'success'
 		});
-	$("#gridPhaDetail").datagrid("reload") ;
-	$("#gridComment").datagrid("reload") ;
-	$("#gridPha").datagrid("reload") ;
+		$("#gridPhaDetail").datagrid("reload") ;
+		$("#gridPha").datagrid("reload");
+		$("#gridComment").datagrid("load") ;
 	}
-	
 }

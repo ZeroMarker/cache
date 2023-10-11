@@ -1,6 +1,6 @@
-ï»¿/*
+/*
 created by scl
-æ‰“å°å…¬å…±js
+´òÓ¡¹«¹²js
  */
 var print = opdoc.lib.ns("opdoc.print");
 print.common = (function() {
@@ -64,6 +64,7 @@ print.common = (function() {
 		var action = options["action"];
 		action = action ? action : "ReadOne";
 		ajaxData["ExcuteAction"] = action;
+		if(typeof websys_getMWToken=='function') ajaxData["MWToken"]=websys_getMWToken();
 		requestTemp(options["ReadyJson"]);
 		function requestTemp(respData){
 			$.ajax("../../web/web.DHCPrintDesigner.cls",{
@@ -164,7 +165,7 @@ print.common = (function() {
 							options["PICDataCallBack"](jsonData, itemNode);
 						} else if (targetPanel
 								&& (targetPanel instanceof jQuery)) {
-							xmlToImg(targetPanel, jsonData, itemNode);
+							xmlToImg(itemNode, jsonData, targetPanel);
 						}
 					}
 					break;
@@ -189,7 +190,7 @@ print.common = (function() {
 			var list=DHCP_TextEncoder(joinedData["arrValue"]);
 			if (onePageNums>1){
 				var listLen=list.split(String.fromCharCode(2)).length;
-			    var Len=Math.ceil(listLen/onePageNums); //å‘ä¸Šå–æ•´
+			    var Len=Math.ceil(listLen/onePageNums); //ÏòÉÏÈ¡Õû
 				for (var i=1;i<=Len;i++){
 					var oneList="";
 					var n=parseInt((i-1)*onePageNums);
@@ -197,6 +198,9 @@ print.common = (function() {
 					if (k>listLen) k=listLen;
 					for (var listI=n;listI<k;listI++){
 						var listIData=list.split(String.fromCharCode(2))[listI];
+						if (listIData.indexOf("\\u0001")>=0){
+							listIData=listIData.replace("\\u0001","")
+						}
 						if (oneList==""){
 							oneList=listIData;
 						}else{
@@ -224,7 +228,7 @@ print.common = (function() {
 			delete item;
 			item = [];
 			node = txtDataNode.childNodes[i];
-			if (node.nodeType=="3") continue; //æ–‡æœ¬èŠ‚ç‚¹ ä¸åšå¤„ç†
+			if (node.nodeType=="3") continue; //ÎÄ±¾½Úµã ²»×ö´¦Àí
 			item.push('<label ctrlType="label" id="' + genEleNewId("label")
 					+ '"');
 			item.push('name="' + node.getAttribute("name") + '"');
@@ -237,7 +241,7 @@ print.common = (function() {
 			if (node.getAttribute("fontbold") != "false") {
 				item.push('font-weight:bold;');
 			}
-			if (node.getAttribute("fontname") != "å®‹ä½“") {
+			if (node.getAttribute("fontname") != "ËÎÌå") {
 				item.push('font-family:' + node.getAttribute("fontname") + ';');
 			}
 			item.push('">');
@@ -496,10 +500,14 @@ print.common = (function() {
 			if (itemNode.getAttribute("fontbold") != "false") {
 				html.push('font-weight:bold;');
 			}
-			if (itemNode.getAttribute("fontname") != "å®‹ä½“") {
+			if (itemNode.getAttribute("fontname") != "ËÎÌå") {
 				html.push('font-family:\'' + itemNode.getAttribute("fontname")
 						+ '\';');
 			}
+			if (itemData.indexOf("\\u0001")>=0){
+				html.push('color:red;');
+				itemData=itemData.replace("\\u0001","")
+				}
 			html.push('"');
 			if (!itemData) {
 				if (jQuery.trim(itemNode.getAttribute("defaultvalue")) != "") {
@@ -509,7 +517,7 @@ print.common = (function() {
 					html.push('>' +itemData.replace(/ /g,"&nbsp") + "</label>");
 				}
 			} else {
-				//html.push('>' + (index+1)+"ï¼š"+itemData + "</label>");
+				//html.push('>' + (index+1)+"£º"+itemData + "</label>");
 				html.push('>' +itemData.replace(/ /g,"&nbsp") + "</label>");
 			}
 			return html.join('');
@@ -570,11 +578,11 @@ print.common = (function() {
 				return new ActiveXObject(ActiveXArr[i]);
 			}catch(e){
 				console.log(e);
-				/*alert("éœ€è¦è¿è¡Œè¿è¡ŒActivexæ‰èƒ½è¿›è¡Œæ‰“å°è®¾ç½®ã€‚å¯ç”¨ActiveXè§£å†³æ–¹æ¡ˆï¼š\n"+
-				"1ã€å¦‚æœæ˜¯Scripting.FileSystemObject (FSO æ–‡æœ¬æ–‡ä»¶è¯»å†™)è¢«å…³é—­äº†ï¼Œ\nå¼€å¯FSOåŠŸèƒ½å³å¯ï¼Œåœ¨â€œè¿è¡Œâ€ä¸­æ‰§è¡Œregsvr32 scrrun.dllå³å¯\n"
-				+"2ã€å®‰å…¨æ¨¡å¼è®¾ç½®æˆâ€œä¸­â€ï¼Œå¦‚æœjavascriptè„šæœ¬ä¸­æŠ¥è¿™ä¸ªé”™è¯¯ï¼Œ\nè¿˜åº”å°†IEçš„å®‰å…¨è®¾ç½®â€œä¸å…è®¸è¿è¡Œæœªæ ‡è®°ä¸ºå®‰å…¨çš„activeXæ§ä»¶â€å¯ç”¨å³å¯ã€‚\n"
-				+'æ³¨æ„å¦‚æœæ‚¨å°†ç›¸åº”çš„ç½‘ç«™è®¾æˆ"å—ä¿¡ä»»çš„ç«™ç‚¹",\nå¿…é¡»å¯¹"å—ä¿¡ä»»çš„ç«™ç‚¹"è¿›è¡Œç›¸åº”çš„IEå®‰å…¨è®¾ç½®ï¼Œæ­¤æ—¶å¦‚æœå¯¹"Internet"IEè®¾ç½®å°†æ˜¯å¾’åŠ³çš„ã€‚\n'
-				+"3ã€æœ‰äº›è„šæœ¬éœ€è¦å¾®è½¯çš„ MSXML æ§ä»¶æ‰èƒ½è¿›å…¥ã€‚\n"
+				/*alert("ĞèÒªÔËĞĞÔËĞĞActivex²ÅÄÜ½øĞĞ´òÓ¡ÉèÖÃ¡£ÆôÓÃActiveX½â¾ö·½°¸£º\n"+
+				"1¡¢Èç¹ûÊÇScripting.FileSystemObject (FSO ÎÄ±¾ÎÄ¼ş¶ÁĞ´)±»¹Ø±ÕÁË£¬\n¿ªÆôFSO¹¦ÄÜ¼´¿É£¬ÔÚ¡°ÔËĞĞ¡±ÖĞÖ´ĞĞregsvr32 scrrun.dll¼´¿É\n"
+				+"2¡¢°²È«Ä£Ê½ÉèÖÃ³É¡°ÖĞ¡±£¬Èç¹ûjavascript½Å±¾ÖĞ±¨Õâ¸ö´íÎó£¬\n»¹Ó¦½«IEµÄ°²È«ÉèÖÃ¡°²»ÔÊĞíÔËĞĞÎ´±ê¼ÇÎª°²È«µÄactiveX¿Ø¼ş¡±ÆôÓÃ¼´¿É¡£\n"
+				+'×¢ÒâÈç¹ûÄú½«ÏàÓ¦µÄÍøÕ¾Éè³É"ÊÜĞÅÈÎµÄÕ¾µã",\n±ØĞë¶Ô"ÊÜĞÅÈÎµÄÕ¾µã"½øĞĞÏàÓ¦µÄIE°²È«ÉèÖÃ£¬´ËÊ±Èç¹û¶Ô"Internet"IEÉèÖÃ½«ÊÇÍ½ÀÍµÄ¡£\n'
+				+"3¡¢ÓĞĞ©½Å±¾ĞèÒªÎ¢ÈíµÄ MSXML ¿Ø¼ş²ÅÄÜ½øÈë¡£\n"
 				+"");*/
 			}
 		}
@@ -658,29 +666,38 @@ print.common = (function() {
 			//console.log(sName);
 		}catch(e){
 			console.log(e);
-			/*alert("éœ€è¦è¿è¡Œè¿è¡ŒActivexæ‰èƒ½è¿›è¡Œæ‰“å°è®¾ç½®ã€‚å¯ç”¨ActiveXè§£å†³æ–¹æ¡ˆï¼š\n"+
-			"1ã€å¦‚æœæ˜¯Scripting.FileSystemObject (FSO æ–‡æœ¬æ–‡ä»¶è¯»å†™)è¢«å…³é—­äº†ï¼Œ\nå¼€å¯FSOåŠŸèƒ½å³å¯ï¼Œåœ¨â€œè¿è¡Œâ€ä¸­æ‰§è¡Œregsvr32 scrrun.dllå³å¯\n"
-			+"2ã€å®‰å…¨æ¨¡å¼è®¾ç½®æˆâ€œä¸­â€ï¼Œå¦‚æœjavascriptè„šæœ¬ä¸­æŠ¥è¿™ä¸ªé”™è¯¯ï¼Œ\nè¿˜åº”å°†IEçš„å®‰å…¨è®¾ç½®â€œä¸å…è®¸è¿è¡Œæœªæ ‡è®°ä¸ºå®‰å…¨çš„activeXæ§ä»¶â€å¯ç”¨å³å¯ã€‚\n"
-			+'æ³¨æ„å¦‚æœæ‚¨å°†ç›¸åº”çš„ç½‘ç«™è®¾æˆ"å—ä¿¡ä»»çš„ç«™ç‚¹",\nå¿…é¡»å¯¹"å—ä¿¡ä»»çš„ç«™ç‚¹"è¿›è¡Œç›¸åº”çš„IEå®‰å…¨è®¾ç½®ï¼Œæ­¤æ—¶å¦‚æœå¯¹"Internet"IEè®¾ç½®å°†æ˜¯å¾’åŠ³çš„ã€‚\n'
-			+"3ã€æœ‰äº›è„šæœ¬éœ€è¦å¾®è½¯çš„ MSXML æ§ä»¶æ‰èƒ½è¿›å…¥ã€‚\n"
+			/*alert("ĞèÒªÔËĞĞÔËĞĞActivex²ÅÄÜ½øĞĞ´òÓ¡ÉèÖÃ¡£ÆôÓÃActiveX½â¾ö·½°¸£º\n"+
+			"1¡¢Èç¹ûÊÇScripting.FileSystemObject (FSO ÎÄ±¾ÎÄ¼ş¶ÁĞ´)±»¹Ø±ÕÁË£¬\n¿ªÆôFSO¹¦ÄÜ¼´¿É£¬ÔÚ¡°ÔËĞĞ¡±ÖĞÖ´ĞĞregsvr32 scrrun.dll¼´¿É\n"
+			+"2¡¢°²È«Ä£Ê½ÉèÖÃ³É¡°ÖĞ¡±£¬Èç¹ûjavascript½Å±¾ÖĞ±¨Õâ¸ö´íÎó£¬\n»¹Ó¦½«IEµÄ°²È«ÉèÖÃ¡°²»ÔÊĞíÔËĞĞÎ´±ê¼ÇÎª°²È«µÄactiveX¿Ø¼ş¡±ÆôÓÃ¼´¿É¡£\n"
+			+'×¢ÒâÈç¹ûÄú½«ÏàÓ¦µÄÍøÕ¾Éè³É"ÊÜĞÅÈÎµÄÕ¾µã",\n±ØĞë¶Ô"ÊÜĞÅÈÎµÄÕ¾µã"½øĞĞÏàÓ¦µÄIE°²È«ÉèÖÃ£¬´ËÊ±Èç¹û¶Ô"Internet"IEÉèÖÃ½«ÊÇÍ½ÀÍµÄ¡£\n'
+			+"3¡¢ÓĞĞ©½Å±¾ĞèÒªÎ¢ÈíµÄ MSXML ¿Ø¼ş²ÅÄÜ½øÈë¡£\n"
 			+"");*/
 		}
 	}
-	//å°†å›¾ç‰‡è½¬åŒ–ä¸ºhtml
+	//½«Í¼Æ¬×ª»¯Îªhtml
 	function xmlToImg(xmlNode,jsonData,targetPanel) {
 	    var count = xmlNode.childNodes.length;
-	    for (var index = 2; index < count; index++) {
+	    for (var index = 0; index < count; index++) {
 	        var oneNode = xmlNode.childNodes[index];
+	        var name=""
+	        try{name=oneNode.getAttribute("name");}catch(e){name=""}
+	        if (name==""){continue}
 	        var cId = getNewCtrlId("img");
-	        var ctrlHtml = "<img ctrlType='img' id='" + cId + "' name='" + oneNode.previousSibling.attributes[1].nodeValue;
-	        ctrlHtml = ctrlHtml + "' style='position:absolute;left:" + (convertPtToPx(oneNode.previousSibling.attributes[6].nodeValue)+30)+ "px;top:" + convertPtToPx(oneNode.previousSibling.attributes[5].nodeValue) + "px;' ";
-		    ctrlHtml = ctrlHtml + "src='" + jsonData.UserAddName + "' ";
+	        var ctrlHtml = "<img ctrlType='img' id='" + cId + "' name='" + name;
+	        ctrlHtml = ctrlHtml + "' style='position:absolute;left:" + (convertPtToPx(oneNode.getAttribute("xcol"))+30)+ "px;top:" + convertPtToPx(oneNode.getAttribute("yrow")) + "px;' ";
+		   	var printValue = jsonData[name];
+			if( printValue!=""){
+		        ctrlHtml = ctrlHtml +  "src='" + printValue + "' ";
+		   	}else if (oneNode.getAttribute("defaultvalue") != "") {
+	             ctrlHtml = ctrlHtml + "src='" + oneNode.getAttribute("defaultvalue") + "' ";
+	      	}
+			//ctrlHtml = ctrlHtml + "src='" + jsonData[name] + "' ";
 	        ctrlHtml = ctrlHtml + " width='75px'  height='30px'/>";
 	        targetPanel.append(ctrlHtml);
 	        delete ctrlHtml;
 	    }
 	}
-	//å–å¾—æ–°æ§ä»¶Id
+	//È¡µÃĞÂ¿Ø¼şId
 	function getNewCtrlId(ctrlType) {
 	    var index = 0;
 	    while (true) {

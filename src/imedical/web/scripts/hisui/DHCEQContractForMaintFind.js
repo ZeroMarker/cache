@@ -1,5 +1,26 @@
 function BodyLoadHandler()
 {
+	//modified by cjt 20230211 需求号3220618 UI页面改造
+	initPanelHeaderStyle();
+	initButtonColor();
+	if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+		if (jQuery("#BAdd1").length>0)
+		{
+			if (($("#BAdd1").attr('class')).indexOf("l-btn-disabled")==-1){
+				$("#BAdd1").css({"background-color":"#28ba05","color":"#ffffff"})
+			}else{
+				$("#BAdd1").css({'background-color':'#E5E5E5','color':'#999'})
+			}
+		}
+		if (jQuery("#BAddNew").length>0)
+		{
+			if (($("#BAddNew").attr('class')).indexOf("l-btn-disabled")==-1){
+				$("#BAddNew").css({"background-color":"#28ba05","color":"#ffffff"})
+			}else{
+				$("#BAddNew").css({'background-color':'#E5E5E5','color':'#999'})
+			}
+		}
+	}
 	InitUserInfo();		
 	InitPage();
 	SetBEnable();		// 需求序号:	717110	Mozy	2018-11-8
@@ -26,6 +47,8 @@ function InitPage()
 	if (obj) obj.onchange=CheckChange;
 	var obj=document.getElementById("ReplacesAD")
 	if (obj) obj.onchange=CheckChange;
+	var obj=document.getElementById("BAddNew")	//czf 1914903
+	if (obj) obj.onclick=BAddNew_Clicked;
 }
 function CheckChange()
 {
@@ -57,6 +80,7 @@ function SetBEnable()
 	{
 		//DisableBElement("BAdd1",true);
 		hiddenObj("BAdd1",1);
+		hiddenObj("BAddNew",1);		//czf 1914903 2021-05-22
 	}
 	else
 	{
@@ -69,8 +93,19 @@ function BAdd_Clicked()
 {
 	var QXType=GetElementValue("QXType");
 	var Type=GetElementValue("Type");
-	var val="&ContractType=1&QXType="+QXType+"&Type="+Type;
+	var val="&ContractType=1&QXType="+QXType+"&Type="+Type+"&AuditType=1";	//czf 1914903 2021-05-22
 	url="dhceq.con.contractformaint.csp?"+val
 	showWindow(url,"保修合同","","","icon-w-paper","modal","","","verylarge");	//modify by lmm 2020-06-04 UI
 }
+
+//czf 1914903 2021-05-22
+function BAddNew_Clicked()
+{
+	var QXType=GetElementValue("QXType");
+	var Type=GetElementValue("Type");
+	var val="&ContractType=1&QXType="+QXType+"&Type="+Type+"&AuditType=2";
+	url="dhceq.con.contractformaint.csp?"+val
+	showWindow(url,"保修合同","","","icon-w-paper","modal","","","verylarge");
+}
+
 document.body.onload = BodyLoadHandler;

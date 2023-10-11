@@ -15,7 +15,8 @@ jQuery(function()
    	defindTitleStyle();
     initButton(); 				//按钮初始化 
     initButtonWidth();
-    InitEvent()
+    InitEvent();
+    initIsIFB();
     //initPage(); 				//非通用初始化
     //setElementEnabled(); 		//输入框只读控制
     initStatusData();
@@ -25,7 +26,7 @@ jQuery(function()
 		queryParams:{
 			ClassName:"web.DHCEQ.Con.BUSContract",
 	        QueryName:"ContractList",
-			vData:"^ContractTypeDR="+getElementValue("ContractType"),
+			vData:"^ContractTypeDR="+getElementValue("ContractType")+"^QXType="+getElementValue("QXType")+"^SignLocDR="+getElementValue("SignLocDR"),	//czf 2021-09-02 modify by zyq 2023-03-29 3369705 
 			UnSelectFlag:""
 		},
 		rownumbers: true,  //如果为true则显示一个行号列
@@ -124,15 +125,28 @@ jQuery(function()
         },
 	});
 });
+
+///czf 2022-09-16
+function initIsIFB()
+{
+	var cbox = $HUI.combobox("#IsIFB",{
+		valueField:'id', 
+		textField:'text',
+		selectOnNavigation:false,
+		panelHeight:"auto",
+		data:[
+			{id:'',text:''},
+			{id:'1',text:'是'},
+			{id:'0',text:'否'}
+		],
+		onChange:function(newval,oldval){
+			//
+		}
+	});
+}
+
 function InitEvent() //初始化事件
 {
-	//Mozy	984437	2019-8-19
-	/*if (jQuery("#BFind").length>0)
-	{
-		jQuery("#BFind").linkbutton({iconCls: 'icon-w-find'});
-		jQuery("#BFind").on("click", BFind_Clicked);
-	}
-	*/
 	if (jQuery("#BClean").length>0)
 	{
 		jQuery("#BClean").linkbutton({iconCls: 'icon-w-clean'});	
@@ -169,6 +183,9 @@ function initStatusData()
 			},{
 				id: '2',
 				text: '审核'
+			},{
+				id: '3',
+				text: '作废'
 			}]
 	});
 }
@@ -215,6 +232,9 @@ function GetData()
 	//MZY0033	1369965		2020-06-15
 	vData=vData+"^GEBeginDate="+getElementValue("GEStartDate");
 	vData=vData+"^GEEndDate="+getElementValue("GEEndDate");
+	vData=vData+"^QXType="+getElementValue("QXType");	//czf 2021-09-02
+	vData=vData+"^IsIFB="+getElementValue("IsIFB");		//是否招标
+	vData=vData+"^OpenCheckNo="+getElementValue("OpenCheckNo");
 	return vData;
 }
 
@@ -225,9 +245,26 @@ function BSaveExcel_Click()
 	var ObjTJob=$('#DHCEQContractDetail').datagrid('getData');
 	if (ObjTJob.rows[0]["TJob"])  TJob=ObjTJob.rows[0]["TJob"];
 	if (TJob=="")  return;
-	var vData=GetData();
-	PrintDHCEQEquipNew("ContractList",1,TJob,vData,"ContractList",100); 
-	return;
+	// MZY0145	3076883		2022-11-30
+	var PrintFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo",'990062');
+	if (PrintFlag=="1")
+	{
+		if (!CheckColset("ContractList"))
+		{
+			messageShow('popover','alert','提示',"导出数据列未设置!");
+			return ;
+		}
+		var url="dhccpmrunqianreport.csp?reportName=DHCEQContractListExport.raq&CurTableName=ContractList&CurUserID="+session['LOGON.USERID']+"&CurGroupID="+session['LOGON.GROUPID']+"&Job="+TJob;
+    	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
+    	window.open(url,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0');
+	}
+	else
+	{
+		var vData=GetData();
+		PrintDHCEQEquipNew("ContractList",1,TJob,vData,"ContractList",100);
+	}
 } 
 
 function BColSet_Click() //导出数据列设置

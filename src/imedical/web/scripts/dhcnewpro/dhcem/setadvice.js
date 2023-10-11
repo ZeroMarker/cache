@@ -48,14 +48,15 @@ function save(){
 		var activeFlag = getValueByField(obj,"activeFlag"); 
 		var hospDr = getValueByField(obj,"hospDr");
 		var item = oecDr+"^"+activeFlag+"^"+hospDr;
-		if(isHasItmInArr(dataArr,item)) hasRepeatData=i;
+		var oecDesc=getValueByField(obj,"oecDesc");
+		if(isHasItmInArr(dataArr,item)) hasRepeatData=oecDesc;
 		dataArr.push(item);
 	});
 	
 	
 	if(hasRepeatData!=""){
 		$('#datagrid').datagrid('load');
-		$.messager.alert("提示","新增数据与第"+hasRepeatData+"行重复！");
+		$.messager.alert("提示","新增数据【"+hasRepeatData+"】重复！");
 		return;
 	}
 	/*

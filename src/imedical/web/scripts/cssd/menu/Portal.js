@@ -1,185 +1,346 @@
-var init = function () {
-	var panels = [
-		{id:'p1',title:'´ı°ìÁĞ±í',height:300,collapsible:true,closable:true,content:"<div><ul id='vexp' style='padding-left:20px'></ul></div>"},
-		{id:'p2',title:'¹ıÆÚÌáĞÑ',height:240,collapsible:true,closable:true,content:"<div><ul id='todolist' style='padding-left:20px'></ul></div>"}
-	    
-		/**
-		{id:'p3',title:'³§ÉÌ×ÊÖÊ¹ıÆÚÌáĞÑ',height:300,collapsible:true,closable:true,content:"<div><ul id='mexp' style='padding-left:20px'></ul></div>"},
-		{id:'p7',title:'×¢²áÖ¤¹ıÆÚÌáĞÑ',height:300,collapsible:true,closable:true,content:"<div><ul id='cert' style='padding-left:20px'></ul></div>"},
-		{id:'p4',title:'·ÖÀàÊıÁ¿Õ¼±ÈÍ³¼Æ',height:550,collapsible:true,closable:true,content:"<div><div id='chartScgQty' style='width:700px;height:500px;'></div></div>"},
-		{id:'p5',title:'·ÖÀà½ğ¶îÕ¼±ÈÍ³¼Æ',height:550,collapsible:true,closable:true,content:"<div><div id='chartScgAmt' style='width:700px;height:500px;'></div></div>"},
-		{id:'p6',title:'¹©Ó¦Á´ÔÆÆ½Ì¨',height:280,collapsible:true,closable:true,content:"<div><div style='width:550px;height:500px;'></div></div>"} */
-	];
-	function getPanelOptions(id){
-		for(var i=0; i<panels.length; i++){
-			if (panels[i].id == id){
-				return panels[i];
-			}
+ï»¿var init = function() {
+	$HUI.radio("[name='DateType']", {
+		onChecked: function(e, value) {
+			Workchart();
+			PkgNum();
+			initTips();
 		}
-		return undefined;
+	});
+	$HUI.radio("[name='AttributeDesc']", {
+		onChecked: function(e, value) {
+			Workchart();
+			PkgNum();
+		}
+	});
+	
+	function Workchart() {
+		var DateType = $("input[name='DateType']:checked").val();
+		var AttributeId = $("input[name='AttributeDesc']:checked").val();
+		var Params = JSON.stringify(addSessionParams({
+			DateType: DateType,
+			AttributeId: AttributeId
+		}));
+		// è·å–å„äººå·¥ä½œé‡æ•°æ®
+		var JsonData = $.cm({
+			ClassName: 'web.CSSDHUI.Common.Tips',
+			MethodName: 'GetPersonWork',
+			Params: Params
+		}, false);
+		
+		var option = {
+			tooltip: {
+				trigger: 'axis',
+				axisPointer: {
+					type: 'cross'
+				}
+			},
+			legend: {},
+			grid: {
+				left: '2%',
+				right: '2%',
+				bottom: '3%',
+				containLabel: true
+			},
+			xAxis: {
+				type: 'value'
+			},
+			yAxis: {
+				type: 'category',
+				data: JsonData.UserArr,
+				axisLabel: { // åæ ‡è½´åˆ»åº¦æ ‡ç­¾çš„ç›¸å…³è®¾ç½®ã€‚
+					interval: 0,
+					rotate: 20// æ–‡å­—å€¾æ–œåº¦
+				}
+			},
+			series: [
+				{
+					name: 'å›æ”¶',
+					type: 'bar',
+					stack: 'total',
+					label: {
+						show: true
+					},
+					emphasis: {
+						focus: 'series'
+					},
+					data: JsonData.CBArr
+				}, {
+					name: 'æœºå™¨æ¸…æ´—',
+					type: 'bar',
+					stack: 'total',
+					label: {
+						show: true
+					},
+					emphasis: {
+						focus: 'series'
+					},
+					data: JsonData.CleanArr
+				}, {
+					name: 'æ‰‹å·¥æ¸…æ´—',
+					type: 'bar',
+					stack: 'total',
+					label: {
+						show: true
+					},
+					emphasis: {
+						focus: 'series'
+					},
+					data: JsonData.PCleanArr
+				}, {
+					name: 'åŒ…è£…',
+					type: 'bar',
+					stack: 'total',
+					label: {
+						show: true
+					},
+					emphasis: {
+						focus: 'series'
+					},
+					data: JsonData.PackArr
+				}, {
+					name: 'åŒ…è£…å®¡æ ¸',
+					type: 'bar',
+					stack: 'total',
+					label: {
+						show: true
+					},
+					emphasis: {
+						focus: 'series'
+					},
+					data: JsonData.PackAckArr
+				}, {
+					name: 'ç­èŒ',
+					type: 'bar',
+					stack: 'total',
+					label: {
+						show: true
+					},
+					emphasis: {
+						focus: 'series'
+					},
+					data: JsonData.SterArr
+				}, {
+					name: 'å‘æ”¾',
+					type: 'bar',
+					stack: 'total',
+					label: {
+						show: true
+					},
+					emphasis: {
+						focus: 'series'
+					},
+					data: JsonData.DispArr
+				}
+			]
+		};
+		var Chart = echarts.init(document.getElementById('EmergencyControl'), 'macarons');
+		Chart.setOption(option);
 	}
-	function getPortalState(){
-		var aa = [];
-		for(var columnIndex=0; columnIndex<2; columnIndex++){
-			var cc = [];
-			var panels = $('#pp').portal('getPanels', columnIndex);
-			for(var i=0; i<panels.length; i++){
-				cc.push(panels[i].attr('id'));
-			}
-				aa.push(cc.join(','));
-			}
-		return aa.join(':');
-	}
-	function addPanels(portalState){
-		var columns = portalState.split(':');
-		for(var columnIndex=0; columnIndex<columns.length; columnIndex++){
-			var cc = columns[columnIndex].split(',');
-			for(var j=0; j<cc.length; j++){
-				var options = getPanelOptions(cc[j]);
-				if (options){
-					var p = $('<div/>').attr('id',options.id).appendTo('body');
-					p.panel(options);
-					$('#pp').portal('add',{
-					panel:p,
-					columnIndex:columnIndex
-					});
+	function PkgNum() {
+		var res = [];
+		var DateType = $("input[name='DateType']:checked").val();
+		var AttributeId = $("input[name='AttributeDesc']:checked").val();
+		var Params = JSON.stringify(addSessionParams({ DateType: DateType, AttributeId: AttributeId }));
+		$.cm({
+			ClassName: 'web.CSSDHUI.Common.Tips',
+			QueryName: 'QueryPkgSum',
+			Params: Params,
+			rows: 999999
+		}, function(jsonData) {
+			var CallQty = 0, CleanQty = 0, PCleanQty = 0, PackQty = 0, SterQty = 0, DispQty = 0;
+			for (var i = 0; i < jsonData.rows.length; i++) {
+				if (jsonData.rows[i].Type === 'å›æ”¶') {
+					CallQty = Number(CallQty) + Number(jsonData.rows[i].Qty);
+				} if (jsonData.rows[i].Type === 'æœºå™¨æ¸…æ´—') {
+					CleanQty = Number(CleanQty) + Number(jsonData.rows[i].Qty);
+				} if (jsonData.rows[i].Type === 'æ‰‹å·¥æ¸…æ´—') {
+					PCleanQty = Number(PCleanQty) + Number(jsonData.rows[i].Qty);
+				} if (jsonData.rows[i].Type === 'æ‰“åŒ…') {
+					PackQty = Number(PackQty) + Number(jsonData.rows[i].Qty);
+				} if (jsonData.rows[i].Type === 'ç­èŒ') {
+					SterQty = Number(SterQty) + Number(jsonData.rows[i].Qty);
+				} if (jsonData.rows[i].Type === 'å‘æ”¾') {
+					DispQty = Number(DispQty) + Number(jsonData.rows[i].Qty);
 				}
 			}
-		}
+			res.push({ value: CallQty, name: 'å›æ”¶' },
+				{ value: CleanQty, name: 'æœºå™¨æ¸…æ´—' },
+				{ value: PCleanQty, name: 'æ‰‹å·¥æ¸…æ´—' },
+				{ value: PackQty, name: 'æ‰“åŒ…' },
+				{ value: SterQty, name: 'ç­èŒ' },
+				{ value: DispQty, name: 'å‘æ”¾' });
+			PkgNumchart(res);
+		});
 	}
-	
-	$('#pp').portal({
-		onStateChange:function(){
-			var state = getPortalState();
+	function PkgNumchart(data) {
+		var option = {
+			tooltip: {
+				trigger: 'item'
+			},
+			legend: {
+				top: 'bottom',
+				left: 'center'
+			},
+			series: [
+				{
+					name: 'æ¶ˆæ¯’åŒ…æ•°é‡',
+					type: 'pie',
+					radius: ['20%', '70%'],
+					itemStyle: {
+						borderRadius: 10,
+						borderColor: '#fff',
+						borderWidth: 2
+					},
+					label: {
+						show: false,
+						position: 'center'
+					},
+					emphasis: {
+						label: {
+							show: true,
+							fontSize: 28,
+							fontWeight: 'bold'
+						}
+					},
+					data: data
+				}
+			]
+		};
+		var chart = echarts.init(document.getElementById('EmergencyControl2'), 'macarons');
+		chart.setOption(option);
 	}
-	});
-	var state ="";
-	if (!state){
-	state = 'p1,p2,p3,p7:p4,p5,p6'; // the default portal state
-	}
-	addPanels(state);
-	$('#pp').portal('resize');
-	
-	function fillPanel(){
+	// å¾…åŠ
+	var CallBackAduit = '<li url="${NodeUrl}" title="${NodeCaption}"><span class=' + 'Num' + '>' + '${Count}</span><p class=' + 'Click' + '>&nbsp;&nbsp;ç‚¹å‡»æŸ¥çœ‹</p></li>';
+	var NeedTodealt = '<li url="${NodeUrl}" title="${NodeCaption}"><span class=' + 'Num' + '>' + ' ${Count}</span><p class=' + 'Click' + '>&nbsp;&nbsp;ç‚¹å‡»æŸ¥çœ‹</p></li>';
+	var Expired = '<li url="${NodeUrl}" title="${NodeCaption}">å·²ç»è¿‡æœŸ&nbsp;<span class=' + 'warn-font-expired' + '>' + ' ${Count}</span></li>';
+	var About = '<li url="${NodeUrl}" title="${NodeCaption}">å³å°†è¿‡æœŸ&nbsp;<span class=' + 'warn-font-about' + '>' + ' ${Count}</span></li>';
+	function initTips() {
+		$('#Callback').empty();
+		$('#Supexpired').empty();
+		$('#Supabout').empty();
+		$('#Locexpired').empty();
+		$('#Locabout').empty();
+		$('#Clean').empty();
+		$('#Pack').empty();
+		$('#Ster').empty();
+		$('#Disp').empty();
+		var DateType = $("input[name='DateType']:checked").val();
+		var Params = JSON.stringify(addSessionParams({
+			DateType: DateType
+		}));
 		$.cm({
 			ClassName: 'web.CSSDHUI.Common.TipsWin',
 			MethodName: 'GetTips',
-			Params: JSON.stringify(sessionObj),
-			wantreturnval:0
-		},function(jsonData){
-			if(jsonData.doccount>0){
-				 $.tmpl(tmpld,jsonData.doc).appendTo( "#todolist" );
-				 $('#todolist').on('click','li',function(){
-				 	var url=$(this).attr("url");
-				    var tabTitle=$(this).attr("title");
-				    window.parent.addTab(tabTitle, url);
-				})
+			Params: Params,
+			wantreturnval: 0
+		}, function(jsonData) {
+			if (jsonData.docapplycount > 0) {
+				$.tmpl(CallBackAduit, jsonData.docapply[0]).appendTo('#Callback');
+				$('#Callback').on('click', 'li', function() {
+					var url = $(this).attr('url');
+					var tabTitle = $(this).attr('title');
+					Common_AddTab(tabTitle, url);
+				});
 			}
-			if(jsonData.docapplycount>0){
-				 $.tmpl(tmpapplyld,jsonData.docapply).appendTo( "#vexp" );
-				 $('#vexp').on('click','li',function(){
-				 	var url=$(this).attr("url");
-				    var tabTitle=$(this).attr("title");
-				    window.parent.addTab(tabTitle, url);
-				})
+			if (jsonData.doccount > 0) {
+				console.log(jsonData.doc);
+				for (var i = 0; i < jsonData.doc.length; i++) {
+					if (jsonData.doc[i].Info === 'ä¾›åº”ä¸­å¿ƒå·²è¿‡æœŸ') {
+						$.tmpl(Expired, jsonData.doc[i]).appendTo('#Supexpired');
+						$('#Supexpired').on('click', 'li', function() {
+							var url = $(this).attr('url');
+							var tabTitle = $(this).attr('title');
+							Common_AddTab(tabTitle, url);
+						});
+					} else if (jsonData.doc[i].Info === 'ä¾›åº”ä¸­å¿ƒå³å°†è¿‡æœŸ') {
+						$.tmpl(About, jsonData.doc[i]).appendTo('#Supabout');
+						$('#Supabout').on('click', 'li', function() {
+							var url = $(this).attr('url');
+							var tabTitle = $(this).attr('title');
+							Common_AddTab(tabTitle, url);
+						});
+					} else if (jsonData.doc[i].Info === 'ç§‘å®¤å·²è¿‡æœŸ') {
+						$.tmpl(Expired, jsonData.doc[i]).appendTo('#Locexpired');
+						$('#Locexpired').on('click', 'li', function() {
+							var url = $(this).attr('url');
+							var tabTitle = $(this).attr('title');
+							Common_AddTab(tabTitle, url);
+						});
+					} else if (jsonData.doc[i].Info === 'ç§‘å®¤å³å°†è¿‡æœŸ') {
+						$.tmpl(About, jsonData.doc[i]).appendTo('#Locabout');
+						$('#Locabout').on('click', 'li', function() {
+							var url = $(this).attr('url');
+							var tabTitle = $(this).attr('title');
+							Common_AddTab(tabTitle, url);
+						});
+					}
+				}
 			}
-			/**
-			if(jsonData.mexpcount>0){
-				 $.tmpl(tmplv,jsonData.mexp).appendTo( "#mexp" );
+			if (jsonData.sterilizepackage) {
+				for (var j = 0; j < jsonData.sterilizepackage.length; j++) {
+					if (jsonData.sterilizepackage[j].Status === 'C') {
+						$.tmpl(NeedTodealt, jsonData.sterilizepackage[j]).appendTo('#Clean');
+						$('#Clean').on('click', 'li', function() {
+							var url = $(this).attr('url');
+							var tabTitle = $(this).attr('title');
+							Common_AddTab(tabTitle, url);
+						});
+					} else if (jsonData.sterilizepackage[j].Status === 'P') {
+						$.tmpl(NeedTodealt, jsonData.sterilizepackage[j]).appendTo('#Pack');
+						$('#Pack').on('click', 'li', function() {
+							var url = $(this).attr('url');
+							var tabTitle = $(this).attr('title');
+							Common_AddTab(tabTitle, url);
+						});
+					} else if (jsonData.sterilizepackage[j].Status === 'S') {
+						$.tmpl(NeedTodealt, jsonData.sterilizepackage[j]).appendTo('#Ster');
+						$('#Ster').on('click', 'li', function() {
+							var url = $(this).attr('url');
+							var tabTitle = $(this).attr('title');
+							Common_AddTab(tabTitle, url);
+						});
+					} else if (jsonData.sterilizepackage[j].Status === 'D') {
+						$.tmpl(NeedTodealt, jsonData.sterilizepackage[j]).appendTo('#Disp');
+						$('#Disp').on('click', 'li', function() {
+							var url = $(this).attr('url');
+							var tabTitle = $(this).attr('title');
+							Common_AddTab(tabTitle, url);
+						});
+					}
+				}
 			}
-			if(jsonData.incicert){
-				 $.tmpl(tmplc,jsonData.incicert).appendTo( "#cert" );
-			}		 */	
-						
 		});
 	}
-	fillPanel();
-
-	var tmpld = "<li url=${NodeUrl} title=${NodeCaption}><a href='#' style='font-size:16px;font-weight:bold;'>${Info}</a></li>";
-	var tmpapplyld = "<li url=${NodeUrl} title=${NodeCaption}><a href='#' style='font-size:16px;font-weight:bold;'>${Info}</a></li>";
-	/**
-	var tmplv = "<li id=${Id}><dl><dt style='font-size:16px;font-weight:bold;'>${Name}</dt><dd>${Info}</dd>"
-				+"<table border=1 cellspacing=0>{{each(i,d) Detail}}"
-				+"<tr>"
-       			+"<td>${i+1}:{{= d.Type}}</td>"
-       			+"<td>{{= d.Date}}</td>"
-       			+"</tr>"
-				+"{{/each}}</table></dl></li>";
-	var tmplc = "<li id=${Id}><dl><dt style='font-weight:bold;'>${Name}</dt><dd>${Info}${Detail}</dd></dl></li>";	
-	**/
-	$.cm({
-		ClassName:"web.CSSDHUI.Charts",
-		MethodName:"GetScgChildNode",
-		NodeId:"AllSCG",
-		StrParam: gLocId+"^"+gUserId+"^^^"+"Amt",
-		Type:"M"
-	},function(jsonData){
-		sunburstAmt(jsonData);
-	});
-function sunburstAmt(data){
-   //Ö¸¶¨Í¼±êµÄÅäÖÃºÍÊı¾İ
-	var option = {
-		tooltip:{
-			 trigger: 'item'
-		},
-		series: {
-	        type: 'sunburst',
-	        center: ['50%', '50%'],
-	        radius: [10, '90%'],
-	        data:data,
-	        levels: [{
-	        },{
-	            r0: 0,
-	            r: 125
-	        }, {
-	            r0: 125,
-	            r: 225
-       		 }, {
-	            r0: 225,
-	            r: 300
-		       }]	        
-	        }
-	};
-    //³õÊ¼»¯echartsÊµÀı
-    var Chart = echarts.init(document.getElementById('chartScgAmt'));
-    Chart.setOption(option);
-	}
-	$.cm({
-		ClassName:"web.CSSDHUI.Charts",
-		MethodName:"GetScgChildNode",
-		NodeId:"AllSCG",
-		StrParam: gLocId+"^"+gUserId+"^^^"+"Qty",
-		Type:"M"
-	},function(jsonData){
-		sunburstQty(jsonData);
-	});
-function sunburstQty(data){
-   //Ö¸¶¨Í¼±êµÄÅäÖÃºÍÊı¾İ
-	var option = {
-		tooltip:{
-			 trigger: 'item'
-		},		
-		series: {
-	        type: 'sunburst',
-	        center: ['50%', '50%'],
-	        radius: [0, '90%'],
-	        data:data,
-	        levels: [{
-	        },{
-	            r0: 0,
-	            r: 125
-	        }, {
-	            r0: 125,
-	            r: 225
-       		 }, {
-	            r0: 225,
-	            r: 300
-		       }]
-		}
-	};
-    //³õÊ¼»¯echartsÊµÀı
-    var Chart = echarts.init(document.getElementById('chartScgQty'));
-    Chart.setOption(option);
-	}
-}
+	PkgNum();
+	Workchart();
+	initTips();
+};
 $(init);
+// ç³»ç»Ÿèœå•æ¨¡å¼ä¸‹,å·¥ä½œå°åˆ‡æ¢æ—¶åˆ·æ–°
+var TopWindow = top.window.frames[0];
+if (!isEmpty(TopWindow.showNavTab)) {
+	var Location = TopWindow.frames[0].location;
+	var href = Location.href;
+	if (href.indexOf('MWToken') <= 0) {
+		if (href.indexOf('?') <= 0) {
+			Location.href += '?MWToken=' + websys_getMWToken();
+		} else {
+			Location.href += '&MWToken=' + websys_getMWToken();
+		}
+	}
+	$(TopWindow.document.getElementById('li_home')).on('click', function() {
+		if (!$(this).hasClass('active')) {
+			TopWindow.frames[0].location.reload();
+		}
+	});
+	$(TopWindow.document.getElementById('myTab')).find('.glyphicon').on('click', function() {
+		if ($(TopWindow.document.getElementById('li_home')).hasClass('active')) {
+			TopWindow.frames[0].location.reload();
+		}
+	});
+	$(TopWindow.document.getElementById('jqContextMenu')).on('click', function() {
+		if (!$(this).hasClass('active') && TopWindow.length === 2) {
+			TopWindow.frames[0].location.reload();
+		}
+	});
+}

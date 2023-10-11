@@ -1,18 +1,31 @@
 ﻿
 $(function(){
+	 if ("undefined"==typeof HISUIStyleCode || HISUIStyleCode==""){
+	 // 炫彩版
+	 }
+	 else if (HISUIStyleCode=="lite")
+	 {
+		 // 极简版
+		 $('.panel-body').css("background-color","#f5f5f5");
+	 }else{
+		// 炫彩版
+	}
+	
 	setDataGrid();
 });
 
 //将病历锁数据加入列表
 function setDataGrid()
 {
+	var Type = $("#Type").combobox('getValue')
 	$('#lockList').datagrid({
 	    fitColumns: true,
 	    loadMsg:'数据装载中......',
 	    autoRowHeight: true,
 	    singleSelect:true,
-	    idField:'ID', 
-	    url:'../EMRservice.Ajax.lock.cls?Action=GetLockList',
+	    idField:'ID',
+	    headerCls:'panel-header-gray', 
+	    url:'../EMRservice.Ajax.lock.cls?Action=GetLockList&Type='+Type,
 	    rownumbers:true,
 	    pageSize:20,
 	    pageList:[10,20,30], 
@@ -45,6 +58,16 @@ function formatOper(val,row,index)
 ///解锁
 function unLockItem(lockId,index,ip)
 {
+	var Type = $("#Type").combobox('getValue')
+	if (Type == "OP")
+	{
+		var className = "EMRservice.BL.BLLockOp"	
+	}
+	else
+	{
+		var className = "EMRservice.BL.BLLock"
+	}
+	
 	var currentIp = getIpAddress();
 	var rowIndex = $('#lockList').datagrid('getRowIndex',lockId);
 	var text = "真的要解锁吗?";
@@ -61,7 +84,7 @@ function unLockItem(lockId,index,ip)
 						url: "../EMRservice.Ajax.common.cls",
 						async: true,
 						data: {
-								"Class": "EMRservice.BL.BLLock",
+								"Class": className,
 								"Method":"UnLock",
 								"OutputType":"String",
 						        "p1": lockId
@@ -87,9 +110,16 @@ function unLockItem(lockId,index,ip)
 ///保存操作记录
 function setToLog(rowObj,ipAddress)
 {
-	
-	//var ipAddress = getIpAddress();
-	var ModelName = "EMR.UnLock.UnLock";
+	var Type = $("#Type").combobox('getValue')
+	if (Type == "OP")
+	{
+		var ModelName = "EMR.OP.UnLock.UnLock";	
+	}
+	else
+	{
+		var ModelName = "EMR.UnLock.UnLock";
+	}
+
 	var Condition = "";
 	Condition = Condition + '{"LockID":"' + rowObj.ID + '",';
 	Condition = Condition + '"LockUserID":"' + rowObj.UserID + '",';
@@ -125,10 +155,12 @@ function GetData()
 	var UserName = $("#UserName").val();
 	var IPAddress = $("#IPAddress").val();
 	var DocName = $("#DocName").val();
+	var Type = $("#Type").combobox('getValue');
 	$('#lockList').datagrid('load', {
 		Action: "GetLockList",
 		UserName: UserName,
    	 	IPAddress: IPAddress,
-   	 	DocName: DocName
+   	 	DocName: DocName,
+   	 	Type: Type
 	});
 }

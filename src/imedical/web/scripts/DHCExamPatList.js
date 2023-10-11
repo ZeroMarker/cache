@@ -320,6 +320,7 @@ function ReadCardAppHandle()
 	}
 	//return
 	var lnk="udhcopbillforadmif.csp?CardNo="+card+"&SelectAdmRowId="+admId+"&SelectPatRowId="+papmiId;
+	if(typeof websys_writeMWToken=='function') lnk=websys_writeMWToken(lnk);
 	var NewWin=open(lnk,"udhcopbillif","scrollbars=yes,resizable=yes,top=6,left=6,width=1024,height=760");
 	
 }

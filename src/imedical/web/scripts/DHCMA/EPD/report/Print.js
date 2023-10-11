@@ -29,7 +29,9 @@ function GetWebConfig(encmeth){
 
 function ExportDataToExcel(ReportID,CardType,strFileName)
 {
-	if ("undefined"==typeof EnableLocalWeb ||0==EnableLocalWeb ){
+	var SignImg = GetUserImg(ReportID);   //取签名图片
+	
+	if ("undefined"===typeof EnableLocalWeb || 0===EnableLocalWeb||(BrowserVer=="isIE11"))  {
 
 		var TemplatePath = $m({                  
 			ClassName:"DHCMed.EPDService.EpidemicReportExport",
@@ -47,6 +49,9 @@ function ExportDataToExcel(ReportID,CardType,strFileName)
 		xlBook=xls.Workbooks.Add(FileName);
 		xlSheet=xlBook.Worksheets.Item(1);
 		var flg = tkMakeServerCall("DHCMed.EPDService.EpidemicReportExport","ExportEpidemic","fillxlSheet",ReportID);
+		if (SignImg) {
+		   	xlSheet.Shapes.AddPicture(SignImg,'1','1','60','688','50','17'); //插入图片方法(文件名、链接、saveWithDocument、左侧、顶部、宽度、高度)
+	   	}        
 		if (CardType=='HIV') {
 			xlSheet=xlBook.Worksheets.Item(2);
 			var flg = tkMakeServerCall("DHCMed.EPDService.EpidemicReportExport","ExportHIVEpd","fillxlSheet",ReportID);
@@ -97,12 +102,13 @@ function ExportDataToExcel(ReportID,CardType,strFileName)
 			Str += "var xlBook = xlApp.Workbooks.Add('" +FileName+ "');"  //标点符号很重要，值都是''引起来才能使用
 			Str += "var xlSheet = xlBook.Worksheets.Item(1);"
 		    Str += RepString 	  //后面一定不能有;
+		    Str +=((SignImg)?("xlSheet.Shapes.AddPicture('" +SignImg+ "','1','1','60','688','50','17');"):"")            //插入图片方法(文件名、链接、saveWithDocument、左侧、顶部、宽度、高度)
 			Str += ((CardType=="HIV")?("var xlSheet = xlBook.Worksheets.Item(2);"+HIVString) : "")   //结束一定不能有;一律使用双引号
-		    Str += ((CardType=="STD")?("var xlSheet = xlBook.Worksheets.Item(3);"+STDtring) : "")
+		    Str += ((CardType=="STD")?("var xlSheet = xlBook.Worksheets.Item(3);"+STDString) : "")
 		    Str += ((CardType=="HBV")?("var xlSheet = xlBook.Worksheets.Item(4);"+HBVString) : "")
 	    	//Str += "var fname = xlApp.Application.GetSaveAsFilename('传染病报告("+strFileName+")"+","+"Excel Spreadsheets (*.xls), *.xls"+"');"
 	    	//Str += "xlBook.SaveAs(fname);"
-	    	Str += "xlBook.SaveAs('传染病报告("+strFileName+")');"
+	    	Str += "xlBook.SaveAs('传染病报告("+strFileName+").xls');"
 		    Str += "xlApp.Visible = false;"
 		    Str += "xlApp.UserControl = false;"
 		    Str += "xlBook.Close(savechanges=false);"
@@ -114,15 +120,17 @@ function ExportDataToExcel(ReportID,CardType,strFileName)
 		
 		//以上为拼接Excel打印代码为字符串
 		CmdShell.notReturn =1;   //设置无结果调用，不阻塞调用
-		var rtn = CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
+		var rtn = CmdShell.CurrentUserEvalJs(Str);   //通过中间件运行打印程序 
 	}	
 
 	return true;
 }
 
 function PrintDataToExcel(ReportID,CardType,strFileName)
-{
-	if ("undefined"==typeof EnableLocalWeb ||0==EnableLocalWeb ){
+{   
+	var SignImg = GetUserImg(ReportID);   //取签名图片
+
+	if ("undefined"===typeof EnableLocalWeb || 0===EnableLocalWeb || (BrowserVer=="isIE11")) {
 		var TemplatePath = $m({                  
 			ClassName:"DHCMed.EPDService.EpidemicReportExport",
 			MethodName:"GetTemplatePath"
@@ -139,6 +147,9 @@ function PrintDataToExcel(ReportID,CardType,strFileName)
 		xlBook=xls.Workbooks.Add(FileName);
 		xlSheet=xlBook.Worksheets.Item(1);
 		var flg = tkMakeServerCall("DHCMed.EPDService.EpidemicReportExport","ExportEpidemic","fillxlSheet",ReportID);
+	   	if (SignImg) {
+		   	xlSheet.Shapes.AddPicture(SignImg,'1','1','60','688','50','17'); //插入图片方法(文件名、链接、saveWithDocument、左侧、顶部、宽度、高度)
+	   	}           
 	    xlSheet.printout();
 		if (CardType=='HIV') {
 			xlSheet=xlBook.Worksheets.Item(2);
@@ -189,9 +200,10 @@ function PrintDataToExcel(ReportID,CardType,strFileName)
 			Str +="var xlBook = xlApp.Workbooks.Add('" +FileName+ "');"  //标点符号很重要，值都是''引起来才能使用
 			Str +="var xlSheet = xlBook.Worksheets.Item(1);"
 			Str +=RepString 	  //后面一定不能有;
+			Str +=((SignImg)?("xlSheet.Shapes.AddPicture('" +SignImg+ "','1','1','60','688','50','17');"):"")            //插入图片方法(文件名、链接、saveWithDocument、左侧、顶部、宽度、高度)
 			Str +="xlSheet.PrintOut();"
 			Str +=((CardType=="HIV")?("var xlSheet = xlBook.Worksheets.Item(2);"+HIVString+"xlSheet.PrintOut();") : "")   //结束一定不能有;一律使用双引号
-			Str +=((CardType=="STD")?("var xlSheet = xlBook.Worksheets.Item(3);"+STDtring+"xlSheet.PrintOut();") : "")
+			Str +=((CardType=="STD")?("var xlSheet = xlBook.Worksheets.Item(3);"+STDString+"xlSheet.PrintOut();") : "")
 			Str +=((CardType=="HBV")?("var xlSheet = xlBook.Worksheets.Item(4);"+HBVString+"xlSheet.PrintOut();") : "")
 			Str +="xlApp.Visible = false;"
 			Str +="xlApp.UserControl = false;"
@@ -203,7 +215,7 @@ function PrintDataToExcel(ReportID,CardType,strFileName)
 			Str +="return 1;}());";
 		//以上为拼接Excel打印代码为字符串
 		CmdShell.notReturn =1;   //设置无结果调用，不阻塞调用
-		var rtn = CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
+		var rtn = CmdShell.CurrentUserEvalJs(Str);   //通过中间件运行打印程序 
 	}
 
 	return true;
@@ -328,3 +340,56 @@ function fillxlSheetHBV(cxlSheet,cData,cRow,cCol)
 	 
 	return HBVString; 
 }
+
+
+function GetUserImg(ReportID) {
+	var SignImg="";
+	var SignID = tkMakeServerCall("DHCMed.CA.SignVerify","GetRepSignID","EPD","EPD",ReportID,"S");
+	if (SignID != "") {
+		SignImg = $m({
+			ClassName:"DHCMed.CA.SignVerify",
+			MethodName:"SaveSignImg",
+			aSignID: SignID
+		},false);
+		if (SignImg!='') {
+			var ImgUrl = window.location.href;
+			ImgUrl = ImgUrl.substring(0,ImgUrl.lastIndexOf('/'));
+			ImgUrl = ImgUrl.substring(0,ImgUrl.lastIndexOf('/'));
+			SignImg = ImgUrl + SignImg + SignID + '.gif';
+		}
+	}
+	return SignImg;
+}
+
+function GetUserSignImg(aUserID) {	
+	var ImgBase64 = tkMakeServerCall("CA.BICAService","GetImageByUserID",aUserID);
+
+	if ((BrowserVer=="isLessIE11")||(BrowserVer=="isIE11")) { //IE浏览器
+		var BaseImg= new ActiveXObject("Base64IMGSave.ClsSaveBase64IMG");
+		var sReigstNo = aUserID;
+		var sFiletype= "gif"
+	    var rtn=BaseImg.WriteFile(sReigstNo,ImgBase64,sFiletype);   //C盘位置需能够访问，否则图片存在目录不在C://目录
+	    if(!rtn){
+	          //alert("签名图片转换错误");
+	          return false;
+	     }  
+		return true;
+	}else{	
+		if (EnableLocalWeb==1) {  //非IE浏览器，且启用中间件
+			var sReigstNo = aUserID;
+			var sFiletype= "gif"
+			var Str ="(function test(x){"
+	    	Str +="var BaseImg= new ActiveXObject('Base64IMGSave.ClsSaveBase64IMG');"
+	    	Str +="var rtn=BaseImg.WriteFile('"+sReigstNo+"','"+ImgBase64+"','"+sFiletype+"');"
+		    Str += "return 1;}());";
+			CmdShell.notReturn =0;   
+			var rtn = CmdShell.EvalJs(Str);   //通过中间件运行打印程序
+			if (rtn.status=="200") {
+				return true;
+			}else {
+				return false;
+			}
+		}
+	}
+}
+    

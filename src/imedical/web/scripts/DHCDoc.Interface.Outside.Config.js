@@ -87,6 +87,7 @@ $(function(){
 	 
 	 $("#BReadMe").click(function(){
 	    var url="dhcdoc.interface.outside.configexp.csp";
+		if(typeof websys_writeMWToken=='function') url=websys_writeMWToken(url);
 	    var OpenWindow=window.open(url,"µ¯³ö´°¿Ú","toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=yes,width="+800+",height="+600+",top="+100+"");         
 		OpenWindow.focus(); 
 

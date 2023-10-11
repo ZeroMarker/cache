@@ -5,9 +5,9 @@
 	obj.refreshgridINFAnti = function(){	
 		// 抗菌用药信息
 		obj.gridINFAnti = $HUI.datagrid("#gridINFAnti",{ 
-			title:'抗菌用药'+'<span style="margin-left:30px;padding:6px 15px;background-color:#e3f7ff;color:#1278b8;border: 1px solid #c0e2f7;border-radius: 5px;"><span class="icon-tip-blue" style="margin-right:5px;">&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color:#1278b8;font-weight: 700;">提示信息：仅选择与此次感染相关的抗菌用药信息</span></span>',
-			headerCls:'panel-header-gray',
-			iconCls:'icon-paper',
+			//title:'抗菌用药',
+			//headerCls:'panel-header-gray',
+			//iconCls:'icon-paper',
 			rownumbers: true, //如果为true, 则显示一个行号列
 			singleSelect: true,
 			autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
@@ -17,17 +17,16 @@
 				{field:'SttDate',title:'开始日期',width:90},
 				{field:'EndDate',title:'结束日期',width:90},
 				{field:'DoseQty',title:'剂量',width:45},
-				{field:'DoseUnit',title:'剂量<br>单位',width:45},
+				{field:'DoseUnit',title:$g('剂量<br>单位'),width:45},
 				{field:'PhcFreq',title:'频次',width:100},
-				{field:'MedUsePurpose',title:'用途',width:80},
 				{field:'AdminRoute',title:'给药途径',width:80},
 				{field:'MedPurpose',title:'目的',width:60},
-				{field:'TreatmentMode',title:'治疗用药<br>方式',width:75},
-				{field:'PreMedEffect',title:'预防用药<br>效果',width:75},
-				{field:'PreMedIndicat',title:'预防用药<br>指征',width:70},
+				{field:'TreatmentMode',title:$g('治疗用药<br>方式'),width:75},
+				{field:'PreMedEffect',title:$g('预防用药<br>效果'),width:75},
+				{field:'PreMedIndicat',title:$g('预防用药<br>指征'),width:70},
 				{field:'CombinedMed',title:'联合用药',width:75},
-				{field:'PreMedTime',title:'术前用药<br>时间(分钟)',width:75},
-				{field:'PostMedDays',title:'术后用药<br>天数',width:65},
+				{field:'PreMedTime',title:$g('术前用药<br>时间(分钟)'),width:75},
+				{field:'PostMedDays',title:$g('术后用药<br>天数'),width:65},
 				{field:'SenAna',title:'敏感度',width:55}
 			]],
 			onSelect:function(rindex,rowData){
@@ -37,7 +36,11 @@
 					obj.gridINFAnti.clearSelections();  //清除选中行
 				} else {
 					obj.AntiRowID = rindex;
-					$("#btnINFAntiDel").linkbutton("enable");
+					if ((obj.RepStatusCode==3)||(obj.RepStatusCode==4)) {  //审核、删除状态报告
+						$("#btnINFAntiDel").linkbutton("disable");
+					}else {
+						$("#btnINFAntiDel").linkbutton("enable");
+					}
 				}		
 			},
 			onDblClickRow:function(rindex, rowdata) {
@@ -62,6 +65,22 @@
 	}
 	obj.refreshgridINFAnti();
 	
+		
+	//是否存在与此次感染相关的抗菌用药信息
+	$HUI.radio("[name='radInfAnti']",{  
+		onChecked:function(e,value){
+			var IsInfAnti = $(e.target).val();   //当前选中的值
+			if (IsInfAnti==1) {
+				$('#divINFAnti').removeAttr("style");
+				OpenINFAntiSync();
+				obj.refreshgridINFAnti();
+			}else {
+				$('#gridINFAnti').datagrid('loadData',{total:0,rows:[]});		
+				$('#divINFAnti').attr("style","display:none");
+			}
+		}
+	});
+
 	 // 抗菌用药提取事件
 	$('#btnINFAntiSync').click(function(e){
 		/// TODO同步医嘱
@@ -99,6 +118,9 @@
 			fit:true,
 			headerCls:'panel-header-gray',
 			iconCls:'icon-paper',
+			pagination : true,//如果为true, 则在DataGrid控件底部显示分页工具栏
+			pageSize: 20,
+			pageList : [20,50,100,200],
 			rownumbers: true, //如果为true, 则显示一个行号列
 			singleSelect: true,
 			autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
@@ -136,18 +158,27 @@
 	// 弹出抗菌用药弹框
 	function OpenINFAntiEdit(d,r){
 		$('#LayerOpenINFAntiEdit').show();
-		obj.LayerOpenINFAntiEdit();	
-		$HUI.dialog('#LayerOpenINFAntiEdit',{
-			buttons:[{
-				text:'保存',
-				handler:function(){	
-					INFAntiAdd(d,r);
-				}
-			},{
-				text:'取消',
-				handler:function(){$HUI.dialog('#LayerOpenINFAntiEdit').close();}
-			}]
-		});
+		if ((obj.RepStatusCode==3)||(obj.RepStatusCode==4)) {
+			obj.LayerOpenINFAntiEdit();	
+		}else {
+			$HUI.dialog('#LayerOpenINFAntiEdit',{
+				title:'抗菌用药-编辑',
+				iconCls:'icon-w-paper',
+				width: 790,
+				modal: true,
+				isTopZindex:true,
+				buttons:[{
+					text:'保存',
+					handler:function(){	
+						INFAntiAdd(d,r);
+					}
+				},{
+					text:'取消',
+					handler:function(){$HUI.dialog('#LayerOpenINFAntiEdit').close();}
+				}]
+			});
+		}
+		//InitINFAntiEditData(d,r);
 		InitINFAntiEditData(d);
 	}
 	
@@ -156,7 +187,9 @@
 		$HUI.dialog('#LayerOpenINFAntiEdit',{
 			title:'抗菌用药-编辑',
 			iconCls:'icon-w-paper',
-			width: 800,    
+			width: 800,
+			height: 370, 
+
 			modal: true,
 			shadow:true,
 			isTopZindex:true
@@ -193,7 +226,6 @@
 		
 		obj.cboDoseUnit = Common_ComboDicID("cboDoseUnit","OEDoseUnit");
 		obj.cboPhcFreq = Common_ComboDicID("cboPhcFreq","OEPhcFreq");
-		obj.cboMedUsePurpose = Common_ComboDicID("cboMedUsePurpose","AntiMedUsePurpose");
 		obj.cboAdminRoute = Common_ComboDicID("cboAdminRoute","AntiAdminRoute");
 		obj.cboMedPurpose = Common_ComboDicID("cboMedPurpose","AntiMedPurpose");
 		obj.cboTreatmentMode = Common_ComboDicID("cboTreatmentMode","AntiTreatmentMode");
@@ -211,8 +243,6 @@
 			$('#cboDoseUnit').combobox('setText',d.DoseUnit);
 			$('#cboPhcFreq').combobox('setValue',d.PhcFreqID);
 			$('#cboPhcFreq').combobox('setText',d.PhcFreq);
-			$('#cboMedUsePurpose').combobox('setValue',d.MedUsePurposeID);
-			$('#cboMedUsePurpose').combobox('setText',d.MedUsePurpose);
 			$('#cboAdminRoute').combobox('setValue',d.AdminRouteID);
 			$('#cboAdminRoute').combobox('setText',d.AdminRoute);
 			$('#cboMedPurpose').combobox('setValue',d.MedPurposeID);
@@ -237,7 +267,6 @@
 			$('#txtDoseQty').val('');
 			$('#cboDoseUnit').combobox('clear');
 			$('#cboPhcFreq').combobox('clear');
-			$('#cboMedUsePurpose').combobox('clear');
 			$('#cboAdminRoute').combobox('clear');
 			$('#cboMedPurpose').combobox('clear');
 			$('#cboTreatmentMode').combobox('clear');
@@ -277,12 +306,6 @@
 			var PhcFreq='';
 		}else{
 			var PhcFreq = $('#cboPhcFreq').combobox('getText');
-		}
-		var MedUsePurposeID = $('#cboMedUsePurpose').combobox('getValue');
-		if (MedUsePurposeID==''){
-			var MedUsePurpose='';
-		}else{
-			var MedUsePurpose = $('#cboMedUsePurpose').combobox('getText');
 		}
 		var AdminRouteID = $('#cboAdminRoute').combobox('getValue');
 		if (AdminRouteID==''){
@@ -332,63 +355,63 @@
 		}
 	
 		var errinfo = "";
-    	if (obj.AntiUseID==''){
-			errinfo = errinfo + "请选择标准抗菌用药医嘱!<br>";
-    	}
+    	// if (obj.AntiUseID==''){
+		// 	errinfo = errinfo + $g("请选择标准抗菌用药医嘱!")+"<br>";
+    	// }
     	if (DoseQty==''){
-    		errinfo = errinfo + "剂量不能为空!<br>";
+    		errinfo = errinfo + $g("剂量不能为空!")+"<br>";
     	}
     	if (DoseUnitID==''){
-			errinfo = errinfo + "剂量单位为空或字典未对照!<br>";
+			errinfo = errinfo + $g("剂量单位为空或字典未对照!")+"<br>";
     	}
     	if (PhcFreqID==''){
-			errinfo = errinfo + "频次为空或字典未对照!<br>";
+			errinfo = errinfo + $g("频次为空或字典未对照!")+"<br>";
     	}
 		if (AdminRouteID==''){
-    		errinfo = errinfo + "给药途径为空或字典未对照!<br>";
+    		errinfo = errinfo + $g("给药途径为空或字典未对照!")+"<br>";
     	}
     	if (MedPurposeID==''){
-			errinfo = errinfo + "目的为空或字典未对照!<br>";
+			errinfo = errinfo + $g("目的为空或字典未对照!")+"<br>";
     	}else {
 	    	if (MedPurpose=="预防") {
 		    	if (PreMedEffectID==''){
-		    		errinfo = errinfo + "目的为预防时,预防用药效果不能为空!<br>";
+		    		errinfo = errinfo + $g("目的为预防时,预防用药效果不能为空!")+"<br>";
 		    	}
 		    	if (PreMedIndicatID==''){
-		    		errinfo = errinfo + "目的为预防时,预防用药指征不能为空!<br>";
+		    		errinfo = errinfo + $g("目的为预防时,预防用药指征不能为空!")+"<br>";
 		    	}
 	    	}
 	    	if ((MedPurpose.indexOf("预防")>=0)&&(MedPurpose.indexOf("治疗")>=0))  {
 		    	if (TreatmentModeID==''){
-					errinfo = errinfo + "目的为治疗+预防时,治疗用药方式不能为空!<br>";
+					errinfo = errinfo + $g("目的为治疗+预防时,治疗用药方式不能为空!")+"<br>";
 	    		}
 		    	if (PreMedEffectID==''){
-		    		errinfo = errinfo + "目的为治疗+预防时,预防用药效果不能为空!<br>";
+		    		errinfo = errinfo + $g("目的为治疗+预防时,预防用药效果不能为空!")+"<br>";
 		    	}
 		    	if (PreMedIndicatID==''){
-		    		errinfo = errinfo + "目的为治疗+预防时,预防用药指征不能为空!<br>";
+		    		errinfo = errinfo + $g("目的为治疗+预防时,预防用药指征不能为空!")+"<br>";
 		    	}
 	    	}
 		    	
 	    	if (MedPurpose=="治疗")  {
 		    	if (TreatmentModeID==''){
-					errinfo = errinfo + "目的为治疗时,治疗用药方式不能为空!<br>";
+					errinfo = errinfo + $g("目的为治疗时,治疗用药方式不能为空!")+"<br>";
 	    		}
 	    	}
     	}
 
 		if (CombinedMedID==''){
-			errinfo = errinfo + "联合用药不能为空!<br>";
+			errinfo = errinfo + $g("联合用药不能为空!")+"<br>";
     	}
 		if (SttDate==''){
-			errinfo = errinfo + "开始日期不能为空!<br>";
+			errinfo = errinfo + $g("开始日期不能为空!")+"<br>";
     	}
 		if (Common_CompareDate(SttDate,NowDate)>0) {
-    		errinfo = errinfo + "开始时间不能在当前时间之后!<br>"; 
+    		errinfo = errinfo + $g("开始时间不能在当前时间之后!")+"<br>"; 
     	}
     	if(EndDate!=''){
 			if (Common_CompareDate(SttDate,EndDate)>0){
-				errinfo = errinfo + "结束日期不能在开始日期之前!<br>"; 
+				errinfo = errinfo + $g("结束日期不能在开始日期之前!")+"<br>"; 
 			}
 		}
 		
@@ -411,8 +434,6 @@
 			DoseUnit:DoseUnit,
 			PhcFreqID:PhcFreqID,
 			PhcFreq:PhcFreq,
-			MedUsePurposeID:MedUsePurposeID,
-			MedUsePurpose:MedUsePurpose,
 			AdminRouteID:AdminRouteID,
 			AdminRoute:AdminRoute,
 			MedPurposeID:MedPurposeID,
@@ -470,8 +491,6 @@
 							DoseUnit:DoseUnit,
 							PhcFreqID:PhcFreqID,
 							PhcFreq:PhcFreq,
-							MedUsePurposeID:MedUsePurposeID,
-							MedUsePurpose:MedUsePurpose,
 							AdminRouteID:AdminRouteID,
 							AdminRoute:AdminRoute,
 							MedPurposeID:MedPurposeID,
@@ -518,8 +537,6 @@
 					DoseUnit:DoseUnit,
 					PhcFreqID:PhcFreqID,
 					PhcFreq:PhcFreq,
-					MedUsePurposeID:MedUsePurposeID,
-					MedUsePurpose:MedUsePurpose,
 					AdminRouteID:AdminRouteID,
 					AdminRoute:AdminRoute,
 					MedPurposeID:MedPurposeID,
@@ -576,7 +593,7 @@
     		Input = Input + CHR_1 + obj.gridINFAnti.getRows()[i].DoseQty;
     		Input = Input + CHR_1 + obj.gridINFAnti.getRows()[i].DoseUnitID;
     		Input = Input + CHR_1 + obj.gridINFAnti.getRows()[i].PhcFreqID;
-    		Input = Input + CHR_1 + obj.gridINFAnti.getRows()[i].MedUsePurposeID;
+    		Input = Input + CHR_1 + "";     //用途
     		Input = Input + CHR_1 + obj.gridINFAnti.getRows()[i].AdminRouteID;
     		Input = Input + CHR_1 + obj.gridINFAnti.getRows()[i].MedPurposeID;
     		Input = Input + CHR_1 + obj.gridINFAnti.getRows()[i].TreatmentModeID;

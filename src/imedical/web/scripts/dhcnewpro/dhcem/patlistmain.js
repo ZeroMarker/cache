@@ -14,7 +14,7 @@ var PatArrFlag = "N";
 var EmWardID = "";	     /// 抢救病区ID
 var GlobleTypeCode="";
 var PatType = "E"; var LgCtLocID=session['LOGON.CTLOCID']; var LgUserID=session['LOGON.USERID'];
-var EmPatTypeArr = [{"value":"Loc","text":'本科病人'}, {"value":"Per","text":'本人病人'}, {"value":"Grp","text":'本组病人'},{"value":"Obs","text":'留观病人'}]; ///{"value":"A","text":'全部病人'}, 
+var EmPatTypeArr = [{"value":"Loc","text":$g('本科病人')}, {"value":"Per","text":$g('本人病人')}, {"value":"Grp","text":$g('本组病人')},{"value":"Obs","text":$g('留观病人')}]; ///{"value":"A","text":'全部病人'}, 
 
 /// 页面初始化函数
 function initPageDefault(){
@@ -31,9 +31,6 @@ function initPageDefault(){
 	InitPatList();
 	
 	InitPatInfoPanel();
-	 
-	/// 初始化页面卡类型定义
-	InitCardTypeDefine();
 	
 	/// 复选框事件
 	InitCheck();
@@ -80,15 +77,27 @@ function InitPatInfoPanel(){
 			$HUI.checkbox("#PatEpiYes").setValue(true);
 	        QryEmPatList();
 	    }	
+	})
+	
+	///就诊科室
+	$HUI.combobox("#AdmLoc",{
+		url:LINK_CSP+"?ClassName=web.DHCEMPatCheckLevQuery&MethodName=jsonGetEmPatLoc&HospID="+session['LOGON.HOSPID'],
+		valueField:'value',
+		textField:'text',
+		onSelect:function(option){
+			$("#QytType").combobox("setValue","Obs");
+			$HUI.checkbox("#PatEpiYes").setValue(true);
+	        QryEmPatList();
+	    }	
 	})	
 	
 	$HUI.combobox("#CheckLev",{
 		data:[
-			{"value":"1","text":"Ⅰ级"},//hxy 2020-02-21 原：1 2 3 4
-			{"value":"2","text":"Ⅱ级"},
-			{"value":"3","text":"Ⅲ级"},
-			{"value":"4","text":"Ⅳa级"},
-			{"value":"5","text":"Ⅳb级"} //ed
+			{"value":"1","text":$g("Ⅰ级")},//hxy 2020-02-21 原：1 2 3 4
+			{"value":"2","text":$g("Ⅱ级")},
+			{"value":"3","text":$g("Ⅲ级")},
+			{"value":"4","text":$g("Ⅳa级")},
+			{"value":"5","text":$g("Ⅳb级")} //ed
 		],
 		valueField:'value',
 		textField:'text',
@@ -96,27 +105,7 @@ function InitPatInfoPanel(){
 	       QryEmPatList();
 	    }	
 	})	
-	
-	
-	var uniturl = LINK_CSP+"?ClassName=web.DHCEMPatCheckLevCom&MethodName=";
-	/// 卡类型  卡类型的combobox的onSelect事件。
-	var option = {
-		panelHeight:"auto",
-		onSelect:function(option){
-	        var CardTypeDefArr = option.value.split("^");
-	        m_CardNoLength = CardTypeDefArr[17];
-	        m_CCMRowID = CardTypeDefArr[14];
-	        
-	        if (CardTypeDefArr[16] == "Handle"){
-		    	$('#EmCardNo').attr("readOnly",false);
-		    }else{
-				$('#EmCardNo').attr("readOnly",true);
-			}
-			$('#EmCardNo').val("");  /// 清空内容
-	    }
-	};
-	var url = uniturl+"CardTypeDefineListBroker";
-	new ListCombobox("EmCardType",url,'',option).init();
+		
 	
 	/// 类型
 	var option = {
@@ -124,6 +113,8 @@ function InitPatInfoPanel(){
 		onSelect:function(option){
 			if(option.value!="Obs"){
 				$("#KeptLoc").combobox("setValue","");
+				$("#AdmLoc").combobox("setValue","");
+				$HUI.checkbox("#PatDisEpi").setValue(false);  ///只看离院
 			}else{
 				$HUI.checkbox("#PatEpiYes").setValue(true);	
 			}
@@ -142,24 +133,7 @@ function InitPatInfoPanel(){
 	$("#more").bind('click',MoreCondition);
 }
 
-/// 初始化页面卡类型定义
-function InitCardTypeDefine(){
-	
-	/// 获取默认卡类型
-	runClassMethod("web.DHCEMPatCheckLevCom","GetDefaultCardType",{},function(jsonString){
-		
-		defaultCardTypeDr = jsonString;
-		var CardTypeDefArr = defaultCardTypeDr.split("^");
-        m_CardNoLength = CardTypeDefArr[17];   /// 卡号长度
-        m_CCMRowID = CardTypeDefArr[14];
-        if (CardTypeDefArr[16] == "Handle"){
-	    	$('#EmCardNo').attr("readOnly",false);
-	    }else{
-			$('#EmCardNo').attr("readOnly",true);
-		}
-		$("#EmCardType").combobox("setValue",defaultCardTypeDr);
-	},'',false)
-}
+
 
 /// 页面DataGrid初始定义已选列表
 function InitPatList(){
@@ -209,6 +183,7 @@ function InitPatList(){
 	var option = {
 		//showHeader:false,
 		headerCls:'panel-header-gray',
+		toolbar:'#toolbar',
 		rownumbers : false,
 		singleSelect : true,
 		pagination: true,
@@ -221,10 +196,10 @@ function InitPatList(){
 			
 			///  设置分诊区域
             if (typeof data.EmPatLevTotal == "undefined"){return;}
-        	$(".l-btn-text:contains('红区')").html("红区(" + data.EmPatLevCnt1 +")");
-        	$(".l-btn-text:contains('橙区')").html("橙区(" + data.EmPatLevCnt2 +")"); //hxy 2020-02-21 st
-			$(".l-btn-text:contains('黄区')").html("黄区(" + data.EmPatLevCnt3 +")"); //原：EmPatLevCnt2
-			$(".l-btn-text:contains('绿区')").html("绿区(" + data.EmPatLevCnt4 +")"); //原：EmPatLevCnt3 ed
+        	$(".l-btn-text:contains('"+$g("红区")+"')").html($g("红区")+"(" + data.EmPatLevCnt1 +")");
+        	$(".l-btn-text:contains('"+$g("橙区")+"')").html($g("橙区")+"(" + data.EmPatLevCnt2 +")"); //hxy 2020-02-21 st
+			$(".l-btn-text:contains('"+$g("黄区")+"')").html($g("黄区")+"(" + data.EmPatLevCnt3 +")"); //原：EmPatLevCnt2
+			$(".l-btn-text:contains('"+$g("绿区")+"')").html($g("绿区")+"(" + data.EmPatLevCnt4 +")"); //原：EmPatLevCnt3 ed
 		},
 		rowStyler:function(index,rowData){   
 
@@ -301,7 +276,10 @@ function showGreenRec(adm){
 	}
 	new WindowUX("绿色通道","PatLabWin", 700, 420 , option).Init();
 	
-	var LinkUrl ='dhcem.green.rec.csp?EpisodeID='+adm
+	var LinkUrl ='dhcem.green.rec.csp?EpisodeID='+adm;
+	if ('undefined'!==typeof websys_getMWToken){
+		LinkUrl += "&MWToken="+websys_getMWToken()
+	}
 	var content = '<iframe class="page-iframe" src="'+ LinkUrl +'" frameborder="no" border="no" height="98%" width="100%" scrolling="no"></iframe>';
 	$("#PatLabWin").html(content);
 	return;		
@@ -309,13 +287,13 @@ function showGreenRec(adm){
 
 /// 去向
 function setCellAreaLabel(value, row, index){
-	if (value == "红区"){
+	if (value == $g("红区")){
 		return 'background-color:#F16E57;color:white';
-	}else if (value == "橙区"){ //hxy 2020-02-21 st
+	}else if (value == $g("橙区")){ //hxy 2020-02-21 st
 		return 'background-color:orange;color:white'; //ed
-	}else if (value == "黄区"){
+	}else if (value == $g("黄区")){
 		return 'background-color:#FFB746;color:white';
-	}else if (value == "绿区"){
+	}else if (value == $g("绿区")){
 		return 'background-color:#2AB66A;color:white';
 	}else{
 		return '';
@@ -429,42 +407,42 @@ function QryEmPatList(){
 	PatListType = ($HUI.combobox("#QytType").getValue()==undefined?"":$HUI.combobox("#QytType").getValue());
 	EmWardID = ($HUI.combobox("#KeptLoc").getValue()==undefined?"":$HUI.combobox("#KeptLoc").getValue());
 	CheckLev = ($HUI.combobox("#CheckLev").getValue()==undefined?"":$HUI.combobox("#CheckLev").getValue());   //qqa 20180310 增加当前分级查询条件
+	AdmLoc = ($HUI.combobox("#AdmLoc").getValue()==undefined?"":$HUI.combobox("#AdmLoc").getValue());  
 	
-	var params = "^^^"+ PatType +"^"+ CardNo +"^"+ StartDate +"^"+ EndDate +"^"+ PatEpi +"^^^^^"+LgCtLocID +"^"+ LgUserID +"^^"+ TmpCondition +"^^"+GlobleTypeCode+"^"+ PatListType +"^"+ EmWardID+"^"+CheckLev+"^^"+DisHosp;
+	var params = "^^^"+ PatType +"^"+ CardNo +"^"+ StartDate +"^"+ EndDate +"^"+ PatEpi +"^^^^^"+LgCtLocID +"^"+ LgUserID +"^^"+ TmpCondition 
+		+"^^"+GlobleTypeCode+"^"+ PatListType +"^"+ EmWardID+"^"+CheckLev+"^^"+DisHosp + "^"+ AdmLoc
+	
 	
 	$("#PatList").datagrid("load",{"params":params}); 
 }
 
+/// 读卡 新
+function ReadCard() {
+	DHCACC_GetAccInfo7(ReadCardCallback);
+}
 /// 读卡
-function ReadCard(){
-
-	runClassMethod("web.DHCOPConfig","GetVersion",{},function(myVersion){
-		
-		var CardTypeRowId = "";
-		var CardTypeValue = $("#EmCardType").combobox("getValue");
-		var m_CCMRowID=""
-		if (CardTypeValue != "") {
-			var CardTypeArr = CardTypeValue.split("^");
-			m_CCMRowID = CardTypeArr[14];
-			CardTypeRowId = CardTypeArr[0];
+function ReadCardCallback(rtnValue){
+	var patientId = "";
+	var myAry = rtnValue.split("^");
+	switch (myAry[0]) {
+		case '0':
+			$('#EmCardNo').val(myAry[1]);
+			patientId = myAry[4];
+			break;
+		case '-200':
+			$.messager.alert("提示", "卡无效", "info", function() {
+				$("#EmCardNo").focus();
+			});
+			break;
+		case '-201':
+			$('#EmCardNo').val(myAry[1]);
+			patientId = myAry[4];
+			break;
+		default:
 		}
-		
-		//var rtn=DHCACC_ReadMagCard(m_CCMRowID,"R", "2");  //QQA
-		
-		var rtn=DHCACC_GetAccInfo(CardTypeRowId,CardTypeValue);
-		
-		var myary=rtn.split("^");
-		if (myary[0]!="0"){
-   			$.messager.alert("提示","卡无效!");
-   		}
-		
-		if ((myary[0]=="0")&&(myary[1]!="undefined")){
-			//$("#EmPatNo").val(myDataArr[2]);      /// 登记号;
-			//$("#PatientID").val(myDataArr[3]);  /// 病人ID
-			$('#EmCardNo').val(myary[1]);
-			QryEmPatList();   /// 查询
-		}			
-	},"text",false)
+	if (patientId != "") {
+		QryEmPatList();   /// 查询
+	}
 }
 
 function M1Card_InitPassWord(){
@@ -503,19 +481,7 @@ function EmCardNo_KeyPress(e){
 	if(e.keyCode == 13){
 		var CardNo = $("#EmCardNo").val();
 		if (CardNo == "") return;
-		var CardNoLen = CardNo.length;
-		if (m_CardNoLength < CardNoLen){
-			$.messager.alert("提示:","卡号输入错误,请重新录入！");
-			return;
-		}
-
-		/// 卡号不足位数时补0
-		for (var k=1;k<=m_CardNoLength-CardNoLen;k++){
-			CardNo="0"+CardNo;  
-		}
-		
-		$("#EmCardNo").val(CardNo);
-		QryEmPatList();
+		DHCACC_GetAccInfo("", CardNo, "", "", ReadCardCallback);
 	}
 }
 
@@ -587,6 +553,9 @@ function showLabWin(LabType, PatientID){
 	new WindowUX(WinTitle,"PatLabWin", $(document).width(), $(document).height()-20 , option).Init();
 	
 	var LinkUrl = (LabType == "1"?"dhcem.seepatlis.csp":"dhcem.inspectrs.csp")+"?PatientID="+PatientID;
+	if ('undefined'!==typeof websys_getMWToken){
+		LinkUrl += "&MWToken="+websys_getMWToken()
+	}
 	var content = '<iframe class="page-iframe" src="'+ LinkUrl +'" frameborder="no" border="no" height="100%" width="100%" scrolling="auto"></iframe>';
 	$("#PatLabWin").html(content);	
 	return;
@@ -622,8 +591,11 @@ function GetWholePatNo(EmPatNo){
 
 /// 跳转到急诊医生界面
 function PageJumpControl(){
-
-    window.location = "websys.csp?a=a&homeTab=dhcem.patoverviews.csp&PersonBanner=dhcem.person.banner.csp&TMENU=57449&TPAGID=148500597";
+	var LinkUrl ="websys.csp?a=a&homeTab=dhcem.patoverviews.csp&PersonBanner=dhcdoc.patinfo.banner.csp&PatientListPage=dhcem.patlist.csp&TMENU=57449&TPAGID=148500597";
+	if ('undefined'!==typeof websys_getMWToken){
+		LinkUrl += "&MWToken="+websys_getMWToken()
+	}
+    window.location = LinkUrl;
 }
 
 /// 已诊
@@ -651,13 +623,22 @@ function LoadPatArrNo(event,value){
 	}
 }
 
+function ClickPatDisEpi(event,value){
+	if(value){
+		$("#QytType").combobox("setValue","Obs");
+		$HUI.checkbox("#PatEpiYes").setValue(true);
+		QryEmPatList();
+	}
+	return;
+}
+
 //hxy 2020-02-21
 function setCell(value){
-	if(value=="1级"){value="Ⅰ级";}
-	if(value=="2级"){value="Ⅱ级";}
-	if(value=="3级"){value="Ⅲ级";}
-	if(value=="4级"){value="Ⅳa级";}
-	if(value=="5级"){value="Ⅳb级";}
+	if(value=="1级"){value=$g("Ⅰ级");}
+	if(value=="2级"){value=$g("Ⅱ级");}
+	if(value=="3级"){value=$g("Ⅲ级");}
+	if(value=="4级"){value=$g("Ⅳa级");}
+	if(value=="5级"){value=$g("Ⅳb级");}
 	return value;
 }
 

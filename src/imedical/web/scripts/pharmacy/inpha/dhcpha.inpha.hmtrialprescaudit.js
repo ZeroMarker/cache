@@ -82,10 +82,20 @@ window.onload = function () {
         // 消息进入
         $("#tab-ipmonitor a").click();
         $("#txt-patno").val(LoadPatNo);
+        InitParams();
         setTimeout("QueryGridPrescAudit()", 500);
     }
 }
-
+function InitParams(){
+	if(LoadOrdItmId==""){return;}
+	var retVal=tkMakeServerCall("PHA.COM.Method","GetOrdItmInfoForTipMess",LoadOrdItmId);
+    if(retVal!="{}"){
+	    var retJson=JSON.parse(retVal)
+		var ordDate=retJson.ordDate;
+		 $("#date-start").data('daterangepicker').setStartDate(ordDate);
+		 $("#date-start").data('daterangepicker').setEndDate(ordDate);
+	}
+}
 //初始化药房科室
 function InitPhaConfig() {
     $.ajax({
@@ -131,6 +141,12 @@ function InitGridPrescList() {
             header: '审方结果',
             width: 62,
             cellattr: addPhDispStatCellAttr
+        },{
+            name: "TDispState",
+            index: "TDispState",
+            header: '发药状态',
+            width: 62,
+            hidden: true
         },
         {
             name: "TPrescEmergen",
@@ -430,13 +446,26 @@ function InitGridAdmPrescList() {
             index: "TAuditResult",
             header: '审方结果',
             width: 62
+        },{
+            name: "TDispState",
+            index: "TDispState",
+            header: '发药状态',
+            width: 62,
+            hidden: true
         },
         {
             name: "TPrescEmergen",
             index: "TPrescEmergen",
             header: '是否加急',
             width: 70,
-            cellattr: addStatCellAttr
+            cellattr: addStatCellAttr,
+            formatter: function(value, options, rowdata){
+				if(value == "Y"){
+					return "是";	
+				}else{
+					return "否";	
+				}
+			}
         },
         {
             name: "TWardLoc",
@@ -665,13 +694,27 @@ function QueryGridDispSub() {
 
 function QueryPrescDetail(prescno) {
     $("#ifrm-cypresc").empty();
-    var htmlstr = GetPrescHtml(prescno);
-    $("#ifrm-cypresc").append(htmlstr);
+    //var htmlstr = GetPrescHtml(prescno);
+    //$("#ifrm-cypresc").append(htmlstr);
+    GetPrescHtml(prescno);
 }
 
-function GetPrescHtml(prescno) {
-    var paramsstr = "DHCINPHA^" + prescno + "^Y^2";
-    $("#ifrm-cypresc").attr("src", ChangeCspPathToAll("dhcpha/dhcpha.common.prescpreview.csp") + "?paramsstr=" + paramsstr + "&PrtType=DISPPREVIEW");
+function GetPrescHtml(prescNo) {
+	var phartype = "IP";		// 住院类型
+	var zfFlag = "底方"
+	var useFlag = "2" 			// 处方审核
+	var cyflag = "Y"
+
+    PHA_PRESC.PREVIEW({
+		prescNo: prescNo,			
+		preAdmType: phartype,
+		zfFlag: zfFlag,
+		prtType: 'DISPPREVIEW',
+		useFlag: useFlag,
+		iframeID: 'ifrm-cypresc',
+		cyFlag: cyflag
+	});
+    //$("#ifrm-cypresc").attr("src", ChangeCspPathToAll("dhcpha/dhcpha.common.prescpreview.csp") + "?paramsstr=" + paramsstr + "&PrtType=DISPPREVIEW");
 }
 
 //获取查询条件
@@ -724,6 +767,11 @@ function PassIPOrder() {
     }
     if ((selectid == "") || (selectid == null)) {
         dhcphaMsgBox.alert("请先选择需要审方通过的处方!");
+        return;
+    }
+    var dispStatus = selrowdata.TDispState;
+    if (dispStatus.indexOf("已发药")>-1) {
+        dhcphaMsgBox.alert("该处方已经发药,不能审核通过!");
         return;
     }
     var auditresult = selrowdata.TAuditResult;
@@ -781,6 +829,11 @@ function RefuseIPOrder() {
         dhcphaMsgBox.alert("请先选择需要拒绝的处方!");
         return;
     }
+    var dispStatus = selrowdata.TDispState;
+    if (dispStatus.indexOf("已发药")>-1) {
+        dhcphaMsgBox.alert("该处方已经发药,不能审核拒绝!");
+        return;
+    }
     var auditresult = selrowdata.TAuditResult;
     if (auditresult.indexOf("接受")>-1) {
         dhcphaMsgBox.alert("该处方审方已经接受,不能审核拒绝!");
@@ -798,7 +851,7 @@ function RefuseIPOrder() {
     }
     var PrescNo = selrowdata.TPrescNo;
     var resultstr = tkMakeServerCall("web.DHCINPHA.HMTrialDrugDisp.TrialDrugDispQuery", "GetOrdStrByPrescno", PrescNo);
-    console.log(resultstr)
+    //console.log(resultstr)
     var orditmstr = resultstr.split("&&")[0];
     if (orditmstr == "") {
         dhcphaMsgBox.alert("该处方没有有效明细信息!");
@@ -990,6 +1043,16 @@ function InitIPOrderModalTab() {
         var adm = PatientInfo.adm;
         var patientID = PatientInfo.patientID;
         var tabId = $(this).attr("id")
+        /* MaYuqiang 20220517 将患者信息传至头菜单，避免引用界面串患者 */
+        var menuWin = websys_getMenuWin();  // 获得头菜单Window对象
+        if (menuWin){		
+            var frm = dhcsys_getmenuform(); //menuWin.document.forms['fEPRMENU'];
+            if((frm) &&(frm.EpisodeID.value != adm)){
+                if (menuWin.MainClearEpisodeDetails) menuWin.MainClearEpisodeDetails();  //清除头菜单上所有病人相关信息
+                frm.EpisodeID.value = adm; 
+                frm.PatientID.value = patientID;
+            }
+        }
         if (tabId == "tab-allergy") {
             $('#ifrm-outmonitor').attr('src', ChangeCspPathToAll('dhcdoc.allergyenter.csp') + '?PatientID=' + patientID + '&EpisodeID=' + adm + "&IsOnlyShowPAList=Y");
         }
@@ -1000,7 +1063,8 @@ function InitIPOrderModalTab() {
             $('#ifrm-outmonitor').attr('src', ChangeCspPathToAll('dhcapp.seepatlis.csp') + '?PatientID=' + patientID + '&EpisodeID=' + adm + '&NoReaded=' + '1');
         }
         if (tabId == "tab-eprquery") {
-            $('#ifrm-outmonitor').attr('src', ChangeCspPathToAll('emr.interface.browse.episode.csp') + '?PatientID=' + patientID + '&EpisodeID=' + adm + '&EpisodeLocID=' + gLocId);
+        	$('#ifrm-outmonitor').attr('src', ChangeCspPathToAll('emr.browse.manage.csp') + '?PatientID=' + patientID + '&EpisodeID=' + adm + '&EpisodeLocID=' + gLocId);
+            //$('#ifrm-outmonitor').attr('src', ChangeCspPathToAll('emr.interface.browse.episode.csp') + '?PatientID=' + patientID + '&EpisodeID=' + adm + '&EpisodeLocID=' + gLocId);
         }
         if (tabId == "tab-orderquery") {
             $('#ifrm-outmonitor').attr('src', ChangeCspPathToAll('ipdoc.patorderview.csp')  +'?EpisodeID=' + adm + '&PageShowFromWay=ShowFromEmrList&DefaultOrderPriorType=ALL');
@@ -1019,7 +1083,8 @@ function InitIPOrderModalTab() {
             $("#modal-prescinfo #ul-monitoraddinfo").height() -
             50
         $("#ifrm-outmonitor").height(tmpiframeheight)
-        $("#ifrm-outmonitor").attr('src', ChangeCspPathToAll("dhcpha.comment.queryorditemds.csp") + "?EpisodeID=" + PatientInfo.adm);
+        //$("#ifrm-outmonitor").attr('src', ChangeCspPathToAll("dhcpha.comment.queryorditemds.csp") + "?EpisodeID=" + PatientInfo.adm);
+        $('#ifrm-outmonitor').attr('src', ChangeCspPathToAll('dhcdoc.allergyenter.csp') + '?PatientID=' + PatientInfo.patientID + '&EpisodeID=' + PatientInfo.adm + "&IsOnlyShowPAList=Y");
         var selectid = $("#grid-presclist").jqGrid('getGridParam', 'selrow');
         var selectdata = $('#grid-presclist').jqGrid('getRowData', selectid);
         var orditem = selectdata.TMoeori;
@@ -1030,13 +1095,18 @@ function InitIPOrderModalTab() {
         AppendPatientOrdInfo(patoptions);
         var tabId = $(this).attr("id");
         if (tabId != "tab-allergy") {
-            $("#tab-allergy").click()
+            setTimeout("ClickAllergy()",100);
         }
     })
     $("#modal-prescinfo").on("hidden.bs.modal", function () {
         //$(this).removeData("bs.modal");
     });
     $("#tab-viewpresc").hide();
+}
+
+function ClickAllergy()
+{
+	$("#tab-allergy").click();
 }
 
 //格式化列

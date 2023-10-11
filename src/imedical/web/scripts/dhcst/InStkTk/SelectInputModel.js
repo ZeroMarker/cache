@@ -10,8 +10,8 @@ function SelectModel(InputType,Fn) {
 	
 	// 确定按钮
 	var returnBT = new Ext.Toolbar.Button({
-				text : '确定',
-				tooltip : '点击确定',
+				text : $g('确定'),
+				tooltip : $g('点击确定'),
 				iconCls : 'page_goto',
 				handler : function() {
 					returnData();
@@ -20,8 +20,8 @@ function SelectModel(InputType,Fn) {
 
 	// 取消按钮
 	var cancelBT = new Ext.Toolbar.Button({
-				text : '关闭',
-				tooltip : '点击关闭',
+				text : $g('关闭'),
+				tooltip : $g('点击关闭'),
 				iconCls : 'page_delete',
 				handler : function() {
 					window.close();
@@ -59,11 +59,11 @@ function SelectModel(InputType,Fn) {
 */
 	
 	var InStkTkWin = new Ext.ux.ComboBox({
-			fieldLabel : '实盘窗口',
+			fieldLabel : $g('实盘窗口'),
 			id : 'InStkTkWin',
 			name : 'InStkTkWin',
 			anchor : '90%',
-			emptyText : '实盘窗口...',
+			emptyText : $g('实盘窗口...'),
 			store : INStkTkWindowStore,
 			valueField : 'RowId',
 			displayField : 'Description',
@@ -85,9 +85,9 @@ function SelectModel(InputType,Fn) {
 //			}
 		});		
 	var window = new Ext.Window({
-				title : '实盘录入方式选择',
+				title : $g('实盘录入方式选择'),
 				width : 500,
-				height : 275,
+				height : 320,
 				labelWidth:100,
 			      plain:true,
 			      modal:true,
@@ -99,7 +99,7 @@ function SelectModel(InputType,Fn) {
 					style: 'padding:5px 5px 5px 5px;',
 					items : [{
 								checked: true,				             
-				                boxLabel: '录入方式一:填充批次表格式（根据账盘数据按批次填充实盘数）',
+				                boxLabel: $g('录入方式一:填充批次表格式（根据账盘数据按批次填充实盘数）'),
 				                id: 'InputModel1',
 				                name:'InputModel',
 				                width : 150 ,
@@ -107,7 +107,7 @@ function SelectModel(InputType,Fn) {
 				                inputValue: '1' 							
 							},{
 								checked: false,				             
-				                boxLabel: '录入方式二:按库存批次录入方式',
+				                boxLabel: $g('录入方式二:按库存批次录入方式'),
 				                id: 'InputModel2',
 				                name:'InputModel',
 				                width : 150 ,
@@ -115,7 +115,7 @@ function SelectModel(InputType,Fn) {
 				                inputValue: '2' 							
 							},{
 								checked: false,				             
-				                boxLabel: '录入方式三:按品种填充表格式（根据账盘数据按品种填充实盘数）',
+				                boxLabel: $g('录入方式三:按品种填充表格式（根据账盘数据按品种填充实盘数）'),
 				                id: 'InputModel3',
 				                name:'InputModel',
 				                width : 150 ,
@@ -123,12 +123,31 @@ function SelectModel(InputType,Fn) {
 				                inputValue: '3' 							
 							},{
 								checked: false,				             
-				                boxLabel: '录入方式四:按货位填充表格式（根据账盘数据按货位填充实盘数）',
+				                boxLabel: $g('录入方式四:按货位填充表格式（根据账盘数据按货位填充实盘数）'),
 				                id: 'InputModel4',
 				                name:'InputModel',
 				                width : 150 ,
 		                    	height : 30 ,
 				                inputValue: '4' 							
+							},{
+								checked: false,				             
+				                boxLabel: $g('<font color=blue>移动端录入方式一:</font>按品种'),
+				                id: 'InputModel5',
+				                name:'InputModel',
+				                width : 150 ,
+		                    	height : 30 ,
+				                inputValue: '5' ,
+				                //hidden:true
+				                							
+							},{
+								checked: false,				             
+				                boxLabel: $g('<font color=blue>移动端录入方式二:</font>按批次'),
+				                id: 'InputModel6',
+				                name:'InputModel',
+				                width : 150 ,
+		                    	height : 30 ,
+				                inputValue: '6' ,
+				                //hidden:true							
 							}]
 					},{
 						layout:'form',
@@ -145,17 +164,38 @@ function SelectModel(InputType,Fn) {
 	
 	if(InputType==1){
 		Ext.getCmp("InputModel3").setDisabled(true);
+		Ext.getCmp("InputModel5").setDisabled(true);
 	}else if(InputType==2){
 		Ext.getCmp("InputModel1").setDisabled(true);
 		Ext.getCmp("InputModel2").setDisabled(true);
 		Ext.getCmp("InputModel3").setValue(true);
 		Ext.getCmp("InputModel4").setDisabled(true);
+		Ext.getCmp("InputModel5").setDisabled(true);
+		Ext.getCmp("InputModel6").setDisabled(true);
 	}
+	else if(InputType==5){
+		Ext.getCmp("InputModel1").setDisabled(true);
+		Ext.getCmp("InputModel2").setDisabled(true);
+		Ext.getCmp("InputModel3").setDisabled(true);
+		Ext.getCmp("InputModel4").setDisabled(true);
+		Ext.getCmp("InputModel6").setDisabled(true);
+		Ext.getCmp("InputModel5").setValue(true);
+	}
+	else if(InputType==6){
+		Ext.getCmp("InputModel1").setDisabled(true);
+		Ext.getCmp("InputModel2").setDisabled(true);
+		Ext.getCmp("InputModel3").setDisabled(true);
+		Ext.getCmp("InputModel4").setDisabled(true);
+		Ext.getCmp("InputModel5").setDisabled(true);
+		Ext.getCmp("InputModel6").setValue(true);
+	}
+	
+	
 
 	function returnData() {
 		var selectModel = Ext.getCmp('InputModel').getValue();	
 		if (selectModel== null) {
-			Msg.info("error","请选择录入方式!");
+			Msg.info("error",$g("请选择录入方式!"));
 		} else {
 			SelectData();
 			window.close();

@@ -5,7 +5,7 @@
 */
 var _BDPHOSPCLS="web.DHCBL.BDP.BDPMappingHOSP";
 function GenHospComp(tableName,sessionStr,opt){
-	tableName = tableName||"";
+	tableName = tableName||"CommonTable";
 	sessionStr = sessionStr||"";
 	var hospid = (session&&session['LOGON.HOSPID'])||"";
 	var defaultOpt = {width:350};
@@ -14,7 +14,7 @@ function GenHospComp(tableName,sessionStr,opt){
 		$("<input id=\"_HospList\" class=\"textbox\"/>").prependTo("body");
 	}
 	if ($("#_HospListLabel").length==0){
-		$("<label id='_HospListLabel' style='color:red;margin:0 10px 0 10px' class='r-label'>医院</label>").prependTo("body");
+		$("<label id='_HospListLabel' style='color:red;margin:0 10px 0 10px' class='r-label'>"+$g("医院")+"</label>").prependTo("body");
 	}
 	var defHospId = $cm({dataType:'text',ClassName:_BDPHOSPCLS,MethodName:"GetDefHospIdByTableName",tableName:tableName,HospID:hospid},false);
 	var obj = $HUI.combogrid('#_HospList',{
@@ -49,6 +49,7 @@ function GenHospComp(tableName,sessionStr,opt){
 }
 
 function GenHospWin(objectName,objectId,callback,opt){
+	objectName = objectName||"CommonTable";
 	if ($("#_HospListWin").length==0){
 		$("<div id=\"_HospListWin\" />").prependTo("body");
 	}
@@ -62,9 +63,14 @@ function GenHospWin(objectName,objectId,callback,opt){
 		modal:true,
 		height:350,
 		title:'医院权限分配',
-		content:'<table id="_HospListGrid"></table>',
+		iconCls:'icon-w-paper',
+		content:'<style>.dialog-button{padding:20px;};</style>\
+		<style>#_HospListWin .dialog-button a.l-btn:first-child{background-color: #2ab66a;};</style>\
+		<style>#_HospListWin .dialog-button a.l-btn:first-child:hover{background-color: #239e5b;};</style>\
+		<table id="_HospListGrid" style="margin:10px;"></table>',
 		buttons:[{
-			text:'确定',
+			text:'保存',
+			class:'green',
 			handler:function(){
 				var HospIDs = "";
 				var rows = gridObj.getData().rows;
@@ -110,7 +116,10 @@ function GenHospWin(objectName,objectId,callback,opt){
 			gridObj = $HUI.datagrid("#_HospListGrid",{
 				mode: 'remote',
 				fit:true,
-				border:false,
+				border:true,
+				style:{padding:10},
+				headerCls:'panel-header-gray',
+				bodyCls:'panel-body-gray',
 				pagination:false,
 				showPageList:false,
 				showRefresh:false,
@@ -137,7 +146,7 @@ function GenHospWin(objectName,objectId,callback,opt){
 	return gridObj;
 }
 function GenHospWinButton(objectName){
-	objectName = objectName||"";
+	objectName = objectName||"CommonTable";
 	if (objectName=="") return null;
 	// 如果非管控数据按钮隐藏
 	var dataType = tkMakeServerCall("web.DHCBL.BDP.BDPTableList","GetDataType",objectName);
@@ -149,7 +158,7 @@ function GenHospWinButton(objectName){
 		}
 	}else{
 		if ($("#_HospBtn").length==0){
-			$("<a id=\"_HospBtn\" class=\"textbox\">数据关联医院</a>").prependTo("body");
+			$("<a id=\"_HospBtn\" class=\"textbox\">"+$g("数据关联医院")+"</a>").prependTo("body");
 		}
 		var btnobj = $HUI.linkbutton("#_HospBtn",{
 			iconCls:'icon-w-key',
@@ -169,7 +178,7 @@ function GenUserHospComp(opt){
 		$("<input id=\"_HospUserList\" class=\"textbox\"/>").prependTo("body");
 	}
 	if ($("#_HospUserListLabel").length==0){
-		$("<label id='_HospUserListLabel' style='color:red;margin:0 10px 0 10px' class='r-label'>医院</label>").prependTo("body");
+		$("<label id='_HospUserListLabel' style='color:red;margin:0 10px 0 10px' class='r-label'>"+$g("医院")+"</label>").prependTo("body");
 	}
 	var obj = $HUI.combogrid('#_HospUserList',{
 		delay: 500,
@@ -185,7 +194,7 @@ function GenUserHospComp(opt){
 		isCombo:true,
 		showPageList:false,
 		showRefresh:false,
-		displayMsg:"当前:{from}~{to},共{total}条",
+		//displayMsg:"当前:{from}~{to},共{total}条",
         onBeforeLoad:function(param){
 			param = $.extend(param,{desc:$("#_HospUserList").lookup("getText")});
 			return true;

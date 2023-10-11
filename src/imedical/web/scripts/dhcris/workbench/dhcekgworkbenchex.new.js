@@ -296,7 +296,65 @@ var ExportBtn = new Ext.Button({
     text:'导出',
     iconCls:'btn-ris-export',
     handler:function(){
-	    ExportList_onclick();
+	    //ExportList_onclick();
+	    	var typeDR = "" ;		// 病人类型 
+	var PatientNo = formatRegNo(Ext.getCmp("PatientNo").getValue()); 	//登记号
+	Ext.getCmp("PatientNo").setValue(PatientNo);
+	var StudyNo = "";    	//检查号
+	var LocDr = Ext.getCmp("RecDep").getValue();		//科室ID
+	var StatusCode = Ext.getCmp("RisStatus").getValue();	//状态Id
+	var ReportDoc = "";		//报告医生
+	var VerifyDoc = "";	// 审核医生
+	var Name = ""; 			// 姓名
+	var ResourceDR = "";	//预约资源rowid
+	var RegEQDR = "" ;  	// 登记资源rowid 
+	var RoomDR = "" ; 		// 房间
+	var InPatientNo = "" ; 	// 住院号
+	var IsFindbyDate = "false" ; 		// 日期的勾选框 CheckDate
+	var IsAppointmentOrder = "" ;		// ckAppointment 需要预约的勾选框
+	var IsBedOrder = "" ;		//ckbedOrder 床旁医嘱
+	var EQGroupDR = "" ;	//检查组rowid
+	var No = "" ;			//编号
+	var IsSetFilm = "false" ; 		//ckSentFilm 已发片
+	var Islock = "false" ; 			// Lock 锁定
+	var IsNotLoc = "N" ;    	// ChkNotLoc 不显示本科病人
+	var QueryByRegDate = "N" ; 		// ckRegDate 登记日期
+	var Resource = "" ;		// Resource 
+	var EQGroup = "" ;
+	var Room = "" ;
+	var Status = Ext.getCmp("RisStatus").getRawValue();
+	var Patienttype = "" ;
+	var RegDevice = "" ;
+	var IsUItem = "N" ;
+	var IsCostRecords = "N" ;
+	var AppLocID = "";
+	var StartDate = Ext.getCmp("StartDate").getRawValue();
+	var EndDate = Ext.getCmp("EndDate").getRawValue();
+	var BookedType=1 ;   //默认	
+	var Condition1=typeDR+"^"+PatientNo+"^"+StudyNo+"^"+LocDr+"^"+StatusCode+"^"+ReportDoc+"^"+VerifyDoc+"^"+Name+"^"+ResourceDR;
+	var Condition2=RegEQDR+"^"+RoomDR+"^"+InPatientNo+"^"+IsFindbyDate+"^"+IsAppointmentOrder+"^"+IsBedOrder+"^"+EQGroupDR+"^^"+No
+		+"^"+IsSetFilm+"^"+Islock+"^"+IsNotLoc+"^"+QueryByRegDate;
+	var Condition3=Resource+"^"+EQGroup+"^"+Room+"^"+Status+"^"+Patienttype+"^"+RegDevice+"^"+StartDate+"^"+EndDate+"^"+IsUItem+"^"+IsCostRecords+"^"+AppLocID;
+    var strCondition=Condition1+"^"+Condition2+"^"+Condition3;
+   
+	var rtn=$cm(
+	{
+		dataType:'text',
+		ResultSetType:"Excel",  //表示通过DLL生成Excel，可支持IE与Chrome系。Chrome系浏览器请安装中间件
+		//ResultSetTypeDo:"Export",    //默认Export，可以设置为：Print
+		//localDir:"D:\\tmp\\",	      //固定文件路径
+		//localDir:"Self",            //用户选择路径
+		//loca//lDir:""                 //默认桌面
+		ExcelName:"excelname",				 //默认DHCCExcel
+		ClassName:"web.DHCRisWorkBenchDoEx",
+		QueryName:"QueryExamItem",
+		strCondition:strCondition,
+		StdDate:StartDate,
+		enddate:EndDate,
+		BookedType:BookedType
+	},false)
+	location.href = rtn;
+    
     }
 });
 

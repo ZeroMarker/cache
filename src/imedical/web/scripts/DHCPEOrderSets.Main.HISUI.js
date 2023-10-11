@@ -1,8 +1,9 @@
 // DHCPEOrderSets.Main.HISUI.js
+// dhcpeordersets.main.hisui.csp
 // by zhongricheng
 
 var WIDTH = $(document).width();
-var ItemType = "N", LisType = "N", MedType = "N", OtherType = "N", IsShow = "N", IsFit = "N";
+var ItemType = "N", LisType = "N", MedType = "N", OtherType = "N", OrdSetsType = "N", IsShow = "N", IsFit = "N";
 $("#OrderSetsSearch").css("width", WIDTH*0.5);
 
 $(function() {
@@ -16,6 +17,8 @@ $(function() {
 	InitItemDataGrid("#QryLisItemList","NoShow");
 	InitItemDataGrid("#QryMedicalItemList","NoShow");
 	InitItemDataGrid("#QryOtherItemList","NoShow");
+	// 初始化套餐
+	InitOrdSetsDataGrid("#QryOrdSetsList","NoShow");
 	
 	$("#BSearch").click(function() {
 		BSearch_click();
@@ -58,6 +61,15 @@ $(function() {
     $("#OtherItem").keydown(function(e) {
 		if(e.keyCode == 13){
 			BSearchItem_click("O");
+		}
+	});
+    
+    $("#BSearchOrdSets").click(function() {
+		BSearchOS_click();
+    });
+    $("#OrdSets").keydown(function(e) {
+		if(e.keyCode == 13){
+			BSearchOS_click();
 		}
 	});
 	
@@ -174,8 +186,8 @@ function InitCombobox() {
 		editable:false,
 		data:[
 			{id:'1',text:'个人'},
-			{id:'2',text:'科室',selected:'true'},
-			{id:'3',text:'全院'}
+			{id:'2',text:'科室',selected:'true'}
+			//{id:'3',text:'全院'}
 		]
 	});
 	
@@ -187,8 +199,8 @@ function InitCombobox() {
 		editable:false,
 		data:[
 			{id:'1', text:'个人'},
-			{id:'2', text:'科室', selected:'true'},
-			{id:'3', text:'全院'}
+			{id:'2', text:'科室', selected:'true'}
+			//{id:'3', text:'全院'}
 		]
 	});
 	
@@ -199,7 +211,14 @@ function InitCombobox() {
 		textField:'desc',
 		defaultFilter:4,
 		onSelect:function(record) {   // 选中增加
+		},
+		onBeforeLoad:function(param){
+			param.LocText = param.q;
+			param.Type="B";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID']; 
 		}
+
 	});
 	
 	// 可用团体
@@ -221,7 +240,10 @@ function InitCombobox() {
 		textField:'desc',
 		editable:false,
 		onSelect:function(record){
-			$("#QryRisItemList").datagrid('load',{ClassName:"web.DHCPE.StationOrder",QueryName:"StationOrderList",Type:"Item",TargetFrame:"PreItemList",Item:$("#RisItem").val(),StationID:record.id}); 
+			var SelRowData = $("#OrderSetsList").datagrid("getSelected");
+			if ( SelRowData ) {
+				$("#QryRisItemList").datagrid('load',{ClassName:"web.DHCPE.StationOrder",QueryName:"StationOrderList",Type:"Item",TargetFrame:"PreItemList",Item:$("#RisItem").val(),StationID:record.id,PreIADMID:"",BType:"B",LocID:session['LOGON.CTLOCID'],hospId:session['LOGON.HOSPID']}); 
+			}
 		}
 	});
 	
@@ -260,6 +282,9 @@ function InitCombobox() {
 				} else if (title == "其他项目" && OtherType == "N") {
 					InitItemDataGrid("#QryOtherItemList","Other");
 					OtherType = "Y";
+				} else if (title == "套餐项目" && OrdSetsType == "N") {
+					InitOrdSetsDataGrid("#QryOrdSetsList","");
+					OrdSetsType = "Y";
 				}
 			}
 		}
@@ -277,7 +302,9 @@ function InitARCOSDataGrid() {
 			QueryName:"SearchPEOrderSets",
 			UserID:session["LOGON.USERID"],  // $.session.get('USERID'),
 			subCatID:$("#subCatID").val(),
-			Conditiones:$("#Conditiones").combobox('getValue')
+			Conditiones:$("#Conditiones").combobox('getValue'),
+			HospID:session['LOGON.HOSPID']
+
 		},
 		method: 'get',
 		idField: 'ARCOSRowid',
@@ -305,6 +332,7 @@ function InitARCOSDataGrid() {
 			{field:'ARCOSCode',title:'代码'},
 			{field:'ARCOSDesc',title:'描述'},
 			{field:'ARCOSAlias',title:'别名'},
+			{field:'AddUser',title:'创建人'},
 			
 			{field:'BreakDesc', title:'拆分', align:'center'},  // 拆分
 			{field:'SexDesc', title:'对应性别', align:'center'},  // 性别
@@ -398,6 +426,11 @@ function InitARCOSDataGrid() {
 				$("#OrderSetsWin").show();
 				
 				var SelRowData = $("#OrderSetsList").datagrid("getSelected");
+				if (!SelRowData) { 
+					$.messager.alert("提示","请选择待修改的医嘱套！", "info"); 
+					return false; 
+				}
+
 				$("#CategoryWin").val(SelRowData.ARCOSOrdCat);
 				$("#csubCatIDWin").val(SelRowData.ARCOSOrdSubCat);
 				$("#CategoryIDWin").val(SelRowData.ARCOSOrdCatDR);
@@ -481,6 +514,7 @@ function InitARCOSDataGrid() {
 			}
 		*},#*
 		*/
+		/*
 		{
 			iconCls: 'icon-house',
 			text:'可用科室',
@@ -511,7 +545,9 @@ function InitARCOSDataGrid() {
 					}
 				});
 			}
-		},{
+		},
+		*/
+		{
 			iconCls: 'icon-show-set',
 			text:'网上套餐',
 			id:'BNetOS',
@@ -519,11 +555,15 @@ function InitARCOSDataGrid() {
 			handler: function(){
 				//BSelWeb_click();
 				//return false;
-				
+					
+				var SelRowData = $("#OrderSetsList").datagrid("getSelected");
+				if (!SelRowData) { 
+					$.messager.alert("提示","请选择待维护的医嘱套！", "info"); 
+					return false; 
+				}
+
 				$("#NetSetsWin").show();
 								
-				var SelRowData = $("#OrderSetsList").datagrid("getSelected");
-				
 				var NetOSInfo = $.cm({ClassName:"web.DHCPE.NetPre.OrdSetsInfo", MethodName:"GetHisSetsInfoNew", SetsID:SelRowData.ARCOSRowid, LocID:session["LOGON.CTLOCID"]}, false);
 				InitNetSetsWin(NetOSInfo);
 			    
@@ -600,6 +640,9 @@ function InitARCOSDataGrid() {
 				} else if (title == "其他项目" && OtherType == "N") {
 					InitItemDataGrid("#QryOtherItemList","Other");
 					OtherType = "Y";
+				} else if (title == "套餐项目" && OrdSetsType == "N") {
+					InitOrdSetsDataGrid("#QryOrdSetsList","");
+					OrdSetsType = "Y";
 				}
 				IsShow = "Y";
 			} else {
@@ -607,6 +650,7 @@ function InitARCOSDataGrid() {
 				else if (title == "检验项目") SetRowStyle("#QryLisItemList");
 				else if (title == "药品项目") SetRowStyle("#QryMedicalItemList");
 				else if (title == "其他项目") SetRowStyle("#QryOtherItemList");
+				else if (title == "套餐项目") InitOrdSetsDataGrid("#QryOrdSetsList","");
 			}
 			//InitItemDataGrid("#QryRisItemList","Item");
 			//InitItemDataGrid("#QryLisItemList","Lab");
@@ -633,23 +677,24 @@ function InitARCOSDataGrid() {
 
 // 查询
 function BSearch_click(){
-	// $.messager.alert("提示","Search", "info");
+	
 	// 套餐列表
 	var HospID=session['LOGON.HOSPID']
-	$HUI.datagrid("#OrderSetsList",{
-		url:$URL,
-		queryParams:{
+	
+	$("#OrderSetsList").datagrid('clearSelections'); //取消选中状态
+
+	$("#OrderSetsList").datagrid('load',{
 			ClassName:"web.DHCPE.HISUIOrderSets",
 			QueryName:"SearchPEOrderSets",
-			UserID:session['LOGON.USERID'],  // $.session.get('USERID'),
+			UserID:session['LOGON.USERID'], // $.session.get('USERID'),
 			subCatID:$("#subCatID").val(),
 			Conditiones:$("#Conditiones").combobox('getValue'),
 			Code:$("#Code").val(),
 			Desc:$("#Desc").val(),
 			Alias:$("#Alias").val(),
 			HospID:HospID
-		}
-	});
+		}); 
+
 	InitARCOSDetailDataGrid("");
 }
 
@@ -872,7 +917,9 @@ function BAdd_click(type){
 							FavDepList:FavDepList,
 							DocMedUnit:DocMedUnit,
 							UserDr:InUser,
-							InString:InString
+							InString:InString,
+							FavHospDr:HospID
+
 						}, function(ret) {
 							if (ret == "0") {
 								$.messager.alert("提示", "修改成功!", "info");
@@ -927,7 +974,8 @@ function BAdd_click(type){
 				FavDepList:FavDepList,
 				DocMedUnit:DocMedUnit,
 				UserDr:InUser,
-				InString:InString
+				InString:InString,
+				FavHospDr:HospID
 			}, function(ret) {
 				if (ret == "0") {
 					$.messager.alert("提示", "修改成功!", "info");
@@ -979,7 +1027,8 @@ function BAdd_click(type){
 				FavDepList:FavDepList,
 				DocMedUnit:DocMedUnit,
 				UserDr:InUser,
-				InString:InString
+				InString:InString,
+				FavHospDr:HospID
 			}, function(ret) {
 					if (ret == "0") {
 							$.messager.alert("提示", "修改成功!", "info");
@@ -1068,6 +1117,7 @@ function BClear_click(Type) {
 	//$("#IsDeitWin").checkbox("setValue", false);	 // 早餐
 	$("#OSLocWin").combobox("setValue","");
 	$("#OrderSetsPGBIWin").combobox("setValue","");
+	BSearch_click();
 }
 
 // 可用科室维护
@@ -1161,9 +1211,16 @@ function InitNetSetsWin(NetOSInfo) {
 	if (NetOSInfo.ActiveFlag == "Y") $("#NetSetsActiveWin").checkbox("setValue", true);  // 激活
 	else $("#NetSetsActiveWin").checkbox("setValue", false);
 	ClearNetOS("");
-	NetOSItemType("");
 	NetOSItemDesc("");
 	NetOSItemDetail("");
+	
+	if(NetOSInfo.ID == "") {
+		NetOSItemType("");
+	}
+	if(NetOSInfo.ID != "") {
+		NetOSItemType(NetOSInfo.ID);
+	}
+
 }
 
 // 操作网上套餐
@@ -1186,6 +1243,7 @@ function NetOSOption(SelRowData, Type) {
 		if (NOSVIPLevel == "") { $.messager.alert("提示", "套餐等级不能为空!", "info"); return false; }
 		
 		NOSSex = $("#NetSetsSexWin").combobox("getValue");  // 性别
+		if (NOSSex == "") { $.messager.alert("提示", "性别不能为空!", "info"); return false; }
 		NOSRemak = $("#NetSetsRemrkWin").val();  // 备注
 		NOSLocID = session["LOGON.CTLOCID"];  // 科室
 		
@@ -1738,7 +1796,11 @@ function InitARCOSDetailDataGrid(ARCOSRowid){
 			ClassName:"web.DHCPE.HISUIOrderSets",
 			QueryName:"SearchPEOrderSetsDetail",
 			ARCOSRowid:ARCOSRowid,
-			QueryFlag:"1"
+			QueryFlag:"1",
+			Type:"B",
+			LocID:session['LOGON.CTLOCID'],
+			hospId:session['LOGON.HOSPID']
+
 		},		
 		columns:[[
 			{field:'ARCOSItemRowid', title:'ARCOSItemRowid', hidden:true},  // 项目明细ID
@@ -1859,7 +1921,7 @@ function InitARCOSDetailDataGrid(ARCOSRowid){
 				$("#OrderSetsPriceWin").show();
 
 				var ARCOSDesc = SelRowData.ARCOSDesc;
-				var AmtData = $.cm({ClassName:"web.DHCPE.HISUIOrderSets", MethodName:"GetOrdSetsAmount", ARCOSRowId:ARCOSRowid}, false);
+				var AmtData = $.cm({ClassName:"web.DHCPE.HISUIOrderSets", MethodName:"GetOrdSetsAmount", ARCOSRowId:ARCOSRowid,Type:"B",LocID:session['LOGON.CTLOCID'],hospId:session['LOGON.HOSPID']}, false);
 					
 				if (AmtData.Amount <= 0) {
 					$.messager.alert("提示","医嘱套原价格为零，不需要定价！","info");
@@ -2153,7 +2215,14 @@ function IAdd(AddType,Id,AddAmount,Index,tablename){
 	var SelOSRowData = $("#OrderSetsList").datagrid("getSelected");
 	if (SelOSRowData) { ARCOSRowid = SelOSRowData.ARCOSRowid; }  // 医嘱套ID
 	else { $.messager.alert("提示","请选择医嘱套！", "info"); return false; }
-	
+
+	//判断是否存在排斥项目
+	var ExcludeFlag=tkMakeServerCall("web.DHCPE.HISUIOrderSets","IsExcludeArcItem",ARCOSRowid,Id)
+     if(ExcludeFlag=="1"){
+	       $.messager.alert("提示","存在排斥项目，不允许添加","info");
+           return false;
+    }
+
 	// 判断医嘱套中是否有该医嘱
 	flag = $.m({ClassName:"web.DHCPE.HISUIOrderSets", MethodName:"IsHaveItemInOrdSets", ARCOSRowid:ARCOSRowid, ArcimRowId:Id}, false);
 	if (flag == 1) { $.messager.alert("提示", "该项目已存在，请勿重复添加！", "info"); return false; }
@@ -2248,11 +2317,11 @@ function IAddItem(SelOSRowData, ARCOSRowid, Id, SampleId, DHCDocOrdRecLoc) {
 						ItemInstructionID:ItemInstructionID,
 						ItmLinkDoctor:ItmLinkDoctor,
 						remark:remark,
-						DHCDocOrderTypeID:3,
+						DHCDocOrderTypeID:3,  // ^OECPR  3  临时医嘱
 						SampleId:SampleId,
 						ARCOSItemNO:"",
 						OrderPriorRemarksDR:OrderPriorRemarksDR,
-						DHCDocOrderRecLoc:DHCDocOrdRecLoc,
+						DHCDocOrderRecLoc:DHCDocOrdRecLoc
 					}, function (ret) {
 						//$("#OrderSetsDetailList").datagrid('load',{ClassName:"web.DHCARCOrdSets",QueryName:"FindOSItem",ARCOSRowid:ARCOSRowid,QueryFlag:"1"}); 
 						//return ret;
@@ -2335,11 +2404,11 @@ function IAddItem(SelOSRowData, ARCOSRowid, Id, SampleId, DHCDocOrdRecLoc) {
 			ItemInstructionID:"",
 			ItmLinkDoctor:"",
 			remark:"",
-			DHCDocOrderTypeID:3,
+			DHCDocOrderTypeID:3,  // ^OECPR  3  临时医嘱
 			SampleId:SampleId,
 			ARCOSItemNO:"",
 			OrderPriorRemarksDR:"",
-			DHCDocOrderRecLoc:DHCDocOrdRecLoc,
+			DHCDocOrderRecLoc:DHCDocOrdRecLoc
 		}, function (ret) {
 			//$("#OrderSetsDetailList").datagrid('load',{ClassName:"web.DHCARCOrdSets",QueryName:"FindOSItem",ARCOSRowid:ARCOSRowid,QueryFlag:"1"}); 
 			//return ret;
@@ -2454,7 +2523,7 @@ function UpdateSerialNO(ARCOSItemRowid,SerNO) {
 // 明细菜单栏中显示套餐价格
 function InitToolbarForARCOSPrice(ARCOSRowid) {
 	if (ARCOSRowid == "") return "";
-	var AmtData = $.cm({ClassName:"web.DHCPE.HISUIOrderSets", MethodName:"GetOrdSetsAmount", ARCOSRowId:ARCOSRowid}, false);
+	var AmtData = $.cm({ClassName:"web.DHCPE.HISUIOrderSets", MethodName:"GetOrdSetsAmount",ARCOSRowId:ARCOSRowid,Type:"B",LocID:session['LOGON.CTLOCID'],hospId:session['LOGON.HOSPID']}, false);
 	$("#OSAmountWin").val(AmtData.Amount);   // 套餐原价
 	$("#OSPriceWin").val(AmtData.ARCOSPrice);   // 套餐定价
 				
@@ -2640,7 +2709,12 @@ function InitItemDataGrid(tablename,type) {
 			ClassName:"web.DHCPE.StationOrder",
 			QueryName:"StationOrderList",
 			Type:type,
-			TargetFrame:"PreItemList"
+			TargetFrame:"PreItemList",
+			PreIADMID:"", 
+			StationID:"",
+			BType:"B",
+			LocID:session['LOGON.CTLOCID'],
+			hospId:session['LOGON.HOSPID']
 		},
 		columns:[[
 			{field:'TUOM', title:'单位', hidden:true},
@@ -2690,6 +2764,55 @@ function InitItemDataGrid(tablename,type) {
 	});
 }
 
+function InitOrdSetsDataGrid(tablename,type) {
+	var ARCOSRowid = "";
+	var SelRowData = $("#OrderSetsList").datagrid("getSelected");
+	if ( SelRowData ) ARCOSRowid = SelRowData.ARCOSRowid;
+	
+	$HUI.datagrid(tablename,{
+		url:$URL,
+		queryParams:{
+			ClassName:"web.DHCPE.HISUIOrderSets",
+			QueryName:"SearchPECanCopyOS",
+			ARCOSRowid:ARCOSRowid,
+			Desc:$("#OrdSets").val(),
+			Type:type,
+			LocID:session['LOGON.CTLOCID'],
+			HospID:session['LOGON.HOSPID']
+		},
+		columns:[[
+			{field:'OSExSex', title:'OSExSex', hidden:true},
+			{field:'OSExVIPLevel', title:'OSExVIPLevel', hidden:true},
+			{field:'OSExLoc', title:'OSExLoc', hidden:true},
+			
+			{field:'ARCOSRowid', title:'操作', align:'center', formatter:function(value,row,index) {
+					return "<a href='#' onclick='ShowCopyOrdSetsItem(\"" + row.ARCOSRowid + "\")'>\
+					<img src='../scripts_lib/hisui-0.1.0/dist/css/icons/add.png' border=0/>\
+					</a>";
+				}
+			},
+			{field:'ARCOSDesc', title:'套餐名称', width:35},
+			{field:'SexDesc', title:'性别', align:'center'},
+			{field:'VIPDesc', title:'VIP等级', width:30},
+			{field:'LocDesc',title:'可用科室', width:30},
+			{field:'OSExPrice',title:'售价', align:'right'}
+		]],
+		striped:true, // 条纹化
+		pagination:true,
+		pageSize:25,
+		pageList:[10,25,50,100],
+		fit:true,
+		border:false,
+		fitColumns:true,
+		singleSelect:true,
+		onDblClickRow:function(rowIndex,rowData){
+			ShowCopyOrdSetsItem(rowData.ARCOSRowid);
+		},
+		onClickRow: function (rowIndex, rowData) {  // 选择行事件     	
+		}
+	});
+}
+
 function SetRowStyle(tablename) {
 	
 	var SelRowData = $("#OrderSetsList").datagrid("getSelected");
@@ -2716,6 +2839,167 @@ function SetRowStyle(tablename) {
 	}
 }
 
+// 显示套餐项目
+function ShowCopyOrdSetsItem(id) {
+	var SelRowData = $("#OrderSetsList").datagrid("getSelected");
+	if ( SelRowData ) {
+		var ARCOSRowid = SelRowData.ARCOSRowid;
+		$("#CopyOSItemWin").show();
+		
+		$HUI.datagrid("#CopyOSItemList",{
+			url:$URL,
+			queryParams:{
+				ClassName:"web.DHCPE.HISUIOrderSets",
+				QueryName:"SearchPEOrderSetsDetail",
+				ARCOSRowid:id,
+				QueryFlag:"1",
+				Type:"B",
+				LocID:session['LOGON.CTLOCID'],
+				hospId:session['LOGON.HOSPID']
+			},		
+			columns:[[
+				{field:'ARCOSItemRowid', title:'ARCOSItemRowid', checkbox:true},  // ,hidden:true},  // 项目明细ID
+				//{field:'ARCIMRowid', title:'ARCIMRowid', hidden:true},  // ARCIM
+				//{field:'ARCOSItemUOMDR' ,title:'ARCOSItemUOMDR', hidden:true},  // 单位
+				//{field:'ARCOSItemFrequenceDR', title:'ARCOSItemFrequenceDR', hidden:true},  // 频次
+				//{field:'ARCOSItemDurationDR', title:'ARCOSItemDurationDR', hidden:true},  // 疗程
+				//{field:'ARCOSItemInstructionDR', title:'ARCOSItemInstructionDR', hidden:true},  // 用法
+				//{field:'ARCOSItemCatDR', title:'ARCOSItemCatDR', hidden:true},  // 
+				//{field:'ARCOSItemSubCatDR', title:'ARCOSItemSubCatDR', hidden:true},  // 
+				//{field:'ARCOSItemOrderType', title:'ARCOSItemOrderType', hidden:true},  // 
+				//{field:'ARCOSDHCDocOrderTypeDR', title:'ARCOSDHCDocOrderTypeDR', hidden:true},  // 医嘱类型
+				//{field:'SampleID', title:'SampleID', hidden:true},  // 标本
+				//{field:'ITMSerialNo', title:'ITMSerialNo', hidden:true},  // 
+				//{field:'OrderPriorRemarksDR', title:'OrderPriorRemarksDR', hidden:true},  // 
+				
+				//{field:'NO', title:'序号', align:'center', hidden:true},
+				{field:'ARCIMDesc',title:'名称'},
+				{field:'ARCOSDHCDocOrderType',title:'医嘱类型',align:'center'},
+				{field:'SampleDesc',title:'标本',align:'center'},
+				{field:'ItmPrice',title:'价格',align:'right',
+					formatter: function(value,rowData,rowIndex){
+						var value = $.m({
+							ClassName:"web.DHCPE.Handle.ARCItmMast",
+							MethodName:"GetItmPrice",
+							ARCIMRowid:rowData.ARCIMRowid,
+						}, false);
+						return parseFloat(value).toFixed(2);
+					}
+				},
+				{field:'ARCOSItemQty',title:'数量',align:'center'},
+				{field:'ARCOSItemBillUOM',title:'单位',align:'center'},
+				{field:'ARCOSItemDoseQty',title:'剂量',align:'center'},
+				{field:'ARCOSItemUOM',title:'剂量单位',align:'center'},
+				{field:'ARCOSItemFrequence',title:'频次',align:'center'},
+				{field:'ARCOSItemDuration',title:'疗程'},
+				{field:'ARCOSItemInstruction',title:'用法'},
+				{field:'ARCOSItmLinkDoctor',title:'关联'},
+				{field:'Tremark',title:'备注'},
+				{field:'OrderPriorRemarks',title:'附加说明'}
+			]],
+			tatle:"套餐项目明细",
+			striped:true, // 条纹化
+			rownumbers:true,
+			singleSelect:false,
+			pagination:true,
+			pageSize:25,
+			pageList:[10,25,40,100],
+			fit:true,
+			fitColumns:true,
+			border:false,
+			//toolbar: [],
+			onLoadSuccess: function (data) {
+				if (data) {
+					$.each(data.rows, function (index, item) {
+						var value = $.m({
+							ClassName:"web.DHCPE.HISUIOrderSets",
+							MethodName:"IsHaveItemInOrdSets",
+							ARCOSRowid:ARCOSRowid,
+							ArcimRowId:item.ARCIMRowid
+						}, false);
+						if (value == "0") {
+	                        $("#CopyOSItemList").datagrid('checkRow', index);
+						} else {
+		                    $("#CopyOSItemDiv [type='checkbox']")[0].disabled = true;
+		                    $("#CopyOSItemDiv [type='checkbox']")[index + 1].disabled = true;
+	                    }
+	                });
+				}
+			},
+			onClickRow: function (rowIndex, rowData) {  // 选择行事件
+				if ($("#CopyOSItemDiv [type='checkbox']")[rowIndex + 1].disabled) {
+					$("#CopyOSItemDiv [type='checkbox']")[rowIndex + 1].checked = false;
+					$("#CopyOSItemDiv [type='checkbox']")[0].checked = false;
+					$("#CopyOSItemList").datagrid("unselectRow", rowIndex);
+					return false;
+				}
+			}
+		});
+		
+		var myWin = $HUI.dialog("#CopyOSItemWin", {
+			iconCls:'icon-copy',
+			resizable:true,
+			title:'复制套餐项目',
+			modal:true,
+			onClose: function() {
+				$("#BCopyOSItem").unbind("click");
+			},
+			onOpen: function() {
+				$("#BCopyOSItem").click(function() {
+					BCopyOSItem_click(ARCOSRowid);
+			    });
+			}
+		});
+	}
+}
+
+// 复制套餐项目
+function BCopyOSItem_click(selRowid) {
+	var rowsData = $("#CopyOSItemList").datagrid("getSelections");
+	if (rowsData) {
+		var ArcimInfo = "";
+		for(var rowIndex in rowsData){
+			if (ArcimInfo == "") {
+				ArcimInfo = rowsData[rowIndex].ARCOSItemRowid;
+			} else {
+				ArcimInfo = ArcimInfo + "^" +rowsData[rowIndex].ARCOSItemRowid;
+			}
+		}
+		if (ArcimInfo != "") {
+			var amtflag = $.cm({ ClassName:"web.DHCPE.HISUIOrderSets", MethodName:"IsHaveAmount", ARCOSRowid:selRowid}, false);
+			if (amtflag == "1") {
+				$.messager.confirm("确认", "该套餐已定价，若再添加项目则会恢复原价，确认添加？", function(r){
+					if (r){
+						UndoPrice("0");
+						var rtn = $.m({ClassName:"web.DHCPE.HISUIOrderSets", MethodName:"BatchUpdateUserARCOS", ARCOSRowid:selRowid, ArcimInfo:ArcimInfo}, false);
+						if (rtn == "1") {
+							$.messager.alert("提示", "复制成功", "info");
+							$("#OrderSetsDetailList").datagrid("reload");
+							$("#CopyOSItemWin").window("close");
+						}
+					}
+				});	
+			} else if (amtflag == "-1") {
+				$.messager.alert("提示","非体检医嘱套，请核实！", "info");
+				return false;
+			} else {
+				var rtn = $.m({ClassName:"web.DHCPE.HISUIOrderSets", MethodName:"BatchUpdateUserARCOS", ARCOSRowid:selRowid, ArcimInfo:ArcimInfo}, false);
+			
+				if (rtn == "1") {
+					$.messager.alert("提示", "复制成功", "info");
+					$("#OrderSetsDetailList").datagrid("reload");
+					$("#CopyOSItemWin").window("close");
+				}
+			}
+		} else {
+			$.messager.alert("提示", "没有选择复制的项目，请重新选择！", "info");
+		}
+	} else {
+		$.messager.alert("提示", "没有需要复制的项目，请重新选择！", "info");
+	}
+	return false;
+}
+
 function GetTableTrID(name) {
 	var p = $(name).prev().find('div table:eq(1)');
 	var ID = $(p).find('tbody tr:first').attr('id');
@@ -2727,11 +3011,35 @@ function GetTableTrID(name) {
 
 // 查询项目
 function BSearchItem_click(type) {
-	//$.messager.alert("type",type);
-	if (type == "R") $("#QryRisItemList").datagrid('load',{ClassName:"web.DHCPE.StationOrder",QueryName:"StationOrderList",Type:"Item",TargetFrame:"PreItemList",Item:$("#RisItem").val(),StationID:$("#Station").combobox("getValue")}); 
-	else if (type == "L") $("#QryLisItemList").datagrid('load',{ClassName:"web.DHCPE.StationOrder",QueryName:"StationOrderList",Type:"Lab",TargetFrame:"PreItemList",Item:$("#LisItem").val()}); 
-	else if (type == "M") $("#QryMedicalItemList").datagrid('load',{ClassName:"web.DHCPE.StationOrder",QueryName:"StationOrderList",Type:"Medical",TargetFrame:"PreItemList",Item:$("#MedicalItem").val()}); 
-	else if (type == "O") $("#QryOtherItemList").datagrid('load',{ClassName:"web.DHCPE.StationOrder",QueryName:"StationOrderList",Type:"Other",TargetFrame:"PreItemList",Item:$("#OtherItem").val()}); 
+	var SelRowData = $("#OrderSetsList").datagrid("getSelected");
+	if ( SelRowData ) {
+		if (type == "R") $("#QryRisItemList").datagrid('load',{ClassName:"web.DHCPE.StationOrder",QueryName:"StationOrderList",Type:"Item",TargetFrame:"PreItemList",Item:$("#RisItem").val(),StationID:$("#Station").combobox("getValue"),PreIADMID:"",BType:"B",LocID:session['LOGON.CTLOCID'],hospId:session['LOGON.HOSPID']}); 
+		else if (type == "L") $("#QryLisItemList").datagrid('load',{ClassName:"web.DHCPE.StationOrder",QueryName:"StationOrderList",Type:"Lab",TargetFrame:"PreItemList",Item:$("#LisItem").val(),PreIADMID:"",StationID:"",BType:"B",LocID:session['LOGON.CTLOCID'],hospId:session['LOGON.HOSPID']}); 
+		else if (type == "M") $("#QryMedicalItemList").datagrid('load',{ClassName:"web.DHCPE.StationOrder",QueryName:"StationOrderList",Type:"Medical",TargetFrame:"PreItemList",Item:$("#MedicalItem").val(),PreIADMID:"",StationID:"",BType:"B",LocID:session['LOGON.CTLOCID'],hospId:session['LOGON.HOSPID']}); 
+		else if (type == "O") $("#QryOtherItemList").datagrid('load',{ClassName:"web.DHCPE.StationOrder",QueryName:"StationOrderList",Type:"Other",TargetFrame:"PreItemList",Item:$("#OtherItem").val(),PreIADMID:"",StationID:"",BType:"B",LocID:session['LOGON.CTLOCID'],hospId:session['LOGON.HOSPID']}); 
+	}
+}
+
+// 查询套餐
+function BSearchOS_click() {
+	var ARCOSRowid = "";
+	var SelRowData = $("#OrderSetsList").datagrid("getSelected");
+	if ( SelRowData ) {
+		ARCOSRowid = SelRowData.ARCOSRowid;
+	} else {
+		//$.messager.alert("提示","请先选择体检医嘱套！","info");
+		return false;
+	}
+	
+	$("#QryOrdSetsList").datagrid("load", {
+		ClassName:"web.DHCPE.HISUIOrderSets",
+		QueryName:"SearchPECanCopyOS",
+		ARCOSRowid:ARCOSRowid,
+		Desc:$("#OrdSets").val(),
+		Type:"",
+		LocID:session["LOGON.CTLOCID"],
+		HospID:session["LOGON.HOSPID"]
+	}); 
 }
 
 // ************************************************其他函数************************************************************************** //
@@ -2763,7 +3071,11 @@ function Dateformatter(date){
 
 function OnPropChanged(event, type) {
 	if (event.propertyName.toLowerCase() == "value") {
-		BSearchItem_click(type);
+		if (type == "OS") {
+			BSearchOS_click();
+		} else {
+			BSearchItem_click(type);
+		}
 	}
 }
 

@@ -41,7 +41,7 @@ ListComponent.prototype.Init = function(){
 		columns : this.columns,
 		pageSize : 30,
 		pageList : [30,60,90],
-		loadMsg : '正在加载信息...',
+		loadMsg : $g('正在加载信息...'),
 		rownumbers : true, //行号
 		singleSelect : false,
 		pagination : true,
@@ -87,6 +87,7 @@ ListComponent.prototype.Init = function(){
 	}
 	//$('#'+this.id).window($.extend(option,this.option));
 	$HUI.window('#'+this.id, $.extend(option,this.option));
+	$('#'+this.id).window('center');
 	$('#'+this.id).window('open');
 }
 

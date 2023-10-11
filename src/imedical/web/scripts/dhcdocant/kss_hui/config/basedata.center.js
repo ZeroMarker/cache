@@ -11,6 +11,9 @@ $(function(){
 	if (type=="AIMITEM") {
 		parCodeDisplay = false
 	}
+	if (type=="IND") {
+		parCodeDisplay = false
+	}
 	if (type=="AIM") {
 		parCodeDisplay = false
 		aimItemDisplay = false
@@ -45,7 +48,7 @@ $(function(){
 							$("#i-config input[name='tableName']").val(selected.tableName);
 							$("#i-config input[name='action']").val("update");
 							
-							if ((type == "AIMITEM")||(type == "AIM")) {
+							if ((type == "AIMITEM")||(type == "AIM")||(type == "IND")) {
 								$HUI.combobox("#i-parCode", {
 									url:$URL+"?ClassName=DHCAnt.KSS.Config.BaseData&QueryName=QryAllbasedata&type=OBJ&ResultSetType=array",
 									valueField:'id',
@@ -121,7 +124,7 @@ $(function(){
 							$("#i-config input[name='tableType']").val("");
 							$("#i-config input[name='tableName']").val("");
 							
-							if ((type == "AIMITEM")||(type == "AIM")) {
+							if ((type == "AIMITEM")||(type == "AIM")||(type == "IND")) {
 								$HUI.combobox("#i-parCode", {
 									url:$URL+"?ClassName=DHCAnt.KSS.Config.BaseData&QueryName=QryAllbasedata&type=OBJ&ResultSetType=array",
 									valueField:'id',

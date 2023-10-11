@@ -17,10 +17,19 @@ var Active = [{"value":"Y","text":'是'}, {"value":"N","text":'否'}];
 var titleNotes=""; //'<span style="font-weight:bold;font-size:12pt;font-family:华文楷体;color:red;">[双击行即可编辑]</span>';
 var Levelrowid="";
 var level=0,parentid="";
+var HospDr="";
 $(function(){
+    InitHosp(); 	//初始化医院 多院区改造 cy 2021-04-09
+    InitTree();
+	InitAdrEvent();
+	InitQuerySec();
+	InitDefault();
+})
+
+function InitTree(){
 	//事件分类元素树的加载     
 	$('#tree').tree({
-		url: 'dhcapp.broker.csp'+"?ClassName=web.DHCADVMEDEVENTADD&MethodName=jsonCheckType&id="+"Root",  ///默认传参 "Root"  加载根目录和一级事件分类数据
+		url: 'dhcapp.broker.csp'+"?ClassName=web.DHCADVMEDEVENTADD&MethodName=jsonCheckType&id="+"Root"+"&hospdr="+HospDr,  ///默认传参 "Root"  加载根目录和一级事件分类数据
     	lines:true,
     	onClick: function(node){
 	    	level=node.level;
@@ -57,15 +66,35 @@ $(function(){
 		}
 
 	});
-	InitAdrEvent();
-	InitQuerySec();
+}
+// 初始化医院 多院区改造 cy 2021-04-09
+function InitHosp(){
+	hospComp = GenHospComp("DHC_AdvQuerySec"); 
+	HospDr=hospComp.getValue(); //cy 2021-04-09
+	//$HUI.combogrid('#_HospList',{value:"11"})
+	hospComp.options().onSelect = function(){///选中事件
+		HospDr=hospComp.getValue(); //cy 2021-04-09
+		QueryTree();
+		Query();
+	}
+	
+
+}
+// 查询树 cy 2021-04-13  
+function QueryTree(){
+	$('#tree').tree({
+		url: 'dhcapp.broker.csp'+"?ClassName=web.DHCADVMEDEVENTADD&MethodName=jsonCheckType&id="+"Root"+"&hospdr="+HospDr  ///默认传参 "Root"  加载根目录和一级事件分类数据
+	})
+}
+function InitDefault(){
 	$('#tabs').tabs({    
 	    onSelect:function(title){    
 			Query();
 	    }    
 	}); 
 	$("#eventdg").datagrid('loadData',{total:0,rows:[]}); 
-})
+}
+
 function Query(){
 	var dgurl=""; 
 	if((parentid=="Root")||(parentid=="")){
@@ -81,13 +110,15 @@ function Query(){
 	$('#eventdg').datagrid({   //子项的加载      wangxuejian 2018-08-21
 		url:dgurl,	
 		queryParams:{
-			params:parentid
+			params:parentid,
+			HospDr:HospDr
 		}
 	});	 
 	$('#querysecdg').datagrid({
 		url:'dhcadv.repaction.csp?action=GetQuerySec',	
 		queryParams:{
-			params:parentid
+			params:parentid,
+			HospDr:HospDr
 		}
 	});
 }
@@ -409,6 +440,7 @@ function InitQuerySec()
 	
 	// 定义columns
 	var columns=[[		
+		{field:"HospDr",title:'医院id',width:90,align:'center',hidden:true},
 		{field:"RepTypeDr",title:'报告类型Dr',width:90,align:'center',hidden:true},
 		{field:'TypeID',title:'TypeID',width:90,editor:'text',hidden:true},
 		{field:"Type",title:'角色',width:80,editor:texteditor,
@@ -431,7 +463,7 @@ function InitQuerySec()
 						///设置级联指针
 						var paramType=option.value+"^"+LgGroupID;  //类型^安全组
 						var ed=$("#querysecdg").datagrid('getEditor',{index:editqsRow,field:'Pointer'});
-						var url='dhcadv.repaction.csp?action=GetSSPPoint&params='+paramType;
+						var url='dhcadv.repaction.csp?action=GetSSPPoint&params='+paramType+'&HospDr='+HospDr;
 						$(ed.target).combobox('setValue','');  //乔庆澳 16.7.13
 						$(ed.target).combobox('reload',url);
 						
@@ -479,7 +511,7 @@ function InitQuerySec()
 			///设置级联指针 huaxiaoying 2018-01-25 st
 			var paramType=rowData.TypeID+"^"+LgGroupID;  //类型^安全组
 			var ed=$("#querysecdg").datagrid('getEditor',{index:editqsRow,field:'Pointer'});
-			var url='dhcadv.repaction.csp?action=GetSSPPoint&params='+paramType;
+			var url='dhcadv.repaction.csp?action=GetSSPPoint&params='+paramType+'&HospDr='+HospDr;
 			$(ed.target).combobox('reload',url); //ed
         
         }
@@ -521,7 +553,7 @@ function insquerysecRow()
 	} 
 	$("#querysecdg").datagrid('insertRow', {//在指定行添加数据，appendRow是在最后一行添加数据
 		index: 0, // 行数从0开始计算
-		row: {ID: '',Type:'',Point: '',SecFlag:''  ,AssessFlag:'N',ShareFlag:'N',FocusFlag:'N',FileFlag:'N',CaseShareFlag:'N',DeleteFlag:'N',CancelFlag:'N'}
+		row: {ID: '',Type:'',Point: '',SecFlag:''  ,AssessFlag:'N',ShareFlag:'N',FocusFlag:'N',FileFlag:'N',CaseShareFlag:'N',DeleteFlag:'N',CancelFlag:'N',HospDr:HospDr}
 	});
 	$("#querysecdg").datagrid('beginEdit', 0);//开启编辑并传入要编辑的行
 	editqsRow=0;
@@ -590,7 +622,7 @@ function savquerysecRow()
 			$.messager.alert("提示","有必填项未填写，请核实!"); 
 			return false;
 		}
-		var tmp=rows[i].ID+"^"+parentid+"^"+rows[i].TypeID+"^"+rows[i].PointID+"^"+rows[i].SecFlagID+"^"+rows[i].AssessFlag+"^"+rows[i].ShareFlag+"^"+rows[i].FocusFlag+"^"+rows[i].FileFlag+"^"+rows[i].CaseShareFlag+"^"+rows[i].DeleteFlag+"^"+rows[i].CancelFlag;// wangxuejian 2016/10/18
+		var tmp=rows[i].ID+"^"+parentid+"^"+rows[i].TypeID+"^"+rows[i].PointID+"^"+rows[i].SecFlagID+"^"+rows[i].AssessFlag+"^"+rows[i].ShareFlag+"^"+rows[i].FocusFlag+"^"+rows[i].FileFlag+"^"+rows[i].CaseShareFlag+"^"+rows[i].DeleteFlag+"^"+rows[i].CancelFlag+"^"+rows[i].HospDr;// wangxuejian 2016/10/18
 		dataList.push(tmp);
 	} 
 	var rowstr=dataList.join("&&");
@@ -627,4 +659,40 @@ function formatLink(value,row,index){
 	}else if (value=='N'){
 		return '否';
 	}
+}
+/// 事件分类复制 2021-6-30 cy
+function EventCopy(){
+	var rowsData = $("#eventdg").datagrid('getSelected');
+	if (rowsData == null) {
+		$.messager.alert("提示","请选择事件分类!");
+		return;	
+	}
+	$("#copyCode").val("");
+	$("#copyName").val("");
+	$('#copydialog').dialog("open");
+
+}
+/// 事件分类复制保存 2021-6-30 cy
+function SaveEventCopy(){
+	
+	if($("#copyEvent").form('validate')){
+		var rowsData = $("#eventdg").datagrid('getSelected');
+		runClassMethod("web.DHCADVMEDEVENTADD","CopyEventInfo",{
+		'CopyID':rowsData.ID,'Code':$("#copyCode").val(),'Desc':$("#copyName").val(),'ParentID':parentid},
+		function(data){
+			if(data==0){
+				$.messager.alert("提示","保存成功");		
+			}else if((data==-1)||data==-2){
+				$.messager.alert("提示","代码重复，保存失败");	
+				//return;	//2017-03-17 保存失败，刷新字典表	
+			}else{
+				$.messager.alert("提示","保存失败");
+				//return;	//2017-03-17 保存失败，刷新字典表	
+			}
+			$('#copydialog').dialog("close");
+			$('#eventdg').datagrid('reload'); //重新加载
+			RefreshTree(parentid);
+		},"text");
+	}
+	
 }

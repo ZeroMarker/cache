@@ -86,6 +86,7 @@ function InitGridProDict() {
 		pagination: false,
 		columns: columns,
 		shrinkToFit: true,
+		exportXls: false,
 		toolbar: "#gridProDictBar",
 		enableDnd: false,
 		onClickRow: function (rowIndex, rowData) {

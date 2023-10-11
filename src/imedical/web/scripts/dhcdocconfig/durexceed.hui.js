@@ -26,6 +26,7 @@ $(function(){
 	
 	//页面元素初始化
 	//PageHandle();
+	InitCache();
 })
 
 function Init(){
@@ -61,11 +62,17 @@ function InitEvent(){
 function PageHandle(){
 	//
 }
-
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function InitDurDataGrid(){
 	//TABLE: DHCDocIPBDictory
 	var columns = [[
-		{field:'TExceedCode',title:'代码',width:100},
+		{field:'TExceedCode',title:'超量代码',width:100},
 		{field:'TExceedDesc',title:'超量原因',width:300},
 		{field:'TExceedFromDate',title:'起始日期',width:100},
 		{field:'TExceedEndDate',title:'截止日期',width:100},
@@ -105,11 +112,11 @@ function InitDurDataGrid(){
 				text:'删除',
 				id:'i-delete',
 				iconCls: 'icon-cancel'
-			},{
+			}/*,{
 				text:'设置限定时间',
 				id:'i-set',
 				iconCls: 'icon-copy-sos'
-			},{
+			}*/,{
 		        text: '授权医院',
 		        iconCls: 'icon-house',
 		        handler: function() {
@@ -120,7 +127,19 @@ function InitDurDataGrid(){
 					}
 					GenHospWin("DHCDoc_ExceedReason",row.ExceedID);
 			    }
-		    }],
+		    }/*,{
+		        text: '翻译',
+		        iconCls: 'icon-translate-word',
+		        handler: function() {
+		         var SelectedRow = $('#i-durGrid') .datagrid('getSelected');
+					if (!SelectedRow){
+					$.messager.alert("提示","请选择需要翻译的行!","info");
+					return false;
+					}
+					CreatTranLate("User.DHCDocExceedReason","DHCExceedDesc",SelectedRow["TExceedDesc"])
+		        }
+    	 }*/
+		 ],
 		 onBeforeLoad:function(param){
 		 	var HospID=$HUI.combogrid('#_HospUserList').getValue();
 		 	if(HospID=='') return false;
@@ -220,9 +239,10 @@ function deConfig () {
 }
 
 function setDurTime() {
-	if($('#i-time').hasClass("c-hidden")) {
+	/*if($('#i-time').hasClass("c-hidden")) {
 		$('#i-time').removeClass("c-hidden");
-	};
+	};*/
+	$("#i-time").dialog('open');
 	//赋值
 	$.m({
 		ClassName:"web.DHCDocExceedReason",
@@ -239,9 +259,8 @@ function setDurTime() {
 	},function (responseText){
 		$("#i-time-jz").val(responseText);	
 	})
-	
 	//
-	var cWin = $HUI.window('#i-time', {
+	/*var cWin = $HUI.window('#i-time', {
 		title: "设置限定时间",
 		iconCls: "icon-w-clock",
 		modal: true,
@@ -254,7 +273,7 @@ function setDurTime() {
 			$('#i-time').addClass("c-hidden");
 		}
 	});
-	PageLogicObj.m_TimeWin = cWin;
+	PageLogicObj.m_TimeWin = cWin;*/
 }
 
 function saveTime () {	
@@ -262,8 +281,9 @@ function saveTime () {
 	var jzTime = $.trim($("#i-time-jz").val());	
 	var otn=tkMakeServerCall("web.DHCDocExceedReason","SetExceedDate","O",mzTime);
 	var etn=tkMakeServerCall("web.DHCDocExceedReason","SetExceedDate","E",jzTime);
-	$.messager.alert('提示','设置成功！',"info");
-	PageLogicObj.m_TimeWin.close();
+	$.messager.popover({msg: '设置成功！',type:'success',timeout: 1000});
+	//PageLogicObj.m_TimeWin.close();
+	$("#i-time").dialog('close');
 }
 
 //保存字典信息

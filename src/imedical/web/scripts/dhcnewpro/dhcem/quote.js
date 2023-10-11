@@ -343,10 +343,10 @@ function quoteOrder(){
 		var itm="";
 		itm=item.OrdCreateDate;
 		itm=itm+"	"+item.ArcimDesc;
-		itm=itm+","+item.DoseQty;
-		itm=itm+","+item.DoseUnit;
-		itm=itm+","+item.Instr;
-		itm=itm+","+item.PHFreq;
+		itm=itm+(item.DoseQty==""?"":","+item.DoseQty);
+		itm=itm+(item.DoseUnit==""?"":","+item.DoseUnit);
+		itm=itm+(item.Instr==""?"":","+item.Instr);
+		itm=itm+(item.PHFreq==""?"":","+item.PHFreq);
 		resultItems.push(itm)
 		
 	});
@@ -455,9 +455,9 @@ function initPatHology(){
 function initLisDatagrid(){
 		
 		$('#LisDatagrid').datagrid({
-			title:$g('检验项目'),
+			title:'',
 			iconCls:'icon-paper',
-			headerCls:'panel-header-gray',
+			bodyCls:'panel-header-gray',
 		    url:'dhcapp.broker.csp?ClassName=web.DHCEMQuote&MethodName=listLis',
 		    fit:true,
 		    fitColumns:true,
@@ -465,7 +465,7 @@ function initLisDatagrid(){
 		    pageList:[10,20,30],
 		   	rownumbers:true,
 		    pagination:true,
-		    singleSelect:true,
+		    singleSelect:false,
 		    toolbar:"#LisDatagridTB",
 			onBeforeLoad:function(param){
 				var type=$("input[name='queryType']:checked").val()
@@ -520,9 +520,8 @@ function initLisDatagrid(){
 		});
 		//检验明细datagrid
 		$('#LisSubDatagrid').datagrid({
-			title:$g('检验结果'),
 			iconCls:'icon-paper',
-			headerCls:'panel-header-gray',
+			bodyCls:'panel-header-gray',
 		    url:'dhcapp.broker.csp?ClassName=web.DHCEMQuote&MethodName=listLisSub',
 		    fit:true,
 		    fitColumns:true,
@@ -561,6 +560,7 @@ function initPacsDatagrid(){
 		    url:'dhcapp.broker.csp?ClassName=web.DHCEMQuote&MethodName=listPacs',
 		    fit:true,
 		    fitColumns:true,
+		    bodyCls:'panel-header-gray',
 		   	pageSize:10,
 		    pageList:[10,20,30],
 		   	rownumbers:true,
@@ -594,7 +594,8 @@ function initPacsDatagrid(){
 		        {field:'RrtDate',title:'报告日期',width:100},
 		        {field:'RrtTime',title:'报告时间',width:60},
 		        {field:'EpisodeDate',title:'就诊日期',width:100},
-		        {field:'DeptDesc',title:'就诊科室',width:100}
+		        {field:'DeptDesc',title:'就诊科室',width:100},
+		        {field:'Img',title:'图像',width:60,formatter:formatterImg} //hxy 2021-02-01
 		    ]],
 		    onCheck:function(rowIndex,rowData){
 			    searchPacsSub();
@@ -615,6 +616,7 @@ function initPacsDatagrid(){
 		    url:'dhcapp.broker.csp?ClassName=web.DHCEMQuote&MethodName=listPacsSub',
 		    fit:true,
 		   	rownumbers:true,
+		   	bodyCls:'panel-header-gray',
 		    singleSelect:false,
 		    fitColumns:true,
 		    nowrap:false,
@@ -641,11 +643,12 @@ function initPatHologyDatagrid(){
 		    url:'dhcapp.broker.csp?ClassName=web.DHCEMQuote&MethodName=ListPatHology',
 		    fit:true,
 		    fitColumns:true,
+		    bodyCls:'panel-header-gray',
 		   	pageSize:10,
 		    pageList:[10,20,30],
 		   	rownumbers:true,
 		    pagination:true,
-		    singleSelect:true,
+		    singleSelect:false,
 		    toolbar:"#PatHologyDatagridTB",
 			onBeforeLoad:function(param){
 				var type=$("input[name='queryPatHologyType']:checked").val();
@@ -690,6 +693,7 @@ function initPatHologyDatagrid(){
 		    url:'dhcapp.broker.csp?ClassName=web.DHCEMQuote&MethodName=ListPatHologySub',
 		    fit:true,
 		   	rownumbers:true,
+		   	bodyCls:'panel-header-gray',
 		    singleSelect:false,
 		    fitColumns:true,
 		    nowrap:false,
@@ -717,11 +721,13 @@ function initOrderDatagrid(){
 		    url:'dhcapp.broker.csp?ClassName=web.DHCEMQuote&MethodName=listOrder',
 		    fit:true,
 		    fitColumns:true,
+		    bodyCls:'panel-header-gray',
 		   	pageSize:10,
 		    pageList:[10,20,30],
 		   	rownumbers:true,
 		    pagination:true,
 		    toolbar:"#OrderDatagridTB",
+		    border:false,
 			onBeforeLoad:function(param){
 				var type=$("input[name='queryOrderType']:checked").val()
 				var EpisodeIDs=$("#EpisodeID").val()
@@ -780,6 +786,7 @@ function initDiaDatagrid(){
 		    pagination:true,
 		    singleSelect:false,
 		    toolbar:"#DiaDatagridTB",
+		    border:false,
 			onBeforeLoad:function(param){
 				var type=$("input[name='queryDiaType']:checked").val()
 				var EpisodeIDs=$("#EpisodeID").val()
@@ -806,6 +813,7 @@ function initDiaDatagrid(){
 		        {field:'AUserName',title:'医生',width:100},
 		        {field:'ADateTime',title:'时间 ',width:100},
 		        {field:'ADemo',title:'备注',width:100},
+		        {field:'SDSDesc',title:'结构诊断',width:250},
 		        {field:'mainMRID',title:'mainMRID',width:100}
 		    ]],
 		   onCheck:function(index,row){
@@ -823,6 +831,7 @@ function getComboGridOpt(){
 	    panelWidth:750,
 	    mode: 'remote',
 	    fitColumns:true,
+	    bodyCls:'panel-header-gray',
 	    url: 'dhcapp.broker.csp?ClassName=web.DHCEMQuote&MethodName=GetAdmList&EpisodeID='+$("#EpisodeID").val(),
 	    idField: 'EpisodeID',
 	    textField: 'EpisodeID',
@@ -916,4 +925,21 @@ function quote(){
 	if (title == $g("病理")){
 		quotePatHology();
 	}
+}
+
+///图像 2021-02-03 hxy
+function formatterImg(value,rowData){
+	retStr = "<a href='#' title='' onclick='showImg(\""+rowData.ImgUrl+"\")'>"+$g(value)+"</span></a>"
+	return retStr;	
+}
+
+///阅读图像
+function showImg(url){
+	if(url===""){
+		$.messager.alert("提示","RIS报告平台没有配置图像阅读路径");	
+		return false;
+	}
+
+	window.open (url, "newwindow", "height=590, width=1050, toolbar =no,top=100,left=200,menubar=no, scrollbars=no, resizable=yes, location=no,status=no");
+	return false;	
 }

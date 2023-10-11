@@ -19,7 +19,18 @@ function InitAllocFirstCodeTabDataGrid(){
         text: '保存',
         iconCls: 'icon-save',
         handler: function() { UpdateClickHandle();}
-    }];
+    }/*,{
+        text: '翻译',
+        iconCls: 'icon-translate-word',
+        handler: function() {
+         	var SelectedRow = PageLogicObj.m_AllocFirstCodeTabDataGrid.datagrid('getSelected');
+			if (!SelectedRow){
+			$.messager.alert("提示","请选择需要翻译的行!","info");
+			return false;
+			}
+			CreatTranLate("User.DHCFirstCode","FirstcName",SelectedRow["Tname"])
+			        }
+     }*/];
 	var Columns=[[ 
 		{field:'Tid',hidden:true,title:''},
 		{field:'Tcode',title:'代码',width:300},

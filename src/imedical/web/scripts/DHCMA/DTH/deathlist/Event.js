@@ -2,11 +2,14 @@
 function InitPatientAdmEvent(obj){	
     
 	obj.LoadEvent = function(args){ 
+	    $('#gridDeathPatient').datagrid('loadData',{ 'total':'0',rows:[] });  //初始加载显示记录为0
 		//查询
 		$('#btnFind').on('click', function(){
 			obj.btnFind_click();
 		});
-		
+		$('#btnExport').on('click', function(){
+	     	obj.btnExport_click();
+     	});
 		//登记号回车查询事件
 		$('#txtRegNo').keydown(function (e) {
 			var e = e || window.event;
@@ -71,8 +74,9 @@ function InitPatientAdmEvent(obj){
 		});
 	}
 	
-	obj.gridDeathPatientLoad = function(){	
-		obj.gridDeathPatient.load({
+	obj.gridDeathPatientLoad = function(){
+	    $("#gridDeathPatient").datagrid("loading");	
+		$cm ({
 			ClassName:"DHCMed.DTHService.ReportSrv",
 			QueryName:"QryDeathPatients",
 			argDateFrom: $('#txtDateFrom').datebox('getValue'), 
@@ -80,8 +84,32 @@ function InitPatientAdmEvent(obj){
 			arglocId: $('#cboRepLoc').combobox('getValue'),
 			hospId:$('#cboSSHosp').combobox('getValue'),   
 			argExamConts: obj.GetExamConditions(),
-			argExamSepeare: "^"
-	    });
+			argExamSepeare: "^",
+			page:1,
+			rows:999
+		},function(rs){
+			$('#gridDeathPatient').datagrid({loadFilter:pagerFilter}).datagrid('loadData', rs);	
+		});
     }
-	
+	obj.btnExport_click  = function(){
+		var rows = obj.gridDeathPatient.getRows().length; 
+		if (rows>0) {
+			$('#gridDeathPatient').datagrid('toExcel','死亡患者列表.xls');
+		}else {
+			$.messager.alert("确认", "无数据记录,不允许导出", 'info');
+		}
+			
+	}
+	obj.OpenEMR =function(aEpisodeID,aPatientID) {
+		var strUrl = cspUrl+"&PatientID=" + aPatientID+"&EpisodeID="+aEpisodeID + "&2=2";
+		//var strUrl = "./emr.record.browse.csp?PatientID=" + aPatientID+"&EpisodeID="+aEpisodeID + "&2=2";
+	    websys_showModal({
+			url:strUrl,
+			title:'病历浏览',
+			iconCls:'icon-w-epr',  
+	        originWindow:window,
+			width:'98%',
+			height:'98%'
+		});
+	}
 }

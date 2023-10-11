@@ -8,6 +8,7 @@ var WIDTH = $(document).width();
 $("#Endanger").css("width", WIDTH*0.5);
 
 $(function(){
+
 	InitCombobox();
 	
 	InitEndangerTypeGrid();
@@ -153,7 +154,7 @@ function BSave_click(Type) {
 //清屏
 function BClear_click() {
 	$("#ID,#Code,#Desc,#ExpInfo,#Remark").val("");
-	$(".hisui-checkbox").checkbox('setValue',false);
+	$("#Active").checkbox('setValue',true);
 	$(".hisui-combobox").combobox('setValue',"");
 	var valbox = $HUI.validatebox("#Code,#Desc", {
 			required: false,
@@ -165,15 +166,31 @@ function BClear_click() {
 			ClassName:"web.DHCPE.Endanger",
 			QueryName:"SearchEndangerType",
 	});
+	LoadEndangerList("");
 }
 
 function InitCombobox() {	
+
+	   var LocID=session['LOGON.CTLOCID']
+	
 	// VIP等级	
 	var VIPObj = $HUI.combobox("#VIPLevel",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindVIP&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindVIP&ResultSetType=array&LocID="+LocID+"&Desc="+escape("职业病"),
 		valueField:'id',
-		textField:'desc'
+		textField:'desc',
+		editable:false,
+		onLoadSuccess:function(){
+			
+			//设置默认值
+			var Data=$('#VIPLevel').combobox('getData');
+			if(Data){
+				$('#VIPLevel').combobox('setValue',Data[0].id)
+			}
+			
+		}
+
 	});
+
 }
 
 function InitEndangerTypeGrid() {
@@ -337,8 +354,8 @@ function ENItem_click(){
 			content:'<iframe id="timeline" frameborder="0" src="dhcpeeditem.hisui.csp?selectrow='+RowId+'+" width="100%" height="99%" ></iframe>'
 		});	
 		*/
-		lnk="dhcpeeditem.hisui.csp"+"?selectrow="+RowId	
-		websys_lu(lnk,false,'width=1355,height=600,hisui=true,title=检查项目维护-'+Desc)
+		lnk="dhcpe.ct.endangeritem.csp"+"?selectrow="+RowId;
+		websys_lu(lnk,false,'width=1355,height=600,hisui=true,title=检查项目维护-'+Desc);
 	}
 }
 
@@ -419,7 +436,7 @@ function BENSave_click(Type) {
 //清屏
 function BENClear_click(){
 	$("#ENID,#ENCode,#ENDesc,#ENExpInfo,#ENRemark").val("");
-	$(".hisui-checkbox").checkbox('setValue',false);
+	$("#ENActive").checkbox('setValue',true);
 	var valbox = $HUI.validatebox("#ENCode,#ENDesc", {
 			required: false,
 	});
@@ -432,7 +449,7 @@ function BENClear_click(){
 }
 
 function LoadEndangerList(rowData) {
-	$('#ID').val(rowData.TID);
+	if(rowData!="") $('#ID').val(rowData.TID);
 	$("#ENID,#ENCode,#ENDesc,#ENExpInfo,#ENRemark").val("");
 	$('#EndangerGrid').datagrid('load', {
 		ClassName:"web.DHCPE.Endanger",

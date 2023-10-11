@@ -27,7 +27,11 @@ function InitViewport(){
 				formatter: function(value,row,index){
 					var ReportID = row["ReportID"];
 					var EpisodeID = row["EpisodeID"];
-					var btn = '<a href="#" class="btn_detail" onclick="objScreen.OpenReport(\'' + ReportID + '\',\'' + EpisodeID + '\')"></a>';
+					if ((typeof HISUIStyleCode != 'undefined') && (HISUIStyleCode=="lite")) {
+						var btn = '<a href="#" class="icon icon-paper" onclick="objScreen.OpenReport(\'' + ReportID + '\',\'' + EpisodeID + '\')"></a>';
+					} else {
+						var btn = '<a href="#" class="btn_detail" onclick="objScreen.OpenReport(\'' + ReportID + '\',\'' + EpisodeID + '\')"></a>';
+					}
 					return btn;
 				}
 			}, 
@@ -50,7 +54,12 @@ function InitViewport(){
 			{field:'ReportUser',title:'报告人',width:100},
 			{field:'ReportDate',title:'报告日期',width:100},
 			{field:'ReportTime',title:'报告时间',width:80}
-		]],onLoadSuccess:function(data){
+		]],
+		onDblClickRow:function(rowIndex,rowData){
+			if(rowIndex>-1){
+				obj.gridTili_rowdblclick(rowData);
+			}
+		},onLoadSuccess:function(data){
 			//加载成功
 			dispalyEasyUILoad(); //隐藏效果
 		}

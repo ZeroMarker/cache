@@ -138,11 +138,24 @@ function InitReportWinEvent(obj){
 	});
 	
 	// 导出
-	$('#btnExport').click(function(e){
+	/**$('#btnExport').click(function(e){
 		var url="dhccpmrunqianreport.csp?reportName=DHCHAIReport.raq&aReportID="+ReportID+"&aEpisodeID="+EpisodeID;
         websys_createWindow(url,1,"width=710,height=610,top=0,left=20,toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes");
 
-	})
+	})**/
+	/**
+	//导出改为润乾直接打印
+	$('#btnExport').click(function(e){
+		var fileName="DHCHAIReport.raq&aReportID="+ReportID+"&aEpisodeID="+EpisodeID;
+		DHCCPM_RQDirectPrint(fileName);
+		});
+		**/
+		//导出改为润乾预览印
+		$('#btnExport').click(function(e){
+		var fileName="DHCHAIReport.raq&aReportID="+ReportID+"&aEpisodeID="+EpisodeID;
+		DHCCPM_RQPrint(fileName);
+		});
+	
 	
 	// 退回原因
 	obj.LayerReturn = function(){

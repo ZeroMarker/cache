@@ -430,6 +430,9 @@ var handSignInterface = {
         case 110:
             Message = '本次签名证据hash信息不正确';
             break;
+        case 119:
+            Message = '签名人"不同意"协议，拒绝签名';
+            break;
         default:
             Message = '未知错误';
             break;
@@ -590,15 +593,16 @@ var handSign = {
             //evidenceData = $.parseJSON(evidenceData);
 
             var signLevel = 'Patient';
-            var signUserId = handSignInterface.getUsrID(evidenceData);
+            var signUserId = parEditor.userId || handSignInterface.getUsrID(evidenceData);
             var userName = 'Patient';
             var actionType = parEditor.actionType || 'Append';
             var description = '患者';
             var img = handSignInterface.getSignScript(evidenceData);
             var headerImage = handSignInterface.getSignPhoto(evidenceData);
             var fingerImage = handSignInterface.getSignFingerprint(evidenceData);
+            var path = parEditor.path || '';
             // 获取编辑器hash
-            var signInfo = parEditor.signDocument(parEditor.instanceId, 'Graph', signLevel, signUserId, userName, img, actionType, description, headerImage, fingerImage);
+            var signInfo = parEditor.signDocument(parEditor.instanceId, 'Graph', signLevel, signUserId, userName, img, actionType, description, headerImage, fingerImage, path);
 
             if (signInfo.result == 'OK') {
                 isSigned = true;

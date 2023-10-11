@@ -28,13 +28,19 @@ $(function(){
      $("#ToNo").keydown(function(e) {
 			if(e.keyCode==13){
 				No_keydown("To");
+				//$("#ToNo").dispatchEvent(new Event('blur', {}));
 			}
 			
         }); 
-   
+
+    /*$("#ToNo").blur(function(){
+               ToNo_Change() 
+             });*/
+
      $("#ToNo2").keydown(function(e) {
 			if(e.keyCode==13){
-				ToNo2_keydown();
+				//ToNo2_keydown();
+				$("#ToNo2").dispatchEvent(new Event('blur', {}));
 			}
 			
         });
@@ -56,6 +62,23 @@ $(function(){
 			SourceCardType_change();	
 		}
 	    });
+	    
+	$("#ImpSourceNo").keydown(function(e) {
+		if(e.keyCode == 13){
+	    	No_keydown("ImpSource");
+		}
+	});
+	
+	$("#ImpSourceCardType").combobox({
+		onSelect:function(){
+			ImpSourceCardType_change();	
+		}
+	});
+	
+	//清屏
+    $("#BMClear").click(function() {	
+		BMClear_click();		
+        });
 		
     $('#SourceCardType').combobox('setValue',"C");
     $('#ToCardType').combobox('setValue',"C");
@@ -65,8 +88,11 @@ $(function(){
 //清屏
 function BClear_click(){
 	$("#SourceNo,#ToNo,#ToNo2,#SourceInfo,#ToInfo,#SourceStatus,#ToStatus,#SourceAmount,#ToAmount,#MoveAmount,#ToAmountNew,#SourceCardID,#ToCardID,#TotalNum,#TotalAmt").val("");
-	  $('#SourceCardType').combobox('setValue',"C");
+	$('#SourceCardType').combobox('setValue',"C");
     $('#ToCardType').combobox('setValue',"C");
+	SourceCardType_change();
+    ToCardType_change();
+
 
 }
 
@@ -128,9 +154,28 @@ function MoveAmount_keydown()
 	}
 	
 }
+function ToNo_Change(){
+
+	$("#ToInfo").val("");
+	$("#ToStatus").val("");
+	$("#ToAmount").val("");
+	$("#ToCardID").val("");
+	No_keydown("To")
+	
+	
+}
+
+
 function No_keydown(Type)
 {
-	
+	var HospID=session['LOGON.HOSPID'];
+	var LocID=session['LOGON.CTLOCID'];
+
+	$("#"+Type+"Info").val("");
+	$("#"+Type+"Status").val("");
+	$("#"+Type+"Amount").val("");
+	$("#"+Type+"CardID").val("");
+
 	    var No=getValueById(Type+"No");
 		if (No=="") 
 		{   
@@ -140,7 +185,7 @@ function No_keydown(Type)
 		}
 		var DoType=getValueById(Type+"CardType");
 		
-		var ret=tkMakeServerCall("web.DHCPE.AdvancePayment","GetInfoByNo",No,DoType);
+		var ret=tkMakeServerCall("web.DHCPE.AdvancePayment","GetInfoByNo",No,DoType,HospID,LocID);
 		var Arr=ret.split("^");
 		if (Arr[0]!=0){
 			 $.messager.popover({msg: "输入信息系统中不存在", type: "info"});
@@ -168,19 +213,41 @@ function No_keydown(Type)
 //计算总金额和总张数
 function CalTotalAmt()
 {
+		var ToID=$("#ToCardID").val();
+	
 	var ToNo=$("#ToNo").val();
 	var ToNo2=$("#ToNo2").val();
-	var Amt=$("#MoveAmount").val();
-	var ToID=$("#ToCardID").val();
-	if ((ToID=="")&&(Amt=="")){	 
-		$.messager.popover({msg: "转移金额不能为空", type: "info"});
-	 	return false;
-	}
-	
 	if((ToNo2=="")&&(ToNo=="")){
 		$.messager.popover({msg: "到代金卡号不能为空", type: "info"})
 		return false;
 	}
+	if(ToID==""){
+		if(ToNo!="")
+		{
+			if (!IsNumber(ToNo)){
+				$.messager.alert("提示","到代金卡号不能包含字母","info");
+				return false;
+			}
+		}
+		if(ToNo2!="")
+		{
+			if (!IsNumber(ToNo2)){
+				$.messager.alert("提示","到代金卡号不能包含字母","info");
+				return false;
+			}
+		}
+		
+	}
+		
+	var Amt=$("#MoveAmount").val();
+	
+	if ((ToID=="")&&(Amt=="")){ 
+		$.messager.popover({msg: "转移金额不能为空", type: "info"});
+	 	return false;
+	}
+	
+	
+	
 	if(ToID==""){
 		if((ToNo2!="")&&(ToNo!="")){
 			var TotalNum=((+ToNo2)-(+ToNo)+1)
@@ -192,9 +259,15 @@ function CalTotalAmt()
 		$("#TotalNum").val(TotalNum);
 	}
 	
+	
 }
 function BMove_click()
 {
+	CalTotalAmt();
+	var HospID=session['LOGON.HOSPID'];
+	var LocID=session['LOGON.CTLOCID'];
+
+
 	var SourceID=$("#SourceCardID").val();
 	if (SourceID==""){
 		$.messager.alert("提示","请输入源数据","info");
@@ -211,6 +284,23 @@ function BMove_click()
 			return false;
 		}
 		ToNo2=$("#ToNo2").val();
+		if(MoveNo!="")
+		{
+			if (!IsNumber(MoveNo)){
+				$.messager.alert("提示","到代金卡号不能包含字母","info");
+				return false;
+			}
+		}
+		if(ToNo2!="")
+		{
+			if (!IsNumber(ToNo2)){
+				$.messager.alert("提示","到代金卡号不能包含字母","info");
+				return false;
+			}
+		}
+
+
+		
 		if (ToNo2!=""){
 			MoveNo=MoveNo+"-"+ToNo2
 		}
@@ -270,13 +360,13 @@ function BMove_click()
 	}else{
 			
 		if($("#SourceNo").val()!=""){
-			var SourceInfoStr=tkMakeServerCall("web.DHCPE.AdvancePayment","GetInfoByNo",$("#SourceNo").val(),getValueById("SourceCardType"));
+			var SourceInfoStr=tkMakeServerCall("web.DHCPE.AdvancePayment","GetInfoByNo",$("#SourceNo").val(),getValueById("SourceCardType"),HospID,LocID);
 			var SourceInfo=SourceInfoStr.split("^");
 			$("#SourceAmount").val(SourceInfo[5]);
 			
 		}
 		if($("#ToNo").val()!=""){
-			var ToInfoStr=tkMakeServerCall("web.DHCPE.AdvancePayment","GetInfoByNo",$("#ToNo").val(),getValueById("ToCardType"));
+			var ToInfoStr=tkMakeServerCall("web.DHCPE.AdvancePayment","GetInfoByNo",$("#ToNo").val(),getValueById("ToCardType"),HospID,LocID);
 			var ToInfo=ToInfoStr.split("^");
 			$("#ToAmountNew").val(ToInfo[5]);
 			
@@ -285,6 +375,21 @@ function BMove_click()
 	    
 	}
 }
+//导入界面清屏
+function BMClear_click(){
+	$("#ImpSourceNo,#ImpSourceInfo,#ImpSourceStatus,#ImpSourceAmount,#ImpTotalAmt").val("");
+    //No_keydown("ImpSource");
+
+}
+function IsNumber(value) {
+  var reg = /^[0-9]+.?[0-9]*$/;
+  if (reg.test(value)) {
+    return true;
+  }
+  return false;
+}
+
+
 function InitCombobox()
 {
 	// 源卡类型
@@ -293,8 +398,8 @@ function InitCombobox()
 		textField:'text',
 		panelHeight:'70',
 		data:[
-            {id:'R',text:'预缴金'},
-            {id:'C',text:'代金卡'},
+            {id:'R',text:$g('预缴金')},
+            {id:'C',text:$g('代金卡')},
            
         ]
 	});
@@ -305,9 +410,20 @@ function InitCombobox()
 		textField:'text',
 		panelHeight:'70',
 		data:[
-            {id:'R',text:'预缴金'},
-            {id:'C',text:'代金卡'},     
+            {id:'R',text:$g('预缴金')},
+            {id:'C',text:$g('代金卡')},     
         ]
-	})
+	});
+	
+	var ImpSourceCTypeObj = $HUI.combobox("#ImpSourceCardType",{
+		valueField:'id',
+		textField:'text',
+		panelHeight:'70',
+		data:[
+            //{id:'R',text:$g('预缴金')},
+            {id:'C',text:$g('代金卡'), selected:true}
+           
+        ]
+	});
 	
 }

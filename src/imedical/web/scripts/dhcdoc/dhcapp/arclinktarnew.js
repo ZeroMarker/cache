@@ -4,6 +4,7 @@ var editRow = ""; editTRow = ""; var PartColumns=""; var ArcColumns="";
 var PartUrl = LINK_CSP+'?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonPart';
 var ArcUrl = LINK_CSP+'?ClassName=web.DHCAPPTreeAdd&MethodName=QueryArcItmDetail';
 var itmmastid =getParam("itmmastid");  ///医嘱项ID
+var ServerObj={};
 /// 页面初始化函数
 function initPageDefault(){
 	
@@ -54,7 +55,39 @@ function initArcItemList(){
 			required: true //设置编辑规则属性
 		}
 	}
-	
+	var textEditor2={
+		type: 'combogrid',//设置编辑格式
+		options: {
+			required : true,
+			id:'PartID',
+			fitColumns:true,
+			fit: true,//自动大小
+			pagination : true,
+			panelWidth:600,
+			textField:'PartDesc', 
+			mode:'remote',
+			url:'dhcapp.broker.csp?ClassName=web.DHCAPPExaReportQuery&MethodName=jsonPart',
+			columns:[[
+				    {field:'PartDesc',title:'部位',width:200},
+				    {field:'LastPartDesc',title:'父部位',width:200},
+					{field:'PartID',title:'PartID',width:100}
+				]],
+			onSelect:function(rowIndex, rowData) {
+				
+				var ed=$("#arcItemList").datagrid('getEditor',{index:editRow, field:'ItemPart'});
+				$(ed.target).combobox('setText',rowData.PartDesc)
+				/// 部位ID
+				var ed=$("#arcItemList").datagrid('getEditor',{index:editRow, field:'ItemPartID'});		
+				$(ed.target).val(rowData.PartID);	
+				},
+			onBeforeLoad:function(param){
+				if (param['q']) {
+					var desc=param['q'];
+				}
+				param = $.extend(param,{PartName:desc,itmmastid:itmmastid});
+			}
+		}
+	}
 	/// 部位树
 	var textTreeEditor={
 		type:'combotree',
@@ -72,7 +105,7 @@ function initArcItemList(){
 		{field:'ItemID',title:'检查项目ID',width:100,hidden:true,editor:textEditor,hidden:true},
 		{field:'ItemDesc',title:'检查项目',width:200,editor:textEditor,hidden:true},
 		{field:'ItemPartID',title:'部位ID',width:100,hidden:true,editor:textEditor},
-		{field:'ItemPart',title:'部位',width:150,editor:textEditor},
+		{field:'ItemPart',title:'部位',width:150,editor:textEditor2},
 		{field:"AlRowID",title:'ID',hidden:true,editor:textEditor}
 	]];
 	
@@ -82,10 +115,17 @@ function initArcItemList(){
 		singleSelect : true,
         onClickRow:function(rowIndex, rowData){
 	        var HospID=window.parent.$HUI.combogrid('#_HospList').getValue()
-			$('#arctardatagrid').datagrid('reload',{pointer: itmmastid,PartID:rowData.ItemPartID,hospid:HospID});
-			$('#FindTarItemList').datagrid('reload',{arcimid: itmmastid,PartID:rowData.ItemPartID,hospid:HospID});
-			$('#PostionList').datagrid('reload',{ArcRowId: itmmastid,PartID:rowData.ItemPartID});
-			$('#arctardatagrid2').datagrid('reload',{pointer: rowData.ItemID,PartID:rowData.ItemPartID});
+	        if ((rowData.ItemPartID=="")||(typeof rowData.ItemPartID =="undefined")){
+		       $('#arctardatagrid').datagrid('loadData',{"rows":[]});
+				$('#FindTarItemList').datagrid('loadData',{"rows":[]});
+				$('#PostionList').datagrid('loadData',{"rows":[]});
+				$('#arctardatagrid2').datagrid('loadData',{"rows":[]});
+		    }else{
+				$('#arctardatagrid').datagrid('reload',{pointer: itmmastid,PartID:rowData.ItemPartID,hospid:HospID});
+				$('#FindTarItemList').datagrid('reload',{arcimid: itmmastid,PartID:rowData.ItemPartID,hospid:HospID});
+				$('#PostionList').datagrid('reload',{ArcRowId: itmmastid,PartID:rowData.ItemPartID});
+				$('#arctardatagrid2').datagrid('reload',{pointer: rowData.ItemID,PartID:rowData.ItemPartID});
+		    }
 	    },
 	    onDblClickRow: function (rowIndex, rowData) {// 双击选择行编辑
 	    
@@ -93,7 +133,7 @@ function initArcItemList(){
                 $("#arcItemList").datagrid('endEdit', editRow); 
             } 
             $("#arcItemList").datagrid('beginEdit', rowIndex); 
-            dataArcGridBindEnterEvent(rowIndex);  //设置回车事件
+           // dataArcGridBindEnterEvent(rowIndex);  //设置回车事件
             editRow = rowIndex;
         }
 	};
@@ -258,11 +298,11 @@ function addRow(){
 function onClickRowDisc(index,row){
 	if(row.TarCode=="合计:") return;
 	var e = $("#arctardatagrid").datagrid('getColumnOption', 'TarDesc');
-	e.editor = {};
+	if (e) e.editor = {};
 	var e = $("#arctardatagrid").datagrid('getColumnOption', 'PartNum');
-	e.editor = {};
+	if (e) e.editor = {};
 	var e = $("#arctardatagrid").datagrid('getColumnOption', 'TarStart');
-	e.editor = {};
+	if (e) e.editor = {};
 	CommonRowClick(index,row,"#arctardatagrid");
 }
 
@@ -320,6 +360,14 @@ function save(){
 			$.messager.alert('提示','保存成功')
 			$('#arctardatagrid').datagrid('reload')
 			$('#FindTarItemList').datagrid('reload')
+		}else if(data == -1){
+			$.messager.alert('提示','不可重复保存:'+data)
+			$('#arctardatagrid').datagrid('reload');
+			$('#FindTarItemList').datagrid('reload');
+		}else if(data == -2){
+			$.messager.alert('提示','收费项不能为空:'+data)
+			$('#arctardatagrid').datagrid('reload');
+			$('#FindTarItemList').datagrid('reload');
 		}else if(data==-11){
 			$.messager.alert('提示','开始时间大于结束时间')
 			$('#arctardatagrid').datagrid('reload')
@@ -455,33 +503,27 @@ function addARCItemRow(){
 		$.messager.alert("提示", "请选择检查项目&部位！");
 		return;
 	}
-	// sufan 由于双击时，关闭，再点增加，不可编辑
-	var e = $("#arctardatagrid2").datagrid('getColumnOption', 'PartNum');
-	e.editor = {type:'numberbox',options:{required:true}};
-	e.editor = {type:'combogrid',options:{
-										required : true,
-										id:'AORowId',
-										fitColumns:true,
-										fit: true,//自动大小
-										pagination : true,
-										panelWidth:600,
-										textField:'desc', 
-										mode:'remote',
-										url:'dhcapp.broker.csp?ClassName=web.DHCAPPArclinkTar&MethodName=QueryArcItmDetail&HospID='+window.parent.$HUI.combogrid('#_HospList').getValue(),
-										columns:[[
-												{field:'tarId',hidden:true},
-												{field:'code',title:'代码',width:60},
-												{field:'desc',title:'名称',width:100},
-												{field:'price',title:'收费项价格',width:40}
-												]],
-												onSelect:function(rowIndex, rowData) {
-			                   					fillValue(rowIndex, rowData);
-			                				}	
-										}
-									};
-
-	commonAddRow({'datagrid':'#arctardatagrid2',value:{'ArcId':rowsMData.ItemID,'BaseFlag':'Y','PartNum':1,'PartID':rowsMData.ItemPartID}})
+	// tanjishan 由于双击时，关闭，再点增加，不可编辑
+	var e = $("#arctardatagrid2").datagrid('getColumnOption', 'TarDesc');
+	if (e) {
+		if (typeof ServerObj.TarDescEditor!="undefined"){
+			$.extend(e.editor,ServerObj.TarDescEditor);
+		}
 	}
+	var e = $("#arctardatagrid2").datagrid('getColumnOption', 'PartNum');
+	if (e) {
+		if (typeof ServerObj.PartNumEditor!="undefined"){
+			$.extend(e.editor,ServerObj.PartNumEditor);
+		}
+	}
+	var e = $("#arctardatagrid2").datagrid('getColumnOption', 'TarStart');
+	if (e) {
+		if (typeof ServerObj.TarStartEditor!="undefined"){
+			$.extend(e.editor,ServerObj.TarStartEditor);
+		}
+	}
+	commonAddRow({'datagrid':'#arctardatagrid2',value:{'ArcId':rowsMData.ItemID,'BaseFlag':'Y','PartNum':1,'PartID':rowsMData.ItemPartID}})
+}
 function saveARCItem(){
 	saveByDataGrid("web.DHCAPPArclinkTar","saveArc","#arctardatagrid2",function(data){
 			if(data==0){
@@ -490,10 +532,19 @@ function saveARCItem(){
 				$('#FindTarItemList').datagrid('reload')
 			}else if(data==-11){
 				$.messager.alert('提示','开始时间大于结束时间')
-				$('#arctardatagrid2').datagrid('reload')
+				//$('#arctardatagrid2').datagrid('reload')
 			}else if(data==-12){
 				$.messager.alert('提示','结束日期早于今天')
-				$('#arcitemdatagrid2').datagrid('reload')
+				//$('#arcitemdatagrid2').datagrid('reload')
+			}else if(data==-3){
+				$.messager.alert('提示','代码重复')
+				//$('#arcitemdatagrid2').datagrid('reload')
+			}else if(data==-4){
+				$.messager.alert('提示','年龄范围格式错误')
+				//$('#arcitemdatagrid2').datagrid('reload')
+			}else if(data==-5){
+				$.messager.alert('提示','日期范围格式错误')
+				//$('#arcitemdatagrid2').datagrid('reload')
 			}else{
 				$.messager.alert('提示','保存失败:'+data)
 				$('#arctardatagrid2').datagrid('reload')
@@ -518,17 +569,38 @@ function deleteARCItemRow(){
 function onClickRowDisc2(index,row){
 	if(row.TarCode=="合计:") return;
 	var e = $("#arctardatagrid2").datagrid('getColumnOption', 'TarDesc');
-	e.editor = {};
+	if (e) {
+		if (typeof ServerObj.TarDescEditor=="undefined"){
+			ServerObj.TarDescEditor={};
+			$.extend(true,ServerObj.TarDescEditor,e.editor);
+		}
+		e.editor = {};
+	}
 	var e = $("#arctardatagrid2").datagrid('getColumnOption', 'PartNum');
-	e.editor = {};
+	if (e) {
+		if (typeof ServerObj.PartNumEditor=="undefined"){
+			ServerObj.PartNumEditor={};
+			$.extend(true,ServerObj.PartNumEditor,e.editor);
+		}
+		e.editor = {};
+	}
 	var e = $("#arctardatagrid2").datagrid('getColumnOption', 'TarStart');
-	e.editor = {};
+	if (e) {
+		if (typeof ServerObj.TarStartEditor=="undefined"){
+			ServerObj.TarStartEditor={};
+			$.extend(true,ServerObj.TarStartEditor,e.editor);
+		}
+		e.editor = {};
+	}
 	CommonRowClick(index,row,"#arctardatagrid2");
 }
  function fillValue2(rowIndex, rowData){
 	$('#arctardatagrid2').datagrid('getRows')[editIndex]['TarDr']=rowData.tarId
 	//$('#arctardatagrid2').datagrid('getRows')[editIndex]['TarCode']=rowData.code
 	//$('#arctardatagrid2').datagrid('getRows')[editIndex]['TarPrice']=rowData.price
+}
+ function fillValue3(rowIndex, rowData){
+	$('#arctardatagrid2').datagrid('getRows')[editIndex]['ByHandleValue']=rowIndex.id;
 }
 /// JQuery 初始化页面
 $(function(){ initPageDefault(); })

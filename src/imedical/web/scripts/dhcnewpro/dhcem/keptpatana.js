@@ -11,9 +11,17 @@ $(function(){
 	initMethod();
 	
 	initRunMethod();
+	
+	initCss();
 	//showImg();
 	
 })
+
+function initCss(){
+	if(HISUIStyleCode==="lite"){
+		$(".heading").css("background","none")
+	}
+}
 
 ///默认需要执行的方法
 function initRunMethod(){
@@ -35,6 +43,7 @@ function initDatagrid(){
 
 	$HUI.datagrid('#keptBedTable',{
 		url:LINK_CSP+"?ClassName=web.DHCEMKeptPatAna&MethodName=JsonBedTable&HospID="+HospID,
+		bodyCls:'panel-header-gray', //hxy 2022-11-18
 		fit:true,
 		rownumbers:true,
 		columns:columns,
@@ -42,7 +51,7 @@ function initDatagrid(){
 		singleSelect:true,
 		pageSize:60,  
 		pageList:[60],
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		rownumbers : false,
 		showHeader:false,
 		pagination:false,
@@ -52,8 +61,8 @@ function initDatagrid(){
 		},
 		onLoadSuccess:function(data){
 			var imgData = data.imgData;
-			showEchartBars("showImgBedInfo",imgData.DataCheck);
-			showEchartBars("showImgPatInfo",imgData.DataSex);
+			showEchartBars("showImgBedInfo",imgData.DataCheck,$g("预检分级"));
+			showEchartBars("showImgPatInfo",imgData.DataSex,$g("性别"));
 		}
 	});
 		
@@ -65,16 +74,20 @@ function initMethod(){
 
 function initPage(){
 
-	var heightEchart = $("#getHeightDiv").height()-30;
+	var heightEchart = $("#getHeightDiv").height()-20;
 	
 	///图标的高度
 	$(".echartBody").each(function (){
 		$(this).height(heightEchart);	
 	})
+	///图标的高度
+	$(".echartBodyPie").each(function (){
+		$(this).height(heightEchart-40);	
+	})
 }
 
 function showImg(){
-	var data = [{name:"周一",group:"床位",value:4},{name:"周二",group:"床位",value:6},{name:"周三",group:"床位",value:1},{name:"周四",group:"床位",value:3},{name:"周五",group:"床位",value:4},{name:"周六",group:"床位",value:4},{name:"周末",group:"床位",value:4}]
+	var data = [{name:$g("周一"),group:$g("床位"),value:4},{name:$g("周二"),group:$g("床位"),value:6},{name:$g("周三"),group:$g("床位"),value:1},{name:$g("周四"),group:$g("床位"),value:3},{name:$g("周五"),group:$g("床位"),value:4},{name:$g("周六"),group:$g("床位"),value:4},{name:$g("周末"),group:$g("床位"),value:4}]
 	showEchartBars("showImgBedInfo",data);		
 }
 
@@ -100,7 +113,7 @@ function showPageImg(data){
 	if(allNumData!==""){
 		for (i=0;i<allNumData.split(":").length;i++){
 			var NumData = allNumData.split(":")[i];
-			$("span[name="+NumData.split("^")[0].escapeJquery()+"]").html(NumData.split("^")[1]);
+			$("span[name='"+NumData.split("^")[0].escapeJquery()+"']").html(NumData.split("^")[1]);
 		}
 	}else{
 		$(".tdDiv").find(".tdRightDivBottomSpan").html(0);	
@@ -108,30 +121,30 @@ function showPageImg(data){
 	
 	var QsPatNum = data.QsPatNum;
 	if(QsPatNum.length){
-		showEchartPie("fjrsEcharts",QsPatNum);
+		showEchartPie("fjrsEcharts",QsPatNum,$g("分级人数统计"));
 	}else{
-		showEchartPie("fjrsEcharts",[]);	
+		showEchartPie("fjrsEcharts",['',''],$g("分级人数统计"));	
 	}
 	
 	var ParseInPatNum = data.ParseInPatNum;
 	if(ParseInPatNum.length){
-		showEchartBars("zryksEcharts",ParseInPatNum);
+		showEchartBars("zryksEcharts",ParseInPatNum,$g("转入院科室统计"));
 	}else{
-		showEchartBars("zryksEcharts",[]);	
+		showEchartBars("zryksEcharts",[],$g("转入院科室统计"));	
 	}
 	
 	var KeyDiseasePatNum = data.KeyDiseasePatNum;
 	if(KeyDiseasePatNum.length){
-		showEchartPie("zdbzEcharts",KeyDiseasePatNum);
+		showEchartPie("zdbzEcharts",KeyDiseasePatNum,$g("重点病种分布"));
 	}else{
-		showEchartPie("zdbzEcharts",[]);	
+		showEchartPie("zdbzEcharts",['',''],$g("重点病种分布"));	
 	}
 	
 	var InLocPatNum = data.InLocPatNum;
 	if(InLocPatNum.length){
-		showEchartBars("zkztEcharts",InLocPatNum);
+		showEchartBars("zkztEcharts",InLocPatNum,$g("在科状态统计"));
 	}else{
-		showEchartBars("zkztEcharts",[]);
+		showEchartBars("zkztEcharts",[],$g("在科状态统计"));
 	}
 	return;
 	
@@ -149,7 +162,7 @@ function showPageImg(data){
 	
 	
 	var PatAgeAnalysess= data.PatAgeAnalysess;
-	alert(PatAgeAnalysess.length);
+	//alert(PatAgeAnalysess.length);
 	showEchartBars("fznlEcharts",PatAgeAnalysess);
 	
 	var PatCheckLocNum= data.PatCheckLocNum;
@@ -159,11 +172,21 @@ function showPageImg(data){
 }
 
 
-function showEchartBars(idName,data){
+function showEchartBars(idName,data,saveName){
 	var obj={
 		grid:{
 			y:40	
-		}	
+		},
+		toolbox: {
+	   			showTitle:false,
+                show: true, //是否显示工具栏
+                feature: {
+                	mark : { show: true }, //画线
+                    restore : { show: true }, //复原
+                    saveAsImage : { show: true,name:saveName}, //是否保存图片
+                    magicType : { show: true, type: ['line', 'bar']} //支持柱形图和折线图的切换 
+                }
+        }
 	}
 	var option = ECharts.ChartOptionTemplates.Bars(data,"","",obj); 
 	option.title ={
@@ -175,8 +198,34 @@ function showEchartBars(idName,data){
 	ECharts.Charts.RenderChart(opt);	
 }
 
-function showEchartPie(idName,data){
-	var option = ECharts.ChartOptionTemplates.Pie(data); 
+function showEchartPie(idName,data,saveName){
+	if(idName=="fjrsEcharts"){
+		var obj={
+		color: ['#BCBCBC','#f00', '#ff793e', '#f9bf3b','#13987e'],
+		toolbox: {
+	   			showTitle:false,
+                show: true, //是否显示工具栏
+                feature: {
+                	mark : { show: true }, //画线
+                    restore : { show: true }, //复原
+                    saveAsImage : { show: true,name:saveName}, //是否保存图片
+                }
+        }
+		}
+	}else{
+		var obj={
+			toolbox: {
+		   			showTitle:false,
+	                show: true, //是否显示工具栏
+	                feature: {
+	                	mark : { show: true }, //画线
+	                    restore : { show: true }, //复原
+	                    saveAsImage : { show: true,name:saveName}, //是否保存图片
+	                }
+	        }
+		}
+	}
+	var option = ECharts.ChartOptionTemplates.Pie(data,"",obj); 
 	option.title ={
 		
 	}

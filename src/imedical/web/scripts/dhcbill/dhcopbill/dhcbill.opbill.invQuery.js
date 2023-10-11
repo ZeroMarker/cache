@@ -1,76 +1,68 @@
-ï»¿/**
+/**
  * FileName: dhcbill.opbill.invQuery.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2018-10-13
- * Description: é—¨è¯Šæ”¶æ®æŸ¥è¯¢
+ * Description: ÃÅÕïÊÕ¾İ²éÑ¯
  */
 
-var GV = {};
-
 $(function () {
-	$(document).keydown(function (e) {
-		banBackSpace(e);
+	var hospComp = GenUserHospComp();
+	$.extend(hospComp.jdata.options, {
+		onSelect: function(index, row){
+			loadConHospMenu();
+		},
+		onLoadSuccess: function(data){
+			loadConHospMenu();
+		}
 	});
+	
 	initQueryMenu();
 	initInvList();
 });
 
 function initQueryMenu() {
-	var defDate = getDefStDate(0);
-	$('#stDateTime').datetimebox('setValue', (defDate + ' ' + '00:00:00'));
-	$('#endDateTime').datetimebox('setValue', (defDate + ' ' + '23:59:59'));
+	$(".datebox-f").datebox("setValue", CV.DefDate);
+	$("#stTime").timespinner("setValue", "00:00:00");
+	$("#endTime").timespinner("setValue", "23:59:59");
 
-	$HUI.linkbutton('#btn-readCard', {
+	$HUI.linkbutton("#btn-readCard", {
 		onClick: function () {
 			readHFMagCardClick();
 		}
 	});
 
-	$HUI.linkbutton('#btn-find', {
+	$HUI.linkbutton("#btn-find", {
 		onClick: function () {
 			loadInvList();
 		}
 	});
 	
-	$HUI.linkbutton('#btn-clear', {
+	$HUI.linkbutton("#btn-clear", {
 		onClick: function () {
 			clearClick();
 		}
 	});
 	
-	//å¡å·å›è½¦æŸ¥è¯¢äº‹ä»¶
-	$('#cardNo').keydown(function (e) {
+	//¿¨ºÅ»Ø³µ²éÑ¯ÊÂ¼ş
+	$("#CardNo").focus().keydown(function (e) {
 		cardNoKeydown(e);
 	});
 
-	//ç™»è®°å·å›è½¦æŸ¥è¯¢äº‹ä»¶
-	$('#patientNo').keydown(function (e) {
+	//µÇ¼ÇºÅ»Ø³µ²éÑ¯ÊÂ¼ş
+	$("#patientNo").keydown(function (e) {
 		patientNoKeydown(e);
 	});
 
-	//å‘ç¥¨å›è½¦æŸ¥è¯¢äº‹ä»¶
-	$('#invNo').keydown(function (e) {
+	//·¢Æ±»Ø³µ²éÑ¯ÊÂ¼ş
+	$("#invNo").keydown(function (e) {
 		var key = websys_getKey(e);
 		if (key == 13) {
 			loadInvList();
 		}
 	});
-
-	//å¡ç±»å‹
-	$HUI.combobox('#cardType', {
-		panelHeight: 'auto',
-		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QCardTypeDefineList&ResultSetType=array',
-		editable: false,
-		valueField: 'value',
-		textField: 'caption',
-		onChange: function (newValue, oldValue) {
-			initReadCard(newValue);
-		}
-	});
-
-	$HUI.combobox('#guser', {
+	
+	$HUI.combobox("#guser", {
 		panelHeight: 150,
-		url: $URL + '?ClassName=web.udhcOPQUERY&QueryName=FindInvUser&ResultSetType=array',
 		valueField: 'id',
 		textField: 'text',
 		mode: 'remote',
@@ -78,84 +70,112 @@ function initQueryMenu() {
 		blurValidValue: true,
 		onBeforeLoad: function (param) {
 			param.desc = param.q;
-			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
 		}
 	});
-
-	$HUI.combobox('#invFlag', {
+	
+	$HUI.combobox("#invFlag", {
 		panelHeight: 'auto',
-		data: [{value: 'A', text: 'ä½œåºŸ'},
-			   {value: 'S', text: 'çº¢å†²'}
+		data: [{value: 'A', text: $g('×÷·Ï')},
+			   {value: 'S', text: $g('ºì³å')}
 			],
 		valueField: 'value',
 		textField: 'text'
 	});
 
-	$HUI.combobox('#footFlag', {
+	$HUI.combobox("#footFlag", {
 		panelHeight: 'auto',
-		data: [{value: 'Y', text: 'å·²ç»“'},
-			   {value: 'N', text: 'æœªç»“'}
+		data: [{value: 'Y', text: $g('ÒÑ½á')},
+			   {value: 'N', text: $g('Î´½á')}
 			],
 		valueField: 'value',
 		textField: 'text'
 	});
 
-	$HUI.combobox('#paymode', {
+	$HUI.combobox("#paymode", {
 		panelHeight: 150,
-		url: $URL + '?ClassName=web.UDHCOPOtherLB&QueryName=ReadCTPayMode&ResultSetType=array',
-		valueField: 'CTPM_RowId',
-		textField: 'CTPM_Desc',
-		defaultFilter: 4
-	});
-
-	$HUI.combobox('#admReason', {
-		panelHeight: 150,
-		url: $URL + '?ClassName=web.udhcOPQUERY&QueryName=FindAdmReason&ResultSetType=array',
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryPayMode&ResultSetType=array',
 		valueField: 'id',
 		textField: 'text',
-		defaultFilter: 4,
-		onBeforeLoad: function (param) {
-			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
-		}
+		defaultFilter: 5
+	});
+	
+	$HUI.combobox("#insTypeId", {
+		panelHeight: 150,
+		valueField: 'id',
+		textField: 'text',
+		defaultFilter: 5
+	});
+	
+	//2022-07-21 ZhYW Ôö¼ÓÊÇ·ñÓ¦¼±ÊÕ·ÑÏÂÀ­¿ò
+	$HUI.combobox("#isCESFlag", {
+		panelHeight: 'auto',
+		data: [{value: 'Y', text: $g('ÊÇ')},
+			   {value: 'N', text: $g('·ñ')}
+			],
+		valueField: 'value',
+		textField: 'text'
 	});
 }
 
 /**
- * è¯»å¡
+* ZhYW
+* ¼ÓÔØ¸úÒ½ÔºÓĞ¹ØµÄ²éÑ¯ÔªËØ
+*/
+function loadConHospMenu() {
+	var hospId = $HUI.combogrid("#_HospUserList").getValue();
+	
+	var url = $URL + "?ClassName=web.udhcOPQUERY&QueryName=FindInvUser&ResultSetType=array&hospId=" + hospId;
+	$("#guser").combobox("clear").combobox("reload", url);
+
+	url = $URL + "?ClassName=web.DHCBillOtherLB&QueryName=QryAdmReason&ResultSetType=array&hospId=" + hospId;
+	$("#insTypeId").combobox("clear").combobox("reload", url);
+}
+
+/**
+ * ¶Á¿¨
  * @method readHFMagCardClick
  * @author ZhYW
  */
 function readHFMagCardClick() {
-	try {
-		var cardType = getValueById('cardType');
-		var cardTypeDR = cardType.split('^')[0];
-		var myRtn = '';
-		if (cardTypeDR == '') {
-			myRtn = DHCACC_GetAccInfo();
-		} else {
-			myRtn = DHCACC_GetAccInfo(cardTypeDR, cardType);
+	DHCACC_GetAccInfo7(magCardCallback);
+}
+
+function cardNoKeydown(e) {
+	var key = websys_getKey(e);
+	if (key == 13) {
+		var cardNo = getValueById("CardNo");
+		if (!cardNo) {
+			return;
 		}
-		var myAry = myRtn.toString().split('^');
-		var rtn = myAry[0];
-		switch (rtn) {
-		case '0':
-			setValueById('cardNo', myAry[1]);
-			setValueById('patientNo', myAry[5]);
-			loadInvList();
-			break;
-		case '-200':
-			$.messager.alert('æç¤º', 'å¡æ— æ•ˆ', 'info', function () {
-				focusById('btn-readCard');
-			});
-			break;
-		case '-201':
-			setValueById('cardNo', myAry[1]);
-			setValueById('patientNo', myAry[5]);
-			loadInvList();
-			break;
-		default:
-		}
-	} catch (e) {
+		DHCACC_GetAccInfo("", cardNo, "", "", magCardCallback);
+	}
+}
+
+function magCardCallback(rtnValue) {
+	var patientId = "";
+	var myAry = rtnValue.split("^");
+	switch (myAry[0]) {
+	case "0":
+		setValueById("CardNo", myAry[1]);
+		patientId = myAry[4];
+		setValueById("patientNo", myAry[5]);
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	case "-200":
+		$.messager.alert("ÌáÊ¾", "¿¨ÎŞĞ§", "info", function () {
+			focusById("CardNo");
+		});
+		break;
+	case "-201":
+		setValueById("CardNo", myAry[1]);
+		patientId = myAry[4];
+		setValueById("patientNo", myAry[5]);
+		setValueById("CardTypeRowId", myAry[8]);
+		break;
+	default:
+	}
+	if (patientId != "") {
+		loadInvList();
 	}
 }
 
@@ -163,8 +183,8 @@ function patientNoKeydown(e) {
 	var key = websys_getKey(e);
 	if (key == 13) {
 		$.m({
-			ClassName: 'web.UDHCJFBaseCommon',
-			MethodName: 'regnocon',
+			ClassName: "web.UDHCJFBaseCommon",
+			MethodName: "regnocon",
 			PAPMINo: $(e.target).val()
 		}, function (patientNo) {
 			$(e.target).val(patientNo);
@@ -173,88 +193,37 @@ function patientNoKeydown(e) {
 	}
 }
 
-function cardNoKeydown(e) {
-	try {
-		var key = websys_getKey(e);
-		if (key == 13) {
-			var cardNo = getValueById('cardNo');
-			if (!cardNo) {
-				return;
-			}
-			var cardType = getValueById('cardType');
-			cardNo = formatCardNo(cardType, cardNo);
-			var cardTypeAry = cardType.split('^');
-			var cardTypeDR = cardTypeAry[0];
-			var myRtn = DHCACC_GetAccInfo(cardTypeDR, cardNo, '', 'PatInfo');
-			var myAry = myRtn.toString().split('^');
-			var rtn = myAry[0];
-			switch (rtn) {
-			case '0':
-				setValueById('cardNo', myAry[1]);
-				setValueById('patientNo', myAry[5]);
-				loadInvList();
-				break;
-			case '-200':
-				setTimeout(function () {
-					$.messager.alert('æç¤º', 'å¡æ— æ•ˆ', 'info', function () {
-						focusById('cardNo');
-					});
-				}, 300);
-				break;
-			case '-201':
-				setValueById('cardNo', myAry[1]);
-				setValueById('patientNo', myAry[5]);
-				loadInvList();
-				break;
-			default:
-			}
-		}
-	} catch (e) {
-	}
-}
-
-/**
- * åˆå§‹åŒ–å¡ç±»å‹æ—¶å¡å·å’Œè¯»å¡æŒ‰é’®çš„å˜åŒ–
- * @method initReadCard
- * @param {String} cardType
- * @author ZhYW
- */
-function initReadCard(cardType) {
-	try {
-		var cardTypeAry = cardType.split('^');
-		var readCardMode = cardTypeAry[16];
-		if (readCardMode == 'Handle') {
-			disableById('btn-readCard');
-			$('#cardNo').attr('readOnly', false);
-		} else {
-			enableById('btn-readCard');
-			setValueById('cardNo', '');
-			$('#cardNo').attr('readOnly', true);
-		}
-	} catch (e) {
-	}
-}
-
 function initInvList() {
 	var toolbar = [{
-			text: 'å¯¼å‡º',
+			text: 'µ¼³ö',
 			iconCls: 'icon-export',
 			handler: function () {
 				exportClick();
 			}
 		}, {
-			text: 'æ‰“å°æ¸…å•',
+			text: '´òÓ¡Çåµ¥',
 			iconCls: 'icon-print',
 			handler: function () {
 				printClick();
 			}
+		}, {
+			text: '´òÓ¡ÊÕ¾İÖ¤Ã÷',
+			iconCls: 'icon-print-arr-bo',
+			handler: function () {
+				prtInvProveClick();
+			}
+		}, {
+			text: '²¹´òµ¼Õïµ¥',
+			iconCls: 'icon-reprint-inv',
+			handler: function () {
+				reprtDirectClick();
+			}
 		}
 	];
 	
-	GV.InvList = $HUI.datagrid('#invList', {
+	GV.InvList = $HUI.datagrid("#invList", {
 		fit: true,
 		border: false,
-		striped: true,
 		singleSelect: true,
 		selectOnCheck: false,
 		checkOnSelect: false,
@@ -262,173 +231,280 @@ function initInvList() {
 		rownumbers: true,
 		pageSize: 20,
 		toolbar: toolbar,
-		data: [],
-		frozenColumns: [[{title: 'ck', field: 'ck', checkbox: true}]],
-		columns: [[{title: 'å¯¼èˆªå·', field: 'TINVRowid', width: 80,
-					formatter: function (value, row, index) {
+		className: "web.udhcOPQUERY",
+		queryName: "INVQUERY11",
+		frozenColumns: [[{field: 'ck', checkbox: true}]],
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["TDate", "InvDate", "TParkDate", "AllowRefundDate"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if ($.inArray(cm[i].field, ["IsStayInv"]) != -1) {
+					cm[i].hidden = true;
+					continue;
+				}
+				
+				if (cm[i].field == "TINVRowid") {
+					cm[i].title = "µ¼º½ºÅ";
+					cm[i].formatter = function (value, row, index) {
 						if (value) {
-							return "<a href='javascript:;' onclick=\"orderDetail(\'" + value + "', '" + row.TabFlag + "\')\">" + value + "</a>";
+							return "<a href='javascript:;' onclick='orderDetail(" + JSON.stringify(row) + ")'>" + value + "</a>";
 						}
 					}
-				   },
-				   {title: 'å‘ç¥¨å·', field: 'TINVNO', width: 100},
-				   {title: 'ç™»è®°å·', field: 'TPatID', width: 100},
-				   {title: 'æ‚£è€…å§“å', field: 'TPatName', width: 80},
-				   {title: 'ç¥¨æ®é‡‘é¢', field: 'TAcount', align: 'right', width: 100},
-				   {title: 'ä½œåºŸ', field: 'TAbort', width: 50,
-					formatter: function (value, row, index) {
-						return (+value == 1) ? '<font color="#21ba45">æ˜¯</font>' : '<font color="#f16e57">å¦</font>';
+				}
+				if ($.inArray(cm[i].field, ["TAbort", "TRefund", "THandin"]) != -1) {
+					cm[i].formatter = function (value, row, index) {
+						var color = (value == 1) ? "#21ba45" : "#f16e57";
+						return "<font color=\"" + color + "\">" + ((value == 1) ? $g("ÊÇ") : $g("·ñ")) + "</font>";
 					}
-				   },
-				   {title: 'çº¢å†²', field: 'TRefund', width: 50,
-					formatter: function (value, row, index) {
-						return (+value == 1) ? '<font color="#21ba45">æ˜¯</font>' : '<font color="#f16e57">å¦</font>';
+				}
+				if (cm[i].field == "TTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.TDate + " " + value;
 					}
-				   },
-				   {title: 'ç»“ç®—', field: 'THandin', width: 50,
-					formatter: function (value, row, index) {
-						return (+value == 1) ? '<font color="#21ba45">æ˜¯</font>' : '<font color="#f16e57">å¦</font>';
+				}
+				if (cm[i].field == "InvTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.InvDate + " " + value;
 					}
-				   },
-				   {title: 'æ”¶è´¹å‘˜', field: 'TUser', width: 70},
-				   {title: 'æ”¶è´¹æ—¶é—´', field: 'TTime', width: 150,
-				    formatter: function (value, row, index) {
-						return row.TDate + ' ' + value;
+				}
+				if (cm[i].field == "TParkTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.TParkDate + " " + value;
 					}
-				   },
-				   {title: 'è´¹ç”¨æ€»é¢', field: 'TotSum', align: 'right', width: 100},
-				   {title: 'æ”¯ä»˜æ–¹å¼', field: 'TPayMode', width: 180},
-				   {title: 'åºŸç¥¨æ—¶é—´', field: 'TParkTime', width: 150,
-				    formatter: function (value, row, index) {
-						return row.TParkDate + ' ' + value;
+				}
+				if (cm[i].field == "AllowRefundTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.AllowRefundDate + " " + value;
 					}
-				   },
-				   {title: 'ä½œåºŸäººå‘˜', field: 'TParUName', width: 80},
-				   {title: 'ä½œåºŸå‘ç¥¨å·', field: 'TInitInvNo', width: 100},
-				   {title: 'åŒ»ä¿æ”¯ä»˜é¢', field: 'TYBSum', align: 'right', width: 95},
-				   {title: 'åŸå‘ç¥¨å·', field: 'OldInvNo', width: 100},
-				   {title: 'è®°è´¦é‡‘é¢', field: 'TPayorShare', align: 'right', width: 80},
-				   {title: 'æŠ˜æ‰£é‡‘é¢', field: 'TDiscAmount', align: 'right', width: 80},
-				   {title: 'ç¥¨æ®ç±»å‹', field: 'TabFlag', width: 80}
-			]],
+				}
+				if (cm[i].field == "CESFlag") {
+					cm[i].formatter = function (value, row, index) {
+						var color = (value == 1) ? "#21ba45" : "#f16e57";
+						return (value == 1) ? ("<a href='javascript:;' onmouseover='showDataRetLog(this, " + JSON.stringify(row) + ")' style='text-decoration:underline;'>" + ("<font color=\"" + color + "\">" + $g("ÊÇ") + "</font>") + "</a>") : ("<font color=\"" + color + "\">" + $g("·ñ") + "</font>");
+					}
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if ($.inArray(cm[i].field, ["TAbort", "TRefund", "THandin"]) != -1) {
+						cm[i].width = 50;
+					}
+					if ($.inArray(cm[i].field, ["TTime", "InvTime", "TParkTime", "AllowRefundTime"]) != -1) {
+						cm[i].width = 155;
+					}
+				}
+			}
+		},
 		onLoadSuccess: function (data) {
-			$(this).datagrid('clearChecked');
-			var hasDisabledRow = false;
+			$(this).datagrid("clearChecked");
 			$.each(data.rows, function (index, row) {
-				if ((+row.TAbort == 1) || (+row.TRefund == 1)) {
-					hasDisabledRow = true;
-					$("#invList").parent().find(".datagrid-row[datagrid-row-index=" + index + "] input:checkbox")[0].disabled = true; //é€€è´¹ç¥¨æ®ä¸èƒ½è¢«é€‰ä¸­
+				if ((row.TAbort == 1) || (row.TRefund == 1)) {
+					GV.InvList.getPanel().find(".datagrid-row[datagrid-row-index=" + index + "] input:checkbox")[0].disabled = true; //ÍË·ÑÆ±¾İ²»ÄÜ±»Ñ¡ÖĞ
 				}
 			});
-			//æœ‰disabledè¡Œæ—¶,è¡¨å¤´ä¹Ÿdisabled
-			$("#invList").parent().find(".datagrid-header-row input:checkbox")[0].disabled = hasDisabledRow;
 		},
 		onCheckAll: function (rows) {
 			$.each(rows, function (index, row) {
-				if ((+row.TAbort == 1) || (+row.TRefund == 1)) {
+				if (GV.InvList.getPanel().find(".datagrid-row[datagrid-row-index=" + index + "] div.datagrid-cell-check>input:checkbox").prop("disabled")) {
 					GV.InvList.uncheckRow(index);
 				}
 			});
+			if (!GV.InvList.getPanel().find(".datagrid-header-row input:checkbox")[0].checked) {
+				GV.InvList.getPanel().find(".datagrid-header-row input:checkbox")[0].checked = true;
+			}
+		},
+		onCheck: function(index, row) {
+			if (GV.InvList.getPanel().find(".datagrid-row[datagrid-row-index=" + index + "] div.datagrid-cell-check>input:checkbox").prop("disabled")) {
+				GV.InvList.uncheckRow(index);
+			}
 		}
 	});
 }
 
 function clearClick() {
-	$(":text:not(.pagination-num)").val("");
-	$(".combobox-f:not(#cardType)").combobox("clear");
-	$("#cardType").combobox("reload");
-	$(".datetimebox-f").datetimebox("setValue", " ");   //å…ˆæ¸…ç©ºæ—¥æœŸï¼Œé˜²æ­¢åå°åŠ è½½æ•°æ®
-	loadInvList();
-	
-	var defDate = getDefStDate(0);
-	$('#stDateTime').datetimebox('setValue', (defDate + ' ' + '00:00:00'));
-	$('#endDateTime').datetimebox('setValue', (defDate + ' ' + '23:59:59'));
+	$(":text:not(.pagination-num,.combo-text)").val("");
+	$(".combobox-f").combobox("clear");
+	$(".datebox-f").datebox("setValue", CV.DefDate);
+	$("#stTime").timespinner("setValue", "00:00:00");
+	$("#endTime").timespinner("setValue", "23:59:59");
+	GV.InvList.options().pageNumber = 1;   //Ìø×ªµ½µÚÒ»Ò³
+	GV.InvList.loadData({total: 0, rows: []});
+	focusById("CardNo");
 }
 
 function loadInvList() {
-	var stDateTime = $('#stDateTime').datetimebox('getValue');
-	var stDate = stDateTime.split(' ')[0];
-	var stTime = stDateTime.split(' ')[1];
-	var endDateTime = $('#endDateTime').datetimebox('getValue');
-	var endDate = endDateTime.split(' ')[0];
-	var endTime = endDateTime.split(' ')[1];
 	var queryParams = {
-		ClassName: 'web.udhcOPQUERY',
-		QueryName: 'INVQUERY11',
-		ReceipNO: getValueById('invNo'),
-		PatientNO: getValueById('patientNo'),
-		PatientName: getValueById('patName'),
-		StartDate: stDate,
-		StTime: stTime,
-		EndDate: endDate,
-		EndTime: endTime,
-		INVStatus: getValueById('invFlag') || '',
-		userID: getValueById('guser') || '',
-		INVFootFlag: getValueById('footFlag') || '',
-		CardNo: getValueById('cardNo'),
-		PayModeId: getValueById('paymode') || '',
-		admReason: getValueById('admReason') || '',
-		HospId: PUBLIC_CONSTANT.SESSION.HOSPID
+		ClassName: "web.udhcOPQUERY",
+		QueryName: "INVQUERY11",
+		ReceipNO: getValueById("invNo"),
+		PatientNO: getValueById("patientNo"),
+		PatientName: getValueById("patName"),
+		StDate: $("#stDate").datebox("getValue"),
+		StTime: $("#stTime").timespinner("getValue"),
+		EndDate: $("#endDate").datebox("getValue"),
+		EndTime: $("#endTime").timespinner("getValue"),
+		INVStatus: getValueById("invFlag") || "",
+		UserId: getValueById("guser") || "",
+		INVFootFlag: getValueById("footFlag") || "",
+		CardNo: getValueById("CardNo"),
+		PayModeId: getValueById("paymode") || "",
+		InsTypeId: getValueById("insTypeId") || "",
+		IsCESFlag: getValueById("isCESFlag") || "",
+		HospId: $HUI.combogrid("#_HospUserList").getValue()
 	};
-	loadDataGridStore('invList', queryParams);
+	loadDataGridStore("invList", queryParams);
 }
 
-function orderDetail(prtRowId, invType) {
-	var url = 'dhcbill.opbill.invoeitm.csp?&invRowId=' + prtRowId + '&invType=' + invType;
-	websys_showModal({
-		url: url,
-		title: 'åŒ»å˜±æ˜ç»†',
-		iconCls: 'icon-w-list'
-	});
+function orderDetail(row) {
+	var argObj = {
+		invRowId: row.TINVRowid,
+		invType: row.TabFlag
+	};
+	BILL_INF.showOPChgOrdItm(argObj);
 }
 
 /**
- * å¯¼å‡º
+ * µ¼³ö
  */
 function exportClick() {
-	var stDateTime = $('#stDateTime').datetimebox('getValue');
-	var stDate = stDateTime.split(' ')[0];
-	var stTime = stDateTime.split(' ')[1];
-	var endDateTime = $('#endDateTime').datetimebox('getValue');
-	var endDate = endDateTime.split(' ')[0];
-	var endTime = endDateTime.split(' ')[1];
-	var fileName = 'DHCBILL-OPBILL-SJMX.rpx' + '&ReceipNO=' + getValueById('invNo') + '&PatientNO=' + getValueById('patientNo');
-	fileName += '&PatientName=' + getValueById('patName') + '&StartDate=' + stDate + '&StTime=' + stTime + '&EndDate=' + endDate + '&EndTime=' + endTime;
-	fileName += '&INVStatus=' + (getValueById('invFlag') || '') + '&userID=' + (getValueById('guser') || '') + '&INVFootFlag=' + (getValueById('footFlag') || '');
-	fileName += '&CardNo=' + getValueById('cardNo') + '&PayModeId=' + (getValueById('paymode') || '') + '&admReason=' + (getValueById('admReason') || '');
-	fileName += '&HospId=' + PUBLIC_CONSTANT.SESSION.HOSPID;
-	var maxHeight = ($(window).height() || 550) * 0.8;
-	var maxWidth = ($(window).width() || 1366) * 0.8;
+	var fileName = "DHCBILL-OPBILL-SJMX.rpx" + "&ReceipNO=" + getValueById("invNo") + "&PatientNO=" + getValueById("patientNo");
+	fileName += "&PatientName=" + getValueById("patName") + "&StDate=" + $("#stDate").datebox("getValue") + "&StTime=" + $("#stTime").timespinner("getValue");
+	fileName += "&EndDate=" + $("#endDate").datebox("getValue") + "&EndTime=" + $("#endTime").timespinner("getValue");
+	fileName += "&INVStatus=" + (getValueById("invFlag") || "") + "&UserId=" + (getValueById("guser") || "") + "&INVFootFlag=" + (getValueById("footFlag") || "");
+	fileName += "&CardNo=" + getValueById("CardNo") + "&PayModeId=" + (getValueById("paymode") || "") + "&InsTypeId=" + (getValueById("insTypeId") || "");
+	fileName += "&IsCESFlag=" + (getValueById("isCESFlag") || "") + "&HospId=" + $HUI.combogrid("#_HospUserList").getValue();
+	var maxHeight = $(window).height() * 0.8;
+	var maxWidth = $(window).width() * 0.8;
 	DHCCPM_RQPrint(fileName, maxWidth, maxHeight);
 }
 
 /**
- * æ‰“å°
+ * ´òÓ¡
  */
 function printClick() {
 	var invAry = [];
 	$.each(GV.InvList.getChecked(), function (index, row) {
 		var prtRowId = row.TINVRowid;
 		var sFlag = row.TabFlag;
-		var tmpStr = prtRowId + ':' + sFlag;
+		var tmpStr = prtRowId + ":" + sFlag;
 		invAry.push(tmpStr);
 	});
 	if (invAry.length == 0) {
-		$.messager.alert('æç¤º', 'è¯·é€‰æ‹©éœ€è¦æ‰“å°çš„è®°å½•', 'info');
+		$.messager.popover({msg: "ÇëÑ¡ÔñĞèÒª´òÓ¡µÄ¼ÇÂ¼", type: "info"});
 		return;
 	}
-	var invStr = invAry.join("!");
 	$.m({
-		ClassName: 'web.DHCBillDtlListPrtLog',
-		MethodName: 'SavePrtLog',
+		ClassName: "web.DHCBillDtlListPrtLog",
+		MethodName: "SavePrtLog",
 		userId: PUBLIC_CONSTANT.SESSION.USERID,
-		invStr: invStr
+		invStr: invAry.join("^")
 	}, function (rtn) {
-		if (rtn != '0') {
-			$.messager.alert('æç¤º', 'ä¿å­˜æ—¥å¿—å¤±è´¥', 'info');
+		var myAry = rtn.split("^");
+		if (myAry[0] != 0) {
+			$.messager.alert({msg: ("±£´æÈÕÖ¾Ê§°Ü£º" + (myAry[1] || myAry[0])), type: "info"});
 			return;
 		}
-		fileName = "{DHCBILL-OPBILL-FYQD.rpx(invStr=" + invStr + ")}";
+		var fileName = "{DHCBILL-OPBILL-FYQD.rpx(invStr=" + invAry.join("!") + ")}";
 		DHCCPM_RQDirectPrint(fileName);
 	});
+}
+
+/**
+ * ´òÓ¡ÊÕ¾İÖ¤Ã÷(·¢Æ±ÒÅÊ§Ö¤Ã÷)
+ */
+function prtInvProveClick() {
+	var rows = GV.InvList.getChecked();
+	if (rows.length == 0) {
+		$.messager.popover({msg: "Çë¹´Ñ¡ĞèÒª´òÓ¡µÄ¼ÇÂ¼", type: "info"});
+		return;
+	}
+	if (rows.length > 1) {
+		$.messager.popover({msg: "Ö»ÄÜ¹´Ñ¡Ò»Ìõ¼ÇÂ¼½øĞĞ´òÓ¡", type: "info"});
+		return;
+	}
+	var fileName = "DHCBILL-OPBILL-SJZM.rpx" + "&InvRowID=" + rows[0].TINVRowid + "&PRTFlag=" + rows[0].TabFlag;
+	var maxHeight = $(window).height() * 0.8;
+	var maxWidth = $(window).width() * 0.8;
+	DHCCPM_RQPrint(fileName, maxWidth, maxHeight);
+}
+
+/**
+ * ²¹´òµ¼Õïµ¥
+ */
+function reprtDirectClick() {
+	var rows = GV.InvList.getChecked();
+	if (rows.length == 0) {
+		$.messager.popover({msg: "Çë¹´Ñ¡ĞèÒª´òÓ¡µÄ¼ÇÂ¼", type: "info"});
+		return;
+	}
+	if (rows.length > 1) {
+		$.messager.popover({msg: "Ö»ÄÜ¹´Ñ¡Ò»Ìõ¼ÇÂ¼½øĞĞ´òÓ¡", type: "info"});
+		return;
+	}
+	var invRowId = rows[0].TINVRowid;
+	var tabFlag = rows[0].TabFlag;
+	var isStayInv = rows[0].IsStayInv;
+	if (isStayInv == "Y") {
+		$.messager.popover({msg: "¼±ÕïÁô¹Û½áËã¼ÇÂ¼²»ÄÜ´òÓ¡µ¼Õïµ¥", type: "info"});
+		return;
+	}
+	switch (tabFlag) {
+	case "PRT":
+		directPrint(invRowId);
+		break;
+	case "API":
+		$.messager.confirm("È·ÈÏ", "´Ë·¢Æ±Îª¼¯ÖĞ´òÓ¡·¢Æ±£¬ÊÇ·ñÈ·ÈÏ´òÓ¡£¿", function(r) {
+			if (!r) {
+				return;
+			}
+			$.m({
+				ClassName: "web.DHCOPBILLOrdDirectList",
+				MethodName: "GetPrtRowId",
+				apiRowId: invRowId
+			}, function(rtn) {
+				var myAry = rtn.split("^");
+				$.each(myAry, function(index, item) {
+					directPrint(item);
+				});
+			});
+		});
+		break;
+	default:
+	}
+}
+
+/**
+ * ZhYW
+ * 2022-07-21
+ * Ó¦¼±ÊÕ·ÑÏµÍ³Êı¾İ»Ø´«ÈÕÖ¾ĞÅÏ¢
+*/
+function showDataRetLog($this, row) {
+	if (row.CESFlag != 1) {
+		return;
+	}
+	var prtRowId = row.TINVRowid;
+	var json = $.cm({ClassName: "BILL.CES.COM.Log", MethodName: "GetCESImportLogInfo", tableName: "DHC_INVPRT", rowId: prtRowId}, false);
+	var content = "<table>"
+					+ "<tr>"
+					+ 	"<td><lable style='color:#666'>" + $g("¿Í»§¶Ë»úÆ÷Âë£º") + "</lable>"
+					+ 	"<lable style='color:#000'>" + json.clientCode + "</lable></td>"
+					+ "</tr>"
+					+ "<tr>"
+					+ 	"<td><lable style='color:#666'>" + $g("¿Í»§¶ËÎ»ÖÃ£º") + "</lable>"
+					+ 	"<lable style='color:#000'>" + json.clientLocation + "</lable></td>"
+					+ "</tr>"
+					+ "<tr>"
+					+ 	"<td><lable style='color:#666'>" + $g("²Ù×÷Ô±£º") + "</lable>"
+					+ 	"<lable style='color:#000'>" + json.userName + "</lable></td>"
+					+ "</tr>"
+					+ "<tr>"
+					+ 	"<td><lable style='color:#666'>" + $g("»Ø´«Ê±¼ä£º") + "</lable>"
+					+ 	"<lable style='color:#000'>" + (json.logDate + " " + json.logTime) + "</lable></td>"
+					+ "</tr>"
+				+ "</table>";
+	$($this).popover({
+		trigger: 'hover',
+		content: content
+	}).popover("show");
 }

@@ -19,7 +19,7 @@ function TransQuery(Incil,StkDate,IncInfo) {
 	
 	// 起始日期
 	var StartDate = new Ext.ux.DateField({
-			fieldLabel : '起始日期',
+			fieldLabel : $g('起始日期'),
 			id : 'StartDate',
 			name : 'StartDate',
 			anchor : '90%',
@@ -29,7 +29,7 @@ function TransQuery(Incil,StkDate,IncInfo) {
 
 	// 结束日期
 	var EndDate = new Ext.ux.DateField({
-			fieldLabel : '结束日期',
+			fieldLabel : $g('结束日期'),
 			id : 'EndDate',
 			name : 'EndDate',
 			anchor : '90%',
@@ -45,8 +45,8 @@ function TransQuery(Incil,StkDate,IncInfo) {
 	
 	// 检索按钮
 	var searchBT = new Ext.Toolbar.Button({
-				text : '查询',
-				tooltip : '点击查询药品台账',
+				text : $g('查询'),
+				tooltip : $g('点击查询药品台账'),
 				iconCls : 'page_find',
 				handler : function() {
 					searchData();
@@ -59,7 +59,7 @@ function TransQuery(Incil,StkDate,IncInfo) {
 	function searchData() {
 		// 必选条件
 		if (Incil == null || Incil.length <= 0) {
-			Msg.info("warning", "请在主界面选择某一条记录查看其台账信息！");
+			Msg.info("warning", $g("请在主界面选择某一条记录查看其台账信息！"));
 			return;
 		}
 		
@@ -107,108 +107,108 @@ function TransQuery(Incil,StkDate,IncInfo) {
 				sortable : true,
 				hidden : true
 			}, {
-				header : "日期",
+				header : $g("日期"),
 				dataIndex : 'TrDate',
 				width : 150,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '批号效期',
+				header : $g('批号效期'),
 				dataIndex : 'BatExp',
 				width : 150,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "单位",
+				header : $g("单位"),
 				dataIndex : 'PurUom',
 				width : 80,
 				align : 'center',
 				sortable : true
 			}, {
-				header : "售价",
+				header :$g( "售价"),
 				dataIndex : 'Sp',
 				width : 65,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "进价",
+				header : $g("进价"),
 				dataIndex : 'Rp',
 				width : 65,
 				
 				align : 'right'
 			}, {
-				header : "结余数量",
+				header : $g("结余数量"),
 				dataIndex : 'EndQtyUom',
 				width : 120,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "数量",
+				header : $g("数量"),
 				dataIndex : 'TrQtyUom',
 				width : 100,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "进价金额",
+				header : $g("进价金额"),
 				dataIndex : 'RpAmt',
 				width : 100,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "售价金额",
+				header : $g("售价金额"),
 				dataIndex : 'SpAmt',
 				width : 100,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "处理号",
+				header : $g("处理号"),
 				dataIndex : 'TrNo',
 				width : 120,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "处理信息",
+				header : $g("处理信息"),
 				dataIndex : 'TrAdm',
 				width : 65,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "业务类型",
+				header : $g("业务类型"),
 				dataIndex : 'TrMsg',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "结余金额(进价)",
+				header : $g("结余金额(进价)"),
 				dataIndex : 'EndRpAmt',
 				width : 100,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "结余金额(售价)",
+				header : $g("结余金额(售价)"),
 				dataIndex : 'EndSpAmt',
 				width : 100,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "供应商",
+				header : $g("供应商"),
 				dataIndex : 'Vendor',
 				width : 160,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "厂商",
+				header : $g("厂商"),
 				dataIndex : 'Manf',
 				width : 160,
 				align : 'left',				
 				sortable : true
 			}, {
-				header : "操作人",
+				header : $g("操作人"),
 				dataIndex : 'OperateUser',
 				width : 65,
 				align : 'left',				
@@ -219,16 +219,16 @@ function TransQuery(Incil,StkDate,IncInfo) {
 			store : DetailInfoStore,
 			pageSize : PageSize,
 			displayInfo : true,
-			displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
+			displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
 			emptyMsg : "No results to display",
-			prevText : "上一页",
-			nextText : "下一页",
-			refreshText : "刷新",
-			lastText : "最后页",
-			firstText : "第一页",
-			beforePageText : "当前页",
-			afterPageText : "共{0}页",
-			emptyMsg : "没有数据",
+			prevText :$g( "上一页"),
+			nextText : $g("下一页"),
+			refreshText : $g("刷新"),
+			lastText : $g("最后页"),
+			firstText : $g("第一页"),
+			beforePageText : $g("当前页"),
+			afterPageText : $g("共{0}页"),
+			emptyMsg :$g( "没有数据"),
 			doLoad:function(C){
 				var B={},
 				A=this.getParams();
@@ -270,7 +270,7 @@ function TransQuery(Incil,StkDate,IncInfo) {
 				autoHeight : true,
 					items : [{
 						xtype : 'fieldset',
-						title : '查询条件',
+						title : $g('查询条件'),
 						autoHeight : true,
 						items : [{
 							layout : 'column',
@@ -283,7 +283,7 @@ function TransQuery(Incil,StkDate,IncInfo) {
 		});
 
 	var window = new Ext.Window({
-				title : '台账信息',
+				title : $g('台账信息'),
 				width : 800,
 				height : 600,
 				layout:'border',

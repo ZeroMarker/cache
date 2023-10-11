@@ -6,12 +6,14 @@ $(function(){
 	defindTitleStyle();
 	initLookUp("");
 	initButton(); //按钮初始化
-	initButtonWidth();
+	//initButtonWidth();
+	initPanelHeaderStyle();
 	setRequiredElements("CType_Desc^CCItem^CCVendorDR_VDesc^CCPrice^CCQuantityNum"); //必填项	Mozy	964414	2019-7-24
 	InitButton(false);
 	initTypeLookUp();
 	initItemLookUp();
-	
+	//modified by cjt 20230131 需求号3220200 UI页面改造
+	initPanelHeaderStyle();
 	//table数据加载
 	$HUI.datagrid("#DHCEQContractConfig",{
 		url:$URL,
@@ -22,6 +24,8 @@ $(function(){
 		},
 		border:false,
 	    fit:true,
+	    //modified by cjt 20230131 需求号3220200 UI页面改造
+	    fitColumns:true,
 	    singleSelect:true,
 		onClickRow:function(rowIndex,rowData){OnclickRow();},
 	    rownumbers: true,  //如果为true则显示一个行号列
@@ -145,6 +149,9 @@ function setSelectValue(elementID,rowData)
 		setElement("CCItemDR",rowData.TRowID);
 		setElement("CCItemDR_Desc",rowData.TName);
 		setElement("CCItem",rowData.TName);
+		// MZY0061	1610216		2020-12-2
+		setElement("CCUnitDR_UOMDesc",rowData.TUOM);
+		setElement("CCUnitDR",rowData.TUOMDR);
 	}
 	else if(elementID=="CCVendorDR_VDesc") {setElement("CCVendorDR",rowData.TRowID);}
 	else if(elementID=="CCBrandDR_Desc") {setElement("CCBrandDR",rowData.TRowID);}
@@ -160,51 +167,89 @@ function clearData(elementID)
 	setElement(elementName,"")
 	return;
 }
+//Modified by myl 20211026  1979743
 function BSave_Clicked()
 {
 	if (getElementValue("CCContractListDR")=="")
 	{
-		$.messager.show({title: '提示',msg: '该配置合同明细数据未保存!'});
+		//$.messager.show({title: '提示',msg: '该配置合同明细数据未保存!'});
+		messageShow('alert','title','提示','该配置合同明细数据未保存!')
 		return;
 	}
 	if (getElementValue("CCType")=="")
 	{
-		$.messager.show({title: '提示',msg: '配置类型不能为空!'});
+		//$.messager.show({title: '提示',msg: '配置类型不能为空!'});
+		messageShow('alert','title','提示','配置类型不能为空!')
 		return;
 	}
 	// Mozy		951093	2019-7-16
 	if ((jQuery('#CCItemDR').val()=="")&&(getElementValue("CCType")==1))
 	{
-		$.messager.show({title: '提示',msg: '配置项不能为空'});
+		//$.messager.show({title: '提示',msg: '配置项不能为空'});
+		messageShow('alert','title','提示','配置项不能为空!')
 		return;
 	}
 	if (getElementValue("CCItem")=="")
 	{
-		$.messager.show({title: '提示',msg: '名称不能为空!'});
+		//$.messager.show({title: '提示',msg: '名称不能为空!'});
+		messageShow('alert','title','提示','名称不能为空!')
 		return;
 	}
 	// Mozy		964414	2019-7-24
 	if (getElementValue("CCQuantityNum")=="")
 	{
-		$.messager.show({title: '提示',msg: '总数量不能为空!'});
+		//$.messager.show({title: '提示',msg: '总数量不能为空!'});
+		messageShow('alert','title','提示','总数量不能为空!')
 		return;
 	}
 	if (getElementValue("CCPrice")=="")
 	{
-		$.messager.show({title: '提示',msg: '单价不能为空!'});
+		//$.messager.show({title: '提示',msg: '单价不能为空!'});
+		messageShow('alert','title','提示','单价不能为空!')
 		return;
 	}
+	// MZY0061	1610216		2020-12-2		供应商自动保存
 	if (getElementValue("CCVendorDR")=="")
 	{
-		$.messager.show({title: '提示',msg: '供应商不能为空!'});
-		return;
+		var val=getPYCode(getElementValue("CCVendorDR_VDesc"))+"^"+getElementValue("CCVendorDR_VDesc")+"^^^2";
+		var CTProviderDR=tkMakeServerCall("web.DHCEQForTrak","UpdProvider",val);
+		if (CTProviderDR=="")
+		{
+			messageShow('alert','error','错误提示','供应商异常!');
+			return;
+		}
+		else
+			setElement("CCVendorDR",CTProviderDR);
 	}
-	var val=CombinData();
+	if ((getElementValue("CCManuFactoryDR")=="")&&(getElementValue("CCManuFactoryDR_MDesc")!=""))
+	{
+		var val=getPYCode(getElementValue("CCManuFactoryDR_MDesc"))+"^"+getElementValue("CCManuFactoryDR_MDesc")+"^^^3";
+		var CCManuFactoryDR=tkMakeServerCall("web.DHCEQForTrak","UpdProvider",val);
+		if (CCManuFactoryDR=="")
+		{
+			messageShow('alert','error','错误提示','生产厂家异常!');
+			return;
+		}
+		else
+			setElement("CCManuFactoryDR",CCManuFactoryDR);
+	}
+	//var val=CombinData();
 	//alertShow(val)
 	if (getElementValue("CCRowID")=="")
 	{
-		if (!window.confirm("确定新增一条记录?")) return;
+		//if (!window.confirm("确定新增一条记录?")) return;
+			messageShow("confirm","info","提示","确定新增一条记录?","",CheckFeeArea,function(){
+				return;
+			})
 	}
+	else
+	{
+		CheckFeeArea();		// MZY0119	2559296		2022-04-07
+	}
+}
+//Modified by myl 20211026  1979743
+function CheckFeeArea()	{
+	var val=CombinData();
 	$.ajax({
 		url:'dhceq.jquery.method.csp',
 		Type:'POST',
@@ -228,22 +273,26 @@ function BSave_Clicked()
 			data=data.split("^");
 			if(data[0]>0)
 			{
-				$.messager.show({title: '提示',msg: '保存成功'});
+				//$.messager.show({title: '提示',msg: '保存成功'});
+				messageShow('alert','title','提示','保存成功')
 				$('#DHCEQContractConfig').datagrid('reload');
 				ClearElement();
 				InitButton(false);
 			}
 			else
-				$.messager.alert('保存失败！','错误代码:'+data[0], 'warning');
+				//$.messager.alert('保存失败！','错误代码:'+data[0], 'warning');
+				messageShow('alert','error','保存失败！','错误代码:'+data[0])
 		}
 	});
 }
+//Modified by myl 20211026  1979743
 function BDelete_Clicked()
 {
 	var rowid=jQuery("#CCRowID").val()
 	if (rowid=="")
 	{
-		$.messager.show({title: '提示',msg: '没有选中记录不能删除'});
+		//$.messager.show({title: '提示',msg: '没有选中记录不能删除'});
+		messageShow('alert','title','提示','没有选中记录不能删除')
 		return;
 	}
 	$.ajax({
@@ -269,13 +318,15 @@ function BDelete_Clicked()
 			//alertShow(data)
 			if(data>0)
 			{
-				$.messager.show({title: '提示',msg: '删除成功'});
+				//$.messager.show({title: '提示',msg: '删除成功'});
+				messageShow('alert','title','提示','删除成功')
 				jQuery('#DHCEQContractConfig').datagrid('reload');
 				ClearElement();
 				InitButton(false);
 			}
 			else
-				$.messager.alert('保存失败！','错误代码:'+data, 'warning');
+				//$.messager.alert(error,'错误代码:'+data, 'warning');
+				messageShow('alert','error','错误提示','错误代码:'+data)
 		}
 	});
 }

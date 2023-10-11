@@ -4,8 +4,16 @@ function getParam(paramName){
 	
     var paramValue = "";
     var isFound = false;
-    if (this.location.search.indexOf("?") == 0 && this.location.search.indexOf("=")>1){
-        arrSource = unescape(this.location.search).substring(1,this.location.search.length).split("&");
+    var search=this.location.search;
+	if(this.parent.location){//2023-03-17 st HOS组件菜单方式取值不到hosNoPatOpenUrl入参
+		var HosMenuSearch=this.parent.location.search; 
+		if((search.indexOf(paramName)<0)&&(HosMenuSearch.indexOf(paramName)>0)){ 
+		    search=HosMenuSearch;
+		}
+	}//ed
+
+    if (search.indexOf("?") == 0 && search.indexOf("=")>1){
+        arrSource = unescape(search).substring(1,search.length).split("&");
         var i = 0;
         while (i < arrSource.length && !isFound){
             if (arrSource[i].indexOf("=") > 0){
@@ -445,8 +453,12 @@ function SplitString(TmpString, LimitLen){
 }
 
 /**去掉字符串前后所有空格*/
-function trim(str){ 
-	return str.replace(/(^\s*)|(\s*$)/g, ""); 
+function trim(str){
+	var res="";
+	if ((typeof str != "undefined")&(str != "")){
+		res = str.replace(/(^\s*)|(\s*$)/g, "");
+	}
+	return res;
 } 
 /**
 *@author : qunianpeng 
@@ -517,8 +529,8 @@ function isIE() {
 * @author zhouxin
 */
 function commonShowWin(option){
-		
-		var content = '<iframe src="'+option.url+'" scrolling="auto" width="100%" height="100%" frameborder="0" scrolling="no" style="display:block;"></iframe>';
+		var url = tokenUrl(option.url);
+		var content = '<iframe src="'+url+'" scrolling="auto" width="100%" height="100%" frameborder="0" scrolling="no" style="display:block;"></iframe>';
 		var defOpt={
 			iconCls:"icon-w-paper",
 			width: 1300,
@@ -544,4 +556,237 @@ function commonCloseWin(){
 
 function commonParentCloseWin(){
 	window.parent.$('#CommonWin').dialog('close');
+}
+
+function formatHtmlToValue(text){
+	text=text||'';
+	text = text.replace(new RegExp('&nbsp;',"g"),' '); //text.replaceAll("&nbsp;"," ");
+	text = text.replace(new RegExp('&nbsp',"g"),' '); //text.replaceAll("&nbsp"," ");
+	return text;
+}
+
+///是否开启了多屏幕
+function isOpenMoreScreen(){
+	if(top.MWScreens){
+		if(top.MWScreens.screens){
+			return top.MWScreens.screens.length>1?true:false;
+		}
+	}
+	
+	if(top.opener){
+		if(top.opener.MWScreens){
+			return top.opener.MWScreens.screens.length>1?true:false;
+		}
+	}
+	
+	return false;
+}
+
+///url拼接token
+function tokenUrl(url){
+	if(typeof websys_getMWToken === "function"){
+		url = url+(url.indexOf('?')!=-1?'&':'?')+"&MWToken="+websys_getMWToken();
+	}
+	return url;
+}
+
+///hos关闭window
+function hosCloseWindow(winId){
+	window.top.postMessage({ 
+		operatePortalWindow: {
+			windowId: winId,
+			operate: 'windowClose'
+		}
+	},"*");
+}
+
+///hos创建window
+function hosCreateWindow(title,url){
+	
+	url+=((url.indexOf('?')>0?'&':'?')+'windowId='+uuid())
+    window.top.postMessage( {embedWindow: {name:title,link:url}}, "*");	
+}
+
+///uuid
+function uuid() {
+	return 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = Math.random() * 16 | 0,
+            v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
+
+/// hos对于没有就诊的情况下打开患者列表
+function hosOpenPatList(url){
+	var e=getParam('EpisodeID')
+	if(e) return;
+	
+	if (typeof LocAdmType === 'undefined') LocAdmType='E';
+
+	if(LocAdmType=='E'){
+		var o=url+'?hosOpen=1';
+		o=tokenUrl(o);
+		window.open(o,'_blank','height='+(window.screen.availHeight-200)+', width='+(window.screen.availWidth-200)+', top=100, left=100,toolbar=no, menubar=no, scrollbars=no, resizable=no, location=no, status=no');
+	}else{
+		showPatientList(LocAdmType);
+	}
+	return;
+}
+
+
+/// 替换某个url中的参数值
+function changeURLArg(url,arg,arg_val){ 
+    var pattern=arg+'=([^&]*)'; 
+    var replaceText=arg+'='+arg_val; 
+    if(url.match(pattern)){ 
+        var tmp='/('+ arg+'=)([^&]*)/gi'; 
+        tmp=url.replace(eval(tmp),replaceText); 
+        return tmp; 
+    }else{ 
+        if(url.match('[\?]')){ 
+            return url+'&'+replaceText; 
+        }else{ 
+            return url+'?'+replaceText; 
+        } 
+    } 
+    return url+'\n'+arg+'\n'+arg_val; 
+}
+
+///对象的形式改变参数
+function changeURLArgs(url,argObj){
+	if(!url) return;
+	
+	for(var key in argObj){
+		url = changeURLArg(url,key,argObj[key]);
+	}
+	
+	return url;
+}
+
+///设置hos公共区域的患者信息
+function hosSetPatient(data){
+	var obj = {
+		type: 'postFromProd',
+		messageList: 
+		[
+		    {
+		        key: 'EpisodeID',
+		        value: data.EpisodeID
+		    },{
+		        key: 'PatientID',
+		        value: data.PatientID
+		    }
+		]
+	}
+
+	var _w = data.hosOpen?window.opener.top:window.top;
+	_w.postMessage(obj, "*")
+    
+    if(data.hosOpen){
+	    if(window.opener){
+		   var nowUrl = window.opener.location.href;
+		   window.opener.location.href = changeURLArgs(nowUrl,{EpisodeID:data.EpisodeID,PatientID:data.PatientID});
+		}
+		window.close();
+	}
+}
+
+///是否开启了多屏幕
+function isOpenMoreScreen(){
+	
+	
+	//搞啥玩意儿判断,直接写死,
+	
+	return true;
+	
+	
+	var ret=false;
+	if(top.MWScreens){
+		if(top.MWScreens.screens){
+			
+			if(top.MWScreens.screens.length>1) ret=true;
+			
+			if(!ret){
+				//判断当只有一个屏幕的是否是宽屏幕
+				console.log(top.MWScreens.screens[0]);
+			}
+		}
+	}
+	if(ret) return ret;
+	
+	
+	if(top.opener){
+		if(top.opener.MWScreens){
+			if(top.opener.MWScreens.screens.length>1) ret=true;
+			console.log(top.opener.MWScreens.screens[0]);
+		}
+	}
+	
+	
+	
+	return ret;
+}
+
+function showPatientList(locType)
+{
+	var src="opdoc.patient.list.csp?NotShowBtnBar=Y";
+	if(locType=='I'){
+		src="inpatientlist.csp";
+	}
+
+	if(typeof tokenUrl=='function') src=tokenUrl(src);
+	var $code ="<iframe width='100%' height='99%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
+	ShowHISUIWindow("患者切换", src,"icon-change-loc",1800, 600);
+}
+function switchPatient(PatientID,EpisodeID,mradm)
+{
+	CloseHISUIWindow();
+	hosSetPatient({EpisodeID:EpisodeID,PatientID:PatientID});
+	var nowUrl = window.location.href;
+	var newUrl = changeURLArgs(nowUrl,{EpisodeID:EpisodeID,PatientID:PatientID});
+	window.location.replace(newUrl);
+	
+}
+
+//hisui弹窗 支持对象类型传参(参数按hisui window)，推荐使用基础平台的websys_showModal
+function ShowHISUIWindow(title,src,iconCls,width,height)
+{
+    if(!width) width=900;
+    if(!height) height=500;
+    if(!$('#_HUI_Model_Win').size()){
+        $("body").append("<div id='_HUI_Model_Win' class='hisui-window' style='overflow:hidden;'></div>");
+    }
+    if((arguments.length==1)&&(typeof arguments[0]=='object')){
+        if(typeof tokenUrl=='function') arguments[0].src=tokenUrl(arguments[0].src);
+        var opts=$.extend({
+            width:width,
+            height:height,
+            collapsible:false,
+            maximizable:false,
+            minimizable:false,
+            modal:true,
+            content:"<iframe width='100%' height='100%' frameborder='0' src='"+arguments[0].src+"'></iframe>"
+        },arguments[0]);
+    }else{
+        if(typeof tokenUrl=='function') src=tokenUrl(src);
+        var opts={
+            iconCls:iconCls,
+            width:width,
+            height:height,
+            title:title,
+            collapsible:false,
+            maximizable:false,
+            minimizable:false,
+            modal:true,
+            content:"<iframe width='100%' height='100%' frameborder='0' src='"+src+"'></iframe>"
+        };
+    }
+    return $('#_HUI_Model_Win').window(opts).window('center');
+}
+
+function CloseHISUIWindow()
+{
+    if($('#_HUI_Model_Win').size()){
+        $('#_HUI_Model_Win').window('close');
+    }
 }

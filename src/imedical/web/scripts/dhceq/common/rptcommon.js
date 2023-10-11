@@ -13,7 +13,7 @@ function initDocument()
 	defindTitleStyle()
 	initLookUp();
 	initButton();
-	initButtonWidth();
+	//initButtonWidth(); //modify by zyq 2023-03-23
 }
 
 /***************************************按钮调用函数*****************************************************/
@@ -71,6 +71,9 @@ function BFind_Clicked()
 	var ReportFileName=jQuery("#ReportFileName").val();
 	var PrintFlag=getElementValue("PrintFlag");
 	var PrintStr=""
+	
+	setElement("EquipTypeIDs","");
+	if (($("#EquipTypes").length>0)&&($("#EquipTypes").combogrid("getValues")!="")) setElement("EquipTypeIDs",$("#EquipTypes").combogrid("getValues").toString());
 	var lnk="";
 	$("input").each(function(){
 		var id=$(this)[0].id;
@@ -116,3 +119,43 @@ function setIframeHeight(iframe) {
 		}
 	}
 };
+///add by ZY0250 20200106
+///增加预折旧按钮得操作,按钮是否显示,在dhceq.fam.monthdeprelist.csp 中根据参数变量DepreFlag是否为1来控制.
+/// 涉及三个菜单：分类折旧统计DHCEQ.S.Rpt.DepreCat；折旧明细DHCEQ.S.Rpt.DepreDetail；科室折旧 DHCEQ.S.Rpt.DepreLoc
+/// 目前只科室折旧 DHCEQ.S.Rpt.DepreLoc增加了DepreFlag=1的参数传递.
+function BDepre_Clicked()
+{
+	var pMonthStr=getElementValue("pMonthStr");
+	if (pMonthStr=="")
+	{
+		messageShow('alert','error','错误提示',"预折旧月份不能为空!")
+		return;
+	}
+	var EquipTypeIDS=getElementValue("EquipTypeIDS");
+	var jsonData=tkMakeServerCall("web.DHCEQMonthDepre","GetPreMonthDepre",pMonthStr,EquipTypeIDS);
+	jsonData=JSON.parse(jsonData)
+	if (jsonData.SQLCODE==0)
+	{
+		messageShow("","success","","预折旧完成");
+		return
+	}
+    else
+    {
+	    if (jsonData.SQLCODE=="-1001") messageShow("","","","错误信息:"+jsonData.Data);
+	    else messageShow('alert','error','错误提示',"有"+jsonData.Data+"个资产折旧出错!")
+		return;
+	}
+}
+// MZY0118	2536230		2022-03-28
+//元素参数重新获取值
+function getParam(ID)
+{
+	if (ID=="EquipTypeDR") {return getElementValue("EquipTypeDR");}
+}
+
+///add by ZY0298 20220307
+function BHandWork_Clicked()
+{
+	var url="dhceq.fam.accountperiod.csp?";
+	showWindow(url,"手工折旧快照月结","","","icon-w-paper","modal","","","large"); 
+}

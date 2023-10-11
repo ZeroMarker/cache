@@ -101,7 +101,7 @@ function gridPatList() {
 					}
 				}	
 			},	
-			{field:'NeedRepCnt',title:'需上报',width:55,align:'center'},
+			{field:'NeedRepCnt',title:'需报<br>例次',width:55,align:'center'},
 			{field:'VisitStatus',title:'状态',width:50,align:'center'}
 		]]
 		,rowStyler: function(index,row){

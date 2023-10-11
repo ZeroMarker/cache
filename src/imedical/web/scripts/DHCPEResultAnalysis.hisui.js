@@ -52,6 +52,8 @@ $(function() {
 		}
 	});
     
+	$(".inherit-border, .inherit-border>div:first-child").css("border-color", borderColor1);
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEResultAnalysis.raq");
     /*
     // hisui bug tab下的layout center 无高度 已提交需求
 	$HUI.tabs("#TabDiv", {
@@ -68,6 +70,7 @@ $(function() {
 });
 
 function InitCombobox() {
+
 	// 性别	
 	$HUI.combobox("#Sex", {
 		valueField:"id",
@@ -75,9 +78,9 @@ function InitCombobox() {
 		panelHeight:"auto",
 		editable:false,
 		data:[
-			{id:'N',text:'不限', selected:'true'},
-			{id:'M',text:'男'},
-			{id:'F',text:'女'}
+			{id:'N',text:$g('不限'), selected:'true'},
+			{id:'M',text:$g('男')},
+			{id:'F',text:$g('女')}
 		]
 	});
 	
@@ -88,14 +91,14 @@ function InitCombobox() {
 		panelHeight:"auto",
 		editable:false,
 		data:[  // id 解释:年龄段上下限（左开右闭 0<age<=15）,间隔,年龄段数量（用于类中变量的生成）
-			{id:'15-65,10,7',text:'15-65岁 间隔10'},
-			{id:'20-60,10,6',text:'20-60岁 间隔10'},
-			{id:'25-65,10,6',text:'25-65岁 间隔10', selected:'true'},
-			{id:'20-70,10,7',text:'20-70岁 间隔10'},
-			{id:'15-55,20,4',text:'15-55岁 间隔20'},
-			{id:'20-60,20,4',text:'20-60岁 间隔20'},
-			{id:'25-65,20,4',text:'25-65岁 间隔20'},
-			{id:'15-75,20,5',text:'15-75岁 间隔20'}
+			{id:'15-65,10,7',text:$g('15-65岁 间隔10')},
+			{id:'20-60,10,6',text:$g('20-60岁 间隔10')},
+			{id:'25-65,10,6',text:$g('25-65岁 间隔10'), selected:'true'},
+			{id:'20-70,10,7',text:$g('20-70岁 间隔10')},
+			{id:'15-55,20,4',text:$g('15-55岁 间隔20')},
+			{id:'20-60,20,4',text:$g('20-60岁 间隔20')},
+			{id:'25-65,20,4',text:$g('25-65岁 间隔20')},
+			{id:'15-75,20,5',text:$g('15-75岁 间隔20')}
 		]
 	});
 	
@@ -127,8 +130,8 @@ function InitCombobox() {
 		panelHeight:"auto",
 		editable:false,
 		data:[
-			{id:'U',text:'个人'},
-			{id:'S',text:'全科', selected:'true'}
+			{id:'U',text:$g('个人')},
+			{id:'S',text:$g('全科'), selected:'true'}
 		]
 	});
 	
@@ -138,8 +141,8 @@ function InitCombobox() {
 		panelHeight:"auto",
 		editable:false,
 		data:[
-			{id:'U',text:'个人'},
-			{id:'S',text:'全科', selected:'true'}
+			{id:'U',text:$g('个人')},
+			{id:'S',text:$g('全科'), selected:'true'}
 		]
 	});
 }
@@ -391,7 +394,8 @@ function BQuery_click() {
 			;
 	//alert(src);
 	
-	$("#ReportFile").attr("src", "dhccpmrunqianreport.csp?reportName=DHCPEResultAnalysis" + AgeNum + ".raq" + src);
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEResultAnalysis" + AgeNum + ".raq" + src);
+	// $("#ReportFile").attr("src", "dhccpmrunqianreport.csp?reportName=DHCPEResultAnalysis" + AgeNum + ".raq" + src);
 	
 }
 
@@ -578,7 +582,7 @@ function InitSymptomsListData() {
 			
 			$('#BUpd').linkbutton('enable');
 			
-			$("#AnalysisResultCondition").datagrid("load", {ClassName:"web.DHCPE.ExcuteExpress", QueryName:"FindExpress", ParrefRowId:rowData.ID, Type:"PR"}); 
+			$("#AnalysisResultCondition").datagrid("load", {ClassName:"web.DHCPE.ExcuteExpress", QueryName:"FindExpress", ParrefRowId:rowData.ID, Type:"PR", CTLOCID:session["LOGON.CTLOCID"]}); 
 			
 			ConditioneditIndex = undefined;  // 重置可编辑的行号
 			
@@ -734,17 +738,15 @@ function BUpd_click() {
 		
 		$("#SymptomsListOptWin").window("close");
 		$("#SymptomsList").datagrid('load',{
-			    ClassName:"web.DHCPE.PositiveRecord",
-				QueryName:"FindPositiveRecord",
-				Type:"Q",
-				iCode:$("#SymptomCode").val(),
-				iDesc:$("#SymptomDesc").val(),
-				iMSeq:$("#SymptomManSeq").val(),
-				iFSeq:$("#SymptomFemanSeq").val(),
-				iUserRange:$("#UseRange").combobox("getValue")
-			
-			    });
-
+		    ClassName:"web.DHCPE.PositiveRecord",
+			QueryName:"FindPositiveRecord",
+			Type:"Q",
+			iCode:$("#SymptomCode").val(),
+			iDesc:$("#SymptomDesc").val(),
+			iMSeq:$("#SymptomManSeq").val(),
+			iFSeq:$("#SymptomFemanSeq").val(),
+			iUserRange:$("#UseRange").combobox("getValue")
+		});
 	}); 
 }
 
@@ -774,7 +776,8 @@ function InitAnalysisResultCondition() {
 			ClassName:"web.DHCPE.ExcuteExpress",
 			QueryName:"FindExpress",
 			ParrefRowId:"",
-			Type:""
+			Type:"",
+			CTLOCID:session["LOGON.CTLOCID"]
 		},
 		fit:true,
 		border:false,
@@ -804,7 +807,7 @@ function InitAnalysisResultCondition() {
 						textField:'OD_Desc',
 						method:'get',
 						//mode:'remote',
-						url:$URL+"?ClassName=web.DHCPE.Report.PosQuery&QueryName=FromDescOrderDetailA&ResultSetType=array",
+						url:$URL+"?ClassName=web.DHCPE.Report.PosQuery&QueryName=FromDescOrderDetailB&CTLOCID=" + session["LOGON.CTLOCID"] + "&ResultSetType=array",
 						onBeforeLoad:function(param){
 							//param.Desc = param.q;
 						},
@@ -844,7 +847,7 @@ function InitAnalysisResultCondition() {
 					*/
 		    	}
 		    },
-		    {field:"TOperator", title:"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;运算符&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;", align:"center", formatter: function(value,row){
+		    {field:"TOperator", title:"运算符", align:"center", formatter: function(value,row){
 					return row.TOperatorname;
 				}, editor:{
 					type:"combobox",
@@ -859,7 +862,7 @@ function InitAnalysisResultCondition() {
 				}
 		    },
 			{field:"TReference", title:"参考值", width:70, editor:"text"},
-			{field:"TSex", title:"&nbsp;&nbsp;性别&nbsp;&nbsp;", align:"center", formatter:function(value,row){
+			{field:"TSex", title:"性别", align:"center", formatter:function(value,row){
 					return row.TSexname;
 				}, editor:{
 					type:"combobox",
@@ -877,7 +880,7 @@ function InitAnalysisResultCondition() {
 					options:{on:"Y",off:"N"}
 				}
 			},
-			{field:"TAgeRange", title:"&nbsp;&nbsp;年龄&nbsp;&nbsp;", align:"center", editor:"text"},
+			{field:"TAgeRange", title:"年龄", align:"center", editor:"text"},
 			{field:"TAfterBracket", title:"后置括号", editor:{
 					type:"combobox",
 					options:{
@@ -889,7 +892,7 @@ function InitAnalysisResultCondition() {
 					}
 				}
 			},
-			{field:"TRelation", title:"&nbsp;&nbsp;关系&nbsp;&nbsp;", align:"center", formatter:function(value,row){
+			{field:"TRelation", title:"关系", align:"center", formatter:function(value,row){
 					return row.TRelationname;
 				}, editor:{
 					type:"combobox",
@@ -902,7 +905,7 @@ function InitAnalysisResultCondition() {
 					}
 				}
 			},
-			{field:"TAdd", title:"&nbsp;&nbsp;新增一行&nbsp;&nbsp;", align:"center", editor:{
+			{field:"TAdd", title:"新增一行", align:"center", editor:{
 					type:"linkbutton",
 					options:{
 						text:"新增一行",
@@ -931,7 +934,7 @@ function InitAnalysisResultCondition() {
 					}
 				}
 			},
-			{field:"TDelete", title:"&nbsp;&nbsp;删除一行&nbsp;&nbsp;", align:"center", editor: {
+			{field:"TDelete", title:"删除一行", align:"center", editor: {
 					type:"linkbutton",
 					options:{
 						text:"删除一行",
@@ -1152,7 +1155,7 @@ function Save(ParrefRowId) {
 	var ret = tkMakeServerCall("web.DHCPE.ExcuteExpress","SaveNewExpress",iType,ParrefRowId,Express);
 	
 	if (ret == 0){
-		$("#AnalysisResultCondition").datagrid("load",{ClassName:"web.DHCPE.ExcuteExpress",QueryName:"FindExpress",ParrefRowId:ParrefRowId,Type:"PR"});
+		$("#AnalysisResultCondition").datagrid("load",{ClassName:"web.DHCPE.ExcuteExpress",QueryName:"FindExpress",ParrefRowId:ParrefRowId,Type:"PR",CTLOCID:session["LOGON.CTLOCID"]});
 		return true;
 	} else {
 		return false;

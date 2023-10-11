@@ -72,9 +72,97 @@ GV.arr=[
 	
 	,{id:"Base||ReceiveMode",type:"radio"}
 	,{id:"Base||AllowFwDoc",type:"checkbox"}
+	,'Base||ExecTimeUsedData'
+	
+	//手动关联医嘱
+	,{id:"Base||ShowLinkOrderO",type:"checkbox"}
+	,{id:"Base||ShowLinkOrderEO",type:"checkbox"}
+	,{id:"Base||ShowLinkOrderEI",type:"checkbox"}
+	,{id:"Base||ShowLinkOrderI",type:"checkbox"}
+	,{id:"Base||ShowLinkOrderH",type:"checkbox"}
+	
+	//会诊
+	,"Base||ConsultationLink"
+	,{id:"Base||ShowConsultationO",type:"checkbox"}
+	,{id:"Base||ShowConsultationEO",type:"checkbox"}
+	,{id:"Base||ShowConsultationEI",type:"checkbox"}
+	,{id:"Base||ShowConsultationI",type:"checkbox"}
+	,{id:"Base||ShowConsultationH",type:"checkbox"}
+	
+	,{id:"Base||ReceiveContact",type:"radio"}
+	,{id:"Base||ExecNurMsgOnReceive",type:"checkbox"}
+	,{id:"Base||AllowNurExec",type:"checkbox"}
+	//,{id:"Base||InvMTSTimePoint",type:"radio"}  //8.5 处理时调用平台接口 不用控制内部接口了
+	,{id:"Base||PINOnReceive",type:"checkbox"}
+	,{id:"Base||PINOnExec",type:"checkbox"}
+	,{id:"Base||PINOnForward",type:"checkbox"}
+	,{id:"Base||ReceiveContactTel",type:"radio"}
+	,{id:"Base||AllowNoTelOnReceive",type:"checkbox"}
+	,"Base||RecTimeLimit","Base||ExecTimeLimit"
+	
+	,{id:"Base||FwDocMustSameAdmType",type:"checkbox"}
+	
+	,{id:"Base||HideExecContactInfoO",type:"checkbox"}
+	,{id:"Base||HideExecContactInfoEO",type:"checkbox"}
+	,{id:"Base||HideExecContactInfoEI",type:"checkbox"}
+	,{id:"Base||HideExecContactInfoI",type:"checkbox"}
+	,{id:"Base||HideExecContactInfoH",type:"checkbox"}
+	
+	,{id:"Base||ExecRequireContactO",type:"checkbox"}
+	,{id:"Base||ExecRequireContactEO",type:"checkbox"}
+	,{id:"Base||ExecRequireContactEI",type:"checkbox"}
+	,{id:"Base||ExecRequireContactI",type:"checkbox"}
+	,{id:"Base||ExecRequireContactH",type:"checkbox"}
+	
+	,{id:"Base||ExecRequireContactTelO",type:"checkbox"}
+	,{id:"Base||ExecRequireContactTelEO",type:"checkbox"}
+	,{id:"Base||ExecRequireContactTelEI",type:"checkbox"}
+	,{id:"Base||ExecRequireContactTelI",type:"checkbox"}
+	,{id:"Base||ExecRequireContactTelH",type:"checkbox"}
+	
+	,{id:"Base||ExecRequireContactResultO",type:"checkbox"}
+	,{id:"Base||ExecRequireContactResultEO",type:"checkbox"}
+	,{id:"Base||ExecRequireContactResultEI",type:"checkbox"}
+	,{id:"Base||ExecRequireContactResultI",type:"checkbox"}
+	,{id:"Base||ExecRequireContactResultH",type:"checkbox"}
+	,{id:"Base||ContactResultDefValue",type:"combobox"}
+	
+	,{id:"Base||ExecRequireTransAdviceO",type:"checkbox"}
+	,{id:"Base||ExecRequireTransAdviceEO",type:"checkbox"}
+	,{id:"Base||ExecRequireTransAdviceEI",type:"checkbox"}
+	,{id:"Base||ExecRequireTransAdviceI",type:"checkbox"}
+	,{id:"Base||ExecRequireTransAdviceH",type:"checkbox"}
+	///接收时解锁消息
+	,{id:"Base||ConfirmMgsOnReceiveO",type:"checkbox"}
+	,{id:"Base||ConfirmMgsOnReceiveEO",type:"checkbox"}
+	,{id:"Base||ConfirmMgsOnReceiveEI",type:"checkbox"}
+	,{id:"Base||ConfirmMgsOnReceiveI",type:"checkbox"}
+	,{id:"Base||ConfirmMgsOnReceiveH",type:"checkbox"}
+	
+	,{id:"Base||ExecContactDefaultO",type:"radio"}
+	,{id:"Base||ExecContactDefaultEO",type:"radio"}
+	,{id:"Base||ExecContactDefaultEI",type:"radio"}
+	,{id:"Base||ExecContactDefaultI",type:"radio"}
+	,{id:"Base||ExecContactDefaultH",type:"radio"}
+	,{id:"Base||ExecContactUserTelDefault",type:"radio"}
+	
+	,{id:"Base||NurRecDefContact",type:"radio"}
+	,{id:"Base||AllowNurRecFwDoc",type:"checkbox"}
 	
 ]
 var init=function(){
+	var conResultData=[{value:'',text:'空'},{value:'F',text:'已通知'},{value:'C',text:'未联系到'}];
+	if(GV.dicConResultExec) {
+		conResultData=[{value:'',text:'空'}];
+		$.each(GV.dicConResultExec,function(){
+			conResultData.push({value:this.TCode,text:this.TDesc})
+		})
+	}
+	$('#Base\\|\\|ContactResultDefValue').combobox({data:conResultData});
+	
+	
+	
+	
 	GV.load();
 	$('#win').dialog({
 		buttons:[{
@@ -109,7 +197,26 @@ var init=function(){
 			},formatter:function(val,row){
 				var cf=$.hisui.getArrayItem(GV.arr,'id',row['id']);
 				if (cf && typeof cf=="object" && (cf.type=="checkbox" || cf.type=="radio" )) {
-					return val=="1"?'是':'否';
+					if (cf.type=="radio") { //radio 拿label
+						var $JO=$("input[name='"+cf.id+"'][value='"+val+"']");
+						if($JO.length>0){
+							return ($JO.radio('options')||{label:''}).label
+						}else{
+							return '';	
+						}
+					}else{
+						return val=="1"?'是':'否';
+					}
+					
+				}else if(cf && typeof cf=="object" && cf.type=="combobox" ){
+					var cbOpts=$('#'+row.id.escapeJquery()).combobox('options');
+					var dataItem=$.hisui.getArrayItem(cbOpts.data,cbOpts.valueField,val);
+					if (dataItem) {
+						return dataItem[cbOpts.textField];
+					}else{
+						return val;	
+					}
+					
 				}
 				return val;
 			}},
@@ -118,7 +225,25 @@ var init=function(){
 			},formatter:function(val,row){
 				var cf=$.hisui.getArrayItem(GV.arr,'id',row['id']);
 				if (cf && typeof cf=="object" && (cf.type=="checkbox" || cf.type=="radio" )) {
-					return val=="1"?'是':'否';
+					if (cf.type=="radio") { //radio 拿label
+						var $JO=$("input[name='"+cf.id+"'][value='"+val+"']");
+						if($JO.length>0){
+							return ($JO.radio('options')||{label:''}).label
+						}else{
+							return '';	
+						}
+					}else{
+						return val=="1"?'是':'否';
+					}
+				}else if(cf && typeof cf=="object" && cf.type=="combobox" ){
+					var cbOpts=$('#'+row.id.escapeJquery()).combobox('options');
+					var dataItem=$.hisui.getArrayItem(cbOpts.data,cbOpts.valueField,val);
+					if (dataItem) {
+						return dataItem[cbOpts.textField];
+					}else{
+						return val;	
+					}
+					
 				}
 				return val;
 			}}
@@ -149,8 +274,49 @@ var init=function(){
 			}
 		}
 	}
+	
+	LoadCombo2Css(30);
+	initJsonArrBox('Base\\|\\|ExecTimeUsedData',{keyTitle:'时间段值',valueTitle:'时间段描述'});
 
 }
+
+function initJsonArrBox(id,myopts){
+	myopts=myopts||{};
+	var target=$('#'+id)[0];
+	initKeyValueBox(target,$.extend({
+		panelWidth:650,
+		panelHeight:250,
+		parseValue:parseValue,
+		formatValue:formatValue
+		,descEditor:'text'
+	},myopts));
+	function formatValue(o){
+		var arr=[];
+		$.each(o,function(){
+			if(this.key!=""){
+				arr.push({key:this.key,value:this.value,desc:this.desc})	;
+			} 
+		})
+		return JSON.stringify(arr);
+	}
+	function parseValue(str){
+		try{
+			var arr=$.parseJSON(str);
+		}catch(e){
+			var arr=[];	
+		}
+		var all=[];
+		$.each(arr,function(){
+			all.push({key:this.key,value:this.value,desc:this.desc,custom:true})
+		})
+		if (all.length==0) all.push({key:'',desc:'',value:'',custom:true});
+		all.push({key:'',desc:'',value:'',custom:true});
+		return all;
+	}
+}
+
+
+
 GV.load=function(){
 	$.post($URL,{ClassName:"web.DHCAntCVOptions",QueryName:"Find",OptsType:"Base",ResultSetType:'array',rows:999}).done(function(r){
 		var rows=$.parseJSON(r);
@@ -205,14 +371,39 @@ GV.confirm=function(){ //确认修改
 				var label="草药医嘱链接"+'【'+(admTypes[i.split('Base||CYOrderEditLink')[1]||'']||'')+'】';
 			}else if (i.indexOf("Base||ShowEditOrder")>-1){
 				var label="显示【医嘱录入】按钮"+'【'+(admTypes[i.split('Base||ShowEditOrder')[1]||'']||'')+'】';
+			}else if (i.indexOf("Base||ShowLinkOrder")>-1){
+				var label="显示【已开医嘱】按钮"+'【'+(admTypes[i.split('Base||ShowLinkOrder')[1]||'']||'')+'】';
+			}else if (i.indexOf("Base||ShowConsultation")>-1){
+				var label="显示【会诊申请】按钮"+'【'+(admTypes[i.split('Base||ShowConsultation')[1]||'']||'')+'】';
 			}else if (i.indexOf("Base||TipEditOrder")>-1){
-				var label="提示开医嘱"+'【'+(admTypes[i.split('Base||TipEditOrder')[1]||'']||'')+'】';
+				var label="提示要评估处理"+'【'+(admTypes[i.split('Base||TipEditOrder')[1]||'']||'')+'】';
 			}else if (i.indexOf("Base||RequireEditOrder")>-1){
-				var label="必须开医嘱"+'【'+(admTypes[i.split('Base||RequireEditOrder')[1]||'']||'')+'】';
+				var label="必须评估处理"+'【'+(admTypes[i.split('Base||RequireEditOrder')[1]||'']||'')+'】';
+			}else if (i.indexOf("Base||HideExecContactInfo")>-1){
+				var label="处理时不显示“通知信息”"+'【'+(admTypes[i.split('Base||HideExecContactInfo')[1]||'']||'')+'】';
+			}else if (i.indexOf("Base||ExecRequireContactTel")>-1){
+				var label="处理时“联系电话”必填"+'【'+(admTypes[i.split('Base||ExecRequireContactTel')[1]||'']||'')+'】';
+			}else if (i.indexOf("Base||ExecRequireContactResult")>-1){
+				var label="处理时“联系结果”必填"+'【'+(admTypes[i.split('Base||ExecRequireContactResult')[1]||'']||'')+'】';
+			}else if (i.indexOf("Base||ExecRequireContact")>-1){
+				var label="处理时“联系人”必填"+'【'+(admTypes[i.split('Base||ExecRequireContact')[1]||'']||'')+'】';
+			}else if (i.indexOf("Base||ExecRequireTransAdvice")>-1){
+				var label="处理时“意见措施”必填"+'【'+(admTypes[i.split('Base||ExecRequireTransAdvice')[1]||'']||'')+'】';
+			}else if (i.indexOf("Base||ConfirmMgsOnReceive")>-1){
+				var label="接收时解锁消息"+'【'+(admTypes[i.split('Base||ConfirmMgsOnReceive')[1]||'']||'')+'】';
+			}else if (i.indexOf("Base||ExecContactDefault")>-1){
+				var label="处理时默认“联系人”"+'【'+(admTypes[i.split('Base||ExecContactDefault')[1]||'']||'')+'】';
+			}else if (i=="Base||ExecContactUserTelDefault"){
+				var label="处理时默认联系人为系统用户时默认电话";
 			}else if (i=="Base||ReceiveMode"){
 				var label="危急值接收";
 			}else{
-				var label=$("#"+i.escapeJquery()).closest('.opts-editor').parent().find('.opts-label').text();
+				if ($("#"+i.escapeJquery()).length>0) {
+					var label=$("#"+i.escapeJquery()).closest('.opts-editor').parent().find('.opts-label').text();
+				}else{
+					var label=$("input[name="+i.escapeJquery()+"]").closest('.opts-editor').parent().find('.opts-label').text();	
+				}
+				
 			}
 			rows.push({id:i,label:label,ov:GV.options[i],nv:domData[i]});
 		}
@@ -228,4 +419,14 @@ GV.confirm=function(){ //确认修改
 	}
 }
 
-$(init);
+$(function(){
+	$.cm({ClassName:'web.DHCAntCVOptions',QueryName:'Find',OptsType:'ConResultExec',rows:999},function(data){
+		if (data&& data.rows) {
+			GV.dicConResultExec=data.rows;	
+			init();	
+		}
+		
+	})
+
+	
+});

@@ -11,12 +11,14 @@ function initDocument()
 	initUserInfo();
     initMessage(); //获取所有业务消息     //add by lmm 2019-09-09
     initLookUp(); //初始化放大镜
+    var paramsFrom=[{"name":"Type","type":"2","value":""},{"name":"LocDesc","type":"1","value":"IFBManageLocDRR_CTLOCDesc"},{"name":"vgroupid","type":"2","value":""},{"name":"LocType","type":"2","value":""},{"name":"notUseFlag","type":"2","value":""},{"name":"ManageLocFlag","type":"2","value":"1"}];
+    singlelookup("IFBManageLocDRR_CTLOCDesc","PLAT.L.Loc",paramsFrom,"");  //czf 2021-09-02 begin
 	defindTitleStyle();
     initButton(); //按钮初始化
     initButtonWidth();
     initPage();
     //modified 20191012 by zy 必填字段的控制先去掉//modfied by wy 20191225
-    setRequiredElements("IFBPrjName^IFBNo^IFBOpenDate^IFBDeadlineDate");
+    setRequiredElements("IFBPrjName^IFBNo^IFBOpenDate^IFBDeadlineDate^IFBManageLocDRR_CTLOCDesc");
     fillData(); //数据填充
     setEnabled(); //按钮控制
     initApproveButtonNew(); //初始化审批按钮
@@ -42,9 +44,9 @@ function initDocument()
 	            handler: function(){
 	                 insertRow();
 	            }
-	        },'----------',
+	        }, 
 	        {
-	            iconCls: 'icon-remove',
+	            iconCls: 'icon-cancel',   //modified by txr 2023-1-4 	3163822
 	            text:'删除',
 	            id:'delete',
 	            handler: function(){
@@ -93,8 +95,11 @@ function creatToolbar()
 	var Status=getElementValue("IFBStatus");
 	if (Status>0)
 	{
-		panel.find("#add").hide()
-		panel.find("#delete").hide()
+		//modified by ZY20230209 bug:3232487
+		//panel.find("#add").hide()
+		//panel.find("#delete").hide()
+		disableElement("add",true);
+		disableElement("delete",true);
 		//panel.find("#add").linkbutton("enable",false);
 		//panel.find("#delete").linkbutton("enable",false);
 	}
@@ -103,6 +108,18 @@ function initPage() //初始化
 {	// modified by wy 2020-05-09 1309389 取消事件重复定义
 	//jQuery("#BCancelSubmit").linkbutton({iconCls: 'icon-w-paper'});
 	//jQuery("#BCancelSubmit").on("click", BCancelSubmit_Clicked);
+    //modified by ZY 20220913 增加拒绝意见填写
+    if (jQuery("#showOpinion").length>0)
+    {
+        jQuery("#showOpinion").on("click", BShowOpinion_Clicked);
+    }
+}
+
+// MZY0041  1427332     2020-7-22
+function BShowOpinion_Clicked()
+{
+    url="dhceq.plat.approvelist.csp?&BussType=93&BussID="+getElementValue("IFBRowID");
+    showWindow(url,"招标记录审批进度","","","icon-w-paper","modal","","","middle");
 }
 function fillData()
 {
@@ -160,6 +177,7 @@ function clearData(elementID)
 	setElement(elementName,"")
 	return;
 }
+
 // 插入新行
 function insertRow()
 {
@@ -254,11 +272,25 @@ function BSave_Clicked()
         var IFBLVendor = (typeof oneRow.IFBLVendor== 'undefined') ? "" : oneRow.IFBLVendor;  //add by wy 2019-5-29 841877 
 		if (IFBLVendor=="")
 		{
-			messageShow('alert','error','提示',"第"+(i+1)+"行[供应商]不正确!");
+			messageShow('alert','error','提示',"第"+(i+1)+"行[供应商]不能为空!");
 			return "-1";
 		}
-	
-	
+		var val="prov=IFBLVendor="+oneRow.IFBLVendorDR+"^";		//czf 2021-01-26 begin 1750639
+		val=tkMakeServerCall("web.DHCEQCommon","GetDRDesc",val);
+		var list=val.split("^");
+		var Detail=list[0].split("=");
+		if (oneRow.IFBLVendor!=Detail[1])
+		{
+			oneRow.IFBLVendorDR=""
+			var val=GetPYCode(IFBLVendor)+"^"+IFBLVendor+"^^^2";
+			var IFBLVendorDR=tkMakeServerCall("web.DHCEQForTrak","UpdProvider",val);
+			if ((IFBLVendorDR=="")||(IFBLVendorDR<0))
+			{
+				messageShow('alert','error','错误提示','供应商自动保存错误!');
+				return;
+			}
+			oneRow.IFBLVendorDR=IFBLVendorDR;
+		}													//czf 2021-01-26 end 1750639
 		if ((oneRow.IFBBQuantity=="")||(IsValidateNumber(oneRow.IFBBQuantity,0,0,0,0)==0))
 		{
 			messageShow('alert','error','提示',"第"+(i+1)+"行[数量]不正确!");
@@ -285,7 +317,7 @@ function BSave_Clicked()
 			    {
 			   		var TModelDR=tkMakeServerCall("web.DHCEQCModel","UpdModel",oneRow.IFBBModelDR_MDesc,IFBBItemDR);
 			    
-			     }
+			    }
 	            oneRow.IFBBModelDR=TModelDR;  //end
 			}
 			val="manufacturer=IFBBManuFactoryDR_MFDesc="+oneRow.IFBBManuFactoryDR+"^";
@@ -294,8 +326,17 @@ function BSave_Clicked()
 			Detail=list[0].split("=");
 			if (oneRow.IFBBManuFactoryDR_MFDesc!=Detail[1])
 			{
-				oneRow.IFBBManuFactoryDR_MFDesc="";
+				//oneRow.IFBBManuFactoryDR_MFDesc="";	//modified by czf 2021-01-26 begin 1750639
 				oneRow.IFBBManuFactoryDR="";
+				var val=GetPYCode(oneRow.IFBBManuFactoryDR_MFDesc)+"^"+oneRow.IFBBManuFactoryDR_MFDesc+"^^^3";
+				var TManuFactoryDR=tkMakeServerCall("web.DHCEQForTrak","UpdProvider",val);
+				if ((TManuFactoryDR=="")||(TManuFactoryDR<0))
+				{
+					messageShow('alert','error','错误提示','生产厂商自动保存错误!');	
+					return;
+				}
+				oneRow.IFBBManuFactoryDR=TManuFactoryDR;		//modified by czf 2021-01-26 end 1750639
+				
 			}  //end
 			var RowData=JSON.stringify(rows[i]);
 			if (dataList=="")
@@ -354,7 +395,10 @@ function BSave_Clicked()
 		//moddified by ZY0228 20200509
 		//modified by wy 2020-4-18 1280315,1278899  管理部门取值错误问题
 		var val="&RowID="+jsonData.Data+"&Type="+Type+"&ManageLocDR="+getElementValue("IFBManageLocDR")
-		url="dhceq.em.ifb.csp?"+val
+		url="dhceq.em.ifb.csp?"+val;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.location.href= url;
 	}
 	else
@@ -387,7 +431,10 @@ function truthBeTold()
 		//moddified by ZY0228 20200509
 		//modified by wy 2020-4-18 1280315,1278899  管理部门取值错误问题
 		var val="&Type="+getElementValue("Type")+"&ManageLocDR="+getElementValue("IFBManageLocDR");
-		url="dhceq.em.ifb.csp?"+val
+		url="dhceq.em.ifb.csp?"+val;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.location.href= url;
 	}
 	else
@@ -416,6 +463,9 @@ function BSubmit_Clicked()
 		//moddified by ZY0228 20200509
 		//modified by wy 2020-4-18 1280315,1278899  管理部门取值错误问题
 		url="dhceq.em.ifb.csp?&RowID="+jsonData.Data+"&Type="+getElementValue("Type")+"&ManageLocDR="+getElementValue("IFBManageLocDR");
+	    if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.location.href= url;
 	}
 	else
@@ -449,7 +499,10 @@ function BCancelSubmit_Clicked()
 		//moddified by ZY0228 20200509
 		//modified by wy 2020-4-18 1280315,1278899  管理部门取值错误问题
 		var val="&RowID="+getElementValue("IFBRowID")+"&Status="+Status+"&WaitAD="+WaitAD+"&Type=1"+"&QXType="+QXType+"&ApproveRole="+ApproveRole+"&ManageLocDR="+getElementValue("IFBManageLocDR");
-		url="dhceq.em.ifb.csp?"+val
+		url="dhceq.em.ifb.csp?"+val;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.setTimeout(function(){window.location.href=url},50); 
     }
 }
@@ -476,7 +529,10 @@ function BApprove_Clicked()
 		//moddified by ZY0228 20200509
 		//modified by wy 2020-4-18 1280315,1278899  管理部门取值错误问题
 		var val="&RowID="+RtnObj.Data+"&Status="+Status+"&WaitAD="+WaitAD+"&QXType="+QXType+"&ApproveRole="+ApproveRole+"&ManageLocDR="+getElementValue("IFBManageLocDR");
-		url="dhceq.em.ifb.csp?"+val
+		url="dhceq.em.ifb.csp?"+val;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.setTimeout(function(){window.location.href=url},50); 
     }
 }
@@ -486,8 +542,10 @@ function getValueList()
   	combindata=IFBRowID;
 	combindata=combindata+"^"+session['LOGON.USERID'];
 	combindata=combindata+"^"+getElementValue("CancelToFlowDR");
-	combindata=combindata+"^"+getElementValue("ApproveSetDR");
-	return combindata;
+    //modified by ZY 20220913 增加拒绝意见填写
+    combindata=combindata+"^"+getElementValue("EditOpinion");
+    combindata=combindata+"^"+getElementValue("RejectReason");
+    return combindata;
 }
 
 function onClickRow(index)
@@ -662,9 +720,16 @@ function CheckDateTimeCheck()
 	var DeadlineDate=new Date(FormatDate(getElementValue("IFBDeadlineDate")).replace(/\-/g, "\/"))
 	if (OpenDate<DeadlineDate)    ////modfied by wy 2019-12-3 投标截至日期要早于开标日期
 	{
-		messageShow('alert','error','提示',"截至日期不能晚于开标日期");
+		messageShow('alert','error','提示',"投标截至日期不能晚于开标日期");	// MZY0144	3074321		2022-11-24
 		return true
 	}
+    //modified by ZY20230307 bug:3297517
+    var DeterminationDate=new Date(FormatDate(getElementValue("IFBDeterminationDate")).replace(/\-/g, "\/"))
+    if (DeterminationDate<OpenDate)    ////modfied by wy 2019-12-3 投标截至日期要早于开标日期
+    {
+        messageShow('alert','error','提示',"定标日期不能早于开标日期"); // MZY0144  3074321     2022-11-24
+        return true
+    }
 	var BuyFileFromDate=new Date(FormatDate(getElementValue("IFBBuyFileFromDate")).replace(/\-/g, "\/"));
 	var BuyFileToDate=new Date(FormatDate(getElementValue("IFBBuyFileToDate")).replace(/\-/g, "\/"))
 	if ((""!=BuyFileFromDate)&&(""!=BuyFileToDate))
@@ -675,7 +740,8 @@ function CheckDateTimeCheck()
 			return true
 		}
 	}
-	return false
+    //modified by ZY20230307 bug:3297547
+    if (checkLegalChar("IFBBuyFilePlace")!=true) return true
 	}
 	
 function BupdateIFBBList(index)

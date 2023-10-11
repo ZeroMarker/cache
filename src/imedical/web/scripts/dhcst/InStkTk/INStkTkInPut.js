@@ -14,7 +14,7 @@ Ext.onReady(function() {
     var impWindow = '';
     var url = DictUrl + 'instktkaction.csp';
     var LocManaGrp = new Ext.form.ComboBox({
-        fieldLabel: '管理组',
+        fieldLabel: $g('管理组'),
         id: 'LocManaGrp',
         name: 'LocManaGrp',
         anchor: '90%',
@@ -23,7 +23,7 @@ Ext.onReady(function() {
         displayField: 'Description',
         allowBlank: true,
         triggerAction: 'all',
-        emptyText: '管理组...',
+        emptyText: $g('管理组...'),
         selectOnFocus: true,
         forceSelection: true,
         minChars: 1,
@@ -48,12 +48,12 @@ Ext.onReady(function() {
         anchor: '90%'
     });
 
-    StkGrpType.on('change', function() {
+    StkGrpType.on('select', function() {
         Ext.getCmp("DHCStkCatGroup").setValue("");
     });
 
     var DHCStkCatGroup = new Ext.ux.ComboBox({
-        fieldLabel: '库存分类',
+        fieldLabel: $g('库存分类'),
         id: 'DHCStkCatGroup',
         name: 'DHCStkCatGroup',
         store: StkCatStore,
@@ -64,7 +64,7 @@ Ext.onReady(function() {
 
 
     var StkBin = new Ext.ux.ComboBox({
-        fieldLabel: '货位',
+        fieldLabel: $g('货位'),
         id: 'StkBin',
         name: 'StkBin',
         anchor: '90%',
@@ -94,14 +94,14 @@ Ext.onReady(function() {
     var InstNo = new Ext.form.TextField({
         id: 'InstNo',
         name: 'InstNo',
-        fieldLabel: '盘点单号',
+        fieldLabel: $g('盘点单号'),
         width: 140,
         anchor: '90%',
         disabled: true
     });
 
     var InputWin = new Ext.form.ComboBox({
-        fieldLabel: '实盘窗口',
+        fieldLabel:$g( '实盘窗口'),
         id: 'InputWin',
         name: 'InputWin',
         anchor: '90%',
@@ -111,7 +111,7 @@ Ext.onReady(function() {
         disabled: true,
         allowBlank: true,
         triggerAction: 'all',
-        emptyText: '实盘窗口...',
+        emptyText: $g('实盘窗口...'),
         listeners: {
             'beforequery': function(e) {
                 this.store.removeAll();
@@ -129,8 +129,8 @@ Ext.onReady(function() {
 
     // 查询按钮
     var SearchBT = new Ext.Toolbar.Button({
-        text: '查询',
-        tooltip: '点击查询',
+        text: $g('查询'),
+        tooltip: $g('点击查询'),
         iconCls: 'page_find',
         width: 70,
         height: 30,
@@ -141,8 +141,8 @@ Ext.onReady(function() {
 
     // 清空按钮
     var RefreshBT = new Ext.Toolbar.Button({
-        text: '清屏',
-        tooltip: '点击清屏',
+        text: $g('清屏'),
+        tooltip: $g('点击清屏'),
         iconCls: 'page_clearscreen',
         width: 70,
         height: 30,
@@ -160,6 +160,8 @@ Ext.onReady(function() {
         Ext.getCmp("StkBin").setValue('');
         Ext.getCmp("StkGrpType").setValue('');
         Ext.getCmp("LocManaGrp").setValue('');
+        Ext.getCmp("M_InciDesc").setValue('');
+        inciRowid = '';
         Select();
         InstDetailGrid.store.removeAll();
         InstDetailGrid.getView().refresh();
@@ -176,15 +178,15 @@ Ext.onReady(function() {
     }
 
     var ImpInstDataBT = new Ext.Toolbar.Button({
-        text: 'Excel导入',
-        tooltip: '读取Excel文件',
+        text: $g('Excel导入'),
+        tooltip: $g('读取Excel文件'),
         iconCls: 'page_excel',
         width: 70,
         height: 30,
         handler: function() {
             var InputWin = Ext.getCmp('InputWin').getValue();
             if (InputWin == '' || InputWin == null) {
-                Msg.info('warning', 'Excel导入的时候必须选择实盘窗口!');
+                Msg.info('warning', $g('Excel导入的时候必须选择实盘窗口!'));
                 return;
             }
             if (impWindow) {
@@ -202,7 +204,7 @@ Ext.onReady(function() {
 
             var fileName = impWindow.FileName;
             if (fileName == '') {
-                Msg.info('warning', '请选择Excel文件!');
+                Msg.info('warning', $g('请选择Excel文件!'));
                 return;
             }
             var InstNo = Ext.getCmp("InstNo").getValue();
@@ -214,7 +216,7 @@ Ext.onReady(function() {
 
     var HelpBT = new Ext.Toolbar.Button({
 	    id: 'HelpBtn',
-        text: '导入模板说明',
+        text: $g('导入模板说明'),
         width: 70,
         height: 30,
         iconCls: 'page_key',
@@ -223,8 +225,8 @@ Ext.onReady(function() {
     });
 
     var SaveBT = new Ext.Toolbar.Button({
-        text: '保存',
-        tooltip: '点击保存',
+        text: $g('保存'),
+        tooltip: $g('点击保存'),
         iconCls: 'page_save',
         width: 70,
         height: 30,
@@ -232,12 +234,92 @@ Ext.onReady(function() {
             save();
         }
     });
+    
+    //设置未填数等于帐盘数
+    var SetDefaultBT2 = new Ext.Toolbar.Button({
+        text: '设置未填数等于帐盘数',
+        tooltip: '点击设置未填数等于帐盘数',
+        iconCls: 'page_gear',
+        width: 70,
+        height: 30,
+        handler: function() {
+            var ss = Ext.Msg.show({
+                title: '提示',
+                msg: '设置未填实盘数等于帐盘数将修改此盘点单所有未录入的记录，是否继续？',
+                buttons: Ext.Msg.YESNO,
+                fn: function(b, t, o) {
+                    if (b == 'yes') {
+                        SetDefaultQty(2);
+                    }
+                },
+                icon: Ext.MessageBox.QUESTION
+            });
+        }
+    });
+
+    //设置未填数等于0
+    var SetDefaultBT = new Ext.Toolbar.Button({
+        text: '设置未填数等于0',
+        tooltip: '点击设置未填数等于0',
+        iconCls: 'page_gear',
+        width: 70,
+        height: 30,
+        handler: function() {
+            var ss = Ext.Msg.show({
+                title: '提示',
+                msg: '设置未填实盘数等于0将修改此盘点单所有未录入的记录，是否继续？',
+                buttons: Ext.Msg.YESNO,
+                fn: function(b, t, o) {
+                    if (b == 'yes') {
+                        SetDefaultQty(1);
+                    }
+                },
+                icon: Ext.MessageBox.QUESTION
+            });
+        }
+    });
+    
+    function SetDefaultQty(flag)
+    {
+	    var rowCount = InstDetailStore.getCount();
+        var modifyFlag = 0;
+        var InputWin = Ext.getCmp("InputWin").getValue();
+        for (var i = 0; i < rowCount; i++) {
+            var rowData = InstDetailStore.getAt(i);
+            //新增或修改过的数据
+            if (rowData.dirty || rowData.data.newRecord) modifyFlag=1
+            if (modifyFlag==1) break;
+        }
+        if (modifyFlag==1){
+	        Msg.info('Warning', '您有需要保存的数据，请先保存数据后再操作!');
+            return;
+        }
+        var UserId = session['LOGON.USERID'];
+        var mask = ShowLoadMask(Ext.getBody(), "处理中请稍候...");
+        Ext.Ajax.request({
+            url: url,
+            params: { actiontype: 'SetInputDefaultQty', Inst: gRowid, UserId: UserId, Flag: flag, InstwWin: InputWin },
+            method: 'post',
+            waitMsg: '处理中...',
+            success: function(response, opt) {
+                var jsonData = Ext.util.JSON.decode(response.responseText);
+                mask.hide();
+                if (jsonData.success == 'true') {
+                    Msg.info('success', '成功!');
+                    QueryDetail();
+                } else {
+                    var ret = jsonData.info;
+                    Msg.info('error', '设置未填记录实盘数失败:' + ret);
+                }
+            }
+        });
+    }
 
     var M_InciDesc = new Ext.form.TextField({
-        fieldLabel: '药品名称',
+        fieldLabel: $g('药品名称'),
         id: 'M_InciDesc',
         name: 'M_InciDesc',
-        emptyText: '药品名称...',
+        emptyText: $g('药品名称...'),
         width: 300,
         listeners: {
             specialkey: function(field, e) {
@@ -301,7 +383,7 @@ Ext.onReady(function() {
                 }
                 var incidesc = rowData.get('desc');
                  if (PCountQty < 0 || BCountQty < 0) {
-	                    Msg.info('warning', incidesc+' 录入的实盘数量不能小于零!');
+	                    Msg.info('warning', incidesc+$g(' 录入的实盘数量不能小于零!'));
 	                    return;
 	                }
                 
@@ -314,30 +396,30 @@ Ext.onReady(function() {
             }
         }
         if (ListDetail == '') {
-            Msg.info('Warning', '没有需要保存的数据!');
+            Msg.info('Warning', $g('没有需要保存的数据!'));
             return;
         }
-        var mask = ShowLoadMask(Ext.getBody(), "处理中请稍候...");
+        var mask = ShowLoadMask(Ext.getBody(), $g("处理中请稍候..."));
         Ext.Ajax.request({
             url: url,
             params: { actiontype: 'SaveInput', Params: ListDetail },
             method: 'post',
-            waitMsg: '处理中...',
+            waitMsg: $g('处理中...'),
             success: function(response, opt) {
                 var jsonData = Ext.util.JSON.decode(response.responseText);
                 mask.hide();
                 if (jsonData.success == 'true') {
-                    Msg.info('success', '保存成功!');
+                    Msg.info('success', $g('保存成功!'));
                     InstDetailStore.reload();
                     //QueryDetail();
                 } else {
                     var ret = jsonData.info;
                     if (ret == '-1') {
-                        Msg.info('warning', '没有需要保存的数据!');
+                        Msg.info('warning', $g('没有需要保存的数据!'));
                     } else if (ret == '-2') {
-                        Msg.info('error', '保存失败!');
+                        Msg.info('error', $g('保存失败!'));
                     } else {
-                        Msg.info('error', '部分数据保存失败:' + ret);
+                        Msg.info('error', $g('部分数据保存失败:' )+ ret);
                     }
                 }
             }
@@ -347,15 +429,15 @@ Ext.onReady(function() {
     //根据帐盘数据插入实盘列表
     function create(inst) {
         if (inst == null || inst == '') {
-            Msg.info('warning', '请选择盘点单');
+            Msg.info('warning', $g('请选择盘点单'));
             return;
         }
         var UserId = session['LOGON.USERID'];
-        var mask = ShowLoadMask(Ext.getBody(), "处理中请稍候...");
+        var mask = ShowLoadMask(Ext.getBody(), $g("处理中请稍候..."));
         Ext.Ajax.request({
             url: url,
             params: { actiontype: 'CreateStkTkInput', Inst: inst, UserId: UserId, InputWin: gInputWin },
-            waitMsg: '处理中...',
+            waitMsg: $g('处理中...'),
             success: function(response, opt) {
                 var jsonData = Ext.util.JSON.decode(response.responseText);
                 mask.hide();
@@ -363,7 +445,7 @@ Ext.onReady(function() {
                     QueryDetail(); //查找实盘列表
                 } else {
                     var ret = jsonData.info;
-                    Msg.info("error", "提取实盘列表失败：" + ret);
+                    Msg.info("error", $g("提取实盘列表失败：") + ret);
                 }
             }
         });
@@ -388,7 +470,7 @@ Ext.onReady(function() {
             params: { start: 0, limit: size },
             callback: function(r, options, success) {
                 if (success == false) {
-                    Msg.info("error", "查询有误,请查看日志!");
+                    Msg.info("error", $g("查询有误,请查看日志!"));
                 }
             }
         });
@@ -449,43 +531,43 @@ Ext.onReady(function() {
         sortable: true,
         hidden: true
     }, {
-        header: '货位',
+        header: $g('货位'),
         dataIndex: 'stkbin',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: '代码',
+        header: $g('代码'),
         dataIndex: 'code',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: "名称",
+        header: $g("名称"),
         dataIndex: 'desc',
         width: 200,
         align: 'left',
         sortable: true
     }, {
-        header: "规格",
+        header: $g("规格"),
         dataIndex: 'spec',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: "冻结数量",
+        header: $g("冻结数量"),
         dataIndex: 'freQty',
         width: 80,
         align: 'right',
         sortable: true
     }, {
-        header: "单位",
+        header:$g( "单位"),
         dataIndex: 'uomDesc',
         width: 60,
         align: 'left',
         sortable: true
     }, {
-        header: '实盘数量(大)',
+        header:$g('实盘数量(大)'),
         dataIndex: 'pcountQty',
         width: 100,
         align: 'right',
@@ -502,7 +584,7 @@ Ext.onReady(function() {
                     if (keyCode == Ext.EventObject.ENTER) {
                         var qty = field.getValue();
                         if (qty < 0) {
-                            Msg.info('warning', '实盘数量不能小于零!');
+                            Msg.info('warning', $g('实盘数量不能小于零!'));
                             return;
                         }
                         var row = cell[0];
@@ -528,13 +610,13 @@ Ext.onReady(function() {
             }
         })
     }, {
-        header: '入库单位',
+        header: $g('入库单位'),
         dataIndex: 'puomdesc',
         width: 60,
         align: 'left',
         sortable: true
     }, {
-        header: '实盘数量(小)',
+        header: $g('实盘数量(小)'),
         dataIndex: 'bcountQty',
         width: 100,
         align: 'right',
@@ -551,7 +633,7 @@ Ext.onReady(function() {
                     if (keyCode == Ext.EventObject.ENTER) {
                         var qty = field.getValue();
                         if (qty < 0) {
-                            Msg.info('warning', '实盘数量不能小于零!');
+                            Msg.info('warning', $g('实盘数量不能小于零!'));
                             return;
                         }
                         var row = cell[0] + 1;
@@ -577,37 +659,37 @@ Ext.onReady(function() {
             }
         })
     }, {
-        header: '基本单位',
+        header: $g('基本单位'),
         dataIndex: 'buomdesc',
         width: 60,
         align: 'left',
         sortable: true
     }, {
-        header: '实盘总数量(基)',
+        header: $g('实盘总数量(基)'),
         dataIndex: 'countQty',
         width: 110,
         align: 'right',
         sortable: true
     }, {
-        header: '实盘日期',
+        header: $g('实盘日期'),
         dataIndex: 'countDate',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: "实盘时间",
+        header:$g( "实盘时间"),
         dataIndex: 'countTime',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: '实盘人',
+        header: $g('实盘人'),
         dataIndex: 'userName',
         width: 80,
         align: 'left',
         sortable: true
     }, {
-        header: '转换系数',
+        header: $g('转换系数'),
         dataIndex: 'fac',
         width: 80,
         align: 'left',
@@ -616,8 +698,8 @@ Ext.onReady(function() {
     }]);
 
     var GridColSetBT = new Ext.Toolbar.Button({
-        text: '列设置',
-        tooltip: '列设置',
+        text: $g('列设置'),
+        tooltip: $g('列设置'),
         iconCls: 'page_gear',
         handler: function() {
             GridColSet(InstDetailGrid, "DHCSTINSTKTKINPUT");
@@ -649,16 +731,16 @@ Ext.onReady(function() {
         store: InstDetailStore,
         pageSize: PageSize,
         displayInfo: true,
-        displayMsg: '当前记录 {0} -- {1} 条 共 {2} 条记录',
+        displayMsg: $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
         emptyMsg: "No results to display",
-        prevText: "上一页",
-        nextText: "下一页",
-        refreshText: "刷新",
-        lastText: "最后页",
-        firstText: "第一页",
-        beforePageText: "当前页",
-        afterPageText: "共{0}页",
-        emptyMsg: "没有数据"
+        prevText: $g("上一页"),
+        nextText: $g("下一页"),
+        refreshText: $g("刷新"),
+        lastText: $g("最后页"),
+        firstText: $g("第一页"),
+        beforePageText: $g("当前页"),
+        afterPageText: $g("共{0}页"),
+        emptyMsg: $g("没有数据")
     });
 
     StatuTabPagingToolbar.addListener('beforechange', function(toolbar, params) {
@@ -668,8 +750,8 @@ Ext.onReady(function() {
         var records = InstDetailStore.getModifiedRecords();
         if (records.length > 0) {
             Ext.Msg.show({
-                title: '提示',
-                msg: '本页数据发生改变，是否需要保存？',
+                title: $g('提示'),
+                msg:$g( '本页数据发生改变，是否需要保存？'),
                 buttons: Ext.Msg.YESNOCANCEL,
                 fn: function(btn, text, opt) {
                     if (btn == 'yes') {
@@ -725,7 +807,7 @@ Ext.onReady(function() {
                 var incidesc = record.get("desc");
                 var diffQty = accAdd(countqty, -freezeqty)
                 var colorflag = "";
-                if (incidesc == "合计") { return; }
+                if (incidesc == $g("合计")) { return; }
                 if ((countqty == "") || (countqty == null)) {
                     return; //未填项不变色
                 }
@@ -763,12 +845,12 @@ Ext.onReady(function() {
         labelWidth: 60,
         width: 400,
         labelAlign: 'right',
-        title: '实盘:录入方式三(按品种录入)',
+        title: $g('实盘:录入方式三(按品种录入)'),
         frame: true,
-        tbar: [SearchBT, '-', RefreshBT, '-', SaveBT],
+        tbar: [SearchBT, '-', RefreshBT, '-', SaveBT, '-', SetDefaultBT, '-', SetDefaultBT2],
         items: [{
             xtype: 'fieldset',
-            title: '查询条件',
+            title: $g('查询条件'),
             layout: 'column',
             style: DHCSTFormStyle.FrmPaddingV,
             items: [{

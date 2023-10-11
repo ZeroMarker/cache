@@ -9,6 +9,10 @@ function InitviewScreenEvent(obj) {
 		$('#btnSure').on('click', function(){
 			obj.layer();
 		});
+		//删除
+		$('#btnDel').on('click', function(){
+			obj.Delete();
+		});
     }
 	//入库弹出框初始化
 	$('#winProEdit').dialog({
@@ -21,7 +25,7 @@ function InitviewScreenEvent(obj) {
 			text:'确定',
 			handler:function(){
 				obj.btnSave_click();
-				$HUI.dialog('#winProEdit').close();
+				//$HUI.dialog('#winProEdit').close();
 			}
 		},{
 			text:'取消',
@@ -53,21 +57,28 @@ function InitviewScreenEvent(obj) {
 		$HUI.dialog('#winProEdit').open();
 	}
 	obj.btnSave_click = function(){
+		var patrn = /^(-)?\d+(\.\d+)?$/;
 		var errinfo = "";
 		var separate="^";
 		var StartNo = $('#StartNo').val();
 		var EndNo = $('#EndNo').val();
 		if (!StartNo) {
-			errinfo = errinfo + "开始编码为空!<br>";
+			errinfo = errinfo + "开始编号为空!<br>";
 		}
-		if (isNaN(StartNo)) {
+		if ((StartNo!="")&&(patrn.exec(StartNo)==null)) {
 			errinfo = errinfo + "开始编号格式错误，输入1~7位数字!<br>";
 		}
-		if (isNaN(EndNo)) {
+		if ((EndNo!="")&&(patrn.exec(EndNo)==null)) {
 			errinfo = errinfo + "结束编码格式错误，输入1~7位数字!<br>";
 		}
+		if (StartNo.length>7){
+			errinfo = errinfo + "开始编码长度大于七位，请修改!<br>";
+		}
+		if (EndNo.length>7){
+			errinfo = errinfo + "结束编码长度大于七位，请修改!<br>";
+		}
 		if (!EndNo) {
-			errinfo = errinfo + "结束编码为空!<br>";
+			errinfo = errinfo + "结束编号为空!<br>";
 		}
 		if (errinfo) {
 			$.messager.alert("错误提示", errinfo, 'info');
@@ -98,6 +109,40 @@ function InitviewScreenEvent(obj) {
 			}
 			$("div#Panel1").append(ret);
 			obj.gridPaperNo.reload();//刷新当前页   
+		}
+	}
+	obj.Delete = function(){
+		var rows = obj.gridPaperNo.getRows().length;  
+		if (rows>0) {
+			var length = obj.gridPaperNo.getChecked().length;
+			if (length>0) {
+				$.messager.confirm("删除", "仅能删除状态为[未分配]和[待用]的纸单号，确定提交并保存?", function (r) {
+					if (r) {
+						var rows=obj.gridPaperNo.getChecked();
+					    for (var ind=0; ind<length;ind++) {
+						    var tmpPaperNoID = rows[ind].PaperNoID;
+						    var PaperNo = rows[ind].PaperNo;
+						    var Status = rows[ind].Status;
+							if ((Status!='未分配') && (Status!='待用')) {
+								continue;
+							}
+							var ret = $m({                  
+								ClassName:"DHCMed.DTH.PaperNo",
+								MethodName:"DeleteObjById",
+								id:tmpPaperNoID
+							},false);
+							if(parseInt(ret)<0){
+								$.messager.alert("错误","纸单号删除失败!"+ret, 'error');
+								break;
+							}
+						}
+						if(parseInt(ret)>=0){
+							$.messager.popover({ msg: "删除成功", type: 'info' });
+							obj.gridPaperNo.reload();//刷新当前页
+						}
+					}
+				});
+			}
 		}
 	}
 }

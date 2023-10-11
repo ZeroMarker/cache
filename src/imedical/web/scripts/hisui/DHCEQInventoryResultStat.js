@@ -9,18 +9,35 @@ function BodyLoadHandler()
 function InitPage()
 {	
 	var obj=document.getElementById("BExport");
-	if (obj) obj.onclick=BExport_Click;
+	// MZY0129	2612991		2022-07-07
+	if (obj)
+	{
+		obj.onclick=BExport_Click;
+		obj.className="l-btn l-btn-small l-btn-plain";
+		obj.style.width="80px";
+	}
 }
 function BExport_Click()
 {
-	if (getElementValue("ChromeFlag")=="1")
+	//Modefied by zc0093  润乾导出修改 2021-01-07 begin
+	var PrintFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo",'990062');
+	if (PrintFlag=="1")
 	{
-		BExportChorme_Click()
+		var url="dhccpmrunqianreport.csp?reportName=DHCEQInventoryResultStat.raq&InventoryDR="+GetElementValue("InventoryDR")+"&StoreLocDR="+GetElementValue("StoreLocDR")
+    	window.open(url,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0');   //
 	}
 	else
 	{
-		BExportIE_Click()
+		if (getElementValue("ChromeFlag")=="1")
+		{
+			BExportChorme_Click()
+		}
+		else
+		{
+			BExportIE_Click()
+		}
 	}
+	//Modefied by zc0093  润乾导出修改 2021-01-07 end
 }
 function BExportChorme_Click()
 {
@@ -73,7 +90,7 @@ function BExportChorme_Click()
 	Str +="for (var Row=1;Row<="+num+";Row++){"
 	Str +="var OneInfo=DataInfo[Row-1];"
 	Str +="var List=OneInfo.split('^');"
-	Str +="if (Row<num) xlsheet.Rows(Row+firstRow).Insert();"
+	Str +="if (Row<"+num+") xlsheet.Rows(Row+firstRow).Insert();"
 	Str +="Col=firstCol;"
 	//TLocID_"^"_TLocName_"^"_TTotalQty_"^"_TAmount_"^"_TDiffQty_"^"_TDiffAmount_"^"_TLoseQty_"^"_TLoseAmount_"^"_TAccordQty_"^"_TAccordAmount_"^"_TJob
 	Str +="xlsheet.cells(Row+firstRow,Col++)=List[1];" //台帐科室

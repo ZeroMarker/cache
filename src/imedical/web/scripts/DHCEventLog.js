@@ -24,15 +24,15 @@ $(function(){
 		delay: 500,
 		panelWidth:350,
 		mode: 'remote',
-		queryParams:{ClassName:'web.SSUser',QueryName: 'LookUpActiveInitials',desc:"a"},
+		queryParams:{ClassName:'web.SSUser',QueryName: 'FindByAll',desc:"a"},
 		url: 'jquery.easyui.querydatatrans.csp',
 		idField: 'HIDDEN',
-		textField: 'Code',
+		textField: 'UserName',
 		onBeforeLoad:function(param){
 			param = $.extend(param,{desc:param.q});
 			return true;
 		},
-		columns: [[{field:'Code',title:'名字',align:'right',width:100},{field:'Description',title:'工号',width:100},{field:'HIDDEN',title:'HIDDEN',align:'right',hidden:true,width:100}]]
+		columns: [[{field:'UserName',title:'名字',align:'right',width:100},{field:'UserCode',title:'工号',width:100},{field:'HIDDEN',title:'HIDDEN',align:'right',hidden:true,width:100}]]
 	});
 	$('#AuditStatus').combogrid({
 		delay: 500,
@@ -156,8 +156,8 @@ $(function(){
 		{field:'LogModelDesc',title:'模块名',width:80,align:'right',hidden:false},
 		
 		{field:'LogDetails',title:'明细',width:50,align:'right',formatter: function(value,row,index){
-					return "<a href='dhceventlogdetails.csp?DetLogParref="+row.LogRowId+"' target='_blank'>查看</a>"
-					return "<a href='websys.default.jquery.csp?WEBSYS.TCOMPONENT=DHCEventLogDetails&DetLogParref="+row.LogRowId+"' target='_blank'>查看</a>"
+					return "<a href='dhceventlogdetails.csp?DetLogParref="+row.LogRowId+"&MWToken="+websys_getMWToken()+"' target='_blank'>查看</a>"
+					return "<a href='websys.default.jquery.csp?WEBSYS.TCOMPONENT=DHCEventLogDetails&DetLogParref="+row.LogRowId+"&MWToken="+websys_getMWToken()+"' target='_blank'>查看</a>"
 			}},
 		{field:'LogAuditDr',title:'LogAuditDr',width:100,align:'right',hidden:true},
 		{field:'LogAuditStatusDesc',title:'审核结果',width:100,align:'right'},	

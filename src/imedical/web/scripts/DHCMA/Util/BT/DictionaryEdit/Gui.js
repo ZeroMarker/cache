@@ -5,6 +5,31 @@ function InitDicEditWin(){
 	obj.RecTicTypeID=""
     $.parser.parse(); // 解析整个页面 
 	
+	//增加院区配置 add by yankai20210728
+	var DefHospOID = $cm({ClassName:"DHCMA.Util.IO.MultiHospInterface",MethodName:"GetDefaultHosp",aTableName:"DHCMA_Util_BT.Dictionary",aHospID:session['LOGON.HOSPID'],dataType:'text'},false);
+	var SessionStr=session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
+	obj.cboSSHosp = Common_ComboToSSHosp3("cboSSHosp","","","DHCMA_Util_BT.Dictionary",SessionStr,"");
+	$('#cboSSHosp').combobox({
+  		onSelect: function(title,index){
+	  		obj.gridDictionary.load({
+				ClassName:"DHCMA.Util.BTS.DictionarySrv",
+				QueryName:"QryDictionaryByDicType",
+				aTypeDr:$('#DicType').tabs('getSelected')[0]['id'],
+				aHospID: $("#cboSSHosp").combobox('getValue')
+			});
+	  	}
+	 })
+	var retMultiHospCfg = $m({
+		ClassName:"DHCMA.Util.BT.Config",
+		MethodName:"GetValueByCode",
+		aCode:"SYSIsOpenMultiHospMode",
+		aHospID:session['DHCMA.HOSPID']
+	},false);
+	if(retMultiHospCfg!="Y" && retMultiHospCfg!="1"){
+		$("#divHosp").hide();
+		$("#btnAuthHosp").hide();
+	}
+	
 	//字典类型列表
 	var runQuery =$cm({
 		ClassName:'DHCMA.Util.BTS.DicTypeSrv',
@@ -38,7 +63,8 @@ function InitDicEditWin(){
 		queryParams:{
 			ClassName:"DHCMA.Util.BTS.DictionarySrv",
 			QueryName:"QryDictionaryByDicType",
-			aTypeDr:''
+			aTypeDr:$('#DicType').tabs('getSelected')[0]['id'],
+			aHospID: $("#cboSSHosp").combobox('getValue')
 		},
 		columns:[[
 			{field:'BTID',title:'ID',width:'50'},
@@ -64,17 +90,28 @@ function InitDicEditWin(){
 			$("#btnAdd").linkbutton("enable");
 			$("#btnEdit").linkbutton("disable");
 			$("#btnDelete").linkbutton("disable");
+			$("#btnAuthHosp").linkbutton("disable");
 		}
 	});
 	
 	$('#DicType').tabs({
     	onSelect:function(title,index){
         	var tab = $('#DicType').tabs('getSelected');
-			obj.gridDictionary.load({
-				ClassName:"DHCMA.Util.BTS.DictionarySrv",
-				QueryName:"QryDictionaryByDicType",
-				aTypeDr:tab[0]['id']
-			});
+        	if(retMultiHospCfg=="Y"){
+	        	obj.gridDictionary.load({
+					ClassName:"DHCMA.Util.BTS.DictionarySrv",
+					QueryName:"QryDictionaryByDicType",
+					aTypeDr:tab[0]['id'],
+					aHospID: $("#cboSSHosp").combobox('getValue')
+				});
+	        }else{
+		    	obj.gridDictionary.load({
+					ClassName:"DHCMA.Util.BTS.DictionarySrv",
+					QueryName:"QryDictionaryByDicType",
+					aTypeDr:tab[0]['id']
+				});    
+		    }
+			
     	}
 	});
 	$('#DicType').tabs('select', 0);

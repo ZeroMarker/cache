@@ -6,7 +6,7 @@ $(function () {
 });
 
 function initQueryMenu() {
-	var defDate = getDefStDate(-1);
+	var defDate = getDefStDate(0);
 	$(".datebox-f").datebox("setValue", defDate);
 }
 

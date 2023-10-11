@@ -2,50 +2,56 @@
 // /描述: 调价单生效
 // /编写者：zhangxiao
 // /编写日期: 2018.06.12
-var init = function () {
-	var InciHandlerParams = function () {
-		var Scg = $("#ScgId").combotree('getValue');
+var init = function() {
+	var InciHandlerParams = function() {
+		var Scg = $('#ScgId').combotree('getValue');
 		var Obj = {
 			StkGrpRowId: Scg,
-			StkGrpType: "M",
-			BDPHospital:gHospId
+			StkGrpType: 'M',
+			BDPHospital: gHospId
 		};
 		return Obj;
-	}
-	$("#InciDesc").lookup(InciLookUpOp(InciHandlerParams, '#InciDesc', '#Inci'));
-	var Clear = function () {
+	};
+	$('#InciDesc').lookup(InciLookUpOp(InciHandlerParams, '#InciDesc', '#Inci'));
+	var Clear = function() {
 		$UI.clearBlock('#Conditions');
 		$UI.clear(AdjPriceGrid);
-		var Dafult = {
+		var DefaultData = {
 			StartDate: DateFormatter(new Date()),
 			EndDate: DateFormatter(new Date()),
-			Status: "Audit"
-		}
-		$UI.fillBlock('#Conditions', Dafult);
+			Status: 'Audit'
+		};
+		$UI.fillBlock('#Conditions', DefaultData);
 		$('#ScgId').combotree('options')['setDefaultFun']();
-	}
+	};
 	$UI.linkbutton('#ClearBT', {
-		onClick: function () {
+		onClick: function() {
 			Clear();
 		}
 	});
 	$UI.linkbutton('#QueryBT', {
-		onClick: function () {
-			Query()
+		onClick: function() {
+			Query();
 		}
 	});
 	function Query() {
-		if (isEmpty($HUI.combobox("#Status").getValue())) {
+		if (isEmpty($HUI.combobox('#Status').getValue())) {
 			$UI.msg('alert', '调价单状态不能为空!');
 			return false;
-		};
+		}
 		var ParamsObj = $UI.loopBlock('Conditions');
-		if (isEmpty(ParamsObj.StartDate)) {
+		var StartDate = ParamsObj.StartDate;
+		var EndDate = ParamsObj.EndDate;
+		if (isEmpty(StartDate)) {
 			$UI.msg('alert', '开始日期不能为空!');
 			return;
 		}
-		if (isEmpty(ParamsObj.EndDate)) {
+		if (isEmpty(EndDate)) {
 			$UI.msg('alert', '截止日期不能为空!');
+			return;
+		}
+		if (compareDate(StartDate, EndDate)) {
+			$UI.msg('alert', '截止日期不能小于开始日期!');
 			return;
 		}
 		var Params = JSON.stringify(ParamsObj);
@@ -57,56 +63,21 @@ var init = function () {
 		});
 	}
 	$UI.linkbutton('#ExeBT', {
-		onClick: function () {
-			var ParamsObj = $UI.loopBlock('#Conditions')
-			var Params = JSON.stringify(ParamsObj)
+		onClick: function() {
+			var ParamsObj = $UI.loopBlock('#Conditions');
+			var Params = JSON.stringify(ParamsObj);
 			var Rows = AdjPriceGrid.getSelectedData();
-			if (Rows === false) { return }; //验证未通过  不能保存
-			if (Rows == "") {
+			if (Rows === false) { return; } // 验证未通过  不能保存
+			if (Rows == '') {
 				$UI.msg('alert', '请选择需要生效的调价单!');
-				return
+				return;
 			}
 			$.cm({
 				ClassName: 'web.DHCSTMHUI.INAdjSalePrice',
 				MethodName: 'SetExe',
 				Params: Params,
 				Rows: JSON.stringify(Rows)
-			}, function (jsonData) {
-				if (jsonData.success == 0) {
-					$UI.msg('success', jsonData.msg);
-					$UI.clear(AdjPriceGrid);
-					Query()
-				} else {
-					$UI.msg('error', jsonData.msg);
-				}
-			});
-		}
-	});
-	$UI.linkbutton('#SaveBT', {
-		onClick: function () {
-			var ParamsObj = $UI.loopBlock('#Conditions')
-			var Params = JSON.stringify(ParamsObj)
-			var Rows = AdjPriceGrid.getChangesData();
-			if (Rows === false) { return; }; //验证未通过  不能保存
-			if (isEmpty(Rows)) {
-				$UI.msg('alert', '没有需要保存的调价单信息!');
-				return;
-			}
-			for (var i = 0; i < Rows.length; i++) {
-				var Status = Rows[i].Status;
-				var InciDesc = Rows[i].InciDesc;
-				var row = i + 1;
-				if (Status == "已审核") {
-					$UI.msg('alert', '第' + row + '行' + InciDesc + '的调价单已审核,请取消审核后修改!');
-					return;
-				}
-			}
-			$.cm({
-				ClassName: 'web.DHCSTMHUI.INAdjSalePrice',
-				MethodName: 'BatUpdatePrice',
-				Params: Params,
-				Rows: JSON.stringify(Rows)
-			}, function (jsonData) {
+			}, function(jsonData) {
 				if (jsonData.success == 0) {
 					$UI.msg('success', jsonData.msg);
 					$UI.clear(AdjPriceGrid);
@@ -117,6 +88,7 @@ var init = function () {
 			});
 		}
 	});
+	
 	var AdjPriceCm = [[
 		{
 			field: 'ck',
@@ -125,18 +97,19 @@ var init = function () {
 			title: 'RowId',
 			field: 'RowId',
 			saveCol: true,
-			hidden: true
+			hidden: true,
+			width: 60
 		}, {
-			title: "调价单号",
+			title: '调价单号',
 			field: 'AspNo',
 			width: 180
 		}, {
-			title: "状态",
+			title: '状态',
 			field: 'Status',
 			saveCol: true,
 			width: 100
 		}, {
-			title: "库存分类",
+			title: '库存分类',
 			field: 'StkCatDesc',
 			width: 100,
 			align: 'left'
@@ -154,101 +127,82 @@ var init = function () {
 			saveCol: true,
 			width: 150
 		}, {
-			title: "规格",
+			title: '规格',
 			field: 'Spec',
 			width: 100
 		}, {
-			title: "调价单位",
+			title: '调价单位',
 			field: 'AspUomDesc',
 			width: 100,
 			align: 'right'
 		}, {
-			title: "调前售价",
+			title: '调前售价',
 			field: 'PriorSpUom',
 			width: 100,
 			align: 'right'
 		}, {
-			title: "调后售价",
+			title: '调后售价',
 			field: 'ResultSpUom',
 			width: 100,
-			align: 'right',
-			saveCol: true,
-			editor: { type: 'numberbox', options: { required: true } }
+			align: 'right'
 		}, {
-			title: "差价(售价)",
+			title: '差价(售价)',
 			field: 'DiffSpUom',
 			width: 100,
 			align: 'right'
 		}, {
-			title: "调前进价",
+			title: '调前进价',
 			field: 'PriorRpUom',
 			width: 100,
 			align: 'right'
 		}, {
-			title: "调后进价",
+			title: '调后进价',
 			field: 'ResultRpUom',
 			width: 100,
-			align: 'right',
-			saveCol: true,
-			editor: { type: 'numberbox', options: { required: true } }
+			align: 'right'
 		}, {
-			title: "差价(进价)",
+			title: '差价(进价)',
 			field: 'DiffRpUom',
 			width: 100,
 			align: 'right'
 		}, {
-			title: "制单日期",
+			title: '制单日期',
 			field: 'AdjDate',
 			width: 120,
 			align: 'left'
 		}, {
-			title: "计划生效日期",
+			title: '计划生效日期',
 			field: 'PreExecuteDate',
 			width: 120,
 			align: 'left'
 		}, {
-			title: "实际生效日期",
+			title: '实际生效日期',
 			field: 'ExecuteDate',
 			width: 120,
 			align: 'left'
 		}, {
-			title: "调价原因",
+			title: '调价原因',
 			field: 'AdjReason',
 			width: 120,
 			align: 'left'
 		}, {
-			title: "调价人",
+			title: '调价人',
 			field: 'AdjUserName',
 			width: 100,
 			align: 'left'
 		}, {
-			title: "定价类型",
+			title: '定价类型',
 			field: 'MarkTypeDesc',
 			width: 120,
 			align: 'left'
 		}, {
-			title: "最高售价",
-			field: 'MaxSp',
-			width: 100,
-			align: 'right'
-		}, {
-			title: "物价文件号",
+			title: '物价文件号',
 			field: 'WarrentNo',
 			width: 120,
 			align: 'left'
 		}, {
-			title: "物价文件日期",
+			title: '物价文件日期',
 			field: 'WnoDate',
-			width: 120,
-			align: 'left'
-		}, {
-			title: "发票号",
-			field: 'InvNo',
-			width: 120,
-			align: 'left'
-		}, {
-			title: "发票日期",
-			field: 'InvDate',
 			width: 120,
 			align: 'left'
 		}
@@ -262,12 +216,18 @@ var init = function () {
 		singleSelect: false,
 		remoteSort: false,
 		showBar: true,
-		onClickCell: function (index, filed, value) {
-			AdjPriceGrid.commonClickCell(index, filed, value);
+		onClickRow: function(index, row) {
+			AdjPriceGrid.commonClickRow(index, row);
+		},
+		navigatingWithKey: true,
+		onLoadSuccess: function(data) {
+			if ((data.rows.length > 0) && (CommParObj.IfSelFirstRow == 'Y')) {
+				$(this).datagrid('selectRow', 0);
+			}
 		}
-	})
+	});
 
-	Clear()
-
-}
+	Clear();
+	Query();
+};
 $(init);

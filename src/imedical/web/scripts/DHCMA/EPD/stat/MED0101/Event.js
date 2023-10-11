@@ -6,12 +6,11 @@ function InitMED0101WinEvent(obj){
 	ReportFrame.src = p_URL;
 	//登记号补零 length位数
 	var length=10;
-	$("#txtPapmiNo").keydown(function(event){
-　　	if(event.keyCode ==13){
-　　		var PapmiNo	 = $("#txtPapmiNo").val();
-			if(!PapmiNo) return;
-			$("#txtPapmiNo").val((Array(length).join('0') + PapmiNo).slice(-length));  
-		}
+	$("#txtPapmiNo").blur(function(){
+		var PapmiNo	 = $("#txtPapmiNo").val();
+		if(!PapmiNo) return;
+		$("#txtPapmiNo").val((Array(length).join('0') + PapmiNo).slice(-length));  
+		
 　　});
 	//查询按钮
 	$("#btnQuery").on('click',function(){
@@ -28,7 +27,7 @@ function InitMED0101WinEvent(obj){
 		var DateTo = arrDateTimeTo[0]
 		var TimeTo = arrDateTimeTo[1]
 				
-		var LocID 	 = $("#cboLocation").combobox("getValue");	
+		var LocID 	 = $("#cboLocation").combobox("getValues");	
 		if (!LocID){ LocID=""; }
 		
 		var PapmiNo	 = $("#txtPapmiNo").val();

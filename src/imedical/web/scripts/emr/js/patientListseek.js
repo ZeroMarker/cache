@@ -1,9 +1,9 @@
 ﻿var cbxLocflag = "Y";
-var startDateFlag = "Y";
 $(function(){
 	$('#chkLoc')[0].status = false;
 	InitPatientList();
 	InitCTLoc();
+	InitDefaultDate();
 });
 
 //Desc:初始化科室
@@ -67,7 +67,7 @@ function InitDoctorName(cbxlocID)
 			    	return;
 			    }
 			});
-			GetData();
+			//GetData();
 		}
     });
 }
@@ -139,18 +139,7 @@ function GetData()
 	 var admType = $('#cboAdmType').combobox('getValue');
 	 var admStatus = $('#cboAdmStatus').combobox('getValue');
 	 var startDate = $('#startDate').datebox('getText');
-	 if(startDateFlag=="Y"&&startDate==""&&dateConfig!=""){
-		
-		startDate = FunGetDateStr(dateConfig-1);
-		
-		$('#startDate').datebox('setValue',startDate)	 
-	 }
 	 var endDate = $('#endDate').datebox('getText');
-	 if(endDate=="" && startDateFlag=="Y"&&dateConfig!=""){
-		endDate = FunGetDateStr(0);
-		$('#endDate').datebox('setValue',endDate);
-	 }
-	 startDateFlag="N";
 	 var outStartDate = $('#outStartDate').datebox('getText');
 	 var outEndDate = $('#outEndDate').datebox('getText');
 	 var expectedLocId = $('#cbxLoc').combobox('getValue');
@@ -211,6 +200,15 @@ function GetData()
 		QueryItem: (queryItem == "请输入诊断内容")? "":queryItem
 	}); 
 }
+
+function InitDefaultDate()
+{
+	 var startDate = FunGetDateStr(dateConfig-1);
+	 $('#startDate').datebox('setValue',startDate);
+	 var endDate = FunGetDateStr(0);
+	 $('#endDate').datebox('setValue',endDate);
+}
+
 $("#PatientListQuery").click(function () {
     GetData();
 });

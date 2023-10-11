@@ -7,7 +7,7 @@ function initcolumns()
 	/// 主诉datagrid
 	var symcolumns=[[
 		{field:'EpisodeID',title:'就诊ID',width:50,hidden:true},
-		{field:'PatStmTom',title:'主诉',width:430},
+		{field:'PatStmTom',title:'主诉',width:520},
 		{field:'amSave',title:'保存对象',width:50,hidden:true},
 		{field:'amPointer',title:'对应ID',width:50,hidden:true},
 		{field:'opUserDr',title:'opUserDr',width:50,hidden:true},
@@ -51,6 +51,7 @@ function initcolumns()
 		onDblClickRow: function (rowIndex, rowData) {// 双击选择行编辑
            var rowsData = $("#patprehislist").datagrid('getSelected');
            window.parent.$("#arDisHis").val(rowsData.PatPreHis);
+           window.parent.LimitNumberarDisHis();
            parent.$('#winonline').window('close');
         } 
 	};
@@ -106,6 +107,7 @@ function initcolumns()
 		onDblClickRow: function (rowIndex, rowData) {// 双击选择行编辑
            var rowsData = $("#patpurposelist").datagrid('getSelected');
            window.parent.$("#ExaPurp").val(rowsData.PatPur);
+           window.parent.LimitNumberExaPurp();
            parent.$('#winonline').window('close');
         } 
 	};
@@ -164,6 +166,7 @@ function quoteprehisdata()
 		return;
 		}
 	window.parent.$("#arDisHis").val(rowsData.PatPreHis);
+	window.parent.LimitNumberarDisHis();
 	parent.$('#winonline').window('close');
 }
 /// 删除现病史模板
@@ -243,6 +246,7 @@ function quotepurdata()
 		return;
 		}
 	window.parent.$("#ExaPurp").val(rowsData.PatPur);
+	window.parent.LimitNumberExaPurp();
 	parent.$('#winonline').window('close');
 }
 /// 删除体征模板

@@ -17,13 +17,12 @@ $(function() {
     });
 	
 	$("#CommonIllness").checkbox({
-
         onCheckChange:function(e,value){
 		    SearchIllDesc(); 
-	        
         }
-    }); 
-	
+    });
+	$(".inherit-border, .inherit-border>div:first-child").css("border-color", borderColor1);
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEIllnessStatistic.raq");
 });
 
 function InitCombobox() {
@@ -129,14 +128,17 @@ function InitGroupsListData() {
 
 // 疾病列表
 function InitIllnessData() {
+	var LocID=session['LOGON.CTLOCID']
 	$HUI.datagrid("#IllDescs", {
 		url:$URL,
 		queryParams:{
 			ClassName:"web.DHCPE.HISUICommon",
 			QueryName:"FindIllness",
 			CommonIllness:"N",
-			Desc:""
+			Desc:"",
+			LocID:LocID
 		},
+		headerCls:'panel-header-gray',
 		collapsible: true, //收起表格的内容
 		lines:true,
 		striped:true, // 条纹化
@@ -208,10 +210,10 @@ function BFind_click(){
 	}
 	
     var ret=tkMakeServerCall("web.DHCPE.Statistic.IllnessStatistic","SetTempIllnessGlobal",BeginDate, EndDate, MarriedDR, SexDR, IllnessList, GADMList,session['LOGON.CTLOCID'],session['LOGON.USERID'])
-	var src="&BeginDate="+BeginDate+"&EndDate="+EndDate+"&USERID="+session['LOGON.USERID'];
+	var src="&BeginDate="+BeginDate+"&EndDate="+EndDate+"&CurUser="+session['LOGON.USERID'];
 	
-	$("#ReportFile").attr("src", "dhccpmrunqianreport.csp?reportName=DHCPEIllnessStatistic.raq" + src);
-	
+	ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEIllnessStatistic.raq" + src);
+	// $("#ReportFile").attr("src", "dhccpmrunqianreport.csp?reportName=DHCPEIllnessStatistic.raq" + src);
 }
 
 // 团体查询
@@ -224,9 +226,10 @@ function SearchGBIDesc() {
 
 // 疾病查询
 function SearchIllDesc() {
+	var LocID=session['LOGON.CTLOCID'];
 	var IllDesc = $("#IllDesc").val();
 	var iCommonIllness="N";
 	var CommonIllness=$("#CommonIllness").checkbox('getValue');
 	if (CommonIllness) {iCommonIllness="Y";} 
-	$("#IllDescs").datagrid("load", {ClassName:"web.DHCPE.HISUICommon",QueryName:"FindIllness",Desc:IllDesc,CommonIllness:iCommonIllness});
+	$("#IllDescs").datagrid("load", {ClassName:"web.DHCPE.HISUICommon",QueryName:"FindIllness",Desc:IllDesc,CommonIllness:iCommonIllness,LocID:LocID});
 }

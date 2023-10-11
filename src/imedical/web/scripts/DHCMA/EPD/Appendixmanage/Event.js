@@ -5,38 +5,131 @@
 		$('#btnAdd').on('click', function(){
 	     	obj.btnAdd_click();
      	});
-		//保存传染病附卡
+     	//保存
 		$('#btnSave').on('click', function(){
 	     	obj.btnSave_click();
      	});
+		//关闭
+		$('#btnClose').on('click', function(){
+	     	$HUI.dialog('#AppendixEdit').close();
+     	});
+     	//添加
+		$('#btnAddTwo').on('click', function(){
+			obj.InitDialog();
+		});
+		//编辑
+		$('#btnEdit').on('click', function(){
+			var rd = obj.gridAppendixCard.getSelected();
+			obj.InitDialog(rd);
+		});
     }
-
-	//单击一行将数据填入表单中
-	obj.gridInfType_onSelect = function (rowData){
-	
-		if (rowData["ID"] == obj.RecRowID) {
-			obj.gridAppendixCard.clearSelections();
-			obj.ClearFormItem1();
-			obj.RecRowID="";
+    
+	//窗体初始化
+	obj.AppendixEdit = $('#AppendixEdit').dialog({
+		title:'传染病附卡维护',
+		iconCls:'icon-w-edit',
+		closed: true,
+		modal: true,
+		isTopZindex:true
+	});
+	// 传染病附卡保存
+	obj.btnSave_click = function(){
+		var errinfo = "";
+		var Code 	= $.trim($('#txtCode').val());
+		var Desc 	= $.trim($('#txtDesc').val());
+		var Kind 	= $.trim($('#txtKind').val());
+		var ActiveDate = $("#ActiveDate").datebox('getValue');
+		var Resume 	= $.trim($('#txtResume').val());
+		var IsActive = $('#chkIsActive').checkbox('getValue')? 'Y':'N';
+		if (!Code) {
+			errinfo = errinfo + "代码不能为空!<br>";
+		}
+		if (!Desc) {
+			errinfo = errinfo + "描述不能为空!<br>";
+		}	
+		if (!Kind){
+			errinfo = errinfo + "类别不能为空!<br>";
+		}
+		
+		if (errinfo) {
+			$.messager.alert("错误提示", errinfo, 'info');
+			return;
+		}
+		
+		var inputStr = obj.RecRowID;
+		inputStr = inputStr + "^" + Code;
+		inputStr = inputStr + "^" + Desc;	
+		inputStr = inputStr + "^" + IsActive;
+		inputStr = inputStr + "^" + Kind;
+		inputStr = inputStr + "^" + ActiveDate;
+		inputStr = inputStr + "^" + Resume;
+		console.log(inputStr);
+		var flg = $m({
+			ClassName:"DHCMed.EPD.AppendixCard",
+			MethodName:"Update",
+			arg:inputStr,
+			separete:"^"
+		},false);
+		if (parseInt(flg) <= 0) {
+			if(parseInt(flg) == -1){
+				$.messager.alert("错误提示", "代码重复!" , 'info');
+				return;
+			}else{
+				$.messager.alert("错误提示", "更新数据错误!Error=" + flg, 'info');
+				return;
+			}
 		}else {
-			obj.RecRowID = rowData["ID"];
-			var txtCode = rowData["Code"];
-			var txtDesc = rowData["Description"];
-			var txtType = rowData["Type"];
-			var dtActiveDate = rowData["FromDate"];
-			var txtResume = rowData["ResumeText"];
-			var chkWork = rowData["IsActive"];
-			chkWork = (chkWork=="是"? true: false);
-			$('#txtCode').val(txtCode);
-			$('#txtCode').attr('disabled','true');											   
-			$('#txtDesc').val(txtDesc);
-			$('#txtType').val(txtType);
-			$('#dtActiveDate').datebox('setValue',dtActiveDate), 
-			$('#txtResume').val(txtResume);
-			$('#chkWork').checkbox('setValue',chkWork);
+			$HUI.dialog('#AppendixEdit').close();
+			$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
+			obj.RecRowID="";
+			$("#btnEdit").linkbutton("disable");
+			obj.gridAppendixCard.reload() ;//刷新当前页
 		}
 	}
-
+	//单击选中事件
+	obj.gridAppendixCard_onSelect = function (){
+		var rowData = obj.gridAppendixCard.getSelected();
+		if (rowData["ID"] == obj.RecRowID) {
+			obj.RecRowID="";
+			$("#btnAdd").linkbutton("enable");
+			$("#btnEdit").linkbutton("disable");
+			obj.gridAppendixCard.clearSelections();  //清除选中行
+		} else {
+			obj.RecRowID = rowData["ID"];
+			$("#btnAdd").linkbutton("disable");
+			$("#btnEdit").linkbutton("enable");
+		}
+	}
+	//窗口初始化
+	obj.InitDialog = function(rd){
+		if(rd){
+			obj.RecRowID 	= rd["ID"];
+			var Code 		= rd["Code"];
+			var Desc 		= rd["Description"];
+			var Type 		= rd["Type"];
+			var FromDate 	= rd["FromDate"];
+			var ResumeText  = rd["ResumeText"];
+			var IsActive 	= rd["IsActive"];
+			$('#txtCode').val(Code).validatebox("validate");
+			$('#txtDesc').val(Desc).validatebox("validate");
+			$('#txtKind').val(Desc).validatebox("validate");
+			$('#ActiveDate').datebox('setValue',FromDate)
+			$('#txtResume').val(ResumeText);
+			$('#chkIsActive').checkbox('setValue',(IsActive=="是" ? true:false));
+		}else{
+			obj.RecRowID = "";
+			$('#txtCode').val('');
+			$('#txtDesc').val('');
+			$('#txtKind').val('');
+			$('#ActiveDate').datebox('clear');
+			$('#txtResume').val('');
+			$('#chkIsActive').checkbox('setValue','');
+		}
+		$HUI.dialog('#AppendixEdit').open();
+	}
+	
+	
+	
 	//初始化-传染病附卡项目弹出框
 	obj.AppendixLog = $('#AppendixLog').dialog({
 		title: '传染病附卡项目',
@@ -78,7 +171,7 @@
 				ClassName:"DHCMed.EPDService.AppendixCardSrv",
 				QueryName:"QryAppendixCartItem",
 				AppendixCardID:RowData.ID,
-				IsActive:'Y'
+				IsActive:''
 			},
 			columns:[[
 				{field:'ID',title:'ID',hidden:true},				
@@ -150,6 +243,16 @@
 									}
 					}
 					,editor:{type:'icheckbox',options:{on:'Y',off:'N'}}},
+					{field:'ItemActive',title:'是否有效',align:'center',width:'90',
+					formatter:function(value,row){
+							if(value=="Y"){
+								return "是"
+								}
+								else{
+									return "否"
+									}
+					}
+					,editor:{type:'icheckbox',options:{on:'Y',off:'N'}}},
 				{field:'ValExp',title:'默认值表达式',width:'100',editor:'text'}
 			]],
 			onDblClickRow:function(rindex,rowData1){
@@ -175,6 +278,7 @@
 					HiddenValueDataType :'',
 					HiddenValueDicName  :'',
 					IsNecess            :'',
+					ItemActive          :'',
 					ValExp              :'' 
 				}
 			});
@@ -182,75 +286,7 @@
 			$('#gridAppendixItem').datagrid('selectRow', obj.editIndex).datagrid('beginEdit', obj.editIndex);
 		}
 	}
-	//保存附卡         
-	obj.btnSave_click = function(){
-		var errinfo = "";
-		var gridInfData = $("#gridAppendixCard").datagrid('getSelected');
-		
-		var Code = "";
-		var Description = "";
-		var FromDate = "";
-		var IsActive = "";
-		var ResumeText = "";
-		var Type = "";
-		var inputStr = "";
-		if(gridInfData!=null){
-			var ID = gridInfData.ID;
-			inputStr = ID + "^";
-
-		}else{
-			inputStr = "^";
-		}
-		Code = $.trim($("#txtCode").val())
-		Description = $.trim($("#txtDesc").val());
-		FromDate =$("#dtActiveDate").datebox('getValue');
-		IsActive = $("#chkWork").checkbox('getValue');
-		IsActive = (IsActive==true? 'Y': 'N');			
-		ResumeText = $.trim($("#txtResume").val());
-		Type = $("#txtType").val();
-		if (!Code) {
-			errinfo = errinfo + "代码为空!<br>";
-		}
-		if (!Description) {
-			errinfo = errinfo + "描述为空!<br>";
-		}
-		if(ResumeText.length>30){
-			errinfo = errinfo + "备注不可超过30字!<br>";
-		}
-		if (errinfo) {
-			$.messager.alert("错误提示", errinfo, 'info');
-			return;
-		}
-		if(!gridInfData){
-			$.messager.alert("提示", "请联系相关维护人员添加!", 'info');
-			return;
-		}
-		inputStr = inputStr + Code + "^";
-		inputStr = inputStr + Description + "^";
-		inputStr = inputStr + IsActive + "^";
-		inputStr = inputStr + Type + "^";
-		inputStr = inputStr + FromDate + "^";
-		inputStr = inputStr + ResumeText + "^";
-		var flg = $m({
-			ClassName:"DHCMed.EPD.AppendixCard",
-			MethodName:"Update",
-			arg:inputStr,
-			separete:"^"
-		},false);
-		if (parseInt(flg) <= 0) {
-			if (parseInt(flg) == -1) {
-				$.messager.alert("错误提示", "数据重复，请重新填写！", 'info');
-			} else {
-				$.messager.alert("错误提示", "更新数据错误!Error=" + flg, 'info');
-			}
-			return;
-		}else {
-			$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
-			obj.ClearFormItem1();
-			obj.RecRowID="";
-			obj.gridAppendixCard.reload();//刷新当前页         
-		}		
-	}
+	
 	
 	//前台保存数据
 	$.extend($.fn.datagrid.methods, {
@@ -309,6 +345,8 @@
 				var ItemCode ="";
 				var IsActive = "";
 				var IsNecess = "";
+				var ItemActive = "";
+				
 				var Name = "";
 				var ValExp = ""
 				var inputStr = "";
@@ -317,11 +355,13 @@
 					HiddenValueDataType = RowData.HiddenValueDataType;
 					HiddenValueDicName = RowData.HiddenValueDicName;
 					ItemCode = RowData.ItemCode
-					IsActive = "Y";
+					IsActive = RowData.ItemActive
 					ID = RowData.ID;
 					IsNecess = RowData.IsNecess;
 					Name = RowData.Name;
 					ValExp = RowData.ValExp;
+					ItemActive = RowData.ItemActive;
+					
 					
 				}else{            //保存新行
 					var newData = $("#gridAppendixItem").datagrid('getSelected');
@@ -329,7 +369,7 @@
 					HiddenValueDataType = newData["HiddenValueDataType"];
 					HiddenValueDicName = newData["HiddenValueDicName"];
 					ItemCode = newData["ItemCode"];
-					IsActive = "Y"
+					IsActive = newData["ItemActive"];
 					IsNecess = newData["IsNecess"];
 					Name = newData["Name"];
 					ValExp = newData["ValExp"];

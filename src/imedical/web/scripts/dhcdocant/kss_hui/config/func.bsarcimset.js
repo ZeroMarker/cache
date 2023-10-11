@@ -25,9 +25,15 @@ function Init(){
 	InitHospList();
 	InitArcimList();
 	InitGrid();
-	
+	InitCache();
 }
-
+function InitCache () {
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function InitEvent(){
 	$("#BFind").click(findCfg)
 }

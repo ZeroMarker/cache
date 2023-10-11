@@ -62,7 +62,13 @@ function BFind_Click()
 	val=val+"&EndDate="+GetElementValue("EndDate");
 	val=val+"&UserDR="+GetElementValue("UserDR");
 	val=val+"&QXType="+GetElementValue("QXType");
-	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQUseRecordFind"+val;  //modify by lmm 2018-09-02 hisui改造：修改hisui默认csp
+    //modified by cjt 20230420 需求号2888051 增加mwtoken
+    var url="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQUseRecordFind"+val;
+    if ('function'==typeof websys_getMWToken) {
+        url=url+"&MWToken="+websys_getMWToken();
+    }
+    window.location.href=url;
+	//window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQUseRecordFind"+val;  //modify by lmm 2018-09-02 hisui改造：修改hisui默认csp
 }
 
 function GetVData()

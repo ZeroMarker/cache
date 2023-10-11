@@ -38,6 +38,7 @@ function initDocument()
 		
 		
 	});
+	setRequiredElements("IHTCode^IHTDesc"); //add by sjh SJH0034 2020-09-10
 	
 }
 function BSave_Clicked()
@@ -76,20 +77,32 @@ function BDelete_Clicked()
 	 messageShow("alert","info","",t[-9243]);
 	}
 	else
-	{ 	var datalist=JSON.stringify(datalist)
-		var jsonData=tkMakeServerCall("web.DHCEQ.EM.BUSAttributeCat","SaveAttributeCat",datalist,"2");
-		jsonData=JSON.parse(jsonData);
-		if(jsonData.SQLCODE==0)
-		{ 
-			 messageShow("alert","info","",t[jsonData.SQLCODE]);
-			 window.location.reload();
-		}
-		else
-		{ 
-			{messageShow("alert","error","错误提示",t[jsonData.SQLCODE]);return;}
-		}
+	{ 	
+	    //modified by wy 2021-9-14 2144654
+		messageShow("confirm","info","提示","是否删除该信息？","",BDelete,function(){
+			return;
+		});	
+
 	}
 }
+function BDelete()
+{ 
+	var datalist=getInputList();
+	var datalist=JSON.stringify(datalist)
+	var jsonData=tkMakeServerCall("web.DHCEQ.EM.BUSAttributeCat","SaveAttributeCat",datalist,"2");
+	jsonData=JSON.parse(jsonData);
+	if(jsonData.SQLCODE==0)
+	{ 
+		messageShow("alert","success","提示",t[jsonData.SQLCODE]);
+	    window.setTimeout(function(){window.location.reload();},300); 
+			 
+	}
+	else
+	{ 
+		messageShow("alert","error","错误提示",t[jsonData.SQLCODE]);return;
+	}
+}
+
 //modify by wl 2020-06-22 增加参数
 function BFind_Clicked()
 {

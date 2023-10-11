@@ -1,6 +1,20 @@
 ﻿$(function(){
+	document.title = emrTrans("首页签名");
 	InitSignType(signType);
-		$HUI.radio("[name='admStatus']",{
+	$HUI.radio("[name='medicineStatus']",{
+		onChecked:function(e,value){
+			InitSignType(signType);
+			if (this.id == "radioChinese")
+			{
+				tmpDocID = chineseDocID;
+			}
+			else
+			{
+				tmpDocID = docId;
+			}
+		}
+	});	
+	$HUI.radio("[name='admStatus']",{
 		onChecked:function(e,value){
 			if (this.id == "radioInp")
 			{
@@ -16,15 +30,19 @@
 	});	
 	if (signType == "Nur")
 	{
+		$("#layoutMain").layout('panel','north').panel('resize',{height:'365'});
+		$('#layoutMain').layout('resize');
+		$("#NurLoc").css("display","block");
+		InitCTLoc("#cbxNurLoc","E");
 		$("#loc").css("display","none");
 		$("#ward").css("display","block");
 		InitCTLoc("#wardcombo","W");
 		$("#wardcombo").combogrid("setValue", userLocID);	
-		$("#wardcombo").combogrid("setText", userlocName);
 		$HUI.radio("#radioInp").setValue(true);
 	}
 	else
 	{
+		$("#NurLoc").css("display","none");
 		$("#loc").css("display","block");
 		$("#ward").css("display","none");
 		InitCTLoc("#cbxLoc","E");
@@ -37,7 +55,7 @@
 		if(groupFlag && !LocFlag){
 			$HUI.checkbox("#chkGroup").setValue(true);	
 			$("#cbxLoc").combobox('disable');
-		}else if(LocFlag){
+		}else{
 			$HUI.checkbox("#chkLoc").setValue(true);
 			$("#cbxLoc").combobox('disable');
 		}
@@ -51,11 +69,15 @@
 	
 	InitPatientList();
 	GetData();
-	$("#frameEditor").attr("src","emr.ip.group.editor.sign.csp");
+	$("#frameEditor").attr("src","emr.ip.group.editor.sign.csp"+"?MWToken="+getMWToken());
+	$("#frameEditor").css("display","none");
+	initNoSelectedPng();
 });
 
 function InitSignType(signType)
 {
+	var medicineType = $("input[name='medicineStatus']:checked").val();
+	
 	jQuery.ajax({
 		type: "GET",
 		dataType: "json",
@@ -65,7 +87,8 @@ function InitSignType(signType)
 			"OutputType":"String",
 			"Class":"EMRservice.BL.GroupSignType",
 			"Method":"GetData",
-			"p1":signType
+			"p1":signType,
+			"p2":medicineType
 		},
 		success: function(d) {
 			var data = eval(d);
@@ -87,7 +110,7 @@ function InitSignType(signType)
 				onLoadSuccess:function(d){
 					var flag = "0";
 					$.each(data,function(idx,val){
-						if (val.Code == userPost){
+						if (val.Code.split(",").indexOf(userPost,0)!=-1 ){
 							$('#cboSignType').combobox('select',val.GlossaryCode);
 							flag = "1"
 							return;
@@ -96,7 +119,7 @@ function InitSignType(signType)
 					if (flag == "0")
 					{
 						$.each(data,function(idx,val){
-							if (val.Code == userLevel){
+							if (val.Code.split(",").indexOf(userLevel,0)!=-1){
 								$('#cboSignType').combobox('select',val.GlossaryCode);
 							return;
 							}
@@ -113,7 +136,7 @@ function InitSignType(signType)
 function InitCTLoc(cobId,type)
 {
 	$(cobId).combogrid({  
-		url: "../EMRservice.Ajax.common.cls?OutputType=String&Class=EMRservice.Ajax.hisData&Method=GetLocListbyType&p1=&p2="+type,		
+		url: "../EMRservice.Ajax.common.cls?OutputType=String&Class=EMRservice.Ajax.hisData&Method=GetLocListbyType&p1=&p2="+type+"p3="+hospitalID,		
 	    idField:'Id',
 	    async:false, 
 	    textField:'Text',
@@ -181,7 +204,7 @@ function InitCTLoc(cobId,type)
             }, 
 			query: function(q) {
  	            //动态搜索
-	            $(cobId).combogrid("grid").datagrid("reload", {'p1':q,'p2':type});
+	            $(cobId).combogrid("grid").datagrid("reload", {'p1':q,'p2':type,'p3':hospitalID});
 	        	$(cobId).combogrid("setValue", q);
 	        }
 	    }
@@ -198,13 +221,13 @@ function InitPatientList()
     pageList:[10,20,30], 
     loadMsg:'数据装载中......',
     autoRowHeight: true,
-    url:'../EMRservice.Ajax.patientInfo.cls?action=GetAdmRecordList', 
     singleSelect:true,
     idField:'EpisodeID', 
     rownumbers:true,
     pagination:true,
     fit:true,
 	remoteSort:false,
+	border:false,
     columns:[[  
         {field:'PatientID',title:'PatientID',width:80,hidden: true},
         {field:'EpisodeID',title:'EpisodeID',width:80,hidden: true},
@@ -246,7 +269,7 @@ function InitPatientList()
 				"actionType":"LOAD",
 				"chartItemType":seleRow.chartItemType,
 				"characteristic":"0",
-				"emrDocId":docId,
+				"emrDocId":tmpDocID,
 				"id":seleRow.InstanceID,
 				"isLeadframe":"0",
 				"isMutex":"1",
@@ -255,6 +278,8 @@ function InitPatientList()
 				"templateId":seleRow.templateID,
 				"text":seleRow.Title		
 			};
+			$("#frameEditor").css("display","block");
+			$("#noRecordpngdiv").css("display","none");
 			document.getElementById("frameEditor").contentWindow.pInfo = pInfo;
 			document.getElementById("frameEditor").contentWindow.InitDocument(tmp);
  
@@ -290,9 +315,22 @@ function GetData()
 	 var isArrivedQue = "";
 	 var tmpUserLoc = "";
 	 var tmpUserID = "";
+	 var tmpNurUserID = "";
 	 if (signType == "Nur")
 	 {
+		var selexpLoc = $('#cbxNurLoc').combogrid('grid').datagrid('getSelected');
+		if (selexpLoc != null) expectedLocId = selexpLoc.Id;
 		wardId = $('#wardcombo').combogrid("getValue"); 
+        //选本人
+        var chkArrivedQueNurUser = $("#chkNurUser")[0].checked;
+        if (chkArrivedQueNurUser){
+            if (wardId != ""){
+                tmpNurUserID = userID;
+            }else {
+                top.$.messager.alert("提示信息","请选择病区后再进行查询！");
+                return;
+            }
+        }
 	 }
 	 else
 	 {
@@ -321,45 +359,57 @@ function GetData()
 	     if(chkArrivedQueGroup){
 		     //本医疗组查询
 		     isArrivedQue="chkGroup";
-		     tmpUserID = "";
+		     tmpUserID = userID;
 		     expectedLocId = "";
-		 }
-		 if (tmpUserID!=""&&expectedLocId==""&&isArrivedQue=="off"&&(admStatus==""||admStatus==undefined)){
-	     	startDate=FunGetDateStr(30);
-	     	endDate=FunGetDateStr(0);
-	      }
+	     }
 	 }
 	 var signStatus =  $('#cboSign').combobox('getValue');
 	 var glossaryCode = $('#cboSignType').combobox('getValue');
 	 
 	if (patientNo=="" && medicareNo=="" && patientName=="" && medicalInsuranceNo=="" && idCardNo=="" && startDate=="" && endDate=="" && outStartDate==""&&outEndDate=="" && isArrivedQue=="off"&&expectedLocId=="")
 	{
-		alert("不能只查询全部就诊记录");
+		top.$.messager.alert("提示信息","不能只查询全部就诊记录");
 		return;
 	}
+	$.ajax({
+		type: "POST",
+		dataType: "json",
+		url: "../EMRservice.Ajax.patientInfo.cls",
+		async: false,
+		data: {
+			"action":"GetAdmRecordList",
+			DocID:tmpDocID,
+			GlossaryCode:glossaryCode,
+			SignStatus:signStatus,
+			LocID:tmpUserLoc,
+			PatientNo: patientNo,  
+			MedicareNo: medicareNo,
+			MedicalInsuranceNo: medicalInsuranceNo,
+			CFCardNo: "",
+			IDCardNo: idCardNo,
+			PatientName: patientName,
+			AdmType: "I",  	
+			AdmStatus: admStatus,
+			StartDate: startDate,
+			EndDate: endDate,
+			OutStartDate: outStartDate,
+			OutEndDate: outEndDate,
+			IsArrivedQue: isArrivedQue,
+			ExpectedLocID: expectedLocId,
+			WardID:wardId,
+			UserID:tmpUserID,
+			NurUserID:tmpNurUserID
+		},
+		success:function(data){
+			$('#patientListData').datagrid('load',data);
+			if (data.total == "0")
+			{
+				top.$.messager.alert("提示信息","当前查询条件下未查到需要签名的病案首页，暂不需要签名！");
+			} 
+			},
+		error : function(d) { alert("GetAdmRecordList error");}
+		})
 	
-	$('#patientListData').datagrid('load', {  
-		DocID:docId,
-		GlossaryCode:glossaryCode,
-		SignStatus:signStatus,
-		LocID:tmpUserLoc,
-   	 	PatientNo: patientNo,  
-    	MedicareNo: medicareNo,
-    	MedicalInsuranceNo: medicalInsuranceNo,
-    	CFCardNo: "",
-    	IDCardNo: idCardNo,
-    	PatientName: patientName,
-   		AdmType: "I",  	
-    	AdmStatus: admStatus,
-    	StartDate: startDate,
-    	EndDate: endDate,
-		OutStartDate: outStartDate,
-    	OutEndDate: outEndDate,
-    	IsArrivedQue: isArrivedQue,
-    	ExpectedLocID: expectedLocId,
-    	WardID:wardId,
-    	UserID:tmpUserID	
-	}); 
 }
 $("#PatientListQuery").click(function () {
     GetData();
@@ -464,4 +514,20 @@ function setMedicareNoLength(){
 		medicareNo ="FC"+ medicareNo;
 	}
 	$("#medicareNo").val(medicareNo);
+}
+
+function initNoSelectedPng()
+{
+	if ("undefined"==typeof HISUIStyleCode || HISUIStyleCode==""){
+	 	// 炫彩版
+	 	$("#noRecordpngdiv").append('<center style="margin-top: 20%"><img  src="../images/no_data.png"  alt="请选择患者" /></center>');
+	 }else if (HISUIStyleCode=="lite"){
+	 	// 极简版
+	 	$("#noRecordpngdiv").append('<center style="margin-top: 20%"><img  src="../images/no_data_lite.png"  alt="请选择患者" /></center>');
+	 	$("#layout").layout('panel','west').panel('resize',{width:'410'});
+	 }else
+	 {
+		// 炫彩版
+		$("#noRecordpngdiv").append('<center style="margin-top: 20%"><img  src="../images/no_data.png"  alt="请选择患者" /></center>');
+	}
 }

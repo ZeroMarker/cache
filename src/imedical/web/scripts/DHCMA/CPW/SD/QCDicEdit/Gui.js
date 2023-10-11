@@ -4,6 +4,8 @@ function InitDicEditWin(){
 	obj.DicID=""
 	obj.TypeID=""
 	obj.TypeCode=""
+	obj.VerID="";
+	obj.ItemID="";
     $.parser.parse(); // 解析整个页面 
 	$('#ItemOptions').tree({
 		url:$URL+"?ClassName=DHCMA.CPW.SDS.QCEntityItemSrv&QueryName=QryQCTree&ResultSetType=array"	
@@ -28,42 +30,63 @@ function InitDicEditWin(){
 		closed: true,
 		modal: true
 	});
+	obj.QCVersion=$HUI.combobox("#QCVersion",{
+		url:$URL+'?ClassName=DHCMA.CPW.SDS.QCEntityVersionSrv&QueryName=QryQCEntityVer&ResultSetType=Array',
+		valueField:'BTID',
+		textField:'BTCode',
+		placeholder:'版本选择',
+		onSelect:function(record){
+			obj.gridDicType.load({
+			    ClassName:"DHCMA.CPW.SDS.DicTypeSrv",
+				QueryName:"QryDicType"	,
+				aEntityID:obj.QCEntityID,
+				aVersion:record.BTID	
+				}
+			) ;	
+			obj.VerID=record.BTID;
+			obj.gridDictionary.loadData([]);
+		}
+	})
 	$("#btnAddT").linkbutton("disable");
 	$("#btnEditT").linkbutton("disable");
 	$("#btnAddD").linkbutton("disable");
 	$("#btnEditD").linkbutton("disable");
  	//监听事件
 	$('#ItemOptions').tree({
-			onClick:function(node){	
-				obj.gridDicType.load({
-					ClassName:"DHCMA.CPW.SDS.DicTypeSrv",
-					QueryName:"QryDicType",
-					aEntityID:node.id		
-					});		
-				obj.gridDictionary.loadData([]);	
+			onClick:function(node){		
 				obj.QCEntityID=node.id;
 				obj.QCEntityDesc=node.text;
-			}
-			
+				var CurVerID=$m({
+					ClassName:'DHCMA.CPW.SDS.QCEntityVersionSrv',
+					MethodName:'GetQCVerID',
+					aQCID:node.id	
+				},false)
+				$("#btnAddT").linkbutton("enable");
+				$("#btnEditT").linkbutton("disable");
+				$("#btnAddD").linkbutton("disable");
+				$("#btnEditD").linkbutton("disable");
+				obj.QCVersion.clear();
+				obj.QCVersion.select(CurVerID)
+				obj.gridDictionary.loadData([]);
+				$('#dicTKey').searchbox('setValue',"")
+				$('#dicDKey').searchbox('setValue',"")
+			}		
 	})
 	
 	obj.gridDictionary = $HUI.datagrid("#gridDictionary",{
-		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
+		pagination: false, //如果为true, 则在DataGrid控件底部显示分页工具栏
 		rownumbers: true, //如果为true, 则显示一个行号列
 		singleSelect: true,
 		nowrap:false,
 		autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
 		loadMsg:'数据加载中...',
-		pageSize: 10,
-		pageList : [10,20,50,100,200],
 		url:$URL,
 		queryParams:{
 						ClassName:"DHCMA.CPW.SDS.DictionarySrv",
-						QueryName:"QryDictByType",
-						aTypeCode:""
+						QueryName:"QryDictByType"
 		},
 		columns:[[
-			{field:'BTCode',title:'字典代码',width:'80',sortable:true},
+			{field:'BTCode',title:'字典代码',width:'80'},
 			{field:'BTDesc',title:'字典名称',width:'200'}, 
 			{field:'IsDefault',title:'默认项',width:'70',
 			formatter:function(v,r,i){
@@ -90,11 +113,11 @@ function InitDicEditWin(){
 		},
 		onSelect:function(rindex,rowData){
 			if (rindex>-1) {
-				$("#btnEditD").linkbutton("enable");
+				obj.gridDictionary_onSelect(rowData,rindex);
 			}
 		},
 		onLoadSuccess:function(data){
-			$("#btnAddD").linkbutton("enable");
+			//$("#btnAddD").linkbutton("disable");
 			$("#btnEditD").linkbutton("disable");
 		}
 	});
@@ -110,14 +133,14 @@ function InitDicEditWin(){
 		url:$URL,
 		nowrap:false,
 		fitColumns:true,
-		displayMsg:'',
+		//displayMsg:'',
 		queryParams:{
 					ClassName:"DHCMA.CPW.SDS.DicTypeSrv",
 					QueryName:"QryDicType",
 					aEntityID:""	
 		},
 		columns:[[
-			{field:'BTCode',title:'值域代码',width:'200',sortable:true},
+			{field:'BTCode',title:'值域代码',width:'200'},
 			{field:'BTDesc',title:'值域名称',width:'320'}, 
 			{field:'BTIsActive',title:'是否有效',width:'70',
 			formatter:function(v,r,i){
@@ -137,15 +160,14 @@ function InitDicEditWin(){
 		onSelect:function(rindex,rowData){
 			if (rindex>-1) {
 				obj.gridDicType_onSelect(rowData,rindex);
-				$("#btnEditT").linkbutton("enable");
 				obj.TypeCode=rowData.BTCode
 			}
 		},
 		onLoadSuccess:function(data){
-			$("#btnAddT").linkbutton("enable");
+			//$("#btnAddT").linkbutton("enable");
 			$("#btnEditT").linkbutton("disable");
 			$("#btnAddD").linkbutton("disable");
-			$("#btnEditD").linkbutton("disable");
+			obj.gridDictionary.loadData([]);
 		}
 	});
 	

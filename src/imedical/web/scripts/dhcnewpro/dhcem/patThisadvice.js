@@ -2,6 +2,8 @@
 $(document).ready(function(){
 	initParams();
 	
+	initPage();
+	
 	initCombobox();
 
 	initDatagrid();
@@ -14,16 +16,26 @@ $(document).ready(function(){
 function initParams(){
 	//colorArr=["red","blue","yellow","orange","green","#fff60b","#ccc","#eac","#666","#888"]
 	colorArr=["#ff32a1","#d952d1","#9152d9","#494dee","#327eb2","#449be2","#39c6c8","#2ab66a","#aade5f","#ffb746","#ff793e","#ff5252","#f16e57"] //hxy 2018-10-31
+	
+	//PatientID==""?EpisodeID="":"";
+}
+
+function initPage(){
+	if(EpisodeID==""){
+		$(".amount").hide()	
+	}
 }
 
 function initCombobox(){
 	$HUI.combobox("#histAdm",{
-		url:LINK_CSP+"?ClassName=web.DHCEMInComUseMethod&MethodName=JsonAdms&PatID="+PatientID+"&LgHospID="+HospID, //hxy 2020-06-18 HospID
+		url:LINK_CSP+"?ClassName=web.DHCEMInComUseMethod&MethodName=JsonAdms&PatID="+PatientID+"&LgHospID="+HospID+"&AdmId="+EpisodeID, //hxy 2020-06-18 HospID //hxy 2022-10-17 AdmId
 		valueField:'value',
 		textField:'text',
 		onSelect:function(option){
-			$("#noAdmTip").hide();
+			$("#noAdmTip").length?$("#noAdmTip").hide():"";
+			$(".amount").show();
 	        EpisodeID = option.value;
+	        $HUI.combobox("#Type",{"url":LINK_CSP+"?ClassName=web.DHCEMPatThisOrd&MethodName=QueryOrderTypeNew&AdmId="+EpisodeID+"&InHospID="+HospID})
 	        search();
 	    }	
 	})
@@ -38,12 +50,12 @@ function initCombobox(){
 	        search();
 	    }	
 	})
-	$HUI.combobox("#Type").setValue("全部");
-	$HUI.combobox("#Type").setText("全部");
+	$HUI.combobox("#Type").setValue($g("全部"));
+	$HUI.combobox("#Type").setText($g("全部"));
 	
 	$HUI.combobox("#StopOrAll",{//hxy 2018-11-01 医嘱子类
 		url:"",
-		data:[{value:1,text:"未停止"},{value:2,text:"已停止"}],
+		data:[{value:1,text:$g("未停止")},{value:2,text:$g("已停止")}],
 		valueField:'value',
 		textField:'text',
 		onSelect:function(option){
@@ -96,13 +108,15 @@ function initDatagrid(){
 			pageSize:60,  
 			pageList:[30,60,120], 
 			autoSizeColumn:false,
-			loadMsg: '正在加载信息...',
+			loadMsg: $g('正在加载信息...'),
 			rownumbers : true,
 			pagination:true,
 			singleSelect:true,
 			selectOnCheck: false,
 			checkOnSelect: false,
 			bodyCls:'panel-header-gray', //hxy 2018-10-29
+			toolbar:"#toolBar", //hxy 2023-01-11 st
+			border:false, //ed
 	        rowStyler: function(index,row){
 				if((row.OrdCreateDate=="")||(row.OrdCreateDate==undefined)){
 					return 'background-color:#6293BB;color:#fff;'; // return inline style
@@ -110,7 +124,7 @@ function initDatagrid(){
 			},
 			onLoadSuccess:function (data){
 				var typeDesc = $HUI.combobox("#Type").getValue();
-				if(typeDesc!=="全部") return;
+				//if(typeDesc!=="全部") return;
 				var obj1=document.getElementById("TotalAmount");	//总费用
 				var obj2=document.getElementById("PayedAmount");	//已缴费合计
 				var obj3=document.getElementById("NotPayedAmount");	//未缴费合计
@@ -118,14 +132,14 @@ function initDatagrid(){
 				//根据就诊号返回病人费用信息 
 		    	if(data.AllPrice!=""){
 			    	$(".pricePart").show();
-				    if(obj1) obj1.innerHTML="总:"+data.TotalAmount;
-				    if(obj2) obj2.innerHTML="已缴:"+data.PayedAmount;
-				    if(obj3) obj3.innerHTML="未缴:"+data.NotPayedAmount;
+				    if(obj1) obj1.innerHTML=$g("总")+":"+data.TotalAmount;
+				    if(obj2) obj2.innerHTML=$g("已缴")+":"+data.PayedAmount;
+				    if(obj3) obj3.innerHTML=$g("未缴")+":"+data.NotPayedAmount;
 			    }else{
 				    $(".pricePart").show();
-				    if(obj1) obj1.innerHTML="总:0.00";
-				    if(obj2) obj2.innerHTML="已缴:0.00";
-				    if(obj3) obj3.innerHTML="未缴:0.00";
+				    if(obj1) obj1.innerHTML=$g("总")+":0.00";
+				    if(obj2) obj2.innerHTML=$g("已缴")+":0.00";
+				    if(obj3) obj3.innerHTML=$g("未缴")+":0.00";
 				}
 				
 				showImgView(data.ItmPriceScale);
@@ -161,7 +175,7 @@ function addViewItm(desc,scale,itmWidth){
 	var itmHtml = '<div class="viewItm"  style="display:inline-block;width:'+itmWidth+';height:10px;background:'+itmColor+'"></div>'
 	
 	var imgViewDescItm = '<div style="display:inline-block;width:10px;height:10px;background:'+itmColor+';border-radius:10px"></div>';
-		imgViewDescItm=imgViewDescItm+'<div style="display:inline-block;">'+desc+(scale*100).toFixed(1)+'%</div>';
+		imgViewDescItm=imgViewDescItm+'<div style="display:inline-block;padding-right:20px">'+desc+(scale*100).toFixed(1)+'%</div>';
 	
 	$("#imgView").append(itmHtml);
 	$("#imgViewDesc").append(imgViewDescItm);

@@ -44,7 +44,11 @@ function InitWinEvent(obj){
 		if (obj.QCEntityID=="") {
 			$.messager.alert("错误提示", "未获取到病种ID", 'info');
 			return;
-			}
+		}
+		if ((BTCode=="")||(BTDesc=="")||(BTIndexCat=="")||(RaqName=="")) {
+			$.messager.alert("错误提示", "指标相关信息不能为空", 'info');
+			return;
+		}
 		var inputStr	=obj.QCEntityID;
 		var inputStr	=inputStr+"^"+RowID;
 		var inputStr	=inputStr+"^"+BTCode;

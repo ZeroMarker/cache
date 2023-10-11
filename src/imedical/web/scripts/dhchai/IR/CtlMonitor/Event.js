@@ -37,10 +37,10 @@ function InitCtlMonitorWinEvent(obj){
 				$.ajax({
 					url : 'dhcmed.cc.sys.ctrlrequest.csp',
 					type : "POST",
-					timeout: 25000,
+					timeout: 55000,
 					data  : {
 						ClassName : 'DHCHAI.Task.TaskManager',
-						MethodName : 'CheckBackTask2',
+						MethodName : 'CheckBactTask',
 						Arg1 : $.form.GetCurrDate('-'),
 						Arg2 : $.form.GetCurrDate('-'),
 						ArgCnt : 2

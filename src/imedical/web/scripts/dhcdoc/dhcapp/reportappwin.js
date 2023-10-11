@@ -22,7 +22,13 @@ showItmAppDetWin = function(arReqID){
 	};
 	
 	new WindowUX('预约详情', 'newWin', '1200', '600', option).Init();
-	
+	var maintablis=$.m({
+	 	ClassName:"DHCDoc.DHCApp.BasicConfig",
+		MethodName:"SentAppionmentAd",
+	 	EpisodeID:EpisodeID,
+	 	arReqID:arReqID,
+	 	HospId:+session['LOGON.HOSPID'],
+		},false);
 	/// 预约详情tab标签
 	var option = {
 		border:true,
@@ -38,12 +44,12 @@ showItmAppDetWin = function(arReqID){
 					$("#dgAppList").datagrid("reload");
 					break;
 				case "app":
-					maintab="dhc.ris.appointment.csp";       //预约
+					maintab=maintablis      //预约
 					break;
 			}
 			if (maintab != ""){
 				//iframe 定义
-		        var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="'+maintab+'?PatientID='+ "" +'&EpisodeID='+ EpisodeID +'"></iframe>';
+		        var iframe='<iframe scrolling="yes" width=99% height=99%  frameborder="0" src="'+maintab+'"></iframe>';
 		        tab.html(iframe);
 	        }
 	    }

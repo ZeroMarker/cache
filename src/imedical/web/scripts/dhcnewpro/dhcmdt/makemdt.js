@@ -173,7 +173,7 @@ function initTable(){
 	var PrvTpEditor={  //设置其为可编辑
 		type: 'combobox',//设置编辑格式
 		options: {
-			url: $URL+"?ClassName=web.DHCEMConsultCom&MethodName=JsonPrvTp",
+			url: $URL+"?ClassName=web.DHCEMConsultCom&MethodName=JsonPrvTp"+"&MWToken="+websys_getMWToken(),
 			valueField: "value", 
 			textField: "text",
 			enterNullValueClear:false,
@@ -230,7 +230,7 @@ function initTable(){
 			onShowPanel:function(){
 				
 				var ed=$("#docTable").datagrid('getEditor',{index:editSelRow,field:'LocDesc'});
-				var unitUrl = $URL+"?ClassName=web.DHCEMConsultCom&MethodName=JsonLocList&LType="+LType+"&LocID="+LgLocID+"&HospID="+LgHospID;
+				var unitUrl = $URL+"?ClassName=web.DHCEMConsultCom&MethodName=JsonLocList&LType="+LType+"&LocID="+LgLocID+"&HospID="+LgHospID+"&MWToken="+websys_getMWToken();
 				$(ed.target).combobox('reload',unitUrl);
 			}		   
 		}
@@ -260,7 +260,7 @@ function initTable(){
 				var LocID = $(ed.target).val();
 				///设置级联指针
 				var ed=$("#docTable").datagrid('getEditor',{index:editSelRow,field:'MarDesc'});
-				var unitUrl=$URL+"?ClassName=web.DHCEMConsLocItem&MethodName=JsonSubMar&LocID="+ LocID;
+				var unitUrl=$URL+"?ClassName=web.DHCEMConsLocItem&MethodName=JsonSubMar&LocID="+ LocID+"&MWToken="+websys_getMWToken();
 				$(ed.target).combobox('reload',unitUrl);
 			}
 		}
@@ -305,7 +305,7 @@ function initTable(){
 				var PrvTpID = $(ed.target).val();
 				///设置级联指针
 				var ed=$("#docTable").datagrid('getEditor',{index:editSelRow,field:'UserName'});
-				var unitUrl=$URL+"?ClassName=web.DHCEMConsultCom&MethodName=JsonLocCareProv&ProvType=DOCTOR&LocID="+ LocID+"&PrvTpID="+ PrvTpID+"&LgUserID="+ LgUserID;
+				var unitUrl=$URL+"?ClassName=web.DHCEMConsultCom&MethodName=JsonLocCareProv&ProvType=DOCTOR&LocID="+ LocID+"&PrvTpID="+ PrvTpID+"&LgUserID="+ LgUserID+"&MWToken="+websys_getMWToken();
 				$(ed.target).combobox('reload',unitUrl);
 			},
 			onChange:function(newValue, oldValue){
@@ -365,7 +365,7 @@ function initTable(){
         }
 	};
 	/// 就诊类型
-	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsonQryConsult&ID="+CstID;
+	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsonQryConsult&ID="+CstID+"&MWToken="+websys_getMWToken();
 	new ListComponent('docTable', columns, uniturl, option).Init();
 }
 

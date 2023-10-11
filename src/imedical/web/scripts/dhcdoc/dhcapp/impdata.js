@@ -13,18 +13,61 @@ function initPageDefault(){
 
 /// 页面 Button 绑定事件
 function initBlButton(){
-	
+	$("#ImpTrePath").filebox({
+		onChange: function(newVal, oldVal) {
+			var file = $(this).filebox("files")[0];
+			//readWorkbookFromLocal(file, showWorkbook)
+		}, onClickButton: function() {
+			$(this).filebox("clear")
+		}
+	})
 	///  检查分类树导入
-	$('#ImpTree').bind("click",ImpTreeTimeOut);
-	
+	//$('#ImpTree').bind("click",ImpTreeTimeOut);
+	$('#ImpTree').click(function() {
+		var files = $("#ImpTrePath").filebox("files")
+		if (files.length == 0) {
+			$.messager.alert("提示", "请选择 Excel 文件!", 'info')
+			return false
+		}
+		readWorkbookFromLocal(files[0], ImpTree)
+	})
 	///  检查分类对应医嘱项和部位导入
-	$('#ImpArc').bind("click",ImpArcTimeOut);
-	
+	$("#ImpArcPath").filebox({
+		onChange: function(newVal, oldVal) {
+			var file = $(this).filebox("files")[0];
+			//readWorkbookFromLocal(file, showWorkbook)
+		}, onClickButton: function() {
+			$(this).filebox("clear")
+		}
+	})
+	//$('#ImpArc').bind("click",ImpArcTimeOut);
+	$('#ImpArc').click(function() {
+		var files = $("#ImpArcPath").filebox("files")
+		if (files.length == 0) {
+			$.messager.alert("提示", "请选择 Excel 文件!", 'info')
+			return false
+		}
+		readWorkbookFromLocal(files[0], ImpArc)
+	})
 	///  检查部位导入
 	/// $('#ImpPart').bind("click",ImpPartTimeOut);
-	
-		$('#ImpPart').bind("click",ImportDataPart);   ///add by sufan 2018-12-15
-		
+	$("#ImpPartPath").filebox({
+		onChange: function(newVal, oldVal) {
+			var file = $(this).filebox("files")[0];
+			//readWorkbookFromLocal(file, showWorkbook)
+		}, onClickButton: function() {
+			$(this).filebox("clear")
+		}
+	})
+	//$('#ImpPart').bind("click",ImportDataPart);   ///add by sufan 2018-12-15
+	$('#ImpPart').click(function() {
+		var files = $("#ImpPartPath").filebox("files")
+		if (files.length == 0) {
+			$.messager.alert("提示", "请选择 Excel 文件!", 'info')
+			return false
+		}
+		readWorkbookFromLocal(files[0], ImpPartTree)
+	})	
 	///  检查分类树模板导出
 	$('#ExpTreeTemp').bind("click",ExpTreeTemp);
 	
@@ -34,6 +77,9 @@ function initBlButton(){
 	///  检查部位模板导出
 	$('#ExpPartTemp').bind("click",ExpPartTemp);
 	
+	/// 检查分类树导出
+	$('#ExpTree').bind("click",ExpAPPTree);
+	
 }
 
 ///  检查分类对应医嘱项和部位导入
@@ -42,11 +88,83 @@ function ImpTreeTimeOut(){
     $.messager.progress({ title:'请稍后', msg:'数据正在导入中...' });
 	setTimeout(function(){ ImpTree()},1000)
 }
-
+function readWorkbookFromLocal(file, callBackFun) {
+	var reader = new FileReader()
+	if (reader.readAsBinaryString) {
+		reader.readAsBinaryString(file)
+		reader.onload = function(e) {
+			const data = e.target.result
+			var workbook = XLSX.read(data, { type: 'binary' })
+            callBackFun(workbook)
+		}
+	} else {
+		reader.readAsArrayBuffer(file)
+		reader.onload = function(e) {
+			const data = e.target.result
+			var workbook = XLSX.read(data, { type: 'array' })
+			callBackFun(workbook)
+		}
+	}
+}
 ///  检查分类树导入
-function ImpTree(){
+function ImpTree(workbook){
+	$.messager.progress({
+		title: "提示",
+		msg: '正在导入数据',
+		text: '导入中....'
+	})
+	var checkBlankLine = "";
+	var blackLines = [];
+	for (var i=0; i< 100; i++) {
+		checkBlankLine += "^"
+	}
+	var sheetNames = workbook.SheetNames
+	var worksheet = workbook.Sheets[sheetNames[0]]
+	var csv = XLSX.utils.sheet_to_csv(worksheet)
 	
-	var efilepath = $("input[name=catuploadfile]").val();
+	var excelRows = []
+	var excelRow = ""
+	var success = 0
+	var rows = csv.split("\n")
+	rows.pop()
+	rows.forEach(function(row, index) {
+		var cols = row.split(",")
+		if (index == 0) {
+		} else {
+			excelRow = cols.join("^")
+			if (checkBlankLine.indexOf(excelRow) > -1) {
+				blackLines.push(index);
+			}
+			var resVal = InsTmpGlobal(excelRow);
+			if (resVal == -2){
+				$.messager.alert('提示',"第"+ row +"行内容，医院信息异常");
+			}else if (resVal == -3){
+				$.messager.alert('提示',"第"+ row +"行内容，代码重复，请核实");
+			}else if (resVal < 0){
+				$.messager.alert('提示',"第"+ row +"行内容，数据错误，请核实");
+			}
+			if (resVal != 0){
+				success = -1;
+				//break;
+			}
+			excelRows.push(excelRow)
+		}
+	})
+	if (blackLines.length > 0 ) {
+		$.messager.alert('提示', "有" + blackLines.length + "空行，请先处理Excel空行！", "info")
+		$.messager.progress("close");
+		return false;
+	}
+	if (success == "-1"){
+		killTmpGlobal();  /// 清除临时global
+		/// 关闭加载框
+		$.messager.progress('close'); 
+		return;
+	}
+	InsTreeData(pid);
+	$.messager.progress("close");
+	
+	/*var efilepath = $("input[name=catuploadfile]").val();
     if (efilepath.indexOf("fakepath") > 0){
 	   $.messager.alert('提示',"请在IE下执行导入！");
 	   $.messager.progress('close'); 
@@ -127,7 +245,8 @@ function ImpTree(){
 	oSheet = null;
             
 	/// 关闭加载框
-	$.messager.progress('close'); 
+	$.messager.progress('close'); */
+	
 }
 
 /// 临时存储其他项目
@@ -161,8 +280,69 @@ function ImpArcTimeOut(){
 	setTimeout(function(){ ImpArc() },1000)
 }
 ///  检查分类对应医嘱项和部位导入
-function ImpArc(){
-
+function ImpArc(workbook){
+	$.messager.progress({
+		title: "提示",
+		msg: '正在导入数据',
+		text: '导入中....'
+	})
+	var checkBlankLine = "";
+	var blackLines = [];
+	for (var i=0; i< 100; i++) {
+		checkBlankLine += "^"
+	}
+	var sheetNames = workbook.SheetNames
+	var worksheet = workbook.Sheets[sheetNames[0]]
+	var csv = XLSX.utils.sheet_to_csv(worksheet)
+	
+	var excelRows = []
+	var excelRow = ""
+	var rows = csv.split("\n")
+	var success=0
+	rows.pop()
+	rows.forEach(function(row, index) {
+		var cols = row.split(",")
+		if (index == 0) {
+		} else {
+			excelRow = cols.join("^")
+			if (checkBlankLine.indexOf(excelRow) > -1) {
+				blackLines.push(index);
+			}
+			var resVal = InsTmpArcGlobal(excelRow);
+			if (resVal == "-1"){
+				$.messager.alert('提示',"第"+ row +"行内容，分类名称不存在");
+			}else if ((resVal == "-2")||(resVal == "-3")){
+				$.messager.alert('提示',"第"+ row +"行内容，检查项目不存在");
+			}else if (resVal == "-4"){
+				$.messager.alert('提示',"第"+ row +"行内容，检查项目不能对照一级部位");
+			}else if (resVal == "-5"){
+				$.messager.alert('提示',"第"+ row +"行内容，医院不能维护");
+			}else if (resVal == "-6"){
+				$.messager.alert('提示',"第"+ row +"行内容，检查项目不能和医院对应");
+			}
+			
+			if (resVal != 0){
+				success = -1;
+				//break;
+			}
+			excelRows.push(excelRow)
+		}
+	})
+	if (blackLines.length > 0 ) {
+		$.messager.alert('提示', "有" + blackLines.length + "空行，请先处理Excel空行！", "info")
+		$.messager.progress("close");
+		return false;
+	}
+	if (success == "-1"){
+		killTmpGlobal();  /// 清除临时global
+		/// 关闭加载框
+		$.messager.progress('close'); 
+		return;
+	}
+	InsTreeArcData(pid);
+	$.messager.progress("close");
+	
+	/*
 	var efilepath = $("input[name=arcuploadfile]").val();
     if (efilepath.indexOf("fakepath") > 0){
 	   $.messager.alert('提示',"请在IE下执行导入！");
@@ -249,6 +429,7 @@ function ImpArc(){
             
 	/// 关闭加载框
 	$.messager.progress('close'); 
+	*/
 }
 
 /// 临时存储导入数据
@@ -285,7 +466,24 @@ function clearFiles(FilePath){
 
 /// 导出检查分类树模板
 function ExpTreeTemp(){
-	
+	$cm({
+		ResultSetType: "ExcelPlugin",  		// 表示通过DLL生成Excel，可支持IE与Chrome系。Chrome系浏览器请安装中间件
+		// ResultSetTypeDo:"Print",    		// 默认Export，可以设置为：PRINT , PREVIEW
+		localDir: "Self",	      			// D:\\tmp\\表示固定文件路径, "Self"表示用户导出时选择保存路径，默认保存到桌面
+		ExcelName: "检查分类树模板",
+		PageName: "web.DHCEMImpTools:FindAPPTreeTemp",	
+		ClassName: "web.DHCEMImpTools",
+		QueryName: "FindAPPTreeTemp",
+	    rows:10
+	},function(data){
+		$.messager.popover({
+			msg: '模板下载成功，请留意任务栏！',
+			type: 'success',
+			timeout: 2000,
+			showType: 'slide'
+		})
+	})
+	/*
 	//1、保存路径
 	var filePath=browseFolder();
 	if (typeof filePath=="undefined"){
@@ -308,12 +506,30 @@ function ExpTreeTemp(){
 	xlBook.SaveAs(filePath+"DHCAPP_TreeTemp.xlsx");
 	xlApp=null;
 	xlBook.Close(savechanges=false);
-	objSheet=null;
+	objSheet=null;*/
+	
 }
 
 /// 导出检查分类对应医嘱项和部位模板
 function ExpArcTemp(){
-	
+	$cm({
+		ResultSetType: "ExcelPlugin",  		// 表示通过DLL生成Excel，可支持IE与Chrome系。Chrome系浏览器请安装中间件
+		// ResultSetTypeDo:"Print",    		// 默认Export，可以设置为：PRINT , PREVIEW
+		localDir: "Self",	      			// D:\\tmp\\表示固定文件路径, "Self"表示用户导出时选择保存路径，默认保存到桌面
+		ExcelName: "检查医嘱项和部位模板",
+		PageName: "web.DHCEMImpTools:FindArcTemp",	
+		ClassName: "web.DHCEMImpTools",
+		QueryName: "FindArcTemp",
+	    rows:10
+	},function(data){
+		$.messager.popover({
+			msg: '模板下载成功，请留意任务栏！',
+			type: 'success',
+			timeout: 2000,
+			showType: 'slide'
+		})
+	})
+	/*
 	//1、保存路径
 	var filePath=browseFolder();
 	if (typeof filePath=="undefined"){
@@ -336,7 +552,7 @@ function ExpArcTemp(){
 	xlBook.SaveAs(filePath+"DHCAPP_ArcTemp.xlsx");
 	xlApp=null;
 	xlBook.Close(savechanges=false);
-	objSheet=null;
+	objSheet=null;*/
 }
 
 ///  检查分类对应医嘱项和部位导入 
@@ -459,7 +675,24 @@ function ImpPart(){
 
 /// 导出检查分类对应医嘱项和部位模板
 function ExpPartTemp(){
-	
+	$cm({
+		ResultSetType: "ExcelPlugin",  		// 表示通过DLL生成Excel，可支持IE与Chrome系。Chrome系浏览器请安装中间件
+		// ResultSetTypeDo:"Print",    		// 默认Export，可以设置为：PRINT , PREVIEW
+		localDir: "Self",	      			// D:\\tmp\\表示固定文件路径, "Self"表示用户导出时选择保存路径，默认保存到桌面
+		ExcelName: "检查部位模板",
+		PageName: "web.DHCEMImpTools:FindPartTemp",	
+		ClassName: "web.DHCEMImpTools",
+		QueryName: "FindPartTemp",
+	    rows:9999
+	},function(data){
+		$.messager.popover({
+			msg: '模板下载成功，请留意任务栏！',
+			type: 'success',
+			timeout: 2000,
+			showType: 'slide'
+		})
+	})
+	/*
 	//1、保存路径
 	var filePath=browseFolder();
 	if (typeof filePath=="undefined"){
@@ -483,6 +716,7 @@ function ExpPartTemp(){
 	xlApp=null;
 	xlBook.Close(savechanges=false);
 	objSheet=null;
+	*/
 }
 
 /// 弹出路径选择框
@@ -514,9 +748,68 @@ function ImportDataPart() {
    setTimeout(function(){ ImpPartTree()},1000)
   
 }
-function ImpPartTree()
+function ImpPartTree(workbook)
 {
+	$.messager.progress({
+		title: "提示",
+		msg: '正在导入数据',
+		text: '导入中....'
+	})
+	var checkBlankLine = "";
+	var blackLines = [];
+	for (var i=0; i< 100; i++) {
+		checkBlankLine += "^"
+	}
+	var sheetNames = workbook.SheetNames
+	var worksheet = workbook.Sheets[sheetNames[0]]
+	var csv = XLSX.utils.sheet_to_csv(worksheet)
+	
+	var excelRows = []
+	var excelRow = ""
+	var rows = csv.split("\n")
+	var success=0
+	rows.pop()
+	rows.forEach(function(row, index) {
+		var cols = row.split(",")
+		if (index == 0) {
+		} else {
+			excelRow = cols.join("^")
+			if (checkBlankLine.indexOf(excelRow) > -1) {
+				blackLines.push(index);
+			}
+			var resVal = InsPartTmpGlobal(excelRow);
+			if (resVal == "-1"){
+				$.messager.alert('提示',"第"+ i +"行内容，代码重复，请核实");
+			}else if (resVal == "-2"){
+				$.messager.alert('提示',"第"+ i +"行内容，代码重复，请核实");
+			}else if (resVal == "-5"){
+				$.messager.alert('提示',"第"+ i +"行内容，代码为空，请核实");
+			}
+			
+			if (resVal != 0){
+				success = -1;
+				//break;
+			}
+			excelRows.push(excelRow)
+		}
+	})
+	if (blackLines.length > 0 ) {
+		$.messager.alert('提示', "有" + blackLines.length + "空行，请先处理Excel空行！", "info")
+		$.messager.progress("close");
+		return false;
+	}
+	if (success == "-1"){
+		killTmpGlobal();  /// 清除临时global
+		/// 关闭加载框
+		$.messager.progress('close'); 
+		return;
+	}
+	InsPartData(pid)
+	$.messager.progress("close");
+	
+	
 	//var efilepath = $("#filepath").val();
+	/*
 	var efilepath = $("input[name=partuploadfile]").val();
     if (efilepath.indexOf("fakepath") > 0){
 	   $.messager.alert('提示',"请在IE下执行导入！");
@@ -595,7 +888,7 @@ function ImpPartTree()
 	oSheet = null;
             
 	/// 关闭加载框
-	$.messager.progress('close'); 
+	$.messager.progress('close'); */
 }
 /// 部位数据存储
 function InsPartTmpGlobal(mListData){
@@ -632,6 +925,25 @@ function killTmpGlobal(){
 function onbeforeunload_handler() {
     killTmpGlobal();  /// 清除临时global
 }
-
+function ExpAPPTree(){
+	$cm({
+		ResultSetType: "ExcelPlugin",  		// 表示通过DLL生成Excel，可支持IE与Chrome系。Chrome系浏览器请安装中间件
+		// ResultSetTypeDo:"Print",    		// 默认Export，可以设置为：PRINT , PREVIEW
+		localDir: "Self",	      			// D:\\tmp\\表示固定文件路径, "Self"表示用户导出时选择保存路径，默认保存到桌面
+		ExcelName: "检查树导出",
+		PageName: "web.DHCEMImpTools:FindAPPTree",	
+		ClassName: "web.DHCEMImpTools",
+		QueryName: "FindAPPTree",
+		HospID:session['LOGON.HOSPID'],
+	    rows:9999
+	},function(data){
+		$.messager.popover({
+			msg: '模板下载成功，请留意任务栏！',
+			type: 'success',
+			timeout: 2000,
+			showType: 'slide'
+		})
+	})
+}
 /// JQuery 初始化页面
 $(function(){ initPageDefault(); })

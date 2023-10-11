@@ -5,18 +5,22 @@ var loadContainer = "";
 var _preViewRevision = "";
 
 $(function(){	
-	var tempParam = {"id":id,"text":text,"chartItemType":chartItemType,"pluginType":pluginType,"emrDocId":emrDocId,"characteristic":characteristic,"status":status};
+	var tempParam = {"id":id,"text":text,"chartItemType":chartItemType,"pluginType":pluginType,"emrDocId":emrDocId,"characteristic":characteristic,"status":status,"pdfDocType":pdfDocType};
 	if ((id+text+chartItemType+pluginType+emrDocId+characteristic).length){
 		loadDocument(tempParam);
 	}
 	
 	if (action == "quality")
     {
+        // 若调用时未定义(声明)则会报错，容错处理
+        if (typeof parent.parent.parent.parent.parent.getViewRevisionFlag != "function"){
+            return;
+        }
 	    //由于object嵌套iframe无法直接调用内部函数
 	    //采用监听留痕显示状态变化
     	setInterval(function(){
-			var status = parent.parent.parent.parent.getViewRevisionFlag()
-			if(_preViewRevision !=status)
+			var status = parent.parent.parent.parent.parent.getViewRevisionFlag()
+			if(_preViewRevision !== status)
 			{
 				setViewRevision(status)
 				_preViewRevision = status
@@ -35,8 +39,7 @@ function closeWindow() {
 
 function autoPrint(){
 	var argJson = {action:"PRINT_DOCUMENT",args:{"actionType":"PrintDirectly"}}; 
-	var ret=cmdSyncExecute(argJson);
-	var obj = JSON.parse(ret);
+	var obj = cmdSyncExecute(argJson);
 	if ('OK'==obj.result) { 
 	    if (typeof window.external.FinishPrint === 'function') window.external.FinishPrint();
 		if (closeAfterPrint == 'Y') closeWindow();
@@ -46,13 +49,11 @@ function autoPrint(){
 //加载文档
 function loadDocument(tempParam)
 {  	
-	// 调用平台方法，锁定页面
-	setSysMenuDoingSth("正在加载病历...");
 	var privileges = getPrivilege("BrowsePrivilege",tempParam.id);
 	if (privileges.canView == "0")
 	{
 		$("#promptMessage").css("display","block");
-		$("#promptMessage").html('<img  src="../scripts/emr/image/icon/noview.png"  alt="您没有权限查看当前病历" />');
+		$("#promptMessage").html('<img style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);"  src="../scripts/emr/image/icon/noview.png"  alt="您没有权限查看当前病历" />');
 		if (parent.eventDispatch)
 		{
 			parent.eventDispatch({"action":"eventLoadDocument"});
@@ -61,9 +62,14 @@ function loadDocument(tempParam)
 	}
 	else
 	{
+		// 调用平台方法，锁定页面
+		setSysMenuDoingSth("正在加载病历...");
 		$("#promptMessage").css("display","none");
 	}
-    if (((typeof tempParam.episodeId == "undefined") || (episodeId == tempParam.episodeId)) && (param != "") && (tempParam.emrDocId == param.emrDocId) && (tempParam.characteristic == "1"))
+	//防止因双击触发2次loadDocument导致插件提示命令未注册
+	if(loadFalg) return;
+	
+    if (((typeof tempParam.episodeId == "undefined") || (episodeId == tempParam.episodeId)) && (param != "") && (checkDocument(tempParam.id).result == "OK"))
     {
 	   var breakState = getBreakState();
     	if (breakState == "false") return;
@@ -85,7 +91,12 @@ function loadDocument(tempParam)
 	    {
 		    episodeId = tempParam.episodeId;
 	    }
-		switch (param.pluginType)
+		var pluginType = param.pluginType;
+		if (param.pdfDocType == "PDF")
+        {
+            pluginType = "DOC";
+        }
+		switch (pluginType)
 		{
 			case "DOC":
 				wordDoc();
@@ -100,6 +111,7 @@ function loadDocument(tempParam)
     if (action == "quality")
     {
     	setQualityColor();
+		_preViewRevision = "";
     }
     setDataToLog();	
     	
@@ -111,6 +123,7 @@ function wordDoc()
 {
 
 	$("#containerGrid").css("display","none");
+    $("#chartOnBlur").focus();
 	$("#containerWord").css("display","block");
 
 	var iword = pluginword()
@@ -134,12 +147,12 @@ function wordDoc()
 		//iword = true; 
 		iwordFlag = true;
 		igridFlag = false;
-		if ((action == "reference")||(action == "externalapp")) setCopyPaste();
+		if ((action == "reference")||(action == "externalapp")) { setCopyPaste(); }
+        else { setRunEMRParams(); }
 	}
 	//设置工作环境
 	setWorkEnvironment(); 
 	openDocument();
-	setReadOnly();
 	if (action == "quality") setViewRevision("true");
 }
 
@@ -147,6 +160,7 @@ function wordDoc()
 function girdDoc()
 {
 	$("#containerWord").css("display","none");
+    $("#chartOnBlur").focus();
 	$("#containerGrid").css("display","block");
 	var igrid = plugingrid()
 	if(igrid==null || igrid.innerHTML== undefined || !igridFlag)
@@ -169,20 +183,37 @@ function girdDoc()
 		//igrid = true;
 		igridFlag = true;
 		iwordFlag = false;
-		if ((action == "reference")||(action == "externalapp")) setCopyPaste();                        //创建视图
+		if ((action === "reference")||(action === "externalapp")) { setCopyPaste(); }                       //创建视图
+        else { setRunEMRParams(); }
 	}
 	setWorkEnvironment();
 	openDocument();	
-	setReadOnly();
 	if (action == "quality") setViewRevision("true");
-}//加载文档
+}
+//加载文档
 function openDocument()
 {
 	if (param.status == "BROWSE")
 	{
 		getPrivateDomains(param.id,ssgroupId,"VIEW");
 	}
-	var argJson = {action:"LOAD_DOCUMENT",args:{params:{"status":param.status},InstanceID:param.id,actionType:param.actionType}};
+    var loadMode = "ALL";
+    if ((loadDocMode.TitleCode != "")||(loadDocMode.RecordConfig != ""))
+    {
+        if ((action == "browse")&&(loadDocMode.BrowseConfig == "Y"))
+        {
+            loadMode = "BATCH";
+        }
+        if ((action == "reference")&&(loadDocMode.ReferenceConfig == "Y"))
+        {
+            loadMode = "BATCH";
+        }
+    }
+
+	//护士浏览需要复制病历内容，所以不展示PDF，传入指定类型Editor时，强制设置LoadType为XML
+    var pdfDocType = param.pdfDocType;
+    if (viewType == "Editor") pdfDocType = "XML"
+    var argJson = {action:"LOAD_DOCUMENT",args:{params:{"status":param.status,"LoadType":pdfDocType,"LoadDocMode":loadMode,"UserLocID":userLocID,"DateTime":param["dateTime"]||""},InstanceID:param.id,actionType:param.actionType}};
 	cmdDoExecute(argJson);	
 }
 
@@ -203,41 +234,41 @@ function setViewRevision(status)
 //设置复制粘贴
 function setCopyPaste()
 {
+    var product = "";
+    ///externalapp为门诊历史就诊页面
 	if (action == "externalapp")
 	{
-		var argJson = {"action":"SET_RUNEMR_PARAMS","args":{"EnablePasteCopyExternalData":true,"EnablePasteCopyAcrossPatient":true}};
-		cmdDoExecute(argJson);
+		product = "OP";
 	}
-	else
-	{
-		var flagExternalData = false, flagAcrossPatient = false;
-	    $.ajax({
-			type: 'Post',
-			dataType: 'json',
-			url: '../EMRservice.Ajax.common.cls',
-			async: true,
-			data: {
-				"OutputType":"String",
-				"Class":"EMRservice.BL.BLSysOption",
-				"Method":"GetCopyPastStatus"
-			},
-			success: function (ret) {
-				if (ret.ExternalData == "N") flagExternalData = true;
-				if (ret.AcrossPatient == "N") flagAcrossPatient = true;
-				var argJson = {"action":"SET_RUNEMR_PARAMS","args":{"EnablePasteCopyExternalData":flagExternalData,"EnablePasteCopyAcrossPatient":flagAcrossPatient}};
-				cmdDoExecute(argJson);
-			},
-			error: function (ret) {
-				alert('setCopyPaste error');
-			}
-		});		
-	}
+	
+    var flagExternalData = false, flagAcrossPatient = false;
+    $.ajax({
+        type: 'Post',
+        dataType: 'json',
+        url: '../EMRservice.Ajax.common.cls?MWToken='+getMWToken(),
+        async: true,
+        data: {
+            "OutputType":"String",
+            "Class":"EMRservice.BL.BLSysOption",
+            "Method":"GetCopyPastStatus",
+            "p1":product
+        },
+        success: function (ret) {
+            if (ret.ExternalData == "N") flagExternalData = true;
+            if (ret.AcrossPatient == "N") flagAcrossPatient = true;
+            var argJson = {"action":"SET_RUNEMR_PARAMS","args":{"EnablePasteCopyExternalData":flagExternalData,"EnablePasteCopyAcrossPatient":flagAcrossPatient}};
+            cmdDoExecute(argJson);
+        },
+        error: function (ret) {
+            alert('setCopyPaste error');
+        }
+    });
 }
 
 //安装插件提示
 function setUpPlug()
 {
-	var result = window.showModalDialog("emr.record.downloadplugin.csp?PluginUrl="+pluginUrl,"","dialogHeight:100px;dialogWidth:200px;resizable:yes;status:no");
+	var result = window.showModalDialog("emr.record.downloadplugin.csp?PluginUrl="+pluginUrl+"&MWToken="+getMWToken(),"","dialogHeight:100px;dialogWidth:200px;resizable:yes;status:no");
 	if (result)
 	{
 		window.location.reload();
@@ -250,6 +281,7 @@ function pluginAdd() {
 	    var obj = JSON.parse(command);
 		if (obj.action == "eventLoadDocument")
 		{
+			setReadOnly();
 			if (action != "quality") previewDocument();
 			
 			eventLoadDocument(obj);
@@ -258,6 +290,11 @@ function pluginAdd() {
 				autoPrint(); 
 			}
 		}
+        else if(obj.action == "eventRequestDoc")
+        {
+            //按条目加载病程，滚动病历滚动轴，请求病历追加事件
+            eventRequestDoc(obj);
+        }
 		if (parent.eventDispatch)
 		{
 			parent.eventDispatch(obj);
@@ -288,7 +325,7 @@ function plugingrid()
 }
 //查找插件
 function plugin() {
-	if(param.pluginType == "DOC")
+	if ((param.pluginType == "DOC")||(param.pdfDocType == "PDF"))
 	{
 		//return $("#browspluginWord")[0];
 		return pluginword();
@@ -306,7 +343,16 @@ function cmdDoExecute(argJson){
 
 //同步执行
 function cmdSyncExecute(argJson){
-	return plugin().syncExecute(JSON.stringify(argJson));
+	var result = plugin().syncExecute(JSON.stringify(argJson));
+	try
+	{
+		result = jQuery.parseJSON(result);
+	}
+	catch(err)
+	{
+		result = "";
+	}
+	return result;
 };
 function init()
 {
@@ -332,23 +378,67 @@ function setWorkEnvironment()
 	var strJson = eval("("+"{'action':'SET_DEFAULT_FONTSTYLE','args':{"+setDefaultFontStyle+"}}"+")");
 	cmdDoExecute(strJson);
 	//设置参数
-    var argJson = {action: "SET_PATIENT_INFO",args:{"PatientID":patientId,"EpisodeID":episodeId,"UserID":userID,"UserName":userName,"UserLocID":userLocID,"SsgroupID":ssgroupId,"IPAddress":ipAddress}};
+    var argJson = {action: "SET_PATIENT_INFO",args:{"PatientID":patientId,"EpisodeID":episodeId,"UserID":userID,"UserCode":userCode,"UserName":userName,"UserLocID":userLocID,"SsgroupID":ssgroupId,"IPAddress":ipAddress}};
     cmdDoExecute(argJson);
+}
+
+//设置电子病历运行环境参数
+function setRunEMRParams()
+{
+    $.ajax({
+		type: 'GET',
+		dataType: 'text',
+		url: '../EMRservice.Ajax.common.cls?MWToken='+getMWToken(),
+		async: false,
+		data: {
+			"OutputType":"String",
+			"Class":"EMRservice.BL.BLSysOption",
+			"Method":"GetRunEMRParams"
+		},
+		success: function (ret) {
+			if (ret != "") {
+                result = eval("("+ret+")");
+            }
+		},
+		error: function (ret) {
+			alert('setRunEMRParams error');
+		}
+	});
+	
+	//var strJson = {action:"SET_RUNEMR_PARAMS",args:result};
+	return cmdSyncExecute(result);
 }
 
 //建立数据库连接
 function setConnect(){
 	var netConnect = "";
+	
+	var port = window.location.port;
+	var protocol = window.location.protocol.split(":")[0];
+	
+	if (protocol == "http")
+	{
+		port = port==""?"80":port;
+	}
+	else if (protocol == "https")
+	{
+		port = port==""?"443":port;
+	}
+	
+	
 	$.ajax({
 		type: 'Post',
 		dataType: 'text',
-		url: '../EMRservice.Ajax.common.cls',
+		url: '../EMRservice.Ajax.common.cls?MWToken='+getMWToken(),
 		async: false,
 		cache: false,
 		data: {
 			"OutputType":"String",
 			"Class":"EMRservice.BL.BLSysOption",
-			"Method":"GetNetConnectJson"
+			"Method":"GetNetConnectJson",
+			"p1":window.location.hostname,
+			"p2":port,
+			"p3":protocol
 		},
 		success: function (ret) {
 
@@ -400,7 +490,7 @@ function setQualityColor()
 	jQuery.ajax({
 		type: "GET",
 		dataType: "json",
-		url: "../EMRservice.Ajax.common.cls",
+		url: "../EMRservice.Ajax.common.cls?MWToken="+getMWToken(),
 		async: false,
 		data:  {
 			"OutputType":"String",
@@ -424,7 +514,7 @@ function getPrivilege(type,instanceId)
 	jQuery.ajax({
 		type: "GET",
 		dataType: "text",
-		url: "../EMRservice.Ajax.privilege.cls",
+		url: "../EMRservice.Ajax.privilege.cls?MWToken="+getMWToken(),
 		async: false,
 		data: {
 			"EpisodeID":  episodeId,
@@ -458,12 +548,38 @@ function eventLoadDocument(commandJson)
 	focusDocument(commandJson.args.InstanceID,"","First");
 }
 
+//按条目加载病程，滚动病历滚动轴，请求病历追加事件
+function eventRequestDoc(commandJson)
+{
+    //判断上一个文档是后加载完成
+    if (loadFalg) return;
+    loadFalg = true;
+    var loadDocMode = commandJson["args"]["LoadDocMode"];
+    var loadDirection = commandJson["args"]["LoadDirection"];
+    var batchMode = commandJson["args"]["BatchMode"];
+    var instanceID = commandJson["args"]["InstanceID"];
+    var argJson = {"action":"LOAD_DOCUMENT","args":{"params":{"status":"NORMAL","LoadDocMode":loadDocMode,"LoadDirection":loadDirection,"BatchMode":batchMode},"InstanceID":instanceID,"actionType":"LOAD"}};
+    var rtn = cmdSyncExecute(argJson);
+    loadFalg = false;
+    if (rtn["result"] != "OK")
+    {
+        alert('文档同步追加失败');
+    }
+}
+
 //鼠标选中的文档内容
 function selectedContent()
 {
 	var argJson = {"action":"GET_SELECT_TEXT","args":""}; 
 	var returnvalue = cmdSyncExecute(argJson);
-	return JSON.parse(returnvalue)["Value"];
+	return returnvalue["Value"];
+}
+
+//查询病历instanceId是否已显示在编辑器中
+function checkDocument(instanceId)
+{
+	var argJson = {"action":"CHECK_DOCUMENT","args":{"InstanceID":instanceId}};
+	return cmdSyncExecute(argJson);
 }
 
 function setDataToLog()
@@ -488,7 +604,7 @@ function setDataToLog()
 		//alert(ConditionAndContent);
 		$.ajax({ 
 			type: "POST", 
-			url: "../EMRservice.Ajax.SetDataToEventLog.cls", 
+			url: "../EMRservice.Ajax.SetDataToEventLog.cls?MWToken="+getMWToken(),
 			data: "ModelName="+ ModelName + "&ConditionAndContent=" + ConditionAndContent + "&SecCode=" + ""
 		});
 	}
@@ -546,5 +662,17 @@ function getBreakState()
 {
 	var argJson = {action:"GET_BREAKCHAGE_STATE",args:{"InstanceID":""}};
 	var returnvalue = cmdSyncExecute(argJson);
-	return JSON.parse(returnvalue)["BreakState"];
+	return returnvalue["BreakState"];
+}
+
+//导出文档
+function exportDocument()
+{
+	if (!param || param.id == "GuideDocument")
+	{
+		setMessage('请选中要导出的文档!','forbid');
+		return;
+	}
+	var argJson = {"action":"SAVE_LOCAL_DOCUMENT","args":{}};
+	cmdDoExecute(argJson);
 }

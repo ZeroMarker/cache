@@ -146,6 +146,12 @@ function eventSaveDocument(commandJson)
 	    	$.messager.alert("提示信息", "保存失败!", 'info');
 	    }
 	}
+	
+	else if (commandJson["args"]["result"] == "INVALID")
+    {
+	    $.messager.alert("提示信息", "病历存在非法字符，不能保存。", 'info');
+    }
+    
 	else if (commandJson["args"]["result"] != "NONE")
 	{
 		$.messager.alert("提示信息", "文档没有发生改变!", 'info');
@@ -436,7 +442,7 @@ function caSign(signProperty,userInfo,instanceId)
 
 	//开始签名
 	var cert = parent.GetSignCert(parent.strKey);
-    var UsrCertCode = parent.GetUniqueID(cert);
+    var UsrCertCode = parent.GetUniqueID(cert,parent.strKey);
     if (!UsrCertCode || '' == UsrCertCode) return '用户唯一标示为空！';
     
 	var signlevel = signProperty.SignatureLevel;

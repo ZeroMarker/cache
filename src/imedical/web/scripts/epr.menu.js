@@ -45,7 +45,7 @@ function ClearDetails(lnk,newwin) {
 			var srcEl = websys_getSrcElement()
 			websys_createWindow(lnk,"TRAK_main","addTab=1,title="+srcEl.innerText);	//
 		}else{
-			top.frames["TRAK_main"].location = lnk;
+			(websys_getTop()||window).frames["TRAK_main"].location = websys_writeMWToken(lnk);
 		}
 	}
 	if (winf) {
@@ -116,7 +116,7 @@ function SelectToolbar(idbar) {
 		}
 	}
 	parent.document.body.rows="30,*,0";
-	ReleaseFieldFocus(top.frames[1]);
+	ReleaseFieldFocus((websys_getTop()||top).frames[1]);
 }
 //--------dhc add end-------------------------
 
@@ -153,21 +153,21 @@ function PassDetails(lnk,newwin) {
 	if (frm.PPRowId.value) lnk+= "&PPRowId=" + frm.PPRowId.value;
 	//alert(lnk);
 	if (newwin == "TRAK_hidden")
-		top.frames["TRAK_hidden"].location = lnk;
+		(websys_getTop()||top).frames["TRAK_hidden"].location = websys_writeMWToken(lnk);
 	else if (newwin != ""){
 		//websys_lu(lnk,0,newwin);
 		if (newwin=='') newwin='width=300,height=380';
 		var winname = "TMENUWIN" ; 
 		if (lnk.indexOf("TMENU")>-1) winname += lnk.split("TMENU=")[1].split("&")[0];
 		var mycurWin = websys_createWindow(lnk,winname,newwin+",toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes");
-		mycurWin.focus();
+		if (mycurWin) mycurWin.focus();
 	}else{
 		groupMutilTabMenu = groupMutilTabMenu||0;
 		if (groupMutilTabMenu==1){
 			var srcEl = websys_getSrcElement()
 			websys_createWindow(lnk,"TRAK_main","addTab=1,title="+srcEl.innerText);	//
 		}else{
-			top.frames["TRAK_main"].location = lnk;
+			(websys_getTop()||top).frames["TRAK_main"].location = websys_writeMWToken(lnk);
 		}
 	}
 }
@@ -295,17 +295,17 @@ function CheckLinkDetailsMulti(lnk,newwin) {
 
 function clearWorklistVariables(lnk,newwin) {
 	RBSessIDs="";RBSessID="";
-	top.frames["TRAK_main"].location = lnk;
+	(websys_getTop()||top).frames["TRAK_main"].location = websys_writeMWToken(lnk);
 }
 
 function websysLastPatientList(lnk,newwin) {
 	if (tlbarprev!='') {SelectToolbar(tlbarprev);}
-	var pl=top.frames['TRAK_main'].TRELOADPATLIST;
+	var pl=(websys_getTop()||top).frames['TRAK_main'].TRELOADPATLIST;
 	if (pl!='') {
 		var winf = null;
 		if (window.parent != window.self) winf = window.parent;
 		if (winf) winf.MainClearEpisodeDetails();
-		top.frames["TRAK_main"].location = "websys.csp?a=a"+pl;
+		(websys_getTop()||top).frames["TRAK_main"].location = "websys.csp?a=a"+pl;
 		var wkf=(pl.split("&")[1]).split("=")[1];
 		var pl_lnk=document.getElementById("twkfl"+wkf);
 		var pl_btnid="tbi"+websys_getParentElement(pl_lnk).id.split("tb")[1];
@@ -877,6 +877,22 @@ function CheckNewBornLinkDetails(lnk,newwin) {
 		}
 		return;
 	}
+	if (frm.EpisodeID.value!="") {
+		var isExist = tkMakeServerCall("websys.Conversions","IsValidMethodName","Nur.Interface.OutSide.Patient","checkCanGiveBirth");
+		if (isExist=="1"){
+			var canGiveBirthInfo = tkMakeServerCall("Nur.Interface.OutSide.Patient", "checkCanGiveBirth", frm.EpisodeID.value) ;
+			if (canGiveBirthInfo!="") {
+				if($.messager) {
+					$.messager.alert('信息提示',canGiveBirthInfo, "info");
+				}else{
+					alert(canGiveBirthInfo) ;
+				}
+				return;
+			}else{
+				frm.canGiveBirth.value=1;
+			}
+		}
+	}
 	if ((frm.EpisodeID.value!="")&&(frm.canGiveBirth.value==0)) {
 		if ($.messager){
 			$.messager.alert('信息提示',t['NotFemale'],"info");
@@ -902,11 +918,11 @@ function PassDetailsExceptEpis(lnk,newwin) {
 	if (frm.OEOrdItemID.value) lnk+= "&OEOrdItemID=" + frm.OEOrdItemID.value;
 
 	if (newwin == "TRAK_hidden")
-		top.frames["TRAK_hidden"].location = lnk;
+		(websys_getTop()||top).frames["TRAK_hidden"].location = websys_writeMWToken(lnk);
 	else if (newwin != "")
 		websys_lu(lnk,0,newwin);
 	else
-		top.frames["TRAK_main"].location = lnk;
+		(websys_getTop()||top).frames["TRAK_main"].location = websys_writeMWToken(lnk);
 }
 //BM Log 34846 Bulk Patient use only
 function BulkPatientClearDetails(lnk,newwin) {
@@ -926,7 +942,7 @@ function BulkPatientClearDetails(lnk,newwin) {
 	if (newwin != "")
 		websys_lu(lnk,0,newwin);
 	else
-		top.frames["TRAK_main"].location = lnk;
+		(websys_getTop()||top).frames["TRAK_main"].location = websys_writeMWToken(lnk);
 	if (winf) {
 		winf.document.DivRoomSelected = "";
 		winf.document.elementID = "";
@@ -1750,11 +1766,11 @@ function PrintTemp()
    //var EID=frm.EpisodeID.value;                 //090310
    //var serverIp=cspRunServerMethod(GetServerNameSpace);
 
-	var win=top.frames['eprmenu'];
+	var win=(websys_getTop()||top).frames['eprmenu'];
 	if (win) {
 		var frm=win.document.forms['fEPRMENU'];
 	}else{
-		var frm=top.document.forms['fEPRMENU'];
+		var frm=(websys_getTop()||top).document.forms['fEPRMENU'];
 	}
 	var EID=frm.EpisodeID.value;
 	var ward=WardId;
@@ -1765,7 +1781,7 @@ function PrintTemp()
 	   return;
 	}
    
-	var frameCenter=top.frames['panel_Center'];
+	var frameCenter=(websys_getTop()||top).frames['panel_Center'];
 	var Temp;
 	Temp= new ActiveXObject("ThreeColor.CLSMAIN");//TestAx.CLSMAIN
 	Temp.ward = ward;
@@ -1835,8 +1851,8 @@ function BrowseAppBillFunction()
 function DHCShowStatusTitle(){
 	window.defaultStatus=session['LOGON.USERCODE']+"     "+session['LOGON.USERNAME'] + "    "+session['LOGON.GROUPDESC']+ "    "+LocDesc;	
 	var myStatusTip="^"+session['LOGON.USERCODE']+"     "+session['LOGON.USERNAME'] + "    "+session['LOGON.GROUPDESC']+ "    "+LocDesc;
-	var myary=top.document.title.split("^");
-	top.document.title=myary[0]+ "    "+myStatusTip
+	var myary=(websys_getTop()||top).document.title.split("^");
+	(websys_getTop()||top).document.title=myary[0]+ "    "+myStatusTip
 }
 
 //sunyi 2011-09-22
@@ -2076,12 +2092,21 @@ function StartICUMonitoring(lnk,newwin){
 	var frm = document.forms["fEPRMENU"];
 	var EID=frm.EpisodeID.value;
 	if(isNaN(EID)){
-		alert(t['NoEpisode']);
+		if ($.messager){
+			$.messager.alert('信息提示',t['NoEpisode'],"info");
+		}else{
+			alert(t['NoEpisode']);
+		}
 		return;
 	}
 	if (frm.EpisodeID.value == "") {
-		alert(t['NoEpisode']);
+		if ($.messager){
+			$.messager.alert('信息提示',t['NoEpisode'],"info");
+		}else{
+			alert(t['NoEpisode']);
+		}
 		return;
+		
 	}
 	var pattern=new RegExp("Y","i");
 	if (pattern.test(frm.Decease.value)) {
@@ -2098,7 +2123,16 @@ function StartICUMonitoring(lnk,newwin){
 	var ctLocId=tkMakeServerCall("web.DHCICUCom", "GetWardCtlocId","",monId)
 	if (ctLocId=="") ctLocId=userCtlocId
 	//
-	//var ServerNameSpace="cn_iptcp:114.251.235.112[1972]:DHC-APP" //临时测试用
+	//var ServerNameSpace="cn_iptcp:114.242.246.243[1972]:DHC-APP" //临时测试用
+	if(monId=="" && userType=="DOCTOR"){
+		if ($.messager){
+			$.messager.alert('信息提示',"该患者未启动监护！","info");
+		}else{
+			alert("该患者未启动监护！");
+		}
+		return;
+		
+		}
 	var flag = isAccessMP("ICU-01","ICU-02");
 	if (flag==1){
 		if ("undefined"==typeof EnableLocalWeb || 0==EnableLocalWeb ){
@@ -2111,7 +2145,11 @@ function StartICUMonitoring(lnk,newwin){
 		{
 			//中间件运行
 			var filePath = window.location.href.split("csp")[0] + "/service/dhcclinic/";
-			IntensiveCare.Show(monId,EID,session["LOGON.USERID"],session["LOGON.GROUPID"],ctLocId,ServerNameSpace,filePath,"");
+			//IntensiveCare.Show(monId,EID,session["LOGON.USERID"],session["LOGON.GROUPID"],ctLocId,ServerNameSpace,filePath,"");
+			var args=[monId,EID,session["LOGON.USERID"],session["LOGON.GROUPID"],ctLocId,ServerNameSpace,filePath,""]	
+			IntensiveCare.notReturn = 1;
+			IntensiveCare.clear();
+			IntensiveCare.cmd('Main.exe'+' '+args);
 	    }
 	}else{
 			var url = flag.split("^")[1];  //打开受限提示界面
@@ -2144,6 +2182,7 @@ function StartBPMonitoring(lnk,newwin){
 			//自动获取数据库地址
 			var args=[session["LOGON.USERID"],session["LOGON.GROUPID"],session['LOGON.CTLOCID'],ServerNameSpace]			
 			BloodPurification.notReturn = 1;
+			BloodPurification.clear();
 			BloodPurification.cmd('DHCClinic.BP.Main.exe'+' '+args)
 		}
 	}else{
@@ -2155,6 +2194,12 @@ function StartBPMonitoring(lnk,newwin){
 function StartICUAutoTotal(lnk,newwin){
 	var filePath = window.location.href.split("csp")[0] + "/service/dhcclinic/";
 	var icuAutoTotalLink = "../service/dhcclinic/app/icu/Main.application?icuaId=" + "&admId=" + "&userId=" + session["LOGON.USERID"] + "&groupId=" + session["LOGON.GROUPID"] + "&locId=" + session['LOGON.CTLOCID'] + "&connString=" + ServerNameSpace + "&filePath=" + filePath + "&total=AutoTotalTemplateView";
+	var userCtlocId=session['LOGON.CTLOCID']
+	var ctLocId=tkMakeServerCall("web.DHCClinicCom", "GetLinkLocId",userCtlocId)
+	if (ctLocId=="") ctLocId=userCtlocId
+	var userType=tkMakeServerCall("web.DHCClinicCom", "GetCtcptType",session["LOGON.USERID"])
+	if (userType=="NURSE") ctLocId=userCtlocId
+	//var ServerNameSpace="cn_iptcp:114.242.246.243[1972]:DHC-APP" //临时测试用
 	var flag = isAccessMP("ICU-01","ICU-02");
 	if (flag==1){
 		//未开启使用中间件 或 老项目，然仍用老的方式运行
@@ -2163,7 +2208,10 @@ function StartICUAutoTotal(lnk,newwin){
 		}
 		else  //中间件运行
 		{
-			IntensiveCare.Show("","",session["LOGON.USERID"],session["LOGON.GROUPID"],session['LOGON.CTLOCID'],ServerNameSpace,filePath,"AutoTotalTemplateView");
+			var args=["","",session["LOGON.USERID"],session["LOGON.GROUPID"],ctLocId,ServerNameSpace,filePath,"AutoTotalTemplateView"]	
+			IntensiveCare.notReturn = 1;
+			IntensiveCare.clear();
+			IntensiveCare.cmd('Main.exe'+' '+args);
 		}
 	}else{
     	var url = flag.split("^")[1];  //打开受限提示界面
@@ -2173,14 +2221,20 @@ function StartICUAutoTotal(lnk,newwin){
  // C:\\Program Files (x86)\\Microsoft\\OutPatMrEditSetUp\\testOutMr.exe
  // 配置菜单时用 E:/dthealth/app/dthis/web/trakWeb3.exe
 function openExpByParam(lnk,newwin,urlParam){
-	lnk = lnk.replace(/\//g,"\\"); 
-	if (lnk.indexOf(".exe")>-1){
-		exec(lnk+" "+urlParam);
+	if (lnk.indexOf(".exe")>-1 || lnk.indexOf(".bat")>-1 || lnk.indexOf(".lnk")>-1 ){
+		lnk = lnk.replace(/\//g,"\\");
+		if (lnk.indexOf('iexplore')>-1 || lnk.indexOf('chrome')>-1) urlParam = urlParam.replace(/&/g,"^&").replace(/\|/g,"^|");
+		if (urlParam.indexOf('^')>-1){
+			exec('"'+lnk+'" '+urlParam);
+		}else{
+			exec('"'+lnk+'" "'+urlParam+'"');
+		}
 	}else{
 		//PassDetails(lnk+"?"+urlParam,newwin);
+		urlParam = encodeURI(urlParam); // 参数有中文的需要转换，有项目浏览器转换异常。
 		lnk = lnk+"?"+urlParam;
 		if (newwin == "TRAK_hidden"){
-			top.frames["TRAK_hidden"].location = lnk;
+			(websys_getTop()||top).frames["TRAK_hidden"].location = websys_writeMWToken(lnk);
 		}else if (newwin != ""){
 			websys_lu(lnk,0,newwin);
 		}else{
@@ -2220,3 +2274,106 @@ function linkAdmExp(lnk,newwin,valueExp) {
 	openExpByParam(lnk,newwin,urlParam);
 	return ;	
 } 
+
+function CheckIsESurReport(lnk,newwin) {
+	//alert("Check Deceased");
+	var frm = document.forms["fEPRMENU"];
+	var EID=frm.EpisodeID.value;
+	if(isNaN(EID)){
+		if ($.messager){
+			$.messager.alert('信息提示',t['NoEpisode'],"info");
+		}else{
+			alert(t['NoEpisode']);
+		}
+		return;
+	}
+	if (frm.EpisodeID.value == "") {
+		if ($.messager){
+			$.messager.alert('信息提示',t['NoEpisode'],"info");
+		}else{
+			alert(t['NoEpisode']);
+		}
+		return;
+	}
+	// 在患者诊疗中，选中患者点诊疗做一个控制，请填写流行学调查表再诊疗
+	var IsESurReport = tkMakeServerCall("DHCDoc.OPDoc.PatientList", "CheckIsESurReport", EID);
+	if (IsESurReport!=1){
+		lnk = "dhcma.epd.esurreport.csp?RegTypeID=1"+"&EpisodeID="+EID;
+		newwin = "top=100,left=100,width=1360,height=800";
+	} 
+	PassDetails(lnk,newwin);
+}
+var CurrentIsIHospitalVisit = false;
+/*互联网问诊*/
+function linkIHospitalVisitUrl(lnk,newwin,valueExp) {
+	var frm = document.forms["fEPRMENU"];
+	var EID=frm.EpisodeID.value;
+	if(isNaN(EID)){
+		if ($.messager){
+			$.messager.alert('信息提示',t['NoEpisode'],"info");
+		}else{
+			alert(t['NoEpisode']);
+		}
+		return;
+	}
+	if (EID == "") {
+		if ($.messager){
+			$.messager.alert('信息提示',t['NoEpisode'],"info");
+		}else{
+			alert(t['NoEpisode']);
+		}
+		return;
+	}
+	var urlParam = tkMakeServerCall("BSP.PAT.SRV.MenuArg","GetIHospitalVisitUrl",EID);
+	exec('%LOCALAPPDATA%\\Google\\Chrome\\Application\\chrome.exe "'+urlParam+'"');
+	var ex = "ScreenMax"
+	setTimeout(function(){
+		CMgr.moveWindow("",MWScreens.screens[0].Bounds.Width+1,0,MWScreens.screens[1].WorkingArea.Width,MWScreens.screens[1].WorkingArea.Height,ex);
+		CurrentIsIHospitalVisit = true;
+		DisableSecondScreen = true;
+	},500);
+	return ;	
+}
+function linkIHospitalIMUrl(lnk,newwin,valueExp) {
+	var urlParam = tkMakeServerCall("BSP.PAT.SRV.MenuArg","GetIHospitalIMUrl");
+	open(urlParam); //exec('%LOCALAPPDATA%\\Google\\Chrome\\Application\\chrome.exe "'+urlParam+'"');
+	return ;	
+}
+function websys_switchcacert(){
+	var oldType = LastCALogonType;
+	dhcsys_getcacert({
+		modelCode:"",
+		callback:function(cartn){
+			if (cartn.IsSucc){
+				if (cartn.ContainerName=="") {
+					// Loc Disable CA 
+				}else{
+					if ("object"== typeof cartn && oldType!=cartn.CALogonType){
+						if (websys_popover){
+							websys_popover("成功切换签名方式")
+						}else{
+							alert("成功切换签名方式");
+						}
+					}	
+				}
+			 }else {
+				if ($.messager){
+					$.messager.popover({
+						msg: "未成功切换签名方式",
+						type: 'error',
+						timeout: 3000, 		//0不自动关闭。3000s
+						showType: 'slide'  //show,fade,slide
+					});
+				}
+				return false;
+			 }
+		},
+		isHeaderMenuOpen:true,
+		SignUserCode:session["LOGON.USERCODE"],
+		notLoadCAJs:0,
+		loc:session["LOGON.CTLOCID"],
+		hospDesc:session["LOGON.HOSPDESC"],
+		groupDesc:session["LOGON.GROUPDESC"],
+		caInSelfWindow:1
+	},"",0,1);
+}

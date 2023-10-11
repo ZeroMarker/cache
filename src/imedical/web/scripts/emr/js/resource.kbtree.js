@@ -12,6 +12,9 @@ function myLoadFilter(data, parent){
 		        }
 		        while(todo.length){
 		            var node = todo.shift();
+		            if (node == undefined){
+                        break;
+                    }
 		            if (node.id == undefined){
 		            	node.id = '_node_' + (serno++);
 		            }

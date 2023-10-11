@@ -85,7 +85,7 @@ function GetEmPatCheckLev(EmPCLvID){
 			$("#EmOxygenFlag").val(FormatterData(EmPatCheckLevObj.EmOxygenFlag));
 			
 			///  筛查
-			$("#EmScreenFlag").val(EmPatCheckLevObj.EmScreenFlag=="Y"?"是":"否");
+			$("#EmScreenFlag").val(EmPatCheckLevObj.EmScreenFlag=="Y"?$g("是"):$g("否"));
 			
 			///  复合伤
 			$("#EmCombFlag").val(FormatterData(EmPatCheckLevObj.EmCombFlag));
@@ -164,16 +164,16 @@ function StyleCheckLevColor(param){
 	if(param=="4级"){
 		css = {"color":"green","font-weight":"bold"};	
 	}*/
-	if((param=="Ⅰ级")||(param=="1级")){
+	if((param==$g("Ⅰ级"))||(param==$g("1级"))){
 		css = {"color":"red","font-weight":"bold"};
 	}
-	if((param=="Ⅱ级")||(param=="2级")){
+	if((param==$g("Ⅱ级"))||(param==$g("2级"))){
 		css = {"color":"orange","font-weight":"bold"};
 	}
-	if((param=="Ⅲ级")||(param=="3级")){
+	if((param==$g("Ⅲ级"))||(param==$g("3级"))){
 		css = {"color":"#f9bf3b","font-weight":"bold"};	
 	}
-	if((param=="Ⅳa级")||(param=="Ⅳb级")||(param=="4级")||(param=="5级")){
+	if((param==$g("Ⅳa级"))||(param==$g("Ⅳb级"))||(param==$g("4级"))||(param==$g("5级"))){
 		css = {"color":"green","font-weight":"bold"};	
 	}//ed
 	return css;
@@ -181,16 +181,16 @@ function StyleCheckLevColor(param){
 
 function StyleCheckLevAreaColor(param){
 	var css={};
-	if(param=="红区"){
+	if(param==$g("红区")){
 		css = {"color":"red","font-weight":"bold"};
 	}
-	if(param=="橙区"){ //hxy 2020-02-21 st
+	if(param==$g("橙区")){ //hxy 2020-02-21 st
 		css = {"color":"orange","font-weight":"bold"};
 	}//ed
-	if(param=="黄区"){
+	if(param==$g("黄区")){
 		css = {"color":"#f9bf3b","font-weight":"bold"};
 	}
-	if(param=="绿区"){
+	if(param==$g("绿区")){
 		css = {"color":"green","font-weight":"bold"};	
 	}
 
@@ -201,9 +201,9 @@ function StyleCheckLevAreaColor(param){
 //格式化数据Y->是，N->否
 function FormatterData(data){
 	if(data.trim()=="Y"){
-		return "是";	
+		return $g("是");	
 	}else if(data.trim()=="N"){
-		return "否"	
+		return $g("否");	
 	}else{
 		return ""	
 	}	
@@ -211,10 +211,10 @@ function FormatterData(data){
 
 //hxy 2020-02-21
 function setCell(value){
-	if(value=="1级"){value="Ⅰ级";}
-	if(value=="2级"){value="Ⅱ级";}
-	if(value=="3级"){value="Ⅲ级";}
-	if(value=="4级"){value="Ⅳa级";}
-	if(value=="5级"){value="Ⅳb级";}
+	if(value==$g("1级")){value=$g("Ⅰ级");}
+	if(value==$g("2级")){value=$g("Ⅱ级");}
+	if(value==$g("3级")){value=$g("Ⅲ级");}
+	if(value==$g("4级")){value=$g("Ⅳa级");}
+	if(value==$g("5级")){value=$g("Ⅳb级");}
 	return value;
 }

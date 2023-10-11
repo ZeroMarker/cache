@@ -12,6 +12,7 @@ $(function() {
     InitGridUserScheFix();
     InitGridUserScheDate();
     InitKalendae();
+    $('.dhcpha-win-mask').remove();
     
     $('#btnAdd').on("click", function() {
         var gridSelect = $("#gridUser").datagrid("getSelected");
@@ -77,7 +78,7 @@ function InitDict() {
         },
         editable: false,
         placeholder: "配液中心...",
-        width: 325
+        width: 200
     });
     var thisYear = (new Date()).getFullYear();
     var weekDays = [];
@@ -258,8 +259,6 @@ function InitGridUserSche() {
             {
                 field: "psDuration",
                 title: '工作时长(小时)',
-                halign: 'left',
-                align: 'right',
                 width: 110
             }
         ]
@@ -590,7 +589,7 @@ function InitGridUserScheDate() {
                 editor: {
                     type: 'datebox',
                     options: {
-                        required: false,
+                        required: true,
                         showSeconds: true,
                         validType:'validDate[\'yyyy-MM-dd\']'
                     }
@@ -599,7 +598,7 @@ function InitGridUserScheDate() {
              {
                 field: "Days",
                 title: '间隔天数',
-                width: 100,
+                width: 200,
                 editor: {
                     type: 'validatebox',
                     options: {
@@ -618,6 +617,7 @@ function InitGridUserScheDate() {
         },
         columns: columns,
         toolbar: "#gridUserScheDateBar",
+        fitColumns:true,
         onDblClickRow: function(rowIndex, rowData) {
             if (rowData) {
                 $(this).datagrid('beginEditRow', {
@@ -635,7 +635,7 @@ function InitGridUserScheDate() {
 }
 //保存人员休息
 function SaveUserDate(){
-	 var pivaLocId = $("#cmbPivaLoc").combobox("getValue") || "";
+	var pivaLocId = $("#cmbPivaLoc").combobox("getValue") || "";
     if (pivaLocId == "") {
         $.messager.alert("提示", "请先选择配液中心", "warning");
         return;
@@ -647,6 +647,7 @@ function SaveUserDate(){
     }
     var userId = gridSelect.userId;
     $('#gridUserScheDate').datagrid('endEditing');
+    
     var gridChanges = $('#gridUserScheDate').datagrid('getChanges')
     var gridChangeLen = gridChanges.length;
     if (gridChangeLen == 0) {
@@ -663,7 +664,13 @@ function SaveUserDate(){
         if ($('#gridUserScheDate').datagrid('getRowIndex', iData) < 0) {
             continue;
         }
-        var paramsStr =  pivaLocId + "^" +userId + "^" + (iData.userStDate || "") + "^" + (iData.Days || "") 
+        var userStDate = (iData.userStDate || "")
+        var days = (iData.Days || "") 
+        var paramsStr =  pivaLocId + "^" +userId + "^" + userStDate + "^" + days;
+        if (userStDate === '' || days === '') {
+	    	$.messager.alert("提示", "请将必填项信息录入完整", "warning");
+        	return;
+	    }
     }
     var saveRet = tkMakeServerCall("web.DHCSTPIVAS.UserLinkSche", "SaveUserDate", paramsStr);
     var saveArr = saveRet.split("^");

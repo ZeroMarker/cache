@@ -11,6 +11,17 @@ function BodyLoadHandler() {
 	Muilt_LookUp("Equip^DeviceDesc");
 	SetElement("DeviceSource",GetElementValue("DeviceSourceDR"));
 	fillData();
+	
+	//czf 2021-03-09 1789983
+	$HUI.datagrid("#tDHCEQDeviceMap",{   
+		rowStyler: function(index, row) {
+	        var BGColor="background-color:";
+	        var CheckResult=tkMakeServerCall("web.DHCEQDeviceMap","CheckEQSource",row.TRowID,row.TDeviceSource,row.TDeviceID,row.TEquipDR);
+			if (CheckResult=="-2004") BGColor="background-color:#ffff00";
+			
+	        return BGColor;
+    }
+	});
 }
 
 function fillData()

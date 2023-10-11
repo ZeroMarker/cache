@@ -22,11 +22,14 @@
    	}
 	
    	obj.LoadRep = function(){
-		var aHospID 	= $('#cboHospital').combobox('getValue');
+		var aHospID 	= $('#cboHospital').combobox('getValues').join('|');
 		var aDateFrom 	= $('#dtDateFrom').datebox('getValue');
 		var aDateTo		= $('#dtDateTo').datebox('getValue');
 		var aLocType 	= Common_CheckboxValue('chkStatunit');
-		var aQrycon 	=  $('#cboQryCon').combobox('getValue');
+		var aQrycon 	= $('#cboQryCon').combobox('getValue');
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
+		
 		ReportFrame = document.getElementById("ReportFrame");
 		if(aDateFrom > aDateTo){
 			$.messager.alert("提示","开始日期应小于或等于结束日期！", 'info');
@@ -36,7 +39,11 @@
 			$.messager.alert("提示","请选择开始日期、结束日期！", 'info');
 			return;
 		}
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S010Inf.raq&aHospIDs='+aHospID +'&aDateFrom=' + aDateFrom +'&aDateTo='+ aDateTo+'&aLocType='+aLocType+'&aQryCon='+aQrycon;	
+		if ((aStatDimens=="")){
+			$.messager.alert("提示","请选择展示维度！", 'info');
+			return;
+		}
+		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S010Inf.raq&aHospIDs='+aHospID +'&aDateFrom=' + aDateFrom +'&aDateTo='+ aDateTo+'&aLocType='+aLocType+'&aQryCon='+aQrycon+'&aStatDimens='+aStatDimens+'&aLocIDs='+aLocIDs+'&aPath='+cspPath;	
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
@@ -45,12 +52,19 @@
 		
 	}
 	obj.up=function(x,y){
-        return y.InfPatCnt-x.InfPatCnt
+        if(obj.sortName=="感染人数")
+		{
+			return y.InfPatCnt-x.InfPatCnt;
+		}
+		else
+		{
+			return y.InfPatRatio-x.InfPatRatio;
+		}
     }
 	obj.option1 = function(arrViewLoc,arrInfPatCnt,arrInfPatRatio,endnumber){
 		var option1 = {
 			title : {
-				text: '住院患者感染例次（率）统计图',
+				text: '住院患者医院感染（例次）发病率统计图',
 				textStyle:{
 					fontSize:28
 				},
@@ -160,13 +174,13 @@
 		var arrViewLoc 		= new Array;
 		var arrInfPatCnt 	= new Array;
 		var arrInfPatRatio 	= new Array;
-		arrRecord 		= runQuery.record;
+		arrRecord 		= runQuery.rows;
 		
 		var arrlength		= 0;
 		for (var indRd = 0; indRd < arrRecord.length; indRd++){
 			var rd = arrRecord[indRd];
 			//去掉全院、医院、科室组
-			if ((rd["xDimensKey"].indexOf('-A-')>-1)||(rd["xDimensKey"].indexOf('-H-')>-1)||(rd["xDimensKey"].indexOf('-G-')>-1)) {
+			if ((rd["xDimensKey"].indexOf('-A-')>-1)||(rd["xDimensKey"].indexOf('-H-')>-1)||(rd["xDimensKey"]=="")||(rd["xDimensKey"].indexOf('-G-')>-1)) {
 				delete arrRecord[indRd];
 				arrlength = arrlength + 1;
 				continue;
@@ -192,33 +206,46 @@
    	obj.ShowEChaert1 = function(){
 		obj.myChart.clear()
 		//当月科室感染率图表
-		var aHospID = $('#cboHospital').combobox('getValue');
+		var aHospID 	= $('#cboHospital').combobox('getValues').join('|');
 		var aDateFrom = $('#dtDateFrom').datebox('getValue');
 		var aDateTo= $('#dtDateTo').datebox('getValue');
 		var aLocType = Common_CheckboxValue('chkStatunit');
 		var aQryCon =  $('#cboQryCon').combobox('getValue');
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S010Inf' + "&QueryName=" + 'QryS010Inf' + "&Arg1=" + aHospID + "&Arg2=" + aDateFrom + "&Arg3=" + aDateTo +"&Arg4="+aLocType+"&Arg5="+aQryCon+"&ArgCnt=" + 5;
-
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 30000, //30秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				var tkclass="DHCHAI.STATV2.S010Inf";
-				var tkQuery="QryS010Inf";
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
+		var aStatDimens = $('#cboShowType').combobox('getValue');
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
+		
+		obj.myChart.showLoading();
+		$cm({
+			ClassName:'DHCHAI.STATV2.S010Inf',
+			QueryName:'QryS010Inf',
+			aHospIDs:aHospID,
+			aDateFrom:aDateFrom,
+			aDateTo:aDateTo,
+			aLocType:aLocType,
+			aQryCon:aQryCon,
+			aStatDimens:aStatDimens,
+			aLocIDs:aLocIDs,
+			page:1,    //可选项，页码，默认1
+			rows:999   //可选项，获取多少条数据，默认50
+		},function(rs){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			obj.echartLocInfRatio(rs);
+			
+			obj.sortName="感染率"; //初始化排序指标
+			obj.myChart.off('legendselectchanged'); //取消事件，避免事件绑定重复导致多次触发
+			obj.myChart.on('legendselectchanged', function(legObj){
+				//处理排序问题 
+				//如果是重复点击认为是需要执行隐藏处理,不想隐藏就不用判断了	
+				if(obj.sortName!=legObj.name)
+				{
+					obj.sortName=legObj.name;
+					obj.echartLocInfRatio(rs);
+				}
+				else
+				{
+					obj.sortName="";  //初始化
+				}
+			});
 		});
 	}
 	

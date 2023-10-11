@@ -26,8 +26,10 @@ function GetPatRegTime(){
 	runClassMethod("web.DHCEMPatCheckLev","GetPatRegTime",{"EpisodeID":EpisodeID},function(jsonString){
 		var jsonObject = jsonString;
 		if (jsonObject != null){
+			setDateBox(jsonObject.admDate);
 			$HUI.datebox("#admDate").setValue(jsonObject.admDate);       /// 就诊日期
 			$HUI.timespinner("#admTime").setValue(jsonObject.admTime);   /// 就诊时间
+			
 		}else{
 			$.messager.alert('错误提示',"取病人就诊时间错误,请重试！");
 			return;	
@@ -35,14 +37,22 @@ function GetPatRegTime(){
 	},'json',false)
 }
 
-function initMethod(){
+///日期控制
+function setDateBox(endDate){
 	//日期控制
 	$('#admDate').datebox().datebox('calendar').calendar({
 		validator: function(date){
 			var now = new Date();
+			if(endDate!=""){
+				now=$.fn.datebox.defaults.parser(endDate);
+			}
 			return date<=now;
 		}
-	});
+	});	
+}
+
+function initMethod(){
+	
 	var now = new Date();
     var MaxTime= now.getHours()+':'+(now.getMinutes()+1);
     $('#admTime').timespinner({
@@ -68,8 +78,8 @@ function sure(){
 	var mParams = admDate +"^"+ admTime;
 	runClassMethod("web.DHCEMPatCheckLev","modPatRegTime",{ "EpisodeID":EpisodeID , "mParams":mParams},function(jsonString){
 		
-		if (jsonString < 0){
-			window.parent.$.messager.alert("提示:","修改失败！","warning");
+		if (jsonString != 0){
+			window.parent.$.messager.alert("提示:","修改失败！"+jsonString,"warning");
 		}else{
 			window.parent.$.messager.alert("提示:","修改成功！","warning",function(){
 				closewin();	/// 关闭

@@ -3,10 +3,12 @@ function InitHISUIWin(){
 	var obj = new Object();
 	$.parser.parse(); // 解析整个页面  
 	
+	obj.DefHospOID = $cm({ClassName:"DHCMA.Util.IO.MultiHospInterface",MethodName:"GetDefaultHosp",aTableName:"DHCMA_CPW_BT.PathMast",aHospID:session['LOGON.HOSPID'],dataType:'text'},false);
+	
 	$('#file').filebox({
 		width: 800,
 		prompt: 'excel文件：*.xls,*.xlsx',
-		buttonText: '选择',
+		buttonText: $g('选择'),
 		buttonAlign: 'right',
 		plain: true,
 		multiple:true,
@@ -24,7 +26,8 @@ function InitHISUIWin(){
 		fit: true,
 		queryParams:{
 			ClassName:"DHCMA.CPW.BTS.ImportPathWay",
-			QueryName:"QryTempFormData"
+			QueryName:"QryTempFormData",
+			argHospID:obj.DefHospOID
 		}, //允许多选
 		singleSelect: false,
 		//设置复选框和行的选择状态不同步
@@ -79,6 +82,7 @@ function InitHISUIWin(){
 			}
 		},
 		onLoadSuccess:function(data){
+			$("#admitList").datagrid("unselectAll");
 			$("#btnSave").linkbutton("disable");	
 			$("#btnDelTmp").linkbutton("disable");	
 		}

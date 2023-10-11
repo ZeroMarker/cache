@@ -64,7 +64,7 @@ function InitMainList(){
 	var StartDate = $HUI.datebox("#StartDate").getValue(); /// 开始日期
 	var EndDate = $HUI.datebox("#EndDate").getValue();     /// 结束日期
 	var param =  StartDate +"@"+ EndDate;
-	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsGetMdtMonthMap&Params="+param+ "&pid="+pid;
+	var uniturl = $URL+"?ClassName=web.DHCMDTConsultQuery&MethodName=JsGetMdtMonthMap&Params="+param+ "&pid="+pid+"&MWToken="+websys_getMWToken();
 	new ListComponent('bmMainList', columns, uniturl, option).Init(); 
 }
 
@@ -78,7 +78,7 @@ function SetCellUrl(value, rowData, rowIndex){
 /// 弹窗
 function Pop_Win(mdtParams){
 
-	var Link = "dhcmdt.disgroupstat.csp?mdtParams="+ mdtParams;
+	var Link = "dhcmdt.disgroupstat.csp?mdtParams="+ mdtParams+"&MWToken="+websys_getMWToken();
 	window.open(Link, '_blank', 'height='+ (window.screen.availHeight-200) +', width='+ (window.screen.availWidth-200) +', top=100, left=100, toolbar=no, menubar=no, scrollbars=no, resizable=yes, location=no, status=no');
 }
 
@@ -143,7 +143,7 @@ function onbeforeunload_handler() {
 
 /// 自动设置页面布局
 function onresize_handler(){
-	
+	$("#bmMainList").datagrid("resize");
 }
 
 /// 页面全部加载完成之后调用(EasyUI解析完之后)

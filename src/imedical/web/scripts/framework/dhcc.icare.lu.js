@@ -254,6 +254,7 @@ if ("undefined" !== typeof Ext){
 		p.pClassName = mycontextary[0].substring(1);
 		p.pClassQuery = mycontextary[1];
 		p.resizeColumn = 1;
+		p.MWToken = websys_getMWToken();
 		delete p.CONTEXT;		
 		var mymodalstr = tkMakeServerCall("ext.websys.QueryBroker", "ReadRSNew2", p.pClassName, p.pClassQuery);		
 		var json = Ext.decode(mymodalstr);		

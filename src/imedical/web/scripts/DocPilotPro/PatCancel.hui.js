@@ -22,7 +22,7 @@ function Init(){
 	},false);
 	if (rtnStr!=""){
 		var rtnStrTemp=rtnStr.split("^");
-		var myStr="登记号:"+rtnStrTemp[1]+",姓名:"+rtnStrTemp[2]+",性别:"+rtnStrTemp[3]+",年龄:"+rtnStrTemp[4];
+		var myStr=$g("登记号")+":"+rtnStrTemp[1]+","+$g("姓名")+":"+rtnStrTemp[2]+","+$g("性别")+":"+rtnStrTemp[3]+","+$g("年龄")+":"+rtnStrTemp[4];
 		$("#PatInfo").val(myStr);
 	}
 }
@@ -102,7 +102,7 @@ function CancelClick(){
 	var CancelReason=$("#CancelReason").combobox("getText");
 	//var CancelReason=CheckComboxSelData("CancelReason",CancelReason);
 	if (CancelReason==""){
-		$.messager.alert("提示","退出病人必须填写取消原因!","info",function(){
+		$.messager.alert("提示",$g("撤销病人必须填写撤销原因!"),"info",function(){
 			$('#CancelReason').next('span').find('input').focus();
 		});
 		return false;
@@ -115,7 +115,7 @@ function ExitClick(){
 	var CancelReason=$("#CancelReason").combobox("getText");
 	//var CancelReason=CheckComboxSelData("CancelReason",CancelReason);
 	if (CancelReason==""){
-		$.messager.alert("提示","退出病人必须填写退出原因!","info",function(){
+		$.messager.alert("提示",$g("中途退出病人必须填写退出原因!"),"info",function(){
 			$('#CancelReason').next('span').find('input').focus();
 		});
 		return false;
@@ -125,10 +125,49 @@ function ExitClick(){
 	SaveDelDataToServer(ServerObj.PPRowId,ServerObj.PatientID,PPPCancelUserDr,CancelReason,CancelVisitStatus);
 }
 function CompleteClick(){
-	var PPPCancelUserDr=session['LOGON.USERID'];
-	var CancelReason="";
-	var CancelVisitStatus="O";
-	SaveDelDataToServer(ServerObj.PPRowId,ServerObj.PatientID,PPPCancelUserDr,CancelReason,CancelVisitStatus);
+	
+	var NextStage=$.cm({
+		ClassName:"web.PilotProject.Extend.PatList",
+		MethodName:"GetPatNextStage",
+		dataType:"text",
+		PPPatid:ServerObj.PPPatid,
+		PPRowId:ServerObj.PPRowId,
+	},false); 
+	var NextStageArr=NextStage.split("^")
+	if (NextStageArr[0]!=""){
+	$.messager.confirm('提示', '是否进入下一个阶段  【'+NextStageArr[0]+'】', function(r){
+		if (r){
+			$m({
+				ClassName:"web.PilotProject.Extend.PatList",
+				MethodName:"SaveStage",
+				PPPatid:ServerObj.PPRowId+"||"+ServerObj.PPPatid,
+				StageDr:NextStageArr[1]
+			}, function(result){
+				if (result == 0) {
+					SuccessAfter();
+				}else {
+					$.messager.alert("提示", "进入下一个阶段失败：" + result , "info");
+				}
+			})	
+		}
+		else{
+			//不进入下一个阶段直接完成
+			var PPPCancelUserDr=session['LOGON.USERID'];
+			var CancelReason="";
+			var CancelVisitStatus="O";
+			SaveDelDataToServer(ServerObj.PPRowId,ServerObj.PatientID,PPPCancelUserDr,CancelReason,CancelVisitStatus);
+		}
+	})
+	}
+	else{
+		//没有下一个阶段直接完成
+		var PPPCancelUserDr=session['LOGON.USERID'];
+		var CancelReason="";
+		var CancelVisitStatus="O";
+		SaveDelDataToServer(ServerObj.PPRowId,ServerObj.PatientID,PPPCancelUserDr,CancelReason,CancelVisitStatus);
+	}
+	
+
 }
 function SaveDelDataToServer(PPRowId,PatientID,PPPCancelUserDr,CancelReason,CancelVisitStatus){
 	try{
@@ -148,15 +187,15 @@ function SaveDelDataToServer(PPRowId,PatientID,PPPCancelUserDr,CancelReason,Canc
 		if (myArray[0]=='0')
 		{
 			if (CancelVisitStatus=="C") {
-				$.messager.alert("提示","病人取消成功!","info",function(){
+				$.messager.alert("提示",$g("病人撤销成功!"),"info",function(){
 					SuccessAfter();
 				});
 			}else if (CancelVisitStatus=="R") {
-				$.messager.alert("提示","病人退出成功!","info",function(){
+				$.messager.alert("提示",$g("病人中途退出成功!"),"info",function(){
 					SuccessAfter();
 				});
 			}else {
-				$.messager.alert("提示","保存成功!","info",function(){
+				$.messager.alert("提示",$g("保存成功!"),"info",function(){
 					SuccessAfter();
 				});
 			}

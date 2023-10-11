@@ -76,44 +76,55 @@ window.onload=function(){
 	if (LoadPatNo!=""){
 		$('#txt-patno').val(LoadPatNo);
 	}
+	if(LoadOrdItmId!=""){
+		InitParams();
+	}
 	setTimeout("QueryGridPrescAudit()",500);
 }
-
+function InitParams(){
+	var retVal=tkMakeServerCall("PHA.COM.Method","GetOrdItmInfoForTipMess",LoadOrdItmId);
+    if(retVal!="{}"){
+	    var retJson=JSON.parse(retVal)
+		var ordDate=retJson.ordDate;
+		$("#date-start").data('daterangepicker').setStartDate(ordDate);
+		$("#date-start").data('daterangepicker').setEndDate(ordDate);
+	}
+}
 //初始化发药table
 function InitGridAudit(){
 	var columns=[
-		{header:'分析结果',index:'druguse',name:'druguse',width:65,formatter: druguseFormatter},
-		{header:'审方结果',index:'TAuditResult',name:'TAuditResult',width:65,cellattr: addPhDispStatCellAttr},
-		{header:'发药状态',index:'TDspStatus',name:'TDspStatus',width:65,hidden:true},
-		{header:'是否加急',name:"TEmergFlag",index:"TEmergFlag",width:70,
+		{header:$g("分析结果"),index:'druguse',name:'druguse',width:65,formatter: druguseFormatter},
+		{header:$g("审方结果"),index:'TAuditResult',name:'TAuditResult',width:65,cellattr: addPhDispStatCellAttr},
+		{header:$g("发药状态"),index:'TDspStatus',name:'TDspStatus',width:65,hidden:true},
+		{header:$g("是否加急"),name:"TEmergFlag",index:"TEmergFlag",width:70,
 			formatter: function(value, options, rowdata){
 				if(value == "Y"){
-					return "是";	
+					return $g("是");	
 				}else{
-					return "否";	
+					return $g("否");	
 				}
 			}	
 		},
-		{header:'姓名',index:'TPatName',name:'TPatName',width:100},
-		{header:'登记号',index:'TPmiNo',name:'TPmiNo',width:100},
-		{header:'处方号',index:'TPrescNo',name:'TPrescNo',width:110},
-		{header:'处方剂型',index:"TPrescType",name:"TPrescType",width:80},
-		{header:'付数',index:"TFactor",name:"TFactor",width:80},
-		{header:'费别',index:"TBillType",name:"TBillType",width:60},
-		{header:'诊断',index:'TMR',name:'TMR',width:300,align:'left'},
+		{header:$g("姓名"),index:'TPatName',name:'TPatName',width:100},
+		{header:$g("登记号"),index:'TPmiNo',name:'TPmiNo',width:100},
+		{header:$g("处方号"),index:'TPrescNo',name:'TPrescNo',width:110},
+		{header:$g("处方剂型"),index:"TPrescType",name:"TPrescType",width:80},
+		{header:$g("付数"),index:"TFactor",name:"TFactor",width:80},
+		{header:$g("费别"),index:"TBillType",name:"TBillType",width:60},
+		{header:$g("诊断"),index:'TMR',name:'TMR',width:300,align:'left'},
 		//鉴于现在标库上还没有慢病诊断录入的地方，经与测试组沟通后暂时先隐藏此列信息 MaYuqiang 20200320
-		{header:'慢病诊断',index:'TMBDiagnos',name:'TMBDiagnos',width:150,align:'left',hidden:true},
-		{header:'性别',index:'TPatSex',name:'TPatSex',width:40},
-		{header:'年龄',index:'TPatAge',name:'TPatAge',width:40},
-		{header:'科室',index:'TPatLoc',name:'TPatLoc',width:100},
-		{header:'拒绝理由',name:"TRefResult",index:"TRefResult",width:300,align:'left'},
-		{header:'申诉理由',name:"TDocNote",index:"TDocNote",width:300,align:'left'},
+		{header:$g("慢病诊断"),index:'TMBDiagnos',name:'TMBDiagnos',width:150,align:'left',hidden:true},
+		{header:$g("性别"),index:'TPatSex',name:'TPatSex',width:40},
+		{header:$g("年龄"),index:'TPatAge',name:'TPatAge',width:40},
+		{header:$g("科室"),index:'TPatLoc',name:'TPatLoc',width:100},
+		{header:$g("拒绝理由"),name:"TRefResult",index:"TRefResult",width:300,align:'left'},
+		{header:$g("申诉理由"),name:"TDocNote",index:"TDocNote",width:300,align:'left'},
 		{header:'TAdm',index:'TAdm',name:'TAdm',width:60,hidden:true},
 		{header:'TPapmi',index:'TPapmi',name:'TPapmi',width:60,hidden:true},
 		{header:'TPatLoc',index:'TPatLoc',name:'TPatLoc',width:60,hidden:true},
 		{header:'TOeori',index:'TOeori',name:'TOeori',width:60,hidden:true},
-		{header:'病人密级',index:'TEncryptLevel',name:'TEncryptLevel',width:70,hidden:true},
-		{header:'病人级别',index:'TPatLevel',name:'TPatLevel',width:70,hidden:true}
+		{header:$g("病人密级"),index:'TEncryptLevel',name:'TEncryptLevel',width:70,hidden:true},
+		{header:$g("病人级别"),index:'TPatLevel',name:'TPatLevel',width:70,hidden:true}
 	]; 
 	var jqOptions={
 		datatype:'local',
@@ -171,9 +182,24 @@ function QueryGridPrescAudit(){
 function QueryGridAuditSub(){
 	var selectid = $("#grid-cypresc").jqGrid('getGridParam', 'selrow');
 	var selrowdata = $("#grid-cypresc").jqGrid('getRowData', selectid);
-	var prescno=selrowdata.TPrescNo;
-	var paramsstr="DHCOUTPHA"+tmpSplit+prescno+tmpSplit+"Y"+tmpSplit+"2";
-	$("#ifrm-presc").attr("src",ChangeCspPathToAll("dhcpha/dhcpha.common.prescpreview.csp")+"?paramsstr="+paramsstr+"&PrtType=DISPPREVIEW");
+	var prescNo = selrowdata.TPrescNo;
+	var dispFlag = selrowdata.TFyFlag;
+	var phartype = "OP";		// 门诊类型
+	var zfFlag = "底方"
+	var useFlag = "2" 			// 处方审核
+	var cyflag = "Y"
+	
+	PHA_PRESC.PREVIEW({
+		prescNo: prescNo,			
+		preAdmType: phartype,
+		zfFlag: zfFlag,
+		prtType: 'DISPPREVIEW',
+		useFlag: useFlag,
+		iframeID: 'ifrm-presc',
+		cyFlag: cyflag
+	});
+	
+	//$("#ifrm-presc").attr("src",ChangeCspPathToAll("dhcpha/dhcpha.common.prescpreview.csp")+"?paramsstr="+paramsstr+"&PrtType=DISPPREVIEW");
 }
 
  //审核通过
@@ -203,7 +229,7 @@ function PassPresc(){
 	        return;
 	    }
 	    else if (auditresult.indexOf("拒绝") != "-1"){
-		    dhcphaMsgBox.alert("您选择的处方已拒绝,需撤销之前的审核记录才能再次审核 !");
+		    dhcphaMsgBox.alert("您选择的处方已拒绝,需撤消之前的审核记录才能再次审核 !");
 	        return;
 		}
     }
@@ -256,11 +282,11 @@ function RefusePresc(){
     }
 	if(RePassNeedCancle=="Y"){
 	    if (auditresult == "通过") {
-	        dhcphaMsgBox.alert("您选择的处方已通过,需撤销之前的审核记录才能再次审核 !");
+	        dhcphaMsgBox.alert("您选择的处方已通过,需撤消之前的审核记录才能再次审核 !");
 	        return;
 	    }
 	    else if (auditresult.indexOf("拒绝") != "-1"){
-		    dhcphaMsgBox.alert("您选择的处方已拒绝,需撤销之前的审核记录才能再次审核 !");
+		    dhcphaMsgBox.alert("您选择的处方已拒绝,需撤消之前的审核记录才能再次审核 !");
 	        return;
 		}
     }
@@ -370,7 +396,8 @@ function InitPrescModalTab(){
 			$('#ifrm-outmonitor').attr('src', ChangeCspPathToAll('dhcapp.seepatlis.csp'+'?PatientID=' + patientID + '&EpisodeID=' + adm+'&NoReaded='+'1')); 
 		}
 		if (tabId=="tab-eprquery"){
-			$('#ifrm-outmonitor').attr('src', ChangeCspPathToAll('emr.interface.browse.episode.csp'+ '?PatientID=' + patientID + '&EpisodeID='+adm+'&EpisodeLocID=' + session['LOGON.CTLOCID'])); 
+			$('#ifrm-outmonitor').attr('src', ChangeCspPathToAll('emr.browse.manage.csp'+ '?PatientID=' + patientID + '&EpisodeID='+adm+'&EpisodeLocID=' + session['LOGON.CTLOCID'])); 
+			//$('#ifrm-outmonitor').attr('src', ChangeCspPathToAll('emr.interface.browse.episode.csp'+ '?PatientID=' + patientID + '&EpisodeID='+adm+'&EpisodeLocID=' + session['LOGON.CTLOCID'])); 
 		}		
 		if (tabId=="tab-orderquery"){
 			$('#ifrm-outmonitor').attr('src', ChangeCspPathToAll('oeorder.opbillinfo.csp'+'?EpisodeID=' +adm)); 
@@ -379,7 +406,8 @@ function InitPrescModalTab(){
 	$('#modal-prescinfo').on('show.bs.modal', function () {
 		$("#modal-prescinfo .modal-dialog").width($(window).width()*0.9);
 		$("#ifrm-outmonitor").height($(window).height()*0.9-140)
-	  	$('#ifrm-outmonitor').attr('src', "dhcpha.comment.queryorditemds.csp?EpisodeID=" + PatientInfo.adm); 
+	  	//$('#ifrm-outmonitor').attr('src', "dhcpha.comment.queryorditemds.csp?EpisodeID=" + PatientInfo.adm); 
+		$('#ifrm-outmonitor').attr('src', ChangeCspPathToAll('dhcdoc.allergyenter.csp'+'?PatientID=' + PatientInfo.patientID + '&EpisodeID=' + PatientInfo.adm+"&IsOnlyShowPAList=Y")); 
 	  	var selectid=$("#grid-cypresc").jqGrid('getGridParam','selrow');
 	  	var selectdata=$('#grid-cypresc').jqGrid('getRowData',selectid);
 	  	var patoptions={
@@ -389,13 +417,18 @@ function InitPrescModalTab(){
 	  	AppendPatientOrdInfo(patoptions);
 	  	var tabId=$(this).attr("id");
 	  	if(tabId!="tab-allergy"){
-			$("#tab-allergy").click()
+			setTimeout("ClickAllergy()",100)
 		}
 	})
 	$("#modal-prescinfo").on("hidden.bs.modal", function() {
 	    //$(this).removeData("bs.modal");
 	});
 	$("#tab-beforeindrug").hide();
+}
+
+function ClickAllergy()
+{
+	$("#tab-allergy").click();
 }
 
 //查看日志

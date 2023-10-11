@@ -30,8 +30,8 @@ function InitTestSetWin(){
 			{field:'BTDesc2',title:'检验医嘱名称2',width:240},
 			{field:'IsActDesc',title:'是否有效',width:80},
 			{field:'ActDate',title:'处置日期',width:100},
-			{field:'ActTime',title:'处置时间',width:80},
-			{field:'UserDesc',title:'处置人',width:100}
+			{field:'ActTime',title:'处置时间',width:80}
+			//,{field:'UserDesc',title:'处置人',width:100}
 		]],
 		onSelect:function(rindex,rowData){
 			if (rindex>-1) {
@@ -71,15 +71,10 @@ function InitTestSetWin(){
 			{field:'RefRanges',title:'正常参考值',width:100},
 			{field:'IsActDesc',title:'是否有效',width:80},
 			{field:'ActDate',title:'处置日期',width:100},
-			{field:'ActTime',title:'处置时间',width:80},
-			{field:'UserDesc',title:'处置人',width:100}
+			{field:'ActTime',title:'处置时间',width:80}
+			//,{field:'UserDesc',title:'处置人',width:100}
 		]],
-		onSelect:function(rindex,rowData){
-			if (rindex>-1) {
-				obj.RecRowID2=rowData.ID;
-				obj.gridTestSet.reload();
-			}
-		},onBeforeLoad: function (param) {
+		onBeforeLoad: function (param) {
 			param.aTSID = obj.RecRowID1;
 		}
 	});

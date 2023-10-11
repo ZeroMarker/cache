@@ -32,12 +32,12 @@ function InitThisLocInci(locrowid){
 function InitDrugTitle(){
 	//定义columns
 	var columns=[
-        {header:'药品Id',name:'Inci',index:'Inci',width:120,hidden:true,title:false},
-        {header:'药品代码',name:'InciCode',index:'InciCode',width:100,align:'left',title:false},
-        {header:'药品名称',name:'InciDesc',index:'InciDesc',width:200,align:'center',title:false}, 
-        {header:'数量',name:'Qty',index:'Qty',width:80,editable:true,align:'center',title:false,
+        {header:("药品Id"),name:'Inci',index:'Inci',width:120,hidden:true,title:false},
+        {header:("药品代码"),name:'InciCode',index:'InciCode',width:100,align:'left',title:false},
+        {header:("药品名称"),name:'InciDesc',index:'InciDesc',width:200,align:'center',title:false}, 
+        {header:("数量"),name:'Qty',index:'Qty',width:80,editable:true,align:'center',title:false,
         	editoptions:{
-	        	size:25,
+	        	size:10,
 	        	dataEvents: [{
 					type: 'keydown',  //blur,focus,change.............
 					fn: function(e) {
@@ -71,18 +71,18 @@ function InitDrugTitle(){
 	        	}]
         	}
         },
-        {header:'单位',name:'Uom',index:'Uom',width:120,algin:'center',title:false},
-        {header:'规格',name:'Spec',index:'Spec',width:120,align:'center',title:false},
-        {header:'售价',name:'Sprice',index:'Sprice',width:80,align:'right',title:false},
-        {header:'售价金额',name:'SpAmt',index:'SpAmt',width:90,align:'center',title:false}, 
-        {header:'厂家',name:'ManfDesc',index:'ManfDesc',width:90,align:'center',title:false}, 
-        {header:'医保类型',name:'Insurance',index:'Insurance',width:80,hidden:true,title:false}
+        {header:("单位"),name:'Uom',index:'Uom',width:120,algin:'center',title:false},
+        {header:("规格"),name:'Spec',index:'Spec',width:120,align:'center',title:false},
+        {header:("售价"),name:'Sprice',index:'Sprice',width:80,align:'right',title:false},
+        {header:("售价金额"),name:'SpAmt',index:'SpAmt',width:90,align:'center',title:false}, 
+        {header:("生产企业"),name:'ManfDesc',index:'ManfDesc',align:'center',title:false}, 
+        {header:("医保类型"),name:'Insurance',index:'Insurance',width:80,hidden:true,title:false}
   	];    
          
     var jqOptions={
 	    url:DHCPHA_CONSTANT.URL.EASYUI_QUERY_URL,
 	    colModel: columns, //列
-	    height: '100%',
+	    height: DhcphaJqGridHeight(1,1),    
 	    autowidth:true,
 	    multiselect: false,
 	    shrinkToFit:false,
@@ -103,7 +103,7 @@ function AddDrugRow(){
 	}
 	if(inciRowId==""){return;}
 	
-	var retval=tkMakeServerCall("web.DHCOUTPHA.Pricing.Query","GetDrugInfo",inciRowId,session['LOGON.CTLOCID']);
+	var retval=tkMakeServerCall("PHA.OP.Pricing.Query","GetDrugInfo",inciRowId,session['LOGON.CTLOCID']);
 	if(retval==""){return}
 	var ArrInfo=retval.split("^");
 	var InciCode=ArrInfo[0];
@@ -123,7 +123,7 @@ function AddDrugRow(){
 	var rowDatas = $("#gird-druginfo").jqGrid("getRowData");
 	var ids = rowDatas.length;
 	if(ids==0){
-		var dataRow={Inci:'',InciCode:'',InciDesc:'合计',Qty:'',Uom:'',Spec:'',Sprice:'',SpAmt:'',ManfDesc:'',Insurance:''}
+		var dataRow={Inci:'',InciCode:'',InciDesc:$g("合计"),Qty:'',Uom:'',Spec:'',Sprice:'',SpAmt:'',ManfDesc:'',Insurance:''}
 		$("#gird-druginfo").jqGrid("addRowData", ids, dataRow, "last");
 
 	}

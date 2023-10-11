@@ -1,6 +1,7 @@
 // 名称:出库请求
 // 编写日期:2012-07-19
 var gGroupId=session['LOGON.GROUPID'];
+var colArr = [];
 Ext.onReady(function(){
 	Ext.QuickTips.init();
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
@@ -30,7 +31,7 @@ Ext.onReady(function(){
 	
 	var requestNnmber = new Ext.form.TextField({
 		id:'requestNnmber',
-		fieldLabel:'请求单号',
+		fieldLabel:$g('请求单号'),
 		listWidth:150,
 		anchor:'90%',
 		selectOnFocus:true,
@@ -40,11 +41,11 @@ Ext.onReady(function(){
 	
 	// 请求部门
 	var LocField= new Ext.ux.LocComboBox({
-		fieldLabel : '请求部门',
+		fieldLabel : $g('请求部门'),
 		id : 'LocField',
 		name : 'LocField',
 		anchor:'90%',
-		emptyText : '请求部门...',
+		emptyText : $g('请求部门...'),
 		groupId:gGroupId,
 	    listeners : {
 			'select' : function(e) {
@@ -74,7 +75,7 @@ Ext.onReady(function(){
 	var dateField = new Ext.ux.DateField({
 		id:'dateField',
 		listWidth:150,
-		fieldLabel:'制单日期',
+		fieldLabel:$g('制单日期'),
 		anchor:'90%',
 		value:new Date(),
 		disabled:true
@@ -84,21 +85,21 @@ Ext.onReady(function(){
 		id:'timeField',
 		disabled:true,
 		anchor:'90%',
-		fieldLabel:'制单时间'
+		fieldLabel:$g('制单时间')
 	});
 	var userField=new Ext.form.TextField({
 		id:'userField',
 		disabled:true,
 		anchor:'90%',
-		fieldLabel:'制单人'
+		fieldLabel:$g('制单人')
 	});
 	
 	var supplyLocField = new Ext.ux.LocComboBox({
 		id:'supplyLocField',
-		fieldLabel:'供给部门',
+		fieldLabel:$g('供给部门'),
 		anchor:'90%',
 		listWidth:210,
-		emptyText:'供给部门...',
+		emptyText:$g('供给部门...'),
 		//groupId:gGroupId,
 		defaultLoc:{},
 		relid:Ext.getCmp("LocField").getValue(),
@@ -112,7 +113,7 @@ Ext.onReady(function(){
 	
 	var remark = new Ext.form.TextArea({
 		id:'remark',
-		fieldLabel:'备注',
+		fieldLabel:$g('备注'),
 		anchor:'90%',
 		height:100,
 		selectOnFocus:true
@@ -120,7 +121,7 @@ Ext.onReady(function(){
 		
 	var completeCK = new Ext.form.Checkbox({
 		id: 'completeCK',
-		fieldLabel:'完成',
+		fieldLabel:$g('完成'),
 		anchor:'90%',
 		disabled:true,
 		allowBlank:true
@@ -128,15 +129,15 @@ Ext.onReady(function(){
 	
 	var TypeStore=new Ext.data.SimpleStore({
 		fields:['RowId','Description'],
-		data:[['O','请领单'],['C','申领计划']]
+		data:[['O',$g('请领单')],['C',$g('申领计划')]]
 	})
 	var reqType=new Ext.form.ComboBox({
 		id:'reqType',
-		fieldLabel:'请求单类型',
+		fieldLabel:$g('请求单类型'),
 		store:TypeStore,
 		valueField:'RowId',
 		displayField:'Description',
-		emptyText:'请求单类型...',
+		emptyText:$g('请求单类型...'),
 		triggerAction:'all',
 		anchor:'90%',
 		minChars:1,
@@ -147,8 +148,8 @@ Ext.onReady(function(){
 	});
 	
 	var find = new Ext.Toolbar.Button({
-		text:'查询',
-	    tooltip:'查询',
+		text:$g('查询'),
+	    tooltip:$g('查询'),
 	    iconCls:'page_find',
 		width : 70,
 		height : 30,
@@ -159,8 +160,8 @@ Ext.onReady(function(){
 	
 	var clear = new Ext.Toolbar.Button({
 		id:'clear',
-		text:'清屏',
-	    tooltip:'清屏',
+		text:$g('清屏'),
+	    tooltip:$g('清屏'),
 	    iconCls:'page_clearscreen',
 		width : 70,
 		height : 30,
@@ -171,7 +172,7 @@ Ext.onReady(function(){
 	
 	// 进价合计
 	var rpAmount = new Ext.form.Label({
-				text : '进价合计:',
+				text : $g('进价合计:'),
 				id : 'rpAmount',
 				width:500,
 				anchor : '90%'
@@ -179,7 +180,7 @@ Ext.onReady(function(){
 			
 	// 售价合计
 	var spAmount = new Ext.form.Label({
-				text : '售价合计:',
+				text : $g('售价合计:'),
 				id : 'spAmount',
 				anchor : '90%',
 				width:200
@@ -211,8 +212,8 @@ Ext.onReady(function(){
 		if(abConsumeReq>0){
 			location.href="dhcst.inrequest.csp?reqByabConsume=";
 		}
-		rpText="进价合计:  "
-		spText="售价合计:  "
+		rpText=$g("进价合计:  ")
+		spText=$g("售价合计:  ")
 		Ext.getCmp("rpAmount").setText(rpText);
 		Ext.getCmp("spAmount").setText(spText);
 		changeElementEnable();
@@ -243,11 +244,13 @@ Ext.onReady(function(){
 		var repinciflag=retlist[0];
 		var cellnum=retlist[1];
 		if (repinciflag=="1") {
-			Msg.info("warning", "该药品与第"+cellnum+"行,请求药品名称重复！");
+			Msg.info("warning", $g("该药品与第")+cellnum+$g("行,请求药品名称重复！"));
 			return false;
 			}
-		var rowrecord = InRequestGrid.getSelectionModel().getSelected();
-		var recordrow = InRequestGridDs.indexOf(rowrecord)
+		//var rowrecord = InRequestGrid.getSelectionModel().getSelected();
+		//var recordrow = InRequestGridDs.indexOf(rowrecord)
+		var cell = InRequestGrid.getSelectionModel().getSelectedCell();
+     	var recordrow = cell[0];
 		var rowData = InRequestGridDs.getAt(recordrow);
 		rowData.set("inci",record.get("InciDr"));
 		rowData.set("code",record.get("InciCode"));
@@ -268,13 +271,13 @@ Ext.onReady(function(){
 		var prflag=tkMakeServerCall("web.DHCST.RelLoc","ChkPRLocFlagByInci",prvlocId,locId,record.get("InciDr"))
 			//	alert("prflag:"+prflag)
 		if (prflag!="1"){
-		var rowrecord = InRequestGrid.getSelectionModel().getSelected();
-		var recordrow = InRequestGridDs.indexOf(rowrecord)
+		var cell = InRequestGrid.getSelectionModel().getSelectedCell();
+     	var recordrow = cell[0];
        var record = InRequestGridDs.getAt(recordrow);
        InRequestGridDs.remove(record);
 			 InRequestGrid.getView().refresh();
 			
-		   Msg.info('warning',locDesc+'不能向'+prvlocDesc+'申领'+InciDesc);
+		   Msg.info('warning',locDesc+$g('不能向')+prvlocDesc+$g('申领')+InciDesc);
 			 return false ;
 		
 		}
@@ -284,7 +287,7 @@ Ext.onReady(function(){
 			Ext.Ajax.request({
 				url : 'dhcst.inrequestaction.csp?actiontype=GetItmInfo&lncId='+ record.get("InciDr")+'&Params='+Params,
 				method : 'POST',
-				waitMsg : '查询中...',
+				waitMsg : $g('查询中...'),
 				success : function(result, request) {
 					var jsonData = Ext.util.JSON.decode(result.responseText.replace(/\r/g,"").replace(/\n/g,""));
 					if (jsonData.success == 'true') {
@@ -294,6 +297,9 @@ Ext.onReady(function(){
 						rowData.set("manf", data[3]);    //生产商						
 						var UomId=data[6];
 						var Uom=data[7];
+						addComboData(ItmUomStore, UomId, Uom);
+                    	rowData.set("uom", UomId);
+						
 						rowData.set("uom", UomId);    //单位Id
 						rowData.set("uomDesc", Uom);    //单位名称
 						rowData.set("sp", data[9]);   
@@ -310,12 +316,11 @@ Ext.onReady(function(){
 				scope:this
 			});
 		}else{
-			Msg.info("error","请选择科室!");
+			Msg.info("error",$g("请选择科室!"));
 		}
-		var col=GetColIndex(InRequestGrid,'qty');
-		var rowrecord = InRequestGrid.getSelectionModel().getSelected();
-		var recordrow = InRequestGridDs.indexOf(rowrecord)
-		InRequestGrid.startEditing(recordrow, col);
+		 if (setEnterSort(InRequestGrid, colArr)) {
+                        addNewRow();
+                    }
 	}
 	
 	function GetPhaOrderInfo2(item, group) {
@@ -329,7 +334,7 @@ Ext.onReady(function(){
 	function addNewRow() {	
 		if ((req!="")&&(Ext.getCmp('completeCK').getValue()==true))
 		{
-			Msg.info('warning','当前请求单已完成!');
+			Msg.info('warning',$g('当前请求单已完成!'));
 			return;
 		}
 		var rowCount =InRequestGrid.getStore().getCount();
@@ -430,7 +435,7 @@ Ext.onReady(function(){
 						
 	InRequestGridDs.add(NewRecord);
 	var col=GetColIndex(InRequestGrid,'desc');
-	InRequestGrid.getSelectionModel().selectRow(InRequestGridDs.getCount() - 1);
+	//InRequestGrid.getSelectionModel().selectRow(InRequestGridDs.getCount() - 1);
 	InRequestGrid.startEditing(InRequestGridDs.getCount() - 1, col);
 	changeElementEnable();
 	}
@@ -446,17 +451,26 @@ var CTUom = new Ext.form.ComboBox({
 	displayField : 'Description',
 	allowBlank : false,
 	triggerAction : 'all',
-	emptyText : '单位...',
+	emptyText : $g('单位...'),
 	selectOnFocus : true,
 	forceSelection : true,
 	minChars : 1,
 	pageSize : 10,
 	listWidth : 250	,
-	valueNotFoundText : ''
+	valueNotFoundText : '',
+	listeners:{
+		specialKey:function(field, e) {
+			if (e.getKey() == Ext.EventObject.ENTER) {
+				if (setEnterSort(InRequestGrid, colArr)) {
+                                addNewRow();
+                            }		
+			}
+		}
+	}
 });
 ItmUomStore.on('beforeload',function(store){
-	var rowrecord = InRequestGrid.getSelectionModel().getSelected();
-	var recordrow = InRequestGridDs.indexOf(rowrecord)
+	var cell = InRequestGrid.getSelectionModel().getSelectedCell();
+    var recordrow = cell[0];
 	var record = InRequestGrid.getStore().getAt(recordrow);
 	var InciDr = record.get("inci");
 	if (InciDr=='') {
@@ -481,8 +495,8 @@ CTUom.on('expand', function(combo) {
  * 单位变换事件
  */
 CTUom.on('select', function(combo) {
-	var rowrecord = InRequestGrid.getSelectionModel().getSelected();
-	var recordrow = InRequestGridDs.indexOf(rowrecord)
+	var cell = InRequestGrid.getSelectionModel().getSelectedCell();
+    var recordrow = cell[0];
 	var record = InRequestGrid.getStore().getAt(recordrow);	
 	var value = combo.getValue();        //目前选择的单位id	
 	var Uom = record.get("uom");    //目前显示的单位
@@ -583,27 +597,27 @@ CTUom.on('select', function(combo) {
 	var InRequestGridCm = new Ext.grid.ColumnModel([
 		 new Ext.grid.RowNumberer(),
 		 {
-	        header:"明细rowid",
+	        header:$g("明细rowid"),
 	        dataIndex:'rowid',
 	        width:100,
 	        align:'left',
 	        sortable:true,
 			hidden:true
 	    },{
-	        header:"药品rowid",
+	        header:$g("药品rowid"),
 	        dataIndex:'inci',
 	        width:100,
 	        align:'left',
 	        sortable:true,
 			hidden:true
 	    },{
-	        header:"代码",
+	        header:$g("代码"),
 	        dataIndex:'code',
 	        width:100,
 	        align:'left',
 	        sortable:true
 	    },{
-	        header:"名称",
+	        header:$g("名称"),
 	        dataIndex:'desc',
 	        id:'colDesc',
 	        width:220,
@@ -623,13 +637,13 @@ CTUom.on('select', function(combo) {
 				}
 	        })
 	    },{
-	        header:"厂商",
+	        header:$g("生产企业"),
 	        dataIndex:'manf',
 	        width:150,
 	        align:'left',
 	        sortable:true
 	    },{
-	        header:"请求数量",
+	        header:$g("请求数量"),
 	        dataIndex:'qty',
 	        id:'colQty',
 	        width:100,
@@ -644,32 +658,32 @@ CTUom.on('select', function(combo) {
 					specialKey:function(field, e) {
 						if (e.getKey() == Ext.EventObject.ENTER) {
 						//InRequestGrid.startEditing(InRequestGridDs.getCount() - 1, 11);
-						var rowrecord = InRequestGrid.getSelectionModel().getSelected();
-						var recordrow = InRequestGridDs.indexOf(rowrecord)
+						var cell = InRequestGrid.getSelectionModel().getSelectedCell();
+     					var recordrow = cell[0];
 						var record = InRequestGrid.getStore().getAt(recordrow);
 						var qty = field.getValue();
 						if((qty == null) || (qty.length <= 0)||(qty.length == "")){
-							Msg.info("warning", "数量不能为空!");
+							Msg.info("warning", $g("数量不能为空!"));
 							return;
 							}
 　　　　　　　　　　　　
 						if (qty <= 0) {
-							Msg.info("warning", "数量不能小于或等于0!");
+							Msg.info("warning", $g("数量不能小于或等于0!"));
 							return;
 						}
 
 						var PrQty = record.get("prvqty");
 						
 						if ((Number(qty) > Number(PrQty))){
-						  Msg.info("warning", "请求数量大于供应方库存数量!");
+						  Msg.info("warning", $g("请求数量大于供应方库存数量!"));
 						  if(gParam[0]=='N'){
 						  	InRequestGrid.startEditing(InRequestGridDs.getCount() - 1, 11);
 						  	record.set("qty","");
 						  	return;
 						  }
 						}
-						var rowrecord = InRequestGrid.getSelectionModel().getSelected();
-						var recordrow = InRequestGridDs.indexOf(rowrecord)
+						var cell = InRequestGrid.getSelectionModel().getSelectedCell();
+     					var recordrow = cell[0];
 						var rowData = InRequestGridDs.getAt(recordrow);
 						var newSpAmt=qty*rowData.get('sp');
 						var newRpAmt=qty*rowData.get('rp');
@@ -678,78 +692,66 @@ CTUom.on('select', function(combo) {
 						rowData.set("spAmt",newSpAmt);
 						rowData.set("rpAmt",newRpAmt);
 						setStatAmount();　//设置合计
-					    addNewRow(); 
+					    if (setEnterSort(InRequestGrid, colArr)) {
+                       	 	addNewRow();
+                    	}
 						}
 					}
 				}
 	        })
 	    },{
-	        header:"请求方库存",
+	        header:$g("请求方库存"),
 	        dataIndex:'reqqty',
 	        width:100,
 	        align:'left',
 	        sortable:true,
 			hidden:false
 	    },{
-	        header:"供应方库存",
+	        header:$g("供应方库存"),
 	        dataIndex:'prvqty',
 	        width:100,
 	        align:'left',
 	        sortable:true,
 			hidden:false
 	    },{
-	        header:"进价",
+	        header:$g("进价"),
 	        dataIndex:'rp',
 	        width:100,
 	        align:'right',
 	        sortable:true
 	    },{
-	        header:"进价金额",
+	        header:$g("进价金额"),
 	        dataIndex:'rpAmt',
 	        width:100,
 	        align:'right',
 	        sortable:true,
 	        renderer:FormatGridRpAmount
 	    },{
-	        header:"零售单价",
+	        header:$g("零售单价"),
 	        dataIndex:'sp',
 	        width:100,
 	        align:'right',
 	        sortable:true
 	    },{
-	        header:"售价金额",
+	        header:$g("售价金额"),
 	        dataIndex:'spAmt',
 	        width:100,
 	        align:'right',
 	        sortable:true,
 	        renderer:FormatGridSpAmount
 	    },{
-	        header:"单位rowid",
-	        dataIndex:'uom',
-	        width:100,
-	        align:'left',
-	        sortable:true,
-			hidden:true
-	    },{
-	        header:"单位",
+	        header:$g("单位"),
 	        dataIndex:'uom',
 	        id:'uom',
 	        width:100,       
 	        align:'left',
 	        sortable:true,
 	        renderer:Ext.util.Format.comboRenderer2(CTUom,"uom","uomDesc"),								
-			editor : new Ext.grid.GridEditor(CTUom),
-			listeners : {
-				specialkey : function(field, e) {
-					if (e.getKey() == Ext.EventObject.ENTER) {	
-						var cell = InRequestGrid.getSelectionModel().getSelectedCell();
-						var colIndex=GetColIndex(INScrapMGrid,"uom");
-						InRequestGrid.startEditing(cell[0], colIndex);									
-					}
-				}
-			}
+			editor : new Ext.grid.GridEditor(CTUom)
+			
+			
 	    },{
-	        header:"备注",
+	        header:$g("备注"),
 	        dataIndex:'remark',
 	        id:'colRemark',
 	        width:200,
@@ -761,40 +763,42 @@ CTUom.on('select', function(combo) {
 				listeners:{
 					specialKey:function(field, e) {
 						if (e.getKey() == Ext.EventObject.ENTER) {
-							var rowrecord = InRequestGrid.getSelectionModel().getSelected();
-							var recordrow = InRequestGridDs.indexOf(rowrecord)
+							var cell = InRequestGrid.getSelectionModel().getSelectedCell();
+     						var recordrow = cell[0];
 							if(InRequestGridDs.getAt(recordrow).get('qty')==0){
-								Msg.info("error","请求数量不能为0!");
+								Msg.info("error",$g("请求数量不能为0!"));
 								InRequestGrid.startEditing(InRequestGridDs.getCount() - 1, 6);
 								return false;
 							}else{
 								//增加一行
-								addNewRow();
+								 if (setEnterSort(InRequestGrid, colArr)) {
+				                        addNewRow();
+				                    }
 							}
 						}
 					}
 				}
 	        })
 	    },{
-	        header:"规格",
+	        header:$g("规格"),
 	        dataIndex:'spec',
 	        width:100,
 	        align:'left',
 	        sortable:true
 	    },{
-	        header:"处方通用名",
+	        header:$g("处方通用名"),
 	        dataIndex:'generic',
 	        width:150,
 	        align:'left',
 	        sortable:true
 	    },{
-	        header:"剂型",
+	        header:$g("剂型"),
 	        dataIndex:'drugForm',
 	        width:100,
 	        align:'left',
 	        sortable:true
 	    },{
-	        header:"建议请领数量",
+	        header:$g("建议请领数量"),
 	        dataIndex:'consumqty',
 	        width:100,
 	        align:'left',
@@ -819,10 +823,10 @@ CTUom.on('select', function(combo) {
 	]);
 	
 	var add = new Ext.Toolbar.Button({
-		text:'新建',
+		text:$g('新建'),
 		id:'newReq',
 		iconCls:'page_add',
-	    tooltip:'新建库存转移请求单',
+	    tooltip:$g('新建库存转移请求单'),
 		width : 70,
 		height : 30,
 		//disabled:true,
@@ -837,14 +841,14 @@ CTUom.on('select', function(combo) {
 		//供给部门
 		var frLoc = Ext.getCmp('supplyLocField').getValue(); 
 		if((frLoc=="")||(frLoc==null)){
-			Msg.info("error", "请选择供给部门!");
+			Msg.info("error", $g("请选择供给部门!"));
 			return false;
 		}
 	
 		//请求部门
 		var toLoc = Ext.getCmp('LocField').getValue(); 
 		if((toLoc=="")||(toLoc==null)){
-			Msg.info("error", "请选择请求部门!");
+			Msg.info("error", $g("请选择请求部门!"));
 			return false;
 		}
 		//登陆用户
@@ -852,7 +856,7 @@ CTUom.on('select', function(combo) {
 		//类组
 		var scg = Ext.getCmp('groupField').getValue(); 
 		if(((scg=="")||(scg==null))&&(gParamCommon[9]=="N")){
-			Msg.info("error", "请选择类组!");
+			Msg.info("error", $g("请选择类组!"));
 			return false;
 		}
 		//完成标志(暂时为空)
@@ -865,7 +869,7 @@ CTUom.on('select', function(combo) {
 		//主表信息字符串
 		var reqInfo = frLoc+"^"+toLoc+"^"+user+"^"+scg+"^"+status+"^"+remark;
 		if(RowDelim==null){
-			Msg.info("error", "行分隔符有误，不能保存!");
+			Msg.info("error", $g("行分隔符有误，不能保存!"));
 			return false;
 		}
 		
@@ -876,7 +880,7 @@ CTUom.on('select', function(combo) {
 		var data = "";
 		var count= InRequestGrid.getStore().getCount();
 		if(count==0){
-		    Msg.info("error", "明细不能为空!");
+		    Msg.info("error", $g("明细不能为空!"));
 			return false;
 		}
 		//获取所有的新记录   bianshuai 2014-04-24
@@ -895,7 +899,7 @@ CTUom.on('select', function(combo) {
 	
 		if (prflag!="1"){
 			
-		   Msg.info('warning',locDesc+'不能向'+prvlocDesc+'申领该药品');
+		   Msg.info('warning',locDesc+$g('不能向')+prvlocDesc+$g('申领该药品'));
 			 return false ;  //
 		 
 		}
@@ -910,7 +914,7 @@ CTUom.on('select', function(combo) {
 			var ppqty=mr[i].data['consumqty'];
 			//alert("colRemark:"+colRemark)
 			if ((inc!="")&&(((qty!=null)&&(Number(qty)<0))||(qty==""))) {
-				 Msg.info("warning", desc+",请求数量不能小于0或为空!");      
+				 Msg.info("warning", desc+$g(",请求数量不能小于0或为空!"));      
 				 return false;
 			}	
 			if ((Number(qty) > Number(PrQty))&&(gParam[0]=='N') ){
@@ -932,43 +936,43 @@ CTUom.on('select', function(combo) {
 			}
 		}
 		if(itmIsNull==1){
-			Msg.info("warning", "明细不能为空!");      
+			Msg.info("warning", $g("明细不能为空!"));      
 				 return false;
 			}
-		if ((req=="")&&(data=="")){Msg.info("warning", "没有内容需要保存!");return false;};
-		if(!IsFormChanged(formPanel) && data==""){Msg.info("warning", "没有内容需要保存!");return false;};
+		if ((req=="")&&(data=="")){Msg.info("warning", $g("没有内容需要保存!"));return false;};
+		if(!IsFormChanged(formPanel) && data==""){Msg.info("warning", $g("没有内容需要保存!"));return false;};
 		Ext.Ajax.request({
 			url : 'dhcst.inrequestaction.csp?actiontype=save',
 			params:{req:req,reqInfo:reqInfo,data:data},
 			method : 'POST',
-			waitMsg : '查询中...',
+			waitMsg : $g('查询中...'),
 			success : function(result, request) {
 				var jsonData = Ext.util.JSON.decode(result.responseText);
 				if (jsonData.success == 'true') {
-					Msg.info("success", "保存成功!");
+					Msg.info("success", $g("保存成功!"));
 					req = jsonData.info;
 					refresh(req);
 				}else{
 					if(jsonData.info==-1){
-						Msg.info("error", "主表保存失败!");
+						Msg.info("error", $g("主表保存失败!"));
 					}else if(jsonData.info==-99){
-						Msg.info("error", "主表加锁失败!");
+						Msg.info("error", $g("主表加锁失败!"));
 					}else if(jsonData.info==-2){
-						Msg.info("error", "主表解锁失败!");
+						Msg.info("error", $g("主表解锁失败!"));
 					}else if(jsonData.info==-5){
-						Msg.info("error", "明细保存失败!");
+						Msg.info("error", $g("明细保存失败!"));
 					}else if(jsonData.info==-4){
-						Msg.info("error", "主表单号设置失败!");
+						Msg.info("error", $g("主表单号设置失败!"));
 					}else if(jsonData.info==-3){
-						Msg.info("error", "主表保存失败!");
+						Msg.info("error", $g("主表保存失败!"));
 					}else if(jsonData.info==-1001){
-						Msg.info("error", "当前单据已完成!");
+						Msg.info("error", $g("当前单据已完成!"));
 					}else if(jsonData.info==-1002){
-						Msg.info("error", "当前单据明细已发生转移!");
+						Msg.info("error", $g("当前单据明细已发生转移!"));
 					}else if(jsonData.info==-1003){
-						Msg.info("error", "当前单据明细已建为采购计划!");
+						Msg.info("error", $g("当前单据明细已建为采购计划!"));
 					}else{
-						Msg.info("error", "保存失败!");
+						Msg.info("error", $g("保存失败!"));
 					}
 				}
 			},
@@ -979,9 +983,9 @@ CTUom.on('select', function(combo) {
 	    add.enable();
 	}
 	var save = new Ext.Toolbar.Button({
-		text:'保存',
+		text:$g('保存'),
 		id:'save',
-	    tooltip:'保存',
+	    tooltip:$g('保存'),
 	    iconCls:'page_save',
 		width : 70,
 		height : 30,
@@ -1063,9 +1067,9 @@ CTUom.on('select', function(combo) {
 	}
 	
 	var complete = new Ext.Toolbar.Button({
-		text:'确认完成',
+		text:$g('确认完成'),
 		id:'complete',
-	    tooltip:'确认完成',
+	    tooltip:$g('确认完成'),
 	    iconCls:'page_gear',
 		width : 70,
 		height : 30,
@@ -1074,7 +1078,7 @@ CTUom.on('select', function(combo) {
 			var completeCK = Ext.getCmp('completeCK').getValue();
             var mod = isDataChanged();
             if (mod && (!completeCK)) {
-                Ext.Msg.confirm('提示', '数据已发生改变,是否需要保存后完成?',
+                Ext.Msg.confirm($g('提示'), $g('数据已发生改变,是否需要保存后完成?'),
                     function(btn) {
                         if (btn == 'yes') {
                             return;
@@ -1094,14 +1098,14 @@ CTUom.on('select', function(combo) {
 	function Complete(){
 		if (req=='') 
 		{
-			Msg.info('warning','没有任何请求单！');
+			Msg.info('warning',$g('没有任何请求单！'));
 			return ;
 		}
 		//子表明细
 		var data = "";
 		var count= InRequestGrid.getStore().getCount();
 		if(count==0){
-		    Msg.info("error", "明细不能为空!");
+		    Msg.info("error", $g("明细不能为空!"));
 		return ;
 		}
 		for(var index=0;index<count;index++){
@@ -1113,7 +1117,7 @@ CTUom.on('select', function(combo) {
 			var desc=rec.data['desc']; 
 
 	  	    if ((Number(qty) > Number(PrQty))){
-			   Msg.info("warning", desc+",请求数量大于供应方库存数量!"); //提示不限制
+			   Msg.info("warning", desc+$g(",请求数量大于供应方库存数量!")); //提示不限制
 	  		   if(gParam[0]=='N'){
 			  	 InRequestGrid.startEditing(InRequestGridDs.getCount() - 1, 11);
 			  	 record.set("qty","");
@@ -1128,11 +1132,11 @@ CTUom.on('select', function(combo) {
 			Ext.Ajax.request({
 				url : 'dhcst.inrequestaction.csp?actiontype=set&req='+req+'&statu='+statu,
 				method : 'POST',
-				waitMsg : '查询中...',
+				waitMsg :$g( '查询中...'),
 				success : function(result, request) {
 					var jsonData = Ext.util.JSON.decode(result.responseText);
 					if (jsonData.success == 'true') {
-						Msg.info("success", "确认完成成功!");
+						Msg.info("success", $g("确认完成成功!"));
 						statu = "Y";
 						completeCK.setValue(statu=='Y'?true:false);
 						var grid=Ext.getCmp('reqItmEditGrid');
@@ -1143,11 +1147,11 @@ CTUom.on('select', function(combo) {
 						
 					}else{
 						if(jsonData.info==-2){
-							Msg.info("error", "设置失败!");
+							Msg.info("error", $g("设置失败!"));
 						}else if(jsonData.info==-1){
-							Msg.info("error", "加锁失败!");
+							Msg.info("error", $g("加锁失败!"));
 						}else{
-							Msg.info("error", "设置失败!");
+							Msg.info("error", $g("设置失败!"));
 						}
 					}
 				},
@@ -1190,8 +1194,8 @@ CTUom.on('select', function(combo) {
 	}
 	
 	var cancelComplete = new Ext.Toolbar.Button({
-		text:'取消完成',
-	    tooltip:'取消完成',
+		text:$g('取消完成'),
+	    tooltip:$g('取消完成'),
 	    id:'cancelComp',
 	    iconCls:'page_gear',
 		width : 70,
@@ -1200,7 +1204,7 @@ CTUom.on('select', function(combo) {
 		handler:function(){
 			if (req=='') 
 			{
-				Msg.info('warning','没有任何请求单！');
+				Msg.info('warning',$g('没有任何请求单！'));
 				return ;
 			}
 			//alert(Ext.getCmp('completeCK').getValue());
@@ -1212,11 +1216,11 @@ CTUom.on('select', function(combo) {
 				Ext.Ajax.request({
 					url : 'dhcst.inrequestaction.csp?actiontype=set&req='+req+'&statu='+statu,
 					method : 'POST',
-					waitMsg : '查询中...',
+					waitMsg : $g('查询中...'),
 					success : function(result, request) {
 						var jsonData = Ext.util.JSON.decode(result.responseText);
 						if (jsonData.success == 'true') {
-							Msg.info("success", "取消完成成功!");
+							Msg.info("success", $g("取消完成成功!"));
 							statu = "N";
 							completeCK.setValue(statu=='Y'?true:false);
 							var grid=Ext.getCmp('reqItmEditGrid');
@@ -1229,14 +1233,14 @@ CTUom.on('select', function(combo) {
 							
 						}else{
 							if(jsonData.info==-2){
-								Msg.info("error", "设置失败!"+jsonData.info);
+								Msg.info("error", $g("设置失败!")+jsonData.info);
 							}else if(jsonData.info==-1){
-								Msg.info("error", "当前请求单已转为正式库存转移单,禁止取消完成!");
+								Msg.info("error", $g("当前请求单已转为正式库存转移单,禁止取消完成!"));
 							}else if (jsonData.info==-99) {
-								Msg.info("error", "加锁失败!");
+								Msg.info("error", $g("加锁失败!"));
 							}					
 							else{
-								Msg.info("error", "设置失败!"+jsonData.info);
+								Msg.info("error", $g("设置失败!")+jsonData.info);
 							}
 						}
 					},
@@ -1252,13 +1256,13 @@ CTUom.on('select', function(combo) {
 	function delReq()
 	{
 		if(req==null || req==""){
-			Msg.info("warning","请选择要删除的请求单!");
+			Msg.info("warning",$g("请选择要删除的请求单!"));
 			return;
 		}
 		
 		Ext.Msg.show({
-			title:'提示',
-			msg:'是否确定删除请求单？',
+			title:$g('提示'),
+			msg:$g('是否确定删除请求单？'),
 			buttons:Ext.Msg.YESNO,
 			icon: Ext.MessageBox.QUESTION,
 			fn:function(b,txt){
@@ -1272,16 +1276,16 @@ CTUom.on('select', function(combo) {
 						success:function(response,opts){
 							var jsonData=Ext.util.JSON.decode(response.responseText);
 							if(jsonData.success=='true'){
-								Msg.info("success","删除成功!");
+								Msg.info("success",$g("删除成功!"));
 								Ext.getCmp("clear").handler.call(Ext.getCmp("clear").scope);
 								//Ext.getCmp("clear").fireEvent('click');
 								//clear.fireEvent('click');
 								//clear_click();
 							}else{
 								if(jsonData.info==-1){
-									Msg.info("warning","该请求单已完成，不允许删除！");
+									Msg.info("warning",$g("该请求单已完成，不允许删除！"));
 								}else{
-									Msg.info("error","删除失败:"+jsonData.info);
+									Msg.info("error",$g("删除失败:")+jsonData.info);
 								}
 							}
 						},
@@ -1297,9 +1301,9 @@ CTUom.on('select', function(combo) {
 	}
 	
 	var del = new Ext.Toolbar.Button({
-		text:'删除',
+		text:$g('删除'),
 		id:'delete',
-	    tooltip:'删除',
+	    tooltip:$g('删除'),
 	    iconCls:'page_delete',
 		width : 70,
 		height : 30,
@@ -1309,14 +1313,14 @@ CTUom.on('select', function(combo) {
 	});
 	
 	var printBT = new Ext.Toolbar.Button({
-		text : '打印',
-		tooltip : '打印请求单',
+		text : $g('打印'),
+		tooltip : $g('打印请求单'),
 		width : 70,
 		height : 30,
 		iconCls : 'page_print',
 		handler : function() {
 			if(req==null || req==""){
-				Msg.info("warning","没有需要打印的请求单!");
+				Msg.info("warning",$g("没有需要打印的请求单!"));
 				return;
 			}
 			PrintINRequest(req);
@@ -1325,8 +1329,8 @@ CTUom.on('select', function(combo) {
 	// 按照科室库存生成请求单
     var ConWinBT = new Ext.Toolbar.Button({
 	id : "PrintBT",
-	text : '生成请求单',
-	tooltip : '生成请求单',
+	text : $g('生成请求单'),
+	tooltip :$g( '生成请求单'),
 	iconCls:'page_goto',
 	width : 70,
 	height : 30,
@@ -1334,7 +1338,7 @@ CTUom.on('select', function(combo) {
 		var ProLoc=Ext.getCmp("supplyLocField").getValue()
 		var toLoc = Ext.getCmp('LocField').getValue(); 
 		if (ProLoc==toLoc){
-			Msg.info("warning", "请求部门和供应部门不能相同!");
+			Msg.info("warning", $g("请求部门和供应部门不能相同!"));
 			return;
 		}		
 		var ProLocDesc=Ext.getCmp("supplyLocField").getRawValue()
@@ -1348,10 +1352,10 @@ CTUom.on('select', function(combo) {
 		iconCls:'page_copy',
 		height:30,
 		width:70,
-		text:'复制请求单',
-		tooltip:'复制请求单',
+		text:$g('复制请求单'),
+		tooltip:$g('复制请求单'),
 		handler:function(){
-			findRec(copyReq,"复制库存转移请求单");
+			findRec(copyReq,$g("复制库存转移请求单"));
 		}
 	});
 	function copyReq(req,transflag){
@@ -1363,28 +1367,28 @@ CTUom.on('select', function(combo) {
 			url : 'dhcst.inrequestaction.csp?actiontype=copy',
 			params:{req:req,reqloc:reqloc,proloc:proloc,transflag:transflag},
 			method : 'POST',
-			waitMsg : '查询中...',
+			waitMsg : $g('查询中...'),
 			success : function(result, request) {
 				var jsonData = Ext.util.JSON.decode(result.responseText);
 				if (jsonData.success == 'true') {
-					Msg.info("success", "复制成功!");
+					Msg.info("success", $g("复制成功!"));
 					req = jsonData.info;
 					refresh(req);
 				}else{
 					if(jsonData.info==-1){
-						Msg.info("error", "主表保存失败!");
+						Msg.info("error", $g("主表保存失败!"));
 					}else if(jsonData.info==-99){
-						Msg.info("error", "主表加锁失败!");
+						Msg.info("error", $g("主表加锁失败!"));
 					}else if(jsonData.info==-2){
-						Msg.info("error", "主表解锁失败!");
+						Msg.info("error", $g("主表解锁失败!"));
 					}else if(jsonData.info==-5){
-						Msg.info("error", "明细保存失败!");
+						Msg.info("error", $g("明细保存失败!"));
 					}else if(jsonData.info==-4){
-						Msg.info("error", "主表单号设置失败!");
+						Msg.info("error", $g("主表单号设置失败!"));
 					}else if(jsonData.info==-3){
-						Msg.info("error", "主表保存失败!");
+						Msg.info("error", $g("主表保存失败!"));
 					}else{
-						Msg.info("error", "保存失败!");
+						Msg.info("error", $g("保存失败!"));
 					}
 				}
 			},
@@ -1397,57 +1401,58 @@ CTUom.on('select', function(combo) {
 	function DeleteDetail(){		
 		if ((req!="")&&(Ext.getCmp('completeCK').getValue()==true))
 		{
-			Msg.info('warning','当前请求单已完成');
+			Msg.info('warning',$g('当前请求单已完成'));
 			return;
 		}
 		
-		var selectlist=InRequestGrid.getSelectionModel().getSelections();
-		if ((selectlist.length==null)||(selectlist.length<0)){
-			Msg.info("error","请选择数据!");
+		//var cell = InRequestGrid.getSelectionModel().getSelectedCell();
+		
+		var cell = InRequestGrid.getSelectionModel().getSelectedCell();
+		if (cell==null){
+			Msg.info("error",$g("请选择数据!"));
 			return false;
 		}
-		else{
-			Ext.MessageBox.confirm('提示','确定要删除记录?',
-				function(btn) {
-					if(btn == 'yes'){
-						var selectlength=selectlist.length
-						for (var selecti=0;selecti<selectlength;selecti++){
-							var selectrecord=selectlist[selecti];
-							var reqItm = selectrecord.data['rowid'];
-							if ((reqItm!="")&&(reqItm!=null)){  //不用异步,否则refresh不起作用
-					            var deleteret=tkMakeServerCall("web.DHCST.INReqItm","Delete",reqItm);
-					            if (deleteret=="0"){
-					            	InRequestGridDs.remove(selectrecord);
-					            }
-					            else{
-						            if (deleteret==-1){
-							          Msg.info("warning","当前单据已完成!");  
-							        }else if(deleteret==-2){
-								       Msg.info("warning","当前单据明细已发生转移!"); 
-							        }else if(deleteret==-3){
-								       Msg.info("warning","当前单据明细已建为采购计划!"); 
-							        }else{
-								       Msg.info("error","删除明细失败!")
-							        }						           
-						         	return false; 
-						         }
-							}
-							else{
-								InRequestGridDs.remove(selectrecord);
-							}
-				
+     	var recordrow = cell[0];
+		var selectrecord = InRequestGridDs.getAt(recordrow);		
+		
+		Ext.MessageBox.confirm($g('提示'),$g('确定要删除记录?'),
+			function(btn) {
+				if(btn == 'yes'){
+						var reqItm = selectrecord.data['rowid'];
+						if ((reqItm!="")&&(reqItm!=null)){  //不用异步,否则refresh不起作用
+				            var deleteret=tkMakeServerCall("web.DHCST.INReqItm","Delete",reqItm);
+				            if (deleteret=="0"){
+				            	InRequestGridDs.remove(selectrecord);
+				            }
+				            else{
+					            if (deleteret==-1){
+						          Msg.info("warning",$g("当前单据已完成!"));  
+						        }else if(deleteret==-2){
+							       Msg.info("warning",$g("当前单据明细已发生转移!")); 
+						        }else if(deleteret==-3){
+							       Msg.info("warning",$g("当前单据明细已建为采购计划!")); 
+						        }else{
+							       Msg.info("error",$g("删除明细失败!"))
+						        }						           
+					         	return false; 
+					         }
 						}
-						InRequestGrid.getView().refresh();
-						changeElementEnable();
-						if (Ext.getCmp('requestNnmber').getValue()!=""){
-							if (InRequestGrid.getStore().getCount()==0){
-									delReq();
-							}
+						else{
+							InRequestGridDs.remove(selectrecord);
+						}
+			
+					
+					InRequestGrid.getView().refresh();
+					changeElementEnable();
+					if (Ext.getCmp('requestNnmber').getValue()!=""){
+						if (InRequestGrid.getStore().getCount()==0){
+								delReq();
 						}
 					}
 				}
-			 )
 			}
+		 )
+			
          setStatAmount();
 	}
 	
@@ -1464,8 +1469,8 @@ CTUom.on('select', function(combo) {
 		}
 		spAmt=FormatGridSpAmount(spAmt);
 		rpAmt=FormatGridRpAmount(rpAmt);
-		rpText="进价合计:  "+rpAmt+"  元";
-		spText="售价合计:  "+spAmt+"  元";
+		rpText=$g("进价合计:  ")+rpAmt+$g("  元");
+		spText=$g("售价合计:  ")+spAmt+$g("  元");
 		Ext.getCmp("rpAmount").setText(rpText);
 		Ext.getCmp("spAmount").setText(spText);	
 	}
@@ -1479,22 +1484,22 @@ CTUom.on('select', function(combo) {
 	InRequestGridCm.defaultSortable = true;
 	
 	var AddDetailBT=new Ext.Button({
-		text:'增加一条',
-		tooltip:'点击增加',
+		text:$g('增加一条'),
+		tooltip:$g('点击增加'),
 		iconCls:'page_add',
 		handler:function(){
 			var toLoc = Ext.getCmp('LocField').getValue(); 
 			if((toLoc=="")||(toLoc==null)){
-				Msg.info("warning", "请选择请求部门!");
+				Msg.info("warning", $g("请选择请求部门!"));
 				return ;
 			}
 			var frLoc = Ext.getCmp('supplyLocField').getValue(); 
 			if((frLoc=="")||(frLoc==null)){
-				Msg.info("warning", "请选择供给部门!");
+				Msg.info("warning", $g("请选择供给部门!"));
 				return ;
 			}
 			if (toLoc == frLoc) {
-				Msg.info("warning", "请求部门和供应部门不能相同!");
+				Msg.info("warning", $g("请求部门和供应部门不能相同!"));
 				return;
 			}
 			var rowCount =InRequestGrid.getStore().getCount();
@@ -1502,7 +1507,7 @@ CTUom.on('select', function(combo) {
 				var rowData = InRequestGridDs.data.items[rowCount - 1];
 				var data=rowData.get("inci")
 				if(data=="" || data.length<=0){
-					Msg.info("warning","已存在新建行");
+					Msg.info("warning",$g("已存在新建行"));
 					return;
 				}
 			}
@@ -1510,7 +1515,7 @@ CTUom.on('select', function(combo) {
 		}
 	})
 	var DelDetailBT=new Ext.Button({
-		text:'删除记录',
+		text:$g('删除记录'),
 		tooltip:'',
 		iconCls:'page_delete',
 		handler:function()
@@ -1520,8 +1525,8 @@ CTUom.on('select', function(combo) {
 	})
 	
 	var GridColSetBT = new Ext.Toolbar.Button({
-		text:'列设置',
-	    tooltip:'列设置',
+		text:$g('列设置'),
+	    tooltip:$g('列设置'),
 	    iconCls:'page_gear',
 //		width : 70,
 //		height : 30,
@@ -1607,14 +1612,14 @@ var newsm = new Ext.grid.CheckboxSelectionModel({
 	//表格
 	InRequestGrid = new Ext.grid.EditorGridPanel({
 		id:'reqItmEditGrid',
-		title:'出库请求单',
+		title:$g('出库请求单'),
 		store:InRequestGridDs,
 		cm:InRequestGridCm,
 		trackMouseOver:true,
 		height:476,
 		stripeRows:true,
 		region:'center',
-		sm:newsm,
+		sm:new Ext.grid.CellSelectionModel({}), //newsm,
 		loadMask:true,
 		clicksToEdit:1,
 		tbar:[AddDetailBT,'-',DelDetailBT,'-',GridColSetBT],
@@ -1633,7 +1638,7 @@ var newsm = new Ext.grid.CheckboxSelectionModel({
 	
 	var rightClickMenu=new Ext.menu.Menu({
 		id:'rightClickMenu',
-		items:[{id:'mnuDelete',text:'删除',handler:DeleteDetail}]
+		items:[{id:'mnuDelete',text:$g('删除'),handler:DeleteDetail}]
 	});
 	function changeElementEnable()
 	{
@@ -1652,14 +1657,14 @@ var newsm = new Ext.grid.CheckboxSelectionModel({
 	var formPanel = new Ext.form.FormPanel({
 		labelWidth : 80,
 		labelAlign : 'right',
-		title:'出库请求制单',
+		title:$g('出库请求制单'),
 		frame : true,
 		tbar:[find,'-',clear,'-',add,'-',save,'-',complete,'-',cancelComplete,'-',ConWinBT,'-',copyBT,'-',printBT,'-',del],
 		autoHeight:true,
 		items : [{
 			layout : 'column',			
 			xtype : 'fieldset',
-			title : '请求单信息',
+			title : $g('请求单信息'),
 			style:DHCSTFormStyle.FrmPaddingV,
 			defaults:{border:false},
 			items : [{
@@ -1704,5 +1709,6 @@ var newsm = new Ext.grid.CheckboxSelectionModel({
 	});
 	reqType.setValue("O");
 	RefreshGridColSet(InRequestGrid,"DHCSTINREQ");   //根据自定义列设置重新配置列
+	colArr = sortColoumByEnterSort(InRequestGrid);
 });
 //===========模块主页面===========================================

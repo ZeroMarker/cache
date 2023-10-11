@@ -65,9 +65,23 @@
         //自动记录病例操作日志
         hisLog.operate('EMR.OP.LoadDoc',docParam);
     },
+	//打印
+    printDoc: function () {
+        iEmrPlugin.PRINT_DOCUMENT({
+            args: 'Print',
+			ProductSourceType:"OPAudit",
+            printMode: ''
+        });
+    },
     cleanDoc: function() {
         iEmrPlugin.CLEAN_DOCUMENT();
     },
+	//开启关闭留痕
+	viewRevision: function(status){
+		iEmrPlugin.SET_REVISION_VISIBLE({
+            Visible:status
+        });
+	},
     ///初始化页面
     initDocument: function(autoLoadTmp) {
         if (autoLoadTmp) return;
@@ -77,7 +91,7 @@
     setPlugin: function(chartItemType) {
         if (sysOption.pluginType === 'DOC') {
             iEmrPlugin.showWord();
-            iEmrPlugin.attachWord(sysOption.pluginUrl, sysOption.pluginType, sysOption.argConnect, editorEvt.eventDispatch);
+            iEmrPlugin.attachWord(sysOption.pluginUrl, sysOption.pluginType, editorEvt.eventDispatch);
 
             var fontStyle = $.parseJSON("{" + sysOption.setDefaultFontStyle.replace(/\'/g, "\"") + "}");
             iEmrPlugin.SET_DEFAULT_FONTSTYLE({
@@ -87,7 +101,7 @@
 
         } else {
             iEmrPlugin.showGrid();
-            iEmrPlugin.attachGrid(sysOption.pluginUrl, sysOption.pluginType, sysOption.argConnect, editorEvt.eventDispatch);
+            iEmrPlugin.attachGrid(sysOption.pluginUrl, sysOption.pluginType, editorEvt.eventDispatch);
 
         }
     },
@@ -114,11 +128,11 @@
 };
 
 var editorEvt = {
-    //设置链接串
-    eventSetNetConnect: function(commandJson) {
+    //设置链接串   20220914改为同步方式
+    /*eventSetNetConnect: function(commandJson) {
         if (commandJson.args.result != 'OK')
             alert('设置链接失败！');
-    },
+    },*/
     //加载文档事件
     eventLoadDocument: function(commandJson) {
         setSysMenuDoingSth();

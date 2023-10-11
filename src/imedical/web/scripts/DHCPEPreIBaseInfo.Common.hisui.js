@@ -336,6 +336,9 @@ function IBISetPatient_Sel(value,DataType) {
 	obj=document.getElementById("CTNationDR");
 	if (obj && Data[iLLoop]) { setValueById("CTNationDR",Data[iLLoop]); }
 
+    //体检特殊客户类型
+    iLLoop=iLLoop+1;
+    $("#SpecialType").combobox('setValue',Data[iLLoop]);
 
 	return true;
 	

@@ -11,7 +11,7 @@ if((purId!="")&&(purId!=null)&&(purId!=0)){
 	Ext.Ajax.request({
 		url : 'dhcst.inpurplanauxbyrequestaction.csp?actiontype=select&purId='+purId,
 		method : 'POST',
-		waitMsg : '查询中...',
+		waitMsg : $g('查询中...'),
 		success : function(result,request) {
 			var jsonData = Ext.util.JSON.decode(result.responseText);
 			var arr = jsonData.info.split("^");
@@ -39,10 +39,10 @@ var inciDr = "";
 var locField = new Ext.ux.LocComboBox({
 	id:'locField',
 	name : 'locField',
-	fieldLabel:'科室',
+	fieldLabel:$g('科室'),
 	//width:120,
 	listWidth:200,
-	emptyText:'科室...',
+	emptyText:$g('科室...'),
 	groupId:gGroupId,
 	anchor:'90%',
 	listeners : {
@@ -58,7 +58,7 @@ var locField = new Ext.ux.LocComboBox({
 });
 var adjUserField = new Ext.form.TextField({
 	id:'adjUserField',
-	fieldLabel:'调整人',
+	fieldLabel:$g('调整人'),
 	anchor:'90%',
 	disabled:true
 });
@@ -70,7 +70,7 @@ var dateField = new Ext.ux.DateField({
 	width:210,
 	listWidth:210,
     allowBlank:false,
-	fieldLabel:'制单日期',
+	fieldLabel:$g('制单日期'),
 	anchor:'90%',
 	value:new Date(),
 	editable:false,
@@ -80,7 +80,7 @@ var dateField = new Ext.ux.DateField({
 var timeField = new Ext.form.TextField({
 	id:'timeField',
     allowBlank:false,
-	fieldLabel:'制单时间',
+	fieldLabel:$g('制单时间'),
 	//format:'HH-MM-SS',
 	anchor:'90%',
 	//value:new Time(),
@@ -89,10 +89,10 @@ var timeField = new Ext.form.TextField({
 
 var adjNumField = new Ext.form.TextField({
 	id:'adjNumField',
-	fieldLabel:'调整单号',
+	fieldLabel:$g('调整单号'),
 	allowBlank:true,
 	//width:120,
-	emptyText:'调整单号...',
+	emptyText:$g('调整单号...'),
 	anchor:'90%',
 	selectOnFocus:true,
 	disabled:true
@@ -100,12 +100,12 @@ var adjNumField = new Ext.form.TextField({
 
 var remarkField = new Ext.form.TextArea({
 	id:'remarkField',
-	fieldLabel:'备注',
+	fieldLabel:$g('备注'),
 	allowBlank:true,
 	width:200,
 	height:50,
 	listWidth:200,
-	emptyText:'备注...',
+	emptyText:$g('备注...'),
 	anchor:'90%',
 	selectOnFocus:true
 });
@@ -113,7 +113,7 @@ var remarkField = new Ext.form.TextArea({
 // 药品类组
 var groupField = new Ext.ux.StkGrpComboBox({
 	id:'groupField',
-	fieldLabel:'类组',
+	fieldLabel:$g('类组'),
 	StkType:App_StkTypeCode,     //标识类组类型
 	LocId:CtLocId,
 	UserId:UserId,
@@ -123,13 +123,13 @@ var groupField = new Ext.ux.StkGrpComboBox({
 // 调整原因
 var causeField = new Ext.form.ComboBox({
 	id:'causeField',
-	fieldLabel:'调整原因',
+	fieldLabel:$g('调整原因'),
 	listWidth:200,
 	allowBlank:true,
 	store:ReasonForAdjustMentStore,
 	valueField:'RowId',
 	displayField:'Description',
-	emptyText:'调整原因...',
+	emptyText:$g('调整原因...'),
 	triggerAction:'all',
 	emptyText:'',
 	minChars:1,
@@ -142,7 +142,7 @@ var causeField = new Ext.form.ComboBox({
 ReasonForAdjustMentStore.load();
 
 var adjComplete=new Ext.Toolbar.Button({
-	text:'单据完成',
+	text:$g('单据完成'),
 	height:30,
 	width:70,
 	iconCls:'page_gear',
@@ -150,7 +150,7 @@ var adjComplete=new Ext.Toolbar.Button({
 		var finshCK = Ext.getCmp('finshCK').getValue();
         var mod = isDataChanged();
         if (mod && (!finshCK)) {
-            Ext.Msg.confirm('提示', '数据已发生改变,是否需要保存后完成?',
+            Ext.Msg.confirm($g('提示'), $g('数据已发生改变,是否需要保存后完成?'),
                 function(btn) {
                     if (btn == 'yes') {
                         return;
@@ -166,7 +166,7 @@ var adjComplete=new Ext.Toolbar.Button({
 });
 
 var cancelAdjComplete=new Ext.Toolbar.Button({
-	text:'取消单据完成',
+	text:$g('取消单据完成'),
 	height:30,
 	width:70,
 	iconCls:'page_gear',
@@ -178,14 +178,14 @@ var cancelAdjComplete=new Ext.Toolbar.Button({
 
 var printInadj = new Ext.Toolbar.Button({
 	id : "printInadj",
-	text : '打印',
-	tooltip : '打印调整单',
+	text : $g('打印'),
+	tooltip : $g('打印调整单'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_print',
 	handler : function() {
 		if (mainRowId==null || mainRowId=="") {
-			Msg.info("warning", "没有需要打印的调整单!");
+			Msg.info("warning", $g("没有需要打印的调整单!"));
 			return;
 		}
 		PrintInAdj(mainRowId);
@@ -194,7 +194,7 @@ var printInadj = new Ext.Toolbar.Button({
 
 var finshCK = new Ext.form.Checkbox({
 	id: 'finshCK',
-	boxLabel:'完成',
+	boxLabel:$g('完成'),
 	disabled:true,
 	allowBlank:true,
 	listeners:{
@@ -208,7 +208,7 @@ var finshCK = new Ext.form.Checkbox({
 
 var auditCK = new Ext.form.Checkbox({
 	id: 'auditCK',
-	boxLabel:'审核',
+	boxLabel:$g('审核'),
 	disabled:true,
 	allowBlank:true
 	
@@ -216,7 +216,7 @@ var auditCK = new Ext.form.Checkbox({
 
 
 var AddDetailBT=new Ext.Button({
-	text:'增加一条',
+	text:$g('增加一条'),
 	height:30,
 	width:70,
 	tooltip:'',
@@ -228,7 +228,7 @@ var AddDetailBT=new Ext.Button({
 });
 
 var DelDetailBT=new Ext.Button({
-	text:'删除一条',
+	text:$g('删除一条'),
 	height:30,
 	width:70,
 	tooltip:'',
@@ -240,8 +240,8 @@ var DelDetailBT=new Ext.Button({
 });
 
 var GridColSetBT = new Ext.Toolbar.Button({
-	text:'列设置',
-    tooltip:'列设置',
+	text:$g('列设置'),
+    tooltip:$g('列设置'),
     iconCls:'page_gear',
 //	width : 70,
 //	height : 30,
@@ -252,7 +252,7 @@ var GridColSetBT = new Ext.Toolbar.Button({
 
 // 进价合计
 var rpAmount = new Ext.form.Label({
-	text : '进价合计:',
+	text : $g('进价合计:'),
 	id : 'rpAmount',
 	width:500,
 	anchor : '90%'
@@ -260,7 +260,7 @@ var rpAmount = new Ext.form.Label({
 		
 // 售价合计
 var spAmount = new Ext.form.Label({
-	text : '售价合计:',
+	text : $g('售价合计:'),
 	id : 'spAmount',
 	anchor : '90%',
 	width:200
@@ -277,7 +277,7 @@ var CTUom = new Ext.form.ComboBox({
 	displayField : 'Description',
 	allowBlank : false,
 	triggerAction : 'all',
-	emptyText : '单位...',
+	emptyText : $g('单位...'),
 	selectOnFocus : true,
 	forceSelection : true,
 	minChars : 1,
@@ -328,6 +328,15 @@ CTUom.on('select', function(combo) {
 	var qty=record.get("qty");
 	var pos = 2;
 	if(value!=Uom){
+		var Inclb=record.get("inclb");
+		var QtyAndPriceInfo = tkMakeServerCall("web.DHCST.Util.DrugUtil","GetIncilbInfo",Inclb,value)
+		if (QtyAndPriceInfo=="") return;
+		var InfoArr = QtyAndPriceInfo.split("^")
+		record.set("sp", InfoArr[0] ); 
+		record.set("rp", InfoArr[1] );
+		//record.set("inclbQty", InfoArr[2]);
+		record.set("InclbAvaQty", InfoArr[4]);
+		/*
 		if(value==BUom){
 			NewStkQty=BatStkQty*ConFac;
 			NewRp=Rp/ConFac;
@@ -341,7 +350,7 @@ CTUom.on('select', function(combo) {
 		record.set("InclbAvaQty",NewStkQty)
 		record.set("rp",NewRp)
 		record.set("sp",NewSp)
-			
+		*/	
 		
 	}
 
@@ -401,34 +410,34 @@ var INAdjMGridDs = new Ext.data.Store({
 var INAdjMGridCm = new Ext.grid.ColumnModel([
 	 new Ext.grid.RowNumberer(),
 	 {
-        header:"明细rowid",
+        header:$g("明细rowid"),
         dataIndex:'adjitm',
         width:150,
         align:'left',
         sortable:true,
 		hidden:true
     },{
-        header:"批次rowid",
+        header:$g("批次rowid"),
         dataIndex:'inclb',
         width:150,
         align:'left',
         sortable:true,
 		hidden:true
     },{
-        header:"药品rowid",
+        header:$g("药品rowid"),
         dataIndex:'inci',
         width:150,
         align:'left',
         sortable:true,
 		hidden:true
     },{
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'code',
         width:80,
         align:'left',
         sortable:true
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'desc',
         id:'desc',
         width:150,
@@ -446,27 +455,27 @@ var INAdjMGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"规格",
+        header:$g("规格"),
         dataIndex:'spec',
         width:80,
         align:'left',
         sortable:true //,
 		//hidden:true
     },{
-        header:"厂商",
+        header:$g("生产企业"),
         dataIndex:'manf',
         width:80,
         align:'left',
         sortable:true
     },{
-        header:"批次~效期",
+        header:$g("批次~效期"),
         dataIndex:'batNo',
         width:150,
         align:'left',
         sortable:true
     
     },{
-        header:"调整单位",
+        header:$g("调整单位"),
         dataIndex:'uom',
         id:'uom',
         width:80,       
@@ -484,13 +493,13 @@ var INAdjMGridCm = new Ext.grid.ColumnModel([
 			}
 		}
     },{
-        header:"批次可用库存",
+        header:$g("批次可用库存"),
         dataIndex:'InclbAvaQty',
         width:120,
         align:'right',
         sortable:true
     },{
-        header:"调整数量",
+        header:$g("调整数量"),
         id:'adjQty',
         dataIndex:'qty',        
         width:100,
@@ -514,9 +523,9 @@ var INAdjMGridCm = new Ext.grid.ColumnModel([
 	                    var fac=rowData.get("confac")
 						
 						if(newqty<0 && (Math.abs(newqty)>rowData.get('InclbAvaQty'))){
-							Msg.info("warning","调整数量为负数时不能超过批次库存!");
+							Msg.info("warning",$g("调整数量为负数时不能超过批次库存!"));
 							return false;
-						}else if(gParam[0]!=1)  ////新增调整数量是否允许小数判断 2020-02-20 yangsj 1 允许录入小数
+						}else if(gParam[0]!="Y")  ////新增调整数量是否允许小数判断 2020-02-20 yangsj 1 允许录入小数
                 		{
 	                		if(buomId!=uom)
 		                    {
@@ -524,7 +533,7 @@ var INAdjMGridCm = new Ext.grid.ColumnModel([
 		                    }
 		                    if((buomQty.toString()).indexOf(".")>=0)
 		                    {
-			                    Msg.info("warning", " 调整数量换算成基本单位之后存在小数，不能调整！请核对库存调整配置!：调整数量换算为基本单位是否允许小数");
+			                    Msg.info("warning", $g(" 调整数量换算成基本单位之后存在小数，不能调整！请核对库存调整配置!：调整数量换算为基本单位是否允许小数"));
 			                    return;
 		                    }
                 		}
@@ -548,26 +557,26 @@ var INAdjMGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"售价",
+        header:$g("售价"),
         dataIndex:'sp',
         width:100,
         align:'right',
         sortable:true
     },{
-        header:"售价金额",
+        header:$g("售价金额"),
         dataIndex:'spAmt',
         width:100,
         align:'right',
         sortable:true,
         renderer:FormatGridSpAmount
     },{
-        header:"进价",
+        header:$g("进价"),
         dataIndex:'rp',
         width:100,
         align:'right',
         sortable:true
     },{
-        header:"进价金额",
+        header:$g("进价金额"),
         dataIndex:'rpAmt',
         width:100,
         align:'right',
@@ -579,16 +588,16 @@ var INAdjMGridCm = new Ext.grid.ColumnModel([
 INAdjMGridCm.defaultSortable = true;
 
 var addINAdjM = new Ext.Toolbar.Button({
-	text:'新建',
-    tooltip:'新建',
+	text:$g('新建'),
+    tooltip:$g('新建'),
     iconCls:'page_add',
 	width : 70,
 	height : 30,
 	handler:function(){
 		if (isDataChanged()){
 			Ext.Msg.show({
-				title:'提示',
-				msg: '已经对该单数据做了修改，继续执行将丢失掉修改，继续吗？',
+				title:$g('提示'),
+				msg: $g('已经对该单数据做了修改，继续执行将丢失掉修改，继续吗？'),
 				buttons: Ext.Msg.YESNO,
 				fn: function(btn){
 			   		if (btn=='yes') {newINAdj();}
@@ -608,8 +617,8 @@ function newINAdj(){
 
 }
 var findINAdjM = new Ext.Toolbar.Button({
-	text:'查询',
-    tooltip:'查询',
+	text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
 	width : 70,
 	height : 30,
@@ -618,8 +627,8 @@ var findINAdjM = new Ext.Toolbar.Button({
 		{
 			{
 				Ext.Msg.show({
-					title:'提示',
-					msg: '已经对该单数据做了修改，继续执行将丢失掉修改，继续吗？',
+					title:$g('提示'),
+					msg: $g('已经对该单数据做了修改，继续执行将丢失掉修改，继续吗？'),
 					buttons: Ext.Msg.YESNO,
 					fn: function(btn){
 				   		if (btn=='yes') {clearPage();FindINAdj(INAdjMGridDs,adjNumField,mainRowId,locField,dateField,addINAdjM,finshCK,auditCK,select);}
@@ -643,8 +652,8 @@ var findINAdjM = new Ext.Toolbar.Button({
 
 
 var saveINAdjM = new Ext.Toolbar.Button({
-	text:'保存',
-    tooltip:'保存',
+	text:$g('保存'),
+    tooltip:$g('保存'),
     iconCls:'page_save',
 	width : 70,
 	height : 30,
@@ -654,8 +663,8 @@ var saveINAdjM = new Ext.Toolbar.Button({
 });
 
 var deleteINAdjM = new Ext.Toolbar.Button({
-	text:'删除',
-    tooltip:'删除',
+	text:$g('删除'),
+    tooltip:$g('删除'),
     iconCls:'page_delete',
 	width : 70,
 	height : 30,
@@ -665,8 +674,8 @@ var deleteINAdjM = new Ext.Toolbar.Button({
 });
 
 var clearINAdjM = new Ext.Toolbar.Button({
-	text:'清屏',
-    tooltip:'清屏',
+	text:$g('清屏'),
+    tooltip:$g('清屏'),
     iconCls:'page_clearscreen',
 	width : 70,
 	height : 30,
@@ -674,8 +683,8 @@ var clearINAdjM = new Ext.Toolbar.Button({
 		if (isDataChanged())
 		{
 			Ext.Msg.show({
-				title:'提示',
-				msg: '已经对该单数据做了修改，继续执行将丢失掉修改，继续吗？',
+				title:$g('提示'),
+				msg: $g('已经对该单数据做了修改，继续执行将丢失掉修改，继续吗？'),
 				buttons: Ext.Msg.YESNO,
 				fn: function(btn){
 			   		if (btn=='yes') {clearPage();SetFormOriginal(formPanel);}
@@ -707,7 +716,7 @@ var formPanel = new Ext.form.FormPanel({
 		autoScroll:true,
 		items : [{
 			xtype : 'fieldset',
-			title : '调整单信息',	
+			title : $g('调整单信息'),	
 			autoHeight : true,
 			style:DHCSTFormStyle.FrmPaddingV,
 			items : [{				
@@ -741,7 +750,7 @@ var formPanel = new Ext.form.FormPanel({
 
 //表格
 var INAdjMGrid = new Ext.grid.EditorGridPanel({
-	title:'明细记录',
+	title:$g('明细记录'),
 	store:INAdjMGridDs,
 	cm:INAdjMGridCm,
 	id:'INAdjMGrid',
@@ -767,7 +776,7 @@ function checkBeforeSave()
 	{
 		if (INAdjMGrid.getStore().getCount()==0)
 		{
-			Msg.info('error','没有任何明细记录!');
+			Msg.info('error',$g('没有任何明细记录!'));
 			return false;
 		}
 	}
@@ -784,7 +793,7 @@ function checkBeforeSave()
 				}
 			}
 			if (rowCount <= 0 || count <= 0) {
-				Msg.info("warning", "请输入请求明细!");
+				Msg.info("warning", $g("请输入请求明细!"));
 				return false;
 			}
 			// 2.重新填充背景
@@ -803,7 +812,7 @@ function checkBeforeSave()
 							&& item_i == item_j ) {
 						changeBgColor(i, "yellow");
 						changeBgColor(j, "yellow");
-						Msg.info("warning", itemdesc+",第"+icnt+","+jcnt+"行"+"药品重复，请重新输入!");
+						Msg.info("warning", itemdesc+$g(",第")+icnt+","+jcnt+$g("行药品重复，请重新输入!"));
 						return false;
 					}
 				}
@@ -829,13 +838,13 @@ function save()
 	var adjInst = "";
 	var adjLoc = Ext.getCmp('locField').getValue();
 	if((adjLoc=="")||(adjLoc==null)){
-		Msg.info("error","请选择供应科室!");
+		Msg.info("error",$g("请选择供应科室!"));
 		return false;
 	}
 	
 	var adjScg = Ext.getCmp('groupField').getValue();
 	if(((adjScg=="")||(adjScg==null))&&(gParamCommon[9]=="N")){
-		Msg.info("error","请选择类组!");
+		Msg.info("error",$g("请选择类组!"));
 		return false;
 	}
 	
@@ -844,7 +853,7 @@ function save()
 	
 	var adjReason = Ext.getCmp('causeField').getValue();
 	if((adjReason=="")||(adjReason==null)){
-		Msg.info("error","请选择调整原因!");
+		Msg.info("error",$g("请选择调整原因!"));
 		return false;
 	}
 	var remark = Ext.getCmp('remarkField').getValue();	
@@ -869,13 +878,13 @@ function save()
 				var qty = rec.get('qty');
 				
 				if ((qty=='')||(parseFloat(qty)==0)){
-					Msg.info('error','当前行调整数量不可为空!');
+					Msg.info('error',$g('当前行调整数量不可为空!'));
 					var qtyColIndex=Ext.getCmp('INAdjMGrid').getColumnModel().getIndexById('adjQty');
 					Ext.getCmp('INAdjMGrid').getSelectionModel().select(index,qtyColIndex);	
 					return;				
 				} 
 				if(qty<0 && (Math.abs(qty)>InclbAvaQty)){
-					         Msg.info("error","调整数量为负数时不能超过批次库存!");
+					         Msg.info("error",$g("调整数量为负数时不能超过批次库存!"));
 					         return;}
 				var uom = rec.get('uom');
 				
@@ -883,7 +892,7 @@ function save()
 	            var buomQty=qty
 	            var fac=rec.get("confac")
 				
-				if(gParam[0]!=1)  ////新增调整数量是否允许小数判断 2020-02-20 yangsj 1 允许录入小数
+				if(gParam[0]!="Y")  ////新增调整数量是否允许小数判断 2020-02-20 yangsj 1 允许录入小数
 	    		{
 	        		if(buomId!=uom)
 	                {
@@ -891,7 +900,7 @@ function save()
 	                }
 	                if((buomQty.toString()).indexOf(".")>=0)
 	                {
-	                    Msg.info("warning", rec.get("desc")+" 调整数量换算成基本单位之后存在小数，不能调整！请核对库存调整配置：调整数量换算为基本单位是否允许小数!");
+	                    Msg.info("warning", rec.get("desc")+$g(" 调整数量换算成基本单位之后存在小数，不能调整！请核对库存调整配置：调整数量换算为基本单位是否允许小数!"));
 	                    return;
 	                }
 	    		}
@@ -912,28 +921,28 @@ function save()
 	}
 
 	if((!IsFormChanged(formPanel))&&(detailData=="")){
-		Msg.info("error", "没有内容需要保存!");
+		Msg.info("error", $g("没有内容需要保存!"));
 		return false;
 	};
 	
-	var loadMask=ShowLoadMask(Ext.getBody(),"处理中...");
+	var loadMask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 	Ext.Ajax.request({
 		url: INAdjMGridUrl+'?actiontype=saveAdj',
 		params:{adj:mainRowId,mainData:tmpData,detailData:detailData},
 		failure: function(result,request) {
-			Msg.info("error","请检查网络连接!");
+			Msg.info("error",$g("请检查网络连接!"));
 		},
 		success: function(result,request) {
 			var jsonData = Ext.util.JSON.decode(result.responseText );
 			if (jsonData.success=='true') {
-				Msg.info("success","保存成功!");
+				Msg.info("success",$g("保存成功!"));
 				mainRowId=jsonData.info   //rowid - 主表rowid	
 				select(mainRowId)		
 			}else{
 				if(jsonData.info==-1){
-					Msg.info("error","插入出错!");
+					Msg.info("error",$g("插入出错!"));
 				}else{
-					Msg.info("error","保存失败!"+jsonData.info);
+					Msg.info("error",$g("保存失败!")+jsonData.info);
 				}
 			}
 		},
@@ -990,7 +999,7 @@ function select(rowid)
 				 	params:{start:0,limit:9999,adj:rowid},
 					callback : function(r,options, success){
 						if(success==false){
-							Ext.MessageBox.alert("查询错误",this.reader.jsonData.Error); 
+							Ext.MessageBox.alert($g("查询错误"),this.reader.jsonData.Error); 
 		     			}
 					}
 				 });
@@ -1007,9 +1016,9 @@ function select(rowid)
 			 	
 			}else{
 				if(jsonData.info==-1){
-					Msg.info("error","检索主表出错!");
+					Msg.info("error",$g("检索主表出错!"));
 				}else{
-					Msg.info("error","检索主表失败!"+jsonData.info);
+					Msg.info("error",$g("检索主表失败!")+jsonData.info);
 				}
 			}
 			
@@ -1030,11 +1039,26 @@ function addComboData(store, id, desc) {
 	var r = new store.recordType(defaultData);
 	store.add(r);
 }
-	
+
+/*	
 function GetPhaOrderInfo2(item, group) {
 	if (item != null && item.length > 0) {
 		var phaLoc = Ext.getCmp("locField").getValue();
 		IncItmBatWindow(item, group, App_StkTypeCode, phaLoc, "N", "0", "","",returnInfo);
+	}
+}
+*/
+
+
+function GetPhaOrderInfo2(item, group) {
+	if (item != null && item.length > 0) {
+		var phaLoc = Ext.getCmp("locField").getValue();
+		var AllBatFlag ="" // Ext.getCmp("zeroFlag").getValue();  //包含0批次 
+		if (AllBatFlag==true){AllBatFlag=0}
+		else {AllBatFlag=1}
+		if ((group=="")||(group==null)){group=""}
+		//IncItmBatWindow(item, group, App_StkTypeCode, phaLoc, "N", ZeroFlag, "","",returnInfo);
+		IncItmBatMutiSelectWindow(item, group, App_StkTypeCode, phaLoc, "N", AllBatFlag, "","",returnInfo);
 	}
 }
 
@@ -1043,7 +1067,7 @@ function addDetailRow()
 {
 	if ((mainRowId!="")&&(Ext.getCmp('finshCK').getValue()==true))
 	{
-		Msg.info('warning','当前调整单已完成,禁止增加明细记录!');
+		Msg.info('warning',$g('当前调整单已完成,禁止增加明细记录!'));
 		return;
 	}	
 	var rowCount=INAdjMGrid.getStore().getCount();
@@ -1051,7 +1075,7 @@ function addDetailRow()
 		var rowData=INAdjMGridDs.data.items[rowCount-1]
 		var data=rowData.get("inci");
 		if(data==""||data.length<=0)
-		{Msg.info("warning","已存在新建行");
+		{Msg.info("warning",$g("已存在新建行"));
 		 return;}
 		}
 	addNewRow();
@@ -1064,25 +1088,25 @@ function DeleteDetail()
 	var complete=Ext.getCmp('finshCK').getValue();
 	if (complete==true)
 	{
-		Msg.info('warning','已经完成,禁止删除明细记录!');	return;
+		Msg.info('warning',$g('已经完成,禁止删除明细记录!'));	return;
 	}
 	
 	var cell = INAdjMGrid.getSelectionModel().getSelectedCell();
 	if(cell==null){
-		Msg.info("warning","请选择数据!");
+		Msg.info("warning",$g("请选择数据!"));
 		return false;
 	}else{
 		var record = INAdjMGridDs.getAt(cell[0]);
 		var rowid = record.get("adjitm");
 		if(rowid!=""){
-			Ext.MessageBox.confirm('提示','确定要删除该记录?',
+			Ext.MessageBox.confirm($g('提示'),$g('确定要删除该记录?'),
 				function(btn) {
 					if(btn == 'yes'){
 						Ext.Ajax.request({
 							url : 'dhcst.inadjaction.csp?actiontype=deleteItem&rowid='+rowid,
-							waitMsg:'删除中...',
+							waitMsg:$g('删除中...'),
 							failure: function(result, request) {
-								Msg.info("error", "请检查网络连接!");
+								Msg.info("error", $g("请检查网络连接!"));
 								return false;
 							},
 							success : function(result, request) {
@@ -1092,16 +1116,16 @@ function DeleteDetail()
 									 	params:{start:0,limit:9999,adj:mainRowId},
 										callback : function(r,options, success){
 											if(success==false){
-												Ext.MessageBox.alert("查询错误",this.reader.jsonData.Error); 
+												Ext.MessageBox.alert($g("查询错误"),this.reader.jsonData.Error); 
 							     			}
 										}
 									 });
 								}else{
 									var jsonInfo=jsonData.info;
 									if (jsonInfo==-5){
-										Msg.info("warning", "已存在台账记录,无法删除!");
+										Msg.info("warning", $g("已存在台账记录,无法删除!"));
 									}else{
-										Msg.info("error", "删除失败!");
+										Msg.info("error", $g("删除失败!"));
 									}
 									return false;
 								}
@@ -1127,6 +1151,7 @@ function DeleteDetail()
 	}
 
 }
+/*
 //科室库存项批次信息窗口关闭时回调函数
 function returnInfo(record) {
 	if (record == null || record == "") {
@@ -1184,6 +1209,60 @@ function returnInfo(record) {
 	var colIndex=GetColIndex(INAdjMGrid,"qty");
 	INAdjMGrid.startEditing(cell[0], colIndex);	
 }
+*/
+
+ ///yunhaibao,库存调整多选批次回调函数
+function returnInfo(modifyrecord,recorditm) {
+	if (modifyrecord == null || modifyrecord == "") {
+		return;
+	}
+	var rowCount = INAdjMGrid.getStore().getCount();
+	var ati=rowCount-1
+	for(var i=0;i<modifyrecord.length;i++){
+		if (i!=0){
+			addNewRow()
+		}
+		inciDr = recorditm.get("InciDr");
+		var rowData = INAdjMGrid.getStore().getAt(ati);
+		ati=ati+1
+		rowData.set("inci",inciDr);
+		rowData.set("code",recorditm.get("InciCode"));
+		rowData.set("desc",recorditm.get("InciDesc"));
+		rowData.set("batNo",modifyrecord[i].data["BatExp"]);
+		rowData.set("manf",recorditm.get("ManfName"));
+		rowData.set("sp",modifyrecord[i].data["Sp"]);
+		rowData.set("rp",modifyrecord[i].data["Rp"]);
+		rowData.set("inclb",modifyrecord[i].data["Inclb"]);
+		rowData.set("spec",recorditm.get("Spec"))
+		rowData.set("Inclbqty",modifyrecord[i].data["InclbQty"]);
+		rowData.set("InclbAvaQty",modifyrecord[i].data["AvaQty"]);     //改为取可用库存
+		//rowData.set("InclbqtyUom",modifyrecord[i].data["InclbQtyO"]);
+		rowData.set("qty",modifyrecord[i].data["ReqQty"]);
+		var uom=modifyrecord[i].data["PurUomId"]
+		var uomDesc=modifyrecord[i].data["PurUomDesc"]
+		addComboData(ItmUomStore,uom,uomDesc);
+		rowData.set("uom",modifyrecord[i].data["PurUomId"]);
+		rowData.set("uomDesc",modifyrecord[i].data["PurUomDesc"]);
+		var buom=modifyrecord[i].data['BUomId'];
+		var confac=modifyrecord[i].data['ConFac'];
+		var rp=modifyrecord[i].data["Rp"]
+		var sp=modifyrecord[i].data["Sp"]
+		puomRp=rp;
+		puomSp=sp;
+		buomRp=puomRp/confac;
+		buomSp=puomSp/confac;
+		rowData.set("confac",confac);
+		rowData.set("buom",buom);
+		rowData.set("rp",rp);
+		rowData.set("sp",sp);
+		var qty=modifyrecord[i].data["ReqQty"]
+   		rowData.set("spAmt",Math.round(qty*rowData.get('sp')*Math.pow(10,2))/Math.pow(10,2)); 
+   		rowData.set("rpAmt",Math.round(qty*rowData.get('rp')*Math.pow(10,2))/Math.pow(10,2));
+		
+	}
+	addNewRow()
+	setStatAmount();
+}
 //====================================================
 //====================================================
 
@@ -1195,7 +1274,7 @@ function addNewRow() {
 	}
 	var scg = Ext.getCmp('groupField').getValue(); 
 	if(((scg=="")||(scg==null))&&(gParamCommon[9]=="N")){
-		Msg.info("error", "请选择类组!");
+		Msg.info("error", $g("请选择类组!"));
 		return ;
 	}
 	
@@ -1309,37 +1388,37 @@ function deleteAdj()
 {
 	if (mainRowId=='')
 	{
-		Msg.info('warning','没有任何库存调整单!');return false;	
+		Msg.info('warning',$g('没有任何库存调整单!'));return false;	
 	}
 	var complete=Ext.getCmp('finshCK').getValue();
 	if (complete==true)
 	{
-		Msg.info('warning','该单已经完成,禁止删除!');	return false;
+		Msg.info('warning',$g('该单已经完成,禁止删除!'));	return false;
 	}
 
 	var rowid=mainRowId;
-	Ext.MessageBox.confirm('提示','确定要删除该库存调整单?',
+	Ext.MessageBox.confirm($g('提示'),$g('确定要删除该库存调整单?'),
 		function(btn) {
 			if(btn == 'yes'){
 				Ext.Ajax.request({
 					url : 'dhcst.inadjaction.csp?actiontype=delete&adj='+rowid,
-					waitMsg:'删除中...',
+					waitMsg:$g('删除中...'),
 					failure: function(result, request) {
-						Msg.info("error", "请检查网络连接!");
+						Msg.info("error", $g("请检查网络连接!"));
 						return false;
 					},
 					success : function(result, request) {
 						var jsonData = Ext.util.JSON.decode(result.responseText);
 						if (jsonData.success == 'true') {
-							Msg.info("success",'删除成功!');
+							Msg.info("success",$g('删除成功!'));
 							clearPage();
 							return true;
 						}else{
 							var jsonInfo=jsonData.info;
 							if (jsonInfo==-5){
-								Msg.info("warning", "明细已存在台账记录,无法删除!");
+								Msg.info("warning", $g("明细已存在台账记录,无法删除!"));
 							}else{
-								Msg.info("error", "删除失败!"+jsonData.info);
+								Msg.info("error", $g("删除失败!")+jsonData.info);
 							}							
 							return false;
 						}
@@ -1370,8 +1449,8 @@ function clearPage()
 	Ext.getCmp('finshCK').setValue("");
 	Ext.getCmp('remarkField').setValue("");
 	Ext.getCmp('auditCK').setValue("");
-	Ext.getCmp("rpAmount").setText("进价金额:");
-	Ext.getCmp("spAmount").setText("售价金额:");
+	Ext.getCmp("rpAmount").setText($g("进价金额:"));
+	Ext.getCmp("spAmount").setText($g("售价金额:"));
 	INAdjMGridDs.removeAll();
 	saveINAdjM.enable();
 	setEditEnable();
@@ -1381,25 +1460,30 @@ function clearPage()
 //设置单据完成
 function setComplete()
 {
+	if (INAdjMGrid.getStore().getCount()==0)
+	{
+		Msg.info('error',$g('没有任何明细记录!'));
+		return false;
+	}
 	//alert(mainRowId);
-	if (mainRowId=='') {Msg.info('warning','没有任何单据,请先查询!');return; }
+	if (mainRowId=='') {Msg.info('warning',$g('没有任何单据,请先查询!'));return; }
 	if (Ext.getCmp('finshCK').getValue()==true){
-		Msg.info('warning','当前单据已完成!');return;
+		Msg.info('warning',$g('当前单据已完成!'));return;
 	}
 	Ext.Ajax.request({
 		url:INAdjMGridUrl+'?actiontype=setComplete'+"&adj="+mainRowId,
 		failure:function(){
-			Msg.info('error','请检查网络!');return;
+			Msg.info('error',$g('请检查网络!'));return;
 		},
 		success:function(result,request){
 			var jsonData = Ext.util.JSON.decode(result.responseText);
 			if (jsonData.success == 'true') {
 				Ext.getCmp('finshCK').setValue(true);
 				saveINAdjM.disable();
-				Msg.info('success','设置成功！');
+				Msg.info('success',$g('设置成功！'));
 				
 			}else{
-				Msg.info("error", "设置失败!"+jsonData.info);
+				Msg.info("error", $g("设置失败!")+jsonData.info);
 				return false;
 			}			
 		}
@@ -1410,23 +1494,23 @@ function setComplete()
 //取消完成
 function cancelComplete()
 {
-	if (mainRowId=='') {Msg.info('warning','没有任何单据,请先查询!');return; }
-	if (Ext.getCmp('finshCK').getValue()==false){Msg.info('error','该单据尚未完成!');return;}	
+	if (mainRowId=='') {Msg.info('warning',$g('没有任何单据,请先查询!'));return; }
+	if (Ext.getCmp('finshCK').getValue()==false){Msg.info('error',$g('该单据尚未完成!'));return;}	
 	Ext.Ajax.request({
 		url:INAdjMGridUrl+'?actiontype='+'cancelComplete'+'&adj='+mainRowId,
-		failure:function(){Msg.info('error','请检查网络!');return;
+		failure:function(){Msg.info('error',$g('请检查网络!'));return;
 		},
 		success:function(result,request){
 			var jsonData = Ext.util.JSON.decode(result.responseText);
 			if (jsonData.success == 'true') {
 				Ext.getCmp('finshCK').setValue(false);
-				Msg.info('success','设置成功！');
+				Msg.info('success',$g('设置成功！'));
 				saveINAdjM.enable();
 			}else{
 				if (jsonData.info==-3){
-					Msg.info("warning", "该单据已审核,无法取消完成!");
+					Msg.info("warning", $g("该单据已审核,无法取消完成!"));
 				}else{
-					Msg.info("error", "设置失败!"+jsonData.info);
+					Msg.info("error", $g("设置失败!")+jsonData.info);
 				}
 				return;
 			}		
@@ -1455,8 +1539,8 @@ function setStatAmount()
 		rpAmt=rpAmt;
 		spAmt=spAmt;
 	}
-	rpText="进价合计:  "+FormatGridRpAmount(rpAmt)+"  元";
-	spText="售价合计:  "+FormatGridSpAmount(spAmt)+"  元";
+	rpText=$g("进价合计:  ")+FormatGridRpAmount(rpAmt)+$g("  元");
+	spText=$g("售价合计:  ")+FormatGridSpAmount(spAmt)+$g("  元");
 	Ext.getCmp("rpAmount").setText(rpText);
 	Ext.getCmp("spAmount").setText(spText);	
 }
@@ -1493,7 +1577,7 @@ Ext.onReady(function(){
 	}	
 	
 	var panel = new Ext.Panel({
-		title:'库存调整制单',
+		title:$g('库存调整制单'),
 		activeTab:0,
 		layout:'fit',
 		region:'north',

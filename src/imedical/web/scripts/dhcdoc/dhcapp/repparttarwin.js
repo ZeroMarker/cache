@@ -5,6 +5,7 @@
 //===========================================================================================
 
 var oeori = "";
+var refRepPart=""
 
 /// 页面初始化函数
 function initPageDefault() {
@@ -19,6 +20,7 @@ function initPageDefault() {
 /// 初始化加载病人就诊ID
 function InitParam(){
 	oeori = getParam("oeori");
+	refRepPart = getParam("refRepPart");
 }
 
 /// 页面DataGrid初始定义检查分类列表
@@ -46,13 +48,23 @@ function InitItemList(){
 	            return 'background-color:Pink;'; 
 	        }
 	    },
+	    onCheckAll:function (){
+ 			var rowsData = $("#dmPartList").datagrid("getRows");
+    		for (var i = 0; i < rowsData.length; i++) {
+      			if ((rowsData[i].ItemStat == "停止")||(rowsData[i].PartID == "")||((rowsData[i].ItemStat == "执行")&&(ServiceObj.TreatItmReqMode ==0))){
+					$("input[type='checkbox']")[i + 1].checked=false
+				}
+	   
+    		}
+		   	SetCheckclick()
+		    },
 	    onCheck:function(rowIndex,rowData){
 			if (rowData.ItemStat == "停止"){
 				$(this).datagrid('unselectRow', rowIndex);
 				$.messager.alert("提示:","当前记录已停止，不能再次撤销！");
 				return;
 			}
-			if ((rowData.ItemStat == "执行")&(rowData.PartID != "")){
+			if ((rowData.ItemStat == "执行")&(rowData.PartID != "")&(ServiceObj.TreatItmReqMode ==0)){
 				$(this).datagrid('unselectRow', rowIndex);
 				$.messager.alert("提示:","当前记录已执行，不能撤销！");
 				return;
@@ -63,6 +75,7 @@ function InitItemList(){
                     $("#dmPartList").datagrid('checkAll');
                 }
 			}
+			SetCheckclick()
 		},
 		onUncheck:function(rowIndex,rowData){
 		   
@@ -72,6 +85,7 @@ function InitItemList(){
                     $("#dmPartList").datagrid('uncheckAll');
                 }
 			}
+			SetCheckclick()
 		},
 	    onClickRow:function(rowIndex, rowData){
 		    
@@ -79,15 +93,32 @@ function InitItemList(){
 		},
 		onLoadSuccess: function(data){
 			/// 隐藏标题行checkbox
-			$("#dmPartList").parent().find("div .datagrid-header-check").children("input[type=\"checkbox\"]").eq(0).attr("style", "display:none;");
+			/// $("#dmPartList").parent().find("div .datagrid-header-check").children("input[type=\"checkbox\"]").eq(0).attr("style", "display:none;");
             /// 循环设置停止项目checkbox 不可选
             if (data.rows.length > 0) {
                 for (var i = 0; i < data.rows.length; i++) {
-                    if ((data.rows[i].ItemStat == "停止")||(data.rows[i].PartID == "")||(data.rows[i].ItemStat == "执行")) {
+                    if ((data.rows[i].ItemStat == "停止")||(data.rows[i].PartID == "")||((data.rows[i].ItemStat == "执行")&&(ServiceObj.TreatItmReqMode ==0))) {
                         $("input[type='checkbox']")[i + 1].disabled = true;
                     }
                 }
             }
+            if (refRepPart!=""){
+	            var rowsData = $("#dmPartList").datagrid("getRows");
+	            var refRepPartArry=refRepPart.split("!!")
+			    for (var i = 0; i < rowsData.length; i++) {
+			       //if ((rowsData[i].ItemStat == "停止")||((rowsData[i].ItemStat == "执行"))){
+					 if (rowsData[i].ItemStat == "停止"){
+						continue;
+					}
+					for (var j = 0; j < refRepPartArry.length; j++) {
+						if (refRepPartArry[j]==rowsData[i].ItemID ){
+							$("input[type='checkbox']")[i + 1].checked=true
+							$(this).datagrid('selectRow', i );
+							}
+					}
+			    }
+	            refRepPart=""
+	            }
         }
 	};
 	
@@ -100,10 +131,10 @@ function InitItemList(){
 function InitBlButton(){
 	
 	///  取消
-	$('a:contains("取消")').bind("click",cancel);
+	$('#Cancel').bind("click",cancel);
 		
 	///  确定
-	$('a:contains("确定")').bind("click",retExaReqItm);
+	$('#BSave').bind("click",retExaReqItm);
 
 }
 
@@ -118,25 +149,53 @@ function InitLoadData(){
 /// 退费申请确定，获取执行选中项目
 function retExaReqItm(){
 
-	var rowsData=$("#dmPartList").datagrid('getSelections'); /// 获取选中行
+	var rowsData=$("#dmPartList").datagrid('getRows'); /// 获取选中行
 	if (rowsData.length == 0){
-		$.messager.alert("提示:","请先选择待申请记录！");
+		$.messager.alert("提示:","请先选择待退费记录！");
 		return;
 	}
-	
 	var mItmListData = [];
 	$.each(rowsData, function(index, rowData){
 		var arReqItmID = rowData.ItemID;  /// 项目ID
 		var PartID = rowData.PartID;      /// 部位ID
 		var PartDesc = rowData.PartDesc;  /// 部位描述
-		var ListData = arReqItmID +"^"+ PartDesc;
-		mItmListData.push(ListData);
+		//if ((rowData.ItemStat == "停止")||(rowData.PartID == "")||((rowData.ItemStat == "执行")&&(ServiceObj.TreatItmReqMode ==0))) {
+		if ($("input[type='checkbox']")[index + 1].checked==false){	
+		}else{
+			var ListData = arReqItmID +"^"+ PartDesc;
+			mItmListData.push(ListData);
+		}
 	});
-	
 	websys_showModal("options").callBackFunc(mItmListData.join("!!"));
 	websys_showModal("close");
 }
-
+function SetCheckclick(){
+	var NeedFlag=1
+	var rowsData = $("#dmPartList").datagrid("getRows");
+    for (var i = 0; i < rowsData.length; i++) {
+       if ((rowsData[i].ItemStat == "停止")||(rowsData[i].PartID == "")||((rowsData[i].ItemStat == "执行"))){
+			continue;
+		}
+	   if ($("input[type='checkbox']")[i + 1].checked){}else{
+		   NeedFlag=0
+		   }
+    }
+    if (NeedFlag==0){
+	    for (var i = 0; i < rowsData.length; i++) {
+		 if ((rowsData[i].PartID == "")&&(rowsData[i].ItemStat != "停止")&&(rowsData[i].ItemStat != "执行")){
+			 $("input[type='checkbox']")[i + 1].checked=false
+			 }		
+	    
+	    }
+	}else{
+		for (var i = 0; i < rowsData.length; i++) {
+		 if ((rowsData[i].PartID == "")&&(rowsData[i].ItemStat != "停止")&&(rowsData[i].ItemStat != "执行")){
+			 $("input[type='checkbox']")[i + 1].checked=true
+			 }		
+	    
+	    }
+	} 
+}
 /// 关闭窗体
 function cancel(){
 	websys_showModal("options").callBackFunc("");

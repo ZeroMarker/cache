@@ -71,6 +71,7 @@ $(function(){
 					}
 				}else{disinput(false)}
 			}else(disinput(false))
+			clearform();
 			Querydic($('#diccbx').combogrid('grid').datagrid('getSelected'),selobj);
 		},
 		onShowPanel:function(){	
@@ -220,7 +221,7 @@ function UpdateDic(){
 	if($('#code').val().indexOf("请输入")>=0 || $('#code').val()==""){$.messager.alert('提示','请输入信息后再保存!');return;}
 	if($('#desc').val().indexOf("请输入")>=0 || $('#desc').val()==""){$.messager.alert('提示','名称不能为空!');return;}
 	if((seldictype=="")||(seldictype=='undefined')){
-		$.messager.alert('提示','请选择字典类别!');return;
+		$.messager.alert('提示','请选择字典类别!','info');return;
 	}
 	
 	var saveinfo=selRowid+"^"+seldictype+"^"+$('#code').val()+"^"+$('#desc').val()+"^^^"
@@ -236,27 +237,27 @@ function UpdateDic(){
 		MSNShow('提示','保存成功！',2000) 
 	}else{
 		if(eval(savecode)==-1001){
-			$.messager.alert('提示','【'+$('#code').val()+'】此代码已存在相同记录!如果要更新内容请先查询出此代码的记录!');  
+			$.messager.alert('提示','【'+$('#code').val()+'】此代码已存在相同记录!如果要更新内容请先查询出此代码的记录!','info');  
 			return; 
 		}
-		$.messager.alert('提示','保存失败!');   
+		$.messager.alert('提示','保存失败!','info');   
 	}
 }
 //删除记录
 function DelDic(){
 	//if(BDPAutDisableFlag('btnDelete')!=true){$.messager.alert('提示','您无权限,请联系管理员授权!');return;}
-	if(selRowid==""){$.messager.alert('提示','请选择要删除的记录!');return;}
+	if(selRowid=="" || selRowid<0 || !selRowid){$.messager.alert('提示','请选择要删除的记录!','info');return;}
 	$.messager.confirm('请确认','你确认要删除这条记录吗?',function(fb){
 		if(fb){
 			var savecode=tkMakeServerCall("web.INSUDicDataCom","Delete","","",selRowid)
 			if(eval(savecode)>0){
-				$.messager.alert('提示','删除成功!');   
+				$.messager.alert('提示','删除成功!','info');   
 				$("#dg").datagrid('reload')
 				selRowid="";
 				$("#dg").datagrid("getPager").pagination('refresh');
 				$("#dg").datagrid('unselectAll')
 			}else{
-				$.messager.alert('提示','删除失败!');   
+				$.messager.alert('提示','删除失败!','info');   
 			}
 		}else{
 			return;	

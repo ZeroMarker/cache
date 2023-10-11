@@ -15,6 +15,10 @@ function InitWinEvent(obj){
      	$('#btnSaveAnti').on('click', function(){
 			obj.btnSaveAnti_click()
      	});
+     	//保存值域关键字信息
+     	$('#btnSaveKey').on('click', function(){
+			obj.btnSaveKey_click()
+     	});
 		//删除
 		$('#btnDelete').on('click', function(){
 	     	obj.btnDelete_click();
@@ -32,7 +36,7 @@ function InitWinEvent(obj){
      obj.refreshNode = function(node)
 		{
 			//替换初始化子节点后，不再重新加载子节点，50为病种数
-			if ((node.id.indexOf("||")<0)&&(node.children.length<50)) {
+			if ((node.id.indexOf("||")<0)&&(node.children.length<60)) {
 				//加载子节点数据				
 				var subNodes = [];	
 				$(node.target)
@@ -63,6 +67,7 @@ function InitWinEvent(obj){
 				}
 		};
 	obj.gridQCItemDic_onSelect = function (rd){
+		//加载对照HIS医嘱项
 		obj.gridQCItemDicMatch.load({
 			ClassName:"DHCMA.CPW.SDS.QCOptionMatchSrv",
 			QueryName:"QryQCItemOptionMatch",
@@ -70,11 +75,21 @@ function InitWinEvent(obj){
 			});
 		editIndex=undefined;
 		obj.optionID=rd["BTID"]
+		//加载标准抗菌药对照
 		var checked=$('#AntiChecked').checkbox('getValue');
 		obj.LoadAntiTree('',checked)
 		$("#btnAdd").linkbutton('enable');
 		$("#btnSave").linkbutton('enable');
 		$("#btnDelete").linkbutton('enable');
+		
+		//加载值域关键字信息
+		var KeyStr=$m({
+			ClassName:'DHCMA.CPW.SD.QCOptionMatchKey',
+			MethodName:'GetKeyInfoByDicId',
+			aDicId:obj.optionID
+		},false)
+		Common_SetValue('DicKey',KeyStr.split('^')[0]);
+		Common_SetValue('DicFilter',KeyStr.split('^')[1]);
 	}
 	obj.btnSaveAnti_click= function(){
 		var rootNode = $("#AntiTree").tree('getRoot'); 
@@ -97,7 +112,27 @@ function InitWinEvent(obj){
 				aInputStr:checkedStr
 			},function(flg){
 				if (parseInt(flg)<0) {
-					$.messager.alert("错误提示", "数据保存错误!Error=" + Err, 'info');	
+					$.messager.alert("错误提示", "数据保存错误!", 'info');	
+				}
+				else{
+					$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
+					}
+				})
+	}
+	obj.btnSaveKey_click = function() {
+		var DicKey=Common_GetValue('DicKey')
+		var DicFilter=Common_GetValue('DicFilter')
+		if ((DicKey=="")&&(DicFilter=="")) {
+			$.messager.alert("错误提示", "关键字信息为空！", 'info');
+			return;
+		}
+		$m({
+				ClassName:"DHCMA.CPW.SD.QCOptionMatchKey",
+				MethodName:"Update",
+				aInputStr:obj.optionID+"^"+DicKey+"^"+DicFilter,
+			},function(flg){
+				if (parseInt(flg)<1) {
+					$.messager.alert("错误提示", "数据保存错误!", 'info');	
 				}
 				else{
 					$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
@@ -111,6 +146,11 @@ function InitWinEvent(obj){
 		var Err = "";
 		///获取更新字典信息
 		var rows=$('#gridQCItemDicMatch').datagrid('getChanges')
+		if(!rows.length){
+			$.messager.alert("错误提示", "没有需保存数据", 'info');
+			obj.gridQCItemDicMatch.clearSelections();
+			return ;
+		}
 		for (var i=0;i<rows.length;i++) {
 				var tmprow=rows[i]
 				var OptionDr=tmprow.OptionDr
@@ -121,6 +161,11 @@ function InitWinEvent(obj){
 				var OMPHCGeneric=tmprow.OMPHCGeneric
 				var OMCategory=tmprow.OMCategory
 				var InputStr=OptionDr+"^"+RowID+"^"+OMType+"^"+OMArcimID+"^"+OMArcimDesc+"^"+OMPHCGeneric+"^"+OMCategory;
+				if((!RowID)&&(!OMArcimDesc)){
+					$.messager.alert("错误提示", "项目为空", 'info');
+					obj.gridQCItemDicMatch.reload()
+					return
+				}
 				$m({
 					ClassName:"DHCMA.CPW.SD.QCOptionMatch",
 					MethodName:"Update",
@@ -136,6 +181,7 @@ function InitWinEvent(obj){
 				$.messager.alert("错误提示", "数据保存错误!Error=" + Err, 'info');
 		}else{
 				obj.gridQCItemDicMatch.reload();
+				obj.gridQCItemDicMatch.clearSelections();
 				$.messager.popover({msg: '提交成功！',type:'success',timeout: 1000})
 				
 				
@@ -146,8 +192,9 @@ function InitWinEvent(obj){
 		var rowData = obj.gridQCItemDicMatch.getSelected();
 		var index=editIndex
 		editIndex=undefined;
-		if (index==""){
+		if (index==undefined){
 			$.messager.alert("提示", "选中数据记录,再点击删除!", 'info');
+			return;
 		}
 		$.messager.confirm("删除", "是否删除选中数据记录?", function (r) {	
 			if (r) {			
@@ -158,7 +205,11 @@ function InitWinEvent(obj){
 							aId:rowData.RowID
 						},false);
 						if (parseInt(flg) < 0) {
-							$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');	
+							if (parseInt(flg)==-777) {
+								$.messager.alert("错误提示","系统参数配置不允许删除！", 'info');
+							} else {
+								$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+							}	
 						} else {
 							$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 						}

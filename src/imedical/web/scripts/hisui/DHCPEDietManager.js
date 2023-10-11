@@ -100,8 +100,9 @@ function RegNo_KeyDown(e){
 	if ((13==Key)) {
 		        
 				var iRegNo="",TPEADMID="",Type=0,obj;
+				var CTLocID=session['LOGON.CTLOCID'];
 				
-				var RegNoLength=tkMakeServerCall("web.DHCPE.DHCPECommon","GetRegNoLength");
+				var RegNoLength=tkMakeServerCall("web.DHCPE.DHCPECommon","GetRegNoLength",CTLocID);
 				var iRegNo=$("#RegNo").val();
 				if(iRegNo==""){
 					 $.messager.alert("提示","请输入登记号","info"); 
@@ -109,7 +110,7 @@ function RegNo_KeyDown(e){
 					
 				}
 				if (iRegNo.length<RegNoLength && iRegNo.length>0) { 
-						iRegNo=RegNoMask(iRegNo);
+						iRegNo=RegNoMask(iRegNo,CTLocID);
 						$("#RegNo").val(iRegNo);
 				}
 				
@@ -300,8 +301,8 @@ function Update(Type)
 	}
 	
 	var objtbl=$("#tDHCPEDietManager").datagrid('getRows');
-	 var TPEADMID=""
-	if((selectrow!="-1")&&(selectrow!="0")){
+	var TPEADMID=""
+	if(selectrow!="-1"){
 		var TPEADMID=objtbl[selectrow].TPEADM;
 		}
 	
@@ -373,7 +374,7 @@ function Update(Type)
 
 function BFind_click()
 {
-
+	var CTLocID=session['LOGON.CTLOCID'];
 	var iBeginDate="",iEndDate="",GroupID="",RegNo="",DietFlag="",iVIPID="";
 	var iBeginDate=getValueById("BeginDate")
 	var iEndDate=getValueById("EndDate")	
@@ -382,9 +383,9 @@ function BFind_click()
 	var DietFlag=getValueById("DietFlag")
 	if(DietFlag){DietFlag="Y";}
 	else{DietFlag="N";}
-	var RegNoLength=tkMakeServerCall("web.DHCPE.DHCPECommon","GetRegNoLength");
+	var RegNoLength=tkMakeServerCall("web.DHCPE.DHCPECommon","GetRegNoLength",CTLocID);
 	if (RegNo.length<RegNoLength&&RegNo.length>0) { 
-		RegNo=RegNoMask(RegNo);
+		RegNo=RegNoMask(RegNo,CTLocID);
 		$("#RegNo").val(RegNo)
 	}
 	var iVIPID=getValueById("VIPLevel")

@@ -1,4 +1,14 @@
 ﻿$(function(){
+	$('#Check_IPDosingNextDay').checkbox({
+		onCheckChange:function(e,value){
+			if(value){
+				$('#DTPicker_Dosing').timespinner('disable').timespinner('setValue','00:01:00');
+			}else{
+				$('#DTPicker_Dosing').timespinner('enable');
+				InitDTPickerDosing("DTPicker_Dosing","IPDosingTime");
+			}
+		}
+	});
 	InitHospList();
 	$('#BSave').click(SaveHDosingConfig);
 })

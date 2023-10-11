@@ -17,7 +17,7 @@ function initDocument()
     //initLookUp("MRObjLocDR_LocDesc^MRExObjDR_ExObj^"); //初始化放大镜
     initLookUp(); //初始化放大镜
     defindTitleStyle(); 
-    //initButton(); //按钮初始化
+    initButton(); //按钮初始化
 	initEvent();
     initButtonWidth();
     //fillData(); //数据填充
@@ -43,17 +43,11 @@ function initDocument()
                 handler: function(){
                        selectall();
                      }      
-                 },'------------------------',{        
-                iconCls: 'icon-add', 
+                 },{        
+                iconCls: 'icon-stamp', 
                 text:buttonstring,      
                  handler: function(){
                      DeleteGridData();
-                     }      
-                 },'------------------------',{        
-                iconCls: 'icon-search', 
-                text:'查询',      
-                 handler: function(){
-                     findGridData();
                      }      
                  }] , 
 		rownumbers: true,  //如果为true，则显示一个行号列。
@@ -67,14 +61,20 @@ function initDocument()
 	    columns:[[
 	    	{ field:'TRowID',formatter: function(value,row,index){
 				return row.TEnableFlag == "Y" ? '<input type="hidden" />'
-		            :'<input type="checkbox" disabled="disabled" name="ckId" value="'+value+'" />';
+		            :'<input type="checkbox" disabled="disabled" name="ckId" style="margin-top:4px;" value="'+value+'" />';
 				}},
 	    	{field:'TInStockNo',title:'入库单号',width:150},   // modified by kdf 2018-02-08 需求号：548506  
 	        {field:'TBuyLoc',title:'科室',width:100},        
 	        {field:'TISLRowID',title:'入库明细ID',width:50,hidden:true},
-	        {field:'TQuantityNum',title:'数量',align:'right'},  
-			{field:'TOriginalFee',title:'单价',align:'right'},
-			{field:'TotalFee',title:'总金额',width:100,align:'right'}, 
+	        //modify by lmm 2021-03-05
+	        {field:'TQuantityNum',title:'入库数量',align:'right'},  
+			{field:'TOriginalFee',title:'入库单价',align:'right'},
+			{field:'TotalFee',title:'入库总金额',width:100,align:'right'}, 
+	        {field:'TReduceNum',title:'退货数量',align:'right'},  
+			{field:'TReduceFee',title:'退货金额',align:'right'},
+	        {field:'TAccountNum',title:'入账数量',align:'right'},  
+			{field:'TAccountFee',title:'入账金额',align:'right'},
+	        //modify by lmm 2021-03-05
 			{field:'TEquipName',title:'设备名称',width:150},    // modified by jyp 2019-03-11   modified by wy 2019-3-14设备项名称改为设备名称
 			{field:'TFunds',title:'资金来源',width:150},
 			{field:'TExpenditures',title:'经费来源',width:150},
@@ -190,17 +190,11 @@ function findGridData(){
                 handler: function(){
                        selectall();
                      }      
-                 },'------------------------',{        
+                 },{        
                 iconCls: 'icon-add', 
                 text:buttonstring,      
                  handler: function(){
                      DeleteGridData();
-                     }      
-                 },'------------------------',{        
-                iconCls: 'icon-search', 
-                text:'查询',      
-                 handler: function(){
-                     findGridData();
                      }      
                  }] , 
 	   });
@@ -218,7 +212,11 @@ function DeleteGridData(){
 	InStockIDs=$("input[name='ckId']").map(function () { 
 	if($(this).prop("checked"))  return $(this).val();         
 	}).get().join(",");
-	if (InStockIDs=="") return;
+	// modified by csj 2020-10-30
+	if (InStockIDs=="") {
+		alertShow("未选择数据！")
+		return;
+	}
 	messageShow("confirm","","",mestring,"",confirmFun,"")
 }
 ///modified by ZY0215 2020-04-02
@@ -281,4 +279,14 @@ function setSelectValue(elementID,rowData)
 		}
 	else {setDefaultElementValue(elementID,rowData)}
 }
+//Add By QW20200922 BUG:QW0080 
+//清楚所有选中记录的ID
+function clearData(vElementID)
+{
+	setElement(vElementID+"DR","")
+}
 
+function BFind_Clicked()
+{
+	findGridData();
+}

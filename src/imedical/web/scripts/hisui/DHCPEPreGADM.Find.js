@@ -93,12 +93,19 @@ function PEFinish()
 		$.messager.alert("提示","请选择待完成体检的团体！","info");
 		return false;
 	}
-	$.messager.confirm("确认", "确定要完成体检吗？", function(r){
+	 
+	var objtbl = $("#tDHCPEPreGADM_Find").datagrid('getRows'); 
+	var iComplete=objtbl[selectrow].PGADM_CompleteStatus;
+	if(iComplete=="未完成"){var status="完成体检";}
+	else{var status="取消完成体检";}
+	
+		$.messager.confirm("确认", "确定要"+status+"吗？", function(r){
 		if (r){
 				FinishPECommon("G",0);
 				BFind_click();
 		}
-	});	
+	});
+		
 	
 	
 }
@@ -615,27 +622,17 @@ function PreGADM_click() {
 //单击团体记录 选择记录
 function ShowCurRecord(selectrow) {
 
-	//站点编码 显示	    
 	var SelRowObj;
 	var obj;
 	var iRowId="";
 	var iComplete=""  
 	 
-	var objtbl = $("#tDHCPEPreGADM_Find").datagrid('getRows'); 
-	  
+	var objtbl = $("#tDHCPEPreGADM_Find").datagrid('getRows');    
 	if (selectrow=="-1")
 	{
-		obj=document.getElementById("Update");
-		if (obj) {DisableBElement("Update",true);}
-		
-		
-		obj=document.getElementById("BCancelPre");
-		if (obj) {DisableBElement("BCancelPre",true);}
-		
-		
-		obj=document.getElementById("BModifyItem");
-		if (obj) {DisableBElement("BModifyItem",true);}
-		
+		$("#Update").linkbutton('disable');		
+		$("#BCancelPre").linkbutton('disable');		
+		$("#BModifyItem").linkbutton('disable');			
 	}
 	 
 	 var PGADMRowId=objtbl[selectrow].PGADM_RowId;
@@ -653,35 +650,38 @@ function ShowCurRecord(selectrow) {
 	 var iComplete=objtbl[selectrow].PGADM_CompleteStatus;
 	 var Status=objtbl[selectrow].PGADM_Status;
 	 
-	//GetURL(CurrentConponent,CurrentAdmType);
+	SetCElement("PEFinish","完成体检");
+	if (Status!="ARRIVED"){
+		 $("#PEFinish").linkbutton('disable');		
+	}else{
+		$("#PEFinish").linkbutton('enable');
+		if(iComplete=="已完成"){
+			SetCElement("PEFinish","取消完成");
+		}
+	}
+	
 	
 		if (Status=="PREREG")
 		{
-			obj=document.getElementById("Update");
-			if(obj){ DisableBElement("Update",false);}
-			
-			obj=document.getElementById("BModifyItem");
-			if(obj){DisableBElement("BModifyItem",false);}
+			 $("#Update").linkbutton('enable');
+	
+			 $("#BModifyItem").linkbutton('enable');
 			
 			obj=document.getElementById("BCancelPre");
 			if(obj){
 				DisableBElement("BCancelPre",false);
 				SetCElement("BCancelPre","取消预约");
-			//obj.innerHTML="<img SRC='../images/websys/update.gif' BORDER='0'>取消预约";
+			
 			}
 			
 			return;
 		}
 		if (Status=="CANCELPREREG")
 		{
-			obj=document.getElementById("Update");
-			if(obj){
-				DisableBElement("Update",true);
-			}
-			obj=document.getElementById("BModifyItem");
-			if(obj){
-				DisableBElement("BModifyItem",true);
-			}
+			 $("#Update").linkbutton('enable');
+	
+			 $("#BModifyItem").linkbutton('enable');
+				
 			obj=document.getElementById("BCancelPre");
 			if(obj){
 				DisableBElement("BCancelPre",false);
@@ -691,70 +691,34 @@ function ShowCurRecord(selectrow) {
 			}
 			return;
 		}
-		
-		obj=document.getElementById("Update");
-		if(obj){
-			DisableBElement("Update",false);
-		}	
-		if (iComplete=="已完成"){                          
-			DisableBElement("Update",true);
-		}  
-		                            
-		obj=document.getElementById("BModifyItem");
-		if(obj){
-			DisableBElement("BModifyItem",false);
-		}
-		if (iComplete=="已完成"){                         
-		DisableBElement("BModifyItem",true);
-		}                             
-		
-		obj=document.getElementById("BCancelPre");
+
+		if (Status=="CANCELPE")
 		{
-			DisableBElement("BCancelPre",true);
+			 $("#Update").linkbutton('disable');
+			 $("#BModifyItem").linkbutton('disable');
+			 $("#HomeSet").linkbutton('disable');
+			 $("#BCopyTeam").linkbutton('disable');
+			
+			 return;
 		}
 
-		if ("CANCELPE"==Status){
-			 DisableBElement("PEFinish",true);
-		}else{
-			DisableBElement("PEFinish",false);
-		}
+		$("#HomeSet").linkbutton('enable');
+		$("#BCopyTeam").linkbutton('enable');
 
+		$("#Update").linkbutton('enable');
+		if (iComplete=="已完成"){                         
+			$("#Update").linkbutton('disable');
+		}  
+		   
+		 $("#BModifyItem").linkbutton('enable');                         
+		if (iComplete=="已完成"){                         
+		 	$("#BModifyItem").linkbutton('disable');    
+		} 
+		                            
+		$("#BCancelPre").linkbutton('disable');    
+
+		
 		return;
-	
-	
-		obj=document.getElementById("Update");
-		if ("PREREG"==Status && obj) { 
-			DisableBElement("Update",false);
-		
-		}
-		else{
-			 DisableBElement("Update",true);
-		}
-		
-		obj=document.getElementById("BCancelPre");
-		if ("PREREG"==Status && obj) { 
-			DisableBElement("BCancelPre",false);
-			obj.innerHTML="取消预约";
-		
-		}
-		else if ("CANCELPREREG"==Status && obj) {
-			DisableBElement("BCancelPre",false);
-			obj.innerHTML="预约";
-		
-		
-		}
-		else{
-			DisableBElement("BCancelPre",true);
-		}
-		
-	
-		obj=document.getElementById("BModifyItem");
-		if ((("ARRIVED"==Status)||("CHECKED"==Status)) && obj) { 
-			DisableBElement("BModifyItem",false);
-		 }
-		else{
-			 DisableBElement("BModifyItem",true);
-		}
 		
 }
 
@@ -964,7 +928,12 @@ function Clear_click() {
    
    //凭条类型
 	setValueById("VIPLevel","")
-
+	
+	//收费状态
+	setValueById("ChargeStatus","")
+  
+  	$(".hisui-checkbox").checkbox('setValue',false);
+	
 	  BFind_click()
    
 }

@@ -9,14 +9,18 @@
 	m_EditRow:-1,
 	m_CopyScheduleASRowIDStr:"",
 	m_tabTRAppMethodInfoNewRows:new Array(),
-	m_PreSelExamRowid:""
+	m_tabTRClinicGroupInfoNewRows:new Array(),
+	m_PreSelExamRowid:"",
+	InitTRDataSelectFlag:0,
+	CacheSaveObj:""
 }
 /// ColorSynopsis对象 用于界面右上角颜色说明 --yl
 var ColorSynopsis={
 	"pink":"停诊",
 	"#99CC33":"替诊",
 	"#FF9999":"被替诊",
-	"purple":"不规则排班"
+	"purple":"不规则排班",
+	"#FF6666":"停止挂号"
 }
 $(function(){
 	//初始化
@@ -97,24 +101,120 @@ function InitEvent(){
 	$("#TRLength").change(TRLengthChange);
 	$('#BTRGen').click(TRGenClick);
 	$('#BTRTempSave').click(TRTempSaveClick);
-	$('#TRTemp').singleCombo({
+    var cbox = $HUI.combobox("#TRTemp", {
         valueField:'ID',   
-        textField:'Name',
-        ClassName:'DHCDoc.OPAdm.TimeRangeTemp',
-        QueryName:'QueryTemp',
-        loadFilter:function(data){
-            for(var i=0;i<data.length;i++){
-                data[i].Name=data[i].TimeRange+"-"+data[i].Name;
-            }
-            return data;
-        },
+        textField:'NameExpend',
+        url:$URL+"?ClassName=DHCDoc.OPAdm.TimeRangeTemp&QueryName=QueryTemp",
+        loadFilter: function(data){
+			return data['rows'];
+		},
+         onLoadError:function(){
+	        debugger;
+	        $.messager.alert('提示','Init Combo Error','error');
+	    },
+	    onLoadSuccess:function(data){
+		},
         onBeforeLoad:function(param){
             param.TRRowid=GetElementValue('TimeRange');
             param.SumLoad=$("#PositiveMax").numberbox('getValue'); 	
             param.HospID=$HUI.combogrid('#_HospUserList').getValue();
+            param.LocID=$('#AdmLoc').combobox("getValue");
+            param.DocID=$("#AdmDoc").combobox("getValue");	
         }
     });
+    $("#BtnExtendConfig").click(ExtendConfigshow);
 	$('#TRGenWin').window({onOpen:function(){$('#TRTemp').combobox('setValue','').combobox('reload');}});
+	
+	$("#NoLimitLoadFlag").checkbox({
+		onCheckChange:function(e,value){
+			//正号限额、预约限额 、加号限额预约起始号
+			var CacheEleAry=["ApptMax","EStartPrefix"]; //"PositiveMax",,"AddtionMax"
+			if(value){
+				var CacheObj={};
+				for(var i=0;i<CacheEleAry.length;i++){
+					var EleName=CacheEleAry[i];
+					CacheObj[EleName]=$("#"+EleName).numberbox('getValue')
+					$("#"+EleName).numberbox('setValue',"");
+					$("#"+EleName).numberbox('disable');			
+				}
+				var TRFlag=$("#TRFlag").checkbox('getValue');
+				CacheObj["TRFlag"]=TRFlag;
+				
+				$("#TRFlag").checkbox('uncheck');
+				$("#TRFlag").checkbox('disable');
+				PageLogicObj.CacheSaveObj=CacheObj;
+			}else{
+				$("#ApptMax,#EStartPrefix").numberbox('enable'); //#PositiveMax,#AddtionMax
+				$("#TRFlag").checkbox('enable');
+				var CacheSaveObj=PageLogicObj.CacheSaveObj;
+				if(CacheSaveObj!=""){
+					for(key in CacheSaveObj){
+						var value=CacheSaveObj[key];
+						if(key=="TRFlag"){
+							$("#"+key).checkbox('setValue',value);		
+						}else{
+							$("#"+key).numberbox('setValue',value);	
+						}
+					}
+					PageLogicObj.CacheSaveObj="";	
+				}
+			}
+		}
+	})
+	$("#SingleSelect").checkbox({
+		onCheckChange:function(e,value){
+			var tab = $('#ScheduleTab').tabs('getSelected');
+			var index = $('#ScheduleTab').tabs('getTabIndex',tab);
+			var GridId="ScheduleGrid"+index;
+			 var rows=$("#"+GridId).datagrid("getSelections");
+			if ($("#SingleSelect").checkbox("getValue")==true){
+				$("#"+GridId).datagrid({
+					singleSelect : true,
+				})
+			}else{
+				$("#"+GridId).datagrid({
+					singleSelect : false,
+				})
+			}
+			$("#"+GridId).datagrid("unselectAll");
+            var url="opadm.scheduleadjust.morebtn.csp";
+            url=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(url):url;
+			$.ajax(url, {
+				"type" : "GET",
+				"dataType" : "html",
+				"async": false,
+				"success" : function(data, textStatus) {
+					$("#MoreMulit_toolbar").remove();
+					$("#MoreMulit").append(data);
+					$HUI.menubutton($("#MoreMulit_toolbar a"),{});
+		    		$('#MoreMulit').find("span").eq(0).css("display","none"); 
+				}
+			});
+		}
+	})
+	  $(window).resize(function() {
+		 	 $('#ScheduleTab').find(".panel datagrid").layout('resize',{width:'100%',height:'100%'})
+		 	var tab = $('#ScheduleTab').tabs('getSelected');
+	 		var index = $('#ScheduleTab').tabs('getTabIndex',tab);
+	 		var GridId="ScheduleGrid"+index;
+	 		$("#"+GridId).datagrid({
+				width:$(window).width()-305
+				})
+	      	$("#"+GridId).datagrid("resize")
+            var url="opadm.scheduleadjust.morebtn.csp";
+            url=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(url):url;
+	      	$.ajax(url, {
+				"type" : "GET",
+				"dataType" : "html",
+				"async": false,
+				"success" : function(data, textStatus) {
+					$("#MoreMulit_toolbar").remove();
+					$("#MoreMulit").append(data);
+					$HUI.menubutton($("#MoreMulit_toolbar a"),{});
+		    		$('#MoreMulit').find("span").eq(0).css("display","none"); 
+				}
+			});
+	    });
 	document.onkeydown = Doc_OnKeyDown;
 }
 function FindClickHandle(){
@@ -153,6 +253,7 @@ function Doc_OnKeyDown(e){
 }
 
 function PageHandle(){
+	InitTempListType();
 }
 function InitLocDocTree(callBack){
 	var HospID=$HUI.combogrid('#_HospUserList').getValue();
@@ -256,6 +357,7 @@ function InitScheduleGrid(GridId,height){
 		height:height,
 		loadMsg:'正在加载',
 		rownumbers:true,
+		singleSelect:$("#SingleSelect").checkbox("getValue"),
 		idField:"ASRowId",
 		columns:[[
 			{field:'check',title:'',width:120,align:'center',checkbox:true},
@@ -269,9 +371,10 @@ function InitScheduleGrid(GridId,height){
             },
             {field:'ASRoom',title:'诊室名称',width:120,sortable:true},
 			{field:'ASSessionType',title:'职称',width:100,sortable:true},
-			{field:'TimeRange',title:'午别',width:60,sortable:true},
+			{field:'TimeRange',title:'时段',width:60,sortable:true},
 			{field:'ASSessStartTime',title:'开始时间',width:70},
 			{field:'ASSessionEndTime',title:'结束时间',width:70},
+			{field:'NoLimitLoadFlag',title:'便捷排班',width:70},
 			{field:'ASLoad',title:'挂号限额',width:70},
 			{field:'ASAppLoad',title:'预约限额',width:70},
 			{field:'AppStartSeqNo',title:'预约起始号',width:80},
@@ -286,6 +389,16 @@ function InitScheduleGrid(GridId,height){
 			},
 			{field:'AppedArriveNum',title:'已取号数',width:60},
 			{field:'QueueNO',title:'剩号',width:60},
+			{field:'StopRegFlag',title:'停止挂号',width:70,
+			   formatter:function(value,rec){ 
+			   		if (value=="Y"){
+                   		var btn = '<a class="editcls" onclick="StopRegFlagHandler(\'' + rec.ASRowId + '\',\''+'N'+'\')">'+"恢复挂号"+'</a>';
+			   		}else{
+				   		var btn = '<a class="editcls" onclick="StopRegFlagHandler(\'' + rec.ASRowId + '\',\''+'Y'+'\')">'+"停止挂号"+'</a>';
+				   		}
+			       return btn;
+                }
+			},
 			{field:'ASStatus',title:'状态',width:40,sortable:true
 			},
 			{field:'ASAuditStatus',title:'排班审批状态',width:140,sortable:true
@@ -299,7 +412,12 @@ function InitScheduleGrid(GridId,height){
 			},
 			{field:'ReferralUser',title:'替诊人',width:80},
 			{field:'ASReason',title:'停替诊原因',width:80},
-			{field:'IrregularFlag',title:'异常',width:40}
+			{field:'IrregularFlag',title:'异常',width:80,
+				formatter:function(value,rec){
+					if (value =="A") return "不规则排班";
+					else return value;
+				}
+			}
 		]],
 		rowStyler:function(index,row){
 			if (row.ASStatus=="停诊"){
@@ -313,6 +431,10 @@ function InitScheduleGrid(GridId,height){
 			}if(row.IrregularFlag=="A"){
 				//不规则排班
 				return 'background-color:purple;color:white;';
+			}
+			if(row.StopRegFlag=="Y"){
+				//不规则排班
+				return 'background-color:#FF6666;color:white;';
 			}
 		},
 		toolbar :[
@@ -378,13 +500,15 @@ function InitScheduleGrid(GridId,height){
 			EditAppSchedule(rowData.ASRowId);
 			LoadApptabAppMethodInfo(rowData.ASRowId)
 			LoadtabTRInfo(rowData.ASRowId)
-			$("#EditWin").window('setTitle','修改排班 <font color="yellow">'+rowData['LocDesc']+ ' ' +rowData['DocDesc']+'</font>');
+			$("#EditWin").window('setTitle','修改排班 <font color="#FF9999">'+rowData['LocDesc']+ ' ' +rowData['DocDesc']+'</font>');
 		},
 		onLoadSuccess:function(data){
 			UpdateScheTabStyle(GridId);
 		}
 	});
-	$.ajax("opadm.scheduleadjust.morebtn.csp ", {
+    var url="opadm.scheduleadjust.morebtn.csp"
+    url=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(url):url;
+	$.ajax(url, {
 		"type" : "GET",
 		"dataType" : "html",
 		"async": false,
@@ -395,7 +519,7 @@ function InitScheduleGrid(GridId,height){
     		$('#MoreMulit').find("span").eq(0).css("display","none"); 
 		}
 	});
-	$("#ThisWeek,#NextWeek,#OneStopNo").unbind('click');
+	$("#ThisWeek,#NextWeek,#OneStopNo,#ScheduleCopyMulit,#SentMeassage").unbind('click');
     $("#ThisWeek").click(function ThisWeek(){
 	    var StartDate=GetDateStr(0) ;
         StartDate=tkMakeServerCall("web.DHCApptScheduleNew","GetMonday",StartDate);   // 从周一开始计算
@@ -433,6 +557,13 @@ function InitScheduleGrid(GridId,height){
 	$("#OneStopNo").click(function OneStopNo(){
     	StopQueueNo();
     })
+    $("#ScheduleCopyMulit").click(function OneScheduleCopy(){
+    	ScheduleCopyMuiltSche();
+    })
+    $("#SentMeassage").click(function OneScheduleCopy(){
+    	SentMeassagehandler();
+    })
+	$HUI.tooltip("#SentMeassage",{position:'bottom',content:'请去挂号设置中维护发送短信内容且需增加发送短信的外部接口'}).show();
 }
 function ScheduleGridLoad(GridId,StartDate,LocRowid,DocRowid,ExaRowid){
 	$("#"+GridId).datagrid("unselectAll");
@@ -448,14 +579,15 @@ function ScheduleGridLoad(GridId,StartDate,LocRowid,DocRowid,ExaRowid){
 	queryParams.Arg6 =session['LOGON.GROUPID'];
 	queryParams.Arg7 ="";	// 资源ID
 	queryParams.Arg8 =ExaRowid;
-	queryParams.Arg9 ="";
+	queryParams.Arg9 =$("#STimeRange").combobox("getValue");
 	queryParams.Arg10 =0;
 	queryParams.Arg11 =PlanScheduleFlag;
 	queryParams.Arg12 ="";
 	queryParams.Arg13 ="";
 	queryParams.Arg14 =$HUI.combogrid('#_HospUserList').getValue();
-	
-	queryParams.ArgCnt = 14;
+	queryParams.Arg15 =$("#SDocSession").combobox("getValue");
+	queryParams.Arg16 =$("#Stuates").combobox("getValue");
+	queryParams.ArgCnt = 16;
 	var opts = $("#"+GridId).datagrid("options");
 	opts.url = "./dhcdoc.cure.query.grid.easyui.csp"
 	$("#"+GridId).datagrid('load', queryParams); 
@@ -482,7 +614,7 @@ function AppedDataShow(ASRowId){
 	websys_showModal({
 		url:"opadm.appcancel.hui.csp?vRBASID="+ASRowId,
 		title:'预约记录',
-		width:'90%',height:'90%'
+		width:'95%',height:'90%'
 	})
 }
 function GetDateStr(AddDayCount) { 
@@ -609,7 +741,8 @@ function ClearWinData(){
 	$('#StartTime,#EndTime,#TRSartTime,#TREndTime').timespinner('setValue','');
 	$("#PositiveMax,#ApptMax,#AddtionMax").numberbox('setValue','');
 	$("#TRRegNum,#TRRegNumStr,#TRRegInfoStr,#EStartPrefix").val('');
-	$("#TRFlag,#StopRegNoFlag").checkbox('uncheck'); //,#EChkStop
+	$("#TRFlag,#StopRegNoFlag,#NoLimitLoadFlag").checkbox('uncheck'); //,#EChkStop
+	$('#pTREdit').hide();
 	if (PageLogicObj.m_tabAppQtyListDataGrid!=""){
 		$('#tabAppQtyList').datagrid('loadData',{"total":0,"rows":[]});
 	}
@@ -625,6 +758,7 @@ function ClearWinData(){
 	queryParams.Arg5 =ASRowId;
 	queryParams.Arg6 ="";
 	queryParams.ArgCnt = 6;
+    queryParams.MWToken=('undefined'!==typeof websys_getMWToken)?websys_getMWToken():"";
 	$.ajax({
 	   type: 'POST',
 	   url: "./dhcdoc.cure.query.grid.easyui.csp",
@@ -636,6 +770,11 @@ function ClearWinData(){
 		    $("#AdmLoc").combobox("select", data.rows[0].LocationID);
 			setTimeout(function(){
 				$("#LocArea").combobox("setValue", data.rows[0].RoomID);
+				var LocAreaDesc = $("#LocArea").combobox("getText");
+				//如果id和描述一样则不显示
+				if (LocAreaDesc==data.rows[0].RoomID){
+					$("#LocArea").combobox("setValue","");
+				}
 				$("#TimeRange").combobox("setValue", data.rows[0].SessionTimeID);
 				$("#AdmDoc").combobox("setValue", data.rows[0].DoctorID);
 				$("#DocSession").combobox("setValue", data.rows[0].SessionTypeDr);
@@ -655,8 +794,15 @@ function ClearWinData(){
 				$('#EndTime').timespinner('setValue',data.rows[0].SessEndTime);
 				$('#PositiveMax').numberbox('setValue',data.rows[0].TotalNum);
 				$('#ApptMax').numberbox('setValue',data.rows[0].BookNum);
+				$('#EStartPrefix').numberbox('setValue',data.rows[0].AppStartNo);
 				$('#AddtionMax').numberbox('setValue',data.rows[0].OverBookNum);
-				$("#EStartPrefix").numberbox('setValue',data.rows[0].AppStartNo);
+				var NoLimitLoadFlag=data.rows[0].NoLimitLoadFlag;
+				if (NoLimitLoadFlag=="Y"){
+	                $("#NoLimitLoadFlag").checkbox('check');
+	            }else{
+		            $("#NoLimitLoadFlag").checkbox('uncheck');
+		        }
+				
 				if (data.rows[0].TRInfo!="") {
 					var TRInfoNum=data.rows[0].TRInfo.split("^") ;
 					var ASTimeRangeFlag=TRInfoNum[0];
@@ -779,6 +925,8 @@ function InitSingleCombo(id,valueField,textField,ClassName,Query,exp,multipleFie
 			var opts = $(this).combobox('options');
 			if (row['code']){
 				return (row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0)||(row['code'].toUpperCase().indexOf(q.toUpperCase()) >= 0);
+			}else if (row['Code']){
+				return (row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0)||(row['Code'].toUpperCase().indexOf(q.toUpperCase()) >= 0);
 			}else{
 				return (row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0);
 			}
@@ -795,6 +943,15 @@ function InitSingleCombo(id,valueField,textField,ClassName,Query,exp,multipleFie
 					 LoadLocArea("");
 				}
 			},
+			onChange:function(newValue, oldValue){
+					if (newValue==""){
+						$("#LocArea,#AdmDoc,#DocSession").combobox("select","");
+						 $("#ClinicGroup").combobox("setValue","");
+						  $("#LocArea,#AdmDoc,#ClinicGroup").combobox('loadData',[])
+
+
+					}
+				},
 			onLoadSuccess:function(data){
 				var CurrentOrdName=$('#AdmLoc').combobox('getValue');
 				if(CurrentOrdName!=""){
@@ -866,9 +1023,12 @@ function InitSingleCombo(id,valueField,textField,ClassName,Query,exp,multipleFie
 			},
 			mode:"remote",
 			onBeforeLoad:function(param){
-				if(!param.q){$(this).combobox('loadData',[])};
+				if ($.isEmptyObject(param)) {
+					param.q="";
+				}
+				/*if(!param.q){$(this).combobox('loadData',[])};
 				if(!param.q) return false;
-				if(param.q.length<1) return false;
+				if(param.q.length<1) return false;*/
 				param.Arg1='';
 				param.Arg2=param.q;
 				param.Arg3=$HUI.combogrid('#_HospUserList').getValue();;
@@ -891,9 +1051,12 @@ function InitSingleCombo(id,valueField,textField,ClassName,Query,exp,multipleFie
 			},
 			mode:"remote",
 			onBeforeLoad:function(param){
-				if(!param.q){$(this).combobox('loadData',[])};
+				if ($.isEmptyObject(param)) {
+					param.q="";
+				}
+				/*if(!param.q){$(this).combobox('loadData',[])};
 				if(!param.q) return false;
-				if(param.q.length<1) return false;
+				if(param.q.length<1) return false;*/
 				param.Arg1='';
 				param.Arg2=param.q;
 				param.Arg3=$HUI.combogrid('#_HospUserList').getValue();;
@@ -931,6 +1094,30 @@ function InitSingleCombo(id,valueField,textField,ClassName,Query,exp,multipleFie
 			selectOnNavigation:false,
 			editable:false,
 		});
+	}else if(id=="EReason"){ 
+		$.extend(ComboObj,{
+			onSelect:function(record){
+				if (record){
+					if (record.Code=="OtherReason"){
+						$("#Stopmore").show();
+					}else{
+						$("#Stopmore").hide();
+					}
+				}
+			}
+		});
+	}else if(id=="ERepReason"){ 
+		$.extend(ComboObj,{
+			onSelect:function(record){
+				if (record){
+					if (record.Code=="OtherReason"){
+						$("#Repmore").show();
+					}else{
+						$("#Repmore").hide();
+					}
+				}
+			}
+		});
 	}
 	$("#"+id).combobox(ComboObj);
 }
@@ -944,9 +1131,11 @@ function InitWinCombo(){
 	InitSingleCombo('ClinicGroup','CLGRPRowId','CLGRPDesc','','',"",true);
 	InitSingleCombo('TimeRange','RowId','Desc','web.DHCApptScheduleNew','LookUpTimeRange',"&Arg1="+ServerObj.CurrDate.split("^")[0]+"&Arg2="+HospitalDr+"&ArgCnt=2");	
 	InitSingleCombo('DocSession','ID','Desc','web.DHCBL.BaseReg.BaseDataQuery','RBCSessionTypeQuery',"&Arg1="+HospitalDr+"&ArgCnt=1");
+	InitSingleCombo('STimeRange','RowId','Desc','web.DHCApptScheduleNew','LookUpTimeRange',"&Arg1="+ServerObj.CurrDate.split("^")[0]+"&Arg2="+HospitalDr+"&ArgCnt=2");	
+	InitSingleCombo('SDocSession','ID','Desc','web.DHCBL.BaseReg.BaseDataQuery','RBCSessionTypeQuery',"&Arg1="+HospitalDr+"&ArgCnt=1");
     InitSingleCombo('EReason','RowId','Desc','web.DHCApptScheduleNew','LookUpReasonNotAvail',"&Arg1="+ServerObj.CurrDate.split("^")[0]+"&ArgCnt=1");
+	InitSingleCombo('Stuates','Tcode','Tname','web.DHCRBCASStatus','FindRBCASStatus',"");
 	InitSingleCombo('ELeader','RowId','Desc','web.DHCApptScheduleNew','LookUpELeaderNew',"");
-	
 	InitSingleCombo('ERepSessionType','ID','Desc','web.DHCBL.BaseReg.BaseDataQuery','RBCSessionTypeQuery',"&Arg1="+HospitalDr+"&ArgCnt=1");
 	InitSingleCombo('ERepReason','RowId','Desc','web.DHCApptScheduleNew','LookUpReasonNotAvail',"&Arg1="+ServerObj.CurrDate.split("^")[0]+"&ArgCnt=1");	
 	InitSingleCombo('ERepLeader','RowId','Desc','web.DHCApptScheduleNew','LookUpELeaderNew',"");
@@ -1004,16 +1193,27 @@ function DocSelectFun(){
 		var Arr1=ret.split("$")[0];
 		var Arr2=ret.split("$")[1];
 		var Arr3=ret.split("$")[2];
-		var Arr=Arr1.split("^");	
-		$("#PositiveMax").numberbox('setValue',Arr[2]);
-		$("#ApptMax").numberbox('setValue',Arr[3]);
-		if(Arr.length>=18){
-		    $("#ClinicGroup").combobox('setValue',Arr[18]);
-		}else{
-			$("#ClinicGroup").combobox("setValue", "");
+		var Arr=Arr1.split("^");
+		if (Arr1!="") {
+			var IsEmptyDataArray=1;
+			for (var k=0;k<Arr.length;k++){
+				if (Arr[k] !="") {
+					IsEmptyDataArray=0;
+					break;
+				}
+			}
+			if (IsEmptyDataArray ==0) {
+				$("#PositiveMax").numberbox('setValue',Arr[2]);
+				$("#ApptMax").numberbox('setValue',Arr[3]);
+				if(Arr.length>=18){
+				    $("#ClinicGroup").combobox('setValue',Arr[18]);
+				}else{
+					$("#ClinicGroup").combobox("setValue", "");
+				}
+				$("#EStartPrefix").numberbox('setValue',Arr[4]);
+				$("#AddtionMax").numberbox('setValue',Arr[5]);
+			}
 		}
-		$("#EStartPrefix").numberbox('setValue',Arr[4]);
-		$("#AddtionMax").numberbox('setValue',Arr[5]);
 		var ASRowID=$("#ASRowID").val();
 		if (ASRowID==""){
 			$("#ApptMax,#EStartPrefix").numberbox('setValue',"");
@@ -1081,10 +1281,10 @@ function SaveNewAS(){
 	var startNum = $("#EStartPrefix").numberbox('getValue');		
 	if (book==0){startNum=0}
 	if (((startNum=="")||(startNum<=0))&(book>0)){
-	  $.messager.alert('提示', "预约起始号数量格式不正确!","info",function(){
-		  $("#EStartPrefix").focus();
-	  })
-	  return false;
+		$.messager.alert('提示', "预约起始号数量格式不正确!","info",function(){
+			$("#EStartPrefix").focus();
+		})
+		return false;
     }
 	var TimeStart = $("#StartTime").timespinner('getValue');		
 	var TimeEnd = $("#EndTime").timespinner('getValue');	
@@ -1123,8 +1323,10 @@ function SaveNewAS(){
 	var LocArea = $("#LocArea").combobox("getValue");	
 	var DocSession = $("#DocSession").combobox("getValue");
 	var ClinicGroup	= getValue("ClinicGroup"); //$("#ClinicGroup").combobox("getValue");
+	var NoLimitLoadFlag=GetNoLimitLoadFlag();
 	var TimeRangeStr=TRFlag+"^"+TRStartTime+"^"+TREndTime+"^"+TRLength+"^"+TRRegNum+"^"+TRRegNumStr+"^"+TRRegInfoStr;
-	var ret1 = cspHttpServerMethod(MNew.value,scheduleDate,AdmDoc,AdmLoc,TimeRange,total,book,over,LocArea,DocSession,ClinicGroup,startNum,TimeStart,TimeEnd,StatusCode,TimeRangeStr,"",StopRegNoFlag,session['LOGON.GROUPID']);
+	var ExpStr=NoLimitLoadFlag;
+	var ret1 = cspHttpServerMethod(MNew.value,scheduleDate,AdmDoc,AdmLoc,TimeRange,total,book,over,LocArea,DocSession,ClinicGroup,startNum,TimeStart,TimeEnd,StatusCode,TimeRangeStr,"",StopRegNoFlag,session['LOGON.GROUPID'],ExpStr);
 	var temparr=ret1.split("^");
 	var ret=temparr[0];
 	if (ret){
@@ -1133,14 +1335,19 @@ function SaveNewAS(){
 			ASRowid=ASRowid.split(String.fromCharCode(1))[0];
 			$('#ASRowID').val(ASRowid);
 			var RequestFlag=temparr[2];
-			var msg="新增排班记录成功,请根据情况修改限额!"
+			var msg="";
+			if(NoLimitLoadFlag!="Y"){
+				msg="新增排班记录成功,请根据情况修改限额!"
+			}
 			if(RequestFlag.indexOf("Y")>=0){
 				//var msg="申请新增排班记录成功,请等待相关人员审批后,根据情况修改限额！";
 				var msg="申请新增排班记录成功,请等待相关人员审批！";
 			}
 			$("#AdmDate").val(scheduleDate.split("^")[0]);
 			$("#AdmDate").prop("disabled",true);
-			$.messager.alert('提示', msg);
+			if(msg!=""){
+				$.messager.alert('提示', msg);
+			}
 			if (PageLogicObj.m_tabAppQtyListDataGrid==""){
 				//PageLogicObj.m_tabAppQtyListDataGrid=InitAppQtyList();
 				InitAppMethodGrid();
@@ -1157,6 +1364,7 @@ function SaveNewAS(){
 			});
 			LimitCombo('disable'); LimitText(true);
 			TRFlag_Click();
+			PageLogicObj.CacheSaveObj="";
 			return true;
 		}else{
 			switch(ret)	{
@@ -1195,14 +1403,17 @@ function UpdateAS(ASRowID){
 		$.messager.alert('提示', "预约限额不能小于各个预约机构限额 "+AppClientNum);
 		return false;
 	}*/
-	var AppCheck=tkMakeServerCall("web.DhcResEffDateSessionClass","CheckAppClientNum",ASRowID,"RBASSchedule",+book)
-	if (AppCheck==1){
-		$.messager.alert('提示', "预约限额不能小于各个预约机构最大预约限额");
-		return false;
+	var NoLimitLoadFlag=GetNoLimitLoadFlag();
+	if(NoLimitLoadFlag!="Y"){
+		var AppCheck=tkMakeServerCall("web.DhcResEffDateSessionClass","CheckAppClientNum",ASRowID,"RBASSchedule",+book)
+		if (AppCheck==1){
+			$.messager.alert('提示', "预约限额不能小于各个预约机构最大预约限额");
+			return false;
+			}
+		if (AppCheck==2){
+			$.messager.alert('提示', "预约限额不能小于各个预约机构限保留数总和");
+			return false;
 		}
-	if (AppCheck==2){
-		$.messager.alert('提示', "预约限额不能小于各个预约机构限保留数总和");
-		return false;
 	}
 	//加号限额
 	var over = $("#AddtionMax").numberbox('getValue');		
@@ -1212,17 +1423,33 @@ function UpdateAS(ASRowID){
 		startNum=0;
 	}
 	if (((startNum=="")||(startNum<=0))&(book>0)){
-	  $.messager.alert('提示', "预约起始号数量格式不正确!","info",function(){
-		  $("#startNum").focus();
-	  })
-	  return false;
+		$.messager.alert('提示', "预约起始号数量格式不正确!","info",function(){
+			$("#startNum").focus();
+		})
+		return false;
     }	
-    var AppedCount=tkMakeServerCall("web.DHCRBApptSchedule","GetAppedSeqNoCount",ASRowID);
-    var RegCount=tkMakeServerCall("web.DHCRBApptSchedule","GetRegSeqNoCount",ASRowID);
+    //var AppedCount=tkMakeServerCall("web.DHCRBApptSchedule","GetAppedSeqNoCount",ASRowID);
+    //var RegCount=tkMakeServerCall("web.DHCRBApptSchedule","GetRegSeqNoCount",ASRowID);
+    var ASRegInfo=tkMakeServerCall("web.DHCRBApptSchedule","GetASRegInfo",ASRowID);
+    var ASRegInfoAry=ASRegInfo.split("^");
+    var RegCount=ASRegInfoAry[0];
+    var AppedCount=ASRegInfoAry[1];
+    var ASNoLimitLoadFlag=ASRegInfoAry[2];
     var SumRegApp=parseFloat(AppedCount)+parseFloat(RegCount)
     if (SumRegApp>=1){
+	    //if(NoLimitLoadFlag=="Y"){
+		if(NoLimitLoadFlag!=ASNoLimitLoadFlag){
+			$.messager.alert('提示', "排班信息已存在预约和挂号记录,不允许修改便捷排班标识!","info",function(){
+				if (ASNoLimitLoadFlag=="Y"){
+	                $("#NoLimitLoadFlag").checkbox('check');
+	            }else{
+		            $("#NoLimitLoadFlag").checkbox('uncheck');
+		        }
+			});
+			return false;   
+		}
 		if (!(dhcsys_confirm("排班信息已存在预约和挂号记录，如果保存数据会导致号序混乱，是否保存"))) return false;
-		}		
+	}		
 	var TimeStart = $("#StartTime").timespinner('getValue');		
 	var TimeEnd = $("#EndTime").timespinner('getValue');
 	var TimeRange = getValue("TimeRange");
@@ -1288,8 +1515,10 @@ function UpdateAS(ASRowID){
 	var DocSession = getValue("DocSession"); //$("#DocSession").combobox("getValue");
 	var ClinicGroup	= getValue("ClinicGroup"); //$("#ClinicGroup").combobox("getValue");
 	var TimeRangeStr=TRFlag+"^"+TRStartTime+"^"+TREndTime+"^"+TRLength+"^"+TRRegNum+"^"+TRRegNumStr+"^"+TRRegInfoStr;
-	if (total  && ASRowID){
-		var ret1 = tkMakeServerCall("web.DHCRBApptSchedule","UpdateOneSchedule",ASRowID,LocArea,total,over,book,startNum,ClinicGroup,DocSession,LockFlag,TimeStart,TimeEnd,TimeRangeStr,StopRegNoFlag);
+	var ExpStr=NoLimitLoadFlag;
+	//if (total  && ASRowID){
+	if (ASRowID){
+		var ret1 = tkMakeServerCall("web.DHCRBApptSchedule","UpdateOneSchedule",ASRowID,LocArea,total,over,book,startNum,ClinicGroup,DocSession,LockFlag,TimeStart,TimeEnd,TimeRangeStr,StopRegNoFlag,ExpStr);
 		var temparr=ret1.split("^")
 		var ret=temparr[0];
 		if (ret == 0) 	{
@@ -1301,24 +1530,24 @@ function UpdateAS(ASRowID){
                 for(var i=0;i<rows.length;i++){
                     var Editors=$('#tabTRInfo').datagrid('getEditors',i);
                     if(Editors.length){
-                        rows[i].Load=GetElementValue(Editors[0].target);
+	                    rows[i].SttTime=GetElementValue(Editors[0].target);
+	                	rows[i].EndTime=GetElementValue(Editors[1].target);
+                        rows[i].Load=GetElementValue(Editors[2].target);
                     }
                     TRInfoTotal+=Number(rows[i].Load);
                 }
-                if (parseFloat(TRInfoTotal)!=parseFloat(total)){
+                var TRASLoad = tkMakeServerCall("DHCDoc.OPAdm.Schedule","GetTRASLoad",ASRowID)
+                if (parseFloat(TRInfoTotal)!=parseFloat(TRASLoad)){
 	                 $('#TRGenWin').window('open');
-	                 var TRASLoad=$.cm({
-				        ClassName:'DHCDoc.OPAdm.Schedule',
-				        MethodName:'GetTRASLoad',
-				        ASRowID:ASRowID,
-				        dataType:"text"
-				    },false);
 					SetElementValue('TRASLoad',TRASLoad);
-					SetElementValue('IntervalTime',"");
+					SetElementValue('IntervalTime',"30");
 					GenWayChecked();
 	                }
 				}
+			LoadApptabAppMethodInfo(ASRowID);
+			LoadtabTRInfo(ASRowID);
 			ReLoadScheduleGrid();
+			PageLogicObj.CacheSaveObj="";
 			return true;
 		}else {
 			  if (ret=="-201"){$.messager.alert('提示', "同一个医生不能在同一天同一时段安排两次！ "+temparr[1]);return;}
@@ -1326,6 +1555,7 @@ function UpdateAS(ASRowID){
 			  if (ret=="-203"){$.messager.alert('提示', "正号限额不能小于已挂出号数! ");return;}
 			  if (ret=="-204"){$.messager.alert('提示', "预约限额不能小于已预约数 ");return;}
 			  if (ret=="-205"){$.messager.alert('提示', "加号限额不能小于已挂出数 ");return;}
+			  if (ret=="-206"){$.messager.alert('提示', "分时段专业组里存在排班未对应的专业组信息，请核实! ");return;}
 			$.messager.alert('提示', "修改失败! ");
 			return false;
 		}
@@ -1414,6 +1644,7 @@ function ValidateInput(){
 		});
 		return false;
 	}	
+	
 	//正号限额
 	var EPositiveMax = $("#PositiveMax").numberbox('getValue');
 	//预约限额 		
@@ -1428,28 +1659,43 @@ function ValidateInput(){
 		});
 		return false;
 	}
-	if ((parseFloat(EApptMax)>0)&&(EStartPrefix=='')){
-		$.messager.alert('提示', "预约起始号不能为空!","info",function(){
-			$("#ApptMax").focus();
-		});
-		return false;
-	}
-	if ((parseInt(EPositiveMax))<(parseInt(EApptMax))){
-		$.messager.alert('提示', "正号限额不能小于预约限额!");
-		return false;
-	}
-	if (parseInt(EApptMax)!=0){
-		if ((parseInt(EPositiveMax)-parseInt(EStartPrefix)+1)<(parseInt(EApptMax))){
-			$.messager.alert('提示', "正号限额减去预约起始号要大于等于预约限额!");
+	var NoLimitLoadFlag=GetNoLimitLoadFlag();
+	if(NoLimitLoadFlag!="Y"){
+		if ((parseFloat(EApptMax)>0)&&(EStartPrefix=='')){
+			$.messager.alert('提示', "预约起始号不能为空!","info",function(){
+				$("#ApptMax").focus();
+			});
+			return false;
+		}
+		if ((parseInt(EPositiveMax))<(parseInt(EApptMax))){
+			$.messager.alert('提示', "正号限额不能小于预约限额!");
+			return false;
+		}
+		if (parseInt(EApptMax)!=0){
+			if ((parseInt(EPositiveMax)-parseInt(EStartPrefix)+1)<(parseInt(EApptMax))){
+				$.messager.alert('提示', "正号限额减去预约起始号要大于等于预约限额!");
+				return false;
+			}
+		}
+		if (parseInt(EPositiveMax)>999){
+			$.messager.alert('错误', "非便捷排班的出诊记录正号限额不能超过999!","info",function(){
+				$("#PositiveMax").focus();
+			});
+			return false;
+		}
+		if (parseInt(EAddtionMax)>9999){
+			$.messager.alert('错误', "非便捷排班的出诊记录加号限额不能超过9999!","info",function(){
+				$("#PositiveMax").focus();
+			});
 			return false;
 		}
 	}
-	if (parseInt(EPositiveMax)>999){
+	/*if (parseInt(EPositiveMax)>999){
 		$.messager.alert('错误', "正号限额不能超过999!","info",function(){
 			$("#PositiveMax").focus();
 		});
 		return false;
-	}
+	}*/
 	return true;	
 }
 function ReLoadScheduleGrid(){
@@ -1472,8 +1718,9 @@ function StopAppSchedule(){
 			return false;
 		}
 		var AppedCount=tkMakeServerCall("web.DHCRBApptSchedule","GetAppedSeqNoCount",rows[i].ASRowId);
-	    if(AppedCount>=1){
-		    if (!(dhcsys_confirm(rows[i].LocDesc+" "+rows[i].DocDesc+" "+rows[i].TimeRange+"的排班信息已存在预约记录,是否确认停诊?"))) return false;
+		var RegedCount=tkMakeServerCall("web.DHCRBApptSchedule","GetRegSeqNoCount",rows[i].ASRowId);
+	    if((AppedCount>=1)||(RegedCount>=1)){
+		    if (!(dhcsys_confirm(rows[i].LocDesc+" "+rows[i].DocDesc+" "+rows[i].TimeRange+"的排班信息已存在预约或者挂号记录,是否确认停诊?"))) return false;
 		}
 		if(idStr==""){
 			idStr=rows[i].ASRowId
@@ -1486,11 +1733,12 @@ function StopAppSchedule(){
 		return false;
 	}
 	$("#StopASRowIDStr").val(idStr)
+	
 	$("#EReason").combobox("select", '');
-	$("#EPassword").val('');
+	$("#EPassword,#EStopRemark").val('');
 	$("#ELeader").combobox('loadData',[{Desc:session['LOGON.USERNAME'],RowId:session['LOGON.USERID']}]).combobox("select", session['LOGON.USERID']);
 	//$("#ELeader").combobox('loadData',[]);
-	$("#EPassword,#tr-EPassword").hide();
+	$("#EPassword,#tr-EPassword,#Stopmore").hide();
 	$("#EReason").next('span').find('input').focus();
 	$("#StopWin").window("open")
 }
@@ -1551,6 +1799,7 @@ function StopClickHandleNew(){
 	var ASRowidStr=$("#StopASRowIDStr").val();
 	var RequestLocDesc=""
 	var NotRequestLocDesc=""
+	var StopRemark=$("#EStopRemark").val();
 	for (var i=0;i<ASRowidStr.split("^").length;i++){
 		var ret=tkMakeServerCall("web.DHCRBApptSchedule","ApptScheduleIsLater",ASRowidStr.split("^")[i]);
 		if (ret<0){ //<0过时了 >0中途停诊 
@@ -1565,7 +1814,7 @@ function StopClickHandleNew(){
 		var RequestRetArr=RequestRet.split("^");
 		var RequestFlag=RequestRetArr[0];
 		if(RequestFlag==0)IsAudit="1";
-		var ret = tkMakeServerCall("web.DHCRBApptSchedule","StopOneSchedule",ASRowidStr.split("^")[i],mStopReasonId,mStopLeaderId,StatusCode,IsAudit);
+		var ret = tkMakeServerCall("web.DHCRBApptSchedule","StopOneSchedule",ASRowidStr.split("^")[i],mStopReasonId,mStopLeaderId,StatusCode,IsAudit,StopRemark);
 		if (ret!= 0) {
 			$.messager.alert('提示', '停诊失败!'+ret);
 			return false;
@@ -1618,11 +1867,14 @@ function CancelStopAppSchedule(ASRowId){
 		var ExistToDate=IsExistInfo.split("^")[2]
 		var AlertStr=""
 		if(RequestFlag=="0")IsAudit="1";
-		var rtn=tkMakeServerCall("web.DHCRBApptSchedule","CancelStopOneSchedule",rows[i].ASRowId)
+		var rtn=tkMakeServerCall("web.DHCRBApptSchedule","CancelStopOneSchedule",rows[i].ASRowId,IsAudit)
 		if(rtn!=0){
 			var rtnArr=rtn.split("^")
 			if(rtnArr[0]=='-201'){
 				$.messager.alert("提示","不能撤销停诊,"+rtnArr[1]+"存在相同时段的排班!")
+				break;
+			}else if(rtnArr[0]=='-202'){
+				$.messager.alert("提示","不能撤销停诊,此诊室已经在同一天同一时段被安排过！ "+rtnArr[1])
 				break;
 			}else{
 				$.messager.alert("提示","撤销停诊失败!")
@@ -1646,15 +1898,15 @@ function CancelStopAppSchedule(ASRowId){
 		}
 	}
 	if(idStr==""){
-		$.messager.alert("提示","请选择要撤消停诊的排班记录")
+		$.messager.alert("提示","请选择要撤销停诊的排班记录")
 		return false;
 	}else{
 		if(rtn==0){
-			var msg="撤消停诊成功!"
-			if(NotRequestLocDesc!=""){msg=NotRequestLocDesc+"撤消停诊成功!"};
+			var msg="撤销停诊成功!"
+			if(NotRequestLocDesc!=""){msg=NotRequestLocDesc+"撤销停诊成功!"};
 			if(RequestLocDesc!=""){
-				if(msg!=""){msg=msg+";"+RequestLocDesc+"撤消停诊申请成功!请等待相关人员审核后生效."}
-				else{msg=RequestLocDesc+"撤消停诊申请成功!请等待相关人员审核后生效."}	
+				if(msg!=""){msg=msg+";"+RequestLocDesc+"撤销停诊申请成功!请等待相关人员审核后生效."}
+				else{msg=RequestLocDesc+"撤销停诊申请成功!请等待相关人员审核后生效."}	
 			}
 			$.messager.popover({msg: msg,type:'success'});
 			//$.messager.alert("提示",msg)
@@ -1698,6 +1950,7 @@ function CancelStopAppSchedule(ASRowId){
 	 }
 	 var selLocDesc=rows[0].LocDesc;
 	 $("#ReplaceASRowIDStr").val(idStr);
+	 $("#Repmore").hide();
 	 ClearReplaceData();
 	 //初始化页面数据
 	 var RBResInfo=tkMakeServerCall("web.DHCApptScheduleNew","GetApptScheduleInfo",idStr)
@@ -1792,6 +2045,7 @@ function ReplaceSaveNew(){
 		}
 	 }
 	 var ASRowID=$("#ReplaceASRowIDStr").val();
+	 var ERepRemark=$("#ERepRemark").val();
 	 var ret=tkMakeServerCall("web.DHCRBApptSchedule","ApptScheduleIsLater",ASRowID)
 	 if (ret<0){
 		$.messager.alert('提示', "操作号源已超过号源可用时间! ");
@@ -1802,7 +2056,7 @@ function ReplaceSaveNew(){
 	 var RequestRetArr=RequestRet.split("^");
 	 var RequestFlag=RequestRetArr[0];
 	 if(RequestFlag=="0")IsAudit="1";
-	 var ret1 = tkMakeServerCall("web.DHCRBApptSchedule","ReplaceOneSchedule",ASRowID,ERepDoc,ERepLoc,ERepReason,ERepLeader,ERepSessionType,IsAudit);
+	 var ret1 = tkMakeServerCall("web.DHCRBApptSchedule","ReplaceOneSchedule",ASRowID,ERepDoc,ERepLoc,ERepReason,ERepLeader,ERepSessionType,IsAudit,ERepRemark);
 	 var temparr=ret1.split("^");
 	 var ret=temparr[0];
 	 if (ret==0){
@@ -1838,7 +2092,7 @@ function ReplaceSaveNew(){
 }
 function ClearReplaceData(){
 	 $("#ERepLoc,#ERepDoc,#ERepSessionType,#ERepReason").combobox("select", '');
-	 $("#ERepPassword").val('');
+	 $("#ERepPassword,#ERepRemark").val('');
 }
 function getValue(id){
 	var className=$("#"+id).attr("class")
@@ -2171,7 +2425,7 @@ function TRFlag_Click(){
 		$('#TRSartTime').timespinner('setValue',SessTimeStart);
 		$('#TREndTime').timespinner('setValue',SessTimeEnd);*/
 		$('#pTREdit').show();
-        $("#tabTRInfo,#tabTRAppMethodInfo").datagrid("resize");
+        $("#tabTRInfo,#tabTRAppMethodInfo,#tabTRClinicGroupInfo").datagrid("resize");
         var data=GetElementValue('tabTRInfo');
         if(!data.length){
             $('#TRGenWin').window('open');
@@ -2183,7 +2437,7 @@ function TRFlag_Click(){
 			        dataType:"text"
 			    },false);
 			SetElementValue('TRASLoad',TRASLoad);
-			SetElementValue('IntervalTime',"");
+			SetElementValue('IntervalTime',"30");
             GenWayChecked();
         }
 	}else{
@@ -2665,7 +2919,10 @@ function UpdateOneSchedule(){
 	EditAppSchedule(rows[0].ASRowId);
 	LoadApptabAppMethodInfo(rows[0].ASRowId)
 	LoadtabTRInfo(rows[0].ASRowId)
-	$("#EditWin").window('setTitle','修改排班 <font color="yellow">'+rows[0].LocDesc+ ' ' +rows[0].DocDesc+'</font>');
+	var SelectTab = tab.panel('options').tab
+	var week=SelectTab[0].innerText.split("(")[1]
+	var week=week.split(")")[0]
+	$("#EditWin").window('setTitle','修改排班 <font color="#FF9999">'+rows[0].LocDesc+ ' ' +rows[0].DocDesc+' 【'+week+'】</font>');
 }
 /*function GetLocDocTreeSel(){
 	var LocRowid="",ExaRowid="",DocRowid="";
@@ -2802,7 +3059,7 @@ function InitAppMethodGrid()
 		border : false,
 		striped : true,
 		rownumbers:false,
-		fitColumns : true,
+		fitColumns : false,
 		autoRowHeight : false,
 		pagination : true, 
 		idField:"ASAMRowid",   
@@ -2812,10 +3069,15 @@ function InitAppMethodGrid()
         columns:[[
             {field:'ASAMRowid',hidden:true},
             {field:'AppMethodID',hidden:true},
-            {field:'AppMethod',title:'预约方式',align:'center',width:170,
+            {field:'AppMethod',title:'预约方式',align:'center',width:130,
                 editor:{
                     type:'combobox',
                     options:{
+	                    valueField:'id',
+					    textField:'text', 
+					    panelHeight:200, 
+					    mode:"local",
+					    url:'DHCDoc.Util.QueryToJSON.cls?JSONTYPE=Combo',
 	                    editable:false,  //不能编辑
                         onBeforeLoad:function(param){
                             param.ClassName='DHCDoc.OPAdm.Schedule';
@@ -2825,7 +3087,7 @@ function InitAppMethodGrid()
                     }
                 }
             },
-            {field:'MaxQty',title:'最大预约数',align:'center',width:100,
+            {field:'MaxQty',title:'最大预约数',align:'center',width:90,
                 editor:{type:'numberbox',options:{min:0,
                     onChange:function(val,oldVal){
                         QtyChange('tabAppMethodInfo',this);
@@ -2833,7 +3095,7 @@ function InitAppMethodGrid()
                 }
             }
             },
-            {field:'ReserveQty',title:'保留数',align:'center',width:100,
+            {field:'ReserveQty',title:'保留数',align:'center',width:55,
                 editor:{type:'numberbox',options:{min:0,
                     onChange:function(val,oldVal){
                         QtyChange('tabAppMethodInfo',this);
@@ -2901,26 +3163,74 @@ function InitTRDataGrid()
 {
     $('#tabTRInfo').datagrid({
         url:'',
-        singleSelect:true,
         fit : true,
 		border : false,
 		striped : true,
-		rownumbers:true,
-		fitColumns : true,
+		singleSelect : true,
+		fitColumns : false,
 		autoRowHeight : false,
-		pagination : true,
-		pageSize: 15,
-		pageList : [15,100,200],
+		rownumbers:true,
+		pagination : true,  
+		rownumbers : true,  
+		pageSize: 1000,
+		pageList : [1000],
         columns:[[
             {field:'ASTRRowid',hidden:true},
-            {field:'SttTime',title:'开始时间',align:'center',width:150},
-            {field:'EndTime',title:'结束时间',align:'center',width:150},
-            {field:'Load',title:'数量',align:'center',width:100,
-                editor:{type:'numberbox',options:{min:1}}
+            {field:'SttTime',title:'开始时间',align:'center',width:100,
+            	editor:{type:'timespinner',options:{}}
             },
-            {field:'tabTRAppMethodInfo',hidden:true}
+            {field:'EndTime',title:'结束时间',align:'center',width:100,
+            	editor:{type:'timespinner',options:{
+	            	}}
+            },
+            {field:'Load',title:'数量',align:'center',width:55,
+                editor:{type:'numberbox',options:{
+	                min:0
+	                }}
+            },
+            {field:'tabTRAppMethodInfo',hidden:true},
+            {field:'tabTRClinicGroupInfo',hidden:true}
         ]],
         toolbar:[{
+            text:'',
+            iconCls:'icon-add',
+            handler:function(){
+                var row=$('#tabTRInfo').datagrid('getSelected');
+				var IndexNumber=0
+				if ((!row)||(row.length==0)){
+				    $('#tabTRInfo').datagrid("insertRow", {
+				        index: 0,
+				        row: {}
+				    });
+				    IndexNumber=0
+				}else{
+					var IndexNumber=$('#tabTRInfo').datagrid('getRowIndex',row);
+					var IndexNumber=parseFloat(IndexNumber)+1
+				    $('#tabTRInfo').datagrid("insertRow", {
+				        index: IndexNumber,
+				        row: {}
+				    });
+					} 
+				AddDGTBSaveTip('tabTRInfo');
+				$('#tabTRInfo').datagrid("beginEdit", IndexNumber);
+            }
+        },{
+            text:'',
+            iconCls:'icon-remove',
+            handler:function(){
+                var row=$('#tabTRInfo').datagrid('getSelected');
+				var IndexNumber=0
+				if ((!row)||(row.length==0)){
+				    $.messager.alert('提示', "请选择一列进行删除","info",function(){
+						$("#BSave").focus();
+					});
+					return false;
+				}
+				var IndexNumber=$('#tabTRInfo').datagrid('getRowIndex',row);
+			    $('#tabTRInfo').datagrid('deleteRow',IndexNumber);
+			    AddDGTBSaveTip('tabTRInfo');
+            }
+        },{
             text:'保存',
             iconCls:'icon-save',
             handler:function(){
@@ -2935,21 +3245,36 @@ function InitTRDataGrid()
                     $.messager.popover({msg:"请先保存分时段预约方式后再进行分时段操作",type:'alert'});
                     return false;
                 }
+                if(CheckGridEditing('tabTRClinicGroupInfo')){
+                    $.messager.popover({msg:"请先保存专业组分时操作",type:'alert'});
+                    return false;
+                }
                 var AppedCount=tkMakeServerCall("web.DHCRBApptSchedule","GetAppedSeqNoCount",ASRowID);
                 var RegCount=tkMakeServerCall("web.DHCRBApptSchedule","GetRegSeqNoCount",ASRowID);
                 var SumRegApp=parseFloat(AppedCount)+parseFloat(RegCount)
                 if (SumRegApp>=1){
-					    if (!(dhcsys_confirm("排班信息已存在预约和挂号记录，如果生成分时段数据会导致号序混乱，是否保存"))) return false;
-					}
+				    if (!(dhcsys_confirm("排班信息已存在预约和挂号记录，如果生成分时段数据会导致号序混乱，是否保存"))) return false;
+				}
+				var ApptMax=Number($("#ApptMax").val());
                 var total=0;
-                var rows=$('#tabTRInfo').datagrid('getData').originalRows;
+                var rows=$('#tabTRInfo').datagrid('getData').rows;
                 for(var i=0;i<rows.length;i++){
                     var Editors=$('#tabTRInfo').datagrid('getEditors',i);
                     if(Editors.length){
-                        rows[i].Load=GetElementValue(Editors[0].target);
+	                    rows[i].SttTime=GetElementValue(Editors[0].target);
+	                    rows[i].EndTime=GetElementValue(Editors[1].target);
+                        rows[i].Load=GetElementValue(Editors[2].target);
                     }
                     if(rows[i].Load==""){
                         $.messager.popover({msg:'分时段限额不能为空',type:'error'});
+                        return;
+                    }
+                    if(rows[i].SttTime==""){
+                        $.messager.popover({msg:'开始时间不能为空',type:'error'});
+                        return;
+                    }
+                    if(rows[i].EndTime==""){
+                        $.messager.popover({msg:'结束时间不能为空',type:'error'});
                         return;
                     }
                     total+=Number(rows[i].Load);
@@ -2971,13 +3296,40 @@ function InitTRDataGrid()
 			                $.messager.popover({msg:'分时段限额中预约方式的最大预约数应该小于分时段限额',type:'error'});
 	                        return;
 			            }
+			            if (parseFloat(MaxQty)>parseFloat(ApptMax)){
+			                $.messager.popover({msg:'分时段限额中预约方式的最大预约数应该小于预约限额总数',type:'error'});
+	                        return;
+			            }
+                    }
+                    if (rows[i].tabTRClinicGroupInfo){
+	                    var ResverNum=0
+	                    for (var j=0;j<rows[i].tabTRClinicGroupInfo.length;j++){
+		                    var OneQty= rows[i].tabTRClinicGroupInfo[j].Qty;
+		                    ResverNum=parseFloat(ResverNum)+parseFloat(OneQty);
+		                }
+	                    if (parseFloat(ResverNum)>parseFloat(rows[i].Load)){
+		                    $.messager.popover({msg:'分时段限额中专业组的总数应该小于分时段限额',type:'error'});
+	                        return;
+		                }
                     }
                 }
                 var PositiveMaxLoad=$("#PositiveMax").numberbox('getValue');
                 if (PositiveMaxLoad!=total){
-					$.messager.popover({msg:"正号限额不等于分时段数量总和",type:'error'});
-			        return false;
+					//$.messager.popover({msg:"正号限额不等于分时段数量总和",type:'error'});
+			        //return false;
+			        // 移至下面 CheckTRInfoTime 方法 
 			    }
+			     var retJson=$.cm({
+			        ClassName:'DHCDoc.OPAdm.Schedule',
+			        MethodName:'CheckTRInfoTime',
+			        TRInfoObjStr:JSON.stringify(rows),
+			        ASRowId:ASRowID,
+			        dataType:"text"
+			    },false);
+			    if (retJson!=0){
+				    $.messager.popover({msg:retJson,type:'error'});
+			        return false;
+				    }
                 SetElementValue('tabTRInfo',rows);
                 AddSaveTip($('#BUpdate').find('.l-btn-text'));
                 ScheduleObj=GetElementValue('tabTRInfo');
@@ -2991,7 +3343,10 @@ function InitTRDataGrid()
 			    if (retJson=="0"){
 				    $.messager.popover({msg:"保存成功!",type:'success'});
 				    LoadtabTRInfo(ASRowID)
-				}
+				}else{
+					$.messager.popover({msg:retJson,type:'error'});
+			        return false;
+					}
             }
         },'-',{
             text:'重新生成',
@@ -3018,7 +3373,7 @@ function InitTRDataGrid()
 			        dataType:"text"
 			    },false);
 				SetElementValue('TRASLoad',TRASLoad);
-				SetElementValue('IntervalTime',"");
+				SetElementValue('IntervalTime',"30");
 				GenWayChecked();
             }
         },'-',{
@@ -3031,12 +3386,15 @@ function InitTRDataGrid()
                 }else{
                     $('#TRTempSaveWin').window('open');
                     $("#TempName").val("").focus();
+                    $("#TempListDesc").combobox("setValue","");
+                    $("#TempListType").combobox("select","");
                     GenWayChecked()
                 }
             }
         }],
         onDblClickRow:function(index,row){
             $(this).datagrid('beginEdit',index);
+            
         },
         onBeforeSelect:function(index,row){
             if(CheckGridEditing('tabAppMethodInfo')){
@@ -3051,8 +3409,29 @@ function InitTRDataGrid()
 		           return CheckBeforAppMedthod();
 		        }
             }
+            if(CheckGridEditing('tabTRClinicGroupInfo')){
+                var UnsaveFlag=confirm('有未保存的专业组分时段信息,是否继续:');
+                if (UnsaveFlag==false){
+	               return UnsaveFlag;
+	            }else{
+		           return CheckBeforClinicGroupInfo();
+		        }
+            }
+            if (PageLogicObj.InitTRDataSelectFlag==0){
+	            var data = $('#tabTRInfo').datagrid('getSelected');  //选择的数据
+	            var rowindex = $('#tabTRInfo').datagrid('getRowIndex',data);  //选择的数据的序列值
+	            if(data && index == rowindex){   //再次点击取消勾选
+	                setTimeout(function(){
+	                    $('#tabTRInfo').datagrid('unselectRow',index);
+	                },200)
+	            }
+            }
             return true;
         },
+        onUnselect:function(rowIndex, rowData){
+			//$(this).datagrid('selectRow', rowIndex)
+			PageLogicObj.InitTRDataSelectFlag==0
+			},
         onSelect:function(index,row){
             var tabTRAppMethodInfo=row.tabTRAppMethodInfo;
             if(!tabTRAppMethodInfo) tabTRAppMethodInfo=[];
@@ -3060,27 +3439,60 @@ function InitTRDataGrid()
                 tabTRAppMethodInfo=JSON.parse(tabTRAppMethodInfo);
             }
             SetElementValue('tabTRAppMethodInfo',tabTRAppMethodInfo);
+            var tabTRClinicGroupInfo=row.tabTRClinicGroupInfo;
+            if(!tabTRClinicGroupInfo) tabTRClinicGroupInfo=[];
+            if(typeof(tabTRClinicGroupInfo)=='string'){
+                tabTRClinicGroupInfo=JSON.parse(tabTRClinicGroupInfo);
+            }
+            SetElementValue('tabTRClinicGroupInfo',tabTRClinicGroupInfo);
+            PageLogicObj.InitTRDataSelectFlag=0
         },
         onLoadSuccess:function(data){
             $(this).datagrid('unselectAll');
             SetElementValue('tabTRAppMethodInfo',[]);
+            SetElementValue('tabTRClinicGroupInfo',[]);
             if(GetElementValue('TRFlag')){
                 ResetASLoad();
             }
             DeleteDGTBSaveTip('tabTRInfo');
         },
-        onBeginEdit:function(){
+        onClickCell: function(index,field,value){
+	        
+	        },
+        onBeginEdit:function(rowIndex, rowData){
             AddDGTBSaveTip('tabTRInfo');
+           
+            var Editors=$('#tabTRInfo').datagrid('getEditors',rowIndex);
+	        if(Editors.length){
+	            $(Editors[0].target).bind("click", function () { 
+					var rowIndex=$(this.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement)[0].rowIndex
+	            	$('#tabTRInfo').datagrid('selectRow', rowIndex)
+	            	PageLogicObj.InitTRDataSelectFlag=1
+	            	})
+	            $(Editors[1].target).bind("click", function () { 
+				var rowIndex=$(this.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement)[0].rowIndex
+	            	$('#tabTRInfo').datagrid('selectRow', rowIndex)
+	            	PageLogicObj.InitTRDataSelectFlag=1
+	            	})
+	            $(Editors[2].target).bind("click", function () { 
+				var rowIndex=$(this.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement)[0].rowIndex
+	            	$('#tabTRInfo').datagrid('selectRow', rowIndex)
+	            	PageLogicObj.InitTRDataSelectFlag=1
+	            	})
+	        }
+
         },
         onAfterEdit:function(index, row, changes){
             ResetASLoad();
         }
     }).datagrid({loadFilter:DocToolsHUI.lib.pagerFilter});
+  
     var ASRowID=$("#ASRowID").val();
     if (ASRowID!=""){
     	LoadtabTRInfo(ASRowID)
     }
 	var tabTRAppMethodInfoEditRow=""
+	var tabTRClinicGroupInfoEditRow=""
     function ResetASLoad()
     {
         var ASLoad=0;
@@ -3098,7 +3510,7 @@ function InitTRDataGrid()
 		striped : true,
 		rownumbers:true,
 		singleSelect : true,
-		fitColumns : true,
+		fitColumns : false,
 		autoRowHeight : false,
 		pagination : true,  
 		pageSize: 15,
@@ -3106,11 +3518,16 @@ function InitTRDataGrid()
         columns:[[
             {field:'TRAMRowid',hidden:true},
             {field:'AppMethodID',hidden:true},
-            {field:'AppMethod',title:'预约方式',align:'center',width:250,
+            {field:'AppMethod',title:'预约方式',align:'center',width:100,
                 editor:{
                     type:'combobox',
                     editable:false,  //不能编辑
                     options:{
+	                    valueField:'id',
+					    textField:'text', 
+					    panelHeight:200, 
+					    mode:"local",
+					    url:'DHCDoc.Util.QueryToJSON.cls?JSONTYPE=Combo',
                         onBeforeLoad:function(param){
                             param.ClassName='DHCDoc.OPAdm.Schedule';
                             param.QueryName='QueryAppMethod';
@@ -3119,7 +3536,7 @@ function InitTRDataGrid()
                     }
                 }
             },
-            {field:'MaxQty',title:'最大预约数量',align:'center',width:100,
+            {field:'MaxQty',title:'最大预约数量',align:'center',width:95,
                 editor:{type:'numberbox',options:{min:0,
                     onChange:function(val,oldVal){
                         QtyChange('tabTRAppMethodInfo',this);
@@ -3127,7 +3544,7 @@ function InitTRDataGrid()
                 }
             }
             },
-            {field:'ReserveQty',title:'保留数量',align:'center',width:100,
+            {field:'ReserveQty',title:'保留数',align:'center',width:55,
                 editor:{type:'numberbox',options:{min:0,
                     onChange:function(val,oldVal){
                         QtyChange('tabTRAppMethodInfo',this);
@@ -3137,7 +3554,7 @@ function InitTRDataGrid()
             }
         ]],
         toolbar:[{
-            text:'增加',
+            text:'',
             iconCls:'icon-add',
             handler:function(){
                 var TRInfoSelected=$('#tabTRInfo').datagrid('getSelected');
@@ -3151,7 +3568,7 @@ function InitTRDataGrid()
                 tabTRAppMethodInfoEditRow=rows.length-1
             }
         },{
-            text:'删除',
+            text:'',
             iconCls:'icon-remove',
             handler:function(){
                 var Selected=$('#tabTRAppMethodInfo').datagrid('getSelected');
@@ -3180,7 +3597,9 @@ function InitTRDataGrid()
                 TRInfoSelected.tabTRAppMethodInfo=PageLogicObj.m_tabTRAppMethodInfoNewRows;
                 var Editors=$('#tabTRInfo').datagrid('getEditors',TRInfoIndex);
                 if(Editors.length){
-                    TRInfoSelected.Load=GetElementValue(Editors[0].target);
+	                TRInfoSelected.SttTime=GetElementValue(Editors[0].target);
+	                TRInfoSelected.EndTime=GetElementValue(Editors[1].target);
+                    TRInfoSelected.Load=GetElementValue(Editors[2].target);
                 }
                 $('#tabTRInfo').datagrid('updateRow',{index:TRInfoIndex,row:TRInfoSelected});
                 AddDGTBSaveTip('tabTRInfo');
@@ -3197,6 +3616,115 @@ function InitTRDataGrid()
             var ed = $(this).datagrid('getEditor', {index:index,field:'AppMethod'});
             SetElementValue(ed.target,row.AppMethodID);
             AddDGTBSaveTip('tabTRAppMethodInfo');
+        }
+    });
+    $('#tabTRClinicGroupInfo').datagrid({
+        url:'',
+        fit : true,
+		border : false,
+		striped : true,
+		rownumbers:true,
+		singleSelect : true,
+		fitColumns : false,
+		autoRowHeight : false,
+		pagination : true,  
+		pageSize: 15,
+		pageList : [15,100,200],
+        columns:[[
+            {field:'TRClinicGroupRowid',hidden:true},
+            {field:'ClinicGroupMethodID',hidden:true},
+            {field:'ClinicGroup',title:'专业组',align:'center',width:100,
+                editor:{
+                    type:'combobox',
+                    options:{
+	                    valueField:'id',
+					    textField:'text', 
+					    panelHeight:200, 
+					    mode:"local",
+					    url:'DHCDoc.Util.QueryToJSON.cls?JSONTYPE=Combo',
+                        onBeforeLoad:function(param){
+	                        var ASRowID=$("#ASRowID").val();
+	            			if (ASRowID=="") return;
+                            param.ClassName='DHCDoc.OPAdm.Schedule';
+                            param.QueryName='QueryClinicGroupList';
+                            param.ASRowID=ASRowID;
+                            param.ArgCnt=1;
+                        }
+                    }
+                }
+            },
+            {field:'Qty',title:'数量',align:'center',width:55,
+                editor:{type:'numberbox',options:{min:0,
+                    onChange:function(val,oldVal){
+                        //QtyChange('tabTRAppMethodInfo',this);
+                    }
+                }
+            }
+            }
+        ]],
+        toolbar:[{
+            text:'',
+            iconCls:'icon-add',
+            handler:function(){
+                var TRInfoSelected=$('#tabTRInfo').datagrid('getSelected');
+                if(!TRInfoSelected){
+                    $.messager.popover({msg:'请选择时段后再维护时段专业组！',type:'error'});
+                    return;
+                }
+                $('#tabTRClinicGroupInfo').datagrid('appendRow',{});
+                var rows=$('#tabTRClinicGroupInfo').datagrid('getRows');
+                $('#tabTRClinicGroupInfo').datagrid('beginEdit',rows.length-1);
+                tabTRClinicGroupInfoEditRow=rows.length-1
+            }
+        },{
+            text:'',
+            iconCls:'icon-remove',
+            handler:function(){
+                var Selected=$('#tabTRClinicGroupInfo').datagrid('getSelected');
+                if((!Selected)&&(tabTRClinicGroupInfoEditRow!="")){
+                    $.messager.popover({msg:'请选择需要删除的行',type:'alert'});
+                    return;
+                }
+                if (Selected){
+               		var index=$('#tabTRClinicGroupInfo').datagrid('getRowIndex',Selected);
+               	}else{
+	                var index=tabTRClinicGroupInfoEditRow
+	               }
+                $('#tabTRClinicGroupInfo').datagrid('deleteRow',index);
+                AddDGTBSaveTip('tabTRClinicGroupInfo');
+                //$('#tabTRAppMethodInfo').datagrid('options').toolbar[4].handler();
+            }
+        },{
+            text:'保存',
+            iconCls:'icon-save',
+            handler:function(){
+                var CheckFlag=CheckBeforClinicGroupInfo()
+                if (CheckFlag==false) return;
+                SetElementValue('tabTRClinicGroupInfo',PageLogicObj.m_tabTRClinicGroupInfoNewRows);
+                var TRInfoSelected=$('#tabTRInfo').datagrid('getSelected');
+	            var TRInfoIndex=$('#tabTRInfo').datagrid('getRowIndex',TRInfoSelected);
+                TRInfoSelected.tabTRClinicGroupInfo=PageLogicObj.m_tabTRClinicGroupInfoNewRows;
+                var Editors=$('#tabTRInfo').datagrid('getEditors',TRInfoIndex);
+                if(Editors.length){
+	                TRInfoSelected.SttTime=GetElementValue(Editors[0].target);
+	                TRInfoSelected.EndTime=GetElementValue(Editors[1].target);
+                    TRInfoSelected.Load=GetElementValue(Editors[2].target);
+                }
+                $('#tabTRInfo').datagrid('updateRow',{index:TRInfoIndex,row:TRInfoSelected});
+                AddDGTBSaveTip('tabTRInfo');
+            }
+        }],
+        onDblClickRow:function(index,row){
+            $(this).datagrid('beginEdit',index);
+            tabTRClinicGroupInfoEditRow=index
+        },
+        onLoadSuccess:function(){
+            DeleteDGTBSaveTip('tabTRClinicGroupInfo');
+        },
+        onBeginEdit:function(index, row){
+            var ed = $(this).datagrid('getEditor', {index:index,field:'ClinicGroup'});
+            SetElementValue(ed.target,row.ClinicGroupMethodID);
+            AddDGTBSaveTip('tabTRClinicGroupInfo');
         }
     });
 }
@@ -3277,11 +3805,76 @@ function CheckBeforAppMedthod(){
     PageLogicObj.m_tabTRAppMethodInfoNewRows=newRows;
     return true;
 }
+function CheckBeforClinicGroupInfo(){
+	var TRInfoSelected=$('#tabTRInfo').datagrid('getSelected');
+    if(!TRInfoSelected){
+        $.messager.popover({msg:'请选择时段后再维护时段预约方式',type:'error'});
+        return false;
+    }
+    PageLogicObj.m_tabTRClinicGroupInfoNewRows=new Array();
+	var newRows=new Array();
+    var AMArr=new Array();
+    var ReserveQtySum=0;
+    var TRLoad=Number(GetElementValue('ApptMax'));
+    var TRInfoIndex=$('#tabTRInfo').datagrid('getRowIndex',TRInfoSelected);
+    var ed = $('#tabTRInfo').datagrid('getEditor', {index:TRInfoIndex,field:'Load'});
+    if(ed) TRLoad=GetElementValue(ed.target);
+    else TRLoad=TRInfoSelected.Load;
+    var TRRows=GetElementValue('tabTRInfo');
+    var AppStartNo=Number(GetElementValue('AppStartNo'));
+    var LoadSum=0
+    for(var i=0;i<TRInfoIndex;i++){ //考虑起始号,才是实际可用号
+        var Load=TRRows[i].Load;
+        var ed = $('#tabTRInfo').datagrid('getEditor', {index:i,field:'Load'});
+        if(ed) Load=GetElementValue(ed.target);
+        else Load=TRInfoSelected.Load;
+        LoadSum+=Number(Load);
+    }
+    if(LoadSum<AppStartNo){
+        TRLoad=Number(TRLoad)+LoadSum-AppStartNo+1
+        if(TRLoad<0) TRLoad=0;
+    }
+    var rows=GetElementValue('tabTRClinicGroupInfo');
+    for(var i=0;i<rows.length;i++){
+        var Editors=$('#tabTRClinicGroupInfo').datagrid('getEditors',i);
+        if(Editors.length){
+            rows[i].ClinicGroupMethodID=GetElementValue(Editors[0].target);
+            rows[i].ClinicGroup=$(Editors[0].target).combobox('getText');
+            rows[i].Qty=GetElementValue(Editors[1].target);
+        }
+        if(rows[i].ClinicGroupMethodID){
+	        if (rows[i].ClinicGroupMethodID==""){
+				 $.messager.alert("提示","请维护专业组");
+                return false;
+			}
+            if(AMArr[rows[i].ClinicGroupMethodID]){
+	            $.messager.alert("提示",rows[i].ClinicGroup+"方式重复维护!");
+                return false;
+            }
+            if(rows[i].Qty==""){
+                $.messager.alert("提示",rows[i].ClinicGroup+" 数量不能为空!");
+                return false;
+            }
+            ReserveQtySum+=Number(rows[i].Qty);
+            newRows.push(rows[i]);
+            AMArr[rows[i].ClinicGroupMethodID]=1
+        }else{
+	         $.messager.alert("提示","请维护专业组");
+             return false;
+	        }
+    }
+    if(ReserveQtySum>Number(TRLoad)){
+	    $.messager.alert("提示","专业组数量合计:"+ReserveQtySum+",不能超过时段总数:"+TRLoad+"!");
+        return false;
+    }
+    PageLogicObj.m_tabTRClinicGroupInfoNewRows=newRows;
+    return true;
+}
 function AppMethodQtySave()
 {
     var ASRowID=$("#ASRowID").val();
 	if (ASRowID==""){
-		$.messager.alert('提示', "请先保存排班信息","info",function(){
+		$.messager.alert('提示', "预约方式限额保存失败:请先保存排班信息","info",function(){
 			$("#BSave").focus();
 		});
 		return false;
@@ -3292,15 +3885,27 @@ function AppMethodQtySave()
         LocationName:"", ClinicGroupName:"", 
         DoctorName:"", ScheduleDate:"", ASRowId:ASRowID, UserID:"",
     },false);
-    var AvailAppQty=+data.rows[0].BookNum;
+    var NoLimitLoadFlag=(data.rows[0].NoLimitLoadFlag=="Y")?"Y":"N";
+    var NewNoLimitLoadFlag=GetNoLimitLoadFlag();
+	if (NewNoLimitLoadFlag!=NoLimitLoadFlag) {
+		$.messager.popover({msg:"预约方式限额保存失败:便捷排班标识勾选变化,请先保存排班信息!",type:'alert'});
+		return false;
+	}else if(NoLimitLoadFlag=="Y"){
+		$.messager.popover({msg:"预约方式限额保存失败:便捷排班无需维护预约方式限额!",type:'alert'});
+		return false;
+	}
+	var AvailAppQty=+data.rows[0].BookNum;
+    if(isNaN(AvailAppQty)){
+	    AvailAppQty=0;
+    }
     var NewAvailAppQty=Number(GetElementValue('ApptMax'));
     if (NewAvailAppQty!=AvailAppQty) {
-		$.messager.alert("提示","请先保存排班信息!","info",function(){
+		$.messager.alert("提示","预约方式限额保存失败:请先保存排班信息!","info",function(){
 			$("#ApptMax").focus();
 		});
 		return false;
 	}else if ((NewAvailAppQty=="0")&&(AvailAppQty>0)){
-		$.messager.alert('提示', "预约限额为0,请先维护预约","info",function(){
+		$.messager.alert('提示', "预约方式限额保存失败:预约限额为0,请先维护预约","info",function(){
 			$("#ApptMax").focus();
 		});
 		return false;
@@ -3355,12 +3960,22 @@ function AppMethodQtySave()
                     });
                     return false;
                 }
+                if ((Number(rows[i].ReserveQty)-Number(TRAMArr[rows[i].AppMethodID].LastReserveQty))>Number(TRAMArr[rows[i].AppMethodID].LastMaxQty)){
+	                $.messager.popover({
+                        msg:rows[i].AppMethod+'分时段最后一个时段的最大预约数必须大于分时段不包含最后一个时段的剩余保留数',
+                        type:'error'
+                    });
+                    return false;
+	                }
                 delete TRAMArr[rows[i].AppMethodID];
             }
             newRows.push(rows[i]);
             AMArr[rows[i].AppMethodID]=1
 
-        }
+        }else{
+	         $.messager.popover({msg:'请选择预约方式！',type:'error'});
+             return false;
+	    }
     }
     for(var AppMethodID in TRAMArr){
         $.messager.popover({msg:TRAMArr[AppMethodID].AppMethod+'分时段存在维护数据,请先删除分时段预约方式',type:'error'});
@@ -3380,7 +3995,10 @@ function AppMethodQtySave()
         dataType:"json"
     },false);
     if (retJson=="0"){
-	    $.messager.popover({msg:"保存成功!",type:'success'});
+	    $.messager.popover({msg:"预约方式限额保存成功!",type:'success',style: {
+					bottom: document.body.clientHeight/2+10,
+					right: document.body.clientWidth/2-20
+				}});
 	    $('#tabAppMethodInfo').datagrid("rejectChanges").datagrid("unselectAll");
 	    LoadApptabAppMethodInfo(ASRowID)
 	}
@@ -3421,15 +4039,25 @@ function GetTRAppMethodInfo()
                var ReserveQty=Number(TRAMArr[AppMethodID].ReserveQty);
                TRAMArr[AppMethodID].ReserveQty=ReserveQty+Number(TRAMData[j].ReserveQty);
                var MaxQty=Number(TRAMArr[AppMethodID].MaxQty);
-               if(MaxQty>Number(TRAMData[j].MaxQty)) TRAMArr[AppMethodID].MaxQty=MaxQty
+               //if(MaxQty>Number(TRAMData[j].MaxQty)) TRAMArr[AppMethodID].MaxQty=MaxQty
+               if(MaxQty<Number(TRAMData[j].MaxQty)) TRAMArr[AppMethodID].MaxQty=Number(TRAMData[j].MaxQty)
+               if ((TRData.length-1)==i){
+	               TRAMArr[AppMethodID].LastMaxQty=Number(TRAMData[j].MaxQty);
+	               TRAMArr[AppMethodID].LastReserveQty=ReserveQty
+	               }
                //TRAMArr[AppMethodID].MaxQty=MaxQty+Number(TRAMData[j].MaxQty);
             }else{
                TRAMArr[AppMethodID]=$.extend({},TRAMData[j]);
+            	if ((TRData.length-1)==i){
+               		TRAMArr[AppMethodID].LastMaxQty=Number(TRAMData[j].MaxQty);
+               		TRAMArr[AppMethodID].LastReserveQty=0
+               }
             }
         }
     }
     return TRAMArr;
 }
+
 function SaveSchedule()
 {
     if(CheckGridEditing('tabAppMethodInfo')){
@@ -3543,7 +4171,7 @@ function TRGenClick()
             AddSaveTip($('#BUpdate').find('.l-btn-text'));
             $('#TRGenWin').window('close');
             if(ReCheckAppMethod()){
-            	$('#tabTRInfo').datagrid('options').toolbar[0].handler();
+            	$('#tabTRInfo').datagrid('options').toolbar[2].handler();
             }
         }
     }else{
@@ -3555,7 +4183,7 @@ function TRGenClick()
             AddSaveTip($('#BUpdate').find('.l-btn-text'));
             $('#TRGenWin').window('close');
             if(ReCheckAppMethod()){
-            	$('#tabTRInfo').datagrid('options').toolbar[0].handler();
+            	$('#tabTRInfo').datagrid('options').toolbar[2].handler();
             }
         }
     }
@@ -3568,18 +4196,36 @@ function CalculateTRInfo(SttTime,EndTime,IntervalTime,ASLoad)
     var IntervalTime=Number(IntervalTime);
     var ASLoad=Number(ASLoad);
     var TRLength=EndMin-SttMin;
-    if(TRLength%IntervalTime){
+    /*if(TRLength%IntervalTime){
         $.messager.popover({msg:"分时段间隔时间不能均分时段!",type:'error'});
         $('#IntervalTime').select();
         return false;
+    }*/
+    if(TRLength%IntervalTime){
+	    setTimeout(function(){
+	    	$.messager.popover({msg:"分时段间隔时间不能均分时段，需核实最后时段号数!",type:'alert'});
+	    },1000)
     }
     var DataArr=new Array();
     var TRCount=TRLength/IntervalTime;
+    var DiffTRCount=TRCount-Math.floor(TRCount)
+    //分时段时判断如果最后一个时段小于五分钟默认添加到上一个时段，否则新增一个时段
+    if ((DiffTRCount*IntervalTime)>(IntervalTime/2)) var TRCount=TRCount+1
     for(var i=1;i<=TRCount;i++){
         var SttTime=SttMin+(i-1)*IntervalTime;
-        var EndTime=SttMin+i*IntervalTime;
+		var EndTime=SttMin+i*IntervalTime;
         var Load=Math.floor(ASLoad/(TRCount-i+1));
-        ASLoad-=Load;
+        if (i>(TRLength/IntervalTime)){
+	        Load=ASLoad
+	        var EndTime=EndMin
+        }
+        else if (((DiffTRCount*IntervalTime)<(IntervalTime/2))&&(Math.floor(TRCount)==i)) {
+	        Load=ASLoad
+	        var EndTime=EndMin
+        }
+        else {
+	        ASLoad-=Load;
+        }
         var obj={SttTime:MinToTime(SttTime),EndTime:MinToTime(EndTime),Load:Load};
         DataArr.push(obj);
     }
@@ -3613,6 +4259,22 @@ function GenTRInfoByTemp()
             if(typeof(Data)=='string'){
                 Data=JSON.parse(Data);
             }
+            var ClinicGroup=getValue("ClinicGroup");
+		    for(var j=0;j<Data.length;j++){
+		        var tabTRClinicGroupInfo=Data[j].tabTRClinicGroupInfo;
+		        if(!tabTRClinicGroupInfo) tabTRClinicGroupInfo=[];
+		        if(typeof(tabTRClinicGroupInfo)=='string'){
+		            tabTRClinicGroupInfo=JSON.parse(tabTRClinicGroupInfo);
+		        }
+		        var tabTRClinicGroupInfoArr=new Array();
+		        for(var m=0;m<tabTRClinicGroupInfo.length;m++){
+			        OneTRClinicGroup=tabTRClinicGroupInfo[m]
+			        if (ClinicGroup.indexOf(OneTRClinicGroup.ClinicGroupMethodID)>=0){
+				        tabTRClinicGroupInfoArr.push(OneTRClinicGroup)
+				        }
+		        }
+		        Data[j].tabTRClinicGroupInfo=tabTRClinicGroupInfoArr
+		    }
             SetElementValue('tabTRInfo',Data);
             return true;
         }
@@ -3690,11 +4352,23 @@ function TRTempSaveClick()
         $.messager.popover({msg:"请填写模板名称!",type:'alert'});
         return;
     }
+    var TempListType=$("#TempListType").combobox("getValue");
+    if(TempListType==''){
+        $.messager.popover({msg:"请选择模板权限类型!",type:'alert'});
+        return;
+    }
+    var TempListDesc=$("#TempListDesc").combobox("getValue");
+    if(TempListDesc==''){
+        $.messager.popover({msg:"请选择模板权限!",type:'alert'});
+        return;
+    }
     var SaveObj={
         Name:TempName,
         Data:GetElementValue('tabTRInfo'),
         TimeRangeDR:GetElementValue('TimeRange'),
-        InsertUserDR:session['LOGON.USERID']
+        InsertUserDR:session['LOGON.USERID'],
+        TempListTypeID:TempListType,
+        TempListID:TempListDesc
     };
     var SaveArr=new Array(SaveObj);
     var retJson=$.cm({
@@ -3838,6 +4512,7 @@ function ShowHISUIWindow(title,src,iconCls,width,height)
     if(!$('#ShowMode_Win').size()){
         $("body").append("<div id='ShowMode_Win' class='hisui-window'></div>");
     }
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
     $('#ShowMode_Win').window({
         iconCls:iconCls,
         width:width,
@@ -3937,6 +4612,19 @@ function TableToExcel(selector)
 $.fn.singleCombo = function(options){
     var ChangeTimer;
     $.extend(options,{
+	    valueField:'id',
+	    textField:'text', 
+	    panelHeight:200, 
+	    mode:"local",
+	    url:'DHCDoc.Util.QueryToJSON.cls?JSONTYPE=Combo',
+	    filter: function(q, row){
+	        var opts = $(this).combobox('options');
+	        return row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0;
+	    },
+	    onLoadError:function(){
+	        debugger;
+	        $.messager.alert('提示','Init Combo Error','error');
+	    },
         onChange:function(){
             clearTimeout(ChangeTimer);
             var target=this;
@@ -3960,21 +4648,7 @@ $.fn.singleCombo = function(options){
     }
     $(this).combobox(options);
 }
-$.extend($.fn.combobox.defaults, {  
-    valueField:'id',
-    textField:'text', 
-    panelHeight:200, 
-    mode:"local",
-    url:'DHCDoc.Util.QueryToJSON.cls?JSONTYPE=Combo',
-    filter: function(q, row){
-        var opts = $(this).combobox('options');
-        return row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0;
-    },
-    onLoadError:function(){
-        debugger;
-        $.messager.alert('提示','Init Combo Error','error');
-    }
-});
+
 function AddColorSynopsis() {
 	$.each(ColorSynopsis, function(index, key){
 		var PorpStr={trigger:'hover',placement:'bottom-left',title:'',content:key}
@@ -3984,6 +4658,37 @@ function AddColorSynopsis() {
 	})
 }
 function StopQueueNo(){
+	var tab = $('#ScheduleTab').tabs('getSelected');
+	var index = $('#ScheduleTab').tabs('getTabIndex',tab);
+	var GridId="ScheduleGrid"+index;
+	var rows=$("#"+GridId).datagrid("getSelections");
+	var idStr="";
+	for(var i=0;i<rows.length;i++){
+		if(idStr==""){
+			idStr=rows[i].ASRowId;
+		}else{
+			idStr=idStr+"^"+rows[i].ASRowId;
+		}
+	}
+	if(idStr==""){
+		$.messager.alert("提示","请选择要停号的排班记录!","warning");
+		return false;
+	}
+	if(idStr.split("^").length>1){
+		$.messager.alert("提示","请选择单个排班进行停号操作!","warning");
+		return false;
+	}
+	var NoLimitLoadFlag=rows[0].NoLimitLoadFlag;
+	if(NoLimitLoadFlag=="Y"){
+		$.messager.alert("提示","便捷排班不支持停号,可直接停止挂号!","warning");
+		return false;	
+	}
+	var src="opadm.schedulestopqueueno.hui.csp?ASRowid="+idStr;
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
+	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
+	createModalDialog("Project","停号(支持shift批量选择顺序号)", PageLogicObj.dw, PageLogicObj.dh,"icon-w-list","",$code,"");
+}
+function ScheduleCopyMuiltSche(){
 	var tab = $('#ScheduleTab').tabs('getSelected');
 	 var index = $('#ScheduleTab').tabs('getTabIndex',tab);
 	 var GridId="ScheduleGrid"+index;
@@ -3997,14 +4702,250 @@ function StopQueueNo(){
 		}
 	 }
 	 if(idStr==""){
-		$.messager.alert("提示","请选择要停号的排班记录!");
+		$.messager.alert("提示","请选择需要同步排班记录!");
 		return false;
 	 }
 	 if(idStr.split("^").length>1){
-		 $.messager.alert("提示","请选择单个排班进行停号操作!");
+		 $.messager.alert("提示","请选择单个排班进行操作!");
 		 return false;
 	 }
-	 var src="opadm.schedulestopqueueno.hui.csp?ASRowid="+idStr;
+	 var HospID=$HUI.combogrid('#_HospUserList').getValue();
+	 var src="opadm.schedulecopymulit.hui.csp?ASRowid="+idStr+"&HospID="+HospID;
+     src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
 	 var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
-	 createModalDialog("Project","停号", PageLogicObj.dw, PageLogicObj.dh,"icon-w-list","",$code,"");
+	 createModalDialog("Project","同步排班信息", $(window).width()-100, PageLogicObj.dh,"icon-w-list","",$code,"");
+}
+function SentMeassagehandler(){
+	var tab = $('#ScheduleTab').tabs('getSelected');
+	 var index = $('#ScheduleTab').tabs('getTabIndex',tab);
+	 var GridId="ScheduleGrid"+index;
+	 var rows=$("#"+GridId).datagrid("getSelections");
+	 var idStr="";
+	 for(var i=0;i<rows.length;i++){
+		if(idStr==""){
+			idStr=rows[i].ASRowId;
+		}else{
+			idStr=idStr+"^"+rows[i].ASRowId;
+		}
+	 }
+	 if(idStr==""){
+		$.messager.alert("提示","请选择需要发送排班记录!");
+		return false;
+	 }
+	 if(idStr.split("^").length>1){
+		 $.messager.alert("提示","请选择单个排班进行操作!");
+		 return false;
+	 }
+	 var Status=rows[0].ASStatus;
+	 /*if ((Status!="停诊")&&(Status!="被替诊")&&(Status!="替诊")){
+		 $.messager.alert("提示","该排班不是停替诊排班，不能发送短信!");
+		 return false;
+	 }*/
+	 var SentMessage=tkMakeServerCall("web.DHCApptScheduleNew","SentMessage",idStr,session['LOGON.GROUPID'],session['LOGON.USERID'])
+	if (SentMessage=="0"){
+		 $.messager.alert("提示","发送成功");
+		}else{
+			$.messager.alert("提示",SentMessage);
+		 	return false;
+		}
 	}
+function ConfigClickHandler(){
+	var HospID=$HUI.combogrid('#_HospUserList').getValue();
+	websys_showModal({
+		url:"opadm.scheduletemplateconfig.hui.csp?HospId="+HospID,
+		title:'排版扩展设置',
+		width:'95%',height:'95%',
+	});
+	}
+function ExtendConfigshow(){
+	var ASRowID=$("#ASRowID").val();
+	if (ASRowID==""){
+		$.messager.popover({msg:"请先保存排班",type:'error'});
+        return false;
+	}
+	$('#TRExtendConfigWin').window('open');
+	ExtendConfiginit(ASRowID)
+	ExtendConfigload(ASRowID)
+	}
+var retArry	
+var ExtendConfigArry=new Object();
+function ExtendConfiginit(ASRowID){
+	$("#ExtendConfigpanle").html("")
+	var HospID=$HUI.combogrid('#_HospUserList').getValue();
+	var ret=$.m({ 
+		ClassName:"DHCDoc.OPAdm.ScheduleTemplateConfig", 
+		MethodName:"GetScheduleConfigJson",
+		HospId:HospID, dataType:"json"
+	},false); 
+	var htmlstr = '';
+	retArry=eval(ret)
+	htmlstr='<table class="search-table">'
+	for (var i=0; i<retArry.length; i++){
+		var Configtype=retArry[i].type
+		if (Configtype=="text"){
+			htmlstr=htmlstr+'<tr><td><label style="margin-left:10px;">'+retArry[i].desc+'</label></td><td style="padding-left:10px;"><input id="'+retArry[i].code+"_"+retArry[i].id+'" class="textbox" ></td></tr>'
+		}else if(Configtype=="checkbox"){
+			htmlstr=htmlstr+'<tr><td><label style="margin-left:10px;">'+retArry[i].desc+'</label></td><td style="padding-left:10px;"><input id="'+retArry[i].code+"_"+retArry[i].id+'" type="checkbox" ></td></tr>'
+		}else if(Configtype=="combobox-sub"){
+			htmlstr=htmlstr+'<tr><td><label style="margin-left:10px;">'+retArry[i].desc+'</label></td><td style="padding-left:10px;"><input id="'+retArry[i].code+"_"+retArry[i].id+'" class="hisui-combobox  textbox" ></td></tr>'
+		}else if(Configtype=="combobox-data"){
+			htmlstr=htmlstr+'<tr><td><label style="margin-left:10px;">'+retArry[i].desc+'</label></td><td style="padding-left:10px;"><input id="'+retArry[i].code+"_"+retArry[i].id+'" class="hisui-combobox  textbox" ></td></tr>'	
+		}
+	}
+	htmlstr=htmlstr+'<tr><td colSpan="2" style="padding-left:80px;" ><a class="hisui-linkbutton l-btn l-btn-small" id="SaveExtendConfig" data-options="" group=""><span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">保存</span><span class="l-btn-icon icon-w-save">&nbsp;</span></span></a></td></tr></table>'
+	$("#ExtendConfigpanle").append(htmlstr)
+	for (var i=0; i<retArry.length; i++){
+		var Configtype=retArry[i].type
+		if((Configtype=="combobox-sub")||(Configtype=="combobox-data")){
+			if (retArry[i].MultCheck=="Y"){var multiplestyle=true}else{var multiplestyle=false}
+			$HUI.combobox("#"+retArry[i].code+"_"+retArry[i].id, { 
+					valueField: 'id',
+					textField: 'desc', 
+					data: retArry[i].Data,
+					multiple:multiplestyle
+			 });
+		}
+	}
+	$("#SaveExtendConfig").click(function(){
+		ExtendConfigsave(ASRowID);
+	});
+}
+function ExtendConfigload(ASRowID){
+	ExtendConfigArry=[];
+	var ret=$.m({ 
+		ClassName:"DHCDoc.OPAdm.ScheduleTemplateConfig", 
+		MethodName:"ShowASScheduleExtendConfig",
+		ASRowid:ASRowID,dataType:"text"
+	},false);
+	retloadArry=eval(ret);
+	for (var i=0; i<retloadArry.length; i++){
+		var Configtype=retloadArry[i].Type;
+		var id=retloadArry[i].STCCode+"_"+retloadArry[i].TemplateConfigID;
+		if (Configtype=="text"){
+			$("#"+id).val(retloadArry[i].Value)
+		}else if(Configtype=="checkbox"){
+			if (retloadArry[i].Value=="true"){
+				$("#"+id).attr("checked",retloadArry[i].Value);;
+			}else{
+				$("#"+id).checkbox('uncheck');
+			}
+		}else if ((Configtype=="combobox-sub")||(Configtype=="combobox-data")){
+			if (retloadArry[i].MultCheck=="Y"){
+				var sbox = $HUI.combobox("#"+id);
+				for (jj=0;jj<retloadArry[i].Value.split("!").length;jj++){
+					if ($.hisui.indexOfArray($("#"+id).combobox('getData'),"id",retloadArry[i].Value.split("!")[jj])>=0) {
+						sbox.select(retloadArry[i].Value.split("!")[jj]);
+					}
+				}
+			
+			}else{
+				if ($.hisui.indexOfArray($("#"+id).combobox('getData'),"id",retloadArry[i].Value)>=0) {
+					$("#"+id).combobox('setValue',retloadArry[i].Value);
+				}
+			}
+		}
+		ExtendConfigArry[id]=retloadArry[i].RowID;
+	} 
+}
+function ExtendConfigsave(ASRowID){
+	var RowIDStr=""
+	var TypeIDStr=""
+	var ValueStr=""
+	for (var i=0; i<retArry.length; i++){
+		if (TypeIDStr==""){TypeIDStr=retArry[i].id}else{TypeIDStr=TypeIDStr+String.fromCharCode(1)+retArry[i].id}
+		var OneRowID=ExtendConfigArry[retArry[i].code+"_"+retArry[i].id]
+		if (!OneRowID){OneRowID=""}
+		if (RowIDStr==""){RowIDStr=OneRowID}else{RowIDStr=RowIDStr+String.fromCharCode(1)+OneRowID}
+		var OneValue=""
+		var Configtype=retArry[i].type
+		if (Configtype=="text"){
+			OneValue=$("#"+retArry[i].code+"_"+retArry[i].id).val()
+		}else if(Configtype=="checkbox"){
+			OneValue=$("#"+retArry[i].code+"_"+retArry[i].id).checkbox('getValue')
+		}else if((Configtype=="combobox-sub")||(Configtype=="combobox-data")){
+			var o=$HUI.combobox("#"+retArry[i].code+"_"+retArry[i].id);
+			if (retArry[i].MultCheck=="Y"){
+				var OneValue=o.getValues().join("!");
+				}else{
+				var OneValue=o.getValues()
+				}
+		}
+		if (i==0){
+			ValueStr=OneValue;
+		}else{
+			ValueStr=ValueStr+String.fromCharCode(1)+OneValue;
+		}
+	}
+	var ret=$.m({ 
+		ClassName:"DHCDoc.OPAdm.ScheduleTemplateConfig", 
+		MethodName:"SaveASScheduleExtendConfig",
+		ASRowid:ASRowID,RowIDStr:RowIDStr, TypeIDStr:TypeIDStr,ValueStr:ValueStr,dataType:"text"
+	},false); 
+	if (ret==0){
+		$.messager.popover({msg:"保存成功!",type:'success'});
+		$('#TRExtendConfigWin').window('close');
+	}else{
+		$.messager.alert("提示","保存失败"+ret);
+          return false;	
+	}
+}
+function StopRegFlagHandler(ASRowID,Flag){
+	if (Flag=="Y"){var FlagMessage="停止挂号"}else{var FlagMessage="恢复挂号"}
+	$.messager.confirm("提示","请确认是否"+FlagMessage+"？",function(r){
+		if (r) {
+			var ret=$.m({ 
+				ClassName:"DHCDoc.OPAdm.Schedule", 
+				MethodName:"StopReg",
+				ASRowid:ASRowID,Flag:Flag,dataType:"text"
+			},false); 
+			if (ret=="0"){
+				$.messager.popover({msg:FlagMessage+"成功!",type:'success'});
+				ReLoadScheduleGrid();
+				return true;
+				}else{
+				$.messager.alert("提示",FlagMessage+"失败"+ret);
+         		return false;	
+				}
+				}
+	})
+}
+function GetNoLimitLoadFlag(){
+	var NoLimitLoadFlag=$("#NoLimitLoadFlag").checkbox("getValue");	
+	NoLimitLoadFlag=NoLimitLoadFlag?"Y":"N";
+	return NoLimitLoadFlag;
+}
+
+function InitTempListType() {
+	$("#TempListType").combobox({
+		valueField:"ID",
+        textField:"Desc",
+        data:[{"ID":"HOSP","Desc":"全院"},{"ID":"LOC","Desc":"科室"},{"ID":"USER","Desc":"用户"}],
+        editable:false,
+        onSelect:function(record){
+	        if(record) InitTempListDesc(record['ID']);
+        }
+	});
+}
+
+function InitTempListDesc(ListType) {
+	$.q({
+		ClassName:"DHCDoc.OPAdm.TimeRangeTemp",
+		QueryName:"QueryTempList",
+		Type:ListType,
+		Desc:"",
+		HospID:$HUI.combogrid('#_HospUserList').getValue(),
+		UserID:session['LOGON.USERID'],
+		rows:9999
+	},function(data){
+		$("#TempListDesc").combobox({
+			valueField:"ID",
+	        textField:"Desc",
+	        data:data['rows'],
+	        filter: function(q, row){
+				if (q=="") return true; 
+				q=q.toUpperCase();
+				if ((row["Alias"].toUpperCase().indexOf(q)>=0)||(row["Desc"].toUpperCase().indexOf(q)>=0)) return true;
+			}
+		});
+	});
+}

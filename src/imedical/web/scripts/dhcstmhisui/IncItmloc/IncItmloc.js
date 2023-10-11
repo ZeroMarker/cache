@@ -1,89 +1,98 @@
-﻿///科室库存管理
-var init = function () {
-	var HospId="";
+﻿// /科室库存管理
+var init = function() {
+	var HospId = '';
 	function InitHosp() {
-		var hospComp=InitHospCombo("CT_Loc",gSessionStr);
-		if (typeof hospComp ==='object'){
-			HospId=$HUI.combogrid('#_HospList').getValue();
-			$('#_HospList').combogrid("options").onSelect=function(index,record){
-				HospId=record.HOSPRowId;
+		var hospComp = InitHospCombo('CT_Loc', gSessionStr);
+		if (typeof hospComp === 'object') {
+			HospId = $HUI.combogrid('#_HospList').getValue();
+			$('#_HospList').combogrid('options').onSelect = function(index, record) {
+				HospId = record.HOSPRowId;
 				$UI.clearBlock('#MainConditions');
 				$HUI.combotree('#StkGrpId').load(HospId);
 				Query();
 			};
-		}else{
-			HospId=gHospId;
+		} else {
+			HospId = gHospId;
 		}
 	}
-	var clear = function () {
+	var clear = function() {
 		$UI.clearBlock('#MainConditions');
 		$UI.clear(ItmLocGrid);
-		Dafult();
+		DefaultData();
 		InitHosp();
-	}
+	};
 
 	$UI.linkbutton('#ClearBT', {
-		onClick: function () {
+		onClick: function() {
 			clear();
 		}
 	});
-	var HandlerParams = function () {
+	$UI.linkbutton('#CreateLimits', {
+		onClick: function() {
+			CreateLimit(Query, $('#ItmLoc').combo('getValue'));
+		}
+	});
+	var HandlerParams = function() {
 		var ScgId = $('#StkGrpId').combotree('getValue');
 		var FrLoc = $('#ItmLoc').combo('getValue');
-		var Obj = { StkGrpRowId: ScgId, StkGrpType: 'M', Locdr: FrLoc ,BDPHospital:HospId};
+		var Obj = { StkGrpRowId: ScgId, StkGrpType: 'M', Locdr: FrLoc, BDPHospital: HospId };
 		return Obj;
-	}
+	};
 	$('#Incidesc').lookup(InciLookUpOp(HandlerParams, '#Incidesc', '#Inci'));
 	
-	//科室
+	// 科室
 	var ItmLocBox = $HUI.combobox('#ItmLoc', {
-		//url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + ItmLocParams,
+		// url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + ItmLocParams,
 		valueField: 'RowId',
 		textField: 'Description',
-		onChange: function (newValue, oldValue) {
+		onSelect: function(record) {
+			var LocId = record['RowId'];
+			$HUI.combotree('#StkGrpId').setFilterByLoc(LocId);
+		},
+		onChange: function(newValue, oldValue) {
 			StkBinReasonBox.clear();
 			var StkBinReasonParams = JSON.stringify(addSessionParams({
 				LocDr: newValue,
-				BDPHospital:HospId
+				BDPHospital: HospId
 			}));
 			var Params = JSON.stringify(addSessionParams({
-				BDPHospital:HospId
+				BDPHospital: HospId
 			}));
 			var url = $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetLocStkBin&ResultSetType=array&Params=' + StkBinReasonParams;
 			StkBinReasonBox.reload(url);
-			var url = $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetLocManGrp&ResultSetType=array&LocId=' + newValue+'&Params='+Params;
+			var url = $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetLocManGrp&ResultSetType=array&LocId=' + newValue + '&Params=' + Params;
 			LocMarReasonBox.reload(url);
 		},
-		onShowPanel:function(){
+		onShowPanel: function() {
 			ItmLocBox.clear();
-			var ItmLocParams = JSON.stringify(addSessionParams({ Type: "All" ,BDPHospital:HospId}));
-			var url=$URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + ItmLocParams;
+			var ItmLocParams = JSON.stringify(addSessionParams({ Type: 'All', BDPHospital: HospId }));
+			var url = $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + ItmLocParams;
 			ItmLocBox.reload(url);
 		}
 	});
-	//货位
+	// 货位
 	var StkBinReasonBox = $HUI.combobox('#StkBinReasonId', {
-		//url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetLocStkBin&ResultSetType=array&Params=' + StkBinReasonParams,
+		// url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetLocStkBin&ResultSetType=array&Params=' + StkBinReasonParams,
 		valueField: 'RowId',
 		textField: 'Description',
-		onShowPanel:function(){
+		onShowPanel: function() {
 			StkBinReasonBox.clear();
-			var locid=$HUI.combobox("#ItmLoc").getValue();
-			var StkBinReasonParams = JSON.stringify(addSessionParams({ LocDr:locid  ,BDPHospital:HospId}));
-			var url=$URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetLocStkBin&ResultSetType=array&Params=' + StkBinReasonParams;
+			var locid = $HUI.combobox('#ItmLoc').getValue();
+			var StkBinReasonParams = JSON.stringify(addSessionParams({ LocDr: locid, BDPHospital: HospId }));
+			var url = $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetLocStkBin&ResultSetType=array&Params=' + StkBinReasonParams;
 			StkBinReasonBox.reload(url);
 		}
 	});
-	//管理组
+	// 管理组
 	var LocMarReasonBox = $HUI.combobox('#LocMarReasonId', {
-		//url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetLocManGrp&ResultSetType=array&LocId=' + gLocId,
+		// url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetLocManGrp&ResultSetType=array&LocId=' + gLocId,
 		valueField: 'RowId',
 		textField: 'Description',
 		multiple: true,
 		selectOnNavigation: false,
-		panelHeight: "auto",
+		panelHeight: 'auto',
 		editable: true,
-		formatter: function (row) {
+		formatter: function(row) {
 			var opts;
 			if (row.selected == true) {
 				opts = row.Description + "<span id='i" + row.RowId + "' class='icon icon-ok'></span>";
@@ -92,24 +101,24 @@ var init = function () {
 			}
 			return opts;
 		},
-		onSelect: function (rec) {
-			var obji = document.getElementById("i" + rec.RowId);
+		onSelect: function(rec) {
+			var obji = document.getElementById('i' + rec.RowId);
 			$(obji).addClass('icon-ok');
 		},
-		onUnselect: function (rec) {
-			var obji = document.getElementById("i" + rec.RowId);
+		onUnselect: function(rec) {
+			var obji = document.getElementById('i' + rec.RowId);
 			$(obji).removeClass('icon-ok');
 		},
-		onShowPanel:function(){
+		onShowPanel: function() {
 			LocMarReasonBox.clear();
-			var locid=$HUI.combobox("#ItmLoc").getValue();
-			var Params = JSON.stringify(addSessionParams({BDPHospital:HospId}));
-			var url=$URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetLocManGrp&ResultSetType=array&LocId=' + locid+'&Params='+Params;
+			var locid = $HUI.combobox('#ItmLoc').getValue();
+			var Params = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			var url = $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetLocManGrp&ResultSetType=array&LocId=' + locid + '&Params=' + Params;
 			LocMarReasonBox.reload(url);
 		}
 	});
-	//供给仓库
-	/*var FrLocParams = JSON.stringify(addSessionParams({ Type: "All" }));
+	// 供给仓库
+	/* var FrLocParams = JSON.stringify(addSessionParams({ Type: "All" }));
 	var FrLocCombox = {
 		type: 'combobox',
 		options: {
@@ -131,88 +140,102 @@ var init = function () {
 		options: {
 			valueField: 'RowId',
 			textField: 'Description',
-			onSelect:function(record){
-				var rows =ItmLocGrid.getRows();
+			onSelect: function(record) {
+				var rows = ItmLocGrid.getRows();
 				var row = rows[ItmLocGrid.editIndex];
-				row.wareHouseDesc=record.Description;
+				row.wareHouseDesc = record.Description;
 			},
-			onShowPanel:function(){
-				var Params=JSON.stringify(addSessionParams({Type:'All',BDPHospital:HospId}));
+			onShowPanel: function() {
+				var Params = JSON.stringify(addSessionParams({ Type: 'All', BDPHospital: HospId }));
 				$(this).combobox('clear');
-				var url = $URL+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='+Params;
-				$(this).combobox('reload',url);
+				var url = $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params=' + Params;
+				$(this).combobox('reload', url);
 			}
 		}
 	};
 
-	//货位码
+	// 货位码
 	var stkbinReasonBox = {
 		type: 'combobox',
 		options: {
 			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetLocStkBin&ResultSetType=array',
 			valueField: 'RowId',
 			textField: 'Description',
-			required: true,
+			// required: true,
 			mode: 'remote',
-			onBeforeLoad: function (param) {
+			onBeforeLoad: function(param) {
 				var rows = ItmLocGrid.getRows();
 				var row = rows[ItmLocGrid.editIndex];
 				if (!isEmpty(row)) {
-					param.Params = JSON.stringify(addSessionParams({ LocDr: $('#ItmLoc').combo('getValue') ,BDPHospital:HospId}));
+					param.Params = JSON.stringify(addSessionParams({ LocDr: $('#ItmLoc').combo('getValue'), BDPHospital: HospId }));
 				}
 			},
-			onSelect:function(record){
-				var rows =ItmLocGrid.getRows();
+			onSelect: function(record) {
+				var rows = ItmLocGrid.getRows();
 				var row = rows[ItmLocGrid.editIndex];
-				row.incsbDesc=record.Description;
+				row.incsbDesc = record.Description;
 			},
-			onShowPanel: function () {
+			onShowPanel: function() {
 				$(this).combobox('clear');
-				$(this).combobox('reload')
+				$(this).combobox('reload');
 			}
 		}
 	};
-	//管理组
+	// 管理组
 	var locmarReasonBox = {
 		type: 'combobox',
 		options: {
 			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetLocManGrp&ResultSetType=array',
 			valueField: 'RowId',
 			textField: 'Description',
-			required: true,
 			mode: 'remote',
-			onBeforeLoad: function (param) {
+			onBeforeLoad: function(param) {
 				var rows = ItmLocGrid.getRows();
 				var row = rows[ItmLocGrid.editIndex];
 				if (!isEmpty(row)) {
 					param.LocId = $('#ItmLoc').combo('getValue');
 				}
 			},
-			onSelect:function(record){
-				var rows =ItmLocGrid.getRows();
+			onSelect: function(record) {
+				var rows = ItmLocGrid.getRows();
 				var row = rows[ItmLocGrid.editIndex];
-				row.inciLmgDesc=record.Description;
+				row.inciLmgDesc = record.Description;
 			},
-			onShowPanel: function () {
-				$(this).combobox('reload')
+			onShowPanel: function() {
+				$(this).combobox('reload');
 			}
 		}
 	};
-	
+	$HUI.combobox('#TransType', {
+		data: [
+			{ 'RowId': 'MP', 'Description': '住院消耗' },
+			{ 'RowId': 'MF', 'Description': '门诊消耗' },
+			{ 'RowId': 'T', 'Description': '转出' },
+			{ 'RowId': 'MY', 'Description': '住院退回' },
+			{ 'RowId': 'MH', 'Description': '门诊退回' },
+			{ 'RowId': 'K', 'Description': '转入' }
+		],
+		valueField: 'RowId',
+		textField: 'Description'
+	});
 	var ItmLocGridCm = [[
-		{
+		{	title: '货位码打印',
+			field: 'ck',
+			width: 80,
+			checkbox: true
+		}, {
 			title: 'incil',
 			field: 'incil',
 			saveCol: true,
 			width: 80,
 			hidden: true
 		}, {
-			title: "inci",
+			title: 'inci',
 			field: 'inci',
 			width: 150,
 			hidden: true
 		}, {
-			title: "代码",
+			title: '代码',
 			field: 'code',
 			width: 100
 		}, {
@@ -221,28 +244,29 @@ var init = function () {
 			editor: {
 				type: 'validatebox',
 				options: {
-					required: true
+					required: true,
+					tipPosition: 'bottom'
 				}
 			},
 			width: 180
 		}, {
-			title: "规格",
+			title: '规格',
 			field: 'spec',
 			width: 100
 		}, {
-			title: "厂商",
+			title: '生产厂家',
 			field: 'manf',
 			width: 200
 		}, {
-			title: "基本单位",
+			title: '基本单位',
 			field: 'bUomDesc',
 			width: 80
 		}, {
-			title: "包装单位",
+			title: '包装单位',
 			field: 'pUomDesc',
 			width: 80
 		}, {
-			title: "库存上限",
+			title: '库存上限',
 			field: 'maxQty',
 			width: 100,
 			align: 'right',
@@ -250,16 +274,17 @@ var init = function () {
 			editor: {
 				type: 'numberbox',
 				options: {
-					required: true
+					min: 0,
+					precision: GetFmtNum('FmtQTY')
 				}
 			},
-			sorter:function(a,b){
-		 		var number1 = parseFloat(a);
-		 		var number2 = parseFloat(b);
-		 		return (number1 > number2 ? 1 : -1); 
+			sorter: function(a, b) {
+				var number1 = parseFloat(a);
+				var number2 = parseFloat(b);
+				return (number1 > number2 ? 1 : -1);
 			}
 		}, {
-			title: "库存下限",
+			title: '库存下限',
 			field: 'minQty',
 			width: 100,
 			align: 'right',
@@ -267,41 +292,40 @@ var init = function () {
 			editor: {
 				type: 'numberbox',
 				options: {
-					precision: 2
+					min: 0,
+					precision: GetFmtNum('FmtQTY')
 				}
 			},
-			sorter:function(a,b){
-		 		var number1 = parseFloat(a);
-		 		var number2 = parseFloat(b);
-		 		return (number1 > number2 ? 1 : -1); 
+			sorter: function(a, b) {
+				var number1 = parseFloat(a);
+				var number2 = parseFloat(b);
+				return (number1 > number2 ? 1 : -1);
 			}
 		}, {
-			title: "库存",
-			field: "stkQty",
+			title: '库存',
+			field: 'stkQty',
 			width: 80,
 			align: 'right',
 			saveCol: true,
-			sortable: true,
-			sorter:function(a,b){
-		 		var number1 = parseFloat(a);
-		 		var number2 = parseFloat(b);
-		 		return (number1 > number2 ? 1 : -1); 
+			sorter: function(a, b) {
+				var number1 = parseFloat(a);
+				var number2 = parseFloat(b);
+				return (number1 > number2 ? 1 : -1);
 			}
 		}, {
-			title: "可用库存",
-			field: "avaQty",
+			title: '可用库存',
+			field: 'avaQty',
 			width: 80,
 			align: 'right',
 			corlor: 'bule',
 			saveCol: true,
-			sortable: true,
-			sorter:function(a,b){
-		 		var number1 = parseFloat(a);
-		 		var number2 = parseFloat(b);
-		 		return (number1 > number2 ? 1 : -1); 
+			sorter: function(a, b) {
+				var number1 = parseFloat(a);
+				var number2 = parseFloat(b);
+				return (number1 > number2 ? 1 : -1);
 			}
 		}, {
-			title: "标准库存",
+			title: '标准库存',
 			field: 'repQty',
 			width: 100,
 			align: 'right',
@@ -309,16 +333,17 @@ var init = function () {
 			editor: {
 				type: 'numberbox',
 				options: {
-					precision: 2
+					min: 0,
+					precision: GetFmtNum('FmtQTY')
 				}
 			},
-			sorter:function(a,b){
-		 		var number1 = parseFloat(a);
-		 		var number2 = parseFloat(b);
-		 		return (number1 > number2 ? 1 : -1); 
+			sorter: function(a, b) {
+				var number1 = parseFloat(a);
+				var number2 = parseFloat(b);
+				return (number1 > number2 ? 1 : -1);
 			}
 		}, {
-			title: "请求基数",
+			title: '请求基数',
 			field: 'repLev',
 			width: 100,
 			align: 'right',
@@ -326,16 +351,17 @@ var init = function () {
 			editor: {
 				type: 'numberbox',
 				options: {
-					precision: 2
+					min: 0,
+					precision: GetFmtNum('FmtQTY')
 				}
 			},
-			sorter:function(a,b){
-		 		var number1 = parseFloat(a);
-		 		var number2 = parseFloat(b);
-		 		return (number1 > number2 ? 1 : -1); 
+			sorter: function(a, b) {
+				var number1 = parseFloat(a);
+				var number2 = parseFloat(b);
+				return (number1 > number2 ? 1 : -1);
 			}
 		}, {
-			title: "采购基数",
+			title: '采购基数',
 			field: 'PurBasQty',
 			width: 100,
 			align: 'right',
@@ -343,18 +369,19 @@ var init = function () {
 			editor: {
 				type: 'numberbox',
 				options: {
-					precision: 2
+					min: 0,
+					precision: GetFmtNum('FmtQTY')
 				}
 			}
 		}, {
-			title: "货位",
+			title: '货位',
 			field: 'incsb',
 			width: 80,
 			formatter: CommonFormatter(stkbinReasonBox, 'incsb', 'incsbDesc'),
 			saveCol: true,
 			editor: stkbinReasonBox
 		}, {
-			title: "备用货位",
+			title: '备用货位',
 			field: 'spStkBin',
 			width: 100,
 			saveCol: true,
@@ -368,25 +395,17 @@ var init = function () {
 			width: 100,
 			saveCol: true,
 			formatter: BoolFormatter,
-			editor: { type: 'checkbox', options: { on: 'Y', off: 'N' } },
+			editor: { type: 'checkbox', options: { on: 'Y', off: 'N' }},
 			align: 'center'
 		}, {
-			title: '重点关注标志',
-			field: 'ChkManFlag',
-			width: 100,
-			saveCol: true,
-			formatter: BoolFormatter,
-			editor: { type: 'checkbox', options: { on: 'Y', off: 'N' } },
-			align: 'center'
-		}, {
-			title: "管理组",
+			title: '管理组',
 			field: 'inciLmg',
 			width: 80,
 			saveCol: true,
 			formatter: CommonFormatter(locmarReasonBox, 'inciLmg', 'inciLmgDesc'),
 			editor: locmarReasonBox
 		}, {
-			title: "供给仓库",
+			title: '供给仓库',
 			field: 'wareHouse',
 			width: 80,
 			saveCol: true,
@@ -398,67 +417,97 @@ var init = function () {
 			width: 100,
 			saveCol: true,
 			formatter: BoolFormatter,
-			editor: { type: 'checkbox', options: { on: 'Y', off: 'N' } },
+			editor: { type: 'checkbox', options: { on: 'Y', off: 'N' }},
 			align: 'center'
 		}
 	]];
-	function Query(){
+	function Query() {
 		$UI.clear(ItmLocGrid);
-			var ParamsObj = $UI.loopBlock('#MainConditions');
-			ParamsObj.LocMarReasonId = ParamsObj.LocMarReasonId.join(',');
-			if (isEmpty(ParamsObj.ItmLoc)) {
-				$UI.msg('alert', '科室不能为空!');
-				return;
-			}
-			var Params = JSON.stringify(ParamsObj);
-			ItmLocGrid.load({
-				ClassName: 'web.DHCSTMHUI.INCItmLoc',
-				QueryName: 'DHCSTLocItm',
-				sort: "Code",
-				order: "asc",
-				Params: Params
-			});
+		var ParamsObj = $UI.loopBlock('#MainConditions');
+		if (isEmpty(ParamsObj.ItmLoc)) {
+			$UI.msg('alert', '科室不能为空!');
+			return;
+		}
+		var Params = JSON.stringify(ParamsObj);
+		ItmLocGrid.load({
+			ClassName: 'web.DHCSTMHUI.INCItmLoc',
+			QueryName: 'DHCSTLocItm',
+			query2JsonStrict: 1,
+			Params: Params
+		});
 	}
 	$UI.linkbutton('#QueryBT', {
-		onClick: function () {
+		onClick: function() {
 			Query();
 		}
 	});
 	var ItmLocGrid = $UI.datagrid('#ItmLocGrid', {
 		queryParams: {
-			ClassName: "web.DHCSTMHUI.INCItmLoc",
-			QueryName: "DHCSTLocItm"
+			ClassName: 'web.DHCSTMHUI.INCItmLoc',
+			QueryName: 'DHCSTLocItm',
+			query2JsonStrict: 1
 		},
 		columns: ItmLocGridCm,
 		remoteSort: false,
 		showBar: true,
-		onClickCell: function (index, field, value) {
-			var Row = ItmLocGrid.getRows()[index]
-			ItmLocGrid.commonClickCell(index, field)
+		singleSelect: false,
+		onClickRow: function(index, row) {
+			ItmLocGrid.commonClickRow(index, row);
+		},
+		navigatingWithKey: true,
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
+				$(this).datagrid('selectRow', 0);
+			}
 		}
 	});
 	$UI.linkbutton('#SaveBT', {
-		onClick: function () {
-			var MainObj = $UI.loopBlock('#MainConditions')
-			var MainInfo = JSON.stringify(MainObj)
+		onClick: function() {
+			var MainObj = $UI.loopBlock('#MainConditions');
+			var MainInfo = JSON.stringify(MainObj);
 			var SelectedRow = ItmLocGrid.getSelected();
 			if (isEmpty(SelectedRow)) {
-				$UI.msg('error', "没有需要保存的明细");
-				return
+				$UI.msg('error', '没有需要保存的明细');
+				return;
 			}
 			var ListData = ItmLocGrid.getChangesData('incil');
-			if (ListData === false){	//未完成编辑或明细为空
+			if (ListData === false) {	// 未完成编辑或明细为空
 				return;
 			}
-			if (isEmpty(ListData)){	//明细不变
-				$UI.msg("alert", "没有需要保存的明细!");
+			if (isEmpty(ListData)) {	// 明细不变
+				$UI.msg('alert', '没有需要保存的明细!');
 				return;
+			}
+			var RowsData = ItmLocGrid.getRows();
+			// 有效行数
+			var count = 0;
+			var CheckMsgArr = [];
+			for (var i = 0; i < RowsData.length; i++) {
+				var RowData = RowsData[i];
+				var maxQty = RowData['maxQty'];
+				var minQty = RowData['minQty'];
+				if ((!isEmpty(maxQty)) && (Number(maxQty) <= 0)) {
+					var CheckMsg = '第' + (i + 1) + '行库存上限不能小于等于零';
+					CheckMsgArr.push(CheckMsg);
+				}
+				if ((!isEmpty(minQty)) && (Number(minQty) <= 0)) {
+					var CheckMsg = '第' + (i + 1) + '行库存下限不能小于等于零';
+					CheckMsgArr.push(CheckMsg);
+				}
+				if ((!isEmpty(maxQty)) && (!isEmpty(minQty)) && (Number(maxQty) <= Number(minQty))) {
+					var CheckMsg = '第' + (i + 1) + '行库存上限不能小于等于库存下限';
+					CheckMsgArr.push(CheckMsg);
+				}
+			}
+			if (!isEmpty(CheckMsgArr)) {
+				$UI.msg('alert', CheckMsgArr.join());
+				return false;
 			}
 			$.cm({
 				ClassName: 'web.DHCSTMHUI.INCItmLoc',
 				MethodName: 'Save',
 				ListData: JSON.stringify(ListData)
-			}, function (jsonData) {
+			}, function(jsonData) {
 				if (jsonData.success === 0) {
 					$UI.msg('success', jsonData.msg);
 					ItmLocGrid.reload();
@@ -468,16 +517,61 @@ var init = function () {
 			});
 		}
 	});
-	/*--设置初始值--*/
+	// 打印按钮对应方法
+	function LodopPrintBarcode(incil, Times) {
+		if (Times == undefined) {
+			Times = 1;
+		}
+		DHCP_GetXMLConfig('InvPrintEncrypt', 'DHCSTMSTB');
+		var inpara = '';
+		inpara = $.cm({ ClassName: 'web.DHCSTMHUI.INCItmLoc', MethodName: 'Selectforprint', incil: incil, dataType: 'text' }, false);
+		for (var i = 1; i <= Times; i++) {
+			// 调用具体打印方法
+			DHC_PrintByLodop(getLodop(), inpara, '', [], '货位码打印', { printListByText: true });
+		}
+	}
+	var PrintBtn = $('#Print').menubutton({ menu: '#mm-Print' });
+	$(PrintBtn.menubutton('options').menu).menu({
+		onClick: function(item) {
+			var BtnName = item.name;		// div定义了name属性
+			if (BtnName == 'PrintHBarCode') {
+				var rowsData = ItmLocGrid.getSelections();
+				if (rowsData.length <= 0) {
+					$UI.msg('alert', '没有要打印的货位码!');
+					return;
+				}
+				var count = rowsData.length;
+				for (var rowIndex = 0; rowIndex < count; rowIndex++) {
+					var row = rowsData[rowIndex];
+					var incil = row.incil;
+					LodopPrintBarcode(incil, 1);
+				}
+			} else if (BtnName == 'PrintHPage') {
+				var rowsData = ItmLocGrid.getRows();
+				if (rowsData.length <= 0) {
+					$UI.msg('alert', '没有要打印的货位码!');
+					return;
+				}
+				var count = rowsData.length;
+				for (var rowIndex = 0; rowIndex < count; rowIndex++) {
+					var row = rowsData[rowIndex];
+					var incil = row.incil;
+					LodopPrintBarcode(incil, 1);
+				}
+			}
+		}
+	});
+	/* --设置初始值--*/
 	var ParamsObj = $UI.loopBlock('#MainConditions');
-	var Dafult = function () {
-		var DafultValue = {
-			RowId: "",
+	var DefaultData = function() {
+		var DefaultDataValue = {
+			RowId: '',
 			ItmLoc: gLocObj,
 			StkGrpId: ParamsObj.StkGrpId
-		}
-		$UI.fillBlock('#MainConditions', DafultValue)
-	}
+		};
+		$UI.fillBlock('#MainConditions', DefaultDataValue);
+	};
+
 	clear();
-}
+};
 $(init);

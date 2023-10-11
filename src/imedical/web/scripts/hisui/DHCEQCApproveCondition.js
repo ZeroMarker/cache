@@ -1,10 +1,18 @@
 //装载页面  函数名称固定
 function BodyLoadHandler() {
+	hidePanelTitle(); //added by LMH 20230211 UI 极简组件界面弹框面板标题隐藏
+	initPanelHeaderStyle(); //added by LMH 20230211 UI 极简组件界面标题格式
+	showBtnIcon('BAdd^BUpdate^BDelete',false); //modified by LMH 20230211 动态设置是否极简显示按钮图标
+	initButtonColor(); //added by LMH 20230211 UI 初始化按钮颜色
 	initButtonWidth();///Add By QW 2018-08-31 HISUI改造:修改按钮长度
 	setButtonText();///Add By QW 2018-09-29 HISUI改造:按钮文字规范
 	InitPage();
 	ChangeStatus(false);
 	InitUserInfo();
+	// MZY0094	2094508		2021-09-13
+	var ApproveSet=tkMakeServerCall("web.DHCEQCApproveSet","GetOneApproveSet",GetElementValue("ApproveSetDR"));
+	var Detail=ApproveSet.split("^");
+	document.getElementById("cEQTitle").innerHTML = "设备审批流: "+Detail[1];
 }
 
 function InitPage(){
@@ -58,6 +66,16 @@ function Fill(ReturnList)
 	SetElement("ConditionFields",list[9]);
 	SetElement("TableName",list[10]);
 	SetElement("Type",list[11]);
+	//Add By QW20210607 BUG:QW0119 需求号:1944805 begin
+	if (GetElementValue("Type")=="0")
+	{
+		ReadOnlyElement("ToValue",true)
+	}
+	else
+	{
+		ReadOnlyElement("ToValue",false)
+	}
+	//Add By QW20210607 BUG:QW0119 end
 }
 function BClose_click()
 {
@@ -122,6 +140,7 @@ function GetConditionFields(value)
 	var list=value.split("^");
 	SetElement("ConditionFieldsDR",list[0]);
 	SetElement("ConditionFields",list[1]);
+	SetElement("TableName",list[2]);  //Add By QW20210607 BUG:QW0119 需求号:1944805
 	SetElement("Type",list[3]);
 	if (GetElementValue("Type")==0)
 	{

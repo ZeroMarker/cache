@@ -36,7 +36,7 @@ function addNewRow() {
 
 var OpTypeStore = new Ext.data.SimpleStore({
 	fields:['key', 'keyValue'],
-	data:[["O",'出库'], ["I",'入库']]
+	data:[["O",$g('出库')], ["I",$g('入库')]]
 });
 	
 var OpTypeGrid="";
@@ -59,7 +59,7 @@ var OpTypeGridDs = new Ext.data.Store({
 });
 
 var DefaultField = new Ext.grid.CheckColumn({
-	header:'是否默认',
+	header:$g('是否默认'),
 	dataIndex:'Default',
 	width:100,
 	sortable:true
@@ -69,7 +69,7 @@ var DefaultField = new Ext.grid.CheckColumn({
 var OpTypeGridCm = new Ext.grid.ColumnModel([
 	 new Ext.grid.RowNumberer(),
 	 {
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'Code',
         width:180,
         align:'left',
@@ -86,7 +86,7 @@ var OpTypeGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'Desc',
         width:300,
         align:'left',
@@ -103,16 +103,16 @@ var OpTypeGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"类别",
+        header:$g("类别"),
         dataIndex:'Type',
         width:200,
         align:'left',
         sortable:true,
 		renderer:function(v, p, record){
 			if(v=="O")
-				return "出库";
+				return $g("出库");
 			if(v=="I")
-				return "入库";
+				return $g("入库");
 		},
 		editor: new Ext.form.ComboBox({
 			id:'opTypeField',
@@ -147,8 +147,8 @@ var OpTypeGridCm = new Ext.grid.ColumnModel([
 OpTypeGridCm.defaultSortable = true;
 
 var addOpType = new Ext.Toolbar.Button({
-	text:'新建',
-    tooltip:'新建',
+	text:$g('新建'),
+    tooltip:$g('新建'),
     iconCls:'page_add',
 	width : 70,
 	height : 30,
@@ -158,8 +158,8 @@ var addOpType = new Ext.Toolbar.Button({
 });
 
 var saveOpType = new Ext.Toolbar.Button({
-	text:'保存',
-    tooltip:'保存',
+	text:$g('保存'),
+    tooltip:$g('保存'),
     iconCls:'page_save',
 	width : 70,
 	height : 30,
@@ -174,15 +174,15 @@ var saveOpType = new Ext.Toolbar.Button({
 			var defaultflag=mr[i].data["Default"];
 			var rowNum = OpTypeGridDs.indexOf(mr[i])+1;
 			if (code==""){
-				Msg.info("warning", "第"+rowNum+"行代码为空!");
+				Msg.info("warning", $g("第")+rowNum+$g("行代码为空!"));
 				return;
 			}
 			if (desc==""){
-				Msg.info("warning", "第"+rowNum+"行名称为空!");
+				Msg.info("warning", $g("第")+rowNum+$g("行名称为空!"));
 				return;
 			}
 			if (type==""){
-				Msg.info("warning", "第"+rowNum+"行类别为空!");
+				Msg.info("warning", $g("第")+rowNum+$g("行类别为空!"));
 				return;
 			}	
 			if((code!="")&&(desc!="")&&(type!="")){
@@ -196,25 +196,25 @@ var saveOpType = new Ext.Toolbar.Button({
 		}
 		
 		if(data==""){
-			Msg.info("warning", "没有修改或添加新数据!");
+			Msg.info("warning", $g("没有修改或添加新数据!"));
 			return false;
 		}else{
-			var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+			var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 			Ext.Ajax.request({
 				url: OpTypeGridUrl+'?actiontype=save',
 				params: {data:data},
 				failure: function(result, request) {
 					mask.hide();
-					Msg.info("error", "请检查网络连接!");
+					Msg.info("error", $g("请检查网络连接!"));
 				},
 				success: function(result, request) {
 					var jsonData = Ext.util.JSON.decode( result.responseText );
 					 mask.hide();
 					if (jsonData.success=='true') {
-						Msg.info("success", "保存成功!");
+						Msg.info("success", $g("保存成功!"));
 						OpTypeGridDs.load();
 					}else{
-						Msg.info("error", "保存失败!" +jsonData.info);
+						Msg.info("error", $g("保存失败!") +jsonData.info);
 						OpTypeGridDs.load();
 					}
 				},
@@ -225,40 +225,40 @@ var saveOpType = new Ext.Toolbar.Button({
 });
 
 var deleteOpType = new Ext.Toolbar.Button({
-	text:'删除',
-    tooltip:'删除',
+	text:$g('删除'),
+    tooltip:$g('删除'),
     iconCls:'page_delete',
 	width : 70,
 	height : 30,
 	handler:function(){
 		var cell = OpTypeGrid.getSelectionModel().getSelectedCell();
 		if(cell==null){
-			Msg.info("warning", "请选择数据!");
+			Msg.info("warning", $g("请选择数据!"));
 			return false;
 		}else{
 			var record = OpTypeGrid.getStore().getAt(cell[0]);
 			var RowId = record.get("RowId");
 			if(RowId!=""){
-				Ext.MessageBox.confirm('提示','确定要删除选定的行?',
+				Ext.MessageBox.confirm($g('提示'),$g('确定要删除选定的行?'),
 					function(btn) {
 						if(btn == 'yes'){
-							var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+							var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 							Ext.Ajax.request({
 								url:OpTypeGridUrl+'?actiontype=delete&rowid='+RowId,
-								waitMsg:'删除中...',
+								waitMsg:$g('删除中...'),
 								failure: function(result, request) {
 									mask.hide();
-									Msg.info("error", "请检查网络连接!");
+									Msg.info("error", $g("请检查网络连接!"));
 								},
 								success: function(result, request) {
 									var jsonData = Ext.util.JSON.decode( result.responseText );
 									 mask.hide();
 									if (jsonData.success=='true') {
-										Msg.info("success", "删除成功!");
+										Msg.info("success", $g("删除成功!"));
 										OpTypeGridDs.remove(record);
 										OpTypeGrid.getView().refresh();
 									}else{
-										Msg.info("error", "删除失败!");
+										Msg.info("error", $g("删除失败!"));
 									}
 								},
 								scope: this
@@ -303,7 +303,7 @@ Ext.onReady(function(){
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 	
 	var OpTypePanel = new Ext.Panel({
-		title:'出入库维护',
+		title:$g('出入库维护'),
 		activeTab: 0,
 		region:'center',
 		items:[OpTypeGrid]                                 

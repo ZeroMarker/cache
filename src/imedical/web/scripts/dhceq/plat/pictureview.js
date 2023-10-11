@@ -6,6 +6,7 @@ jQuery(document).ready
 		setTimeout("initDocument();",50);
 	}
 );
+
 function initDocument()
 {
 	initPicList()
@@ -26,6 +27,12 @@ function initDocument()
 		if (obj)
 		{
 			jQuery("#BDelete").on("click", BDelete_Click);
+		}
+		
+		var obj=document.getElementById("BDownload");
+		if (obj)
+		{
+			jQuery("#BDownload").on("click", BDownload_Click);
 		}
 	}
 }
@@ -68,17 +75,36 @@ function BUpLoad_Click()
 	var PicType=CurPic[0]
 	var PicName=CurPic[1]
 	var str='../csp/dhceq.plat.picbatchupload.csp?&PTRowID='+PTRowID+'&PicTypeData='+PicTypeData+'&PicType='+PicType+'&PicName='+PicName+'&SourceType='+getElementValue("SourceType")+'&SourceID='+getElementValue("SourceID")
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		str += "&MWToken="+websys_getMWToken()
+	}
 	window.open(str,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0')
 }
 function BDelete_Click()
 {
-	var CurPicDiv=$("#PicListView").find('.active')
-	var CurPicObj=CurPicDiv.children()
-	var CurPicInfo=$(CurPicObj).attr("id")
-	var Return=tkMakeServerCall("web.DHCEQ.Plat.LIBPicture","DeletePic",CurPicInfo.split("_")[1])
-	if (Return==0)
-	{
-		alertShow("操作成功!")
-		location.reload()
-	}
+    ///modified by ZY20230406 bug:3350221
+    messageShow("confirm","info","提示","请确定是否删除?","",function(){
+            
+            var CurPicDiv=$("#PicListView").find('.active')
+            var CurPicObj=CurPicDiv.children()
+            var CurPicInfo=$(CurPicObj).attr("id")
+            var Return=tkMakeServerCall("web.DHCEQ.Plat.LIBPicture","DeletePic",CurPicInfo.split("_")[1])
+            if (Return==0)
+            {
+                alertShow("操作成功!")
+                location.reload()
+            }
+        },function(){
+            //
+    },"确定","取消");
+    
+}
+///add by ZY0307 20220713 2761399
+function BDownload_Click()
+{
+	var src=$(".active>img").attr("src")
+	var alink = document.createElement("a");
+	alink.href = src;
+	alink.download = "testImg.jpg";
+	alink.click();
 }

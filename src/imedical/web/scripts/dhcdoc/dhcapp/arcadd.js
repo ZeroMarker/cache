@@ -8,13 +8,17 @@ var TarArray = [{"value":"Y","text":'是'}, {"value":"N","text":'否'}];
 var ReqArray = [{"value":"Y","text":'是'}, {"value":"N","text":'否'}];
 /// 页面初始化函数
 function initPageDefault(){
-	
-	initArcItemList();       ///  初始页面DataGrid检查医嘱列表
-	initButton();          ///  页面Button绑定事件
-	initColumns();
-	
+	var hospComp = GenHospComp("DHC_AppArcAdd"); //Doc_APP_Arcmastrelmain
+	hospComp.jdata.options.onSelect  = function(){
+		$("#code,#desc").val("");
+		commonQuery();
+	}
+	hospComp.jdata.options.onLoadSuccess= function(data){
+		initArcItemList();       ///  初始页面DataGrid检查医嘱列表
+		initButton();          ///  页面Button绑定事件
+		initColumns();
+	}
 }
-
 /// 初始化datagrid列
 function initColumns(){
 	ArcColumns = [[
@@ -24,7 +28,6 @@ function initColumns(){
 		{field:'itmID',title:'itmID',width:80}
 	]];
 }
-
 ///检查项目,部位列表 
 function initArcItemList(){
 	
@@ -121,7 +124,7 @@ function initArcItemList(){
             editRow = rowIndex;
         }
 	};
-	var HospID=window.parent.$HUI.combogrid('#_HospList').getValue()
+	var HospID=$HUI.combogrid('#_HospList').getValue()
 	var uniturl = LINK_CSP+"?ClassName=web.DHCAPPArcAdd&MethodName=QueryExaArc&HospID="+HospID;
 	new ListComponent('arcItemList', columns, uniturl, option).Init(); 
 }
@@ -142,10 +145,10 @@ function initButton(){
 	///回车事件 sufan   2016/08/03
 	$('#desc').bind('keypress',function(event){
 		if(event.keyCode == "13"){
-			var HospID=window.parent.$HUI.combogrid('#_HospList').getValue()
+			var HospID=$HUI.combogrid('#_HospList').getValue()
 			var unitUrl = ArcUrl + "&Input="+$('#desc').val()+"&HospID="+HospID;
 			/// 调用医嘱项列表窗口
-			new ListComponentWin($('#desc'), "", "600px", "" , unitUrl, ArcColumns, setArcCurrEditRowCellVal).init();
+			//new ListComponentWin($('#desc'), "", "600px", "" , unitUrl, ArcColumns, setArcCurrEditRowCellVal).init();
 		}
 	});
 	
@@ -199,12 +202,12 @@ function saveExecArc(){
 		$.messager.alert("提示","没有待保存数据!");
 		return;
 	}
-	var HospID=window.parent.$HUI.combogrid('#_HospList').getValue()
+	var HospID=$HUI.combogrid('#_HospList').getValue()
 	var dataList = [];
 	for(var i=0;i<rowsData.length;i++){
 		
 		if((rowsData[i].ArcDr=="")||(rowsData[i].AraArcDesc=="")){
-			$.messager.alert("提示","检查项目不能为空！"); 
+			$.messager.alert("提示","医嘱项不能为空！"); 
 			return false;
 		}
 		var tmp=rowsData[i].AraRowId+"^"+rowsData[i].ArcDr+"^"+rowsData[i].AraArcDesc+"^"+rowsData[i].ExecCode+"^"+ rowsData[i].TarCode +"^"+ rowsData[i].ReqCode+"^"+HospID;
@@ -253,7 +256,7 @@ function dataGridBindEnterEvent(index){
 			var ed=$("#arcItemList").datagrid('getEditor',{index:index, field:'AraArcDesc'});		
 			var input = $(ed.target).val();
 			if (input == ""){return;}
-			var HospID=window.parent.$HUI.combogrid('#_HospList').getValue()
+			var HospID=$HUI.combogrid('#_HospList').getValue()
 			var unitUrl = ArcUrl + "&Input="+$(ed.target).val()+"&HospID="+HospID;
 			/// 调用医嘱项列表窗口
 			new ListComponentWin($(ed.target), input, "600px", "" , unitUrl, ArcColumns, setCurrEditRowCellVal).init();
@@ -286,7 +289,7 @@ function commonQuery()
 	var code=$('#code').val();
 	var desc=$('#desc').val();
 	var param=code+"^"+desc;
-	var HospID=window.parent.$HUI.combogrid('#_HospList').getValue()
+	var HospID=$HUI.combogrid('#_HospList').getValue()
 	$('#arcItemList').datagrid('load',{params:param,HospID:HospID}); 
 }
 /// JQuery 初始化页面

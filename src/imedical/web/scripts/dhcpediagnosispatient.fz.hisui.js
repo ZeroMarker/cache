@@ -1,3 +1,4 @@
+
 //名称 dhcpediagnosispatient.fz.hisui.js
 //功能 健康证管理
 //创建 
@@ -27,27 +28,50 @@ var init = function(){
 	
 	
 	
+	//VIP等级 下拉列表
 	var VIPObj = $HUI.combobox("#VIP",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindVIP&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindVIP&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
 		valueField:'id',
 		textField:'desc'
-	})
-		
+		})
+   
+   //结论 下拉列表
+      /*
+ 	var ConclusionObj = $HUI.combobox("#Conclusion",{
+        url:$URL+"?ClassName=web.DHCPE.Settings.Value&QueryName=QueryValue&ResultSetType=array&APPCode="+"HealthCard"+"&ParamCode="+"Conclusion"+"&CType=V"+"&Desc="+""+"&TypeId="+getValueById("VIP"),
+        valueField:'SVParamValue',
+        textField:'SVParamValue'
+        
+        })
+        */
+    var ConclusionObj = $HUI.combobox("#Conclusion",{
+        url:$URL+"?ClassName=web.DHCPE.Settings.Value&QueryName=QueryValue&ResultSetType=array&APPCode="+"HealthCard"+"&ParamCode="+"Conclusion"+"&CType=V"+"&Desc="+""+"&TypeId="+getValueById("VIP"),
+        valueField:'SVParamValue',
+        textField:'SVParamValue',
+        onBeforeLoad: function(param) {
+             var VIP = getValueById("VIP");
+             param.TypeId = VIP;
+             param.APPCode = "HealthCard";
+             param.ParamCode = "Conclusion";
+             param.CType = "V";
+         }
+        
+        })
+    //查询
 	$("#Query").click(function(){
   			Query();
 		});
 	
+	//打印
 	$("#BPrint").click(function(){
   			BPrint();
 		});
 		
-		
+	//保存	
 	$("#BSave").click(function(){
   			BSave();
 		});
-	$("#BCancel").click(function(){
-  			BCancel();
-		});
+	
 	
 	$("#RegNo").change(function(){
   			RegNoOnChange();
@@ -55,7 +79,6 @@ var init = function(){
 		
 	
 	$("#RegNo").keydown(function(e) {
-			
 			if(e.keyCode==13){
 				RegNoOnChange();
 			}
@@ -91,8 +114,6 @@ var init = function(){
 			{field:'VIPDesc',title:'VIP等级',width:50,hidden:true}
 		]],
 		onClickRow:function(rowIndex, rowData){
-			
-			
 			setValueById("VIP",rowData.VIPLevel)
 			setValueById("PAADM",rowData.PaadmID)
 	        $('#patName').text(rowData.Name);
@@ -102,13 +123,23 @@ var init = function(){
 		    $('#PEDate').text(rowData.AdmDate);
 		    $('#VIPLevel').text(rowData.VIPDesc);
 		    $('#PatNoName').text("登记号：");
+			//blue：炫彩 lite：极简
+			var HISUIStyleCode=tkMakeServerCall("websys.StandardTypeItem","GetIdFromCodeOrDescription","websys","HISUIDefVersion");
 		    if (rowData.Sex == '男') {
-				$('#sex').removeClass('woman').addClass('man');
+				if (HISUIStyleCode== 'blue') {
+				    $('#sex').removeClass('woman').addClass('man');
+				}else{
+					$('#sex').removeClass('woman_lite').addClass('man_lite');
+				}
 			} else {
-				$('#sex').removeClass('man').addClass('woman');
+				if (HISUIStyleCode== 'blue') {
+				   $('#sex').removeClass('man').addClass('woman');
+				}else{
+					$('#sex').removeClass('man_lite').addClass('woman_lite');
+				}
 			}
 			
-			$("#CardManager").datagrid("load",{ClassName:"web.DHCPE.CardManager",QueryName:"FindCardManager",EpisodeID:rowData.PaadmID}); 
+			$("#CardManager").datagrid("load",{ClassName:"web.DHCPE.CardManager",QueryName:"FindCardManager",EpisodeID:rowData.PaadmID,UserID:session['LOGON.USERID']}); 
 			
 			var Str=tkMakeServerCall("web.DHCPE.CardManager","GetGSEx",rowData.PaadmID);
 			
@@ -117,27 +148,14 @@ var init = function(){
 			$("#Conclusion").combobox('reload');
 			$("#Suggestions").val("");
 
-		
-			
 			var HadAudit=tkMakeServerCall("web.DHCPE.CardManager","GetHadAudit",rowData.PaadmID);
-			
-			if (HadAudit=="N")
-			{
-				obj =document.getElementById("BCancel");
-		 		if(obj){obj.style.display="none";}
-				obj =document.getElementById("BSave");
-		 		if(obj){obj.style.display="";}
-			
-			}
-			else
-			{
-				obj =document.getElementById("BSave");
-		 		if(obj){obj.style.display="none";}
-				obj =document.getElementById("BCancel");
-		 		if(obj){obj.style.display="";}
+			if (HadAudit=="N"){
+				SetCElement("BSave","保存");	
+			}else{
+				SetCElement("BSave","撤销保存");
 		 	}
 		    $("#Conclusion").combobox("setValue",GSEx);
-			  $("#Suggestions").val(Remark);
+			$("#Suggestions").val(Remark);
 	    }
 	});
 
@@ -154,69 +172,52 @@ var init = function(){
 		queryParams:{
 			ClassName:"web.DHCPE.CardManager",
 			QueryName:"FindCardManager",
-			EpisodeID:""
+			EpisodeID:"",
+			UserID:session['LOGON.USERID']
 				
 		},
 		columns:[[	
-		   
-			
-			{field:'Name',title:'项目名称',width:150},	
-		    {field:'EngName',title:'英文名',width:100},
-			{field:'Result',title:'结果',width:450},
-			{field:'Range',title:'参考范围',width:100},
-			{field:'TSInfo',title:'提示',width:100},
-			{field:'Unit',title:'单位',width:100}
+			{field:'Name',title:'项目名称',width:250},	
+		    {field:'EngName',title:'英文名',width:150},
+			{field:'Result',title:'结果',width:480},
+			{field:'Range',title:'参考范围',width:120},
+			{field:'TSInfo',title:'提示',width:120},
+			{field:'Unit',title:'单位',width:120}
 			
 		]],
-		onSelect: function (rowIndex, rowData) {
-			
+		onSelect: function (rowIndex, rowData) {	
 			
 		}
 			
-	});
-	
-	
-	var ConclusionObj = $HUI.combobox("#Conclusion",{
-		url:$URL+"?ClassName=web.DHCPE.CardManager&QueryName=OutConclusion&ResultSetType=array",
-		valueField:'id',
-		textField:'Desc',
-		onBeforeLoad:function(param){
-			
-			var VIP=getValueById("VIP");
-			param.VIPLevel = VIP;
-		}
-		
-		})
-	
-	
-};
-
+	});	
  
+};
 
 
 
 function RegNoOnChange()
 {
-	var RegNo=getValueById("RegNo")
+	var CTLocID=session['LOGON.CTLOCID'];
+	var HospID=session['LOGON.HOSPID'];
+	var RegNo=$("#RegNo").val();
 	if(RegNo!="") {
-		var RegNo=tkMakeServerCall("web.DHCPE.DHCPECommon","RegNoMask",RegNo);
+		var RegNo=tkMakeServerCall("web.DHCPE.DHCPECommon","RegNoMask",RegNo,CTLocID);
 		$("#RegNo").val(RegNo)
 	}
-  var HospID=session['LOGON.HOSPID']
-	$("#CanDiagnosisList").datagrid('load',{ClassName:"web.DHCPE.ResultNew",QueryName:"FindDiagnosisPatInfo",RegNo:$("#RegNo").val(),HospID:HospID}); 
-	
+	$("#CanDiagnosisList").datagrid('load',{ClassName:"web.DHCPE.ResultNew",QueryName:"FindDiagnosisPatInfo",RegNo:$("#RegNo").val(),HospID:HospID}); 	
 }
 
 
 function Query()
 {
-	var HospID=session['LOGON.HOSPID']
-	var BDate=getValueById("BDate")
-	var EDate=getValueById("EDate")
-	var VIP=getValueById("VIP")
-	var RegNo=getValueById("RegNo")
+	var CTLocID=session['LOGON.CTLOCID'];
+	var HospID=session['LOGON.HOSPID'];
+	var BDate=$("#BDate").datebox('getValue');
+	var EDate=$("#EDate").datebox('getValue');
+	var VIP=$("#VIP").combobox('getValue');
+	var RegNo=$("#RegNo").val();
 	if(RegNo!="") {
-		var RegNo=tkMakeServerCall("web.DHCPE.DHCPECommon","RegNoMask",RegNo);
+		var RegNo=tkMakeServerCall("web.DHCPE.DHCPECommon","RegNoMask",RegNo,CTLocID);
 		$("#RegNo").val(RegNo)
 		}
 
@@ -226,31 +227,53 @@ function Query()
 
 function BSave()
 {
-	 var ret=SaveApp();
-	 if (ret=="0"){
-		 obj =document.getElementById("BSave");
-		 if(obj){obj.style.display="none";}
-		 obj =document.getElementById("BCancel");
-		 if(obj){obj.style.display="";}
-		 
-	 }else{
-		 //$.messager.alert("提示",ret,"info");
-	 }
-	
-	
+	 var EpisodeID="",Conclusion="",Suggestions="";	
+	 EpisodeID=$("#PAADM").val();
+	 var HadAudit=tkMakeServerCall("web.DHCPE.CardManager","GetHadAudit",EpisodeID);
+	 if (HadAudit=="N"){
+		 Conclusion=$("#Conclusion").combobox('getValue');
+		
+		  if(Conclusion==""){
+			  $.messager.alert("提示","结论不能为空!","info");
+			  return ;
+			 }		 
+		Suggestions=$("#Suggestions").val();		
+		var ret=tkMakeServerCall("web.DHCPE.CardManager","Save",EpisodeID,Conclusion,Suggestions);
+		if (ret=="0"){
+			SetCElement("BSave","撤销保存");
+		}else{
+			 $.messager.alert("提示",ret,"info");
+			 
+		}
+		
+	}else{
+		var ret=tkMakeServerCall("web.DHCPE.ResultDiagnosis","AuditStationS",EpisodeID,"Cancel","0","N");
+		if (ret=="0"){
+			SetCElement("BSave","保存");
+		}
+		else{
+		  if(ret=="ReMainHadAudit"){
+			  $.messager.alert("提示","复检已提交!","info");
+			  }
+		 if(ret=="NoSS"){
+			 $.messager.alert("提示","还未小结!","info");
+			 }
+		 if(ret=="ReportStatusErr"){
+			 $.messager.alert("提示","报告状态不是打印或者审核状态,请取消已完成等操作!","info");
+			 }
+	    }
+	}
+		
 }
 
 
 function BCancel()
 {
 	 var EpisodeID="";
-	 EpisodeID=getValueById("PAADM");
-	 
+	 EpisodeID=$("#PAADM").val();
 	 var ret=tkMakeServerCall("web.DHCPE.ResultDiagnosis","AuditStationS",EpisodeID,"Cancel","0","N");
-	 
-	
 	 if (ret=="0"){
-		 
+ 
 		 obj =document.getElementById("BCancel");
 		 if(obj){obj.style.display="none";}
 		 obj =document.getElementById("BSave");
@@ -272,20 +295,19 @@ function SaveApp()
 	 var EpisodeID="",Conclusion="",Suggestions="";
 	
 	 EpisodeID=getValueById("PAADM");
-	 Conclusion=getValueById("Conclusion");
-	 
-	  if(Conclusion==""){
-		  $.messager.alert("提示","结论不能为空!","info");
-		 return 1;
-		 }
-	 
-	 
-	Suggestions=getValueById("Suggestions");
-
-	
-	var ret=tkMakeServerCall("web.DHCPE.CardManager","Save",EpisodeID,Conclusion,Suggestions);
-	
-	return ret;
+	 var HadAudit=tkMakeServerCall("web.DHCPE.CardManager","GetHadAudit",EpisodeID);
+	 if (HadAudit=="N"){
+		 Conclusion=getValueById("Conclusion");
+		 
+		  if(Conclusion==""){
+			  $.messager.alert("提示","结论不能为空!","info");
+			 return 1;
+			 }		 
+		Suggestions=getValueById("Suggestions");		
+		var ret=tkMakeServerCall("web.DHCPE.CardManager","Save",EpisodeID,Conclusion,Suggestions);
+		
+		return ret;
+	}
  }
 
  //打印回执单xml
@@ -381,6 +403,7 @@ function BPrint()
 	var ret=tkMakeServerCall("web.DHCPE.CardManager","GetReportInfo",EpisodeID);
 	
 	var Arr=ret.split("^");
+	
 	if (Arr[0]=="-1"){
 		$.messager.alert("提示",Arr[1],"info");
 		return false;

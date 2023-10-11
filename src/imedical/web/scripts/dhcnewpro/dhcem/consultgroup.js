@@ -3,6 +3,8 @@
 /// descript:  会诊申请MDT小组字典维护
 
 var editRow = ""; editDRow = "";
+TypeCode="";
+var TypeFlagArr = [{"value":"NUR","text":'护士专科组'}, {"value":"DOC","text":'医师大科'}]; //hxy 2021-06-18
 /// 页面初始化函数
 function initPageDefault(){
 	//初始化医院 hxy 2020-05-28
@@ -22,7 +24,6 @@ function InitHosp(){
 	hospComp = GenHospComp("DHC_EmConsultGroup");  //hxy 2020-05-12 st
 	hospComp.options().onSelect = function(){///选中事件
 		query();
-		$('#item').datagrid('loadData',{total:0,rows:[]});
 	}//ed
 }
 
@@ -100,26 +101,64 @@ function InitMainList(){
 				$(ed.target).combobox('setValue', option.text);
 			},
 			onShowPanel:function(){
+				var ed=$("#main").datagrid('getEditor',{index:editRow,field:'Type'}); //hxy 2021-06-28 st
+				var Type=$(ed.target).val();
+				if(Type==""){
+					$.messager.alert("提示","请选择类型!");
+					return;
+				} //ed
 
 				///设置级联指针
 				var ed=$("#main").datagrid('getEditor',{index:editRow,field:'TLeader'});
-				var unitUrl=$URL+"?ClassName=web.DHCEMConsultCom&MethodName=JsonUser&HospID="+hospComp.getValue(); //hxy 2020-05-28 &HospID="+hospComp.getValue()
+				var unitUrl=$URL+"?ClassName=web.DHCEMConsultCom&MethodName=JsonUser&HospID="+hospComp.getValue()+"&Type="+Type; //hxy 2020-05-28 &HospID="+hospComp.getValue()
 				$(ed.target).combobox('reload',unitUrl);
+			},
+			onChange:function(newValue, oldValue){
+				if (newValue == ""){
+					var ed=$("#main").datagrid('getEditor',{index:editRow,field:'TLeaderID'});
+					$(ed.target).val("");
+				}
 			}
 		}
 	}
 	
+	//类型设置其为可编辑 //hxy 2021-06-18
+	var typeEditor={
+		type: 'combobox',     //设置编辑格式
+		options: {
+			required: true,
+			data: TypeFlagArr,
+			valueField: "value",
+			textField: "text",
+			panelHeight:"auto",  //设置容器高度自动增长
+			editable:false,
+			onSelect:function(option){
+				var ed=$("#main").datagrid('getEditor',{index:editRow,field:'Type'});
+				$(ed.target).val(option.value);  //设置value
+				var ed=$("#main").datagrid('getEditor',{index:editRow,field:'TypeDesc'});
+				$(ed.target).combobox('setValue', option.text);  //设置Desc
+				
+				var ed=$("#main").datagrid('getEditor',{index:editRow,field:'TLeaderID'});
+				$(ed.target).val("");
+				var ed=$("#main").datagrid('getEditor',{index:editRow,field:'TLeader'});
+				$(ed.target).combobox('setValue', "");
+			}
+		}
+	}
+
 	/**
 	 * 定义columns
 	 */
 	var columns=[[
 		{field:'ID',title:'ID',width:100,hidden:true,align:'left'}, //hxy 2020-04-30 左对齐
 		{field:'Code',title:'代码',width:100,editor:textEditor,align:'left'},
-		{field:'Desc',title:'描述',width:150,editor:textEditor,align:'left'},
+		{field:'Desc',title:'描述',width:140,editor:textEditor,align:'left'},
+		{field:'Type',title:'类型',width:100,editor:textEditor,hidden:true,align:'left'},
+		{field:'TypeDesc',title:'类型',width:110,editor:typeEditor,align:'left'},
 		{field:'TLeaderID',title:'TLeaderID',width:100,editor:textEditor,hidden:true,align:'left'},
-		{field:'TLeader',title:'组长',width:140,editor:TLeaderEditor,align:'left'},
+		{field:'TLeader',title:'组长',width:100,editor:TLeaderEditor,align:'left'},
 		{field:'ActCode',title:'aitActCode',width:100,editor:textEditor,hidden:true,align:'left'},
-		{field:'ActDesc',title:'是否可用',width:100,editor:activeEditor,align:'left'},
+		{field:'ActDesc',title:'是否可用',width:80,editor:activeEditor,align:'left'},
 		{field:'HospID',title:'HospID',width:100,editor:textEditor,hidden:true,align:'left'},
 		{field:'HospDesc',title:'医院',width:200,editor:HospEditor,align:'left',hidden:true} //hxy 2020-05-28 hidden
 	]];
@@ -128,7 +167,7 @@ function InitMainList(){
 	 * 定义datagrid
 	 */
 	var option = {
-		title:'会诊科室组维护-专科组', //hxy 2020-04-30 st
+		title:'会诊科室组维护-专科组/大科', //hxy 2020-04-30 st
 		headerCls:'panel-header-gray', 
 		border:true,
 		iconCls:'icon-paper',//ed
@@ -136,6 +175,14 @@ function InitMainList(){
 		singleSelect : true,
 	    onDblClickRow: function (rowIndex, rowData) {//双击选择行编辑
 	    
+	    	//注意要在开启行编辑之**前**完成设置editor为空的操作 2021-06-21
+	    	var ee = $('#main').datagrid('getColumnOption', 'TypeDesc');
+	    	if(rowData.ID!=""){			
+				ee.editor={};    
+	        }else{
+				ee.editor=typeEditor;
+		    }
+	    	
             if ((editRow != "")||(editRow == "0")) { 
                 $("#main").datagrid('endEdit', editRow); 
             } 
@@ -143,10 +190,20 @@ function InitMainList(){
             editRow = rowIndex;
         },
         onClickRow:function(rowIndex, rowData){
-	        
+	        TypeCode=rowData.Type;
 	        /// MDT小组成员列表
 			var uniturl = $URL+"?ClassName=web.DHCEMConsultGroup&MethodName=QryConsultGroupItm&ID="+rowData.ID;
 			$("#item").datagrid({url:uniturl});
+			if(rowData.Type=="DOC"){ //hxy 2021-06-18
+				$('#item').datagrid('hideColumn', 'User');
+				$('#item').datagrid('hideColumn', 'ContactsFlag');
+				$('#item').datagrid('hideColumn', 'DefFlag');
+			}else{
+				$('#item').datagrid('showColumn', 'User');
+				$('#item').datagrid('showColumn', 'ContactsFlag');
+				$('#item').datagrid('showColumn', 'DefFlag');
+				
+			}
 	    }
 	};
 	
@@ -178,7 +235,16 @@ function saveRow(){
 			$.messager.alert("提示","医院不能为空!"); 
 			return false;
 		}
-		var tmp=rowsData[i].ID +"^"+ rowsData[i].Code +"^"+ rowsData[i].Desc +"^"+ rowsData[i].ActCode +"^"+ rowsData[i].HospID +"^"+ rowsData[i].TLeaderID;
+		if((rowsData[i].Type=="DOC")&&(rowsData[i].TLeaderID=="")){ //hxy 2021-06-18
+			$.messager.alert("提示","医师大科请选择组长!"); 
+			return false;
+		}
+		
+		var TLeaderID=rowsData[i].TLeaderID; //hxy 2020-09-22 st
+		if(rowsData[i].TLeader==""){
+			TLeaderID="";
+		}
+		var tmp=rowsData[i].ID +"^"+ rowsData[i].Code +"^"+ rowsData[i].Desc +"^"+ rowsData[i].ActCode +"^"+ rowsData[i].HospID +"^"+ TLeaderID +"^"+ rowsData[i].Type; //hxy 2020-09-22 rowsData[i]. //ed
 		dataList.push(tmp);
 	}
 	
@@ -195,6 +261,7 @@ function saveRow(){
 			return;
 		}
 		$('#main').datagrid('reload'); //重新加载
+		$('#item').datagrid('loadData',{total:0,rows:[]}); //hxy 2021-06-21
 	})
 }
 
@@ -218,8 +285,34 @@ function insertRow(){
 	var HospDr=hospComp.getValue(); //hxy 2020-05-28
 	$("#main").datagrid('insertRow', {
 		index: 0, // 行数从0开始计算
-		row: {ID:'', Code:'', Desc:'', ActCode:'Y', ActDesc:'是', HospID:HospDr, HospDesc:''} //hxy 2020-05-28 HospID:''
+		row: {ID:'', Code:'', Desc:'', ActCode:'Y', ActDesc:'是', HospID:HospDr, HospDesc:'',TypeDesc:''} //hxy 2020-05-28 HospID:''
 	});
+	
+	//注意要在开启行编辑之**前**完成设置editor为空的操作 2021-06-21
+	var ee = $('#main').datagrid('getColumnOption', 'TypeDesc');
+	ee.editor={
+		type: 'combobox',     //设置编辑格式
+		options: {
+			required: true,
+			data: TypeFlagArr,
+			valueField: "value",
+			textField: "text",
+			panelHeight:"auto",  //设置容器高度自动增长
+			editable:false,
+			onSelect:function(option){
+				var ed=$("#main").datagrid('getEditor',{index:editRow,field:'Type'});
+				$(ed.target).val(option.value);  //设置value
+				var ed=$("#main").datagrid('getEditor',{index:editRow,field:'TypeDesc'});
+				$(ed.target).combobox('setValue', option.text);  //设置Desc
+				
+				var ed=$("#main").datagrid('getEditor',{index:editRow,field:'TLeaderID'});
+				$(ed.target).val("");
+				var ed=$("#main").datagrid('getEditor',{index:editRow,field:'TLeader'});
+				$(ed.target).combobox('setValue', "");
+			}
+		}
+	};
+	
 	$("#main").datagrid('beginEdit', 0);//开启编辑并传入要编辑的行
 	editRow=0;
 }
@@ -236,6 +329,7 @@ function deleteRow(){
 						$.messager.alert('提示','此项已和医嘱项绑定,不能删除！','warning');
 					}
 					$('#main').datagrid('reload'); //重新加载
+					$('#item').datagrid('loadData',{total:0,rows:[]}); //hxy 2021-06-21
 				})
 			}
 		});
@@ -285,7 +379,14 @@ function InitItemList(){
 			},
 			onShowPanel:function(){ //hxy 2020-06-04
 				var ed=$("#item").datagrid('getEditor',{index:editDRow,field:'LocDesc'});
-				var unitUrl=$URL +"?ClassName=web.DHCEMConsultCom&MethodName=JsonLoc&HospID="+hospComp.getValue();
+				//var unitUrl=$URL +"?ClassName=web.DHCEMConsultCom&MethodName=JsonLoc&HospID="+hospComp.getValue();
+				var LType="CONSULTWARD"; //hxy 2021-06-10 st
+				var rowData = $("#main").datagrid("getSelected");
+				if(rowData.Type=="DOC"){
+					LType="CONSULT";
+				}
+				var unitUrl=$URL +"?ClassName=web.DHCEMConsultCom&MethodName=JsonLocList&HospID="+hospComp.getValue()+"&LType="+LType; //hxy 2020-09-21 //ed
+				//var unitUrl=$URL +"?ClassName=web.DHCEMConsultCom&MethodName=JsonLocList&HospID="+hospComp.getValue()+"&LType=CONSULTWARD"; //hxy 2020-09-21 //ed
 				$(ed.target).combobox('reload',unitUrl);
 			}
 		}
@@ -299,6 +400,7 @@ function InitItemList(){
 			url: "",
 			valueField: "value", 
 			textField: "text",
+			//required: true, //hxy 2020-09-23
 			//editable:false,
 			mode:'remote',
 			onSelect:function(option){
@@ -373,7 +475,7 @@ function InitItemList(){
 	 * 定义datagrid
 	 */
 	var option = {
-		title:'专科组成员科室', //hxy 2020-04-30 st
+		title:'专科组成员科室/大科科室', //hxy 2020-04-30 st
 		headerCls:'panel-header-gray', 
 		border:true,
 		iconCls:'icon-paper',//ed
@@ -408,19 +510,23 @@ function saveItemRow(){
 		return;
 	}
 	
-	var allHasUserID="";
+	/*var allHasUserID="";
 	for(var i=0;i<allRowData.length;i++){		///判断重复人员
 		if((allRowData[i].UserID!="")&&(allHasUserID.indexOf("^"+allRowData[i].UserID+"^")!=-1)){
 			$.messager.alert("提示","存在重复的人员信息，重复人员："+allRowData[i].User); 
 			return false;	
 		}
 		allHasUserID==""?allHasUserID="^"+allRowData[i].UserID+"^":allHasUserID=allRowData[i].UserID+"^";
-	}
+	}*/
 	
 	var  dataList = [];
 	for(var i=0;i<rowsData.length;i++){
 		if(rowsData[i].LocID==""){
 			$.messager.alert("提示","科室不能为空!"); 
+			return false;
+		}
+		if((rowsData[i].UserID=="")&&(TypeCode=="NUR")){
+			$.messager.alert("提示","人员不能为空!"); 
 			return false;
 		}
 		if(rowsData[i].HospID==""){
@@ -435,7 +541,15 @@ function saveItemRow(){
 
 	//保存数据
 	runClassMethod("web.DHCEMConsultGroup","SaveItem",{"mListData":mListData},function(jsonString){
-
+		
+		if (jsonString == "-1"){ //hxy 2020-08-11
+			$.messager.alert('提示','人员重复,请核实后再试！','warning');
+			return;	
+		}
+		if (jsonString == "-2"){ //hxy 2021-06-18
+			$.messager.alert('提示','科室重复,请核实后再试！','warning');
+			return;	
+		}
 		if ((jsonString == "-1")||((jsonString == "-3"))){
 			$.messager.alert('提示','代码重复,请核实后再试！','warning');
 			return;	
@@ -502,9 +616,11 @@ function deleteItmRow(){
 
 function query(){
 	var HospDr=hospComp.getValue();
+	var Type = $HUI.combobox("#typeBox").getValue(); //hxy 2021-06-18
 	$("#main").datagrid( { 
-		url:$URL+"?ClassName=web.DHCEMConsultGroup&MethodName=QryConsultGroup&params="+HospDr
+		url:$URL+"?ClassName=web.DHCEMConsultGroup&MethodName=QryConsultGroup&params="+HospDr+"^"+Type
 	})
+	$('#item').datagrid('loadData',{total:0,rows:[]});
 }
 
 /// JQuery 初始化页面

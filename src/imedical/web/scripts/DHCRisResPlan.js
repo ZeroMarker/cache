@@ -1,4 +1,4 @@
-
+ï»¿
 //DHCRisResPlan.js
 
 var gBKUseTypeDR="";
@@ -35,24 +35,26 @@ function BodyLoadHandler()
 		deletePlanObj.onclick=DeletePlan_click;
 	}
 	//alert("H1")
-	//²éÑ¯¿ÉÒÔµÇÂ½µÄ¿ÆÊÒºÍÉÏ´ÎÑ¡ÔñµÄ¿ÆÊÒ
+	//æŸ¥è¯¢å¯ä»¥ç™»é™†çš„ç§‘å®¤å’Œä¸Šæ¬¡é€‰æ‹©çš„ç§‘å®¤
 	GetLocName();
 	//alert("H2")
-	//²éÑ¯ĞÇÆÚµÄÃèÊö
+	//æŸ¥è¯¢æ˜ŸæœŸçš„æè¿°
     GetWeekDesc();
     //alert("H3")
-	//»ñÈ¡Ê±¼ä¶ÎµÄÃèÊö
+	//è·å–æ—¶é—´æ®µçš„æè¿°
     GetTimePeriodDesc();
     //alert("H4")
-    //»ñÈ¡·şÎñ×é
+    //è·å–æœåŠ¡ç»„
     GetServiceGroup();
     //alert("H5")
-    //Éú³É×ÊÔ´Éú³ÉµÄ¿ªÊ¼¡B½áÊøÈÕÆÚ
+    //ç”Ÿæˆèµ„æºç”Ÿæˆçš„å¼€å§‹î“ˆç»“æŸæ—¥æœŸ
     GetResCreateDate();
     //alert("H6")
-    //»ñÈ¡Ô¤Ô¼Ê¹ÓÃ·½Ê½ID²¢ÉèÖÃÑùÊ½
+    //è·å–é¢„çº¦ä½¿ç”¨æ–¹å¼IDå¹¶è®¾ç½®æ ·å¼
     GetUseType();
-    //alert("H7")	
+    //alert("H7")
+    //è·å–å†¬å¤ä»¤æ—¶
+    GetWinterSummerTime();
     var patTypeListObj=document.getElementById("patTypeList");
 	if (patTypeListObj)
 	{
@@ -64,14 +66,58 @@ function BodyLoadHandler()
 	{
 		showNotAvailObj.onclick=clickShowNotAvail;
 	}
-	
+	var SummerTimeObj=document.getElementById("SummerTime");
+	if (SummerTimeObj)
+	{
+		SummerTimeObj.onclick=clickSummerTime;
+	}
+	var WinterTimeObj=document.getElementById("WinterTime");
+	if (WinterTimeObj)
+	{
+		WinterTimeObj.onclick=clickWinterTime;
+	}
 	if (document.getElementById("FindNotAvail").value=="Y")
 	{
 		document.getElementById("ShowNotAvailPlan").checked=true;
 	}
+	if (document.getElementById("IsSummer").value=="Y")
+	{
+		document.getElementById("SummerTime").checked=true;
+	}
+	if (document.getElementById("IsWinter").value=="Y")
+	{
+		document.getElementById("WinterTime").checked=true;
+	}
 }
 
+function cTrim(sInputString,iType)
+{
+  var sTmpStr = ' '
+  var i = -1
 
+  if(iType == 0 || iType == 1)
+  {
+     while(sTmpStr == ' ')
+     {
+       ++i
+       sTmpStr = sInputString.substr(i,1)
+     }
+     sInputString = sInputString.substring(i)
+  }
+
+  if(iType == 0 || iType == 2)
+  {
+    sTmpStr = ' '
+    i = sInputString.length
+    while(sTmpStr == ' ')
+    {
+       --i
+       sTmpStr = sInputString.substr(i,1)
+    }
+    sInputString = sInputString.substring(0,i+1)
+  }
+  return sInputString
+}
 function clickShowNotAvail()
 {
 	//var FindNotAvail="";
@@ -84,7 +130,30 @@ function clickShowNotAvail()
 	//alert(lnk);
    	//location.href=lnk; 
 }
-
+function clickSummerTime()
+{
+	//var FindNotAvail="";
+	//alert(document.getElementById("FindNotAvial").value);
+	if (document.getElementById("SummerTime").checked)
+		document.getElementById("IsSummer").value="Y";
+	else
+		document.getElementById("IsSummer").value="";
+	//var lnk= "websys.default.csp?WEBSYS.TCOMPONENT=DHCRisBookTime&FindNotAvail="+FindNotAvail;
+	//alert(lnk);
+   	//location.href=lnk; 
+}
+function clickWinterTime()
+{
+	//var FindNotAvail="";
+	//alert(document.getElementById("FindNotAvial").value);
+	if (document.getElementById("WinterTime").checked)
+		document.getElementById("IsWinter").value="Y";
+	else
+		document.getElementById("IsWinter").value="";
+	//var lnk= "websys.default.csp?WEBSYS.TCOMPONENT=DHCRisBookTime&FindNotAvail="+FindNotAvail;
+	//alert(lnk);
+   	//location.href=lnk; 
+}
 
 function Add_click()
 {
@@ -95,22 +164,22 @@ function Add_click()
 	
 	if (ResourceId=="")
 	{
-		alert("ÇëÏÈÑ¡Ôñ×ÊÔ´!£¡");
+		alert("è¯·å…ˆé€‰æ‹©èµ„æº!ï¼");
 		return;
 	}
 	
-	//ĞÇÆÚÊı×Ö(1,2,3,4,5,6,7)
+	//æ˜ŸæœŸæ•°å­—(1,2,3,4,5,6,7)
 	var WeekNum=document.getElementById("Week").value;
-	//Ê±¼ä¶Î´úÂë
+	//æ—¶é—´æ®µä»£ç 
 	var TimePeriodCode=document.getElementById("TimeDesc").value;
-	//·şÎñ×éID
+	//æœåŠ¡ç»„ID
 	var ServiceGroupId=document.getElementById("ServiceGroup").value;
 	//alert("1");
 	var StartTime=document.getElementById("StartTime").value;
 	var ret=isTime(StartTime);
 	if (ret==false)
 	{
-		ErrorInfo="¿ªÊ¼Ê±¼ä¸ñÊ½²»¶Ô,Ê±¼ä¸ñÊ½Ó¦Îª[xx:xx:xx]";
+		ErrorInfo="å¼€å§‹æ—¶é—´æ ¼å¼ä¸å¯¹,æ—¶é—´æ ¼å¼åº”ä¸º[xx:xx:xx]";
 		alert(ErrorInfo);
 		return ;
 	}
@@ -118,7 +187,7 @@ function Add_click()
 	var ret=isTime(StartTime);
 	if (ret==false)
 	{
-		ErrorInfo="½áÊøÊ±¼ä¸ñÊ½²»¶Ô,Ê±¼ä¸ñÊ½Ó¦Îª[xx:xx:xx]";
+		ErrorInfo="ç»“æŸæ—¶é—´æ ¼å¼ä¸å¯¹,æ—¶é—´æ ¼å¼åº”ä¸º[xx:xx:xx]";
 		alert(ErrorInfo);
 		return ;
 	}
@@ -127,7 +196,7 @@ function Add_click()
 	//if((BookMaxNumber=="")&(gBKUseTypeDR=="1"))
 	if(BookMaxNumber=="")
 	{
-		alert("ÇëÊäÈë×î´óÔ¤Ô¼Êı!");
+		alert("è¯·è¾“å…¥æœ€å¤§é¢„çº¦æ•°!");
 		return;
 	}
 	
@@ -135,7 +204,7 @@ function Add_click()
 	//if((BookAutoNumber=="")&(gBKUseTypeDR=="1"))
 	if(BookAutoNumber=="")
 	{
-		alert("ÇëÊäÈë×Ô¶¯Ô¤Ô¼Êı!");
+		alert("è¯·è¾“å…¥è‡ªåŠ¨é¢„çº¦æ•°!");
 		return;
 	}
 	//alert("2")
@@ -146,7 +215,7 @@ function Add_click()
     	
 	if(intAutoNumber > intMaxNumber)
 	{
-		alert("×Ô¶¯Ô¤Ô¼Êı²»ÄÜ´óÓÚ×î´óÔ¤Ô¼Êı");
+		alert("è‡ªåŠ¨é¢„çº¦æ•°ä¸èƒ½å¤§äºæœ€å¤§é¢„çº¦æ•°");
 		return ;
 	}
 	
@@ -156,20 +225,15 @@ function Add_click()
 		var ret=isTime(inChargeTime);
 		if (ret==false)
 		{
-			ErrorInfo="Í£Ö¹Ô¤Ô¼Ê±¼ä¸ñÊ½²»¶Ô,Ê±¼ä¸ñÊ½Ó¦Îª[xx:xx:xx]";
+			ErrorInfo="æ”¶è´¹æ—¶é—´æ ¼å¼ä¸å¯¹,æ—¶é—´æ ¼å¼åº”ä¸º[xx:xx:xx]";
 			alert(ErrorInfo);
 			return ;
 		}
 	}
-	else
-	{
-		alert("Í£Ö¹Ô¤Ô¼Ê±¼ä²»ÄÜÎª¿Õ£¡");
-		return;
-	}
 	
 	//alert("3")
 	
-	//ÅĞ¶Ï¸ÃÊ±¶ÎÊÇ·ñÒÑ¾­Ìí¼ÓÁË×ÊÔ´¼Æ»®
+	//åˆ¤æ–­è¯¥æ—¶æ®µæ˜¯å¦å·²ç»æ·»åŠ äº†èµ„æºè®¡åˆ’
 	var eSrc=window.event.srcElement;
 	var objtbl=document.getElementById('tDHCRisResPlan');
 	var rows=objtbl.rows.length;
@@ -187,7 +251,7 @@ function Add_click()
 	    
 	    if ((TimePeriodCode==TimeDescCode)&&(WeekNum==iWeek)&&(ServiceGroupId==AddServiceGroupId))
 	    {
-		    alert("×ÊÔ´¼Æ»®´æÔÚ,²»ÄÜÖØ¸´Ìí¼Ó");
+		    alert("èµ„æºè®¡åˆ’å­˜åœ¨,ä¸èƒ½é‡å¤æ·»åŠ ");
 		    return;
 	    }
 	}
@@ -222,8 +286,9 @@ function Add_click()
     var notAvail="";
 	if ( document.getElementById("notAvail").checked)
 		notAvail="Y";
-		
-	var Info=LocId+"^"+ResourceId+"^"+WeekNum+"^"+ServiceGroupId+"^"+TimePeriodCode+"^"+StartTime+"^"+EndTime+"^"+BookMaxNumber+"^"+BookAutoNumber+"^"+inChargeTime+"^"+UseLock+"^"+availTime+"^"+NotAllowIPBK+"^"+availPatTypeCode+"^"+notAvail;
+	var WinterSummerTime=""; //document.getElementById("WinterSummerTime").value;
+    //alert(WinterSummerTime)
+	var Info=LocId+"^"+ResourceId+"^"+WeekNum+"^"+ServiceGroupId+"^"+TimePeriodCode+"^"+StartTime+"^"+EndTime+"^"+BookMaxNumber+"^"+BookAutoNumber+"^"+inChargeTime+"^"+UseLock+"^"+availTime+"^"+NotAllowIPBK+"^"+availPatTypeCode+"^"+notAvail+"^"+WinterSummerTime;
 	//alert(Info);
 	//web.DHCRisResourceApptSchudle.InsertResoucePlan
 	var InsertResPlanInfoFun=document.getElementById("InsertResPlanInfo").value;
@@ -231,7 +296,7 @@ function Add_click()
 	var Ret=value.split("^")
 	if (Ret[0]!="0")
 	{
-		var Info="Ôö¼Ó×ÊÔ´¼Æ»®Ê§°Ü:SQLCODE="+Ret[0];
+		var Info="å¢åŠ èµ„æºè®¡åˆ’å¤±è´¥:SQLCODE="+Ret[0];
 		alert(Info);
 	}
 	else
@@ -249,14 +314,16 @@ function Delete_click()
 	var SelRowid=document.getElementById("SelRowid").value;
 	if (SelRowid=="")
 	{
-		alert("ÇëÏÈÑ¡ÔñÒ»ÌõÅÅ°à¼ÇÂ¼!£¡");
+		alert("è¯·å…ˆé€‰æ‹©ä¸€æ¡æ’ç­è®°å½•!ï¼");
 		return;
 	}
+	//alert(SelRowid);
 	var DeleteResPlanInfoFun=document.getElementById("DeleteResPlanInfo").value;
 	var ret=cspRunServerMethod(DeleteResPlanInfoFun,SelRowid);
+	//alert(ret);
 	if (ret!="0")
 	{
-		var Info="×ÊÔ´¼Æ»®ÒÑ¾­Éú³É£¬²»ÄÜÉ¾³ı";
+		var Info="èµ„æºè®¡åˆ’å·²ç»ç”Ÿæˆï¼Œä¸èƒ½åˆ é™¤";
 		alert(Info);
 	}
 	else
@@ -282,24 +349,20 @@ function Modi_click()
 	
 	var ResourceId=document.getElementById("ResourceId").value;
 	
-	if (ResourceId=="")
-	{
-		alert("ÇëÏÈÑ¡Ôñ×ÊÔ´!£¡");
-		return;
-	}
 	
-	//ĞÇÆÚÊı×Ö(1,2,3,4,5,6,7)
+	
+	//æ˜ŸæœŸæ•°å­—(1,2,3,4,5,6,7)
 	var WeekNum=document.getElementById("Week").value;
-	//Ê±¼ä¶Î´úÂë
+	//æ—¶é—´æ®µä»£ç 
 	var TimePeriodCode=document.getElementById("TimeDesc").value;
-	//·şÎñ×éID
+	//æœåŠ¡ç»„ID
 	var ServiceGroupId=document.getElementById("ServiceGroup").value;
 	
 	var StartTime=document.getElementById("StartTime").value;
 	var ret=isTime(StartTime);
 	if (ret==false)
 	{
-		ErrorInfo="¿ªÊ¼Ê±¼ä¸ñÊ½²»¶Ô,Ê±¼ä¸ñÊ½Ó¦Îª[xx:xx:xx]";
+		ErrorInfo="å¼€å§‹æ—¶é—´æ ¼å¼ä¸å¯¹,æ—¶é—´æ ¼å¼åº”ä¸º[xx:xx:xx]";
 		alert(ErrorInfo);
 		return ;
 
@@ -308,7 +371,7 @@ function Modi_click()
 	var ret=isTime(StartTime);
 	if (ret==false)
 	{
-		ErrorInfo="½áÊøÊ±¼ä¸ñÊ½²»¶Ô,Ê±¼ä¸ñÊ½Ó¦Îª[xx:xx:xx]";
+		ErrorInfo="ç»“æŸæ—¶é—´æ ¼å¼ä¸å¯¹,æ—¶é—´æ ¼å¼åº”ä¸º[xx:xx:xx]";
 		alert(ErrorInfo);
 		return ;
 
@@ -316,16 +379,21 @@ function Modi_click()
 	
 	var BookMaxNumber=document.getElementById("MaxNumber").value;
 	
+	if (BookMaxNumber=="")
+	{
+		alert("è¯·å…ˆé€‰æ‹©èµ„æº!ï¼");
+		return;
+	}
 	var BookAutoNumber=document.getElementById("AutoNumber").value;
 	if(BookMaxNumber=="")
 	{
-		alert("ÇëÊäÈë×î´óÔ¤Ô¼Êı!");
+		alert("è¯·è¾“å…¥æœ€å¤§é¢„çº¦æ•°!");
 		return;
 	}
 	
 	if(BookAutoNumber=="")
 	{
-		alert("ÇëÊäÈë×Ô¶¯Ô¤Ô¼Êı!");
+		alert("è¯·è¾“å…¥è‡ªåŠ¨é¢„çº¦æ•°!");
 		return;
 	}
 	
@@ -334,7 +402,7 @@ function Modi_click()
     
     if(intAutoNumber > intMaxNumber)
 	{
-		alert("×Ô¶¯Ô¤Ô¼Êı²»ÄÜ´óÓÚ×î´óÔ¤Ô¼Êı");
+		alert("è‡ªåŠ¨é¢„çº¦æ•°ä¸èƒ½å¤§äºæœ€å¤§é¢„çº¦æ•°");
 		return ;
 	}
 	
@@ -342,7 +410,7 @@ function Modi_click()
 	
 	if (SelRowid=="")
 	{
-		alert("ÇëÏÈÑ¡ÔñÒ»ÌõÅÅ°à¼ÇÂ¼!£¡");
+		alert("è¯·å…ˆé€‰æ‹©ä¸€æ¡æ’ç­è®°å½•!ï¼");
 		return;
 	}
 	
@@ -352,15 +420,10 @@ function Modi_click()
 		var ret=isTime(inChargeTime);
 		if (ret==false)
 		{
-			ErrorInfo="Í£Ö¹Ô¤Ô¼Ê±¼ä¸ñÊ½²»¶Ô,Ê±¼ä¸ñÊ½Ó¦Îª[xx:xx:xx]";
+			ErrorInfo="æ”¶è´¹æ—¶é—´æ ¼å¼ä¸å¯¹,æ—¶é—´æ ¼å¼åº”ä¸º[xx:xx:xx]";
 			alert(ErrorInfo);
 			return ;
 		}
-	}
-	else
-	{
-		alert("Í£Ö¹Ô¤Ô¼Ê±¼ä²»ÄÜÎª¿Õ£¡");
-		return;
 	}
 	
 	 var UseLock="N";
@@ -393,15 +456,18 @@ function Modi_click()
     var notAvail="";
 	if ( document.getElementById("notAvail").checked)
 		notAvail="Y";
-    
-	var Info=LocId+"^"+ResourceId+"^"+WeekNum+"^"+ServiceGroupId+"^"+TimePeriodCode+"^"+StartTime+"^"+EndTime+"^"+BookMaxNumber+"^"+BookAutoNumber+"^"+SelRowid+"^"+inChargeTime+"^"+UseLock+"^"+availTime+"^"+NotAllowIPBK+"^"+availPatTypeCode+"^"+notAvail;
+    var WinterSummerTime="";
+
+	var WinterSummerTime=""; //document.getElementById("WinterSummerTime").value;
+    //alert(WinterSummerTime)
+	var Info=LocId+"^"+ResourceId+"^"+WeekNum+"^"+ServiceGroupId+"^"+TimePeriodCode+"^"+StartTime+"^"+EndTime+"^"+BookMaxNumber+"^"+BookAutoNumber+"^"+SelRowid+"^"+inChargeTime+"^"+UseLock+"^"+availTime+"^"+NotAllowIPBK+"^"+availPatTypeCode+"^"+notAvail+"^"+WinterSummerTime;
 	
 	//web.DHCRisResourceApptSchudle.UpdateResoucePlan
 	var UpdateResPlanInfoFun=document.getElementById("UpdateResPlanInfo").value;
 	var ret=cspRunServerMethod(UpdateResPlanInfoFun,Info);
 	if (ret!="0")
 	{
-	     var Info="¸üĞÂ×ÊÔ´¼Æ»®Ê§°Ü:SQLCODE="+ret;
+	     var Info="æ›´æ–°èµ„æºè®¡åˆ’å¤±è´¥:SQLCODE="+ret;
 		alert(Info);
 	}
 	else
@@ -425,24 +491,28 @@ function CreateSchulde_click()
 	
 	if (document.getElementById("IsLocCreateSchulde").checked)
     {
-	   ConFlag=confirm('È·¶¨°´µ±Ç°¿ÆÊÒ¶ÔËùÓĞÉè±¸Éú³ÉÅÅ°à!');
+	   ConFlag=confirm('ç¡®å®šæŒ‰å½“å‰ç§‘å®¤å¯¹æ‰€æœ‰è®¾å¤‡ç”Ÿæˆæ’ç­!');
 	   if (ConFlag==false){return}
   	   var GetResIdByFun=document.getElementById("GetResIdByLocRowid").value;
 	   ResourceId=cspRunServerMethod(GetResIdByFun,LocId);
     }
-     
-    Info=LocId+"^"+ResourceId+"^"+StartDate+"^"+EndDate;
-	
+    //alert("å¦‚æœå‹¾é€‰å†¬å¤ä»¤æ—¶ï¼Œç”Ÿæˆæ—¶ä¼šç”Ÿæˆå¯¹åº”å†¬å¤ä»¤æ—¶çš„èµ„æºæ’ç‰ˆ");
+    var IsSummer=""; //document.getElementById("IsSummer").value;
+	var IsWinter=""; //document.getElementById("IsWinter").value;
+    Info=LocId+"^"+ResourceId+"^"+StartDate+"^"+EndDate+"^"+IsSummer+"^"+IsWinter;
+	//alert(Info);
 	//web.DHCRisResourceApptSchudle.CreateResApptSchulde
-	var CreateResApptSchuldeFun=document.getElementById("CreateResApptSchulde").value;
-	var ret=cspRunServerMethod(CreateResApptSchuldeFun,Info);
+	var ret=tkMakeServerCall("web.DHCRisResourceApptSchudle","CreateResApptSchulde",Info);
+	//var CreateResApptSchuldeFun=document.getElementById("CreateResApptSchulde").value;
+	//var ret=cspRunServerMethod(CreateResApptSchuldeFun,Info,session['LOGON.USERID']);
+	//alert(ret);
 	if (ret=="0")
 	{
-		alert("Éú³É×ÊÔ´¼Æ»®³É¹¦!");
+		alert("ç”Ÿæˆèµ„æºè®¡åˆ’æˆåŠŸ!");
 	}
 	else
 	{
-		alert("Éú³É×ÊÔ´¼Æ»®Ê§°Ü!");
+		alert("ç”Ÿæˆèµ„æºè®¡åˆ’å¤±è´¥!");
 	}
 	
 }
@@ -458,10 +528,10 @@ function DeletePlan_click()
 	var EndDate=document.getElementById("EndDate").value;
 	
 	var Info;
-	var hint = "ÊÇ·ñÉ¾³ı";
+	var hint = "æ˜¯å¦åˆ é™¤";
 	if (document.getElementById("IsLocCreateSchulde").checked)
     {
-	   hint = hint + " ¿ÆÊÒÈ«²¿×ÊÔ´ ";
+	   hint = hint + " ç§‘å®¤å…¨éƒ¨èµ„æº ";
 	   //web.DHCRisCommFunction.GetResIdByLocRowid
   	   var GetResIdByFun=document.getElementById("GetResIdByLocRowid").value;
 	   ResourceId=cspRunServerMethod(GetResIdByFun,LocId);
@@ -473,7 +543,7 @@ function DeletePlan_click()
      
     if ( ResourceId=="")
     {
-	    alert("ÇëÑ¡Ôñ×ÊÔ´");
+	    alert("è¯·é€‰æ‹©èµ„æº");
 	    return;
     }
     
@@ -497,7 +567,7 @@ function DeletePlan_click()
     {
 	    eDate=EndDate;
     }
-    hint=hint+" "+stDate+"ÖÁ"+eDate+" µÄÔ¤Ô¼¼Æ»®?";
+    hint=hint+" "+stDate+"è‡³"+eDate+" çš„é¢„çº¦è®¡åˆ’?";
     if ( false==confirm(hint))
     	return;
     
@@ -511,7 +581,7 @@ function DeletePlan_click()
   	if (ret!="")
   		alert(ret);
   	else
-  		alert("É¾³ı³É¹¦!");
+  		alert("åˆ é™¤æˆåŠŸ!");
   	
 	
 }
@@ -564,7 +634,7 @@ function GetLocResource(Info)
     document.getElementById("ResourceId").value=Item[1];
 }
 
-//²éÑ¯ĞÇÆÚµÄÃèÊö
+//æŸ¥è¯¢æ˜ŸæœŸçš„æè¿°
 function GetWeekDesc()
 {
     WeekObj=document.getElementById("Week");
@@ -579,7 +649,7 @@ function GetWeekDesc()
     }
 }
 
-//»ñÈ¡Ê±¼ä¶ÎµÄÃèÊö
+//è·å–æ—¶é—´æ®µçš„æè¿°
 function GetTimePeriodDesc()
 {
     TimeDescObj=document.getElementById("TimeDesc");
@@ -599,7 +669,7 @@ function GetTimePeriodDesc()
     }
 }
 
-//»ñÈ¡·şÎñ×é
+//è·å–æœåŠ¡ç»„
 function GetServiceGroup()
 {
     ServiceGroupObj=document.getElementById("ServiceGroup");
@@ -640,7 +710,7 @@ function AddItem(ObjName, Info)
 	} 
 }
 
-//Éú³É×ÊÔ´Éú³ÉµÄ¿ªÊ¼¡B½áÊøÈÕÆÚ
+//ç”Ÿæˆèµ„æºç”Ÿæˆçš„å¼€å§‹î“ˆç»“æŸæ—¥æœŸ
 function GetResCreateDate()
 {
 	
@@ -698,7 +768,10 @@ function SelectRowHandler()
 		document.getElementById("notAvail").checked=true;
 	else
 		document.getElementById("notAvail").checked=false;
-
+    var WinterSummerTime=""; //document.getElementById("TWinterSummerTimez"+selectrow).innerText;
+    //alert(WinterSummerTime)
+    var WinterSummerId=""; //document.getElementById("WinterSummerIdz"+selectrow).value;
+    //alert(WinterSummerId)
 	var Weekobj=document.getElementById("Week");
 	if (Weekobj)
 	{
@@ -706,7 +779,7 @@ function SelectRowHandler()
 		Weekobj.text=TWeek;
 	
 	}
-	//Ê±¼ä¶Î´úÂë
+	//æ—¶é—´æ®µä»£ç 
 	var TimeDescObj=document.getElementById("TimeDesc");
 	if (TimeDescObj)
 	{
@@ -715,7 +788,7 @@ function SelectRowHandler()
 		
 	}
 
-	//·şÎñ×éID
+	//æœåŠ¡ç»„ID
 	var ServiceGroupObj=document.getElementById("ServiceGroup");
 	if (ServiceGroupObj)
 	{
@@ -792,8 +865,14 @@ function SelectRowHandler()
 	var availPatTypeObj=document.getElementById("patType");
 	if (availPatTypeObj)
 		availPatTypeObj.value=availPatType;
-		
-     
+		/*
+	var WinterSummerTimeObj=document.getElementById("WinterSummerTime");
+	
+	if (WinterSummerTimeObj)
+	{
+		WinterSummerTimeObj.value=WinterSummerId;
+	}
+	*/
 }
 
 function isTime(str) 
@@ -812,18 +891,18 @@ function isTime(str)
 
 function DateDemo()
 {
-   var d, s="";           // ÉùÃ÷±äÁ¿?
+   var d, s="";           // å£°æ˜å˜é‡?
    d = new Date(); 
    var sDay="",sMonth="",sYear="";
-   sDay = d.getDate();			// »ñÈ¡ÈÕ?
+   sDay = d.getDate();			// è·å–æ—¥?
    if(sDay < 10)
    sDay = "0"+sDay;
     
-   sMonth = d.getMonth()+1;		// »ñÈ¡ÔÂ·İ?
+   sMonth = d.getMonth()+1;		// è·å–æœˆä»½?
    if(sMonth < 10)
    sMonth = "0"+sMonth;
    
-   sYear  = d.getFullYear();		// »ñÈ¡Äê·İ?
+   sYear  = d.getFullYear();		// è·å–å¹´ä»½?
    s = sDay + "/" + sMonth + "/" + sYear;
    return(s); 
    
@@ -948,6 +1027,26 @@ function dealString(value,list)
 	}
 	return listRet;
 }
-
+//è·å–å†¬å¤ä»¤æ—¶
+function GetWinterSummerTime()
+{
+    WinterSummerTimeObj=document.getElementById("WinterSummerTime");
+    if (WinterSummerTimeObj)
+    {
+	    //ServiceGroupObj.onchange=onSexchange;
+    	//ServiceGroupObj.onkeydown =onSexkeydown;
+    	//alert("111")
+ 		combo("WinterSummerTime");
+		//var WinterSummerTime=tkMakeServerCall("web.DHCRisResourceApptSchudle","GetWinterSummerTime","");
+		//alert(WinterSummerTime)
+		var GetWinterSummerTimeFunction=document.getElementById("GetWinterSummerTime").value;
+		var Info1=cspRunServerMethod(GetWinterSummerTimeFunction);
+    	//AddItem("TimeDesc",Info1);
+		//var Info1=cspRunServerMethod(GetTimePeriodInfoFunction);
+		//var Info1=cspRunServerMethod(WinterSummerTime);
+		//alert("222")
+    	AddItem("WinterSummerTime",Info1);
+    }
+}
 document.body.onload = BodyLoadHandler;
 

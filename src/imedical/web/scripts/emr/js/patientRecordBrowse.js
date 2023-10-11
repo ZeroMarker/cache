@@ -122,6 +122,9 @@ function setContent(data)
     $(li).attr("type",data.type);
     $(li).attr("characteristic",data.characteristic);
     $(li).attr("epsiodeId",data.epsiodeId);
+    $(li).attr({"isLeadframe":data.isLeadframe});
+    $(li).attr({"isMutex":data.isMutex,"categoryId":data.categoryId});
+    $(li).attr({"templateId":data.templateId});
     var link = $('<a href="#"></a>');
     $(link).append($('<div></div>').append('<div class="title">'+$.trim(data.text)+'</div><div class="log"></div>'));
     var print = "";
@@ -189,6 +192,10 @@ function setTempParam(obj)
     var pluginType = $(obj).attr("pluginType");
     var emrDocId = $(obj).attr("emrDocId");
     var characteristic = $(obj).attr("characteristic");
+    var templateId = $(obj).attr("templateId");
+    var categoryId = $(obj).attr("categoryId");
+    var isLeadframe = $(obj).attr("isLeadframe");
+    var isMutex = $(obj).attr("isMutex");
     
     var tempParam = {
         "id":id,
@@ -197,6 +204,11 @@ function setTempParam(obj)
         "pluginType":pluginType,
         "emrDocId":emrDocId,
         "characteristic":characteristic,
+        "templateId":templateId,
+        "categoryId":categoryId,
+        "isLeadframe":isLeadframe,
+        "isMutex":isMutex,
+        "actionType":"LOAD",
         "status":"BROWSE"
     };
     return tempParam;

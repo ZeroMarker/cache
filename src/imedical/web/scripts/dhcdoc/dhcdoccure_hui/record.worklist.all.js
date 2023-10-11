@@ -2,9 +2,32 @@ var CureWorkListDataGrid;
 var PageWorkListAllObj={
 	m_SelectArcimID:"",
 	m_LogHospID:session['LOGON.HOSPID'],
-	_WORK_SELECT_DCAROWID:""	
+	_WORK_SELECT_DCAROWID:"",
+	m_LoadStopOrd:"",
+	m_LoadTabTimer:"",
+	dw:$(window).width(),
+	dh:$(window).height(),
+	PatCondition:[{id:"PatNo",desc:$g("登记号")},{id:"PatMedNo",desc:$g("住院号")},{id:"PatName",desc:$g("患者姓名")}],
+	cspName:"doccure.worklist.hui.csp"
 }
+
+function CheckDocCureUseBase(){
+	if (ServerObj.DocCureUseBase=="1"){
+		$(".window-mask.alldom").show();
+		return false;
+	}else if (ServerObj.CureAppVersion!="V1"){
+		$(".window-mask.alldom").show();
+		return false;
+	}else{
+		$(".window-mask.alldom").hide();
+		return true;
+	}
+}
+
 $(document).ready(function(){
+	if (!CheckDocCureUseBase()){
+		return;
+	}
 	Init();
 	InitEvent();
 	PageHandle();		
@@ -12,9 +35,12 @@ $(document).ready(function(){
 	
 });
 function Init(){
-	InitCardType();
+	InitPatCondition();
 	InitOrderLoc();
+	InitOrderDoc();
 	InitArcimDesc();
+	$("#sttDate").datebox('setValue',ServerObj.CurrentDate);	
+	$("#endDate").datebox('setValue',ServerObj.CurrentDate);	
 	//服务组列表
 	$HUI.combobox("#serviceGroup",{
 	    valueField:'Rowid',   
@@ -28,11 +54,15 @@ function Init(){
 	InitCureWorkListDataGrid();
 	
 	//预约列表Init
-	InitCureApplyAppDataGrid();
-	//治疗列表Init
-	InitCureRecordDataGrid();
-	//治疗评估列表Init
-	InitCureAssessmentDataGrid();
+	workList_AppListObj.InitCureApplyAppDataGrid();
+	if($("#Apply_Resultlist").length>0){
+		//治疗列表Init
+		workList_RecordListObj.InitCureRecordDataGrid();
+	}
+	if($("#Apply_Assessment").length>0){
+		//治疗评估列表Init
+		workList_AssListObj.InitCureAssessmentDataGrid();
+	}
 }
 function InitEvent(){
 	$('#btnFind').bind('click', function(){
@@ -49,65 +79,125 @@ function InitEvent(){
 			CureWorkListDataGridLoad();
 		}
 	});
-	$('#PatMedNo').bind('keydown', function(event){
+	$('#PatConditionVal').bind('keydown', function(event){
 		if(event.keyCode==13)
 		{
-			CureWorkListDataGridLoad();
+			var PatCondition=$("#PatCondition").combobox("getValue");
+			if(PatCondition=="PatNo"){
+				PatNoHandle(CureWorkListDataGridLoad,this.id);	
+				if ($(this).val()==""){
+					$("#PatientID").val("");
+				}
+			}else{
+				CureWorkListDataGridLoad();
+			}
 		}
 	});
-	$HUI.checkbox("#OPCheck",{
-		onChecked:function(e,val){
-			setTimeout("CureWorkListDataGridLoad();",10)
-		},
-		onUnchecked:function(e,val){
+	$('#PatConditionVal').bind('change', function(){
+		var PatCondition=$("#PatCondition").combobox("getValue");
+		if(PatCondition=="PatNo"){
+			if ($(this).val()==""){
+				$("#PatientID").val("");
+			}
+		}
+    });
+	$HUI.checkbox("#OPCheck,#IPCheck",{
+		onCheckChange:function(e,value){
 			setTimeout("CureWorkListDataGridLoad();",10)
 		}
 	})
-	$HUI.checkbox("#IPCheck",{
-		onChecked:function(e,val){
-			setTimeout("CureWorkListDataGridLoad();",10)
-		},
-		onUnchecked:function(e,val){
+	$HUI.checkbox("#IStatCheck,#AStatCheck",{
+		onCheckChange:function(e,value){
 			setTimeout("CureWorkListDataGridLoad();",10)
 		}
 	})
-	$HUI.combobox("#queryStatus",{
-    	onSelect:function(rec){
-	    	CureWorkListDataGridLoad();
-	    }
-	});
+	
+	if($('#apptabs-dialog').length>0){
+		$('#apptabs-dialog').window({
+			onClose:function(){
+				RefreshDataGrid();	
+			}	
+		})	
+	}
 	//common.readcard.js
-	var param="work";
-	//InitPatNoEvent(param);
-	//InitCardNoEvent(param);
-	InitPatNoEvent(CureWorkListDataGridLoad);
+	//InitPatNoEvent(CureWorkListDataGridLoad);
 	InitCardNoEvent(CureWorkListDataGridLoad);
 };
 
 function PageHandle(){
-	
+	resizePanel();
+}
+
+function InitPatCondition(){
+	$HUI.combobox("#PatCondition", {
+		valueField: 'id',
+		textField: 'desc', 
+		editable:false,
+		data: PageWorkListAllObj.PatCondition,
+		onSelect:function(){
+	    	$("#PatConditionVal").val("");
+	    	$("#PatientID").val("");
+	    }
+	});
 }
 
 function ClearHandle(){
-	InitCardType();
-	$("#CardNo,#PatMedNo,#patNo,#PatientID,#ApplyNo,#CardTypeNew").val("");
+	//InitCardType();
+	$("#cardNo,#CardNo,#PatientID,#ApplyNo,#CardTypeNew,#PatConditionVal").val("");
 	$("#sttDate,#endDate").datebox("setValue","");	
-	$("#queryStatus,#serviceGroup").combobox("setValue","");
-	$("#OPCheck,#IPCheck,#LongOrdPriority").checkbox('uncheck');
+	$("#queryStatus,#serviceGroup,#PatCondition").combobox("setValue","");
+	$("#OPCheck,#IPCheck,#IStatCheck,#AStatCheck").checkbox('uncheck');
 	PageWorkListAllObj.m_SelectArcimID="";    
 	$("#ComboArcim").lookup('setText','');
 	$("#ComboOrderLoc").combobox('select','');	
 }
 
 function InitCureWorkListDataGrid(){
-	var cureWorkListToolBar = [/*{
+	var cureWorkListToolBar = [{
 			id:'BtnCall',
 			text:'叫号',
-			iconCls:'icon-add',
+			iconCls:'icon-big-ring',
 			handler:function(){
-				FormMatterPatName();		 
+				DHCDocCure_CureCall.CureCallHandle(CureWorkListDataGrid,CureWorkListDataGridLoad);		 
 			}
-		},'-',*/];
+		},{
+			id:'BtnPass',
+			text:'过号',
+			iconCls:'icon-skip-no',
+			handler:function(){
+				DHCDocCure_CureCall.SkipCallHandle(CureWorkListDataGrid,CureWorkListDataGridLoad);		 
+			}
+		},"-",{
+		id:'BtnDetailView',
+			text:'申请单浏览', 
+			iconCls:'icon-funnel-eye',  
+			handler:function(){
+				OpenApplyDetailDiag();
+			}
+		},"-"];
+	if(ServerObj.LayoutConfig=="2"){
+		cureWorkListToolBar.push({
+			id:'Apply_Applist',
+			text:'治疗处理', 
+			iconCls:'icon-mutpaper-tri',  
+			handler:function(){
+				Apply_Click("Apply_Applist");
+			}
+		})
+		
+		cureWorkListToolBar.push({
+			id:'Apply_Assessment',
+			text:'治疗评估', 
+			iconCls:'icon-paper-table',  
+			handler:function(){
+				Apply_Click("Apply_Assessment");
+			}
+		})
+	}
+	var mypageSize=10;
+	if(ServerObj.LayoutConfig=="2"){
+    	mypageSize=20;
+    }
 	// 治疗工作台查询Grid
 	CureWorkListDataGrid=$('#tabCureWorkList').datagrid({  
 		fit : true,
@@ -123,58 +213,67 @@ function InitCureWorkListDataGrid(){
 		pagination : true,
 		rownumbers : true,
 		idField:"Rowid",
-		pageSize : 5,
-		pageList : [5,15,50],
-		columns :[[   
-					{field:'RowCheck',checkbox:true},     
-        			{ field: 'Rowid', title: 'ID', width: 1, align: 'left', sortable: true,hidden:true
-					}, 
-					{field:'CureApplyNo',title:'申请单号',width:110,align:'left'},   
-					{field:'PatNo',title:'登记号',width:100,align:'left'},   
-        			{field:'PatName',title:'姓名',width:80,align:'left',
-						/*formatter:function(value,row){							
-							return '<a href="###" onclick=FormMatterPatName();>'+row.PatName+"</a>"
-						},
-						styler:function(value,row){
-							return "color:blue;"
-						}*/
-					},   
-					{field:'PatOther',title:'患者其他信息',width:200,align:'left', resizable: true},
-					{field:'ArcimDesc',title:'治疗项目',width:200,align:'left', resizable: true},
-        			//{field:'PatSex',title:'性别',width:40,align:'left'},
-        			//{field:'PatAge',title:'年龄',width:40,align:'left'},
-        			{field:'DCAAQty',title:'治疗数量',width:70,align:'left', resizable: true},
-					{ field: 'DDCRSDate', title:'预约治疗日期', width: 100, align: 'left', sortable: true, resizable: true},
-					{field:'DCASeqNo',title:'排队序号',width:80,align:'left'},
-        			{ field: 'ResourceDesc', title: '资源', width: 80, align: 'left', resizable: true
-					},
-					{ field: 'TimeDesc', title: '时段', width: 60, align: 'left', resizable: true
-					},
-					{ field: 'StartTime', title: '开始时间', width: 80, align: 'left',resizable: true
-					},
-					{ field: 'EndTime', title: '结束时间', width: 80, align: 'left',resizable: true
-					},
-					{ field: 'ServiceGroupDesc', title: '服务组', width: 60, align: 'left',resizable: true
-					},
-					{ field: 'DDCRSStatus', title: '排班状态', width: 80, align: 'left',resizable: true
-					},
-					{ field: 'DCAAStatus', title: '预约状态', width: 80, align: 'left',resizable: true
-					},
-					{ field: 'CallStatus', title: '呼叫状态', width: 80, align: 'left',resizable: true
-					},
-					{ field: 'ReqUser', title: '预约操作人', width: 80, align: 'left',resizable: true
-					},
-					{ field: 'ReqDate', title: '预约操作时间', width: 120, align: 'left',resizable: true
-					},
-					{ field: 'LastUpdateUser', title: '更新人', width: 80, align: 'left',resizable: true,hidden: true
-					},
-					{ field: 'LastUpdateDate', title: '更新时间', width: 80, align: 'left',resizable: true,hidden: true
-					},
-					{ field: 'OEOREDR', title: '执行记录ID', width: 60, align: 'left',hidden: true
-					},
-					{ field: 'ServiceGroupID', title: '服务组', width: 60, align: 'left',hidden: true
+		pageSize : mypageSize,
+		pageList : [5,10,20,50],
+		frozenColumns : [
+			[
+				{field:'RowCheck',checkbox:true},     
+    			{field:'Rowid', title: 'ID', width: 1, align: 'left',hidden:true}, 
+				{field:'CureApplyNo',title:'申请单号',width:120,align:'left'},   
+				{field:'PatNo',title:'登记号',width:100,align:'left'},   
+    			{field:'PatName',title:'姓名',width:80,align:'left'},   
+				{field:'PatOther',title:'患者其他信息',width:200,align:'left', resizable: true},
+				{field:'ArcimDesc',title:'治疗项目',width:200,align:'left', resizable: true,
+					formatter: function (value, rowData, rowIndex) {
+						var retStr="<span>"+rowData.ArcimDesc+"</span>";
+						if(rowData.ArcimDesc!=""){
+							retStr = "<a href='#' title='医嘱列表'  onclick='InitBillInfoList(\""+rowData.AdmRowID+"\")'>"+retStr+"</a>"
+						}
+						return retStr;
 					}
-    			 ]] ,
+				},
+    			{field:'DCAAQty',title:'治疗数量',width:70,align:'left', resizable: true},
+				{field: 'DDCRSDate', title:'预约治疗日期', width: 100, align: 'left', resizable: true},
+				{field:'DCASeqNo',title:'排队序号',width:80,align:'left'},
+			]
+		],
+		columns :[[   
+				{field: 'LocDesc', title:'科室', width: 150, align: 'left', resizable: true
+				},
+				{field: 'ResourceDesc', title: '资源', width: 80, align: 'left', resizable: true
+				},
+				{field: 'TimeDesc', title: '时段', width: 60, align: 'left', resizable: true
+				},
+				{field: 'StartTime', title: '开始时间', width: 80, align: 'left',resizable: true
+				},
+				{ field: 'EndTime', title: '结束时间', width: 80, align: 'left',resizable: true
+				},
+				{ field: 'ServiceGroupDesc', title: '服务组', width: 80, align: 'left',resizable: true
+				},
+				{ field: 'DDCRSStatus', title: '排班状态', width: 80, align: 'left',resizable: true
+				},
+				{ field: 'DCAAStatus', title: '预约状态', width: 80, align: 'left',resizable: true
+				},
+				{ field: 'CallStatus', title: '呼叫状态', width: 80, align: 'left',resizable: true
+				},
+				{ field: 'ReqUser', title: '预约操作人', width: 80, align: 'left',resizable: true
+				},
+				{ field: 'ReqDate', title: '预约操作时间', width: 120, align: 'left',resizable: true
+				},
+				{ field: 'LastUpdateUser', title: '更新人', width: 80, align: 'left',resizable: true,hidden: true
+				},
+				{ field: 'LastUpdateDate', title: '更新时间', width: 80, align: 'left',resizable: true,hidden: true
+				},
+				{ field: 'OEOREDR', title: '执行记录ID', width: 60, align: 'left',hidden: true
+				},
+				{ field: 'AdmRowID', title: 'AdmRowID', width: 60, align: 'left',hidden: true
+				},
+				{ field: 'PatientID', title: 'PatientID', width: 60, align: 'left',hidden: true
+				},
+				{ field: 'ServiceGroupID', title: '服务组', width: 60, align: 'left',hidden: true
+				}
+			 ]
+		],
     	toolbar : cureWorkListToolBar,
 		onClickRow:function(rowIndex, rowData){
 			loadTabData()
@@ -187,8 +286,10 @@ function InitCureWorkListDataGrid(){
 			loadTabData();
 		},
 		rowStyler:function(index,row){   
-	        if (row.CallStatus=="正在呼叫"){   
-	            return 'background-color:green;';   
+	        if (row.CallStatusCode=="Call"){   
+	            return 'background-color: #21ba45 !important;color:#fff !important;';
+	        }else if (row.CallStatusCode=="Pass"){   
+	            return 'background-color: #d2eafe  !important;color:#000 !important;';
 	        }   
 	    },
 	    onLoadSuccess: function () {   //隐藏表头的checkbox
@@ -200,22 +301,17 @@ function InitCureWorkListDataGrid(){
                 .bind('click', function(){
 					loadTabData();
 			    });
+		    if(ServerObj.DHCDocCureUseCall==0){
+				$("#BtnCall,#BtnPass").linkbutton("disable");
+			}
         },onSelect:function(index, row){
 			var frm=dhcsys_getmenuform();
 			if (frm){
 				var DCARowId=row["Rowid"];
-				var Info=$.cm({
-					ClassName:"DHCDoc.DHCDocCure.Common",
-					MethodName:"GetPatAdmIDByDCA",
-					DCARowId:DCARowId,
-					dataType:"text"
-				},false); 
-				if(Info!=""){
-					var PatientID=Info.split("^")[1];
-					var EpisodeID=Info.split("^")[0]
-					frm.PatientID.value=PatientID;
-					frm.EpisodeID.value=EpisodeID;
-				}
+				var AdmRowID=row["AdmRowID"];
+				var PatientID=row["PatientID"];
+				frm.PatientID.value=PatientID;
+				frm.EpisodeID.value=AdmRowID;
 			}
 		},
 		onBeforeSelect:function(index, row){
@@ -230,7 +326,7 @@ function InitCureWorkListDataGrid(){
 				}
 				return false;
 			}
-            } 
+        } 
 	});
 	$('#tabs').tabs({
   		onSelect: function(title,index){
@@ -240,26 +336,44 @@ function InitCureWorkListDataGrid(){
 	//CureWorkListDataGridLoad();	
 }
 
-function CureWorkListDataGridLoad()
+function CureWorkListDataGridLoad(NotClearFlag)
 {
 	var ServiceGroup=$("#serviceGroup").combobox('getValue');
 	var PatientID=$("#PatientID").val();
 	var sttDate=$('#sttDate').datebox('getValue');
 	var endDate=$('#endDate').datebox('getValue');
-	var queryStatus=$("#queryStatus").combobox('getValue');
 	var ApplyNo=$("#ApplyNo").val();
-	var PatMedNo=$("#PatMedNo").val();
+	
 	var CheckAdmType="";
 	var OPCheckObj=$HUI.checkbox("#OPCheck").getValue()
 	if (OPCheckObj){CheckAdmType="O"};
 	var IPCheckObj=$HUI.checkbox("#IPCheck").getValue()
 	if (IPCheckObj){CheckAdmType="I"};
 	if ((OPCheckObj)&&(IPCheckObj)){CheckAdmType=""};
+	var queryStatus="";
+	var IStatObj=$HUI.checkbox("#IStatCheck").getValue()
+	if (IStatObj){queryStatus="I"};
+	var AStatObj=$HUI.checkbox("#AStatCheck").getValue()
+	if (AStatObj){queryStatus="A"};
+	if ((IStatObj)&&(AStatObj)){queryStatus=""};
+	
 	var gtext=$HUI.lookup("#ComboArcim").getText();
 	if (gtext=="")PageWorkListAllObj.m_SelectArcimID="";
 	var queryArcim=PageWorkListAllObj.m_SelectArcimID;
 	var queryOrderLoc=$("#ComboOrderLoc").combobox("getValue");
-	queryOrderLoc=CheckComboxSelData("ComboOrderLoc",queryOrderLoc);
+	queryOrderLoc=com_Util.CheckComboxSelData("ComboOrderLoc",queryOrderLoc);
+	var queryOrderDoc=$("#ComboOrderDoc").combobox("getValue");
+	queryOrderDoc=com_Util.CheckComboxSelData("ComboOrderDoc",queryOrderDoc);
+	var PatName="",PatMedNo=""; //$("#PatMedNo").val();
+	var PatCondition=$("#PatCondition").combobox("getValue");
+	var PatConditionVal=$("#PatConditionVal").val();
+	if(PatCondition=="PatName"){
+		PatName=PatConditionVal;
+	}else if(PatCondition=="PatMedNo"){
+		PatMedNo=PatConditionVal;
+	}
+	var ExpStr=PatName+"^"+session['LOGON.USERID']+"^"+session['LOGON.HOSPID']+"^"+session['LOGON.LANGID']+"^"+PageWorkListAllObj.cspName;
+		ExpStr=ExpStr+"^"+queryOrderDoc
 	$.cm({
 		ClassName:"DHCDoc.DHCDocCure.Appointment",
 		QueryName:"FindCurrentAppointmentListHUI",
@@ -275,132 +389,39 @@ function CureWorkListDataGridLoad()
 		'CheckAdmType':CheckAdmType,
 		'queryArcim':queryArcim,
 		'queryOrderLoc':queryOrderLoc,
+		ExpStr:ExpStr,
 		Pagerows:CureWorkListDataGrid.datagrid("options").pageSize,
 		rows:99999
 	},function(GridData){
 		CureWorkListDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData); 
-		CureWorkListDataGrid.datagrid("clearSelections");
-		CureWorkListDataGrid.datagrid("clearChecked");	
-		PageWorkListAllObj._WORK_SELECT_DCAROWID="";
+		if(NotClearFlag!="Y"){
+			CureWorkListDataGrid.datagrid("clearSelections");
+			CureWorkListDataGrid.datagrid("clearChecked");	
+			PageWorkListAllObj._WORK_SELECT_DCAROWID="";
+		}
 	});
 	
 }
 
-function FormMatterPatName(val,row){
-	//以下程序仅支持东华叫号接口
+function loadTabData() {
 	var rows = CureWorkListDataGrid.datagrid("getSelections");
-	var DCAARowId="",DCARowId="",DCAOEOREDR=""
-	if (rows.length>=1)
-	{
-		var succsss=true;
-		for(var i=0;i<rows.length;i++){
-			
-			var rowIndex = CureWorkListDataGrid.datagrid("getRowIndex", rows[i]);
-			var selected=CureWorkListDataGrid.datagrid('getRows'); 
-			var DCAARowId=selected[rowIndex].Rowid;
-			DCAOEOREDR=selected[rowIndex].OEOREDR;
-			var PatName=selected[rowIndex].PatName;
-			var treatID=selected[rowIndex].ServiceGroupID;
-			
-		    var ServiceGroupDesc=selected[rowIndex].ServiceGroupDesc;
-		    var StartTime=selected[rowIndex].StartTime;
-			//alert(DCAARowId)
-			//return;
-			/*
-			深圳市中医院  治疗室 叫号接口
-		   	web.DHCVISVoiceCall.InsertVoiceQueue(callinfo,user,computerIP,"A","LR","N",callinfo,callinfo,"",treatID)
-		   	callinfo          请 张三 进入治疗室
-		   	user              userID
-		   	computerIP        计算机IP
-		   	treatID           治疗类型ID   
-			*/
-			var callinfo="请"+PatName+"进入治疗室";
-			var computerIP=GetComputerIp()
-			var loguser=session['LOGON.USERID'];
-			var logloc=session['LOGON.CTLOCID'];
-			var ret="0"; 
-			//alert(callinfo+";"+loguser+";"+computerIP+";"+callinfo+";"+logloc+";"+treatID);
-			var zhContent=DCAARowId+";"+PatName+";"+ServiceGroupDesc+";"+StartTime;
-			var ret=tkMakeServerCall("web.DHCVISVoiceCall","InsertVoiceQueue",callinfo,loguser,computerIP,"A","LR","N",zhContent,logloc,"",treatID)
-			//alert("InsertVoiceQueue+"+ret)
-			if(ret=="0"){
-				var callret=tkMakeServerCall("DHCDoc.DHCDocCure.Appointment","UpdateTreatCallStatus",DCAARowId,"Y")
-				if(callret!=0){
-					succsss=false;
-					$.messager.alert("错误", "更新呼叫状态失败", 'error')
-			        return false;
-				}else{
-					//alert("呼叫成功")
-					$.messager.alert("提示", "呼叫成功")
-				}
-			}else{
-				var errmsg="呼叫失败:"+ret
-				$.messager.alert("错误", errmsg, 'error');
-				succsss=false;
-			    return false;
-			}
-		}
-		if(succsss==true){
-			$.messager.alert("提示", "呼叫成功")		
-		}
-	}else{
-		$.messager.alert("错误", "请选择一位病人再呼叫.", 'error')
-		 return false;
-	}
-}
-
-function GetComputerIp() 
-{
-   var ipAddr="";
-   var locator = new ActiveXObject ("WbemScripting.SWbemLocator");  
-   var service = locator.ConnectServer("."); //连接本机服务器
-   var properties = service.ExecQuery("SELECT * FROM Win32_NetworkAdapterConfiguration");  //查询使用SQL标准 
-   var e = new Enumerator (properties);
-   var p = e.item ();
-
-   for (;!e.atEnd();e.moveNext ())  
-   {
-  	var p = e.item ();  
- 	//document.write("IP:" + p.IPAddress(0) + " ");//IP地址为数组类型,子网俺码及默认网关亦同
-	ipAddr=p.IPAddress(0); 
-	if(ipAddr) break;
-	}
-
-	return ipAddr;
-}
-function loadTabData()
-{
-	var rows = CureWorkListDataGrid.datagrid("getSelections");
-	var DCARowId="",DCARowIdStr="",DCAOEOREDR="";
-	
+	var idAry=[],DCARowIdStr="";
 	for(var i=0;i<rows.length;i++){
 		var DCAARowId=rows[i].Rowid;
-		if (DCAARowId!="")
-		{
-			//DCARowId=DCAARowId.split("||")[0];
-			DCARowId=DCAARowId
-		}else{
+		if (DCAARowId=="") {
 			continue;	
 		}
-		if(DCARowIdStr==""){
-			DCARowIdStr=DCARowId;
-		}else{
-			DCARowIdStr=DCARowIdStr+"!"+DCARowId;
-		}
+		idAry.push(DCAARowId);
 	}
+	DCARowIdStr=idAry.join("!");
 	PageWorkListAllObj._WORK_SELECT_DCAROWID=DCARowIdStr;
-	// 更新选择的面板的新标题和内容
-	var title = $('.tabs-selected').text();
-	var seltab = $('#tabs').tabs('getSelected');  // 获取选择的面板
-	setTimeout(function(){DataGridLoad(title);},100)
-}
-function refreshTab(cfg){  
-    var refresh_tab = cfg.tabTitle?$('#tabs').tabs('getTab',cfg.tabTitle):$('#tabs').tabs('getSelected');  
-    if(refresh_tab && refresh_tab.find('iframe').length > 0){  
-	    var _refresh_ifram = refresh_tab.find('iframe')[0];  
-	    var refresh_url = cfg.url?cfg.url:_refresh_ifram.src;   
-	    _refresh_ifram.contentWindow.location.href=refresh_url;  
-    }  
+	var seltab = $('#tabs').tabs('getSelected');
+	var title = seltab.panel('options').title;
+	
+	clearTimeout(PageWorkListAllObj.m_LoadTabTimer);
+	PageWorkListAllObj.m_LoadTabTimer=setTimeout(function(){
+		DataGridLoad(title);
+	},200)
 }
 
 function RefreshDataGrid(){
@@ -456,47 +477,223 @@ function InitArcimDesc()
     });  
 };
 function InitOrderLoc(){
-	$HUI.combobox("#ComboOrderLoc", {})
-    $.cm({
-		ClassName:"DHCDoc.DHCDocCure.Config",
-		QueryName:"FindLoc",
-		'Loc':"",
-		'CureFlag':"",
-		'Hospital':session['LOGON.HOSPID'],
-		dataType:"json",
-		rows:99999
-	},function(Data){
-		var cbox = $HUI.combobox("#ComboOrderLoc", {
-				valueField: 'LocRowID',
-				textField: 'LocDesc', 
-				editable:true,
-				data: Data["rows"],
-				filter: function(q, row){
-					return (row["LocDesc"].toUpperCase().indexOf(q.toUpperCase()) >= 0)||(row["LocContactName"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
-				}
-		 });
-	});
+	var obj=com_withLocDocFun.InitComboDoc("ComboOrderDoc");
+	com_withLocDocFun.InitComboLoc("ComboOrderLoc",obj);
 }
-function CheckComboxSelData(id,selId){
-	var Find=0;
-	var Data=$("#"+id).combobox('getData');
-	for(var i=0;i<Data.length;i++){
-		if (id=="ComboOrderLoc"){
-			var CombValue=Data[i].LocRowID;
-			var CombDesc=Data[i].LocDesc;
-		}else if(id=="RESSessionType"){
-			var CombValue=Data[i].ID  
-			var CombDesc=Data[i].Desc
-		}else{
-			var CombValue=Data[i].value  
-			var CombDesc=Data[i].desc
+function InitOrderDoc(LocID){
+}
+
+function InitBillInfoList(EpisodeID){
+	PageWorkListAllObj.m_LoadStopOrd="";
+	var dhwid=$(document.body).width()-100;
+	var dhhei=$(document.body).height()-200;
+	$('#admorderlist-dialog').window('open').window('resize',{width:dhwid,height:dhhei,top: 50,left:45});
+    var BillInfoColumns=[[
+        {field: 'ReportLinkInfo',hidden:true}
+        ,{field: 'OrderSum', title: unescape('总价'), width: 80, align: 'left'}
+        ,{field: 'Price', title: '单价', width: 80, align: 'left'}
+        ,{field: 'Desc', title: '医嘱名称', width: 250, align: 'left',
+            formatter:function(value,row,index){
+                if (row.ReportLinkInfo ==""){
+                    return value;
+                }
+                var btn = '<a style="color: #ff7f24;text-decoration: underline;" onclick="OpenReportLink(\''+row.ReportLinkInfo +'\')">'+value+'\</a>';
+                return btn;
+        }}
+        ,{field: 'PackQty', title: '数量', width: 80, align: 'left'}
+        ,{field: 'ReLoc', title: '接收科室', width: 150, align: 'left'}
+        ,{field: 'Doctor', title: '医师', width: 100, align: 'left'}
+        ,{field: 'OrdStatus', title: '医嘱状态', width: 100, align: 'left'}
+        ,{field: 'OrdStartDate', title: '开始时间', width: 150, align: 'left'}
+        ,{field: 'OrdBilled', title: '计费状态', width: 100, align: 'left'}
+        ,{field: 'OrdXDate', title: '停止日期', width: 100, align: 'left',sortable: true}
+        ,{field: 'OrdXTime', title: '停止时间', width: 100, align: 'left',sortable: true}
+        ,{field: 'StopDoc', title: '停医嘱人', width: 100, align: 'left',sortable: true}
+        ,{field: 'OEItemID', title: '医嘱编码', width: 100, align: 'left',sortable: true}
+        //,{field: 'BtnPrtOrder', title: '打印医嘱标签', width: 60, align: 'left',sortable: true}
+        //,{field: 'BtnLinkLabPage', title: '申请单', width: 60, align: 'left',sortable: true}
+    ]];
+    
+    
+    var BillInfoToolBar = [{
+            text: '刷新',
+            iconCls: 'icon-reload',
+            handler: function() {
+                PageWorkListAllObj.m_LoadStopOrd="";
+                $('#tabBillInfoList').datagrid('reload');
+            }
+        },{
+            text: '已停止医嘱',
+            iconCls: 'icon-cancel',
+            handler: function() {
+                PageWorkListAllObj.m_LoadStopOrd="Stop";
+                $('#tabBillInfoList').datagrid('reload');
+            }
+        }]
+    
+    var BillInfoDataGrid=$('#tabBillInfoList').datagrid({
+        fit : true,
+        width : 'auto',
+        border : false,
+        striped : true,
+        singleSelect : true,
+        fitColumns : false,
+        autoRowHeight : true,
+        url : $URL,
+        loadMsg : '加载中..',  
+        pagination : true,
+        pageSize:25,
+		pageList : [25,50], 
+        rownumbers : true,
+        idField:"OEItemID",
+        columns :BillInfoColumns,
+        toolbar :BillInfoToolBar,
+        onClickRow:function(rowIndex, rowData){
+            BillInfoDataSelectedRow=rowIndex;
+        },
+        rowStyler: function(index,row){
+            if (row.OrdStatus=="停止"){
+                return 'background-color:#BDBEC2;color:#000000;';
+            }else if (row.OEItemID!=""){
+                return '';
+            }else{
+                return 'background-color:#C8FEC0;color:#000000;';
+            }
+        },
+        queryParams:{
+	    	ClassName:"web.DHCDocOPOrdInfo",
+	    	QueryName:"GetOrdByAdm" 
+	    },
+        onBeforeLoad:function(param){
+            $.extend(param,{EpisodeID:EpisodeID,OrdComStatus:PageWorkListAllObj.m_LoadStopOrd})
+        }
+        ,onLoadSuccess:function(data){ 
+            if (PageWorkListAllObj.m_LoadStopOrd==""){
+                BillInfoDataGrid.datagrid('hideColumn', 'OrdXDate');
+                BillInfoDataGrid.datagrid('hideColumn', 'OrdXTime');
+            }else{
+                BillInfoDataGrid.datagrid('showColumn', 'OrdXDate');
+                BillInfoDataGrid.datagrid('showColumn', 'OrdXTime');
+            }
+        }
+    });
+    //LoadBillInfoList();
+}
+
+function getConfigUrl(userId,groupId,ctlocId){
+	return com_Util.getConfigUrl(userId,groupId,ctlocId);
+}
+function resizePanel(){
+	if(ServerObj.LayoutConfig=="1"){
+		var ListScale=60;
+		if(ServerObj.UIConfigObj!=""){
+			var data = eval('(' + ServerObj.UIConfigObj + ')');
+			if ((!data['DocCure_AppListScale'])||(data['DocCure_AppListScale']=="")){
+				ListScale=60;
+			}else{
+				ListScale=data['DocCure_AppListScale'];
+			}
 		}
-		if(selId==CombValue){
-			selId=CombValue;
-			Find=1;
-			break;
-		}
+		ListScale=parseFloat(ListScale/100);
+			
+		$('#main_layout').layout('panel', 'north').panel('resize',{
+			height:PageWorkListAllObj.dh*ListScale
+		})
+		$('#main_layout').layout("resize");
 	}
-	if (Find=="1") return selId
-	return "";
+}
+
+function Apply_Click(Type){
+	var obj=$("#"+Type);
+	if(obj.length=0){
+		$.messager.alert("提示","未发现定义的对应的界面","info");
+		return false;
+	}else{
+		var tabTitle=obj[0].innerText;
+		tabTitle=$.trim(tabTitle);
+
+		var dhwid=$(document.body).width()-100;
+		var dhhei=$(document.body).height()-200;
+		$('#apptabs-dialog').window('open').window('resize',{
+			width:dhwid,
+			height:dhhei,
+			top:100,
+			left:50
+		});
+		$("#tabs").tabs("select",tabTitle)	
+	}
+}
+
+function OpenApplyDetailDiag()
+{
+	var DCARowId=GetSelectRow();
+	if(DCARowId==""){
+		return;	
+	}
+	
+	com_openwin.ShowApplyDetail(DCARowId,ServerObj.DHCDocCureLinkPage,"");
+}
+function GetSelectRow(){
+	var rows = CureWorkListDataGrid.datagrid("getSelections");
+	if (rows.length==0) 
+	{
+		$.messager.alert("提示","请选择一条预约记录浏览申请单信息!","warning");
+		return "";
+	}else if (rows.length>1){
+     	$.messager.alert("错误","您选择了多条预约记录!","warning")
+     	return "";
+     }
+	var DCAARowId=rows[0].Rowid;
+	if(DCAARowId=="")
+	{
+		$.messager.alert('提示','请选择一条预约记录浏览申请单信息!',"warning");
+		return "";
+	}	
+	var DCARowId=DCAARowId.split("||")[0];
+	return DCARowId;
+}
+
+function togglePanelExpand(){
+	var wp = $("#CenterPanel").layout("panel", "west");
+	var cp = $("#CenterPanel").layout("panel", "center");
+	$(wp).panel({
+		onExpand:function(){
+			IFrameReSizeWidth("FormMain",-200)
+		},
+		onCollapse:function(){
+			IFrameReSizeWidth("FormMain",200)
+		}	
+	})	
+}
+function toggleMoreInfo(ele){
+	if ($(ele).hasClass('expanded')){  //已经展开 隐藏
+		$(ele).removeClass('expanded');
+		$("#moreBtn")[0].innerText=$g("更多");
+    	$("tr.display-more-tr").slideUp("fast", setHeight(-40));
+	}else{
+		$(ele).addClass('expanded');
+		$("#moreBtn")[0].innerText=$g("隐藏");
+    	$("tr.display-more-tr").slideDown("'normal", setHeight(40));
+	}
+	
+
+	function setHeight(num) {
+		var l = $("#search-applist-layout");
+		var n = l.layout("panel", "north");
+		var nh = parseInt(n.outerHeight()) + parseInt(num);
+		n.panel("resize", {
+			height: nh
+		});
+		if (num > 0) {
+			$("tr.display-more-tr").show();
+		} else {
+			$("tr.display-more-tr").hide();
+		}
+		var c = l.layout("panel", "center");
+		var ch = parseInt(c.panel("panel").outerHeight()) - parseInt(num);
+		c.panel("resize", {
+			height: ch,
+			top: nh
+		});
+	}
 }

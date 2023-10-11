@@ -110,25 +110,25 @@ function BSave_click(Type)
 	var iDFLimit=$("#DFLimit").val();
 	if(iOPFlag=="N"){
 		if(iDFLimit!=""){ 
-			$.messager.alert("提示","优惠打折不允许,最大折扣率应为空","info");
+			$.messager.alert("提示","优惠打折不允许,最大折扣值应为空","info");
 			return false;
 		}
 	}
 	if(iOPFlag=="Y"){
 		if(iDFLimit==""){ 
-			$.messager.alert("提示","请输入折扣率","info");
+			$.messager.alert("提示","请输入折扣值","info");
 			return false;
 		}
 		
 		if((iDFLimit<=0)||(iDFLimit>=100)){
-			$.messager.alert("提示","折扣率应大于0小于100","info");
+			$.messager.alert("提示","折扣值应大于0小于100","info");
 			return false;
 		}else{
 			if (IsFloat(iDFLimit)){}
 			else 
 			{   
 				$("#DFLimit").focus();
-		    	$.messager.alert("提示","折扣率不能为0","info");
+		    	$.messager.alert("提示","折扣值不能为0","info");
 				return false;
 			}
 		}
@@ -216,6 +216,9 @@ function BClear_click()
 	$("#OPName").combogrid('setValue',"");
 	$("#UserId,#DFLimit").val("");
 	$(".hisui-checkbox").checkbox('setValue',false);
+	$("#BAdd").linkbutton('enable');
+	$("#OPName").combogrid('enable');
+
 	$("#OPChargeLimitQueryTab").datagrid('load',{
 				ClassName:"web.DHCPE.ChargeLimit",
 				QueryName:"FindChargeLimit",
@@ -227,26 +230,39 @@ function InitCombobox()
 {
 	
 	//操作员
-	   var OPNameObj = $HUI.combogrid("#OPName",{
-		panelWidth:270,
+	 	 var OPNameObj = $HUI.combogrid("#OPName",{
+		panelWidth:470,
+		panelHeight:260,
 		url:$URL+"?ClassName=web.DHCPE.Report.DoctorWorkStatistic&QueryName=SearchUSERSXT",
 		mode:'remote',
 		delay:200,
+		pagination:true,
+		minQueryLen:1,
+        rownumbers:true,//序号 
+		fit: true,
+		pageSize: 5,
+		pageList: [5,10],
 		idField:'DocDr',
 		textField:'DocName',
 		onBeforeLoad:function(param){
 			param.Desc = param.q;
+			param.Type="B";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID'];
+
 		},
 		columns:[[
-		    {field:'DocDr',title:'ID',width:40},
-			{field:'DocName',title:'姓名',width:200}
+		    {field:'DocDr',title:'ID',width:50},
+			{field:'DocName',title:'姓名',width:200},
+			{field:'Initials',title:'工号',width:190} 
 				
 		]],
 		onLoadSuccess:function(){
-			//$("#OPName").combogrid('setValue',""); 
+			//$("#UserName").combogrid('setValue',""); 
 		},
 
 		});
+
 		
 	//凑整费
 	var RFMObj = $HUI.combobox("#RoundingFeeMode",{
@@ -311,6 +327,9 @@ function InitOPChargeLimitDataGrid(){
 				}if(rowData.TASChargedFlag=="是"){
 					$("#ASChargedFlag").checkbox('setValue',true);
 				}
+				 $("#BAdd").linkbutton('disable');
+			     $("#OPName").combogrid('disable');
+
 
 		}
 			

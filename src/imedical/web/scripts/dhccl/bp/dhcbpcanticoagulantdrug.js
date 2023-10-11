@@ -219,7 +219,8 @@ $(function(){
 						$.m({
 							ClassName:"web.DHCBPCAnticoagulantDrug",
 							MethodName:"InsertAnticoagulantDrug",
-							bpcADInfoList:paraStr
+							bpcADInfoList:paraStr,
+							hospId:session['LOGON.HOSPID']
 						},function(success){
 							if(success==0)
 							{
@@ -321,6 +322,7 @@ $(function(){
 							ClassName:"web.DHCBPCAnticoagulantDrug",
 							MethodName:"UpdateAnticoagulantDrug",
 							bpcADInfoList:paraStr,
+							hospId:session['LOGON.HOSPID']
 						},function(success){
 							if(success==0)
 							{
@@ -348,6 +350,7 @@ $(function(){
 		queryParams:{
 			ClassName:"web.DHCBPCAnticoagulantDrug",
 			QueryName:"FindAnticoagulantDrug",
+			hospId:session['LOGON.HOSPID']
 		},
         columns:[[
         	{ field: "tID", title: "±àºÅ", width: 70 },

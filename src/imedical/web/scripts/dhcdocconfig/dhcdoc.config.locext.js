@@ -3,7 +3,7 @@ var LocExtDataGrid;
 var LocRowID="";
 $(function(){ 
 	InitHospList();
-    $("#BFind").click(LoadLocExtDataGrid);
+    $("#BFind").click(function (){LocExtDataGrid.datagrid("load");});
 });
 function InitHospList()
 {
@@ -20,6 +20,14 @@ function InitHospList()
 function Init(){
 	InitComboLoc();
     InitLocExtGrid();
+    InitCache();
+}
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
 }
 function InitLocExtGrid()
 {
@@ -38,13 +46,15 @@ function InitLocExtGrid()
                 LocExtDataGrid.datagrid("rejectChanges");
                 LocExtDataGrid.datagrid("unselectAll");
             }
-        }];
+        },'-',{
+	        id:'tip',
+			iconCls: 'icon-help',
+			handler: function(){
+				$("#tip").popover('show');
+			}
+	    }];
 	LocExtColumns=[[    
                     { field: 'LocRowID', title: 'LocRowID', width: 1, align: 'center', sortable: true,hidden:true
-					},
-        			{ field: 'LocDesc', title: '科室', width: 150, align: 'center', sortable: true,formatter:function(value){
-	        			return value.split(" ")[1];
-	        		}
 					},
 					{ field: 'RecLocByLogonLoc', title: '登录时以此取接收科室',  align: 'center', sortable: true,
 					   editor : {
@@ -201,14 +211,15 @@ function InitLocExtGrid()
 				 			else  return "否";
 				 	   }
 					},
-					{ field: 'BloodPressureByEntryDiagnosis', title: '录入诊断时必须录入血压值',  align: 'center', sortable: true,
+					{ field: 'BloodPressureByEntryDiagnosis', title: '录入诊断必填血压的最低年龄',  align: 'center', sortable: true,
 					   editor : {
-                                type : 'icheckbox',
+                                /*type : 'icheckbox',
                                 options : {
                                     on : 'Y',
                                     off : ''
-                                }
-                       },
+                                }*/
+                                type : 'numberbox'
+                       }/*,
                        styler: function(value,row,index){
 			 				if (value=="Y"){
 				 				return 'color:#21ba45;';
@@ -219,7 +230,7 @@ function InitLocExtGrid()
 			 		   formatter:function(value,record){
 				 			if (value=="Y") return "是";
 				 			else  return "否";
-				 	   }
+				 	   }*/
 					},
 					{ field: 'INCHighMaterialTrack', title: '高值材料跟踪',  align: 'center', sortable: true,
 					   editor : {
@@ -368,7 +379,7 @@ function InitLocExtGrid()
 				 			if (value=="Y") return "是";
 				 			else  return "否";
 				 	   }
-					},{ field: 'OutPriorAllowPoisonDrug', title: '出院带药允许开精神毒麻类药品',  align: 'center', sortable: true,
+					}/*,{ field: 'OutPriorAllowPoisonDrug', title: '出院带药允许开精神毒麻类药品',  align: 'center', sortable: true,
 					   editor : {
                                 type : 'icheckbox',
                                 options : {
@@ -387,7 +398,7 @@ function InitLocExtGrid()
 				 			if (value=="Y") return "是";
 				 			else  return "否";
 				 	   }
-					},{ field: 'DiagFromTempOrHisAutoSave', title: '诊断通过模板/历史录入自动保存', width: 220,
+					}*/,{ field: 'DiagFromTempOrHisAutoSave', title: '诊断通过模板/历史录入自动保存', width: 220,
 						editor:{
 					        type:'combobox',
 					        options:{
@@ -448,6 +459,109 @@ function InitLocExtGrid()
 					   editor : {
                                 type : 'numberbox'
                        }
+					},
+					{ field: 'IsGynaecology', title: '孕、产、妇相关科室',  align: 'center', sortable: true,
+					   editor : {
+                                type : 'icheckbox',
+                                options : {
+                                    on : 'Y',
+                                    off : ''
+                                }
+                       },
+                       styler: function(value,row,index){
+			 				if (value=="Y"){
+				 				return 'color:#21ba45;';
+				 			}else{
+					 			return 'color:#f16e57;';
+					 		}
+		 			   },
+			 		   formatter:function(value,record){
+				 			if (value=="Y") return "是";
+				 			else  return "否";
+				 	   }
+					},
+					{ field: 'DiagCertificateMaxDaysOff', title: '诊断证明最大休假天数',  align: 'center', sortable: true,
+					   editor : {
+                                type : 'numberbox'
+                       }
+					},
+					{ field: 'SDSDiagEntry', title:'启用结构化诊断',  align: 'center', sortable: true,
+					   editor : {
+                                type : 'icheckbox',
+                                options : {
+                                    on : 'Y',
+                                    off : ''
+                                }
+                       },
+                       styler: function(value,row,index){
+			 				if (value=="Y"){
+				 				return 'color:#21ba45;';
+				 			}else{
+					 			return 'color:#f16e57;';
+					 		}
+		 			   },
+			 		   formatter:function(value,record){
+				 			if (value=="Y") return "是";
+				 			else  return "否";
+				 	   }
+					},
+					{ field: 'DiagDefFirstReg', title:'诊断录入检索没有本科就诊是否默认初诊',  align: 'center', sortable: true,
+					   editor : {
+                                type : 'icheckbox',
+                                options : {
+                                    on : 'Y',
+                                    off : ''
+                                }
+                       },
+                       styler: function(value,row,index){
+			 				if (value=="Y"){
+				 				return 'color:#21ba45;';
+				 			}else{
+					 			return 'color:#f16e57;';
+					 		}
+		 			   },
+			 		   formatter:function(value,record){
+				 			if (value=="Y") return "是";
+				 			else  return "否";
+				 	   }
+					},{ field: 'DealExecStartOnZeroBySpecOrder', title: '出院\转科医嘱自动停止当日0点之后的所有执行记录',  align: 'center', sortable: true,
+						editor : {
+								type : 'icheckbox',
+								options : {
+									on : 'Y',
+									off : ''
+								}
+						},
+						styler: function(value,row,index){
+							if (value=="Y"){
+								return 'color:#21ba45;';
+							}else{
+								return 'color:#f16e57;';
+							}
+						},
+						formatter:function(value,record){
+							if (value=="Y") return "是";
+							else  return "否";
+						}
+					},{ field: 'DefOpenAllHosp', title: '默认跨院',  align: 'center', sortable: true,
+						editor : {
+								type : 'icheckbox',
+								options : {
+									on : 'Y',
+									off : ''
+								}
+						},
+						styler: function(value,row,index){
+							if (value=="Y"){
+								return 'color:#21ba45;';
+							}else{
+								return 'color:#f16e57;';
+							}
+						},
+						formatter:function(value,record){
+							if (value=="Y") return "是";
+							else  return "否";
+						}
 					}
     			 ]];
 	LocExtDataGrid=$('#tabLocExtConfig').datagrid({  
@@ -464,8 +578,24 @@ function InitLocExtGrid()
 		idField:"LocRowID",
 		pageSize: 15,
 		pageList : [15,50,100,200],
+		frozenColumns:[[
+			{ field: 'LocDesc', title: '科室', width: 150, align: 'center', sortable: true,
+				formatter:function(value){
+					return value.split(" ")[1];
+				}
+			}
+		]],
 		columns :LocExtColumns,
 		toolbar :LocExtToolBar,
+		url : $URL+"?ClassName=DHCDoc.DHCDocConfig.LocExt&QueryName=GetLocExtConfig",
+		onBeforeLoad:function(param){
+				var LocId=$("#Combo_Loc").combobox("getValue");
+				param = $.extend(param,{ LocId:LocId,HospId:$HUI.combogrid('#_HospList').getValue()});
+		},
+		onLoadSuccess:function(data){
+				editRow=undefined;
+				LocExtDataGrid.datagrid('unselectAll')
+			},
 		onClickRow:function(rowIndex, rowData){
 			if (editRow != undefined) {
 				$.messager.alert("提示", "有正在编辑的行，请先点击保存");
@@ -475,8 +605,9 @@ function InitLocExtGrid()
 			editRow=rowIndex
 			LocRowID=rowData.LocRowID
 		}
-	});
-	LoadLocExtDataGrid();
+	})  //.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter});
+	InitTip();
+	//LoadLocExtDataGrid();
 };
 function LoadLocExtDataGrid()
 {
@@ -489,8 +620,7 @@ function LoadLocExtDataGrid()
 	    Pagerows:LocExtDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
 		editRow = undefined;
-		LocExtDataGrid.datagrid('unselectAll');
-		LocExtDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+		LocExtDataGrid.datagrid('unselectAll').datagrid('loadData',GridData);
 	});
 };
 function InitComboLoc()
@@ -523,7 +653,10 @@ function InitComboLoc()
 	});
 };
 function Save(){
-	if(LocRowID==""){
+	  if(LocRowID==""){
+		  return false;
+	  }
+	  if(editRow==undefined){
 		  return false;
 	  }
 	  var rows = LocExtDataGrid.datagrid("getRows"); 
@@ -549,6 +682,10 @@ function Save(){
 	  var NotAllowAdmissionsIFNoCall=0;
 	  var OutPriorAllowPoisonDrug=0;
 	  var ModifyDateTimeAuthority=0;
+	  var IsGynaecology=0;
+	  var SDSDiagEntry=0;
+	  var DealExecStartOnZeroBySpecOrder=0;
+	  var DefOpenAllHosp=0;
 	    //选择要删除的行  
 	   if (rows.length > 0)
 	   { 	
@@ -585,8 +722,13 @@ function Save(){
 			    }
 				var selected=editors[6].target.is(':checked');
 				if(selected) LocCAVerify="1";
-				var selected=editors[7].target.is(':checked');
-				if(selected) BloodPressureByEntryDiagnosis="1";
+				var BloodPressureByEntryDiagnosis=editors[7].target.numberbox('getValue');
+				if ((BloodPressureByEntryDiagnosis!="")&&((isNaN(Number(BloodPressureByEntryDiagnosis)))==true)||(BloodPressureByEntryDiagnosis<0)){
+				  $.messager.alert("提示","录入诊断时N岁以上必须录入血压值应填写大于等于0的数字!");
+				  return false;
+			    }
+				//var selected=editors[7].target.is(':checked');
+				//if(selected) BloodPressureByEntryDiagnosis="1";
 				var selected=editors[8].target.is(':checked');
 				if(selected) INCHighMaterialTrack="1";
 				var selected=editors[9].target.is(':checked');
@@ -605,22 +747,34 @@ function Save(){
 				if(selected) NotDisplayNoPayOrd="1";
 				var selected=editors[14].target.is(':checked');
 				if(selected) NotAllowAdmissionsIFNoCall="1";
-				var selected=editors[15].target.is(':checked');
-				if(selected) OutPriorAllowPoisonDrug="1";
+				//var selected=editors[15].target.is(':checked');
+				//if(selected) OutPriorAllowPoisonDrug="1";
 				var DiagFromTempOrHisAutoSave=rows['DiagFromTempOrHisAutoSave'];
-				var selected=editors[17].target.is(':checked');
+				var selected=editors[16].target.is(':checked');
 				if(selected) ModifyDateTimeAuthority="1";
-			    var ModifyDateTimeUpHour=editors[18].target.numberbox('getValue');
+			    var ModifyDateTimeUpHour=editors[17].target.numberbox('getValue');
 			    if (isNaN(Number(ModifyDateTimeUpHour))==true){
 				  $.messager.alert("提示","开医嘱日期可提前小时数应填写数字!");
 				  return false;
 			    }
+			    var selected=editors[18].target.is(':checked');
+				if(selected) IsGynaecology="1";
+			    var DiagCertificateMaxDaysOff=editors[19].target.numberbox('getValue');
+			    if ((!isInteger(DiagCertificateMaxDaysOff))&&(DiagCertificateMaxDaysOff!="")){
+				    $.messager.alert("提示","诊断证明最大休假天数应填写正整数!");
+				    return false;
+				}
+				SDSDiagEntry=editors[20].target.is(':checked')?1:0;
+				DiagDefFirstReg=editors[21].target.is(':checked')?1:0;
+				DealExecStartOnZeroBySpecOrder=editors[22].target.is(':checked')?1:0;
+				DefOpenAllHosp=editors[23].target.is(':checked')?1:0;
+				
 			}
 	     } 
-		  var DHCFieldNumStr="1^3^4^5^6^7^9^8^10^11^12^13^14^15^16^17^18^19^20^21^22^23^24^25^26";
+		  var DHCFieldNumStr="1^3^4^5^6^7^9^8^10^11^12^13^14^15^16^17^18^19^20^21^22^23^24^25^26^27^28^29^30^31^32";
 		  var ValStr=RecLocByLogonLoc+"^"+NoReferral+"^"+NotPackQty+"^"+ARCOSInputByLogonLoc+"^"+NotNeedInstrArcim+"^"+AddDocByNotPriceOEItem+"^"+ModifySttDateTimeAuthority+"^"+StopOrderDiscExec+"^"+DocAppIntervalTime+"^"+LocCAVerify+"^"+BloodPressureByEntryDiagnosis+"^"+INCHighMaterialTrack+"^"+OnlyThisDepStop+"^"+AllowCostInputReg+"^"+IsChinaMed+"^"+NotAutoChangeRecloc+"^"+ForbidDosingInstr+"^"+OpenUseDKB+"^"+NotDisplayNoPayOrd+"^"+ModifySttDateTimeUpHour;
 		   	  ValStr=ValStr+"^"+NotAllowAdmissionsIFNoCall+"^"+OutPriorAllowPoisonDrug+"^"+DiagFromTempOrHisAutoSave;
-		   	  ValStr=ValStr+"^"+ModifyDateTimeAuthority+"^"+ModifyDateTimeUpHour
+		   	  ValStr=ValStr+"^"+ModifyDateTimeAuthority+"^"+ModifyDateTimeUpHour+"^"+IsGynaecology+"^"+DiagCertificateMaxDaysOff+'^'+SDSDiagEntry+'^'+DiagDefFirstReg+'^'+DealExecStartOnZeroBySpecOrder+"^"+DefOpenAllHosp;
 		  
 	      $.m({
 			 ClassName:"DHCDoc.DHCDocConfig.LocExt",
@@ -629,7 +783,8 @@ function Save(){
 		  },function(value){
 				if(value=="0"){
 					LocExtDataGrid.datagrid("endEdit", editRow);
-	    			LoadLocExtDataGrid();
+	    			//LoadLocExtDataGrid();
+	    			LocExtDataGrid.datagrid("load")
 					$.messager.show({title:"提示",msg:"保存成功"});
 				}else{
 					$.messager.alert('提示',"保存失败:"+value);
@@ -637,4 +792,20 @@ function Save(){
 				}
 		  });
 	 }
+}
+function InitTip(){
+	var _content = "<ul class='tip_class'><li style='font-weight:bold'>使用说明</li>" + 
+		'<li>1、常规设置->库存不足不自动切换药房不勾选时,本页面[科室库存不足不自动切换药房配置]才起作用。</li>'
+		"</ul>" 
+		
+	$("#tip").popover({
+		width:500,
+		trigger:'hover',
+		content:_content
+	});
+}
+function isInteger(objStr) {
+    var reg = /^\+?[0-9]*[0-9][0-9]*$/;
+    var ret = objStr.match(reg);
+    if (ret == null) { return false } else { return true }
 }

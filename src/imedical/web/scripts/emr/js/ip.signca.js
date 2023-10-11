@@ -20,7 +20,7 @@ $(function(){
 		valueField: 'id',
 		textField: 'text',
 		editable: false,
-		panelHeight: 'auto',
+		panelHeight: '135',
 		onSelect:function() {
             //if (opts.topwin.strKey == "") return;
 			var key = $('#keys').combobox('getValue');
@@ -30,27 +30,19 @@ $(function(){
 				if (isLogin)
 				{
 					$("#trPassword").css('display','none');
-				}
-				else
+				} 
+				else if($('#trPassword').is(':hidden'))
 				{
-					$("#trPassword").css('display','block');
+					$("#trPassword").show();
 				}
 			}
-			if (isEnableSelectUserLevel == "Y")
-			{
-				//通过CA接口获取当前key的唯一编码
-				var certB64 = opts.topwin.GetSignCert(key);
-				var UsrCertCode = opts.topwin.GetUniqueID(certB64);
-				//通过key的唯一编码获取关联UserID
-				var UsrIdByKey = GetUsrIdByKey(UsrCertCode);
-				var userlevel = getUserLevel(UsrIdByKey);
-				if (userlevel == "")
-				{
-					alert("未获取到当前证书用户级别,无法初始化级别下拉框!");
-					return;
-				}
-				initUserLevel(userlevel);
-			}
+
+			//通过CA接口获取当前key的唯一编码
+			var certB64 = opts.topwin.GetSignCert(key);
+			var UsrCertCode = opts.topwin.GetUniqueID(certB64,key);
+			//通过key的唯一编码获取关联UserID
+			var UsrIdByKey = GetUsrIdByKey(UsrCertCode);
+			getUserLevel(UsrIdByKey);
 		},
         onLoadSuccess:function() {
             //if (opts.topwin.strKey == "") return;
@@ -62,44 +54,31 @@ $(function(){
 				{
 					$("#trPassword").css('display','none');
 				}
-				else
-				{
-					$("#trPassword").css('display','block');
-				}
 			}
-			if (isEnableSelectUserLevel == "Y")
-			{
-				//通过CA接口获取当前key的唯一编码
-				var certB64 = opts.topwin.GetSignCert(key);
-				var UsrCertCode = opts.topwin.GetUniqueID(certB64);
-				//通过key的唯一编码获取关联UserID
-				var UsrIdByKey = GetUsrIdByKey(UsrCertCode);
-				var userlevel = getUserLevel(UsrIdByKey);
-				if (userlevel == "")
-				{
-					alert("未获取到当前证书用户级别,无法初始化级别下拉框!");
-					return;
-				}
-				initUserLevel(userlevel);
-			}
+
+			//通过CA接口获取当前key的唯一编码
+			var certB64 = opts.topwin.GetSignCert(key);
+			var UsrCertCode = opts.topwin.GetUniqueID(certB64,key);
+			//通过key的唯一编码获取关联UserID
+			var UsrIdByKey = GetUsrIdByKey(UsrCertCode);
+			getUserLevel(UsrIdByKey);
 		}
 	});
 	
-	if (isEnableSelectUserLevel == "Y") {
-		$('#trLevel').show();
-		$("#txtLevel").combobox({
-			valueField: 'LevelCode',
-			textField: 'LevelDesc',
-			editable: false,
-			panelHeight: 'auto'
-		});
-	}
+	$("#txtLevel").combobox({
+		valueField: 'LevelCode',
+		textField: 'LevelDesc',
+		editable: false,
+		width:240,
+		panelHeight:120
+	});
+	
 	init();
 	
-    if (openFlag == "0"){
+    /*if (openFlag == "0"){
 	    checkSure();
 	    return;
-	}
+	}*/
     
 	document.getElementById("password").focus();
 	
@@ -247,7 +226,7 @@ function GetList_pnp()
             var uniqueID = user.split('||')[1];
             //通过CA接口获取当前key的唯一编码
             var certB64 = opts.topwin.GetSignCert(uniqueID);
-            var UsrCertCode = opts.topwin.GetUniqueID(certB64);
+            var UsrCertCode = opts.topwin.GetUniqueID(certB64,uniqueID);
             //通过key的唯一编码获取关联UserID
             var UsrIdByKey = GetUsrIdByKey(UsrCertCode);            
 
@@ -287,7 +266,7 @@ function ajaxLogin(key) {
 	    } 
     } catch (err) {}
 
-    var UsrCertCode = opts.topwin.GetUniqueID(cert);
+    var UsrCertCode = opts.topwin.GetUniqueID(cert,key);
     var certificateNo = opts.topwin.GetCertNo(key);
 	
 	if (CAVersion == "2")
@@ -320,7 +299,8 @@ function ajaxLogin(key) {
             	"pg":"inpatient",
             	"ph":episodeId,
             	"pi":signType,
-            	"pj":venderCode
+            	"pj":venderCode,
+            	"pk":opts.oriSignatureLevel
         },
         success: function(ret) 
         {
@@ -378,10 +358,10 @@ function GetUsrIdByKey(UsrCertCode) {
     return result;
 }
 
-///跟据UserID获取用户级别
+///跟据UserID获取用户签名角色范围
 function getUserLevel(usrIdByKey)
 {
-	var userlevel = "";
+	var oriSignatureLevel = opts.oriSignatureLevel;
 	jQuery.ajax({
 		type: "Post",
 		dataType: "text",
@@ -390,55 +370,51 @@ function getUserLevel(usrIdByKey)
 		data: {
 			"OutputType":"String",
 			"Class":"EMRservice.BL.BLSignRole",
-			"Method":"GetUserLevel",
-			"p1":usrIdByKey,
-			"p2":episodeId
+			"Method":"GetSignCharacter",
+			"p1":oriSignatureLevel,
+			"p2":usrIdByKey,
+			"p3":userLocId,
+			"p4":episodeId
 		},
 		success: function(d) {
-			if(d != "") userlevel = d.split("^")[0];
+			if (d == "") return;
+			var strs = d.split("^"); 
+			var data = eval("("+strs[2]+")");
+			var userlevel = strs[0];
+			setLevelRange(data,userlevel);
 		},
 		error : function(d) { 
 			alert("getUserLevel error");
 		}
 	});
-	return userlevel;
 }
-///初始化级别下拉框
-function initUserLevel(userlevel)
+
+function setLevelRange(data,userlevel)
 {
-	jQuery.ajax({
-		type: "Post",
-		dataType: "text",
-		url: "../EMRservice.Ajax.common.cls",
-		async: false,
-		data: {
-			"OutputType":"String",
-			"Class":"EMRservice.BL.BLUserLevel",
-			"Method":"GetUserLevelRangeJson",
-			"p1":userlevel
+	$("#txtLevel").combobox({
+		valueField:'LevelCode',                        
+		textField:'LevelDesc',
+		width:240,
+		panelHeight:120,
+		data:data,
+		onSelect:function(record)
+		{
+			
 		},
-		success: function(d) {
-			if(d != "") {
-				$('#txtLevel').combobox('loadData', eval("["+d+"]"));
-				$('#txtLevel').combobox('select',userlevel);
-			}
-		},
-		error : function(d) { 
-			alert("initUserLevel error");
+	    onLoadSuccess:function(d){
+	    	$('#txtLevel').combobox('select',userlevel);
+	    	$('#txtLevel').combobox('enable');
 		}
 	});
 }
 
 function getuserInfo(userInfo)
 {
-	if (isEnableSelectUserLevel == "Y")
-	{
-		 var result = eval("("+userInfo+")");
-		 result.UserLevel = $('#txtLevel').combobox('getValue');
-		 result.LevelDesc = $("#txtLevel").combobox('getText');
-		 userInfo = JSON.stringify(result);
-	}
-	return userInfo;
+	 var result = eval("("+userInfo+")");
+	 result.characterCode = $('#txtLevel').combobox('getValue');
+	 result.characterDesc = $("#txtLevel").combobox('getText');
+	 userInfo = JSON.stringify(result);
+	 return userInfo;
 }
 
 //关闭窗口

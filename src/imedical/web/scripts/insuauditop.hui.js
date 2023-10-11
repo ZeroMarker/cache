@@ -150,43 +150,44 @@ function InitPatDg()
          
           ]],
        columns:[[
-           {field:'TabRegNo',title:'登记号',width:140,align:'left'},
+           {field:'TabRegNo',title:'登记号',width:140},
            {field:'TabPatName',title:'姓名',width:100},
            {field:'TabCTDesc',title:'科室描述',width:150},
            {field:'TabPatType',title:'病人类型',width:100},
-           {field:'TabDiagDesc',title:'疾病名称',width:140},
-           {field:'TabPrescNo',title:'处方号',width:60,align:'center'},
+           {field:'TabDiagDesc',title:'疾病名称',width:140,showTip:true},
+           {field:'TabPrescNo',title:'处方号',width:60},
            {field:'TabOEORIDate',title:'开医嘱日期',width:160},
-           {field:'TabOEORITimeOrd',title:'开医嘱时间',width:120,align:'center'},
-           {field:'TabOEORIDoctorDesc',title:'开医嘱医生',width:120,align:'center'},
-           {field:'TabPrescPrice',title:'单位价格',width:90,align:'right',
+           {field:'TabOEORITimeOrd',title:'开医嘱时间',width:120},
+           {field:'TabOEORIDoctorDesc',title:'开医嘱医生',width:120},
+           {field:'TabAuditFlag',title:'审核标记',width:90},
+           {field:'Select',title:'选择',width:60,hidden:true},
+               {field:'TabPrescPrice',title:'单价',width:90,align:'right',
              formatter:function(val,rowData,rowIndex){
                if(!isNaN(val))
                 return Number(val).toFixed(4);
                 }
            },
-           {field:'TabAuditFlag',title:'审核标记',width:90,align:'center'},
-            {field:'Select',title:'选择',width:60,align:'center'},
-            {field:'TabOEORIPhQty',title:'数量',width:60,align:'center'},
-            {field:'TabTotalAmount',title:'总价',width:60,align:'right',
+            {field:'TabPackUOM',title:'单位',width:60},
+            {field:'TabOEORIPhQty',title:'数量',width:60,align:'right'},
+            {field:'TabTotalAmount',title:'金额',width:60,align:'right',
              formatter:function(val,rowData,rowIndex){
                if(!isNaN(val))
                 return Number(val).toFixed(2);
                 }
             },
-             {field:'TabArcimDesc',title:'医嘱名称',width:60,align:'center'},
-            {field:'TabPhcfrCode',title:'频次',width:60,align:'center'},
-            {field:'TabDoseQtyUnit',title:'剂量',width:60,align:'center'},
-            {field:'TabPhOrdQtyUnit',title:'总量',width:60,align:'center'},
-            {field:'TabPackNum',title:'整包数量',width:90,align:'center'},
-            {field:'TabOEORIRowId',title:'TabOEORIRowId"',width:60,align:'center'},
+             {field:'TabArcimDesc',title:'医嘱名称',width:180},
+            {field:'TabPhcfrCode',title:'频次',width:60},
+            {field:'TabDoseQtyUnit',title:'剂量',width:60},
+            {field:'TabPhOrdQtyUnit',title:'总量',width:60},
+            {field:'TabPackNum',title:'整包数量',width:90,hidden:true},
+            {field:'TabOEORIRowId',title:'TabOEORIRowId',width:60},
            {field:'TabAuditUserName',title:'审核人',width:80},
            {field:'TabAuditDate',title:'审核日期',width:90},
            {field:'TabAuditTime',title:'审核时间',width:80},
-           {field:'TabPatNo',title:'医保号',width:60,align:'center'},
-           {field:'TabPatID',title:'证件号',width:60,align:'center'},
-           {field:'job',title:'进程号',width:60,align:'center'},
-           {field:'TblRType',title:'审批类型',width:60,align:'center'},
+           {field:'TabPatNo',title:'医保号',width:60},
+           {field:'TabPatID',title:'身份证号',width:80},
+           {field:'job',title:'进程号',width:60},
+           {field:'TblRType',title:'审批类型',width:60},
            {field:'TabAdmRowid',title:'TabAdmRowid',width:40,hidden:true},
             {field:'TabDemo',title:'备注 ',width:100,
             editor:{
@@ -196,7 +197,10 @@ function InitPatDg()
        ]],
        pageSize: 10,
        pagination:true,
-       onClickRow : function(rowIndex, rowData) {
+       //onClickRow : function(rowIndex, rowData) {
+	       
+	    onSelect:function(rowIndex, rowData){
+		    setEprMenuForm(rowData.TabAdmRowid); // + DingSH 20220126 
             SelOeOrdDr=rowData.TabOEORIRowId;
             SelPatName=rowData.TabPatName
             QryPatOrd();
@@ -219,7 +223,11 @@ function InitPatDg()
 	        
 	       
        },
-    
+      onUnselect:function(rowIndex, rowData){
+	      SelOeOrdDr="";
+          SelPatName="";
+	       QryPatOrd();
+	      },
        onLoadSuccess:function(data)
        {
            //alert(256)
@@ -259,24 +267,19 @@ function InitPatOrdDg()
            {field:'Tchangeflag',title:'Tchangeflag',width:10,hidden:true},
            {field:'TariCode',title:'收费项目编码',width:200},
            {field:'TariDesc',title:'收费项目名称',width:240 },
-           {field:'Price',title:'单价',width:160,align:'right',
-             formatter:function(val,rowData,rowIndex){
-               if(!isNaN(val))
-                return Number(val).toFixed(4);
-                }
-           },
-           {field:'InsuCode',title:'医保项目编码',width:200},
-           {field:'InsuDesc',title:'医保项目名称',width:240 },
-           {field:'xmlbDesc',title:'项目类别',width:100},
+           {field:'InsuCode',title:'医保项目编码',width:220},
+           {field:'InsuDesc',title:'医保项目名称',width:260 },
+           {field:'xmlbDesc',title:'项目类别',width:80},
            {field:'xmlb',title:'项目类别',width:10,hidden:true},
-           {field:'sl',title:'数量',width:100,align:'center'},
-           {field:'Price',title:'价格',width:120,align:'right',
+           {field:'Price',title:'单价',width:100,align:'right',
              formatter:function(val,rowData,rowIndex){
                if(!isNaN(val))
                 return Number(val).toFixed(4);
                 }
            },
-           {field:'Amount',title:'总价',width:140,align:'right',
+           {field:'uomDesc',title:'单位',width:60},
+           {field:'sl',title:'数量',width:100,align:'right'},
+           {field:'Amount',title:'金额',width:120,align:'right',
              formatter:function(val,rowData,rowIndex){
                if(!isNaN(val))
                 return Number(val).toFixed(2);
@@ -497,6 +500,7 @@ function Refuse_click()
 function InsuNotice_click()
 {
     //InsuNotice(Guser,NowDate); //DHCINSUPort.js 此功能暂未纳入标准版
+     $.messager.alert('提示', '此接口需要连接医保中心,暂无此功能', 'info');
 }
 
 
@@ -528,6 +532,7 @@ function BuildReportStr(row){
 
 //申报上报
 function Report_click(){
+	 $.messager.alert('提示', '此接口需要连接医保中心,暂无此功能', 'info');
 	    var Amount="",flag=0,SDate="",EDate="",SucessCount=0;
 	    var Month=now.getMonth()+1;
   		var Date=now.getDate();
@@ -662,4 +667,11 @@ function SetValue(value)
    return value;
 }
 
- 
+ /*头菜单传值*/
+function setEprMenuForm(episodeId, patientId) {
+	var frm = dhcsys_getmenuform();
+	if (frm && (frm.EpisodeID.value != episodeId)) {
+		frm.EpisodeID.value = episodeId;
+		frm.PatientID.value = patientId;
+	}
+}

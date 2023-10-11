@@ -12,7 +12,8 @@ $(function () {
         $('#gridHoliday').datagrid('addNewRow', { editField: 'holidayDesc' });
     });
     $('#btnSave').on('click', Save);
-    $('#btnDelete').on('click', Delete);
+    $('#btnDelete').on('click', Delete); 
+    $('.dhcpha-win-mask').remove();
 });
 
 function InitGridDict() {
@@ -112,6 +113,7 @@ function InitGridHoliday() {
             QueryName: 'PIVAHoliday'
         },
         columns: columns,
+        fitColumns:true,
         toolbar: '#gridHolidayBar',
         onClickRow: function (rowIndex, rowData) {
             if (rowData) {

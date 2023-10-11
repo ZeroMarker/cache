@@ -6,32 +6,33 @@
  * hisui版本:0.1.0
  */
  var InLocRowid="";
+ var InLocRecRowid="";
+ var UpFlag ="";
  var HospDr='';
  var GUser=session['LOGON.USERID'];
  var LocRowIndex=-1;
  var LocRecRowIndex=-1;
  $(function()
  {
-	 
-$(document).keydown(function (e) {
-             banBackSpace(e);
-        }); 
-//#1初始化医保类型	
-InitInsuTypeCmb()	
-//#2初始化医保科室gd
-InitInLocDg()
-	 
-//#3初始化医保科室记录gd
-InitInLocRecDg()
+	$(document).keydown(function (e) {
+		banBackSpace(e);
+	}); 
+	//#1初始化医保类型	
+	InitInsuTypeCmb()	
+	//#2初始化医保科室gd
+	InitInLocDg()
+		 
+	//#3初始化医保科室记录gd
+	InitInLocRecDg()
 
-//#4初始化Btn事件
-InitBtnClick();   
-  
-//#5隐藏元素
- $('#locDlEd').hide();
- $('#locRecDlEd').hide();     
- $('#locRecDlBd').hide();            
-  
+	//#4初始化Btn事件
+	InitBtnClick();   
+	  
+	//#5隐藏元素
+	 $('#locDlEd').hide();
+	 $('#locRecDlEd').hide();     
+	 $('#locRecDlBd').hide();            
+  	QryInLoc();	
 });
 
 //初始化Btn事件
@@ -43,34 +44,34 @@ function InitBtnClick(){
 	KeyWords_onkeydown(e);
 	});  
 	
-	
+	//科室信息编辑框 保存按钮事件
 	 $("#btnS").click(function () {
 	        UpdateInLoc();
             QryInLoc();
 			
         });
-        
+    //科室信息编辑框 关闭按钮事件    
    $("#btnC").click(function () {
             //QryInLoc();
 			$('#locDlEd').window('close');  
        });       
-        
+    //科室信息上传编辑框 保存按钮事件              
         
   $("#btnS1").click(function () {
             //QryInLoc();
             UpdateInLocRec();
             QryInLocRec();
         });
-        
+      //科室信息上传编辑框 关闭按钮事件   
    $("#btnC1").click(function () {
             //QrylocRecDlEd();
 			$('#locRecDlEd').window('close');  
        });  
-       
+     //上传记录生成框 生成按钮事件  
     $("#btnRbd").click(function () {
             ReBuildInLocRec();
         });
-        
+        //上传记录生成框 关闭按钮事件  
    $("#btnRbC").click(function () {
             //QrylocRecDlEd();
 			$('#locRecDlBd').window('close');  
@@ -91,20 +92,18 @@ function KeyWords_onkeydown(e)
 
 //查询科室信息事件
 function QryInLoc()
-{
-	
+{	
     //var stdate=$('#stdate').datebox('getValue');
 	//var endate=$('#endate').datebox('getValue');
     var InRowid=""
     var KeyWords=$('#KeyWords').val();
-    $('#locdg').datagrid('options').url = $URL
 	$('#locdg').datagrid('reload',{
 		ClassName:'web.DHCINSULocInfoCtl',
 		QueryName:'QryInLocInfo',
 		InRowid:InRowid,
 		KeyWords:KeyWords,
 		HospDr:PUBLIC_CONSTANT.SESSION.HOSPID
-		});
+	});
 	
 }
 
@@ -140,7 +139,10 @@ function InitInsuTypeCmb()
     	{
 	      QryInLocRec();
 	    	
-	    }
+	    },
+	    onLoadSuccess:function(){
+			$('#InsuType').combobox('select','00A');
+			},
 	});
 	var comboJson=$.cm({
 	    ClassName:"web.INSUDicDataCom",
@@ -156,66 +158,46 @@ function InitInsuTypeCmb()
 //初始化医保科室gd
 function InitInLocDg()
 {
-	 	//{field:'Security',title:'允许通过',formatter:function(value,row,index){
-			//	return "<span onclick='GV.showMenuSecurityWin("+row.ID+",\""+row.Name+"\",\""+row.Caption+"\")' class='icon-security'>&nbsp;</span>";
-			//}}
-	 //初始化datagrid
 	$HUI.datagrid("#locdg",{
 		url:$URL,
-		//fit: true,
+		fit: true,
 		border: false,
-		//idField:'dgid',
-		//iconCls: 'icon-save',
-		//rownumbers:true,
-		width: '100%',
 		striped:true,
-		//fitColumns:true,
 		singleSelect: true,
-		//autoRowHeight:false,
-		
-		data: [],
 		frozenColumns:[[
 		  { 
 		    field:'TOpt',
 		    width:40,
 		    title:'操作',
 		    formatter: function (value, row, index) {
-						
-							return "<img class='myTooltip' style='width:60' title='科室信息修改' onclick=\"locEditClick('" + index+"')\" src='../scripts_lib/hisui-0.1.0/dist/css/icons/paper_pen.png' style='border:0px;cursor:pointer'>";
-						
-					}
-		  }
-		
-		]],
-		columns:[[
-		
-		  
-			{field:'TInd',title:'TInd',width:10,hidden:true},
+				return "<img class='myTooltip' style='width:60' title='科室信息修改' onclick=\"locEditClick('" + index+"')\" src='../scripts_lib/hisui-0.1.0/dist/css/icons/paper_pen.png' style='border:0px;cursor:pointer'>";
+			}
+		  },{field:'TInd',title:'TInd',width:10,hidden:true},
 			{field:'TRowid',title:'TRowid',width:10,hidden:true},
 			{field:'TDeptCode',title:'医院科室编码',width:140},
 			{field:'TDeptDesc',title:'医院科室名称',width:180},
-			{field:'TDeptType',title:'科室类型',width:150},
-			{field:'TStandDeptCode',title:'标准科室编码',width:140},
-			{field:'TProfessionDeptCode',title:'专业科室代码 ',width:150,hidden:true},
-			{field:'TDeptDr',title:'科室Dr',width:50,align:'center',hidden:true},
-			{field:'TSPBedNum',title:'批准床位数量',width:50,hidden:true},
-			{field:'TSJBedNum',title:'实际开放床位数量',width:50,hidden:true},
-			{field:'TDeptSetUpDate',title:'科室成立时间',width:50,hidden:true},
-			{field:'TDoctorNum',title:'医师数量',width:50,hidden:true},
-			{field:'TTechnicianNum',title:'技师数量',width:50,hidden:true},
-			{field:'TPharmacistNum',title:'药师数量',width:50,hidden:true},
-			{field:'TNurseNum',title:'护理人员数量',width:50,hidden:true},
+			{field:'TDeptType',title:'科室类型',width:150,hidden:true},
+			{field:'TStandDeptCode',title:'国家科室名称',width:120},
+			{field:'TProfessionDeptCode',title:'国家科室代码 ',width:120},
+			{field:'TDeptDr',title:'HIS科室id',width:50,align:'center',hidden:true}
+		]],
+		columns:[[
+			{field:'TSPBedNum',title:'批准床位数量',width:100},
+			{field:'TSJBedNum',title:'医保认可床位数量',width:120},
+			{field:'TDeptSetUpDate',title:'科室成立时间',width:100},
+			{field:'TDoctorNum',title:'医师人数',width:80},
+			{field:'TTechnicianNum',title:'技师人数',width:80},
+			{field:'TPharmacistNum',title:'药师人数',width:80},
+			{field:'TNurseNum',title:'护士人数',width:80},
 			{field:'TDeptHead',title:'科室负责人',width:120},
-			{field:'TDeptHeadTelNo',title:'负责人电话',width:120},
-			{field:'TNurseHead',title:'护士长',width:100},
-			{field:'TNurseHeadTelNo',title:'护士长电话',width:220},
-			{field:'TIsKeyDept',title:'是否重点科室',width:140},
-			{field:'TKeyDeptLevel',title:'重点科室等级',width:150,hidden:true},
-			{field:'TIsAllowFee',title:'该科室是否发生费用',width:150,hidden:true},
+			{field:'TDeptHeadTelNo',title:'科室负责人电话',width:120},
+			{field:'Titro',title:'简介',width:120},
+			{field:'Tmedservscp',title:'医疗服务范围',width:120},
+			{field:'Tpoolareano',title:'统筹区编号',width:100},
 			{field:'THospCode',title:'医院机构编码',width:50,hidden:true},
-			{field:'TStDate',title:'开始日期',width:50,hidden:true},
+			{field:'TStDate',title:'开始日期',width:100},
 			{field:'TStTime',title:'开始时间',width:50,hidden:true},
-			{field:'TEdDate',title:'结束日期',width:50,hidden:true},
+			{field:'TEdDate',title:'结束日期',width:100},
 			{field:'TEdTime',title:'结束时间',width:50,hidden:true},
 			{field:'TActFlag',title:'有效标志',width:50,hidden:true},
 			{field:'TUserDr',title:'经办人',width:100,hidden:true},
@@ -231,13 +213,11 @@ function InitInLocDg()
 			
 		]],
 		pageSize: 10,
+		pageList:[10,20,30],
 		pagination:true,
         onClickRow : function(rowIndex, rowData) {
-	        
-			//alert("rowData="+rowData.TRowid)   
 			InLocRowid=rowData.TRowid;
 			QryInLocRec();
-            
         },
         onDblClickRow:function(rowIndex, rowData){
 	        //initLocFrm(rowIndex, rowData);
@@ -247,20 +227,10 @@ function InitInLocDg()
         },
         onLoadSuccess:function(data)
 		{
-			var index=0;
-			if (data.total>0)
-			{
-			 if (LocRowIndex>=0){
-			   index=LocRowIndex
-			 }
-			  $('#locdg').datagrid('selectRow',index);
-			}
 			LocRowIndex=-1;
 		}
-	});
-	
+	});	
 }
-
 //初始化医保科室记录gd
 function InitInLocRecDg()
 {
@@ -269,7 +239,7 @@ function InitInLocRecDg()
 		///idField:'recdgid',
 		//rownumbers:true,
 		url:$URL,
-		width: '100%',
+		fit:true,
 		striped:true,
 		singleSelect: true,
 		modal:true,
@@ -301,10 +271,10 @@ function InitInLocRecDg()
 			{field:'THSPUserDr',title:'医院审批人',width:60,hidden:true},
 			{field:'THSPUserCode',title:'医院审批人',width:60,hidden:true},
 			{field:'THSPUserName',title:'医院审批人',width:120},
-			{field:'THSPFlag',title:'医院审批状态',width:140},
-			{field:'THSPDate',title:'医院审批日期',width:140},
-			{field:'THSPTime',title:'医院审批时间',width:140},
-			{field:'TISPUserDr',title:'医保审批人',width:140,hidden:true},
+			{field:'THSPFlag',title:'科室上传状态',width:140},
+			{field:'THSPDate',title:'科室上传日期',width:140},
+			{field:'THSPTime',title:'科室上传时间',width:140},
+			{field:'TISPUserDr',title:'上传人',width:140,hidden:true},
 			{field:'TISPFlag',title:'医保审批状态',width:140},
 			{field:'TISPDate',title:'医保审批日期',width:140},
 			{field:'TISPTime',title:'医保审批时间',width:140},
@@ -324,7 +294,8 @@ function InitInLocRecDg()
 		pagination:true,
 		//rownumbers:true,
         onClickRow:function(rowIndex, rowData) {
-	      
+	      InLocRecRowid=rowData.TRowid;
+	      UpFlag=rowData.THSPFlag
         },
          onDblClickRow:function(rowIndex, rowData){
 	       
@@ -354,43 +325,135 @@ function InitInLocRecDg()
 //加载科室信息
 function loadLocPanel(rowIndex, rowData)
 {
-	$('#DeptCode').val(rowData.TDeptCode)
-	$('#DeptDesc').val(rowData.TDeptDesc)
-	$('#DeptType').val(rowData.TDeptType)
-	$('#StandDeptCode').val(rowData.TStandDeptCode)
-	$('#ProfessionDeptCode').val(rowData.TProfessionDeptCode)
-	$('#DeptDr').val(rowData.TDeptDr)
-	$('#SPBedNum').val(rowData.TSPBedNum)
-	$('#SJBedNum').val(rowData.TSJBedNum)
-	$('#DeptSetUpDate').val(rowData.TDeptSetUpDate)
-	$('#DoctorNum').val(rowData.TDoctorNum)
-	$('#TechnicianNum').val(rowData.TTechnicianNum)
-	$('#PharmacistNum').val(rowData.TPharmacistNum)
-	$('#NurseNum').val(rowData.NurseNum)
-	$('#DeptHead').val(rowData.TDeptHead)
-	$('#DeptHeadTelNo').val(rowData.TDeptHeadTelNo)
-	$('#NurseHead').val(rowData.TNurseHead)
-	$('#NurseHeadTelNo').val(rowData.TNurseHeadTelNo)
-	$('#IsKeyDept').val(rowData.TIsKeyDept)
-	$('#KeyDeptLevel').val(rowData.TKeyDeptLevel)
-	$('#IsAllowFee').val(rowData.TIsAllowFee)
-	$('#HospCode').val(rowData.THosp)
-	$('#StDate').val(rowData.TStDate)
-	$('#StTime').val(rowData.TStTime)
-	$('#EdDate').val(rowData.TEdDate)
-	$('#EdTime').val(rowData.TEdTime)
-	$('#ActFlag').val(rowData.TActFlag)
+
+	$HUI.combobox('#ActFlag', {
+		panelHeight: 'auto',
+		data: [ {
+				value: '1',
+				text: '有效'
+			},{
+				value: '0',
+				text: '无效'
+			}
+		],
+		valueField: 'value',
+		textField: 'text',
+		onSelect: function (data) {					
+		}
+	});
+	
+	
+	$HUI.combobox('#DeptType', {
+		panelHeight: 'auto',
+		data: [ {
+				value: '1',
+				text: '门诊'
+			},{
+				value: '2',
+				text: '住院'
+			}
+		],
+		valueField: 'value',
+		textField: 'text',
+		onSelect: function (data) {					
+		}
+	});
+	$("#StandDeptCode").combogrid({
+		panelWidth: 320,
+		panelHeight: 350,
+		mode:'remote',
+		delay:300,
+		method: 'GET',
+		striped: true,
+		fitColumns: true,
+		pagination:true,
+		editable: true,
+		valueField: 'cCode',
+		textField: 'cDesc',
+		//url:$URL,
+		data:[],
+		columns:[
+		[{
+			field:'id',title:'rowid',hidden:true},
+			{field:'cCode',title:'编码',width:100} ,
+			{field:'cDesc',title:'名称',width:100},
+		]],
+		onBeforeLoad:function(param){
+				$('#StandDeptCode').combogrid("grid").datagrid("options").url=$URL;
+				param.ClassName="web.INSUDicDataCom";
+				param.QueryName="QueryDic";
+				param.Type="dept00A";
+				param.Code=param.q;
+		},
+		onLoadSuccess:function(data){
+		},
+		onSelect:function(index,rowData){
+			setValueById('ProfessionDeptCode',rowData.cCode);		
+			}	
+	})
+	$("#DeptHead").combogrid({
+		panelWidth: 320,
+		panelHeight: 350,
+		mode:'remote',
+		method: 'GET',
+		striped: true,
+		fitColumns: true,
+		pagination:true,
+		editable: true,
+		valueField: 'Description',
+		textField: 'Description',
+		url:$URL,
+		data:[],
+		columns:[
+		[{
+			field:'HIDDEN',title:'HIDDEN',hidden:true},
+			{field:'Code',title:'编码',width:100} ,
+			{field:'Description',title:'名称',width:100},
+		]],
+		onBeforeLoad:function(param){
+			param.ClassName = "web.SSUser";
+			param.QueryName= "LookUpActive";
+			param.desc = param.q;
+			//param.Code=param.q
+		},
+		onLoadSuccess:function(data){
+		},
+		onSelect:function(index,rowData){	 
+			}	
+	})
+	setValueById('DeptCode',rowData.TDeptCode)
+	setValueById('DeptDesc',rowData.TDeptDesc)
+	setValueById('DeptType',rowData.TDeptType)
+	setValueById('StandDeptCode',rowData.TStandDeptCode)
+	setValueById('ProfessionDeptCode',rowData.TProfessionDeptCode)
+	setValueById('DeptDr',rowData.TDeptDr)
+	setValueById('SPBedNum',rowData.TSPBedNum)
+	setValueById('SJBedNum',rowData.TSJBedNum)
+	setValueById('DeptSetUpDate',rowData.TDeptSetUpDate)
+	setValueById('DoctorNum',rowData.TDoctorNum)
+	setValueById('TechnicianNum',rowData.TTechnicianNum)
+	setValueById('PharmacistNum',rowData.TPharmacistNum)
+	setValueById('NurseNum',rowData.TNurseNum)
+	setValueById('DeptHead',rowData.TDeptHead)
+	setValueById('DeptHeadTelNo',rowData.TDeptHeadTelNo)
+	setValueById('StDate',rowData.TStDate)
+	setValueById('EdDate',rowData.TEdDate)
+	setValueById('ActFlag',rowData.TActFlag)
 	$('#UserDr').val(rowData.TUserDr)
 	$('#UserName').val(rowData.TUserName)
-	$('#Date').val(rowData.TDate)
+	setValueById('Date',rowData.TDate)
 	$('#Time').val(rowData.TTime)
 	$('#Remark').val(rowData.TRemark)
-	$('#ExtStr01').val(rowData.TExtStr01)
-	$('#ExtStr02').val(rowData.TExtStr02)
-	$('#ExtStr03').val(rowData.TExtStr03)
-	$('#ExtStr04').val(rowData.TExtStr04)
-	$('#ExtStr05').val(rowData.TExtStr05)
+//	$('#ExtStr01').val(rowData.TExtStr01)
+//	$('#ExtStr02').val(rowData.TExtStr02)
+//	$('#ExtStr03').val(rowData.TExtStr03)
+//	$('#ExtStr04').val(rowData.TExtStr04)
+//	$('#ExtStr05').val(rowData.TExtStr05)
+//	$('#Remark').val(rowData.TRemark)
+	$('#itro').val(rowData.Titro)
+	$('#medservscp').val(rowData.Tmedservscp)
 	$('#Rowid').val(rowData.TRowid)
+	$('#HospCode').val(rowData.THospCode)
 
 }
 
@@ -407,8 +470,8 @@ function initLocFrm(rowIndex, rowData)
     $('#locDlEd').show(); 
 		$HUI.dialog("#locDlEd",{
 			title:"科室信息编辑",
-			height:550,
-			width:870,
+			height:510,
+			width:850,
 		    iconCls: 'icon-w-edit',
 			modal:true
 			//content:initLocFrmC(),
@@ -438,6 +501,28 @@ function initLocFrm(rowIndex, rowData)
 //加载科室信息
 function loadLocRecPanel(rowIndex, rowData)
 {
+	$HUI.combobox('#RHSPFlag', {
+		panelHeight: 'auto',
+		data: [{
+				value: '',
+				text: '未上传',
+				'selected':true
+			}, {
+				value: '1',
+				text: '已上传'
+			},{
+				value: '2',
+				text: '已变更'
+			},{
+				value: '0',
+				text: '已撤销'
+			}
+		],
+		valueField: 'value',
+		textField: 'text',
+		onSelect: function (data) {					
+		}
+	});
 	$('#RCTDr').val(rowData.TCTDr);
 	$('#RCenterNo').val(rowData.TCenterNo);
 	$('#RStates').val(rowData.TStates);
@@ -447,16 +532,20 @@ function loadLocRecPanel(rowIndex, rowData)
 	$('#RInsuTypeDesc').val(rowData.TInsuTypeDesc);
 	$('#RHSPUserName').val(rowData.THSPUserName);
 	$('#RHSPUserDr').val(rowData.THSPUserDr);
-	$('#RHSPFlag').val(rowData.THSPFlag);
-	$('#RHSPDate').val(rowData.THSPDate);
+	//$('#RHSPFlag').val(rowData.THSPFlag);
+	setValueById('RHSPFlag',rowData.THSPFlag)
+	//$('#RHSPDate').val(rowData.THSPDate);
+	setValueById('RHSPDate',rowData.THSPDate)
 	$('#RHSPTime').val(rowData.THSPTime);
 	$('#RISPUserDr').val(rowData.TISPUserDr);
 	$('#RISPFlag').val(rowData.TISPFlag);
-	$('#RISPDate').val(rowData.TISPDate);
+	//$('#RISPDate').val(rowData.TISPDate);
+	setValueById('RISPDate',rowData.TISPDate)
 	$('#RISPTime').val(rowData.TISPTime);
 	$('#RUserDr').val(rowData.TUserDr);
 	$('#RUserName').val(rowData.TUserName);
-	$('#RDate').val(rowData.TDate);
+	//$('#RDate').val(rowData.TDate);
+	setValueById('RDate',rowData.TDate)
 	$('#RTime').val(rowData.TTime);
 	$('#RExtStr01').val(rowData.TExtStr01);
 	$('#RExtStr02').val(rowData.TExtStr02);
@@ -482,7 +571,7 @@ function initLocRecFrm(rowIndex, rowData)
     $('#locRecDlEd').show(); 
 		$HUI.dialog("#locRecDlEd",{
 			title:"医保上传记录编辑",
-			height:465,
+			height:320,
 			width:880,
 			iconCls:'icon-w-edit',
 			//content:initLocFrmC(),
@@ -535,43 +624,89 @@ function UpdateInLoc()
 //获取待保存科室信息串
 function BuildInLoc()
 {
-	var InStr=$('#Rowid').val()
-	InStr=InStr+"^"+$('#DeptCode').val()
-	InStr=InStr+"^"+$('#DeptDesc').val()
-	InStr=InStr+"^"+$('#DeptType').val()
-	InStr=InStr+"^"+$('#StandDeptCode').val()
-	InStr=InStr+"^"+$('#ProfessionDeptCode').val()
-	InStr=InStr+"^"+$('#DeptDr').val()
-	InStr=InStr+"^"+$('#SPBedNum').val()
-	InStr=InStr+"^"+$('#SJBedNum').val()
-	InStr=InStr+"^"+$('#DeptSetUpDate').val()
-	InStr=InStr+"^"+$('#DoctorNum').val()
-	InStr=InStr+"^"+$('#TechnicianNum').val()
-	InStr=InStr+"^"+$('#PharmacistNum').val()
-	InStr=InStr+"^"+$('#NurseNum').val()
-	InStr=InStr+"^"+$('#DeptHead').val()
-	InStr=InStr+"^"+$('#DeptHeadTelNo').val()
-	InStr=InStr+"^"+$('#NurseHead').val()
-	InStr=InStr+"^"+$('#NurseHeadTelNo').val()
-	InStr=InStr+"^"+$('#IsKeyDept').val()
-	InStr=InStr+"^"+$('#KeyDeptLevel').val()
-	InStr=InStr+"^"+$('#IsAllowFee').val()
-	InStr=InStr+"^"+$('#HospCode').val()
-	InStr=InStr+"^"+$('#StDate').val()
-	InStr=InStr+"^"+$('#StTime').val()
-	InStr=InStr+"^"+$('#EdDate').val()
-	InStr=InStr+"^"+$('#EdTime').val()
-	InStr=InStr+"^"+$('#ActFlag').val()
-	InStr=InStr+"^"+$('#UserDr').val()
-	InStr=InStr+"^"+$('#Date').val()
-	InStr=InStr+"^"+$('#Time').val()
-	InStr=InStr+"^"+$('#Remark').val()
-	InStr=InStr+"^"+$('#ExtStr01').val()
-	InStr=InStr+"^"+$('#ExtStr02').val()
-	InStr=InStr+"^"+$('#ExtStr03').val()
-	InStr=InStr+"^"+$('#ExtStr04').val()
-	InStr=InStr+"^"+$('#ExtStr05').val()
-	
+	var InStr=getValueById('Rowid')                    // getValueById('Rowid')
+	InStr=InStr+"^"+getValueById('DeptCode')           // getValueById('DeptCode')
+	InStr=InStr+"^"+getValueById('DeptDesc')           // getValueById('DeptDesc')
+	var type=getValueById('DeptType')
+	if(type=="门诊"){type="1"}else{type="2"}
+	InStr=InStr+"^"+type           // getValueById('DeptType')
+	InStr=InStr+"^"+getValueById('StandDeptCode')      // getValueById('StandDeptCode')
+	//InStr=InStr+"^"+getValueById('ProfessionDeptCode') // getValueById('ProfessionDeptCode')
+	var ProfessionDeptCode=getValueById('ProfessionDeptCode');
+	if(ProfessionDeptCode == "")
+	{
+		$.messager.alert("温馨提示","科别不能为空!", 'info');
+		return ;
+	}
+	InStr=InStr+"^"+ProfessionDeptCode
+	InStr=InStr+"^"+getValueById('DeptDr')         // getValueById('DeptDr')
+	InStr=InStr+"^"+getValueById('SPBedNum')       // getValueById('SPBedNum')
+	InStr=InStr+"^"+getValueById('SJBedNum')  // getValueById('SJBedNum')
+	//InStr=InStr+"^"+getValueById('DeptSetUpDate')     // getValueById('DeptSetUpDate')
+	var DeptSetUpDate=getValueById('DeptSetUpDate');
+	if(DeptSetUpDate == "")
+	{
+		$.messager.alert("温馨提示","科室成立日期不能为空!", 'info');
+		return ;
+	}
+	InStr=InStr+"^"+DeptSetUpDate
+	InStr=InStr+"^"+getValueById('DoctorNum')      // getValueById('DoctorNum')
+	InStr=InStr+"^"+getValueById('TechnicianNum')  // getValueById('TechnicianNum')
+	InStr=InStr+"^"+getValueById('PharmacistNum')  // getValueById('PharmacistNum')
+	InStr=InStr+"^"+getValueById('NurseNum')       // getValueById('NurseNum')
+	//InStr=InStr+"^"+getValueById('DeptHead')       // getValueById('DeptHead')
+	var DeptHead=getValueById('DeptHead');
+	if(DeptHead == "")
+	{
+		$.messager.alert("温馨提示","科室负责人不能为空!", 'info');
+		return ;
+	}
+	InStr=InStr+"^"+DeptHead
+	//InStr=InStr+"^"+getValueById('DeptHeadTelNo')  // getValueById('DeptHeadTelNo')
+	var DeptHeadTelNo=getValueById('DeptHeadTelNo');
+	if(DeptHeadTelNo == "")
+	{
+		$.messager.alert("温馨提示","负责人电话不能为空!", 'info');
+		return ;
+	}
+	InStr=InStr+"^"+DeptHeadTelNo
+	InStr=InStr+"^"+""
+	InStr=InStr+"^"+""
+	InStr=InStr+"^"+""
+	InStr=InStr+"^"+""
+	InStr=InStr+"^"+""
+	//InStr=InStr+"^"+""
+	InStr=InStr+"^"+getValueById('HospCode')		// getValueById('HospCode')
+	//InStr=InStr+"^"+getValueById('StDate')		// getValueById('StDate')
+	var StDate=getValueById('StDate');
+	if(StDate == "")
+	{
+		$.messager.alert("温馨提示","开始日期不能为空!", 'info');
+		return ;
+	}
+	InStr=InStr+"^"+StDate
+	InStr=InStr+"^"+""
+	InStr=InStr+"^"+getValueById('EdDate')		// getValueById('EdDate')
+	InStr=InStr+"^"+""
+	InStr=InStr+"^"+getValueById('ActFlag')
+	InStr=InStr+"^"+getValueById('UserDr')		// getValueById('UserDr')
+	InStr=InStr+"^"+getValueById('Date')		// getValueById('Date')
+	InStr=InStr+"^"+getValueById('Time')		// getValueById('Time')
+	InStr=InStr+"^"+getValueById('Remark')		// getValueById('Remark')
+	//InStr=InStr+"^"+getValueById('itro')		// getValueById('ExtStr01')
+	var itro=getValueById('itro');
+	if(itro == "")
+	{
+		$.messager.alert("温馨提示","简介不能为空!", 'info');
+		return ;
+	}
+	InStr=InStr+"^"+itro						// getValueById('ExtStr01')
+	//InStr=InStr+"^"+getValueById('ExtStr02'	 // getValueById('ExtStr02')
+	InStr=InStr+"^"+getValueById('medservscp')	// getValueById('ExtStr02')
+	InStr=InStr+"^"+getValueById('ExtStr03')	// getValueById('ExtStr03')
+	InStr=InStr+"^"+getValueById('ExtStr04')	// getValueById('ExtStr04')
+	InStr=InStr+"^"+getValueById('ExtStr05')	// getValueById('ExtStr05')
+	InStr=InStr+"^"+session['LOGON.HOSPID']
 	return InStr
 }
 
@@ -603,24 +738,24 @@ function UpdateInLocRec()
 //获取待保存医保上传记录串
 function BuildInLocRec()
 {
-	var InStr=$('#RRowid').val()
-	InStr=InStr+"^"+$('#RCTDr').val()
-	InStr=InStr+"^"+$('#RCenterNo').val()
-	InStr=InStr+"^"+$('#RStates').val()
-	InStr=InStr+"^"+$('#RSeriNo').val()
-	InStr=InStr+"^"+$('#RBusiNo').val()
-	InStr=InStr+"^"+$('#RInsuType').val()
-	InStr=InStr+"^"+$('#RHSPUserDr').val()
-	InStr=InStr+"^"+$('#RHSPFlag').val()
-	InStr=InStr+"^"+$('#RHSPDate').val()
-	InStr=InStr+"^"+$('#RHSPTime').val()
-	InStr=InStr+"^"+$('#RISPUserDr').val()
-	InStr=InStr+"^"+$('#RISPFlag').val()
-	InStr=InStr+"^"+$('#RISPDate').val()
-	InStr=InStr+"^"+$('#RISPTime').val()
-	InStr=InStr+"^"+$('#RUserDr').val()
-	InStr=InStr+"^"+$('#RDate').val()
-	InStr=InStr+"^"+$('#RTime').val()
+	var InStr=getValueById('RRowid')              // getValueById('RRowid')
+	InStr=InStr+"^"+getValueById('RCTDr')          // getValueById('RCTDr')
+	InStr=InStr+"^"+getValueById('RCenterNo')     // getValueById('RCenterNo')
+	InStr=InStr+"^"+getValueById('RStates')        // getValueById('RStates')
+	InStr=InStr+"^"+""
+	InStr=InStr+"^"+""
+	InStr=InStr+"^"+getValueById('RInsuType')      // getValueById('RInsuType')
+	InStr=InStr+"^"+getValueById('RHSPUserDr')     // getValueById('RHSPUserDr')
+	InStr=InStr+"^"+getValueById('RHSPFlag')       // getValueById('RHSPFlag')
+	InStr=InStr+"^"+getValueById('RHSPDate')       // getValueById('RHSPDate')
+	InStr=InStr+"^"+getValueById('RHSPTime')      // getValueById('RHSPTime')
+	InStr=InStr+"^"+""
+	InStr=InStr+"^"+""
+	InStr=InStr+"^"+""
+	InStr=InStr+"^"+""
+	InStr=InStr+"^"+getValueById('RUserDr')       // getValueById('RUserDr')
+	InStr=InStr+"^"+getValueById('RDate')          // getValueById('RDate')
+	InStr=InStr+"^"+getValueById('RTime')          // getValueById('RTime')
 	InStr=InStr+"^"+$('#RExtStr01').val()
 	InStr=InStr+"^"+$('#RExtStr02').val()
 	InStr=InStr+"^"+$('#RExtStr03').val()
@@ -642,7 +777,7 @@ function initLocRecRbFrm()
     $('#locRecDlBd').show(); 
 		$HUI.dialog("#locRecDlBd",{
 			title:"医保上传记录生成",
-			height:255,
+			height:260,
 			width:300,
 			iconCls: 'icon-w-batch-add',
 			modal:true
@@ -683,12 +818,15 @@ function FrmRbdResShw()
 
 
 
+///******************************************************************
+///功能说明
+///生成待上传记录
 function ReBuildInLocRec()
 {
 
 	var InsuTypeDesc=$("#RdInsuTypeDesc").val();
 	var InsuType=$("#RdInsuType").val();
-	var ExpStr=$("#RdCenter").val()+"^"+$("#RdStates").val()+"^^^^^"
+	var ExpStr=$("#RdCenter").val()+"^"+$("#RdCenter").val()+"^^^^^"
 	$.messager.confirm("生成", "确定重新生成"+InsuTypeDesc+"科室上传记录?", function (r) {
 		if (r)
 		 {
@@ -709,7 +847,7 @@ function ReBuildInLocRec()
 			  
 			  },
 			  function(rtn){
-	         $.messager.alert("生成记录提示", rtn, 'info');  
+	         $.messager.alert("生成记录提示", rtn.split("!")[1], 'info');  
 	         setTimeout('$.messager.progress("close");', 2 * 1000);
 	         //QryInLoc();
 		});	
@@ -719,12 +857,88 @@ function ReBuildInLocRec()
 });
 	
 }
+///******************************************************************
 
-//重新生成科室信息 
-function ReBuildInLoc()
+///******************************************************************
+///功能说明：
+//科室信息管理接口调用 
+//科室上传3401
+function InLocUL(){
+	var InsuType=$("#InsuType").combobox('getValue');
+	if (""==InsuType){ 
+	$.messager.alert("提示", "请选择医保类型", 'info');  return;}
+	var ExpStr=InsuType+"^^^3401^"+InLocRecRowid
+	//alert(InLocRecRowid)
+	if (InLocRecRowid==""){
+		//$.messager.alert("提示", "科室上传,本次将上传所有的待上传科室记录", 'info'); 	
+		}else{
+			if(UpFlag=="已上传" || UpFlag=="已变更") {$.messager.alert("提示", "科室变更上传,该记录不可重复上传", 'info');return ;}
+			//$.messager.alert("提示", "科室上传,本次将只上传科室上传记录表Rowid为：" +InLocRecRowid+"的数据", 'info'); 
+			}
+	var RtnFLag=InsuDicCTLocUL(0,GUser,ExpStr); //DHCINSUPort.js
+	if(RtnFLag.split("^")[0]<0){
+		 $.messager.alert("提示", "科室上传失败", 'info');  
+		}else{
+		$.messager.alert("提示", "科室上传成功", 'info');  
+	}
+}
+//科室变更3402
+function InLocULMod()
 {
-	
-$.messager.confirm("生成", "确定重新生成科室信息?", function (r) {
+	var InsuType=$("#InsuType").combobox('getValue');
+	if (""==InsuType){ 
+	$.messager.alert("提示", "请选择医保类型", 'info');  return;}
+	var Rowid=InLocRecRowid;
+	if(Rowid==""){$.messager.alert("提示", "科室变更失败,请选中一条上传记录", 'info');  return;}
+	ExpStr=InsuType+"^^^3402^"
+	if(UpFlag!="已上传" && UpFlag!="已变更") {$.messager.alert("提示", "科室变更失败,该记录尚未上传或变更,无法变更", 'info');return ;}
+	var RtnFLag=InsuDicCTLocULMod(0,GUser,Rowid,ExpStr); //DHCINSUPort.js
+	if(RtnFLag.split("^")[0]<0){
+		 $.messager.alert("提示", "科室变更失败", 'info');  
+		}else{
+		$.messager.alert("提示", "科室变更成功", 'info');  
+	}
+}
+//科室批量上传3401A
+function InLocPLUL()
+{
+	var InsuType=$("#InsuType").combobox('getValue');
+	if (""==InsuType){ 
+	$.messager.alert("提示", "请选择医保类型", 'info');  return;}
+	var ExpStr=InsuType+"^^^3401A^"+""
+	var RtnFLag=InsuDicCTLocUL(0,GUser,ExpStr); //DHCINSUPort.js
+	if(RtnFLag.split("^")[0]<0){
+		 $.messager.alert("提示", "科室批量上传失败", 'info');  
+		}else{
+		$.messager.alert("提示", "科室批量上传成功", 'info');  
+	}
+}
+//科室撤销3403
+function InLocULCancel()
+{
+	var InsuType=$("#InsuType").combobox('getValue');
+	if (""==InsuType){ 
+	$.messager.alert("提示", "请选择医保类型", 'info');  return;}
+	var Rowid=InLocRecRowid;
+	if(Rowid==""){$.messager.alert("提示", "科室撤销失败,请选中一条上传记录", 'info');  return;}
+	ExpStr=InsuType+"^^^3403^"
+	if(UpFlag!="已上传" && UpFlag!="已变更") {$.messager.alert("提示", "科室撤销失败,该记录尚未上传或变更,无法撤销", 'info');return ;}
+	var RtnFLag=InsuDicCTLocULCancel(0,GUser,Rowid,ExpStr); //DHCINSUPort.js
+	if(RtnFLag.split("^")[0]<0){
+		 $.messager.alert("提示", "科室撤销失败", 'info');  
+		}else{
+		$.messager.alert("提示", "科室撤销成功", 'info');  
+	}
+}
+///******************************************************************
+///******************************************************************
+///功能说明：
+//同步科室信息 
+///******************************************************************
+function ReBuildInLoc()
+{	
+var InsuType=$("#InsuType").combobox('getValue');
+$.messager.confirm("生成", "确定重新同步科室信息?", function (r) {
 		if (r)
 		 {
 			$.messager.progress({
@@ -741,12 +955,12 @@ $.messager.confirm("生成", "确定重新生成科室信息?", function (r) {
 			  LocDesc:"",
 			  UserDr:GUser,
 			  HospDr:PUBLIC_CONSTANT.SESSION.HOSPID,
-			  ExpStr:"^^^^^"
-			  
+			  ExpStr:"^^^^^",
+			  InsuType:InsuType
 			  },
 			  function(rtn){
 			
-	         $.messager.alert("提示", rtn, 'info');  
+	         $.messager.alert("提示", rtn.split("!")[1], 'info');  
 	         setTimeout('$.messager.progress("close");', 2 * 1000);
 	         QryInLoc();
 		});	
@@ -760,7 +974,7 @@ $.messager.confirm("生成", "确定重新生成科室信息?", function (r) {
 	
 }
 
-
+/*
 //科室上传
 function InLocUL(){
 	var InsuType=$("#InsuType").combobox('getValue');
@@ -770,7 +984,7 @@ function InLocUL(){
 
 	var RtnFLag=InsuDicCTLocUL(0,GUser,ExpStr); //DHCINSUPort.js
 	}
-
+*/
 //科室下载
 function InLocDL(){
 	var InsuType=$("#InsuType").combobox('getValue');
@@ -887,9 +1101,7 @@ catch(e){
 }
 finally{
 	setTimeout('$.messager.progress("close");', 1 * 1000);
-} 
-	
-    
+}    
    
 }
 function buildImportStr(xlsheet,rowindex){
@@ -960,20 +1172,11 @@ function SetValue(value)
 	return value;
 }
 
-
-
-
-
 //科室导出
 function InLocEpot()
 {
 	try
 	{
-		
-
-		
-		
-		
 	var rtn = $cm({
 	dataType:'text',
 	ResultSetType:"Excel",
@@ -1030,6 +1233,6 @@ $(".FileWindow").on("change","input[type='file']",function(){
 });
 function selectHospCombHandle(){
 	$('#InsuType').combobox('reload');
-	QryInLoc();
-	QryInLocRec();
+	//QryInLoc();
+	//QryInLocRec();
 }

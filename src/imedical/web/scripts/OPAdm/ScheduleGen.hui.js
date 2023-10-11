@@ -153,6 +153,7 @@ function Create_Click()
 	if(schstr=="") info+="全部"
 	else info+="指定选择"
 	info+="</font>的排班吗？";
+	info+="(未产生业务的已生成排班会按排班模板进行更新)"
 	$.messager.confirm("提示",info , 
 		function (data) {
             if (data) {

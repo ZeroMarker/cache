@@ -170,7 +170,7 @@
             //导出
             this.btnExportDocument = function() {
                 //if (!param || param.id == 'GuideDocument')
-                var documentContext = emrEditor.getDocContext();
+                var documentContext = emrEditor.getDocWithoutPrivilege();
                 if (!documentContext || 'ERROR' == documentContext.result) {
                     showEditorMsg('请选中要导出的文档!', 'forbid');
                     return;

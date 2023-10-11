@@ -88,8 +88,8 @@ function SetPhaLocConfig(configstr) {
     enddate = FormatDateT(enddate);
     $("#date-start").data('daterangepicker').setStartDate(startdate + " 00:00:00");
     $("#date-start").data('daterangepicker').setEndDate(startdate + " 00:00:00");
-    $("#date-end").data('daterangepicker').setStartDate(startdate + " 23:59:59");
-    $("#date-end").data('daterangepicker').setEndDate(startdate + " 23:59:59");
+    $("#date-end").data('daterangepicker').setStartDate(enddate + " 23:59:59");
+    $("#date-end").data('daterangepicker').setEndDate(enddate + " 23:59:59");
     InitAgreeRetModal();
 }
 
@@ -545,6 +545,9 @@ function InitTrialDispTab() {
         var tmpTabId = "#div-" + tabId.split("-")[1] + "-condition";
         $(tmpTabId).show();
         $("#monitor-condition").children().not(tmpTabId).hide();
+        if (tmpTabId !== NowTAB){
+	    	 $("#ifrm-presc").attr("src", "");	    
+	    }
         NowTAB = tmpTabId;
         QueryInPhDispList();
     })
@@ -653,6 +656,14 @@ function RePrintLabel() {
     if (PhacRowid != "") {
         PrintDispSheet(PhacRowid, "1");
     }
+}
+
+//重打草药处方
+function RePrintPresc() {
+	var prescno = GetSelPrescNo();
+	if (prescno!="") {
+		INPHA_PRINTCOM.Presc(prescno, "正方", "");
+	}
 }
 
 //填写置可退的原因

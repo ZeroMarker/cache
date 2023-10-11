@@ -4,25 +4,9 @@ function Init(){
 	GetIsWritePisFlag();
 }
 function ItemMastOn(itmmastid,TesItemDesc,arDefEmg){
-	$("#TesItemID").val(itmmastid);
-	$("#TesItemDesc").val(TesItemDesc);
-	var LocID = ""; var LocDesc = "";
-	var OpenForAllHosp=0,LogLoc="";
-	var OrderOpenForAllHosp=parent.$HUI.checkbox("#OrderOpenForAllHosp").getValue();
-	var FindByLogDep=parent.$HUI.checkbox("#FindByLogDep").getValue();
-	if (OrderOpenForAllHosp==true){OpenForAllHosp=1}
-	if (FindByLogDep==true){LogLoc=session['LOGON.CTLOCID']}
-	runClassMethod("web.DHCAPPExaReportQuery","jsonItmDefaultRecLoc",{"EpisodeID":EpisodeID, "ItmmastID":itmmastid,"OrderDepRowId":LogLoc,"OpenForAllHosp":OpenForAllHosp},function(jsonString){
-		if (jsonString != ""){
-			var jsonObjArr = jsonString;
-			LocID = jsonObjArr[0].value;
-			LocDesc = jsonObjArr[0].text;
-		}
-	},'json',false)
-
-	$("#recLoc").combobox("setValue",LocID);
-	$("#recLoc").combobox("setText",LocDesc);
+	ItemMastOn_Map.apply(null, arguments);
 	SentOrderpanel.SetEmFlag(0,1,1)
+	FLostBBPanel.LoadPisSpecList(itmmastid)
 	/*SetPisEmgflag(itmmastid);  /// 设置加急标志
 	if (arDefEmg=="Y"){
 		$("#EmgFlag").checkbox('check');
@@ -31,11 +15,9 @@ function ItemMastOn(itmmastid,TesItemDesc,arDefEmg){
 	//SetPisFrostflag(itmmastid);  /// 设置冰冻标志
 }
 function ItemMastOff(itmmast){
-	$("#TesItemID").val("");
-	$("#TesItemDesc").val("");
-	$("#recLoc").combobox("setValue","");
-	$("#recLoc").combobox("setText","");
+	ItemMastOff_Map.apply(null, arguments);
 	$("#EmgFlag,#FrostFlag").checkbox('uncheck').checkbox('enable');
+	FLostBBPanel.LoadPisSpecList("")
 }
 function SaveOtherInfo(){
 
@@ -71,16 +53,5 @@ function SetPisFrostflag(arcimid){
 
 /// 是否允许填写申请单
 function GetIsWritePisFlag(){
-	TakOrdMsg=$.cm({
-	    ClassName : "web.DHCAppPisMasterQuery",
-	    MethodName : "GetIsWritePisFlag",
-	    dataType:"text",
-	    "LgGroupID":session['LOGON.GROUPID'],
-	    "LgUserID":session['LOGON.USERID'],
-	    "LgLocID":session['LOGON.CTLOCID'],
-	    "EpisodeID":EpisodeID
-    },false);
-	if(TakOrdMsg != ""){
-		$.messager.alert("提示:",TakOrdMsg);
-	}
+	GetIsWritePisFlag_Map.apply(null, arguments);
 }

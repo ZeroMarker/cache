@@ -9,7 +9,7 @@ var TemplateId = "";
 var recCategory = "";
 var recDetial = "";
 var bindString = "";
-var parent ="";
+var parentNode ="";
 var grandparent = "";
 var TYPE = "";
 var recbindString = "";
@@ -68,7 +68,7 @@ function readXml(xmlstring)
 				recCategory = "";
 				recDetial = "";
 				recbindString = "";
-				parent ="";
+				parentNode ="";
 				grandparent = "";
 				TYPE = "";
 				rectype = "";
@@ -106,8 +106,8 @@ function readXml(xmlstring)
         				}
    					});
 					TYPE = "ICompositeDesc";
-					parent = $('#confirmSelect').tree('getParent',recDetial.target)
-					recbindString = recCategory.text + "." + parent.text + "." + recDetial.text;
+					parentNode = $('#confirmSelect').tree('getParent',recDetial.target)
+					recbindString = recCategory.text + "." + parentNode.text + "." + recDetial.text;
 				}
 				else
 				{
@@ -191,9 +191,9 @@ function readXml(xmlstring)
    						});
 					}
 					TYPE = "ICompositeSample";
-					parent = $('#confirmSelect').tree('getParent',recDetial.target);
-					grandparent = $('#confirmSelect').tree('getParent',parent.target);
-					recbindString = recCategory.text + "." + grandparent.text + "." + parent.text + "." + recDetial.text;
+					parentNode = $('#confirmSelect').tree('getParent',recDetial.target);
+					grandparent = $('#confirmSelect').tree('getParent',parentNode.target);
+					recbindString = recCategory.text + "." + grandparent.text + "." + parentNode.text + "." + recDetial.text;
 				}
 				VTYPE = $('#valueType').combobox('getValue');			
 		},
@@ -298,7 +298,12 @@ function GetSample(Sample)
 	{
 		var SampleType = Sample[i].nodeName;
 		CSCODE = Sample[i].getElementsByTagName("Code")[0].firstChild.nodeValue;
-		CSName = Sample[i].getElementsByTagName("DisplayName")[0].firstChild.nodeValue;
+        //校验firstChild是否为null
+        if (Sample[i].getElementsByTagName("DisplayName")[0].firstChild){
+            CSName = Sample[i].getElementsByTagName("DisplayName")[0].firstChild.nodeValue;
+        }else{
+            CSName = "";
+        }
 		if( i != 0)
 		{
 			recjson=recjson+",";

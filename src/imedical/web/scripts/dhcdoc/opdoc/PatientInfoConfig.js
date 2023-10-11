@@ -5,6 +5,7 @@ opl.view=(function(){
 	function Init(){
 		InitHospList();
 		//LoadDataGrid();
+		InitCache();
 	}
 	function InitHospList()
 	{
@@ -16,6 +17,13 @@ opl.view=(function(){
 		hospComp.jdata.options.onLoadSuccess= function(data){
 			InitTable();
 			InitAdmType();
+		}
+	}
+	function InitCache(){
+		var hasCache = $.DHCDoc.ConfigHasCache();
+		if (hasCache!=1) {
+			$.DHCDoc.CacheConfigPage();
+			$.DHCDoc.storageConfigPageCache();
 		}
 	}
 	function InitAdmType(){
@@ -223,7 +231,7 @@ opl.view=(function(){
 				ID:ID
 			},function(val){
 				if (val=="0"){
-					LoadDataGrid();
+					LoadDataGrid($("#AdmType").combobox('getValue'));
 				}else{
 					$.messager.alert("Ã· æ","…æ≥˝ ß∞‹! "+val);
 				}

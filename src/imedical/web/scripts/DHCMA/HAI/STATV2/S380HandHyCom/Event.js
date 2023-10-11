@@ -25,6 +25,8 @@
 		var aHospID 	= $('#cboHospital').combobox('getValue');
 		var aDateFrom 	= $('#dtDateFrom').datebox('getValue');
 		var aDateTo		= $('#dtDateTo').datebox('getValue');
+		var aMethod		= $('#cboMethod').datebox('getValue');
+		var aObsType    = $('#cboObsType').datebox('getValue');
 		if(aDateFrom > aDateTo){
 			$.messager.alert("提示","开始日期应小于或等于结束日期！", 'info');
 			return;
@@ -34,7 +36,7 @@
 			return;
 		}
 		ReportFrame = document.getElementById("ReportFrame");
-		p_URL 		= 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S380HandHyCom.raq&aHospIDs='+aHospID +'&aDateFrom=' + aDateFrom +'&aDateTo='+ aDateTo;	
+		p_URL 		= 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S380HandHyCom.raq&aHospIDs='+aHospID +'&aDateFrom=' + aDateFrom +'&aDateTo='+ aDateTo +'&aMethod='+ aMethod+'&aObsType='+aObsType;	
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
@@ -167,13 +169,13 @@
 		var arrCorrectCount 	= new Array();		//洗手正确数
 		var arrCorrectRatio 	= new Array();		//正确率
 		var arrCompRatio		= new Array();
-		arrRecord 		= runQuery.record;
+		arrRecord 		= runQuery.rows;
 		
 		var arrlength		= 0;
 		for (var indRd = 0; indRd < arrRecord.length; indRd++){
 			var rd = arrRecord[indRd];
 			//去掉全院、医院、科室组
-			if ((rd["DimensKey"].indexOf('-A-')>-1)||(rd["DimensKey"].indexOf('-H-')>-1)||(rd["DimensKey"].indexOf('-G-')>-1)) {
+			if (rd["DimensKey"].indexOf('全院')>-1) {
 				delete arrRecord[indRd];
 				arrlength = arrlength + 1;
 				continue;
@@ -204,28 +206,23 @@
 		var aHospID = $('#cboHospital').combobox('getValue');
 		var aDateFrom = $('#dtDateFrom').datebox('getValue');
 		var aDateTo= $('#dtDateTo').datebox('getValue');
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S380HandHyCom' + "&QueryName=" + 'QryHandHyRegSta' + "&Arg1=" + aHospID + "&Arg2=" + aDateFrom + "&Arg3=" + aDateTo+"&ArgCnt=" + 3;
-
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 30000, //30秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				var tkclass="DHCHAI.STATV2.S380HandHyCom";
-				var tkQuery="QryHandHyRegSta";
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
+		var aMethod = $('#cboMethod').datebox('getValue');
+		var aObsType = $('#cboObsType').datebox('getValue');
+		
+		obj.myChart.showLoading();	//隐藏加载动画
+		$cm({
+			ClassName:"DHCHAI.STATV2.S380HandHyCom",
+			QueryName:"QryHandHyRegSta",
+			aHospIDs:aHospID, 
+			aDateFrom:aDateFrom, 
+			aDateTo:aDateTo, 
+			aMethod:aMethod, 
+			aObsType:aObsType, 
+			page: 1,
+			rows: 999
+		},function(rs){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			obj.echartLocInfRatio(rs);
 		});
 	}
 	

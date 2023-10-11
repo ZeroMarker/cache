@@ -1,13 +1,5 @@
 ﻿function InitS120mrbbacsenWinEvent(obj){
-	var MRBDesc = new Array();
-	var AntDesc = new Array();
-	var arrMRBCount = new Array();
-	var arrAntCount = new Array();
-	var arrMRBRatio = new Array();
-	var arrAntRatio = new Array();
-	
-   	obj.LoadEvent = function(args){
-		
+	obj.LoadEvent = function(args){
 		$('#ReportFrame').css('display', 'block');
 		setTimeout(function(){
 			obj.LoadRep();
@@ -27,32 +19,18 @@
 			$('#EchartDiv').css('display', 'none');
 			obj.LoadRep();
 		});
-		//
    	}
-	obj.clickEvent = function(number){
-		if(MRBDesc.length<=number){
-			var MRBDesc1 	 = MRBDesc.slice(0,MRBDesc.length);
-			var arrMRBCount1 = arrMRBCount.slice(0,MRBDesc.length);		
-			var arrMRBRatio1 = arrMRBRatio.slice(0,MRBDesc.length);
-		
-			var endnumber = (10/BacDesc.length)*100;
-		}else{
-			var MRBDesc1 	 = MRBDesc.slice(0,number);
-			var arrMRBCount1 = arrMRBCount.slice(0,number);		
-			var arrMRBRatio1 = arrMRBRatio.slice(0,number);
-
-			var endnumber = (10/number)*100;
-		}
-		
-		var option2 = obj.option1(MRBDesc1,arrMRBCount1,arrMRBRatio1,endnumber);
-		obj.myChart.setOption(option2,true);
-	}
+	
    	obj.LoadRep = function(){
-		var aHospID 	= $('#cboHospital').combobox('getValue');
+		var aHospID 	= $('#cboHospital').combobox('getValues').join('|');
 		var aDateFrom 	= $('#dtDateFrom').datebox('getValue');
 		var aDateTo		= $('#dtDateTo').datebox('getValue');
 		var aLocType 	= Common_CheckboxValue('chkStatunit');
-		var aQrycon 	= $('#cboQryCon').combobox('getValue');
+		var aQrycon 	= "";	//$('#cboQryCon').combobox('getValue');
+		var aStatDimens ="";
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
+		var aBacDescs	= $('#cboBacteria').combobox('getValues').join(',');
+		var aAntDescs 	= $('#cboAnti').combobox('getValues').join(',');		
 		ReportFrame = document.getElementById("ReportFrame");
 		if(aDateFrom > aDateTo){
 			$.messager.alert("提示","开始日期应小于或等于结束日期！", 'info');
@@ -62,35 +40,37 @@
 			$.messager.alert("提示","请选择开始日期、结束日期！", 'info');
 			return;
 		}
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S120MRBBacSen.raq&aHospIDs='+aHospID +'&aDateFrom=' + aDateFrom +'&aDateTo='+ aDateTo+'&aLocType='+aLocType+'&aQryCon='+aQrycon;	
+		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMA.HAI.STATV2.S120MRBBacSen.raq&aHospIDs='+aHospID +'&aDateFrom=' + aDateFrom +'&aDateTo='+ aDateTo+'&aLocType='+aLocType+'&aQryCon='+aQrycon+'&aStatDimens='+aStatDimens+'&aLocIDs='+aLocIDs+'&aBacDescs='+aBacDescs+'&aAntDescs='+aAntDescs+'&aPath='+cspPath;	
 		if(!ReportFrame.src){
 			ReportFrame.frameElement.src=p_URL;
 		}else{
 			ReportFrame.src = p_URL;
-		}
+		} 
 		
 	}
-	obj.option1 = function(MRBDesc,arrMRBCount,arrMRBRatio,endnumber){
+
+	obj.option1 = function(BacDesc,arrBacCount,arrBacRatio,endnumber){
 		var option1 = {
 			title : {
-				text: '多重耐药医院感染病原体对抗菌药物的耐药率',
+				text: '多重耐药菌医疗机构感染病原体对抗菌药物的耐药率',
 				textStyle:{
 					fontSize:28
 				},
 				x:'center',
 				y:'top'
 			},
+			tooltip: {
+				trigger: 'axis',
+			},
 			grid:{
 				left:'5%',
-				top:'11%',	
+				top:'12%',	
 				right:'5%',
 				bottom:'5%',
 				containLabel:true
 			},
-			tooltip: {
-				trigger: 'axis',
-			},
 			toolbox: {
+				right:"20px",
 				feature: {
 					dataView: {show: false, readOnly: false},
 					magicType: {show: true, type: ['line', 'bar']},
@@ -107,12 +87,13 @@
 				show: true,
 				realtime: true,
 				start: 0,
-				end: endnumber
+				end: endnumber,
+				zoomLock:true
 			}],
 			xAxis: [
 				{
 					type: 'category',
-					data: MRBDesc,
+					data: BacDesc,
 					axisLabel: {
 								margin:8,
 								rotate:45,
@@ -122,8 +103,10 @@
 									//处理标签，过长折行和省略
 									if(value.length>6 && value.length<11){
 										return value.substr(0,5)+'\n'+value.substr(5,5);
-									}else if(value.length>10){
-										return value.substr(0,6)+'\n'+value.substr(6,4)+"...";
+									}else if(value.length>10&&value.length<16){
+										return value.substr(0,5)+'\n'+value.substr(5,5)+'\n'+value.substr(10,5);
+									}else if(value.length>15&&value.length<21){
+										return value.substr(0,5)+'\n'+value.substr(5,5)+'\n'+value.substr(10,5)+'\n'+value.substr(15,5);
 									}else{
 										return value;
 									}
@@ -136,7 +119,7 @@
 					type: 'value',
 					name: '耐药数',
 					min: 0,
-					interval:1,
+					interval:Math.ceil(arrBacCount[0]/10),
 					axisLabel: {
 						formatter: '{value} '
 					}
@@ -145,7 +128,7 @@
 					type: 'value',
 					name: '耐药率(%)',
 					min: 0,
-					interval:1,
+					interval:10,
 					axisLabel: {
 						formatter: '{value} %'
 					}
@@ -156,13 +139,13 @@
 					name:'耐药数',
 					type:'bar',
 					barMaxWidth:50,
-					data:arrMRBCount
+					data:arrBacCount
 				},
 				{
 					name:'耐药率',
 					type:'line',
 					yAxisIndex: 1,
-					data:arrMRBRatio,
+					data:arrBacRatio,
 					label: {
 						show:true,
 						formatter:"{c}%"
@@ -175,21 +158,17 @@
 	
     obj.echartLocInfRatio = function(runQuery){
 		if (!runQuery) return;
+		arrRecord 		= runQuery.rows;
+		var BacDesc = new Array();			//细菌名称
+		var arrBacCount = new Array();		//耐药数目
+		var arrBacRatio= new Array();		//耐药率
 		
-		MRBDesc.splice(0,MRBDesc.length);
-		arrMRBCount.splice(0,arrMRBCount.length);		
-		arrMRBRatio.splice(0,arrMRBRatio.length);
-		AntDesc.splice(0,AntDesc.length);
-		arrAntCount.splice(0,arrAntCount.length);		
-		arrAntRatio.splice(0,arrAntRatio.length);
-		
-		arrRecord 		= runQuery.record;
-		var arrlength	= arrRecord.length;
 		for (var indRd = 0; indRd < arrRecord.length; indRd++){
 			var rd = arrRecord[indRd];
-			MRBDesc.push(rd["MRBDesc"]);
-			AntDesc.push(rd["AntDesc"]);
+			
+			BacDesc.push(rd["BacDesc"]);
 		}
+		//合并细菌
 		function uniq(array){
 		    var temp = [];
 		    var index = [];
@@ -206,77 +185,119 @@
 		    }
 		    return temp;
 		}
-		MRBDesc=uniq(MRBDesc);
-		for(var i = 0; i < MRBDesc.length; i++){
-			var MRBDesc1 = MRBDesc[i];
-			var AntDesc1 = AntDesc[i];
+		BacDesc=uniq(BacDesc)
+		
+		for(var i = 0; i < BacDesc.length; i++){
+			var BacDesc1 = BacDesc[i];
 			var Count1=0;
-			var Count2=0;	
+			var Sum=0;	
 			for (var indRd = 0; indRd < arrRecord.length; indRd++){
 				var rd = arrRecord[indRd];
-				if((rd["MRBDesc"]==MRBDesc1)&&(rd["MapTestSen"]!='S')){
-					Count1=Count1+1;
-				}else if((rd["AntDesc"]==AntDesc1)&&(rd["MapTestSen"]!='S')){
-					Count2=Count2+1;
+				if(rd["BacDesc"]==BacDesc1){
+					Sum=parseInt(Sum)+parseInt(rd["Cnt"]);
+					Count1=parseInt(Count1)+parseInt(rd["NoSCnt"]);
 				}
 			}
-			arrMRBRatio.push((rd["Count1"]/arrlength)*100);
-			arrAntRatio.push((rd["Count2"]/arrlength)*100);
-			arrMRBCount.push(rd["Count1"]);
-			arrAntCount.push(rd["Count2"]);
+			arrBacRatio.push(((Count1/Sum)*100).toFixed(2));
+			arrBacCount.push(Count1);
 		}
-		var len = MRBDesc.length;
-		for(var i = 0; i < len-1; i++){
-			for(var j = 0; j < len-1-i ; j++){
-				if(arrMRBCount[j+1] > arrMRBCount[j]) {//相邻元素两两对比
-					var temp1 = arrMRBCount[j+1];//元素交换
-					arrMRBCount[j+1] = arrMRBCount[j];
-					arrMRBCount[j] = temp1;
-					var temp2 = MRBDesc[j+1];//元素交换
-					MRBDesc[j+1] = MRBDesc[j];
-					MRBDesc[j] = temp2;
-					var temp2 = arrMRBRatio[j+1];//元素交换
-					arrMRBRatio[j+1] = arrMRBRatio[j];
-					arrMRBRatio[j] = temp2;
-					
+		
+		if(obj.sortName=="耐药数"){
+			var len = BacDesc.length;
+			for(var i = 0; i < len-1; i++){
+				for(var j = 0; j < len-1-i ; j++){
+					if(arrBacCount[j+1] > arrBacCount[j]) {//相邻元素两两对比
+						var temp1 = arrBacCount[j+1];//元素交换
+						arrBacCount[j+1] = arrBacCount[j];
+						arrBacCount[j] = temp1;
+						var temp2 = BacDesc[j+1];//元素交换
+						BacDesc[j+1] = BacDesc[j];
+						BacDesc[j] = temp2;
+						var temp2 = arrBacRatio[j+1];//元素交换
+						arrBacRatio[j+1] = arrBacRatio[j];
+						arrBacRatio[j] = temp2;	
+					}
 				}
 			}
 		}
-		var endnumber = (10/MRBDesc.length)*100;
+		else{
+			var len = BacDesc.length;
+			for(var i = 0; i < len-1; i++){
+				for(var j = 0; j < len-1-i ; j++){
+					if(parseFloat(arrBacRatio[j+1])>parseFloat(arrBacRatio[j])) {//相邻元素两两对比
+						var temp1 = arrBacRatio[j+1];//元素交换
+						arrBacRatio[j+1] = arrBacRatio[j];
+						arrBacRatio[j] = temp1;
+						var temp2 = BacDesc[j+1];//元素交换
+						BacDesc[j+1] = BacDesc[j];
+						BacDesc[j] = temp2;
+						var temp2 = arrBacCount[j+1];//元素交换
+						arrBacCount[j+1] = arrBacCount[j];
+						arrBacCount[j] = temp2;	
+					}
+				}
+			}
+		}	
+		var endnumber = (14/BacDesc.length)*100;
 		// 使用刚指定的配置项和数据显示图表。
-		obj.myChart.setOption(obj.option1(MRBDesc,arrMRBCount,arrMRBRatio,endnumber),true);
+		obj.myChart.setOption(obj.option1(BacDesc,arrBacCount,arrBacRatio,endnumber),true);
 	}
    	obj.ShowEChaert1 = function(){
 		obj.myChart.clear()
-		 //当月科室感染率图表
-		var aHospID = $('#cboHospital').combobox('getValue');
-		var aDateFrom = $('#dtDateFrom').datebox('getValue');
-		var aDateTo= $('#dtDateTo').datebox('getValue');
-		var aLocType = Common_CheckboxValue('chkStatunit');
-		var aQrycon 	= $('#cboQryCon').combobox('getValue');
-		var dataInput = "ClassName=" + 'DHCHAI.STATV2.S120MRBBacSen' + "&QueryName=" + 'QryRstMRBSen' + "&Arg1=" + aHospID  +"&Arg2="+aDateFrom+"&Arg3="+aDateTo+ "&Arg4=" + aLocType + "&Arg5=" + aQrycon+"&ArgCnt=" + 5;
-
-		$.ajax({
-			url: "./dhchai.query.csp",
-			type: "post",
-			timeout: 30000, //30秒超时
-			async: true,   //异步
-			beforeSend:function(){
-				obj.myChart.showLoading();	
-			},
-			data: dataInput,
-			success: function(data, textStatus){
-				obj.myChart.hideLoading();    //隐藏加载动画
-				var retval = (new Function("return " + data))();
-				obj.echartLocInfRatio(retval);
-			},
-			error: function(XMLHttpRequest, textStatus, errorThrown){
-				var tkclass="DHCHAI.STATV2.S120MRBBacSen";
-				var tkQuery="QryRstMRBSen";
-				alert("类" + tkclass + ":" + tkQuery + "执行错误,Status:" + textStatus + ",Error:" + errorThrown);
-				obj.myChart.hideLoading();    //隐藏加载动画
-			}
+		//当月科室感染率图表
+		var aHospID 	= $('#cboHospital').combobox('getValues').join('|');
+		var aDateFrom 	= $('#dtDateFrom').datebox('getValue');
+		var aDateTo		= $('#dtDateTo').datebox('getValue');
+		var aLocType 	= Common_CheckboxValue('chkStatunit');
+		var aQrycon 	= "";	//$('#cboQryCon').combobox('getValue');
+		var aStatDimens ="";
+		var aLocIDs 	= $('#cboLoc').combobox('getValues').join(',');	
+		var aBacDescs	= $('#cboBacteria').combobox('getValues').join(',');
+		var aAntDescs 	= $('#cboAnti').combobox('getValues').join(',');		
+		ReportFrame = document.getElementById("ReportFrame");
+		if(aDateFrom > aDateTo){
+			$.messager.alert("提示","开始日期应小于或等于结束日期！", 'info');
+			return;
+		}
+		if ((aDateFrom=="")||(aDateTo=="")){
+			$.messager.alert("提示","请选择开始日期、结束日期！", 'info');
+			return;
+		}
+		obj.myChart.showLoading();    //显示加载动画
+		$cm({
+			ClassName:'DHCHAI.STATV2.S120MRBBacSen',
+			QueryName:'QryRepRstSen',
+			aHospIDs:aHospID,
+			aDateFrom:aDateFrom,
+			aDateTo:aDateTo,
+			aLocType:aLocType,
+			aQryCon:aQrycon,
+			aStatDimens:aStatDimens,
+			aLocIDs:aLocIDs,
+			aBacDescs:aBacDescs,
+			aAntDescs:aAntDescs,
+			page:1,    //可选项，页码，默认1
+			rows:999   //可选项，获取多少条数据，默认50
+		},function(rs){
+			obj.myChart.hideLoading();    //隐藏加载动画
+			obj.echartLocInfRatio(rs); //
+			
+			obj.sortName="耐药率"; //初始化排序指标
+			obj.myChart.off('legendselectchanged'); //取消事件，避免事件绑定重复导致多次触发
+			obj.myChart.on('legendselectchanged', function(legObj){
+				//处理排序问题 
+				//如果是重复点击认为是需要执行隐藏处理,不想隐藏就不用判断了	
+				if(obj.sortName!=legObj.name)
+				{
+					obj.sortName=legObj.name;
+					obj.echartLocInfRatio(rs);
+				}
+				else
+				{
+					obj.sortName="";  //初始化
+				}
+				
+			});
 		});
 	}
-	
 }

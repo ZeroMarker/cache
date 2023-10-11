@@ -52,6 +52,12 @@ function getVisualization(ClassMethod,Type,FirstFlag)
 					case 5:
 						initActionDistribution(data);
 						break;
+					case 8:  //Modify by zx 2022-06-30 BUG:2762075
+						initStatInfo(data);
+						break;
+					case 9:  //Modify by zx 2022-06-30 BUG:2762075
+						initMaintAveInfo(data);
+						break;
 					default:
 						break;
 				}
@@ -185,15 +191,37 @@ function initMaintStatistics(data)
 	StatisticsChart = echarts.init(document.getElementById('Statistics'));
 	var wholenum=parseInt(data.split("^")[0]);
 	var maintnum=parseInt(data.split("^")[1]);
+	//Modify by zx 2022-06-30 BUG:2762075
 	option = {
 	    tooltip: {
 	        trigger: 'item',
 	        formatter: "{a} <br/>{b}: {c} ({d}%)"
 	    },
+	    title: {
+              text: (wholenum+maintnum),
+              // 副标题
+              subtext: "设备总数",
+              // 主副标题间距
+              itemGap: -5,
+              x: 'center',
+              y: 'center',
+              // 主标题样式
+              textStyle: {
+                  fontSize: '20',
+                  color: '#fff'
+              },
+              // 副标题样式
+              subtextStyle: {
+                  fontSize: '12',
+                  fontWeight: '600',
+                  color: '#ccc'
+              }
+          },
 	    color:['#008B45', '#7828CE'] ,
 	    legend: {
 	        orient: 'vertical',
 	        x: 'left',
+	        y: 'bottom',
 	        data:['正常','故障'],
 	        textStyle:{    //图例文字的样式
 		        color:'#F3E3EE',
@@ -206,22 +234,27 @@ function initMaintStatistics(data)
 	            type:'pie',
 	            radius: ['50%', '70%'],
 	            avoidLabelOverlap: false,
-	            label: {
-	                normal: {
-	                    show: false,
-	                    position: 'center'
-	                },
-	                emphasis: {
-	                    show: true,
-	                    textStyle: {
-	                        fontSize: '30',
-	                        fontWeight: 'bold'
-	                    }
-	                }
-	            },
+			    label: {
+	             normal : {
+					formatter: '{b}:{c}: ({d}%)',
+					textStyle : {
+						fontWeight : 'normal',
+						fontSize : 12,
+			          	fontWeight: 'bold',
+			          	color:'#ffffff'
+					}
+				}
+           },
+	            emphasis: {
+			    	label: {
+			        	show: false,
+			          	fontSize: '30',
+			          	fontWeight: 'bold'
+			        }
+			    },
 	            labelLine: {
 	                normal: {
-	                    show: false
+	                    show: true
 	                }
 	            },
 	            data:[
@@ -507,6 +540,7 @@ function initActionDistribution(data)
 		serData.push(newSeriesData)
 	}
 	ActionChart = echarts.init(document.getElementById('Action'));
+	//Modify by zx 2022-06-30 BUG:2762075
 	option = {
 	    tooltip: {
 	        trigger: 'item',
@@ -516,11 +550,26 @@ function initActionDistribution(data)
 	    legend: {
 	        orient: 'vertical',
 	        x: 'right',
+	        y: 'center',
 	        data:nameData,
 	        textStyle:{    //图例文字的样式
 		        color:'#F3E3EE',
 		        fontSize:12
-	    	}
+	    	},
+	    	formatter: function(name) {
+            var data = option.series[0].data;
+            var total = 0;
+            var tarValue;
+            for (var i = 0; i < data.length; i++) {
+              total += parseInt(data[i].value);
+              if (data[i].name == name) {
+                tarValue = data[i].value;
+              }
+            }
+            var v = tarValue;
+            var p = Math.round(((tarValue / total) * 100));
+            return name+' '+v+'台('+p+'%)';
+          }
 	    },
 	    series: [
 	    {
@@ -970,4 +1019,36 @@ function getOneMaintDetail(rowid)
 			jQuery("#equip").html(data[79]+"("+data[121]+")");
        }
     })
+}
+
+//add by zx 2022-06-30 BUG:2762075
+function initStatInfo(data)
+{
+	data=data.split("^");
+	console.log(data)
+	jQuery("#TotalOriginalFee").text(data[1]);
+	jQuery("#AddNum").text(data[2]);
+	jQuery("#DisuseNum").text(data[3]);
+	jQuery("#OpencheckNum").text(data[6]);
+	jQuery("#FirstAidtNumper").text(data[7]);
+	jQuery("#WholeNumper").text(data[8]);
+	jQuery("#BenefitAnalyNumper").text(data[9]);
+	jQuery("#MaintNum").text(data[4]);
+	jQuery("#RepairNum").text(data[5]);
+	jQuery("#AveWorkHour").text(data[10]);
+}
+
+//add by zx 2022-06-30 BUG:2762075
+function initMaintAveInfo(data)
+{
+	data=data.split("^");
+	var timeData=data[2];
+	timeData=timeData.split(",");
+	var totalTime=0;
+	for (var i=0;i<timeData.length;i++)
+	{
+		totalTime=totalTime+parseFloat(timeData[i]);
+	}
+	var aveTime=parseFloat(totalTime/timeData.length).toFixed(2);
+	jQuery("#AveAcceptHour").text(aveTime);
 }

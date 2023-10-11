@@ -55,16 +55,16 @@ GetPhaOrderWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 		store: PhaOrderStore,
 		pageSize: 15,
 		displayInfo: true,
-		displayMsg: '当前记录 {0} -- {1} 条 共 {2} 条记录',
+		displayMsg: $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
 		emptyMsg: "No results to display",
-		prevText: "上一页",
-		nextText: "下一页",
-		refreshText: "刷新",
-		lastText: "最后页",
-		firstText: "第一页",
-		beforePageText: "当前页",
-		afterPageText: "共{0}页",
-		emptyMsg: "没有数据"
+		prevText: $g("上一页"),
+		nextText: $g("下一页"),
+		refreshText: $g("刷新"),
+		lastText: $g("最后页"),
+		firstText: $g("第一页"),
+		beforePageText: $g("当前页"),
+		afterPageText: $g("共{0}页"),
+		emptyMsg: $g("没有数据")
 	});
 	var nm = new Ext.grid.RowNumberer({
 		width: 20
@@ -74,7 +74,7 @@ GetPhaOrderWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 	});**/ 
 	// the check column is created using a custom plugin
 	var ColumnNotUseFlag = new Ext.grid.CheckColumn({
-		header: '不可用',
+		header: $g('不可用'),
 		dataIndex: 'NotUseFlag',
 		width: 60,
 		renderer: function(v, p, record) {
@@ -83,112 +83,115 @@ GetPhaOrderWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 		}
 	});
 	var PhaOrderCm = new Ext.grid.ColumnModel([nm, {
-		header: "代码",
+		header: $g("代码"),
 		dataIndex: 'InciCode',
 		width: 80,
 		align: 'left',
 		sortable: true
 	},
 	{
-		header: '名称',
+		header: $g('名称'),
 		dataIndex: 'InciDesc',
 		width: 200,
 		align: 'left',
 		sortable: true
 	},
 	{
-		header: "规格",
+		header:$g( "规格"),
 		dataIndex: 'Spec',
 		width: 100,
 		align: 'left',
 		sortable: true
 	},
 	{
-		header: "厂商",
+		header: $g("生产企业"),
 		dataIndex: 'ManfName',
 		width: 180,
 		align: 'left',
 		sortable: true
 	},
 	{
-		header: '入库单位',
+		header: $g('入库单位'),
 		dataIndex: 'PuomDesc',
 		width: 70,
 		align: 'left',
 		sortable: true
 	},
 	{
-		header: "售价(入库单位)",
+		header:$g( "售价(入库单位)"),
 		dataIndex: 'pSp',
 		width: 100,
 		align: 'right',
 		sortable: true
 	},
 	{
-		header: "数量(入库单位)",
+		header: $g("数量(入库单位)"),
 		dataIndex: 'PuomQty',
 		width: 100,
 		align: 'right',
-		sortable: true
+		sortable: true,
+		hidden:Locdr==""?true:false,
 	},
 	{
-		header: "基本单位",
+		header: $g("基本单位"),
 		dataIndex: 'BuomDesc',
 		width: 80,
 		align: 'left',
 		sortable: true
 	},
 	{
-		header: "售价(基本单位)",
+		header: $g("售价(基本单位)"),
 		dataIndex: 'bSp',
 		width: 100,
 		align: 'right',
 		sortable: true
 	},
 	{
-		header: "数量(基本单位)",
+		header: $g("数量(基本单位)"),
 		dataIndex: 'BuomQty',
 		width: 100,
 		align: 'right',
-		sortable: true
+		sortable: true,
+		hidden:Locdr==""?true:false,
 	},
 	{
-		header: "计价单位",
+		header: $g("计价单位"),
 		dataIndex: 'BillUomDesc',
 		width: 80,
 		align: 'left',
 		sortable: true
 	},
 	{
-		header: "售价(计价单位)",
+		header: $g("售价(计价单位)"),
 		dataIndex: 'BillSp',
 		width: 100,
 		align: 'right',
 		sortable: true
 	},
 	{
-		header: "数量(计价单位)",
+		header: $g("数量(计价单位)"),
 		dataIndex: 'BillUomQty',
 		width: 100,
 		align: 'right',
-		sortable: true
+		sortable: true,
+		hidden:Locdr==""?true:false,
 	},
 	{
-		header: "剂型",
+		header: $g("剂型"),
 		dataIndex: 'PhcFormDesc',
 		width: 60,
 		align: 'left',
 		sortable: true
 	},
 	{
-		header: "商品名",
+		header: $g("商品名"),
 		dataIndex: 'GoodName',
 		width: 80,
 		align: 'left',
 		sortable: true
 	},
 	{
-		header: "处方通用名",
+		header: $g("处方通用名"),
 		dataIndex: 'GeneName',
 		width: 160,
 		align: 'left',
@@ -198,8 +201,8 @@ GetPhaOrderWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 	PhaOrderCm.defaultSortable = true; 
 	// 返回按钮
 	var returnBT = new Ext.Toolbar.Button({
-		text: '选取',
-		tooltip: '点击选取',
+		text:$g( '选取'),
+		tooltip: $g('点击选取'),
 		iconCls: 'page_goto',
 		handler: function() {
 			returnData();
@@ -211,9 +214,9 @@ GetPhaOrderWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 	function returnData() {
 		var selectRows = PhaOrderGrid.getSelectionModel().getSelections();
 		if (selectRows.length == 0) {
-			Msg.info("warning", "请选择要返回的药品信息！");
+			Msg.info("warning", $g("请选择要返回的药品信息！"));
 		} else if (selectRows.length > 1) {
-			Msg.info("warning", "返回只允许选择一条记录！");
+			Msg.info("warning", $g("返回只允许选择一条记录！"));
 		} else {
 			flg = true;
 			window.close();
@@ -221,8 +224,8 @@ GetPhaOrderWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 	} 
 	// 关闭按钮
 	var closeBT = new Ext.Toolbar.Button({
-		text: '关闭',
-		tooltip: '点击关闭',
+		text: $g('关闭'),
+		tooltip: $g('点击关闭'),
 		iconCls: 'page_close',
 		handler: function() {
 			flg = false;
@@ -244,7 +247,7 @@ GetPhaOrderWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 	});
 	if (!window) {
 		var window = new Ext.Window({
-			title: '药品信息',
+			title:$g( '药品信息'),
 			width : document.body.clientWidth*0.6,
 			height : document.body.clientHeight*0.75,
 			layout: 'fit',
@@ -331,7 +334,7 @@ GetPhaOrderWindow = function(Input, StkGrpRowId, StkGrpType, Locdr, NotUseFlag, 
 		PhaOrderStore.load({
 			callback: function(r, options, success) {
 				if (success == false) {
-					Msg.info('warning', '没有任何符合的记录！');
+					Msg.info('warning', $g('没有任何符合的记录！'));
 					if (window) {
 						window.close();
 					}

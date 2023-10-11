@@ -4,7 +4,7 @@ findIngDret = function(){
 		id:'startDate',
 		listWidth:210,
 		allowBlank:true,
-		fieldLabel:'起始日期',
+		fieldLabel:$g('起始日期'),
 		anchor:'90%',
 		value:DefaultStDate()
 		//,
@@ -15,7 +15,7 @@ findIngDret = function(){
 		id:'endDate',
 		listWidth:210,
 		allowBlank:true,
-		fieldLabel:'截止日期',
+		fieldLabel:$g('截止日期'),
 		anchor:'90%',
 		value:DefaultEdDate()
 		//,
@@ -23,12 +23,12 @@ findIngDret = function(){
 	});
     var rLocdr=Ext.getCmp('locField').getValue();
     if (rLocdr == null || rLocdr.length <= 0) {
-		Msg.info("warning", "供给部门不能为空,请关闭窗体选择供给部门！");
+		Msg.info("warning", $g("供给部门不能为空,请关闭窗体选择供给部门！"));
 		return;
 	}  
     
 	var completFlag = new Ext.grid.CheckColumn({
-		header:'完成标志',
+		header:$g('完成标志'),
 		dataIndex:'completed',
 		anchor:'90%',		
 		sortable:true,
@@ -40,7 +40,7 @@ findIngDret = function(){
 	});
 			
 	var auditFlag = new Ext.grid.CheckColumn({
-		header:'审核标志',
+		header:$g('审核标志'),
 		dataIndex:'auditFlag',
 		anchor:'90%',		
 		sortable:true,
@@ -53,7 +53,7 @@ findIngDret = function(){
 
 
 	var Vendor2 = new Ext.ux.VendorComboBox({
-	fieldLabel : '供应商',
+	fieldLabel : $g('经营企业'),
 	id : 'Vendor2',
 	name : 'Vendor2',
 	anchor:'90%',
@@ -61,7 +61,7 @@ findIngDret = function(){
 });
 
 	var chkComplete=new Ext.form.Checkbox({
-		boxLabel:'仅已完成',
+		boxLabel:$g('仅已完成'),
 		id:'completed',
 		name:'completed',
 		anchor:'90%'	
@@ -104,25 +104,25 @@ findIngDret = function(){
 			dataIndex:'ingrt',
 			hidden:true
 		},{
-			header: '退货单号',
+			header: $g('退货单号'),
 			dataIndex: 'ingrtNo',
 			width: 150,
 			sortable:true,
 			align: 'center'
 		},{
-			header: '供应商',
+			header: $g('经营企业'),
 			dataIndex: 'vendorName',
 			width: 220,
 			sortable:true,
 			align: 'left'
 		},{
-			header: "日期",
+			header: $g("日期"),
 			dataIndex: 'retDate',
 			width: 120,
 			align: 'center',
 			sortable: true
 		},{
-			header:'完成标志',
+			header:$g('完成标志'),
 			dataIndex:'completed',
 			align:'center',
 			width:120,
@@ -132,13 +132,13 @@ findIngDret = function(){
 				return '<div class="x-grid3-check-col'+(((v=='Y')||(v==true))?'-on':'')+' x-grid3-cc-'+this.id+'">&#160;</div>';
 			}
 		},{
-			header: "操作人",
+			header: $g("操作人"),
 			dataIndex: 'retUserName',
 			width: 120,
 			align: 'center',
 			sortable: true
 		},{
-			header:'审核标志',
+			header:$g('审核标志'),
 			dataIndex:'auditFlag',
 			align:'center',
 			width:120,
@@ -154,8 +154,8 @@ findIngDret = function(){
 		store:OrderDs,
 		pageSize:20,
 		displayInfo:true,
-		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录"
+		displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+		emptyMsg:$g("没有记录")
 		/*,
 		doLoad:function(C){
 			var B={},
@@ -182,16 +182,16 @@ findIngDret = function(){
 		if((endDate!="")&&(endDate!=null)){endDate = endDate.format(App_StkDateFormat);}
 		var vorId = Ext.getCmp('Vendor2').getValue();
 		if((startDate=="")||(startDate==null)){
-			Msg.info("error","请选择起始日期!");
+			Msg.info("error",$g("请选择起始日期!"));
 			return false;
 		}
 		if((endDate=="")||(endDate==null)){
-			Msg.info("error","请选择截止日期!");
+			Msg.info("error",$g("请选择截止日期!"));
 			return false;
 		}
 		/*
 		if((vorId=="")||(vorId==null)){
-			Msg.info("error","请选择供应商!");
+			Msg.info("error","请选择经营企业!");
 			return false;
 		} */
 		/*if((locId=="")||(locId==null)){
@@ -200,7 +200,7 @@ findIngDret = function(){
 		}*/
 		//改为取选择的科室
 		if((rLocdr=="")||(rLocdr==null)){
-			Msg.info("error","请选择科室!");
+			Msg.info("error",$g("请选择科室!"));
 	    return false;
 		}
 		var complete="";
@@ -209,7 +209,7 @@ findIngDret = function(){
 		//else
 		//{complete="N"}
 		
-		//strPar - 参数串(起始日期^截止日期^科室Id^供应商Id^^仅已完成)
+		//strPar - 参数串(起始日期^截止日期^科室Id^经营企业Id^^仅已完成)
         var strParam=startDate+"^"+endDate+"^"+rLocdr+"^"+vorId+"^^"+complete
 	    var ingrtstr="ingrt"
         var descstr="desc"
@@ -221,15 +221,15 @@ findIngDret = function(){
 	};
 
 	var fB = new Ext.Toolbar.Button({
-		text:'查询',
-		tooltip:'查询',
+		text:$g('查询'),
+		tooltip:$g('查询'),
 		iconCls:'page_find',
 		width : 70,
 		height : 30
 	});
 	var xB=new Ext.Toolbar.Button({
-		text:'关闭',
-		tooltip:'关闭',
+		text:$g('关闭'),
+		tooltip:$g('关闭'),
 		iconCls:'page_delete',
 		width : 70,
 		height : 30,
@@ -251,7 +251,7 @@ findIngDret = function(){
 		tbar:[fB,'-',xB],
 		items:[{
 			xtype:'fieldset',
-			title:'查询条件',
+			title:$g('查询条件'),
 			style:DHCSTFormStyle.FrmPaddingV,
 			layout:'column',
 			defaults: {border:false}, 
@@ -278,7 +278,7 @@ findIngDret = function(){
 	});
 	
 	var findWin = new Ext.Window({
-		title:'查找退货单',
+		title:$g('查找退货单'),
 		width:document.body.clientWidth*0.9,
 		height:document.body.clientHeight*0.9,
 		minWidth:document.body.clientWidth*0.3, 

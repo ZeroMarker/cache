@@ -4,12 +4,12 @@ function BodyLoadHandler()
 	InitUserInfo();
 	InitPage();
 	SetBEnable();
+	
 	initButtonWidth();  //hisui改造 add by wy
 	///modofied by ZY0197   增加管理科室参数，同时有hisui改造遗留问题
-	var obj=document.getElementById("BAdd");
-	if (obj) obj.onclick=BAdd_Clicked;
-	var obj=document.getElementById("BFind");
-	if (obj) obj.onclick=BFind_Clicked;
+	//add by lmm 2023-02-01 极简UI改造
+	initButtonColor(); 
+	initPanelHeaderStyle();
 }
 
 function InitPage()
@@ -17,6 +17,10 @@ function InitPage()
 	SetElement("Status",GetElementValue("GetStatus"));
 	KeyUp("Mode");
 	Muilt_LookUp("Mode");
+	var obj=document.getElementById("BAdd");   //modify by myl 1796707 20210309
+	if (obj) obj.onclick=BAdd_Clicked;
+	var obj=document.getElementById("BFind");
+	if (obj) obj.onclick=BFind_Clicked;
 }
 
 function GetModeDR(value)

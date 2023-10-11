@@ -26,8 +26,8 @@ $(function(){
 function InitInstruGrid(){
 	//定义columns
 	var columns=[[
-        {field:'TLocDesc',title:'药房名称',width:300},
-        {field:'TYFDesc',title:'用法',width:300},
+        {field:'TLocDesc',title:$g("药房名称"),width:300},
+        {field:'TYFDesc',title:$g("用法"),width:300},
         {field:'TYFID',title:'TYFID',width:200,hidden:true},
         {field:'yfcodeid',title:'yfcodeid',width:200,hidden:true}
 	]];  
@@ -44,7 +44,7 @@ function InitInstruGrid(){
         pageSize:50,  // 每页显示的记录条数
 	    pageList:[50,100,300],   // 可以设置每页记录条数的列表
 	    singleSelect:true,
-	    loadMsg: '正在加载信息...',
+	    loadMsg: $g("正在加载信息")+"...",
 	    pagination:true  
    });
 }
@@ -55,16 +55,16 @@ function btnAddHandler()
 	var instrudesc=$("#instru").combobox('getText')
 	if  ($.trim(instrudesc)==""){
 		instu="";
-		$.messager.alert('提示',"请选择用法!","info");
+		$.messager.alert($g("提示"), $g("请选择用法!"),"info");
 		return;		
 	}
 	if (instru==undefined){
-		$.messager.alert('提示',"请选择正确用法,选择后不允许手动修改文字!","info");
+		$.messager.alert($g("提示"), $g("请选择正确用法,选择后不允许手动修改文字!"),"info");
 		return;	
 	}
     var returnValue= tkMakeServerCall("PHA.OP.CfPrtLab.OperTab","Insert",gLocId,instru,instrudesc);
     if(returnValue==-1){
-	    $.messager.alert('提示',"该用法在本药房已维护!","info");
+	    $.messager.alert($g("提示"), $g("该用法在本药房已维护!"),"info");
 	    return;
     }else{
 	    $('#instructiongrid').datagrid('reload');
@@ -76,18 +76,18 @@ function btnAddHandler()
 function btnDeleteHandler(){
 	var seletcted = $("#instructiongrid").datagrid("getSelected");
 	if (seletcted==null){
-		$.messager.alert('提示',"请先选择需要删除的记录!","info");
+		$.messager.alert($g("提示"), $g("请先选择需要删除的记录!"),"info");
 		return;
 	}
 	var yfcodeid=seletcted["yfcodeid"];
-	$.messager.confirm('提示',"确认删除吗？",function(r){
+	$.messager.confirm($g("提示"), $g("确认删除吗？"),function(r){
 		if(r){
 			var retValue=tkMakeServerCall("PHA.OP.CfPrtLab.OperTab","Delete",gLocId,yfcodeid);
 			if(retValue==0){
 				$('#instructiongrid').datagrid('reload');
 			}
 			else{
-				$.messager.alert('提示',"删除失败,错误代码:"+retValue,"error");
+				$.messager.alert($g("提示"), $g("删除失败,错误代码:")+retValue,"error");
 			}
 		}
 	});

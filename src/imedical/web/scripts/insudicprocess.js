@@ -71,6 +71,7 @@ $(function(){
 					}
 				}else{disinput(false)}
 			}else(disinput(false))
+			clearform();
 			Querydic($('#diccbx').combogrid('grid').datagrid('getSelected'),selobj);
 		},
 		onShowPanel:function(){	
@@ -151,7 +152,13 @@ $(function(){
         	//alert(rowIndex+"-"+rowData.itemid)
         }
 	});
-	
+	//登记号回车查询事件
+	$("#dicDemo").keydown(function (e) {
+		var key = websys_getKey(e);
+		if (key == 13) {
+			Querydic();
+		}
+	});
 	//授权管理
 	if(BDPAutDisableFlag('btnAdd')!=true){$('btnAdd').linkbutton('disable');}
 	if(BDPAutDisableFlag('btnAddup')!=true){$('btnAddup').linkbutton('disable');}
@@ -165,19 +172,19 @@ function getSearchParam(){
 }  
 
 //查询字典数据
-function Querydic(rec,selobj){
+function Querydic(){
 	//alert(rec.INDIDDicCode)
 	//queryParams参数可以提交到后台通过FormCollection获取 也可以Request["ProductName"]=?获取
-	seldictype=rec.INDIDDicCode;
 	// tangzf 2020-6-17 使用HISUI接口 加载数据
 	var QueryParam={
 		ClassName:'web.INSUDicDataCom' ,
-		QueryName: 'QueryDic1',
-		Type :rec.INDIDDicCode, 
-		HospDr : PUBLIC_CONSTANT.SESSION.HOSPID,
+		QueryName: 'QueryDicByTypeOrCodeDesc',
+		Type :$('#diccbx').combobox('getValue'), 
+		keyDemo:getValueById('dicDemo'),
+		HospDr : PUBLIC_CONSTANT.SESSION.HOSPID
 	}
 	loadDataGridStore('dg',QueryParam);
-	
+	seldictype = $('#diccbx').combobox('getValue');
 	/*
 	if(('undefined'==seldictype)||(""==seldictype)) return
 	//var tmpARGUS=ROOTID+SplCode+'INSUDICinfo'+SplCode+seldictype
@@ -247,7 +254,7 @@ function UpdateDic(){
 //删除记录
 function DelDic(){
 	//if(BDPAutDisableFlag('btnDelete')!=true){$.messager.alert('提示','您无权限,请联系管理员授权!');return;}
-	if(selRowid==""){$.messager.alert('提示','请选择要删除的记录!');return;}
+	if(selRowid==""|| selRowid<0 || !selRowid){$.messager.alert('提示','请选择要删除的记录!','info');return;}
 	$.messager.confirm('请确认','你确认要删除这条记录吗?',function(fb){
 		if(fb){
 			var savecode=tkMakeServerCall("web.INSUDicDataCom","Delete","","",selRowid)

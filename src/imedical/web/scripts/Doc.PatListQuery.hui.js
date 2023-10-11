@@ -1,46 +1,43 @@
-ï»¿var PageLogicObj={
+var PageLogicObj={
 	m_PatListTabDataGrid:"",
 	m_FindFlag:0,
 	m_PAAdmRowId:"",
-	m_ConflictCehckStr:"cOutStatus^cInStatus^cDisInStatus",
+	m_ConflictCehckStr:"cOutStatus^cInStatus^cDisInStatus^cPreStatus",
 	m_EpisodeID:"",
-	m_PatientID:""
+	m_PatientID:"",
+	m_ShowPatOperBtn: 1
 }
 $(window).load(function() {
-	var OFlag = $("#cOutStatus").checkbox('getValue');
-	var cInStatus=$("#cInStatus").checkbox('getValue');
-	var cDisInStatus=$("#cDisInStatus").checkbox('getValue');
-	if ((OFlag)&&(!cInStatus)&&(!cDisInStatus)) {
-		$("#WardDesc").combobox('disable');
-	}else {
-		$("#WardDesc").combobox('enable');
-	}
+	SetWardStatus();
 })
 $(function(){
-	//åˆå§‹åŒ–
+	//³õÊ¼»¯
 	Init();
-	//äº‹ä»¶åˆå§‹åŒ–
+	//ÊÂ¼ş³õÊ¼»¯
 	InitEvent();
-	//é¡µé¢å…ƒç´ åˆå§‹åŒ–
+	//Ò³ÃæÔªËØ³õÊ¼»¯
 	PageHandle();
 	$("#CardNo").focus();
 })
 function PageHandle(){
-	$("#Startdate,#Enddate").datebox('setValue',ServerObj.NowDate);
-	//ç§‘å®¤
+	//¿ÆÊÒ
 	LoadDept(); 
-	//åŒ»ç”Ÿ
+	//Ò½Éú
 	LoadDoc();
-	//ç—…åŒº
+	//²¡Çø
 	LoadWard();
-	//å§“å
+	//ĞÕÃû
 	IntNameLookUp();
-	//è¯Šæ–­
+	//Õï¶Ï
 	IntDiagnosisLookUp();
-	//åˆå§‹åŒ–æ¡ä»¶
+	//³õÊ¼»¯Ìõ¼ş
 	InitFindType();
+	//Éí·İÖ¤
+	IntCredNoLookUp();
+	//»¼Õß·Ñ±ğ
+	LoadAdmReason()
 	//OPDocLogTabDataGridLoad();
-	if ((session['LOGON.GROUPDESC']=='æ‰‹æœ¯æŠ¤å£«')){
+	if ((session['LOGON.GROUPDESC']=='ÊÖÊõ»¤Ê¿')){
 		$("#PatMed").focus();
 	}
 	var frm=dhcsys_getmenuform();
@@ -50,12 +47,19 @@ function PageHandle(){
 	}
 }
 function Init(){
-	var hospComp = GenUserHospComp();
+	var HospIdTdWidth=$("#HospIdTd").width()
+	var opt={width:HospIdTdWidth}
+	var hospComp = GenUserHospComp(opt);
 	hospComp.jdata.options.onSelect = function(e,t){
 		var HospID=t.HOSPRowId;
 		PageHandle();
 	}
 	PageLogicObj.m_PatListTabDataGrid=InitPatListTabDataGrid();
+	// onCheck ²»ÄÜÑ¡ÖĞ»¼ÕßµÄ½çÃæ£¬²»Ö§³ÖĞĞ²Ù×÷°´Å¥
+	if ((typeof window.parent.SetChildPatNo == "function")||(typeof window.parent.ChangePerson == "function")) {
+		PageLogicObj.m_ShowPatOperBtn = 0
+		PageLogicObj.m_PatListTabDataGrid.datagrid('hideColumn', 'patOperBtn')
+	}
 }
 function InitEvent(){
 	$("#BFind").click(PatListTabDataGridLoad);
@@ -69,7 +73,7 @@ function InitEvent(){
 		ExportPrintCommon("Export");
 	});   //ExprotClickHandle 
 	$HUI.checkbox(".hisui-checkbox",{
-        onChecked:function(e,value){
+        onCheckChange:function(e,value){
             var id=e.currentTarget.id;
             chekboxChange(id);
         }
@@ -78,65 +82,78 @@ function InitEvent(){
 }
 function InitPatListTabDataGrid(){
 	var Columns=[[ 
-		{field:'SerialNumber',title:'åºå·',width:40,align:'center'},
+		//ĞòºÅ²»Á¬¹á ÆÁ±ÎĞòºÅÊ¹ÓÃrownumbers
+		//{field:'SerialNumber',title:'ĞòºÅ',width:40,align:'center'},
+		{field:"patOperBtn", title:'²Ù×÷', width:225, align:'center',
+			formatter: function(value, row, index) {
+				var operDiv = '<div id="patOperBtn_'  + index + '" style="width:100%;height:100%"></div>'
+				return operDiv
+			}
+		},
+		{field:'RegNo',title:'µÇ¼ÇºÅ',width:100,sortable:true},
+		{field:'PatName1',title:'ĞÕÃû',width:100,sortable:false}, 
 		{field:'PatientID',hidden:true,title:''},
-		{field:'AdmDate',title:'å°±è¯Šæ—¥æœŸ',width:100},
-		{field:'AdmTime',title:'å°±è¯Šæ—¶é—´',width:80},
-		{field:'AdmDept',title:'å°±è¯Šç§‘å®¤',width:120},
-		{field:'AdmDoc',title:'åŒ»ç”Ÿ',width:100},
-		{field:'AdmReason',title:'è´¹åˆ«',width:70},
-		{field:'AdmType',title:'å°±è¯Šç±»å‹',width:70},
-		{field:'PAAdmWard',title:'ç—…åŒº',width:120},
-		{field:'PAAdmBed',title:'åºŠä½',width:50},
-		{field:'PatName1',title:'å§“å',width:100}, 
-		{field:'PatSex1',title:'æ€§åˆ«',width:50}, 
-		{field:'PatientMedicare',title:'ç—…æ¡ˆå·',width:80}, 
-		{field:'RegNo',title:'ç™»è®°å·',width:100},
-        {field:'AdmDischgDate',title:'å‡ºé™¢æ—¥æœŸ',width:100},
-        {field:'PAADMDischgTime',title:'å‡ºé™¢æ—¶é—´',width:80},
-		{field:'MRDiagnoseDesc',title:'è¯Šæ–­',width:120},
-		{field:'baseinfo',title:'åŸºæœ¬ä¿¡æ¯',width:70,align:'center',
+		{field:'AdmDate',title:'¾ÍÕïÈÕÆÚ',width:90,sortable:true},
+		{field:'AdmTime',title:'¾ÍÕïÊ±¼ä',width:70,sortable:true},
+		{field:'AdmDept',title:'¾ÍÕï¿ÆÊÒ',width:120,sortable:true},
+		{field:'AdmDoc',title:'Ò½Éú',width:100,sortable:true},
+		{field:'AdmReason',title:'·Ñ±ğ',width:70,sortable:true},
+		{field:'AdmType',title:'¾ÍÕïÀàĞÍ',width:70,sortable:true},
+		{field:'PAAdmWard',title:'²¡Çø',width:120,sortable:true},
+		{field:'PAAdmBed',title:'´²Î»',width:50,sortable:true},
+		
+		{field:'PatSex1',title:'ĞÔ±ğ',width:50,sortable:true}, 
+		{field:'PatAge',title:'ÄêÁä',width:50,sortable:false}, 
+		{field:'PatCredNo',title:'Ö¤¼şºÅ',width:230,sortable:false}, 
+		{field:'PatientMedicare',title:'²¡°¸ºÅ',width:80,sortable:true}, 
+		
+        {field:'AdmDischgDate',title:'³öÔºÈÕÆÚ',width:100,sortable:true},
+        {field:'PAADMDischgTime',title:'³öÔºÊ±¼ä',width:80,sortable:true},
+		{field:'MRDiagnoseDesc',title:'Õï¶Ï',width:120,sortable:true},
+		{field:'baseinfo',title:'»ù±¾ĞÅÏ¢',width:70,align:'center',
 			formatter: function(value,row,index){
-				var btn = '<a class="editcls" onclick="BPatBaseInfo(\'' + row["EpisodeID"] + '\')"><img src="../images/webemr/regalert.gif"></a>';
+				var btn = '<a class="editcls" onclick="BPatBaseInfo(\'' + row["EpisodeID"] + '\' , \''+row["WardId"] + '\')"><img src="../images/webemr/Regalert.gif"></a>';
 				return btn;
 			}
 		},
-		{field:'EpisodeID',title:'å°±è¯Šå·',width:80},
-		{field:'VisitStatus',title:'ç—…äººçŠ¶æ€',width:80},
-		{field:'AddPilotProPat',title:'åŠ å…¥ç§‘ç ”é¡¹ç›®',width:100,align:'center',
+		{field:'WardId',hidden:true,title:''},
+		{field:'EpisodeID',title:'¾ÍÕïºÅ',width:80,sortable:false},
+		{field:'VisitStatus',title:'²¡ÈË×´Ì¬',width:80,sortable:true},
+		{field:'AddPilotProPat',title:'¼ÓÈë¿ÆÑĞÏîÄ¿',width:100,align:'center',
 			formatter: function(value,row,index){
 				var btn = '<a class="editcls" onclick="BAddPilotProPat(\'' + row["EpisodeID"] + '\' , \''+row["EpisodeID"] + '\')"><img src="../images/websys/new.gif"></a>';
 				return btn;
 			}
 		}, 
-		{field:'TelPhone',title:'è”ç³»ç”µè¯',width:120},
-		{field:'PatPoliticalLevel',title:'æ‚£è€…çº§åˆ«',width:100},
-		{field:'PatSecretLevel',title:'æ‚£è€…å¯†çº§',width:100}
+		{field:'TelPhone',title:'ÁªÏµµç»°',width:120,sortable:true},
+		{field:'PatPoliticalLevel',title:'»¼Õß¼¶±ğ',width:100,sortable:true},
+		{field:'PatSecretLevel',title:'»¼ÕßÃÜ¼¶',width:100,sortable:true}
     ]]
 	var PatListTabDataGrid=$("#PatListTab").datagrid({
 		fit : true,
 		border : false,
-		striped : true,
+		striped : false,
 		singleSelect : true,
 		fitColumns : false,
 		autoRowHeight : false,
-		pagination : true,  
+		pagination : true, 
+		rownumbers : true,		
 		pageSize: 20,
 		pageList : [20,100,200],
 		idField:'EpisodeID',
 		columns :Columns,
+		remoteSort:false,
 		onCheck:function(index, row){
 			if ((!(typeof window.parent.SetChildPatNo == "function"))&&(!(typeof window.parent.ChangePerson === "function"))) {
 				var frm=dhcsys_getmenuform();
+				var menuWin=websys_getMenuWin();
+				if ((menuWin) &&(menuWin.MainClearEpisodeDetails)) menuWin.MainClearEpisodeDetails();
 				if (frm){
 					frm.EpisodeID.value=row["EpisodeID"];
 					frm.PatientID.value=row["PatientID"];
-					if (frm.AnaesthesiaID) frm.AnaesthesiaID.value = "";
-					if (frm.canGiveBirth) frm.canGiveBirth.value = "";
-					if (frm.PPRowId) frm.PPRowId.value = "";
 				}
 				if(session['LOGON.GROUPID']=='105'){
-					WriteTimeToTXT("EpisodeID="+row["EpisodeID"]+",PatientID="+row["PatientID"]+",ç—…äººID="+row["RegNo"]);
+					WriteTimeToTXT("EpisodeID="+row["EpisodeID"]+",PatientID="+row["PatientID"]+",²¡ÈËID="+row["RegNo"]);
 				}
 			}
 		},
@@ -145,32 +162,29 @@ function InitPatListTabDataGrid(){
 			var AdmID=EpisodeID;
 			var PatientID=row["PatientID"];
 			var frm=dhcsys_getmenuform();
-			//æ—§ç‰ˆå¼€ä½é™¢è¯->æ‚£è€…åˆ‡æ¢(æ¨¡æ€æ¡†å¼¹å‡º)
+			var menuWin=websys_getMenuWin();
+			//¾É°æ¿ª×¡ÔºÖ¤->»¼ÕßÇĞ»»(Ä£Ì¬¿òµ¯³ö)
 			if (window.name=="BookCreat"){
+				/*if ((menuWin) &&(menuWin.MainClearEpisodeDetails)) menuWin.MainClearEpisodeDetails();zz
 				if (frm){
 					frm.EpisodeID.value=PageLogicObj.m_EpisodeID;
 					frm.PatientID.value=PageLogicObj.m_PatientID;
-					if (frm.AnaesthesiaID) frm.AnaesthesiaID.value = "";
-					if (frm.canGiveBirth) frm.canGiveBirth.value = "";
-					if (frm.PPRowId) frm.PPRowId.value = "";
-				}
+				}*/
 				var Parobj=window.opener
 				self.close();
 				Parobj.ChangePerson(AdmID,PatientID)
 			}
-			//æ–°ç‰ˆå¼€ä½é™¢è¯->æ‚£è€…åˆ‡æ¢(hisuiå¼¹æ¡†)
+			//ĞÂ°æ¿ª×¡ÔºÖ¤->»¼ÕßÇĞ»»(hisuiµ¯¿ò)
 			if ("function" === typeof window.parent.ChangePerson){
+				/*if ((menuWin) &&(menuWin.MainClearEpisodeDetails)) menuWin.MainClearEpisodeDetails();
 				if (frm){
 					frm.EpisodeID.value=PageLogicObj.m_EpisodeID;
 					frm.PatientID.value=PageLogicObj.m_PatientID;
-					if (frm.AnaesthesiaID) frm.AnaesthesiaID.value = "";
-					if (frm.canGiveBirth) frm.canGiveBirth.value = "";
-					if (frm.PPRowId) frm.PPRowId.value = "";
-				}
+				}*/
 				window.parent.ChangePerson(AdmID,PatientID);
 				window.parent.destroyDialog("BookCreat");
 			}
-			//é¢„çº¦/åŠ å·->æ‚£è€…æŸ¥è¯¢
+			//Ô¤Ô¼/¼ÓºÅ->»¼Õß²éÑ¯
 			if (typeof window.parent.SetChildPatNo == "function") {
 				window.parent.SetChildPatNo(row["RegNo"]);
 				window.close()
@@ -192,6 +206,44 @@ function InitPatListTabDataGrid(){
 						if (frm.PPRowId) frm.PPRowId.value = "";
 					}
 					return false;
+				}
+			}
+		},
+		onResizeColumn: function(field, width) {
+			if (PageLogicObj.m_ShowPatOperBtn == 1) {
+				// ÁĞ¿í¸Ä±ä£¬°´Å¥ÇøËæÖ®±ä»¯
+				if (field == "patOperBtn") {
+					$(this).datagrid('getPanel').find('td[field="patOperBtn"]').find('.shortcutbar-list-x').panel('resize')
+				}
+			}
+		},
+		onLoadSuccess: function(data) {
+			if (PageLogicObj.m_ShowPatOperBtn == 1) {
+				// ´¦ÀíĞĞ¸ßÌ«Ğ¡
+				$(this).datagrid('getPanel').find('div.datagrid-body tr').find('td[field="patOperBtn"]').children("div").css({   
+					"height": "40px" 
+				})
+				// ´¦ÀíĞòºÅ¸ß¶È
+				$(this).datagrid('getPanel').find('.datagrid-td-rownumber').css({   
+					"height": "40px"
+				})
+				$(this).datagrid('getPanel').find('div.datagrid-body tr').find()
+				if (data.total > 0) {
+					data.rows.forEach(function(value, index, array) {
+						$('#patOperBtn_' + index).marybtnbar({
+							barCls: 'background:none;padding:5px 0px;',
+							queryParams: {ClassName:'DHCDoc.OPDoc.MainFrame',QueryName:'QueryBtnCfg',url:'doc.patlistquery.hui.csp'},
+							onBeforeLoad: function(param){
+								param.EpisodeID=value.EpisodeID;
+							},
+							onClick: function(jq,cfg){
+								jq.tooltip('hide');
+								$("#PatListTab").datagrid("unselectAll")
+								$("#PatListTab").datagrid("selectRow", index)
+								jumpMenu(cfg)
+							}
+						})
+					});
 				}
 			}
 		}
@@ -229,10 +281,11 @@ function LoadDept(){
 	});
 }
 function LoadDoc(){
+	var HospID=$HUI.combogrid('#_HospUserList').getValue();
 	$.cm({
 		ClassName:"web.DHCExamPatList",
 		QueryName:"FindDoc",
-	   	LocId:$("#CTLoc").combobox('getValue'), DocDesc:"",
+	   	LocId:$("#CTLoc").combobox('getValue'), DocDesc:"",HospID:HospID,
 		rows:99999
 	},function(GridData){
 		var cbox = $HUI.combobox("#AdmDoc", {
@@ -264,11 +317,19 @@ function LoadWard(){
 					return (row["Ward"].toUpperCase().indexOf(q.toUpperCase()) >= 0) ||(row["Alias"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
 				},
 				onLoadSuccess:function(){
+					var OFlag = $("#cOutStatus").checkbox('getValue');
+					var cInStatus=$("#cInStatus").checkbox('getValue');
+					var cDisInStatus=$("#cDisInStatus").checkbox('getValue');
 					var data=$(this).combobox('getData');
-					if ((data.length>0)&&(LocId!="")&&(!OFlag)){
-						$(this).combobox('select',data[0]['HIDDEN']);
+					if ((OFlag)&&(!cInStatus)&&(!cDisInStatus)) {
+						$("#WardDesc").combobox('disable');
 					}else{
-						SetDefaultWard();
+						$("#WardDesc").combobox('enable');
+						if ((data.length>0)&&(LocId!="")&&(!OFlag)){
+							$(this).combobox('select',data[0]['HIDDEN']);
+						}else{
+							SetDefaultWard();
+						}
 					}
 					
 				}
@@ -288,9 +349,54 @@ function SetDefaultWard(){
 		dataType:"text"
 	},false);
 	if (rtn!=""){
-		$("#WardDesc").combobox('setValue',rtn.split("^")[1]);
+		if ($.hisui.indexOfArray($("#WardDesc").combobox('getData'),"HIDDEN",rtn.split("^")[1]) >=0) {
+			$("#WardDesc").combobox("setValue",rtn.split("^")[1]);
+		}else{
+			$("#WardDesc").combobox("setValue","");
+		}
 	}
 }
+
+function IntCredNoLookUp() {
+	$("#PatCredNo").lookup({
+        url:$URL,
+        mode:'remote',
+        method:"Get",
+        idField:'PAAdmRowId',
+        textField:'CredNo',
+        columns:[[  
+			{field:'PatNo',title:'µÇ¼ÇºÅ',width:100},
+			{field:'PatName',title:'»¼ÕßĞÕÃû',width:100,sortable:true},
+			{field:'Birth',title:'³öÉúÈÕÆÚ',width:95,sortable:true},
+			{field:'PatSex',title:'ĞÔ±ğ',width:40,sortable:true},
+			{field:'InPatFlag',title:'ÕıÔÚ×¡Ôº',width:80,sortable:true},
+			{field:'InPatLoc',title:'×¡Ôº¿ÆÊÒ',width:120,sortable:true},
+			{field:'CredNo',title:'Ö¤¼şºÅÂë',width:120,sortable:true}
+        ]], 
+        pagination:true,
+        panelWidth:500,
+        isCombo:true,
+        minQueryLen:2,
+        delay:'500',
+        queryOnSameQueryString:true,
+        queryParams:{ClassName: 'web.DHCExamPatList',QueryName: 'patcrednolookup'},
+        onBeforeLoad:function(param){
+	        var desc=param['q'];
+	        if (desc=="") return false;
+	        var OutStatus=$("#cOutStatus").checkbox('getValue')?'1':'';
+		    var InStatus=$("#cInStatus").checkbox('getValue')?'1':'';
+		    var DisInStatus=$("#cDisInStatus").checkbox('getValue')?'1':'';
+			param = $.extend(param,{PatCredNo:desc,HospDr:$HUI.combogrid('#_HospUserList').getValue()});
+	    },
+	    onSelect:function(index, row){
+		    var PatNo=row['PatNo'];
+		    $("#PatNo").val(PatNo);
+		    //PageLogicObj.m_PAAdmRowId=row['PAAdmRowId'];
+		    FindPatDetail();
+		}
+    });
+}
+
 function IntNameLookUp(){
 	$("#Name").lookup({
         url:$URL,
@@ -298,13 +404,14 @@ function IntNameLookUp(){
         method:"Get",
         idField:'PAAdmRowId',
         textField:'PatName',
+		remoteSort:false,
         columns:[[  
-			{field:'PatNo',title:'ç™»è®°å·',width:100},
-			{field:'PatName',title:'æ‚£è€…å§“å',width:100,sortable:true},
-			{field:'Birth',title:'å‡ºç”Ÿæ—¥æœŸ',width:95,sortable:true},
-			{field:'PatSex',title:'æ€§åˆ«',width:40,sortable:true},
-			{field:'InPatFlag',title:'æ­£åœ¨ä½é™¢',width:80,sortable:true},
-			{field:'InPatLoc',title:'ä½é™¢ç§‘å®¤',width:120,sortable:true}
+			{field:'PatNo',title:'µÇ¼ÇºÅ',width:100},
+			{field:'PatName',title:'»¼ÕßĞÕÃû',width:100,sortable:true},
+			{field:'Birth',title:'³öÉúÈÕÆÚ',width:95,sortable:true},
+			{field:'PatSex',title:'ĞÔ±ğ',width:40,sortable:true},
+			{field:'InPatFlag',title:'ÕıÔÚ×¡Ôº',width:80,sortable:true},
+			{field:'InPatLoc',title:'×¡Ôº¿ÆÊÒ',width:120,sortable:true}
         ]], 
         pagination:true,
         panelWidth:500,
@@ -337,10 +444,11 @@ function IntDiagnosisLookUp() {
         idField:'HIDDEN',
         textField:'desc',
         columns:[[  
-            {field:'desc',title:'è¯Šæ–­åç§°',width:300,sortable:true},
+            {field:'desc',title:'Õï¶ÏÃû³Æ',width:300,sortable:true},
 			{field:'code',title:'code',width:120,sortable:true},
 			{field:'HIDDEN',title:'HIDDEN',width:120,sortable:true,hidden:true}
         ]],
+		fitColumns:true,
         pagination:true,
         panelWidth:500,
         panelHeight:410,
@@ -413,7 +521,7 @@ function DocumentOnKeyDown(e){
 function FindPatDetail(){
 	var PatNo=$('#PatNo').val();
 	if (PatNo!=""){
-		//å¦‚æœæ˜¯æŒ‰æ‚£è€…æŸ¥è¯¢åˆ™æ¸…ç©ºå¼€å§‹ä¸æˆªæ­¢æ—¥æœŸ
+		//Èç¹ûÊÇ°´»¼Õß²éÑ¯ÔòÇå¿Õ¿ªÊ¼Óë½ØÖ¹ÈÕÆÚ
 		$("#Startdate,#Enddate").datebox('setValue','');
 		var value=$.cm({
 		    ClassName : "web.DHCExamPatList",
@@ -445,6 +553,16 @@ function SetPatient_Sel(value){
 	var PatMed=$("#PatMed").val();
 	if ((PatNo=="")&&(PatMed!="")){
 		FindPatByMedicare();
+	}
+	var PatientID=unescape(Split_Value[23]);
+	var UnitRegNo=$.cm({
+	    ClassName : "web.DHCOPAdmReg",
+	    MethodName : "GetUnitedRegNo",
+	    dataType:"text",
+	    PatientID:PatientID,
+    },false);
+	if (UnitRegNo!=""){
+		$.messager.alert("ÌáÊ¾",unescape(Split_Value[3])+" ¸ÃµÇ¼ÇºÅÒÑ±»ºÏ²¢£¬±£ÁôµÇ¼ÇºÅÎª<font style='color:red'>"+UnitRegNo+"</font>!","info")
 	} 
 	//PageLogicObj.m_PAAdmRowId="";
 	PatListTabDataGridLoad();
@@ -487,7 +605,7 @@ function CardNoKeyDownCallBack(myrtn){
     		FindPatDetail();
 			break;
 		case "-200": 
-			$.messager.alert("æç¤º","å¡æ— æ•ˆ!","info",function(){
+			$.messager.alert("ÌáÊ¾","¿¨ÎŞĞ§!","info",function(){
 				$("#CardTypeNew,#PatNo").val("");
 				$("#CardNo").focus();
 			});
@@ -514,11 +632,13 @@ function BClearClickHandle(){
 	$(".textbox").val('');
 	$("#SAge,#EAge").numberbox('setValue','');
 	$(".hisui-combobox").combobox('select','');
-	$("#Startdate,#Enddate").datebox('setValue',ServerObj.NowDate);
-	$("#cOutStatus,#cInStatus,#cDisInStatus").checkbox('setValue',false);
+	//$("#Startdate,#Enddate").datebox('setValue',ServerObj.NowDate);
+	$("#Startdate,#Enddate").datebox('setValue',"");
+	//$("#cOutStatus,#cInStatus,#cDisInStatus").checkbox('setValue',false);
 	$("#Name").lookup('setText','');
 	$("#PatMed").removeAttr("disabled");
-	$("#WardDesc").combobox('enable');
+	SetWardStatus(); //$("#WardDesc").combobox('enable');
+	if ($("#cOutStatus").checkbox('getValue')==false) {SetDefaultWard();}
 	PageLogicObj.m_PAAdmRowId="";
 	PageLogicObj.m_PatListTabDataGrid.datagrid('loadData', {"total":0,"rows":[]});
 	//setTimeout(function(){PatListTabDataGridLoad();});
@@ -530,7 +650,7 @@ function GetPrintDetailData(){
 function PrintClickHandle(){
 	try {   
 	    if (PageLogicObj.m_FindFlag==0){
-		    $.messager.alert("æç¤º","è¯·å…ˆç‚¹å‡»æŸ¥æ‰¾åå†æ‰“å°!");
+		    $.messager.alert("ÌáÊ¾","ÇëÏÈµã»÷²éÕÒºóÔÙ´òÓ¡!");
 		    return false;
 		}
 		var TemplatePath=$.cm({
@@ -540,13 +660,13 @@ function PrintClickHandle(){
 		},false);
 		var Template=TemplatePath+"DHCExamPatList1.xls";
         var xlApp,xlsheet,xlBook
-		//å·¦å³è¾¹è·
+		//×óÓÒ±ß¾à
 	    xlApp = new ActiveXObject("Excel.Application");
 	    xlBook = xlApp.Workbooks.Add(Template);
 	    xlsheet = xlBook.ActiveSheet;
 	    xlsheet.PageSetup.LeftMargin=15;  
 	    xlsheet.PageSetup.RightMargin=0;
-		//è·å–é¡µé¢æ•°æ®
+		//»ñÈ¡Ò³ÃæÊı¾İ
 		var ReturnValue=$.cm({
 			ClassName:"web.DHCExamPatList",
 			MethodName:"GetDHCExamPatListMessage",
@@ -554,14 +674,14 @@ function PrintClickHandle(){
 			dataType:"text"
 		},false);
 	    if (+ReturnValue==0){
-		    $.messager.alert("æç¤º","æ²¡æœ‰éœ€è¦æ‰“å°çš„æ•°æ®!");
+		    $.messager.alert("ÌáÊ¾","Ã»ÓĞĞèÒª´òÓ¡µÄÊı¾İ!");
 		    return false;
 		}
 		var myRows=ReturnValue;
-		$.messager.confirm('ç¡®è®¤å¯¹è¯æ¡†', 'ç¡®å®šè¦æ‰“å°ä¿¡æ¯?', function(r){
+		$.messager.confirm('È·ÈÏ¶Ô»°¿ò', 'È·¶¨Òª´òÓ¡ĞÅÏ¢?', function(r){
 			if (r){
-				var xlsrow=2; //ç”¨æ¥æŒ‡å®šæ¨¡æ¿çš„å¼€å§‹è¡Œæ•°ä½ç½®
-				var xlsCurcol=0;  //ç”¨æ¥æŒ‡å®šå¼€å§‹çš„åˆ—æ•°ä½ç½®
+				var xlsrow=2; //ÓÃÀ´Ö¸¶¨Ä£°åµÄ¿ªÊ¼ĞĞÊıÎ»ÖÃ
+				var xlsCurcol=0;  //ÓÃÀ´Ö¸¶¨¿ªÊ¼µÄÁĞÊıÎ»ÖÃ
 				var NO=myRows/48
 			    NO=parseInt(NO)+1;
 				var Flag=1
@@ -569,9 +689,9 @@ function PrintClickHandle(){
 				    if (xlsrow==(50*Flag)){
 					     Flag=Flag+1;
 				         if(ServerObj.HospName!=""){
-					        xlsheet.cells(1,1)=ServerObj.HospName+"æ‚£è€…æŸ¥æ‰¾å•";
+					        xlsheet.cells(1,1)=ServerObj.HospName+"»¼Õß²éÕÒµ¥";
 					     }else{
-						    xlsheet.cells(1,1)="æ‚£è€…æŸ¥æ‰¾å•";
+						    xlsheet.cells(1,1)="»¼Õß²éÕÒµ¥";
 						 }
 						 xlsheet.PrintOut;
 						 var xlsrow=2;
@@ -583,8 +703,8 @@ function PrintClickHandle(){
 				    	 xlsheet.PageSetup.RightMargin=0;
 				    	
 					}
-					xlsrow=xlsrow+1; //ä»ç¬¬ä¸‰è¡Œå¼€å§‹
-					//è·å–é¡µé¢æ•°æ®
+					xlsrow=xlsrow+1; //´ÓµÚÈıĞĞ¿ªÊ¼
+					//»ñÈ¡Ò³ÃæÊı¾İ
 					var StrData=$.cm({
 						ClassName:"web.DHCExamPatList",
 						MethodName:"GetDHCExamPatListMessage",
@@ -593,24 +713,24 @@ function PrintClickHandle(){
 					},false);
 		            var DataValue=StrData.split("^")
 		            xlsheet.cells(xlsrow,xlsCurcol+1)=Row;
-		            xlsheet.cells(xlsrow,xlsCurcol+8)=DataValue[0]; //AdmDate å°±è¯Šæ—¥æœŸ
-		            xlsheet.cells(xlsrow,xlsCurcol+9)=DataValue[1];//AdmTime å°±è¯Šæ—¶é—´
-		            xlsheet.cells(xlsrow,xlsCurcol+11)=DataValue[2];//AdmDoC åŒ»ç”Ÿ
-		            xlsheet.cells(xlsrow,xlsCurcol+7)=DataValue[3];//AdmReasoc è´¹åˆ«
-		            xlsheet.cells(xlsrow,xlsCurcol+6)=DataValue[4];//AdmType  å°±è¯Šç±»å‹
-		            xlsheet.cells(xlsrow,xlsCurcol+12)=DataValue[5];//PAAdmWard ç—…åŒº
-		            xlsheet.cells(xlsrow,xlsCurcol+13)=DataValue[6];//PAAdmBed ç—…åºŠ
-		            xlsheet.cells(xlsrow,xlsCurcol+10)=DataValue[7];//AdmDept å°±è¯Šç§‘å®¤
-		            xlsheet.cells(xlsrow,xlsCurcol+3)=DataValue[12]; //ç—…äººID
-		            xlsheet.cells(xlsrow,xlsCurcol+2)=DataValue[13];//ç—…æ¡ˆå·
-		            xlsheet.cells(xlsrow,xlsCurcol+14)=DataValue[10];//AdmDischgDate å‡ºé™¢æ—¥æœŸ
-		            xlsheet.cells(xlsrow,xlsCurcol+4)=DataValue[14];// ç—…äººå§“å
-		            xlsheet.cells(xlsrow,xlsCurcol+5)=DataValue[15]// ç—…äººæ€§åˆ«
+		            xlsheet.cells(xlsrow,xlsCurcol+8)=DataValue[0]; //AdmDate ¾ÍÕïÈÕÆÚ
+		            xlsheet.cells(xlsrow,xlsCurcol+9)=DataValue[1];//AdmTime ¾ÍÕïÊ±¼ä
+		            xlsheet.cells(xlsrow,xlsCurcol+11)=DataValue[2];//AdmDoC Ò½Éú
+		            xlsheet.cells(xlsrow,xlsCurcol+7)=DataValue[3];//AdmReasoc ·Ñ±ğ
+		            xlsheet.cells(xlsrow,xlsCurcol+6)=DataValue[4];//AdmType  ¾ÍÕïÀàĞÍ
+		            xlsheet.cells(xlsrow,xlsCurcol+12)=DataValue[5];//PAAdmWard ²¡Çø
+		            xlsheet.cells(xlsrow,xlsCurcol+13)=DataValue[6];//PAAdmBed ²¡´²
+		            xlsheet.cells(xlsrow,xlsCurcol+10)=DataValue[7];//AdmDept ¾ÍÕï¿ÆÊÒ
+		            xlsheet.cells(xlsrow,xlsCurcol+3)=DataValue[12]; //²¡ÈËID
+		            xlsheet.cells(xlsrow,xlsCurcol+2)=DataValue[13];//²¡°¸ºÅ
+		            xlsheet.cells(xlsrow,xlsCurcol+14)=DataValue[10];//AdmDischgDate ³öÔºÈÕÆÚ
+		            xlsheet.cells(xlsrow,xlsCurcol+4)=DataValue[14];// ²¡ÈËĞÕÃû
+		            xlsheet.cells(xlsrow,xlsCurcol+5)=DataValue[15]// ²¡ÈËĞÔ±ğ
 		        }
 		        if(ServerObj.HospName!=""){
-			        xlsheet.cells(1,1)=ServerObj.HospName+"æ‚£è€…æŸ¥æ‰¾å•";
+			        xlsheet.cells(1,1)=ServerObj.HospName+"»¼Õß²éÕÒµ¥";
 			    }else{
-				    xlsheet.cells(1,1)="æ‚£è€…æŸ¥æ‰¾å•";
+				    xlsheet.cells(1,1)="»¼Õß²éÕÒµ¥";
 				}
 				var d=new Date();
 				var h=d.getHours();
@@ -628,28 +748,37 @@ function PrintClickHandle(){
 	};
 }
 function PatListTabDataGridLoad(PrintFlag){
-	//æœ€åä¸€ä¸ªå‚æ•°åˆå¹¶
+	//×îºóÒ»¸ö²ÎÊıºÏ²¢
 	var PatNo=$('#PatNo').val();
 	var PatMed = $("#PatMed").val();
 	var SAge = $("#SAge").val();
 	var EAge = $("#EAge").val();
 	var Diagnosis = $("#Diagnosis").lookup("getText");
 	var HospID=$HUI.combogrid('#_HospUserList').getValue();
-	var RequestPatMed = PatMed + "^" + Diagnosis + "^" + SAge + "^" + EAge+"^"+HospID;
+	var RequestPatMed = PatMed + "^" + Diagnosis + "^" + SAge + "^" + EAge+"^"+HospID
 	var SDate = $("#Startdate").datebox('getValue');
 	var EDate = $("#Enddate").datebox('getValue');
 	var OFlag = $("#cOutStatus").checkbox('getValue');
 	var IFlag = $("#cInStatus").checkbox('getValue');
 	var DisFlag = $("#cDisInStatus").checkbox('getValue');
-	if ((!OFlag)&&(!IFlag)&&(!DisFlag)) {
-		$.messager.alert("æç¤º","è¯·å…ˆé€‰æ‹©é—¨/æ€¥/ä½é™¢æ‚£è€…ç±»å‹è¿›è¡ŒæŸ¥è¯¢!","info");
+	var PreFlag = $("#cPreStatus").checkbox('getValue');
+	if ((!OFlag)&&(!IFlag)&&(!DisFlag)&&(!PreFlag)) {
+		$.messager.alert("ÌáÊ¾","ÇëÏÈÑ¡ÔñÃÅ¼±Õï/×¡Ôº/³öÔº/Ô¤×¡Ôº»¼ÕßÀàĞÍ½øĞĞ²éÑ¯!","info");
 		return false;
 	}
-	var DateFlag = tkMakeServerCall("web.DHCExamPatList","IfSelectDate",SDate,EDate);
-	if ((PatNo=="")&&(OFlag)&&(DateFlag!=1)) {
-		 $.messager.alert("æç¤º","è¯·é€‰æ‹©åˆé€‚çš„æ—¥æœŸèŒƒå›´,é—¨è¯Šæ‰€é€‰æ‹©æ—¥æœŸåœ¨7å¤©ä¹‹å†…!","info");
-		 return false;
-	}
+	if ((PatNo=="")&&(PatMed=="")&&(SDate=="")&&(EDate=="")){
+		$.messager.alert("ÌáÊ¾","ÇëÖÁÉÙÑ¡ÔñÒ»¸ö²éÑ¯Ìõ¼ş(ÈÕÆÚ¡¢¿¨ºÅ¡¢µÇ¼ÇºÅ¡¢²¡°¸ºÅ)½øĞĞ²éÑ¯!","info");
+		return false;
+		}
+	var PreFlag=$("#cPreStatus").checkbox('getValue')?'on':''
+	var RequestPatMed=RequestPatMed +"^"+PreFlag
+	var PatType = $("#PatType").datebox('getValue');
+	var RequestPatMed=RequestPatMed +"^"+PatType
+	 var DateFlag = tkMakeServerCall("web.DHCExamPatList","IfSelectDate",SDate,EDate,session['LOGON.HOSPID']);
+	 if ((PatNo=="")&&(DateFlag!="")) {
+	    $.messager.alert("ÌáÊ¾",DateFlag,"info");
+	    return false;
+	 }
 	PageLogicObj.m_FindFlag=1;
 	var GridData=$.cm({
 	    ClassName : "web.DHCExamPatList",
@@ -704,53 +833,101 @@ function chekboxChange(id){
 			$("#WardDesc").combobox('enable');
 		}
 	}
+	var cOutStatusFlag=$("#cOutStatus").checkbox('getValue')
+	var cInStatusFlag=$("#cInStatus").checkbox('getValue')
+	var cDisInStatusFlag=$("#cDisInStatus").checkbox('getValue')
+	var cPreFlag = $("#cPreStatus").checkbox('getValue');
+	/*if ((cOutStatusFlag==true)&&(cInStatusFlag==false)&&(cDisInStatusFlag==false)){
+		$("#WardDesc").combobox('setValue','')
+	}else if ((cOutStatusFlag==true)&&(cInStatusFlag==true)&&(cDisInStatusFlag==false)){
+		//$("#WardDesc").combobox('setValue','')
+	}else if ((cOutStatusFlag==true)&&(cInStatusFlag==false)&&(cDisInStatusFlag==true)){
+		//$("#WardDesc").combobox('setValue','')
+	}else{
+		if ($("#WardDesc").combobox('getValue')=="") {
+			SetDefaultWard()
+		}
+	}*/
+	if (cOutStatusFlag ==true) {
+		$("#WardDesc").combobox('setValue','');
+	}
+	if ((cInStatusFlag==true)||(cDisInStatusFlag==true)||(cPreFlag==true)) {
+		$("#WardDesc").combobox('enable');
+	}else{
+		$("#WardDesc").combobox('setValue','').combobox('disable');
+	}
 }
-function BPatBaseInfo(EpisodeID){
-	//var src="dhc.nurse.vue.mainentry.csp?ViewName=PatInfo&EpisodeID="+EpisodeID;
-	var src="dhc.nurse.vue.nis.csp?pageName=patientDetail&EpisodeID="+EpisodeID;
-	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
-	createModalDialog("Find","æ‚£è€…åŸºæœ¬ä¿¡æ¯", 900, 500,"icon-w-card","",$code,"");
+function BPatBaseInfo(EpisodeID,wardId){
+	//2022.06.29 V8.5.2 »»³É»¤Ê¿Õ¾ĞÂ·â×°µÄHISUIÒ³Ãæ(Ò³ÃæÏÔÊ¾ÄÚÈİÅäÖÃÀ´Ô´£º´²Î»¿¨ÅäÖÃ-»¼ÕßÏêÏ¸ĞÅÏ¢ÅäÖÃ)
+	/*var src="dhc.nurse.vue.nis.csp?pageName=patientDetail&EpisodeID="+EpisodeID;
+	websys_showModal({
+		url:src,
+		title:'»¼Õß»ù±¾ĞÅÏ¢',
+		width:900,height:500
+	})*/
+	var getPatDetailMaxRow=$.cm({
+		ClassName:"Nur.NIS.Service.Base.BedConfig",
+		MethodName:"getPatDetailMaxRow",
+		HospId:session['LOGON.HOSPID'],
+		wardId:""
+	},false);
+	getPatDetailMaxRow = parseInt(getPatDetailMaxRow);
+	var panelHeadHeight = 37,patBarHeight = 41;
+    var panelBodyHeight = getPatDetailMaxRow * 30 + (getPatDetailMaxRow + 1) * 10;
+  	var panelHeight = panelHeadHeight + patBarHeight + panelBodyHeight;
+  	var lnk="nur.hisui.patdetailinfo.csp?EpisodeID="+EpisodeID+"&saveOperation=N&wardID="+wardId
+	websys_showModal({
+	    url: lnk,
+	    title: "»¼Õß»ù±¾ĞÅÏ¢",
+	    iconCls:'icon-w-eye',
+	    width: 738,
+	    height: panelHeight,
+	    CallBackFunc: function(result) {
+	      websys_showModal("close");
+	    }
+  });
 }
 function BAddPilotProPat(EpisodeID,PatientID){
 	var src="docpilotpro.patadd.hui.csp?EpisodeID="+EpisodeID+"&PatientID="+PatientID;
+	if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
-	createModalDialog("Find","åŠ å…¥ç§‘ç ”é¡¹ç›®", 1340, 600,"icon-w-add","",$code,"");
+	createModalDialog("Find","¼ÓÈë¿ÆÑĞÏîÄ¿", 1340, 600,"icon-w-add","",$code,"");
 }
 function WriteTimeToTXT(i){
 	var writeStr;
 	var userId=session['LOGON.USERID'];
 	var myDate = new Date();
 	var mytime=myDate.toLocaleTimeString()+":"+myDate.getMilliseconds();
-	writeStr="æ—¶é—´:"+mytime;
+	writeStr="Ê±¼ä:"+mytime;
 	/*    
 	object.OpenTextFile(filename[, iomode[, create[, format]]])    
-	å‚æ•°objectå¿…é€‰é¡¹ã€‚object åº”ä¸º FileSystemObject çš„åç§°ã€‚    
-	filenameå¿…é€‰é¡¹ã€‚æŒ‡æ˜è¦æ‰“å¼€æ–‡ä»¶çš„å­—ç¬¦ä¸²è¡¨è¾¾å¼ã€‚    
-	iomodeå¯é€‰é¡¹ã€‚å¯ä»¥æ˜¯ä¸‰ä¸ªå¸¸æ•°ä¹‹ä¸€ï¼šForReading ã€ ForWriting æˆ– ForAppending ã€‚    
-	createå¯é€‰é¡¹ã€‚Boolean å€¼ï¼ŒæŒ‡æ˜å½“æŒ‡å®šçš„ filename ä¸å­˜åœ¨æ—¶æ˜¯å¦åˆ›å»ºæ–°æ–‡ä»¶ã€‚å¦‚æœåˆ›å»ºæ–°æ–‡ä»¶åˆ™å€¼ä¸º True ï¼Œå¦‚æœä¸åˆ›å»ºåˆ™ä¸º False ã€‚å¦‚æœå¿½ç•¥ï¼Œåˆ™ä¸åˆ›å»ºæ–°æ–‡ä»¶ã€‚    
-	formatå¯é€‰é¡¹ã€‚ä½¿ç”¨ä¸‰æ€å€¼ä¸­çš„ä¸€ä¸ªæ¥æŒ‡æ˜æ‰“å¼€æ–‡ä»¶çš„æ ¼å¼ã€‚å¦‚æœå¿½ç•¥ï¼Œé‚£ä¹ˆæ–‡ä»¶å°†ä»¥ ASCII æ ¼å¼æ‰“å¼€ã€‚    
-	è®¾ç½®iomode å‚æ•°å¯ä»¥æ˜¯ä¸‹åˆ—è®¾ç½®ä¸­çš„ä»»ä¸€ç§ï¼š    
-	å¸¸æ•°      å€¼  æè¿°    
-	ForReading 1 ä»¥åªè¯»æ–¹å¼æ‰“å¼€æ–‡ä»¶ã€‚ä¸èƒ½å†™è¿™ä¸ªæ–‡ä»¶ã€‚    
-	ForWriting 2 ä»¥å†™æ–¹å¼æ‰“å¼€æ–‡ä»¶    
-	ForAppending 8 æ‰“å¼€æ–‡ä»¶å¹¶ä»æ–‡ä»¶æœ«å°¾å¼€å§‹å†™ã€‚    
-	format å‚æ•°å¯ä»¥æ˜¯ä¸‹åˆ—è®¾ç½®ä¸­çš„ä»»ä¸€ç§ï¼š    
-	å€¼              æè¿°    
-	TristateTrue ä»¥ Unicode æ ¼å¼æ‰“å¼€æ–‡ä»¶ã€‚    
-	TristateFalse ä»¥ ASCII æ ¼å¼æ‰“å¼€æ–‡ä»¶ã€‚    
-	TristateUseDefault ä½¿ç”¨ç³»ç»Ÿé»˜è®¤å€¼æ‰“å¼€æ–‡ä»¶ã€‚ 
-	-2ç³»ç»Ÿé»˜è®¤ã€-1ä»¥Unicode æ ¼å¼ã€0ä»¥ASCII æ ¼å¼   
+	²ÎÊıobject±ØÑ¡Ïî¡£object Ó¦Îª FileSystemObject µÄÃû³Æ¡£    
+	filename±ØÑ¡Ïî¡£Ö¸Ã÷Òª´ò¿ªÎÄ¼şµÄ×Ö·û´®±í´ïÊ½¡£    
+	iomode¿ÉÑ¡Ïî¡£¿ÉÒÔÊÇÈı¸ö³£ÊıÖ®Ò»£ºForReading ¡¢ ForWriting »ò ForAppending ¡£    
+	create¿ÉÑ¡Ïî¡£Boolean Öµ£¬Ö¸Ã÷µ±Ö¸¶¨µÄ filename ²»´æÔÚÊ±ÊÇ·ñ´´½¨ĞÂÎÄ¼ş¡£Èç¹û´´½¨ĞÂÎÄ¼şÔòÖµÎª True £¬Èç¹û²»´´½¨ÔòÎª False ¡£Èç¹ûºöÂÔ£¬Ôò²»´´½¨ĞÂÎÄ¼ş¡£    
+	format¿ÉÑ¡Ïî¡£Ê¹ÓÃÈıÌ¬ÖµÖĞµÄÒ»¸öÀ´Ö¸Ã÷´ò¿ªÎÄ¼şµÄ¸ñÊ½¡£Èç¹ûºöÂÔ£¬ÄÇÃ´ÎÄ¼ş½«ÒÔ ASCII ¸ñÊ½´ò¿ª¡£    
+	ÉèÖÃiomode ²ÎÊı¿ÉÒÔÊÇÏÂÁĞÉèÖÃÖĞµÄÈÎÒ»ÖÖ£º    
+	³£Êı      Öµ  ÃèÊö    
+	ForReading 1 ÒÔÖ»¶Á·½Ê½´ò¿ªÎÄ¼ş¡£²»ÄÜĞ´Õâ¸öÎÄ¼ş¡£    
+	ForWriting 2 ÒÔĞ´·½Ê½´ò¿ªÎÄ¼ş    
+	ForAppending 8 ´ò¿ªÎÄ¼ş²¢´ÓÎÄ¼şÄ©Î²¿ªÊ¼Ğ´¡£    
+	format ²ÎÊı¿ÉÒÔÊÇÏÂÁĞÉèÖÃÖĞµÄÈÎÒ»ÖÖ£º    
+	Öµ              ÃèÊö    
+	TristateTrue ÒÔ Unicode ¸ñÊ½´ò¿ªÎÄ¼ş¡£    
+	TristateFalse ÒÔ ASCII ¸ñÊ½´ò¿ªÎÄ¼ş¡£    
+	TristateUseDefault Ê¹ÓÃÏµÍ³Ä¬ÈÏÖµ´ò¿ªÎÄ¼ş¡£ 
+	-2ÏµÍ³Ä¬ÈÏ¡¢-1ÒÔUnicode ¸ñÊ½¡¢0ÒÔASCII ¸ñÊ½   
 	*/     
 	var filePath="c://"+userId+"searchLog.txt";
 	var objFSO = new ActiveXObject("Scripting.FileSystemObject");
 	var objStream;
-	if (!objFSO.FileExists(filePath)){    // æ£€æŸ¥æ–‡ä»¶æ˜¯å¦å­˜åœ¨
+	if (!objFSO.FileExists(filePath)){    // ¼ì²éÎÄ¼şÊÇ·ñ´æÔÚ
    		objStream=objFSO.CreateTextFile(filePath,8,true);
 	}else{
 		objStream=objFSO.OpenTextFile(filePath,8,false,-1);
 	}
 	objStream.Write(writeStr+"----"+i+"\r\n");
-   	objStream.Close();  // å…³é—­æ–‡ä»¶
+   	objStream.Close();  // ¹Ø±ÕÎÄ¼ş
 }
 function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,_event){
     $("body").append("<div id='"+id+"' class='hisui-dialog'></div>");
@@ -779,7 +956,7 @@ function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,
     });
 }
 function destroyDialog(id){
-   //ç§»é™¤å­˜åœ¨çš„Dialog
+   //ÒÆ³ı´æÔÚµÄDialog
    $("body").remove("#"+id); 
    $("#"+id).dialog('destroy');
 }
@@ -822,21 +999,26 @@ function ExprotClickHandle() {
 	 var OFlag = $("#cOutStatus").checkbox('getValue');
 	 var IFlag = $("#cInStatus").checkbox('getValue');
 	 var DisFlag = $("#cDisInStatus").checkbox('getValue');
-	 if ((!OFlag)&&(!IFlag)&&(!DisFlag)) {
-	   $.messager.alert("æç¤º","è¯·å…ˆé€‰æ‹©é—¨/æ€¥/ä½é™¢æ‚£è€…ç±»å‹è¿›è¡ŒæŸ¥è¯¢!","info");
-	   return false;
-	 }
-	 var DateFlag = tkMakeServerCall("web.DHCExamPatList","IfSelectDate",SDate,EDate);
-	 if ((PatNo=="")&&(OFlag)&&(DateFlag!=1)) {
-	    $.messager.alert("æç¤º","è¯·é€‰æ‹©åˆé€‚çš„æ—¥æœŸèŒƒå›´,é—¨è¯Šæ‰€é€‰æ‹©æ—¥æœŸåœ¨7å¤©ä¹‹å†…!","info");
+	 var PreFlag = $("#cPreStatus").checkbox('getValue');
+	 if ((!OFlag)&&(!IFlag)&&(!DisFlag)&&(!PreFlag)) {
+		$.messager.alert("ÌáÊ¾","ÇëÏÈÑ¡ÔñÃÅ¼±Õï/×¡Ôº/³öÔº/Ô¤×¡Ôº»¼ÕßÀàĞÍ½øĞĞ²éÑ¯!","info");
+		return false;
+	}
+	  var DateFlag = tkMakeServerCall("web.DHCExamPatList","IfSelectDate",SDate,EDate,session['LOGON.HOSPID']);
+	 if ((PatNo=="")&&(DateFlag!="")) {
+	    $.messager.alert("ÌáÊ¾",DateFlag,"info");
 	    return false;
 	 }
+	 var PreFlag=$("#cPreStatus").checkbox('getValue')?'on':''
+	var RequestPatMed=RequestPatMed +"^"+PreFlag
+	var PatType = $("#PatType").datebox('getValue');
+	var RequestPatMed=RequestPatMed +"^"+PatType
 	 var FileName="PatListQuery";
-	 var oXL = new ActiveXObject("Excel.Application"); //åˆ›å»ºAXå¯¹è±¡excel   
-	 var oWB = oXL.Workbooks.Add(); //è·å–workbookå¯¹è±¡   
-	 var oSheet = oWB.ActiveSheet; //æ¿€æ´»å½“å‰sheet
+	 var oXL = new ActiveXObject("Excel.Application"); //´´½¨AX¶ÔÏóexcel   
+	 var oWB = oXL.Workbooks.Add(); //»ñÈ¡workbook¶ÔÏó   
+	 var oSheet = oWB.ActiveSheet; //¼¤»îµ±Ç°sheet
 	 oSheet.Columns.NumberFormatLocal = "@";
-	 //è®¾ç½®å·¥ä½œè–„åç§°  
+	 //ÉèÖÃ¹¤×÷±¡Ãû³Æ  
 	 oSheet.name = FileName; 
 	 PageLogicObj.m_FindFlag=1;
 	 $.cm({
@@ -878,14 +1060,14 @@ function ExprotClickHandle() {
 		        col++;
 	       }
 	   }
-	   oXL.Visible = false; //è®¾ç½®excelå¯è§å±æ€§
+	   oXL.Visible = false; //ÉèÖÃexcel¿É¼ûÊôĞÔ
 	   var fname = oXL.Application.GetSaveAsFilename(FileName+".xls", "Excel Spreadsheets (*.xls), *.xls");
 	   oWB.SaveAs(fname);
 	   oWB.Close(savechanges=false);
 	   oXL.Quit();
 	   oXL=null;
 	  }catch(e){
-	    $.messager.alert("æç¤º",e.message);
+	    $.messager.alert("ÌáÊ¾",e.message);
 	  };
    });
 }
@@ -895,25 +1077,40 @@ function ExportPrintCommon(ResultSetTypeDo){
 	 var SAge = $("#SAge").val();
 	 var EAge = $("#EAge").val();
 	 var Diagnosis = $("#Diagnosis").lookup("getText");
-	 var RequestPatMed = PatMed + "^" + Diagnosis + "^" + SAge + "^" + EAge;
+	 var HospID=$HUI.combogrid('#_HospUserList').getValue();
+	 var RequestPatMed = PatMed + "^" + Diagnosis + "^" + SAge + "^" + EAge+"^"+HospID
 	 var SDate = $("#Startdate").datebox('getValue');
 	 var EDate = $("#Enddate").datebox('getValue');
 	 var OFlag = $("#cOutStatus").checkbox('getValue');
 	 var IFlag = $("#cInStatus").checkbox('getValue');
 	 var DisFlag = $("#cDisInStatus").checkbox('getValue');
-	 if ((!OFlag)&&(!IFlag)&&(!DisFlag)) {
-	   $.messager.alert("æç¤º","è¯·å…ˆé€‰æ‹©é—¨/æ€¥/ä½é™¢æ‚£è€…ç±»å‹è¿›è¡ŒæŸ¥è¯¢!","info");
-	   return false;
-	 }
-	 var DateFlag = tkMakeServerCall("web.DHCExamPatList","IfSelectDate",SDate,EDate);
-	 if ((PatNo=="")&&(OFlag)&&(DateFlag!=1)) {
-	    $.messager.alert("æç¤º","è¯·é€‰æ‹©åˆé€‚çš„æ—¥æœŸèŒƒå›´,é—¨è¯Šæ‰€é€‰æ‹©æ—¥æœŸåœ¨7å¤©ä¹‹å†…!","info");
+	 var PreFlag=$("#cPreStatus").checkbox('getValue')
+	 if ((!OFlag)&&(!IFlag)&&(!DisFlag)&&(!PreFlag)) {
+		$.messager.alert("ÌáÊ¾","ÇëÏÈÑ¡ÔñÃÅ¼±Õï/×¡Ôº/³öÔº/Ô¤×¡Ôº»¼ÕßÀàĞÍ½øĞĞ²éÑ¯!","info");
+		return false;
+	}
+	 var DateFlag = tkMakeServerCall("web.DHCExamPatList","IfSelectDate",SDate,EDate,session['LOGON.HOSPID']);
+	 if ((PatNo=="")&&(DateFlag!="")) {
+	    $.messager.alert("ÌáÊ¾",DateFlag,"info");
 	    return false;
 	 }
+	 var Rows =PageLogicObj.m_PatListTabDataGrid.datagrid('getRows')
+	 if (Rows.length==0){
+		 if (ResultSetTypeDo=="Print"){
+			 $.messager.alert("ÌáÊ¾","Çë²»Òª´òÓ¡¿ÕÊı¾İ","info");
+		 }else{
+		 	$.messager.alert("ÌáÊ¾","Çë²»Òªµ¼³ö¿ÕÊı¾İ","info");
+		 }
+		return false;
+		 }
+	 var PreFlag=$("#cPreStatus").checkbox('getValue')?'on':''
+	 var RequestPatMed=RequestPatMed +"^"+PreFlag
+	 var PatType = $("#PatType").datebox('getValue');
+	 var RequestPatMed=RequestPatMed +"^"+PatType
 	 $.cm({
 		 localDir:ResultSetTypeDo=="Export"?"Self":"",
 		 ResultSetTypeDo:ResultSetTypeDo,
-	     ExcelName:ServerObj.HospName+"æ‚£è€…æŸ¥æ‰¾å•",
+	     ExcelName:$HUI.combogrid('#_HospUserList').getText()+"»¼Õß²éÕÒµ¥",
 	     ResultSetType:"ExcelPlugin",
 	     ClassName : "web.DHCExamPatList",
 	     QueryName : "RegFindExport",
@@ -936,27 +1133,114 @@ function ExportPrintCommon(ResultSetTypeDo){
 	     rows:99999
 	 },false);
 }
-
-//æŸ¥è¯¢æ–¹æ³•
-function SearchFunLib(){
-	var PatNo=$("#PatNo").val();
-	//var name=$('#TextDesc').val();
-	$('#mygrid').datagrid('load',  { 
-		ClassName:"web.DHCExamPatList",
-		QueryName:"GetBioBankFlagLog" ,  
-		'PatNo':PatNo,   
-		//'Name':name
-	});
-	$('#mygrid').datagrid('unselectAll');
+function SetWardStatus(){
+	var OFlag = $("#cOutStatus").checkbox('getValue');
+	var cInStatus=$("#cInStatus").checkbox('getValue');
+	var cDisInStatus=$("#cDisInStatus").checkbox('getValue');
+	var cPreFlag = $("#cPreStatus").checkbox('getValue');
+	if ((OFlag)&&(!cInStatus)&&(!cDisInStatus)&&(!cPreFlag)) {
+		$("#WardDesc").combobox('disable');
+	}else {
+		$("#WardDesc").combobox('enable');
+	}
+}
+function LoadAdmReason(){
+	var HospID=$HUI.combogrid('#_HospUserList').getValue();
+	var sessinStr="^"+session['LOGON.USERID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.GROUPID']+"^"+HospID+"^"+session['LOGON.SITECODE']+"^"
+	var DefaultPatTypePara=tkMakeServerCall('web.UDHCOPOtherLB','ReadAdmReason',"GetAdmReasonToHUIJson","",sessinStr)
+	$("#PatType").combobox({
+		//width:115,
+		valueField: 'id',
+		textField: 'text', 
+		//editable:false,
+		blurValidValue:true,
+		data: JSON.parse(DefaultPatTypePara),
+		filter: function(q, row){
+			if (q=="") return true;
+			if (row["text"].indexOf(q.toUpperCase())>=0) return true;
+			var find=0;
+			if ((row["AliasStr"])&&(row["AliasStr"]!="")){
+				for (var i=0;i<row["AliasStr"].split("^").length;i++){
+					if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0){
+						find=1;
+						break;
+					}
+				}
+			}
+			if (find==1) return true;
+			return false;
+		},
+		onSelect:function(rec){
+			//PatTypeOnChange();
+		}
+	})
 }
 
-//é‡ç½®æ–¹æ³•
-function ClearFunLib()
-{
-	$("#PatNo").val("");
-	$('#mygrid').datagrid('load',  { 
-		ClassName:"web.DHCExamPatList.cls",
-		QueryName:"GetBioBankLog"
-	});
-	$('#mygrid').datagrid('unselectAll');
+/**
+ * »¼ÕßÁĞ±í°´Å¥Ìø×ª²Ëµ¥
+ * @param {*} cfg 
+ */
+function jumpMenu(cfg) {
+	var menuCodeStr = cfg.url
+	if (menuCodeStr == "") {
+		var msg = "ÇëÇ°Íù <font style='font-weight:bold;color:red;'>Ò½ÉúÕ¾ÅäÖÃ-ÏÔÊ¾ĞÅÏ¢ÅäÖÃ-ÃÅÕï¹¦ÄÜÇø°´Å¥ÅäÖÃ »¼Õß²éÑ¯ĞĞ°´Å¥</font> µÄÁ´½Ó ÅäÖÃ ¶ÔÓ¦²Ëµ¥´úÂë£¡"
+		$.messager.alert("ÌáÊ¾", msg, "info")
+		return false
+	}
+	var top = websys_getMenuWin()
+	if(top) {
+		var matchMenu = getMatchMenu(top.menuJson.records, menuCodeStr, null)
+		// console.log(matchMenu)
+		if (matchMenu != null) {
+			var link = ""
+			var newwin = ""
+			if (matchMenu.target == "_blank") {
+				newwin = matchMenu.blankOpt
+			}
+			// Ò½ÉúÕ¾ÅäÖÃ-ÏÔÊ¾ĞÅÏ¢ÅäÖÃ-ÃÅÕï¹¦ÄÜÇø°´Å¥ÅäÖÃ »¼Õß²éÑ¯ĞĞ°´Å¥ µ¥»÷ÊÂ¼ş£¬ÅäÖÃ´ò¿ªĞÂ´°¿ÚµÄ²ÎÊı£¬²»ĞèÒªµÄ¿É²»ÅäÖÃ£¬°´Ô­ÓĞ²Ëµ¥´ò¿ª·½Ê½´¦Àí
+			// Ex: "top=6%,left=2%,width=96%,height=105%"
+			if (cfg.handler != "") {
+				newwin = cfg.handler
+			}
+			if (matchMenu.link.indexOf("javascript:") > -1) {
+				link = matchMenu.link.split("'")[1]
+			} else {
+				link = matchMenu.link
+			}
+			top.PassDetails(link, newwin)
+		} else {
+			$.messager.alert("ÌáÊ¾", "ÄúÃ»ÓĞÈ¨ÏŞ´ò¿ªµ±Ç°°´Å¥¶ÔÓ¦²Ëµ¥£¡", "info")
+			return false
+		}
+	} else {
+		$.messager.alert("ÌáÊ¾", "Î´ÄÜ»ñÈ¡Í·²Ëµ¥ ¡°top¡±, ÇëÁªÏµ»ù´¡Æ½Ì¨Ö§³Ö£¡", "info")
+		return false
+	}
+}
+
+/**
+ * µİ¹é»ñÈ¡°´Å¥¶ÔÓ¦²Ëµ¥£¨Ä¿Ç°Ó¦¸ÃÖ÷ÒªÊÇÍ·²Ëµ¥£©
+ * @param {*} menuArr 
+ * @param {*} menuCodeStr 
+ * @param {*} matchMenu 
+ * @returns 
+ */
+function getMatchMenu(menuArr, menuCodeStr, matchMenu) {
+	for (var i = 0; i < menuArr.length; i++) {
+		if (menuArr[i].link != "#") {
+			// replaceAll() ²»¼æÈİÒ½Îªä¯ÀÀÆ÷
+			// var menuCode = menuArr[i].code.replaceAll("_", ".")
+			var menuCode = menuArr[i].code.replace(/_/g, ".")
+			if ((";" + menuCodeStr + ";").indexOf(";" + menuCode + ";") > -1) {
+				matchMenu = menuArr[i]
+				return matchMenu
+			}
+		} else {
+			var matchMenu = getMatchMenu(menuArr[i].children, menuCodeStr, matchMenu)
+			if (matchMenu) {
+				return matchMenu
+			}
+		}
+	}
+	return matchMenu
 }

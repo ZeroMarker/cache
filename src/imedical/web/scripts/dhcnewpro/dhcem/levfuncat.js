@@ -24,7 +24,7 @@ $(function(){
 			 }
 	});
 	
-	$('#hospDrID').combobox({ //hxy 2019-07-20 st
+	/*$('#hospDrID').combobox({ //hxy 2019-07-20 st
 	 	url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
 	 	valueField:'value',
 		textField:'text',   
@@ -32,7 +32,7 @@ $(function(){
 	 }) 
 	 $('#queryBTN').on('click',function(){
 		 commonQuery({'datagrid':'#datagrid','formid':'#toolbar'}); //调用查询
-	 }) //hxy ed
+	 }) //hxy ed 
 	 
 	 $('#hospDr').combobox({ //hxy 2019-07-21 st
 	 	url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
@@ -42,7 +42,7 @@ $(function(){
 	 }) 
 	 $('#queryButton').on('click',function(){
 		 commonQuery({'datagrid':'#datagrid1','formid':'#toolbar1'}); //调用查询
-	 }) //hxy ed
+	 }) //hxy ed *///hxy 2020-12-25 注释
 
    
 })
@@ -97,7 +97,7 @@ function addRowLib(){
 function onClickRowLib(index,row){
 	CommonRowClick(index,row,"#datagrid1");
 	
-	if(row.LFLHospDrID!=2){
+	/*if(row.LFLHospDrID!=2){
 		HospDrID=row.LFLHospDrID
 		var rowIndex=$('#datagrid1').datagrid('getRowIndex',$('#datagrid1').datagrid('getSelected'))
     	rowIndex=rowIndex==-1?0:rowIndex
@@ -108,7 +108,7 @@ function onClickRowLib(index,row){
     	 })
     	 
     	$(varEditor.target).combobox('select', row.LFLCatDr);
-	}
+	}*///hxy 2020-12-25 注释
 	
 }
 

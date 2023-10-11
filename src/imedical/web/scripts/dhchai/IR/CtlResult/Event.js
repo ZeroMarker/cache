@@ -58,6 +58,59 @@ function InitCtlResultWinEvent(obj){
 			}
 		});
 	});
+
+	 $('#gridCtlResult').on('click','a.btnEdit', function (e) {
+	    e.preventDefault();
+		var tr = $(this).closest('tr');
+		var row = obj.gridCtlResult.row(tr);
+		var rowData = row.data();
+		var ResultID = rowData.ResultID;
+		obj.btnEdit_Click(ResultID);
+    });	
+	 obj.btnEdit_Click = function(ResultID) {	
+		$.form.SetValue("cboMakeInfType",'');
+		layer.open({
+			type: 1,
+			zIndex: 100,
+			area: '300px',
+			title: '感染类型', 
+			content: $('#layer_select'),
+			btn: ['保存','关闭'],
+			btnAlign: 'c',
+			yes: function(index, layero){
+				var MakeInfType = $.form.GetValue("cboMakeInfType");
+				if (MakeInfType==''){
+					layer.msg('请选择感染类型!',{icon: 2});
+					return;
+				}else{
+					if (obj.UpdateInfType(ResultID,MakeInfType,1)){
+			    		layer.msg('标记成功!',{icon: 1});
+			    		obj.gridCtlResult.ajax.reload(null,false);
+						layer.close(index);
+			    	}else{
+			    		layer.msg('标记失败!',{icon: 2});
+			    	};
+				}
+			}
+		});		 
+	 }
+	 
+	 obj.UpdateInfType = function(aResultID,aMakeInfType,aIsByHand){
+		var ret = $.Tool.RunServerMethod('DHCHAI.DP.LabVisitRepResult','UpdateInfType',aResultID,aMakeInfType,aIsByHand)
+    	if (parseInt(ret)>0){
+    		return true;
+    	}else{
+    		return false;
+    	}
+	}
+	obj.ReportInfType = function(aResultID,aMakeInfType){
+		var ret = $.Tool.RunServerMethod('DHCHAI.DP.LabVisitRepResult','ReportInfType',aResultID,aMakeInfType)
+    	if (parseInt(ret)>0){
+    		return true;
+    	}else{
+    		return false;
+    	}
+	}
 	//疑似筛查
     //链接选中方式
     $('#gridCtlResult').on('click','a.screen_single', function (e) {
@@ -106,7 +159,15 @@ function InitCtlResultWinEvent(obj){
 	};
      //导出
     $("#btnExport").on('click', function(){
-		obj.gridCtlResult.buttons(0,null)[1].node.click();
+		var tr = $(this).closest('tr');
+		var row = obj.gridCtlResult.row(tr);
+		if(row.length>0){
+			obj.gridCtlResult.buttons(0,null)[1].node.click();
+		}else{
+	        layer.msg('没有数据，无法导出！',{time: 3000,icon: 2});
+            return false; 	
+		}
+		
 	});
     /*
  	//打印
@@ -232,7 +293,14 @@ function InitCtlResultWinEvent(obj){
         var objInfo = $.Tool.RunServerMethod("DHCHAI.IRS.INFMBRSrv","GetReportString",InfMBRID);
         var RepInfo = $.Tool.RunServerMethod("DHCHAI.IRS.INFMBRSrv","GetMBRRepID",rd["AdmID"],InfMBRID)
         var RepStatus = RepInfo.split("^")[5];
-        
+        var ResultID = rd["ResultID"];  //检验结果
+        var InfTypeID="",InfTypeCode="",InfTypeDesc="";
+        var InfTypeInfo = $.Tool.RunServerMethod("DHCHAI.DP.LabVisitRepResult","GetInfType",ResultID);
+        if (InfTypeInfo) {
+	         InfTypeID =InfTypeInfo.split("^")[0];
+	         InfTypeCode =InfTypeInfo.split("^")[1];
+	         InfTypeDesc =InfTypeInfo.split("^")[2];
+        }  
         if(InfMBRID) {
 	        var InfType =objInfo.split("^")[9].split(",")[0];
 	        $("#"+InfType).iCheck('check');
@@ -286,8 +354,16 @@ function InitCtlResultWinEvent(obj){
 	            $("#"+End).iCheck('check');
 	        }
 	        $.form.SetValue("txtResume",objInfo.split("^")[23]);
+	        $('#SumAssess input[name="Assess"]').iCheck('uncheck');
+	        var Assess =objInfo.split("^")[27];
+	        if (Assess) {
+	        	$("#Assess-"+Assess).iCheck('check');
+	        }
         }else{
 	        $.form.SetValue("chkInfType",'');
+	        if (InfTypeID) {
+		         $("#"+InfTypeID).iCheck('check');
+	        }
 	        $.form.SetValue("chkInsulatType",'');
 	        $.form.SetValue("chkContactList",'');
 	        $.form.SetValue("chkDropletList",'');
@@ -300,6 +376,7 @@ function InitCtlResultWinEvent(obj){
 	        $.form.SetValue("chkVisitList",'');
 	        $.form.SetValue("chkEndList",'');
 	        $.form.SetValue("txtResume",'');
+	        $('#SumAssess input[name="Assess"]').iCheck('uncheck');
         }
 
 	    layer.open({
@@ -310,7 +387,7 @@ function InitCtlResultWinEvent(obj){
 			title: [imgHtml+' '+rd["PatName"]]+'  耐药菌报告', 
 			content: $('#layer_two'),
 			//maxmin: true,
-       		btn: ['保存','提交','审核','删除','关闭'],
+       		btn: ['保存','提交','审核','删除','打印','关闭'],
 			btnAlign: 'c',
 			yes: function(index, layero){// 保存
 				if (!verifyReport()){
@@ -323,6 +400,16 @@ function InitCtlResultWinEvent(obj){
 		 		var ret = obj.Layer_Save("1");
 				if(parseInt(ret)>0)
 				{
+					//感染类型
+					var InfType="";
+			        $('input:radio',$("#chkInfType")).each(function(){
+			       		if(true == $(this).is(':checked')){
+			            	InfType=$(this).attr("id");
+			       		}
+			    	});
+    	            if (InfType!=InfTypeID) {   //修改或标记
+    	            	obj.ReportInfType(ResultID,InfType);
+    	            }
 					obj.gridCtlResult.ajax.reload(function(){
 						var rowIndex = $.Tool.GetTableRowIndex(obj.gridCtlResult,"INFMBRID",ret);
 						if (rowIndex > -1){
@@ -360,6 +447,16 @@ function InitCtlResultWinEvent(obj){
 				var ret = obj.Layer_Save("2");
 				if(parseInt(ret)>0)
 				{
+						//感染类型
+					var InfType="";
+			        $('input:radio',$("#chkInfType")).each(function(){
+			       		if(true == $(this).is(':checked')){
+			            	InfType=$(this).attr("id");
+			       		}
+			    	});
+    	            if (InfType!=InfTypeID) {   //修改或标记
+    	            	obj.ReportInfType(ResultID,InfType);
+    	            }
 					obj.gridCtlResult.ajax.reload(function(){
 						var rowIndex = $.Tool.GetTableRowIndex(obj.gridCtlResult,"INFMBRID",ret);
 						if (rowIndex > -1){
@@ -422,6 +519,14 @@ function InitCtlResultWinEvent(obj){
 					layer.msg('删除失败!',{icon: 2});
 					return false;
 				}	
+			},btn5: function(index, layero){ // 打印
+				var rd = obj.layer_rd;
+   			 	var reportId = rd["INFMBRID"];
+				if (!reportId) return;
+   			 	var fileName="{DHCHAI.INF.MBRReport.raq(aMRBRepID="+reportId+")}";
+				DHCCPM_RQDirectPrint(fileName);
+				//var url="dhccpmrunqianreport.csp?reportName=DHCHAI.INF.MBRReport.raq&aMRBRepID="+reportId;
+    			//websys_createWindow(url,1,"width=710,height=610,top=0,left=20,toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes");	
 			},
 			success: function(layero){
 				var dh=$('div.layui-layer-content').height();
@@ -430,14 +535,17 @@ function InitCtlResultWinEvent(obj){
 				var button1 = layero.find(".layui-layer-btn1"); //提交
 				var button2 = layero.find(".layui-layer-btn2"); //审核
 				var button3 = layero.find(".layui-layer-btn3"); //删除
+				var button4 = layero.find(".layui-layer-btn4"); //打印
 				$("#SumAssess").show();                         //显示总结性评价
 				if (!RepStatus) {
 					$(button2).hide();
 					$(button3).hide();
+					$(button4).hide();
 					$('#SumAssess').hide();
 				} else if (RepStatus == '1') {
 				    $('#SumAssess').hide();
-					$(button2).hide();
+				    $(button2).hide();
+				    $(button4).hide();
 				}else if (RepStatus =='2') {
 					$(button0).hide();
 					if (CheckFlg !='1') {
@@ -451,8 +559,12 @@ function InitCtlResultWinEvent(obj){
 						$(button3).hide();
 					}
 				}else if (RepStatus =='4') {
+					$('#SumAssess').hide();
+					$(button0).hide();
+					$(button1).hide();
 					$(button2).hide();
 					$(button3).hide();
+					$(button4).hide();
 				}
 				
 			}	
@@ -612,11 +724,11 @@ function InitCtlResultWinEvent(obj){
         //续发病例
         var SecondCase="";
         //审核报告总结性评价
-	var RepAssess ="";
-        var AssessVal = $('#SumAssess input[name="Assess"]:checked ').val();
-        if(AssessVal){
-		RepAssess =AssessVal;
-	}
+		var RepAssess ="";
+	    var AssessVal = $('#SumAssess input[name="Assess"]:checked').val();
+	    if(AssessVal){
+			RepAssess =AssessVal;
+		}
 		var InputMBRStr = ID;
 		InputMBRStr += "^" + AdmID;
 		InputMBRStr += "^" + LabRepDr;
@@ -644,6 +756,8 @@ function InitCtlResultWinEvent(obj){
 	    InputMBRStr += "^" + "";
 	    InputMBRStr += "^" + "";
 	    InputMBRStr += "^" + $.LOGON.USERID;
+	    InputMBRStr += "^" + RepAssess;      //报告总结性评价
+	    
 	    //报告信息
 	   	var InputRepStr = "";         // 报告ID DHCHAI.IR.INFReport	
 		InputRepStr += "^" + AdmID;
@@ -660,7 +774,7 @@ function InitCtlResultWinEvent(obj){
 	    InputLogStr += "^" + "";         // 操作意见
 	    InputLogStr += "^" + $.LOGON.USERID;
 	    var InputStr = InputMBRStr + "#" + InputRepStr + "#" + InputLogStr;
-	    var InputStr = InputStr + "#" + RepAssess;      //新增报告总结性评价
+	   
 		var retval = $.Tool.RunServerMethod("DHCHAI.IRS.INFMBRSrv","SaveReport",InputStr);
 		return retval;
 	}

@@ -21,6 +21,8 @@ function initTopPanel()
 	initButton(); //按钮初始化 add by wy 2019-4-22
     initButtonWidth();
 	jQuery('#BAdd').on("click", BAdd_Clicked);
+	jQuery("#BCopy").linkbutton({iconCls: 'icon-w-save'});  //Add By QW20210129 BUG:QW0090
+	jQuery('#BCopy').on("click", BCopy_Clicked); //Add By QW20210129 BUG:QW0090
 	initLookUp();
 	defindTitleStyle();
 	setRequiredElements("User^Group")
@@ -117,6 +119,7 @@ function ClearElement()
 	setElement("LocFlag","");
 	setElement("EquipFlag","");
 	setElement("ItemFlag","");
+	setEnabled();  //Add By QW20210311 BUG:QW0095 测试需求1803607
 }
 function BFind_Clicked()
 {
@@ -335,10 +338,25 @@ function setEnabled()
 	disableElement("BSave",true);
 	disableElement("BDelete",true);
 	disableElement("BAdd",false);
+	disableElement("BCopy",true); //Add By QW20210129 BUG:QW0090
 }
 function setDisEnabled()
 {
 	disableElement("BSave",false);
 	disableElement("BDelete",false);
 	disableElement("BAdd",true);
+	disableElement("BCopy",false); //Add By QW20210129 BUG:QW0090
+}
+
+
+//Add By QW20210129 BUG:QW0090
+function BCopy_Clicked()
+{
+	if (getElementValue("RowID")==""){
+			$.messager.popover({msg:"请选择一行",type:'alert'});
+            return false;
+    } 
+    var RowID=getElementValue("RowID")
+	var url="dhceq.plat.cmanagelimitmodify.csp?&RowID=&MLLManageLimitDR="+RowID
+	showWindow(url,"权限复制","","7.5row","icon-w-paper","modal","","","middle",refreshWindow); //modified By QW20210910 BUG:QW0146 测试需求2135372
 }

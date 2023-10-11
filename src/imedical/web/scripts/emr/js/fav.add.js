@@ -10,10 +10,10 @@
     var image = Gender=="女"?"../scripts/emr/image/icon/woman_big.png":"../scripts/emr/image/icon/man_big.png";
     var alt = Gender=="女"?"woman_big.png":"man_big.png";
     $("#photo").attr({"src":image, "alt":alt});
-    var info = '<div class="contantdiv"><span>&emsp;'+emrTrans("病人ID")+'：</span><span id="PatientNo">'+PatientNo+'</span></div>';
-    info = info + '<div class="contantdiv"><span>&emsp;&emsp;'+emrTrans("姓名")+'：</span><span id="Name">'+Name+'</span></div>';
-    info = info + '<div class="contantdiv"><span>&emsp;&emsp;'+emrTrans("性别")+'：</span><span id="Gender">'+Gender+'</span></div>';
-    info = info + '<div class="contantdiv"><span>'+emrTrans("出生日期")+'：</span><span id="BOD">'+BOD+'</span></div>';
+    var info = '<div class="contantdiv"><span style="color: #666666;">&emsp;'+emrTrans("病人ID")+'：</span><span id="PatientNo">'+PatientNo+'</span></div>';
+    info = info + '<div class="contantdiv"><span style="color: #666666;">&emsp;&emsp;'+emrTrans("姓名")+'：</span><span id="Name">'+Name+'</span></div>';
+    info = info + '<div class="contantdiv"><span style="color: #666666;">&emsp;&emsp;'+emrTrans("性别")+'：</span><span id="Gender">'+Gender+'</span></div>';
+    info = info + '<div class="contantdiv"><span style="color: #666666;">'+emrTrans("出生日期")+'：</span><span id="BOD">'+BOD+'</span></div>';
     $("#content").append(info);
     //初始化收藏位置
     initCatalogTree("cbxLocation",true);
@@ -43,7 +43,7 @@
     });
     
     $('#tags').tagsInput({
-        width:'310px',
+        width:'326px',
         height:'73px',
         onAddTag:function(tag){
             var curlength = tag.length;
@@ -53,7 +53,7 @@
                 $('#tags').removeTag(tag);
             }
         },
-        defaultText:"输入关键字(0-15字)，回车试试看"
+        defaultText:emrTrans("输入关键字(0-15字)，回车试试看")
     });
 });
 
@@ -176,14 +176,30 @@ $("#btnNew").bind('click', function(){
 //新建文件夹窗口
 function newCatalog()
 {
+	var logHeight = 197;
+	if ("undefined"==typeof HISUIStyleCode || HISUIStyleCode=="")
+	{
+		 // 炫彩版
+		 logHeight = 197;
+	}
+	else if (HISUIStyleCode=="lite")
+	{
+		 // 极简版
+		logHeight = 195;
+	}else
+	{
+		// 炫彩版
+		logHeight = 197;
+	}
     $('#newCatalog').window({
         title: "创建文件夹",
-        width: 300,  
-        height: 160,  
+        width: 312,  
+        height: logHeight,  
         modal: true,
         minimizable: false,
         maximizable: false,
         collapsible: false,
+        iconCls: 'icon-w-card',
         closed: true,
         onOpen: function(){
             initCatalogTree("cbxNewLocation",false);

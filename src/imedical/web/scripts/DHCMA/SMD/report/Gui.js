@@ -18,11 +18,12 @@ function InitReportWin() {
 	obj.RepTypeDesc = ServerObj.RepTypeDesc;
 	
 	if (obj.RepTypeCode == '1') {                                //重性精神疾病发病报告卡
-		$('#report-title').text('重性精神疾病发病报告卡');
+		$('#report-title').text($g('重性精神疾病发病报告卡'));
 		$('#tr-AdmitReason').css('display', 'none');
+		$('#td-AdmitReason').css('display', 'none');	
 		LoadSMDSMIInfo();
 	} else if (obj.RepTypeCode == '3') {                         //严重精神障碍患者发病报告卡
-		$('#report-title').text('严重精神障碍患者发病报告卡');
+		$('#report-title').text($g('严重精神障碍患者发病报告卡'));
 		LoadSMDSMIInfo();
 	} else if (obj.RepTypeCode == '4') { 
 		LoadDischageInfo();
@@ -40,14 +41,14 @@ function InitReportWin() {
 	obj.cboRegAddType = Common_ComboToDic("cboRegAddType", "SMDAddrType","",ServerObj.HospID);         //户籍地址类型
 	obj.cboCurrAddType = Common_ComboToDic("cboCurrAddType", "SMDAddrType","",ServerObj.HospID);       //现住址地址类型
 	//户籍地址
-	obj.cboRegProvince = Common_ComboToArea2("cboRegProvince", "1");              // 省
+	obj.cboRegProvince = Common_ComboToArea2("cboRegProvince", "1",1);              // 省
 	obj.RegCity = $HUI.combobox('#cboRegProvince', {
 		onChange: function (newValue, oldValue) {
 			$('#cboRegCity').combobox('clear');
 			$('#cboRegCounty').combobox('clear');
 			$('#cboRegVillage').combobox('clear');
 			$('#txtRegRoad').val('');
-			obj.cboRegCity = Common_ComboToArea2("cboRegCity", "cboRegProvince");				// 市
+			obj.cboRegCity = Common_ComboToArea2("cboRegCity", "cboRegProvince",2);				// 市
 		}
 	});
 	obj.RegCounty = $HUI.combobox('#cboRegCity', {
@@ -55,14 +56,14 @@ function InitReportWin() {
 			$('#cboRegCounty').combobox('clear');
 			$('#cboRegVillage').combobox('clear');
 			$('#txtRegRoad').val('');
-			obj.cboRegCounty = Common_ComboToArea2("cboRegCounty", "cboRegCity");             // 县
+			obj.cboRegCounty = Common_ComboToArea2("cboRegCounty", "cboRegCity",3);             // 县
 		}
 	});
 	obj.RegVillage = $HUI.combobox('#cboRegCounty', {
 		onChange: function (newValue, oldValue) {
 			$('#cboRegVillage').combobox('clear');
 			$('#txtRegRoad').val('');
-			obj.cboRegVillage = Common_ComboToArea2("cboRegVillage", "cboRegCounty");         // 乡
+			obj.cboRegVillage = Common_ComboToArea2("cboRegVillage", "cboRegCounty",4);         // 乡
 		}
 	});
 	$HUI.combobox('#cboRegVillage', {
@@ -74,14 +75,14 @@ function InitReportWin() {
 		}
 	});
 	//现地址
-	obj.cboCurrProvince = Common_ComboToArea2("cboCurrProvince", "1");               // 省
+	obj.cboCurrProvince = Common_ComboToArea2("cboCurrProvince", "1",1);               // 省
 	obj.CurrCity = $HUI.combobox('#cboCurrProvince', {
 		onChange: function (newValue, oldValue) {
 			$('#cboCurrCity').combobox('clear');
 			$('#cboCurrCounty').combobox('clear');
 			$('#cboCurrVillage').combobox('clear');
 			$('#txtCurrRoad').val('');
-			obj.cboCurrCity = Common_ComboToArea2("cboCurrCity", "cboCurrProvince");			  // 市
+			obj.cboCurrCity = Common_ComboToArea2("cboCurrCity", "cboCurrProvince",2);			  // 市
 		}
 	});
 	obj.CurrCounty = $HUI.combobox('#cboCurrCity', {
@@ -89,7 +90,7 @@ function InitReportWin() {
 			$('#cboCurrCounty').combobox('clear');
 			$('#cboCurrVillage').combobox('clear');
 			$('#txtCurrRoad').val('');
-			obj.cboCurrCounty = Common_ComboToArea2("cboCurrCounty", "cboCurrCity");            // 县
+			obj.cboCurrCounty = Common_ComboToArea2("cboCurrCounty", "cboCurrCity",3);            // 县
 		}
 	});
 
@@ -97,7 +98,7 @@ function InitReportWin() {
 		onChange: function (newValue, oldValue) {
 			$('#cboCurrVillage').combobox('clear');
 			$('#txtCurrRoad').val('');
-			obj.cboCurrVillage = Common_ComboToArea2("cboCurrVillage", "cboCurrCounty");         // 乡
+			obj.cboCurrVillage = Common_ComboToArea2("cboCurrVillage", "cboCurrCounty",4);         // 乡
 		}
 	});
 	$HUI.combobox('#cboCurrVillage', {
@@ -171,16 +172,20 @@ function LoadSMDSMIInfo() {
 	Common_ComboToDic("cboLockStatus","SMDGS","",ServerObj.HospID);               //既往关锁情况
 	Common_ComboToDic("cboAgree","SMDZQTY","",ServerObj.HospID);                  //知情同意
 	
+	Common_ComboToDic("cboIsDrug","SMDKJSYW","",ServerObj.HospID);       //是否服药
+	Common_ComboToDic("cboIsDrug2","SMDKJSYW","",ServerObj.HospID);       //是否服药 出院康复
+
+
 	// ****************************** ↓↓↓ 单选、多选事件
 	$HUI.checkbox("[name='chkReferralList']",{  //送诊主体选项触发事件
 		onChecked:function(e,value){
 			var value = $(e.target).attr("label");   //当前选中的值
-			if (value=='其他') {	
+			if (value==$g('其他')) {	
 				$('#txtReferralTxt').removeAttr("disabled");
 			}
 		},onUnchecked :function(e,value){
 			var value = $(e.target).attr("label");
-			if (value=='其他') {	
+			if (value==$g('其他')) {	
 				$('#txtReferralTxt').attr('disabled','disabled');
 				$('#txtReferralTxt').val('');
 			}
@@ -259,12 +264,12 @@ function  LoadDischageInfo() {
 	$HUI.checkbox("[name='chkTreatMeasureList']",{  //本次住院康复措施选项触发事件
 		onChecked:function(e,value){
 			var value = $(e.target).attr("label");   //当前选中的值
-			if (value=='其他') {	
+			if (value==$g('其他')) {	
 				$('#txtTreatMeasureTxt').removeAttr("disabled");
 			}
 		},onUnchecked :function(e,value){
 			var value = $(e.target).attr("label");
-			if (value=='其他') {	
+			if (value==$g('其他')) {	
 				$('#txtTreatMeasureTxt').attr('disabled','disabled');
 				$('#txtTreatMeasureTxt').val('');
 			}
@@ -273,12 +278,12 @@ function  LoadDischageInfo() {
 	$HUI.checkbox("[name='chkRehabMeasureList']",{  //下一步治疗康复措施选项触发事件
 		onChecked:function(e,value){
 			var value = $(e.target).attr("label");   //当前选中的值
-			if (value=='其他') {	
+			if (value==$g('其他')) {	
 				$('#txtRehabMeasureTxt').removeAttr("disabled");
 			}
 		},onUnchecked :function(e,value){
 			var value = $(e.target).attr("label");
-			if (value=='其他') {	
+			if (value==$g('其他')) {	
 				$('#txtRehabMeasureTxt').attr('disabled','disabled');
 				$('#txtRehabMeasureTxt').val('');
 			}
@@ -290,13 +295,13 @@ function  LoadDischageInfo() {
 	$HUI.radio("[name='radIsFundingList']",{  //本次住院是否获得经费补助选项触发事件
 		onChecked:function(e,value){
 			var value = $(e.target).attr("label");   //当前选中的值
-			if (value=='有') {	
+			if (value==$g('有')) {	
 				$('input[type=radio][name=radFundsTypeList]').radio('enable');
 				$('input[type=radio][name=radFundsSourceList]').radio('enable');
 				$HUI.radio("[name='radFundsSourceList']",{  //经费来源选项触发事件
 					onChecked:function(e,value){
 						var value = $(e.target).attr("label");   //当前选中的值
-						if (value=='其他') {	
+						if (value==$g('其他')) {	
 							$('#txtFundsSource').removeAttr("disabled");
 						}else{
 							$('#txtFundsSource').attr('disabled','disabled');
@@ -331,7 +336,6 @@ function  BuildSymptom() {
 	for (var dicIndex = 0; dicIndex < len; dicIndex++) {
 		if (dicList[dicIndex] == '') continue;
 		var dicSubList = dicList[dicIndex].split(String.fromCharCode(2));
-		
 		var strSymptom =$m({
 			ClassName:"DHCMed.SMD.Symptom",
 			MethodName:"GetStringByCat",

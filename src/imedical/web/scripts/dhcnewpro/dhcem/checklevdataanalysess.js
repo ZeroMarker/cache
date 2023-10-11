@@ -74,7 +74,12 @@ function showPageImg(data){
 	//alert(PatAgeAnalysess.length);
 	showEchartBars("fznlEcharts",PatAgeAnalysess);
 	
-	var PatCheckLocNum= data.PatCheckLocNum;
+	if(REPLACELOCASPRV==1){
+		$("#LocSta").text($g("分诊号别分布统计"));
+		var PatCheckLocNum= data.PatCheckCareNum;
+	}else{
+		var PatCheckLocNum= data.PatCheckLocNum;
+	}
 	showEchartBars("fzksEcharts",PatCheckLocNum);
 	//var PatAgeAnalysess = [{"name":"<1","value":"0"},{"name":"1-10","value":"0"},{"name":"10-20","value":"0"},{"name":"20-30","value":"0"},{"name":"30-40","value":"0"},{"name":"40-50","value":"0"},{"name":"60-70","value":"0"},{"name":"70-80","value":"0"},{"name":"80-90","value":"0"},{"name":"90-100","value":"0"},{"name":">100","value":"0"}]
 	//showEchartPie("fznlEcharts",PatAgeAnalysess);

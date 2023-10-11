@@ -65,6 +65,47 @@ function InitPatList(){
 		}
 	});
 }
+function gridRepList() {
+	$HUI.datagrid("#gridRepList",{
+		fit: true,
+		title: '患者院感报告列表',
+		headerCls:'panel-header-gray',
+		iconCls:'icon-resort',
+		pagination: false, //如果为true, 则在DataGrid控件底部显示分页工具栏
+		rownumbers: true, //如果为true, 则显示一个行号列
+		singleSelect: true,
+		remoteSort:false,   //本地数据排序必须设置为false
+		sortName:'InfPos',
+		sortOrder:'desc',
+		loadMsg:'数据加载中...',
+		columns:[[
+			{field:'InfPos',title:'感染部位',width:160},
+			{field:'InfDate',title:'感染日期',width:120},
+			{field:'PatName',title:'感染科室',width:140}, 
+			{field:'InfEffect',title:'转归',width:100,align:'center'},
+			{field:'RepStatus',title:'状态',width:80,align:'center'},
+			{field:'ReportDate',title:'报告日期',width:100}
+		]],
+		onLoadSuccess:function(data){
+			dispalyEasyUILoad(); //隐藏效果
+		}
+	});
+}
+	
+//加载患者报告明细
+function gridRepListLoad(){
+	$("#gridRepList").datagrid("loading");
+	$cm ({
+		ClassName:'DHCHAI.IRS.INFDiagnosSrv',
+		QueryName:'QryInfRepList',
+		aEpisodeID:obj.EpisodeID, 		
+		page:1,      //可选项，页码，默认1			
+		rows:999    //可选项，获取多少条数据，默认50
+	},function(rs){
+		$('#gridRepList').datagrid('loadData', rs);				
+	});
+}
+
  //加载表格
 function gridPatList() {
 	$HUI.datagrid("#gridPatList",{
@@ -103,7 +144,7 @@ function gridPatList() {
 					}
 				}	
 			},	
-			{field:'NeedRepCnt',title:'需上报',width:55,align:'center'},
+			{field:'NeedRepCnt',title:'需报<br>例次',width:55,align:'center'},
 			{field:'VisitStatus',title:'状态',width:50,align:'center'}
 		]]
 		,onClickCell: function(rindex,field,value){  //刷新设置选中后执行两遍，换成onClickCell
@@ -111,6 +152,7 @@ function gridPatList() {
 				var rData = $('#gridPatList').datagrid('getRows')[rindex];
 				obj.EpisodeID = rData.EpisodeID;
 				gridPatList_onSelect(obj.EpisodeID);
+				gridRepList();
 			}	
 		},
 		onLoadSuccess:function(data){
@@ -135,6 +177,10 @@ function gridPatListLoad(){
 	});
 }
 
+function gotoBottomReply(){
+	var msgJObj = $("#divMessage").parent();
+	if(msgJObj.length>0) msgJObj[0].scrollTop = msgJObj[0].scrollHeight; 
+}
 //加载单个患者消息
  function gridPatList_onSelect(aEpisodeID){	
 	if (!aEpisodeID) return;
@@ -144,7 +190,8 @@ function gridPatListLoad(){
 	$('#Message').attr("style","border:1px solid #ccc;border-radius:4px;");
 	window.setTimeout(function () { 
 		MsgLoad(aEpisodeID); //加载单个患者消息
-		disLoadWindow(); 
+		disLoadWindow();
+		gridRepListLoad();
 	}, 100); 
 	$.parser.parse('#divCenter');   //渲染本层不可以，只有渲染父层
 }
@@ -155,12 +202,12 @@ function MsgLoad(aEpisodeID){
 	obj.Msg = $cm({
 		ClassName:'DHCHAI.IRS.CCMessageSrv',
 		QueryName:'QryMsgByPaadm',
-		aPaadm:aEpisodeID
+		aPaadm:aEpisodeID,
+		aPutNum:50
 	},false);
 	
 	if (obj.Msg.total>0) {
 		$('#divMessage').empty();
-
 		for (var i=0;i<obj.Msg.total;i++){
 			var rd = obj.Msg.rows[i];	
 			if ((rd.CSMsgType==1)||(rd.CSMsgType==3)) {
@@ -201,10 +248,11 @@ function MsgLoad(aEpisodeID){
 						+ ' </div>'
 			}
 		}
-	
-		$('#divMessage').append(Msghtml);	
+
+		$('#divMessage').append(Msghtml);
+		gotoBottomReply();
 		return true;
-	}			
+	}		
 }
 
 //阅读消息

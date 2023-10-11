@@ -64,7 +64,8 @@ $(function(){
 			ClassName:"web.DHCPE.OrderDetailRelate",
 			QueryName:"OrderDetailRelateList",
 			ParRef:$('#ParRef').val(),
-			Desc:$("#ARCIMDesc").val()
+			Desc:$("#ARCIMDesc").val(),
+			hospId:session['LOGON.HOSPID']
 		}); 
 
 }  
@@ -193,6 +194,7 @@ function LoadOrderTabTablist(rowData)
 			ClassName:"web.DHCPE.OrderDetailRelate",
 			QueryName:"OrderDetailRelateList",
 			ParRef:$('#ParRef').val(),
+			hospId:session['LOGON.HOSPID']
 		
 	});
 	
@@ -221,6 +223,7 @@ function InitOrderTabDataGrid()
 			ClassName:"web.DHCPE.OrderDetailRelate",
 			QueryName:"OrderDetailRelateList",
 			ParRef:$('#ParRef').val(),
+			hospId:session['LOGON.HOSPID']
 		},
 		columns:[[
 
@@ -439,6 +442,12 @@ function BSave_click(Type){
 		$.messager.alert("提示","顺序号不能为空","info");
 		return false;
 	}
+	if((!(isInteger(iSequence)))||(iSequence<=0)) 
+		   {
+			   $.messager.alert("提示","顺序号只能是正整数","info");
+			    return false; 
+		   }
+
 
 	//是否必填项
 	var iRequired="N";
@@ -507,7 +516,9 @@ function BDelete_click(){
 			
 			$.m({ ClassName:"web.DHCPE.OrderDetailRelate", MethodName:"Delete", itmjs:'',itmjsex:'',Rowid:ID },function(ReturnValue){
 				if (ReturnValue!='0') {
-					$.messager.alert("提示","删除失败","error");  
+					if(ReturnValue=="Err 07"){$.messager.alert("提示","删除失败:该细项已和大项关联","error")}
+					else{$.messager.alert("提示","删除失败","error"); } 
+  
 				}else{
 					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 					BClear_click();
@@ -531,4 +542,11 @@ function BImport_click()
 	
 }
 
+ function isInteger(num) {
+      if (!isNaN(num) && num % 1 === 0) {
+        return true;
+      } else {
+        return false;
+      }
+}
 

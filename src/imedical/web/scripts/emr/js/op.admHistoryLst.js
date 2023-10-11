@@ -57,6 +57,7 @@ function openEPRRecordBrowse(patientID, episodeID, admType) {
     var lnk = "epr.newfw.episodelistuvpanel.csp?patientID=" + patientID + "&episodeID=" + episodeID + "&admType=" + admType;
     $('#frameDetail').attr('src', lnk);
     $('#refEmrDoc').hide();
+    $('#refEmrLastDoc').hide();
     $('#insCombo').hide(); 
     $('#prevAdm').hide();
     $('#nextAdm').hide();
@@ -67,7 +68,7 @@ function openEPRRecordBrowse(patientID, episodeID, admType) {
 function showEmrDoc(insData) {
     if (''===insData) return;
     
-    //通过权限规则脚本判断是否允许浏览
+    //通过浏览权限规则脚本判断是否允许浏览
     if (getViewPrivilege(insData).canView == '0') {
         var Viewblank = 'emr.blank.csp?info=OPCannotView';
         $('#frameDetail').attr('src', Viewblank);
@@ -76,13 +77,15 @@ function showEmrDoc(insData) {
         //通过权限规则脚本控制是否显示引用按钮
         if (getQuotePrivilege(insData).canquote == '1') {
             $('#refEmrDoc').show();
+            if ('' != refEmrLastDocID) $('#refEmrLastDoc').show();
         }else {
             $('#refEmrDoc').hide();
+            $('#refEmrLastDoc').hide();
         }
          
         BeforeResScale();
         admHisUrl = 'emr.record.browse.browsform.editor.csp?VisitType=OP&'; //id=2461||1&chartItemType=Single&pluginType=DOC
-        var src = admHisUrl + 'id=' + insData.id + '&chartItemType=' + insData.chartItemType + '&pluginType=' + insData.pluginType;
+        var src = admHisUrl + 'id=' + insData.id + '&chartItemType=' + insData.chartItemType + '&pluginType=' + insData.pluginType+"&Action=externalapp";
         $('#frameDetail').attr('src', src);
         if ('N' !== isSwitchHistoryOERecord) {
             $('#prevAdm').show();
@@ -128,6 +131,8 @@ function showHistoryEMR(adm,order) {
 
 // 济宁使用集成平台的页面
 function showxmlpreview(adm) {
+    $('#refEmrDoc').hide();
+    $('#refEmrLastDoc').hide();
     $('#prevAdm').hide();
     $('#nextAdm').hide();
     $('#insCombo').hide();    
@@ -164,10 +169,10 @@ function ResScale(flag) {
     parent.$('body').layout('resize');
 }
 
-// 获取模板加载权限
+// 获取病历浏览权限
 function getViewPrivilege(insData) {
     var result = '';
-    var data = ajaxDATA('String', 'EMRservice.Ajax.privilege', 'GetLoadPrivilege', userID, userLocID, ssgroupID, episodeID, patientID, insData.id);
+    var data = ajaxDATA('String', 'EMRservice.Ajax.privilege', 'GetBrowsePrivilege', userID, userLocID, ssgroupID, episodeID, patientID, insData.id);
     ajaxGETSync(data, function (ret) {
         result = $.parseJSON(ret);
     }, function (ret) {
@@ -217,7 +222,7 @@ $(function () {
             for (var i = 0, len = data.total; i < len; i++) {
                 var row = data.rows[i];
                 var div = $('<div class="admDetail"></div>');
-                $(div).append(row.record);
+                $(div).html(row.record);
                 $('#admHistoryLst').append(div);
             }
             //隔行变色
@@ -317,6 +322,41 @@ $(function () {
         }
     });
     $('#refEmrDoc').hide();
+
+    if ('' != refEmrLastDocID) {
+        $('#refEmrLastDoc').live('click', function () {
+            if (!isClicked) {
+                isClicked = true;
+                setTimeout(function() { isClicked = false; }, 2000);
+                common.GetRecodeParam(refEmrLastDocID, function (tempParam) {
+                    if (tempParam == "") {
+                        alert( '未找到病历模板！');
+                        return;
+                    }
+                    parent.createEmrLastDocFromInstance(tempParam, curEpisodId);
+                });
+            }
+        });
+    }
+    
+    //医嘱引用功能 - 医嘱数据由医生站提供
+    $('#refOeord').live('click', function (evt) {
+        if (!isClicked) {
+            ResScale(oldwidth);
+            isClicked = true;
+            setTimeout(function(){isClicked = false;},2000);
+            if (window.frames["frameDetail"])
+            {
+                // 调用医生站接口，获取医嘱页签上勾选的医嘱数据
+                var refOeordData = window.frames["frameDetail"].OEOrdItemListEMR_PassSelected();
+                var param = {
+                    "action" : "insertText",
+                    "text" : refOeordData
+                };
+                parent.eventDispatch(param);
+            }
+        }
+    });
     
     //病历实例下拉菜单
     $("#insCombo").change(function () {
@@ -326,15 +366,16 @@ $(function () {
     
     //查看病历内容
     $('.emrdoc').live('click', function () {
+        $('#refOeord').hide();
         //查看病历内容为三版病历
         if ( $(this).attr('isEMR') == 1) {
-	        curEpisodId = $(this).attr('admID');
-	        if (('O' === $(this).attr('admType'))||('E' === $(this).attr('admType'))) {
-	            showOPEMR($(this).attr('admID'));
-	            if ('' == admIDs) getOEPEpisodeList();
-	        }else {
-	            openRecordBrowse(patientID, $(this).attr('admID'));
-        	}
+            curEpisodId = $(this).attr('admID');
+            if (('O' === $(this).attr('admType'))||('E' === $(this).attr('admType'))) {
+                showOPEMR($(this).attr('admID'));
+                if ('' == admIDs) getOEPEpisodeList();
+            }else {
+                openRecordBrowse(patientID, $(this).attr('admID'));
+            }
         }else {
             openEPRRecordBrowse(patientID, $(this).attr('admID'), $(this).attr('admType'));
         }
@@ -390,7 +431,9 @@ $(function () {
     
     //查看体检报告
     $('.healthReport').live('click', function () {
+        $('#refOeord').hide();
         $('#refEmrDoc').hide();
+        $('#refEmrLastDoc').hide();
         $('#prevAdm').hide();
         $('#nextAdm').hide();
         $('#insCombo').hide();
@@ -401,6 +444,8 @@ $(function () {
     
     //查看医嘱内容
     $('.oeord').live('click', function () {
+        $('#refOeord').hide();
+        $('#refEmrLastDoc').hide();
         $('#prevAdm').hide();
         $('#nextAdm').hide();
         $('#insCombo').hide();
@@ -411,9 +456,11 @@ $(function () {
      
     //慈林项目-查看医嘱内容
     $('.oeordByCL').live('click', function () {
+        if ('N' !== OPEnableRefOeord) $('#refOeord').show();
         $('#prevAdm').hide();
         $('#nextAdm').hide();
         $('#refEmrDoc').hide();
+        $('#refEmrLastDoc').hide();
         $('#insCombo').hide();
         var oeordLnk = 'websys.default.csp?WEBSYS.TCOMPONENT=OEOrdItem.ListEMR&EpisodeID=' + $(this).attr('admID') + '&par=' + $(this).attr('ord') +'&EpisodeAll=0'+'&ExcludeCurrentEpisode=0';
         $('#frameDetail').attr('src', oeordLnk);
@@ -422,8 +469,11 @@ $(function () {
     
     //查看病历提供医嘱引用界面
     $('.oeordEMR').live('click', function () {
+        $('#refOeord').hide();
         $('#prevAdm').hide();
         $('#nextAdm').hide();
+        $('#refEmrDoc').hide();
+        $('#refEmrLastDoc').hide();
         $('#insCombo').hide();    
         var oeordLnk = 'emr.op.oeorddata.csp?PatientID=' + patientID + '&EpisodeID=' + $(this).attr('admID') + '&ssgroupID=' + ssgroupID;
         $('#frameDetail').attr('src', oeordLnk);
@@ -432,13 +482,17 @@ $(function () {
     
     //南方医院，在列表界面进行引用
     $('.refDoc').live('click', function () {
-        var admID = $(this).attr('admID');
-        var insID = $(this).attr('insID');
-        var emrDocID = $(this).attr('emrDocID');
-        common.GetRecodeParam(emrDocID, function (tempParam) {alert('tempParam'+ insID);
-            tempParam['id']=insID;
-            parent.createDocFromInstance(tempParam);
-        });
+        if (!isClicked) {
+            isClicked = true;
+            setTimeout(function() { isClicked = false; }, 2000);
+            var admID = $(this).attr('admID');
+            var insID = $(this).attr('insID');
+            var emrDocID = $(this).attr('emrDocID');
+            common.GetRecodeParam(emrDocID, function (tempParam) {alert('tempParam'+ insID);
+                tempParam['id']=insID;
+                parent.createDocFromInstance(tempParam);
+            });
+        }
     }); 
     
     //加载更多

@@ -31,8 +31,15 @@ $(function(){
 	
 	//页面元素初始化
 	//PageHandle();
+	InitCache();
 })
-
+function InitCache(){
+	var hasCache = $.DHCDoc.hasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function Init(){
 	PageLogicObj.m_MainGrid = InitMainGrid();
 	LoadCenMainPage();
@@ -365,8 +372,14 @@ function saveCmd () {
 		$.messager.alert("提示","保存成功...","info")
 		PageLogicObj.m_CmdGridWin.close();
 		PageLogicObj.m_CmdGrid.reload();
-	} else {
-		$.messager.alert("提示","保存失败...","info")
+	} else if (rtn =="repeat"){
+		$.messager.alert("提示","保存失败!模块名称重复!","info",function(){
+			$("#cmd-name").focus();
+		})
+	}else {
+		$.messager.alert("提示","保存失败...","info",function(){
+			$("#cmd-name").focus();
+		})
 	}
 	
 }
@@ -410,8 +423,8 @@ function InitCenterGrid(defineId){
 	var columns = [[
 		{field:'SubCode',title:'代码',width:200},
 		{field:'SubDesc',title:'描述',width:200},
-		{field:'SubStDate',title:'开始时间',width:200},
-		{field:'SubEndDate',title:'结束时间',width:200},
+		{field:'SubStDate',title:'开始日期',width:200},
+		{field:'SubEndDate',title:'结束日期',width:200},
 		{field:'SubRowID',title:'ID',width:60}
     ]]
 	var DurDataGrid = $HUI.datagrid("#i-c-grid", {
@@ -468,14 +481,14 @@ function centerDialog (ac) {
 		$("#cen-action").val("add");
 		$("#cen-id").val("")
 		$("#cen-name").val("");
-		$("#cen-code").val("");
-		$("#data-sd").datebox("setValue", "");
+		$("#cen-code").val("").focus();
+		$("#data-sd").datebox("setValue", ServerObj.CurDate);
 		$("#data-ed").datebox("setValue", "");
 		_title = "添加",_icon="icon-w-add";
 	} else {
 		$("#cen-action").val("edit");
 		$("#cen-id").val(selected.SubRowID)
-		$("#cen-code").val(selected.SubCode);
+		$("#cen-code").val(selected.SubCode).focus();
 		$("#cen-name").val(selected.SubDesc);
 		$("#data-sd").datebox("setValue", selected.SubStDate);
 		$("#data-ed").datebox("setValue", selected.SubEndDate);
@@ -492,6 +505,9 @@ function centerDialog (ac) {
 		collapsible:false,
 		onClose: function () {
 			$('#cen').addClass("c-hidden");
+		},
+		onShow:function(){
+			$("#cen-code").focus();
 		}
 	});
 	PageLogicObj.m_CenterWin = cenWin;
@@ -505,14 +521,23 @@ function saveCenter () {
 	var sdate = $("#data-sd").datebox("getValue");
 	var edate = $("#data-ed").datebox("getValue");
 	if (code == "") {
-		$.messager.alert("提示","数据代码不得为空...","info")
+		$.messager.alert("提示","数据代码不得为空...","info",function(){
+			$("#cen-code").focus();
+		})
 		return false;
 	}
 	if (name == "") {
-		$.messager.alert("提示","数据描述不得为空...","info")
+		$.messager.alert("提示","数据描述不得为空...","info",function(){
+			$("#cen-name").focus();
+		})
 		return false;
 	}
-	
+	if (sdate ==""){
+		$.messager.alert("提示","请选择开始日期！","info",function(){
+			$("#data-sd").next('span').find('input').focus();
+		})
+		return false;
+	}
 	var result = CompareDate(sdate,edate)
 	if (!result) {
 		$.messager.alert("提示","请重新选择有效的日期...","info")

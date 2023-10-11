@@ -2,11 +2,9 @@
  * FileName: dhcbillmenu.tarfactor.js
  * User: TangTao
  * Date: 2014-04-10
- * Function: 病人折扣记账系数
- * Description:
+ * Description: 病人折扣记账系数
  */
 
-var lastIndex = "";
 var EditIndex = -1;
 var m_AdmReaonDr = "";
 var m_TarCateDr = "";
@@ -122,7 +120,7 @@ function initGrid() {
 				hidden: true
 			}, {
 				field: 'TFADMTYPEDesc',
-				title: '类型',
+				title: '就诊类型',
 				width: 100,
 				sortable: true,
 				resizable: true,
@@ -132,6 +130,7 @@ function initGrid() {
 						valueField: 'id',
 						textField: 'name',
 						data: [{id: 'A', name: '全部'},
+							   {id: 'E', name: '急诊'},
 						       {id: 'O', name: '门诊'},
 						       {id: 'I', name: '住院'},
 						       {id: 'H', name: '体检'}
@@ -219,7 +218,7 @@ function initGrid() {
 							if (!rec) {
 								return;
 							}
-							m_TarCateDr = rec.rowid; //获取选中的收费大类ID
+							m_TarCateDr = rec.rowid;  //获取选中的收费大类ID
 							var thTarCateDr = $.m({
 									ClassName: "DHCBILLConfig.DHCBILLSysType",
 									MethodName: "GetTarCateBySubCate",
@@ -248,6 +247,12 @@ function initGrid() {
 									if (thisEd) {
 										$(thisEd.target).combobox('clear').combobox("loadData", []);
 									}
+									//清空医嘱项目数据
+									m_ArcimDr = "";
+									var thisEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFArcimDesc'});
+									if (thisEd) {
+										$(thisEd.target).combobox('clear').combobox('disable');
+									}
 								}
 							}
 						},
@@ -267,6 +272,12 @@ function initGrid() {
 								var thisEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFTarIDesc'});
 								if (thisEd) {
 									$(thisEd.target).combobox('clear').combobox('loadData', []); //清除原来的数据
+								}
+								//清空医嘱项目数据
+								m_ArcimDr = "";
+								var thisEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFArcimDesc'});
+								if (thisEd) {
+									$(thisEd.target).combobox('clear').combobox('disable');
 								}
 							}
 						}
@@ -314,16 +325,12 @@ function initGrid() {
 								if (thisEd) {
 									$(thisEd.target).combobox('clear').combobox('loadData', []);    //清除原来的数据
 								}
-							}
-							var thTarRowid = $.m({
-									ClassName: "DHCBILLConfig.DHCBILLSysType",
-									MethodName: "GetTarCateBySubCate",
-									TarSubCateDr: m_TarSubCateDr,
-									CateDr: "SC"
-								}, false);
-							var thisEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFTarCateDesc'});
-							if (thisEd) {
-								$(thisEd.target).combobox('select', thTarRowid);
+								//清空医嘱项目数据
+								m_ArcimDr = "";
+								var thisEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFArcimDesc'});
+								if (thisEd) {
+									$(thisEd.target).combobox('clear').combobox('disable');
+								}
 							}
 						},
 						onChange: function (newValue, oldValue) {
@@ -334,6 +341,12 @@ function initGrid() {
 								var thisEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFTarIDesc'});
 								if (thisEd) {
 									$(thisEd.target).combobox('clear').combobox('loadData', []); //清除原来的数据
+								}
+								//清空医嘱项目数据
+								m_ArcimDr = "";
+								var thisEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFArcimDesc'});
+								if (thisEd) {
+									$(thisEd.target).combobox('clear').combobox('disable');
 								}
 							}
 						}
@@ -352,41 +365,27 @@ function initGrid() {
 						url: $URL + '?ClassName=DHCBILLConfig.DHCBILLFIND&QueryName=FindTarItem&ResultSetType=array',
 						mode: 'remote',
 						method: 'get',
-						delay: 500,
+						delay: 200,
 						blurValidValue: true,
 						valueField: 'rowid',
 						textField: 'desc',
 						onBeforeLoad: function (param) {
+							var CateEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFTarCateDesc'});
+							var CateEdValue = CateEd ? $(CateEd.target).combobox('getValue') : "";
 							var SubCateEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFTarSubCateDesc'});
 							var SubCateEdValue = SubCateEd ? $(SubCateEd.target).combobox('getValue') : "";
 							if (!SubCateEdValue && !param.q) {
 								return false;
 							}
 							$.extend(param, {
-								code: "",                           //项目代码
-								desc: "",                           //项目名称 根据输入数据查询
 								alias: param.q,                     //别名
-								str: SubCateEdValue,                //入参串
+								str: SubCateEdValue + PUBLIC_CONSTANT.SEPARATOR.CH2 + CateEdValue,                //入参串
 								HospID: getValueById("hospital")    //医院ID
 							});
 							return true;
 					 	},
 						onSelect: function (rec) {
 							m_TarItemDr = rec.rowid; //获取选中的收费项目ID
-							var thTarRowidStr = $.m({
-									ClassName: "DHCBILLConfig.DHCBILLSysType",
-									MethodName: "GetTarCateByTarRowid",
-									TarRowid: m_TarItemDr,
-									CateDr: "SC"
-								}, false);
-							var thisEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFTarCateDesc'});
-							if (thisEd) {
-								$(thisEd.target).combobox('select', thTarRowidStr.split("^")[0]);
-							}
-							var thisEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFTarSubCateDesc'});
-							if (thisEd) {
-								$(thisEd.target).combobox('select', thTarRowidStr.split("^")[1]);
-							}
 							var thisEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFArcimDesc'});
 							if (thisEd) {
 								$(thisEd.target).combobox('enable');
@@ -395,6 +394,7 @@ function initGrid() {
 						onChange: function (newValue, oldValue) {
 							if (!newValue) {
 								m_TarItemDr = "";
+								m_ArcimDr = "";
 								var thisEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFArcimDesc'});
 								if (thisEd) {
 									$(thisEd.target).combobox('clear').combobox('disable');
@@ -413,19 +413,20 @@ function initGrid() {
 					type: 'combobox',
 					options: {
 						panelHeight: 200,
-						url: $URL + '?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem&ResultSetType=array',
 						mode: 'remote',
 						method: 'get',
-						delay: 500,
+						delay: 300,
 						blurValidValue: true,
 						valueField: 'ArcimRowID',
 						textField: 'ArcimDesc',
 						disabled: true,
 						onBeforeLoad: function (param) {
-							if (!param.q) {
+							if (!($.trim(param.q).length > 1)) {
 								return false;
 							}
-							$.extend(param, {Alias: param.q, HospId: getValueById("hospital")});
+							$.extend($(this).combobox("options"), {url: $URL})
+							var sessionStr = PUBLIC_CONSTANT.SESSION.USERID + "^" + "" + "^" + "" + "^" + getValueById("hospital");
+							$.extend(param, {ClassName: "BILL.COM.ItemMast", QueryName: "FindARCItmMast", ResultSetType: "array", alias: param.q, sessionStr: sessionStr});
 							return true;
 						},
 						onSelect: function (rec) {
@@ -443,14 +444,14 @@ function initGrid() {
 			}, {
 				field: 'TFStartDate',
 				title: '开始日期',
-				width: 100,
+				width: 120,
 				editor: 'datebox',
 				sortable: true,
 				resizable: true
 			}, {
 				field: 'TFEndDate',
 				title: '结束日期',
-				width: 100,
+				width: 120,
 				editor: 'datebox',
 				sortable: true,
 				resizable: true
@@ -510,7 +511,7 @@ function initGrid() {
 				hidden: true
 			}, {
 				field: 'TFTARSCDR',
-				title: '项目子类ID',
+				title: 'TFTARSCDR',
 				hidden: true
 			}, {
 				field: 'TFTARCDR',
@@ -545,7 +546,6 @@ function initGrid() {
 		pagination: true,
 		rownumbers: true,
 		pageSize: 20,
-		data: [],
 		columns: CateColumns,
 		toolbar: '#tToolBar',
 		onLoadSuccess: function (data) {
@@ -559,7 +559,7 @@ function initGrid() {
 			m_ArcimDr = "";
 		},
 		onBeginEdit: function(index, row) {
-			beginEditRowHandler(index, row);
+			onBeginEditHandler(index, row);
 		}
 	});
 }
@@ -567,7 +567,7 @@ function initGrid() {
 /**
 * 2019-01-17 ZhYW
 */
-function beginEditRowHandler(index, row) {
+function onBeginEditHandler(index, row) {
 	var ed = $('#tTarCate').datagrid('getEditor', {
 			index: index,
 			field: 'TFDiscRate',
@@ -609,8 +609,7 @@ function initLoadGrid(ExpStr) {
 }
 
 $('#BtnAdd').bind('click', function () {
-	//$('#tTarCate').datagrid('endEdit', lastIndex);
-	lastIndex = $('#tTarCate').datagrid('getRows').length - 1;
+	var lastIndex = $('#tTarCate').datagrid('getRows').length - 1;
 	$('#tTarCate').datagrid('selectRow', lastIndex);
 	var selected = $('#tTarCate').datagrid('getSelected');
 	if (selected) {
@@ -639,37 +638,47 @@ $('#BtnAdd').bind('click', function () {
 		TFAlterPayorRate: '',
 		TFArcimDesc: ''
 	});
-	lastIndex = $('#tTarCate').datagrid('getRows').length - 1;
+	var lastIndex = $('#tTarCate').datagrid('getRows').length - 1;
 	$('#tTarCate').datagrid('selectRow', lastIndex);
 	$('#tTarCate').datagrid('beginEdit', lastIndex);
 	EditIndex = lastIndex;
 });
 
 $('#BtnUpdate').bind('click', function () {
-	var selected = $('#tTarCate').datagrid('getSelected');
-	if (selected) {
-		var thisIndex = $('#tTarCate').datagrid('getRowIndex', selected);
+	var row = $('#tTarCate').datagrid('getSelected');
+	if (row) {
+		var thisIndex = $('#tTarCate').datagrid('getRowIndex', row);
 		if ((EditIndex != -1) && (EditIndex != thisIndex)) {
 			$.messager.alert('提示', "一次只能修改一条记录", 'info');
 			return;
 		}
+		EditIndex = thisIndex;
+		var regFacDR = row.TFRegFacDr;
+		var admReaDR = row.TFPITDR;
+		var tarCateDR = row.TFTARCDR;
+		var tarSubCateDR = row.TFTARSCDR;
+		var tarItemDR = row.TFTARIDR;
+		var arcimDR = row.TFArcimDr;
+		m_RegFacDr = regFacDR;
+		m_AdmReaonDr = admReaDR;
+		m_TarCateDr = tarCateDR;
+		m_TarSubCateDr = tarSubCateDR;
+		m_TarItemDr = tarItemDR;
+		m_ArcimDr = arcimDR;
+		
 		$('#tTarCate').datagrid('beginEdit', thisIndex);
 		$('#tTarCate').datagrid('selectRow', thisIndex);
-		EditIndex = thisIndex;
-		var selected = $('#tTarCate').datagrid('getSelected');
 
 		var thisEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFAdmReaDesc'});
-		$(thisEd.target).combobox('select', selected.TFPITDR);
+		$(thisEd.target).combobox('select', admReaDR);
 		var thisEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFTarCateDesc'});
-		$(thisEd.target).combobox('select', selected.TFTARCDR);
+		$(thisEd.target).combobox('select', tarCateDR);
 		var thisEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFTarSubCateDesc'});
-		$(thisEd.target).combobox('select', selected.TFTARSCDR);
-		m_TarItemDr = selected.TFTARIDR;
+		$(thisEd.target).combobox('select', tarSubCateDR);
 		var thisEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFRegFac'});
-		$(thisEd.target).combobox('select', selected.TFRegFacDr);
+		$(thisEd.target).combobox('select', regFacDR);
 		var thisEd = $('#tTarCate').datagrid('getEditor', {index: EditIndex, field: 'TFADMTYPEDesc'});
-		$(thisEd.target).combobox('select', selected.TFADMTYPE);
-		m_ArcimDr = selected.TFArcimDr;
+		$(thisEd.target).combobox('select', row.TFADMTYPE);
 	}
 });
 
@@ -679,24 +688,22 @@ $('#BtnSave').bind('click', function () {
 	if (selected) {
 		// selected.TFRowId为undefined，说明是新建项目，调用保存接口
 		if (selected.TFRowId == "") {
+			var tmpTFTarIDesc = selected.TFTarIDesc || "";
 			var tmpTarSubCateDesc = selected.TFTarSubCateDesc || "";
 			var tmpTarCateDesc = selected.TFTarCateDesc || "";
-			if ((tmpTarSubCateDesc == "") && (tmpTarCateDesc == "")) {
-				$.messager.alert('提示', "收费项目子类与收费项目大类同时为空，不允许添加", 'info');
-				EditIndex = -1;
+			if ((tmpTFTarIDesc == "") && (tmpTarSubCateDesc == "") && (tmpTarCateDesc == "")) {
+				$.messager.alert('提示', "收费项目、子类、大类不能同时为空", 'info');
 				initLoadGrid("");
 				return;
 			}
 			var tmpStartDate = selected.TFStartDate || "";
 			if (tmpStartDate == "") {
-				$.messager.alert('提示', "开始日期为空，不允许添加", 'info');
-				EditIndex = -1;
+				$.messager.alert('提示', "开始日期不能为空", 'info');
 				initLoadGrid("");
 				return;
 			}
 			if ((selected.TFDiscRate == "") && (selected.TFPayorRate == "")) {
-				$.messager.alert('提示', "折扣、记账系数同时为空，不允许添加", 'info');
-				EditIndex = -1;
+				$.messager.alert('提示', "折扣、记账系数不能同时为空", 'info');
 				initLoadGrid("");
 				return;
 			}
@@ -704,14 +711,13 @@ $('#BtnSave').bind('click', function () {
 			var tmpRegFac = selected.TFRegFac || "";
 			if ((tmpAdmReaDesc != "") && (tmpRegFac != "")) {
 				$.messager.alert('提示', "折扣设置不允许同时选择优惠类型和费别，只能选择一个设置优惠", 'info');
-				EditIndex = -1;
 				initLoadGrid("");
 				return;
 			}
 			var hospId = getValueById("hospital");
 			var tmpArcimDesc = selected.TFArcimDesc || "";
 			
-			var FactorStr = "^" + tmpAdmReaDesc + "^" + tmpTarSubCateDesc + "^" + selected.TFTarIDesc;
+			var FactorStr = "^" + tmpAdmReaDesc + "^" + tmpTarSubCateDesc + "^" + tmpTFTarIDesc;
 			FactorStr = FactorStr + "^" + tmpStartDate + "^" + selected.TFEndDate + "^" + selected.TFDiscRate;
 			FactorStr = FactorStr + "^" + selected.TFPayorRate + "^" + selected.TFAlterLevel + "^" + selected.TFAlterPayorRate;
 			FactorStr = FactorStr + "^" + tmpRegFac + "^" + tmpTarCateDesc + "^" + selected.TFADMTYPEDesc;
@@ -731,35 +737,32 @@ $('#BtnSave').bind('click', function () {
 					$.messager.alert('提示', "开始日期不能为空，且不能小于等于今日", 'info');
 					break;
 				case "-1002":
-					$.messager.alert('提示', "结束日期不能小于等于今日", 'info');
+					$.messager.alert('提示', "结束日期不能小于今日", 'info');
 					break;
 				default:
 					$.messager.alert('提示', "保存失败，错误代码：" + rtn, 'error');
 				}
-				EditIndex = -1;
 				initLoadGrid("");
 			});
 		} else {
 			$('#tTarCate').datagrid('selectRow', EditIndex);
 			var selected = $('#tTarCate').datagrid('getSelected');
+			var tmpTFTarIDesc = selected.TFTarIDesc || "";
 			var tmpTarSubCateDesc = selected.TFTarSubCateDesc || "";
 			var tmpTarCateDesc = selected.TFTarCateDesc || "";
-			if (tmpTarSubCateDesc == "" && tmpTarCateDesc == "") {
-				$.messager.alert('提示', "收费项目子类与收费项目大类同时为空，不允许修改", 'info');
-				EditIndex = -1;
+			if ((tmpTFTarIDesc == "") && (tmpTarSubCateDesc == "") && (tmpTarCateDesc == "")) {
+				$.messager.alert('提示', "收费项目、子类、大类不能同时为空", 'info');
 				initLoadGrid("");
 				return;
 			}
 			var tmpStartDate = selected.TFStartDate || "";
 			if (tmpStartDate == "") {
-				$.messager.alert('提示', "开始日期为空，不允许修改", 'info');
-				EditIndex = -1;
+				$.messager.alert('提示', "开始日期不能为空", 'info');
 				initLoadGrid("");
 				return;
 			}
 			if ((selected.TFDiscRate == "") && (selected.TFPayorRate == "")) {
-				$.messager.alert('提示', "折扣、记账系数同时为空，不允许修改", 'info');
-				EditIndex = -1;
+				$.messager.alert('提示', "折扣、记账系数不能同时为空", 'info');
 				initLoadGrid("");
 				return;
 			}
@@ -767,7 +770,6 @@ $('#BtnSave').bind('click', function () {
 			var tmpRegFac = selected.TFRegFac || "";
 			if (( tmpAdmReaDesc != "") && ( tmpRegFac != "")) {
 				$.messager.alert('提示', "折扣设置不允许同时选择优惠类型和费别，只能选择一个设置优惠", 'info');
-				EditIndex = -1;
 				initLoadGrid("");
 				return;
 			}
@@ -823,12 +825,11 @@ $('#BtnSave').bind('click', function () {
 					$.messager.alert('提示', "开始日期不能为空，且不能小于等于今日", 'info');
 					break;
 				case "-1002":
-					$.messager.alert('提示', "结束日期不能小于等于今日", 'info');
+					$.messager.alert('提示', "结束日期不能小于今日", 'info');
 					break;
 				default:
 					$.messager.alert('提示', "修改失败，错误代码：" + rtn, 'error');
 				}
-				EditIndex = -1;
 				initLoadGrid("");
 			});
 		}
@@ -853,7 +854,7 @@ $('#BtnDelete').bind('click', function () {
 					FactorStr: FactorStr,
 					User: PUBLIC_CONSTANT.SESSION.USERID
 				}, function (rtn) {
-					if (rtn == "0") {
+					if (rtn == 0) {
 						$.messager.alert('提示', "删除成功", 'success');
 					} else {
 						$.messager.alert('提示', "删除失败，错误代码：" + rtn, 'error');

@@ -187,17 +187,28 @@ function Query(){
 	var saveParStr = GetSaveParStr() ;
 	PHA.Loading("Show") 
 	var pid = tkMakeServerCall("PHA.PRC.Create.Adult", "JobGetAdultPrescDataNum", queryParStr, saveParStr, logonLocId);
-	// 调后台,5s一次
-	var jobInterval = setInterval(function() {
-		var jobRet = tkMakeServerCall("PHA.PRC.Com.Util", "JobRecieve", pid);
-		if (jobRet != "") {
-			clearInterval(jobInterval);
+	// 调后台,3s一次
+	setTimeout('JobRecieve('+pid+')', 3000);
+}
+
+function JobRecieve(pid) {
+	$cm({
+		ClassName: "PHA.PRC.Com.Util",
+		MethodName: "JobRecieve",
+		pid: pid,
+		dataType: 'text'
+	}, function(jobRet){
+		if (jobRet == "-1"){
+			setTimeout(function(){
+				JobRecieve(pid);
+			}, 2000);
+		} else {
 			PHA.Loading("Hide")
 			var jobRetArr = jobRet.split("^");
 			var jobRetSucc = jobRetArr[0];
 			var jobRetVal = jobRetArr[1];
 			if (jobRetSucc < 0) {
-				PHA.Alert('提示', "查询失败，错误代码："+jobRetVal, 'warning');
+				PHA.Alert('提示', "查询失败，错误代码："+ jobRetVal, 'warning');
 			} else {
 				if (jobRetVal == 0) {
 					var msgInfo = "没有符合条件的处方,请更换查询条件后再试!";
@@ -207,8 +218,7 @@ function Query(){
 				}
 			}
 		}
-	},5000);
-	
+	})
 }
 
 function ComfirmClear(){
@@ -289,7 +299,13 @@ function Save(){
 
 //下载导入模板
 function DownLoadModel(){
-	window.open("../scripts/pha/prc/v2/门诊处方点评导入模板.xlsx", "_blank");	
+	var modelA = document.getElementById('downloadModel');
+	if(!modelA){
+		modelA = document.createElement('a');
+		modelA.id = "downloadModel";
+	}
+	modelA.href = "../scripts/pha/prc/v2/门诊处方点评导入模板.xlsx";
+	modelA.click();
 }
 
 function GetQueryParStr(){
@@ -354,11 +370,11 @@ function CheckBeforeSave() {
 	}
 	if ((rnum=="")&&(pcent=="")){
 		PHA.Alert('提示', "请先填写随机数或者百分比!", 'warning');
-		return ;		
+		return -1;		
 	}
 	if ((!(rnum>0))&&(!(pcent>0))){
 		PHA.Alert('提示', "填写的随机数或者百分比格式不正确，请修改后重试!", 'warning');
-		return ;		
+		return -1;		
 	}
 	var rnumstr = rnum.split(".")
 	if (rnumstr[0] !== rnum){

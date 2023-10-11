@@ -16,7 +16,7 @@ $(function(){
 	$("#BClear").click(function() {	
 		BClear_click();		
         });
-    
+    ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=DHCPEStatisticCallVoice.raq");
 })
 
 
@@ -40,17 +40,16 @@ function BFind_click(){
 	else if (ShowFlag == "Doc") reportName = "DHCPECallVoiceDocStatistic.raq";
 	else { alert("请选择查询类型！"); return false;}
 	
-	var CTLOCID = session["LOGON.CTLOCID"];
-	var GROUPID = session["LOGON.GROUPID"];
-	var USERID = session["LOGON.USERID"];
+	var CurLoc = session["LOGON.CTLOCID"];
+	var CurUser = session["LOGON.USERID"];
 	
 	var lnk = "&BeginDate=" + BeginDate
 			+ "&EndDate=" + EndDate
-			+ "&USERID=" + USERID
-			+ "&CTLOCID=" + CTLOCID			
+			+ "&CurUser=" + CurUser
+			+ "&CurLoc=" + CurLoc			
 			;
-	document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=" + reportName + lnk;
-
+	//document.getElementById('ReportFile').src = "dhccpmrunqianreport.csp?reportName=" + reportName + lnk;
+    ShowRunQianUrl("ReportFile", "dhccpmrunqianreport.csp?reportName=" + reportName + lnk);
 }
 
 function InitCombobox(){
@@ -62,9 +61,26 @@ function InitCombobox(){
 		panelHeight:"auto",
 		editable:false,
 		data:[
-			{id:'User',text:'按人员查询',selected:true},
-			{id:'Doc',text:'按医生查询'}
+			{id:'User',text:$g('按人员查询'),selected:true},
+			{id:'Doc',text:$g('按医生查询')}
 		]
 	});
 }
-
+// 解决iframe中 润乾csp 跳动问题
+function ShowRunQianUrl(iframeId, url) {
+    var iframeObj = document.getElementById(iframeId)
+    if (iframeObj) {
+	    iframeObj.src=url;
+	    //debugger;
+	    $(iframeObj).hide();
+	    if (iframeObj.attachEvent) {
+		    iframeObj.attachEvent("onload", function(){
+		        $(this).show();
+		    });
+	    } else {
+		    iframeObj.onload = function(){
+		        $(this).show();
+		    };
+	    }
+    }
+}

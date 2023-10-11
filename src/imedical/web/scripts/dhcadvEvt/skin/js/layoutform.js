@@ -1,4 +1,5 @@
 $(document).ready(function(){
+	$.messager.defaults = { ok: $g("确定"),cancel: $g("取消")};
 	//创建一个console对象
 	textAreaListener(); //2018/1/10 textarea回车不换行
 	window.console = window.console || (function () {  
@@ -67,7 +68,7 @@ $(document).ready(function(){
 				     }
 				     return true;
 				},
-				message: '日期格式不对.'
+				message: $g('日期格式不对.')
 			}
 	})
 		
@@ -230,14 +231,13 @@ function uploadPic(obj,id){
 	  var filename=file.replace(/.*(\/|\\)/, ""); 
 	  var fileExt=(/[.]/.exec(filename)) ? /[^.]+$/.exec(filename.toLowerCase()) : '';
 
-
       //image/gif,image/jpeg,image/jpg,image/png,image/svg  
       if(fileExt!='gif'&&fileExt!='jpeg'&&fileExt!='jpg'&&fileExt!='png'&&fileExt!='svg'&&fileExt!='bmp'){  
-            $.messager.alert("提示","您上传的文件不符合图片格式，请上传图片(gif/jpeg/jpg/png/svg/bmp)。")    
+            $.messager.alert($g("提示"),$g("您上传的文件不符合图片格式，请上传图片(gif/jpeg/jpg/png/svg/bmp)。"))    
             return;  
       }
       if($("#picViewDiv"+id).find("img").length>0){
-	      $.messager.confirm('提示','已上传图片，是否要覆盖原图片?',function(r){
+	      $.messager.confirm($g('提示'),$g('已上传图片，是否要覆盖原图片?'),function(r){
     			if (r){
 					$(obj).parent().find("input[name='ext']").val(fileExt)
 	  				$(obj).parent().submit();
@@ -255,8 +255,6 @@ function dbClickLegend(obj){
 		$(obj).addClass("legend-img-gobottom"); 
 }
 function showPre(obj){
-	
-
 	type=$(obj).attr('type')
 	if(type=='radio'){
 		
@@ -274,6 +272,7 @@ function showPre(obj){
 				$('#'+this.id).removeAttr("checked");
 			}
 		})
+		unCheckRadio(obj);// 调用单选框取消勾选 2021-02-02 cy
 		
 	}else{
 		if($(obj).attr("checked")=="checked"){
@@ -330,7 +329,7 @@ function addRow(obj,id,formId){
 		},"text",false);
 }
 function removeRow(obj){
-	$.messager.confirm("提示", "是否进行删除操作", function (res) {//提示是否删除
+	$.messager.confirm($g("提示"), $g("是否进行删除操作"), function (res) {//提示是否删除
 		if (res) {
 			$(obj).parent().parent().remove()	
 		}
@@ -407,6 +406,10 @@ function checkbox_change(obj,dicId,formId,parref){
 								}
 							}
 						});
+						unCheckRadio(obj);  // 调用单选框取消勾选 2021-02-02 cy
+		
+		
+						
 				}catch(e){
 					alert(e.message)
 				}
@@ -531,9 +534,13 @@ function checkRequired(){
 		  if($("input[type=checkbox]", obj).length>0){
 			if($("input[type=checkbox]:checked", obj).length==0){
 				
-				$("#"+id).find("em").html("*该项为必填项");
+				$("#"+id).find("em").html($g("*该项为必填项"));
 				if(ret){
-					$("html,body").stop(true);$("html,body,#mainpanel").animate({scrollTop: $("#"+id).offset().top}, 1000);	
+					//$("html,body").stop(true);$("html,body,#top").animate({scrollTop: $("#"+id).offset().top}, 1000);	
+						var topdiv=$("#top").offset().top; //  距离窗口顶端的高度
+						var domdiv=$("#"+id).offset().top; // 距离窗口顶端的高度
+						
+						$("html,body,#mainpanel").scrollTop(Math.abs(topdiv-domdiv));
 				}
 				ret=false;
 			}
@@ -543,9 +550,14 @@ function checkRequired(){
 		if(type=="radio"){
 			if($("input[type=radio]", obj).length>0){
 				if($("input[type=radio]:checked", obj).length==0){
-					$("#"+id).find("em").html("*该项为必填项");
+					$("#"+id).find("em").html($g("*该项为必填项"));
 					if(ret){
-						$("html,body").stop(true);$("html,body,#mainpanel").animate({scrollTop: $("#"+id).offset().top}, 1000);	
+						//$("html,body").stop(true);
+						//$("html,body,#top").animate({scrollTop: $("#"+id).offset().top}, 1000);	
+						var topdiv=$("#top").offset().top; //  距离窗口顶端的高度
+						var domdiv=$("#"+id).offset().top; // 距离窗口顶端的高度
+						$("html,body,#mainpanel").scrollTop(Math.abs(topdiv-domdiv));
+					
 					}
 					ret=false;
 				}
@@ -660,24 +672,35 @@ function closePanleSmall(){
 }
 
 function checkbox_inline_change(obj,dicField,formId,parref){
-		//lable93972
-		id=dicField
-		if($(obj).attr("checked")==undefined){
-			$("label[data-parref='"+id+"']").hide()
-		}else{
-			$("label[data-parref='"+id+"']").css("display","inline-block");
-			$("label[data-parref='"+id+"']").show()
-		}	
+	id=dicField
+	var name=$(obj).attr('name');
+	if($(obj).attr('type')=='radio'){
+		/// 添加勾选标识便于判断标识来取消勾选
+		$("input[name='"+name+"'][type=radio]:not(:checked)").attr("ckflag", 0);
+	}
+	
+	if($(obj).attr("checked")==undefined){
+		$("[data-parref='"+id+"']").hide(); /// 2021-06-09 cy 隐藏data-parref='"+id+"'的所有元素$("label[data-parref='"+id+"']").hide()
+		if($(obj).attr('type')=='radio'){
+			$(obj).attr("ckflag",0);
+		}
+	}else{
+		$("[data-parref='"+id+"']:not(.easyui-datebox)").css("display","inline-block");
+		$("[data-parref='"+id+"']:not(.easyui-datebox)").show();
+		if($(obj).attr('type')=='radio'){
+			$(obj).attr("ckflag",1);
+		}
+	}
+	if(typeof doOther==="function"){
 		doOther(obj);
-		
+	}
 }
-
 function removePic(){
 	$("#picViewDiv").html("");
 	$("#picPath").val("");
 }
 function removePic(formId,dicId){
-	$.messager.confirm('提示','确定要删除图片吗？', function(r){
+	$.messager.confirm($g('提示'),$g('确定要删除图片吗？'), function(r){
        if(r){
 	         fileName=$("input[data-img-id='"+formId+"-"+dicId+"']").val()	
 		   runClassMethod(
@@ -879,16 +902,16 @@ function JudgmentDate(){
 	var inDate=new Date(Date.parse(inDate));
 	var ret=true;
 	if(effectDate<productDate){
-		$.messager.alert('Warning','器械有效日期不能小于生产日期!');
+		$.messager.alert('Warning',$g('器械有效日期不能小于生产日期!'));
 		
 		return false;
 	}
 	if(stopDate<productDate){
-		$.messager.alert('Warning','器械停用日期不能小于生产日期!');
+		$.messager.alert('Warning',$g('器械停用日期不能小于生产日期!'));
 		return false;
 	}
 	if((inDate!="Invalid Date")&&(inDate<productDate)){
-		$.messager.alert('Warning','器械植入日期不能小于生产日期!');
+		$.messager.alert('Warning',$g('器械植入日期不能小于生产日期!'));
 		return false;
 	}
 	return ret;
@@ -902,17 +925,17 @@ function JudgeDeviceData(){
 	var stopDate=new Date(Date.parse(stopDate));
 	var ret=true;
 	if(effectDate>productDate){
-		$.messager.alert('Warning','有效日期不能小于生产日期!');
+		$.messager.alert('Warning',$g('有效日期不能小于生产日期!'));
 		return false;
 	}
 	if(effectDate>stopDate){
-		$.messager.alert('Warning','停用日期不能小于生产日期!');
+		$.messager.alert('Warning',$g('停用日期不能小于生产日期!'));
 		return false;
 	}
 	if(document.getElementById("MDDeviceCode")){ //hxy 2018-01-23 
 		var MDDeviceCode=$("#MDDeviceCode").val()
 		if((MDDeviceCode=="")||(MDDeviceCode==undefined)){
-			$.messager.alert('Warning','器械编码不能为空!');
+			$.messager.alert('Warning',$g('器械编码不能为空!'));
 			return false;
 		}
 	}	
@@ -921,13 +944,13 @@ function JudgeDeviceData(){
 	var findDate=$("input[name='173350.89913']").val(); //发现熟知日期
 	var findDates=new Date(Date.parse(findDate));
 	if(findDates>dateNow){
-		$.messager.alert('Warning','发现或熟知日期不能大于当前日期!');
+		$.messager.alert('Warning',$g('发现或熟知日期不能大于当前日期!'));
 		return false;
 		}
 	var happenDate=$("input[name='171531.89030']").val(); //事件发生日期
 	var happenDate=new Date(Date.parse(happenDate));
 	if(findDate<happenDate){
-		$.messager.alert('Warning','发现或熟知日期不能小于事件发生日期！');
+		$.messager.alert('Warning',$g('发现或熟知日期不能小于事件发生日期！'));
 		return false;
 		}
 	return ret;
@@ -1006,7 +1029,7 @@ function JudgeHapDate(){
 	
 	var ret=true;
 	if(effectDate>startdate){
-		$.messager.alert('Warning','事件发生日期不能大于当前日期!');
+		$.messager.alert('Warning',$g('事件发生日期不能大于当前日期!'));
 		return false;
 	}
 	return ret;
@@ -1049,7 +1072,7 @@ function JudgeNotDate(){
 	var nowdate=new Date(nowdate.replace(/-/g, "/").replace(/-/g, "/"));
 	var ret=true;
 	if(NotDate>nowdate){
-		$.messager.alert('Warning','通知时间不能大于当前时间!');
+		$.messager.alert('Warning',$g('通知时间不能大于当前时间!'));
 		return false;
 	}
 	return ret;
@@ -1075,7 +1098,12 @@ function textAreaListener(){
 function initLableInput(){
 	$(".lable-input").each(function(){
 		var htmlLength=$(this).prev().html().length;
-		var value=Number(20)+Number(15*htmlLength);
+		var value=0;
+		if(session['LOGON.LANGCODE']=='EN'){
+			value=Number(20)+Number(8*htmlLength);
+		}else{
+			value=Number(20)+Number(15*htmlLength);
+		}
 		
 		$(this).css("margin-left",value);
 		
@@ -1095,7 +1123,7 @@ function requiredHideInput(){
 					if(parentTitle==undefined){
 						parentTitle=$("#"+parentId).html();
 					}	
-					title="请填写 "+parentTitle+$(this).prev().html();				
+					title=$g("请填写 ")+parentTitle+$(this).prev().html();				
 					rtn=false;
 					
 			}
@@ -1103,7 +1131,7 @@ function requiredHideInput(){
 		
 	})
 	if(!rtn){
-		$.messager.alert("提示",title);
+		$.messager.alert($g("提示"),title);
 	}
 	return rtn;
 	
@@ -1146,11 +1174,19 @@ function childCorrelParentCheck(obj){
 			num=num-nextNum												//去掉子类选中的个数
 			}
 		if(num==1){														
-			$(parrentLable).children().removeAttr("checked")			//该元素上面直接第一层取消选择
-			cancleParentPar(parrentLable)
+			$(parrentLable).children().removeAttr("checked");			//该元素上面直接第一层取消选择
+			/// 2021-02-02 cy 添加单选取消功能  此处是为了添加标识
+			if($(parrentLable).children().attr("type")=="radio"){
+				$(parrentLable).children().attr("ckflag",0);
+			}
+			cancleParentPar(parrentLable);
 			}
 		}else{	
 			$(parrentLable).children().attr("checked",'true')			//该元素上面直接第一层选中
+			/// 2021-02-02 cy 添加单选取消功能  此处是为了添加标识
+			if($(parrentLable).children().attr("type")=="radio"){
+				$(parrentLable).children().attr("ckflag",1);
+			}
 			cancleParentPar(parrentLable)
 		} 
 	
@@ -1174,5 +1210,41 @@ function cancleParentPar(parrentLable){
 	}else{
 		$(parParLable).children().attr("checked",'true')				//该元素上面直接第二层选中
 	}
+}
+
+/// 单选框取消勾选 2021-02-02 cy
+function unCheckRadio(obj){
+	var name=$(obj).attr('name');
+	if($(obj).attr('type')=='radio'){
+		/// 添加勾选标识便于判断标识来取消勾选
+		$("input[name='"+name+"'][type=radio]:not(:checked)").attr("ckflag", 0);
+		if($(obj).attr("ckflag")==1){
+			$(obj).attr("ckflag",0);
+			$(obj).attr("checked", false);
+		}else{
+			$(obj).attr("ckflag",1);
+		}
+	}
+}
+
+/// 面板元素控制是否可以编辑 2021-03-26 cy
+function SetPanel(id){
+	
+	$("#"+id+" input").attr("disabled",true);
+	$("#"+id+" a").attr("disabled",true);
+	$("#"+id+" textarea").attr("readonly",'readonly');
+	$("#"+id+" input[type=checkbox]").attr("disabled",true);  
+	$("#"+id+" input[type=radio]").attr("disabled",true); 
+	$("#"+id+" input[class^=combo-text]").combobox({"disabled":true});
+	$("#"+id+" select[class^=easyui-combobox]").attr('disabled',"disabled");
+	
+	$("#"+id+" input[class^=easyui-datebox]").datebox({"disabled":true}); // 日期不可编辑放后面
+	
+	$("#"+id+" input").css("background-color","#F0F0F0");
+	$("#"+id+" textarea").css("background-color","#F0F0F0");
+	$("#"+id+" input[type=checkbox]").css("background-color","#F0F0F0") ;
+	$("#"+id+" input[type=radio]").css({"background-color": "#F0F0F0" });
+
+	
 }
 

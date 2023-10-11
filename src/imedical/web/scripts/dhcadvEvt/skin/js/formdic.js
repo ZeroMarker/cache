@@ -1,7 +1,24 @@
+var HospDr="";
 $(function(){
-	$HUI.radio("#queryTypen").setValue(true);
+    //InitHosp(); 	//初始化医院 多院区改造 cy 2021-04-09
+	//初始化界面默认信息
+	InitDefault();
+});
+// 初始化医院 多院区改造 cy 2021-04-09
+function InitHosp(){
+	hospComp = GenHospComp("DHC_AdvFormName"); 
+	HospDr=hospComp.getValue(); 
+	//$HUI.combogrid('#_HospList',{value:"11"})
+	hospComp.options().onSelect = function(){///选中事件
+		HospDr=hospComp.getValue();
+		$("#queryForm").combobox('setValue',""); 
+		QueryDataGrid(); 
+		var url='dhcapp.broker.csp?ClassName=web.DHCADVFormName&MethodName=listCombo&HospDr='+HospDr;
+		$("#queryForm").combobox('reload',url);  
+	}
+}
+function InitDefault(){
 	if($("#userEdit").val()==1){
-		
 	    $("#goFormName").hide();
 	    $("#subHidden").parent().parent().hide();
 	    $("#addRow").hide(); //hxy 2018-06-12 st
@@ -36,46 +53,37 @@ $(function(){
 	    $('#datagrid').datagrid('hideColumn','displayTitle');
 	    $('#datagrid').datagrid('hideColumn','userEdit');
 	    $('#datagrid').datagrid('hideColumn','subDicTile');
-
-
-
 	}
+	$HUI.radio("#queryTypen").setValue(true);
 	var IEVersion =serverCall("ext.util.String","GetIEVersion"); //hxy 2017-12-14 st
     $('#datagrid').datagrid({   
 		url:'dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listGrid&IEVersion='+IEVersion
 	});//ed
 	$("#queryStyle").next().find(".combo-text").on("input propertychange",function(){  
      	$('#queryStyle').combobox('clear');
-   		commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})
+   		QueryDataGrid();
 	})
+	//表单类型
+	$('#queryForm').combobox({
+		valueField:'value',
+		textField:'text',
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVFormName&MethodName=listCombo&HospDr='+HospDr,
+		onSelect: function(rec){  
+			QueryDataGrid();
+		} 	  
+	}); 
 	$("#queryForm").next().find(".combo-text").on("input propertychange",function(){  
-     	//$('#queryForm').combobox('clear');
-   		commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})
+   		QueryDataGrid();
 	}) 	
-	//$(".combo-text").change(function(){alert(1);}); 
 	$("#queryFormBtn").hide(); 
 	$("#queryField").keydown(
 		function(e){
 			if(e.keyCode==13) {
-				commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})
+				QueryDataGrid();
      		}	
 		}
 	
 	) 
-	/* $("#queryTreeField").keydown(
-		function(e){
-			if(e.keyCode==13) {
-				
-				val=$.trim($("#queryTreeField").val());
-				var rowsData = $("#datagrid").datagrid('getSelected')
-				var url = LINK_CSP+'?ClassName=web.DHCADVFormDic&MethodName=listTree&id='+rowsData.ID+'&text='+val;
-				$('#formTree').tree('options').url=encodeURI(url);
-				$('#formTree').tree('reload')
-			
-				
-			}
-		}
-	) */
 	$('#queryTreeField').searchbox({
 		searcher : function (value, name) {
 			var rowsData = $("#datagrid").datagrid('getSelected')
@@ -84,9 +92,6 @@ $(function(){
 				$('#formTree').tree('reload');
 		}
 	});
-	
-	
-	
 	$("#subValue").keydown(
 		function(e){
 			if(e.keyCode==13) {
@@ -103,11 +108,15 @@ $(function(){
 	
 	$HUI.radio("[name='queryType']",{
 		onChecked:function(){   		
-			commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})
+			QueryDataGrid();
 		}
   	}); 
-	commonQuery({'datagrid':'#datagrid','formid':'#toolbar'})
-});
+  	
+	QueryDataGrid();
+}
+function QueryDataGrid(){
+	commonQuery({'datagrid':'#datagrid','formid':'#toolbar'});
+}
 
 function queryFormDataGrid(){
 	$('#formDatagrid').datagrid('load', {    
@@ -118,10 +127,19 @@ function queryFormDataGrid(){
 
 function onClickRow(index,row){
 	CommonRowClick(index,row,"#datagrid");
+	// 多院区改造 cy 2021-04-13 根据医院重新加载工作流维护的类型下拉数据
+	var catDesced=$("#datagrid").datagrid('getEditor',{index:index,field:'catDesc'});
+	var url="dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listFormCat&HospDr="+HospDr;
+	$(catDesced.target).combobox('reload',url);  
 }
 
 function addRow(){
 	commonAddRow({'datagrid':'#datagrid',value:{'style':'input','newLine':'N'}})
+	// 多院区改造 cy 2021-04-13 根据医院重新加载工作流维护的类型下拉数据
+	var catDesced=$("#datagrid").datagrid('getEditor',{index:0,field:'catDesc'});
+	var url="dhcapp.broker.csp?ClassName=web.DHCADVFormDic&MethodName=listFormCat&HospDr="+HospDr;
+	$(catDesced.target).combobox('reload',url);  
+
 }
 ///绑定数据   
 function binding(){                      
@@ -188,7 +206,7 @@ function addSub(){
 	}else{
 		$("#queryFormBtn").hide(); 
 	}
-	$("#seq").val(1)
+	$("#seq").val(0)
 	$('#sub').dialog("open");   
 }
 
@@ -304,7 +322,7 @@ function saveSub(){
 		 seq=$("#seq").val();
 		 par=subField+"^"+subTitle+"^"+subStyle+"^"+subId+"^"+subParref+"^"+subUrl+"^"+subValue+"^"+subNewLine 
 		 par=par+"^"+subWidth+"^"+subHeight+"^"+subCols+"^"+subRows+"^^"+sameLevel+"^"+subHiddenValue+"^"+subHiddenSub+"^^"+subDicSameLine+"^"+canCopy+"^^"+seq
-		 par=par+"^^"+subHidden;//hxy 2018-04-26
+		 par=par+"^^^"+subHidden;//hxy 2018-04-26 //hxy 2020-10-09 add ^ //24
 
 		 runClassMethod(
 	 				"web.DHCADVFormDic",
@@ -422,6 +440,6 @@ function Sure()
 window.onload = function(){ 
 	if($("#userEdit").val()==1){
 	　　$HUI.radio("input[name='queryType'][value='Y']").setValue(true);
-		commonQuery({'datagrid':'#datagrid','formid':'#toolbar'});
+		QueryDataGrid();
 	}
 } 

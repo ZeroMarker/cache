@@ -101,7 +101,7 @@ function InitCollectDataList(){
 		{header:'处方剂型',index:'TPreFormType',name:'TPreFormType',width:50},
 		{header:'用药日期',index:'TBrothDate',name:'TBrothDate',width:60},
 		{header:'袋数',index:'TActUnPocNum',name:'TActUnPocNum',width:50},
-		{header:'膏方总罐数',index:'TOrPasJarNum',name:'TOrPasJarNum',width:60},
+		{header:'膏方总罐数',index:'TOrPasJarNum',name:'TOrPasJarNum',width:60,hidden:true},
 	    {header:'揭药人',index:'TBrothName',name:'TBrothName',width:80},
 		{header:'揭药日期',index:'TActBrothDate',name:'TActBrothDate',width:100},
 		{header:'当前状态',index:'TBrothStatue',name:'TBrothStatue',width:60},
@@ -151,10 +151,11 @@ function QueryCollectData()
 	var wardloc=$('#sel-phaward').val();
 	if (wardloc==null){wardloc=""};
 	var barcode=$('#txt-barcode').val();
+	var batNo=$('#sel-medbatno').val();
 	//如果条码在揭药表不存在，则先要收集插入该条码的揭药信息！
-	//alert("barcode:"+barcode)
 	if((barcode!="")&&(barcode!=null)){
-		var ret=tkMakeServerCall("web.DHCINPHA.HMMedBroth.MedBrothDispQuery","SaveMedBrothNoData",barcode,gUserID,gLocId);
+		var ret=tkMakeServerCall("web.DHCINPHA.HMMedBroth.MedBrothDispQuery","SaveMedBrothNoData",barcode,gUserID,gLocId,batNo);
+		//alert("ret:"+ret)
 		if(ret!=0){
 			if (ret=="-1"){
 				SendVoiceStr="条码有误"
@@ -177,11 +178,13 @@ function QueryCollectData()
 			}else{
 				SendVoiceStr="采集数据失败,"+ret
 			}
+			dhcphaMsgBox.alert(SendVoiceStr);
 			SendVocie(SendVoiceStr);
 			return false;
 		}
 	}	
-	var params=startdate+"^"+enddate+"^"+wardloc+"^"+gLocId+"^"+barcode;
+	var params=startdate+"^"+enddate+"^"+wardloc+"^"+gLocId+"^"+barcode+"^"+batNo;
+	//alert("params:"+params)
 	$("#grid-colldatalist").setGridParam({
 		postData:{
 			'params':params
@@ -217,6 +220,7 @@ function ConfirmDisp(){
 			}
 	    }
 	}
+	//alert("ListDataStr:"+ListDataStr)
 	var ret=tkMakeServerCall("web.DHCINPHA.HMMedBroth.MedBrothDispQuery","SaveCollectData",ListDataStr,MedBatNo,gUserID);
 	if(ret!=0){
 		if(ret==-1){

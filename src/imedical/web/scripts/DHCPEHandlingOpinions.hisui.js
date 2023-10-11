@@ -244,6 +244,9 @@ function BAdd_click(Type) {
 }
 
 function BSearch_click() {
+	$("#HandlingOpinions").datagrid('clearSelections'); //取消选中状态
+    $("#BUpd").linkbutton('disable');
+
 	$HUI.datagrid("#HandlingOpinions",{
 		url:$URL,
 		queryParams:{

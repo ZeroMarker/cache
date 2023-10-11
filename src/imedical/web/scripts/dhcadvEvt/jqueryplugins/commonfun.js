@@ -476,134 +476,166 @@ function trim(str){
 
 //控制日期选择不得超过今天	2018-05-30 cy
 function chkdate(id,timeid){
-	var datevalue=$('#'+id).datebox('getValue');
-	$('#'+id).datebox({editable:false});
-	$('#'+id).datebox().datebox('calendar').calendar({
-		validator: function(date){
-			var now = new Date();
-			return date<=now;
+	if ($('#'+id).length > 0){
+		var datevalue=$('#'+id).datebox('getValue');
+		$('#'+id).datebox({editable:false});
+		$('#'+id).datebox().datebox('calendar').calendar({
+			validator: function(date){
+				var now = new Date();
+				return date<=now;
+			}
+		});
+		if(datevalue!=""){
+			$('#'+id).datebox('setValue',datevalue);	
 		}
-	});
-	if(datevalue!=""){
-		$('#'+id).datebox('setValue',datevalue);	
-	}
-	// 发生日期 勾选自动补录 日期类型
-	if((timeid!="")&&(timeid!=undefined)&&($("input[id^='"+timeid+"']").length>0)){
-		$('#'+id).datebox({
-		    onSelect: function(date){
-			    var SelDate="";
-				var Reltiem=$("#"+timeid).val();   //sufan  2019-11-12  选择日期时判断下发生时间
-				var Year = date.getFullYear();
-				var Month = date.getMonth()+1;
-				var Day = date.getDate();
-				
-				if(typeof(DateFormat)=="undefined"){ //2017-03-15 cy
-					SelDate=  Year+"-"+Month+"-"+Day;
-				}else{
-					if(DateFormat=="4"){ //日期格式 4:"DMY" DD/MM/YYYY 2017-03-07 cy
-						SelDate= Day+"/"+Month+"/"+Year;
-					}else if(DateFormat=="3"){ //日期格式 3:"YMD" YYYY-MM-DD
-						SelDate= Year+"-"+Month+"-"+Day;
-					}else if(DateFormat=="1"){ //日期格式 1:"MDY" MM/DD/YYYY
-						SelDate= Month+"/"+Day+"/"+Year;
-					}else{ //2017-03-15 cy
-						SelDate= Year+"-"+Month+"-"+Day;
+	
+		// 发生日期 勾选自动补录 日期类型
+		if((timeid!="")&&(timeid!=undefined)&&($("input[id^='"+timeid+"']").length>0)){
+				$('#'+id).datebox({
+			    onSelect: function(date){
+				    var SelDate="";
+					var Reltiem=$("#"+timeid).val();   //sufan  2019-11-12  选择日期时判断下发生时间
+					var Year = date.getFullYear();
+					var Month = date.getMonth()+1;
+					var Day = date.getDate();
+					
+					if(typeof(DateFormat)=="undefined"){ //2017-03-15 cy
+						SelDate=  Year+"-"+Month+"-"+Day;
+					}else{
+						if(DateFormat=="4"){ //日期格式 4:"DMY" DD/MM/YYYY 2017-03-07 cy
+							SelDate= Day+"/"+Month+"/"+Year;
+						}else if(DateFormat=="3"){ //日期格式 3:"YMD" YYYY-MM-DD
+							SelDate= Year+"-"+Month+"-"+Day;
+						}else if(DateFormat=="1"){ //日期格式 1:"MDY" MM/DD/YYYY
+							SelDate= Month+"/"+Day+"/"+Year;
+						}else{ //2017-03-15 cy
+							SelDate= Year+"-"+Month+"-"+Day;
+						}
 					}
-				}
-				
-				// 日期时间比较
-				var DateFlag="";
-				runClassMethod("web.DHCADVCOMMON","DateTimeCompare",{'Date':SelDate,'Time':Reltiem},
-					function(data){
-						DateFlag=data;
-				},"text",false);
-				if(DateFlag==1){
-					$.messager.alert("提示:","日期所关联时间大于当前时间！请重新填写时间");
-					$("#"+timeid).val("");
-				}
-				
-				/* if ((new Date(date).toDateString() === new Date().toDateString())&&(Reltiem!="")) {	
-					var seletime=Reltiem.replace(":","").valueOf();
-					var nowhour=new Date().getHours();
-					if(nowhour<10){
-						nowhour="0"+nowhour;
-					}
-					var nowitme=new Date().getMinutes();
-					if(nowitme<10){
-						nowitme="0"+nowitme;
-					}
-					var currtime=(nowhour+""+nowitme).valueOf();
-					if(seletime>currtime){
-						$.messager.alert("提示:","日期所关联时间大于当前时间！请重新填写时间");
+					
+					// 日期时间比较
+					var DateFlag="";
+					runClassMethod("web.DHCADVCOMMON","DateTimeCompare",{'Date':SelDate,'Time':Reltiem},
+						function(data){
+							DateFlag=data;
+					},"text",false);
+					if(DateFlag==1){
+						$.messager.alert($g("提示")+":",$g("日期所关联时间大于当前时间")+"，"+$g("请重新填写时间")+"！");
 						$("#"+timeid).val("");
 					}
-				} */
-		    }
-		})
+					
+					/* if ((new Date(date).toDateString() === new Date().toDateString())&&(Reltiem!="")) {	
+						var seletime=Reltiem.replace(":","").valueOf();
+						var nowhour=new Date().getHours();
+						if(nowhour<10){
+							nowhour="0"+nowhour;
+						}
+						var nowitme=new Date().getMinutes();
+						if(nowitme<10){
+							nowitme="0"+nowitme;
+						}
+						var currtime=(nowhour+""+nowitme).valueOf();
+						if(seletime>currtime){
+							$.messager.alert("提示:","日期所关联时间大于当前时间！请重新填写时间");
+							$("#"+timeid).val("");
+						}
+					} */
+			    }
+			})
+		}
 	}
-	
 } 
 //报告元素赋值  2018-05-30 cy
 //入参: id:元素id, type:元素类型(input,radio,checkbox,datebox,combobox), value:元素所赋值
 function RepSetValue(id,type,value){
-	if((type=="input")||(type=="textarea")){
-		$('#'+id).val(value); 
-	}else if((type=="radio")||(type=="checkbox")){
-		$("input[type="+type+"][id^='"+id+"']").attr("disabled",false);
-		$("input[type="+type+"][id^='"+id+"'][value='"+value+"']").click(); 
-	}else if((type=="combobox")){
-		//$('#'+id).combobox({disabled:false});  
-		$('#'+id).combobox('setValue',value); 
-	}else if((type=="datebox")){
-		///$('#'+id).datebox({disabled:false}); 
-		$('#'+id).datebox('setValue',value);
+	if($("input[type="+type+"][id^='"+id+"']").length > 0){
+		if(type=="input"){
+			$('#'+id).val(value); 
+		}
+		if((type=="radio")||(type=="checkbox")){
+			$("input[type="+type+"][id^='"+id+"']").attr("disabled",false);
+			$("input[type="+type+"][id^='"+id+"'][value='"+value+"']").click(); 
+		}
+	}
+	if($('#'+id).length > 0){
+		if(type=="textarea"){
+			$('#'+id).val(value); 
+		}
+		if(type=="combobox"){
+			//$('#'+id).combobox({disabled:false});  
+			$('#'+id).combobox('setValue',value); 
+		}
+		if(type=="datebox"){
+			///$('#'+id).datebox({disabled:false}); 
+			$('#'+id).datebox('setValue',value);
+		}
 	}
 }
 //报告元素是否可以编辑 2018-05-31 cy
 //入参: id:元素id, type:元素类型(input,radio,checkbox,datebox,combobox), readflag: 编辑标识 0或空 可以编辑,1 不可编辑
 function RepSetRead(id,type,readflag){
-	if((type=="input")||(type=="textarea")){
-		if(readflag==1){
-			$('#'+id).attr("readonly","readonly"); 
-		}else{
-			$('#'+id).attr("readonly",false);
+	if($("input[type="+type+"][id^='"+id+"']").length > 0){
+		if(type=="input"){
+			if(readflag==1){
+				$('#'+id).attr("readonly","readonly"); 
+			}else{
+				$('#'+id).attr("readonly",false);
+			}
 		}
-	}else if((type=="radio")||(type=="checkbox")){
-		if(readflag==1){
-			$("input[type="+type+"][id^='"+id+"']").attr("disabled",true);  
-		}else{
-			$("input[type="+type+"][id^='"+id+"']").attr("disabled",false); 
+		if((type=="radio")||(type=="checkbox")){
+			if(readflag==1){
+				$("input[type="+type+"][id^='"+id+"']").attr("disabled",true);  
+			}else{
+				$("input[type="+type+"][id^='"+id+"']").attr("disabled",false); 
+			}
 		}
-	}else if((type=="combobox")){
-		if(readflag==1){
-			$('#'+id).combobox({disabled:true});
-		}else{
-			$('#'+id).combobox({disabled:false});  
+	}
+	if($('#'+id).length > 0){
+		if(type=="textarea"){
+			if(readflag==1){
+				$('#'+id).attr("readonly","readonly"); 
+			}else{
+				$('#'+id).attr("readonly",false);
+			}
 		}
-	}else if((type=="datebox")){
-		var value=$('#'+id).datebox('getValue');
-		if(readflag==1){
-			$('#'+id).datebox({disabled:'true'});  
-		}else{
-			$('#'+id).datebox({disabled:false}); 
-			if(value!=""){
-				$('#'+id).datebox('setValue',value);	
-			}  
+		if(type=="combobox"){
+			if(readflag==1){
+				$('#'+id).combobox({disabled:true});
+			}else{
+				$('#'+id).combobox({disabled:false});  
+			}
+		}
+		if(type=="datebox"){
+			var value=$('#'+id).datebox('getValue');
+			if(readflag==1){
+				$('#'+id).datebox({disabled:'true'});  
+			}else{
+				$('#'+id).datebox({disabled:false}); 
+				if(value!=""){
+					$('#'+id).datebox('setValue',value);	
+				}  
+			}
 		}
 	}
 }
 //控制科室下拉框检索 符合检索码，输入值检索	2018-06-06 cy
 function chkcombobox(id,url){
-	var value=$('#'+id).combobox('getValue');
-	$('#'+id).combobox({ 
-		//url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=QueryLocDescCombo',
-		mode:'remote',  //,  //必须设置这个属性
-		onShowPanel:function(){ 
-			$('#'+id).combobox('reload',url)
+	if ($('#'+id).length > 0){
+		var value=$('#'+id).combobox('getValue');
+		$('#'+id).combobox({ 
+			//url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=QueryLocDescCombo',
+			mode:'remote',  //,  //必须设置这个属性
+			onShowPanel:function(){ 
+				$('#'+id).combobox('reload',url)
+			},
+			onHidePanel : function() {
+				// 下拉框输入值校验--输入仅做检索使用，下拉框必须选择具体的数据 2021-0-6-25 cy
+				chkcomboxvalue(this);
+			}
+		});
+		if(value!=""){
+			$('#'+id).combobox('setValue',value);	
 		}
-	});
-	if(value!=""){
-		$('#'+id).combobox('setValue',value);	
 	}
 } 
 //获取日期类型（元旦，劳动节，春节，星期六，星期日等等） 2018-06-13 cy
@@ -754,22 +786,23 @@ function CheckEmPcsTime(timeid,dateid){
 		return InTime;
 	}
 	if ((InTime.length != 4)){
-		$.messager.alert("提示:","请录入正确的时间格式！<span style='color:red;'>例如:18:23,请录入1823</span>");
-		$('#'+ id).val("");
+		$.messager.alert($g("提示")+":",$g("请录入正确的时间格式")+"！<span style='color:red;'>"+$g("例如")+":18:23,"+$g("请录入")+"1823");
+		//$.messager.alert("提示:","请录入正确的时间格式！<span style='color:red;'>例如:18:23,请录入1823</span>");
+		$('#'+ timeid).val("");
 		return "";
 	}
 	
 	var hour = InTime.substring(0,2);
 	if (hour > 23){
-		$.messager.alert("提示:","小时数不能大于23！");
-		$('#'+ id).val("");
+		$.messager.alert($g("提示")+":",$g("小时数不能大于23")+"！");
+		$('#'+ timeid).val("");
 		return "";
 	}
 	
 	var itme = InTime.substring(2,4);
 	if (itme > 59){
-		$.messager.alert("提示:","分钟数不能大于59！");
-		$('#'+ id).val("");
+		$.messager.alert($g("提示")+":",$g("分钟数不能大于59")+"！");
+		$('#'+ timeid).val("");
 		return "";
 	}
 	//sufan  2019-11-12  选择日期时判断下发生时间
@@ -786,7 +819,7 @@ function CheckEmPcsTime(timeid,dateid){
 			DateFlag=data;
 	},"text",false);
 	if(DateFlag==1){
-		$.messager.alert("提示:","填写时间大于当前时间！");
+		$.messager.alert($g("提示")+":",$g("填写时间大于当前时间")+"！");
 		$("#"+timeid).val("");
 		return "";
 	}else{
@@ -838,15 +871,17 @@ function chknum(id,type,min,max){
 			if(this.value.indexOf(".")< 0 && this.value !=""){//以上已经过滤，此处控制的是如果没有小数点，首位不能为类似于 01、02的金额 
 		    	this.value= parseInt(this.value); 
 		    } 
+		})
+		$("input[id^='"+id+"']").live("blur",function(){
 		    if(((max!=-1)&&(min!=-1) )&&((this.value<min)||(this.value>max))&&(this.value!=""))
 		    {
-				$.messager.alert("提示:","请输入"+min+"-"+max+"的整数");	
+				$.messager.alert($g("提示")+":",$g("请输入")+min+"-"+max+$g("的整数"));
 				this.value="";
 			}else if((min!=-1)&&(this.value<min)&&(max==-1)&&(this.value!="")){
-				$.messager.alert("提示:","请输入不小于"+min+"的整数");	
+				$.messager.alert($g("提示")+":",$g("请输入不小于")+min+$g("的整数"));	
 				this.value="";
 			}else if((max!=-1)&&(this.value>max)&&(min==-1)&&(this.value!="")){
-				$.messager.alert("提示:","请输入不大于"+max+"的整数");	
+				$.messager.alert($g("提示")+":",$g("请输入不大于")+max+$g("的整数"));	
 				this.value="";
 			}
 		})
@@ -865,15 +900,17 @@ function chknum(id,type,min,max){
 			if(this.value.indexOf(".")< 0 && this.value !=""){//以上已经过滤，此处控制的是如果没有小数点，首位不能为类似于 01、02的金额 
 		    	this.value= parseFloat(this.value); 
 		    } 
+		})
+		$("input[id^='"+id+"']").live("blur",function(){
 		    if(((max!=-1)&&(min!=-1) )&&((this.value<min)||(this.value>max))&&(this.value!=""))
 		    {
-				$.messager.alert("提示:","请输入"+min+"-"+max+"的数");	
+				$.messager.alert($g("提示")+":",$g("请输入")+min+"-"+max+$g("的数"));	
 				this.value="";
 			}else if((min!=-1)&&(this.value<min)&&(max==-1)&&(this.value!="")){
-				$.messager.alert("提示:","请输入不小于"+min+"的数");	
+				$.messager.alert($g("提示")+":",$g("请输入不小于")+min+$g("的数"));	
 				this.value="";
 			}else if((max!=-1)&&(this.value>max)&&(min==-1)&&(this.value!="")){
-				$.messager.alert("提示:","请输入不大于"+max+"的数");	
+				$.messager.alert($g("提示")+":",$g("请输入不大于")+max+$g("的数"));	
 				this.value="";
 			}
 		})
@@ -887,6 +924,8 @@ function $_TrsSymbolToTxt(tmpString){
 	var ARROW_SYMBOL = "TSS02";  /// ^
 	var QUM_SYMBOL = "TSS03";  /// "
 	var COMMA_SYMBOL = "TSS04";  /// ,
+	var MONEY_SYMBOL = "TSS05";  /// $
+	var MARK_SYMBOL = "TSS06";  /// !
 	if (tmpString.indexOf("#") != "-1"){
 		tmpString = tmpString.replace(/\#/g,WELL_SYMBOL);
 	}
@@ -898,6 +937,12 @@ function $_TrsSymbolToTxt(tmpString){
 	}
 	if (tmpString.indexOf(',') != "-1"){
 		tmpString = tmpString.replace(/\,/g,COMMA_SYMBOL);
+	}
+	if (tmpString.indexOf('$') != "-1"){
+		tmpString = tmpString.replace(/\,/g,MONEY_SYMBOL);
+	}
+	if (tmpString.indexOf('!') != "-1"){
+		tmpString = tmpString.replace(/\,/g,MARK_SYMBOL);
 	}
 	return tmpString;
 }
@@ -916,6 +961,12 @@ function $_TrsTxtToSymbol(tmpString){
 	}
 	if (tmpString.indexOf("TSS04") != "-1"){
 		tmpString = tmpString.replace(/\TSS04/g,',');
+	}
+	if (tmpString.indexOf("TSS05") != "-1"){
+		tmpString = tmpString.replace(/\TSS05/g,'$');
+	}
+	if (tmpString.indexOf("TSS06") != "-1"){
+		tmpString = tmpString.replace(/\TSS06/g,'!');
 	}
 	return tmpString;
 }
@@ -939,7 +990,7 @@ function checkBP(id){
 			var text1=text.split("/")[0];
 			var text2=text.split("/")[1];
 			if((text.indexOf("/")<0)||(text1=="")||(text2=="")){
-				$.messager.alert("提示:","请录入正确的血压格式,例如80/120");	
+				$.messager.alert($g("提示")+":",$g("请录入正确的血压格式,例如80/120"));	
 				this.value="";
 			}
 	})
@@ -964,6 +1015,10 @@ function chkTableDate(id){
 function compareSelTowTime(BefDate,AftDate)
 {
 	var BefSelDateArr="",BefSelYear="",BefSelMonth="",BefSelDate="",AftSelDateArr="",AftSelYear="",AftSelMonth="",AftSelDate="";
+	if((BefDate=="")||(AftDate=="")){
+		return true;
+	}
+	
 	if(DateFormat=="4"){ //日期格式 4:"DMY" DD/MM/YYYY
 		BefSelDateArr=BefDate.split("/");
 		BefSelYear=BefSelDateArr[2];
@@ -1015,4 +1070,36 @@ function compareSelTowTime(BefDate,AftDate)
 //处理未定义的变量
 function $getValue(value){
 	return value==undefined?"":value;
+}
+// 下拉框输入值校验--输入仅做检索使用，下拉框必须选择具体的数据 2021-0-6-25 cy
+function chkcomboxvalue(obj){
+	var _options = $(obj).combobox('options');
+	var _data = $(obj).combobox('getData');/* 下拉框所有选项 */
+	var _value = $(obj).combobox('getValue');/* 用户输入的值 */
+	var _b = false;/* 标识是否在下拉列表中找到了用户输入的字符 */
+	for (var i = 0; i < _data.length; i++) {
+		if ((_data[i][_options.valueField] == _value)) {
+			_b=true;
+			break;
+		}
+	}
+	if(!_b){
+		$(obj).combobox('setValue', '');
+	}
+}
+// 下拉框输入值校验--输入仅做检索使用，下拉框必须选择具体的数据 2021-0-6-25 cy
+function chkcomboxtext(obj){
+	var _options = $(obj).combobox('options');
+	var _data = $(obj).combobox('getData');/* 下拉框所有选项 */
+	var _value = $(obj).combobox('getValue');/* 用户输入的值 */
+	var _b = false;/* 标识是否在下拉列表中找到了用户输入的字符 */
+	for (var i = 0; i < _data.length; i++) {
+		if ((_data[i][_options.textField] == _value)) {
+			_b=true;
+			break;
+		}
+	}
+	if(!_b){
+		$(obj).combobox('setValue', '');
+	}
 }

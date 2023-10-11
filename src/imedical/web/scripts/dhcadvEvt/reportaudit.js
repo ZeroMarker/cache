@@ -1,20 +1,21 @@
 // Creator: congyue
 /// CreateDate: 2017-07-28
 //  Descript: 不良事件升级 审核界面
-var LgParam=LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+LgHospID;
 var url = "dhcadv.repaction.csp";
-var statShare = [{ "val": "未分享", "text": "未分享" },{ "val": "分享", "text": "分享" }];
-var statReceive = [{ "val": "未接收", "text": "未接收" },{ "val": "1", "text": "接收" },{ "val": "2", "text": "驳回" },{ "val": "3", "text": "撤销" },{ "val": "4", "text": "审核" },{ "val": "7", "text": "归档(待复核)" },{ "val": "5", "text": "归档" },{ "val": "6", "text": "撤销归档" }];
-var statOverTime = [{ "val": "Y", "text": "超时" },{ "val": "N", "text": "未超时" }];
+var statShare = [{ "val": "未分享", "text": $g("未分享") },{ "val": "分享", "text": $g("分享") }];
+var statReceive = [{ "val": "未接收", "text": $g("未接收") },{ "val": "1", "text": $g("接收") },{ "val": "2", "text": $g("驳回") },{ "val": "3", "text": $g("撤销") },{ "val": "4", "text": $g("审核") },{ "val": "7", "text": $g("归档(待复核)") },{ "val": "5", "text": $g("归档") },{ "val": "6", "text": $g("撤销归档") }];
+var statOverTime = [{ "val": "Y", "text": $g("超时") },{ "val": "N", "text": $g("未超时") }];
 var Active = [{"value":"Y","text":'Y'}, {"value":"N","text":'N'}];
-var condArray= [{ "val": "and", "text": "并且" },{ "val": "or", "text": "或者" }]; //逻辑关系
-var stateBoxArray= [{ "val": "=", "text": "等于" },{ "val": ">", "text": "大于" },{ "val": ">=", "text": "大于等于" },{ "val": "<=", "text": "小于等于" },{ "val": "<", "text": "小于" }]; //条件
+var condArray= [{ "val": "and", "text": $g("并且") },{ "val": "or", "text": $g("或者") }]; //逻辑关系
+var stateBoxArray= [{ "val": "=", "text": $g("等于") },{ "val": ">", "text": $g("大于") },{ "val": ">=", "text": $g("大于等于") },{ "val": "<=", "text": $g("小于等于") },{ "val": "<", "text": $g("小于") }]; //条件
 var editRow="",TranFlag=0,errflag=0 ;///TranFlag:转抄标志   errflag:转抄回复人员与被转抄人员是否一致
 var loceditRow=0,StrParam="",audittitle="",curCondRow=1; // 共享科室行修改标志, 查询条件串, 审核查询标题, 高级查询条件 行数
 var StDate="";  //一周前的日期   2018-01-26 修改，默认开始日期为上线使用日期，即2018-01-01
-var EndDate=formatDate(0); //系统的当前日期
+var EndDate=""; //系统的当前日期
 var FileTimes=serverCall("web.DHCADVCOMMON","GetEmSysConfig",{"AdvCode":"FILETIMES","Params":LgParam})
 var ColSort="",ColOrder=""; // 排序列 , 排序标志:desc 降序   asc 升序
+var receiveflag="",impflag="",appauditflag="",backflag="";//首页-接收标识 重点关注 待审批标识 退回标识
+var auditflag="",inpfileflag="",homeAutOverTime=""; //首页-已处理标识 归档标识 首页是否护士长审核超时
 $(function(){ 
 	InitPageComponent(); 	  /// 初始化界面控件内容
 	InitPageButton();         /// 界面按钮控制
@@ -23,13 +24,18 @@ $(function(){
 });
 /// 初始化界面控件内容
 function InitPageComponent(){
-	if(DateFormat=="4"){ //日期格式 4:"DMY" DD/MM/YYYY
-		StDate="01"+"/"+"01"+"/"+2018;  //当年开始日期
-	}else if(DateFormat=="3"){ //日期格式 3:"YMD" YYYY-MM-DD
-		StDate=2018+"-"+"01"+"-"+"01";  //当年开始日期
-	}else if(DateFormat=="1"){ //日期格式 1:"MDY" MM/DD/YYYY
-		StDate="01"+"/"+"01"+"/"+2018;  //当年开始日期
-	}
+	$.messager.defaults = { ok: $g("确定"),cancel: $g("取消")};
+	// 获取登录人 信息
+	runClassMethod("web.DHCADVCOMMONPART","GetRepUserInfo",{'UserID':LgUserID,'LocID':LgCtLocID,'HospID':LgHospID,'GroupID':LgGroupID},
+	function(Data){ 
+		LgGroupDesc=Data.GroupDesc;
+		
+	},"json",false);
+	runClassMethod("web.DHCADVCOMMON","GetStaEndDate",{'LgParam':LgParam},function(data){
+		var tmp=data.split("^"); 
+		StDate=tmp[0];
+		EndDate=tmp[1];
+	},'',false);
 	
 	//接收
 	$('#receive').combobox({
@@ -46,15 +52,10 @@ function InitPageComponent(){
 	
 	//报告的类型类型
 	$('#typeevent').combobox({
-		url:url+'?action=SelEventbyNew&param='+LgGroupID+"^"+LgCtLocID+"^"+LgUserID,
+		url:url+'?action=SelEventbyNew&param='+LgParam,
 		onSelect: function(rec){  
 			var TypeStatus=rec.value; 
 			ComboboxEvent(TypeStatus);  
-			if((rec.text=="管路滑脱报告单")||(rec.text=="用药错误报告单")||(rec.text=="跌倒(坠床)事件报告单")||(rec.text=="压疮报告单")){
-				$('#Fish').show();
-			}else{
-				$('#Fish').hide();
-			}
 		} 	  
 	}); 
 	//分享状态
@@ -78,39 +79,65 @@ function InitPageComponent(){
 	audittitle=decodeURI(decodeURI(audittitle));
 	if(StrParam!=""){
 		var tmp=StrParam.split("^");
+		$('#stdate').combobox({disabled:true});
+		$('#enddate').combobox({disabled:true});		
 		$("#stdate").datebox("setValue", tmp[0]);  //Init起始日期
 		$("#enddate").datebox("setValue", tmp[1]);  //Init结束日期
 		if(tmp[2]!=""){
-			$('#dept').combobox({disabled:true});;  //科室ID
+			$('#dept').combobox({disabled:true});  //科室ID
 			$('#dept').combobox("setValue",tmp[2]);     //科室ID
 			$("#dept").combobox('setText',LgCtLocDesc);
 		}else{
 			$('#dept').combobox("setValue",tmp[2]);     //科室ID
 			$("#dept").combobox('setText',"")
 		}
-		$('#status').combobox("setValue",tmp[7]);  //状态
-		$('#typeevent').combobox("setValue",tmp[8]);  //报告类型
-		$('#receive').combobox("setValue",tmp[9]); //接收状态
-		$('#Share').combobox("setValue",tmp[10]);  //分享状态 
+		if(tmp[7]!=""){
+			$('#status').combobox({disabled:true});
+			$('#status').combobox("setValue",tmp[7]);  //状态
+		}
+		if(tmp[8]!=""){
+			$('#receive').combobox({disabled:true});
+			$('#receive').combobox("setValue",tmp[9]); //接收状态
+		}
+		if(tmp[9]!=""){
+			$('#typeevent').combobox({disabled:true});
+			$('#typeevent').combobox("setValue",tmp[8]);  //报告类型
+		}
+		if(tmp[10]!=""){
+			$('#Share').combobox({disabled:true});
+			$('#Share').combobox("setValue",tmp[10]);  //分享状态 
+		}
+		if(tmp[18]!=""){
+			$('#OverTime').combobox({disabled:true});
+			$('#OverTime').combobox("setValue",tmp[18]);  //超时状态
+		}
+   		
+   		receiveflag=tmp[11];
+		impflag=tmp[12];
+		appauditflag=tmp[13];
+		backflag=tmp[14];
+		auditflag=tmp[15];
+		inpfileflag=tmp[16];
+		homeAutOverTime=tmp[18];
 	
 	}else{
 		$("#stdate").datebox("setValue", StDate);  //Init起始日期
 		$("#enddate").datebox("setValue", EndDate);  //Init结束日期
 		if((LgCtLocDesc!="护理部")&&(LgCtLocDesc!="医务部")){
-			$('#dept').combobox("setValue",LgCtLocID);     //科室ID
-			$("#dept").combobox('setText',LgCtLocDesc);
+			//$('#dept').combobox("setValue",LgCtLocID);     //科室ID  sufan 2020-12-09  产品部需求
+			//$("#dept").combobox('setText',LgCtLocDesc);
 		}
 		
 	}
 }
 /// 界面按钮控制
 function InitPageButton(){
-	$('#audittitle').html("报告审核查询"+audittitle);
+	$('#audittitle').html($g("报告审核查询")+audittitle);
 	
 	$('#Refresh').bind("click",Query);  //刷新
 	$('#Find').bind("click",Query);  //点击查询 
 	$('#Export').bind("click",Export);  //点击导出(动态导出)
-	$('#ExportWord').bind("click",ExportWord);  //点击导出(word导出)	
+	$('#ExportWord').bind("click",ExportWordFile);  //点击导出(word导出)	
 	$('#ExportExcel').bind("click",ExportExcel);  //点击导出(卫计委excel数据)
 	$('#ExportExcelAll').bind("click",ExportExcelAll);  //点击导出(医管局excel数据)
 	$('#ExportAll').bind("click",ExportAll);  //点击导出(全部类型固定数据)
@@ -164,52 +191,52 @@ function InitPageDataGrid()
 		{field:"ck",checkbox:true,width:20},
 		{field:"RepID",title:'RepID',width:80,hidden:true},
 		{field:"recordID",title:'recordID',width:80,hidden:true},
-		{field:'RepShareStatus',title:'分享状态',width:80,align:'center',hidden:true},
-		{field:'Edit',title:'查看',width:60,align:'center',formatter:setCellEditSymbol,hidden:false},
-		{field:'AuditList',title:'审批明细',width:60,align:'center',formatter:setCellAuditList,hidden:false},
-		{field:'StatusLast',title:'上一状态',width:100,hidden:true},
-		{field:'StatusLastID',title:'上一状态ID',width:100,hidden:true},
-		{field:"RepStaus",title:'报告状态',hidden:false},
-		{field:"RepStausDr",title:'报告状态ID',width:90,hidden:true},
-		{field:'StatusNext',title:'下一状态',width:100,hidden:true},
-		{field:'StatusNextID',title:'下一状态ID',width:100,hidden:true},
-		{field:'RepDate',title:'报告日期',width:100,sortable:true},
-		{field:'Medadrreceive',title:'接收状态',width:100},
-		{field:'Medadrreceivedr',title:'接收状态dr',width:80,hidden:true},
-		{field:'PatID',title:'登记号',width:100,hidden:false},		
-		{field:'AdmNo',title:'病案号',width:100,formatter:setPatientRecord},
-		{field:'PatName',title:'姓名',width:100},
-		{field:'RepType',title:'报告类型',width:260},
-		{field:'OccurDate',title:'发生日期',width:100},
-		{field:'OccurLoc',title:'发生科室',width:130},
-		{field:'LocDep',title:'报告系统',width:150,hidden:true},
+		{field:'Edit',title:$g('查看'),width:60,align:'center',formatter:setCellEditSymbol,hidden:false},
+		{field:'AuditList',title:$g('审批明细'),width:60,align:'center',formatter:setCellAuditList,hidden:false},
+		{field:'PatOutFlag',title:$g('明细追踪'),width:280,align:'center',formatter:setLinkList,hidden:false},
+		{field:'TranList',title:$g('转抄明细'),width:60,align:'center',formatter:setTranList,hidden:false},
+		{field:'StatusLast',title:$g('上一状态'),width:100,hidden:true},
+		{field:'StatusLastID',title:$g('上一状态ID'),width:100,hidden:true},
+		{field:"RepStaus",title:$g('报告状态'),hidden:false},
+		{field:"RepStausDr",title:$g('报告状态ID'),width:90,hidden:true},
+		{field:'StatusNext',title:$g('下一状态'),width:100,hidden:true},
+		{field:'StatusNextID',title:$g('下一状态ID'),width:100,hidden:true},
+		{field:'RepDate',title:$g('报告日期'),width:100,sortable:true},
+		{field:'Medadrreceive',title:$g('接收状态'),width:100},
+		{field:'Medadrreceivedr',title:$g('接收状态dr'),width:80,hidden:true},
+		{field:'PatID',title:$g('登记号'),width:100,hidden:false},		
+		{field:'AdmNo',title:$g('病案号'),width:100,formatter:setPatientRecord},
+		{field:'PatName',title:$g('姓名'),width:100},
+		{field:'RepType',title:$g('报告类型'),width:260},
+		{field:'OccurDate',title:$g('发生日期'),width:100},
+		{field:'OccurLoc',title:$g('发生科室'),width:130},
+		{field:'LocDep',title:$g('报告系统'),width:150,hidden:true},
 		{field:'RepLocDr',title:'RepLocDr',width:150,hidden:true},
-		{field:'RepLoc',title:'报告科室',width:130},	
-		{field:'RepUser',title:'报告人',width:100},	
-		{field:'RepTypeCode',title:'报告类型代码',width:120,hidden:true},
-		{field:'RepImpFlag',title:'重点关注',width:100,hidden:false},
-		{field:'RepSubType',title:'报告子类型',width:120,hidden:true},
-		{field:'Subflag',title:'子表标志',width:120,hidden:true},
-		{field:'SubUserflag',title:'子表用户标志',width:120,hidden:true},
-		{field:'RepLevel',title:'不良事件级别',width:120,hidden:true},
-		{field:'RepInjSev',title:'伤害严重度',width:120,hidden:true},
-		{field:'RepTypeDr',title:'报告类型Dr',width:120,hidden:true},
-		{field:'StsusGrant',title:'审核标识',width:120,hidden:true},
-		{field:'MedadrRevStatus',title:'驳回指向',width:120,hidden:true},
-		{field:'StaFistAuditUser',title:'被驳回人',width:120,hidden:true},
-		{field:'BackAuditUser',title:'驳回操作人',width:120,hidden:true},
-		{field:'RepOverTimeflag',title:'填报超时',width:120,hidden:false},
-		{field:'AutOverTimeflag',title:'受理超时',width:120,hidden:false},
-		{field:'CaseShareLoclist',title:'共享科室',width:120,hidden:false},
-		{field:'CaseShareUserlist',title:'共享用户',width:120,hidden:false},
-		{field:'CaseShareAdvicelist',title:'共享意见',width:120,hidden:false},
-		{field:'FileFlag',title:'归档状态',width:80},
-		{field:'UserLeadflag',title:'科护士长标识',width:80,hidden:true},
-		{field:'AdmID',title:'就诊ID',width:80,hidden:true},
-		{field:'RepAppAuditFlag',title:'待审批标识',width:80,hidden:true},
-		{field:'PatOutFlag',title:'患者转归',width:80,formatter:setPatOutForm,hidden:true}
-		
-		
+		{field:'RepLoc',title:$g('报告科室'),width:130},	
+		{field:'RepUser',title:$g('报告人'),width:100},	
+		{field:'RepUserDr',title:'RepUserDr',width:150,hidden:true},	
+		{field:'RepTypeCode',title:$g('报告类型代码'),width:120,hidden:true},
+		{field:'RepImpFlag',title:$g('重点关注'),width:100,hidden:false},
+		{field:'RepSubType',title:$g('报告子类型'),width:120,hidden:true},
+		{field:'Subflag',title:$g('子表标志'),width:120,hidden:true},
+		{field:'SubUserflag',title:$g('子表用户标志'),width:120,hidden:true},
+		{field:'RepLevel',title:$g('不良事件级别'),width:120,hidden:true},
+		{field:'RepInjSev',title:$g('伤害严重度'),width:120,hidden:true},
+		{field:'RepTypeDr',title:$g('报告类型Dr'),width:120,hidden:true},
+		{field:'StsusGrant',title:$g('审核标识'),width:120,hidden:true},
+		{field:'MedadrRevStatus',title:$g('驳回指向'),width:120,hidden:true},
+		{field:'StaFistAuditUser',title:$g('被驳回人'),width:120,hidden:true},
+		{field:'BackAuditUser',title:$g('驳回操作人'),width:120,hidden:true},
+		{field:'RepOverTimeflag',title:$g('填报超时'),width:120,hidden:false},
+		{field:'AutOverTimeflag',title:$g('受理超时'),width:120,hidden:false},
+		{field:'CaseShareLoclist',title:$g('共享科室'),width:120,hidden:false},
+		{field:'CaseShareUserlist',title:$g('共享用户'),width:120,hidden:false},
+		{field:'CaseShareAdvicelist',title:$g('共享意见'),width:120,hidden:false},
+		{field:'FileFlag',title:$g('归档状态'),width:80},
+		{field:'RepShareStatus',title:$g('分享状态'),width:80,align:'center',hidden:false},
+		{field:'UserLeadflag',title:$g('科护士长标识'),width:80,hidden:true},
+		{field:'AdmID',title:$g('就诊ID'),width:80,hidden:true},
+		{field:'RepAppAuditFlag',title:$g('待审批标识'),width:80,hidden:true}
 
 	]];
 	
@@ -226,10 +253,9 @@ function InitPageDataGrid()
 		pageSize:40,  // 每页显示的记录条数
 		pageList:[40,80],   // 可以设置每页记录条数的列表
 	    singleSelect:false,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		nowrap:true,
-		//height:300,
 		rowStyler:function(index,row){  
 	        if ((row.StaFistAuditUser==LgUserName)||(row.BackAuditUser==LgUserName)){  
 	            return 'background-color:red;';  
@@ -242,86 +268,48 @@ function InitPageDataGrid()
 			var params=RepID+"^"+RepTypeCode+"^"+LgUserID;
 			var Subflag=rowData.Subflag;
 			var SubUserflag=rowData.SubUserflag;
-			/* if(StsusGrant=="1"){ //2018-01-17
-				$('#Audit').attr('class','toolbar-auditUndo');
-				$('#Audit').text(" 撤销审核");
-            }else{
-				$('#Audit').attr('class','toolbar-audit');
-				$('#Audit').text(" 审核");            
-	        }*/
 			if((Subflag==1)&&(SubUserflag==1)){
 				$('#REceive').hide();
-				//$('#Back').hide();
 				$('#RepImpFlag').hide();
-				//$('#SHare').hide();
-				//$('#Audit').hide();
 			}else{
 				$('#REceive').show(); //2018-03-28 cy 去掉接收按钮
-				//$('#Back').show();
 				$('#RepImpFlag').show();
-				//$('#SHare').show();
-				//$('#Audit').show();
 			}
-			var RepImpFlag=rowData.RepImpFlag;    //重点关注
-	        var RepShareStatus=rowData.RepShareStatus; //分享状态
-        	
-		    if ((RepImpFlag=="关注")){
-				$('#RepImpFlag').attr('class','toolbar-focusUndo');
-				$('#RepImpFlag').text(" 取消关注");
-		    }else{
-				$('#RepImpFlag').attr('class','toolbar-focus');
-				$('#RepImpFlag').text(" 重点关注");
-		    }
+			
 		    var FileFlag=JudgeIsOutCome(); //归档状态
-		    /* if ((FileFlag=="已归档")||(JudgeUserIsFile()=="2")){
-				$('#File').attr('class','toolbar-fileUndo');
-				$('#File').text(" 撤销归档");
-		    }else{
-				$('#File').attr('class','toolbar-file');
-				$('#File').text("归档");
-		    } */
-		   
 		    if(FileFlag==0){
 			    $('#File').show();
 			    $('#File').attr('class','toolbar-file');
-				$('#File').text("归档");
+				$('#File').text($g("归档"));
 			}else if(FileFlag==1){ // 1个人 报告已归档 显示撤销归档按钮
 				$('#File').show();
 				$('#File').attr('class','toolbar-fileUndo');
-				$('#File').text("撤销归档");
+				$('#File').text($g("撤销归档"));
 			}else if(FileFlag==2){ // 1个人  报告已撤销归档 显示归档按钮
 				$('#File').show();
 				$('#File').attr('class','toolbar-file');
-				$('#File').text("归档");
+				$('#File').text($g("归档"));
 			}else if(FileFlag==3){ // 2个人 报告已归档  显示撤销复核归档按钮
 				$("#File").hide();
 				$("#FileAudit").show();
 				$('#FileAudit').attr('class','toolbar-fileUndo');
-				$('#FileAudit').text(" 撤销复核");
+				$('#FileAudit').text($g(" 撤销复核"));
 			}else if(FileFlag==4){ // 2个人 报告已归档待复核 显示复核归档按钮和撤销归档按钮
 				$("#FileAudit").show();
 				$('#FileAudit').attr('class','toolbar-fileUndo');
-				$('#FileAudit').text("归档复核");
+				$('#FileAudit').text($g("归档复核"));
 				$("#File").show();
 				$('#File').attr('class','toolbar-fileUndo');
-				$('#File').text("撤销归档");
+				$('#File').text($g("撤销归档"));
 			}else if(FileFlag==5){ // 2个人 报告已归撤销归档 显示归档按钮
 				$("#File").show();
 				$('#File').attr('class','toolbar-file');
-				$('#File').text("归档");
+				$('#File').text($g("归档"));
 				$("#FileAudit").hide();
 
 			}else{
 				$("#FileAudit").hide();
 			}
-	    
-		    /* if ((RepShareStatus=="分享")){
-				$('#SHare').attr('class','adv_sel_71');
-				$('#SHare').text(" 撤销分享");
-			}else{
-				$('#SHare').attr('class','adv_sel_7');
-				$('#SHare').text(" 分享");
-			} */
 	        ButtonInfo();
 	    },
         onUnselect:function(rowIndex, rowData){ 
@@ -331,21 +319,17 @@ function InitPageDataGrid()
 			ColSort=sort;
 			ColOrder=order;
 			Query();
- 		}  
+ 		},onDblClickRow:function(rowIndex, rowData){ 
+        	setCellEditSymbol("DblClick", rowData, rowIndex);
+		}  
 	});
 	if(StrParam==""){
 		Query();
 	}
 	//initScroll("#maindg");//初始化显示横向滚动条
 }
-function Query()
-{
-	//1、清空datagrid 
-	$('#maindg').datagrid('loadData', {total:0,rows:[]}); 
-	if((audittitle!="")&&(LgGroupDesc=="住院护士")){
-		$('#dept').combobox("setValue",LgCtLocID);     //科室ID
-		$("#dept").combobox('setText',LgCtLocDesc);
-	}
+function GetParamList(){
+	
 	//2、查询
 	var StDate=$('#stdate').datebox('getValue');   //起始日期
 	var EndDate=$('#enddate').datebox('getValue'); //截止日期
@@ -362,7 +346,15 @@ function Query()
 	if (statShare==undefined){statShare="";}
 	if (OverTime==undefined){OverTime="";}
 	var PatNo=$.trim($("#patno").val());
-	var StrParam=StDate+"^"+EndDate+"^"+LocID+"^"+PatNo+"^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^"+status+"^"+typeevent+"^"+receive+"^"+statShare+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+OverTime;
+	//StrParam=StDate+"^"+EndDate+"^"+LocID+"^"+PatNo+"^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^"+status+"^"+typeevent+"^"+statShare+"^"+receive+"^^^^^^^"+OverTime+"^^^^^^2";
+	StrParam=StDate+"^"+EndDate+"^"+LocID+"^"+PatNo+"^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^"+status+"^"+typeevent+"^"+statShare+"^"+receive+"^"+receiveflag+"^"+impflag+"^"+appauditflag+"^"+backflag+"^"+auditflag+"^"+inpfileflag+"^"+OverTime+"^"+homeAutOverTime+"^^^^^2";
+	return StrParam;
+}
+function Query()
+{
+	//1、清空datagrid 
+	$('#maindg').datagrid('loadData', {total:0,rows:[]}); 
+	StrParam=GetParamList();
 	var ColParam=ColSort+"^"+ColOrder;
 	$('#maindg').datagrid({
 		url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=QueryAuditRepList',	
@@ -372,8 +364,8 @@ function Query()
 			ParStr:getParStr(),
 			ColParam:ColParam}
 	});
-	audittitle="";
-	$('#audittitle').html("报告审核查询"+audittitle);
+	//audittitle="";
+	$('#audittitle').html($g("报告审核查询")+audittitle);
 	//var Rel='dhcadv.reportaudit.csp?StrParam='+StrParam+'&audittitle='+"";
 	//location.href=Rel;
 }
@@ -381,50 +373,62 @@ function Query()
 ///设置编辑连接
 function setCellEditSymbol(value, rowData, rowIndex)
 {
-		var recordID=escape(rowData.recordID);         //表单填写记录ID
-		var RepID=escape(rowData.RepID);               //报告ID   yangyongtao 2017-11-28
-		var RepStaus=escape(rowData.RepStaus);         //表单状态
+		var recordID=rowData.recordID;         //表单填写记录ID
+		var RepID=rowData.RepID;               //报告ID   yangyongtao 2017-11-28
+		var RepStaus=rowData.RepStaus;         //表单状态
 		var RepStausDr=rowData.RepStausDr;     //表单状态Dr
 		var RepTypeDr=rowData.RepTypeDr;       //报告类型Dr
-		var RepTypeCode=escape(rowData.RepTypeCode);   //报告类型代码
-		var RepType=escape(rowData.RepType);           //报告类型
-		var StatusLast=escape(rowData.StatusLast);     //报告上一状态
-		var Medadrreceivedr=escape(rowData.Medadrreceivedr); //接收状态dr
-		var StatusNextID=escape(rowData.StatusNextIDaudit) // StatusNextIDaudit 为匹配权限的下一状态  替换 rowData.StatusNextID; //下一状态ID
-		var StatusNext=escape(rowData.StatusNext); 	   //下一状态
-		var RepUser=escape(rowData.RepUser) ; 		   //报告人
-		var StaFistAuditUser=escape(rowData.StaFistAuditUser);  //被驳回人
-		var BackAuditUser=escape(rowData.BackAuditUser); //驳回操作人
-		var editFlag=1;  						//修改标志  1可以修改 -1不可以修改   如果上一状态为空并且接收状态是驳回（接收状态dr为2）则可以修改
-		var StsusGrant=escape(rowData.StsusGrant); 		//审核标识
-		var StatusLastID=escape(rowData.StatusLastID);  //上一个状态
-		var StaFistAuditUser=escape(rowData.StaFistAuditUser); //被驳回人
-		var UserLeadflag=escape(rowData.UserLeadflag);  //科护士长标识
+		var RepTypeCode=rowData.RepTypeCode;   //报告类型代码
+		var RepType=rowData.RepType;           //报告类型
+		var StatusLast=rowData.StatusLast;     //报告上一状态
+		var Medadrreceivedr=rowData.Medadrreceivedr; //接收状态dr
+		var StatusNextID=rowData.StatusNextIDaudit // StatusNextIDaudit 为匹配权限的下一状态  替换 rowData.StatusNextID; //下一状态ID
+		var StatusNext=rowData.StatusNext; 	   //下一状态
+		var RepUser=rowData.RepUser ; 		   //报告人
+		var RepUserDr=rowData.RepUserDr;   //报告人id
+		var StaFistAuditUser=rowData.StaFistAuditUser;  //被驳回人
+		var BackAuditUser=rowData.BackAuditUser; //驳回操作人
+		var editFlag=rowData.IfRepEdit;  		//修改标志  1：允许修改(报告未做审核操作且报告未归档)，其他：不允许修改
+		var StsusGrant=rowData.StsusGrant; 		//审核标识
+		var StatusLastID=rowData.StatusLastID;  //上一个状态
+		var StaFistAuditUser=rowData.StaFistAuditUser; //被驳回人
+		var UserLeadflag=rowData.UserLeadflag;  //科护士长标识
 		var FileFlag=rowData.FileFlag;  			//归档标识
-		var RepAppAuditFlag=escape(rowData.RepAppAuditFlag);  //带审批标识
-		var Medadrreceive=escape(rowData.Medadrreceive);     //接受状态
-		var RepLocDr=escape(rowData.RepLocDr);				 //上报科室		sufan 2019-06-24
-		var SubUserflag=escape(rowData.SubUserflag);     // 转抄人标志
-		var AdmID=escape(rowData.AdmID);     // 就诊id
+		var RepAppAuditFlag=rowData.RepAppAuditFlag;  //待审批标识
+		var Medadrreceive=rowData.Medadrreceive;     //接受状态
+		var RepLocDr=rowData.RepLocDr;				 //上报科室		sufan 2019-06-24
+		var SubUserflag=rowData.SubUserflag;     // 转抄人标志
+		var AdmID=rowData.AdmID;     // 就诊id
 
-		/* if((StatusLast!="")&&(RepUser!=LgUserName)&&(StaFistAuditUser!=LgUserName)){///&&(Medadrreceivedr!=2)
+		if((RepAppAuditFlag!=1)&&(Medadrreceivedr!=2)){
 			editFlag=-1;
-		} */
+		}
 		
-		if(((StatusLast!="")&&(StaFistAuditUser!=LgUserName)&&(LgGroupDesc=="住院护士"))){///&&(Medadrreceivedr!=2)
-			editFlag=-1;
-		}
-		if(((StatusLast=="")&&(RepUser!=LgUserName)&&(LgGroupDesc=="住院护士"))){///&&(Medadrreceivedr!=2)
-			editFlag=-1;
-		}
 		if((Medadrreceivedr==2)&&(StaFistAuditUser!=LgUserName)&&(BackAuditUser!=LgUserName)){
 			editFlag=-1;
 		}
-		if((FileFlag!="未归档")&&(FileFlag!="撤销归档")){
+		
+		if((FileFlag.indexOf($g("归档")) > 0)&&(FileFlag!=$g("未归档"))&&(FileFlag!=$g("撤销归档"))){
 			editFlag=-1;
 		}
-		FileFlag=escape(FileFlag);  			//归档标识
-		return "<a href='#' onclick=\"showEditWin('"+recordID+"','"+RepStaus+"','"+RepTypeDr+"','"+RepTypeCode+"','"+RepType+"','"+RepID+"','"+editFlag+"','"+RepStausDr+"','"+StatusNextID+"','"+Medadrreceivedr+"','"+FileFlag+"','"+StsusGrant+"','"+StatusLastID+"','"+StaFistAuditUser+"','"+UserLeadflag+"','"+RepAppAuditFlag+"','"+StatusNext+"','"+RepUser+"','"+Medadrreceive+"','"+RepLocDr+"','"+SubUserflag+"','"+AdmID+"')\"><img src='../scripts/dhcadvEvt/images/adv_sel_8.png' border=0/></a>";
+		if(editFlag!="1"){
+			editFlag=-1;
+		}
+		FileFlag=escape(FileFlag);  		//归档标识
+		RepStaus=escape(RepStaus);         //表单状态
+		RepType=escape(RepType);           //报告类型
+		StatusLast=escape(StatusLast);     //报告上一状态
+		StatusNext=escape(StatusNext); 	   //下一状态
+		RepUser=escape(RepUser) ; 		   //报告人
+		StaFistAuditUser=escape(StaFistAuditUser);  //被驳回人
+		BackAuditUser=escape(BackAuditUser); //驳回操作人
+		Medadrreceivedr=escape(Medadrreceivedr); //接收状态dr
+		Medadrreceive=escape(Medadrreceive);     //接收状态
+		if(value!="DblClick"){  // 
+			return "<a href='#' onclick=\"showEditWin('"+recordID+"','"+RepStaus+"','"+RepTypeDr+"','"+RepTypeCode+"','"+RepType+"','"+RepID+"','"+editFlag+"','"+RepStausDr+"','"+StatusNextID+"','"+Medadrreceivedr+"','"+FileFlag+"','"+StsusGrant+"','"+StatusLastID+"','"+StaFistAuditUser+"','"+UserLeadflag+"','"+RepAppAuditFlag+"','"+StatusNext+"','"+RepUser+"','"+Medadrreceive+"','"+RepLocDr+"','"+SubUserflag+"','"+AdmID+"')\"><img src='../scripts/dhcadvEvt/images/adv_sel_8.png' border=0/></a>";
+		}else{
+			showEditWin(recordID,RepStaus,RepTypeDr,RepTypeCode,RepType,RepID,editFlag,RepStausDr,StatusNextID,Medadrreceivedr,FileFlag,StsusGrant,StatusLastID,StaFistAuditUser,UserLeadflag,RepAppAuditFlag,StatusNext,RepUser,Medadrreceive,RepLocDr,SubUserflag,AdmID);
+		}
 }
 
 //编辑窗体
@@ -434,7 +438,7 @@ function showEditWin(recordID,RepStaus,RepTypeDr,RepTypeCode,RepType,RepID,editF
 
 	$('body').append('<div id="win"></div>');
 	$('#win').window({
-		title:'报告编辑',
+		title:$g('报告编辑'),
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,
@@ -456,22 +460,22 @@ function REceive()
 	var LocAdvice="";
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
 	
 	var RepFileFlag=""; //归档状态 2018-01-23
 	$.each(selItems, function(index, item){
 		var FileFlag=item.FileFlag; //归档状态 2018-01-23
-		if (FileFlag=="已归档"){
+		if (FileFlag==$g("已归档")){
 			RepFileFlag="-1";
 		}
 	})
 	if (RepFileFlag=="-1"){
-		$.messager.alert("提示:","所选报告存在已归档报告，不能接收！");
+		$.messager.alert($g("提示:"),$g("所选报告存在已归档报告，不能接收！"));
 		return;
 	}
-	$.messager.confirm("提示", "是否进行接收操作", function (res) {//提示是否删除
+	$.messager.confirm($g("提示"), $g("是否进行接收操作"), function (res) {//提示是否删除
 		if (res) {
 			$.each(selItems, function(index, item){
 				var RepID=item.RepID;         //关联主表ID
@@ -484,12 +488,12 @@ function REceive()
 				//var errnum=$('[datagrid-row-index="'+num+'"] .datagrid-cell-rownumber').text(); //2017-11-23 获取行号
 				//alert(params);
 				//保存数据
-				runClassMethod("web.DHCADVCOMMONPART","REMataReport",{'params':params},
+				runClassMethod("web.DHCADVCOMMONPART","REMataReport",{'params':params,'LgParam':LgParam},
 				function(jsonString){ 
 				//$.post(url+'?action=REMataReport',{"params":params},function(jsonString){
 					//var num=$('#maindg').datagrid("getRowIndex",item)+1; //2017-04-06  获取行数 区分哪一行操作出错
 					if(jsonString.ErrCode < 0){
-						$.messager.alert("提示:","接收错误,错误原因:"+"<font style='color:red;'>"+jsonString.ErrMsg+"</font>");  //+"第"+errnum+"条数据"
+						$.messager.alert($g("提示:"),$g("接收错误,错误原因:")+"<font style='color:red;'>"+$g(jsonString.ErrMsg)+"</font>");  //+"第"+errnum+"条数据"
 					}
 					
 				});
@@ -504,18 +508,18 @@ function RejectWin()
 {
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
 	if (selItems.length>1){
-		$.messager.alert("提示:","驳回操作,请只选择一行数据！");
+		$.messager.alert($g("提示:"),$g("驳回操作,请只选择一行数据！"));
 		return;
 	}
 	var RepFileFlag="",RepBackFlag="" //归档状态 2018-01-23  是否可以驳回标识审核完毕的报告不能进行驳回操作） 2018-04-08
 	$.each(selItems, function(index, item){
 		var FileFlag=item.FileFlag; //归档状态 2018-01-23
 		var StatusNextID=item.StatusNextID; //报告下一状态ID 2018-04-08
-		if (FileFlag=="已归档"){
+		if (FileFlag==$g("已归档")){
 			RepFileFlag="-1";
 		}
 		if(StatusNextID==""){
@@ -523,17 +527,17 @@ function RejectWin()
 		}
 	})
 	if (RepFileFlag=="-1"){
-		$.messager.alert("提示:","所选报告存在已归档报告，不能驳回！");
+		$.messager.alert($g("提示:"),$g("所选报告存在已归档报告，不能驳回！"));
 		return;
 	}
 	if (RepBackFlag=="-1"){
-		$.messager.alert("提示:","所选报告存在已审核完毕的报告，不能驳回！");
+		$.messager.alert($g("提示:"),$g("所选报告存在已审核完毕的报告，不能驳回！"));
 		return;
 	}
 	var RepStausDr=selItems[0].RepStausDr //当前状态id
 	$("#showalert").show();//hxy 08-30 显示背影层
 	$('#RetWin').window({
-		title:'驳回',
+		title:$g('驳回'),
 		collapsible:false,
 		border:false,
 		closed:false,
@@ -564,23 +568,23 @@ function BackBt()
 	var RevStatus=$('#RevStatus').combobox('getValue');  //驳回指向
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
 	if (selItems.length>1){
-		$.messager.alert("提示:","驳回操作,请只选择一行数据！");
+		$.messager.alert($g("提示:"),$g("驳回操作,请只选择一行数据！"));
 		return;
 	}
 	if (RevStatus==""){
-		$.messager.alert("提示:","请选择驳回指向！");
+		$.messager.alert($g("提示:"),$g("请选择驳回指向！"));
 		return;
 	}
 	if ($('#RevStatus').combobox('getText')=="护理部审核"){
-		$.messager.alert("提示:","护理部未审核，驳回指向不能为护理部审核！");
+		$.messager.alert($g("提示:"),$g("护理部未审核，驳回指向不能为护理部审核！"));
 		return;
 	}
 	if (Retreason==""){
-		$.messager.alert("提示:","请填写驳回意见！");
+		$.messager.alert($g("提示:"),$g("请填写驳回意见！"));
 		return;
 	}
 	var RepID=selItems[0].RepID;         //报表ID
@@ -593,7 +597,7 @@ function BackBt()
 				//var resobj = jQuery.parseJSON(jsonString);
 				//var num=$('#maindg').datagrid("getRowIndex",item)+1; //2017-04-06  获取行数 区分哪一行操作出错
 				if(jsonString.ErrCode < 0){
-					$.messager.alert("提示:","驳回错误,错误原因:"+"<font style='color:red;'>"+jsonString.ErrMsg+"</font>");   ///+"第"+errnum+"条数据"
+					$.messager.alert($g("提示:"),$g("驳回错误,错误原因:")+"<font style='color:red;'>"+$g(jsonString.ErrMsg)+"</font>");   ///+"第"+errnum+"条数据"
 				}
 	},"json");
 	
@@ -607,11 +611,11 @@ function BackBt()
 function Share(){
 var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
 	if (selItems.length>1){
-		$.messager.alert("提示:","分享操作,请只选择一行数据！");
+		$.messager.alert($g("提示:"),$g("分享操作,请只选择一行数据！"));
 		return;
 	}
 	var RepID=selItems[0].RepID;         //报表ID
@@ -621,19 +625,19 @@ var selItems = $('#maindg').datagrid('getSelections');
 	var params=RepID+"^"+LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+RepTypeCode+"^"+RepStausDr+"^"+RepShareStatus   //参数串
 
   	var Sharemessage=""
-     if(RepShareStatus=="未分享"){
-	     Sharemessage="分享";
+     if(RepShareStatus==$g("未分享")){
+	     Sharemessage=$g("分享");
 	} 
-	if(RepShareStatus=="分享"){
-	     Sharemessage="取消分享";
+	if(RepShareStatus==$g("分享")){
+	     Sharemessage=$g("取消分享");
 	}
-	$.messager.confirm("提示", "是否进行"+Sharemessage+"操作", function (res) {//提示是否删除
+	$.messager.confirm($g("提示"), $g("是否进行")+$g(Sharemessage)+$g("操作"), function (res) {//提示是否删除
 		if (res) {
 			//保存数据
 			$.post(url+'?action=InsRepShare',{"params":params},function(jsonString){
 				var resobj = jQuery.parseJSON(jsonString);
 				if(resobj.ErrCode < 0){
-					$.messager.alert("提示:","分享错误,错误原因:"+"<font style='color:red;'>"+resobj.ErrMsg+"</font>");
+					$.messager.alert($g("提示:"),$g("分享错误,错误原因:")+"<font style='color:red;'>"+resobj.ErrMsg+"</font>");
 				}
 			});
 			$('#maindg').datagrid('reload'); //重新加载
@@ -647,24 +651,24 @@ function RepImpFlag()
 {
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
    	if (selItems.length>1){
-		$.messager.alert("提示:","关注操作,请只选择一行数据！");
+		$.messager.alert($g("提示:"),$g("关注操作,请只选择一行数据！"));
 		return;
 	}
 	var RepID=selItems[0].RepID;         //报表ID
 	var RepTypeCode=selItems[0].RepTypeCode;         //报告类型代码
     var RepImpFlag=selItems[0].RepImpFlag;    //重点标记
   	var Impmessage=""
-    if(RepImpFlag=="未关注"){
+    if(RepImpFlag==$g("未关注")){
 	     RepImpFlag="N";
-	     Impmessage="关注";
+	     Impmessage=$g("关注");
 	} 
-	if(RepImpFlag=="关注"){
+	if(RepImpFlag==$g("关注")){
 	     RepImpFlag="Y";
-	     Impmessage="取消关注";
+	     Impmessage=$g("取消关注");
 	}
 	var Focusparams=LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+RepTypeCode;
 	//获取重点关注权限
@@ -678,16 +682,16 @@ function RepImpFlag()
         }  
 	});	
 	if(FocusAuthority=="N"){
-		$.messager.alert("提示:","无"+Impmessage+"操作权限！");
+		$.messager.alert($g("提示:"),$g("无")+$g(Impmessage)+$g("操作权限！"));
 		return;
 	}
-	$.messager.confirm("提示", "是否进行"+Impmessage+"操作", function (res) {//提示是否删除
+	$.messager.confirm($g("提示"), $g("是否进行"+Impmessage+"操作"), function (res) {//提示是否删除
 		if (res) {
 			//保存数据
 			runClassMethod("web.DHCADVCOMMONPART","InsRepImp",{'RepID':RepID,'RepImpFlag':RepImpFlag},
 				function(data){ 
 					if (data!="0") {
-						$.messager.alert("提示:",Impmessage+"失败!");
+						$.messager.alert($g("提示:"),Impmessage+$g("失败!"));
 					}
 				},"text");
 			$('#maindg').datagrid('reload'); //重新加载
@@ -701,15 +705,15 @@ function CancelAuditBt()
 	var LocAdvice="" //$('#matadrLocAdvice').val();
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
 	var Medadrreceivedr=selItems[0].Medadrreceivedr;//接收状态
 	if (Medadrreceivedr==1){
-		$.messager.alert("提示:","报告已接收不能撤销审核！");
+		$.messager.alert($g("提示:"),$g("报告已接收不能撤销审核！"));
 		return;
 	}
-	$.messager.confirm("提示", "是否进行撤销审核操作", function (res) {//提示是否删除
+	$.messager.confirm($g("提示"), $g("是否进行撤销审核操作"), function (res) {//提示是否删除
 		if (res) {
 			$.each(selItems, function(index, item){
 				var RepID=item.RepID;         //报表ID
@@ -720,7 +724,7 @@ function CancelAuditBt()
 				var StaFistAuditUser=item.StaFistAuditUser; //被驳回人
 				
 				if ((StaFistAuditUser!="")&(StaFistAuditUser!=LgUserName)){
-					$.messager.alert("提示:","报告为驳回报告，且未驳回给当前登录人，无权限撤销审核！");
+					$.messager.alert($g("提示:"),$g("报告为驳回报告，且未驳回给当前登录人，无权限撤销审核！"));
 					return;
 				}
 				var params=RepID+"^"+StatusLastID+"^"+LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+NextLoc+"^"+LocAdvice+"^"+Medadrreceivedr+"^"+RepTypeCode;   //参数串
@@ -730,7 +734,7 @@ function CancelAuditBt()
 					//var resobj = jQuery.parseJSON(jsonString);
 					//var num=$('#maindg').datagrid("getRowIndex",item)+1; //2017-04-06  获取行数 区分哪一行操作出错
 					if(jsonString.ErrCode < 0){
-						$.messager.alert("提示:","审核错误,错误原因:"+"<font style='color:red;'>"+jsonString.ErrMsg+"</font>");   ///+"第"+errnum+"条数据"
+						$.messager.alert($g("提示:"),$g("审核错误,错误原因:")+"<font style='color:red;'>"+$g(jsonString.ErrMsg)+"</font>");   ///+"第"+errnum+"条数据"
 					}
 				},"json");								
 			})
@@ -746,11 +750,11 @@ function Audit()
 {
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
    	if (selItems.length>1){
-		$.messager.alert("提示:","审核操作,请只选择一行数据！");
+		$.messager.alert($g("提示:"),$g("审核操作,请只选择一行数据！"));
 		return;
 	}
 	var RepFileFlag=""; //归档状态 2018-01-23
@@ -761,7 +765,7 @@ function Audit()
 		}
 	})
 	if (RepFileFlag=="-1"){
-		$.messager.alert("提示:","所选报告存在已归档报告，不能审核！");
+		$.messager.alert($g("提示:"),$g("所选报告存在已归档报告，不能审核！"));
 		return;
 	}
 	
@@ -774,7 +778,7 @@ function Audit()
 		$.each(selItems, function(index, item){
 			$("#showalert").show();//hxy 08-30 显示背影层
 			$('#Process').window({
-				title:'审核',
+				title:$g('审核'),
 				collapsible:false,
 				border:false,
 				closed:false,
@@ -806,12 +810,12 @@ function ConfirmAudit()
 	var LocAdvice=$('#matadrLocAdvice').val();
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
 	if(LocAdvice=="")     // wangxuejian 2016-10-26
 	{
-		$.messager.alert("提示:","处理意见不能为空！");	
+		$.messager.alert($g("提示:"),$g("处理意见不能为空！"));	
 		return;
 	}
 	$.each(selItems, function(index, item){
@@ -829,7 +833,7 @@ function ConfirmAudit()
 					//var resobj = jQuery.parseJSON(jsonString);
 					//var num=$('#maindg').datagrid("getRowIndex",item)+1; //2017-04-06  获取行数 区分哪一行操作出错
 					if(jsonString.ErrCode < 0){
-						$.messager.alert("提示:","审核错误,错误原因:"+"<font style='color:red;'>"+jsonString.ErrMsg+"</font>");   ///+"第"+errnum+"条数据"
+						$.messager.alert($g("提示:"),$g("审核错误,错误原因:")+"<font style='color:red;'>"+$g(jsonString.ErrMsg)+"</font>");   ///+"第"+errnum+"条数据"
 					}
 		},"json");
 		
@@ -839,421 +843,6 @@ function ConfirmAudit()
 	$('#Process').window('close');
 }
 
-
-//转抄  2016-05-13 增加
-function Transcription()
-{	
-	//TranFlag=0;
-	//清空输入框
-	$('#medadrUser').attr("disabled",false);
-	$('#medadrDateTime').attr("disabled",false);
-	$("#tranLocAdvic").attr("disabled",false);
-	$("#medadrUser").val("");
-	$("#medadrDateTime").val("");
-	$("#tranLocAdvic").val("");
-	$("#tranLocDr").combobox('setValue',"");
-	$("#tranReplyMess").val("");
-
-	var selItems = $('#maindg').datagrid('getSelections');
-	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
-		return;
-	}
-	if (selItems.length>1){
-		$.messager.alert("提示:","转抄操作,请只选择一行数据！");
-		return;
-	}
-	//$("#showalert").show();//hxy 08-30 显示背影层
-	$('#TranWin').window({
-		title:'转抄',
-		collapsible:false,
-		border:false,
-		closed:false,
-		width:900,
-		height:480
-	});
-	$('#TranWin').window('open');
-	$.each(selItems, function(index, item){
-		
-		var RepID=item.RepID;         //报表ID
-		var RepTypeCode=item.RepTypeCode;         //报告类型
-		var params=RepID+"^"+RepTypeCode+"^"+LgUserID;
-		var Subflag=item.Subflag;         //子表标志
-		var SubUserflag=item.SubUserflag;//当前登录人员与科室是否匹配被指向人员与科室
-		TranUserList(RepID,RepTypeCode,SubUserflag);//转抄指向人员
-		TranLocUserList(RepID,RepTypeCode,SubUserflag);//转抄科室人员意见信息
-		if(SubUserflag==0){
-			//清空输入框
-			//var time=
-			getDateTime(); //2016-10-08 congyue
-			$('#medadrUser').attr("disabled",false);
-			$('#medadrDateTime').attr("disabled",false);
-			$("#tranLocAdvic").attr("disabled",false);
-			$("#medadrUser").val(LgUserName);//显示转抄人(当前登陆人)
-			$("#medadrUser").attr("disabled",true);
-			$("#medadrDateTime").attr("disabled",true);
-			$("#tranLocAdvic").val("");
-			$("#tranLocDr").combobox('setValue',"");
-			$("#tranReplyMess").val("");
-			$("#tranReply").hide();
-			$("#tranReplyMess").hide();	
-			$("#replyFlag").hide();//是否转抄回复
-
-		}
-		$.ajax({
-			type: "POST",// 请求方式
-	    	url: url,
-	    	data: "action=SearchAuditMess&params="+params,
-			success: function(data){
-				var tmp=data.split("^");
-				if(SubUserflag==1){
-					$('#medadrUser').val(tmp[0]); //处理人员
-					$('#medadrUser').attr("disabled","true");
-					$('#medadrDateTime').val(tmp[1]+" "+tmp[2]);   //处理时间
-					$('#medadrDateTime').attr("disabled","true");
-					$('#tranLocAdvic').val(tmp[3]); //处理意见
-					$('#tranLocAdvic').attr("disabled","true");
-					$("#tranReply").show();
-			        $("#tranReplyMess").show();
-			        $("#replyFlag").show();//是否转抄回复
-					//var UserID=rowData.UserID;
-					if ((tmp[5]!=LgUserID)&(tmp[6]!=LgCtLocID)){
-						errflag=1;
-						$("#tranLocDr").combobox('setValue',"");
-					}else{
-						errflag=0;
-					}
-		
-				}
-				else{
-					errflag=0;
-				}
-			}
-		});
-		if(SubUserflag==1){
-			$('#transub').hide();
-			$('#tranreply').show();
-			$('#tranrec').show();
-	
-		}else{
-			$('#transub').show();
-			$('#tranreply').hide();
-			$('#tranrec').hide();
-	    }
-   });
-	
-}
-//转抄指向人员
-function TranUserList(RepID,RepTypeCode,SubUserflag)
-{
-	//转抄科室
-	$('#tranLocDr').combobox({
-		url:url+'?action=GetQueryLoc&RepTypeCode='+RepTypeCode,
-		onSelect:function(){
-			var tranLocDr=$('#tranLocDr').combobox('getValue');
-			$('#selectdg').datagrid({
-				url:url+'?action=GetUserDr',	
-				queryParams:{
-					params:RepTypeCode+"^"+tranLocDr}
-			});
-		}
-	}); 
-	//定义columns
-	var usercolumns=[[
-		{field:"ID",title:'ID',width:90,hidden:true},
-		{field:"LocID",title:'LocID',width:90,hidden:true},
-		{field:"Locname",title:'Locname',width:90,hidden:true},
-		{field:"UserID",title:'UserID',width:90,hidden:true},
-		{field:'Username',title:'科室人员',width:120}
-	]];
-	var titleNotes="";
-	if(SubUserflag==1){
-		titleNotes="";
-	}else{
-		titleNotes='<span style="font-size:10pt;font-family:华文楷体;color:red;">[双击行即可添加至转抄信息表]</span>';
-	}
-	var params=RepID+"^"+RepTypeCode;
-	//定义datagrid
-	$('#selectdg').datagrid({
-		title:'指向人员'+titleNotes,
-		url:url+'?action=QueryUserMess&paramsuser='+params,
-		fit:true,
-		rownumbers:true,
-		columns:usercolumns,
-		border:false,
-		pageSize:40,  // 每页显示的记录条数
-		pageList:[40,80],   // 可以设置每页记录条数的列表
-	    singleSelect:false,
-		loadMsg: '正在加载信息...',
-		pagination:true,
-		onDblClickRow:function(rowIndex, rowData){ 
-			if((SubUserflag==1)){ //(SubUserflag==1)||(TranFlag==1)
-				$('#selectdg').datagrid({title:'指向人员'});
-				return;
-			}else{
-				$('#selectdg').datagrid({title:'指向人员'+titleNotes});
-				if ((editRow != "")||(editRow == "0")) {
-	            	$("#selectdg").datagrid('endEdit', editRow);
-				}
-				var LocID=rowData.LocID;
-				var UserID=rowData.UserID;
-				var Username=rowData.Username;
-			
-				var tranLocDr=$('#tranLocDr').combobox('getValue');
-				var tranLocDesc=$('#tranLocDr').combobox('getText');
-				//2017-11-23 cy 判断转抄科室为空不能添加人员
-				if(tranLocDesc==""){
-					$.messager.alert("提示:","转抄科室不能为空！");	
-					return;
-				}
-				//2017-11-23 cy 判断添加人员不能重复添加
-				var  dataList=$('#tranmesdg').datagrid('getData'); 
-				for(var i=0;i<dataList.rows.length;i++){
-					if(UserID==dataList.rows[i].nameID){
-						$.messager.alert("提示","该人员已添加！"); 
-						return ;
-					}
-				}				
-
-				$('#tranmesdg').datagrid('insertRow',{
-					 index: 0,	// index start with 0
-					 row: {
-						ID:"",
-						name: Username,
-						nameID: UserID,
-						LocDesc: tranLocDesc,
-						LocDr: tranLocDr
-					}
-		        });
-		    }
-		}
-     
-	});
-}
-//转抄科室人员意见信息
-function TranLocUserList(RepID,RepTypeCode,SubUserflag)
-{
-	//定义columns
-	var columns=[[
-		{field:"ID",title:'ID',width:90,hidden:true},
-		{field:"tranDateTime",title:'转抄时间',width:90,hidden:true},
-		{field:'tranuser',title:'转抄人',width:120,hidden:true},
-		{field:"tranuserID",title:'tranuserID',width:90,hidden:true},
-		{field:'LocDesc',title:'科室',width:120},
-		{field:"LocDr",title:'LocDr',width:90,hidden:true},
-		{field:'name',title:'人员',width:80},
-		{field:"nameID",title:'nameID',width:90,hidden:true},
-		{field:'LocAdvice',title:'处理意见',width:100,formatter:transAdvice},
-		{field:'advice',title:'回复内容',width:100,formatter:transAdvice},
-		{field:'DutyFlag',title:'备注',width:200},
-		{field:"tranreceive",title:'接收状态',width:90,hidden:true},
-		{field:"tranrecedate",title:'接收日期',width:90,hidden:true},
-		{field:"trancompdate",title:'完成日期',width:90,hidden:true}
-	]];
-	var titleOpNotes="";
-	if(SubUserflag==1){
-		titleOpNotes="";
-	}else{
-		titleOpNotes='<span style="font-size:10pt;font-family:华文楷体;color:red;">[双击行即可清除此条数据]</span>';
-	}
-	var params=RepID+"^"+RepTypeCode;
-	//定义datagrid
-	$('#tranmesdg').datagrid({
-		title:'转抄信息表'+titleOpNotes,
-		url:url+'?action=QueryTranLocUser&params='+params,
-		fit:true,
-		border:false,
-		rownumbers:true,
-		columns:columns,
-		pageSize:40,  // 每页显示的记录条数
-		pageList:[40,80],   // 可以设置每页记录条数的列表
-	    singleSelect:false,
-		loadMsg: '正在加载信息...',
-		pagination:true,
-        nowrap:false,
-		onDblClickRow:function(rowIndex, rowData){  //双击清除选中行
-			if((SubUserflag==1)){ //(SubUserflag==1)||(TranFlag==1)
-				return;
-			}else{
-				if((rowData.LocAdvice==undefined)||(rowData.LocAdvice=="")){
-					$('#tranmesdg').datagrid('deleteRow',rowIndex);
-				}else{
-					alert("已转抄,不可删除");	
-				}
-			}
-		}
-	});	
-	
-}
-//转抄提交
-function TranSub()
-{
-	/* if(TranFlag==1){
-		$.messager.alert("提示:","已提交成功，请勿重复点击");
-		return;
-	} */
-	if(errflag==1){
-		$.messager.alert("提示:","非转抄被指向人员，无权限操作");
-		return;
-	}
-	var tranLocDr=$('#tranLocDr').combobox('getValue');
-	var tranLocAdvic=$('#tranLocAdvic').val();
-	tranLocAdvic = tranLocAdvic.replace(/\"/g,"∑");	 //qunianpeng 2018/1/10 转换引号
-	var tranReplyMess=$('#tranReplyMess').val();
-	tranReplyMess = tranReplyMess.replace(/\"/g,"∑");  //qunianpeng 2018/1/10 转换引号
-	var mediReceive="",mediRecDate="",mediRecTime="",mediCompleteDate="",mediCompleteTime="",medadrList="";	
-	var selItems = $('#maindg').datagrid('getSelections');
-	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
-		return;
-	}
-	$.each(selItems, function(index, item){
-		var RepID=item.RepID;         //报表ID
-		var RepTypeCode=item.RepTypeCode; //报告类型代码
-		var Medadrreceivedr=item.Medadrreceivedr;//接收状态
-		var StatusNextID=item.StatusNextID; //下一个状态
-		var RepStausDr=item.RepStausDr //当前状态
-		medadrList=RepID+"^"+RepTypeCode+"^"+tranLocDr+"^"+tranLocAdvic+"^"+Medadrreceivedr+"^"+StatusNextID+"^"+LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+RepStausDr;   //参数串
-	})		
-	var rows = $("#tranmesdg").datagrid('getChanges');
-	if(rows.length<=0){
-		$.messager.alert("提示","没有待保存数据!");
-		return;
-	}
-	var dataList = [];
-	for(var i=0;i<rows.length;i++)
-	{
-		if((rows[i].LocDr=="")||(rows[i].nameID=="")){
-			$.messager.alert("提示","科室指向或人员不能为空!"); 
-			return false;
-		}
-		if(tranLocAdvic==""){
-			$.messager.alert("提示","处理意见不能为空!"); 
-			return false;
-		}
-		var List=rows[i].ID+"^"+LgUserID+"^"+rows[i].LocDr+"^"+rows[i].nameID+"^"+tranReplyMess+"^"+mediReceive+"^"+mediRecDate+"^"+mediRecTime+"^"+mediCompleteDate+"^"+mediCompleteTime+"^"+tranLocAdvic;
-		dataList.push(List);
-	} 
-	var medadriList=dataList.join("&&");
-	var params="medadrList="+medadrList+"&medadriList="+medadriList; 
-
-	//保存数据
-	$.post(url+'?action=SaveTranMess',{"medadrList":medadrList,"medadriList":medadriList},function(jsonString){
-		var resobj = jQuery.parseJSON(jsonString);
-		if(resobj.ErrCode==0){
-			//TranFlag=1;
-			$.messager.alert("提示:","提交成功");
-			$('#maindg').datagrid('reload'); //重新加载
-			$('#maindg').datagrid('unselectAll') //2017-04-06 清除全选 $('#maindg').datagrid('clearSelections')  //2017-06-09 清除全选
-     			$('#tranmesdg').datagrid('reload'); //重新加载 qunianpeng 2018/1/17			
-		}
-		if(resobj.ErrCode < 0){
-			$.messager.alert("提示:","转抄提交错误,错误原因:"+"<font style='color:red;'>"+resobj.ErrMsg+"</font>");
-			return ;
-		}
-		//$('#selectdg').datagrid('reload'); //重新加载
-		//$('#tranmesdg').datagrid('reload'); //重新加载
-		
-	});
-	closeTranWindow();		
-}
-//转抄回复
-function TranReply(Replyflag)
-{   var tranDutyFlag="N"  //转抄之后未回复
-	var tranLocDr=$('#tranLocDr').combobox('getValue');
-	var tranLocAdvic=$('#tranLocAdvic').val();
-	var tranReplyMess=$('#tranReplyMess').val();
-	tranReplyMess = tranReplyMess.replace(/\"/g,"∑"); //qunianpeng 2018/1/10 转换引号
-	if($("#reply").is(':checked')){
-		tranDutyFlag="Y";
-	}
-	var medadriList=LgUserID+"^"+tranReplyMess+"^"+Replyflag+"^"+tranDutyFlag;
-	
-	var rows = $("#tranmesdg").datagrid('getRows');
-	var dataList = [];
-	for(var i=0;i<rows.length;i++)
-	{
-		if((Replyflag==1)&&(rows[i].advice!="")&&(rows[i].nameID==LgUserID)){
-			$.messager.alert("提示:","已提交成功，请勿重复点击");
-			return false;
-		}
-		
-		if((Replyflag==0)&&(rows[i].tranrecedate!="")&&(rows[i].nameID==LgUserID)){
-			$.messager.alert("提示:","已接收成功，请勿重复点击");
-			return false;
-		}
-		if((Replyflag==0)&&(rows[i].advice!="")&&(rows[i].nameID==LgUserID)){
-			$.messager.alert("提示:","回复已提交，接收无效");
-			return false;
-		}
-	} 
-	/* if((TranFlag==1)&(Replyflag==1)){
-		$.messager.alert("提示:","已提交成功，请勿重复点击");
-		return;
-	}
-	if((TranFlag==2)&(Replyflag==0)){
-		$.messager.alert("提示:","已接收成功，请勿重复点击");
-		return;
-	}
-	if((TranFlag==1)&(Replyflag==0)){
-		$.messager.alert("提示:","回复已提交，接收无效");
-		return;
-	} */
-	
-	if((errflag==1)&(Replyflag==0)){
-		$.messager.alert("提示:","非转抄被指向人员，无权限操作");
-		return;
-	}
-	if((Replyflag==1)&(tranReplyMess=="")){
-		$.messager.alert("提示:","回复提交操作，回复内容不能为空");
-		return;
-	}
-	if((Replyflag==0)&(tranReplyMess!="")){
-		$.messager.alert("提示:","接收操作，回复内容不填");
-		return;
-	}
-	var selItems = $('#maindg').datagrid('getSelections');
-	var medadrList="";
-	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
-		return;
-	}
-	$.each(selItems, function(index, item){
-		var RepID=item.RepID;         //报表ID
-		var RepTypeCode=item.RepTypeCode; //报告类型代码
-		var Medadrreceivedr=item.Medadrreceivedr;//接收状态
-		var StatusNextID=item.StatusNextID; //下一个状态
-		medadrList=RepID+"^"+RepTypeCode+"^"+tranLocDr+"^"+tranLocAdvic+"^"+Medadrreceivedr+"^"+StatusNextID;   //参数串
-		//var params="medadrList="+medadrList+"&medadriList="+medadriList; 
-	})
-	//alert(params);
-	//保存数据
-	$.post(url+'?action=SaveReplyMess',{"medadrList":medadrList,"medadriList":medadriList},function(jsonString){
-		var resobj = jQuery.parseJSON(jsonString);
-		if(resobj.ErrCode==0){
-			if(Replyflag==1){
-				//TranFlag=1;
-				$('#maindg').datagrid('reload'); //重新加载
-				$('#maindg').datagrid('unselectAll') //2017-04-06 清除全选 $('#maindg').datagrid('clearSelections')  //2017-06-09 清除全选
-			}
-			$.messager.alert("提示:","操作成功");
-			   closeTranWindow();	
-		}
-		if(resobj.ErrCode < 0){
-			$.messager.alert("提示:","操作错误,错误原因:"+"<font style='color:red;'>"+resobj.ErrMsg+"</font>");
-		}
-		//$('#selectdg').datagrid('reload'); //重新加载
-		//$('#tranmesdg').datagrid('reload'); //重新加载
-		
-	});
-}
-
-//关闭转抄窗口
-function closeTranWindow()
-{  
-	$('#TranWin').window('close');
-}
-
 ///设置审批明细连接  
 function setCellAuditList(value, rowData, rowIndex)
 {
@@ -1261,7 +850,7 @@ function setCellAuditList(value, rowData, rowIndex)
 		var RepTypeCode=escape(rowData.RepTypeCode); //报告类型代码
 		var RepUser=rowData.RepUser; // 报告人
 		var RepUserFlag=0;
-		if(RepUser=="匿名"){
+		if(RepUser==$g("匿名")){
 			RepUserFlag=-1;
 		}
 		return "<a href='#' onclick=\"showAuditListWin('"+RepID+"','"+RepTypeCode+"','"+RepUserFlag+"')\"><img src='../scripts/dhcadvEvt/images/adv_sel_11.png' border=0/></a>";
@@ -1373,11 +962,13 @@ function showAuditListWin(RepID,RepTypeCode,RepUserFlag)
 
 	$('body').append('<div id="winonline"></div>');
 	$('#winonline').window({
-		title:'审批明细',
-		collapsible:true,
+		title:$g('审批明细'),
 		border:false,
+		collapsible:false,
+		minimizable:false,
+		maximizable:false,
+		resizable:false,
 		closed:"true",
-		minimizable: false,
 		width:1100,
 		height:500
 	});
@@ -1481,17 +1072,17 @@ function ExportExcel()
 	var EndDate=$('#enddate').datebox('getValue'); //截止日期
 	var filePath=browseFolder();
 	if (typeof filePath=="undefined"){
-		$.messager.alert("提示:","<font style='color:red;font-weight:bold;font-size:20px;'>已取消操作！</font>","error");
+		$.messager.alert($g("提示:"),"<font style='color:red;font-weight:bold;font-size:20px;'>"+$g("已取消操作！")+"</font>","error");
 		return;
 	}
   var re=/[a-zA-Z]:\\/;     //wangxuejian 2016-10-10
 	if ((filePath.match(re)=="")||(filePath.match(re)==null)){
-		$.messager.alert("提示:","<font style='color:red;font-weight:bold;font-size:20px;'>请选择有效路径后,重试！</font>","error");
+		$.messager.alert($g("提示:"),"<font style='color:red;font-weight:bold;font-size:20px;'>"+$g("请选择有效路径后,重试！")+"</font>","error");
 		return;
 	}
 	var Staticflag=ExportExcelStatic(StDate,EndDate,filePath);
 	if(Staticflag==true){
-	$.messager.alert("提示:","<font style='color:green;font-weight:bold;font-size:20px;'>导出完成！导出目录为:"+filePath+"</font>","info");
+	$.messager.alert($g("提示:"),"<font style='color:green;font-weight:bold;font-size:20px;'>"+$g("导出完成！导出目录为:")+filePath+"</font>","info");
 	}/*else{
 		$.messager.alert("提示:","<font style='color:green;font-weight:bold;font-size:20px;'>导出失败！</font>","info");
 	}*/
@@ -1504,26 +1095,26 @@ function ExportExcelAll()
 	var EndDate=$('#enddate').datebox('getValue'); //截止日期
 	var typeevent=$('#typeevent').combobox('getText');  //报告类型
 	if((typeevent=="")||(typeevent=="全部")){
-		$.messager.alert("提示:","<font style='color:red;font-weight:bold;font-size:20px;'>请选择具体报告类型,重试！</font>","error");
+		$.messager.alert($g("提示:"),"<font style='color:red;font-weight:bold;font-size:20px;'>"+$g("请选择具体报告类型,重试！")+"</font>","error");
 		return;
 	}
 	if((typeevent.indexOf("医疗") >= 0)){
-		$.messager.alert("提示:","该类型没有医管局需要数据，请选择其他类型","error");
+		$.messager.alert($g("提示:"),$g("该类型没有医管局需要数据，请选择其他类型"),"error");
 		return;
 	}
 	var filePath=browseFolder();
 	if (typeof filePath=="undefined"){
-		$.messager.alert("提示:","<font style='color:red;font-weight:bold;font-size:20px;'>已取消操作！</font>","error");
+		$.messager.alert($g("提示:"),"<font style='color:red;font-weight:bold;font-size:20px;'>"+$g("已取消操作！")+"</font>","error");
 		return;
 	}
   var re=/[a-zA-Z]:\\/;     //wangxuejian 2016-10-10
 	if ((filePath.match(re)=="")||(filePath.match(re)==null)){
-		$.messager.alert("提示:","<font style='color:red;font-weight:bold;font-size:20px;'>请选择有效路径后,重试！</font>","error");
+		$.messager.alert($g("提示:"),"<font style='color:red;font-weight:bold;font-size:20px;'>"+$g("请选择有效路径后,重试！")+"</font>","error");
 		return;
 	}
 	var Allflag=ExportExcelAllData(StDate,EndDate,typeevent,filePath);
 	if(Allflag==true){
-	$.messager.alert("提示:","<font style='color:green;font-weight:bold;font-size:20px;'>导出完成！导出目录为:"+filePath+"</font>","info");
+	$.messager.alert($g("提示:"),"<font style='color:green;font-weight:bold;font-size:20px;'>"+$g("导出完成！导出目录为:")+filePath+"</font>","info");
 	}/*else{
 		$.messager.alert("提示:","<font style='color:green;font-weight:bold;font-size:20px;'>导出失败！</font>","info");
 	}*/
@@ -1533,25 +1124,29 @@ function Export()
 {
 	var typeevent=$('#typeevent').combobox('getValue');  //报告类型
 	if((typeevent=="")||(typeevent=="全部")){
-		$.messager.alert("提示:","请选择具体报告类型","error");
+		$.messager.alert($g("提示:"),$g("请选择具体报告类型"),"error");
 		return;
 	}
-	//formNameID==##class(web.DHCADVCOMMONPART).GetFormNameID
+	/// 2021-07-09 cy 导出明细改造
+	var LinkID="",FormNameID="";
 	runClassMethod("web.DHCADVCOMMONPART","GetFormNameID",{"AdrEvtDr":typeevent},
 	function(ret){
-		formNameID=ret
+		FormNameID=ret
+	},'text',false);
+	runClassMethod("web.DHCADVEXPFIELD","GetExpLinkID",{"FormNameDr":FormNameID,"HospDr":LgHospID},
+	function(ret){
+		LinkID=ret
 	},'text',false);
 	//窗体处在打开状态,退出
 	if(!$('#ExportWin').is(":visible")){
 		$('#ExportWin').window('open');
-		//initDatagrid();
-		reloadAllItmTable(formNameID);
+		reloadAllItmTable(LinkID);
 		$('#setItmTable').datagrid('loadData', {total:0,rows:[]}); 
 		return;
 	} 
 	
 	$('#ExportWin').window({
-		title:'导出',
+		title:$g('导出'),
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,
@@ -1561,43 +1156,39 @@ function Export()
 		height:480
 	});
 	$('#ExportWin').window('open');
-	initDatagrid();
-	$("a:contains('添加元素')").bind('click',addItm);
-    $("a:contains('删除元素')").bind('click',delItm);
-    $("a:contains('全部选中')").bind('click',selAllItm);
-    $("a:contains('取消选中')").bind('click',unSelAllItm);
-    $("a:contains('全部删除')").bind('click',delAllItm);
+	initDatagrid(LinkID);
+	$("#cuidAdd").bind('click',addItm); //a:contains('添加元素')
+    $("#cuidDel").bind('click',delItm); //a:contains('删除元素')
+    $("#cuidSelAll").bind('click',selAllItm); //a:contains('全部选中')
+    $("#cuidCanSel").bind('click',unSelAllItm); //a:contains('取消选中')
+    $("#cuidDelAll").bind('click',delAllItm); //a:contains('全部删除')
 
 }
 
-function initDatagrid(){
+function initDatagrid(LinkID){
 	var columns=[[
 		{field:'FormDicID',title:'FormDicID',width:50,hidden:true},
 		{field:'DicField',title:'DicField',width:100,hidden:true},
-		{field:'DicDesc',title:'全部列',width:200}
+		{field:'DicDesc',title:$g('全部列'),width:200}
 	]];
 	
 	$("#allItmTable").datagrid({
 		url:LINK_CSP+"?ClassName=web.DHCADVEXPFIELD&MethodName=GetSetFiel",
 		queryParams:{
-			ForNameID:""
+			LinkID:LinkID
 		},
 		fit:true,
 		rownumbers:true,
 		columns:columns,
-		loadMsg: '正在加载信息...',
-		//showHeader:false,
+		loadMsg: $g('正在加载信息...'),
 		rownumbers : false,
-		pagination:false,
-		onSelect:function (rowIndex, rowData){
-			
-		}
+		pagination:false
 	});	
 	
 	var setcolumns=[[
 		{field:'FormDicID',title:'FormDicID',width:50,hidden:true},
 		{field:'DicField',title:'DicField',width:100,hidden:true},
-		{field:'DicDesc',title:'导出列',width:200}
+		{field:'DicDesc',title:$g('导出列'),width:200}
 	]];
 
 	$("#setItmTable").datagrid({
@@ -1605,7 +1196,7 @@ function initDatagrid(){
 		fit:true,
 		rownumbers:true,
 		columns:setcolumns,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		//showHeader:false,
 		rownumbers : false,
 		pagination:false,
@@ -1613,10 +1204,7 @@ function initDatagrid(){
 			
 		}
 	});
-	$('#setItmTable').datagrid('loadData', {total:0,rows:[]}); 
-	reloadAllItmTable(formNameID);
-	reloadSetFielTable(formNameID);
-		
+	$('#setItmTable').datagrid('loadData', {total:0,rows:[]}); 		
 }
 ///添加元素
 function addItm(){
@@ -1676,19 +1264,8 @@ function unSelAllItm(){
 //reload 左上表
 function reloadAllItmTable(value){
 	$("#allItmTable").datagrid('load',{
-		ForNameID:value
+		LinkID:value
 	})
-}
-
-function reloadSetFielTable(value){
-	$("#setItmTable").datagrid('load',{
-		ForNameID:value
-	})
-}
-///刷新 field和fieldVal
-function reloadTopTable(){
-	reloadSetFielTable(formNameID);
-	reloadAllItmTable(formNameID);
 }
 function ExportOK(){
 	var StDate=$('#stdate').datebox('getValue');   //起始日期
@@ -1696,7 +1273,7 @@ function ExportOK(){
 	var RepType=$('#typeevent').combobox('getText');  //报告类型
 	var datas = $("#setItmTable").datagrid("getRows");
 	if(datas.length<1){
-		$.messager.alert("提示","导出列为空，请添加导出列！");
+		$.messager.alert($g("提示"),$g("导出列为空，请添加导出列！"));
 		return;	    
 	}
 	var fieldList = [],descList=[],tablefield=[],tabledesc=[];
@@ -1715,7 +1292,7 @@ function ExportOK(){
 	var TabFieldList=tablefield.join("#");
 	var TabDescList=tabledesc.join("#");
 	var filePath="";
-	ExportData(StDate,EndDate,RepType,TitleList,DescList,filePath,TabFieldList,TabDescList);
+	ExportData(StDate,EndDate,RepType,TitleList,DescList,filePath,TabFieldList,TabDescList,StrParam,LgParam,getParStr());
 	//var filePath=browseFolder();
 	//if (typeof filePath=="undefined"){
 	//	$.messager.alert("提示:","<font style='color:red;font-weight:bold;font-size:20px;'>已取消操作！</font>","error");
@@ -1742,7 +1319,7 @@ function ExportAll()
 	var StDate=$('#stdate').datebox('getValue');   //起始日期
 	var EndDate=$('#enddate').datebox('getValue'); //截止日期
 	var typeevent=$('#typeevent').combobox('getText');  //报告类型
-	ExportAllData(StDate,EndDate,typeevent);
+	ExportAllData(StDate,EndDate,typeevent,StrParam,LgParam,getParStr());
 	
 	/* if((typeevent=="")||(typeevent=="全部")){
 		$.messager.alert("提示:","类型条件为空，请选择类型","error");
@@ -1778,17 +1355,17 @@ function ExportGather()
 	} */
 	var filePath=browseFolder();
 	if (typeof filePath=="undefined"){
-		$.messager.alert("提示:","<font style='color:red;font-weight:bold;font-size:20px;'>已取消操作！</font>","error");
+		$.messager.alert($g("提示:"),"<font style='color:red;font-weight:bold;font-size:20px;'>"+$g("已取消操作！")+"</font>","error");
 		return;
 	}
   	var re=/[a-zA-Z]:\\/;     
 	if ((filePath.match(re)=="")||(filePath.match(re)==null)){
-		$.messager.alert("提示:","<font style='color:red;font-weight:bold;font-size:20px;'>请选择有效路径后,重试！</font>","error");
+		$.messager.alert($g("提示:"),"<font style='color:red;font-weight:bold;font-size:20px;'>"+$g("请选择有效路径后,重试！")+"</font>","error");
 		return;
 	}
 	var Allflag=ExportGatherData(StDate,EndDate,typeevent,filePath);
 	if(Allflag==true){
-		$.messager.alert("提示:","<font style='color:green;font-weight:bold;font-size:20px;'>导出完成！导出目录为:"+filePath+"</font>","info");
+		$.messager.alert($g("提示:"),"<font style='color:green;font-weight:bold;font-size:20px;'>"+$g("导出完成！导出目录为:")+filePath+"</font>","info");
 	}/*else{
 		$.messager.alert("提示:","<font style='color:green;font-weight:bold;font-size:20px;'>导出失败！</font>","info");
 	}*/
@@ -1815,10 +1392,10 @@ function CancelFilewin(flag)
 	
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
-	var title=flag==1?"撤销归档":"撤销复核";
+	var title=flag==1?$g("撤销归档"):$g("撤销复核");
 	$("#showalert").show();//hxy 08-30 显示背影层
 	$('#CanFileWin').window({
 		title:title,
@@ -1847,11 +1424,11 @@ function File()
 {
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
    	if (selItems.length>1){
-		$.messager.alert("提示:","归档操作,请只选择一行数据！");
+		$.messager.alert($g("提示:"),$g("归档操作,请只选择一行数据！"));
 		return;
 	}
 	
@@ -1861,7 +1438,7 @@ function File()
     $.each(selItems, function(index, item){
 		var StatusNextID=item.StatusNextID; //下一个状态
 		var FileFlag=item.FileFlag; //归档状态 2018-01-23
-		if((StatusNextID!="")||(FileFlag=="已归档")){
+		if((StatusNextID!="")||(FileFlag==$g("已归档"))){
 			winshowflag=-1;
 		}
 	
@@ -1871,18 +1448,19 @@ function File()
 	    return;
 	}else{
 		if(winshowflag=="-1"){
-		$.messager.alert("提示:","所勾选报告有未审核完成的报告，请仔细检查勾选数据！");
+		$.messager.alert($g("提示:"),$g("所勾选报告有未审核完成的报告，请仔细检查勾选数据！"));
 		return;
 	}
 		$("#showalert").show();//hxy 08-30 显示背影层
 		$('#FileWin').window({
-			title:'归档',
+			title:$g('归档'),
 			collapsible:false,
 			border:false,
 			closed:false,
 			minimizable:false,
 			maximizable:false,
 			closable:false,
+			resizable:false,
 			width:600,
 			height:310
 		});
@@ -1900,27 +1478,27 @@ function ConfirmFile()
 {	
 	var filereason=$.trim($('#filereason').val());
 	if (filereason==""){
-		$.messager.alert("提示:","归档建议不能为空！");
+		$.messager.alert($g("提示:"),$g("归档建议不能为空！"));
 		return;
 	}
 	filereason= $_TrsSymbolToTxt(filereason); /// 处理特殊符号	
 	var UserCodeFile=$('#UserCodeFile').val();
 	if (UserCodeFile==""){
-		$.messager.alert("提示:","归档人员不能为空！");
+		$.messager.alert($g("提示:"),$g("归档人员不能为空！"));
 		return;
 	}
 	var passWordFile=$('#passWordFile').val();
 	if (passWordFile==""){
-		$.messager.alert("提示:","归档人员密码不能为空！");
+		$.messager.alert($g("提示:"),$g("归档人员密码不能为空！"));
 		return;
 	}
 	var selItems = $('#maindg').datagrid('getSelections');
     var RepTypeCode=selItems[0].RepTypeCode; //归档状态 2018-01-23
 	var UserIDFile="",UserIDAudit="",ifFileflag="",ifAuditflag="";
-	runClassMethod("web.DHCADVREPFILE","ConfirmPassWord",{ 'userCode':UserCodeFile,'passWord':passWordFile,'RepTypeCode':RepTypeCode},
+	runClassMethod("web.DHCADVREPFILE","ConfirmPassWord",{ 'userCode':UserCodeFile,'passWord':passWordFile,'RepTypeCode':RepTypeCode,'LgParam':LgParam},
 		function(data){ 
 			if(data.split("^")[0] != 0){
-				$.messager.alert("提示:","归档人员："+"<font style='color:red;'>"+data+"</font>");
+				$.messager.alert($g("提示:"),$g("归档人员：")+"<font style='color:red;'>"+$g(data)+"</font>");
 				ifFileflag=-1;
 			}else{
 				UserIDFile = data.split("^")[1];   ///这个就是用户ID
@@ -1932,7 +1510,7 @@ function ConfirmFile()
 	var UserIDAudit="";
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
 	var FileId=serverCall("web.DHCADVCOMMONPART","GetFileRecordId",{"RepID":selItems[0].RepID,"RepTypeDr":selItems[0].RepTypeDr,"flag":1})
@@ -1954,7 +1532,7 @@ function ConfirmFile()
 		runClassMethod("web.DHCADVCOMMONPART","FileMataReport",{'auditparams':auditparams,'fileparams':fileparams},
 				function(jsonString){ 
 					if(jsonString < 0){
-						$.messager.alert("提示:","报告归档失败!"+"ErrCode:"+jsonString);   ///+"第"+errnum+"条数据"
+						$.messager.alert($g("提示:"),$g("报告归档失败!")+"ErrCode:"+jsonString);   ///+"第"+errnum+"条数据"
 					}
 		},"",false);
 		
@@ -1969,11 +1547,11 @@ function FileAudit()
 {
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
    	if (selItems.length>1){
-		$.messager.alert("提示:","归档操作,请只选择一行数据！");
+		$.messager.alert($g("提示:"),$g("归档操作,请只选择一行数据！"));
 		return;
 	}
 	
@@ -1983,7 +1561,7 @@ function FileAudit()
     $.each(selItems, function(index, item){
 		var StatusNextID=item.StatusNextID; //下一个状态
 		var FileFlag=item.FileFlag; //归档状态 2018-01-23
-		if((StatusNextID!="")||(FileFlag=="已归档")){
+		if((StatusNextID!="")||(FileFlag==$g("已归档"))){
 			winshowflag=-1;
 		}
 	
@@ -1993,17 +1571,18 @@ function FileAudit()
 	    return;
 	}else{
 		if(winshowflag=="-1"){
-		$.messager.alert("提示:","所勾选报告有未审核完成的报告，请仔细检查勾选数据！");
+		$.messager.alert($g("提示:"),$g("所勾选报告有未审核完成的报告，请仔细检查勾选数据！"));
 		return;
 	}
 		$("#showalert").show();//hxy 08-30 显示背影层
 		$('#RevFileWin').window({
-			title:'归档复核',
+			title:$g('归档复核'),
 			collapsible:false,
 			border:false,
 			closed:false,
 			minimizable:false,
 			maximizable:false,
+			resizable:false,
 			closable:false,
 			width:600,
 			height:310
@@ -2023,27 +1602,27 @@ function RevFile()
 {
 	var filereason=$.trim($('#filereasonaud').val());
 	if (filereason==""){
-		$.messager.alert("提示:","复核归档建议不能为空！");
+		$.messager.alert($g("提示:"),$g("复核归档建议不能为空！"));
 		return;
 	}
 	filereason = $_TrsSymbolToTxt(filereason); /// 处理特殊符号
 	var UserCodeFile=$('#UserCodeAudit').val();
 	if (UserCodeFile==""){
-		$.messager.alert("提示:","复核归档人员不能为空！");
+		$.messager.alert($g("提示:"),$g("复核归档人员不能为空！"));
 		return;
 	}
 	var passWordFile=$('#passWordAudit').val();
 	if (passWordFile==""){
-		$.messager.alert("提示:","复核归档人员密码不能为空！");
+		$.messager.alert($g("提示:"),$g("复核归档人员密码不能为空！"));
 		return;
 	}
 	var selItems = $('#maindg').datagrid('getSelections');
     var RepTypeCode=selItems[0].RepTypeCode; //归档状态 2018-01-23
 	var UserIDFile="",UserIDAudit="",ifFileflag="",ifAuditflag="";
-	runClassMethod("web.DHCADVREPFILE","ConfirmPassWord",{ 'userCode':UserCodeFile,'passWord':passWordFile,'RepTypeCode':RepTypeCode},
+	runClassMethod("web.DHCADVREPFILE","ConfirmPassWord",{ 'userCode':UserCodeFile,'passWord':passWordFile,'RepTypeCode':RepTypeCode,'LgParam':LgParam},
 		function(data){ 
 			if(data.split("^")[0] != 0){
-				$.messager.alert("提示:","复核归档人员："+"<font style='color:red;'>"+data+"</font>");
+				$.messager.alert($g("提示:"),$g("复核归档人员：")+"<font style='color:red;'>"+$g(data)+"</font>");
 				ifFileflag=-1;
 			}else{
 				UserIDFile = data.split("^")[1];   ///这个就是用户ID
@@ -2055,7 +1634,7 @@ function RevFile()
 	var UserIDAudit="";
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
 	
@@ -2078,7 +1657,7 @@ function RevFile()
 					//var resobj = jQuery.parseJSON(jsonString);
 					//var num=$('#maindg').datagrid("getRowIndex",item)+1; //2017-04-06  获取行数 区分哪一行操作出错
 					if(jsonString < 0){
-						$.messager.alert("提示:","报告复核归档失败!");   ///+"第"+errnum+"条数据"
+						$.messager.alert($g("提示:"),$g("报告复核归档失败!"));   ///+"第"+errnum+"条数据"
 					}
 		},"",false);
 		
@@ -2095,22 +1674,22 @@ function RepCancel()
 	var LocAdvice="";
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
 	var RepFileFlag=""; //归档状态 2018-01-23
 	$.each(selItems, function(index, item){
 		var FileFlag=item.FileFlag; //归档状态 2018-01-23
-		if (FileFlag=="已归档"){
+		if (FileFlag==$g("已归档")){
 			RepFileFlag="-1";
 		}
 	})
 	
 	if (RepFileFlag=="-1"){
-		$.messager.alert("提示:","所选报告存在已归档报告，不能作废！");
+		$.messager.alert($g("提示:"),$g("所选报告存在已归档报告，不能作废！"));
 		return;
 	}
-	$.messager.confirm("提示", "是否进行作废操作", function (res) {//提示是否删除
+	$.messager.confirm($g("提示"), $g("是否进行作废操作"), function (res) {//提示是否删除
 		if (res) {
 			$.each(selItems, function(index, item){
 				var RepID=item.RepID;         //关联主表ID
@@ -2125,7 +1704,7 @@ function RepCancel()
 				function(jsonString){ 
 					//var num=$('#maindg').datagrid("getRowIndex",item)+1; //2017-04-06  获取行数 区分哪一行操作出错
 					if(jsonString.ErrCode < 0){
-						$.messager.alert("提示:","作废错误,错误原因:"+"<font style='color:red;'>"+jsonString.ErrMsg+"</font>");  //+"第"+errnum+"条数据"
+						$.messager.alert($g("提示:"),$g("作废错误,错误原因:")+"<font style='color:red;'>"+$g(jsonString.ErrMsg)+"</font>");  //+"第"+errnum+"条数据"
 					}
 				},"json",false);
 				
@@ -2155,22 +1734,26 @@ var adviceditor={
 function CaseShare(){
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
 	if (selItems.length>1){
-		$.messager.alert("提示:","只能选中一行数据,请重试！");
+		$.messager.alert($g("提示:"),$g("只能选中一行数据,请重试！"));
 		return;
 	}
 	var RepID=selItems[0].RepID;         //关联主表ID
 	var RepTypeCode=selItems[0].RepTypeCode;         //报告类型代码
 	var params=RepID+"^"+RepTypeCode;
+	CaseShareShow(params);
+}
+function CaseShareShow(params){
 	$('#WardW').window({
-			title:'添加共享科室',
+			title:$g('案例共享'),
 			collapsible:false,
 			border:false,
 			minimizable:false,
 			maximizable:false,
+			resizable:false,
 			width:900,
 			height:450
 		});
@@ -2253,14 +1836,14 @@ function CaseShare(){
 		
 	// 定义columns
 	var columns=[[
-		{field:"RepDr",title:'报告指向',width:80,editor:texteditor,hidden:true}, 
-		{field:'RepTypeCode',title:'状态代码',width:80,editor:texteditor,hidden:true},
-		{field:"ShareLocDr",title:'科室Dr',width:80,editor:texteditor,hidden:true},
-		{field:"ShareLoc",title:'科室',width:200,editor:Eventeditor},		
-		{field:"ShareUserDr",title:'用户Dr',width:80,editor:texteditors,hidden:true},
-		{field:"ShareUser",title:'用户',width:140,editor:Usereditor},
-		{field:"ShareAdvice",title:'意见/目的',width:350,editor:adviceditor},
-		{field:'Active',title:'是否共享',width:80,editor:activeEditor},
+		{field:"RepDr",title:$g('报告指向'),width:80,editor:texteditor,hidden:true}, 
+		{field:'RepTypeCode',title:$g('状态代码'),width:80,editor:texteditor,hidden:true},
+		{field:"ShareLocDr",title:$g('科室Dr'),width:80,editor:texteditor,hidden:true},
+		{field:"ShareLoc",title:$g('科室'),width:200,editor:Eventeditor},		
+		{field:"ShareUserDr",title:$g('用户Dr'),width:80,editor:texteditors,hidden:true},
+		{field:"ShareUser",title:$g('用户'),width:140,editor:Usereditor},
+		{field:"ShareAdvice",title:$g('意见/目的'),width:350,editor:adviceditor},
+		{field:'Active',title:$g('是否共享'),width:80,editor:activeEditor},
 		{field:"ID",title:'ID',width:70,align:'center',hidden:true}
 	]];
 	
@@ -2275,7 +1858,7 @@ function CaseShare(){
 	    singleSelect:true,
 	    nowrap:false,
 	    pagination:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 	    onDblClickRow: function (rowIndex, rowData) {//双击选择行编辑
 	    
             if ((loceditRow != "")||(loceditRow == "0")) {
@@ -2310,10 +1893,6 @@ function CaseShare(){
         }
         
 	});
-	/* $('#Warddg').datagrid({
-		url:'dhcapp.broker.csp?ClassName=web.DHCADVCASESHARE&MethodName=QueryCaseShare'+'&params='+params+'&rows='+10+'&page='+1
-	});	 */
-	
 }
 
 /* ///添加安全小组成员病区-增加
@@ -2338,11 +1917,11 @@ function addWardAdd()
 {	
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
 	if (selItems.length>1){
-		$.messager.alert("提示:","只能选中一行数据,请重试！");
+		$.messager.alert($g("提示:"),$g("只能选中一行数据,请重试！"));
 		return;
 	}
 	
@@ -2356,7 +1935,7 @@ function addWardAdd()
 	for(var i=0;i<rows.length;i++)
 	{
 		if((rows[i].ShareLoc=="")){
-			$.messager.alert("提示","有必填项未填写，请核实!"); 
+			$.messager.alert($g("提示"),$g("有必填项未填写，请核实!")); 
 			return false;
 		}
 	} 
@@ -2380,14 +1959,14 @@ function saveSecuGUW()
 	}
 	var rows = $("#Warddg").datagrid('getChanges');
 	if(rows.length<=0){
-		$.messager.alert("提示","没有待保存数据!");
+		$.messager.alert($g("提示"),$g("没有待保存数据!"));
 		return;
 	}
 	var dataList = [];
 	for(var i=0;i<rows.length;i++)
 	{
 		if((rows[i].ShareLoc=="")){
-			$.messager.alert("提示","有必填项未填写，请核实!"); 
+			$.messager.alert($g("提示"),$g("有必填项未填写，请核实!")); 
 			return false;
 		}
 		var tmp=rows[i].ID+"^"+rows[i].RepDr+"^"+rows[i].RepTypeCode+"^"+rows[i].ShareLocDr+"^"+rows[i].Active+"^"+LgUserID+"^"+rows[i].ShareUserDr+"^"+rows[i].ShareAdvice;
@@ -2398,12 +1977,12 @@ function saveSecuGUW()
 	runClassMethod("web.DHCADVCASESHARE","SaveCaseShare",{'DataList':rowstr},
 	function(data){ 
 		if(data==0){
-			$.messager.alert('提示','操作成功');
+			$.messager.alert($g('提示'),$g('操作成功'));
 		}else if ((data == -1)||((data == -2))){
-			$.messager.alert('提示','科室重复,请核实后再试','warning');
+			$.messager.alert($g('提示'),$g('科室重复,请核实后再试'),'warning');
 			return;	//2017-03-17 保存失败，刷新字典表
 		}else {
-			$.messager.alert('提示','操作失败','warning');
+			$.messager.alert($g('提示'),$g('操作失败'),'warning');
 			return;	//2017-03-17 保存失败，刷新字典表
 		}
 	},"",false);
@@ -2419,29 +1998,44 @@ function RepDelete()
 {
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
+		return;
+	}
+	if (selItems.length>1){
+		$.messager.alert($g("提示:"),$g("请选中一条数据！"));
 		return;
 	}
 	var RepFileFlag=""; //归档状态 2018-01-23
-	$.each(selItems, function(index, item){
-		var FileFlag=item.FileFlag; //归档状态 2018-01-23
-		if (FileFlag=="已归档"){
-			RepFileFlag="-1";
-		}
-	})
+	var StatusLast=selItems[0].StatusLast; //报告上一状态
+	var RepUserDr=selItems[0].RepUserDr; //报告人
+	var Medadrreceivedr=selItems[0].Medadrreceivedr; //接收状态dr
+	var FileFlag=selItems[0].FileFlag; //归档状态 2018-01-23
+	
+	if (FileFlag=="已归档"){
+		RepFileFlag="-1";
+	}
+	
 	if (RepFileFlag=="-1"){
-		$.messager.alert("提示:","所选报告存在已归档报告，不能删除！");
+		$.messager.alert($g("提示:"),$g("所选报告存在已归档报告，不能删除！"));
 		return;
 	}
-	$.messager.confirm("提示", "是否进行删除操作", function (res) {//提示是否删除
+	if (RepUserDr!=LgUserID){
+		$.messager.alert($g("提示:"),$g("报告非本人上报，不能删除！"));
+		return;
+	}
+	if (((StatusLast!="")||(Medadrreceivedr!="未接收"))&&(Medadrreceivedr!=2)){
+		$.messager.alert($g("提示:"),$g("报告已被接收或审核，不能删除！"));
+		return;
+	}
+
+	$.messager.confirm($g("提示"), $g("是否进行删除操作"), function (res) {//提示是否删除
 		if (res) {
 			$.each(selItems, function(index, item){
 				var RepID=item.RepID;         //关联主表ID
 				runClassMethod("web.DHCADVCOMMONPART","DelRepData",{'RepID':RepID},
 				function(data){ 
-					//var num=$('#maindg').datagrid("getRowIndex",item)+1; //2017-04-06  获取行数 区分哪一行操作出错
 					if(data< 0){
-						$.messager.alert("提示:","删除失败！");  //+"第"+errnum+"条数据"
+						$.messager.alert($g("提示:"),$g("删除失败！"));  //+"第"+errnum+"条数据"
 					}
 				},"",false);
 				
@@ -2461,17 +2055,17 @@ function fish(){
 	}
 	var RepType=$('#typeevent').combobox('getValue');  //报告类型
 	if (((RepTypeCode=="")||(RepTypeCode==undefined))&&((RepType=="")||(RepType==undefined))){
-		$.messager.alert("提示:","请选中一条数据或者选择具体类型重试！");
+		$.messager.alert($g("提示:"),$g("请选中一条数据或者选择具体类型重试！"));
 		return;
 	}
 	var StDate=$('#stdate').datebox('getValue');   //起始日期
 	var EndDate=$('#enddate').datebox('getValue'); //截止日期
 	
-	var StrParam=StDate+"^"+EndDate+"^"+RepTypeCode+"^"+RepType
+	var StrParamList=StDate+"^"+EndDate+"^"+RepTypeCode+"^"+RepType;
 	if($('#fishwin').is(":visible")){return;}  //窗体处在打开状态,退出
 	$('body').append('<div id="fishwin"></div>');
 	$('#fishwin').window({
-		title:'鱼骨图',
+		title:$g('鱼骨图'),
 		collapsible:false,
 		border:false,
 		minimizable:false,
@@ -2481,7 +2075,7 @@ function fish(){
 		height:620
 	});
 	
-	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcadv.fishbone.csp?RepID='+RepID+'&StrParam='+StrParam+'"></iframe>';
+	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcadv.fishbone.csp?RepID='+RepID+'&StrParam='+StrParamList+'"></iframe>';
 	$('#fishwin').html(iframe);
 	$('#fishwin').window('open');
 }
@@ -2505,7 +2099,7 @@ function LoadPatientRecord(PatID,Adm){
 
 	$('body').append('<div id="winlode"></div>');
 	$('#winlode').window({
-		title:'病历浏览列表',
+		title:$g('病历浏览列表'),
 		border:false,
 		collapsible:false,
 		minimizable:false,
@@ -2535,9 +2129,9 @@ function setPatOutForm(value, rowData, rowIndex)
 	var PatOutFlag=escape(rowData.PatOutFlag);         // 转归标识
 	
 	if (PatOutFlag == "Y"){
-		html = "<a href='#' onclick=\"LoadPatOutcomWin('"+RepID+"','"+recordID+"')\" >是</a>";
+		html = "<a href='#' onclick=\"LoadPatOutcomWin('"+RepID+"','"+recordID+"')\" >"+$g("是")+"</a>";
 	}else{
-		html = "<span>否</span>";
+		html = "<span>"+$g("否")+"</span>";
 	}
     return html;
     
@@ -2550,7 +2144,7 @@ function LoadPatOutcomWin(RepID,recordID)
 
 	$('body').append('<div id="patoutwin"></div>');
 	$('#patoutwin').window({
-		title:'患者转归',
+		title:$g('患者转归'),
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,
@@ -2585,11 +2179,11 @@ function htmlPrint(){
 
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
 	if (selItems.length>1){
-		$.messager.alert("提示:","请选中一条数据！");
+		$.messager.alert($g("提示:"),$g("请选中一条数据！"));
 		return;
 	}
 	var RepID=selItems[0].RepID;//报告ID
@@ -2610,18 +2204,49 @@ function ButtonInfo(){
 		$('#RepDelete').hide();
 		$('#RepCancel').hide();
 		$('#Fish').hide();
+		$('#RepImpFlag').hide();
+		$('#SHare').hide();
 		return;
 	}
-	var FileOperSec="",CaseShareOperSec="",DeleteOperSec="",CancelOperSec="",FishOperSec="";
+	var FileOperSec="",CaseShareOperSec="",DeleteOperSec="",CancelOperSec="",FishOperSec="",RepImpFlagSec="",ShareFlagSec="";
 	$.each(selItems, function(index, item){
 		var RepTypeCode=item.RepTypeCode; //报告类型代码
+		var RepImpFlag=item.RepImpFlag;    //重点关注
+		    if ((RepImpFlag==$g("关注"))){
+				$('#RepImpFlag').attr('class','toolbar-focusUndo');
+				$('#RepImpFlag').text($g("取消关注"));
+		    }else{
+				$('#RepImpFlag').attr('class','toolbar-focus');
+				$('#RepImpFlag').text($g("重点关注"));
+		    }
 		//if((RepTypeCode=="advPipeOff")||(RepTypeCode=="advDrugUseErr")||(RepTypeCode=="advFallDownFill")||(RepTypeCode=="advSkinUlcer")){
         	FishOperSec="Y";
        // }
-		var OperSecparams=LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+RepTypeCode;
-		runClassMethod("web.DHCADVCOMMON","GetOperSecAll",{'params':OperSecparams},
+       
+       var RepShareStatus=item.RepShareStatus;    // 分享状态
+       if ((RepShareStatus==$g("分享"))){
+			$('#SHare').attr('class','adv_sel_71');
+			$('#SHare').text($g("撤销分享"));
+		}else{
+			$('#SHare').attr('class','adv_sel_7');
+			$('#SHare').text($g("分享"));
+		}
+       
+		runClassMethod("web.DHCADVCOMMON","GetOperSecAll",{'RepTypeCode':RepTypeCode,'LgParam':LgParam},
 		function(data){
 			var tmp=data.split("^"); 
+			// 分享权限
+			if((tmp[0]=="Y")&&(ShareFlagSec!="N")){
+				ShareFlagSec="Y";
+	        }else{
+		        ShareFlagSec="N";
+		    }
+			//重点关注权限
+			if((tmp[1]=="Y")&&(RepImpFlagSec!="N")){
+				RepImpFlagSec="Y";
+	        }else{
+		        RepImpFlagSec="N";
+		    }
 			//归档权限
 			if((tmp[2]=="Y")&&(FileOperSec!="N")){
 				FileOperSec="Y";
@@ -2646,10 +2271,23 @@ function ButtonInfo(){
 	        }else{
 		        CancelOperSec="N";
 		    }
-		   
+		   	
+
 		},"text",false);
 		
 	})
+	// 分享权限
+	if(ShareFlagSec=="N"){
+		$('#SHare').hide();
+    }else{
+		$('#SHare').show();
+    }
+	//重点关注权限
+	if(RepImpFlagSec=="N"){
+		$('#RepImpFlag').hide();
+    }else{
+		$('#RepImpFlag').show();
+    }
 	//归档权限
 	if(FileOperSec=="N"){
 		$('#File').hide();
@@ -2693,11 +2331,11 @@ function InitFileList()
 		{field:"ck",checkbox:true,width:20},
 		{field:"FileId",title:'FileId',width:80,hidden:true},
 		{field:"AuitUserId",title:'AuitUserId',width:80,hidden:true},
-		{field:'AuitUser',title:'归档用户',width:80,align:'center'},
+		{field:'AuitUser',title:$g('归档用户'),width:80,align:'center'},
 		{field:'FileFlagCode',title:'FileFlagCode',width:60,align:'center',hidden:true},
-		{field:'FileFlag',title:'归档标识',width:60,align:'center'},
-		{field:'FileDate',title:'归档日期',width:160,align:'center'},
-		{field:'FileTime',title:'归档时间',width:100,align:'center'}
+		{field:'FileFlag',title:$g('归档标识'),width:60,align:'center'},
+		{field:'FileDate',title:$g('归档日期'),width:160,align:'center'},
+		{field:'FileTime',title:$g('归档时间'),width:100,align:'center'}
 	]];
 	//定义datagrid
 	$('#filelist').datagrid({
@@ -2708,7 +2346,7 @@ function InitFileList()
 		pageSize:40,  // 每页显示的记录条数
 		pageList:[40,80],   // 可以设置每页记录条数的列表
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		nowrap:false
 	});
@@ -2725,11 +2363,11 @@ function InitCancFileList(flag)
 		//{field:'ItemOpt',title:'操作',width:60,align:'center',formatter:SetCanFileOpUrl},
 		{field:"FileId",title:'FileId',width:80,hidden:true},
 		{field:"AuitUserId",title:'AuitUserId',width:80,hidden:true},
-		{field:'AuitUser',title:'归档用户',width:80,align:'center'},
+		{field:'AuitUser',title:$g('归档用户'),width:80,align:'center'},
 		{field:'FileFlagCode',title:'FileFlagCode',width:60,align:'center',hidden:true},
-		{field:'FileFlag',title:'归档标识',width:60,align:'center'},
-		{field:'FileDate',title:'归档日期',width:160,align:'center'},
-		{field:'FileTime',title:'归档时间',width:100,align:'center'}
+		{field:'FileFlag',title:$g('归档标识'),width:60,align:'center'},
+		{field:'FileDate',title:$g('归档日期'),width:160,align:'center'},
+		{field:'FileTime',title:$g('归档时间'),width:100,align:'center'}
 	]];
 	//定义datagrid
 	$('#cancelfilelist').datagrid({
@@ -2740,7 +2378,7 @@ function InitCancFileList(flag)
 		pageSize:40,  // 每页显示的记录条数
 		pageList:[40,80],   // 可以设置每页记录条数的列表
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		pagination:true,
 		nowrap:false
 	});
@@ -2752,7 +2390,7 @@ function SetCanFileOpUrl(value, rowData, rowIndex){
 		 return "";
 	}
 	if ((rowData.FileFlagCode == "01")||(rowData.FileFlagCode == "02")){
-		var html = "<a href='#' onclick='ConfirmFileNew("+rowIndex+","+rowData.FileFlagCode+")'>撤销</a>";
+		var html = "<a href='#' onclick='ConfirmFileNew("+rowIndex+","+rowData.FileFlagCode+")'>"+$g("撤销")+"</a>";
 	}
     return html;
 }
@@ -2761,12 +2399,12 @@ function ConfirmCanFile()
 {
 	var canfilereason=$('#canfilereason').val();
 	if (canfilereason==""){
-		$.messager.alert("提示:","撤销归档建议不能为空！");
+		$.messager.alert($g("提示:"),$g("撤销归档建议不能为空！"));
 		return;
 	}
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
 	var canitem=$('#cancelfilelist').datagrid('getRows');
@@ -2782,9 +2420,9 @@ function ConfirmCanFile()
 	runClassMethod("web.DHCADVCOMMONPART","FileMataReport",{'auditparams':auditparams,'fileparams':fileparams},
 		function(jsonString){
 			if(jsonString=="-1") {
-				$.messager.alert("提示:","报告撤销操作失败! 失败原因:撤销操作人与操作人不一致");
+				$.messager.alert($g("提示:"),$g("报告撤销操作失败! 失败原因:撤销操作人与操作人不一致"));
 			}else if((jsonString !=0)){
-				$.messager.alert("提示:","报告撤销操作失败!"+"ErrCode:"+jsonString);   ///+"第"+errnum+"条数据"
+				$.messager.alert($g("提示:"),$g("报告撤销操作失败!")+"ErrCode:"+jsonString);   ///+"第"+errnum+"条数据"
 			}
 	},"",false);
 	$('#maindg').datagrid('reload'); //重新加载
@@ -2813,17 +2451,17 @@ function addCondition(){
 	
 	curCondRow=curCondRow+1;
 	var html=""
-	html+='<tr id="'+curCondRow+'Tr"><td><b style="padding-left:30px">查询条件</b>';
+	html+='<tr id="'+curCondRow+'Tr"><td><b style="padding-left:30px">'+$g("查询条件")+'</b>';
 	html+=getLookUpHtml(curCondRow,1);
 	html+=getSelectHtml(curCondRow,1);
 	html+='<span style="padding-left:20px;"><input class="dhcc-input" id="QueCond"'+curCondRow+"-"+1+' style="width:120"/></span>';
-	html+='</td><td style="padding-left:60px"><b style="padding-left:30px">查询条件</b>';
+	html+='</td><td style="padding-left:60px"><b style="padding-left:30px">'+$g("查询条件")+'</b>';
 	html+=getLookUpHtml(curCondRow,2);
 	html+=getSelectHtml(curCondRow,2);
 	html+='<span style="padding-left:20px;"><input class="dhcc-input" id="QueCond"'+curCondRow+"-"+2+' style="width:120"/></span>';
-	html+='</td><td style="padding-left:20px"><span style="cursor: pointer" onclick="addCondition()"><span  class="icon icon-add" >&nbsp;&nbsp;&nbsp;&nbsp;</span>增加行</span></td>>';
+	html+='</td><td style="padding-left:20px"><span style="cursor: pointer" onclick="addCondition()"><span  class="icon icon-add" >&nbsp;&nbsp;&nbsp;&nbsp;</span>'+$g("增加行")+'</span></td>>';
 	if(curCondRow>2){
-		html+='</td><td style="padding-left:20px"><span style="cursor: pointer" onclick="removeCond('+curCondRow+')"><span  class="icon icon-remove" >&nbsp;&nbsp;&nbsp;&nbsp;</span>删除行</span></td></tr>';
+		html+='</td><td style="padding-left:20px"><span style="cursor: pointer" onclick="removeCond('+curCondRow+')"><span  class="icon icon-remove" >&nbsp;&nbsp;&nbsp;&nbsp;</span>'+$g("删除行")+'</span></td></tr>';
 	}
 	$("#condTable").append(html);
 	//条件
@@ -2891,14 +2529,14 @@ function getLookUpHtml(row,column){
 function toggleExecInfo(obj){
 	if($(obj).hasClass("expanded")){
 		$(obj).removeClass("expanded");
-		$(obj).html("高级查询");
+		$(obj).html($g("高级查询"));
 		$("#condTable").hide();
 		$("#dashline").hide();
 		$("#condTd").hide();
 		
 	}else{
 		$(obj).addClass("expanded");
-		$(obj).html("隐藏");
+		$(obj).html($g("隐藏"));
 		$("#condTable").show();
 		$("#dashline").show();
 		$("#condTd").show();
@@ -2971,29 +2609,27 @@ function Print()
 {
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
-	if (selItems.length>1){
-		$.messager.alert("提示:","请选中一条数据！");
-		return;
-	}
-	var RepID=selItems[0].RepID;//报告ID
-	var RepTypeCode=selItems[0].RepTypeCode;//报告类型代码/表单名称Code
-	runClassMethod("web.DHCADVRepPrint","GetPrintData",{"AdvMasterDr":RepID,"PrintUserId":LgUserID,"LgHospID":LgHospID},function(ret){
-		dhcprtPrint(RepTypeCode,ret,"print");
-	},"json");
+	$.each(selItems, function(index, item){
+		var RepID=item.RepID;//报告ID
+		var RepTypeCode=item.RepTypeCode;//报告类型代码/表单名称Code
+		runClassMethod("web.DHCADVRepPrint","GetPrintData",{"AdvMasterDr":RepID,"PrintUserId":LgUserID,"LgHospID":LgHospID},function(ret){
+			dhcprtPrint(RepTypeCode,ret,"print");
+		},"json");
+	})
 }
 ///导出word格式
-function ExportWord()
+function ExportWordFile()
 {
 	var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
 	if (selItems.length>1){
-		$.messager.alert("提示:","请选中一条数据！");
+		$.messager.alert($g("提示:"),$g("请选中一条数据！"));
 		return;
 	}
 	var RepID=selItems[0].RepID;//报告ID
@@ -3009,11 +2645,11 @@ function DeptConBtn(){
 	var AssWinCode="FunDeptConform"
     var selItems = $('#maindg').datagrid('getSelections');
 	if (!selItems.length){
-		$.messager.alert("提示:","请选中行,重试！");
+		$.messager.alert($g("提示:"),$g("请选中行,重试！"));
 		return;
 	}
    	if (selItems.length>1){
-		$.messager.alert("提示:","持续追踪操作,请只选择一行数据！");
+		$.messager.alert($g("提示:"),$g("持续追踪操作,请只选择一行数据！"));
 		return;
 	}
 	var recordId=selItems[0].recordID
@@ -3021,7 +2657,7 @@ function DeptConBtn(){
 
 	$('body').append('<div id="deptconwin"></div>');
 	$('#deptconwin').window({
-		title:LgGroupDesc+'持续追踪内容',
+		title:LgGroupDesc+$g('持续追踪内容'),
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,
@@ -3048,6 +2684,7 @@ function DeptConBtn(){
 function closeDeptConWindow()
 {  
 	$('#deptconwin').window('close');
+	$('#linkwin').window('close');
 }
 
 
@@ -3058,6 +2695,11 @@ function setLinkList(value, rowData, rowIndex)
 	var RepID=rowData.RepID;         //报表ID
 	var RepType=rowData.RepType;         //报表ID	
 	var PatOutFlag=rowData.PatOutFlag;         // 转归标识
+	var CaseShareflag=rowData.CaseShareflag; // 案例共享标志
+	var RepTypeCode=rowData.RepTypeCode;         //报告类型代码
+	var params=RepID+"^"+RepTypeCode;
+	var SubUserflag=rowData.SubUserflag;  // 被转抄用户标识
+	
 	var FunDeptFlag="",RepAssFalg="";
 	var PatOutFormCode="PatOutcomform",FunDeptFormCode="FunDeptConform";
 	if(RepType.indexOf("院外")>=0){
@@ -3075,23 +2717,37 @@ function setLinkList(value, rowData, rowIndex)
 	},"text",false);
 			
 	if (PatOutFlag == "Y"){
-		html = "<a href='#' onclick=\"LoadLinkWin('"+RepID+"','"+recordID+"','"+PatOutFormCode+"','转归')\" >转归</a>";
+		html = "<a href='#' id='zg' class='dhcc-btn-tb'  onclick=\"LoadLinkWin('"+RepID+"','"+recordID+"','"+PatOutFormCode+"',$g('转归'))\" >"+$g("转归")+"</a>";
 	}else{
-		html = "<span style='color:#CCCCCC;'>转归</span>";
+		html ="<span class='dhcc-btn-tb disabled' style='cursor:default;'>"+$g("转归")+"</span>";
 	}
 	if (FunDeptFlag == "Y"){
-		html =html+ "/<a href='#' onclick=\"LoadLinkWin('"+RepID+"','"+recordID+"','"+FunDeptFormCode+"','追踪反馈')\" >反馈</a>";
+		html =html+ "<a href='#' class='dhcc-btn-tb yellow' onclick=\"LoadLinkWin('"+RepID+"','"+recordID+"','"+FunDeptFormCode+"',$g('追踪反馈'))\" >"+$g("反馈")+"</a>";
 	}else{
-		html =html+ "/<span style='color:#CCCCCC;'>反馈</span>";
+		html =html+ "<span class='dhcc-btn-tb disabled' style='cursor:default;'>"+$g("反馈")+"</span>";
 	}
 	if (RepAssFalg == "Y"){
-		html =html+ "/<span style='color:#40a2de;'>评估</span>";
+		html =html+ "<span class='dhcc-btn-tb' style='cursor:default;'>"+$g("评估")+"</span>";
 	}else{
-		html =html+ "/<span style='color:#CCCCCC;'>评估</span>";
+		html =html+ "<span class='dhcc-btn-tb disabled' style='cursor:default;'>"+$g("评估")+"</span>";
+	
 	}
+	if (CaseShareflag == "Y"){
+		html = html+ "<a href='#' class='dhcc-btn-tb yellow' onclick=\"ShowWin('"+params+"')\" >"+$g("案例共享")+"</a>";
+	}else{
+		html =html+ "<span class='dhcc-btn-tb disabled' style='cursor:default;'>"+$g("案例共享")+"</span>";
+	}
+	if (SubUserflag == "1"){
+		//html = html+ "<a href='#' id='zc' class='dhcc-btn-tb' onclick=\"TranList('"+params+"')\" >"+$g("转抄")+"</a>";
+		html =html+ "<span class='dhcc-btn-tb' style='cursor:default;'>"+$g("转抄")+"</span>";
+	}else{
+		html =html+ "<span class='dhcc-btn-tb disabled' style='cursor:default;'>"+$g("转抄")+"</span>";
+	}
+	
     return html;
     
 }
+
 //编辑窗体  2018-05-07 cy 转归界面
 function LoadLinkWin(RepID,recordID,FormCode,FormTitle)
 {
@@ -3119,3 +2775,82 @@ function LoadLinkWin(RepID,recordID,FormCode,FormTitle)
 	$('#linkwin').html(iframe);
 	$('#linkwin').window('open');
 }
+
+// 2021-03-18 cy 案例共享查看
+function ShowWin(params){
+	CaseShareShow(params);
+	$('#WardWbar').hide();
+}
+
+/// 2021-03-18 cy 设置转抄明细连接  
+function setTranList(value, rowData, rowIndex)
+{
+		var RepID=escape(rowData.RepID);         //报表ID
+		var RepTypeCode=escape(rowData.RepTypeCode); //报告类型代码
+		var params=RepID+"^"+RepTypeCode;
+		return "<a href='#' onclick=\"TranList('"+params+"')\"><img src='../scripts/dhcadvEvt/images/adv_sel_11.png' border=0/></a>";
+}
+// 2021-03-18 cy 转抄明细查看
+function TranList(params)
+{
+	$('#TranWin').window({
+		title:$g('转抄明细'),
+		collapsible:false,
+		border:false,
+		minimizable:false,
+		maximizable:false,
+		resizable:false,
+		width:1100,
+		height:500
+	});
+	$('#TranWin').window('open');	
+	
+	//定义columns
+	var columns=[[
+		{field:'MedItmID',title:$g('转抄ID'),width:150,hidden:true},
+		{field:'MedIAuditDateTime',title:$g('转抄时间'),width:150,hidden:false},
+		{field:'MedIAuditUser',title:$g('转抄人'),width:100,hidden:false},
+		{field:'MedIAuditUserDR',title:$g('转抄人ID'),width:100,hidden:true},
+		{field:'MedILocAdvice',title:$g('转抄处理意见'),width:200,formatter:setLocAdvice},
+		{field:'MedINextLoc',title:$g('转抄指向科室'),width:150},
+		{field:'MedINextLocDR',title:$g('转抄指向科室指向ID'),width:100,hidden:true},
+		{field:'MedINextUser',title:$g('转抄指向人员'),width:100},
+		{field:'MedINextUserDR',title:$g('转抄指向人员ID'),width:100,hidden:true},
+		{field:'MedIUserAdvice',title:$g('人员回复意见'),width:200,formatter:setUserAdvice},
+		{field:'MedIReceive',title:$g('接收状态'),width:60},
+		{field:'DutyFlag',title:$g('备注'),width:200},
+		{field:'MedIReceiveDateTime',title:$g('接收时间'),width:150},
+		{field:'MedICompleteDateTime',title:$g('完成时间'),width:150}
+	]];
+	//定义datagrid
+	$('#Trandg').datagrid({   
+		title:'',
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVSEARCHREPORT&MethodName=QueryTranMess'+'&params='+params,
+		fit:true,
+		border:false,
+		rownumbers:true,
+		columns:columns,
+		pageSize:40,  // 每页显示的记录条数
+		pageList:[40,80],   // 可以设置每页记录条数的列表
+	    singleSelect:false,
+		loadMsg: $g('正在加载信息...'),
+		pagination:true,
+        nowrap:false
+	});	
+	
+}
+//操作  病历
+function setLocAdvice(value, rowData, rowIndex)
+{   
+    return $_TrsTxtToSymbol(rowData.MedILocAdvice);
+   // return "<a href='#' mce_href='#' onclick='LoadPatientRecord("+rowData.PatID+","+Adm+");'>"+PatNo+"</a>";  
+    
+}
+//操作  病历
+function setUserAdvice(value, rowData, rowIndex)
+{   
+    return $_TrsTxtToSymbol(rowData.MedIUserAdvice);
+   // return "<a href='#' mce_href='#' onclick='LoadPatientRecord("+rowData.PatID+","+Adm+");'>"+PatNo+"</a>";  
+    
+}
+

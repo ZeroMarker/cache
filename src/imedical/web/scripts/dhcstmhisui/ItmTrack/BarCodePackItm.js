@@ -4,19 +4,18 @@
  * @param {} InfoStr
  */
 function BarCodePackItm(dhcit, InfoStr) {
-	
 	var Info = tkMakeServerCall('web.DHCSTMHUI.DHCItmTrack', 'GetPackInciStr', dhcit);
-	//获取不到关联信息的,不再显示该Window
-	if(isEmpty(Info)){
+	// 获取不到关联信息的,不再显示该Window
+	if (isEmpty(Info)) {
 		return false;
 	}
 	
-	//显示已存在的信息
+	// 显示已存在的信息
 	function GetPackItmInfo() {
 		if (isEmpty(dhcit)) {
 			return;
 		}
-		var ParamsObj = {DHCIT : dhcit};
+		var ParamsObj = { DHCIT: dhcit };
 		var Params = JSON.stringify(ParamsObj);
 		PackItmGrid.load({
 			ClassName: 'web.DHCSTMHUI.DHCItmTrack',
@@ -27,14 +26,14 @@ function BarCodePackItm(dhcit, InfoStr) {
 		});
 	}
 	
-	var ManfParams = JSON.stringify(addSessionParams({StkType:"M"}));
+	var ManfParams = JSON.stringify(addSessionParams({ StkType: 'M' }));
 	var PackItmManf = {
 		type: 'combobox',
 		options: {
 			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetPhManufacturer&ResultSetType=array&Params=' + ManfParams,
 			valueField: 'RowId',
 			textField: 'Description',
-			onSelect: function(record){
+			onSelect: function(record) {
 				var rows = PackItmGrid.getRows();
 				var row = rows[PackItmGrid.editIndex];
 				row['ManfDesc'] = record['Description'];
@@ -44,70 +43,70 @@ function BarCodePackItm(dhcit, InfoStr) {
 	
 	var PackItmCm = [[
 		{
-			title : '明细ID',
-			field : 'RowId',
-			width : 60,
-			hidden : true
+			title: '明细ID',
+			field: 'RowId',
+			width: 60,
+			hidden: true
 		}, {
-			title : '物资RowId',
-			field : 'InciId',
-			width : 60,
-			hidden : true
+			title: '物资RowId',
+			field: 'InciId',
+			width: 60,
+			hidden: true
 		}, {
-			title : '物资代码',
-			field : 'InciCode',
-			width : 100,
-			sortable : true
+			title: '物资代码',
+			field: 'InciCode',
+			width: 100,
+			sortable: true
 		}, {
-			title : '物资名称',
-			field : 'InciDesc',
-			width : 120,
-			sortable : true
+			title: '物资名称',
+			field: 'InciDesc',
+			width: 120,
+			sortable: true
 		}, {
-			title : '规格',
-			field : 'Spec',
-			width : 120
+			title: '规格',
+			field: 'Spec',
+			width: 120
 		}, {
-			title : '自带条码',
-			field : 'OriginalCode',
-			width : 150,
-			sortable : true,
-			editor : {
+			title: '自带条码',
+			field: 'OriginalCode',
+			width: 150,
+			sortable: true,
+			editor: {
 				type: 'validatebox',
 				options: {
-					//required: true
+					// required: true
 				}
 			}
 		}, {
-			title : '批号',
-			field : 'BatchNo',
-			width : 120,
-			align : 'left',
-			sortable : true,
-			editor : {
+			title: '批号',
+			field: 'BatchNo',
+			width: 120,
+			align: 'left',
+			sortable: true,
+			editor: {
 				type: 'validatebox',
 				options: {
-					//required: true
+					// required: true
 				}
 			}
 		}, {
-			title : '效期',
-			field : 'ExpDate',
-			width : 120,
-			align : 'left',
-			sortable : true,
-			editor : {
+			title: '效期',
+			field: 'ExpDate',
+			width: 120,
+			align: 'left',
+			sortable: true,
+			editor: {
 				type: 'datebox',
 				options: {
-					//required: true
+					// required: true
 				}
 			}
 		}, {
-			title : '厂商',
-			field : 'ManfId',
-			width : 120,
-			align : 'left',
-			sortable : true,
+			title: '生产厂家',
+			field: 'ManfId',
+			width: 120,
+			align: 'left',
+			sortable: true,
 			formatter: CommonFormatter(PackItmManf, 'ManfId', 'ManfDesc'),
 			editor: PackItmManf
 		}
@@ -122,7 +121,7 @@ function BarCodePackItm(dhcit, InfoStr) {
 		fitColumns: true
 	});
 	
-	function PackItmSplitDetail(index, row){
+	function PackItmSplitDetail(index, row) {
 		row['RowId'] = '';
 		PackItmGrid.insertRow({
 			index: index + 1,
@@ -130,8 +129,8 @@ function BarCodePackItm(dhcit, InfoStr) {
 		});
 	}
 	
-	function PackItmDeleteDetail(index, row){
-		if(row['RowId'] != ''){
+	function PackItmDeleteDetail(index, row) {
+		if (row['RowId'] != '') {
 			$UI.msg('alert', '已保存明细不可删除!');
 			return;
 		}
@@ -140,10 +139,10 @@ function BarCodePackItm(dhcit, InfoStr) {
 	}
 
 	$HUI.dialog('#BarCodePackItmWin', {
-		title : InfoStr + ' 明细信息',
+		title: InfoStr + ' 明细信息',
 		width: gWinWidth,
 		height: gWinHeight,
-		onOpen: function(){
+		onOpen: function() {
 			GetPackItmInfo(dhcit);
 		}
 	}).open();

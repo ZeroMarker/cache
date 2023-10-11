@@ -1,10 +1,13 @@
 ﻿var g_returnData={};
+//病种查询过的科室
+var disSelectedLocId = "";
 //病种数量
 var _diseaseCount=0;
 //初始化标志
 var _flagInit = true;
+var TempData = "";
 $(function(){
-    if (action == "updateTitle")
+    if ((action == "updateTitle")||(action == "modifyTitle"))
 	{
 		initChangeTitle();
 	}
@@ -12,15 +15,95 @@ $(function(){
 	{
 		//根据诊断取病种关联模板
 		if (openDiseaseTemp=="Y"){
-			InitDiseaseCom(locId);
+            if(_flagInit){
+                initDisease(); 
+                _flagInit=false;
+            }
 		}else{
 			$("#selDiseaseSpecies").css("display","none");
 			GetUserTemplate(locId,"");
 		}
 		initLoc();
 	}
+	
+	$HUI.radio("[name='rdoLoc']",{
+	    onChecked:function(e,value){
+			var diseaseSpeciescode = ""; 
+			var diseaseSpeciesGrid = $('#selDiseaseSpecies').combogrid('grid').datagrid('getSelected');
+			if(diseaseSpeciesGrid != null)
+			{
+				diseaseSpeciescode = diseaseSpeciesGrid.Code;
+			}		    
+            var ID = $(e.target).attr("id");    
+			searchTempByDisease(diseaseSpeciescode,ID);
+	    }
+    });	 
+    
+    if (openWay=="personal")
+	{
+		$HUI.radio("#rdoPerson").setValue(true);
+		getPersonalTreeData();
+	} 
+	
 });
-
+///病种
+function initDisease(){
+    //初始，选中患者本次就诊的病种
+    var diseaseData = getPatDisease(episodeId);
+    if (diseaseData !=""&&_flagInit){
+        initDiseaseCom(diseaseData);
+        $('#selDiseaseSpecies').combogrid('grid').datagrid('selectRow', 0);
+        GetUserTemplate(locId,diseaseData[0].Code,_flagInit);
+    }else{
+        if(DiagnosInfo!="" &&_flagInit){
+            if(DiagnosInfo.split("^")[1] == ""){
+                diseaseData = getDiseaseByDiagnos("",locId,"");
+                initDiseaseCom(diseaseData);
+                GetUserTemplate(locId,"",false);
+            }else{
+                diseaseData = getDiseaseByDiagnos(DiagnosInfo,locId,"");
+                initDiseaseCom(diseaseData);
+                //诊断不为空  第一次时根据诊断关联的病种选中第一条
+                if(diseaseData != ""){
+                    $('#selDiseaseSpecies').combogrid('grid').datagrid('selectRow', 0);
+                    GetUserTemplate(locId,diseaseData[0].Code,_flagInit);
+                }else{
+                    //诊断关联病种为空，直接加载模板
+                    GetUserTemplate(locId,"",false);
+                }
+            }
+        }else if(DiagnosInfo=="" && _flagInit){
+            diseaseData = getDiseaseByDiagnos("",locId,"");
+            initDiseaseCom(diseaseData);
+            GetUserTemplate(locId,"",false);
+        }
+    }
+}
+///根据诊断获取病种
+function getDiseaseByDiagnos(diagInfo,ctlocId,name){
+    var result = "";
+    jQuery.ajax({
+        type: "get",
+        dataType: "text",
+        url: "../EMRservice.Ajax.common.cls",
+        async: false,
+        data: {
+            "OutputType":"Stream",
+            "Class":"EMRservice.BL.BLUserTemplate",
+            "Method":"getDiseaseByDiagnos",
+            "p1":diagInfo,
+            "p2":ctlocId,
+            "p3":name
+        },
+        success: function(d) {
+            result = eval(d);
+        },
+        error: function() { 
+            alert("getDiseaseByDiagnos error");
+        }
+    });
+    return result;
+}
 function initLoc()
 {
 	jQuery.ajax({
@@ -81,17 +164,28 @@ function initLoc()
 ///查询卡片///////////////////////////////////////////////////////////////
 $('#search').searchbox({ 
 	searcher:function(value,name){ 
-		var selLocId = "";
-		if ($('#rdoLoc')[0].checked) selLocId = $('#selLocId').combobox('getValue');
-		var selDiseaseSpecies="";
-		if(openDiseaseTemp=="Y"){
-			var selected = $('#selDiseaseSpecies').combogrid('grid').datagrid('getSelected');
-			if(selected){
-				selDiseaseSpecies=selected.Code;
-			}	
+		if ($('#rdoPerson')[0].checked)
+		{
+            if (TempData == ""){
+                return;
+            }
+            var tmpTemplateData = findTemplate(TempData, value);
+            $('#templates').tree('loadData',tmpTemplateData);
 		}
-		
-		searchSelect(selLocId,value,selDiseaseSpecies);
+		else
+		{
+			var selLocId = "";
+			if ($('#rdoLoc')[0].checked) selLocId = $('#selLocId').combobox('getValue');
+			var selDiseaseSpecies="";
+			if(openDiseaseTemp=="Y"){
+				var selected = $('#selDiseaseSpecies').combogrid('grid').datagrid('getSelected');
+				if(selected){
+					selDiseaseSpecies=selected.Code;
+				}	
+			}
+			
+			searchSelect(selLocId,value,selDiseaseSpecies);
+		}
 
 	}          
 });
@@ -107,7 +201,7 @@ function searchSelect(sellocId,selvalue,selDiseaseSpecies)
 		data: {
 			"OutputType":"Stream",
 			"Class":"EMRservice.BL.BLUserTemplate",
-			"Method":"GetUserTemplateJson",
+			"Method":"GetUserTemplateTitlesJson",
 			"p1":sellocId,
 			"p2":docId,
 			"p3":episodeId,
@@ -138,12 +232,25 @@ function setTree(data)
 //ztree鼠标左键点击回调函数
 function ztOnClick(treeNode)
 {
-	if (treeNode.attributes.nodetype != "leaf") return
-	g_returnData = 
+	if ((treeNode.attributes.nodetype != "leaf")&&(treeNode.attributes.nodeType != "personal")) return
+	if (treeNode.attributes.nodetype == "leaf")
 	{
-	 	"code":treeNode.attributes.Code,
-	 	"titleCode":treeNode.attributes.TitleCode,
-	 	"titleName":treeNode.name
+		g_returnData = 
+		{
+		 	"code":treeNode.attributes.Code,
+		 	"titleCode":treeNode.attributes.TitleCode,
+		 	"titleName":treeNode.name
+		}
+	}
+	else
+	{
+		g_returnData = 
+		{
+		 	"code":treeNode.attributes.emrdocId,
+		 	"titleCode":treeNode.attributes.titleCode,
+		 	"titleName":treeNode.text,
+		 	"exampleId":treeNode.id
+		}
 	}
 	if (g_returnData.titleCode != "")
 	{
@@ -159,17 +266,17 @@ function ztOnClick(treeNode)
 	}
 }
 //加载病种下拉框
-function InitDiseaseCom(locId){ 
+function initDiseaseCom(comData){ 
 	$("#selDiseaseSpecies").combogrid({  
-		panelWidth:278,
+		panelWidth:390,
 		panelHeight:200,
-		url: "../EMRservice.Ajax.common.cls?OutputType=Stream&Class=EMRservice.BL.BLUserTemplate&Method=getDiseaseByDiagnos&p1="+DiagnosInfo+"&p2="+locId,		
-	    idField:'Id',  
+        data:comData,
+        idField:'Code',  
 	    textField:'Name',
 	    fitColumns: true,
 	    columns:[[  
 	        {field:'Code',title:'Code',width:130,sortable:true},  
-	        {field:'Name',title:'名称',width:130,sortable:true}  
+	        {field:'Name',title:'名称',width:230,sortable:true}  
 		 ]],
 		 keyHandler:{
 			up: function() {
@@ -232,78 +339,47 @@ function InitDiseaseCom(locId){
             }, 
 			query: function(q) {
 				if(q==""){
-					$("#icdlist").combogrid('clear');	
+					$("#icdlist").combogrid('clear');
+					searchTempByDisease("","");	
 				}
 				var selLocId="";
 				if ($('#rdoLoc')[0].checked) selLocId = $('#selLocId').combobox('getValue');
  	            //动态搜索
-	            $('#selDiseaseSpecies').combogrid("grid").datagrid("reload", {'p1':"",'p2':selLocId,'p3':q});
+                var diseaseData = getDiseaseByDiagnos("",selLocId,q);
+                $("#selDiseaseSpecies").combogrid({data:diseaseData});
 	            $('#selDiseaseSpecies').combogrid("setValue", q);  
 	        }
 	    },
 	    onSelect:function (idnex,d){
+            if (_flagInit){
+                return;
+            }
 		    var selDiseaseSpecies = d.Code;
 		    var selLocId = "";
 			if ($('#rdoLoc')[0].checked) selLocId = $('#selLocId').combobox('getValue');
-			if(_flagInit){
-				GetUserTemplate(locId,selDiseaseSpecies,_flagInit);	
-			}else{
-				searchSelect(selLocId,"",selDiseaseSpecies);
-			}
 			//选中后，存储患者类型
 			saveAdmPatType(episodeId,d.Code,userID)
+			// 选中病种后查询模板
+			searchTempByDisease(selDiseaseSpecies,"");
 			
 		 },
 	     onShowPanel:function(){
 			var selLocId = "";
 			if ($('#rdoLoc')[0].checked) selLocId = $('#selLocId').combobox('getValue');
-			if($('#selDiseaseSpecies').combogrid('grid').datagrid('getRows').length==0){
-				$('#selDiseaseSpecies').combogrid("grid").datagrid("reload", {'p1':"",'p2':selLocId ,'p3':""});	
+            if(($('#selDiseaseSpecies').combogrid('grid').datagrid('getRows').length==0)||(disSelectedLocId!=selLocId)){
+                disSelectedLocId = selLocId
+                var diseaseData = getDiseaseByDiagnos("",selLocId,"");
+                $("#selDiseaseSpecies").combogrid({data:diseaseData});  
 			}
 		},
-		 onLoadSuccess:function(){
-			  //初始，选中患者本次就诊的病种
-			var diseaseCode = getPatDisease(episodeId)
-			
-			if (diseaseCode!=""&&_flagInit)
-			{
-
-				objDisease = eval(diseaseCode);
-				$("#selDiseaseSpecies").combogrid("setValue",objDisease.Name);
-	
-				GetUserTemplate(locId,objDisease.Code,true);	
-					
-			}
-			else
-			{
-				
-				if(DiagnosInfo!="" &&_flagInit){
-					//诊断不为空  第一次时根据诊断关联的病种选中第一条
-					var rows = $('#selDiseaseSpecies').combogrid('grid').datagrid('getRows');
-					_diseaseCount=rows.length;
-					if(_diseaseCount>0){
-						$('#selDiseaseSpecies').combogrid('grid').datagrid('selectRow', 0);	
-					}else{
-						//诊断关联病种为空，直接加载模板
-						GetUserTemplate(locId,"",false);
-					}
-					
-					
-				}else if(DiagnosInfo=="" && _flagInit){
-					//诊断为空 第一次加载时默认加载科室病种  不选中
-					$('#selDiseaseSpecies').combogrid("grid").datagrid("reload", {'p1':"",'p2':locId,'p3':""});
-						GetUserTemplate(locId,"",false);	
-				}
-			}
-			_flagInit=false;
-		}
+        onLoadSuccess:function(data){
+        }
 	});
 }
 //模板操作////////////////////////////////////////////////////////////
 //取模板
 function GetUserTemplate(tmpLocId,selDiseaseSpecies,flag)
 {
-	selectLoc(); 
 	jQuery.ajax({
 		type: "get",
 		dataType: "text",
@@ -312,7 +388,7 @@ function GetUserTemplate(tmpLocId,selDiseaseSpecies,flag)
 		data: {
 			"OutputType":"Stream",
 			"Class":"EMRservice.BL.BLUserTemplate",
-			"Method":"GetUserTemplateJson",
+			"Method":"GetUserTemplateTitlesJson",
 			"p1":tmpLocId,
 			"p2":docId,
 			"p3":episodeId,
@@ -376,10 +452,10 @@ function closeWindow() {
 //获取患者就诊列表
 function getPatDisease(episodeId)
 {
-	var result = "0";
+    var result = "";
 	jQuery.ajax({
 		type: "get",
-		dataType: "json",
+        dataType: "text",
 		url: "../EMRservice.Ajax.common.cls",
 		async: false,
 		data: {
@@ -389,10 +465,12 @@ function getPatDisease(episodeId)
 			"p1":episodeId
 		},
 		success: function(d) {
-			result = JSON.stringify(d)=="{}"? "":d;
+            if (d != "{}"){
+                result = eval("["+d+"]");
+            }
 		},
 		error : function(d) { 
-			alert("initConfig error");
+            alert("getPatDisease error");
 		}
 	});	
 	return result;
@@ -427,3 +505,94 @@ function saveAdmPatType(episodeId,diseaseCode,userId)
 	return result;
 }
 
+function getPersonalTreeData()
+{
+	jQuery.ajax({
+		type: "get",
+		dataType: "text",
+		url: "../EMRservice.Ajax.common.cls",
+		async: true,
+		data: {
+			"OutputType":"Stream",
+			"Class":"EMRservice.BL.PersonalTemplate",
+			"Method":"GetDataTreeByDocID",
+			"p1":userID,
+			"p2":docId,
+			"p3":locId,
+			"p4":episodeId
+		},
+		success: function(d) {
+			if (d == "") return;
+			var data = eval("["+d+"]")[0];
+			if (data.length != 0){
+				setTree(data);
+				TempData = data;
+			}
+		},
+		error : function(d) { 
+			alert("getPersonalTreeData error");
+		}
+	});
+}
+
+function findTemplate(data,value)
+{
+    var result = new Array();
+    for (var i = 0; i < data.length; i++) 
+    { 
+        if ((data[i].children)&&(data[i].children.length >0))
+        {
+            var child = findTemplate(data[i].children,value)
+            if ((child != "")&&(child.length >0))
+            {
+                var tmp = JSON.parse(JSON.stringify(data[i]));
+                tmp.children = [];
+                tmp.children = child;
+                result.push(tmp);
+            }
+        }
+        else
+        {
+            if (data[i].text.indexOf(value)!=-1){
+                result.push(data[i]);
+            }else if (data[i].attributes.py){
+                value = value.toUpperCase();
+                if (data[i].attributes.py.indexOf(value)!=-1){
+                    result.push(data[i]);
+                }
+            }else if (data[i].attributes.SimpleSpel){
+                value = value.toUpperCase();
+                if (data[i].attributes.SimpleSpel.indexOf(value)!=-1){
+                    result.push(data[i]);
+                }
+            }
+        }
+    }
+    return result;
+}
+
+function searchTempByDisease(diseaseCode,RadioId)
+{
+	if (RadioId =="")
+	{
+		if($("input[name='rdoLoc']:checked"))
+		{
+			var Id=$("input[name='rdoLoc']:checked").val().trim();
+			RadioId = Id;
+		}
+	}
+	if(RadioId == "rdoAll")
+	{
+
+		GetUserTemplate("",diseaseCode);
+	}			
+	else if(RadioId == "rdoLoc")
+	{
+		GetUserTemplate(locId,diseaseCode);
+	}
+	else
+	{
+		getPersonalTreeData();
+	}
+	
+}

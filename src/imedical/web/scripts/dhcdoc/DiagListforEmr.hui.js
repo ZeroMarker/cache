@@ -1,4 +1,4 @@
-ï»¿var selRowIndex="";
+var selRowIndex="";
 $(function(){
 	InitDiagnosList();
 });
@@ -6,21 +6,24 @@ function InitDiagnosList()
 {
 	var Columns=[[ 
         { field: 'MRDIARowId', checkbox:true}, 
-		{ field: 'MRCIDRowId', title:'', hidden:true},
-		{ field: 'DiagnosCat', title: 'åˆ†ç±»', width: 40},
-		{ field: 'DiagnosType', title: 'è¯Šæ–­ç±»å‹', width: 80},
-		{ field: 'DiagnosLeavel', title: 'çº§åˆ«', width: 40},
-		{ field: 'DiagnosPrefix', title: 'è¯Šæ–­å‰ç¼€', width: 80},
-		{ field: 'DiagnosICDDesc', title: 'è¯Šæ–­', width: 150},
-		{ field: 'MainDiagFlag', title: 'ä¸»è¯Šæ–­', width: 60},
-		{ field: 'DiagnosNotes', title: 'è¯Šæ–­æ³¨é‡Š', width: 80},
-		{ field: 'MRCIDCode', title: 'ICDä»£ç ', width: 80},
-		{ field: 'DiagnosStatus', title: 'è¯Šæ–­çŠ¶æ€', width: 75},
-		{ field: 'DiagnosOnsetDate', title: 'å‘ç—…æ—¥æœŸ', width: 95},
-		{ field: 'DiagnosDate', title: 'è¯Šæ–­æ—¥æœŸ', width: 95},
-		{ field: 'DiagnosDoctor', title: 'åŒ»ç”Ÿ', width: 80}
+		{ field: 'MRCIDRowId', hidden:true},
+		{ field: 'TCMTreatmentID', hidden:true},
+		{ field: 'DiagnosCat', title: '·ÖÀà', width: 40},
+		{ field: 'DiagnosType', title: 'Õï¶ÏÀàĞÍ', width: 80},
+		{ field: 'DiagnosLeavel', title: '¼¶±ğ', width: 40},
+		{ field: 'DiagnosPrefix', title: 'Õï¶ÏÇ°×º', width: 80},
+		{ field: 'DiagnosICDDesc', title: 'Õï¶Ï', width: 200},
+		{ field: 'DiagnosNotes', title: 'Õï¶Ï×¢ÊÍ', width: 80},
+		{ field: 'SDSDesc', title: '½á¹¹»¯Õï¶Ï', width: 250},
+		{ field: 'TCMTreatment', title: 'ÖĞÒ½ÖÎ·¨', width: 150},
+		{ field: 'MainDiagFlag', title: 'Ö÷Õï¶Ï', width: 60},
+		{ field: 'MRCIDCode', title: 'ICD´úÂë', width: 80},
+		{ field: 'DiagnosStatus', title: 'Õï¶Ï×´Ì¬', width: 75},
+		{ field: 'DiagnosOnsetDate', title: '·¢²¡ÈÕÆÚ', width: 95},
+		{ field: 'DiagnosDate', title: 'Õï¶ÏÈÕÆÚ', width: 95},
+		{ field: 'DiagnosDoctor', title: 'Ò½Éú', width: 80}
 	 ]];
-	 var QueStateQryTabDataGrid=$("#tabDiagnosList").datagrid({
+	 $("#tabDiagnosList").datagrid({
 		fit : true,
 		border : false,
 		striped : true,
@@ -31,15 +34,15 @@ function InitDiagnosList()
 		pageSize: 15,
 		pageList : [15,100,200],
 		idField:'MRDIARowId',
-		url:'oeorder.oplistcustom.new.request.csp?action=GetDiagList&USERID='+session['LOGON.USERID']+"&MRADM="+ServerObj.mradm,
+		url:'DHCDoc.Util.QueryToJSON.cls?JSONTYPE=Grid&ClassName=web.DHCDocDiagnosEntryV8&QueryName=DiagnosList&MRADMID='+ServerObj.mradm,
 		columns :Columns,
-		loadFilter: function(data){
+		/*loadFilter: function(data){
 			//{"total":0,"rows":[]}
 			var obj=new Object();
 			obj.total=data['data'].length;
 			obj.rows=data['data'];
 			return obj;
-		},
+		},*/
 		onCheck:function(rowIndex, rowData){
 			var MRDIARowId=rowData.MRDIARowId;
 			if ((selRowIndex!=="")||(MRDIARowId.indexOf("||")<0)){
@@ -47,7 +50,7 @@ function InitDiagnosList()
 			}
 			var MRDIAMRDIADR=rowData.MRDIAMRDIADR;
 	        var rows = $("#tabDiagnosList").datagrid('getRows');
-			//å‹¾é€‰ä¸»è¯Šæ–­
+			//¹´Ñ¡Ö÷Õï¶Ï
 			if (MRDIAMRDIADR==""){
 				for (var idx=rowIndex+1;idx<rows.length;idx++) {
 					var myMRDIAMRDIADR=rows[idx].MRDIAMRDIADR;
@@ -56,7 +59,7 @@ function InitDiagnosList()
 						$("#tabDiagnosList").datagrid('checkRow',idx);
 					}
 				}
-			}else if (MRDIAMRDIADR.indexOf("||")>=0){ //å‹¾é€‰å­åŒ»å˜± å­˜åœ¨ç©ºè¡Œçš„æƒ…å†µ
+			}else if (MRDIAMRDIADR.indexOf("||")>=0){ //¹´Ñ¡×ÓÒ½Öö ´æÔÚ¿ÕĞĞµÄÇé¿ö
 				var MasterrowIndex=$("#tabDiagnosList").datagrid('getRowIndex',MRDIAMRDIADR);
 				if (MasterrowIndex>=0){
 					$("#tabDiagnosList").datagrid('checkRow',MasterrowIndex);
@@ -69,7 +72,7 @@ function InitDiagnosList()
 			if ((selRowIndex!=="")||(MRDIARowId.indexOf("||")<0)) return false;
 			var MRDIAMRDIADR=rowData.MRDIAMRDIADR;
 	        var rows = $("#tabDiagnosList").datagrid('getRows');
-			//å–æ¶ˆå‹¾é€‰ä¸»è¯Šæ–­
+			//È¡Ïû¹´Ñ¡Ö÷Õï¶Ï
 			if (MRDIAMRDIADR==""){
 				for (var idx=rowIndex+1;idx<rows.length;idx++) {
 					var myMRDIAMRDIADR=rows[idx].MRDIAMRDIADR;
@@ -78,7 +81,7 @@ function InitDiagnosList()
 						$("#tabDiagnosList").datagrid('uncheckRow',idx);
 					}
 				}
-			}else if (MRDIAMRDIADR!=""){ //å‹¾é€‰å­è¯Šæ–­
+			}else if (MRDIAMRDIADR!=""){ //¹´Ñ¡×ÓÕï¶Ï
 				var MasterrowIndex=$("#tabDiagnosList").datagrid('getRowIndex',MRDIAMRDIADR);
 				if (MasterrowIndex>=0){
 					$("#tabDiagnosList").datagrid('uncheckRow',MasterrowIndex);
@@ -96,7 +99,7 @@ function getRefData(){
 	var rtnObj= {data:"",toTitle:"",msg:"",success:true};
 	var rows=$("#tabDiagnosList").datagrid("getChecked");
 	if ((!rows)||(rows.length==0)) {
-		$.extend(rtnObj, { msg: "æœªé€‰æ‹©éœ€è¦æ“ä½œçš„è¡Œæ•°æ®!",success:false});
+		$.extend(rtnObj, { msg: "Î´Ñ¡ÔñĞèÒª²Ù×÷µÄĞĞÊı¾İ!",success:false});
 		return rtnObj;
 	}
 	var ids = [];
@@ -120,6 +123,6 @@ function getRefData(){
 		}
 	}
 	var DataGridCopyData=ids.join("^"); //String.fromCharCode(2)
-	$.extend(rtnObj, { data: DataGridCopyData,toTitle:$g("è¯Šæ–­å½•å…¥")});
+	$.extend(rtnObj, { data: DataGridCopyData,toTitle:$g("Õï¶ÏÂ¼Èë")});
 	return rtnObj;
 }

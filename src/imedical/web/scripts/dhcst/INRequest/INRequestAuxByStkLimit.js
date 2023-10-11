@@ -13,10 +13,10 @@ var rowDelim=xRowDelim();
 
 // 请求部门
 var LocField= new Ext.ux.LocComboBox({
-	fieldLabel : '请求部门',
+	fieldLabel : $g('请求部门'),
 	id : 'LocField',
 	name : 'LocField',
-	emptyText : '请求部门...',
+	emptyText : $g('请求部门...'),
 	groupId:gGroupId,
 	width:180,
 	listeners : {
@@ -37,9 +37,9 @@ LocField.on('select', function(e) {
 });
 var supplyLocField = new Ext.ux.LocComboBox({
 	id:'supplyLocField',
-	fieldLabel:'供给部门',
+	fieldLabel:$g('供给部门'),
 	listWidth:210,
-	emptyText:'供给部门...',
+	emptyText:$g('供给部门...'),
 	//groupId:gGroupId,
 	defaultLoc:{},
 	width:180,
@@ -69,7 +69,7 @@ var group = new Ext.ux.StkGrpComboBox({
 });
 // 库存分类
 var M_StkCat = new Ext.ux.ComboBox({
-	fieldLabel : '库存分类',
+	fieldLabel : $g('库存分类'),
 	id : 'M_StkCat',
 	name : 'M_StkCat',
 	store : StkCatStore,
@@ -80,7 +80,7 @@ var M_StkCat = new Ext.ux.ComboBox({
 
 var reqOrder = new Ext.form.TextField({
 	id:'reqOrder',
-	fieldLabel:'请求单号',
+	fieldLabel:$g('请求单号'),
 	allowBlank:true,
 	width:200,
 	listWidth:200,
@@ -93,13 +93,13 @@ var reqOrder = new Ext.form.TextField({
 
 var IntSigner = new Ext.form.Checkbox({
 	id: 'IntSigner',
-	boxLabel:'包装量取整',
+	boxLabel:$g('包装量取整'),
 	allowBlank:true
 });
 
 var ManagerDrugSigner = new Ext.form.Checkbox({
 	id:'ManagerDrugSigner',
-	boxLabel:'管理药标志',
+	boxLabel:$g('管理药标志'),
 	allowBlank:true
 });
 //=========================定义全局变量=================================
@@ -161,38 +161,38 @@ var INRequestAuxByStkLimitGridDs = new Ext.data.Store({
 var INRequestAuxByStkLimitGridCm = new Ext.grid.ColumnModel([
 	 new Ext.grid.RowNumberer(),
 	 {
-        header:"药品rowid",
+        header:$g("药品rowid"),
         dataIndex:'inci',
         width:80,
         align:'left',
         sortable:true,
 		hidden:true
     },{
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'code',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'desc',
         width:250,
         align:'left',
         sortable:true
     },{
-        header:"单位",
+        header:$g("单位"),
         dataIndex:'pUomDesc',
         width:80,
         align:'left',
         sortable:true
     },{
-        header:"建议申请量",
+        header:$g("建议申请量"),
         dataIndex:'reqQty',
         width:120,
         align:'right',
         sortable:true
     },{
-        header:"实际申请量",
+        header:$g("实际申请量"),
         dataIndex:'realReqQty',
         width:120,
         align:'right',
@@ -202,37 +202,37 @@ var INRequestAuxByStkLimitGridCm = new Ext.grid.ColumnModel([
             allowBlank:false
         })
     },{
-        header:"当前库存",
+        header:$g("当前库存"),
         dataIndex:'qty',
         width:120,
         align:'right',
         sortable:true
     },{
-        header:"供应方库存",
+        header:$g("供应方库存"),
         dataIndex:'prvoqty',
         width:120,
         align:'right',
         sortable:true
     },{
-        header:"库存上限",
+        header:$g("库存上限"),
         dataIndex:'maxQty',
         width:120,
         align:'right',
         sortable:true
     },{
-        header:"库存下限",
+        header:$g("库存下限"),
         dataIndex:'minQty',
         width:120,
         align:'right',
         sortable:true
     },{
-        header:"标准库存",
+        header:$g("标准库存"),
         dataIndex:'repQty',
         width:120,
         align:'right',
         sortable:true
     },{
-        header:"库存分类",
+        header:$g("库存分类"),
         dataIndex:'stkCatDesc',
         width:120,
         align:'right',
@@ -264,8 +264,8 @@ function getPid(){
 }
 
 var find = new Ext.Toolbar.Button({
-	text:'查询',
-    tooltip:'查询',
+	text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
 	width:70,
 	height:30,
@@ -274,18 +274,18 @@ var find = new Ext.Toolbar.Button({
 		//供给部门
 		var frLoc = Ext.getCmp('supplyLocField').getValue(); 
 		if((frLoc=="")||(frLoc==null)){
-			Msg.info("error", "请选择供给部门!");
+			Msg.info("error", $g("请选择供给部门!"));
 			return false;
 		}
 		//请求部门
 		var toLoc = Ext.getCmp('LocField').getValue(); 
 		if((toLoc=="")||(toLoc==null)){
-			Msg.info("error", "请选择请求部门!");
+			Msg.info("error", $g("请选择请求部门!"));
 			return false;
 		}
 		/*求部门和供给部门不能相同*/
 		if (frLoc==toLoc){
-			Msg.info("error", "请求部门和供给部门不能相同!");
+			Msg.info("error", $g("请求部门和供给部门不能相同!"));
 			return false;
 		}
 
@@ -293,7 +293,7 @@ var find = new Ext.Toolbar.Button({
 		var groupId = Ext.getCmp('group').getValue();
 		
 		if ((groupId=='')||(groupId==null)){
-			Msg.info("error", "类组不能为空!");
+			Msg.info("error", $g("类组不能为空!"));
 			return false;
 		}
         //库存分类
@@ -311,7 +311,7 @@ var find = new Ext.Toolbar.Button({
 			params:{start:0,limit:pagingToolbar.pageSize,sort:'code',dir:'desc'},
 			callback:function(r,options, success){
 					if(success==false){
-     					Msg.info("error", "查询错误，请查看日志!");
+     					Msg.info("error", $g("查询错误，请查看日志!"));
 					}
 			}
 		});
@@ -323,14 +323,14 @@ function CreateReq(){
 	var frLoc = Ext.getCmp('supplyLocField').getValue(); 
 	var frLocName = Ext.getCmp('supplyLocField').getRawValue();
 	if((frLoc=="")||(frLoc==null)){
-		Msg.info("warning", "请选择供给部门!");
+		Msg.info("warning", $g("请选择供给部门!"));
 		return;
 	}
 	//请求部门
 	var toLoc = Ext.getCmp('LocField').getValue(); 
 	var toLocName = Ext.getCmp('LocField').getRawValue();
 	if((toLoc=="")||(toLoc==null)){
-		Msg.info("warning", "请选择请求部门!");
+		Msg.info("warning", $g("请选择请求部门!"));
 		return;
 	}
 	//类组
@@ -339,18 +339,18 @@ function CreateReq(){
 	var reqInfo=frLoc+"^"+toLoc+"^"+UserId+"^"+scg;
 	var count = INRequestAuxByStkLimitGridDs.getCount();
 	if(count==0){
-		Msg.info("warning","没有请领明细,不能生成请求单!");
+		Msg.info("warning",$g("没有请领明细,不能生成请求单!"));
 		return;
 	}
 	var record=INRequestAuxByStkLimitGridDs.getAt(0);
 	var pid=record.get("pid");
 	if(pid==null || pid==""){
-		Msg.info("warning","没有请领明细,不能生成请求单!");
+		Msg.info("warning",$g("没有请领明细,不能生成请求单!"));
 		return;
 	}
 	var data=INRequestAuxByStkLimitGridDs.getModifiedRecords();
 	if(data.length>0){
-		Msg.info("warning","存在尚未保存的记录，请先点击保存！");
+		Msg.info("warning",$g("存在尚未保存的记录，请先点击保存！"));
 		return;
 	}
 	Ext.Ajax.request({
@@ -359,22 +359,22 @@ function CreateReq(){
 		success : function(result, request) {
 			var jsonData = Ext.util.JSON.decode(result.responseText);
 			if (jsonData.success == 'true') {
-				Msg.info("success", "生成请求单成功!");
+				Msg.info("success", $g("生成请求单成功!"));
 				var infoArr = jsonData.info.split("^");
 				var req = infoArr[0];
 				var reqNo = infoArr[1];
 				Ext.getCmp("reqOrder").setValue(reqNo);
 				location.href="dhcst.inrequest.csp?reqByabConsume="+req;
 			}else{					
-				Msg.info("error", "生成请求单失败:"+jsonData.info);					
+				Msg.info("error", $g("生成请求单失败:")+jsonData.info);					
 			}
 		},
 		scope : this
 	});
 }
 var CreateBtn = new Ext.Toolbar.Button({
-	text:'生成请求单',
-    tooltip:'点击生成请求单',
+	text:$g('生成请求单'),
+    tooltip:$g('点击生成请求单'),
     iconCls:'page_gear',
 	width : 70,
 	height : 30,
@@ -384,8 +384,8 @@ var CreateBtn = new Ext.Toolbar.Button({
 	}	
 });
 var productReqOrder = new Ext.Toolbar.Button({
-	text:'保存',
-    tooltip:'保存',
+	text:$g('保存'),
+    tooltip:$g('保存'),
     iconCls:'page_save',
 	width : 70,
 	height : 30,
@@ -393,7 +393,7 @@ var productReqOrder = new Ext.Toolbar.Button({
 	handler:function(){
 		var count = INRequestAuxByStkLimitGridDs.getCount();
 		if(count==0){
-			Msg.info("warning","没有请求明细,禁止保存!");
+			Msg.info("warning",$g("没有请求明细,禁止保存!"));
 			return;
 		}
 		var str = "";
@@ -416,7 +416,7 @@ var productReqOrder = new Ext.Toolbar.Button({
 			//}
 		}	
 		if(pid==""){
-			Msg.info("warning","没有请求明细,禁止保存!");
+			Msg.info("warning",$g("没有请求明细,禁止保存!"));
 			return;
 		}	
 		
@@ -424,16 +424,16 @@ var productReqOrder = new Ext.Toolbar.Button({
 			url : 'dhcst.inrequestaction.csp?actiontype=SaveForAuxByLim',
 			params:{Pid:pid,ListData:str},
 			method : 'POST',
-			waitMsg : '查询中...',
+			waitMsg : $g('查询中...'),
 			success : function(result, request) {
 				var jsonData = Ext.util.JSON.decode(result.responseText);
 				if (jsonData.success == 'true') {
-					Msg.info("success", "保存成功!");
+					Msg.info("success", $g("保存成功!"));
 					INRequestAuxByStkLimitGridDs.commitChanges();
 //					var reqNo=jsonData.info;
 //					Ext.getCmp('reqOrder').setValue(reqNo);  //请求单号
 				}else{					
-					Msg.info("error", "保存失败:"+jsonData.info);					
+					Msg.info("error", $g("保存失败:")+jsonData.info);					
 				}
 			},
 			scope : this
@@ -442,15 +442,15 @@ var productReqOrder = new Ext.Toolbar.Button({
 });
 var clear = new Ext.Toolbar.Button({
 	id:'clearData',
-	text:'清屏',
-    tooltip:'清屏',
+	text:$g('清屏'),
+    tooltip:$g('清屏'),
     iconCls:'page_clearscreen',
 	width : 70,
 	height : 30,
 	handler:function(){
 		Ext.Msg.show({
-			title:'提示',
-			msg: '是否确定清空辅助请求数据?(注:此数据为临时统计结果,可重新统计.)',
+			title:$g('提示'),
+			msg: $g('是否确定清空辅助请求数据?(注:此数据为临时统计结果,可重新统计.)'),
 			buttons: Ext.Msg.YESNO,
 			fn: function(btn){
 		   		if (btn=='yes') {clearDataGrid();}
@@ -482,8 +482,8 @@ var pagingToolbar = new Ext.PagingToolbar({
     store:INRequestAuxByStkLimitGridDs,
 	pageSize:PageSize,
     displayInfo:true,
-    displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-    emptyMsg:"没有记录",
+    displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+    emptyMsg:$g("没有记录"),
 	doLoad:function(C){
 		var B={},
 		A=this.getParams();
@@ -498,7 +498,7 @@ var pagingToolbar = new Ext.PagingToolbar({
 		B['strPar']=staParArr.join("^") //1:表示翻页
 		var data=INRequestAuxByStkLimitGridDs.getModifiedRecords();
 		if(data.length>0){
-			Msg.info("warning","本页有尚未保存的记录，请先保存！");
+			Msg.info("warning",$g("本页有尚未保存的记录，请先保存！"));
 			return;
 		}
 		if(this.fireEvent("beforechange",this,B)!==false){
@@ -532,7 +532,7 @@ function KillTmpGlobal(pid)
 		
 		},
 		failure:function(){
-			Msg.info('error','后台临时数据清空错误!')	
+			Msg.info('error',$g('后台临时数据清空错误!'))	
 		}		
 	});
 
@@ -550,11 +550,11 @@ Ext.onReady(function(){
 		labelAlign : 'right',
 		frame : true,
 		autoScroll : false,
-		title:'辅助请求(依据<库存上下限>)',
+		title:$g('辅助请求(依据<库存上下限>)'),
 		tbar:[find,'-',clear,'-',productReqOrder,'-',CreateBtn],
 		items : [{
 			xtype:'fieldset',
-			title:'查询条件',
+			title:$g('查询条件'),
 			style : DHCSTFormStyle.FrmPaddingV,
 			layout: 'column',    // Specifies that the items will now be arranged in columns		
 			defaults: {border:false}, 

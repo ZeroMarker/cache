@@ -27,21 +27,32 @@
 		}
 		// 病原学检验信息
 		obj.gridINFLab = $HUI.datagrid("#gridINFLab",{ 
-			//title:'病原学检验'+'<div class="messager-popover info"><span class="messager-popover-icon info"></span><span class="content">提示信息！</span></div>',
-			title:'病原学检验'+'<span style="margin-left:30px;padding:6px 15px;background-color:#e3f7ff;color:#1278b8;border: 1px solid #c0e2f7;border-radius: 5px;"><span class="icon-tip-blue" style="margin-right:5px;">&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color:#1278b8;font-weight: 700;">提示信息：仅选择与此次感染相关的病原学信息</span></span>',
-			headerCls:'panel-header-gray',
-			iconCls:'icon-paper',
+			//title:'病原学检验',
+			//headerCls:'panel-header-gray',
+			//iconCls:'icon-paper',
 			rownumbers: true, //如果为true, 则显示一个行号列
 			singleSelect: true,
 			autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
 			loadMsg:'数据加载中...',
 			columns:[[
-				{field:'TSDesc',title:'检验医嘱',width:300},
+				{field:'TSDesc',title:'检验医嘱',width:290},
 				{field:'SubmissLoc',title:'送检科室',width:160},
 				{field:'Specimen',title:'标本',width:120},
-				{field:'SubmissDate',title:'送检日期',width:100},
+				{field:'SubmissDate',title:'送检日期',width:140,
+					formatter: function(value,row,index){
+					return row.SubmissDate+" "+row.SubmissTime;	
+					}
+				},
 				{field:'AssayMethod',title:'检验方法',width:120},
-				{field:'RuleMRBs',title:'病原体',width:300},
+				{field:'Bacterias',title:'病原体',width:290,
+					formatter: function(value,row,index){
+						if (row.RuleMRBs) {
+							return row.RuleMRBs;
+						}else {
+							return value;
+						}
+					}
+				},
 				{field:'PathogenTest',title:'病原学检验结果',width:120}
 			]],
 			onSelect:function(rindex,rowData){
@@ -51,7 +62,11 @@
 					obj.gridINFLab.clearSelections();  //清除选中行
 				} else {
 					obj.LabRowID = rindex;
-					$("#btnINFLabDel").linkbutton("enable");
+					if ((obj.RepStatusCode==3)||(obj.RepStatusCode==4)) {  //审核、删除状态报告
+						$("#btnINFLabDel").linkbutton("disable");
+					}else {
+						$("#btnINFLabDel").linkbutton("enable");
+					}
 				}	
 			},
 			onDblClickRow:function(rindex, rowdata) {
@@ -75,7 +90,6 @@
 		}
 	}
 	obj.refreshgridINFLab();
-	
 
 	 // 病原学检验提取事件
 	$('#btnINFLabSync').click(function(e){
@@ -99,6 +113,22 @@
 		
 		OpenINFLabSync();
 	});
+	
+	//是否存在与此次感染相关的病原学信息
+	$HUI.radio("[name='radInfLab']",{  
+		onChecked:function(e,value){
+			var IsInfLab = $(e.target).val();   //当前选中的值
+			if (IsInfLab==1) {
+				$('#divINFLab').removeAttr("style");
+				OpenINFLabSync();
+				obj.refreshgridINFLab();		
+			}else {
+				$('#gridINFLab').datagrid('loadData',{total:0,rows:[]});	
+				$('#divINFLab').attr("style","display:none");
+			}
+		}
+	});
+	
 	
 	//病原学检验提取弹出事件
 	obj.LayerOpenINFLabSync = function() {
@@ -125,7 +155,10 @@
 			iconCls:'icon-paper',
 			rownumbers: true, //如果为true, 则显示一个行号列
 			singleSelect: true,
-			fitColumns: true,
+			pagination : true,//如果为true, 则在DataGrid控件底部显示分页工具栏
+			pageSize: 20,
+			pageList : [20,50,100,200],
+			//fitColumns: true,
 			loadMsg:'数据加载中...',
 			url:$URL,
 			queryParams:{
@@ -137,7 +170,11 @@
 				{field:'TSDesc',title:'检验医嘱',width:200},
 				{field:'Specimen',title:'标本',width:100},
 				{field:'SubmissLoc',title:'送检科室',width:120},
-				{field:'SubmissDate',title:'送检日期',width:100},
+				{field:'SubmissDate',title:'送检日期',width:140,
+					formatter: function(value,row,index){
+					return row.SubmissDate+" "+row.SubmissTime;	
+					}
+				},
 				{field:'AssayMethod',title:'检验方法',width:100},
 				{field:'PathogenTest',title:'病原学检验结果',width:150},
 				{field:'Bacterias',title:'病原体',width:300,
@@ -174,18 +211,27 @@
 	// 弹出病原学检验信息弹框
 	function OpenINFLabEdit(d,r){
 		$('#LayerOpenINFLabEdit').show();
-		obj.LayerOpenINFLabEdit();
-		$HUI.dialog('#LayerOpenINFLabEdit',{
-			buttons:[{
-				text:'保存',
-				handler:function(){	
-					INFLabAdd(d,r);
-				}
-			},{
-				text:'取消',
-				handler:function(){$HUI.dialog('#LayerOpenINFLabEdit').close();}
-			}]
-		});
+		if ((obj.RepStatusCode==3)||(obj.RepStatusCode==4)) {
+			obj.LayerOpenINFLabEdit();
+		}else {
+			$HUI.dialog('#LayerOpenINFLabEdit',{ 
+				title:'病原学检验信息-编辑',
+				iconCls:'icon-w-paper',
+				width: 1000,
+				height: 578,    
+				modal: true,
+				isTopZindex:true,
+				buttons:[{
+					text:'保存',
+					handler:function(){	
+						INFLabAdd(d,r);
+					}
+				},{
+					text:'取消',
+					handler:function(){$HUI.dialog('#LayerOpenINFLabEdit').close();}
+				}]
+			});	
+		}
 		InitINFLabEditData(d,r);
 	}
 	
@@ -194,7 +240,8 @@
 		$HUI.dialog('#LayerOpenINFLabEdit',{
 			title:'病原学检验信息-编辑',
 			iconCls:'icon-w-paper',
-			width: 1000,    
+			width: 1000,
+			height: 535,    
 			modal: true,
 			isTopZindex:true
 		});
@@ -226,10 +273,12 @@
 	function OnSelectRstSen() {
 		var rowData = obj.gridRstSen.getSelected();
 		if (rowData["ID"] == obj.LabSenID) {
+			obj.gridRstSenID=-1;
 			obj.clearLabSenData();	
 			$("#btnDelSen").linkbutton("disable");			
 			obj.gridRstSen.clearSelections();  //清除选中行
 		} else {
+			obj.gridRstSenID = obj.gridRstSen.getRowIndex(rowData);		//选中的药敏数据行号
 			obj.LabSenID = rowData["ID"];
 			obj.BacteriaID = rowData.BacteriaID;
 			$('#cboBacteria').lookup('setText',rowData.Bacteria);
@@ -237,8 +286,12 @@
 			$('#cboAntibiotic').lookup('setText',rowData.AntDesc);
 			$('#cboRstSen').combobox('setValue',rowData.SensitivityID);
 			$('#cboRstSen').combobox('setText',rowData.Sensitivity);
-
-			$("#btnDelSen").linkbutton("enable");
+			if ((obj.RepStatusCode==3)||(obj.RepStatusCode==4)) {  //审核、删除状态报告
+				$("#btnAddSen").linkbutton("disable");
+				$("#btnDelSen").linkbutton("disable");
+			}else {
+				$("#btnDelSen").linkbutton("enable");
+			}
 		}
 	}
 	//清除药敏信息添加行 数据
@@ -252,6 +305,7 @@
 		$("#btnINFLabDel").linkbutton("disable");	
 	}
 	// 添加病原体药敏信息
+	obj.gridRstSenID = -1;
 	$('#btnAddSen').click(function(e){
 		var BacteriaID = obj.BacteriaID;
 		var Bacteria = $('#cboBacteria').lookup('getText');
@@ -261,13 +315,13 @@
 		var Sensitivity = $('#cboRstSen').combobox('getText');
 		var errinfo = "";
     	if (obj.BacteriaID==''){
-			errinfo = errinfo + "请选择病原体!<br>";
+			errinfo = errinfo + $g("请选择病原体!")+"<br>";
     	}
     	if (obj.AntibioticID==''){
-    		errinfo = errinfo + "请选择抗生素!<br>";
+    		errinfo = errinfo + $g("请选择抗生素!")+"<br>";
     	}
 		if (SensitivityID==''){
-    		errinfo = errinfo + "药敏结果不能为空!<br>";
+    		errinfo = errinfo + $g("药敏结果不能为空!")+"<br>";
     	}
 		
 		if (errinfo){
@@ -305,7 +359,8 @@
 			if (selectObj) {
 				var ind = obj.gridRstSen.getRowIndex(selectObj);  //获取当前选中行的行号(从0开始)
 				obj.gridRstSen.updateRow({  //更新指定行
-					index: ind,	   // index：要插入的行索引，如果该索引值未定义，则追加新行。row：行数据。					row:row
+					index: ind,	   // index：要插入的行索引，如果该索引值未定义，则追加新行。row：行数据。					
+					row:row
 				});
 			}else{	//添加
 				obj.gridRstSen.appendRow({  //插入一个新行
@@ -335,6 +390,7 @@
 			$.messager.confirm("提示", "是否删除该条药敏信息数据？", function (r) {
 				if (r){				
 					obj.gridRstSen.deleteRow(index);
+					obj.gridRstSenID = -1;
 					obj.clearLabSenData();
 				}
 			});
@@ -360,7 +416,7 @@
 			]],
 			onBeforeLoad:function(param){
 				var desc=param['q'];
-				//if (desc=="") return false;  
+				if ((desc)&&(desc.indexOf('[√]')>0)) desc=desc.split('[√]')[0];  
 				param = $.extend(param,{aAlias:desc}); //将参数q转换为类中的参数
 			},
 			onSelect:function(index,rowData){  
@@ -537,7 +593,20 @@
 		
 		var TestSetID = obj.TestSetID;
 		var TSDesc = $('#cboTestSet').lookup('getText');
-		
+		if (d) {  //update 20230211 处理手工添加的数据
+			var LabRepID = d.LabRepID;
+			if (TSDesc.indexOf('[√]')>0) TSDesc=TSDesc.split('[√]')[0];
+			if ((!TestSetID)&&(TSDesc)){
+				var objTestSet=$m({
+					ClassName:"DHCHAI.DP.LabTestSetMap",
+					MethodName:"GetObjByTestSet",
+					aSCode:LISSCode,
+					aTestSet:TSDesc
+				},false);
+				var TestSetData = JSON.parse(objTestSet);
+				TestSetID = TestSetData.ID;
+			}
+		}
 		var SubmissLocID = obj.SubmissLocID;
 		var SubmissLoc = $('#cboSubmissLoc').lookup('getText');
 		
@@ -589,34 +658,36 @@
 		}
 		
 		var errinfo = "";
-    	if (obj.TestSetID==''){
-			errinfo = errinfo + "请选择标准检验医嘱!<br>";
+    	if (TestSetID==''){
+			errinfo = errinfo + $g("请选择标准检验医嘱!")+"<br>";
     	}
     	if (obj.SubmissLocID==''){
-    		errinfo = errinfo + "请选择送检科室!<br>";
+    		errinfo = errinfo + $g("请选择送检科室!")+"<br>";
     	}
 		if (obj.SpecimenID==''){
-    		errinfo = errinfo + "请选择标本!<br>";
+    		errinfo = errinfo + $g("请选择标本!")+"<br>";
     	}
     	
     	if (AssayMethodID==''){
-			errinfo = errinfo + "检验方法不能为空!<br>";
+			errinfo = errinfo + $g("检验方法不能为空!")+"<br>";
     	}
     	if (PathogenTestID==''){
-			errinfo = errinfo + "病原学检验不能为空!<br>";
+			errinfo = errinfo + $g("病原学检验不能为空!")+"<br>";
     	}
 		if (SubmissDate==''){
-			errinfo = errinfo + "送检日期不能为空!<br>";
+			errinfo = errinfo + $g("送检日期不能为空!")+"<br>";
     	}
     	if (SubmissDate) {
 			if ((Common_CompareDate(AdmDate,SubmissDate)>0)||(Common_CompareDate(SubmissDate,DischDate)>0)||(Common_CompareDate(SubmissDate,NowDate)>0)) {
-				errinfo = errinfo + "送检日期期需在住院期间且不应超出当前日期!"; 
+				errinfo = errinfo + $g("送检日期期需在住院期间且不应超出当前日期!"); 
 			}
 		}
+		/*
 		// 药敏结果不能为空
 		if (obj.gridRstSen.getRows().length<1){
 			errinfo = errinfo + "药敏结果不能为空!<br>";
 		}
+		*/
 		if (errinfo !='') {
 			$.messager.alert("提示", errinfo, 'info');
 			return ;

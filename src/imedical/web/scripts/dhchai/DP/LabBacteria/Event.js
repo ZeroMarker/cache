@@ -72,7 +72,11 @@ function InitLabBacteriaWinEvent(obj){
 			function(){ 
 				var flg = $.Tool.RunServerMethod("DHCHAI.DP.LabBacteria","DeleteById",ID);
 				if (parseInt(flg)<0){
-					layer.msg('删除失败!',{icon: 2});
+					if (parseInt(flg)=='-777') {
+						layer.msg('-777：当前无删除权限，请启用删除权限后再删除记录!',{icon: 2});
+					}else {
+						layer.msg('删除失败!',{icon: 2});
+					}
 				} else {
 					obj.gridLabBacteria.rows({selected:true}).remove().draw(false);
 					layer.msg('删除成功!',{icon: 1});
@@ -95,13 +99,15 @@ function InitLabBacteriaWinEvent(obj){
 			$.form.SetValue("cboBacType",rd["TypeID"],rd["TypeDesc"]);
 			$.form.SetValue("txtWCode",rd["WCode"]);
 			$.form.SetValue("chkActive",rd["IsActive"]== 1);
+			$.form.SetValue("chkIsCommon",rd["IsCommon"]== 1);
 		} else {
 			$.form.SetValue("txtBacCode",'');   
 			$.form.SetValue("txtBacDesc",'');
 			$.form.SetValue("txtBacName",'');   
 			$.form.SetValue("cboBacCat",'');
 			$.form.SetValue("txtWCode",'');   
-			$.form.SetValue("chkActive",'');  
+			$.form.SetValue("chkActive",''); 
+			$.form.SetValue("chkIsCommon",''); 
 		}
 		
 		layer.config({  
@@ -147,7 +153,7 @@ function InitLabBacteriaWinEvent(obj){
 		var BacCatDr  = $.form.GetValue("cboBacCat");
 		var WCode     = $.form.GetValue("txtWCode");
 		var IsActive  = $.form.GetValue("chkActive");
-		
+		var IsCommon  = $.form.GetValue("chkIsCommon");
 		var InputStr = ID;
 		InputStr += "^" + BacCode;
 		InputStr += "^" + BacDesc;
@@ -156,7 +162,9 @@ function InitLabBacteriaWinEvent(obj){
 		InputStr += "^" + BacCatDr;
 		InputStr += "^" + WCode;
 		InputStr += "^" + IsActive;
-		
+		InputStr += "^" + "";
+		InputStr += "^" + "";
+		InputStr += "^" + IsCommon;
 		if (BacCode == '') {
 			layer.alert("代码不允许为空",{icon: 0});
 			return;
@@ -203,7 +211,7 @@ function InitLabBacteriaWinEvent(obj){
 		var BacCatDr  = $.form.GetValue("cboBacCat");
 		var WCode     = $.form.GetValue("txtWCode");
 		var IsActive  = $.form.GetValue("chkActive");
-		
+		var IsCommon  = $.form.GetValue("chkIsCommon");
 		var InputStr = ID;
 		InputStr += "^" + BacCode;
 		InputStr += "^" + BacDesc;
@@ -212,7 +220,9 @@ function InitLabBacteriaWinEvent(obj){
 		InputStr += "^" + BacCatDr;
 		InputStr += "^" + WCode;
 		InputStr += "^" + IsActive;
-		
+		InputStr += "^" + "";
+		InputStr += "^" + "";
+		InputStr += "^" + IsCommon;
 		if (BacCode == '') {
 			layer.alert("代码不允许为空",{icon: 0});
 			return;

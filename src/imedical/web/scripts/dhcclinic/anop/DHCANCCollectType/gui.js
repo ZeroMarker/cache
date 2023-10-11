@@ -585,10 +585,11 @@ function InitViewScreen()
 	}); 	
 	
 	obj.ANCCTIComOrdStoreProxy.on('beforeload', function(objProxy, param){
-		param.ClassName = 'web.DHCICUBedEquip';
-		param.QueryName = 'FindMoniDataItem';
+		param.ClassName = 'web.DHCANCCollectType';
+		param.QueryName = 'FindRecordItem';
 		param.Arg1 = obj.ANCCTIComOrd.getRawValue();
-		param.ArgCnt = 1;
+		param.Arg2 = obj.ANCCTRowid.getRawValue();
+		param.ArgCnt = 2;
 	});
 	//obj.ANCCTIComOrdStore.load({});
 	obj.PanelANCCTIChannelNo = new Ext.Panel({

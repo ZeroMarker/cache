@@ -56,7 +56,7 @@ function setlistdata(data)
 	$(li).attr({"templateId":data.templateId,"characteristic":data.characteristic,"emrNum":data.emrNum});
 	$(li).attr({"itemTitle":data.itemTitle});
 	$(li).attr({"page":data.endPage});
-	var left = "<div class='left'><input class='hisui-checkbox recordcheck' type='checkbox' name='checkbox' data-options='onCheckChange:function(event,value){checkOnClick(this)}' label=''/></div>" 
+	var left = "<div class='left'><input class='hisui-checkbox recordcheck' type='checkbox' name='recordList' data-options='onCheckChange:function(event,value){checkOnClick(this)}' label=''/></div>" 
 	$(li).append(left);
 	var right = $('<a href="#" class="right"></a>');
 	var first = $('<div class="first"></div>');
@@ -66,7 +66,7 @@ function setlistdata(data)
 	{
 		$(fleft).append('<span class="printed">'+emrTrans("已打印")+'</span>');
 	}
-	$(fleft).append('<input type="image" class="log" onclick="showListLog(this)"></div>');
+	$(fleft).append('<span type="image" class="log" onclick="showListLog(this)"></span></div>');
 	$(first).append(fleft);
 	$(right).append(first);
 	var second = '<div class="second"><span class="data">'+data.happendate+'</span><span>'+data.happentime+'</span><span>'+data.creator+'</span></div>';
@@ -83,8 +83,8 @@ function setlistdata(data)
 }
 
 ///List类型打开病历
-$(document).on('click',"#InstanceTree.instance-item li",function(){
-	var obj = $(this);
+$(document).on('click',"#InstanceTree.instance-item li .right",function(){
+	var obj = $(this).parent();
 	var tempParam = {
 		"id":obj.attr("id"),
 		"text":obj.attr("text"),
@@ -259,8 +259,8 @@ function showListLog(obj)
 
 function showLog(docId,num)
 {
-	var content = '<iframe id="framedialog" src="emr.instancelog.csp?EpisodeID='+episodeID+'&EMRDocId='+docId+'&EMRNum='+num+'" frameborder="no" style="width:100%;height:100%;border:0;margin:0;padding:0;overflow:hidden"></iframe>';
-	$HUI.dialog('#dialog',{  
+	var content = '<iframe id="framedialog" src="emr.instancelog.csp?EpisodeID='+episodeID+'&EMRDocId='+docId+'&EMRNum='+num+'&MWToken='+getMWToken()+'" frameborder="no" style="width:100%;height:100%;border:0;margin:0;padding:0;overflow:hidden"></iframe>';
+	parent.$HUI.dialog('#dialog',{  
 	    title: '操作日志',  
 	    width: 980,  
 	    height: 500,
@@ -272,7 +272,7 @@ function showLog(docId,num)
 	    isTopZindex:true, 
 	    modal: true 
 	});
-	$HUI.dialog('#dialog').open();	
+	parent.$HUI.dialog('#dialog').open();	
 }
 
 //更改选中的边框颜色
@@ -294,10 +294,10 @@ function selectAll(obj)
 {
 	if (obj.checked)
 	{
-		$HUI.checkbox('.recordcheck').setValue(true);
+		$HUI.checkbox("input[name='recordList']").setValue(true);
 	}
 	else
 	{
-		$HUI.checkbox('.recordcheck').setValue(false);
+		$HUI.checkbox("input[name='recordList']").setValue(false);
 	}	
 } 

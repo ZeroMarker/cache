@@ -4,7 +4,7 @@
 	    $('.page-footer').css('display','none');
     } 
 	if (EpisodeID=="" || PatientID=="") {
-		$.messager.alert("提示", "患者信息不存在!",'info');
+		$.messager.alert($g("提示"), $g("患者信息不存在!"),'info');
 		return;
 	}
 	
@@ -23,7 +23,6 @@
 	obj.IsUpdatePatInfo = IsUpdatePatInfo;
 	obj.IsUpdateReportNo = IsUpdateReportNo;
 	obj.IsUpdateSampleNo = IsUpdateSampleNo;
-
 	//加载症状与体征
 	obj.BuildSign = function() {
 		$cm({
@@ -62,9 +61,15 @@
 					var IsExist = ParrefList.indexOf(objTmp6.Code); 
 					if (IsExist<1) { //不存在
 						htmlStr += '<div class="td-quarter">'
-						if (objTmp6.ExtraTypeDesc !="无") {
+						if (objTmp6.ExtraTypeDesc !=$g("无")) {
 							htmlStr += '<input id=chk'+objTmp6.ID+' type="checkbox" class="hisui-checkbox" '+(objTmp6.Impl==1? 'checked="checked"':"")+' label='+objTmp6.Desc+' name="chkList"  value='+objTmp6.chkID+'>'
-							htmlStr += '<input id=txt'+objTmp6.ID+' class="textbox text-resume" name="txtList" value='+objTmp6.ExtraText+'>'+objTmp6.ExtraUnit
+							if(objTmp6.Desc==$g("发热")){
+								htmlStr += '<input id=txt'+objTmp6.ID+' style="margin:5px 0px 5px 5px;" class="hisui-numberbox" data-options="precision:1,forcePrecisionZoer:false,fix:false,max:46.5,min:14.2" name="txtList" value='+objTmp6.ExtraText+'>'+objTmp6.ExtraUnit
+							}else if((objTmp6.Desc==$g("腹泻"))||(objTmp6.Desc==$g("呕吐"))){
+								htmlStr += '<input id=txt'+objTmp6.ID+' style="margin:5px 0px 5px 5px;" class="hisui-numberbox" name="txtList" value='+objTmp6.ExtraText+'>'+objTmp6.ExtraUnit
+							}else{
+								htmlStr += '<input id=txt'+objTmp6.ID+' style="margin:5px 0px 5px 5px;" class="textbox" name="txtList" value='+objTmp6.ExtraText+'>'+objTmp6.ExtraUnit
+							}
 						}else {
 							htmlStr += '<input id=chk'+objTmp6.ID+' type="checkbox" class="hisui-checkbox" '+(objTmp6.Impl==1? 'checked="checked"':"")+' label='+objTmp6.Desc+' name="chkList" value='+objTmp6.chkID+'>'	
 						}
@@ -72,12 +77,12 @@
 					}else {  //存在
 						htmlStr += '<table>'
 						htmlStr += 	'<tr class="report-tr">'
-						htmlStr +=    '<td id=SignSub'+objTmp6.ID+'>'+objTmp6.Desc+'</td>'
+						htmlStr +=    '<td id=SignSub'+objTmp6.ID+' style="padding-right:10px;">'+objTmp6.Desc+'</td>'
 						var groupStr9 = "", flgSub6 = 0;
 						for (var k=0; k<arrayData9.length; k++) {
 							var objTmp9 = arrayData9[k];
 							if (objTmp9.Code.substring(0, 6)!=objTmp6.Code) { continue; }
-							htmlStr += '<td><input id=chk'+objTmp9.ID+' type="checkbox" class="hisui-checkbox" '+(objTmp9.Impl==1? 'checked="checked"':"")+' label='+objTmp9.Desc+' name="chkList" value='+objTmp9.chkID+'></td>'
+							htmlStr += '<td style="padding-right:20px;"><input id=chk'+objTmp9.ID+'  type="checkbox" class="hisui-checkbox" '+(objTmp9.Impl==1? 'checked="checked"':"")+' label='+objTmp9.Desc+' name="chkList" value='+objTmp9.chkID+'></td>'
 						}
 						htmlStr += 	'</tr>'
 						htmlStr += ' </table>'
@@ -120,36 +125,7 @@
 					}
 				});
 		    }
-	    });
-	    obj.chkPreDiagnos = Common_CheckboxToDic("chkPreDiagnosDrs","FBDPreDiagnos",2);   //初步诊断
-	    $HUI.checkbox("[name='chkPreDiagnosDrs']",{  
-			onCheckChange:function(e,value){
-				var PerDiagnos = $(e.target).attr("label");   //当前选中的值
-				if (PerDiagnos=='其他') {
-					if(value==false){	
-						$('#txtPreDiagnos').val("")						
-						$('#txtPreDiagnos').attr('disabled','disabled');
-					}else{
-						$('#txtPreDiagnos').removeAttr('disabled');
-					}
-				}
-				
-			}
-		});
-	    obj.chkAnamnesis = Common_CheckboxToDic("chkAnamnesisDrs","FBDAnamnesis",2);  //既往病史
-	    $HUI.checkbox("[name='chkAnamnesisDrs']",{  
-			onCheckChange:function(e,value){
-				var Anamnesis = $(e.target).attr("label");   //当前选中的值
-				if (Anamnesis=='其他') {
-					if(value==false){
-						$('#txtAnamnesis').val("")
-						$('#txtAnamnesis').attr('disabled','disabled');
-					}else{
-						$('#txtAnamnesis').removeAttr('disabled');
-					}
-				}			
-			}
-		});       
+	    });   
 		//省
 		obj.cboCurrProvince = $HUI.combobox('#cboCurrProvince', {
 			editable: true,
@@ -157,7 +133,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId=1";
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId=1"+ "&aFlag=1";
 		   	 	$('#cboCurrProvince').combobox('reload',url);
 			}, onChange:function(newValue,oldValue){		
 				$('#cboCurrCity').combobox('clear');
@@ -175,7 +151,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboCurrProvince').combobox('getValue');
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboCurrProvince').combobox('getValue')+ "&aFlag=2";
 		   	 	$('#cboCurrCity').combobox('reload',url);
 			}, onChange:function(newValue,oldValue){
 				$('#cboCurrCounty').combobox('clear');
@@ -191,7 +167,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboCurrCity').combobox('getValue');
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboCurrCity').combobox('getValue')+ "&aFlag=3";
 		   	 	$('#cboCurrCounty').combobox('reload',url);
 			}, onChange:function(newValue,oldValue){
 				$('#cboCurrVillage').combobox('setValue','');
@@ -207,7 +183,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboCurrCounty').combobox('getValue');
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboCurrCounty').combobox('getValue')+ "&aFlag=4";
 		   	 	$('#cboCurrVillage').combobox('reload',url);
 			},
 			onSelect:function(record){
@@ -215,13 +191,55 @@
 				$('#txtCurrAddress').val($('#cboCurrProvince').combobox('getText')+$('#cboCurrCity').combobox('getText')+$('#cboCurrCounty').combobox('getText')+$('#cboCurrVillage').combobox('getText'));
 			}
 		});
+		
+		// 食源性疾病所属与现住址强制关联
+		if (ServerObj.FBDRegionRelateCurrAdd == '1' && ServerObj.FBDInitAddressByLocalHospital != '') {
+			var InitAddrArray = ServerObj.FBDInitAddressByLocalHospital.split('`');
+			$('#cboPatArea').combobox({
+				onSelect: function(newValue,oldValue) {
+					setTimeout(function(){
+						var PatAreaDesc = $('#cboPatArea').combobox('getText');
+						if (PatAreaDesc == $g("本县区")) {				//本县区
+							$('#cboCurrProvince').combobox('setValue',InitAddrArray[0].split('^')[0]);
+							$('#cboCurrProvince').combobox('setText',InitAddrArray[0].split('^')[1]);
+							$('#cboCurrCity').combobox('setValue',InitAddrArray[1].split('^')[0]);
+							$('#cboCurrCity').combobox('setText',InitAddrArray[1].split('^')[1]);
+							$('#cboCurrCounty').combobox('setValue',InitAddrArray[2].split('^')[0]);
+							$('#cboCurrCounty').combobox('setText',InitAddrArray[2].split('^')[1]);
+							$('#cboCurrVillage').combobox('clear');
+							$('#txtCurrRoad').val("");
+							$('#txtCurrAddress').val("");
+						}else if (PatAreaDesc == $g("本市其它县区")) {		//本市其他县区
+							$('#cboCurrProvince').combobox('setValue',InitAddrArray[0].split('^')[0]);
+							$('#cboCurrProvince').combobox('setText',InitAddrArray[0].split('^')[1]);
+							$('#cboCurrCity').combobox('setValue',InitAddrArray[1].split('^')[0]);
+							$('#cboCurrCity').combobox('setText',InitAddrArray[1].split('^')[1]);
+							$('#cboCurrCounty').combobox('clear');
+							$('#cboCurrVillage').combobox('clear');
+							$('#txtCurrRoad').val("");
+							$('#txtCurrAddress').val("");
+						}else if (PatAreaDesc == $g("本省其它城市")) {		//本省其它地市
+							$('#cboCurrProvince').combobox('setValue',InitAddrArray[0].split('^')[0]);
+							$('#cboCurrProvince').combobox('setText',InitAddrArray[0].split('^')[1]);
+							$('#cboCurrCity').combobox('clear');
+							$('#cboCurrCounty').combobox('clear');
+							$('#cboCurrVillage').combobox('clear');
+							$('#txtCurrRoad').val("");
+							$('#txtCurrsAddress').val("");
+						}else{
+							$('#cboCurrProvince').combobox('clear');
+							$('#cboCurrCity').combobox('clear');
+							$('#cboCurrCounty').combobox('clear');
+							$('#cboCurrVillage').combobox('clear');
+							$('#txtCurrRoad').val("");
+							$('#txtCurrsAddress').val("");
+						}
+			        }, 200)
+				}
+			})
+		}
 	}
 	obj.LoadDicInfo = function() {
-		
-		//样本类型
-		obj.cboSampleType = Common_ComboToDic("cboSampleType","FBDSampleType","",session['LOGON.HOSPID']);
-		//单位
-		obj.cboSampleUnit = Common_ComboToDic("cboSampleUnit","FBDSampleUnit","",session['LOGON.HOSPID']);
 		//食品分类
 		obj.cboFoodType = Common_ComboToDic("cboFoodType","FBDFoodType","",session['LOGON.HOSPID']);
 		//加工或包装方式
@@ -253,7 +271,7 @@
 		$HUI.radio("[name='radEatTypeList']",{  //进食地点选项触发事件
 			onChecked:function(e,value){
 				var EatType = $(e.target).attr("label");   //当前选中的值
-				if (EatType=='境内') {				
+				if (EatType==$g('境内')) {				
 					obj.LoadEatAddress();
 					$('#cboEatProvince').combobox('enable');
 					$('#cboEatCity').combobox('enable');
@@ -272,7 +290,7 @@
 		$HUI.radio("[name='radBuyTypeList']",{  //进食地点选项触发事件
 			onChecked:function(e,value){
 				var BuyType = $(e.target).attr("label");   //当前选中的值
-				if (BuyType=='境内') {	
+				if (BuyType==$g('境内')) {	
 					obj.LoadBuyAddress();
 					$('#cboBuyProvince').combobox('enable');
 					$('#cboBuyCity').combobox('enable');
@@ -296,7 +314,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId=1";
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId=1"+ "&aFlag=1";
 		   	 	$('#cboEatProvince').combobox('reload',url);
 			},
 			onChange:function(newValue,oldValue){		
@@ -312,7 +330,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboEatProvince').combobox('getValue');
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboEatProvince').combobox('getValue')+ "&aFlag=2";
 		   	 	$('#cboEatCity').combobox('reload',url);
 			},
 			onChange:function(newValue,oldValue){
@@ -327,7 +345,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboEatCity').combobox('getValue');
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboEatCity').combobox('getValue')+ "&aFlag=3";
 		   	 	$('#cboEatCounty').combobox('reload',url);
 			},
 			 onChange:function(newValue,oldValue){
@@ -343,7 +361,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId=1";
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId=1"+ "&aFlag=1";
 		   	 	$('#cboBuyProvince').combobox('reload',url);
 			},
 			onChange:function(newValue,oldValue){		
@@ -359,7 +377,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboBuyProvince').combobox('getValue');
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboBuyProvince').combobox('getValue')+ "&aFlag=2";
 		   	 	$('#cboBuyCity').combobox('reload',url);
 			},
 			onChange:function(newValue,oldValue){
@@ -374,7 +392,7 @@
 			valueField: 'ID',
 			textField: 'ShortDesc',
 			onShowPanel: function () {
-				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboBuyCity').combobox('getValue');
+				var url=$URL+"?ClassName=DHCMed.SS.AreaDic&QueryName=QryArea&ResultSetType=array&aParentId="+$('#cboBuyCity').combobox('getValue')+ "&aFlag=3";
 		   	 	$('#cboBuyCounty').combobox('reload',url);
 			},
 			onChange:function(newValue,oldValue){
@@ -383,7 +401,7 @@
 		});
 	}
 	obj.gridFood = $HUI.datagrid("#gridFoodInfo",{
-		title:'暴露信息（是否怀疑是进食了某些食品后出现以上症状，如果"是"请于下列表格中填写食品信息，可填写多个。购买地点和进食场所至少填写一项）',
+		title:$g('暴露信息（是否怀疑是进食了某些食品后出现以上症状，如果"是"请于下列表格中填写食品信息，可填写多个。购买地点和进食场所至少填写一项）'),
 		headerCls:'panel-header-gray',
 		iconCls:'icon-paper',
 		rownumbers: true, //如果为true, 则显示一个行号列
@@ -393,25 +411,14 @@
 		columns:[[
 			{field:'FoodName',title:'食品名称',width:'80'},
 			{field:'FoodType',title:'食品分类',width:'80'},
-			{field:'Packing',title:'加工或<br>包装方式',width:'80'},
+			{field:'Packing',title:'加工或包装方式',width:'120'},
 			{field:'FoodBrand',title:'食品品牌',width:'80'},
-			{field:'Manufacturer',title:'生产厂家',width:'80'},
-			{field:'EatingSite',title:'进食场所',width:'120',
-				formatter: function(value,row,index){
-					return row.EatingSiteCate+" "+row.EatingSite;					
-				}
-			}, 
-			{field:'BuySite',title:'购买场所',width:'120',
-				formatter: function(value,row,index){
-					return row.BuySiteCate+" "+row.BuySite;					
-				}
-			}, 
-			{field:'EatingPlaces',title:'进食地点',width:'130',
+			{field:'EatingPlaces',title:'进食地点',width:'230',
 				formatter: function(value,row,index){
 					return row.EatingTypeDesc+" ("+row.EatProvinceDesc+" "+row.EatCityDesc+" "+row.EatCountyDesc+" "+row.EatingPlaces+')';					
 				}
 			}, 
-			{field:'BuyPlaces',title:'购买地点',width:'130',
+			{field:'BuyPlaces',title:'购买地点',width:'230',
 				formatter: function(value,row,index){
 					return row.BuyTypeDesc+" ("+row.BuyProvinceDesc+" "+row.BuyCityDesc+" "+row.BuyCountyDesc+" "+row.WhereToBuy+')';										
 				}
@@ -421,9 +428,8 @@
 					return row.EatingDate+" "+row.EatingTime;					
 				}
 			}, 
-			{field:'EatingNum',title:'进食<br>人数',width:'40'},
-			{field:'IsIncidenceDesc',title:'其他人<br>是否发病',width:'80'},
-			{field:'IsSamplingDesc',title:'是否<br>采样',width:'40'}
+			{field:'EatingNum',title:'进食人数',width:'80'},
+			{field:'IsIncidenceDesc',title:'其他人是否发病',width:'160'}
 		]],
 		onSelect:function(rindex,rowData){
 			if (rindex>-1) {
@@ -432,29 +438,6 @@
 		}
 	});
 	
-	obj.gridSample = $HUI.datagrid("#gridSampleInfo",{
-		//fit: true,
-		title:'生物样本采集（是否采集生物标本，如果“是”请于表格中填写标本信息）',
-		headerCls:'panel-header-gray',
-		iconCls:'icon-paper',
-		rownumbers: true, //如果为true, 则显示一个行号列
-		singleSelect: true,
-		autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
-		loadMsg:'数据加载中...',
-		columns:[[
-			{field:'SampleNo',title:'样本编号',width:'200'},
-			{field:'SampleTypeDesc',title:'样本类型',width:'200'},
-			{field:'SampleNumber',title:'样本数量',width:'100'},
-			{field:'SampleUnitDesc',title:'单位',width:'200'},
-			{field:'SampleDate',title:'采样日期',width:'100'},
-			{field:'Resume',title:'备注',width:'300'}
-		]],
-		onSelect:function(rindex,rowData){
-			if (rindex>-1) {
-				obj.gridSample_rowclick();
-			}
-		}
-	});
 	
 	InitReportWinEvent(obj);
 	obj.LoadEvent();

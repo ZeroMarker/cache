@@ -114,6 +114,9 @@ function AddgridData(type)
 	{
 		url="dhceqmaintmasteritemlimitlist.csp?"+"&SourceType="+type;	
 	}
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
     window.open(url,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0')
 	
 }
@@ -502,7 +505,11 @@ function BSave_Clicked()
 	}
 		alertShow("更新成功！");
 	//****************************	
-	window.location.href= 'dhceq.process.maintplan.csp?RowID='+$('#RowID').val()+"&BussType="+getJQValue($("#BussType"))+"&Status=0&SourceType=2";
+	var url = 'dhceq.process.maintplan.csp?RowID='+$('#RowID').val()+"&BussType="+getJQValue($("#BussType"))+"&Status=0&SourceType=2";
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.location.href= url
 
 
 }
@@ -571,7 +578,11 @@ function BSubmit_Clicked()
 	}
 		alertShow("更新成功！");
 	//****************************	
-	window.location.href= 'dhceq.process.maintplan.csp?RowID='+Rtn+"&QXType="+getJQValue($("#QXType"))+"&BussType="+getJQValue($("#BussType"))+"&MaintTypedr="+getJQValue($("#MaintTypedr"))+"&Status=2&SourceType=2";
+	var url='dhceq.process.maintplan.csp?RowID='+Rtn+"&QXType="+getJQValue($("#QXType"))+"&BussType="+getJQValue($("#BussType"))+"&MaintTypedr="+getJQValue($("#MaintTypedr"))+"&Status=2&SourceType=2";
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.location.href= url;
 	
 }
 /*
@@ -670,8 +681,12 @@ function BDelete_Clicked()
 		return;	
 	}
 		alertShow("更新成功！");
-	//****************************	
-	window.location.href= 'dhceq.process.maintplan.csp?RowID='+"&QXType="+getJQValue($("#QXType"))+"&BussType="+getJQValue($("#BussType"))+"&MaintTypedr="+getJQValue($("#MaintTypedr"))+"&Status=&SourceType=2";
+	//****************************
+	var url='dhceq.process.maintplan.csp?RowID='+"&QXType="+getJQValue($("#QXType"))+"&BussType="+getJQValue($("#BussType"))+"&MaintTypedr="+getJQValue($("#MaintTypedr"))+"&Status=&SourceType=2";
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}	
+	window.location.href= url;
 }
 /*
  *Description:计划删除事件
@@ -1004,7 +1019,9 @@ function CheckGridData()
 function EquipList_Clicked()
 {
 	url="dhceqmaintequiplist.csp?"+"&SourceType="+type;	
-	
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
     window.open(url,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0')
 	
 }

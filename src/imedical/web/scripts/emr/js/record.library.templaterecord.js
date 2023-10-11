@@ -119,7 +119,22 @@ function TemplateList()
 	    overflow:'auto',
 	    columns:[[
 	    	{field:'id',title:'id',hidden:true},
-	        {field:'text',title:'名称',width:200,sortable:true,sorter:function(a,b){  
+	    	//2020-6-19 by yejian 名称显示修改docidtext
+	        /*{field:'text',title:'名称',width:200,sortable:true,sorter:function(a,b){  
+				a = a.split('/');  
+				b = b.split('/');  
+				if (a[2] == b[2]){  
+					if (a[0] == b[0]){  
+						return (a[1]>b[1]?1:-1);  
+					} else {  
+						return (a[0]>b[0]?1:-1);  
+					}  
+				} else {  
+					return (a[2]>b[2]?1:-1);  
+				}  
+			}},*/
+			{field:'text',title:'名称',width:200,sortable:true,hidden:true},
+	        {field:'DocIDText',title:'名称',width:200,sortable:true,sorter:function(a,b){  
 				a = a.split('/');  
 				b = b.split('/');  
 				if (a[2] == b[2]){  
@@ -370,7 +385,8 @@ function ListInstance(data)
 			{field:'templateId',hidden:true},{field:'isLeadframe',hidden:true},
 			{field:'isMutex',hidden:true},{field:'categoryId',hidden:true},
 			{field:'JaneSpell',hidden:true},{field:'FullFight',hidden:true},
-			{field:'isWaitsign',hidden:true}
+			{field:'isWaitsign',hidden:true},
+			{field:'patientsign',title:'患者待签',width:130,formatter: PatientStatusOperate,sortable:true}
 		]],
 		//点击表格病历打开
 		onDblClickRow:function(index,row)
@@ -546,12 +562,14 @@ function setTemplate(data,categoryId)
 		var div = $('<div class="template"></div>');
 		if (data[i].attributes.quotation == "1")
 		{
-			$(div).append('<a href="#"><div class="new" ><div class="title">' +data[i].text+ '</div></div></a>');
+			//2020-6-19 by yejian 名称显示修改docid名称
+			$(div).append('<a href="#"><div class="new" ><div class="title">' +data[i].attributes.DocIDText+ '</div></div></a>');
 			$(div).append('<a href="#"><div class="quote"></div></a>');	
 		}
 		else
 		{
-			$(div).append('<a href="#"><div class="title">' +data[i].text+ '</div></a>');
+			//2020-6-19 by yejian 名称显示修改docid名称
+			$(div).append('<a href="#"><div class="title">' +data[i].attributes.DocIDText+ '</div></a>');
 		}
 		$(div).append('<div class="janespell" style="display:none;">' +data[i].attributes.JaneSpell+ '</div>');
 		$(div).append('<div class="fullfight" style="display:none;">' +data[i].attributes.FullFight+ '</div>');
@@ -684,13 +702,25 @@ function setRecord(data,categoryId)
 		$(link).attr({"isWaitsign":data[i].isWaitsign});
 		
 		var div = $('<div class="instance"></div>');
-		if ((data[i].doctorwait == "1")&&(isShowToBeSignedSymbol != "N"))
+		if (isShowToBeSignedSymbol != "N")
 		{
-			if($.browser.version == '11.0')
+			if (data[i].doctorwait == "1")
 			{
-				$(div).append('<div class="pic" style="width:26px">待签</div>');
-			}else{
-				$(div).append('<div class="pic">待签</div>');
+				if($.browser.version == '11.0')
+				{
+					$(div).append('<div class="pic" style="width:26px">医生待签</div>');
+				}else{
+					$(div).append('<div class="pic">医生待签</div>');
+				}
+			}
+			if (data[i].patientwait == "1")
+			{
+				if($.browser.version == '11.0')
+				{
+					$(div).append('<div class="picleft" style="width:26px">患者待签</div>');
+				}else{
+					$(div).append('<div class="picleft">患者待签</div>');
+				}
 			}
 		}
 		$(div).append('<a href="#"><div class="content">' +data[i].summary+ '</div></a>');
@@ -927,4 +957,13 @@ function findRecord(data,value)
 		if (data[i].text.indexOf(value)!=-1) result.push(data[i]);
 	}
 	return result;
+}
+
+function PatientStatusOperate(val,row,index)
+{
+	if (row.patientwait == "1")
+	{
+		var span = '<a>待签</a>';  
+		return span;
+	}
 }

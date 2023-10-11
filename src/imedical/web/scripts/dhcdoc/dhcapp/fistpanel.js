@@ -32,7 +32,7 @@
 		
 		/// 申请医生  
 		$('#ApplyDocUser').combobox({
-			url:LINK_CSP+"?ClassName=web.DHCAppPisMasterQuery&MethodName=QueryDoc&LocID=",
+			url:LINK_CSP+"?ClassName=web.DHCAppPisMasterQuery&MethodName=QueryDoc&LocID="+session['LOGON.CTLOCID'],
 			blurValidValue:true,		
 			onShowPanel:function(){
 				var appLocID=$('#ApplyLoc').combobox('getValue');
@@ -42,7 +42,6 @@
 		});
     	/// 申请医生	
 		$('#ApplyDocUser').combobox("setValue",session['LOGON.USERID']);
-		$('#ApplyDocUser').combobox("setText",session['LOGON.USERNAME']);
 		/// 申请科室
 		$('#ApplyLoc').combobox("setValue",session['LOGON.CTLOCID']);
 	}

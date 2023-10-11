@@ -20,6 +20,8 @@ function initPageDefault(){
 	InitParams();      /// 初始华参数
 	InitComponents();  /// 初始化界面组件
 	InitShiftsItem();  /// 加载Table列表
+	
+	nurIndexPopWin();  /// 急诊交班指标项  页面加载时，自动打开副屏；用户大会使用 bianshuai 2022-10-12
 }
 
 /// 初始化页面参数
@@ -125,10 +127,10 @@ function SetCellUrl(value, rowData, rowIndex){
 	
 	var html = "";
 	if (rowData.CompFlag != "Y"){
-		html = "<a href='#' onclick='wri("+ rowIndex +")' title='编辑' style='margin:0px 5px;'><img src='../scripts/dhcnewpro/dhcem/images/write_order.png' border=0/></a>";
-	    html += "<a href='#' onclick='del("+ rowIndex +")' title='删除' style='margin:0px 5px;'><img src='../scripts/dhcnewpro/dhcem/images/cancel.png' border=0/></a>";
+		html = "<a href='#' onclick='wri("+ rowIndex +")' title='"+$g("编辑")+"' style='margin:0px 5px;'><img src='../scripts/dhcnewpro/dhcem/images/write_order.png' border=0/></a>";
+	    html += "<a href='#' onclick='del("+ rowIndex +")' title='"+$g("删除")+"' style='margin:0px 5px;'><img src='../scripts/dhcnewpro/dhcem/images/cancel.png' border=0/></a>";
 	}
-	html += "<a href='#' onclick='log("+ rowData.EpisodeID +")' title='日志' style='margin:0px 5px;'><img src='../scripts/dhcnewpro/dhcem/images/eye.png' border=0/></a>";
+	html += "<a href='#' onclick='log("+ rowData.EpisodeID +")' title='"+$g("日志")+"' style='margin:0px 5px;'><img src='../scripts/dhcnewpro/dhcem/images/eye.png' border=0/></a>";
 	return html;
 }
 
@@ -164,7 +166,7 @@ function setCellType(value, row, index){
 /// 类型
 function SetCellWriFlag(value, rowData, rowIndex){
 	
-	var html = "<span style='display:block;width:45px;background:#7dba56;padding:3px 6px;color:#fff;border-radius: 4px 4px 4px 4px;'>"+ (value == "Y"?"已填":"未填")+"</span>";
+	var html = "<span style='display:block;width:45px;background:#7dba56;padding:3px 6px;color:#fff;border-radius: 4px 4px 4px 4px;'>"+ (value == "Y"?$g("已填"):$g("未填"))+"</span>";
 	return html;
 }
 
@@ -210,19 +212,23 @@ function InsEmShiftObj(itemobj){
 	$HUI.datebox("#WrDate").setValue(itemobj.WrDate);
 	/// 交班人员
 	$("#CarePrv").val(itemobj.UserName);
+	$("#UserCode").val(itemobj.UserCode);
 	$("#PassWord").val("");
 	/// 接班人员
-	$("#RecUser").val(itemobj.RecUser);
-	
+	///$("#RecUser").val(itemobj.RecUser);
+	$("#RecUserCode").val(itemobj.RecUser);
+	$("#RecPassWord").val("");
 	$("#bt_find").linkbutton('disable');  /// 查询按钮
 	if (itemobj.CompFlag == "Y"){
 		$("#bt_del").linkbutton('disable');   /// 删除按钮
 		$("#bt_sure").linkbutton('disable');  /// 确认按钮
 		$("#bt_add").linkbutton('disable');   /// 新增按钮
+		$("#RecUserCode").attr("disabled","disable");
 	}else{
 		$("#bt_del").linkbutton('enable');   /// 删除按钮
 		$("#bt_sure").linkbutton('enable');  /// 确认按钮
 		$("#bt_add").linkbutton('enable');   /// 新增按钮	
+		$("#RecUserCode").removeAttr("disabled");
 	}
 	CompFlag = itemobj.CompFlag;
 }
@@ -261,11 +267,18 @@ function clearPages(){
     /// 交班日期
 	$HUI.datebox("#WrDate").setValue(GetCurSystemDate(0));
 	/// 交班人员
-	$("#CarePrv").val(session['LOGON.USERNAME']);
+	//$("#CarePrv").val(session['LOGON.USERNAME']);
+	runClassMethod("web.DHCEMGroupPatMajor","GetTrsUser",{"LgUserName":session['LOGON.USERNAME']},function(data){
+		$("#CarePrv").val(data);
+	},"text",false)
+	$("#UserCode").val(session['LOGON.USERCODE']);
 	$("#PassWord").val("");
+	
 	/// 接班人员
 	$("#RecUser").val("");
-	
+	$("#RecUserCode").val("");
+	$("#RecPassWord").val("");
+	$("#RecUserCode").removeAttr("disabled");
 	$("#bmDetList").datagrid("loadData", { total: 0, rows: [] });
 	
 	$("#bt_find").linkbutton('enable');  /// 查询按钮
@@ -375,9 +388,12 @@ function takShift(){
 
 /// 交班列表窗口
 function OpenBedLisWin(){
-	
+	var link="dhcem.bedsideshiftquery.csp?Type=T&EmType=Nur";
+	if ('undefined'!==typeof websys_getMWToken){
+		link += "&MWToken="+websys_getMWToken();
+	}
 	commonShowWin({
-		url:"dhcem.bedsideshiftquery.csp?Type=T&EmType=Nur",
+		url:link,
 		title:"交班本查询"	
 	})
 }
@@ -396,12 +412,15 @@ function wri(index){
 		return;
 	}
 	var EpisodeID = rowDatas[index].EpisodeID; /// 就诊ID
-	
+	var link="dhcem.wirtebedshift.csp?bsID="+ BsID +"&bsItemID="+ bsItemID +"&EpisodeID="+ EpisodeID +"&EmType=Nur" +"&Pid="+ Pid;
+	if ('undefined'!==typeof websys_getMWToken){
+		link += "&MWToken="+websys_getMWToken();
+	}
 	commonShowWin({
-		url:"dhcem.wirtebedshift.csp?bsID="+ BsID +"&bsItemID="+ bsItemID +"&EpisodeID="+ EpisodeID +"&EmType=Nur" +"&Pid="+ Pid,
+		url:link,
 		title:"交班录入",
-		width: (window.screen.availWidth - 20),
-		height: (window.screen.availHeight - 150)
+		width: 1400, //(window.screen.availWidth - 20),
+		height: 800 //(window.screen.availHeight - 150)
 	})
 }
 
@@ -433,12 +452,15 @@ function add(){
 		$.messager.alert("提示:","请先选择或生成交班记录！","warning");
 		return;
 	}
-	
+	var link="dhcem.addpat.csp?BsID="+ BsID +"&Pid="+ Pid;
+	if ('undefined'!==typeof websys_getMWToken){
+		link += "&MWToken="+websys_getMWToken();
+	}
 	commonShowWin({
-		url:"dhcem.addpat.csp?BsID="+ BsID +"&Pid="+ Pid,
+		url:link,
 		title:"新增",
-		width: 600,
-		height: 270
+		width: 570,
+		height: 200
 	})
 }
 
@@ -459,9 +481,12 @@ function delBsPat(bsItemID){
 function log(EpisodeID){
 	
 	if (!hasLog(EpisodeID)) return;  /// 病人是否有交班日志 
-	
+	var link="dhcem.pattimeaxis.csp?PatientID=&EpisodeID="+ EpisodeID +"&EmType=Nur";
+	if ('undefined'!==typeof websys_getMWToken){
+		link += "&MWToken="+websys_getMWToken();
+	}
 	commonShowWin({
-		url:"dhcem.pattimeaxis.csp?PatientID=&EpisodeID="+ EpisodeID +"&EmType=Nur",
+		url:link,
 		title:"历次交班信息",
 		height: (window.screen.availHeight - 180)	
 	})
@@ -470,31 +495,46 @@ function log(EpisodeID){
 /// 确认
 function sure(){
 	
+	var rowDatas = $('#bmDetList').datagrid('getRows');
+	if (rowDatas.length == 0){
+		$.messager.alert("提示:","待交班病人不能为空！","warning");
+		return;	
+	}
+	var userCode = $("#UserCode").val();
+	var passWord = $("#PassWord").val(); /// 签名密码
+	if (passWord == ""){
+		$.messager.alert("提示:","交班人签名密码不能为空！","warning");
+		return false;
+	}
+	
+	var recUser = $("#RecUserCode").val();    /// 接班人
+	if (recUser == ""){
+		$.messager.alert("提示:","接班人不能为空！","warning");
+		return;
+	}
+	if(userCode===recUser){
+		$.messager.alert("提示:","交班人和接班人不能为同一个人！","warning");
+		return;
+	}
+	
+	var recPassWord=$("#RecPassWord").val();
+	if (recPassWord == ""){
+		$.messager.alert("提示:","接班人签名密码不能为空！","warning");
+		return false;
+	}
+	
+	if (!IsValPassWord(userCode,passWord,recUser,recPassWord)) return;        /// 验证密码
+	
 	$.messager.confirm("确认", "确定要提交本次交班记录?确认之后不允许再进行修改！", function (r) {
 		if (r) {
-			sureBs();
+			sureBs();	
 		}
 	});
 }
 
 /// 确认
 function sureBs(){
-	
-	var rowDatas = $('#bmDetList').datagrid('getRows');
-	if (rowDatas.length == 0){
-		$.messager.alert("提示:","待交班病人不能为空！","warning");
-		return;	
-	}
-	
-	var RecUser = $("#RecUser").val(); /// 接班人
-	if (RecUser == ""){
-		$.messager.alert("提示:","接班人不能为空！","warning");
-		return;
-	}
-	//if (!IsValAccUser(RecUser)) return;  /// 验证接班人是否填写正确
-	
-	if (!IsValPassWord()) return;        /// 验证密码
-	
+	var recUser = $("#RecUserCode").val();    /// 接班人
 	var items = $("input[name='item']"); /// 交班分项
 	var itemArr = [];
 	for(var i=0; i<items.length; i++){
@@ -504,9 +544,10 @@ function sureBs(){
 	}
 	
 	/// 主信息
-	var mListData = RecUser +"^"+ itemArr.join("#");
+	var mListData = recUser +"^"+ itemArr.join("#");
 	
 	runClassMethod("web.DHCEMBedSideShift","InsBsSure",{ "BsID":BsID , "mListData":mListData},function(jsonString){
+
 		if (jsonString == -1){
 			$.messager.alert("提示:","交班记录为空或新增病人未填写交班记录，不能进行确认操作！","warning");
 			return;
@@ -521,19 +562,16 @@ function sureBs(){
 }
 
 /// 签名验证
-function IsValPassWord(){
+function IsValPassWord(userCode,passWord,recUserCode,recPassWord){
 
-	var PassWord = $("#PassWord").val(); /// 签名密码
-	if (PassWord == ""){
-		$.messager.alert("提示:","交班人签名密码不能为空！","warning");
-		return false;
-	}
-	
-	var userName = $("#CarePrv").val(); /// 交班人
-	
 	var success = false;
-	runClassMethod("web.DHCEMBedSideShift","IsValPassWord",{"userName":userName, "passWord":PassWord},function(jsonString){
-
+	runClassMethod("web.DHCEMBedSideShift","IsValPassWord",{
+		"userCode":userCode,
+		"passWord":passWord,
+		"recUserCode":recUserCode,
+		"recPassWord":recPassWord,
+		"lgHospID":LgHospID
+	},function(jsonString){
 		if (jsonString == 0){
 			success = true;
 		}else{
@@ -565,7 +603,7 @@ function delShifts(){
 		$.messager.alert("提示:","请先选中一次交班记录后，重试！");
 		return;
 	}
-	$.messager.confirm('确认对话框','确定要删除当前交班记录吗！', function(r){
+	$.messager.confirm('确认对话框','确定要删除当前交班记录吗？', function(r){
 		if (r){
 			runClassMethod("web.DHCEMBedSideShift","deleteBs",{"BsID":BsID},function(jsonString){
 
@@ -609,7 +647,7 @@ function onbeforeunload_handler() {
 
 /// 自动设置页面布局
 function onresize_handler(){
-	
+	$.parser.parse($('#listorderitem'));  /// 重新解析
 }
 
 /// 页面全部加载完成之后调用(EasyUI解析完之后)
@@ -628,6 +666,15 @@ function setCellLabel(value){
 	if(value.indexOf("4级")>-1){value="Ⅳa级";}
 	if(value.indexOf("5级")>-1){value="Ⅳb级";}
 	return value;
+}
+
+/// 急诊交班指标项
+function nurIndexPopWin(){
+	IsOpenMoreScreen = isOpenMoreScreen();	///是否多屏幕 2022-03-07 用户大会
+	// openPatEmr(PatientID, EpisodeID, mradm);
+	if(IsOpenMoreScreen){
+	websys_emit("onNurShiftIndex",{"PatientID":""});
+	}
 }
 
 window.onload = onload_handler;

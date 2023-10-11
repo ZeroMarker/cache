@@ -14,6 +14,7 @@ $(function(){
 	});
 	$("#btnSave").on("click",SaveContent);
 	$("#btn-Search").on("click",Query);
+	
 });
 
 /// ³õÊ¼»¯×Öµä
@@ -23,7 +24,7 @@ function InitDict(){
 		ClassName:"web.DHCST.PhcConvert",
 		QueryName:"GetCMPrescType",
 		StrParams:HospId,
-		mode:"remote",
+		mode:"local",
 		onBeforeLoad:function(params){
 			params.StrParams=HospId
 		}
@@ -116,7 +117,7 @@ function InitGridConvert(){
 		ClassName:'web.DHCST.PhcConvert',
 		QueryName:'Query',
 		queryParams:{
-			StrParams:''
+			StrParams:'^^'+HospId
 		},
 	    toolbar:'#gridConvertBar',
         columns:gridColumns,

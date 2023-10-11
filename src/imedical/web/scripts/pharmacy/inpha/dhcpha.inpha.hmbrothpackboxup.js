@@ -46,7 +46,7 @@ $(function(){
 	})
 	
 	$("#chk-haspackbox").on("ifChanged",function(){
-		QueryGridBroPack();
+		//QueryGridBroPack();
 	})
 	
 	InitPhBoxNumModal();
@@ -102,8 +102,11 @@ function PrescNoTrackQuery(){
 	var prescNo=selectdata.TPrescNo;
 	var TAdm=selectdata.TAdm;
 	var prescNo=$.jgrid.stripHtml(prescNo);
-	var lnk="dhcpha/dhcpha.inpha.hmprescnotrack.csp?gPrescNo="+prescNo+"&Adm="+TAdm;
-	window.open(lnk,"_target","width="+(window.screen.availWidth-50)+",height="+(window.screen.availHeight-100)+ ",menubar=no,status=yes,toolbar=no,resizable=yes,top='0',left='110',location=no") ;
+	var lnk="dhcpha/dhcpha.inpha.hmpresctimeline.csp?gPrescNo="+prescNo;
+	window.open(lnk,"_target","width="+(window.screen.availWidth/2+100)+",height="+(window.screen.availHeight-50)+ ",menubar=no,status=yes,toolbar=no,resizable=yes,top='0',left='110',location=no") ;
+	//var lnk="dhcpha/dhcpha.inpha.hmprescnotrack.csp?gPrescNo="+prescNo+"&Adm="+TAdm;
+	//window.open(lnk,"_target","width="+(window.screen.availWidth-50)+",height="+(window.screen.availHeight-100)+ ",menubar=no,status=yes,toolbar=no,resizable=yes,top='0',left='110',location=no") ;
+
 }
 
 //初始化揭药批次列表
@@ -147,14 +150,16 @@ function InitPackBatNoDetList(){
 		{header:'TphmbiId',index:'TphmbiId',name:'TphmbiId',width:5,hidden:true},
 		{header:'病区',index:'TWardLoc',name:'TWardLoc',width:100,align:'left'},
 		{header:'患者姓名',index:'TPatName',name:'TPatName',width:100},
-		{header:'处方号',index:'TPrescNo',name:'TPrescNo',width:80,
+		{header:'处方号',index:'TPrescNo',name:'TPrescNo',width:80
+		/*
 			formatter:function(cellvalue, options, rowObject){
 			    return "<a onclick=\"PrescNoTrackQuery()\" style='text-decoration:underline;'>"+cellvalue+"</a>";
 			}
+			*/
 		},
 		{header:'用药日期',index:'TBrothDate',name:'TBrothDate',width:100},
 		{header:'袋数',index:'TActUnPocNum',name:'TActUnPocNum',width:80},
-		{header:'罐数',index:'TJarNum',name:'TJarNum',width:80},
+		{header:'罐数',index:'TJarNum',name:'TJarNum',width:80,hidden:true},
 	    {header:'揭药人',index:'TBrothName',name:'TBrothName',width:80},
 		{header:'揭药日期',index:'TActBrothDate',name:'TActBrothDate',width:100},
 		{header:'药袋当前状态',index:'TBrothStatue',name:'TBrothStatue',width:60},
@@ -196,7 +201,9 @@ function QueryGridBroPack()
 	if($("#chk-haspackbox").is(':checked')){
 		packboxflag="Y";
 	}	
-	var params=startdate+tmpSplit+enddate+tmpSplit+wardLoc+tmpSplit+medbatno+tmpSplit+packboxflag;
+	var params=startdate+tmpSplit+enddate+tmpSplit+wardLoc+tmpSplit+medbatno+tmpSplit+packboxflag
+	+tmpSplit+DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID;
+
 	$("#grid-brobatno").setGridParam({
 		postData:{
 			'params':params

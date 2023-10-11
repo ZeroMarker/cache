@@ -1,6 +1,7 @@
 ///业务审核等级维护
 var DictUrl="dhcst."
 var unitsUrl = 'dhcst.stkauditlevelaction.csp';
+var TmpUserId = ""
 Ext.onReady(function() {
 	
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
@@ -9,7 +10,7 @@ Ext.onReady(function() {
 	var QueryButton = new Ext.Button({
 		width: 65,
 		id: "QueryBtn",
-		text: '查询',
+		text: $g('查询'),
 		iconCls: 'page_find',
 		listeners: {
 			"click": function() {
@@ -20,7 +21,7 @@ Ext.onReady(function() {
 	var SaveButton = new Ext.Button({
 		width: 65,
 		id: "SaveBtn",
-		text: '保存',
+		text: $g('保存'),
 		iconCls: 'page_save',
 		listeners: {
 			"click": function() {
@@ -31,8 +32,8 @@ Ext.onReady(function() {
 	// 增加按钮
 	var AddButton = new Ext.Toolbar.Button({
 		id: "AddBtn",
-		text: '增加',
-		tooltip: '点击增加',
+		text: $g('增加'),
+		tooltip: $g('点击增加'),
 		width: 70,
 		height: 30,
 		iconCls: 'page_add',
@@ -42,7 +43,7 @@ Ext.onReady(function() {
 				var rowData = StkAuditLevelgridds.data.items[rowCount - 1];
 				var data = rowData.get("ActiveFlagId");
 				if (data == null || data.length <= 0) {
-					Msg.info("warning", "已存在新建行!");
+					Msg.info("warning", $g("已存在新建行!"));
 					return;
 				}
 			}
@@ -51,10 +52,10 @@ Ext.onReady(function() {
 	});
 	var DelButton = new Ext.Toolbar.Button({
 		id: 'DelBtn',
-		text: '删除',
+		text: $g('删除'),
 		width: '70',
 		height: '30',
-		tooltip: '点击删除',
+		tooltip: $g('点击删除'),
 		iconCls: 'page_delete',
 		handler: function() {
 			DelAuditLevel();
@@ -63,7 +64,7 @@ Ext.onReady(function() {
 	// 启用标识	
 	var ActiveFlagStore = new Ext.data.SimpleStore({
 		fields : ['RowId', 'Description'],
-		data : [['Y','启用'],['N','未启用']]
+		data : [['Y',$g('启用')],['N',$g('未启用')]]
 	});
 	
 	// 启用标识
@@ -92,7 +93,7 @@ Ext.onReady(function() {
  
 	// 项目类型 
 	var STALType = new Ext.ux.ComboBox({
-		fieldLabel: '项目类型',
+		fieldLabel: $g('项目类型'),
 		id: 'STALType',
 		name: 'STALType',
 		//anchor : '90%',
@@ -105,7 +106,7 @@ Ext.onReady(function() {
 
 	//项目操作安全级
 	var STALSSGroup = new Ext.ux.ComboBox({
-		fieldLabel: '项目操作安全级',
+		fieldLabel: $g('项目操作安全级'),
 		id: 'STALSSGroup',
 		name: 'STALSSGroup',
 		//anchor : '90%',
@@ -122,7 +123,7 @@ Ext.onReady(function() {
 	}); 
 	//科室
 	var STALItmLoc = new Ext.ux.ComboBox({
-		fieldLabel: '科室',
+		fieldLabel: $g('科室'),
 		id: 'STALItmLoc',
 		name: 'STALItmLoc',
 		//anchor : '90%',
@@ -150,23 +151,42 @@ Ext.onReady(function() {
 	}); 
 	//审核人
 	var STALSSUser = new Ext.ux.ComboBox({
-		fieldLabel: '审核人',
+		fieldLabel: $g('审核人'),
 		id: 'STALSSUser',
 		name: 'STALSSUser',
 		width: 50,
 		store: DeptUserStore,
 		valueField: 'RowId',
 		displayField: 'Description',
-		filterName: 'SSUserName'
+		filterName: 'SSUserName',
+		typeAhead:false,
+		editable:false,
+		listeners:{'focus':{fn:function(e){e.expand();this.doQuery(this.allQuery, true);},buffer:200}},	
 	});
 	STALSSUser.on('beforequery', function(e) {
-		var ctlocid=Ext.getCmp("STALItmLoc").getValue();
+		var cell = StkAuditLevelgrid.getSelectionModel().getSelectedCell();
+        // 选中行
+        var row = cell[0];
+        var rowData = StkAuditLevelgrid.getStore().getAt(row);
+        var ctlocid=rowData.data.ItmLocId
 		var userdesc=Ext.getCmp("STALSSUser").getRawValue();
-		DeptUserStore.removeAll();
-		DeptUserStore.setBaseParam('locId',ctlocid);
-		DeptUserStore.setBaseParam('Desc',userdesc);
-		DeptUserStore.load({});	
+		TmpUserId = Ext.getCmp("STALSSUser").getValue();
+		/// 延迟重新加载改行的User的Store，不然上一行的User-Store会先覆盖过来把当前行的选择值直接清除掉 2021-08-24
+		setTimeout(function(){    
+			DeptUserStore.removeAll();
+			DeptUserStore.setBaseParam('locId',ctlocid);
+			DeptUserStore.setBaseParam('Desc',userdesc);
+			DeptUserStore.load({});	
+			},300)
+		
 	}); 
+	
+	DeptUserStore.addListener('load', function(st, rds, opts) {
+		//alert(TmpUserId)
+        Ext.getCmp("STALSSUser").setValue(TmpUserId);
+});
+
+	
 	// 访问路径
 	var DetailUrl = unitsUrl+'?action=QueryAuditLevel'; // 通过AJAX方式调用后台数据
 	var proxy = new Ext.data.HttpProxy({
@@ -196,7 +216,7 @@ Ext.onReady(function() {
 		hidden: true
 	},
 	{
-		header: "启用标识",
+		header: $g("启用标识"),
 		dataIndex: 'ActiveFlagId',
 		width: 70,
 		align: 'center',
@@ -205,7 +225,7 @@ Ext.onReady(function() {
 		renderer: Ext.util.Format.comboRenderer2(ActiveFlag, "ActiveFlagId", "ActiveFlagDesc")
 	},
 	{
-		header: '项目类型',
+		header: $g('项目类型'),
 		dataIndex: 'TypeId',
 		width: 100,
 		align: 'left',
@@ -214,7 +234,7 @@ Ext.onReady(function() {
 		renderer: Ext.util.Format.comboRenderer2(STALType, "TypeId", "TypeDesc")
 	},
 	{
-		header: '项目描述',
+		header: $g('项目描述'),
 		dataIndex: 'STALItmDesc',
 		width: 100,
 		align: 'left',
@@ -231,7 +251,7 @@ Ext.onReady(function() {
 		}))
 	},
 	{
-		header: "项目等级代码",
+		header: $g("项目等级代码"),
 		dataIndex: 'ItmLevel',
 		width: 100,
 		align: 'left',
@@ -239,7 +259,7 @@ Ext.onReady(function() {
 		editor: new Ext.form.NumberField  
 	},
 	{
-		header: "安全组",
+		header: $g("安全组"),
 		dataIndex: 'SSGroupId',
 		width: 150,
 		align: 'center',
@@ -249,19 +269,19 @@ Ext.onReady(function() {
 	},
 
 	{
-		header: "科室",
+		header: $g("科室"),
 		dataIndex: 'ItmLocId',
 		width: 180,
-		align: 'right',
+		align: 'left',
 		sortable: true,
 		editor: new Ext.grid.GridEditor(STALItmLoc),
 		renderer: Ext.util.Format.comboRenderer2(STALItmLoc, "ItmLocId", "ItmLocDesc")
 	},
 	{
-		header: "审核人",
+		header: $g("审核人"),
 		dataIndex: 'SSUserId',
-		width: 100,
-		align: 'right',
+		width: 180,
+		align: 'left',
 		editor: new Ext.grid.GridEditor(STALSSUser),
 		renderer: Ext.util.Format.comboRenderer2(STALSSUser, "SSUserId", "SSUserDesc")
 	}]); 
@@ -313,7 +333,7 @@ Ext.onReady(function() {
 	};
 	var StkAuditLevelgrid = new Ext.grid.EditorGridPanel({
 		id: 'StkAuditLeveltbl',
-		title: '业务审核等级维护',
+		title: $g('业务审核等级维护'),
 		region: 'center',
 		autoScroll: true,//自动生成滚动条
 		enableHdMenu: false,
@@ -381,22 +401,22 @@ Ext.onReady(function() {
 				var SSUserId = rowData.get("SSUserId");
 				if ((ActiveFlagId==null)||(ActiveFlagId==""))
 				{
-					Msg.info("warning", "请维护启用状态!");
+					Msg.info("warning", $g("请维护启用状态!"));
 					return
 				}
 				if ((TypeId==null)||(TypeId==""))
 				{
-					Msg.info("warning", "请维护项目类型!");
+					Msg.info("warning", $g("请维护项目类型!"));
 					return
 				}
 				if ((TypeId==null)||(TypeId==""))
 				{
-					Msg.info("warning", "请维护项目类型!");
+					Msg.info("warning", $g("请维护项目类型!"));
 					return
 				}
 				if((TypeId=="Basic")&&((SSUserId=="")||(SSUserId==null))) 
 				{
-					Msg.info("warning", "项目类型为药品信息时,审核人必填!");
+					Msg.info("warning", $g("项目类型为药品信息时,审核人必填!"));
 					return	
 				}
 				if ((SSUserId=="")&&(ItmLocId=="")&&(SSGroupId==""))
@@ -404,7 +424,7 @@ Ext.onReady(function() {
 					Msg.info("warning", "安全组,科室,审核人不能同时为空!");
 					return	
 				}
-				var str = STALRowId + "^" + ActiveFlagId + "^" + TypeId + "^" + STALItmDesc + "^" + ItmLevel + "^" + SSGroupId + "^" + StkGrpId + "^" + ItmLocId + "^" + SSUserId
+				var str = STALRowId + "^" + ActiveFlagId + "^" + TypeId + "^" + encodeURI(STALItmDesc) + "^" + ItmLevel + "^" + SSGroupId + "^" + StkGrpId + "^" + ItmLocId + "^" + SSUserId
 				if (ListDetail == "") {
 					ListDetail = str;
 				} else {
@@ -412,8 +432,9 @@ Ext.onReady(function() {
 				}
 			}
 		}
+		
 		if (ListDetail == "") {
-			Msg.info("Warning", "没有需要保存的明细!");
+			Msg.info("Warning", $g("没有需要保存的明细!"));
 			return false;
 		} 
 		///数据库交互
@@ -421,8 +442,8 @@ Ext.onReady(function() {
 			url: unitsUrl + '?action=SaveAuditLevel&ListDetail=' + ListDetail,
 			failure: function(result, request) {
 				Ext.Msg.show({
-					title: '错误',
-					msg: '请检查网络连接!',
+					title: $g('错误'),
+					msg: $g('请检查网络连接!'),
 					buttons: Ext.Msg.OK,
 					icon: Ext.MessageBox.ERROR
 				});
@@ -431,14 +452,14 @@ Ext.onReady(function() {
 			success: function(result, request) {
 				var jsonData = Ext.util.JSON.decode(result.responseText);
 				if (jsonData.retvalue == 0) { 
-					Msg.info("success", "保存成功!");
+					Msg.info("success", $g("保存成功!"));
 					QueryAuditLevel();
 				} else if (jsonData.retvalue == -1) {
-					Ext.Msg.alert("提示", "数据重复！");
+					Ext.Msg.alert($g("提示"), $g("数据重复！"));
 				} else if (jsonData.retvalue == -5) {
-					Ext.Msg.alert("提示", "没有需要保存的数据!返回值: " + jsonData.retinfo);
+					Ext.Msg.alert($g("提示"), $g("没有需要保存的数据!返回值: ") + jsonData.retinfo);
 				} else {
-					Ext.Msg.alert("提示", "添加失败!返回值: " + jsonData.retinfo);
+					Ext.Msg.alert($g("提示"), $g("添加失败!返回值: ") + jsonData.retinfo);
 				}
 			},
 			scope: this
@@ -447,19 +468,19 @@ Ext.onReady(function() {
 	function DelAuditLevel() {
 		var cell = StkAuditLevelgrid.getSelectionModel().getSelectedCell();
 		if (cell == null) {
-			Msg.info("warning", "请选择要删除的记录！");
+			Msg.info("warning", $g("请选择要删除的记录！"));
 			return;
 		}
 		var row = cell[0];
 		var record = StkAuditLevelgridds.getAt(row);
 		var STALRowid = record.get("STALRowId");
 		if (STALRowid == null || STALRowid.length < 1) {
-			Msg.info("warning", "所选记录尚未保存，不能删除!");
+			Msg.info("warning", $g("所选记录尚未保存，不能删除!"));
 			return;
 		} else {
 			Ext.MessageBox.show({
-				title: '提示',
-				msg: '是否确定删除该记录',
+				title: $g('提示'),
+				msg: $g('是否确定删除该记录'),
 				buttons: Ext.MessageBox.YESNO,
 				fn: showResult,
 				icon: Ext.MessageBox.QUESTION
@@ -467,19 +488,19 @@ Ext.onReady(function() {
 		}
 		function showResult(btn) {
 			if (btn == "yes") { 
-				var mask = ShowLoadMask(Ext.getBody(), "处理中请稍候...");
+				var mask = ShowLoadMask(Ext.getBody(), $g("处理中请稍候..."));
 				Ext.Ajax.request({
 					url: unitsUrl + '?action=DelAuditLevel&STALRowid=' + STALRowid,
 					success: function(response, opts) {
 						var jsonData = Ext.util.JSON.decode(response.responseText);
 						mask.hide();
 						if (jsonData.retvalue == 0) {
-							Msg.info("success", "删除成功!");
+							Msg.info("success", $g("删除成功!"));
 							QueryAuditLevel();
 						} else if (jsonData.retvalue == -1) {
-							Msg.info("error", "请选择需删除记录!");
+							Msg.info("error", $g("请选择需删除记录!"));
 						} else {
-							Msg.info("error", "删除失败!");
+							Msg.info("error", $g("删除失败!"));
 						}
 					}
 				});

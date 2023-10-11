@@ -9,7 +9,7 @@ Ext.onReady(function() {
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 	
 	var InciDr = new Ext.form.TextField({
-		fieldLabel : '药品RowId',
+		fieldLabel : $g('药品RowId'),
 		id : 'InciDr',
 		name : 'InciDr',
 		anchor : '90%',
@@ -18,7 +18,7 @@ Ext.onReady(function() {
 	});
 	
 	var ItmDesc = new Ext.form.TextField({
-		fieldLabel : '药品名称',
+		fieldLabel : $g('药品名称'),
 		id : 'ItmDesc',
 		name : 'ItmDesc',
 		anchor:'90%',
@@ -34,7 +34,7 @@ Ext.onReady(function() {
 	
 	// 调价单号
 	var AdjSpNo = new Ext.form.TextField({
-		fieldLabel : '调价单号',
+		fieldLabel : $g('调价单号'),
 		id : 'AdjSpNo',
 		name : 'AdjSpNo',
 		anchor:'90%',
@@ -43,7 +43,7 @@ Ext.onReady(function() {
 	
 	// 起始日期
 	var StartDate = new Ext.ux.DateField({
-		fieldLabel : '起始日期',
+		fieldLabel : $g('起始日期'),
 		id : 'StartDate',
 		name : 'StartDate',
 		anchor:'90%',
@@ -53,7 +53,7 @@ Ext.onReady(function() {
 	
 	// 结束日期
 	var EndDate= new Ext.ux.DateField({
-		fieldLabel : '结束日期',
+		fieldLabel : $g('结束日期'),
 		id : 'EndDate',
 		name : 'EndDate',
 		anchor:'90%',
@@ -63,11 +63,11 @@ Ext.onReady(function() {
 	
 	var TypeStore = new Ext.data.SimpleStore({
 		fields : ['RowId', 'Description'],
-		data : [['No', '未审核'], ['Audit', '已审核未生效']]
+		data : [['No', $g('未审核')], ['Audit', $g('已审核未生效')]]
 	});
 	
 	var Type = new Ext.form.ComboBox({
-		fieldLabel : '调价单状态',
+		fieldLabel : $g('调价单状态'),
 		id : 'Type',
 		name : 'Type',
 		width : 100,
@@ -89,7 +89,7 @@ Ext.onReady(function() {
 	
 	ReasonForAdjSpStore.load();
 	var AdjSpReason = new Ext.form.ComboBox({
-		fieldLabel : '调价原因',
+		fieldLabel : $g('调价原因'),
 		id : 'AdjSpReason',
 		name : 'AdjSpReason',
 		anchor:'90%',
@@ -99,7 +99,7 @@ Ext.onReady(function() {
 		displayField : 'Description',
 		allowBlank : false,
 		triggerAction : 'all',
-		emptyText : '调价原因...',
+		emptyText : $g('调价原因...'),
 		selectOnFocus : true,
 		forceSelection : true,
 		listWidth : 150,
@@ -110,8 +110,8 @@ Ext.onReady(function() {
 	// 查询未审核调价单按钮
 	var SearchBT = new Ext.Toolbar.Button({
 		id : "SearchBT",
-		text : '查询',
-		tooltip : '点击查询',
+		text : $g('查询'),
+		tooltip : $g('点击查询'),
 		width : 70,
 		height : 30,
 		iconCls : 'page_find',
@@ -123,8 +123,8 @@ Ext.onReady(function() {
 	// 清空按钮
 	var ClearBT = new Ext.Toolbar.Button({
 		id : "ClearBT",
-		text : '清屏',
-		tooltip : '点击清屏',
+		text : $g('清屏'),
+		tooltip : $g('点击清屏'),
 		width : 70,
 		height : 30,
 		iconCls : 'page_clearscreen',
@@ -153,8 +153,8 @@ Ext.onReady(function() {
 	// 审核按钮
 	var AuditBT = new Ext.Toolbar.Button({
 		id : "AuditBT",
-		text : '审核',
-		tooltip : '点击审核',
+		text : $g('审核'),
+		tooltip : $g('点击审核'),
 		width : 70,
 		height : 30,
 		iconCls : 'page_gear',
@@ -195,13 +195,13 @@ Ext.onReady(function() {
 			}
 			if(DateFlag==-1) 
 			{
-				    Ext.Msg.confirm('提示:计划生效日期校验','计划生效日期 <font color="yellow"> (黄色日期)</font>小于或者等于今日，审核后任务无法生效，是否修改计划日期为明天再审核？',
+				    Ext.Msg.confirm($g('提示:计划生效日期校验'),$g('计划生效日期 <font color="yellow"> (黄色日期)</font>小于或者等于今日，审核后任务无法生效，是否修改计划日期为明天再审核？'),
 					      function(btn){
 						if(btn=='yes'){
 						  var ret=tkMakeServerCall("web.DHCST.INAdjSalePrice","UpDateAspPreDate",StrAspId)
 						  if(ret==0) auditOrder();	
 						  else {
-									Msg.info("warning", "更新计划生效日期失败!");
+									Msg.info("warning", $g("更新计划生效日期失败!"));
 									return;
 								}				
 						}else{
@@ -237,10 +237,10 @@ Ext.onReady(function() {
 		}
 
 		if(StrAspId==""){
-			Msg.info("warning","未勾选需要审核的记录!");
+			Msg.info("warning",$g("未勾选需要审核的记录!"));
 			return;
 		}		
-		var mask=ShowLoadMask(Ext.getBody(),"处理中...");
+		var mask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 		//提交数据库执行审核
 		Ext.Ajax.request({
 			url : DictUrl+'inadjpriceactionallbatch.csp?actiontype=AuditAsp'
@@ -250,31 +250,31 @@ Ext.onReady(function() {
 				var jsonData = Ext.util.JSON.decode(response.responseText);
 				mask.hide();
 				if(jsonData.info==0){
-					Msg.info("success", "审核成功！");
+					Msg.info("success", $g("审核成功！"));
 				}
 				else if(jsonData.info==-1){
-					Msg.info("warning", "错误：存在已审核或已生效的调价记录!");
+					Msg.info("warning", $g("错误：存在已审核或已生效的调价记录!"));
 					return;
 				}else if(jsonData.info==-2){
-					Msg.info("warning", "错误：计划生效日期不能为空!");
+					Msg.info("warning", $g("错误：计划生效日期不能为空!"));
 					return;
 				}else if(jsonData.info==-3){
-					Msg.info("warning", "错误：存在已经过期调价单!");
+					Msg.info("warning", $g("错误：存在已经过期调价单!"));
 					return;
 				}else if(jsonData.info==-4){
-					Msg.info("error", "错误：更新调价单状态失败!");
+					Msg.info("error", $g("错误：更新调价单状态失败!"));
 					return;
 				}else if(jsonData.info==-5){
-					Msg.info("error", "错误：调价单生效失败!");
+					Msg.info("error", $g("错误：调价单生效失败!"));
 					return;
 				}else{
-					Msg.info("error", "错误:"+jsonData.info);
+					Msg.info("error", $g("错误:")+jsonData.info);
 					return;
 				}
 				getAspDetail();
 			},
 			failure : function(response){
-				Msg.info("error", "审核发生错误："+response.responseText);					
+				Msg.info("error", $g("审核发生错误：")+response.responseText);					
 				return;
 			}
 		});		
@@ -283,8 +283,8 @@ Ext.onReady(function() {
 	// 取消审核按钮
 	var CancelAuditBT = new Ext.Toolbar.Button({
 		id : "CancelAuditBT",
-		text : '取消审核',
-		tooltip : '点击取消审核',
+		text : $g('取消审核'),
+		tooltip : $g('点击取消审核'),
 		width : 70,
 		height : 30,
 		iconCls : 'page_gear',
@@ -313,10 +313,10 @@ Ext.onReady(function() {
 			}
 		}
 		if(StrAspId==""){
-			Msg.info("warning","未勾选需要取消审核的记录!");
+			Msg.info("warning",$g("未勾选需要取消审核的记录!"));
 			return;
 		}		
-		var mask=ShowLoadMask(Ext.getBody(),"处理中...");
+		var mask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 		//提交数据库执行审核
 		Ext.Ajax.request({
 			url : DictUrl+'inadjpriceactionallbatch.csp?actiontype=CancelAuditAsp'
@@ -326,22 +326,22 @@ Ext.onReady(function() {
 				var jsonData = Ext.util.JSON.decode(response.responseText);
 				mask.hide();
 				if(jsonData.info==0){
-					Msg.info("success", "取消审核成功！");
+					Msg.info("success", $g("取消审核成功！"));
 				}
 				else if(jsonData.info==-1){
-					Msg.info("warning", "错误：存在不是审核状态的调价记录!");
+					Msg.info("warning", $g("错误：存在不是审核状态的调价记录!"));
 					return;
 				}else if(jsonData.info==-2){
-					Msg.info("error", "错误：更新调价单状态失败!");
+					Msg.info("error", $g("错误：更新调价单状态失败!"));
 					return;
 				}else{
-					Msg.info("error", "错误:"+jsonData.info);
+					Msg.info("error", $g("错误:")+jsonData.info);
 					return;
 				}
 				getAspDetail();
 			},
 			failure : function(response){
-				Msg.info("error", "取消审核发生错误："+response.responseText);					
+				Msg.info("error", $g("取消审核发生错误：")+response.responseText);					
 				return;
 			}
 		});
@@ -396,123 +396,123 @@ Ext.onReady(function() {
 		sortable : true,
 		hidden : true
 	}, {
-		header : "调价单号",
+		header : $g("调价单号"),
 		dataIndex : 'AspNo',
 		width : 120,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "状态",
+		header : $g("状态"),
 		dataIndex : 'Status',
 		width : 80,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "库存分类",
+		header : $g("库存分类"),
 		dataIndex : 'StkCatDesc',
 		width : 80,
 		align : 'left',
 		sortable : true
 	}, {
-		header : '药品代码',
+		header : $g('药品代码'),
 		dataIndex : 'InciCode',
 		width : 80,
 		align : 'left',
 		sortable : true
 	}, {
-		header : '药品名称',
+		header : $g('药品名称'),
 		dataIndex : 'InciDesc',
 		width : 230,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "调价单位",
+		header : $g("调价单位"),
 		dataIndex : 'AspUomDesc',
 		width : 60,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "调前售价",
+		header : $g("调前售价"),
 		dataIndex : 'PriorSpUom',
 		width : 90,
 		align : 'right',
 		sortable : true
 	}, {
-		header : "调后售价",
+		header : $g("调后售价"),
 		dataIndex : 'ResultSpUom',
 		width : 80,
 		align : 'right',
 		sortable : true		
 	}, {
-		header : "差价(售价)",
+		header : $g("差价(售价)"),
 		dataIndex : 'DiffSpUom',
 		width : 90,
 		align : 'right',
 		sortable : true
 	}, {
-		header : "调前进价",
+		header : $g("调前进价"),
 		dataIndex : 'PriorRpUom',
 		width : 90,
 		align : 'right',
 		sortable : true
 	}, {
-		header : "调后进价",
+		header : $g("调后进价"),
 		dataIndex : 'ResultRpUom',
 		width : 90,
 		align : 'right',
 		sortable : true
 	}, {
-		header : "差价(进价)",
+		header : $g("差价(进价)"),
 		dataIndex : 'DiffRpUom',
 		width : 90,
 		align : 'right',
 		sortable : true
 	}, {
-		header : "制单日期",
+		header : $g("制单日期"),
 		dataIndex : 'AdjDate',
 		width : 100,
 		align : 'left',
 		sortable : true				
 	}, {
-		header : "计划生效日期",
+		header : $g("计划生效日期"),
 		dataIndex : 'PreExecuteDate',
 		width : 100,
 		align : 'left',
 		sortable : true,
 		renderer:DateColorRenderer
 	}, {
-		header : "实际生效日期",
+		header : $g("实际生效日期"),
 		dataIndex : 'ExecuteDate',
 		width : 100,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "调价原因",
+		header : $g("调价原因"),
 		dataIndex : 'AdjReasonId',
 		width : 100,
 		align : 'left',					
 		sortable : true,
 		renderer : Ext.util.Format.comboRenderer(AdjSpReason)
 	}, {
-		header : "调价人",
+		header : $g("调价人"),
 		dataIndex : 'AdjUserName',
 		width : 80,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "定价类型",
+		header :$g( "定价类型"),
 		dataIndex : 'MarkType',
 		width : 100,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "物价文件号",
+		header :$g( "物价文件号"),
 		dataIndex : 'PriceFileNo',
 		width : 100,
 		align : 'left',
 		sortable : true
 	}, {
-		header : "最高售价",
+		header : $g("最高售价"),
 		dataIndex : 'MaxSp',
 		width : 90,
 		align : 'right',
@@ -523,18 +523,18 @@ Ext.onReady(function() {
 		store:DetailStore,
 		pageSize:PageSize,
 		displayInfo:true,
-		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:'没有记录',
-		firstText:'第一页',
-		lastText:'最后一页',
-		nextText:'下一页',
-		prevText:'上一页'		
+		displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+		emptyMsg:$g('没有记录'),
+		firstText:$g('第一页'),
+		lastText:$g('最后一页'),
+		nextText:$g('下一页'),
+		prevText:$g('上一页')		
 	});
 	
 	DetailPageToolBar.addListener('beforechange',function(ptbar,params){
 		var selrows=DetailGrid.getSelectionModel().getCount();
 		if(selrows>0){
-			Msg.info("warning","当前页选择了要审核的记录，请先审核后再翻页！");
+			Msg.info("warning",$g("当前页选择了要审核的记录，请先审核后再翻页！"));
 			return false;
 		}
 	})
@@ -542,7 +542,7 @@ Ext.onReady(function() {
 	var DetailGrid = new Ext.grid.GridPanel({
 		id : 'DetailGrid',
 		region : 'center',
-		title : '调价单明细(所有批次)',
+		title : $g('调价单明细(所有批次)'),
 		cm : DetailCm,
 		store : DetailStore,
 		trackMouseOver : true,
@@ -607,7 +607,7 @@ Ext.onReady(function() {
 		var Status=Ext.getCmp("Type").getValue();
 		var Others=AspNo+"^"+Status+"^"+InciRowid+"^"+"^"+HospID;
 		if (StartDate == null || StartDate.length <= 0 ) {
-			Msg.info("warning", "开始日期不能为空！");
+			Msg.info("warning", $g("开始日期不能为空！"));
 			Ext.getCmp("StartDate").focus();
 			return;
 		}
@@ -615,7 +615,7 @@ Ext.onReady(function() {
 			StartDate=StartDate.format("Y-m-d");
 		}
 		if (EndDate == null || EndDate.length <= 0 ) {
-			Msg.info("warning", "截止日期不能为空！");
+			Msg.info("warning", $g("截止日期不能为空！"));
 			Ext.getCmp("EndDate").focus();
 			return;
 		}
@@ -637,13 +637,13 @@ Ext.onReady(function() {
 		labelWidth : 80,
 		labelAlign : 'right',
 		frame : true,
-		title:'调价单审核(所有批次)',
+		title:$g('调价单审核(所有批次)'),
 		autoHeight:true,
 		//bodyStyle : 'padding:5px;',
 		tbar : [SearchBT, '-', ClearBT, '-',  AuditBT, '-', CancelAuditBT],
 		items : [{					
 			xtype : 'fieldset',
-			title : '查询条件',
+			title : $g('查询条件'),
 			autoHeight : true,
 			style: DHCSTFormStyle.FrmPaddingV,
 			defaults:{border:false},
@@ -682,7 +682,7 @@ Ext.onReady(function() {
 	
 	var RpRule=tkMakeServerCall("web.DHCSTCOMMPARA","GetRpRule",HospID)
 	if(RpRule!=3){
-		Msg.info("warning","非批次价模式请用统一价调价菜单!!!");
+		Msg.info("warning",$g("非批次价模式请用统一价调价菜单!!!"));
 		SearchBT.setDisabled(true);
 		ClearBT.setDisabled(true);
 		AuditBT.setDisabled(true);

@@ -10,7 +10,7 @@ function InitviewScreenEvent(obj) {
 		});
     }
 	obj.btnPass_click = function(){
-		$.messager.confirm("提示", "确定过号?", function (r) {
+		$.messager.confirm("提示", "确定分号?", function (r) {
 			if (r) {
 				var separate="^"
 				var LogonLocID=session['LOGON.CTLOCID'];

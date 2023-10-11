@@ -571,17 +571,26 @@ function SetDealRemak(value)
 }
 
 function BPriewResult(PAADM){
-
+	var url="dhcpenewdiagnosis.diagnosis.hisui.csp?EpisodeID="+PAADM+"&MainDoctor="+""+"&OnlyRead="+"Y"+"&HWFlag="+"0";
+	/*
 	var wwidth=1200;
 	var wheight=500;
 	var xposition = (screen.width - wwidth) / 2;
 	var yposition = (screen.height - wheight) / 2;
-	var url="dhcpenewdiagnosis.diagnosis.hisui.csp?EpisodeID="+PAADM+"&MainDoctor="+""+"&OnlyRead="+"Y";
+	
 	var nwin='toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=yes,copyhistory=yesheight='
 			+'height='+wheight+',width='+wwidth+',left='+xposition+',top='+yposition
 			;
 	
-	var cwin=window.open(url,"_blank",nwin)
+	var cwin=window.open(PEURLAddToken(url),"_blank",nwin)
+	*/
+websys_showModal({
+		url:PEURLAddToken(url),
+		title:'体检结果',
+		width:1160,
+		height:700,
+		myParent: this.location
+	});
 
 
 }
@@ -701,6 +710,18 @@ function InitHighRiskListGrid(){
 /**************************************高危信息维护 strat***********************************/
 //查询 
 function BFind_click(){
+	
+	var iRegNo=$("#RegNo").val(); 
+	if(iRegNo!="") {
+	 	var iRegNo=$.m({
+			"ClassName":"web.DHCPE.DHCPECommon",
+			"MethodName":"RegNoMask",
+            "RegNo":iRegNo
+		}, false);
+		
+			$("#RegNo").val(iRegNo)
+		}
+	
 	var HospID=session['LOGON.HOSPID']
 	var StartDate=$("#StartDate").datebox('getValue');
 	var EndDate=$("#EndDate").datebox('getValue');
@@ -755,6 +776,7 @@ function BFind_click(){
 			EDIDs:EDIDs,
 			ResultFlag:iResultFlag,
 			Name:Name,
+			txtRegNo:$("#RegNo").val(),
 			IfSolve:IfSolve,
 			VIPLevel:VIPLevel,
 			ContractID:ContractID,
@@ -764,6 +786,7 @@ function BFind_click(){
 }
 
 function InitHighRiskGrid(){
+	
 		$HUI.datagrid("#HighRiskGrid",{
 		url:$URL,
 		fit : true,
@@ -781,7 +804,8 @@ function InitHighRiskGrid(){
 		selectOnCheck: true,
 		queryParams:{
 			ClassName:"web.DHCPE.HighRiskNew",
-			QueryName:"SearchHighRiskED",	    
+			QueryName:"SearchHighRiskED",
+			LocID:session['LOGON.CTLOCID']	    
 		},
 		frozenColumns:[[
 			{title: '选择',field: 'Select',width: 60,checkbox:true},
@@ -800,18 +824,30 @@ function InitHighRiskGrid(){
 			$("#ParrefRowId").val(rowData.TEDID);
 
 		   $('#DHCPEEDCondition').datagrid('load', {ClassName:"web.DHCPE.ExcuteExpress",QueryName:"FindExpress",ParrefRowId:rowData.TEDID,Type:""});
+		   	$("#NorInfo").val("");
 			ConditionendEditing();
 		   
 		    
 								
 		},
-		onLoadSuccess:function(data){
-			$('#express').panel('setTitle','表达式 - '+rowData.TEDDesc);
-			$("#ParrefRowId").val(rowData.TEDID);
+		onUnselect: function (rowIndex, rowData) {
+		
+			$('#express').panel('setTitle','表达式 - ');
+			$("#ParrefRowId").val("");
+		    $('#DHCPEEDCondition').datagrid('load', {ClassName:"web.DHCPE.ExcuteExpress",QueryName:"FindExpress",ParrefRowId:"",Type:""});
+			$("#NorInfo").val("");
+			ConditionendEditing();    
+								
+		},
+		onLoadSuccess:function(rowData){
+			if(rowData.TEDID!=undefined){
+				$('#express').panel('setTitle','表达式 - '+rowData.TEDDesc);
+				$("#ParrefRowId").val(rowData.TEDID);
 
-			  $('#DHCPEEDCondition').datagrid('load', {ClassName:"web.DHCPE.ExcuteExpress",QueryName:"FindExpress",ParrefRowId:rowData.TEDID,Type:""});
-			ConditionendEditing();
-		   
+				$('#DHCPEEDCondition').datagrid('load', {ClassName:"web.DHCPE.ExcuteExpress",QueryName:"FindExpress",ParrefRowId:rowData.TEDID,Type:""});
+				$("#NorInfo").val("");
+				ConditionendEditing();
+			} 
 			
 		}
 		
@@ -857,8 +893,7 @@ function ConditionendEditing(){
 
 function BSave_click()
 {  
-	//$("#DHCPEEDCondition").datagrid('ConditionendEditing', ConditioneditIndex); //最后一行结束行编辑
-	//alert(ConditioneditIndex+"ConditioneditIndex")	
+		
 	ConditionendEditing();
 	var Char_1=String.fromCharCode(1);
 	var Express=""
@@ -872,7 +907,7 @@ function BSave_click()
 		
 		ItemID=rows[i].TItemID
 		
-		if (ItemID=="") break;
+		//if (ItemID=="") break;
 		PreBracket=rows[i].TPreBracket
 		AfterBracket=rows[i].TAfterBracket
 		Relation=rows[i].TRelation
@@ -902,7 +937,14 @@ function BSave_click()
 			}
 			
 		}
-		OneRowInfo=PreBracket+"^"+ItemID+"^"+Operator+"^"+ODStandardID+"^"+Reference+"^"+Sex+"^"+AfterBracket+"^"+Relation+"^"+NoBloodFlag+"^"+AgeRange;
+
+		var EKBXCode=rows[i].EKBXCode;            //知识库专家建议表达式（外部码）
+        var EKBItemDtlCode=rows[i].EKBItemDtlCode; //知识库站点细项代码
+        var EKBItemDtlDesc=rows[i].EKBItemDtlDesc; //知识库站点细项名称
+		if ((ItemID=="")&&(EKBItemDtlCode==""))  break;
+		OneRowInfo=PreBracket+"^"+ItemID+"^"+Operator+"^"+ODStandardID+"^"+Reference+"^"+Sex+"^"+AfterBracket+"^"+Relation+"^"+NoBloodFlag+"^"+AgeRange+"^"+EKBXCode+"^"+EKBItemDtlCode+"^"+EKBItemDtlDesc;   
+
+		//OneRowInfo=PreBracket+"^"+ItemID+"^"+Operator+"^"+ODStandardID+"^"+Reference+"^"+Sex+"^"+AfterBracket+"^"+Relation+"^"+NoBloodFlag+"^"+AgeRange;
 		
 		if (Express!=""){
 			Express=Express+Char_1+OneRowInfo;
@@ -949,6 +991,8 @@ function loadEDCondition(rowData){
 	
 }
 function InitEDConditionGrid(){
+
+	 var LocID=session['LOGON.CTLOCID'];
 	
 	$HUI.datagrid("#DHCPEEDCondition",{
 		url:$URL,
@@ -988,58 +1032,36 @@ function InitEDConditionGrid(){
 						return row.TItem;
 					},
 					
-			editor:{
-					type:'combobox',
-					options:{
-						valueField:'OD_RowId',
-						textField:'OD_Desc',
-						method:'get',
-						//mode:'remote',
-						url:$URL+"?ClassName=web.DHCPE.Report.PosQuery&QueryName=FromDescOrderDetailA&ResultSetType=array",
-						onBeforeLoad:function(param){
-							//param.Desc = param.q;
+			  editor:{
+                    type:'combobox',
+                    options:{
+                        valueField:'TODID',
+                        textField:'TODDesc',
+                        //method:'get',
+                        //mode:'remote',
+                       url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindOrderDetail&ResultSetType=array&LocID="+LocID,
+                        onBeforeLoad:function(param){
+                            param.Desc = param.q;
+                            
+                            },
+                       onSelect: function (rowData) {
+	                           
+								var String="^"+rowData.TODCode+"^"+rowData.TODID;
+								var NorInfo=tkMakeServerCall("web.DHCPE.ODStandard","GetNorInfo",String);
+								//alert("NorInfo:"+NorInfo)
+								$("#NorInfo").val(NorInfo)
 							
-							}
-						
-					}
-				}		
+						},
+
+                        
+                    }
+                } 		
 					
-			/*		
-		    editor:{
-					type:'combogrid',
-					options:{
-						
-						
-						panelWidth:235,
-						url:$URL+"?ClassName=web.DHCPE.Report.PosQuery&QueryName=FromDescOrderDetail",
-						mode:'remote',
-						delay:200,
-						idField:'OD_RowId',
-						textField:'OD_Desc',
-						onBeforeLoad:function(param){
-							param.Desc = param.q;
-						},
-						onSelect: function (rowIndex, rowData) {
-							var String="^"+rowData.OD_Code+"^"+rowData.OD_RowId
-							
-							var NorInfo=tkMakeServerCall("web.DHCPE.ODStandard","GetNorInfo",String);
-							var obj=document.getElementById("NorInfo");
-							if (obj) obj.value=NorInfo;
-							
-						},
 			
-						columns:[[
-							{field:'OD_RowId',hidden:true},
-							{field:'OD_Desc',title:'名称',width:120},
-							{field:'OD_Code',title:'编码',width:100}
-			
-						]]
-						
-						
-						
-					}
-		    }*/
 		    },
+		    {field:' EKBXCode',title:' EKBXCode',hidden: true},
+			{field:'EKBItemDtlCode',title:'知识库细项代码',width:130},
+            {field:'EKBItemDtlDesc',title:'知识库细项名称',width:130},
 		    {field:'TOperator',title:'运算符',width:70,
 		    
 		    formatter:function(value,row){
@@ -1164,12 +1186,21 @@ function InitEDConditionGrid(){
 /************************************表达式维护 end***********************************/
 
 function InitCombobox(){
+	/*
 	//VIP等级	
 	var VIPObj = $HUI.combobox("#VIPLevel",{
 		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindVIP&ResultSetType=array",
 		valueField:'id',
 		textField:'desc',
 		});
+   */
+   
+	//VIP等级-多院区	
+	var VIPObj = $HUI.combobox("#VIPLevel",{
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindVIP&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
+		valueField:'id',
+		textField:'desc',
+	});
 		
 	//团体
 	var GroupObj = $HUI.combogrid("#GroupDesc",{
@@ -1226,8 +1257,8 @@ function InitCombobox(){
 		textField:'text',
 		panelHeight:'70',
 		data:[
-            {id:'1',text:'已处理'},
-            {id:'2',text:'未处理'},
+            {id:'1',text:$g('已处理')},
+            {id:'2',text:$g('未处理')},
            
         ]
 

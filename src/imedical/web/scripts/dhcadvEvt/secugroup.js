@@ -1,7 +1,26 @@
 ///CreatDate：   2017-12-10 
 ///Creator：    huaxiaoying
 var EditRow="0";   //add by sufan 2018-07-16
+var hospID="";
 $(function(){ 
+    //初始化医院 多院区改造 cy 2021-04-09
+    InitHosp(); 
+	//初始化界面默认信息
+	InitDefault();
+	
+});
+function InitHosp(){
+	hospComp = GenHospComp("DHC_AdvSecuGroup"); 
+	hospID=hospComp.getValue();
+	//hospComp.setValue("全部"); 
+	//$HUI.combogrid('#_HospList',{value:"11"})
+	hospComp.options().onSelect = function(){///选中事件
+ 		hospID=hospComp.getValue();
+		QueryBtn();
+	}
+}
+
+function InitDefault(){ 
 	$.extend($.fn.datagrid.defaults.editors, {
 			combogrid: {
 				init: function(container, options){
@@ -33,21 +52,13 @@ $(function(){
         }
     });
     $('#WardW,#UserW,#LocW').window('close');  //2018-01-12 cy 添加分管科室
-    /*$(".deleteMan").click(function(){
-  		alert($(this).attr("id"));
-	});*/
 	loadHtml();
-	$('#hospID').combobox({ //hxy 2019-07-20 st
-	 	url:'dhcapp.broker.csp?ClassName=web.DHCEMCommonUtil&MethodName=GetHospDs',
-	 	valueField:'value',
-		textField:'text',   
-		panelHeight:'auto'
-	}) //ed
-    
-});
+	QueryBtn();
+	
+};
 
 function addRow(){
-	commonAddRow({'datagrid':'#datagrid',value:{'SECUActiveFlag':'Y','SECUHospDr':LgHospID}})
+	commonAddRow({'datagrid':'#datagrid',value:{'SECUActiveFlag':'Y','SECUHospDr':hospID}})
 }
 //双击编辑
 function onDblClickRow(index,row){
@@ -105,6 +116,7 @@ function addUser(){
 		return;
 	} //ed
 	$("#datagrid").datagrid('endEdit', EditRow); 
+	$('#UserW').panel({title: "新增小组成员"});
 	$('#UserW').window('open');
     $('#gridUser').datagrid('loadData',{total:0,rows:[]});
 	addUserAdd();
@@ -120,11 +132,11 @@ function addUser(){
 //双击编辑成员
 function onDblClickRowUser(index,row){
 	CommonRowClick(index,row,"#gridUser");
-	/*var rowIndex=$('#gridUser').datagrid('getRowIndex',$('#gridUser').datagrid('getSelected'))
-	var varEditor = $('#gridUser').datagrid('getEditor', { index: rowIndex, field: 'SECUUser' });
-	$(varEditor.target).combogrid( { 
-		url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListUser&HospDr='+LgHospID
-	})*/
+	var varEditor = $('#gridUser').datagrid('getEditor', { index: index, field: 'SECUUser' });
+	$(varEditor.target).combogrid({ 
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListUser&SECURowId='+SECURowId+'&HospID='+hospID
+	})
+		$(varEditor.target).combogrid('setValue',row.SECUUser);
 }
 ///添加安全小组成员-增加
 function addUserAdd(){
@@ -134,13 +146,22 @@ function addUserAdd(){
     var rowIndex=$('#gridUser').datagrid('getRowIndex',$('#gridUser').datagrid('getSelected'))
 	var varEditor = $('#gridUser').datagrid('getEditor', { index: rowIndex, field: 'SECUUser' });
 	$(varEditor.target).combogrid( { 
-		url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListUser&SECURowId='+SECURowId
-	})
-	
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListUser&SECURowId='+SECURowId+'&HospID='+hospID
+	})	
+}
+///修改成员
+function updateUser(id){
+	var row =$("#datagrid").datagrid('getSelected');
+	SECURowId=row.ID; ///子表id
+		$('#UserW').panel({title: "修改小组成员"});
+		$('#UserW').window('open');	
+	$('#gridUser').datagrid({
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=selUser&id='+id
+	});			
 }
 ///添加人员
 function fillValue(rowIndex, rowData){
-	$('#gridUser').datagrid('getRows')[editIndex]['SECUUserDr']=rowData.id
+	$('#gridUser').datagrid('getRows')[editIndex]['SECUUserDr']=rowData.id;
 }
 ///保存安全小组成员
 function saveSecuGU(){
@@ -180,7 +201,7 @@ function addWardAdd(){
     var rowIndex=$('#gridWard').datagrid('getRowIndex',$('#gridWard').datagrid('getSelected'))
 	var varEditor = $('#gridWard').datagrid('getEditor', { index: rowIndex, field: 'SECUWard' });
 	$(varEditor.target).combogrid( { 
-		url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListWard'
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListWard&HospID='+hospID
 	})
 	
 }
@@ -192,11 +213,13 @@ function fillValueWard(rowIndex, rowData){
 function onDblClickRowWard(index,row){
 	
 	CommonRowClick(index,row,"#gridWard");
-	/*var rowIndex=$('#gridWard').datagrid('getRowIndex',$('#gridWard').datagrid('getSelected'))
-	var varEditor = $('#gridWard').datagrid('getEditor', { index: rowIndex, field: 'SECUWard' });
+	var rowIndex=$('#gridWard').datagrid('getRowIndex',$('#gridWard').datagrid('getSelected'))
+	var varEditor = $('#gridWard').datagrid('getEditor', { index: index, field: 'SECUWard' });
+	var WardText=varEditor.oldHtml;
 	$(varEditor.target).combogrid( { 
-		url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListWard'
-	})*/
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListWard&HospID='+hospID
+	})
+	$(varEditor.target).combogrid("setValue", WardText); 
 }
 ///保存安全小组分管病区
 function saveSecuGUW(){
@@ -263,8 +286,8 @@ function toHtml(Id){
 				if(trStr==undefined){return;}
 				var trArray=trStr.split("^");
 				html+='<tr>';
-				html+='<td style="width:25px;"><a id="'+trArray[0]+'" class="img icon-cancel" onclick="deleteUser(this.id)" title="删除"></a></td>';
-			    html+='<td style="width:50px;max-width:50px;">'+trArray[1]+'</td>' //hxy 2020-03-19 max-width:50px;
+				html+='<td style="width:25px;"><a id="'+trArray[0]+'"  class="img icon-cancel" onclick="deleteUser(this.id)" title="删除"></a></td>';
+			    html+='<td style="width:50px;max-width:50px;" ondblclick="updateUser('+trArray[0]+')">'+trArray[1]+'</td>' //hxy 2020-03-19 max-width:50px;
 				
 				html+='<td style="width:150px;">'
 				if(trArray==""){wardHtml=""}
@@ -386,7 +409,7 @@ function addLocAdd(){
     var rowIndex=$('#gridLoc').datagrid('getRowIndex',$('#gridLoc').datagrid('getSelected'))
 	var varEditor = $('#gridLoc').datagrid('getEditor', { index: rowIndex, field: 'SECUGULLoc' });
 	$(varEditor.target).combogrid( { 
-		url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListLoc'
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListLoc&HospID='+hospID
 	})
 	
 }
@@ -399,12 +422,15 @@ function fillValueLoc(rowIndex, rowData){
 //双击编辑科室
 function onDblClickRowLoc(index,row){
 	CommonRowClick(index,row,"#gridLoc");
-	//sufan 注释  2018-05-22 双击会清掉老的数据，改在csp中加载
-	/*var rowIndex=$('#gridLoc').datagrid('getRowIndex',$('#gridLoc').datagrid('getSelected'))
+	var rowIndex=$('#gridLoc').datagrid('getRowIndex',$('#gridLoc').datagrid('getSelected'))
 	var varEditor = $('#gridLoc').datagrid('getEditor', { index: rowIndex, field: 'SECUGULLoc' });
+	var LocText=varEditor.oldHtml;
 	$(varEditor.target).combogrid( { 
-		url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListLoc'
-	})*/
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVSecuGroup&MethodName=ListLoc&HospID='+hospID
+	})
+	$(varEditor.target).combogrid("setValue", LocText); 
+	
+	
 }
 ///保存安全小组分管科室
 function saveSecuGUL(){

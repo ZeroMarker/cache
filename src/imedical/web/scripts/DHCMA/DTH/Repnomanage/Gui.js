@@ -47,7 +47,7 @@ function InitviewScreen(){
  
 	obj.gridRepNoList =$HUI.datagrid("#gridRepNoList",{
 		fit: true,
-		title: "报告单号管理",
+		title: "报告编号管理",
 		headerCls:'panel-header-gray',
 		iconCls:'icon-add-note',
 		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏

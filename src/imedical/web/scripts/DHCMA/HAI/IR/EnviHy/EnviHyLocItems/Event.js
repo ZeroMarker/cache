@@ -1,53 +1,90 @@
-ï»¿//é¡µé¢Event
+//Ò³ÃæEvent
 function InitEnviHyLocItemsWinEvent(obj){
-	//å¼¹çª—åˆå§‹åŒ–
+	//µ¯´°³õÊ¼»¯
 	$('#winEvLocItems').dialog({
-		title: 'ç§‘å®¤ç›‘æµ‹é¡¹ç›®è®¡åˆ’ç¼–è¾‘',
+		title: '¿ÆÊÒ¼à²âÏîÄ¿¼Æ»®±à¼­',
 		iconCls:'icon-w-paper',
 		headerCls:'panel-header-gray',
 		closed: true,
 		modal: true,
 		isTopZindex:true,
 	});
-	
+	//µ¯´°³õÊ¼»¯
+	$('#winEvLocItems2').dialog({
+		title: '¿ÆÊÒ¼à²âÏîÄ¿¼Æ»®±à¼­',
+		iconCls:'icon-w-paper',
+		headerCls:'panel-header-gray',
+		closed: true,
+		modal: true,
+		isTopZindex:true,
+	});
+	//tabÒ³Ç©ÇĞ»»
+	$HUI.tabs("#Maintabs", {
+		onSelect: function (title,index){
+			var tab=$("#Maintabs").tabs('getSelected');
+			var ContentID=tab[0].id;
+			obj.TabArgsID = ContentID;
+			obj.RecRowID1="";
+		}
+	});
 	obj.LoadEvent = function(args){
-	    //ä¿å­˜
+	    //±£´æ
 		$('#btnSave').on('click', function(){
 	     	obj.btnSave_click();
      	});
-		//å…³é—­
+		//¹Ø±Õ
 		$('#btnClose').on('click', function(){
 	     	$HUI.dialog('#winPcEntity').close();
      	});
 		
-		//ä¿å­˜å­ç±»
+		//±£´æ×ÓÀà
 		$('#btnSubSave').on('click', function(){
 	     	obj.btnSaveSub_click();
      	});
-		//å…³é—­å­ç±»
+		//¹Ø±Õ×ÓÀà
 		$('#btnSubClose').on('click', function(){
 	     	$HUI.dialog('#winEvLocItems').close();
      	});
-		//åˆ é™¤å­ç±»
+		//É¾³ı×ÓÀà
      	$('#btnSubDelete').on('click', function(){
-			if(!obj.RecRowID1)  return;
+			if((!obj.RecRowID1)&&(!obj.RecRowID3))  return;
 	     	obj.btnDeleteSub_click();
      	});
-		//ç¼–è¾‘å­ç±»
+     	
+     	//±£´æ×ÓÀà
+		$('#btnSubSave2').on('click', function(){
+	     	obj.btnSaveSub2_click();
+     	});
+		//¹Ø±Õ×ÓÀà
+		$('#btnSubClose2').on('click', function(){
+	     	$HUI.dialog('#winEvLocItems2').close();
+     	});
+     	
+     	
+		//±à¼­×ÓÀà
      	$('#btnSubEdit').on('click', function(){
-			if(!obj.RecRowID1)return;
+			if ((!obj.RecRowID1)&&((!obj.RecRowID3)))return;
 	     	var rd=obj.gridEvLocItems.getSelected();
 			obj.layer2(rd);		
      	});
-		//æ·»åŠ å­ç±»
+		//Ìí¼Ó×ÓÀà
      	$('#btnSubAdd').on('click', function(){
-			if(!obj.RecRowID1)return;
-			var rd=obj.gridEHLocation.getSelected();
-			obj.layer1(rd);	
+	     	if (obj.TabArgsID == "EHLoc"){
+				if(!obj.RecRowID1)return;
+				var rd=obj.gridEHLocation.getSelected();
+				$("#TRUnit").css('display','none');
+				obj.layer1(rd);	
+	     	}
+	     	if (obj.TabArgsID == "EHItem"){
+				if(!obj.RecRowID3)return;
+				var rd=obj.gridEHItem.getSelected();
+				$("#TRUnit").css('display','none');
+				obj.layer3(rd);	
+	     	}
      	});
     }
     
-    //å‰å°ä¿å­˜æ•°æ®
+    //Ç°Ì¨±£´æÊı¾İ
 	$.extend($.fn.datagrid.methods, {
 		editCell: function(jq,param){
 			return jq.each(function(){
@@ -69,7 +106,22 @@ function InitEnviHyLocItemsWinEvent(obj){
 		}
 	});
 	
-	//é€‰æ‹©ç§‘å®¤
+	//Ñ¡ÔñÏîÄ¿
+    obj.gridEHItem_onSelect = function (){
+	    var rowData = obj.gridEHItem.getSelected();	
+	    if (rowData["ID"] == obj.RecRowID3){
+			$("#btnSubAdd").linkbutton("disable");
+			$("#btnSubEdit").linkbutton("disable");
+			$("#btnSubDelete").linkbutton("disable");
+			obj.RecRowID3="";
+		    obj.gridEHItem.clearSelections();  //Çå³ıÑ¡ÖĞĞĞ
+		}else {
+			$("#btnSubAdd").linkbutton("enable");
+			obj.RecRowID3 = rowData["ID"];
+			obj.EvLocItemsLoad();  //¼ÓÔØ×Ó·ÖÀà
+		}
+	}
+	//Ñ¡Ôñ¿ÆÊÒ
     obj.gridEHLocation_onSelect = function (){
 	    var rowData = obj.gridEHLocation.getSelected();	 
 	    if (rowData["ID"] == obj.RecRowID1){
@@ -77,66 +129,65 @@ function InitEnviHyLocItemsWinEvent(obj){
 			$("#btnSubEdit").linkbutton("disable");
 			$("#btnSubDelete").linkbutton("disable");
 			obj.RecRowID1="";
-		    obj.gridEHLocation.clearSelections();  //æ¸…é™¤é€‰ä¸­è¡Œ
+		    obj.gridEHLocation.clearSelections();  //Çå³ıÑ¡ÖĞĞĞ
 		}else {
 			$("#btnSubAdd").linkbutton("enable");
 			obj.RecRowID1 = rowData["ID"];
-			obj.EvLocItemsLoad();  //åŠ è½½å­åˆ†ç±»
+			obj.EvLocItemsLoad();  //¼ÓÔØ×Ó·ÖÀà
 		}
 	}
     
-    //é€‰æ‹©ç§‘å®¤ç›‘æµ‹é¡¹ç›®è®¡åˆ’
+    //Ñ¡Ôñ¿ÆÊÒ¼à²âÏîÄ¿¼Æ»®
     obj.gridEvLocItems_onSelect = function (){
-	    if(!obj.RecRowID1)return;
+	    if((!obj.RecRowID1)&&(!obj.RecRowID3)) return;
 	    if($("#btnSubEdit").hasClass("l-btn-disabled")) obj.RecRowID2="";
 	    var rowData = obj.gridEvLocItems.getSelected();
-	    if (rowData["LoID"] == obj.RecRowID2){
+	    if (rowData["IDList"] == obj.RecRowID2){
 		    $("#btnSubAdd").linkbutton("enable");
 			$("#btnSubEdit").linkbutton("disable");
 			$("#btnSubDelete").linkbutton("disable");
 			obj.RecRowID2="";
-		    obj.gridEvLocItems.clearSelections();  //æ¸…é™¤é€‰ä¸­è¡Œ
+		    obj.gridEvLocItems.clearSelections();  //Çå³ıÑ¡ÖĞĞĞ
 		}else {
-			obj.RecRowID2 = rowData["LoID"];
+			obj.RecRowID2 = rowData["IDList"];
 			$("#btnSubAdd").linkbutton("disable");
 			$("#btnSubEdit").linkbutton("enable");
 			$("#btnSubDelete").linkbutton("enable");
 		 }
 	}
 	
-	
-	
-	//åŒå‡»ç¼–è¾‘äº‹ä»¶
+	//Ë«»÷±à¼­ÊÂ¼ş
 	obj.gridEvLocItems_onDbselect = function(rowData){
-		if(!obj.RecRowID1){
-			$.messager.alert("é”™è¯¯æç¤º", "è¯·å…ˆé€‰æ‹©å·¦è¡¨ä¸­çš„æ•°æ®" , 'info');			
+		if ((!obj.RecRowID1)&&(!obj.RecRowID3)){
+			$.messager.alert("´íÎóÌáÊ¾", "ÇëÏÈÑ¡Ôñ×ó±íÖĞµÄÊı¾İ" , 'info');			
 			return;
 		}
+		
 		obj.layer2(rowData);
 	}
 	
-	//ä¿å­˜
+	//±£´æ
 	obj.btnSaveSub_click = function(){
 		var errinfo = "";
 		var LocationID 	= obj.RecRowID1;
 		var ItemID     	= $('#cboItem').combobox('getValue');
 		var txtItemMax  = $('#txtItemMax').val();
 		var txtItemMin  = $('#txtItemMin').val();
-		var ItemUnitID 	= $('#cboItemUnit').combobox('getValue');
-		var PlanDate 	= $('#PlanDate').datebox('getValue');
+		var DateItemArr = $('#cboDateItem').combobox('getValues');
+        var DateItemIDs = DateItemArr.join();
 		var txtNote  	= $('#txtNote').val();
 		var IsActive    = $("#chkActive").checkbox('getValue')? '1':'0';
 		if (!ItemID) {
-			errinfo = errinfo + "ç›‘æµ‹é¡¹ç›®ä¸ºç©º!<br>";
+			errinfo = errinfo + "¼à²âÏîÄ¿Îª¿Õ!<br>";
 		}
-		if (!ItemUnitID) {
-			errinfo = errinfo + "é™å®šå•ä½ä¸ºç©º!<br>";
+		if (!txtItemMax) {
+			errinfo = errinfo + "¼Æ»®¼à²âÊıÁ¿Îª¿Õ!<br>";
 		}
-		if (!PlanDate) {
-			errinfo = errinfo + "è®¡åˆ’å®‰æ’æ—¥æœŸä¸ºç©º!<br>";
+		if (!DateItemIDs) {
+			errinfo = errinfo + "¼à²â¼Æ»®Îª¿Õ!<br>";
 		}
 		if (errinfo) {
-			$.messager.alert("é”™è¯¯æç¤º", errinfo, 'info');
+			$.messager.alert("´íÎóÌáÊ¾", errinfo, 'info');
 			return;
 		}
 			
@@ -145,133 +196,242 @@ function InitEnviHyLocItemsWinEvent(obj){
 		inputStr = inputStr + "^" +	ItemID;
 		inputStr = inputStr + "^" + txtItemMax;
 		inputStr = inputStr + "^" + txtItemMin;
-		inputStr = inputStr + "^" + ItemUnitID;
-		inputStr = inputStr + "^" + PlanDate;
+		inputStr = inputStr + "^" + DateItemIDs;
 		inputStr = inputStr + "^" + txtNote;
 		inputStr = inputStr + "^" + IsActive;
 		var flg = $m({
-			ClassName:"DHCHAI.IR.EnviHyLocItems",
-			MethodName:"Update",
-			InStr:inputStr,
+			ClassName:"DHCHAI.IRS.EnviHyLocItemsSrv",
+			MethodName:"SaveLocItems",
+			inputStr:inputStr,
 			aSeparete:"^"
 		},false);
 		if (parseInt(flg) <= 0){
 			if (parseInt(flg) == 0){
-				$.messager.alert("é”™è¯¯æç¤º", "å‚æ•°é”™è¯¯!" , 'info');
+				$.messager.alert("´íÎóÌáÊ¾", "²ÎÊı´íÎó!" , 'info');
 			}else if(parseInt(flg) == -2){
-				$.messager.alert("é”™è¯¯æç¤º", "æ•°æ®é‡å¤!" , 'info');
+				$.messager.alert("´íÎóÌáÊ¾", "Êı¾İÖØ¸´!" , 'info');
 			}else {
-				$.messager.alert("é”™è¯¯æç¤º", "æ›´æ–°æ•°æ®é”™è¯¯!Error=" + flg, 'info');
+				$.messager.alert("´íÎóÌáÊ¾", "¸üĞÂÊı¾İ´íÎó!Error=" + flg, 'info');
 			}
 		}else{
 			$HUI.dialog('#winEvLocItems').close();
-			$.messager.popover({msg: 'ä¿å­˜æˆåŠŸï¼',type:'success',timeout: 1000});
-			obj.gridEvLocItems.reload() ;//åˆ·æ–°å½“å‰é¡µ
+			$.messager.popover({msg: '±£´æ³É¹¦£¡',type:'success',timeout: 1000});
+			obj.gridEvLocItems.reload() ;//Ë¢ĞÂµ±Ç°Ò³
 		}
 	}
 	
-	//åˆ é™¤
-	obj.btnDeleteSub_click = function(){
-		var rowData = obj.gridEvLocItems.getSelected();
-		var rowDataID = rowData["LoID"];
-		if ((obj.RecRowID1=="")||(rowDataID=="")){
-			$.messager.alert("æç¤º", "é€‰ä¸­æ•°æ®è®°å½•,å†ç‚¹å‡»åˆ é™¤!", 'info');
+	//±£´æ
+	obj.btnSaveSub2_click = function(){
+		var errinfo = "";
+		var ItemID 	= obj.RecRowID3;
+		var txtItemMax  = $('#txtItemMax2').val();
+		var txtItemMin  = $('#txtItemMin2').val();
+		var DateItemArr = $('#cboDateItem2').combobox('getValues');
+        var DateItemIDs = DateItemArr.join();
+        var SubLocArr   = $('#cboLocation2').combobox('getValues');
+        var aSubLocIDs  = SubLocArr.join();
+		var txtNote  	= $('#txtNote2').val();
+		var IsActive    = $("#chkActive2").checkbox('getValue')? '1':'0';
+		if (!aSubLocIDs) {
+			errinfo = errinfo + "ÉêÇë¿ÆÊÒÎª¿Õ!<br>";
+		}
+		if (!DateItemIDs) {
+			errinfo = errinfo + "¼à²â¼Æ»®Îª¿Õ!<br>";
+		}
+		if (!txtItemMax) {
+			errinfo = errinfo + "¼Æ»®¼à²âÊıÁ¿Îª¿Õ!<br>";
+		}
+		if (errinfo) {
+			$.messager.alert("´íÎóÌáÊ¾", errinfo, 'info');
 			return;
 		}
-		$.messager.confirm("åˆ é™¤", "æ˜¯å¦åˆ é™¤é€‰ä¸­æ•°æ®è®°å½•?", function (r){
+		if	(aSubLocIDs.substr(0,1)!=','){
+			aSubLocIDs=','+aSubLocIDs;
+		}	
+		var inputStr = obj.RecRowID2;
+		inputStr = inputStr + "^" + aSubLocIDs;
+		inputStr = inputStr + "^" +	ItemID;
+		inputStr = inputStr + "^" + txtItemMax;
+		inputStr = inputStr + "^" + txtItemMin;
+		inputStr = inputStr + "^" + DateItemIDs;
+		inputStr = inputStr + "^" + txtNote;
+		inputStr = inputStr + "^" + IsActive;
+		var flg = $m({
+			ClassName:"DHCHAI.IRS.EnviHyLocItemsSrv",
+			MethodName:"SaveLocItemsByItem",
+			inputStr:inputStr,
+			aSeparete:"^"
+		},false);
+		if (parseInt(flg) <= 0){
+			if (parseInt(flg) == 0){
+				$.messager.alert("´íÎóÌáÊ¾", "²ÎÊı´íÎó!" , 'info');
+			}else if(parseInt(flg) == -2){
+				$.messager.alert("´íÎóÌáÊ¾", "Êı¾İÖØ¸´!" , 'info');
+			}else {
+				$.messager.alert("´íÎóÌáÊ¾", "¸üĞÂÊı¾İ´íÎó!Error=" + flg, 'info');
+			}
+		}else{
+			$HUI.dialog('#winEvLocItems2').close();
+			$.messager.popover({msg: '±£´æ³É¹¦£¡',type:'success',timeout: 1000});
+			obj.gridEvLocItems.reload() ;//Ë¢ĞÂµ±Ç°Ò³
+		}
+	}
+	
+	//É¾³ı
+	obj.btnDeleteSub_click = function(){
+		var rowData = obj.gridEvLocItems.getSelected();
+		var rowDataIDs = rowData["IDList"];
+		if (((obj.RecRowID1=="")&&(obj.RecRowID3==""))||(rowDataIDs=="")){
+			$.messager.alert("ÌáÊ¾", "Ñ¡ÖĞÊı¾İ¼ÇÂ¼,ÔÙµã»÷É¾³ı!", 'info');
+			return;
+		}
+		$.messager.confirm("É¾³ı", "ÊÇ·ñÉ¾³ıÑ¡ÖĞÊı¾İ¼ÇÂ¼?", function (r){
 			if(r){
 				var flg = $m({
-					ClassName:"DHCHAI.IR.EnviHyLocItems",
-					MethodName:"DeleteById",
-					Id:rowDataID
+					ClassName:"DHCHAI.IRS.EnviHyLocItemsSrv",
+					MethodName:"DeleteLocItems",
+					aLocItemIDs:rowDataIDs
 				},false);
 				if(parseInt(flg) < 0){
-					$.messager.alert("é”™è¯¯æç¤º","åˆ é™¤æ•°æ®é”™è¯¯!Error=" + flg, 'info');
+					$.messager.alert("´íÎóÌáÊ¾","É¾³ıÊı¾İ´íÎó!Error=" + flg, 'info');
 				}else{
-					$.messager.popover({msg: 'åˆ é™¤æˆåŠŸï¼',type:'success',timeout: 1000});
+					$.messager.popover({msg: 'É¾³ı³É¹¦£¡',type:'success',timeout: 1000});
 					obj.RecRowID2 = ""
-					obj.gridEvLocItems.reload() ;//åˆ·æ–°å½“å‰é¡µ
+					obj.gridEvLocItems.reload() ;//Ë¢ĞÂµ±Ç°Ò³
 				}
 			}
 		});
 	}
 	
-	//åŠ è½½å­è¡¨
+	//¼ÓÔØ×Ó±í
 	obj.EvLocItemsLoad = function () {
-		obj.gridEvLocItems.load({
-			ClassName:"DHCHAI.IRS.EnviHyLocItemsSrv",
-			QueryName:"QryEnviHyLocItems",
-			locId:obj.RecRowID1
-		});	
+		if (obj.TabArgsID == "EHLoc"){
+			obj.gridEvLocItems.load({
+				ClassName:"DHCHAI.IRS.EnviHyLocItemsSrv",
+				QueryName:"QryEnviHyLocItems",
+				locId:obj.RecRowID1
+			});	
+		}else{
+			obj.gridEvLocItems.load({
+				ClassName:"DHCHAI.IRS.EnviHyLocItemsSrv",
+				QueryName:"QryEnviHyLocItems",
+				locId:"",
+				ItemID:obj.RecRowID3
+			});	
+		}
+		
 	}
 	
-	//é…ç½®çª—ä½“-åˆå§‹åŒ–
+	//ÅäÖÃ´°Ìå-³õÊ¼»¯
 	obj.layer2 = function(rowData){
-		if(!obj.RecRowID1){
-			//è‹¥ï¼ˆobj.RecRowID1 ä¸ºç©ºï¼‰çˆ¶è¡¨æœªè¢«é€‰ä¸­ï¼Œåˆ™å­è¡¨ä¸è¿›è¡Œæ“ä½œ
-			$.messager.alert("é”™è¯¯æç¤º","è¯·å…ˆé€‰å®šç”³è¯·ç§‘å®¤",'info');
+		if ((!obj.RecRowID1)&&(!obj.RecRowID3)){
+			//Èô£¨obj.RecRowID1 Îª¿Õ£©¸¸±íÎ´±»Ñ¡ÖĞ£¬Ôò×Ó±í²»½øĞĞ²Ù×÷
+			$.messager.alert("´íÎóÌáÊ¾","ÇëÏÈÑ¡¶¨×ó±ßÏîÄ¿",'info');
 			return;
-		}	
-		if(rowData){
-			obj.RecRowID2=rowData["LoID"];
-			var ApplyLocID = rowData["ApplyLocID"];
-			var ApplyLocDesc  = rowData["ApplyLocDesc"];
-			var EvItemID = rowData["EvItemID"];
-			var EHItemMax = rowData["EHItemMax"];
-			var EHItemMin = rowData["EHItemMin"];
-			var EHItemUnitID = rowData["EHItemUnitID"];
-			var EHItemUnitDesc = rowData["EHItemUnitDesc"];
-			var EHPlanDate = rowData["EHPlanDate"];
-			var EHNote = rowData["EHNote"];
-			var IsActiveDesc = rowData["IsActiveDesc"];
-			IsActiveDesc = (IsActiveDesc=="æ˜¯"? true: false)
-			//$('#cboLocation').combobox('setValue',ApplyLocID);
-			$('#cboLocation').val(ApplyLocDesc);
-			//ApplyLocDesc=Common_LookupToLoc('cboLocation','cboLocationID','1|2','O|I','');
-			$('#cboItem').combobox('setValue',EvItemID);
-			$('#txtItemMax').val(EHItemMax);
-			$('#txtItemMin').val(EHItemMin);
-			$('#cboItemUnit').combobox('setValue',EHItemUnitID);
-			$('#cboItemUnit').combobox('setText',EHItemUnitDesc);
-			$('#PlanDate').datebox('setValue',EHPlanDate);
-			$('#txtNote').val(EHNote);
-			$('#chkActive').checkbox('setValue',IsActiveDesc);
 		}
-		$HUI.dialog('#winEvLocItems').open();
+		$('#cboDateItem').combobox('clear');
+		$("#TRUnit").css('display','table-row');
+		if (obj.TabArgsID == "EHLoc"){
+			if(rowData){
+				obj.RecRowID2=rowData["IDList"];
+				var ApplyLocID = rowData["ApplyLocID"];
+				var ApplyLocDesc  = rowData["ApplyLocDesc"];
+				var EvItemID = rowData["EvItemID"];
+				var EHItemMax = rowData["EHItemMax"];
+				var EHItemMin = rowData["EHItemMin"];
+				var EHNote = rowData["EHNote"];
+				var DescIDList= rowData["DescIDList"];
+				var IsActiveDesc = rowData["IsActiveDesc"];
+				IsActiveDesc = (IsActiveDesc=="ÊÇ"? true: false)
+				$('#cboLocation').val(ApplyLocDesc);
+				$('#cboItem').combobox('setValue',EvItemID);
+				$('#cboItem').validatebox("validate");
+				$('#txtItemMax').val(EHItemMax).validatebox("validate");;
+				$('#txtItemMin').val(EHItemMin);
+				$('#txtNote').val(EHNote);
+				$('#chkActive').checkbox('setValue',IsActiveDesc);
+				$('#cboDateItem').combobox('setValues',DescIDList.split(","));
+			}
+			$HUI.dialog('#winEvLocItems').open();
+		}else{
+			if(rowData){
+				obj.RecRowID2=rowData["IDList"];
+				var ApplyLocID = rowData["ApplyLocID"];
+				var ApplyLocDesc  = rowData["ApplyLocDesc"];
+				var EvItemDesc = rowData["EvItemDesc"];
+				var EHItemMax = rowData["EHItemMax"];
+				var EHItemMin = rowData["EHItemMin"];
+				var EHNote = rowData["EHNote"];
+				var DescIDList= rowData["DescIDList"];
+				var IsActiveDesc = rowData["IsActiveDesc"];
+				IsActiveDesc = (IsActiveDesc=="ÊÇ"? true: false);
+				
+				$('#cboItem2').val(EvItemDesc);
+				$('#cboLocation2').combobox('setValues',ApplyLocID.split(","));
+				$('#cboLocation2').validatebox("validate");
+				$('#txtItemMax2').val(EHItemMax).validatebox("validate");;
+				$('#txtItemMin2').val(EHItemMin);
+				$('#txtNote2').val(EHNote);
+				$('#chkActive2').checkbox('setValue',IsActiveDesc);
+				$('#cboDateItem2').combobox('setValues',DescIDList.split(","));
+				$('#cboDateItem2').validatebox("validate");
+			}
+			$HUI.dialog('#winEvLocItems2').open();
+		}
 	}
 		
-	//é…ç½®çª—ä½“-åˆå§‹åŒ–
+	//ÅäÖÃ´°Ìå-³õÊ¼»¯
 	obj.layer1 = function(rowData){
 		if(!obj.RecRowID1){
-			//è‹¥ï¼ˆobj.RecRowID1 ä¸ºç©ºï¼‰çˆ¶è¡¨æœªè¢«é€‰ä¸­ï¼Œåˆ™å­è¡¨ä¸è¿›è¡Œæ“ä½œ
-			$.messager.alert("é”™è¯¯æç¤º","è¯·å…ˆé€‰å®šç”³è¯·ç§‘å®¤",'info');
+			//Èô£¨obj.RecRowID1 Îª¿Õ£©¸¸±íÎ´±»Ñ¡ÖĞ£¬Ôò×Ó±í²»½øĞĞ²Ù×÷
+			$.messager.alert("´íÎóÌáÊ¾","ÇëÏÈÑ¡¶¨ÉêÇë¿ÆÊÒ",'info');
 			return;
-		}	
+		}
 		if(rowData){
 			obj.RecRowID2 ="";
 			var ApplyLocDesc  = rowData["LocDesc2"];
 			$('#cboLocation').val(ApplyLocDesc);
-			//ApplyLocDesc=Common_LookupToLoc('cboLocation','cboLocationID','1|2','O|I','');
-			//$('#cboLocation').combobox('setValue','');
 			$('#cboItem').combobox('setValue','');
-			$('#txtItemMax').val('');
+			$('#cboItem').validatebox("validate");
+			$('#txtItemMax').val('').validatebox("validate");
 			$('#txtItemMin').val('');
-			$('#cboItemUnit').combobox('setValue','');
-			$('#PlanDate').datebox('setValue','');
+			$('#cboDateItem').combobox('setValue','');
+			$('#cboDateItem').validatebox("validate");
 			$('#txtNote').val('');
 			$('#chkActive').checkbox('setValue',false);
 		}
 		$HUI.dialog('#winEvLocItems').open();
 	}
-	
-	//æŸ¥è¯¢
+	//ÅäÖÃ´°Ìå-³õÊ¼»¯
+	obj.layer3 = function(rowData){
+		if(!obj.RecRowID3){
+			//Èô£¨obj.RecRowID1 Îª¿Õ£©¸¸±íÎ´±»Ñ¡ÖĞ£¬Ôò×Ó±í²»½øĞĞ²Ù×÷
+			$.messager.alert("´íÎóÌáÊ¾","ÇëÏÈÑ¡¶¨¼à²âÏîÄ¿",'info');
+			return;
+		}
+		if(rowData){
+			obj.RecRowID2 ="";
+			var ItemDesc  = rowData["ItemDesc"];
+			$('#cboItem2').val(ItemDesc);
+			$('#txtItemMax2').val('').validatebox("validate");
+			$('#txtItemMin2').val('');
+			$('#cboLocation2').combobox('setValue','');
+			$('#cboLocation2').validatebox("validate");
+			$('#cboDateItem2').combobox('setValue','');
+			$('#cboDateItem2').validatebox("validate");
+			$('#txtNote2').val('');
+			$('#chkActive2').checkbox('setValue',false);
+		}
+		$HUI.dialog('#winEvLocItems2').open();
+	}
+	//²éÑ¯
 	$('#search').searchbox({
 		searcher:function(){
 			var locDesc = ($('#search').searchbox('getValue'))
-			obj.reloadgridEHLocation(locDesc);//é‡æ–°åŠ è½½è¡¨æ ¼æ•°æ®
+			obj.reloadgridEHLocation(locDesc);//ÖØĞÂ¼ÓÔØ±í¸ñÊı¾İ
 		}
 	});
-		
+	
 	obj.reloadgridEHLocation = function(locDesc){
 		var ApplyLocDesc = locDesc;
 		$('#gridEHLocation').datagrid('load', {
@@ -281,7 +441,26 @@ function InitEnviHyLocItemsWinEvent(obj){
 			aLocCate : "",
 			aLocType : "",
 			aIsActive: 1,
-			locDesc:ApplyLocDesc
+			locDesc:ApplyLocDesc,
+			page:1,
+			rows:9999
+		});		
+	};
+	//²éÑ¯
+	$('#search1').searchbox({
+		searcher:function(){
+			var ItemDesc = ($('#search1').searchbox('getValue'))
+			obj.reloadgridEHItem(ItemDesc);//ÖØĞÂ¼ÓÔØ±í¸ñÊı¾İ
+		}
+	});	
+	obj.reloadgridEHItem = function(ItemDesc){
+		$('#gridEHItem').datagrid('load', {
+			ClassName:'DHCHAI.IRS.EnviHyItemSrv',
+			QueryName:"QryEvItem",
+			aIsActive : 1,
+			aAlis : ItemDesc,
+			page:1,
+			rows:9999
 		});		
 	};
 }

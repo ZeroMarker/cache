@@ -50,24 +50,26 @@ function InitSuspInfectDicWin(){
 	});
 	
 	//传染病类别
-	obj.cboKind = Common_ComboDicID('cboKind','EpdemicType');
+	obj.cboKind = Common_ComboDicID('cboKind','EpdemicType',1);
+	
 	//传染病诊断
 	$HUI.combobox('#cboKind',{
-		editable: true,				   
+		editable: true,			   
 	    onSelect:function(rows){
 			var KindID = rows.Code;
+			var InfectData=$cm({
+				ClassName :'DHCMed.EPDService.InfectionSrv',
+				QueryName : 'QryIFList',
+				ResultSetType :'array',
+				aWork : "true",
+				aKind : KindID
+				},false)
 		    obj.cboInfect = $HUI.combobox('#cboInfect', {
-				url: $URL,
 				editable: true,
 				defaultFilter:4,     //text字段包含匹配或拼音首字母包含匹配 不区分大小写
 				valueField: 'RowID',
 				textField: 'MIFDisease',
-				onBeforeLoad: function (param) {
-					param.ClassName = 'DHCMed.EPDService.InfectionSrv';
-					param.QueryName = 'QryIFList';
-					param.ResultSetType = 'array';
-					param.aKind = KindID;
-				}
+				data:InfectData
 			});
 	    }
     });

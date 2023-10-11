@@ -1,4 +1,4 @@
-$(function(){
+ï»¿$(function(){
 	$("#DateTime").hide();
 	$('#Forever').attr("checked",true);
 	$('#seekform').find(':radio').change(function(){
@@ -11,16 +11,23 @@ $(function(){
 	})
 	initcombox();
 	InitAuthorityDataList();
+	if(HISUIStyleCode == 'lite'){
+		$(".centerlite").css({"background-color":"#f5f5f5"})
+	}
 });
 var eprPatient= new Object();
 eprPatient.admStatus = "";
 eprPatient.startDate = "";
 eprPatient.endDate = "";
 eprPatient.medicareNo = "";
+eprPatient.regNo = "";
+eprPatient.patName = "";
 eprPatient.locID = "";
 eprPatient.specialAdm = "";
+eprPatient.ischecked = "";
+eprPatient.Diagnos="";
 
-//²¡ÈËÁĞ±í³õÊ¼»¯
+//ç—…äººåˆ—è¡¨åˆå§‹åŒ–
 function InitAuthorityDataList()
 {
 	$('#patientListTable').datagrid({ 
@@ -30,61 +37,103 @@ function InitAuthorityDataList()
             //pagePosition: 'bottom',
 			fitColumns: true,
 			method: 'post',
-            loadMsg: '¼ÓÔØÖĞ......',
+            loadMsg: 'åŠ è½½ä¸­......',
 			autoRowHeight: true,
 			url:'../EPRservice.Quality.Ajax.patientInfoList.cls',
 			queryParams: {
                 StartDate: eprPatient.startDate,
 				EndDate: eprPatient.endDate,
 				MedicareNo: eprPatient.medicareNo,
+				RegNo: eprPatient.regNo,
+				PatName: eprPatient.patName,
 				ALocID: eprPatient.locID,
 				AdmStatus: eprPatient.admStatus,
-				SpecialAdm: eprPatient.specialAdm
+				ischecked: eprPatient.ischecked,
+				SpecialAdm: eprPatient.specialAdm,
+				Diagnos:eprPatient.Diagnos
             },
 			singleSelect:true,
 			//idField:'rowID', 
 			//rownumbers:true,
 			fit:true,
 			columns:[[
-				{field:'ProblemFlag',title:'Ê±Ğ§È±Ïİ',width:100,align:'center',
+				{field:'ProblemFlag',title:'æ—¶æ•ˆç¼ºé™·',width:100,align:'left',
 				formatter:function(value,row,index){  
    					if(row.ProblemFlag != 0 ){
          			return "<img height='15' src='../scripts/emr/image/icon/aging.png'/>";
      				}
  				}},
-				{field:'MedicareNo',title:'²¡°¸ºÅ',width:100,align:'center'},
-				{field:'PAPMIName',title:'²¡ÈËĞÕÃû',width:100,align:'center',cellattr: addCellAttr},
-				{field:'Age',title:'ÄêÁä',width:100,align:'center'},
-				{field:'PAPMISex',title:'ĞÔ±ğ',width:100,align:'center'},
-				{field:'Illness',title:'²¡Çé',width:100,align:'center'},
-				{field:'TransLocFlag',title:'×ª¿Æ±êÖ¾',width:100,align:'center'},
-				{field:'ResidentDays',title:'×¡ÔºÌìÊı',width:100,align:'center'},
-				{field:'AdmDateTime',title:'ÈëÔºÊ±¼ä',width:100,align:'center'},
-				{field:'QualityFlag',title:'»·½ÚÖÊ¿Ø',width:100,align:'center',
+				{field:'MedicareNo',title:'ç—…æ¡ˆå·',width:100,align:'left'},
+				{field:'PAPMIName',title:'ç—…äººå§“å',width:100,align:'left',cellattr: addCellAttr},
+				{field:'Age',title:'å¹´é¾„',width:100,align:'left'},
+				{field:'PAPMISex',title:'æ€§åˆ«',width:100,align:'left'},
+				{field:'Illness',title:'ç—…æƒ…',width:100,align:'left',
+				formatter:function(value){
+	                return $g(value)
+	            }
+				},
+				{field:'TransLocFlag',title:'è½¬ç§‘æ ‡å¿—',width:100,align:'left',
+				formatter:function(value){
+	                return $g(value)
+	            }
+				},
+				{field:'ResidentDays',title:'ä½é™¢å¤©æ•°',width:100,align:'left'},
+				{field:'DisDate',title:'å‡ºé™¢æ—¶é—´',width:100,align:'left'},
+				{field:'AdmDateTime',title:'å…¥é™¢æ—¶é—´',width:100,align:'left'},
+				{field:'QualityFlag',title:'ç¯èŠ‚è´¨æ§',width:100,align:'left',
 				formatter:function(value,row,index){  
    					if(row.QualityFlag == "Y" ){
-         			return "<img height='15' src='../scripts/emr/image/icon/segment.png'/>";
+         				return "<img height='15' src='../scripts/emr/image/icon/segment.png'/>";
      				}
  				}},
-				{field:'CreateDisUser',title:'ÖÊ¿ØÒ½Éú',width:100,align:'center'},
-				{field:'MainDiagnos',title:'Õï¶Ï',width:100,align:'center'},
-				{field:'InPathWayStatus',title:'ÁÙ´²Â·¾¶',width:100,align:'center'},
-				{field:'PAAdmDocCodeDR',title:'¾­ÖÎÒ½Éú',width:100,align:'center'},
-				{field:'Attending',title:'Ö÷ÖÎÒ½Éú',width:100,align:'center'},
-				{field:'Chief',title:'Ö÷ÈÎÒ½Éú',width:100,align:'center'},
-				{field:'BedNo',title:'´²ºÅ',width:100,align:'center'}
+				{field:'CreateDisUser',title:'è´¨æ§åŒ»ç”Ÿ',width:100,align:'left'},
+				{field:'MainDiagnos',title:'è¯Šæ–­',width:100,align:'left'},
+				{field:'InPathWayStatus',title:'ä¸´åºŠè·¯å¾„',width:100,align:'left'},
+				{field:'PAAdmDocCodeDR',title:'ç»æ²»åŒ»ç”Ÿ',width:100,align:'left'},
+				{field:'Attending',title:'ä¸»æ²»åŒ»ç”Ÿ',width:100,align:'left'},
+				{field:'Chief',title:'ä¸»ä»»åŒ»ç”Ÿ',width:100,align:'left'},
+				{field:'BedNo',title:'åºŠå·',width:100,align:'left'}
 			]],
 		  rowStyler:function(rowIndex, rowData){   
-       			if (rowData.DisManualFlag=="Y"){   
-           		return 'background-color:#B9A8CE;';   
+       			if (rowData.DisManualFlag=="Y"){ 
+       				if(HISUIStyleCode!=='lite'){
+	       				return 'background-color:#FFF2E9;color:#FF793E'; 
+	       			}else{
+		       			return 'background-color:#FFFAE8;color:#FFA200';
+		       		}     
        			}   
    			},
 		  onDblClickRow: function(rowIndex, rowData) {
 			  //alert(rowData.EpisodeID);
 				var episodeID = rowData.EpisodeID
-				var url = "dhc.emr.quality.discheckrule.csp?EpisodeID="+episodeID+ '&action=D';
-				window.open (url,'newwindow','top=0,left=0,width='+window.screen.width+',height='+window.screen.height+',toolbar=no,menubar=no,scrollbars=no, resizable=yes,location=no, status=no,channelmode=yes ') 
+				var patientName=rowData.PAPMIName
+				var MedicareNo=rowData.MedicareNo
+				var BedNo=rowData.BedNo
+				var url = "dhc.emr.quality.discheckrule.csp?EpisodeID="+episodeID+ '&action=D'+'&patientName='+patientName+'&MedicareNo='+MedicareNo+'&BedNo='+BedNo;
+				if('undefined' != typeof websys_getMWToken)
+				{
+					url += "&MWToken="+websys_getMWToken()
+				}
+				window.open (url,'newwindowQuality','top=0,left=0,width='+window.screen.width+',height='+window.screen.height+',toolbar=no,menubar=no,scrollbars=no, resizable=yes,location=no, status=no,channelmode=yes ') 
 				
+				
+			},
+		  onClickCell: function(rowIndex, field, value) {
+			  var rows = $('#patientListTable').datagrid('getRows');
+			  var row = rows[rowIndex];
+			  var episodeID = row.EpisodeID;
+			  if(field =='ProblemFlag')
+			  {
+				if('undefined' != typeof websys_getMWToken)
+				{
+				  createModalDialog("QualityResultDialogA","è‡ªåŠ¨è´¨æ§åˆ—è¡¨å‡ºé™¢","650","600","iframeQualityResultA","<iframe id='iframeQualityResultA' scrolling='auto' frameborder='0' src='dhc.emr.quality.qualityresult.csp?EpisodeID=" + episodeID + "&ARuleID=7"+"&MWToken="+websys_getMWToken() +"' style='width:640px; height:550px; display:block;'></iframe>","","")
+				}
+				else
+				{
+					createModalDialog("QualityResultDialogA","è‡ªåŠ¨è´¨æ§åˆ—è¡¨å‡ºé™¢","650","600","iframeQualityResultA","<iframe id='iframeQualityResultA' scrolling='auto' frameborder='0' src='dhc.emr.quality.qualityresult.csp?EpisodeID=" + episodeID + "&ARuleID=7" +"' style='width:640px; height:550px; display:block;'></iframe>","","")
+				}
+				//window.open("dhc.emr.quality.qualityresult.csp?EpisodeID=" + episodeID+ "&RuleID=" + 7); 
+			  }
 			},
 		  loadFilter:function(data)
 		  {
@@ -123,61 +172,127 @@ function addCellAttr(rowId, val, rawObject, cm, rdata) {
              }
          }
 
-//¿ÆÊÒ³õÊ¼»¯
+//ç§‘å®¤åˆå§‹åŒ–
 function initcombox()
 {
 	$('#ctLocID').combobox
 	({
 		valueField:'ID',  
 	    textField:'Name',
-		url:'../web.eprajax.usercopypastepower.cls?Action=GetCTLocID&Type=E',
+		url:'../web.eprajax.usercopypastepower.cls?Action=GetCTLocID&Type=E&HospitalID='+HospitalID+'&LocId='+Locid,
 		mode:'remote',
+                                value:Locid,data:[{id:Locid,text:UserLocDesc}], 
 		onChange: function (n,o) {
 			$('#ctLocID').combobox('setValue',n);
 		    var newText = $('#ctLocID').combobox('getText');
-			$('#ctLocID').combobox('reload','../web.eprajax.usercopypastepower.cls?Action=GetCTLocID&Type=E&Filter='+encodeURI(newText.toUpperCase()));
+			$('#ctLocID').combobox('reload','../web.eprajax.usercopypastepower.cls?Action=GetCTLocID&Type=E&HospitalID='+HospitalID+'&Filter='+encodeURI(newText.toUpperCase())+'&LocId='+Locid);
 		},
 		onSelect: function(record){
 			
 	    } 
     });
 }
-///³õÊ¼»¯ÖØµã»¼ÕßÏÂÀ­¶àÑ¡¿ò
+
+$('#mrNo').bind('keypress', function(event) {
+			if (event.keyCode == "13") {
+				doSearch();
+			}
+		});
+ $('#regNo').bind('keypress', function(event) {
+			if (event.keyCode == "13") {
+				setpatientNoLength();
+			}
+		});
+///åˆå§‹åŒ–é‡ç‚¹æ‚£è€…ä¸‹æ‹‰å¤šé€‰æ¡†
 $(function(){
 	var cbox = $HUI.combobox("#specialAdm",{
 		valueField:'id',
 		textField:'text',
 		multiple:true,
-		rowStyle:'checkbox', //ÏÔÊ¾³É¹´Ñ¡ĞĞĞÎÊ½
+		rowStyle:'checkbox', //æ˜¾ç¤ºæˆå‹¾é€‰è¡Œå½¢å¼
 		selectOnNavigation:false,
 		panelHeight:"auto",
 		editable:false,
 		data:[
-			{id:'OverAdm',text:'×¡Ôº³¬¹ı31Ìì»¼Õß'},
-			{id:'TerminallyIll',text:'²¡Î£»¼Õß'},
-			{id:'DiseaseSeve',text:'²¡ÖØ»¼Õß'}
+			{id:'OverAdm',text:emrTrans("ä½é™¢è¶…è¿‡31å¤©æ‚£è€…")},
+			{id:'TerminallyIll',text:emrTrans("ç—…å±æ‚£è€…")},
+			{id:'DiseaseSeve',text:emrTrans("ç—…é‡æ‚£è€…")},
+			{id:'BloodFilter',text:emrTrans("è¾“è¡€æ‚£è€…")},
+			{id:'Operate',text:emrTrans("æ‰‹æœ¯æ‚£è€…")},
+			{id:'KSSPat',text:emrTrans('æŠ—ç”Ÿç´ ä½¿ç”¨æ‚£è€…')},
+			{id:'HZHZ',text:emrTrans('ä¼šè¯Šæ‚£è€…')},
+			{id:'ZKHZ',text:emrTrans('è½¬ç§‘æ‚£è€…')}
 		]
 		
 		
 	})
 });
-
-//²éÑ¯°´Å¥ÊÂ¼ş
+function setpatientNoLength(){
+	var RegNo = $("#regNo").val();
+	if (RegNo != '') {
+		for (var i=(10-RegNo.length-1); i>=0; i--){
+			RegNo ="0"+ RegNo;
+		}
+	}
+	$("#regNo").val(RegNo);
+	doSearch();
+}
+//å¯¼å‡ºexcel
+function makeExcel(){
+    var options = $('#patientListTable').datagrid('getPager').data("pagination").options; 
+    var curr = options.pageNumber; 
+    var total = options.total;
+    var pager = $('#patientListTable').datagrid('getPager');
+    var rows = []
+    for (i=1;i<=((total/options.pageSize)+1);i++)
+    {
+	     pager.pagination('select',i);
+         pager.pagination('refresh');
+         var currows =  $('#patientListTable').datagrid('getRows');
+         if (currows.length==0)
+         {
+	         continue;
+	     }
+         for (var j in currows)
+         {
+	         rows.push(currows[j]);
+	     }
+         //rows.concat(currows);
+	}
+	 pager.pagination('select',curr);
+     pager.pagination('refresh');
+	$('#patientListTable').datagrid('toExcel',{
+		filename:'patientListTable.xls',
+		rows:rows
+		});
+	}
+//æŸ¥è¯¢æŒ‰é’®äº‹ä»¶
 function doSearch() {
 	//alert(specialAdm);
      var queryParams = $('#patientListTable').datagrid('options').queryParams;
      queryParams.StartDate = $("#inputCreateDateStart").datetimebox('getText');;
      queryParams.EndDate = $("#inputCreateDateEnd").datetimebox('getText');;
      queryParams.MedicareNo = $("#mrNo").val();
+     queryParams.RegNo = $("#regNo").val();
+     queryParams.PatName = $("#patName").val();
+     queryParams.Diagnos = $("#Diagnos").val();
 	 queryParams.ALocID = $("#ctLocID").combobox('getValue');
 	 queryParams.AdmStatus = "D";
      queryParams.SpecialAdm = $("#specialAdm").combobox('getValues').join(); 
-
+	 queryParams.ischecked = $("input[name='Devaluated']:checked").val();
+         if (SSGroupID==KSSGroup)
+        {
+	   queryParams.ALocID=Locid;
+       }
      $('#patientListTable').datagrid('options').queryParams = queryParams;
      $('#patientListTable').datagrid('reload');			   
     
 }
 
+//é‡ç½®æŸ¥è¯¢æ¡ä»¶  åªé‡ç½®ç§‘å®¤
+function doReset(){
+	initcombox()	
+}
 
 
 

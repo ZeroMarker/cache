@@ -30,6 +30,9 @@ function InitHISUIWinEvent(obj){
 		$("#delIcon").on('click',function(){
 			obj.btnDelete_click();
 		});
+		$("#syncIcon").on('click',function(){
+			obj.btnSync_click();	
+		})
 	};	
 	//双击编辑事件
 	obj.gridProduct_onDbselect = function(rd){
@@ -91,6 +94,7 @@ function InitHISUIWinEvent(obj){
 		}else {
 			$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
 			obj.RecRowID = flg;
+			$HUI.dialog('#winProEdit').close();
 			obj.dictList.reload() ;//刷新当前页
 		}
 	}
@@ -134,5 +138,23 @@ function InitHISUIWinEvent(obj){
 		}
 		$HUI.dialog('#winProEdit').open();
 	}
+	//同步医院信息将同时同步医院组信息
+	obj.btnSync_click = function(){
+		var ret = $m({
+			ClassName:"DHCMA.Util.EPS.HospitalSrv",
+			MethodName:"SyncHospAndGroupInfo",
+			aSysCode:"HIS01"
+		},false);
+		
+		if(parseInt(ret)>0){
+			$.messager.alert("提示", "同步医院组信息成功!", 'info');
+			obj.dictList.reload() ;//刷新当前页
+			return;	
+		}else{
+			$.messager.alert("提示", "同步医院组信息失败，请重试!", 'error');
+			return;	
+		}	
+	}
+	
 }
 

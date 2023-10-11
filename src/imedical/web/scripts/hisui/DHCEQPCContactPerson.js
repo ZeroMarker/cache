@@ -3,7 +3,10 @@ var SelectedRow = -1;
 var rowid=0;
 document.body.onload = BodyLoadHandler;
 function BodyLoadHandler() 
-{	
+{
+	initPanelHeaderStyle();
+	initButtonColor();
+	//hidePanelTitle();
 	InitMessage();	
 	InitButton(false);
 	KeyUp("SourceDesc","N");
@@ -20,6 +23,8 @@ function BodyLoadHandler()
 	{
 		disableElement("SourceDesc",true);
 	}
+	singlelookup("SourceDesc","PLAT.L.Vendor",[{name:"Name",type:1,value:"SourceDesc"},{name:"SourceType",type:1,value:"SourceType"}],GetVendorID); //add by sjh BUG0032 2020-09-01
+
 } 
 
 function InitButton(isselected)
@@ -125,6 +130,9 @@ function BFind_Click()
 	val=val+"&Hold5="+GetElementValue("Hold5")
 	val=val+"&SourceFlag="+GetElementValue("SourceFlag")		//modified by czf 20200404
 	val=val+"&SourceID="+GetElementValue("SourceID")
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		val += "&MWToken="+websys_getMWToken()
+	}
 	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQPCContactPerson"+val;
 }
 
@@ -143,7 +151,11 @@ function BUpdate_Click()
 	{	location.reload();	}
 	else
 	{
-		alertShow("SQLCODE="+result);
+		if (result=="-3003"){	//czf 2261263
+			messageShow("","","",t['-3003']);
+		}else{
+			alertShow("SQLCODE="+result);
+		}
 	}
 }
 
@@ -152,10 +164,10 @@ function BDelete_Click()
 	rowid=GetElementValue("RowID");
 	if (rowid=="")
 	{
-		messageShow("","","",t['-3002']);
+		messageShow("","","",t['-3002']);		//请选择行删除
 		return;
 	}
-	var truthBeTold = window.confirm(t['-3001']);
+	var truthBeTold = window.confirm(t['-3001']);	//是否删除
     if (!truthBeTold) return;
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="")

@@ -27,33 +27,35 @@ function InitDict() {
 	// 初始化-多选下拉框
 	PHA.ComboBox("conMultiDocLoc", {
 		multiple: true,
-		rowStyle: 'checkbox', //显示成勾选行形式,不要勾选框就注释
+		rowStyle: 'checkbox', 
 		url: PHA_STORE.DocLoc().url
 	});
 	
 	PHA.ComboBox("conMultiAntDrugLevel", {
 		multiple: true,
-		rowStyle: 'checkbox', //显示成勾选行形式,不要勾选框就注释
+		rowStyle: 'checkbox', 
 		width:156,
 		url: PRC_STORE.PCNTSAntiLevel()
 	});
 	PHA.ComboBox("conMultiBillType", {
 		multiple: true,
-		rowStyle: 'checkbox', //显示成勾选行形式,不要勾选框就注释
+		rowStyle: 'checkbox', 
 		url: PHA_STORE.PACAdmReason().url
 	});
 	PHA.ComboBox("conMultiPosion", {
 		multiple: true,
-		rowStyle: 'checkbox', //显示成勾选行形式,不要勾选框就注释
+		rowStyle: 'checkbox', 
 		url: PRC_STORE.PCNTSPoison()
 	});
 	
-	var opts=$.extend({},{width:160},PHA_STORE.ArcItmMast());
-	PHA.LookUp("conMultiArcDesc", opts);
+	var opts=$.extend({},PHA_STORE.ArcItmMast());
+	opts.width = 160;
+	opts.panelWidth = 450;
+	PHA.ComboGrid("conMultiArcDesc", opts);
 	
 	PHA.ComboBox("conMultiPhaLoc", {
 		multiple: true,
-		rowStyle: 'checkbox', //显示成勾选行形式,不要勾选框就注释
+		rowStyle: 'checkbox', 
 		url: PHA_STORE.Pharmacy("").url
 	});
 	// 初始化-下拉框
@@ -96,9 +98,12 @@ function InitDict() {
 		}, {
 			RowId: "Percent",
 			Description: "百分比"
+		}, {
+			RowId: "LocRandom",
+			Description: "科室随机数"
 		}],
 		panelHeight: "auto",
-		width:85
+		width:110
 	});
 	
 	// 初始化-下拉树
@@ -264,11 +269,22 @@ function Query(){
 	var saveParStr = GetSaveParStr() ;
 	PHA.Loading("Show") 
 	var pid = tkMakeServerCall("PHA.PRC.Create.IPGeneral", "JobGetLeavePersonNum", queryParStr, saveParStr, logonLocId);
-	// 调后台,5s一次
-	var jobInterval = setInterval(function() {
-		var jobRet = tkMakeServerCall("PHA.PRC.Com.Util", "JobRecieve", pid);
-		if (jobRet != "") {
-			clearInterval(jobInterval);
+	// 调后台,3s一次
+	setTimeout('JobRecieve('+pid+')', 3000);
+}
+
+function JobRecieve(pid) {
+	$cm({
+		ClassName: "PHA.PRC.Com.Util",
+		MethodName: "JobRecieve",
+		pid: pid,
+		dataType: 'text'
+	}, function(jobRet){
+		if (jobRet == "-1"){
+			setTimeout(function(){
+				JobRecieve(pid);
+			}, 2000);
+		} else {
 			PHA.Loading("Hide")
 			var jobRetArr = jobRet.split("^");
 			var jobRetSucc = jobRetArr[0];
@@ -284,9 +300,9 @@ function Query(){
 				}
 			}
 		}
-	},5000);
-	
+	})
 }
+
 
 function ComfirmClear(){
 	var comInfo = "您确认要清除吗?"
@@ -305,7 +321,7 @@ function Clear(){
 	$("#conMultiAntDrugLevel").combobox("setValue",'');	
 	$("#conMultiPosion").combobox("setValue",'');
 	$("#conDoctor").combobox("setValue",'');	
-	$("#conMultiArcDesc").val('');	
+	$("#conMultiArcDesc").combogrid('setValue','');	
 	$("#conAgeMin").val(''); 
 	$("#conAgeMax").val(''); 		
 	//$('#chkBasicFlag').iCheck('uncheck') ;
@@ -378,7 +394,13 @@ function Save(){
 
 //下载导入模板
 function DownLoadModel(){
-	window.open("../scripts/pha/prc/v2/住院医嘱点评导入模板.xlsx", "_blank");	
+	var modelA = document.getElementById('downloadModel');
+	if(!modelA){
+		modelA = document.createElement('a');
+		modelA.id = "downloadModel";
+	}
+	modelA.href = "../scripts/pha/prc/v2/住院医嘱点评导入模板.xlsx";
+	modelA.click();
 }
 
 function GetQueryParStr(){
@@ -392,7 +414,7 @@ function GetQueryParStr(){
 	var antiLevelStr = $("#conMultiAntDrugLevel").combobox('getValues')||'';		//抗菌药物级别
 	var poisonStr = $("#conMultiPosion").combobox('getValues')||'';		//管制分类
 	var doctorId = $("#conDoctor").combobox('getValue')||'';			//医生
-	var arcimId = $("#conMultiArcDesc").lookup('getValue')||'';			//医嘱名称
+	var arcimId = $("#conMultiArcDesc").combogrid('getValue')||'';			//医嘱名称
 	var ageMin = $.trim($("#conAgeMin").val())||''; 					//年龄下限
 	var ageMax = $.trim($("#conAgeMax").val())||''; 					//年龄上限
 	var basicFlag = ""			//基本药物标志
@@ -416,19 +438,20 @@ function GetQueryParStr(){
 function GetSaveParStr(){
 	var wayCode = "IP"		//点评方式代码
 	//var savenum = $.trim($("#conSaveText").val())||'';
-	var rnum="",pcent=""
+	var rnum="",pcent="",docrnum=""
 	//var savetype = $("input[name='saveType']:checked").val();
 	var savetype = $("#conSaveType").combobox('getValue')||'';
 	var conTxt = $.trim($("#conSaveTxt").val())||'';	
     if (savetype=="Random"){
 		var rnum = conTxt;	
-	}
-	else{
+	}else if(savetype=="Percent") {
 		var pcent = conTxt;	
+	}else {	
+		var docrnum = conTxt;
 	}
 	var spaceqty = $.trim($("#conSpaceQty").val())||'';		//间隔数
 	
-	var saveparstr = wayCode +"^"+ rnum +"^"+ pcent +"^"+ spaceqty	
+	var saveparstr = wayCode +"^"+ rnum +"^"+ pcent +"^"+ spaceqty +"^"+ docrnum;
 	
 	return saveparstr
 	
@@ -460,21 +483,29 @@ function CheckBeforeSave() {
 		PHA.Alert('提示', "出院人数为0,没有可抽取的出院病历,请先统计出院人数!", 'warning');
 		return -1;
 	}
-	var rnum="",pcent=""
+	var rnum="",pcent="",docrnum=""
 	var savetype = $("#conSaveType").combobox('getValue')||'';
-	var conTxt = $.trim($("#conSaveTxt").val())||'';	
-    if (savetype=="Random"){
+	var conTxt = $.trim($("#conSaveTxt").val())||'';
+	if (savetype=="Random"){
 		var rnum = conTxt;	
 	}
-	else{
+	else if(savetype=="Percent") {
 		var pcent = conTxt;	
 	}
-	if ((rnum=="")&&(pcent=="")){
+	else {	
+		var docrnum = conTxt;
+	}
+	if ((rnum=="")&&(pcent=="")&&(docrnum=="")){
 		PHA.Alert('提示', "请先填写随机数或者百分比!", 'warning');
 		return -1;		
 	}
-	if ((!(rnum>0))&&(!(pcent>0))){
+	if ((!(rnum>0))&&(!(pcent>0))&&(!(docrnum>0))){
 		PHA.Alert('提示', "填写的随机数或者百分比格式不正确，请修改后重试!", 'warning');
+		return -1;		
+	}
+	var docrnumstr = docrnum.split(".")
+	if (docrnumstr[0] !== docrnum){
+		PHA.Alert('提示', "填写的科室随机数不能为小数，请修改后重试!", 'warning');
 		return -1;		
 	}
 	var rnumstr = rnum.split(".")
@@ -532,14 +563,17 @@ function GetSpaceQty()
 {
 	var spaceQty = $.trim($("#conSpaceQty").val())||'';
 	var maxnum = $.trim($("#conLeaveNum").val())||'';		//统计处方总数
-	var rnum="",pcent=""
+	var rnum="",pcent="",docrnum=""
 	var savetype = $("#conSaveType").combobox('getValue')||'';
 	var conTxt = $.trim($("#conSaveTxt").val())||'';	
     if (savetype=="Random"){
 		var rnum = conTxt;	
 	}
-	else{
+	else if (savetype=="Percent"){
 		var pcent = conTxt;	
+	}
+	else{
+		var docrnum = conTxt; 
 	}
 	if (rnum != "") {
 		var writeqty = rnum;

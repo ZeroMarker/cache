@@ -5,11 +5,11 @@ var gLocId=session['LOGON.CTLOCID'];
 var gGroupId=session['LOGON.GROUPID'];
 
 var PhaLoc=new Ext.ux.LocComboBox({
-	fieldLabel : '<font color=blue>科室</font>',
+	fieldLabel : '<font color=blue>'+$g('科室')+'</font>',
 	id : 'PhaLoc',
 	name : 'PhaLoc',
 	anchor : '90%',
-	emptyText : '科室...',
+	emptyText : $g('科室...'),
 	groupId:gGroupId,
 		listeners : {
 			'select' : function(e) {
@@ -24,7 +24,7 @@ var PhaLoc=new Ext.ux.LocComboBox({
 });
 
 var DateFrom = new Ext.ux.DateField({
-	fieldLabel : '<font color=blue>开始日期</font>',
+	fieldLabel : '<font color=blue>'+$g('开始日期')+'</font>',
 	id : 'DateFrom',
 	name : 'DateFrom',
 	anchor : '90%',
@@ -32,7 +32,7 @@ var DateFrom = new Ext.ux.DateField({
 });
 	
 var DateTo = new Ext.ux.DateField({
-	fieldLabel : '<font color=blue>截止日期</font>',
+	fieldLabel : '<font color=blue>'+$g('截止日期')+'</font>',
 	id : 'DateTo',
 	name : 'DateTo',
 	anchor : '90%',
@@ -42,7 +42,7 @@ var DateTo = new Ext.ux.DateField({
 // 药品类组
 var StkGrpField = new Ext.ux.StkGrpComboBox({
 	id:'StkGrpType',
-	fieldLabel:'类组',
+	fieldLabel:$g('类组'),
 	StkType:App_StkTypeCode,     //标识类组类型
 	LocId:gLocId,
 	UserId:gUserId,
@@ -52,13 +52,13 @@ var StkGrpField = new Ext.ux.StkGrpComboBox({
 // 调整原因
 var AdjReasonField = new Ext.form.ComboBox({
 	id:'AdjustField',
-	fieldLabel:'调整原因',
+	fieldLabel:$g('调整原因'),
 	listWidth:200,
 	allowBlank:true,
 	store:ReasonForAdjustMentStore,
 	valueField:'RowId',
 	displayField:'Description',
-	emptyText:'调整原因...',
+	emptyText:$g('调整原因...'),
 	triggerAction:'all',
 	emptyText:'',
 	minChars:1,
@@ -72,7 +72,7 @@ var AdjReasonField = new Ext.form.ComboBox({
 ReasonForAdjustMentStore.load();
 
 var IncDesc = new Ext.form.TextField({
-	fieldLabel : '药品名称',
+	fieldLabel : $g('药品名称'),
 	id : 'IncDesc',
 	name : 'IncDesc',
 	anchor : '90%',
@@ -88,7 +88,7 @@ var IncDesc = new Ext.form.TextField({
 });
 
 var InciDr = new Ext.form.TextField({
-	fieldLabel : '药品RowId',
+	fieldLabel : $g('药品RowId'),
 	id : 'InciDr',
 	name : 'InciDr',
 	anchor : '90%',
@@ -96,8 +96,8 @@ var InciDr = new Ext.form.TextField({
 });
 	
 var findINAdjBT = new Ext.Toolbar.Button({
-	text:'查询',
-    tooltip:'查询',
+	text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
 	width : 70,
 	height : 30,
@@ -107,8 +107,8 @@ var findINAdjBT = new Ext.Toolbar.Button({
 });
 
 var printAdjBT = new Ext.Toolbar.Button({
-	text:'打印',
-    tooltip:'打印',
+	text:$g('打印'),
+    tooltip:$g('打印'),
     iconCls:'page_print',
 	width : 70,
 	height : 30,
@@ -118,8 +118,8 @@ var printAdjBT = new Ext.Toolbar.Button({
 });
 
 var exportINAdjBT = new Ext.Toolbar.Button({
-	text:'另存',
-    tooltip:'另存',
+	text:$g('另存'),
+    tooltip:$g('另存'),
     iconCls:'page_export',
 	width : 70,
 	height : 30,
@@ -129,8 +129,8 @@ var exportINAdjBT = new Ext.Toolbar.Button({
 });
 
 var clearINAdjBT = new Ext.Toolbar.Button({
-	text:'清屏',
-    tooltip:'清屏',
+	text:$g('清屏'),
+    tooltip:$g('清屏'),
     iconCls:'page_clearscreen',
 	width : 70,
 	height : 30,
@@ -148,7 +148,7 @@ var formPanel = new Ext.form.FormPanel({
     tbar:[findINAdjBT,'-',clearINAdjBT,'-',printAdjBT,'-',exportINAdjBT],
 	items:[{
 		xtype:'fieldset',
-		title:'查询条件',
+		title:$g('查询条件'),
 		layout:'column',
 		style:'padding:5px 0px 0px 0px',
 		defaults:{border:false},
@@ -189,70 +189,70 @@ var DetailStore=new Ext.data.JsonStore({
 var nm=new Ext.grid.RowNumberer();
 var DetailCm=new Ext.grid.ColumnModel([nm,
     {
-		header:'药品代码',
+		header:$g('药品代码'),
 		dataIndex:'InciCode',
 		width:100,
 		sortable:true
 	},{
-		header:'药品名称',
+		header:$g('药品名称'),
 		dataIndex:'InciDesc',
 		width:200,
 		sortable:true
 	},{
-		header:'调整数量',
+		header:$g('调整数量'),
 		dataIndex:'AdjQty',
 		width:80,
 		align:'right',
 		sortable:true
 	},{
-		header:'单位',
+		header:$g('单位'),
 		dataIndex:'AdjUom',
 		width:80,
 		align:'right',
 		sortable:false
 	},{
-		header:'调整数量(基本)',
+		header:$g('调整数量(基本)'),
 		dataIndex:'bAdjQty',
 		width:100,
 		align:'right',
 		sortable:false
 	},{
-		header:'单位(基本)',
+		header:$g('单位(基本)'),
 		dataIndex:'bUomDesc',
 		width:80,
 		align:'right',
 		sortable:false
 	},{
-		header:'进价',
+		header:$g('进价'),
 		dataIndex:'Rp',
 		width:60,
 		align:'right',
 		sortable:false
 	},{
-		header:'进价金额',
+		header:$g('进价金额'),
 		dataIndex:'RpAmt',
 		width:100,
 		align:'right',
 		sortable:true
 	},{
-		header:'售价',
+		header:$g('售价'),
 		dataIndex:'Sp',
 		width:60,
 		align:'right',
 		sortable:false
 	},{
-		header:'售价金额',
+		header:$g('售价金额'),
 		dataIndex:'SpAmt',
 		width:100,
 		align:'right',
 		sortable:true
 	},{
-		header:'厂商',
+		header:$g('生产企业'),
 		dataIndex:'Manf',
 		width:200,
 		sortable:false
 	},{
-		header:'规格',
+		header:$g('规格'),
 		dataIndex:'Spec',
 		width:100,
 		sortable:false
@@ -264,17 +264,17 @@ var PagingToolBar=new Ext.PagingToolbar({
 	store:DetailStore,
 	displayInfo:true,
 	pageSize:PageSize,
-	displayMsg:"当前记录{0}---{1}条  共{2}条记录",
-	emptyMsg:"没有数据",
-	firstText:'第一页',
-	lastText:'最后一页',
-	prevText:'上一页',
-	refreshText:'刷新',
-	nextText:'下一页'		
+	displayMsg:$g("当前记录{0}---{1}条  共{2}条记录"),
+	emptyMsg:$g("没有数据"),
+	firstText:$g('第一页'),
+	lastText:$g('最后一页'),
+	prevText:$g('上一页'),
+	refreshText:$g('刷新'),
+	nextText:$g('下一页')		
 });
 	
 var DetailGrid=new Ext.grid.GridPanel({
-	title:'明细',
+	title:$g('明细'),
 	id:'DetailGrid',
 	height : 140,
 	region:'center',
@@ -340,7 +340,7 @@ function FindAdjustStat()
 	var EndDate=Ext.getCmp("DateTo").getValue()
 	if(StartDate==""||EndDate=="")
 	{
-		Msg.info("warning", "开始日期和截止日期不能空！");
+		Msg.info("warning", $g("开始日期和截止日期不能空！"));
 		return;
 	}
 	var StartDate=Ext.getCmp("DateFrom").getValue().format(App_StkDateFormat).toString();;
@@ -348,15 +348,15 @@ function FindAdjustStat()
 	var LocId=Ext.getCmp("PhaLoc").getValue();		
 
 	if(LocId==null || LocId==""){
-		Msg.info("warning","科室不能为空!");
+		Msg.info("warning",$g("科室不能为空!"));
 		return;
 	}
 	if(StartDate==null || StartDate==""){
-		Msg.info("warning","开始日期不能为空!");
+		Msg.info("warning",$g("开始日期不能为空!"));
 		return;
 	}
 	if(EndDate==null || EndDate==""){
-		Msg.info("warning","截止日期不能为空!");
+		Msg.info("warning",$g("截止日期不能为空!"));
 		return;
 	}
 	
@@ -409,15 +409,15 @@ function getParaList()
 	var LocDesc=Ext.getCmp("PhaLoc").getRawValue();		
 	
 	if(LocId==null || LocId==""){
-		Msg.info("warning","科室不能为空!");
+		Msg.info("warning",$g("科室不能为空!"));
 		return;
 	}
 	if(StartDate==null || StartDate==""){
-		Msg.info("warning","开始日期不能为空!");
+		Msg.info("warning",$g("开始日期不能为空!"));
 		return;
 	}
 	if(EndDate==null || EndDate==""){
-		Msg.info("warning","截止日期不能为空!");
+		Msg.info("warning",$g("截止日期不能为空!"));
 		return;
 	}
 
@@ -441,7 +441,7 @@ Ext.onReady(function(){
 	Ext.QuickTips.init();
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;	
 	var panel = new Ext.Panel({
-		title:'库存调整统计',
+		title:$g('库存调整统计'),
 		activeTab:0,
 		layout:'fit',
 		region:'north',

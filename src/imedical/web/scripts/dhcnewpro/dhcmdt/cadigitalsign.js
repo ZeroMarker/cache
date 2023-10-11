@@ -98,4 +98,15 @@ function isTakeDigSign(){
 function GetCertNo(key){
 	var par=key.split('/');
 	return par[0];
-	}
+}
+
+//专家是否已经签过名了
+function IsgetsignmdtSIGNID(ItmID)
+{  
+    var IsCASign = "";
+	runClassMethod("web.DHCMDTSignVerify","IsgetsignmdtSIGNID",{"mdtID":ItmID},function(jsonString){
+		IsCASign = jsonString;     
+	},'',false)
+	return IsCASign;
+	
+}

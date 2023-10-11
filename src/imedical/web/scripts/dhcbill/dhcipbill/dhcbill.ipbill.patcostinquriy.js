@@ -1,8 +1,8 @@
-/**
+Ôªø/**
  * FileName: dhcbill.ipbill.patcostinquriy.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2018-06-27
- * Description: ø∆ “∑—”√≤È—Ø
+ * Description: ÁßëÂÆ§Ë¥πÁî®Êü•ËØ¢
  */
 
 $(function () {
@@ -14,216 +14,271 @@ $(function () {
 });
 
 function initQueryMenu() {
-	$HUI.linkbutton('#btn-find', {
+	$HUI.linkbutton("#btn-find", {
 		onClick: function () {
-			find_Click();
+			findClick();
+		}
+	});
+
+	//ÂºÄÂçïÁßëÂÆ§, ÂåªÂò±Êé•Êî∂ÁßëÂÆ§
+	$HUI.combobox("#userDept, #recDept", {
+		panelHeight: 150,
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryDept&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
+		valueField: 'id',
+		textField: 'text',
+		defaultFilter: 5,
+		blurValidValue: true,
+		filter: function(q, row) {
+			var opts = $(this).combobox("options");
+			var mCode = false;
+			if (row.contactName) {
+				mCode = row.contactName.toUpperCase().indexOf(q.toUpperCase()) >= 0
+			}
+			var mValue = row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0;
+			return mCode || mValue;
+		}
+	});
+}
+
+function initTabs() {
+	$.cm({
+		ClassName: "web.DHCIPBillPATCostInquriy",
+		QueryName: "QryAdmTransLoc",
+		ResultSetType: "array",
+		adm: GV.EpisodeID
+	}, function (data) {
+		data.forEach(function(item) {
+			var deptId = item.id;
+			var dept = item.text;
+			if ($("#tabItem").tabs("exists", item.text)) {
+				return true;
+			}
+			var dgId = deptId + "-List";
+			$("#tabItem").tabs("add", {
+				title: dept,
+				id: deptId,
+				closable: false,
+				content: "<table id=\"" + dgId + "\"></table>"
+			});
+			$HUI.datagrid("#" + dgId, {
+				fit: true,
+				border: false,
+				singleSelect: true,
+				url: $URL,
+				toolbar: [],
+				pageSize: 999999999,
+				className: "web.DHCIPBillPATCostInquriy",
+				queryName: "FindBillCateFee",
+				onColumnsLoad: function(cm) {
+					for (var i = (cm.length - 1); i >= 0; i--) {
+						if (cm[i].field == "TCateId") {
+							cm[i].hidden = true;
+						}
+						if (!cm[i].width) {
+							cm[i].width = 150;
+						}
+					}
+				},
+				queryParams: {
+					ClassName: "web.DHCIPBillPATCostInquriy",
+					QueryName: "FindBillCateFee",
+					billId: GV.BillRowID,
+					stDate: getValueById("stDate"),
+					endate: getValueById("endDate"),
+					ordDeptId: deptId,
+					episodeId: GV.EpisodeID,
+					userDeptId: getValueById("userDept"),
+					recDeptId: getValueById("recDept")
+				},
+				onSelect: function (index, row) {
+					if (row.TCateId != "") {
+						loadOrdItmList(row);
+					}
+				}
+			});
+		});
+
+		if (data.length > 0) {
+			$("#tabItem").tabs({
+				selected: 1
+			});
 		}
 	});
 }
 
 /**
- * º”‘ÿtabs
- * @method initTabs
- * @author ZhYW
- */
-function initTabs() {
-	$.m({
-		ClassName: 'web.DHCIPBillPATCostInquriy',
-		MethodName: 'GetTransLoc',
-		episodeId: GV.EpisodeID
-	}, function (rtn) {
-		var myAry = rtn.split('#');
-		$.each(myAry, function (index, itm) {
-			var deptId = itm.split('^')[0];
-			var deptDesc = itm.split('^')[1];
-			if (!$('#tabItem').tabs('exists', deptDesc)) {
-				$('#tabItem').tabs('add', {
-					title: deptDesc,
-					id: deptId.replace('.', 'c'),
-					closable: false,
-					content: '<table id=\"' + deptId.replace('.', 'c') + 'table' + '\"></table>'
-				});
-				$HUI.datagrid('#' + deptId.replace('.', 'c') + 'table', {
-					fit: true,
-					striped: true,
-					border: false,
-					singleSelect: true,
-					url: $URL,
-					toolbar: [],
-					pageSize: 999999999,
-					columns: [[{field: 'TCateDesc', title: '“Ω÷ˆ¥Û¿‡', width: 150},
-							   {field: 'TCateAmt', title: 'Ω∂Ó', align: 'right', width: 150, formatter: formatAmt},
-							   {field: 'TCateId', title: 'TCateId', hidden: true}
-						]],
-					queryParams: {
-						ClassName: 'web.DHCIPBillPATCostInquriy',
-						QueryName: 'FindBillOrderDetail',
-						billNo: GV.BillRowID,
-						stDate: getValueById("stDate"),
-						endate: getValueById("endDate"),
-						deptIdStr: deptId,
-						episodeId: GV.EpisodeID
-					},
-					onSelect: function (rowIndex, rowData) {
-						if (rowData.TCateDesc != '∫œº∆') {
-							loadOrdItmList(rowData);
-						}
-					}
-				});
-			}
-			$('#tabItem').tabs({
-				selected: 1
-			});
-		});
-	});
-}
-
-/**
-* “Ω÷ˆœÓ¡–±Ì
+* ÂåªÂò±È°πÂàóË°®
 */ 
 function initOrdItmList() {
-	$HUI.datagrid('#ordItmList', {
+	$HUI.datagrid("#ordItmList", {
 		fit: true,
-		striped: true,
 		iconCls: 'icon-paper',
 		headerCls: 'panel-header-gray',
-		title: '“Ω÷ˆœÓ¡–±Ì',
+		title: 'ÂåªÂò±È°πÂàóË°®',
 		singleSelect: true,
 		fitColumns: true,
 		pagination: true,
 		rownumbers: true,
-		pageSize: 15,
-		pageList: [15, 20, 25, 30],
+		pageSize: 20,
 		toolbar: [],
-		data: [],
-		columns: [[{title: '“Ω÷ˆ¥Û¿‡', field: 'TCateDesc', width: 80},
-				   {title: '“Ω÷ˆ√˚≥∆', field: 'TArcimDesc', width: 180},
-				   {title: 'µ•Œª', field: 'TUom', width: 60},
-				   {title: 'µ•º€', field: 'TPrice', align: 'right', width: 100},
-				   {title: ' ˝¡ø', field: 'TQty', width: 80},
-				   {title: 'Ω∂Ó', field: 'TAmt', align: 'right', width: 100, formatter: formatAmt},
-				   {title: '“Ω÷ˆœÓID', field: 'TARCIM', width: 100},
-				   {title: '“Ω÷ˆID', field: 'TOEORI', hidden: true}
-			]],
+		className: "web.DHCIPBillPATCostInquriy",
+		queryName: "FindOrderDetail",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if (cm[i].field == "TOEORI") {
+					cm[i].hidden = true;
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if (cm[i].field == "TArcimDesc") {
+						cm[i].width = 180;
+					}
+				}
+			}
+		},
 		onLoadSuccess: function (data) {
 			$("#oeItmList").datagrid("loadData", {
 				total: 0,
 				rows: []
 			});
 		},
-		onSelect: function (rowIndex, rowData) {
-			loadOEItmList(rowData);
+		onSelect: function (index, row) {
+			loadOEItmList(row);
 		}
 	});
 }
 
 /**
-* ÷¥––º«¬º¡–±Ì
+* ÊâßË°åËÆ∞ÂΩïÂàóË°®
 */
 function initOEItmList() {
-	$HUI.datagrid('#oeItmList', {
+	$HUI.datagrid("#oeItmList", {
 		fit: true,
-		striped: true,
 		iconCls: 'icon-paper-tri',
 		headerCls: 'panel-header-gray',
-		title: '÷¥––º«¬º¡–±Ì',
+		title: 'ÊâßË°åËÆ∞ÂΩïÂàóË°®',
 		singleSelect: true,
 		pagination: true,
 		rownumbers: true,
-		pageSize: 15,
-		pageList: [15, 20, 25, 30],
+		pageSize: 20,
 		toolbar: [],
-		data: [],
-		columns: [[{field: 'TordPrior', title: '“Ω÷ˆ¿‡–Õ', width: 80},
-				   {field: 'TExStDate', title: '“™«Û÷¥–– ±º‰', width: 160,
-				   	formatter: function (value, row, index) {
-						return value + " " + row.TExStTime;
+		className: "web.DHCIPBillPATCostInquriy",
+		queryName: "FindOrdExecInfo",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["TExStDate", "TExecDate", "TConfFlag"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if (cm[i].field == "TExStTime") {
+					cm[i].formatter = function(value, row, index) {
+				   		return row.TExStDate + " " + value;
 					}
-				   },
-				   {field: 'DateExecuted', title: '÷¥–– ±º‰', width: 160,
-				    formatter: function (value, row, index) {
-						return value + " " + row.TimeExecuted;
+				}
+				if (cm[i].field == "TExecTime") {
+					cm[i].formatter = function(value, row, index) {
+				   		return row.TExecDate + " " + value;
 					}
-				   },
-				   {field: 'UserAddDesc', title: 'ø™“Ω÷ˆ»À', width: 80},
-				   {field: 'OrderStatus', title: '◊¥Ã¨', width: 80},
-				   {field: 'CareProvDesc', title: '¥¶¿Ì»À', width: 80},
-				   {field: 'UserDeptDesc', title: 'ø™µ•ø∆ “', width: 100},
-				   {field: 'TBillFlag', title: '’Àµ•◊¥Ã¨', width: 80},
-				   {field: 'TPatamt', title: 'Ω∂Ó', width: 100, align: 'right', formatter: formatAmt},
-				   {field: 'TCollectQty', title: '∑¢“© ˝¡ø', width: 70},
-				   {field: 'TRefundQty', title: 'ÕÀ“© ˝¡ø', width: 70},
-				   {field: 'TPBORowID', title: '’Àµ•“Ω÷ˆID', width: 100},
-				   {field: 'TOrdExcRowID', title: '÷¥––º«¬ºID', width: 100}
-			]]
+				}
+				if (!cm[i].width) {
+					cm[i].width = 80;
+					if ($.inArray(cm[i].field, ["TExStTime", "TExecTime"]) != -1) {
+						cm[i].width = 160;
+					}
+				}
+			}
+		}
 	});
 }
 
 /**
- * ÷ÿ–¬º”‘ÿ“Ω÷ˆgrid
+ * ÈáçÊñ∞Âä†ËΩΩÂåªÂò±grid
  * @method loadOrdItmList
  * @author ZhYW
  */
-function loadOrdItmList(rowData) {
-	if (!rowData) {
+function loadOrdItmList(row) {
+	if (!row) {
 		return;
 	}
-	var itemCateId = rowData.TCateId;
-	var tabObj = $('#tabItem').tabs('getSelected');
-	var tabId = tabObj.panel('options').id;
-	var deptIdStr = tabId.replace('c', '.');
+	var itemCateId = row.TCateId;
+	var tabObj = $("#tabItem").tabs("getSelected");
+	var deptId = tabObj.panel("options").id;
 	var queryParams = {
-		ClassName: 'web.DHCIPBillPATCostInquriy',
-		QueryName: 'FindIPPatOrderDetail',
-		billNo: GV.BillRowID,
+		ClassName: "web.DHCIPBillPATCostInquriy",
+		QueryName: "FindOrderDetail",
+		billId: GV.BillRowID,
 		stDate: getValueById("stDate"),
 		endDate: getValueById("endDate"),
-		deptIdStr: deptIdStr,
+		ordDeptId: deptId,
 		episodeId: GV.EpisodeID,
-		itemCateId: itemCateId
+		itemCateId: itemCateId,
+		userDeptId: getValueById("userDept"),
+		recDeptId: getValueById("recDept")
 	};
-	loadDataGridStore('ordItmList', queryParams);
+	loadDataGridStore("ordItmList", queryParams);
 }
 
 /**
- * ÷ÿ–¬º”‘ÿ÷¥––º«¬ºgrid
+ * ÈáçÊñ∞Âä†ËΩΩÊâßË°åËÆ∞ÂΩïgrid
  * @method loadOEItmList
  * @author ZhYW
  */
-function loadOEItmList(rowData) {
-	if (!rowData) {
+function loadOEItmList(row) {
+	if (!row) {
 		return;
 	}
-	var ordItmStr = rowData.TOEORI;
 	var queryParams = {
-		ClassName: 'web.DHCIPBillPATCostInquriy',
-		QueryName: 'FindOrdExecInfo',
-		ordItmStr: ordItmStr,
-		billNo: GV.BillRowID
+		ClassName: "web.DHCIPBillPATCostInquriy",
+		QueryName: "FindOrdExecInfo",
+		ordItmStr: row.TOEORI,
+		billId: GV.BillRowID
 	};
-	loadDataGridStore('oeItmList', queryParams);
+	loadDataGridStore("oeItmList", queryParams);
 }
 
 /**
- * ≤È—Ø∞¥≈•µ„ª˜ ¬º˛
- * @method find_Click
+ * Êü•ËØ¢ÊåâÈíÆÁÇπÂáª‰∫ã‰ª∂
+ * @method findClick
  * @author ZhYW
  */
-function find_Click() {
-	var tabs = $('#tabItem').tabs('tabs');
-	$.each(tabs, function (index, tab) {
+function findClick() {
+	$.each($("#tabItem").tabs("tabs"), function (index, tab) {
 		if (index > 0) {
-			var tabId = tab.panel('options').id;
-			var deptIdStr = tabId.replace('c', '.');
-			$('#' + tabId + 'table').datagrid('load', {
-				ClassName: 'web.DHCIPBillPATCostInquriy',
-				QueryName: 'FindBillOrderDetail',
-				billNo: GV.BillRowID,
+			var deptId = tab.panel("options").id;
+			$("#" + deptId + "-List").datagrid("load", {
+				ClassName: "web.DHCIPBillPATCostInquriy",
+				QueryName: "FindBillCateFee",
+				billId: GV.BillRowID,
 				stDate: getValueById("stDate"),
 				endDate: getValueById("endDate"),
-				deptIdStr: deptIdStr,
-				episodeId: GV.EpisodeID
+				ordDeptId: deptId,
+				episodeId: GV.EpisodeID,
+				userDeptId: getValueById("userDept"),
+				recDeptId: getValueById("recDept")
 			});
 		}
 	});
+}
+
+/**
+ * ÊÇ£ËÄÖÂàóË°®‰∏≠ÈÄâÊã©ÊÇ£ËÄÖÂàáÊç¢
+ */
+function switchPatient(patientId, episodeId) {
+	$("#InpatListDiv").data("AutoOpen", 0);
+	GV.EpisodeID = episodeId;
+	GV.BillRowID = "";
+	getPatInfoByAdm(GV.EpisodeID);
+	closeTabs();
+	initTabs();
+}
+
+/**
+ * Ê∏ÖÈô§Èô§Á¨¨‰∏Ä‰∏™È°µÁ≠æÂ§ñÁöÑÊâÄÊúâÈ°µÁ≠æ
+ */
+function closeTabs() {
+	var tabs = $("#tabItem").tabs("tabs");
+    for(var i = 0, len = tabs.length; i < len; i++) {
+        //Âõ†‰∏∫tabsÂà†Èô§‰πãÂêé‰ºöÈáçÊñ∞ÂØπÂÖ∂ÂÖÉÁ¥†ËøõË°åÊéíÂ∫èÔºåÊâÄ‰ª•Âú®Âà†Èô§ÊñπÊ≥ïÊó∂ÂÄôÂè™ÈúÄË¶ÅËøõË°åÂà†Èô§1Âç≥ÂèØ(Âõ†‰∏∫ÊàëÊÉ≥‰øùÁïôÁ¨¨‰∏Ä‰∏™ÂÖÉÁ¥†ÔºåÂ¶ÇÊûú‰∏çÊÉ≥‰øùÁïôÂ∞±ÊîπÊàê0Âç≥ÂèØ)
+   		$("#tabItem").tabs("close", 1);
+    }
 }

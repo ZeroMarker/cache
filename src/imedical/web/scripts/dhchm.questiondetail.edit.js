@@ -9,7 +9,7 @@ $.extend($.fn.validatebox.defaults.rules, {
 	checkQDCodeExist:{
 		validator: function(value){
 			var url=$URL;  
-			var data={ClassName:'web.DHCHM.QuestionDetailSet',MethodName:'CheckQDCodeExist',Code:value};
+			var data={ClassName:'web.DHCHM.QuestionDetailSet',MethodName:'CheckQDCodeExist',Code:value,ID:$("#DID").val()};
 			var rtn=$.ajax({ url: url, async: false, cache: false, type: "post" ,data:data}).responseText;
 			return rtn==0;
 		},
@@ -42,6 +42,7 @@ var init = function(){
 		queryParams:{
 			ClassName:"web.DHCHM.QuestionDetailSet",
 			QueryName:"FindQDetail",
+			Active:"true"
 		},
 		onSelect:function(rowIndex,rowData){
 			if (rowIndex>-1){
@@ -63,15 +64,6 @@ var init = function(){
 		},	
 		columns:[[
 			{field:'QDID',hidden:true,sortable:'true'},
-			{field:'QDOperation',width:50,title:'操作',align:'center',
-				formatter:function(value,row,index){
-					return "<a href='#' onclick='openDSetsWin(\""+row.QDID+"\",\""+row.QDType+"\")'>\
-					<img style='padding-top:4px;' title='套餐关联度维护' alt='套餐关联度维护' src='../scripts_lib/hisui-0.1.0/dist/css/icons/paper_link_pen.png' border=0/>\
-					</a>";
-
-				}
-                        
-			},
 			{field:'QDCode',width:100,title:'编码'},
 			{field:'QDDesc',width:200,title:'描述'},
 			{field:'QDType',width:80,title:'类型',
@@ -114,7 +106,7 @@ var init = function(){
 				}
 			},
 			{field:'QDLinkCode',width:60,title:'关联码'},
-			{field:'QDElementNum',width:50,title:'列数'},
+			{field:'QDElementNum',hidden:true,title:'列数'},
 			{field:'QDActive',width:50,title:'激活',align:'center',
 				formatter:function(value,row,index){
 					var checked=value=="true"? "checked":"";
@@ -141,7 +133,21 @@ var init = function(){
 			text:'新增',
 			handler:function(){
 				detailClear();
-				$("#DetailEditWin").window("open");
+				//$("#DetailEditWin").window("open");
+				 $("#DetailEditWin").show();
+				 $HUI.window("#DetailEditWin", {
+        		title: "新增",
+       		 	iconCls: "icon-w-add",
+         		collapsible: false,
+        		minimizable: false,
+       			 maximizable: false,
+       			 modal: true,
+        		width: 600,
+       			 height: 335,
+       
+    			});
+
+
 			}
 		},{
 			iconCls:'icon-edit',
@@ -164,10 +170,11 @@ var init = function(){
 		url:$URL,
 		queryParams:{
 			ClassName:"web.DHCHM.QuestionDetailSet",
-			QueryName:"FindQDOption",
+			QueryName:"FindQDOption"
 		},
 		onSelect:function(rowIndex,rowData){
 			$("#OpID").val(rowData.QDOID);
+			$("#OpCode").val(rowData.QDOCode);
 			$("#OpDesc").val(rowData.QDODesc);
 			$("#OpSeq").val(rowData.QDOOrder);
 			$("#OpSex").combobox("setValue",rowData.QDOSex);
@@ -196,13 +203,11 @@ var init = function(){
 				formatter:function(value,row,index){
 					return "<a href='#' onclick='openDOLinkDWin(\""+row.QDOID+"\")'>\
 					<img   title='关联问题维护' alt='关联问题维护' style='margin-left:8px;padding-top:4px;' src='../scripts_lib/hisui-0.1.0/dist/css/icons/adm_add.png' border=0/>\
-					</a>\
-					<a href='#' onclick='openDOSetsWin(\""+row.QDOID+"\")'>\
-					<img   title='套餐关联度维护' alt='套餐关联度维护' style='margin-left:8px;padding-top:4px;' src='../scripts_lib/hisui-0.1.0/dist/css/icons/paper_link_pen.png' border=0/>\
 					</a>";
 
 				}
 			},
+			{field:'QDOCode',width:'60',title:'编码'},
 			{field:'QDODesc',width:'140',title:'描述'},
 			{field:'QDOSex',width:'60',title:'性别',
 				formatter:function(value,row,index){
@@ -258,6 +263,7 @@ function findBtn_onclick(){
 	var PDesc=$("#PDesc").val();
 	var PActive=$("#PActive").checkbox("getValue");
 	detailDataGrid.load({ClassName:"web.DHCHM.QuestionDetailSet",QueryName:"FindQDetail",Code:PCode,Desc:PDesc,Active:PActive});
+	
 }
 /**
  * 问卷内容清屏按钮点击事件
@@ -267,6 +273,8 @@ function findBtn_onclick(){
 function clearBtn_onclick(){
 	$("#PCode").val("");
 	$("#PDesc").val("");
+	$("#PActive").checkbox("setValue",true);
+	findBtn_onclick();
 }
 
 /**
@@ -295,7 +303,20 @@ function detailEdit(rowObj){
 		$("#DRequired").checkbox("uncheck");
 	}
 	$("#DRemark").val(rowObj.QDRemark);
-	$("#DetailEditWin").window("open");
+	//$("#DetailEditWin").window("open");
+	 $("#DetailEditWin").show();
+				 $HUI.window("#DetailEditWin", {
+        		title: "编辑",
+       		 	iconCls: "icon-w-edit",
+         		collapsible: false,
+        		minimizable: false,
+       			 maximizable: false,
+       			 modal: true,
+        		 width: 600,
+       			 height: 335,
+       
+    			});
+
 }
 
 /**
@@ -306,12 +327,34 @@ function detailEdit(rowObj){
 function detailSave(){
 	var QDID=$("#DID").val();
 	var QDDesc=$("#DDesc").val();
+	if(QDDesc==""){
+		$.messager.alert("提示","描述不能为空","info");
+		return false;
+	}
 	var QDCode=$("#DCode").val();
+	if(QDCode==""){
+		$.messager.alert("提示","编码不能为空","info");
+		return false;
+	}
+	if(!$("#DCode").validatebox("isValid")){
+		$.messager.alert("提示","编码已存在","info");
+		return false;
+	}
 	var QDType=$("#DType").combobox("getValue");
 	var QDUnit=$("#DUnit").val();
 	var QDSex=$("#DSex").combobox("getValue");
 	var QDLinkCode=$("#DLinkCode").val();
-	var QDColNum=$("#DColNum").val();
+	var QDColNum="";  //$("#DColNum").val();
+	if (QDColNum!=""){
+		
+		   if((!(isInteger(QDColNum)))||(QDColNum<=0)) 
+		   {
+			   $.messager.alert("提示","显示列数只能是正整数","info");
+			    return false; 
+		   }
+
+	}
+
 	var QDActive="N";
 	var QDRequired="N";
 	if($("#DActive").checkbox("getValue")){
@@ -321,18 +364,12 @@ function detailSave(){
 		QDRequired="Y";
 	}
 	var QDRemark=$("#DRemark").val();
-	if(QDCode==""){
-		$.messager.alert("提示","编码不能为空","info");
+	
+	if((QDRemark!="")&&(!$("#DRemark").validatebox("isValid"))){
+		$.messager.alert("提示","备注超长","info");
 		return false;
 	}
-	if((QDID=="")&&(!$("#DCode").validatebox("isValid"))){
-		$.messager.alert("提示","编码已存在","info");
-		return false;
-	}
-	if(QDDesc==""){
-		$.messager.alert("提示","描述不能为空","info");
-		return false;
-	}
+	
 	var property = 'QDCode^QDDesc^QDType^QDUnit^QDSex^QDLinkCode^QDElementNum^QDActive^QDRequired^QDRemark';
 	var valList = QDCode+"^"+QDDesc+"^"+QDType+"^"+QDUnit+"^"+QDSex+"^"+QDLinkCode+"^"+QDColNum+"^"+QDActive+"^"+QDRequired+"^"+QDRemark;
 	try{
@@ -362,8 +399,13 @@ function optionSave()
 	var QDOParRef=$("#OpParf").val();
 	var OpParfType=$("#OpParfType").val();
 	var OpID=$("#OpID").val();
-	if((QDOParRef=="")||(OpID=="")){
+	if(QDOParRef==""){
 		$.messager.alert("提示","请先选中要保存的数据行","info");
+		return false;
+	}
+	var QDOCode=$("#OpCode").val();
+	if(QDOCode==""){
+		$.messager.alert("提示","编码不能为空","info");
 		return false;
 	}
 	var QDODesc=$("#OpDesc").val();
@@ -372,6 +414,16 @@ function optionSave()
 		return false;
 	}
 	var QDOOrder=$("#OpSeq").val();
+	if (QDOOrder!=""){
+		
+		   if((!(isInteger(QDOOrder)))||(QDOOrder<=0)) 
+		   {
+			   $.messager.alert("提示","顺序只能是正整数","info");
+			    return false; 
+		   }
+
+	}
+
 	var QDOSex=$("#OpSex").combobox("getValue")
 	var QDODefault="N";
 	if($("#OpDefault").checkbox("getValue")){
@@ -385,8 +437,8 @@ function optionSave()
 	if($("#OpActive").checkbox("getValue")){
 		QDOActive="Y";
 	}
-	var property = 'QDOActive^QDODefault^QDODesc^QDOOrder^QDOParRef^QDOSex^QDONote';
-	var valList=QDOActive+"^"+QDODefault+"^"+QDODesc+"^"+QDOOrder+"^"+QDOParRef+"^"+QDOSex+"^"+QDONote;
+	var property = 'QDOActive^QDODefault^QDOCode^QDODesc^QDOOrder^QDOParRef^QDOSex^QDONote';
+	var valList=QDOActive+"^"+QDODefault+"^"+QDOCode+"^"+ QDODesc+"^"+QDOOrder+"^"+QDOParRef+"^"+QDOSex+"^"+QDONote;
 	try{
 		var ret=tkMakeServerCall("web.DHCHM.QuestionDetailSet","QDOSave",OpID,valList,property,OpParfType,QDODefault,QDOParRef);
 		if (ret.split("^")[0] == -1) {
@@ -432,6 +484,7 @@ function optionClear(){
 	//$("#OpParf").val("");
 	//$("#OpParfType").val("");
 	$("#OpID").val("");
+	$("#OpCode").val("");
 	$("#OpDesc").val("");
 	$("#OpSeq").val("");
 	$("#OpSex").combobox("setValue","");
@@ -447,9 +500,9 @@ function optionClear(){
  */
 function setGridHeight()
 {
-	$("#GridDiv").height($("#ContentDiv").height()-51);
+	$("#GridDiv").height($("#ContentDiv").height()-53);
 	$("#DetailList").datagrid("resize");
-	$("#OpGridDiv").height($("#OptionDiv").height()-171);	
+	$("#OpGridDiv").height($("#OptionDiv").height()-211);	
 	$("#OptionList").datagrid("resize");
 }
 
@@ -465,6 +518,8 @@ var openDOLinkDWin = function(OID){
 		return false;
 	}
 	//window.open("dhchm.dolinkdetail.edit.csp?OID="+OID);
+	
+	var lnk = "dhchm.dolinkdetail.edit.csp?OID="+OID;
 	$HUI.window("#DOLinkDetailWin",{
 		title:"关联问题维护",
 		collapsible:false,
@@ -474,7 +529,8 @@ var openDOLinkDWin = function(OID){
 		modal:true,
 		width:500,
 		height:400,
-		content:'<iframe src="dhchm.dolinkdetail.edit.csp?OID='+OID+'" width="100%" height="100%" frameborder="0" ></iframe>'
+		
+		content:'<iframe src= "'+PEURLAddToken(lnk)+'" width="100%" height="100%" frameborder="0" ></iframe>'
 	}).center();
 };
 /**
@@ -489,6 +545,7 @@ var openDSetsWin = function(DID,DType){
 		$.messager.alert("提示","选择型问题请在右侧选项页面维护","info");
 		return false;
 	}
+	var lnk = "dhchm.queslinkordersets.csp?DID='+DID+'";
 	$HUI.window("#DLOrdSetsWin",{
 		title:"关联套餐维护",
 		collapsible:false,
@@ -498,7 +555,7 @@ var openDSetsWin = function(DID,DType){
 		modal:true,
 		width:600,
 		height:500,
-		content:'<iframe src="dhchm.queslinkordersets.csp?DID='+DID+'" width="100%" height="100%" frameborder="0"></iframe>'
+		content:'<iframe src="' + PEURLAddToken(lnk) + '" width="100%" height="100%" frameborder="0"></iframe>'
 	});
 };
 /**
@@ -508,6 +565,7 @@ var openDSetsWin = function(DID,DType){
  * @DateTime 2019-04-01
  */
 var openDOSetsWin = function(OID){
+	var lnk ="dhchm.optionlinkordersets.csp?OID='+OID+'";
 	$HUI.window("#DLOrdSetsWin",{
 		title:"关联套餐维护",
 		collapsible:false,
@@ -517,8 +575,18 @@ var openDOSetsWin = function(OID){
 		modal:true,
 		width:600,
 		height:500,
-		content:'<iframe src="dhchm.optionlinkordersets.csp?OID='+OID+'" width="100%" height="100%" frameborder="0"></iframe>'
+		content:'<iframe src="' + PEURLAddToken(lnk) + '" width="100%" height="100%" frameborder="0"></iframe>'
 	});
 };
+
+
+
+function isInteger(num) {
+   if (!isNaN(num) && num % 1 === 0) {
+        return true;
+    } else {
+        return false;
+    }
+}
 
 $(init);

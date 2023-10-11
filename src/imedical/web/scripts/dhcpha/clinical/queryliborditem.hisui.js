@@ -17,8 +17,10 @@ function BodyLoadHandler()
 	
 	// 科室
 	$('#admLoc').combobox({
+		mode:"remote",
 		onShowPanel:function(){
-			$('#admLoc').combobox('reload',url+'?action=SelAllLoc')
+			//$('#admLoc').combobox('reload',url+'?action=SelAllLoc')
+			$('#admLoc').combobox('reload',url+'?action=GetAllLocNewVersion')
 		}
 	}); 	
 	$('#admLoc').combobox('setValue',""); 	// 设置病区默认值
@@ -234,6 +236,7 @@ function Reset()
 	$('#levelMan').combobox('setValue',"");
 	$('#label').combobox('setValue',"");
 	$('#admLoc').combobox('setValue',"");
-	
+	$('#label').combobox('setText',"全部"); //	设置combobox默认值	
+	Query();
 }
 

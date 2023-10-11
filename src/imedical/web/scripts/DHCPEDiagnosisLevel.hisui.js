@@ -30,7 +30,25 @@ $(function(){
 		BClear_click();		
         });
     
+	  info();
 })
+
+function info()
+{
+	
+	var ID=$("#ID").val()
+	if(ID==""){
+		$("#BAdd").linkbutton('enable');
+		$("#BUpdate").linkbutton('disable');
+		$("#BDelete").linkbutton('disable');
+	}else{
+		$("#BAdd").linkbutton('disable');
+		$("#BUpdate").linkbutton('enable');
+		$("#BDelete").linkbutton('enable');
+	}
+	
+}
+
 
 
 //修改
@@ -97,16 +115,21 @@ function BSave_click(Type)
 	    var Instring=ID+"^"+iLevel+"^"+iDesc+"^"+iWarnFlag;
 		var flag=tkMakeServerCall("web.DHCPE.DiagnosisLevel","Update",'','',Instring);
     }
-	if (flag==0){
+	   var flag=flag.split("^")
+	if (flag[0]==0){
 		if(Type=="1"){$.messager.alert("提示","修改成功","success");}
 		if(Type=="0"){$.messager.alert("提示","新增成功","success");}
-		BClear_click();	
+		BClear_click(); 
+	
+	}else if (flag[0]=="-1"){
+		$.messager.alert("提示",flag[1],"info");
 	
 	}else{
 		if(Type=="0"){$.messager.alert("提示","修改错误","error");}
 		if(Type=="1"){$.messager.alert("提示","新增错误","error");}
 			
 	} 
+
 
 }
 
@@ -122,7 +145,12 @@ function BDelete_click()
 		if (r){
 				$.m({ ClassName:"web.DHCPE.DiagnosisLevel", MethodName:"Delete",InString:ID},function(ReturnValue){
 				if (ReturnValue!="0") {
-					$.messager.alert("提示","删除失败","error");  
+					if(ReturnValue.indexOf("^")>0){
+						$.messager.alert("提示","删除失败:"+ReturnValue.split("^")[1],"error"); 
+					} else{
+						$.messager.alert("提示","删除失败","error"); 
+					}
+ 
 				}else{
 					$.messager.alert("提示","删除成功","success");
 					BClear_click();	
@@ -146,6 +174,7 @@ function BClear_click()
 			QueryName:"LevelAll",
 		
 			});
+	info();
 	
 }
 
@@ -181,6 +210,10 @@ function InitDiagnosisLevelDataGrid(){
 				$("#ID").val(rowData.TRowID);
 				$("#Level").val(rowData.TLevel);
 				$("#Desc").val(rowData.TDesc);
+				$("#BAdd").linkbutton('disable');
+				$("#BUpdate").linkbutton('enable');
+				$("#BDelete").linkbutton('enable');
+
 
 		}
 			

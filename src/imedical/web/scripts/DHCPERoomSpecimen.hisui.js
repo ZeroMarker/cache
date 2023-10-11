@@ -94,6 +94,7 @@ function BClear_click(){
 			QueryName:"FindRoomSpecimen",
 			Parref:selectrow, 
 			Type:RoomType,
+			LocID:session['LOGON.CTLOCID']
 		});	
 	
 }
@@ -183,6 +184,7 @@ var columns =[[
 			{field:'TSpecimen',width:640,title:title},
 						 
 		]];
+
 		
 function InitRoomSpecimenGrid(){
 	
@@ -205,7 +207,7 @@ function InitRoomSpecimenGrid(){
 			QueryName:"FindRoomSpecimen",
 			Parref:selectrow, 
 			Type:RoomType,
-		    
+			LocID:session['LOGON.CTLOCID']	    
 		},
 		columns:columns,
 		onSelect: function (rowIndex, rowData) {
@@ -232,7 +234,7 @@ function InitCombobox(){
 	if(RoomType=="SP"){
 		//标本类型
 		var SpecimenObj = $HUI.combobox("#Specimen",{
-			url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=GetSpecimen&ResultSetType=array",
+			url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=GetSpecimen&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
 			valueField:'id',
 			textField:'desc'
 			})

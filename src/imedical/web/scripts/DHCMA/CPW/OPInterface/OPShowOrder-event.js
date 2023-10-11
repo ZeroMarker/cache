@@ -34,26 +34,7 @@ function InitOPOrderWinEvent(obj) {
 			});
 			$HUI.dialog('#GeneCPWDialog').close();
 		})
-		/*
-		$HUI.tabs("#CPW-main", {
-			onSelect: function (title) {
-				switch (title) {
-					case "主要诊疗工作":
-						obj.tabType = "T";
-						obj.TQueryLoad();
-						break;
-					case "重点医嘱":
-						obj.tabType = "O";
-						//obj.OQueryLoad();
-						break;
-					case "变异原因":
-						obj.tabType = "V";
-						obj.VQueryLoad();
-						break;
-				}
-			}
-		});
-		*/
+
 		$HUI.tabs("#CPW-Var", {
 			onSelect: function (title) {
 				switch (title) {
@@ -116,21 +97,24 @@ function InitOPOrderWinEvent(obj) {
 			obj.CancelTCMVar();	
 		})
 		$('#PrintCPWInformedConsert').on('click', function () {
-			//var flg = PrintDataToExcel();
 			var LODOP=getLodop();
-			LODOP.PRINT_INIT("#PrintCPWInformedConsert");  //打印任务的名称
-			var PrintUrl="./dhcma.cpw.opcp.consentprint.csp?EpisodeID="+EpisodeID;
-			LODOP.ADD_PRINT_URL("2cm","0","100%","100%",PrintUrl);
+			LODOP.PRINT_INIT("PrintOPCPWConsert");  //打印任务的名称
+			LODOP.ADD_PRINT_HTM("285mm", "90mm",300,100,"<span tdata='pageNO'>第##页</span>/<span tdata='pageCount'>共##页</span>");
+			LODOP.SET_PRINT_STYLEA(0, "ItemType",1);//每页都输出
+			//LODOP.SET_PRINT_MODE("DOUBLE_SIDED_PRINT", 0); 	//人工双面打印（打印机不支持双面打印时，0为单面打印，1为不双面打印，2为双面打印）
+			//LODOP.SET_PRINT_MODE("PRINT_DUPLEX", 0);			//人工双面打印（打印机不支持双面打印时，0为单面打印，1为不双面打印，2为双面打印）
+			LodopPrintURL(LODOP,"./dhcma.cpw.opcp.consentprint.csp?EpisodeID="+EpisodeID,"10mm","12mm","6mm","20mm")
 			LODOP.PRINT();
+			
 		});
-		$('#PrintCPWInform').on('click', function () {
-			//var flg = PrintCPWToExcel();
-			var aEpisodeID = EpisodeID;
-	    	//PrintCPWQueryToExcel("","","","",aEpisodeID);
-	    	var LODOP=getLodop();
-			LODOP.PRINT_INIT("PrintOPCPWInform");  //打印任务的名称
-			var PrintUrl="./dhcma.cpw.opcp.oplodopprint.csp?EpisodeID="+aEpisodeID;
-			LODOP.ADD_PRINT_URL("1cm","1cm","100%","100%",PrintUrl);
+		$('#PrintCPWInform').on('click', function () {			
+			var LODOP=getLodop();
+			LODOP.PRINT_INIT("PrintOPCPWInform1");  //打印任务的名称
+			LODOP.ADD_PRINT_HTM("285mm", "90mm",300,100,"<span tdata='pageNO'>第##页</span>/<span tdata='pageCount'>共##页</span>");
+			LODOP.SET_PRINT_STYLEA(0, "ItemType",1);//每页都输出
+			//LODOP.SET_PRINT_MODE("DOUBLE_SIDED_PRINT", 0); 	//人工双面打印（打印机不支持双面打印时，0为单面打印，1为不双面打印，2为双面打印）
+			//LODOP.SET_PRINT_MODE("PRINT_DUPLEX", 0);			//人工双面打印（打印机不支持双面打印时，0为单面打印，1为不双面打印，2为双面打印）
+			LodopPrintURL(LODOP,"./dhcma.cpw.opcp.oplodopprint.csp?EpisodeID="+EpisodeID,"10mm","12mm","6mm","20mm")
 			LODOP.PRINT();
 		});
 	}
@@ -177,16 +161,16 @@ function InitOPOrderWinEvent(obj) {
 			$('#Var-TCMVar-Save').linkbutton("disable");
 			$('#Var-TCMVar-Cancel').linkbutton("disable");
 			$(".Operimg").attr("src", "../scripts/DHCMA/img/forbid.png");
-			$(".Operimg").attr("title", "禁止操作");
+			$(".Operimg").attr("title", $g("禁止操作"));
 			$(".Operimg").attr("onclick", "");
-			$("#foot-note").text("请选择【当前阶段】后，继续各项操作！")
+			$("#foot-note").text($g("请选择【当前阶段】后，继续各项操作！"))
 		} else {
 			$("#ObtnSave").show();
 			$("#img-Execute").attr("src","../scripts/DHCMA/img/add.png");
-			$("#img-Execute").attr("title", "全部执行");
+			$("#img-Execute").attr("title", $g("全部执行"));
 			$("#img-Execute").attr("onclick", "objOrder.ExecuteAllItem()");
 			$("#img-Cancle").attr("src","../scripts/DHCMA/img/no.png");
-			$("#img-Cancle").attr("title", "全部撤销");
+			$("#img-Cancle").attr("title", $g("全部撤销"));
 			$("#img-Cancle").attr("onclick", "objOrder.CancelAllItem()");
 			
 			$('#Var-Item-Save').linkbutton("enable");
@@ -195,7 +179,7 @@ function InitOPOrderWinEvent(obj) {
 			$('#Var-Order-Cancel').linkbutton("enable");
 			$('#Var-TCMVar-Save').linkbutton("enable");
 			$('#Var-TCMVar-Cancel').linkbutton("enable");
-			$("#foot-note").text("请按照本阶段内容执行！")
+			$("#foot-note").text($g("请按照本阶段内容执行！"))
 		}
 		if (obj.ConfList.slice(-1) == 1) {
 			$("#ObtnSave").hide(); //如果最后一个阶段都已经签名，那不再显示确认阶段按钮
@@ -207,12 +191,12 @@ function InitOPOrderWinEvent(obj) {
 			$('#Var-TCMVar-Save').linkbutton("disable");
 			$('#Var-TCMVar-Cancel').linkbutton("disable");
 			$(".Operimg").attr("src", "../scripts/DHCMA/img/forbid.png");
-			$(".Operimg").attr("title", "禁止操作");
+			$(".Operimg").attr("title", $g("禁止操作"));
 			$(".Operimg").attr("onclick", "");
 		}
 	}
 	obj.ShowByCPWStatus = function () {
-		if (obj.StatusCurrDesc == "出径") {
+		if (obj.StatusCurrDesc == $g("出径")) {
 			$("#btnClose").hide();	//完成按钮
 			$("#btnOut").hide();		//出径按钮
 			$('#Var-Item-Save').linkbutton("disable");
@@ -222,9 +206,9 @@ function InitOPOrderWinEvent(obj) {
 			$('#Var-TCMVar-Save').linkbutton("disable");
 			$('#Var-TCMVar-Cancel').linkbutton("disable");
 			$(".Operimg").attr("src", "../scripts/DHCMA/img/forbid.png");
-			$(".Operimg").attr("title", "禁止操作");
+			$(".Operimg").attr("title", $g("禁止操作"));
 			$(".Operimg").attr("onclick", "");
-			$("#foot-note").text("该临床路径已经【" + obj.StatusCurrDesc + "】，禁止表单操作！")
+			$("#foot-note").text($g("该临床路径已经")+"【" + $g(obj.StatusCurrDesc) + "】，"+$g("禁止表单操作！"))
 		} else if (obj.StatusCurrDesc == "完成") {
 			$("#btnClose").hide();	//完成按钮
 			$("#btnOut").hide();		//出径按钮
@@ -235,9 +219,9 @@ function InitOPOrderWinEvent(obj) {
 			$('#Var-TCMVar-Save').linkbutton("disable");
 			$('#Var-TCMVar-Cancel').linkbutton("disable");
 			$(".Operimg").attr("src", "../scripts/DHCMA/img/forbid.png");
-			$(".Operimg").attr("title", "禁止操作");
+			$(".Operimg").attr("title", $g("禁止操作"));
 			$(".Operimg").attr("onclick", "");
-			$("#foot-note").text("该临床路径已经【" + obj.StatusCurrDesc + "】，禁止表单操作！")
+			$("#foot-note").text($g("该临床路径已经")+"【" + $g(obj.StatusCurrDesc) + "】，"+$g("禁止表单操作！"))
 		} else {	//入径
 
 		}
@@ -270,7 +254,7 @@ function InitOPOrderWinEvent(obj) {
 		}, function (ret) {
 			if (parseInt(ret) > 0) {
 				$.messager.popover({
-					msg: '执行成功',
+					msg: $g('执行成功'),
 					type: 'success',
 					style: {
 						top: 150,
@@ -279,7 +263,7 @@ function InitOPOrderWinEvent(obj) {
 				});
 			} else {
 				$.messager.popover({
-					msg: '执行失败,ret=' + ret,
+					msg: $g('执行失败')+',ret=' + ret,
 					type: 'error',
 					style: {
 						top: 150,
@@ -319,7 +303,7 @@ function InitOPOrderWinEvent(obj) {
 		}, function (ret) {
 			if (parseInt(ret) > 0) {
 				$.messager.popover({
-					msg: '撤销成功',
+					msg: $g('撤销成功'),
 					type: 'success',
 					style: {
 						top: 150,
@@ -328,7 +312,7 @@ function InitOPOrderWinEvent(obj) {
 				});
 			} else {
 				$.messager.popover({
-					msg: '撤销失败',
+					msg: $g('撤销失败'),
 					type: 'error',
 					style: {
 						top: 150,
@@ -364,7 +348,7 @@ function InitOPOrderWinEvent(obj) {
 				var rows = $('#tb-Variation-Item').datagrid("getSelections");
 				if (rows.length == 0) {
 					$.messager.popover({
-						msg: '请选择项目',
+						msg: $g('请选择项目'),
 						type: 'error',
 						style: {
 							top: 150,
@@ -399,7 +383,7 @@ function InitOPOrderWinEvent(obj) {
 				$('#ItemTree').find('.tree-node-selected').removeClass('tree-node-selected');
 			} else {
 				$.messager.popover({
-					msg: '不能选择原因分类',
+					msg: $g('不能选择原因分类'),
 					type: 'error',
 					style: {
 						top: 150,
@@ -410,7 +394,7 @@ function InitOPOrderWinEvent(obj) {
 			}
 		} else {
 			$.messager.popover({
-				msg: '请选择变异原因',
+				msg: $g('请选择变异原因'),
 				type: 'error',
 				style: {
 					top: 150,
@@ -425,7 +409,7 @@ function InitOPOrderWinEvent(obj) {
 		var rows = $('#tb-Variation-Item').datagrid("getSelections");
 		if (rows.length == 0) {
 			$.messager.popover({
-				msg: '请选择项目',
+				msg: $g('请选择项目'),
 				type: 'error',
 				style: {
 					top: 150,
@@ -458,7 +442,7 @@ function InitOPOrderWinEvent(obj) {
 				var rows = $('#tb-Variation-Order').datagrid("getSelections");
 				if (rows.length == 0) {
 					$.messager.popover({
-						msg: '请选择医嘱',
+						msg: $g('请选择医嘱'),
 						type: 'error',
 						style: {
 							top: 150,
@@ -492,7 +476,7 @@ function InitOPOrderWinEvent(obj) {
 				$('#ItemTree').find('.tree-node-selected').removeClass('tree-node-selected');
 			} else {
 				$.messager.popover({
-					msg: '不能选择原因分类',
+					msg: $g('不能选择原因分类'),
 					type: 'error',
 					style: {
 						top: 150,
@@ -503,7 +487,7 @@ function InitOPOrderWinEvent(obj) {
 			}
 		} else {
 			$.messager.popover({
-				msg: '请选择变异原因',
+				msg: $g('请选择变异原因'),
 				type: 'error',
 				style: {
 					top: 150,
@@ -518,7 +502,7 @@ function InitOPOrderWinEvent(obj) {
 		var rows = $('#tb-Variation-Order').datagrid("getSelections");
 		if (rows.length == 0) {
 			$.messager.popover({
-				msg: '请选择医嘱',
+				msg: $g('请选择医嘱'),
 				type: 'error',
 				style: {
 					top: 150,
@@ -551,7 +535,7 @@ function InitOPOrderWinEvent(obj) {
 				var rows = $('#tb-Variation-TCMVar').datagrid("getSelections");
 				if (rows.length == 0) {
 					$.messager.popover({
-						msg: '请选择医嘱',
+						msg: $g('请选择医嘱'),
 						type: 'error',
 						style: {
 							top: 150,
@@ -586,7 +570,7 @@ function InitOPOrderWinEvent(obj) {
 				$('#ItemTree').find('.tree-node-selected').removeClass('tree-node-selected');
 			} else {
 				$.messager.popover({
-					msg: '不能选择原因分类',
+					msg: $g('不能选择原因分类'),
 					type: 'error',
 					style: {
 						top: 150,
@@ -597,7 +581,7 @@ function InitOPOrderWinEvent(obj) {
 			}
 		} else {
 			$.messager.popover({
-				msg: '请选择变异原因',
+				msg: $g('请选择变异原因'),
 				type: 'error',
 				style: {
 					top: 150,
@@ -613,7 +597,7 @@ function InitOPOrderWinEvent(obj) {
 		var rows = $('#tb-Variation-TCMVar').datagrid("getSelections");
 		if (rows.length == 0) {
 			$.messager.popover({
-				msg: '请选择变异记录',
+				msg: $g('请选择变异记录'),
 				type: 'error',
 				style: {
 					top: 150,
@@ -742,13 +726,13 @@ function InitOPOrderWinEvent(obj) {
 		var varTxt = Common_GetValue('OutText')
 		var errorInfo = "";
 		if (varID == "") {
-			errorInfo = "请选择出径原因！<br />"
+			errorInfo = $g("请选择出径原因！<br />")
 		}
 		if (varTxt == "") {
-			errorInfo = errorInfo + "请填写备注信息！"
+			errorInfo = errorInfo + $g("请填写备注信息！")
 		}
 		if (errorInfo != "") {
-			$.messager.alert("错误提示", errorInfo, "error")
+			$.messager.alert($g("错误提示"), errorInfo, "error")
 			return;
 		}
 		$m({
@@ -758,7 +742,7 @@ function InitOPOrderWinEvent(obj) {
 			aSeparete: "^"
 		}, function (ret) {
 			if (parseInt(ret) > 0) {
-				$.messager.popover({ msg: "操作成功", type: 'success' });
+				$.messager.popover({ msg: $g("操作成功"), type: 'success' });
 				$HUI.dialog('#OutCPWDialog').close();
 				obj.InitOCPWInfo();
 				obj.OperationControl();
@@ -767,12 +751,12 @@ function InitOPOrderWinEvent(obj) {
 	}
 	obj.CloseCPW = function () {		
 		if (obj.StepSelecedID != obj.StepList[obj.StepList.length-1].split(":")[0]){
-			$.messager.popover({ msg: "还有阶段未执行，禁止此操作", type: 'error' });
+			$.messager.popover({ msg: $g("还有阶段未执行，禁止此操作"), type: 'error' });
 			return;	
 		}else{
 			//检查是否自动进行阶段确认及变异保存设置
 			if (ServerObj.IsAutoCfmStep=="Y"||parseInt(ServerObj.IsAutoCfmStep)==1){
-				$.messager.confirm("完成", "确定完成?<br />完成后将不能再做任何修改！", function (r) {
+				$.messager.confirm($g("完成"), $g("确定完成?<br />完成后将不能再做任何修改！"), function (r) {
 					if (r) {
 						$m({
 							ClassName: "DHCMA.CPW.OPCPS.InterfaceSrv",
@@ -781,9 +765,13 @@ function InitOPOrderWinEvent(obj) {
 							aInputs: obj.PathwayID + "^" + session['DHCMA.USERID'] + "^" + session['DHCMA.CTLOCID'] + "^" + session['DHCMA.CTWARDID']
 						}, function (ret) {
 							if (parseInt(ret) > 0) {
-								$.messager.popover({ msg: "操作成功", type: 'success' });
+								$.messager.popover({ msg: $g("操作成功"), type: 'success' });
 								obj.InitOCPWInfo();
 								obj.OperationControl();
+							}else if(parseInt(ret)==-2){
+								$.messager.popover({ msg: $g("操作失败，您有当前阶段变异未处理，请先处理变异！"), type: 'error' });		
+							}else{
+								$.messager.popover({ msg: $g("操作失败，请稍后再试！"), type: 'error' });	
 							}
 						})
 					} 
@@ -791,7 +779,7 @@ function InitOPOrderWinEvent(obj) {
 			}else {
 				//最后一个阶段是否确定
 				if (obj.ConfList.slice(-1) != 1) {
-					$.messager.popover({ msg: "还有阶段未确定，禁止此操作", type: 'error' });
+					$.messager.popover({ msg: $g("还有阶段未确定，禁止此操作"), type: 'error' });
 					return;
 				}
 			}	
@@ -801,16 +789,16 @@ function InitOPOrderWinEvent(obj) {
 		var DateFrom = $('#ODateFrom').datebox('getValue');
 		var DateTo = $('#ODateTo').datebox('getValue');
 		if (DateFrom == "") {
-			$.messager.popover({ msg: "开始日期不能为空", type: 'error' });
+			$.messager.popover({ msg: $g("开始日期不能为空"), type: 'error' });
 			return;
 		} else {
 			if (DateTo == "") {
-				$.messager.popover({ msg: "结束日期不能为空", type: 'error' });
+				$.messager.popover({ msg: $g("结束日期不能为空"), type: 'error' });
 				return;
 			} else {
 				var flg = Common_CompareDate(DateFrom, DateTo);
 				if (flg) {
-					$.messager.popover({ msg: "结束日期不能小于开始日期", type: 'error' });
+					$.messager.popover({ msg: $g("结束日期不能小于开始日期"), type: 'error' });
 					return;
 				}
 			}
@@ -818,8 +806,8 @@ function InitOPOrderWinEvent(obj) {
 		//检查变异原因
 		var VarCount = $cm({ ClassName: "DHCMA.CPW.OPCPS.PathwayVarSrv", MethodName: "CheckVarToCfmStep", aPathwayID: obj.PathwayID, aEpisID: obj.PathwayID + "||" + obj.StepSelecedID}, false);
 		if (parseInt(VarCount) > 0) {
-			$.messager.popover({ msg: "有变异信息未处理，请先处理变异信息！", type: 'error' });
-			$('#CPW-main').tabs('select', "变异原因");
+			$.messager.popover({ msg: $g("有变异信息未处理，请先处理变异信息！"), type: 'error' });
+			$('#CPW-main').tabs('select', $g("变异原因"));
 			return;
 		}
 		//检查阶段日期是否合法：新阶段开始日期不能早于前一阶段结束日期
@@ -833,7 +821,7 @@ function InitOPOrderWinEvent(obj) {
 			$.messager.popover({ msg: CheckStepDateMsg, type: 'error' });
 			return;
 		}
-		$.messager.confirm("确定", "确认后将不能再做任何修改！", function (r) {
+		$.messager.confirm($g("确定"), $g("确认后将不能再做任何修改！"), function (r) {
 			if (r) {
 				//继续操作
 				var NextEpisID = ""
@@ -853,8 +841,10 @@ function InitOPOrderWinEvent(obj) {
 					aNextEpisID: NextEpisID
 				}, function (ret) {
 					if (parseInt(ret) > 0) {
-						$.messager.popover({ msg: "确定成功", type: 'success' });
-						obj.InitOCPWSteps();	//步骤信息
+						$.messager.popover({ msg: $g("确定成功"), type: 'success' });
+						//obj.InitOCPWSteps();	//步骤信息
+						obj.InitOCPWInfo();
+						obj.OperationControl();
 					}
 				})
 			} else {
@@ -891,16 +881,16 @@ function InitOPOrderWinEvent(obj) {
 			htmlIcon=htmlIcon+'<span class="OIcon OIcon-Y">￥</span>'
 			$('#OCPWIcon').html(htmlIcon)
 			$(".OIcon-D").popover({
-				content: '单病种信息：' + JsonObj.SDDesc
+				content: $g('单病种信息：' + JsonObj.SDDesc)
 			});
 			$(".OIcon-B").popover({
 				content: JsonObj.VarDesc
 			});
 			$(".OIcon-T").popover({
-				content: '入径天数：' + JsonObj.CPWDays + '天<br />计划天数：' + JsonObj.FormDays + '天'
+				content: $g('入径天数：') + JsonObj.CPWDays + $g('天<br />计划天数：') + JsonObj.FormDays + $g('天')
 			});
 			$(".OIcon-Y").popover({
-				content: '总费用：' + JsonObj.PatCost + '<br />计划费用：' + JsonObj.FormCost + '元'
+				content: $g('总费用：') + JsonObj.PatCost + $g('<br />计划费用：') + JsonObj.FormCost + $g('元')
 			});
 			
 			obj.InitOCPWSteps();
@@ -1147,9 +1137,9 @@ function InitOPOrderWinEvent(obj) {
 		if(Emvalue==1){
 			$('#OStepMoreList').css('display','block');
 			$('#OStepMore').attr("value",0);
-			$('#OStepMore').text("收起▲");
+			$('#OStepMore').text($g("收起▲"));
 		}else{
-			$('#OStepMore').text("更多▼");
+			$('#OStepMore').text($g("更多▼"));
 			$('#OStepMore').attr("value",1);
 			$('#OStepMoreList').css('display','none');
 		}

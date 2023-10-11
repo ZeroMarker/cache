@@ -1,14 +1,11 @@
 ﻿/**
  * FileName: dhcbill.ipbill.checkadmfee.js
- * Anchor: ZhYW, yangchong
+ * Author: ZhYW, yangchong
  * Date: 2018-06-30
  * Description: 住院费用核查
  */
 
 $(function () {
-	$(document).keydown(function (e) {
-		banBackSpace(e);
-	});
 	initQueryMenu();
 	initPatList();
 	initPointList();
@@ -31,7 +28,7 @@ function initQueryMenu() {
 		medicareNoKeydown(e);
 	});
 
-	$HUI.linkbutton("#btnFind", {
+	$HUI.linkbutton("#btn-find", {
 		onClick: function () {
 			findClick();
 		}
@@ -43,19 +40,19 @@ function initQueryMenu() {
 		}
 	});
 	
-	$HUI.linkbutton("#btnAudit", {
+	$HUI.linkbutton("#btn-audit", {
 		onClick: function () {
 			auditClick();
 		}
 	});
 	
-	$HUI.linkbutton("#btnCancel", {
+	$HUI.linkbutton("#btn-cancel", {
 		onClick: function () {
 			cancelClick();
 		}
 	});
 	
-	$HUI.linkbutton("#btnClear", {
+	$HUI.linkbutton("#btn-clear", {
 		onClick: function () {
 			clearClick();
 		}
@@ -63,35 +60,39 @@ function initQueryMenu() {
 	
 	$("#more-container").click(function () {
 		var t = $(this);
-		if (t.find(".arrows-w-text").text() == "更多") {
-			t.find(".arrows-w-text").text("收起");
-			t.find(".spread-w-down").removeClass("spread-w-down").addClass("retract-w-up");
+		var ui = (HISUIStyleCode == "lite") ? "b" : "w";  //+2022-07-08 ZhYW 根据HISUI风格显示上下箭头图标
+		if (t.find(".arrows-" + ui + "-text").text() == $g("更多")) {
+			t.find(".arrows-" + ui + "-text").text($g("收起"));
+			t.find(".spread-" + ui + "-down").removeClass("spread-" + ui + "-down").addClass("retract-" + ui + "-up");
 			$("tr.display-more-td").slideDown("normal", setHeight(140));
 		} else {
-			t.find(".arrows-w-text").text("更多");
-			t.find(".retract-w-up").removeClass("retract-w-up").addClass("spread-w-down");
+			t.find(".arrows-" + ui + "-text").text($g("更多"));
+			t.find(".retract-" + ui + "-up").removeClass("retract-" + ui + "-up").addClass("spread-" + ui + "-down");
 			$("tr.display-more-td").slideUp("fast", setHeight(-140));
 		}
 	});
 	
 	$HUI.combobox("#dept", {
 		panelHeight: 150,
-		url: $URL + '?ClassName=web.DHCIPBillCheckAdmCost&QueryName=FindDept&ResultSetType=array',
-		mode: 'remote',
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryIPDept&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
 		valueField: 'id',
 		textField: 'text',
-		onBeforeLoad: function (param) {
-			param.desc = param.q;
-			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
-		},
-		onSelect: function (rec) {
-			var url = $URL + '?ClassName=web.DHCIPBillCheckAdmCost&QueryName=FindWard&ResultSetType=array';
-			$('#ward').combobox('clear').combobox('reload', url);
+		disabled: (["L", "W"].indexOf(CV.ViewType) != -1),
+		value: (CV.ViewType == "L") ? PUBLIC_CONSTANT.SESSION.CTLOCID : "",
+		defaultFilter: 5,
+		blurValidValue: true,
+		filter: function(q, row) {
+			var opts = $(this).combobox("options");
+			var mCode = false;
+			if (row.contactName) {
+				mCode = row.contactName.toUpperCase().indexOf(q.toUpperCase()) >= 0
+			}
+			var mValue = row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0;
+			return mCode || mValue;
 		},
 		onChange: function (newValue, oldValue) {
-			if (!newValue) {
-				$('#ward').combobox('clear').combobox('loadData', []);
-			}
+			var url = $URL + "?ClassName=web.DHCBillOtherLB&QueryName=QryLocLinkWard&ResultSetType=array&locId=" + (newValue || "");
+			$("#ward").combobox("clear").combobox("reload", url);
 		}
 	});
 	
@@ -100,38 +101,33 @@ function initQueryMenu() {
 		editable: false,
 		valueField: 'id',
 		textField: 'text',
-		onBeforeLoad: function (param) {
-			param.deptId = getValueById("dept");
-		}
+		disabled: (CV.ViewType == "W"),
+		data: (CV.ViewType == "W") ? [{id: PUBLIC_CONSTANT.SESSION.WARDID, text: session['LOGON.CTLOCDESC'], selected: true}] : [],
 	});
 	
-	$("#admReason").combobox({
+	$("#insType").combobox({
 		panelHeight: 150,
-		url: $URL + '?ClassName=web.DHCIPBillCheckAdmCost&QueryName=FindAdmReason&ResultSetType=array',
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryAdmReason&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
 		valueField: 'id',
 		textField: 'text',
-		defaultFilter: 4,
-		onBeforeLoad: function (param) {
-			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
-		}
+		defaultFilter: 5
 	});
 	
 	$HUI.combobox("#isAudit", {
 		panelHeight: 'auto',
 		editable: false,
-		valueField: 'id',
+		valueField: 'value',
 		textField: 'text',
-		blurValidValue: true,
-		data: [{id: '', text: '全部'},
-			   {id: 'Y', text: '已审核'},
-			   {id: 'N', text: '未审核'}
+		data: [{value: '', text: $g('全部')},
+			   {value: 'Y', text: $g('已审核')},
+			   {value: 'N', text: $g('未审核')}
 		],
-		onSelect: function (record) {
-			var row = $("#patList").datagrid("getSelected");
+		onSelect: function (rec) {
+			var row = GV.PatList.getSelected();
 			var adm = row ? row.id : "";
 			loadPointList(adm);
 			
-			var row = $("#moniList").datagrid("getSelected");
+			var row = GV.MoniList.getSelected();
 			adm = row ? row.TAdm : adm;
 			var MPCRowID = row ? row.TMPCRowID : "";
 			loadDtlList(adm, MPCRowID);
@@ -157,7 +153,7 @@ function medicareNoKeydown(e) {
 
 function initPatList() {
 	var selectRowIndex = undefined;
-	$HUI.datagrid("#patList", {
+	GV.PatList = $HUI.datagrid("#patList", {
 		fit: true,
 		border: false,
 		singleSelect: true,
@@ -165,18 +161,18 @@ function initPatList() {
 		rownumbers: false,
 		loadMsg: '',
 		pageSize: 999999999,
-		columns: [[{field: 'patName', width: 100},
-				   {field: 'patNO', width: 115}
+		columns: [[{field: 'patName', width: 110},
+				   {field: 'patNo', width: 110}
 			]],
 		onLoadSuccess: function (data) {
 			selectRowIndex = undefined;
-			$("#patList").datagrid("getPanel").addClass("lines-bottom");
-			$("#head-menu").layout("panel", "north").panel({
-				title: "患者列表 ( " + data.rows.length + "人 )"
+			GV.PatList.getPanel().addClass("lines-bottom");
+			$(".layout:eq(0)").layout("panel", "west").panel({
+				title: $g("患者列表 ") + "(" + data.rows.length + $g("人") + ")"
 			});
 			if ((data.rows.length == 1) && GV.EpisodeID) {
 				GV.EpisodeID = "";
-				$("#patList").datagrid("selectRow", 0); //设置选中第一行
+				GV.PatList.selectRow(0);   //设置选中第一行
 			}
 		},
 		onSelect: function (index, row) {
@@ -184,17 +180,15 @@ function initPatList() {
 				return;
 			}
 			selectRowIndex = index;
-			var adm = row.id;
-			setTimeout(selectPatListRow(adm), 200);
+			setTimeout(selectPatListRow(row.id), 200);
 		}
 	});
-	$("#patList").datagrid("getPanel").addClass("lines-no").find(".datagrid-view2 > .datagrid-header").removeClass("datagrid-header");
+	GV.PatList.getPanel().addClass("lines-no").find(".datagrid-view2 > .datagrid-header").removeClass("datagrid-header");
 }
 
 function initPointList() {
-	$HUI.datagrid("#moniList", {
+	GV.MoniList = $HUI.datagrid("#moniList", {
 		fit: true,
-		striped: true,
 		iconCls: 'icon-paper-tri',
 		headerCls: 'panel-header-gray',
 		toolbar: '#pointToolBar',
@@ -203,12 +197,19 @@ function initPointList() {
 		pagination: false,
 		rownumbers: true,
 		pageSize: 999999,
-		columns: [[{title: 'TAdm', field: 'TAdm', hidden: true},
-				   {title: 'TMPCRowID', field: 'TMPCRowID', hidden: true},
-				   {title: 'TMPCCode', field: 'TMPCCode', hidden: true},
-				   {title: '监控点描述', field: 'TMPCDesc', width: 200},
-				   {title: '核查结果', field: 'TErrMsg', width: 300}
-			]],
+		className: "web.DHCIPBillCheckAdmCost",
+		queryName: "FindCheckFee",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["TAdm", "TMPCRowID", "TMPCCode"]) != -1) {
+					cm[i].hidden = true;
+					continue;
+				}
+				if (!cm[i].width) {
+					cm[i].width = 200;
+				}
+			}
+		},
 		onSelect: function (index, row) {
 			loadDtlList(row.TAdm, row.TMPCRowID);
 		}
@@ -220,56 +221,95 @@ function loadPointList(adm) {
 		ClassName: "web.DHCIPBillCheckAdmCost",
 		QueryName: "FindCheckFee",
 		adm: adm,
-		job: GV.Job,
+		pid: CV.PID,
 		isAudit: getValueById("isAudit"),
+		roleLevel: CV.RoleLevel,
 		rows: 999999
 	};
 	loadDataGridStore("moniList", queryParams);
 }
 
 function initDtlList() {
-	$HUI.datagrid("#dtlList", {
+	GV.DtlList = $HUI.datagrid("#dtlList", {
 		fit: true,
-		striped: true,
 		iconCls: 'icon-paper',
 		headerCls: 'panel-header-gray',
 		singleSelect: true,
 		selectOnCheck: false,
 		checkOnSelect: false,
-		pageSize: 999999999,
+		titleNoWrap: false,
+		view: scrollview,  //滚动加载
+		pageSize: 500,
 		rownumbers: true,
 		toolbar: [],
-		columns: [[{field: 'ck', checkbox: true},
-			       {title: 'TAdm', field: 'TAdm', hidden: true},
-				   {title: 'TMPCRowID', field: 'TMPCRowID', hidden: true},
-				   {title: '监控点描述', field: 'TMPCDesc', width: 410,
-					styler: function (value, row, index) {
-						if (row.TAuditFlag == "Y") {
-							return {class: 'cell-audited'};
-						} else {
-							return {class: 'cell-unAudited'};
-						}
-					}
-				   },
-				   {title: '医嘱', field: 'TArcimDesc', width: 200},
-				   {title: '医嘱子类', field: 'TItemCatDesc', width: 150},
-				   {title: '医嘱大类', field: 'TOECCatDesc', width: 150},
-				   {title: '要求执行时间', field: 'TOEEXDatTime', width: 150},
-				   {title: '医嘱状态', field: 'TOrdStatDesc', width: 100},
-				   {title: '执行记录状态', field: 'TOEEXStatDesc', width: 100},
-				   {title: '计费状态', field: 'TBilledStatus', width: 100},
-				   {title: '单价', field: 'TUnitPrice', align: 'right', width: 100},
-				   {title: '数量', field: 'TTotalQty', width: 100},
-				   {title: '金额', field: 'TTotalAmount', align: 'right', width: 100},
-				   {title: '实际发药数量', field: 'TDspTotalQty', width: 150},
-				   {title: '开医嘱医生', field: 'TOrdDocName', width: 100},
-				   {title: '接收科室', field: 'TRecDeptDesc', width: 180},
-				   {title: 'TAuditFlag', field: 'TAuditFlag', hidden: true},
-				   {title: 'TTypeCode', field: 'TTypeCode', hidden: true},
-				   {title: 'TTypeDR', field: 'TTypeDR', hidden: true}
+		frozenColumns: [[{field: 'ck', checkbox: true},
+						 {title: '监控点描述', field: 'TMPCDesc', width: 300,
+						 	formatter: function (value, row, index) {
+								if (row.TMPCReviewed != "Y") {
+									return "<a onmouseover='showCantReviewReason(this, " + JSON.stringify(row) + ")' style='text-decoration:none;color:#000000;'>" + value + "</a>";
+								}
+								return value;
+						  	},
+							styler: function (value, row, index) {
+								return {class: ((row.TAuditId) ? 'cell-audited' : 'cell-unAudited')};
+							}
+				   		 }
 			]],
+		className: "web.DHCIPBillCheckAdmCost",
+		queryName: "FindCheckFeeDtl",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["TMPCDesc", "TAuditDate", "TMPCReviewed", "TReviewDate"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if ($.inArray(cm[i].field, ["TAdm", "TMPCRowID", "TAuditId", "TAuditLevel", "TTypeCode", "TTypeDR"]) != -1) {
+					cm[i].hidden = true;
+					continue;
+				}
+				//配置的是一级审核时，不显示二级审核人、时间
+				if (CV.AuditLevelCfg == 1) {
+					if ($.inArray(cm[i].field, ["TReviewUser", "TReviewTime"]) != -1) {
+						cm.splice(i, 1);
+						continue;
+					}
+				}else {
+					if ($.inArray(cm[i].field, ["TAuditUser", "TAuditTime"]) != -1) {
+						cm[i].title = "一级" + cm[i].title;
+					}
+				}
+				if (cm[i].field == "TAuditTime") {
+					cm[i].formatter = function(value, row, index) {
+					   	return row.TAuditDate + " " + value;
+					};
+				}
+				if (cm[i].field == "TReviewTime") {
+					cm[i].formatter = function(value, row, index) {
+					   	return row.TReviewDate + " " + value;
+					};
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if (cm[i].field == "TArcimDesc") {
+						cm[i].width = 200;
+					}
+					if ($.inArray(cm[i].field, ["TAuditTime", "TReviewTime"]) != -1) {
+						cm[i].width = 160;
+					}
+				}
+			}
+		},
 		onLoadSuccess: function(data) {
-			$("#dtlList").datagrid("clearChecked");
+			GV.DtlList.clearChecked();
+			var hasDisabledRow = false;
+			$.each(data.rows, function (index, row) {
+				if (row.TMPCReviewed != "Y") {
+					hasDisabledRow = true;
+					GV.DtlList.getPanel().find(".datagrid-row[datagrid-row-index=" + index + "] input:checkbox")[0].disabled = true;
+				}
+			});
+			//有disabled行时，表头也disabled
+			GV.DtlList.getPanel().find(".datagrid-header-row input:checkbox")[0].disabled = hasDisabledRow;
 		}
 	});
 }
@@ -279,12 +319,11 @@ function loadDtlList(adm, MPCRowID) {
 		ClassName: "web.DHCIPBillCheckAdmCost",
 		QueryName: "FindCheckFeeDtl",
 		adm: adm,
-		job: GV.Job,
+		pid: CV.PID,
 		MPCRowID: MPCRowID,
 		isAudit: getValueById("isAudit"),
-		rows: 9999999
+		roleLevel: CV.RoleLevel
 	};
-	
 	loadDataGridStore("dtlList", queryParams);
 }
 
@@ -295,21 +334,21 @@ function getPatInfo() {
 		return;
 	}
 	clearPatInfo();
-	$.m({
+	$.cm({
 		ClassName: "web.DHCIPBillCheckAdmCost",
 		MethodName: "GetPatientInfo",
 		adm: GV.EpisodeID,
-		patNo: patNo,
-		medicare: medicare,
-		sessionStr: getSessionStr()
-	}, function (rtn) {
-		if (rtn) {
-			var myAry = rtn.split(PUBLIC_CONSTANT.SEPARATOR.CH2);
-			setValueById("patientNo", myAry[1]);
-			setValueById("medicareNo", myAry[3]);
-			GV.EpisodeID = myAry[4];
-			loadPatList();
+		patientNo: patNo,
+		medicareNo: medicare,
+		hospId: PUBLIC_CONSTANT.SESSION.HOSPID
+	}, function (json) {
+		if (!json) {
+			return;
 		}
+		setValueById("patientNo", json.patientNo);
+		setValueById("medicareNo", json.medicareNo);
+		GV.EpisodeID = json.episodeId;
+		loadPatList();
 	});
 }
 
@@ -322,45 +361,31 @@ function clearPatInfo() {
 }
 
 function selectPatListRow(adm) {
-	$.m({
+	$.cm({
 		ClassName: "web.DHCIPBillCheckAdmCost",
 		MethodName: "GetAdmInfo",
 		adm: adm
-	}, function (rtn) {
-		if (rtn) {
-			var myAry = rtn.split(PUBLIC_CONSTANT.SEPARATOR.CH2);
-			setValueById("patientNo", myAry[1]);
-			$("#ban-Name").text(myAry[2]);
-			$("#ban-patientNo").text(myAry[1]);
-			$("#ban-medicareNo").text(myAry[3]);
-			$("#ban-bed").text(myAry[4]);
-			$("#ban-ward").text(myAry[7]);
-			$("#ban-dept").text(myAry[12]);
-			switch(myAry[11]) {
-			case "男":
-				$("#ban-sex").removeClass("unman man woman").addClass("man");
-				break;
-			case "女":
-				$("#ban-sex").removeClass("unman man woman").addClass("woman");
-				break;
-			default:
-				$("#ban-sex").removeClass("unman man woman").addClass("unman");
-			}
-			getIPBillCheckFee(adm);
+	}, function (json) {
+		if (!json) {
+			return;
 		}
+		setValueById("patientNo", json.patientNo);
+		$("#ban-Name").text(json.patName);
+		$("#ban-patientNo").text(json.patientNo);
+		$("#ban-medicareNo").text(json.medicareNo);
+		$("#ban-bed").text(json.bed);
+		$("#ban-ward").text(json.ward);
+		$("#ban-dept").text(json.dept);
+		$("#ban-sex").removeClass("unman man woman").addClass(json.sexIconCls);
+		
+		getIPBillCheckFee(adm);
 	});
 }
 
 function getIPBillCheckFee(adm) {
-	$.m({
-		ClassName: "web.DHCIPBillCheckAdmCost",
-		MethodName: "GetIPBillCheckFeeData",
-		adm: adm,
-		job: GV.Job
-	}, function (rtn) {
-		loadPointList(adm);
-		loadDtlList(adm, "");
-	});
+	$.m({ClassName: "web.DHCIPBillCheckAdmCost", MethodName: "GetIPBillCheckFeeData", wantreturnval: 0, adm: adm, pid: CV.PID}, false);
+	loadPointList(adm);
+	loadDtlList(adm, "");
 }
 
 /**
@@ -370,12 +395,16 @@ function findClick() {
 	if (getValueById("patientNo") != "") {
 		setValueById("medicareNo", "");
 		getPatInfo();
-	} else if (getValueById("medicareNo") != "") {
+		return;
+	}
+	
+	if (getValueById("medicareNo") != "") {
 		setValueById("patientNo", "");
 		getPatInfo();
-	}else {
-		loadPatList();
+		return;
 	}
+
+	loadPatList();
 }
 
 function loadPatList() {
@@ -383,10 +412,11 @@ function loadPatList() {
 		ClassName: "web.DHCIPBillCheckAdmCost",
 		QueryName: "FindCurInPatient",
 		episodeIDStr: GV.EpisodeID,
-		deptID: getValueById("dept") || "",
-		wardID: getValueById("ward") || "",
-		admReasonID: getValueById("admReason") || "",
+		deptId: getValueById("dept") || "",
+		wardId: getValueById("ward") || "",
+		insTypeId: getValueById("insType") || "",
 		oneKeyCheckFlag: getValueById("oneKeyCheck"),
+		roleLevel: CV.RoleLevel,
 		sessionStr: getSessionStr(),
 		rows: 9999999
 	};
@@ -397,96 +427,175 @@ function clearClick() {
 	GV.EpisodeID = "";
 	$(".combobox-f:not(#isAudit)").combobox("clear");
 	setValueById("isAudit", "");
+	if (CV.ViewType == "L") {
+		$("#dept").combobox("setValue", PUBLIC_CONSTANT.SESSION.CTLOCID);
+	}
+	if (CV.ViewType == "W") {
+		var text = $.m({ClassName: "User.CTLoc", MethodName: "GetTranByDesc", Prop: "CTLOCDesc", Desc: session['LOGON.CTLOCDESC'], LangId: PUBLIC_CONSTANT.SESSION.LANGID}, false);
+		var data = [{id: PUBLIC_CONSTANT.SESSION.WARDID, text: text, selected: true}];
+		$("#ward").combobox("loadData", data);
+	}
 	clearPatInfo();
-	$("#moniList").datagrid("loadData", {
-		total: 0,
-		rows: []
-	});
-	$("#dtlList").datagrid("loadData", {
-		total: 0,
-		rows: []
-	});
+	GV.MoniList.loadData({total: 0,	rows: []});
+	//GV.DtlList.loadData({total: 0, rows: []});
+	loadDtlList("", "");
 	loadPatList();
 }
 
 function auditClick() {
-	var myAry = [];
-	var tmpStr = "";
-	$.each($("#dtlList").datagrid("getChecked"), function(index, row) {
-		if (row.TAuditFlag == "Y") {
-			return true;
-		}
-		tmpStr = row.TAdm + "^" + row.TMPCRowID + "^" + row.TTypeCode + "^" + row.TTypeDR;
-		myAry.push(tmpStr);
-	});
-	if (myAry.length == 0) {
-		$.messager.alert("提示", "请选择未审核的明细进行审核", "info");
+	var _validate = function() {
+		return new Promise(function (resolve, reject) {
+			var rows = GV.DtlList.getChecked();
+			auditAry = rows.filter(function(row) {
+				return (CV.RoleLevel == (+row.TAuditLevel + 1));
+			}).map(function(row) {
+				return row.TAdm + "^" + row.TMPCRowID + "^" + row.TTypeCode + "^" + row.TTypeDR + "^" + row.TAuditId + "^" + CV.RoleLevel;
+			});
+			if (auditAry.length == 0) {
+				var msg = "请选择待审核的明细进行审核";
+				if (CV.RoleLevel > 1) {
+					if ((rows.length > 0) && (+CV.RoleLevel > +rows[0].TAuditLevel)) {
+						msg = "请先让一级审核人审核";
+					}
+				}
+				$.messager.popover({msg: msg, type: "info"});
+				return reject();
+			}
+			resolve();
+		});
+	};
+	
+	var _cfr = function() {
+		return new Promise(function (resolve, reject) {
+			$.messager.confirm("确认", "是否确认审核？", function(r) {
+				return r ? resolve() : reject();
+			});
+		});
+	};
+	
+	var _audit = function() {
+		return new Promise(function (resolve, reject) {
+			$.m({
+				ClassName: "web.DHCIPBillCheckAdmCost",
+				MethodName: "Audit",
+				auditList: auditAry,
+				sessionStr: getSessionStr()
+			}, function (rtn) {
+				var myAry = rtn.split("^");
+				if (myAry[0] == 0) {
+					$.messager.popover({msg: "审核成功", type: "success"});					
+					return resolve();
+				}
+				$.messager.popover({msg: "审核失败：" + (myAry[1] || myAry[0]), type: "error"});
+				reject();
+			});
+		});
+	};
+	
+	var _success = function() {
+		GV.DtlList.reload();
+	};
+	
+	if ($("#btn-audit").linkbutton("options").disabled) {
 		return;
 	}
+	$("#btn-audit").linkbutton("disable");
 	
-	$.m({
-		ClassName: "web.DHCIPBillCheckAdmCost",
-		MethodName: "Audit",
-		auditList: myAry,
-		guser: PUBLIC_CONSTANT.SESSION.USERID
-	}, function (rtn) {
-		if (rtn == "0") {
-			$.messager.alert("提示", "审核成功", "success", function() {
-				$("#dtlList").datagrid("reload");
-			});
-		} else {
-			$.messager.alert("提示", "审核失败，错误代码：" + rtn, "error");
-		}
-	});
+	var auditAry = [];
+	
+	var promise = Promise.resolve();
+	promise
+		.then(_validate)
+		.then(_cfr)
+		.then(_audit)
+		.then(function() {
+			_success();
+			$("#btn-audit").linkbutton("enable");
+		}, function() {
+			$("#btn-audit").linkbutton("enable");
+		});
 }
 
 function cancelClick() {
-	var myAry = [];
-	var tmpStr = "";
-	$.each($("#dtlList").datagrid("getChecked"), function(index, row) {
-		if (row.TAuditFlag != "Y") {
-			return true;
-		}
-		tmpStr = row.TAdm + "^" + row.TMPCRowID + "^" + row.TTypeCode + "^" + row.TTypeDR;
-		myAry.push(tmpStr);
-	});
-	if (myAry.length == 0) {
-		$.messager.alert("提示", "请选择需要撤销审核的明细", "info");
+	var _validate = function() {
+		return new Promise(function (resolve, reject) {
+			var rows = GV.DtlList.getChecked();
+			auditAry = rows.filter(function(row) {
+				return (CV.RoleLevel == row.TAuditLevel);
+			}).map(function(row) {
+				return row.TAuditId + "^" + CV.RoleLevel;
+			});
+			if (auditAry.length == 0) {
+				$.messager.popover({msg: "请选择需要撤销审核的明细", type: "info"});
+				return reject();
+			}
+			resolve();
+		});
+	};
+	
+	var _cfr = function() {
+		return new Promise(function (resolve, reject) {
+			$.messager.confirm("确认", "是否确认撤销审核？", function(r) {
+				return r ? resolve() : reject();
+			});
+		});
+	};
+	
+	var _cancel = function() {
+		return new Promise(function (resolve, reject) {
+			$.m({
+				ClassName: "web.DHCIPBillCheckAdmCost",
+				MethodName: "CancelAudit",
+				auditList: auditAry,
+				sessionStr: getSessionStr()
+			}, function (rtn) {
+				var myAry = rtn.split("^");
+				if (myAry[0] == 0) {
+					$.messager.popover({msg: "撤销成功", type: "success"});
+					return resolve();
+				}
+				$.messager.popover({msg: "撤销失败：" + (myAry[1] || myAry[0]), type: "error"});
+				reject();
+			});
+		});
+	};
+	
+	var _success = function() {
+		GV.DtlList.reload();
+	};
+	
+	if ($("#btn-cancel").linkbutton("options").disabled) {
 		return;
 	}
+	$("#btn-cancel").linkbutton("disable");
 
-	$.m({
-		ClassName: "web.DHCIPBillCheckAdmCost",
-		MethodName: "CancelAudit",
-		cancelList: myAry,
-		guser: PUBLIC_CONSTANT.SESSION.USERID
-	}, function (rtn) {
-		if (rtn == "0") {
-			$.messager.alert("提示", "撤销成功", "success", function() {
-				$("#dtlList").datagrid("reload");
-			});
-		} else {
-			$.messager.alert("提示", "撤销失败，错误代码：" + rtn, "error");
-		}		
-	});
+	var auditAry = [];
+	
+	var promise = Promise.resolve();
+	promise
+		.then(_validate)
+		.then(_cfr)
+		.then(_cancel)
+		.then(function() {
+			_success();
+			$("#btn-cancel").linkbutton("enable");
+		}, function() {
+			$("#btn-cancel").linkbutton("enable");
+		});
 }
 
 /**
  * 一键核查
  */
 function oneKeyCheckClick() {
-	$(".combobox-f:not(#isAudit)").combobox("clear").combobox("reload");
+	if (["L", "W"].indexOf(CV.ViewType) == -1) {
+		$(".combobox-f:not(#isAudit)").combobox("clear").combobox("reload");
+	}
 	setValueById("isAudit", "");
 	setValueById("oneKeyCheck", "Y");
 	clearPatInfo();
-	$("#moniList").datagrid("loadData", {
-		total: 0,
-		rows: []
-	});
-	$("#dtlList").datagrid("loadData", {
-		total: 0,
-		rows: []
-	});
+	GV.MoniList.loadData({total: 0,	rows: []});
+	GV.DtlList.loadData({total: 0, rows: []});
 	loadPatList();
 }
 
@@ -497,13 +606,13 @@ function oneKeyCheckClick() {
  * @author ZhYW
  */
 function setHeight(num) {
-	var l = $("#head-menu");
+	var l = $(".layout:eq(1)");
 	var n = l.layout("panel", "north");
 	var nh = parseInt(n.panel("panel").outerHeight()) + parseInt(num);
 	n.panel("resize", {
 		height: nh
 	});
-	if (+num > 0) {
+	if (num > 0) {
 		$("tr.display-more-td").show();
 	} else {
 		$("tr.display-more-td").hide();
@@ -514,4 +623,46 @@ function setHeight(num) {
 		height: ch,
 		top: nh
 	});
+}
+
+/**
+* 泡芙提示不可审核原因
+*/
+function showCantReviewReason($this, row) {
+	if (row.TAuditId > 0) {
+		return;
+	}
+	if (row.TMPCReviewed == "Y") {
+		return;   //做了直接退费审核的不显示不可退费原因
+	}
+	$($this).popover({
+		trigger: 'hover',
+		content: $g("监控点") + "<font color=\"#FF0000\">" + row.TMPCDesc + "</font>" + "配置不能审核"
+	}).popover("show");
+}
+
+/**
+* 离开页面时清除临时global
+*/
+$(window).unload(function() {
+	//调用ajax请求会被取消或不成功，改为如下方式HTTP POST
+	delSvrTMP4Beacon();
+});
+
+/**
+* 离开页面时清除临时global
+* 新的chrome下，用visibilitychange事件替换unload事件
+*/
+document.addEventListener("visibilitychange", function() {
+	if (document.hidden) {
+		//调用ajax请求会被取消或不成功，改为如下方式HTTP POST
+		delSvrTMP4Beacon();
+	}
+});
+
+/**
+* 清除临时global
+*/
+function delSvrTMP4Beacon() {
+	$.cm({ClassName: "web.DHCIPBillCheckAdmCost", MethodName: "KillTMP", type: "BEACON", pid: CV.PID, wantreturnval: 0});
 }

@@ -170,6 +170,13 @@ function BSubmit_Clicked()
 	
 	var truthBeTold = true;
 	var Rnt=Num-QuantityNum;
+	// add by sjh SJH0034 2020-09-16 BEGIN
+	if(Num==0)
+	{
+		var truthBeTold = window.confirm("选择的设备数量为0，最少选择一台或一台以上的设备！");
+		return
+	}
+	// add by sjh SJH0034 2020-09-16 END
 	if (Rnt<0)
 	{
 		var truthBeTold = window.confirm("选择的设备数量少了"+-Rnt+"台,是否修改?");

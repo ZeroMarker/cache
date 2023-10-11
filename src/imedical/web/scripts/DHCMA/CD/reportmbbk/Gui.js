@@ -13,14 +13,14 @@ function InitReportWin(){
   
 	//户口地址
 	$('#cboPatAgeDW').combobox({});  //年龄单位
-	obj.cboProvince1 = Common_ComboToArea2("cboProvince1","1");            // 省
+	obj.cboProvince1 = Common_ComboToArea2("cboProvince1","1",1);            // 省
 	obj.RegCity1 = $HUI.combobox('#cboProvince1', {
 		onChange:function(newValue,oldValue){
 			$('#cboCity1').combobox('clear');
 			$('#cboCounty1').combobox('clear');
 			$('#cboVillage1').combobox('clear');
 			$('#txtCUN1').val('');
-			obj.cboCity1 = Common_ComboToArea2("cboCity1","cboProvince1");				// 市
+			obj.cboCity1 = Common_ComboToArea2("cboCity1","cboProvince1",2);				// 市
 		}
 		
 	});
@@ -29,14 +29,14 @@ function InitReportWin(){
 			$('#cboCounty1').combobox('clear');
 			$('#cboVillage1').combobox('clear');
 			$('#txtCUN1').val('');
-			obj.cboCounty1 = Common_ComboToArea2("cboCounty1","cboCity1");             // 县
+			obj.cboCounty1 = Common_ComboToArea2("cboCounty1","cboCity1",3);             // 县
 		}
 	});
 	obj.RegVillage1 = $HUI.combobox('#cboCounty1', {
 		onChange:function(newValue,oldValue){
 			$('#cboVillage1').combobox('clear');
 			$('#txtCUN1').val('');
-			obj.cboVillage1 = Common_ComboToArea2("cboVillage1","cboCounty1");         // 乡
+			obj.cboVillage1 = Common_ComboToArea2("cboVillage1","cboCounty1",4);         // 乡
 		}
 	});
 	$HUI.combobox('#cboVillage1', {
@@ -48,14 +48,14 @@ function InitReportWin(){
 	});
 	
 	//现地址
-	obj.cboProvince2 = Common_ComboToArea2("cboProvince2","1");            // 省
+	obj.cboProvince2 = Common_ComboToArea2("cboProvince2","1",1);            // 省
 	obj.RegCity2 = $HUI.combobox('#cboProvince2', {
 		onChange:function(newValue,oldValue){
 			$('#cboCity2').combobox('clear');
 			$('#cboCounty2').combobox('clear');
 			$('#cboVillage2').combobox('clear');
 			$('#txtCUN2').val('');
-			obj.cboCity2 = Common_ComboToArea2("cboCity2","cboProvince2");				// 市
+			obj.cboCity2 = Common_ComboToArea2("cboCity2","cboProvince2",2);				// 市
 		}
 		
 	});
@@ -64,14 +64,14 @@ function InitReportWin(){
 			$('#cboCounty2').combobox('clear');
 			$('#cboVillage2').combobox('clear');
 			$('#txtCUN2').val('');
-			obj.cboCounty2 = Common_ComboToArea2("cboCounty2","cboCity2");             // 县
+			obj.cboCounty2 = Common_ComboToArea2("cboCounty2","cboCity2",3);             // 县
 		}
 	});
 	obj.RegVillage2 = $HUI.combobox('#cboCounty2', {
 		onChange:function(newValue,oldValue){
 			$('#cboVillage2').combobox('clear');
 			$('#txtCUN2').val('');
-			obj.cboVillage2 = Common_ComboToArea2("cboVillage2","cboCounty2");         // 乡
+			obj.cboVillage2 = Common_ComboToArea2("cboVillage2","cboCounty2",4);         // 乡
 		}
 	});
 	$HUI.combobox('#cboVillage2', {
@@ -118,7 +118,7 @@ function InitReportWin(){
 	});
 	
 	obj.cboCRZDDW = Common_ComboToDic("cboCRZDDW","CRMBZDDW","",LogonHospID);              //诊断单位
-	obj.cboCRReportLoc = Common_ComboToLoc2("cboCRReportLoc","E","","");     //科室位置
+	obj.cboCRReportLoc = Common_ComboToLoc2("cboCRReportLoc","E","","",LogonHospID);     //科室位置
 
 	obj.LoadListInfo = function() {	  //加载单选、多选列表  
 		obj.radBGKLXList = Common_RadioToDic("radBGKLXList","CRMBReportType",3);         //报卡类型

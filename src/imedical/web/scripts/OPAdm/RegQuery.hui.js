@@ -1,38 +1,49 @@
-var PageLogicObj={
+ï»¿var PageLogicObj={
 	m_RegQueryTabDataGrid:"",
 }
 $(function(){
-	//³õÊ¼»¯
+	//åˆå§‹åŒ–  
 	Init();
-	//ÊÂ¼ş³õÊ¼»¯
+	//äº‹ä»¶åˆå§‹åŒ–
 	InitEvent();
 })
 function PageHandle(){
 	$("#StDate,#EdDate").datebox('setValue',ServerObj.CurDate);
-	RegQueryTabDataGridLoad();
-	//¹ÒºÅÔ±
+	$.cm({
+		ClassName:"web.DHCOPRegConfig",
+		MethodName:"GetGroupConfig",
+		HospId:session['LOGON.HOSPID'],
+		GroupID:session['LOGON.GROUPID'],
+		Node1:"RegDefaultSearch",
+		dataType:"text"
+	},function(ret){
+		if (ret==1)	RegQueryTabDataGridLoad();
+	})
+	//æ—¶æ®µ
+	LoadTimeRange()
+	//æŒ‚å·å‘˜
 	LoadGhuse();
-	//¿ÆÊÒ
+	//ç§‘å®¤
 	LoadDept();
-	//ÓÅ»İ
+	//ä¼˜æƒ 
 	LoadRegConDisList();
-	//Ò½Éú ºÅ±ğ
+	//åŒ»ç”Ÿ å·åˆ«
 	LoadMarkDoc();
 	LoadDoc();
-	//Ö§¸¶·½Ê½
+	//æ”¯ä»˜æ–¹å¼
 	LoadPayMode();
-	//¹ÒºÅÖ°³Æ
+	//æŒ‚å·èŒç§°
 	LoadSessionType();
 }
 function Init(){
-	var hospComp = GenUserHospComp();
+	var hospComp = GenUserHospComp({width:386});
 	hospComp.jdata.options.onSelect = function(e,t){
 		var HospID=t.HOSPRowId;
 		PageHandle();
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){
 		PageLogicObj.m_RegQueryTabDataGrid=InitRegQueryTabDataGrid();
-		//Ò³ÃæÔªËØ³õÊ¼»¯
+		//é¡µé¢å…ƒç´ åˆå§‹åŒ–
 		PageHandle();
 	}
 }
@@ -55,7 +66,7 @@ function DocumentOnKeyDown(e){
 		var type=e.type;
 		var SrcObj=e.target;
 	}
-	//ä¯ÀÀÆ÷ÖĞBackspace²»¿ÉÓÃ  
+	//æµè§ˆå™¨ä¸­Backspaceä¸å¯ç”¨  
    var keyEvent;   
    if(e.keyCode==8){   
        var d=e.srcElement||e.target;
@@ -73,51 +84,55 @@ function DocumentOnKeyDown(e){
 }
 function InitRegQueryTabDataGrid(){
 	/* 
-	Ô­ºÅÖØ´òÒÆÖÁÍËºÅ½çÃæ
+	åŸå·é‡æ‰“ç§»è‡³é€€å·ç•Œé¢
 	{
 		id:"rePrint",
-		text: 'ÖØ´ò',
+		text: 'é‡æ‰“',
 		iconCls: 'icon-print',
 		handler: function(){ReprintClickHandler();}
 	}, */	
 	PageLogicObj.toolbar=[{
 		id:"Export",
-		text: 'µ¼³ö',
+		text: 'å¯¼å‡º',
 		iconCls: 'icon-arrow-right-top',
 		handler: function(){ExportClick();}
 	}]
 	var Columns=[[ 
 		{field:'TRegisFee',hidden:true,title:''},
-		{field:'TPatNo',title:'µÇ¼ÇºÅ',width:100},
-		{field:'TPatMNo',title:'²¡ÀúºÅ',width:80},
-		{field:'TPatName',title:'ĞÕÃû',width:80},
-		{field:'TRegLoc',title:'¿ÆÊÒ',width:120},
-		{field:'TRegDoc',title:'ºÅ±ğ',width:140},
-		{field:'TArriveDoc',title:'¿´ÕïÒ½Éú',width:100},
-		{field:'TRegDate',title:'¾ÍÕïÈÕÆÚ',width:100},
-		{field:'TRegFee',title:'¹ÒºÅ·Ñ',width:50},
-		{field:'TFormFee',title:'¹¤±¾·Ñ',width:50},
-		{field:'TExamFee',title:'ÕïÁÆ·Ñ',width:50},
-		{field:'TUsrCode',title:'¹ÒºÅÔ±',width:80},
-		{field:'TUsrName',title:'¹ÒºÅÔ±ĞÕÃû',width:80},
-		{field:'TRegTime',title:'¹ÒºÅÊ±¼ä',width:150},
-		{field:'TRefUsr',title:'ÍËºÅÔ±',width:80},
-		{field:'TRefUsrname',title:'ÍËºÅÔ±ĞÕÃû',width:90},
-		{field:'TRefTime',title:'ÍËºÅÊ±¼ä',width:100},
-		{field:'TRegNo',title:'Ë³ĞòºÅ',width:50},
-		{field:'TRegType',title:'¹ÒºÅÀàĞÍ',width:90},
-		{field:'TAddflag',title:'¼ÓºÅ',width:90},
-		{field:'THandDate',title:'½áÕËÈÕÆÚ',width:90},
-		{field:'TPatCardNo',title:'¿¨ºÅ',width:120},
-		{field:'TInvNo',title:'·¢Æ±ºÅ',width:110},
-		{field:'TPayMode',title:'Ö§¸¶·½Ê½',width:280},	
-		{field:'TimeRangeInfo',title:'½¨Òé¾ÍÕïÊ±¶Î',width:150},
-		{field:'TabReturnReason',title:'ÍËºÅÔ­Òò',width:90},
-		{field:'TTelHome',title:'ÁªÏµµç»°',width:90},
-		{field:'TSessionType',title:'¹ÒºÅÖ°³Æ',width:100},
-		{field:'TRoom',title:'ÕïÊÒ',width:90},
-		{field:'TPoliticalLevel',title:'»¼Õß¼¶±ğ',width:90},
-		{field:'TSecretLevel',title:'»¼ÕßÃÜ¼¶',width:90}
+		{field:'TPatNo',title:'ç™»è®°å·',width:100},
+		{field:'TPatMNo',title:'ç—…å†å·',width:80},
+		{field:'TPatName',title:'å§“å',width:80},
+		{field:'PAPMIDVAnumber',title:'è¯ä»¶å·ç ',width:180},
+		{field:'TRegLoc',title:'ç§‘å®¤',width:120},
+		{field:'TRegDoc',title:'å·åˆ«',width:140},
+		{field:'TArriveDoc',title:'çœ‹è¯ŠåŒ»ç”Ÿ',width:100},
+		{field:'TRegDate',title:'å°±è¯Šæ—¥æœŸ',width:100,sortable:true,sorter:Sort_int},
+		{field:'TAdmReasonDesc',title:'è´¹åˆ«',width:60},
+		{field:'TRegFee',title:'æŒ‚å·è´¹',width:50},
+		{field:'TFormFee',title:'å·¥æœ¬è´¹',width:50},
+		{field:'TExamFee',title:'è¯Šç–—è´¹',width:50},
+		{field:'TUsrCode',title:'æŒ‚å·å‘˜',width:80},
+		{field:'TUsrName',title:'æŒ‚å·å‘˜å§“å',width:80},
+		{field:'TRegTime',title:'æŒ‚å·æ—¶é—´',width:150,sortable:true,sorter:Sort_int},
+		{field:'TRefUsr',title:'é€€å·å‘˜',width:80},
+		{field:'TRefUsrname',title:'é€€å·å‘˜å§“å',width:90},
+		{field:'TRefTime',title:'é€€å·æ—¶é—´',width:150},
+		{field:'TRegNo',title:'é¡ºåºå·',width:50},
+		{field:'TRegType',title:'æŒ‚å·ç±»å‹',width:90},
+		{field:'TAddflag',title:'åŠ å·',width:90},
+		{field:'THandDate',title:'ç»“è´¦æ—¥æœŸ',width:90},
+		{field:'TPatCardNo',title:'å¡å·',width:120},
+		{field:'TInvNo',title:'å‘ç¥¨å·',width:110},
+		{field:'TPayMode',title:'æ”¯ä»˜æ–¹å¼',width:280},	
+		{field:'TimeRangeInfo',title:'å»ºè®®å°±è¯Šæ—¶æ®µ',width:150},
+		{field:'TabReturnReason',title:'é€€å·åŸå› ',width:90},
+		{field:'TTelHome',title:'è”ç³»ç”µè¯',width:90},
+		{field:'TSessionType',title:'æŒ‚å·èŒç§°',width:100},
+		{field:'TRoom',title:'è¯Šå®¤',width:90},
+		{field:'TPoliticalLevel',title:'æ‚£è€…çº§åˆ«',width:90},
+		{field:'TSecretLevel',title:'æ‚£è€…å¯†çº§',width:90},
+		{field:'TRegSource',title:'æŒ‚å·æ¸ é“',width:90},
+		{field:'TRCDDesc',title:'æŒ‚å·ä¼˜æƒ ',width:90}
     ]]
 	var RegQueryTabDataGrid=$("#RegQueryTab").datagrid({
 		fit : true,
@@ -129,6 +144,9 @@ function InitRegQueryTabDataGrid(){
 		rownumbers:true,
 		pagination : true,  
 		rownumbers : true,  
+		loading:true,
+		sortOrder:'asc',
+		remoteSort:false,
 		pageSize: 20,
 		pageList : [20,100,200],
 		idField:'TRegisFee',
@@ -151,14 +169,20 @@ function InitRegQueryTabDataGrid(){
 	return RegQueryTabDataGrid;
 }
 function RegQueryTabDataGridLoad(){
+	if ($("#BFind").hasClass('l-btn-disabled')){
+		return false;
+	}
+	DisableBtn("BFind",true);
 	var selfHosp = true;//$("#SelfHosp").checkbox('getValue');
 	var payMode = $("#PayMode").combobox('getValue')+"^";
 	var RMarkdesc=$("#RMarkdesc").combobox('getValue');
+	var TimeRange=$("#TimeRange").combobox('getValue');
 	var HospID=$HUI.combogrid('#_HospUserList').getValue();
 	if (!RMarkdesc) RMarkdesc="";
 	if (selfHosp) payMode = $("#PayMode").combobox('getValue')+"^"+HospID+"^"+$("#TelHome").val()+"^"+RMarkdesc;
 	else payMode = $("#PayMode").combobox('getValue')+"^^"+$("#TelHome").val()+"^"+RMarkdesc;
-	payMode=payMode+"^"+$("#SessionType").combobox('getText')
+	payMode=payMode+"^"+$("#SessionType").combobox('getText')+"^"+TimeRange
+	PageLogicObj.m_RegQueryTabDataGrid.datagrid("loading");
 	$.cm({
 	    ClassName : "web.DHCOPRegReports",
 	    QueryName : "RegQuery",
@@ -180,7 +204,9 @@ function RegQueryTabDataGridLoad(){
 	    PayMode:payMode,
 	    Pagerows:PageLogicObj.m_RegQueryTabDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
+		DisableBtn("BFind",false);
 		PageLogicObj.m_RegQueryTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+		PageLogicObj.m_RegQueryTabDataGrid.datagrid("loaded");
 	});
 }
 function LoadGhuse(){
@@ -201,6 +227,24 @@ function LoadGhuse(){
 				filter: function(q, row){
 					return (row["SSUSR_Name"].toUpperCase().indexOf(q.toUpperCase()) >= 0)||(row["SSUSR_Initials"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
 				}
+		 });
+	});
+}
+function LoadTimeRange(){
+	var HospID=$HUI.combogrid('#_HospUserList').getValue();
+	$.cm({
+		ClassName:"web.DHCApptScheduleNew",
+		QueryName:"LookUpTimeRange",
+		HospId:HospID,
+		rows:99999
+	},function(GridData){
+		var cbox = $HUI.combobox("#TimeRange", {
+				valueField: 'RowId',
+				textField: 'Desc', 
+				editable:true,
+				data: GridData["rows"],
+				enterNullValueClear:false,
+				
 		 });
 	});
 }
@@ -238,11 +282,12 @@ function LoadDept(){
 	});
 }
 function LoadMarkDoc(){
+	var HospID=$HUI.combogrid('#_HospUserList').getValue();
 	$.cm({
 		ClassName:"web.DHCOPRegReports",
 		QueryName:"OPDoclookup",
 		locid:$("#RLocdesc").combobox('getValue'),
-		DocDesc:"",
+		DocDesc:"",HospID:HospID,
 		rows:99999
 	},function(GridData){
 		var cbox = $HUI.combobox("#RMarkdesc", {
@@ -258,11 +303,12 @@ function LoadMarkDoc(){
 	});
 }
 function LoadDoc(){
+	var HospID=$HUI.combogrid('#_HospUserList').getValue();
 	$.cm({
 		ClassName:"web.DHCOPRegReports",
 		QueryName:"OPDoclookup",
 		locid:$("#RLocdesc").combobox('getValue'),
-		DocDesc:"",
+		DocDesc:"",HospID:HospID,
 		rows:99999
 	},function(GridData){
 		var cbox = $HUI.combobox("#RDocdesc", {
@@ -301,7 +347,7 @@ function LoadRegConDisList() {
 }
 
 /*
-¾É·½·¨Î´×öÔºÇøÇø·Ö£¬Óë¹ÒºÅ½çÃæÍ³Ò»µ÷ÓÃ·½·¨
+æ—§æ–¹æ³•æœªåšé™¢åŒºåŒºåˆ†ï¼Œä¸æŒ‚å·ç•Œé¢ç»Ÿä¸€è°ƒç”¨æ–¹æ³•
 */
 function LoadRegConDis(){
 	$.cm({
@@ -370,7 +416,7 @@ function CardNoKeyDownCallBack(myrtn){
    var myary=myrtn.split("^");
    var rtn=myary[0];
 	switch (rtn){
-		case "0": //¿¨ÓĞĞ§ÓĞÕÊ»§
+		case "0": //å¡æœ‰æ•ˆæœ‰å¸æˆ·
 			var PatientID=myary[4];
 			var PatientNo=myary[5];
 			var CardNo=myary[1]
@@ -378,10 +424,10 @@ function CardNoKeyDownCallBack(myrtn){
 			RegQueryTabDataGridLoad();
 			event.keyCode=13;			
 			break;
-		case "-200": //¿¨ÎŞĞ§
-			$.messager.alert("ÌáÊ¾","¿¨ÎŞĞ§","info",function(){$("#CardNo").focus();});
+		case "-200": //å¡æ— æ•ˆ
+			$.messager.alert("æç¤º","å¡æ— æ•ˆ","info",function(){$("#CardNo").focus();});
 			break;
-		case "-201": //¿¨ÓĞĞ§ÎŞÕÊ»§
+		case "-201": //å¡æœ‰æ•ˆæ— å¸æˆ·
 			var PatientID=myary[4];
 			var PatientNo=myary[5];
 			var CardNo=myary[1];
@@ -411,11 +457,11 @@ function RegNoKeydownHandler(e){
 function ReprintClickHandler(){
 	var row=PageLogicObj.m_RegQueryTabDataGrid.datagrid('getSelected');
 	if (!row){
-		$.messager.alert("ÌáÊ¾","ÇëÑ¡ÔñĞèÒªÖØ´òµÄ¹ÒºÅ¼ÇÂ¼!");
+		$.messager.alert("æç¤º","è¯·é€‰æ‹©éœ€è¦é‡æ‰“çš„æŒ‚å·è®°å½•!");
 		return false;
 	}
 	if (row["TRefUsr"]!=""){
-		$.messager.alert("ÌáÊ¾","ÒÑÍËºÅ²»ÄÜÖØ´ò!");
+		$.messager.alert("æç¤º","å·²é€€å·ä¸èƒ½é‡æ‰“!");
 		return false;
 	}
 	DHCP_GetXMLConfig("InvPrintEncrypt","DHCOPAdmRegPrint");
@@ -430,7 +476,7 @@ function ReprintClickHandler(){
 		RegfeeRowId:RegRowId, AppFlag:"", RePrintFlag:"Y"
 	},false);
 	PrintOut(ret);
-	$.messager.alert("ÌáÊ¾","ÖØ´ò³É¹¦!");
+	$.messager.alert("æç¤º","é‡æ‰“æˆåŠŸ!");
 } 
 function PrintOut(PrintData) {
 	try {
@@ -491,7 +537,7 @@ function PrintOut(PrintData) {
 			else  MyList = MyList + String.fromCharCode(2)+tempBillDesc+"   "+tempBillAmount;
 		}
 
-		//²¡ÈË×Ô¸º±ÈÀıµÄ±¸×¢
+		//ç—…äººè‡ªè´Ÿæ¯”ä¾‹çš„å¤‡æ³¨
 		var ProportionNote="";
 		var ProportionNote1="";
 		var ProportionNote2="";
@@ -499,22 +545,22 @@ function PrintOut(PrintData) {
 		InsuPayCount="";
 		InsuPayOverallPlanning="";
 		InsuPayOther="";
-		ProportionNote="±¾ÊÕ¾İÖĞ,"+RegFee+"Ôª"+"²»ÊôÓÚÒ½±£±¨Ïú·¶Î§";
+		ProportionNote="æœ¬æ”¶æ®ä¸­,"+RegFee+"å…ƒ"+"ä¸å±äºåŒ»ä¿æŠ¥é”€èŒƒå›´";
 		ProportionNote1="";
 		ProportionNote2="";
 		var NeedCardFee=false;
 		var CardFee=0;
  		if (NeedCardFee==true){
- 			var CardFee="¹¤±¾·Ñ "+parseFloat(CardFee)+"Ôª";
+ 			var CardFee="å·¥æœ¬è´¹ "+parseFloat(CardFee)+"å…ƒ";
  		}else{
  			var CardFee="";
  		}
 		RegTime=RegDateYear+"-"+RegDateMonth+"-"+RegDateDay+" "+RegTime
 		if (AccBalance=="") AccBalance=0;
-		//ÖØ´ò²»ÏÔÊ¾Ïû·Ñ½ğ¶î¡£
-		//Ïû·Ñºó½ğ¶î
+		//é‡æ‰“ä¸æ˜¾ç¤ºæ¶ˆè´¹é‡‘é¢ã€‚
+		//æ¶ˆè´¹åé‡‘é¢
 		AccTotal="" //SaveNumbleFaxed(AccBalance);
-		//Ïû·ÑÇ°½ğ¶î
+		//æ¶ˆè´¹å‰é‡‘é¢
     	AccAmount="" //SaveNumbleFaxed(parseFloat(AccBalance)+parseFloat(Total));
 		var cardnoprint=$('#CardNo').val();
 		if (cardnoprint=="") {
@@ -522,8 +568,8 @@ function PrintOut(PrintData) {
 			cardnoprint=row['TPatCardNo'];
 		}
 		var TimeD=TimeRange;
-		if (AppFee!=0){AppFee="Ô¤Ô¼·Ñ:"+AppFee}else{AppFee=""}
-		if (OtherFee!=0) {OtherFee="ÖÎÁÆ·Ñ:"+OtherFee}else{OtherFee=""}
+		if (AppFee!=0){AppFee="é¢„çº¦è´¹:"+AppFee}else{AppFee=""}
+		if (OtherFee!=0) {OtherFee="æ²»ç–—è´¹:"+OtherFee}else{OtherFee=""}
 		var PDlime=String.fromCharCode(2);
 		var MyPara="AdmNo"+PDlime+AdmNo+"^"+"PatName"+PDlime+PatName+"^"+"TransactionNo"+PDlime+TransactionNo+"^"+"AccTotal"+PDlime+AccTotal+"^"+"AccAmount"+PDlime+AccAmount;
 		var MyPara=MyPara+"^"+"MarkDesc"+PDlime+MarkDesc+"^"+"AdmDate"+PDlime+AdmDateStr+"^"+"SeqNo"+PDlime+SeqNo+"^RegDep"+PDlime+RegDep;
@@ -538,11 +584,11 @@ function PrintOut(PrintData) {
 		var MyPara=MyPara+"^"+"RowID"+PDlime+RowID;
 		var MyPara=MyPara+"^"+"DYIPMRN"+PDlime+Trim(DYIPMRN);
 		var MyPara=MyPara+"^"+"ExabMemo"+PDlime+ExabMemo;
-		var MyPara=MyPara+"^"+"PatNo"+PDlime+PatNo;       //´òÓ¡µÇ¼ÇºÅ
+		var MyPara=MyPara+"^"+"PatNo"+PDlime+PatNo;       //æ‰“å°ç™»è®°å·
 		var MyPara=MyPara+"^"+"HospName"+PDlime+HospitalDesc+"^"+"paymoderstr1"+PDlime+PayModeStr1+"^"+"paymoderstr2"+PDlime+PayModeStr2;
 		var myobj=document.getElementById("ClsBillPrint");
 		PrintFun(myobj,MyPara,"");	
-	} catch(e) {$.messager.alert("ÌáÊ¾",e.message)};
+	} catch(e) {$.messager.alert("æç¤º",e.message)};
 }
 
 function PrintFun(PObj,inpara,inlist){
@@ -561,7 +607,7 @@ function PrintFun(PObj,inpara,inlist){
 			var rtn=PObj.ToPrintDocNew(inpara,inlist,docobj);
 		}
 	}catch(e){
-		$.messager.alert("ÌáÊ¾",e.message);
+		$.messager.alert("æç¤º",e.message);
 		return;
 	}
 }
@@ -587,6 +633,14 @@ function SaveNumbleFaxed(str){
 	return str;
 }
 function ExportClick(){
+	
+	//ä¿®æ”¹å¯¼å‡ºé…ç½®
+	//var lnk="websys.query.customisecolumn.csp?CONTEXT=Kweb.DHCOPRegReports:RegQuery&PAGENAME=opadm.regquery.hui.csp&PREFID=0";
+	//alert(typeof websys_writeMWToken)
+	//if(typeof websys_writeMWToken=='function') lnk=websys_writeMWToken(lnk);
+	//window.location.href=lnk;
+	//return
+	
 	var selfHosp = true; 
 	var HospID=$HUI.combogrid('#_HospUserList').getValue();
 	//$("#SelfHosp").checkbox('getValue');
@@ -594,14 +648,17 @@ function ExportClick(){
 	if (selfHosp) payMode = $("#PayMode").combobox('getValue')+"^"+session['LOGON.HOSPID']+"^"+$("#RMarkdesc").combobox('getValue');*/
 	if (selfHosp) payMode = $("#PayMode").combobox('getValue')+"^"+HospID+"^"+$("#TelHome").val()+"^"+$("#RMarkdesc").combobox('getValue');
 	else payMode = $("#PayMode").combobox('getValue')+"^^"+$("#TelHome").val()+"^"+$("#RMarkdesc").combobox('getValue');
-	payMode=payMode+"^"+$("#SessionType").combobox('getText')
+	var TimeRange=$("#TimeRange").combobox('getValue');
+	payMode=payMode+"^"+$("#SessionType").combobox('getText')+"^"+TimeRange
+	
 	
 	$cm({
-	    ExcelName:"¹ÒºÅ²éÑ¯Ã÷Ï¸",
+	    ExcelName:"æŒ‚å·æŸ¥è¯¢æ˜ç»†",
 		localDir:"Self", 
 	    ResultSetType:"ExcelPlugin",
 		ClassName:'web.DHCOPRegReports',
 		QueryName:'RegQuery',
+		PageName:"opadm.regquery.hui.csp",
 		StDate:$("#StDate").datebox('getValue'),
 	    EdDate:$("#EdDate").datebox('getValue'),
 	    StTime:$("#StTime").timespinner('getValue'),
@@ -650,8 +707,8 @@ function ExportClickOld(){
 				oSheet.Cells(i+2,j+1).value =sstr[j];
 			}
 		}
-        $.messager.alert("ÌáÊ¾","ÎÄ¼ş½«±£´æÔÚÄúµÄEÅÌ¸ùÄ¿Â¼ÏÂ","info",function(){
-	        var savePath="E:\\¹ÒºÅ²éÑ¯Ã÷Ï¸.xls";
+        $.messager.alert("æç¤º","æ–‡ä»¶å°†ä¿å­˜åœ¨æ‚¨çš„Eç›˜æ ¹ç›®å½•ä¸‹","info",function(){
+	        var savePath="E:\\æŒ‚å·æŸ¥è¯¢æ˜ç»†.xls";
 			oSheet.saveas(savePath);
 			oWB.Close (savechanges=false);
 			oXL.Quit();
@@ -660,7 +717,7 @@ function ExportClickOld(){
 	    });		
 	}
 	catch(e) {
-		$.messager.alert("ÌáÊ¾","Òª´òÓ¡¸Ã±í¡AÄú±ØĞë°²×°Excelµç×Ó±í¸ñÈí¼ş,Í¬Ê±ä¯ÀÀÆ÷ĞëÊ¹ÓÃ'ActiveX ¿Ø¼ş',ÄúµÄä¯ÀÀÆ÷ĞëÔÊĞíÖ´ĞĞ¿Ø¼ş¡C Çëµã»÷¡i°ïÖú¡jÁË½âä¯ÀÀÆ÷ÉèÖÃ·½·¨¡I");
+		$.messager.alert("æç¤º","è¦æ‰“å°è¯¥è¡¨î“‡æ‚¨å¿…é¡»å®‰è£…Excelç”µå­è¡¨æ ¼è½¯ä»¶,åŒæ—¶æµè§ˆå™¨é¡»ä½¿ç”¨'ActiveX æ§ä»¶',æ‚¨çš„æµè§ˆå™¨é¡»å…è®¸æ‰§è¡Œæ§ä»¶î“‰ è¯·ç‚¹å‡»î“¯å¸®åŠ©î“°äº†è§£æµè§ˆå™¨è®¾ç½®æ–¹æ³•î“");
 		return "";
 	}
 }
@@ -706,10 +763,23 @@ function LoadSessionType(){
 				enterNullValueClear:false,
 				data: GridData["rows"],
 				multiple:true,
-				rowStyle:'checkbox', //ÏÔÊ¾³É¹´Ñ¡ĞĞĞÎÊ½
+				rowStyle:'checkbox', //æ˜¾ç¤ºæˆå‹¾é€‰è¡Œå½¢å¼
 				filter: function(q, row){
 					return (row["Desc"].toUpperCase().indexOf(q.toUpperCase()) >= 0) ||(row["Code"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
 				}
 		 });
 	});
+}
+function DisableBtn(id,disabled){
+	if (disabled){
+		$HUI.linkbutton("#"+id).disable();
+	}else{
+		$HUI.linkbutton("#"+id).enable();
 	}
+}
+function Sort_int(a,b) {
+    if (a.length > b.length) return 1;
+    else if (a.length < b.length) return -1;
+    else if (a > b) return 1;
+    else return -1;
+}

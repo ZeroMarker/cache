@@ -1,3 +1,10 @@
+var PageLogicObj = {
+	v_CHosp:"",
+	m_Loc:"",
+	m_OPAdmReason:"",
+	m_IPAdmReason:""
+	
+}
 $(function(){
 	//页面元素初始化 必须设置同步，否则会导致页面数据初始化时错误
 	PageHandle();
@@ -7,9 +14,26 @@ $(function(){
 	InitEvent();
 });
 function Init(){
+	InitHospList();
+	InitData();
+	InitLayout();
+}
+function InitEvent(){
+	$("#BSave").click(SaveClickHandle);
+	$HUI.checkbox("#AutoProCode",{
+        onCheckChange:function(e,value){
+            AutoProCodeClick(value);
+        }
+    });
+}
+function InitLayout() {
+	$("#PilotProSubCatList").css('height',$(window).height()-340)	
+}
+function InitData() {
 	$.cm({
 		ClassName:"web.PilotProject.DHCDocPPGroupSeting",
 		MethodName:"GetInitInfo",
+		InHosp:GetHospValue(),
 		dataType:"text"
 	},function(rtnStr){
 		var PilotExpression=rtnStr.split("^")[0];
@@ -32,16 +56,21 @@ function Init(){
 		}else{
 			o.setValue(false);
 		}
+		
 		if (OPOrdAutoBilled=="Y") {
 			$("#OPOrdAutoBilled").checkbox('check');
 		}else{
 			$("#OPOrdAutoBilled").checkbox('uncheck');
 		}
+		
 		$("#PilotExpression").val(PilotExpression);
-		var cbox=$HUI.combobox("#SuperLoc");
-			cbox.select(SuperDepRowId);
+
+		//var cbox=$HUI.combobox("#SuperLoc");
+		//cbox.setValue(SuperDepRowId);
+		$("#SuperLoc").combobox("setValue",SuperDepRowId)
 		var cbox=$HUI.combobox("#ProRegList");
 			cbox.select(ProRegList);
+		
 		$("#ProCodeLenght").val(ProCodeLenght);
 		var cbox=$HUI.combobox("#PilotPatAdmReason");
 			cbox.select(PilotPatAdmReason);
@@ -55,21 +84,13 @@ function Init(){
 		var SubObj=document.getElementById('PilotProSubCatList')
 		if (SubObj){
 			for(var i=0;i<SubObj.length;i++){
+				SubObj.options[i].selected=false;
 				if(("!"+SubConfigStr+"!").indexOf("!"+SubObj.options[i].value+"!")!=-1){
 					SubObj.options[i].selected=true;
 				}
 			}
 		}
-	});
-	$("#PilotProSubCatList").css('height',$(window).height()-340)
-}
-function InitEvent(){
-	$("#BSave").click(SaveClickHandle);
-	$HUI.checkbox("#AutoProCode",{
-        onCheckChange:function(e,value){
-            AutoProCodeClick(value);
-        }
-    });
+	});	
 }
 function AutoProCodeClick(value){
 	if (value) {
@@ -117,12 +138,13 @@ function SaveClickHandle(){
 		MethodName:"Save1Method",
 		dataType:"text",
 		ParaStr:myStr,
-		myExpStr:""
+		myExpStr:"",
+		InHosp:GetHospValue()
 	},function(rtn){
 		if (rtn=="0"){
-			$.messager.alert("提示","保存成功");
+			$.messager.alert("提示","保存成功","info");
 		}else{
-			$.messager.alert("提示","保存失败");
+			$.messager.alert("提示","保存失败","error");
 		}
 	});
 }
@@ -218,21 +240,23 @@ function PageHandle(){
 		QueryName:"FindLoc",
 		dataType:"json",
 		Loc:"",
+		InHosp:GetHospValue(),
 		rows:99999
 	},false);
 	//Desc:%String,Code:%String,RowId:%String,Alias
-	var cbox = $HUI.combobox("#SuperLoc", {
+	PageLogicObj.m_Loc = $HUI.combobox("#SuperLoc", {
 			valueField: 'RowId',
 			textField: 'Desc', 
 			editable:true,
+			blurValidValue:true,
 			data: Data["rows"],
 			filter: function(q, row){
 				var opts = $(this).combobox('options');
 				return (row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0)||(row["Alias"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
-			},
-			onChange:function(newValue,oldValue){
-				if (newValue=="") $(this).setValue("");
 			}
+			/*onChange:function(newValue,oldValue){
+				if (newValue=="") $(this).setValue("");
+			}*/
 	 });
 	//挂号次数
 	var cbox = $HUI.combobox("#ProRegList", {
@@ -249,22 +273,29 @@ function PageHandle(){
 		ClassName:"web.PilotProject.DHCDocPPGroupSeting",
 		MethodName:"ReadAdmReasonListBroker",
 		JSFunName:"GetAdmReasonToHUIJson",
-		ListName:""
+		ListName:"",
+		InHosp:GetHospValue()
 	},false);
-	var cbox = $HUI.combobox("#PilotPatAdmReason,#IPPilotPatAdmReason", {
+	PageLogicObj.m_OPAdmReason = $HUI.combobox("#PilotPatAdmReason", {
 			valueField: 'id',
 			textField: 'text', 
+			blurValidValue:true,
 			editable:true,
-			data: JSON.parse(Data),
-			onChange:function(newValue,oldValue){
-				if (newValue=="") $(this).setValue("");
-			}
+			data: JSON.parse(Data)
+	 });
+	 PageLogicObj.m_IPAdmReason = $HUI.combobox("#IPPilotPatAdmReason", {
+			valueField: 'id',
+			textField: 'text', 
+			blurValidValue:true,
+			editable:true,
+			data: JSON.parse(Data)
 	 });
 	 //子类
 	 var SubCat=$.cm({
 		ClassName:"web.PilotProject.DHCDocPPGroupSeting",
 		MethodName:"FindSubCat",
-		dataType:"text"
+		dataType:"text",
+		InHosp:GetHospValue()
 	},false);
 	var obj=document.getElementById("PilotProSubCatList");
 	for (var i=0;i<SubCat.split(String.fromCharCode(2)).length;i++){
@@ -273,4 +304,85 @@ function PageHandle(){
 	 	var SubDesc=tempStr.split(String.fromCharCode(1))[1];
 	 	obj.options[i]=new Option(SubDesc,SubRowId);
 	 }
+}
+
+function InitHospList()
+{
+	var hospComp = GenHospComp("Doc_BaseConfig_CNMedCode");
+	hospComp.jdata.options.onSelect = function(rowIndex,data){
+		PageLogicObj.v_CHosp = data.HOSPRowId;
+		SwitchHosp();
+		InitData();
+	}
+	hospComp.jdata.options.onLoadSuccess= function(data){
+		//Init();
+	}
+}
+
+function GetHospValue() {
+	if (PageLogicObj.v_CHosp == "") {
+		return session['LOGON.HOSPID'];
+	}
+	
+	return PageLogicObj.v_CHosp
+}
+
+function SwitchHosp() {
+	PageLogicObj.m_Loc.clear();
+	PageLogicObj.m_OPAdmReason.clear();
+	PageLogicObj.m_IPAdmReason.clear();
+	var loc = "";
+	var url = $URL+"?ClassName=web.PilotProject.DHCDocPilotProject&QueryName=FindLoc&Loc="+loc+"&InHosp="+GetHospValue()+"&ResultSetType=array";
+	PageLogicObj.m_Loc.reload(url);
+	
+	
+	/*
+	var JSFunName = "GetAdmReasonToHUIJson"
+	url = $URL+"?ClassName=web.PilotProject.DHCDocPPGroupSeting&QueryName=ReadAdmReasonListBroker&JSFunName="+JSFunName+"&InHosp="+GetHospValue()+"&ResultSetType=array";
+	
+	PageLogicObj.m_OPAdmReason.reload(url);
+	PageLogicObj.m_IPAdmReason.reload(url);
+	*/
+	
+	//费别
+   var Data=$.m({
+		ClassName:"web.PilotProject.DHCDocPPGroupSeting",
+		MethodName:"ReadAdmReasonListBroker",
+		JSFunName:"GetAdmReasonToHUIJson",
+		ListName:"",
+		InHosp:GetHospValue()
+	},false);
+	PageLogicObj.m_OPAdmReason = $HUI.combobox("#PilotPatAdmReason", {
+			valueField: 'id',
+			textField: 'text', 
+			blurValidValue:true,
+			editable:true,
+			data: JSON.parse(Data)
+	 });
+	 PageLogicObj.m_IPAdmReason = $HUI.combobox("#IPPilotPatAdmReason", {
+			valueField: 'id',
+			textField: 'text', 
+			blurValidValue:true,
+			editable:true,
+			data: JSON.parse(Data)
+	 });
+	 
+	
+	//子类
+	 var SubCat=$.cm({
+		ClassName:"web.PilotProject.DHCDocPPGroupSeting",
+		MethodName:"FindSubCat",
+		dataType:"text",
+		InHosp:GetHospValue()
+	},false);
+	var obj=document.getElementById("PilotProSubCatList");
+	$("#PilotProSubCatList").empty();
+	for (var i=0;i<SubCat.split(String.fromCharCode(2)).length;i++){
+	 	var tempStr=SubCat.split(String.fromCharCode(2))[i];
+	 	var SubRowId=tempStr.split(String.fromCharCode(1))[0];
+	 	var SubDesc=tempStr.split(String.fromCharCode(1))[1];
+	 	obj.options[i]=new Option(SubDesc,SubRowId);
+	 }
+	 
+	
 }

@@ -46,7 +46,16 @@ var init = function(){
 		var newParamsArr = newParams.split(",");
 		var Params = [],paramsChange=false,t="",ot="";
 		for(var i =0; i<newParamsArr.length; i++){
-			t = newParamsArr[i].split(":")[0];
+			var c = ":"; 
+			/*param As %String="" => param:%String=""*/
+			/*param As %String => param:%String*/
+			/*param="" => param=""*/
+			if (newParamsArr[i].indexOf(":")>-1) {
+				c = ":";
+			}else{
+				c = "=";
+			}
+			t = newParamsArr[i].split(c)[0];
 			ot="";
 			if (i<oldParamsArr.length){
 				ot = oldParamsArr[i].split("^")[0];
@@ -82,6 +91,7 @@ var init = function(){
 		var Code = $("#Code").val();
 		var Caption = $("#Caption").val();
 		var Model = $("#Model").val();
+		var SubPath = $("#SubPath").val();
 		var Mth = $("#Mth").combogrid("getValue");
 		var Cls = $("#Cls").combogrid("getValue");
 		var Note = $("#Note").val();
@@ -110,12 +120,28 @@ var init = function(){
 		if ($("#EnableTransaction").prop("checked")){
 			EnableTransactionVal = "on";
 		}
+		var EnableLogVal = "off";
+		if ($("#EnableLog").prop("checked")){
+			EnableLogVal = "on";
+		}
+		var NotUpdateTimeoutVal = "off";
+		if ($("#NotUpdateTimeout").prop("checked")){
+			NotUpdateTimeoutVal = "on";
+		}
+		var GrantPathsVal = "";
+		$("#GrantPaths option:selected").each(function(){
+ 			GrantPathsVal +="^"+$(this).val();
+ 		})
+ 	
 		$.ajaxRunServerMethod({ClassName:cls,MethodName:"Save",
-			ID:ID,Code:Code,Caption:Caption,Cls:Cls,Mth:Mth,Model:Model,Query:Query,Note:Note,Source:Source,WSDLPath:WSDLPath,Params:Params,AllowWSInvoke:AllowWSInvoke,
-			Type:Type,
+			ID:ID,Code:Code,Caption:Caption,Cls:Cls,Mth:Mth,Model:Model,Query:Query,Note:Note,Source:Source,
+			WSDLPath:WSDLPath,Params:Params,AllowWSInvoke:AllowWSInvoke,
+			Type:Type,SubPath:SubPath,GrantPaths:GrantPathsVal,
 			DisableFilter:DisableFilterVal,
 			RunTimeout:RunTimeout,
-			EnableTransaction:EnableTransactionVal
+			EnableTransaction:EnableTransactionVal,
+			EnableLog:EnableLogVal,
+			NotUpdateTimeout:NotUpdateTimeoutVal
 			},
 			function(rtn){
 				if(parseInt(rtn)>0){

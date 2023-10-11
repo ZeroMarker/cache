@@ -133,6 +133,10 @@ function BSelectWrite_change(value,rowIndex){
 		textField:'DocName',
 		onBeforeLoad:function(param){
 			param.Desc = param.q;
+			param.Type="B";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID'];
+
 		},
 		columns:[[
 		    {field:'DocDr',title:'ID',width:40},
@@ -142,7 +146,7 @@ function BSelectWrite_change(value,rowIndex){
 		]],
 		onLoadSuccess:function(){
 			//$("#UserName").combogrid('setValue',""); 
-		},
+		}
 
 		});	
 		 
@@ -156,6 +160,7 @@ function BSelectWrite_change(value,rowIndex){
 		textField:'Desc',
 		onBeforeLoad:function(param){
 			param.ctlocdesc = param.q;
+			param.hospId = session['LOGON.HOSPID'];
 		},
 		
 		columns:[[
@@ -166,7 +171,7 @@ function BSelectWrite_change(value,rowIndex){
 		]],
 		onLoadSuccess:function(){
 			//$("#LocName").combogrid('setValue',""); 
-		},
+		}
 
 	});
 		
@@ -175,7 +180,11 @@ function BSelectWrite_change(value,rowIndex){
 	var GroupObj = $HUI.combobox("#GroupName",{
 		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindFeeTypeSuperGroup&ResultSetType=array",
 		valueField:'id',
-		textField:'desc'
+		textField:'desc',
+		onBeforeLoad:function(param){
+			param.hospId = session['LOGON.HOSPID']; 
+		}
+
 	});	
 	
 	    
@@ -191,6 +200,7 @@ function BFind_click(){
 			UserID:$("#UserName").combogrid('getValue'),
 		    GroupID:$("#GroupName").combobox('getValue'),
 			LocID:$("#LocName").combogrid('getValue'),
+			hospId:session['LOGON.HOSPID']
 		    
 		});	
 } 
@@ -213,6 +223,7 @@ function BClear_click(){
 	$("#ChartAssignTab").datagrid('load',{
 			ClassName:"web.DHCPE.ChartAssign",
 			QueryName:"SerchChartAssign",
+			hospId:session['LOGON.HOSPID']
 			
 		    
 		});	
@@ -347,6 +358,7 @@ function InitChartAssignDataGrid(){
 		queryParams:{
 			ClassName:"web.DHCPE.ChartAssign",
 			QueryName:"SerchChartAssign",
+			hospId:session['LOGON.HOSPID']
 		},
 		columns:[[
 	

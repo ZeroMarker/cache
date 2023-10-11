@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+
+    <script type="text/javascript" src="../js/jquery.min.js"></script>
+</head>
+
+<body>
+    test
+    <script>
+        $(function() {
+            var userList = GetUserList();
+            var userArray = userList.split("&&&");
+            var oid="1.2.156.112562.2.1.2.2";
+            for (var i = 0; i < userArray.length; i++) {
+                var singleUser = userArray[i];
+                var certID = singleUser.split("||")[1];
+                var signCert=GetSignCert(certID);
+                var userID=GetExtCertInfoByOID(signCert,oid);
+                var signData=SignedData(certID,"123456789");
+                console.log({
+                    CertID:certID,
+                    SignCert:signCert,
+                    UserID:userID,
+                    SignData:signData
+                })
+            }
+            
+
+            var svscom = new ActiveXObject("BJCA_SVS_ClientCOM.BJCASVSEngine");
+            var cert = svscom.GetServerCertificate();
+            alert(cert); //打印服务器证书
+            var random = svscom.GenRandom(24);
+            alert(random);
+
+            var tsscom = new ActiveXObject("BJCA_TS_ClientCom.BJCATSEngine");
+            var data = "this is a test";
+            var tsReqData = tsscom.CreateTSRequest(data, 1); //创建时间戳请求
+            if (tsReqData == "") {
+                alert("创建时间戳请求失败!");
+            }
+            var tsData = tsscom.CreateTS(tsReqData); //由时间戳请求产生时间戳
+            if (tsData == "") {
+                alert("产生时间戳失败!");
+            }
+            var ret = tsscom.VerifyTS(tsData, data); //验证时间戳并验证原文
+            if (ret != 0) {
+                alert("验证时间戳失败!");
+            }
+        });
+    </script>
+</body>
+<script type="text/javascript" src="SecX_Common.js"></script>
+
+</html>

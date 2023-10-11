@@ -37,15 +37,15 @@
 		var dgOpts={
 			//trID,contact,contactTel,conResult,trAdvice,fwLocDesc,fwUserName,trUserName,trOpDT,trOpDesc
 			columns:[[
-				{field:'contact',title:'联系人',width:80,align:'center'},
-				{field:'contactTel',title:'联系电话',width:100,align:'center'},
-				{field:'conResult',title:'联系结果',width:100,align:'center'},
-				{field:'fwLocDesc',title:'转发科室',width:100,align:'center'},
-				{field:'fwUserName',title:'转发医生',width:80,align:'center'},
-				{field:'trAdvice',title:'意见措施',width:300,align:'center'},
-				{field:'trOpDesc',title:'操作',width:80,align:'center'},
-				{field:'trUserName',title:'操作人',width:80,align:'center'},
-				{field:'trOpDT',title:'操作时间',width:160,align:'center'}
+				{field:'contact',title:'联系人',width:80,align:'left'},
+				{field:'contactTel',title:'联系电话',width:100,align:'left'},
+				{field:'conResult',title:'联系结果',width:100,align:'left'},
+				{field:'fwLocDesc',title:'转发科室',width:100,align:'left'},
+				{field:'fwUserName',title:'转发医生',width:80,align:'left'},
+				{field:'trAdvice',title:'意见措施',width:300,align:'left'},
+				{field:'trOpDesc',title:'操作',width:80,align:'left'},
+				{field:'trUserName',title:'操作人',width:80,align:'left'},
+				{field:'trOpDT',title:'操作时间',width:160,align:'left'}
 			]],
 			//fitColumns:false,
 			queryParams:{
@@ -82,8 +82,11 @@
 		var $transOrdTable=$layout.find('.transOrdTable');
 		var $transOrdExecTable=$layout.find('.transOrdExecTable');
 		$layout.layout({fit:true});
-			
-		var $tb=$('<div id="transOrdExecTable-tb" style="padding:4px 0 4px 10px;line-height:30px;">执行日期：<input class="tb-st" /> -- <input class="tb-end" /> <a href="javascript:void(0);" class="tb-search" style="margin-left:10px;" >查询</a></div> ').appendTo('body');;
+		
+		var tbLineHeight=30;
+		if(typeof HISUIStyleCode=='string' && HISUIStyleCode=='lite') tbLineHeight=28;
+		
+		var $tb=$('<div id="transOrdExecTable-tb" style="padding:4px 0 4px 10px;line-height:'+tbLineHeight+'px;"><span style="padding-right:10px;">'+$g('执行日期')+'</span><input class="tb-st" /><span style="padding:0 10px;">'+$g('至')+'</span><input class="tb-end" /> <a href="javascript:void(0);" class="tb-search" style="margin-left:10px;" >查询</a></div> ').appendTo('body');;
 		//console.log($tb.html());
 		var $st=$tb.find('.tb-st').datebox({});
 		var $end=$tb.find('.tb-end').datebox({});
@@ -92,6 +95,7 @@
 
 		$transOrdTable.datagrid({
 			title:'医嘱信息',
+			iconCls:'icon-paper-info',
 			headerCls:'panel-header-gray',
 			border:true,
 			url:opts.baseUrl+'/csp/websys.Broker.cls',
@@ -107,9 +111,9 @@
 			toolbar:[],
 			//lkID,ordItm,ordDesc,ordDoctorName,ordLocDesc,ordDateTime,ordExecNurseName,ordExecDateTime		
 			columns:[[
-				{field:'ordDesc',title:'医嘱名称',width:150},
-				{field:'ordDoctorName',title:'下医嘱医生',width:150},
-				{field:'ordDateTime',title:'下医嘱时间',width:150} //,
+				{field:'ordDesc',title:'医嘱名称',width:199},
+				{field:'ordDoctorName',title:'下医嘱医生',width:120},
+				{field:'ordDateTime',title:'下医嘱时间',width:160} //,
 				//{field:'ordExecNurseName',title:'执行护士',width:100} ,
 				//{field:'ordExecDateTime',title:'执行时间',width:150} 
 			]],
@@ -128,9 +132,12 @@
 				$transOrdExecTable.datagrid('load',{orderId:row.ordItm, execStDate:st, execEndDate:end,ClassName:'web.DHCDocMain',QueryName:'FindOrderExecDet'});
 			}
 		})
+		///此表格通过设置宽度 使表格所有列宽和表格宽一致  将左后一列边框变透明
+		$transOrdTable.datagrid('getPanel').addClass('orderview-dg-nolastborder');
 			
 		$transOrdExecTable.datagrid({
 			title:'执行记录',
+			iconCls:'icon-paper-clock-bue',
 			headerCls:'panel-header-gray',
 			border:true,
 			url:opts.baseUrl+'/csp/websys.Broker.cls',
@@ -141,6 +148,7 @@
 			pagination: true,
 			pageSize:15,
 			fit:true,
+			fitColumns:true,
 			pageList: [15,30,50],  
 			striped: true ,	
 			toolbar:'#transOrdExecTable-tb',
@@ -167,7 +175,7 @@
     window.renderCVTransOrd=renderCVTransOrd;
     
     
-    //渲染处理医嘱
+    //渲染病历表格
 	function renderCVTransEmr(ele,data,buttonData,modalContent){
 		console.log(ele,data,buttonData,modalContent);
 		var $ele=$(ele);
@@ -199,24 +207,48 @@
 			columns:[[
 				{field:'insTitle',title:'标题',width:150},
 				{field:'insCreateUserName',title:'创建医生',width:150},
-				{field:'insCreateDateTime',title:'创建时间',width:150},
-				{field:'insID',title:'病历',width:100,formatter:function(value){
+				{field:'insCreateDateTime',title:'创建时间',width:160},
+				{field:'insID',title:'病历',width:188,formatter:function(value){
 					return '<a class="a-emr-view" data-instance="'+value+'" data-adm="'+(data.Adm||'')+'" href="javascript:void(0);" >查看</a>';
 				}}
 			]],
 			onLoadSuccess:function(){
 				$transEMRTable.closest('.datagrid').find('.a-emr-view').off('click').on('click',function(){
 					var instanceID=$(this).data('instance'),adm=$(this).data('adm');
-					var link='emr.browse.csp?EpisodeID='+adm+'&InstanceID='+instanceID;
-					var maxWidth=screen.availWidth-20;
-					var maxHeight=screen.availHeight-40;
-					var w=parseInt(maxWidth*0.8),h=parseInt(maxHeight*0.8),l=parseInt((maxWidth-w)/2),t=parseInt((maxHeight-h)/2);
-					var features='top='+t+',left='+l+',width='+w+',height='+h+',toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=no,resizable=yes,maximized=yes'
-					window.open(link,'transEMRWin',features);
+					//var link='emr.browse.csp?EpisodeID='+adm+'&InstanceID='+instanceID;
+					
+					getEmrViewLinkCfg(function(link){
+						link=$.orderview.formatByJson(link,{EpisodeID:adm,InstanceID:instanceID});
+						var maxWidth=screen.availWidth-20;
+						var maxHeight=screen.availHeight-40;
+						var w=parseInt(maxWidth*0.8),h=parseInt(maxHeight*0.8),l=parseInt((maxWidth-w)/2),t=parseInt((maxHeight-h)/2);
+						var features='top='+t+',left='+l+',width='+w+',height='+h+',toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=no,resizable=yes,maximized=yes'
+						$.orderview.easyOriginWin(link,'transEMRWin',features);
+						
+					})
+					
+
 				})
 			}
 		})
+		///此表格通过设置宽度 使表格所有列宽和表格宽一致  将左后一列边框变透明
+		$transEMRTable.datagrid('getPanel').addClass('orderview-dg-nolastborder');
 	}
+	
+	var cacheEmrViewLinkCfg=''
+	function getEmrViewLinkCfg(callback){
+		if (cacheEmrViewLinkCfg) {
+			callback(cacheEmrViewLinkCfg);
+		}else{
+			$.m({ClassName:'web.DHCAntCVOptions',MethodName:'GetBaseOpt',Code:'EmrViewLink'},function(ret){
+				cacheEmrViewLinkCfg=ret;
+				callback(ret);
+			})
+		}
+		
+	}
+	
+	
 	window.renderCVTransEmr=renderCVTransEmr;
     
     if ($ && $.fn && $.fn.orderview){

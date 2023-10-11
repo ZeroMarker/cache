@@ -1,4 +1,4 @@
-//DHCPEAPAC.Find.hisui.js
+//名称  DHCPEAPAC.Find.hisui.js
 //功能	体检卡明细查询	
 //创建	2019.04.01
 //创建人  xy
@@ -139,8 +139,11 @@ function PrintBalance(TxtInfo)
 	//DHCP_PrintFun(myobj,TxtInfoPat,"");
 	DHC_PrintByLodop(getLodop(),TxtInfoPat,"","","");
 }
+
+//原号重打
 function BRePRintInv_click()
 {
+	var LocID=session['LOGON.CTLOCID']
 	var RowId=$("#RowId").val();
 	if (RowId=="") {
 		 $.messager.alert("提示","请选择待打印的记录","info");
@@ -150,19 +153,21 @@ function BRePRintInv_click()
 	 var InvID="",DetailType="";
 	 var objtbl = $("#APACFindQueryTab").datagrid('getRows'); 
 	 var InvID=objtbl[selectrow].TSourceNo;
-	 
-	if (InvID=="") {
+	 if(InvID.indexOf("(")>"-1") { var InvID=InvID.split("(")[0]; }
+
+	 if (InvID=="") {
 		$.messager.alert("提示","没有原发票不能重打","info");
 		return false;
 		}
 	 var DetailType=objtbl[selectrow].TType;
-	if ((DetailType!="开户")&&(DetailType!="交预缴金")) return false;
+	if ((DetailType!="开户")&&(DetailType!="交预缴金")&&(DetailType!="充值")) return false;
 	PrintInv(InvID);
 }
 function PrintInv(InvID)
 {
-	var TxtInfo=tkMakeServerCall("web.DHCPE.AdvancePayment","GetInvoiceInfo",InvID,"1");
-	var ListInfo=tkMakeServerCall("web.DHCPE.AdvancePayment","GetInvoiceInfo",InvID,"2");
+	var LocID=session['LOGON.CTLOCID']
+	var TxtInfo=tkMakeServerCall("web.DHCPE.AdvancePayment","GetInvoiceInfo",InvID,"1","",LocID);
+	var ListInfo=tkMakeServerCall("web.DHCPE.AdvancePayment","GetInvoiceInfo",InvID,"2","",LocID);
 	if (TxtInfo=="") return
 	///xml print requird
 	DHCP_GetXMLConfig("InvPrintEncrypt","PEInvPrint");
@@ -177,55 +182,132 @@ function PrintInv(InvID)
 	
 function InitCombobox()
 {
-	// 体检卡
+	//体检卡
 	var CTypeObj = $HUI.combobox("#CardType",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindTJCardType&ResultSetType=array",
-		valueField:'id',
-		textField:'desc'
-		
-		})
+		valueField: 'id', 
+		textField: 'text', 
+		data: [
+			{ id: 'R', text: $g('预缴金')}, 
+			{ id: 'C', text: $g('代金卡') } 	
+		]
+	});
 	
-	// 类型	
+	
+ 	//类型
 	var TypeObj = $HUI.combobox("#Type",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindType&ResultSetType=array",
-		valueField:'id',
-		textField:'desc'
-		
-		})
-	/*	
-	// 支付方式	
-	var RPObj = $HUI.combobox("#PayMode",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindPayMode&ResultSetType=array",
-		valueField:'id',
-		textField:'text'
-		})	
-		*/
+		valueField: 'id', 
+		textField: 'text', 
+		data: [
+			{ id: 'B', text: $g('开户')}, 
+			{ id: 'R', text: $g('交预缴金') }, 
+			{ id: 'RF', text: $g('退预缴金') }, 
+			{ id: 'O', text: $g('转出') },
+			{ id: 'I', text: $g('转入')}, 
+			{ id: 'C', text: $g('结算') }, 
+			{ id: 'CF', text: $g('结算退费') }	
+		]
+	});
+	
+	
 
-		// 支付方式	
+	/*
+	// 退费支付方式	
 	var RPObj = $HUI.combobox("#PayMode",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindTJCardPayMode&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindTJCardPayMode&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
 		valueField:'id',
 		textField:'text',
 		panelHeight:'140',	
 		})	
+	*/
+	
+	// 退费支付方式	
+	var RPObj = $HUI.combobox("#PayMode",{
+		url:$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindRefundPayMode&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
+		valueField:'id',
+		textField:'desc',
+		panelHeight:'140',	
+		})
 
 }
 
 //查询
 function BFind_click(){
 	var CardType=$("#CardType").combobox('getValue');
-	
-	var RegNoLength=tkMakeServerCall("web.DHCPE.DHCPECommon","GetRegNoLength");
+	var LocID=session['LOGON.CTLOCID']
+	var RegNoLength=tkMakeServerCall("web.DHCPE.DHCPECommon","GetRegNoLength",LocID);
 	iRegNo=$("#RegNo").val();
 
   if(CardType=="R"){
 	   	if (iRegNo.length<RegNoLength && iRegNo.length>0) { 
-			iRegNo=tkMakeServerCall("web.DHCPE.DHCPECommon","RegNoMask",iRegNo);
+			iRegNo=tkMakeServerCall("web.DHCPE.DHCPECommon","RegNoMask",iRegNo,LocID);
 			$("#RegNo").val(iRegNo)
 		};
+		
+		var columns=[[
+			
+			{field:'TRowID',title:'TRowID',hidden: true},
+		    {field:'TRegNo',width:120,title:'登记号'},
+			{field:'TName',width:80,title:'姓名'},
+			{field:'TBilledName',title:'消费者姓名',hidden: true},
+			{field:'TSex',width:50,title:'性别'},
+			{field:'TDate',width:100,title:'日期'},
+			{field:'TTime',width:100,title:'时间'},
+			{field:'TType',width:80,title:'类型'},
+			{field:'TCardNo',title:'代金卡号',hidden: true},
+			{field:'TAmount',width:100,title:'金额',align:'right'},
+			{field:'TSourceNo',width:180,title:'单据号'},
+			{field:'TPAADMTypeDesc',width:100,title:'就诊类型'},
+			{field:'TUser',width:80,title:'操作员'},
+			{field:'TRemainAmount',width:100,title:'剩余金额',align:'right'},
+			{field:'TPayMode',width:120,title:'支付方式'},
+			{field:'TAge',width:100,title:'出生日期'},
+			{field:'TReport',width:80,title:'是否日结'},
+			{field:'TRemark',width:120,title:'备注'},
+			{field:'TReRemark',width:'120',title:'退费备注'},
+					
+	]]
+  }else{
+	  var columns=[[
+			
+			{field:'TRowID',title:'TRowID',hidden: true},
+		    {field:'TRegNo',width:120,title:'登记号'},
+			{field:'TName',width:80,title:'姓名'},
+			{field:'TBilledName',width:80,title:'消费者姓名'},
+			{field:'TSex',width:50,title:'性别'},
+			{field:'TDate',width:100,title:'日期'},
+			{field:'TTime',width:100,title:'时间'},
+			{field:'TType',width:80,title:'类型'},
+			{field:'TCardNo',width:150,title:'代金卡号'},
+			{field:'TAmount',width:100,title:'金额',align:'right'},
+			{field:'TSourceNo',width:180,title:'单据号'},
+			{field:'TPAADMTypeDesc',width:100,title:'就诊类型'},
+			{field:'TUser',width:80,title:'操作员'},
+			{field:'TRemainAmount',width:100,title:'剩余金额',align:'right'},
+			{field:'TPayMode',width:120,title:'支付方式'},
+			{field:'TAge',width:100,title:'出生日期'},
+			{field:'TReport',width:80,title:'是否日结'},
+			{field:'TRemark',width:120,title:'备注'},
+			{field:'TReRemark',width:'120',title:'退费备注'},
+					
+	]]
   }
+ 
 
-	$("#APACFindQueryTab").datagrid('load',{
+	$HUI.datagrid("#APACFindQueryTab", {
+		url: $URL,
+		fit: true,
+		border: false,
+		striped: true,
+		fitColumns: false,
+		autoRowHeight: false,
+		rownumbers: true,
+		pagination: true,
+		rownumbers: true,
+		pageSize: 20,
+		pageList: [20, 100, 200],
+		singleSelect: true,
+		selectOnCheck: true,
+		queryParams: {
 			ClassName:"web.DHCPE.APQuery",
 			QueryName:"SearchAPACDetail",
 			RegNo:$("#RegNo").val(),
@@ -233,11 +315,42 @@ function BFind_click(){
 			Type:$("#Type").combobox('getValue'),
 			CardType:$("#CardType").combobox('getValue'),
 			BeginDate:$("#BeginDate").datebox('getValue'),
-			EndDate:$("#EndDate").datebox('getValue')
-			})
+			EndDate:$("#EndDate").datebox('getValue'),
+			CTLocID:session['LOGON.CTLOCID']
+
+		},
+		columns: columns,
+	})
+	  selectrow=-1;
+	 $("#RowId").val("");
+
 	
 }
 
+var columns=[[
+			
+			{field:'TRowID',title:'TRowID',hidden: true},
+		    {field:'TRegNo',width:120,title:'登记号'},
+			{field:'TName',width:80,title:'姓名'},
+			{field:'TBilledName',title:'消费者姓名',hidden: true},
+			{field:'TSex',width:50,title:'性别'},
+			{field:'TDate',width:100,title:'日期'},
+			{field:'TTime',width:100,title:'时间'},
+			{field:'TType',width:80,title:'类型'},
+			{field:'TCardNo',title:'代金卡号',hidden: true},
+			{field:'TAmount',width:100,title:'金额',align:'right'},
+			{field:'TSourceNo',width:180,title:'单据号'},
+			{field:'TPAADMTypeDesc',width:100,title:'就诊类型'},
+			{field:'TUser',width:80,title:'操作员'},
+			{field:'TRemainAmount',width:100,title:'剩余金额',align:'right'},
+			{field:'TPayMode',width:120,title:'支付方式'},
+			{field:'TAge',width:100,title:'出生日期'},
+			{field:'TReport',width:80,title:'是否日结'},
+			{field:'TRemark',width:120,title:'备注'},
+			{field:'TReRemark',width:'120',title:'退费备注'},
+					
+	]]
+		
 function InitAPACFindDataGrid(){
 	
 	$HUI.datagrid("#APACFindQueryTab",{
@@ -261,7 +374,8 @@ function InitAPACFindDataGrid(){
 			Type:$("#Type").combobox('getValue'),
 			CardType:$("#CardType").combobox('getValue'),
 			BeginDate:$("#BeginDate").datebox('getValue'),
-			EndDate:$("#EndDate").datebox('getValue')
+			EndDate:$("#EndDate").datebox('getValue'),
+			CTLocID:session['LOGON.CTLOCID']
 				
 		},
 		onClickRow:function(rowIndex,rowData){
@@ -275,37 +389,14 @@ function InitAPACFindDataGrid(){
 
 			formatter:function(value,rowData,rowIndex){
 				if((rowData.TSourceNo.indexOf("退")<0)&&(rowData.TType.indexOf("结算")<0)&&(rowData.TType.indexOf("转出")<0)&&(rowData.TType.indexOf("转入")<0)&&(rowData.TRemainAmount!="0.00")){
-					return "<a href='#' onclick='BRefund_click(\""+rowIndex+"\")'>\
-					<img src='../scripts_lib/hisui-0.1.0/dist/css/icons/cancel_order.png' border=0/>\
-					</a>";
+					return "<span style='cursor:pointer;padding:0 8px 0px 10px' class='icon-return-paid' onclick='BRefund_click("+rowIndex+")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";	                   				
 				}
 				}}	
 				]],
-		columns:[[
-			
-			{field:'TRowID',title:'TRowID',hidden: true},
-		    {field:'TRegNo',width:120,title:'登记号'},
-			{field:'TName',width:80,title:'姓名'},
-			{field:'TBilledName',width:80,title:'消费者姓名'},
-			{field:'TSex',width:50,title:'性别'},
-			{field:'TDate',width:100,title:'日期'},
-			{field:'TTime',width:100,title:'时间'},
-			{field:'TType',width:80,title:'类型'},
-			{field:'TCardNo',width:150,title:'代金卡号'},
-			{field:'TAmount',width:100,title:'金额',align:'right'},
-			{field:'TSourceNo',width:150,title:'单据号'},
-			{field:'TUser',width:80,title:'操作员'},
-			{field:'TRemainAmount',width:100,title:'剩余金额',align:'right'},
-			{field:'TPayMode',width:120,title:'支付方式'},
-			{field:'TAge',width:100,title:'出生日期'},
-			{field:'TReport',width:80,title:'是否日结'},
-			{field:'TRemark',width:120,title:'备注'},
-			{field:'TReRemark',width:'120',title:'退费备注'},
-					
-		]],
+		columns: columns,
 		onSelect: function (rowIndex, rowData) {
 			
-			if((rowData.TSourceNo=="")||(rowData.TSourceNo.indexOf("退")>=0)||(rowData.TSourceNo.indexOf("集")>=0)||((rowData.TType!="开户")&&(rowData.TType!="交预缴金"))){
+			if((rowData.TSourceNo=="")||(rowData.TSourceNo.indexOf("退")>=0)||(rowData.TSourceNo.indexOf("集")>=0)||((rowData.TType!="开户")&&(rowData.TType!="交预缴金")&&(rowData.TType!="充值"))){
 					$("#BRePRintInv").linkbutton('disable');
 				
 					}else{
@@ -327,12 +418,21 @@ function BRefund_click(selectrow)
 	var lnk="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCPEAPAC.Refund"+"&RowID="+ID;
 	websys_lu(lnk,false,'width=630,height=340,hisui=true,title=退费')
 	*/
+	 var LocID=session['LOGON.CTLOCID'];
 	 var objtbl = $("#APACFindQueryTab").datagrid('getRows'); 
-	var ID=objtbl[selectrow].TRowID;
-	var Type=objtbl[selectrow].TType;
-   var PayMode=objtbl[selectrow].TPayMode;
-	$("#myWin").show();
+	 var ID=objtbl[selectrow].TRowID;
+	 var Type=objtbl[selectrow].TType;
+     var PayMode=objtbl[selectrow].TPayMode;
+     var PayModeID=objtbl[selectrow].TPayModeID;
+     
+	  $("#myWin").show();
 	 
+	  $('#form-save').form("clear");
+	 
+	 //退费支付方式-重新加载
+	 var PayModeUrl=$URL+"?ClassName=web.DHCPE.CT.HISUICommon&QueryName=FindRefundPayMode&ResultSetType=array&LocID="+LocID+"&PayModeID="+PayModeID;
+     $("#PayMode").combobox('reload',PayModeUrl);
+
 		var myWin = $HUI.dialog("#myWin",{
 			iconCls:'icon-w-edit',
 			resizable:true,
@@ -358,12 +458,14 @@ function BRefund_click(selectrow)
 				}
 			}]
 		});
-		$('#form-save').form("clear");
+		
+
 		if(Type=="转入"){
-		$("#BUpdatePayMode_btn").linkbutton('disable');
+			$("#BUpdatePayMode_btn").linkbutton('disable');
 		}else{
-		$("#BUpdatePayMode_btn").linkbutton('enable');
+			$("#BUpdatePayMode_btn").linkbutton('enable');
 		}
+
 		if((PayMode!="")&&(PayMode.indexOf("(")!="-1")){
 		
 			var NoStr=PayMode.split("(")[1];
@@ -371,7 +473,7 @@ function BRefund_click(selectrow)
 			$("#No").val(No);
 		}		
 
-    if((PayMode!="")&&(PayMode.indexOf("支票")>=0)){
+		if((PayMode!="")&&(PayMode.indexOf("支票")>=0)){
 			$("#No").attr('disabled',false);
 		}else{
 		
@@ -384,7 +486,7 @@ function BRefund_click(selectrow)
 }
 function BUpdatePayMode_click(ID)
 {
-	
+	var LocID=session['LOGON.CTLOCID']
 	if (ID=="")
 	{
 		$.messager.alert("提示","退费的记录不存在","info");
@@ -403,7 +505,7 @@ function BUpdatePayMode_click(ID)
 			}
 		}
 
-	var ret=tkMakeServerCall("web.DHCPE.AdvancePayment","UpdatePayMode",ID,PayMode,No);
+	var ret=tkMakeServerCall("web.DHCPE.AdvancePayment","UpdatePayMode",ID,PayMode,No,LocID);
 	var Arr=ret.split("^");
 	if (Arr[0]!="0"){
 		$.messager.alert("提示",Arr[1],"info");
@@ -418,7 +520,8 @@ function BUpdatePayMode_click(ID)
 			Type:$("#Type").combobox('getValue'),
 			CardType:$("#CardType").combobox('getValue'),
 			BeginDate:$("#BeginDate").datebox('getValue'),
-			EndDate:$("#EndDate").datebox('getValue')
+			EndDate:$("#EndDate").datebox('getValue'),
+			CTLocID:session['LOGON.CTLOCID']
 			})
 	}
 	
@@ -427,7 +530,10 @@ function BUpdatePayMode_click(ID)
 
 function BRefund(ID)
 {
-	
+	var LocID=session['LOGON.CTLOCID']
+	var HOSPID=session['LOGON.HOSPID']
+	var USERID=session['LOGON.USERID']
+
 	if (ID=="")
 	{	
 		$.messager.alert("提示","退费的记录不存在","info");
@@ -491,7 +597,8 @@ function BRefund(ID)
 		}
 
 	var Strings=ID+"^"+RFee+"^"+InvID+"^"+PayMode+"^"+RRemark
-	var ret=tkMakeServerCall("web.DHCPE.AdvancePayment","Refund",Strings);
+	//var ret=tkMakeServerCall("web.DHCPE.AdvancePayment","Refund",Strings);
+	var ret=tkMakeServerCall("web.DHCPE.AdvancePayment","Refund",Strings,LocID,USERID,HOSPID);
 
 	var RetArr=ret.split("^");
 	if (RetArr[0]!=0)
@@ -500,7 +607,7 @@ function BRefund(ID)
 		return false;
 	}
 	var NewAPCRowId=RetArr[2];
-	var refundInfo=tkMakeServerCall("web.DHCPE.AdvancePayment","GetExtRefundByAPCRowID",NewAPCRowId,"",ID);
+	var refundInfo=tkMakeServerCall("web.DHCPE.AdvancePayment","GetExtRefundByAPCRowID",NewAPCRowId,"",ID,"",LocID);
 	if (refundInfo != "") {
 			var char1 = String.fromCharCode(1);
 			var PEBarCodePayStr = refundInfo.split(char1)[1]; //互联网扫码付支付记录
@@ -517,10 +624,10 @@ function BRefund(ID)
 			if (scanFlag == "1") {
 				
 			} else {
-				var expStr = session['LOGON.CTLOCID'] + "^" + session['LOGON.GROUPID'] + "^" + session['LOGON.HOSPID'] + "^" + session['LOGON.USERID'] + "^^^^^D^";
+				var expStr = session['LOGON.CTLOCID'] + "^" + session['LOGON.GROUPID'] + "^" + session['LOGON.HOSPID'] + "^" + session['LOGON.USERID'] ;
 				var refRtn = RefundPayService("PEDEP", oldINvID, dropInvID, newInvID, refundAmt, "PEDEP", expStr);
-				if (refRtn.rtnCode != "0") {
-					$.messager.alert("提示","体检退费成功，调用第三方退费接口失败,请补交易！\n" + refRtn.rtnMsg,"info");
+				if (refRtn.ResultCode != "0") {
+					$.messager.alert("提示","体检退费成功，调用第三方退费接口失败,请补交易！\n" + refRtn.ResultMsg,"info");
 				}
 			}
 	}
@@ -540,7 +647,9 @@ function BRefund(ID)
 			Type:$("#Type").combobox('getValue'),
 			CardType:$("#CardType").combobox('getValue'),
 			BeginDate:$("#BeginDate").datebox('getValue'),
-			EndDate:$("#EndDate").datebox('getValue')
+			EndDate:$("#EndDate").datebox('getValue'),
+			CTLocID:session['LOGON.CTLOCID']
+			
 			})
 	
 }
@@ -549,7 +658,9 @@ function BRefund(ID)
 function SetInvNo()
 { 
 	var userId=session['LOGON.USERID'];
-	var ret=tkMakeServerCall("web.DHCPE.DHCPEPAY","getcurinvno",userId);
+	var CTLocId=session['LOGON.CTLOCID'];
+	//var ret=tkMakeServerCall("web.DHCPE.DHCPEPAY","getcurinvno",userId);
+	var ret=tkMakeServerCall("web.DHCPE.DHCPEPAY","getcurinvno",userId,"N",CTLocId);
 	
     var invNo=ret.split("^");
     if ((invNo[0]=="")||(invNo[1]=="")){ 

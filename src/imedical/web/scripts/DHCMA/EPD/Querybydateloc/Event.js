@@ -64,11 +64,19 @@ function InitviewScreenEvent(obj) {
 	    	}
 		});
 		
+    $('#EPDLogDetail').dialog({
+			title: '传染病报告历史操作记录',
+			iconCls:'icon-w-paper',
+			closed: true,
+			modal: true,
+			isTopZindex:false
+		});
     }
 	obj.btnAllImport_click  = function(){
 		var rows = obj.gridEpdQuery.getRows().length; 		
 		if (rows>0) {
-			$('#gridEpdQuery').datagrid('toExcel','传染病报告查询表.xls');
+			//$('#gridEpdQuery').datagrid('toExcel','传染病报告查询表.xls');
+			grid2excel($("#gridEpdQuery"), {IE11IsLowIE: false,filename:'传染病报告查询表',allPage: true});
 		}else {
 			$.messager.alert("确认", "无数据记录,不允许导出", 'info');
 		}	
@@ -106,8 +114,27 @@ function InitviewScreenEvent(obj) {
 						MethodName:"GetAppendixCard",
 						aDiseaseID:objRec[i].DiseaseDr
 					},false);
-					//ExportDataToExcel(ReportID,CardType,StrName);
-					PrintDataToExcel(ReportID,CardType,StrName);
+					var LODOP=getLodop();
+					LODOP.PRINT_INIT("PrintDHCMAEPDReport");		//打印任务的名称
+					LODOP.ADD_PRINT_HTM(1,600,300,100,"<span tdata='pageNO'>第##页</span>/<span tdata='pageCount'>共##页</span>");
+					LODOP.SET_PRINT_STYLEA(0,"ItemType",1);			//每页都打印页码
+					LODOP.SET_PRINT_MODE("DOUBLE_SIDED_PRINT", 0);	//人工双面打印(打印机不支持双面打印时，0为单面打印，1为不双面打印，2为双面打印)
+					LODOP.SET_PRINT_MODE("PRINT_DUPLEX", 0);		//自动双面打印(打印机支持双面打印时，0为单面打印，1为不双面打印，2为双面打印)
+					LodopPrintURL(LODOP,"dhcma.epd.lodopprint.csp?ReportID="+ReportID);
+					if (CardType) {
+						LODOP.NewPage();
+						if(CardType=="HIV"){
+							LodopPrintURL(LODOP,"dhcma.epd.lodophiv.csp?ReportID="+ReportID);
+						}
+						if(CardType=="STD"){
+							LodopPrintURL(LODOP,"dhcma.epd.lodopstd.csp?ReportID="+ReportID);
+						}
+						if(CardType=="HBV"){
+							LodopPrintURL(LODOP,"dhcma.epd.lodophbv.csp?ReportID="+ReportID);
+						}
+					}
+					//LODOP.PREVIEW();		//预览打印
+					LODOP.PRINT();			//直接打印
 				}
 			} else {
 				$.messager.alert("提示", "先选择查询记录,再进行导出!",'info');
@@ -151,6 +178,12 @@ function InitviewScreenEvent(obj) {
 				$.messager.alert("提示信息", "请至少选中一行待审记录,再进行审核!",'info');
 				return;
 			}
+			$.messager.popover({
+				msg: '批量审核成功',
+				type: 'success',
+				timeout: 2000, 		//0不自动关闭。3000s
+				showType: 'slide'  //show,fade,slide
+			});
 			obj.EpdQueryLoad();
 			obj.gridEpdQuery.clearSelections();  ;  //清除所有选择的行
 		} else {
@@ -167,6 +200,7 @@ function InitviewScreenEvent(obj) {
 	
 	
 	obj.openHandler = function(RowData){
+		if(RowData.MIFAppendix){var RepHeight = "90%";}else{var RepHeight = "625";}
 		var strUrl = "./dhcma.epd.report.csp?1=1"+
 						"&PatientID=" + RowData.PatientID + 
 						"&EpisodeID=" + RowData.Paadm + 
@@ -181,7 +215,7 @@ function InitviewScreenEvent(obj) {
 	        originWindow:window,
 			closable:false,
 			width:1340,
-			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
+			height:RepHeight,  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
 			dataRow:{RowID:RowData.RowID},  
 			onBeforeClose:function(){
 				obj.EpdQueryLoad();  //刷新
@@ -189,7 +223,24 @@ function InitviewScreenEvent(obj) {
 		});
 		
 	}
-	obj.OpenEPDReport = function(aReportID,aPatientID,aEpisodeID) {
+	obj.OpenEPDReport = function(aReportID,aPatientID,aEpisodeID,aRepHeight) {
+		var strUrl = "./dhcma.epd.report.csp?1=1"+"&PatientID=" + aPatientID + "&EpisodeID=" + aEpisodeID + "&ReportID=" + aReportID +"&IsSecret=" + IsSecret +"&LocFlag=" + LocFlag;	
+	    websys_showModal({
+			url:strUrl,
+			title:'传染病报告',
+			iconCls:'icon-w-epr',  
+	        originWindow:window,
+			closable:false,
+			width:1340,
+			height:aRepHeight,  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
+			onBeforeClose:function(){
+				obj.EpdQueryLoad();  //刷新
+			} 
+		});
+		
+	}
+   
+   obj.OpenRevised = function(aReportID,aPatientID,aEpisodeID) {
 		var strUrl = "./dhcma.epd.report.csp?1=1"+"&PatientID=" + aPatientID + "&EpisodeID=" + aEpisodeID + "&ReportID=" + aReportID +"&IsSecret=" + IsSecret +"&LocFlag=" + LocFlag;
         	
 	    websys_showModal({
@@ -203,13 +254,13 @@ function InitviewScreenEvent(obj) {
 			onBeforeClose:function(){
 				obj.EpdQueryLoad();  //刷新
 			} 
-		});
-		
+		});		
 	}
-
+	
 	obj.EpdQueryLoad = function(){
 		var DateFrom = $('#DateFrom').datebox('getValue');
 		var DateTo = $('#DateTo').datebox('getValue');
+		var IsInHosp = $("#chkIsInHosp").checkbox('getValue') ? 1:0;
 		if ((DateFrom == '')||(DateTo == '')) {
 			$.messager.alert("提示","开始日期、结束日期不允许为空!",'info');
 			return;
@@ -236,6 +287,7 @@ function InitviewScreenEvent(obj) {
 			MIFKind:$('#cboMIFKind').combobox('getValue'),
 			aRegNo:(isInt?(Array(10).join(0) + SearchData).slice(-10):""),   //补全10位登记号
 			aPatName:(isInt?"":SearchData),
+			aIsInHosp:IsInHosp,
 			page:1,
 			rows:999
 		},function(rs){
@@ -253,6 +305,22 @@ function InitviewScreenEvent(obj) {
 	        originWindow:window,
 			width:'98%',
 			height:'98%'
+		});
+	}
+	obj.OpenLog = function(aReportID) {
+		$HUI.dialog('#EPDLogDetail').open();
+		$cm ({
+			ClassName:"DHCMed.EPDService.EpidemicSrv",
+			QueryName:"QryEpidemicLog",
+			aReportID:aReportID,
+			aFromDate: "",
+			aToDate: "",
+			aHospital: "",
+			aLoc: "",
+			aStatusCode: ""
+		},function(rs){
+			$("#gridEPDLogInfo").datagrid("loaded");
+			$('#gridEPDLogInfo').datagrid({loadFilter:pagerFilter}).datagrid('loadData', rs);
 		});
 	}
 }

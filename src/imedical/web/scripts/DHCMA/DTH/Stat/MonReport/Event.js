@@ -5,8 +5,9 @@ function InitMED0101WinEvent(obj){
 			obj.btnQuery();
 		});
 		ReportFrame = document.getElementById("report");
-		p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMed.DTH.MonReport.raq&HospID='+"" +'&StartDate=' + "" +'&EndDate='+ "";	
-		ReportFrame.src = p_URL;
+		obj.btnQuery();
+		/*p_URL = 'dhccpmrunqianreport.csp?reportName=DHCMed.DTH.MonReport.raq&HospID='+"" +'&StartDate=' + "" +'&EndDate='+ "";	
+		ReportFrame.src = p_URL;*/
     }
 	//查询按钮
     obj.btnQuery = function(){

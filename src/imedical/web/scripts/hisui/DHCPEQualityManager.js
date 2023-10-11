@@ -95,8 +95,10 @@ function BSave_click() {
 	var Ret=tkMakeServerCall("web.DHCPE.QualityManager","Save",ID,SaveInfo);
 	var Arr=Ret.split("^");
 	if (Arr[0]>0){
-		$("#tDHCPEQualityManager").datagrid('load',{ComponentID:56444,PAADM:$("#PAADM").val()});
-		//location.reload();
+		$.messager.alert("提示","保存成功","success");
+		$("#tDHCPEQualityManager").datagrid('load',{ComponentID:getValueById("GetComponentID"),PAADM:$("#PAADM").val()});
+		Clear_click();
+
 	}else{
 		$.messager.alert("提示",Arr[1],"error"); 
 		
@@ -105,8 +107,8 @@ function BSave_click() {
 function BDelete_click()
 {
 	var encmeth="",ID="",UserID="";
-	var obj=document.getElementById("ID");
-	if (obj) ID=obj.value;
+	
+	var ID=$("#ID").val();
 	if(ID==""){
 		$.messager.alert("提示","请先选择要删除的记录","info");
 		return false;
@@ -118,9 +120,10 @@ function BDelete_click()
 	var Ret=cspRunServerMethod(encmeth,ID,UserID);
 	var Arr=Ret.split("^");
 	if (Arr[0]>0){
-		$.messager.alert("提示","删除成功","error"); 
-		$("#tDHCPEQualityManager").datagrid('load',{ComponentID:56444,PAADM:$("#PAADM").val()});
-		
+		$.messager.alert("提示","删除成功","success"); 
+		$("#tDHCPEQualityManager").datagrid('load',{ComponentID:getValueById("GetComponentID"),PAADM:$("#PAADM").val()});
+		Clear_click();
+	
 	}else{
 		$.messager.alert("提示",Arr[1],"info");
 	} 
@@ -285,6 +288,7 @@ function FindErrUserAfter(value)
 		obj.value=Arr[1]; 
 	}
 }
+/*
 function SelectRowHandler(index,rowdata) {
 	
 	var selectrow=index;
@@ -297,6 +301,21 @@ function SelectRowHandler(index,rowdata) {
 	CurrentSel=selectrow;
 	
 	ShowCurRecord(rowdata);
+}
+*/
+var selectrow=-1; 
+function SelectRowHandler(index,rowdata) {
+	
+	var selectrow=index;
+	 if(index==selectrow)
+	{ 
+		Clear_click() 
+		ShowCurRecord(rowdata);
+		
+	} else{
+		selectrow=-1;
+	}
+	
 }
 
 function Clear_click() {

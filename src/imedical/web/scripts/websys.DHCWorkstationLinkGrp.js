@@ -30,6 +30,10 @@ var SaveBtnClickHandler = function(){
 	}else{
 		WSLGLocDr = "";
 	}
+	if (document.getElementById("WSLGGrpDesc").value == "" && document.getElementById("WSLGLocDesc").value == ""){
+		alert(t["GrpLocDescIsNull"]);
+		return ;
+	}
 	var rtn = tkMakeServerCall("websys.DHCWorkstationLnkGrp","Save",WSLGRowId, WSLGWSDr, WSLGGrpDr, WSLGLocDr);
 	if (rtn>0){
 		alert(t["SaveSucc"]);

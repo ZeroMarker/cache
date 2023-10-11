@@ -21,7 +21,7 @@ FindPlan = function(Fn){
 	var startDateField = new Ext.ux.DateField({
 		id:'startDateField',
 		allowBlank:true,
-		fieldLabel:'起始日期',
+		fieldLabel:$g('起始日期'),
 		anchor:'90%',
 		value:DefaultStDate()
 	});
@@ -29,7 +29,7 @@ FindPlan = function(Fn){
 	var endDateField = new Ext.ux.DateField({
 		id:'endDateField',
 		allowBlank:true,
-		fieldLabel:'截止日期',
+		fieldLabel:$g('截止日期'),
 		anchor:'90%',
 		value:DefaultEdDate()
 	});
@@ -45,7 +45,7 @@ FindPlan = function(Fn){
 
 	var aliasNameField = new Ext.form.TextField({
 		id:'aliasName',
-		fieldLabel:'药品名称',
+		fieldLabel:$g('药品名称'),
 		allowBlank:true,
 		width:180,
 		listWidth:180,
@@ -65,13 +65,13 @@ FindPlan = function(Fn){
 
 	var apcVendorField = new Ext.ux.VendorComboBox({
 		id:'apcVendorField',
-		fieldLabel:'供应商',
+		fieldLabel:$g('经营企业'),
 		anchor:'90%'
 	});
 	
 	var PlanNoField = new Ext.form.TextField({
 		id:'PlanNo',
-		fieldLabel:'计划单号',
+		fieldLabel:$g('计划单号'),
 		allowBlank:true,
 		emptyText:'',
 		anchor:'90%',
@@ -80,28 +80,39 @@ FindPlan = function(Fn){
 		
 	var DeptField = new Ext.ux.LocComboBox({
 		id:'DeptField',
-		fieldLabel:'科室',
+		fieldLabel:$g('科室'),
 		anchor:'90%',
 		listWidth:180,
 		emptyText:'',
-		groupId:gGroupId
+		groupId:gGroupId,
+		listeners : {
+			'select' : function(e) {
+                          var SelLocId=Ext.getCmp('DeptField').getValue();//add wyx 根据选择的科室动态加载类组
+                          GField.getStore().removeAll();
+                          GField.getStore().setBaseParam("locId",SelLocId)
+                          GField.getStore().setBaseParam("userId",UserId)
+                          GField.getStore().setBaseParam("type",App_StkTypeCode)
+                          GField.getStore().load();
+			}
+	}
+		
 	});
 	
 	
 	var finshField = new Ext.form.Radio({ 
 		id:'finsh',
 		name:'finsh',
-		boxLabel:'完成'  
+		boxLabel:$g('完成')  
 	});
 	var noFinshField = new Ext.form.Radio({  
 		id:'noFinsh',
 		name:'finsh', 
-		boxLabel:'未完成'  
+		boxLabel:$g('未完成')  
 	});
 	var allFinshField = new Ext.form.Radio({ 
 		id:'allFinsh',
 		name:'finsh',  
-		boxLabel:'全部',
+		boxLabel:$g('全部'),
 		checked:true
 	});
 	
@@ -137,31 +148,31 @@ FindPlan = function(Fn){
 	var planCm = new Ext.grid.ColumnModel([
 		new Ext.grid.RowNumberer(),
 		{
-			header: "计划单号",
+			header: $g("计划单号"),
 			dataIndex: 'PurNo',
 			width: 120,
 			align: 'left',
 			sortable: true
 		},{
-			header: "科室",
+			header: $g("科室"),
 			dataIndex: 'Loc',
 			width: 90,
 			align: 'left',
 			sortable: true
 		},{
-			header:'日期',
+			header:$g('日期'),
 			width:80,
 			dataIndex:'Date',
 			align: 'left',
 			sortable: true
 		},{
-			header:'制作人',
+			header:$g('制作人'),
 			align: 'left',
 			width:70,
 			dataIndex:'User',
 			sortable: true
 		},{
-			header:'审批',
+			header:$g('审批'),
 			align: 'center',
 			width:70,
 			dataIndex:'PoFlag',
@@ -171,7 +182,7 @@ FindPlan = function(Fn){
 				return '<div class="x-grid3-check-col'+(((v=='Y')||(v==true))?'-on':'')+' x-grid3-cc-'+this.id+'">&#160;</div>';
 			}
 		},{
-			header:'完成',
+			header:$g('完成'),
 			align: 'center',
 			width:70,
 			dataIndex:'CmpFlag',
@@ -227,103 +238,103 @@ FindPlan = function(Fn){
 	var planItemCm = new Ext.grid.ColumnModel([
 		new Ext.grid.RowNumberer(),
 		{
-			header: "代码",
+			header: $g("代码"),
 			dataIndex: 'IncCode',
 			width: 90,
 			align: 'left',
 			sortable: true
 		},{
-			header: "名称",
+			header: $g("名称"),
 			dataIndex: 'IncDesc',
 			width: 120,
 			align: 'left',
 			sortable: true
 		},{
-			header:'厂商',
+			header:$g('生产企业'),
 			width:120,
 			dataIndex:'Manf',
 			align: 'left',
 			sortable: true
 		},{
-			header:'规格',
+			header:$g('规格'),
 			align: 'left',
 			width:70,
 			dataIndex:'Spec',
 			sortable: true
 		},{
-			header:'数量',
+			header:$g('数量'),
 			align: 'right',
 			width:70,
 			dataIndex:'Qty',
 			sortable: true
 		},{
-			header:'单位',
+			header:$g('单位'),
 			align: 'left',
 			width:70,
 			dataIndex:'Uom',
 			sortable: true
 		},{
-			header:'进价',
+			header:$g('进价'),
 			align: 'right',
 			width:70,
 			dataIndex:'Rp',
 			sortable: true
 		},{
-			header:'售价',
+			header:$g('售价'),
 			align: 'right',
 			width:70,
 			dataIndex:'Sp',
 			sortable: true
 		},{
-			header:'进价金额',
+			header:$g('进价金额'),
 			align: 'right',
 			width:70,
 			dataIndex:'RpAmt',
 			sortable: true
 		},{
-			header:'售价金额',
+			header:$g('售价金额'),
 			align: 'right',
 			width:70,
 			dataIndex:'SpAmt',
 			sortable: true
 		},{
-			header:'供应商',
+			header:$g('经营企业'),
 			align: 'left',
 			width:150,
 			dataIndex:'Vendor',
 			sortable: true
 		},{
-			header:'配送商',
+			header:$g('配送企业'),
 			align: 'left',
 			width:70,
 			dataIndex:'Carrier',
 			sortable: true
 		},{
-			header:'剂型',
+			header:$g('剂型'),
 			align: 'left',
 			width:70,
 			dataIndex:'Form',
 			sortable: true
 		},{
-			header:'申购科室',
+			header:$g('申购科室'),
 			align: 'left',
 			width:70,
 			dataIndex:'ReqLoc',
 			sortable: true
 		},{
-			header:'申购科室库存量',
+			header:$g('申购科室库存量'),
 			align: 'right',
 			width:100,
 			dataIndex:'StkQty',
 			sortable: true
 		},{
-			header:'库存上限',
+			header:$g('库存上限'),
 			align: 'right',
 			width:70,
 			dataIndex:'MaxQty',
 			sortable: true
 		},{
-			header:'库存下限',
+			header:$g('库存下限'),
 			align: 'right',
 			width:70,
 			dataIndex:'MinQty',
@@ -332,8 +343,8 @@ FindPlan = function(Fn){
 	]);
 				
 	var find = new Ext.Toolbar.Button({
-		text:'查询',
-		tooltip:'查询',
+		text:$g('查询'),
+		tooltip:$g('查询'),
 		iconCls:'page_find',
 		width : 70,
 		height : 30,
@@ -350,7 +361,7 @@ FindPlan = function(Fn){
 				FEndDate = FEndDate.format('Y-m-d');
 			}
 			if(FStartDate>FEndDate){
-				Msg.info("warning","起始日期应该小于截止日期");
+				Msg.info("warning",$g("起始日期应该小于截止日期"));
 				return;
 			}
 			StartDate=StartDate.format(App_StkDateFormat);
@@ -368,9 +379,9 @@ FindPlan = function(Fn){
 			}
 			var strParam = locId+"^"+StartDate+"^"+EndDate+"^"+PurNo+"^"+StkGrpId+"^"+VendorId+"^"+IncId+"^"+Complete+"^"+Audit;
 			if((StartDate=="")||(StartDate==null)){
-				Msg.info("error", "请选择开始日期!");
+				Msg.info("error", $g("请选择开始日期!"));
 			}else if((EndDate=="")||(EndDate==null)){
-				Msg.info("error", "请选择截止日期!");
+				Msg.info("error", $g("请选择截止日期!"));
 			}else{
 				planDs.setBaseParam('strParam',strParam);
 				planDs.removeAll();
@@ -382,8 +393,8 @@ FindPlan = function(Fn){
 	});
 				
 	var sure = new Ext.Toolbar.Button({
-		text:'选取',
-		tooltip:'选取',
+		text:$g('选取'),
+		tooltip:$g('选取'),
 		iconCls:'page_goto',
 		width : 70,
 		height : 30,
@@ -396,7 +407,7 @@ FindPlan = function(Fn){
 		var rowObj = planGrid.getSelectionModel().getSelections(); 
 		var len = rowObj.length;
 		if(len < 1){
-			Msg.info("error", "请选择计划单!");
+			Msg.info("error", $g("请选择计划单!"));
 			return false;
 		}else{
 			var planRowId = rowObj[0].get("RowId");
@@ -406,13 +417,21 @@ FindPlan = function(Fn){
 		win.close();	
 	}
 	var clear = new Ext.Toolbar.Button({
-		text:'清屏',
-		tooltip:'清屏',
+		text:$g('清屏'),
+		tooltip:$g('清屏'),
 		iconCls:'page_clearscreen',
 		width : 70,
 		height :30,
 		handler:function(){
 			SetLogInDept(DeptField.getStore(),"DeptField")
+			
+			var SelLocId=Ext.getCmp('DeptField').getValue();//add wyx 根据选择的科室动态加载类组
+            GField.getStore().removeAll();
+            GField.getStore().setBaseParam("locId",SelLocId)
+            GField.getStore().setBaseParam("userId",UserId)
+            GField.getStore().setBaseParam("type",App_StkTypeCode)
+            GField.getStore().load();
+
 			PlanNoField.setValue("");
 			apcVendorField.setValue("");
 			apcVendorField.setRawValue("");
@@ -431,8 +450,8 @@ FindPlan = function(Fn){
 	});
 
 	var cancel = new Ext.Toolbar.Button({
-		text:'关闭',
-		tooltip:'关闭',
+		text:$g('关闭'),
+		tooltip:$g('关闭'),
 		iconCls:'page_close',
 		width : 70,
 		height : 30,
@@ -445,8 +464,8 @@ FindPlan = function(Fn){
 		store:planDs,
 		pageSize:22,
 		displayInfo:true,
-		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录"
+		displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+		emptyMsg:$g("没有记录")
 	});
 			
 	planGrid = new Ext.grid.GridPanel({
@@ -466,8 +485,8 @@ FindPlan = function(Fn){
 		pageSize:25,
 		id:'planItem',
 		displayInfo:true,
-		displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-		emptyMsg:"没有记录"
+		displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+		emptyMsg:$g("没有记录")
 	});
 		
 	planItemGrid = new Ext.grid.GridPanel({
@@ -487,7 +506,7 @@ FindPlan = function(Fn){
 		tbar:[find,'-',clear,'-',sure,'-',cancel],
 		items:[{
 			xtype:'fieldset',
-			title:'查询条件',
+			title:$g('查询条件'),
 			style:DHCSTFormStyle.FrmPaddingV+"padding-bottom:0px",
 			defaults:{border:false},
 			layout:'column',
@@ -520,7 +539,7 @@ FindPlan = function(Fn){
 	});
 	
 	var win = new Ext.Window({
-		title:'查找计划单',
+		title:$g('查找计划单'),
 		width:document.body.clientWidth*0.9,
 		height:document.body.clientHeight*0.9,
 		layout:'border',
@@ -537,13 +556,13 @@ FindPlan = function(Fn){
 			region:'west',
 			width:300,
 			split:true,
-			title:'采购计划单',
+			title:$g('采购计划单'),
 			margins: '0 5 0 0',
 			collapsible:true,
 			layout:'fit',
 			items:planGrid
 		},{
-			title:'明细',
+			title:$g('明细'),
 			region:'center',
 			layout:'fit',
 			items:planItemGrid

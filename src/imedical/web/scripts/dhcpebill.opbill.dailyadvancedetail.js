@@ -16,48 +16,106 @@ var PUBLIC_CONSTANT = {
 	}
 };
 
-$(document).ready(function () {
-	initAdvanceListGrid();
-});
 
-function initAdvanceListGrid() {
+
+$(function () {
+	var toolbar = [{
+		text: $g('导出'),
+		iconCls: 'icon-export',
+		handler: function () {
+			exportClick();
+		}
+	},{
+		text: $g('导出配置'),
+		iconCls: 'icon-batch-cfg',
+		handler: function () {
+			configClick();
+		}
+	}];
+	
+
 	$.cm({
 		ClassName: "web.DHCPE.DHCPEToOPBillInterface",
-		MethodName: "GetAdvanceInvDetColumns"
+		MethodName: "GetAdvanceInvDetColumns",
+		LocID:session['LOGON.CTLOCID']
 	}, function (txtData) {
 		var columnAry = new Array();
+		var columnum=txtData.length;
 		$.each(txtData, function (index, item) {
 			var column = {};
 			column["title"] = item.title;
 			column["field"] = item.field;
 			column["align"] = item.align;
-			column["width"] = item.width;
+			column["width"] = 1552/columnum-1;
 			columnAry.push(column);
 		});
-		var opbillInvListObj = $HUI.datagrid('#dhcpeInvList', {
+		var opbillInvListObj = $HUI.datagrid('#dhcpeadvancelist', {
+				url: $URL,
 				fit: true,
 				striped: true,
-				singleSelect: true,
-				selectOnCheck: false,
-				autoRowHeight: false,
-				showFooter: true,
-				url: $URL,
+				border: false,
 				pagination: true,
 				rownumbers: true,
 				pageSize: 20,
 				pageList: [20, 30, 40, 50],
-				columns: [columnAry],
+				toolbar: toolbar,
+				columns: [columnAry ],
 				queryParams: {
 					ClassName: PUBLIC_CONSTANT.METHOD.CLS,
 					QueryName: PUBLIC_CONSTANT.METHOD.QUERY,
-					stDate: GlobalObj.stDate,
-					stTime: GlobalObj.stTime,
-					endDate: GlobalObj.endDate,
-					endTime: GlobalObj.endTime,
-					footId: GlobalObj.footId,
-					guser: GlobalObj.guser,
-					hospDR: GlobalObj.hospDR
+					'stDate': GlobalObj.stDate,
+					'stTime': GlobalObj.stTime,
+					'endDate': GlobalObj.endDate,
+					'endTime': GlobalObj.endTime,
+					'footId': GlobalObj.footId,
+					'guser': GlobalObj.guser,
+					'hospDR': GlobalObj.hospDR,
+					'locId':session['LOGON.CTLOCID']
 				}
 			});
 	});
+});
+
+/**
+ * Creator: xueying
+ * CreatDate: 20230420
+ * Description: 导出
+*/
+function exportClick() {
+	$.cm({
+		ResultSetType: "ExcelPlugin",
+		localDir: "Self",
+		ExcelName: $(".tabs-selected .tabs-title", parent.document).text(),
+		PageName: page,
+		ClassName: PUBLIC_CONSTANT.METHOD.CLS,
+		QueryName: PUBLIC_CONSTANT.METHOD.QUERY,
+		'stDate': GlobalObj.stDate,
+		'stTime': GlobalObj.stTime,
+		'endDate': GlobalObj.endDate,
+		'endTime': GlobalObj.endTime,
+		'footId': GlobalObj.footId,
+		'guser': GlobalObj.guser,
+		'hospDR': GlobalObj.hospDR,
+		'locId':session['LOGON.CTLOCID']
+	}, false);
 }
+
+/**
+ * Creator: xueying
+ * CreatDate: 20230420
+ * Description: 导出配置
+*/
+function configClick() {
+	var url = "websys.query.customisecolumn.csp?CONTEXT=Kweb.DHCOPBillDailyDetails:FindOPBillInvDetails&PREFID=0&PAGENAME=" + page;
+	websys_showModal({
+		url: url,
+		title: '导出配置',
+		iconCls: 'icon-w-config',
+		width: '80%',
+		height: '80%'
+	});
+}
+
+
+
+

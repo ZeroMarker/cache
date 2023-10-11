@@ -131,6 +131,10 @@ function InitCombobox()
 		textField:'DocName',
 		onBeforeLoad:function(param){
 			param.Desc = param.q;
+			param.Type="B";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID'];
+
 		},
 		columns:[[
 		    {field:'DocDr',title:'ID',width:40},
@@ -139,7 +143,7 @@ function InitCombobox()
 		]],
 		onLoadSuccess:function(){
 			//$("#UserName").combogrid('setValue',"")	
-		},
+		}
 		});
 }
 

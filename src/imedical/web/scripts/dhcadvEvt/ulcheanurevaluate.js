@@ -96,12 +96,12 @@ function reportControl(){
 			if ((this.value!="")){
 				$("[id^='"+rowid+"'][id$='"+rownum+"']").attr("readonly",'readonly');
 				$("input[id^='"+rowid+"'][id$='"+rownum+"']").datebox({"disabled":true});
-				$('a:contains("删除")').parent().hide();
+				$('a:contains('+$g("删除")+')').parent().hide();
 			}
 			if(AssessFlag!="Y"){
 				$("[id^='"+rowid+"'][id$='"+rownum+"']").attr("readonly",'readonly');
 				$("input[id^='"+rowid+"'][id$='"+rownum+"']").datebox({"disabled":true});
-				$('a:contains("增加")').parent().hide();
+				$('a:contains('+$g("增加")+')').parent().hide();
 			}
 		})
 		/* //护士长评价 督查日期 不可编辑
@@ -119,7 +119,7 @@ function reportControl(){
 		"width":800,
 		"max-width":800
 	});
-	
+	RepSetRead("Participants","input",1);	
 	//名称
 	$('#ManaImprovement-94378-94951').css({
 		"width":300,
@@ -168,175 +168,175 @@ function setManImprove()
 		if($(this).is(':checked')){
 			if(this.id.indexOf("HumFactor-94914-95118")>=0){	
 				i=i+1;
-				if($(this).val()=="12岁以上人群"){
+				if($(this).val()==$g("12岁以上人群")){
 					i=i-1;
 					HumFactor="";
 				}else{
-					HumFactor=i+"、"+"患者因素——12岁以上人群体重指数（BMI）:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+					HumFactor=i+"、"+$g("患者因素")+"——"+$g("12岁以上人群")+$g("体重指数（BMI）")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				}
 				HumFactorlist=HumFactorlist+HumFactor;
 			}else if(this.id.indexOf("HumFactor-94914-95122")>=0){	
 				i=i+1;
-				if($(this).val()=="12岁以下人群"){
+				if($(this).val()==$g("12岁以下人群")){
 					i=i-1;
 					HumFactor="";
 				}else{
-					HumFactor=i+"、"+"患者因素——12岁以下人群:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+					HumFactor=i+"、"+$g("患者因素")+"——"+$g("12岁以下人群")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				}
 				HumFactorlist=HumFactorlist+HumFactor;
 			}else if(this.id.indexOf("HumFactor-94914-95122")>=0){	
 				i=i+1;
-				if($(this).val()=="12岁以下人群"){
+				if($(this).val()==$g("12岁以下人群")){
 					i=i-1;
 					HumFactor="";
 				}else{
-					HumFactor=i+"、"+"患者因素——12岁以下人群:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+					HumFactor=i+"、"+$g("患者因素")+"——"+$g("12岁以下人群")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				}
 				HumFactorlist=HumFactorlist+HumFactor;
 			}else if(this.id.indexOf("HumFactor-94914-95127")>=0){	
 				i=i+1;
-				if($(this).val()=="皮肤类型"){
+				if($(this).val()==$g("皮肤类型")){
 					i=i-1;
 					HumFactor="";
 				}else{
-					HumFactor=i+"、"+"患者因素——皮肤类型:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+					HumFactor=i+"、"+$g("患者因素")+"——"+$g("皮肤类型")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				}
 				HumFactorlist=HumFactorlist+HumFactor;
 			}else if(this.id.indexOf("HumFactor-94914-95135")>=0){	
 				i=i+1;
-				if($(this).val()=="活动"){
+				if($(this).val()==$g("活动")){
 					i=i-1;
 					HumFactor="";
 				}else{
-					HumFactor=i+"、"+"患者因素——活动:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+					HumFactor=i+"、"+$g("患者因素")+"——"+$g("活动")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				}
 				HumFactorlist=HumFactorlist+HumFactor;
 			}else if(this.id.indexOf("HumFactor-94914-95136")>=0){	
 				i=i+1;
-				if($(this).val()=="运动"){
+				if($(this).val()==$g("运动")){
 					i=i-1;
 					HumFactor="";
-				}else{
-					HumFactor=i+"、"+"患者因素——运动:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				}else{ 
+					HumFactor=i+"、"+$g("患者因素")+"——"+$g("运动")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				}
 				HumFactorlist=HumFactorlist+HumFactor;
 			}else if(this.id.indexOf("HumFactor-94914-95137")>=0){	
 				i=i+1;
-				if($(this).val()=="营养因素"){
+				if($(this).val()==$g("营养因素")){
 					i=i-1;
 					HumFactor="";
 				}else{
-					HumFactor=i+"、"+"患者因素——营养因素:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+					HumFactor=i+"、"+$g("患者因素")+"——"+$g("营养因素")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				}
 				HumFactorlist=HumFactorlist+HumFactor;
 			}else if(this.id.indexOf("HumFactor-94914-95155")>=0){	
 				i=i+1;
-				if($(this).val()=="精神状况"){
+				if($(this).val()==$g("精神状况")){
 					i=i-1;
 					HumFactor="";
 				}else{
-					HumFactor=i+"、"+"患者因素——精神状况:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+					HumFactor=i+"、"+$g("患者因素")+"——"+$g("精神状况")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				}
 				HumFactorlist=HumFactorlist+HumFactor;
 			}else if(this.id.indexOf("HumFactor-94914-95160")>=0){	
 				i=i+1;
-				if($(this).val()=="组织灌注和氧合"){
+				if($(this).val()==$g("组织灌注和氧合")){
 					i=i-1;
 					HumFactor="";
 				}else{
-					HumFactor=i+"、"+"患者因素——组织灌注和氧合:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+					HumFactor=i+"、"+$g("患者因素")+"——"+$g("组织灌注和氧合")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				}
 				HumFactorlist=HumFactorlist+HumFactor;
 			}else if(this.id.indexOf("HumFactor-94914-95162")>=0){	
 				i=i+1;
-				if($(this).val()=="拒绝使用保护措施"){
+				if($(this).val()==$g("拒绝使用保护措施")){
 					i=i-1;
 					HumFactor="";
 				}else{
-					HumFactor=i+"、"+"患者因素——拒绝使用保护措施:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+					HumFactor=i+"、"+$g("患者因素")+"——"+$g("拒绝使用保护措施")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				}
 				HumFactorlist=HumFactorlist+HumFactor;
 			}else if(this.id.indexOf("HumFactor-94914")>=0){
 				i=i+1;
-				HumFactor=i+"、"+"患者因素:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				HumFactor=i+"、"+$g("患者因素")+":"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				HumFactorlist=HumFactorlist+HumFactor; 		
 			}else if(this.id.indexOf("HumFactor-94915-95180-95183")>=0){
 				i=i+1;
-				HumFactor=i+"、"+"护士因素——健康教育不到位——压疮预防健康教育针对性不强:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				HumFactor=i+"、"+$g("护士因素")+"——"+$g("健康教育不到位")+"——"+$g("压疮预防健康教育针对性不强")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				HumFactorlist=HumFactorlist+HumFactor ;		
 			}else if(this.id.indexOf("HumFactor-94915-95169")>=0){
 				i=i+1;
-				if($(this).val()=="护理措施落实不到位"){
+				if($(this).val()==$g("护理措施落实不到位")){
 					i=i-1;
 					HumFactor="";
 				}else{  
-					HumFactor=i+"、"+"护士因素——护理措施落实不到位:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+					HumFactor=i+"、"+$g("护士因素")+"——"+$g("护理措施落实不到位")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				}
 				HumFactorlist=HumFactorlist+HumFactor; 		
 			}else if(this.id.indexOf("HumFactor-94915-95180")>=0){
 				i=i+1;
-				if($(this).val()=="健康教育不到位"){
+				if($(this).val()==$g("健康教育不到位")){
 					i=i-1;
 					HumFactor="";
 				}else{  
-					HumFactor=i+"、"+"护士因素——健康教育不到位:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+					HumFactor=i+"、"+$g("护士因素")+"——"+$g("健康教育不到位")+"："+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				}
 				HumFactorlist=HumFactorlist+HumFactor ;		
 			}else if(this.id.indexOf("HumFactor-94915")>=0){
 				i=i+1;
-				HumFactor=i+"、"+"护士因素:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				HumFactor=i+"、"+$g("护士因素")+":"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				HumFactorlist=HumFactorlist+HumFactor ;
 			}else if(this.id.indexOf("HumFactor-94916")>=0){
 				i=i+1;
-				HumFactor=i+"、"+"医疗因素:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				HumFactor=i+"、"+$g("医疗因素")+":"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				HumFactorlist=HumFactorlist+HumFactor ;		
 			}else if(this.id.indexOf(" HumFactor-94917-95198")>=0){
 				i=i+1;
-				if($(this).val()=="未落实压疮预防健康教育要求"){
+				if($(this).val()==$g("未落实压疮预防健康教育要求")){
 					i=i-1;
 					HumFactor="";
 				}else{  
-					HumFactor=i+"、"+"护理员、陪护因素——未落实压疮预防健康教育要求:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+					HumFactor=i+"、"+$g("护理员、陪护因素")+"——"+$g("未落实压疮预防健康教育要求")+":"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				}
 				HumFactorlist=HumFactorlist+HumFactor ;		
 			}else if(this.id.indexOf("HumFactor-94917")>=0){
 				i=i+1;
-				HumFactor=i+"、"+"护理员、陪护因素:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+				HumFactor=i+"、"+$g("护理员、陪护因素")+":"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				HumFactorlist=HumFactorlist+HumFactor ;		
 			}
 		}
 	});
 	if(HumFactorlist!=""){
-		list=list+"\n"+"一、人的因素:"+"\n"+HumFactorlist;
+		list=list+"\n"+$g("一、人的因素:")+"\n"+HumFactorlist;
 	}
 
 	$("input[id^='UlcDeviceCause']").each(function(){
 		if($(this).is(':checked')){
 			if(this.id.indexOf("UlcDeviceCause-94920")>=0){	
 				j=j+1;
-				if($(this).val()=="设备设施不适用"){
+				if($(this).val()==$g("设备设施不适用")){
 					j=j-1;
 					DeviceCause="";
 				}else{
-					DeviceCause=j+"、"+"设备设施不适用:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+					DeviceCause=j+"、"+$g("设备设施不适用")+":"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				}
 				DeviceCauselist=DeviceCauselist+DeviceCause;
 			}else if(this.id.indexOf("UlcDeviceCause-94921")>=0){	
 				j=j+1;
-				if($(this).val()=="提供预防压疮相应设施、设备不足"){
+				if($(this).val()==$g("提供预防压疮相应设施、设备不足")){
 					j=j-1;
 					DeviceCause="";
 				}else{
-					DeviceCause=j+"、"+"提供预防压疮相应设施、设备不足:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+					DeviceCause=j+"、"+$g("提供预防压疮相应设施、设备不足")+":"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				}
 				DeviceCauselist=DeviceCauselist+DeviceCause;
 			}else if(this.id.indexOf("UlcDeviceCause-94922")>=0){	
 				j=j+1;
-				if($(this).val()=="仪器、设备故障"){
+				if($(this).val()==$g("仪器、设备故障")){
 					j=j-1;
 					DeviceCause="";
 				}else{
-					DeviceCause=j+"、"+"仪器、设备故障:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+					DeviceCause=j+"、"+$g("仪器、设备故障")+":"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				}
 				list=list+DeviceCause;
 			}else if(this.id.indexOf("UlcDeviceCause")>=0){	
@@ -347,18 +347,18 @@ function setManImprove()
 		}
 	});
 	if(DeviceCauselist!=""){
-		list=list+"\n"+"二、设备设施因素:"+"\n"+DeviceCauselist;
+		list=list+"\n"+$g("二、设备设施因素:")+"\n"+DeviceCauselist;
 	}
 
 	$("input[id^='MatFactor']").each(function(){
 		if($(this).is(':checked')){
 			if(this.id.indexOf("MatFactor-94925")>=0){	
 				k=k+1;
-				if($(this).val()=="医疗器具压迫"){
+				if($(this).val()==$g("医疗器具压迫")){
 					k=k-1;
 					MatFactor="";
 				}else{
-					MatFactor=k+"、"+"医疗器具压迫:"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
+					MatFactor=k+"、"+$g("医疗器具压迫")+":"+this.parentElement.innerText+"			"+getInputValue(this.id)+"\n";
 				}
 				MatFactorlist=MatFactorlist+MatFactor;
 			}else if(this.id.indexOf("MatFactor")>=0){	
@@ -369,7 +369,7 @@ function setManImprove()
 		}
 	});
 	if(MatFactorlist!=""){
-		list=list+"\n"+"三、材料因素:"+"\n"+MatFactorlist;
+		list=list+"\n"+$g("三、材料因素:")+"\n"+MatFactorlist;
 	}
 
 	$("input[id^='UlcMethodFactor']").each(function(){
@@ -380,7 +380,7 @@ function setManImprove()
 		}
 	});
 	if(MethodFactorlist!=""){
-		list=list+"\n"+"四、方法因素:"+"\n"+MethodFactorlist;
+		list=list+"\n"+$g("四、方法因素:")+"\n"+MethodFactorlist;
 	}
 
 	$("input[id^='UlcEnvirFactor']").each(function(){
@@ -391,7 +391,7 @@ function setManImprove()
 		}
 	});
 	if(EnvirFactorlist!=""){
-		list=list+"\n"+"五、环境因素:"+"\n"+EnvirFactorlist;
+		list=list+"\n"+$g("五、环境因素:")+"\n"+EnvirFactorlist;
 	}
 
 	$("input[id^='UlcManaFactor']").each(function(){
@@ -402,7 +402,7 @@ function setManImprove()
 		}
 	});
 	if(ManaFactorlist!=""){
-		list=list+"\n"+"六、管理因素:"+"\n"+ManaFactorlist;
+		list=list+"\n"+$g("六、管理因素:")+"\n"+ManaFactorlist;
 	}
 	
   	var Caserow=0
@@ -460,14 +460,14 @@ function checkother(){
 			HumFactorys=this.value;
 		}
 	})
-	if(HumFactorys=="12岁以上人群"){
+	if(HumFactorys==$g("12岁以上人群")){
 		$("input[type=checkbox][id^='HumFactor-94914-95118-']").each(function(){
 			if (($(this).is(':checked'))&&(this.value!="")){
 				HumFactorysList=this.value
 			}
 		})
 		if (HumFactorysList==""){
-			$.messager.alert("提示:","【患者因素】勾选'12岁以上人群'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),"【"+$g("患者因素")+"】"+$g("勾选")+$g('12岁以上人群')+"，"+$g("请勾选相应内容")+"！");	
 			return false;
 		}
 	}
@@ -479,14 +479,14 @@ function checkother(){
 			HumFactoryx=this.value;
 		}
 	})
-	if(HumFactoryx=="12岁以下人群"){
+	if(HumFactoryx==$g("12岁以下人群")){
 		$("input[type=checkbox][id^='HumFactor-94914-95122-']").each(function(){
 			if (($(this).is(':checked'))&&(this.value!="")){
 				HumFactoryxList=this.value
 			}
 		})
 		if (HumFactoryxList==""){
-			$.messager.alert("提示:","【患者因素】勾选'12岁以下人群'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),"【"+$g("患者因素")+"】"+$g("勾选")+$g('12岁以下人群')+"，"+$g("请勾选相应内容")+"！");	
 			return false;
 		}
 	}
@@ -498,14 +498,14 @@ function checkother(){
 			HumFactorpf=this.value;
 		}
 	})
-	if(HumFactorpf=="皮肤类型"){
+	if(HumFactorpf==$g("皮肤类型")){
 		$("input[type=checkbox][id^='HumFactor-94914-95127-']").each(function(){
 			if (($(this).is(':checked'))&&(this.value!="")){
 				HumFactorpfList=this.value
 			}
 		})
 		if (HumFactorpfList==""){
-			$.messager.alert("提示:","【患者因素】勾选'皮肤类型'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),"【"+$g("患者因素")+"】"+$g("勾选")+$g('皮肤类型')+"，"+$g("请勾选相应内容")+"！");	
 			return false;
 		}
 	}
@@ -517,14 +517,14 @@ function checkother(){
 			HumFactorhd=this.value;
 		}
 	})
-	if(HumFactorhd=="活动"){
+	if(HumFactorhd==$g("活动")){
 		$("input[type=checkbox][id^='HumFactor-94914-95135-']").each(function(){
 			if (($(this).is(':checked'))&&(this.value!="")){
 				HumFactorhdList=this.value
 			}
 		})
 		if (HumFactorhdList==""){
-			$.messager.alert("提示:","【患者因素】勾选'活动'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),"【"+$g("患者因素")+"】"+$g("勾选")+$g('活动')+"，"+$g("请勾选相应内容")+"！");	
 			return false;
 		}
 	}
@@ -536,14 +536,14 @@ function checkother(){
 			HumFactoryd=this.value;
 		}
 	})
-	if(HumFactoryd=="运动"){
+	if(HumFactoryd==$g("运动")){
 		$("input[type=checkbox][id^='HumFactor-94914-95136-']").each(function(){
 			if (($(this).is(':checked'))&&(this.value!="")){
 				HumFactorydList=this.value
 			}
 		})
 		if (HumFactorydList==""){
-			$.messager.alert("提示:","【患者因素】勾选'运动'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),"【"+$g("患者因素")+"】"+$g("勾选")+$g('运动')+"，"+$g("请勾选相应内容")+"！");	
 			return false;
 		}
 	}
@@ -555,14 +555,14 @@ function checkother(){
 			HumFactoryy=this.value;
 		}
 	})
-	if(HumFactoryy=="营养因素"){
+	if(HumFactoryy==$g("营养因素")){
 		$("input[type=checkbox][id^='HumFactor-94914-95137-']").each(function(){
 			if (($(this).is(':checked'))&&(this.value!="")){
 				HumFactoryyList=this.value
 			}
 		})
 		if (HumFactoryyList==""){
-			$.messager.alert("提示:","【患者因素】勾选'营养因素'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),"【"+$g("患者因素")+"】"+$g("勾选")+$g('营养因素')+"，"+$g("请勾选相应内容")+"！");	
 			return false;
 		}
 	}
@@ -574,14 +574,14 @@ function checkother(){
 			HumFactorjs=this.value;
 		}
 	})
-	if(HumFactorjs=="精神状况"){
+	if(HumFactorjs==$g("精神状况")){
 		$("input[type=checkbox][id^='HumFactor-94914-95155-']").each(function(){
 			if (($(this).is(':checked'))&&(this.value!="")){
 				HumFactorjsList=this.value
 			}
 		})
 		if (HumFactorjsList==""){
-			$.messager.alert("提示:","【患者因素】勾选'精神状况'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),"【"+$g("患者因素")+"】"+$g("勾选")+$g('精神状况')+"，"+$g("请勾选相应内容")+"！");	
 			return false;
 		}
 	}
@@ -593,14 +593,14 @@ function checkother(){
 			HumFactoryh=this.value;
 		}
 	})
-	if(HumFactoryh=="组织灌注和氧合"){
+	if(HumFactoryh==$g("组织灌注和氧合")){
 		$("input[type=checkbox][id^='HumFactor-94914-95160-']").each(function(){
 			if (($(this).is(':checked'))&&(this.value!="")){
 				HumFactoryhList=this.value
 			}
 		})
 		if (HumFactoryhList==""){
-			$.messager.alert("提示:","【患者因素】勾选'组织灌注和氧合'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),"【"+$g("患者因素")+"】"+$g("勾选")+$g('组织灌注和氧合')+"，"+$g("请勾选相应内容")+"！");	
 			return false;
 		}
 	}
@@ -612,14 +612,14 @@ function checkother(){
 			HumFactorcs=this.value;
 		}
 	})
-	if(HumFactorcs=="拒绝使用保护措施"){
+	if(HumFactorcs==$g("拒绝使用保护措施")){
 		$("input[type=checkbox][id^='HumFactor-94914-95162-']").each(function(){
 			if (($(this).is(':checked'))&&(this.value!="")){
 				HumFactorcsList=this.value
 			}
 		})
 		if (HumFactorcsList==""){
-			$.messager.alert("提示:","【患者因素】勾选'拒绝使用保护措施'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),"【"+$g("患者因素")+"】"+$g("勾选")+$g('拒绝使用保护措施')+"，"+$g("请勾选相应内容")+"！");	
 			return false;
 		}
 	}
@@ -631,14 +631,14 @@ function checkother(){
 			HumFactorza=this.value;
 		}
 	})
-	if(HumFactorza=="护理措施落实不到位"){
+	if(HumFactorza==$g("护理措施落实不到位")){
 		$("input[type=checkbox][id^='HumFactor-94915-95169-']").each(function(){
 			if (($(this).is(':checked'))&&(this.value!="")){
 				HumFactorzaList=this.value
 			}
 		})
 		if (HumFactorzaList==""){
-			$.messager.alert("提示:","【护士因素】勾选'护理措施落实不到位'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),"【"+$g("护士因素")+"】"+$g("勾选")+$g('护理措施落实不到位')+"，"+$g("请勾选相应内容")+"！");	
 			return false;
 		}
 	}
@@ -650,7 +650,7 @@ function checkother(){
 		}
 	})
 	if(HumFactorzaoth==-1){
-		$.messager.alert("提示:","【护士因素-护理措施落实不到位】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("护士因素")+"-"+$g("护理措施落实不到位")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	//护士因素-健康教育不到位
@@ -660,14 +660,14 @@ function checkother(){
 			HumFactorjy=this.value;
 		}
 	})
-	if(HumFactorjy=="护理措施落实不到位"){
+	if(HumFactorjy==$g("健康教育不到位")){
 		$("input[type=checkbox][id^='HumFactor-94915-95180-']").each(function(){
 			if (($(this).is(':checked'))&&(this.value!="")){
 				HumFactorjyList=this.value
 			}
 		})
 		if (HumFactorjyList==""){
-			$.messager.alert("提示:","【护士因素】勾选'护理措施落实不到位'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),"【"+$g("护士因素")+"】"+$g("勾选")+$g('健康教育不到位')+"，"+$g("请勾选相应内容")+"！");	
 			return false;
 		}
 	}
@@ -685,7 +685,7 @@ function checkother(){
 			}
 		})
 		if (HumFactorffList==""){
-			$.messager.alert("提示:","【护士因素-护理措施落实不到位】勾选'压疮预防健康教育针对性不强'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),"【"+$g("护士因素")+"-"+$g("护理措施落实不到位")+"】"+$g("勾选")+$g('压疮预防健康教育针对性不强')+"，"+$g("请勾选相应内容")+"！");	
 			return false;
 		}
 	}
@@ -697,7 +697,7 @@ function checkother(){
 		}
 	})
 	if(HumFactorffoth==-1){
-		$.messager.alert("提示:","【护士因素-护理措施落实不到位-压疮预防健康教育针对性不强】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("护士因素")+"-"+$g("护理措施落实不到位")+"-"+$g("压疮预防健康教育针对性不强")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	//医疗因素
@@ -710,7 +710,7 @@ function checkother(){
 		}
 	})
 	if(HumFactoroth==-1){
-		$.messager.alert("提示:","【医疗因素】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("医疗因素")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 
@@ -724,7 +724,7 @@ function checkother(){
 		}
 	})
 	if(HumFactoroth==-1){
-		$.messager.alert("提示:","【护理员、陪护因素】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("护理员、陪护因素")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -735,14 +735,14 @@ function checkother(){
 			HumFactorjy=this.value;
 		}
 	})
-	if(HumFactorjy=="未落实压疮预防健康教育要求"){
+	if(HumFactorjy==$g("未落实压疮预防健康教育要求")){
 		$("input[type=checkbox][id^='HumFactor-94917-95198-']").each(function(){
 			if (($(this).is(':checked'))&&(this.value!="")){
 				HumFactorjyList=this.value
 			}
 		})
 		if (HumFactorjyList==""){
-			$.messager.alert("提示:","【护理员、陪护因素】勾选'未落实压疮预防健康教育要求'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),"【"+$g("护理员、陪护因素")+"】"+$g("勾选")+$g('未落实压疮预防健康教育要求')+"，"+$g("请勾选相应内容")+"！");	
 			return false;
 		}
 	}
@@ -754,7 +754,7 @@ function checkother(){
 		}
 	})
 	if(HumFactorjyoth==-1){
-		$.messager.alert("提示:","【护理员、陪护因素-未落实压疮预防健康教育要求】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("护理员、陪护因素")+"-"+$g("未落实压疮预防健康教育要求")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -768,7 +768,7 @@ function checkother(){
 		}
 	})
 	if(UlcDeviceCauseoth==-1){
-		$.messager.alert("提示:","【设备设施因素】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("设备设施因素")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	//设备设施因素-设备设施不适用
@@ -778,14 +778,14 @@ function checkother(){
 			UlcDeviceCausesb=this.value;
 		}
 	})
-	if(UlcDeviceCausesb=="设备设施不适用"){
+	if(UlcDeviceCausesb==$g("设备设施不适用")){
 		$("input[type=checkbox][id^='UlcDeviceCause-94920-']").each(function(){
 			if (($(this).is(':checked'))&&(this.value!="")){
 				UlcDeviceCausesbList=this.value
 			}
 		})
 		if (UlcDeviceCausesbList==""){
-			$.messager.alert("提示:","【设备设施因素】勾选'设备设施不适用'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),"【"+$g("设备设施因素")+"】"+$g("勾选")+$g('设备设施不适用')+"，"+$g("请勾选相应内容")+"！");	
 			return false;
 		}
 	}
@@ -797,7 +797,7 @@ function checkother(){
 		}
 	})
 	if(UlcDeviceCausesboth==-1){
-		$.messager.alert("提示:","【设备设施因素-设备设施不适用】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("设备设施因素")+"-"+$g("设备设施不适用")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -808,14 +808,14 @@ function checkother(){
 			UlcDeviceCausecs=this.value;
 		}
 	})
-	if(UlcDeviceCausecs=="提供预防压疮相应设施、设备不足"){
+	if(UlcDeviceCausecs==$g('提供预防压疮相应设施、设备不足')){
 		$("input[type=checkbox][id^='UlcDeviceCause-94921-']").each(function(){
 			if (($(this).is(':checked'))&&(this.value!="")){
 				UlcDeviceCausecsList=this.value
 			}
 		})
 		if (UlcDeviceCausecsList==""){
-			$.messager.alert("提示:","【设备设施因素】勾选'提供预防压疮相应设施、设备不足'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),"【"+$g("设备设施因素")+"】"+$g("勾选")+$g('提供预防压疮相应设施、设备不足')+"，"+$g("请勾选相应内容")+"！");	
 			return false;
 		}
 	}
@@ -827,7 +827,7 @@ function checkother(){
 		}
 	})
 	if(UlcDeviceCausecsoth==-1){
-		$.messager.alert("提示:","【设备设施因素-提供预防压疮相应设施、设备不足】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("设备设施因素")+"-"+$g('提供预防压疮相应设施、设备不足')+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -838,14 +838,14 @@ function checkother(){
 			UlcDeviceCausegz=this.value;
 		}
 	})
-	if(UlcDeviceCausegz=="仪器、设备故障"){
+	if(UlcDeviceCausegz==$g("仪器、设备故障")){
 		$("input[type=checkbox][id^='UlcDeviceCause-94922-']").each(function(){
 			if (($(this).is(':checked'))&&(this.value!="")){
 				UlcDeviceCausegzList=this.value
 			}
 		})
 		if (UlcDeviceCausegzList==""){
-			$.messager.alert("提示:","【设备设施因素】勾选'仪器、设备故障'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),"【"+$g("设备设施因素")+"】"+$g("勾选")+$g('仪器、设备故障')+"，"+$g("请勾选相应内容")+"！");	
 			return false;
 		}
 	}
@@ -857,7 +857,7 @@ function checkother(){
 		}
 	})
 	if(UlcDeviceCausegzoth==-1){
-		$.messager.alert("提示:","【设备设施因素-仪器、设备故障】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("设备设施因素")+"-"+$g("仪器、设备故障")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -871,7 +871,7 @@ function checkother(){
 		}
 	})
 	if(MatFactoroth==-1){
-		$.messager.alert("提示:","【材料因素】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("材料因素")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -882,14 +882,14 @@ function checkother(){
 			MatFactorqj=this.value;
 		}
 	})
-	if(MatFactorqj=="医疗器具压迫"){
+	if(MatFactorqj==$g("医疗器具压迫")){
 		$("input[type=checkbox][id^='MatFactor-94925-']").each(function(){
 			if (($(this).is(':checked'))&&(this.value!="")){
 				MatFactorqjList=this.value
 			}
 		})
 		if (MatFactorqjList==""){
-			$.messager.alert("提示:","【医疗器具压迫】勾选'仪器、设备故障'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),"【"+$g("医疗器具压迫")+"】"+$g("勾选")+$g('仪器、设备故障')+"，"+$g("请勾选相应内容")+"！");	
 			return false;
 		}
 	}
@@ -901,7 +901,7 @@ function checkother(){
 		}
 	})
 	if(MatFactorqjoth==-1){
-		$.messager.alert("提示:","【材料因素-医疗器具压迫】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("材料因素")+"-"+$g("医疗器具压迫")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -915,7 +915,7 @@ function checkother(){
 		}
 	})
 	if(methodFactoroth==-1){
-		$.messager.alert("提示:","【方法因素】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("方法因素")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -929,7 +929,7 @@ function checkother(){
 		}
 	})
 	if(UlcManaFactoroth==-1){
-		$.messager.alert("提示:","【管理因素】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("管理因素")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -940,7 +940,7 @@ function checkother(){
 			if((this.value=="title")&&($("input[name$='.96082'][class='lable-input']").val()=="")){
 				ManaImprovementoth=-1;
 			}
-			if((this.value=="制度、流程及规范制定或修订")){
+			if((this.value==$g("制度、流程及规范制定或修订"))){
 				if(!($("#ManaImprovement-94378-94949").is(':checked'))&&!($("#ManaImprovement-94378-94950").is(':checked'))){
 					ManaImprovementoth=-2;
 				}
@@ -951,11 +951,11 @@ function checkother(){
 		}	
 	})
 	if(ManaImprovementoth==-2){
-		$.messager.alert("提示:","【管理改进】勾选'制度、流程及规范制定或修订'，请勾选和填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("管理改进")+"】"+$g("勾选")+$g('制度、流程及规范制定或修订')+"，"+$g("请勾选和填写内容")+"！");	
 		return false;
 	}
 	if(ManaImprovementoth==-1){
-		$.messager.alert("提示:","【管理改进】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("管理改进")+"】"+$g("勾选")+$g('其他')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 	
@@ -969,7 +969,7 @@ function checkother(){
 		}
 	})
 	if(AftImpMeasures==-1){
-		$.messager.alert("提示:","【事件发生后整改措施落实效果】勾选'未落实'，请填写内容！");	
+		$.messager.alert($g("提示:"),"【"+$g("事件发生后整改措施落实效果")+"】"+$g("勾选")+$g('未落实')+"，"+$g("请填写内容")+"！");	
 		return false;
 	}
 		
@@ -1233,7 +1233,7 @@ function StaffEnter()
 {
 	$('#staffwin').show();
 	$('#staffwin').window({
-		title:'科室人员信息',
+		title:$g('科室人员信息'),
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,
@@ -1254,8 +1254,8 @@ function InitStaffGrid()
 	//定义columns
 	var columns=[[
 	     {field:"ck",checkbox:'true',width:40},
-		 {field:'userCode',title:'用户Code',width:100},
-		 {field:'userName',title:'用户姓名',width:100}
+		 {field:'userCode',title:$g('用户Code'),width:100},
+		 {field:'userName',title:$g('用户姓名'),width:100}
 		]];
 	
 	//定义datagrid
@@ -1285,7 +1285,16 @@ function InitStaffGrid()
 		 {
 	       var userName = rowData.userName
 	       MeetMember(userName)
-		 },	
+		 },onLoadSuccess:function(data){  
+			if(userName!=""){
+				for(var i=0;i<data.rows.length;i++){
+					var Name = data.rows[i].userName+"，";
+					if(userName.indexOf(Name)>=0){
+						$("#user").datagrid("selectRow",i);
+					}
+				}
+			}
+		}
 	});	
 	$("#UserNames").val($("#Participants").val()); /// 给弹出的人员窗口里面人员赋值(表单的参会人员)
 	$(".datagrid-header-check input[type=checkbox]").on("click",function(){ ///2018-04-13 cy 评价界面
@@ -1362,7 +1371,7 @@ function getInputValue(id){
 		inputvalue="";
 	}
 	if((inputvalue!="无")&&(inputvalue!="")){
-		inputvalue="整改措施："+inputvalue;
+		inputvalue=$g("整改措施：")+inputvalue;
 	}
 	return inputvalue;
 	

@@ -1,33 +1,17 @@
 ﻿﻿/**
  * FileName: dhcbill.ipbill.billdtl.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-05-22
  * Description: 患者费用明细
  */
-
-var GV = {
-	EpisodeID: getParam("EpisodeID"),
-	BillRowId: getParam("BillRowId"),
-	CateRowId: getParam("CateRowId")
-};
 
 $(function () {
 	initQueryMenu();
 	initBillDtlList();
 });
 
-function initQueryMenu() {	
-	getPatInfoByAdm(GV.EpisodeID);  //dhcbill.inpatient.banner.csp
-	$.m({
-		ClassName: "web.UDHCJFBaseCommon",
-		MethodName: "GetPatAdmInDays",
-		PAADMRowID: GV.EpisodeID,
-		BillNo: GV.BillRowId
-	}, function(rtn) {
-		var myAry = rtn.split("^");
-		setValueById("stDate", myAry[0]);
-		setValueById("endDate", myAry[1]);
-	});
+function initQueryMenu() {
+	getPatInfoByAdm(CV.EpisodeID);  //dhcbill.inpatient.banner.csp
 	
 	$HUI.linkbutton("#btn-find", {
 		onClick: function () {
@@ -48,34 +32,39 @@ function initBillDtlList() {
 		border: false,
 		striped: true,
 		singleSelect: true,
+		rownumbers: true,
 		pagination: true,
 		pageSize: 20,
-		columns: [[{title: '分类', field: 'CateDesc', width: 150},
-				   {title: '项目名称', field: 'ItmDesc', width: 220},
-				   {title: '单位', field: 'UOM', width: 120},
-				   {title: '单价', field: 'Price', align: 'right', width: 120},
-				   {title: '数量', field: 'Qty', width: 120},
-				   {title: '金额', field: 'Amount', align: 'right', width: 120},
-				   {title: '医保分类', field: 'YBDesc', width: 100},
-				   {title: '剂型', field: 'PhcfDesc', width: 120, hidden: true},
-				   {title: '产地', field: 'PhmnfName', width: 120, hidden: true},
-				   {title: '物价编码', field: 'ChargeBasis', width: 150},
-				   {title: 'Adm', field: 'Adm', hidden: true},
-				   {title: 'CateID', field: 'CateID', hidden: true},
-				   {title: 'ItmID', field: 'ItmID', hidden: true},
-				   {title: 'DtlFlag', field: 'DtlFlag', hidden: true}
-			]],
+		className: "web.DHCIPBillPatFeeDtl",
+		queryName: "FindBillDtl",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if (!cm[i].width) {
+					cm[i].width = 130;
+					if (cm[i].field == "TCateDesc") {
+						cm[i].width = 120;
+					}
+					if (cm[i].field == "TItmDesc") {
+						cm[i].width = 198;
+					}
+					if (cm[i].field == "TChargeBasis") {
+						cm[i].width = 120;
+					}
+				}
+			}
+		},
 		url: $URL,
 		queryParams: {
 			ClassName: "web.DHCIPBillPatFeeDtl",
 			QueryName: "FindBillDtl",
-			billId: GV.BillRowId,
+			billId: CV.BillID,
 			stDate: "",
 			endDate: "",
-			tarCateId: GV.CateRowId
+			episodeId: CV.EpisodeID,
+			otherQryStr:  CV.CateID + "!" + (getValueById("splitCK") ? 1 : 0)
 		},
 		rowStyler: function (index, row) {
-			if ((row.CateDesc.indexOf("小计") != -1) || (row.CateDesc.indexOf("合计") != -1)) {
+			if ([$g("小计"), $g("合计")].indexOf(row.TCateDesc) != -1) {
 				return 'font-weight: bold';
 			}
 		}
@@ -83,13 +72,16 @@ function initBillDtlList() {
 }
 
 function loadBillDtlList() {
+	var isSplit = getValueById("splitCK") ? 1 : 0;
+	var otherQryStr = CV.CateID + "!" + isSplit;
 	var queryParams = {
 		ClassName: "web.DHCIPBillPatFeeDtl",
 		QueryName: "FindBillDtl",
-		billId: GV.BillRowId,
+		billId: CV.BillID,
 		stDate: getValueById("stDate"),
 		endDate: getValueById("endDate"),
-		tarCateId: GV.CateRowId
+		episodeId: CV.EpisodeID,
+		otherQryStr: otherQryStr
 	}
 	loadDataGridStore("billDtlList", queryParams);
 }
@@ -100,19 +92,32 @@ function loadBillDtlList() {
 function printClick() {
 	var stDate = getValueById("stDate");
 	var endDate = getValueById("endDate");
-	var tarCateId = GV.CateRowId;
+	var isSplit = getValueById("splitCK") ? 1 : 0;
+	var otherQryStr = CV.CateID + "!" + isSplit;
+	var splitColFlag = getPageCfgValue("dhcbill.ipbill.billdtl.csp", "BSC", "", PUBLIC_CONSTANT.SESSION.HOSPID);
 	$.m({
 		ClassName: "web.DHCBillDtlListPrtLog",
 		MethodName: "SavePrtLog",
 		userId: PUBLIC_CONSTANT.SESSION.USERID,
-		invStr: GV.BillRowId + ":" + "IP"
+		invStr: CV.BillID + ":" + "IP"
 	}, function (rtn) {
 		if (rtn != 0) {
-			$.messager.popover({msg: '保存日志失败', type: 'error'});
+			$.messager.popover({msg: "保存日志失败", type: "error"});
 			return;
 		}
-		var parameter = "billId=" + GV.BillRowId + ";" + "stDate=" + stDate + ";" + "endDate=" + endDate + ";" + "tarCateId=" + tarCateId;
-		var fileName = "{DHCBILL-IPBILL-FYQD.rpx(" + parameter + ")}";
+		var paramObj = {
+			billId: CV.BillID,
+			stDate: stDate,
+			endDate: endDate,
+			episodeId: CV.EpisodeID,
+			otherQryStr: otherQryStr
+		};
+		var params = "";
+		$.each(Object.keys(paramObj), function(index, prop) {
+			params += ((params == "") ? "" : ";") + prop + "=" + paramObj[prop];
+		});
+		var fileName = (splitColFlag == 1) ? "DHCBILL-IPBILL-FYQDSL.rpx" : "DHCBILL-IPBILL-FYQD.rpx";
+		fileName = "{" + fileName + "(" + params + ")}";
 		DHCCPM_RQDirectPrint(fileName);
 	});
 }

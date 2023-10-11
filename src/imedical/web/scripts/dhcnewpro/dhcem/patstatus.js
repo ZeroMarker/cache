@@ -1,7 +1,7 @@
 ///CreatDate:  2016-08-01
 ///Author:    lvpeng 
 var editRow = "";
-
+var ActFlagArr = [{"value":"Y","text":'是'}, {"value":"N","text":'否'}];
 $(function(){
 	//自定义编辑器在 jquery.easyui.extend.js 增加，需要实现编辑器的4个默认方法
 	 $.extend($.fn.datagrid.defaults.editors, {
@@ -38,8 +38,9 @@ $(function(){
    
    	hospComp = GenHospComp("DHC_EmPatStatusAcc");  //hxy 2020-05-26
     hospComp.options().onSelect = function(){///选中事件
-		$("#datagrid").datagrid('load');
-		$("#datagrid1").datagrid('loadData',{total:0,rows:[]});
+		//$("#datagrid").datagrid('load');
+		//$("#datagrid1").datagrid('loadData',{total:0,rows:[]});
+		ClickRowSys();
 	}//ed
 });
 
@@ -84,7 +85,7 @@ function onClickRowSysItm(index,row){
 
 ///双击编辑 状态授权表(子表)
 function onClickRowSys(rowIndex,row){
-	if (editRow != "") { 
+	if ((editRow != "")||(editRow == "0")) { 
         $("#datagrid").datagrid('endEdit', editRow); 
     } 
     $("#datagrid").datagrid('beginEdit', rowIndex); 
@@ -185,7 +186,7 @@ function savePsa(){
 			return false;
 		}
 	
-		var tmp=rowsData[i].ID +"^"+ rowsData[i].PTCode +"^"+ rowsData[i].PTDesc +"^"+ rowsData[i].PTProID;
+		var tmp=rowsData[i].ID +"^"+ rowsData[i].PTCode +"^"+ rowsData[i].PTDesc +"^"+ rowsData[i].PTProID +"^"+ rowsData[i].AutoDis+"^"+ rowsData[i].Active;
 		dataList.push(tmp);
 	}
 	
@@ -226,5 +227,13 @@ function cancelPsa(){
 	}else{
 		 $.messager.alert('提示','请选择要删除的项','warning');
 		 return;
+	}
+}
+//YN转换是否
+function formatLink(value,row,index){
+	if (value=='Y'){
+		return '是';
+	}else if (value=='N'){
+		return '否';
 	}
 }

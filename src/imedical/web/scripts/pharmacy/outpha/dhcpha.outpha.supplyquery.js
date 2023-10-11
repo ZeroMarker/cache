@@ -64,7 +64,7 @@ function InitBasicLoc() {
 		"?action=GetBasicLocList&style=select2",
 		allowClear: true,
 		width: '11em',
-		placeholder: '基数科室...'
+		placeholder: $g("基数科室")+'...'
 	}
 	$("#sel-basicloc").dhcphaSelect(selectoption);
 	$('#sel-basicloc').on('select2:select', function (event) {
@@ -77,28 +77,28 @@ function InitSupplyQueryList() {
 	//定义columns
 	var columns = [[{
 				field: 'Tward',
-				title: '病区',
+				title: ("病区"),
 				width: 60,
 				hidden: true
 			}, {
 				field: 'Tdocloc',
-				title: '基数科室',
+				title: ("基数科室"),
 				width: 150
 			}, {
 				field: 'Tsuppdate',
-				title: '日期',
+				title: ("日期"),
 				width: 80
 			}, {
 				field: 'Tsupptime',
-				title: '时间',
+				title: ("时间"),
 				width: 70
 			}, {
 				field: 'Tusername',
-				title: '操作人',
+				title: ("操作人"),
 				width: 100
 			}, {
 				field: 'Tsuppno',
-				title: '单号',
+				title: ("单号"),
 				width: 150
 			}, {
 				field: 'Tsupp',
@@ -131,19 +131,19 @@ function InitSupplyQueryTotalList() {
 	//定义columns
 	var columns = [[{
 				field: 'Tincicode',
-				title: '药品代码',
+				title: ("药品代码"),
 				width: 100
 			}, {
 				field: 'Tincidesc',
-				title: '药品名称',
+				title: ("药品名称"),
 				width: 300
 			}, {
 				field: 'Tqty',
-				title: '发药数量',
+				title: ("发药数量"),
 				width: 100
 			}, {
 				field: 'Tspec',
-				title: '规格',
+				title: ("规格"),
 				width: 135
 			}
 		]];
@@ -170,7 +170,7 @@ function Query() {
 		var DispLocId = $("#sel-phaloc").val();
 	if (DispLocId == null) {
 		DispLocId = "";
-		dhcphaMsgBox.alert("请选择药房!");
+		dhcphaMsgBox.alert($g("请选择药房!"));
 		return;
 	}
 	var DoctorLocId = $("#sel-basicloc").val();
@@ -228,17 +228,17 @@ function ClearConditions() {
 function BPrintHandler() {
 	if ($('#supplyquerydg').datagrid('getData').rows.length == 0) //获取当前界面数据行数
 	{
-		dhcphaMsgBox.alert("页面没有数据!");
+		dhcphaMsgBox.alert($g("页面没有数据!"));
 		return;
 	}
 	var gridSelected = $('#supplyquerydg').datagrid('getSelected');
 	if (gridSelected == null) {
-		dhcphaMsgBox.alert("请选择需要打印的行!");
+		dhcphaMsgBox.alert($g("请选择需要打印的行!"));
 		return;
 	}
 	if ($('#supplyquerytotaldg').datagrid('getData').rows.length == 0) //获取当前界面数据行数
 	{
-		dhcphaMsgBox.alert("页面没有数据");
+		dhcphaMsgBox.alert($g("页面没有数据"));
 		return;
 	}
 	PrintSupp(gridSelected.Tsupp);

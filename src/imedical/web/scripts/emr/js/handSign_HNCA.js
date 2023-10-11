@@ -96,15 +96,16 @@ var handSign = {
             if (typeof evidenceData === 'undefined') return;
             //evidenceData = $.parseJSON(evidenceData);
             var signLevel = 'Patient';
-            var signUserId = handSignInterface.getUsrID(evidenceData);
+            var signUserId = parEditor.userId || handSignInterface.getUsrID(evidenceData);
             var userName = 'Patient';
             var actionType = 'Append';
             var description = '患者';
             var img = handSignInterface.getSignScript(evidenceData);
             var headerImage = ''; //handSignInterface.getSignPhoto(evidenceData);
             var fingerImage = handSignInterface.getSignFingerprint(evidenceData);
+            var path = parEditor.path || '';
             // 获取编辑器hash
-            var signInfo = parEditor.signDocument(parEditor.instanceId, 'Graph', signLevel, signUserId, userName, img, actionType, description, headerImage, fingerImage);
+            var signInfo = parEditor.signDocument(parEditor.instanceId, 'Graph', signLevel, signUserId, userName, img, actionType, description, headerImage, fingerImage, path);
             if (signInfo.result == 'OK') {
                 isSigned = true;
                 // 签名

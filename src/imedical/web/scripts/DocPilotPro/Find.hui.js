@@ -1,4 +1,7 @@
 var PageLogicObj={
+	v_CHosp:"",
+	m_Loc:"",
+	m_Doc:"",
 	m_PilotProListTabDataGrid:"",
 	dw:$(window).width()-150,
 	dh:$(window).height()-100
@@ -35,8 +38,11 @@ function InitEvent(){
 	$("#BFind").click(PilotProListTabDataGridLoad);
 	$("#BClear").click(ClearClickHander);
 	$("#BExport").click(ExportClickHander)
+	$("#ChooseExport").click(ChooseExport)
+	
 }
 function Init(){
+	InitHospList();
 	PageLogicObj.m_PilotProListTabDataGrid=InitPilotProListTabDataGrid();
 }
 function InitPilotProListTabDataGrid(){
@@ -45,28 +51,45 @@ function InitPilotProListTabDataGrid(){
         iconCls: 'icon-add',
         handler: function() {AddClickHandle(); }
     },{
-        text: '修改项目',
+        text: '修改',
         iconCls: 'icon-write-order',
         handler: function() {UpdateClickHandle();}
-    },'-',{
-        text: '付款记录',
-        iconCls: 'icon-fee',
-        handler: function() {RemClickHandle();}
-    },'-',{
+    },'-',
+    {
+			text: '阶段设置',
+			iconCls: 'icon-analysis',
+			handler: function() {StageClickHandle();}
+		},'-',{
         text: '免费医嘱设置',
-        iconCls: 'icon-fee',
+        iconCls: 'icon-drug-link',
         handler: function() {FreeOrdClickHandle();}
-    }];
+    },{
+			text: '一键复制免费医嘱',
+			iconCls: 'icon-drug-audit',
+			handler: function() {CopyClickHandle();}
+		}
+    ,'-',{
+        text: '付款记录',
+        iconCls: 'icon-int-bill',
+        handler: function() {RemClickHandle();}
+    },'-',
+    {
+			text: '药品维护',
+			iconCls: 'icon-drug',
+			handler: function() {DrugClickHandle();}
+		}
+	];
 	var Columns=[[ 
 		{field:'TPPRowId',hidden:true,title:''},
+		{field:'CheckTPP',checkbox:'true',align:'center',width:70,auto:false},
 		{field:'TPPCode',title:'项目编号',width:100},
 		{field:'TPPDesc',title:'药物/医疗器械名称',width:200},
-		{field:'TEndDate',title:'完成日期',width:80},
-		{field:'TPPCreateDepartment',title:'立项科室',width:100},
-		{field:'TPPStartUser',title:'负责人',width:100},
+		{field:'PorCreateDate',title:'立项日期',width:100},		
+		{field:'TPPCreateDepartment',title:'立项科室',width:150},
+		{field:'TPPStartUser',title:'负责人',width:150},
 		{field:'TPPBudget',title:'项目预算',width:100},
 		{field:'TPPState',title:'当前状态',width:80},
-		{field:'PPSUpdateReason',title:'状态原因',width:80},
+		{field:'PPSUpdateReason',title:'状态变更过程',width:180},
 		{field:'ArchivesFilesNo',title:'档案文件夹编号',width:110},
 		{field:'PlanNamenow',title:'方案名称',width:80},
 		{field:'ApplicationUnitnow',title:'申请人',width:80},
@@ -82,16 +105,17 @@ function InitPilotProListTabDataGrid(){
 					return 'background-color:#BEBEBE;';
 				}
 			}
-
 		},
-		{field:'TPPStartDate',title:'开始日期',width:100},
+		{field:'TPPStartDate',title:'项目开始日期',width:100},
+		{field:'TEndDate',title:'项目结束日期',width:95},
 		{field:'RecordSum',title:'',hidden:true}
     ]]
 	var PilotProListTabDataGrid=$("#PilotProListTab").datagrid({
 		fit : true,
 		border : false,
 		striped : true,
-		singleSelect : true,
+		nowrap:false,
+		singleSelect : false,
 		fitColumns : false,
 		autoRowHeight : false,
 		rownumbers:true,
@@ -105,10 +129,75 @@ function InitPilotProListTabDataGrid(){
 	}); 
 	return PilotProListTabDataGrid;
 }
+
+function StageClickHandle () {
+	var row=PageLogicObj.m_PilotProListTabDataGrid.datagrid('getSelected');
+	if ((!row)||(row.length==0)){
+		$.messager.alert("提示","请选择项目!","warning");
+		return false;
+	}
+	var rtn=CheckChooseMore()
+	if (!rtn) return ;
+	var PPRowId=row["TPPRowId"];
+	var PPDesc=row["TPPDesc"];
+	
+	var URL = "docpilotpro.cfg.stage.csp?PPRowId="+PPRowId+"&InHosp="+GetHospValue();
+	websys_showModal({
+		url:URL,
+		//maximizable:true,
+		iconCls: 'icon-w-edit',
+		title:'阶段设置',
+		width:$(window).width()-200,height:$(window).height()-200
+	})
+}
+
+function DrugClickHandle() {
+	var row=PageLogicObj.m_PilotProListTabDataGrid.datagrid('getSelected');
+	if ((!row)||(row.length==0)){
+		$.messager.alert("提示","请选择项目!","warning");
+		return false;
+	}
+	var rtn=CheckChooseMore()
+	if (!rtn) return ;
+	var PPRowId=row["TPPRowId"];
+	var PPDesc=row["TPPDesc"];
+	
+	var URL = "gcp.cfg.drug.csp?PPRowId="+PPRowId+"&InHosp="+GetHospValue();
+	websys_showModal({
+		url:URL,
+		//maximizable:true,
+		iconCls: 'icon-w-edit',
+		title:'药品维护',
+		width:$(window).width()-200,height:$(window).height()-200
+	})
+}
+
+function CopyClickHandle() {
+	var row=PageLogicObj.m_PilotProListTabDataGrid.datagrid('getSelected');
+	if ((!row)||(row.length==0)){
+		$.messager.alert("提示","请选择项目!","warning");
+		return false;
+	}
+	var rtn=CheckChooseMore()
+	if (!rtn) return ;
+	var PPRowId=row["TPPRowId"];
+	var PPDesc=row["TPPDesc"];
+	
+	var URL = "gcp.cfg.copyord.csp?PPRowId="+PPRowId+"&InHosp="+GetHospValue();
+	websys_showModal({
+		url:URL,
+		//maximizable:true,
+		iconCls: 'icon-w-edit',
+		title:'复制',
+		//width:$(window).width()-200,height:$(window).height()-200
+		width:600,height:500
+	})	
+}
+
 function PilotProListTabDataGridLoad(){
 	var StatusID=$("#Status").combobox("getValue");
 	if (StatusID==undefined) StatusID="";
-	var CFDr=$("#CF").combobox("getValue");
+	var CFDr=""	//$("#CF").combobox("getValue");
 	if (CFDr==undefined) CFDr="";
 	var StartDate=$("#StartDate").datebox("getValue")||"",
 		EndDate=$("#EndDate").datebox("getValue")||"";
@@ -130,7 +219,7 @@ function PilotProListTabDataGridLoad(){
 	    PPStartUserDr:$("#PPStartUser").combobox("getValue"),
 	    Indication:$("#Indication").val(),
 	    ArchivesFilesNo:$("#ArchivesFilesNo").val(),
-	    Exp:StatusID+"^"+CFDr+"^"+StartDate+"^"+EndDate,
+	    Exp:StatusID+"^"+CFDr+"^"+StartDate+"^"+EndDate+"^"+GetHospValue(),
 	    //StatusID:$("#Status").combobox("getValue"),
 	    //CFDr:$("#CF").combobox("getValue"),
 	    Pagerows:PageLogicObj.m_PilotProListTabDataGrid.datagrid("options").pageSize,rows:99999
@@ -145,12 +234,13 @@ function ClearClickHander(){
 	}
 	$(".hisui-combobox").combobox('select','');
 	$(".hisui-datebox").datebox('setValue','');
+	PilotProListTabDataGridLoad();
 }
 
 function ExportClickHander () {
 	var StatusID=$("#Status").combobox("getValue");
 	if (StatusID==undefined) StatusID="";
-	var CFDr=$("#CF").combobox("getValue");
+	var CFDr=""	//$("#CF").combobox("getValue");
 	if (CFDr==undefined) CFDr="";
 	var StartDate=$("#StartDate").datebox("getValue")||"",
 		EndDate=$("#EndDate").datebox("getValue")||"";
@@ -170,13 +260,10 @@ function ExportClickHander () {
 		Indication=$("#Indication").val(),
 		ArchivesFilesNo=$("#Indication").val(),
 		Exp=StatusID+"^"+CFDr+"^"+StartDate+"^"+EndDate;
-		
-	var rtn = $cm({
-		dataType:'text',
-		ResultSetType:"Excel",
-		ExcelName:"PilotProject",
+	
+	var result = $m({
 		ClassName:"web.PilotProject.Extend.E1",
-		QueryName:"Export",
+		MethodName:"GetTotal",
 		PPCode:$("#PPCode").val(),
 	    PPDesc:$("#PPDesc").val(),
 	    Flag:ServerObj.Flag,
@@ -192,12 +279,42 @@ function ExportClickHander () {
 	    PPStartUserDr:$("#PPStartUser").combobox("getValue"),
 	    Indication:$("#Indication").val(),
 	    ArchivesFilesNo:$("#ArchivesFilesNo").val(),
-	    Exp:StatusID+"^"+CFDr+"^"+StartDate+"^"+EndDate
+	    Exp:StatusID+"^"+CFDr+"^"+StartDate+"^"+EndDate+"^"+GetHospValue()
 	},false);
 	
+	if (result==0) {
+		$.messager.alert("提示","无导出数据！","warning");
+		return false;
+	} else {
+		var rtn = $cm({
+			localDir:"Self", 
+			ResultSetTypeDo:"Export",
+			//dataType:'text',
+			ResultSetType:"ExcelPlugin", //Excel
+			ExcelName:"PilotProject",
+			ClassName:"web.PilotProject.Extend.E1",
+			QueryName:"Export",
+			PPCode:$("#PPCode").val(),
+		    PPDesc:$("#PPDesc").val(),
+		    Flag:ServerObj.Flag,
+		    PlanNo:$("#PlanNo").val(),
+		    PlanName:$("#PlanName").val(),
+		    ApplicationUnit:$("#ApplicationUnit").val(),
+		    PilotCategoryDr:$("#PilotCategory").combobox("getValue"),
+		    ApprovalNo:$("#ApprovalNo").val(),
+		    ApplyMatterDr:$("#ApplyMatter").combobox("getValue"),
+		    ApplyStageDr:$("#ApplyStage").combobox("getValue"),
+		    IsHeadmanDr:$("#IsHeadman").combobox("getValue"),
+		    PPCreateDepartmentDr:$("#PPCreateDepartment").combobox("getValue"),
+		    PPStartUserDr:$("#PPStartUser").combobox("getValue"),
+		    Indication:$("#Indication").val(),
+		    ArchivesFilesNo:$("#ArchivesFilesNo").val(),
+		    Exp:StatusID+"^"+CFDr+"^"+StartDate+"^"+EndDate+"^"+GetHospValue()
+		},false);
+	}
 	//var rtn = tkMakeServerCall("websys.Query","ToExcel","PilotProject2","web.PilotProject.Extend.E1","Export",PPCode,PPDesc,Flag,PlanNo,PlanName,ApplicationUnit,PilotCategoryDr,ApprovalNo,ApplyMatterDr,ApplyStageDr,IsHeadmanDr,PPCreateDepartmentDr,PPStartUserDr,Indication,ArchivesFilesNo,Exp);
 	
-	location.href = rtn;	
+	//location.href = rtn;	
 }
 
 function LoadDepartment(){
@@ -206,9 +323,10 @@ function LoadDepartment(){
 		QueryName:"FindLoc",
 		dataType:"json",
 		Loc:"",
+		InHosp:GetHospValue(),
 		rows:99999
 	},function(Data){
-		var cbox = $HUI.combobox("#PPCreateDepartment", {
+		PageLogicObj.m_Loc = $HUI.combobox("#PPCreateDepartment", {
 				valueField: 'RowId',
 				textField: 'Desc', 
 				editable:true,
@@ -233,9 +351,10 @@ function LoadStartUser(){
 		QueryName:"FindStartUser",
 		dataType:"json",
 		PPStartUser:"",
+		InHosp:GetHospValue(),
 		rows:99999
 	},function(Data){
-		var cbox = $HUI.combobox("#PPStartUser", {
+		PageLogicObj.m_Doc = $HUI.combobox("#PPStartUser", {
 				valueField: 'Hidden',
 				textField: 'Desc', 
 				editable:true,
@@ -399,8 +518,9 @@ function LoadStatus(){
 function AddClickHandle(){
 	var Flag=ServerObj.Flag;
 	var src="docpilotpro.project.hui.csp?PPRowId="+"&Flag=";
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
-	createModalDialog("Project","临床试验立项", '1010', '450',"icon-w-add","",$code,"");
+	createModalDialog("Project","临床试验立项", '1100', '650',"icon-w-add","",$code,"");
 }
 function RemClickHandle(){
 	var row=PageLogicObj.m_PilotProListTabDataGrid.datagrid('getSelected');
@@ -408,9 +528,13 @@ function RemClickHandle(){
 		$.messager.alert("提示","请选择项目!");
 		return false;
 	}
+	var rtn=CheckChooseMore()
+	if (!rtn) return ;
 	var PPRowId=row["TPPRowId"];
 	var PPDesc=row["TPPDesc"];
-	var src="docpilotpro.rem.hui.csp?PPRowId="+PPRowId;
+	var InHosp=GetHospValue();
+	var src="docpilotpro.rem.hui.csp?PPRowId="+PPRowId+"&InHosp="+InHosp;
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
 	createModalDialog("Project","药理项目:"+PPDesc, PageLogicObj.dw, PageLogicObj.dh,"icon-w-edit","",$code,"");
 }
@@ -420,9 +544,13 @@ function FreeOrdClickHandle(){
 		$.messager.alert("提示","请选择项目!");
 		return false;
 	}
+	var rtn=CheckChooseMore()
+	if (!rtn) return ;
 	var PPRowId=row["TPPRowId"];
 	var PPDesc=row["TPPDesc"];
-	var src="docpilotpro.freeordset.hui.csp?PPRowId="+PPRowId;
+	var InHosp=GetHospValue();
+	var src="docpilotpro.freeordset.hui.csp?PPRowId="+PPRowId+"&InHosp="+InHosp;
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
 	createModalDialog("Project","药理项目:"+PPDesc, PageLogicObj.dw, PageLogicObj.dh,"icon-w-edit","",$code,"");
 }
@@ -432,12 +560,16 @@ function UpdateClickHandle(){
 		$.messager.alert("提示","请选择需要修改的项目!");
 		return false;
 	}
+	var rtn=CheckChooseMore()
+	if (!rtn) return ;
 	var PPRowId=row["TPPRowId"];
 	var Flag=ServerObj.Flag; 
 	var PPDesc=row["TPPDesc"];
-	var src="docpilotpro.project.hui.csp?PPRowId="+PPRowId+"&Flag="+Flag;
+	var InHosp=GetHospValue();
+	var src="docpilotpro.project.hui.csp?PPRowId="+PPRowId+"&Flag="+Flag+"&InHosp="+InHosp;
+    src=('undefined'!==typeof websys_writeMWToken)?websys_writeMWToken(src):src;
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
-	createModalDialog("Project",PPDesc+" 药理项目修改", '1030', '450',"icon-w-update","",$code,"");
+	createModalDialog("Project",PPDesc+" 药理项目修改", '1100', '650',"icon-w-update","",$code,"");
 	//todo 以下药理中心关系系统相关界面 
 	/*if ((Flag=="ProApprove")||(Flag=="CPRCApprove")||(Flag=="Sign")||(Flag=="SignModify")){
 		var EthicsMeetAduitDate=row["TEthicsMeetAduitDate"];
@@ -498,6 +630,7 @@ function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,
         closable: true,
         content:_content,
         onClose:function(){
+	        PilotProListTabDataGridLoad();
 	        destroyDialog(id);
 	    }
     });
@@ -506,4 +639,81 @@ function destroyDialog(id){
    //移除存在的Dialog
    $("body").remove("#"+id); 
    $("#"+id).dialog('destroy');
+}
+function InitHospList()
+{
+	var hospComp = GenHospComp("Doc_BaseConfig_CNMedCode");
+	hospComp.jdata.options.onSelect = function(rowIndex,data){
+		PageLogicObj.v_CHosp = data.HOSPRowId;
+		SwitchHosp();
+		PilotProListTabDataGridLoad();
+	}
+	hospComp.jdata.options.onLoadSuccess= function(data){
+		//Init();
+	}
+}
+
+function GetHospValue() {
+	if (PageLogicObj.v_CHosp == "") {
+		return session['LOGON.HOSPID'];
+	}
+	
+	return PageLogicObj.v_CHosp
+}
+
+function SwitchHosp() {
+	PageLogicObj.m_Loc.clear();
+	PageLogicObj.m_PilotProListTabDataGrid.datagrid("clearSelections")
+	var UserID = $("#PPStartUser").combobox("getValue")||"",
+		loc = "",
+		PPStartUser = "";
+	url = $URL+"?ClassName=web.PilotProject.DHCDocPilotProject&QueryName=FindLoc&Loc="+loc+"&User="+UserID+"&InHosp="+GetHospValue()+"&ResultSetType=array";
+	PageLogicObj.m_Loc.reload(url);
+	
+	url = $URL+"?ClassName=web.PilotProject.DHCDocPilotProject&QueryName=FindStartUser&PPStartUser="+PPStartUser+"&InHosp="+GetHospValue()+"&ResultSetType=array";
+	PageLogicObj.m_Doc.reload(url);
+	PageLogicObj.m_Doc.clear();
+	
+}
+function CheckChooseMore(){
+	
+	var rows=PageLogicObj.m_PilotProListTabDataGrid.datagrid('getChecked');
+	if (rows.length>1){
+		$.messager.alert("提示","请选择一条项目!","info");
+		return false;
+	}	
+	return true;
+}
+function ReSortRows(rows){
+	var Newrows=[]
+	for (var i=0;i<rows.length;i++){
+		var TPPRowId=rows[i].TPPRowId
+		Newrows[TPPRowId]
+	}
+}
+function sortTPPRowId(TPPRowId) {
+	return function (a,b){
+		var obj1 = a[TPPRowId];
+		var obj2 = b[TPPRowId];
+		return obj1 - obj2
+	}
+}
+function ChooseExport(){
+	var rows=$("#PilotProListTab").datagrid('getSelections');
+	if (rows.length>0) {
+		//数据重新排列 由于getSelections获取的数据是选中时的数据，现在把数据通过id的大小重新排列
+		//如果界面排序规则发生改变 sortTPPRowId也要相应改变
+		rows.sort(sortTPPRowId("TPPRowId"))
+		$("#PilotProListTab").datagrid('toExcel', {
+			filename: '临床药理项目导出.xls',
+			rows: rows,
+			worksheet: 'Worksheet'
+		});
+		} else {
+			$.messager.alert("提示", "先选择项目记录,再进行导出!",'info');
+			return;
+		} 
+}
+function ShowAlertInfo(that){
+	$HUI.tooltip(that,{position:'bottom'}).show();
 }

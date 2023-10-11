@@ -9,7 +9,13 @@ function InitPathItemCatListWinEvent(obj){
 		isTopZindex:true
 		
 	});
-	
+	// 检查删除按钮是否允许删除，若否则隐藏该按钮
+	if(!chkDelBtnIsAble("DHCMA.CPW.BT.PathItemCat")){
+		$("#btnDelete").hide();	
+	}else{
+		$("#btnDelete").show();	
+	}
+
     obj.LoadEvent = function(args){ 
 		//保存
 		$('#btnSave').on('click', function(){
@@ -32,6 +38,10 @@ function InitPathItemCatListWinEvent(obj){
      	$('#btnDelete').on('click', function(){
 	     	obj.btnDelete_click();
      	});
+     	//管控数据医院授权点击事件				add by yankai20210803
+		$('#btnAuthHosp').on('click',function(){
+			Common_WinToAuthHosp(obj.RecRowID,"DHCMA_CPW_BT.PathItemCat","gridAuthHosp","winAuthHosp");	
+		})
     }
 	//选择项目分类字典
 	obj.gridPathItemCat_onSelect = function (){
@@ -42,6 +52,7 @@ function InitPathItemCatListWinEvent(obj){
 			$("#btnAdd").linkbutton("enable");
 			$("#btnEdit").linkbutton("disable");
 			$("#btnDelete").linkbutton("disable");
+			$("#btnAuthHosp").linkbutton("disable");
 			obj.RecRowID="";
 			obj.gridPathItemCat.clearSelections();
 		}
@@ -50,6 +61,7 @@ function InitPathItemCatListWinEvent(obj){
 			$("#btnAdd").linkbutton("disable");
 			$("#btnEdit").linkbutton("enable");
 			$("#btnDelete").linkbutton("enable");
+			$("#btnAuthHosp").linkbutton("enable");
 		}
 	}	
 	//双击编辑事件
@@ -62,6 +74,7 @@ function InitPathItemCatListWinEvent(obj){
 		var Code = $('#txtCode').val();
 		var Desc = $('#txtDesc').val();
 		var BTTypeDr =$('#cboItemType').combobox('getValue');
+		var BTPowerDr =$('#cboPowerType').combobox('getValue');
 		
 		if (!Code) {
 			errinfo = errinfo + "代码为空!<br>";
@@ -71,6 +84,9 @@ function InitPathItemCatListWinEvent(obj){
 		}	
 		if (!BTTypeDr) {
 			errinfo = errinfo + "项目大类为空!<br>";
+		}
+		if (!BTPowerDr) {
+			errinfo = errinfo + "权限分类为空!<br>";
 		}	
 		var IsCheck = $m({
 			ClassName:"DHCMA.CPW.BT.PathItemCat",
@@ -91,12 +107,14 @@ function InitPathItemCatListWinEvent(obj){
 		inputStr = inputStr + CHR_1 + Code;
 		inputStr = inputStr + CHR_1 + Desc;
 		inputStr = inputStr + CHR_1 + BTTypeDr;
+		inputStr = inputStr + CHR_1 + BTPowerDr;
 		
 		var flg = $m({
 			ClassName:"DHCMA.CPW.BT.PathItemCat",
 			MethodName:"Update",
 			aInputStr:inputStr,
-			aSeparete:CHR_1
+			aSeparete:CHR_1,
+			aHospID: $("#cboSSHosp").combobox('getValue')
 		},false);
 		if (parseInt(flg) <= 0) {
 			if (parseInt(flg) == 0) {
@@ -129,10 +147,15 @@ function InitPathItemCatListWinEvent(obj){
 				var flg = $m({
 					ClassName:"DHCMA.CPW.BT.PathItemCat",
 					MethodName:"DeleteById",
-					aId:rowID
+					aId:rowID,
+					aHospID: $("#cboSSHosp").combobox('getValue')
 				},false);
 				if (parseInt(flg) < 0) {
-					$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					if (parseInt(flg)==-777) {
+						$.messager.alert("错误提示","系统参数配置不允许删除！", 'info');
+					} else {
+						$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					}
 				} else {
 					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 					obj.RecRowID = "";
@@ -149,15 +172,17 @@ function InitPathItemCatListWinEvent(obj){
 			var Code = rd["BTCode"];
 			var Desc = rd["BTDesc"];
 			var BTTypeID = rd["BTTypeID"];
+			var BTPowerID = rd["BTPowerID"];
 			$('#txtCode').val(Code);
 			$('#txtDesc').val(Desc);
 			$('#cboItemType').combobox('setValue',BTTypeID);
-			
+			$('#cboPowerType').combobox('setValue',BTPowerID);
 		}else{
 			obj.RecRowID = "";
 			$('#txtCode').val('');
 			$('#txtDesc').val('');
 			$('#cboItemType').combobox('setValue','');
+			$('#cboPowerType').combobox('setValue','');
 		}
 		$HUI.dialog('#winPathItemCatEdit').open();
 	}

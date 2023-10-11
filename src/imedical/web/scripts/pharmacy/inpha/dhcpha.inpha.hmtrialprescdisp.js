@@ -7,7 +7,9 @@ CreateDate:	2017-07-05
 var NowTAB = "#div-presc-condition"; // 记录当前tab
 DHCPHA_CONSTANT.VAR.TIMER = "";
 DHCPHA_CONSTANT.VAR.TIMERSTEP = 20 * 1000;
-
+DHCPHA_CONSTANT.VAR.Dispenser = gUserID;
+var AppPropData		// 模块配置
+var LogonInfo = gGroupId +"^"+ gLocId +"^"+ gUserID +"^"+ gHospID;
 $(function () {
     InitPhaConfig();
     /* 初始化插件 start*/
@@ -29,6 +31,7 @@ $(function () {
     InitGridAdm();
     InitGridAdmPrescList();
     InitTrialDispTab();
+    InitDispenserModal();
     $("#monitor-condition").children().not("#div-presc-condition").hide();
 
     /* 表单元素事件 start*/
@@ -65,9 +68,25 @@ $(function () {
         } else {
             clearTimeout(DHCPHA_CONSTANT.VAR.TIMER);
         }
-    })
+    });
+
+    $('#btn-change').bind("click", function(){
+		$('#modal-hmtrialdispenser').modal('show'); 
+		});
+
     InitRefuseReasonModal();
     InitBodyStyle();
+    // 草药PC端设置
+	AppPropData = tkMakeServerCall("PHA.HERB.Com.Method","GetAppProp",LogonInfo,"HERB.PC","");
+	var AllowSelDispUser = JSON.parse(AppPropData).AllowSelDispUser ;
+	if (AllowSelDispUser!="Y") {
+        $("#btn-change").attr({
+            "style": "display:none"
+        });
+        $("#img-change").attr({
+            "style": "display:none"
+        });
+	}
 })
 
 window.onload = function () {
@@ -331,7 +350,7 @@ function InitGridAdm() {
                 var adm = selrowdata.TAdm;
                 $("#grid-admpresclist").jqGrid("clearGridData");
                 var params = GetMainCodParams();
-                params = params + "^^" + adm;
+                params = params + "^" + adm;
                 $("#grid-admpresclist").setGridParam({
                     datatype: 'json',
                     page: 1,
@@ -498,13 +517,6 @@ function InitTrialDispTab() {
 function QueryInPhDispList() {
     var params = GetMainCodParams();
     if (NowTAB == "#div-presc-condition") {
-        var wardloc = $('#sel-phaward').val();
-        if (wardloc == null) {
-            wardloc = ""
-        };
-        var Input = params + "^" + wardloc + "^";
-        var WardStr = tkMakeServerCall("web.DHCINPHA.HMTrialDrugDisp.TrialDrugDispQuery", "GetDispWardStr", Input);
-        params = params + "^" + WardStr + "^";
         $("#grid-presclist").setGridParam({
             datatype: 'json',
             page: 1,
@@ -548,16 +560,65 @@ function QueryGridDispSub() {
 
 function QueryPrescDetail(prescno) {
     $("#ifrm-presc").empty();
-    var htmlstr = GetPrescHtml(prescno);
-    $("#ifrm-presc").append(htmlstr);
+    GetPrescHtml(prescno);
+    //$("#ifrm-presc").append(htmlstr);
 }
 
 function GetPrescHtml(prescno) {
     var cyflag = "Y";
-    var phartype = "DHCINPHA";
-    var paramsstr = phartype + "^" + prescno + "^" + cyflag;
-    $("#ifrm-presc").attr("src", ChangeCspPathToAll("dhcpha/dhcpha.common.prescpreview.csp") + "?paramsstr=" + paramsstr + "&PrtType=DISPPREVIEW");
+    var prescNo = prescno;
+	var dispFlag = "";
+	var phartype = "IP";		// 住院类型
+	var zfFlag = "底方"
+	if (dispFlag !== "OK"){
+		var useFlag = "3" 		// 未发药
+	}
+	else {
+		var useFlag = "4"		// 已发药
+	}
+	
+	PHA_PRESC.PREVIEW({
+		prescNo: prescNo,			
+		preAdmType: phartype,
+		zfFlag: zfFlag,
+		prtType: 'DISPPREVIEW',
+		useFlag: useFlag,
+		iframeID: 'ifrm-presc',
+		cyFlag: cyflag
+	});
+
+    //$("#ifrm-presc").attr("src", ChangeCspPathToAll("dhcpha/dhcpha.common.prescpreview.csp") + "?paramsstr=" + paramsstr + "&PrtType=DISPPREVIEW");
 }
+
+
+// 配药人选择
+function InitDispenserModal() {  
+    $('#modal-hmtrialdispenser').on('show.bs.modal', function () {
+        var option = {
+            url: DHCPHA_CONSTANT.URL.COMMON_INPHA_URL + '?action=GetInPhaUser&style=select2&groupId=' + DHCPHA_CONSTANT.SESSION.GROUP_ROWID + '&locId=' + DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID,
+            width: 200,
+            minimumResultsForSearch: Infinity
+        };
+
+        $('#sel-dispenser').dhcphaSelect(option);
+        $('#sel-dispenser').empty();
+    });
+    /* 配药人默认当前登录人 */
+    $("#currentpyuser").text(gUserName);
+
+    $('#btn-dispenser-sure').on('click', function () {
+        var dispenser = $('#sel-dispenser').val();
+        if (dispenser == '' || dispenser == null) {
+            dhcphaMsgBox.alert('请选择配药人!');
+            return;
+        }
+	  	$("#currentpyuser").text("");
+		$("#currentpyuser").text($('#sel-dispenser').text()); 
+		DHCPHA_CONSTANT.VAR.Dispenser= dispenser 
+        $('#modal-hmtrialdispenser').modal('hide');
+    });
+}
+
 
 //获取查询条件
 function GetMainCodParams() {
@@ -575,7 +636,11 @@ function GetMainCodParams() {
         dhcphaMsgBox.alert("药房不允许为空!");
         return;
     }
-    var params = startdate + "^" + starttime + "^" + enddate + "^" + endtime + "^" + phaloc;
+    var wardloc = $('#sel-phaward').val();
+    if (wardloc == null) {
+        wardloc = ""
+    };
+    var params = startdate + "^" + starttime + "^" + enddate + "^" + endtime + "^" + phaloc + "^" + wardloc;
     return params;
 }
 
@@ -599,8 +664,9 @@ function AllConfirmDisp() {
 }
 
 //确认全发
-function ConfirmDispAll(result) {
-    if (result == true) {
+function ExecuteDispAll(result) {
+	
+    if (result = true) {
         if (NowTAB == "#div-presc-condition") {
             var prescrowdata = $("#grid-presclist").jqGrid('getRowData');
         } else {
@@ -612,6 +678,17 @@ function ConfirmDispAll(result) {
         }
         QueryInPhDispList();
     }
+}
+
+//确认全发
+function ConfirmDispAll(result) {
+    if (result == true) {
+	    CACert("PHAHERBIPAllFY", ExecuteDispAll);
+    }
+}
+
+function PressConfirmDisp(){
+	CACert("PHAHERBIPFY", ConfirmDisp);
 }
 
 //发药按钮
@@ -627,7 +704,7 @@ function ConfirmDisp() {
     }
     var prescridrows = prescrowdata.length;
     if (prescridrows <= 0) {
-        dhcphaMsgBox.alert("审方发药列表无数据!");
+        dhcphaMsgBox.alert("待发药列表中无数据!");
         return;
     }
     ExecuteDisp(selectid);
@@ -660,8 +737,9 @@ function ExecuteDisp(selectid) {
     if ($("#chk-urgent").is(':checked')) {
         urgentFlag = "Y";
     }
+    var dispenser = DHCPHA_CONSTANT.VAR.Dispenser;
 
-    var params = prescno + "^" + phaLoc + "^" + gUserID + "^" + urgentFlag;
+    var params = prescno + "^" + phaLoc + "^" + gUserID + "^" + urgentFlag + "^" + dispenser;
     var retStr = tkMakeServerCall("web.DHCINPHA.HMTrialDrugDisp.SqlDbTrialDrugDisp", "SaveData", params);
     var PhacRowid = retStr.split("^")[0];
     var retMessage = retStr.split("^")[1];
@@ -710,7 +788,7 @@ function RefuseDisp() {
     }
     var prescridrows = prescrowdata.length;
     if (prescridrows <= 0) {
-        dhcphaMsgBox.alert("审方发药列表无数据，无法拒绝发药!");
+        dhcphaMsgBox.alert("待发药列表中无数据，无法拒绝发药!");
         return;
     }
 

@@ -3,6 +3,13 @@
 ///  Descript: 过敏录入hisui
 var TagCode="",CategoryRowId="";selectRowIndex=""
 $(document).ready(function() {
+	
+	hosNoPatOpenUrl = getParam("hosNoPatOpenUrl"); //hxy 2023-03-09 st
+	hosNoPatOpenUrl?hosOpenPatList(hosNoPatOpenUrl):''; //ed
+	
+	if(PatientID==""){
+		PatientID=serverCall("web.DHCEMCommonUtil","GetPatientID",{EpisodeID:EpisodeID})
+	}
 	if (IsOnlyShowPAList=="N"){
     	loadCurDate();   //时间控件加载当前时间
 	
@@ -66,7 +73,7 @@ $(document).ready(function() {
 	    pagination:true,
 	    singleSelect:true,
 	    fitColumns:true,
-	    title:'过敏记录', //hxy 2018-10-09 st
+	    title:$g('过敏记录'), //hxy 2018-10-09 st
 	    iconCls:'icon-paper',
 	    headerCls:'panel-header-gray', //配置项使表格变成灰色
         toolbar: [], //配置项toolbar为空时,会在标题与列头产生间距" //hxy ed
@@ -78,7 +85,7 @@ $(document).ready(function() {
 		align: 'center'
 		}, {
 		field: 'Allergen',
-		title: '过敏源',
+		title: '过敏原',
 		align: 'center'
 		}, {
 		field: 'ALGItem',
@@ -237,7 +244,7 @@ function FormStatus	(value){
 	}
  
 function UpdateALLItem(){
-	TagCode=$g($("#MRCATTagDescription").combobox('getValue'));
+	TagCode=$e($("#MRCATTagDescription").combobox('getValue'));
 	//$('#ALGItem').val(0);
 	//过敏项目
 	$HUI.combobox('#ALGItem',{
@@ -249,7 +256,7 @@ function UpdateALLItem(){
 	}); 	  
 	}
 
-function $g(value){
+function $e(value){
 	if(value==null) return ""
 	return value;
 }

@@ -193,6 +193,18 @@ function InitIQpopupWindow(windowType,addX,addY){
 							befaddAdvancedConditions(eprIQaddGrid,eprIQaddWin);
 						}
 					},
+					'-',
+					{
+						id: 'btnEditConditons',
+						name: 'btnEditConditons',
+						text: '±à¼­²éÑ¯Ìõ¼þ',
+						cls: 'x-btn-text-icon',
+						icon: '../scripts/epr/Pics/btnConfirm.gif',
+						pressed: false,
+						handler: function (){
+							window.showModalDialog("dhc.epr.query.operationitem.csp",'',"dialogHeight:700px;dialogWidth:1600px;resizable:yes;status:no");
+						}
+					},
 					'-','->', '-',
 					{
 						id: 'btnCancel',

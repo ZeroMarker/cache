@@ -101,7 +101,7 @@ function InitReport(recordId)
 function SaveReport(flag)
 {
 	if($('#PatName').val()==""){
-		$.messager.alert("提示:","患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！");	
+		$.messager.alert($g("提示:"),$g("患者姓名为空，请输入登记号或病案号回车选择记录录入患者信息！"));	
 		return false;
 	}
 	///保存前,对页面必填项进行检查
@@ -130,7 +130,7 @@ function checkother(){
 	    	TextNum= parseInt(TextNum); 
 	    } 
 	    if(((PipeOthNum+"")!=(TextNum+""))||(TextNum<2)){
-		    $.messager.alert("提示:","【患者既往是否发生过管路滑脱事件】勾选'次数'，数据填写不规范,请填写大于1的整数！");	
+		    $.messager.alert($g("提示:"),$g("【患者既往是否发生过管路滑脱事件】勾选'次数'，数据填写不规范,请填写大于1的整数！"));	
 			return false;
 		}
 
@@ -148,11 +148,11 @@ function checkother(){
 		}	
 	})
 	if(PipeTakeStepsoth==-2){
-		$.messager.alert("提示:","【采取措施】勾选'诊断性检查'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【采取措施】勾选'诊断性检查'，请填写内容！"));	
 		return false;
 	}
 	if(PipeTakeStepsoth==-1){
-		$.messager.alert("提示:","【采取措施】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【采取措施】勾选'其他'，请填写内容！"));	
 		return false;
 	}
 	
@@ -170,7 +170,7 @@ function checkother(){
 			}
 		})
 		if (PipeList==""){
-			$.messager.alert("提示:","【并发症】勾选'有'，请勾选相应内容！");	
+			$.messager.alert($g("提示:"),$g("【并发症】勾选'有'，请勾选相应内容！"));	
 			return false;
 		}
 	}
@@ -184,7 +184,7 @@ function checkother(){
 	})
 	
 	if(PipeComploth==-1){
-		$.messager.alert("提示:","【并发症】勾选'出血'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【并发症】勾选'出血'，请填写内容！"));	
 		return false;
 	}
 	$("input[type=checkbox][id^='PipeComplication-94540-94548']").each(function(){
@@ -195,7 +195,7 @@ function checkother(){
 		}	
 	})
 	if(PipeComploth==-2){
-		$.messager.alert("提示:","【并发症】勾选'其他'，请填写内容！");	
+		$.messager.alert($g("提示:"),$g("【并发症】勾选'其他'，请填写内容！"));	
 		return false;
 	}
 	// 【并发症】 '出血'
@@ -206,7 +206,7 @@ function checkother(){
 	    	TextNum= parseInt(TextNum); 
 	    } 
 	    if(((PipeCompNum+"")!=(TextNum+""))||(TextNum<1)){
-		    $.messager.alert("提示:","【并发症】勾选'出血'，数据填写不规范,请填写大于0的整数！");	
+		    $.messager.alert($g("提示:"),$g("【并发症】勾选'出血'，数据填写不规范,请填写大于0的整数！"));	
 			return false;
 		}
 
@@ -267,40 +267,6 @@ function InitCheckRadio(){
 }
 //时间 数字校验
 function CheckTimeorNum(){
-	//入院时ADL得分
-	chknum("PatAdmADLScore",1,0,100);
-	$('#PatAdmADLScore').live("keyup",function(){
-		RepSetRead("PatSelfCareAbility-","radio",0);  //自我照顾能力
-		if((this.value>100)||(this.value=="")){
-			$("input[type=radio][id^='PatSelfCareAbility-']").removeAttr("checked");
-		}else if((this.value>40)||(this.value<100)){
-			$("input[type=radio][id^='PatSelfCareAbility-94346']").click();	
-		}
-		if(((this.value>0)||(this.value==0))&&((this.value<40)||(this.value==40))&&(this.value!="")){
-			$("input[type=radio][id^='PatSelfCareAbility-94347']").click();	
-		}
-		if(this.value==100){
-			$("input[type=radio][id^='PatSelfCareAbility-94345']").click();	
-		}
-		RepSetRead("PatSelfCareAbility-","radio",1);  //自我照顾能力
-	})
-	//发生前ADL得分
-	chknum("OccurADLScore",1,0,100);
-	$('#OccurADLScore').live("keyup",function(){
-		RepSetRead("OccurPatSelfCareAbility-","radio",0);  //自我照顾能力
-		if((this.value>100)||(this.value=="")){
-			$("input[type=radio][id^='OccurPatSelfCareAbility-']").removeAttr("checked");
-		}else if((this.value>40)||(this.value<100)){
-			$("input[type=radio][id^='OccurPatSelfCareAbility-94240']").click();	
-		}
-		if(((this.value>0)||(this.value==0))&&((this.value<40)||(this.value==40))&&(this.value!="")){
-			$("input[type=radio][id^='OccurPatSelfCareAbility-94241']").click();	
-		}
-		if(this.value==100){
-			$("input[type=radio][id^='OccurPatSelfCareAbility-94239']").click();	
-		}
-		RepSetRead("OccurPatSelfCareAbility-","radio",1);  //自我照顾能力
-	})
 	// Ramsay 评分
 	chknum("consciousState-94977",1,0,100);
 	// RASS评分

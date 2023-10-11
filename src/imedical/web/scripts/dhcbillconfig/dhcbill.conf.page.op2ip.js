@@ -1,6 +1,6 @@
 ﻿/**
  * FileName: dhcbill.conf.page.op2ip.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-11-01
  * Description: 门急诊费用转住院页面配置
  */
@@ -40,13 +40,13 @@ $(function() {
 		fit: true,
 		striped: true,
 		title: '不能转入住院医嘱子类',
+		iconCls: 'icon-paper',
 		headerCls: 'panel-header-gray',
 		fitColumns: true,
-		rownumbers: false,
+		rownumbers: true,
 		pageSize: 999999999,
 		loadMsg: '',
 		toolbar: [],
-		data: [],
 		columns: [[{title: 'ck', field: 'ck', checkbox: true},
 				   {title: 'id', field: 'id', hidden: true},
 		           {title: 'code', field: 'code', hidden: true},
@@ -54,7 +54,7 @@ $(function() {
 			]],
 		onLoadSuccess: function(data) {
 			$.each(data.rows, function (index, row) {
-				if (row.checked) {
+				if (row.selected) {
 					GV.LimitItemCateList.checkRow(index);
 				}
 			});
@@ -85,39 +85,39 @@ function saveClick() {
 	var hospital = getValueById("hospital");
 	
 	$.messager.confirm("确认", "确认保存?", function(r) {
-		if (r) {
-			var confObj = {};
-			var limitCatAry = [];
-			var str = "";
-			$.each(GV.LimitItemCateList.getChecked(), function(index, row) {
-				limitCatAry.push(row.id);
-			});
-			confObj[GV.CateCode + "VAL"] = limitCatAry.join(PUBLIC_CONSTANT.SEPARATOR.CH2);
-			confObj[GV.CateCode + "DESC"] = "不能转入住院医嘱子类";
-			
-			var confAry = [];
-			$.each(GV.CodeStr.split("^"), function(index, item) {
-				var myObj = {};
-				myObj.PCSite = GV.Site;
-				myObj.PCSiteDR = hospital;
-				myObj.PCCode = item;
-				myObj.PCValue = confObj[item + "VAL"];
-				myObj.PCDesc = confObj[item + "DESC"];
-				confAry.push(JSON.stringify(myObj));
-			});
-			$.m({
-				ClassName: "web.DHCBillPageConf",
-				MethodName: "SaveConfInfo",
-				pageId: GV.PageId,
-				confList: confAry
-			}, function(rtn) {
-				if (rtn == "0") {
-					$.messager.popover({msg: "保存成功", type: "success"});
-				}else {
-					$.messager.popover({msg: "保存失败：" + rtn, type: "error"});
-				}
-			});
+		if (!r) {
+			return;
 		}
+		var confObj = {};
+		var limitCatAry = [];
+		$.each(GV.LimitItemCateList.getChecked(), function(index, row) {
+			limitCatAry.push(row.id);
+		});
+		confObj[GV.CateCode + "VAL"] = limitCatAry.join(PUBLIC_CONSTANT.SEPARATOR.CH2);
+		confObj[GV.CateCode + "DESC"] = "不能转入住院医嘱子类";
+		
+		var confAry = [];
+		$.each(GV.CodeStr.split("^"), function(index, item) {
+			var myObj = {};
+			myObj.PCSite = GV.Site;
+			myObj.PCSiteDR = hospital;
+			myObj.PCCode = item;
+			myObj.PCValue = confObj[item + "VAL"];
+			myObj.PCDesc = confObj[item + "DESC"];
+			confAry.push(JSON.stringify(myObj));
+		});
+		$.m({
+			ClassName: "web.DHCBillPageConf",
+			MethodName: "SaveConfInfo",
+			pageId: GV.PageId,
+			confList: confAry
+		}, function(rtn) {
+			if (rtn == 0) {
+				$.messager.popover({msg: "保存成功", type: "success"});
+				return;
+			}
+			$.messager.popover({msg: "保存失败：" + rtn, type: "error"});
+		});
 	});
 }
 

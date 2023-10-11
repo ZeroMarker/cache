@@ -47,17 +47,26 @@ function InitEmrRepAdmWin(){
 			var CheckDateTime = objEPD[ind].CheckDate+' '+objEPD[ind].CheckTime;
 			var CheckUserName = objEPD[ind].CheckUserName;		
 			var DelReason     = objEPD[ind].DelReason;
+			var OldRepFlag     = objEPD[ind].OldRepFlag;
 			var background=""
-			if(Status=="作废"){
-				var background='style="background:#C0C0C0;'
+			if (Status=="作废"){
+				var background='style="background:#C0C0C0;"'
 			}
 			var type="epd";
 			htmlStr =  '<div class="card-div" id=CardEpd'+EPDID+'>'	
-			htmlStr += 		'<div class="card-title" '+background+'><span><a ref="#" onclick="objScreen.OpenEPDReport(\'' + type +'\',\'' + EPDID + '\')">传染病报告</a></span></div>'
+			if (OldRepFlag==1) {
+				htmlStr += '<div class="card-title" style="background:#BA55D3;"><span>传染病报告(历史数据导入)</span></div>'			
+			}else {
+				htmlStr += 	'<div class="card-title" '+background+'><span><a ref="#" onclick="objScreen.OpenEPDReport(\'' + type +'\',\'' + EPDID + '\')">传染病报告</a></span></div>'			
+			}
 			htmlStr += 		'<div class="card-epd">'
 			htmlStr += 			'<table class="card-table">'
 			htmlStr += 				'<tbody>'
-			htmlStr += 					'<tr><td class="card-td"><span>诊断：</span></td><td><a ref="#" style="color:blue" onclick="objScreen.OpenEPDReport(\'' + type +'\',\'' + EPDID + '\')">'+DiseaseName+'</a></td></tr>'
+			if (OldRepFlag==1) {
+				htmlStr +=             '<tr><td class="card-td"><span>诊断：</span></td><td>'+DiseaseName+'</td></tr>'			
+			}else {
+				htmlStr += 			   '<tr><td class="card-td"><span>诊断：</span></td><td><a ref="#" style="color:blue" onclick="objScreen.OpenEPDReport(\'' + type +'\',\'' + EPDID + '\')">'+DiseaseName+'</a></td></tr>'
+			}
 			htmlStr += 					'<tr><td class="card-td"><span>诊断日期：</span></td><td>'+DiagDate+'</td></tr>'
 			htmlStr += 					'<tr><td class="card-td"><span>报告状态：</span></td><td>'+Status+'</td></tr>'
 			htmlStr += 					'<tr><td class="card-td"><span>报告科室：</span></td><td>'+ReportDep+'</td></tr>'
@@ -102,7 +111,7 @@ function InitEmrRepAdmWin(){
 		
 			var background=""
 			if(Status=="作废"){
-				var background='style="background:#C0C0C0;'
+				var background='style="background:#C0C0C0;"'
 			}
 			
 			htmlStr =  '<div class="card-div" id=CardNCP'+NCPID+'>'	
@@ -195,17 +204,17 @@ function InitEmrRepAdmWin(){
 			var type="referral";
 			var background=""
 			if(Status=="作废"){
-				var background='style="background:#C0C0C0;'
+				var background='style="background:#C0C0C0;"'
 			}
 			htmlStr =  '<div class="card-div" id=CardEpd'+RefID+'>'	
-			htmlStr += 		'<div class="card-title"'+background+'><span><a ref="#" onclick="objScreen.OpenEPDReport(\'' + type +'\',\'' + RefID + '\')">传染病报告</a></span></div>'
+			htmlStr += 		'<div class="card-title"'+background+'><span><a ref="#" onclick="objScreen.OpenEPDReport(\'' + type +'\',\'' + RefID + '\')">'+ReportName+'</a></span></div>'
 			htmlStr += 		'<div class="card-epd">'
 			htmlStr += 			'<table class="card-table">'
 			htmlStr += 				'<tbody>'
 			htmlStr += 					'<tr><td class="card-td"><span>报告类型：</span></td><td><a ref="#" style="color:blue" onclick="objScreen.OpenEPDReport(\'' + type +'\',\'' + RefID + '\')">'+ReportName+'</a></td></tr>'
 			htmlStr += 					'<tr><td class="card-td"><span>转诊日期：</span></td><td>'+ReferralDate+'</td></tr>'
 			htmlStr += 					'<tr><td class="card-td"><span>报告状态：</span></td><td>'+Status+'</td></tr>'
-			htmlStr += 					'<tr><td class="card-td"><span>转诊科室：</span></td><td>'+ReferralHosp +'</td></tr>'
+			htmlStr += 					'<tr><td class="card-td"><span>转诊单位：</span></td><td>'+ReferralHosp +'</td></tr>'
 			htmlStr += 					'<tr><td class="card-td"><span>报告时间：</span></td><td>'+RepDateTime+'</td></tr>'
 			htmlStr += 					'<tr><td class="card-td"><span>报告人：</span></td><td>'+RepUserName+'</td></tr>'					
 			htmlStr += 				'</tbody>'
@@ -243,7 +252,7 @@ function InitEmrRepAdmWin(){
 			var type="ili";
 			var background=""
 			if(Status=="作废"){
-				var background='style="background:#C0C0C0;'
+				var background='style="background:#C0C0C0;"'
 			}
 			htmlStr =  '<div class="card-div" id=CardEpd'+ILIID+'>'	
 			htmlStr += 		'<div class="card-title"'+background+'><span><a ref="#" onclick="objScreen.OpenEPDReport(\'' + type +'\',\'' + ILIID + '\')">传染病报告</a></span></div>'
@@ -294,7 +303,7 @@ function InitEmrRepAdmWin(){
 			var ReturnReason = objDTH[ind].ReturnReason;
 			var background=""
 			if(RepStatus=="作废"){
-				var background='style="background:#C0C0C0;'
+				var background='style="background:#C0C0C0;"'
 			}		
 			htmlStr =  '<div class="card-div" id=CardDth'+DTHID+'>'	
 			htmlStr += 		'<div class="card-title" '+background+'><span><a ref="#" onclick="objScreen.OpenDTHReport(\'' + DTHID + '\')">居民死亡医学证明（推断）书</a></span></div>'
@@ -345,7 +354,7 @@ function InitEmrRepAdmWin(){
 			var BackOpinion  = objHAI[ind].BackOpinion;
 			var background=""
 			if(ReportStatus=="作废"){
-				var background='style="background:#C0C0C0;'
+				var background='style="background:#C0C0C0;"'
 			}
 			
 			htmlStr =  '<div class="card-div" id=CardHAI'+HAIID+'>'
@@ -372,6 +381,118 @@ function InitEmrRepAdmWin(){
 			
 	}
 	
+	//多重耐药菌报告
+	obj.LoadMBRData = function() {
+		var strMBRList =$m({
+			ClassName:"DHCHAI.IRS.INFMBRSrv",
+			QueryName:"QryMBRRepSrv",
+			ResultSetType:'array',
+			aEpisodeID: HAIEpisodeDr
+		}, false);
+		var objMBR = JSON.parse(strMBRList);
+		var MBRlen = objMBR.length;
+	    if (MBRlen<1) return;
+	   
+		var htmlStr ='';
+		for (var ind=0; ind<MBRlen;ind++) {
+			var MBRRepID     = objMBR[ind].MBRRepID;
+			var LabRepID     = objMBR[ind].LabRepID;		
+			var SpecDesc     = objMBR[ind].SpecDesc;
+			var LocDesc      = objMBR[ind].LocDesc
+			var SubmissDate  = objMBR[ind].SubmissDate;
+			var MRBDesc      = objMBR[ind].MRBDesc;
+			var InfTypeDesc  = objMBR[ind].InfTypeDesc;
+			var HandDesc     = objMBR[ind].HandDesc;
+			var ReportStatus = objMBR[ind].StatusDesc;
+			var RepDateTime  = objMBR[ind].RepDate+' '+objMBR[ind].RepTime;
+			var InsulatDesc  = objMBR[ind].InsulatDesc;
+			var ContactListDesc  = objMBR[ind].ContactListDesc;		
+			var background=""
+			if(ReportStatus=="作废"){
+				var background='style="background:#C0C0C0;"'
+			}
+			
+			htmlStr =  '<div class="card-div" id=CardMBR'+MBRRepID+'>'
+			htmlStr += 		'<div class="card-title" '+background+'><span><a ref="#" onclick="objScreen.OpenMBRReport(\'' + MBRRepID + '\',\'' + LabRepID + '\')">多耐细菌报告</a></span></div>'
+			htmlStr += 		'<div class="card-hai">'
+			htmlStr += 			'<table class="card-table">'
+			htmlStr += 				'<tbody>'
+			htmlStr += 					'<tr><td class="card-td"><span>细菌名称：</span></td><td><a ref="#" style="color:blue" onclick="objScreen.OpenMBRReport(\'' + MBRRepID + '\',\'' + LabRepID + '\')">'+MRBDesc+'</a></td></tr>'
+			htmlStr += 					'<tr><td class="card-td"><span>送检日期：</span></td><td>'+SubmissDate+'</td></tr>'
+			htmlStr += 					'<tr><td class="card-td"><span>送检标本：</span></td><td>'+SpecDesc+'</td></tr>'
+			htmlStr += 					'<tr><td class="card-td"><span>送检科室：</span></td><td>'+LocDesc+'</td></tr>'
+			htmlStr += 					'<tr><td class="card-td"><span>报告状态：</span></td><td>'+ReportStatus+'</td></tr>'
+			htmlStr += 					'<tr><td class="card-td"><span>报告时间：</span></td><td>'+RepDateTime+'</td></tr>'
+			htmlStr += 					'<tr><td class="card-td"><span>感染类型：</span></td><td>'+InfTypeDesc+'</td></tr>'
+			htmlStr += 					'<tr><td class="card-td"><span>隔离方式：</span></td><td>'+InsulatDesc+'</td></tr>'
+			htmlStr += 					'<tr><td class="card-td"><span>接触隔离：</span></td><td><a class="hisui-tooltip" title='+ContactListDesc+'>'+ContactListDesc+'</a></td></tr>'
+			htmlStr += 				'</tbody>'
+			htmlStr += 			'</table>'
+			htmlStr += 		'<div>'
+			htmlStr += '<div>'
+			
+			$("#cardlist").append(htmlStr);		
+		}	
+			
+	}
+	
+		
+	//手术切口调查报告
+	obj.LoadOPSData = function() {
+		var strOpsList =$m({
+			ClassName:"DHCHAI.IRS.INFOPSSrv",
+			QueryName:"QryINFOPSByAdm",
+			ResultSetType:'array',
+			aEpisodeDr: HAIEpisodeDr
+		}, false);
+		var objOps = JSON.parse(strOpsList);
+		var Opslen = objOps.length;
+	    if (Opslen<1) return;
+	    
+		var htmlStr ='';
+		for (var ind=0; ind<Opslen;ind++) {
+			var ReportID     = objOps[ind].ReportID;
+			var OPSID        = objOps[ind].OPSID;
+			var OperAnaesID  = objOps[ind].OperAnaesID;		
+			var OperName     = objOps[ind].OperName;
+			var OperType      = objOps[ind].OperType
+			var OperSttDateTime = objOps[ind].OperStartDateTime;
+			var OperEndDateTime = objOps[ind].OperEndDateTime;
+			var CuteHealing  = objOps[ind].CuteHealing;
+			var CuteType     = objOps[ind].CuteType;
+			var ReportStatus = objOps[ind].StatusDesc;
+			var RepDateTime  = objOps[ind].RepDate+' '+objOps[ind].RepTime;
+			var NNISLevel  = objOps[ind].NNISLevel;
+			var ASADesc  = objOps[ind].ASADesc;		
+			var background=""
+			if(ReportStatus=="作废"){
+				var background='style="background:#C0C0C0;"'
+			}
+			
+			htmlStr =  '<div class="card-div" id=CardOPS'+ReportID+'>'
+			htmlStr += 		'<div class="card-title" '+background+'><span><a ref="#" onclick="objScreen.OpenOPSReport(\'' + ReportID + '\',\'' + OPSID + '\',\'' + OperAnaesID + '\')">手术切口调查</a></span></div>'
+			htmlStr += 		'<div class="card-hai">'
+			htmlStr += 			'<table class="card-table">'
+			htmlStr += 				'<tbody>'
+			htmlStr += 					'<tr><td class="card-td"><span>手术名称：</span></td><td><a ref="#" style="color:blue" onclick="objScreen.OpenOPSReport(\'' + ReportID + '\',\'' + OPSID + '\',\'' + OperAnaesID + '\')">'+OperName+'</a></td></tr>'
+			htmlStr += 					'<tr><td class="card-td"><span>手术类型：</span></td><td>'+OperType+'</td></tr>'
+			htmlStr += 					'<tr><td class="card-td"><span>手术时间：</span></td><td>'+OperSttDateTime+'</td></tr>'
+			htmlStr += 					'<tr><td class="card-td"><span>结束时间：</span></td><td>'+OperEndDateTime+'</td></tr>'
+			htmlStr += 					'<tr><td class="card-td"><span>切口愈合：</span></td><td>'+CuteType+'/'+CuteHealing+'</td></tr>'
+			htmlStr += 					'<tr><td class="card-td"><span>报告状态：</span></td><td>'+ReportStatus+'</td></tr>'
+			htmlStr += 					'<tr><td class="card-td"><span>报告时间：</span></td><td>'+RepDateTime+'</td></tr>'
+			htmlStr += 					'<tr><td class="card-td"><span>风险分级：</span></td><td>'+NNISLevel+'</td></tr>'
+			htmlStr += 					'<tr><td class="card-td"><span>ASA评分：</span></td><td>'+ASADesc+'</td></tr>'
+			htmlStr += 				'</tbody>'
+			htmlStr += 			'</table>'
+			htmlStr += 		'<div>'
+			htmlStr += '<div>'
+			
+			$("#cardlist").append(htmlStr);		
+		}	
+			
+	}
+
 	//精神疾病
 	obj.LoadSMDData = function() {
 		var strSMDList =$m({
@@ -398,7 +519,7 @@ function InitEmrRepAdmWin(){
 			var ChkUserName  = objSMD[ind].CheckUserDesc;		
 			var background=""
 			if(StatusDesc=="作废"){
-				var background='style="background:#C0C0C0;'
+				var background='style="background:#C0C0C0;"'
 			}
 			htmlStr =  '<div class="card-div" id=CardSmd'+SMDID+'>'
 			htmlStr += 		'<div class="card-title"'+background+'><span><a ref="#" onclick="objScreen.OpenSMDReport(\'' + SMDID + '\')">精神疾病报告卡</a></span></div>'
@@ -448,7 +569,7 @@ function InitEmrRepAdmWin(){
 			var ChkUserName  = objFBD[ind].ChkUserName;
 			var background=""		
 			if(StatusDesc=="作废"){
-				var background='style="background:#C0C0C0;'
+				var background='style="background:#C0C0C0;"'
 			}
 			htmlStr =  '<div class="card-div" id=CardFbd'+FBDID+'>'
 			htmlStr += 		'<div class="card-title"'+background+'><span><a ref="#" onclick="objScreen.OpenFBDReport(\'FBD\',\'' + FBDID + '\')">食源性疾病</a></span></div>'
@@ -499,7 +620,7 @@ function InitEmrRepAdmWin(){
 			var ChkUserName  = objSusAb[ind].ChkUserName;
 			var background=""		
 			if(StatusDesc=="作废"){
-				var background='style="background:#C0C0C0;'
+				var background='style="background:#C0C0C0;"'
 			}
 			htmlStr =  '<div class="card-div" id=CardFbd'+SusAbID+'>'
 			htmlStr += 		'<div class="card-title"'+background+'><span style="cursor:pointer;"><a ref="#" onclick="objScreen.OpenFBDReport(\'SUS\',\'' + SusAbID + '\')">疑似食源性疾病</a></span></div>'
@@ -553,7 +674,7 @@ function InitEmrRepAdmWin(){
 			var CheckOpinion  = objSPE[ind].CheckOpinion;
 			var background=""		
 			if(StatusDesc=="作废"){
-				var background='style="background:#C0C0C0;'
+				var background='style="background:#C0C0C0;"'
 			}
 			htmlStr =  '<div class="card-div" id=CardSpe'+SPEID+'>'				
 			htmlStr += 		'<div class="card-title"'+background+'><span><a ref="#" onclick="objScreen.OpenEditSPE(\'' + SPEID + '\')">特殊患者</a></span></div>'
@@ -604,7 +725,7 @@ function InitEmrRepAdmWin(){
 			var ChkUserName  = objCD[ind].CheckUser;		
 			var background=""		
 			if(StatusDesc=="作废"){
-				var background='style="background:#C0C0C0;'
+				var background='style="background:#C0C0C0;"'
 			}
 			htmlStr =  '<div class="card-div" id=CardCD'+CDID+'>'
 			htmlStr += 		'<div class="card-title"'+background+'><span><a ref="#" onclick="objScreen.OpenCDReport(\'' + RepType + '\',\'' + CDID + '\')">慢病管理</a></span></div>'

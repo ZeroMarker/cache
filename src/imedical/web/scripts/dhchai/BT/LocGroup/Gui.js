@@ -20,7 +20,8 @@ function InitLocGroupWin(){
 		columns: [
 			{ "data": "ID"},
 			{ "data": "Code" },
-			{ "data": "Desc" }
+			{ "data": "Desc" },
+			{ "data": "IndNo" }
 		],
 		drawCallback: function (settings) {
 			$("#btnAdd").removeClass('disabled');

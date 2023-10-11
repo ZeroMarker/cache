@@ -96,6 +96,6 @@ var ReasonForScrapurnStore = new Ext.data.Store({
 var TransTypeStore = new Ext.data.SimpleStore({
 	fields : ['RowId', 'Description'],
 	data : [['G', '入库'], ['R', '退货'],['T','转移出库'], ['K', '转移入库'], ['F', '门诊发药'],['H', '门诊退药'],
-			['P', '住院发药'],['Y', '住院退药'],['A','库存调整'],['D','库存报损'],['M','制剂生成'],['X','制剂消耗']
+			['P', '住院发药'],['Y', '住院退药'],['A','库存调整'],['D','库存报损'],['M','制剂生成'],['X','制剂消耗'],['HC','门诊撤消退药']
 			]
 });

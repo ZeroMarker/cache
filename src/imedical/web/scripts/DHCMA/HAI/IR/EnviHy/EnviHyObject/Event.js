@@ -9,7 +9,16 @@ function InitEnviHyObjectWinEvent(obj){
 		modal: true,
 		isTopZindex:true,
 	});
-	
+	//检索框
+	$('#btnsearch').searchbox({ 
+		searcher:function(value,name){
+			$('#gridEvObject').datagrid('load',{
+				ClassName:'DHCHAI.IRS.EnviHyObjectSrv',
+	        	QueryName:'QryEvObject',
+	       		aAlis:value
+			});
+		}	
+	});	
     obj.LoadEvent = function(args){
 	    //保存
 	    $('#btnSave').on('click', function(){
@@ -62,9 +71,11 @@ function InitEnviHyObjectWinEvent(obj){
 	obj.btnSave_click = function(){
 		var errinfo = "";
 		var ObjectDesc = $('#ObjectDesc').val();
+		var EHObjDesc2 = $('#EHObjDesc2').val();
 		var SpecimenType = $('#cboSpecimenType').combobox('getText');
 		var IsActive = $("#chkActive").checkbox('getValue')? '1':'0';
 		var HospID=$('#cboHospital').combobox('getValue');
+		var ObjLocID=$('#cboObjLoc').combobox('getValue');
 		if (!ObjectDesc) {
 			errinfo = errinfo + "对象名称为空!<br>";
 		}
@@ -81,7 +92,8 @@ function InitEnviHyObjectWinEvent(obj){
 		inputStr = inputStr + "^" + IsActive;
 		inputStr = inputStr + "^" + HospID;
 		inputStr = inputStr + "^" + $.LOGON.USERID;
-		
+		inputStr = inputStr + "^" + EHObjDesc2;
+		inputStr = inputStr + "^" + ObjLocID;
 		var flg = $m({
 			ClassName:"DHCHAI.IR.EnviHyObject",
 			MethodName:"Update",
@@ -92,6 +104,8 @@ function InitEnviHyObjectWinEvent(obj){
 			if (parseInt(flg) == 0){
 				$.messager.alert("错误提示", "参数错误!" , 'info');
 			}else if(parseInt(flg) == -2){
+				$.messager.alert("错误提示", "数据重复!" , 'info');
+			}else if(parseInt(flg) == -100){
 				$.messager.alert("错误提示", "数据重复!" , 'info');
 			}else {
 				$.messager.alert("错误提示", "更新数据错误!Error=" + flg, 'info');
@@ -133,22 +147,29 @@ function InitEnviHyObjectWinEvent(obj){
 		if(rowData){
 			obj.RecRowID=rowData["ID"];
 			var ObjectDesc = rowData["ObjectDesc"];
+			var ObjectDesc2 = rowData["ObjectDesc2"];
 			var SpecimenTypeID = rowData["SpecimenTypeID"];
 			var SpecimenTypeDesc = rowData["SpecimenTypeDesc"];
 			var IsActDesc = rowData["IsActDesc"];
 			IsActDesc = (IsActDesc=="是"? true: false)
 			var HospID = rowData["HospID"];
-			$('#ObjectDesc').val(ObjectDesc);
+			var LocID = rowData["LocID"];
+			$('#ObjectDesc').val(ObjectDesc).validatebox("validate");
+			$('#EHObjDesc2').val(ObjectDesc2);
 			$('#cboSpecimenType').combobox('setValue',SpecimenTypeID);
 			$('#cboSpecimenType').combobox('setText',SpecimenTypeDesc);
+			$('#cboSpecimenType').validatebox("validate");
 			$('#chkActive').checkbox('setValue',IsActDesc);
 			$('#cboHospital').combobox('setValue',HospID);
+			$('#cboObjLoc').combobox('setValue',LocID);
 		}else{
 			obj.RecRowID="";
-			$('#ObjectDesc').val('');
+			$('#ObjectDesc').val('').validatebox("validate");
+			$('#EHObjDesc2').val('');
 			$('#cboSpecimenType').combobox('setValue','');
 			$('#chkActive').checkbox('setValue',false);
 			$('#cboHospital').combobox('setValue','');
+			$('#cboObjLoc').combobox('setValue','');
 		}
 		$HUI.dialog('#winProEdit').open();
 	}

@@ -1,6 +1,6 @@
 ﻿/**
  * FileName: dhcbill.ipbill.inpatlist.js
- * Anchor: ZhYW
+ * Author: ZhYW
  * Date: 2019-03-06
  * Description: 住院患者查询
  */
@@ -11,8 +11,8 @@ $(function () {
 });
 
 function initQueryMenu() {
-	setValueById("stDate", getDefStDate(-30));
-	setValueById("endDate", getDefStDate(0));
+	$("#stDate").datebox("setValue", CV.StDate);
+	$("#endDate").datebox("setValue", CV.EndDate);
 
 	$("#btn-find").linkbutton({
 		onClick: function () {
@@ -22,12 +22,12 @@ function initQueryMenu() {
 
 	$("#btn-clear").linkbutton({
 		onClick: function () {
-			clear_Click();
+			clearClick();
 		}
 	});
 
 	//发票回车查询事件
-	$('#receiptNo').keydown(function (e) {
+	$("#receiptNo").keydown(function (e) {
 		var key = websys_getKey(e);
 		if (key == 13) {
 			loadPatList();
@@ -37,76 +37,119 @@ function initQueryMenu() {
 	//科室
 	$("#dept").combobox({
 		panelHeight: 150,
-		url: $URL + '?ClassName=web.DHCIPBillCashier&QueryName=FindDept&ResultSetType=array',
-		mode: 'remote',
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryIPDept&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
 		valueField: 'id',
 		textField: 'text',
-		onBeforeLoad: function (param) {
-			param.desc = param.q;
-			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
+		disabled: (["L", "W"].indexOf(CV.ViewType) != -1),
+		defaultFilter: 5,
+		blurValidValue: true,
+		filter: function(q, row) {
+			var opts = $(this).combobox("options");
+			var mCode = false;
+			if (row.contactName) {
+				mCode = row.contactName.toUpperCase().indexOf(q.toUpperCase()) >= 0
+			}
+			var mValue = row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0;
+			return mCode || mValue;
 		},
-		onSelect: function (rec) {
-			var url = $URL + '?ClassName=web.DHCIPBillCashier&QueryName=FindWard&ResultSetType=array';
-			$('#ward').combobox('clear').combobox('reload', url);
+		onLoadSuccess: function(data) {
+			if (CV.ViewType != "L") {
+				return;
+			}
+			setValueById("dept", PUBLIC_CONSTANT.SESSION.CTLOCID);
 		},
 		onChange: function (newValue, oldValue) {
-			if (!newValue) {
-				$('#ward').combobox('clear').combobox('loadData', []);
-			}
+			var url = $URL + "?ClassName=web.DHCBillOtherLB&QueryName=QryLocLinkWard&ResultSetType=array&locId=" + (newValue || "");
+			$("#ward").combobox("clear").combobox("reload", url);
 		}
 	});
-
+	
 	//病区
+	var ward = $.m({ClassName: "User.CTLoc", MethodName: "GetTranByDesc", Prop: "CTLOCDesc", Desc: session['LOGON.CTLOCDESC'], LangId: PUBLIC_CONSTANT.SESSION.LANGID}, false);
 	$("#ward").combobox({
 		panelHeight: 150,
 		editable: false,
 		valueField: 'id',
 		textField: 'text',
-		onBeforeLoad: function (param) {
-			param.deptId = getValueById('dept');
-		}
+		disabled: (CV.ViewType == "W"),
+		data: (CV.ViewType == "W") ? [{id: PUBLIC_CONSTANT.SESSION.WARDID, text: ward, selected: true}] : []
 	});
 
 	//费别
 	$("#admReason").combobox({
 		panelHeight: 150,
-		url: $URL + '?ClassName=web.DHCIPBillCashier&QueryName=FindAdmReason&ResultSetType=array',
+		url: $URL + '?ClassName=web.DHCBillOtherLB&QueryName=QryAdmReason&ResultSetType=array&hospId=' + PUBLIC_CONSTANT.SESSION.HOSPID,
 		valueField: 'id',
 		textField: 'text',
-		defaultFilter: 4,
-		onBeforeLoad: function (param) {
-			param.hospId = PUBLIC_CONSTANT.SESSION.HOSPID;
-		}
+		defaultFilter: 5
+	});
+	
+	//在院状态
+	$HUI.combobox("#admStatus", {
+		panelHeight: 'auto',
+		valueField: 'value',
+		textField: 'text',
+		editable: false,
+		data: [{value: '1', text: $g('当前在院'), selected: true},
+			   {value: '2', text: $g('医生确认')},
+			   {value: '3', text: $g('护士确认')},
+			   {value: '4', text: $g('财务结算')}]
 	});
 }
 
 function initPatList() {
-	$("#patList").datagrid({
+	GV.PatList = $HUI.datagrid("#patList", {
 		fit: true,
 		border: false,
-		striped: true,
 		singleSelect: true,
 		pagination: true,
 		fitColumns: false,
 		pageSize: 20,
-		data: [],
-		columns: [[{title: '登记号', field: 'TpatNo', width: 120},
-				   {title: '病案号', field: 'TpatMedicare', width: 80},
-				   {title: '姓名', field: 'TpatName', width: 80},
-				   {title: '年龄', field: 'Tage', width: 50},
-				   {title: '科室', field: 'TpatLoc', width: 120},
-				   {title: '病区', field: 'TpatWard', width: 140},
-				   {title: '床位', field: 'TpatBed', width: 50},
-				   {title: '就诊日期', field: 'TadmDate', width: 100},
-				   {title: '就诊时间', field: 'TadmTime', width: 80},
-				   {title: '出院日期', field: 'TdiscDate', width: 100},
-				   {title: '出院时间', field: 'TdiscTime', width: 80},
-				   {title: '性别', field: 'Tsex', width: 50},
-				   {title: '费别', field: 'TadmReason', width: 80}
-			]],
-		onDblClickRow: function (rowIndex, rowData) {
+		className: "web.DHCIPBillCashier",
+		queryName: "FindPatList",
+		onColumnsLoad: function(cm) {
+			for (var i = (cm.length - 1); i >= 0; i--) {
+				if ($.inArray(cm[i].field, ["TWard", "TAdmDate", "TDiscDate"]) != -1) {
+					cm.splice(i, 1);
+					continue;
+				}
+				if ($.inArray(cm[i].field, ["TPAPMI", "TAdm"]) != -1) {
+					cm[i].hidden = true;
+					continue;
+				}
+				if (cm[i].field == "TAdmTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.TAdmDate + " " + value;
+					}
+				}
+				if (cm[i].field == "TDiscTime") {
+					cm[i].formatter = function (value, row, index) {
+						return row.TDiscDate + " " + value;
+					}
+				}
+				if (cm[i].field == "TLoc") {
+					cm[i].title = '科室病区';
+					cm[i].formatter = function (value, row, index) {
+						return value + " " + row.TWard;
+					}
+				}
+				if (!cm[i].width) {
+					cm[i].width = 100;
+					if ($.inArray(cm[i].field, ["TSex", "TAge", "TBed"]) != -1) {
+						cm[i].width = 70;
+					}
+					if ($.inArray(cm[i].field, ["TAdmTime", "TDiscTime"]) != -1) {
+						cm[i].width = 155;
+					}
+					if ($.inArray(cm[i].field, ["TLoc"]) != -1) {
+						cm[i].width = 175;
+					}
+				}
+			}
+		},
+		onDblClickRow: function (index, row) {
 			if (window.parent.frames && window.parent.frames.switchPatient) {
-				window.parent.frames.switchPatient(rowData.TPapmi, rowData.TAdm);
+				window.parent.frames.switchPatient(row.TPAPMI, row.TAdm);
 				window.parent.frames.hidePatListWin();
 			}
 		}
@@ -114,43 +157,35 @@ function initPatList() {
 }
 
 function loadPatList() {
-	var queryParams = {
-		ClassName: "web.DHCIPBillCashier",
-		QueryName: "FindPatList",
-		stDate: getValueById("stDate"),
-		endDate: getValueById("endDate"),
-		patLoc: getValueById("dept"),
-		patWard: getValueById("ward"),
-		admReason: getValueById("admReason"),
-		Invoice: getValueById("receiptNo"),
-		patName: getValueById("patName"),
-		checkedStatus: $("#Medical").radio("getValue") + "^" + $("#Final").radio("getValue") + "^" + $("#PayFlag").radio("getValue") + "^" + $("#CurAdm").radio("getValue"),
-		sessionStr: getSessionStr()
-	};
-	loadDataGridStore("patList", queryParams);
+    var queryParams = {
+        ClassName: "web.DHCIPBillCashier",
+        QueryName: "FindPatList",
+        stDate: getValueById("stDate"),
+        endDate: getValueById("endDate"),
+        deptId: getValueById("dept"),
+        wardId: getValueById("ward"),
+        insTypeId: getValueById("admReason"),
+        invoiceNo: getValueById("receiptNo"),
+        patientName: getValueById("patName"),
+        admStatus: getValueById("admStatus"),
+        sessionStr: getSessionStr()
+    };
+    loadDataGridStore("patList", queryParams);
 }
 
 /**
  * 清屏
  */
-function clear_Click() {
-	$(".hisui-combobox").combobox("clear").combobox("reload");
-	setValueById("stDate", getDefStDate(-30));
-	setValueById("endDate", getDefStDate(0));
-	setValueById("patName", "");
-	setValueById("receiptNo", "");
-	$("#CurAdm").radio("setValue", true);
-	$("#patList").datagrid("load", {
-		ClassName: "web.DHCIPBillCashier",
-		QueryName: "FindPatList",
-		stDate: "",
-		endDate: "",
-		patLoc: "",
-		patWard: "",
-		admReason: "",
-		Invoice: "",
-		patName: "",
-		checkedStatus: "",
-		ExpStr: ""
-	});
+function clearClick() {
+	$(":text:not(.pagination-num,.combo-text)").val("");
+	if (!CV.ViewType) {
+		$("#dept").combobox("setValue", "");
+	}
+	$("#stDate").datebox("setValue", CV.StDate);
+	$("#endDate").datebox("setValue", CV.EndDate);
+	$("#admReason").combobox("clear");
+	$("#admStatus").combobox("setValue", "1");
+	
+	GV.PatList.options().pageNumber = 1;   //跳转到第一页
+	GV.PatList.loadData({total: 0, rows: []});
 }

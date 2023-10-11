@@ -173,6 +173,11 @@ function setEnabled()
 			disableElement("BSave",true)
 		}
 	}
+	// MZY0074	1849905		2021-04-30
+	if (Status!="1")
+	{
+		disableElement("AMSRejectReason",true);
+	}
 	//审核后才可打印及生成转移单
 	if (Status!="2")
 	{
@@ -411,7 +416,7 @@ function BSave_Clicked()
 			messageShow('alert','error','错误提示','第'+(i+1)+'行数据不正确!')
 			return "-1"
 		}
-		if ((oneRow.AMSLQuantityNum=="")||(parseInt(oneRow.AMSLQuantityNum)<=0))
+		if ((oneRow.AMSLQuantityNum=="")||(isNaN(oneRow.AMSLQuantityNum)))     //Modefied by zc0131 2023-03-08 支持录入小数
 		{
 			messageShow('alert','error','错误提示','第'+(i+1)+'行数据不正确!')
 			return "-1"
@@ -508,7 +513,13 @@ function BCancelSubmit_Clicked()
 		messageShow('alert','error','错误提示',t[-9003]);
 		return;
 	}
-	var Rtn=tkMakeServerCall("web.DHCEQ.MP.BUSStoreMove","CancelSubmitData",AMSRowID,getElementValue("CurRole"),getElementValue("CancelToFlowDR"));
+	// MZY0074	1849905		2021-04-30
+	if (getElementValue("AMSRejectReason")=="")
+	{
+		messageShow('alert','error','错误提示','拒绝原因不能为空!')
+		return
+	}
+	var Rtn=tkMakeServerCall("web.DHCEQ.MP.BUSStoreMove","CancelSubmitData",AMSRowID,getElementValue("CurRole"),getElementValue("CancelToFlowDR"),getElementValue("AMSRejectReason"));
 	//alertShow(AMSRowID+","+getElementValue("CurRole")+","+getElementValue("CancelToFlowDR"))
     var RtnObj=JSON.parse(Rtn);
     if (RtnObj.SQLCODE<0)

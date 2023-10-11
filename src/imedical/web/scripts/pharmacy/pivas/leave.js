@@ -15,7 +15,10 @@ $(function() {
         MainTain("U");
     });
     $('#btnDelete').on("click", Delete);
+    $('#btnFind').on("click", Query);
     setTimeout(Query, 100);
+    $('.dhcpha-win-mask').remove();
+    
 });
 
 function InitDict() {
@@ -35,6 +38,7 @@ function InitDict() {
         }
     }, {
         placeholder: '请假状态...',
+        panelHeight:'auto',
         editable: false,
         onSelect: function(data) {
             Query();
@@ -54,13 +58,13 @@ function InitGridLeave() {
                 width: 60,
                 styler: function(value, row, index) {
                     if (value == "未审核") {
-                        return "background-color:white;color:black;font-weight:bold;"
+                        return "background-color:white;color:black;"
                     } else if (value == "已审核") {
-                        return "background-color:#e2ffde;color:#3c763d;font-weight:bold;"
+                        return "background-color:#e2ffde;color:#3c763d;"
                     } else if (value == "已完成") {
-                        return "background-color:#e3f7ff;color:#1278b8;font-weight:bold;"
+                        return "background-color:#e3f7ff;color:#1278b8;"
                     } else if (value == "已拒绝") {
-                        return "background-color:#ffe3e3;color:#ff3d2c;font-weight:bold;"
+                        return "background-color:#ffe3e3;color:#ff3d2c;"
                     }
                     return "";
                 }
@@ -82,7 +86,8 @@ function InitGridLeave() {
         columns: columns,
         toolbar: "#gridLeaveBar",
         border: false,
-        nowrap: false
+        nowrap: false,
+        fitColumns:true
     };
     DHCPHA_HUI_COM.Grid.Init("gridLeave", dataGridOption);
 }
@@ -122,7 +127,15 @@ function MainTain(type) {
         $("#dateEnd").datebox("setValue", gridSelect.plEdDate);
         $("#txtReason").val(gridSelect.plReason);
     }
-    $('#gridLeaveWin').window({ 'title': "请假信息" + ((type == "A") ? "新增" : "编辑") })
+    $('#gridLeaveWin').window({
+        title: "请假信息" + ((type == "A") ? "新增" : "修改"),
+        onOpen: function () {
+          $('#gridLeaveWin').window('resize',{
+            width:$('#gridLeaveWin .pha-con-table').width() +10,
+            height:'auto'
+          }).window('center')
+        }
+      });
     $('#gridLeaveWin').window('open');
     /*
     $('#gridLeaveWin').window('move', {

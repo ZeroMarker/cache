@@ -9,30 +9,17 @@ function initDocument()
 	initButtonWidth();   //add by lmm 2020-04-26 1292188
 	//modify by lmm 2019-10-28 1040240 LMM0048
 	initButton();
-	jQuery("#BAdd").linkbutton({iconCls: 'icon-w-add'});
-	jQuery("#BAdd").on("click", BAdd_Click);
-	//add by lmm 2020-05-07
-	jQuery("#BComputer").linkbutton({iconCls: 'icon-w-ok'});
-	jQuery("#BComputer").on("click", BComputer_Click);
-	//modify by lmm 2020-03-27 
-	if (getElementValue("Planstatus")=="2")
+	//add by lmm 2020-05-07 modify by zyq 2022-11-03 begin
+	//	jQuery("#BComputer").linkbutton({iconCls: 'icon-w-ok'}); 
+	//	jQuery("#BComputer").on("click", BComputer_Click); 
+	if (getElementValue("Planstatus")=="2"||getElementValue("Planstatus")=="3")
 	{
 		//disableElement("BAdd",true)
 		hiddenObj("BAdd",1)
-		hiddenObj("BComputer",1)
-		
-	}	
-	else if (getElementValue("Planstatus")=="3")
-	{
-		hiddenObj("BAdd",1)
-		
-	}
-	else
-	{
-		hiddenObj("BComputer",1)
-	}	
+
+	}	//modify by zyq 2022-11-03 end	
 	//add by lmm 2020-05-07
-		$HUI.datagrid("#maintlimitequipdatagrid",{   
+	$HUI.datagrid("#maintlimitequipdatagrid",{   
 	    url:$URL, 
 		idField:'TRowID', //主键   //add by lmm 2018-10-23
 	    border : false,
@@ -86,7 +73,7 @@ function initDocument()
 }
 
 //modify by lmm 2019-10-28 1040240 LMM0048
-function BAdd_Click()
+function BAdd_Clicked() //modify by zyq 2022-11-03
 {
 	var rows = $('#maintlimitequipdatagrid').datagrid('getChecked');
 	var vallist=""
@@ -148,6 +135,7 @@ function clearData(vElementID)
 }
 
 //add by lmm 2020-05-07
+/*
 function BComputer_Click()
 {
 	var rows = $('#maintlimitequipdatagrid').datagrid('getChecked');
@@ -178,10 +166,5 @@ function BComputer_Click()
 	var list = tkMakeServerCall("web.DHCEQ.EM.BUSEquipAttribute", "SaveSourIDInfoEquipAttribute",SourceType,EquipInfo,DataList);
 	websys_showModal("options").mth();
 	$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
-	
-	
-	
-	
 }
-
-
+*/

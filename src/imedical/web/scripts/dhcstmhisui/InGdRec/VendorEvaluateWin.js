@@ -1,6 +1,6 @@
-var VendorEvaluateWin = function (IngrId) {
+var VendorEvaluateWin = function(IngrId) {
 	$HUI.dialog('#VendorEvaluateWin').open();
-	var ReasonData = "";
+	var ReasonData = '';
 	var ReasonCombox = {
 		type: 'combobox',
 		options: {
@@ -10,92 +10,95 @@ var VendorEvaluateWin = function (IngrId) {
 			multiple: true,
 			selectOnNavigation: false,
 			rowStyle: 'checkbox',
-			onBeforeLoad: function (param) {
+			onBeforeLoad: function(param) {
 				var rows = MainGrid.getRows();
 				var row = rows[MainGrid.editIndex];
 				if (!isEmpty(row)) {
 					param.Parref = row.IndexId;
 				}
 			},
-			onLoadSuccess: function () {
+			onLoadSuccess: function() {
 				ReasonData = $(this).combobox('getData');
 			},
-			onSelect: function (record) {
+			onSelect: function(record) {
 				var rows = MainGrid.getRows();
 				var row = rows[MainGrid.editIndex];
-				var Reason = $(this).combobox('getValues').join(",");
+				var Reason = $(this).combobox('getValues').join(',');
 				row.ReasonId = Reason;
-				row.ReasonDesc = $(this).combobox('getText'); //tkMakeServerCall('web.DHCSTMHUI.DHCVendorEvaluationIndex', 'EvalReasonDescByReason', Reason);
+				row.ReasonDesc = $(this).combobox('getText'); // tkMakeServerCall('web.DHCSTMHUI.DHCVendorEvaluationIndex', 'EvalReasonDescByReason', Reason);
 				var Score = tkMakeServerCall('web.DHCSTMHUI.DHCVendorEvaluationIndex', 'EvalScoreByReason', Reason);
 				row.Score = Number(Score);
 			},
-			onUnselect: function (record) {
+			onUnselect: function(record) {
 				var rows = MainGrid.getRows();
 				var row = rows[MainGrid.editIndex];
-				var Reason = $(this).combobox('getValues').join(",");
-				row.ReasonId = Reason;
-				row.ReasonDesc = $(this).combobox('getText');
-				var Score = tkMakeServerCall('web.DHCSTMHUI.DHCVendorEvaluationIndex', 'EvalScoreByReason', Reason);
-				row.Score = Number(Score);
-			},
-			onAllSelectClick: function (e) {
-				var rows = MainGrid.getRows();
-				var row = rows[MainGrid.editIndex];
-				var Reason = $(this).combobox('getValues').join(",");
+				var Reason = $(this).combobox('getValues').join(',');
 				row.ReasonId = Reason;
 				row.ReasonDesc = $(this).combobox('getText');
 				var Score = tkMakeServerCall('web.DHCSTMHUI.DHCVendorEvaluationIndex', 'EvalScoreByReason', Reason);
 				row.Score = Number(Score);
 			},
-			onShowPanel: function () {
-				$(this).combobox('reload')
+			onAllSelectClick: function(e) {
+				var rows = MainGrid.getRows();
+				var row = rows[MainGrid.editIndex];
+				var Reason = $(this).combobox('getValues').join(',');
+				row.ReasonId = Reason;
+				row.ReasonDesc = $(this).combobox('getText');
+				var Score = tkMakeServerCall('web.DHCSTMHUI.DHCVendorEvaluationIndex', 'EvalScoreByReason', Reason);
+				row.Score = Number(Score);
+			},
+			onShowPanel: function() {
+				$(this).combobox('reload');
 			}
 		}
 	};
-	var MainCm = [[{
-		title: "RowId",
-		field: 'RowId',
-		width: 50,
-		hidden: true
-	}, {
-		title: "评价指标Id",
-		field: 'IndexId',
-		width: 50,
-		hidden: true
-	}, {
-		title: "评价指标",
-		field: 'IndexDesc',
-		width: 150
-	}, {
-		title: "分数",
-		field: 'Score',
-		editor: {
-			type: 'numberbox'
-		},
-		width: 100
-	}, {
-		title: "扣分项",
-		field: 'ReasonId',
-		editor: ReasonCombox,
-		formatter: CommonFormatter(ReasonCombox, 'ReasonId', 'ReasonDesc'),
-		width: 150
-	}, {
-		title: "备注",
-		field: 'Remark',
-		editor: {
-			type: 'text'
-		},
-		width: 150
-	}, {
-		title: "提交状态",
-		field: 'SubmitFlag',
-		width: 50,
-		hidden: true
-	}, {
-		title: "分数是否可修改",
-		field: 'ScoreEdited',
-		width: 110
-	}
+	var MainCm = [[
+		{
+			title: 'RowId',
+			field: 'RowId',
+			width: 50,
+			hidden: true
+		}, {
+			title: '评价指标Id',
+			field: 'IndexId',
+			width: 50,
+			hidden: true
+		}, {
+			title: '评价指标',
+			field: 'IndexDesc',
+			width: 150
+		}, {
+			title: '分数',
+			field: 'Score',
+			editor: {
+				type: 'numberbox',
+				precision: 2
+			},
+			width: 100
+		}, {
+			title: '扣分项',
+			field: 'ReasonId',
+			editor: ReasonCombox,
+			formatter: CommonFormatter(ReasonCombox, 'ReasonId', 'ReasonDesc'),
+			width: 150
+		}, {
+			title: '备注',
+			field: 'Remark',
+			editor: {
+				type: 'text'
+			},
+			width: 150
+		}, {
+			title: '提交状态',
+			field: 'SubmitFlag',
+			width: 50,
+			hidden: true
+		}, {
+			title: '分数是否可修改',
+			field: 'ScoreEdited',
+			width: 110,
+			hidden: true
+		}
 	]];
 	var MainGrid = $UI.datagrid('#EvaluateGrid', {
 		queryParams: {
@@ -104,28 +107,28 @@ var VendorEvaluateWin = function (IngrId) {
 		},
 		columns: MainCm,
 		pagination: false,
-		onClickCell: function (index, filed, value) {
+		onClickCell: function(index, filed, value) {
 			var Row = MainGrid.getRows()[index];
-			if ((filed == 'Score')&&(Row.ScoreEdited=='N')) {
-				$UI.msg('alert', "分数不可修改");
+			if ((filed == 'Score') && (Row.ScoreEdited == 'N')) {
+				$UI.msg('alert', '分数不可修改');
 				return false;
 			}
 			MainGrid.commonClickCell(index, filed, value);
 		}
 	});
 
-	$UI.linkbutton('#SaveBT', {
-		onClick: function () {
-			Save();
+	$UI.linkbutton('#VSaveBT', {
+		onClick: function() {
+			VSave();
 		}
 	});
-	$UI.linkbutton('#SubmitBT', {
-		onClick: function () {
-			Submit();
+	$UI.linkbutton('#VSubmitBT', {
+		onClick: function() {
+			VSubmit();
 		}
 	});
 
-	function Save() {
+	function VSave() {
 		var DetailObj = MainGrid.getRowsData();
 		if (DetailObj === false) {
 			return false;
@@ -134,7 +137,7 @@ var VendorEvaluateWin = function (IngrId) {
 			return false;
 		}
 		var SubmitFlag = DetailObj[0].SubmitFlag;
-		if (SubmitFlag == "Y") {
+		if (SubmitFlag == 'Y') {
 			$UI.msg('alert', '供应商评价信息已提交,不能修改!');
 			MainGrid.reload();
 			return false;
@@ -146,8 +149,8 @@ var VendorEvaluateWin = function (IngrId) {
 			MethodName: 'SaveVenEvalByPointer',
 			Pointer: IngrId,
 			List: Detail,
-			Type: "G"
-		}, function (jsonData) {
+			Type: 'G'
+		}, function(jsonData) {
 			hideMask();
 			if (jsonData.success == 0) {
 				$UI.msg('success', jsonData.msg);
@@ -157,7 +160,7 @@ var VendorEvaluateWin = function (IngrId) {
 			}
 		});
 	}
-	function Submit() {
+	function VSubmit() {
 		var DetailObj = MainGrid.getRowsData();
 		if (DetailObj === false) {
 			return false;
@@ -171,7 +174,7 @@ var VendorEvaluateWin = function (IngrId) {
 			ClassName: 'web.DHCSTMHUI.DHCVendorEvaluationIndex',
 			MethodName: 'SubmitEvaluation',
 			List: Detail
-		}, function (jsonData) {
+		}, function(jsonData) {
 			hideMask();
 			if (jsonData.success == 0) {
 				$UI.msg('success', jsonData.msg);
@@ -188,5 +191,4 @@ var VendorEvaluateWin = function (IngrId) {
 		Pointer: IngrId,
 		Type: 'G'
 	});
-
-}
+};

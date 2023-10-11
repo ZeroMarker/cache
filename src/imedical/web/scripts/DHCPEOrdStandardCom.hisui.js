@@ -227,6 +227,7 @@ function InitODStandardComDataGrid()
 		    {field:'TSexDesc',width:'60',title:'性别'},
 		    {field:'TSort',width:'60',title:'序号'},
 			{field:'TNatureValue',width:'60',title:'正常值'},
+			{field:'TDefault',width:'60',title:'默认'}, 
 			{field:'THDValue',width:'60',title:'荒诞值'},
 			{field:'TNoPrint',width:'60',title:'不打印'},
 			{field:'TSummary',width:'60',title:'进入小结'},
@@ -235,7 +236,7 @@ function InitODStandardComDataGrid()
 			{field:'TMin',width:'60',title:'下限'},
 			{field:'TMax',width:'60',title:'上限'},
 			{field:'TUnit',width:'60',title:'单位'},
-			{field:'TEyeSee',width:'100',title:'所见'},	
+			{field:'TEyeSee',width:'100',title:'所见'}
 						
 		]],
 		onSelect: function (rowIndex, rowData) {
@@ -263,6 +264,13 @@ function InitODStandardComDataGrid()
 				}if(rowData.TNatureValue=="是"){
 					$("#NatureValue").checkbox('setValue',true);
 				};
+					
+			if(rowData.TDefault=="否"){
+					$("#Default").checkbox('setValue',false);
+				}if(rowData.TDefault=="是"){
+					$("#Default").checkbox('setValue',true);
+				};
+
 			$("#EyeSee").val(rowData.TEyeSee);
 			$("#Unit").val(rowData.TUnit);
 			$("#ReferenceMin").val(rowData.TMin);
@@ -271,6 +279,7 @@ function InitODStandardComDataGrid()
 			$("#AgeMax").val(rowData.TAgeMax); 
 			$("#TextVal").val(rowData.TTextVal); 
 			$("#CurNatureValue").val(rowData.TNatureValue); 
+			$("#CurDefault").val(rowData.TDefault);
 					
 		
 		}
@@ -413,7 +422,12 @@ function BSave_click(Type)
 	var iNatureValue="N";
 	var NatureValue=$("#NatureValue").checkbox('getValue');
 	if(NatureValue) iNatureValue="Y";
-	
+
+	//默认
+	var iDefault="N";
+	var Default=$("#Default").checkbox('getValue');
+	if(Default) iDefault="Y";
+
 	
 	//是否进入小结 
 	var iSummary="N";
@@ -439,11 +453,22 @@ function BSave_click(Type)
 	var ret=tkMakeServerCall("web.DHCPE.ODStandard","GetODSNatureValue",iParRef,iRowId);
 	if((CurNatureValue=="否")&&(iNatureValue=="Y")&&(ret=="1"))
 	 {
-	   $.messager.alert("提示","正常值已设置,不能重复设置","info");
-	    return false;
+	    //$.messager.alert("提示","正常值已设置,不能重复设置","info");
+	    //return false;
     
 	}
 	
+
+	var CurDefault=$("#CurDefault").val();
+	var ret=tkMakeServerCall("web.DHCPE.ODStandard","IsExistDefault",iParRef);
+	if((CurDefault=="否")&&(iDefault=="Y")&&(ret=="1"))
+	 {
+	    $.messager.alert("提示","默认已设置,不能重复设置","info");
+	    return false;
+    
+	}
+
+
 	var Instring = iParRef	
 				+"^"+iRowId		
 				+"^"+iChildSub
@@ -463,6 +488,7 @@ function BSave_click(Type)
 	      		+"^"+iHighRiskFlag   
 	      		+"^"+$.trim(iEyeSee)
 	      		+"^"+iHDValue
+				+"^"+iDefault
 		;
 	//alert(Instring)
  	var flag=tkMakeServerCall("web.DHCPE.ODStandard","Save",'','',Instring);
@@ -514,7 +540,7 @@ function BDelete_click()
 function BClear_click()
 {
 	
-	$("#ODSRowID,#ChildSub,#TextVal,#EyeSee,#Sort,#Unit,#ReferenceMax,#ReferenceMin,#AgeMin,#AgeMax,#CurNatureValue").val("");
+	$("#ODSRowID,#ChildSub,#TextVal,#EyeSee,#Sort,#Unit,#ReferenceMax,#ReferenceMin,#AgeMin,#AgeMax,#CurNatureValue,#CurDefault").val("");
 	$(".hisui-checkbox").checkbox('setValue',false);
 		//默认性别为"不限"
 	$("#Sex").combobox('setValue',"N");

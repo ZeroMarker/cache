@@ -35,7 +35,7 @@
 				arrayCol[arrayCol.length] = i;
 				continue;
 			}	
-			if(!col.title) {  //无标题
+			if ((!col.title)||(col.title=="住院病历")) {  //无标题
 				arrayCol[arrayCol.length] = i;
 				continue;
 			}			

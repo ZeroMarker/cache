@@ -30,6 +30,10 @@ function InitDicEditWinEvent(obj){
 		$('#btnDelete').on('click', function(){
 			obj.btnDelete_click();
 		});
+		//管控数据医院授权点击事件				add by yankai20210730
+		$('#btnAuthHosp').on('click',function(){
+			Common_WinToAuthHosp(obj.RecRowID,"DHCMA_Util_BT.Dictionary","gridAuthHosp","winAuthHosp");	
+		})
 		/* for(var xindex=0;xindex<tabsLength;xindex++){
 			$('#btnAdd'+xindex).on('click', function(){
 				obj.layer();
@@ -52,12 +56,14 @@ function InitDicEditWinEvent(obj){
 			$("#btnAdd").linkbutton("enable");
 			$("#btnEdit").linkbutton("disable");
 			$("#btnDelete").linkbutton("disable");
+			$("#btnAuthHosp").linkbutton("disable");
 			obj.gridDictionary.clearSelections();
 		} else {
 			obj.RecRowID = rd["BTID"];
 			$("#btnAdd").linkbutton("disable");
 			$("#btnEdit").linkbutton("enable");
 			$("#btnDelete").linkbutton("enable");
+			$("#btnAuthHosp").linkbutton("enable");
 		}
 		/* if (rd["BTID"] == obj.RecRowID) {
 			obj.RecRowID="";
@@ -126,7 +132,8 @@ function InitDicEditWinEvent(obj){
 			ClassName:"DHCMA.Util.BT.Dictionary",
 			MethodName:"Update",
 			aInputStr:inputStr,
-			aSeparete:CHR_1
+			aSeparete:CHR_1,
+			aHospID: $("#cboSSHosp").combobox('getValue')
 		},false);
 		if (parseInt(flg) <= 0) {
 			if (parseInt(flg) == 0) {
@@ -153,10 +160,16 @@ function InitDicEditWinEvent(obj){
 				var flg = $m({
 					ClassName:"DHCMA.Util.BT.Dictionary",
 					MethodName:"DeleteById",
-					aId:obj.RecRowID
+					aId:obj.RecRowID,
+					aHospID: $("#cboSSHosp").combobox('getValue')
 				},false);
 				if (parseInt(flg) < 0) {
-					$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					if (parseInt(flg)=='-777') {
+						$.messager.alert("错误提示","-777：当前无删除权限，请启用删除权限后再删除记录!",'info');
+					}else {
+						$.messager.alert("错误提示","删除数据错误!Error=" + flg, 'info');
+					}
+					return;
 				} else {
 					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 					obj.RecRowID = "";

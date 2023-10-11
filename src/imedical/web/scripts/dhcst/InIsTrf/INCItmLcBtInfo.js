@@ -1,8 +1,8 @@
-ï»¿/**
- * åç§°: ç§‘å®¤åº“å­˜é¡¹æ‰¹æ¬¡
+/**
+ * Ãû³Æ: ¿ÆÊÒ¿â´æÏîÅú´Î
  * 
- * æè¿°: ç§‘å®¤åº“å­˜é¡¹æ‰¹æ¬¡ ç¼–å†™è€…ï¼šzhangyong ç¼–å†™æ—¥æœŸ: 2012.1.11
- * æœ€åæ›´æ–°:yunhaibao,20151202,ä¿®æ”¹ç•Œé¢ä»¥åŠæ•°æ®,ä¾›ä¾æ®è¯·æ±‚å‡ºåº“å³é”®ä¿®æ”¹æ‰¹æ¬¡ç”¨
+ * ÃèÊö: ¿ÆÊÒ¿â´æÏîÅú´Î ±àĞ´Õß£ºzhangyong ±àĞ´ÈÕÆÚ: 2012.1.11
+ * ×îºó¸üĞÂ:yunhaibao,20151202,ĞŞ¸Ä½çÃæÒÔ¼°Êı¾İ,¹©ÒÀ¾İÇëÇó³ö¿âÓÒ¼üĞŞ¸ÄÅú´ÎÓÃ
  */
 INCItmLcBtInfo = function(InciDr, PhaLoc, PhaLocRQ, Fn) {
 	Ext.QuickTips.init();
@@ -14,13 +14,13 @@ INCItmLcBtInfo = function(InciDr, PhaLoc, PhaLocRQ, Fn) {
 			+ InciDr + '&ProLocId=' + PhaLoc + '&ReqLocId=' + PhaLocRQ
 			+ '&start=' + 0 + '&limit=' + 15;;
 
-	// é€šè¿‡AJAXæ–¹å¼è°ƒç”¨åå°æ•°æ®
+	// Í¨¹ıAJAX·½Ê½µ÷ÓÃºóÌ¨Êı¾İ
 	var proxy = new Ext.data.HttpProxy({
 				url : ItmLcBtUrl,
 				method : "POST"
 			});
 	
-	// æŒ‡å®šåˆ—å‚æ•°
+	// Ö¸¶¨ÁĞ²ÎÊı
 	var fields = ["Inclb", "IncRowId", "IncCode", "IncName",
 			"BatExp", "Manf", "InclbQty", "InitQty",
 			"PurUomDesc", "Sp", "Transfer", "ReqQty",
@@ -28,14 +28,14 @@ INCItmLcBtInfo = function(InciDr, PhaLoc, PhaLocRQ, Fn) {
 			"RequrstStockQty", "IngrDate", "Sepc", "GeneDesc", "FormDesc",
 			"PurUomId", "BUomId", "ConFac", "DirtyQty", "AvaQty",
 			"BatSp","InclbWarnFlag"];
-	// æ”¯æŒåˆ†é¡µæ˜¾ç¤ºçš„è¯»å–æ–¹å¼
+	// Ö§³Ö·ÖÒ³ÏÔÊ¾µÄ¶ÁÈ¡·½Ê½
 	var reader = new Ext.data.JsonReader({
 				root : 'rows',
 				totalProperty : "results",
 				id : "Inclb",
 				fields : fields
 			});
-	// æ•°æ®é›†
+	// Êı¾İ¼¯
 	var ItmLcBtStore = new Ext.data.Store({
 				proxy : proxy,
 				reader : reader
@@ -45,69 +45,69 @@ INCItmLcBtInfo = function(InciDr, PhaLoc, PhaLocRQ, Fn) {
 				store : ItmLcBtStore,
 				pageSize : 15,
 				displayInfo : true,
-				displayMsg : 'å½“å‰è®°å½• {0} -- {1} æ¡ å…± {2} æ¡è®°å½•',
+				displayMsg : $g('µ±Ç°¼ÇÂ¼ {0} -- {1} Ìõ ¹² {2} Ìõ¼ÇÂ¼'),
 				emptyMsg : "No results to display",
-				prevText : "ä¸Šä¸€é¡µ",
-				nextText : "ä¸‹ä¸€é¡µ",
-				refreshText : "åˆ·æ–°",
-				lastText : "æœ€åé¡µ",
-				firstText : "ç¬¬ä¸€é¡µ",
-				beforePageText : "å½“å‰é¡µ",
-				afterPageText : "å…±{0}é¡µ",
-				emptyMsg : "æ²¡æœ‰æ•°æ®"
+				prevText : $g("ÉÏÒ»Ò³"),
+				nextText : $g("ÏÂÒ»Ò³"),
+				refreshText : $g("Ë¢ĞÂ"),
+				lastText : $g("×îºóÒ³"),
+				firstText : $g("µÚÒ»Ò³"),
+				beforePageText : $g("µ±Ç°Ò³"),
+				afterPageText : $g("¹²{0}Ò³"),
+				emptyMsg : $g("Ã»ÓĞÊı¾İ")
 			});
 
 	var nm = new Ext.grid.RowNumberer();
 	//var sm = new Ext.grid.CheckboxSelectionModel();
     var sm =  new Ext.grid.CellSelectionModel({});
 	var ItmLcBtCm = new Ext.grid.ColumnModel([nm, {
-				header : "æ‰¹æ¬¡RowID",
+				header : $g("Åú´ÎRowID"),
 				dataIndex : 'Inclb',
 				width : 100,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "è¯å“ç¼–å·RowId",
+				header : $g("Ò©Æ·±àºÅRowId"),
 				dataIndex : 'IncRowId',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : 'è¯å“ä»£ç ',
+				header : $g('Ò©Æ·´úÂë'),
 				dataIndex : 'IncCode',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden:true
 			}, {
-				header : 'è¯å“åç§°',
+				header : $g('Ò©Æ·Ãû³Æ'),
 				dataIndex : 'IncName',
 				width : 230,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "æ‰¹æ¬¡/æ•ˆæœŸ",
+				header : $g("Åú´Î/Ğ§ÆÚ"),
 				dataIndex : 'BatExp',
 				width : 150,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "æ‰¹æ¬¡åº“å­˜",
+				header : $g("Åú´Î¿â´æ"),
 				dataIndex : 'InclbQty',
 				width : 90,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "æ‰¹æ¬¡å¯ç”¨åº“å­˜",
+				header : $g("Åú´Î¿ÉÓÃ¿â´æ"),
 				dataIndex : 'AvaQty',
 				width : 90,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "è½¬ç§»æ•°é‡",
+				header : $g("×ªÒÆÊıÁ¿"),
 				dataIndex : 'InitQty',
 				width : 80,
 				align : 'right',
@@ -155,133 +155,133 @@ INCItmLcBtInfo = function(InciDr, PhaLoc, PhaLocRQ, Fn) {
 
 				})
 			}, {
-				header : "ç”Ÿäº§å‚å•†",
+				header : $g("Éú²úÆóÒµ"),
 				dataIndex : 'Manf',
 				width : 180,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "å•ä½RowId",
+				header : $g("µ¥Î»RowId"),
 				dataIndex : 'PurUomId',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "å•ä½",
+				header : $g("µ¥Î»"),
 				dataIndex : 'PurUomDesc',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "å”®ä»·",
+				header : $g("ÊÛ¼Û"),
 				dataIndex : 'Sp',
 				width : 60,
 				align : 'right',				
 				sortable : true
 			}, {
-				header : "æ‰¹æ¬¡å”®ä»·",
+				header : $g("Åú´ÎÊÛ¼Û"),
 				dataIndex : 'BatSp',
 				width : 60,
 				align : 'right',				
 				sortable : true
 			}, {
-				header : "ç±»å‹",
+				header : $g("ÀàĞÍ"),
 				dataIndex : 'Transfer',
 				width : 80,
 				align : 'center',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "è¯·æ±‚æ•°é‡",
+				header : $g("ÇëÇóÊıÁ¿"),
 				dataIndex : 'ReqQty',
 				width : 80,
 				align : 'right',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "åŸºæœ¬å•ä½RowId",
+				header : $g("»ù±¾µ¥Î»RowId"),
 				dataIndex : 'BUomId',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "åŸºæœ¬å•ä½",
+				header : $g("»ù±¾µ¥Î»"),
 				dataIndex : 'BUomDesc',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "è¿›ä»·",
+				header : $g("½ø¼Û"),
 				dataIndex : 'Rp',
 				width : 60,
 				align : 'right',				
 				sortable : true
 			}, {
-				header : "è´§ä½ç ",
+				header : $g("»õÎ»Âë"),
 				dataIndex : 'StkBin',
 				width : 100,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "ä¾›åº”æ–¹åº“å­˜",
+				header : $g("¹©Ó¦·½¿â´æ"),
 				dataIndex : 'SupplyStockQty',
 				width : 100,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "è¯·æ±‚æ–¹åº“å­˜",
+				header : $g("ÇëÇó·½¿â´æ"),
 				dataIndex : 'RequrstStockQty',
 				width : 100,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "å…¥åº“æ—¥æœŸ",
+				header : $g("Èë¿âÈÕÆÚ"),
 				dataIndex : 'IngrDate',
 				width : 80,
 				align : 'center',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "è§„æ ¼",
+				header : $g("¹æ¸ñ"),
 				dataIndex : 'Sepc',
 				width : 100,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "å¤„æ–¹é€šç”¨å",
+				header : $g("´¦·½Í¨ÓÃÃû"),
 				dataIndex : 'GeneDesc',
 				width : 120,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "å‰‚å‹",
+				header : $g("¼ÁĞÍ"),
 				dataIndex : 'FormDesc',
 				width : 100,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "è½¬æ¢ç‡",
+				header : $g("×ª»»ÂÊ"),
 				dataIndex : 'ConFac',
 				width : 100,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : "æ‰¹æ¬¡å ç”¨åº“å­˜",
+				header : $g("Åú´ÎÕ¼ÓÃ¿â´æ"),
 				dataIndex : 'DirtyQty',
 				width : 90,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "è­¦ç¤ºçº§åˆ«",
+				header : $g("¾¯Ê¾¼¶±ğ"),
 				dataIndex : 'InclbWarnFlag',
 				width : 90,
 				align : 'right',
@@ -293,22 +293,22 @@ INCItmLcBtInfo = function(InciDr, PhaLoc, PhaLocRQ, Fn) {
 			return '<span style="font-size:13px;font-weight:bold">'+val+'</span>';
 
 	}
-	// è¿”å›æŒ‰é’®
+	// ·µ»Ø°´Å¥
 	var returnBT = new Ext.Toolbar.Button({
-				text : 'è¿”å›',
-				tooltip : 'ç‚¹å‡»è¿”å›',
+				text : $g('·µ»Ø'),
+				tooltip : $g('µã»÷·µ»Ø'),
 				iconCls : 'page_goto',
 				handler : function() {
 					returnData();
 				}
 			});
 	/**
-	 * è¿”å›æ•°æ®
+	 * ·µ»ØÊı¾İ
 	 */
 	function returnData() {
 		var rowsModified=ItmLcBtGrid.getStore().getModifiedRecords();
 		if (rowsModified.length==0){
-			Msg.info("warning", "è¯·è¾“å…¥è½¬ç§»æ•°é‡!");
+			Msg.info("warning", $g("ÇëÊäÈë×ªÒÆÊıÁ¿!"));
 		}else{
 			var rowslen=0
 			var modifylen=rowsModified.length;
@@ -318,11 +318,11 @@ INCItmLcBtInfo = function(InciDr, PhaLoc, PhaLocRQ, Fn) {
 				 inclbwarnflag=rowsModified[rowslen].data["InclbWarnFlag"]
 				 var expbatinfo=rowsModified[rowslen].data["BatExp"]
 				 if (inclbwarnflag=="1"){
-					 if (confirm(expbatinfo+"ä¸ºè¿‡æœŸè¯å“,æ˜¯å¦ç»§ç»­?")){continue;}
+					 if (confirm(expbatinfo+$g("Îª¹ıÆÚÒ©Æ·,ÊÇ·ñ¼ÌĞø?"))){continue;}
 					 else{return}
 				 }
 				 else if (inclbwarnflag=="2"){
-					 if (confirm(expbatinfo+"ä¸ºæ‰¹æ¬¡ä¸å¯ç”¨,æ˜¯å¦ç»§ç»­?")){continue}
+					 if (confirm(expbatinfo+$g("ÎªÅú´Î²»¿ÉÓÃ,ÊÇ·ñ¼ÌĞø?"))){continue}
 					 else{return}
 				 }
 			}
@@ -331,10 +331,10 @@ INCItmLcBtInfo = function(InciDr, PhaLoc, PhaLocRQ, Fn) {
 		}
 	}
 
-	// å…³é—­æŒ‰é’®
+	// ¹Ø±Õ°´Å¥
 	var closeBT = new Ext.Toolbar.Button({
-				text : 'å…³é—­',
-				tooltip : 'ç‚¹å‡»å…³é—­',
+				text : $g('¹Ø±Õ'),
+				tooltip : $g('µã»÷¹Ø±Õ'),
 				iconCls : 'page_delete',
 				handler : function() {
 					flg = false;
@@ -375,12 +375,12 @@ INCItmLcBtInfo = function(InciDr, PhaLoc, PhaLocRQ, Fn) {
 			}
 		}
 	})
-	// åŒå‡»äº‹ä»¶
+	// Ë«»÷ÊÂ¼ş
 	ItmLcBtGrid.on('rowdblclick', function() {
-					//éªŒè¯æ˜¯å¦åŒ…å«è¿‡æœŸæˆ–åœç”¨
+					//ÑéÖ¤ÊÇ·ñ°üº¬¹ıÆÚ»òÍ£ÓÃ
 				returnData();
 			});
-	// å›è½¦äº‹ä»¶
+	// »Ø³µÊÂ¼ş
 	ItmLcBtGrid.on('keydown', function(e) {
 				if (e.getKey() == Ext.EventObject.ENTER) {
 
@@ -405,7 +405,7 @@ INCItmLcBtInfo = function(InciDr, PhaLoc, PhaLocRQ, Fn) {
 		    items:[IncInfo] 
 		});
 	var window = new Ext.Window({
-				title : 'è¯å“æ‰¹æ¬¡åº“å­˜ä¿¡æ¯',
+				title : $g("Ò©Æ·Åú´Î¿â´æĞÅÏ¢"),
 				width : document.body.clientWidth*0.65,
 				height : document.body.clientHeight*0.75,
 				layout : 'border',
@@ -441,14 +441,14 @@ INCItmLcBtInfo = function(InciDr, PhaLoc, PhaLocRQ, Fn) {
 			var IncSpec=ItmLcBtRowData.get("Sepc"); 
 			var IncPuomDesc=ItmLcBtRowData.get("PurUomDesc"); 
 			var IncBuomDesc=ItmLcBtRowData.get("BUomDesc"); 
-			var IncInfoMain='è¯å“ä»£ç :'+IncCode+'ã€€ã€€è¯å“åç§°:'+IncDesc;
-			var IncInfoOther="è§„æ ¼:"+IncSpec+"ã€€ã€€å…¥åº“å•ä½:"+IncPuomDesc+"ã€€ã€€åŸºæœ¬å•ä½:"+IncBuomDesc;
-	   	 	var IncInfoStr=IncInfoMain+'ã€€ã€€ã€€'+IncInfoOther;
+			var IncInfoMain=$g('Ò©Æ·´úÂë:')+IncCode+$g('¡¡¡¡Ò©Æ·Ãû³Æ:')+IncDesc;
+			var IncInfoOther=$g("¹æ¸ñ:")+IncSpec+$g("¡¡¡¡Èë¿âµ¥Î»:")+IncPuomDesc+$g("¡¡¡¡»ù±¾µ¥Î»:")+IncBuomDesc;
+	   	 	var IncInfoStr=IncInfoMain+'¡¡¡¡¡¡'+IncInfoOther;
 	   	 	
 		 }
 		 else
 		 {
-			var IncInfoStr="è¯¥è¯å“æ²¡æœ‰æœ‰æ•ˆæ‰¹æ¬¡ä¿¡æ¯!"
+			var IncInfoStr=$g("¸ÃÒ©Æ·Ã»ÓĞÓĞĞ§Åú´ÎĞÅÏ¢!")
 		 }
 		 Ext.getCmp("IncInfo").setText(IncInfoStr,false);
 	})

@@ -34,7 +34,7 @@ function initHisTools () {
     };
     ///  弹窗
     HisTools['hislinkWindow'] = new function () {
-        wins = {};
+        dialogId = ""; // 弹窗是否关闭标识
 
         this.args = null;
 
@@ -46,59 +46,44 @@ function initHisTools () {
                 cancelCallback: cancelCallback
             }
         }
-        this.show = function(winId, winName, wWidth, wHeight, isDirectOpen) {//alert(wWidth+", "+wHeight);
-            /*for (var key in wins) {
-                if (winId === key) {
-                    $('#'+winId).window('open');
-                    return;
-                }
-            }*/
-            var win = wins[winId];
-            if (win && !win.closed) {
-                win.focus();
-                return;
+        this.show = function(winName, wWidth, wHeight, isDirectOpen) {//alert(wWidth+", "+wHeight);
+            function closeDialogFlag(){
+                dialogId = "";
             }
+            dialogId = 'hislink';
             if (!wWidth || !wHeight) {
                 //wWidth = $('body').width() - 200;
                 //wHeight = $('body').height() - 50;
-                var iTop = 50;
-                var iLeft = 100;
-                //用opdoc.hislink.window-20180628.js即可
-                //wins[winId] = createWindow(winId, winName, 'emr.opdoc.hislink.window.csp', wWidth, wHeight, iTop, iLeft, '');
                 wWidth = window.screen.availWidth - 200;
-                wHeight = window.screen.availHeight - 150;
+                wHeight = window.screen.availHeight - 250;
 				if ((typeof(isDirectOpen) != undefined)&&(isDirectOpen == "Y"))
 				{
-					wins[winId] = window.open(this.args.lnk, winName, 'width='+wWidth+',height='+wHeight+',top='+iTop+',left='+iLeft+',scrollbars=yes,resizable=yes,status=no,center=yes,minimize=no,maximize=yes');
+                    var content = "<iframe id='hislinkFrame' scrolling='auto' frameborder='0' src='"+this.args.lnk+"' style='width:100%; height:100%;'></iframe>";
+                    createModalDialog(dialogId,winName,wWidth,wHeight,'hislinkFrame',content,closeDialogFlag,'');
 				}
 				else
 				{
-					wins[winId] = window.open('emr.opdoc.hislink.window.csp', winName, 'width='+wWidth+',height='+wHeight+',top='+iTop+',left='+iLeft+',scrollbars=yes,resizable=yes,status=no,center=yes,minimize=no,maximize=yes');
-					//wins[winId] = window.open('emr.op.hislink.window.csp', winName, 'width=1000,height=600,top=50,left=150,scrollbars=yes,resizable=yes,status=no,center=yes,minimize=no,maximize=yes');
+                    var lnk = this.args.lnk;
+                    var src = "emr.opdoc.hislink.window.csp?lnk="+lnk+"&title="+winName+"&dialogId="+dialogId+"&isConfirmCallback=Y&MWToken="+getMWToken();
+                    var content = "<iframe id='hislinkFrame' scrolling='auto' frameborder='0' src='"+src+"' style='width:100%; height:100%;'></iframe>";
+                    createModalDialog(dialogId,winName,wWidth,wHeight,'hislinkFrame',content,closeDialogFlag,'');
 				}
             } else {
                 var iWidth = wWidth;
                 var iHeight = wHeight;
-                var iTop = (window.screen.availHeight - iHeight) / 2;
-                var iLeft = (window.screen.availWidth - iWidth) / 2;
-                //wins[winId] = createWindow(winId, winName, 'emr.opdoc.hislink.window.csp', iWidth, iHeight, iTop, iLeft, '');
-                wins[winId] = window.open('emr.opdoc.hislink.window.csp', winName, 'height=' + iHeight + ',width=' + iWidth + ',top=' + iTop + ',left=' + iLeft + ',scrollbars=yes,resizable=yes,status=no,center=yes,minimize=no,maximize=yes');
+                var lnk = this.args.lnk;
+                var src = "emr.opdoc.hislink.window.csp?lnk="+lnk+"&title="+winName+"&dialogId="+dialogId+"&isConfirmCallback=Y&MWToken="+getMWToken();
+                var content = "<iframe id='hislinkFrame' scrolling='auto' frameborder='0' src='"+src+"' style='width:100%; height:100%;'></iframe>";
+                createModalDialog(dialogId,winName,iWidth,iHeight,'hislinkFrame',content,closeDialogFlag,'');
             }
         } 
 
         this.closeAll = function () {
-            var win;
-            for (var key in wins) {
-                win = wins[key];
-                win.close();
+            if (dialogId != "") {
+                $HUI.dialog('#hislink').close();
+                dialogId = "";
             }
-            /*for (var key in wins) {
-                win = wins[key];
-                $('#'+key).window('close');
-                $("#"+key).window('destroy');
-                $('body').remove('#'+key);
-            }*/
-            wins = {};
+            return;
         }
 
         /// 接收编辑器发出的事件，打开链接单元
@@ -111,13 +96,15 @@ function initHisTools () {
                     if (ret != "") {
                         ret = $.parseJSON(ret);
                         if (ret.Value == "") {
-                            var param = []
-                            if (typeof args.Url.relation.length != "undefined") {
-                                $.each(args.Url.relation, function(index, item){
-                                    param.push({"Path":item.path,"Value":ret[item.name]});
-                                });
-                            }else {
-                                param.push({"Path":args.Url.relation.path,"Value":ret[args.Url.relation.name]});
+                            var param = [];
+                            if (typeof args.Url.relation != "undefined") {
+                                if (typeof args.Url.relation.length != "undefined") {
+                                    $.each(args.Url.relation, function(index, item){
+                                        param.push({"Path":item.path,"Value":ret[item.name]});
+                                    });
+                                }else {
+                                    param.push({"Path":args.Url.relation.path,"Value":ret[args.Url.relation.name]});
+                                }
                             }
                             iEmrPlugin.UPDATE_INSTANCE_DATA({
                                 actionType: args.WriteBack,
@@ -152,11 +139,11 @@ function initHisTools () {
             eventSave("openUnitlink");
 			if ((typeof(unitLink.IsDirectOpen) != undefined)&&(unitLink.IsDirectOpen == "Y"))
 			{
-				this.show(args, unitLink.Title, "", "", "Y");
+				this.show(unitLink.Title, "", "", "Y");
 			}
 			else
 			{
-				this.show(args, unitLink.Title);
+				this.show(unitLink.Title);
 			}
             //this.show(args.Url);
         }
@@ -252,44 +239,54 @@ function initHisTools () {
                         item.Title = item.Title+'<sup style="border-radius: 10px; border: 1px solid transparent; border-image: none; left: 50px; top: 12px; width: 10px; height: 10px; text-align: center; color: rgb(255, 255, 255); line-height: 10px; font-size: 10px; display: inline-block; position: absolute; transform: translateY(-50%) translateX(100%); background-color: rgb(238, 79, 56);"></sup>';
                     }
                 }*/
+                //结核病历
+                if ((sysOption.PhthisisEpisodeIDs == "")&&(item.Name === 'phthisisRecordCatalog')){
+                    continue;
+                }
+                var setSelected = false;
+                var tab = $dataTabs.tabs('getSelected');
+                if (!tab) {
+                    setSelected = true;
+                }
 
                 $dataTabs.tabs('add', {
                     id: item.Name,
                     title: item.Title,
-                    selected: 0 == idx,
+                    selected: (setSelected)&&(plantToothTreatmentCategory == ""),
                     fit: true,
                     content: _content,
                     href: item.Href
                 });
             };
         }
+		
+		if(plantToothTreatmentCategory !== "")
+        {
+	        $dataTabs.tabs('add', {
+	            id: 'dentalImplants',
+	            title: '种植牙疗程',
+	            selected: true,
+	            fit: true,
+	            content: "<iframe id='dentalimplantsFrame' name='dentalimplantsFrame' src='' style='width:100%;height:100%;' frameborder='0' scrolling='no' lnk='emr.opdoc.planttoothtreatment.csp?PatientID=@patientID&EpisodeID=@episodeID' refreshOnSelect=''></iframe>"
+	        });
+        }
 
         addTabs(envVar.opResource);
 
         this.refresh = function () {
             var tabs = $dataTabs.tabs('tabs');
-            var len = tabs.length;
-
-            for (var idx = 0; idx < len; idx++) {
-                iframe = tabs[idx].find('iframe');
-                if (iframe.length > 0) {
-                    $(iframe[0]).attr('src', '');
-                }
-                /*if (envVar.opResource[idx].Name === 'opdocAdmHistory') {
-                    var opHistoryFlag = common.getOPHistoryFlag();                    
-                    var newTitle = envVar.opResource[idx].Title;
-                    if ($.parseJSON(opHistoryFlag.replace(/\'/g, "\""))[0].AdmHistoryCount > 0) {
-                        newTitle = newTitle+'<sup style="border-radius: 10px; border: 1px solid transparent; border-image: none; left: 50px; top: 12px; width: 10px; height: 10px; text-align: center; color: rgb(255, 255, 255); line-height: 10px; font-size: 10px; display: inline-block; position: absolute; transform: translateY(-50%) translateX(100%); background-color: rgb(238, 79, 56);"></sup>';
-                    }
-                    $dataTabs.tabs('update', {
-                        tab: tabs[idx],
-                        options: {
-                            title: newTitle
-                        }
-                    });
-                }*/
+            for (var idx = tabs.length - 1; idx > -1; idx--) {
+                $dataTabs.tabs('close',idx);
             }
-            onSelect('', 0);
+
+            //结核病历
+            var data = ajaxDATA('String', 'EMRservice.BL.opInterface', 'getPhthisisRecordAdm', patInfo.EpisodeID);
+            ajaxGETSync(data, function (ret) {
+                sysOption.PhthisisEpisodeIDs = ret;
+            }, function (ret) {
+                $.messager.alert('发生错误', 'getPhthisisRecordAdm error:' + ret, 'error');
+            });
+            addTabs(envVar.opResource);
         }
 
         this.refreshOeordFrame = function () {
@@ -368,7 +365,7 @@ function updateEMRInstanceData(flag, content, callback, episodeID) {
 		if ((typeof(content.UpdateEMR)=="undefined")||(content.UpdateEMR != true)) return;
 		var queryAllergiesList = "";
 		if (typeof(content.QueryAllergiesList)!="undefined") queryAllergiesList = content.QueryAllergiesList;
-		var data = ajaxDATA('String', 'EMRservice.BL.opInterface', 'getAllergic', patInfo.PatientID, queryAllergiesList);
+		var data = ajaxDATA('String', 'EMRservice.BL.opInterface', 'getAllergic', patInfo.EpisodeID, queryAllergiesList);
 		ajaxGETSync(data, function (ret) {
 			content = ret;
 		}, function (ret) {
@@ -385,13 +382,14 @@ function updateEMRInstanceData(flag, content, callback, episodeID) {
             actionType: 'Replace',
             InstanceID: instanceId || '',
             Path: path,
-            Value: content.replace(/\\r\\n/g, '\r\n').replace(/@/g, '\r\n'),
+            Value: content.replace(/\\r\\n/g, '\n').replace(/@/g, '\n'),
             isSync: true
         });
         if (rtn.result == 'OK') {
-            eventSave("updateInsByDoc");
             if (typeof callback == 'function') {
                 callback();
+            } else {
+                eventSave("updateInsByDoc");
             }
         }
     };

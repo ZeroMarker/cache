@@ -54,8 +54,11 @@ function InitReportQryWin(){
 				formatter: function(value,row,index){
 					if (value=="") return "";
 					var ReportID = row["ReportID"];
-					
-					var btn = '<a href="#" class="btn_detail" onclick="objScreen.OpenSMDReport(\'' + ReportID + '\')"></a>';
+					if ((typeof HISUIStyleCode != 'undefined') && (HISUIStyleCode=="lite")) {
+						var btn = '<a href="#" class="icon icon-paper" onclick="objScreen.OpenSMDReport(\'' + ReportID + '\')"></a>';
+					} else {
+						var btn = '<a href="#" class="btn_detail" onclick="objScreen.OpenSMDReport(\'' + ReportID + '\')"></a>';
+					}
 					return btn;
 				}
 			},
@@ -87,7 +90,7 @@ function InitReportQryWin(){
 				formatter: function(value,row,index){
 					if (value=="") return "";
 					var ReportID = row["ReportID"];
-					var btn = '<a href="#" onclick="objScreen.OpenSMDReport(\'' + ReportID + '\')"><span style="color:blue">'+ value +'</span></a>';
+					var btn = '<a href="#" onclick="objScreen.OpenSMDReport(\'' + ReportID + '\')">'+ value +'</a>';
 					return btn;
 				}
 			},			
@@ -100,7 +103,11 @@ function InitReportQryWin(){
 			{field: 'CheckTime',title: '审核时间', width: 80},                                                                                                                                            
 			{field: 'Contactor',title: '联系人姓名', width: 100},                                                                                                                                      
 			{field: 'ContactorTel',title: '联系人电话', width: 120}
-		]],onLoadSuccess:function(data){
+		]],onDblClickRow:function(index, row) {
+			if (index>-1) {
+				obj.OpenSMDReport(row["ReportID"])
+			}
+		},onLoadSuccess:function(data){
 			//加载成功
 			dispalyEasyUILoad(); //隐藏效果
 		}

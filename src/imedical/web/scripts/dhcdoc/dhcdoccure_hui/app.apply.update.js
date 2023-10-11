@@ -6,7 +6,6 @@
 	HospID:session['LOGON.HOSPID'],
 	CureAppendItemListDataGrid:""
 }
-var dw=$(window).width(),dh=$(window).height();
 $(window).load(function(){
 	InitInfo();
 })
@@ -23,157 +22,38 @@ function Init(){
 
 function InitEvent(){
 	$('#btnSave').click(SaveCureApply);
-	$('#btnPrint').click(btnPrint); 
+	$('#btnPrint').click(function(){
+		app_applyPrint.XML_PrintCureApply(ServerObj.DCARowId,PageApplyUpdateObj.PrintData);	
+	}); 
 	if(ServerObj.DCARowId!=""){
 		$('#btnCancel').bind("click",function(){
 			CancelApply(ServerObj.DCARowId);	
 		}); 
 	}
+	
+	$('#btnPatBody').click(function(){
+		com_openwin.ShowPatBody(ServerObj.DCARowId,"Y")
+	})
 	document.onkeydown = Page_OnKeyDown;
 }
-
-function SetPrice(){
-	if(ServerObj.DCARowId!="")return;
-	$('#OrderPrice').val("");
-	var ItemRowID=$('#ItemRowid').val();
-	if(ItemRowID==""){
-		return;	
-	}
-	var OrderQty=$('#OrderQty').val();
-	if(OrderQty==""){
-		return;		
-	}
-	var OrderQty=parseFloat(OrderQty);
-	var BillingUOM=$("#BillingUOM").combobox('getValue');
-	var BillingUOMDr=CheckComboxSelData("BillingUOM",BillingUOM);
-	if(BillingUOMDr==""){
-		return;	
-	}
-	var OrderReLoc=$("#OrderReLoc").combobox('getValue');
-	var OrderReLocDr=CheckComboxSelData("OrderReLoc",OrderReLoc);
-	if (OrderReLocDr==""){
-		//return;	
-	}
-	var OrderBillType=$("#OrderBillType").combobox('getValue');
-	var OrderBillTypeDr=CheckComboxSelData("OrderBillType",OrderBillType);
-	if(OrderBillTypeDr==""){
-		//return;	
-	}
-	//ArcimRowid, OrderRecDepRowid, OrderPackUOMRowid, OrdRowID)
-	if (ServerObj.GetPriceMethod != "") {
-        //var ret = cspRunServerMethod(ServerObj.GetPriceMethod, ServerObj.EpisodeID, ItemRowID, OrderReLocDr,BillingUOMDr,"");
-        var ret=$.cm({
-	    	ClassName:"DHCDoc.DHCDocCure.Apply",
-			MethodName:"GetPrice",
-			dataType:"text",
-			'EpisodeID':ServerObj.EpisodeID,
-			'ArcimRowid':ItemRowID, 
-			'OrderRecDepRowid':OrderReLocDr, 
-			'OrderPackUOMRowid':BillingUOMDr, 
-			'OrdRowID':"",    
-	    },false)
-	    //alert(OrderQty+","+ret)
-        var sum=OrderQty*parseFloat(ret)
-        $('#OrderPrice').val(sum);
-	}
-}
-
 function PageHandle(){
-	if(ServerObj.DCARowId==""){
-		$('#btnCancel').linkbutton("disable");
-		
-		var ExpStr=session['LOGON.USERID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.GROUPID'];
-		var ObjScope=$.cm({
-			ClassName:"DHCDoc.DHCDocCure.Apply",
-			MethodName:"CheckAfterInit",
-			'EpisodeID':ServerObj.EpisodeID,
-			'ExpStr':ExpStr,
-		},false);
-		var value=ObjScope.result;
-		if((typeof(value)!='undefined')&&(value!="0")){
-			$("#warning").prop("innerText","提示信息:"+value);
-			$('#btnSave').linkbutton("disable");
-			$('#btnPrint').linkbutton("disable");
-			$('#btnSave').unbind();
-			$('#btnPrint').unbind();
-		}
-	}else{
-		$("#warning_panel").remove();
-		$('#apply_form_region').layout('panel', 'north').panel('resize',{
-			height:63
-		})	
+	var ItemWidth=0; //计算textarea的宽度=首日次数(元素td).innerWidth()+费用(label td).innerWidth()+费用(元素td).width()
+	var jObj=$(".td-toCalWidth");
+	for(var i=0;i<jObj.length;i++){
+		ItemWidth+=$(jObj[i]).innerWidth();
 	}
-	var PanelWidth = $("#apply_form_panel").innerWidth();
-	var ItemWidth=PanelWidth*0.85;
-	$(".form-table textarea").width(ItemWidth)
-	$("#apply_append_panel").panel('resize',{height: 255});	
-	$('#apply_form_region').layout('panel', 'south').panel('resize',{
-		height:dh-450
-	})
-	$('#apply_form_region').layout("resize");
+	ItemWidth=ItemWidth+$("#OrderPrice").width();
+	$(".form-table textarea").width(ItemWidth+4);
 	$("#ChronicDiag,#label_ChronicDiag").hide();
 }
 
 function InitInfo(){
-	var DCARowId=ServerObj.DCARowId;
-	var EpisodeID=ServerObj.EpisodeID;
-	if(DCARowId!=""){
-		initCureApplyInfo(DCARowId,"");
-	}else{
-		if(EpisodeID!=""){
-			initCureApplyInfo("",EpisodeID)	
-		}
-		
-	}	
-}
-
-function CancelApply(DCARowId){
-	if(DCARowId!=""){
-		$.messager.confirm('撤销',"确认要撤销该申请单吗",function(r){
-			if (r){
-				$.m({
-					ClassName:"DHCDoc.DHCDocCure.Apply",
-					MethodName:"CancelCureApply",
-					'DCARowId':DCARowId,
-					'UserID':session['LOGON.USERID'],
-				},function testget(value){
-					if(value == "0"){
-						$.messager.show({title:"提示",msg:"撤销成功"});
-						//window.returnValue = true;
-						websys_showModal('hide');
-						websys_showModal('options').CureApplyDataGridLoad();
-						websys_showModal("close");
-					}else{
-						if(value=="100")value="已经有预约记录或者治疗记录,不允许撤销";
-						else if(value=="101")value="该治疗申请已经完成,不允许撤销";
-						else if(value=="102")value="该治疗申请存在已治疗的记录,不允许撤销"
-						else if(value=="103")value="该治疗申请已撤销,不允许撤销"
-						else if(value=="104")value="该治疗申请已分配,不允许撤销"
-						$.messager.alert("提示","撤销失败,"+value);
-						return false;
-					}				
-					
-				});
-			}
-		})
-	}else{
-		$.messager.alert("提示","申请单信息获取错误");
-		return false;
-	}
-			
-}
-function initCureApplyInfo(DCARowId,EpisodeID){
 	PageApplyUpdateObj.PrintData="";
-	$.m({
-		ClassName:"DHCDoc.DHCDocCure.Apply",
-		MethodName:"GetPatientBaseInfo",
-		'DCARowId':DCARowId,
-		'adm':EpisodeID,
-	},function testget(value){
-		if (value!=""){
-			DisplayPatInfo(value);
-		}
-	});
+	//加载患者信息条
+	if(typeof InitPatInfoBanner){
+		InitPatInfoBanner(ServerObj.EpisodeID); 
+	}
+	var DCARowId=ServerObj.DCARowId;
 	if(DCARowId!=""){
 		var CureInfo=$.cm({
 			ClassName:"DHCDoc.DHCDocCure.Apply",
@@ -189,7 +69,41 @@ function initCureApplyInfo(DCARowId,EpisodeID){
 			DisplayCureInfo(TempArr[1],TempArr[2]);
 			LoadCureAppendItemListData(DCARowId);
 		}
+	}	
+}
+
+function CancelApply(DCARowId){
+	if(DCARowId!=""){
+		$.messager.confirm('撤销',"确认要撤销该申请单吗",function(r){
+			if (r){
+				$.m({
+					ClassName:"DHCDoc.DHCDocCure.Apply",
+					MethodName:"CancelAppBroker",
+					'DCARowId':DCARowId,
+					'UserID':session['LOGON.USERID']
+				},function testget(value){
+					var Code=value.split("^")[0];
+					var ErrMsg=value.split("^")[1];
+					if(Code == "0"){
+						$.messager.popover({msg: '撤销成功！',type:'success',timeout: 2000});
+						//window.returnValue = true;
+						websys_showModal('hide');
+						if(websys_showModal('options') && websys_showModal('options').callbackFun){
+							websys_showModal('options').callbackFun();
+						}
+						websys_showModal("close");
+					}else{
+						$.messager.alert("提示","撤销失败,"+ErrMsg,"warning");
+						return false;
+					}				
+				});
+			}
+		})
+	}else{
+		$.messager.alert("提示","申请单信息获取错误","warning");
+		return false;
 	}
+			
 }
 
 function DisplayCureInfo(val,oval){
@@ -225,7 +139,7 @@ function DisplayCureInfo(val,oval){
 		$HUI.combobox("#OrderBillType").setValue(OrderBillType);
 		$HUI.combobox("#BillingUOM").setValue(BillingUOM);
 		$HUI.combobox("#OrderReLoc").setValue(OrderReLoc);
-		CureItemPlanCombCreat(DDCISRowid);
+		InitCureItemTemp(DDCISRowid);
 	}
 	if(CureApplyOtherArr!=""){
 		//s ret=OrderDoseQty_"^"_OrderDoseUnitID_"^"_OrderDoseUnit_"^"_PriorityDR_"^"_PriorityDesc
@@ -322,50 +236,6 @@ function ChangeElementStyle(StyleConfigObj) {
         }
 	}
 }
-
-function DisplayPatInfo(val){
-	var PatInfoObj=eval("("+val+")");
-	if(typeof(PatInfoObj.baseInfoName)=='undefined'){return}
-	var PatNo=PatInfoObj.baseInfoRegNo;
-	var PatName=PatInfoObj.baseInfoName;
-	var PatSex=PatInfoObj.baseInfoSex;
-	var PatAge=PatInfoObj.baseInfoAge;
-	var PatType=PatInfoObj.baseInfoInsu;
-	var patBed=PatInfoObj.baseInfoBedno;
-	if(patBed=="")patBed="-";
-	var PatTel="";
-	var PatAddress="";
-	var PatNoi=PatNo
-	var InfoAdmDays=PatInfoObj.baseInfoAdmDays;
-	var charge="￥"+PatInfoObj.baseInfoCharge;
-	var Diagnosis=PatInfoObj.baseInfoDiag;
-	var IconProfile=PatInfoObj.baseIconProfile;
-	$("#patNo").prop("innerText",PatNoi);
-	$("#patName").prop("innerText",PatName);
-	$("#patSex").prop("innerText",PatSex);
-	$("#patSeximg :last-child").remove();
-	if(PatSex=="男"){
-		var imghtml="<img src='../images/man.png' alt=''/>"
-		$("#patSeximg").append(imghtml)
-	}else if(PatSex=="女"){
-		var imghtml="<img src='../images/woman.png' alt=''/>";
-		$("#patSeximg").append(imghtml)
-	}
-	$("#patAge").prop("innerText",PatAge);
-	$("#patType").prop("innerText",PatType);
-	$("#patBed").prop("innerText",patBed);
-	$("#charge").prop("innerText",charge);
-	$("#Diagnosis").prop("innerText",Diagnosis);
-	//$("#InfoAdmDays").prop("innerText",InfoAdmDays);
-	//$("#patAddress").prop("innerText",PatAddress);
-	//$("#IconProfile").prop("innerText",IconProfile);
-	if(ServerObj.DCARowId==""){
-		var trs = $("tr[class='ifhidden']"); 
-		for(i = 0; i < trs.length; i++){ 
-			trs[i].style.display = "none"; //这里获取的trs[i]是DOM对象而不是jQuery对象，因此不能直接使用hide()方法 
-		}
-	}
-}
 function SaveCureApply()
 {
     var DCARowId=ServerObj.DCARowId;
@@ -424,7 +294,7 @@ function InitItem(){
 	ItemBillUOMCombCreat("") //整包装单位		
 	DHCDocOrderRecLocCombCreat("","",0);
 	DHCDocOrderBillTypeCombCreat();
-	CureItemPlanCombCreat("");
+	InitCureItemTemp("");
 }
 
 function Clear_Mes(){
@@ -496,27 +366,66 @@ function DHCDocOrderBillTypeCombCreat(){
 	})
 }
 
+function InitCureItemTemp(DDCISRowid){
+	CureItemPlanCombCreat(DDCISRowid);
+	InitApplyRemark(DDCISRowid);
+}
+
 function CureItemPlanCombCreat(DDCISRowid){
 	$HUI.combobox("#CureItemPlan",{
 		valueField:'CombValue',   
     	textField:'CombDesc',
     	editable:false,
-    	url:$URL+"?ClassName=DHCDoc.DHCDocCure.Apply&QueryName=CombListFind&CombName=CureItemPlan&Inpute1="+DDCISRowid+"&Inpute2="+""+"&Inpute3=&ResultSetType=array",
+    	url:$URL+"?ClassName=DHCDoc.DHCDocCure.Apply&QueryName=CombListFind&CombName=CureItemPlan&Inpute1="+DDCISRowid+"&Inpute2=P&Inpute3=&ResultSetType=array",
     	onLoadSuccess:function(data){
 	    	$HUI.combobox("#CureItemPlan").setValue("");
-	    },onLoadError:function(data){
-	    	alert(data)
 	    },onSelect:function(record){
-            var ID=record['CombValue'];
-			var ret=$.cm({
-				ClassName:"DHCDoc.DHCDocCure.CureItemSet",
-				MethodName:"GetPlanDetailByID",
-				dataType:"text",
-				'DDCISPRowid':ID,
-			},false);
-			if(ret!=""){
-				$("#ApplyPlan").val("");
-				$("#ApplyPlan").val(ret);
+			var CombNote=record['CombNote'];
+			if(CombNote!=""){
+				$("#ApplyPlan").val(CombNote);
+			}
+		}
+	})
+}
+
+function InitApplyRemark(DDCISRowid){
+	$HUI.combobox("#CureItemNote",{
+		valueField:'CombValue',   
+    	textField:'CombDesc',
+    	multiple:true,
+		rowStyle:'checkbox', //显示成勾选行形式
+		selectOnNavigation:false,
+		//panelHeight:"auto",
+		editable:false,
+    	url:$URL+"?ClassName=DHCDoc.DHCDocCure.Apply&QueryName=CombListFind&CombName=CureItemPlan&Inpute1="+DDCISRowid+"&Inpute2=N&Inpute3=&ResultSetType=array",
+    	onLoadSuccess:function(data){
+	    	$HUI.combobox(this).setValue("");
+	    },onSelect:function(record){
+		    var Remark=$("#ApplyRemark").val();
+            var CombNote=record['CombNote'];
+			if(CombNote!=""){
+				if(Remark!=""){Remark=Remark+";"+CombNote;}
+				else{Remark=CombNote;}
+				$("#ApplyRemark").val(Remark);
+			}
+		},onAllSelectClick:function(e){
+			var Remark=$("#ApplyRemark").val();
+			var CombNote="";
+			var arr = $(this).combobox("getValues");
+			if(arr.length>0){
+				var Data = $(this).combobox("getData");
+				for(var i=0;i<Data.length;i++){
+					var id=Data[i].CombValue; 
+		    		var myNote=Data[i].CombNote; 
+		    		if((myNote=="") || ($.hisui.indexOfArray(arr,id)<0)){continue}
+		    		if(CombNote=="")CombNote= myNote;
+		    		else CombNote=CombNote+";"+myNote;
+				}
+			}
+			if(CombNote!=""){
+				if(Remark!=""){Remark=Remark+";"+CombNote;}
+				else{Remark=CombNote;}
+				$("#ApplyRemark").val(Remark);
 			}
 		}
 	})
@@ -558,249 +467,6 @@ function ItemBillUOMCombCreat(ArcimDr)
 		}
 	})
 }
-
-function mPiece(s1, sep, n) {
-    //Getting wanted piece, passing (string,separator,piece number)
-    //First piece starts from 0
-    //Split the array with the passed delimeter
-    delimArray = s1.split(sep);
-    //If out of range, return a blank string
-    if ((n <= delimArray.length - 1) && (n >= 0)) return delimArray[n];
-}
-
-//Excel打印方法
-function btnPrint()
-{	
-	var DCARowId=ServerObj.DCARowId; //$('#DCARowId').val()
-	if (DCARowId==""){
-		$.messager.alert("提示","请选择需要打印的申请单据")
-		return false
-	}
-	DHCP_GetXMLConfig("InvPrintEncrypt","DHCDocCureApplyNew");
-	var RtnStr=PageApplyUpdateObj.PrintData;
-	var RtnStrArry=RtnStr.split(String.fromCharCode(1));
-	var PatientArr=RtnStrArry[0].split("^"); //患者基本信息
-	var CureApplyArr=RtnStrArry[1].split("^"); //预约单信息
-	var CureApplyOtherArr=RtnStrArry[2].split("^"); //预约单其他医嘱信息
-	
-	var PatID=PatientArr[0]
-	var PatNo=PatientArr[1];
-	var PatName=PatientArr[2];
-	var PatSex=PatientArr[3];
-	var PatAge=PatientArr[4];
-	var PatType=PatientArr[6];
-	var PatTel=PatientArr[24];
-	var PatAddress=PatientArr[10];
-	
-	var ArcimDesc=CureApplyArr[0]
-	var AppOrderQty=CureApplyArr[2]
-	var AppOrderUom=CureApplyArr[3]
-	AppOrderQty=AppOrderQty+AppOrderUom;
-	var RelocID=CureApplyArr[5]
-	var AppReloc=CureApplyArr[4]
-	var ApplyStatus=CureApplyArr[6]
-	var ApplyUser=CureApplyArr[7]
-	var ApplyDate=CureApplyArr[8]
-	var ApplyRemarks=CureApplyArr[13]
-	var ApplyPlan=CureApplyArr[14]
-	var AdmID=CureApplyArr[15]
-	var Price=CureApplyArr[16]
-	var UnitPrice=CureApplyArr[18]	
-	var AppLoc=CureApplyArr[25]
-	var DocCurNO=CureApplyArr[30];	
-	var InsertDate=CureApplyArr[27];
-	var Hospital=tkMakeServerCall("DHCDoc.DHCDocCure.Apply","GetHospitalDesc",session['LOGON.HOSPID'])
-	var Title=Hospital+"治疗申请凭证";
-	
-	var OrderDoseQty=CureApplyOtherArr[0];
-	var OrderDoseUnitID=CureApplyOtherArr[1];
-	var OrderDoseUnit=CureApplyOtherArr[2];
-	var PriorityDR=CureApplyOtherArr[3];
-	var PriorityDesc=CureApplyOtherArr[4];
-	var PHFreqDr=CureApplyOtherArr[5];
-	var PHFreqDesc1=CureApplyOtherArr[6];
-	var instrDr=CureApplyOtherArr[7];
-	var instrDesc1=CureApplyOtherArr[8];
-	var DuratDR=CureApplyOtherArr[9];
-	var DuratDesc=CureApplyOtherArr[10];
-	var StDate=CureApplyOtherArr[11];
-	var FirstDayTimes=CureApplyOtherArr[12];
-	var PDlime=String.fromCharCode(2);
-    var MyPara="HospName"+PDlime+Title;
-    	MyPara=MyPara+"^"+"PatName"+PDlime+PatName;
-    	MyPara=MyPara+"^"+"PatSex"+PDlime+PatSex;
-    	MyPara=MyPara+"^"+"PatPhone"+PDlime+PatTel;
-    	MyPara=MyPara+"^"+"PatRegNo"+PDlime+PatNo;
-    	MyPara=MyPara+"^"+"PatAdress"+PDlime+PatAddress;
-    	MyPara=MyPara+"^"+"ApplyUser"+PDlime+ApplyUser;
-    	MyPara=MyPara+"^"+"ApplyDept"+PDlime+AppReloc;
-    	MyPara=MyPara+"^"+"OrderPrior"+PDlime+PriorityDesc;
-    	MyPara=MyPara+"^"+"DoseQty"+PDlime+OrderDoseQty+OrderDoseUnit;
-    	MyPara=MyPara+"^"+"Freq"+PDlime+PHFreqDesc1;
-    	MyPara=MyPara+"^"+"Duration"+PDlime+DuratDesc;
-    	MyPara=MyPara+"^"+"Qty"+PDlime+AppOrderQty;
-    	MyPara=MyPara+"^"+"CureRecloc"+PDlime+AppReloc;
-    	MyPara=MyPara+"^"+"SttDate"+PDlime+ApplyDate;
-    	MyPara=MyPara+"^"+"CureItem"+PDlime+ArcimDesc;
-    	MyPara=MyPara+"^"+"ApplyPlan"+PDlime+ApplyPlan;
-    	MyPara=MyPara+"^"+"Notes"+PDlime+ApplyRemarks;
-    	MyPara=MyPara+"^"+"DocCureNO"+PDlime+DocCurNO;
-    DHC_PrintByLodop(getLodop(),MyPara,"","","");
-	/*var getpath=tkMakeServerCall("web.UDHCJFCOMMON","getpath")
-	var Template=getpath+"DHCDocCureApplyPrt.xls";
-	var xlApp,xlsheet,xlBook
- 
-	//左右边距
-    xlApp = new ActiveXObject("Excel.Application");
-    xlBook = xlApp.Workbooks.Add(Template);
-    xlsheet = xlBook.ActiveSheet;
-    xlsheet.PageSetup.LeftMargin=0;  //lgl+
-    xlsheet.PageSetup.RightMargin=0;
- 
-	
-	var xlsrow=2; //用来指定模板的开始行数位置
-	var xlsCurcol=1;  //用来指定开始的列数位置
-	
-	
-	var RtnStr=PageApplyUpdateObj.PrintData; //tkMakeServerCall("DHCDoc.DHCDocCure.Apply","GetCureApply",DCARowId)
-	var RtnStrArry=RtnStr.split(String.fromCharCode(1));
-	var PatientArr=RtnStrArry[0].split("^"); //患者基本信息
-	var CureApplyArr=RtnStrArry[1].split("^"); //预约单信息
-	var CureApplyOtherArr=RtnStrArry[2].split("^"); //预约单其他医嘱信息
-	
-	var PatID=PatientArr[0]
-	var PatNo=PatientArr[1];
-	var PatName=PatientArr[2];
-	var PatSex=PatientArr[3];
-	var PatAge=PatientArr[4];
-	var PatType=PatientArr[6];
-	var PatTel=PatientArr[24];
-	var PatAddress=PatientArr[10];
-	
-	var ArcimDesc=CureApplyArr[0]
-	var AppOrderQty=CureApplyArr[2]
-	var AppOrderUom=CureApplyArr[3]
-	AppOrderQty=AppOrderQty+AppOrderUom;
-	var RelocID=CureApplyArr[5]
-	var AppReloc=CureApplyArr[4]
-	var ApplyStatus=CureApplyArr[6]
-	var ApplyUser=CureApplyArr[7]
-	var ApplyDate=CureApplyArr[8]
-	var ApplyRemarks=CureApplyArr[13]
-	var ApplyPlan=CureApplyArr[14]
-	var AdmID=CureApplyArr[15]
-	var Price=CureApplyArr[16]
-	var UnitPrice=CureApplyArr[18]	
-	var AppLoc=CureApplyArr[25]
-	var DocCurNO=CureApplyArr[30];	
-	var InsertDate=CureApplyArr[27];
-	var Hospital=tkMakeServerCall("DHCDoc.DHCDocCure.Apply","GetHospitalDesc",session['LOGON.HOSPID'])
-	var Title=Hospital+"治疗申请凭证";
-	
-	var OrderDoseQty=CureApplyOtherArr[0];
-	var OrderDoseUnitID=CureApplyOtherArr[1];
-	var OrderDoseUnit=CureApplyOtherArr[2];
-	var PriorityDR=CureApplyOtherArr[3];
-	var PriorityDesc=CureApplyOtherArr[4];
-	var PHFreqDr=CureApplyOtherArr[5];
-	var PHFreqDesc1=CureApplyOtherArr[6];
-	var instrDr=CureApplyOtherArr[7];
-	var instrDesc1=CureApplyOtherArr[8];
-	var DuratDR=CureApplyOtherArr[9];
-	var DuratDesc=CureApplyOtherArr[10];
-	var StDate=CureApplyOtherArr[11];
-	var FirstDayTimes=CureApplyOtherArr[12];
-	
-	xlsheet.cells(1,2)=Title;
-	xlsheet.cells(xlsrow,xlsCurcol+8)=DocCurNO
-	xlsrow=xlsrow+1
-	xlsheet.cells(xlsrow,xlsCurcol+2)=PatName
-	xlsheet.cells(xlsrow,xlsCurcol+4)=PatSex
-	xlsheet.cells(xlsrow,xlsCurcol+6)=PatTel
-	xlsheet.cells(xlsrow,xlsCurcol+8)=PatNo
-	xlsrow=xlsrow+1
-	xlsheet.cells(xlsrow,xlsCurcol+2)=PatAddress
-	xlsrow=xlsrow+1
-	xlsheet.cells(xlsrow,xlsCurcol+6)=AppLoc
-	xlsheet.cells(xlsrow,xlsCurcol+2)=ApplyUser
-	xlsrow=xlsrow+1
-	xlsheet.cells(xlsrow,xlsCurcol+2)=PriorityDesc
-	xlsheet.cells(xlsrow,xlsCurcol+4)=OrderDoseQty+""+OrderDoseUnit
-	xlsheet.cells(xlsrow,xlsCurcol+6)=PHFreqDesc1
-	xlsheet.cells(xlsrow,xlsCurcol+8)=DuratDesc
-	xlsrow=xlsrow+1
-	xlsheet.cells(xlsrow,xlsCurcol+2)=AppOrderQty
-	xlsrow=xlsrow+1
-	xlsheet.cells(xlsrow,xlsCurcol+2)=AppReloc
-	xlsheet.cells(xlsrow,xlsCurcol+6)=ApplyDate
-	xlsrow=xlsrow+1
-	xlsheet.cells(xlsrow,xlsCurcol+2)=ArcimDesc
-	xlsrow=xlsrow+1
-	xlsheet.cells(xlsrow,xlsCurcol+2)=ApplyPlan
-	xlsrow=xlsrow+1
-	xlsheet.cells(xlsrow,xlsCurcol+2)=ApplyRemarks
-	xlsrow=xlsrow+1
-	xlsheet.cells(xlsrow,xlsCurcol+2)=ApplyUser
-	xlsheet.cells(xlsrow,xlsCurcol+6)=InsertDate
-
-	
-    xlBook.PrintOut()
-    xlBook.Close (savechanges=false);
-    xlApp.Quit();
-	xlApp=null;
-	xlsheet=null;*/
-}
-//在excel表格中画线的方法。
-function gridlist(objSheet,row1,row2,c1,c2)
-{
-	objSheet.Range(objSheet.Cells(row1, c1), objSheet.Cells(row2,c2)).Borders(1).LineStyle=1;
-	objSheet.Range(objSheet.Cells(row1, c1), objSheet.Cells(row2,c2)).Borders(2).LineStyle=1;
-	objSheet.Range(objSheet.Cells(row1, c1), objSheet.Cells(row2,c2)).Borders(3).LineStyle=1;
-	objSheet.Range(objSheet.Cells(row1, c1), objSheet.Cells(row2,c2)).Borders(4).LineStyle=1; 
-}
-///xml打印方法-未具体实现,可整合到单据打印中
-function PrintCureApply()
-{
-    DHCP_GetXMLConfig("InvPrintEncrypt","DHCDocCureApply");
-    if(PageApplyUpdateObj.PrintData=="")return;
-    var TempArrApply=PageApplyUpdateObj.PrintData.split("^");
-    var PatNo=TempArrApply[0];
-    var PatName=TempArrApply[1];
-    var PatSex=TempArrApply[2];
-    var PatAge=TempArrApply[3];
-    var PatType=TempArrApply[4];
-    var PatTel=TempArrApply[5];
-    var PatAddress=TempArrApply[6];
-    var ArcimDesc=TempArrApply[7];
-    var OrderQty=TempArrApply[8];
-    var BillingUOM=TempArrApply[9];
-    var OrderReLoc=TempArrApply[10];
-    var ApplyUser=TempArrApply[11];
-    var ApplyDate=TempArrApply[12];
-    var ApplyRemarks=TempArrApply[13];
-    var ApplyPlan=TempArrApply[14];
-    var PDlime=String.fromCharCode(2);
-    var MyPara="ArcimDesc"+PDlime+ArcimDesc
-    var MyPara=MyPara+"^"+"PatNo"+PDlime+PatNo
-    var MyPara=MyPara+"^"+"PatName"+PDlime+PatName
-    var MyPara=MyPara+"^"+"PatSex"+PDlime+PatSex
-    var MyPara=MyPara+"^"+"PatAge"+PDlime+PatAge
-    var MyPara=MyPara+"^"+"PatType"+PDlime+PatType
-    var MyPara=MyPara+"^"+"PatTel"+PDlime+PatTel
-    var MyPara=MyPara+"^"+"PatAddress"+PDlime+PatAddress
-    var MyPara=MyPara+"^"+"ArcimDesc"+PDlime+ArcimDesc
-    var MyPara=MyPara+"^"+"OrderQty"+PDlime+OrderQty
-    var MyPara=MyPara+"^"+"BillingUOM"+PDlime+BillingUOM
-    var MyPara=MyPara+"^"+"OrderReLoc"+PDlime+OrderReLoc
-    var MyPara=MyPara+"^"+"ApplyUser"+PDlime+ApplyUser
-    var MyPara=MyPara+"^"+"ApplyDate"+PDlime+ApplyDate
-    var MyPara=MyPara+"^"+"ApplyRemarks"+PDlime+ApplyRemarks
-    var MyPara=MyPara+"^"+"ApplyPlan"+PDlime+ApplyPlan
-    //alert(MyPara);
-    var myobj=document.getElementById("ClsBillPrint");
-	DHCP_PrintFun(myobj,MyPara,"");
-}
-
 
 //初始化绑定医嘱列表
 function InitCureAppendItemList(){
@@ -846,6 +512,7 @@ function LoadCureAppendItemListData(Rowid){
 		QueryName:"FindCureItemAppendItem",
 		DCARowId:Rowid,
 		Episodeid:ServerObj.EpisodeID,
+		SessionStr:com_Util.GetSessionStr(),
 		Pagerows:PageApplyUpdateObj.CureAppendItemListDataGrid.datagrid("options").pageSize,
 		rows:99999
 	},function(GridData){

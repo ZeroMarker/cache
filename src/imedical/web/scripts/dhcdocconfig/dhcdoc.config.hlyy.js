@@ -117,17 +117,19 @@ function HLYYLimitDepConfig()
 		SubNode:LimitDepRowID,
 		HospId:$HUI.combogrid('#_HospList').getValue()
 	},false);
-	objScope=eval("(" + objScope + ")");
-	for( var i=0;i<arrayObj1.length;i++) {
-		  var param1=arrayObj1[i][0];
-		  var Num=arrayObj1[i][1];
-		  var value=objScope.result.split("^")[Num-1];
-		  if (value==1){
-			$("#"+param1+"").checkbox('check');
-		 }else{
-			$("#"+param1+"").checkbox('uncheck');
+	if (objScope!=""){
+		objScope=eval(objScope);
+		for( var i=0;i<arrayObj1.length;i++) {
+			  var param1=arrayObj1[i][0];
+			  var Num=arrayObj1[i][1];
+			  var value=objScope.result.split("^")[Num-1];
+			  if (value==1){
+				$("#"+param1+"").checkbox('check');
+			 }else{
+				$("#"+param1+"").checkbox('uncheck');
+			 }
 		 }
-	 }
+	}
 };
 function InitHLYYOtherConfig(param1,param2)
 {

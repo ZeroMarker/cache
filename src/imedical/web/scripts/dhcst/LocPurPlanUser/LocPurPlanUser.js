@@ -20,7 +20,7 @@ var groupComboStore = new Ext.data.JsonStore({
  
 
 var groupCombo = new Ext.ux.ComboBox({
-	fieldLabel : '安全组',
+	fieldLabel : $g('安全组'),
 	id : 'groupCombo',
 	name : 'groupCombo',
 	store : groupComboStore,
@@ -87,13 +87,13 @@ var CTLocGridDs = new Ext.data.Store({
 var CTLocGridCm = new Ext.grid.ColumnModel([
 	new Ext.grid.RowNumberer(),
 	{
-		header:"代码",
+		header:$g("代码"),
 		dataIndex:'Code',
 		width:150,
 		align:'left',
 		sortable:true
 	},{
-		header:"名称",
+		header:$g("名称"),
 		dataIndex:'Desc',
 		width:200,
 		align:'left',
@@ -102,8 +102,8 @@ var CTLocGridCm = new Ext.grid.ColumnModel([
 ]);
 
 var queryCTLoc = new Ext.Toolbar.Button({
-	text:'查询',
-	tooltip:'查询',
+	text:$g('查询'),
+	tooltip:$g('查询'),
 	iconCls:'page_find',
 	width : 70,
 	height : 30,
@@ -117,7 +117,7 @@ var CTLocPagingToolbar = new Ext.PagingToolbar({
 	store:CTLocGridDs,
 	pageSize:30,
 	displayInfo:true,
-	displayMsg:'第 {0} 条到 {1} 条，一共 {2} 条'
+	displayMsg:$g('第 {0} 条到 {1} 条，一共 {2} 条')
 });
 
 //表格
@@ -128,7 +128,7 @@ CTLocGrid = new Ext.grid.GridPanel({
 	stripeRows:true,
 	sm:new Ext.grid.RowSelectionModel({}),
 	loadMask:true,
-	tbar:['安全组:',groupCombo,'科室代码:',locCode,'科室名称:',locName,'-',queryCTLoc],
+	tbar:[$g('安全组:'),groupCombo,$g('科室代码:'),locCode,$g('科室名称:'),locName,'-',queryCTLoc],
 	bbar:CTLocPagingToolbar,
 	listeners : {
 		'rowclick' : function(grid,rowIndex,e){
@@ -159,7 +159,7 @@ var UStore = new Ext.data.Store({
 });
 	
 var UCG = new Ext.form.ComboBox({
-	fieldLabel : '名称',
+	fieldLabel : $g('名称'),
 	id : 'UCG',
 	name : 'UCG',
 	anchor : '90%',
@@ -169,7 +169,7 @@ var UCG = new Ext.form.ComboBox({
 	displayField : 'Description',
 	//allowBlank : false,
 	triggerAction : 'all',
-	emptyText : '名称...',
+	emptyText : $g('名称...'),
 	selectOnFocus : true,
 	forceSelection : true,
 	minChars : 1,
@@ -177,6 +177,8 @@ var UCG = new Ext.form.ComboBox({
 	listWidth : 250,
 	valueNotFoundText : ''
 });		
+
+
 	
 UCG.on('beforequery', function(e) {
 	UStore.removeAll();
@@ -186,14 +188,26 @@ UCG.on('beforequery', function(e) {
 	UStore.load({
 		params:{start:0,limit:pageSize},
 		callback : function(r,options, success){
+					/*
 					var tmprecode=new  Ext.data.Record()
 					for(var i=0; i<LocPurUserGridDs.getCount()-1;i++ ){
 						var name=LocPurUserGridDs.getAt(i).get("Name");
 						UStore.removeAt(UStore.find("Description",name));
 					}
+					*/
+					setTimeout("RemoveUCGRecord()",1)
 				}
 	});
 });
+
+function RemoveUCGRecord(){
+	var tmprecode=new  Ext.data.Record()
+	for(var i=0; i<LocPurUserGridDs.getCount()-1;i++ ){
+		var name=LocPurUserGridDs.getAt(i).get("Name");
+		UStore.removeAt(UStore.find("Description",name));
+	}
+
+}
 
 //配置数据源
 var LocPurUserGridProxy = new Ext.data.HttpProxy({url:gridUrl+'?actiontype=QueryUser',method:'GET'});
@@ -222,14 +236,14 @@ var LocPurUserGridDs = new Ext.data.Store({
 });
 
 var DefaultField = new Ext.grid.CheckColumn({
-	header:'是否默认',
+	header:$g('是否默认'),
 	dataIndex:'Default',
 	width:100,
 	sortable:true
 });
 
 var ActiveField = new Ext.grid.CheckColumn({
-	header:'是否有效',
+	header:$g('是否有效'),
 	dataIndex:'Active',
 	width:100,
 	sortable:true
@@ -238,13 +252,13 @@ var ActiveField = new Ext.grid.CheckColumn({
 //模型
 var LocPurUserGridCm = new Ext.grid.ColumnModel([
 	new Ext.grid.RowNumberer(),{
-		header:"人员ID",
+		header:$g("人员ID"),
 		dataIndex:'Code',
 		width:200,
 		align:'left',
 		sortable:true
 	},{
-		header:"姓名",
+		header:$g("姓名"),
 		dataIndex:'UserId',
 		width:200,
 		align:'left',
@@ -255,8 +269,8 @@ var LocPurUserGridCm = new Ext.grid.ColumnModel([
 ]);
 
 var addLocPurUser = new Ext.Toolbar.Button({
-	text:'新建',
-	tooltip:'新建',
+	text:$g('新建'),
+	tooltip:$g('新建'),
 	iconCls:'page_add',
 	width : 70,
 	height : 30,
@@ -264,7 +278,7 @@ var addLocPurUser = new Ext.Toolbar.Button({
 		if(CTLocId!=""){
 			addRow();
 		}else{
-			Msg.info("error", "请选择科室!");
+			Msg.info("error", $g("请选择科室!"));
 		}
 		
 	}
@@ -278,8 +292,8 @@ function addRow() {
 }
 
 var saveLocPurUser = new Ext.Toolbar.Button({
-	text:'保存',
-	tooltip:'保存',
+	text:$g('保存'),
+	tooltip:$g('保存'),
 	width : 70,
 	height : 30,
 	iconCls:'page_save',
@@ -304,26 +318,26 @@ var saveLocPurUser = new Ext.Toolbar.Button({
 			}
 		}
 		if(data==""){
-			Msg.info("error","没有需要保存的数据!");
+			Msg.info("error",$g("没有需要保存的数据!"));
 			return false;
 		}else{
 			Ext.Ajax.request({
 				url: gridUrl+'?actiontype=SaveUser',
 				params: {data:data,ctlocid:CTLocId},
 				failure: function(result, request) {
-					Msg.info("error", "请检查网络连接!");
+					Msg.info("error", $g("请检查网络连接!"));
 				},
 				success: function(result, request) {
 					data="";
 					var jsonData = Ext.util.JSON.decode( result.responseText );
 					if (jsonData.success=='true') {
-						Msg.info("success", "保存成功!");
+						Msg.info("success", $g("保存成功!"));
 						LocPurUserGridDs.reload();
 					}else{
 						if(jsonData.info==-1){
-							Msg.info("error","人员重复!");
+							Msg.info("error",$g("人员重复!"));
 						}else{
-							Msg.info("error", "保存失败"+jsonData.info);
+							Msg.info("error", $g("保存失败")+jsonData.info);
 						}
 					}
 				},
@@ -334,36 +348,36 @@ var saveLocPurUser = new Ext.Toolbar.Button({
 });
 
 var deleteLocPurUser = new Ext.Toolbar.Button({
-	text:'删除',
-	tooltip:'删除',
+	text:$g('删除'),
+	tooltip:$g('删除'),
 	iconCls:'page_delete',
 	width : 70,
 	height : 30,
 	handler:function(){
 		var cell = LocPurUserGrid.getSelectionModel().getSelectedCell();
 		if(cell==null){
-			Msg.info("error","请选择数据!");
+			Msg.info("error",$g("请选择数据!"));
 			return false;
 		}else{
 			var record = LocPurUserGrid.getStore().getAt(cell[0]);
 			var RowId = record.get("Rowid");
 			if(RowId!=""){
-				Ext.MessageBox.confirm('提示','确定要删除选定的行?',
+				Ext.MessageBox.confirm($g('提示'),$g('确定要删除选定的行?'),
 					function(btn) {
 						if(btn == 'yes'){
 							Ext.Ajax.request({
 								url:gridUrl+'?actiontype=deleteUser&rowid='+RowId,
-								waitMsg:'删除中...',
+								waitMsg:$g('删除中...'),
 								failure: function(result, request) {
-									Msg.info("error","请检查网络连接!");
+									Msg.info("error",$g("请检查网络连接!"));
 								},
 								success: function(result, request) {
 									var jsonData = Ext.util.JSON.decode( result.responseText );
 									if (jsonData.success=='true') {
-										Msg.info("success","删除成功!");
+										Msg.info("success",$g("删除成功!"));
 										LocPurUserGridDs.reload();
 									}else{
-										Msg.info("error","删除失败!");
+										Msg.info("error",$g("删除失败!"));
 									}
 								},
 								scope: this
@@ -383,7 +397,7 @@ var LocPurUserPagingbar = new Ext.PagingToolbar({
 	store:LocPurUserGridDs,
 	pageSize:30,
 	displayInfo:true,
-	displayMsg:'第 {0} 条到 {1}条，一共 {2} 条'
+	displayMsg:$g('第 {0} 条到 {1}条，一共 {2} 条')
 });
 
 //表格
@@ -419,7 +433,7 @@ var HospPanel = InitHospCombo('DHC_LocPurPlanUser',function(combo, record, index
 	queryCTLoc.handler();
 	RefreshLocUser()
 	LocPurUserGrid.store.removeAll();
-	LocPurUserGrid.getView().refresh();
+	//LocPurUserGrid.getView().refresh();
 	groupComboStore.removeAll();
 	Ext.getCmp('groupCombo').setValue("")
 	Ext.getCmp('groupCombo').setRawValue("")
@@ -438,7 +452,7 @@ Ext.onReady(function(){
 	
 	var CTLocPanel = new Ext.Panel({
 		deferredRender : true,
-		title:'科室信息',
+		title:$g('科室信息'),
 		activeTab: 0,
 		region:'center',
 		collapsible: true,
@@ -450,7 +464,7 @@ Ext.onReady(function(){
 	
 	var StkLocUserCatGroupPanel = new Ext.Panel({
 		deferredRender : true,
-		title:'人员维护',
+		title:$g('人员维护'),
 		activeTab: 0,
 		region:'center',
 		height:300,

@@ -41,9 +41,12 @@ function ShowPreManagerInfo(e)
 
 function BTemplateManager_click()
 {
-	var str = "websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCPEPreTemplate";
+	//var str = "websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCPEPreTemplate";
 	//window.open(str,"_blank","toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,top=50,left=100,width=1200,height=600");
-	websys_lu(str,false,'hisui=true,title=预约限额模板维护')
+	//websys_lu(str,false,'hisui=true,title=预约限额模板维护')
+	var lnk="dhcpe.pretemplate.csp";
+	websys_lu(lnk,false,'iconCls=icon-w-edit,width=1280,height=700,hisui=true,title=预约限额模板维护')
+
 	
 }
 
@@ -51,6 +54,16 @@ function BFind_click()
 {
 	
 	var Month=$("#Month").datebox('getValue');
+	if(Month == "") {
+		$.messager.alert("提示", "请先选择日期！", "info");
+		return false;
+	}
+	
+    var TabInfo = $.m({ClassName:"web.DHCPE.PreManager", MethodName:"OutMainHISUI",Month:Month,CTLOCID:"",OutFlag:"Return"}, false);
+	$("#PreManagerQueryTab").empty();
+	$("#PreManagerQueryTab").append(TabInfo); 
+
+	/*
 	if(Month==""){  var  Month=$zd(+$h,3);}
      $('#Month').datebox('setValue',Month);
 	  lnk="dhcpepremanagerlist.hisui.csp"
@@ -60,5 +73,6 @@ function BFind_click()
 		 window.location.href=lnk
 	//location.href=lnk; 
 	
-	//$("#PreManagerQueryTab").datagrid('load',{ClassName:"web.DHCPE.PreManager",QueryName:"OutMainHISUI",Month:Month,CTLOCID:LOCID})
+	*/
+
 }

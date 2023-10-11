@@ -46,10 +46,10 @@ function debounce(func, wait, immediate) {
     return debounced;
 }
 var GV={};
-GV.SendModelJson=[{id:"I",text:"信息系统"},{id:"S",text:"手机短信"},{id:"E",text:"电子邮箱"},{id:"ENS",text:"集成平台"}];
+GV.SendModelJson=$.cm({ClassName:'websys.DHCMessageActionTypeMgr',MethodName:'OutSendModeJSON'},false); //[{id:"I",text:"信息系统"},{id:"S",text:"手机短信"},{id:"E",text:"电子邮箱"},{id:"ENS",text:"集成平台"}];
 GV.AdmTypeJson=[{id:"O",text:"门诊"},{id:"E",text:"急诊"},{id:"I",text:"住院"},{id:"H",text:"体检"}];
 GV.TargetRoleTypeJson=[{id:'',text:'自动判断'},{id:'AdmLoc',text:'就诊科室'},{id:'OrdLoc',text:'下医嘱科室'},{id:'Any',text:'任何角色'},{id:'Other',text:'其它'}];
-GV.ReceiveTypeJson=[{id:'M',text:'消息平台接收对象'},{id:'L',text:'科室(登录)'},{id:'LCP',text:'科室人员'},{id:'LCPD',text:'科室医生'},{id:'LCPN',text:'科室护士'},{id:'U',text:'用户'},{id:'G',text:'安全组'}];
+GV.ReceiveTypeJson=[{id:'M',text:'消息平台接收对象'},{id:'L',text:'科室(登录)'},{id:'LCP',text:'科室人员'},{id:'LCPD',text:'科室医生'},{id:'LCPN',text:'科室护士'},{id:'U',text:'用户'},{id:'G',text:'安全组'},{id:'ALG',text:'就诊科室x安全组'}];
 GV.current={};
 var initEditWin=function(){
 	$('#cfg_edit_win').dialog({
@@ -117,7 +117,7 @@ var initEditWin=function(){
 	
 	$('#ReceiveType').combobox({
 		data:GV.ReceiveTypeJson,
-		valueField:'id',textField:'text',editable:false,panelHeight:'auto',
+		valueField:'id',textField:'text',editable:false,panelHeight:200,
 		onChange:function(nv,ov){
 			$('#ReceiveObj').combogrid('options').queryParams={rectype:nv}
 			$('#ReceiveObj').combogrid('setRemoteValue',{value:'',text:''})

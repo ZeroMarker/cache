@@ -1,6 +1,7 @@
 ﻿function InitViewportEvent(obj) {
 	obj.LoadEvent=function(args) {
 		$('#gridTHIV').datagrid('loadData',{ 'total':'0',rows:[] });  //初始加载显示记录为0
+		obj.gridLoad();
 		//查询
 		$('#btnQuery').on('click', function(){
 			obj.btnQuery_click();
@@ -15,11 +16,21 @@
 	obj.btnQuery_click = function(){
 		var FromDate = $('#txtFromDate').datebox('getValue')
 		var ToDate = $('#txtToDate').datebox('getValue')
+		if (FromDate>Common_GetDate(new Date())){
+			$.messager.alert("提示","开始日期不能大于当前日期!");
+			return;
+		}
+		if (ToDate>Common_GetDate(new Date())){
+			$.messager.alert("提示","结束日期不能大于当前日期!");
+			return;
+		}
 		if ((FromDate == '')||(ToDate == '')) {
 			$.messager.alert("提示","开始日期、结束日期不允许为空!");
+			return;
 		}
 		if (Common_CompareDate(FromDate,ToDate)>0) {
 			$.messager.alert("提示","开始日期不能大于结束日期!");
+			return;
 		}
 		obj.gridLoad();
 	}

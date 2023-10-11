@@ -272,7 +272,7 @@ CreatMyDiv.prototype={
 */
 var DataGrid=function (obj)
 {
-	this.url=obj.url;
+	this.url=(typeof websys_writeMWToken=='function')?websys_writeMWToken(obj.url):obj.url;
 	this.columns=obj.columns;
 	this.pagesize=obj.pagesize;
 	this.table=obj.table;

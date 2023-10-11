@@ -1,23 +1,29 @@
 ﻿var init = function() {
 	$UI.linkbutton('#SearchBT', {
-		onClick: function(){
+		onClick: function() {
 			Query();
 		}
 	});
-	function Query(){
+	function Query() {
 		$UI.clear(DetailGrid);
 		$UI.clear(MasterGrid);
 		var ParamsObj = $UI.loopBlock('Conditions');
-		if(isEmpty(ParamsObj['FrLoc'])){
+		var StartDate = ParamsObj.StartDate;
+		var EndDate = ParamsObj.EndDate;
+		if (isEmpty(ParamsObj['FrLoc'])) {
 			$UI.msg('alert', '科室不可为空!');
 			return;
 		}
-		if(isEmpty(ParamsObj['StartDate'])){
-			$UI.msg('alert', '起始日期不可为空!');
+		if (isEmpty(StartDate)) {
+			$UI.msg('alert', '开始日期不能为空!');
 			return;
 		}
-		if(isEmpty(ParamsObj['EndDate'])){
-			$UI.msg('alert', '截止日期不可为空!');
+		if (isEmpty(EndDate)) {
+			$UI.msg('alert', '截止日期不能为空!');
+			return;
+		}
+		if (compareDate(StartDate, EndDate)) {
+			$UI.msg('alert', '截止日期不能小于开始日期!');
 			return;
 		}
 		ParamsObj['DateType'] = '1';
@@ -27,11 +33,12 @@
 		MasterGrid.load({
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
 			QueryName: 'DHCINIsTrfM',
+			query2JsonStrict: 1,
 			Params: Params
 		});
 	}
 	$UI.linkbutton('#ClearBT', {
-		onClick: function(){
+		onClick: function() {
 			$UI.clearBlock('Conditions');
 			$UI.clear(DetailGrid);
 			$UI.clear(MasterGrid);
@@ -39,9 +46,9 @@
 		}
 	});
 	$UI.linkbutton('#PrintBT', {
-		onClick: function(){
+		onClick: function() {
 			var SelectedRow = MasterGrid.getSelected();
-			if(isEmpty(SelectedRow)){
+			if (isEmpty(SelectedRow)) {
 				$UI.msg('alert', '请选择需要打印的单据!');
 				return;
 			}
@@ -51,31 +58,27 @@
 	});
 	
 	$UI.linkbutton('#AutitYesBT', {
-		onClick: function(){
+		onClick: function() {
 			var Sels = MasterGrid.getSelections();
-			if(isEmpty(Sels)){
+			if (isEmpty(Sels)) {
 				$UI.msg('alert', '请选择需要审核的单据!');
 				return;
 			}
-			$.messager.confirm('审核', '确定审核选取的单据?', function(r){
-				if(r){
-					TransOutAuditYes();
-				}
-			});
+			$UI.confirm('确定审核选取的单据?', '', '', TransOutAuditYes);
 		}
 	});
-	function TransOutAuditYes(){
+	function TransOutAuditYes() {
 		var Sels = MasterGrid.getSelections();
 		var InitStr = '';
-		for(var i = 0, Len = Sels.length; i < Len; i++){
+		for (var i = 0, Len = Sels.length; i < Len; i++) {
 			var InitId = Sels[i]['RowId'];
-			if(InitStr == ''){
+			if (InitStr == '') {
 				InitStr = InitId;
-			}else{
+			} else {
 				InitStr = InitStr + '^' + InitId;
 			}
 		}
-		if(isEmpty(InitStr)){
+		if (isEmpty(InitStr)) {
 			return;
 		}
 		showMask();
@@ -85,53 +88,49 @@
 			InitStr: InitStr,
 			UserId: gUserId,
 			GroupId: gGroupId,
-			AutoAuditInFlag:'Y'
-		},function(jsonData){
-			if(jsonData.success === 0){
+			AutoAuditInFlag: 'Y'
+		}, function(jsonData) {
+			if (jsonData.success === 0) {
 				var Ret = jsonData.msg;
-				var RetArr = Ret.split(",");
+				var RetArr = Ret.split(',');
 				var InitRetStr = RetArr[0];
 				var TotalCnt = RetArr[1];
 				var SucessCnt = RetArr[2];
-				$UI.msg('success', '共'+TotalCnt+'张单据,成功审核'+SucessCnt+'张单据!');
-				if(InitParamObj['AutoPrintAfterAckOut'] == 'Y'){
-					var InitArr = InitRetStr.split("^");
-					for(var i = 0; i < InitArr.length; i++){
+				$UI.msg('success', '共' + TotalCnt + '张单据,成功审核' + SucessCnt + '张单据!');
+				if (InitParamObj['AutoPrintAfterAckOut'] == 'Y') {
+					var InitArr = InitRetStr.split('^');
+					for (var i = 0; i < InitArr.length; i++) {
 						var Init = InitArr[i];
-						var HVflag = GetCertDocHVFlag(Init,"T");
+						var HVflag = GetCertDocHVFlag(Init, 'T');
 						PrintInIsTrfBC(Init, 'Y');
 					}
 				}
 				Query();
-			}else{
+			} else {
 				$UI.msg('error', jsonData.msg);
 			}
 			hideMask();
 		});
 	}
 	$UI.linkbutton('#AutitNoBT', {
-		onClick: function(){
+		onClick: function() {
 			var Sels = MasterGrid.getSelections();
-			if(isEmpty(Sels)){
+			if (isEmpty(Sels)) {
 				$UI.msg('alert', '请选择需要拒绝的单据!');
 				return;
 			}
-			$.messager.confirm('拒绝', '确定拒绝选取的单据?', function(r){
-				if(r){
-					TransOutAuditNo();
-				}
-			});
+			$UI.confirm('确定拒绝选取的单据?', '', '', TransOutAuditNo);
 		}
 	});
 	
-	function TransOutAuditNo(){
+	function TransOutAuditNo() {
 		var Sels = MasterGrid.getSelections();
 		var InitStr = '';
-		for(var i = 0, Len = Sels.length; i < Len; i++){
+		for (var i = 0, Len = Sels.length; i < Len; i++) {
 			var InitId = Sels[i]['RowId'];
-			if(InitStr == ''){
+			if (InitStr == '') {
 				InitStr = InitId;
-			}else{
+			} else {
 				InitStr = InitStr + '^' + InitId;
 			}
 		}
@@ -141,44 +140,45 @@
 			MethodName: 'jsTransOutAuditNoStr',
 			InitStr: InitStr,
 			UserId: gUserId
-		},function(jsonData){
+		}, function(jsonData) {
 			var Ret = jsonData.msg;
-			var RetArr = Ret.split(",");
+			var RetArr = Ret.split(',');
 			var InitRetStr = RetArr[0];
 			var TotalCnt = RetArr[1];
 			var SucessCnt = RetArr[2];
-			$UI.msg('success', '共'+TotalCnt+'张单据,成功拒绝'+SucessCnt+'张单据!');
+			$UI.msg('success', '共' + TotalCnt + '张单据,成功拒绝' + SucessCnt + '张单据!');
 			Query();
 			hideMask();
 		});
 	}
 
-	var FrLoc = $HUI.combobox('#FrLoc',{
+	var FrLoc = $HUI.combobox('#FrLoc', {
 		url: $URL
 			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
-			+ JSON.stringify(addSessionParams({Type:'Login'})),
+			+ JSON.stringify(addSessionParams({ Type: 'Login', Element: 'FrLoc' })),
 		valueField: 'RowId',
 		textField: 'Description',
-		onSelect: function(record){
+		onSelect: function(record) {
 			var LocId = record['RowId'];
-			$('#CreateUser').combobox('clear');  
+			$('#CreateUser').combobox('clear');
 			$('#CreateUser').combobox('reload', $URL
 				+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetDeptUser&ResultSetType=Array&Params='
-				+ JSON.stringify({LocDr:LocId})
+				+ JSON.stringify({ LocDr: LocId })
 			);
 		}
 	});
 	$('#FrLoc').combobox('setValue', session['LOGON.CTLOCID']);
 	
-	var ToLoc = $HUI.combobox('#ToLoc',{
+	var ToLoc = $HUI.combobox('#ToLoc', {
 		url: $URL
 			+ '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params='
-			+ JSON.stringify(addSessionParams({Type:'All'})),
+			+ JSON.stringify(addSessionParams({ Type: 'All', Element: 'ToLoc' })),
 		valueField: 'RowId',
 		textField: 'Description'
 	});
 
-	var MasterCm = [[{
+	var MasterCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
 			saveCol: true,
@@ -244,29 +244,32 @@
 	var MasterGrid = $UI.datagrid('#MasterGrid', {
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrf',
-			QueryName: 'DHCINIsTrfM'
+			QueryName: 'DHCINIsTrfM',
+			query2JsonStrict: 1
 		},
 		columns: MasterCm,
 		showBar: true,
-		onSelect: function(index, row){
+		onSelect: function(index, row) {
 			var Init = row['RowId'];
-			var ParamsObj = {Init:Init, InitType:'T'};
+			var ParamsObj = { Init: Init, InitType: 'T' };
 			$UI.clear(DetailGrid);
 			DetailGrid.load({
 				ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
 				QueryName: 'DHCINIsTrfD',
+				query2JsonStrict: 1,
 				Params: JSON.stringify(ParamsObj),
 				rows: 99999
 			});
 		},
-		onLoadSuccess: function(data){
-			if(data.rows.length > 0){
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
 				MasterGrid.selectRow(0);
 			}
 		}
 	});
 
-	var DetailCm = [[{
+	var DetailCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
 			width: 80,
@@ -293,7 +296,7 @@
 			field: 'BatExp',
 			width: 200
 		}, {
-			title: '厂商',
+			title: '生产厂家',
 			field: 'ManfDesc',
 			width: 160
 		}, {
@@ -361,22 +364,23 @@
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.DHCINIsTrfItm',
 			QueryName: 'DHCINIsTrfD',
+			query2JsonStrict: 1,
 			rows: 99999
 		},
-		pagination:false,
+		pagination: false,
 		columns: DetailCm,
 		showBar: true,
 		remoteSort: false
 	});
 	
-	//设置缺省值
-	function SetDefaValues(){
+	// 设置缺省值
+	function SetDefaValues() {
 		$('#FrLoc').combobox('setValue', gLocId);
 		$('#StartDate').datebox('setValue', DefaultStDate());
-		$('#EndDate').datebox('setValue',  DefaultEdDate());
+		$('#EndDate').datebox('setValue', DefaultEdDate());
 	}
 	
 	SetDefaValues();
 	Query();
-}
+};
 $(init);

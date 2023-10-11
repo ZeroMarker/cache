@@ -1,0 +1,384 @@
+<html>
+<head>
+
+<!-- Put your page Title here -->
+<title>	自动生成医嘱规则 </title>
+<csp:content charset="UTF-8">
+<HISUI />
+<dhcclinic:head></dhcclinic:head>
+
+</head>
+<body class="hisui-layout">
+	
+	<div data-options="region:'west',border:false" style="width:240px;padding:4px 2px 4px 4px;">
+		<div id="arcimRuleTools" class="box-tool">
+			<a href="#" id="btnAddArcimRule" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+			<a href="#" id="btnEditArcimRule" class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true">修改</a>
+			<a href="#" id="btnDelArcimRule" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true">删除</a>	
+		</div>
+		<table id="arcimRuleBox">
+		</table>
+		<div id="arcimRuleDialog" class="hisui-dialog" data-options="closed:true,width:560,height:180,modal:true">
+			<form id="arcimRuleForm" method="post">
+				<div class="form-rows">
+					<div>
+						<div class="form-row">
+							<div class="form-title">代码</div>
+							<div class="form-item-normal">
+								<input type="text" id="ArcimRuleCode" name="Code" class="hisui-validatebox" data-options="required:true,validType:{length:[0,50]}"/>
+							</div>
+							<div class="form-title">名称</div>
+							<div class="form-item-normal">
+								<input type="text" id="ArcimRuleDesc" name="Description" class="hisui-validatebox" data-options="required:true,validType:{length:[0,50]}"/>
+							</div>
+						</div>
+					</div>
+					<div>
+						<div class="form-row">
+							<div class="form-title">助记码</div>
+							<div class="form-item-normal">
+								<input type="text" id="ArcimRuleAlias" name="Alias" class="hisui-validatebox" data-options="required:true,validType:{length:[0,50]}"/>
+							</div>
+						</div>
+					</div>
+				</div>
+				<input type="hidden" id="ArcimRuleRowId" name="RowId" />
+			</form>
+		</div>
+	</div>
+	
+	<div data-options="region:'center',border:false" style="padding:4px 4px 4px 2px;">
+		<div id="mainTabs" class="hisui-tabs" data-options="fit:true">	
+			<div title="麻醉药品关联医嘱项">
+				<table id="drugArcimBox">
+				</table>
+				<div id="drugArcimTools">
+					<form id="drugArcimForm" method="post">
+						<div class="form-rows">
+							<div>
+								<div class="form-row">
+									<div class="form-title">数据项</div>
+									<div class="form-item-normal">
+										<select id="DrugItem" class="hisui-combobox" name="DrugItem"></select>
+									</div>
+									<div class="form-title">医嘱项</div>
+									<div class="form-item-normal">
+										<select id="DrugArcimID" name="ArcimID" class="hisui-combobox"></select>
+									</div>
+									<div class="form-title-common">数量</div>
+									<div class="form-item-normal">
+										<input type="text" id="DrugArcimPackQty" name="PackQty" class="hisui-numberbox" style="width:60px">
+									</div>
+									<div class="form-title-common">单位</div>
+									<div class="form-item-normal">
+										<select id="DrugArcimPackUom" name="PackUom" class="hisui-combobox" style="width:80px"></select>
+									</div>
+									<span class="form-btn">
+										<a href="#" id="btnAddDrugArcim" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a>
+									</span>
+									<span class="form-btn">
+										<a href="#" id="btnEditDrugArcim" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">修改</a>
+									</span>
+									
+								</div>
+							</div>
+							<div>
+								<div class="form-row">
+									<div class="form-title">用药途径</div>
+									<div class="form-item-normal">
+										<select id="DrugArcimInstr" name="Instruction" class="hisui-combobox"></select>
+									</div>
+									<div class="form-title">接收科室</div>
+									<div class="form-item-normal">
+										<select id="DrugArcimRecvLoc" name="RecvLoc" class="hisui-combobox"></select>
+									</div>
+									<div class="form-title-common">剂量</div>
+									<div class="form-item-normal">
+										<input type="text" id="DrugArcimDoseQty" name="PackQty" class="hisui-numberbox" style="width:60px">
+									</div>
+									<div class="form-title-common">单位</div>
+									<div class="form-item-normal">
+										<select id="DrugArcimDoseUom" name="DoseUom" class="hisui-combobox" style="width:80px"></select>
+									</div>
+									<span class="form-btn">
+										<a href="#" id="btnQueryDrugArcim" class="hisui-linkbutton" data-options="iconCls:'icon-w-find'">查询</a>
+									</span>
+									<span class="form-btn">
+										<a href="#" id="btnDelDrugArcim" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">删除</a>
+									</span>
+								</div>
+							</div>
+						</div>
+						<input type="hidden" id="DrugArcimRule" name="Rule" />
+						<input type="hidden" id="DrugArcimRowId" name="RowId" />
+					</form>
+					
+					
+					
+				</div>
+				<div id="drugArcimDialog" class="hisui-dialog" data-options="closed:true,width:540,height:280,modal:true">
+					
+				</div>
+			</div>
+			<div title="事件关联医嘱项">
+				<table id="eventArcimBox"></table>
+				<div id="eventArcimTools">
+					<form id="eventArcimForm" method="post">
+						<div class="form-rows">
+							<div>
+								<div class="form-row">
+									<div class="form-title">事件项</div>
+									<div class="form-item-normal">
+										<select id="EventItem" class="hisui-combobox" name="EventItem"></select>
+									</div>
+									<div class="form-title">值规则</div>
+									<div class="form-item-normal">
+										<input type="text" id="EventValueRule" name="EventValueRule" class="hisui-validatebox" style="width:80px;">
+									</div>
+									<div class="form-title">明细项</div>
+									<div class="form-item-normal">
+										<select id="DetailItem" name="DetailItem" class="hisui-combobox" placeholder="请先选择事件项" style="width:60px;"></select>
+									</div>
+									<div class="form-title">值规则</div>
+									<div class="form-item-normal">
+										<input type="text" id="DetailValueRole" name="DetailValueRole" class="hisui-validatebox" style="width:80px;">
+									</div>
+								</div>
+							</div>
+							<div>
+								<div class="form-row">
+									<div class="form-title">医嘱项</div>
+									<div class="form-item-normal">
+										<select id="EventArcimID" name="ArcimID" class="hisui-combobox"></select>
+									</div>
+									<div class="form-title">医嘱套</div>
+									<div class="form-item-normal">
+										<select id="EventArcimOrderSet" name="OrderSet" class="hisui-combobox" style="width:80px;"></select>
+									</div>
+									<div class="form-title">数量</div>
+									<div class="form-item-normal">
+										<input type="text" id="EventArcimPackQty" name="PackQty" class="hisui-numberbox" style="width:60px;">
+									</div>
+									<div class="form-title">单位</div>
+									<div class="form-item-normal">
+										<select id="EventArcimPackUom" name="PackUom" class="hisui-combobox" style="width:80px;"></select>
+									</div>
+									<span class="form-btn">
+										<a href="#" id="btnAddEventArcim" class="hisui-linkbutton" data-options="iconCls:'icon-w-add'">新增</a>
+									</span>
+									<span class="form-btn">
+										<a href="#" id="btnEditEventArcim" class="hisui-linkbutton" data-options="iconCls:'icon-w-edit'">修改</a>
+									</span>
+								</div>
+							</div>
+							<div>
+								<div class="form-row">
+									<div class="form-title">接收科室</div>
+									<div class="form-item-normal">
+										<select id="EventArcimRecvLoc" name="RecvLoc" class="hisui-combobox"></select>
+									</div>
+									<div class="form-title">用药途径</div>
+									<div class="form-item-normal">
+										<select id="EventArcimInstr" name="Instruction" class="hisui-combobox" style="width:80px;"></select>
+									</div>
+									
+									<div class="form-title">剂量</div>
+									<div class="form-item-normal">
+										<input type="text" id="EventArcimDoseQty" name="PackQty" class="hisui-numberbox" style="width:60px;">
+									</div>
+									<div class="form-title">单位</div>
+									<div class="form-item-normal">
+										<select id="EventArcimDoseUom" name="DoseUom" class="hisui-combobox" style="width:80px;"></select>
+									</div>
+									<span class="form-btn">
+										<a href="#" id="btnQueryEventArcim" class="hisui-linkbutton" data-options="iconCls:'icon-w-Find'">查询</a>
+									</span>
+									<span class="form-btn">
+										<a href="#" id="btnDelEventArcim" class="hisui-linkbutton" data-options="iconCls:'icon-w-cancel'">删除</a>
+									</span>
+								</div>
+							</div>
+						</div>
+						<input type="hidden" id="EventArcimRule" name="Rule" />
+						<input type="hidden" id="EventArcimRowId" name="RowId" />
+					</form>
+				</div>
+			</div>
+			<div title="麻醉方法关联医嘱项">
+				<table id="anaMethodArcimBox"></table>
+				<div id="anaMethodArcimTools">
+					<a href="#" id="btnAddMethodArcim" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+					<a href="#" id="btnEditMethodArcim" class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true">修改</a>
+					<a href="#" id="btnDelMethodArcim" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true">删除</a>
+				</div>
+				<div id="anaMethodArcimDialog" class="hisui-dialog" data-options="closed:true,width:540,height:360,modal:true">
+					<form id="anaMethodArcimForm" method="post">
+						<div class="form-rows">
+							<div>
+								<div class="form-row">
+									<div class="form-title">麻醉方法</div>
+									<div class="form-item-normal">
+										<select id="AnaMethod" class="hisui-combobox" name="AnaMethod"></select>
+									</div>
+									<div class="form-title">医嘱项</div>
+									<div class="form-item-normal">
+										<select id="AnaMethodArcimID" name="ArcimID" class="hisui-combobox"></select>
+									</div>
+									
+								</div>
+							</div>
+							<div>
+								<div class="form-row">
+									<div class="form-title">超时时长</div>
+									<div class="form-item-normal">
+										<input type="text" id="TimeOutHours" name="TimeOutHours" class="hisui-numberbox">
+									</div>
+									<div class="form-title">医嘱项</div>
+									<div class="form-item-normal">
+										<select id="TimeOutArcimID" name="TimeOutArcimID" class="hisui-combobox"></select>
+									</div>
+									
+								</div>
+							</div>
+							<div>
+								<div class="form-row">
+									<div class="form-title">数量</div>
+									<div class="form-item-normal">
+										<input type="text" id="AnaMethodArcimPackQty" name="PackQty" class="hisui-numberbox">
+									</div>
+									<div class="form-title">单位</div>
+									<div class="form-item-normal">
+										<select id="AnaMethodArcimPackUom" name="PackUom" class="hisui-combobox"></select>
+									</div>
+								</div>
+							</div>
+							<div>
+								<div class="form-row">
+									<div class="form-title">剂量</div>
+									<div class="form-item-normal">
+										<input type="text" id="AnaMethodArcimDoseQty" name="PackQty" class="hisui-numberbox">
+									</div>
+									<div class="form-title">单位</div>
+									<div class="form-item-normal">
+										<select id="AnaMethodArcimDoseUom" name="DoseUom" class="hisui-combobox"></select>
+									</div>
+								</div>
+							</div>
+							<div>
+								<div class="form-row">
+									<div class="form-title">用药途径</div>
+									<div class="form-item-normal">
+										<select id="AnaMethodArcimInstr" name="Instruction" class="hisui-combobox"></select>
+									</div>
+									<div class="form-title">医嘱套</div>
+									<div class="form-item-normal">
+										<select id="AnaMethodArcimOrderSet" name="OrderSet" class="hisui-combobox"></select>
+									</div>
+								</div>
+							</div>
+							<div>
+								<div class="form-row">
+									<div class="form-title">接收科室</div>
+									<div class="form-item-normal">
+										<select id="AnaMethodRecvLoc" name="RecvLoc" class="hisui-combobox"></select>
+									</div>
+								</div>
+							</div>
+						</div>
+						<input type="hidden" id="AnaMethodArcimRule" name="Rule" />
+						<input type="hidden" id="AnaMethodArcimRowId" name="RowId" />
+					</form>
+				</div>
+			</div>
+			<div title="麻醉导管关联医嘱项">
+				<table id="catheterArcimBox">
+                </table>
+                <div id="catheterArcimTools">
+                    <a href="#" id="btnAddCatheterArcim" class="hisui-linkbutton" data-options="iconCls:'icon-add',plain:true">新增</a>
+                    <a href="#" id="btnEditCatheterArcim" class="hisui-linkbutton" data-options="iconCls:'icon-edit',plain:true">修改</a>
+                    <a href="#" id="btnDelCatheterArcim" class="hisui-linkbutton" data-options="iconCls:'icon-remove',plain:true">删除</a>
+                </div>
+                <div id="catheterArcimDialog" class="hisui-dialog" data-options="closed:true,width:540,height:380,modal:true">
+                    <form id="catheterArcimForm" method="post">
+                        <div class="form-rows">
+                            <div>
+                                <div class="form-row">
+                                    <div class="form-title">导管</div>
+                                    <div class="form-item-normal">
+                                        <select id="Catheter" class="hisui-combobox" name="Catheter"></select>
+                                    </div>
+                                    <div class="form-title">型号</div>
+                                    <div class="form-item-normal">
+                                        <select id="CatheterType" name="CatheterType" class="hisui-combobox"></select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="form-row">
+                                    <div class="form-title">定位方法</div>
+                                    <div class="form-item-normal">
+                                        <select id="PosMethod" name="PosMethod" class="hisui-combobox"></select>
+                                    </div>
+                                    <div class="form-title">医嘱项</div>
+                                    <div class="form-item-normal">
+                                        <select id="CatheterArcimID" name="ArcimID" class="hisui-combobox"></select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="form-row">
+                                    <div class="form-title">数量</div>
+                                    <div class="form-item-normal">
+                                        <input type="text" id="CatheterArcimPackQty" name="PackQty" class="hisui-numberbox">
+                                    </div>
+                                    <div class="form-title">单位</div>
+                                    <div class="form-item-normal">
+                                        <select id="CatheterArcimPackUom" name="PackUom" class="hisui-combobox"></select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="form-row">
+                                    <div class="form-title">剂量</div>
+                                    <div class="form-item-normal">
+                                        <input type="text" id="CatheterArcimDoseQty" name="DoseQty" class="hisui-numberbox">
+                                    </div>
+                                    <div class="form-title">单位</div>
+                                    <div class="form-item-normal">
+                                        <select id="CatheterArcimDoseUom" name="DoseUom" class="hisui-combobox"></select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="form-row">
+                                    <div class="form-title">用药途径</div>
+                                    <div class="form-item-normal">
+                                        <select id="CatheterArcimInstr" name="Instruction" class="hisui-combobox"></select>
+                                    </div>
+                                    <div class="form-title">医嘱套</div>
+                                    <div class="form-item-normal">
+                                        <select id="CatheterArcimOrderSet" name="OrderSet" class="hisui-combobox"></select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                            	<div class="form-row">
+                            		<div class="form-title">接收科室</div>
+									<div class="form-item-normal">
+										<select id="EventArcimRecvLoc" name="RecvLoc" class="hisui-combobox"></select>
+									</div>
+                            	</div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="CatheterArcimRule" name="Rule" />
+                        <input type="hidden" id="CatheterArcimRowId" name="RowId" />
+                    </form>
+                </div>
+			</div>
+		</div>
+	</div>
+	
+	<script type="text/javascript" src="../service/dhcanop/js/dhccl.dataform.js"></script>
+	<script type="text/javascript" src="../service/dhcanop/js/dhcan.arcimrule.js"></script>
+</body>
+</html>

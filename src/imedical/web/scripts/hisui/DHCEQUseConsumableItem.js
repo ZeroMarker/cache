@@ -4,6 +4,9 @@ function BodyLoadHandler()
 	initButtonWidth();///Add By QW 2018-10-11 HISUI改造:修改按钮长度
 	setButtonText();///Add By QW 2018-10-11 HISUI改造:按钮文字规范
 	InitPage();
+	///modified by ZY0294 20211122
+	KeyUp("ConsumableItem^UseRecord");
+	Muilt_LookUp("ConsumableItem^UseRecord");
 }
 
 function InitPage()
@@ -11,13 +14,14 @@ function InitPage()
 	document.getElementById('BAdd').onclick=BAdd_Click;
 	document.getElementById('BUpdate').onclick=BUpdate_Click;
 	document.getElementById('BDelete').onclick=BDelete_Click;
+	document.getElementById('BFind').onclick=BFind_Click;	//add by ZY0282 20211109
 	setRequiredElements("ConsumableItem^UseRecord")   //add by yh 20190801
 	var obj=document.getElementById("Quantity");         //add by czf 461821
 	if (obj) obj.onkeyup=Num_KeyUp;
 	var obj=document.getElementById("ConsumableItem");
 	if (obj) obj.onchange=ValueClear;
 }
-
+/* ///modified by ZY0285 多余代码
 function FillData()
 {
 	var rowid=GetElementValue("RowID");	
@@ -33,7 +37,7 @@ function FillData()
 	SetData(result);
 }
 }
-
+*/
 function BAdd_Click() //增加
 {
 	if (GetElementValue("RowID")!="")	
@@ -169,15 +173,17 @@ function GetUseRecordInfo(value)
 	var obj=document.getElementById('UseRecordDR');
 	obj.value=List[0];	
 }
+
+///modified by ZY0256 20210315 鍙栭敊鍊肩殑浣嶇疆
 function GetConsumableItemInfo(value)
 {
 	var List=value.split("^");						// modify by wl 2019-9-10 begin 1025258
 	var obj=document.getElementById('ConsumableItem');
-	obj.value=List[2];
-	var obj=document.getElementById('ConsumableItemDR');
 	obj.value=List[1];
+	var obj=document.getElementById('ConsumableItemDR');
+	obj.value=List[0];
 	var obj=document.getElementById('Price');	//add by czf 461821 begin
-	obj.value=List[5];							   // modify by wl 2019-9-10 end
+	obj.value=List[4];							   // modify by wl 2019-9-10 end
 }
 
 function Num_KeyUp()
@@ -213,4 +219,14 @@ function UnitDR(value) // 单位
 
 }
 */
+///modified by ZY0285 20211206
+//add by ZY0282 20211109
+function BFind_Click()
+{
+	var val="&UseRecordDR="+GetElementValue("UseRecordDR");
+	val=val+"&UseRecord="+GetElementValue("UseRecord");	//add by ZY0270 20210616
+	val=val+"&ConsumableItemDR="+GetElementValue("ConsumableItemDR");
+	val=val+"&ConsumableItem="+GetElementValue("ConsumableItem");
+	window.location.href="websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQUseConsumableItem"+val;
+}
 document.body.onload = BodyLoadHandler;

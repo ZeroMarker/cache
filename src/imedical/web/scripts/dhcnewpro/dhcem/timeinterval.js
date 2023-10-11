@@ -218,11 +218,11 @@ function saveRow(){
 			$('#dgMainList').datagrid('beginEdit',editRow);
 			return false;
 		}
-		if (rowsData[i].StartTime >= rowsData[i].EndTime){
-			$.messager.alert("提示","开始时间不能大于或等于结束时间！","warning");
-			$('#dgMainList').datagrid('beginEdit',editRow);
-			return false;
-		}
+//		if (rowsData[i].StartTime >= rowsData[i].EndTime){
+//			$.messager.alert("提示","开始时间不能大于或等于结束时间！","warning");
+//			$('#dgMainList').datagrid('beginEdit',editRow);
+//			return false;
+//		}
 		if (rowsData[i].ModuleID == ""){
 			$.messager.alert("提示","模块不能为空！","warning");
 			$('#dgMainList').datagrid('beginEdit',editRow);

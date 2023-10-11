@@ -1,8 +1,8 @@
-var CHR_1=String.fromCharCode(1);
+ï»¿var CHR_1=String.fromCharCode(1);
 var ShowSelectCPWDialog = function(){
 	
 	var obj = new Object();
-	$.parser.parse(); // ½âÎöÕû¸öÒ³Ãæ 
+	$.parser.parse(); // è§£ææ•´ä¸ªé¡µé¢ 
 	$('#NotInApply').css('display','none');
 	$('#InitText').css('display','block');
 	$('#Summary').css('display','none');
@@ -10,7 +10,7 @@ var ShowSelectCPWDialog = function(){
 	var NotInReason = $HUI.combobox('#NotInReason', {
 		url: $URL,
 		editable: false,
-		placeholder:'ÇëÑ¡Ôñ',
+		placeholder:'è¯·é€‰æ‹©',
 		valueField: 'VarID',
 		textField: 'Desc',
 		onBeforeLoad: function (param) {
@@ -22,39 +22,24 @@ var ShowSelectCPWDialog = function(){
 			param.ResultSetType = 'array';
 		}
 	});
-	obj.OutReason = $HUI.combobox('#OutReason', {
-		url: $URL,
-		editable: false,
-		placeholder:'ÇëÑ¡Ôñ',
-		valueField: 'VarID',
-		textField: 'Desc',
-		onBeforeLoad: function (param) {
-			param.ClassName = 'DHCMA.CPW.BTS.PathVariatSrv';
-			param.QueryName = 'QryVerByTypeCat';
-			param.aTypeCode = '02';
-			param.aCatCode = '';
-			param.aAdmType = 'O';
-			param.ResultSetType = 'array';
-		}
-	});
-	visitID="";		//ËùÑ¡Ôñ±íµ¥ÉÏ´ÎÈë¾¶visitID
-	selectID="";	//ËùÑ¡Ôñ±íµ¥formID
-	diagnos="";		//ËùÑ¡Â·¾¶Òı·¢Èë¾¶µÄÕï¶Ï×Ö·û´®$c(1)·Ö¸ô
+
+	visitID="";		//æ‰€é€‰æ‹©è¡¨å•ä¸Šæ¬¡å…¥å¾„visitID
+	selectID="";	//æ‰€é€‰æ‹©è¡¨å•formID
+	diagnos="";		//æ‰€é€‰è·¯å¾„å¼•å‘å…¥å¾„çš„è¯Šæ–­å­—ç¬¦ä¸²$c(1)åˆ†éš”
 	var CPWArr=CPWStr.split(",");
-	var CPWHtml="<div id='CPW-NotIn' class='CPW-Select NotIn'>²»Èë¾¶ÉêÇë</div><hr style='border:0;margin:0 atuo;height:1px;background-color:#cccccc;'/>";
+	var CPWHtml="<div id='CPW-NotIn' class='CPW-Select NotIn'>"+$g("ä¸å…¥å¾„ç”³è¯·")+"</div><hr style='border:0;margin:0 atuo;height:1px;background-color:#cccccc;'/>";
 	for(var ind = 0,len = CPWArr.length; ind < len; ind++){
 		var tmpCPW=CPWArr[ind];
 		CPWClass="CPW-Select MayIn";
 		if (tmpCPW.split("^")[2]!=""){
-			CPWHtml=CPWHtml+"<div id='CPW-"+tmpCPW.split("^")[0]+"' class='"+CPWClass+"' visit='"+tmpCPW.split("^")[2]+"' diagnos='"+tmpCPW.split("^")[3]+"'>"+tmpCPW.split("^")[1]+"<img style='float:right' src='../images/webemr/ÁÙ´²Â·¾¶.png' border='0' /></div>"	
+			CPWHtml=CPWHtml+"<div id='CPW-"+tmpCPW.split("^")[0]+"' class='"+CPWClass+"' visit='"+tmpCPW.split("^")[2]+"' diagnos='"+tmpCPW.split("^")[3]+"'>"+tmpCPW.split("^")[1]+"<img style='float:right' src='../images/webemr/ä¸´åºŠè·¯å¾„.png' border='0' /></div>"	
 		}else{
 			CPWHtml=CPWHtml+"<div id='CPW-"+tmpCPW.split("^")[0]+"' class='"+CPWClass+"' visit='"+tmpCPW.split("^")[2]+"' diagnos='"+tmpCPW.split("^")[3]+"'>"+tmpCPW.split("^")[1]+"</div>"
 		}
-		
 	}
 	$('#CPWList').html(CPWHtml);
 	
-	//³õÊ¼»¯ÏÔÊ¾Ñ¡ÖĞµÚÒ»ÌõÂ·¾¶
+	//åˆå§‹åŒ–æ˜¾ç¤ºé€‰ä¸­ç¬¬ä¸€æ¡è·¯å¾„
 	SelectCPW($(".MayIn").eq(0)[0]);
 	InitHtml(visitID,selectID);
 	$('#InCPWDialog').on('click','#CPW-NotIn',function(){
@@ -66,46 +51,33 @@ var ShowSelectCPWDialog = function(){
 		SelectCPW(this);
 		InitHtml(visitID,selectID);
 	});
-	/*
-	$("#btnClose").on('click',function(){			
-		if(top.$ && top.$("#WinModalEasyUI").length>0) top.$("#WinModalEasyUI").window("close");
-	});
-	*/	
+
 	$("#btnGetIn").on('click',function(){			
 		var btnTxt=$('#btnGetIn .l-btn-text').text();
 		if (!selectID){
-			$.messager.alert("´íÎóÌáÊ¾", "ÇëÏÈµã»÷Òª½øÈëµÄÂ·¾¶»ò²»Èë¾¶ÉêÇëÔÙ½øĞĞ²Ù×÷£¡", "error");
+			$.messager.alert($g("é”™è¯¯æç¤º"), $g("è¯·å…ˆç‚¹å‡»è¦è¿›å…¥çš„è·¯å¾„æˆ–ä¸å…¥å¾„ç”³è¯·å†è¿›è¡Œæ“ä½œï¼"), "error");
 			return;	
 		}else{
-			if(btnTxt=="Èë¾¶"){		//Èë¾¶
-				var ret =$m({
-					ClassName:"DHCMA.CPW.OPCPS.InterfaceSrv",
-					MethodName:"GetInOPCPW",
-					aEpisodeID:EpisodeID,
-					aInputs:selectID+"^"+session['DHCMA.USERID']+"^"+session['DHCMA.CTLOCID']+"^"+session['DHCMA.CTWARDID']+"^"+visitID+"^"+diagnos,
-					aBtnType:"btnGetIn"
-				}, false);
-				if(parseInt(ret)>0){
-					$.messager.popover({msg: 'Èë¾¶³É¹¦£¡',type:'info',timeout: 2000});
-				}else{
-					$.messager.popover({msg: 'Èë¾¶Ê§°Ü£¡',type:'info',timeout: 2000});
-				}
-				setTimeout(function(){
-					websys_showModal('close');
-				},2300)
-				//¹Ø±Õ´°¿Ú
-			}else if(btnTxt=="Ìá½»"){	//²»Èë¾¶
+			if(btnTxt==$g("å…¥å¾„")){		//å…¥å¾„
+				var aInputStr=selectID+"^"+session['DHCMA.USERID']+"^"+session['DHCMA.CTLOCID']+"^"+session['DHCMA.CTWARDID']+"^"+visitID+"^"+diagnos;
+				//CAç­¾åéªŒè¯
+				CASignLogonModal('OPCPW','GetInOPCPW',{
+					// ç­¾åæ•°æ®
+					signData: aInputStr,
+					dhcmaOperaType:'I'
+				},GetInOPCPWFun,EpisodeID,aInputStr);			
+			}else if(btnTxt==$g("æäº¤")){	//ä¸å…¥å¾„
 				var verID=Common_GetValue('NotInReason')
 				var verTxt=Common_GetValue('NotInText')
 			
 				if((verID == "")&&(verTxt == "")){
-					$.messager.alert("´íÎóÌáÊ¾", "ÇëÑ¡ÔñÔ­Òò²¢ÌîĞ´±¸×¢ĞÅÏ¢£¡", "error")
+					$.messager.alert($g("é”™è¯¯æç¤º"), $g("è¯·é€‰æ‹©åŸå› å¹¶å¡«å†™å¤‡æ³¨ä¿¡æ¯ï¼"), "error")
 					return;
 				}else if(verID == "") {
-					$.messager.alert("´íÎóÌáÊ¾", "ÇëÑ¡Ôñ²»Èë¾¶Ô­Òò£¡", "error")
+					$.messager.alert($g("é”™è¯¯æç¤º"), $g("è¯·é€‰æ‹©ä¸å…¥å¾„åŸå› ï¼"), "error")
 					return;
 				}else if(verTxt == "") {
-					$.messager.alert("´íÎóÌáÊ¾", "ÇëÌîĞ´±¸×¢ĞÅÏ¢£¡", "error")
+					$.messager.alert($g("é”™è¯¯æç¤º"), $g("è¯·å¡«å†™å¤‡æ³¨ä¿¡æ¯ï¼"), "error")
 					return;
 				}
 			
@@ -116,11 +88,11 @@ var ShowSelectCPWDialog = function(){
 					aInputs:selectID+"^"+session['DHCMA.USERID']+"^"+session['DHCMA.CTLOCID']+"^"+session['DHCMA.CTWARDID']+"^"+verID+"^"+verTxt+"^"+visitID
 				}, false);
 				if(parseInt(ret)>0){
-					$.messager.popover({msg:"ÉêÇë³É¹¦",type:'success',timeout: 2000});
+					$.messager.popover({msg:$g("ç”³è¯·æˆåŠŸ"),type:'success',timeout: 2000});
 				}else{
-					$.messager.popover({msg:"ÉêÇëÊ§°Ü",type:'error',timeout: 2000});
+					$.messager.popover({msg:$g("ç”³è¯·å¤±è´¥"),type:'error',timeout: 2000});
 				}
-				//¹Ø±Õ´°¿Ú
+				//å…³é—­çª—å£
 			 	setTimeout(function(){
 					websys_showModal('close');
 				},2300)
@@ -129,66 +101,7 @@ var ShowSelectCPWDialog = function(){
 			}
 		}
 	});
-	/*
-	$(".histInbtn").on('click',function(){
-		if (!selectID){
-			$.messager.alert("´íÎóÌáÊ¾", "ÇëÏÈµã»÷Òª½øÈëµÄÂ·¾¶ÔÙ½øĞĞ²Ù×÷£¡", "error");
-			return;	
-		}
-		
-		if(this.id == "btnContPath"){
-			var ret =$m({
-				ClassName:"DHCMA.CPW.OPCPS.InterfaceSrv",
-				MethodName:"GetInOPCPW",
-				aEpisodeID:EpisodeID,
-				aInputs:selectID+"^"+session['DHCMA.USERID']+"^"+session['DHCMA.CTLOCID']+"^"+session['DHCMA.CTWARDID']+"^"+visitID+"^"+diagnos,
-				aBtnType:this.id
-			}, false);
-			if(parseInt(ret)>0){
-				$.messager.popover({msg:"Èë¾¶³É¹¦",type:'success',timeout: 2000,});
-			}else{
-				$.messager.popover({msg:"Èë¾¶Ê§°Ü",type:'error',timeout: 2000,});
-			}
-			//¹Ø±Õ´°¿Ú
-			 setTimeout(function(){
-				websys_showModal('close');
-			},2300)
-		}else if(this.id == "btnOutPath"){
-			$HUI.dialog('#OutCPWDialog').open();
-			$("#btn-OutCPWDialog").on('click',function(){
-				var verID = Common_GetValue('OutReason')
-				var verTxt = Common_GetValue('OutText')
-				var errorInfo = "";
-				if (verID == "") {
-					errorInfo = "ÇëÑ¡Ôñ³ö¾¶Ô­Òò£¡<br />"
-				}
-				if (verTxt == "") {
-					errorInfo = errorInfo + "ÇëÌîĞ´±¸×¢ĞÅÏ¢£¡"
-				}
-				if (errorInfo != "") {
-					$.messager.alert("´íÎóÌáÊ¾", errorInfo, "error")
-					return;
-				}
-				$m({
-					ClassName: "DHCMA.CPW.OPCPS.InterfaceSrv",
-					MethodName: "GetOutOPCPW",
-					aEpisodeID: EpisodeID,
-					aInputs: "" + "^" + session['DHCMA.USERID'] + "^" + session['DHCMA.CTLOCID'] + "^" + session['DHCMA.CTWARDID'] + "^" + verID + "^" + verTxt + "^" + visitID
-				}, function (ret) {
-					if (parseInt(ret) > 0) {
-						$.messager.popover({ msg: "²Ù×÷³É¹¦", type: 'success' });
-						$HUI.dialog('#OutCPWDialog').close();
-					}
-				})
-				setTimeout(function(){
-					websys_showModal('close');
-				},2300)
-			})			
-		}else{
-		 	return;
-		}
-	})
-	*/
+
 	function NotInApply(ID){
 		$('#CPW-NotIn').removeClass("NotIn");
 		$('#CPW-NotIn').addClass("NotIn-Select");
@@ -199,8 +112,8 @@ var ShowSelectCPWDialog = function(){
 		$('#InitText').css('display','none');
 		$('#Summary').css('display','none');
 		//$('.histInbtn').hide();
-		$('#btnGetIn .l-btn-text').text("Ìá½»")
-		$('#CPWDiag-right').panel("header").find('div.panel-title').text("ÉêÇë")
+		$('#btnGetIn .l-btn-text').text($g("æäº¤"))
+		$('#CPWDiag-right').panel("header").find('div.panel-title').text($g("ç”³è¯·"))
 	}
 	function SelectCPW(obj){
 		$('#CPW-NotIn').removeClass("NotIn-Select");
@@ -210,8 +123,8 @@ var ShowSelectCPWDialog = function(){
 		selectID=obj.id.split("-")[1];
 		visitID=obj.getAttribute("visit");
 		diagnos=obj.getAttribute("diagnos");
-		$('#btnGetIn .l-btn-text').text("Èë¾¶")
-		$('#CPWDiag-right').panel("header").find('div.panel-title').text("Â·¾¶ËµÃ÷")
+		$('#btnGetIn .l-btn-text').text($g("å…¥å¾„"))
+		$('#CPWDiag-right').panel("header").find('div.panel-title').text($g("è·¯å¾„è¯´æ˜"))
 		$('#NotInApply').css('display','none');
 		$('#InitText').css('display','none');
 		$('#CPWName').css('display','block');
@@ -234,7 +147,7 @@ var ShowSelectCPWDialog = function(){
 			aVisitID:v,
 			aFormID:f
 		},function(data){
-			//Set return=PathName_"^"_FirstInDate_"^Èë¾¶µÚ"_InDays_"Ìì£¨µÚ"_(InWayCount+1)_"´Î£©^"_CurStep_"^"_NextStep_"^"_ApplyPerson_"^"_HelpDoc
+			//Set return=PathName_"^"_FirstInDate_"^å…¥å¾„ç¬¬"_InDays_"å¤©ï¼ˆç¬¬"_(InWayCount+1)_"æ¬¡ï¼‰^"_CurStep_"^"_NextStep_"^"_ApplyPerson_"^"_HelpDoc
 			var retArr=data.split("^");
 			$('#PathName').html(retArr[0]);	
 			$('#FirstInDate').html(retArr[1]);
@@ -245,6 +158,26 @@ var ShowSelectCPWDialog = function(){
 			$('#HelpDoc').html(retArr[6]);
 		});
 	}
+	
+	// å…¥å¾„æ–¹æ³•
+	GetInOPCPWFun = function(aEpisodeID,aInputStr){
+		var ret =$m({
+			ClassName:"DHCMA.CPW.OPCPS.InterfaceSrv",
+			MethodName:"GetInOPCPW",
+			aEpisodeID:aEpisodeID,
+			aInputs:aInputStr,
+			aBtnType:"btnGetIn"
+		}, false);
+		if(parseInt(ret)>0){
+			$.messager.popover({msg: $g('å…¥å¾„æˆåŠŸï¼'),type:'info',timeout: 2000});
+		}else{
+			$.messager.popover({msg: $g('å…¥å¾„å¤±è´¥ï¼'),type:'info',timeout: 2000});
+		}
+		setTimeout(function(){
+			websys_showModal('close');
+		},2300)
+		if(parseInt(ret)>0) return parseInt(ret);
+	} 
 	
 }
 

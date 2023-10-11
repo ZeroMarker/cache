@@ -5,7 +5,10 @@ Description:患者列表
 */
 var frm = dhcsys_getmenuform()
 frm.EpisodeID.value=""
-var url='dhcpha.clinical.action.csp' ;
+var url="dhcpha.clinical.action.csp";
+if ("undefined"!==typeof(websys_getMWToken)){
+	url += "?MWToken="+websys_getMWToken()
+	}
 var drugSearchLocID=""; //dws 2017-11-16 查找临床药学首页患者后将病区ID传给药历页面
 function BodyLoadHandler()
 {
@@ -23,31 +26,31 @@ function BodyLoadHandler()
 			  pageSize:30,
 			  pageList:[30,60],
 			  columns:[[ 
-			  {field:'WardID',title:'WardID',width:100,hidden:true},
-			  {field:'patward',title:'病区',width:160},
-			  {field:'monLevel',title:'监护级别ID',width:80,align:'center',hidden:true},
-			  {field:'monLevelDesc',title:'监护级别',width:80,align:'center',
+			  {field:'WardID',title:$g('WardID'),width:100,hidden:true},
+			  {field:'patward',title:$g('病区'),width:160},
+			  {field:'monLevel',title:$g('监护级别ID'),width:80,align:'center',hidden:true},
+			  {field:'monLevelDesc',title:$g('监护级别'),width:80,align:'center',
 			  		formatter:setMonLevelDescShow
 			  },
-			  {field:'patbed',title:'床号',width:80},
-			  {field:'monCount',title:'监护次数',width:60,formatter:setCellLink,align:'center'},
-			  {field:'patno',title:'登记号',width:100,formatter:fomartShowPatInfo}, 
-			  {field:'patname',title:'姓名',width:100},   
-			  {field:'patsex',title:'性别',width:70},
-			  {field:'patage',title:'年龄',width:70},
-			  {field:'patheight',title:'身高',width:60},
-			  {field:'patweight',title:'体重',width:60},
-			  {field:'patindate',title:'入院日期',width:100},
-			  {field:'patloc',title:'科室',width:150},
-			  {field:'AdmLocID',title:'AdmLocID',width:150,hidden:true},
-			  {field:'patroom',title:'病房',width:100},
-			  {field:'patdoctor',title:'主治医师',width:80},
-			  {field:'patempflag',title:'重点关注',width:80,hidden:true,
+			  {field:'patbed',title:$g('床号'),width:80},
+			  {field:'monCount',title:$g('监护次数'),width:60,formatter:setCellLink,align:'center'},
+			  {field:'patno',title:$g('登记号'),width:100,formatter:fomartShowPatInfo}, 
+			  {field:'patname',title:$g('姓名'),width:100},   
+			  {field:'patsex',title:$g('性别'),width:70},
+			  {field:'patage',title:$g('年龄'),width:70},
+			  {field:'patheight',title:$g('身高'),width:60},
+			  {field:'patweight',title:$g('体重'),width:60},
+			  {field:'patindate',title:$g('入院日期'),width:100},
+			  {field:'patloc',title:$g('科室'),width:150},
+			  {field:'AdmLocID',title:$g('AdmLocID'),width:150,hidden:true},
+			  {field:'patroom',title:$g('病房'),width:100},
+			  {field:'patdoctor',title:$g('主治医师'),width:80},
+			  {field:'patempflag',title:$g('重点关注'),width:80,hidden:true,
 			  		formatter:SetCellColor},
-			  {field:'patdiag',title:'诊断',width:400},
-			  {field:'patadm',title:'adm'},
-			  {field:'monSubCId',title:'学科分类',hidden:true},
-			  {field:'PatientID',title:'PatientID'}
+			  {field:'patdiag',title:$g('诊断'),width:400},
+			  {field:'patadm',title:$g('adm')},
+			  {field:'monSubCId',title:$g('学科分类'),hidden:true},
+			  {field:'PatientID',title:$g('PatientID')}
 
 			  ]],
 			  url:url,
@@ -293,6 +296,7 @@ function BodyLoadHandler()
 		})
 		
 		InitPageQueryDiv(); //初始化页面查询Div
+		LoadWardPatList();  //登陆时自动加载出本病区病人
 }
 
 
@@ -381,7 +385,7 @@ function SetCellColor(value, rowData, rowIndex)
 {
 	var html="";
 	if(value=="Y"){
-		html='<span style="color:red;font-weight:600">已关注</span>';
+		html='<span style="color:red;font-weight:600">$g("已关注")</span>';
 	}
 	return html;
 }
@@ -447,7 +451,7 @@ function showAdrRepWin(Title,RepType,AdmDr,PatientID)
 			break;
     }
 
-	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="'+maintab+'?PatientID='+PatientID+'&EpisodeID='+AdmDr+'&frmflag='+1+'&code='+advcode+'&quoteflag='+1+'"> </iframe>';
+	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="'+maintab+'?PatientID='+PatientID+'&EpisodeID='+AdmDr+'&frmflag='+1+'&code='+advcode+'&quoteflag='+1+'&MWToken='+websys_getMWToken()+'"> </iframe>';
 	$('#win').html(iframe);
 	$('#win').window('open');
 	/*
@@ -460,21 +464,21 @@ function SignEmpPat(admDr)
 {
 	$('#empatwin').css("display","block");
 	$('#empatwin').dialog({
-		title:"标记患者监护级别",
+		title:$g("标记患者监护级别"),
 		collapsible:false,
 		border:false,
 		closed:"true",
 		width:300,
 		height:460,
 		buttons:[{
-				text:'保存',
+				text:$g('保存'),
 				iconCls:'icon-save',
 				handler:function(){
 					saveEmPat(admDr);
 					$('#patgrid').datagrid('reload');  //qunianpeng 2016-08-04
 					}
 			},{
-				text:'关闭',
+				text:$g('关闭'),
 				iconCls:'icon-cancel',
 				handler:function(){
 					$('#empatwin').dialog('close');
@@ -492,10 +496,10 @@ function SignEmpPat(admDr)
 	$("#empPatID").val("");
 	var panelHeightOption = {panelHeight : "auto"};
 	/* 设置监控级别 */
-	var monLevCombobox = new ListCombobox("monlevel",url+'?action=SelMonLevel','',panelHeightOption);
+	var monLevCombobox = new ListCombobox("monlevel",url+'&action=SelMonLevel','',panelHeightOption);
 	monLevCombobox.init();
 	/* 转换级别 */
-	var trmLevCombobox = new ListCombobox("trmlevel",url+'?action=SelMonLevel','',panelHeightOption);
+	var trmLevCombobox = new ListCombobox("trmlevel",url+'&action=SelMonLevel','',panelHeightOption);
 	trmLevCombobox.init();
 	$('#trmlevel').combobox({
 		disabled:true
@@ -505,7 +509,7 @@ function SignEmpPat(admDr)
 	$("#user").combobox({
 		panelHeight:"auto",  //设置容器高度自动增长
 		onShowPanel:function(){
-			$('#user').combobox('reload',url+'?action=SelUserByGrp&grpId='+session['LOGON.GROUPID'])
+			$('#user').combobox('reload',url+'&action=SelUserByGrp&grpId='+session['LOGON.GROUPID'])
 		}
 	});
 	
@@ -551,8 +555,8 @@ function saveEmPat(EpisodeID)
 	}
 	else{
 
-		if((enddate=="")||(endtime=="")){
-			$.messager.alert('操作提示','结束日期或时间不能为空!',"info");
+		if((enddate==""||endtime=="")&trmlevel==""){
+			$.messager.alert('操作提示','结束日期时间或转为级别不能同时为空!',"info");
 			return;
 		}
 		if(ChangeTimeStamp(stdate,sttime)>ChangeTimeStamp(enddate,endtime)){	 /// 修改日期比较 qunianpeng 2018/3/21		 
@@ -570,7 +574,7 @@ function saveEmPat(EpisodeID)
     ///切换监护级别
     if (trmlevel != ""){
 	    monlevel = trmlevel;
-	    var empdatalist = enddate+"^"+endtime+"^"+EpisodeID+"^"+trmlevel+"^"+user+"^"+remark+"^^^"+reason;
+	    var empdatalist ="^^"+EpisodeID+"^"+trmlevel+"^"+user+"^"+remark+"^"+enddate+"^"+endtime+"^"+reason;
 		saveflag = saveEmPatAjax("",empdatalist);
 	}
 
@@ -653,14 +657,14 @@ function InitPageQueryDiv()
 	//病区
 /* 	$('#ward').combobox({
 		onShowPanel:function(){
-			$('#ward').combobox('reload',url+'?action=SelAllWard')
+			$('#ward').combobox('reload',url+'&action=SelAllWard')
 		}
 	}); */
 	
 	$('#ward').combobox({ //qunianpeng 2017/8/14 支持拼音码和汉字
 		mode:'remote',
 		onShowPanel:function(){ 
-			$('#ward').combobox('reload',url+'?action=GetAllWardNewVersion&hospId='+session['LOGON.HOSPID']+'  ')
+			$('#ward').combobox('reload',url+'&action=GetAllWardNewVersion&hospId='+session['LOGON.HOSPID']+'  ')
 		}
 	});
 	$("#tip").css({
@@ -670,7 +674,7 @@ function InitPageQueryDiv()
 	$("#tip").animate({opacity: 0}, 800).hide();
 	
 	//查询条件设置
-	$("a:contains('查询')").bind('click',function(){
+	$("a:contains("+$g('查询')+")").bind('click',function(){
 		
 		$("#tip").css({
 			top : ($(this).offset().top + 30) + 'px',   
@@ -680,19 +684,19 @@ function InitPageQueryDiv()
 	})
 	
 	//提交
-	$("a:contains('提交')").bind('click',function(){
+	$("a:contains("+$g('提交')+")").bind('click',function(){
 		LoadPatList();
 	})
 	
 	//取消
-	$("a:contains('关闭')").bind('click',function(){
+	$("a:contains("+$g('关闭')+")").bind('click',function(){
 		$('#ward').combobox("setValue","");
 		$('#patno').val("");
 		$("#tip").animate({opacity: 0}, 800).hide();
 	})
 	
 	//返回
-	$("a:contains('返回')").bind('click',function(){
+	$("a:contains("+$g('返回')+")").bind('click',function(){
 		LoadPatListBack();
 	})
 	//登记号绑定回车事件
@@ -745,9 +749,11 @@ function LoadPatList()
 function LoadPatListBack()
 {
 	var LocID=session['LOGON.CTLOCID']; //登录科室ID
+	var linkLocDr=tkMakeServerCall("web.DHCSTPHCMEMPPAT","GetLinkLoc",LocID)
+	if (linkLocDr=="") return;
 	$('#patgrid').datagrid('load',{
 		action: 'QueryInHosPatList',
-		input:""+"^"+LocID+"^"+""
+		input:""+"^"+linkLocDr+"^"+""
 	});
 }
 
@@ -761,20 +767,20 @@ function showEditWin(monLocID, monLevID, monAdmID, monSubCId, monWardID,monLevel
 	if($('#monwin').is(":visible")){return;}  //窗体处在打开状态,退出
 	$('body').append('<div id="monwin"></div>');
 	$('#monwin').window({
-		title:"药学监护",
+		title:$g("药学监护"),
 		collapsible:true,
 		border:false,
 		closed:"true",
 		width:1250,
-		height:600,
-		minimizable:false,						/// 隐藏最小化按钮
-		maximized:true,							/// 最大化(qunianpeng 2018/3/10)		
+		height:600,		
+		minimizable:false,					/// 隐藏最小化按钮
+		maximized:true,						/// 最大化(qunianpeng 2018/3/17)
 		onClose:function(){
-			$('#monwin').remove();  			/// 窗口关闭时移除win的DIV标签
+			$('#monwin').remove();  //窗口关闭时移除win的DIV标签
 		}
 	});
 
-	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.pharcaredit.csp?monLocID='+monLocID+'&monLevID='+monLevID+'&monAdmID='+monAdmID+'&monSubCId='+monSubCId+'&monWardID='+monWardID+'&monLevelDesc='+monLevelDesc+' "></iframe>';
+	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.pharcaredit.csp?monLocID='+monLocID+'&monLevID='+monLevID+'&monAdmID='+monAdmID+'&monSubCId='+monSubCId+'&monWardID='+monWardID+'&monLevelDesc='+monLevelDesc+'&MWToken='+websys_getMWToken()+'"></iframe>';
 	$('#monwin').html(iframe);
 	$('#monwin').window('open');
 }
@@ -794,7 +800,7 @@ function showPatMonWin(monAdmID,monSubClassId,monLevelDesc){
 	if($('#monwin').is(":visible")){return;}  //窗体处在打开状态,退出
 	$('body').append('<div id="monwin"></div>');
 	$('#monwin').window({
-		title:"监护信息查询",
+		title:$g("监护信息查询"),
 		collapsible:true,
 		border:false,
 		closed:"true",
@@ -807,7 +813,7 @@ function showPatMonWin(monAdmID,monSubClassId,monLevelDesc){
 		}
 	});
 
-	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.pharcarequery.csp?monAdmID='+monAdmID+'&monSubClassId='+monSubClassId+'&monLevelDesc='+monLevelDesc+' "></iframe>';
+	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.pharcarequery.csp?monAdmID='+monAdmID+'&monSubClassId='+monSubClassId+'&monLevelDesc='+monLevelDesc+'&MWToken='+websys_getMWToken()+' "></iframe>';
 	$('#monwin').html(iframe);
 	$('#monwin').window('open');
 }
@@ -830,7 +836,7 @@ function showPatPhaSerWin(){
 	if($('#monwin').is(":visible")){return;}  //窗体处在打开状态,退出
 	$('body').append('<div id="monwin"></div>');
 	$('#monwin').window({
-		title:"药学服务查询",
+		title:$g("药学服务查询"),
 		collapsible:true,
 		border:false,
 		minimizable:false,
@@ -841,7 +847,7 @@ function showPatPhaSerWin(){
 			$('#monwin').remove();  //窗口关闭时移除win的DIV标签
 		}
 	});
-	var src = 'dhcpha.clinical.perpharservice.csp?EpisodeID='+EpisodeID;
+	var src = 'dhcpha.clinical.perpharservice.csp?EpisodeID='+EpisodeID+'&MWToken='+websys_getMWToken();
 	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="'+ src +'"></iframe>';
 	$('#monwin').html(iframe);
 	$('#monwin').window('open');
@@ -864,7 +870,20 @@ function ChangeTimeStamp(date,time){
 }
 //导出
 function BtnExportHandler(){
-	var p_URL='dhccpmrunqianreport.csp?reportName=DHCST_PHCM_InHosPatInfo.raq';
+	var params = $('#patgrid').datagrid("options").queryParams.input;
+	var p_URL='dhccpmrunqianreport.csp?reportName=DHCST_PHCM_InHosPatInfo.raq&input='+params;
 	window.open(p_URL,"","top=20,left=20,width=930,height=660,scrollbars=1"); 
       
+}
+
+///登陆时自动加载出本病区病人
+function LoadWardPatList()
+{
+	var LocID=session['LOGON.CTLOCID'];
+	var linkLocDr=tkMakeServerCall("web.DHCSTPHCMEMPPAT","GetLinkLoc",LocID)
+	if (linkLocDr=="") return;
+	$('#patgrid').datagrid('load',{  
+		action: 'QueryInHosPatList',
+		input:""+"^"+linkLocDr+"^^"
+	});
 }

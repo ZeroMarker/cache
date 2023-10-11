@@ -1,981 +1,1072 @@
-//É¾³ıÃ÷Ï¸
-function deleteItem(sterItemRowId) {
-	if(isEmpty(sterItemRowId)) {
-		$UI.msg('alert', 'ÇëÑ¡ÔñÒªÉ¾³ıµÄµ¥¾İ!');
-		return false;
-	}
-	$.messager.confirm("²Ù×÷ÌáÊ¾","ÄúÈ·¶¨ÒªÖ´ĞĞ²Ù×÷Âğ£¿",function(data){
-		if(data){
-			$.cm({
-				ClassName: 'web.CSSDHUI.Clean.CleanInfo',
-				MethodName: 'jsDelete',
-				rowId: sterItemRowId
-			}, function(jsonData) {
-				if(jsonData.success == 0) {
-					$UI.msg('success', jsonData.msg);
-					$('#ItemList').datagrid('reload');
-				} else {
-					$UI.msg('error', jsonData.msg);
-				}
-			});		
-		}
-	});
-
-}
-
-//É¾³ıÖ÷±í
-function Del(sterItemRowId, IsCmtEnterMachine) {
-	if(isEmpty(sterItemRowId)) {
-		$UI.msg('alert', 'ÇëÑ¡ÔñÒªÉ¾³ıµÄµ¥¾İ!');
-		return false;
-	}
-	$.messager.confirm("²Ù×÷ÌáÊ¾","ÄúÈ·¶¨ÒªÖ´ĞĞ²Ù×÷Âğ£¿",function(data){
-		if(data){
-			if(IsCmtEnterMachine == "1") {
-				$UI.msg("alert", "ÒÑ¾­È·ÈÏ½ø¹ø!");
-				return;
-			}	
-			$.cm({
-				ClassName: 'web.CSSDHUI.Clean.CleanInfo',
-				MethodName: 'jsDeleteMain',
-				rowId: sterItemRowId
-			}, function(jsonData) {
-				if(jsonData.success == 0) {
-					$UI.msg('success', jsonData.msg);
-					$('#tabDrugList').datagrid('reload');
-					//$("#BarCodeInfo").val("");
-				} else {
-				$UI.msg('error', jsonData.msg);
-				}
-			});
-		}
-	});
-
-}
+ï»¿// æ¸…æ´—åˆ¶å•
+var CleanList, ItemListGrid;
+var CurrMainId;
 var init = function() {
-	var ifCleanRack = IfcleanRack();
-	if(ifCleanRack=="N"){
-		$("#cleanCode").attr("readonly","readonly");
-		$("#cleanCode").attr("disabled",true);		
-	}
-	$("#cleandate").dateboxq("setValue", DateFormatter(new Date()));
-	var Params = JSON.stringify($UI.loopBlock('cleantable'));
-	var GridListIndex = "";
-	var GridListIndexId = ""
-	var typeDetial="2"
-	var PackageBox = $HUI.combobox('#CommonPackage', {
-			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPackage&ResultSetType=array&typeDetial=' + typeDetial,
-			valueField: 'RowId',
-			textField: 'Description'
-		});
-	//ÇåÏ´·½Ê½
-	$("#cleantype").keydown(function(e) {
-		var curKey = e.which;
-		if(curKey == 13) {
-			if($("#cleantype").val() != "") {
-				$.m({
-					ClassName: "web.CSSDHUI.Clean.CleanInfo",
-					MethodName: "GetCleanType",
-					cleanCode: $("#cleantype").val()
-				}, function(txtData) {
-					if(txtData != null && !isEmpty(txtData)) {
-						var ifCleanRack = IfcleanRack();
-						arr = txtData.split('^');
-						if(arr[2]=="N"){
-							$UI.msg('alert', arr[1]+'·½Ê½Î´ÆôÓÃ!');
-							$("#cleantype").val("");
-							$('#cleantype').focus();
-							return ;
-						}
-						$("#cleantypev").val(arr[0]);
-						$("#cleantype").val(arr[1]);
-						if(ifCleanRack=="Y"){
-							if(isEmpty($("#cleanmachine").val())){
-								$("#cleanmachine").focus();
-							}else if(isEmpty($("#cleanCode").val())){
-								$("#cleanCode").focus();
-							}else if(isEmpty($("#cleanStro").val())){
-								$("#cleanStro").focus();
-							}else if(isEmpty($("#cleaner").val())){
-								$("#cleaner").focus();
-							}
-						}else{
-							if(isEmpty($("#cleanmachine").val())){
-								$("#cleanmachine").focus();
-							}else if(isEmpty($("#cleanStro").val())){
-								$("#cleanStro").focus();
-							}else if(isEmpty($("#cleaner").val())){
-								$("#cleaner").focus();
-							}
-						}
-						
-						
-					} else {
-						$UI.msg('alert', '´íÎóµÄÇåÏ´·½Ê½!');
-						$("#cleantype").val("");
-						$('#cleantype').focus();
-						return;
-					}
-				})
+	// è·å–é¡µé¢ä¼ å‚
+	function getQueryVariable(variable) {
+		var query = window.location.search.substring(1);
+		var vars = query.split('&');
+		for (var i = 0; i < vars.length; i++) {
+			var pair = vars[i].split('=');
+			if (pair[0] === variable) {
+				return pair[1];
 			}
 		}
+		return (false);
+	}
+	var IsManualTemp = '';
+	var ParamsTB = JSON.stringify(addSessionParams({ BDPHospital: gHospId }));
+	var CleanLocParams = JSON.stringify(addSessionParams({ Type: 'Login', BDPHospital: gHospId }));
+	$HUI.combobox('#CleanLoc', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + CleanLocParams,
+		valueField: 'RowId',
+		textField: 'Description',
+		onSelect: function(record) {
+			var CleanTypeId = $('#CleanType').combobox('getValue');
+			var Params = JSON.stringify(addSessionParams({ BDPHospital: gHospId, TempType: CleanTypeId, SupLocId: record.RowId }));
+			var Url = $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetMachineNoComBo&ResultSetType=array&type="washer"&Params=' + Params;
+			$('#CleanMachine').combobox('reload', Url).combobox('clear');
+		}
 	});
-	//¹øºÅ
-	$("#cleanmachine").keydown(function(event) {
-		var ifCleanRack = IfcleanRack();
-		if(event.which == 13) {
-			var v = $("#cleanmachine").val();
-			var Ret = tkMakeServerCall('web.CSSDHUI.Common.Dicts', 'GetMachineNo', "washer", v);
-			if(Ret.split('^')[3]=="N"){
-				$UI.msg('alert',Ret.split('^')[2]+'ÇåÏ´¹øÎ´ÆôÓÃ!');
-				$("#cleanmachine").val("");
-				$("#cleanmachine").focus();
-				return;
-			}
-			if(Ret.split('^')[0] == "Y") {
-				$("#MachineNoValue").val(Ret.split('^')[1]);
-				$("#cleanmachine").val(Ret.split('^')[2]);
-				var ifCleanRack = IfcleanRack();
-				if(ifCleanRack=="Y"){
-					$("#cleanCode").focus();
-				}else{
-					$("#cleanStro").focus();	
-				}
-				
+	$HUI.combobox('#CleanType', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCleanType&ResultSetType=array',
+		valueField: 'RowId',
+		textField: 'Description',
+		enterNullValueClear: false,
+		spellField: 'Code',
+		onSelect: function(record) {
+			IsManualTemp = record.IsManualTemp;	// æ˜¯å¦æ‰‹å·¥æ¸…æ´—
+			if (IsManualTemp === 'Y') {
+				$('#CleanMachine').combobox('disable');
+				$('#CleanMachine').combobox('setValue', '');
+				$('#CleanStro').combobox('disable');
+				$('#CleanStro').combobox('setValue', '');
 			} else {
-				$UI.msg('alert', 'Î´ÕÒµ½Ïà¹ØĞÅÏ¢!');
-				$("#cleanmachine").val("");
-				$("#cleanmachine").focus();
+				$('#CleanMachine').combobox('enable');
+				$('#CleanStro').combobox('enable');
+				var MachineId = $('#CleanMachine').combobox('getValue');
+				if ((CleanParamObj.IsMachineBindType == 'Y') && isEmpty(MachineId)) {		// æ¸…æ´—æœºä¸æ¸…æ´—æ–¹å¼æ˜¯ä¸€å¯¹ä¸€ç»‘å®š
+					var CleanTypeId = record.RowId;
+					var Params = JSON.stringify(addSessionParams({ BDPHospital: gHospId, TempType: CleanTypeId }));
+					var Url = $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetMachineNoComBo&ResultSetType=array&type="washer"&Params=' + Params;
+					$('#CleanMachine').combobox('reload', Url).combobox('clear');
+				}
 			}
-			
+		},
+		onBeforeLoad: function(param) {
+			param.Params = JSON.stringify(addSessionParams({ BDPHospital: gHospId }));
+		},
+		onShowPanel: function(record) {
+			$('#CleanMachine').combobox('enable');
+			$('#CleanStro').combobox('enable');
 		}
+
 	});
-	//ÇåÏ´¼Ü
-	$("#cleanCode").keydown(function(e) {
-		var curKey = e.which;
-		if(curKey == 13) {
-			if($("#cleanCode").val() != "") {
-				$.m({
-					ClassName: "web.CSSDHUI.Clean.CleanInfo",
-					MethodName: "GetCleanCode",
-					cleanCode: $("#cleanCode").val()
-				}, function(txtData) {
-					if(txtData != null && !isEmpty(txtData)) {
-						arr = txtData.split('^');
-						$("#cleanCodev").val(arr[0]);
-						$("#cleanCode").val(arr[1]);
-						$('#cleanStro').focus();
-					} else {
-						$UI.msg('alert', '´íÎóµÄÇåÏ´¼ÜºÅ!');
-						$("#cleanCode").val("");
-						$('#cleanCode').focus();
-						return;
-					}
-				})
+
+	$('#CleanType').combobox('textbox').keyup(function(event) {
+		var curKey = event.which;
+		if (curKey == 13) {
+			var CleanTypeVal = $('#CleanType').combobox('getText');
+			if (isEmpty(CleanTypeVal)) {
+				$UI.msg('alert', 'è¯·å½•å…¥æ¸…æ´—æ–¹å¼!');
+				return;
 			}
-		}
-	});
-	//ÇåÏ´³ÌĞò
-	$("#cleanStro").keydown(function(e) {
-		var curKey = e.which;
-		if(curKey == 13) {
-			if($("#cleanStro").val() != "") {
-				$.m({
-					ClassName: "web.CSSDHUI.Clean.CleanInfo",
-					MethodName: "GetCleanPro",
-					cleanCode: $("#cleanStro").val()
-				}, function(txtData) {
-					if(txtData != null && !isEmpty(txtData)) {
-						arr = txtData.split('^');
-						if(arr[2]=="N"){
-							$UI.msg('alert', arr[1]+'³ÌĞòÎ´ÆôÓÃ!');
-							$("#cleanStro").val("");
-							$('#cleanStro').focus();
-							return ;
-						}
-						$("#cleanStrov").val(arr[0]);
-						$("#cleanStro").val(arr[1]);
-						$('#cleaner').focus();
-					} else {
-						$UI.msg('alert', '´íÎóµÄÇåÏ´³ÌĞò!');
-						$("#cleanStro").val("");
-						$('#cleanStro').focus();
-						return;
-					}
-				})
-			}
-		}
-	});
-	//ÇåÏ´ÈË»Ø³µ
-	$("#cleaner").keydown(function(e) {
-		var curKey = e.which;
-		if(curKey == 13) {
-			if($("#cleaner").val() != "") {
-				$.m({
-					ClassName: "web.CSSDHUI.Clean.CleanInfo",
-					MethodName: "GetCleanUser",
-					cleanCode: $("#cleaner").val()
-				}, function(txtData) {
-					if(txtData != null && !isEmpty(txtData)) {
-						var arr = txtData.split('^');
-						$("#cleanerv").val(arr[0]);
-						$("#cleaner").val(arr[1]);
-						//Èç¹ûÒÔÉÏĞÅÏ¢ÓĞÒ»ÌõÎª¿Õ,Ôò´ËÊ±²»ÊÇÔÚĞÂ½¨Êı¾İ,¶øÊÇ×¼±¸Ö´ĞĞ²éÑ¯²Ù×÷
-						if(isEmpty($("#cleantype").val())||isEmpty($("#cleanmachine").val())||isEmpty($("#cleanStro").val())){
-							return ;
-						}
-						$('#BarCode').focus();
-						$('#add').click();
-					} else {
-						$UI.msg('alert', '´íÎóµÄÇåÏ´ÈË!');
-						$("#cleaner").val("");
-						$('#cleaner').focus();
-						return;
-					}
-				})
-			}
-		}
-	});
-	//È·¶¨¿ò
-	$("#cleanadd").keydown(function(e) {
-		var curKey = e.which;
-		if(curKey == 13) {
-			if($("#cleanadd").val() == "0000000000") {
-				$('#add').click();
-			}
-		}
-	});
-	//Ôö¼ÓÇåÏ´Ö÷±í
-	$UI.linkbutton('#add', {
-		onClick: function() {
-			if($('#cleandate').dateboxq('getValue')==""){
-				$UI.msg('alert', 'ÇëÑ¡ÔñÈÕÆÚ');
-				$('#cleandate').focus();
-				return ;
-			}
-			if($("#cleantype").val()==""){
-				$UI.msg('alert', 'ÇëÑ¡ÔñÇåÏ´·½Ê½');
-				$('#cleantype').focus();
-				return ;
-			}
-			if($("#cleanmachine").val()==""){
-				$UI.msg('alert', 'ÇëÑ¡ÔñÇåÏ´»úºÅ');
-				$('#cleanmachine').focus();
-				return ;
-			}
-			var ifCleanRack = IfcleanRack();
-			if($("#cleanCode").val()==""&&ifCleanRack!="N"){
-				$UI.msg('alert', 'ÇëÑ¡ÔñÇåÏ´¼ÜºÅ');
-				$('#cleanCode').focus();
-				return ;
-			}
-			if($("#cleanStro").val()==""){
-				$UI.msg('alert', 'ÇëÑ¡ÔñÇåÏ´³ÌĞò');
-				$('#cleanStro').focus();
-				return ;
-			}
-			if($("#cleaner").val()==""){
-				$UI.msg('alert', 'ÇëÑ¡ÔñÇåÏ´ÈË');
-				$('#cleaner').focus();
-				return ;
-			}
-			var Params = JSON.stringify($UI.loopBlock('cleantable'));
-			GridListIndex = "";
-			GridListIndexId = ""
-			$.cm({
+			var CleanTypeObj = $.cm({
 				ClassName: 'web.CSSDHUI.Clean.CleanInfo',
-				MethodName: 'jsSaveClean',
+				MethodName: 'GetCleanType',
+				CleanCode: CleanTypeVal,
+				Params: ParamsTB
+			}, false);
+			var CleanTypeId = CleanTypeObj['CleanTypeId'];
+			if (isEmpty(CleanTypeId)) {
+				$UI.msg('alert', 'è¯·å½•å…¥å¯ç”¨çš„æ¸…æ´—æ–¹å¼!');
+				$('#CleanType').combobox('setText', '');
+				$('#CleanType').combobox('textbox').focus();
+				return;
+			}
+			$('#CleanType').combobox('setValue', CleanTypeId);
+			IsManualTemp = CleanTypeObj['CleanTypeIsManualTemp'];
+			SetFocusAdd();
+		}
+	});
+
+	$HUI.combobox('#CleanMachine', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetMachineNoComBo&ResultSetType=array',
+		valueField: 'RowId',
+		textField: 'Description',
+		enterNullValueClear: false,
+		onSelect: function(record) {
+			if (CleanParamObj.IsMachineBindType == 'Y') {
+				$('#CleanType').combobox('setValue', record['TempType']);
+			}
+		},
+		onBeforeLoad: function(param) {
+			param.type = 'washer';
+			var CleanTypeId = $('#CleanType').combobox('getValue');
+			var SupLocId = $('#CleanLoc').combobox('getValue');
+			param.Params = JSON.stringify(addSessionParams({ BDPHospital: gHospId, TempType: CleanTypeId, SupLocId: SupLocId }));
+		}
+	});
+
+	$('#CleanMachine').combobox('textbox').keyup(function(event) {
+		if (event.which == 13) {
+			var MachineVal = $('#CleanMachine').combobox('getText');
+			if (isEmpty(MachineVal)) {
+				$UI.msg('alert', 'è¯·å½•å…¥æ¸…æ´—æœºï¼');
+				return;
+			}
+			var CleanTypeId = $('#CleanType').combobox('getValue');
+			var SupLocId = $('#CleanLoc').combobox('getValue');
+			var Params = JSON.stringify(addSessionParams({ BDPHospital: gHospId, TempType: CleanTypeId, SupLocId: SupLocId }));
+			var MachineObj = $.cm({
+				ClassName: 'web.CSSDHUI.Common.Dicts',
+				MethodName: 'GetMachineNo',
+				Type: 'washer',
+				MachineNo: MachineVal,
 				Params: Params
-			}, function(jsonData) {
-				if(jsonData.success == 0) {
-					$UI.msg("success", jsonData.msg);
-					$UI.clear(ItemListGrid);
-					$UI.clearBlock('#cleantable');
-					$UI.clear(ItemListGrid)
-					if(!isEmpty(jsonData.rowid)){
-						FindNew(jsonData.rowid);
-					}
-					Default();
-					$("#BarCode").val("").focus();
+			}, false);
+			var MachineId = MachineObj['ID'];
+			if (isEmpty(MachineId)) {
+				$UI.msg('alert', 'è¯·å½•å…¥å¯ç”¨çš„æ¸…æ´—æœº!');
+				$('#CleanMachine').combobox('setValue', '');
+				$('#CleanMachine').combobox('textbox').focus();
+				return;
+			}
+			$('#CleanMachine').combobox('setValue', MachineId);
+			if (CleanParamObj.IsMachineBindType == 'Y') {
+				$('#CleanType').combobox('setValue', MachineObj['TempType']);
+			}
+			IsManualTemp = 'N';
+			SetFocusAdd();
+		}
+	});
+
+	var CleanType = '1001';	// æ¸…æ´—ç¨‹åº
+	$HUI.combobox('#CleanStro', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetProCom&ResultSetType=array&type=' + CleanType,
+		valueField: 'RowId',
+		textField: 'Description',
+		enterNullValueClear: false,
+		spellField: 'Code',
+		onBeforeLoad: function(param) {
+			param.Params = JSON.stringify(addSessionParams({ BDPHospital: gHospId }));
+		}
+	});
+
+	$('#CleanStro').combobox('textbox').keyup(function(event) {
+		var CurKey = event.which;
+		if (CurKey == 13) {
+			var CleanStroVal = $('#CleanStro').combobox('getText');
+			if (isEmpty(CleanStroVal)) {
+				$UI.msg('alert', 'è¯·å½•å…¥æ¸…æ´—ç¨‹åºï¼');
+				return;
+			}
+			var CleanStroObj = $.cm({
+				ClassName: 'web.CSSDHUI.Clean.CleanInfo',
+				MethodName: 'GetCleanPro',
+				CleanCode: CleanStroVal,
+				Params: ParamsTB
+			}, false);
+			var CleanProId = CleanStroObj['CleanProId'];
+			if (isEmpty(CleanProId)) {
+				$UI.msg('alert', 'è¯·å½•å…¥å¯ç”¨çš„æ¸…æ´—ç¨‹åº!');
+				$('#CleanStro').combobox('setValue', '');
+				$('#CleanStro').combobox('textbox').focus();
+				return;
+			}
+			$('#CleanStro').combobox('setValue', CleanProId);
+			SetFocusAdd();
+		}
+	});
+
+	// æ¸…æ´—æ¶
+	var PackTypeDetail = '3';
+	$HUI.combobox('#CleanBasket', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetAllSterCar&ResultSetType=array&PackTypeDetail=' + PackTypeDetail + '&Params=' + ParamsTB,
+		valueField: 'RowId',
+		textField: 'Description',
+		enterNullValueClear: false,
+		spellField: 'Code',
+		onSelect: function(record) {
+			Query();
+		}
+	});
+
+	$('#CleanBasket').combobox('textbox').keyup(function(event) {
+		if (event.which == 13) {
+			var BasketVal = $('#CleanBasket').combobox('getText');
+			if (BasketVal !== '') {
+				var CleanObj = $.cm({
+					ClassName: 'web.CSSDHUI.Common.Dicts',
+					MethodName: 'GetSterCar',
+					type: '3',
+					SterCar: BasketVal,
+					Params: ParamsTB
+				}, false);
+				if (isEmpty(CleanObj['DictId'])) {
+					$UI.msg('alert', 'æœªè·å–åˆ°å¯ç”¨çš„æ¸…æ´—æ¶ï¼');
+					$('#CleanBasket').combobox('setValue', '');
+					$('#CleanBasket').combobox('textbox').focus();
+					return;
+				}
+				$('#CleanBasket').combobox('setValue', CleanObj['DictId']);
+			}
+		}
+	});
+
+	$('#StartTime').focus(function(enent) {
+		var value = $('#StartTime').timespinner('getValue');
+		if (isEmpty(value)) {
+			var Time = GetNowTime();
+			$('#StartTime').timespinner('setValue', Time);
+		}
+	});
+
+	$HUI.combobox('#Cleaner', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetAllUser&ResultSetType=array',
+		valueField: 'RowId',
+		textField: 'Description',
+		enterNullValueClear: false,
+		spellField: 'Code',
+		onBeforeLoad: function(param) {
+			param.Params = JSON.stringify(addSessionParams({ BDPHospital: gHospId }));
+		}
+	});
+
+	$('#Cleaner').combobox('textbox').keyup(function(event) {
+		if (event.keyCode == 13) {
+			var CleanerVal = $('#Cleaner').combobox('getText');
+			if (isEmpty(CleanerVal)) {
+				if (CleanParamObj.IsGetCleanUserByLogin == 'Y') {
+					$('#Cleaner').combobox('setValue', gUserId);
 				} else {
-					$UI.msg("alert", "ÇëÊäÈëÇåÏ´ĞÅÏ¢");
-					$("#cleantype").focus();
+					$UI.msg('alert', 'è¯·å½•å…¥æ¸…æ´—äººï¼');
+					return;
 				}
-			});
-		}
-	});
-	//Çå¿Õ
-	$UI.linkbutton('#clear', {
-		onClick: function() {
-			$UI.clearBlock('#cleantable');
-			Default();
-			//$("#BarCodeInfo").val("");
-			$UI.clear(GridList);
-			$UI.clear(ItemListGrid);
-		}
-	});
-	//²éÑ¯
-	$UI.linkbutton('#query', {
-		onClick: function() {
-			var Params = JSON.stringify($UI.loopBlock('cleantable'));
-			$UI.clear(ItemListGrid);
-			GridListIndex = "";
-			GridListIndexId = "";
-			GridList.load({
-				ClassName: 'web.CSSDHUI.Clean.CleanInfo',
-				QueryName: 'SelectAll',
-				Params: Params
-			});
-		}
-	});
-	$UI.linkbutton('#AddItemBT', {
-		onClick: function() {
-			var row = $('#tabDrugList').datagrid('getSelected');
-			if(isEmpty(row)){
-				$UI.msg("alert", "ÇëÑ¡ÔñÇåÏ´ĞÅÏ¢!");
-				return ;
-			}
-			if(row.IsCmtEnterMachine==1){
-				$UI.msg("alert", "ÒÑ¾­È·ÈÏ½ø¹øÎŞ·¨¼ÌĞøÌí¼ÓÃ÷Ï¸!");
-				return ;
-			}
-			$("#SelReqWinStartDate").dateboxq("setValue", DateFormatter(new Date()));
-			$("#SelReqWinEndDate").dateboxq("setValue", DateFormatter(new Date()));
-			FindItem();
-			$HUI.dialog('#SelReqWin').open();
-			ItemListGrid.commonReload();
-		}
-	});
-	
-	//´ıÇåÏ´¹«ÓÃ°ü(ÆÕÍ¨°ü)µ¯´°
-	$UI.linkbutton('#AddGYB', {
-		onClick: function() {
-			var row = $('#tabDrugList').datagrid('getSelected');
-			if(isEmpty(row)){
-				$UI.msg("alert", "ÇëÑ¡ÔñÇåÏ´ĞÅÏ¢!");
-				return ;
-			}
-			if(row.IsCmtEnterMachine==1){
-				$UI.msg("alert", "ÒÑ¾­È·ÈÏ½ø¹øÎŞ·¨¼ÌĞøÌí¼ÓÃ÷Ï¸!");
-				return ;
-			}
-			$("#SelReqStartDate").dateboxq("setValue", DateFormatter(new Date()));
-			$("#SelReqEndDate").dateboxq("setValue", DateFormatter(new Date()));
-			var Params = JSON.stringify($UI.loopBlock('uncleanord'));
-			UnCleanOrdListGrid.load({
-				ClassName: 'web.CSSDHUI.Clean.CleanInfo',
-				QueryName: 'SelectAllUnCleanOrd',
-				Params: Params
-			});
-			$HUI.dialog('#OrdWin').open();
-			UnCleanOrdListGrid.commonReload();
-		}
-	});
-	//²éÑ¯´ıÇåÏ´¹«ÓÃ°ü
-	$UI.linkbutton('#queryord', {
-		onClick: function() {
-			var Params = JSON.stringify($UI.loopBlock('uncleanord'));
-			UnCleanOrdListGrid.load({
-				ClassName: 'web.CSSDHUI.Clean.CleanInfo',
-				QueryName: 'SelectAllUnCleanOrd',
-				Params: Params
-			});
-			$HUI.dialog('#OrdWin').open();
-		}
-	});
-	//²éÑ¯´ıÇåÏ´×¨¿ÆÆ÷Ğµ°ü
-	$UI.linkbutton('#querySelReqWin', {
-		onClick: function() {
-			var Params = JSON.stringify($UI.loopBlock('SelReqConditions'));
-			UnCleanItemListGrid.load({
-				ClassName: 'web.CSSDHUI.Clean.CleanInfo',
-				QueryName: 'SelectUnClean',
-				Params: Params
-			});
-			$HUI.dialog('#SelReqWin').open();
-		}
-	});
-	//´ıÇåÏ´¹«ÓÃ°üÌí¼ÓÏû¶¾°ü¹¦ÄÜ
-	$UI.linkbutton('#AddUnCleanOrd', {
-		onClick: function() {
-			var Rows = UnCleanOrdListGrid.getSelectedData();
-			var DetailParams = JSON.stringify(Rows);
-			if(isEmpty(Rows)){
-				$UI.msg('alert', 'ÇëÑ¡ÔñÒªÇåÏ´µÄÏû¶¾°ü');
-				return;
-			}
-			var flag=""
-			$.each(Rows,function(index,item){
-				if(parseInt(item.willQty)<=0){
-					$UI.msg('alert', 'ÇëÊäÈëºÏÊÊµÄÇåÏ´ÊıÁ¿');
-					flag = 1;
+			} else {
+				var UserObj = $.cm({
+					ClassName: 'web.CSSDHUI.Common.Dicts',
+					MethodName: 'GetUserByCodeJson',
+					userCode: CleanerVal,
+					Params: ParamsTB
+				}, false);
+				var UserId = UserObj['RowId'];
+				if (isEmpty(UserId)) {
+					$UI.msg('alert', 'è¯·å½•å…¥æ­£ç¡®çš„æ¸…æ´—äººï¼');
+					$('#Cleaner').combobox('setValue', '');
+					$('#Cleaner').combobox('textbox').focus();
+					return;
 				}
-				if(parseInt(item.willQty)>parseInt(item.unCleanQty)){
-					$UI.msg('alert', 'ÇåÏ´ÊıÁ¿²»ÄÜ¶àÓÚÎ´ÇåÏ´ÊıÁ¿');
-					flag=1;
-				}
-					
-			});
-			if(flag==1){
-				return ;	
+				$('#Cleaner').combobox('setValue', UserId);
 			}
-
-			var mainRows = GridList.getSelected();
-			if(isEmpty(mainRows)) {
-				$UI.msg('alert', 'ÇëÑ¡ÔñĞèÒªÌí¼ÓµÄ¹ø´Î!');
-				return;
-			}
-			
-			$.cm({
-				ClassName: 'web.CSSDHUI.Clean.CleanInfo',
-				MethodName: 'SaveUnOrdClean',
-				Params: DetailParams,
-				mainId: mainRows.ID
-			}, function(jsonData) {
-				UnCleanOrdListGrid.commonReload();
-				$('#OrdWin').window('close');
-				ItemListGrid.commonReload();
-			});
-			
-		}
-	});
-	//µ¯³ö¿òÀïÃæ°´Å¥´ıÇåÏ´×¨¿Æ°ü
-	$UI.linkbutton('#SelBarCodeCreateBT', {
-		onClick: function() {
-			var Rows = UnCleanItemListGrid.getSelectedData();
-			if(isEmpty(Rows)){
-				$UI.msg('alert', 'ÇëÑ¡ÔñÒªÇåÏ´µÄÏû¶¾°ü');
-				return ;
-			}
-			var params = JSON.stringify(Rows);
-			var mainRows = GridList.getSelected();
-			if(isEmpty(mainRows)) {
-				$UI.msg('alert', 'ÇëÑ¡ÔñĞèÒªÌí¼ÓµÄ¹ø´Î!');
-				return;
-			}
-			$.cm({
-				ClassName: 'web.CSSDHUI.Clean.CleanInfo',
-				MethodName: 'SaveUnClean',
-				Params: params,
-				mainId: mainRows.ID
-			}, function(jsonData) {
-				UnCleanItemListGrid.commonReload();
-				$('#SelReqWin').window('close');
-				ItemListGrid.commonReload();
-			});
-
-		}
-	});
-	//È·ÈÏ½ø¹ø
-	$UI.linkbutton('#btnCommit', {
-		onClick: function() {
-			var Rows = GridList.getSelected();
-			if(isEmpty(Rows)) {
-				$UI.msg("alert", "ÇëÑ¡ÔñĞèÒªÈ·ÈÏ½ø¹øµÄ¼ÇÂ¼!");
-				return;
-			}
-			var RowIndex = GridList.getRowIndex(Rows);
-			GridListIndex = RowIndex;
-			GridListIndexId = Rows.ID;
-			if(ItemListGrid.getRows()==""){
-				$UI.msg("alert", "Ã»ÓĞÃ÷Ï¸²»ÄÜ½ø¹ø");
-				return ;
-			}	
-			if(Rows.IsCmtEnterMachine == "1") {
-				$UI.msg("alert", "ÒÑ¾­È·ÈÏ½ø¹ø!");
-				return;
-			}
-			$.cm({
-				ClassName: 'web.CSSDHUI.Clean.CleanInfo',
-				MethodName: 'CmtEnterMachine',
-				Params: Rows.ID
-			}, function(jsonData) {
-				GridList.commonReload();
-				ItemListGrid.commonReload();
-			});
-		}
-	});
-	//É¨ÂëÌí¼Ó¹Ì¶¨±êÇ©
-	$("#BarCode").keypress(function(event) {
-		if(event.which == 13) {
-			var value = $("#BarCode").val();
-			var row = $('#tabDrugList').datagrid('getSelected');
-			if(isEmpty(row)) {
-				$UI.msg('alert', 'ÇëÑ¡ÔñĞèÒªÌí¼ÓµÄ¹ø´Î!');
-				return;
-			}
-			if(row.IsCmtEnterMachine==1){
-				$UI.msg('alert', 'ÒÑ¾­È·ÈÏ½ø¹øÎŞ·¨¼ÌĞøÌí¼ÓÃ÷Ï¸!');
-				$("#BarCode").val("");
-				return ;
-			}
-			if(isEmpty(row.ID)) {
-				$UI.msg('alert', '²ÎÊı´íÎó!');
-				return;
-			}
-			$.cm({
-				ClassName: 'web.CSSDHUI.Clean.CleanInfo',
-				MethodName: 'jsSaveCleanDetail',
-				mainId: row.ID,
-				barCode: value
-			}, function(jsonData) {
-				if(jsonData.success == 0) {
-					//$("#BarCodeInfo").val(jsonData.msg)
-					FindItemByF(row.ID);
-				} else {
-					$UI.msg('error', jsonData.msg);
-				}
-				$("#BarCode").val("").focus();
-			});
-		}
-	});
-	$UI.linkbutton('#CommonPackageCreateBT',{
-		onClick: function() {
-			var row = $('#tabDrugList').datagrid('getSelected');
-			if(isEmpty(row)){
-				$UI.msg('alert', 'ÇëÑ¡ÔñĞèÒªÌí¼ÓµÄ¹ø´Î!');
-				return ;
-			}
-			if(row.IsCmtEnterMachine==1){
-				$UI.msg("alert", "ÒÑ¾­È·ÈÏ½ø¹øÎŞ·¨¼ÌĞøÌí¼ÓÃ÷Ï¸!");
-				$("#CommonPackage").combobox('setValue','');
-				$("#CommonPackageNum").numberbox("setValue","");
-				return ;
-			}
-			var packageDr = $("#CommonPackage").combobox('getValue')
-			var number = $("#CommonPackageNum").val();
-			if(isEmpty(packageDr)){
-				$UI.msg('alert', 'ÇëÑ¡ÔñĞèÒªÌí¼ÓµÄÆÕÍ¨°ü!');
-				return ;
-			}
-			if(isEmpty(number)||number<=0){
-				$UI.msg('alert', 'ÇëÊäÈëºÏÊÊµÄÊıÁ¿!');
-				$("#CommonPackageNum").numberbox("setValue","");
-				$("#CommonPackageNum").focus();
-				return ;
-			}
-			$.cm({
-				ClassName: 'web.CSSDHUI.Clean.CleanInfo',
-				MethodName: 'JsSaveCommonPackage',
-				mainId: row.ID,
-				PackageDr: packageDr,
-				Number: number
-			}, function(jsonData) {
-				if(jsonData.success == 0) {
-					FindItemByF(row.ID);
-					$("#CommonPackage").combobox('setValue','');
-					$UI.clearBlock('#CleanDetailTable');
-				} else {
-					$UI.msg('error', jsonData.msg);
-				}
-			});
-		}
-	})	
-	var ItemCm = [
-		[{
-				field: 'operate',
-				title: '²Ù×÷',
-				align: 'center',
-				width: 50,
-				formatter: function(value, row, index) {
-					if(row.Iscmt != "0") {
-						var str = '<a href="#" name="opera"  disabled  class="easyui-linkbutton" title="É¾³ı"></a>';
-					} else {
-						var str = '<a href="#" name="opera"    class="easyui-linkbutton" title="É¾³ı" onclick="deleteItem(' + row.ID + ')"></a>';
-					}
-					return str;
-				}
-			},
-			{
-				title: 'ID',
-				field: 'ID',
-				width: 100,
-				hidden: true
-			}, {
-				title: 'ÉêÇëµ¥',
-				field: 'ApplyNo',
-				width: 100
-			}, {
-				title: '¿ÆÊÒ',
-				field: 'LocName',
-				width: 100
-			}, {
-				title: 'Ïû¶¾°üÃû³Æ',
-				field: 'packagedesc',
-				width: 120
-			},
-			{
-				title: '°ü±êÅÆ±àÂë',
-				field: 'CodeLabel',
-				width: 100
-			},
-			{
-				title: 'ÊıÁ¿',
-				field: 'qty',
-				width: 50,
-				align: 'right'
-			},
-			{
-				title: 'ÊÇ·ñ½ø¹ø',
-				field: 'Iscmt',
-				width: 100,
-				hidden: true
-			}
-		]
-	];
-	//ÓÒ±ßÃ÷Ï¸
-	var ItemListGrid = $UI.datagrid('#ItemList', {
-		queryParams: {
-			ClassName: 'web.CSSDHUI.Clean.CleanInfo',
-			MethodName: 'SelectCleanDetail',
-			rows:99999
-		},
-		columns: ItemCm,
-		toolbar: '#InputTB',
-		pagination:false,
-		singleSelect: false,
-		remoteSort:true,
-		onLoadSuccess: function(data) {
-			$("a[name='opera']").linkbutton({
-				plain: true,
-				iconCls: 'icon-cancel'
-			});	
-			
+			SetFocusAdd();
 		}
 	});
 
-	var UnCleanCm = [
-		[
-			{
-				title: '',
-				field: 'ck',
-				checkbox: true,
-				width: 50
-			},
-			{
-				title: 'DetailID',
-				field: 'DetailID',
-				width: 100,
-				hidden: true
-			}, {
-				title: 'ÉêÇëµ¥',
-				field: 'ApplyNo',
-				width: 100
-			}, {
-				title: '¿ÆÊÒ',
-				field: 'LocName',
-				width: 200
-			},
-			{
-				title: 'Ïû¶¾°ü',
-				field: 'pkgdr',
-				width: 100,
-				hidden: true
-			},
-			{
-				title: 'Ïû¶¾°üÃû³Æ',
-				field: 'pkgName',
-				width: 200
-			},
-			{
-				title: 'ÊıÁ¿',
-				field: 'BackQty',
-				align: 'right',
-				width: 100
-			}
-		]
-	];
-
-	var UnCleanOrdCm = [
-		[   
-		     {
-				title: '',
-				field: 'ck',
-				checkbox: true,
-				width: 50
-			},  
-		    {
-				title: 'pkgdr',
-				field: 'pkgdr',
-				width: 100,
-				hidden: true
-			}, {
-				title: 'Ïû¶¾°üÃû³Æ',
-				field: 'pkgName',
-				width: 100
-			}, {
-				title: '»ØÊÕÊıÁ¿',
-				field: 'backQty',
-				width: 100
-			},
-			{
-				title: 'ÇåÏ´ÊıÁ¿',
-				field: 'cleanQty',
-				width: 100
-			},
-			{
-				title: 'Î´ÇåÏ´ÊıÁ¿',
-				field: 'unCleanQty',
-				width: 100
-			},
-			{
-				title: 'ÒªÇåÏ´ÊıÁ¿',
-				field: 'willQty',
-				width: 100,
-				editor: {
-					type: 'numberbox',
-					options: {
-						//required: true
-					}
-				}
-			}
-		]
-	];
-	//´ıÇåÏ´×¨¿ÆÆ÷Ğµ°ü
-	var UnCleanItemListGrid = $UI.datagrid('#UnCleanList', {
-		queryParams: {
-			ClassName: 'web.CSSDHUI.Clean.CleanInfo',
-			MethodName: 'SelectUnClean'
-		},
-		columns: UnCleanCm,
-		toolbar: '#SelReqWinTB',
-		singleSelect: false,
-		pagination: true,
-		singleSelect: false
-
-	});
-	var map = {};
-	//´ıÇåÏ´¹©Ó¦ÊÒ¹«ÓÃ°ü
-	var UnCleanOrdListGrid = $UI.datagrid('#UnCleanOrdList', {
-		queryParams: {
-			ClassName: 'web.CSSDHUI.Clean.CleanInfo',
-			MethodName: 'SelectAllUnCleanOrd'
-		},
-		columns: UnCleanOrdCm,
-		pagination: true,
-		singleSelect: false,
-		toolbar: '#OrdWinTB',
-		onClickCell: function(index, filed, value) {
-			var Row = UnCleanOrdListGrid.getRows()[index];
-			UnCleanOrdListGrid.commonClickCell(index, filed);
-		},
-		onClickRow: function (rowIndex, rowData) {
-			if(map[rowIndex]){
-				$("#UnCleanOrdList").datagrid("uncheckRow",rowIndex);
-				map[rowIndex] = false;
-			}else{
-				$("#UnCleanOrdList").datagrid("checkRow",rowIndex);
-				map[rowIndex]=true;
-			}
-		},
-		onLoadSuccess:function(data){
-			if(data.rows.length>0){
-				for(var i=0;i<data.rows.length;i++){
-					map[i] = false;
-				}
-			}
+	function SetFocusAdd() {
+		if (IsManualTemp == 'Y') {
+			$('#CleanMachine').combobox('disable');
+			$('#CleanMachine').combobox('setValue', '');
+			$('#CleanStro').combobox('disable');
+			$('#CleanStro').combobox('setValue', '');
 		}
-
-	});
-	var Cm = [
-		[{
-				title: '²Ù×÷',
-				field: 'MachineN',
-				width: 50,
-				formatter: formatOper
-			},
-			{
-				title: 'È·ÈÏ½ø¹ø',
-				field: 'IsCmtEnterMachine',
-				width: 100,
-				styler: flagColor,
-				formatter: function(value) {
-					var status = "";
-					if(value == "1") {
-						status = "ÒÑÍê³É";
-					} else {
-						status = "Î´Íê³É";
-					}
-					return status;
-				}
-			},
-			{
-				title: 'ID',
-				field: 'ID',
-				hidden: true
-			}, {
-				title: '»úÆ÷ºÅ',
-				field: 'MachineNo',
-				width: 60,
-				align:'right'
-			}, {
-				title: 'ÇåÏ´·½Ê½',
-				field: 'cleanType',
-				width: 100
-			}, {
-				title: 'ÈÕÆÚ',
-				field: 'CleanDate',
-				width: 100
-			}, {
-				title: 'Ê±¼ä',
-				field: 'CleanTime',
-				width: 100
-			}, {
-				title: 'ÇåÏ´¼ÜºÅ',
-				field: 'VehicleLabel',
-				width: 100
-			}, {
-				title: 'ÇåÏ´ÅúºÅ',
-				field: 'CleanNo1',
-				width: 150
-
-			},
-			{
-				title: 'ÇåÏ´ÈË',
-				field: 'CleanerName',
-				width: 100
-
-			},
-			{
-				title: 'ÑéÊÕÈË',
-				field: 'ChkerName',
-				width: 100
-
-			}
-
-		]
-	];
-
-	function flagColor(val, row, index) {
-		if(val == '1') {
-			return 'background:#15b398;color:white';
-		}else{
-			return 'background:#ff584c;color:white';
+		if (isEmpty($('#CleanType').combobox('getValue'))) {
+			IsManualTemp = '';
+			$('#CleanType').combobox('textbox').focus();
+			return;
 		}
+		if ((IsManualTemp == 'N') && (isEmpty($('#CleanMachine').combobox('getValue')))) {
+			if (CleanParamObj.IsMachineBindType == 'Y') {		// æ¸…æ´—æœºä¸æ¸…æ´—æ–¹å¼æ˜¯ä¸€å¯¹ä¸€ç»‘å®š
+				var CleanTypeId = $('#CleanType').combobox('getValue');
+				var Params = JSON.stringify(addSessionParams({ BDPHospital: gHospId, TempType: CleanTypeId }));
+				var Url = $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetMachineNoComBo&ResultSetType=array&type="washer"&Params=' + Params;
+				$('#CleanMachine').combobox('reload', Url).combobox('clear');
+			}
+			$('#CleanMachine').combobox('textbox').focus();
+			return;
+		}
+		if ((IsManualTemp == 'N') && (isEmpty($('#CleanStro').combobox('getValue')))) {
+			$('#CleanStro').combobox('textbox').focus();
+			return;
+		}
+		if (isEmpty($('#Cleaner').combobox('getValue'))) {
+			$('#Cleaner').combobox('textbox').focus();
+			return;
+		}
+		Add();
 	}
 
-	function formatOper(val, row, index) {
-			if(row.IsCmtEnterMachine=="1")
-			var str = '<a href="#" name="operaM" class="easyui-linkbutton" disabled title="É¾³ı"></a>';
-			else 
-			var str = '<a href="#" name="operaM" class="easyui-linkbutton" title="É¾³ı" onclick="Del(' + row.ID + ',' + row.IsCmtEnterMachine + ')"></a>';
-			return str;
+	function Add() {
+		var MainObj = $UI.loopBlock('#CleanTable');
+		if (isEmpty(MainObj.CleanLoc)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©æ¸…æ´—ç§‘å®¤ï¼');
+			$('#CleanLoc').combobox('textbox').focus();
+			return;
 		}
-	
+		if (isEmpty(MainObj.CleanType)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©æ¸…æ´—æ–¹å¼ï¼');
+			$('#CleanType').combobox('textbox').focus();
+			return;
+		}
+		if (IsManualTemp == 'N') {
+			if (isEmpty(MainObj.CleanMachine)) {
+				$UI.msg('alert', 'è¯·é€‰æ‹©æ¸…æ´—æœºï¼');
+				$('#CleanMachine').combobox('textbox').focus();
+				return;
+			}
+			if (isEmpty(MainObj.CleanStro)) {
+				$UI.msg('alert', 'è¯·é€‰æ‹©æ¸…æ´—ç¨‹åºï¼');
+				$('#CleanStro').combobox('textbox').focus();
+				return;
+			}
+		}
+		if (isEmpty(MainObj.Cleaner)) {
+			if (CleanParamObj.IsGetCleanUserByLogin == 'Y') {
+				MainObj.Cleaner = gUserId;
+			} else {
+				$UI.msg('alert', 'è¯·å½•å…¥æ¸…æ´—äººï¼');
+				$('#Cleaner').combobox('textbox').focus();
+				return;
+			}
+		}
+		var Params = JSON.stringify(MainObj);
+		showMask();
+		$.cm({
+			ClassName: 'web.CSSDHUI.Clean.CleanInfo',
+			MethodName: 'jsSaveClean',
+			Params: Params
+		}, function(jsonData) {
+			hideMask();
+			if (jsonData.success === 0) {
+				$UI.msg('success', jsonData.msg);
+				CurrMainId = jsonData.rowid;
+				Default();
+				if (!isEmpty(jsonData.rowid)) {
+					Query(jsonData.rowid);
+				}
+				$('#CodeDictId').val('').focus();
+			} else {
+				$UI.msg('error', jsonData.msg);
+			}
+		});
+	}
 
-	var GridList = $UI.datagrid('#tabDrugList', {
-		url: $URL,
-		queryParams: {
+	$UI.linkbutton('#AddBT', {
+		onClick: function() {
+			Add();
+		}
+	});
+
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
+			Default();
+		}
+	});
+
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
+			var ParamsObj = $UI.loopBlock('CleanTable');
+			if (isEmpty(ParamsObj.CleanLoc)) {
+				$UI.msg('alert', 'ç§‘å®¤ä¸èƒ½ä¸ºç©ºï¼');
+				return;
+			} else if (isEmpty(ParamsObj.StartDate)) {
+				$UI.msg('alert', 'å¼€å§‹æ—¥æœŸä¸èƒ½ä¸ºç©ºï¼');
+				return;
+			} else if (isEmpty(ParamsObj.EndDate)) {
+				$UI.msg('alert', 'æˆªæ­¢æ—¥æœŸä¸èƒ½ä¸ºç©ºï¼');
+				return;
+			} else {
+				Query();
+			}
+		}
+	});
+
+	function Query(RowId) {
+		$UI.clear(CleanList);
+		$UI.clear(ItemListGrid);
+		var ParamsObj = $UI.loopBlock('CleanTable');
+		if (!isEmpty(RowId)) {
+			ParamsObj.CleanId = RowId;
+		}
+		var Params = JSON.stringify(ParamsObj);
+		CleanList.load({
 			ClassName: 'web.CSSDHUI.Clean.CleanInfo',
 			QueryName: 'SelectAll',
 			Params: Params
+		});
+	}
+
+	function CmtEnterMachine(ComParamsObj) {
+		var Params = JSON.stringify(ComParamsObj);
+		showMask();
+		$.cm({
+			ClassName: 'web.CSSDHUI.Clean.CleanInfo',
+			MethodName: 'jsCmtEnterMachine',
+			Params: Params
+		}, function(jsonData) {
+			hideMask();
+			if (jsonData.success === 0) {
+				$UI.msg('success', jsonData.msg);
+				CleanList.reload();
+				CurrMainId = jsonData.rowid;
+			} else {
+				$UI.msg('error', jsonData.msg);
+			}
+		});
+	}
+
+	$UI.linkbutton('#CommitBT', {
+		onClick: function() {
+			var Rows = CleanList.getSelected();
+			if (isEmpty(Rows)) {
+				$UI.msg('alert', 'è¯·é€‰æ‹©éœ€è¦ç¡®è®¤æ¸…æ´—çš„è®°å½•ï¼');
+				return;
+			}
+			if (Rows.IsCmtEnterMachine == '1') {
+				$UI.msg('alert', 'å·²ç»ç¡®è®¤æ¸…æ´—ï¼Œä¸èƒ½å†æ¬¡è¿›è¡Œæ¸…æ´—æ“ä½œï¼');
+				return;
+			}
+			if (ItemListGrid.getRows() == '') {
+				$UI.msg('alert', 'æ²¡æœ‰æ˜ç»†ä¸èƒ½è¿›è¡Œæ¸…æ´—æ“ä½œï¼');
+				return;
+			}
+			var ParamsObj = $UI.loopBlock('#CleanTable');
+			var StartTime = ParamsObj.StartTime;
+			var CurTime = GetNowTime();
+			var ComParamsObj = { Id: Rows.RowId, StartTime: StartTime };
+			if (!isEmpty(StartTime) && (StartTime > CurTime)) {
+				$UI.confirm('æ‰€é€‰æ¸…æ´—æ—¶é—´æ™šäºå½“å‰æ—¶é—´,æ˜¯å¦ç»§ç»­æ‰§è¡Œ?', '', '', CmtEnterMachine, '', '', '', '', ComParamsObj);
+			} else if (isEmpty(StartTime)) {
+				$UI.confirm('æ¸…æ´—æ—¶é—´ä¸ºç©ºï¼Œæ˜¯å¦ç»§ç»­æ‰§è¡Œæ¸…æ´—æ“ä½œ?', '', '', CmtEnterMachine, '', '', '', '', ComParamsObj);
+			} else {
+				CmtEnterMachine(ComParamsObj);
+			}
+		}
+	});
+
+	$UI.linkbutton('#CancelBT', {
+		onClick: function() {
+			var Rows = CleanList.getSelected();
+			if (isEmpty(Rows)) {
+				$UI.msg('alert', 'è¯·é€‰æ‹©éœ€è¦æ’¤é”€æ¸…æ´—çš„è®°å½•ï¼');
+				return;
+			}
+			if (Rows.IsCmtEnterMachine == '0') {
+				$UI.msg('alert', 'æœªç¡®è®¤æ¸…æ´—ï¼Œä¸èƒ½æ’¤é”€æ¸…æ´—æ“ä½œï¼');
+				return;
+			}
+			if (Rows.IsCheck !== '') {
+				$UI.msg('alert', 'è¯¥æ¸…æ´—å•æ®å·²éªŒæ”¶ï¼Œä¸èƒ½æ’¤é”€æ¸…æ´—æ“ä½œï¼');
+				return;
+			}
+			var Params = JSON.stringify({ CleanId: Rows.RowId });
+			showMask();
+			$.cm({
+				ClassName: 'web.CSSDHUI.Clean.CleanInfo',
+				MethodName: 'jsCancelEnterMachine',
+				Params: Params
+			}, function(jsonData) {
+				hideMask();
+				if (jsonData.success === 0) {
+					$UI.msg('success', jsonData.msg);
+					CleanList.reload();
+					CurrMainId = Rows.RowId;
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		}
+	});
+
+	function flagColor(val, row, index) {
+		if (val === '1') {
+			return 'color:white;background:' + GetColorCode('green');
+		} else if (val === '0') {
+			return 'color:white;background:' + GetColorCode('red');
+		}
+	}
+
+	var Cm = [
+		[{
+			title: 'æ“ä½œ',
+			field: 'MachineN',
+			width: 120,
+			frozen: true,
+			align: 'center',
+			formatter: function(val, row, index) {
+				var str = '';
+				if (row.IsCmtEnterMachine !== '1') {
+					str = str + '<div class="icon-cancel col-icon"  href="#"  title="åˆ é™¤" onclick="CleanList.commonDeleteRow(true,' + index + ');"></div>';
+				}
+				if (row.LevelFlag === '1') {
+					str = str + '<div href="#" class="icon-emergency col-icon" title="ç´§æ€¥"></div>';
+				}
+				if (row.BeInfected === 'Y') {
+					str = str + '<div href="#" class="icon-virus col-icon" title="æ„ŸæŸ“"></div>';
+				}
+				// æ¸…æ´—ä¿¡æ¯è®°å½•
+				str = str + '<div href="#" class="icon-paper-info col-icon" title="æ¸…æ´—ä¿¡æ¯" onclick="SetleanTypeDetail(' + row.RowId + ');"></div>';
+				return str;
+			}
+		}, {
+			title: 'æ¸…æ´—ç§‘å®¤',
+			field: 'CleanLoc',
+			width: 100
+		}, {
+			title: 'ç¡®è®¤æ¸…æ´—',
+			field: 'IsCmtEnterMachine',
+			width: 70,
+			styler: flagColor,
+			formatter: function(value) {
+				var status = '';
+				if (value === '1') {
+					status = 'å·²ç¡®è®¤';
+				} else {
+					status = 'æœªç¡®è®¤';
+				}
+				return status;
+			}
+		}, {
+			title: 'éªŒæ”¶ç»“æœ',
+			field: 'IsCheck',
+			width: 70,
+			align: 'center',
+			styler: flagColor,
+			formatter: function(value) {
+				var status = '';
+				if (value === '1') {
+					status = 'åˆæ ¼';
+				} else if (value === '0') {
+					status = 'ä¸åˆæ ¼';
+				} else {
+					status = 'æœªéªŒæ”¶';
+				}
+				return status;
+			}
+		}, {
+			title: 'ç´§æ€¥çŠ¶æ€',
+			field: 'LevelFlag',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'RowId',
+			field: 'RowId',
+			width: 60,
+			hidden: true
+		}, {
+			title: 'æ¸…æ´—æ‰¹å·',
+			field: 'CleanNum',
+			width: 140
+		}, {
+			title: 'æ¸…æ´—æœº',
+			field: 'MachineAlias',
+			width: 60,
+			align: 'center'
+		}, {
+			title: 'æ¸…æ´—æ¶',
+			field: 'CleanBasketDesc',
+			width: 180
+		}, {
+			title: 'æ¸…æ´—æ–¹å¼',
+			field: 'CleanTypeDesc',
+			width: 100
+		}, {
+			title: 'æ¸…æ´—ç¨‹åº',
+			field: 'CleanProDesc',
+			width: 100
+		}, {
+			title: 'æ—¥æœŸ',
+			field: 'CleanDate',
+			width: 160
+		}, {
+			title: 'æ—¶é—´',
+			field: 'CleanTime',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'æ¸…æ´—äºº',
+			field: 'CleanerName',
+			width: 100
+		}, {
+			title: 'éªŒæ”¶äºº',
+			field: 'ChkerName',
+			width: 100
+		}, {
+			title: 'æ˜¯å¦éªŒæ”¶',
+			field: 'IsCheck',
+			width: 80,
+			hidden: true
+		}, {
+			title: 'æ„ŸæŸ“æ ‡å¿—',
+			field: 'BeInfected',
+			width: 50,
+			hidden: true
+		}
+		]
+	];
+
+	CleanList = $UI.datagrid('#CleanList', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.Clean.CleanInfo',
+			QueryName: 'SelectAll',
+			Params: ParamsTB
+		},
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.Clean.CleanInfo',
+			MethodName: 'jsDeleteMain'
 		},
 		columns: Cm,
-		toolbar: "#UomTB",
+		sortName: 'RowId',
+		sortOrder: 'desc',
+		pagination: true,
 		remoteSort: false,
-		lazy: false,
+		onClickRow: function(index, row) {
+			CleanList.commonClickRow(index, row);
+		},
 		onLoadSuccess: function(data) {
-			$("a[name='operaM']").linkbutton({plain:true,iconCls:'icon-cancel'});  
-			if(data.rows.length > 0&&isEmpty(GridListIndex)) {
-				$('#tabDrugList').datagrid("selectRow", 0);
-				FindItemByF(data.rows[0].ID);
-				
+			if (data.rows.length > 0) {
+				var GridListIndex = '';
+				if (!isEmpty(CurrMainId)) {
+					var Rows = $('#CleanList').datagrid('getRows');
+					$.each(Rows, function(index, item) {
+						if (item.RowId == CurrMainId) {
+							GridListIndex = index;
+							return false;
+						}
+					});
+					CurrMainId = '';
+				} else if (CommParObj.SelectFirstRow == 'Y') {
+					GridListIndex = 0;
+				}
+				if (!isEmpty(GridListIndex)) {
+					$('#CleanList').datagrid('selectRow', GridListIndex);
+				}
 			}
-			if(!isEmpty(GridListIndex)){
-				$('#tabDrugList').datagrid("selectRow", GridListIndex);
-				FindItemByF(GridListIndexId);
-			}
-			
-
 		},
-		/**
-		onClickCell: function(index, filed, value) {
-			var Row = GridList.getRows()[index]
-			var Id = Row.ID;
-			var IsCmt = Row.IsCmtEnterMachine;
-			if(!isEmpty(Id)) {
-				FindItemByF(Id);
-				if(IsCmt == "1") {
-					$('#BarCode').attr("disabled", "disabled"); //ÉèÎª²»¿ÉÓÃ
-					$('#AddItemBT').linkbutton('disable');
-					$('#AddGYB').linkbutton('disable');
-					$('#CommonPackage').combobox('disable');
-					$('#CommonPackageNum').attr("disabled", "disabled");
-					$('#CommonPackageCreateBT').linkbutton('disable');
-				}
-				if(IsCmt == "0") {
-					$("#BarCode").attr("disabled", false);
-					$('#AddItemBT').linkbutton('enable');
-					$('#AddGYB').linkbutton('enable');
-					$('#CommonPackage').combobox('enable');
-					$('#CommonPackageNum').attr("disabled", false);
-					$('#CommonPackageCreateBT').linkbutton('enable');
-				}
-			}
-			GridList.commonClickCell(index, filed)
+		afterDelFn: function() {
+			$UI.clear(ItemListGrid);
 		},
-		**/
-		onSelect:function(index, rowData) {
-			var Row = GridList.getRows()[index]
-			var Id = Row.ID;
+		onSelect: function(index, rowData) {
+			var Row = CleanList.getRows()[index];
+			var Id = Row.RowId;
 			var IsCmt = Row.IsCmtEnterMachine;
-			if(!isEmpty(Id)) {
+			if (!isEmpty(Id)) {
 				FindItemByF(Id);
-				if(IsCmt == "1") {
-					$('#BarCode').attr("disabled", "disabled"); //ÉèÎª²»¿ÉÓÃ
-					$('#AddItemBT').linkbutton('disable');
-					$('#AddGYB').linkbutton('disable');
-					$('#CommonPackage').combobox('disable');
-					$('#CommonPackageNum').attr("disabled", "disabled");
-					$('#CommonPackageCreateBT').linkbutton('disable');
-				}
-				if(IsCmt == "0") {
-					$("#BarCode").attr("disabled", false);
-					$('#AddItemBT').linkbutton('enable');
-					$('#AddGYB').linkbutton('enable');
-					$('#CommonPackage').combobox('enable');
-					$('#CommonPackageNum').attr("disabled", false);
-					$('#CommonPackageCreateBT').linkbutton('enable');
-				}
 			}
-			
 		}
-	
-	})
+	});
+
+	/* ----------æ˜ç»†------------*/
+	var PkgParams = JSON.stringify(addSessionParams({ BDPHospital: gHospId, TypeDetail: '2' }));
+	$HUI.combobox('#CommonPkg', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPkg&ResultSetType=array&Params=' + PkgParams,
+		valueField: 'RowId',
+		textField: 'Description'
+	});
+
+	// æ–¹å¼ä¸€ï¼šæ™®é€šå¾ªç¯åŒ…
+	$UI.linkbutton('#ComPkgCreateBT', {
+		onClick: function() {
+			CommonPackageAdd();
+		}
+	});
+
+	$('#ComPkgNum').keypress(function(event) {
+		if (event.which === 13) {
+			CommonPackageAdd();
+		}
+	});
+
+	function CommonPackageAdd() {
+		var row = $('#CleanList').datagrid('getSelected');
+		if (isEmpty(row)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©éœ€è¦æ·»åŠ çš„æ¸…æ´—å•æ®!');
+			return;
+		}
+		if (row.IsCmtEnterMachine === 1) {
+			$UI.msg('alert', 'å·²ç»ç¡®è®¤æ¸…æ´—æ— æ³•ç»§ç»­æ·»åŠ æ˜ç»†!');
+			$('#CommonPkg').combobox('setValue', '');
+			$('#ComPkgNum').numberbox('setValue', '');
+			return;
+		}
+		var PkgId = $('#CommonPkg').combobox('getValue');
+		var Num = $('#ComPkgNum').val();
+		if (isEmpty(PkgId)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©éœ€è¦æ·»åŠ çš„æ™®é€šå¾ªç¯åŒ…!');
+			return;
+		}
+		if (isEmpty(Num)) {
+			$UI.msg('alert', 'è¯·è¾“å…¥åˆé€‚çš„æ•°é‡!');
+			return;
+		}
+		var Params = JSON.stringify(addSessionParams({ MainId: row.RowId, PkgId: PkgId, PkgNum: Num }));
+		showMask();
+		$.cm({
+			ClassName: 'web.CSSDHUI.Clean.CleanInfo',
+			MethodName: 'JsSaveCommonPackage',
+			Params: Params
+		}, function(jsonData) {
+			hideMask();
+			if (jsonData.success === 0) {
+				$UI.msg('success', jsonData.msg);
+				ItemListGrid.reload();
+				$UI.clearBlock('#CleanDetailTable');
+			} else {
+				$UI.msg('error', jsonData.msg);
+			}
+			$('#CommonPkg').combobox('setValue', '');
+			$('#ComPkgNum').numberbox('setValue', '');
+		});
+	}
+
+	// æ–¹å¼äºŒï¼šæ‰«ç åŠ¨ä½œï¼ˆæ ‡ç‰Œè¿½æº¯åŒ…ï¼Œæ¸…æ´—ç­ï¼‰
+	$('#CodeDictId').keyup(function(event) {
+		if (event.which === 13) {
+			AddCleanItem();
+		}
+	}).focus(function(event) {
+		$('#CodeDictId').val('');
+		$('#BarCodeHidden').val('');
+		var ReadOnly = $('#CodeDictId').attr('readonly');
+		if (ReadOnly === 'readonly') {
+			$('#BarCodeHidden').focus();
+		}
+		InitScanIcon();
+	}).blur(function(event) {
+		InitScanIcon();
+	});
+
+	$('#BarCodeHidden').keyup(function(event) {
+		if (event.which === 13) {
+			var HiddenVal = $('#BarCodeHidden').val();
+			$('#CodeDictId').val(HiddenVal);
+			$('#BarCodeHidden').val('');
+			AddCleanItem();
+		}
+	}).focus(function(enent) {
+		InitScanIcon();
+	}).blur(function(event) {
+		InitScanIcon();
+	});
+
+	// æ§åˆ¶æ˜¯å¦å…è®¸ç¼–è¾‘
+	$('#BarCodeSwitchBT').linkbutton({
+		iconCls: 'icon-w-switch',
+		onClick: function() {
+			var ReadOnly = $('#CodeDictId').attr('readonly');
+			if (ReadOnly === 'readonly') {
+				$('#CodeDictId').attr({ readonly: false });
+				SetLocalStorage('BarCodeHidden', '');
+			} else {
+				$('#CodeDictId').attr({ readonly: true });
+				SetLocalStorage('BarCodeHidden', 'Y');
+			}
+			$('#CodeDictId').focus();
+		}
+	});
+
+	// æ§åˆ¶æ‰«ç å›¾æ ‡
+	function InitScanIcon() {
+		var ElementId = document.activeElement.id;
+		var ReadOnly = $('#CodeDictId').attr('readonly');
+		if (ElementId === 'BarCodeHidden') {
+			// æ‰«æicon
+			$('#UseBarCodeBT').linkbutton({ iconCls: 'icon-scanning' });
+		} else if (ReadOnly === 'readonly') {
+			// åªè¯»icon
+			$('#UseBarCodeBT').linkbutton({ iconCls: 'icon-gray-edit' });
+		} else {
+			// å¯ç¼–è¾‘icon
+			$('#UseBarCodeBT').linkbutton({ iconCls: 'icon-blue-edit' });
+		}
+	}
+	if (GetLocalStorage('BarCodeHidden') === 'Y') {
+		$('#CodeDictId').attr({ 'readonly': true });
+	} else {
+		$('#CodeDictId').attr({ 'readonly': false });
+	}
+	InitScanIcon();
+
+	function AddCleanItem() {
+		var label = $('#CodeDictId').val();
+		var row = $('#CleanList').datagrid('getSelected');
+		if (isEmpty(row)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©éœ€è¦æ·»åŠ çš„æ¸…æ´—å•æ®!');
+			return;
+		}
+		if (isEmpty(row.RowId)) {
+			$UI.msg('alert', 'è¯·é€‰æ‹©æ¸…æ´—å•æ®!');
+			return;
+		}
+		if (row.IsCmtEnterMachine === 1) {
+			$UI.msg('alert', 'å·²ç»ç¡®è®¤æ¸…æ´—æ— æ³•ç»§ç»­æ·»åŠ æ˜ç»†!');
+			$('#CodeDictId').val('');
+			return;
+		}
+		if (isEmpty(label)) {
+			$UI.msg('alert', 'æœªè·å–åˆ°æ‰«æçš„æ ‡ç­¾!');
+			return;
+		}
+		var ParamsObj = $UI.loopBlock('CleanDetailTable');
+		ParamsObj.MainId = row.RowId;
+		showMask();
+		var Params = JSON.stringify(addSessionParams(ParamsObj));
+		$.cm({
+			ClassName: 'web.CSSDHUI.Clean.CleanInfo',
+			MethodName: 'jsSaveCleanDetail',
+			Params: Params
+		}, function(jsonData) {
+			hideMask();
+			if (jsonData.success === 0) {
+				$UI.msg('success', jsonData.msg);
+				ItemListGrid.reload();
+				if (!isEmpty(jsonData.rowid)) {
+					CurrMainId = jsonData.rowid;
+				}
+			} else {
+				$UI.msg('error', jsonData.msg);
+			}
+			$('#CodeDictId').val('').focus();
+		});
+	}
+
+	// å¾…æ¸…æ´—å…¬ç”¨åŒ…-æŒ‰å›æ”¶è®°å½•
+	$UI.linkbutton('#AddCallBackBT', {
+		onClick: function() {
+			var row = $('#CleanList').datagrid('getSelected');
+			if (!isEmpty(row)) {
+				if (row.IsCmtEnterMachine === 1) {
+					$UI.msg('alert', 'å·²ç»ç¡®è®¤æ¸…æ´—æ— æ³•ç»§ç»­æ·»åŠ æ˜ç»†!');
+					return;
+				}
+			}
+			CallBackCleanOrdWin(FindItemByF);
+		}
+	});
+
+	// å¾…æ¸…æ´—ä¸åˆæ ¼åŒ…æ·»åŠ å¼¹å‡ºæ¡†æŒ‰é’®
+	$UI.linkbutton('#AddUnPassCleanBtn', {
+		onClick: function() {
+			var row = $('#CleanList').datagrid('getSelected');
+			if (!isEmpty(row)) {
+				if (row.IsCmtEnterMachine === 1) {
+					$UI.msg('alert', 'å·²ç»ç¡®è®¤æ¸…æ´—æ— æ³•ç»§ç»­æ·»åŠ æ˜ç»†!');
+					return;
+				}
+			}
+			UnPassCleanWin(FindItemByF);
+		}
+	});
+
+	// å¾…ç­èŒä¸åˆæ ¼åŒ…æ·»åŠ å¼¹å‡ºæ¡†æŒ‰é’®
+	$UI.linkbutton('#AddUnPassSterBtn', {
+		onClick: function() {
+			var row = $('#CleanList').datagrid('getSelected');
+			if (!isEmpty(row)) {
+				if (row.IsCmtEnterMachine === 1) {
+					$UI.msg('alert', 'å·²ç»ç¡®è®¤æ¸…æ´—æ— æ³•ç»§ç»­æ·»åŠ æ˜ç»†!');
+					return;
+				}
+			}
+			UnPassSterWin(FindItemByF);
+		}
+	});
+
+	// å¾…æ·»åŠ å¤–æ¥å™¨æ¢°åŒ…æ·»åŠ å¼¹å‡ºæ¡†æŒ‰é’®
+	$UI.linkbutton('#AddExtBT', {
+		onClick: function() {
+			var row = $('#CleanList').datagrid('getSelected');
+			if (!isEmpty(row)) {
+				if (row.IsCmtEnterMachine === 1) {
+					$UI.msg('alert', 'å·²ç»ç¡®è®¤æ¸…æ´—æ— æ³•ç»§ç»­æ·»åŠ æ˜ç»†!');
+					return;
+				}
+			}
+			UnCleanExtWin(FindItemByF);
+		}
+	});
+
+	// ç´§æ€¥åŒ…ï¼ˆç»¿è‰²é€šé“ï¼‰
+	$UI.linkbutton('#CreateBT', {
+		onClick: function() {
+			var row = $('#CleanList').datagrid('getSelected');
+			if (!isEmpty(row)) {
+				if (row.IsCmtEnterMachine === 1) {
+					$UI.msg('alert', 'å·²ç»ç¡®è®¤æ¸…æ´—æ— æ³•ç»§ç»­æ·»åŠ æ˜ç»†!');
+					return;
+				}
+			}
+			SelCallBackItm(FindItemByF);
+		}
+	});
+
+	// å¾…æ¸…æ´—è¿‡æœŸå¤„ç†åŒ…æ·»åŠ å¼¹å‡ºæ¡†æŒ‰é’®
+	$UI.linkbutton('#AddExpireDealBtn', {
+		onClick: function() {
+			var row = $('#CleanList').datagrid('getSelected');
+			if (!isEmpty(row)) {
+				if (row.IsCmtEnterMachine === 1) {
+					$UI.msg('alert', 'å·²ç»ç¡®è®¤æ¸…æ´—æ— æ³•ç»§ç»­æ·»åŠ æ˜ç»†!');
+					return;
+				}
+			}
+			ExpireDealWin(FindItemByF);
+		}
+	});
 
 	function FindItemByF(Id) {
 		ItemListGrid.load({
 			ClassName: 'web.CSSDHUI.Clean.CleanInfo',
 			QueryName: 'SelectCleanDetail',
 			Params: Id,
-			rows:99999
+			rows: 99999
 		});
-
 	}
-	//´ıÇåÏ´×¨¿ÆÆ÷Ğµ°ü
-	function FindItem() {
-		var Params = JSON.stringify($UI.loopBlock('SelReqConditions'));
-		UnCleanItemListGrid.load({
+
+	var ItemCm = [
+		[{
+			field: 'ck',
+			checkbox: true,
+			frozen: true,
+			width: 50
+		}, {
+			field: 'operate',
+			title: 'æ“ä½œ',
+			align: 'center',
+			width: 90,
+			frozen: true,
+			allowExport: false,
+			formatter: function(value, row, index) {
+				var str = '';
+				if (row.Iscmt == '0') {
+					str = str + '<div class="col-icon icon-cancel"  href="#"  title="åˆ é™¤" onclick="ItemListGrid.commonDeleteRow(false,' + index + ');"></div>';
+				}
+				if (row.LevelFlag == '1') {
+					str = str + '<div href="#" class="col-icon icon-emergency" title="ç´§æ€¥"></div>';
+				}
+				if (row.BeInfected == 'Y') {
+					str = str + '<div href="#" class="col-icon icon-virus" title="æ„ŸæŸ“"></div>';
+				}
+				return str;
+			}
+		}, {
+			title: 'RowId',
+			field: 'RowId',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'æ¶ˆæ¯’åŒ…',
+			field: 'PkgDesc',
+			width: 120,
+			showTip: true,
+			tipWidth: 200
+		}, {
+			title: 'æ ‡ç‰Œ',
+			field: 'CodeDictId',
+			width: 100
+		}, {
+			title: 'æ•°é‡',
+			field: 'TotalQty',
+			width: 50,
+			align: 'right'
+		}, {
+			title: 'å›æ”¶å•å·',
+			field: 'ApplyNo',
+			width: 120
+		}, {
+			title: 'ç§‘å®¤',
+			field: 'BackLocDesc',
+			width: 100
+		}, {
+			title: 'æ˜¯å¦æ¸…æ´—',
+			field: 'Iscmt',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'ç´§æ€¥çŠ¶æ€',
+			field: 'LevelFlag',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'æ„ŸæŸ“æ ‡å¿—',
+			field: 'BeInfected',
+			width: 50,
+			hidden: true
+		}
+		]
+	];
+	ItemListGrid = $UI.datagrid('#ItemList', {
+		queryParams: {
 			ClassName: 'web.CSSDHUI.Clean.CleanInfo',
-			QueryName: 'SelectUnClean',
-			Params : Params
-		});
+			MethodName: 'SelectCleanDetail',
+			rows: 99999
+		},
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.Clean.CleanInfo',
+			MethodName: 'jsDelete'
+		},
+		toolbar: [{
+			id: 'DeleteAll',
+			text: 'åˆ é™¤',
+			iconCls: 'icon-cancel',
+			handler: function() {
+				ItemListGrid.commonDeleteRow(true);
+			}
+		}],
+		columns: ItemCm,
+		pagination: false,
+		singleSelect: false,
+		remoteSort: false,
+		sortName: 'RowId',
+		sortOrder: 'asc',
+		onLoadSuccess: function(data) {
+			GetMarkQty();
+		}
+	});
+
+	// æ˜¾ç¤ºæ•°é‡è§’æ ‡
+	function GetMarkQty() {
+		var ParamsObj = {};
+		ParamsObj.StartDate = DefaultStDate();
+		ParamsObj.EndDate = DefaultEdDate();
+		var Params = JSON.stringify(addSessionParams(ParamsObj));
+		var MarkQtyObj = $.cm({
+			ClassName: 'web.CSSDHUI.Clean.CleanInfo',
+			MethodName: 'GetMarkQty',
+			Params: Params
+		}, false);
+		$('#CallBackNum').html(MarkQtyObj.CallBackNum);
+		$('#CreateNum').html(MarkQtyObj.CreateNum);
+		$('#OprNum').html(MarkQtyObj.OprNum);
+		$('#ExtNum').html(MarkQtyObj.ExtNum);
+		$('#UnPassCleanNum').html(MarkQtyObj.UnPassCleanNum);
+		$('#UnPassSterNum').html(MarkQtyObj.UnPassSterNum);
+		$('#ExpireDealNum').html(MarkQtyObj.ExpireDealNum);
 	}
-	
-	function FindNew(Id){
-		GridList.load({
-		ClassName: 'web.CSSDHUI.Clean.CleanInfo',
-		QueryName: 'FindNew',
-		ID:Id
-		});
-	}
+
 	var Default = function() {
-		///ÉèÖÃ³õÊ¼Öµ ¿¼ÂÇÊ¹ÓÃÅäÖÃ
-		$("#cleandate").dateboxq("setValue", DateFormatter(new Date()));
-		$('#cleantype').focus();
-	}
+		var StartDate = getQueryVariable('StartDate');
+		$UI.clearBlock('#CleanTable');
+		$UI.clear(CleanList);
+		$UI.clear(ItemListGrid);
+		IsManualTemp = '';
+		$('#CleanMachine').combobox('enable');
+		$('#CleanType').combobox('enable');
+		$('#CleanStro').combobox('enable');
+		var DefaultValue = {
+			StartDate: StartDate,
+			EndDate: DefaultEdDate(),
+			CleanLoc: gLocId
+		};
+		$UI.fillBlock('#CleanTable', DefaultValue);
+		$('#CleanMachine').combobox('textbox').focus();
+	};
 	Default();
-
-}
-
+	Query();
+	GetMarkQty();
+};
 $(init);
+
+function SetleanTypeDetail(RowId) {
+	SetCleanTypeDetailWin(RowId);
+}

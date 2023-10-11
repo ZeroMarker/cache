@@ -1,141 +1,119 @@
-///	DHCBillPayScanCodeService.js
+ï»¿///	DHCBillPayScanCodeService.js
 
 /**
- * [createScanCodePay ´´½¨É¨Âë¸¶¶©µ¥]
- * @param {[String]} tradeType    [ÒµÎñÀàĞÍ]
- * @param {[String]} payMode 		[Ö§¸¶·½Ê½]
- * @param {[String]} tradeAmt     [½ğ¶î]
- * @param {[String]} expStr       [À©Õ¹´®(¿ÆÊÒ^°²È«×é^ÔºÇø^²Ù×÷Ô±ID^²¡ÈËID^¾ÍÕï^ÒµÎñ±íÖ¸Õë´®(ÒÔ!·Ö¸ô,¿ÉÎª¿Õ)^Ô­¶©µ¥ID^ÊÕÍË±êÖ¾(CÊÕDÍË))]
+ * [createScanCodePay åˆ›å»ºæ‰«ç ä»˜è®¢å•]
+ * @param {[String]} tradeType    [ä¸šåŠ¡ç±»å‹]
+ * @param {[String]} payMode 	  [æ”¯ä»˜æ–¹å¼]
+ * @param {[String]} tradeAmt     [é‡‘é¢]
+ * @param {[String]} expStr       [æ‰©å±•ä¸²(ç§‘å®¤^å®‰å…¨ç»„^é™¢åŒº^æ“ä½œå‘˜ID^ç—…äººID^å°±è¯Š^ä¸šåŠ¡è¡¨æŒ‡é’ˆä¸²(ä»¥!åˆ†éš”,å¯ä¸ºç©º)^åŸè®¢å•ID^æ”¶é€€æ ‡å¿—(Cæ”¶Dé€€))]
  */
 function createScanCodePay(tradeType, payMode, tradeAmt, scanCode, expStr) {
-	var buildRtn = tkMakeServerCall("DHCBILL.ScanPay.BLL.DHCBillScanCodePayLogic", "CreateScanCodePay", tradeType, payMode, tradeAmt, scanCode, expStr);
-	return buildRtn;
+	var rtn = tkMakeServerCall("DHCBILL.ScanPay.BLL.DHCBillScanCodePayLogic", "CreateScanCodePay", tradeType, payMode, tradeAmt, scanCode, expStr);
+	return rtn;
 }
 
 /**
- * [commitScanCodePay Ìá½»É¨ÂëÖ§¸¶]
- * @param {[String]} ETPRowID    [¶©µ¥ID]
- * @param {[String]} scanCode    [ÊÖ»úÖ§¸¶Âë]
+ * [commitScanCodePay æäº¤æ‰«ç æ”¯ä»˜]
+ * @param {[String]} ETPRowID    [è®¢å•ID]
+ * @param {[String]} scanCode    [æ‰‹æœºæ”¯ä»˜ç ]
  */
 function commitScanCodePay(ETPRowID, scanCode) {
-	var payRtn = tkMakeServerCall("DHCBILL.ScanPay.BLL.DHCBillScanCodePayLogic", "CommitScanCodePay", ETPRowID, scanCode);
-	return payRtn;
+	var rtn = tkMakeServerCall("DHCBILL.ScanPay.BLL.DHCBillScanCodePayLogic", "CommitScanCodePay", ETPRowID, scanCode);
+	return rtn;
 }
 
 /**
- * [verifyScanCodePayStatus ²éÑ¯¶©µ¥×´Ì¬]
- * @param {[String]} ETPRowID    [¶©µ¥ID]
- * @param {[String]} scanCode    [ÊÖ»úÖ§¸¶Âë]
+ * [verifyScanCodePayStatus æŸ¥è¯¢è®¢å•çŠ¶æ€]
+ * @param {[String]} ETPRowID    [è®¢å•ID]
+ * @param {[String]} scanCode    [æ‰‹æœºæ”¯ä»˜ç ]
  */
 function verifyScanCodePayStatus(ETPRowID, ScanCode) {
-	var payRtn = tkMakeServerCall("DHCBILL.ScanPay.BLL.DHCBillScanCodePayLogic", "VerifyScanCodePayStatus", ETPRowID, ScanCode);
-	return payRtn
+	var rtn = tkMakeServerCall("DHCBILL.ScanPay.BLL.DHCBillScanCodePayLogic", "VerifyScanCodePayStatus", ETPRowID, ScanCode);
+	return rtn;
 }
 
 /**
- * [cancelScanCodePay ¶©µ¥¹Ø±Õ]
- * @param {[String]} ETPRowID    [¶©µ¥ID]
- * @param {[String]} scanCode 	[ÊÖ»úÖ§¸¶Âë]
+ * [cancelScanCodePay è®¢å•å…³é—­]
+ * @param {[String]} ETPRowID    [è®¢å•ID]
+ * @param {[String]} scanCode 	[æ‰‹æœºæ”¯ä»˜ç ]
  */
 function cancelScanCodePay(ETPRowID, ScanCode) {
-	var payRtn = tkMakeServerCall("DHCBILL.ScanPay.BLL.DHCBillScanCodePayLogic", "CancelScanCodePay", ETPRowID, ScanCode);
-	return payRtn;
+	var rtn = tkMakeServerCall("DHCBILL.ScanPay.BLL.DHCBillScanCodePayLogic", "CancelScanCodePay", ETPRowID, ScanCode);
+	return rtn;
 }
 
 /**
- * [refundScanCodePay ÍË·Ñ½Ó¿Ú]
- * @param {[String]} TradeType    [ÒµÎñÀàĞÍ]
- * @param {[String]} ReceipRowID 	[Ô­ÒµÎñID]
- * @param {[String]} RefundAmt    [ÍË¿î½ğ¶î]
- * @param {[String]} OriginalType [Ô­ÒµÎñÀàĞÍ]
- * @param {[String]} OriginalID   [Ô­¶©µ¥ID]
- * @param {[String]} ExpStr 	    [À©Õ¹´®(¿ÆÊÒ^°²È«×é^ÔºÇø^²Ù×÷Ô±ID^²¡ÈËID^¾ÍÕï^ÒµÎñ±íÖ¸Õë´®(ÒÔ!·Ö¸ô,¿ÉÎª¿Õ)^Ô­¶©µ¥ID^ÊÕÍË±êÖ¾(CÊÕDÍË))]
+ * [refundScanCodePay é€€è´¹æ¥å£]
+ * @param {[String]} TradeType    [ä¸šåŠ¡ç±»å‹]
+ * @param {[String]} OrgETPRowID  [åŸè®¢å•ID]
+ * @param {[String]} RefundAmt    [é€€æ¬¾é‡‘é¢]
+ * @param {[String]} ExpStr 	  [æ‰©å±•ä¸²(ç§‘å®¤^å®‰å…¨ç»„^é™¢åŒº^æ“ä½œå‘˜ID^ç—…äººID^å°±è¯Š^ä¸šåŠ¡è¡¨æŒ‡é’ˆä¸²(ä»¥!åˆ†éš”,å¯ä¸ºç©º)^åŸè®¢å•ID^æ”¶é€€æ ‡å¿—(Cæ”¶Dé€€))]
  */
-function refundScanCodePay(TradeType, RefundAmt, OriginalID, ExpStr) {
+function refundScanCodePay(TradeType, OrgETPRowID, RefundAmt, ExpStr) {
 	var rtnValue = {
-		rtnCode: "-2001",
-		rtnMsg: "½Ó¿ÚÍË·ÑÊ§°Ü"
+		ResultCode: -2001,
+		ResultMsg: "æ¥å£é€€è´¹å¤±è´¥"
 	};
-	var RefRtn = tkMakeServerCall("DHCBILL.ScanPay.BLL.DHCBillScanCodePayLogic", "RefundScanCodePay", TradeType, RefundAmt, OriginalID, ExpStr);
-	var rtn = RefRtn.split('^')[0];
-	switch (rtn) {
+	var rtn = tkMakeServerCall("DHCBILL.ScanPay.BLL.DHCBillScanCodePayLogic", "RefundScanCodePay", TradeType, OrgETPRowID, RefundAmt, ExpStr);
+	var myAry = rtn.split("^");
+	switch (myAry[0]) {
 	case "00":
-		rtnValue.rtnCode = "0";
-		rtnValue.rtnMsg = "½Ó¿ÚÍË·Ñ³É¹¦";
-		if (RefRtn.split('^')[1] != "0") {
-			//±£´æÊı¾İÊ§°Ü·µ»Ø1
-			rtnValue.rtnCode = "1";
-			rtnValue.rtnMsg = "½Ó¿ÚÍË·Ñ³É¹¦,±£´æ¶©µ¥Êı¾İÊ§°Ü";
+		var code = 0;
+		var msg = "æ¥å£é€€è´¹æˆåŠŸ";
+		if (myAry[1] != 0) {
+			//ä¿å­˜æ•°æ®å¤±è´¥è¿”å›1
+			code = 1;
+			msg = "æ¥å£é€€è´¹æˆåŠŸï¼Œä¿å­˜è®¢å•æ•°æ®å¤±è´¥";
 		}
-		break;
-	case "100":
-		rtnValue.rtnCode = "-2002";
-		rtnValue.rtnMsg = "³ÌĞòÒì³£,½Ó¿ÚÍË·ÑÊ§°Ü"; //·µ»ØÃèÊö
-		break;
-	case "200":
-		rtnValue.rtnCode = "-2003";
-		rtnValue.rtnMsg = "½Ó¿Úµ÷ÓÃÒì³£,½Ó¿ÚÍË·ÑÊ§°Ü"; //·µ»ØÃèÊö
-		break;
-	case "300":
-		rtnValue.rtnCode = "-2004";
-		rtnValue.rtnMsg = "Ö§¸¶·½Ê½Î´ÅäÖÃAdapterÀà,½Ó¿ÚÍË·ÑÊ§°Ü"; //·µ»ØÃèÊö
+		rtnValue.ResultCode = code;
+		rtnValue.ResultMsg = msg;
 		break;
 	default:
-		rtnValue.rtnMsg = "-2005";
-		rtnValue.rtnMsg = "½Ó¿ÚÍË·ÑÊ§°Ü:" + rtn;   //·µ»ØÃèÊö
+		rtnValue.ResultCode = -2002;
+		rtnValue.ResultMsg = myAry[1] || "æ¥å£é€€è´¹å¤±è´¥";   //è¿”å›æè¿°
 	}
 	return rtnValue;
 }
 
 /**
- * [correctScanCodePay ³åÏú½Ó¿Ú]
- * @param {[String]} ETPRowID   [¶©µ¥ID]
- * @param {[String]} ExpStr 	[À©Õ¹´®(¿ÆÊÒ^°²È«×é^ÔºÇø^²Ù×÷Ô±ID)]
+ * [correctScanCodePay å†²é”€æ¥å£]
+ * @param {[String]} ETPRowID   [è®¢å•ID]
+ * @param {[String]} ExpStr 	[æ‰©å±•ä¸²(ç§‘å®¤^å®‰å…¨ç»„^é™¢åŒº^æ“ä½œå‘˜ID)]
  */
 function correctScanCodePay(ETPRowID, ExpStr) {
 	var rtnValue = {
-		rtnCode: "-3001",
-		rtnMsg: "¶©µ¥³åÏúÊ§°Ü"
+		ResultCode: -3001,
+		ResultMsg: "è®¢å•å†²é”€å¤±è´¥"
 	};
-	var RefRtn = tkMakeServerCall("DHCBILL.ScanPay.BLL.DHCBillScanCodePayLogic", "CorrectScanCodePay", ETPRowID, ExpStr);
-	var rtn = RefRtn.split('^')[0];
-	switch (rtn) {
+	var rtn = tkMakeServerCall("DHCBILL.ScanPay.BLL.DHCBillScanCodePayLogic", "CorrectScanCodePay", ETPRowID, ExpStr);
+	var myAry = rtn.split("^");
+	switch (myAry[0]) {
 	case "00":
-		rtnValue.rtnCode = "0";
-		rtnValue.rtnMsg = "¶©µ¥³åÏú³É¹¦";
-		if (RefRtn.split('^')[1] != "0") {
-			//±£´æÊı¾İÊ§°Ü·µ»Ø1
-			rtnValue.rtnCode = "1";
-			rtnValue.rtnMsg = "¶©µ¥³åÏú³É¹¦,±£´æ¶©µ¥Êı¾İÊ§°Ü";
+		var code = 0;
+		var msg = "è®¢å•å†²é”€æˆåŠŸ";
+		if (myAry[1] != 0) {
+			//ä¿å­˜æ•°æ®å¤±è´¥è¿”å›1
+			code = 1;
+			msg = "è®¢å•å†²é”€æˆåŠŸï¼Œä¿å­˜è®¢å•æ•°æ®å¤±è´¥";
 		}
-		break;
-	case "100":
-		rtnValue.rtnCode = "-3002";
-		rtnValue.rtnMsg = "³ÌĞòÒì³£,¶©µ¥³åÏúÊ§°Ü"; //·µ»ØÃèÊö
-		break;
-	case "200":
-		rtnValue.rtnCode = "-3003";
-		rtnValue.rtnMsg = "½Ó¿Úµ÷ÓÃÒì³£,¶©µ¥³åÏúÊ§°Ü"; //·µ»ØÃèÊö
-		break;
-	case "300":
-		rtnValue.rtnCode = "-3004";
-		rtnValue.rtnMsg = "Ö§¸¶·½Ê½Î´ÅäÖÃAdapterÀà,¶©µ¥³åÏúÊ§°Ü"; //·µ»ØÃèÊö
+		rtnValue.ResultCode = code;
+		rtnValue.ResultMsg = msg;
 		break;
 	default:
-		rtnValue.rtnMsg = "-3005";
-		rtnValue.rtnMsg = "¶©µ¥³åÏúÊ§°Ü:" + rtn; //·µ»ØÃèÊö
+		rtnValue.ResultCode = -3002;
+		rtnValue.ResultMsg = myAry[1] || "è®¢å•å†²é”€å¤±è´¥"; //è¿”å›æè¿°
 	}
 	return rtnValue;
 }
 
 /**
- * [linkBussinssToNO ¶©µ¥¹ØÁªÒµÎñ]
- * @param {[String]} ETPRowID    [¶©µ¥ID]
- * @param {[String]} HisPrtStr   [ÒµÎñID]
+ * [linkBussinssToNO è®¢å•å…³è”ä¸šåŠ¡]
+ * @param {[String]} ETPRowID    [è®¢å•ID]
+ * @param {[String]} HisPrtStr   [ä¸šåŠ¡ID]
  */
 /*
 function scanOrderConHIS(ETPRowID, HisPrtStr) {
-	var payRtn=tkMakeServerCall("DHCBILL.ScanPay.BLL.DHCBillScanCodePayLogic","ScanOrderConHIS",ETPRowID,HisPrtStr);
-	return  payRtn;
+	var rtn = tkMakeServerCall("DHCBILL.ScanPay.BLL.DHCBillScanCodePayLogic", "ScanOrderConHIS", ETPRowID, HisPrtStr);
+	return rtn;
 }
 */

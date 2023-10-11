@@ -29,7 +29,7 @@ $(function () {
 			QueryName: GV.QUERY,
 			type: GV.Type,
 			hospital: PUBLIC_CONSTANT.SESSION.HOSPID,
-			guser: PUBLIC_CONSTANT.SESSION.USERID
+			guser: ""   //查询所有购入的可用发票
 		},
 		onDblClickRow: function (index, row) {
 			getReceipts(row);

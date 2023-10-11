@@ -1,12 +1,12 @@
-// /åç§°: å…¥åº“å•æ‰“å°
-// /æè¿°: å…¥åº“å•æ‰“å°
-// /ç¼–å†™è€…ï¼šzhangdongmei
-// /ç¼–å†™æ—¥æœŸ: 2012.11.13
+// /Ãû³Æ: Èë¿âµ¥´òÓ¡
+// /ÃèÊö: Èë¿âµ¥´òÓ¡
+// /±àĞ´Õß£ºzhangdongmei
+// /±àĞ´ÈÕÆÚ: 2012.11.13
 
 /*
  * creator:zhangdongmei,2012-11-23
- * description:æ‰“å°å•ä¸ªå…¥åº“å•ï¼ˆæ¶¦ä¹¾ï¼‰
- * params: ingr:å…¥åº“ä¸»è¡¨id
+ * description:´òÓ¡µ¥¸öÈë¿âµ¥£¨ÈóÇ¬£©
+ * params: ingr:Èë¿âÖ÷±íid
  * return:
  * */
 function PrintRec(ingr,printtype){
@@ -31,20 +31,20 @@ function PrintRec(ingr,printtype){
 	var PurUser=mainArr[20]
 	var RQDTFormat=App_StkRQDateFormat  //+" "+App_StkRQTimeFormat;
 	if (printtype==1) {
-		//ç›´æ¥æ‰“å°
-		fileName="{DHCST_StockRec_Common.raq(Parref="+ingr+";VendorIO="+vendorIO+";IngrNo="+ingrNo+";IngrDate="+ingrDate+";IngrLocIO="+ingrLocIO+";CreateUserIO="+CreateUserIO+";PurUserIO="+PurUserIO+ ";HospDescIO="+session['LOGON.HOSPID']+";RQDTFormat="+RQDTFormat+")}";
+		//Ö±½Ó´òÓ¡
+		fileName="{DHCST_StockRec_Common.rpx(Parref="+ingr+";VendorIO="+vendorIO+";IngrNo="+ingrNo+";IngrDate="+ingrDate+";IngrLocIO="+ingrLocIO+";CreateUserIO="+CreateUserIO+";PurUserIO="+PurUserIO+ ";HospDescIO="+session['LOGON.HOSPID']+";RQDTFormat="+RQDTFormat+")}";
 		DHCCPM_RQDirectPrint(fileName);
 	}
 	else {
-		//é¢„è§ˆæ‰“å°	
-		fileName="DHCST_StockRec_Common.raq&Parref="+ingr+"&VendorIO="+vendorIO+"&IngrNo="+ingrNo+"&IngrDate="+ingrDate+"&IngrLocIO="+ingrLocIO+"&CreateUserIO="+CreateUserIO+"&PurUserIO="+PurUserIO+"&HospDescIO="+session['LOGON.HOSPID']+"&RQDTFormat="+RQDTFormat;
+		//Ô¤ÀÀ´òÓ¡	
+		fileName="DHCST_StockRec_Common.rpx&Parref="+ingr+"&VendorIO="+vendorIO+"&IngrNo="+ingrNo+"&IngrDate="+ingrDate+"&IngrLocIO="+ingrLocIO+"&CreateUserIO="+CreateUserIO+"&PurUserIO="+PurUserIO+"&HospDescIO="+session['LOGON.HOSPID']+"&RQDTFormat="+RQDTFormat;
 		DHCCPM_RQPrint(fileName)	
 	}
 }
 /*
  * creator:wyx,2013-11-20
- * description:æ‰“å°å…¥åº“å•éªŒæ”¶å•ï¼ˆæ¶¦ä¹¾ï¼‰
- * params: ingr:å…¥åº“ä¸»è¡¨id
+ * description:´òÓ¡Èë¿âµ¥ÑéÊÕµ¥£¨ÈóÇ¬£©
+ * params: ingr:Èë¿âÖ÷±íid
  * return:
  * */
 function PrintRecCheck(ingr,printtype){
@@ -71,20 +71,20 @@ function PrintRecCheck(ingr,printtype){
 	var AcceptUser=mainArr[23];
 	var RQDTFormat=App_StkRQDateFormat;
 	if (printtype==1) {
-		//ç›´æ¥æ‰“å°
+		//Ö±½Ó´òÓ¡
 	    fileName="{DHCST_StockRecCheck_Common.raq(Parref="+ingr+";VendorIO="+vendorIO+";IngrNo="+ingrNo+";IngrDate="+ingrDate+";IngrLocIO="+ingrLocIO+";CreateUserIO="+CreateUserIO+";AcceptUserIO="+AcceptUserIO+";PurUserIO="+PurUserIO+";HospDescIO="+session['LOGON.HOSPID']+";RQDTFormat="+RQDTFormat+";PurUserIO="+PurUserIO+")}";
 	    DHCCPM_RQDirectPrint(fileName);	
 	}
 	else {
-		//é¢„è§ˆæ‰“å°		
+		//Ô¤ÀÀ´òÓ¡		
 	    fileName="DHCST_StockRecCheck_Common.raq&Parref="+ingr+"&VendorIO="+vendorIO+"&IngrNo="+ingrNo+"&IngrDate="+ingrDate+"&IngrLocIO="+ingrLocIO+"&CreateUserIO="+CreateUserIO+"&AcceptUserIO="+AcceptUserIO+"&PurUserIO="+PurUserIO+"&HospDescIO="+session['LOGON.HOSPID']+"&RQDTFormat="+RQDTFormat+"&PurUserIO="+PurUserIO
 	    DHCCPM_RQPrint(fileName)
 	}
 }
 /*
  * creator:zhangdongmei,2012-11-13
- * description:æ‰“å°å•ä¸ªå…¥åº“å•
- * params: ingr:å…¥åº“ä¸»è¡¨id
+ * description:´òÓ¡µ¥¸öÈë¿âµ¥
+ * params: ingr:Èë¿âÖ÷±íid
  * return:
  * */
 function PrintRecBill(ingr){
@@ -137,8 +137,8 @@ function PrintRecBill(ingr){
 
 /*
  * creator:zhangdongmei,2012-11-13
- * description:å–å…¥åº“æ˜ç»†ä¿¡æ¯
- * params: ingr:å…¥åº“ä¸»è¡¨id
+ * description:È¡Èë¿âÃ÷Ï¸ĞÅÏ¢
+ * params: ingr:Èë¿âÖ÷±íid
  * return:
  * */
 function GetDetailData(ingr){
@@ -157,8 +157,8 @@ function GetDetailData(ingr){
 
 /*
  * creator:zhangdongmei,2012-11-13
- * description:å–å…¥åº“ä¸»è¡¨ä¿¡æ¯
- * params: ingr:å…¥åº“ä¸»è¡¨id
+ * description:È¡Èë¿âÖ÷±íĞÅÏ¢
+ * params: ingr:Èë¿âÖ÷±íid
  * return:
  * */
 function GetMainData(ingr){

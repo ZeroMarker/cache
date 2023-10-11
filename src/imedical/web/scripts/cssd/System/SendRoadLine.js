@@ -1,314 +1,340 @@
-///œ¬ ’œ¬ÀÕœﬂ¬∑Œ¨ª§
-///wxj 2019-04-09
-var init = function (){
-	var SystemBox = $HUI.combobox('#System', {
-		data:[{'RowId':'','Description':'»´≤ø'},{'RowId':'1','Description':'œ˚∂æπ©”¶π‹¿ÌœµÕ≥'},{'RowId':'2','Description':'Œ¿…˙≤ƒ¡œπ‹¿ÌœµÕ≥'},{'RowId':'3','Description':'∑Û¡œπ‹¿ÌœµÕ≥'}],
-		valueField: 'RowId',
-		textField: 'Description'
-	});
-	var StoreLocParams=JSON.stringify(addSessionParams({Type:"All"}));
-	var StoreLocCombox = {
-		type:'combobox',
-		options:{
-			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+StoreLocParams,
-			valueField: 'RowId',
-			textField: 'Description',
-			required:true,
-			onSelect:function(record){
-				var rows =SendLineGrid.getRows();
-				var row = rows[SendLineGrid.editIndex];
-				row.StoreLocDesc=record.Description;
-			},
-			onShowPanel:function(){
-				$(this).combobox('reload')
-			}
-		}
-	};
-	var UserCombox = {
+Ôªø// ‰∏ãÊî∂‰∏ãÈÄÅÁ∫øË∑ØÁª¥Êä§
+var init = function() {
+	function Query() {
+		$UI.clear(SendMainLineGrid);
+		$UI.clear(LocGrid);
+		var Params = JSON.stringify(addSessionParams($UI.loopBlock('LineTB')));
+		SendMainLineGrid.load({
+			ClassName: 'web.CSSDHUI.System.SendRoadLine',
+			QueryName: 'SelectAll',
+			Params: Params,
+			rows: 999
+		});
+	}
+
+	var SupLocParams = JSON.stringify(addSessionParams({ Type: 'SupLoc', BDPHospital: gHospId }));
+	var SupLocCombox = {
 		type: 'combobox',
 		options: {
-			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetUser&ResultSetType=array',
+			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + SupLocParams,
 			valueField: 'RowId',
 			textField: 'Description',
 			required: true,
-			onSelect:function(record){
-				var rows =SendLineGrid.getRows();
-				var row = rows[SendLineGrid.editIndex];
-				row.SendUserName=record.Description;
-			},
-			onShowPanel:function(){
-				$(this).combobox('reload');
+			onSelect: function(record) {
+				var rows = SendMainLineGrid.getRows();
+				var row = rows[SendMainLineGrid.editIndex];
+				row.SupLocDesc = record.Description;
 			}
 		}
 	};
-	var LocParams=JSON.stringify(addSessionParams({Type:"All"}));
-	var LocCombox = {
-		type:'combobox',
-		options:{
-			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+LocParams,
-			valueField: 'RowId',
-			textField: 'Description',
-			required:true,
-			onSelect:function(record){
-				var rows = LocGrid.getRows();
-				var row = rows[LocGrid.editIndex];
-				row.LocDesc=record.Description;
-			},
-			onShowPanel:function(){
-				$(this).combobox('reload');
-			}
-		}
-	}
-	var systemData =[{'RowId':'1','Description':'œ˚∂æπ©”¶π‹¿ÌœµÕ≥'},{'RowId':'2','Description':'Œ¿…˙≤ƒ¡œπ‹¿ÌœµÕ≥'},{'RowId':'3','Description':'∑Û¡œπ‹¿ÌœµÕ≥'}]
-	var systemCombox = {
+	var LineUserParams = JSON.stringify(addSessionParams({ BDPHospital: gHospId }));
+	var LineUserCombox = {
 		type: 'combobox',
 		options: {
-			data: systemData,
+			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetAllUser&ResultSetType=array&Params=' + LineUserParams,
 			valueField: 'RowId',
-			textField: 'Description'
+			textField: 'Description',
+			required: false,
+			onSelect: function(record) {
+				var rows = SendMainLineGrid.getRows();
+				var row = rows[SendMainLineGrid.editIndex];
+				row.LineUserName = record.Description;
+			}
 		}
-	} 
-	$UI.linkbutton('#SearchBT',{ 
-		onClick:function(){
-			var Params = JSON.stringify($UI.loopBlock('LineTB'));
-			SendLineGrid.load({
-				ClassName: 'web.CSSDHUI.System.SendRoadLine',
-				QueryName: 'SelectSendLine',
-				Params: Params,
-				rows:999
-			});
-			$UI.clear(LocGrid);
+	};
+
+	var SendLineGridCm = [[
+		{
+			title: 'RowId',
+			field: 'RowId',
+			width: 10,
+			hidden: true
+		}, {
+			title: '‰æõÂ∫îÂÆ§',
+			field: 'SupLocId',
+			formatter: CommonFormatter(SupLocCombox, 'SupLocId', 'SupLocDesc'),
+			editor: SupLocCombox,
+			width: 200
+		}, {
+			title: 'Á∫øË∑ØÁºñÂè∑',
+			align: 'center',
+			field: 'LineCode',
+			width: 100,
+			editor: { type: 'validatebox', options: { required: true }}
+		}, {
+			title: 'Á∫øË∑ØÊèèËø∞',
+			field: 'LineDesc',
+			width: 150,
+			editor: { type: 'validatebox', options: { required: true }}
+		}, {
+			title: 'Ë¥üË¥£‰∫∫',
+			field: 'LineUserId',
+			width: 200,
+			formatter: CommonFormatter(LineUserCombox, 'LineUserId', 'LineUserName'),
+			editor: LineUserCombox
 		}
-	});
-	$UI.linkbutton('#ClearBT',{ 
-		onClick:function(){
-			$UI.clearBlock('BorderLine');
-			$UI.clear(SendLineGrid);
-			$UI.clear(LocGrid);
-			$('#System').combobox("setValue","");
-		}
-	});
-	$UI.linkbutton('#AddBT',{ 
-		onClick:function(){
-			SendLineGrid.commonAddRow();
-			DeflocGrp("");
-		}
-	});
-	$UI.linkbutton('#SaveBT',{ 
-		onClick:function(){
-			var Rows=SendLineGrid.getChangesData();
-			if(isEmpty(Rows)){
-				//$UI.msg('alert','√ª”––Ë“™±£¥Êµƒ–≈œ¢!');
+	]];
+	var SendMainLineGrid = $UI.datagrid('#SendLineGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.SendRoadLine',
+			QueryName: 'SelectAll'
+		},
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.System.SendRoadLine',
+			MethodName: 'jsDelete'
+		},
+		saveDataFn: function() {
+			var Rows = SendMainLineGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows === false) {
+				$UI.msg('alert', 'Â≠òÂú®Êú™Â°´ÂÜôÁöÑÂøÖÂ°´È°πÔºå‰∏çËÉΩ‰øùÂ≠ò!');
 				return;
 			}
 			$.cm({
 				ClassName: 'web.CSSDHUI.System.SendRoadLine',
-				MethodName: 'Save',
+				MethodName: 'jsSave',
 				Params: JSON.stringify(Rows)
-			},function(jsonData){
-				$UI.msg('success',jsonData.msg);
-				if(jsonData.success==0){
-					SendLineGrid.reload();
-				}else{
-					$UI.msg('error',jsonData.msg);
+			}, function(jsonData) {
+				$UI.msg('success', jsonData.msg);
+				if (jsonData.success === 0) {
+					SendMainLineGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
 				}
 			});
-		}
-	});
-	
-	$UI.linkbutton('#DeleteBT',{ 
-		onClick:function (){
-			SendLineGrid.commonDeleteRow();
-			Delete();
-		}
-	});
-	function Delete(){
-		var Rows=SendLineGrid.getSelectedData()
-		if(isEmpty(Rows)){
-			//$UI.msg('alert','√ª”–—°÷–µƒ–≈œ¢!')
-			return;
-		}
-		$.messager.confirm("≤Ÿ◊˜Ã· æ","ƒ˙»∑∂®“™÷¥––…æ≥˝≤Ÿ◊˜¬£ø",function(data){
-			if(data){
-				$.cm({
-					ClassName: 'web.CSSDHUI.System.SendRoadLine',
-					MethodName: 'Delete',
-					Params: JSON.stringify(Rows)
-					},function(jsonData){
-						if(jsonData.success==0){
-							$UI.msg('success',jsonData.msg);
-							SendLineGrid.reload()
-						}else{
-						 	$UI.msg('error',jsonData.msg);
-						}
-					});
-			}
-		});
-	}
-	
-	
-	var SendLineGridCm = [[{
-			title: 'RowId',
-			field: 'RowId',
-			width:10,
-			hidden: true
-		}, {
-			title: 'œµÕ≥',
-			field: 'System',
-			width:150,
-			formatter: CommonFormatter(systemCombox,'System','SystemDesc'),
-			editor:systemCombox
-		}, {
-			title: '≤÷ø‚',
-			field: 'StockLocId',
-			formatter: CommonFormatter(StoreLocCombox,'StoreLocId','StoreLocDesc'),
-			editor:StoreLocCombox,
-			width:200
-		}, {
-			title: '¬•∫≈',
-			align:'right',
-			field: 'FloorCode',
-			width:100,
-			editor:{type:'numberbox',options:{required:true}}
-		}, {
-			title: 'œﬂ¬∑±‡∫≈',
-			align:'right',
-			field: 'LineCode',
-			width:100,
-			editor:{type:'numberbox',options:{required:true}}
-		}, {
-			title: 'œﬂ¬∑√Ë ˆ',
-			field: 'LineDesc',
-			width:150,
-			editor:{type:'validatebox',options:{required:true}}
-		}, {
-			title: '∏∫‘»À',
-			field: 'SendUserId',
-			width:200,
-			formatter: CommonFormatter(UserCombox, 'SendUserId', 'SendUserName'),
-			editor: UserCombox
-		}
-	]];
-	var SendLineGrid = $UI.datagrid('#SendLineGrid', {
-		lazy:false,
-		queryParams: {
-			ClassName: 'web.CSSDHUI.System.SendRoadLine',
-			QueryName: 'SelectSendLine'
 		},
 		columns: SendLineGridCm,
+		showAddSaveDelItems: true,
+		fitColumns: true,
 		pagination: false,
 		remoteSort: false,
-		onLoadSuccess:function(data){
-			if(data.rows.length>0){
-				$('#SendLineGrid').datagrid("selectRow", 0)
-				var Row=SendLineGrid.getRows()[0]
-				var Id = Row.RowId;
-				DeflocGrp(Id);
-		 	}
-		},
-		//sortName: 'RowId',
-		//sortOrder: 'Desc',
-		onClickCell: function(index, filed ,value){
-			var Row=SendLineGrid.getRows()[index]
-			var Id = Row.RowId;
-			if(!isEmpty(Id)){
-				DeflocGrp(Id);
+		checkField: 'SupLocId',
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
+				$('#SendLineGrid').datagrid('selectRow', 0);
 			}
-			SendLineGrid.commonClickCell(index,filed);
+		},
+		onClickRow: function(index, row) {
+			SendMainLineGrid.commonClickRow(index, row);
+		},
+		onSelect: function(index, rowData) {
+			var RoadLineId = rowData.RowId;
+			if (!isEmpty(RoadLineId)) {
+				LocGrid.load({
+					ClassName: 'web.CSSDHUI.System.SendRoadLine',
+					QueryName: 'SelectLineItm',
+					RoadLineId: RoadLineId,
+					rows: 999
+				});
+				TimeGrid.load({
+					ClassName: 'web.CSSDHUI.System.SendRoadLine',
+					QueryName: 'SelectLineTime',
+					RoadLineId: RoadLineId,
+					rows: 999
+				});
+			}
+		},
+		afterDelFn: function() {
+			LocGrid.reload();
+			TimeGrid.reload();
 		}
-	})
-	
-	var LocGridCm = [[{
-			title: 'Rowid',
-			field: 'Rowid',
-			width:10,
+	});
+
+	var LocParams = JSON.stringify(addSessionParams({ Type: 'All', BDPHospital: gHospId }));
+	var LocCombox = {
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + LocParams,
+			valueField: 'RowId',
+			textField: 'Description',
+			required: true,
+			onSelect: function(record) {
+				var rows = LocGrid.getRows();
+				var row = rows[LocGrid.editIndex];
+				row.LocDesc = record.Description;
+			}
+		}
+	};
+
+	var LocGridCm = [[
+		{
+			field: 'ck',
+			checkbox: true,
+			width: 50
+		}, {
+			title: 'RowId',
+			field: 'RowId',
+			width: 60,
 			hidden: true
-		},{
-			title: '¥˙¬Î',
-			field: 'LocCode', 
-			width:200
-		},{
-			title: '√Ë ˆ',
+		}, {
+			title: 'ÁßëÂÆ§‰ª£Á†Å',
+			field: 'LocCode',
+			width: 200
+		}, {
+			title: 'ÁßëÂÆ§ÊèèËø∞',
 			field: 'LocId',
-			width:200,
-			formatter: CommonFormatter(LocCombox,'LocId','LocDesc'),
-			editor:LocCombox
+			width: 200,
+			formatter: CommonFormatter(LocCombox, 'LocId', 'LocDesc'),
+			editor: LocCombox
 		}
 	]];
 	var LocGrid = $UI.datagrid('#LocGrid', {
 		queryParams: {
 			ClassName: 'web.CSSDHUI.System.SendRoadLine',
-			QueryName: 'SelectLineDetail'
+			QueryName: 'SelectLineItm'
 		},
-		showAddSaveDelItems:true,
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.System.SendRoadLine',
+			MethodName: 'jsDeleteItm'
+		},
+		showAddSaveDelItems: true,
 		columns: LocGridCm,
 		fitColumns: true,
+		singleSelect: false,
 		pagination: false,
 		remoteSort: false,
-		saveDataFn:function(){//±£¥Ê√˜œ∏
+		checkField: 'LocId',
+		sortName: 'RowId',
+		sortOrder: 'asc',
+		saveDataFn: function() {
 			var Rows = LocGrid.getChangesData();
-			if(isEmpty(Rows)){
-				//$UI.msg('alert','√ª”––Ë“™±£¥Êµƒ–≈œ¢!');
+			if (isEmpty(Rows)) {
 				return;
 			}
-			var Selected = SendLineGrid.getSelected();
-			var PRowId = Selected.RowId;
+			if (Rows === false) {
+				$UI.msg('alert', 'Â≠òÂú®Êú™Â°´ÂÜôÁöÑÂøÖÂ°´È°πÔºå‰∏çËÉΩ‰øùÂ≠ò!');
+				return;
+			}
+			var RoadLineObj = SendMainLineGrid.getSelected();
+			var RoadLineId = RoadLineObj.RowId;
 			$.cm({
 				ClassName: 'web.CSSDHUI.System.SendRoadLine',
-				MethodName: 'SaveDetail',
-				Parref: PRowId,
+				MethodName: 'jsSaveItm',
+				RoadLineId: RoadLineId,
 				Params: JSON.stringify(Rows)
-			},function(jsonData){
-				if(jsonData.success==0){
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
 					$UI.msg('success', jsonData.msg);
 					LocGrid.reload();
-				}else{
+				} else {
 					$UI.msg('error', jsonData.msg);
 				}
 			});
 		},
-		beforeAddFn:function(){
+		beforeAddFn: function() {
 			var rowMain = $('#SendLineGrid').datagrid('getSelected');
-			if(isEmpty(rowMain)){
-				$UI.msg('alert','«Î—°‘Òœﬂ¬∑Œ¨ª§!');
+			if (isEmpty(rowMain)) {
+				$UI.msg('alert', 'ËØ∑ÈÄâÊã©Á∫øË∑ØÁª¥Êä§!');
 				return false;
 			}
 		},
-		beforeDelFn:function(){
-			var rowLoc = $('#LocGrid').datagrid('getSelected');
-			if(!isEmpty(rowLoc)){
-				if (!isEmpty(rowLoc.Rowid)) {
-					var Rows=LocGrid.getSelectedData();
-					$.cm({
-						ClassName:'web.CSSDHUI.System.SendRoadLine',
-						MethodName:'DeleteDetail',
-						Params:JSON.stringify(Rows)
-					},function(jsonData){
-						if(jsonData.success==0){
-							//$UI.msg('success', jsonData.msg);
-							$('#LocGrid').datagrid('reload');
-						}else{
-							$UI.msg('error', jsonData.msg);
-						}
-					});	
-				}
-			}else{
-				$UI.msg('alert','«Î—°‘Ò“™…æ≥˝µƒµ•æ›!');
+		onCheck: function(index, row) {
+			LocGrid.commonClickRow(index, row);
+		},
+		onClickCell: function(index, field, value) {
+			var Row = LocGrid.getRows()[index];
+			if (!isEmpty(Row.RowId) && field === 'LocId') {
 				return false;
 			}
-		},
-		onClickCell: function(index, field ,value){
-			LocGrid.commonClickCell(index,field);
+			LocGrid.commonClickCell(index, field);
 		}
 	});
-	
-	function DeflocGrp(Id) {
-		LocGrid.load({
+
+	var TimeGridCm = [[
+		{
+			field: 'ck',
+			checkbox: true,
+			width: 50
+		}, {
+			title: 'RowId',
+			field: 'RowId',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'ÂºÄÂßãÊó∂Èó¥',
+			field: 'StartTime',
+			width: 100,
+			editor: {
+				type: 'timespinner',
+				options: {
+					required: true,
+					showSeconds: false
+				}
+			}
+		}, {
+			title: 'ÁªìÊùüÊó∂Èó¥',
+			field: 'EndTime',
+			width: 100,
+			editor: {
+				type: 'timespinner',
+				options: {
+					required: true,
+					showSeconds: false
+				}
+			}
+		}
+	]];
+
+	var TimeGrid = $UI.datagrid('#TimeGrid', {
+		queryParams: {
 			ClassName: 'web.CSSDHUI.System.SendRoadLine',
-			QueryName: 'SelectLineDetail',
-			Parref:Id,
-			rows:999
-		});
-	}
-}
+			QueryName: 'SelectLineTime'
+		},
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.System.SendRoadLine',
+			MethodName: 'jsDeleteLineTime'
+		},
+		showAddSaveDelItems: true,
+		columns: TimeGridCm,
+		fitColumns: true,
+		singleSelect: false,
+		pagination: false,
+		remoteSort: false,
+		saveDataFn: function() {
+			var Rows = TimeGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows === false) {
+				$UI.msg('alert', 'Â≠òÂú®Êú™Â°´ÂÜôÁöÑÂøÖÂ°´È°πÔºå‰∏çËÉΩ‰øùÂ≠ò!');
+				return;
+			}
+			for (var i = 0; i < Rows.length; i++) {
+				if (Rows[i]['StartTime'] >= Rows[i]['EndTime']) {
+					$UI.msg('alert', 'ÁªìÊùüÊó∂Èó¥ÈúÄÂ§ß‰∫éÂºÄÂßãÊó∂Èó¥!');
+					TimeGrid.commonClickRow(i, Rows[i]);
+					return;
+				}
+			}
+			var RoadLineObj = SendMainLineGrid.getSelected();
+			var RoadLineId = RoadLineObj.RowId;
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.SendRoadLine',
+				MethodName: 'jsSaveLineTime',
+				RoadLineId: RoadLineId,
+				Params: JSON.stringify(Rows)
+			}, function(jsonData) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', jsonData.msg);
+					TimeGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		beforeAddFn: function() {
+			var rowMain = $('#SendLineGrid').datagrid('getSelected');
+			if (isEmpty(rowMain)) {
+				$UI.msg('alert', 'ËØ∑ÈÄâÊã©Á∫øË∑ØÁª¥Êä§!');
+				return false;
+			}
+		},
+		onCheck: function(index, row) {
+			TimeGrid.commonClickRow(index, row);
+		}
+	});
+	Query();
+};
 $(init);

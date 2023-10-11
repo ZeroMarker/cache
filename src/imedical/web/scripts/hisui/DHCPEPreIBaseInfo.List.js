@@ -28,7 +28,7 @@ function BNew_Click()
 	//websys_lu(str,false,'width=1020,height=545,hisui=true,title=个人基本信息维护')
    // window.open(str,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=1000,height=1200,left=120,top=0')
 	var lnk="dhcpepreibaseinfo.edit.hisui.csp";
-	websys_lu(lnk,false,'iconCls=icon-w-edit,width=795,height=640,hisui=true,title=个人基本信息维护')
+	websys_lu(lnk,false,'iconCls=icon-w-edit,width=795,height=680,hisui=true,title=个人基本信息维护')
 
 }
 function RegNo_keydown(e){
@@ -42,11 +42,11 @@ function RegNo_keydown(e){
 
 function BFind_Click()
 {   
-   
-    var RegNoLength=tkMakeServerCall("web.DHCPE.DHCPECommon","GetRegNoLength");
+   var CTLocID=session['LOGON.CTLOCID']
+    var RegNoLength=tkMakeServerCall("web.DHCPE.DHCPECommon","GetRegNoLength",CTLocID);
 	iRegNo=getValueById("RegNo");
 	if (iRegNo.length<RegNoLength&&iRegNo.length>0) { 
-		iRegNo=RegNoMask(iRegNo);
+		iRegNo=RegNoMask(iRegNo,CTLocID);
 		$("#RegNo").val(iRegNo);
 	}
 	

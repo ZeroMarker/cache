@@ -47,9 +47,16 @@ function debounce(func, wait, immediate) {
     return debounced;
 }
 var GV={};
+if (typeof isV85Plus=='string' && isV85Plus=='1') {
+	GV.SendModeJson=$.cm({ClassName:'websys.DHCMessageActionTypeMgr',MethodName:'OutSendModeJSON'},false);
+}else{
+	GV.SendModeJson=[{id:'I',text:'信息系统'}];
+}
+
 GV.CVTypeJson=[{id:"1",text:"检验"},{id:"2",text:"病理"},{id:"3",text:"心电"},{id:"4",text:"超声"},{id:"5",text:"内镜"},{id:"6",text:"放射"}];
 GV.AdmType={"O":"门诊","I":"住院","E":"急诊","H":"体检"};
 GV.DaysOfWeekMap={"0":"周日","1":"周一","2":"周二","3":"周三","4":"周四","5":"周五","6":"周六"};
+GV.TargetRoleTypeJson=[{id:'',text:'自动判断'},{id:'AdmLoc',text:'就诊科室'},{id:'OrdLoc',text:'下医嘱科室'},{id:'Any',text:'任何角色'},{id:'Other',text:'其它'}];
 GV.DaysOfWeekJson=[];
 $.each(GV.DaysOfWeekMap,function(id,text){
 	GV.DaysOfWeekJson.push({id:id,text:text})
@@ -120,39 +127,44 @@ var init=function(){
 			doCheck1045();	
 		}
 	})
-	GenHospComp('DHC_AntCVMsgCfg');
-	$('#_HospList').combogrid('options').onSelect=function(row){
-		//console.log("onSelect",row);	
-		debounced_reInit();
-	}
-	$('#_HospList').combogrid('options').onLoadSuccess=function(data){
-		$('#_HospList').combogrid('setValue',data.rows[0].HOSPRowId);
-		debounced_reInit();
-	}	
 	
-	/*$('#_HospList').combogrid({
-		width:250,
-		panelWidth:450,
-		delay: 500,
-		mode: 'remote',
-		url:$URL+"?ClassName=web.CTHospital&QueryName=List",
-		onBeforeLoad:function(param){
-			param.desc=param.q;
-			return true;
-		},
-		onSelect:function(row){
-			console.log("onSelect",row);	
+	if (typeof GenHospComp=='function' ) {
+		GenHospComp('DHC_AntCVMsgCfg');
+		$('#_HospList').combogrid('options').onSelect=function(row){
+			//console.log("onSelect",row);	
 			debounced_reInit();
-		},
-		onLoadSuccess:function(data){
+		}
+		$('#_HospList').combogrid('options').onLoadSuccess=function(data){
 			$('#_HospList').combogrid('setValue',data.rows[0].HOSPRowId);
 			debounced_reInit();
-		},
-		idField:"HOSPRowId",textField:"HOSPDesc",
-		columns:[[{field:'HOSPDesc',title:'医院名称',width:200},{field:'HOSPCode',title:'医院代码',width:200}]],
-		pagination:true
-	})
-	*/
+		}	
+		
+	}else{
+		$('#_HospList').combogrid({
+			width:250,
+			panelWidth:450,
+			delay: 500,
+			mode: 'remote',
+			url:$URL+"?ClassName=web.CTHospital&QueryName=List",
+			onBeforeLoad:function(param){
+				param.desc=param.q;
+				return true;
+			},
+			onSelect:function(row){
+				console.log("onSelect",row);	
+				debounced_reInit();
+			},
+			onLoadSuccess:function(data){
+				$('#_HospList').combogrid('setValue',data.rows[0].HOSPRowId);
+				debounced_reInit();
+			},
+			idField:"HOSPRowId",textField:"HOSPDesc",
+			columns:[[{field:'HOSPDesc',title:'医院名称',width:200},{field:'HOSPCode',title:'医院代码',width:200}]],
+			pagination:true
+		})
+		
+	}
+
 	var reInit=function(){
 		var hosp=$('#_HospList').combogrid('getValue');
 		hosp=parseInt(hosp)>0?parseInt(hosp):'';
@@ -279,7 +291,10 @@ var init=function(){
 			}},
 			{field:"TStartTime",title:"开始时间",width:80},
 			{field:"TEndTime",title:"结束时间",width:80},
+			{field:"TResultContains",title:"结果需包含",width:150},
+			{field:"TSendModeDesc",title:"发送方式",width:80},
 			{field:"TReceiveDesc",title:"消息接收者",width:150}
+			,{field:"TTargetRoleDesc",title:"目标角色",width:150}
 		]],
 		pagination:true,
 		pageSize:20,
@@ -357,6 +372,12 @@ var init=function(){
 	});
 	//$('#Loading').fadeOut('fast');
 
+	setTimeout(function(){
+		var height=$('#index_tree_tb')._outerHeight();
+		$('#index_tree_layout').layout('panel','north').panel('resize',{height:height});
+		$('#index_tree_layout').layout('resize');	
+	},200)
+
 }
 
 var initEditWin=function(){
@@ -372,7 +393,7 @@ var initEditWin=function(){
 				$('#cfg_edit_win').dialog('close');
 			}
 		}],
-		width:350
+		width:680
 		
 	})
 	$('#TAdmType').combobox({
@@ -397,22 +418,34 @@ var initEditWin=function(){
 	})
 	$('#TSendTimes').numberbox({min:1,max:5});
 	$("#TSendInterval").numberbox({min:0,max:60*24-1,required:true});
-	//取配置的危急值类型
-	$.q({
-		ClassName:'web.DHCAntCVOptions',QueryName:'Find',OptsType:'CVType'
-	},function(ret){
-		if (ret && ret.rows ){
-			GV.CVTypeJson=[];
-			$.each(ret.rows,function(ind,item){
-				GV.CVTypeJson.push({id:item.TCode,text:item.TDesc});
+	
+	if (typeof isCVTypeSupport=='string' && isCVTypeSupport=='1') {
+		//取配置的危急值类型
+		$.q({
+			ClassName:'web.DHCAntCVOptions',QueryName:'Find',OptsType:'CVType'
+		},function(ret){
+			if (ret && ret.rows ){
+				GV.CVTypeJson=[];
+				$.each(ret.rows,function(ind,item){
+					GV.CVTypeJson.push({id:item.TCode,text:item.TDesc});
+				})
+			}
+			$('#TCVTypes').combobox({
+				data:GV.CVTypeJson,
+				valueField:'id',textField:'text',editable:false,multiple:true,panelHeight:'auto',
+				required:true
 			})
-		}
+		})
+	}else{
 		$('#TCVTypes').combobox({
 			data:GV.CVTypeJson,
 			valueField:'id',textField:'text',editable:false,multiple:true,panelHeight:'auto',
 			required:true
 		})
-	})
+	}
+	
+	
+
 	$('#TDaysOfWeek').combobox({ //星期
 		data:GV.DaysOfWeekJson,
 		valueField:'id',textField:'text',editable:false,multiple:true,panelHeight:'auto'
@@ -420,7 +453,7 @@ var initEditWin=function(){
 	$("#TStartTime").timespinner({width:200,showSeconds:true});
 	$("#TEndTime").timespinner({width:200,showSeconds:true});
 	$('#TReceiveType').combobox({
-		data:[{id:'M',text:'消息平台接收对象'},{id:'L',text:'科室'},{id:'U',text:'用户'}],
+		data:[{id:'M',text:'消息平台接收对象'},{id:'L',text:'科室'},{id:'U',text:'用户'},{id:'G',text:'安全组'},{id:'LTEL',text:'科室电话'}],
 		valueField:'id',textField:'text',editable:false,
 		onChange:function(nv,ov){
 			//ReInitTReceiveObj(nv);
@@ -448,6 +481,62 @@ var initEditWin=function(){
 		columns:[[{field:'Code',title:'代码',width:200},{field:'Desc',title:'名称',width:200}]],
 		pagination:true
 	})
+	//alert(1)
+	$('#TSendMode').combobox({
+		data:GV.SendModeJson,
+		valueField:'id',textField:'text',editable:false,panelHeight:'auto'
+	})
+	
+	//======目标角色 START =================================================
+	$('#TTragetRoleType').combobox({
+		data:GV.TargetRoleTypeJson,
+		valueField:'id',textField:'text',editable:false,panelHeight:'auto',
+		onChange:function(nv,ov){
+			if (nv=="Other"){
+				$('#TTragetRoleLoc').combogrid('enable');
+				$('#TTragetRoleGroup').combogrid('enable');
+			}else if(ov=="Other"){
+				$('#TTragetRoleLoc').combogrid('disable');
+				$('#TTragetRoleGroup').combogrid('disable');
+			}
+		},
+		value:""
+	})
+	
+	$('#TTragetRoleLoc').combogrid({
+		panelWidth:450,
+		delay: 500,
+		mode: 'remote',
+		url:$URL+"?ClassName=websys.DHCMessageReceiveCfgMgr&QueryName=FindReceiveObj",
+		onBeforeLoad:function(param){
+			param.desc=param.q;
+			param.rectype='L';
+			return true;
+		},
+		idField:"ID",textField:"Desc",
+		columns:[[{field:'Desc',title:'科室名称',width:200},{field:'Code',title:'科室代码',width:200}]],
+		pagination:true,
+		disabled:true
+	})
+	$('#TTragetRoleGroup').combogrid({
+		panelWidth:450,
+		delay: 500,
+		mode: 'remote',
+		url:$URL+"?ClassName=websys.DHCMessageReceiveCfgMgr&QueryName=FindReceiveObj",
+		onBeforeLoad:function(param){
+			param.desc=param.q;
+			param.rectype='G';
+			return true;
+		},
+		idField:"ID",textField:"Desc",
+		columns:[[{field:'Desc',title:'安全组名称',width:200},{field:'Code',title:'代码',width:200}]],
+		pagination:true,
+		disabled:true
+		
+	})
+	//===目标角色 END =========================================
+	
+	
 
 	
 	GV.setEditVal=function(row){
@@ -469,6 +558,8 @@ var initEditWin=function(){
 			$('#TDaysOfWeek').combobox('setValues',row.TDaysOfWeek?row.TDaysOfWeek.split(","):[]); //星期
 			$("#TStartTime").timespinner('setValue',row.TStartTime);
 			$("#TEndTime").timespinner('setValue',row.TEndTime);
+			$('#TSendMode').combobox('setValue',row.TSendMode);
+			
 			var TReceiveCode=row.TReceiveCode;
 			var TReceiveDesc=row.TReceiveDesc;
 			var RTypeVal=TReceiveCode.split("-")[0],
@@ -482,6 +573,20 @@ var initEditWin=function(){
 			//$('#TReceiveObj').combogrid('grid').datagrid('reload',{'q':RObjDesc});
 			//$('#TReceiveObj').combogrid('setValue',RObjVal);
 			$('#TReceiveObj').combogrid('setRemoteValue',{value:RObjVal,text:RObjDesc});
+			
+			if ($.hisui.indexOfArray(GV.TargetRoleTypeJson,'id',row.TTargetRole)>-1){
+				$('#TTragetRoleType').combobox('setValue',row.TTargetRole);
+				$('#TTragetRoleLoc').combogrid('setRemoteValue',{value:'',text:''});
+				$('#TTragetRoleGroup').combogrid('setRemoteValue',{value:'',text:''});
+			}else{
+				$('#TTragetRoleType').combobox('setValue','Other');
+				var loc="",group="";
+				if (row.TTargetRole.indexOf('L')>-1) loc=(parseInt(row.TTargetRole.split('L')[1])||'')+'';
+				if (row.TTargetRole.indexOf('G')>-1) group=(parseInt(row.TTargetRole.split('G')[1])||'')+'';
+				$('#TTragetRoleLoc').combogrid('setRemoteValue',{value:loc,text:loc==''?'':(row.TTargetRoleDesc.split(',')[0]||'')});
+				$('#TTragetRoleGroup').combogrid('setRemoteValue',{value:loc,text:group==''?'':(row.TTargetRoleDesc.split(',')[loc==''?0:1]||'')});
+			}
+			$('#TResultContains').val(row.TResultContains);
 			
 		}else{
 			$('#TId').val('');
@@ -504,6 +609,14 @@ var initEditWin=function(){
 			$('#TReceiveType').combobox('setValue','');
 			$('#TReceiveObj').combogrid({queryParams:{rectype:""}});
 			$('#TReceiveObj').combogrid('setValue','');
+			
+			$('#TTragetRoleType').combobox('setValue','');
+			$('#TTragetRoleLoc').combogrid('setRemoteValue',{value:'',text:''});
+			$('#TTragetRoleGroup').combogrid('setRemoteValue',{value:'',text:''});
+			
+			$('#TSendMode').combobox('setValue','');
+			$('#TResultContains').val('');
+			
 		}
 		$('#TAdmType').combobox('disable');
 		$('#TAdmLoc').combogrid('disable');
@@ -515,6 +628,7 @@ var initEditWin=function(){
 			$("#TSendInterval").numberbox('options').min=1;
 			$("#TSendInterval").numberbox('enable').numberbox('validate');
 		}
+		
 	}
 	GV.save=function(){
 		
@@ -538,10 +652,23 @@ var initEditWin=function(){
 		data.ReceiveCode=ReceiveType+"-"+TReceiveObj;
 		
 		
+		var TargetRole=$('#TTragetRoleType').combobox('getValue');
+		if (TargetRole=="Other"){
+			TargetRole='';
+			var loc=$('#TTragetRoleLoc').combogrid('getValue');
+			var group=$('#TTragetRoleGroup').combogrid('getValue');
+			if (loc>0) TargetRole=TargetRole+'L'+loc;
+			if (group>0) TargetRole=TargetRole+'G'+group;
+		}
+		data.TargetRole=TargetRole;
+		
 		var hosp=$('#_HospList').combogrid('getValue');
 		hosp=parseInt(hosp)>0?parseInt(hosp):'';
 		data.HospId=hosp;
 		
+		data.SendMode=$('#TSendMode').combobox('getValue');
+		
+		data.ResultContains=$.trim($('#TResultContains').val());
 		
 		//console.log(data);
 

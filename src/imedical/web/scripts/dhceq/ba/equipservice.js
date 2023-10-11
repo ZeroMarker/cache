@@ -15,9 +15,8 @@ function initDocument()
 	initButtonWidth();
 	initLookUp(); //初始化放大镜
 	initButton(); //按钮初始化
-	jQuery("#BAdd").linkbutton({iconCls: 'icon-w-add'});
-	jQuery("#BAdd").on("click", BAdd_Clicked);
 	///modified by ZY0209
+	setEnabled(); //按钮控制
 	findEquipList(0);
 	findEquipService();
 	//add by ZY0224 2020-04-24
@@ -118,9 +117,19 @@ function BDelete_Clicked()
 	    messageShow("confirm","","",t[-9203],"",confirmFun,"")
 	}
 }
-///modified by ZY0215 2020-04-02
+///modified by ZY0258 2021-03-31
 function confirmFun()
 {
+	DeleteRowIDs=""
+	var rows = $('#DHCEQServiceItem').datagrid('getRows');
+	for (var i = 0; i < rows.length; i++) 
+	{
+		var oneRow=rows[i]
+		if (oneRow.Opt=="Y")
+		{
+			DeleteRowIDs=DeleteRowIDs+","+oneRow.TRowID
+		}
+	}
 	var jsonData=tkMakeServerCall("web.DHCEQ.BA.CTEquipService","DeleteData",DeleteRowIDs);
 	jsonData=JSON.parse(jsonData)
 	
@@ -128,6 +137,8 @@ function confirmFun()
 	{
 		messageShow("","","","操作成功!");
 		findEquipService()
+		///modified by ZY0256 20210315
+		var DeleteRowIDs=""
 	}
 	else
     {
@@ -221,11 +232,23 @@ function findEquipService()
 				SourceType:getElementValue("SourceType"),
 				SourceID:getElementValue("SourceID"),
 		},
-		rownumbers: true,  //如果为true，则显示一个行号列。
+		//rownumbers: true,  //如果为true，则显示一个行号列。
 		singleSelect:true,
 		fitColumns:true,  //modify by lmm 2020-06-06 UI
 		fit:true,
 		border:false,
+		toolbar:[{                    //modify by txr 2023-02-09 UI
+				iconCls:'icon-add',
+				text:'新增',
+				id:'add',
+				handler:function(){BAdd_Clicked();}
+			},
+			{
+				iconCls:'icon-cancel',
+				text:'删除',
+				id:'delete',
+				handler:function(){BDelete_Clicked();}
+			}],
 		columns:ESColumns,
 		pagination:true,
 		pageSize:25,
@@ -233,4 +256,22 @@ function findEquipService()
 		pageList:[25,50,75,100],
 	    onClickRow: function (rowIndex,rowData) {}
 	});
+}
+///add by ZY 20211014
+function setEnabled()
+{
+	var ReadOnly=getElementValue("ReadOnly");
+	if (ReadOnly==1)
+	{
+		
+		disableElement("BFind",true)
+		disableElement("BAdd",true)
+		disableElement("BDelete",true)
+	}
+}
+
+///add by ZY0301 20220523
+function getParam(ID)
+{
+	
 }

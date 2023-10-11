@@ -8,6 +8,8 @@ $(function(){
 		
 	InitCombobox();
 	
+	 info();
+	 
 	InitMessageTempletDataGrid();
    
     //查询
@@ -34,8 +36,16 @@ $(function(){
     $('#del_btn').click(function(e){
     	DelData();
     });
+    
+   
    
 })
+
+
+function info()
+{
+	$("#Active").checkbox('setValue',true)
+}
 
 function AddData()
 {
@@ -118,11 +128,7 @@ SaveForm=function(id)
 	   }
 	    if(flag==0){
 		    $.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
-		    $("#MessageTempletGrid").datagrid('load',{
-			    ClassName:"web.DHCPE.MessageTemplet",
-			    QueryName:"FindMessageTemplet",
-			    Active:$("#Active").checkbox('getValue'),
-			    }); 
+		    BFind_click();	
 			$('#myWin').dialog('close'); 
 	    }else{
 		    $.messager.alert('操作提示',"保存失败","error");
@@ -134,6 +140,7 @@ function UpdateData()
 {
 	
 	var ID=$("#ID").val();
+	
 	if(ID==""){
 		$.messager.alert('操作提示',"请选择待修改的记录","info");
 		return
@@ -187,14 +194,8 @@ function DelData()
 				if (ReturnValue!='0') {
 					$.messager.alert("提示","删除失败","error");  
 				}else{
-					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
-					$("#ID").val(""); 
-					
-					$("#MessageTempletGrid").datagrid('load',{
-						ClassName:"web.DHCPE.MessageTemplet",
-						QueryName:"FindMessageTemplet",
-		   				 Active:$("#Active").checkbox('getValue'),
-					}); 
+					$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});	
+					BFind_click();	
 	
 			        $('#myWin').dialog('close'); 
 				}
@@ -211,44 +212,38 @@ function BFind_click()
 	if (($("#Type").combobox('getValue')==undefined)||($("#Type").combobox('getValue')=="")){var  Type="";}
 	else{var Type=$("#Type").combobox('getValue');}
 	
+	
+	var iActive="0";
+	var Active=$("#Active").checkbox('getValue');
+	if(Active){var iActive="1";}
+	else{var iActive="0";}
+	
+	
 	$("#MessageTempletGrid").datagrid('load',{
 			ClassName:"web.DHCPE.MessageTemplet",
 			QueryName:"FindMessageTemplet",
 			Type:Type,
 		    VIPLevel:VIPLevel,
 			Templet:$.trim($("#Templet").val()),
-		    Active:$("#Active").checkbox('getValue'),
+		    Active:iActive
 		});	
+		
+	$("#ID").val("");
 }
 
 
-//删除
-function BDelete_click()
-{
-	var RowId=$("#ID").val();
-	if (RowId=="")
-	{
-		$.messager.alert("提示","请先选择待删除的记录","info");	
-		return false;
-	}
-	var rtn=tkMakeServerCall("web.DHCPE.OMEType","OMETypeDelete",RowId);
-	if (rtn.split("^")[0]=="-1"){
-		$.messager.alert("提示","删除失败"+rtn.split("^")[1],"error");	
-	}else{
-		BClear_click();
-		$.messager.alert("提示","删除成功","success");
-	}
-	
-	
-}
+
 
 //清屏
 function BClear_click()
 {
+
 	$("#ID,#Templet").val("");
 	$("#VIPLevel").combobox('setValue',"");
 	$("#Type").combobox('setValue',"");
 	$(".hisui-checkbox").checkbox('setValue',false);
+	info();
+	BFind_click();	
 	
 } 
 
@@ -310,6 +305,11 @@ function InitMessageTempletDataGrid()
 	if (($("#Type").combobox('getValue')==undefined)||($("#Type").combobox('getValue')=="")){var  Type="";}
 	else{var Type=$("#Type").combobox('getValue');}
 	
+	var iActive="0";
+	var Active=$("#Active").checkbox('getValue');
+	if(Active){var iActive="1";}
+	else{var iActive="0";}
+	
 	$HUI.datagrid("#MessageTempletGrid",{
 		url:$URL,
 		fit : true,
@@ -330,23 +330,21 @@ function InitMessageTempletDataGrid()
 			Type:Type,
 		    VIPLevel:VIPLevel,
 			Templet:$.trim($("#Templet").val()),
-		    Active:$("#Active").checkbox('getValue'),
+		    Active:iActive
 		},
 		columns:[[
 	
 		    {field:'ID',title:'ID',hidden: true},
-			{field:'NMT_Type',width:'150',title:'短信类型'},
-			{field:'NMT_Templet',width:'750',title:'短信内容'},
-			{field:'NMT_Active',width:'50',title:'激活'},
-			{field:'NMT_VIPLevel',width:'150',title:'VIP等级'},
-			
-			
+			{field:'NMT_Type',width:150,title:'短信类型'},
+			{field:'NMT_Templet',width:750,title:'短信内容'},
+			{field:'NMT_Active',width:50,title:'激活'},
+			{field:'NMT_VIPLevel',width:150,title:'VIP等级'}
+				
 		
 		]],
 		onSelect: function (rowIndex, rowData) {
 			   
-				$("#ID").val(rowData.ID);
-				
+				$("#ID").val(rowData.ID);			
 					
 		}
 		

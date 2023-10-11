@@ -37,6 +37,10 @@ $(function(){
 			onHidePanel: function () {
         		OnHidePanel("#ctLoc");
         	},
+			onBeforeLoad:function(param)
+        	{
+            	param.hospId=session['LOGON.HOSPID'];
+        	}
 			})			
 		var modeObj=$HUI.combobox("#mode",{
 			url:$URL+"?ClassName=web.DHCBPCBloodPurificationMode&QueryName=FindDHCBPCBPMode&ResultSetType=array",
@@ -81,7 +85,9 @@ $(function(){
 								ClassName:"web.DHCBPCBloodPurificationMode",
 								MethodName:"InsertBPModeLoc",
 								bpcModeDr:$("#mode").combobox('getValue'),
-								ctloc:$("#ctLoc").combobox('getValue')
+								ctloc:$("#ctLoc").combobox('getValue'),
+								bpcModeAliasDesc:'',
+								hospId:session['LOGON.HOSPID']
 							},function(success){
 								if(success==0)
 								{
@@ -136,7 +142,9 @@ $(function(){
 							MethodName:"UpdateBPModeLoc",
 							bpMLId:id,
 							bpcModeDr:$("#mode").combobox('getValue'),
-							ctloc:$("#ctLoc").combobox('getValue')
+							ctloc:$("#ctLoc").combobox('getValue'),
+							bpcModeAliasDesc:'',
+							hospId:session['LOGON.HOSPID']
 						},function(success){
 							if(success==0)
 							{
@@ -165,7 +173,8 @@ $(function(){
 		url:$URL,
 		queryParams:{
 			ClassName:"web.DHCBPCBloodPurificationMode",
-			QueryName:"FindBPModeLoc"
+			QueryName:"FindBPModeLoc",
+			hospId:session['LOGON.HOSPID']
 		},
         columns:[[
 			{ field: "tModeRowId", title: "±àºÅ", width: 120 },

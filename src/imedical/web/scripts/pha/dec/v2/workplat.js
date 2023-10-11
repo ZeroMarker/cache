@@ -109,8 +109,8 @@ function loadPrePie(data){
 	$.each(data.rows, function(k, row){
 		var name = row.sProDict;
 		if(name=="È«²¿") return true;
-		pieData.seriesData.push({name: name, value: Number(row.INum) + Number(row.ONum)});
-		pieData.legendData.push(name);
+		pieData.seriesData.push({name: $g(name), value: Number(row.INum) + Number(row.ONum)});
+		pieData.legendData.push($g(name));
 	})
 	InitPie(pieData)
 }

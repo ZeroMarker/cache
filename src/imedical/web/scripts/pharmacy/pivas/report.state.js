@@ -3,19 +3,20 @@
  * 编写日期: 2018-01-14
  * 编写人:   yunhaibao
  */
-$(function(){
-	PIVAS.Session.More(session['LOGON.CTLOCID'])
-	PIVAS.Date.Init({Id:'dateStart',LocId:"",Type:'Start',QueryType:'Data'});
-	PIVAS.Date.Init({Id:'dateEnd',LocId:"",Type:'End',QueryType:'Data'});
-	$("#btnFind").on('click',Query)
-	$("iframe").attr("src",PIVAS.RunQianBG);	
-})
+$(function () {
+    PIVAS.Session.More(session['LOGON.CTLOCID']);
+    PIVAS.Date.Init({ Id: 'dateStart', LocId: '', Type: 'Start', QueryType: 'Data' });
+    PIVAS.Date.Init({ Id: 'dateEnd', LocId: '', Type: 'End', QueryType: 'Data' });
+    $('#btnFind').on('click', Query);
+    $('iframe').attr('src', PIVAS.RunQianBG);
+    $('.dhcpha-win-mask').remove();
+});
 
-function Query(){
-	var startDate=$("#dateStart").datebox("getValue");
-	var endDate=$("#dateEnd").datebox("getValue");
-	var raqObj = {
-        raqName: "DHCST_PIVAS_配液状态统计.raq",
+function Query() {
+    var startDate = $('#dateStart').datebox('getValue');
+    var endDate = $('#dateEnd').datebox('getValue');
+    var raqObj = {
+        raqName: 'PHA_PIVAS_PSStat.rpx',
         raqParams: {
             startDate: startDate,
             endDate: endDate,
@@ -27,6 +28,6 @@ function Query(){
         isPreview: 1,
         isPath: 1
     };
-    var raqSrc = PIVASPRINT.RaqPrint(raqObj)
-    $("iframe").attr("src", raqSrc);
+    var raqSrc = PIVASPRINT.RaqPrint(raqObj);
+    $('iframe').attr('src', raqSrc);
 }

@@ -70,10 +70,26 @@ function initPatientDoctor()
 }
 
 $("#btsure").click(function(){
-	var practiceId = $('#practice').combobox('getValue');
-	var residentId = $('#resident').combobox('getValue');
-	var attendingId = $('#attending').combobox('getValue');
-	var chiefId = $('#chief').combobox('getValue');
+	var practiceId = "";
+	var residentId = "";
+	var attendingId = "";
+	var chiefId = "";
+	if ($('#practice').combobox('getText') != "")
+	{
+		practiceId = $('#practice').combobox('getValue');
+	}
+	if ($('#resident').combobox('getText') != "")
+	{
+		residentId = $('#resident').combobox('getValue');
+	}
+	if ($('#attending').combobox('getText') != "")
+	{
+		attendingId = $('#attending').combobox('getValue');
+	}
+	if ($('#chief').combobox('getText') != "")
+	{
+		chiefId = $('#chief').combobox('getValue');
+	}
 	if ((practiceId == "")&&(residentId == "")&&(attendingId == "")&&(chiefId == ""))
 	{
 		alert("请设置患者医师");

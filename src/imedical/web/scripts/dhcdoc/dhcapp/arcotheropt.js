@@ -75,14 +75,19 @@ function add(){
 		$.messager.alert('提示','请选择医嘱项分类')   //lvpeng 2016-7-14
 		return;	
 	}
-	if(endEditing()){
-		$("#datagrid").datagrid('insertRow', {
-			index: 0, 
-			row: {}
-		});
-		$("#datagrid").datagrid('beginEdit', 0);//开启编辑并传入要编辑的行
-		editIndex=0;
-	}
+	if (editIndex==undefined){
+		if(endEditing()){
+			$("#datagrid").datagrid('insertRow', {
+				index: 0, 
+				row: {}
+			});
+			$("#datagrid").datagrid('beginEdit', 0);//开启编辑并传入要编辑的行
+			editIndex=0;
+		}
+	}else{
+		$.messager.alert('提示','请选择保存后再新增')   //lvpeng 2016-7-14
+		return;	
+		}
 }
 
 /// 删除选中行
@@ -111,6 +116,9 @@ function onDblClickRow(index, rowData){
 	 if(endEditing()){
 		 $("#datagrid").datagrid('beginEdit', index);
 		 editIndex = index;
+		 var ed=$("#datagrid").datagrid('getEditor',{index:editIndex,field:'AOMoChoice'});
+		var unitUrl=$URL+"?ClassName=web.DHCAPPArcLinkOpt&MethodName=jsonAppOtherOpt&ALOOptDr="+ rowData.AORowId ;
+		$(ed.target).combobox('reload',unitUrl);
 	 }
 }
 
@@ -118,7 +126,18 @@ function onDblClickRow(index, rowData){
 
 function fillValue(rowIndex, rowData){
 	var selected = $('#datagrid').datagrid('getData').rows[editIndex];
-	runClassMethod("web.DHCAPPArcLinkOpt","Save",{"ALOArcDr":itmmastid,"ALOOptDr":rowData.ID,"ID":selected.ID},function(jsonString){
+	var ed=$("#datagrid").datagrid('getEditor',{index:editIndex,field:'AOMoChoice'});
+	var unitUrl=$URL+"?ClassName=web.DHCAPPArcLinkOpt&MethodName=jsonAppOtherOpt&ALOOptDr="+ rowData.ID ;
+	$(ed.target).combobox('reload',unitUrl);
+	var rows=$("#datagrid").datagrid("selectRow",editIndex).datagrid("getSelected");
+	rows.AORowId=rowData.ID
+}
+function save(){
+	var selected = $('#datagrid').datagrid("selectRow",editIndex).datagrid("getSelected"); 
+	var ALOOptDr =selected.AORowId
+	var ID=selected.ID
+	var MoChoice=selected.AOMoChoiceDr
+	runClassMethod("web.DHCAPPArcLinkOpt","Save",{"ALOArcDr":itmmastid,"ALOOptDr":ALOOptDr,"ID":ID,"MoChoice":MoChoice},function(jsonString){
 		if(jsonString==0){
 			$.messager.alert('提示','操作成功');
 		}else if(jsonString==-10){

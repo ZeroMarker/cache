@@ -9,7 +9,8 @@ function InitINFOPSQryWin(){
     
     $("#cboHospital").data("param",$.LOGON.HOSPID);	
 	$.form.SelectRender("cboHospital");  //渲染下拉框
-	
+	$("#cboHospital option:selected").next().attr("selected", true)
+	$("#cboHospital").select2();
     //初始化赋值
     $.form.DateTimeRender('DateFrom',$.form.GetCurrDate('-'));
     $.form.DateTimeRender('DateTo',$.form.GetCurrDate('-'));

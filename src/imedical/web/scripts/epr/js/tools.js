@@ -483,7 +483,7 @@ function my_blur(obj, myid)
 }
 
 /// 创建HISUI-Dialog弹窗
-function createModalDialog(dialogId, dialogTitle, width, height, iframeId, iframeContent,callback,arr){
+function createModalDialog(dialogId, dialogTitle, width, height, iframeId, iframeContent,callback,arr,iconCls){
     if ($("#modalIframe").length<1)
 	{
         $("body").append('<iframe id="modalIframe" style="position: absolute; z-index: 1999; width: 100%; height: 100%; top: 0;left:0;scrolling:no;" frameborder="0"></iframe>');
@@ -497,6 +497,7 @@ function createModalDialog(dialogId, dialogTitle, width, height, iframeId, ifram
 	if (isNaN(height)) height = 500;  
     //document.getElementById("editorFrame").style.visibility="hidden"; //隐藏插件
     var returnValue = "";
+    if(iconCls == undefined) iconCls = 'icon-w-card';
     $HUI.dialog('#'+dialogId,{ 
         title: dialogTitle,
         width: width,
@@ -511,6 +512,7 @@ function createModalDialog(dialogId, dialogTitle, width, height, iframeId, ifram
         closable: true,
         isTopZindex: true,
         content: iframeContent,
+        iconCls:iconCls,
         onBeforeClose:function(){
             var tempFrame = $('#'+iframeId)[0].contentWindow;
             if (tempFrame && tempFrame.returnValue)

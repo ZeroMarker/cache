@@ -4,12 +4,13 @@ $(document).ready(function () {
 });
 function initDocument()
 {
+	initLookUp();
 	defindTitleStyle(); 
 	//modify by lmm 2019-10-28 1040240 LMM0048
 	initButton();
 	initButtonWidth();   //add by lmm 2020-04-26 1292188
-	jQuery("#BAdd").linkbutton({iconCls: 'icon-w-add'});
-	jQuery("#BAdd").on("click", BAdd_Click);
+	//jQuery("#BAdd").linkbutton({iconCls: 'icon-w-add'});
+	//jQuery("#BAdd").on("click", BAdd_Clicked); modify by zyq 2022-12-22
 	
 	//modify by lmm 2020-03-27 
 	if (getElementValue("Planstatus")=="2")
@@ -59,7 +60,7 @@ function initDocument()
     	
 }
 //modify by lmm 2019-10-28 1040240 LMM0048
-function BAdd_Click()
+function BAdd_Clicked()
 {
 	var rows = $('#maintloclimitdatagrid').datagrid('getChecked');
 	var vallist=""

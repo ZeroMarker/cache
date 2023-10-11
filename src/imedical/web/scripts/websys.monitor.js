@@ -1,3 +1,60 @@
+Vue.component('im-panel',{
+	template:'<div class="panel panel-primary im-panel">\
+				<div class="panel-heading" @click="panelHeaderClick();">\
+					<span class="glyphicon" :class="{\'glyphicon-plus\':c,\'glyphicon-minus\':!c}" aria-hidden="true"></span>{{title}}\
+				</div>\
+				<div  class="panel-body" :style="bodyDisplay">\
+					<slot name="body"></slot>\
+				</div>\
+				<div :style="bodyDisplay">\
+				<slot></slot>\
+				</div>\
+			</div>',
+	props:{
+		height:{
+			type:Number,
+			'default':300,
+			required:false,
+			validator:function(value){
+				return value>0 ;
+			}
+		},
+		collapsed:{
+			type:Boolean,
+			'default':false
+		},
+		title:{
+			'default':""
+		}
+	},
+	data:function(){
+		return {"c":false};
+	},
+	computed:{
+		bodyDisplay:function(){
+			return {
+				display:this.c?'none':'block'
+			};
+		}
+	},
+	created:function(){
+		this.c=this.collapsed;
+	},
+	methods:{
+		panelHeaderClick:function(){
+			this.c = !this.c;
+			//发事件到父组件
+			//this.$emit("collapsed",!this.collapsed);
+		}
+	}
+});
+var needPosition = function (mtype) {
+	if (mtype == 'Task') return false;
+	if (mtype == 'QryClientList') return false;
+	if (mtype == 'OpenTransactions') return false;
+	if (mtype == 'TimeCheck') return false;
+	return true;
+};
 var serverOption = {
     title: {
         text: '服务器结构'
@@ -110,9 +167,16 @@ var drawByServerAndType = function(serverId,typeItem){
 	$.extend(true,opt,lineOpt);
 	if (typeItem.mtype=="Task") {
 		var curDate = new Date();
-		var curDateStr = curDate.getFullYear()+"-"+(1+curDate.getMonth())+"-"+curDate.getDate();
-		var hdate = mutil.zdh(curDateStr,3);	
-		$.q({ClassName:"websys.MonitorDataMgr",QueryName:"Find",StDate:hdate,EndDate:hdate,TypeDr:typeItem.mid,ServerId:serverId},
+		var curDateStr = getFormatDate(curDate);
+		var sDate = mutil.zdh(curDateStr,3);
+		// 切换的时候要初始化日期
+		var beforeDate = getNextDate(curDate, -1);
+		var eDate = mutil.zdh(beforeDate,3);
+		monitorJson.taskStDate = beforeDate;
+		monitorJson.taskEndDate = curDateStr;
+		monitorJson.showErrorTaskFlag = true;
+		monitorJson.taskList=[];
+		$.q({ClassName:"websys.MonitorDataMgr",QueryName:"Find",StDate:sDate,EndDate:sDate,TypeDr:typeItem.mid,ServerId:serverId},
 		function(json){
 			monitorJson.taskList=[];
 			for (var i=0;i<json.rows.length;i++){
@@ -149,11 +213,18 @@ var drawByServerAndType = function(serverId,typeItem){
  
 			};
     		opt.tooltip.formatter=function(params,ticket,callback){
-		        var html='<table class="table">'+typeItem.mtipTitle;
+			var dateString = params[0].axisValue
+			var html='<table class="table">'+typeItem.mtipTitle;
+			html += "<caption>" + dateString + "</caption>";
 		        try{
 			        params.forEach(function(item,index){
-				         if (opt.series[index].myhtml.length>0){
-					         html += opt.series[index].myhtml[item.dataIndex];
+				         var seriesName = item['seriesName'];
+				         for (var i=0;i<opt.series.length; i++){
+					         if (opt.series[i].name==seriesName){
+				         		if (opt.series[i].myhtml.length>0){
+					        		html += opt.series[i].myhtml[item.dataIndex];
+				         		}
+					         }
 				         }
 			        });
 		        }catch(e){
@@ -167,7 +238,7 @@ var drawByServerAndType = function(serverId,typeItem){
 	        opt.xAxis.data=[];
 			opt.legend.data=[]; 		//[{name:'阀值线',symbolSize:'0',lineStyle:{normal:{width:1,type:"dashed",opacity:0.4}}}];
 			opt.series=[];
-	        if (typeItem.mtype=="Disk"){
+	        if (typeItem.mtype=="Disk" || typeItem.mtype=="License"){
 		        opt.yAxis.max=100;
 		        opt.yAxis.min=0;
 		        opt.yAxis.axisLabel={formatter: '{value}%'}
@@ -187,7 +258,7 @@ var drawByServerAndType = function(serverId,typeItem){
 				}
 				for (var i=0; i<opt.series.length; i++){
 					if(opt.series[i].name==item.SubType){
-						if (typeItem.mtype=="Disk"){
+						if (typeItem.mtype=="Disk" || typeItem.mtype=="License"){
 							 opt.series[i].data.push(item.Value.split("%")[0]);
 						}else{
 							 opt.series[i].data.push(item.Value);
@@ -196,7 +267,7 @@ var drawByServerAndType = function(serverId,typeItem){
 					}
 				}
 			});
-			if (typeItem.mtype=="Disk"){  //只有Disk才有
+			if (typeItem.mtype=="Disk" || typeItem.mtype=="License" ){  //只有Disk才有
 				if(opt.series.length>1){
 					for (var i=0;i<opt.series[1].data.length;i++){
 						opt.series[0].data.push("90");
@@ -208,23 +279,60 @@ var drawByServerAndType = function(serverId,typeItem){
 		});
 	}
 };
+function needDraw(serverType, mtype) {
+	//  DB,ECP,MainWEB,Shadow", ",D,E,M,S"
+	if (mtype == 'QryClientList') return false;
+	if (mtype == 'OpenTransactions') return false;
+	if (mtype == 'TimeCheck') return false;
+	if (mtype == 'Task') {
+		return serverType == "M" || serverType == "D";
+	}
+	if (mtype == 'Shadow') {
+		return serverType == "M" || serverType == "S";
+	}
+	if (mtype == 'PatFeeCheck') {
+		return serverType == "M" || serverType == "S";
+	}
+	if (mtype == 'License') {
+		return serverType != "D";
+	}
+	return true;
+}
 var drawServer = function (server,typeList){
 	//先不画服务
 	//ServerChart = echarts.init(document.getElementById('ServerInfo'));
 	//ServerChart.setOption(serverOption);
 	typeList.forEach(function(item,index){
 		// 画哪个服务器的 哪种类型
-		//if (item.mtype=="Disk"){
-			if (item.mactive=='Y'){
-				drawByServerAndType(server.serverId,item);
+		if (item.mactive=='Y' && needDraw(server.serverType, item.mtype)){
+			drawByServerAndType(server.serverId,item);			
+		} else {
+			if (chartList[item.mtype]) { // 清楚其他页签的旧数据。
+				var opt={};
+				$.extend(true,opt,lineOpt);
+				chartList[item.mtype].setOption(opt, true);
 			}
-		//}
+		}
 	});
 	//drawDisk(server.serverId);
 	//drawDisk(server.serverId);
 	//drawCosolelog(server.serverId);
 	//drawWij(server.serverId);
 	//drawDatabase(server.serverId);
+	if(server.serverType == "M") {
+		var curDate = new Date();
+		monitorJson.clientStDate = getNextDate(curDate, -1);
+		monitorJson.clientEndDate = getFormatDate(curDate);
+		monitorJson.clientList=[];
+		$("#clientList").show();
+	} else {
+		$("#clientList").hide();
+	}
+	if(server.serverType == "M" || server.serverType == "D" ) {
+		$("#tasklist").show();
+	} else {
+		$("#tasklist").hide();
+	}	
 }	
 var chartList={};
 var init = function (){
@@ -240,7 +348,7 @@ var init = function (){
 				this.draw(this.serverList.length>0?this.serverList[0]:null); //this.curServer);
 				that.ccheight = document.body.clientHeight - $(".m-chartcontainer").offset().top;
 				this.mTypeList.forEach (function(item, index){
-					if (item.mactive=='Y' && item.mtype!='Task'){
+					if (item.mactive=='Y' && needPosition(item.mtype)){
 						// 初始化所有类型的图表
 						chartList[item.mtype] = echarts.init(document.getElementById(item.mtype));
 					}
@@ -276,6 +384,7 @@ var init = function (){
 			}
 		},
 		methods:{
+			needPosition:needPosition,
 			draw:function(item){
 				if (item.serverId!=this.curServer.serverId){
 					//var oldArr = this.mTypeList;
@@ -288,6 +397,10 @@ var init = function (){
 			audit:function(id){
 				this.curAuditId = id;
 				$("#audiowin").modal();
+				$('#audiowin').on("shown.bs.modal",function(e){
+        			// 在模态层弹出之后，做对应的动作，即指定文本框获取焦点
+					$("#auditUserName").focus();
+				});				
 			},
 			auditLog:function(){
 				var _t = this;
@@ -299,19 +412,24 @@ var init = function (){
 					$("#auditUserName").focus();
 					return ;
 				}
-				if (curAuditId>0){
+				if (curAuditId>0 || curAuditId == "ALL"){
 					//audit error
 					$.m({ClassName:"websys.MonitorDataAuditMgr", MethodName:"AlertAudit", 
 						MonitorRowId:this.curAuditId, UserName:username},
 						function(rtn){
 							if (rtn==1){
-								list.forEach(function(item,ind){
-									if (item.RowId==curAuditId){
-										list.splice(ind,1);
-										return false;
-									}
-								});
-								_t.alertInfoCount--;
+								if(curAuditId == "ALL"){
+									list.splice(0);											
+									_t.alertInfoCount = 0;							
+								} else {									
+									list.forEach(function(item,ind){
+										if (item.RowId==curAuditId){
+											list.splice(ind,1);
+											return false;
+										}
+									});
+									_t.alertInfoCount--;
+								}
 								$("#audiowin").modal("hide");
 							}else{
 								_t.modalmsg="审核信息保存失败!!";
@@ -341,8 +459,12 @@ var init = function (){
 				/*
 				$('#typwin').modal();
 				$('[data-toggle="popover"]').popover();
-				*/
-				window.open("websys.monitor.cfg.csp","_self");
+				*/				
+				if ("undefined" == typeof websys_getMWToken) {
+					window.open("websys.monitor.cfg.csp","_self");				
+				} else {
+					window.open("websys.monitor.cfg.csp" + "?MWToken=" + websys_getMWToken(),"_self");
+				}
 			},
 			collapseError:function(){
 				this.collapseErrorFlag = !this.collapseErrorFlag;
@@ -422,18 +544,44 @@ var init = function (){
 				this.currentparam.value = curTypeItem.mparam;
 				//console.log(curTypeItem.mparam);
 			},
+			taskTimeConfig:function(){
+				var that = this;
+				var param = "ServerId=" + this.curServer.serverId;
+				param += "&serverName=" + this.curServer.serverName;
+				param += "&serverIP=" + this.curServer.serverIP;
+				if ("undefined" == typeof websys_getMWToken) {
+					window.open("websys.monitor.taskTimecfg.csp?" + param, "_black", "width=800, height=500, top=100, left=300");			
+				} else {
+					window.open("websys.monitor.taskTimecfg.csp" + "?MWToken=" + websys_getMWToken() + "&" + param, "_black", "width=800, height=500, top=100, left=300");
+				}
+			},
 			showErrorTask:function(){
 				var that = this;
 				//var curDate = new Date();
 				//var curDateStr = curDate.getFullYear()+"-"+(1+curDate.getMonth())+"-"+curDate.getDate();
 				var hdate = mutil.zdh(monitorJson.taskEndDate,3);
 				var shdate = mutil.zdh(monitorJson.taskStDate,3); //parseFloat(hdate)-7	
-				$.q({ClassName:"websys.MonitorDataMgr",QueryName:"Find",rows:500,StDate:shdate,EndDate:hdate,TypeDr:6,ServerId:this.curServer.serverId},
+				$.q({ClassName:"websys.MonitorDataMgr",QueryName:"Find",rows:5000,StDate:shdate,EndDate:hdate,TypeDr:6,ServerId:this.curServer.serverId},
 				function(json){
 					monitorJson.taskList=[];
 					for (var i=0;i<json.rows.length;i++){
 						if (json.rows[i].Value==1 && that.showErrorTaskFlag) continue;
 						monitorJson.taskList.push(json.rows[i]);
+					}
+				})
+			},
+			showErrorClient:function(){
+				var that = this;
+				//var curDate = new Date();
+				//var curDateStr = curDate.getFullYear()+"-"+(1+curDate.getMonth())+"-"+curDate.getDate();
+				var hdate = mutil.zdh(monitorJson.clientEndDate,3);
+				var shdate = mutil.zdh(monitorJson.clientStDate,3);
+				$.q({ClassName:"websys.MonitorDataMgr",QueryName:"Find",rows:5000,StDate:shdate,EndDate:hdate,TypeDr:9,ServerId:this.curServer.serverId},
+				function(json){
+					monitorJson.clientList=[];
+					for (var i=0;i<json.rows.length;i++){
+						// if (json.rows[i].Value==1 && that.showErrorTaskFlag) continue;
+						monitorJson.clientList.push(json.rows[i]);
 					}
 				})
 			}
@@ -442,3 +590,23 @@ var init = function (){
 }
 $(init);
 
+// date 代表指定的日期，格式：2018-09-27
+// day 传-1表始前一天，传1表始后一天
+// JS获取指定日期的前一天，后一天
+// 原文链接：https://blog.csdn.net/weixin_53545517/article/details/126300288
+function getNextDate(date, day) { 
+	var dd = new Date(date);
+	dd.setDate(dd.getDate() + day);
+	var y = dd.getFullYear();
+	var m = dd.getMonth() + 1 < 10 ? "0" + (dd.getMonth() + 1) : dd.getMonth() + 1;
+	var d = dd.getDate() < 10 ? "0" + dd.getDate() : dd.getDate();
+	return y + "-" + m + "-" + d;
+};
+// 日期格式化
+function getFormatDate(date) {
+	var dd = new Date(date);
+	var y = dd.getFullYear();
+	var m = dd.getMonth() + 1 < 10 ? "0" + (dd.getMonth() + 1) : dd.getMonth() + 1;
+	var d = dd.getDate() < 10 ? "0" + dd.getDate() : dd.getDate();
+	return y + "-" + m + "-" + d;
+};

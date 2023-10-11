@@ -52,7 +52,7 @@ function DHCWeb_Get18IdFromCardNo(pId){
     var Checker = [1,9,8,7,6,5,4,3,2,1,1];  
 
     if(pId.length != 15 && pId.length != 18){
-		dhcsys_alert("身份证号共有 15位或18位"); 
+		dhcsys_alert($g("身份证号共有 15位或18位")); 
 		return "";
     }
 	if (pId.length == 18){
@@ -95,7 +95,7 @@ function DHCWeb_IsIdCardNo(pId){
     var Wi = [7,9,10,5,8,4,2,1,6,3,7,9,10,5,8,4,2];  
     var Checker = [1,9,8,7,6,5,4,3,2,1,1];  
     if(pId.length != 15 && pId.length != 18){
-		dhcsys_alert("身份证号共有 15位或18位"); 
+		dhcsys_alert($g("身份证号共有 15位或18位")); 
 		return false;
     }
     var Ai=pId.length==18?pId.substring(0,17):pId.slice(0,6)+"19"+pId.slice(6,15);  
@@ -1425,7 +1425,7 @@ function CheckIdCard(idcard){
 	var area={11:"北京",12:"天津",13:"河北",14:"山西",15:"内蒙古",21:"辽宁",22:"吉林",23:"黑龙江",
 　　　　　　31:"上海",32:"江苏",33:"浙江",34:"安徽",35:"福建",36:"江西",37:"山东",
 　　　　　　41:"河南",42:"湖北",43:"湖南",44:"广东",45:"广西",46:"海南",50:"重庆",51:"四川",52:"贵州",53:"云南",54:"西藏",
-　　　　　　61:"陕西",62:"甘肃",63:"青海",64:"宁夏",65:"新疆",71:"台湾",81:"香港",82:"澳门",91:"国外"} 
+　　　　　　61:"陕西",62:"甘肃",63:"青海",64:"宁夏",65:"新疆",71:"台湾",81:"香港",82:"澳门",83:"台湾",91:"国外"} 
 
 	var idcard,Y,JYM; 
 	var S,M; 
@@ -1673,4 +1673,89 @@ function DHCWeb_AscTransChar(AscStr) {
 		}
 	}
 	return rtnStr;
+}
+/// desc: 校验电话，身份证信息是否合法
+/// input: Obj:{"TelNo":"手机号","IDTypeID":"证件类型ID","IDCardNo":"证件号码"}
+/// output: {"Flag":"-1/0(失败/成功)","Code":"字段Code","Desc":"描述"}
+function DHCWeb_IsTelOrMobile(Obj) {
+    var RtnObj = { Flag: "0", Code: "", Desc: "" };
+    if (typeof(Obj) != "object") return true;
+
+    //校验电话号码
+    var TelNo = Obj.TelNo || "";
+    if ((TelNo!="")&&(!DHCC_IsTelOrMobile(TelNo))) {
+        RtnObj.Flag = "-1";
+        RtnObj.Code = "TelNo";
+        if (TelNo.indexOf('-') >= 0) {
+            RtnObj.Desc = "固定电话长度错误,固定电话区号长度为【3】或【4】位,固定电话号码长度为【7】或【8】位,并以连接符【-】连接,请核实!";
+        } else {
+            if (TelNo.length != 11) {
+                RtnObj.Desc = "联系电话电话长度应为【11】位,请核实!";
+            } else {
+                RtnObj.Desc = "不存在该号段的手机号,请核实!";
+            }
+        }
+        return RtnObj;
+    }
+
+    //校验证件类型和证件号码
+    var CredTypeID = Obj.IDTypeID || ""; //证件类型ID
+    var IDCardNo = Obj.IDCardNo || ""; //证件号码
+    if ((IDCardNo!="")&&(DHCWeb_IsCredTypeID(CredTypeID))) {
+        var CredFlag = DHCWeb_IsIdCardNoNew(IDCardNo);
+        if (CredFlag != "1") {
+            RtnObj.Flag = "-1";
+            RtnObj.Code = "IDCardNo";
+            RtnObj.Desc = CredFlag;
+            return RtnObj;
+        }
+    }
+    return RtnObj;
+}
+
+/// 判断证件类型ID是否是身份证类型
+function DHCWeb_IsCredTypeID(CredTypeID) {
+    var CredInfo = tkMakeServerCall('web.UDHCOPOtherLB', 'CheckISCredType', CredTypeID);
+    if (CredInfo.split("^")[0] != "0") return false;
+    return true
+}
+
+/// 校验身份证号码是否合法，返回空或错误描述
+function DHCWeb_IsIdCardNoNew(pId) {
+    pId = pId.toLowerCase();
+    var arrVerifyCode = [1, 0, "x", 9, 8, 7, 6, 5, 4, 3, 2];
+    var Wi = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
+    var Checker = [1, 9, 8, 7, 6, 5, 4, 3, 2, 1, 1];
+    if (pId.length != 15 && pId.length != 18) {
+        return "身份证号共有 15位或18位";
+    }
+    var Ai = pId.length == 18 ? pId.substring(0, 17) : pId.slice(0, 6) + "19" + pId.slice(6, 15);
+    if (!/^\d+$/.test(Ai)) {
+        return "身份证除最后一位外必须为数字";
+    }
+    var yyyy = Ai.slice(6, 10),
+        mm = Ai.slice(10, 12) - 1,
+        dd = Ai.slice(12, 14);
+    var d = new Date(yyyy, mm, dd),
+        now = new Date();
+    var year = d.getFullYear(),
+        mon = d.getMonth(),
+        day = d.getDate();
+    if (year != yyyy || mon != mm || day != dd || d > now || year < 1901) {
+        return "身份证输入错误";
+    }
+    for (var i = 0, ret = 0; i < 17; i++) ret += Ai.charAt(i) * Wi[i];
+    Ai += arrVerifyCode[ret %= 11];
+
+    if (pId.length == 18) {
+        if (!validId18(pId)) {
+            return "身份证号码有误,请检查!";
+        }
+    }
+    if (pId.length == 15) {
+        if (!validId15(pId)) {
+            return "身份证号码有误,请检查!";
+        }
+    }
+    return "1";
 }

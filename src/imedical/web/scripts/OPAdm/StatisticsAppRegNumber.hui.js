@@ -99,10 +99,10 @@ function StatisticsAppRegNumberTreeGrid(){
     	{field:'LocDesc',title:'科室',width:100},
     	{field:'DocDesc',title:'号别',width:100},
     	{field:'RBASStatusdesc',title:'状态',width:100},
-    	{field:'TStatisticsReg',title:'挂号数',width:100,sortable:true},  
-    	{field:'TStatisticsApp',title:'剩号数',width:100,sortable:true},
-    	{field:'TStatisticsArrive',title:'已就诊数',width:100,sortable:true},
-    	{field:'TStatisticsUnArrive',title:'未就诊数',width:100,sortable:true},
+    	{field:'TStatisticsReg',title:'挂号数',width:100,sortable:true, sorter:mySort},  
+    	{field:'TStatisticsApp',title:'剩号数',width:100,sortable:true, sorter:mySort},
+    	{field:'TStatisticsArrive',title:'已就诊数',width:100,sortable:true, sorter:mySort},
+    	{field:'TStatisticsUnArrive',title:'未就诊数',width:100,sortable:true, sorter:mySort},
         //{field:'RBASStatusdesc',title:'所属父级',width:100,hidden:true},
     ]];
 	var StatisticsAppRegNumberTreeGrid=$('#tabStatisticsAppRegNumber').datagrid({    
@@ -275,4 +275,11 @@ function myparser(s){
 	} else {
 		return new Date();
 	}
+}
+//自定义排序,解决百分数的排序不准确问题
+function mySort(a,b) {
+
+		a = parseFloat(a);
+		b = parseFloat(b);
+		return (a>b?1:-1);
 }

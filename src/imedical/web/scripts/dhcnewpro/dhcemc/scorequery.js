@@ -47,9 +47,9 @@ function InitDetList(){
 		{field:'User',title:'评分人',width:120,},
 		{field:'Date',title:'评分日期',width:120},
 		{field:'Time',title:'评分时间',width:120},
-		{field:'Detail',title:'详情',width:120,align:'center',formatter:
+		{field:'Detail',title:'详情',width:120,formatter:
 			function (value, row, index){
-				return '<a href="#" onclick="review(\''+ row.ID +'\',\''+ row.ScoreID +'\')">详情</a>';
+				return '<a href="#" onclick="review(\''+ row.ID +'\',\''+ row.ScoreID+'\',\''+ row.ScoreDesc +'\')">'+$g("详情")+'</a>';
 			}
 		}
 	]];
@@ -57,6 +57,8 @@ function InitDetList(){
 	///  定义datagrid
 	var option = {
 		//showHeader:false,
+		toolbar:"#toolbar",
+		fitColumns:true,
 		rownumbers : true,
 		singleSelect : true,
 		pagination: true,
@@ -74,15 +76,30 @@ function InitDetList(){
 }
 
 /// 评分表预览
-function review(ID, ScoreID){
+function review(ID, ScoreID,ScoreDesc){
 	
 	if (ScoreID == ""){
 		$.messager.alert("提示:","表单为空！","warning");
 		return;
 	}
 	var link = "dhcemc.scoretabreview.csp?ScoreID="+ ScoreID +"&ID=" + ID +"&EditFlag=0";
-	window.open(link, '_blank', 'height='+ (window.screen.availHeight - 180) +', width=1200, top=50, left=100, toolbar=no, menubar=no, scrollbars=no, resizable=yes, location=no, status=no');
-}
+	///window.open(link, '_blank', 'height='+ (window.screen.availHeight - 180) +', width=1200, top=50, left=100, toolbar=no, menubar=no, scrollbars=no, resizable=yes, location=no, status=no');
+	var iLeft = ($(window).width()-1280)/2; //获得窗口的水平位置;
+	var iTop=($(window).height()-640)/2; //获得窗口的垂直位置;
+	websys_showModal({
+		url: link,
+		height:640,
+		width:1280, 
+		left:iLeft,
+		top:iTop,
+		iconCls:"icon-w-paper",
+		title: ScoreDesc,
+		closed: true,
+		onClose:function(){}
+	});
+
+
+} 
 
 /// 查询
 function find_click(){

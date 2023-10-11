@@ -77,7 +77,7 @@ function init(episodeId,catalogId)
 function load(data)
 {
     param = data;
-	if (param.pluginType == "DOC")
+	if ((param.pluginType == "DOC")||(param.pdfDocType == "PDF"))
 	{
 		wordDoc();
 	}
@@ -112,6 +112,7 @@ function wordDoc()
 	setWorkEnvironment(); 
     SetDefaultFontStyle();
 	openDocument();
+	setPatientInfo();
 }
 
 //安装插件提示
@@ -146,6 +147,7 @@ function girdDoc()
 	}
 	setWorkEnvironment();
 	openDocument();	
+	setPatientInfo();
 }
 
 function pluginword()
@@ -179,7 +181,7 @@ function addEvent(obj, name, func)
 }
 //查找插件
 function plugin() {
-	if(param.pluginType == "DOC")
+	if((param.pluginType == "DOC")||(param.pdfDocType == "PDF"))
 	{
 		return pluginword();
 	}else
@@ -230,6 +232,19 @@ function setWorkEnvironment()
 function setConnect()
 {
 	var netConnect = "";
+	
+	var port = window.location.port;
+	var protocol = window.location.protocol.split(":")[0];
+	
+	if (protocol == "http")
+	{
+		port = port==""?"80":port;
+	}
+	else if (protocol == "https")
+	{
+		port = port==""?"443":port;
+	}
+	
 	$.ajax({
 		type: 'Post',
 		dataType: 'text',
@@ -239,7 +254,10 @@ function setConnect()
 		data: {
 			"OutputType":"String",
 			"Class":"EMRservice.BL.BLSysOption",
-			"Method":"GetNetConnectJson"
+			"Method":"GetNetConnectJson",
+			"p1":window.location.hostname,
+			"p2":port,
+			"p3":protocol
 		},
 		success: function (ret) {
 
@@ -271,11 +289,19 @@ function setPatientInfo()
 //加载文档
 function openDocument()
 {
+    cleanDocument();
     if (instanceID!="") {
-		var argJson = {action:"LOAD_DOCUMENT",args:{params:{"status":"BROWSE","isLoadOne":"Y"},InstanceID:instanceID,actionType:"LOAD"}};	
+		var argJson = {action:"LOAD_DOCUMENT",args:{params:{"status":"BROWSE","isLoadOne":"Y","LoadType":param.pdfDocType},InstanceID:instanceID,actionType:"LOAD"}};	
 	}else{
-        var argJson = {action:"LOAD_DOCUMENT",args:{params:{"status":"BROWSE"},InstanceID:param.id,actionType:"LOAD"}};
+        var argJson = {action:"LOAD_DOCUMENT",args:{params:{"status":"BROWSE","LoadType":param.pdfDocType},InstanceID:param.id,actionType:"LOAD"}};
     }
+	cmdDoShellExecute(argJson);	
+}
+
+//加载病历之前，先清空文档
+function cleanDocument()
+{
+	var argJson = {"action":"CLEAN_DOCUMENT","args":""};
 	cmdDoShellExecute(argJson);	
 }
 
@@ -313,7 +339,15 @@ function eventDispatch(obj)
 	{
 		if(obj["args"].result == "OK"){
 			if(obj["args"].params.result == "OK"){
-				invoker.setPrinted(param["id"]);
+				if (typeof(invoker.reloadMenu) == "function")
+				{
+					invoker.reloadMenu(param["id"]);
+				}
+				if(typeof setOperationLog == "function"){
+					//基础平台组审计和日志记录
+					var paramContext = GetRecodeParamByInsID(param["id"]);
+					setOperationLog(paramContext,"EMR.OnePrint.OK");	
+				}
 			}
 		}
 		seq = seq + 1;
@@ -345,4 +379,25 @@ function eventLoadDocument()
 function closeWindow()
 {
 	parent.closeDialog("printDialog");	
+}
+/*根据实例ID获取实例详细信息*/
+function GetRecodeParamByInsID(insID) {
+      var result = "";
+	jQuery.ajax({
+			type : "GET", 
+			dataType : "text",
+			url : "../EMRservice.Ajax.common.cls",
+			async : false,
+			data : {
+					"OutputType":"String",
+					"Class":"EMRservice.Ajax.opInterface",
+					"Method":"GetRecodeParamByInsID",			
+					"p1":insID
+				},
+			success : function(d) {
+	           		result =eval("("+d+")");
+			},
+			error : function(d) { alert("GetRecodeParamByInsID error");}
+		});	
+	return result;
 }

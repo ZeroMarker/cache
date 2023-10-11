@@ -2,9 +2,9 @@
  * FileName: dhcbillmenu.arrearsmoney.js
  * User: TangTao
  * Date: 2014-04-10
- * Function: 非绿色通道欠费额度
- * Description:
+ * Description: 非绿色通道欠费额度
  */
+
 var thisJFAMType = "";
 var thisJFAMALDr = "";
 var thisJFAMOperator1 = "";
@@ -90,21 +90,18 @@ function initArrearsMoneyGrid() {
 				editor: {
 					type: 'combobox',
 					options: {
-						url: $URL,
-						valueField: 'TOperatorCode',
-						textField: 'TOperatorDesc',
+						panelHeight: 100,
+						editable: false,
+						valueField: 'value',
+						textField: 'value',
 						required: true,
-						onBeforeLoad: function (param) {
-							param.ClassName = "DHCBILLConfig.DHCBILLArrears";
-							param.QueryName = "FindOperator";
-							param.ResultSetType = "array";
-							param.Arg1 = ">";
-						},
+						data: [{value: '>='},
+			   				   {value: '>'}
+			   				  ],
 						onSelect: function (rec) {
 							if (rec) {
-								thisJFAMOperator1 = rec.TOperatorCode;
+								thisJFAMOperator1 = rec.value;
 							}
-
 						}
 					}
 				}
@@ -130,19 +127,17 @@ function initArrearsMoneyGrid() {
 				editor: {
 					type: 'combobox',
 					options: {
-						url: $URL,
-						valueField: 'TOperatorCode',
-						textField: 'TOperatorDesc',
+						panelHeight: 100,
+						editable: false,
+						valueField: 'value',
+						textField: 'value',
 						required: true,
-						onBeforeLoad: function (param) {
-							param.ClassName = "DHCBILLConfig.DHCBILLArrears";
-							param.QueryName = "FindOperator";
-							param.ResultSetType = "array";
-							param.Arg1 = "<";
-						},
+						data: [{value: '<='},
+			   				   {value: '<'}
+			   				   ],
 						onSelect: function (rec) {
 							if (rec) {
-								thisJFAMOperator2 = rec.TOperatorCode;
+								thisJFAMOperator2 = rec.value;
 							}
 						}
 					}
@@ -295,6 +290,9 @@ $('#winUpdate').bind('click', function () {
 });
 
 $('#winSave').bind('click', function () {
+	if (!checkData()) {
+		return;
+	}
 	$('#tArrearsMoney').datagrid('selectRow', winEditIndex);
 	var selected = $('#tArrearsMoney').datagrid('getSelected');
 	if (selected) {
@@ -329,9 +327,9 @@ $('#winSave').bind('click', function () {
 				ArrMoneyInfo: ArrearsStr,
 				Guser: PUBLIC_CONSTANT.SESSION.USERID
 			}, function (rtn) {
-				if (rtn == "0") {
+				if (rtn == 0) {
 					$.messager.alert('提示', "保存成功!", 'success');
-				} else if (rtn == "-100") {
+				} else if (rtn == -100) {
 					$.messager.alert('提示', "控制等级重复", 'info');
 				} else {
 					$.messager.alert('提示', "保存失败，错误代码：" + rtn, 'error');
@@ -396,9 +394,9 @@ $('#winSave').bind('click', function () {
 				ArrMoneyInfo: ArrearsStr,
 				Guser: PUBLIC_CONSTANT.SESSION.USERID
 			}, function (rtn) {
-				if (rtn == "0") {
+				if (rtn == 0) {
 					$.messager.alert('提示', "修改成功", 'success');
-				} else if (value == "-100") {
+				} else if (rtn == -100) {
 					$.messager.alert('提示', "控制等级重复", 'info');
 				} else {
 					$.messager.alert('提示', "修改失败，错误代码：" + rtn, 'error');
@@ -447,7 +445,7 @@ $('#winDelete').bind('click', function () {
 						Guser: PUBLIC_CONSTANT.SESSION.USERID,
 						HospID: PUBLIC_CONSTANT.SESSION.HOSPID
 					}, function (rtn) {
-						if (rtn == "0") {
+						if (rtn == 0) {
 							$.messager.alert('提示', "删除成功", 'success');
 						} else {
 							$.messager.alert('提示', "删除失败，错误代码：" + rtn, 'error');
@@ -468,3 +466,18 @@ $('#winFind').bind('click', function () {
 	thisJFAMOperator1 = "",
 	thisJFAMOperator2 = "";
 });
+
+/**
+* 验证数据合法性
+*/
+function checkData() {
+	var bool = true;
+	$(".validatebox-text").each(function(index, item) {
+		if (!$(this).validatebox("isValid")) {
+			$(this).focus();
+			bool = false;
+			return false;
+		}
+	});
+	return bool;
+}

@@ -9,6 +9,8 @@ $(function() {
     InitDict();
     InitGridSchedulSum();
     InitGridSchedulUser();
+    $('.dhcpha-win-mask').remove();
+    $('#btnFind').on('click', Query);
 });
 
 function InitDict() {
@@ -92,6 +94,7 @@ function InitGridSchedulSum() {
         toolbar: "#gridSchedulSumBar",
         border: false,
         pagination: false,
+        gridSave:false,
         onClickCell: function(index, field, value) {
             if (field == "scheDate") {
                 return;

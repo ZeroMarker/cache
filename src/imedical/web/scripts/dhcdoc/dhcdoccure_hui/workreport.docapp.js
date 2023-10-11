@@ -1,15 +1,19 @@
-var CureReportDataGrid;
+var PageLogicObj={
+	CureReportDataGrid:"",
+	EChartObj:""
+}
 $(document).ready(function(){
   	Init();
   	InitEvent();
-  	CureReportDataGridLoad()
+  	LoadEchats();
+  	//CureReportDataGridLoad()
 });
 
 function Init(){
 	InitDate();
   	InitDoc(); 
   	InitArcimDesc(); 
-  	InitCureReportDataGrid();	
+  	PageLogicObj.CureReportDataGrid=InitCureReportDataGrid();	
 }
 
 function InitEvent(){
@@ -24,7 +28,7 @@ function InitEvent(){
 
 function InitCureReportDataGrid()
 {
-	CureReportDataGrid=$('#tabRecordReportList').datagrid({  
+	var CureReportDataGrid=$('#tabRecordReportList').datagrid({  
 		fit : true,
 		width : 'auto',
 		border : false,
@@ -37,10 +41,9 @@ function InitCureReportDataGrid()
 		singleSelect:true,    
 		url : '',
 		loadMsg : '加载中..',  
-		pagination : true,  //
-		rownumbers : true,  //
+		pagination : true,
+		rownumbers : true,
 		idField:"seqno",
-		//pageNumber:0,
 		pageSize : 20,
 		pageList : [20,50,100],
 		//<!--出参是：执行人、资源组（医嘱项）、执行数量、金额-->
@@ -55,9 +58,14 @@ function InitCureReportDataGrid()
 				{field:'Job',title:'Job',width:30,hidden:true}   
 			 ]] 
 	});
+	return CureReportDataGrid
 }
 function CureReportDataGridLoad()
 {
+	$.messager.progress({
+		title: "提示",
+		text: '数据加载中...'
+	});
 	var StartDate=$("#StartDate").datebox("getValue");
 	var EndDate=$("#EndDate").datebox("getValue");
 	var queryDoc=$("#ComboDoc").combobox("getValue");
@@ -72,37 +80,39 @@ function CureReportDataGridLoad()
 		'UserID':session['LOGON.USERID'],
 		'queryDoc':queryDoc,
 		'queryArcim':queryArcim,
-		Pagerows:CureReportDataGrid.datagrid("options").pageSize,
+		Pagerows:PageLogicObj.CureReportDataGrid.datagrid("options").pageSize,
 		rows:99999
 	},function(GridData){
-		CureReportDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData); 
+		PageLogicObj.CureReportDataGrid.datagrid({loadFilter:pagerFilter}).datagrid('loadData',GridData);
+		$.messager.progress("close");
+		LoadEchatsData(GridData);
 	})
 }
 
 function ExportCureReportOld(){
 	try{
 		var UserID=session['LOGON.USERID'];
-		var RowIDs=CureReportDataGrid.datagrid('getRows');
+		var RowIDs=PageLogicObj.CureReportDataGrid.datagrid('getRows');
 		//if(RowIDs.length)
 		var RowNum=RowIDs.length;
 		if(RowNum==0){
-			$.messager.alert("提示","未有需要导出的数据");
+			$.messager.alert("提示",$g("未有需要导出的数据"));
 			return false;
 		}
-		CureReportDataGrid.datagrid('selectRow',0);
+		PageLogicObj.CureReportDataGrid.datagrid('selectRow',0);
 		var ProcessNo=""
-		var row = CureReportDataGrid.datagrid('getSelected');
+		var row = PageLogicObj.CureReportDataGrid.datagrid('getSelected');
 		if (row){
 			ProcessNo=row.Job
 		}
 
 		if(ProcessNo==""){
-			$.messager.alert("提示","获取进程号错误");
+			$.messager.alert("提示",$g("获取进程号错误"));
 			return false;
 		}
 		var datacount=tkMakeServerCall(PageSizeItemObj.PUBLIC_WORKREPORT_CLASSNAME,"GetQryWorkReportForDocAppNum",ProcessNo,UserID);
 		if(datacount==0){
-			$.messager.alert("提示","获取导出数据错误");
+			$.messager.alert("提示",$g("获取导出数据错误"));
 			return false;
 		}
 		var xlApp,xlsheet,xlBook;
@@ -179,7 +189,7 @@ function ExportCureReport(){
 		},false)	
 		var DetailData=GridData.rows; //明细信息
 		if (DetailData.length==0) {
-			$.messager.alert("提示","没有需要打印的数据!");
+			$.messager.alert("提示",$g("没有需要打印的数据!"));
 			return false
 		}
 		//明细信息展示
@@ -192,39 +202,176 @@ function ExportCureReport(){
 			{field:"OrdPrice",title:"总金额(元)",width:"10%",align:"right"}
 		];	
 		PrintDocument(PrintNum,IndirPrint,TaskName,Title,Cols,DetailData)
-		return;
-		
-		/*var UserID=session['LOGON.USERID'];
-		var RowIDs=CureReportDataGrid.datagrid('getRows');
-		//if(RowIDs.length)
-		var RowNum=RowIDs.length;
-		if(RowNum==0){
-			$.messager.alert("提示","未有需要导出的数据");
-			return false;
-		}
-		CureReportDataGrid.datagrid('selectRow',0);
-		var ProcessNo=""
-		var row = CureReportDataGrid.datagrid('getSelected');
-		if (row){
-			ProcessNo=row.Job
-		}
-
-		if(ProcessNo==""){
-			$.messager.alert("提示","获取进程号错误");
-			return false;
-		}
-		var datacount=tkMakeServerCall(PageSizeItemObj.PUBLIC_WORKREPORT_CLASSNAME,"GetQryWorkReportForDocAppNum",ProcessNo,UserID);
-		if(datacount==0){
-			$.messager.alert("提示","获取导出数据错误");
-			return false;
-		}
-		var StartDate=$("#StartDate").datebox("getValue")||"";
-		var EndDate=$("#EndDate").datebox("getValue")||"";
-		var param = "LocId="+session['LOGON.CTLOCID']+"&ProcessNo="+ProcessNo+"&USERID="+UserID+"&StartDate="+StartDate;
-		param = param +"&EndDate="+EndDate;
-		websys_printout("DocCureWorkReport","isLodop=1&showPrintBtn=1&"+param,"width=830,height=660,top=20,left=100");
-		*/
 	}catch(e){
-		alert(e.message);	
+		$.messager.alert("提示",e.message);	
 	}
+}
+
+
+function LoadEchats(){
+	var colors = ['#5793f3', '#d14a61', '#675bba'];
+	var option = null;
+	option = {
+		title: {
+            text: $g("医生申请工作量柱状图"),
+            left: "center"
+        },
+        color: colors,
+	    tooltip: {
+	        trigger: 'axis',
+	        axisPointer: {
+	            type: 'cross'
+	        }
+	    },
+	    grid: {
+		    bottom: '15%',
+		    top: 75,
+	        right: '5%',
+	        left:'3%'
+	    },
+	    toolbox: {
+	        feature: {
+	            /*dataView: {
+		            title : $g("数据视图"),
+		            lang :[$g('数据视图列表'), $g('关闭'), $g('刷新')],
+		            show: true, 
+		            readOnly: false,
+		            optionToContent: function(opt) {
+					    var axisData = opt.xAxis[0].data;
+					    var series = opt.series;
+					    var table = '<table style="width:100%;text-align:left"><tbody><tr>'
+					                 + '<td>'+$g("开单医生")+'</td>'
+					                 + '<td>' + series[0].name + '</td>'
+					                 + '<td>' + series[1].name + '</td>'
+					                 + '</tr>';
+					    for (var i = 0, l = axisData.length; i < l; i++) {
+					        table += '<tr>'
+					                 + '<td>' + axisData[i] + '</td>'
+					                 + '<td>' + series[0].data[i] + '</td>'
+					                 + '<td>' + series[1].data[i] + '</td>'
+					                 + '</tr>';
+					    }
+					    table += '</tbody></table>';
+					    return table;
+					}
+				},*/
+	            saveAsImage: {
+		            title : $g("保存为图片"),
+		            show: true
+		        }
+	        }
+	    },
+	    legend: {
+		    data: [$g("申请数量"), $g("总金额(RMB/元)")],
+		    top:30
+		},
+	    xAxis: [
+	        {
+	            type: 'category',
+	            axisTick: {
+	                alignWithLabel: true
+	            },
+	            data: []
+	        }
+	    ],
+	    yAxis: [
+	        {
+	            type: 'value',
+	            name: $g("申请数量"),
+	            min: 0,
+	            position: 'left',
+	            axisLine: {
+	                lineStyle: {
+	                    color: colors[0]
+	                }
+	            },
+	            axisLabel: {
+	                formatter: '{value}'
+	            }
+	        },
+	        {
+	            type: 'value',
+	            name: $g("总金额(RMB/元)"),
+	            min: 0,
+	            position: 'right',
+	            axisLine: {
+	                lineStyle: {
+	                    color: colors[1]
+	                }
+	            },
+	            axisLabel: {
+	                formatter: '{value}'
+	            }
+	        }
+	    ],
+	    series: []
+	};
+	
+	var dom = document.getElementById("container");
+	PageLogicObj.EChartObj = echarts.init(dom);
+	
+	if (option && typeof option === "object") {
+	    PageLogicObj.EChartObj.setOption(option, true);
+	}	
+}
+
+function LoadEchatsData(data){
+	var newdata=[];
+	var name="";
+	var NameArr=[];
+	var QtyArr=[];
+	var PriceArr=[];
+	for(var i=0;i<data.total;i++){
+		var onedata=data.originalRows[i]
+		//alert(onedata)
+		if(onedata.DCARowId!=""){
+			var name=onedata.CureAppUser;
+			var index=$.inArray(name, NameArr);
+			if(index<0){
+				NameArr.push(name)
+			}
+			continue;
+		}
+		var OrdPrice=parseFloat(onedata.OrdPrice);
+		var OrderQty=parseFloat(onedata.OrderQty);
+		QtyArr.push(OrderQty);
+		PriceArr.push(OrdPrice)
+	}	
+	
+	var seriesArr=[
+        {
+            name: $g("申请数量"),
+            type: 'bar',
+            data: QtyArr,
+            markPoint: {
+                data: [
+                    {type: 'max', name: $g("最大值")},
+                    {type: 'min', name: $g("最小值")}
+                ]
+            },
+            markLine: {
+                data: [
+                    {type: 'average', name: $g("平均值")}
+                ]
+            }
+        },
+        {
+            name: $g("总金额(RMB/元)"),
+            type: 'bar',
+            yAxisIndex: 1,
+            data: PriceArr,
+            markPoint: {
+                data: [
+                    {type: 'max', name: $g("最大值")},
+                    {type: 'min', name: $g("最小值")}
+                ]
+            },
+            markLine: {
+                data: [
+                    {type: 'average', name: $g("平均值")}
+                ]
+            }
+        }
+    ]
+	workReport_InitItem.ReloadEChartData(PageLogicObj.EChartObj,NameArr,seriesArr)
 }

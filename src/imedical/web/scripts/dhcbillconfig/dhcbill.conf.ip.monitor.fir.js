@@ -27,7 +27,7 @@ $(function() {
 			MethodName: "SaveCheckData",
 			jsonStr: JSON.stringify(jsonObj)
 		}, function (rtn) {
-			var type = (rtn.success == "0") ? "success" : "error";
+			var type = (rtn.success == 0) ? "success" : "error";
 			$.messager.popover({msg: rtn.msg, type: type});
 			GV.CateList.reload();
 		});

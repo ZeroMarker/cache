@@ -20,7 +20,7 @@ function BatTransQuery(Inclb,StkDate,InclbInfo) {
 	
 	// 起始日期
 	var StartDate = new Ext.ux.DateField({
-			fieldLabel : '起始日期',
+			fieldLabel : $g('起始日期'),
 			id : 'StartDate',
 			name : 'StartDate',
 			anchor : '90%',
@@ -30,7 +30,7 @@ function BatTransQuery(Inclb,StkDate,InclbInfo) {
 
 	// 结束日期
 	var EndDate = new Ext.ux.DateField({
-			fieldLabel : '结束日期',
+			fieldLabel : $g('结束日期'),
 			id : 'EndDate',
 			name : 'EndDate',
 			anchor : '90%',
@@ -47,8 +47,8 @@ function BatTransQuery(Inclb,StkDate,InclbInfo) {
     Ext.getCmp('Inclbinfo').setText(InclbInfo,false)
     // 另存按钮
 	var SaveAsBT = new Ext.Toolbar.Button({
-				text : '另存',
-				tooltip : '另存为Excel',
+				text : $g('另存'),
+				tooltip : $g('另存为Excel'),
 				iconCls : 'page_excel',
 				width : 70,
 				height : 30,
@@ -59,8 +59,8 @@ function BatTransQuery(Inclb,StkDate,InclbInfo) {
 	
 	// 检索按钮
 	var SearchBT = new Ext.Toolbar.Button({
-				text : '查询',
-				tooltip : '点击查询药品台账',
+				text : $g('查询'),
+				tooltip : $g('点击查询药品台账'),
 				iconCls : 'page_find',
 				handler : function() {
 					searchData();
@@ -73,7 +73,7 @@ function BatTransQuery(Inclb,StkDate,InclbInfo) {
 	function searchData() {
 		// 必选条件
 		if (Inclb == null || Inclb.length <= 0) {
-			Msg.info("warning", "请在批次界面选择某一批次记录查看其追踪信息！");
+			Msg.info("warning", $g("请在批次界面选择某一批次记录查看其追踪信息！"));
 			return;
 		}
 		
@@ -119,90 +119,90 @@ function BatTransQuery(Inclb,StkDate,InclbInfo) {
 				sortable : true,
 				hidden : true
 			}, {
-				header : "日期",
+				header : $g("日期"),
 				dataIndex : 'TrDate',
 				width : 130,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "摘要",
+				header : $g("摘要"),
 				dataIndex : 'TrMsg',
 				width : 60,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "数量",
+				header : $g("数量"),
 				dataIndex : 'TrQtyUom',
 				width : 80,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "结余数量",
+				header : $g("结余数量"),
 				dataIndex : 'EndQtyUom',
 				width : 100,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "进价",
+				header : $g("进价"),
 				dataIndex : 'PurUomRp',
 				width : 80,
 				
 				align : 'right'
 			}, {
-				header : "售价",
+				header : $g("售价"),
 				dataIndex : 'PurUomSp',
 				width : 80,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "进价金额",
+				header : $g("进价金额"),
 				dataIndex : 'TrRpAmt',
 				width : 100,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "售价金额",
+				header : $g("售价金额"),
 				dataIndex : 'TrSpAmt',
 				width : 100,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "结余进价金额",
+				header : $g("结余进价金额"),
 				dataIndex : 'EndRpAmt',
 				width : 100,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "结余售价金额",
+				header : $g("结余售价金额"),
 				dataIndex : 'EndSpAmt',
 				width : 100,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "处理号",
+				header : $g("处理号"),
 				dataIndex : 'TrNo',
 				width : 180,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "处理相关部门(人)",
+				header : $g("处理相关部门(人)"),
 				dataIndex : 'TrAdm',
 				width : 120,
 				align : 'right',
 				sortable : true
 			},{
-				header : "操作人",
+				header : $g("操作人"),
 				dataIndex : 'OperateUser',
 				width : 65,
 				align : 'left',				
 				sortable : true
 			},{
-				header : "备注",
+				header :$g( "备注"),
 				dataIndex : 'TrMark',
 				width : 65,
 				align : 'left',				
@@ -213,16 +213,16 @@ function BatTransQuery(Inclb,StkDate,InclbInfo) {
 			store : DetailInfoStore,
 			pageSize : PageSize,
 			displayInfo : true,
-			displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
+			displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
 			emptyMsg : "No results to display",
-			prevText : "上一页",
-			nextText : "下一页",
-			refreshText : "刷新",
-			lastText : "最后页",
-			firstText : "第一页",
-			beforePageText : "当前页",
-			afterPageText : "共{0}页",
-			emptyMsg : "没有数据",
+			prevText : $g("上一页"),
+			nextText : $g("下一页"),
+			refreshText : $g("刷新"),
+			lastText :$g( "最后页"),
+			firstText : $g("第一页"),
+			beforePageText : $g("当前页"),
+			afterPageText : $g("共{0}页"),
+			emptyMsg : $g("没有数据"),
 			doLoad:function(C){
 				var B={},
 				A=this.getParams();
@@ -264,7 +264,7 @@ function BatTransQuery(Inclb,StkDate,InclbInfo) {
 				autoHeight : true,
 					items : [{
 						xtype : 'fieldset',
-						title : '查询条件',
+						title : $g('查询条件'),
 						autoHeight : true,
 						items : [{
 							layout : 'column',
@@ -277,7 +277,7 @@ function BatTransQuery(Inclb,StkDate,InclbInfo) {
 		});
 
 	var window = new Ext.Window({
-				title : '批次信息追踪',
+				title : $g('批次信息追踪'),
 				width : 800,
 				height : 600,
 				layout:'border',

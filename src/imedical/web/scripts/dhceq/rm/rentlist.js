@@ -5,6 +5,7 @@ $(function(){
 
 function initDocument()
 {
+	defindTitleStyle();   //add by lmm 2022-05-24 2612999
 	initUserInfo();
 	initLookUp();
 	initStatusData();
@@ -23,7 +24,9 @@ function initDocument()
 			RequestNo:getElementValue("RequestNo"),
 			StatusDR:getElementValue("StatusDR"),
 			CurUser:'',
-			Name:getElementValue("Name")
+			Name:getElementValue("Name"),
+			CurLocDR:curLocID,//add by csj 2020-07-01当前登录科室
+			QXType:getElementValue("QXType")	//czf 2021-11-18 2221492
 		},
 		border:false,
 	    fit:true,
@@ -79,6 +82,7 @@ function BFind_Clicked()
 			RequestNo:getElementValue("RequestNo"),
 			StatusDR:getElementValue("StatusDR"),
 			CurUser:'',
+			CurLocDR:curLocID,//add by csj 2020-07-01当前登录科室
 			Name:getElementValue("Name")
 		}
 	});

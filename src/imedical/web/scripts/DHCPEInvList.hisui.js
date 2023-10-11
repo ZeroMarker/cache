@@ -13,6 +13,10 @@ $(function(){
 	
 	InitInvListQueryTabDataGrid();
 	
+	   //修改
+     $("#BModify").click(function() {	
+		SaveForm();		
+        });
 
 	
 	//查询
@@ -298,7 +302,13 @@ function BPrintList_click(){
 	DHCP_GetXMLConfig("InvPrintEncrypt","PEINVPRTLIST");
 	//var myobj=document.getElementById("ClsBillPrint");
 	//DHCP_PrintFun(myobj,TxtInfo,ListInfo);
-	DHC_PrintByLodop(getLodop(),TxtInfo,ListInfo,"","{printListByText:true}");
+	//DHC_PrintByLodop(getLodop(),TxtInfo,ListInfo,"","{printListByText:true}");
+	var otherCfg={	
+		printListByText:true,
+		tdnowrap:true, 
+	}	  
+    DHC_PrintByLodop(getLodop(),TxtInfo,ListInfo,"","",otherCfg);
+
 }
 
 function GetListFlag(admtype)
@@ -315,14 +325,20 @@ function GetListFlag(admtype)
 //查询
 function BFind_click()
 {
-	$('#RPFRowId').val("")
-	var RegNoLength=tkMakeServerCall("web.DHCPE.DHCPECommon","GetRegNoLength");
+	var CTLocID=session['LOGON.CTLOCID'];
+
+	$('#RPFRowId').val("");
+
+	var RegNoLength=tkMakeServerCall("web.DHCPE.DHCPECommon","GetRegNoLength",CTLocID);
 	iRegNo=$("#RegNo").val();
 	if (iRegNo.length<RegNoLength && iRegNo.length>0) { 
-		iRegNo=tkMakeServerCall("web.DHCPE.DHCPECommon","RegNoMask",iRegNo);
+		iRegNo=tkMakeServerCall("web.DHCPE.DHCPECommon","RegNoMask",iRegNo,CTLocID);
 		$("#RegNo").val(iRegNo)
 	}
 
+	 var iGroupID=$("#GDesc").combogrid('getValue');
+	if (($("#GDesc").combogrid('getValue')==undefined)||($("#GDesc").combogrid('getValue')=="")){var iGroupID="";} 
+	
 	$("#InvListQueryTab").datagrid('load',{
 			ClassName:"web.DHCPE.InvPrt",
 			QueryName:"FindInvPrtList",
@@ -336,6 +352,10 @@ function BFind_click()
 			RPFlag:$("#RPFlag").combobox('getValue'),
 			InvStatus:$("#InvStatus").combobox('getValue'),
 			InvPayMode:$("#InvPayMode").combobox('getValue'),
+			CashierStat:"",
+			isApply:ApplyFlag,
+			LocID:CTLocID,
+            GroupID:iGroupID
 
 			});
 }
@@ -368,14 +388,20 @@ function InitInvListQueryTabDataGrid()
 			CardNo:$("#CardNo").val(),
 			BeginDate:$("#BeginDate").datebox('getValue'),
 			EndDate:$("#EndDate").datebox('getValue'),
-			RPFlag:$("#RPFlag").combogrid('getValue')
+			RPFlag:$("#RPFlag").combogrid('getValue'),
+			CashierStat:"",
+			isApply:ApplyFlag,
+			LocID:session['LOGON.CTLOCID']		
 				
 		},
 		frozenColumns:[[
 		
 		{field:'TModifyPaymode',title:'修改支付方式',width:'100',hidden:ApplyFlag=="F"?true:false,align:'center',
 			formatter:function(value,rowData,rowIndex){
-				if((rowData.TInvNo.indexOf("退")==-1)&&(rowData.TRPFlag=="否")){
+				if((rowData.TInvNo.indexOf("退")==-1)&&(rowData.TFlag.indexOf("作废")==-1)&&(rowData.TRPFlag=="否")){
+					return "<span style='cursor:pointer;' class='icon-paid' title='修改支付方式' onclick='BMPaymode_click(\"" + rowIndex + "\")'>&nbsp;&nbsp;&nbsp;&nbsp;</span>"
+						
+					
 					return "<a href='#' onclick='BMPaymode_click(\""+rowIndex+"\")'>\
 					<img src='../scripts_lib/hisui-0.1.0/dist/css/icons/change_pay_way.png' border=0/>\
 					</a>";
@@ -390,6 +416,18 @@ function InitInvListQueryTabDataGrid()
 		    {field:'TRowId',title:'TRowId',hidden: true},	
 			{field:'TAmount',width:'80',title:'金额',align:'right'},
 			{field:'TFlag',width:'60',title:'状态'},
+			{field:'TPrintEInv',width:'160',title:'是否打印电子发票',align:'center',
+           		formatter: function (value,rowData,rowIndex) {
+	           	if(rowData.TRowId!=""){
+					if(value=="0"){
+						return '<input type="checkbox" checked="checked" disabled/>';
+					}else{
+						return '<input type="checkbox" value="" disabled/>';
+					}
+	           	}
+			}
+            },
+            {field:'TEInvNo',width:'140',title:'电子票据号'},
 			{field:'TUser',width:'80',title:'收费员'},
 			{field:'TInvDate',width:'150',title:'收费日期'},
 			{field:'TRPFlag',width:'80',title:'结账标志',align:'center'},
@@ -430,17 +468,22 @@ function InitInvListQueryTabDataGrid()
 
 function InitCombobox()
 {
+
 	// 日结标记	
 	var RPObj = $HUI.combobox("#RPFlag",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindRPFlag&ResultSetType=array",
 		valueField:'id',
-		textField:'desc',
+		textField:'text',
 		panelHeight:'70',
-		})
+		data:[
+            {id:'Y',text:$g('是')},
+            {id:'N',text:$g('否')} 
+        ]
 
+	}); 
+	
 	// 支付方式	
 	var InvPayModeObj = $HUI.combobox("#InvPayMode",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindTJPayMode&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindTJPayMode&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
 		valueField:'id',
 		textField:'text',
 		panelHeight:'200',
@@ -448,7 +491,7 @@ function InitCombobox()
 
 	// 支付方式	
 	var PayModeObj = $HUI.combobox("#PayMode",{
-		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindTJPayMode&extFlag=1&ResultSetType=array",
+		url:$URL+"?ClassName=web.DHCPE.HISUICommon&QueryName=FindTJPayMode&extFlag=1&ResultSetType=array&LocID="+session['LOGON.CTLOCID'],
 		valueField:'id',
 		textField:'text',
 		panelHeight:'100',
@@ -460,13 +503,39 @@ function InitCombobox()
 		textField:'text',
 		panelHeight:'100',
 		data:[
-            {id:'正常',text:'正常'},
-            {id:'作废',text:'作废'},
-            {id:'冲红',text:'冲红'},
+            {id:'正常',text:$g('正常')},
+            {id:'作废',text:$g('作废')},
+            {id:'冲红',text:$g('冲红')}
            
         ]
 
 	}); 
+   
+    //团体
+	var GDescObj = $HUI.combogrid("#GDesc",{
+		panelWidth:430,
+		url:$URL+"?ClassName=web.DHCPE.PreGBaseInfo&QueryName=SearchGListByDesc",
+		mode: 'remote',  
+		delay:200,
+		pagination : true, 
+		pageSize: 20,
+		pageList : [20,50,100],
+		idField:'GBI_RowId',
+		textField:'GBI_Desc',
+		onBeforeLoad:function(param){
+			param.GBIDesc = param.q;
+		},
+		onShowPanel:function()
+		{
+			$('#GDesc').combogrid('grid').datagrid('reload');
+		},
+		columns:[[
+			{field:'GBI_RowId',title:'ID',width:30},
+			{field:'GBI_Desc',title:'名称',width:150},
+			{field:'GBI_Code',title:'编码',width:100}
+					
+		]]
+		});
 
 
 }
@@ -476,7 +545,7 @@ function InitInfo(InvNo)
 {
 	$('#WInvNo').val(InvNo);
 	if((InvNo!="")&&(InvNo.indexOf("(")>=0)){
-		var InvNo=InvNo.split("(")[0];
+		var InvNo=(InvNo.split("(")[1]).split(")")[0];
 	}
 	var User=session['LOGON.USERID'];
 	var Info=tkMakeServerCall("web.DHCPE.ModifyPayMode","GetInvInfoByInvNo",InvNo,"",User);
@@ -498,6 +567,9 @@ function BMPaymode_click(selectrow)
 {
 	var objtbl = $("#InvListQueryTab").datagrid('getRows');
 	var InvNo=objtbl[selectrow].TInvNo;
+	if((InvNo!="")&&(InvNo.indexOf("(")>=0)){
+		var InvNo=(InvNo.split("(")[1]).split(")")[0];
+	}
 	var InvID=objtbl[selectrow].TRowId;
 	var PayMode=objtbl[selectrow].TPayMode;
 	var User=session['LOGON.USERID'];
@@ -510,6 +582,18 @@ function BMPaymode_click(selectrow)
 	
 	$("#myWin").show();
 	 
+	 $HUI.window("#myWin", {
+        title: "修改支付方式",
+        iconCls: "icon-w-edit",
+        collapsible: false,
+        minimizable: false,
+        maximizable: false,
+        modal: true,
+       
+       
+    });
+	 
+	 /*
 		var myWin = $HUI.dialog("#myWin",{
 			iconCls:'icon-w-edit',
 			resizable:true,
@@ -529,6 +613,7 @@ function BMPaymode_click(selectrow)
 				}
 			}]
 		});
+		*/
 		$('#form-save').form("clear");
 		InitInfo(InvNo);
 		
@@ -639,6 +724,7 @@ function PayMode_change(){
         $("#PayMode").combobox("disable"); 
 	}else{
 		$("#PayMode").combobox("enable");
+		$("#No").val("");
 	}
 }
 
@@ -653,6 +739,7 @@ function PayModeNew_change()
 	}else{
 		
 		$("#No").attr('disabled',true);
+		$("#No").val("");
 	}
 	
 }

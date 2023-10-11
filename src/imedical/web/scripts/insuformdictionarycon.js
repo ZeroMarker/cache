@@ -8,7 +8,7 @@
 
 //===========修改部分=================开始
 //在医保字典表中的基本编码(不包含医保类型编码,医保类型编码由程序来匹配。即：数据库中实际配置的是DosageZZA)
-var DicCode="Dosage";             //费用类型 
+var DicCode="drug_dosform";             //费用类型 
 // 获取字典数据的类名及方法名称(His中的字典列表)
 // 这里的方法由自己来写返回值 固定格式(List)
 var HisDicClass="web.INSUDictionaryContrast";         //类名
@@ -369,7 +369,7 @@ function reloadInsuDicGV(loadType){
 	var InsuType=$('#InsuTypeBox').combobox('getValue');     //医保类型
 	//var SearchKey=$('#SearchMedBox').val();                          //检索关键字
 	var SearchKey=$('#SearchMedBox').searchbox('getValue');   //检索关键字
-	var ExtStr=SearchKey;
+	var ExtStr=SearchKey+"^"+PUBLIC_CONSTANT.SESSION.HOSPID;
 	//alert("KeyCode="+KeyCode+"|ExtStr"+ExtStr);
 	
 	//重新加载查询结果
@@ -426,7 +426,8 @@ function Import()
 }
 function selectHospCombHandle(){
 	$('#InsuTypeBox').combobox('clear');
-	$('#InsuTypeBox').combobox('options').url = APP_PATH+"/INSUDictionaryContrast/GetDicDataList&DicKey=DLLType&ExtStr=";
+	var ExtStr = PUBLIC_CONSTANT.SESSION.HOSPID;  //增加院区 20230314 
+	$('#InsuTypeBox').combobox('options').url = APP_PATH+"/INSUDictionaryContrast/GetDicDataList&DicKey=DLLType&ExtStr="+ExtStr;
 	$('#InsuTypeBox').combobox('reload');
 	//RefushGridViews();
 	setTimeout(function(){

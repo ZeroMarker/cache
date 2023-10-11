@@ -14,6 +14,18 @@ var privilege = {
     },
     //保存权限
     canSave: function (documentContext) {
+	    var lockedInsID = $("#lock span").attr("instaceID");
+		if ((lockedInsID != undefined )&&(lockedInsID == documentContext.InstanceID))
+	    {
+			var message = '病历已加锁，不允许进行保存操作！';
+			showEditorMsg({msg:message,type:'alert'});
+			
+			iEmrPlugin.SET_READONLY({
+                ReadOnly: true
+            });
+			return false;
+		}
+	    
         var ret = false;
         if (!this._checkPrivilege(documentContext))
             return ret;
@@ -22,7 +34,7 @@ var privilege = {
         if (!ret)
 		{
 			var message = '权限控制：不允许进行保存操作！' + documentContext.privelege.cantSaveReason;
-			$.messager.popover({msg:message,type:'alert',style:{top:10,right:5}});
+			showEditorMsg({msg:message,type:'alert'});
 		}
         //showEditorMsg('权限控制：不允许进行保存操作！', 'warning');
 
@@ -38,7 +50,7 @@ var privilege = {
         if (!ret)
 		{
 			var message = '权限控制：不允许进行打印操作！' + documentContext.privelege.cantPrintReason;
-			$.messager.popover({msg:message,type:'alert',style:{top:10,right:5}});
+			showEditorMsg({msg:message,type:'alert'});
 		}  
         //showEditorMsg('权限控制：不允许进行打印操作！', 'warning');
 
@@ -46,6 +58,18 @@ var privilege = {
     },
     //删除权限
     canDelete: function (documentContext) {
+	    var lockedInsID = $("#lock span").attr("instaceID");
+		if ((lockedInsID != undefined )&&(lockedInsID == documentContext.InstanceID))
+	    {
+			var message = '病历已加锁，不允许进行删除操作！';
+			showEditorMsg({msg:message,type:'alert'});
+			
+			iEmrPlugin.SET_READONLY({
+                ReadOnly: true
+            });
+			return false;
+		}
+
         var ret = false;
         if (!this._checkPrivilege(documentContext))
             return ret;
@@ -54,7 +78,7 @@ var privilege = {
         if (!ret)
 		{
 			var message = '权限控制：不允许进行删除操作！' + documentContext.privelege.cantDeleteReason;
-			$.messager.popover({msg:message,type:'alert',style:{top:10,right:5}});
+			showEditorMsg({msg:message,type:'alert'});
 		}
         //showEditorMsg('权限控制：不允许进行删除操作！', 'warning');
 
@@ -69,7 +93,7 @@ var privilege = {
         if (!ret)
 		{
 			var message = '权限控制：不允许进行审核操作！' + documentContext.privelege.cantCheckReason;
-			$.messager.popover({msg:message,type:'alert',style:{top:10,right:5}});
+			showEditorMsg({msg:message,type:'alert'});
 		}
         //showEditorMsg('权限控制：不允许进行审核操作！', 'warning');
 
@@ -84,10 +108,36 @@ var privilege = {
         if (!ret)
 		{
 			var message = '权限控制：不允许进行重审核操作！' + documentContext.privelege.cantReCheckReason;
-			$.messager.popover({msg:message,type:'alert',style:{top:10,right:5}});
+			showEditorMsg({msg:message,type:'alert'});
 		}
         //showEditorMsg('权限控制：不允许进行重审核操作！', 'warning');
 
+        return ret;
+    },
+    canPatCheck: function (documentContext) {
+        var ret = false;
+        if (!this._checkPrivilege(documentContext))
+            return ret;
+
+        ret = documentContext.privelege.canPatCheck == '1';
+        if (!ret)
+        {
+            var message = '不允许进行患者签名操作! ' + documentContext.privelege.cantPatCheckReason;
+            showEditorMsg(message, 'warning');
+        }
+        return ret;
+    },
+    canPatReCheck: function (documentContext) {
+        var ret = false;
+        if (!this._checkPrivilege(documentContext))
+            return ret;
+
+        ret = documentContext.privelege.canPatReCheck == '1';
+        if (!ret)
+        {
+            var message = '不允许进行患者改签操作! ' + documentContext.privelege.cantPatReCheckReason;
+            showEditorMsg(message, 'warning');
+        }
         return ret;
     },
     canRevokCheck: function (documentContext) {
@@ -99,7 +149,7 @@ var privilege = {
         if (!ret)
 		{
 			var message = '权限控制：不允许进行撤销审核操作！' + documentContext.privelege.cantRevokCheckReason;
-			$.messager.popover({msg:message,type:'alert',style:{top:10,right:5}});
+			showEditorMsg({msg:message,type:'alert'});
 		} 
         //showEditorMsg('权限控制：不允许进行撤销审核操作！', 'warning');
 
@@ -114,7 +164,7 @@ var privilege = {
         if (!ret)
 		{
 			var message = '权限控制：不允许进行引用审核操作！' + documentContext.privelege.cantReferenceReason;
-			$.messager.popover({msg:message,type:'alert',style:{top:10,right:5}});
+			showEditorMsg({msg:message,type:'alert'});
 		}
         //showEditorMsg('权限控制：不允许进行引用审核操作！', 'warning');
 
@@ -129,7 +179,7 @@ var privilege = {
         if (!ret)
 		{
 			var message = '权限控制：不允许进行导出操作！' + documentContext.privelege.cantExportReason;
-			$.messager.popover({msg:message,type:'alert',style:{top:10,right:5}});
+			showEditorMsg({msg:message,type:'alert'});
 		}
         //showEditorMsg('权限控制：不允许进行导出操作！', 'warning');
 
@@ -144,7 +194,7 @@ var privilege = {
         if (!ret)
 		{
 			var message = '权限控制：不允许进行复制粘贴操作！' + documentContext.privelege.cantCopyPasteReason;
-			$.messager.popover({msg:message,type:'alert',style:{top:10,right:15}});
+			showEditorMsg({msg:message,type:'alert'});
 		}
         //showEditorMsg('权限控制：不允许进行复制粘贴操作！', 'warning');
 
@@ -159,7 +209,7 @@ var privilege = {
         if (!ret)
 		{
 			var message = '权限控制：不允许进行留痕操作！' + documentContext.privelege.cantReviseReason;
-			$.messager.popover({msg:message,type:'alert',style:{top:10,right:5}});
+			showEditorMsg({msg:message,type:'alert'});
 		} 
         //showEditorMsg('权限控制：不允许进行留痕操作！', 'warning');
 
@@ -174,14 +224,14 @@ var privilege = {
         if (!ret)
 		{
 			var message = '权限控制：不允许进行查看留痕操作！' + documentContext.privelege.cantViewReviseReason;
-			$.messager.popover({msg:message,type:'alert',style:{top:10,right:5}});
+			showEditorMsg({msg:message,type:'alert'});
 		}
         //showEditorMsg('权限控制：不允许进行查看留痕操作！', 'warning');
 
         return ret;
     },
     //检查签名权限脚本
-    checkSign: function (userInfo, signProperty) {
+    checkSign: function (userInfo, signProperty, documentContext, callback, arr) {
 
         var result = {
             'flag': false,
@@ -193,30 +243,56 @@ var privilege = {
                 'flag': false,
                 'ationtype': ''
             };
-            $.messager.popover({msg:'已签名,不必再签！',type:'info',style:{top:10,right:5}});
-            //showEditorMsg('已签名,不必再签', 'forbid');
-            return result;
+            showEditorMsg({msg:'已签名,不必再签！',type:'info'});
+            if ((sysOption.isAllRevokeSign.split("^")[0]=="Y")&&(sysOption.isAllRevokeSign.split("^")[2]=="Y")&&(documentContext!=undefined)&&(documentContext!="")&&(documentContext.InstanceID!=undefined)&&(documentContext.InstanceID!=""))
+            {
+	            var instanceId = documentContext.InstanceID;
+	            var text = '是否需要撤销本人签名？';
+				$.messager.confirm("操作提示", text, function (data) { 
+					if(data) {
+						
+						var ret = revokeWordSign(userInfo,signProperty,instanceId);
+						if (ret.result == "OK")
+						{
+							$.messager.popover({msg:'签名撤销成功！', type:'success', style:{top:10,right:5}});
+						}
+						else
+						{
+							$.messager.popover({msg:'签名撤销失败！', type:'error', style:{top:10,right:5}});
+						}
+                        callback(result, arr);
+					} else {
+                        callback(result, arr);
+                    }
+				});
+            }
+            return;
         }
         if (signProperty.OriSignatureLevel == 'All') {
             if (count > 0) {
                 //改签
-                if (confirm('已签名，是否改签') == true) {
-                    result = {
-                        'flag': true,
-                        'ationtype': 'Replace'
-                    };
-                } else {
-                    result = {
-                        'flag': false,
-                        'ationtype': ''
-                    };
-                }
+                top.$.messager.confirm("操作提示", "已签名，是否改签?", function (data) { 
+					if(data) {
+						result = {
+                            'flag': true,
+                            'ationtype': 'Replace'
+                        };
+                        callback(result,arr);
+					} else {
+                        result = {
+                            'flag': false,
+                            'ationtype': ''
+                        };
+                        callback(result,arr);
+					}
+				});
             } else {
                 //签名
                 result = {
                     'flag': true,
                     'ationtype': 'Append'
                 };
+                callback(result,arr);
             }
         } else if (signProperty.OriSignatureLevel == 'Check') {
             if (count <= 0) {
@@ -225,122 +301,136 @@ var privilege = {
                     'flag': true,
                     'ationtype': 'Append'
                 };
+                callback(result,arr);
             } else {
                 if (userInfo.UserLevel == 'Resident') {
                     if (count == 1 && signProperty.SignatureLevel == 'Resident') {
                         //改签
-                        if (confirm('已签名，是否改签') == true) {
-                            result = {
-                                'flag': true,
-                                'ationtype': 'Replace'
-                            };
-                        } else {
-                            result = {
-                                'flag': false,
-                                'ationtype': ''
-                            };
-                        }
+                        top.$.messager.confirm("操作提示", "已签名，是否改签?", function (data) { 
+							if(data) {
+								result = {
+                                    'flag': true,
+                                    'ationtype': 'Replace'
+                                };
+		                        callback(result,arr);
+							} else {
+                                result = {
+                                    'flag': false,
+                                    'ationtype': ''
+                                };
+		                        callback(result,arr);
+							}
+						});
                     } else {
                         //无权限签
                         result = {
                             'flag': false,
                             'ationtype': ''
                         };
-                        $.messager.popover({msg:'已签名,不必再签！',type:'info',style:{top:10,right:5}});
-                        //showEditorMsg('已签名,不必再签', 'forbid');
+                        showEditorMsg({msg:'已签名,不必再签！',type:'info'});
+                        callback(result,arr);
                     }
                 } else if (userInfo.UserLevel == 'Attending') {
                     var flag = 0
-                        for (var i = 0; i < count; i++) {
-                            if (signProperty.Authenticator[i].SignatureLevel == 'Chief') {
-                                flag = 1
-                                    break;
-                            }
-                        }
-
-                        if (flag == 1) {
-                            //无权限签
-                            result = {
-                                'flag': false,
-                                'ationtype': ''
-                            };
-                            $.messager.popover({msg:'已签名,不必再签！',type:'info',style:{top:10,right:5}});
-                            //showEditorMsg('已签名,不必再签', 'forbid');
-                            return result;
-                        }
-
-                        flag = 0
-                        for (var i = 1; i < count; i++) {
-                            if (signProperty.Authenticator[i].SignatureLevel == 'Attending') {
-                                flag = 1
-                                    break;
-                            }
-                        }
-
-                        if (flag != 1) {
-                            //签名
-                            result = {
-                                'flag': true,
-                                'ationtype': 'Append'
-                            };
-                        } else if (signProperty.SignatureLevel == 'Attending') {
-                            //改签
-                            if (confirm('已签名，是否改签') == true) {
-                                result = {
-                                    'flag': true,
-                                    'ationtype': 'Replace'
-                                };
-                            } else {
-                                result = {
-                                    'flag': false,
-                                    'ationtype': ''
-                                };
-                            }
-                        } else {
-                            //无权限签
-                            result = {
-                                'flag': false,
-                                'ationtype': ''
-                            };
-                            $.messager.popover({msg:'已签名,不必再签！',type:'info',style:{top:10,right:5}});
-                            //showEditorMsg('已签名,不必再签', 'forbid');
-                        }
-                } else if (userInfo.UserLevel == 'Chief') {
-                    var flag = 0
-                        for (var i = 0; i < count; i++) {
-                            if (signProperty.Authenticator[i].SignatureLevel == 'Chief') {
-                                flag = 1;
+                    for (var i = 0; i < count; i++) {
+                        if (signProperty.Authenticator[i].SignatureLevel == 'Chief') {
+                            flag = 1
                                 break;
-                            }
                         }
-                        if (flag != 1) {
-                            //签名
-                            result = {
-                                'flag': true,
-                                'ationtype': 'Append'
-                            };
-                        } else if (signProperty.SignatureLevel == 'Chief') {
-                            //改签
-                            if (confirm('已签名，是否改签') == true) {
-                                result = {
+                    }
+
+                    if (flag == 1) {
+                        //无权限签
+                        result = {
+                            'flag': false,
+                            'ationtype': ''
+                        };
+                        showEditorMsg({msg:'已签名,不必再签！',type:'info'});
+                        callback(result,arr);
+                        return;
+                    }
+
+                    flag = 0
+                    for (var i = 1; i < count; i++) {
+                        if (signProperty.Authenticator[i].SignatureLevel == 'Attending') {
+                            flag = 1
+                                break;
+                        }
+                    }
+
+                    if (flag != 1) {
+                        //签名
+                        result = {
+                            'flag': true,
+                            'ationtype': 'Append'
+                        };
+                        callback(result,arr);
+                    } else if (signProperty.SignatureLevel == 'Attending') {
+                        //改签
+                        top.$.messager.confirm("操作提示", "已签名，是否改签?", function (data) { 
+							if(data) {
+								result = {
                                     'flag': true,
                                     'ationtype': 'Replace'
                                 };
-                            } else {
+		                        callback(result,arr);
+							} else {
                                 result = {
                                     'flag': false,
                                     'ationtype': ''
                                 };
-                            }
-                        } else {
-                            //无权限签
-                            result = {
-                                'flag': false,
-                                'ationtype': ''
-                            };
-                            $.messager.popover({msg:'已签名,不必再签！',type:'info',style:{top:10,right:5}});
-                            //showEditorMsg('已签名,不必再签', 'forbid');
+		                        callback(result,arr);
+							}
+						});
+                    } else {
+                        //无权限签
+                        result = {
+                            'flag': false,
+                            'ationtype': ''
+                        };
+                        showEditorMsg({msg:'已签名,不必再签！',type:'info'});
+                        callback(result,arr);
+                    }
+                } else if ($.inArray(userInfo.UserLevel,["Chief","ViceChief"]) != -1) {
+                    var flag = 0
+                    for (var i = 0; i < count; i++) {
+                        if ($.inArray(signProperty.Authenticator[i].SignatureLevel,["Chief","ViceChief"]) != -1) {
+                            flag = 1;
+                            break;
                         }
+                    }
+                    if (flag != 1) {
+                        //签名
+                        result = {
+                            'flag': true,
+                            'ationtype': 'Append'
+                        };
+                        callback(result,arr);
+                    } else if (signProperty.SignatureLevel == 'Chief') {
+                        top.$.messager.confirm("操作提示", "已签名，是否改签", function (data) { 
+							if(data) {
+								result = {
+                                    'flag': true,
+                                    'ationtype': 'Replace'
+                                };
+                                callback(result,arr);
+							} else {
+								result = {
+                                    'flag': false,
+                                    'ationtype': ''
+                                };
+                                callback(result,arr);
+							}
+						});
+                    } else {
+                        //无权限签
+                        result = {
+                            'flag': false,
+                            'ationtype': ''
+                        };
+                        showEditorMsg({msg:'已签名,不必再签！',type:'info'});
+                        callback(result,arr);
+                    }
                 }
             }
         } else {
@@ -350,30 +440,34 @@ var privilege = {
                     'flag': false,
                     'ationtype': ''
                 };
-                $.messager.popover({msg:'签名身份不符，无权限签名！',type:'alert',style:{top:10,right:5}});
-                //showEditorMsg('签名身份不符，无权限签名', 'forbid');
+                showEditorMsg({msg:'签名身份不符，无权限签名！',type:'alert'});
+                callback(result,arr);
             } else if (count > 0) {
                 //改签
-                if (confirm('已签名，是否改签') == true) {
-                    result = {
-                        'flag': true,
-                        'ationtype': 'Replace'
-                    };
-                } else {
-                    result = {
-                        'flag': false,
-                        'ationtype': ''
-                    };
-                }
+                top.$.messager.confirm("操作提示", "已签名，是否改签?", function (data) { 
+					if(data) {
+						result = {
+	                        'flag': true,
+	                        'ationtype': 'Replace'
+	                    };
+                        callback(result,arr);
+					} else {
+	                    result = {
+	                        'flag': false,
+	                        'ationtype': ''
+	                    };
+                        callback(result,arr);
+					}
+				});
             } else {
                 //签名
                 result = {
                     'flag': true,
                     'ationtype': 'Append'
                 };
+                callback(result,arr);
             }
         }
-        return result;
     },
     //是否调用签名失效
     GetRevokeStatus: function () {
@@ -450,7 +544,7 @@ var privilege = {
         if (!ret)
 		{
 			var message = '权限控制：不允许进行自动审批动作！' + documentContext.privelege.cantAutoApplyReason;
-			$.messager.popover({msg:message,type:'alert',style:{top:10,right:5}});
+			showEditorMsg({msg:message,type:'alert'});
 		}
         return ret;
     }

@@ -27,42 +27,48 @@ function openWindow(name, lnk) {
     var iLeft = 330;
     //var iLeft = (window.screen.availWidth - iWidth);
     //var iTop = (window.screen.availWidth - iHeight);
-
-    window.open(lnk, name, 'height=' + iHeight + ',width=' + iWidth + ',top=' + iTop + ',left=' + iLeft + ',scrollbars=yes,resizable=yes,status=no,center=yes,minimize=no,maximize=yes');
+    if (judgeIsIE()){
+        window.open(lnk, name, 'height=' + iHeight + ',width=' + iWidth + ',top=' + iTop + ',left=' + iLeft + ',scrollbars=yes,resizable=yes,status=no,center=yes,minimize=no,maximize=yes');
+    }else{
+        parent.createWindow("admHistoryWindow",name,lnk,iWidth + 400,iHeight + 200,50,150);
+    }
 }
 
 //住院病历浏览
 function openRecordBrowse(patientID, episodeID) {
     if ('N' == OPDisplayWindow) {
         $HUI.dialog('#admHisDetail').open();
-        $("#insComboSpan").hide();
-        var lnk = 'emr.interface.browse.category.csp?EpisodeID=' + episodeID + '&PatientID=' + patientID + '&OPHistoryDefaultSelectDocID=' + OPHistoryDefaultSelectDocID;
+        var lnk = 'emr.browse.emr.csp?EpisodeID='+episodeID+'&Action=externalapp&ViewType=Editor&OPHistoryDefaultSelectDocID=' + OPHistoryDefaultSelectDocID + '&MWToken=' + getMWToken();
         $('#frameDetail').attr('src', lnk);
         showAdmHisDetail(true);
     }else {
         //河南中医药大学第一附属医院项目历史就诊病历弹窗显示
-        var lnk = 'emr.browse.emr.csp?EpisodeID='+episodeID+'&Action=&ViewType=Editor';
+        var lnk = 'emr.browse.emr.csp?EpisodeID='+episodeID+'&Action=externalapp&ViewType=Editor&OPHistoryDefaultSelectDocID=' + OPHistoryDefaultSelectDocID + '&MWToken=' + getMWToken();
         openWindow('recordbrowse', lnk);
     }
 }
 
 //显示门诊病历详细内容
 function showEmrDoc(insData) {
+    //通过浏览权限规则脚本判断是否允许浏览
     if ((''===insData)||(getViewPrivilege(insData).canView == '0')) {
-        var Viewblank = 'emr.blank.csp?info=OPCannotView';
-        $('#frameDetail').attr('src', Viewblank);
-        $('#refEmrDoc').hide();
+        var frame = document.getElementById("frameDetail");
+		frame = document.all ? frame.contentWindow.document : frame.contentDocument;
+		frame.open();
+		frame.write('<body><img  src="../scripts/emr/image/icon/noview.png"  alt="您没有权限查看当前病历" />');
+		frame.write('</body>');
+		frame.close();
         showAdmHisDetail(true);
-    }else {
-	    //$('#refEmrDoc').show();
+    } else {
 	    admHisUrl = 'emr.record.browse.browsform.editor.csp?VisitType=OP&'; //id=2461||1&chartItemType=Single&pluginType=DOC
-	    var src = admHisUrl + 'id=' + insData.id + '&chartItemType=' + insData.chartItemType + '&pluginType=' + insData.pluginType;
+        var src = admHisUrl + 'id=' + insData.id + '&chartItemType=' + insData.chartItemType + '&pluginType=' + insData.pluginType + '&Action=externalapp&MWToken=' + getMWToken();
 	    $('#frameDetail').attr('src', src);
 	    //通过权限规则脚本控制是否显示引用按钮
 	    if (getQuotePrivilege(insData).canquote == '1') {
 	        $('#refEmrDoc').show();
-	    }else {
-	        $('#refEmrDoc').hide();
+            if ('' != refEmrLastDocID) {
+                $('#refEmrLastDoc').show();
+            }
 	    }
         
         if ('N' !== isSwitchHistoryOERecord) {
@@ -80,7 +86,7 @@ function showEmrDoc(insData) {
 //实例集合
 var allInstance = "";
 var currentIdx = "";
-function showHistoryEMR(adm,order) {
+function showHistoryEMR(adm,seq) {
     var data = ajaxDATA('String', 'EMRservice.BL.opInterface',
             'getAllInstance', userLocID, ssgroupID, adm, userID);
     ajaxGET(data, function (ret) {
@@ -104,6 +110,12 @@ function showHistoryEMR(adm,order) {
         var insCombo = $HUI.combobox("#insCombo",{
             valueField:'id',textField:'text',multiple:false,selectOnNavigation:false,editable:false,
             data:comboDataJson,
+            onShowPanel:function(){
+                document.getElementById("admHisPnl").style.visibility="hidden";
+            },
+            onHidePanel:function(){
+                document.getElementById("admHisPnl").style.visibility="visible";               
+            },
             onSelect:function(rec) {
                 currentIdx = rec.id;
                 showEmrDoc(allInstance[rec.id]);
@@ -123,10 +135,10 @@ function showHistoryEMR(adm,order) {
             currentIdx = 0;
             showEmrDoc('');
         }else {
-            if ("last" == order) {
+            if ("last" == seq) {
                 insCombo.select(allInstance.length-1);
             }else {
-                insCombo.select(0);
+                insCombo.select(seq);
             }
         }
     }, function (ret) {
@@ -136,16 +148,14 @@ function showHistoryEMR(adm,order) {
 
 /// 济宁使用集成平台的页面
 function showxmlpreview(adm) {
-    $('#refEmrDoc').hide();
-    $('#insComboSpan').hide();
     var oeordLnk = 'dhctt.xmlpreview.csp?xmlName=EMRPreview&EpisodeID='+adm;
     $('#frameDetail').attr('scrolling', 'yes').attr('src', oeordLnk);
     showAdmHisDetail(true); 
 }
 
-function showOPEMR(adm,order) {
+function showOPEMR(adm,seq) {
     if ('showHistoryEMR' == showHistoryEMRmethod) {
-        showHistoryEMR(adm,order);
+        showHistoryEMR(adm,seq);
     }
     else if ('showxmlpreview' == showHistoryEMRmethod){
         showHistoryEMR1(adm);
@@ -174,10 +184,10 @@ function GetRecodeParam(emrTmplCateid, func) {
 
 }
 
-// 获取模板加载权限
+// 获取病历浏览权限
 function getViewPrivilege(insData) {
     var result = '';
-    var data = ajaxDATA('String', 'EMRservice.Ajax.privilege', 'GetLoadPrivilege', userID, userLocID, ssgroupID, episodeID, patientID, insData.id);
+    var data = ajaxDATA('String', 'EMRservice.Ajax.privilege', 'GetBrowsePrivilege', userID, userLocID, ssgroupID, episodeID, patientID, insData.id);
     ajaxGETSync(data, function (ret) {
         result = $.parseJSON(ret);
     }, function (ret) {
@@ -199,7 +209,12 @@ function getOEPEpisodeList() {
         $.messager.alert('发生错误', 'GetOEPEpisodeListByPID:' + err.message || err, 'info');
     });
 }
-
+//刷新历史就诊列表
+function refreshAdmHistoryList(){
+    $('#admHistoryLst').empty();
+    getAdmHistory(patientID, GetOPHistoryMethod == 'GetOPHistoryAll' ? '' : episodeID);
+}
+var getAdmHistory = "";
 var currentAdmID = "";
 $(function () {
     $HUI.dialog('#admHisDetail').close();
@@ -209,7 +224,7 @@ $(function () {
         document.documentElement.className ='ie11';
     }
     //加载历史就诊
-    var getAdmHistory = function (patID, admID, ctloc) {
+    getAdmHistory = function (patID, admID, ctloc) {
         function appendDetail(data) {
             for (var i = 0, len = data.total; i < len; i++) {
                 var row = data.rows[i];
@@ -217,6 +232,8 @@ $(function () {
                 $(div).append(row.record);
                 $('#admHistoryLst').append(div);
             }
+            //隔行变色
+            $('.admDetail:odd').css('background-color', '#E0EEEE');
         }
 
         if ($('#stdpnl').length > 0) {
@@ -225,7 +242,7 @@ $(function () {
                         GetOPHistoryMethod, patID,
                         $("input[name='flag']:checked").val(), admID,
                         $("input[name='flagAdmType']:checked").val(), "HISUI");
-                ajaxGET(data, function (ret) {
+                ajaxGETSync(data, function (ret) {
                     appendDetail($.parseJSON(ret));
                 }, function (err) {
                     $.messager.alert('发生错误', GetOPHistoryMethod + ':' + err.message || err, 'info');
@@ -241,7 +258,7 @@ $(function () {
                         $('#startDate').datebox('getText'),
                         $('#endDate').datebox('getText'),
                         ctloc);
-                ajaxGET(data, function (ret) {
+                ajaxGETSync(data, function (ret) {
                     appendDetail($.parseJSON(ret));
                 }, function (ret) {
                     $.messager.alert('发生错误', 'GetOPHistoryByDateLoc:' + ret, 'info');
@@ -252,14 +269,6 @@ $(function () {
     ();
     //查询条件栏
     if ($('#stdpnl').length > 0) {
-        /*
-        $('#Type' + admType).prop('checked',true);
-        $(':radio').change(function () {
-            $('#admHistoryLst').empty();
-            getAdmHistory(patientID, GetOPHistoryMethod == 'GetOPHistoryAll' ? '' : episodeID);
-            $('#msg_start')[0].scrollIntoView(true);
-        });
-        */
         $HUI.radio('#Type' + admType).setValue(true);
         $HUI.radio('#Type'+admType).options().checked = true;
         if (admType == "E") {
@@ -273,14 +282,12 @@ $(function () {
             onChecked:function(e,value){
                 $('#admHistoryLst').empty();
                 getAdmHistory(patientID, GetOPHistoryMethod == 'GetOPHistoryAll' ? '' : episodeID);
-                $('#msg_start')[0].scrollIntoView(true);
             }
         });
         $HUI.radio("[name='flagAdmType']",{
             onChecked:function(e,value){
                 $('#admHistoryLst').empty();
                 getAdmHistory(patientID, GetOPHistoryMethod == 'GetOPHistoryAll' ? '' : episodeID);
-                $('#msg_start')[0].scrollIntoView(true);
             }
         });
         
@@ -317,8 +324,16 @@ $(function () {
             parent.createDocFromInstance(allInstance[idx]);
         }
     });
-    //默认隐藏引用按钮
-    $('#refEmrDoc').hide();
+
+    if ('' != refEmrLastDocID) {
+        $('#refEmrLastDoc').bind('click', function () {
+            if (!isClicked) {
+                isClicked = true;
+                setTimeout(function() { isClicked = false; }, 2000);
+                parent.createEmrLastDocFromInstance(refEmrLastDocID,currentAdmID);
+            }
+        });
+    }
     
     /*
     //病历实例下拉菜单
@@ -333,11 +348,17 @@ $(function () {
         if (('O' === $(this).attr('admType'))||('E' === $(this).attr('admType'))) {
             if ('N' == OPDisplayWindow) {
                 $HUI.dialog('#admHisDetail').open();
-                showOPEMR($(this).attr('admID'));
+                var index = parseInt($(this).attr('index'))
+                showOPEMR($(this).attr('admID'), index);
                 if ('' == admIDs) getOEPEpisodeList();
             }else{
                 windowArgs = {
+                    patientID: patientID,
+                    userLocID: userLocID,
+                    ssgroupID: ssgroupID,
+                    userID: userID,
                     admID: $(this).attr('admID'),
+                    refEmrLastDocID:refEmrLastDocID,
                     refEmrDocCallback: function(idx) {
                         parent.createDocFromInstance(idx);
                     },
@@ -349,6 +370,9 @@ $(function () {
                     }
                 };
                 var lnk = 'emr.opdoc.history.window.csp';
+                if (!judgeIsIE()){
+                    parent.envVar.hisuiWindowArgs = windowArgs;
+                }
                 openWindow('历史就诊病历显示页面', lnk);
             }
         }
@@ -375,7 +399,6 @@ $(function () {
                 }
             }
         });
-        //$('#prevAdm').show();
         //查看该患者门(急)诊就诊所书写的下一份病历内容
         $('#nextAdm').bind('click', function () {
             if (!isClicked) {
@@ -386,34 +409,23 @@ $(function () {
                 }else {
                     if ((admIDs.length-1) != admIDs.indexOf(currentAdmID)) {
                         currentAdmID = admIDs[admIDs.indexOf(currentAdmID)+1];
-                        showOPEMR(currentAdmID);
+                        showOPEMR(currentAdmID, 0);
                     }else {
                         $.messager.alert('提示', "已经切换至该患者门(急)诊就诊所书写的最后一份病历！", 'info');
                     }
                 }
             }
         });
-        //$('#nextAdm').show();
     }
     //查看医嘱内容
     $(document).on('click','.oeord', function () {
         $HUI.dialog('#admHisDetail').open();
-        $('#refEmrDoc').hide();
-        $('#prevAdm').hide();
-        $('#nextAdm').hide();
-        //$('#insCombo').hide();
-        $("#insComboSpan").hide();
         var oeordLnk = 'oeorder.opbillinfo.csp?PatientID=' + patientID + '&EpisodeID=' + $(this).attr('admID');
         $('#frameDetail').attr('src', oeordLnk);
         showAdmHisDetail(true);
     });
     $(document).on('click','.oeordEMR', function () {
         $HUI.dialog('#admHisDetail').open();
-        //$('#insCombo').hide();
-        $('#refEmrDoc').hide();
-        $('#prevAdm').hide();
-        $('#nextAdm').hide();
-        $("#insComboSpan").hide();
         var oeordLnk = 'emr.op.oeorddata.csp?PatientID=' + patientID + '&EpisodeID=' + $(this).attr('admID') + '&ssgroupID=' + ssgroupID;
         $('#frameDetail').attr('src', oeordLnk);
         showAdmOeOrd(true);
@@ -437,17 +449,19 @@ $(function () {
         var lastEpisodeID = records.length === 0 ? episodeID : records.last().attr('admID');
         //alert(lastEpisodeID);
         getAdmHistory(patientID, lastEpisodeID);
-        $('#msg_end')[0].scrollIntoView(true);
+        $('#msg').scrollTop($('#admHistoryLst')[0].scrollHeight);
     });
     //返回就诊列表
     $('#backAdmHistoryLst').bind('click', function () {
+        $('#refEmrDoc').hide();
+        $('#refEmrLastDoc').hide();
+        $('#prevAdm').hide();
+        $('#nextAdm').hide();
+        $("#insComboSpan").hide();
         $HUI.dialog('#admHisDetail').close();
         showAdmHisDetail(false);
     });
-    
+    $("#insComboSpan").hide();
     //初始化获取数据
     getAdmHistory(patientID, GetOPHistoryMethod == 'GetOPHistoryAll'?'':episodeID);
-
-    //隔行变色
-    $('.admDetail:odd').css('background-color', '#E0EEEE');
 });

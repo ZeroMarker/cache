@@ -1,6 +1,12 @@
-var tmpcategoryId = "";
+﻿var tmpcategoryId = "";
+var tmpnodeId = "";
 
 $(function(){
+	if (isAllowEditTextKB == "Y"){
+		$("#delete").show();
+		$("#modify").show();
+		$("#new").show();
+	}
 	initCbCategory();
 });
 
@@ -73,6 +79,13 @@ function getInsertText()
 	parent.eventDispatch(param);  
 }
 
+function reloadTextKbTree(){
+	var categoryId = getCagegoryID();
+	var locID = getUserLocID();
+	getCategory(categoryId,locID);
+	//$('#cbLoc').combobox('reload','../EMRservice.Ajax.common.cls?OutputType=Stream&Class=EMRservice.BL.BLTextKBCategory&Method=GetTextKBLoc&p1='+categoryId+'&p2=');
+}
+
 $("#insert").click(function(){
 	  getInsertText();
 })
@@ -88,15 +101,113 @@ $("#close").click(function(){
 
 $("#new").click(function(){
 	if (tmpcategoryId == ""){
-		alert("����ѡ��Ŀ¼�ڵ�");
+		alert("请先选择目录节点");
 	} else {
 		var array = new Array(0);
 		array[0] = tmpcategoryId;
+		array[1] = "";
+		array[2] = "";
+        array[3] = reloadTextKbTree;
 		var returnValues = window.showModalDialog("emr.edit.kbtext.csp",array,"dialogLeft:1000px;dialogHeight:765px;dialogWidth:700px;resizable:yes;center:yes;minimize:yes;maximize:yes;");
 	}
 })
 
-///����Ŀ¼
+$("#modify").click(function(){
+	if (tmpnodeId == ""){
+		alert("请先选择要修改的节点");
+		return;
+	}
+	
+	var createUsrInfo = getCreateUsrInfo(tmpnodeId);
+	if (createUsrInfo == "")
+	{
+		alert("获取当前节点创建者相关信息失败，不允许修改此节点");
+		return;
+	}
+	createUsrInfo = eval("("+createUsrInfo+")");
+	if (createUsrInfo.createUser != userCode)
+	{
+		alert("非本人创建节点不允许修改，当前节点创建人["+createUsrInfo.createUserName+"];工号["+createUsrInfo.createUser+"]")
+		return;
+	}
+	
+	var array = new Array(0);
+	array[0] = tmpnodeId;
+	array[1] = createUsrInfo.name;
+	array[2] = "Y";
+    array[3] = reloadTextKbTree;
+	var returnValues = window.showModalDialog("emr.edit.kbtext.csp",array,"dialogLeft:1000px;dialogHeight:765px;dialogWidth:700px;resizable:yes;center:yes;minimize:yes;maximize:yes;");
+})
+
+$("#delete").click(function(){
+	if (tmpnodeId == ""){
+		alert("请先选择要删除的节点");
+		return;
+	}
+	
+	var createUsrInfo = getCreateUsrInfo(tmpnodeId);
+	if (createUsrInfo == "")
+	{
+		alert("获取当前节点创建者相关信息失败，不允许删除此节点");
+		return;
+	}
+	createUsrInfo = eval("("+createUsrInfo+")");
+	if (createUsrInfo.createUser != userCode)
+	{
+		alert("非本人创建节点不允许删除，当前节点创建人["+createUsrInfo.createUserName+"];工号["+createUsrInfo.createUser+"]")
+		return;
+	}
+	if (confirm("是否确认要删除？")==true){
+		jQuery.ajax({
+			type: "get",
+			dataType: "text",
+			url: "../EMRservice.Ajax.common.cls",
+			async: false,
+			data: {
+				"OutputType":"string",
+				"Class":"EMRservice.BL.BLTextKBContent",
+				"Method":"DeleteCategory",
+				"p1":tmpnodeId
+			},
+			success: function(d) {
+				if (d == "1")
+				{
+					reloadTextKbTree();
+				}
+				else
+				{
+					alert("删除节点失败，请联系系统管理员")	
+				}
+			},
+			error : function(d) { alert("DeleteCategory error");}
+		});	
+	}
+})
+
+///获取创建者信息，用于判断是否有权限删除修改节点
+function getCreateUsrInfo(nodeID)
+{ 
+	var result = "";
+	jQuery.ajax({
+		type: "get",
+		dataType: "text",
+		url: "../EMRservice.Ajax.common.cls",
+		async: false,
+		data: {
+			"OutputType":"string",
+			"Class":"EMRservice.BL.BLTextKBContent",
+			"Method":"GetCreateUsrInfo",
+			"p1":nodeID
+		},
+		success: function(d) {
+			result = d;
+		},
+		error : function(d) { alert("GetCreateUsrInfo error");}
+	});	
+	return result;
+}
+
+///加载目录
 function getCategory(parentId,paramLoc)
 {	 
 	jQuery.ajax({
@@ -121,7 +232,7 @@ function getCategory(parentId,paramLoc)
 	});	
 }
 
-///����Ŀ¼
+///设置目录
 var ztSetting =
 {
     view :
@@ -141,19 +252,21 @@ var ztSetting =
     }
 };
 
-//ztree����������ص�����
+//ztree鼠标左键点击回调函数
 function ztOnClick(event, treeId, treeNode)
 {
-    if (treeNode.attributes.type != "leaf") 
+	if (treeNode.attributes.type != "leaf") 
 	{
+		tmpnodeId = "";
 		tmpcategoryId = treeNode.id;	
 		return
 	}
 	tmpcategoryId = "";
+	tmpnodeId = treeNode.id;
 	setContent(treeNode.id);
 }
 
-///��������
+///加载内容
 function setContent(categoryId)
 {
 	jQuery.ajax({

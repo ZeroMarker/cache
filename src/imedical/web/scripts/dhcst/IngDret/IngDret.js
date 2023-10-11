@@ -11,10 +11,13 @@ var HospId=session['LOGON.HOSPID'];
 var userId = session['LOGON.USERID'];
 var locId = session['LOGON.CTLOCID'];
 var groupId=session['LOGON.GROUPID'];
+var PurPlanParam = PHA_COM.ParamProp("DHCSTPURPLANAUDIT")
+var ReturnParam  = PHA_COM.ParamProp("DHCSTRETURN")
+
 //var arr = window.status.split(":");
 //var length = arr.length;
 var gIngrt= "";   //退货主表id
-var Msg_LostModified='数据已录入或修改，你当前的操作将丢失这些结果，是否继续?';
+var Msg_LostModified=$g('数据已录入或修改，你当前的操作将丢失这些结果，是否继续?');
  
 var buomRp="";   //基本单位进价
 var buomSp=""; //基本单位售价
@@ -31,7 +34,7 @@ var dateField = new Ext.form.DateField({
 	id:'dateField',
 	listWidth:150,
     allowBlank:false,
-	fieldLabel:'日期',
+	fieldLabel:$g('日期'),
 	anchor:'90%',
 	value:new Date(),
 	editable:false,
@@ -40,7 +43,7 @@ var dateField = new Ext.form.DateField({
 
 var dretField = new Ext.form.TextField({
 	id:'dret',
-	fieldLabel:'退货单号',
+	fieldLabel:$g('退货单号'),
 	allowBlank:true,
 	emptyText:'',
 	anchor:'90%',
@@ -50,8 +53,8 @@ var dretField = new Ext.form.TextField({
 
 var locField = new Ext.ux.LocComboBox({
 	id:'locField',
-	fieldLabel:'退货科室',
-	emptyText:'退货科室...',
+	fieldLabel:$g('退货科室'),
+	emptyText:$g('退货科室...'),
 	anchor:'90%',
 	groupId:groupId,
 	listeners : {
@@ -78,7 +81,7 @@ var groupField=new Ext.ux.StkGrpComboBox({
 //=========统计添加=======		
 		// 当页条数
 		var NumAmount = new Ext.form.TextField({
-					emptyText : '当页条数',
+					emptyText : $g('当页条数'),
 					id : 'NumAmount',
 					name : 'NumAmount',
 					anchor : '90%',
@@ -86,7 +89,7 @@ var groupField=new Ext.ux.StkGrpComboBox({
 				});	
 		// 进价合计
 		var RpAmount = new Ext.form.TextField({
-					emptyText : '进价合计',
+					emptyText : $g('进价合计'),
 					id : 'RpAmount',
 					name : 'RpAmount',
 					width:200,
@@ -94,7 +97,7 @@ var groupField=new Ext.ux.StkGrpComboBox({
 				});			
 		// 售价合计
 		var SpAmount = new Ext.form.TextField({
-					emptyText : '售价合计',
+					emptyText : $g('售价合计'),
 					id : 'SpAmount',
 					name : 'SpAmount',
 					anchor : '90%',
@@ -115,16 +118,16 @@ var groupField=new Ext.ux.StkGrpComboBox({
 			    RpAmt=RpAmt+RpAmt1;
 			    SpAmt=SpAmt+SpAmt1;
 				}
-			Count="当前条数:"+" "+Count	
-			RpAmt="进价合计:"+" "+ FormatGridRpAmount(RpAmt)+" "+"元"
-			SpAmt="售价合计:"+" "+ FormatGridSpAmount(SpAmt)+" "+"元"
+			Count=$g("当前条数:")+" "+Count	
+			RpAmt=$g("进价合计:")+" "+ FormatGridRpAmount(RpAmt)+" "+$g("元")
+			SpAmt=$g("售价合计:")+" "+ FormatGridSpAmount(SpAmt)+" "+$g("元")
 			Ext.getCmp("NumAmount").setValue(Count)	
 			Ext.getCmp("RpAmount").setValue(RpAmt)	
 			Ext.getCmp("SpAmount").setValue(SpAmt)
 			}		
 //=========统计添加=======
 var Vendor = new Ext.ux.VendorComboBox({
-	fieldLabel : '供应商',
+	fieldLabel : $g('经营企业'),
 	id : 'Vendor',
 	name : 'Vendor',
 	anchor:'90%',
@@ -133,7 +136,7 @@ var Vendor = new Ext.ux.VendorComboBox({
 
 var pNameField = new Ext.form.TextField({
 	id:'pName',
-	fieldLabel:'名称',
+	fieldLabel:$g('名称'),
 	allowBlank:true,
 	width:180,
 	listWidth:150,
@@ -162,7 +165,7 @@ var pNameField = new Ext.form.TextField({
 
 var transOrder = new Ext.form.Checkbox({
 	id: 'transOrder',
-	boxLabel:'调价换票',
+	boxLabel:$g('调价换票'),
 	anchor:'90%',
 	allowBlank:true
 });
@@ -170,7 +173,7 @@ var transOrder = new Ext.form.Checkbox({
 //"完成"标志
 var complete = new Ext.form.Checkbox({
 	id: 'complete',
-	boxLabel:'完成',
+	boxLabel:$g('完成'),
 	disabled:true,
 	allowBlank:true,
 	disabled:true,
@@ -186,7 +189,7 @@ var complete = new Ext.form.Checkbox({
 //"审核"标志
 var auditChk = new Ext.form.Checkbox({
 	id: 'audited',
-	boxLabel:'审核',
+	boxLabel:$g('审核'),
 	disabled:true,
 	allowBlank:true,
 	disabled:true,
@@ -195,22 +198,22 @@ var auditChk = new Ext.form.Checkbox({
 
 var noViewZeroItem = new Ext.form.Checkbox({
 	id: 'noViewZeroItem',
-	fieldLabel:'不显示库存为零的项',
+	fieldLabel:$g('不显示库存为零的项'),
 	allowBlank:true,
 	checked:true
 });
 
 var noViewZeroVendor = new Ext.form.Checkbox({
 	id: 'noViewZeroVendor',
-	fieldLabel:'不显示库存为零的供应商',
+	fieldLabel:$g('不显示库存为零的经营企业'),
 	allowBlank:true
 });
 //=========================退货管理=================================
 
 ReasonForReturnStore.load();
 var newBT = new Ext.Toolbar.Button({
-	text:'新建',
-    tooltip:'新建退货单',
+	text:$g('新建'),
+    tooltip:$g('新建退货单'),
     iconCls:'page_add',
 	width : 70,
 	height : 30,
@@ -222,8 +225,8 @@ var newBT = new Ext.Toolbar.Button({
 
 
 var clearBT = new Ext.Toolbar.Button({
-	text:'清屏',
-    tooltip:'清屏',
+	text:$g('清屏'),
+    tooltip:$g('清屏'),
     iconCls:'page_clearscreen',
 	width : 70,
 	height : 30,
@@ -232,7 +235,7 @@ var clearBT = new Ext.Toolbar.Button({
 		var mod=Modified();
 		if  ( mod&&(!compFlag) ) {
 			Ext.Msg.show({
-			   title:'提示',
+			   title:$g('提示'),
 			   msg: Msg_LostModified,
 			   buttons: Ext.Msg.YESNO,
 			   fn: function(b,t,o){
@@ -269,7 +272,7 @@ function clearData(){
 
 
 var AddDetailBT=new Ext.Button({
-	text:'增加一条',
+	text:$g('增加一条'),
 	tooltip:'',
 	iconCls:'page_add',
 	handler:function()
@@ -280,7 +283,7 @@ var AddDetailBT=new Ext.Button({
 });
 
 var DelDetailBT=new Ext.Button({
-	text:'删除一条',
+	text:$g('删除一条'),
 	tooltip:'',
 	iconCls:'page_delete',
 	handler:function()
@@ -297,8 +300,8 @@ var DelDetailBT=new Ext.Button({
 });
 
 var GridColSetBT = new Ext.Toolbar.Button({
-	text:'列设置',
-    tooltip:'列设置',
+	text:$g('列设置'),
+    tooltip:$g('列设置'),
     iconCls:'page_gear',
 //	width : 70,
 //	height : 30,
@@ -308,8 +311,8 @@ var GridColSetBT = new Ext.Toolbar.Button({
 });
 
 var findIngDret = new Ext.Toolbar.Button({
-	text:'查询',
-    tooltip:'查询',
+	text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
 	width : 70,
 	height : 30,
@@ -320,8 +323,8 @@ var findIngDret = new Ext.Toolbar.Button({
 });
 
 var completeBT = new Ext.Toolbar.Button({
-	text:'完成',
-    tooltip:'完成',
+	text:$g('完成'),
+    tooltip:$g('完成'),
     iconCls:'page_gear',
 	width : 70,
 	height : 30,
@@ -329,7 +332,7 @@ var completeBT = new Ext.Toolbar.Button({
 		var compFlag=Ext.getCmp('complete').getValue();
 		var mod=Modified();
 		if (mod&&(!compFlag)) {
-			Ext.Msg.confirm('提示','数据已发生改变,是否需要保存后完成?',
+			Ext.Msg.confirm($g('提示'),$g('数据已发生改变,是否需要保存后完成?'),
 			    function(btn){
 				  if(btn=='yes'){
 				     return;						
@@ -344,8 +347,8 @@ var completeBT = new Ext.Toolbar.Button({
 });
 
 var cancelCompleteBT = new Ext.Toolbar.Button({
-	text:'取消完成',
-    tooltip:'取消完成',
+	text:$g('取消完成'),
+    tooltip:$g('取消完成'),
     iconCls:'page_gear',
 	width : 70,
 	height : 30,
@@ -357,8 +360,8 @@ var cancelCompleteBT = new Ext.Toolbar.Button({
 // 打印退货单
 var printBT = new Ext.Toolbar.Button({
 	id : "printBT",
-	text : '打印',
-	tooltip : '打印退货单',
+	text : $g('打印'),
+	tooltip : $g('打印退货单'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_print',
@@ -369,8 +372,8 @@ var printBT = new Ext.Toolbar.Button({
 // 依据入库单退货
 var findIngBT = new Ext.Toolbar.Button({
 	id : "findIngBT",
-	text : '依据入库单退货',
-	tooltip : '依据入库单退货',
+	text : $g('依据入库单退货'),
+	tooltip : $g('依据入库单退货'),
 	width : 70,
 	height : 30,
 	iconCls : 'page_print',
@@ -378,7 +381,7 @@ var findIngBT = new Ext.Toolbar.Button({
 		///有明细时不允许,功能类似依据请求出库
 		if (IngDretDetailGridDs.getCount()>0)
 		{
-			Msg.info("warning","已存在退货明细!");
+			Msg.info("warning",$g("已存在退货明细!"));
 			return;
 			
 		}
@@ -387,45 +390,52 @@ var findIngBT = new Ext.Toolbar.Button({
 });
 
 var saveIngDret = new Ext.Toolbar.Button({
-	text:'保存',
-    tooltip:'保存',
+	id:"saveIngDret",
+	text:$g('保存'),
+    tooltip:$g('保存'),
     iconCls:'page_save',
 	width : 70,
 	disabled:true,
 	height : 30,
 	handler:function(){
+		var rowCount =IngDretDetailGridDs.getCount();
+		if(rowCount==0) 
+		{
+			Msg.info('warning',$g('明细数据为空，请核对明细!'))
+			return;
+		} 
 		//1.保存主表信息
 		var retNo = Ext.getCmp('dret').getValue();
 		var scg = Ext.getCmp('groupField').getValue();
 		if(((scg=="")||(scg==null))&&(gParamCommon[9]=="N")){
-			Msg.info("error","请选择类组!");
+			Msg.info("error",$g("请选择类组!"));
 			return false;
 		}
 		var vendorId=Ext.getCmp("Vendor").getValue();
 		if((vendorId=="")||(vendorId==null)){
-			Msg.info("error","请选择供应商!");
+			Msg.info("error",$g("请选择经营企业!"));
 			return false;
 		}
 		var locId=Ext.getCmp("locField").getValue();
 		if((locId=="")||(locId==null)){
-			Msg.info("error","请选择科室!");
+			Msg.info("error",$g("请选择科室!"));
 			return false;
 		}
 		var stkType = "";
 		var adjChequeFlag = (Ext.getCmp('transOrder').getValue()==true?'Y':'N');
 		var rlocid=Ext.getCmp('locField').getValue(); //取退货科室id不能取登录科室
 		var mainInfo=rlocid+"^"+vendorId+"^"+userId+"^"+scg+"^"+adjChequeFlag;
-		if (locId=='') {Msg.info('error','请选择退货科室!') ;}
-		if (vendorId=='') {Msg.info('error','请选择退货供应商!') ;}
-		if (userId=='') {Msg.info('error','请选择退货人!') ;}
-		if ((scg=='')&&(gParamCommon[9]=="N")) {Msg.info('error','请选择类组!') ;}
+		if (locId=='') {Msg.info('error',$g('请选择退货科室!') );}
+		if (vendorId=='') {Msg.info('error',$g('请选择退货经营企业!')) ;}
+		if (userId=='') {Msg.info('error',$g('请选择退货人!')) ;}
+		if ((scg=='')&&(gParamCommon[9]=="N")) {Msg.info('error',$g('请选择类组!')) ;}
 		
 		if(IngDretDetailGrid.activeEditor != null){
 			IngDretDetailGrid.activeEditor.completeEdit();
 		}
 		var rows = "";
 		var count = IngDretDetailGridDs.getCount();	
-		if(!count>0){Msg.info('error','没有需要保存的数据!') ;return}
+		if(!count>0){Msg.info('error',$g('没有需要保存的数据!')) ;return}
 		for(var index=0;index<count;index++){
 			var row = IngDretDetailGridDs.getAt(index);
 			//新增或数据发生变化时执行下述操作
@@ -436,7 +446,9 @@ var saveIngDret = new Ext.Toolbar.Button({
 				if((inclbrowid=="")||(inclbrowid==null)){continue;}
 				var qty = row.get('qty'); 			//数量
 				if(qty==null || qty==""||qty<=0){
-					Msg.info("warning","第"+(index+1)+"行退货数量为空或者小于0!");
+					Msg.info("warning",$g("第")+(index+1)+$g("行退货数量为空或者小于0!"));
+					var newcolIndex = GetColIndex(IngDretDetailGrid, 'qty');
+                	IngDretDetailGrid.startEditing(index, newcolIndex);
 					return;
 				}
 				var uomId = row.get('uom'); 		//单位
@@ -453,6 +465,11 @@ var saveIngDret = new Ext.Toolbar.Button({
 				}else{
 					invDate="";
 				}
+				if (((invNo=="")&&(invDate!=""))||((invNo!="")&&(invDate=="")))
+                {
+	                Msg.info("warning", $g("第")+(index+1)+$g("行,发票号和发票日期需同时填入！"));
+                    return;
+                }
 				var invAmt = row.get('invAmt'); //发票金额
 				var sxNo = row.get('sxNo'); //随行单号
 				if(sxNo==null){
@@ -460,7 +477,9 @@ var saveIngDret = new Ext.Toolbar.Button({
 				}
 				var reason = row.get('reasonId'); //退货原因
 				if(reason==null || reason==""){
-					Msg.info("warning","第"+(index+1)+"行退货原因为空!");
+					Msg.info("warning",$g("第")+(index+1)+$g("行退货原因为空!"));
+					var newcolIndex = GetColIndex(IngDretDetailGrid, 'reasonId');
+                	IngDretDetailGrid.startEditing(index, newcolIndex);
 					return;
 				}
 				var aspa = row.get('aspAmt'); //退货调价金额
@@ -478,37 +497,43 @@ var saveIngDret = new Ext.Toolbar.Button({
 			}
 		}
 		//if(rows==""){Msg.info('error','没有需要保存的数据!') ;return}
-		var loadMask=ShowLoadMask(Ext.getBody(),"处理中...");
+		//检查预算数据
+		var ret = CheckSaveBudget(gIngrt,rows)
+ 		if(!ret) return;
+
+		
+		var loadMask=ShowLoadMask(Ext.getBody(),$g("处理中..."));
 		Ext.Ajax.request({
 			url: URL+'?actiontype=save',
 			params:{ret:gIngrt,MainData:mainInfo,Detail:rows},
 			failure: function(result, request) {
-				Msg.info("error","请检查网络连接!");
+				Msg.info("error",$g("请检查网络连接!"));
 			},
 			success: function(result, request) {
 				var jsonData = Ext.util.JSON.decode(result.responseText);
 				if (jsonData.success=='true') {
-					Msg.info("success","保存成功!");
+					Msg.info("success",$g("保存成功!"));
 					//alert(jsonData.info);
 					gIngrt =  jsonData.info; //退货单主表Id
 					Select(gIngrt);
 					IngDretDetailGridDs.load({params:{start:0,limit:999,sort:'ingrti',dir:'desc',ret:gIngrt}});
+					SendBusiData(gIngrt,"RETURN","SAVE");
 				}else{
 					var ret=jsonData.info;
 					if(ret=='-10'){
-						Msg.info("warning","可用库存不足于退货!");
+						Msg.info("warning",$g("可用库存不足于退货!"));
 					}else if(ret=='-3'){
-						Msg.info("warning","生成退货单号失败!");
+						Msg.info("warning",$g("生成退货单号失败!"));
 					}else if(ret=='-4'){
-						Msg.info("warning","保存退货单失败!");
+						Msg.info("warning",$g("保存退货单失败!"));
 					}else if(ret=='-6'){
-						Msg.info("warning","保存退货明细失败!");
+						Msg.info("warning",$g("保存退货明细失败!"));
 					}else if(ret=='-8'){
-						Msg.info("warning","退货单已完成!");
+						Msg.info("warning",$g("退货单已完成!"));
 					}else if(ret=='-9'){
-						Msg.info("warning","退货单已审核!");
+						Msg.info("warning",$g("退货单已审核!"));
 					}else{
-						Msg.info("error","保存失败:"+ret);
+						Msg.info("error",$g("保存失败:")+ret);
 					}
 					
 				}
@@ -522,41 +547,78 @@ var saveIngDret = new Ext.Toolbar.Button({
 });
 
 
+function CheckSaveBudget(gIngrt,data){
+	if (_BudgetSaveFlag != "LIMIT" && _BudgetSaveFlag != "WARN") return true;
+	var locId = Ext.getCmp('locField').getValue();
+	var locDesc = Ext.getCmp('locField').getRawValue();
+	var budgetId = Ext.getCmp('BudgetProComb').getRawValue();
+	if(!budgetId) {
+		Msg.info("warning","保存数据需核对HRP预算系统，请选择一个预算项目!");
+		return false;
+	}
+	var MianObj={
+		project_id : "", //项目id
+		project_desc: "", //项目名称
+		loc_id : locId, //科室id
+		loc_desc : locDesc, //科室名称
+		business : "RETURN", //业务类型
+		businode : "SAVE", //业务节点
+		main_id : "gIngrt", //业务主表id
+		main_no : "", //业务单号
+		operate : "INSERT", //操作类型
+		Detail : data //明细数据
+	}
+	var BusiData = JSON.stringify(MianObj)
+	var ret = tkMakeServerCall("PHA.IN.Budget.Client.Interface","SendBusiData",BusiData)
+	var RetJson = JSON.parse(ret);
+	if(RetJson.code < 0 )
+	{
+		Msg.info("error",RetJson.msg);
+		return false;
+	}
+	else if(RetJson.code == 1)
+	{
+		Msg.info("warning",RetJson.msg);
+	}
+	return true;
+}
+
+
 var deleteIngDret = new Ext.Toolbar.Button({
-	text:'删除',
-    tooltip:'删除',
+	text:$g('删除'),
+    tooltip:$g('删除'),
     iconCls:'page_delete',
 	width : 70,
 	height : 30,
 	handler:function(){
 		if(gIngrt==null || gIngrt==""){
-			Msg.info("error","没有要删除的退货单!");
+			Msg.info("error",$g("没有要删除的退货单!"));
 			return false;
 		}else{			
 			if (Ext.getCmp('complete').getValue()==true)
 			{
-				Msg.info("warning","已经完成,禁止删除!");
+				Msg.info("warning",$g("已经完成,禁止删除!"));
 				return;
 			}
 
-			Ext.MessageBox.confirm('提示','确定要删除该退货单?',
+			Ext.MessageBox.confirm($g('提示'),$g('确定要删除该退货单?'),
 				function(btn) {
 					if(btn == 'yes'){
 						Ext.Ajax.request({
 							url:URL+'?actiontype=delete&Ingrt='+gIngrt,
-							waitMsg:'删除中...',
+							waitMsg:$g('删除中...'),
 							failure: function(result, request) {
-								Msg.info("error","请检查网络连接!");
+								Msg.info("error",$g("请检查网络连接!"));
 							},
 							success: function(result, request) {
 								var jsonData = Ext.util.JSON.decode( result.responseText );
 								if (jsonData.success=='true') {
-									Msg.info("success","删除成功!");
+									Msg.info("success",$g("删除成功!"));
 									Clear();
 								}else if(jsonData.info==-99){
-									Msg.info("error","退货单不为未完成状态,不能删除!");
+									Msg.info("error",$g("退货单不为未完成状态,不能删除!"));
 								}else{
-									Msg.info("error","删除失败!");
+									Msg.info("error",$g("删除失败!"));
 								}
 							},
 							scope: this
@@ -573,45 +635,45 @@ function DeleteDetail(){
 
 	if ((gIngrt!="")&&(Ext.getCmp('complete').getValue()==true))
 	{
-		Msg.info('warning','当前退货单已完成,禁止删除明细记录!');
+		Msg.info('warning',$g('当前退货单已完成,禁止删除明细记录!'));
 		return;
 	}	
 	
 	
 	var cell=IngDretDetailGrid.getSelectionModel().getSelectedCell();
 	if (!cell) {
-		Msg.info("warning",'请选择明细记录!');
+		Msg.info("warning",$g('请选择明细记录!'));
 		return;
 	}
 	
 	var rowindex=cell[0];
 	if(rowindex==null){
 		
-		Msg.info("error","请选择数据!");
+		Msg.info("error",$g("请选择数据!"));
 		return false;
 	}else{
 		var record = IngDretDetailGrid.getStore().getAt(rowindex);
 		var RowId = record.get("ingrti");
 		if(RowId!=""){
-			Ext.MessageBox.confirm('提示','确定要删除选定的行?',
+			Ext.MessageBox.confirm($g('提示'),$g('确定要删除选定的行?'),
 				function(btn) {
 					if(btn == 'yes'){
 						
 						Ext.Ajax.request({
 							
 							url:URL+'?actiontype=deleteDetail&rowid='+RowId,
-							waitMsg:'删除中...',
+							waitMsg:$g('删除中...'),
 							failure: function(result, request) {
-								Msg.info("error","请检查网络连接!");
+								Msg.info("error",$g("请检查网络连接!"));
 							},
 							success: function(result, request) {
 								var jsonData = Ext.util.JSON.decode( result.responseText );
 								if (jsonData.success=='true') {
-									Msg.info("success","删除成功!");
+									Msg.info("success",$g("删除成功!"));
 									IngDretDetailGridDs.load({params:{start:0,limit:20,sort:'ingrti',dir:'desc',ret:gIngrt}});
 								        GetAmount();
 								}else{
-									Msg.info("error","删除失败!");
+									Msg.info("error",$g("删除失败!"));
 								}
 							},
 							scope: this
@@ -631,7 +693,7 @@ function DeleteDetail(){
 
 //=========================退货管理=================================
 var Cause2 = new Ext.form.ComboBox({
-	fieldLabel : '退货原因',
+	fieldLabel : $g('退货原因'),
 	id : 'Cause2',
 	name : 'Cause2',
 	anchor : '90%',
@@ -641,7 +703,7 @@ var Cause2 = new Ext.form.ComboBox({
 	displayField : 'Description',
 	allowBlank : false,
 	triggerAction : 'all',
-	emptyText : '退货原因...',
+	emptyText : $g('退货原因...'),
 	selectOnFocus : true,
 	forceSelection : true,
 	minChars : 1,
@@ -700,7 +762,10 @@ var IngDretDetailGridDs = new Ext.data.Store({
 		{name:'retReason'},
 		{name:'stkqty'},
 		{name:'buom'},
-		{name:'confac'}
+		{name:'confac'},
+		{name:'InsuCode'},
+		{name:'InsuDesc'}
+		
 	]),
     remoteSort:false
 });
@@ -717,7 +782,7 @@ var CTUom = new Ext.form.ComboBox({
 	displayField : 'Description',
 	allowBlank : false,
 	triggerAction : 'all',
-	emptyText : '单位...',
+	emptyText :$g( '单位...'),
 	selectOnFocus : true,
 	forceSelection : true,
 	minChars : 1,
@@ -790,12 +855,11 @@ var RpEditor=new Ext.form.NumberField({
 		
 				if (cost == null
 						|| cost.length <= 0) {
-					Msg.info("warning", "进价不能为空!");
+					Msg.info("warning", $g("进价不能为空!"));
 					return;
 				}
 				if (cost <= 0) {
-					Msg.info("warning",
-							"进价不能小于或等于0!");
+					Msg.info("warning",$g("进价不能小于或等于0!"));
 					return;
 				}
 			var cell = IngDretDetailGrid.getSelectionModel().getSelectedCell();	
@@ -820,12 +884,11 @@ var SpEditor=new Ext.form.NumberField({
 		
 				if (cost == null
 						|| cost.length <= 0) {
-					Msg.info("warning", "售价不能为空!");
+					Msg.info("warning", $g("售价不能为空!"));
 					return;
 				}
 				if (cost <= 0) {
-					Msg.info("warning",
-							"售价不能小于或等于0!");
+					Msg.info("warning",$g("售价不能小于或等于0!"));
 					return;
 				}
 				
@@ -845,34 +908,34 @@ var SpEditor=new Ext.form.NumberField({
 var IngDretDetailGridCm = new Ext.grid.ColumnModel([
 	 new Ext.grid.RowNumberer(),
 	{
-        header:"退货子表rowid",
+        header:$g("退货子表rowid"),
         dataIndex:'ingrti',
         width:80,
         align:'left',
         sortable:true,
 		hidden:true
     },{
-        header:"入库子表rowid",
+        header:$g("入库子表rowid"),
         dataIndex:'ingri',
         width:80,
         align:'left',
         sortable:true,
 		hidden:true
     },{
-        header:"批次DR",
+        header:$g("批次DR"),
         dataIndex:'inclb',
         width:80,
         align:'left',
         sortable:true,
 		hidden:true
     },{
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'code',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'desc',
         id:'desc',
         width:200,
@@ -880,25 +943,25 @@ var IngDretDetailGridCm = new Ext.grid.ColumnModel([
         sortable:true,
         editor:pNameField
     },{
-        header:"厂商",
+        header:$g("生产企业"),
         dataIndex:'manf',
         width:200,
         align:'left',
         sortable:true
     },{
-        header:"规格",
+        header:$g("规格"),
         dataIndex:'spec',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"批次库存",
+        header:$g("批次库存"),
         dataIndex:'stkqty',
         width:100,
         align:'left',
         sortable:true    	
     },{
-        header:"退货数量",
+        header:$g("退货数量"),
         dataIndex:'qty',
         width:100,
         id:'qty',
@@ -917,7 +980,7 @@ var IngDretDetailGridCm = new Ext.grid.ColumnModel([
 						var count = field.getValue();
 						if(count>row.get("stkqty")){
 							field.setValue("");
-							Msg.info("error","退货数量不能大于库存数量!");
+							Msg.info("error",$g("退货数量不能大于库存数量!"));
 						}else{
 							if(setEnterSort(IngDretDetailGrid,colArr)){
 									addDetailRow();
@@ -929,7 +992,7 @@ var IngDretDetailGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"退货单位",
+        header:$g("退货单位"),
         dataIndex:'uom',
         id:'uom',
         width:100,       
@@ -948,7 +1011,7 @@ var IngDretDetailGridCm = new Ext.grid.ColumnModel([
 			}
 		}
     },{
-        header:"退货原因",
+        header:$g("退货原因"),
         dataIndex:'reasonId',
         width:100,
         id:'reasonId',
@@ -957,7 +1020,7 @@ var IngDretDetailGridCm = new Ext.grid.ColumnModel([
 		editor:new Ext.grid.GridEditor(Cause2),
 		renderer:Ext.util.Format.comboRenderer(Cause2)
     },{
-        header:"退货进价",
+        header:$g("退货进价"),
         dataIndex:'rp',
         width:100,
         align:'right',
@@ -966,40 +1029,40 @@ var IngDretDetailGridCm = new Ext.grid.ColumnModel([
 
         
     },{
-        header:"退货进价金额",
+        header:$g("退货进价金额"),
         dataIndex:'rpAmt',
         width:100,
         align:'right',
         sortable:true,
         renderer:FormatGridRpAmount
     },{
-        header:"售价",
+        header:$g("售价"),
         dataIndex:'sp',
         width:100,
         align:'right',
         sortable:true,
         editor : SpEditor
     },{
-        header:"退货售价金额",
+        header:$g("退货售价金额"),
         dataIndex:'spAmt',
         width:100,
         align:'right',
         sortable:true,
         renderer:FormatGridSpAmount
     },{
-        header:"批号",
+        header:$g("批号"),
         dataIndex:'batNo',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"效期",
+        header:$g("效期"),
         dataIndex:'expDate',
         width:100,
         align:'left',
         sortable:true
     },{
-        header:"发票号",
+        header:$g("发票号"),
         dataIndex:'invNo',
         id:'invNo',
         width:100,
@@ -1021,7 +1084,7 @@ var IngDretDetailGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"发票日期",
+        header:$g("发票日期"),
         dataIndex:'invDate',
         id:'invDate',
         width:100,
@@ -1046,7 +1109,7 @@ var IngDretDetailGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"退发票金额",
+        header:$g("退发票金额"),
         dataIndex:'invAmt',
         id:'invAmt',
         width:100,
@@ -1069,7 +1132,7 @@ var IngDretDetailGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"随行单号",
+        header:$g("随行单号"),
         dataIndex:'sxNo',
         id:'sxNo',
         width:100,
@@ -1089,6 +1152,19 @@ var IngDretDetailGridCm = new Ext.grid.ColumnModel([
 				}
 			}
         })
+    }
+    ,{
+        header:$g("国家医保编码"),
+        dataIndex:'InsuCode',
+        width:100,
+        align:'left',
+        sortable:true
+    },{
+        header:$g("国家医保名称"),
+        dataIndex:'InsuDesc',
+        width:100,
+        align:'left',
+        sortable:true
     }
 ]);
 
@@ -1115,14 +1191,14 @@ var IngDretDetailGrid = new Ext.grid.EditorGridPanel({
 		}
 	}),
 	loadMask:true,
-    //tbar:['物品名称',pNameField,'-',findVendor,'-',addList,'-','不显示库存为零的项',noViewZeroItem,'-','不显示库存为零的供应商',noViewZeroVendor],
+    //tbar:['物品名称',pNameField,'-',findVendor,'-',addList,'-','不显示库存为零的项',noViewZeroItem,'-','不显示库存为零的经营企业',noViewZeroVendor],
 	clicksToEdit:1
 });
 
 IngDretDetailGrid.on('afteredit',function(e){
 	if(e.field=='qty'){
 		if(e.record.get("qty")>e.record.get("stkqty")){
-			Msg.info("error","退货数量不能大于库存数量!");
+			Msg.info("error",$g("退货数量不能大于库存数量!"));
 			e.record.set("qty","");
 		}else{
 			e.record.set("rpAmt", accMul(e.value,e.record.get("rp"))); 
@@ -1167,7 +1243,7 @@ var rightMenu=new Ext.menu.Menu({
 	id:"rightClickMenu",
 	items:[{
 		id:"mnuDelete",
-		text:"删除",
+		text:$g("删除"),
 		handler:DeleteDetail
 	}]
 });
@@ -1188,7 +1264,7 @@ var formPanel = new Ext.form.FormPanel({
 	tbar : [findIngDret,'-',clearBT,'-',newBT,'-',saveIngDret,'-',completeBT,'-',cancelCompleteBT,'-',findIngBT,'-',printBT,'-',deleteIngDret],
 	items:[{
 		xtype:'fieldset',
-		title:'退货单信息',
+		title:$g('退货单信息'),
 		style:DHCSTFormStyle.FrmPaddingV,
 		layout: 'column',    // Specifies that the items will now be arranged in columns
 		items : [{ 				
@@ -1206,7 +1282,7 @@ var formPanel = new Ext.form.FormPanel({
 			columnWidth: 0.20,
 			xtype : 'fieldset',
 			border:false,
-        	items: [dateField]
+        	items: [dateField,BudgetProComb]
 			
 		},{ 				
 			columnWidth: 0.1,
@@ -1236,12 +1312,12 @@ Ext.onReady(function(){
 	                region: 'north',
 	                split: true,
         			height: DHCSTFormStyle.FrmHeight(2),
-	                title: '退货制单',
+	                title: $g('退货制单'),
 	                layout:'fit',
 	                items: formPanel               
 	            },{             
 	                region: 'center',		                
-                	title:'明细记录',
+                	title:$g('明细记录'),
                 	split:false,
                 	//height:250,
                 	//minSize:100,
@@ -1257,6 +1333,7 @@ Ext.onReady(function(){
 	
 	RefreshGridColSet(IngDretDetailGrid,"DHCSTRETURN");   //根据自定义列设置重新配置列
 	colArr=sortColoumByEnterSort(IngDretDetailGrid); //将回车的调整顺序初始化好
+	SetBudgetPro(Ext.getCmp("locField").getValue(),"RETURN",[1,2],"saveIngDret") //加载HRP预算项目
 });
 //===========模块主页面=================================================
 
@@ -1267,7 +1344,7 @@ Ext.onReady(function(){
 function addDetailRow() {
 	if ((gIngrt!="")&&(Ext.getCmp('complete').getValue()==true))
 	{
-		Msg.info('warning','当前退货单已完成,禁止增加明细记录!');
+		Msg.info('warning',$g('当前退货单已完成,禁止增加明细记录!'));
 		return;
 	}	
 	locField.setDisabled(true);
@@ -1318,7 +1395,10 @@ function addDetailRow() {
 		{name : 'retReason',type : 'string'},
 		{name : 'stkqty',type : 'double'},
 		{name:'buom',type:'string'},
-		{name:'confac',type:'string'	}
+		{name:'confac',type:'string'},
+		{name:'InsuCode',type:'string'},
+		{name:'InsuDesc',type:'string'}
+		
 	]);
 	var NewRec = new rec({
 		ingrti:'',
@@ -1347,7 +1427,9 @@ function addDetailRow() {
 		retReason:retReason,
 		stkqty:'',
 		buom:'',
-		confac:''
+		confac:'',
+		InsuCode:'',
+		InsuDesc:''
 	});
 					
 	IngDretDetailGridDs.add(NewRec);
@@ -1382,9 +1464,11 @@ function AddList(row){
 	var recqty = row.get('recqty');
 	var stkqty = row.get('stkqty');
 	var rp = row.get('rp');
-	
-	//var rpAmt = row.get('rpAmt');
 	var sp = row.get('sp');
+	var sp = row.get('sp');
+	if(ReturnParam.ChoiceRp == 2 ) var rp = row.get('CurRp');
+	if(ReturnParam.ChoiceSp == 2 ) var sp = row.get('CurSp');
+	//var rpAmt = row.get('rpAmt');
 	//var spAmt = row.get('spAmt');
 	//var invAmt = row.get('invAmt');
 	var invNo = row.get('invNo');
@@ -1397,7 +1481,8 @@ function AddList(row){
 	var spec = row.get('Spec');
 	var buom=row.get('buom');
 	var confac=row.get('confac');
-	
+	var InsuCode = row.get('InsuCode');
+	var InsuDesc = row.get('InsuDesc');
 	puomRp=rp;
 	puomSp=sp;
 	buomRp=puomRp/confac;
@@ -1405,14 +1490,14 @@ function AddList(row){
 	var cell=IngDretDetailGrid.getSelectionModel().getSelectedCell();
 	var rowIndex=cell[0];
 	if(stkqty<=0){
-		Msg.info("warning","该项目库存为零，不能退货!");
+		Msg.info("warning",$g("该项目库存为零，不能退货!"));
 		IngDretDetailGrid.startEditing(rowIndex,coldescIndex);
 		return;
 	}		
 	var selectVenid=Ext.getCmp("Vendor").getValue();
 	if(selectVenid!=null & selectVenid!=""){
 		if(selectVenid!=venid){    
-			Msg.info("warning","该项目供应商不等于已选择项目的供应商，不能在同一张退货单上退货");
+			Msg.info("warning",$g("该项目经营企业不等于已选择项目的经营企业，不能在同一张退货单上退货"));
 			IngDretDetailGrid.startEditing(rowIndex,coldescIndex);
 			return;
 		}
@@ -1425,7 +1510,7 @@ function AddList(row){
 		var tmpData=IngDretDetailGridDs.getAt(j);
 		var tmpInclb=tmpData.get("inclb");
 		if((tmpInclb==INCLB)&(j!=rowIndex)){
-			Msg.info("warning","该批次已经存在于退货列表！")
+			Msg.info("warning",$g("该批次已经存在于退货列表！"))
 			IngDretDetailGrid.startEditing(rowIndex,coldescIndex);
 			return;
 		}
@@ -1459,6 +1544,8 @@ function AddList(row){
 
 	rowData.set('buom',buom);
 	rowData.set('confac',confac);
+	rowData.set('InsuCode',InsuCode);
+	rowData.set('InsuDesc',InsuDesc);
 	if(setEnterSort(IngDretDetailGrid,colArr)){
 		addDetailRow();
 	}
@@ -1496,28 +1583,40 @@ function Clear(){
 
 
 /*退货单完成*/
-function Complete() {          
+function Complete() {    
+	var rowCount =IngDretDetailGridDs.getCount();
+	if(rowCount==0) 
+	{
+		Msg.info('warning',$g('明细数据为空，请核对明细!'))
+		return;
+	} 
+
+	     
 	if((gIngrt!="")&&(gIngrt!=null)){
+		/// 检查预算项目
+	    var ret = SendBusiData(gIngrt,"RETURN","COMP");
+	    if(!ret) return;
+
 		Ext.Ajax.request({
 			url:URL+'?actiontype=complet&ret='+gIngrt,
-			waitMsg:'执行中...',
+			waitMsg:$g('执行中...'),
 			failure: function(result, request) {
-				Msg.info("error","请检查网络连接!");
+				Msg.info("error",$g("请检查网络连接!"));
 			},
 			success: function(result, request) {
 				var jsonData = Ext.util.JSON.decode( result.responseText );
 				if (jsonData.success=='true') {
-					Msg.info("success","设置完成成功!");
+					Msg.info("success",$g("设置完成成功!"));
 					Select(gIngrt);
 					IngDretDetailGridDs.load({params:{start:0,limit:999,sort:'ingrti',dir:'desc',ret:gIngrt}});
 				}else{
 					if (jsonData.info==-2)
 					{
-						Msg.info("error","退货单已完成!");
+						Msg.info("error",$g("退货单已完成!"));
 					}
 					else
 					{
-						Msg.info("error","设置完成失败!"+jsonData.info);
+						Msg.info("error",$g("设置完成失败!")+jsonData.info);
 					}
 				}
 			},
@@ -1526,7 +1625,7 @@ function Complete() {
 	}
 	else
 	{
-		Msg.info("warning", "没有需要完成的退货单!");
+		Msg.info("warning",$g( "没有需要完成的退货单!"));
 		return;
 	}
             
@@ -1538,33 +1637,33 @@ function cancelComplete() {
 	if((gIngrt!="")&&(gIngrt!=null)){
 		Ext.Ajax.request({
 			url:URL+'?actiontype=cancelComompleted&ret='+gIngrt,
-			waitMsg:'执行中......',
+			waitMsg:$g('执行中......'),
 			failure: function(result, request) {
-				Msg.info("error","请检查网络连接!");
+				Msg.info("error",$g("请检查网络连接!"));
 			},
 			success: function(result, request) {
 				var jsonData = Ext.util.JSON.decode( result.responseText );
 				if (jsonData.success=='true') {
-					Msg.info("success","取消完成成功!");
+					Msg.info("success",$g("取消完成成功!"));
 					Select(gIngrt);
 					IngDretDetailGridDs.load({params:{start:0,limit:999,sort:'ingrti',dir:'desc',ret:gIngrt}});
 				}else{
 					switch (jsonData.info)
 					{
 					 case '-1':
-					 	Msg.info("warning","退货单不存在!");
+					 	Msg.info("warning",$g("退货单不存在!"));
 					 	break;
 					 case '-10':
-					 	Msg.info("warning","退货单已经审核,禁止取消完成!");
+					 	Msg.info("warning",$g("退货单已经审核,禁止取消完成!"));
 					 	break;
 					 case '-2':
-					 	Msg.info("warning","退货单未完成!");
+					 	Msg.info("warning",$g("退货单未完成!"));
 					 	break;
 					 case '-99':
-					 	Msg.info("error","加锁失败!");
+					 	Msg.info("error",$g("加锁失败!"));
 					 	break;
 					 default:
-					 	Msg.info("error","取消完成失败!"+jsonData.info);
+					 	Msg.info("error",$g("取消完成失败!")+jsonData.info);
 					 	break;
 					}
 				}
@@ -1574,7 +1673,7 @@ function cancelComplete() {
 	}
 	else
 	{
-		Msg.info("warning", "没有需要取消完成的退货单!");
+		Msg.info("warning", $g("没有需要取消完成的退货单!"));
 		return;
 	}
             
@@ -1587,9 +1686,9 @@ function Select(Ingrt)
 	gIngrt=Ingrt;
 	Ext.Ajax.request({
 		url:URL+'?actiontype=getOrder&rowid='+Ingrt,
-		waitMsg:'查询中...',
+		waitMsg:$g('查询中...'),
 		failure: function(result, request) {
-			Msg.info("error","请检查网络连接!");
+			Msg.info("error",$g("请检查网络连接!"));
 		},
 		success: function(result, request) {
 			var jsonData = Ext.util.JSON.decode( result.responseText );
@@ -1639,9 +1738,9 @@ function SelectRec(Ingr)
 	//gIngrt=Ingr;
 	Ext.Ajax.request({
 		url:URL+'?actiontype=getRec&rowid='+Ingr,
-		waitMsg:'查询中...',
+		waitMsg:$g('查询中...'),
 		failure: function(result, request) {
-			Msg.info("error","请检查网络连接!");
+			Msg.info("error",$g("请检查网络连接!"));
 		},
 		success: function(result, request) {
 			var jsonData = Ext.util.JSON.decode( result.responseText );
@@ -1739,7 +1838,7 @@ function SetIngriPrice(rec,ingri,uom)
 	Ext.Ajax.request({
 		url:URL+'?actiontype=getIngriPrice'+"&ingri="+ingri+"&uom="+uom,
 		failure:function(){
-			Msg.info("error","失败!");
+			Msg.info("error",$g("失败!"));
 		},
 		success:function(result, request){
 			//alert(result.responseText);
@@ -1777,12 +1876,19 @@ function handleSelectedIngri(rec)
 {
 	AddList(rec);
 }
+
+function test()
+{
+	
+}
+
+	
 //退出或刷新时,界面提示是否保存
 //Creator:bianshuai 2014-04-21
 window.onbeforeunload = function(){
 	var compFlag=Ext.getCmp('complete').getValue();
 	var mod=Modified();
 	if  (mod&&(!compFlag)) {
-		return "数据已录入或修改,你当前的操作将丢失这些结果,是否继续？";
+		return $g("数据已录入或修改,你当前的操作将丢失这些结果,是否继续？");
 	} 
 }

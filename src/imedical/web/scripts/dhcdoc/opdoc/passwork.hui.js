@@ -792,6 +792,7 @@ function exportData () {
 		Note: Note,
 		XmlData: xmlData
 	}, false);
+	if(typeof websys_writeMWToken=='function') rtn=websys_writeMWToken(rtn);
 	location.href = rtn;
 }
 
@@ -907,6 +908,7 @@ function EditNWork (ItemID) {
 function seeLabDetail(EpisodeID) {
 	//epr.newfw.episodelistbrowser.csp
 	var lnk= "emr.record.browse.csp?"+"&EpisodeID="+EpisodeID;
+	if(typeof websys_writeMWToken=='function') lnk=websys_writeMWToken(lnk);
    	window.open(lnk,"htm",'toolbar=no,location=no,directories=no,resizable=yes,width=1000,height=1000');
 }
 function BodykeydownHandler(e){

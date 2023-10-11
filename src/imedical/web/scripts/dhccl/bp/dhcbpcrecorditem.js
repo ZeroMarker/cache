@@ -64,10 +64,11 @@ $(function(){
 		BPCRIArcimDr:$("#tBPCRIArcim"),
 		BPCRIUomDr:$("#tBPCRIUom"),
 		BPCRIType:$("#tBPCRIType"),
-		BPCRIDataType:$("#tBPCRIDataType")
+		BPCRIDataType:$("#tBPCRIDataType"),
+		BPCRICollectCode:$("#tBPCRICollectCode")
 	}
 	function setDialogValue(BPCRIRowId,BPCRICode,BPCRIDesc,BPCRIMultiValueDesc,BPCRIOptions,BPCRISortNo,BPCRIMin,
-		BPCRIMax,BPCRIImpossibleMin,BPCRIImpossibleMax,BPCRIMainRecordItemDr,BPCRIBPCRecordCatDr,BPCRIArcimDr,BPCRIUomDr,BPCRIType,BPCRIDataType){
+		BPCRIMax,BPCRIImpossibleMin,BPCRIImpossibleMax,BPCRIMainRecordItemDr,BPCRIBPCRecordCatDr,BPCRIArcimDr,BPCRIUomDr,BPCRIType,BPCRIDataType,BPCRICollectCode){
 		obj.BPCRIRowId.val(BPCRIRowId);
 		obj.BPCRICode.val(BPCRICode);
 		obj.BPCRIDesc.val(BPCRIDesc);
@@ -84,6 +85,7 @@ $(function(){
 		obj.BPCRIUomDr.combobox("setValue",BPCRIUomDr);
 		obj.BPCRIType.combobox("setValue",BPCRIType);
 		obj.BPCRIDataType.combobox("setValue",BPCRIDataType);
+		obj.BPCRICollectCode.val(BPCRICollectCode);
 	}
 	var InsertHandler=function(){
 		$("#recordItemDialog").show();
@@ -125,6 +127,7 @@ $(function(){
 					var BPCRIImpossibleMin=obj.BPCRIImpossibleMin.val();
 					var BPCRIImpossibleMax=obj.BPCRIImpossibleMax.val();
 					var BPCRIMainRecordItemDr=obj.BPCRIMainRecordItemDr.combobox("getValue");
+					var BPCRICollectCode=obj.BPCRICollectCode.val();
 					
 					var data=$.m({
 								ClassName:"web.DHCBPCRecordItem",
@@ -143,13 +146,14 @@ $(function(){
 								BPCRIMax: BPCRIMax,
 								BPCRIImpossibleMin: BPCRIImpossibleMin,
 								BPCRIImpossibleMax: BPCRIImpossibleMax,
-								BPCRIMainRecordItemDr:BPCRIMainRecordItemDr 
+								BPCRIMainRecordItemDr:BPCRIMainRecordItemDr,
+								BPCRICollectCode:BPCRICollectCode
 							},function(success){
 								if(success==0)
 								{
 									$.messager.alert("提示","新增成功");
 									recordItemDlgObj.close();
-									setDialogValue("","","","","","","","","","","","","","","","");
+									setDialogValue("","","","","","","","","","","","","","","","","");
 									recordItemObj.load();
 								}else
 								{
@@ -166,7 +170,7 @@ $(function(){
 				}
 			}],
 			onClose:function(){  
-                setDialogValue("","","","","","","","","","","","","","","","");
+                setDialogValue("","","","","","","","","","","","","","","","","");
             }  
 		
 		})
@@ -176,7 +180,7 @@ $(function(){
 	{
 
 		setDialogValue(row.tRowId,row.tBPCRICode,row.tBPCRIDesc,row.tBPCRIMultiValueDesc,row.tBPCRIOptions,row.tBPCRISortNo,row.tBPCRIMin,row.tBPCRIMax,
-			row.tBPCRIImpossibleMin,row.tBPCRIImpossibleMax,row.tBPCRIMainRecordItemDr,row.tBPCRIBPCRecordCatDr,row.tBPCRIArcimDr,row.tBPCRIUomDr,row.tBPCRITypeDr,row.tBPCRIDataTypeDr)
+			row.tBPCRIImpossibleMin,row.tBPCRIImpossibleMax,row.tBPCRIMainRecordItemDr,row.tBPCRIBPCRecordCatDr,row.tBPCRIArcimDr,row.tBPCRIUomDr,row.tBPCRITypeDr,row.tBPCRIDataTypeDr,row.BPCRICollectCode)
 		$("#recordItemDialog").show();
 		var recordItemDlgObj=$HUI.dialog("#recordItemDialog",{
 			iconCls:'icon-w-edit',
@@ -202,6 +206,7 @@ $(function(){
 					var BPCRIImpossibleMax=obj.BPCRIImpossibleMax.val();
 					var BPCRIMainRecordItemDr=obj.BPCRIMainRecordItemDr.combobox("getValue");
 					var BPCRIRowId=obj.BPCRIRowId.val();
+					var BPCRICollectCode=obj.BPCRICollectCode.val();
 					var data=$.m({
 							ClassName:"web.DHCBPCRecordItem",
 							MethodName:"UpdateBPCReItem",
@@ -220,14 +225,15 @@ $(function(){
 								BPCRIMax: BPCRIMax,
 								BPCRIImpossibleMin: BPCRIImpossibleMin,
 								BPCRIImpossibleMax: BPCRIImpossibleMax,
-								BPCRIMainRecordItemDr:BPCRIMainRecordItemDr
+								BPCRIMainRecordItemDr:BPCRIMainRecordItemDr,
+								BPCRICollectCode:BPCRICollectCode
 						},function(success){
 							if(success==0)
 							{
 								$.messager.alert("提示","记录项目更新成功！");
 								
 								recordItemDlgObj.close();
-								setDialogValue("","","","","","","","","","","","","","","","");
+								setDialogValue("","","","","","","","","","","","","","","","","");
 								recordItemObj.load();
 							}else{
 								$.messager.alert("提示","记录项目更新失败！"+success);
@@ -243,7 +249,7 @@ $(function(){
 				}
 			}],
 			onClose:function(){  
-                setDialogValue("","","","","","","","","","","","","","","","");
+                setDialogValue("","","","","","","","","","","","","","","","","");
             }  
 		})
 	}
@@ -261,7 +267,8 @@ $(function(){
 			,{title: '监护代码', width: 150, field: 'tBPCRICode'}
 			,{title: '监护名称', width: 150, field: 'tBPCRIDesc'}
 			,{title: '监护大类', width: 100, field: 'tBPCRIBPCRecordCat'}	
-			,{title: '监护类型', width: 100, field: 'tBPCRIType'}	
+			,{title: '监护类型', width: 100, field: 'tBPCRIType'}
+			,{title: '采集代码', width: 100, field: 'tBPCRICollectCode'}	
 			,{title: '医嘱名称', width: 100, field: 'tBPCRIArcim'}
 			,{title: '单位', width: 100, field: 'tBPCRIUom'}
 			,{title: '选项指针', width: 100, field: 'tBPCRIOptions'}

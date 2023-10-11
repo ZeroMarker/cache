@@ -23,8 +23,8 @@
 		    obj.itemynuse.setValue(rc.get("tIcucioiActive"));
 			obj.itemynuse.setRawValue(rc.get("tIcucioiActiveDesc"));
 		    obj.itemtype.setValue(rc.get("tIcucioiType"));
-		    obj.itemviewcat.setValue(rc.get("tAncvcId"));
-			obj.itemviewcat.setRawValue(rc.get("tAncvcDesc"));
+		    //obj.itemviewcat.setValue(rc.get("tAncvcId"));
+			//obj.itemviewcat.setRawValue(rc.get("tAncvcDesc"));
 		    //alert(rc.get("tAncvcId"))
 		    obj.itemcomorder.setValue(rc.get("tAncoId"));
 			obj.itemcomorder.setRawValue(rc.get("tAncoDesc"));
@@ -49,8 +49,8 @@
 		    obj.itemynuse.setValue("");
 			obj.itemynuse.setRawValue("");
 		    obj.itemtype.setValue("");
-		    obj.itemviewcat.setValue("");
-			obj.itemviewcat.setRawValue("");
+		    //obj.itemviewcat.setValue("");
+			//obj.itemviewcat.setRawValue("");
 		    obj.itemcomorder.setValue("");
 			obj.itemcomorder.setRawValue("");
 		    obj.itemusemethod.setValue("");
@@ -83,11 +83,11 @@
 			ExtTool.alert("提示","描述不能为空!");	
 			return;
 		}
-		if(obj.itemviewcat.getValue()=="")
+		/*if(obj.itemviewcat.getValue()=="")
 		{
 			ExtTool.alert("提示","显示分类不能为空!");	
 			return;
-		}
+		}*/
 		/*if(obj.itemtype.getValue()=="")
 		{
 			ExtTool.alert("提示","出入量类型不能为空!");	
@@ -100,7 +100,7 @@
 		//alert(itemtype)
 		var itemcomorder=obj.itemcomorder.getValue();      //常用医嘱
         //alert(itemcomorder)
-		var itemviewcat=obj.itemviewcat.getValue();         //显示分类
+		//var itemviewcat=obj.itemviewcat.getValue();         //显示分类
         //alert(itemviewcat)
 		var itemusemethod=obj.itemusemethod.getValue();   //用法
 		var itemynuse=obj.itemynuse.getValue();       //是否可用
@@ -183,7 +183,7 @@
 				return ;
 			}
 		}
-		var ret=_DHCICUCIOItem.InsertICUCIOItem(itemcode,itemname,itemtype,itemcomorder,itemviewcat,itemusemethod,itemynuse,itemctloc,icucioiDr,icucioiStrategy,icucioiMultiple,icucioiValueField);
+		var ret=_DHCICUCIOItem.InsertICUCIOItem(itemcode,itemname,itemtype,itemcomorder,"",itemusemethod,itemynuse,itemctloc,icucioiDr,icucioiStrategy,icucioiMultiple,icucioiValueField);
 		//alert(ret)
 		if(ret!='0') 
 		{ 
@@ -199,8 +199,8 @@
 			obj.itemynuse.setValue("");
 			obj.itemynuse.setRawValue("");
 			obj.itemtype.setValue("");
-			obj.itemviewcat.setValue("");
-			obj.itemviewcat.setRawValue("");
+			//obj.itemviewcat.setValue("");
+			//obj.itemviewcat.setRawValue("");
 			obj.itemcomorder.setValue("");
 			obj.itemcomorder.setRawValue("");
 			obj.itemusemethod.setValue("");
@@ -234,11 +234,12 @@
 			ExtTool.alert("提示","描述不能为空!");	
 			return;
 		}
-		if(obj.itemviewcat.getValue()=="")
+		/*if(obj.itemviewcat.getValue()=="")
 		{
 			ExtTool.alert("提示","显示分类不能为空!");	
 			return;
 		}
+		*/
 		/*if(obj.itemtype.getValue()=="")
 		{
 			ExtTool.alert("提示","出入量类型不能为空!");	
@@ -249,7 +250,7 @@
 		var itemname=obj.itemname.getValue();           //名称
 		var itemtype=obj.itemtype.getValue();         //类型
 		var itemcomorder=obj.itemcomorder.getValue();      //常用医嘱
-		var itemviewcat=obj.itemviewcat.getValue();         //显示分类
+		//var itemviewcat=obj.itemviewcat.getValue();         //显示分类
 		var itemusemethod=obj.itemusemethod.getValue();   //用法
 		var itemynuse=obj.itemynuse.getValue();       //是否可用
 		var itemctloc=obj.itemctloc.getValue();          //科室
@@ -333,7 +334,7 @@
 			}
 		}
         //alert(IcucioiId+"^"+itemcode+"^"+itemname+"^"+itemtype+"^"+itemcomorder+"^"+itemviewcat+"^"+itemusemethod+"^"+itemynuse+"^"+itemctloc)
-		var ret=_DHCICUCIOItem.UpdateICUCIOItem(IcucioiId,itemcode,itemname,itemtype,itemcomorder,itemviewcat,itemusemethod,itemynuse,itemctloc,icucioiDr,icucioiStrategy,icucioiMultiple,icucioiValueField);
+		var ret=_DHCICUCIOItem.UpdateICUCIOItem(IcucioiId,itemcode,itemname,itemtype,itemcomorder,"",itemusemethod,itemynuse,itemctloc,icucioiDr,icucioiStrategy,icucioiMultiple,icucioiValueField);
 		//alert(ret)
 		if(ret!=0)
 		{
@@ -349,8 +350,8 @@
 			obj.itemynuse.setValue("");
 			obj.itemynuse.setRawValue("");
 			obj.itemtype.setValue("");
-			obj.itemviewcat.setValue("");
-			obj.itemviewcat.setRawValue("");
+			//obj.itemviewcat.setValue("");
+			//obj.itemviewcat.setRawValue("");
 			obj.itemcomorder.setValue("");
 			obj.itemcomorder.setRawValue("");
 			obj.itemusemethod.setValue("");
@@ -389,8 +390,8 @@
 			obj.itemynuse.setValue("");
 			obj.itemynuse.setRawValue("");
 			obj.itemtype.setValue("");
-			obj.itemviewcat.setValue("");
-			obj.itemviewcat.setRawValue("");
+			//obj.itemviewcat.setValue("");
+			//obj.itemviewcat.setRawValue("");
 			obj.itemcomorder.setValue("");
 			obj.itemcomorder.setRawValue("");
 			obj.itemusemethod.setValue("");
@@ -410,24 +411,24 @@
 	obj.findbutton_click = function(){
 		obj.retGridPanelStore.removeAll();
 		obj.retGridPanelStore.load({});
-			obj.IcucioiId.setValue("");
-			obj.itemcode.setValue("");
-			obj.itemname.setValue("");
-			obj.itemctloc.setValue("");
-			obj.itemynuse.setValue("");
-			obj.itemynuse.setRawValue("");
-			obj.itemtype.setValue("");
-			obj.itemviewcat.setValue("");
-			obj.itemviewcat.setRawValue("");
-			obj.itemcomorder.setValue("");
-			obj.itemcomorder.setRawValue("");
-			obj.itemusemethod.setValue("");
+			//obj.IcucioiId.setValue("");
+			//obj.itemcode.setValue("");
+			//obj.itemname.setValue("");
+			//obj.itemctloc.setValue("");
+			//obj.itemynuse.setValue("");
+			//obj.itemynuse.setRawValue("");
+			//obj.itemtype.setValue("");
+			//obj.itemviewcat.setValue("");
+			//obj.itemviewcat.setRawValue("");
+			//obj.itemcomorder.setValue("");
+			//obj.itemcomorder.setRawValue("");
+			//obj.itemusemethod.setValue("");
 			//obj.IcucioiDr.setValue("");	//20160831+dyl
-			obj.IcucioiStrategy.setRawValue("");
-			obj.IcucioiDrDesc.setValue("");
-			obj.IcucioiDrDesc.setRawValue("");
-			obj.IcucioiValueField.setRawValue("");
-			obj.IcucioiMultiple.setValue("");  
+			//obj.IcucioiStrategy.setRawValue("");
+			//obj.IcucioiDrDesc.setValue("");
+			//obj.IcucioiDrDesc.setRawValue("");
+			//obj.IcucioiValueField.setRawValue("");
+			//obj.IcucioiMultiple.setValue("");  
 		obj.intCurrRowIndex = -1;
 	};
 }

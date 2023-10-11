@@ -117,7 +117,7 @@ function Modi_click()
 	
 	if (Code=="")
 	{
-		alert("Code不能为空!");
+		alert("请选择一条记录!");
 		return;
 	}
 

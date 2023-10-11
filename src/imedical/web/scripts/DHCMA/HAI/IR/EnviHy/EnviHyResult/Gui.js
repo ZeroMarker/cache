@@ -2,8 +2,16 @@
 var objScreen = new Object();
 function InitviewScreen(){
 	var obj = objScreen;
+	
     $.parser.parse(); // 解析整个页面
- 
+	if (typeof EnviHyMaxSpecimen=="undefined"){
+		EnviHyMaxSpecimen=$m({
+			ClassName:"DHCHAI.BT.Config",
+			MethodName:"GetValByCode",
+			aCode:"EnviHyMaxSpecimen"
+		});
+	}
+	
     LogonHospID=$.LOGON.HOSPID;
 	LogonUserID=$.LOGON.USERID;
 	LogonLocID=$.LOGON.LOCID;
@@ -33,7 +41,7 @@ function InitviewScreen(){
 		data:obj.HospData,
 		onSelect:function(rec){//给医院增加Select事件，更新科室列表
 			obj.TabArgs.HospIDs=rec.ID
-			Common_LookupToLoc('txtMonitorLocDesc','txtMonitorLocID',obj.TabArgs.HospIDs,'O|I','');
+			Common_LookupToLoc('txtMonitorLocDesc','txtMonitorLocID',obj.TabArgs.HospIDs,'','');
 			if ($('#txtMonitorLocID').val()!="") {
 				$("#txtMonitorLocDesc").lookup('clear');
 				$('#txtMonitorLocID').val('');
@@ -43,8 +51,55 @@ function InitviewScreen(){
 			$('#cboHospital').combobox('select',data[0].ID);
 		}
 	})
+	//监测项目列表
+	$HUI.combobox("#cboEvItem", {
+		multiple:true,
+		rowStyle:'checkbox',
+		panelHeight:300,
+		editable:true,
+		valueField:'ID',
+		textField:'ItemDesc',
+		onShowPanel: function () {		
+			var url=$URL+"?ClassName=DHCHAI.IRS.EnviHyLocItemsSrv&QueryName=QryLocItems&ResultSetType=Array&aLocID="+""+"&aEvItemFL="+$('#cboEvItemFL').combobox('getValue');
+			$("#cboEvItem").combobox('reload',url);
+		}
+	});
+	var cboEvItemFLList = $cm ({
+		ClassName:"DHCHAI.BTS.DictionarySrv",
+		QueryName:"QryDic",
+		aTypeCode:"EHItemType"
+	},false);
+	obj.EvItemFL = cboEvItemFLList.rows;
+	$HUI.combobox("#cboEvItemFL",{
+		valueField:'ID',
+		textField:'DicDesc',
+		editable:false,
+		data:obj.EvItemFL,
+		onSelect:function(rec){
+			//Common_ComboToLoc('cboMonitorLoc',rec.ID);
+			$HUI.combobox("#cboEvItem", {
+				valueField:'ID',
+				textField:'ItemDesc',
+				onShowPanel: function () {
+					//var url=$URL+"?ClassName=DHCHAI.IRS.EnviHyItemSrv&QueryName=QryEvItem&aIsActive=1&ResultSetType=Array&EvItemFL="+rec.ID;
+					if (tDHCMedMenuOper['Admin']=="1"){
+						var url=$URL+"?ClassName=DHCHAI.IRS.EnviHyLocItemsSrv&QueryName=QryLocItems&ResultSetType=Array&aLocID="+""+"&aEvItemFL="+rec.ID;
+					}else{
+						var url=$URL+"?ClassName=DHCHAI.IRS.EnviHyLocItemsSrv&QueryName=QryLocItems&ResultSetType=Array&aLocID="+$('#cboMonitorLoc').combobox('getValue')+"&aEvItemFL="+rec.ID;
+					}
+					$("#cboEvItem").combobox('reload',url);
+				}
+			});
+		},onLoadSuccess:function(data){
+			// 院区默认选择
+			//Common_ComboDicID('cboItemType','EHItemType');
+			//$('#cboEvItemFL').combobox('select',data[0].ID);
+		}
+	});
 	//状态列表
 	obj.cboStatus=Common_ComboDicCode('cboStatus','EHRepStatus');
+	obj.cboStatus1=Common_ComboDicCode('cboStatus1','EHRepStatus');
+	obj.cboStatus1=Common_ComboDicCode('cboStatus2','EHRepStatus');
 	//是否合格列表
 	obj.cboStandard=Common_ComboDicCode('cboStandard','EHStandard');
 	//开始日期、结束日期
@@ -59,30 +114,48 @@ function InitviewScreen(){
 		rownumbers: true, //如果为true, 则显示一个行号列
 		singleSelect: false,  //是否允许多选
 		autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
-		fitColumns: true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
+		fitColumns: false, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动。
 		loadMsg:'数据加载中...',
 		pageSize: 20,
 		pageList : [20,50,100,200],
+		sortOrder:'asc',
+		remoteSort:false,
 		columns:[[
-			{field:'checkOrd',checkbox:'true',align:'center',auto:false},
-			{field:'ReportID',title:'ID',align:'center',sortable:true},
-			{field:'ItemDesc',title:'监测项目',sortable:true},
-			{field:'ItemObjDesc',title:'监测对象',sortable:true},
-			{field:'StatusDesc',title:'&nbsp;&nbsp;状态',align:'left',sortable:true,
+			{field:'checkOrd',checkbox:'true',align:'center',width:'60',auto:false,sortable:true},
+			{field:'ReportID',title:'ID',align:'center',width:'60',sortable:true,sortable:true},
+			{field:"BarCode",title:"申请号",width:120,sortable:true,
+	        	formatter:function(value,row,index){
+		        	if (row.ReCheckSign == '1'){
+						return '┏' + value+"&nbsp";
+					} else if (row.ReCheckSign == '2'){
+						return '┃' + value+"&nbsp";
+					} else if (row.ReCheckSign == '3'){
+						return '┗' + value+"&nbsp";
+					} else {
+						return value;
+					}
+		        }
+	        },
+			{field:'ItemDesc',title:'监测项目',width:'180',sortable:true},
+			{field:'ItemObjDesc',title:'监测对象',width:'100',sortable:true},
+			{field:'StatusDesc',title:'&nbsp;&nbsp;状态',align:'left',width:'100',sortable:true,
 				formatter: function(value,row,index){
-					var btn = '<a style="padding-left:5px;" href="#" onclick="objScreen.winReportLog_show(\'' + row["ReportID"] + '\')"><span class="icon icon-add-note">&nbsp;&nbsp;&nbsp;&nbsp</span>' + value + '</a>';
+					var btn = '<a style="padding-left:5px;" href="#" onclick="objScreen.winReportLog_show(\'' + row["ReportID"] + '\')">' + value + '</a>';
 					return btn;
 				}
 			},
-			{field:'MonitorDate',title:'监测日期',align:'center',sortable:true},
-			{field:'MonitorLocDesc',title:'监测科室',sortable:true},
-			{field:'SpecTypeDesc',title:'标本类型',align:'center',sortable:true},
-			{field:'SpecimenNum',title:'标本数量',align:'center',sortable:true},
-			{field:'StandardDesc',title:'是否合格',align:'center',sortable:true,
+			{field:'MonitorDate',title:'监测日期',align:'center',width:'100',sortable:true,sorter:Sort_int},
+			{field:'MonitorLocDesc',title:'监测科室',width:'100',sortable:true},
+			{field:'SpecTypeDesc',title:'标本类型',width:'80',sortable:true},
+			{field:'SpecimenNum',title:'标本数量',align:'center',width:'80',sortable:true},
+			{field:'StandardDesc',title:'是否合格',align:'center',width:'80',sortable:true,
 				styler: function(value,row,index){
 					if (value=="不合格"){
 						return 'background-color:#FF7256;';
-					}else{
+					}else if (value=="合格"){
+						return 'background-color:green;'
+						}
+					else{
 						return 'background-color:#AAAAAA;'
 					}
 				},
@@ -92,26 +165,32 @@ function InitviewScreen(){
 					return btn;
 				}
 			},
-			{field:'EnterTypeDesc',title:'录入方式',sortable:true},
-			{field:'IsReCheck',title:'是否复检',sortable:true,
+			{field:'EnterTypeDesc',title:'录入方式',width:'80',sortable:true},
+			{field:'IsReCheck',title:'是否复检',width:'80',sortable:true,
 				formatter: function(value,row,index){
 					return (value == 1 ? "是" : "否");
 				}
 			},
-			{field:'ApplyDate',title:'申请日期',sortable:true},
-			{field:'ApplyTime',title:'申请时间',sortable:true},
-			{field:'ApplyLocDesc',title:'申请科室',sortable:true},
-			{field:'ApplyUserDesc',title:'申请人',sortable:true},
-			{field:'CollDate',title:'采集日期',sortable:true},
-			{field:'CollTime',title:'采集时间',sortable:true},
-			{field:'CollUserDesc',title:'采集人',sortable:true},
-			{field:'RecDate',title:'接收日期',sortable:true},
-			{field:'RecTime',title:'接收时间',sortable:true},
-			{field:'RecUserDesc',title:'接收人',sortable:true},
-			{field:'RepDate',title:'报告日期',sortable:true},
-			{field:'RepTime',title:'报告时间',sortable:true},
-			{field:'RepLocDesc',title:'报告科室',sortable:true},
-			{field:'RepUserDesc',title:'报告人',sortable:true}
+			{field:'ApplyDate',title:'申请日期',width:'100',sortable:true,sorter:Sort_int},
+			{field:'ApplyTime',title:'申请时间',width:'80',sortable:true,sorter:Sort_int},
+			{field:'ApplyLocDesc',title:'申请科室',width:'100',sortable:true},
+			{field:'ApplyUserDesc',title:'申请人',width:'80',sortable:true},
+			{field:'CollDate',title:'采集日期',width:'100',sortable:true,sorter:Sort_int},
+			{field:'CollTime',title:'采集时间',width:'80',sortable:true,sorter:Sort_int},
+			{field:'CollUserDesc',title:'采集人',width:'80',sortable:true},
+			{field:'RecDate',title:'接收日期',width:'100',sortable:true,sorter:Sort_int},
+			{field:'RecTime',title:'接收时间',width:'80',sortable:true,sorter:Sort_int},
+			{field:'RecUserDesc',title:'接收人',width:'80',sortable:true},
+			{field:'RepDate',title:'报告日期',width:'100',sortable:true,sorter:Sort_int},
+			{field:'RepTime',title:'报告时间',width:'80',sortable:true,sorter:Sort_int},
+			{field:'RepLocDesc',title:'报告科室',width:'80',sortable:true},
+			{field:'RepUserDesc',title:'报告人',width:'80',sortable:true},
+			{field:'StatusCode',title:'修改状态',align:'center',width:'80',sortable:true,
+				formatter: function(value,row,index){
+					var btn = '<a href="#" onclick="objScreen.winUpStatus_show(\'' + row["ReportID"] + '\',\'\')">' + "修改状态" + '</a>';
+					return btn;
+				}
+			}
 		]],
 		onDblClickRow:function(rowIndex,rowData){
 			if(rowIndex>-1){
@@ -183,9 +262,13 @@ function InitviewScreen(){
 					}
 				}
 				$("#txtBarcode").show();
+				$('#txtBarcode').val("");
+				$('#txtBarcode').focus();
 			} else if (obj.TabArgs.ContentID.indexOf('WriteReps')>-1){
 				$('#btnBarcode').show();
 				$("#txtBarcode").show();
+				$('#txtBarcode').val("");
+				$('#txtBarcode').focus();
 				if (obj.StatusOrder.indexOf('|5|')>-1) {
 					//需要审核
 					if (StatusCode == 5){
@@ -214,6 +297,7 @@ function InitviewScreen(){
 				}
 			}
 		}
+		
 	});
 	
 	//录入结果弹出窗
@@ -222,7 +306,7 @@ function InitviewScreen(){
 		iconCls:'icon-w-paper',
 		closed: true,
 		modal: true,
-		isTopZindex:false,//true,
+		isTopZindex:true,
 		buttons:[{
 			text:'保存',
 			id:'winEnterResult_btnSave',
@@ -246,14 +330,77 @@ function InitviewScreen(){
 			}
 		 }
 	});
+	//修改状态弹出窗
+	$('#winUpdateStatus').dialog({
+		title: '修改状态',
+		iconCls:'icon-w-paper',
+		closed: true,
+		modal: true,
+		height:167,
+		isTopZindex:true,
+		buttons:[{
+			text:'保存',
+			id:'winUpdateStatus_btnSave',
+			handler:function(){
+				obj.winUpdateStatus_btnSave_click();
+				$HUI.dialog('#winUpdateStatus').close();
+			}
+		},{
+			text:'关闭',
+			handler:function(){
+				bClose = true;
+				$HUI.dialog('#winUpdateStatus').close();
+			}
+		}]
+		,onBeforeOpen:function(){//弹出框之前初始
+        	bClose = true;
+		 }
+		,onBeforeClose:function(){//关闭弹出框之前动作
+        	if (!bClose) {  
+              return bClose;  //通过全局变量来控制是否关闭窗口  
+			}
+		 }
+	});
 	//报告状态列表窗
 	$('#winStatusList').dialog({
 		title: '状态列表',
 		iconCls:'icon-w-paper',
 		closed: true,
 		modal: true,
-		isTopZindex:false
+		isTopZindex:true
 	});
+		//修改状态弹出窗
+	$('#winUpdateStatus1').dialog({
+		title: '批量修改状态',
+		iconCls:'icon-w-paper',
+		closed: true,
+		modal: true,
+		height:167,
+		isTopZindex:true,
+		buttons:[{
+			text:'保存',
+			id:'winUpdateStatus_btnSave1',
+			handler:function(){
+				obj.winUpdateStatus_btnSave_click1();
+				$HUI.dialog('#winUpdateStatus1').close();
+			}
+		},{
+			text:'关闭',
+			handler:function(){
+				bClose = true;
+				$HUI.dialog('#winUpdateStatus1').close();
+			}
+		}]
+		,onBeforeOpen:function(){//弹出框之前初始
+        	bClose = true;
+		 }
+		,onBeforeClose:function(){//关闭弹出框之前动作
+        	if (!bClose) {  
+              return bClose;  //通过全局变量来控制是否关闭窗口  
+			}
+		 }
+	});
+
 	InitviewScreenEvent(obj);
 	obj.LoadEvent(arguments);
 	return obj;

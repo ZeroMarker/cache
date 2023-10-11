@@ -7,6 +7,7 @@ function BodyLoadHandler()
 	InitUserInfo(); //系统参数
 	InitEvent();
 	initButtonWidth();	//hisui改造 Add By DJ 2018-10-12	
+	initPanelHeaderStyle();//hisui改造 add by zyq 2023-02-02
 	disabled(true);//灰化
 	
 }
@@ -34,9 +35,9 @@ function BAdd_Click() //增加
 	var plist=CombinData(); //函数调用
 	var result=cspRunServerMethod(encmeth,plist,'2');
 	result=result.replace(/\\n/g,"\n")
-	if(result=="")
+	if(result<0) //modified by sjh SJH0034 2020-09-11
 	{
-		messageShow("","","",t[-3001])
+		messageShow("","","",t[-3001])  //modified by sjh SJH0034 2020-09-11
 		return
 	}
 	else
@@ -139,5 +140,3 @@ function condition()//条件
 	return false;
 }
 document.body.onload = BodyLoadHandler;
-
-

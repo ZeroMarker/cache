@@ -5,29 +5,49 @@ $(function () {
 	$modelInstanceTree = $('#modelInstanceTree');
 	var param = {"action":"GET_DOCUMENT_CONTEXT"};
 	documentContext = parent.eventDispatch(param);
-	initTree(userId,instanceId);
+    instanceId = documentContext.InstanceID || "";
+	if (instanceId == "")
+	{
+		$.messager.alert('提示', "请先打开病历，再操作个人模板管理页面！", 'info');
+		return;
+	}
+    initTreeMain(userId,instanceId);
 	initContextMenu();
 	$('#newName').on('input', function () {
 		checkNewname();
 	});
 });
+
+function initTreeMain(userId,instanceId){
+	if (isShowAllPersonalTemplate == "Y"){
+		initTreeAll(userId,instanceId);
+	} else {
+		initTree(userId,instanceId);
+	}
+}
+
 //去掉特殊字符
 function checkNewname(){
-	var patrn = /[`~!@#$%^&*()_\-+=<>?:"{}|,.\/;'\\[\]·~！@#￥%……&*（）——\-+={}|《》？：“”【】、；’‘'，。、]/im;
+	var patrn = /[`~!@#$%^&*()_\-+=<>?:"{}|,.\/;\\[\]·~！@#￥%……&*（）——\-+={}|《》？：“”【】、；’‘，。、]/im;
 	var newName = $('#newName').val();
+	//正则表达式中的test方法，用于检测字符串是否有匹配的文本
 	if(patrn.test(newName)){
+		//提示不允许输入特殊字符
+		$.messager.popover({
+			msg:'不允许输入特殊字符',
+			timeout:2000,
+			type:'error'
+		});
 		for(var i = 0;i<newName.length;i++){
 			newName = newName.replace(patrn,"");
 		}
 		$('#newName').val(newName);
-		//提示不允许输入特殊字符
-		$("#newName").tooltip({position:'bottom'}).tooltip('show');
 		return false;
 	}else{
-		$("#newName").tooltip({position:'bottom'}).tooltip('hide');
 		return true;
 	}
 }
+
 ///设置目录权限
 function onContextMenu(e, node) {
 	e.preventDefault();
@@ -73,6 +93,20 @@ function onContextMenu(e, node) {
 	});
 }
 
+//传入insID，刷新对应Doc的个人模板目录，文档改变事件调用
+function initTreeByInsID(insID){
+    if (typeof insID === "undefined" || insID === "")
+    {
+	    $modelInstanceTree.tree({
+	        data : [],
+	        dnd: true,
+			lines:true,
+		});
+		return;
+    }
+    initTreeMain(userId,insID);
+}
+
 function initTree(userId,instanceId)
 {
 	var patInfo = parent.patInfo;
@@ -84,6 +118,19 @@ function initTree(userId,instanceId)
         alert('GetTemplateClassify ' + ' error:' + ret);
     });
 }
+
+function initTreeAll(userId,instanceId)
+{
+    var patInfo = parent.patInfo;
+    
+    var data = ajaxDATA('Stream', 'EMRservice.BL.PersonalTemplate', 'GetAllDataTree', patInfo.EpisodeID, patInfo.UserLocID, patInfo.UserID, patInfo.SsgroupID);
+    ajaxGET(data, function (ret) {
+	    initTreeFunc($.parseJSON(ret));
+    }, function (ret) {
+        alert('GetAllDataTree ' + ' error:' + ret);
+    });
+}
+
 
 function initTreeFunc(data)
 {
@@ -379,6 +426,7 @@ function showNameDlg(fnOnComfirmed) {
 				text: '确认',
 				handler: function () {					
 					var newName = $('#newName').val();
+                    newName = newName.replace(/'/g,"");
 					if ('' == newName){
 						$.messager.alert('提示','保存失败!', 'info');
 						return;
@@ -402,6 +450,14 @@ function showNameDlg(fnOnComfirmed) {
 
 function savetemplate()
 {
+    var param = {"action":"GET_DOCUMENT_CONTEXT"};
+	documentContext = parent.eventDispatch(param);
+    instanceId = documentContext.InstanceID || "";
+    if (typeof documentContext === "undefined" || documentContext.status.curStatus === "") {
+		$.messager.alert('提示', "请先保存当前病历后，再保存个人模板！", 'info');
+    	return;
+    }
+    
 	$('#newName').val(documentContext.Title.DisplayName);
 	var node = $modelInstanceTree.tree('getSelected');
 
@@ -443,7 +499,8 @@ function newCategory(name)
 			"Method":"AddCategory",
 			"p1":userId,
 			"p2":parentId,
-			"p3":name
+			"p3":name,
+			"p4":instanceId
 		},
 		success: function(d){
 			if (d != "")
@@ -482,7 +539,7 @@ function saveExample(name)
 	var ret = parent.eventDispatch(param); 
 	if (ret.result === 'OK' && ret.params.result === 'OK') 
 	{
-		initTree(userId,instanceId);
+		initTreeMain(userId,instanceId);
 	}
 	else
 	{
@@ -594,34 +651,57 @@ function shareit(){
 	
     if (node) {
         var id = node.id;
-		jQuery.ajax({
-			type: "post",
-			dataType: "text",
-			url: "../EMRservice.Ajax.common.cls",
-			async: true,
-			data: {
-				"OutputType":"String",
-				"Class":"EMRservice.BL.PersonalTemplate",
-				"Method":"Share",
-				"p1":node.id,
-				"p2":userLocId
-			},
-			success: function(d){
-				if (d == '1') 
-				{
-					$.messager.alert('提示','分享个人模板成功，等待审核后即可在科室模板中进行使用', 'info');		
-				} 
-				else 
-				{
-					$.messager.alert('提示', '分享失败，失败原因:'+d, 'info');
+        //判断是否已分享过，如分享过给予提示
+		if (IsShareToLoc(id))
+		{
+			var tipMsg = '您已分享过该个人模板【' + node.text + '】，是否再次分享?'
+			parent.$.messager.confirm("操作提示", tipMsg, function (data) {
+				if (data)
+				{   
+					share(id);
 				}
-			
-			},
-			error: function(d) {
-				$.messager.alert('提示', "分享个人模板error", 'info');
-			}
-		});	
+				else 
+				{   
+					return ;
+				}
+			});
+		}
+		else
+		{
+			share(id);
+		}
     }
+}
+
+function share(id)
+{
+	jQuery.ajax({
+		type: "post",
+		dataType: "text",
+		url: "../EMRservice.Ajax.common.cls",
+		async: true,
+		data: {
+			"OutputType":"String",
+			"Class":"EMRservice.BL.PersonalTemplate",
+			"Method":"Share",
+			"p1":id,
+			"p2":userLocId
+		},
+		success: function(d){
+			if (d == '1') 
+			{
+				$.messager.alert('提示','分享个人模板成功，等待审核后即可在科室模板中进行使用', 'info');		
+			} 
+			else 
+			{
+				$.messager.alert('提示', '分享失败，失败原因:'+d, 'info');
+			}
+		
+		},
+		error: function(d) {
+			$.messager.alert('提示', "分享个人模板error", 'info');
+		}
+	});
 }
 
 ///编辑个人模板
@@ -635,14 +715,45 @@ function Modifyit()
 	}
     if (node) {
 	    //以前的模态框
-//        var returnValues = window.showModalDialog('emr.opdoc.edit.personal.csp', node, 'dialogHeight:765px;dialogWidth:1360px;resizable:yes;center:yes;minimize:yes;maximize:yes;');
+        //var returnValues = window.showModalDialog('emr.opdoc.edit.personal.csp', node, 'dialogHeight:765px;dialogWidth:1360px;resizable:yes;center:yes;minimize:yes;maximize:yes;');
     	
+        var xpwidth=window.screen.width-200;
+		var xpheight=window.screen.height-100;
     	//HISUI模态框
 		var nodeStr = base64encode(utf16to8(escape(JSON.stringify(node))));
-		var iframeContent = '<iframe id="EditPersonal" scrolling="no" frameborder="0" src="emr.opdoc.edit.personal.csp?NodeStr='+nodeStr+'" style="width:100%;height:99%;"></iframe>'
-    	parent.createModalDialog("HisUIEditPersonal", "个人模板内容", 1300, 800, "EditPersonal", iframeContent,"","")
+		var iframeContent = '<iframe id="EditPersonal" scrolling="no" frameborder="0" src="emr.opdoc.edit.personal.csp?NodeStr='+nodeStr+'&MWToken='+getMWToken()+'" style="width:100%;height:99%;"></iframe>'
+    	parent.createModalDialog("HisUIEditPersonal", "个人模板内容", xpwidth-100, xpheight-200, "EditPersonal", iframeContent,"","")
     }
 }
+
+///判断是否已分享过
+function IsShareToLoc(nodeID)
+{
+	var result = false;
+	jQuery.ajax({
+		type: "post",
+		dataType: "text",
+		url: "../EMRservice.Ajax.common.cls",
+		async: false,
+		data: {
+			"OutputType":"String",
+			"Class":"EMRservice.BL.PersonalTemplate",
+			"Method":"IsShareToLoc",
+			"p1":nodeID,
+			"p2":userLocId
+		},
+		success: function(d){
+			if (d == "1"){
+				result = true;		
+			}
+		},
+		error: function(d) {
+			$.messager.alert('提示', "获取个人模板是否已分享数据error", 'info');
+		}
+	});	
+	return result;
+}
+
 function getCurr(){
     var n = $modelInstanceTree.find('.tree-node-hover');
     if (!n.length){

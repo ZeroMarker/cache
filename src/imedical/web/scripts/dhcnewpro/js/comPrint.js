@@ -126,9 +126,18 @@ function newProPrtWd(EmPCLvID,EpisodeID,LgHospID){
 	str = str + "^" + "HospitalName" + CH2 + PrintData.split("^")[6];
 	str = str+ "^" + "RegNoBarCode" + CH2 + PrintData.split("^")[0];
 	str = str+ "^" + "AdmDep" + CH2 + PrintData.split("^")[7];   //添加科室 add by 
+	
+	
 	DHCP_GetXMLConfig("InvPrintEncrypt","PrtWCinctureo"); 
-	var myobj=document.getElementById("ClsBillPrint");
-	DHCP_PrintFunHDLP(myobj,str,"");
+	if (typeof getLodop ==="function") {
+		var LODOP = getLodop();
+    	LODOP.PRINT_INIT("CST PRINT");
+		DHC_CreateByXML(LODOP,str,"",[],"PRINT-CST-NT");  //MyPara 为xml打印要求的格式
+    	var printRet = LODOP.PRINT();
+	}else{
+		var myobj=document.getElementById("ClsBillPrint");
+		DHCP_PrintFunHDLP(myobj,str,"");
+	}
 	return;
 
 }

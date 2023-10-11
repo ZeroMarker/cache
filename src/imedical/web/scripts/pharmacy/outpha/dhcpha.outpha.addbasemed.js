@@ -52,12 +52,12 @@ function InitCmgArcItm() {
                 hidden: true
             }, {
                 field: 'arcItmCode',
-                title: '药品代码',
+                title: $g("药品代码"),
                 width: 100,
                 sortable: true
             }, {
                 field: 'arcItmDesc',
-                title: '药品名称',
+                title: $g("药品名称"),
                 width: 300,
                 sortable: true
             }]
@@ -97,23 +97,23 @@ function InitBaseMedGrid() {
     var columns = [
         [{
             field: 'Tarcitm',
-            title: '药品名称',
+            title: $g("药品名称"),
             width: 275
         }, {
             field: 'Tinst',
-            title: '用法',
+            title: $g("用法"),
             width: 190
         }, {
             field: 'Tdocloc',
-            title: '开单科室',
+            title: $g("开单科室"),
             width: 220
         }, {
             field: 'Tuseloc',
-            title: '使用科室',
+            title: $g("使用科室"),
             width: 220
         }, {
             field: 'Tnote',
-            title: '备注',
+            title: $g("备注"),
             width: 200
         }, {
             field: 'Tphbr',
@@ -165,7 +165,7 @@ function InitBaseMedGrid() {
         pageSize: 50, // 每页显示的记录条数
         pageList: [50, 100, 300], // 可以设置每页记录条数的列表
         singleSelect: true,
-        loadMsg: '正在加载信息...',
+        loadMsg: $g("正在加载信息")+"...",
         fitColumns: false,
         pagination: true,
         onClickRow: function (rowIndex, rowData) {
@@ -229,7 +229,7 @@ function btnAddHandler() {
     var remark = $("#remark").val();
     var arcim = $("#cmgArcItm").combogrid("getValue") || "";
     if (arcim == "") {
-        $.messager.alert('提示', "请录入药品名称!", "info");
+        $.messager.alert($g("提示"), $g("请录入药品名称")+"!", "info");
         return;
     }
     var instu = $("#instu").combobox('getValue');
@@ -241,7 +241,7 @@ function btnAddHandler() {
         docloc = "";
     }
     if (docloc == "") {
-        $.messager.alert('提示', "请选择开单科室!", "info");
+        $.messager.alert($g("提示"), $g("请选择开单科室")+"!", "info");
         return;
     }
     var useloc = $("#useLoc").combobox('getValue');
@@ -249,12 +249,12 @@ function btnAddHandler() {
         useloc = "";
     }
     if (useloc == "") {
-        $.messager.alert('提示', "请选择使用科室!", "info");
+        $.messager.alert($g("提示"), $g("请选择使用科室")+"!", "info");
         return;
     }
     var returnValue = tkMakeServerCall("PHA.OP.CfBase.OperTab", "AddBaseMed", arcim, instu, docloc, useloc, remark,basetype);
     if (returnValue == 0) {
-        $.messager.alert('提示', "不允许添加重复数据!", "info");
+        $.messager.alert($g("提示"), $g("不允许添加重复数据")+"!", "info");
         return;
     } else if (returnValue > 0) {
         $('#basemedgrid').datagrid('reload');
@@ -266,18 +266,18 @@ function btnAddHandler() {
 function btnDeleteHandler() {
     var seletcted = $("#basemedgrid").datagrid("getSelected");
     if (seletcted == null) {
-        $.messager.alert('提示', "请先选择需要删除的记录!", "info");
+        $.messager.alert($g("提示"), $g("请先选择需要删除的记录")+"!", "info");
         return;
     }
     var phbr = seletcted["Tphbr"];
-    $.messager.confirm('提示', "确认删除吗？", function (r) {
+    $.messager.confirm($g("提示"), $g("确认删除吗")+"？", function (r) {
         if (r) {
             var retValue = tkMakeServerCall("PHA.OP.CfBase.OperTab", "DelBaseMed", phbr);
             if (retValue == 0) {
                 $('#basemedgrid').datagrid('reload');
                 btnClearHandler();
             } else {
-                $.messager.alert('提示', "删除失败,错误代码:" + retValue, "error");
+                $.messager.alert($g("提示"), $g("删除失败,错误代码")+":" + retValue, "error");
             }
         }
     });
@@ -286,14 +286,14 @@ function btnDeleteHandler() {
 function btnUpdateHandler() {
     var seletcted = $("#basemedgrid").datagrid("getSelected");
     if (seletcted == null) {
-        $.messager.alert('提示', "请先选择需要修改的记录!", "info");
+        $.messager.alert($g("提示"), $g("请先选择需要修改的记录")+"!", "info");
         return;
     }
     var basetype = $("[name=baseType]:checked").val();
     var remark = $("#remark").val();
     var arcim = $("#cmgArcItm").combogrid("getValue") || "";
     if (arcim == "") {
-        $.messager.alert('提示', "请录入药品名称!", "info");
+        $.messager.alert($g("提示"), $g("请录入药品名称")+"!", "info");
         return;
     }
     var instu = $("#instu").combobox('getValue');
@@ -305,7 +305,7 @@ function btnUpdateHandler() {
         docloc = "";
     }
     if (docloc == "") {
-        $.messager.alert('提示', "请选择开单科室!", "info");
+        $.messager.alert($g("提示"), $g("请选择开单科室")+"!", "info");
         return;
     }
     var useloc = $("#useLoc").combobox('getValue');
@@ -313,7 +313,7 @@ function btnUpdateHandler() {
         useloc = "";
     }
     if (useloc == "") {
-        $.messager.alert('提示', "请选择使用科室!", "info");
+        $.messager.alert($g("提示"), $g("请选择使用科室")+"!", "info");
         return;
     }
     var phbr = seletcted["Tphbr"];
@@ -322,9 +322,9 @@ function btnUpdateHandler() {
         $('#basemedgrid').datagrid('reload');
         btnClearHandler();
     } else if (returnValue == -2) {
-        $.messager.alert('提示', "修改后的记录已存在!", "info");
+        $.messager.alert($g("提示"), $g("修改后的记录已存在")+"!", "info");
     } else {
-        $.messager.alert('提示', "修改失败,错误代码:" + returnValue, "error");
+        $.messager.alert($g("提示"), $g("修改失败,错误代码")+":" + returnValue, "error");
     }
 }
 ///清空
@@ -344,6 +344,9 @@ function Query() {
         InputStr: $("[name=baseType]:checked").val(),
         HospId: HospId
     });
+    $("#docLoc").combobox('reload');
+    $('#useLoc').combobox('reload');
+    $("#instu").combobox('reload');
 }
 
 function InitHospCombo(){

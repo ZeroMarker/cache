@@ -13,12 +13,19 @@ function initDocument()
 	initUserInfo();	//获取所有session值
     initMessage("BuyPlan"); //获取入参js业务和通用消息
     initLookUp(); //初始化放大镜
+    //czf 2021-09-02 begin
+    var paramsFrom=[{"name":"Type","type":"2","value":""},{"name":"LocDesc","type":"1","value":"BPManageLocDR_CTLOCDesc"},{"name":"vgroupid","type":"2","value":""},{"name":"LocType","type":"2","value":""},{"name":"notUseFlag","type":"2","value":""},{"name":"ManageLocFlag","type":"2","value":"1"}];
+    singlelookup("BPManageLocDR_CTLOCDesc","PLAT.L.Loc",paramsFrom,"");	
+    var ETParams=[{"name":"Desc","type":"1","value":"BPEquipTypeDR_ETDesc"},{"name":"GroupID","type":"3","value":curGroupID},{"name":"Flag","type":"2","value":"0"},{"name":"FacilityFlag","type":"2","value":"0"},{"name":"ManageLocID","type":"4","value":"BPManageLocDR"}];
+    singlelookup("BPEquipTypeDR_ETDesc","PLAT.L.EquipType",ETParams,"");
+	//czf 2021-09-02 end
 	defindTitleStyle();
     initButton(); //按钮初始化
     initButtonWidth();	//初始化按钮宽度
     initPage();//非通用按钮初始化
-    setElement("BPEquipTypeDR_ETDesc",getElementValue("BPEquipType"));
-    setRequiredElements("BPPlanName^BPHold1_Desc^BPEquipTypeDR_ETDesc");	//modified by csj 20191112 类组必填
+    ///modified by ZY0301 20220523
+    //setElement("BPEquipTypeDR_ETDesc",getElementValue("BPEquipType"));
+    setRequiredElements("BPPlanName^BPHold1_Desc^BPEquipTypeDR_ETDesc^BPManageLocDR_CTLOCDesc");	//modified by csj 20191112 类组必填
     fillData(); //数据填充
     setEnabled(); //按钮控制
     initEditFields(getElementValue("ApproveSetDR"),getElementValue("CurRole"));	//add by csj 20190806 
@@ -87,8 +94,8 @@ function initDataGrid()
 //添加“合计”信息
 function creatToolbar()
 {
-	var lable_innerText='总数量:'+getElementValue("BPQuantityNum")+'&nbsp;&nbsp;&nbsp;总金额:'+getElementValue("BPTotalFee");
-	$("#sumTotal").html(lable_innerText);
+	//modified by ZY0253 初始化时统计合计
+	ChangeTotal()
 	//按钮灰化
 	var panel = objtbl.datagrid("getPanel");	
 	var BPStatus=getElementValue("BPStatus");
@@ -120,9 +127,9 @@ function initPage()
 		//jQuery("#BAuditReqeust").linkbutton({iconCls: 'icon-w-ok'});
 		jQuery("#BAuditReqeust").on("click", BAuditReqeust_Clicked);
 	}
-	
+	// MZY0041	1427332		2020-7-22	注释悬停启用按钮方式
 	//Modified by CSJ 20191213 审批信息悬停查看
-	$("#showOpinion").on("mouseover mouseout",function(event){
+	/*$("#showOpinion").on("mouseover mouseout",function(event){
 		if(event.type == "mouseover"){
 			//鼠标悬浮
 			$("#showOpinion").popover('show');
@@ -130,8 +137,11 @@ function initPage()
 			//鼠标离开
 			$("#showOpinion").popover('hide')
 		}
-	})
-
+	})*/
+	if (jQuery("#showOpinion").length>0)
+	{
+		jQuery("#showOpinion").on("click", BShowOpinion_Clicked);
+	}
 }
 
 
@@ -143,7 +153,7 @@ function fillData()
 	if (jsonData.SQLCODE<0) {messageShow("","","",jsonData.Data);return;}
 	setElementByJson(jsonData.Data);
 	//add by CSJ 20191201 新版审批记录
-	$("#showOpinion").popover({trigger:'manual',placement:'bottom',content:'<ul class="eq-auditopinion">'+jsonData.Data.AuditOpinion+'</ul>'});
+	//$("#showOpinion").popover({trigger:'manual',placement:'bottom',content:'<ul class="eq-auditopinion">'+jsonData.Data.AuditOpinion+'</ul>'});	 MZY0041	1427332		2020-7-22
 	var ApproveListInfo=tkMakeServerCall("web.DHCEQApproveList","GetApproveByRource","2",RowID)
 	FillEditOpinion(ApproveListInfo,"EditOpinion")
 }
@@ -274,7 +284,11 @@ function deleteRow()
 
 function BClear_Clicked()
 {
-	window.location.href= 'dhceq.em.buyplan.csp?QXType=&Type=0&PlanType=0&WaitAD=off';
+	var url='dhceq.em.buyplan.csp?QXType=&Type=0&PlanType=0&WaitAD=off';
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.location.href= url;
 }
 
 function BSave_Clicked()
@@ -289,7 +303,11 @@ function BSave_Clicked()
 	if (jsonData.SQLCODE==0)
 	{
 		messageShow('alert','info','提示',t[0]);	//操作成功
-		window.location.href= 'dhceq.em.buyplan.csp?WaitAD=off&RowID='+jsonData.Data+"&Type="+getElementValue("Type")+"&PlanType="+getElementValue("PlanType");
+		var url='dhceq.em.buyplan.csp?WaitAD=off&RowID='+jsonData.Data+"&Type="+getElementValue("Type")+"&PlanType="+getElementValue("PlanType");
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
+		window.location.href= url;
 	}
 	else
 	{
@@ -312,7 +330,11 @@ function BDelete_Clicked()
 	    }
 	    else
 	    {
-		    window.location.href= "dhceq.em.buyplan.csp?WaitAD=off&Type="+getElementValue("Type")+"&PlanType="+getElementValue("PlanType");
+		    var url="dhceq.em.buyplan.csp?WaitAD=off&Type="+getElementValue("Type")+"&PlanType="+getElementValue("PlanType");
+			if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+				url += "&MWToken="+websys_getMWToken()
+			}
+		    window.location.href= url
 		}
 
 	}
@@ -339,7 +361,11 @@ function BSubmit_Clicked()
 		jsonData=JSON.parse(jsonData)
 		if (jsonData.SQLCODE==0)
 	    {
-		    window.location.href='dhceq.em.buyplan.csp?RowID='+jsonData.Data+"&WaitAD="+getElementValue("WaitAD")+"&Type="+getElementValue("Type")+"&PlanType="+getElementValue("PlanType");
+		    var url='dhceq.em.buyplan.csp?RowID='+jsonData.Data+"&WaitAD="+getElementValue("WaitAD")+"&Type="+getElementValue("Type")+"&PlanType="+getElementValue("PlanType");
+			if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+				url += "&MWToken="+websys_getMWToken()
+			}
+		    window.location.href=url;
 		}
 	    else
 	    {
@@ -367,7 +393,11 @@ function BCancelSubmit_Clicked()
 	jsonData=JSON.parse(jsonData)
     if (jsonData.SQLCODE==0)
     {
-	    window.location.href= 'dhceq.em.buyplan.csp?RowID='+jsonData.Data+"&WaitAD="+getElementValue("WaitAD")+"&Type="+getElementValue("Type")+"&PlanType="+getElementValue("PlanType")+"&CurRole="+getElementValue("CurRole");	//modified by csj 20190716
+	    var url='dhceq.em.buyplan.csp?RowID='+jsonData.Data+"&WaitAD="+getElementValue("WaitAD")+"&Type="+getElementValue("Type")+"&PlanType="+getElementValue("PlanType")+"&CurRole="+getElementValue("CurRole");;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
+	    window.location.href= url;
     }
     else
     {
@@ -414,6 +444,8 @@ function GetTableInfo()
 	var RowNo = ""
 	for (var i = 0; i < rows.length; i++) 
 	{
+		//add by csj 2020-10-13 需求号：1556638
+		rows[i].BPLTotalFee=rows[i].BPLQuantityNum*rows[i].BPLPriceFee;
 		RowNo=i+1
 		var BPLRow=(typeof rows[i].BPLRow == 'undefined') ? "" : rows[i].BPLRow
 		var BPLRowID=(typeof rows[i].BPLRowID == 'undefined') ? "" : rows[i].BPLRowID
@@ -677,6 +709,9 @@ function bindGridEvent()
 	            var originalFee=parseFloat($(invPriceFeeEdt.target).val());
 	            var rowData = objtbl.datagrid('getSelected');
 				rowData.BPLTotalFee=quantityNum*originalFee;
+				//add by ZY0248 2020-12-14
+				$('#DHCEQBuyPlan').datagrid('endEdit',editIndex);
+				ChangeTotal()
         	});
 	    }
         if(invPriceFeeEdt){
@@ -686,6 +721,9 @@ function bindGridEvent()
 	            var originalFee=parseFloat($(invPriceFeeEdt.target).val());
 	            var rowData = objtbl.datagrid('getSelected');
 				rowData.BPLTotalFee=quantityNum*originalFee;
+				//add by ZY0248 2020-12-14
+				$('#DHCEQBuyPlan').datagrid('endEdit',editIndex);
+				ChangeTotal()
         	});
 	    }
 	   
@@ -824,7 +862,7 @@ function BIFBRequest_Clicked()
 	var para="&PlanListIDs="+PlanListIDs+"&SourceType=2"+"&ManageLocDR="+session['EQ.DEPTID']	//modified by csj 20191024 添加来源类型  modified by wy 201912-14 需求1136404 增加管理部门	
 	//add by zx 2019-09-11
 	//var url="dhceq.em.ifb.csp?"+para;
-	var url="dhceq.em.ifbnew.csp?"+para;
+	var url="dhceq.em.ifb.csp?"+para;   //modified by wy 2020-8-14 1476459 招标文件去掉new字样
 	showWindow(url,"招标申请单","","","icon-w-paper","modal","","","large",refreshWindow)  //modify by lmm 2020-06-02 UI
 }
 
@@ -854,4 +892,16 @@ function getParam(vQueryParams){
 		return objtbl.datagrid('getSelected').BPLRowID==undefined?"":objtbl.datagrid('getSelected').BPLRowID;
 	}
 	return ""
+}
+// MZY0041	1427332		2020-7-22
+function BShowOpinion_Clicked()
+{
+	url="dhceq.plat.approvelist.csp?&BussType=92&BussID="+getElementValue("BPRowID");
+	showWindow(url,"采购计划审批进度","","","icon-w-paper","modal","","","middle");
+}
+//add By ZY0286 20211210
+//元素参数重新获取值
+function getParam(ID)
+{
+	if (ID=="EquipTypeDR"){return getElementValue("BPEquipTypeDR")}
 }

@@ -21,7 +21,7 @@ $(function(){
 	InitPhaLoc();
 	InitPhaLocGrid();		
 	$('#btnAdd').on('click',function(){
-		$('#phcodewin').window({'title':"门诊发药科室维护增加"});
+		$('#phcodewin').window({'title':$g("门诊发药科室维护增加")});
 		$('#phcodewin').window('open');
 		$("input[type=checkbox][name=chkcondition]").prop('checked',false);
 		$("input[name=txtconditon]").val("");
@@ -49,126 +49,126 @@ function InitPhaLocGrid(){
 	var columns=[[
 	    {field:'Tphlid',title:'Tphlid',width:50,hidden:true},
         {field:'Tyfid',title:'Tyfid',width:100,hidden:true},
-        {field:'Tdesc',title:'药房名称',width:150},
-        {field:'Tyfsf',title:'取药算法',width:100},
-        {field:'TCyFlag',title:'中草药',width:50,align:'center',
+        {field:'Tdesc',title:$g("药房名称"),width:150},
+        {field:'Tyfsf',title:$g("取药算法"),width:100},
+        {field:'TCyFlag',title:$g("中草药"),width:50,align:'center',
         	formatter:function(value,row,index){
-	        	if (value=="是"){
+	        	if (value==$g("是")){
 		        	return gridChkIcon;
 	        	}else{
 		        //	return '<img src="../scripts/dhcpha/img/cancel.png" border=0/>';
 		        }
 	        }
         },
-        {field:'TAuditFlag',title:'处方审核',width:55,align:'center',
+        {field:'TAuditFlag',title:$g("处方审核"),width:55,align:'center',
         	formatter:function(value,row,index){
-	        	if (value=="是"){
+	        	if (value==$g("是")){
 	        		return gridChkIcon;
 	        	}else{
 		        //	return '<img src="../scripts/dhcpha/img/cancel.png" border=0/>';
 		        }
 	        }
         },
-        {field:'Tbyfs',title:'提前摆药',width:55,align:'center',
+        {field:'Tbyfs',title:$g("提前摆药"),width:55,align:'center',
         	formatter:function(value,row,index){
-	        	if (value=="是"){
+	        	if (value==$g("是")){
 	        		return gridChkIcon;
 	        	}else{
 		        //	return '<img src="../scripts/dhcpha/img/cancel.png" border=0/>';
 		        }
 	        }
         },
-        {field:'Tpysure',title:'配药确认',width:55,align:'center',
+        {field:'Tpysure',title:$g("配药确认"),width:55,align:'center',
         	formatter:function(value,row,index){
-	        	if (value=="是"){
+	        	if (value==$g("是")){
 	        		return gridChkIcon;
 	        	}else{
 		        //	return '<img src="../scripts/dhcpha/img/cancel.png" border=0/>';
 		        }
 	        }
         },
-        {field:'TAutoPyFlag',title:'自动打印</br>配　　药',width:55,align:'center',
+        {field:'TAutoPyFlag',title:$g("自动打印")+'</br>'+$g("配　　药"),width:55,align:'center',
         	formatter:function(value,row,index){
-	        	if (value=="是"){
+	        	if (value==$g("是")){
 	        		return gridChkIcon;
 	        	}else{
 		        //	return '<img src="../scripts/dhcpha/img/cancel.png" border=0/>';
 		        }
 	        }
         },
-        {field:'Tpy',title:'配药',width:55,align:'center',
+        {field:'Tpy',title:$g("配药"),width:55,align:'center',
         	formatter:function(value,row,index){
-	        	if (value=="是"){
+	        	if (value==$g("是")){
 	        		return gridChkIcon;
 	        	}else{
 		        //	return '<img src="../scripts/dhcpha/img/cancel.png" border=0/>';
 		        }
 	        }
         },
-        {field:'Tfy',title:'发药',width:55,align:'center',hidden:true,
+        {field:'Tfy',title:$g("发药"),width:55,align:'center',hidden:true,
         	formatter:function(value,row,index){
-	        	if (value=="是"){
+	        	if (value==$g("是")){
 	        		return gridChkIcon;
 	        	}else{
 		        //	return '<img src="../scripts/dhcpha/img/cancel.png" border=0/>';
 		        }
 	        }
         },
-        {field:'TOthLocRet',title:'跨科室退药',width:65,align:'center',
+        {field:'TOthLocRet',title:$g("跨科室退药"),width:65,align:'center',
         	formatter:function(value,row,index){
-	        	if (value=="是"){
+	        	if (value==$g("是")){
 	        		return gridChkIcon;
 	        	}else{
 		        //	return '<img src="../scripts/dhcpha/img/cancel.png" border=0/>';
 		        }
 	        }
         },
-        {field:'TDispMachine',title:'发药机',width:55,align:'center',
+        {field:'TDispMachine',title:$g("发药机"),width:55,align:'center',
         	formatter:function(value,row,index){
-	        	if (value=="是"){
+	        	if (value==$g("是")){
 	        		return gridChkIcon;
 	        	}else{
 		        //	return '<img src="../scripts/dhcpha/img/cancel.png" border=0/>';
 		        }
 	        }
         },
-        {field:'TSendFlag',title:'发送数据',width:55,align:'center',
+        {field:'TSendFlag',title:$g("发送数据"),width:55,align:'center',
         	formatter:function(value,row,index){
-	        	if (value=="是"){
+	        	if (value==$g("是")){
 	        		return gridChkIcon;
 	        	}else{
 		        //	return '<img src="../scripts/dhcpha/img/cancel.png" border=0/>';
 		        }
 	        }
         },
-        {field:'TPrintFlag',title:'分配打印机',width:65,align:'center',hidden:true,
+        {field:'TPrintFlag',title:$g("分配打印机"),width:65,align:'center',hidden:true,
         	formatter:function(value,row,index){
-	        	if (value=="是"){
+	        	if (value==$g("是")){
 	        		return gridChkIcon;
 	        	}else{
 		        //	return '<img src="../scripts/dhcpha/img/cancel.png" border=0/>';
 		        }
 	        }
         },
-        {field:'TWinTypeFlag',title:'窗口分类',width:55,align:'center',hidden:true,
+        {field:'TWinTypeFlag',title:$g("窗口分类"),width:55,align:'center',hidden:true,
         	formatter:function(value,row,index){
-	        	if (value=="是"){
+	        	if (value==$g("是")){
 	        		return gridChkIcon;
 	        	}else{
 		        //	return '<img src="../scripts/dhcpha/img/cancel.png" border=0/>';
 		        }
 	        }
         },
-        {field:'TScreenFlag',title:'显示屏',width:50,align:'center',
+        {field:'TScreenFlag',title:$g("显示屏"),width:50,align:'center',
         	formatter:function(value,row,index){
-	        	if (value=="是"){
+	        	if (value==$g("是")){
 	        		return gridChkIcon;
 	        	}else{
 		        //	return '<img src="../scripts/dhcpha/img/cancel.png" border=0/>';
 		        }
 	        }
         },
-        {field:'TScreenPath',title:'显示路径',width:100}
+        {field:'TScreenPath',title:$g("显示路径"),width:100}
 	]];  
 	
    //定义datagrid	
@@ -191,7 +191,7 @@ function InitPhaLocGrid(){
 		onLoadSuccess: function(){       	
 	    },
 	    onLoadError:function(data){
-			$.messager.alert("错误","加载数据失败,请查看错误日志!","warning")
+			$.messager.alert($g("错误"),$g("加载数据失败,请查看错误日志!"),"warning")
 			$('#phlocgrid').datagrid('loadData',{total:0,rows:[]});
 			$('#phlocgrid').datagrid('options').queryParams.params = ""; 
 		}  
@@ -203,14 +203,14 @@ function InitPhaLocGrid(){
 function btnSaveHandler(){
 	var phLocRowId="";
 	var winTitle=$("#phcodewin").panel('options').title;
-	if (winTitle.indexOf("修改")>=0){
+	if (winTitle.indexOf($g("修改"))>=0){
 		var phalocselect = $("#phlocgrid").datagrid("getSelected");
 		if (phalocselect==null){
-			$.messager.alert('提示',"请先选中需修改的行!","info");
+			$.messager.alert($g("提示"),$g("请先选中需修改的行!"),"info");
 			return;
 		}
 		phLocRowId=phalocselect.Tphlid;
-	}else if (winTitle.indexOf("增加")>=0){
+	}else if (winTitle.indexOf($g("增加"))>=0){
 		phLocRowId="";
 	}else{
 		return;
@@ -218,12 +218,12 @@ function btnSaveHandler(){
 	var locRowId=$("#phaLoc").combobox("getValue");
 	if (($.trim($("#phaLoc").combobox("getValue"))=="")||(locRowId==undefined)){
 		locRowId="";
-		$.messager.alert('提示',"发药科室必填!","info");
+		$.messager.alert($g("提示"),$g("发药科室必填!"),"info");
 		return;
 	}
 	var dispmath=$("#dispMath").combobox("getValue");
 	if ((dispmath=="")||(dispmath==undefined)){
-		$.messager.alert('提示',"取药算法必填!","info");
+		$.messager.alert($g("提示"),$g("取药算法必填!"),"info");
 		return;
 	}
 	var screenpath=$("#screenPath").val();
@@ -285,65 +285,65 @@ function btnSaveHandler(){
 			   +"^"+chkaudit+"^"+chkotherlocret	  
 	var saveret=tkMakeServerCall("web.DHCOUTPHA.PhCode","SavePhLocCode",params)
 	if (saveret=="0"){
-		$.messager.alert('提示',"保存成功!","info");
+		$.messager.alert($g("提示"),$g("保存成功!"),"info");
 		$('#phcodewin').window('close');
 		$('#phlocgrid').datagrid('reload');
 	}else if (saveret==""){
-		$.messager.alert('提示',"当前用户非本药房用户,请先在药房人员维护中添加,再进行相关操作!","info");
+		$.messager.alert($g("提示"),$g("当前用户非本药房用户,请先在药房人员维护中添加,再进行相关操作!"),"info");
 	}else if (saveret==1){
-		$.messager.alert('提示',"该发药科室已存在，不允许重复添加!","warning");
+		$.messager.alert($g("提示"),$g("该发药科室已存在，不允许重复添加!"),"warning");
 	}else{
-		$.messager.alert('错误提示',"保存失败,错误代码:"+saveret,"warning");
+		$.messager.alert($g("错误提示"),$g("保存失败,错误代码:")+saveret,"warning");
 	}
 }
 //修改发药类别
 function btnUpdateHandler(){
 	var phalocselect = $("#phlocgrid").datagrid("getSelected");
 	if (phalocselect==null){
-		$.messager.alert('提示',"请先选中需修改的行!","info");
+		$.messager.alert($g("提示"),$g("请先选中需修改的行!"),"info");
 		return;
 	}
-	$('#phcodewin').window({'title':"门诊发药科室维护修改"});
+	$('#phcodewin').window({'title':$g("门诊发药科室维护修改")});
 	$('#phcodewin').window('open');
 	$("input[type=checkbox][name=chkcondition]").prop('checked',false);
 	$("input[name=txtconditon]").val("");	
-	if (phalocselect["Tpy"]=="是"){
+	if (phalocselect["Tpy"]==$g("是")){
 		$('#chkPY').prop('checked',true);
 	}
-	if (phalocselect["Tfy"]=="是"){
+	if (phalocselect["Tfy"]==$g("是")){
 		$('#chkFY').prop('checked',true);
 	}
-	if (phalocselect["Tbyfs"]=="是"){
+	if (phalocselect["Tbyfs"]==$g("是")){
 		$('#chkTQ').prop('checked',true);
 	}
-	if (phalocselect["TCyFlag"]=="是"){
+	if (phalocselect["TCyFlag"]==$g("是")){
 		$('#chkZCY').prop('checked',true);
 	}
-	if (phalocselect["TSendFlag"]=="是"){
+	if (phalocselect["TSendFlag"]==$g("是")){
 		$('#chkSend').prop('checked',true);
 	}
-	if (phalocselect["TPrintFlag"]=="是"){
+	if (phalocselect["TPrintFlag"]==$g("是")){
 		$('#chkPrint').prop('checked',true);
 	}
-	if (phalocselect["TWinTypeFlag"]=="是"){
+	if (phalocselect["TWinTypeFlag"]==$g("是")){
 		$('#chkWinType').prop('checked',true);
 	}
-	if (phalocselect["TDispMachine"]=="是"){
+	if (phalocselect["TDispMachine"]==$g("是")){
 		$('#chkMachine').prop('checked',true);
 	}
-	if (phalocselect["TScreenFlag"]=="是"){
+	if (phalocselect["TScreenFlag"]==$g("是")){
 		$('#chkScreen').prop('checked',true);
 	}
-	if (phalocselect["Tpysure"]=="是"){
+	if (phalocselect["Tpysure"]==$g("是")){
 		$('#chkSure').prop('checked',true);
 	}
-	if (phalocselect["TAutoPyFlag"]=="是"){
+	if (phalocselect["TAutoPyFlag"]==$g("是")){
 		$('#chkAutoPY').prop('checked',true);
 	}
-	if (phalocselect["TAuditFlag"]=="是"){
+	if (phalocselect["TAuditFlag"]==$g("是")){
 		$('#chkAudit').prop('checked',true);
 	}
-	if (phalocselect["TOthLocRet"]=="是"){
+	if (phalocselect["TOthLocRet"]==$g("是")){
 		$('#chkOtherLocRet').prop('checked',true);
 	}
 	$("#screenPath").val(phalocselect["TScreenPath"]);
@@ -351,9 +351,9 @@ function btnUpdateHandler(){
 	$("#phaLoc").combobox("setText",phalocselect["Tdesc"]);
 	var dispmath=phalocselect["Tyfsf"];
 	$("#dispMath").combobox("setText",phalocselect["Tyfsf"]);
-	if (dispmath=="按照次序"){
+	if (dispmath==$g("按照次序")){
 		$("#dispMath").combobox("setValue",1);
-	}else if(dispmath=="按照工作量"){
+	}else if(dispmath==$g("按照工作量")){
 		$("#dispMath").combobox("setValue",2);
 	}
 	$("#phaLoc").combobox('disable')

@@ -53,6 +53,15 @@ function init_SearchPanel(){
   		calAmt(this.value);
 	})
 	
+	$("#INPAYbcbxf0").keyup(function(e){ 
+		if(e.keyCode===13){
+			calAmt(getValueById("INPAYjjzfe0"));		
+		}
+	})
+	$('#INPAYbcbxf0').bind('change',function(){
+  		calAmt(getValueById("INPAYjjzfe0"));
+	})
+	
 	// 身份证
 	$('#INPAYid0000').bind('change',function(){
 		if(this.value.length !='15' && this.value.length !='18'){
@@ -82,7 +91,14 @@ function buildADMSeri(){
  * 计算个人自负
  */
 function calAmt(insuAmt){
-	var totalAmt = getValueById('INPAYbcbxf0');
+	//var totalAmt = getValueById('INPAYbcbxf0');
+	var totalAmt = $("#INPAYbcbxf0").val();
+	if (totalAmt <=0){
+		$.messager.alert('提示', "输入总金额不正确", 'error');
+		setValueById('INPAYgrzfe0', '0.00');
+		return;	
+	}
+		
 	var selfAmt = totalAmt - insuAmt;
 	if(selfAmt < 0){
 		$.messager.alert('提示', "输入金额不正确", 'error');
@@ -94,15 +110,23 @@ function calAmt(insuAmt){
 /*
  * 数据校验
  */
-function checkData(){
-	var totalAmt = getValueById('INPAYbcbxf0');
+function checkAmtData(){
+	//var totalAmt = getValueById('INPAYbcbxf0');
+	var totalAmt = $("#INPAYbcbxf0").val();
+	if (totalAmt <=0){
+		$.messager.alert('提示', "输入总金额不正确", 'error');
+		setValueById('#INPAYbcbxf0', '0.00');
+		return;	
+	}
+	var insuAmt = $("#INPAYjjzfe0").val();
 	var selfAmt = totalAmt - insuAmt;
 	if(selfAmt < 0){
 		$.messager.alert('提示', "输入金额不正确", 'error');
 		setValueById('INPAYgrzfe0', '0.00');
-		return;	
+		return false;	
 	}
 	setValueById('INPAYgrzfe0', formatAmt(selfAmt));
+	return true;
 }
 /*
  * 院外垫付grid
@@ -165,6 +189,8 @@ function Query(){
  */
 function Add(){
 	try{
+		var flag=checkAmtData();
+		if(!flag){return;}
 		var tmpObj = new Object();
 		var saveTable=$('#addInfo').find('input');
 		$.each(saveTable, function (index, rowData) {
@@ -193,7 +219,7 @@ function Add(){
 function Abort(){
 	var selected = $('#dg').datagrid('getSelected');
 	if(!selected){
-		$.messager.alert('提示','请选择要删除的记录','info');	
+		$.messager.alert('提示','请选择要作废的记录','info');	
 		return;
 	}
 	if(selected.TFlag != '正常结算'){
@@ -220,7 +246,7 @@ function Abort(){
 				}else{
 					$.messager.alert('作废失败:', rtn, 'error');
 				}
-				Clear();
+				//Clear();
 				Query();
 			});
 		}
@@ -232,14 +258,14 @@ function Abort(){
 function Clear(){
 	$(".search-table").form("clear");
 	setValueById('StartDate',getDefStDate(-31));
-	setValueById('EndDate',getDefStDate(31));
+	setValueById('EndDate',getDefStDate(0));  //结束日期使用当天日期 modify by kj 20200304
 	// 就诊类型
 	setValueById('INPAYZstr12','OP');
 	// 医保类型
 	var data = $('#INPAYZstr04').combobox('getData');
-	if(data.length > 0){
+	/*if(data.length > 0){
 		$('#INPAYZstr04').combobox('select',data[0].cCode);	
-	}
+	}*/
 	// 结算状态
 	setValueById('INPAYFlag','I');;
 	// amt
@@ -276,12 +302,13 @@ function selectRowHandle(index,rowData){
 		setValueById('INPAYxming0',rowData.Txming0);
 		setValueById('INPAYbcbxf0',rowData.Tbcbxf0);
 		setValueById('INPAYZstr24',rowData.TZstr24);
-		setValueById('INPAYsftsbz',rowData.Tsftsbz); // 医疗类别
-		setValueById('INPAYZstr12',rowData.AdmType); // 就诊类型
+		//setValueById('INPAYsftsbz',rowData.Tsftsbz); // 医疗类别
+		setValueById('INPAYsftsbz',rowData.MedType);   // 医疗类别
+		setValueById('INPAYZstr12',rowData.AdmType);   //就诊类型
 		setValueById('INPAYZstr16',rowData.TZstr16);
 		setValueById('INPAYjjzfe0',rowData.Tjjzfe0);
-		setValueById('INPAYZstr13',rowData.States); //地区
-		setValueById('INPAYxbie00',rowData.Sex); //性别
+		setValueById('INPAYZstr13',rowData.States);   //地区
+		setValueById('INPAYxbie00',rowData.Sex);      //性别
 		setValueById('INPAYdjlsh0',rowData.Tdjlsh0);
 		setValueById('INPAYid0000',rowData.Tid0000);
 		setValueById('INPAYgrzfe0',rowData.Tgrzfe0);
@@ -313,7 +340,7 @@ function init_MedType(){
 function loadMedType(){
 	var INSUType = getValueById('INPAYZstr04');
 	setValueById('INPAYsftsbz','');
-	var url = $URL + "?ClassName=web.INSUDicDataCom&QueryName=QueryDic1&Type=" + 'AKA130' + INSUType + '&Code=' + '' + '&OPIPFlag=' + getValueById('INPAYZstr12')+'&HospDr='+HospDr;
+	var url = $URL + "?ClassName=web.INSUDicDataCom&QueryName=QueryDic1&Type=" + 'med_type' + INSUType + '&Code=' + '' + '&OPIPFlag=' + getValueById('INPAYZstr12')+'&HospDr='+HospDr;
 	$('#INPAYsftsbz').combobox('reload', url); 
 }
 /*
@@ -342,7 +369,7 @@ function init_States(){
 		  hospDr:HospDr
 		}
 	var INSUType = getValueById('INPAYZstr04');
-	INSULoadDicData('INPAYZstr13','YAB003' + INSUType,options);
+	INSULoadDicData('INPAYZstr13','admdvs' + INSUType,options);
 }
 /*
  * 就诊类型
@@ -351,6 +378,7 @@ function init_AdmType(){
 	$HUI.combobox("#INPAYZstr12", {
 		valueField:'id',
 		textField:'text',
+		editable:false,
 		data:[{
 			"id" : 'OP',
 			"text":"门诊",
@@ -374,7 +402,7 @@ function init_TreatmentType(){
 		  hospDr:HospDr
 		}
 	var INSUType = getValueById('INPAYZstr04');
-	INSULoadDicData('INPAYZstr10','AKC021' + INSUType,options);
+	INSULoadDicData('INPAYZstr10','psn_type' + INSUType,options);
 }
 /*
  * 性别

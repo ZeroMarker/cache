@@ -18,31 +18,42 @@ function InitEvent(){
 	$HUI.tabs("#tt2",{
 		onSelect:function(title,index){
 			if (title=="需处理医嘱"){ //需处理医嘱
-				LinkUrl = "doc.ordverify.hui.csp?EpisodeID="+ ServerObj.EpisodeID ;
+				LinkUrl = "doc.ordverify.hui.csp?EpisodeID="+ ServerObj.EpisodeID+"&FromTabFlag=Y" ;
+				if(typeof websys_writeMWToken=='function') LinkUrl=websys_writeMWToken(LinkUrl);
 				$("#TabMain").attr("src", LinkUrl);
 			}else if (title=="待审核检验检查申请"){ //待确认检验检查申请
 				LinkUrl="dhcapp.mainframe.csp?PatientID=" + ServerObj.PatientID + "&EpisodeID=" + ServerObj.EpisodeID + "&mradm=" + ServerObj.mradm +"&PracticeFlag=1"+"&PPRowId="+ServerObj.PPRowId;
+				if(typeof websys_writeMWToken=='function') LinkUrl=websys_writeMWToken(LinkUrl);
 				$("#TabMain1").attr("src", LinkUrl);
 			}else if (title=="待审核治疗申请"){
 				var LinkUrl = "doccure.applytree.hui.csp?EpisodeID=" + ServerObj.EpisodeID+"&PracticeCureCount="+ServerObj.PracticeCureNum+"&ParaType="+"&PPRowId="+ServerObj.PPRowId
+				if(typeof websys_writeMWToken=='function') LinkUrl=websys_writeMWToken(LinkUrl);
 				$("#TabMain2").attr("src", LinkUrl);
 			}				
 		}
 	});
 	if (ServerObj.GetPracticeOrdNum>0){
-		$("#tt2").find('.tabs-header:first').find('.tabs-title').eq(0).text("未审核医嘱"+"("+ServerObj.GetPracticeOrdNum+")")
+		if(ServerObj.PageType=="CureAdvise"){
+			$("#tt2").find('.tabs-header:first').find('.tabs-title').eq(0).text($g("建议医嘱")+"("+ServerObj.GetPracticeOrdNum+")")
+		}else{
+			$("#tt2").find('.tabs-header:first').find('.tabs-title').eq(0).text($g("未审核医嘱")+"("+ServerObj.GetPracticeOrdNum+")")
+		}
+	}else{
+		if(ServerObj.PAAdmType!="I")CloseTabByTitle("未审核医嘱");
 	}
 	if (ServerObj.VerifyStyleNum>0){
-		$("#tt2").find('.tabs-header:first').find('.tabs-title').eq(1).text("需处理医嘱"+"("+ServerObj.VerifyStyleNum+")")
+		$("#tt2").find('.tabs-header:first').find('.tabs-title').eq(1).text($g("需处理医嘱")+"("+ServerObj.VerifyStyleNum+")")
 		//$(#NeedtoHandleOrder).attr(title, 需处理医嘱+(+ServerObj.VerifyStyleNum+));
+	}else{
+		if(ServerObj.PAAdmType!="I")CloseTabByTitle("需处理医嘱");
 	}
 	if (ServerObj.PracticeLabNum>0) {
-		$("#tt2").find('.tabs-header:first').find('.tabs-title').eq(2).text("待审核检验检查申请"+"("+ServerObj.PracticeLabNum+")")
+		$("#tt2").find('.tabs-header:first').find('.tabs-title').eq(2).text($g("待审核检验检查申请")+"("+ServerObj.PracticeLabNum+")")
 	}else{
 		CloseTabByTitle("待审核检验检查申请");
 	}
 	if (ServerObj.PracticeCureNum>0) {
-		var newTitle="待审核治疗申请"+"("+ServerObj.PracticeCureNum+")";
+		var newTitle=$g("待审核治疗申请")+"("+ServerObj.PracticeCureNum+")";
 		if (ServerObj.PracticeLabNum>0) {
 			$("#tt2").find('.tabs-header:first').find('.tabs-title').eq(3).text(newTitle);
 		}else{
@@ -59,33 +70,35 @@ function InitEvent(){
 }
 function UnSaveOrderTabDataGrid(){
 	var toobar=new Array();
-    if (ServerObj.PracticeFlag!=1){
+    if (ServerObj.PracticeFlag!=1 && ServerObj.PageType!="CureAdvise"){
 		toobar.push({
 			text:'确认',
-			iconCls :'icon-add',
+			iconCls :'icon-save-sure',
 			handler :function() {AddClickHandle();}
 		});
 	}
 	toobar.push({
 		text:'删除',
-		iconCls :'icon-remove',
+		iconCls :'icon-cancel',
 		handler: function() {DelClickHandle();}
 	});
 	var Columns=[[ 
 		{field:'CheckPre',title:'选择',checkbox:'true'},
 		{field:'Rowid',hidden:true,title:'Rowid'},
 		{field:'OrdSeqNo',title:'序号',width:50},
-		{field:'OrderPrior',title:'医嘱类型',width:100},
-		{field:'OrderName',title:'医嘱名称',width:400},
-		{field:'OrderDoseQty',title:'单次剂量',width:100},
-		{field:'OrderDoseUOM',title:'剂量单位',width:100},
+		{field:'OrderPrior',title:'医嘱类型',width:80},
+		{field:'OrderInsertType',title:'类型',width:100,hidden:((ServerObj.PageType.indexOf("Cure")<0))?true:false},
+		{field:'OrderName',title:'医嘱名称',width:280},
+		{field:'OrderDoseQty',title:'单次剂量',width:80},
+		{field:'OrderDoseUOM',title:'剂量单位',width:80},
 		{field:'OrderInstr',title:'用法',width:100},
 		{field:'OrderFreq',title:'频次',width:100},
 		{field:'OrderDur',title:'疗程',width:100},
-		{field:'OrderPackQty',title:'数量',width:100},
-		{field:'OrderPackUOM',title:'数量单位',width:100},
+		{field:'OrderRecLoc',title:'接收科室',width:150},
+		{field:'OrderPackQty',title:'数量',width:80},
+		{field:'OrderPackUOM',title:'数量单位',width:80},
 		{field:'OrderUserAdd',title:'开医嘱人',width:100},
-		{field:'OrderStartDate',title:'开始日期时间',width:210},
+		{field:'OrderStartDate',title:'开始日期时间',width:180},
 		{field:'JsonStr',hidden:true,title:'JsonStr'}
     ]]
     var SingeFLag=false
@@ -95,7 +108,7 @@ function UnSaveOrderTabDataGrid(){
 		border :false,
 		striped  :false,
 		singleSelect :SingeFLag,
-		fitColumns :true,
+		fitColumns :false,
 		autoRowHeight :false,
 		rownumbers: false,
 		pagination :true,  
@@ -140,6 +153,7 @@ function UnSaveOrderTabDataGridLoad(){
 	    Adm:ServerObj.EpisodeID,
 	    Type:type,
 	    PageType:ServerObj.PageType,
+	    AssScoreID:ServerObj.CureAssScoreID,
 	    Pagerows:PageLogicObj.m_UnSaveOrderTabDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
 		PageLogicObj.m_UnSaveOrderTabDataGrid.datagrid("uncheckAll");
@@ -294,9 +308,10 @@ function UpdateTabsTilte() {
 			MethodName:"GetPracticeOrdNum",
 			Adm:ServerObj.EpisodeID,
 			Type:"N",
-			PageType:ServerObj.PageType
+			PageType:ServerObj.PageType,
+			AssScoreID:ServerObj.CureAssScoreID
 		},false);
-		var title="未审核医嘱";
+		var title=$g("未审核医嘱");
 		if (ServerObj.GetPracticeOrdNum>0) {
 			title=title+"("+ServerObj.GetPracticeOrdNum+")";
 		}
@@ -307,7 +322,7 @@ function UpdateTabsTilte() {
 			MethodName:"GetVerifyStyleNum",
 			EpisodeID:ServerObj.EpisodeID
 		},false);
-		var title="需处理医嘱";
+		var title=$g("需处理医嘱");
 		if (ServerObj.VerifyStyleNum>0) {
 			title=title+"("+ServerObj.VerifyStyleNum+")";
 		}
@@ -320,9 +335,9 @@ function UpdateTabsTilte() {
 			page:1,
 			params:ServerObj.EpisodeID+"^^I^"+session['LOGON.HOSPID']
 		},false);
-		var title="待审核检验检查申请";
+		//var title="待审核检验检查申请";
 		if (ServerObj.PracticeLabNum>0) {
-			title=title+"("+ServerObj.PracticeLabNum+")";
+			title=$g(title)+"("+ServerObj.PracticeLabNum+")";
 			$("#tt2").find('.tabs-header:first').find('.tabs-title').eq(index).text(title);
 		}else{
 			$('#tt2').tabs('close',index);
@@ -333,11 +348,12 @@ function UpdateTabsTilte() {
 			MethodName:"GetPracticeOrdNum",
 			Adm:ServerObj.EpisodeID,
 			Type:"N",
-			PageType:"Cure"
+			PageType:"Cure^CureAdvise",
+			AssScoreID:ServerObj.CureAssScoreID
 		},false);
-		var title="待审核治疗申请";
+		//var title="待审核治疗申请";
 		if (ServerObj.PracticeCureNum>0) {
-			title=title+"("+ServerObj.PracticeCureNum+")";
+			title=$g(title)+"("+ServerObj.PracticeCureNum+")";
 			$("#tt2").find('.tabs-header:first').find('.tabs-title').eq(index).text(title);
 		}else{
 			$('#tt2').tabs('close',index);

@@ -2,8 +2,8 @@
 // /描述: 科室库存项货位码维护
 // /编写者：LiangQiang
 // /编写日期: 2013.11.12
-Ext.onReady(function() {
 
+Ext.onReady(function() {
 		Ext.QuickTips.init();
 		Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 		var gStrParam='';
@@ -11,6 +11,7 @@ Ext.onReady(function() {
 		var gGroupId=session['LOGON.GROUPID'];
 		var gLocId=session['LOGON.CTLOCID'];
 		var gUserId=session['LOGON.USERID'];
+		
          //该人员被授权的类组串。
          if (gGrantStkGrp==""){
           GetGrantStkGrp();
@@ -20,7 +21,7 @@ Ext.onReady(function() {
 		 var HelpButton = new Ext.Button({
              width : 65,
              id:"HelpButton",
-             text: '帮助',
+             text: $g('帮助'),
 			 renderTo: Ext.get("tipdiv"),  
 			 iconCls : 'page_help'
 			 
@@ -29,7 +30,7 @@ Ext.onReady(function() {
 
 　　　　///科室
 		var PhaLoc = new Ext.ux.LocComboBox({
-					fieldLabel : '科室',
+					fieldLabel : $g('科室'),
 					id : 'PhaLoc',
 					name : 'PhaLoc',
 					width : 200,
@@ -61,7 +62,7 @@ Ext.onReady(function() {
 
 		///药品名称
 		var InciDesc = new Ext.form.TextField({
-                fieldLabel : '药品名称',
+                fieldLabel : $g('药品名称'),
                 id : 'InciDesc',
                 name : 'InciDesc',
 				width : 250,
@@ -74,7 +75,7 @@ Ext.onReady(function() {
                         }
                     },
 					render : function SetTip(textfield, e){
-                             this.getEl().dom.setAttribute("ext:qtip", "录入拼音助记词后回车");
+                             this.getEl().dom.setAttribute("ext:qtip", $g("录入拼音助记词后回车"));
                     },
                     blur:function(){
 	                   	if (InciDesc.getValue()==""){
@@ -87,7 +88,7 @@ Ext.onReady(function() {
 
         ///货位
 		var StkBinTxt = new Ext.form.TextField({
-                fieldLabel : '货位',
+                fieldLabel : $g('货位'),
                 id : 'StkBinTxt',
                 name : 'StkBinTxt',
                 width : 180,
@@ -99,14 +100,14 @@ Ext.onReady(function() {
                         }
                     },
 					render : function SetTip(textfield, e){
-                             this.getEl().dom.setAttribute("ext:qtip", "录入货位码后回车,左匹配模糊查询");
+                             this.getEl().dom.setAttribute("ext:qtip", $g("录入货位码后回车,左匹配模糊查询"));
                     }
                 }
             });
 	　　
 		///药品代码
 		var IncCodeTxt = new Ext.form.TextField({
-                fieldLabel : '药品代码',
+                fieldLabel : $g('药品代码'),
                 id : 'IncCodeTxt',
                 name : 'IncCodeTxt',
                 width : 120,
@@ -118,7 +119,7 @@ Ext.onReady(function() {
                     },
                     
                     render : function SetTip(textfield, e){
-                             this.getEl().dom.setAttribute("ext:qtip", "录入药品代码回车,左匹配模糊查询");
+                             this.getEl().dom.setAttribute("ext:qtip", $g("录入药品代码回车,左匹配模糊查询"));
                     }
                 }
             });
@@ -126,13 +127,13 @@ Ext.onReady(function() {
          //第二行工具栏
 		 var twoTbar=new Ext.Toolbar({   
 		 region: 'center',
-		 items:[ '药品名称:',InciDesc]  
+		 items:[ $g('药品名称:'),InciDesc]  
 		 
 		 }); 
 
         //根据授权的类组串加载库存分类 add wyx 2014-04-28
 		var M_StkCat = new Ext.ux.ComboBoxD({
-			fieldLabel : '库存分类',
+			fieldLabel : $g('库存分类'),
 			id : 'M_StkCat',
 			name : 'M_StkCat',
 			store : StkCatStoreByGrant,
@@ -158,14 +159,14 @@ Ext.onReady(function() {
 					sortable : true,
 					hidden : true
 				}, {
-					header : '代码',
+					header : $g('代码'),
 					dataIndex : 'code',
 					width : 80,
 					align : 'left',
 					sortable : true,
 					hidden : true
 				}, {
-					header : "货位名称",
+					header : $g("货位名称"),
 					dataIndex : 'desc',
 					width : 400,
 					align : 'left',
@@ -210,8 +211,8 @@ Ext.onReady(function() {
 			store:StkBinStore,
 			pageSize:50,
 			displayInfo:true,
-			displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-			emptyMsg:"没有记录"
+			displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+			emptyMsg:$g("没有记录")
 		});
 		
 		var StkBinSm = new Ext.grid.CheckboxSelectionModel({singleSelect : true});
@@ -225,7 +226,7 @@ Ext.onReady(function() {
 					sm : StkBinSm, //new Ext.grid.CellSelectionModel({}),
 					clicksToEdit : 1,
 					loadMask : true,
-					tbar:['科室:',PhaLoc,'-','货位:',StkBinTxt],
+					tbar:[$g('科室:'),PhaLoc,'-',$g('货位:'),StkBinTxt],
                     ddGroup: 'secondGridDDGroup',
 					enableDragDrop : true,
 					bbar:GridPagingToolbar
@@ -243,18 +244,42 @@ Ext.onReady(function() {
 					sortable : true,
 					hidden : true
 				}, {
-					header : '代码',
+					header : $g('代码'),
 					dataIndex : 'code',
 					width : 140
 
 				}, {
-					header : "名称",
+					header : $g("名称"),  
 					dataIndex : 'desc',
 					width : 400,
 					align : 'left'
 
-				}]);
+				}, {
+					header : $g("添加至左侧货位"),  
+					dataIndex : 'add',
+					width : 120,
+					align : 'center',
+					renderer:addfomatter
 
+				}]);
+		AddInciToSB=function(incil,incDesc)
+		{
+			var selectRecord=StkBinGrid.getSelectionModel().getSelected();
+			if(!selectRecord)
+			{
+				Msg.info("error", $g("请选择一个货位码！"));
+				return;
+			}
+			var Stkbin=selectRecord.get("sb");
+			var savestr=incil+"^"+Stkbin;
+			save(savestr)
+		}
+				
+		function addfomatter(value, metaData, record, rowIndex, colIndex, store){
+			var incil=record.get("rowid"),incDesc=record.get("desc");
+			 return  "<a  onclick='AddInciToSB(\"" +incil +'","' +incDesc +"\")'><img src='../images/uiimages/edit_add.png' border=0/></a>"
+		}
+	
 		LocInciCm.defaultSortable = true;
 		
 		// 访问路径
@@ -284,8 +309,8 @@ Ext.onReady(function() {
 			store:LocInciStore,
 			pageSize:50,
 			displayInfo:true,
-			displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-			emptyMsg:"没有记录"
+			displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+			emptyMsg:$g("没有记录")
 		});
 		
 		var LocInciGrid = new Ext.grid.GridPanel({
@@ -298,7 +323,7 @@ Ext.onReady(function() {
 					loadMask : true,
 					enableDragDrop : true,
 					ddGroup : 'firstGridDDGroup',
-					tbar:['药品代码:',IncCodeTxt,'-','库存分类:',M_StkCat,HelpButton],
+					tbar:[$g('药品代码:'),IncCodeTxt,'-',$g('库存分类:'),M_StkCat,HelpButton],
 					bbar:LocInciGridPagingToolbar,
                     listeners:{ 
      
@@ -323,12 +348,12 @@ Ext.onReady(function() {
 					sortable : true,
 					hidden : true
 				}, {
-					header : '代码',
+					header : $g('代码'),
 					dataIndex : 'code',
 					width : 80
 
 				}, {
-					header : "名称",
+					header : $g("名称"),
 					dataIndex : 'desc',
 					width : 400,
 					align : 'left'
@@ -365,7 +390,7 @@ Ext.onReady(function() {
 					id:'BinInciGrid',
 					region : 'west',
 					cm : BinInciCm,
-					title:'货位摆放药品(双击删除)',
+					title:$g('货位摆放药品(双击删除)'),
 					store : BinInciStore,
 					trackMouseOver : true,
 					stripeRows : true,
@@ -384,12 +409,12 @@ Ext.onReady(function() {
 					sortable : true,
 					hidden : true
 				}, {
-					header : '代码',
+					header : $g('代码'),
 					dataIndex : 'code',
 					width : 80
 
 				}, {
-					header : "名称",
+					header : $g("名称"),
 					dataIndex : 'desc',
 					width : 400,
 					align : 'left'
@@ -426,7 +451,7 @@ Ext.onReady(function() {
 					id:'InciBinGrid',
 					region : 'center',
 					cm : InciBinCm,
-					title:'药品货位(双击删除)',
+					title:$g('药品货位(双击删除)'),
 					store : InciBinStore,
 					trackMouseOver : true,
 					stripeRows : true,
@@ -438,7 +463,7 @@ Ext.onReady(function() {
 　　　　 //左边panel
 		 var westPanel = new Ext.Panel({  
 			 id:'westform',
-			 title:'科室药品货位维护',
+			 title:$g('科室药品货位维护'),
 			 region:'west',
 			 collapsible: false,
 			 margins:'0 3 0 0',
@@ -463,7 +488,7 @@ Ext.onReady(function() {
 　　　　　//中间panel
 		　centerPanel = new Ext.Panel({
 		　id:'centerform',
-		  title:'科室药品',
+		  title:$g('科室药品'),
 		　region: 'center',
 		　margins:'0 3 0 1', 
 		　frame : true,
@@ -551,7 +576,7 @@ Ext.onReady(function() {
 			// 必选条件
 			var phaLoc = Ext.getCmp("PhaLoc").getValue();
 			if (phaLoc == null || phaLoc.length <= 0) {
-				Msg.info("warning", "科室不能为空！");
+				Msg.info("warning", $g("科室不能为空！"));
 				Ext.getCmp("PhaLoc").focus();
 				return;
 			}
@@ -582,7 +607,7 @@ Ext.onReady(function() {
 				callback: function(r, options, success){
 
 					   if (success==false){
-							Msg.info("error", "查询科室药品错误");
+							Msg.info("error", $g("查询科室药品错误"));
 						 } else{
 							   
 						 }         
@@ -597,18 +622,18 @@ Ext.onReady(function() {
 		function save(savestr){
 			PhaLocId=Ext.getCmp('PhaLoc').getValue();
 			if(PhaLocId==null||PhaLocId.length<1){
-				Msg.info("warning", "科室不能为空!");
+				Msg.info("warning",$g( "科室不能为空!"));
 				return;
 			}
 		    var savestr=savestr+"^"+PhaLocId;
 			var url = DictUrl
 					+ "incstkbinaction.csp?actiontype=SaveLocItmBin";
-            var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+            var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 			Ext.Ajax.request({
 						url : url,
 						method : 'POST',
 						params: {savestr:savestr},
-						waitMsg : '处理中...',
+						waitMsg : $g('处理中...'),
 						success : function(result, request) {
 							var jsonData = Ext.util.JSON
 									.decode(result.responseText);
@@ -624,7 +649,7 @@ Ext.onReady(function() {
 
 							} else {
 								var ret=(jsonData.info).split(':')[1];
-								Msg.info("error", "保存失败："+ret);
+								Msg.info("error", $g("保存失败：")+ret);
 
 							}
 						},
@@ -671,7 +696,7 @@ Ext.onReady(function() {
 				callback: function(r, options, success){
 
 					   if (success==false){
-							Msg.info("error", "查询科室药品货位错误");
+							Msg.info("error", $g("查询科室药品货位错误"));
 						 } else{
 
 							 
@@ -725,7 +750,7 @@ Ext.onReady(function() {
 				callback: function(r, options, success){
 
 					   if (success==false){
-							Msg.info("error", "查询货位科室药品错误");
+							Msg.info("error", $g("查询货位科室药品错误"));
 						 } else{
 							 var totalnum =BinInciGrid.getStore().getCount()-1;
 							 Ext.getCmp("BinInciGrid").getSelectionModel().selectRow(totalnum);
@@ -742,7 +767,7 @@ Ext.onReady(function() {
 	 BinInciGrid.on('rowdblclick',function(grid,rowIndex,e){
 		   
 				//var selectedRow = BinInciStore.data.items[rowIndex];
-				Ext.MessageBox.confirm('注意', '确认要删除吗 ? ',DeleteBinInciData);
+				Ext.MessageBox.confirm($g('注意'), $g('确认要删除吗 ? '),DeleteBinInciData);
 				
 				
 			});
@@ -757,12 +782,12 @@ Ext.onReady(function() {
 
 		var url = DictUrl
 					+ "incstkbinaction.csp?actiontype=DelBinInci";
-        var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+        var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 		Ext.Ajax.request({
 						url : url,
 						method : 'POST',
 						params: {ParStr:ParStr},
-						waitMsg : '处理中...',
+						waitMsg : $g('处理中...'),
 						success : function(result, request) {
 							var jsonData = Ext.util.JSON
 									.decode(result.responseText);
@@ -777,7 +802,7 @@ Ext.onReady(function() {
 
 							} else {
 								var ret=jsonData.info;
-								Msg.info("error", "删除失败："+ret);
+								Msg.info("error", $g("删除失败：")+ret);
 
 							}
 						},
@@ -791,7 +816,7 @@ Ext.onReady(function() {
     //库存项货位双击事件
 	InciBinGrid.on('rowdblclick',function(grid,rowIndex,e){
 		   
-				Ext.MessageBox.confirm('注意', '确认要删除吗 ? ',DeleteInciBinData);
+				Ext.MessageBox.confirm($g('注意'), $g('确认要删除吗 ? '),DeleteInciBinData);
 				
 				
 			});
@@ -806,12 +831,12 @@ Ext.onReady(function() {
 
 		var url = DictUrl
 					+ "incstkbinaction.csp?actiontype=DelBinInci";
-        var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+        var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 		Ext.Ajax.request({
 						url : url,
 						method : 'POST',
 						params: {ParStr:ParStr},
-						waitMsg : '处理中...',
+						waitMsg : $g('处理中...'),
 						success : function(result, request) {
 							var jsonData = Ext.util.JSON
 									.decode(result.responseText);
@@ -826,7 +851,7 @@ Ext.onReady(function() {
 
 							} else {
 								var ret=jsonData.info;
-								Msg.info("error", "删除失败："+ret);
+								Msg.info("error", $g("删除失败：")+ret);
 
 							}
 						},
@@ -845,7 +870,7 @@ Ext.onReady(function() {
         width: 400,
         anchorOffset: 5,
 		hideDelay : 8000,
-        html: "<font size=3 color='#5E88B6'><b>选中药品行拖拽至左边货位行,完成关联<b></font>"
+        html: "<font size=3 color='#5E88B6'><b>"+$g("1.选中左侧货位码，点击科室药品列表中的添加列的 + 号,完成关联")+"<b><br><b>"+$g("2.选中药品行拖拽至左边货位行,完成关联")+"<b></font>"
     });
 
 

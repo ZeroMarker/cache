@@ -9,7 +9,7 @@ Ext.onReady(function() {
 	var gGroupId=session['LOGON.GROUPID'];
 	//统计科室
 	var PhaLoc = new Ext.ux.LocComboBox({
-			fieldLabel : '科室',
+			fieldLabel : $g('科室'),
 			id : 'PhaLoc',
 			name : 'PhaLoc',
 			anchor:'90%',
@@ -17,7 +17,7 @@ Ext.onReady(function() {
 		});
 		// 起始日期
 		var StartDate = new Ext.ux.DateField({
-					fieldLabel : '开始日期',
+					fieldLabel : $g('开始日期'),
 					id : 'StartDate',
 					name : 'StartDate',
 					anchor : '90%',
@@ -26,7 +26,7 @@ Ext.onReady(function() {
 				});
 		// 截止日期
 		var EndDate = new Ext.ux.DateField({
-					fieldLabel : '截止日期',
+					fieldLabel : $g('截止日期'),
 					id : 'EndDate',
 					name : 'EndDate',
 					anchor : '90%',
@@ -34,7 +34,7 @@ Ext.onReady(function() {
 					value : new Date()
 				});
 		var PFlag = new Ext.form.Checkbox({
-			fieldLabel : '住院发/退药',
+			fieldLabel : $g('住院发/退药'),
 			id : 'PFlag',
 			name : 'PFlag',
 			anchor : '90%',
@@ -49,7 +49,7 @@ Ext.onReady(function() {
 			width : 50
 		});
 		var GFlag = new Ext.form.Checkbox({
-			fieldLabel : '入库',
+			fieldLabel : $g('入库'),
 			id : 'GFlag',
 			name : 'GFlag',
 			anchor : '90%',
@@ -64,7 +64,7 @@ Ext.onReady(function() {
 			width : 50
 		});
 		var FFlag = new Ext.form.Checkbox({
-			fieldLabel : '门诊发/退药',
+			fieldLabel : $g('门诊发/退药'),
 			id : 'FFlag',
 			name : 'FFlag',
 			anchor : '90%',
@@ -79,7 +79,7 @@ Ext.onReady(function() {
 			width : 50
 		});	
 		var TFlag = new Ext.form.Checkbox({
-			fieldLabel : '转出',
+			fieldLabel : $g('转出'),
 			id : 'TFlag',
 			name : 'TFlag',
 			anchor : '90%',
@@ -94,7 +94,7 @@ Ext.onReady(function() {
 			width : 50
 		});	
 		var KFlag = new Ext.form.Checkbox({
-			fieldLabel : '转入',
+			fieldLabel : $g('转入'),
 			id : 'KFlag',
 			name : 'KFlag',
 			anchor : '90%',
@@ -110,8 +110,8 @@ Ext.onReady(function() {
 		});					
 		// 查询按钮
 		var SearchBT = new Ext.Toolbar.Button({
-					text : '查询',
-					tooltip : '点击查询',
+					text : $g('查询'),
+					tooltip : $g('点击查询'),
 					iconCls : 'page_find',
 					width : 70,
 					height : 30,
@@ -127,18 +127,18 @@ Ext.onReady(function() {
 			// 必选条件
 			var phaLoc = Ext.getCmp("PhaLoc").getValue();
 			if (phaLoc == null || phaLoc.length <= 0) {
-				Msg.info("warning", "科室不能为空！");
+				Msg.info("warning", $g("科室不能为空！"));
 				Ext.getCmp("PhaLoc").focus();
 				return;
 			}
 			var startDate = Ext.getCmp("StartDate").getRawValue();
 			var endDate = Ext.getCmp("EndDate").getRawValue();
 			if (startDate == undefined || startDate.length <= 0) {
-				Msg.info("warning", "请选择开始日期!");
+				Msg.info("warning", $g("请选择开始日期!"));
 				return;
 			}
 			if (endDate == undefined || endDate.length <= 0) {
-				Msg.info("warning", "请选择截止日期!");
+				Msg.info("warning", $g("请选择截止日期!"));
 				return;
 			}
 			var TransType=null;
@@ -188,7 +188,7 @@ Ext.onReady(function() {
 				}
 			}
 			if (TransType == null || TransType.length <= 0) {
-				Msg.info("warning", "请选择业务类型!");
+				Msg.info("warning", $g("请选择业务类型!"));
 				return;
 			}
 			
@@ -200,7 +200,7 @@ Ext.onReady(function() {
 			StockQtyStore.load({params:{start:0,limit:pageSize},
 				callback : function(o,response,success) { 
 					if (success == false){  
-						Ext.MessageBox.alert("查询错误",StockQtyStore.reader.jsonData.Error);  
+						Ext.MessageBox.alert($g("查询错误"),StockQtyStore.reader.jsonData.Error);  
 					}
 				}
 			});
@@ -209,8 +209,8 @@ Ext.onReady(function() {
 				
 		// 清空按钮
 		var RefreshBT = new Ext.Toolbar.Button({
-					text : '清屏',
-					tooltip : '点击清屏',
+					text : $g('清屏'),
+					tooltip : $g('点击清屏'),
 					iconCls : 'page_clearscreen',
 					width : 70,
 					height : 30,
@@ -224,6 +224,7 @@ Ext.onReady(function() {
 		 */
 		function clearData() {
 			gStrParam='';
+			SetLogInDept(PhaLoc.getStore(),'PhaLoc');
 			Ext.getCmp("StartDate").setValue(new Date().add(Date.DAY, - 30));
 			Ext.getCmp("EndDate").setValue(new Date());
 			Ext.getCmp("PFlag").setValue(false);
@@ -242,8 +243,8 @@ Ext.onReady(function() {
 		}
 		// 另存按钮
 		var SaveAsBT = new Ext.Toolbar.Button({
-					text : '另存',
-					tooltip : '另存为Excel',
+					text : $g('另存'),
+					tooltip : $g('另存为Excel'),
 					iconCls : 'page_export',
 					width : 70,
 					height : 30,
@@ -262,103 +263,103 @@ Ext.onReady(function() {
 					sortable : true,
 					hidden : true
 				}, {
-					header : '代码',
+					header : $g('代码'),
 					dataIndex : 'code',
 					width : 80,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "名称",
+					header : $g("名称"),
 					dataIndex : 'desc',
 					width : 200,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "规格",
+					header : $g("规格"),
 					dataIndex : 'spec',
 					width : 90,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "单位",
+					header : $g("单位"),
 					dataIndex : 'stkUom',
 					width : 80,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "可用库存",
+					header : $g("可用库存"),
 					dataIndex : 'avaQty',
 					width : 100,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "批次库存",
+					header : $g("批次库存"),
 					dataIndex : 'stkQty',
 					width : 100,
 					align : 'right',
 					sortable : true
 				}, {
-					header : "售价",
+					header : $g("售价"),
 					dataIndex : 'sp',
 					width : 60,
 					align : 'right',					
 					sortable : true
 				}, {
-					header : "批号",
+					header : $g("批号"),
 					dataIndex : 'batNo',
 					width : 100,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "效期",
+					header : $g("效期"),
 					dataIndex : 'expDate',
 					width : 100,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "厂商",
+					header : $g("生产企业"),
 					dataIndex : 'manf',
 					width : 150,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "供应商",
+					header : $g("经营企业"),
 					dataIndex : 'vendor',
 					width : 150,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "货位",
+					header : $g("货位"),
 					dataIndex : 'sbDesc',
 					width : 150,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "最后一次入库日期",
+					header : $g("最后一次入库日期"),
 					dataIndex : 'LastImpDate',
 					width : 150,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "最后一次出库日期",
+					header : $g("最后一次出库日期"),
 					dataIndex : 'LastTrOutDate',
 					width : 150,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "最后一次转入日期",
+					header : $g("最后一次转入日期"),
 					dataIndex : 'LastTrInDate',
 					width : 150,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "最后一次发药日期(住院)",
+					header :$g( "最后一次发药日期(住院)"),
 					dataIndex : 'LastIpDate',
 					width : 150,
 					align : 'left',
 					sortable : true
 				}, {
-					header : "最后一次发药日期(门诊)",
+					header : $g("最后一次发药日期(门诊)"),
 					dataIndex : 'LastOpDate',
 					width : 150,
 					align : 'left',
@@ -398,16 +399,16 @@ Ext.onReady(function() {
 					store : StockQtyStore,
 					pageSize : PageSize,
 					displayInfo : true,
-					displayMsg : '当前记录 {0} -- {1} 条 共 {2} 条记录',
+					displayMsg : $g('当前记录 {0} -- {1} 条 共 {2} 条记录'),
 					emptyMsg : "No results to display",
-					prevText : "上一页",
-					nextText : "下一页",
-					refreshText : "刷新",
-					lastText : "最后页",
-					firstText : "第一页",
-					beforePageText : "当前页",
-					afterPageText : "共{0}页",
-					emptyMsg : "没有数据"
+					prevText : $g("上一页"),
+					nextText : $g("下一页"),
+					refreshText : $g("刷新"),
+					lastText : $g("最后页"),
+					firstText : $g("第一页"),
+					beforePageText : $g("当前页"),
+					afterPageText : $g("共{0}页"),
+					emptyMsg : $g("没有数据")
 				});
 
 		var StockQtyGrid = new Ext.grid.GridPanel({
@@ -426,7 +427,7 @@ Ext.onReady(function() {
 	var HisListTab = new Ext.form.FormPanel({
 			labelWidth : 60,
 			region : 'north',
-			title:"呆滞品报警查询",
+			title:$g("呆滞品报警查询"),
 			autoHeight : true,
 			labelAlign : 'right',
 			frame : true,
@@ -435,7 +436,7 @@ Ext.onReady(function() {
 			items:[{
 				layout : 'column',
 				defaults: { border:false},	
-				title:'查询条件',
+				title:$g('查询条件'),
 				xtype: 'fieldset',
 				style:'padding-top:5px;padding-bottom:5px',	
 					items:[{
@@ -447,7 +448,7 @@ Ext.onReady(function() {
 					  },{
 						columnWidth:0.55,																	
 						xtype: 'fieldset',
-						title:'业务类型<业务发生数少于录入数认定为呆滞品>',	
+						title:$g('业务类型<业务发生数少于录入数(入库单位)认定为呆滞品>'),	
 						//style:'padding-top:5px;padding-bottom:5px',		
 						border:true,
 						hideLabels:false,
@@ -513,7 +514,7 @@ Ext.onReady(function() {
 			                items:HisListTab
 			            }, {
 			                region: 'center',
-			                title: '明细',			               
+			                title: $g('明细'),			               
 			                layout: 'fit', // specify layout manager for items
 			                items: StockQtyGrid       
 			               

@@ -198,6 +198,11 @@ function InitMBRRepWinEvent(obj){
 	            $("#"+End).iCheck('check');
 	        }
 	        $.form.SetValue("txtResume",objInfo.split("^")[23]);
+	        $('#SumAssess input[name="Assess"]').iCheck('uncheck');
+	        var Assess =objInfo.split("^")[27];
+	        if (Assess) {
+	        	$("#Assess-"+Assess).iCheck('check');
+	        }
         }else{
 	        $.form.SetValue("chkInfType",'');
 	        $.form.SetValue("chkInsulatType",'');
@@ -212,6 +217,7 @@ function InitMBRRepWinEvent(obj){
 	        $.form.SetValue("chkVisitList",'');
 	        $.form.SetValue("chkEndList",'');
 	        $.form.SetValue("txtResume",'');
+	         $('#SumAssess input[name="Assess"]').iCheck('uncheck');
         }
 
 	    layer.open({
@@ -222,7 +228,7 @@ function InitMBRRepWinEvent(obj){
 			title: [imgHtml+' '+rd["PatName"]]+'  耐药菌报告', 
 			content: $('#layer_two'),
 			//maxmin: true,
-			btn: ['保存','提交','审核','删除','关闭'],
+			btn: ['保存','提交','审核','删除','打印','关闭'],
 			btnAlign: 'c',
 			yes: function(index, layero){// 保存
 				if (!verifyReport()){
@@ -305,6 +311,14 @@ function InitMBRRepWinEvent(obj){
 					layer.msg('删除失败!',{icon: 2});
 					return false;
 				}	
+			},btn5: function(index, layero){ // 打印
+				var rd = obj.layer_rd;
+   			 	var reportId = rd["ID"];
+				if (!reportId) return;
+   			 	var fileName="{DHCHAI.INF.MBRReport.raq(aMRBRepID="+reportId+")}";
+				DHCCPM_RQDirectPrint(fileName);
+				//var url="dhccpmrunqianreport.csp?reportName=DHCHAI.INF.MBRReport.raq&aMRBRepID="+reportId;
+    			//websys_createWindow(url,1,"width=710,height=610,top=0,left=20,toolbar=no,location=no,directories=no,menubar=no,scrollbars=yes,resizable=yes");	
 			},
 			success: function(layero){
 				var dh=$('div.layui-layer-content').height();
@@ -313,11 +327,17 @@ function InitMBRRepWinEvent(obj){
 				var button1 = layero.find(".layui-layer-btn1"); //提交
 				var button2 = layero.find(".layui-layer-btn2"); //审核
 				var button3 = layero.find(".layui-layer-btn3"); //删除
+				var button4 = layero.find(".layui-layer-btn4"); //打印
+				$("#SumAssess").show();                         //显示总结性评价
 				if (!RepStatus) {
+					$('#SumAssess').hide();
 					$(button2).hide();
 					$(button3).hide();
+					$(button4).hide();
 				}else if (RepStatus =='1') {
+					$('#SumAssess').hide();
 					$(button2).hide();
+					$(button4).hide();
 				}else if (RepStatus =='2') {
 					$(button0).hide();
 					if (CheckFlg !='1') {
@@ -331,10 +351,12 @@ function InitMBRRepWinEvent(obj){
 						$(button3).hide();
 					}
 				}else if (RepStatus =='4') {
+					$('#SumAssess').hide();
 					$(button0).hide();
 					$(button1).hide();
 					$(button2).hide();
 					$(button3).hide();
+					$(button4).hide();
 				}
 				
 			}	
@@ -466,7 +488,13 @@ function InitMBRRepWinEvent(obj){
         var HandHygiene="";
         //续发病例
         var SecondCase="";
-
+		 //审核报告总结性评价
+		var RepAssess ="";
+	    var AssessVal = $('#SumAssess input[name="Assess"]:checked ').val();
+	    if(AssessVal){
+			RepAssess =AssessVal;
+		}
+		
 		var InputMBRStr = INFMBRID;
 		InputMBRStr += "^" + AdmID;
 		InputMBRStr += "^" + LabRepDr;
@@ -494,6 +522,8 @@ function InitMBRRepWinEvent(obj){
 	    InputMBRStr += "^" + "";
 	    InputMBRStr += "^" + "";
 	    InputMBRStr += "^" + $.LOGON.USERID;
+	    InputMBRStr += "^" + RepAssess;      //报告总结性评价
+	     
 	    //报告信息
 	   	var InputRepStr = "";         // 报告ID DHCHAI.IR.INFReport	
 		InputRepStr += "^" + AdmID;

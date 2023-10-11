@@ -35,12 +35,22 @@ function BUpdate_Click()
 {
 	if (condition()) return;
 	var AllotType=GetElementValue("AllotType")
-	if (AllotType=="0")		//0:固定比例,1:工作量,2:面积,3:人数,4:床位,5:收入
+	if (AllotType=="0")		//0:固定比例,1:工作量,2:面积,3:人数,4:床位,5:收入,6:固定值
 	{
 		var AllotRate=GetElementValue("AllotRate")
 		if ((AllotRate<=0)||(AllotRate>100)||isNaN(AllotRate))
 		{
 			alertShow("请输入有效的分摊比例(%)")
+			return
+		}
+	}
+	else if (AllotType=="6")
+	{
+		var AllotValue=GetElementValue("AllotValue")
+		var TotalFee=GetElementValue("TotalFee")
+		if (+AllotValue>+TotalFee)		//czf 2170967
+		{
+			alertShow("分摊值不能大于维修费用!")
 			return
 		}
 	}
@@ -72,7 +82,7 @@ function BUpdate_Click()
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="") return;	
 	var plist=CombinData(); //函数调用
-	var result=cspRunServerMethod(encmeth,'','',plist);
+	var result=cspRunServerMethod(encmeth,'','',plist,'',GetElementValue("TotalFee"));
 	result=result.replace(/\\n/g,"\n")
 	if(result<0) 
 	{
@@ -191,7 +201,13 @@ function disabled(value)
 	AllotType_Change()
 	var SourceID=GetElementValue("SourceID");		//add by CZF0076 2020-02-26
 	var Status=GetElementValue("Status");
-	if ((SourceID=="")||(Status=="")||(Status==2))
+	// MZY0080	1891466		2021-06-03
+	if (GetElementValue("ReadOnly")=="Y")
+	{
+		DisableBElement("BUpdate",true);
+		DisableBElement("BDelete",true);
+	}
+	else if ((SourceID=="")||(Status=="")||(Status==2))
 	{
 		DisableBElement("BUpdate",true);
 		DisableBElement("BDelete",true);

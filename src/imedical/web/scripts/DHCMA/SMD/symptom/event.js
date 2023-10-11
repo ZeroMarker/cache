@@ -42,7 +42,7 @@ function InitSymptomWinEvent(obj){
 			errinfo = errinfo + "名称为空!<br>";
 		}
 		if (!cboMsCate) {
-			errinfo = errinfo + "症状类型为空!<br>";
+			errinfo = errinfo + "症状分类为空!<br>";
 		}
 		if (errinfo) {
 			$.messager.alert("错误提示",errinfo);
@@ -92,7 +92,12 @@ function InitSymptomWinEvent(obj){
 					},false);
 					
 					if (parseInt(flg) < 0) {
-						$.messager.alert("错误提示","删除第" + (index+1) + "行数据错误!Error=" + flg, 'error');
+						if (parseInt(flg)=='-777') {
+							$.messager.alert("错误提示","-777：当前无删除权限，请启用删除权限后再删除记录!",'info');
+						}else {
+							$.messager.alert("错误提示","删除第" + (index+1) + "行数据错误!Error=" + flg, 'error');
+						}
+						return;
 					} else {
 						$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});
 						obj.ClearFormItem();

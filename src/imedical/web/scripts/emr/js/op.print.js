@@ -1,8 +1,15 @@
 ﻿//关闭窗口
 function closeWindow() {
-    window.opener = null;
-    window.open('', '_self');
-    window.close();
+    var closableFlag = typeof parent.sysOption.isShowCloseBtn != "undefined"?parent.sysOption.isShowCloseBtn:true;
+    if (closableFlag && judgeIsIE()){
+        window.opener = null;
+        window.open('', '_self');
+        window.close();
+    }else {
+        if ((window.parent)&&(window.parent.closeEasyUIDialog)){
+            window.parent.closeEasyUIDialog("printDialog");
+        }
+    }
 }
 
 //  emr.op.editor.csp invoke
@@ -15,7 +22,7 @@ var emrEditor = {
     tempParam: '',
     newEmrPlugin: function() {
         if (!iEmrPlugin) {
-            iEmrPlugin = new iEmrPluginEx(window.frames['editorFrame']);
+            iEmrPlugin = new iEmrPluginEx(document.getElementById("editorFrame").contentWindow);
         }
     },
     initDocument: function() {
@@ -101,14 +108,14 @@ function doAfterPrint() {
             window.external.FinishPrint();      
         }
     }
-    setTimeout(function(){
+    if (envVar.autoClose === 'Y') {
         closeWindow();
-    }, 1000);
+    }
 }
 
 function insertSelfPrintLog(doAfterReq) {
     var data = ajaxDATA('String', 'EMRservice.HISInterface.BOExternal', 'InsertCustomSelfPrintLog', envVar.instanceId, patInfo.IPAddress, patInfo.UserID);
-    ajaxGET(data, function(ret) {
+    ajaxGETSync(data, function(ret) {
         if ('function' == typeof doAfterReq)
             doAfterReq();
     }, function(err) {
@@ -120,18 +127,8 @@ function doPrint() {
     if (envVar.autoPrint === 'Y') {
         var prtResult = iEmrPlugin.PRINT_DOCUMENT({
             args: 'PrintDirectly',
-            CopyCount: envVar.CopyCount,
-            isSync: true
+            CopyCount: envVar.CopyCount
         });
-        
-        if ('OK' === prtResult.result) {
-            if (typeof window.dialogArguments != "undefined") {
-                window.dialogArguments.insertSelfPrintLog(envVar.instanceId);
-            } else {
-                insertSelfPrintLog(doAfterPrint);
-            }
-        }
-        doAfterPrint();
     } else {
         bindBtnPrint();
     }    
@@ -164,6 +161,22 @@ var editorEvt = {
         if (typeof fnAction === 'function') {
             fnAction(commandJson);
         }
+    },
+    eventPrintDocument: function(commandJson) {
+        if (commandJson.args.result == 'OK') {
+            window.returnValue = true;
+            if (typeof window.dialogArguments != "undefined") {
+                window.dialogArguments.insertSelfPrintLog(envVar.instanceId);
+                doAfterPrint();
+            } else {
+                if (window.parent && (typeof(window.parent.insertSelfPrintLog) === "function") ){
+                    window.parent.insertSelfPrintLog(envVar.instanceId);
+                    doAfterPrint();
+                }else {
+                    insertSelfPrintLog(doAfterPrint);
+                }
+            }
+        }
     }
 };
 
@@ -172,12 +185,8 @@ function bindBtnPrint() {
     $('#btnPrint').live('click', function() {
         envVar.isPrinting = true;
         var prtResult = iEmrPlugin.PRINT_DOCUMENT({
-            args: 'PrintDirectly',
-            isSync: true
+            args: 'PrintDirectly'
         });
-        if ('OK' === prtResult.result) {
-            closeWindow();
-        }
     });
 }
 
@@ -194,6 +203,7 @@ function createInstance() {
 
 
 $(function() {
+    window.returnValue = false;
     patInfo.IPAddress = getIpAddress();
     try {
         if (envVar.autoPrint === 'Y') {
@@ -210,6 +220,10 @@ $(function() {
         });
 
         if ('N'==envVar.isWithTemplate){
+            if ('' === envVar.instanceId) {
+                alert('未找到指定的病历！');
+                closeWindow();
+            }
             common.GetRecodeParamByInsID(envVar.instanceId, function(tempParam) {
                 emrEditor.tempParam = tempParam;
                 $('#editorFrame').attr('src', 'emr.op.editor.csp');
@@ -227,7 +241,6 @@ $(function() {
         //createInstance();
     } catch (e) {
         alert('发生错误：' + e.message);
-        window.returnValue = false;
         closeWindow();
     }
 });

@@ -7,9 +7,13 @@ eprMessageSummary.readFlag = "";
 eprMessageSummary.executeFlag = "";
 eprMessageSummary.createDateStart = "";
 eprMessageSummary.createDateEnd = "";
-
+eprMessageSummary.locID = "";
+eprMessageSummary.MessageDesc = "";
 
     $(function() {
+	    if(HISUIStyleCode == "lite"){
+	    $(".div_center").css({'background-color':'#f5f5f5'});
+		}
 	    initcombox();
 	    $('#ConfirmBtn').hide()
 	   
@@ -20,13 +24,15 @@ eprMessageSummary.createDateEnd = "";
             queryParams: {
                 UserID: userID,
 				UserType: 'SEND',
-				ReadFlag: 'U',
+				ReadFlag: '',
 				ExecuteFlag: 'U',
 				ConfirmFlag:'U',
 				EffectiveFlag: 'E',
 				CreateDateStart: '',
 				CreateDateEnd: '',
-                Action: 'getmessage'
+                LocID :'',
+                Action: 'getmessage',
+                MessageDesc: ''
             },
             method: 'post',
             loadMsg: '加载中......',
@@ -36,19 +42,25 @@ eprMessageSummary.createDateEnd = "";
             showHeader: true,
             fitColumns: true,
             columns: [[
-                { field: 'ck', checkbox: true },
+               { field: 'ck', title: '勾选框',checkbox: true },
                 { field: 'Name', title: '患者姓名', width: 70},
                 { field: 'MessageID', title: '消息ID', width: 250, hidden: true },
                 { field: 'MessageTitle', title: '消息', width: 150},
                 { field: 'Message', title: '消息内容', width: 300 },
                 { field: 'SenderUserID', title: '发送者ID', width: 80, hidden: true },
-                { field: 'SenderUserName', title: '发送者', width: 80, sortable: true, hidden: true },
+                { field: 'SenderUserName', title: '发送者', width: 80, sortable: true},
                 { field: 'CreateDateTime', title: '发送日期时间', width: 80, sortable: true},
                 { field: 'ReceiverUserID', title: '接收者ID', width: 80, hidden: true },
-                { field: 'ReceiverUserName', title: '接收者', width: 70 }, 
+                { field: 'ReceiverUserName', title: '接收者', width: 70 },
+				{ field: 'CtLocName', title: '责任科室', width: 70 },				
                 { field: 'ExecuteFlag', title: 'ExecuteFlag', width: 80, hidden: true },
                 { field: 'ExecuteDateTime', title: '执行日期时间', width: 80},
 				{ field: 'AppealText', title: '申诉', width: 200}, 
+				{field:'MesStep',title:'消息流程',width:100,align:'center',
+					formatter:function(value,row,index){ 
+					return '<span style="color:#449be2;cursor:pointer">流程图查看</span>'
+					}
+				},
                 { field: 'Effective', title: '生效', width: 80, hidden: true },
                 { field: 'EffectiveFlag', title: 'EffectiveFlag', width: 80, hidden: true },
                 { field: 'EffectiveDateTime', title: 'EffectiveDateTime', width: 80, hidden: true },
@@ -73,10 +85,64 @@ eprMessageSummary.createDateEnd = "";
 				var episodeID = rowData.EpisodeID
 				var patientID=rowData.PatientID;
 				//var url = "emr.record.browse.csp?&EpisodeID="+episodeID;
-				var url = "emr.browse.csp?&EpisodeID="+episodeID;
+				if (QuaSetPage=="2")
+	            {   
+				var url = "emr.browse.quality.csp?&PatientID="+patientID+"&EpisodeID="+episodeID+"&InstanceID="+rowData.InstanceId+"&Path="+rowData.Path;
+	            }
+	            else
+	            {
+		            var url = "emr.record.fullquality.csp?&EpisodeID="+episodeID; 
+		        }
+		        if('undefined' != typeof websys_getMWToken)
+				{
+					url += "&MWToken="+websys_getMWToken()
+				}
 				window.open (url,'newwindow','height=800,width=1280,top=0,left=0,toolbar=no,menubar=no,scrollbars=no, resizable=yes,location=no, status=no') 
 				//alert(episodeID);
-			}
+			},
+			onClickCell: function(rowIndex, field, value) {
+				var rows = $('#messageListTable').datagrid('getRows');
+				var row = rows[rowIndex];
+				var MessageID = row.MessageID;
+				if(field =='MesStep'){
+					var urlstr = "dhc.emr.quality.messagestep.csp?&MessageID="+MessageID;
+					if('undefined' != typeof websys_getMWToken)
+					{
+						urlstr += "&MWToken="+websys_getMWToken()
+					}
+					websys_showModal({
+						iconCls:'icon-w-msg',
+						url:urlstr,
+						title:$g('消息流程图'),
+						width:420,height:280
+						});	
+					//createModalDialog("QualityMesDialogD","消息流程图","400","250","iframeQualityMes","<iframe id='iframeQualityMes' scrolling='auto' frameborder='0' src='" + urlstr +"' style='width:400px; height:200px; display:block;'></iframe>","","")
+				}
+			},
+			 loadFilter:function(data)
+		  {
+			  if(typeof data.length == 'number' && typeof data.splice == 'function'){
+				  data={total: data.length,rows: data}
+			  }
+    		  var dg=$(this);
+    		  var opts=dg.datagrid('options');
+              var pager=dg.datagrid('getPager');
+              pager.pagination({
+    	      	onSelectPage:function(pageNum, pageSize){
+	    	      	opts.pageNumber=pageNum;
+        	 	  	opts.pageSize=pageSize;
+        	     	pager.pagination('refresh',{pageNumber:pageNum,pageSize:pageSize});
+        	     	dg.datagrid('loadData',data);
+        	    }
+              });
+    		  if(!data.originalRows){
+	    		  data.originalRows = (data.rows);
+              }
+   		 	  var start = (opts.pageNumber-1)*parseInt(opts.pageSize);
+              var end = start + parseInt(opts.pageSize);
+              data.rows = (data.originalRows.slice(start, end));
+              return data;
+          }
         });
 
 		//切换按钮
@@ -95,6 +161,7 @@ eprMessageSummary.createDateEnd = "";
 				
 				$('#ConfirmBtn').hide()
 			}
+			$('#selectDec').searchbox("setValue", "");
 			var RadioValue = value;
 			var arr = RadioValue.split("|"); 
 			eprMessageSummary.readFlag = arr[0];
@@ -106,7 +173,8 @@ eprMessageSummary.createDateEnd = "";
 		    queryParams.ConfirmFlag = eprMessageSummary.confirmFlag;
 			queryParams.CreateDateStart = eprMessageSummary.createDateStart;
 			queryParams.CreateDateEnd = eprMessageSummary.createDateEnd;
-
+                                    queryParams.LocID = eprMessageSummary.locID;
+            queryParams.MessageDesc = '';
 		    $('#messageListTable').datagrid('options').queryParams = queryParams;
 		    $('#messageListTable').datagrid('reload');			
 
@@ -157,29 +225,109 @@ eprMessageSummary.createDateEnd = "";
         $('#ConfirmBtn').on('click', function() {
             Confirm();
  		});
+                                   
+                               //导出表格
+        $('#makeExcelBtn').on('click', function() {
+            makeExcel();
+ 		});                                
 
 		$('#inputCreateDateStart').datebox({    
-			onSelect: function() {
+			onChange: function() {
+				eprMessageSummary.createDateStart = $('#inputCreateDateStart').datebox('getValue');
+				refreshGrid();
+            },
+            onSelect: function() {
 				eprMessageSummary.createDateStart = $('#inputCreateDateStart').datebox('getValue');
 				refreshGrid();
             }			
 		}); 
 
-		$('#inputCreateDateEnd').datebox({    
+		$('#inputCreateDateEnd').datebox({  
+		    onChange: function() {
+				eprMessageSummary.createDateEnd = $('#inputCreateDateEnd').datebox('getValue');
+				refreshGrid();
+            },			  
 			onSelect: function() {
 				eprMessageSummary.createDateEnd = $('#inputCreateDateEnd').datebox('getValue');
 				refreshGrid();
             }			
-		}); 		
+		}); 
 		
+		$('#selectDec').searchbox({
+        	searcher:function(value,name){
+    		var SelectDec=value;        	
+        	eprMessageSummary.MessageDesc = SelectDec;
+			refreshGrid();
 		
+    }
+   
+});		
+		$('#ctLocID').combobox
+	 ({
+		valueField:'ID',  
+	    textField:'Name',
+		url:'../web.eprajax.usercopypastepower.cls?Action=GetAllCTLocID&Type=E&HospitalID='+HospitalID,
+		mode:'remote',
+		onChange: function (n,o) {
+			$('#ctLocID').combobox('setValue',n);
+		    var newText = $('#ctLocID').combobox('getText');
+			$('#ctLocID').combobox('reload','../web.eprajax.usercopypastepower.cls?Action=GetAllCTLocID&Type=E&HospitalID='+HospitalID+'&Filter='+encodeURI(newText.toUpperCase()));
+		    eprMessageSummary.locID = $("#ctLocID").combobox('getValue');
+		   
+		    refreshGrid();
+		},
+		onSelect: function(record){
+		eprMessageSummary.locID = $("#ctLocID").combobox('getValue');
+		refreshGrid();	
+	    } 
+    });
+
+                                	//导出excel
+        function makeExcel()
+        {
+	        
+	         var options = $('#messageListTable').datagrid('getPager').data("pagination").options; 
+             var curr = options.pageNumber; 
+             var total = options.total;
+             var pager = $('#messageListTable').datagrid('getPager');
+             var rows = [] 
+             var limit=(total/options.pageSize)
+             if (Math.floor(limit)!=limit)
+             {
+	             var limit= limit+1
+	          }
+            for (i=1;i<=limit;i++)
+            {
+	             pager.pagination('select',i);
+                 pager.pagination('refresh');
+                 var currows =  $('#messageListTable').datagrid('getRows');
+                 if (currows.length==0)
+                 {
+	                 continue;
+	             }
+           for (var j in currows)
+           {
+	            rows.push(currows[j]);
+	        }
+         
+	    }
+	     
+	      pager.pagination('select',curr);
+          pager.pagination('refresh');
+	      $('#messageListTable').datagrid('toExcel',{
+		  filename:'messageListTable.xls',
+		  rows:rows
+		});
+	}		
+
 		function refreshGrid(){
 			var queryParams = $('#messageListTable').datagrid('options').queryParams;
             //queryParams.ReadFlag = eprMessageSummary.readFlag;
             //queryParams.ExecuteFlag = eprMessageSummary.executeFlag;
 			queryParams.CreateDateStart = eprMessageSummary.createDateStart;
 			queryParams.CreateDateEnd = eprMessageSummary.createDateEnd;
-			
+                                                queryParams.LocID = eprMessageSummary.locID;
+			queryParams.MessageDesc = eprMessageSummary.MessageDesc;
             $('#messageListTable').datagrid('options').queryParams = queryParams;
             $('#messageListTable').datagrid('reload');			
 		}
@@ -227,12 +375,12 @@ eprMessageSummary.createDateEnd = "";
 			({
 				valueField:'ID',  
 				textField:'Name',
-				url:'../web.eprajax.usercopypastepower.cls?Action=GetCTLocID&Type=E',
+				url:'../web.eprajax.usercopypastepower.cls?Action=GetAllCTLocID&Type=E&HospitalID='+HospitalID,
 				mode:'remote',
 				onChange: function (n,o) {
 					$('#inputDocLoc').combobox('setValue',n);
 					var newText = $('#inputDocLoc').combobox('getText');
-					$('#inputDocLoc').combobox('reload','../web.eprajax.usercopypastepower.cls?Action=GetCTLocID&Type=E&Filter='+encodeURI(newText.toUpperCase()));
+					$('#inputDocLoc').combobox('reload','../web.eprajax.usercopypastepower.cls?Action=GetAllCTLocID&Type=E&HospitalID='+HospitalID+'&Filter='+encodeURI(newText.toUpperCase()));
 				},
 				onSelect: function(record){
 					
@@ -377,6 +525,10 @@ eprMessageSummary.createDateEnd = "";
                 }*/
 				receiveUserID = $('#inputReceiveUserID').val();
 				var messageHeader = $('#inputMessageHeader').val();
+				if ($('#inputReceiveUserName').val() == "") {
+                    $.messager.alert('错误', '请选择收件人！', 'error');
+                    return;
+                }
                 if (messageHeader == "") {
                     $.messager.alert('错误', '请输入消息标题！', 'error');
                     return;
@@ -391,10 +543,10 @@ eprMessageSummary.createDateEnd = "";
 				var priority = $('#inputPriorityValue').val();
 
                 //确认发送
-                var msg = "<p>确定发送消息？ </p>"
-                         + "<p>医生： 《" + $('#inputReceiveUserName').val() + "》 </p>"
-                         + "<p>消息头： 《" + messageHeader + "》 </p>"
-                         + "<p>消息内容： 《" + message + "》 </p>";
+                var msg = "<p>"+$g('确定发送消息？')+"</p>"
+                         + "<p>"+$g('医生')+"： 《" + $('#inputReceiveUserName').val() + "》 </p>"
+                         + "<p>"+$g('消息头')+"： 《" + messageHeader + "》 </p>"
+                         + "<p>"+$g('消息内容')+"： 《" + message + "》 </p>";
 
                 $.messager.confirm('确认发送', msg, function(r) {
                     if (r) {
@@ -413,9 +565,12 @@ eprMessageSummary.createDateEnd = "";
 		
 		
 		               var episodeID = QualityMessageItemRows[i].EpisodeID;
+		               
+		               var LocId=QualityMessageItemRows[i].LocID;
+		               
 	                   }
                         var obj = $.ajax({
-                            url: "../web.eprajax.AjaxEPRMessage.cls?Action=send&UserID=" + userID + "&ReceiveUserID=" + receiveUserID + "&MessageHeader=" + encodeURI(messageHeader) + "&Message=" + encodeURI(message) + "&MessageSource=QUALITY&EpisodeID=" + episodeID + "&Priority=" + priority,
+                            url: "../web.eprajax.AjaxEPRMessage.cls?Action=send&UserID=" + userID + "&ReceiveUserID=" + receiveUserID + "&MessageHeader=" + encodeURI(messageHeader) + "&Message=" + encodeURI(message) + "&MessageSource=QUALITY&EpisodeID=" + episodeID + "&Priority=" + priority+'&LocID='+LocId,
                             type: 'post',
                             async: false
                         });

@@ -5,7 +5,7 @@
 var url = "dhcadv.repaction.csp";
 var StrParam="";
 var StDate="";
-var EndDateByYear=""; //当年最后一天
+var EndDate="";
 $(function(){
 	InitPageComponent(); 	  /// 初始化界面控件内容
 	InitPageDataList();		  /// 初始化页面表格,图形分析 数据
@@ -18,7 +18,7 @@ function InitPageComponent(){
 	   $(this).hide();
 	 });
 	$("#gologin").hide(); //2017-11-23 cy 隐藏首页按钮
-	var myDate = new Date();
+	/* var myDate = new Date();
 	if(DateFormat=="4"){ //日期格式 4:"DMY" DD/MM/YYYY
 		StDate="01"+"/"+"01"+"/"+"2018";  //当年开始日期
 		EndDateByYear="31"+"/"+"12"+"/"+myDate.getFullYear()
@@ -28,23 +28,25 @@ function InitPageComponent(){
 	}else if(DateFormat=="1"){ //日期格式 1:"MDY" MM/DD/YYYY
 		StDate="01"+"/"+"01"+"/"+"2018";  //当年开始日期
 		EndDateByYear="12"+"/"+"31"+"/"+myDate.getFullYear()
-	}
+	} */
 	if((LgGroupDesc=="护理部")||(LgGroupDesc=="Nursing Manager")){
 		$('#cancel').show();  //其他查询界面链接展现
 	}else{
 		$('#cancel').hide(); 
 	} 
+	runClassMethod("web.DHCADVCOMMON","GetStaEndDate",{'LgParam':LgParam},function(data){
+		var tmp=data.split("^"); 
+		StDate=tmp[0];
+		EndDate=tmp[1];
+	},'',false)
 }
 
 /// 初始化页面表格,图形分析 数据
 function InitPageDataList(){
-	var date=formatDate(0);  //CurentTime(); //获取当前日期
-	var params=StDate+"^"+date;
-	var param=StDate+"^"+date+"^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID;
-	var DateList=StDate+"^"+EndDateByYear;
+	var DateList=StDate+"^"+EndDate;
 	StaticbyType(DateList);//不良事件按类型统计
 	StaticbyMon(DateList); //不良事件按月统计
-	WardInfo(param); //初始化统计列表  病区分布
+	WardInfo(DateList); //初始化统计列表  病区分布
 }
 /// 初始化页面样式
 function InitPageStyle(){
@@ -73,8 +75,8 @@ function InitPageStyle(){
 function UntreatedInfo(param){
 		//定义columns
 	var columns=[[
-		{field:'name',title:'报告类型',width:150,align:'center'},
-		{field:'value',title:'报告数量',width:150,align:'center'}
+		{field:'name',title:$g("报告类型"),width:150,align:'center'},
+		{field:'value',title:$g("报告数量"),width:150,align:'center'}
 	]];
 	//定义datagrid
 	$('#untreated').datagrid({
@@ -84,7 +86,7 @@ function UntreatedInfo(param){
 		columns:columns,
 		rownumbers:true,
 	    singleSelect:false,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g("正在加载信息..."),
 		showFooter:true,
 		pageSize:10,  // 每页显示的记录条数
 		pageList:[10,20,30],
@@ -98,13 +100,13 @@ function WardInfo(param)
 {
 	//定义columns
 	var columns=[[
-		{field:"name",title:'病区/科室',width:150,align:'center',sortable:true},
-		{field:'reptype',title:'报告类型',width:150,align:'center'},
-		{field:'value',title:'报告数量',width:150,align:'center'}
+		{field:"name",title:$g("病区/科室"),width:150,align:'center',sortable:true},
+		{field:'reptype',title:$g("报告类型"),width:150,align:'center'},
+		{field:'value',title:$g("报告数量"),width:150,align:'center'}
 	]];
 	//定义datagrid
 	$('#warddg').datagrid({
-		url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=StaticPreAlert'+'&params='+param,
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=StaticPreAlert'+'&params='+param+'&LgParam='+LgParam,
 		fit:true,
 		columns:columns,
 		rownumbers:true,
@@ -112,7 +114,7 @@ function WardInfo(param)
 		sortName:'name',
 		sortOrder:'asc',
 	    singleSelect:false,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g("正在加载信息..."),
 		showFooter:true,
 		pageSize:10,  // 每页显示的记录条数
 		pageList:[10,20,30],
@@ -142,7 +144,7 @@ function CurentTime()
 ///事件填报 联动
 function JumpBtn(){
 	$("#w_click_show").show();
-	var UserList=LgUserID+"^"+LgCtLocID+"^"+LgGroupID;
+	var UserList=LgUserID+"^"+LgCtLocID+"^"+LgGroupID+"^"+LgHospID;
     $.ajax({
 		type: "POST",
 		url:'dhcapp.broker.csp?ClassName=web.DHCADVCOMMONPART&MethodName=GetRepTypeByWFList'+'&UserList='+UserList,		
@@ -265,7 +267,7 @@ function StaticBtn(){
 	});
 	
 	$("#compstaquery").click(function(){
-	   var Rel='dhcadv.compstaquery.csp';
+	   var Rel="dhcadv.model.report.csp?&code=" +""+'&quoteflag=1';
 		location.href=Rel;
 	});
 }
@@ -290,96 +292,74 @@ function QueryBtn(){
 
 //收件一览 联动  （接收标识为1 且属于自己待审批报告  即为本人接收过的报告）
 function RecListBt(){
-	var StsDate=StDate;  //一周前的日期
-	var EndDate=formatDate(0); //系统的当前日期
-	var StrParam=StsDate+"^"+EndDate+"^^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^1^^Y^^^^^^^";
+	var StrParam=StDate+"^"+EndDate+"^^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^^1^Y^^^^^^^^^^^^2";
 	var Rel='dhcadv.reportaudit.csp?StrParam='+StrParam+'&audittitle='+encodeURI(encodeURI("(收件一览)"));
 	location.href=Rel;
 }
 //已报事件 联动  （本人在本科室已提交的报告）
 function CompleBt(){
-	var StsDate=StDate;  //一周前的日期
-	var EndDate=formatDate(0); //系统的当前日期
-	var StrParam=StsDate+"^"+EndDate+"^"+LgCtLocID+"^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^Y^^^^Y^^N^^^";
+	var StrParam=StDate+"^"+EndDate+"^"+LgCtLocID+"^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^Y^^^^^^^^^^^^Y^^N^^1";
 	var Rel='dhcadv.reportquery.csp?StrParam='+StrParam+'&querytitle='+encodeURI(encodeURI("(已报事件)"));
 	location.href=Rel;
 }
 // 重点关注 联动
 function RepImpBt(){
-	var StsDate=StDate;  //一周前的日期
-	var EndDate=formatDate(0); //系统的当前日期
-	var StrParam=StsDate+"^"+EndDate+"^^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^^^^"+"Y"+"^"+""+"^"+""+"^"+""+"^"+""+"^"+""+"^"+"";
+	var StrParam=StDate+"^"+EndDate+"^^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^^^^Y^^^^^^^^^^^2";
 	var Rel='dhcadv.reportaudit.csp?StrParam='+StrParam+'&audittitle='+encodeURI(encodeURI("(重点关注)"));
 	location.href=Rel;
 }
 //草稿箱 联动
 function DraftsBt(){
-	var StsDate=StDate;  //一周前的日期
-	var EndDate=formatDate(0); //系统的当前日期
-	var StrParam=StsDate+"^"+EndDate+"^"+LgCtLocID+"^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^N^^^^N^^^^";
+	var StrParam=StDate+"^"+EndDate+"^"+LgCtLocID+"^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^N^^^^^^^^^^^^N^^N^^1";
 	var Rel='dhcadv.reportquery.csp?StrParam='+StrParam+'&querytitle='+encodeURI(encodeURI("(草稿箱)"));
 	location.href=Rel;
 }
 //归档事件
 function FileBt(){
-	var StsDate=StDate;  //一周前的日期
-	var EndDate=formatDate(0); //系统的当前日期
-	var StrParam=StsDate+"^"+EndDate+"^^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^^^^^^^^Y^^";  //19
+	var StrParam=StDate+"^"+EndDate+"^^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^^^^^^^^Y^^^^^^^2";  //24
 	var Rel='dhcadv.reportaudit.csp?StrParam='+StrParam+'&audittitle='+encodeURI(encodeURI("(归档事件)"));
 	location.href=Rel;
 }
 //待审批报告
 function PendAuditBt(){
-	var StsDate=StDate;  //一周前的日期
-	var EndDate=formatDate(0); //系统的当前日期
-	var StrParam=StsDate+"^"+EndDate+"^^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^^^^^Y^^^^^";
+	var StrParam=StDate+"^"+EndDate+"^^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^^^^^Y^^^^^^^^^^2";
 	var Rel='dhcadv.reportaudit.csp?StrParam='+StrParam+'&audittitle='+encodeURI(encodeURI("(待审批报告)"));
 	location.href=Rel;
 }
 //被退回报告 联动
 function BackBt(){
-	var StsDate=StDate;  //一周前的日期
-	var EndDate=formatDate(0); //系统的当前日期
-	var StrParam=StsDate+"^"+EndDate+"^^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^2^^^^^Y^^^^";
+	var StrParam=StDate+"^"+EndDate+"^^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^^2^^^^Y^^^^^^^^^2";
 	var Rel='dhcadv.reportaudit.csp?StrParam='+StrParam+'&audittitle='+encodeURI(encodeURI("(被退回报告)"));
 	location.href=Rel;
 }
 //填写时限
 function FillTimeBt(){
-	var StsDate=StDate;  //一周前的日期
-	var EndDate=formatDate(0); //系统的当前日期
 	var RepLoc=LgCtLocID;
-	var StrParam=StsDate+"^"+EndDate+"^^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^^^^^^^Y^";
+	var StrParam=StDate+"^"+EndDate+"^^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^^^^^^^^^^^^Y^^^1";
 	var Rel='dhcadv.reportquery.csp?StrParam='+StrParam+'&querytitle='+encodeURI(encodeURI("(填写时限)"));
 	location.href=Rel;
 }
 //受理时限
 function AcceptTimeBt(){
-	var StsDate=StDate;  //一周前的日期
-	var EndDate=formatDate(0); //系统的当前日期
-	var StrParam=StsDate+"^"+EndDate+"^^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^^^^^^^^^^Y";
+	var StrParam=StDate+"^"+EndDate+"^^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^^^^^^^^^^Y^^^^^2";
 	var Rel='dhcadv.reportaudit.csp?StrParam='+StrParam+'&audittitle='+encodeURI(encodeURI("(受理时限)"));
 	location.href=Rel;
 }
 //全部已处理报告
 function AuditBt(){
-	var StsDate=StDate;  //一周前的日期
-	var EndDate=formatDate(0); //系统的当前日期
-	var StrParam=StsDate+"^"+EndDate+"^^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^^^^^^^Y^^^";
+	var StrParam=StDate+"^"+EndDate+"^^^"+LgGroupID+"^"+LgCtLocID+"^"+LgUserID+"^^^^^^^^^Y^^^^^^^^2";
 	var Rel='dhcadv.reportaudit.csp?StrParam='+StrParam+'&audittitle='+encodeURI(encodeURI("(全部已处理报告)"));
 	location.href=Rel;
 }
 //不良事件按类型统计
 function StaticbyType(DateList)
 {
-	var params=DateList+"^"+LgUserID+"^"+LgCtLocID+"^"+LgGroupID;
-
 	$.ajax({
 		type: "POST",
-		url:'dhcapp.broker.csp?ClassName=web.DHCADVREPBYEVENT&MethodName=AnalysisReport'+'&params='+params,
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVREPBYEVENT&MethodName=AnalysisReport'+'&params='+DateList+'&LgParam='+LgParam,
 		success: function(jsonString){
 			var ListDataObj = jQuery.parseJSON(jsonString);
-			var option = ECharts.ChartOptionTemplates.Bars(ListDataObj,"","#"); 
+			var option = ECharts.ChartOptionTemplates.Blt(ListDataObj,"","#"); 
 			option.title ={
 				
 			}
@@ -393,10 +373,9 @@ function StaticbyType(DateList)
 //不良事件按类型统计
 function StaticbyTypeLoc(DateList)
 {
-	var params=DateList+"^"+LgUserID+"^"+LgCtLocID+"^"+LgGroupID;
 	$.ajax({
 		type: "POST",
-		url:'dhcapp.broker.csp?ClassName=web.DHCADVREPBYEVENT&MethodName=AnalysisReport'+'&params='+params,
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVREPBYEVENT&MethodName=AnalysisReport'+'&params='+DateList+'&LgParam='+LgParam,
 		success: function(jsonString){
 			var ListDataObj = jQuery.parseJSON(jsonString);
 			var option = ECharts.ChartOptionTemplates.Bars(ListDataObj,"","#"); 
@@ -415,18 +394,18 @@ function StaticbyTypeLoc(DateList)
  function StaticbyMon(DateList)
 {
 
-	var params=DateList+"^"+""+"^"+LgUserID+"^"+LgCtLocID+"^"+LgGroupID;
+	var params=DateList+"^"+"";
 	var columns=[[
-		{field:"name",title:'月份',width:150,align:'center'},
-		{field:'value',title:'数量',width:150,align:'center'}
+		{field:"name",title:$g("月份"),width:150,align:'center'},
+		{field:'value',title:$g("数量"),width:150,align:'center'}
 	]];
 	//定义datagrid
 	$('#dgbymon').datagrid({
-		url:'dhcapp.broker.csp?ClassName=web.DHCADVREPBYMON&MethodName=StatAllRepByMon'+'&params='+params,		
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVREPBYMON&MethodName=StatAllRepByMon'+'&params='+params+'&LgParam='+LgParam,		
 		fit:true,
 		columns:columns,
 	    singleSelect:false,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g("正在加载信息..."),
 		showFooter:true,
 		pageSize:10,  // 每页显示的记录条数
 		pageList:[10,20,30],
@@ -438,7 +417,7 @@ function StaticbyTypeLoc(DateList)
 		
 	$.ajax({
 		type: "POST",
-		url:'dhcapp.broker.csp?ClassName=web.DHCADVREPBYMON&MethodName=AnalysisRepByMon'+'&params='+params,	
+		url:'dhcapp.broker.csp?ClassName=web.DHCADVREPBYMON&MethodName=AnalysisRepByMon'+'&params='+params+'&LgParam='+LgParam,	
 		//url: url+"?action=AnalysisRepByMon&params="+params,
 		success: function(jsonString){
 			var ListDataObj = jQuery.parseJSON(jsonString);

@@ -1,6 +1,6 @@
 ﻿///xml打印方法，需要在csp中加载xml打印的基本方法
 function PrintBarCode(OrderID,PisID){
-	var MyPara=$.cm({
+	var MyPara=$cm({
 	    ClassName : "web.DHCDocAPPBL",
 	    MethodName : "PrintBarCode",
 	    dataType:"text",

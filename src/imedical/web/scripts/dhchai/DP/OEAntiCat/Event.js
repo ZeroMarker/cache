@@ -72,7 +72,11 @@ function InitOEAntiCatWinEvent(obj){
 			function(){ 
 				var flg = $.Tool.RunServerMethod("DHCHAI.DP.OEAntiCat","DeleteById",ID);
 				if (parseInt(flg)<0){
-					layer.msg('删除失败!',{icon: 2});
+					if (parseInt(flg)=='-777') {
+						layer.msg('抗菌药物分类-777：当前无删除权限，请启用删除权限后再删除记录!',{icon: 2});
+					}else {
+						layer.msg('删除失败!',{icon: 2});
+					}
 				} else {
 					obj.gridOEAntiCat.rows({selected:true}).remove().draw(false);
 					layer.msg('删除成功!',{icon: 1});

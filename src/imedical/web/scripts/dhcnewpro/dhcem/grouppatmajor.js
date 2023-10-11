@@ -129,7 +129,10 @@ function formatDate(t){
 function clearForm(){
 	$("input[type='checkbox'][name$='GroupReportFor']").radio('setValue',false);
 	$('#formMes').form("clear");
-	$("#GroupReportUser").val(LgUserName);
+	runClassMethod("web.DHCEMGroupPatMajor","GetTrsUser",{"LgUserName":LgUserName},function(data){
+		$("#GroupReportUser").val(data);
+	},"text",false)	
+	//$("#GroupReportUser").val(LgUserName);
 	//$("input[type='checkbox'][name$='GroupReportFor']").radio('setValue',false);
 	//$('.hisui-radio').not("input[type='radio'][name$='Flag']").radio('setValue',false)
 }

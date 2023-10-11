@@ -11,7 +11,7 @@ findRec = function(Fn, WinTitle) {
         id: 'startDate',
         listWidth: 210,
         allowBlank: true,
-        fieldLabel: '起始日期',
+        fieldLabel: $g('起始日期'),
         anchor: '95%',
         value: new Date()
     });
@@ -20,7 +20,7 @@ findRec = function(Fn, WinTitle) {
         id: 'endDate',
         listWidth: 210,
         allowBlank: true,
-        fieldLabel: '截止日期',
+        fieldLabel: $g('截止日期'),
         anchor: '95%',
         value: new Date()
     });
@@ -28,8 +28,8 @@ findRec = function(Fn, WinTitle) {
     var Loc = new Ext.ux.LocComboBox({
         id: 'Loc',
         anchor: '95%',
-        fieldLabel: '请求部门',
-        emptyText: '请求部门...',
+        fieldLabel: $g('请求部门'),
+        emptyText: $g('请求部门...'),
         groupId: gGroupId
     });
     /*
@@ -41,40 +41,40 @@ findRec = function(Fn, WinTitle) {
     */
     var SupplyLoc = new Ext.ux.LocComboBox({
         id: 'SupplyLoc',
-        fieldLabel: '供给部门',
+        fieldLabel: $g('供给部门'),
         anchor: '95%',
-        emptyText: '供给部门...',
+        emptyText: $g('供给部门...'),
         defaultLoc: {}
     });
 
     var NoTransfer = new Ext.form.Checkbox({
         id: 'NoTransfer',
-        fieldLabel: '未转移',
+        fieldLabel: $g('未转移'),
         allowBlank: true,
         checked: true
     });
 
     var PartTransfer = new Ext.form.Checkbox({
         id: 'PartTransfer',
-        fieldLabel: '部分转移',
+        fieldLabel: $g('部分转移'),
         allowBlank: true,
         checked: true
     });
 
     var AllTransfer = new Ext.form.Checkbox({
         id: 'AllTransfer',
-        fieldLabel: '全部转移',
+        fieldLabel:$g( '全部转移'),
         allowBlank: true
     });
 
     var Over = new Ext.form.Checkbox({
         id: 'Over',
-        fieldLabel: '完成',
+        fieldLabel: $g('完成'),
         allowBlank: true
     });
     var NotIncludeTrans = new Ext.form.Checkbox({
         id: 'NotIncludeTrans',
-        fieldLabel: '不包含已转移',
+        fieldLabel:$g( '不包含已转移'),
         allowBlank: true,
         handler: function() {
             var rowrecord = Grid.getSelectionModel().getSelected();
@@ -87,9 +87,28 @@ findRec = function(Fn, WinTitle) {
         }
 
     });
+    
+        var ReqStatus = new Ext.ux.form.LovCombo({
+		id : 'ReqStatus',
+		name : 'ReqStatus',
+		fieldLabel : $g('请求状态'),
+		//listWidth : 400,
+		anchor: '90%',
+		//labelStyle : "text-align:right;width:100;",
+		labelSeparator : '',
+		separator:',',	
+		hideOnSelect : false,
+		maxHeight : 300,
+		editable:false,
+		store : GetReqStatusStore ,
+		valueField : 'RowId',
+		displayField : 'Description',
+		triggerAction : 'all'
+	});
+    
     var fB = new Ext.Toolbar.Button({
-        text: '查询',
-        tooltip: '查询',
+        text: $g('查询'),
+        tooltip: $g('查询'),
         iconCls: 'page_find',
         width: 70,
         height: 30,
@@ -104,20 +123,20 @@ findRec = function(Fn, WinTitle) {
         if ((startDate != "") && (startDate != null)) {
             startDate = startDate.format(App_StkDateFormat);
         } else {
-            Msg.info("error", "请选择起始日期!");
+            Msg.info("error", $g("请选择起始日期!"));
             return false;
         }
         var endDate = Ext.getCmp('endDate').getValue();
         if ((endDate != "") && (endDate != null)) {
             endDate = endDate.format(App_StkDateFormat);
         } else {
-            Msg.info("error", "请选择截止日期!");
+            Msg.info("error", $g("请选择截止日期!"));
             return false;
         }
 
         var toLocId = Ext.getCmp('Loc').getValue();
         if ((toLocId == "") || (toLocId == null)) {
-            Msg.info("error", "请选择请求部门!");
+            Msg.info("error", $g("请选择请求部门!"));
             return false;
         }
         var frLocId = Ext.getCmp('SupplyLoc').getValue();
@@ -128,8 +147,10 @@ findRec = function(Fn, WinTitle) {
         if ((partTrans == 1) || (allTrans == 1)) {
             comp = "Y";
         }
+        var ReqStatus = Ext.getCmp('ReqStatus').getValue();
+        
         var tranStatus = noTrans + "%" + partTrans + "%" + allTrans;
-        var strPar = startDate + "^" + endDate + "^" + toLocId + "^" + frLocId + "^" + comp + "^" + tranStatus;
+        var strPar = startDate + "^" + endDate + "^" + toLocId + "^" + frLocId + "^" + comp + "^" + ReqStatus;
         OrderDs2.removeAll();
         OrderDs.removeAll();
         OrderDs.load({ params: { start: 0, limit: pagingToolbar3.pageSize, sort: '', dir: 'desc', strPar: strPar } });
@@ -143,8 +164,8 @@ findRec = function(Fn, WinTitle) {
         })
     }
     var cB = new Ext.Toolbar.Button({
-        text: '清屏',
-        tooltip: '清屏',
+        text:$g( '清屏'),
+        tooltip: $g('清屏'),
         iconCls: 'page_clearscreen',
         width: 70,
         height: 30,
@@ -158,8 +179,8 @@ findRec = function(Fn, WinTitle) {
         iconCls: 'page_close',
         height: 30,
         width: 70,
-        text: '关闭',
-        tooltip: '关闭',
+        text: $g('关闭'),
+        tooltip: $g('关闭'),
         handler: function() {
             findWin.close();
         }
@@ -169,16 +190,16 @@ findRec = function(Fn, WinTitle) {
         iconCls: 'page_delete',
         height: 30,
         width: 70,
-        text: '删除',
-        tooltip: '点击删除未完成库存请求',
+        text: $g('删除'),
+        tooltip: $g('点击删除未完成库存请求'),
         handler: function() {
             var selectRows = Grid.getSelectionModel().getSelections();
             if (selectRows.length == 0) {
-                Msg.info("warning", "请先选择需要删除的请求单!");
+                Msg.info("warning", $g("请先选择需要删除的请求单!"));
             } else {
                 Ext.MessageBox.show({
-                    title: '提示',
-                    msg: '是否确定删除请求单',
+                    title: $g('提示'),
+                    msg:$g( '是否确定删除请求单'),
                     buttons: Ext.MessageBox.YESNO,
                     fn: DeleteHandler,
                     icon: Ext.MessageBox.QUESTION
@@ -198,14 +219,14 @@ findRec = function(Fn, WinTitle) {
                 success: function(response, opts) {
                     var jsonData = Ext.util.JSON.decode(response.responseText);
                     if (jsonData.success == 'true') {
-                        Msg.info("success", "删除成功!");
+                        Msg.info("success", $g("删除成功!"));
                         QueryReqList();
 
                     } else {
                         if (jsonData.info == -1) {
-                            Msg.info("warning", "该请求单已完成，不允许删除！");
+                            Msg.info("warning", $g("该请求单已完成，不允许删除！"));
                         } else {
-                            Msg.info("error", "删除失败:" + jsonData.info);
+                            Msg.info("error", $g("删除失败:" )+ jsonData.info);
                         }
                     }
                 },
@@ -250,43 +271,43 @@ findRec = function(Fn, WinTitle) {
             hidden: true,
             align: 'left'
         }, {
-            header: '请求编号',
+            header: $g('请求编号'),
             dataIndex: 'reqNo',
             width: 125,
             sortable: true,
             align: 'left'
         }, {
-            header: '请求部门',
+            header: $g('请求部门'),
             dataIndex: 'toLocDesc',
             width: 125,
             sortable: true,
             align: 'left'
         }, {
-            header: "供给部门",
+            header: $g("供给部门"),
             dataIndex: 'frLocDesc',
             width: 125,
             align: 'left',
             sortable: true
         }, {
-            header: "请求人",
+            header: $g("请求人"),
             dataIndex: 'userName',
             width: 125,
             align: 'left',
             sortable: true
         }, {
-            header: "日期",
+            header: $g("日期"),
             dataIndex: 'date',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: "时间",
+            header: $g("时间"),
             dataIndex: 'time',
             width: 100,
             align: 'left',
             sortable: true
         }, {
-            header: '完成状态',
+            header: $g('完成状态'),
             dataIndex: 'comp',
             align: 'center',
             width: 100,
@@ -296,10 +317,11 @@ findRec = function(Fn, WinTitle) {
                 return '<div class="x-grid3-check-col' + (((v == 'Y') || (v == true)) ? '-on' : '') + ' x-grid3-cc-' + this.id + '">&#160;</div>';
             }
         }, {
-            header: "其他状态",
+            header: $g("其他状态"),
             dataIndex: 'status',
-            width: 100,
+            width: 200,
             align: 'left',
+            /*
             renderer: function(value) {
                 var status = "";
                 if (value == 0) {
@@ -311,9 +333,10 @@ findRec = function(Fn, WinTitle) {
                 }
                 return status;
             },
+            */
             sortable: true
         }, {
-            header: '备注',
+            header: $g('备注'),
             dataIndex: 'remark',
             width: 130,
             align: 'left'
@@ -323,8 +346,8 @@ findRec = function(Fn, WinTitle) {
         store: OrderDs,
         pageSize: 20,
         displayInfo: true,
-        displayMsg: '第 {0} 条到 {1}条 ，一共 {2} 条',
-        emptyMsg: "没有记录",
+        displayMsg: $g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+        emptyMsg: $g("没有记录"),
         doLoad: function(C) {
             var B = {},
                 A = this.getParams();
@@ -381,7 +404,7 @@ findRec = function(Fn, WinTitle) {
     var OrderCm2 = new Ext.grid.ColumnModel([
         new Ext.grid.RowNumberer(),
         {
-            header: '作废',
+            header: $g('作废'),
             dataIndex: 'cancel',
             width: 60,
             sortable: true,
@@ -390,67 +413,67 @@ findRec = function(Fn, WinTitle) {
                 return '<input type="checkbox"' + (v == "1" ? "checked" : "") + '/>'; //根据值返回checkbox是否勾选    
             }
         }, {
-            header: '代码',
+            header: $g('代码'),
             dataIndex: 'code',
             width: 100,
             sortable: true,
             align: 'left'
         }, {
-            header: '名称',
+            header: $g('名称'),
             dataIndex: 'desc',
             width: 220,
             sortable: true,
             align: 'left'
         }, {
-            header: "厂商",
+            header: $g("生产企业"),
             dataIndex: 'manf',
             width: 120,
             align: 'left',
             sortable: true
         }, {
-            header: "请求数量",
+            header: $g("请求数量"),
             dataIndex: 'qty',
             width: 80,
             align: 'right',
             sortable: true
         }, {
-            header: "单位",
+            header: $g("单位"),
             dataIndex: 'uomDesc',
             width: 72,
             align: 'left',
             sortable: true
         }, {
-            header: '售价',
+            header: $g('售价'),
             dataIndex: 'sp',
             align: 'right',
             width: 80,
             sortable: true
         }, {
-            header: "售价金额",
+            header: $g("售价金额"),
             dataIndex: 'spAmt',
             width: 80,
             align: 'right',
             sortable: true
         }, {
-            header: '处方通用名',
+            header: $g('处方通用名'),
             dataIndex: 'generic',
             align: 'left',
             width: 120,
             sortable: true
         }, {
-            header: '剂型',
+            header: $g('剂型'),
             dataIndex: 'drugForm',
             align: 'left',
             width: 120,
             sortable: true
         }, {
-            header: '备注',
+            header: $g('备注'),
             dataIndex: 'remark',
             align: 'left',
             width: 80,
             sortable: true
         }, {
-            header: '规格',
+            header: $g('规格'),
             dataIndex: 'spec',
             align: 'left',
             width: 120,
@@ -461,12 +484,12 @@ findRec = function(Fn, WinTitle) {
         store: OrderDs2,
         pageSize: 20,
         displayInfo: true,
-        displayMsg: '第 {0} 条到 {1}条 ，一共 {2} 条',
-        emptyMsg: "没有记录"
+        displayMsg: $g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+        emptyMsg: $g("没有记录")
     });
     var detailTBar = new Ext.Toolbar({
         region: 'center',
-        items: [NotIncludeTrans, "不包含已转移"]
+        items: [NotIncludeTrans, $g("不包含已转移")]
     });
     var Grid2 = new Ext.grid.GridPanel({
         region: 'south',
@@ -481,7 +504,7 @@ findRec = function(Fn, WinTitle) {
         bbar: pagingToolbar4,
         listeners: {
             'render': function() {
-                if (WinTitle == "复制库存转移请求单") {
+                if (WinTitle ==$g("复制库存转移请求单")) {
                     detailTBar.render(this.tbar);
 
                 }
@@ -520,7 +543,7 @@ findRec = function(Fn, WinTitle) {
         layout: 'fit',
         items: [{
             xtype: 'fieldset',
-            title: '查询条件',
+            title: $g('查询条件'),
             layout: 'column',
             autoHeight: true,
             style: DHCSTFormStyle.FrmPaddingV,
@@ -537,6 +560,12 @@ findRec = function(Fn, WinTitle) {
                     items: [SupplyLoc, Loc]
                 },
                 {
+                    columnWidth: .3,
+                    xtype: 'fieldset',
+                    border: false,
+                    items: [ReqStatus]
+                }/*,
+                {
                     columnWidth: .1,
                     xtype: 'fieldset',
                     border: false,
@@ -551,13 +580,13 @@ findRec = function(Fn, WinTitle) {
                     xtype: 'fieldset',
                     border: false,
                     items: [AllTransfer]
-                }
+                }*/
             ]
         }]
     });
 
     var findWin = new Ext.Window({
-        title: '查找库存转移请求单',
+        title: $g('查找库存转移请求单'),
         height: document.body.clientHeight * 0.9,
         width: document.body.clientWidth * 0.9,
         minWidth: document.body.clientWidth * 0.5,
@@ -590,7 +619,7 @@ findRec = function(Fn, WinTitle) {
         }]
     });
 
-    if (WinTitle == "复制库存转移请求单") {
+    if (WinTitle == $g("复制库存转移请求单")) {
         findWin.title = WinTitle;
     }
     //显示窗口

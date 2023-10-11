@@ -67,7 +67,7 @@ function getValueById(id){
 			if (objClassInfo.indexOf("combogrid")>=0){
 				result=jObj.combogrid("getText");
 			}else if (objClassInfo.indexOf("datebox-f")>=0){
-				result=jObj.datebox('getText')
+				result=jObj.datebox('getValue')
 			}else if (objClassInfo.indexOf("combobox")>=0){
 				result=jObj.combobox("getValue");
 			}else if(objClassInfo.indexOf("number")>=0){
@@ -118,7 +118,7 @@ function setValueById(id,vValue)
 					//jQuery("#"+id).combogrid('setText',vValue);
 					jObj.combogrid('setValue',vValue); 
 				}else if (objClassInfo.indexOf("datebox-f")>=0){
-					jObj.datebox('setText',vValue)  
+					jObj.datebox('setValue',vValue);  
 				}else if (objClassInfo.indexOf("combobox")>=0){
 					jObj.combobox('setValue',vValue);
 				}else if(objClassInfo.indexOf("number")>=0){
@@ -335,12 +335,15 @@ function validateRequired(){
 	if (errorIdArr.length>0) {focusById(errorIdArr[0]);}
 	return errorIdArr.join("^");
 }
-//websys_lu('websys.csp?TEVENT=t54369iTest&&USERNAME=程丹颖&SessionId=Tba68W8MC8',false,'title='title',width=980,height=650,left=130,top=3');return false;
+//websys_lu('websys.csp?TEVENT=t54369iTest&&USERNAME=&SessionId=Tba68W8MC8',false,'title='title',width=980,height=650,left=130,top=3');return false;
 /*websys_lubak = websys_lu;
+/** websys_showModal({url:'http://www.baidu.com',title:'关于iMedical',width:860,height:592});
+ * websys_showModal({title:'关于iMedical',content:'我是内容',width:860,height:592});*/
 // opt中left与top为空时,弹出窗口居中
+/*
 function websys_lu(url,lookup,opt){
+	opt=opt||"";
 	//if (opt!="") eval("var "+opt);
-	opt = opt ||"";
 	var obj={};
 	var arr = opt.split(",");
 	$.each(arr,function(ind,item){

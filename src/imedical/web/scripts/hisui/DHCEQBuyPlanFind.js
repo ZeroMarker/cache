@@ -11,6 +11,11 @@ function BodyLoadHandler()
 	SetEnabled();
 	SetElement("PlanTypeList",GetElementValue("PlanTypeListDR"))
 	initButtonWidth()  //hisui改造 add by lmm 2018-08-20
+	initPanelHeaderStyle();
+	if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+		// 极简版
+		$("#BAddNew").css({"background-color":"#28ba05","color":"#ffffff"})
+	}
 }
 
 
@@ -74,20 +79,24 @@ function BFind_Clicked(){
 function BAdd_Clicked()
 {
 	var PlanType=GetElementValue("PlanType")
+	var url="";
 	if (PlanType==0)
 	{
-		window.location.href= 'dhceq.em.buyplan.csp?Type=0'+'&PlanType='+PlanType
+		
+		url= 'dhceq.em.buyplan.csp?Type=0'+'&PlanType='+PlanType
 	}
 	else if (PlanType==1)
 	{
-		window.location.href= 'websys.default.csp?WEBSYS.TCOMPONENT=DHCEQBuyPlanYear&Type=0'+'&PlanType='+PlanType  //hisui改造 modify by lmm 2018-08-18
-//		window.location.href= 'websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQBuyPlanYear&Type=0'+'&PlanType='+PlanType  //hisui改造 modify by lmm 2018-08-18
+		url= 'websys.default.csp?WEBSYS.TCOMPONENT=DHCEQBuyPlanYear&Type=0'+'&PlanType='+PlanType  //hisui改造 modify by lmm 2018-08-18
 	}
 	else
 	{
-		window.location.href= 'websys.default.csp?WEBSYS.TCOMPONENT=DHCEQBuyPlanYearDeal&Type=0'+'&PlanType='+PlanType  //hisui改造 modify by lmm 2018-08-18
-//		window.location.href= 'websys.default.hisui.csp?WEBSYS.TCOMPONENT=DHCEQBuyPlanYearDeal&Type=0'+'&PlanType='+PlanType  //hisui改造 modify by lmm 2018-08-18
+		url= 'websys.default.csp?WEBSYS.TCOMPONENT=DHCEQBuyPlanYearDeal&Type=0'+'&PlanType='+PlanType  //hisui改造 modify by lmm 2018-08-18
 	}
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		url += "&MWToken="+websys_getMWToken()
+	}
+	window.location.href=url;
 }
 // Mozy0045	2011-3-14
 function BAddNew_Clicked()

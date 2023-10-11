@@ -90,12 +90,12 @@ function InitItemList()
                 if (editRow != undefined) {
                     return;
                 }else{
+	                editRow = 0;
                     ItemListDataGrid.datagrid("insertRow", {
                         index: 0,
                         row: {}
                     });
                     ItemListDataGrid.datagrid("beginEdit", 0);
-                    editRow = 0;
                 }
               
             }
@@ -125,11 +125,11 @@ function InitItemList()
 								ARCIRowid:ID
 							},false);
 					        if(value=="0"){
-						       ItemListDataGrid.datagrid('load');
-       					       ItemListDataGrid.datagrid('unselectAll');
+						       ItemListDataGrid.datagrid('unselectAll').datagrid('load');
        					       $.messager.show({title:"提示",msg:"删除成功"});
 					        }else{
 						       $.messager.alert('提示',"删除失败:"+value);
+						       return;
 					        }
 					        editRow = undefined;
                         }
@@ -143,7 +143,15 @@ function InitItemList()
 			iconCls: 'icon-save',
 			handler: function() {
 				var editors = ItemListDataGrid.datagrid('getEditors', editRow);
-				var arcrowid = editors[0].target.combobox('getValue');
+				var rows = ItemListDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
+                if(rows.Rowid){
+	                var Rowid=rows.Rowid
+	            }else{
+		            var Rowid=""
+		        }
+		        var arcrowid=rows.ActIARCIMDR;
+		        if (!arcrowid) arcrowid="";
+				//var arcrowid = editors[0].target.combobox('getValue');
 				if(arcrowid==""){
 					$.messager.alert('提示',"医嘱项不能为空!");
 					return false;
@@ -158,9 +166,9 @@ function InitItemList()
 					$.messager.alert('提示',"数量只能为正整数!");
 					return false;
 				}
-				var rows = ItemListDataGrid.datagrid("getRows");
-				var InstrDR=rows[0]['InstrDR'];
-				if (InstrDR==undefined) InstrDR="";	
+				var InstrDR=rows['InstrDR'];
+				if (!InstrDR) InstrDR="";	
+				/*var rows = ItemListDataGrid.datagrid("getRows");
 	            for(var i=0; i<rows.length; i++){
 				   if(rows[i].ActIARCIMDR!=undefined){
 					   if ((arcrowid==rows[i].ActIARCIMDR)&&(InstrDR==rows[i].InstrDR)){
@@ -168,17 +176,27 @@ function InitItemList()
 						   return false;
 					   }
 				   }
-				}
+				}*/
+				var Dose=editors[3].target.val();
+				if (Dose==undefined){Dose=""} 
+				var DoseUomDR=rows.DoseUomDR;
+				if (!DoseUomDR) DoseUomDR="";
 				var value=$.m({ 
 					ClassName:"DHCDoc.DHCDocConfig.SkinTestConfig", 
-					MethodName:"Insert",
+					MethodName:"Save",
+					Rowid:Rowid,
 					ActRowid:ActRowid,
 					ArcimRowid:arcrowid,
 					ActQty:qty,
 					InstrDR:InstrDR,
+					Dose:Dose,
+					DoseUomDR:DoseUomDR,
 					HospId:$HUI.combogrid('#_HospList').getValue()
 				},false);
-		        if(+value=="0"){
+				if (value=="repeat") {
+					$.messager.alert('提示',"保存失败！记录重复!");
+			        return false;
+				}else if(+value=="0"){
 			       ItemListDataGrid.datagrid('unselectAll').datagrid('load');
 			       $.messager.show({title:"提示",msg:"保存成功"});
 		        }else if(value=="-1"){
@@ -196,14 +214,11 @@ function InitItemList()
             handler: function() {
                 //取消当前编辑行把当前编辑行罢undefined回滚改变的数据,取消选择的行
                 editRow = undefined;
-                ItemListDataGrid.datagrid("rejectChanges");
-                ItemListDataGrid.datagrid("unselectAll");
+                ItemListDataGrid.datagrid("rejectChanges").datagrid("unselectAll");
             }
         }];
 	ItemListColumns=[[ 
-        { field: 'Rowid', title: 'ID', width: 10, align: 'center', hidden:true
-		},
-		{ field: 'ActIARCIMDesc', title: '名称', width: 60, align: 'center', 
+		{ field: 'ActIARCIMDesc', title: '名称', width: 200, align: 'left', 
 		  	editor:{
                      type:'combogrid',
                      options:{
@@ -221,92 +236,42 @@ function InitItemList()
 						fit: true,//自动大小   
 						pageSize: 10,//每页显示的记录条数，默认为10   
 						pageList: [10,20,30,100],//可以设置每页记录条数的列表  
-                        url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
+                        url:$URL+"?ClassName=DHCDoc.DHCDocConfig.SkinTestConfig&QueryName=FindItem", //DHCDoc.DHCDocConfig.ArcItemConfig
                         columns:[[
                             {field:'ArcimDesc',title:'名称',width:400,sortable:true},
 		                    {field:'ArcimRowID',title:'ID',width:120,sortable:true},
 		                    {field:'selected',title:'ID',width:120,sortable:true,hidden:true}
-                         ]]/*,
-						 keyHandler:{
-							up: function () {
-				                //取得选中行
-				                var selected = $(this).combogrid('grid').datagrid('getSelected');
-				                if (selected) {
-				                    //取得选中行的rowIndex
-				                    var index = $(this).combogrid('grid').datagrid('getRowIndex', selected);
-				                    //向上移动到第一行为止
-				                    if (index > 0) {
-				                        $(this).combogrid('grid').datagrid('selectRow', index - 1);
-				                    }
-				                } else {
-				                    var rows = $(this).combogrid('grid').datagrid('getRows');
-				                    $(this).combogrid('grid').datagrid('selectRow', rows.length - 1);
-				                }
-				             },
-				             down: function () {
-				               //取得选中行
-				                var selected = $(this).combogrid('grid').datagrid('getSelected');
-				                if (selected) {
-				                    //取得选中行的rowIndex
-				                    var index = $(this).combogrid('grid').datagrid('getRowIndex', selected);
-				                    //向下移动到当页最后一行为止
-				                    if (index < $(this).combogrid('grid').datagrid('getData').rows.length - 1) {
-				                        $(this).combogrid('grid').datagrid('selectRow', index + 1);
-				                    }
-				                } else {
-				                    $(this).combogrid('grid').datagrid('selectRow', 0);
-				                }
-				            },
-							left: function () {
-								return false;
-				            },
-							right: function () {
-								return false;
-				            },            
-							enter: function () { 
-							  //文本框的内容为选中行的的字段内容
-				                var selected = $(this).combogrid('grid').datagrid('getSelected');  
-							    if (selected) { 
-							      $(this).combogrid("options").value=selected.ArcimDesc;
-							      var rows=ItemListDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
-                                  //rows.ActIARCIMDR=selected.ArcimRowID
-							    }
-							    //
-				                //选中后让下拉表格消失
-				                $(this).combogrid('hidePanel');
-								$(this).focus();
-				            },
-							 query:function(q){
-								var object1=new Object();
-								object1=$(this)
-								if (this.AutoSearchTimeOut) {
-									window.clearTimeout(this.AutoSearchTimeOut)
-									this.AutoSearchTimeOut=window.setTimeout(function(){ LoadItemData(q,object1);},400); 
-								}else{
-									this.AutoSearchTimeOut=window.setTimeout(function(){ LoadItemData(q,object1);},400); 
-								}
-								$(this).combogrid("setValue",q);
-							}
-							 
-            			}*/,onClickRow : function(rowIndex, rowData) {
+                         ]],onClickRow : function(rowIndex, rowData) {
                 			var rows=ItemListDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
-                            //if(rows) rows.ActIARCIMDR=rowData.ArcimRowID
+                            if(rows) rows.ActIARCIMDR=rowData.ArcimRowID;
+                            var editDoseObj=ItemListDataGrid.datagrid('getEditor', {index:editRow,field:'Dose'});
+							$(editDoseObj.target).val("");
+                            var EditDoseUomObj=ItemListDataGrid.datagrid('getEditor', {index:editRow,field:'DoseUom'});
+							EditDoseUomObj.target.combobox('reload').combobox('select',"");
 		                 },
 		                 onBeforeLoad:function(param){
 			                 var desc=param['q'];
 			                 param = $.extend(param,{Alias:param["q"],HospId:$HUI.combogrid('#_HospList').getValue()});
-			             }
+			             },
+			             onSelect: function (rowIndex, rowData){
+				             var rows=ItemListDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
+                            if(rows) rows.ActIARCIMDR=rowData.ArcimRowID;
+				            var editDoseObj=ItemListDataGrid.datagrid('getEditor', {index:editRow,field:'Dose'});
+							$(editDoseObj.target).val("");
+				            var EditDoseUomObj=ItemListDataGrid.datagrid('getEditor', {index:editRow,field:'DoseUom'});
+							EditDoseUomObj.target.combobox('reload').combobox('select',"");
+				         }
             		}
     			  }
 		},
-		{ field: 'ActIQty', title: '数量', width: 10, align: 'center', 
+		{ field: 'ActIQty', title: '数量', width: 50, align: 'center', 
 		  editor : {type : 'text',options : {}}
 		},
 		{ field: 'ActIARCIMDR', title: '名称', width: 10, align: 'center', hidden:true
 		},
 		{ field: 'InstrDR', title: '', width: 10, align: 'center', hidden:true
 		},
-		{field:'Instr',title:'用法',width:70,editor:{
+		{field:'Instr',title:'用法',width:90,editor:{
 				type:'combobox',  
 				options:{
 					url:$URL+"?ClassName=web.DHCDocItemDefault&QueryName=FindGlobal", 
@@ -338,6 +303,65 @@ function InitItemList()
 			  formatter:function(value, record){
 				  return record.Instr;
 			  }
+		},
+		{field:'Dose',title:'单次剂量',width:70,editor : {type : 'text'}},
+		{field:'DoseUomDR',hidden:true},
+		{field:'DoseUom',title:'剂量单位',width:70,editor:{
+				type:'combobox',  
+				options:{
+					url:$URL+"?ClassName=web.DHCDocItemDefault&QueryName=FindDoseUOM", //PUBLIC_CONSTANT.URL.QUERY_COMBO_URL,
+					valueField:'RowId',
+					textField:'Desc',
+					required:false,
+					onBeforeLoad:function(param){
+						var ARCIMDR=""
+						var editors = ItemListDataGrid.datagrid('getEditors', editRow); 
+						if (editors[0]){
+							var ARCIMDR=editors[0].target.combogrid('getValue');
+						}
+						if (ARCIMDR == undefined){
+							ARCIMD="";
+						}
+						if ((ARCIMDR=="")||(ARCIMDR.indexOf("||")==-1)) {
+							var ARCIMDR=ItemListDataGrid.datagrid("getData").rows[editRow].ActIARCIMDR;
+						}
+						if (ARCIMDR == undefined){
+							ARCIMDR="";
+						}
+						param = $.extend(param,{ARCIMRowid:ARCIMDR,HOSPID:$HUI.combogrid('#_HospList').getValue()});
+					},
+					loadFilter:function(data){
+					    return data['rows'];
+					},
+					onSelect:function(rec){
+						var rows=ItemListDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
+                        rows.DoseUomDR=rec.RowId;
+					},
+					onChange:function(newValue, oldValue){
+						if (!newValue) newValue="";
+						if (newValue==""){
+							var rows=ItemListDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
+							if (rows) rows.DoseUomDR="";
+						}
+					},
+					onHidePanel:function(){
+						var rows=ItemListDataGrid.datagrid("selectRow",editRow).datagrid("getSelected");
+						if (!$.isNumeric($(this).combobox('getValue'))) return;
+						if (rows) rows.DoseUomDR=$(this).combobox('getValue');
+					},
+					onLoadSuccess:function(data){
+						var editDoseObj=ItemListDataGrid.datagrid('getEditor', {index:editRow,field:'Dose'});
+						if (data.length==0) {
+							editDoseObj.target.prop("readonly",true);
+						}else{
+							editDoseObj.target.prop("readonly",false);
+						}
+					}
+				  }
+			  },
+			  formatter:function(value, record){
+				  return record.DoseUom;
+			  }
 		}
     ]];
 	// 列表Grid
@@ -347,7 +371,7 @@ function InitItemList()
 		border : false,
 		striped : true,
 		singleSelect : true,
-		fitColumns : true,
+		fitColumns : false,
 		autoRowHeight : false,
 		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.SkinTestConfig&QueryName=GetSkinLinkItem&ActRowid=&HospId="+$HUI.combogrid('#_HospList').getValue(),
 		loadMsg : '加载中..',  
@@ -360,6 +384,18 @@ function InitItemList()
 		toolbar:ItemListToolBar,
 		onLoadSuccess:function(data){
 			editRow = undefined;
+		},
+		onDblClickRow:function(rowIndex, rowData){
+			if (editRow!==undefined){
+				$.messager.alert("提示","有正在编辑的行,请选保存或取消编辑!");
+				return false;
+			}
+			editRow=rowIndex;
+			ItemListDataGrid.datagrid("beginEdit", rowIndex);
+		},
+		onBeforeLoad:function(queryParams){
+			editRow=undefined;
+			$('#tabItemList').datagrid("unselectAll");
 		}
 	});
 };

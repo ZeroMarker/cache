@@ -54,7 +54,10 @@ function createRentHistoryInfo(jsonData)
 //		var ApproveTime=jsonData.rows[i].TApproveTime; //审批时间
 //		var ApproveUser=jsonData.rows[i].TApproveUser; //审批人
 //		var Opinion=jsonData.rows[i].TOpinion; //审批人
-		var YearMonth=jsonData.rows[i].TRequestDate.split("-")[0]+'-'+jsonData.rows[i].TRequestDate.split("-")[1]; 
+		//Modefied by zc0089 2020-12-08 日期格式转化 begin
+		//var YearMonth=jsonData.rows[i].TRequestDate.split("-")[0]+'-'+jsonData.rows[i].TRequestDate.split("-")[1]; ]; 
+		var YearMonth=FormatDate(jsonData.rows[i].TRequestDate,"","").split("-")[0]+'-'+FormatDate(jsonData.rows[i].TRequestDate,"","").split("-")[1]; 
+		//Modefied by zc0089 2020-12-08 日期格式转化 end
 //		var ApproveRole=jsonData.rows[i].TApproveRole; //审批角色
 //		var Action=jsonData.rows[i].TAction; //审批动作
 //		var keyInfo=ApproveUser+" "+Action+"，审批意见："+Opinion

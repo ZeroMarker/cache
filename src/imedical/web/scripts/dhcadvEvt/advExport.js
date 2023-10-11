@@ -837,21 +837,26 @@ function exportSkinUlcerData(data,filePath,NameList)
 }
 
 //动态导出
-function ExportData(StDate,EndDate,RepType,TitleList,DescList,filePath,TabFieldList,TabDescList)
+function ExportData(StDate,EndDate,RepType,TitleList,DescList,filePath,TabFieldList,TabDescList,StrParam, LgParam,ParStr)
 {
 	var data="",tabledata="";
 	runClassMethod("web.DHCADVCOMMONPRINT","GetExportData",
-	{StDate:StDate,EndDate:EndDate,reporttype:RepType,TitleList:TitleList,DescList:DescList},function(ret){
+	{StDate:StDate,EndDate:EndDate,reporttype:RepType,TitleList:TitleList,DescList:DescList,StrParam:StrParam,LgParam:LgParam,ParStr:ParStr},function(ret){
 		data=ret;
 	},"json",false);
 
 	if((RepType.indexOf("压力性损伤")>0)||(RepType.indexOf("压力性损伤")==0)){
 		runClassMethod("web.DHCADVCOMMONPRINT","GetExportData",
-		{StDate:StDate,EndDate:EndDate,reporttype:RepType,TitleList:"UlcerPart",DescList:"压疮部位"},function(ret){
+		{StDate:StDate,EndDate:EndDate,reporttype:RepType,TitleList:"UlcerPart",DescList:"压疮部位",StrParam:StrParam,LgParam:LgParam,ParStr:ParStr},function(ret){
 			tabledata=ret;
 		},"json",false);
 	}
-	
+	if((RepType.indexOf("药品不良")>0)||(RepType.indexOf("药品不良")==0)){
+		runClassMethod("web.DHCADVCOMMONPRINT","GetExportData",
+		{StDate:StDate,EndDate:EndDate,reporttype:RepType,TitleList:"SuspectNewDrug#BlendNewDrug",DescList:"怀疑药品#并用药品",StrParam:StrParam,LgParam:LgParam,ParStr:ParStr},function(ret){
+			tabledata=ret;
+		},"json",false);
+	}
 	var strjLen=data.length;
 	var tbstrjLen=tabledata.length;
 	
@@ -882,8 +887,7 @@ function ExportData(StDate,EndDate,RepType,TitleList,DescList,filePath,TabFieldL
 			Str = Str +"objSheet.Cells(2,"+(1+j)+").value='"+$getValue(data[0][Title[titlelen-1-j]])+"';" ; // 数据列描述
 			Str = Str +"objSheet.Cells("+(3+len)+","+(1+j)+").value='"+$getValue(data[i][Title[titlelen-1-j]])+"';" // 数据列 数据值
 		}
-	//}
-		if(tbstrjLen>0) 
+		if(((RepType.indexOf("压力性损伤")>0)||(RepType.indexOf("压力性损伤")==0))&&(tbstrjLen>0)) 
 	  	{ 
 			var UlcerPartlist=$getValue(tabledata[i]["UlcerPart"]);//压疮部位
 			var Ulcerlen=UlcerPartlist.length; //压疮部位个数
@@ -891,12 +895,6 @@ function ExportData(StDate,EndDate,RepType,TitleList,DescList,filePath,TabFieldL
 			for (j=0;j<tbtitlelen;j++){ 
 				Str = Str +"xlApp.Range(xlApp.Cells(1,"+(1+titlelen+0)+"),xlApp.Cells("+1+","+(1+titlelen+29)+")).MergeCells = true;";  //合并单元格
 				Str = Str +"objSheet.Cells(1,"+(1+titlelen+0)+").value='部位';";
-				/* for(var k=0;k<Ulcerlen;k++){
-					xlApp.Range(xlApp.Cells(1,1+titlelen+(k*(tbtitlelen-1))+k),xlApp.Cells(1,1+titlelen+((k+1)*(tbtitlelen-1))+k)).MergeCells = true;  //合并单元格
-					objSheet.Cells(1,1+titlelen+(k*(tbtitlelen-1))+k).value="部位"+(k+1);
-					objSheet.Cells(2,1+titlelen+(k*tbtitlelen)+j).value="'"+TbDesc[tbtitlelen-1-j]; //
-					objSheet.Cells(2+i,1+titlelen+(k*tbtitlelen)+j).value="'"+$getValue(UlcerPartlist[k][TbTitle[tbtitlelen-1-j]]); //
-				} */
 				Str = Str +"objSheet.Cells(2,"+(1+titlelen+0)+").value='压疮来源';";
 				Str = Str +"objSheet.Cells(2,"+(1+titlelen+1)+").value='压疮发现日期';";
 				Str = Str +"objSheet.Cells(2,"+(1+titlelen+2)+").value='部位_枕部';";
@@ -967,6 +965,71 @@ function ExportData(StDate,EndDate,RepType,TitleList,DescList,filePath,TabFieldL
 				len=len+Ulcerlen;
 			}
 	  	}
+		if(((RepType.indexOf("药品不良")>0)||(RepType.indexOf("药品不良")==0))&&(tbstrjLen>0)) 
+	  	{ 
+			
+			var SuspectDruglist=$getValue(tabledata[i]["SuspectNewDrug"]);// 怀疑药品
+			var SuspectDruglen=SuspectDruglist.length; //怀疑药品个数  
+			var BlendDruglist=$getValue(tabledata[i]["BlendNewDrug"]);// 并用药品
+			var BlendDruglen=BlendDruglist.length; //并用药品个数 
+			
+			Str = Str +"xlApp.Range(xlApp.Cells(1,"+(1+titlelen+0)+"),xlApp.Cells("+1+","+(1+titlelen+8)+")).MergeCells = true;";  //合并单元格
+			Str = Str +"objSheet.Cells(1,"+(1+titlelen+0)+").value='怀疑药品';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+0)+").value='批准文号';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+1)+").value='商品名称';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+2)+").value='通用名称(含剂型)';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+3)+").value='生产厂家';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+4)+").value='生产批号';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+5)+").value='用法用量(次剂量、途径、日次数)';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+6)+").value='开始时间';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+7)+").value='结束时间';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+8)+").value='用药原因';";
+			
+			Str = Str +"xlApp.Range(xlApp.Cells(1,"+(1+titlelen+9)+"),xlApp.Cells("+1+","+(1+titlelen+17)+")).MergeCells = true;";  //合并单元格
+			Str = Str +"objSheet.Cells(1,"+(1+titlelen+9)+").value='并用药品';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+9)+").value='批准文号';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+10)+").value='商品名称';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+11)+").value='通用名称(含剂型)';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+12)+").value='生产厂家';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+13)+").value='生产批号';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+14)+").value='用法用量(次剂量、途径、日次数)';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+15)+").value='开始时间';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+16)+").value='结束时间';";
+			Str = Str +"objSheet.Cells(2,"+(1+titlelen+17)+").value='用药原因';";
+			if (BlendDruglen>SuspectDruglen){
+				SuspectDruglen=BlendDruglen;
+			}
+				
+			for(var k=0;k<SuspectDruglen;k++){
+				if(SuspectDruglist[k]!=undefined){
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+0)+").value='"+$getValue(SuspectDruglist[k]["SuspectNewDrug-96649"])+"';" ;// 批准文号	
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+1)+").value='"+$getValue(SuspectDruglist[k]["SuspectNewDrug-96650"])+"';" ;// 商品名称
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+2)+").value='"+$getValue(SuspectDruglist[k]["SuspectNewDrug-96651"])+"';"; // 通用名称(含剂型)	
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+3)+").value='"+$getValue(SuspectDruglist[k]["SuspectNewDrug-96652"])+"';"; // 生产厂家	
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+4)+").value='"+$getValue(SuspectDruglist[k]["SuspectNewDrug-96653"])+"';"; // 生产批号
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+5)+").value='"+$getValue(SuspectDruglist[k]["SuspectNewDrug-96654"])+"';"; // 用法用量(次剂量、途径、日次数)	
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+6)+").value='"+$getValue(SuspectDruglist[k]["SuspectNewDrug-96655"])+"';"; // 开始时间
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+7)+").value='"+$getValue(SuspectDruglist[k]["SuspectNewDrug-96656"])+"';"; // 结束时间
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+8)+").value='"+$getValue(SuspectDruglist[k]["SuspectNewDrug-96657"])+"';"; // 用药原因
+				}
+				if(BlendDruglist[k]!=undefined){
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+9)+").value='"+$getValue(BlendDruglist[k]["BlendNewDrug-96674"])+"';" ;// 批准文号	
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+10)+").value='"+$getValue(BlendDruglist[k]["BlendNewDrug-96675"])+"';" ;// 商品名称
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+11)+").value='"+$getValue(BlendDruglist[k]["BlendNewDrug-96676"])+"';"; // 通用名称(含剂型)	
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+12)+").value='"+$getValue(BlendDruglist[k]["BlendNewDrug-96677"])+"';"; // 生产厂家	
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+13)+").value='"+$getValue(BlendDruglist[k]["BlendNewDrug-96678"])+"';"; // 生产批号
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+14)+").value='"+$getValue(BlendDruglist[k]["BlendNewDrug-96679"])+"';"; // 用法用量(次剂量、途径、日次数)	
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+15)+").value='"+$getValue(BlendDruglist[k]["BlendNewDrug-96680"])+"';"; // 开始时间
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+16)+").value='"+$getValue(BlendDruglist[k]["BlendNewDrug-96681"])+"';"; // 结束时间
+					Str = Str +"objSheet.Cells("+(3+len+k)+","+(1+titlelen+17)+").value='"+$getValue(BlendDruglist[k]["BlendNewDrug-96682"])+"';"; // 用药原因
+				}
+			}
+			if(SuspectDruglen!=0){
+				len=len+SuspectDruglen;
+			}
+			
+	  	}
+	  	
 	}
 	console.log(Str)
 	Str=Str+"xlApp.Visible=true;"+
@@ -980,12 +1043,12 @@ function ExportData(StDate,EndDate,RepType,TitleList,DescList,filePath,TabFieldL
 	return;
 }
 ///不良事件按类型全部导出
-function ExportAllData(StDate,EndDate,typeevent)
+function ExportAllData(StDate,EndDate,typeevent,StrParam, LgParam,ParStr)
 { 
 	var  strjData=""
 
 	runClassMethod("web.DHCADVCOMMONPRINT","GetExportAllData",
-	{StDate:StDate,EndDate:EndDate,reporttype:typeevent},function(ret){				
+	{StDate:StDate,EndDate:EndDate,reporttype:typeevent,StrParam:StrParam, LgParam:LgParam,ParStr:ParStr},function(ret){				
 		strjData=ret;
 	},"json",false);
 	
@@ -998,6 +1061,7 @@ function ExportAllData(StDate,EndDate,typeevent)
 	"objSheet.PageSetup.LeftMargin=0;"+  
 	"objSheet.PageSetup.RightMargin=0;"+
 	"objSheet.Application.Visible = true;"+
+	"xlApp.Columns('A:Z').NumberFormatLocal = '@';" + ///'''A—L列设置为文本
 	"xlApp.Range(objSheet.Cells(1,1),objSheet.Cells(1,16)).MergeCells = true;"+
 	"objSheet.cells(1,1).Font.Bold = true;"+
 	"objSheet.cells(1,1).Font.Size =18;"+
@@ -1172,12 +1236,12 @@ function exportword(RepTypeCode,exportData)
 	var ret = serverCall("web.DHCPRTMain","GetTmpData",{MACode:RepTypeCode});
 	ret = ret.split("&&")[7];
 	if(ret==""){
-		alert("模板获取错误!检查模板名称是否错误或是否维护打印模板！");
+		$.messager.alert($g("提示")+":",$g("模板获取错误")+"！"+$g("检查模板名称是否错误或是否维护打印模板")+"！");
 		return;
 	}
 	
 	if(!typeof(exportData) == 'object') {
-		alert("打印入参错误,格式应为Object对象！");
+		$.messager.alert($g("提示")+":",$g("打印入参错误")+"，"+$g("格式应为Object对象")+"！");
 		return;
 	}
 	var prehtml="";

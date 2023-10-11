@@ -41,7 +41,8 @@ function initMethod(){
 	$('#regno').bind('keypress',function(event){
         if(event.keyCode == "13")    
         {
-            RegNoBlur()
+            RegNoBlur();
+            search();
         }
     });	
     
@@ -89,29 +90,23 @@ function initCombobox(){
 	       
 	    }	
 	})
-		
+	var levArr = [{"id":"1","text":$g('Ⅰ级')},{"id":"2","text":$g('Ⅱ级')},{"id":"3","text":$g('Ⅲ级')},{"id":"4","text":$g('Ⅳa级')},{"id":"5","text":$g('Ⅳb级')}]; //hxy 2023-01-03	
 	$HUI.combobox("#level",{
-		url:LINK_CSP+"?ClassName=web.DHCEMRegister&MethodName=GetNurLevel",
+		//url:LINK_CSP+"?ClassName=web.DHCEMRegister&MethodName=GetNurLevel",
 		valueField:'id',
 		textField:'text',
+		data:levArr,
 		onSelect:function(option){
 	       
 	    }	
 	})
 	
+	var screenArr = [{"id":"Y","text":$g('是')}, {"id":"N","text":$g('否')}]; //hxy 2023-01-03
 	$HUI.combobox("#screening",{
-		url:LINK_CSP+"?ClassName=web.DHCEMRegister&MethodName=GetScreeningInfo",
+		url:'',//LINK_CSP+"?ClassName=web.DHCEMRegister&MethodName=GetScreeningInfo",
 		valueField:'id',
 		textField:'text',
-		onSelect:function(option){
-	       
-	    }	
-	})
-	
-	$HUI.combobox("#screening",{
-		url:LINK_CSP+"?ClassName=web.DHCEMRegister&MethodName=GetScreeningInfo",
-		valueField:'id',
-		textField:'text',
+		data:screenArr,
 		onSelect:function(option){
 	       
 	    }	
@@ -127,22 +122,20 @@ function initCombobox(){
 	    }	
 	})
 	
-	$HUI.combobox("#swichLoc",{
-		valueField:'id',
-		textField:'text',
-		data:[{'id':'1','text':'急诊科'},
-			  {'id':'2','text':'中西医结合一科'},
-			  {'id':'3','text':'中西医结合二科'}
-			  ],
-		onSelect:function(option){
-	       
-	    }	
-	})	
-	
-	
 	//号别科室
 	$HUI.combobox("#levCareLoc",{
 		url:LINK_CSP+"?ClassName=web.DHCEMPatCheckLevQuery&MethodName=jsonGetEmPatLoc&HospID="+hosp,
+		valueField:'value',
+		textField:'text',
+		mode:"remote",
+		onSelect:function(option){
+	       
+	    }	
+	})
+	
+	//特殊人群
+	$HUI.combobox("#emPatType",{
+		url:LINK_CSP+"?ClassName=web.DHCEMPatCheckLevQuery&MethodName=JsonGetEmPatType&HospID="+hosp,
 		valueField:'value',
 		textField:'text',
 		mode:"remote",
@@ -189,106 +182,110 @@ function initDatagrid(){
             title: '登记号'
         }, {
             field: 'name',
-            align: 'center',
+            //align: 'center',
             title: '姓名'
         }, {
             field: 'sex',
-            align: 'center',
+            //align: 'center',
             title: '性别'
         }, {
             field: 'age',
-            align: 'center',
+            //align: 'center',
             title: '年龄'  
         }, {
             field: 'symptom',
-            align: 'center',
+            //align: 'center',
             title: '症状'
         }, { //2016-09-21 congyue
             field: 'EmAware',
-            align: 'center',
+            //align: 'center',
             title: '神志' //意识状态
         }, {
             field: 'PCSTemp',  //体温T 2016-09-03 congyue
-            align: 'center',
+            //align: 'center',
             title: 'T(℃)'
         }, {
             field: 'PCSHeart',
-            align: 'center',
+            //align: 'center',
             title: 'HR(次/分)'
         }, {
             field: 'PCSPCSPulse',
-            align: 'center',
+            //align: 'center',
             title: 'P(次/分)'
         }, {
             field: 'PCSBP', //BP 2016-09-03 congyue
-            align: 'center',
+            //align: 'center',
             title: 'BP(mmHg)'        
         },{
             field: 'PCSR', //BP 2016-09-03 congyue
-            align: 'center',
+            //align: 'center',
             title: 'R(次/分)'        
         },{
             field: 'EmPcsSoP2', //BP 2016-09-03 congyue
-            align: 'center',
+            //align: 'center',
             title: 'SPO2(%)'        
         },{
             field: 'EmPcsGLU', //BP 2016-09-03 congyue
-            align: 'center',
+            //align: 'center',
             title: 'Glu(mmol/l)'        
         },{
             field: 'SignHis', //BP 2016-09-03 congyue
-            align: 'center',
+            //align: 'center',
             title: '体征记录',
             formatter:function(value,row,index){
-				return '<a href="#" title="历史"  onclick="openSignHis('+row.PCLRowID+')">历史</a>';
+				return '<a href="#" title="历史"  onclick="openSignHis('+row.PCLRowID+')">'+$g('历史')+'</a>';
 			}        
         },{
             field: 'tel',
-            align: 'center',
+            //align: 'center',
             title: '电话'
         }, {
             field: 'PCLCareLoc',
-            align: 'center',
+            //align: 'center',
             title: '分诊科室'
         },{
             field: 'curmarkno',
-            align: 'center',
+            //align: 'center',
             title: '号别'
         }, {
             field: 'PCLAdmWay',
-            align: 'center',
+            //align: 'center',
             title: '来诊方式'
         }, {
             field: 'IsGreenAdm',
-            align: 'center',
-            title: '绿色通道'
+            //align: 'center',
+            title: '绿色通道',
+            formatter:function(value,row,index){
+				if (value=='Y'){return $g('是');} 
+				else {return $g('否');}
+			}//hxy 2023-01-03
         },{
             field: 'PCLPatAskFlag',
-            align: 'center',
+            //align: 'center',
             title: '假条',
             formatter:function(value,row,index){
-				if (value=='Y'){return '是';} 
-				else {return '否';}
+				if (value=='Y'){return $g('是');} 
+				else {return $g('否');}
 			}//hxy 2018-10-22
         }, {
             field: 'SickHistory',
-            align: 'center',
+            //align: 'center',
             title: '既往史'
         },
         {
             field: 'VeerLocDesc',
-            align: 'center',
+            //align: 'center',
             title: '转诊科室'
         },
          {
             field: 'NurseLevel',
-            align: 'center',
+            //align: 'center',
             title: '护士分级',
             formatter:setCellLabel  //hxy 2020-02-20
         },
          {
             field: 'PCLNurUser',
-            align: 'center',
+            //align: 'center',
             title: '分诊护士'
         }]]
         
@@ -300,13 +297,13 @@ function initDatagrid(){
 		columns:columns,
 		pageSize:60,  
 		pageList:[60], 
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		rownumbers : false,
 		pagination:true,
 		singleSelect:true,
 		selectOnCheck: false,
 		checkOnSelect: false,
-		title:'分诊查询', //hxy 2018-10-09 st
+		title:$g('预检分级查询'), //hxy 2018-10-09 st
 		toolbar:'#toolbar',
 		iconCls:'icon-paper',
 		headerCls:'panel-header-gray', //ed
@@ -328,7 +325,7 @@ function openSignHis(EmPCLvID){
 	websys_showModal({
 		url: lnk,
 		iconCls:"icon-w-paper",
-		title: '分诊生命体征历史查询',
+		title: $g('分诊生命体征历史查询'),
 		closed: true,
 		onClose:function(){}
 	});
@@ -422,14 +419,15 @@ function getParams(){
 	if($("#noRegCheck").is(":checked")){
 		registerFlag=2;
 	}
-	var levCareLoc = $g($HUI.combobox('#levCareLoc').getValue())
+	var levCareLoc = $u($HUI.combobox('#levCareLoc').getValue());
+	var emPatType = $u($HUI.combobox('#emPatType').getValue());
 	var Params;
 	Params = $HUI.datebox("#startDate").getValue()+"^"+$HUI.datebox("#endDate").getValue()+"^"+$('#regno').val()
-	Params=Params+"^"+$g($HUI.combobox('#loc').getValue())+"^"+$g($HUI.combobox('#from').getValue())+"^"+$HUI.timespinner('#startTime').getValue();
+	Params=Params+"^"+$u($HUI.combobox('#loc').getValue())+"^"+$u($HUI.combobox('#from').getValue())+"^"+$HUI.timespinner('#startTime').getValue();
 	Params = Params+"^"+$HUI.timespinner('#endTime').getValue()
-	Params=Params+"^"+Note+"^"+$g($HUI.combobox('#symptom').getValue())+"^"+$g($HUI.combobox('#level').getValue())
-	Params = Params+"^"+$g($HUI.combobox('#pastHistory').getValue())+"^"+$g($HUI.combobox('#screening').getValue())+"^"+hosp
-	Params = Params+"^"+registerFlag+"^"+levCareLoc
+	Params=Params+"^"+Note+"^"+$u($HUI.combobox('#symptom').getValue())+"^"+$u($HUI.combobox('#level').getValue())
+	Params = Params+"^"+$u($HUI.combobox('#pastHistory').getValue())+"^"+$u($HUI.combobox('#screening').getValue())+"^"+hosp
+	Params = Params+"^"+registerFlag+"^"+levCareLoc+"^"+emPatType+"^"+LgUserID; //hxy 2021-07-15
 	return Params;
 }
 
@@ -540,24 +538,43 @@ function gridlist(objSheet,row1,row2,c1,c2)
 	objSheet.Range(objSheet.Cells(row1, c1), objSheet.Cells(row2,c2)).Borders(4).Weight=2
 }
 
-function $g(){	
+function $u(){	
 	if (arguments[0]== null || arguments[0]== undefined) return "" 
 	return arguments[0];
 }
 
 function linkToCsp(row){
 	var lnk = "dhcem.emerpatientinfom.csp?EpisodeID="+ row.EpisodeID +"&EmPCLvID="+row.PCLRowID+"&PatientID="+row.patientID;
-	var openCss = 'width='+(window.screen.availWidth-100)+',height='+(window.screen.availHeight-160)+ ', top=100, left=50, location=no,toolbar=no, menubar=no, scrollbars=yes, resizable=no,status=no'
-	window.open(lnk,'newwindow',openCss) 
+	var blankWidth="",blankHeight="";
+	if(window.top==window.self){
+		blankWidth = $(window).width();
+		blankHeight = $(window).height();
+	}else{
+		blankWidth = $(window.parent).width();
+		blankHeight = $(window.parent).height();
+	}
+	websys_showModal({ //hxy 2022-11-13 st
+		url: lnk,
+		width:(blankWidth-20),
+		height:(blankHeight-180),
+		iconCls:"icon-w-paper",
+		title: $g('患者分诊信息'),
+		closed: true,
+		onClose:function(){}
+	});
+	
+//	var lnk = "dhcem.emerpatientinfom.csp?EpisodeID="+ row.EpisodeID +"&EmPCLvID="+row.PCLRowID+"&PatientID="+row.patientID;
+//	var openCss = 'width='+(window.screen.availWidth-100)+',height='+(window.screen.availHeight-160)+ ', top=100, left=50, location=no,toolbar=no, menubar=no, scrollbars=yes, resizable=no,status=no'
+//	window.open(lnk,'newwindow',openCss) 
 }
 
 //hxy 2020-02-20
 function setCellLabel(value,row,index){
-	if(value=="1级"){value="Ⅰ级";}
-	if(value=="2级"){value="Ⅱ级";}
-	if(value=="3级"){value="Ⅲ级";}
-	if(value=="4级"){value="Ⅳa级";}
-	if(value=="5级"){value="Ⅳb级";}
+	if(value=="1级"){value=$g("Ⅰ级");}
+	if(value=="2级"){value=$g("Ⅱ级");}
+	if(value=="3级"){value=$g("Ⅲ级");}
+	if(value=="4级"){value=$g("Ⅳa级");}
+	if(value=="5级"){value=$g("Ⅳb级");}
 	return value;
 }
 //hxy 2020-02-20
@@ -576,11 +593,15 @@ function expExcel()
 	///获取导出数据 
 	var strjLen=0; 
  	var strjData="";	
-	runClassMethod("web.DHCEMRegister","GetRegisterNew",{},
+	runClassMethod("web.DHCEMRegister","GetRegisterNew",{LgUserID:LgUserID},
 	function(data){ 
 		strjData=data;
 		strjLen=data.length;
 	},'json',false)
+	if(strjLen==0){
+		$.messager.alert('提示',$g("当前无数据需导出"));
+		return;
+	}
 		
 	var Str = "(function test(x){"+
 	"var xlApp = new ActiveXObject('Excel.Application');"+
@@ -646,7 +667,7 @@ function expExcel()
 	    Str=Str+"xlSheet.cells("+(i+2)+",16).value='"+strjData[i-1].EmPcsGLU+"';";
 	    Str=Str+"xlSheet.Columns(17).NumberFormatLocal='@';";
 	    Str=Str+"xlSheet.cells("+(i+2)+",17).value='"+strjData[i-1].tel+"';";
-	    Str=Str+"xlSheet.cells("+(i+2)+",18).value='"+strjData[i-1].PCLNurseLevel+"';";
+	    Str=Str+"xlSheet.cells("+(i+2)+",18).value='"+setCell(strjData[i-1].PCLNurseLevel)+"级"+"';";
 	    Str=Str+"xlSheet.cells("+(i+2)+",19).value='"+strjData[i-1].curmarkno+"';";
 	    Str=Str+"xlSheet.cells("+(i+2)+",20).value='"+strjData[i-1].PCLAdmWay+"';";
 	    Str=Str+"xlSheet.cells("+(i+2)+",21).value='"+strjData[i-1].PCLPatAskFlag+"';";
@@ -674,6 +695,6 @@ function expExcel()
      "return 1;}());";
      //以上为拼接Excel打印代码为字符串
      CmdShell.notReturn = 1;   //设置无结果调用，不阻塞调用
-	 var rtn = CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
+	 var rtn = CmdShell.CurrentUserEvalJs(Str);   //通过中间件运行打印程序 
 	 return;
 }

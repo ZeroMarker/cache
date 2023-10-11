@@ -26,6 +26,10 @@ $(function() {
     });
     $('#btnSave').on("click", Save);
     $('#btnDelete').on("click", Delete);
+    $('#btnFind').on('click', function () {
+        $('#gridDuty').datagrid('query', { inputStr: $('#cmbPivaLoc').combobox('getValue') });
+    });
+    $('.dhcpha-win-mask').remove();
 });
 
 function InitDict() {
@@ -98,7 +102,7 @@ function InitGridDuty() {
             },
             {
                 field: "pdMinDays",
-                title: '休假天数</br>最小值',
+                title: '休假天数最小值',
                 halign: 'center',
                 align: 'right',
                 width: 65,
@@ -113,7 +117,7 @@ function InitGridDuty() {
             },
             {
                 field: "pdMaxDays",
-                title: '休假天数</br>最大值',
+                title: '休假天数最大值',
                 halign: 'center',
                 align: 'right',
                 width: 65,
@@ -128,7 +132,7 @@ function InitGridDuty() {
             },
             {
                 field: "pdWeekEndFlag",
-                title: '双休日</br>必休',
+                title: '双休日必休',
                 halign: 'center',
                 align: 'center',
                 width: 65,
@@ -143,7 +147,7 @@ function InitGridDuty() {
             },
             {
                 field: "pdFestivalFlag",
-                title: '节假日</br>必休',
+                title: '节假日必休',
                 halign: 'center',
                 align: 'center',
                 width: 65,
@@ -158,7 +162,7 @@ function InitGridDuty() {
             },
             {
                 field: "pdFestExFlag",
-                title: '节假日</br>倒休',
+                title: '节假日倒休',
                 halign: 'center',
                 align: 'center',
                 width: 65,
@@ -173,7 +177,7 @@ function InitGridDuty() {
             },
             {
                 field: "pdHolidayFlag",
-                title: '寒暑假</br>可休',
+                title: '寒暑假可休',
                 halign: 'center',
                 align: 'center',
                 width: 65,
@@ -188,7 +192,7 @@ function InitGridDuty() {
             },
             {
                 field: "pdFreeFlag",
-                title: '自由岗</br>标志',
+                title: '自由岗标志',
                 halign: 'center',
                 align: 'center',
                 width: 65,

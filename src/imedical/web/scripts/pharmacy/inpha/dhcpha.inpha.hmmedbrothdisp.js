@@ -295,20 +295,24 @@ function ConfirmBroDisp(){
 	if(ret==-1){
 		SendVoiceStr="揭药信息不存在"
 		SendVocie(SendVoiceStr);
-		dhcphaMsgBox.message("揭药信息不存在")
+		//dhcphaMsgBox.message("揭药信息不存在")
+		dhcphaMsgBox.alert("揭药信息不存在");
 		return false;
 	}else if(ret=="-2"){
 		SendVoiceStr="该处方已揭药"
 		SendVocie(SendVoiceStr);
-		dhcphaMsgBox.message("该处方已揭药")
+		//dhcphaMsgBox.message("该处方已揭药")
+		dhcphaMsgBox.alert("该处方已揭药");
 		return false;
 	}else if(ret<0){
 		SendVoiceStr="揭药失败,"+ret
 		SendVocie(SendVoiceStr);
-		dhcphaMsgBox.message("揭药失败!错误代码："+ret)
+		//dhcphaMsgBox.message("揭药失败!错误代码："+ret)
+		dhcphaMsgBox.alert("揭药失败!错误代码："+ret);
 		return false;
 	}else{
-		dhcphaMsgBox.message("揭药成功！")
+		//dhcphaMsgBox.message("揭药成功！")
+		dhcphaMsgBox.alert("揭药成功！");
 		SendVoiceStr="开始下一个病区";
 		SendVocie(SendVoiceStr);
 	}

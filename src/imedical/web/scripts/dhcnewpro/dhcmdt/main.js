@@ -12,6 +12,7 @@ var LgGroup = session['LOGON.GROUPDESC'];
 var LgHosp = session['LOGON.HOSPID'];
 var LgLoc = session['LOGON.CTLOCID'];
 var LgUser = session['LOGON.USERID'];
+var Flag = "";
 /// 页面初始化函数
 function initPageDefault(){
 	//isHasReqAbility();  ///判断是否有申请的权限
@@ -19,6 +20,7 @@ function initPageDefault(){
 	getPatBaseInfo();   /// 病人就诊信息
 	initFrameSrc();     /// 页面iframe资源
 	initComponent(); 	/// 初始化界面控件内容
+	LoadMoreScr();
 }
 
 /// 初始化页面组件
@@ -44,10 +46,11 @@ function initComponent(){
 			if (EpisodeID != rowData.EpisodeID){
 				/// 刷新病历iframe资源
 				refreshEmrFrameSrc(rowData.PatientID, rowData.EpisodeID);
+				EpisodeID = rowData.EpisodeID;
 			}
         }
 	}
-	var url = 'dhcapp.broker.csp?ClassName=web.DHCMDTCom&MethodName=GetAdmList&EpisodeID='+ EpisodeID;
+	var url = 'dhcapp.broker.csp?ClassName=web.DHCMDTCom&MethodName=GetAdmList&EpisodeID='+ EpisodeID+"&MWToken="+websys_getMWToken();
 	new ListComboGrid("mdtadm", columns, url, option).Init();
 
 }
@@ -76,7 +79,11 @@ function initEpisode(){
 	EpisodeID = getParam("EpisodeID");   /// 就诊ID
 	mradm = getParam("mradm ");          /// 就诊诊断ID
 	CsType = getParam("CsType");         /// 会诊类型
-	
+	hosNoPatOpenUrl = getParam("hosNoPatOpenUrl"); //hxy 2023-03-17 st
+	debugger
+	hosNoPatOpenUrl?hosOpenPatList(hosNoPatOpenUrl):''; //ed
+
+	//IsOpenMoreScreen = isOpenMoreScreen();	///是否多屏幕
 	/// 就诊ID为空时，从框架取病人信息
 	if (EpisodeID == ""){
 		var frm = dhcsys_getmenuform();
@@ -90,19 +97,41 @@ function initEpisode(){
 
 /// 病人就诊信息
 function getPatBaseInfo(){
+	if(!EpisodeID){
+		return;
+	}
+	/*
+	$.m({ClassName:"web.DHCDoc.OP.AjaxInterface",MethodName:"GetOPInfoBar",CONTEXT:"",EpisodeID:EpisodeID,PatientID:PatientID},function(html){
+		if (html!=""){
+			$("#PatInfoItem").html(reservedToHtml(html));
+		}
+	});
+	
+	return;
+	*/
 	
 	runClassMethod("web.DHCMDTConsultQuery","GetPatEssInfo",{"PatientID":"", "EpisodeID":EpisodeID},function(jsonString){
 		var jsonObject = jsonString;
-
+		///住院患者不需要显示信息条
+		if(jsonObject.PatType=="I") {
+			$(".pf-patimg").attr("style","display:none")
+			$(".pf-patbase").css("display","none")
+			$(".pf-tools").css({
+				"left":"0px",
+				"text-align":"left"
+			})
+		}
 		$('.ui-span-m').each(function(){
-			$(this).text(jsonObject[this.id]);
-			if (jsonObject.PatSex == "男"){
-				$("#PatPhoto").attr("src","../scripts/dhcnewpro/images/boy.png");
-			}else if (jsonObject.PatSex == "女"){
-				$("#PatPhoto").attr("src","../scripts/dhcnewpro/images/girl.png");
-			}else{
-				$("#PatPhoto").attr("src","../images/unman.png");
-			}
+			$(this).html(jsonObject[this.id]);
+			
+		$("#PatPhoto").attr("src","../images/"+jsonObject.imgName+".png");	
+//			if (jsonObject.PatSexCH == "男"){
+//				$("#PatPhoto").attr("src","../scripts/dhcnewpro/images/boy.png");
+//			}else if (jsonObject.PatSexCH == "女"){
+//				$("#PatPhoto").attr("src","../scripts/dhcnewpro/images/girl.png");
+//			}else{
+//				$("#PatPhoto").attr("src","../images/unman.png");
+//			}
 		})
 		if(jsonObject.PatDiagDescAll!=""){ //hxy 2020-05-06 st
 			$("#PatDiagDesc").tooltip({
@@ -119,21 +148,40 @@ function getPatBaseInfo(){
 	},'json',false)
 }
 
+/**
+* @author wanghc
+* @date 2012/5/18
+* @param {String} str
+* @return {HTMLString} html html片段
+*/
+function reservedToHtml(str){	
+	var replacements = {"&lt;":"<", "&#60;":"<", "&gt;":">", "&#62;":">", "&quot;":"\"", "&#34;":"\"", "&apos;":"'",
+	"&#39;":"'", "&amp;":"&", "&#38;":"&"};
+	return str.replace(/(&lt;)|(&gt;)|(&quot;)|(&apos;)|(&amp;)|(&#60;)|(&#62;)|(&#34;)|(&#39;)|(&#38;)/g,function(v){
+		return replacements[v];		
+	});
+}
+
+
 /// 页面iframe资源
 function initFrameSrc(){
-	
-	var frm = dhcsys_getmenuform();
-	if (frm) {
-		PatientID = frm.PatientID.value;
-		EpisodeID = frm.EpisodeID.value;
-		mradm = frm.mradm.value;
+	if(EpisodeID==""){
+		var frm = dhcsys_getmenuform();
+		if (frm) {
+			PatientID = frm.PatientID.value;
+			EpisodeID = frm.EpisodeID.value;
+			mradm = frm.mradm.value;
+		}
 	}
 	
-	var link ="emr.interface.browse.category.csp?PatientID="+ PatientID +"&EpisodeID="+ EpisodeID +"&EpisodeLocID="+session['LOGON.CTLOCID']+"&Action="+'externalapp';
-	$("#newWinFrame").attr("src",link);
+	if(IsOpenMoreScreen=="0"){
+		//var link ="emr.interface.browse.category.csp?PatientID="+ PatientID +"&EpisodeID="+ EpisodeID +"&EpisodeLocID="+session['LOGON.CTLOCID']+"&Action="+'externalapp&SinglePatient=1'+"&MWToken="+websys_getMWToken();
+		var link ="emr.bs.browse.csp?PatientID="+ PatientID +"&EpisodeID="+ EpisodeID +"&EpisodeLocID="+session['LOGON.CTLOCID']+"&Action="+'externalapp'+"&MWToken="+websys_getMWToken()+"&categorydir=south"; //hxy 2021-05-24 放开注释
+		$("#newWinFrame").attr("src",link);
+	}
 	
-	var url = "dhcmdt.write.csp";
-	var link = url + "?PatientID="+ PatientID +"&EpisodeID="+ EpisodeID +"&mradm="+ mradm;
+	var url = "dhcmdt.writemain.csp";
+	var link = url + "?PatientID="+ PatientID +"&EpisodeID="+ EpisodeID +"&mradm="+ mradm +"&isValFlag="+ Flag+"&MWToken="+websys_getMWToken();
 	$("#ConsultFrame").attr("src",link);
 }
 
@@ -146,7 +194,9 @@ function InsQuote(resQuote, flag){
 /// 页面iframe资源
 function refreshEmrFrameSrc(PatientID, EpisodeID){
 	
-	var link ="emr.interface.browse.category.csp?PatientID="+ PatientID +"&EpisodeID="+ EpisodeID +"&EpisodeLocID="+session['LOGON.CTLOCID']+"&Action="+'externalapp';
+	//var link ="emr.interface.browse.category.csp?PatientID="+ PatientID +"&EpisodeID="+ EpisodeID +"&EpisodeLocID="+session['LOGON.CTLOCID']+"&Action="+'externalapp'+"&MWToken="+websys_getMWToken(); //hxy 2021-05-24 放开注释
+	var link ="emr.bs.browse.csp?PatientID="+ PatientID +"&EpisodeID="+ EpisodeID +"&EpisodeLocID="+session['LOGON.CTLOCID']+"&Action="+'externalapp'+"&MWToken="+websys_getMWToken()+"&categorydir=south"; //hxy 2021-05-24 放开注释
+	//var link ="emr.browse.manage.csp?PatientID="+ PatientID +"&EpisodeID="+ EpisodeID;
 	$("#newWinFrame").attr("src",link);
 }
 
@@ -156,6 +206,30 @@ function refreshComboGrid(EpisodeID){
 	$('#mdtadm').combogrid('setValue', '');
 	$("#mdtadm").combogrid('grid').datagrid("load",{"EpisodeID": EpisodeID});
 	$('#mdtadm').combogrid('grid').datagrid('reload');
+}
+
+
+
+/// 病历查看:超融合
+function LoadMoreScr(){
+	if(!IsOpenMoreScreen) return;
+	
+	var frm = dhcsys_getmenuform();
+	if (frm) {
+		PatientID = frm.PatientID.value;
+		EpisodeID = frm.EpisodeID.value;
+		mradm = frm.mradm.value;
+	}
+	
+	var Obj={
+		PatientID:PatientID,
+		EpisodeID:EpisodeID,
+		Type:2,
+		EpisodeLocID:session['LOGON.CTLOCID'],
+		Action:"externalapp"
+	}
+	
+	websys_emit("onMdtConsWriteOpen",Obj);
 }
 
 /// JQuery 初始化页面

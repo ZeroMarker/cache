@@ -66,7 +66,8 @@ var SaveBtnClickHandler = function(){
 	var ViewLinkComponent = document.getElementById("ViewLinkComponent").value;
 	var enc = document.getElementById("SaveEnc").value;
 	
-	var rtn = cspHttpServerMethod(enc,ViewID,ViewName,ViewCaption,ViewLinkUrl,ViewLinkComponent);
+	var rtn = cspRunServerMethod(enc,ViewID,ViewName,ViewCaption,ViewLinkUrl,ViewLinkComponent);
+	// tkMakeServerCall("websys.View","Save",ViewID,ViewName,ViewCaption,ViewLinkUrl,ViewLinkComponent) ; //
 	var rtnArr = rtn.split("^");
 	if (rtnArr.length==2){
 		if (rtnArr[0]=="0"){
@@ -83,7 +84,7 @@ var DeleteBtnClickHandler = function(){
 	if(confirm(t["DelConfirm"]||"È·¶¨ÒªÉ¾³ýÂð£¿")){
 		var sid = document.getElementById("ViewID").value;
 		var enc = document.getElementById("DeleteEnc").value;
-		var rtn = cspHttpServerMethod(enc,sid);
+		var rtn = cspRunServerMethod(enc,sid);
 		var rtnArr = rtn.split("^");
 		if (rtnArr.length==2){
 			if (rtnArr[0]=="0"){

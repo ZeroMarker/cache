@@ -1,30 +1,89 @@
 ﻿var navPage = document.getElementById("frameNav").contentWindow; //window.frames["frameNav"];
 var editPage = document.getElementById("framRecord").contentWindow; //window.frames["framRecord"];
 $(function(){
+	navPage = document.getElementById("frameNav").contentWindow; 
+	editPage = document.getElementById("framRecord").contentWindow; 
+	if ((fromType != "")&&(fromCode != ""))
+	{
+		var eventInfo = getEventInfo();
+		if (eventInfo == "")
+		{
+			$.messager.alert("提示","未获取到待关联数据，请联系工作人员调用推送事件数据接口!",'info');
+			return;
+		}
+		setEventInfo(eventInfo);
+	}
 	initEditor();
 	initNavPage();
-	if (displayType != "Nav")
+	if ((docID=="")&&(modeType!="Browse"))
 	{
-		initDocument();
+		arr = recordParam;
+		var categoryIDs = "1,3,4,6,5,2";
+		//var tempFrame = "<iframe id='iframeCreateRecord' scrolling='auto' frameborder='0' src='emr.interface.ip.navigation.list.template.csp?EpisodeID="+setting.episodeId+"&CategoryIDs="+categoryIDs+"&PatientID="+setting.patientId+" style='width:1050px; height:500px; display:block;'></iframe>";
+		var url = "emr.interface.ip.navigation.list.template.csp?CategoryIDs=1,3,4,6,5,2&EpisodeID="+setting.episodeId+"&PatientID="+setting.patientId+"&MWToken="+getMWToken();
+		var tempFrame =   '<iframe id="iframeCreateRecord" src='+url+' width="100%" height="100%" scrolling="auto" marginwidth=0 marginheight=0 frameborder="no" framespacing=0></iframe>'
+		createModalDialog("dialogCreateRecord","创建病历",1080,520,"iframeCreateRecord",tempFrame,createRecordCallback,arr,true,false);
 	}
 	else
 	{
-	/* 	$("#editor").css("display","none");
-		$("#nav").css("display","block"); */
+		if (displayType != "Nav")
+		{
+			initDocument();
+		}
+		else
+		{
+		/* 	$("#editor").css("display","none");
+			$("#nav").css("display","block"); */
+		}
 	}
 });
+
+//获取事件信息
+function getEventInfo()
+{
+	var result = "";
+	jQuery.ajax({
+		type: "get",
+		dataType: "text",
+		url: "../EMRservice.Ajax.common.cls",
+		async: false,
+		data: {
+			"OutputType":"String",
+			"Class":"EMRservice.BL.Event.BLEvents",
+			"Method":"GetEventIDByFromInfo",
+			"p1":fromType,
+			"p2":fromCode
+		},
+		success : function(d) {
+			result = d;
+		},
+		error : function(d) { alert("getEventInfo error");}
+	});
+	return result;
+}
+
+//设置事件信息
+function setEventInfo(eventInfo)
+{
+	var eventType = eventInfo.split("^")[0];
+	var eventID = eventInfo.split("^")[1];
+	var argJson = {"event":{"EventID":eventID,"EventType":eventType}};
+	recordParam.args = argJson;
+}
 
 function initNavPage()
 {
 	var tempDocID = docID;
 	if (navShowType == "Category") {tempDocID = "";}
-	$("#frameNav").attr("src","emr.ip.navigation.csp?EpisodeID="+setting.episodeId +"&CategoryID="+setting.categoryId +"&DocID="+tempDocID);	
+	var url = "emr.ip.navigation.csp?EpisodeID="+setting.episodeId +"&CategoryID="+setting.categoryId +"&DocID="+tempDocID+"&MWToken="+getMWToken();
+	$("#frameNav").attr("src",url);	
 }
 
 ///编辑器///////////////////////////////////////////////////
 function initEditor()
 {
-	$("#framRecord").attr("src","emr.ip.edit.csp?EpisodeID="+setting.episodeId +"&CTlocID="+setting.userLocId +"&UserID="+setting.userId +"&DocID="+docID +"&RecordShowType="+recordShowType);
+	var url = "emr.ip.edit.csp?EpisodeID="+setting.episodeId +"&CTlocID="+setting.userLocId +"&UserID="+setting.userId +"&DocID="+docID +"&RecordShowType="+recordShowType +"&ProductSourceType="+fromType +"&ProductSourceCode="+fromCode+"&ShowNav="+showNav+"&OpenWay=Interface"+"&MWToken="+getMWToken();
+	$("#framRecord").attr("src",url);
 }
 ///打开病历
 function operateRecord(param)
@@ -48,35 +107,13 @@ function initDocument()
 		iframeRecord.attachEvent("onload", function(){
 			// iframe framRecord加载完成后要进行的操作
 			if (!window.frames["framRecord"]) return;
-			var iframe = editPage.document.getElementById("framRecordTool");
-			if (iframe.attachEvent){ // 兼容IE写法
-				iframe.attachEvent("onload", function(){
-					// iframe framRecordTool加载完成后要进行的操作
-					operateRecord(recordParam);
-				})
-			} else {
-				iframe.onload = function(){
-					// iframe加载完成后要进行的操作
-					operateRecord(recordParam);
-				}
-			}
+			operateRecord(recordParam);
 		})
 	} else {
 		iframeRecord.onload = function(){
 			// iframe framRecord加载完成后要进行的操作
 			if (!editPage) return;
-			var iframe = editPage.document.getElementById("framRecordTool");
-			if (iframe.attachEvent){ // 兼容IE写法
-				iframe.attachEvent("onload", function(){
-					// iframe framRecordTool加载完成后要进行的操作
-					operateRecord(recordParam);
-				})
-			} else {
-				iframe.onload = function(){
-					// iframe加载完成后要进行的操作
-					operateRecord(recordParam);
-				}
-			}
+			operateRecord(recordParam);
 		}
 	}
 }
@@ -111,19 +148,36 @@ function gotoEdit()
 {
 	$("#nav").css("display","none");
 	$("#editor").css("display","block");
-	editPage.toolbar.setOtherButtonPrivilege();
+	editPage.setOtherButtonPrivilege();
 }
 
 ///关闭时有修改提示是否保存
+window.onunload = function()
+{
+	//因接口页中onbeforeunload，返回false无法阻止外部窗口关闭接口页。
+	//导致病历未解锁、菜单锁定未清除。
+	//优化逻辑清锁、清菜单。
+	if (editPage)
+	{
+		editPage.unLockDocumnet();
+		setSysMenuDoingSth();
+		/* 医为浏览器不支持，暂时注释
+		if (editPage.savePrompt("") == "cancel")
+		{
+			return false;
+		}
+		*/
+	}
+}
+
+///关闭页面时清掉头菜单标志量及锁信息
 window.onbeforeunload = function()
 {
-    if ((editPage)&&(editPage.savePrompt("") == "cancel"))
+	if (editPage)
 	{
-		return '';
+		editPage.unLockDocumnet();
+		setSysMenuDoingSth();
 	}
-
-	editPage.unLockDocumnet();
-	window.onbeforeunload=null;
 }
 
 ///修改标题名称
@@ -194,4 +248,19 @@ function setSysMenuDoingSth(sthmsg) {
                 DoingSth.value = sthmsg || '';
         }
     }
+}
+function createRecordCallback(returnValue)
+{
+	//返回创建病历的docId;
+	if (returnValue =="Create")
+	{
+		if (!editPage) return;
+		operateRecord(recordParam);
+	}
+	else if (returnValue =="closeWithOutCreate")
+	{
+		//initDocument();
+		operateRecord(recordParam);
+	}
+	;
 }

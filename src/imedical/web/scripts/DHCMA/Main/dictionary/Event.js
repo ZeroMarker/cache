@@ -46,11 +46,18 @@
 		obj.layInit(obj.CurrDicType,valArr[2]);
 		
 	}
+	// 搜索框
+	$('#txtSearch').searchbox({ 
+		searcher:function(value,name){ 
+			var node = $('#treeType').tree('getRoot');
+			obj.refreshNode(node,value);
+		}	
+	});
 	//双击表单
 	obj.gridItems_onDbselect=function(rowData){
 		//obj.layInit(rowData["Type"],rowData["myid"]);
 		var productId=obj.ProductId;
-		$('#cboHosp').combobox('enable');
+		//$('#cboHosp').combobox('enable');
 		if(rowData["myid"]){
 			//编辑
 			var strDic=obj.GetStrDic(rowData["myid"])
@@ -59,14 +66,21 @@
 			if (arryFields[8]!="undefined"){
 				productId=arryFields[8];
 			}
+			if (productId==""){
+				$('#cboPro').combobox('enable');
+			}
 			$("#txtCode").val(arryFields[1]);
 			$("#txtDesc").val(arryFields[2]);
-			if(arryFields[4]!='0'){$("#cboHosp").combobox("setValue",arryFields[4]);}else{$("#cboHosp").combobox("setValue",session['LOGON.HOSPID']);}
-			$('#cboHosp').combobox('disable');
+			if(arryFields[4]!='0'){
+				$("#cboHosp").combobox("setValue",arryFields[4]);
+			}else{
+				$("#cboHosp").combobox("setValue","");
+			}
 			$("#cboPro").combobox("setValue",productId);
 			$("#chkIsActive").checkbox("setValue",arryFields[5] == "1"?true:false);
 			$("#txtRowId").val(arryFields[0]);
 			$("#txtType").val(arryFields[3]);
+			$("#txtInNo").val(arryFields[9]);
 		}
 		$HUI.dialog('#winInit').open();
 	};
@@ -88,10 +102,12 @@
 		var product=$("#cboPro").combobox("getValue");
 		if(product=="") {
 			$.messager.alert("提示","所属产品不能为空！");
+			$('#cboPro').combobox('enable');
 			return;
 		}	
 		var active =$("#chkIsActive").checkbox("getValue");
 		var isActive=active?'1':'0';
+		var InNo = $.trim($("#txtInNo").val());
 		if(!type){type=obj.CurrDicType}
 		var separete = String.fromCharCode(1);
 		var tmp = rowId+ separete;
@@ -103,8 +119,8 @@
 		tmp +=  separete;//开始时间
 		tmp +=  separete;//结束时间
 		tmp += product + separete;
-		
-		
+		tmp += InNo + separete;
+			
 		if(rowId!=""){
 			var CKCode=$m({
 				ClassName:'DHCMed.SS.Dictionary',
@@ -194,7 +210,7 @@
 	obj.layInit=function(){
 		var productId=obj.ProductId
 		var DicType=obj.CurrDicType
-		$('#cboHosp').combobox('enable');
+		//$('#cboHosp').combobox('enable');
 		if(arguments[1]){
 			//编辑
 			var strDic=obj.GetStrDic(arguments[1])
@@ -203,37 +219,51 @@
 			if (arryFields[8]!="undefined"){
 				productId=arryFields[8];
 			}
+
+			if (productId==""){
+				$('#cboPro').combobox('enable');
+			}
 			//编辑添加项目
 			if(arguments[0]==DicType){
 				$("#txtCode").val("");
 				$("#txtDesc").val("");
-				if(arryFields[4]!='0'){$("#cboHosp").combobox("setValue",arryFields[4]);}else{$("#cboHosp").combobox("setValue",session['LOGON.HOSPID']);}
-				$('#cboHosp').combobox('disable');
+				if(arryFields[4]!='0'){
+					$("#cboHosp").combobox("setValue",arryFields[4]);
+				}else{
+					$("#cboHosp").combobox("setValue","");
+				}
 				$("#cboPro").combobox("setValue",productId);
+				
 				$("#chkIsActive").checkbox("setValue",false);
 				$("#txtRowId").val("");
 				$("#txtType").val(arguments[0]);
 				$HUI.dialog('#winInit').open();
 				return;
-				}
+			}
 			$("#txtCode").val(arryFields[1]);
 			$("#txtDesc").val(arryFields[2]);
-			if(arryFields[4]!='0'){$("#cboHosp").combobox("setValue",arryFields[4]);}else{$("#cboHosp").combobox("setValue",session['LOGON.HOSPID']);}
-			$('#cboHosp').combobox('disable');
+			if(arryFields[4]!='0'){
+				$("#cboHosp").combobox("setValue",arryFields[4]);
+			}else{
+				$("#cboHosp").combobox("setValue","");
+			}
 			$("#cboPro").combobox("setValue",productId);
+			
 			$("#chkIsActive").checkbox("setValue",arryFields[5] == "1"?true:false);
 			$("#txtRowId").val(arryFields[0]);
 			$("#txtType").val(arryFields[3]);
+			$("#txtInNo").val(arryFields[9]);
 		}else{
 			//添加
 			//$("#txtCode").attr("disable",true)
 			$("#txtCode").val("");
 			$("#txtDesc").val("");
-			$("#cboHosp").combobox("setValue",session['LOGON.HOSPID']);
+			$("#cboHosp").combobox("setValue",'');
 			$("#cboPro").combobox("setValue",productId);
 			$("#chkIsActive").checkbox("setValue",false);
 			$("#txtRowId").val(arguments[1]);
 			$("#txtType").val(arguments[0]);
+			$("#txtInNo").val("");
 		}
 		$HUI.dialog('#winInit').open();
 	}

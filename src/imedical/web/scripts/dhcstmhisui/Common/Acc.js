@@ -1,27 +1,32 @@
-//说明：javascript的乘法结果会有误差，在两个浮点数相乘的时候会比较明显。这个函数返回较为精确的乘法结果。 
-//调用：accMul(arg1,arg2) 
-//返回值：arg1乘以arg2的精确结果 
-function accMul(arg1,arg2) 
-{ 
-	var m=0,s1=arg1.toString(),s2=arg2.toString(); 
-	try{m+=s1.split(".")[1].length}catch(e){} 
-	try{m+=s2.split(".")[1].length}catch(e){} 
-	return Number(s1.replace(".",""))*Number(s2.replace(".",""))/Math.pow(10,m) 
-} 
-//给Number类型增加一个mul方法，调用起来更加方便。 
+//说明：javascript的乘法结果会有误差，在两个浮点数相乘的时候会比较明显。这个函数返回较为精确的乘法结果。
+//调用：accMul(arg1,arg2)
+//返回值：arg1乘以arg2的精确结果
+function accMul(arg1,arg2) {
+	if(AccIsEmpty(arg1) || AccIsEmpty(arg2)){
+		return '';
+	}
+	var m=0,s1=arg1.toString(),s2=arg2.toString();
+	try{m+=s1.split(".")[1].length}catch(e){}
+	try{m+=s2.split(".")[1].length}catch(e){}
+	return Number(s1.replace(".",""))*Number(s2.replace(".",""))/Math.pow(10,m);
+}
+//给Number类型增加一个mul方法，调用起来更加方便。
 Number.prototype.mul = function (arg){
 	return accMul(arg, this);
-} 
+}
 
 //除法:2014-07-31 利用accMul重写accDiv
-//说明：javascript的除法结果会有误差，在两个浮点数相除的时候会比较明显。这个函数返回较为精确的除法结果。 
-//调用：accDiv(arg1,arg2) 
-//返回值：arg1除以arg2的精确结果 
+//说明：javascript的除法结果会有误差，在两个浮点数相除的时候会比较明显。这个函数返回较为精确的除法结果。
+//调用：accDiv(arg1,arg2)
+//返回值：arg1除以arg2的精确结果
 function accDiv(arg1,arg2){
+	if(AccIsEmpty(arg1) || AccIsEmpty(arg2)){
+		return '';
+	}
 	var t1=0,t2=0,r1,r2;
 	try{t1=arg1.toString().split(".")[1].length}catch(e){}
 	try{t2=arg2.toString().split(".")[1].length}catch(e){}
-	
+
 	with(Math){
 		var m = pow(10,t1+t2);
 		r1 = accMul(arg1, m);
@@ -30,7 +35,7 @@ function accDiv(arg1,arg2){
 	}
 }
 
-//给Number类型增加一个div方法，调用起来更加方便。 
+//给Number类型增加一个div方法，调用起来更加方便。
 Number.prototype.div = function (arg){
 	return accDiv(this, arg);
 }
@@ -66,4 +71,8 @@ function accSub(arg1,arg2){
 
 Number.prototype.sub = function(arg){
 	return accSub(this, arg);
+}
+
+function AccIsEmpty(v){
+	return v === null || v === undefined || v === '';
 }

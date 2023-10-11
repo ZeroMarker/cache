@@ -134,10 +134,30 @@ function BUpdate_click()
 	var ret=tkMakeServerCall("web.DHCPE.PreTemplate","UpdateTimeInfo",Type,ParRef,ID,Info);
 	
 	if (ret=="1"){
-		window.location.reload();
+		//window.location.reload();
+		 $("#PreTemplateTimeQueryTab").datagrid('load',{
+			    ClassName:"web.DHCPE.PreTemplate",
+				QueryName:"SerchTimeInfo", 
+				Type:Type,
+				ParRef:ParRef,
+		}); 
+		
+		window.parent.$("#PreGADMHomeGrid").datagrid('load',{
+			ClassName:"web.DHCPE.PreHome",
+			QueryName:"SerchHomeInfo",
+			PGADMDr:PreGADM,
+			Type:"G"
+		}); 
+		
+		
 	}else{
 		$.messager.alert("提示",ret,"info");
 	}
+}
+function BClear()
+{
+	$("#Num,#ID,#EndTime,#StartTime").val("") 
+	
 }
 
 function BDelete_click()
@@ -159,13 +179,21 @@ function BDelete_click()
 				}else{
 					$.messager.alert("提示","删除成功","success");
 					
+					 BClear();
+					 
 					 $("#PreTemplateTimeQueryTab").datagrid('load',{
 			    		ClassName:"web.DHCPE.PreTemplate",
 						QueryName:"SerchTimeInfo", 
 						Type:Type,
 						ParRef:ParRef,
 			    		}); 
-					
+			    		
+					window.parent.$("#PreGADMHomeGrid").datagrid('load',{
+						ClassName:"web.DHCPE.PreHome",
+						QueryName:"SerchHomeInfo",
+						PGADMDr:PreGADM,
+						Type:"G"
+					}); 
 				}
 				});
 		}
@@ -216,10 +244,10 @@ function InitPreTemplateTimeDataGrid(){
 		},columns:[[
 			{field:'TParRef',hidden:true,title:'就诊id'},
 			{field:'TID',hidden:true,title:'就诊id'},
-			{field:'TStartTime',width:'100',title:'开始时间'},
-			{field:'TEndTime',width:'100',title:'结束时间'},
-			{field:'TNumMale',width:'100',title:'数量(男)'},
-			{field:'TNumFemale',width:'60',title:'数量(女)'},		
+			{field:'TStartTime',width:'150',title:'开始时间'},
+			{field:'TEndTime',width:'150',title:'结束时间'},
+			{field:'TNumMale',width:'120',title:'数量(男)'},
+			{field:'TNumFemale',width:'120',title:'数量(女)'},		
 		
 				
 		]],

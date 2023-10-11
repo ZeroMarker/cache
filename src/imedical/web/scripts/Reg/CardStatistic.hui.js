@@ -187,6 +187,11 @@ function ExportClickHandler() {
 	if ($("#Own").checkbox('getValue')){
 		PageLogicObj.m_UserRowId=session['LOGON.USERID'];
 	}	
+	var rows = PageLogicObj.m_CardStatisticTabDataGrid.datagrid('getRows');
+	if ((!rows)||(rows.length==0)){
+		$.messager.alert("提示","请查询出数据后导出!");
+		return false;	
+	}
 	$cm({
 	    ExcelName:"建/换/补卡统计",
 		localDir:"Self", 

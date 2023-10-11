@@ -15,7 +15,7 @@ function PrintINScrap(inscrap){
 	var INScrapLoc=mainArr[3];
 	var INScrapScg=mainArr[4];
 	var INScrapUser=mainArr[5];
-	var INScrapRemark=mainArr[6];
+	var INScrapRemark=mainArr[6];  // £»
 	var RQDTFormat=App_StkRQDateFormat; //+" "+App_StkRQTimeFormat;
 	//fileName="{DHCST_INScrap_Common.raq(Parref="+inscrap+";INScrapNo="+INScrapNo+";INScrapReason="+INScrapReason+";INScrapDate="+INScrapDate+";INScrapLoc="+INScrapLoc+";INScrapScg="+INScrapScg+";INScrapUser="+INScrapUser+";HospDesc="+App_LogonHospDesc+";INScrapRemark="+INScrapRemark+";RQDTFormat="+RQDTFormat+")}";
 	fileName="{DHCST_INScrap_Common.raq(Parref="+inscrap+";INScrapNo="+INScrapNo+";INScrapDate="+INScrapDate+";RQDTFormat="+RQDTFormat+")}";

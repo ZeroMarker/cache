@@ -1,29 +1,89 @@
 ///DHCInsuPort.js
 /// 版本号：V2.0
-
+ 
 var INSUXMLHttp;
 //Zhan 20200620 原来的全局变量太多,放在这里
+/*
 var INSUPORTGLOBAL={
-	SysIp:"",
-	AddDivideFlag:"",
-	InsuType:"",
+	SysIp:"",			//中间件IP
+	AddDivideFlag:"",	//是否向计费组结算界面添加支付方式
+	InsuType:"",		//医保类型
 	iniFileName:"",
 	fso:"",
 	iniServerIP:0,	//是否初始化ECP服务器IP。0不初始化IP，从DHCInsu.ini中取；1初始化传入的IP,
 	INSUSerIP:"",
+	INSUSerPort:"",
 	INSUblltype:"",	//程序自动获取,
-	httpFlag:0,	//在字典DLLType中的医保描述中配置,0:默认用传统模式，1:用http模式传参数(此模式时INSUPORTGLOBAL.iniServerIP要为0)，2:头菜单模式，3：websocket模式,
-	ServerMode:0, //0:客户端模式,每个客户端要部署中间件服务程序 1:服务器模式只用在服务器上部署,脱卡时使用，客户端不用装医保环境,需要修改GetInsuIPAddress中的服务器IP,
-	DHCINSUBLL:null,
+	httpFlag:0,		//在字典DLLType中的医保描述中配置,0:默认用传统模式，1:用http模式传参数(此模式时INSU.PORT.GLOBAL.iniServerIP要为0)，2:头菜单模式，3：websocket模式,
+	ServerMode:0, 	//0:客户端模式,每个客户端要部署中间件服务程序 1:服务器模式只用在服务器上部署,脱卡时使用，客户端不用装医保环境,需要修改GetInsuSerIPAddress中的服务器IP,
+	DHCINSUBLL:null,	//医保动态库对象
 	tmpCnt:0,
-	isIE:false,
-	isSSL:false,
-	SerStatus:0,
-	isWinXP:false,
-	dbEncrypt:"|||",
+	isIE:false,		//浏览器是否是IE,程序自动判断
+	isSSL:false,	//是否是SSL,程序自动判断
+	SerStatus:0,	//中间件服务状态,程序会自动判断
+	isWinXP:false,	//是否是XP系统,程序自动判断
+	dbEncrypt:"|||", //数据加加密信息串,程序自动在字典表中取
 	HospID:session['LOGON.HOSPID'],
 	INSULOCALSERVICE:0,
+	chromeVersion:0,	//Chrome版本号,程序自动判断
+	AutoStartINSUService:0	//是否自动启动中间件,字典表中配置
 };
+*/
+//医保对象定义 DingSH 20201204
+var INSU = {};          //INSU             医保对外对象
+    INSU.PORT = {};     //INSU.PORT        医保接口对象
+    INSU.PORT.GLOBAL =  //INSU.PORT.GLOBAL 医保接口对象全局变量
+    {
+		SysIp:"",			//中间件IP
+		AddDivideFlag:"",	//是否向计费组结算界面添加支付方式
+		InsuType:"",		//医保类型
+		iniFileName:"",
+		fso:"",
+		iniServerIP:0,	//是否初始化ECP服务器IP。0不初始化IP，从DHCInsu.ini中取；1初始化传入的IP,
+		INSUSerIP:"",
+		INSUSerPort:"",
+		INSUblltype:"",	//程序自动获取,
+		httpFlag:0,		//在字典DLLType中的医保描述中配置,0:默认用传统模式，1:用http模式传参数(此模式时INSU.PORT.GLOBAL.iniServerIP要为0)，2:头菜单模式，3：websocket模式,
+		ServerMode:0, 	//0:客户端模式,每个客户端要部署中间件服务程序 1:服务器模式只用在服务器上部署,脱卡时使用，客户端不用装医保环境,需要修改GetInsuSerIPAddress中的服务器IP,
+		DHCINSUBLL:null,	//医保动态库对象
+		tmpCnt:0,
+		isIE:false,		//浏览器是否是IE,程序自动判断
+		isSSL:false,	//是否是SSL,程序自动判断
+		SerStatus:0,	//中间件服务状态,程序会自动判断
+		isWinXP:false,	//是否是XP系统,程序自动判断
+		dbEncrypt:"|||", //数据加加密信息串,程序自动在字典表中取
+		HospID:session['LOGON.HOSPID'],
+		INSULOCALSERVICE:0,
+		chromeVersion:0,	//Chrome版本号,程序自动判断
+		AutoStartINSUService:0	//是否自动启动中间件,字典表中配置
+    };
+    INSU.MSG =                               //医保消息提醒对象
+    {
+	    //例子 
+	    //INSU.MSG.alertMsg("Hello INSU","温馨提示","info")
+	    //INSU.MSG.alertMsg("医保收费金额不等,请联系系统管理员","报错提示","error")
+		alertMsg:function(msg,title,shwType)
+		{
+			if (typeof $.messager.alert =="function")
+			{
+				$.messager.alert(title,msg,shwType);
+			} 
+			else if (typeof dhcsys_alert =="function")
+			{
+				dhcsys_alert(msg);
+		    }
+		    else
+		    {
+			    alert(msg);
+			    
+			}
+		}
+		// todo 
+	
+	};
+
+
+
 //----------------医保组和计费组接口标准版----------------
 //读医保卡
 //入参:
@@ -57,13 +117,13 @@ function InsuReadCard(Handle,UserId,InsuNo,CardType,ExpString)
 	    }
 		*/
 		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-    	if(INSUPORTGLOBAL.httpFlag==0){
-    		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-			rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuASReadCard(Handle,UserId,InsuNo,CardType,ExpStrForNet)  
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+    		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuASReadCard(Handle,UserId,InsuNo,CardType,ExpStrForNet)  
 	    	DHCINSUBLL= null;
     	}else{
 			var getInStr="Handle="+Handle+"&userid="+UserId+"&InsuNo="+InsuNo+"&CardType="+CardType+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-			rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuASReadCard",getInStr,"")
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuASReadCard",getInStr,"")
 	    }
 		    return rtn;
  }catch(e){
@@ -107,13 +167,13 @@ function InsuReadCardFrm(Handle,UserId,InsuNo,CardType,ExpString)
 		*/
 
 		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-    	if(INSUPORTGLOBAL.httpFlag==0){
-	    	if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-			var rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuASReadCardFrm(Handle,UserId,InsuNo,CardType,ExpStrForNet)  
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuASReadCardFrm(Handle,UserId,InsuNo,CardType,ExpStrForNet)  
 		    DHCINSUBLL= null;
     	}else{
 			var getInStr="Handle="+Handle+"&userid="+UserId+"&InsuNo="+InsuNo+"&CardType="+CardType+"&ExpStrForNet="+toINSUSafeCode(ExpStrForNet);
-			rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuASReadCardFrm",getInStr,"")
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuASReadCardFrm",getInStr,"")
 	    }
 
 		    return rtn;
@@ -161,13 +221,13 @@ function InsuIPReg(Handle,UserId,PaadmRowid,AdmReasonNationCode,AdmReasonId,ExpS
 		*/
 
 		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-    	if(INSUPORTGLOBAL.httpFlag==0){
-			if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-			rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuIPReg(Handle,UserId,PaadmRowid,AdmReasonNationCode, AdmReasonId,ExpStrForNet);
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuIPReg(Handle,UserId,PaadmRowid,AdmReasonNationCode, AdmReasonId,ExpStrForNet);
 			DHCINSUBLL= null;
     	}else{
 			var getInStr="Handle="+Handle+"&UserId="+UserId+"&PaadmRowid="+PaadmRowid+"&AdmReasonNationCode="+AdmReasonNationCode+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-			rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuIPReg",getInStr,"")
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuIPReg",getInStr,"")
 	    }
 
     return rtn;
@@ -217,13 +277,13 @@ function InsuIPRegMod(Handle,UserId,PaadmRowid,AdmReasonNationCode,AdmReasonId,E
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuIPRegMod(Handle,UserId,PaadmRowid,AdmReasonNationCode, AdmReasonId,ExpStrForNet);
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuIPRegMod(Handle,UserId,PaadmRowid,AdmReasonNationCode, AdmReasonId,ExpStrForNet);
 		DHCINSUBLL= null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&PaadmRowid="+PaadmRowid+"&AdmReasonNationCode="+AdmReasonNationCode+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuIPRegMod",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuIPRegMod",getInStr,"")
 	}
 
     return rtn;
@@ -267,13 +327,13 @@ function InsuIPRegStrike(Handle,UserId,PaadmRowid, AdmReasonNationCode, AdmReaso
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuIPRegDestroy(Handle,UserId,PaadmRowid, AdmReasonNationCode, AdmReasonId,ExpStrForNet);
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuIPRegDestroy(Handle,UserId,PaadmRowid, AdmReasonNationCode, AdmReasonId,ExpStrForNet);
 		DHCINSUBLL= null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&PaadmRowid="+PaadmRowid+"&AdmReasonNationCode="+AdmReasonNationCode+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuIPRegDestroy",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuIPRegDestroy",getInStr,"")
 	}
     return rtn;
  }catch(e){
@@ -316,13 +376,13 @@ function InsuIPDividePre(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,Ex
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuIPDividePre(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,ExpStrForNet);
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuIPDividePre(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,ExpStrForNet);
 		DHCINSUBLL= null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&BillNO="+BillNO+"&AdmReasonNationCode="+AdmReasonNationCode+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuIPDividePre",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuIPDividePre",getInStr,"")
 	}
 
     if(rtn.split("^")[0]=="0"){
@@ -366,13 +426,13 @@ function InsuIPMXUnload(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,Exp
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		var rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuIPMXUpload(Handle,UserId ,BillNO,AdmReasonNationCode,AdmReasonId,ExpStrForNet);
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuIPMXUpload(Handle,UserId ,BillNO,AdmReasonNationCode,AdmReasonId,ExpStrForNet);
 		DHCINSUBLL= null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&BillNO="+BillNO+"&AdmReasonNationCode="+AdmReasonNationCode+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuIPMXUpload",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuIPMXUpload",getInStr,"")
 	}
     if(rtn==="0"){
 		dhcsys_alert("费用上传成功"); 		   
@@ -418,13 +478,13 @@ function InsuIPMXCancel(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,Exp
 		*/
       //return -1
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuIPMXCancel(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,ExpStrForNet);
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuIPMXCancel(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,ExpStrForNet);
 		DHCINSUBLL= null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&BillNO="+BillNO+"&AdmReasonNationCode="+AdmReasonNationCode+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuIPMXCancel",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuIPMXCancel",getInStr,"")
 	}
     if(rtn==="0"){
 		dhcsys_alert("费用撤销成功"); 		   
@@ -448,7 +508,7 @@ function InsuIPDivide(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,ExpSt
 	try {
 	//dhcsys_alert("医保结算开始")
 	//dhcsys_alert("医保结算开始:Handle="+Handle+"^UserId="+UserId+"^BillNO="+BillNO+"^AdmReasonNationCode="+AdmReasonNationCode+"^AdmReasonId="+AdmReasonId+"^ExpString="+ExpString)
-	INSUPORTGLOBAL.AddDivideFlag=false;	//向计费组结算界面添加费用成功与否的标志
+	INSU.PORT.GLOBAL.AddDivideFlag=false;	//向计费组结算界面添加费用成功与否的标志
 	if(BillNO==""){dhcsys_alert("帐单号不能空!");return;}
 	 InsuTypeCode=GetInsuTypeCode(AdmReasonId)
     if (InsuTypeCode=="") {return -1;} 
@@ -475,16 +535,16 @@ function InsuIPDivide(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,ExpSt
 		//dhcsys_alert(Handle+"+"+BillNO+"+"+UserId+"+"+AdmReasonNationCode+"+"+AdmReasonId+"+"+ExpString)
 
 		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return DivideStr}	//Zhan 20181213增加配置并增加中间件功能
-    	if(INSUPORTGLOBAL.httpFlag==0){
-			if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-			DivideStr=INSUPORTGLOBAL.DHCINSUBLL.InsuIPDivide(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,ExpStrForNet);
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			DivideStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuIPDivide(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,ExpStrForNet);
 			//dhcsys_alert(DivideStr)  //标志^总金额^统筹^附加^干保基金^帐户^现金  
 			//DivideStr="0^146.7^0^0^0^146.7^0"
 			//var	DivideStr="0^200^11.5^"+BillNO+String.fromCharCode(2)+"15^21.5"+String.fromCharCode(2)+"16^1000"+String.fromCharCode(2)+"17^0"+String.fromCharCode(2)+"18^500"
 			DHCINSUBLL=null;  
     	}else{
 			var getInStr="Handle="+Handle+"&UserId="+UserId+"&BillNO="+BillNO+"&AdmReasonNationCode="+AdmReasonNationCode+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-			DivideStr=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuIPDivide",getInStr,"")
+			DivideStr=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuIPDivide",getInStr,"")
 	    }
 
 		if((DivideStr=="")||(DivideStr=="-1")||(DivideStr==undefined))
@@ -499,7 +559,7 @@ function InsuIPDivide(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,ExpSt
 		//-----------如果计费组用的是老版的组件结算的界面，就用下边的添加支付方式的代码----->
 		/*
 		INSUAdd(DivideStr,1)	//向计费组结算界面添加各支付方式费用
-		if(INSUPORTGLOBAL.AddDivideFlag==true)
+		if(INSU.PORT.GLOBAL.AddDivideFlag==true)
 		{
 			return 0;
 		}	
@@ -556,13 +616,13 @@ function InsuIPJSDPrint(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,Exp
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuIPJSDPrint(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,ExpStrForNet);
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuIPJSDPrint(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,ExpStrForNet);
 		DHCINSUBLL= null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&BillNO="+BillNO+"&AdmReasonNationCode="+AdmReasonNationCode+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuIPJSDPrint",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuIPJSDPrint",getInStr,"")
 	}
 	
 	//润乾报表打印方式
@@ -613,13 +673,13 @@ function InsuIPDivideCancle(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId
 	    }
 		*/
 		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return flag}	//Zhan 20181213增加配置并增加中间件功能
-		if(INSUPORTGLOBAL.httpFlag==0){
-			if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-			flag=INSUPORTGLOBAL.DHCINSUBLL.InsuIPDivideStrike(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,ExpStrForNet);
+		if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			flag=INSU.PORT.GLOBAL.DHCINSUBLL.InsuIPDivideStrike(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,ExpStrForNet);
 			DHCINSUBLL=null;
 		}else{
 			var getInStr="Handle="+Handle+"&UserId="+UserId+"&BillNO="+BillNO+"&AdmReasonNationCode="+AdmReasonNationCode+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-			flag=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuIPDivideStrike",getInStr,"")
+			flag=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuIPDivideStrike",getInStr,"")
 		}
 		if ((flag=="0")||(flag=="-2"))
 		{
@@ -652,7 +712,7 @@ function InsuOPReg(Handle,UserId,PaadmRowid,AdmSource,AdmReasonId,ExpString)
 
 	try{
 	//dhcsys_alert("医保病人门诊挂号:"+Handle+"^"+UserId+"^"+PaadmRowid+"^"+AdmSource+"^"+AdmReasonId+"^"+ExpString)
-	InsuTypeCode=GetInsuTypeCode(AdmReasonId)
+	//InsuTypeCode=GetInsuTypeCode(AdmReasonId)
     //if (InsuTypeCode=="") {return -1;} 
     //InsuTypeCode="SZ"
 	var InsuRegStr="-1";
@@ -675,14 +735,14 @@ function InsuOPReg(Handle,UserId,PaadmRowid,AdmSource,AdmReasonId,ExpString)
 		*/
 
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return InsuRegStr}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		InsuRegStr=INSUPORTGLOBAL.DHCINSUBLL.InsuOPReg(Handle,UserId,PaadmRowid,AdmSource,AdmReasonId,ExpStrForNet)  
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		InsuRegStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuOPReg(Handle,UserId,PaadmRowid,AdmSource,AdmReasonId,ExpStrForNet)  
 		//dhcsys_alert("InsuRegStr="+InsuRegStr)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&PaadmRowid="+PaadmRowid+"&AdmSource="+AdmSource+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		InsuRegStr=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuOPReg",getInStr,"")
+		InsuRegStr=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuOPReg",getInStr,"")
     }
 
 	if ((InsuRegStr=="")||(InsuRegStr=="-1")||(InsuRegStr==undefined)) {
@@ -731,16 +791,16 @@ function InsuOPRegStrike(Handle,UserId,AdmInfoRowid,AdmSource,AdmReasonId,ExpStr
 		*/
     //dhcsys_alert(Handle+"^"+AdmInfoRowid+"^"+UserId+"^"+AdmSource+"^"+AdmReasonId+"^"+ExpString)
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return RetStr}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		RetStr=INSUPORTGLOBAL.DHCINSUBLL.InsuOPRegDestroy(Handle,UserId,AdmInfoRowid,AdmSource,AdmReasonId,ExpStrForNet)
-		//var RetStr=INSUPORTGLOBAL.DHCINSUBLL.InsuOPRegDestroy(Handle,AdmInfoRowid,UserId,ExpString)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		RetStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuOPRegDestroy(Handle,UserId,AdmInfoRowid,AdmSource,AdmReasonId,ExpStrForNet)
+		//var RetStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuOPRegDestroy(Handle,AdmInfoRowid,UserId,ExpString)
 		//InsuOPRegDestroy(ByVal dHandle As Integer, ByVal INADMRowid As String, ByVal UserID As String, ByVal ExpStr As String) As Boolean
 		//dhcsys_alert(DivideStr)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&AdmInfoRowid="+AdmInfoRowid+"&AdmSource="+AdmSource+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		RetStr=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuOPRegDestroy",getInStr,"")
+		RetStr=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuOPRegDestroy",getInStr,"")
     }
 
 	if ((RetStr=="")||(RetStr=="-1")||(RetStr==undefined)) {
@@ -803,10 +863,10 @@ function InsuOPDivide(Handle , UserId, StrInvDr, AdmSource, AdmReasonId,ExpStrin
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return OutStr}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
 		//dhcsys_alert("医保调门诊医保接口开始:StrInvDr="+StrInvDr+"^UserId="+UserId+"^AdmSource="+AdmSource+"^AdmReasonId="+AdmReasonId+"^ExpString="+ExpString+"^CPPFlag="+CPPFlag)
-		DivideStr=INSUPORTGLOBAL.DHCINSUBLL.InsuOPDivide(Handle,UserId,StrInvDr,AdmSource,AdmReasonId,ExpStrForNet,CPPFlag)
+		DivideStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuOPDivide(Handle,UserId,StrInvDr,AdmSource,AdmReasonId,ExpStrForNet,CPPFlag)
 
 		//ExpString=ExpString+"2"
 		//dhcsys_alert("ExpString="+ExpString)
@@ -816,7 +876,7 @@ function InsuOPDivide(Handle , UserId, StrInvDr, AdmSource, AdmReasonId,ExpStrin
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&StrInvDr="+StrInvDr+"&AdmSource="+AdmSource+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet)+"&CPPFlag="+CPPFlag;
-		DivideStr=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuOPDivide",getInStr,"")
+		DivideStr=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuOPDivide",getInStr,"")
 		if(DivideStr==""){DivideStr="-3"}
     }
 	if ((DivideStr=="")||(DivideStr=="-3")||(DivideStr==undefined)) {
@@ -865,13 +925,13 @@ function InsuOPJSDPrint(Handle,UserId,StrInvDr,AdmSource,AdmReasonId,ExpString,C
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return DivideStr}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		DivideStr=INSUPORTGLOBAL.DHCINSUBLL.InsuOPJSDPrint(Handle,UserId,StrInvDr,AdmSource,AdmReasonId,ExpStrForNet,CPPFlag)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		DivideStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuOPJSDPrint(Handle,UserId,StrInvDr,AdmSource,AdmReasonId,ExpStrForNet,CPPFlag)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&StrInvDr="+StrInvDr+"&AdmSource="+AdmSource+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet)+"&CPPFlag="+CPPFlag;
-		DivideStr=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuOPJSDPrint",getInStr,"")
+		DivideStr=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuOPJSDPrint",getInStr,"")
 		if(DivideStr==""){DivideStr="-3"}
     }
 	return DivideStr
@@ -915,15 +975,15 @@ function InsuOPDivideStrike(Handle,UserId,DivRowid,AdmSource,AdmReasonId,ExpStri
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return OutStr}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		var DivideStr=INSUPORTGLOBAL.DHCINSUBLL.InsuOPDivideStrike(Handle,UserId,DivRowid,AdmSource,AdmReasonId,ExpStrForNet,CPPFlag)
-		//var DivideStr=INSUPORTGLOBAL.DHCINSUBLL.InsuOPDivideStrike(Handle,DivRowid,UserId,ExpString)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		var DivideStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuOPDivideStrike(Handle,UserId,DivRowid,AdmSource,AdmReasonId,ExpStrForNet,CPPFlag)
+		//var DivideStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuOPDivideStrike(Handle,DivRowid,UserId,ExpString)
 		
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&DivRowid="+DivRowid+"&AdmSource="+AdmSource+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet)+"&CPPFlag="+CPPFlag;
-		DivideStr=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuOPDivideStrike",getInStr,"")
+		DivideStr=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuOPDivideStrike",getInStr,"")
 		if(DivideStr==""){DivideStr="-1"}
     }
 	if ((DivideStr=="")||(DivideStr=="-1")||(DivideStr==undefined)) {
@@ -984,14 +1044,14 @@ function InsuPEDivide(Handle,UserId,StrInvDr,AdmSource, AdmReasonId,ExpString,CP
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return OutStr}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		DivideStr=INSUPORTGLOBAL.DHCINSUBLL.InsuPEDivide(Handle,UserId,StrInvDr,AdmSource,AdmReasonId,ExpStrForNet,CPPFlag)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		DivideStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuPEDivide(Handle,UserId,StrInvDr,AdmSource,AdmReasonId,ExpStrForNet,CPPFlag)
 
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&StrInvDr="+StrInvDr+"&AdmSource="+AdmSource+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet)+"&CPPFlag="+CPPFlag;
-		DivideStr=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuPEDivide",getInStr,"")
+		DivideStr=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuPEDivide",getInStr,"")
 		if(DivideStr==""){DivideStr="-3"}
     }
 	if ((DivideStr=="")||(DivideStr=="-3")||(DivideStr==undefined)) {
@@ -1041,15 +1101,15 @@ function InsuPEDivideStrike(Handle,UserId,DivRowid,AdmSource,AdmReasonId,ExpStri
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return DivideStr}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		DivideStr=INSUPORTGLOBAL.DHCINSUBLL.InsuPEDivideStrike(Handle,UserId,DivRowid,AdmSource,AdmReasonId,ExpStrForNet,CPPFlag)
-		//var DivideStr=INSUPORTGLOBAL.DHCINSUBLL.InsuOPDivideStrike(Handle,DivRowid,UserId,ExpString)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		DivideStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuPEDivideStrike(Handle,UserId,DivRowid,AdmSource,AdmReasonId,ExpStrForNet,CPPFlag)
+		//var DivideStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuOPDivideStrike(Handle,DivRowid,UserId,ExpString)
 		
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&DivRowid="+DivRowid+"&AdmSource="+AdmSource+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet)+"&CPPFlag="+CPPFlag;
-		DivideStr=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuPEDivideStrike",getInStr,"")
+		DivideStr=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuPEDivideStrike",getInStr,"")
 		if(DivideStr==""){DivideStr="-1"}
     }
 	if ((DivideStr=="")||(DivideStr=="-1")||(DivideStr==undefined)) {
@@ -1063,7 +1123,138 @@ function InsuPEDivideStrike(Handle,UserId,DivRowid,AdmSource,AdmReasonId,ExpStri
 		return -1;
 	}
 }
+///门诊事后慢病结算
+///入参?	Handle                  Interger?医保返回的句柄?目前大部分项目部用?不用的地方固定成?0〃
+///			UserId                  用户表Rowid
+///			StrInvDr                DHC_InvPrtDr表的Rowid的串   分割符为?^〃
+///     AdmReasonAdmSource   		Pac_admreason.rea_AdmSource
+///     AdmReasonId             	Pac_admreason.Rowid
+///     ExpString                   StrikeFlag^安全组Dr^InsuNo^CardType^YLLB^DicCode^DicDesc^总金额^结算来源^数据库连接串^待遇类型^院内账户ID^院区指针^GrzfPMDr！Money^MoneyType
+///											StrikeFlag：S代表退费重收的发票，如果是磁条卡需要传医保号,安全组Dr：操作员当前安全组,InsuNo：医保个人编号、医保卡号、医保号的加密串 供磁卡的地方用 
+///											CardType：有无医保卡,YLLB：医疗类别（普通门诊、门诊特病、门诊工伤、门诊生育）,DicCode：病种代码,总金额：各种卡的余额合计
+///										    DYLB：医保待遇类别（"131"门诊特殊病、"161"特殊检查、"162"特殊治疗）,Money:卡余额,MoneyType：卡类型 His就诊卡，银行卡。。。
+///                                         GrzfPMDr: 门诊收费界面选择的支付方式Dr             
+///		CPPFlag					    集中打印发票标志(Y:集中打印;NotCPPFlag:非预交金;ECPP:急诊留观)
+///Return:成功:0,失败:-1
+///注：给计费返回-3，计费不删除发票信息；返回-4，计费删除发票信息。
+function InsuOPDivideAudit(Handle , UserId, StrInvDr, AdmSource, AdmReasonId,ExpString,CPPFlag)
+{
+	try {
+	OutStr="-3"
+	Handle=0
+	//dhcsys_alert("医保门诊收费开始")
+	//dhcsys_alert("医保门诊收费开始:StrInvDr="+StrInvDr+"^UserId="+UserId+"^AdmSource="+AdmSource+"^AdmReasonId="+AdmReasonId+"^ExpString="+ExpString+"^CPPFlag="+CPPFlag)
+	if (ExpString.split("!")[0].split("^").length<8) {
+		dhcsys_alert("扩展参数串ExpString位数不够"+ExpString) 
+		return OutStr
+	}
+	var DivideStr="-1";
+	var ExpStrForNet=BuildInsuExpStrStd(ExpString,9)
+	//dhcsys_alert("ExpStrForNet:"+ExpStrForNet)
+	InsuTypeCode=GetInsuTypeCode(AdmReasonId)
+    if (InsuTypeCode=="") {return OutStr;} 
+    //dhcsys_alert(InsuTypeCode)
+	/* Zhan 20181213注释，改为取配置
+    switch (InsuTypeCode){ 
+	    case "ZZB" :
+	    	var DHCINSUBLL = new ActiveXObject("DHCINSUBLL.INSU_HN_ZZB_TEST"); //Zhan 20160615 test 
+	    	break;
+	    case "YZB" :
+	    	var DHCINSUBLL = new ActiveXObject("DHCINSUBLL.INSU_JS_YZA");     //扬中市居民医保
+	    	break;
+	    default :
+	    	dhcsys_alert("此类型不联医保接口,请检查程序或数据;InsuTypeCode="+InsuTypeCode);
+	    	return -1;
+	    	break;
+	    }
+		*/
+	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return OutStr}	//Zhan 20181213增加配置并增加中间件功能
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		//dhcsys_alert("医保调门诊医保接口开始:StrInvDr="+StrInvDr+"^UserId="+UserId+"^AdmSource="+AdmSource+"^AdmReasonId="+AdmReasonId+"^ExpString="+ExpString+"^CPPFlag="+CPPFlag)
+		DivideStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuOPDivideAudit(Handle,UserId,StrInvDr,AdmSource,AdmReasonId,ExpStrForNet,CPPFlag)
 
+		//ExpString=ExpString+"2"
+		//dhcsys_alert("ExpString="+ExpString)
+
+		//dhcsys_alert(DivideStr)
+		//var DivideStr="0^200^11.5^"+StrInvDr+String.fromCharCode(2)+"15^21.5"+String.fromCharCode(2)+"16^1000"+String.fromCharCode(2)+"17^0"+String.fromCharCode(2)+"18^500"
+		DHCINSUBLL=null;
+	}else{
+		var getInStr="Handle="+Handle+"&UserId="+UserId+"&StrInvDr="+StrInvDr+"&AdmSource="+AdmSource+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet)+"&CPPFlag="+CPPFlag;
+		DivideStr=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuOPDivideAudit",getInStr,"")
+		if(DivideStr==""){DivideStr="-3"}
+    }
+	if ((DivideStr=="")||(DivideStr=="-3")||(DivideStr==undefined)) {
+		if(GetIusujsMsgFlag("OPDIVIDE")=="1"){dhcsys_alert("医保结算失败,返回值:"+OutStr)}	//Zhan 20161219 弹窗增加配置
+		return OutStr;
+	}
+	if(GetIusujsMsgFlag("OPDIVIDE")=="1"){dhcsys_alert("医保结算成功,返回值:"+DivideStr)}	//Zhan 20161219 弹窗增加配置
+	return DivideStr
+	
+	}catch(e){
+		dhcsys_alert("调用医保接口发生异常"+e.message);
+		return -4 ;		//计费-4调用删除
+	}
+}
+
+///门诊事后慢病结算冲销
+///入参?	Handle                   	Interger?医保返回的句柄?目前大部分项目部用?不用的地方固定成?0〃
+///			UserId                    	用户表Rowid
+///			DivRowid                  	Insu_Divide表的Rowid的
+///         AdmReasonAdmSource   		Pac_admreason.rea_AdmSource
+///         AdmReasonId             	Pac_admreason.Rowid
+///         ExpString:                  医保类型^计费异常回滚标识(Y,)^医保组异常回滚标识(Y,)^读卡标识^结算来源^数据库连接串
+///			CPPFlag						集中打印发票标志 
+///Return:成功:0,失败:-1
+function InsuOPDivideStrikeAudit(Handle,UserId,DivRowid,AdmSource,AdmReasonId,ExpString,CPPFlag)
+{
+	try {
+	OutStr="-1"
+	Handle=0
+	//dhcsys_alert("医保门诊撤销开始")
+	//dhcsys_alert("医保门诊退费开始:DivRowid="+DivRowid+"^UserId="+UserId+"^AdmReasonId="+AdmReasonId+"^ExpString="+ExpString+"^CPPFlag="+CPPFlag)
+    var ExpStrForNet=BuildInsuExpStrStd(ExpString,5)
+	InsuTypeCode=GetInsuTypeCode(AdmReasonId)
+    if (InsuTypeCode=="") {return -1;} 
+
+	/* Zhan 20181213注释，改为取配置
+    switch (InsuTypeCode){ 
+	    case "ZZB" :
+	    	var DHCINSUBLL = new ActiveXObject("DHCINSUBLL.INSU_HN_ZZB_TEST"); //Zhan 20160615 test 
+	    	break;
+	    case "YZB" :
+	    	var DHCINSUBLL = new ActiveXObject("DHCINSUBLL.INSU_JS_YZA");     //扬中市居民医保
+	    	break;
+	    default :
+	    	dhcsys_alert("此类型不联医保接口,请检查程序或数据;InsuTypeCode="+InsuTypeCode);
+	    	return -1;
+	    	break;
+	    }
+		*/
+	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return OutStr}	//Zhan 20181213增加配置并增加中间件功能
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		var DivideStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuOPDivideStrikeAudit(Handle,UserId,DivRowid,AdmSource,AdmReasonId,ExpStrForNet,CPPFlag)
+		//var DivideStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuOPDivideStrike(Handle,DivRowid,UserId,ExpString)
+		
+		DHCINSUBLL=null;
+	}else{
+		var getInStr="Handle="+Handle+"&UserId="+UserId+"&DivRowid="+DivRowid+"&AdmSource="+AdmSource+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet)+"&CPPFlag="+CPPFlag;
+		DivideStr=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuOPDivideStrikeAudit",getInStr,"")
+		if(DivideStr==""){DivideStr="-1"}
+    }
+	if ((DivideStr=="")||(DivideStr=="-1")||(DivideStr==undefined)) {
+		if(GetIusujsMsgFlag("OPDIVIDECANCLE")==""){dhcsys_alert("医保取消结算失败,返回值:"+OutStr)}	//Zhan 20161219 弹窗增加配置
+		return OutStr;
+	}
+	if(GetIusujsMsgFlag("OPDIVIDECANCLE")==""){dhcsys_alert("医保取消结算成功,返回值:"+DivideStr)}	//Zhan 20161219 弹窗增加配置
+	return DivideStr
+	}catch(e){
+		dhcsys_alert("调用医保接口发生异常"+e.message);
+		return -1;
+	}
+}
 
 /// 医保目录下载
 ///入参 	Handle                   	Interger?医保返回的句柄?目前大部分项目部用?不用的地方固定成?0〃
@@ -1098,13 +1289,13 @@ function InsuTarItmDL(Handle,UserId,ExpString)
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuTarItmDL(Handle,UserId,ExpStrForNet)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuTarItmDL(Handle,UserId,ExpStrForNet)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuTarItmDL",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuTarItmDL",getInStr,"")
 		if(rtn==""){rtn="-1"}
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
@@ -1149,13 +1340,13 @@ function InsuDiagnosisDL(Handle,UserId,ExpString)
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuDiagnosisDL(Handle,UserId,ExpStrForNet)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuDiagnosisDL(Handle,UserId,ExpStrForNet)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuDiagnosisDL",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuDiagnosisDL",getInStr,"")
 		if(rtn==""){rtn="-1"}
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
@@ -1200,13 +1391,13 @@ function InsuBasDicDL(Handle,UserId,ExpString)
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuBasDicDL(Handle,UserId,ExpStrForNet)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuBasDicDL(Handle,UserId,ExpStrForNet)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuBasDicDL",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuBasDicDL",getInStr,"")
 		if(rtn==""){rtn="-1"}
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
@@ -1251,13 +1442,13 @@ function InsuTarConDL(Handle,UserId,ConDr,ExpString)
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuTarConDL(Handle,UserId,ConDr,ExpStrForNet)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuTarConDL(Handle,UserId,ConDr,ExpStrForNet)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ConDr="+ConDr+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuTarConDL",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuTarConDL",getInStr,"")
 		if(rtn==""){rtn="-1"}
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
@@ -1303,13 +1494,13 @@ function InsuTarConUL(Handle,UserId,ConDr,ExpString)
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuTarConUL(Handle,UserId,ConDr,ExpStrForNet)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuTarConUL(Handle,UserId,ConDr,ExpStrForNet)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ConDr="+ConDr+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuTarConUL",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuTarConUL",getInStr,"")
 		if(rtn==""){rtn="-1"}
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
@@ -1355,13 +1546,13 @@ function InsuTarConDelete(Handle,UserId,ConDr,ExpString)
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuTarConDelete(Handle,UserId,ConDr,ExpStrForNet)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuTarConDelete(Handle,UserId,ConDr,ExpStrForNet)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ConDr="+ConDr+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuTarConDelete",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuTarConDelete",getInStr,"")
 		if(rtn==""){rtn="-1"}
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
@@ -1406,13 +1597,13 @@ function InsuBasDicUL(Handle,UserId,ExpString)
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuBasDicUL(Handle,UserId,ExpStrForNet)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuBasDicUL(Handle,UserId,ExpStrForNet)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuBasDicUL",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuBasDicUL",getInStr,"")
 		if(rtn==""){rtn="-1"}
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
@@ -1457,13 +1648,13 @@ function InsuDicCTCareprovUL(Handle,UserId,ExpString)
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuDicCTCareprovUL(Handle,UserId,ExpStrForNet)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuDicCTCareprovUL(Handle,UserId,ExpStrForNet)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuDicCTCareprovUL",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuDicCTCareprovUL",getInStr,"")
 		if(rtn==""){rtn="-1"}
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
@@ -1510,13 +1701,13 @@ function InsuDicCTCareprovDL(Handle,UserId,ExpString)
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuDicCTCareprovUL(Handle,UserId,ExpStrForNet)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuDicCTCareprovUL(Handle,UserId,ExpStrForNet)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuDicCTCareprovDL",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuDicCTCareprovDL",getInStr,"")
 		if(rtn==""){rtn="-1"}
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
@@ -1564,13 +1755,13 @@ function InsuDicJXUL(Handle,UserId,ExpString)
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuDicJXUL(Handle,UserId,ExpStrForNet)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuDicJXUL(Handle,UserId,ExpStrForNet)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuDicJXUL",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuDicJXUL",getInStr,"")
 		if(rtn==""){rtn="-1"}
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
@@ -1615,13 +1806,13 @@ function InsuDicCTLocUL(Handle,UserId,ExpString)
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuDicCTLocUL(Handle,UserId,ExpStrForNet)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuDicCTLocUL(Handle,UserId,ExpStrForNet)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuDicCTLocUL",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuDicCTLocUL",getInStr,"")
 		if(rtn==""){rtn="-1"}
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
@@ -1668,13 +1859,13 @@ function InsuDicCTLocDL(Handle,UserId,ExpString)
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuDicCTLocDL(Handle,UserId,ExpStrForNet)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuDicCTLocDL(Handle,UserId,ExpStrForNet)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuDicCTLocDL",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuDicCTLocDL",getInStr,"")
 		if(rtn==""){rtn="-1"}
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
@@ -1687,8 +1878,163 @@ function InsuDicCTLocDL(Handle,UserId,ExpString)
 }
 
 
+/// 科室信息变更
+///入参 	Handle                   	Interger?医保返回的句柄?目前大部分项目部用?不用的地方固定成?0〃
+///			UserId                    	用户表Rowid
+///			Rowid						科室上传记录id
+///         ExpString:                  医保类型^数据库连接串
+///出参:成功:0,失败:-1
+function InsuDicCTLocULMod(Handle,UserId,Rowid,ExpString)
+{
+	try {
+	OutStr="-1"
+	var rtn="-1";
+	//dhcsys_alert("医保科室信息上传开始Handle="+Handle+"UserId="+UserId+"ExpString="+ExpString)
+	InsuTypeCode=ExpString.split("^")[0]
+	var ExpStrForNet=BuildInsuExpStrStd(ExpString,1)
+    if (InsuTypeCode=="") 
+    {
+	    dhcsys_alert("扩展参数医保类型为空")
+	    return -1;
+	 } 
+	/* Zhan 20181213注释，改为取配置
+    switch (InsuTypeCode){ 
+	    case "ZZB" :
+	    	var DHCINSUBLL = new ActiveXObject("DHCINSUBLL.INSU_HN_ZZB_TEST"); //Zhan 20160615 test 
+	    	break;
+	    case "YZB" :
+	    	var DHCINSUBLL = new ActiveXObject("DHCINSUBLL.INSU_JS_YZA");     //扬中市居民医保
+	    	break;
+	    default :
+	    	dhcsys_alert("此类型不联医保接口,请检查程序或数据;InsuTypeCode="+InsuTypeCode);
+	    	return -1;
+	    	break;
+	    }
+		*/
+	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuDicCTLocULMod(Handle,UserId,Rowid,ExpStrForNet)
+		DHCINSUBLL=null;
+	}else{
+		var getInStr="Handle="+Handle+"&UserId="+UserId+"&Rowid="+Rowid+"&ExpString="+toINSUSafeCode(ExpStrForNet);
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuDicCTLocULMod",getInStr,"")
+		if(rtn==""){rtn="-1"}
+    }
+	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
+	return rtn
+	}catch(e){
+		dhcsys_alert("调用医保接口发生异常"+e.message);
+		return -1;
+	}
+	
+}
 
+/// 科室信息撤销
+///入参 	Handle                   	Interger?医保返回的句柄?目前大部分项目部用?不用的地方固定成?0〃
+///			UserId                    	用户表Rowid
+///         ExpString:                  医保类型^数据库连接串
+///出参:成功:0,失败:-1
+function InsuDicCTLocULCancel(Handle,UserId,Rowid,ExpString)
+{
+	try {
+	OutStr="-1"
+	var rtn="-1";
+	//dhcsys_alert("医保科室信息上传开始Handle="+Handle+"UserId="+UserId+"ExpString="+ExpString)
+	InsuTypeCode=ExpString.split("^")[0]
+	var ExpStrForNet=BuildInsuExpStrStd(ExpString,1)
+    if (InsuTypeCode=="") 
+    {
+	    dhcsys_alert("扩展参数医保类型为空")
+	    return -1;
+	 } 
+	/* Zhan 20181213注释，改为取配置
+    switch (InsuTypeCode){ 
+	    case "ZZB" :
+	    	var DHCINSUBLL = new ActiveXObject("DHCINSUBLL.INSU_HN_ZZB_TEST"); //Zhan 20160615 test 
+	    	break;
+	    case "YZB" :
+	    	var DHCINSUBLL = new ActiveXObject("DHCINSUBLL.INSU_JS_YZA");     //扬中市居民医保
+	    	break;
+	    default :
+	    	dhcsys_alert("此类型不联医保接口,请检查程序或数据;InsuTypeCode="+InsuTypeCode);
+	    	return -1;
+	    	break;
+	    }
+		*/
+	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuDicCTLocULCancel(Handle,UserId,Rowid,ExpStrForNet)
+		DHCINSUBLL=null;
+	}else{
+		var getInStr="Handle="+Handle+"&UserId="+UserId+"&Rowid="+Rowid+"&ExpString="+toINSUSafeCode(ExpStrForNet);
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuDicCTLocULCancel",getInStr,"")
+		if(rtn==""){rtn="-1"}
+    }
+	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
+	return rtn
+	}catch(e){
+		dhcsys_alert("调用医保接口发生异常"+e.message);
+		return -1;
+	}
+	
+}
 
+///科室信息操作
+/// Handle:0:动态库形式,1:后台M形式
+/// 后台M形式上传,入参说明:
+///     上传：Input:科室Dr(为空上传全部)串(^分割),ExpStr:交易代码(3401)^操作员指针^院区^医保类型^
+/// 批量上传：Input:科室Dr(为空上传全部)串(^分割),ExpStr:交易代码(3401A)操作员指针^院区^医保类型^
+///     变更：Input:医保科室上传记录表Dr串(^分割),ExpStr:交易代码(3402)^操作员指针^院区^医保类型^
+///     撤销：Input:医保科室上传记录表Dr串(^分割),ExpStr:交易代码(3403)^操作员指针^院区^医保类型^
+/// 动态库形式上传：入参说明
+function InsuLocInfoOpt(Handle,Input,ExpStr) 
+{
+        Infno = ExpStr.split("^")[0]
+		switch (Handle){ 
+			case "1" :
+					var RtnStr = tkMakeServerCall("INSU.MI.NAT.OFFBIZ.DeptMgt","CTLocInfoOpt",Input,ExpStr);
+					return  RtnStr
+					break;
+			case "0" :
+					switch (Infno){ 
+						case "3401",'3401A' :
+							/*
+								入参 	Handle: 		Interger?医保返回的句柄?目前大部分项目部用?不用的地方固定成?0〃
+										UserId:			用户表Rowid
+								        ExpString:		3401:医保类型^^^3401^医保科室上传记录表Rowid
+														3401A:医保类型^^^3401A^
+								出参:成功:0,失败:-1
+							*/
+							return  InsuDicCTLocUL(Handle,UserId,ExpString);  
+							break;
+						case "3402" :
+							/*
+								入参 	Handle: 		Interger?医保返回的句柄?目前大部分项目部用?不用的地方固定成?0〃
+										UserId:			用户表Rowid
+										Rowid:			医保科室上传记录表Rowid
+								        ExpString:		医保类型^^^3402^
+								出参:成功:0,失败:-1
+							*/
+							return  InsuDicCTLocULMod(Handle,UserId,Rowid,ExpString);
+							break;
+						case "3403" :
+							/*
+								入参 	Handle: 		Interger?医保返回的句柄?目前大部分项目部用?不用的地方固定成?0〃
+										UserId:			用户表Rowid
+										Rowid:			医保科室上传记录表Rowid
+								        ExpString:		医保类型^^^3403^
+								出参:成功:0,失败:-1
+							*/
+						return  InsuDicCTLocULCancel(Handle,UserId,Rowid,ExpString);
+						break;
+						default :
+							break;
+						}
+				break;
+			}
+}
 
 /// 收费类别信息上传
 ///入参 	Handle                   	Interger?医保返回的句柄?目前大部分项目部用?不用的地方固定成?0〃
@@ -1723,13 +2069,13 @@ function InsuDicTarCateUL(Handle,UserId,ExpString)
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuDicTarCateUL(Handle,UserId,ExpStrForNet)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuDicTarCateUL(Handle,UserId,ExpStrForNet)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuDicTarCateUL",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuDicTarCateUL",getInStr,"")
 		if(rtn==""){rtn="-1"}
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
@@ -1775,13 +2121,13 @@ function InsuHisDicUL(Handle,UserId,ExpString)
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuHisDicUL(Handle,UserId,ExpStrForNet)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuHisDicUL(Handle,UserId,ExpStrForNet)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuHisDicUL",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuHisDicUL",getInStr,"")
 		if(rtn==""){rtn="-1"}
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
@@ -1827,13 +2173,13 @@ function InsuASSignIn(Handle,UserId,ExpString)
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuASSignIn(Handle,UserId,ExpStrForNet)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuASSignIn(Handle,UserId,ExpStrForNet)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuASSignIn",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuASSignIn",getInStr,"")
 		if(rtn==""){rtn="-1"}
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
@@ -1880,13 +2226,13 @@ function InsuASSignOut(Handle,UserId,ExpString)
 	    }
 		*/
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuASSignOut(Handle,UserId,ExpStrForNet)
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuASSignOut(Handle,UserId,ExpStrForNet)
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuASSignOut",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuASSignOut",getInStr,"")
 		if(rtn==""){rtn="-1"}
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
@@ -1912,7 +2258,8 @@ function InsuIPDivideCancleForInsu(Handle,UserId,djlsh0,AdmReasonNationCode,AdmR
 	try {
 		//dhcsys_alert("医保住院退费[只退医保]开始"+Handle+"^"+UserId+"^"+djlsh0+"^"+AdmReasonNationCode+"^"+AdmReasonId+"^"+ExpString)
 	  	if(djlsh0==""){dhcsys_alert("单据流水号不能空!");return -1;}
-	  	var ExpStrForNet=BuildInsuExpStrStd(ExpString,3)
+	  	//var ExpStrForNet=BuildInsuExpStrStd(ExpString,3)
+		var ExpStrForNet=BuildInsuExpStrStd(ExpString,1)	//upt 20230218 HanZH
 		InsuTypeCode=GetInsuTypeCode(AdmReasonId)
 	    if (InsuTypeCode=="") {return -1;} 
 		var rtn="-1";
@@ -1932,13 +2279,13 @@ function InsuIPDivideCancleForInsu(Handle,UserId,djlsh0,AdmReasonNationCode,AdmR
 	    }
 		*/
 			if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-			if(INSUPORTGLOBAL.httpFlag==0){
-				if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-				var flag=INSUPORTGLOBAL.DHCINSUBLL.InsuIPDivideStrikeForInsu(Handle,UserId,djlsh0,AdmReasonNationCode,AdmReasonId,ExpStrForNet);
+			if(INSU.PORT.GLOBAL.httpFlag==0){
+				if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+				var flag=INSU.PORT.GLOBAL.DHCINSUBLL.InsuIPDivideStrikeForInsu(Handle,UserId,djlsh0,AdmReasonNationCode,AdmReasonId,ExpStrForNet);
 				DHCINSUBLL=null;
 			}else{
 				var getInStr="Handle="+Handle+"&UserId="+UserId+"&djlsh0="+djlsh0+"&AdmReasonNationCode="+AdmReasonNationCode+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-				flag=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuIPDivideStrikeForInsu",getInStr,"")
+				flag=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuIPDivideStrikeForInsu",getInStr,"")
 			}
 	  		if ((flag=="0")||(flag=="-2"))
 	  		{
@@ -1952,7 +2299,7 @@ function InsuIPDivideCancleForInsu(Handle,UserId,djlsh0,AdmReasonNationCode,AdmR
 				return -1;
 			}
  	}
- 	catch(e){
+ 	catch(e){InsuEPRInfoUL
 		dhcsys_alert("调用医保接口发生异常"+e.message);
 		return -1;
 	}
@@ -1995,13 +2342,13 @@ function InsuIPDivideCancleForHis(Handle,UserId,BillNo,AdmReasonNationCode,AdmRe
 	    }
 		*/
 			if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return flag}	//Zhan 20181213增加配置并增加中间件功能
-			if(INSUPORTGLOBAL.httpFlag==0){
-				if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-				flag=INSUPORTGLOBAL.DHCINSUBLL.InsuIPDivideStrikeForHis(Handle,UserId,BillNo,AdmReasonNationCode,AdmReasonId,ExpStrForNet);
+			if(INSU.PORT.GLOBAL.httpFlag==0){
+				if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+				flag=INSU.PORT.GLOBAL.DHCINSUBLL.InsuIPDivideStrikeForHis(Handle,UserId,BillNo,AdmReasonNationCode,AdmReasonId,ExpStrForNet);
 				DHCINSUBLL=null;
 			}else{
 				var getInStr="Handle="+Handle+"&UserId="+UserId+"&BillNo="+BillNo+"&AdmReasonNationCode="+AdmReasonNationCode+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
-				flag=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuIPDivideStrikeForHis",getInStr,"")
+				flag=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuIPDivideStrikeForHis",getInStr,"")
 			}
 	  		if ((flag=="0")||(flag=="-2"))
 	  		{
@@ -2037,7 +2384,8 @@ function InsuOPDivideCancleForInsu(Handle,UserId,djlsh0,AdmSource,AdmReasonId,Ex
 		//dhcsys_alert("医保住院退费[只退医保]开始"+Handle+"^"+UserId+"^"+djlsh0+"^"+AdmReasonNationCode+"^"+AdmReasonId+"^"+ExpString)
 	  	if(djlsh0==""){dhcsys_alert("单据流水号不能空!");return -1;}
 		var flag="-1";
-	  	var ExpStrForNet=BuildInsuExpStrStd(ExpString,2)
+	  	//var ExpStrForNet=BuildInsuExpStrStd(ExpString,2)
+		var ExpStrForNet=BuildInsuExpStrStd(ExpString,1)	//upt 20230218 HanZH
 		InsuTypeCode=GetInsuTypeCode(AdmReasonId)
 	    if (InsuTypeCode=="") {return -1;} 
 	   	//dhcsys_alert(InsuTypeCode)
@@ -2056,13 +2404,13 @@ function InsuOPDivideCancleForInsu(Handle,UserId,djlsh0,AdmSource,AdmReasonId,Ex
 	    }
 		*/
 			if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return flag}	//Zhan 20181213增加配置并增加中间件功能
-			if(INSUPORTGLOBAL.httpFlag==0){
-				if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-				flag=INSUPORTGLOBAL.DHCINSUBLL.InsuOPDivideStrikeForInsu(Handle,UserId,djlsh0,AdmSource,AdmReasonId,ExpStrForNet,CPPFlag);
+			if(INSU.PORT.GLOBAL.httpFlag==0){
+				if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+				flag=INSU.PORT.GLOBAL.DHCINSUBLL.InsuOPDivideStrikeForInsu(Handle,UserId,djlsh0,AdmSource,AdmReasonId,ExpStrForNet,CPPFlag);
 				DHCINSUBLL=null;
 			}else{
 				var getInStr="Handle="+Handle+"&UserId="+UserId+"&djlsh0="+djlsh0+"&AdmSource="+AdmSource+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet)+"&CPPFlag="+CPPFlag;
-				flag=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuOPDivideStrikeForInsu",getInStr,"")
+				flag=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuOPDivideStrikeForInsu",getInStr,"")
 			}
 	  		if ((flag=="0")||(flag=="-2"))
 	  		{
@@ -2116,13 +2464,13 @@ function InsuOPDivideCancleForHis(Handle,UserId,DivRowid,AdmSource,AdmReasonId,E
 	    }
 		*/
 			if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return flag}	//Zhan 20181213增加配置并增加中间件功能
-			if(INSUPORTGLOBAL.httpFlag==0){
-				if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-				flag=INSUPORTGLOBAL.DHCINSUBLL.InsuOPDivideStrikeForHis(Handle,UserId,DivRowid,AdmSource,AdmReasonId,ExpStrForNet,CPPFlag);
+			if(INSU.PORT.GLOBAL.httpFlag==0){
+				if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+				flag=INSU.PORT.GLOBAL.DHCINSUBLL.InsuOPDivideStrikeForHis(Handle,UserId,DivRowid,AdmSource,AdmReasonId,ExpStrForNet,CPPFlag);
 				DHCINSUBLL=null;
 			}else{
 				var getInStr="Handle="+Handle+"&UserId="+UserId+"&DivRowid="+DivRowid+"&AdmSource="+AdmSource+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet)+"&CPPFlag="+CPPFlag;
-				flag=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuOPDivideStrikeForHis",getInStr,"")
+				flag=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuOPDivideStrikeForHis",getInStr,"")
 			}
 	  		if ((flag=="0")||(flag=="-2"))
 	  		{
@@ -2141,7 +2489,42 @@ function InsuOPDivideCancleForHis(Handle,UserId,DivRowid,AdmSource,AdmReasonId,E
 		return -1;
 	}
 }
+/// 医保冲正交易
+///入参 	 dHandle： Interger?医保返回的句柄?目前大部分项目部用?不用的地方固定成?0〃
+///			  UserId： 用户表Rowid                不能为空
+///            PsnNo： 医保个人编号               不能为空
+///           OmsgId： 需要冲正的发送方报文Id      不能为空
+///            Oinfno：需要冲正的交易编号          不能为空
+///            ExpStr: 医保类型^冲正交易表指针^医保结算表指针^数据库连接串
+/// 注意：医保结算表指针 如果不为空 那么PsnNo,OmsgId可以为空
+///出参:成功:0,失败:-1
+function InsuReverse(dhandle,UserId,PsnNo,OmsgId,Oinfno,ExpStr)
+{
+	try{
+    	var InsuType=ExpStr.split("^")[0]
+    	if (InsuType=="") {return -1;} 
+    	var ExpStrForNet=BuildInsuExpStrStd(ExpStr,3);
+    	if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+		if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			
+				rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuReverse(dhandle,UserId,PsnNo,OmsgId,Oinfno,ExpStrForNet);
+			INSU.PORT.GLOBAL.DHCINSUBLL= null;
+		}else{
+			var getInStr="dhandle="+dhandle+"&UserId="+UserId+"&PsnNo="+PsnNo+"&OmsgId="+OmsgId+"&Oinfno="+Oinfno+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+			
+				rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuReverse",getInStr,"")
+		}
+	    return rtn;
+    	
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
 
+}
 
 ///****************************公共函数*****************
 
@@ -2150,7 +2533,7 @@ function InsuOPDivideCancleForHis(Handle,UserId,DivRowid,AdmSource,AdmReasonId,E
 function GetInsuTypeCode(AdmreaonDr)
 	{
 	var VerStr="";
-	VerStr=tkMakeServerCall("web.INSUDicDataCom","QueryByCode","AdmReasonDrToDLLType",AdmreaonDr,INSUPORTGLOBAL.HospID);
+	VerStr=tkMakeServerCall("web.INSUDicDataCom","QueryByCode","AdmReasonDrToDLLType",AdmreaonDr,INSU.PORT.GLOBAL.HospID);
 	if ((VerStr=="0")||(VerStr=="")){
 		dhcsys_alert(VerStr + "根据费别表rowid未取到医保类型。\n\n请核对病人费别是否改成自费了,或者检查AdmReasonDrToDLLType对照")
 		return "";
@@ -2158,18 +2541,35 @@ function GetInsuTypeCode(AdmreaonDr)
     InsuTypeCode=VerStr.split("^")[5]    //得到医保类型代码  XZA,XZB.XZC等 
 	return InsuTypeCode
 	} 
+//获取数据加密串
 function GetINSUdbEncrypt()
 	{
 	var VerStr="";
-	VerStr=tkMakeServerCall("web.INSUDicDataCom","QueryByCode","SYS","DBEncrypt",INSUPORTGLOBAL.HospID);
+	VerStr=tkMakeServerCall("web.INSUDicDataCom","QueryByCode","SYS","DBEncrypt",INSU.PORT.GLOBAL.HospID);
 	if ((VerStr=="0")||(VerStr=="")){
 		dhcsys_alert(VerStr + "未取到数据库连接加密信息串,请在医保字典的系统中配置DBEncrypt")
 		return "";
 	}else{
-		INSUPORTGLOBAL.dbEncrypt="|"+VerStr.split("^")[5]+"|"+VerStr.split("^")[6]+"|"+VerStr.split("^")[4]+"|"+VerStr.split("^")[11]+"|"+document.location.port+"|"+"HOSPID:"+INSUPORTGLOBAL.HospID
+		INSU.PORT.GLOBAL.dbEncrypt="|"+VerStr.split("^")[5]+"|"+VerStr.split("^")[6]+"|"+VerStr.split("^")[4]+"|"+VerStr.split("^")[11]+"|"+document.location.port+"|"+"HOSPID:"+INSU.PORT.GLOBAL.HospID+"|"+((window.location.href.indexOf("https")!==-1)?"HTTPS":"HTTP")
 	}
-	return INSUPORTGLOBAL.dbEncrypt
-	} 
+	return INSU.PORT.GLOBAL.dbEncrypt
+} 
+//读取字典配置信息
+function GetINSUDicInfo(qdicType,qdicCode,ind)
+	{
+	var dicStr="";
+	dicStr=tkMakeServerCall("web.INSUDicDataCom","QueryByCode",qdicType,qdicCode,INSU.PORT.GLOBAL.HospID);
+	if ((dicStr=="0")||(dicStr=="")){
+		dhcsys_alert(dicStr + "未取到数据信息串,请在医保字典的系统中配置"+qdicCode)
+		return "";
+	}else{
+		var tmpdicarr=dicStr.split("^")
+		if(tmpdicarr.length>=ind){
+			dicStr=tmpdicarr[ind]
+		}
+	}
+	return dicStr
+} 
 // 功能描述:获取医保类型对应的医保DLL相关配置
 // Zhan 20181213
 // 入参:InsuTypeCode:医保类别代码如ZZB
@@ -2178,26 +2578,39 @@ function GetInsuDLLOBJByCode(InsuTypeCode)
 {
 	try{
 		var VerStr="";
-		INSUPORTGLOBAL.httpFlag="";
-		INSUPORTGLOBAL.INSUblltype="";
+		INSU.PORT.GLOBAL.httpFlag="";
+		INSU.PORT.GLOBAL.INSUblltype="";
 		var ModeDesc=""
-		VerStr=tkMakeServerCall("web.INSUDicDataCom","QueryByCode","DLLType",InsuTypeCode,INSUPORTGLOBAL.HospID);
+		VerStr=tkMakeServerCall("web.INSUDicDataCom","QueryByCode","DLLType",InsuTypeCode,INSU.PORT.GLOBAL.HospID);
 		if ((VerStr=="0")||(VerStr=="")){
-			dhcsys_alert(VerStr + "根据InsuTypeCode医保类型的DLL配置信息！请检查DLLType(医保接口DLL)配置")
+			//dhcsys_alert(VerStr + "根据InsuTypeCode医保类型的DLL配置信息！请检查DLLType(医保接口DLL)配置")
+			INSU.MSG.alertMsg("根据InsuTypeCode医保类型的DLL配置信息！请检查DLLType(医保接口DLL)配置","提示","info");
 			return false;
 		}
 		if(VerStr.indexOf("DHCINSUBLL.")==-1){
-			dhcsys_alert(VerStr + InsuTypeCode+"的医保类型未配置DLL信息，请联系管理员处理")		
+			//dhcsys_alert(VerStr + InsuTypeCode+"的医保类型未配置DLL信息，请联系管理员处理")		
+			INSU.MSG.alertMsg(VerStr + InsuTypeCode+"的医保类型未配置DLL信息，请联系管理员处理","提示","info");
 			return false;
 		}
 		var VerStrArr=VerStr.split("^")
-		INSUPORTGLOBAL.httpFlag=VerStrArr[6]
-		
-		if ((INSUPORTGLOBAL.SerStatus!="1")&&(INSUPORTGLOBAL.isWinXP)){
-	      	INSUPORTGLOBAL.httpFlag="0"
+		INSU.PORT.GLOBAL.httpFlag=VerStrArr[6]
+		//如果配置了中间件模式且是自动启动
+		if((INSU.PORT.GLOBAL.httpFlag=="1")&&(INSU.PORT.GLOBAL.SerStatus!="1")){
+			if(INSU.PORT.GLOBAL.AutoStartINSUService=="1"){
+				//启动中间件
+				openINSUSers("")
+				INSU.MSG.alertMsg("正在启动医保中间件服务程序，稍后请重新操作！","提示","info");
+			}else{
+				INSU.MSG.alertMsg("请启动医保中间件服务程序！","提示","info");
+			}
+			
+		}
+
+		if ((INSU.PORT.GLOBAL.SerStatus!="1")&&(INSU.PORT.GLOBAL.isWinXP)){
+	      	INSU.PORT.GLOBAL.httpFlag="0"
 		}	
-		//dhcsys_alert(INSUPORTGLOBAL.isWinXP+"-"+INSUPORTGLOBAL.httpFlag)
-		switch (INSUPORTGLOBAL.httpFlag){ 
+		//dhcsys_alert(INSU.PORT.GLOBAL.isWinXP+"-"+INSU.PORT.GLOBAL.httpFlag)
+		switch (INSU.PORT.GLOBAL.httpFlag){ 
 			/*
 			case "2" :
 				//头菜单或窗体调用模式，山东地纬的项目有用，以后准备用中间件实现
@@ -2208,16 +2621,16 @@ function GetInsuDLLOBJByCode(InsuTypeCode)
 				break;
 				*/
 			case "1" :case "3" :case "2" :
-				//中间件模式
+				//中间件模式,1:http模式,加载DLL后释放模式,2:http模式,加载DLL后不释放模式,3:websocket模式,加载DLL后释放模式
 				ModeDesc="中间件"
-				INSUPORTGLOBAL.INSUblltype=VerStrArr[5].split(".")[1]
+				INSU.PORT.GLOBAL.INSUblltype=VerStrArr[5].split(".")[1]
 				break;
 			default :
 				ModeDesc="DLL";
-				INSUPORTGLOBAL.DHCINSUBLL = new ActiveXObject(VerStrArr[5]);	//默认为ActiveXObject调用方式
+				INSU.PORT.GLOBAL.DHCINSUBLL = new ActiveXObject(VerStrArr[5]);	//默认为ActiveXObject调用方式
 		    	break;	
 			}
-			//dhcsys_alert(INSUPORTGLOBAL.httpFlag+"_"+INSUPORTGLOBAL.INSUblltype+"\n"+VerStr)
+			//dhcsys_alert(INSU.PORT.GLOBAL.httpFlag+"_"+INSU.PORT.GLOBAL.INSUblltype+"\n"+VerStr)
 		return true
 	}catch(e){
 		dhcsys_alert("GetInsuDLLOBJByCode调用"+ModeDesc+"时发生异常："+e.message);
@@ -2249,7 +2662,7 @@ function GetIusujsMsgFlag(dicCode)
 {
 	//调试时使用的
 	/*var VerStr="";
-	VerStr=tkMakeServerCall("web.INSUDicDataCom","QueryByCode","INSUJSMSGFLAG",dicCode,INSUPORTGLOBAL.HospID);
+	VerStr=tkMakeServerCall("web.INSUDicDataCom","QueryByCode","INSUJSMSGFLAG",dicCode,INSU.PORT.GLOBAL.HospID);
 	if ((VerStr=="0")||(VerStr=="")){
 		return "";
 	}
@@ -2307,16 +2720,16 @@ function BuildInsuExpStrStd(ExpStr,Ind)
 function BuildInsuExpStrStd(ExpStr,Ind)
 {
 	var NewExpStr=ExpStr;
-	if (ExpStr==""){return ExpStr+"^"+ServerNameSpace+INSUPORTGLOBAL.dbEncrypt;}
+	if (ExpStr==""){return ExpStr+"^"+ServerNameSpace+INSU.PORT.GLOBAL.dbEncrypt;}
 	if("undefined"==typeof(Ind)){return NewExpStr ;}
 	if(Ind<1){return NewExpStr;}
 	try
 	{
 		var tmpArr=ExpStr.split("^")
-		if((tmpArr.length-1)==Ind){NewExpStr=ExpStr+"^"+ServerNameSpace+INSUPORTGLOBAL.dbEncrypt; return NewExpStr;}
+		if((tmpArr.length-1)==Ind){NewExpStr=ExpStr+"^"+ServerNameSpace+INSU.PORT.GLOBAL.dbEncrypt; return NewExpStr;}
 		var tmpNewArr=tmpArr.slice(0,Ind)
 		var tmprightArr=tmpArr.slice(Ind+1)
-		tmpNewArr.push(ServerNameSpace+INSUPORTGLOBAL.dbEncrypt)
+		tmpNewArr.push(ServerNameSpace+INSU.PORT.GLOBAL.dbEncrypt)
 		NewExpStr=tmpNewArr.concat(tmprightArr).join("^")
 	}
 	catch(e)
@@ -2398,7 +2811,7 @@ function INSUAdd(DivideStr,InsuTypeCode)
 		PayModeRowIDObj.value="1"   			//支付方式表rowid  现金
 		//pay=balanceobj.value
 		tmppay=amounttopayobj.value
-		INSUPORTGLOBAL.AddDivideFlag=true;
+		INSU.PORT.GLOBAL.AddDivideFlag=true;
 		if (tmppay<0)
 		{ 
 			balanceobj.style.color="red";
@@ -2419,14 +2832,14 @@ function ReadCardNew(InsuNo,Type)
 		//return "0|6003105182^603991952^120000650601001^张?^女^1971-01-01^31^0^888888^宝安洪浪南路??号有限公司^1^1^2^Z000^1175.02^200907^5^0^0^0^0^0^0^0^0^0^^^^^^^1^0^0^0^0^0^综合##2^@@"
 		//医疗证号1^电脑号2^身份证号(可以取自数据库)3^姓名(可以取自数据库)4^性别?代码?性别??(可以取自数据库)5^出生时间(可以取自数据库)6^年龄(可以取自数据库)7^特殊人群?代码?8^单位编码9^单位名称10^就业状态?代码?就业状态??11^参保类型?代码?参保类型??12^经费来源?代码?经费来源??13^管理属地?代码?管理属地??14^帐户余额15^年月16^连续参保月数17^基本医疗保险共济基金支付最高限额?当前?18^基本医疗保险共济基金已用金额?本年度内?19^基本医疗保险共济基金可用余额?当前?20^地方补充医疗保险共济基金支付最高限额?当前?21^地方补充医疗保险共济基金已用金额?本年度内?22^地方补充医疗保险共济基金可用余额?当前?23^?帐户?不足自付限额?当前?24^?帐户?自付已用金额?本年度内?25^?帐户?自付可用余额?当前?26^监护人1电脑号*27^监护人2电脑号*28^监护人1身份证号*29^监护人2身份证号*30^监护人1姓名*31^监护人2姓名*32^医保参加情况?"0"未参加,"1"参加?33^统筹参加情况?"0"未参加,"1"参加?34^离休参加情况?"0"未参加,"1"参加?35^生育参加情况?"0"未参加,"1"参加?36^工伤参加情况?"0"未参加,"1"参加?37^少儿参加情况?"0"未参加,"1"参加?*38
 	    
-    	if(INSUPORTGLOBAL.httpFlag==0){
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
 			insuDHCINSUBLL = new ActiveXObject("DHCINSUBLL.INSU_HN_ZZB_TEST");
-			if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
 			RtnStr=insuDHCINSUBLL.InsuASReadCard(dHandle,UserID,InsuNo,Type);
 			insuDHCINSUBLL=null
     	}else{
 			var getInStr="Handle="+Handle+"&userid="+UserId+"&InsuNo="+InsuNo+"&Type="+Type;
-			RtnStr=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuASReadCard",getInStr,"")
+			RtnStr=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuASReadCard",getInStr,"")
 	    }
 	    return RtnStr
 	}catch(e){
@@ -2464,13 +2877,13 @@ function InsuReport(Handle,Indata,UserId,ExpString){
 		*/
 
 		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-    	if(INSUPORTGLOBAL.httpFlag==0){
-	    	if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-			var rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuApplyItems(Handle,Indata,UserId,ExpStrForNet)  
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuApplyItems(Handle,Indata,UserId,ExpStrForNet)  
 		    DHCINSUBLL= null;
     	}else{
 			var getInStr="Handle="+Handle+"&Indata="+Indata+"&UserId="+UserId+"&ExpStrForNet="+toINSUSafeCode(ExpStrForNet);
-			rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuApplyItems",getInStr,"");
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuApplyItems",getInStr,"");
 	    }
 
 		    return rtn;
@@ -2491,14 +2904,14 @@ function ReadIDCard()
  try{
 	 var CardNo="";
 	var rtn="-1";
-	if(INSUPORTGLOBAL.httpFlag==0){
+	if(INSU.PORT.GLOBAL.httpFlag==0){
 		 var DHCINSUBLL = new ActiveXObject("DHCINSUBLL.INSU_HN_ZZB"); 
-		 if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		 rtn=INSUPORTGLOBAL.DHCINSUBLL.ReadIDCard(1,CardNo) 
+		 if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		 rtn=INSU.PORT.GLOBAL.DHCINSUBLL.ReadIDCard(1,CardNo) 
 		 DHCINSUBLL= null; 
 	}else{
 		var getInStr="Handle="+Handle+"&InsuNo="+InsuNo;
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"ReadIDCard",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"ReadIDCard",getInStr,"")
 	}
     return rtn;
  }catch(e){
@@ -2532,13 +2945,13 @@ function InsuIPRegQuery(UserDr,ExpStr,AdmReasonNationCode,AdmReasonId)
 	*/
 	InsuTypeCode=GetInsuTypeCode(AdmReasonId)
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return flag}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuIPRegQuery(1,UserDr,ExpStr);
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuIPRegQuery(1,UserDr,ExpStr);
 		DHCINSUBLL= null;
 	}else{
 		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStr);
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuIPRegQuery",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuIPRegQuery",getInStr,"")
 	}
     return rtn;
 }
@@ -2556,18 +2969,18 @@ function InsuIPDivideOut(Handle,UserId,BillNO,AdmReasonNationCode,AdmReasonId,Ex
     var truthOut = window.confirm("确定进行医保零结算?");
     if (!truthOut) {return -1;}
 	
-	INSUPORTGLOBAL.AddDivideFlag=false;	//向计费组结算界面添加费用成功与否的标志
+	INSU.PORT.GLOBAL.AddDivideFlag=false;	//向计费组结算界面添加费用成功与否的标志
 	if(BillNO==""){dhcsys_alert("帐单号不能空!");return;}
 	InsuTypeCode=GetInsuTypeCode(AdmReasonId)
 	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return flag}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
+	if(INSU.PORT.GLOBAL.httpFlag==0){
 		var DHCINSUBLL = new ActiveXObject("DHCINSUBLL.INSU_SH");
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		DivideStr=INSUPORTGLOBAL.DHCINSUBLL.InsuIPDivideOut(Handle,BillNO,UserId,ExpString);
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		DivideStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuIPDivideOut(Handle,BillNO,UserId,ExpString);
 		DHCINSUBLL=null;  
 	}else{
 		var getInStr="Handle="+Handle+"&BillNO="+BillNO+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpString);
-		DivideStr=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuIPDivideOut",getInStr,"")
+		DivideStr=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuIPDivideOut",getInStr,"")
 	}
 	if(DivideStr=="0") //???什么情况返回-2,不用添加支付方式?
 	{
@@ -2598,7 +3011,7 @@ function InsuTypeOnchangeLink(AdmreaonDr,IPType){
 	
     var InsuDicQuery ="AKA130"+InsuTypeCode;
 	var VerStr="";
-	VerStr=tkMakeServerCall("web.INSUDicDataCom","GetSys","","",InsuDicQuery,INSUPORTGLOBAL.HospID);
+	VerStr=tkMakeServerCall("web.INSUDicDataCom","GetSys","","",InsuDicQuery,INSU.PORT.GLOBAL.HospID);
 	if ((VerStr=="0")||(VerStr=="")){
 		return false;
 	   }
@@ -2633,13 +3046,13 @@ function INSUUpLoadConAudit(InsuType) {
 	    }
 	*/
 	if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuUpLoadConAudit()
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuUpLoadConAudit()
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="";
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuUpLoadConAudit",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuUpLoadConAudit",getInStr,"")
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
 	return rtn
@@ -2674,13 +3087,13 @@ function INSUDownLoadConAudit(InsuType) {
 	    }
 	*/
 	if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-	if(INSUPORTGLOBAL.httpFlag==0){
-		if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-		rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuDownLoadConAudit()
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuDownLoadConAudit()
 		DHCINSUBLL=null;
 	}else{
 		var getInStr="";
-		rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuDownLoadConAudit",getInStr,"")
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuDownLoadConAudit",getInStr,"")
     }
 	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
 	return rtn
@@ -2720,13 +3133,13 @@ function InsuBasDL(InsuType,ExpString)
 		    }
 		*/
 		if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
-		if(INSUPORTGLOBAL.httpFlag==0){
-			if(INSUPORTGLOBAL.iniServerIP){var ini=INSUPORTGLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
-			rtn=INSUPORTGLOBAL.DHCINSUBLL.InsuBasDL(InsuType,"");
+		if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuBasDL(InsuType,"");
 			DHCINSUBLL= null;
 		}else{
 			var getInStr="InsuType="+InsuType+"&ExpString="+toINSUSafeCode(ExpString);
-			rtn=CallInsuComGet(INSUPORTGLOBAL.INSUblltype,"InsuBasDL",getInStr,"")
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuBasDL",getInStr,"")
 		}
 	    return rtn;
 	}catch(e){
@@ -2736,26 +3149,1153 @@ function InsuBasDL(InsuType,ExpString)
 	} 
 
 }
+
+
+
+/// 医保目录下载
+///入参 	Handle                   	Interger?医保返回的句柄?目前大部分项目部用?不用的地方固定成?0〃
+///			UserId                    	用户表Rowid
+///         ExpString:                  医保类型(00A)^数据库连接串^交易代码(1301)^HIS下载批次号所在列序号^是否全部下载^HIS批次号
+///出参:成功:0,失败:-1
+function InsuPLDownload(Handle,UserId,ExpStr)
+{
+	try {
+	OutStr="-1"
+	//dhcsys_alert("医保对照关系下载开始Handle="+Handle+"UserId="+UserId+"ConDr="+ConDr+"ExpString="+ExpString)
+	InsuTypeCode=ExpStr.split("^")[0]
+	var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1)
+    if (InsuTypeCode=="") 
+    {
+	    dhcsys_alert("扩展参数医保类型为空")
+	    return -1;
+	 } 
+	 var rtn="-1";
+	/* Zhan 20181213注释，改为取配置
+    switch (InsuTypeCode){ 
+	    case "ZZB" :
+	    	var DHCINSUBLL = new ActiveXObject("DHCINSUBLL.INSU_HN_ZZB_TEST"); //Zhan 20160615 test 
+	    	break;
+	    case "YZB" :
+	    	var DHCINSUBLL = new ActiveXObject("DHCINSUBLL.INSU_JS_YZA");     //扬中市居民医保
+	    	break;
+	    default :
+	    	dhcsys_alert("此类型不联医保接口,请检查程序或数据;InsuTypeCode="+InsuTypeCode);
+	    	return -1;
+	    	break;
+	    }
+		*/
+	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuPLDownload(Handle,UserId,ExpStrForNet)
+		DHCINSUBLL=null;
+	}else{
+		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuPLDownload",getInStr,"")
+		if(rtn==""){rtn="-1"}
+    }
+	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
+	return rtn
+	}catch(e){
+		dhcsys_alert("调用医保接口发生异常"+e.message);
+		return -1;
+	}
+	
+}
+
+///医保转院备案
+function INSUTransferHosApprove(Handle,UserId,AdmDr,InsuType,ExpStr)
+{
+	try{
+	    var ExpStrForNet=BuildInsuExpStrStd(ExpStr,13)
+		if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.INSUTransferHosApprove(Handle,UserId,AdmDr,ExpStrForNet);
+		    DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&AdmDr="+AdmDr+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"INSUTransferHosApprove",getInStr,"");
+	    }
+	    
+    return rtn;
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
+}
+
+///医保转院备案撤销
+function INSUTransferHosApproveDestory(Handle,UserId,AdmDr,InsuType,ExpStr)
+{
+	try{
+		
+		var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1)
+		if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.INSUTransferHosApproveDestory(Handle,UserId,AdmDr,ExpStrForNet);
+		    DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&AdmDr="+AdmDr+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"INSUTransferHosApproveDestory",getInStr,"");
+	    }
+    return rtn;
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
+}
+//医保住院备案查询  
+function InsuTransferHospQuery(Handle,UserId,Rowid,InsuType,ExpStr)
+{
+	try{
+		var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1)
+		if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuTransferHospQuery(Handle,UserId,Rowid,ExpStrForNet);
+		    DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&Rowid="+Rowid+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuTransferHospQuery",getInStr,"");
+	    }
+    return rtn;
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
+}
+///门诊慢特病备案，特检特治备案
+function InsuReport(dhandle,UserId,Indata,ExpStr)
+{
+	try{
+		
+    	var InsuType=ExpStr.split("^")[0]
+    	var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1);
+    	
+    	if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuApplyItems(dhandle,UserId,Indata,ExpStrForNet)
+		    DHCINSUBLL= null;
+    	}else{
+			var getInStr="dhandle="+dhandle+"&UserId="+UserId+"&Indata="+Indata+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuApplyItems",getInStr,"");
+	    }
+    	
+    return rtn;
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
+}
+
+///门诊慢特病备案，特检特治备案撤销
+function InsuReportDestory(dhandle,UserId,RowId,Indata,ExpStr)
+{
+	try{
+    	var InsuType=ExpStr.split("^")[0];
+    	var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1);
+    	if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuApplyItemsDestroy(dhandle,UserId,RowId,Indata,ExpStrForNet);
+		    DHCINSUBLL= null;
+    	}else{
+			var getInStr="dhandle="+dhandle+"&UserId="+UserId+"&RowId="+RowId+"&Indata="+Indata+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuApplyItemsDestroy",getInStr,"");
+	    }
+    return rtn;
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
+	
+}
+///门诊慢特病备案，特检特治备案查询
+function InsuReportQuery(dhandle,SDate,EDate,UserId,RowId,Rptlb,ExpStr)
+{
+	try{
+		
+    	var InsuType=ExpStr.split("^")[0]
+    	var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1);
+    	if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuApplyItemsQuery(dhandle,SDate,EDate,UserId,RowId,Rptlb,ExpStrForNet);
+		    DHCINSUBLL= null;
+    	}else{
+			var getInStr="dhandle="+dhandle+"&SDate="+SDate+"&EDate="+EDate+"&UserId="+UserId+"&RowId="+RowId+"&Rptlb="+Rptlb+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuApplyItemsQuery",getInStr,"");
+	    }
+    	
+    return rtn;
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
+	
+}
+///人员外伤备案
+function INSUTrumchkReg(Handle,UserId,AdmDr,InStr,ExpStr,TrumchkRegDr)
+{
+	try{
+		var InsuType=ExpStr.split("^")[0];
+	    var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1);
+		if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.INSUTrumChkReg(Handle,UserId,AdmDr,InStr,ExpStrForNet,TrumchkRegDr);
+		    DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&AdmDr="+AdmDr+"&InStr="+InStr+"&ExpString="+toINSUSafeCode(ExpStrForNet)+"&TrumchkRegDr="+TrumchkRegDr;
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"INSUTrumChkReg",getInStr,"");
+	    }
+	    
+    return rtn;
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
+}
+
+///人员外伤备案撤销
+function INSUTrumchkRegDestory(Handle,UserId,AdmDr,InStr,ExpStr)
+{
+	try{
+		var InsuType=ExpStr.split("^")[0];
+		var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1);
+		if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.INSUTrumChkRegDestory(Handle,UserId,AdmDr,InStr,ExpStrForNet);
+		    DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&AdmDr="+AdmDr+"&InStr="+InStr+"&ExpString="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"INSUTrumChkRegDestory",getInStr,"");
+	    }
+    return rtn;
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
+}
+
+///人员定点备案
+function INSUPsnFixReg(Handle,UserId,AdmDr,InStr,ExpStr,PsnFixRegDr)
+{
+	try{
+		var InsuType=ExpStr.split("^")[0];
+	    var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1);
+		if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.INSUPsnFixReg(Handle,UserId,AdmDr,InStr,ExpStrForNet,PsnFixRegDr);
+		    DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&AdmDr="+AdmDr+"&InStr="+InStr+"&PsnFixRegDr="+PsnFixRegDr+"&ExpString="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"INSUPsnFixReg",getInStr,"");
+	    }
+	    
+    return rtn;
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
+}
+
+///人员定点备案撤销
+function INSUPsnFixRegDestory(Handle,UserId,AdmDr,PsnNo,ExpStr)
+{
+	try{
+		var InsuType=ExpStr.split("^")[0];
+		var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1);
+		if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.INSUTPsnFixRegDestory(Handle,UserId,AdmDr,PsnNo,ExpStrForNet);
+		    DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&AdmDr="+AdmDr+"&PsnNo="+PsnNo+"&ExpString="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"INSUPsnFixRegDestory",getInStr,"");
+	    }
+    return rtn;
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
+}
+///生育登记备案
+function INSUMatnTrtReg(Handle,UserId,AdmDr,InStr,ExpStr)
+{
+	try{
+		
+       console.log("开始")	
+		var InsuType=ExpStr.split("^")[0];
+	    var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1);
+		if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	
+	    	console.log("if")	
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.INSUMatnTrtReg(Handle,UserId,AdmDr,InStr,ExpStrForNet);
+		    DHCINSUBLL= null;
+    	}else{
+	    	
+	    	console.log("else")	
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&AdmDr="+AdmDr+"&InStr="+InStr+"&ExpString="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"INSUMatnTrtReg",getInStr,"");
+	    }
+	 console.log("结束")	
+    return rtn;
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
+}
+
+///生育登记备案撤销
+function INSUMatnTrtRegDestory(Handle,UserId,AdmDr,PsnNo,ExpStr)
+{
+	try{
+		var InsuType=ExpStr.split("^")[0];
+		var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1);
+		if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.INSUMatnTrtRegDestory(Handle,UserId,AdmDr,PsnNo,ExpStrForNet);
+		    DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&AdmDr="+AdmDr+"&PsnNo="+PsnNo+"&ExpString="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"INSUMatnTrtRegDestory",getInStr,"");
+	    }
+    return rtn;
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
+}
+///人员重特大疾病备案
+function INSUSevSpBigDiseReg(Handle,UserId,AdmDr,SevSpBigDiseRegDr,ExpStr)
+{
+	try{	
+		var InsuType=ExpStr.split("^")[0];
+	    var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1);
+		if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.INSUSevSpBigDiseReg(Handle,UserId,AdmDr,SevSpBigDiseRegDr,ExpStrForNet);
+		    DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&AdmDr="+AdmDr+"&SevSpBigDiseRegDr="+SevSpBigDiseRegDr+"&ExpString="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"INSUSevSpBigDiseReg",getInStr,"");
+	    }	
+    return rtn;
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
+}
+
+///人员重特大疾病备案撤销
+function INSUSevSpBigDiseRegDestory(Handle,UserId,AdmDr,PsnNo,ExpStr)
+{
+	try{
+		var InsuType=ExpStr.split("^")[0];
+		var ExpStrForNet=BuildInsuExpStrStd(ExpStr,2);
+		if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.INSUSevSpBigDiseRegDestory(Handle,UserId,AdmDr,PsnNo,ExpStrForNet);
+		    DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&AdmDr="+AdmDr+"&PsnNo="+PsnNo+"&ExpString="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"INSUSevSpBigDiseRegDestory",getInStr,"");
+	    }
+    return rtn;
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
+}
+//人员重特大疾病备案查询  
+function INSUSevSpBigDiseRegQuery(dhandle,UserId,RowId,InsuType,ExpStr)
+{
+	try{
+		var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1)
+		if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.INSUSevSpBigDiseRegQuery(dhandle,UserId,RowId,ExpStrForNet);
+		    DHCINSUBLL= null;
+    	}else{
+			var getInStr="dhandle="+dhandle+"&UserId="+UserId+"&RowId="+RowId+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"INSUSevSpBigDiseRegQuery",getInStr,"");
+	    }
+    return rtn;
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
+}
+/*
+*院区查询
+*/
+function InsuGetHosp(dhandle,UserId,ExpStr)
+{
+	try{
+		//alert("InsuType="+InsuType)
+    	var InsuType=ExpStr.split("^")[4]
+    	if (InsuType=="") {return -1;} 
+    	
+    	var ExpStrForNet=BuildInsuExpStrStd(ExpStr,3);
+    	
+    	if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+		if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuGetHosp(dhandle,UserId,ExpStrForNet);
+			DHCINSUBLL= null;
+		}else{
+			var getInStr="dhandle="+dhandle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuGetHosp",getInStr,"")
+		}
+	    return rtn;
+    	
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
+
+}
+
+
+/// 医保目录查询
+///入参 	Handle                   	Interger?医保返回的句柄?目前大部分项目部用?不用的地方固定成?0〃
+///			UserId                    	用户表Rowid
+///         ExpString:                  医保类型^交易代码^返回值格式标识^返回值数据节点名^数据库连接串^"ArgName1=ArgValue1&ArgName2=ArgValue2&...&ArgNameN=ArgValueN
+///出参:成功:0,失败:-1
+function InsuHilistQry(Handle,UserId,ExpStr)
+{
+	try {
+	OutStr="-1"
+	//dhcsys_alert("医保对照关系下载开始Handle="+Handle+"UserId="+UserId+"ConDr="+ConDr+"ExpString="+ExpString)
+	InsuTypeCode=ExpStr.split("^")[0]
+	var ExpStrForNet=BuildInsuExpStrStd(ExpStr,5)
+    if (InsuTypeCode=="") 
+    {
+	    dhcsys_alert("扩展参数医保类型为空")
+	    return -1;
+	 } 
+	 var rtn="-1";
+	/* Zhan 20181213注释，改为取配置
+    switch (InsuTypeCode){ 
+	    case "ZZB" :
+	    	var DHCINSUBLL = new ActiveXObject("DHCINSUBLL.INSU_HN_ZZB_TEST"); //Zhan 20160615 test 
+	    	break;
+	    case "YZB" :
+	    	var DHCINSUBLL = new ActiveXObject("DHCINSUBLL.INSU_JS_YZA");     //扬中市居民医保
+	    	break;
+	    default :
+	    	dhcsys_alert("此类型不联医保接口,请检查程序或数据;InsuTypeCode="+InsuTypeCode);
+	    	return -1;
+	    	break;
+	    }
+		*/
+	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuHilistQuery(Handle,UserId,ExpStrForNet)
+		DHCINSUBLL=null;
+	}else{
+		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuHilistQuery",getInStr,"")
+		if(rtn==""){rtn="-1"}
+    }
+	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return OutStr;}
+	return rtn
+	}catch(e){
+		dhcsys_alert("调用医保接口发生异常"+e.message);
+		return -1;
+	}
+}
+
+///医保常用查询
+///20210112 DingSH 
+///ExpStr=医保类型^交易代码^返回值格式标识()^返回值数据节点名^数据库连接串^"ArgName1=ArgValue1&ArgName2=ArgValue2&...&ArgNameN=ArgValueN"
+function InsuServQry(Handle,UserId,ExpStr)
+{
+	try{
+	InsuTypeCode=ExpStr.split("^")[0]
+	var ExpStrForNet=BuildInsuExpStrStd(ExpStr,4)
+    if (InsuTypeCode=="") 
+    {
+	    dhcsys_alert("扩展参数医保类型为空")
+	    return -1;
+	 } 
+	 var rtn="-1";
+	/* Zhan 20181213注释，改为取配置
+    switch (InsuTypeCode){ 
+	    case "00A" :
+	    	var DHCINSUBLL = new ActiveXObject("DHCINSUBLL.INSU_GD_GDA"); //Zhan 20160615 test 
+	    	break;
+	    case "YZB" :
+	    	var DHCINSUBLL = new ActiveXObject("DHCINSUBLL.INSU_JS_YZA");     //扬中市居民医保
+	    	break;
+	    default :
+	    	dhcsys_alert("此类型不联医保接口,请检查程序或数据;InsuTypeCode="+InsuTypeCode);
+	    	return -1;
+	    	break;
+	    }
+		*/
+	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuServQry(Handle,UserId,ExpStrForNet)
+		DHCINSUBLL=null;
+	}else{
+		var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuServQry",getInStr,"")
+		if(rtn==""){rtn="-1"}
+    }
+	if ((rtn=="")||(rtn=="-1")||(rtn==undefined)) {return rtn;}
+	return rtn
+	}catch(e){
+		dhcsys_alert("调用医保接口发生异常"+e.message);
+		return -1;
+	}
+	
+}	
+
+///异地清分数据提取
+function InsuDivInfoQuery(Handle,UserId,InsuType,ExpString)
+{
+	try{
+	 	InsuTypeCode=InsuType;
+	 	var ExpStrForNet=BuildInsuExpStrStd(ExpString,12);
+	 	var rtn="-1";
+	 	if (InsuTypeCode=="") 
+	 	{
+	    	alert("医保类型为空，请选择医保类型")
+	    	return -1;
+		} 
+		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuDivInfoQuery(Handle,UserId,ExpStrForNet);
+			INSU.PORT.GLOBAL.DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuDivInfoQuery",getInStr,"")
+	    }
+    	return rtn;
+  	}catch(e){
+		alert("调用医保接口发生异常"+e.message);
+		return "-1"
+  	}finally{
+	
+  	}      
+}
+//异地清分确认
+function InsuDivInfoConfirm(Handle,UserId,InsuType,ExpString)
+{
+	try{
+	 	InsuTypeCode=InsuType;
+	 	var ExpStrForNet=BuildInsuExpStrStd(ExpString,12);
+	 	var rtn="-1";
+	 	if (InsuTypeCode=="") 
+	 	{
+	    	alert("医保类型为空，请选择医保类型")
+	    	return -1;
+		} 
+		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuDivInfoConfirm(Handle,UserId,ExpStrForNet);
+			//alert(rtn)
+			INSU.PORT.GLOBAL.DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuDivInfoConfirm",getInStr,"")
+	    }
+    	return rtn;
+  	}catch(e){
+		alert("调用医保接口发生异常"+e.message);
+		return "-1"
+  	}finally{
+	
+  	}      
+}
+//异地清分回退
+function InsuDivInfoConfirmCancel(Handle,UserId,InsuType,ExpString)
+{
+	try{
+	 	InsuTypeCode=InsuType;
+	 	var ExpStrForNet=BuildInsuExpStrStd(ExpString,12);
+	 	var rtn="-1";
+	 	if (InsuTypeCode=="") 
+	 	{
+	    	alert("医保类型为空，请选择医保类型")
+	    	return -1;
+		} 
+		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuDivInfoConfirmCancel(Handle,UserId,ExpStrForNet);
+			INSU.PORT.GLOBAL.DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuDivInfoConfirmCancel",getInStr,"")
+	    }
+    	return rtn;
+  	}catch(e){
+		alert("调用医保接口发生异常"+e.message);
+		return "-1"
+  	}finally{
+	
+  	}      
+} 
+
+/// 医保清单上传
+/// 入参:
+/// Handle：句柄默认0;UserId:SS_User.SSUSR_RowId;PaadmRowid:Pa_Adm.Rowid;AdmReasonNationCode:Pac_AdmReason.REA_NationalCode
+/// AdmReasonId:Pac_AdmReason.Rowid
+/// ExpString: 入院类别(普通,急观,家床)^医保诊断编码^医保诊断名称^医保个人编号^就诊日期^就诊时间^治疗方式^补偿方式^医保类型^数据库连接^卡类型^待遇类别
+//出参?0或-1
+//说明 
+function InsuFundInfoUL(PaadmRowid,UserId,GroupId,MethodStr,BillNo,AdmReasonId,ExpStr)
+{
+ try{
+ 	//alert("医保入院登记开始Handle="+Handle+"^UserId="+UserId+"^PaadmRowid="+PaadmRowid+"^AdmReasonNationCode="+AdmReasonNationCode+"^AdmReasonId="+AdmReasonId+"^ExpString="+ExpString)
+	if(BillNo==""){alert("帐单号不能空!");return -1;}
+	InsuTypeCode=GetInsuTypeCode(AdmReasonId)
+    if (InsuTypeCode == "") {
+	    alert("医保类型为空，请选择医保类型");
+	    return -1;
+	} 
+	var rtn="-1";
+    var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1)
+	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuFundInfoUL(PaadmRowid,UserId,GroupId,MethodStr,BillNo,ExpStrForNet);
+		INSU.PORT.GLOBAL.DHCINSUBLL= null;
+	}else{
+		var getInStr="AdmDr="+PaadmRowid+"&UserId="+UserId+"&GroupId="+GroupId+"&MethodStr="+MethodStr+"&BillNo="+BillNo+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+		rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuFundInfoUL",getInStr,"")
+    }
+
+    return rtn;
+  }catch(e){
+	alert("调用医保接口发生异常"+e.message);
+	return "-1"
+  }finally{
+	
+  }   
+}
+
+//2021-10-09-25 十堰东风新增 医保结算清单上传
+//Public Function InsuEPRInfoUL(ByVal Handle As String, ByVal UserId As String, ByVal AdmDr As String, ByVal DivDr As String, ByVal Action As String, ByVal UpType As String, ByVal ExpStr As String) As String
+// UpType: 测试上传(Test),否则直接上传。湖北不用管这个值，穿空。
+function InsuEPRInfoUL(Handle,UserId,AdmDr,DivDr,Action,UpType,ExpStr)
+{
+	try{
+	 	InsuTypeCode=ExpStr.split("^")[0];
+	 	//var ExpStrForNet=BuildExpStrStd(ExpStr,1);
+	 	var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1)
+	 	var rtn="-1";
+	 	if (InsuTypeCode=="") 
+	 	{
+	    	alert("医保类型为空，请选择医保类型")
+	    	return -1;
+		} 
+		// Handle,  AdmDr, DivDr, UserId,Action, ExpStr
+		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuEPRInfoUL(Handle,UserId,AdmDr,DivDr,Action,UpType,ExpStrForNet);
+			INSU.PORT.GLOBAL.DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&AdmDr="+AdmDr+"&DivDr="+DivDr+"&Action="+Action+"&Action="+UpType+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuEPRInfoUL",getInStr,"");
+	    }
+    	return rtn;
+  	}catch(e){
+		alert("调用医保接口发生异常"+e.message);
+		return "-1"
+  	}finally{
+	
+  	}      
+}
+
+//4102 医疗保障基金结算清单信息状态修改 +20230228 HanZH
+function InsuEPRInfoULStasModi(Handle,UserId,UploadIdStr,ExpStr)
+{
+	try{
+	 	InsuTypeCode=ExpStr.split("^")[0];
+	 	//var ExpStrForNet=BuildExpStrStd(ExpStr,1);
+	 	var ExpStrForNet=BuildInsuExpStrStd(ExpStr,3)
+	 	var rtn="-1";
+		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuEPRInfoULStasModi(Handle,UserId,AdmDr,DivDr,Action,UpType,ExpStrForNet);
+			INSU.PORT.GLOBAL.DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&UploadIdStr="+UploadIdStr+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuEPRInfoULStasModi",getInStr,"");
+	    }
+    	return rtn;
+  	}catch(e){
+		alert("调用医保接口发生异常"+e.message);
+		return "-1"
+  	}finally{
+	
+  	}      
+}
+
+
+//4103 医疗保障基金结算清单信息查询 +20230228 HanZH
+function InsuEPRInfoQuery(Handle,UserId,UploadIdStr,ExpStr)
+{
+	try{
+	 	InsuTypeCode=ExpStr.split("^")[0];
+	 	//var ExpStrForNet=BuildExpStrStd(ExpStr,1);
+	 	var ExpStrForNet=BuildInsuExpStrStd(ExpStr,2)
+	 	var rtn="-1";
+		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuEPRInfoQuery(Handle,UserId,UploadIdStr,ExpStrForNet);
+			INSU.PORT.GLOBAL.DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&UploadIdStr="+UploadIdStr+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuEPRInfoQuery",getInStr,"");
+	    }
+    	return rtn;
+  	}catch(e){
+		alert("调用医保接口发生异常"+e.message);
+		return "-1"
+  	}finally{
+	
+  	}      
+}
+
+// 医保对总账
+function InsuLiquidationAll(Handle,UserId,InsuType,ExpString)
+{
+
+
+  try{
+	 	InsuTypeCode=InsuType;
+	 	var ExpStrForNet=BuildInsuExpStrStd(ExpString,3);
+	 	var rtn="-1";
+	 	if (InsuTypeCode=="") 
+	 	{
+	    	alert("医保类型为空，请选择医保类型")
+	    	return rtn;
+		} 
+		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuLiquidationAll(Handle,UserId,ExpStrForNet);
+			INSU.PORT.GLOBAL.DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuLiquidationAll",getInStr,"")
+	    }
+    	return rtn;
+  	}catch(e){
+		alert("调用医保接口发生异常"+e.message);
+		return rtn;
+  	}finally{
+	
+  	}   
+}
+
+
+//医保对明细账
+function InsuLiquidationMx(Handle,UserId,InsuType,ExpString)
+{
+
+try{
+	 	InsuTypeCode=InsuType;
+	 	var ExpStrForNet=BuildInsuExpStrStd(ExpString,12);
+	 	var rtn="-1";
+	 	if (InsuTypeCode=="") 
+	 	{
+	    	alert("医保类型为空，请选择医保类型")
+	    	return rtn;
+		} 
+		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuLiquidationMx(Handle,UserId,ExpStrForNet);
+			INSU.PORT.GLOBAL.DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuLiquidationMx",getInStr,"")
+	    }
+    	return rtn;
+  	}catch(e){
+		alert("调用医保接口发生异常"+e.message);
+		return rtn;
+  	}finally{
+	
+  	}  
+}
+/// 医保清算申请(3203)
+///入参   	dHandle                   	Interger?医保返回的句柄?目前大部分项目部用?不用的地方固定成?0〃
+///			userId                    	用户表Rowid
+///			setlYM                  	清算年月 例如 202301 格式
+///         hiType   		            医保类型 例如 00A
+///         clrType             	    清算类别 默认为空
+///         clrWay             	        清算方式 默认为空
+///         expStr:                     对账院区^数据库连接串
+///Return:成功:0,失败:-1^错误信息
+function InsuClrAppy(dHandle,userId,setlYM,hiType,clrType,clrWay,expStr)
+{
+
+
+  try{
+	 	InsuTypeCode=hiType;
+	 	var ExpStrForNet=BuildInsuExpStrStd(ExpString,1);
+	 	var rtn="-1";
+	 	if (InsuTypeCode =="") 
+	 	{
+	    	alert("医保类型为空，请选择医保类型")
+	    	return rtn;
+		} 
+		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuClrAppy(dHandle,userId,setlYM,hiType,clrType,clrWay,ExpStrForNet);
+			INSU.PORT.GLOBAL.DHCINSUBLL= null;
+    	}else{
+			var getInStr="dHandle="+dHandle+"&userId="+userId+"&setlYM="+setlYM+"&hiType="+hiType+"&clrType="+clrType+"&clrWay="+clrWay+"&expStr="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuClrAppy",getInStr,"")
+	    }
+    	return rtn;
+  	}catch(e){
+		alert("调用医保接口发生异常"+e.message);
+		return rtn;
+  	}finally{
+	
+  	}   
+}
+
+/// 医保清算申请撤销(3204)
+///入参   	dHandle                   	Interger?医保返回的句柄?目前大部分项目部用?不用的地方固定成?0〃
+///			userId                    	用户表Rowid
+///			clrAppyEvtId                清算申请Id  (清算申请时医保中心返回)
+///         hiType   		            医保类型 例如 00A
+///         clrType             	    清算类别 默认为空
+///         expStr:                     对账院区^数据库连接串
+///Return:成功:0,失败:-1^错误信息
+function InsuClrAppyCancel(dHandle,userId,clrAppyEvtId,hiType,clrType,expStr)
+{
+
+
+  try{
+	 	InsuTypeCode=hiType;
+	 	var ExpStrForNet=BuildInsuExpStrStd(ExpString,1);
+	 	var rtn="-1";
+	 	if (InsuTypeCode =="") 
+	 	{
+	    	alert("医保类型为空，请选择医保类型")
+	    	return rtn;
+		} 
+		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuClrAppyCancel(dHandle,userId,clrAppyEvtId,hiType,clrType,ExpStrForNet);
+			INSU.PORT.GLOBAL.DHCINSUBLL= null;
+    	}else{
+			var getInStr="dHandle="+dHandle+"&userId="+userId+"&clrAppyEvtId="+clrAppyEvtId+"&hiType="+hiType+"&clrType="+clrType+"&expStr="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuClrAppyCancel",getInStr,"")
+	    }
+    	return rtn;
+  	}catch(e){
+		alert("调用医保接口发生异常"+e.message);
+		return rtn;
+  	}finally{
+	
+  	}   
+}
+//医保数据采集上传
+//2022-04-11 
+//DingSH 
+function InsuDataUL(Handle,UserId,InArgInfo,InArgType,OutArgType,ExpStr)
+{
+	try{
+	 	InsuTypeCode=ExpStr.split("^")[0];
+	 	//var ExpStrForNet=BuildExpStrStd(ExpStr,1);
+	 	var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1)
+	 	var rtn="-1";
+	 	if (InsuTypeCode=="") 
+	 	{
+	    	alert("医保类型为空，请选择医保类型")
+	    	return -1;
+		} 
+		// Handle,  AdmDr, DivDr, UserId,Action, ExpStr
+		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuDataUL(Handle,UserId,InArgInfo,InArgType,OutArgType,ExpStrForNet);
+			INSU.PORT.GLOBAL.DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&InArgInfo="+InArgInfo+"&InArgType="+InArgType+"&OutArgType="+OutArgType+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuDataUL",getInStr,"");
+	    }
+    	return rtn;
+  	}catch(e){
+		alert("调用医保接口发生异常"+e.message);
+		return "-1"
+  	}finally{
+	
+  	}      
+}
+
+
+//医保数据采集上传撤销
+//2022-04-11 
+//DingSH 
+function InsuDataULCancel(Handle,UserId,InArgInfo,InArgType,OutArgType,ExpStr)
+{
+	try{
+	 	InsuTypeCode=ExpStr.split("^")[0];
+	 	//var ExpStrForNet=BuildExpStrStd(ExpStr,1);
+	 	var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1)
+	 	var rtn="-1";
+	 	if (InsuTypeCode=="") 
+	 	{
+	    	alert("医保类型为空，请选择医保类型")
+	    	return -1;
+		} 
+		// Handle,  AdmDr, DivDr, UserId,Action, ExpStr
+		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			rtn=INSU.PORT.GLOBAL.DHCINSUBLL.InsuDataULCancel(Handle,UserId,InArgInfo,InArgType,OutArgType,ExpStrForNet);
+			INSU.PORT.GLOBAL.DHCINSUBLL= null;
+    	}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&InArgInfo="+InArgInfo+"&InArgType="+InArgType+"&OutArgType="+OutArgType+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuDataULCancel",getInStr,"");
+	    }
+    	return rtn;
+  	}catch(e){
+		alert("调用医保接口发生异常"+e.message);
+		return "-1"
+  	}finally{
+	
+  	}      
+}
+
+///门诊慢特病备案，特检特治备案查询
+function INSUDiseaseApproveQueryNew(dhandle,UserId,psnno,ExpStr)
+{
+	try{
+    	var InsuType=ExpStr.split("^")[0]
+    	var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1);
+    	if(GetInsuDLLOBJByCode(InsuType)==false){return rtn}	//Zhan 20181213增加配置并增加中间件功能
+    	if(INSU.PORT.GLOBAL.httpFlag==0){
+	    	if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)}	//Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			var rtn=INSU.PORT.GLOBAL.DHCINSUBLL.INSUDiseaseApproveQueryNew(dhandle,UserId,psnno,ExpStrForNet);
+		    DHCINSUBLL= null;
+    	}else{
+			var getInStr="dhandle="+dhandle+"&UserId="+UserId+"&psnno="+psnno+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+			rtn=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"INSUDiseaseApproveQueryNew",getInStr,"");
+	    }
+    	
+    return rtn;
+  }catch(e){
+    alert("调用医保接口发生异常"+e.message);
+    return "-1"
+  }finally{
+    
+  } 
+	
+}
+
+///门诊结算单打印
+function InsuOPJSDPrint00A(Handle,UserId,InsuDivid,AdmSource,AdmReasonId,ExpStr)
+{
+	try {
+		OutStr="-1"
+		Handle=0
+		//dhcsys_alert("医保门诊结算单打印开始:InsuDivid="+InsuDivid"^UserId="+UserId+"^AdmReasonId="+AdmReasonId+"^ExpStr="+ExpStr)
+	    var ExpStrForNet=BuildInsuExpStrStd(ExpStr,1)
+		InsuTypeCode=GetInsuTypeCode(AdmReasonId)
+	    if (InsuTypeCode=="") {return -1;} 
+		var DivideStr="-1";
+		if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return DivideStr}	//Zhan 20181213增加配置并增加中间件功能
+		if(INSU.PORT.GLOBAL.httpFlag==0){
+			if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+			DivideStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuOPJSDPrint(Handle,UserId,InsuDivid,AdmSource,AdmReasonId,ExpStrForNet)
+			DHCINSUBLL=null;
+		}else{
+			var getInStr="Handle="+Handle+"&UserId="+UserId+"&InsuDivid="+InsuDivid+"&AdmSource="+AdmSource+"&AdmReasonId="+AdmReasonId+"&ExpStr="+toINSUSafeCode(ExpStrForNet);
+			DivideStr=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuOPJSDPrint",getInStr,"")
+			if(DivideStr==""){DivideStr="-3"}
+	    }
+		return DivideStr
+	}catch(e){
+		dhcsys_alert("调用医保接口发生异常"+e.message);
+		return -1;
+	}
+	
+}
+
+///医保病人门诊外院报销收费
+///入参?	Handle                  Interger?医保返回的句柄?目前大部分项目部用?不用的地方固定成?0〃
+///			UserId                  用户表Rowid
+///			OutInvDr                BILL.OUTPAY.InvPrt表的Rowid
+///     AdmReasonAdmSource   		Pac_admreason.rea_AdmSource
+///     AdmReasonId             	Pac_admreason.Rowid
+///     ExpString                   StrikeFlag^安全组Dr^InsuNo^CardType^YLLB^DicCode^DicDesc^总金额^结算来源^数据库连接串^待遇类型^院内账户ID^院区指针^GrzfPMDr！Money^MoneyType
+///											StrikeFlag：S代表退费重收的发票，如果是磁条卡需要传医保号,安全组Dr：操作员当前安全组,InsuNo：医保个人编号、医保卡号、医保号的加密串 供磁卡的地方用 
+///											CardType：有无医保卡,YLLB：医疗类别（普通门诊、门诊特病、门诊工伤、门诊生育）,DicCode：病种代码,总金额：各种卡的余额合计
+///										    DYLB：医保待遇类别（"131"门诊特殊病、"161"特殊检查、"162"特殊治疗）,Money:卡余额,MoneyType：卡类型 His就诊卡，银行卡。。。
+///                                         GrzfPMDr: 门诊收费界面选择的支付方式Dr             
+///		CPPFlag					    集中打印发票标志(Y:集中打印;NotCPPFlag:非预交金;)
+///Return:成功:0,失败:-1
+///注：给计费返回-3，计费不删除发票信息；返回-4，计费删除发票信息。
+function InsuOPOutPayDivide(Handle,UserId,OutInvDr, AdmSource,AdmReasonId,ExpString)
+{
+	try {
+	OutStr="-3"
+	Handle=0
+	//dhcsys_alert("医保门诊外院报销收费开始")
+	//dhcsys_alert("医保门诊外院报销收费:OutInvDr="+OutInvDr+"^UserId="+UserId+"^AdmSource="+AdmSource+"^AdmReasonId="+AdmReasonId+"^ExpString="+ExpString)
+	if (ExpString.split("!")[0].split("^").length<8) {
+		dhcsys_alert("扩展参数串ExpString位数不够"+ExpString) 
+		return OutStr
+	}
+	var DivideStr="-1";
+	var ExpStrForNet=BuildInsuExpStrStd(ExpString,9)
+	//dhcsys_alert("ExpStrForNet:"+ExpStrForNet)
+	InsuTypeCode=GetInsuTypeCode(AdmReasonId)
+    if (InsuTypeCode=="") {return OutStr;}  //有报错返回提醒
+	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return OutStr}	//Zhan 20181213增加配置并增加中间件功能
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		//dhcsys_alert("医保调门诊医保接口开始:StrInvDr="+StrInvDr+"^UserId="+UserId+"^AdmSource="+AdmSource+"^AdmReasonId="+AdmReasonId+"^ExpString="+ExpString+"^CPPFlag="+CPPFlag)
+		DivideStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuOPOutPayDivide(Handle,UserId,StrInvDr,AdmSource,AdmReasonId,ExpStrForNet,CPPFlag)
+		DHCINSUBLL=null;
+	}else{
+		var getInStr="Handle="+Handle+"&UserId="+UserId+"&OutInvDr="+OutInvDr+"&AdmSource="+AdmSource+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
+		DivideStr=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuOPOutPayDivide",getInStr,"")
+		if(DivideStr==""){DivideStr="-3"}
+    }
+	if ((DivideStr=="")||(DivideStr=="-3")||(DivideStr==undefined)) {
+		if(GetIusujsMsgFlag("OPDIVIDE")=="1"){dhcsys_alert("医保结算失败,返回值:"+OutStr)}	//Zhan 20161219 弹窗增加配置
+		return OutStr;
+	}
+	if(GetIusujsMsgFlag("OPDIVIDE")=="1"){dhcsys_alert("医保结算成功,返回值:"+DivideStr)}	//Zhan 20161219 弹窗增加配置
+	return DivideStr
+	
+	}catch(e){
+		dhcsys_alert("调用医保接口发生异常"+e.message);
+		return -4 ;		//计费-4调用删除
+	}
+}
+
+///医保病人门诊外院报销退费
+///入参?	Handle                   	Interger?医保返回的句柄?目前大部分项目部用?不用的地方固定成?0〃
+///			UserId                    	用户表Rowid
+///			DivRowid                  	Insu_Divide表的Rowid的
+///         AdmReasonAdmSource   		Pac_admreason.rea_AdmSource
+///         AdmReasonId             	Pac_admreason.Rowid
+///         ExpString:                  医保类型^计费异常回滚标识(Y,)^医保组异常回滚标识(Y,)^读卡标识^结算来源^数据库连接串
+///Return:成功:0,失败:-1
+function InsuOPOutPayDivideStrike(Handle,UserId,DivRowid,AdmSource,AdmReasonId,ExpString)
+{
+	try {
+	OutStr="-1"
+	Handle=0
+	//dhcsys_alert("医保门诊外院报销退费开始")
+	//dhcsys_alert("医保门诊外院报销退费开始:DivRowid="+DivRowid+"^UserId="+UserId+"^AdmReasonId="+AdmReasonId+"^ExpString="+ExpString)
+    var ExpStrForNet=BuildInsuExpStrStd(ExpString,5)
+	InsuTypeCode=GetInsuTypeCode(AdmReasonId) //有报错返回提醒
+    if (InsuTypeCode=="") {return -1;} 
+	if(GetInsuDLLOBJByCode(InsuTypeCode)==false){return OutStr}	//Zhan 20181213增加配置并增加中间件功能
+	if(INSU.PORT.GLOBAL.httpFlag==0){
+		if(INSU.PORT.GLOBAL.iniServerIP){var ini=INSU.PORT.GLOBAL.DHCINSUBLL.Initialize(ServerNameSpace)} //Zhan 20170419,var ServerNameSpace = 'cn_iptcp:172.19.19.57[1972]:DHC-APP';
+		var DivideStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuOPOutPayDivideStrike(Handle,UserId,DivRowid,AdmSource,AdmReasonId,ExpStrForNet)
+		//var DivideStr=INSU.PORT.GLOBAL.DHCINSUBLL.InsuOPDivideStrike(Handle,DivRowid,UserId,ExpString)
+		
+		DHCINSUBLL=null;
+	}else{
+		var getInStr="Handle="+Handle+"&UserId="+UserId+"&DivRowid="+DivRowid+"&AdmSource="+AdmSource+"&AdmReasonId="+AdmReasonId+"&ExpString="+toINSUSafeCode(ExpStrForNet);
+		DivideStr=CallInsuComGet(INSU.PORT.GLOBAL.INSUblltype,"InsuOPOutPayDivideStrike",getInStr,"")
+		if(DivideStr==""){DivideStr="-1"}
+    }
+	if ((DivideStr=="")||(DivideStr=="-1")||(DivideStr==undefined)) {
+		if(GetIusujsMsgFlag("OPDIVIDECANCLE")==""){dhcsys_alert("医保取消结算失败,返回值:"+OutStr)}	//Zhan 20161219 弹窗增加配置
+		return OutStr;
+	}
+	if(GetIusujsMsgFlag("OPDIVIDECANCLE")==""){dhcsys_alert("医保取消结算成功,返回值:"+DivideStr)}	//Zhan 20161219 弹窗增加配置
+	return DivideStr
+	}catch(e){
+		dhcsys_alert("调用医保接口发生异常"+e.message);
+		return -1;
+	}
+}
+
+
 //----------------医保中间件相关----------------
 
 //获取中间件服务IP
-function GetInsuIPAddress() {
+function GetInsuSerIPAddress() {
     var obj = null;
 	var rslt=""
-    INSUPORTGLOBAL.INSUSerIP = "127.0.0.1";	//不用rcbdyctl.dll取本机IP了,如果是服务器模式就填服务器IP
-	return INSUPORTGLOBAL.INSUSerIP
+    INSU.PORT.GLOBAL.INSUSerIP = "127.0.0.1";	//不用rcbdyctl.dll取本机IP了,如果是服务器模式就填服务器IP
+	return INSU.PORT.GLOBAL.INSUSerIP
 	/*
 	if("undefined" != typeof ClientIPAddress){
-		INSUPORTGLOBAL.INSUSerIP=ClientIPAddress	//ClientIPAddress是系统JS中的变量		
+		INSU.PORT.GLOBAL.INSUSerIP=ClientIPAddress	//ClientIPAddress是系统JS中的变量		
 	}
-	if(INSUPORTGLOBAL.INSUSerIP!=""){return INSUPORTGLOBAL.INSUSerIP};
+	if(INSU.PORT.GLOBAL.INSUSerIP!=""){return INSU.PORT.GLOBAL.INSUSerIP};
     try {
         obj = new ActiveXObject("rcbdyctl.Setting");
         rslt = obj.GetIPAddress;
         if(rslt!=""){
 	    	if(rslt.split(";").length>1){rslt=rslt.split(";")[0]}
 	    }
-        INSUPORTGLOBAL.INSUSerIP=rslt;
+        INSU.PORT.GLOBAL.INSUSerIP=rslt;
         obj = null;
     } catch(e) {
 	    dhcsys_alert("获取客户端IP失败。\n错误内容:"+e.message);
@@ -2764,35 +4304,52 @@ function GetInsuIPAddress() {
 	*/
     return rslt;
 }
+
 //启动医保中间件服务程序,支持IE8+,Chrome
 //Zhan 20181123,配合20181123及以后版本的服务程序
 function openINSUSers(strPath)
 {
 	try{
-
-		if(document.getElementById('openINSUSers')) {
-			document.body.removeChild(document.getElementById('openINSUSers'));
+		if(INSU.PORT.GLOBAL.AutoStartINSUService!="1"){
+			dhcsys_alert("目前配置为手动启动医保中间件,请手动启动INSUService程序……")
+			return;
 		}
-		var openINSUSers = document.body.appendChild(document.createElement('openINSUSers'));
-		openINSUSers.innerHTML = '<a href="INSUshell://" id="openINSUSerlk">';
-		document.getElementById('openINSUSerlk').click();
-		INSUPORTGLOBAL.tmpCnt=INSUPORTGLOBAL.tmpCnt+1
-		return true;
+		if(INSU.PORT.GLOBAL.tmpCnt>0){			
+			return;
+		}
+		if((INSU.PORT.GLOBAL.isIE)||(INSU.PORT.GLOBAL.chromeVersion>71)){
+			if(document.getElementById('openINSUSers')) {
+				document.body.removeChild(document.getElementById('openINSUSers'));
+			}else{
+
+			}
+			var openINSUSers = document.body.appendChild(document.createElement('openINSUSers'));
+			openINSUSers.innerHTML = '<a href="INSUshell://" id="openINSUSerlk">';
+			INSU.PORT.GLOBAL.tmpCnt=INSU.PORT.GLOBAL.tmpCnt+1
+			document.getElementById('openINSUSerlk').click();
+			dhcsys_alert("正在启动中间件服务,稍后可能需要重新办理……")
+			return true;
+		}else{
+			INSU.PORT.GLOBAL.tmpCnt=INSU.PORT.GLOBAL.tmpCnt+1
+			try{
+				var aw=window.open("INSUshell://","_self");
+				//aw.opener = null;
+				//aw.location.href ="INSUshell://";
+				aw.close();
+				dhcsys_alert("正在启动中间件服务,稍后可能需要重新办理……")
+				aw=null;
+			}catch(ex){
+			}		
+			return true;
+		}
+
 		//var element= $('<a id="INSUshell" href="INSUshell://test">insushell</a>')
 		//element.trigger("click");
 		//document.getElementById("")
 		//var wo=window.open("INSUshell://");
 		//wo.close();		
 
-		try{
-			var aw=window.open("INSUshell://");
-			//aw.opener = null;
-			//aw.location.href ="INSUshell://";
-			aw.close();
-			aw=null;
-		}catch(ex){
-		}		
-		return true;
+
 	}catch(e)
 	{
 		dhcsys_alert('INSUShell:'+e.message);
@@ -2840,18 +4397,18 @@ function CallInsuComGet(blltype,funName,inUrl,ExpStr)
 {
 	var RtnINSUComStr="";
 	try{
-		if(INSUPORTGLOBAL.INSUSerIP==""){GetInsuIPAddress();}
+		if(INSU.PORT.GLOBAL.INSUSerIP==""){GetInsuSerIPAddress();}
         var childurl="";
         childurl=window.location.href.split("/web/")[0]
 		var tmpArgs={ 
-			test:Insubtoa(INSUPORTGLOBAL.httpFlag+":"+Date.now()+"/"+blltype+"/"+funName+"?"+inUrl),
+			test:Insubtoa(INSU.PORT.GLOBAL.httpFlag+":"+Date.now()+"/"+blltype+"/"+funName+"?"+inUrl),
 			win:window 
 		}			
-		var tmpurlArgs=Insubtoa(INSUPORTGLOBAL.httpFlag+":"+Date.now()+"/"+blltype+"/"+funName+"?"+inUrl);
+		var tmpurlArgs=Insubtoa(INSU.PORT.GLOBAL.httpFlag+":"+Date.now()+"/"+blltype+"/"+funName+"?"+inUrl);
 		var urlArgs=""
-		if(INSUPORTGLOBAL.httpFlag==3){
+		if(INSU.PORT.GLOBAL.httpFlag==3){
 			//websocket
-	        if(INSUPORTGLOBAL.isSSL && INSUPORTGLOBAL.isIE){
+	        if(INSU.PORT.GLOBAL.isSSL && INSU.PORT.GLOBAL.isIE){
 		        urlArgs=childurl+"/web/INSUModalOpen.html?temps="+Math.random()+"&url="+childurl.replace(/https/, "http")+"/web/INSUModalLocal.html?tmpurlArgs="+tmpurlArgs; 
 			}else{
 				urlArgs=childurl+"/web/INSUModalchild.html?temps="+Math.random()+"&tmpurlArgs="+tmpurlArgs; 
@@ -2866,13 +4423,17 @@ function CallInsuComGet(blltype,funName,inUrl,ExpStr)
 	}finally{
 	} 
 }
+//中间件调用封装
+//urlArgs:实际的url参数，由各个调用函数决定
+//tmpArgs:暂时不用
 function InsuHTTPGet(urlArgs,tmpArgs,ExpStr)
 {
 	var RtnHTTPStr="";
 	try{
 		var tmpuserAgent = navigator.userAgent; //取得浏览器的userAgent字符串
-		var INSUURL="http://" + INSUPORTGLOBAL.INSUSerIP + ":888/"+urlArgs;
-		if(INSUXMLHttp=="") {createInsuXMLHttpRequest()};  
+		//var INSUURL="http://" + INSU.PORT.GLOBAL.INSUSerIP + ":888/"+urlArgs;
+		var INSUURL=(INSU.PORT.GLOBAL.isSSL?"HTTPS://":"HTTP://")+ INSU.PORT.GLOBAL.INSUSerIP + ":"+INSU.PORT.GLOBAL.INSUSerPort+"/"+urlArgs;
+		if(INSUXMLHttp==""||INSUXMLHttp==undefined) {createInsuXMLHttpRequest()};  
 	
 		INSUXMLHttp.open("GET", INSUURL, false); 
 		INSUXMLHttp.onreadystatechange =function() {
@@ -2888,11 +4449,15 @@ function InsuHTTPGet(urlArgs,tmpArgs,ExpStr)
 					}
 					
 				}  
-				if((INSUXMLHttp.status==12029)&& tmpArgs!="12029"){
+				if(((INSUXMLHttp.status==12029)||(INSUXMLHttp.status==0))&& tmpArgs!="12029"){
 					//dhcsys_alert("status:"+INSUXMLHttp.status)
-					if(INSUPORTGLOBAL.tmpCnt>1){dhcsys_alert("启动医保服务程序失败1");return;}
+					if(INSU.PORT.GLOBAL.tmpCnt>1){
+						INSU.PORT.GLOBAL.SerStatus="0"
+						//dhcsys_alert("启动医保服务程序失败1");
+						return;
+					}
 					openINSUSers("")
-					dhcsys_alert("正在启动中间件服务,稍后可能需要重新办理……")
+					//if(INSU.PORT.GLOBAL.AutoStartINSUService=="1") dhcsys_alert("正在启动中间件服务,稍后可能需要重新办理……")
 				}
 				
 	        }  
@@ -2906,31 +4471,38 @@ function InsuHTTPGet(urlArgs,tmpArgs,ExpStr)
 		//
 		INSUXMLHttp.setRequestHeader("Content-Type","application/x-www-form-urlencoded;charset=utf-8");  
 		INSUXMLHttp.send();  
+		INSU.PORT.GLOBAL.SerStatus="1"
 	    return RtnHTTPStr
 	}catch(e){
-		if(INSUPORTGLOBAL.tmpCnt>1){return;dhcsys_alert("启动医保服务程序失败2");}
+		if(INSU.PORT.GLOBAL.tmpCnt>1){
+			INSU.PORT.GLOBAL.SerStatus="0"
+			return;dhcsys_alert("启动医保服务程序失败2");
+		}else{INSU.PORT.GLOBAL.tmpCnt=INSU.PORT.GLOBAL.tmpCnt+1}
 		if(tmpArgs!="12029"){
 			var tmpmsg=e.message.toUpperCase()
 			if((tmpmsg.indexOf("NETWORK")!=-1)||(tmpmsg.indexOf("FAILED")!=-1)) {
+				
 				openINSUSers("")
 				//dhcsys_alert("服务状态异常2:"+e.message+",正在启动服务,稍后可能需要重新办理……")
 			}else{
 				//dhcsys_alert("服务状态异常2:"+e.message)
+				
 				return RtnHTTPStr
 			}
 			return InsuHTTPGet(urlArgs,tmpArgs,ExpStr)
-		}
+		}INSU.PORT.GLOBAL.SerStatus="0"
 		return RtnHTTPStr;
 	}finally{
 	} 
 }
+//内部调用中间件的websocket
 function InsuWebsocket(urlArgs,tmpArgs,ExpStr)
 {
 	//
 	var RtnwebStr="";
 	
 	try{
-		//if(INSUPORTGLOBAL.isIE)
+		//if(INSU.PORT.GLOBAL.isIE)
 		RtnwebStr=window.showInsuModalDialog(urlArgs,tmpArgs,"dialogWidth:300px;dialogHeight:200px;toolbar:no;location:no;directories:no;menubar:no"); 
 		//
 	    return RtnwebStr
@@ -2967,60 +4539,54 @@ function toINSUSafeCode(inArg)
 	}finally{
 	} 
 }
+//加密函数
 function Insubtoa(INSUinArgs){
 	try{
 		//return window.btoa(unescape(encodeURIComponent(inArgs)))
 		return window.btoa(encodeURIComponent(INSUinArgs))
 	}catch(ex){
-		return INSUinArgs
+		return tkMakeServerCall("web.Util.Encryption","Base64Encode",encodeURIComponent(INSUinArgs))
 	}
 }
+//解密
 function Insuatob(INSUinArgs){
 	try{
 		//return decodeURIComponent(escape(window.atob(inArgs)))
 		return decodeURIComponent(window.atob(INSUinArgs))
 	}catch(ex){
-		return INSUinArgs
+		return decodeURIComponent(tkMakeServerCall("web.Util.Encryption","Base64Decode",INSUinArgs))
+		//return INSUinArgs
 	}
 }
-function GetInsuStatusBak(){
-	try{
-		if(INSUPORTGLOBAL.INSUSerIP==""){GetInsuIPAddress();}
-		var tmpurlArgs="/test/GetStatus?";		
-		INSUPORTGLOBAL.SerStatus=InsuHTTPGet(tmpurlArgs,"12029","")
-		//console.log('zhan test:hello:'+INSUPORTGLOBAL.SerStatus);			
-		
-	}catch(exg){
-		//console.log('zhan test:error:'+eex.message);
-	}
-}
-function GetInsuStatus()
+//获取中间件的服务状态
+function GetInsuStatus(cFlag)
 {
 	//urlArgs,tmpArgs,ExpStr
 	var tmpArgs=""
 	var ExpStr=""
-	if(INSUPORTGLOBAL.INSUSerIP==""){GetInsuIPAddress();}
+	if(INSU.PORT.GLOBAL.INSUSerIP==""){GetInsuSerIPAddress();}
 	var tmpurlArgs="/test/GetStatus?";		
 	try{
 		var tmpuserAgent = navigator.userAgent; //取得浏览器的userAgent字符串
-		var INSUURL="http://" + INSUPORTGLOBAL.INSUSerIP + ":888/"+tmpurlArgs;
-		if(INSUXMLHttp=="") {createInsuXMLHttpRequest()};  
+		//var INSUURL="http://" + INSU.PORT.GLOBAL.INSUSerIP + ":888/"+tmpurlArgs;
+		var INSUURL=(INSU.PORT.GLOBAL.isSSL?"HTTPS://":"HTTP://")+ INSU.PORT.GLOBAL.INSUSerIP + ":"+INSU.PORT.GLOBAL.INSUSerPort+"/"+tmpurlArgs;
+		if(INSUXMLHttp==""||INSUXMLHttp==undefined) {createInsuXMLHttpRequest()};  
 		INSUXMLHttp.open("GET", INSUURL, true); 
 		INSUXMLHttp.onreadystatechange =function() {
 	        if (INSUXMLHttp.readyState == 4) {
 				if (INSUXMLHttp.status == 200) {
 					var tmpdata=INSUXMLHttp.responseText
 					if(tmpdata.split(String.fromCharCode(13)).length>0){
-						INSUPORTGLOBAL.SerStatus = tmpdata.split(String.fromCharCode(13))[0];
+						INSU.PORT.GLOBAL.SerStatus = tmpdata.split(String.fromCharCode(13))[0];
 					}else{
-						INSUPORTGLOBAL.SerStatus = tmpdata;
+						INSU.PORT.GLOBAL.SerStatus = tmpdata;
 					}
 					
 				}  
-				if((INSUXMLHttp.status==12029)&& tmpArgs!="12029"){
+				if(((INSUXMLHttp.status==12029)||(INSUXMLHttp.status==0))&& tmpArgs!="12029"){
 					//dhcsys_alert("status:"+INSUXMLHttp.status)
-					if(INSUPORTGLOBAL.tmpCnt>1){dhcsys_alert("启动医保服务程序失败1");return;}
-					openINSUSers("")
+					if(INSU.PORT.GLOBAL.tmpCnt>1){return;}
+					if(cFlag) openINSUSers("")
 					//dhcsys_alert("正在启动中间件服务,稍后可能需要重新办理……")
 				}
 				
@@ -3031,42 +4597,43 @@ function GetInsuStatus()
 		/* 
 		$.get(INSUURL,function(tmpdata){
 			if(tmpdata.split(String.fromCharCode(13)).length>0){
-				INSUPORTGLOBAL.SerStatus = tmpdata.split(String.fromCharCode(13))[0];
+				INSU.PORT.GLOBAL.SerStatus = tmpdata.split(String.fromCharCode(13))[0];
 			}else{
-				INSUPORTGLOBAL.SerStatus = tmpdata;
+				INSU.PORT.GLOBAL.SerStatus = tmpdata;
 			}
 		});
 		*/
 		
-	    return INSUPORTGLOBAL.SerStatus
+	    return INSU.PORT.GLOBAL.SerStatus
 	}catch(e){
-		if(INSUPORTGLOBAL.tmpCnt>1){return;dhcsys_alert("启动医保服务程序失败2");}
+		if(INSU.PORT.GLOBAL.tmpCnt>1){return;}
 		if(tmpArgs!="12029"){
 			var tmpmsg=e.message.toUpperCase()
 			if((tmpmsg.indexOf("NETWORK")!=-1)||(tmpmsg.indexOf("FAILED")!=-1)) {
-				openINSUSers("")
+				if(cFlag) openINSUSers("")
 				//dhcsys_alert("服务状态异常2:"+e.message+",正在启动服务,稍后可能需要重新办理……")
 			}else{
 				//dhcsys_alert("服务状态异常2:"+e.message)
-				return INSUPORTGLOBAL.SerStatus
+				return INSU.PORT.GLOBAL.SerStatus
 			}
-			return InsuHTTPGet(urlArgs,tmpArgs,ExpStr)
+			return GetInsuStatus(0)
 		}
-		return INSUPORTGLOBAL.SerStatus;
+		return INSU.PORT.GLOBAL.SerStatus;
 	}finally{
 	} 
 }
+//重启中间件服务
 function RestartINSUService()
 {
 	//urlArgs,tmpArgs,ExpStr
 	var tmpArgs=""
 	var ExpStr=""
 	var RtnCode="-1"
-	if(INSUPORTGLOBAL.INSUSerIP==""){GetInsuIPAddress();}
+	if(INSU.PORT.GLOBAL.INSUSerIP==""){GetInsuSerIPAddress();}
 	var tmpurlArgs="/test/RestartService?";		
 	try{
 		var tmpuserAgent = navigator.userAgent; //取得浏览器的userAgent字符串
-		var INSUURL="http://" + INSUPORTGLOBAL.INSUSerIP + ":888/"+tmpurlArgs;
+		var INSUURL=(INSU.PORT.GLOBAL.isSSL?"HTTPS://":"HTTP://") + INSU.PORT.GLOBAL.INSUSerIP + ":"+INSU.PORT.GLOBAL.INSUSerPort+"/"+tmpurlArgs;
 		if(INSUXMLHttp=="") {createInsuXMLHttpRequest()};  
 		INSUXMLHttp.open("GET", INSUURL, true); 
 		INSUXMLHttp.onreadystatechange =function() {
@@ -3092,38 +4659,73 @@ function RestartINSUService()
 }
 //下边代码不影响其它产品组,不用动
 (function() {
-
+	//setTimeout("GetINSUdbEncrypt()",600);
+	GetINSUdbEncrypt();
+	INSU.PORT.GLOBAL.AutoStartINSUService=GetINSUDicInfo("SYS","AutoStartINSUService",5)
+	var sUserAgent = navigator.userAgent;
 	try{
 		if ("ActiveXObject" in window){
-			INSUPORTGLOBAL.isIE=true;
+			INSU.PORT.GLOBAL.isIE=true;
 		}
-		if(window.location.href.indexOf("https")!==-1){
-		   INSUPORTGLOBAL.isSSL=true;
+		
+		try{
+			// 获取谷歌浏览器版本,72以上版本
+		    var arr = sUserAgent.split(' '); 
+		    var tmpchromeVersion = '';
+		    for(var i=0;i < arr.length;i++){
+		        if(/chrome/i.test(arr[i]))
+		        tmpchromeVersion = arr[i]
+		    }
+		    if(tmpchromeVersion){INSU.PORT.GLOBAL.chromeVersion=Number(tmpchromeVersion.split('/')[1].split('.')[0]);}
+
+		}catch(ees){
+		}
+		
+		if((window.location.href.indexOf("https")!==-1) && (INSU.PORT.GLOBAL.chromeVersion<72)){
+		   INSU.PORT.GLOBAL.isSSL=true;
+		   INSU.PORT.GLOBAL.INSUSerPort="2443"
 		}else{
-		   INSUPORTGLOBAL.isSSL=false;
+		   INSU.PORT.GLOBAL.isSSL=false;
+		   INSU.PORT.GLOBAL.INSUSerPort="888"
 		}
-		INSUPORTGLOBAL.SysIp=document.location.hostname;
+		INSU.PORT.GLOBAL.SysIp=document.location.hostname;
 	}catch(ee){
 	}
-	var sUserAgent = navigator.userAgent;
-	INSUPORTGLOBAL.isWinXP = sUserAgent.indexOf("Windows NT 5.1") > -1 || sUserAgent.indexOf("Windows XP") > -1;
-  	if (INSUPORTGLOBAL.isWinXP){
+	GetInsuSerIPAddress();	
+	
+	try{
+		var localinsujs=(INSU.PORT.GLOBAL.isSSL?"HTTPS://":"HTTP://")+INSU.PORT.GLOBAL.INSUSerIP+":"+INSU.PORT.GLOBAL.INSUSerPort+"/insulocalservice.js"
+		if (typeof(jQuery)!="undefined"){
+			var localinsujs=(INSU.PORT.GLOBAL.isSSL?"HTTPS://":"HTTP://")+INSU.PORT.GLOBAL.INSUSerIP+":"+INSU.PORT.GLOBAL.INSUSerPort+"/insulocalservice.js"
+			jQuery.getScript(localinsujs)
+		}else{
+			var newscript = document.createElement('script');
+			newscript.setAttribute('type','text/javascript');
+			newscript.setAttribute('src',localinsujs);
+			newscript.setAttribute('async',"async");
+			var insuhead = document.getElementsByTagName('body')[0];
+			insuhead.appendChild(newscript);
+		}
+	}catch(e){
+		//alert("newscript发生异常"+e.message);
+		return "-1"
+	}finally{
+
+	}   
+	
+	
+	INSU.PORT.GLOBAL.isWinXP = sUserAgent.indexOf("Windows NT 5.1") > -1 || sUserAgent.indexOf("Windows XP") > -1;
+  	if (INSU.PORT.GLOBAL.isWinXP){
       	//Zhan 20190318XP系统不启用中间件
-      	INSUPORTGLOBAL.SerStatus="0"
+      	INSU.PORT.GLOBAL.SerStatus="0"
 	}else{
 		try{
-			//GetInsuStatus();
-			//setTimeout("GetInsuStatus()",500);
-			GetInsuStatus();
+			GetInsuStatus(0);
 		}catch(eex){
 			
 		}
-		/*
-		try{
-			if(INSUPORTGLOBAL.SerStatus!="1"){var tstatus=setTimeout("GetInsuStatus()",3000);}	
-		}catch(eexx){}	
-		*/
 	}
+
 	
     window.spawn = window.spawn || function(gen) {
         function continuer(verb, arg) {
@@ -3184,20 +4786,4 @@ function RestartINSUService()
         throw 'Execution stopped until showInsuModalDialog is closed';
     };
 
-	setTimeout("GetINSUdbEncrypt()",600);
-
-	try{
-		var newscript = document.createElement('script');
-		newscript.setAttribute('type','text/javascript');
-		newscript.setAttribute('src','http://127.0.0.1:888/insulocalservice.js');
-		var insuhead = document.getElementsByTagName('head')[0];
-		insuhead.appendChild(newscript);
-	}catch(e){
-		//alert("newscript发生异常"+e.message);
-		return "-1"
-	}finally{
-
-	}   
-
 })();
-

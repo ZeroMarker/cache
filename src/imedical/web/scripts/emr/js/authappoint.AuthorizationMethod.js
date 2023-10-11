@@ -2,8 +2,8 @@
 var url = '../EMRservice.Ajax.AuthAppoint.cls';
 
 var eprIntegratedAuthorization = '1' //表明是综合授权
-var defaultAppointType = '0'; //个人 0-个人，1-科室
-var defaultAppointSpan = '168'; //168小时(1周)
+var defaultAppointType = '1'; //个人 0-个人，1-科室
+var defaultAppointSpan = '24'; //168小时(1周)
 var defaultAppointRequestSpan = '0'; //无
 var defaultAppointAction = 'getunappointed'; //getall-获取全部未授权已授权，getrefuse-获取已拒绝，getunappointed-获取未授权
 var defaultCanAppoint = '2'; //0-无权限,1-可授权,2-全部
@@ -231,6 +231,9 @@ function getAction(val){
         case 'save':
             retStr = '保存';
             break;
+        case 'check':
+            retStr = '签名';
+            break;
         case 'print':
             retStr = '打印';
             break;
@@ -393,6 +396,9 @@ function getActionByCode(val)
             break;
 		case 'N':
             retStr = '创建';
+            break;
+        case 'C':
+            retStr = '签名';
             break;
         default:
             retStr = val;
@@ -873,9 +879,9 @@ function expanderGridRowClick(g, index, e){
 
 //处理点击表头排序后授权行改色和数据加载
 function gridHeaderClick(g, columnId, e){
-	alert("aaa");
-	alert(columnId);
-	alert(g.id);
+	//alert("aaa");
+	//alert(columnId);
+	//alert(g.id);
     if (columnId != 0) {
         changeRowBackgroundColor(g)
 		/*
@@ -1592,7 +1598,7 @@ function withdrawAppoint(){
 //add by niucaicai 导出数据方法 -------------------------------------start
 function doExport(grid, Flag){
     try {
-        //debugger;
+        debugger;
         var xls = new ActiveXObject("Excel.Application");
         xls.visible = true; //设置excel为可见    
         var xlBook = xls.Workbooks.Add;
@@ -1643,47 +1649,52 @@ function doExport(grid, Flag){
 			xlSheet.Columns(i).NumberFormatLocal = "@";
         }
 		//加载子表列数据
+		var temp_expanderopObj = [];
 		for (var j = 0; j < total; j++) {
 			expander.toggleRow(j);
 		}
-		var expanderGrid = Ext.getCmp("expanderGrid0");
-		if ((expanderGrid == undefined)||(expanderGrid == "undefined")||(expanderGrid == "null")||(expanderGrid == "NULL")||(expanderGrid == ""))
-		{
-			return;
-		}
 
-		var expanderCM = expanderGrid.getColumnModel();
-		var expanderCMCount = expanderCM.getColumnCount();
+		if ((Flag == 2)||(Flag == 4))
+		{
+			var expanderGrid = Ext.getCmp("expanderGrid0");
+			if ((expanderGrid == undefined)||(expanderGrid == "undefined")||(expanderGrid == "null")||(expanderGrid == "NULL")||(expanderGrid == ""))
+			{
+				return;
+			}
+
+			var expanderCM = expanderGrid.getColumnModel();
+			var expanderCMCount = expanderCM.getColumnCount();
         var temp_expanderopObj = [];
-        
-        //只下载没有隐藏的列(isHidden()为true表示隐藏,其他都为显示)    
-        //临时数组,存放所有当前显示列的下标    
-        for (i = 1; i < expanderCMCount; i++) {
-            if (expanderCM.getColumnHeader(i) == "" || expanderCM.isHidden(i) == true) {
-                //不下载CheckBox列和隐藏列  
-            }
-            else {
-                temp_expanderopObj.push(i);
-            }
-        }
-        for (i = 1, j = temp_obj.length + 1 ; i <= temp_expanderopObj.length; i++, j++) {
-            //显示列的列标题    
-            xlSheet.Cells(1, j).Value = expanderCM.getColumnHeader(temp_expanderopObj[i - 1]);
-            xlSheet.Cells(1, j).Interior.ColorIndex = 15;
-            xlSheet.Cells(1, j).Font.Bold = true;
-            //设置导出的列格式，解决字符串在导出到excel中变成数值型
-			/*
-			var fld = expanderGrid.getStore().recordType.prototype.fields.get(expanderCM.getDataIndex(temp_expanderopObj[i - 1]));
-            if (fld.type == "auto") {
-                xlSheet.Columns(j).NumberFormatLocal = "@";
-            }
-			*/
-			xlSheet.Columns(j).NumberFormatLocal = "@";
-        }
+			
+			//只下载没有隐藏的列(isHidden()为true表示隐藏,其他都为显示)    
+			//临时数组,存放所有当前显示列的下标    
+			for (i = 1; i < expanderCMCount; i++) {
+				if (expanderCM.getColumnHeader(i) == "" || expanderCM.isHidden(i) == true) {
+					//不下载CheckBox列和隐藏列  
+				}
+				else {
+					temp_expanderopObj.push(i);
+				}
+			}
+			for (i = 1, j = temp_obj.length + 1 ; i <= temp_expanderopObj.length; i++, j++) {
+				//显示列的列标题    
+				xlSheet.Cells(1, j).Value = expanderCM.getColumnHeader(temp_expanderopObj[i - 1]);
+				xlSheet.Cells(1, j).Interior.ColorIndex = 15;
+				xlSheet.Cells(1, j).Font.Bold = true;
+				//设置导出的列格式，解决字符串在导出到excel中变成数值型
+				/*
+				var fld = expanderGrid.getStore().recordType.prototype.fields.get(expanderCM.getDataIndex(temp_expanderopObj[i - 1]));
+				if (fld.type == "auto") {
+					xlSheet.Columns(j).NumberFormatLocal = "@";
+				}
+				*/
+				xlSheet.Columns(j).NumberFormatLocal = "@";
+			}
+		}
 		
         var RowNum = 2;
-        if (Flag == 1) {
-            ExportCurrentPage(grid, xlSheet, temp_obj, temp_expanderopObj, xlBook, xls, RowNum)
+        if ((Flag == 1)||(Flag == 2)) {
+            ExportCurrentPage(grid, xlSheet, temp_obj, temp_expanderopObj, xlBook, xls, RowNum, Flag)
         }
         else {
             var k = 0;
@@ -1691,7 +1702,7 @@ function doExport(grid, Flag){
             Ext.getCmp("btnCommit").disabled = true;
             Ext.getCmp("btnWithdraw").disabled = true;
             Ext.getCmp("btnAppointQuery").disabled = true;
-            ExportAllPage(grid, xlSheet, temp_obj, temp_expanderopObj, xlBook, xls, k, RowNum)
+            ExportAllPage(grid, xlSheet, temp_obj, temp_expanderopObj, xlBook, xls, k, RowNum, Flag)
         }
         
     } 
@@ -1707,7 +1718,7 @@ function doExport(grid, Flag){
 }
 
 //导出当前页数据
-function ExportCurrentPage(grid, xlSheet, temp_obj, temp_expanderopObj, xlBook, xls, RowNum){
+function ExportCurrentPage(grid, xlSheet, temp_obj, temp_expanderopObj, xlBook, xls, RowNum, Flag){
     var store = grid.getStore();
     var recordCount = store.getCount();
     if (recordCount > 0) {
@@ -1715,21 +1726,31 @@ function ExportCurrentPage(grid, xlSheet, temp_obj, temp_expanderopObj, xlBook, 
 		var view = grid.getView();
 		for (m = 0; m < recordCount ; m++)
 		{
-			var expanderGridID = "expanderGrid" + m;
-			var expanderGrid = Ext.getCmp(expanderGridID);
-			var expanderStore = expanderGrid.getStore();
-			var expanderRecCount = expanderStore.getCount();
-			if (expanderRecCount > 0)
+			if (Flag == 1)
 			{
-				var expanderView = expanderGrid.getView();
-				for (i = 1; i <= expanderRecCount; i++) {
-					for (j = 1; j <= temp_obj.length; j++) {
-						xlSheet.Cells(RowNum, j).Value = view.getCell(m, temp_obj[j - 1]).innerText;
+				for (j = 1; j <= temp_obj.length; j++) {
+					xlSheet.Cells(RowNum, j).Value = view.getCell(m, temp_obj[j - 1]).innerText;
+				}
+				RowNum = RowNum + 1;
+			}
+			else
+			{
+				var expanderGridID = "expanderGrid" + m;
+				var expanderGrid = Ext.getCmp(expanderGridID);
+				var expanderStore = expanderGrid.getStore();
+				var expanderRecCount = expanderStore.getCount();
+				if (expanderRecCount > 0)
+				{
+					var expanderView = expanderGrid.getView();
+					for (i = 1; i <= expanderRecCount; i++) {
+						for (j = 1; j <= temp_obj.length; j++) {
+							xlSheet.Cells(RowNum, j).Value = view.getCell(m, temp_obj[j - 1]).innerText;
+						}
+						for (n = temp_obj.length + 1, j = 1; n <= temp_obj.length + temp_expanderopObj.length; n++, j++) {
+							xlSheet.Cells(RowNum, n).Value = expanderView.getCell(i - 1, temp_expanderopObj[j - 1]).innerText;
+						}
+						RowNum = RowNum + 1;
 					}
-					for (n = temp_obj.length + 1, j = 1; n <= temp_obj.length + temp_expanderopObj.length; n++, j++) {
-						xlSheet.Cells(RowNum, n).Value = expanderView.getCell(i - 1, temp_expanderopObj[j - 1]).innerText;
-					}
-					RowNum = RowNum + 1;
 				}
 			}
 		}
@@ -1745,7 +1766,7 @@ function ExportCurrentPage(grid, xlSheet, temp_obj, temp_expanderopObj, xlBook, 
 }
 
 //导出所有数据
-function ExportAllPage(grid, xlSheet, temp_obj, temp_expanderopObj, xlBook, xls, k, RowNum){
+function ExportAllPage(grid, xlSheet, temp_obj, temp_expanderopObj, xlBook, xls, k, RowNum, Flag){
     var gstore = grid.getStore();
     gstore.load({
         //分页加载数据
@@ -1773,29 +1794,39 @@ function ExportAllPage(grid, xlSheet, temp_obj, temp_expanderopObj, xlBook, xls,
                 //显示方式改为分组显示，修改导出功能
 				var view = grid.getView();
 				for (m = 0; m < recordCount; m++) {
-					expander.toggleRow(m);
-					var expanderGridID = "expanderGrid" + m;
-					var expanderGrid = Ext.getCmp(expanderGridID);
-					var expanderStore = expanderGrid.getStore();
-					var expanderRecCount = expanderStore.getCount();
-					if (expanderRecCount > 0)
+					if (Flag == 3)
 					{
-						var expanderView = expanderGrid.getView();
-						for (i = 1; i <= expanderRecCount; i++) {
-							for (j = 1; j <= temp_obj.length; j++) {
-								xlSheet.Cells(RowNum, j).Value = view.getCell(m, temp_obj[j - 1]).innerText;
+						for (j = 1; j <= temp_obj.length; j++) {
+							xlSheet.Cells(RowNum, j).Value = view.getCell(m, temp_obj[j - 1]).innerText;
+						}
+						RowNum = RowNum + 1;
+					}
+					else
+					{
+						expander.toggleRow(m);
+						var expanderGridID = "expanderGrid" + m;
+						var expanderGrid = Ext.getCmp(expanderGridID);
+						var expanderStore = expanderGrid.getStore();
+						var expanderRecCount = expanderStore.getCount();
+						if (expanderRecCount > 0)
+						{
+							var expanderView = expanderGrid.getView();
+							for (i = 1; i <= expanderRecCount; i++) {
+								for (j = 1; j <= temp_obj.length; j++) {
+									xlSheet.Cells(RowNum, j).Value = view.getCell(m, temp_obj[j - 1]).innerText;
+								}
+								for (n = temp_obj.length + 1, j = 1; n <= temp_obj.length + temp_expanderopObj.length; n++, j++) {
+									xlSheet.Cells(RowNum, n).Value = expanderView.getCell(i - 1, temp_expanderopObj[j - 1]).innerText;
+								}
+								RowNum = RowNum + 1;
 							}
-							for (n = temp_obj.length + 1, j = 1; n <= temp_obj.length + temp_expanderopObj.length; n++, j++) {
-								xlSheet.Cells(RowNum, n).Value = expanderView.getCell(i - 1, temp_expanderopObj[j - 1]).innerText;
-							}
-							RowNum = RowNum + 1;
 						}
 					}
 				}
 				
                 k = k + 1;
                 //递归调用方法本身，进行下一页数据的导出
-                ExportAllPage(grid, xlSheet, temp_obj, temp_expanderopObj, xlBook, xls, k, RowNum);
+                ExportAllPage(grid, xlSheet, temp_obj, temp_expanderopObj, xlBook, xls, k, RowNum, Flag);
                 xlSheet.Columns.AutoFit;
                 xls.ActiveWindow.Zoom = 100;
                 xls.UserControl = true; //很重要,不能省略,不然会出问题 意思是excel交由用户控制

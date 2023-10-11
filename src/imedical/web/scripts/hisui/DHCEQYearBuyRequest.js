@@ -5,7 +5,8 @@
 //-------------------------------------------------------------------------
 var SelectedRow = 0;
 var rowid=0;
-var Component="tDHCEQYearBuyRequest"
+var Component="tDHCEQYearBuyRequest";
+
 function BodyLoadHandler() 
 {
 	initButtonWidth();  //add by lmm 2018-09-05 hisui改造：修改按钮长度
@@ -32,6 +33,12 @@ function BodyLoadHandler()
 	else
 	{
 		DisableBElement("BExecute",true)
+	}
+	//add by txr20230209 UI
+	initPanelHeaderStyle();
+	if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+		// 极简版
+		$("#BExecute").css({"background-color":"#28ba05","color":"#ffffff"})
 	}
 }
 
@@ -111,7 +118,9 @@ function BFind_Click()
 				ApproveRole:getValueById("ApproveRole"),
 				ApproveFlag:Flag,
 				Action:getValueById("Action"),
-				ManageLocDR:getValueById("ManageLocDR")
+				ManageLocDR:getValueById("ManageLocDR"),
+                Status:getValueById("Status"),  ///add by ZY20230309 bug:3313691
+				QXType:GetElementValue("QXType")		//czf 2021-09-02
 				});
 		}
 }
@@ -132,6 +141,7 @@ function GetVData()
 	val=val+"^ApproveFlag="+GetElementValue("ApproveFlag");
 	val=val+"^Action="+GetElementValue("Action");
 	val=val+"^ManageLocDR="+GetElementValue("ManageLocDR");
+	val=val+"^QXType="+GetElementValue("QXType");	//czf 2021-09-02
 	return val;
 }
 
@@ -463,6 +473,35 @@ function batchApprove()
 function reloadGrid()
 {
 	$('#'+Component).datagrid('reload');
+}
+
+///add by czf 1837956 2021-05-18
+///双击行事件
+function DblClickRowHandler(rowIndex,rowData)
+{
+	var val="&RowID="+rowData.TRowID;
+    val=val+"&ApproveRole="+GetElementValue("ApproveRole");
+    val=val+"&QXType="+GetElementValue("QXType");
+    val=val+"&Type="+GetElementValue("Type");
+	if (GetElementValue("WaitAD"))
+    {
+    	val=val+"&WaitAD=on";
+    }
+    else
+    {
+    	val=val+"&WaitAD=off";
+    }
+    val=val+"&Action="+GetElementValue("Action");
+    var batchFlag=rowData.THold1;
+    if (batchFlag=="Y")
+    {
+	    var str="dhceq.em.buyrequestbatch.csp?"+val;
+    }
+    else
+    {
+	    var str="dhceq.em.buyrequest.csp?"+val;
+	}
+	showWindow(str,"采购申请单","","","icon-w-paper","modal","","","large",refreshWindow);   //modify by lmm 2019-02-16
 }
 
 document.body.onload = BodyLoadHandler;

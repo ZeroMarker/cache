@@ -95,7 +95,7 @@ function BFind_click()
 function BClear_click()
 {
 	$("#STCode,#STDesc").val("");
-	
+	BFind_click();
 }
 function AddData()
 {
@@ -164,7 +164,11 @@ SaveForm=function(id)
 	  	var iAllResultShow="N";
 		var AllResultShow=$("#AllResultShow").checkbox('getValue');
 	    if(AllResultShow) {iAllResultShow="Y";}
-	
+		
+		/// 单独排队
+		var iSingleRoomManager="N";
+		var SingleRoomManager=$("#SingleRoomManager").checkbox('getValue');
+	    if(SingleRoomManager) {iSingleRoomManager="Y";}
 	
 		var LayoutType=$('#LayoutType').combobox('getValue');	
 		if (($('#LayoutType').combobox('getValue')==undefined)||($('#LayoutType').combobox('getValue')=="")){var LayoutType="";}
@@ -182,8 +186,8 @@ SaveForm=function(id)
 			$.messager.alert('错误提示','报告顺序不能为空!',"error");
 			return;
 		}
-		
-		var Instring=id+"^"+Code+"^"+Desc+"^"+Place+"^"+Sequence+"^"+iActive+"^"+iAutoAudit+"^"+LayoutType+"^"+ButtonType+"^"+ReportSequence+"^"+iAllResultShow;
+			var LocID=session['LOGON.CTLOCID'];
+		var Instring=id+"^"+Code+"^"+Desc+"^"+Place+"^"+Sequence+"^"+iActive+"^"+iAutoAudit+"^"+LayoutType+"^"+ButtonType+"^"+ReportSequence+"^"+iAllResultShow+"^"+LocID+"^"+iSingleRoomManager;
 	   
 		var flag=tkMakeServerCall("web.DHCPE.Station","Save",'','',Instring);
  		if (""==id) { 
@@ -244,6 +248,13 @@ function UpdateData()
 		   }else{
 			   $("#AllResultShow").checkbox('setValue',false);
 		   }
+		   
+		   if(StaionInfo[11]=="Y"){
+			    $("#SingleRoomManager").checkbox('setValue',true);
+		   }else{
+			   $("#SingleRoomManager").checkbox('setValue',false);
+		   }
+		   
 			$("#myWin").show();
 			
 			var myWin = $HUI.dialog("#myWin",{
@@ -354,6 +365,7 @@ function STLDel_click()
 						ClassName:"web.DHCPE.StationLoc",
 						QueryName:"SearchStationLocDetail",
 		    			LocID:LocID,
+						hospId:session['LOGON.HOSPID']
 		
 					});
 
@@ -434,6 +446,16 @@ function STLSave_click(Type)
 
 
 	//alert(ParRef+"^"+LocID+"^"+LocDesc+"^"+LocSort)
+	var ExistFlag=tkMakeServerCall("web.DHCPE.StationLoc","IsExistStationLoc",ParRef,LocID,LocDesc,LocSort);
+	if(ExistFlag=="1"){
+		$.messager.alert("提示","该站点对应科室描述已存在","info");
+		return false;
+	}
+	if(ExistFlag=="2"){
+		$.messager.alert("提示","该顺序号已存在","info");
+		return false;
+	}
+
 	var flag=tkMakeServerCall("web.DHCPE.StationLoc","Update",ParRef,LocID,LocDesc,LocSort);
 	if (flag=="0"){
 		if(Type=="1"){$.messager.alert("提示","修改成功","success");}
@@ -463,14 +485,15 @@ function loadStationLoc(rowData) {
 	$("#LocID,#LocSort,#LocDesc").val("");
 	$("#ARCID,#ARCSort,#ParRefLocID").val("");
 	$("#ARCDesc").combogrid("setValue","");
-
+	$("#STLDadd_btn").linkbutton('enable');
 	$('#StationLocDetailGrid').datagrid('load', {
 			ClassName:"web.DHCPE.StationLoc",
 			QueryName:"SearchStationLocDetail",
 		    LocID:"",
+			hospId:session['LOGON.HOSPID']
 		
 	});
-	
+	BSTDClear_click()
 }
 function InitStationLocDataGrid()
 {
@@ -518,15 +541,16 @@ function InitStationLocDataGrid()
 	})
 }
 function loadStationLocDetail(rowData) {
-	
+	$("#STLDadd_btn").linkbutton('enable');
 	$("#ParRefLocID").val(rowData.STL_RowId)
 	$('#StationLocDetailGrid').datagrid('load', {
 			ClassName:"web.DHCPE.StationLoc",
 			QueryName:"SearchStationLocDetail",
 		    LocID:rowData.STL_RowId,
+			hospId:session['LOGON.HOSPID']
 		
 	});
-	
+	 BSTDClear_click();
 
 	
 }
@@ -549,6 +573,7 @@ function BSTDClear_click()
 			ClassName:"web.DHCPE.StationLoc",
 			QueryName:"SearchStationLocDetail",
 		    LocID:$("#ParRefLocID").val(),
+			hospId:session['LOGON.HOSPID']
 		
 		});
 }
@@ -583,6 +608,13 @@ function STLDSave_click(Type)
 			$.messager.alert("提示","项目不能为空","info");
 			return false;
 		}
+		
+		var flag=tkMakeServerCall("web.DHCPE.StationLoc","IsExistDetail",ARCRowID);
+		if(flag=="1"){
+			$.messager.alert("提示","该项目已存在，无需新增","info");
+			return false;
+		}
+
 	}
 	
 	if(Type=="1")
@@ -593,6 +625,14 @@ function STLDSave_click(Type)
 			return false;
 			
 		}
+		var ret=tkMakeServerCall("web.DHCPE.StationLoc","GetDetail",ARCRowID);
+		var SortOld=ret.split("^")[1];
+		var Sort=$("#ARCSort").val();
+		if(SortOld==Sort){
+			$.messager.alert("提示","数据未有任何变化,无需重新保存","info");
+			return false;
+		}
+
 		
 	}
 	
@@ -659,6 +699,7 @@ function STLDDel_click()
 						ClassName:"web.DHCPE.StationLoc",
 						QueryName:"SearchStationLocDetail",
 		   				 LocID:$("#ParRefLocID").val(),
+						hospId:session['LOGON.HOSPID']
 		
 					});
 					$("#ARCID,#ARCSort").val("");
@@ -692,6 +733,7 @@ function STLDDel_click()
 			ClassName:"web.DHCPE.StationLoc",
 			QueryName:"SearchStationLocDetail",
 		    LocID:"",
+			hospId:session['LOGON.HOSPID']
 		},
 		
 		columns:[[
@@ -705,6 +747,7 @@ function STLDDel_click()
 			  $("#ARCDesc").combogrid("setValue",rowData.ARCIMDesc);
 			  $("#ARCSort").val(rowData.TSort);
 			  $("#STLDadd_btn").linkbutton('disable');
+			  $("#ARCDesc").combogrid('disable');
 				
 					
 		}
@@ -758,6 +801,9 @@ function InitCombobox()
 		onBeforeLoad:function(param){
 			param.ParRef = $("#ParRef").val();
 			param.ARCIMDesc = param.q;
+			param.LocID=session['LOGON.CTLOCID'];
+            param.hospId=session['LOGON.HOSPID']
+
 		},
 		onShowPanel:function()
 		{
@@ -765,14 +811,14 @@ function InitCombobox()
 		},
 		columns:[[
 		    {field:'STORD_ParRef',title:'站点ID',hidden: true},
-		    {field:'STORD_ParRef_Name',title:'站项目点名称',width:100},
+		    {field:'STORD_ParRef_Name',title:'站点名称',width:100},
 			{field:'STORD_ARCIM_Desc',title:'医嘱名称',width:120},
 			{field:'STORD_ARCIM_Code',title:'医嘱编码',width:100},
 			{field:'STORD_ARCIM_DR',title:'医嘱ID',hidden: true},	
 					
 		]],
 		onLoadSuccess:function(){
-			$("#ARCDesc").combogrid('setValue',"")
+			//$("#ARCDesc").combogrid('setValue',"")
 			
 		},
 

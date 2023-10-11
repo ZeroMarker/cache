@@ -1,780 +1,1025 @@
-//…æ≥˝√˜œ∏
-function deleteItem(ItemRowId){
-	if (isEmpty(ItemRowId)) {
-			//$UI.msg('alert','«Î—°‘Ò“™…æ≥˝µƒµ•æ›!');
-			return false;
-		}
-	var requiredDelete = RequiredDelete();
-	if (requiredDelete == "Y") {
-		$.messager.confirm("≤Ÿ◊˜Ã· æ","ƒ˙»∑∂®“™÷¥––…æ≥˝≤Ÿ◊˜¬£ø",function(data){	
-			if(data){
-				$.cm({
-					ClassName:'web.CSSDHUI.PackageDisp.DispItm',
-					MethodName:'jsDelete',
-					rowId:ItemRowId
-				},function(jsonData){
-					if(jsonData.success==0){
-						$UI.msg('success',jsonData.msg);
-						$('#ItemList').datagrid('reload');
-					}else{
-						$UI.msg('error',jsonData.msg);
-					}
-				});
-			}
-		});
-	}
-	if (requiredDelete != "Y") {
-		$.cm({
-			ClassName : 'web.CSSDHUI.PackageDisp.DispItm',
-			MethodName : 'jsDelete',
-			rowId : ItemRowId
-		}, function(jsonData) {
-			if (jsonData.success == 0) {
-				$UI.msg('success', jsonData.msg);
-				$('#ItemList').datagrid('reload');
-			} else {
-				$UI.msg('error', jsonData.msg);
-			}
-		});
-	}
-}
-//…æ≥˝∑¢∑≈±Í«©√˜œ∏why0217
-function deleteDispLabelItem(ItemRowId){
-	if (isEmpty(ItemRowId)) {
-			//$UI.msg('alert','«Î—°‘Ò“™…æ≥˝µƒµ•æ›!');
-			return false;
-		}
-	var requiredDelete = RequiredDelete();
-	if (requiredDelete == "Y") {
-		$.messager.confirm("≤Ÿ◊˜Ã· æ","ƒ˙»∑∂®“™÷¥––…æ≥˝≤Ÿ◊˜¬£ø",function(data){	
-			if(data){
-				$.cm({
-					ClassName:'web.CSSDHUI.PackageDisp.DispDetail',
-					MethodName:'jsDelete',
-					rowId:ItemRowId
-				},function(jsonData){
-					if(jsonData.success==0){
-						$UI.msg('success',jsonData.msg);
-						$('#ItemList').datagrid('reload');
-						$('#ItemSList').datagrid('reload');
-					}else{
-						$UI.msg('error',jsonData.msg);
-					}
-				});
-			}
-		});
-	}
-	if (requiredDelete != "Y") {
-		$.cm({
-			ClassName : 'web.CSSDHUI.PackageDisp.DispDetail',
-			MethodName : 'jsDelete',
-			rowId : ItemRowId
-		}, function(jsonData) {
-			if (jsonData.success == 0) {
-				$UI.msg('success', jsonData.msg);
-				$('#ItemList').datagrid('reload');
-				$('#ItemSList').datagrid('reload');
-			} else {
-				$UI.msg('error', jsonData.msg);
-			}
-		});
-	}
-}
-//…æ≥˝÷˜±Ìµ•æ›
-//µ⁄“ª≤Ω:≈Ãµ„µ•æ› «∑Òø…“‘…æ≥˝
-// µ⁄∂˛≤Ω…æ≥˝÷˜±Ìµ•æ›
-// µ⁄»˝≤Ω…æ≥˝◊”±Ì ˝æ› (∞¸¿®–ﬁ∏ƒ¥Ú∞¸±Ì ˝æ›)ƒø«∞µƒ≤ﬂ¬‘ «:”–√˜œ∏≤ª‘ –Ì…æ≥˝
-function deleteMain(mainRowId){
+Ôªø// Âà†Èô§ÊòéÁªÜ
+var MainListGrid, ItemListGrid, ItemSListGrid;
+var CurrMainId = '';
+var DocType = '0';
+// Êèê‰∫§
+function submitOrder(mainRowId) {
+	var ParamsObj = $UI.loopBlock('#MainCondition');
 	if (isEmpty(mainRowId)) {
-			$UI.msg('alert','«Î—°‘Ò“™…æ≥˝µƒµ•æ›!');
-			return false;
+		$UI.msg('alert', 'ËØ∑ÈÄâÊã©Ë¶ÅÊèê‰∫§ÁöÑÂçïÊçÆ!');
+		return false;
+	}
+	ParamsObj.mainRowId = mainRowId;
+	var Params = JSON.stringify(ParamsObj);
+	showMask();
+	$.cm({
+		ClassName: 'web.CSSDHUI.PackageDisp.Disp',
+		MethodName: 'jsSubmitOrder',
+		Params: Params
+	}, function(jsonData) {
+		hideMask();
+		if (jsonData.success === 0) {
+			$UI.msg('success', jsonData.msg);
+			CurrMainId = mainRowId;
+			$('#MainList').datagrid('reload');
+		} else {
+			$UI.msg('error', jsonData.msg);
 		}
-	$.messager.confirm("≤Ÿ◊˜Ã· æ","ƒ˙»∑∂®“™÷¥––…æ≥˝≤Ÿ◊˜¬£ø",function(data){	
-		if(data){	
-			$.cm({
-				ClassName:'web.CSSDHUI.PackageDisp.Disp',
-				MethodName:'jsDelete',
-				mainRowId:mainRowId
-			},function(jsonData){
-				if(jsonData.success==0){
-					$UI.msg('success',jsonData.msg);
-					$('#MainList').datagrid('reload');
-					$('#ItemList').datagrid('reload');
-				}else{
-					$UI.msg('error',jsonData.msg);
-				}
-			});
-   		}
 	});
 }
-var GridListIndex = "";
-var GridListIndexId = ""
-//Ã·Ωª
-function submitOrder(mainRowId){
+// Êí§ÈîÄ
+function cancelOrder(mainRowId) {
 	if (isEmpty(mainRowId)) {
-			$UI.msg('alert','«Î—°‘Ò“™Ã·Ωªµƒµ•æ›!');
-			return false;
-		}
-		var Rows = $('#MainList').datagrid("getRows");
-		$.each(Rows,function(index,item){
-			if(item.RowId==mainRowId){
-				GridListIndex=index;
-				GridListIndexId=mainRowId;
+		$UI.msg('alert', 'ËØ∑ÈÄâÊã©Ë¶ÅÊí§ÈîÄÁöÑÂçïÊçÆ!');
+		return false;
+	}
+	if (DispParamObj.RequiredCancel === 'Y') {
+		$.messager.confirm('Êìç‰ΩúÊèêÁ§∫', 'ÊÇ®Á°ÆÂÆöË¶ÅÊâßË°åÊí§ÈîÄÊìç‰ΩúÂêóÔºü', function(data) {
+			if (data) {
+				Cancel(mainRowId);
 			}
 		});
-		$.cm({
-			ClassName:'web.CSSDHUI.PackageDisp.Disp',
-			MethodName:'jsSubmitOrder',
-			mainRowId:mainRowId,
-			gUser:gUserId
-		},function(jsonData){
-			if(jsonData.success==0){
-				$UI.msg('success',jsonData.msg);
-				$('#MainList').datagrid('reload');
-			}else{
-				$UI.msg('error',jsonData.msg);
-			}
-		});
-}
-//≥∑œ˙
-function cancelOrder(mainRowId){
-	if (isEmpty(mainRowId)) {
-			$UI.msg('alert','«Î—°‘Ò“™≥∑œ˙µƒµ•æ›!');
-			return false;
-		}
-	var requiredCancel = RequiredCancel();
-	if (requiredCancel == "Y") {
-		$.messager.confirm("≤Ÿ◊˜Ã· æ","ƒ˙»∑∂®“™÷¥––≥∑œ˙≤Ÿ◊˜¬£ø",function(data){	
-			if(data){
-				var Rows = $('#MainList').datagrid("getRows");
-				$.each(Rows,function(index,item){
-					if(item.RowId==mainRowId){
-						GridListIndex=index;
-						GridListIndexId=mainRowId;
-					}
-				});
-				$.cm({
-					ClassName:'web.CSSDHUI.PackageDisp.Disp',
-					MethodName:'jsCancelOrder',
-					mainRowId:mainRowId
-				},function(jsonData){
-					if(jsonData.success==0){
-						$UI.msg('success',jsonData.msg);
-						$('#MainList').datagrid('reload');
-					}else{
-						$UI.msg('error',jsonData.msg);
-					}
-				});
-			}
-		});
+	} else {
+		Cancel(mainRowId);
 	}
 }
-///====================================== ¬º˛¥¶¿Ìend=======================
+
+function Cancel(mainRowId) {
+	var ParamsObj = $UI.loopBlock('#MainCondition');
+	ParamsObj.mainRowId = mainRowId;
+	var Params = JSON.stringify(ParamsObj);
+	showMask();
+	$.cm({
+		ClassName: 'web.CSSDHUI.PackageDisp.Disp',
+		MethodName: 'jsCancelOrder',
+		Params: Params
+	}, function(jsonData) {
+		hideMask();
+		if (jsonData.success === 0) {
+			$UI.msg('success', jsonData.msg);
+			CurrMainId = mainRowId;
+			$('#MainList').datagrid('reload');
+		} else {
+			$UI.msg('error', jsonData.msg);
+		}
+	});
+}
 var init = function() {
-	var MainReqFlage="";
-	//∑¢∑≈ø∆ “
-	var ReqLocParams=JSON.stringify(addSessionParams({Type:"SupLoc"}));
-	var ReqLocBox = $HUI.combobox('#ReqLoc', {
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+ReqLocParams,
+	// ÂèëÊîæÁßëÂÆ§
+	var ReqLocParams = JSON.stringify(addSessionParams({ Type: 'Login' }));
+	$HUI.combobox('#ReqLoc', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + ReqLocParams,
 		valueField: 'RowId',
 		textField: 'Description',
-		onLoadSuccess: function (data) {   //ƒ¨»œµ«¬ºø∆ “
-			$("#ReqLoc").combobox('setValue',gLocId);
+		onSelect: function(record) {
+			var Params = JSON.stringify(addSessionParams({ SupLocId: record['RowId'], BDPHospital: gHospId }));
+			var url = $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetLine&ResultSetType=array&Params=' + Params;
+			$('#LineCode').combobox('clear').combobox('reload', url);
+
+			$HUI.combobox('#fromUserDr').clear();
+			var FrUserParams = JSON.stringify(addSessionParams({ BDPHospital: gHospId, LocId: record.RowId }));
+			url = $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetAllUser&ResultSetType=array&Params=' + FrUserParams;
+			$HUI.combobox('#fromUserDr').reload(url);
 		}
 	});
-	//Ω” ’ø∆ “
-	var SupLocParams=JSON.stringify(addSessionParams({Type:"All"}));
-	var SupLocBox = $HUI.combobox('#SupLoc', {
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+SupLocParams,
+	var LineParams = JSON.stringify(addSessionParams({ SupLocId: gLocId, BDPHospital: gHospId }));
+	$HUI.combobox('#LineCode', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetLine&ResultSetType=array&Params=' + LineParams,
 		valueField: 'RowId',
 		textField: 'Description'
 	});
-	//¬•∫≈
-	var FloorBox = $HUI.combobox('#FloorCode', {
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetFloorCode&ResultSetType=array',
+	// Êé•Êî∂ÁßëÂÆ§
+	var SupLocParams = JSON.stringify(addSessionParams({ Type: 'RecLoc' }));
+	$HUI.combobox('#SupLoc', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + SupLocParams,
+		valueField: 'RowId',
+		textField: 'Description'
+	});
+	$HUI.combobox('#ReqType', {
 		valueField: 'RowId',
 		textField: 'Description',
-		onLoadSuccess: function (data) {   //ƒ¨»œµ⁄“ª∏ˆ÷µ
-			//$("#FloorCode").combobox('setValue',data[0].RowId);
-		},
-		onSelect: function (row) {
-                    if (row != null) {
-						//alert(row.RowId);
-                        $HUI.combobox('#LineCode', {
-                          url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetLineCode&ResultSetType=array&FloorCode='+row.RowId,
-                          valueField: 'RowId',
-                          textField: 'Description',
-						  	onLoadSuccess: function (data) {   //ƒ¨»œµ⁄“ª∏ˆ÷µ
-								$("#LineCode").combobox('setValue',data[0].RowId);
-							}
-                      }); 
-                    }
-                }
+		data: ReqTypeAllData
+	});
+	// ÂèëÊîæ‰∫∫
+	var ParamsTB = JSON.stringify(addSessionParams({ BDPHospital: gHospId }));
+	$HUI.combobox('#fromUserDr', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetAllUser&ResultSetType=array&Params=' + ParamsTB,
+		valueField: 'RowId',
+		textField: 'Description',
+		enterNullValueClear: false,
+		spellField: 'Code'
+	});
+	$('#fromUserDr').combobox('textbox').keyup(function(event) {
+		if (event.keyCode == 13) {
+			var userCode = $('#fromUserDr').combobox('getText');
+			if (userCode != '') {
+				var UserObj = $.cm({
+					ClassName: 'web.CSSDHUI.Common.Dicts',
+					MethodName: 'GetUserByCodeJson',
+					userCode: userCode,
+					Params: ParamsTB
+				}, false);
+				if (UserObj['RowId'] === '') {
+					$UI.msg('alert', 'Êú™Ëé∑ÂèñÂÆ°Ê†∏‰∫∫Áõ∏ÂÖ≥‰ø°ÊÅØÔºÅ');
+					$('#fromUserDr').combobox('clear');
+					$('#fromUserDr').combobox('setValue', '').combobox('hidePanel');
+					$('#fromUserDr').combobox('textbox').focus();
+					return;
+				}
+				$('#fromUserDr').combobox('clear');
+				$('#fromUserDr').combobox('setValue', UserObj['RowId']).combobox('hidePanel');
+			}
+		}
+	});
 
+	// Ê∂àÊØíÂåÖ
+	var PkgParams = JSON.stringify(addSessionParams({ BDPHospital: gHospId, TypeDetail: '1,2,7' }));
+	$HUI.combobox('#PackageName', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPkg&ResultSetType=array&Params=' + PkgParams,
+		valueField: 'RowId',
+		textField: 'Description'
 	});
-	//∑¢∑≈»À
-	$("#toUser").keypress(function(event) {
-		if ( event.which == 13 ) {
-			var v=$("#toUser").val();
-			var Ret = tkMakeServerCall('web.CSSDHUI.Common.Dicts', 'GetPersonInfo',v);
-			if(Ret.split('^')[0]=="Y"){
-				$("#toUser").val(Ret.split('^')[2]);
-				$("#toUserDr").val(Ret.split('^')[1]);
-				$("#SterUser").focus();
-			}else{
-				$UI.msg('alert','Œ¥’“µΩœ‡πÿ–≈œ¢!');
-				$("#SterUser").val("");
-				$("#SterUser").focus();
-			}
+	
+	// ÁîüÊàêËØ∑È¢ÜÂçï
+	$UI.linkbutton('#CreateBT', {
+		onClick: function() {
+			var ExcludeExt = 'Y';
+			SelReq(query, ExcludeExt);
 		}
 	});
-	//œ˚∂æ∞¸
-	var typeDetial="2"
-	var PackageBox = $HUI.combobox('#PackageName', {
-			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPackage&ResultSetType=array&typeDetial=' + typeDetial,
-			valueField: 'RowId',
-			textField: 'Description'
-		});
-	
-	var Dafult={
-		FStartDate:DefaultStDate(),
-		FEndDate:DefaultEdDate
-	}
-	$UI.fillBlock('#MainCondition',Dafult)
-	
-	function Clear(){
-		//$UI.clearBlock('#MainCondition');
-		SupLocBox.reload();
-		//$UI.fillBlock('#MainCondition',Dafult);
-		$UI.clear(MainListGrid);
-		$UI.clear(ItemListGrid);
-	}
-	////===============================≥ı ºªØ◊Èº˛end=============================
-	
-	//…˙≥…«Î¡Ïµ•
-	$UI.linkbutton('#CreateBT',{ 
-		onClick:function(){
-			SelReq(function(){MainListGrid.reload();});
+	// ÈÄöËøáÂÄüÂåÖÂçïÁîüÊàêÂèëÊîæÂçï
+	$UI.linkbutton('#CreateBTApply', {
+		onClick: function() {
+			var ApplyType = '1';
+			SelReqApply(query, ApplyType);
 		}
 	});
-	//Õ®π˝ΩË∞¸µ•…˙≥…∑¢∑≈µ•
-	$UI.linkbutton('#CreateBTApply',{ 
-		onClick:function(){
-			SelReqApply(function(){MainListGrid.reload();});
+	$UI.linkbutton('#CreateBTFLApply', {
+		onClick: function() {
+			var ApplyType = '2';
+			SelReqApply(query, ApplyType);
 		}
 	});
-	//≤È—Ø
-	$UI.linkbutton('#QueryBT',{ 
-		onClick:function(){
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
 			query();
-			Clear();
 		}
 	});
-	//…®¬Î∂Ø◊˜◊‘∂ØÃ·Ωª
-	$("#BarCode").keypress(function(event) {
-		if ( event.which == 13 ) {
-			var v=$("#BarCode").val();
-			var row = $('#MainList').datagrid('getSelected');
-			if(isEmpty(row)){
-				$UI.msg('alert','«Î—°‘Ò–Ë“™ÃÌº”µƒ∑¢∑≈µ•æ›!');
-				return;
+	
+	// Êâ´Á†ÅÂä®‰Ωú
+	$('#BarCode').keyup(function(event) {
+		if (event.which == 13) {
+			AddOrdDispItem();
+		}
+	}).focus(function(event) {
+		$('#BarCode').val('');
+		$('#BarCodeHidden').val('');
+		var ReadOnly = $('#BarCode').attr('readonly');
+		if (ReadOnly == 'readonly') {
+			$('#BarCodeHidden').focus();
+		}
+		InitScanIcon();
+	}).blur(function(event) {
+		InitScanIcon();
+	});
+	$('#BarCodeHidden').keyup(function(event) {
+		if (event.which == 13) {
+			var HiddenVal = $('#BarCodeHidden').val();
+			$('#BarCode').val(HiddenVal);
+			$('#BarCodeHidden').val('');
+			AddOrdDispItem();
+		}
+	}).focus(function(enent) {
+		InitScanIcon();
+	}).blur(function(event) {
+		InitScanIcon();
+	});
+	// ÊéßÂà∂Ê†áÁ≠æÊòØÂê¶ÂÖÅËÆ∏ÁºñËæë
+	$('#BarCodeSwitchBT').linkbutton({
+		iconCls: 'icon-w-switch',
+		// plain: true,
+		// iconCls: 'icon-key-switch',
+		onClick: function() {
+			var ReadOnly = $('#BarCode').attr('readonly');		// Âè™ËØªÊó∂,Ê≠§ÂÄº‰∏∫'readonly'
+			if (ReadOnly == 'readonly') {
+				$('#BarCode').attr({ readonly: false });
+				SetLocalStorage('BarCodeHidden', '');
+			} else {
+				$('#BarCode').attr({ readonly: true });
+				SetLocalStorage('BarCodeHidden', 'Y');
 			}
-			if(isEmpty(row.RowId)){
-				$UI.msg('alert','≤Œ ˝¥ÌŒÛ!');
-				return;
-			}
-			if(isEmpty(v)){
-				$UI.msg('alert','Ãı¬Î¬º»ÎŒ™ø’!');
-				return;
-			}
-			//alert(row.RowId);
-			var Rows = $('#MainList').datagrid("getRows");
-				$.each(Rows,function(index,item){
-					if(item.RowId==row.RowId){
-						GridListIndex=index;
-						GridListIndexId=row.RowId;
-					}
-			});
-			$.cm({
-				ClassName:'web.CSSDHUI.PackageDisp.DispDetail',
-				MethodName:'jsSaveDetail',
-				mainId:row.RowId,
-				barCode:v,
-				gUser:gUserId
-			},function(jsonData){
-				if(jsonData.success==0){
-					//playSuccess();
-					$UI.msg('success',jsonData.msg);
-					ItemListGrid.reload();
-					FindItemSByF(jsonData.rowid);
-					IsCommit(row.RowId,gUserId);
-				}else{
-					//playWarn();
-					$UI.msg('error',jsonData.msg);
-				}
-				$("#BarCode").val("").focus();
-			});
+			$('#BarCode').focus();
 		}
 	});
-	function IsCommit(mainid,userdr){
+	// ÊéßÂà∂Êâ´Á†ÅÂõæÊ†á
+	function InitScanIcon() {
+		var ElementId = document.activeElement.id;
+		var ReadOnly = $('#BarCode').attr('readonly');
+		if (ElementId == 'BarCodeHidden') {
+			// Êâ´Êèèicon
+			$('#UseBarCodeBT').linkbutton({ iconCls: 'icon-scanning' });
+		} else if (ReadOnly == 'readonly') {
+			// Âè™ËØªicon
+			$('#UseBarCodeBT').linkbutton({ iconCls: 'icon-gray-edit' });
+		} else {
+			// ÂèØÁºñËæëicon
+			$('#UseBarCodeBT').linkbutton({ iconCls: 'icon-blue-edit' });
+		}
+	}
+	if (GetLocalStorage('BarCodeHidden') == 'Y') {
+		$('#BarCode').attr({ 'readonly': true });
+	} else {
+		$('#BarCode').attr({ 'readonly': false });
+	}
+	InitScanIcon();
+	
+	function AddOrdDispItem() {
+		var BarCode = $('#BarCode').val();
+		var row = $('#MainList').datagrid('getSelected');
+		var DetailParams = JSON.stringify([{ Label: BarCode }]);
+		if (isEmpty(row)) {
+			$UI.msg('alert', 'ËØ∑ÈÄâÊã©ÈúÄË¶ÅÊ∑ªÂä†ÁöÑÂèëÊîæÂçïÊçÆ!');
+			return;
+		}
+		if (isEmpty(row.RowId)) {
+			$UI.msg('alert', 'ÂèÇÊï∞ÈîôËØØ!');
+			return;
+		}
+		if (isEmpty(BarCode)) {
+			$UI.msg('alert', 'Ê†áÁ≠æÊâ´Êèè‰∏∫Á©∫!');
+			return;
+		}
+		var MainParams = JSON.stringify(addSessionParams({ MainId: row.RowId }));
+		$('#BarCode').attr('disabled', 'disabled');
 		$.cm({
-			ClassName:'web.CSSDHUI.PackageDisp.DispDetail',
-			MethodName:'IsCommit',
-			rowId:mainid,
-			guser:userdr
-			},function(jsonData){
-				if(jsonData==0)
-				{
-					submitOrder(mainid);
+			ClassName: 'web.CSSDHUI.PackageDisp.DispDetail',
+			MethodName: 'jsSaveDetail',
+			MainParams: MainParams,
+			Params: DetailParams
+		}, function(jsonData) {
+			$('#BarCode').removeAttr('disabled');
+			if (jsonData.success >= 0) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', jsonData.msg);
+				} else {
+					$UI.msg('alert', jsonData.msg);
 				}
-			});
-		}
-	function query(){
+				playSuccess();
+				ItemListGrid.reload();
+			} else {
+				playWarn();
+				$UI.msg('error', jsonData.msg);
+			}
+			
+			$('#BarCode').val('').focus();
+		});
+	}
+
+	function query(Rowid) {
+		$UI.clear(ItemSListGrid);
 		$UI.clear(ItemListGrid);
-		var Params = JSON.stringify($UI.loopBlock('#CondTB'));
-		var GridListIndex = "";
-		var GridListIndexId = "";
+		$UI.clear(MainListGrid);
+		var Params = '';
+		if (!isEmpty(Rowid)) {
+			Params = JSON.stringify(addSessionParams({ RowId: Rowid }));
+			var RowidArr = Rowid.split(',');
+			CurrMainId = RowidArr[0];
+		} else {
+			var ParamsObj = $UI.loopBlock('#MainCondition');
+			var fromlocdr = ParamsObj.fromLocDr;
+			if (isEmpty(fromlocdr)) {
+				$UI.msg('alert', 'ËØ∑ÈÄâÊã©ÂèëÊîæÁßëÂÆ§ÔºÅ');
+				return;
+			}
+			if (isEmpty(ParamsObj.FStartDate)) {
+				$UI.msg('alert', 'Ëµ∑ÂßãÊó•Êúü‰∏çËÉΩ‰∏∫Á©∫ÔºÅ');
+				return;
+			}
+			if (isEmpty(ParamsObj.FEndDate)) {
+				$UI.msg('alert', 'Êà™Ê≠¢Êó•Êúü‰∏çËÉΩ‰∏∫Á©∫ÔºÅ');
+				return;
+			}
+			ParamsObj.DocType = DocType;
+			Params = JSON.stringify(ParamsObj);
+			
+			if (ParamsObj.FComplateFlag != 'Y') {
+				SetLocalStorage('CompleteFlag', ParamsObj.FComplateFlag);
+			}
+		}
 		MainListGrid.load({
-			ClassName: 'web.CSSDHUI.PackageDisp.Disp',
+			ClassName: 'web.CSSDHUI.PackageDisp.DispScan',
 			QueryName: 'SelectAll',
-			//sort:'RowId',
-			//order:'Desc',
+			sort: 'RowId',
+			order: 'desc',
 			Params: Params
 		});
 	}
-	//¥Ú”°µ•æ›
-	$UI.linkbutton('#Print', {
-		onClick: function () {
-			var Detail = MainListGrid.getChecked();
-			var DetailParams = JSON.stringify(Detail);
-			if (isEmpty(Detail)) {
-				$UI.msg('alert', '«Î—°‘Ò–Ë“™¥Ú”°µ•æ›');
-			}
-			if (!isEmpty(Detail)) {
-				$.each(Detail, function (index, item) {
-					PrintINDispReq(item.RowId);
-				});
-			}
-			
+	// ÊâìÂç∞ÂçïÊçÆ
+	function Print() {
+		var Detail = MainListGrid.getChecked();
+		if (isEmpty(Detail)) {
+			$UI.msg('alert', 'ËØ∑ÈÄâÊã©ÈúÄË¶ÅÊâìÂç∞ÂçïÊçÆ');
+			return;
 		}
-	});
-	//≈˙¡øÃ·Ωª
-	$UI.linkbutton('#submitAll', {
-		onClick: function () {
-			$.messager.confirm("≤Ÿ◊˜Ã· æ","ƒ˙»∑∂®“™÷¥––≈˙¡øÃ·Ωª≤Ÿ◊˜¬£ø",function(data){	
-			if(data){
-				var Detail = MainListGrid.getChecked();
-				var DetailParams = JSON.stringify(Detail);
-				if (isEmpty(Detail)) {
-					$UI.msg('alert', '«Î—°‘Ò–Ë“™Ã·Ωªµ•æ›');
-					return;
-				}
-				$.cm({
-					ClassName:'web.CSSDHUI.PackageDisp.Disp',
-					MethodName:'jsSubmitAll',
-					Params:DetailParams,
-					gUser:gUserId	
-				},function(jsonData){
-					if(jsonData.success==0){
-						$UI.msg('success',jsonData.msg);
-						$('#MainList').datagrid('reload');
-					}else{
-						$UI.msg('error',jsonData.msg);
+		var DispStr = '';
+		for (var i = 0; i < Detail.length; i++) {
+			var DispId = Detail[i].RowId;
+			if (DispStr == '') {
+				DispStr = DispId;
+			} else {
+				DispStr = DispStr + '^' + DispId;
+			}
+		}
+		if (DispStr == '') {
+			$UI.msg('alert', 'ËØ∑ÈÄâÊã©ÈúÄË¶ÅÊâìÂç∞ÁöÑ‰ø°ÊÅØ!');
+			return false;
+		}
+		PrintDispMain(DispStr);
+	}
+	// Ê±áÊÄªÊâìÂç∞ÂçïÊçÆ
+	function PrintSum() {
+		var Detail = MainListGrid.getChecked();
+		if (isEmpty(Detail)) {
+			$UI.msg('alert', 'ËØ∑ÈÄâÊã©ÈúÄË¶ÅÊâìÂç∞ÂçïÊçÆ');
+			return;
+		}
+		var DetailIds = '';
+		$.each(Detail, function(index, item) {
+			if (DetailIds == '') {
+				DetailIds = item.RowId;
+			} else {
+				DetailIds = DetailIds + ',' + item.RowId;
+			}
+		});
+		var RaqName = 'CSSD_HUI_DispPrintSum.raq';
+		PrintINDispSum(RaqName, DetailIds);
+	}
+	// ÊâπÈáèÊèê‰∫§
+	function submitAll() {
+		var Rows = MainListGrid.getChecked();
+		if (isEmpty(Rows)) {
+			$UI.msg('alert', 'ËØ∑ÈÄâÊã©ÈúÄË¶ÅÊèê‰∫§ÂçïÊçÆ!');
+			return;
+		}
+		for (var i = 0, Len = Rows.length; i < Len; i++) {
+			var ComplateFlag = Rows[i]['ComplateFlag'];
+			if (ComplateFlag === 'Y') {
+				$UI.msg('alert', 'Â≠òÂú®Â∑≤Êèê‰∫§ÂçïÊçÆÔºÅ');
+				return;
+			}
+		}
+		$.messager.confirm('Êìç‰ΩúÊèêÁ§∫', 'ÊÇ®Á°ÆÂÆöË¶ÅÊâßË°åÊâπÈáèÊèê‰∫§Êìç‰ΩúÂêóÔºü', function(data) {
+			if (data) {
+				Rows = MainListGrid.getChecked();
+				var MainIdStr = '';
+				for (var i = 0, Len = Rows.length; i < Len; i++) {
+					var MainId = Rows[i]['RowId'];
+					if (MainIdStr === '') {
+						MainIdStr = MainId;
+					} else {
+						MainIdStr = MainIdStr + ',' + MainId;
 					}
-					});
 				}
-			});
-		}
-	});
-	//…œ√Ê ‰»ÎøÚµƒªÿ≥µ ¬º˛¥¶¿Ì end
-	var MainCm = [[{
-				title : '',
-				field : 'ck',
-				checkbox : true,
-				width : 50
-			},{
-		field:'operate',
-		title:'≤Ÿ◊˜',
-		align:'center',
-		width:'100',
-		formatter:function(value, row, index){
-			if(row.ComplateFlag=="Y"){
-				var str = '<a href="#" name="operaM" class="easyui-linkbutton" disabled title="…æ≥˝" onclick="deleteMain('+row.RowId+')"></a>';
-				var str =str+ '<a href="#" name="operaR" class="easyui-linkbutton" title="≥∑œ˙" onclick="cancelOrder('+row.RowId+')"></a>';
+				submitOrder(MainIdStr);
 			}
-			else {
-				var str = '<a href="#" name="operaM" class="easyui-linkbutton" title="…æ≥˝" onclick="deleteMain('+row.RowId+')"></a>';
-				var str =str+ '<a href="#" name="operaC" class="easyui-linkbutton" title="Ã·Ωª" onclick="submitOrder('+row.RowId+')"></a>';
-			}
-			return str;
-		}
-	},{
-			title: 'RowId',
-			field: 'RowId',
-			width:50,
-			hidden: true
-		}, {
-			title: 'µ•∫≈',
-			align:'left',
-			field: 'No',
-			width:150,
-			fitColumns:true
-		}, {
-			title: '∑¢∑≈ø∆ “',
-			align:'left',
-			field: 'FroLocDesc',
-			width:150,
-			fitColumns:true
-		}, {
-			title:'∑¢∑≈»À',
-			align:'left',
-			field:'FUserDesc',
-			width:150,
-			fitColumns:true
-		},{
-			title:'∑¢∑≈»’∆⁄',
-			align:'left',
-			field:'FDate',
-			width:150,
-			fitColumns:true
-		}, {
-			title: 'Ω” ’ø∆ “',
-			align:'left',
-			field: 'TLocDesc',
-			width:150,
-			fitColumns:true
-		}, {
-			title: 'µ•æ›¿‡–Õ',
-			align:'left',
-			field: 'Type',
-			width:150,
-			fitColumns:true
-		},{
-			title:'Ã·Ωª»À',
-			align:'left',
-			field:'DispUserDesc',
-			width:150,
-			fitColumns:true
-		}, {
-			title: 'Ã·Ωª ±º‰',
-			align:'left',
-			field: 'ChkDate',
-			width:150,
-			fitColumns:true
-		},{
-			title: 'ÕÍ≥…±Í÷æ',
-			align:'left',
-			field: 'ComplateFlag',
-			width:100,
-			fitColumns:true
-		}
-	]];
-
-	var MainListGrid = $UI.datagrid('#MainList', {
-		queryParams: {
-			ClassName: 'web.CSSDHUI.PackageDisp.Disp',
-			QueryName: 'SelectAll',
-			Params:JSON.stringify($UI.loopBlock('#CondTB'))
-			//sort:'RowId',
-			//order:'desc'
-		},
-		columns: MainCm,
-		toolbar: '#CondTB',
-		lazy:false,
-		selectOnCheck: false,
-		//singleSelect: false,
-		onLoadSuccess:function(data){  
-			$("a[name='operaM']").linkbutton({text:'',plain:true,iconCls:'icon-cancel'});  
-			$("a[name='operaC']").linkbutton({text:'',plain:true,iconCls:'icon-upload'});  
-			$("a[name='operaR']").linkbutton({text:'',plain:true,iconCls:'icon-back'});  
-			if(data.rows.length>0&&isEmpty(GridListIndex)){
-				$('#MainList').datagrid("selectRow", 0);
-				FindItemByF(data.rows[0].RowId);
-			}
-			if(!isEmpty(GridListIndex)){
-				$('#MainList').datagrid("selectRow", GridListIndex);
-				FindItemSByF(GridListIndexId);
-			}
-		},
-		onClickCell: function(index, filed ,value){
-			var Row=MainListGrid.getRows()[index]
-			var Id = Row.RowId;
-			if(!isEmpty(Id)){
-				FindItemByF(Id);
-			}	
-			MainListGrid.commonClickCell(index,filed)
-		}
-	})
+		});
+	}
 	
-//========================================œ˚∂æ∞¸√˜œ∏====start==============	
-	//œ˚∂æ∞¸œ¬¿≠¡–±Ì
-	var packData=$.cm({
-		ClassName: 'web.CSSDHUI.Common.Dicts',
-			QueryName: 'GetPackage'	,
-			ResultSetType:"array",
-			typeDetial: "2,7"
-	},false);
-	var PackageBox = {
-		type: 'combobox',
-		options: {
-			data:packData,
-			valueField: 'RowId',
-			textField: 'Description',
-			required:true,
-			onSelect: function (record) {
-				var rows = ItemListGrid.getRows();
-				var row = rows[ItemListGrid.editIndex];
-				row.PackageName = record.Description;
-			},
-			onShowPanel: function () {
-				$(this).combobox('reload')
-			}
-		}
-	};
-	var ItemCm = [[{
-		field:'operate',title:'≤Ÿ◊˜',align:'center',width:50,
-			formatter:function(value, row, index){
-				var rowMain = $('#MainList').datagrid('getSelected');
-				if(rowMain.ComplateFlag=="Y"){
-					var str = '<a href="#" name="opera"  disabled  class="easyui-linkbutton" title="…æ≥˝" onclick="deleteItem('+row.RowId+')"></a>';
-				}else{
-					var str = '<a href="#" name="opera"    class="easyui-linkbutton" title="…æ≥˝" onclick="deleteItem('+row.RowId+')"></a>';
+	var MainCm = [[
+		{
+			title: '',
+			field: 'ck',
+			checkbox: true,
+			frozen: true,
+			width: 50
+		}, {
+			field: 'operate',
+			title: 'Êìç‰Ωú',
+			frozen: true,
+			align: 'center',
+			width: '100',
+			allowExport: false,
+			formatter: function(value, row, index) {
+				var str = '';
+				if (row.ComplateFlag === 'Y') {
+					str = '<div class="col-icon icon-back" href="#" title="Êí§ÈîÄ" onclick="cancelOrder(' + row.RowId + ')"></div>';
+				} else {
+					str = '<div class="col-icon icon-cancel" href="#" title="Âà†Èô§" onclick="MainListGrid.commonDeleteRow(true,' + index + ');"></div>'
+							+ '<div class="col-icon icon-submit" href="#" title="Êèê‰∫§" onclick="submitOrder(' + row.RowId + ')"></div>';
+				}
+				if (row.LevelFlag === '1') {
+					str = str + '<div class="col-icon icon-emergency" href="#" title="Á¥ßÊÄ•"></div>';
 				}
 				return str;
 			}
-		},{
+		}, {
 			title: 'RowId',
 			field: 'RowId',
-			width:100,
+			width: 50,
 			hidden: true
-		},{
+		}, {
+			title: 'ÂçïÂè∑',
+			align: 'left',
+			field: 'No',
+			styler: function(val, row, index) {
+				if (row.IsOver == '1') {
+					return OverColor;
+				}
+			},
+			width: 120
+		}, {
+			title: 'ÂèëÊîæ‰æùÊçÆ',
+			align: 'left',
+			field: 'ApplyTypeDesc',
+			width: 120
+		}, {
+			title: 'Êé•Êî∂ÁßëÂÆ§',
+			align: 'left',
+			field: 'ToLocDesc',
+			width: 150
+		}, {
+			title: 'ÂèëÊîæ‰∫∫',
+			align: 'left',
+			field: 'FromUserDesc',
+			width: 80
+		}, {
+			title: 'ÂèëÊîæÊó∂Èó¥',
+			align: 'left',
+			field: 'DispDate',
+			width: 150
+		}, {
+			title: 'Áî≥ËØ∑‰∫∫',
+			align: 'left',
+			field: 'ApplyUserName',
+			width: 80
+		}, {
+			title: 'Áî≥ËØ∑Êó∂Èó¥',
+			align: 'left',
+			field: 'ApplyDateTime',
+			width: 160
+		}, {
+			title: 'Êèê‰∫§Ê†áÂøó',
+			field: 'ComplateFlag',
+			hidden: true,
+			align: 'center',
+			width: 80
+		}, {
+			title: 'Êèê‰∫§‰∫∫',
+			align: 'left',
+			field: 'DispUserDesc',
+			width: 80
+		}, {
+			title: 'Êèê‰∫§Êó∂Èó¥',
+			align: 'left',
+			field: 'DispCHKDate',
+			width: 160
+		}, {
+			title: 'Êé•Êî∂Ê†áËÆ∞',
+			field: 'IsRec',
+			align: 'center',
+			width: 80
+		}, {
+			title: 'ÂèëÊîæÁßëÂÆ§',
+			align: 'left',
+			field: 'FromLocDesc',
+			width: 150
+		}, {
+			title: 'IsOver',
+			field: 'IsOver',
+			width: 50,
+			hidden: true
+		}, {
+			title: 'ÂõûÊî∂ÂçïÂè∑',
+			align: 'left',
+			field: 'CallbackNo',
+			width: 120
+		}, {
+			title: 'ÂõûÊî∂‰∫∫',
+			align: 'left',
+			field: 'CallBackUserName',
+			width: 100
+		}, {
+			title: 'ÂõûÊî∂Êó∂Èó¥',
+			align: 'left',
+			field: 'CallBackDateTime',
+			width: 160
+		}, {
+			title: 'Áî≥ËØ∑ÂçïÁ±ªÂûã',
+			field: 'ApplyType',
+			width: 50,
+			hidden: true
+		}
+	]];
+
+	MainListGrid = $UI.datagrid('#MainList', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.PackageDisp.DispScan',
+			QueryName: 'SelectAll'
+		},
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.PackageDisp.Disp',
+			MethodName: 'jsDelete'
+		},
+		toolbar: [
+			{
+				id: 'submitAll',
+				text: 'ÊâπÈáèÊèê‰∫§',
+				iconCls: 'icon-paper-submit',
+				handler: function() {
+					submitAll();
+				}
+			}, {
+				id: 'Print',
+				text: 'ÊâìÂç∞',
+				iconCls: 'icon-print',
+				handler: function() {
+					Print();
+				}
+			}, {
+				id: 'PrintSum',
+				text: 'Ê±áÊÄªÊâìÂç∞',
+				iconCls: 'icon-print-box',
+				handler: function() {
+					PrintSum();
+				}
+			}
+		],
+		columns: MainCm,
+		selectOnCheck: false,
+		sortOrder: 'desc',
+		sortName: 'RowId',
+		onLoadSuccess: function(data) {
+			$UI.clear(ItemListGrid);
+			$UI.clear(ItemSListGrid);
+			if (data.rows.length > 0) {
+				var GridListIndex = '';
+				if (!isEmpty(CurrMainId)) {
+					var Rows = $('#MainList').datagrid('getRows');
+					$.each(Rows, function(index, item) {
+						if (item.RowId == CurrMainId) {
+							GridListIndex = index;
+							return false;
+						}
+					});
+					CurrMainId = '';
+				} else if (CommParObj.SelectFirstRow == 'Y') {
+					GridListIndex = 0;
+				}
+				if (!isEmpty(GridListIndex)) {
+					$('#MainList').datagrid('selectRow', GridListIndex);
+				}
+			}
+			GetMarkQty();
+		},
+		onSelect: function(index, rowData) {
+			var Id = rowData.RowId;
+			var isOPRFlag = rowData.isOPRFlag;
+			if ((isOPRFlag === 'N') && (DispParamObj['UseLabelForDisp']) === 'N') {
+				$('#BarCode').attr('disabled', 'disabled');
+			} else {
+				$('#BarCode').removeAttr('disabled');
+			}
+			if (!isEmpty(Id)) {
+				FindItemByF(Id);
+			}
+		},
+		onClickRow: function(index, row) {
+			MainListGrid.commonClickRow(index, row);
+		}
+	});
+	// Ê∂àÊØíÂåÖ‰∏ãÊãâÂàóË°®
+	var packData = $.cm({
+		ClassName: 'web.CSSDHUI.Common.Dicts',
+		QueryName: 'GetPkg',
+		ResultSetType: 'array',
+		Params: PkgParams
+	}, false);
+	var PackageBox = {
+		type: 'combobox',
+		options: {
+			data: packData,
+			valueField: 'RowId',
+			textField: 'Description',
+			required: true,
+			onSelect: function(record) {
+				var rows = ItemListGrid.getRows();
+				var row = rows[ItemListGrid.editIndex];
+				row.PackageName = record.Description;
+			}
+		}
+	};
+	
+	// ÂåÖË£ÖÊùêÊñô
+	var PackagePackCombox = {
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetMaterials&ResultSetType=array',
+			valueField: 'RowId',
+			textField: 'Description'
+		}
+	};
+	
+	function BatchDisp() {
+		var row = $('#MainList').datagrid('getSelected');
+		if (isEmpty(row)) {
+			$UI.msg('alert', 'ËØ∑ÈÄâÊã©ÈúÄË¶ÅÂèëÊîæÁöÑÂçïÊçÆ!');
+			return;
+		}
+		if (row.ComplateFlag == 'Y') {
+			$UI.msg('alert', 'ËØ•ÂçïÊçÆÂ∑≤Êèê‰∫§‰∏çÂÖÅËÆ∏Ê∑ªÂä†!');
+			return;
+		}
+		var DispMainRowid = row.RowId;
+		var ApplyType = row.ApplyType;
+		var ExcludeExt = 'Y';
+		SelectDispCode(AddItms, DispMainRowid, 'ord', ApplyType, ExcludeExt);
+	}
+	
+	function AddItms(barcodes) {
+		var row = $('#MainList').datagrid('getSelected');
+		var DetailParams = JSON.stringify(barcodes);
+		var MainParams = JSON.stringify(addSessionParams({ MainId: row.RowId }));
+		showMask();
+		$.cm({
+			ClassName: 'web.CSSDHUI.PackageDisp.DispDetail',
+			MethodName: 'jsSaveDetail',
+			MainParams: MainParams,
+			Params: DetailParams
+		}, function(jsonData) {
+			hideMask();
+			if (jsonData.success >= 0) {
+				if (jsonData.success === 0) {
+					$UI.msg('success', jsonData.msg);
+				} else {
+					$UI.msg('alert', jsonData.msg);
+				}
+				playSuccess();
+				ItemListGrid.reload();
+			} else {
+				playWarn();
+				$UI.msg('error', jsonData.msg);
+			}
+		});
+	}
+	
+	var ItemCm = [[
+		{
+			field: 'ck',
+			checkbox: true,
+			frozen: true
+		}, {
+			field: 'operate',
+			title: 'Êìç‰Ωú',
+			frozen: true,
+			align: 'center',
+			width: 80,
+			allowExport: false,
+			formatter: function(value, row, index) {
+				var rowMain = $('#MainList').datagrid('getSelected');
+				var str = '';
+				if (rowMain.ComplateFlag !== 'Y') {
+					str = str + '<div class="icon-cancel col-icon" href="#" title="Âà†Èô§" onclick="ItemListGrid.commonDeleteRow(false,' + index + ')"></div>';
+				}
+				if (row.LevelFlag === '1') {
+					str = str + '<div class="icon-emergency col-icon" href="#" title="Á¥ßÊÄ•"></div>';
+				}
+				return str;
+			}
+		}, {
+			title: 'RowId',
+			field: 'RowId',
+			width: 100,
+			hidden: true
+		}, {
 			title: 'CallBackDetailDr',
 			field: 'CallBackDetailDr',
-			width:100,
+			width: 100,
 			hidden: true
-		},{
-			title: 'œ˚∂æ∞¸√˚≥∆',
-			align:'left',
+		}, {
+			title: 'Ê∂àÊØíÂåÖ',
+			align: 'left',
 			field: 'PackageDR',
-			width:140,
+			width: 140,
 			formatter: CommonFormatter(PackageBox, 'PackageDR', 'PackageName'),
 			editor: PackageBox
-		},{
-			title: '¥˝∑¢∑≈ ˝¡ø',
-			align:'right',
+		}, {
+			title: 'ÂèëÊîæÊï∞',
+			align: 'right',
 			field: 'Qty',
-			width:100,
-			editor:{type:'numberbox',options:{required:true}}
-		} ,
-		{
-			title: '∑¢∑≈ ˝¡ø',
-			align:'right',
+			width: 75,
+			editor: { type: 'numberbox', options: { required: true }}
+		}, {
+			title: 'Êú™Êâ´Á†Å',
+			align: 'right',
+			field: 'UnDispQty',
+			width: 75
+		}, {
+			title: 'Êâ´Á†ÅÊï∞',
+			align: 'right',
 			field: 'DispQty',
-			width:100
-		}
-	]]; 
-	 $UI.linkbutton('#AddBT',{ 
-		onClick:function(){
-			var rowMain = $('#MainList').datagrid('getSelected');
-			if(rowMain.ComplateFlag=="Y") return false;
-			ItemListGrid.commonAddRow();
-		}
-	});
-	$UI.linkbutton('#DeleteBT',{ 
-		onClick:function(){
-			var ItemRowId="";
-			var rowMain = $('#ItemList').datagrid('getSelected');
-			if(!isEmpty(rowMain)){
-				ItemRowId = rowMain.RowId;
+			width: 75,
+			styler: function(value, row, index) {
+				if (row.DispQty > row.Qty) {
+					return OverColor;
+				}
 			}
-			if(isEmpty(ItemRowId)&&!isEmpty(rowMain)){
-				ItemListGrid.commonDeleteRow();
+		}, {
+			title: 'Êú™ÂèëÊï∞',
+			align: 'right',
+			field: 'CBUnDispQty',
+			width: 75
+		}, {
+			title: 'ÂåÖË£ÖÊùêÊñô',
+			align: 'left',
+			field: 'PackMaterial',
+			width: 80,
+			formatter: CommonFormatter(PackagePackCombox, 'PackMaterial', 'PackMaterialName')
+		}, {
+			title: '‰ª∑Ê†º',
+			align: 'right',
+			field: 'Price',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'Á¥ßÂº†Áä∂ÊÄÅ',
+			align: 'right',
+			field: 'LevelFlag',
+			width: 100,
+			hidden: true
+		}
+	]];
+	var DispItmRows = null;
+	ItemListGrid = $UI.datagrid('#ItemList', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.PackageDisp.DispItm',
+			QueryName: 'SelectByF'
+		},
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.PackageDisp.DispItm',
+			MethodName: 'jsDelete'
+		},
+		columns: ItemCm,
+		showAddSaveDelItems: true,
+		beforeAddFn: function() {
+			ItemListGrid.unselectAll();
+			var rowMain = $('#MainList').datagrid('getSelected');
+			if (isEmpty(rowMain)) {
+				$UI.msg('alert', 'ËØ∑ÈÄâÊã©Ë¶ÅÂ¢ûÂä†ÁöÑÂèëÊîæÂçïÊçÆ!');
 				return false;
 			}
-			if (isEmpty(rowMain)) {
-				$UI.msg('alert','«Î—°‘Ò“™…æ≥˝µƒµ•æ›!');
-				 return false;
-			}
-			var MainObj = $('#MainList').datagrid('getSelected');
-			if(MainObj.ComplateFlag != "Y"){	
-				deleteItem(ItemRowId);
-			}else{
-				$UI.msg('alert',"µ•æ›“—Ã·Ωª≤ªƒ‹…æ≥˝√˜œ∏!");
-			}
-		}
-	});
-	//±£¥Êµ•æ›
-	$UI.linkbutton('#SaveBT',{ 
-		onClick:function(){
+			if (rowMain.ComplateFlag === 'Y') return false;
+		},
+		saveDataFn: function() {
 			var rowMain = $('#MainList').datagrid('getSelected');
-			if(rowMain.ComplateFlag=="Y") return false;
-			var Rows=ItemListGrid.getChangesData();	
-			if(isEmpty(Rows)){
-				//$UI.msg('alert','√ª”––Ë“™±£¥Êµƒ–≈œ¢!');
+			var Rows = ItemListGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				$UI.msg('alert', 'Ê≤°ÊúâÈúÄË¶Å‰øùÂ≠òÁöÑ‰ø°ÊÅØ!');
 				return;
 			}
-			var rowMain = $('#MainList').datagrid('getSelected');
+			if (Rows == false) {
+				$UI.msg('alert', 'Â≠òÂú®Êú™Â°´ÂÜôÁöÑÂøÖÂ°´È°πÔºå‰∏çËÉΩ‰øùÂ≠ò!');
+				return;
+			}
+			var MainId = rowMain.RowId;
+			var Params = JSON.stringify(addSessionParams({ MainId: MainId }));
+			showMask();
 			$.cm({
 				ClassName: 'web.CSSDHUI.PackageDisp.DispItm',
 				MethodName: 'jsSave',
 				Params: JSON.stringify(Rows),
-				MainId:rowMain.RowId
-			},function(jsonData){
-				if(jsonData.success==0){
-					$UI.msg('success',jsonData.msg);
+				ParamsTB: Params
+			}, function(jsonData) {
+				hideMask();
+				if (jsonData.success == 0) {
+					$UI.msg('success', jsonData.msg);
 					ItemListGrid.reload();
-				}else{
-					$UI.msg('error',jsonData.msg);
+				} else {
+					$UI.msg('error', jsonData.msg);
 				}
 			});
+		},
+		toolbar: [{
+			text: 'ÂæÖÂèëÊîæ',
+			iconCls: 'icon-paper-plane-clock',
+			handler: function() {
+				BatchDisp();
+			}
+		}],
+		pagination: false,
+		singleSelect: false,
+		idField: 'RowId',
+		sortName: 'RowId',
+		sortOrder: 'desc',
+		checkField: 'PackageDR',
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
+				if (!isEmpty(DispItmRows)) {
+					$.each(DispItmRows, function(index, row) {
+						var RowIndex = $('#ItemList').datagrid('getRowIndex', row.RowId);
+						if (RowIndex !== -1) {
+							// Ëøô‰∏™‰ΩçÁΩÆÁöÑÂÜôÊ≥ï, ‰ºöÂºïËµ∑‰ΩøÁî®ÂºπÁ™óÂêéÁöÑcheckÂºÇÂ∏∏, ‰ΩÜÊòØÊñ≠ÁÇπÂèàËé∑Âèñ‰∏çÂà∞,why?
+							$('#ItemList').datagrid('selectRow', RowIndex);
+						}
+					});
+					DispItmRows = null;
+				} else {
+					$('#ItemList').datagrid('selectRow', 0);
+				}
+			}
+		},
+		onSelect: function(index, rowData) {
+			FindItemSByF();
+		},
+		onUnselect: function(index, row) {
+			FindItemSByF();
+		},
+		onSelectAll: function(rows) {
+			FindItemSByF();
+		},
+		onUnselectAll: function(rows) {
+			$UI.clear(ItemSListGrid);
+		},
+		onClickCell: function(index, field, value) {
+			ItemListGrid.commonClickCell(index, field);
+		},
+		onBeforeEdit: function() {
+			var rowMain = $('#MainList').datagrid('getSelected');
+			if (rowMain.ComplateFlag === 'Y') return false;
+		},
+		onBeforeCellEdit: function(index, field) {
+			var row = $(this).datagrid('getRows')[index];
+			var CallBackDetailDr = row.CallBackDetailDr;
+			if (field === 'PackageDR') {
+				if ((!isEmpty(row)) && (!isEmpty(CallBackDetailDr))) {
+					return false;
+				}
+			}
+		},
+		beforeDelFn: function() {
+			var rowItem = $('#ItemList').datagrid('getSelected');
+			if (isEmpty(rowItem)) {
+				$UI.msg('alert', 'ËØ∑ÈÄâÊã©Ë¶ÅÂà†Èô§ÁöÑÂèëÊîæÂçïÊòéÁªÜ!');
+				return false;
+			}
+			var MainObj = $('#MainList').datagrid('getSelected');
+			if (MainObj.ComplateFlag === 'Y') {
+				$UI.msg('alert', 'ÂèëÊîæÂçïÂ∑≤Êèê‰∫§‰∏çËÉΩÂà†Èô§ÊòéÁªÜ!');
+				return false;
+			}
+		},
+		afterDelFn: function() {
+			$UI.clear(ItemSListGrid);
 		}
 	});
-	var ItemListGrid = $UI.datagrid('#ItemList', {
-			queryParams: {
-				ClassName: 'web.CSSDHUI.PackageDisp.DispItm',
-				MethodName: 'SelectByF'
-			},
-			columns: ItemCm,
-			toolbar:'#Itembr',
-			pagination:false,
-			singleSelect:false,
-			onLoadSuccess:function(data){  
-				$("a[name='opera']").linkbutton({text:'',plain:true,iconCls:'icon-cancel'});  
-				if(data.rows.length>0){
-					$('#ItemList').datagrid("selectRow", 0)
-						$("#BarCode").val("").focus();
-						
-				}
-			},
-			//showAddSaveDelItems: true,
-			//toolbar:'#itmtd',
-			//showAddSaveItems: true,
-			//showSaveItems:true,
-			/* saveDataFn:function(){//±£¥Ê√˜œ∏
-				var Rows=ItemListGrid.getChangesData();	
-				if(isEmpty(Rows)){
-					//$UI.msg('alert','√ª”––Ë“™±£¥Êµƒ–≈œ¢!');
-					return;
-				}
-				var rowMain = $('#MainList').datagrid('getSelected');
-				$.cm({
-					ClassName: 'web.CSSDHUI.PackageDisp.DispItm',
-					MethodName: 'jsSave',
-					Params: JSON.stringify(Rows),
-					MainId:rowMain.RowId
-				},function(jsonData){
-					if(jsonData.success==0){
-						$UI.msg('success',jsonData.msg);
-						ItemListGrid.reload();
-					}else{
-						$UI.msg('error',jsonData.msg);
-					}
-				});
-			}, */
-			/* beforeDelFn:function(){
-				var ItemRowId="";
-				var rowMain = $('#ItemList').datagrid('getSelected');
-				if(!isEmpty(rowMain)){
-					ItemRowId = rowMain.RowId;
-				}
-				if (isEmpty(rowMain)) {
-					$UI.msg('alert','«Î—°‘Ò“™…æ≥˝µƒµ•æ›!');
-				 	return false;
-				}
-				var MainObj = $('#MainList').datagrid('getSelected');
-				if(MainObj.ComplateFlag != "Y"){	
-				deleteItem(ItemRowId);
-				}else{
-					$UI.msg('alert',"µ•æ›“—Ã·Ωª≤ªƒ‹…æ≥˝√˜œ∏!");
-				}
-			}, */
-			onClickCell: function(index, field, value){
-				var Row=ItemListGrid.getRows()[index]
-				var Id = Row.PackageDR;
-				var DispId = Row.RowId;
-				if(!isEmpty(DispId)){
-					FindItemSByF(DispId);
-				}	
-				ItemListGrid.commonClickCell(index, field);
-			},
-			/* beforeAddFn:function(){
-				var rowMain = $('#MainList').datagrid('getSelected');
-				if(rowMain.ComplateFlag=="Y") return false;
-			}, */
-			onBeforeEdit:function(){
-				var rowMain = $('#MainList').datagrid('getSelected');
-				if(rowMain.ComplateFlag=="Y") return false;
-			},
-			onAfterEdit:function(rowIndex,rowData){
-				if(!isEmpty(rowData.RowId)){
-					$("a[name='opera']").linkbutton({text:'',plain:true,iconCls:'icon-cancel'});  
-            }
-		}
-			
-	});	
 	
 	function FindItemByF(Id) {
 		$UI.clear(ItemListGrid);
 		$UI.clear(ItemSListGrid);
+		var Flag = 'Y';			// Âä†ËØ•Ê†áÂøó‰∏∫‰∫Ü‰∏çÂæ™ÁéØCSSD_PackageDispDetail
 		ItemListGrid.load({
 			ClassName: 'web.CSSDHUI.PackageDisp.DispItm',
 			QueryName: 'SelectByF',
-			MainId:Id
+			MainId: Id,
+			Flag: Flag,
+			rows: 9999
 		});
+		$('#BarCode').focus();
 	}
-//=========================œ˚∂æ∞¸√˜œ∏end====================
-//∑¢∑≈±Í«©√˜œ∏
-	var ItemSCm = [[{
-		field:'operate',title:'≤Ÿ◊˜',align:'center',width:50,
-			formatter:function(value, row, index){
+	// ÂèëÊîæÊ†áÁ≠æÊòéÁªÜ
+	var ItemSCm = [[
+		{
+			field: 'operate',
+			title: 'Êìç‰Ωú',
+			frozen: true,
+			align: 'center',
+			width: 50,
+			allowExport: false,
+			formatter: function(value, row, index) {
 				var rowMain = $('#MainList').datagrid('getSelected');
-				if(rowMain.ComplateFlag=="Y"){
-					var str = '<a href="#" name="opera"  disabled  class="easyui-linkbutton" title="…æ≥˝" onclick="deleteDispLabelItem('+row.RowId+')"></a>';
-				}else{
-					var str = '<a href="#" name="opera"    class="easyui-linkbutton" title="…æ≥˝" onclick="deleteDispLabelItem('+row.RowId+')"></a>';
+				var str = '';
+				if (rowMain.ComplateFlag !== 'Y') {
+					str = '<div class="col-icon icon-cancel" title="Âà†Èô§" onclick="ItemSListGrid.commonDeleteRow(false,' + index + ');"></div>';
 				}
 				return str;
 			}
-		},
-        {
-            title: 'RowId',
-            field: 'RowId',
-            width:100,
-            hidden: true
-        },{
-		    title: 'œ˚∂æ∞¸√˚≥∆',
-            field: 'PackageName',
-            align: 'left',
-            width:180
-		},{
-            title: '±Í«©',
-            field: 'Label',
-            align: 'right',
-            width:180
-        }
-    ]]; 
-
-    var ItemSListGrid = $UI.datagrid('#ItemSList', {
+		}, {
+			title: 'RowId',
+			field: 'RowId',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'Ê∂àÊØíÂåÖId',
+			align: 'left',
+			field: 'PackageDR',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'Ê∂àÊØíÂåÖ',
+			field: 'PackageName',
+			align: 'left',
+			width: 165
+		}, {
+			title: 'Ê†áÁ≠æ',
+			field: 'Label',
+			align: 'left',
+			width: 160
+		}, {
+			title: 'ÂåÖË£ÖÊùêÊñô',
+			align: 'left',
+			field: 'PackMaterial',
+			width: 80,
+			formatter: CommonFormatter(PackagePackCombox, 'PackMaterial', 'PackMaterialName')
+		}
+	]];
+	ItemSListGrid = $UI.datagrid('#ItemSList', {
 		queryParams: {
 			ClassName: 'web.CSSDHUI.PackageDisp.DispDetail',
 			QueryName: 'SelectByF'
 		},
+		deleteRowParams: {
+			ClassName: 'web.CSSDHUI.PackageDisp.DispDetail',
+			MethodName: 'jsDelete'
+		},
 		columns: ItemSCm,
-		pagination:false,
-		onLoadSuccess:function(data){  
-				$("a[name='opera']").linkbutton({text:'',plain:true,iconCls:'icon-cancel'});  
-				if(data.rows.length>0){
-					$('#ItemSList').datagrid("selectRow", 0)
-				}
+		pagination: false,
+		sortName: 'RowId',
+		sortOrder: 'desc',
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			ItemSListGrid.commonClickRow(index, row);
+		},
+		afterDelFn: function() {
+			DispItmRows = ItemListGrid.getChecked();
+			ItemListGrid.reload();
 		}
-    }); 
-    ///∏˘æ›∑¢∑≈√˜œ∏±Ìid≤ÈæﬂÃÂ±Í«©√˜œ∏
-    function FindItemSByF(Id) {
-        ItemSListGrid.load({
-            ClassName: 'web.CSSDHUI.PackageDisp.DispDetail',
-            QueryName: 'SelectByF',
-            DispId:Id
-        });
-    }
-}
+	});
+	var Default = {
+		fromLocDr: gLocObj,
+		FStartDate: DefaultStDate(),
+		FEndDate: DefaultEdDate(),
+		FComplateFlag: GetLocalStorage('CompleteFlag') || ''
+	};
+	$UI.fillBlock('#MainCondition', Default);
+	
+	// ÊòæÁ§∫Êï∞ÈáèËßíÊ†á
+	function GetMarkQty() {
+		var Obj = $UI.loopBlock('#MainCondition');
+		var ParamsObj = {};
+		ParamsObj.StartDate = Obj.FStartDate;
+		ParamsObj.EndDate = Obj.FEndDate;
+		ParamsObj.DispFlag = '1';
+		ParamsObj.ExcludeExt = 'Y';
+		var Params = JSON.stringify(addSessionParams(ParamsObj));
+		var MarkQtyObj = $.cm({
+			ClassName: 'web.CSSDHUI.PackageDisp.DispDetail',
+			MethodName: 'GetMarkQty',
+			Params: Params
+		}, false);
+		$('#ReturnNum').html(MarkQtyObj.ReturnNum);
+		$('#ApplyNum').html(MarkQtyObj.ApplyNum);
+		$('#FLApplyNum').html(MarkQtyObj.FLApplyNum);
+	}
+	function AdjustLayoutSize() {
+		var NorthHeight = $(window).height() * 0.5;
+		var EastWidth = '';
+		if ($(window).width() < 680) {
+			EastWidth = 0;
+		} else if ($(window).width() * 0.58 <= 680) {
+			EastWidth = $(window).width() - 680;
+		} else {
+			EastWidth = $(window).width() * 0.42;
+		}
+		$('#Layout').layout('panel', 'east').panel('resize', { width: EastWidth });
+		$('#Layout').layout();
+		$('#ItmLayout').layout('panel', 'north').panel('resize', { height: NorthHeight });
+		$('#ItmLayout').layout();
+	}
+	function FindItemSByF() {
+		$UI.clear(ItemSListGrid);
+		var DispIdStr = '';
+		var Itms = ItemListGrid.getSelections();
+		for (var i = 0, Len = Itms.length; i < Len; i++) {
+			var DispId = Itms[i]['RowId'];
+			if (DispIdStr === '') {
+				DispIdStr = DispId;
+			} else {
+				DispIdStr = DispIdStr + ',' + DispId;
+			}
+		}
+		if (DispIdStr === '') {
+			return;
+		}
+		ItemSListGrid.load({
+			ClassName: 'web.CSSDHUI.PackageDisp.DispDetail',
+			QueryName: 'SelectByF',
+			DispId: DispIdStr,
+			rows: 9999
+		});
+	}
+	window.onresize = function() {
+		AdjustLayoutSize();
+	};
+	AdjustLayoutSize();
+	query();
+};
 $(init);

@@ -10,6 +10,7 @@ var editRow = ""; editDRow = ""; editPRow = "",editCRow=0,editURow =0,editARow=0
 /// 页面初始化函数
 function initPageDefault(){
 	
+	init(); //ylp 初始化医院 //20230222
 	//初始化字典类型列表
 	InitMainList();
 	
@@ -30,11 +31,45 @@ function initPageDefault(){
 	InitAppUserList();
 	
 	InitAppUserAutList();
+	
+	///初始化MDT反馈次数维护列表 xiaowenwu 2020-03-05
+	InitFeedbackNumList();
+	
+	/// 页面 tabs
+	InitPageTabs();
+}
+function init(){
+	
+	hospComp = GenHospComp("DHC_EmConsDicType");  //hxy 2020-05-27 st //2020-05-31 add
+	hospComp.options().onSelect = function(){///选中事件
+		$("#main").datagrid('reload',{params:hospComp.getValue()});
+	}
+
+	$('#queryBTN').on('click',function(){
+		$("#main").datagrid('reload',{params:hospComp.getValue()});
+	 })
+		
 }
 
 /// 界面元素监听事件
 function InitWidListener(){
 	
+}
+
+/// 页面 tabs
+function InitPageTabs(){
+	
+	$('#tag_id').tabs({ 
+		onSelect:function(title){
+			switch (title){
+				case "外院专家":
+					if ($("#tab_req").attr("src") == "") $("#tab_req").attr('src',$("#tab_req").attr("data-src"));
+					break;
+				default:
+					return;
+			}
+		}
+	}); 
 }
 
 ///初始化字典类型列表
@@ -76,7 +111,7 @@ function InitMainList(){
 			valueField: "value", 
 			textField: "text",
 			editable:false,
-			url:$URL+"?ClassName=web.DHCMDTCom&MethodName=GetHospDs",
+			url:$URL+"?ClassName=web.DHCMDTCom&MethodName=GetHospDs"+"&MWToken="+websys_getMWToken(),
 			//required:true,
 			panelHeight:"auto",  //设置容器高度自动增长
 			onSelect:function(option){
@@ -101,7 +136,7 @@ function InitMainList(){
 		{field:'ActCode',title:'aitActCode',width:100,editor:textEditor,hidden:true},
 		{field:'ActDesc',title:'启用',width:80,editor:activeEditor},
 		{field:'HospID',title:'HospID',width:100,editor:textEditor,hidden:true},
-		{field:'HospDesc',title:'医院',width:200,editor:HospEditor}
+		{field:'HospDesc',title:'医院',width:200,editor:HospEditor,hidden:true}
 	]];
 	
 	/**
@@ -139,10 +174,15 @@ function InitMainList(){
 			$("#consAppUser").datagrid('reload',{GropID:rowData.ID});
 			
 			$("#consAppUserAut").datagrid('reload',{DARowID:0});
+			
+			$("#feedbackNum").datagrid('reload',{mID:rowData.ID});
+			
+			/// 外院专家
+			frames[0].window.location.reload()
 	    }
 	};
 	
-	var uniturl = $URL+"?ClassName=web.DHCMDTGroup&MethodName=QryGroup";
+	var uniturl = $URL+"?ClassName=web.DHCMDTGroup&MethodName=QryGroup"+"&params="+hospComp.getValue()+"&MWToken="+websys_getMWToken();
 	new ListComponent('main', columns, uniturl, option).Init();
 
 }
@@ -209,7 +249,7 @@ function insertRow(){
 	
 	$("#main").datagrid('insertRow', {
 		index: 0, // 行数从0开始计算
-		row: {ID:'', Code:'', Desc:'', ActCode:'Y', ActDesc:'是', HospID:'', HospDesc:'',Notes:''}
+		row: {ID:'', Code:'', Desc:'', ActCode:'Y', ActDesc:'是', HospID:hospComp.getValue(), HospDesc:'',Notes:''}
 	});
 	$("#main").datagrid('beginEdit', 0);//开启编辑并传入要编辑的行
 	editRow=0;
@@ -253,7 +293,7 @@ function InitItemList(){
 	var LocEditor={  //设置其为可编辑
 		type: 'combobox',//设置编辑格式
 		options: {
-			url: $URL +"?ClassName=web.DHCMDTCom&MethodName=JsonLoc&HospID"+session['LOGON.HOSPID'],
+			url: $URL +"?ClassName=web.DHCMDTCom&MethodName=JsonLoc&HospID"+session['LOGON.HOSPID']+"&MWToken="+websys_getMWToken(),
 			valueField: "value", 
 			textField: "text",
 			mode:'remote',
@@ -280,7 +320,7 @@ function InitItemList(){
 	var PrvTpEditor={  //设置其为可编辑
 		type: 'combobox',//设置编辑格式
 		options: {
-			url: $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonPrvTp",
+			url: $URL+"?ClassName=web.DHCMDTCom&MethodName=JsonPrvTp"+"&MWToken="+websys_getMWToken(),
 			valueField: "value", 
 			textField: "text",
 			enterNullValueClear:false,
@@ -346,7 +386,7 @@ function InitItemList(){
 				var PrvTpID = $(ed.target).val();
 				///设置级联指针
 				var ed=$("#item").datagrid('getEditor',{index:editDRow,field:'User'});
-				var unitUrl=$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonLocUser&LocID="+ LocID+"&PrvTpID="+PrvTpID;
+				var unitUrl=$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonLocUser&LocID="+ LocID+"&PrvTpID="+PrvTpID+"&MWToken="+websys_getMWToken();
 				$(ed.target).combobox('reload',unitUrl);
 			}
 		}
@@ -408,7 +448,7 @@ function InitItemList(){
 	    }
 	};
 	
-	var uniturl = $URL+"?ClassName=web.DHCMDTGroup&MethodName=QryGroupItm&ID=0";
+	var uniturl = $URL+"?ClassName=web.DHCMDTGroup&MethodName=QryGroupItm&ID=0"+"&MWToken="+websys_getMWToken();
 	new ListComponent('item', columns, uniturl, option).Init();
 
 }
@@ -429,7 +469,7 @@ function saveItemRow(){
 	for(var i=0;i<rowsData.length;i++){
 		
 		if((rowsData[i].LocID=="")||(rowsData[i].PrvTpID=="")){
-			$.messager.alert("提示","科室或职称为空!"); 
+			$.messager.alert("提示","科室或职称不能为空!"); 
 			return false;
 		}
 		if(rowsData[i].HospID==""){
@@ -550,7 +590,7 @@ function InitDetailList(){
 				var HospID = $(ed.target).val();
 				///设置级联指针
 				var ed=$("#detail").datagrid('getEditor',{index:editPRow,field:'LocDesc'});
-				var unitUrl=$URL +"?ClassName=web.DHCMDTCom&MethodName=JsonLoc&HospID="+HospID;
+				var unitUrl=$URL +"?ClassName=web.DHCMDTCom&MethodName=JsonLoc&HospID="+HospID+"&MWToken="+websys_getMWToken();
 				$(ed.target).combobox('reload',unitUrl);
 			}
 		}
@@ -575,7 +615,7 @@ function InitDetailList(){
 				var LocID = $(ed.target).val();
 				///设置级联指针
 				var ed=$("#detail").datagrid('getEditor',{index:editPRow,field:'PrvDesc'});
-				var unitUrl=$URL+"?ClassName=web.DHCMDTCom&MethodName=jsonLocCare&LocID="+ LocID;
+				var unitUrl=$URL+"?ClassName=web.DHCMDTCom&MethodName=jsonLocCare&LocID="+ LocID+"&MWToken="+websys_getMWToken();
 				$(ed.target).combobox('reload',unitUrl);
 			}
 		}
@@ -613,7 +653,7 @@ function InitDetailList(){
         }
 	};
 	
-	var uniturl = $URL+"?ClassName=web.DHCMDTCareProv&MethodName=QryCareProv&mID=0";
+	var uniturl = $URL+"?ClassName=web.DHCMDTCareProv&MethodName=QryCareProv&mID=0"+"&MWToken="+websys_getMWToken();
 	new ListComponent('detail', columns, uniturl, option).Init();
 }
 
@@ -647,7 +687,7 @@ function InitConsOrdList(){
 			},
 			onShowPanel:function(){
 				var ed=$("#consOrd").datagrid('getEditor',{index:editCRow,field:'Arci'});
-				var unitUrl=$URL+"?ClassName=web.DHCMDTOrdConfig&MethodName=ListArci";
+				var unitUrl=$URL+"?ClassName=web.DHCMDTOrdConfig&MethodName=ListArci"+"&MWToken="+websys_getMWToken();
 				$(ed.target).combobox('reload',unitUrl);
 			}
 		}
@@ -683,7 +723,7 @@ function InitConsOrdList(){
         }
 	};
 	
-	var uniturl = $URL+"?ClassName=web.DHCMDTOrdConfig&MethodName=QryList&mID=0";
+	var uniturl = $URL+"?ClassName=web.DHCMDTOrdConfig&MethodName=QryList&mID=0"+"&MWToken="+websys_getMWToken();
 	new ListComponent('consOrd', columns, uniturl, option).Init();
 }
 
@@ -720,7 +760,7 @@ function InitAppUserList(){
 			},
 			onShowPanel:function(){
 				var ed=$("#consAppUser").datagrid('getEditor',{index:editURow,field:'Type'});
-				var unitUrl=$URL+"?ClassName=web.DHCMDTDocAppAut&MethodName=JsonListAutType";
+				var unitUrl=$URL+"?ClassName=web.DHCMDTDocAppAut&MethodName=JsonListAutType"+"&MWToken="+websys_getMWToken();
 				$(ed.target).combobox('reload',unitUrl);
 			}
 		}
@@ -745,7 +785,7 @@ function InitAppUserList(){
 				var ed=$("#consAppUser").datagrid('getEditor',{index:editURow,field:'TypeID'});
 				var TypeID=$(ed.target).val();
 				var ed=$("#consAppUser").datagrid('getEditor',{index:editURow,field:'Pointer'});
-				var unitUrl=$URL+"?ClassName=web.DHCMDTDocAppAut&MethodName=JsonListAutPointer&TypeID="+TypeID;
+				var unitUrl=$URL+"?ClassName=web.DHCMDTDocAppAut&MethodName=JsonListAutPointer&TypeID="+TypeID+"&MWToken="+websys_getMWToken();
 				$(ed.target).combobox('reload',unitUrl);
 			}
 		}
@@ -784,7 +824,7 @@ function InitAppUserList(){
         }
 	};
 	
-	var uniturl = $URL+"?ClassName=web.DHCMDTDocAppAut&MethodName=QryDocAutItm&GropID=0";
+	var uniturl = $URL+"?ClassName=web.DHCMDTDocAppAut&MethodName=QryDocAutItm&GropID=0"+"&MWToken="+websys_getMWToken();
 	new ListComponent('consAppUser', columns, uniturl, option).Init();
 }
 
@@ -818,7 +858,7 @@ function InitAppUserAutList(){
 			},
 			onShowPanel:function(){
 				var ed=$("#consAppUserAut").datagrid('getEditor',{index:editARow,field:'DicItm'});
-				var unitUrl=$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonListDitItm&DicCode=AppAut&LgParams="+LgParams;
+				var unitUrl=$URL+"?ClassName=web.DHCMDTCom&MethodName=JsonListDitItm&DicCode=AppAut&LgParams="+LgParams+"&MWToken="+websys_getMWToken();
 				$(ed.target).combobox('reload',unitUrl);
 			}
 		}
@@ -856,7 +896,7 @@ function InitAppUserAutList(){
         }
 	};
 	
-	var uniturl = $URL+"?ClassName=web.DHCMDTDocAppAut&MethodName=QryDocAutDicItm&DARowID=0";
+	var uniturl = $URL+"?ClassName=web.DHCMDTDocAppAut&MethodName=QryDocAutDicItm&DARowID=0"+"&MWToken="+websys_getMWToken();
 	new ListComponent('consAppUserAut', columns, uniturl, option).Init();
 }
 /// 保存编辑行
@@ -1099,7 +1139,7 @@ function InitConsPurList(){
         }
 	};
 	
-	var uniturl = $URL+"?ClassName=web.DHCMDTemp&MethodName=QryOpiTemp&mID=0";
+	var uniturl = $URL+"?ClassName=web.DHCMDTemp&MethodName=QryOpiTemp&mID=0"+"&MWToken="+websys_getMWToken();
 	new ListComponent('consPur', columns, uniturl, option).Init();
 }
 
@@ -1390,6 +1430,150 @@ function saveAppAutRow(){
 		}
 	
 		$("#consAppUserAut").datagrid('reload');
+	})
+}
+
+///初始化MDT反馈次数维护列表 xiaowenwu 2020-03-05
+function InitFeedbackNumList(){
+	
+	/**
+	 * 文本编辑格
+	 */
+	var textEditor={
+		type: 'text',//设置编辑格式
+		options: {
+			required: true //设置编辑规则属性
+		}
+	}
+	
+	
+	
+	/**
+	 * 定义columns
+	 */
+	var columns=[[
+		{field:'ID',title:'ID',width:100,hidden:true,align:'center'},
+		{field:'mID',title:'mID',width:100,hidden:true,align:'center'},
+		{field:'MDTimes',title:'次数',width:100,editor:textEditor,align:'center'},
+		{field:'MDInterval',title:'间隔时间(天)',width:100,editor:textEditor,align:'center'},
+	]];
+	
+	/**
+	 * 定义datagrid
+	 */
+	var option = {
+		title:'',
+		//nowrap:false,
+		headerCls:'panel-header-gray',
+		singleSelect : true,
+		iconCls:'icon-paper',
+	    onDblClickRow: function (rowIndex, rowData) {//双击选择行编辑
+	    
+            if ((editPRow != "")||(editPRow == "0")) { 
+                $("#feedbackNum").datagrid('endEdit', editPRow); 
+            } 
+            $("#feedbackNum").datagrid('beginEdit', rowIndex); 
+            editPRow = rowIndex;
+        }
+	};
+	
+	var uniturl = $URL+"?ClassName=web.DHCMDTFolUpTimes&MethodName=QryFolUpTimes&mID=0"+"&MWToken="+websys_getMWToken();
+	new ListComponent('feedbackNum', columns, uniturl, option).Init();
+}
+
+/// 插入新行 xiaowenwu 2020-03-05
+function insertFeeRow(){
+	
+	var rowData = $("#main").datagrid("getSelected");
+	if (rowData == null) {
+		$.messager.alert("提示","请先选择病种分组!","warning");
+		return;
+	}
+	var ID = rowData.ID;           /// 主项目ID
+	var HospID = rowData.HospID;   /// 医院ID
+	
+	if(editCRow >= "0"){
+		$("#feedbackNum").datagrid('endEdit', editCRow);//结束编辑，传入之前编辑的行
+	}
+	
+	/// 检查第一行是否为空行
+	var rowsData = $("#feedbackNum").datagrid('getRows');
+	if (rowsData.length != 0){
+		if (rowsData[0].LocID == ""){
+			$('#feedbackNum').datagrid('selectRow',0);
+			$("#feedbackNum").datagrid('beginEdit',0);//开启编辑并传入要编辑的行
+			return;
+		}
+	}
+	
+	$("#feedbackNum").datagrid('insertRow', {
+		index: 0, // 行数从0开始计算
+		row: {mID:ID, ID:'', MDTimes:'', MDInterval:''}
+	});
+	$("#feedbackNum").datagrid('beginEdit', 0);//开启编辑并传入要编辑的行
+	editCRow=0;
+}
+
+/// 删除选中行 xiaowenwu 2020-03-05
+function deleteFeeRow(){
+	
+	var rowsData = $("#feedbackNum").datagrid('getSelected'); //选中要删除的行
+	if (rowsData != null) {
+		$.messager.confirm("提示", "您确定要删除这些数据吗？", function (res) {//提示是否删除
+			if (res) {
+				runClassMethod("web.DHCMDTFolUpTimes","remove",{"ID":rowsData.ID},function(jsonString){
+
+					if (jsonString < 0){
+						$.messager.alert('提示','删除失败！','warning');
+					}
+					$('#feedbackNum').datagrid('reload'); //重新加载
+				})
+			}
+		});
+	}else{
+		 $.messager.alert('提示','请选择要删除的项','warning');
+		 return;
+	}
+}
+
+
+/// 保存编辑行 xiaowenwu 2020-03-05
+function saveFeeRow(){
+	
+	if(editCRow>="0"){
+		$("#feedbackNum").datagrid('endEdit', editCRow);
+	}
+
+	var rowsData = $("#feedbackNum").datagrid('getChanges');
+	if(rowsData.length<=0){
+		$.messager.alert("提示","没有待保存数据!","warning");
+		return;
+	}
+	var dataList = [];
+	for(var i=0;i<rowsData.length;i++){
+		
+		if((rowsData[i].MDTimes=="")||(rowsData[i].MDInterval=="")){
+			$.messager.alert("提示","随访次数或时间间隔不能为空!"); 
+			return false;
+		}
+		var tmp=rowsData[i].ID +"^"+ rowsData[i].mID +"^"+ rowsData[i].MDTimes+"^"+ rowsData[i].MDInterval;
+		dataList.push(tmp);
+	}
+	
+	var mListData=dataList.join("$$");
+
+	//保存数据
+	runClassMethod("web.DHCMDTFolUpTimes","save",{"mParam":mListData},function(jsonString){
+
+		if ((jsonString == "-1")||((jsonString == "-3"))){
+			$.messager.alert('提示','代码重复,请核实后再试！','warning');
+			return;	
+		}else if ((jsonString == "-2")||((jsonString == "-4"))){
+			$.messager.alert('提示','描述重复,请核实后再试！','warning');
+			return;
+		}
+	
+		$("#feedbackNum").datagrid('reload');
 	})
 }
 

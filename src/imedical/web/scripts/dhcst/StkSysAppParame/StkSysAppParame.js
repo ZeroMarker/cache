@@ -93,6 +93,10 @@ function addNewMXRow() {
         {
             name: 'Memo',
             type: 'string'
+        },
+        {
+            name: 'DefaultVal',
+            type: 'string'
         }
     ]);
 
@@ -101,7 +105,8 @@ function addNewMXRow() {
         Parref: '',
         Code: '',
         Desc: '',
-        Memo: ''
+        Memo: '',
+        DefaultVal: ''
     });
 
     StkSysAppParameGridDs.add(MXRecord);
@@ -210,8 +215,7 @@ var StkSysAppParameGridCm = new Ext.grid.ColumnModel([
             id: 'defaultValField',
             allowBlank: true,
             listeners: {
-                specialKey: function (field, e) {
-                }
+                specialKey: function (field, e) {}
             }
         })
     }
@@ -251,7 +255,7 @@ var saveStkSysAppParame = new Ext.Toolbar.Button({
             var rowid = mr[i].data['RowId']; //StkSysAppParameGridDs.getAt(StkSysAppParameGridDs.find('Code',code)).get('RowId');
             var desc = mr[i].data['Desc'];
             var memo = mr[i].data['Memo'];
-			var defaultVal = mr[i].data['DefaultVal'];
+            var defaultVal = mr[i].data['DefaultVal'];
             if (code == '') {
                 Msg.info('warning', '名称不能为空!');
                 return;
@@ -332,6 +336,7 @@ var deleteStkSysAppParame = new Ext.Toolbar.Button({
                                 if (jsonData.success == 'true') {
                                     Msg.info('success', '删除成功!');
                                     StkSysAppParameGridDs.load({ params: { StkSysAppId: StkSysAppId } });
+                                    StkSysAppParameValueGrid.getStore().removeAll();
                                 } else {
                                     Msg.info('error', '删除失败!');
                                 }
@@ -482,11 +487,10 @@ var Hosp = new Ext.form.ComboBox({
             var cell = StkSysAppParameValueGrid.getSelectionModel().getSelectedCell();
             var row = cell[0];
             var rowData = StkSysAppParameValueGrid.getStore().getAt(row);
-			if (rowData.get("Type")!='D'){
-				rowData.set('Pointer', '');
-				typeField.load();
-			}
-            
+            if (rowData.get('Type') != 'D') {
+                rowData.set('Pointer', '');
+                typeField.load();
+            }
         }
     }
 });
@@ -502,11 +506,14 @@ function addRow() {
     var cell = StkSysAppGrid.getSelectionModel().getSelectedCell();
     var selectdata = StkSysAppGrid.getStore().getAt(cell[0]);
     var selectcode = selectdata.get('Code');
+    var celli = StkSysAppParameGrid.getSelectionModel().getSelectedCell();
+    var selectdatai = StkSysAppParameGrid.getStore().getAt(celli[0]);
+    var selectcodei = selectdatai.get('Code'); ///增加限制用药限制数量开始日期只能按院级维护
     var Type = '';
     TypeName = '';
     Pointer = '';
     PointerName = '';
-    if (selectcode == 'DHCSTCOMMON') {
+    if (selectcode == 'DHCSTCOMMON' || selectcodei == 'DrugLimitQtyStartDay') {
         Type = 'D';
         TypeName = '全院';
         Pointer = 'DHC';
@@ -634,7 +641,7 @@ var StkSysAppParameValueGridCm = new Ext.grid.ColumnModel([
         //renderer:Ext.util.Format.comboRenderer(Hosp)
         renderer: Ext.util.Format.comboRenderer2(Hosp, 'HospDr', 'HospName'),
         editor: new Ext.grid.GridEditor(Hosp),
-		menuDisabled:true
+        menuDisabled: true
     },
     {
         header: '类型',
@@ -644,7 +651,7 @@ var StkSysAppParameValueGridCm = new Ext.grid.ColumnModel([
         sortable: true,
         editor: new Ext.grid.GridEditor(typeField),
         renderer: Ext.util.Format.comboRenderer(typeField),
-		menuDisabled:true
+        menuDisabled: true
     },
     {
         header: '类型值',
@@ -654,7 +661,7 @@ var StkSysAppParameValueGridCm = new Ext.grid.ColumnModel([
         sortable: true,
         editor: new Ext.grid.GridEditor(PointerField),
         renderer: Ext.util.Format.comboRenderer2(PointerField, 'Pointer', 'PointerName'),
-		menuDisabled:true
+        menuDisabled: true
     },
     {
         header: '参数值',
@@ -674,7 +681,7 @@ var StkSysAppParameValueGridCm = new Ext.grid.ColumnModel([
                 }
             }
         }),
-		menuDisabled:true
+        menuDisabled: true
     },
     {
         header: '参数值',
@@ -699,7 +706,7 @@ var StkSysAppParameValueGridCm = new Ext.grid.ColumnModel([
                 }
             }
         }),
-		menuDisabled:true
+        menuDisabled: true
     },
     {
         header: '生效日期',
@@ -726,7 +733,7 @@ var StkSysAppParameValueGridCm = new Ext.grid.ColumnModel([
                 }
             }
         }),
-		menuDisabled:true
+        menuDisabled: true
     }
 ]);
 
@@ -740,13 +747,12 @@ var addStkSysAppParameValue = new Ext.Toolbar.Button({
     width: 70,
     height: 30,
     handler: function () {
-	    var cell = StkSysAppParameGrid.getSelectionModel().getSelectedCell();
+        var cell = StkSysAppParameGrid.getSelectionModel().getSelectedCell();
         if (cell == null || StkSysAppParameId === '') {
             Msg.info('warning', '请选择参数属性!');
             return false;
-        } 
- 		addRow();
-
+        }
+        addRow();
     }
 });
 
@@ -909,7 +915,10 @@ StkSysAppParameValueGrid.on('beforeedit', function (e) {
     var cell = StkSysAppGrid.getSelectionModel().getSelectedCell();
     var selectdata = StkSysAppGrid.getStore().getAt(cell[0]);
     var selectcode = selectdata.get('Code');
-    if (selectcode == 'DHCSTCOMMON') {
+    var celli = StkSysAppParameGrid.getSelectionModel().getSelectedCell();
+    var selectdatai = StkSysAppParameGrid.getStore().getAt(celli[0]);
+    var selectcodei = selectdatai.get('Code'); ///增加限制用药限制数量开始日期只能按院级维护
+    if (selectcode == 'DHCSTCOMMON' || selectcodei == 'DrugLimitQtyStartDay') {
         if (e.field == 'Type' || e.field == 'Pointer') {
             e.cancel = true;
         }
@@ -968,11 +977,11 @@ function IfValueCipher() {
     return false;
 }
 
-function GetSelectedAppCode(){
+function GetSelectedAppCode() {
     var cell = StkSysAppGrid.getSelectionModel().getSelectedCell();
     var selectdata = StkSysAppGrid.getStore().getAt(cell[0]);
     var selectcode = selectdata.get('Code');
-	return selectcode;
+    return selectcode;
 }
 //===========模块主页面=================================================
 Ext.onReady(function () {

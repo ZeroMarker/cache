@@ -14,8 +14,8 @@ function InitThWordsMapCheckWin(){
 		singleSelect: true,
 		autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
 		loadMsg:'数据加载中...',
-		pageSize: 10,
-		pageList : [10,20,50,100,200],
+		pageSize: 20,
+		pageList : [20,50,100,200],
 	    url:$URL,
 	    queryParams:{
 		    ClassName:"DHCHAI.RMES.ThWordsMapSrv",
@@ -24,17 +24,14 @@ function InitThWordsMapCheckWin(){
 	    },
 		columns:[[
 			{field:'ID',title:'ID',width:'50',sortable:'true'},
-			{field:'KeyWord',title:'关键词',width:'120',sortable:'true'},
-			{field:'WordTypeDesc',title:'分类',width:'150',sortable:'true'},
-			{field:'IsActive',title:'是否<br>有效',width:'60',sortable:'true',
-				formatter: function(value,row,index){
-					if (value=="1") {
-						return "是";
-						}else{
-							return "否"
-							}
-				}},
-			{field:'UnCheckCnt',title:'未审核<br>记录数',width:'60',sortable:'true'}
+			{field:'KeyWord',title:'关键词',width:'100',sortable:'true'},
+			{field:'WordTypeDesc',title:'分类',width:'140',sortable:'true'},
+			{field:'IsActive',title:'是否有效',width:'80',sortable:'true',
+				formatter: function (value) {
+					return (value=="1"?'<a href="#" style="color:green" >是</a>':'<a href="#" style="color:red" >否</a>')
+				}	
+			},
+			{field:'UnCheckCnt',title:'未审核记录数',width:'110',sortable:'true'}
 		]],
 		onBeforeLoad: function (param) {  
 			var firstLoad = $(this).attr("firstLoad");
@@ -45,15 +42,22 @@ function InitThWordsMapCheckWin(){
 			}
 			return true;
 		},
-		onClickCell: function(rindex,field,value){  //刷新设置选中后执行两遍，换成onClickCel
+		/*onClickCell: function(rindex,field,value){  //刷新设置选中后执行两遍，换成onClickCel
 			if (rindex>-1) {
 				var rData = $('#gridThemeWords').datagrid('getRows')[rindex];
 				$('#searchThWordsMap').searchbox('clear');		
-				obj.gridThemeWords_onSelect(rData);
 			}
+		},*/
+		onSelect:function(rindex,rowData){
+			if (rindex>-1) {
+				obj.gridThemeWords_onSelect(rowData);
+			}
+			$('#searchThWordsMap').searchbox('clear');
 		},
 		onLoadSuccess:function(data){
 			$("#btnAutoMap").linkbutton("enable");
+			obj.RecRowID1="";
+			obj.gridThWordsMapLoad();  //加载归一词对照
 		}
 	});
 	
@@ -67,8 +71,8 @@ function InitThWordsMapCheckWin(){
 		//singleSelect: true,
 		autoRowHeight: false, //定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
 		loadMsg:'数据加载中...',
-		pageSize: 10,
-		pageList : [10,20,50,100,200],
+		pageSize: 20,
+		pageList : [20,50,100,200],
 		url:$URL,
 		queryParams:{
 			ClassName:"DHCHAI.RMES.ThWordsMapSrv",
@@ -113,6 +117,7 @@ function InitThWordsMapCheckWin(){
 		onLoadSuccess:function(data){
 			$("#btnCheck").linkbutton("disable");
 			$("#btnUnCheck").linkbutton("disable");
+            $("#gridThWordsMap").datagrid('unselectAll').datagrid('uncheckAll')
 		}
 	});
 	

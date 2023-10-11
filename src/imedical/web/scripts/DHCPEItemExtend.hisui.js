@@ -74,6 +74,7 @@ function BAdd_click()
 			ClassName:"web.DHCPE.ItemExtend",
 			QueryName:"SerchItemExtendNew",
 			ArcItemID:"",
+			hospId:session['LOGON.HOSPID']
 			});
 	}
 	
@@ -93,6 +94,7 @@ function BFind_click()
 			ClassName:"web.DHCPE.ItemExtend",
 			QueryName:"SerchItemExtendNew",
 			ArcItemID:ID,
+			hospId:session['LOGON.HOSPID']
 			});
 }
  
@@ -111,6 +113,10 @@ function InitCombobox()
 		textField:'Name',
 		onBeforeLoad:function(param){
 			param.FeeTest = param.q;
+			param.Type="B";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId = session['LOGON.HOSPID'];
+
 		},
 		columns:[[
 		    {field:'ID',title:'ID',width:40},
@@ -142,6 +148,7 @@ function InitItemExtendDataGrid()
 			ClassName:"web.DHCPE.ItemExtend",
 			QueryName:"SerchItemExtendNew",
 			ArcItemID:"",
+			hospId:session['LOGON.HOSPID']
 		},
 		columns:[[
 	
@@ -323,8 +330,9 @@ function FillARCInfo(ID)
 	if(ID==""){
 		return false;
 	}
+	var hospId=session['LOGON.HOSPID']
 	$("#ParRef").val(ID);
-	var Info=tkMakeServerCall("web.DHCPE.ItemExtend","GetARCDesc",ID);
+	var Info=tkMakeServerCall("web.DHCPE.ItemExtend","GetARCDesc",ID,hospId);
 	var InfoArr=Info.split("^");
 	$("#ARCDesc").val(InfoArr[0]);
 	$("#ARCPrice").val(InfoArr[1]);
@@ -345,7 +353,7 @@ var openIEPriceWin = function(ID,IEType){
 	$("#StartDate").datebox("enable");
 	$("#Price").attr('disabled',false);
 
-	document.getElementById('tPrice').innerHTML="价格";	
+	document.getElementById('tPrice').innerHTML="<font color=red>*</font>价格";
 	
 	FillARCInfo(ID);
 	//alert(ItemID)
@@ -414,7 +422,7 @@ var openIEPriceWin = function(ID,IEType){
 	$("#StartDate").datebox("enable");
 	$("#Price").attr('disabled',false);
 
-    document.getElementById('tPrice').innerHTML="最低消费";	
+    document.getElementById('tPrice').innerHTML="<font color=red>*</font>最低消费"; 
 	FillARCInfo(ID);
 	
 	$HUI.window("#IEPriceWin",{

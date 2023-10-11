@@ -60,7 +60,7 @@ function InitDetList(){
 		{field:'ECOCArciID',title:'医嘱ID',width:100,editor:textEditor,align:'center',hidden:true},
 		{field:'ECOCType',title:'会诊类型',width:100,editor:TypeEditor,align:'center'},
 		{field:'ECOCTypeID',title:'类型ID',width:100,editor:textEditor,align:'center',hidden:true},
-		{field:'ECOCProTp',title:'医生职称',width:100,editor:PrvTpEditor,align:'center'},
+		{field:'ECOCProTp',title:'职称',width:100,editor:PrvTpEditor,align:'center'},
 		{field:'ECOCProTpID',title:'职称ID',width:100,editor:textEditor,align:'center',hidden:true},
 		{field:'ECOCProp',title:'会诊性质',width:100,editor:PropEditor,align:'center'},
 		{field:'ECOCPropID',title:'会诊性质ID',width:100,editor:textEditor,align:'center',hidden:true},
@@ -114,7 +114,7 @@ function saveRow(){
 		}
 		
 		if((rowsData[i].ECOCArciID==="")){
-			$.messager.alert("提示","医嘱项不能为空");     
+			$.messager.alert("提示","会诊医嘱不能为空");     
 			return false;
 		}
 		
@@ -151,7 +151,7 @@ function saveRow(){
 		}
 		
 		if (string==0){
-			$.messager.alert('提示','添加成功！','info');
+			$.messager.alert('提示','保存成功！','info');
 		}
 		$('#dgMainList').datagrid('reload'); //重新加载
 	})
@@ -235,7 +235,8 @@ var LocEditor={  //设置其为可编辑
 				$.messager.alert('提示',"请先选择医院!");
 				return;
 			}*/ //hxy 2020-05-28 注释
-	        var url = $URL+"?ClassName=web.DHCEMConsultCom&MethodName=QryEmConsLoc&HospID="+hospComp.getValue(); //hxy 2020-05-28 原：HospID
+	        //var url = $URL+"?ClassName=web.DHCEMConsultCom&MethodName=QryEmConsLoc&HospID="+hospComp.getValue(); //hxy 2020-05-28 原：HospID
+	        var url = $URL+"?ClassName=web.DHCEMConsultCom&MethodName=QryEmConsLocNew&HospID="+hospComp.getValue(); //hxy 2020-09-22
 	        var ed=$("#dgMainList").datagrid('getEditor',{index:editRow,field:'ECOCLoc'});
 			$(ed.target).combobox('reload', url);
 		}, //ed
@@ -350,10 +351,10 @@ var TypeEditor={  //设置其为可编辑
 		valueField: "value", 
 		textField: "text",
 		mode:'remote',
-		data:[
+		/*data:[
 			{value:"I",text:"院内会诊"},
 			{value:"O",text:"院外会诊"}
-		],
+		],*/
 		enterNullValueClear:false,
 		onSelect:function(option){
 			var ed=$("#dgMainList").datagrid('getEditor',{index:editRow,field:'ECOCType'});
@@ -362,6 +363,11 @@ var TypeEditor={  //设置其为可编辑
 			$(ed.target).val(option.value);
 			
 		},
+		onShowPanel:function(){ //hxy 2021-02-27 st
+	        var url = $URL+"?ClassName=web.DHCEMConsultCom&MethodName=JsonAllCstType&HospID="+hospComp.getValue() //+"&Ord=Y";
+	        var ed=$("#dgMainList").datagrid('getEditor',{index:editRow,field:'ECOCType'});
+			$(ed.target).combobox('reload', url);
+		}, //ed
 		onChange:function(newValue, oldValue){
 			if (newValue == ""){
 				var ed=$("#dgMainList").datagrid('getEditor',{index:editRow,field:'ECOCTypeID'});

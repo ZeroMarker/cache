@@ -12,8 +12,12 @@ DHCPHA_CONSTANT.DEFAULT.CYFLAG="Y";
 DHCPHA_CONSTANT.VAR.OUTPHAWAY=tkMakeServerCall("web.DHCSTCNTSCOMMON","GetWayIdByCode","OA")
 DHCPHA_CONSTANT.DEFAULT.APPTYPE="OR";
 DHCPHA_CONSTANT.URL.THIS_URL=ChangeCspPathToAll("dhcpha.outpha.outmonitor.save.csp");
+var AppPropData		// 模块配置
 var COOKTYPEDr = "";
 var tmpSplit=DHCPHA_CONSTANT.VAR.MSPLIT;
+var prescnoQuery=""
+var cityrowid="";
+var LogonInfo = gGroupId +"^"+ gLocId +"^"+ gUserID +"^"+ gHospID;
 $(function(){
 	CheckPermission();	
 	var ctloc=DHCPHA_CONSTANT.DEFAULT.LOC.text;
@@ -29,6 +33,7 @@ $(function(){
 	//$("#date-start").data('daterangepicker').setStartDate(tmpstartdate);
 	
 	InitGridDisp();	
+	InitDispUserModal();
 	/* 表单元素事件 start*/
 	//登记号回车事件
 	$('#txt-patno').on('keypress',function(event){
@@ -65,7 +70,7 @@ $(function(){
 	/* 表单元素事件 end*/
 	/* 绑定按钮事件 start*/
 	$("#btn-change").on("click",function(){
-		$("#modal-windowinfo").modal('show');
+		$("#modal-outhmdispuser").modal('show');
 	});
 	$("#btn-reffy").on("click",ExecuteRefuseFY);
 	$("#btn-cancelreffy").on("click",CancelRefuseFY);
@@ -85,8 +90,21 @@ $(function(){
 	showAddMaterial();
 	$('#btn-modifySubmit').on("click",savePrescModified);
 	$("#btn-modalclose").on("click",closeAddPrescModal);
+	InitAgreeRetModal();
 	InitBodyStyle();
 	HotKeyInit("CMPrescDisp","grid-disp");	//快捷键
+	// 草药PC端设置
+	AppPropData = tkMakeServerCall("PHA.HERB.Com.Method","GetAppProp",LogonInfo,"HERB.PC","");
+	SetButAutty();
+	var AllowSelDispUser = JSON.parse(AppPropData).AllowSelDispUser ;
+	if (AllowSelDispUser!="Y") {
+        $("#btn-change").attr({
+            "style": "display:none"
+        });
+        $("#img-change").attr({
+            "style": "display:none"
+        });
+	}
 })
 
 //载入数据
@@ -94,9 +112,20 @@ window.onload=function(){
 	if (LoadPatNo!=""){
 		$('#txt-patno').val(LoadPatNo);
 	}
+	if(LoadOrdItmId!=""){
+		InitParams();
+	}
 	setTimeout("QueryGridDisp()",500);
 }
-
+function InitParams(){
+	var retVal=tkMakeServerCall("PHA.COM.Method","GetOrdItmInfoForTipMess",LoadOrdItmId);
+    if(retVal!="{}"){
+	    var retJson=JSON.parse(retVal)
+		var ordDate=retJson.ordDate;
+		$("#date-start").data('daterangepicker').setStartDate(ordDate);
+		$("#date-start").data('daterangepicker').setEndDate(ordDate);
+	}
+}
 //初始化处方修改模态框控件
 function InitPrescModify(){
 	InitPhcInstruc();
@@ -150,6 +179,123 @@ function ReturnDisp(){
     });
 }
 
+//权限控制是否可退按钮可操作！
+function SetButAutty() {
+    var IfAgreeReturn = JSON.parse(AppPropData).IfAgreeReturn ;
+    if (IfAgreeReturn !== "Y") {
+        $("#btn-agreeret").attr({
+            "disabled": "disabled"
+        });
+    }
+}
+
+/* 点击发药按钮 */
+function ClickDispBtn(){
+	CACert("PHAHERBOPFY", ShowHerbDeliveryDiag);
+	
+}
+
+/* 打开草药配送信息填写窗口 */
+function ShowHerbDeliveryDiag(){
+	var selectid = $("#grid-disp").jqGrid('getGridParam','selrow');
+	if (selectid == null){
+	    dhcphaMsgBox.alert("没有选中数据,不能发药!");
+	    return;
+	}
+	var selrowdata = $("#grid-disp").jqGrid('getRowData', selectid);
+	var prescNo = selrowdata.TPrescNo||"";
+	var prescForm = selrowdata.TPrescTypeCode||"";
+	var papmi = selrowdata.TPapmi||"";
+	var patname = selrowdata.TPatName||"";
+	var fyflag = selrowdata.TFyFlag||'';	
+	var warnmsgtitle = "病人姓名:"+ patname +"\t"+"处方号:"+ prescNo +"\n"
+	
+	if (fyflag == "OK"){
+		dhcphaMsgBox.alert(warnmsgtitle+"该记录已经发药!");
+		return;
+	}
+	var prescResult = GetOrdRefResultByPresc(prescNo)
+	if (prescResult == "N"){
+		dhcphaMsgBox.alert(warnmsgtitle+"该处方已被拒绝,禁止发药!");
+		return;
+    }else if (prescResult == "A"){
+		dhcphaMsgBox.alert(warnmsgtitle+"该处方已被拒绝,禁止发药!");
+		return;
+	}else if (prescResult == "S"){
+		if(!confirm(warnmsgtitle+"该处方医生已提交申诉\n点击'确定'将同意申诉继续发药，点击'取消'将放弃发药操作。")){
+			return;
+		}
+		var cancelrefuseret=tkMakeServerCall("web.DHCSTCNTSOUTMONITOR","CancelRefuse",DHCPHA_CONSTANT.SESSION.GUSER_ROWID,prescno,"OR"); //申诉后发药应先撤消拒绝
+	}
+	
+	var deliveryFlag = JSON.parse(AppPropData).DeliveryFlag ;
+	if (deliveryFlag == "Y") {
+		ShowDeliveryDiag({
+			prescNo : prescNo,
+			prescForm : prescForm,
+			papmi : papmi
+		},GetDeliveryRet); 
+	}
+	else {
+		PressExecuteFY() ;	
+	}
+}
+
+function GetDeliveryRet(retVal){
+	if (retVal == 1){
+		PressExecuteFY() ;
+	}
+	return ;
+}
+
+/* 重新打开处方快递信息弹框 */
+function ReShowDeliveryDiag(){
+	var selectid = $("#grid-disp").jqGrid('getGridParam','selrow');
+	if (selectid == null){
+	    dhcphaMsgBox.alert("没有选中数据,不能查看配送信息!");
+	    return;
+	}
+	var selrowdata = $("#grid-disp").jqGrid('getRowData', selectid);
+	var prescNo = selrowdata.TPrescNo||"";
+	var prescForm = selrowdata.TPrescTypeCode||"";
+	var papmi = selrowdata.TPapmi||"";
+	var patname = selrowdata.TPatName||"";
+	var fyflag = selrowdata.TFyFlag||'';	
+	var warnmsgtitle = "病人姓名:"+ patname +"\t"+"处方号:"+ prescNo +"\n"
+	if (fyflag !== "OK"){
+		dhcphaMsgBox.alert(warnmsgtitle+"该记录未发药，发药后才允许查看配送信息!");
+		return;
+	}
+	var postTypeStr = tkMakeServerCall("PHA.HERB.Com.Method","GetPostType",prescNo,LogonInfo);
+	var prescTakeModeDesc = postTypeStr.split("^")[2]
+	/* 取药方式为现取现配和空时不会弹出配送信息的框 */
+	if ((prescTakeModeDesc == "")||(prescTakeModeDesc == "现取现配")){
+		if (prescTakeModeDesc == ""){
+			var prescTakeModeDesc = "空"
+		}
+		dhcphaMsgBox.alert(warnmsgtitle+"该记录取药方式为 “"+ prescTakeModeDesc +"” ，没有配送信息可以查看!");
+		return;	
+	}
+	
+	var deliveryFlag = JSON.parse(AppPropData).DeliveryFlag ;
+	if (deliveryFlag == "Y") {
+		ShowDeliveryDiag({
+			prescNo : prescNo,
+			prescForm : prescForm,
+			papmi : papmi
+		},GetReShowRet); 
+	}
+	else {
+		dhcphaMsgBox.alert("未开启草药处方快递功能，请先在参数设置中开启配置后重试！");
+		return;	
+	}
+	
+}
+
+function GetReShowRet(retVal){
+	return ;	
+}
+
 
 //初始化发药table
 function InitGridDisp(){
@@ -190,15 +336,20 @@ function InitGridDisp(){
 		},
 		{header:'手工方',name:"THandMadeFlag",index:"THandMadeFlag",width:80,hidden:true},
 		{header:'付数',name:"TDuration",index:"TDuration",width:70,hidden:true},
-		{header:'拒绝发药理由',name:"TRefResult",index:"TRefResult",width:300,align:'left'},
-		{header:'拒绝发药申诉理由',name:"TDocNote",index:"TDocNote",width:300,align:'left'},
+		{header:'可退标志',name:"TAgreeRetFlag",index:"TAgreeRetFlag",width:70,align:'left'},
+		{header:'置可退人',name:"TAgreeRetUser",index:"TAgreeRetUser",width:100,align:'left'},
+		{header:'置可退日期',name:"TAgreeRetDate",index:"TAgreeRetDate",width:150,align:'left'},
+		{header:'置可退备注',name:"TAgreeRetRemark",index:"TAgreeRetRemark",width:200,align:'left'},
+		{header:'拒绝发药理由',name:"TRefResult",index:"TRefResult",width:200,align:'left'},
+		{header:'拒绝发药申诉理由',name:"TDocNote",index:"TDocNote",width:200,align:'left'},
 		{header:'TAdm',index:'TAdm',name:'TAdm',width:60,hidden:true},
 		{header:'TPapmi',index:'TPapmi',name:'TPapmi',width:60,hidden:true},
 		{header:'TPatLoc',index:'TPatLoc',name:'TPatLoc',width:60,hidden:true},
 		{header:'Tphd',index:'Tphd',name:'Tphd',width:60,hidden:true},
 		{header:'TOeori',index:'TOeori',name:'TOeori',width:60,hidden:true},
 		{header:'病人密级',index:'TEncryptLevel',name:'TEncryptLevel',width:70,hidden:true},
-		{header:'病人级别',index:'TPatLevel',name:'TPatLevel',width:70,hidden:true}
+		{header:'病人级别',index:'TPatLevel',name:'TPatLevel',width:70,hidden:true},
+		{header:'处方剂型代码',index:'TPrescTypeCode',name:'TPrescTypeCode',width:70,hidden:true},
 	]; 
 	var jqOptions={
 		datatype:'local',
@@ -211,16 +362,8 @@ function InitGridDisp(){
 		viewrecords: true,
 		onSelectRow:function(id,status){
 			QueryGridDispSub();
-			/**
-			手工方补录由于标库未启用，暂注释
 			var selrowdata = $("#grid-disp").jqGrid('getRowData', id);
-			var handmadeflag=selrowdata.THandMadeFlag;
-			var dispstatus=selrowdata.TDspStatus; 
-			if(handmadeflag=="1"){			//&&((dispstatus=="")||(dispstatus==null)))
-				$("#grid-dispdetail").empty();	//清空模态框table 
-				InitPrescModify();
-				$('#prescModal').modal('show');
-			}**/
+			prescnoQuery = selrowdata.TPrescNo;
 	},
 	loadComplete: function(){ 
 			var grid_records = $(this).getGridParam('records');
@@ -259,11 +402,23 @@ function QueryGridDisp(){
 function QueryGridDispSub(){
 	var selectid = $("#grid-disp").jqGrid('getGridParam', 'selrow');
 	var selrowdata = $("#grid-disp").jqGrid('getRowData', selectid);
-	var prescno=selrowdata.TPrescNo;
-	var cyflag=DHCPHA_CONSTANT.DEFAULT.CYFLAG;
-	var phartype="DHCOUTPHA";
-	var paramsstr=phartype+"^"+prescno+"^"+cyflag;
-	$("#ifrm-presc").attr("src",ChangeCspPathToAll("dhcpha/dhcpha.common.prescpreview.csp")+"?paramsstr="+paramsstr+"&PrtType=DISPPREVIEW");
+	var prescNo = selrowdata.TPrescNo;
+	var dispFlag = selrowdata.TFyFlag;
+	var phartype = "OP";		// 门诊类型
+	var zfFlag = "底方"
+	var useFlag = "2" 			// 处方审核
+	var cyflag = "Y"
+	
+	PHA_PRESC.PREVIEW({
+		prescNo: prescNo,			
+		preAdmType: phartype,
+		zfFlag: zfFlag,
+		prtType: 'DISPPREVIEW',
+		useFlag: useFlag,
+		iframeID: 'ifrm-presc',
+		cyFlag: cyflag
+	});
+	//$("#ifrm-presc").attr("src",ChangeCspPathToAll("dhcpha/dhcpha.common.prescpreview.csp")+"?paramsstr="+paramsstr+"&PrtType=DISPPREVIEW");
 }
 
 //执行全发
@@ -279,23 +434,36 @@ function ExecuteAllFY(){
 
 function ConfirmDispAll(result){
 	if (result==true){
-		var chkdisp="";
-		if($("#chk-disp").is(':checked')){
-			chkdisp="Y";
-		}else{
-		    chkdisp="";
-		}
-		if(chkdisp=="Y"){
-			dhcphaMsgBox.alert("检索为已发药数据,不能发药!");
-	    	return;
-		}
-		var fyrowdata = $("#grid-disp").jqGrid('getRowData');
-		var fygridrows=fyrowdata.length;
-		for(var rowi=1;rowi<=fygridrows;rowi++){
-			DispensingMonitor(rowi);		
-		} 
+		CACert("PHAHERBOPAllFY", DoExecuteAllFY);
 	}
 	QueryGridDisp();
+	
+}
+
+/// 执行全部发药
+function DoExecuteAllFY(){
+	var chkdisp="";
+	if($("#chk-disp").is(':checked')){
+		chkdisp="Y";
+	}else{
+	    chkdisp="";
+	}
+	if(chkdisp=="Y"){
+		dhcphaMsgBox.alert("检索为已发药数据,不能发药!");
+    	return;
+	}
+	var fyrowdata = $("#grid-disp").jqGrid('getRowData');
+	var fygridrows=fyrowdata.length;
+	for(var rowi=1;rowi<=fygridrows;rowi++){
+		DispensingMonitor(rowi);		
+	} 
+	
+}
+
+// 发药
+function PressExecuteFY(){
+	ExecuteFY();
+	//CACert("PHAHERBOPFY", ExecuteFY);
 }
 
 // 执行发药
@@ -337,8 +505,9 @@ function DispensingMonitor(rowid){
 		}
 		var cancelrefuseret=tkMakeServerCall("web.DHCSTCNTSOUTMONITOR","CancelRefuse",DHCPHA_CONSTANT.SESSION.GUSER_ROWID,prescno,"OR"); //申诉后发药应先撤消拒绝
 	}
+	
 	var params=DHCPHA_CONSTANT.DEFAULT.PHLOC+tmpSplit+DHCPHA_CONSTANT.DEFAULT.PHWINDOW+tmpSplit+DHCPHA_CONSTANT.DEFAULT.PHPYUSER+tmpSplit+DHCPHA_CONSTANT.DEFAULT.PHUSER+tmpSplit+prescno;                                       
-	var retval=tkMakeServerCall("PHA.OP.HMDisp.OperTab","SaveData",params)
+	var retval=tkMakeServerCall("PHA.OP.HMDisp.OperTab","SaveData",params,LogonInfo)
 	var retcode=retval.split("^")[0];
 	var retmessage=retval.split("^")[1];
 	if ((retcode<0)||((retcode==0))){
@@ -480,6 +649,8 @@ function CancelRefuseFY(){
 			TDspStatus:''
 		};	
 		$("#grid-disp").jqGrid('setRowData',selectid,newdata,"");
+		/* 考虑到移动端会判断 dhc_stdrugrefuse 里的拒发数据，所以在pc端撤消时也处理掉 */
+		var cancelRet = tkMakeServerCall("PHA.MOB.COM.PC","CancelRefuseCom",prescno);
 		dhcphaMsgBox.alert("撤消成功!","success");
 		QueryGridDisp();
 	}else if (cancelrefuseret == "-2"){
@@ -517,6 +688,7 @@ function ChkUnFyOtherLoc(){
 
 //清空
 function ClearConditions(){
+	CheckPermission();
 	var cardoptions={
 		id:"#sel-cardtype"
 	}
@@ -571,6 +743,8 @@ function CheckPermission(){
 				DHCPHA_CONSTANT.DEFAULT.PHLOC=retdata.phloc;
 				DHCPHA_CONSTANT.DEFAULT.PHPYUSER=retdata.phuser;
 				DHCPHA_CONSTANT.DEFAULT.PHUSER=retdata.phuser;
+				$("#currentpyuser").text(retdata.phuserName);
+				$("#currentfyuser").text(retdata.phuserName);
 			}
 		},  
 		error:function(){}  
@@ -872,7 +1046,7 @@ function ExchangeCookType(){
 	var prescrowdata = $("#grid-disp").jqGrid('getRowData');
 	var prescridrows=prescrowdata.length;
 	if(prescridrows<=0){
-	    dhcphaMsgBox.alert("审方发药列表无数据!");
+	    dhcphaMsgBox.alert("当前界面内容无明细数据!");
 	    return;
 	}
 	var selectid = $("#grid-disp").jqGrid('getGridParam', 'selrow');
@@ -953,7 +1127,115 @@ function SendOrderToMachine(phd){
 		dhcphaMsgBox.alert("发送数据失败,错误代码:"+retString,"error");
 		return;  
 	}
+}
+
+// 置为可退 
+// MaYuqiang 20210309
+function SaveAgreeRet() {
+    var selectid = $("#grid-disp").jqGrid('getGridParam', 'selrow') ;
+    var selrowdata = $("#grid-disp").jqGrid('getRowData', selectid) ;
+    var prescno = selrowdata.TPrescNo ;
+    var phdId = selrowdata.Tphd ;				// 门诊发药主表id
+    var agreeFlag = selrowdata.TAgreeRetFlag;	// 可退标志
+    var dspStatus = selrowdata.TDspStatus;		// 发药状态	
+    
+    if ((prescno == "") || (prescno == null)) {
+        dhcphaMsgBox.alert("请先选择需要置可退的处方!");
+        return;
+    }
+    if ((agreeFlag == "是")||(agreeFlag == "Y")) {
+        dhcphaMsgBox.alert("该处方已经置为可退，无需再次操作!");
+        return;
+    }
+    if (dspStatus != "已发药") {
+        dhcphaMsgBox.alert("该处方尚未发药，不可置为可退!");
+        return;
+    }
+    var IfAgreeReturn = JSON.parse(AppPropData).IfAgreeReturn ;
+    if (IfAgreeReturn != "Y") {
+        dhcphaMsgBox.alert("当前登录人无置可退权限，如需置可退请先修改配置!");
+        return;
+    }
+    $('#modal-agreereturn').modal('show');
+    $('#txt-agrretremark').text("");
+    var timeout = setTimeout(function () {
+        $(window).focus();
+        $('#txt-agrretremark').focus();
+    }, 500);
 }	
+
+
+// 填写置可退的原因
+function InitAgreeRetModal() {
+    $("#btn-agreeret-sure").on("click", function () {       
+        var selectid = $("#grid-disp").jqGrid('getGridParam', 'selrow') ;
+	    var selrowdata = $("#grid-disp").jqGrid('getRowData', selectid) ;
+	    var prescno = selrowdata.TPrescNo ;
+	    var phdId = selrowdata.Tphd ;				// 门诊发药主表id
+        
+        if ((phdId == "") || (phdId == null)) {
+            dhcphaMsgBox.alert("请先选择需要置可退的处方!");
+            return;
+        }
+        var agrretremark = $.trim($('#txt-agrretremark').val());
+        $("#modal-agreereturn").modal('hide');
+        var ParamData = phdId + "^" + gUserID + "^" + agrretremark;
+        var RetResult = tkMakeServerCall("PHA.OP.HMDisp.OperTab", "SaveAgreeRet", ParamData);
+        var RetCode = RetResult.split("^")[0];
+        var RetMessage = RetResult.split("^")[1];
+        if (RetCode != "0") {
+            dhcphaMsgBox.alert(RetMessage);
+            return;
+        } else {
+            dhcphaMsgBox.alert("该处方置为可退成功!", "success");
+            QueryGridDisp() ;
+        }
+
+    });
+}
+
+//发药人,配药人选择
+ function InitDispUserModal() {
+     $('#modal-outhmdispuser').on('show.bs.modal', function () {
+         var option = {
+			url: DHCPHA_CONSTANT.URL.COMMON_OUTPHA_URL +
+				"?action=GetPYUserList&style=select2" + '&gLocId=' +
+				DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID + '&gUserId=' +
+				DHCPHA_CONSTANT.SESSION.GUSER_ROWID + "&flag=PY",
+			minimumResultsForSearch: Infinity
+		 }
+		 var option2 = {
+			url: DHCPHA_CONSTANT.URL.COMMON_OUTPHA_URL +
+				"?action=GetPYUserList&style=select2" + '&gLocId=' +
+				DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID + '&gUserId=' +
+				DHCPHA_CONSTANT.SESSION.GUSER_ROWID + "&flag=FY",
+			minimumResultsForSearch: Infinity
+		 }
+         $('#sel-pyuser').dhcphaSelect(option);
+         $('#sel-pyuser').empty();
+         $('#sel-fyuser').dhcphaSelect(option2);
+         $('#sel-fyuser').empty();
+     });
+     $('#btn-hmuser-sure').on('click', function () {
+         var fyuser = $('#sel-fyuser').val();
+         var pyuser = $('#sel-pyuser').val();
+         if ((fyuser == '' || fyuser == null)) {
+             dhcphaMsgBox.alert('请选择发药人!');
+             return;
+         }
+         if ((pyuser == '' || pyuser == null)) {
+             dhcphaMsgBox.alert('请选择配药人!');
+             return;
+         }
+         $('#modal-outhmdispuser').modal('hide');
+         DHCPHA_CONSTANT.DEFAULT.PHPYUSER=pyuser;
+		 DHCPHA_CONSTANT.DEFAULT.PHUSER=fyuser;
+		 var pystaffdata = $("#sel-pyuser").select2("data")[0];
+		 var fystaffdata = $("#sel-fyuser").select2("data")[0];
+		 $("#currentpyuser").text(pystaffdata.text);
+		 $("#currentfyuser").text(fystaffdata.text);
+     });
+ }
 
 function SetFocus()
 {

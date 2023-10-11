@@ -3,7 +3,7 @@
  * createdate:	2018-05-22
  * description:	药房对应HISUI的一些插件扩展
  */
-$(function() {
+ $(function () {
     /// combobox添加getValue方法,原默认是继承自combo
     $.fn.combobox.methods = $.extend({}, $.fn.combobox.methods, {
         /*
@@ -15,27 +15,27 @@ $(function() {
             }
             return val;
         },*/
-        query: function(jq, _options) {
-            return jq.each(function() {
-                var comboOpts = $(this).combobox("options");
-                if ($(this).combobox("options").ClassName) {
-                    var _url = "DHCST.QUERY.BROKER.csp?DataType=Array&ClassName=" + comboOpts.ClassName + "&QueryName=" + comboOpts.QueryName;
+        query: function (jq, _options) {
+            return jq.each(function () {
+                var comboOpts = $(this).combobox('options');
+                if ($(this).combobox('options').ClassName) {
+                    var _url = 'DHCST.QUERY.BROKER.csp?DataType=Array&ClassName=' + comboOpts.ClassName + '&QueryName=' + comboOpts.QueryName;
                     for (var _qField in _options) {
                         var _qValue = _options[_qField];
-                        _url += "&" + _qField + "=" + _qValue;
+                        _url += '&' + _qField + '=' + _qValue;
                     }
                     comboOpts.url = _url;
                     $(this).combobox('clear');
                     $(this).combobox('reload');
                 }
-            })
+            });
         }
     });
     // 验证
     $.extend($.fn.validatebox.defaults.rules, {
         // 是否正数
         PosNumber: {
-            validator: function(value, param) {
+            validator: function (value, param) {
                 var regTxt = /^[0-9]+\.?[0-9]{0,9}$/;
                 return regTxt.test(value);
             },
@@ -51,11 +51,10 @@ $(function() {
     $.extend($.fn.datagrid.methods, {
         // 判断是否修改完成
         // flag:    add-代表增加新行
-        endEditing: function(jq) {
-            return jq.each(function() {
+        endEditing: function (jq) {
+            return jq.each(function () {
                 var editIndex = $(this).datagrid('options').editIndex;
                 if (editIndex == undefined) {
-
                 } else {
                     if ($(this).datagrid('validateRow', editIndex)) {
                         $(this).datagrid('endEdit', editIndex);
@@ -68,22 +67,21 @@ $(function() {
                         //$(this).datagrid('options').editIndex = undefined;
                     }
                 }
-            })
+            });
         },
-        cancelEditRow: function(jq) {
-            return jq.each(function() {
+        cancelEditRow: function (jq) {
+            return jq.each(function () {
                 var editIndex = $(this).datagrid('options').editIndex;
                 if (editIndex == undefined) {
-
                 } else {
                     $(this).datagrid('cancelEdit', editIndex);
                     $(this).datagrid('options').editIndex = undefined;
                 }
-            })
+            });
         },
         // 增加编辑行
-        addNewRow: function(jq, _options) {
-            return jq.each(function() {
+        addNewRow: function (jq, _options) {
+            return jq.each(function () {
                 $(this).datagrid('endEditing');
                 if ($(this).datagrid('options').editIndex == undefined) {
                     if (_options.defaultRow) {
@@ -92,22 +90,23 @@ $(function() {
                         $(this).datagrid('appendRow', {});
                     }
 
-                    var rowIndex = $(this).datagrid("getRows").length - 1;
+                    var rowIndex = $(this).datagrid('getRows').length - 1;
                     $(this).datagrid('selectRow', rowIndex).datagrid('beginEdit', rowIndex);
-                    var ed = $(this).datagrid('getEditor', { index: rowIndex, field: _options.editField });
-                    if ((ed.type).indexOf("combo") >= 0) {
-                        $(ed.target).combobox('textbox').focus();
-                    } else {
-                        $(ed.target).focus();
+                    if (_options.editField) {
+                        var ed = $(this).datagrid('getEditor', { index: rowIndex, field: _options.editField });
+                        if (ed.type.indexOf('combo') >= 0) {
+                            $(ed.target).combobox('textbox').focus();
+                        } else {
+                            $(ed.target).focus();
+                        }
                     }
                     $(this).datagrid('options').editIndex = rowIndex;
-
                 }
             });
         },
         // 开始编辑行
-        beginEditRow: function(jq, _options) {
-            return jq.each(function() {
+        beginEditRow: function (jq, _options) {
+            return jq.each(function () {
                 $(this).datagrid('endEditing');
                 if ($(this).datagrid('options').editIndex == undefined) {
                     var rowIndex = _options.rowIndex;
@@ -127,10 +126,9 @@ $(function() {
             });
         },
         // 清空
-        clear: function(jq) {
-            return jq.each(function() {
-                $(this).datagrid('loadData', { total: 0, rows: [] });
-                var _queryParams = $(this).datagrid("options").queryParams;
+        clear: function (jq) {
+            return jq.each(function () {
+                var _queryParams = $(this).datagrid('options').queryParams;
                 var _baseParams = {};
                 if (_queryParams.ClassName) {
                     _baseParams.ClassName = _queryParams.ClassName;
@@ -138,43 +136,103 @@ $(function() {
                 if (_queryParams.QueryName) {
                     _baseParams.QueryName = _queryParams.QueryName;
                 }
-                $(this).datagrid("options").queryParams = _baseParams;
-            })
+                $(this).datagrid('options').queryParams = _baseParams;
+                $(this).datagrid('loadData', {
+                    total: 0,
+                    rows: [],
+                    footer: []
+                });
+                $(this).datagrid('rejectChanges')
+            });
         },
         // 查询
         // _options:除ClassName,QueryName之外的查询参数
-        query: function(jq, _options) {
-            return jq.each(function() {
-                if ($(this).datagrid("options").pageNumber == 0) {
-                    $(this).datagrid("options").pageNumber = 1;
+        query: function (jq, _options) {
+            return jq.each(function () {
+                if ($(this).datagrid('options').pageNumber == 0) {
+                    $(this).datagrid('options').pageNumber = 1;
                 }
-                var _queryParams = $(this).datagrid("options").queryParams;
+                var _queryParams = $(this).datagrid('options').queryParams;
                 $.extend(_queryParams, _options);
                 $(this).datagrid('reload');
-            })
+            });
         }
     });
 
     // datagrid-editor 扩展
     $.extend($.fn.datagrid.defaults.editors, {
         timespinner: {
-            init: function(container, options) {
+            init: function (container, options) {
                 var input = $('<input/>').appendTo(container);
                 input.timespinner(options);
                 return input;
             },
-            getValue: function(target) {
+            getValue: function (target) {
                 var val = $(target).timespinner('getValue');
                 return val;
             },
-            setValue: function(target, value) {
+            setValue: function (target, value) {
                 $(target).timespinner('setValue', value);
             },
-            resize: function(target, width) {
-                $(target).timespinner("resize", width);
+            resize: function (target, width) {
+                $(target).timespinner('resize', width);
             }
         }
     });
+    // datagrid-filter 相关
+    if ($.fn.datagrid.defaults.operators){
+    $.fn.datagrid.defaults.operators.nofilter.text=$g('无')
+	$.fn.datagrid.defaults.operators.contains.text=$g('包含')
+	$.fn.datagrid.defaults.operators.equal.text=$g('等于')
+	$.fn.datagrid.defaults.operators.notequal.text=$g('不等于')
+	$.fn.datagrid.defaults.operators.beginwith.text=$g('前匹配')
+	$.fn.datagrid.defaults.operators.endwith.text=$g('后匹配')
+	$.fn.datagrid.defaults.operators.less.text=$g('小于')
+	$.fn.datagrid.defaults.operators.lessorequal.text=$g('小于等于')
+	$.fn.datagrid.defaults.operators.greater.text=$g('大于')
+	$.fn.datagrid.defaults.operators.greaterorequal.text=$g('大于等于')
+	$.extend($.fn.datagrid.defaults.operators, {
+		notcontains: {
+			text: '不包含',
+			isMatch: function(source, value){
+				source = String(source);
+				value = String(value);
+				return source.toLowerCase().indexOf(value.toLowerCase()) < 0;
+			}
+		}		
+	});
+    $.extend($.fn.datagrid.methods, {
+        enableFilterAll: function (jq, filters) {
+            return jq.each(function () {
+	            var $grid=$(this);
+	            filters = filters || [];
+			    var filterCols = [];
+			    var defaultOp = ['contains','notcontains','equal','notequal','beginwith','endwith'];
+			    var cols = [].concat($grid.datagrid('options').columns[0]);
+			    var frozenCols = $grid.datagrid('options').frozenColumns[0];
+			    if (frozenCols) {
+			        cols = cols.concat(frozenCols);
+			    }
+
+			    for (var i = 0, len = cols.length; i < len; i++) {
+			        var col = cols[i];
+			        if (col.hidden === true) {
+			            continue;
+			        }
+			        filterCols.push({
+			            field: col.field,
+			            op: defaultOp,
+			            type:'text',
+			            defaultFilterOperator:'contains'
+			        });
+			    }
+			    
+			    $grid.datagrid('enableFilter', $.extend([],filterCols,filters));
+	            
+            });
+        }
+    });
+    }
 
 });
 /* 修改checkbox样式...

@@ -31,8 +31,8 @@ function InitEnviHyItemWin(){
 			{field:'ItemDesc',title:'项目名称',sortable:true},
 			{field:'SpecimenTypeDesc',title:'标本类型',sortable:true},
 			{field:'Norm',title:'检测标准',sortable:true},
-			{field:'NormMax',title:'菌落数正常上限',sortable:true},
-			{field:'NormMin',title:'菌落数正常下限',sortable:true},
+			{field:'NormMax',title:'中心值',sortable:true},
+			{field:'NormMin',title:'周边值',sortable:true},
 			{field:'SpecimenNum',title:'标本个数',sortable:true},
 			{field:'CenterNum',title:'中心个数',sortable:true},
 			{field:'SurroundNum',title:'周边个数',sortable:true},
@@ -44,6 +44,7 @@ function InitEnviHyItemWin(){
 			{field:'IsObjNullDesc',title:'申请时允许对象为空',sortable:true},
 			{field:'IsSpecNumDesc',title:'申请时允许调整标本数量',sortable:true},
 			{field:'EHEnterTypeDesc',title:'录入方式',sortable:true},
+			{field:'LabItem',title:'检验项目',sortable:true},
 			{field:'HospDesc',title:'关联院区',sortable:true,
 				formatter:function(v){
 					if (v=="") {
@@ -69,6 +70,9 @@ function InitEnviHyItemWin(){
 			$("#btnAdd").linkbutton("enable");
 			$("#btnEdit").linkbutton("disable");
 			$("#btnDelete").linkbutton("disable");
+			//增加清空关联表
+			obj.RecRowID1="";
+			obj.EvItemObjLoad();  //加载对象
 		}
 	});
 	
@@ -96,6 +100,21 @@ function InitEnviHyItemWin(){
 		}
 	});	
 		
+	//检验项目
+	obj.cboLabItem = $HUI.combobox('#cboLabItem',{
+		url: $URL,
+		editable: false,
+		//multiple:true,  //多选
+		mode: 'remote',
+		valueField: 'ID',
+		textField: 'Desc',
+		onBeforeLoad: function (param) {
+			param.ClassName = 'DHCHAI.DPS.LabInfTestSetSrv';
+			param.QueryName = 'QryByType';
+			param.aType = '1';
+			param.ResultSetType = 'array'
+		}
+	});	
 		
 	obj.gridEvItemObj = $HUI.datagrid("#gridEvItemObj", {
 		fit: true,
@@ -122,6 +141,9 @@ function InitEnviHyItemWin(){
 		onBeforeLoad: function (param){
 			//隐藏表头的checkbox
 			$(".datagrid-header-check").html("");
+			$(".datagrid-header-check").css("width","0");    //让对象名称顶格显示
+			$(".datagrid-cell-c2-ObjDesc").css("width","300"); //隐藏对象名称那一格右侧的线
+			
 		},
 		onCheck:function(rindex,rowData){
 			var Parref = obj.RecRowID1
@@ -158,13 +180,28 @@ function InitEnviHyItemWin(){
 			for (var i=0;i<rLength;i++) {
 				var rowData=data.rows[i]
 				if (rowData.LinkID!="") {
-					$("#gridEvItemObj").datagrid("updateRow",{  
-	        	       index:i, //行索引  
-	            	   row:{  
-	                		 checked:1
+					if (rowData.aShowAll=="0"){
+						$("#gridEvItemObj").datagrid("updateRow",{  
+	        	       	index:i, //行索引  
+	            	   	row:{  
+	                		 	checked:0
 	                	  }  
-	 		 		})
+	 		 			});
+						  $m({
+							ClassName:"DHCHAI.IR.EnviHyItemObj",
+							MethodName:"DeleteById",
+							aId:rowData.LinkID
+						})
+	 		 		}else{ 
+	 		 			$("#gridEvItemObj").datagrid("updateRow",{  
+	        	       	index:i, //行索引  
+	            	   	row:{  
+	                		 	checked:1
+	                	  	}  
+	 		 			})
+					}
 				}
+				
 			}
 		}
 	});
@@ -174,7 +211,7 @@ function InitEnviHyItemWin(){
 		valueField:'ID',
 		textField:'BTDesc'
 	});
-	
+	$("#winEvItem .r-label").css("padding-left","6px")
 	InitEnviHyItemWinEvent(obj);
 	obj.LoadEvent(arguments);
 	return obj;

@@ -11,8 +11,8 @@ function PhcCatNewSelect(gNewPhcCatId,Fn) {
     Ext.QuickTips.init();
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
       var AddRootBT = new Ext.Toolbar.Button({
-			text : '增加一级分类',
-			tooltip : '点击增加一级分类',
+			text : $g('增加一级分类'),
+			tooltip : $g('点击增加一级分类'),
 			//iconCls : 'page_find',
 			width : 70,
 			height : 30,
@@ -22,8 +22,8 @@ function PhcCatNewSelect(gNewPhcCatId,Fn) {
 			}
      })
      var AddBT = new Ext.Toolbar.Button({
-			text : '增加',
-			tooltip : '点击增加',
+			text : $g('增加'),
+			tooltip : $g('点击增加'),
 			//iconCls : 'page_find',
 			width : 70,
 			height : 30,
@@ -34,8 +34,8 @@ function PhcCatNewSelect(gNewPhcCatId,Fn) {
 			}
      })  
      var DeleteBT = new Ext.Toolbar.Button({
-			text : '删除',
-			tooltip : '点击删除',
+			text : $g('删除'),
+			tooltip : $g('点击删除'),
 			//iconCls : 'page_find',
 			width : 70,
 			height : 30,
@@ -43,8 +43,8 @@ function PhcCatNewSelect(gNewPhcCatId,Fn) {
 			}
      })  
      var QueryBT = new Ext.Toolbar.Button({
-			text : '查询',
-			tooltip : '点击查询',
+			text : $g('查询'),
+			tooltip : $g('点击查询'),
 			//iconCls : 'page_find',
 			width : 70,
 			height : 30,
@@ -55,8 +55,8 @@ function PhcCatNewSelect(gNewPhcCatId,Fn) {
 			}
      })   
           var KongBT = new Ext.Toolbar.Button({
-			text : '维护为空',
-			tooltip : '点击维护为空！',
+			text : $g('维护为空'),
+			tooltip : $g('点击维护为空！'),
 			//iconCls : 'page_find',
 			width : 70,
 			height : 30,
@@ -66,7 +66,7 @@ function PhcCatNewSelect(gNewPhcCatId,Fn) {
 			}
      }) 
 	 var M_PhcDesc = new Ext.form.TextField({
-			fieldLabel : '药学分类描述',
+			fieldLabel : $g('药学分类描述'),
 			id : 'M_PhcDesc',
 			name : 'M_PhcDesc',
 			anchor : '90%',
@@ -116,11 +116,11 @@ function PhcCatNewSelect(gNewPhcCatId,Fn) {
                 	afterrender: function(node) { 
                 	}        
             	} ,
-				tbar:['检索:',
+				tbar:[$g('检索:'),
 					new Ext.form.TextField({
 						id:'FindTreeText',
 						width:150,
-						emptyText:'请输入查找内容',
+						emptyText:$g('请输入查找内容'),
 						enableKeyEvents: true,
 						listeners:{
 							keyup:function(node, event) {
@@ -130,14 +130,14 @@ function PhcCatNewSelect(gNewPhcCatId,Fn) {
 						}
 					}), '-', 
 					{
-						text:'清空',
+						text:$g('清空'),
 						iconCls:'page_clearscreen',
 						handler:function(){
 							clearFind();
 						}
 					  } ,'-',
 					{
-						text:'传递空值',
+						text:$g('传递空值'),
 						iconCls:'page_refresh',
 						handler:function(){
 							closeflag="1"
@@ -149,7 +149,7 @@ function PhcCatNewSelect(gNewPhcCatId,Fn) {
 	// 异步加载根节点
 	var rootnode = new Tree.AsyncTreeNode({
 
-				text : '药学多级分类',
+				text : $g('药学多级分类'),
 
 				id : 'id',
 
@@ -210,9 +210,9 @@ function PhcCatNewSelect(gNewPhcCatId,Fn) {
    var selectreasongridcm = new Ext.grid.ColumnModel({ 
 	  columns:[
        
-	        {header:'描述',dataIndex:'reasondesc',width:300},
+	        {header:$g('描述'),dataIndex:'reasondesc',width:300},
 	        {header:'rowid',dataIndex:'reasonrowid',width:40},
-	        {header:'分级',dataIndex:'reasonlevel',width:40}  
+	        {header:$g('分级'),dataIndex:'reasonlevel',width:40}  
 	          ]   
 	});
  
@@ -321,7 +321,7 @@ function setCommFlag(){
 	});
 	
 	var window = new Ext.Window({
-			title:'药学多级分类(双击选取)',
+			title:$g('药学多级分类(双击选取)'),
 			layout:'border',
 			modal:true,
 			width : document.body.clientWidth*0.6,

@@ -7,7 +7,7 @@ function InitAssResultWinEvent(obj){
 		var top = ($(window).height() - 35) / 2; 
 		var height = $(window).height() * 2; 
  		$("<div class=\"datagrid-mask\"></div>").css({ display: "block", width: "100%", height: height ,opacity: .7,'z-index': 5000}).appendTo("#divScreen"); 
- 		$("<div class=\"datagrid-mask-msg\"></div>").html("数据同步中,请稍候...").appendTo("#divScreen").css({ display: "block", left: left, top: top }); 
+ 		$("<div class=\"datagrid-mask-msg\"></div>").html("数据评估中,请稍候...").appendTo("#divScreen").css({ display: "block", left: left, top: top }); 
 	}
 	
 	//取消加载层  
@@ -17,8 +17,7 @@ function InitAssResultWinEvent(obj){
 	}
 	
 	obj.LoadEvent = function(args){
-		$('#AssessResult').datagrid('loadData',{ 'total':'0',rows:[] });  //初始加载显示记录为0
-		  
+	  
 		$('#btnExport').on('click', function(){
 	     	obj.btnExport_click();
      	});
@@ -39,25 +38,10 @@ function InitAssResultWinEvent(obj){
 					disLoadWindow(); 
 				}, 100); 		
 			}else {
-				$.messager.alert("提示", "先选择评估模型再执行任务", 'info');
+				$.messager.alert("提示", "先选择评估模型再执行手工评估", 'info');
 			}	
      	});
-     	
-	   	$HUI.combogrid('#cbgModel',{
-			onSelect:function(rows){
-				obj.gridAssResultLoad();		
-				/*
-				var ModelID = $('#cbgModel').combogrid('getValue');
-				obj.gridAssResult.load({
-					ClassName:'DHCHAI.AMS.AssessResultSrv',
-					QueryName:'QryAssessResult',
-					aModelDr:ModelID
-				});
-				*/
-			}
-		});
 	}
-	
 	
 	//窗体初始化
 	obj.ResultDialog = function () {
@@ -106,7 +90,7 @@ function InitAssResultWinEvent(obj){
 							$.messager.popover({msg: '处置成功！',type:'success',timeout: 1000});
 							obj.RecRowID="";
 							$HUI.dialog('#ResultEdit').close();
-							obj.gridAssResultLoad(); //刷新
+							obj.gridAssResult.reload(); //刷新
 						}else {
 							$.messager.alert("错误提示","处置失败!",'error');
 							return true;
@@ -159,26 +143,11 @@ function InitAssResultWinEvent(obj){
 	}
 	//打开报告
     obj.btnDetail_Click =function(aReportID,aEpisodeID) {
-	    var Type =1;
-		var NewBabyFlg  = $m({
-			ClassName:"DHCHAI.DP.PAAdm",
-			MethodName:"GetNewBabyById",
-			id:aEpisodeID
-		},false);
-	
-		if (NewBabyFlg=="1"){
-			Type = 2;
-		}		
-		if (Type == '1') {
-			var strTitle = '医院感染报告';
-			var strUrl="dhcma.hai.ir.inf.report.csp?1=1&Paadm=" + aEpisodeID + "&ReportID="+ aReportID + t;
-		}else if(Type == '2') {
-			var strTitle = '新生儿医院感染报告';
-			var strUrl="dhcma.hai.ir.inf.nreport.csp?1=1&Paadm=" + aEpisodeID + "&ReportID="+ aReportID + t;	   
-		}	
+		var strUrl="dhcma.hai.ir.inf.report.csp?1=1&Paadm=" + aEpisodeID + "&ReportID="+ aReportID + t;
+		
 		websys_showModal({
 			url:strUrl,
-			title:strTitle,
+			title:'医院感染报告',
 			iconCls:'icon-w-epr',  
 			width:1320,
 			height:'95%'
@@ -192,20 +161,20 @@ function InitAssResultWinEvent(obj){
 			QueryName:'QryScreenLog',
 			aEpisodeID:aEpisodeID
 		},function(jsonData){
-		 
 			var json = JSON.parse(jsonData);
 			var htmlStr ='<div><span style="line-height:25px;">处置操作明细：</span></br>';
 			for (var index =0; index< json.total; index++) {
+				var Details = json.rows[index].Details;
 				var Status = json.rows[index].Status;
 				var UserDesc = json.rows[index].UserDesc;
 				var ActDate = json.rows[index].ActDate;
 				var ActTime = json.rows[index].ActTime;
-				htmlStr +='<span style="line-height:25px;">'+(index+1)+". <span style='color:blue'>("+Status+")</span> "+UserDesc+" "+ActDate+" "+ActTime+'</span></br>';	
+				htmlStr +='<span style="line-height:25px;">'+(index+1)+"."+Details+"<span style='color:blue'>("+Status+")</span> "+UserDesc+" "+ActDate+" "+ActTime+'</span></br>';	
 			}
 			htmlStr +='</div>';
 		 
 			$("#ScreenLog"+aEpisodeID).popover({
-				width:'300px',
+				width:'560px',
 				content:htmlStr,
 				trigger:'hover',
 				placement:'left',
@@ -224,20 +193,16 @@ function InitAssResultWinEvent(obj){
 		}	
 	}
 	
-	//加载临床责任患者明细
+	
 	obj.gridAssResultLoad = function(){
-		$("#AssessResult").datagrid("loading");
-		$cm ({
+		var ModelID = $('#cbgModel').combogrid('getValue');
+		var InfPos = $("#cboInfPos").combobox('getValue');
+		obj.gridAssResult.load({
 			ClassName:'DHCHAI.AMS.AssessResultSrv',
 			QueryName:'QryAssessResult',
-			aModelDr:$('#cbgModel').combogrid('getValue'),
-			aInfPos:$('#cboInfPos').combobox('getValue'),
-			ResultSetType:'array',
-			page:1,      //可选项，页码，默认1			
-			rows:200    //可选项，获取多少条数据，默认50
-		},function(rs){
-			$('#AssessResult').datagrid({loadFilter:pagerFilter}).datagrid('loadData', rs);				
-		})
+			aModelDr:ModelID,
+			aInfPos:InfPos
+		});
     }
     
 }

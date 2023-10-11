@@ -37,71 +37,90 @@ function InitReturnInfoList() {
 	//定义columns
 	var columns = [[{
 				field: 'TPmiNo',
-				title: '登记号',
+				title: ("登记号"),
 				width: 150,
 				align: 'center',
 				sortable: true
 			}, {
 				field: 'TPatName',
-				title: '姓名',
+				title: ("姓名"),
 				width: 100,
 				align: 'center'
 			}, {
 				field: 'TRetDate',
-				title: '退药日期',
+				title: ("退药日期"),
 				width: 120,
 				align: 'center',
 				sortable: true
 			}, {
 				field: 'TRetMoney',
-				title: '退药金额',
+				title: ("退药金额"),
 				width: 80,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'TRetUser',
-				title: '操作人',
+				title: ("操作人"),
 				width: 100,
 				align: 'center',
 				sortable: true
 			}, {
 				field: 'TDoctor',
-				title: '医生',
+				title: ("医生"),
 				width: 100,
 				align: 'center'
 			}, {
 				field: 'TLocDesc',
-				title: '科室',
+				title: ("科室"),
 				width: 120,
 				align: 'left',
 				sortable: true
 			}, {
 				field: 'TRetReason',
-				title: '退药原因',
+				title: ("退药原因"),
 				width: 150,
 				align: 'left',
 				sortable: true
 			}, {
 				field: 'TDispDate',
-				title: '发药日期',
+				title: ("发药日期"),
 				width: 120,
 				align: 'center',
 				sortable: true
 			}, {
+				field: 'TCancleUser',
+				title: ("撤消人"),
+				width: 80,
+				align: 'center',
+				sortable: true
+			}, {
+				field: 'TCancleDate',
+				title: ("撤消日期"),
+				width: 80,
+				align: 'center',
+				sortable: true
+			}, {
+				field: 'TCancleTime',
+				title: ("撤消时间"),
+				width: 120,
+				align: 'center',
+				sortable: true,
+				hidden: true
+			}, {
 				field: 'TEncryptLevel',
-				title: '病人密级',
+				title: ("病人密级"),
 				width: 80,
 				align: 'center',
 				hidden: true
 			}, {
 				field: 'TPatLevel',
-				title: '病人级别',
+				title: ("病人级别"),
 				width: 80,
 				align: 'center',
 				hidden: true
 			}, {
 				field: 'TRetRowid',
-				title: '退药单Id',
+				title: ("退药单Id"),
 				width: 80,
 				hidden: false
 			}
@@ -131,32 +150,32 @@ function InitReturnDetailList() {
 	//定义columns
 	var columns = [[{
 				field: 'TPhDesc',
-				title: '药品名称',
+				title: ("药品名称"),
 				width: 300,
 				align: 'left'
 			}, {
 				field: 'TPhUom',
-				title: '单位',
+				title: ("单位"),
 				width: 125,
 				align: 'center'
 			}, {
 				field: 'TRetQty',
-				title: '退药数量',
+				title: ("退药数量"),
 				width: 125,
 				align: 'right'
 			}, {
 				field: 'TPhprice',
-				title: '单价',
+				title: ("单价"),
 				width: 125,
 				align: 'right'
 			}, {
 				field: 'TRetMoney',
-				title: '退药金额',
+				title: ("退药金额"),
 				width: 125,
 				align: 'right'
 			}, {
 				field: 'TBatExpStr',
-				title: '批号~效期',
+				title: ("批号~效期"),
 				width: 125,
 				align: 'center'
 			}
@@ -192,7 +211,7 @@ function Query() {
 function QueryDetail() {
 	var selectdata = $("#returninfodg").datagrid("getSelected")
 		if (selectdata == null) {
-			dhcphaMsgBox.alert("选中数据异常!");
+			dhcphaMsgBox.alert($g("选中数据异常!"));
 			return;
 		}
 		var params = selectdata["TRetRowid"]
@@ -219,7 +238,7 @@ function ClearConditions() {
 function BPrintHandler() {
 	var selectdata = $("#returninfodg").datagrid("getSelected");
 	if (selectdata == null) {
-		dhcphaMsgBox.alert("请选择需要打印的退药单!");
+		dhcphaMsgBox.alert($g("请选择需要打印的退药单!"));
 		return;
 	}
 	var retrowid = selectdata["TRetRowid"];
@@ -230,11 +249,12 @@ function BPrintHandler() {
 function BCancelReturnHandler() {
 	var selectdata = $("#returninfodg").datagrid("getSelected");
 	if (selectdata == null) {
-		dhcphaMsgBox.alert("请选择需要撤消的退药单!");
+		dhcphaMsgBox.alert($g("请选择需要撤消的退药单!"));
 		return;
 	}
 	var retrowid = selectdata["TRetRowid"];
-	var cancelRet = tkMakeServerCall("PHA.OP.Return.OperTab", "CancleReturn", retrowid);
+	var othParams=DHCPHA_CONSTANT.SESSION.GROUP_ROWID+"^"+DHCPHA_CONSTANT.SESSION.GCTLOC_ROWID;
+	var cancelRet = tkMakeServerCall("PHA.OP.Return.OperTab", "CancleReturn", retrowid,DHCPHA_CONSTANT.SESSION.GUSER_ROWID,othParams);
 	var cancelRetArr = cancelRet.split("^");
 	var retCode = cancelRetArr[0];
 	if (retCode != 0) {
@@ -242,10 +262,10 @@ function BCancelReturnHandler() {
 		if (cancelRetInfo != "") {
 			dhcphaMsgBox.alert(cancelRetInfo);
 		} else {
-			dhcphaMsgBox.alert("撤消失败,请联系相关人员进行处理,错误代码:" + cancelRet);
+			dhcphaMsgBox.alert($g("撤消失败,请联系相关人员进行处理,错误代码:") + cancelRet);
 		}
 	} else {
-		dhcphaMsgBox.alert("撤消成功！");
+		dhcphaMsgBox.alert($g("撤消成功！"));
 		Query();
 	}
 }

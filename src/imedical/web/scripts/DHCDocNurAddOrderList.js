@@ -150,6 +150,7 @@ function SetTableStyle(){
 				var ret=cspRunServerMethod(GetInstrLinkItemsNum,EpisodeID,MasterOrderItemRowId);
 				if (ret>0) {
 						var path="websys.default.csp?WEBSYS.TCOMPONENT=DHCDocInstrLinkOrdItem&EpisodeID="+EpisodeID+"&MasterOrderItemRowId="+MasterOrderItemRowId+"&MasterOrderSeqNo="+MasterOrderSeqNo+"&MasterOrderPriorRowid="+OrderPriorRowid+"&MasterOrderStartDate="+OrderStartDate+"&MasterOrderFreqRowid="+OrderFreqRowid;
+						if(typeof websys_writeMWToken=='function') path=websys_writeMWToken(path);
 						window.open(path,"frmOSList","toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,top=100,width=500,height=600")	
 				}
 			}

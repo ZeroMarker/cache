@@ -98,9 +98,17 @@ function InitviewScreen(){
 				aCode :ProductCode
 			},false);
 			
-			$('#cboProduct').combobox('select',ProductId);
-		
+			$('#cboProduct').combobox('select',ProductId);		
 			$('#cboProduct').combobox('disable');
+			
+			var objPro = obj.objById(ProductId);
+			var DisType = '';
+			objPro = JSON.parse(objPro);        //变成json串		
+			if (objPro) { 
+				DisType1 = objPro.ProCode;	
+				DisType2 = objPro.ProCode+'DiseaseType';			
+			}
+		
 		}
 	});
 	
@@ -112,6 +120,17 @@ function InitviewScreen(){
 			},false);
 		return objPro;
 	};
+	
+	obj.cboCateg = $HUI.combobox("#cboCateg", {
+		valueField: 'myid',
+		textField: 'Description',
+		onShowPanel: function () {
+			var url=$URL+"?ClassName=DHCMed.SSService.DictionarySrv&QueryName=QryDictionary&ResultSetType=array&aType="+DisType2;
+			$("#cboCateg").combobox('reload',url);
+		} 
+	});	
+		
+
 	InitviewScreenEvent(obj);
 	obj.LoadEvent(arguments);	
 	return obj;

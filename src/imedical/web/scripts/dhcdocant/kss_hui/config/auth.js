@@ -42,7 +42,7 @@ $(function(){
 			},
 			{field:'phcpoDesc',title:'抗菌药物级别',width:200},
 			{field:'tppControlTypeDesc',title:'允许类型',width:100},
-			{field:'isKssAut',title:'是否维护子表',width:100,
+			{field:'isKssAut',title:'是否维医生权限',width:110,
 				formatter:function(value,row,index){
 					if (value == "1") {
 						return "<span class='c-ok'>是</span>";
@@ -1130,19 +1130,19 @@ $(function(){
 			var dialogStr = "<div id='i-auth-dialog-add' class='c-auth-dialog container'>" +
 							"<input type='hidden' name='id' />" +
 							"<div class='row'>"  +
-								"<div class='col-xs-6'><span class='c-span'>医护级别</span><input type='text' name='docLevel'/></div>" +
+								"<div class='col-xs-6'><span class='c-span'>医护级别</span><input style='width:250px;' type='text' name='docLevel'/></div>" +
 							"</div>" +
 							"<div class='row'>"  +
-								"<div class='col-xs-6'><span class='c-span'>就诊类型</span><input type='text' name='admType' /></div>" +
+								"<div class='col-xs-6'><span class='c-span'>就诊类型</span><input style='width:250px;' type='text' name='admType' /></div>" +
 							"</div>" +
 							"<div class='row'>" +
-								"<div class='col-xs-6'><span class='c-span'>抗菌级别</span><input type='text' name='kssLevel' /></div>" +
+								"<div class='col-xs-6'><span class='c-span'>抗菌级别</span><input style='width:250px;' type='text' name='kssLevel' /></div>" +
 							"</div>" +
 							"<div class='row'>" +
-								"<div class='col-xs-6'><span class='c-span'>允许类型</span><input type='text' name='appType' /></div>" +
+								"<div class='col-xs-6'><span class='c-span'>允许类型</span><input style='width:250px;' type='text' name='appType' /></div>" +
 							"</div>" +
 							"<div class='row'>" +
-								"<div class='col-xs-6'><span class='c-span'>所属院区</span><input id='i-auth-dialog-add-hosp' type='text' name='hosp' /></div>" +
+								"<div class='col-xs-6'><span class='c-span'>所属院区</span><input style='width:250px;' id='i-auth-dialog-add-hosp' type='text' name='hosp' /></div>" +
 							"</div>" +
 							"<div class='row'>" +
 								"<div class='col-xs-6'><span class='c-ck-span'>审核权限</span><input id='i-auth-dialog-add-ck' type='checkbox' name='isAudit' /></div>" +
@@ -1226,19 +1226,19 @@ $(function(){
 			var domStr = "<div id='i-auth-dialog' class='c-auth-dialog container'>" +
 							"<input type='hidden' name='id' />" +
 							"<div class='row'>"  +
-								"<div class='col-xs-6'><span class='c-span'>医护级别</span><input type='text' name='docLevel'/></div>" +
+								"<div class='col-xs-6'><span class='c-span'>医护级别</span><input style='width:250px;'  type='text' name='docLevel'/></div>" +
 							"</div>" +
 							"<div class='row'>"  +
-								"<div class='col-xs-6'><span class='c-span'>就诊类型</span><input type='text' name='admType' /></div>" +
+								"<div class='col-xs-6'><span class='c-span'>就诊类型</span><input style='width:250px;'  type='text' name='admType' /></div>" +
 							"</div>" +
 							"<div class='row'>" +
-								"<div class='col-xs-6'><span class='c-span'>抗菌级别</span><input type='text' name='kssLevel' /></div>" +
+								"<div class='col-xs-6'><span class='c-span'>抗菌级别</span><input style='width:250px;'  type='text' name='kssLevel' /></div>" +
 							"</div>" +
 							"<div class='row'>" +
-								"<div class='col-xs-6'><span class='c-span'>允许类型</span><input type='text' name='appType' id='i-auth-dialog-appType' /></div>" +
+								"<div class='col-xs-6'><span class='c-span'>允许类型</span><input style='width:250px;'  type='text' name='appType' id='i-auth-dialog-appType' /></div>" +
 							"</div>" +
 							"<div class='row'>" +
-								"<div class='col-xs-6'><span class='c-span'>所属院区</span><input id='i-auth-dialog-hosp' type='text' name='hosp' /></div>" +
+								"<div class='col-xs-6'><span class='c-span'>所属院区</span><input style='width:250px;'  id='i-auth-dialog-hosp' type='text' name='hosp' /></div>" +
 							"</div>" +
 							"<div class='row'>" +
 								"<div class='col-xs-6'><span class='c-ck-span'>审核权限</span><input id='i-auth-dialog-ck' type='checkbox' name='isAudit' /></div>" +
@@ -1318,7 +1318,7 @@ $(function(){
 			
 		};
 	}
-	
+	InitCache();
 	//修改医生权限
 	$("#i-auth-docAuthAdd").on('click', function(){
 		editDocAuth(undefined);
@@ -1349,7 +1349,7 @@ $(function(){
 								"<span class='c-span-sp'></span><span class='c-span'>医生姓名</span><input id='i-9docAuth-doc' type='text' />" +
 							"</div>" +
 							"<div class='row'>" +
-								"<div><span class='c-span'>所属院区</span><input id='i-9docAuth-hosp' type='text'/></div>" +
+								"<div><span class='c-span'>所属院区</span><input style='width:407px;' id='i-9docAuth-hosp' type='text'/></div>" +
 							"</div>" +
 							"<div class='row c-auth-docdialog-new-h4row'>" +
 								"<div class='col-xs-12'><h4>权限</h4></div>" +
@@ -1402,7 +1402,7 @@ $(function(){
 								"<span class='c-span-sp'></span><span class='c-span'>医生姓名 </span><input id='i-9docAuth-doc' type='text' />" +
 							"</div>" +
 							"<div class='row c-auth-docdialog-new-baseinfo'>" +
-								"<span class='c-span'>所属院区</span><input id='i-9docAuth-hosp' type='text'/>" +
+								"<span class='c-span'>所属院区</span><input style='width:407px;' id='i-9docAuth-hosp' type='text'/>" +
 							"</div>" +
 							"<div class='row c-auth-docdialog-new-h4row'>" +
 								"<div class='col-xs-12'><h4>门诊</h4></div>" +
@@ -1505,10 +1505,11 @@ $(function(){
 							"</div>" +
 							"<div class='row'>" +
 								"<span class='c-span'>允许类型</span><input id='i-auth-docdialog-add-appType' type='text' name='appType' />" +
-								"<span class='c-span-sp'></span><span class='c-span'>所属院区</span><input id='i-auth-docdialog-add-hosp' type='text' name='hosp' />" +
+								"<span class='c-span-sp'></span><span class='c-span'>审核权限</span><input id='i-auth-docdialog-add-isAudit' type='checkbox' name='isAudit' />" +
 							"</div>" +
 							"<div class='row'>" +
-								"<span class='c-span'>审核权限</span><input id='i-auth-docdialog-add-isAudit' type='checkbox' name='isAudit' />" +
+								
+								"<span class='c-span'>所属院区</span><input style='width:406px;' id='i-auth-docdialog-add-hosp' type='text' name='hosp' />" +
 							"</div>" +
 							"<div class='row' style='text-align:center;'>" +
 								//"<div class='col-xs-12' style='text-align:center;'><a id='c-auth-docdialog-add-save' class='btn btn-info c-btn' style='width:100px;'>保存</a></div>" +
@@ -1854,10 +1855,11 @@ $(function(){
 							"</div>" +
 							"<div class='row'>" +
 								"<span class='c-span'>允许类型</span><input id='i-auth-docdialog-appType' type='text' name='appType' />" +
-								"<span class='c-span-sp'></span><span class='c-span'>所属院区</span><input id='i-auth-docdialog-hosp' type='text' name='hosp' />" +
+								"<span class='c-span-sp'></span><span class='c-span'>审核权限</span><input id='i-auth-docdialog-isAudit' type='checkbox' name='isAudit' />" +
 							"</div>" +
 							"<div class='row'>" +
-								"<span class='c-span'>审核权限</span><input id='i-auth-docdialog-isAudit' type='checkbox' name='isAudit' />" +
+							"<span class='c-span'>所属院区</span><input style='width:406px;' id='i-auth-docdialog-hosp' type='text' name='hosp' />" +
+								
 							"</div>" +
 							"<div class='row' style='text-align:center;'>" +
 								"<a id='c-auth-docdialog-save'>保存</a>" +
@@ -1986,7 +1988,7 @@ $(function(){
 			return false;
 		}
 		if (mStry.length != "2") {
-			layer.alert("不是子表记录，不能删除！", {title:'提示',icon: 0}); 
+			layer.alert("没有维护医生权限，不能删除！", {title:'提示',icon: 0}); 
 			return false;
 		}
 		var message = "您确认删除该医生权限配置么？";
@@ -2167,9 +2169,12 @@ $(function(){
 	});
 	
 	$("#i-auth-import").on('click', function(){
-		var src="dhcant.kss.config.auth.import.csp";
+		var src="dhcant.kss.config.auth.import.csp?a=1";
+        if ('undefined'!==typeof websys_getMWToken){
+            src += "&MWToken="+websys_getMWToken();
+        }
 		var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
-		createModalDialog("importDiag","导入", 850, 545,"icon-w-import","",$code,"");
+		createModalDialog("importDiag","导入", 950, 545,"icon-w-import","",$code,"");
 	});
 	
 	$("#i-auth-import2").on('click', function(){
@@ -2268,25 +2273,65 @@ $(function(){
 			}
 		}
 		
+		//方式一
+		/*$.messager.confirm("提示", "确定导出么?", function (r) {
+			if (r) {
+				var rtn = $cm({
+					localDir:"Self", 
+					ResultSetTypeDo:"Export",
+					//dataType:'text',
+					ResultSetType:"ExcelPlugin", //Excel
+					ExcelName:"KJAuthorityData",
+					ClassName:"DHCAnt.KSS.Config.Authority",
+					QueryName:"Export",
+					isCkecked:arg1,
+					locId:arg2,
+					docLevel:arg3,
+					docId:arg4,
+					docNum:arg5,
+					admType:arg6,
+					poisonId:arg7,
+					isKSSAuthority:arg8,
+					isVerifyAuthority:arg9,
+					InHosp:arg10
+				},true);
+				
+			} else {
+				//
+			}
+		});*/
+		
+		//方式二
+		//location.href = tkMakeServerCall("websys.Query","ToExcel","DHCEventLog","web.DHCEventLogDetails","FindParAndDet",$('#StDate').datebox("getValue"),$('#EndDate').datebox("getValue"),$('#User').combogrid("getValue"),$('#AuditFlag').combobox("getValue"),$('#Model').combogrid("getValue"),$('#Type').combobox("getValue"));
+		
+		
+		location.href = tkMakeServerCall("websys.Query","ToExcel","抗菌药物权限","DHCAnt.KSS.Config.Authority","Export",arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10);
+		
+		//方式三
+		/*
 		var rtn = $cm({
-			dataType:'text',
-			ResultSetType:'Excel',
-			ExcelName:'KJAuthorityData',
-			ClassName:'DHCAnt.KSS.Config.Authority',
-			QueryName:'QryKSSAuthority',
-			isCkecked:arg1,
-			locId:arg2,
-			docLevel:arg3,
-			docId:arg4,
-			docNum:arg5,
-			admType:arg6,
-			poisonId:arg7,
-			isKSSAuthority:arg8,
-			isVerifyAuthority:arg9,
-			InHosp:arg10
-			
-		}, false);
-		location.href = rtn;
+					dataType:'text',
+					ResultSetType:'Excel',
+					ExcelName:'抗菌药物权限',
+					ClassName:'DHCAnt.KSS.Config.Authority',
+					QueryName:'Export',
+					isCkecked:arg1,
+					locId:arg2,
+					docLevel:arg3,
+					docId:arg4,
+					docNum:arg5,
+					admType:arg6,
+					poisonId:arg7,
+					isKSSAuthority:arg8,
+					isVerifyAuthority:arg9,
+					InHosp:arg10
+					
+				}, false);
+				location.href = rtn;
+				
+		
+		*/
+		
 	})
 	
 	function banBackSpace(e){
@@ -2360,7 +2405,7 @@ function reloadAuthGrid(notip) {
 	var arg1="",arg2="",arg3="",
 		arg4="",arg5="",arg6="",
 		arg7="",arg8="",arg9="",
-		arg10="";
+		arg10="",arg11="";
 	//arg10 = $('#i-auth-condition-hosp').simplecombobox('getValue')||"";	//院区
 	arg10 = PageLogicObj.m_CHosp;	//院区
 	if(!$("#i-auth-condition-switch").is(':checked')){
@@ -2419,7 +2464,8 @@ function reloadAuthGrid(notip) {
 		Arg4:arg4,Arg5:arg5,Arg6:arg6,
 		Arg7:arg7,Arg8:arg8,Arg9:arg9,
 		Arg10:arg10,
-		ArgCnt:10
+		Arg11:arg11,
+		ArgCnt:11
 	});
 }
 function clearScreen () {
@@ -2566,5 +2612,11 @@ function GetHospValue() {
 	
 	return PageLogicObj.m_CHosp
 }
-
+function InitCache () {
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 

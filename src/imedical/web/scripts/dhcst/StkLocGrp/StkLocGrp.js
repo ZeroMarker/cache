@@ -4,22 +4,22 @@
 //=========================科室组类别=============================
 var conditionCodeField = new Ext.form.TextField({
 	id:'conditionCodeField',
-	fieldLabel:'代码',
+	fieldLabel:$g('代码'),
 	allowBlank:true,
 	width:180,
 	listWidth:180,
-	emptyText:'代码...',
+	emptyText:$g('代码...'),
 	anchor:'90%',
 	selectOnFocus:true
 });
 	
 var conditionDescField = new Ext.form.TextField({
 	id:'conditionDescField',
-	fieldLabel:'名称',
+	fieldLabel:$g('名称'),
 	allowBlank:true,
 	width:150,
 	listWidth:150,
-	emptyText:'名称...',
+	emptyText:$g('名称...'),
 	anchor:'90%',
 	selectOnFocus:true
 });
@@ -77,7 +77,7 @@ var StkLocGrpGridDs = new Ext.data.Store({
 var StkLocGrpGridCm = new Ext.grid.ColumnModel([
 	 new Ext.grid.RowNumberer(),
 	 {
-        header:"代码",
+        header:$g("代码"),
         dataIndex:'Code',
         width:180,
         align:'left',
@@ -94,7 +94,7 @@ var StkLocGrpGridCm = new Ext.grid.ColumnModel([
 			}
         })
     },{
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'Desc',
         width:300,
         align:'left',
@@ -117,8 +117,8 @@ var StkLocGrpGridCm = new Ext.grid.ColumnModel([
 StkLocGrpGridCm.defaultSortable = true;
 
 var findStkLocGrp = new Ext.Toolbar.Button({
-	text:'查询',
-    tooltip:'查询',
+	text:$g('查询'),
+    tooltip:$g('查询'),
     iconCls:'page_find',
 	width : 70,
 	height : 30,
@@ -128,8 +128,8 @@ var findStkLocGrp = new Ext.Toolbar.Button({
 });
 
 var addStkLocGrp = new Ext.Toolbar.Button({
-	text:'新建',
-    tooltip:'新建',
+	text:$g('新建'),
+    tooltip:$g('新建'),
     iconCls:'page_add',
 	width : 70,
 	height : 30,
@@ -139,8 +139,8 @@ var addStkLocGrp = new Ext.Toolbar.Button({
 });
 
 var saveStkLocGrp = new Ext.Toolbar.Button({
-	text:'保存',
-    tooltip:'保存',
+	text:$g('保存'),
+    tooltip:$g('保存'),
     iconCls:'page_save',
 	width : 70,
 	height : 30,
@@ -153,11 +153,11 @@ var saveStkLocGrp = new Ext.Toolbar.Button({
 			var desc = mr[i].data["Desc"].trim();
 			var rowNum = StkLocGrpGridDs.indexOf(mr[i])+1;
 			if (code==""){
-				Msg.info("warning", "第"+rowNum+"行代码为空!");
+				Msg.info("warning", $g("第")+rowNum+$g("行代码为空!"));
 				return;
 			}
 			if (desc==""){
-				Msg.info("warning", "第"+rowNum+"行名称为空!");
+				Msg.info("warning", $g("第")+rowNum+$g("行名称为空!"));
 				return;
 			}
 			if((code!="")&&(desc!="")){
@@ -171,31 +171,31 @@ var saveStkLocGrp = new Ext.Toolbar.Button({
 		}
 		
 		if(data==""){
-			Msg.info("warning", "没有修改或添加新数据!");
+			Msg.info("warning", $g("没有修改或添加新数据!"));
 			return false;
 		}else{
-			var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+			var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 			Ext.Ajax.request({
 				url: StkLocGrpGridUrl+'?actiontype=save',
 				params: {data:data},
 				failure: function(result, request) {
 					 mask.hide();
-					Msg.info("error", "请检查网络连接!");
+					Msg.info("error", $g("请检查网络连接!"));
 				},
 				success: function(result, request) {
 					var jsonData = Ext.util.JSON.decode( result.responseText );
 					 mask.hide();
 					if (jsonData.success=='true') {
-						Msg.info("success", "保存成功!");
+						Msg.info("success", $g("保存成功!"));
 						Query();
 					}else{
 						var date=jsonData.info
 						if(date==-5){
-							Msg.info("warning", "代码重复!");}
+							Msg.info("warning", $g("代码重复!"));}
 						else if(date==-6){
-							Msg.info("warning", "名称重复!" );}
+							Msg.info("warning", $g("名称重复!" ));}
 						else {
-							Msg.info("error", "保存失败！" );
+							Msg.info("error", $g("保存失败！" ));
 						}
 						//Query();
 					}
@@ -208,44 +208,44 @@ var saveStkLocGrp = new Ext.Toolbar.Button({
 
 
 var deleteStkLocGrp = new Ext.Toolbar.Button({
-	text:'删除',
-    tooltip:'删除',
+	text:$g('删除'),
+    tooltip:$g('删除'),
     iconCls:'page_delete',
 	width : 70,
 	height : 30,
 	handler:function(){
 		var cell = StkLocGrpGrid.getSelectionModel().getSelectedCell();
 		if(cell==null){
-			Msg.info("error", "请选择数据!");
+			Msg.info("error", $g("请选择数据!"));
 			return false;
 		}else{
 			var record = StkLocGrpGrid.getStore().getAt(cell[0]);
 			var RowId = record.get("RowId");
 			if(RowId!=""){
-				Ext.MessageBox.confirm('提示','确定要删除选定的行?',
+				Ext.MessageBox.confirm($g('提示'),$g('确定要删除选定的行?'),
 					function(btn) {
 						if(btn == 'yes'){
-							var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+							var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 							Ext.Ajax.request({
 								url:StkLocGrpGridUrl+'?actiontype=delete&rowid='+RowId,
-								waitMsg:'删除中...',
+								waitMsg:$g('删除中...'),
 								failure: function(result, request) {
 									 mask.hide();
-									Msg.info("error", "请检查网络连接!");
+									Msg.info("error", $g("请检查网络连接!"));
 								},
 								success: function(result, request) {
 									var jsonData = Ext.util.JSON.decode( result.responseText );
 									 mask.hide();
 									if (jsonData.success=='true') {
-										Msg.info("success", "删除成功!");
+										Msg.info("success", $g("删除成功!"));
 										StkLocGrpGridDs.remove(record);
 										StkLocGrpGrid.getView().refresh();
 										StkLocGrpGridDs.reload();
 									}else{
 										if(jsonData.info==-2){
-											Msg.info("warning", "科室组已在科室扩充信息中使用，不能删除!");
+											Msg.info("warning", $g("科室组已在科室扩充信息中使用，不能删除!"));
 										}else{
-											Msg.info("error", "删除失败!");
+											Msg.info("error", $g("删除失败!"));
 										}
 									}
 								},
@@ -272,7 +272,7 @@ var formPanel = new Ext.form.FormPanel({
     tbar:[findStkLocGrp,'-',addStkLocGrp,'-',saveStkLocGrp,'-',deleteStkLocGrp],
 	items : [{
 		xtype : 'fieldset',
-		title : '查询条件',
+		title : $g('查询条件'),
 		style:DHCSTFormStyle.FrmPaddingV,
 			layout : 'column',
 			items : [{
@@ -294,8 +294,8 @@ var StkLocGrpPagingToolbar = new Ext.PagingToolbar({
     store:StkLocGrpGridDs,
 	pageSize:35,
     displayInfo:true,
-    displayMsg:'第 {0} 条到 {1}条 ，一共 {2} 条',
-    emptyMsg:"没有记录",
+    displayMsg:$g('第 {0} 条到 {1}条 ，一共 {2} 条'),
+    emptyMsg:$g("没有记录"),
 	doLoad:function(C){
 		var B={},
 		A=this.getParams();
@@ -348,7 +348,7 @@ Ext.onReady(function(){
 	
 	var panel = new Ext.Panel({
 		id:"panel",
-		title:'科室组定义',
+		title:$g('科室组定义'),
 		layout:'fit',
 		activeTab:0,
 		region:'north',

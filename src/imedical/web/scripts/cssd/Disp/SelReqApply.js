@@ -1,293 +1,311 @@
-﻿function SelReqApply(Fn){
-	$HUI.dialog('#SelReqWinBorrow').open();
+﻿// 临床包发放中的非循环包、借包弹框
+var gFn, gApplyType;
+function SelReqApply(Fn, ApplyType) {
+	gFn = Fn;
+	gApplyType = ApplyType;
+	$HUI.dialog('#SelReqWinBorrow', {
+		width: gWinWidth,
+		height: gWinHeight
+	}).open();
+}
+
+var initSelReqApply = function() {
 	$UI.clearBlock('#SelReqConditionsBro');
-	//申请科室
+	var ReqLocParams = JSON.stringify(addSessionParams({ Type: 'RecLoc', BDPHospital: gHospId }));
 	$HUI.combobox('#SelReqLocB', {
-		url: $URL
-			+ '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array',
-		valueField: 'RowId',
-		textField: 'Description'
-//		onLoadSuccess: function (data) {   //默认登录科室
-//			$("#SelReqLoc").combobox('setValue',gLocId);
-//		}
-	});	
-	
-	//供应科室
-	var SupLocParams=JSON.stringify(addSessionParams({Type:"SupLoc"}));
-	var SupLocBox = $HUI.combobox('#ReqSupLoc', {
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params='+SupLocParams,
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=Array&Params=' + ReqLocParams,
 		valueField: 'RowId',
 		textField: 'Description',
-		onLoadSuccess: function (data) {   //默认第一个值
-			$("#ReqSupLoc").combobox('setValue',data[0].RowId);
+		onSelect: function(record) {
+			var Params = JSON.stringify(addSessionParams({ BDPHospital: gHospId, SupLocId: record.RowId }));
+			var Url = $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetLine&ResultSetType=array&Params=' + Params;
+			$('#BroLineCode').combobox('reload', Url).combobox('clear');
 		}
 	});
-	//楼号
-	var FloorBox = $HUI.combobox('#BroFloorCode', {
-		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetFloorCode&ResultSetType=array',
+	
+	var LineParams = JSON.stringify(addSessionParams({ SupLocId: gLocId, BDPHospital: gHospId }));
+	$HUI.combobox('#BroLineCode', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetLine&ResultSetType=array&Params=' + LineParams,
 		valueField: 'RowId',
-		textField: 'Description',
-		onLoadSuccess: function (data) {   //默认第一个值
-			//$("#FloorCode").combobox('setValue',data[0].RowId);
-		},
-		onSelect: function (row) {
-                    if (row != null) {
-						//alert(row.RowId);
-                        $HUI.combobox('#BroLineCode', {
-                          url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetLineCode&ResultSetType=array&FloorCode='+row.RowId,
-                          valueField: 'RowId',
-                          textField: 'Description',
-						  	onLoadSuccess: function (data) {   //默认第一个值
-								$("#BroLineCode").combobox('setValue',data[0].RowId);
-							}
-                      }); 
-                    }
-                }
-
+		textField: 'Description'
 	});
+
 	$UI.linkbutton('#SelReqQueryBTBro', {
-		onClick: function(){
+		onClick: function() {
 			SelReqQuery();
 		}
 	});
-	function SelReqQuery(){
+	function SelReqQuery() {
 		var ParamsObj = $UI.loopBlock('#SelReqWinBorrow');
+		ParamsObj['ApplyType'] = gApplyType;
 		var Params = JSON.stringify(ParamsObj);
-		//alert(Params);
 		$UI.clear(SelReqMasterGrid);
 		$UI.clear(SelReqDetailGrid);
 		SelReqMasterGrid.load({
-			ClassName: 'web.CSSDHUI.PackageDisp.CreateDispByBorrow',
+			ClassName: 'web.CSSDHUI.PackageDisp.CreateDispByApply',
 			QueryName: 'SelectDispForCallBack',
-			Params: Params
+			Params: Params,
+			rows: 9999
 		});
 	}
-	
-	$UI.linkbutton('#SelReqCreateBTBro',{
-		onClick: function(){
+	$UI.linkbutton('#SelReqCreateBTBro', {
+		onClick: function() {
 			SelReqCreate();
 		}
 	});
-	function SelReqCreate(){
-		var Rows = SelReqMasterGrid.getChecked();
-		if(isEmpty(Rows)){
-			$UI.msg('alert', '请选择需要生成的回收单据');
+	function SelReqCreate() {
+		SelReqDetailGrid.endEditing();
+		var ItemRows = SelReqDetailGrid.getChecked();
+		if (isEmpty(ItemRows)) {
+			$UI.msg('alert', '请选择需要发放的消毒包');
 			return;
 		}
-		var DetailIds="";
-		for(var i= 0, Len= Rows.length;i < Len;i++){
-			var detailid = Rows[i]['RowId'];
-			if(DetailIds == ""){
-				DetailIds = detailid;
-			}	
-			else{
-				DetailIds = DetailIds + ',' + detailid;
+		var ItemRowObj = SelReqDetailGrid.getSelectedData();
+		var Params = JSON.stringify(addSessionParams());
+		showMask();
+		$.cm({
+			ClassName: 'web.CSSDHUI.PackageDisp.Disp',
+			MethodName: 'jsCreateDispByCallBack',
+			Params: Params,
+			ItemRow: JSON.stringify(ItemRowObj)
+		}, function(jsonData) {
+			hideMask();
+			if (jsonData.success === 0) {
+				$UI.msg('success', jsonData.msg);
+				$('#SelReqWinBorrow').window('close');
+				var MainIdStr = jsonData.rowid;
+				gFn(MainIdStr);
+			} else {
+				$UI.msg('error', jsonData.msg);
 			}
-		}
-		var ItemRowObj=SelReqDetailGrid.getSelections();
-		var ItemRowId=",";
-		for(var i=0;i<ItemRowObj.length;i++){
-			var ItemRowId=ItemRowId+ItemRowObj[i].RowId+",";
-		}
-		var Parames=JSON.stringify(addSessionParams({ItemRowId:ItemRowId}));
-		//判断是单个生成还是批量生成
-		if(DetailIds.indexOf(",")!="-1")
-		{
-			$.cm({
-				ClassName: 'web.CSSDHUI.PackageDisp.Disp',
-				MethodName: 'jsCreatDispByCallBackAll',
-				Parames: Parames,
-				CallBackMainRow: DetailIds
-			},function(jsonData){
-				if(jsonData.success === 0){
-					$UI.msg('success', jsonData.msg);
-					$('#SelReqWinBorrow').window('close');
-					Fn();
-				}else{
-					$UI.msg('error', jsonData.msg);
-				}
-			}); 
-		}
-		else{
-			$.cm({
-				ClassName: 'web.CSSDHUI.PackageDisp.Disp',
-				MethodName: 'jsCreatDispByApply',
-				Parames: Parames,
-				CallBackMainRow: DetailIds
-			},function(jsonData){
-				if(jsonData.success === 0){
-					$UI.msg('success', jsonData.msg);
-					$('#SelReqWinBorrow').window('close');
-					Fn();
-				}else{
-					$UI.msg('error', jsonData.msg);
-				}
-			}); 
-		}
+		});
 	}
-	function SelReqDefa(){
+	
+	function SelReqDefa() {
 		$UI.clearBlock('#SelReqConditionsBro');
-		//$("input[name='PackageType'][label='全部']").attr("checked",true); 
-		var Dafult={
-			FStartDate:DefaultStDate(),
-			FEndDate:DefaultEdDate,
-			FReqNo:""
-		}
-		$UI.fillBlock('#SelReqConditionsBro', Dafult)
-		
+		var Default = {
+			StartDate: $UI.loopBlock('#MainCondition').FStartDate,
+			EndDate: $UI.loopBlock('#MainCondition').FEndDate
+		};
+		$UI.fillBlock('#SelReqConditionsBro', Default);
 	}
 	var SelReqMasterCm = [[
 		{
 			field: 'ck',
 			checkbox: true
-		},
-		{
+		}, {
 			title: 'RowId',
-			align:'center',
+			align: 'center',
 			field: 'RowId',
-			width:50,
+			width: 50,
 			hidden: true
 		}, {
+			field: 'operate',
+			title: '标识',
+			align: 'center',
+			width: 60,
+			formatter: function(value, row, index) {
+				var str = '';
+				if (row.ReqLevel == '1') {
+					str = '<div class="col-icon icon-emergency" href="#" title="紧急"></div>';
+				}
+				return str;
+			}
+		}, {
 			title: '单号',
-			align:'left',
-			field: 'No',
-			width:100,
-			fitColumns:true
-			
+			align: 'left',
+			field: 'ApplyNo',
+			width: 110
 		}, {
 			title: '单据类型',
-			align:'left',
-			field: 'ApplyTypeName',
-			width:100,
-			fitColumns:true
-		},{
+			align: 'left',
+			field: 'ApplyTypeDesc',
+			width: 100
+		}, {
 			title: '申请科室',
-			align:'left',
-			field: 'FromLocDesc',
-			width:100,
-			fitColumns:true
+			align: 'left',
+			field: 'ReqLocDesc',
+			width: 100
 		}, {
 			title: '申请日期',
-			align:'left',
-			field: 'AckDate',
-			width:100,
-			fitColumns:true
-		}, {
-			title: '申请时间',
-			align:'left',
-			field: 'AckTime',
-			width:100,
-			fitColumns:true
+			align: 'left',
+			field: 'ApplyDate',
+			width: 160
 		}, {
 			title: '申请人',
-			align:'left',
-			field: 'AckUserDesc',
-			width:100,
-			fitColumns:true
-		},{
-			title:'回收标志',
-			align:'left',
-			field:'ReqFlag',
-			width:100,
-			fitColumns:true,
-			hidden:true
-		},{
-			title:'是否生成发放单标志',
-			align:'center',
-			field:'DispFlag',
-			width:100,
-			fitColumns:true
+			align: 'left',
+			field: 'ApplyUserDesc',
+			width: 100
+		}, {
+			title: '已全部生成发放单',
+			align: 'center',
+			field: 'AllCreateFlag',
+			width: 120
 		}
 	]];
-
 
 	var SelReqMasterGrid = $UI.datagrid('#SelReqMasterGridBro', {
 		queryParams: {
 			ClassName: 'web.CSSDHUI.PackageDisp.CreateDispByApply',
-			QueryName: 'SelectDispForCallBack',
-			Params:JSON.stringify(addSessionParams({ReqFlag:"N"}))
+			QueryName: 'SelectDispForCallBack'
 		},
 		columns: SelReqMasterCm,
-		lazy:true,
-		selectOnCheck: false,
-		onLoadSuccess:function(data){  
-			if(data.rows.length>0){
-				$('#SelReqMasterGridBro').datagrid("selectRow", 0);
-				var Row=SelReqMasterGrid.getRows()[0]
-				var Id = Row.RowId;
-				FindItemByF(Id);
-			}	
+		singleSelect: false,
+		pagination: false,
+		sortOrder: 'desc',
+		sortName: 'RowId',
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
+				$('#SelReqMasterGridBro').datagrid('selectRow', 0);
+			}
 		},
-		onClickCell: function(index, filed ,value){
-			var Row=SelReqMasterGrid.getRows()[index]
-			var Id = Row.RowId;
-			if(!isEmpty(Id)){
-				FindItemByF(Id);	
-			}	
-			SelReqMasterGrid.commonClickCell(index,filed)
+		onClickRow: function(index, row) {
+			SelReqMasterGrid.commonClickRow(index, row);
 		},
-		onDblClickRow:function(rowIndex){//鼠标双击事件
-			$('#SelReqMasterGridBro').datagrid("selectRow",rowIndex);//选中此行
+		onSelect: function(index, rowData) {
+			FindItemByF();
+		},
+		onDblClickRow: function(rowIndex) {
+			$('#SelReqMasterGridBro').datagrid('selectRow', rowIndex);
 			SelReqCreate();
+		},
+		onUnselect: function(index, row) {
+			FindItemByF();
+		},
+		onSelectAll: function(rows) {
+			FindItemByF();
+		},
+		onUnselectAll: function(rows) {
+			$UI.clear(SelReqDetailGrid);
 		}
-	})
+	});
 
 	var SelReqDetailCm = [[
-	{
-			title: '',
-			id:'selectAll',
-			field: 'ck',
-			checked:true,
-			checkbox : true
-		},
 		{
+			title: '',
+			id: 'selectAll',
+			field: 'ck',
+			checked: true,
+			checkbox: true
+		}, {
 			title: 'RowId',
 			field: 'RowId',
-			width:100,
+			width: 100,
 			hidden: true
-		},{
-			title: '消毒包名称',
-			align:'left',
-			field: 'PackageName',
-			width:200
-		},{
-			title: '申请数量',
-			align:'right',
-			field: 'Qty',
-			width:70
-		},{
-			title: '发放数量',
-			align:'right',
+		}, {
+			field: 'operate',
+			title: '标识',
+			align: 'center',
+			width: 60,
+			formatter: function(value, row, index) {
+				var str = '';
+				if (row.LevelFlag == '1') {
+					str = '<div class="col-icon icon-emergency" href="#" title="紧急"></div>';
+				}
+				return str;
+			}
+		}, {
+			title: '消毒包',
+			align: 'left',
+			field: 'PkgDesc',
+			width: 160
+		}, {
+			title: '申请数',
+			align: 'right',
+			field: 'BackQty',
+			width: 60
+		}, {
+			title: '发放数',
+			align: 'right',
 			field: 'DispQty',
-			width:70
+			width: 60
+		}, {
+			title: '要发放数',
+			align: 'right',
+			field: 'PreDispQty',
+			width: 70,
+			editor: { type: 'numberbox' }
+		}, {
+			title: '紧急状态',
+			field: 'LevelFlag',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'PkgId',
+			field: 'PkgId',
+			width: 100,
+			hidden: true
+		}, {
+			title: 'Material',
+			field: 'Material',
+			width: 100,
+			hidden: true
 		}
-	]]; 
+	]];
 
+	var IsCheckFlag = true;
 	var SelReqDetailGrid = $UI.datagrid('#SelReqDetailGridBro', {
 		queryParams: {
-				ClassName: 'web.CSSDHUI.PackageDisp.CreateDispByApply',
-				MethodName: 'SelectByF'
-			},
-			columns: SelReqDetailCm,
-			pagination:true,
-			singleSelect:false,
-			onLoadSuccess:function(data){  
-				if(data.rows.length>0){
-					$('#SelReqDetailGridBro').datagrid("selectAll");
-				}	
+			ClassName: 'web.CSSDHUI.PackageDisp.CreateDispByApply',
+			QueryName: 'SelectByF'
+		},
+		columns: SelReqDetailCm,
+		fitColumns: true,
+		pagination: false,
+		singleSelect: false,
+		sortOrder: 'desc',
+		sortName: 'RowId',
+		onLoadSuccess: function(data) {
+			if (data.rows.length > 0) {
+				$('#SelReqDetailGridBro').datagrid('selectAll');
 			}
-		});	
+		},
+		onClickCell: function(index, field, value) {
+			SelReqDetailGrid.commonClickCell(index, field);
+			IsCheckFlag = false;
+		},
+		onSelect: function(index, rowData) {
+			if (!IsCheckFlag) {
+				IsCheckFlag = true;
+				$('#SelReqDetailGridBro').datagrid('unselectRow', index);
+			}
+		},
+		onUnselect: function(index, row) {
+			if (!IsCheckFlag) {
+				IsCheckFlag = true;
+				$('#SelReqDetailGridBro').datagrid('selectRow', index);
+			}
+		}
+	});
 	
-	function FindItemByF(Id) {
-		//alert(Id);
+	function FindItemByF() {
+		$UI.clear(SelReqDetailGrid);
+		var ApplyIdStr = '';
+		var Sels = SelReqMasterGrid.getSelections();
+		for (var i = 0, Len = Sels.length; i < Len; i++) {
+			var ApplyId = Sels[i]['RowId'];
+			if (ApplyIdStr === '') {
+				ApplyIdStr = ApplyId;
+			} else {
+				ApplyIdStr = ApplyIdStr + ',' + ApplyId;
+			}
+		}
+		if (ApplyIdStr === '') {
+			return;
+		}
 		SelReqDetailGrid.load({
 			ClassName: 'web.CSSDHUI.PackageDisp.CreateDispByApply',
 			QueryName: 'SelectByF',
-			ApplyId:Id
-			
+			ApplyId: ApplyIdStr,
+			rows: 9999
 		});
 	}
-	SelReqDefa();
-	SelReqQuery();
-
-}
+	
+	$HUI.dialog('#SelReqWinBorrow', {
+		onOpen: function() {
+			SelReqDefa();
+			SelReqQuery();
+		}
+	});
+};
+$(initSelReqApply);

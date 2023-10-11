@@ -1,8 +1,24 @@
 //dhctt.mainview.js
 $(function(){
+	var MWToken = websys_getMWToken();
+	var links = ["dhctt.findtablestructure.csp?MWToken="+MWToken,
+	"dhctt.findglobal.csp?MWToken="+MWToken,
+	"dhctt.sql.csp?MWToken="+MWToken,
+	"websys.default.csp?WEBSYS.TCOMPONENT=DHCTTSqlLog&MWToken="+MWToken,
+	"dhctt.xmlexport.csp?MWToken="+MWToken,
+	"dhctt.xmlimport.csp?MWToken="+MWToken,
+	"dhctt.xmldesigner.csp?MWToken="+MWToken,
+	//"ViewReport.csp",
+	"websys.default.hisui.csp?WEBSYS.TCOMPONENT=websys.AddIns&MWToken="+MWToken,
+	"websys.default.hisui.csp?WEBSYS.TCOMPONENT=CF.BSP.SYS.OpenEvent&MWToken="+MWToken,
+	"../html/bsp.sys.token.html?MWToken="+MWToken,
+	"websys.default.csp?WEBSYS.TCOMPONENT=websys.View&MWToken="+MWToken,
+	""
+	//,"dhctt.fileupload.csp"
+	]
 	$("#tt").tabs("add",{
 		title:"表结构查询",
-		content:'<iframe src="dhctt.findtablestructure.csp" scrolling="no" frameborder="0" style="width:100%;height:100%;"></iframe>'
+		content:'<iframe src="'+links[0]+'" scrolling="no" frameborder="0" style="width:100%;height:100%;"></iframe>'
 	});	
 	$("#tt").tabs("add",{
 		title:"Global查询",
@@ -25,42 +41,29 @@ $(function(){
 		content:''
 	});
 	$("#tt").tabs("add",{
-		title:"菜单导出",
-		content:''
-	});
-	$("#tt").tabs("add",{
-		title:"菜单导入",
-		content:''
-	});
-	$("#tt").tabs("add",{
 		title:"XML模板设计",
 		content:''
 	});
-	$("#tt").tabs("add",{
+	/*$("#tt").tabs("add",{
 		title:"XML模板设计(IE6,IE8)",
+		content:''
+	});*/
+	$("#tt").tabs("add",{
+		title:"插件管理(Chrome)",
 		content:''
 	});
 	$("#tt").tabs("add",{
-		title:"插件管理(Chrome)",
+		title:"扩展屏配置",
+		content:''
+	});
+	$("#tt").tabs("add",{
+		title:"Token管理",
 		content:''
 	});
 	/*$("#tt").tabs("add",{
 		title:"文件上传",
 		content:''
 	});*/
-	var links = ["dhctt.findtablestructure.csp",
-	"dhctt.findglobal.csp",
-	"dhctt.sql.csp",
-	"websys.default.csp?WEBSYS.TCOMPONENT=DHCTTSqlLog",
-	"dhctt.xmlexport.csp",
-	"dhctt.xmlimport.csp",
-	"dhctt.menuexport.csp",
-	"dhctt.menuimport.csp",
-	"dhctt.xmldesigner.csp",
-	"ViewReport.csp",
-	"websys.default.hisui.csp?WEBSYS.TCOMPONENT=websys.AddIns"
-	//,"dhctt.fileupload.csp"
-	]
 	$("#tt").tabs("options").onSelect=function(title,index){
 		var tab = $("#tt").tabs("getTab",index);
 		if(tab.panel("options").content==""){

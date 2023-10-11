@@ -56,22 +56,31 @@ function InitDicMapWinEvent(obj){
 	//新增对照
 	obj.btnMapAdd_click = function(){
 		var errinfo = "";
+	    var Maprd = obj.gridDicMap.getSelected();
 		var rd=obj.gridDictionary.getSelected();
+	    if (Maprd==null){
+		    var errinfo = errinfo +  "请先选中字典项再对照!<br>";
+		}
+		if (rd==null) {
+			var errinfo = errinfo +  "请选中业务字典项再对照!<br>";
+		}
+		if (errinfo!=""){
+			$.messager.alert("提示", errinfo, 'info');
+			return false;
+		}
 	    var DicDesc = rd["Desc"];
 	    var DicType = rd["TypeCode"];
-
-	    var Maprd = obj.gridDicMap.getSelected();
+	    /*-------------------------*/
 		var MapID = Maprd["MapID"];
 		var DicID = Maprd["DicID"];
 		var ProDicType = Maprd["DicType"];
 		var Product = Maprd["Product"];
         var MapDicDesc = Maprd["MapDicDesc"];
+		
+		
         if ((MapID)&&(MapDicDesc)&&(DicDesc!=MapDicDesc)) { //已对照的项目再对照名称不同的项目，视为增加
         	MapID = "";
         }
-		if ((!rd)||(!Maprd)) {
-			errinfo = errinfo + "先选中字典项再对照!<br>";	
-		}
 		var DicTypeDr = $m({
 			ClassName:"DHCMA.Util.BT.DicTypeMap",
 			MethodName:"GetIdByType",
@@ -102,31 +111,38 @@ function InitDicMapWinEvent(obj){
 		}else {
 			$.messager.popover({msg: '新增对照成功！',type:'success',timeout: 1000});
 			obj.gridDicMapLoad() ;//刷新
+			obj.gridDictionaryLoad();
 		}
 	}
 	
 	//修改对照
 	obj.btnMapUpdate_click = function(){
 		var errinfo = "";
+	    var Maprd = obj.gridDicMap.getSelected();
 		var rd=obj.gridDictionary.getSelected();
+		
+		if (Maprd==null){
+		    var errinfo = errinfo +  "请先选中字典项,再修改对照!<br>";
+		}
+		if (rd==null) {
+			var errinfo = errinfo +  "请选中业务字典项,再修改对照!<br>";
+		}
+		if (MapID=="") {
+			var errinfo = errinfo +  "请先增加对照,再修改对照!<br>";
+		}
+		if (errinfo!=""){
+			$.messager.alert("提示", errinfo, 'info');
+			return false;
+		}
+		
+		
 	    var DicDesc = rd["Desc"];
 	    var DicType = rd["TypeCode"];
-
-	    var Maprd = obj.gridDicMap.getSelected();
+	    /*——------------------------*/
 		var MapID = Maprd["MapID"];
 		var DicID = Maprd["DicID"];
 		var DicTypeDr = Maprd["MapDicTypeID"];
-	
-		if ((!rd)||(!Maprd)) {
-			errinfo = errinfo + "先选中字典项再修改对照!<br>";	
-		}
-		if (!DicTypeDr) {
-			errinfo = errinfo + "无对照项目不需修改!<br>";	
-		}
-		if (errinfo) {
-			$.messager.alert("错误提示", errinfo, 'info');
-			return;
-		}
+		
 		
 		var inputStr = MapID;
 		inputStr = inputStr + CHR_1 + DicDesc;
@@ -145,15 +161,19 @@ function InitDicMapWinEvent(obj){
 		}else {
 			$.messager.popover({msg: '修改对照成功！',type:'success',timeout: 1000});
 			obj.gridDicMapLoad() ;//刷新
+			obj.gridDictionaryLoad();
 		}
 	}
 	
 	//取消对照 
 	obj.btnMapDelete_click = function(){
 		var Maprd = obj.gridDicMap.getSelected();
-		var MapID = Maprd["MapID"];
-		if (MapID=="") return;
+		if (Maprd==null){
+			$.messager.alert("提示", "请先选中字典项,再取消对照!", 'info');
+			return false;
+		}
 		
+		var MapID = Maprd["MapID"];
 		$.messager.confirm("取消对照", "是否取消选中数据对照记录?", function (r) {				
 			if (r) {				
 				var flg = $m({
@@ -166,6 +186,7 @@ function InitDicMapWinEvent(obj){
 				} else {
 					$.messager.popover({msg: '取消对照成功！',type:'success',timeout: 1000});
 					obj.gridDicMapLoad() ;//刷新
+					obj.gridDictionary.clearSelections();
 				}
 			} 
 		});

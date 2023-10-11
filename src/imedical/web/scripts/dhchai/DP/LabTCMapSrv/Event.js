@@ -7,7 +7,16 @@ function InitLabTCMapWinEvent(obj){
 			modal: true,
 			isTopZindex:true
 		});
-		
+		var p = $('#gridLabTCMap').datagrid('getPager');
+	    if (p){
+	        $(p).pagination({ //设置分页功能栏
+	           //分页功能可以通过Pagination的事件调用后台分页功能来实现
+	        	onRefresh:function(){
+		        	$("#btnEdit_one").linkbutton("disable");
+	        	}
+	 
+	        });
+	    }
 		$('#layer_two').dialog({
 			title: '检验项目结果编辑',
 			iconCls:"icon-w-paper",
@@ -105,7 +114,8 @@ function InitLabTCMapWinEvent(obj){
 				obj.gridLabTCMap_onSelect = function(){
 					if($("#btnEdit_one").hasClass("l-btn-disabled")) obj.RecRowID1="";
 					var rowData = obj.gridLabTCMap.getSelected();
-					
+					$('#btnsearch_two').searchbox("setValue","");
+					$('#btnsearch_three').searchbox("setValue","");
 					if (rowData["ID"] == obj.RecRowID1) {
 						$("#btnEdit_one").linkbutton("disable");
 						$("#btnEdit_two").linkbutton("disable");
@@ -127,29 +137,24 @@ function InitLabTCMapWinEvent(obj){
 				}
 			//选择子项  检验项目结果
 			    obj.gridLabTCMapRst_onSelect = function (){
-					//if($("#btnEdit_two").hasClass("l-btn-disabled")) return;
 					if(!obj.RecRowID1)return;
-					if($("#btnEdit_one").hasClass("l-btn-disabled")) obj.RecRowID2="";
+					if($("#btnEdit_two").hasClass("l-btn-disabled")) obj.RecRowID2="";
 					var rowData = obj.gridLabTCMapRst.getSelected();
 					
-					if (rowData["RstID"] == obj.RecRowID2) {
-						$("#btnEdit_one").linkbutton("enable");
-						$("#btnEdit_two").linkbutton("enable");
-						$("#btnEdit_three").linkbutton("disable");
+					if (rowData["ID"] == obj.RecRowID2) {
+						$("#btnEdit_two").linkbutton("disable");
 						
 						obj.RecRowID2="";
 						obj.gridLabTCMapRst.clearSelections();  //清除选中行
 					} else {
-						obj.RecRowID2 = rowData["RstID"];
-						$("#btnEdit_one").linkbutton("enable");
+						obj.RecRowID2 = rowData["ID"];
 						$("#btnEdit_two").linkbutton("enable");
-						$("#btnEdit_three").linkbutton("disable");
 						
 					}
 				}
 			//双击编辑事件 子表  检验项目结果
 				obj.gridLabTCMapRst_onDbSelect = function(rd){
-					if($("#btnEdit_two").hasClass("l-btn-disabled")){
+					if($("#btnEdit_one").hasClass("l-btn-disabled")){
 						$.messager.alert("错误提示", "请先选择左表中的数据" , 'info');			
 						return;
 					}
@@ -204,6 +209,7 @@ function InitLabTCMapWinEvent(obj){
 						$HUI.dialog('#layer_one').close();
 						$.messager.popover({msg: '保存成功！',type:'success',timeout: 1000});
 						obj.RecRowID1=flg;
+						$("#btnEdit_one").linkbutton("disable");
 						obj.gridLabTCMap.reload() ;//刷新当前页
 					}
 				}
@@ -211,29 +217,24 @@ function InitLabTCMapWinEvent(obj){
 				
 				//选择子项  检验项目定值结果
 				    obj.gridLabTCMapAb_onSelect = function (){
-						//if($("#btnEdit_three").hasClass("l-btn-disabled")) return;
 						if(!obj.RecRowID1)return;
-						if($("#btnEdit_one").hasClass("l-btn-disabled")) obj.RecRowID3="";
+						if($("#btnEdit_three").hasClass("l-btn-disabled")) obj.RecRowID3="";
 						var rowData = obj.gridLabTCMapAb.getSelected();
 						
-						if (rowData["AbID"] == obj.RecRowID3) {
-							$("#btnEdit_one").linkbutton("enable");
-							$("#btnEdit_two").linkbutton("disable");
-							$("#btnEdit_three").linkbutton("enable");
+						if (rowData["ID"] == obj.RecRowID3) {
+							$("#btnEdit_three").linkbutton("disable");
 							
 							obj.RecRowID3="";
 							obj.gridLabTCMapAb.clearSelections();  //清除选中行
 						} else {
-							obj.RecRowID3 = rowData["AbID"];
-							$("#btnEdit_one").linkbutton("enable");
-							$("#btnEdit_two").linkbutton("disable");
+							obj.RecRowID3 = rowData["ID"];
 							$("#btnEdit_three").linkbutton("enable");
 							
 						}
 					}
 				//双击编辑事件 子表  检验项目定值结果
 					obj.gridLabTCMapAb_onDbSelect = function(rd){
-						if($("#btnEdit_three").hasClass("l-btn-disabled")){
+						if($("#btnEdit_one").hasClass("l-btn-disabled")){
 							$.messager.alert("错误提示", "请先选择左表中的数据" , 'info');			
 							return;
 						}
@@ -244,25 +245,33 @@ function InitLabTCMapWinEvent(obj){
 			
 			//保存子类 检验项目结果
 				obj.btnRstSave_click =  function(){
-					var rowData = obj.gridLabTCMapRst.getSelected();
+					var rowDatas = obj.gridLabTCMapRst.getRows();
+					var rowlen2=rowDatas.length;
+					var AbFlag = "";
+					for (var indx=0;indx<rowlen2;indx++){
+						if(rowDatas[indx].ID == obj.RecRowID2){
+							TestRes=rowDatas[indx].TestRes;
+							break;
+						}
+					}
 					//var AbFlag=rowData.AbFlag;
-					var RecRowID2 = rowData.ID;
-					var MapItemDr = rowData.MapID;
-					var TestRes   = rowData.TestRes;
+					//var RecRowID2 = rowData.ID;
+					//var MapItemDr = rowData.MapID;
+					//var TestRes   = rowData.TestRes;
 					var errinfo = "";	
 					var MapText = $('#txtMapText').val();
 					var MapNote = $('#txtMapNote').val();
 					var IsActive = $("#chkActive").checkbox('getValue')? '1':'0';
 					
-					if (!MapItemDr) {
+					if (!obj.RecRowID1) {
 						errinfo = errinfo + "检验项目为空!<br>";
 					}
 					
-					var InputStr = RecRowID2;
-					InputStr += "^" + MapItemDr;
-					InputStr += "^" + TestRes;
+					var InputStr = obj.RecRowID2;
+					InputStr += "^" + obj.RecRowID1;
 					InputStr += "^" + MapText;		
 					InputStr += "^" + MapNote;
+					InputStr += "^" + TestRes;
 					InputStr += "^" + IsActive;
 					InputStr += "^" + ''; 
 					InputStr += "^" + '';
@@ -291,25 +300,29 @@ function InitLabTCMapWinEvent(obj){
 			
 			//保存子类 检验项目定值结果
 				obj.btnAbSave_click =  function(){
-					var rowData = obj.gridLabTCMapAb.getSelected();
-					var AbFlag=rowData.AbFlag;
-					var RecRowID3 = rowData.ID;
-					var MapItemDr = rowData.MapID;
+					var rowDatas = obj.gridLabTCMapAb.getRows();
+					var rowlen=rowDatas.length;
+					var AbFlag = "";
+					for (var indx=0;indx<rowlen;indx++){
+						if(rowDatas[indx].ID == obj.RecRowID3){
+							AbFlag=rowDatas[indx].AbFlag;
+							break;
+						}
+					}
 					var errinfo = "";	
 					var MapText = $('#txtAbMapText').val();
 					var MapNote = $('#txtAbMapNote').val();
 					var IsActive = $("#chkAbActive").checkbox('getValue')? '1':'0';
 					
-					var InputStr = RecRowID3;
-					InputStr += "^" + MapItemDr;
-					InputStr += "^" + AbFlag;
+					var InputStr = obj.RecRowID3;
+					InputStr += "^" + obj.RecRowID1;
 					InputStr += "^" + MapText;		
 					InputStr += "^" + MapNote;
+					InputStr += "^" + AbFlag;
 					InputStr += "^" + IsActive;
 					InputStr += "^" + ''; 
 					InputStr += "^" + '';
 					InputStr += "^" + '';
-					console.log(InputStr);
 					var flg = $m({
 						ClassName:"DHCHAI.DP.LabTCMapAb",
 						MethodName:"Update",
@@ -368,7 +381,7 @@ function InitLabTCMapWinEvent(obj){
 				var AbFlagS = rd["AbFlagS"];
 				var SCode = rd["SCode"];
 				var IsActive = rd["IsActive"];
-				IsActive = (IsActive=="是"? true: false)
+				IsActive = (IsActive=="1"? true: false)
 				$('#txtTestCode').val(Code);
 				$('#txtTestDesc').val(Desc);
 				$('#txtTestSet').val(SetList);
@@ -397,11 +410,14 @@ function InitLabTCMapWinEvent(obj){
 			}	
 			
 			if(rd){
-				obj.RecRowID2	=rd["RstID"];
-				var txtMapText	= rd["MapText"];
-				var txtMapNote = rd["MapNote"];
+				obj.RecRowID2	=rd["ID"];
+				var txtMapText	= rd["TestRes"];
+				var txtMapNote = rd["MapText"];
 				var IsActive = rd["IsActive"];
-				IsActive = (IsActive=="是"? true: false)
+				IsActive = (IsActive=="1"? true: false)
+				$('#txtMapText').val(txtMapText);
+				$('#txtMapNote').val(txtMapNote);
+				$('#chkActive').checkbox('setValue',IsActive);
 			}else{
 				obj.RecRowID2 ="";
 				$('#txtMapText').val('');
@@ -420,11 +436,14 @@ function InitLabTCMapWinEvent(obj){
 			}	
 			
 			if(rd){
-				obj.RecRowID3	=rd["AbID"];
-				var txtAbMapText	= rd["MapText"];
-				var txtAbMapNote = rd["MapNote"];
+				obj.RecRowID3	=rd["ID"];
+				var AbFlag	= rd["AbFlag"];
+				var MapText = rd["MapText"];
 				var IsActive = rd["IsActive"];
-				IsActive = (IsActive=="是"? true: false)
+				IsActive = (IsActive=="1"? true: false)
+				$('#txtAbMapText').val(AbFlag);
+				$('#txtAbMapNote').val(MapText);
+				$('#chkAbActive').checkbox('setValue',IsActive);
 			}else{
 				obj.RecRowID3 ="";
 				$('#txtAbMapText').val('');

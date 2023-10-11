@@ -59,8 +59,10 @@ function ExportExcel(){
 		ResultSetType:'Excel',
 		ExcelName:'’Ô«¯’Ô “º‡≤‚√˜œ∏',
 		ClassName:'web.DHCDocRegConfigDataCheck',
-		QueryName:'ExaBorRoomConfigDataCheck'
+		QueryName:'ExaBorRoomConfigDataCheck',
+		HospID:$HUI.combogrid('#_HospUserList').getValue()
 	}, false);
+	if(typeof websys_writeMWToken=='function') rtn=websys_writeMWToken(rtn);
 	location.href = rtn;
 }
 

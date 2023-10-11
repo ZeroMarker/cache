@@ -4,9 +4,33 @@ function InitPathVarCatListWin(){
 	obj.RecRowID = "";
     $.parser.parse(); // 解析整个页面 
 	
+	//增加院区配置 add by yankai20210803
+	var DefHospOID = $cm({ClassName:"DHCMA.Util.IO.MultiHospInterface",MethodName:"GetDefaultHosp",aTableName:"DHCMA_CPW_BT.PathVarCat",aHospID:session['LOGON.HOSPID'],dataType:'text'},false);
+	var SessionStr=session['LOGON.USERID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.CTLOCID']+"^"+session['LOGON.HOSPID']
+	obj.cboSSHosp = Common_ComboToSSHosp3("cboSSHosp","","","DHCMA_CPW_BT.PathVarCat",SessionStr,"");
+	$('#cboSSHosp').combobox({
+  		onSelect: function(title,index){
+	  		obj.gridPathVarCat.load({
+				ClassName:"DHCMA.CPW.BTS.PathVarCatSrv",
+				QueryName:"QryPathVarCat",
+				aHospID: $("#cboSSHosp").combobox('getValue')
+			});
+	  	}
+	 })
+	var retMultiHospCfg = $m({
+		ClassName:"DHCMA.Util.BT.Config",
+		MethodName:"GetValueByCode",
+		aCode:"SYSIsOpenMultiHospMode",
+		aHospID:session['DHCMA.HOSPID']
+	},false);
+	if(retMultiHospCfg!="Y" && retMultiHospCfg!="1"){
+		$("#divHosp").hide();
+		$("#btnAuthHosp").hide();	
+	}
+	
 	obj.gridPathVarCat = $HUI.datagrid("#gridPathVarCat",{
 		fit: true,
-		title: "变异原因分类维护",
+		//title: "变异原因分类维护",
 		iconCls:"icon-resort",
 		headerCls:'panel-header-gray',
 		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
@@ -19,7 +43,8 @@ function InitPathVarCatListWin(){
 	    url:$URL,
 	    queryParams:{
 		    ClassName:"DHCMA.CPW.BTS.PathVarCatSrv",
-			QueryName:"QryPathVarCat"
+			QueryName:"QryPathVarCat",
+			aHospID: $("#cboSSHosp").combobox('getValue')
 	    },
 		columns:[[
 			{field:'BTID',title:'ID',width:'100'},
@@ -40,6 +65,7 @@ function InitPathVarCatListWin(){
 			$("#btnAdd").linkbutton("enable");
 			$("#btnEdit").linkbutton("disable");
 			$("#btnDelete").linkbutton("disable");
+			$("#btnAuthHosp").linkbutton("disable");
 		}
 	});
 	

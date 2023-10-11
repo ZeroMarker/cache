@@ -330,7 +330,12 @@ function goEPRPDF(grid, rowindex, e) {
 		        {
 		            html: '<iframe id="eprWrite" scrolling="no" frameborder="0" style="width:100%; height:100%;" src="dhc.epr.quality.checkrule.csp?EpisodeID=' + episodeID + '&action=' + action +'"></iframe>'
 		        }
-	        ]
+	        ]£¬
+	listeners:{
+		        "close":function(){
+		    		doSearch();   
+		        } 
+	}
         });
         win.show();
 		win.maximize();

@@ -4,9 +4,12 @@
 /// -------------------------------
 function BodyLoadHandler() 
 {
+	initPanelHeaderStyle();
+	initButtonColor();
+	hidePanelTitle();
 	InitUserInfo();
 	InitPage();	
-	initButtonWidth()  //hisui改造 add by czf 20180831
+	//initButtonWidth()  //hisui改造 add by czf 20180831
 	SetComboboxRequired()
 	SetSourceAmount()
 }
@@ -222,6 +225,7 @@ function ClearData()
 function CheckData()
 {
 	if (CheckMustItemNull()) return true;
+	/* MZY0058	1558051		2020-10-18
 	var PayPercent=GetElementValue("PayPercent");
 	if (PayPercent!="")
 	{
@@ -251,7 +255,7 @@ function CheckData()
 			alertShow("请录入计划付款周期单位!");
 			return true;
 		}
-	}
+	}*/
 }
 function SetSourceAmount()
 {

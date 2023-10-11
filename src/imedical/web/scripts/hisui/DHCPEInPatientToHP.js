@@ -11,7 +11,9 @@ function BodyLoadHandler() {
     	window.location.reload();
 	});
 	
-   
+    $('#BFind').on('click',function() {
+        setValueById("ID","") 
+    })
 	var obj,EpisodeID="",encmeth="",BaseInfo="";
 	obj=document.getElementById("BDelete");
 	if (obj){
@@ -70,6 +72,7 @@ function BDelete_click()
 	var Ret=cspRunServerMethod(encmeth,ID,UserID);
 	var Arr=Ret.split("^");
 	if (Arr[0]>0){
+		setValueById("ID","") 
 		obj=document.getElementById("BFind");
 		if (obj) obj.click();
 	}else{

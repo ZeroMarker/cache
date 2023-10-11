@@ -98,9 +98,10 @@ function initTrainingScoreList()
 		$HUI.datagrid("#tDHCEQTrainingScoreList",{   
 		    url:$URL, 
 		    queryParams:{
-		        ClassName:"web.DHCEQ.EM.BUSTraining",   //Modefied by zc0044 2018-11-22 ÐÞ¸ÄqueryÃû³Æ
+		        ClassName:"web.DHCEQ.EM.BUSTraining", 
 		        QueryName:"GetTrainingScore",
-				TrainingDR:getElementValue("CORowID")
+				TrainingDR:getElementValue("CORowID"),
+				Stage:getElementValue("TRRStage") 
 		    },
 		    fit:true,
 			striped : true,
@@ -113,7 +114,7 @@ function initTrainingScoreList()
 			pageSize:12,
 			pageNumber:1,
 			pageList:[12,24,36,48],
-			onDblClickRow:function(rowIndex, rowData)
+			onClickRow:function(rowIndex, rowData) 
 			{	
 				setElement("TSRowID",rowData.TRowID);
 				setElement("CORowID",rowData.TTrainingDR);
@@ -194,10 +195,11 @@ function BSave_Clicked()
 	if (jsonData.SQLCODE==0)
 	{
 		var val="&RowID="+jsonData.Data+"&CORowID="+getElementValue("CORowID");
-//		url="dhceq.em.trainingscorelist.csp?"+val
-		url=location.href.split("?")[0]+"?"+val
-	    window.location.href= url;
-
+		url=location.href.split("?")[0]+"?"+val;
+		if('function'==typeof websys_getMWToken){
+			url+="&MWToken="+websys_getMWToken();
+		}
+		window.location.href=url;
 	}
 	else
     {
@@ -236,9 +238,12 @@ function BDelete_Clicked()
 	    }
 	    else
 	    {
-			location.reload()
+			url=location.href.split("?")[0]+"?&CORowID="+getElementValue("CORowID");
+			if('function'==typeof websys_getMWToken){
+				url+="&MWToken="+websys_getMWToken();
+			}
+			window.location.href=url;
 		}
-
 	}
 	
 	function Cancel(){
@@ -258,8 +263,10 @@ function BAdd_Clicked()
 	{
 		var val="&RowID="+getElementValue("TRRRowID");
 		url="dhceq.em.trainingrecordlist.csp?"+val
-	    window.location.href= url;
-
+		if('function'==typeof websys_getMWToken){
+			url+="&MWToken="+websys_getMWToken();
+		}
+		window.location.href=url;
 	}
 	else
     {

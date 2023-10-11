@@ -1,6 +1,6 @@
 ///Creator :QQA 
 ///CreateDate: 2017-03-09
-
+var windowId = '';
 $(function (){
 	
 	validAdm();
@@ -16,6 +16,13 @@ $(function (){
 })
 
 function validAdm(){
+	
+	hosNoPatOpenUrl = getParam("hosNoPatOpenUrl"); //hxy 2011-10-24 st
+	hosNoPatOpenUrl?hosOpenPatList(hosNoPatOpenUrl):''; //ed
+	if(hosNoPatOpenUrl!=""){
+		$("#cancLev").hide();
+	}
+	
 	//获取病人信息
 	runClassMethod("web.DHCEMECheck","GetAdmStatus",{
 		EpisodeID:EpisodeID
@@ -27,16 +34,21 @@ function validAdm(){
 			}
 		},"text"
 	)
+	
+	window.onload = function(){
+		windowId = GetQueryString("windowId");
+	}
 }
 
 //显示分级的信息
 function showCheckLev(){
+	if(EpisodeID=="")return;
 	//获取病人信息
 	runClassMethod("web.DHCEMECheck","GetEmPatCheckLevGrade",{
 		EpisodeID:EpisodeID
 		},function (data){
 			var nursCheckLev = data.split("^")[0];
-			var docCheckLev = data.split("^")[1]?data.split("^")[1]:"无";
+			var docCheckLev = data.split("^")[1]?data.split("^")[1]:$g("无");
 			var styleCss = StyleCheckLevColor(nursCheckLev); 
 			$("#nursCheck").val(setCellLabel(nursCheckLev)); //hxy 2020-02-20
 			$("#nursCheck").css(styleCss);
@@ -45,6 +57,8 @@ function showCheckLev(){
 			$("#docCheck").css(styleCss);
 		},"text"
 	)
+	
+	InitPatInfoBanner(EpisodeID); 
 }
 
 function initWidget(){
@@ -63,7 +77,7 @@ function initWidget(){
 		blurValidValue:true,
 		valueField:'id',
 		textField:'text',
-		data:[{ "id": "1", "text": "Ⅰ级"},{ "id": "2", "text": "Ⅱ级"},{ "id": "3", "text": "Ⅲ级"},{ "id": "4", "text": "Ⅳa级"},{ "id": "5", "text": "Ⅳb级"}] //hxy 2020-02-20
+		data:[{ "id": "1", "text": $g("Ⅰ级")},{ "id": "2", "text": $g("Ⅱ级")},{ "id": "3", "text": $g("Ⅲ级")},{ "id": "4", "text": $g("Ⅳa级")},{ "id": "5", "text": $g("Ⅳb级")}] //hxy 2020-02-20
 		//data:[{ "id": "1", "text": "1级"},{ "id": "2", "text": "2级"},{ "id": "3", "text": "3级"},{ "id": "4", "text": "4级"}]
 	});
 
@@ -71,8 +85,8 @@ function initWidget(){
 }
 
 function initMethod(){
-	$('a:contains("保存")').bind("click",UptPatCheckLev);
-	$('a:contains("取消")').bind("click",CloseWindow);	
+	$('#saveLev').bind("click",UptPatCheckLev); //a:contains("保存")
+	$('#cancLev').bind("click",CloseWindow);	//a:contains("取消")
 }
 
 ///修改病人分级
@@ -161,14 +175,31 @@ function StyleCheckLevColor(param){
 ///关闭界面
 function CloseWindow(){
 	window.close();
+	myClick('windowClose');
 }
 
 //hxy 2020-02-20
 function setCellLabel(value){
-	if(value.indexOf("1级")>-1){value="Ⅰ级";}
-	if(value.indexOf("2级")>-1){value="Ⅱ级";}
-	if(value.indexOf("3级")>-1){value="Ⅲ级";}
-	if(value.indexOf("4级")>-1){value="Ⅳa级";}
-	if(value.indexOf("5级")>-1){value="Ⅳb级";}
+	if(value.indexOf("1级")>-1){value=$g("Ⅰ级");}
+	if(value.indexOf("2级")>-1){value=$g("Ⅱ级");}
+	if(value.indexOf("3级")>-1){value=$g("Ⅲ级");}
+	if(value.indexOf("4级")>-1){value=$g("Ⅳa级");}
+	if(value.indexOf("5级")>-1){value=$g("Ⅳb级");}
 	return value;
+}
+
+function GetQueryString(name){
+	var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+	var r = window.location.search.substr(1).match(reg);
+	if(r!=null)return  unescape(r[2]); return null;
+}
+
+function myClick (command){
+	window.parent.postMessage(
+	{ operatePortalWindow: 
+	{
+		windowId: windowId,
+		operate: command
+	} 
+	},"*");
 }

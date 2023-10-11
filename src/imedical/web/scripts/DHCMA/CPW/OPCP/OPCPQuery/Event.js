@@ -150,14 +150,14 @@ function InitCheckQueryWinEvent(obj){
     obj.btnPrintPathway=function(){
 	   var row =$("#GridCheckQuery").datagrid('getSelected');
 	   if(row){
-	   		var aEpisodeID = row['aEpisodeID'];
-	   		//var pathwayID = row['CPWID'];
-	   		//alert(aEpisodeID+"--"+pathwayID);
-	    	//PrintCPWQueryToExcel("","","","",aEpisodeID);
-	    var LODOP=getLodop();
-			LODOP.PRINT_INIT("PrintOPCPWInform");  //打印任务的名称
-			var PrintUrl="./dhcma.cpw.opcp.oplodopprint.csp?EpisodeID="+aEpisodeID;
-			LODOP.ADD_PRINT_URL("1cm","1cm","100%","100%",PrintUrl);
+			var aEpisodeID=row['aEpisodeID'];		
+			var LODOP=getLodop();
+			LODOP.PRINT_INIT("PrintOPCPWInform2");  //打印任务的名称
+			LODOP.ADD_PRINT_HTM("285mm", "90mm",300,100,"<span tdata='pageNO'>第##页</span>/<span tdata='pageCount'>共##页</span>");
+			LODOP.SET_PRINT_STYLEA(0, "ItemType",1);//每页都输出
+			//LODOP.SET_PRINT_MODE("DOUBLE_SIDED_PRINT", 0); 	//人工双面打印（打印机不支持双面打印时，0为单面打印，1为不双面打印，2为双面打印）
+			//LODOP.SET_PRINT_MODE("PRINT_DUPLEX", 0);			//人工双面打印（打印机不支持双面打印时，0为单面打印，1为不双面打印，2为双面打印）
+			LodopPrintURL(LODOP,"./dhcma.cpw.opcp.oplodopprint.csp?EpisodeID="+aEpisodeID,"10mm","12mm","6mm","20mm")
 			LODOP.PRINT();
 	   }else{
 			$.messager.alert("确认", "请选择要打印表单的病人", 'info');   

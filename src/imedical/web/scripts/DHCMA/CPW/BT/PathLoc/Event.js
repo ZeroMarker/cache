@@ -37,7 +37,7 @@ function InitHISUIWinEvent(obj){
 			}
 			else
 			{
-				$.messager.alert("失败","添加失败，住院科室无法关联门诊路径或门诊科室无法关联住院径！");
+				$.messager.alert("失败","添加失败，住院科室无法关联门诊路径或门诊科室无法关联住院路径！");
 			}			
 			return false;
 		}else{			
@@ -83,6 +83,15 @@ function InitHISUIWinEvent(obj){
 					ClassName:"DHCMA.CPW.BTS.PathLocSrv",
 					QueryName:"QryPathByLoc",
 					aLocDr:$('#cboLocDr').combobox('getValue')
+				});
+				obj.pathList.load({
+					ClassName:"DHCMA.CPW.BTS.PathLocSrv",
+					QueryName:"QryPathMast",
+					aTypeDr:Common_GetValue("cboTypeDr"),
+					aKeyWord:$("#txtDesc").val(),
+					aHospID:$('#cboHosp').combobox('getValue'),
+					aFlag:1,
+					aIsQryCompl:2
 				});	
 			}
 		});
@@ -95,6 +104,15 @@ function InitHISUIWinEvent(obj){
 					ClassName:"DHCMA.CPW.BTS.PathLocSrv",
 					QueryName:"QryPathByLoc",
 					aLocDr:$('#cboLocDr').combobox('getValue')
+				});
+				obj.pathList.load({
+					ClassName:"DHCMA.CPW.BTS.PathLocSrv",
+					QueryName:"QryPathMast",
+					aTypeDr:Common_GetValue("cboTypeDr"),
+					aKeyWord:$("#txtDesc").val(),
+					aHospID:$('#cboHosp').combobox('getValue'),
+					aFlag:1,
+					aIsQryCompl:2
 				});	
 			}
 		});
@@ -104,7 +122,10 @@ function InitHISUIWinEvent(obj){
 					ClassName:"DHCMA.CPW.BTS.PathLocSrv",
 					QueryName:"QryPathMast",
 					aTypeDr:Common_GetValue("cboTypeDr"),
-					aKeyWord:$("#txtDesc").val()
+					aKeyWord:$("#txtDesc").val(),
+					aHospID:$('#cboHosp').combobox('getValue'),
+					aFlag:1,
+					aIsQryCompl:2
 				});
 			} 
 		});		
@@ -114,7 +135,7 @@ function InitHISUIWinEvent(obj){
 					ClassName:"DHCMA.CPW.BTS.PathLocSrv",
 					QueryName:"QryPathByLoc",
 					aLocDr:newValue
-				});
+				});			
 			}
 		});
 		$("body").layout();

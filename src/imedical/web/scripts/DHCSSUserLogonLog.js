@@ -152,6 +152,7 @@ var OperationFun=function(operation){
 			//localDir:"D:\\xml\\"
 			//localDir:"", 			// 桌面，
 			ExcelName:"门诊到岗时间查询",				 //默认DHCCExcel
+			PageName:"DHCSSUserLogonLog",
 			ClassName:"web.DHCSSUserLogonLog",
 			QueryName:"FindUserLog",
 			Stdate:Stdate ,

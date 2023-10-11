@@ -18,11 +18,12 @@ function initDocument()
 	initMessage();
 	defindTitleStyle();
 	initButton();
-	jQuery("#BExecute").linkbutton({iconCls: 'icon-w-save'});
+	// MZY0091	2083796		2021-08-26	修正图标
+	jQuery("#BExecute").linkbutton({iconCls: 'icon-w-run'});
 	jQuery("#BExecute").on("click", BExecute_Click);
-	jQuery("#BFinish").linkbutton({iconCls: 'icon-w-save'});
+	jQuery("#BFinish").linkbutton({iconCls: 'icon-w-ok'});
 	jQuery("#BFinish").on("click", BFinish_Click);
-	initButtonWidth();
+	//initButtonWidth();
 	fillData()
 	setEnabled();
 	//显示列表
@@ -30,9 +31,53 @@ function initDocument()
 	$HUI.datagrid("#tDHCEQMaintEquipList",{
 		onClickRow:function(rowIndex,rowData){
 			SelectRowHandler(rowIndex,rowData);
-		}
+		},
+		//add by lmm 2020-11-18
+		onUncheck:function(rowIndex,rowData){
+			UnSelectRowHandler(rowIndex,rowData);
+		},
+		onCheckAll: function (rows) { onCheckAll(rows); },
+		onUncheckAll: function (rows) { onUncheckAll(rows); },
+		//add by lmm 2020-11-18
 	});
+	// add by hyy 按钮样式 2023-03-07
+	if (jQuery("#BFinish").length>0)
+	{
+		if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+			// 极简版
+			if (($("#BFinish").attr('class')).indexOf("l-btn-disabled")==-1){
+				$("#BFinish").css({"background-color":"#28ba05","color":"#ffffff"})
+			}else{
+				$("#BFinish").css({'background-color':'#E5E5E5','color':'#999'})
+			}
+		}
+	}
+	if (jQuery("#BExecute").length>0)
+	{
+		if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+			// 极简版
+			if (($("#BExecute").attr('class')).indexOf("l-btn-disabled")==-1){
+				$("#BExecute").css({"background-color":"#28ba05","color":"#ffffff"})
+			}else{
+				$("#BExecute").css({'background-color':'#E5E5E5','color':'#999'})
+			}
+		}
+	}
+	// add by sjh SJH0037 2020-10-16 start 增加MaintTypeDR控制，巡检保养不显示计量证号和日期
+	if(getElementValue("MaintTypeDR")!=5)
+	{
+		$('#tDHCEQMaintEquipList').datagrid('hideColumn','TCertificateNo')
+		$('#tDHCEQMaintEquipList').datagrid('hideColumn','TMaintDate')
+	}
+	if (getElementValue("BussType")!="1") $('#tDHCEQMaintEquipList').datagrid('hideColumn','TExecute');	// MZY0093	2021-09-08
+	changeColumnOption() //add by lmm 2020-11-18 	
+	// MZY0076	2021-05-25	注释相关列
+	$('#tDHCEQMaintEquipList').datagrid('hideColumn','TMaintPic');
+	$('#tDHCEQMaintEquipList').datagrid('hideColumn','TMaintFile');
+	$('#tDHCEQMaintEquipList').datagrid('hideColumn','TPMReport');
 }
+
+
 function fillData()
 {
 	var RowID=getElementValue("RowID")
@@ -102,7 +147,7 @@ function BExecute_Click()
 		}
 		else
 		{
-			var PlanEquip=MPRowID+"^"+selectrow[i].TEquipID+"^"+selectrow[i].TRowID+"^"+selectrow[i].TResult+"^"+selectrow[i].THold1; //modified by czf 1283059
+			var PlanEquip=MPRowID+"^"+selectrow[i].TEquipID+"^"+selectrow[i].TRowID+"^"+selectrow[i].TResult+"^"+selectrow[i].THold1+"^"+selectrow[i].TCertificateNo+"^"+selectrow[i].TMaintDate+"^"+selectrow[i].TExecuteDate+"^"+selectrow[i].TAffixDR; //modified by czf 1283059
 			PlanRowIDs.push(PlanEquip);
 		}
 	}
@@ -113,16 +158,29 @@ function BExecute_Click()
 		else
 		{	val=val+","+PlanRowIDs[j]	}
 	}
-	var Result=tkMakeServerCall("web.DHCEQ.EM.BUSMaintPlan","ExecutePlan",RowID,val,BussType,Remark)  //add by lmm 2019-05-16 896639
-	if (Result>0)
+	// MZY0109	2385363		2021-12-30
+	if (tkMakeServerCall("web.DHCEQCommon","GetSysInfo",501002)==0)
 	{
-		alertShow(t[0]);
-		window.location.reload();
+		 if (PlanRowIDs.length>1)
+		 {
+			 alertShow("不能批量执行,请逐条记录选中后执行.");
+			 return;
+		 }
 	}
-	else
-	{
-		alertShow(t[Result])
-	}
+   	messageShow("confirm","info","提示","所选中设备按计划执行并生成PM报告,是否执行?","",function(){
+    	var Result=tkMakeServerCall("web.DHCEQ.EM.BUSMaintPlan","ExecutePlan",RowID,val,BussType,Remark);
+		if (Result>0)
+		{
+			alertShow(t[0]);
+			window.location.reload();
+		}
+		else
+		{
+			alertShow(Result);
+		}
+	},function(){
+		return;
+	},"执行","取消");
 }
 //modify by lmm 2020-04-03
 function BFinish_Click()
@@ -222,9 +280,22 @@ function SelectRowHandler(index,rowData)
 	{
 		if (endEditing())
 		{
+			// MZY0079	1883089,1883162		2021-06-02
+			rowData.TExecuteDate=getElementValue("EExecuteDate");
 			$('#tDHCEQMaintEquipList').datagrid('selectRow', index).datagrid('beginEdit', index);
 			editIndex = index;
 			modifyBeforeRow = $.extend({},$('#tDHCEQMaintEquipList').datagrid('getRows')[editIndex]);
+			var ed=jQuery("#tDHCEQMaintEquipList").datagrid('getEditor',{index:editIndex,field:'TResult'});
+			jQuery(ed.target).val("完好");  //设置ID
+			var ed=jQuery("#tDHCEQMaintEquipList").datagrid('getEditor',{index:editIndex,field:'TResult'});
+			jQuery(ed.target).combobox('setValue', "完好");
+			// MZY0079	1883089,1883162		2021-06-02	注释
+			/*var ed=jQuery("#tDHCEQMaintEquipList").datagrid('getEditor',{index:editIndex,field:'TExecuteDate'});
+			jQuery(ed.target).val(ExecuteDate);  //设置ID
+			var ed=jQuery("#tDHCEQMaintEquipList").datagrid('getEditor',{index:editIndex,field:'TExecuteDate'});
+			jQuery(ed.target).datebox('setValue', ExecuteDate);
+			*/
+			setElement("ListEquipID",rowData.TEquipID)
 		} else {
 			$('#tDHCEQMaintEquipList').datagrid('selectRow', editIndex);
 		}
@@ -262,5 +333,104 @@ function maintHistoryList(index)
 		}
 	});
 }
+//add by lmm 2020-11-18 
+//执行结果改用下拉菜单
+function changeColumnOption()
+{
+	var TResult=$("#tDHCEQMaintEquipList").datagrid('getColumnOption','TResult');	
+	TResult.editor={type: 'combobox',options:{
+					data: [{"value":"完好","text":"完好"},{"value":"有缺陷","text":"有缺陷"},{"value":"故障","text":"故障"}],
+                    valueField: "value",  
+                    textField: "text", 
+                    panelHeight:"auto",  
+                    required: false,
+                    onSelect:function(option){
+						var ed=jQuery("#tDHCEQMaintEquipList").datagrid('getEditor',{index:editIndex,field:'TResult'});
+						jQuery(ed.target).val(option.value);  //设置ID
+						var ed=jQuery("#tDHCEQMaintEquipList").datagrid('getEditor',{index:editIndex,field:'TResult'});
+						jQuery(ed.target).combobox('setValue', option.text);
+					}
+		
+		}};		//列增加编辑器
+	TResult.formatter=	function(value,row){
+		return row.TResult;
+	}		
+}
+///add by lmm 2020-11-18
+/**全选的处理*/
+function onCheckAll(rows){
+    $.each(rows, function(index, item){
+        var rowData= rows[index];//获取到行内容
+        SelectRowHandler(index,rowData)
+    });
+}
+///add by lmm 2020-11-18
+/**全不选的处理*/
+function onUncheckAll(rows){
+	var Status=getElementValue("Status");
+	if (Status>0) return
+    $.each(rows, function(index, item){
+        var rowData= rows[index];//获取到行内容
+        UnSelectRowHandler(index,rowData)
+    });
+}
+//add by lmm 2020-11-18
+//取消勾选行触发事件
+function UnSelectRowHandler(index,rowData)
+{
+	var Status=getElementValue("Status");
+	if (Status>0) return
+	if(rowData.TExecuteFlag=="已执行") return;
 
+	rowData.TExecuteDate="";	// MZY0079	1883089,1883162		2021-06-02
+	$('#tDHCEQMaintEquipList').datagrid('beginEdit', index);
+	var ed=jQuery("#tDHCEQMaintEquipList").datagrid('getEditor',{index:index,field:'TResult'});
+	jQuery(ed.target).val("");  //设置ID
+	var ed=jQuery("#tDHCEQMaintEquipList").datagrid('getEditor',{index:index,field:'TResult'});
+	jQuery(ed.target).combobox('setValue', "");
+	// MZY0079	1883089,1883162		2021-06-02	注释
+	/*var ed=jQuery("#tDHCEQMaintEquipList").datagrid('getEditor',{index:index,field:'TExecuteDate'});
+	jQuery(ed.target).val("");  //设置ID
+	var ed=jQuery("#tDHCEQMaintEquipList").datagrid('getEditor',{index:index,field:'TExecuteDate'});
+	jQuery(ed.target).datebox('setValue', "");*/
+	$('#tDHCEQMaintEquipList').datagrid('endEdit', index);
+}
 
+///记录执行操作	 MZY0076	2021-05-25
+//Modify by zx 2021-05-29 调整执行按钮链接
+function executeList(index)
+{
+	var BussType=getElementValue("BussType")
+	if(BussType!="1")
+	{
+		var curRowObj=$('#tDHCEQMaintEquipList').datagrid('getRows')[index];
+		var params="ReadOnly=&QXType=&BussType="+BussType+"&EquipDR="+curRowObj.TEquipID+"&RowID="+curRowObj.TMaintID+"&CollectFlag=";
+		if((getElementValue("MaintTypeDR")==5))
+		{
+			var url="dhceq.em.meterage.csp?";
+			var title="计量记录"
+		}
+		else
+		{
+			var url="dhceq.em.inspect.csp?";
+			var title="巡检记录"
+		}
+		showWindow(url+params,title,"","11row","icon-w-paper","modal","","","lar")
+	}
+	else
+	{
+		var curRowObj=$('#tDHCEQMaintEquipList').datagrid('getRows')[index];
+		url="dhceq.em.preventivemaint.csp?&ReadOnly=&QXType=&BussType="+BussType+"&EquipDR="+curRowObj.TEquipID+"&MaintLocDR="+curRowObj.TMaintLocDR+"&MaintTypeDR="+getElementValue("MaintTypeDR")+"&RowID="+curRowObj.TMaintID+"&PlanExecuteID="+curRowObj.TPlanExecuteID+"&PlanExecuteListID="+curRowObj.TRowID;
+		showWindow(url,"预防性维护记录","","","icon-w-paper","","","","large");
+	}
+}
+
+function GetAffixID(index,data)
+{
+	var rowData = $('#tDHCEQMaintEquipList').datagrid('getSelected');
+	rowData.TAffixDR=data.TRowID
+	// MZY0096	2144129		2021-09-16
+	var ed=jQuery("#tDHCEQMaintEquipList").datagrid('getEditor',{index:editIndex,field:'TAffix'});
+	jQuery(ed.target).combogrid('setValue', data.TDesc);
+	$('#tDHCEQMaintEquipList').datagrid('endEdit',editIndex);
+}

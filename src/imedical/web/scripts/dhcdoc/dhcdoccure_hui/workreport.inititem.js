@@ -16,22 +16,17 @@ function gridlist(objSheet,row1,row2,c1,c2)
 	objSheet.Range(objSheet.Cells(row1, c1), objSheet.Cells(row2,c2)).Borders(4).Weight=3
 }
 
-function InitDate(){
-	/*var date=new Date();
-    var y = date.getFullYear();
-	var m = date.getMonth()+1;
-	var d = date.getDate();
-	var Today= y+'-'+m+'-'+d;
-    $('#StartDate').datebox('setValue', Today);	
-    $('#EndDate').datebox('setValue', Today);		
-    */
-    var CurDay=$.cm({
-		ClassName:"DHCDoc.DHCDocCure.Common",
-		MethodName:"DateLogicalToHtml",
-		'h':"",
-		dataType:"text"   
-	},false);
-    $("#StartDate,#EndDate").datebox('setValue',CurDay);		
+function InitDate(CurrentDate){
+	if(typeof(CurrentDate)=='undefined'){CurrentDate="";}
+	if(CurrentDate==""){
+	    CurrentDate=$.cm({
+			ClassName:"DHCDoc.DHCDocCure.Common",
+			MethodName:"DateLogicalToHtml",
+			'h':"",
+			dataType:"text"   
+		},false);
+	}
+    $("#StartDate,#EndDate").datebox('setValue',CurrentDate);		
 }
 
 function InitLoc(){
@@ -326,47 +321,54 @@ function LoadDocData(LocRowId,q)
 
 function InitArcimDesc()
 {
-	$("#ComboArcim").lookup({
-        url:$URL,
-        mode:'remote',
-        disabled:false,
-        method:"Get",
-        idField:'ArcimRowID',
-        textField:'ArcimDesc',
-        columns:[[  
-            {field:'ArcimDesc',title:'名称',width:320,sortable:true},
-			{field:'ArcimRowID',title:'ID',width:100,sortable:true},
-			{field:'selected',title:'ID',width:120,sortable:true,hidden:true}
-        ]],
-        pagination:true,
-        panelWidth:420,
-        panelHeight:260,
-        isCombo:true,
-        minQueryLen:1,
-        rownumbers:true,//序号   
-		fit: true,
-		pageSize: 5,
-		pageList: [5],
-        delay:'500',
-        queryOnSameQueryString:true,
-        queryParams:{ClassName: PageSizeItemObj.PUBLIC_APPLY_CLASSNAME,QueryName: 'FindAllItem'},
-        onBeforeLoad:function(param){
-	        var desc=param['q'];
-	        //if (desc=="") return false;
-	        var CureItemFlag="on"
-			param = $.extend(param,{'Alias':desc,'CureItemFlag':CureItemFlag,'SubCategory':""});
-	    },onSelect:function(ind,item){
-            var Desc=item['desc'];
-			var ID=item['ArcimRowID'];
-			PageSizeItemObj.m_SelectArcimID=ID;
-			$HUI.lookup("#ComboArcim").hidePanel();
-		},onHidePanel:function(){
-            var gtext=$HUI.lookup("#ComboArcim").getText();
-            if((gtext=="")){
-	        	PageSizeItemObj.m_SelectArcimID="";    
-	        }
-		}
-    });  
+	if($("#ComboArcim").length>0){
+		$("#ComboArcim").lookup({
+	        url:$URL,
+	        mode:'remote',
+	        disabled:false,
+	        method:"Get",
+	        idField:'ArcimRowID',
+	        textField:'ArcimDesc',
+	        columns:[[  
+	            {field:'ArcimDesc',title:'名称',width:320,sortable:true},
+				{field:'ArcimRowID',title:'ID',width:100,sortable:true},
+				{field:'selected',title:'ID',width:120,sortable:true,hidden:true}
+	        ]],
+	        pagination:true,
+	        panelWidth:420,
+	        panelHeight:260,
+	        isCombo:true,
+	        minQueryLen:1,
+	        rownumbers:true,//序号   
+			fit: true,
+			pageSize: 5,
+			pageList: [5],
+	        delay:'500',
+	        queryOnSameQueryString:true,
+	        queryParams:{ClassName: PageSizeItemObj.PUBLIC_APPLY_CLASSNAME,QueryName: 'FindAllItem'},
+	        onBeforeLoad:function(param){
+		        var desc=param['q'];
+		        //if (desc=="") return false;
+		        var CureItemFlag="on";
+		        if(typeof(Util_GetSelHospID)=="function"){
+					var UserHospID=Util_GetSelHospID(); //common.util.js
+				}else{
+					var UserHospID=Util_GetSelUserHospID();	
+				}
+				param = $.extend(param,{'Alias':desc,'CureItemFlag':CureItemFlag,'SubCategory':"",'HospID':UserHospID});
+		    },onSelect:function(ind,item){
+	            var Desc=item['desc'];
+				var ID=item['ArcimRowID'];
+				PageSizeItemObj.m_SelectArcimID=ID;
+				$HUI.lookup("#ComboArcim").hidePanel();
+			},onHidePanel:function(){
+	            var gtext=$HUI.lookup("#ComboArcim").getText();
+	            if((gtext=="")){
+		        	PageSizeItemObj.m_SelectArcimID="";    
+		        }
+			}
+	    });  
+	}
 };
 
 function InitResGroup(){
@@ -395,21 +397,116 @@ function Util_GetSelUserHospID(){
 
 function CheckComboxSelData(id,selId){
 	var Find=0;
-	 var Data=$("#"+id).combobox('getData');
-	 for(var i=0;i<Data.length;i++){
-		 if (id=="ArcimDesc"){
-			var CombValue=Data[i].ArcimRowID;
-		 	var CombDesc=Data[i].ArcimDesc;
-	     }else{
-		    var CombValue=Data[i].Rowid  
-		 	var CombDesc=Data[i].Desc
-		 }
-		  if(selId==CombValue){
-			  selId=CombValue;
-			  Find=1;
-			  break;
-	      }
-	  }
-	  if (Find=="1") return selId
-	  return "";
+	var Data=$("#"+id).combobox('getData');
+	var opts=$("#"+id).combobox('options');
+	var opt_text=opts.textField;
+	var opt_val=opts.valueField;
+	for(var i=0;i<Data.length;i++){
+		var CombValue=Data[i][opt_val]
+		var CombDesc=Data[i][opt_text]
+		if(selId==CombValue){
+			selId=CombValue;
+			Find=1;
+			break;
+		}
+	}
+	if (Find=="1") return selId
+	return "";
 }
+
+workReport_InitItem=(function(){
+	function ReloadEChartData(EChartObj,xAxisArr,seriesArr){
+		var options = EChartObj.getOption();  
+		var settings={
+			xAxis:[
+			    {
+			        type: 'category',
+		            axisTick: {
+			            show : true,
+			            interval : 0,
+		                alignWithLabel: true
+		            },
+				    axisLabel: {
+					    margin: 15,
+				      	interval: 0,//让所有坐标值全部显示
+                        rotate:8
+				    },
+		            data: xAxisArr
+		        }
+		    ],
+			series:seriesArr,
+		    contentToOption: function() {
+			    /*
+			    * 置空数据视图刷新的方法
+			    *当前遇到的问题：
+			    	刷新后治疗次数柱状图消失，再次进入数据视图，治疗次数列头显示undefined
+			    */
+		    }
+		}
+		$.extend(options, settings);
+		
+		EChartObj.hideLoading();  
+		EChartObj.setOption(options,true);  
+	}
+	
+	function InitCureLoc(init_Loc,callBackFun){
+		var SessionStr=com_Util.GetSessionStr();
+	    $.cm({
+			ClassName:"DHCDoc.DHCDocCure.Config",
+			QueryName:"FindLoc",
+			'Loc':"",
+			'CureFlag':"1",
+			SessionStr:SessionStr,
+			dataType:"json",
+			rows:99999
+		},function(Data){
+			$HUI.combobox("#Combo_CureLoc", {
+				valueField: 'LocRowID',
+				textField: 'LocDesc', 
+				editable:true,
+				data: Data["rows"],
+				filter: function(q, row){
+					return (row["LocDesc"].toUpperCase().indexOf(q.toUpperCase()) >= 0)||(row["LocContactName"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
+				},
+				onLoadSuccess:function(){
+					var data=$(this).combobox("getData");
+					for(var i=0;i<data.length;i++){
+				    	if(data[i].LocRowID==init_Loc){
+					    	$(this).combobox('setValue',init_Loc);
+					    	break;
+					    }
+				    }
+				},
+				onChange:function(n,o){
+					if(typeof n=="undefined"){
+						var locId="";
+					}else{
+						var locId=n;
+					}
+					if(typeof callBackFun == "function"){
+						callBackFun();	
+					}
+					var url = $URL+"?ClassName=DHCDoc.DHCDocCure.Config&QueryName=QueryResource&LocID="+locId+"&ResultSetType=array";
+					var DocObj=$HUI.combobox("#Combo_CureDoc")
+					DocObj.clear();
+					DocObj.reload(url);
+				}
+			});
+		});
+	}
+	function InitCureDoc(LocID){
+		$HUI.combobox("#Combo_CureDoc",{
+			valueField:'TRowid',   
+	    	textField:'TResDesc',
+	    	filter: function(q, row){
+				return (row["TResDesc"].toUpperCase().indexOf(q.toUpperCase()) >= 0);
+			}	
+		})
+	}
+	
+	return{
+		"ReloadEChartData":ReloadEChartData,
+		"InitCureLoc":InitCureLoc,	
+		"InitCureDoc":InitCureDoc	
+	}
+})()

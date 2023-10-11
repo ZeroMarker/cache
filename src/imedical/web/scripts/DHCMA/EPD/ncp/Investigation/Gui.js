@@ -18,11 +18,11 @@ function InitReportWin(){
     } 
 
 	if (EpisodeID=="" || PatientID=="") {
-		$.messager.alert("提示", "患者信息不存在!",'info');
+		$.messager.alert($g("提示"), $g("患者信息不存在!"),'info');
 		return;
 	}
 	if (obj.EpidemicList=="") {
-		$.messager.alert("提示", "患者没有有效的新冠肺炎相关传染病报告，请先填写传染病报告!",'info');
+		$.messager.alert($g("提示"), $g("患者没有有效的新冠肺炎相关传染病报告，请先填写传染病报告!"),'info');
 		return;
 	}
 
@@ -63,7 +63,7 @@ function InitReportWin(){
 	}	
 
 	obj.gridSample = $HUI.datagrid("#gridSampleInfo",{
-		title:'实验室检测（标本采集与新型冠状病毒检测情况）',
+		title:$g('实验室检测（标本采集与新型冠状病毒检测情况）'),
 		headerCls:'panel-header-gray',
 		iconCls:'icon-paper',
 		rownumbers: true, //如果为true, 则显示一个行号列
@@ -92,7 +92,7 @@ function InitReportWin(){
 	    $HUI.checkbox("[name='chkSymPtoms']",{  
 			onCheckChange:function(e,value){
 				var SymPtoms = $(e.target).attr("label");   //当前选中的值
-				if (SymPtoms=='发热') {
+				if (SymPtoms==$g('发热')) {
 					if(value==false){
 						$('#txtTemperature').val("");
 						$('#txtTemperature').attr('disabled','disabled');
@@ -100,7 +100,7 @@ function InitReportWin(){
 						$('#txtTemperature').removeAttr('disabled');
 					}
 				}	
-				if (SymPtoms=='其他') {
+				if (SymPtoms==$g('其他')) {
 					if(value==false){
 						$('#txtSymPtom').val("");
 						$('#txtSymPtom').attr('disabled','disabled');
@@ -114,7 +114,7 @@ function InitReportWin(){
 	    $HUI.checkbox("[name='chkComplication']",{  
 			onCheckChange:function(e,value){
 				var Complication = $(e.target).attr("label");   //当前选中的值
-				if (Complication=='其他') {
+				if (Complication==$g('其他')) {
 					if(value==false){
 						$('#txtComplication').val("");
 						$('#txtComplication').attr('disabled','disabled');
@@ -128,7 +128,7 @@ function InitReportWin(){
 	    $HUI.checkbox("[name='chkPreAnamnesis']",{  
 			onCheckChange:function(e,value){
 				var PreAnamnesis = $(e.target).attr("label");   //当前选中的值		
-				if (PreAnamnesis=='无') {
+				if (PreAnamnesis==$g('无')) {
 					if(value==false){
 						$("[name='chkPreAnamnesis']").checkbox('enable');
 					}else {
@@ -138,7 +138,7 @@ function InitReportWin(){
 						$("[name='chkPreAnamnesis']:checked").checkbox('enable');
 					}
 				}
-				if (PreAnamnesis=='其他') {
+				if (PreAnamnesis==$g('其他')) {
 					if(value==false){
 						$('#txtPreAnamnesis').val("")
 						$('#txtPreAnamnesis').attr('disabled','disabled');
@@ -239,7 +239,7 @@ function InitReportWin(){
 	    $HUI.combobox('#cboChestXray', {
 			onSelect:function(rd){
 				var Desc = rd.DicDesc;
-				if (Desc=="有"){	
+				if (Desc==$g("有")){	
 					$('#dtChestXrayDate').datebox('enable');
 	            }else{
 		            $('#dtChestXrayDate').datebox('clear');
@@ -250,7 +250,7 @@ function InitReportWin(){
 		$HUI.combobox('#cboChestCT', {
 			onSelect:function(rd){
 				var Desc = rd.DicDesc;
-				if (Desc=="有"){	
+				if (Desc==$g("有")){	
 					$('#dtChestCTDate').datebox('enable');
 	            }else{
 		            $('#dtChestCTDate').datebox('clear');
@@ -261,7 +261,7 @@ function InitReportWin(){
 		$HUI.combobox('#cboOccupation', {
 			onSelect:function(rd){
 				var Desc = rd.DicDesc;
-				if (Desc=="其他"){	
+				if (Desc==$g("其他")){	
 					$('#txtOccupation').removeAttr("disabled");
 	            }else{
 		            $('#txtOccupation').val('');
@@ -272,7 +272,7 @@ function InitReportWin(){
 		$HUI.combobox('#cboMarket', {
 			onSelect:function(rd){
 				var Desc = rd.DicDesc;
-				if (Desc=="是"){	
+				if (Desc==$g("是")){	
 					$('#txtDistance').removeAttr('disabled');
 	            }else{
 		            $('#txtDistance').val('');
@@ -283,7 +283,7 @@ function InitReportWin(){
 		$HUI.combobox('#cboIsMarket', {
 			onSelect:function(rd){
 				var Desc = rd.DicDesc;
-				if (Desc=="是"){	
+				if (Desc==$g("是")){	
 					$('#cboMarketType').combobox('enable'); 
 				}else{
 					$('#cboMarketType').combobox('clear'); 

@@ -7,7 +7,7 @@ function InitSurveryWinEvent(obj){
 	if (tDHCMedMenuOper['Admin']==1) {
 		IsAdmin = 1;  //管理员权限
 	}
-	$('#gridLocPatients,#gridLocNPatients').on('draw.dt', function () {   //渲染复选框
+	$('#gridLocPatients,#gridLocNPatients,gridLocNAPatients').on('draw.dt', function () {   //渲染复选框
     	$.form.iCheckRender();
     });
     //日期切换刷新
@@ -25,19 +25,32 @@ function InitSurveryWinEvent(obj){
 			var nicuFlag = arr[1];
 			$('#ulLoc').val(locID);
 			if(nicuFlag=="1"){  //NICU科室
-				var objGrid = $('#gridLogsN');
-				if (objGrid){
-					objGrid.DataTable().clear().draw();
+				if (NICUISApgar==1){
+					var objGrid = $('#gridLogsNA');
+					if (objGrid){
+						objGrid.DataTable().clear().draw();
+					}
+					$('.icu-mode-list').hide();
+					$('.nicu-mode-list').hide();
+					$('.nicu-apgar-mode-list').show();
+					setTimeout(refreshGridLogsN,0.2*1000);  //错开达到异步
+				}else{
+					var objGrid = $('#gridLogsN');
+					if (objGrid){
+						objGrid.DataTable().clear().draw();
+					}
+					$('.icu-mode-list').hide();
+					$('.nicu-mode-list').show();
+					$('.nicu-apgar-mode-list').hide();
+					setTimeout(refreshGridLogsNA,0.2*1000);  //错开达到异步
 				}
-				$('.icu-mode-list').hide();
-				$('.nicu-mode-list').show();
-				setTimeout(refreshGridLogsN,0.2*1000);  //错开达到异步
 			}else if (nicuFlag=="0"){  //ICU科室
 				var objGrid = $('#gridLogs');
 				if (objGrid){
 					objGrid.DataTable().clear().draw();
 				}
 				$('.nicu-mode-list').hide();
+				$('.nicu-apgar-mode-list').hide();
 				$('.icu-mode-list').show();
 				setTimeout(refreshGridLogs,0.2*1000);  //错开达到异步
 			}else{  //未配置
@@ -46,6 +59,7 @@ function InitSurveryWinEvent(obj){
 					objGrid.DataTable().clear().draw();
 				}
 				$('.nicu-mode-list').hide();
+				$('.nicu-apgar-mode-list').hide();
 				$('.icu-mode-list').show();
 				//setTimeout(refreshGridLogs,0.2*1000);  //错开达到异步
 				myLoadHiden();
@@ -130,11 +144,21 @@ function InitSurveryWinEvent(obj){
 				$('#ulLoc').val(locID);
 				//写死$("#ulLoc").val("22");
 				if (nicuFlag=="1"){  //NICU科室
-					$('.icu-mode-list').hide();
-					$('.nicu-mode-list').show();
-					setTimeout(refreshGridLogsN,0.2*1000);  //错开达到异步
+					if (NICUISApgar==1){
+					
+						$('.icu-mode-list').hide();
+						$('.nicu-mode-list').hide();
+						$('.nicu-apgar-mode-list').show();
+						setTimeout(refreshGridLogsNA,0.2*1000);  //错开达到异步
+					}else{
+						$('.icu-mode-list').hide();
+						$('.nicu-apgar-mode-list').hide();
+						$('.nicu-mode-list').show();
+						setTimeout(refreshGridLogsN,0.2*1000);  //错开达到异步
+					}
 				}else if (nicuFlag=="0"){  //ICU科室
 					$('.nicu-mode-list').hide();
+					$('.nicu-apgar-mode-list').hide();
 					$('.icu-mode-list').show();
 					setTimeout(refreshGridLogs,0.2*1000);  //错开达到异步
 				}else{  //未配置
@@ -143,6 +167,7 @@ function InitSurveryWinEvent(obj){
 						//objGrid.DataTable().clear().draw();
 					}
 					$('.nicu-mode-list').hide();
+					$('.nicu-apgar-mode-list').hide();
 					$('.icu-mode-list').show();
 					myLoadHiden();
 					//setTimeout(refreshGridLogs,0.2*1000);  //错开达到异步
@@ -289,6 +314,55 @@ function InitSurveryWinEvent(obj){
 			layer.msg('NICU日志确认失败!',{icon: 2});
 		}
 	});
+	$("#sendLogNADtl").on('click', function(){
+		//NICU带管日志明细
+		if (obj.layerSel){
+		} else {
+			layer.msg("请选择对应的确认日期记录！");
+			return;
+		}
+		var ILLocDr =obj.layerSel.LocID;
+		var ILDate = obj.layerSel.SurveryDate;
+		$('#gridLocNAPatients tbody tr').each( function (){
+			var tr = $(this);
+			var row = obj.gridLocNAPatients.row(tr);
+			var data=row.data();
+			var td7 = $('td',tr).eq(7);
+			var chk1 = $('td input:checkbox',tr).eq(0);  //脐、静脉
+			var chk2 = $('td input:checkbox',tr).eq(1); //呼吸机
+			//var chk3 = $('td input:checkbox',tr).eq(2); //泌尿
+			var ID ="";
+			var Paadm = data.Paadm;
+			//debugger
+			var ILIsVAP ="0",ILIsPICC="0",ILIsUC="0",ILIsOper="0";
+			if(chk1.is(":checked"))
+			{
+				ILIsPICC = "1";
+			}
+			if(chk2.is(":checked"))
+			{
+				ILIsVAP = "1";
+			}
+			
+			var InputStr = ID;
+			InputStr += "^" + Paadm;
+			InputStr += "^" + ILLocDr;
+			InputStr += "^" + ILDate;
+			InputStr += "^" + ILIsVAP;
+			InputStr += "^" + ILIsPICC;
+			InputStr += "^" + ILIsUC;
+			InputStr += "^" + ILIsOper;
+			var retval = $.Tool.RunServerMethod("DHCHAI.IR.ICULogDtl","Update",InputStr);
+		});
+		var retval = $.Tool.RunServerMethod("DHCHAI.IRS.ICULogSrv","CreateICULogByDay",ILDate,ILDate,ILLocDr);
+		if (parseInt(retval)>0){
+			layer.msg('NICU日志确认成功!',{time: 2000,icon: 1});
+			refreshGridLogsNA();
+			layer.close(obj.layerIdxNAPat);
+		} else {
+			layer.msg('NICU日志确认失败!',{icon: 2});
+		}
+	});
 	$("#btnAdd").on('click', function(){
 		myLoading();
 		if ($(".Loading_animate_content").length != 0) {
@@ -354,6 +428,38 @@ function InitSurveryWinEvent(obj){
 		refreshGridLocNPatients();
 		layer.msg('根据医嘱自动生成插拔管日志成功:'+Count+'',{icon: 1});
 	};
+	$("#btnAddNA").on('click', function(){
+		myLoading();
+		if ($(".Loading_animate_content").length != 0) {
+			myLoadingBug();
+			$(".Loading_animate_content").css({"display":"block","z-index":"9999","position":"absolute","top":"0","width":"100%","height":"100%"});    //覆盖在modal上面，显示出来
+		}
+		setTimeout(createNICUApgarLogs,0.2*1000);  //错开达到异步			
+	});
+	function createNICUApgarLogs()
+	{
+		//根据医嘱生成插拔管日志
+		var Count = 0;
+		var aDateFrom = obj.layerSel.SurveryDate;
+		var aDateTo =obj.layerSel.SurveryDate;
+		var aLocDr = obj.layerSel.LocID;
+		var aEpisodeDr ="";
+		var rowsdata=obj.gridLocNAPatients.rows().data();
+		for (var indRst = 0; indRst < rowsdata.length; indRst++){
+			var data = rowsdata[indRst];
+			var retval = $.Tool.RunServerMethod("DHCHAI.IRS.ICULogSrv","CreateICULogByOEOrd",aDateFrom,aDateTo,aLocDr,data.Paadm);
+			if (parseInt(retval)>0){
+				Count++;
+			}
+		}
+		//add 20190513 生成日志明细同时生成日志汇总
+		var retval = $.Tool.RunServerMethod("DHCHAI.IRS.ICULogSrv","CreateICULogByDay",aDateFrom,aDateTo,aLocDr);
+		if (parseInt(retval)>0){
+			refreshGridLogs();
+		}
+		refreshGridLocNAPatients();
+		layer.msg('根据医嘱自动生成插拔管日志成功:'+Count+'',{icon: 1});
+	};
 	/*
 	$("#btnPrint").on('click', function(){
 		obj.gridLogs.buttons(0,null)[2].node.click();
@@ -406,7 +512,36 @@ function InitSurveryWinEvent(obj){
 				}
 		});
     });
-	
+  $('#gridLogsNA').on('click', 'a.editor_edit', function (e) {
+        e.preventDefault();
+		var tr = $(this).closest('tr');
+		var row = obj.gridLogsNA.row(tr);
+		var rowData = row.data();
+		//alert(rowData.LocID+"---"+rowData.SurveryDate);
+		obj.layerSel = rowData;
+		obj.layerIdxNAPat = layer.open({
+				type: 1,  //0(信息框,默认) 1(页面层)  2(iframe层) 3(加载层) 4(tips层)
+				zIndex: 101,
+				area: ['100%','100%'],
+				maxmin: false
+				,title: "NICU插管情况("+rowData.LocDesc+" "+rowData.SurveryDate+")", 
+				content: $('#winICULogsNAEditModal'),
+				btn: [],
+				success: function(layero){
+					//展示回调
+					refreshGridLocNAPatients();
+					if(obj.gridNICUApgarOEItems==undefined)
+					{
+						
+					}
+					else
+					{
+						obj.layerSelPat.Paadm = "";
+						obj.gridNICUApgarOEItems.clear().draw();
+					}
+				}
+		});
+    });
 	$('#ulOeItem > li').click(function (e) {
 		e.preventDefault();
 		$('#ulOeItem > li').removeClass('active');
@@ -493,7 +628,49 @@ function InitSurveryWinEvent(obj){
 			});
 		}
 	});
-	
+	$('#ulOeItemNA > li').click(function (e) {
+		e.preventDefault();
+		$('#ulOeItemNA > li').removeClass('active');
+		$(this).addClass('active');
+		var val = $(this).val();
+		$('#ulOeItemNA').val(val);
+		if (!obj.layerSelPat.Paadm) return;
+		if(obj.gridNICUApgarOEItems==undefined)
+		{
+			obj.gridNICUApgarOEItems = $("#gridNICUApgarOEItems").DataTable({
+				dom: 'rt<"row"<"col-sm-10 col-xs-10"pl>>',
+				select: 'single',
+				paging: true,
+				ordering: true,
+				ajax: {
+					"url": "dhchai.query.datatables.csp",
+					"data": function (d) {
+						d.ClassName = "DHCHAI.IRS.ICULogSrv";
+						d.QueryName = "QryICUAdmOeItem";
+						d.Arg1=obj.layerSelPat.Paadm;
+						d.Arg2=$('#ulOeItemNA').val();
+						d.ArgCnt = 2;
+					}
+				},
+				columns: [
+					{"data": "OeItemDesc"},
+					{"data": "StartDt"},
+					{"data": "EndDt"}
+				],
+				"createdRow": function ( row, data, index ) {
+					if ( data.TypeValue=="临时医嘱") {
+						$('td', row).addClass('danger');
+					}
+				}
+			});
+		}
+		else
+		{
+			//存在情况下
+			obj.gridNICUApgarOEItems.ajax.reload(function(){				
+			});
+		}
+	});
 	//刷新ICU患者列表
 	function refreshGridLogs()
 	{
@@ -595,7 +772,7 @@ function InitSurveryWinEvent(obj){
 						},0 );
 					// Update footer
 					$(api.column(1).footer()).html(total1);  
-					//$(api.column(2).footer()).html(total2);
+					$(api.column(2).footer()).html(total2);
 					$(api.column(3).footer()).html(total3);
 					$(api.column(4).footer()).html(total4);
 					$(api.column(5).footer()).html(total5);
@@ -824,6 +1001,12 @@ function InitSurveryWinEvent(obj){
 						.reduce( function (a, b) {
 							return intVal(a) + intVal(b);
 						},0 );
+					var total6 = api
+						.column(6)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );
 					var total7 = api
 						.column(7)
 						.data()
@@ -838,6 +1021,12 @@ function InitSurveryWinEvent(obj){
 						},0 );
 					var total9 = api
 						.column(9)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );
+					var total10 = api
+						.column(10)
 						.data()
 						.reduce( function (a, b) {
 							return intVal(a) + intVal(b);
@@ -860,6 +1049,12 @@ function InitSurveryWinEvent(obj){
 						.reduce( function (a, b) {
 							return intVal(a) + intVal(b);
 						},0 );	
+					var total14 = api
+						.column(14)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );
 					var total15 = api
 						.column(15)
 						.data()
@@ -878,6 +1073,12 @@ function InitSurveryWinEvent(obj){
 						.reduce( function (a, b) {
 							return intVal(a) + intVal(b);
 						},0 );	
+					var total18 = api
+						.column(18)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );
 					var total19 = api
 						.column(19)
 						.data()
@@ -892,19 +1093,23 @@ function InitSurveryWinEvent(obj){
 						},0 );	
 					// Update footer
 					$(api.column(1).footer()).html(total1);  
-					//$(api.column(2).footer()).html(total2);
+					$(api.column(2).footer()).html(total2);
 					$(api.column(3).footer()).html(total3);  
 					$(api.column(4).footer()).html(total4);  
-					$(api.column(5).footer()).html(total5);  
+					$(api.column(5).footer()).html(total5);
+					$(api.column(6).footer()).html(total6);  
 					$(api.column(7).footer()).html(total7);  
 					$(api.column(8).footer()).html(total8);  
 					$(api.column(9).footer()).html(total9); 
+					$(api.column(10).footer()).html(total10);  
 					$(api.column(11).footer()).html(total11);  
 					$(api.column(12).footer()).html(total12);  
 					$(api.column(13).footer()).html(total13);
+					$(api.column(14).footer()).html(total14);  
 					$(api.column(15).footer()).html(total15);  
 					$(api.column(16).footer()).html(total16);
 					$(api.column(17).footer()).html(total17);
+					$(api.column(18).footer()).html(total18);  
 					$(api.column(19).footer()).html(total19);
 					$(api.column(20).footer()).html(total20);
 				}
@@ -941,6 +1146,232 @@ function InitSurveryWinEvent(obj){
 		{
 			//存在情况下
 			obj.gridLogsN.ajax.reload(function(){});
+		}
+		//myLoadHiden();
+	}
+	//刷新NICU患者列表
+	function refreshGridLogsNA()
+	{
+		//var rd = obj.layerRep_rd;
+		if(obj.gridLogsNA==undefined)
+		{
+			//Nicu日志列表
+			obj.gridLogsNA = $("#gridLogsNA").on('processing.dt', function ( e, settings, processing ) {
+				//$('#processingIndicator').css( 'display', processing ? 'block' : 'none' );
+				
+				if(!processing)
+				{
+					$("#gridLogsNA").dataTable().fnAdjustColumnSizing();
+					myLoadHiden();
+				}
+			}).DataTable({
+				dom: 'rt',
+				paging:false,
+				ordering: false,
+				columnDefs: [
+						{"className": "dt-center", "targets": "_all"}
+				],
+				ajax: {
+					"url": "dhchai.query.datatables.csp",
+					"data": function (d) {
+						d.ClassName = "DHCHAI.IRS.ICULogSrv";
+						d.QueryName = "QryNAISByMonth";
+						d.Arg1=$("#startDate").val();
+						d.Arg2=$('#ulLoc').val();
+						d.ArgCnt = 2;
+					}
+				},
+				columns: [
+					{"data": "SurveryDay",render: function (data, type, row) {
+						return type === 'export' ?
+							row.SurveryDate:'<a href="#" class="editor_edit">'+data+'</a>';
+					}},
+					
+					{"data": "AISItem1"},
+					{
+						"data": "AISItem2"
+					},
+					{"data": "AISItem3"},
+					{"data": "AISItem4"},
+					{"data": "AISItem5"},
+					{
+						"data": "AISItem6"
+					},
+					{"data": "AISItem7"},
+					{"data": "AISItem8"},
+					{"data": "AISItem9"},
+					{
+						"data": "AISItem10"
+					},
+					{"data": "AISItem11"},
+					{"data": "AISItem12"},
+					{"data": "AISItem13"},
+					{
+						"data": "AISItem14"
+					},
+					{"data": "AISItem15"},
+					{"data": "AISItem16"}
+					
+				],
+				"footerCallback": function ( row, data, start, end, display ) {
+					var api = this.api();
+					// Remove the formatting to get integer data for summation
+					var intVal = function ( i ) {
+						return typeof i === 'string' ?
+							i.replace(/[\$,]/g, '')*1 :
+							typeof i === 'number' ?
+								i : 0;
+					};
+					// 新入科人
+					var total1 = api
+						.column(1)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );
+					// 在科人数
+					var col2 = api.rows().data();
+					var total2 =0;
+					col2.each( function (d) {
+						total2 = total2+ intVal(d.AISItem2);
+					});
+  					var total3 = api
+						.column(3)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );
+					var total4 = api
+						.column(4)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );	
+					var total5 = api
+						.column(5)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );
+					var total6 = api
+						.column(6)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );
+					var total7 = api
+						.column(7)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );
+					var total8 = api
+						.column(8)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );
+					var total9 = api
+						.column(9)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );
+					var total10 = api
+						.column(10)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );
+					var total11 = api
+						.column(11)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );
+					var total12 = api
+						.column(12)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );
+					var total13 = api
+						.column(13)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );	
+					var total14 = api
+						.column(14)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );
+					var total15 = api
+						.column(15)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );
+					var total16 = api
+						.column(16)
+						.data()
+						.reduce( function (a, b) {
+							return intVal(a) + intVal(b);
+						},0 );	
+				
+					// Update footer
+					$(api.column(1).footer()).html(total1);  
+					$(api.column(2).footer()).html(total2);
+					$(api.column(3).footer()).html(total3);  
+					$(api.column(4).footer()).html(total4);  
+					$(api.column(5).footer()).html(total5);
+					$(api.column(6).footer()).html(total6);  
+					$(api.column(7).footer()).html(total7);  
+					$(api.column(8).footer()).html(total8);  
+					$(api.column(9).footer()).html(total9); 
+					$(api.column(10).footer()).html(total10);  
+					$(api.column(11).footer()).html(total11);  
+					$(api.column(12).footer()).html(total12);  
+					$(api.column(13).footer()).html(total13);
+					$(api.column(14).footer()).html(total14);  
+					$(api.column(15).footer()).html(total15);  
+					$(api.column(16).footer()).html(total16);
+					
+				}
+			});
+		
+			//增加NICU表格导出打印
+			new $.fn.dataTable.Buttons( obj.gridLogsNA, {
+				buttons: [
+					{
+						extend: 'excel',
+						text:'导出',
+						title:"NICU日志"
+						,footer: true
+						,exportOptions: {
+							columns: ':visible'
+							,width:50
+							,orthogonal: 'export'
+						},
+						customize: function( xlsx ) {
+							var sheet = xlsx.xl.worksheets['sheet1.xml'];
+						}
+					},
+					{
+						extend: 'print',
+						text:'打印'
+						,title:""
+						,footer: true
+						,exportOptions: { orthogonal: 'export' }				
+					}
+				]
+			});
+		}
+		else
+		{
+			//存在情况下
+			obj.gridLogsNA.ajax.reload(function(){});
 		}
 		//myLoadHiden();
 	}
@@ -1295,6 +1726,196 @@ function InitSurveryWinEvent(obj){
 			});
 		} else {
 			obj.gridLocNPatients.ajax.reload();
+		}
+	}
+	//刷新NICU患者列表
+	function refreshGridLocNAPatients()
+	{
+		//var rd = obj.layerRep_rd;
+		//查询数据
+		if(obj.gridLocNAPatients==undefined)
+		{
+			obj.gridLocNAPatients = $("#gridLocNAPatients").on('processing.dt', function ( e, settings, processing ) {
+				//$('#processingIndicator').css( 'display', processing ? 'block' : 'none' );
+				
+				if(!processing)
+				{
+					$("#gridLocNAPatients").dataTable().fnAdjustColumnSizing();
+					myLoadHiden();
+				}
+			}).DataTable({
+				dom: 'rt<"row"<"col-sm-6 col-xs-6"pl><"col-sm-6 col-xs-6"i>>',
+				select: 'single',
+				paging: true,
+				ordering: true,
+				info: true,
+				ajax: {
+					"url": "dhchai.query.datatables.csp",
+					"data": function (d) {
+						d.ClassName = "DHCHAI.IRS.ICULogSrv";
+						d.QueryName = "QryICUAdmStr";
+						d.Arg1=obj.layerSel.SurveryDate;
+						d.Arg2=obj.layerSel.LocID;
+						d.ArgCnt = 2;
+					}
+				},
+				columns: [
+					{"data": null},
+					{"data": "PapmiNo"},
+					{"data": "PatientName"},
+					{"data": "Sex"},
+					{"data": "Age"},
+					{"data": "PAAdmBed"},
+					{"data": null,
+						render: function ( data, type, row ) {
+						return '<a href="#" class="zy">摘要</a>';
+						}
+					},
+					{"data": "PAAdmDate"},
+					{"data": "PADischDate"},
+					{"data": "PatApgar"},
+					{
+						"data": null,
+						 render: function ( data, type, row ) {
+							 var rst = "";
+							 if(data.IsPICC=="1")
+								 rst = '<input type="checkbox" value="'+data.IsPICC+'" checked/>';
+							 else
+								 rst = '<input type="checkbox" value="'+data.IsPICC+'"/>';
+							return rst
+						}
+					},
+					{
+						"data": null,
+						 render: function ( data, type, row ) {
+							var rst = "";
+							 if(data.IsVAP=="1")
+								 rst = '<input type="checkbox" value="'+data.IsVAP+'" checked/>';
+							 else
+								 rst = '<input type="checkbox" value="'+data.IsVAP+'"/>';
+							
+							return rst
+						}
+					},
+					{
+						"data": null,
+						 render: function ( data, type, row ) {
+							 var rst = '<a href="#" class="editor_edit">补Apgar评分&nbsp;&nbsp;</a>';
+							 
+							return rst
+						}
+					}
+				],
+				"createdRow": function ( row, data, index ) {
+					if ( data.IsPICCO=="1") {
+						$('td', row).eq(10).addClass('success');
+					}
+					if ( data.IsVAPO=="1") {
+						$('td', row).eq(11).addClass('success');
+					}
+				}
+				,"columnDefs": [{
+					"searchable": false,
+					"orderable": false,
+					"visible": true,
+					"targets": 0
+				}],
+				"order": [[ 1, 'asc' ]]
+			});
+			obj.gridLocNAPatients.on('order.dt search.dt',function() {
+				obj.gridLocNAPatients.column(0, {
+					"search": 'applied',
+					"order": 'applied'
+					}).nodes().each(function(cell, i) {
+				cell.innerHTML = i + 1;
+				});
+			}).draw();
+			// 摘要点击
+			$('#gridLocNAPatients').on('click','a.zy', function (e) {
+				e.preventDefault();
+				var tr = $(this).closest('tr');
+				var row = obj.gridLocNAPatients.row(tr);
+				var rowData = row.data();
+				
+				var EpisodeDr = rowData.EpisodeDr;
+				var url = '../csp/dhchai.ir.view.main.csp?PaadmID='+EpisodeDr+'&1=1';
+				if (parent.layer) {
+					parent.layer.open({
+						  type: 2,
+						  area: ['95%', '95%'],
+						  title:false,
+						  closeBtn:0,
+						  fixed: false, //不固定
+						  maxmin: false,
+						  maxmin: false,
+						  content: [url,'no']
+					});
+				}else {
+					layer.open({
+					  type: 2,
+					  area: ['95%', '95%'],
+					  title:false,
+					  closeBtn:0,
+					  fixed: false, //不固定
+					  maxmin: false,
+					  maxmin: false,
+					  content: [url,'no']
+					});
+				}
+			});
+			
+			obj.gridLocNAPatients.on('select', function(e, dt, type, indexes) {
+				//获得选中行
+				obj.layerSelPat=obj.gridLocNAPatients.rows({selected: true}).data().toArray()[0];
+				//alert(obj.layerSelPat.Paadm+"===1");
+				//$('#ulOeItemN').val(0); //默认检索条件
+				$('#ulOeItemN li:first-child').click();
+			});
+			
+	
+			$('#gridLocNAPatients').on('click', 'a.editor_edit', function (e) {
+				e.preventDefault();			
+				var tr = $(this).closest('tr');
+				var row = obj.gridLocNAPatients.row(tr);
+				var rowData = row.data();
+				//prompt层
+				layer.prompt({title: '输入患者apgar，并确认',btnAlign: 'c'}, function(Apgar, index){
+					//校验数据格式是否有效
+					var reg = new RegExp("^[0-9]*$");  //浮点数 ^(-?\d+)(\.\d+)?$ 两位小数的正实数：^[0-9]+(.[0-9]{2})?$ 
+					if(!reg.test(Apgar)){
+						layer.msg("请输入数字",{time: 2000,icon: 1});
+						return;
+					}	
+					var intApgar =  parseInt(Apgar);
+					if((intApgar<0)||(intApgar>10))
+					{
+						layer.msg("Apgar评分一般在0-10之间",{time: 2000,icon: 1});
+						return;
+					}
+					
+					//后台保存				
+					var retval = $.Tool.RunServerMethod("DHCHAI.DPS.PAAdmSrv","UpdateApgar",rowData.Paadm,intApgar);
+					
+					if(retval=="1")
+					{
+						//更新表格
+						rowData.PatApgar =intApgar;
+						obj.gridLocNAPatients
+							.row( tr )
+							.data( rowData )
+							.draw();
+						layer.close(index);
+					}
+					else
+					{
+						layer.msg("保存Apgar评分失败！");					
+					}
+					
+				});
+				
+			});
+		} else {
+			obj.gridLocNAPatients.ajax.reload();
 		}
 	}
 	function myLoading() {

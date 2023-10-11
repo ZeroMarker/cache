@@ -23,7 +23,11 @@ var privilege = {
 
         ret = documentContext.privelege.canSave == '1';
         if (!ret)
-            showEditorMsg('权限控制：不允许进行保存操作！', 'warning');
+		{
+			var message = '不允许进行保存操作！' + documentContext.privelege.cantSaveReason;
+			showEditorMsg(message, 'warning');
+		}
+            
 
         return ret;
     },
@@ -35,7 +39,11 @@ var privilege = {
 
         ret = documentContext.privelege.canPrint == '1';
         if (!ret)
-            showEditorMsg('权限控制：不允许进行打印操作！', 'warning');
+		{
+			var message = '不允许进行打印操作！' + documentContext.privelege.cantPrintReason;
+			showEditorMsg(message, 'warning');
+		}  
+            
 
         return ret;
     },
@@ -47,7 +55,11 @@ var privilege = {
 
         ret = documentContext.privelege.canDelete == '1';
         if (!ret)
-            showEditorMsg('权限控制：不允许进行删除操作！', 'warning');
+		{
+			var message = '不允许进行删除操作！' + documentContext.privelege.cantDeleteReason;
+			showEditorMsg(message, 'warning');
+		}
+            
 
         return ret;
     },
@@ -58,7 +70,11 @@ var privilege = {
 
         ret = documentContext.privelege.canCheck == '1';
         if (!ret)
-            showEditorMsg('权限控制：不允许进行审核操作！', 'warning');
+		{
+			var message = '不允许进行审核操作！' + documentContext.privelege.cantCheckReason;
+			showEditorMsg(message, 'warning');
+		}
+            
 
         return ret;
     },
@@ -69,8 +85,38 @@ var privilege = {
 
         ret = documentContext.privelege.canReCheck == '1';
         if (!ret)
-            showEditorMsg('权限控制：不允许进行重审核操作！', 'warning');
+		{
+			var message = '不允许进行重审核操作！' + documentContext.privelege.cantReCheckReason;
+			showEditorMsg(message, 'warning');
+		}
+            
 
+        return ret;
+    },
+    canPatCheck: function (documentContext) {
+        var ret = false;
+        if (!this._checkPrivilege(documentContext))
+            return ret;
+
+        ret = documentContext.privelege.canPatCheck == '1';
+        if (!ret)
+        {
+            var message = '不允许进行患者签名操作! ' + documentContext.privelege.cantPatCheckReason;
+            showEditorMsg(message, 'warning');
+        }
+        return ret;
+    },
+    canPatReCheck: function (documentContext) {
+        var ret = false;
+        if (!this._checkPrivilege(documentContext))
+            return ret;
+
+        ret = documentContext.privelege.canPatReCheck == '1';
+        if (!ret)
+        {
+            var message = '不允许进行患者改签操作! ' + documentContext.privelege.cantPatReCheckReason;
+            showEditorMsg(message, 'warning');
+        }
         return ret;
     },
     canRevokCheck: function (documentContext) {
@@ -80,7 +126,11 @@ var privilege = {
 
         ret = documentContext.privelege.canRevokCheck == '1';
         if (!ret)
-            showEditorMsg('权限控制：不允许进行撤销审核操作！', 'warning');
+		{
+			var message = '不允许进行撤销审核操作！' + documentContext.privelege.cantRevokCheckReason;
+			showEditorMsg(message, 'warning');
+		} 
+            
 
         return ret;
     },
@@ -91,7 +141,11 @@ var privilege = {
 
         ret = documentContext.privelege.canReference == '1';
         if (!ret)
-            showEditorMsg('权限控制：不允许进行引用审核操作！', 'warning');
+		{
+			var message = '不允许进行引用审核操作！' + documentContext.privelege.cantReferenceReason;
+			showEditorMsg(message, 'warning');
+		}
+            
 
         return ret;
     },
@@ -102,7 +156,11 @@ var privilege = {
 
         ret = documentContext.privelege.canExport == '1';
         if (!ret)
-            showEditorMsg('权限控制：不允许进行导出操作！', 'warning');
+		{
+			var message = '不允许进行导出操作！' + documentContext.privelege.cantExportReason;
+			showEditorMsg(message, 'warning');
+		}
+            
 
         return ret;
     },
@@ -113,7 +171,11 @@ var privilege = {
 
         ret = documentContext.privelege.canCopyPaste == '1';
         if (!ret)
-            showEditorMsg('权限控制：不允许进行复制粘贴操作！', 'warning');
+		{
+			var message = '不允许进行复制粘贴操作！' + documentContext.privelege.cantCopyPasteReason;
+			showEditorMsg(message, 'warning');
+		}
+            
 
         return ret;
     },
@@ -124,7 +186,11 @@ var privilege = {
 
         ret = documentContext.privelege.canRevise == '1';
         if (!ret)
-            showEditorMsg('权限控制：不允许进行留痕操作！', 'warning');
+		{
+			var message = '不允许进行留痕操作！' + documentContext.privelege.cantReviseReason;
+			showEditorMsg(message, 'warning');
+		} 
+            
 
         return ret;
     },
@@ -135,7 +201,11 @@ var privilege = {
 
         ret = documentContext.privelege.canViewRevise == '1';
         if (!ret)
-            showEditorMsg('权限控制：不允许进行查看留痕操作！', 'warning');
+		{
+			var message = '不允许进行查看留痕操作！' + documentContext.privelege.cantViewReviseReason;
+			showEditorMsg(message, 'warning');
+		}
+            
 
         return ret;
     },
@@ -260,10 +330,10 @@ var privilege = {
                             };
                             showEditorMsg('已签名,不必再签', 'forbid');
                         }
-                } else if (userInfo.UserLevel == 'Chief') {
+                } else if ($.inArray(userInfo.UserLevel,["Chief","ViceChief"]) != -1) {
                     var flag = 0
                         for (var i = 0; i < count; i++) {
-                            if (signProperty.Authenticator[i].SignatureLevel == 'Chief') {
+                            if ($.inArray(signProperty.Authenticator[i].SignatureLevel,["Chief","ViceChief"]) != -1) {
                                 flag = 1;
                                 break;
                             }

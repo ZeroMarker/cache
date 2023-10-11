@@ -142,9 +142,12 @@ function InitDeathRegList(){
 	
 	///  定义datagrid
 	var option = {
+		iconCls:'icon-paper', //hxy 2022-11-16 st
+		title:$g('死亡登记'),
+		fitColumns:true, //ed
 		//showHeader:false,
 		toolbar:"#toolbar",
-		border:false,
+		border:true,
 		headerCls:'panel-header-gray',
 		rownumbers : false,
 		singleSelect : true,
@@ -272,7 +275,22 @@ function gridlist(objSheet,row1,row2,c1,c2)
 
 ///导出
 function expExcel(itbl)
-{				
+{		var Dea=$g('死亡登记');
+		var DeathNum=$g('编号');
+		var PatRegNo=$g('登记号')
+		var PatName=$g('姓名');
+		var PatSex=$g('性别');
+		var PatAge=$g('实足年龄');
+		var HouseHoldName=$g('户主姓名');
+		var RegDate=$g('登记日期');
+		var Birth=$g('出生日期');
+		var VistDate=$g('死亡日期');
+		var DateDel=$g('送预防科日期');
+		var DateSendMed=$g('送病历室日期');
+		var Tel=$g('电话');
+		var Add=$g('地址');
+		var Come=$g('来源');
+		
 		var TemplatePath = serverCall("web.DHCDocConfig","GetPath");
 		var hospName = "";
 		runClassMethod("web.DHCEMRegister","gethHospitalName",{'locId':LgCtLocID},function(jsonString){
@@ -297,21 +315,21 @@ function expExcel(itbl)
 	    }
     	
 		Str=Str+"xlSheet.cells(1,1) ='"+hospName+"';"+    
-  	  	"xlSheet.cells(2,1).value='死亡登记';"+
-    	"xlSheet.cells(3,2).value='编号';"+
-    	"xlSheet.cells(3,3).value='登记号';"+
-    	"xlSheet.cells(3,4).value='姓名';"+
-    	"xlSheet.cells(3,5).value='性别';"+
-    	"xlSheet.cells(3,6).value='实足年龄';"+
-		"xlSheet.cells(3,7).value='户主姓名';"+
-		"xlSheet.cells(3,8).value='登记日期';"+
-		"xlSheet.cells(3,9).value='出生日期';"+
-		"xlSheet.cells(3,10).value='死亡日期';"+
-		"xlSheet.cells(3,11).value='送预防科日期';"+
-		"xlSheet.cells(3,12).value='送病历室日期';"+
-		"xlSheet.cells(3,13).value='电话';"+
-		"xlSheet.cells(3,14).value='地址';"+
-		"xlSheet.cells(3,15).value='来源';";
+  	  	"xlSheet.cells(2,1).value='"+Dea+"';"+
+    	"xlSheet.cells(3,2).value='"+DeathNum+"';"+
+    	"xlSheet.cells(3,3).value='"+PatRegNo+"';"+
+    	"xlSheet.cells(3,4).value='"+PatName+"';"+
+    	"xlSheet.cells(3,5).value='"+PatSex+"';"+
+    	"xlSheet.cells(3,6).value='"+PatAge+"';"+
+		"xlSheet.cells(3,7).value='"+HouseHoldName+"';"+
+		"xlSheet.cells(3,8).value='"+RegDate+"';"+
+		"xlSheet.cells(3,9).value='"+Birth+"';"+
+		"xlSheet.cells(3,10).value='"+VistDate+"';"+
+		"xlSheet.cells(3,11).value='"+DateDel+"';"+
+		"xlSheet.cells(3,12).value='"+DateSendMed+"';"+
+		"xlSheet.cells(3,13).value='"+Tel+"';"+
+		"xlSheet.cells(3,14).value='"+Add+"';"+
+		"xlSheet.cells(3,15).value='"+Come+"';";
    
     if (itbl.length==0) {
 	    $.messager.alert("提示","没有选中数据！");
@@ -358,7 +376,7 @@ function expExcel(itbl)
     "return 1;}());";
     //以上为拼接Excel打印代码为字符串
     CmdShell.notReturn = 1;   //设置无结果调用，不阻塞调用
-	var rtn = CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
+	var rtn = CmdShell.CurrentUserEvalJs(Str);   //通过中间件运行打印程序 
 	return; 
 }
 
@@ -373,7 +391,7 @@ function DeathRegist()
 	}
 	$('#DeathWin').window({
 		iconCls:'icon-w-edit',
-		title:'死亡登记',
+		title:$g('死亡登记'),
 		collapsible:false,
 		minimizable:false,
 		maximizable:false,

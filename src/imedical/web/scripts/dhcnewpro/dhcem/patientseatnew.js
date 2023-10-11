@@ -2,12 +2,18 @@ var dragFlag=true;   /// 拖动标记
 var TmpTrsSeat = ""; /// 转移座位
 var LgUserID = session['LOGON.USERID'];  /// 用户ID
 var LgLocID = session['LOGON.CTLOCID'];  /// 科室ID
+var LgParams=LgHospID+"^"+LgLocID+"^"+LgGroupID+"^"+LgUserID;
 var defaultCardTypeDr //默认卡类型
 $(function(){
 	
 	initParam();
+	
+	initPage();
+	
 	//初始化combobox
 	initCombo(); 
+	
+	initOneMethod();
 	
 	initPageDomMethod();
 	
@@ -26,14 +32,34 @@ $(function(){
 
 })
 
+function initOneMethod(){
+	$("#plantObsRoomBtn").on("click",plantObsRoomBtn);
+}
+
+function initPage(){
+	
+	if(SEATVIEWDEF==1){
+		$HUI.switchbox("#switch1").setValue(false);
+	}	
+	if(SEATLAYOUTDEF==1){
+		$HUI.switchbox("#switch2").setValue(false);
+	}
+	return;
+}
+
 function initPageDomMethod(){
 	$("#patRegNo").bind('keypress',PatRegNo_KeyPress);
+	$('#filterValue').on('keypress',filterValue_KeyPress);
 }
 
 function initParam (){
 	seatObj={
-		seatWidth:210,
-		seatHeight:45
+		seatWidth:228, //210
+		seatHeight:46 //45
+	}
+	
+	if(SEATVIEWDEF==1){
+		seatObj.seatHeight=201; //216
 	}
 	
 	//当前选中床位信息
@@ -82,17 +108,23 @@ function initParam (){
 function InitBedPage() {	
     //调用方法执行后台代码
     var patRegNo=$("#patRegNo").val();
-	runClassMethod("web.DHCEMPatientSeat","SelAllBedNew",
-	{'LocId':LgCtLocID,"PatRegNo":patRegNo},
-	function(data){ 
+    var filterValue = $("#filterValue").val();
+	var filterType = $("#filterCombo").combobox("getValue");
+	runClassMethod(
+		"web.DHCEMPatientSeat","SelAllBedNew",{
+			'LgParams':LgParams,
+			"PatRegNo":patRegNo,
+			"FilterType":$(".queryItmActive").length?$(".queryItmActive").attr("filterType"):filterType,
+			"FilterValue":$(".queryItmActive").length?$(".queryItmActive").attr("filterValue"):filterValue
+		},function(data){ 
 		var noPerple = data.allSeat-data.useSeat;
 		var str = data.text;
 		var seatSize = data.size;
 		var seatNorms = data.widAndHei;
 		var row = seatSize.split("*")[0];
 		var cow = seatSize.split("*")[1];
-		seatObj.seatWidth = seatNorms.split("*")[0];
-		seatObj.seatHeight = seatNorms.split("*")[1];
+		//seatObj.seatWidth = seatNorms.split("*")[0];
+		//seatObj.seatHeight = seatNorms.split("*")[1];
 		if((str=="")&&(patRegNo=="")){
 			$.messager.alert("提示","没有座位！");
 			return;	
@@ -106,18 +138,36 @@ function InitBedPage() {
 
 //初始化座位
 function initpatient(row,cow){
-	var $BedDiv  = $('#lef-bottom');
+	var $BedDiv  = $('#transSeatArea');
 	var bedHeight=seatObj.seatHeight==""?43:seatObj.seatHeight;
-	seatObj.seatWidth!=""?$("#lef-bottom").css("width",(parseInt(seatObj.seatWidth)+12)*parseInt(cow)):$("#lef-bottom").css("width",222*parseInt(cow));
+	
+	bedDivWidth=parseInt(seatObj.seatWidth+12)*cow
+	$BedDiv.css("width",bedDivWidth+"px");
+	//seatObj.seatWidth!=""?$("#lef-bottom").css("width",(parseInt(seatObj.seatWidth)+12)*parseInt(cow)):$("#lef-bottom").css("width",222*parseInt(cow));
 	$BedDiv.empty();
+	var thisSeatHtml="";
 	for (i = 1; i <= row*cow; i++) {
-		$("<div class='sickbed' style='visibility:hidden' id='sickbed" +i+"'>" +
-			"<div style='height:100%;'>"+
-				"<span class='posInline' id='bedName"+i+"' style='line-height:"+bedHeight+"px;width:35px;font-weight:700;padding-left:10px;'></span>"+
-				"<span class='posInline' id='patName"+i+"' style='line-height:"+bedHeight+"px;width:80px;font-weight:700;'></span>"+
-				"<span class='posInline' id='planDate"+i+"' style='line-height:"+bedHeight+"px;font-weight:700;'></span>"+
+		thisSeatHtml=
+		"<div class='sickbed' style='visibility:hidden;' id='sickbed"+i+"'>" +
+			"<div class='hasSyOrdMes'>"+$g("医")+"</div>"+
+			"<div class='sickbedBorder'></div>"+
+			"<div class='sickbedOpPanel' style='display:none;'><a href='#' onclick='plantPatBtn()' style='font-weight:600;border-radius:5px;border:none'>"+$g("安排")+"</a></div>"+
+			"<div class='sickbedContent'>"+
+				"<span class='posInline bedName' id='bedName"+i+"' style='line-height:28px;font-weight:700;'></span>"+
+				"<span class='posInline' id='patName1' style='line-height:28px;width:77px;font-weight:700;'></span>"+
+				"<span class='posInline' id='planDate"+i+"' style='line-height:28px;width:40px;text-align:right;font-weight:700;'></span>"+
 				"<span class='seat-btn-icon' id='patSexImg"+i+"'>&nbsp;</span>"+
-				//"<span class='posInline' style='line-height:"+bedHeight+"px;'>01</span>"+
+				"<div id='patInfo2' style='height:150px;padding-left:10px;'>"+
+					"<div><span class='bed-span'>"+$g("姓名")+"：</span><span id='patName2'></span><span id='patSex2'></span><span id='patAge2'></span></div>" +
+	                "<div><span class='bed-span'>"+$g("费别")+"：</span><span id='patFei2'></span></div>" +
+	                "<div><span class='bed-span'>"+$g("登记号")+"：</span><span id='patRegNo2'></span></div>" +
+	                "<div><span class='bed-span'>"+$g("诊断")+"：</span><span id='MRDiagnos2'></span></div>" +
+	                "<div><span class='bed-span'>"+$g("过敏原")+"：</span><span id='AllergyInfo2'></span></div>" +
+	                "<div><span class='bed-span'>"+$g("就诊科室")+"：</span><span id='PatInDep2'></span></div>" +
+	                "<div><span class='bed-span'>"+$g("就诊时间")+"：</span><span id='PaAdmTime2'></span></div>" +
+	                "<div><span class='bed-span'>"+$g("主管医生")+"：</span><span id='MainDoc2'></span></div>" +
+	                "<div id='patInfoIcon2'></div>" +
+				"</div>"+
 			"</div>"+
 			"<div class='sickbedBorder hideItm' id='sickbedBorder"+i+"'>"+
 				"<div id='seattitle'>"+
@@ -127,17 +177,31 @@ function initpatient(row,cow){
 				"<div class='patientBody' id='patientBody"+i+"'></div>" +
 			"</div>"+
 			"<div class='ArrangeBtn hideItm' id='ArrangeBtn"+i+"'></div>"+       //这个参数只为了存储数据
-		 "</div>").appendTo($BedDiv); 
+		 "</div>"
+		 
+		$(thisSeatHtml).appendTo($BedDiv); 
 		if(i%cow==0&&i!=cow*row){
-			$("<div style='clear:both'></div>").appendTo($BedDiv); 
+			$("<div class='seatClear' style='clear:both'></div>").appendTo($BedDiv); 
 		}
 	}
+	
+	
+	
+	
 	if(seatObj.seatWidth!=""){
 		$('.sickbed').css('width',seatObj.seatWidth);
 		$('.sickbed').css('height',seatObj.seatHeight);
+		$('.sickbedBorder,.sickbedOpPanel').css('width',seatObj.seatWidth);
+		$('.sickbedBorder,.sickbedOpPanel').css('height',seatObj.seatHeight);
+		$('.sickbedContent').css('width',parseInt(seatObj.seatWidth)-4);
+		$('.sickbedContent').css('height',parseInt(seatObj.seatHeight)-4);
 	}else{
-		$('.sickbed').css('width',210);
-		$('.sickbed').css('height',45);	
+		$('.sickbed').css('width',228);
+		$('.sickbed').css('height',46);	//45
+		$('.sickbedBorder,.sickbedOpPanel').css('width',228);
+		$('.sickbedBorder,.sickbedOpPanel').css('height',46); //45
+		$('.sickbedContent').css('width',224); //206
+		$('.sickbedContent').css('height',42); //41
 	}
 	
 	initMethod();
@@ -178,8 +242,21 @@ function PatRegNo_KeyPress(e){
 			TmpPatNo = GetWholePatNo(TmpPatNo);
 			$("#patRegNo").val(TmpPatNo);
 		}
-		$("#obsPatTable").datagrid("load",{"LgLocID":LgLocID,"TmpPatNo":TmpPatNo}); 
-		InitBedPage();
+		againData(LgLocID,TmpPatNo);
+	}
+}
+
+function againData(filterType,filterValue){
+	$("#obsPatTable").datagrid("load",{"LgLocID":LgLocID,"TmpPatNo":"","FilterType":filterType,"FilterValue":filterValue}); 
+	InitBedPage();		
+}
+
+function filterValue_KeyPress(e){
+	if(e.keyCode == 13){
+		var filterValue = $("#filterValue").val();
+		var filterType = $("#filterCombo").combobox("getValue");
+		$(".queryItmActive").length?$(".queryItmActive").removeClass("queryItmActive"):"";
+		againData(filterType,filterValue);
 	}
 }
 
@@ -231,7 +308,10 @@ function initPatientText(row,cow,str,noPerple){
 	var WomanSeatNum=0;
 	var UnknownSeatNum=0;
 	var AllPersonNum=0;
+	var HasNoExecOrdNum=0;
 	var strArr = str.split("$$");
+	var popTipNumber = 0;
+	var SexNumberObj={};
 	for(i=0;i<strArr.length-1;i++){
 		var hasPat = strArr[i].split("^")[6];  //NY
 		var seatDesc  = strArr[i].split("^")[1];
@@ -243,12 +323,16 @@ function initPatientText(row,cow,str,noPerple){
 		if(seatColor=="") seatColor="#77AAFF";
 		$("#sickbed"+num).attr("seatId",seatID);
 		$(".sickbed #bedName"+num).text(seatName);
+		if(seatColor!=""){
+			$(".sickbed #bedName"+num).css("color",seatColor);
+			//$(".sickbed #bedName"+num).css("background",seatColor); //2023-01-12
+		}
 		$(".sickbed #ArrangeBtn"+num).attr("seatId",seatID);
 		$(".sickbed #ArrangeBtn"+num).attr("seat",seatName);
 		$("#sickbed"+num).css('visibility','visible');
 		$(".sickbed #patientNum"+num).css("background-color",seatColor);
 		$(".sickbed #ArrangeBtn"+num).attr("hasPat",hasPat);
-		if(hasPat!="Y"){			
+		if(hasPat=="N"){			
 			$(".sickbed #ArrangeBtn"+num).attr("regNo","");
 			$(".sickbed #ArrangeBtn"+num).attr("patName","");
 			$(".sickbed #ArrangeBtn"+num).attr("cardNo","");
@@ -260,7 +344,8 @@ function initPatientText(row,cow,str,noPerple){
 			$(".sickbed #patientNum"+num).text(seatName);	    //QQA 2017-01-10
 			$(".sickbed #patientNum"+num).css("color","#000")   //nsj 2016-11-29
 			$("#sickbed"+num).addClass("onDroppable");   //设置放置事件
-			
+			$("#sickbed"+num).find("#patInfo2").html("");
+			$("#sickbed"+num).find(".sickbedOpPanel").show();
 		}
 		
 	   if(hasPat=="YY"){ ///座位图被病人占用  yyt 2019-05-01
@@ -272,26 +357,26 @@ function initPatientText(row,cow,str,noPerple){
 			
 			var sexHtmlStr=""
 			sexHtmlStr = 			 '<div style="margin-top:5px;margin-left:8px;">';
-			sexHtmlStr = sexHtmlStr +'<span style="color:red">'+"留观病人占用";
+			sexHtmlStr = sexHtmlStr +'<span style="color:red">'+$g("留观病人占用");
 			sexHtmlStr = sexHtmlStr +'	</span>';
 			sexHtmlStr = sexHtmlStr + '</div>';
 			sexHtmlStr = sexHtmlStr + '<div class="pat-text">';
-			sexHtmlStr = sexHtmlStr + '		<span>'+"姓&nbsp;&nbsp;&nbsp;名："+ patName +'</span>';
+			sexHtmlStr = sexHtmlStr + '		<span>'+$g("姓名")+"："+ patName +'</span>'; //&nbsp;&nbsp;&nbsp;
 			sexHtmlStr = sexHtmlStr + '</div style="margin-top:5px">';
 			sexHtmlStr = sexHtmlStr + '<div class="pat-text">';
-			sexHtmlStr = sexHtmlStr + '		<span>'+"登记号："+ regNo +'</span>';
+			sexHtmlStr = sexHtmlStr + '		<span>'+$g("登记号")+"："+ regNo +'</span>';
 			sexHtmlStr = sexHtmlStr + '</div>';
 			
 			sexHtmlStr = sexHtmlStr + '<div class="pat-text">';
-			sexHtmlStr = sexHtmlStr + '		<span>'+"日&nbsp;&nbsp;&nbsp;期："+ PaAdmDate +'</span>';
+			sexHtmlStr = sexHtmlStr + '		<span>'+$g("日期")+"："+ PaAdmDate +'</span>'; //&nbsp;&nbsp;&nbsp;
 			sexHtmlStr = sexHtmlStr + '</div>';
 			
 			sexHtmlStr = sexHtmlStr + '<div class="pat-text">';
-			sexHtmlStr = sexHtmlStr + '		<span>'+"时&nbsp;&nbsp;&nbsp;间："+ PaAdmTime +'</span>';
+			sexHtmlStr = sexHtmlStr + '		<span>'+$g("时间")+"："+ PaAdmTime +'</span>'; //&nbsp;&nbsp;&nbsp;
 			sexHtmlStr = sexHtmlStr + '</div>';
 			
 			sexHtmlStr = sexHtmlStr + '<div class="pat-text">';
-			sexHtmlStr = sexHtmlStr + '		<span>'+"医&nbsp;&nbsp;&nbsp;生："+ PrvDoc +'</span>';
+			sexHtmlStr = sexHtmlStr + '		<span>'+$g("医生")+"："+ PrvDoc +'</span>'; //&nbsp;&nbsp;&nbsp;
 			sexHtmlStr = sexHtmlStr + '</div>';
 
 			$(".sickbed #patientBody"+num).append(sexHtmlStr);
@@ -300,49 +385,91 @@ function initPatientText(row,cow,str,noPerple){
 		}
 
 		if(hasPat=="Y"){
-			var admId  = strArr[i].split("^")[7];
-			var patName  = strArr[i].split("^")[8];
-			var cardNo  = strArr[i].split("^")[9]; 
-			var patId  = strArr[i].split("^")[10]; 
-			var regNo  = strArr[i].split("^")[11];
-			var secretLev = strArr[i].split("^")[12];
-			var patLev = strArr[i].split("^")[13];
-			var patSex  = strArr[i].split("^")[14]; 
-			var patAge  = strArr[i].split("^")[15]; 
-			var patFei  = strArr[i].split("^")[16];
-			var MRDiagnos = strArr[i].split("^")[17];
-			var PatInDep = strArr[i].split("^")[18];
-			var PaAdmTime = strArr[i].split("^")[19];   /// 新加 2019-03-04 bianshuai
-			var MainDoc = strArr[i].split("^")[20];     /// 新加 2019-05-30 bianshuai
-			var InSeatDateLimit = strArr[i].split("^")[21];
-			var PatSexDesc = "";     //性别描述
-
+			var thisPatInfo=strArr[i].split("!!")[0];
+			var otherInfo=strArr[i].split("!!")[1];
+			var admId  = thisPatInfo.split("^")[7];
+			var patName  = thisPatInfo.split("^")[8];
+			var cardNo  = thisPatInfo.split("^")[9]; 
+			var patId  = thisPatInfo.split("^")[10]; 
+			var regNo  = thisPatInfo.split("^")[11];
+			var secretLev = thisPatInfo.split("^")[12];
+			var patLev = thisPatInfo.split("^")[13];
+			var patSex  = thisPatInfo.split("^")[14]; 
+			var patAge  = thisPatInfo.split("^")[15]; 
+			var patFei  = thisPatInfo.split("^")[16];
+			var MRDiagnos = thisPatInfo.split("^")[17];
+			var PatInDep = thisPatInfo.split("^")[18];
+			var PaAdmTime = thisPatInfo.split("^")[19];   /// 新加 2019-03-04 bianshuai
+			var MainDoc = thisPatInfo.split("^")[20];     /// 新加 2019-05-30 bianshuai
+			var InSeatDateLimit = thisPatInfo.split("^")[21];
+			var AllergyInfo = thisPatInfo.split("^")[22];
+			var AdmAbnormal = thisPatInfo.split("^")[23];
+			var PatSexDesc = thisPatInfo.split("^")[24];  ///性别
+			
+			if(AdmAbnormal=="Y"){
+				popTipNumber++;
+				$.messager.popover({
+					msg: $g('座位号')+seatName+$g('的患者')+patName+$g('无法获取有效就诊(未挂号或者挂号失效(退号)),请核实!'),
+					type: 'error',
+					style: {
+						bottom: -document.body.scrollTop - document.documentElement.scrollTop + 10,
+						right: 10
+					},
+					timeout:5000*popTipNumber
+				});
+			}
+			
 			$(".sickbed #Transfuse"+num).attr("admId",admId);
 			$(".sickbed #ArrangeBtn"+num).attr("regNo",regNo);
 			$(".sickbed #ArrangeBtn"+num).attr("patName",patName);
 			$(".sickbed #ArrangeBtn"+num).attr("cardNo",cardNo);
-			$(".sickbed #Transfuse"+num).attr("patFlag","有人");
+			$(".sickbed #Transfuse"+num).attr("patFlag",$g("有人"));
 			$(".sickbed #Transfuse"+num).attr("regNo",regNo);
 			$(".sickbed #ArrangeBtn"+num).attr("secretLev",secretLev);
 			$(".sickbed #ArrangeBtn"+num).attr("patLev",patLev);
 			$(".sickbed #ArrangeBtn"+num).attr("patId",patId);
 			$(".sickbed #ArrangeBtn"+num).attr("admId",admId);
 			
-			var sexHtmlStr = "",sexIcon=""
-			AllPersonNum++;
-			if(patSex.trim()=="1"){  //男
-				PatSexDesc="男";
-				ManSeatNum++;
+			$("#sickbed"+num).find("#patName2").html(patName);
+			$("#sickbed"+num).find("#patAge2").html("("+patAge+")");
+			//$("#sickbed"+num).find("#patSex2").html(PatSexDesc);
+			$("#sickbed"+num).find("#patFei2").html(patFei);
+			$("#sickbed"+num).find("#patRegNo2").html(regNo);
+//			$("#sickbed"+num).find("#MRDiagnos2").html(MRDiagnos);
+//			$("#sickbed"+num).find("#AllergyInfo2").html(AllergyInfo);
+			if(MRDiagnos===""){
+				$("#sickbed"+num).find("#MRDiagnos2").html("<span style='color:#fff'>"+$g("无")+"</span>");
+			}else{
+				$("#sickbed"+num).find("#MRDiagnos2").html(MRDiagnos);
+			}
+			if(AllergyInfo===""){
+				$("#sickbed"+num).find("#AllergyInfo2").html("<span style='color:#fff'>"+$g("无")+"</span>");
+			}else{
+				$("#sickbed"+num).find("#AllergyInfo2").html(AllergyInfo);
+			}
+			$("#sickbed"+num).find("#PatInDep2").html(PatInDep);
+			$("#sickbed"+num).find("#PaAdmTime2").html(PaAdmTime);
+			$("#sickbed"+num).find("#MainDoc2").html(MainDoc);
+			if(otherInfo!=""){
+				$("#sickbed"+num).find(".hasSyOrdMes").show();
+				$("#sickbed"+num).addClass("hasSyOrd");
+				HasNoExecOrdNum++;
+			}
+			
+			var sexHtmlStr = "",sexIcon="",sexCon="";
+			AllPersonNum++
+			SexNumberObj[PatSexDesc]=(SexNumberObj[PatSexDesc]?SexNumberObj[PatSexDesc]+1:1); ///记录性别
+			
+			if(PatSexDesc==$g("男")){  //男 	ManSeatNum++;
 				sexIcon="pat_mannew";
-			}else if(patSex.trim()=="2"){   //女
-				PatSexDesc="女";
-				WomanSeatNum++;
+				sexCon="mancontent";
+			}else if(PatSexDesc==$g("女")){   //女 WomanSeatNum++;
 				sexIcon="pat_womannew";
-			}else {							//未知
-				PatSexDesc="未知";
-				UnknownSeatNum++;
+				sexCon="womancontent";
+			}else {	//未知 UnknownSeatNum++;
 				sexIcon="pat_nomannew";
 			}
+			
 			
 			sexHtmlStr = 			 '<div>';
 			sexHtmlStr = sexHtmlStr +'	<span class="l-btn-left l-btn-icon-left">';
@@ -357,11 +484,11 @@ function initPatientText(row,cow,str,noPerple){
 			sexHtmlStr = sexHtmlStr + '</div>';
 			sexHtmlStr = sexHtmlStr + '<div class="pat-text" style="text-overflow:ellipsis;overflow:hidden;width:165px;">';
 			//sexHtmlStr = sexHtmlStr + '		<span>'+ PatInDep +'</span>';
-			sexHtmlStr = sexHtmlStr + '		<span>诊断：'+ MRDiagnos +'</span>';
+			sexHtmlStr = sexHtmlStr + '		<span>'+$g("诊断")+'：'+ MRDiagnos +'</span>';
 			sexHtmlStr = sexHtmlStr + '</div>';
 			sexHtmlStr = sexHtmlStr + '<div class="pat-text">';
 			//sexHtmlStr = sexHtmlStr + '		<span>'+ PaAdmTime +'</span>';
-			sexHtmlStr = sexHtmlStr + '		<span>医生：'+ MainDoc+ '</span>';
+			sexHtmlStr = sexHtmlStr + '		<span>'+$g("医生")+'：'+ MainDoc+ '</span>';
 			sexHtmlStr = sexHtmlStr + '</div>';
 			
 			$(".sickbed #patientBody"+num).append(sexHtmlStr);
@@ -369,10 +496,13 @@ function initPatientText(row,cow,str,noPerple){
 			var seatShowName="";
 			patName.length>5?seatShowName=patName.substring(0,5)+"..":seatShowName=patName;
 			
-			$(".sickbed #patName"+num).text(seatShowName);
+			//$(".sickbed #patName"+num).text(seatShowName);
+			$("#sickbed"+num).find("#patName1").html(seatShowName);
 			$(".sickbed #patSexImg"+num).addClass(sexIcon);
 			$(".sickbed #planDate"+num).text(InSeatDateLimit);
 			
+			$("#sickbed"+num).addClass(sexCon); //hxy 2023-01-29
+			$("#sickbed"+num+" .sickbedContent").addClass(sexCon); //hxy 2023-01-29
 			
 			$("#sickbed"+num).find(".patientNum").addClass("onDraggable");
 			
@@ -381,15 +511,16 @@ function initPatientText(row,cow,str,noPerple){
 				trackMouse:true,
 			    content:  
 				    '<div style="color: #ffffff;">' +
-	                '<div>姓名：'+patName+'</div>' +
-	                '<div>年龄：'+patAge+'</div>' +
-	                '<div>性别：'+PatSexDesc+'</div>' +
-	                '<div>费别：'+patFei+'</div>' +
-	                '<div>登记号：'+regNo+'</div>' +
-	                '<div>诊断：'+MRDiagnos+'</div>' +
-	                '<div>就诊科室：'+PatInDep+'</div>' +
-	                '<div>就诊时间：'+PaAdmTime+'</div>' +
-	                '<div>主管医生：'+MainDoc+'</div>' +
+	                '<div>'+$g('姓名')+'：'+patName+'</div>' +
+	                '<div>'+$g('年龄')+'：'+patAge+'</div>' +
+	                '<div>'+$g('性别')+'：'+PatSexDesc+'</div>' +
+	                '<div>'+$g('费别')+'：'+patFei+'</div>' +
+	                '<div>'+$g('登记号')+'：'+regNo+'</div>' +
+	                '<div>'+$g('诊断')+'：'+MRDiagnos+'</div>' +
+	                '<div style="width:200px">'+$g('过敏原')+'：'+AllergyInfo+'</div>' +
+	                '<div>'+$g('就诊科室')+'：'+PatInDep+'</div>' +
+	                '<div>'+$g('就诊时间')+'：'+PaAdmTime+'</div>' +
+	                '<div>'+$g('主管医生')+'：<span id="TipMainDoc">'+MainDoc+'</span></div>' +
 	                '</div>',
 			    onShow: function(){
 					
@@ -399,17 +530,31 @@ function initPatientText(row,cow,str,noPerple){
 	}
 	
 	
-	
-	$('#top_btn_no').html(noPerple);
-	$('#top_btn_man').html("男人:"+ManSeatNum);
-	$('#top_btn_woman').html("女人:"+WomanSeatNum);
-	$('#top_btn_unman').html("未知:"+UnknownSeatNum);
-	$('#top_btn_all').html(AllPersonNum);
-	
+	if(!$("#filterValue").val()&&!$(".queryItmActive").length){
+		$('#top_btn_no').html(noPerple);
+		//$('#top_btn_man').html(ManSeatNum);
+		//$('#top_btn_woman').html(WomanSeatNum);
+		//$('#top_btn_unman').html(UnknownSeatNum);
+		$('#top_btn_all').html(AllPersonNum);
+		$('#top_btn_ord').html(HasNoExecOrdNum);
+		
+		$(".sexArea").html("");
+		for (key in SexNumberObj){
+			var thisHtml = 
+			'<span style="display: inline-block;width:15px;"></span>'+
+				'<span class="queryItm" onclick="clickQueryItm(this)" filterType="PatSex" filterValue="'+key+'">'+
+				'<span style="color:333333;">'+key+'</span><span class="showNumberSpan" id="top_btn_man">'+SexNumberObj[key]+'</span>'+
+			'</span>'
+			$(".sexArea").append(thisHtml)
+		}
+	}
 	
 	initSeatClick();
 	initDragAndDrop();
 	
+	///配置和紧凑
+	var obj={value:$HUI.switchbox("#switch2").getValue()};
+	changeSeatViewPosition(obj);
 	//SeatClickInfo();//yyt
 }
 
@@ -435,10 +580,10 @@ function initDragAndDrop(){
 	$HUI.droppable(('.onDroppable'),{
 		accept: '.onDraggable, .onDraggable1',
 		onDragEnter:function(e,source){
-			$(this).find(".sickbedBorder").css({"border":"2px solid #6b6fc7"});
+			$(this).find(".sickbedBorder,.sickbedOpPanel").css({"border":"2px solid #6b6fc7"});
 		},
 		onDragLeave: function(e,source){
-			$(this).find(".sickbedBorder").css({'border':'1px solid #ccc'});
+			$(this).find(".sickbedBorder,.sickbedOpPanel").css({'border':'1px solid #ccc'});
 		},
 		onDrop: function(e,source){
 			var hasPat=$(this).find(".ArrangeBtn").attr("hasPat") 
@@ -487,67 +632,105 @@ function initDragAndDropPat(){
 function initSeatClick(){
 	
 	$('.sickbed').on('click',function(){    //无人的时候点击座位可以安排
-	
-	   var hasPat=$(this).find(".ArrangeBtn").attr("hasPat") 	  
-	   if(hasPat=="YY"){
-		   $.messager.alert("提示","该座位已占用，不能分配！","warning");
-		     return  
-	   }
-	   
-		if(($(this).find(".ArrangeBtn").attr("patId")===undefined)&&(curSelSeat.patId!=="")){
-			curSelSeat.seatRowId=$(this).find(".ArrangeBtn").attr("seatId");
-			TmpTrsSeat=$(this).find(".ArrangeBtn").attr("seat");
-			planModel="U";
-			ArrPatSeat();  /// planPat();
-			return;	
-		}
-	  
-		if(!$(this).hasClass("sickbed-selected")&&$(".sickbed-selected").length){
-			$(".sickbed-selected").toggleClass("sickbed-selected");
-		}
-		
-		if($(this).hasClass("sickbed-selected")){
-			clearCurSelSeat();	
-		}
-		
-		$(this).toggleClass("sickbed-selected");
-		
-		//设置当前
-		if($(this).hasClass("sickbed-selected")){
-			var $obj=$(this).find(".ArrangeBtn");
-			setCurSelSeat($obj);		
-		}
-		setEprMenuForm(curSelSeat.admId,curSelSeat.patId);
-		///根据列表安排  yyt
-		var SelData = $("#obsPatTable").datagrid("getSelections");  //加载面板
-		if(($(this).find(".ArrangeBtn").attr("patId")===undefined)&&(SelData.length)){   //选中等候区病人再选中床位上病人
-			$HUI.combobox("#UserTradeSeatBt").setValue($(this).find(".ArrangeBtn").attr("seat"));
-			$('#SeatRowId').val($(this).find(".ArrangeBtn").attr("seatId"));
-			$('#CardNum').val($(this).find(".ArrangeBtn").attr("CardNo"));	
-			loadPlanPatWin(SelData)
-			return;
-		}
-		checkOrUnCheck(obsPatTable.checkIndex)  //清除选中行
-
-		return false;
+		seatClickFun(this,"");
 	}).bind("contextmenu", function(e){
 			/// 增加右键菜单 2019-02-21 bianshuai
 			e.preventDefault(); //阻止浏览器捕获右键事件
-			
 			if (!$(this).hasClass("sickbed-selected")){
-				$.messager.alert("提示","请先选择病人！","warning");
-				return;
+				if($(this).find(".ArrangeBtn").attr("patId")){
+					$(this).click();
+				}else{
+					clearCurSelSeat();
+					if(obsPatTable.checkIndex!==""){
+						$("#obsPatTable").datagrid("unselectRow", obsPatTable.checkIndex);
+						obsPatTable.checkIndex="";
+					}
+					seatClickFun(this,"plantPatBtn");
+				}
 			}
-//			if(curSelSeat.admId == ""){   //无人座位不能选中
-//				return ;
-//			}
 			$HUI.menu('#menu').show({ 
 	           //显示右键菜单  
 	           left: e.pageX,//在鼠标点击处显示菜单  
 	           top: e.pageY  
 			});
 	});
+	
+	$(".sickbed").on({
+		mouseover : function(){
+			if($(this).find(".ArrangeBtn").attr("patId")){
+				return;	
+			}
+			var cssObj={
+				"z-index":1,
+				"opacity": 0.5,
+				"line-height":(parseInt($(this).height()))+"px"
+			}
+			$(this).find(".sickbedOpPanel").css(cssObj);
+			lantNoPatSeatId=$(this).attr("id");
+		} ,
+		mouseout : function(){
+			if($(this).find(".ArrangeBtn").attr("patId")){
+				return;	
+			}
+			var cssObj={
+				"z-index":-1,
+				"opacity": 0
+			}
+			$(this).find(".sickbedOpPanel").css(cssObj);
+			lantNoPatSeatId="";
+		} 
+	}) ;
+	
 	event.stopPropagation();	
+}
+
+function seatClickFun(_this,type){
+	var hasPat=$(_this).find(".ArrangeBtn").attr("hasPat") 	  
+	if(hasPat=="YY"){
+	   $.messager.alert("提示","该座位已占用，不能分配！","warning");
+	     return  
+	}
+	if(($(_this).find(".ArrangeBtn").attr("patId")===undefined)&&(curSelSeat.patId==="")&&(type!="plantPatBtn")){
+		return;	
+	}
+
+	if(($(_this).find(".ArrangeBtn").attr("patId")===undefined)&&(curSelSeat.patId!=="")){
+		curSelSeat.seatRowId=$(_this).find(".ArrangeBtn").attr("seatId");
+		TmpTrsSeat=$(_this).find(".ArrangeBtn").attr("seat");
+		planModel="U";
+		ArrPatSeat();  /// planPat();
+		return;	
+	}
+
+	if(!$(_this).hasClass("sickbed-selected")&&$(".sickbed-selected").length){
+		$(".sickbed-selected").toggleClass("sickbed-selected");
+	}
+
+	if($(_this).hasClass("sickbed-selected")){
+		clearCurSelSeat();	
+	}
+
+	$(_this).toggleClass("sickbed-selected");
+
+	//设置当前
+	if($(_this).hasClass("sickbed-selected")){
+		var $obj=$(_this).find(".ArrangeBtn");
+		setCurSelSeat($obj);		
+	}
+	setEprMenuForm(curSelSeat.admId,curSelSeat.patId);
+	///根据列表安排  yyt
+	var SelData = $("#obsPatTable").datagrid("getSelections");  //加载面板
+	if(($(_this).find(".ArrangeBtn").attr("patId")===undefined)&&(SelData.length)){   //选中等候区病人再选中床位上病人
+		$HUI.combobox("#UserTradeSeatBt").setValue($(_this).find(".ArrangeBtn").attr("seat"));
+		$('#SeatRowId').val($(_this).find(".ArrangeBtn").attr("seatId"));
+		$('#CardNum').val($(_this).find(".ArrangeBtn").attr("CardNo"));	
+		loadPlanPatWin(SelData)
+		return;
+	}
+	checkOrUnCheck(obsPatTable.checkIndex)  //清除选中行
+
+	return false;
+		
 }
 
 //界面显示时间，1s钟刷新一次
@@ -575,19 +758,19 @@ function beginrefresh(){
 	var str = "";  					//nsj 2016-11-30
 	var week = time.getDay(); 
 	if (week == 0) {  
-        str = "星期日";  
+        str = $g("星期日");  
 	} else if (week == 1) {  
-        str = "星期一";  
+        str = $g("星期一");  
 	} else if (week == 2) {  
-        str = "星期二";  
+        str = $g("星期二");  
 	} else if (week == 3) {  
-        str = "星期三";  
+        str = $g("星期三");  
 	} else if (week == 4) {  
-        str = "星期四";  
+        str = $g("星期四");  
 	} else if (week == 5) {  
-        str = "星期五";  
+        str = $g("星期五");  
 	} else if (week == 6) {  
-        str = "星期六";  
+        str = $g("星期六");  
 	}  
   	$("#showNowWeek").text(str);
 }
@@ -661,176 +844,45 @@ function planPatByMove(seatID){
 	clearCurDropSeat();	
 	return false;
 }
-
+/// 读卡 新
+function readCardNo() {
+	DHCACC_GetAccInfo7(ReadCardCallback);
+}
 /// 读卡
-function readCardNo(){
-
-	runClassMethod ("web.DHCOPConfig","GetVersion",{},function(myVersion){
-		
-			if (myVersion=="12"){
-				M1Card_InitPassWord();
-   			}
-   			
-   			var CardTypeRowId = "";
-			var CardTypeValue = $("#EmCardType").combobox("getValue");
-			var m_CCMRowID=""
-			if (CardTypeValue != "") {
-				var CardTypeArr = CardTypeValue.split("^");
-				m_CCMRowID = CardTypeArr[14];
-				CardTypeRowId=CardTypeArr[0];
-			}
-			//var rtn=DHCACC_ReadMagCard(m_CCMRowID,"R", "2");  //QQA
-			var rtn=DHCACC_GetAccInfo(CardTypeRowId,CardTypeValue);
-   			var myary=rtn.split("^");
-   			if (myary[0]!="0"){
-	   			$.messager.alert("提示","卡无效!");
-	   		}
-			if ((myary[0]=="0")&&(myary[1]!="undefined")){
-				$('#CardNum').val(myary[1]);
-				GetValidatePatbyCard();
-			}			
-		},"text",false
-	)
-
-
-/* 	/// 卡类型ID
-	var CardTypeRowId = "";
-	var CardTypeValue = $("#EmCardType").val();
-	
-	if (CardTypeValue != "") {
-		var CardTypeArr = CardTypeValue.split("^");
-		CardTypeRowId = CardTypeArr[0];
-	}
-	
-	var myrtn = DHCACC_GetAccInfo(CardTypeRowId, CardTypeValue);
-	if (myrtn==-200){ //卡无效
-		$.messager.alert("提示","卡无效-1!");
-		return;
-	}
-	
-	var myary = myrtn.split("^");
-	var rtn = myary[0];
-	
-	switch (rtn) {
-		case "0":
-			//卡有效
-			var PatientID = myary[4];
-			var PatientNo = myary[5];
-			var CardNo = myary[1];
-			var NewCardTypeRowId = myary[8];
-			$('#CardNum').val(CardNo);
-			$('#RegiNum').val(PatientNo);
-			GetEmRegPatInfo();
+function ReadCardCallback(rtnValue){
+	var patientId = "";
+	var myAry = rtnValue.split("^");
+	switch (myAry[0]) {
+		case '0':
+			$('#CardNum').val(myAry[1]);
+			$('#RegiNum').val(myAry[5]);
+			$('#PatId').val(myAry[4]);			
+			$('#CardTypeRowId').val(myAry[8]);
+			patientId = myAry[4];
 			break;
-		case "-200":
-			//卡无效
-			$.messager.alert("提示","卡无效!");
+		case '-200':
+			$.messager.alert("提示", "卡无效", "info", function() {
+				$("#CardNo").focus();
+			});
 			break;
-		case "-201":
-			//现金
-			var PatientID = myary[4];
-			var PatientNo = myary[5];
-			var CardNo = myary[1];
-			var NewCardTypeRowId = myary[8];
-			$('#CardNum').val(CardNo);     /// 卡号
-			$('#RegiNum').val(PatientNo);   /// 登记号
-			GetEmRegPatInfo();
+		case '-201':
+			$('#CardNum').val(myAry[1]);
+			$('#RegiNum').val(myAry[5]);
+			$('#PatId').val(myAry[4]);
+			$('#CardTypeRowId').val(myAry[8]);
+			patientId = myAry[4];
 			break;
 		default:
-	} */
-}
-
-
-function M1Card_InitPassWord()
-{
-	try{
-		var myobj=document.getElementById("ClsM1Card");
-		if (myobj==null) return;
-		var rtn=myobj.M1Card_Init();
-  }catch(e)
-  {
-  	}
-}
-
-function GetValidatePatbyCard()
-{
-	
-	var myCardNo = $('#CardNum').val();   //卡号
-	var SecurityNo=""
-	var myExpStr=""
-	var CardTypeRowId=""
-	
-	var CardTypeValue =$("#EmCardType").combobox("getValue");
-
-	if (CardTypeValue != "") {
-		var CardTypeArr = CardTypeValue.split("^");
-		CardTypeRowId = CardTypeArr[0];
+		}
+	if (patientId != "") {
+		GetEmRegPatInfo("");
 	}
-
-	runClassMethod("web.DHCBL.CARDIF.ICardRefInfo","ReadPatValidateInfoByCardNo",
-		{'CardNO':myCardNo,
-		 'SecurityNo':SecurityNo,
-		 'CardTypeDR':CardTypeRowId,   //全局变量
-		 'ExpStr':myExpStr
-		},
-		function(data){
-			if (data=="") { return;}
-			var myary=data.split("^");
-			if(myary[0]=="0"){
-				
-			}else if(myary[0]=="-341"){
-				runClassMethod("web.DHCEMPatientSeat","GetPatInfo",{'CardNo':$('#CardNum').val(),'RegNo':''},
-					function(myData){
-						var myDataArr= myData.split("^");
-						if(myDataArr[0]=="0"){
-						
-								$("#RegiNum").val(myDataArr[2]);      /// 登记号;
-								$("#PatId").val(myDataArr[3]);  /// 病人ID
-								GetEmRegPatInfo("");
-								return;
-						}
-					},"text"
-				)
-			}else{
-				clearCurDropSeat();  //清空卡号信息
-				switch(myary[0]){
-					case "-340":
-						$.messager.alert("提示","发卡时,此卡已经有对应的登记号了,不能在新增了");
-						break;
-					case "-350":
-						$.messager.alert("提示","此卡已经使用,不能重复发卡!");
-						break;
-					case "-351":
-						$.messager.alert("提示","此卡已经被挂失,不能使用!");
-						break;
-					case "-352":
-						$.messager.alert("提示","此卡已经被作废?不能使用!");
-						break;
-					case "-356":
-						$.messager.alert("提示","发卡时,配置要求新增卡记录,但是此卡数据被预先生成错误!");
-						break;
-					case "-357":
-						$.messager.alert("提示","发卡时,配置要求更新卡记录,但是此卡数据没有预先生成!");
-						break;
-					case "-358":
-						$.messager.alert("提示","发卡时,此卡已经有对应的登记号了,不能在新增了");
-						break;
-					default:
-						$.messager.alert("Error Code:" +myary[0]);
-						break;
-				}
-				
-					
-			}
-			
-		},"text",false
-	)
 }
 
 
 function GetEmRegPatInfo(){
 	runClassMethod("web.DHCEMPatientSeat","GetCurrAdm",
-	    {'CardNo':'','RegNo':$('#RegiNum').val()},
+	    {'CardNo':'','RegNo':$('#RegiNum').val(),'LgHospID':LgHospID},
 		    function(data){
 			    SettingModel(data);
 		},"text",false);
@@ -909,7 +961,8 @@ function InsPatSeat(){
 
 	var Datas = {
 	   'CardNo':CardNum,
-	   'RegNo':RegNum
+	   'RegNo':RegNum,
+	   'LgHospID':LgHospID
 	}
 	
     PatAdmInfo = MyRunClassMethod("web.DHCEMPatientSeat","GetCurrAdm",Datas); 
@@ -919,8 +972,13 @@ function InsPatSeat(){
 	}
 	var PatientID = PatAdmInfo.split("^")[6];
 	var EpisodeID = PatAdmInfo.split("^")[0];
+	var SelItems = $("#obsPatTable").datagrid('getSelections');
+	var WaitListID="";
+	if(SelItems.length) WaitListID=SelItems[0].ID;
 	
-	var Parr="^"+LgCtLocID+"^"+PatientID+"^"+EpisodeID+"^"+SeatRowId+"^"+LgUserID+"^"+"Y"+"^"+PrvDoc;
+	var fromSeatId = $(".sickbed-selected").length?$(".sickbed-selected").attr("seatid"):"";
+
+	var Parr="^"+LgCtLocID+"^"+PatientID+"^"+EpisodeID+"^"+SeatRowId+"^"+LgUserID+"^"+"Y"+"^"+PrvDoc+"^"+WaitListID+"^"+fromSeatId;
 	var rs = MyRunClassMethod("web.DHCEMPatientSeat","save",{'parr':Parr});
 	if(rs=="0"){
    		$.messager.alert("提示","安排成功！");
@@ -947,7 +1005,7 @@ function transfuse(){
 	if(curSelSeat.admId===""){
 		$.messager.alert("提示","没有病人,不能进行输液操作");
 		return false;
-	}else if(curSelSeat.admId!=="有人"){
+	}else if(curSelSeat.admId!==$g("有人")){
 		var EpisodeID = curSelSeat.admId;
 		var PatientID = curSelSeat.patId;
 		setEprMenuForm(EpisodeID,PatientID); 
@@ -981,7 +1039,7 @@ function toggleClass(){
 		if(regNo){
 			planPat($(this).find(".ArrangeBtn").attr("seatid"));
 			runClassMethod("web.DHCEMPatientSeat","GetCurrAdm",
-		    {'patCardNo':'','regNo':regNo},
+		    {'patCardNo':'','regNo':regNo,'LgHospID':LgHospID}, 
 			    function(data){
 				    if(data==""){
 					    $.messager.alert("提示","病人没有就诊信息");
@@ -1007,29 +1065,21 @@ function toggleClass(){
 	}
 
 function initCombo(){
-	$HUI.combobox("#EmCardType",{
-		url:LINK_CSP+"?ClassName=web.DHCEMPatCheckLevCom&MethodName=CardTypeDefineListBroker",
-		valueField:'value',
-   		textField:'text',
-   		onSelect:function(res){
-	   		CarTypeSetting(res.value);
-	   	}
-	})
 	
+	var comboData = [
+		{ "id": "PatNo", "text": $g("登记号") }, 
+		{ "id": "PatName", "text": $g("姓名") },
+		{ "id": "PatSex", "text": $g("性别") },
+		{ "id": "PatSeat", "text": $g("座位") }
+	];
+	$HUI.combobox('#filterCombo',{
+		valueField:'id',
+		textField:'text',
+		data:comboData
+	});
 	
-	/// 获取默认卡类型
-	runClassMethod("web.DHCEMPatCheckLevCom","GetDefaultCardType",{},function(jsonString){
-		defaultCardTypeDr = jsonString;
-		var CardTypeDefArr = defaultCardTypeDr.split("^");
-        m_CardNoLength = CardTypeDefArr[17];   /// 卡号长度
-        m_CCMRowID = CardTypeDefArr[14];
-        if (CardTypeDefArr[16] == "Handle"){
-	    	$('#CardNum').attr("readOnly",false);
-	    }else{
-			$('#CardNum').attr("readOnly",true);
-		}
-		$HUI.combobox("#EmCardType").setValue(defaultCardTypeDr);
-	},'',false)
+	$HUI.combobox('#filterCombo').setValue("PatNo");
+	
 	
 	$HUI.combobox("#UserTradeSeatBt",{
 		url:LINK_CSP+"?ClassName=web.DHCEMPatientSeat&MethodName=SeatDatasByJson2&Loc="+LgCtLocID,
@@ -1098,7 +1148,7 @@ function initMondelMethod(){
 		 }
 		 
 		runClassMethod("web.DHCEMPatientSeat","GetCurrAdm",
-	    {'CardNo':'','RegNo':$('#RegiNum').val()},
+	    {'CardNo':'','RegNo':$('#RegiNum').val(),'LgHospID':LgHospID},
 		    function(data){
 			    SettingModel(data);
 			},"text",false);
@@ -1106,36 +1156,14 @@ function initMondelMethod(){
 	   });
 	   
 	$('#CardNum').on('keypress', function(e){     
-       e=e||event;
-       if(e.keyCode=="13"){
-	     var CardNo = $('#CardNum').val()
-	     if(CardNo==""){
-		    $.messager.alert("提示","卡号为空");
-		    CleanModel();
-		 	return
-		 }
-		 
-		var CardNoLen = CardNo.length;
-
-		if (m_CardNoLength < CardNoLen){
-			$.messager.alert("提示","卡号输入错误,请重新录入！");
-			CleanModel();     
-			return;
+		e=e||event;
+		if(e.keyCode=="13"){
+			var CardNo = $("#CardNum").val();
+			if (CardNo == "") return;
+			DHCACC_GetAccInfo("", CardNo, "", "", ReadCardCallback);
 		}
-
-		/// 卡号不足位数时补0
-		for (var k=1;k<=m_CardNoLength-CardNoLen;k++){
-			CardNo="0"+CardNo;  
-		}
-		 
-		$('#CardNum').val(CardNo);
-		runClassMethod("web.DHCEMPatientSeat","GetCurrAdm",
-	    {'CardNo':CardNo,'RegNo':''},
-		    function(data){
-			   SettingModel(data);
-			},"text",false);
-       }
-	});	   
+	});	
+	
 }    
 
 //设置Model模板数据    
@@ -1143,16 +1171,10 @@ function SettingModel(data){
 	
 	NoPatCleanModel();	 ///先清除一波数据
 	
-	if(data=="-1"){
-		$.messager.alert("提示","未找到该病人!");	
+	if(data==""){
+		$.messager.alert("提示","未找到该病人或病人当前无就诊信息!");	
 		return;
 	}
-	
-	if(data=="-2"){
-		$.messager.alert("提示","病人当前无就诊信息!");	
-		return;
-	}
-	
 	
 	$('#PaAdm').val(data.split("^")[0]);
 	$('#CardNum').val(data.split("^")[1]);
@@ -1218,15 +1240,20 @@ function clearCurSelSeat(){
 }
 
 function setCurSelSeat($obj){
-	var seatRowId = ($obj.attr("seatId")==""||$obj.attr("seatId")==undefined)?arguments[0]:$obj.attr("seatId");
-	var seat = ($obj.attr("seat")==""||$obj.attr("seat")==undefined)?arguments[0]:$obj.attr("seat");
-	var regNo = ($obj.attr("regNo")==""||$obj.attr("regNo")==undefined)?"":$obj.attr("regNo");
-	var patName = ($obj.attr("patName")==""||$obj.attr("patName")==undefined)?"":$obj.attr("patName");
-	var cardNo = ($obj.attr("cardNo")==""||$obj.attr("cardNo")==undefined)?"":$obj.attr("cardNo");
-	var secretLev = ($obj.attr("secretLev")==""||$obj.attr("secretLev")==undefined)?"":$obj.attr("secretLev");
-	var patLev = ($obj.attr("patLev")==""||$obj.attr("patLev")==undefined)?"":$obj.attr("patLev");
-	var patId=($obj.attr("patId")==""||$obj.attr("patId")==undefined)?"":$obj.attr("patId");
-	var admId=($obj.attr("admId")==""||$obj.attr("admId")==undefined)?"":$obj.attr("admId");
+	var seatRowId="",seat="",regNo="",patName="",cardNo="",secretLev="",patLev="",patId="",admId=""
+
+	if(typeof $obj === 'object'){
+		seatRowId = $obj.attr("seatId");
+		seat = $obj.attr("seat");
+		regNo = $obj.attr("regNo");
+		patName = $obj.attr("patName");
+		cardNo = $obj.attr("cardNo");
+		secretLev = $obj.attr("secretLev");
+		patLev = $obj.attr("patLev");
+		patId = $obj.attr("patId");
+		admId = $obj.attr("admId");
+	}
+	
 	curSelSeat.seatRowId=seatRowId;
 	curSelSeat.seat=seat;
 	curSelSeat.regNo=regNo;
@@ -1239,7 +1266,7 @@ function setCurSelSeat($obj){
 }
     
 function CleanModel(){	
-	
+	$("#filterValue").val("");
 	$('#RegiNum').val("") ;    
 	$('#UserName').val("");
 	$('#CardNum').val("");
@@ -1248,14 +1275,14 @@ function CleanModel(){
 	$('#patId').val("");
 	$('#PaAdm').val("");
 	$('#SeatRowId').val("");
+	$('#CardTypeNew').val("");
+	$('#CardTypeRowId').val("");
 	$HUI.combobox("#PatSeatNo").enable();
 	$HUI.combobox("#PatSeatNo").setValue("");
 	$HUI.combobox("#UserTradeSeatBt").enable();
 	$HUI.combobox("#UserTradeSeatBt").setValue("");
 	$HUI.combobox("#PrvDoc").setValue("");
-	
-	//$HUI.combobox("#EmCardType").setValue("");
-	
+		
 	$('#PatSex').val("");       /// 性别
 	$('#PatAge').val("");       /// 年龄
 	$('#PaAdmTime').val("");    /// 就诊时间
@@ -1334,7 +1361,7 @@ function initWaitArea(){
 		fit:true,
 	    onLoadSuccess:function (data) { //数据加载完毕事件
 			initDragAndDropPat();  /// 病人列表拖动事件
-			$("#waitNumber").html(data.total);
+			(!$("#filterValue").val()&&!$(".queryItmActive").length)?$("#top_btn_wait").html(data.total):"";
         },
         onClickRow: function (index, rowData){   //yyt
 			$(".sickbed").removeClass("sickbed-selected");
@@ -1342,27 +1369,32 @@ function initWaitArea(){
          	checkOrUnCheck(index);
          	checkOrUnCheckSeat($(this));
          	setEprMenuForm(rowData.EpisodeID,rowData.PatientID);
-	    }
+	    },
+	    onDblClickRow:function(index,row){
+			remvoeWaitPat(row.ID);
+		}
 	}
 	
    	/// 就诊类型
-	var uniturl = $URL+"?ClassName=web.DHCEMPatientSeat&MethodName=JsLocPatWaitArea&LgLocID="+ LgLocID;
+	var uniturl = $URL+"?ClassName=web.DHCEMPatientSeat&MethodName=JsLocPatWaitArea&LgParams="+ LgParams;
 	new ListComponent('obsPatTable', columns, uniturl, option).Init();
 }
 
 /// 病人信息列表  卡片样式
 function setCellLabel(value, rowData, rowIndex){
-	
+	var IsHasSyOrd=rowData.IsHasSyOrd;
 	var tooltipStr =rowData.PatName+","+rowData.PatSex+","+rowData.PatAge+","+rowData.BillType;
-	var htmlstr =  	    '<div class="celllabel onDraggable1" title="'+tooltipStr+'" ';
+	//var htmlstr =  	    '<div style="position: relative;" class="celllabel onDraggable1" title="'+tooltipStr+'" ';
+	var htmlstr =  	    '<div style="position: relative;" class="celllabel" title="'+tooltipStr+'" ';
 	var htmlstr = htmlstr +'data-adm="'+rowData.EpisodeID+'">'
+	var htmlstr = htmlstr + '<div class="hasSyOrdMes" style="'+(IsHasSyOrd?"display:block":"")+'">'+$g('医')+'</div>';
 	var htmlstr = htmlstr +'<span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">';
 	var htmlstr = htmlstr + rowData.PatName + '</span>';
-	var htmlstr = htmlstr + '<span class="l-btn-text" style="color:#ccc;margin-left:1px;padding:0">' + rowData.PatNo + '</span>';
+	var htmlstr = htmlstr + '<span class="l-btn-text" style="color:#666;margin-left:1px;padding:0">' + rowData.PatNo + '</span>';
 
-	if(rowData.PatSex=="男"){
+	if(rowData.PatSex==$g("男")){
 		var htmlstr = htmlstr+'<span class="l-btn-icon pat_man">&nbsp;</span>';
-	}else if(rowData.PatSex=="女"){
+	}else if(rowData.PatSex==$g("女")){
 		var htmlstr = htmlstr+'<span class="l-btn-icon pat_woman">&nbsp;</span>';
 	}else{
 		var htmlstr = htmlstr+'<span class="l-btn-icon pat_noman">&nbsp;</span>';	
@@ -1376,7 +1408,7 @@ function InsPatWaitArea(){
 	
 	var EpisodeID = $("#PaAdm").val(); /// 就诊ID
     if ($('#SeatRowId').val() != ""){  /// 从座位图迁到等候区，就诊ID取选定对象的病人就诊ID
-		if(curSelSeat.admId!="") EpisodeID = curSelSeat.admId;   
+		curSelSeat.admId?EpisodeID = curSelSeat.admId:"";   
 	} 
 	
 	if (EpisodeID == ""){
@@ -1418,7 +1450,7 @@ function TempMeaSin(){
 	var viewName = "TemperatureMeasureSingle";
 	var seatFlag = "true";		//2019-04-26 add by dl 添加是否是座位图病人的标志,处理生命体征病人列表不是座位图病人列表的问题
 	var LinkUrl = 'dhc.nurse.vue.mainentry.csp?EpisodeID='+ EpisodeID +'&ViewName='+ viewName+'&SeatFlag='+seatFlag;
-	window.open(LinkUrl,'生命体征','top=25,left=25,width='+(window.screen.availWidth-50)+',height='+(window.screen.availHeight-50));
+	window.open(LinkUrl,$g('生命体征'),'top=25,left=25,width='+(window.screen.availWidth-50)+',height='+(window.screen.availHeight-50));
 }
 
 /// 护士执行 bianshuai 2019-02-21
@@ -1436,19 +1468,21 @@ function NurExec(){
 	
 	var LinkUrl = 'dhcem.nur.main.hisui.csp';
 	setEprMenuForm(EpisodeID,PatientID);
-	window.open(LinkUrl,'护士执行','top=25,left=25,width='+(window.screen.availWidth-50)+',height='+(window.screen.availHeight-50));
+	websys_showModal({
+		url: LinkUrl,
+		width: (window.screen.availWidth-50)+'px',
+		height: (window.screen.availHeight-50)+'px',
+		iconCls:"icon-w-paper",
+		title: $g('护士执行'),
+		closed: true,
+		onClose:function(){}
+	});
 }
 
 /// 安排 bianshuai 2019-02-21
 function ArrPatSeat(){
 	CleanModel();  		 /// 清空面板数据
 	$HUI.window("#wind").open();
-	var EmCardType =$("#EmCardType").combobox("getValue");
-	$HUI.combobox("#EmCardType").setValue(defaultCardTypeDr);  //默认卡类型	
-	//if(EmCardType==""){   
-	//	$HUI.combobox("#EmCardType").setValue(defaultCardTypeDr);  //默认卡类型	
-	//}
-	
 	$("#SeatRowId").val(curSelSeat.seatRowId);
 	$HUI.combobox("#UserTradeSeatBt").setValue(curSelSeat.seatRowId)
 	$('#CardNum').val(curSelSeat.cardNo);
@@ -1527,12 +1561,17 @@ function removePatSeat(){
 }
 
 var setEprMenuForm = function(adm,papmi){
-	var frm = dhcsys_getmenuform();
+	/*var frm = dhcsys_getmenuform();
+	var menuWin=websys_getMenuWin();
 	if((frm) &&(frm.EpisodeID.value != adm)){
-		frm.EpisodeID.value = ""; 			//DHCDocMainView.EpisodeID;
+		frm.EpisodeID.value = adm; 			//DHCDocMainView.EpisodeID;
 		frm.PatientID.value = papmi; 		//DHCDocMainView.PatientID;
 		if(frm.AnaesthesiaID) frm.AnaesthesiaID.value = "";
 		if(frm.PPRowId) frm.PPRowId.value = "";
+	}*/
+	var frm=window.parent.document.forms["fEPRMENU"];	
+	if(frm.EpisodeID){
+		frm.EpisodeID.value=adm;
 	}
 }
 
@@ -1572,31 +1611,11 @@ function InitPatPopPanel(jsonObject){
 		$('#PatLoc').val(jsonObject.PatLoc);       /// 就诊科室
 		$('#CardNum').val(jsonObject.PatCardNo);   /// 卡号
 		$('#PaAdm').val(jsonObject.EpisodeID);     /// 就诊ID 
-		if (jsonObject.CardTypeID != ""){
-			GetEmPatCardTypeDefine(jsonObject.CardTypeID);  ///  设置卡类型
-		}
+		$('#CardTypeRowId').val(jsonObject.CardTypeID);   /// 卡类型ID
+		$('#CardTypeNew').val(jsonObject.CardTypeNew);     /// 卡类型描述
 	}
 }
 
-/// 获取病人对应卡类型数据
-function GetEmPatCardTypeDefine(CardTypeID){
-
-	runClassMethod("web.DHCEMPatCheckLevCom","GetEmPatCardTypeDefine",{"CardTypeID":CardTypeID},function(jsonString){
-		
-		if (jsonString != null){
-			var CardTypeDefine = jsonString;
-			var CardTypeDefArr = CardTypeDefine.split("^");
-			if (CardTypeDefArr[16] == "Handle"){
-				$('#CardNum').attr("readOnly",false);
-			}else{
-				$('#CardNum').attr("readOnly",true);
-			}
-			m_CardNoLength = CardTypeDefArr[17];   /// 卡号长度
-			m_CCMRowID = CardTypeDefArr[14];
-			$("#EmCardType").combobox("setValue",CardTypeDefine);
-		}
-	},'',false)
-}
 
 function ChargeDoc(){
 	$HUI.window("#DocWin").open();	
@@ -1616,12 +1635,23 @@ function  DocSure(){
 		return;
 	}
 	var ChargDoc = $HUI.combobox("#ChargDoc").getValue();
+	var ChargDocDesc = $HUI.combobox("#ChargDoc").getText();
 	runClassMethod("web.DHCEMPatientSeat","UpdPrvDoc",{"Loc":LgLocID,'EpisodeID':EpisodeID,'ChargDoc':ChargDoc},
 	  function(data){
          if(data=="0"){ 
              $.messager.alert("提示:","修改成功！","success");
+             if($(".sickbed-selected").length){
+	             $(".sickbed-selected").find("#MainDoc2").html(ChargDocDesc);
+	             
+	             var seatId = $(".sickbed-selected").attr("id");
+	             var contentHtml = $HUI.tooltip("#"+seatId).options().content;
+	             var $dom = $(contentHtml);
+	             $dom.find("#TipMainDoc").html(ChargDocDesc);
+	             $HUI.tooltip("#"+seatId).options().content = $dom.html();
+	             $HUI.tooltip("#"+seatId,{});
+	         }
              $HUI.window("#DocWin").close();
-             InitBedPage();
+             //InitBedPage();
           }
 	   },"text"); 
 	
@@ -1711,7 +1741,7 @@ function SeatClickInfo(){
 	     if(($(this).find(".ArrangeBtn").attr("patId")===undefined)){
 		   $HUI.window("#wind").open();  
 		 }
-		 var selItems = $("#obsPatTable").datagrid('getSelections')  // yyt 2019-04-27  选中列表安排座位
+		 var selItems = $("#obsPatTable").datagrid('getSelections');  // yyt 2019-04-27  选中列表安排座位
 		 if (!selItems.length){
 			//$.messager.alert("提示:","请选中行,重试！");
 			//return;
@@ -1736,6 +1766,17 @@ function SeatClickInfo(){
 		 }
 	 })
 	
+}
+
+function remvoeWaitPat(ID){
+	$.messager.confirm('确认对话框','当前病人，是否离开？', function(r){
+		if (r){
+		  	MyRunClassMethod("web.DHCEMPatientSeat","RemoveWaitArea",{'ID':ID});
+			clearCurSelSeat();  /// 清空 curSelSeat 对象
+			$("#obsPatTable").datagrid("reload");  /// 刷新等候区队列
+		}
+	});
+	return;
 }
 
 
@@ -1775,3 +1816,105 @@ function newPrintXmlMode(){
 	return;
 }	
 
+
+function changeSeatView(obj){
+	if(obj.value){
+		$(".sickbed,.sickbedBorder").css({"height":"46px","transition":"height 0.2s"}); //45px
+		$(".sickbedContent").css({"height":"42px","transition":"height 0.2s"}); //41px
+		seatObj.seatHeight="46px"; //45px
+	}else{
+		$(".sickbed,.sickbedBorder").css({"height":"201px","transition":"height 0.2s"}); //220px
+		$(".sickbedContent").css({"height":"197px","transition":"height 0.2s"}); //216px
+		seatObj.seatHeight="201px"; //220px
+	}
+	return;
+}
+
+function changeSeatViewPosition(obj){
+	if(obj.value){
+		$('.seatClear').show();
+		$('#transSeatArea').css("width",bedDivWidth+"px");
+		$('.sickbed').each(function(){
+			$(this).css("visibility")==="hidden"?$(this).removeCss("display"):"";
+		})
+	}else{
+		$('.seatClear').hide();
+		$('#transSeatArea').removeCss("width");
+		$('.sickbed').each(function(){
+			$(this).css("visibility")==="hidden"?$(this).hide():"";
+		})
+	}
+	return;
+}
+
+function qBarOp(type){
+	var qBarNowValue=$(".qBarVal").text();
+	var qBarChangedValue="";
+	if(type==="add"){
+		qBarChangedValue=parseInt(qBarNowValue)+5;
+	}
+	if(type==="sub"){
+		qBarChangedValue=parseInt(qBarNowValue)-5;
+	}
+	if(type==="reset"){
+		qBarChangedValue=100;
+	}
+	qBarChangedValue=qBarChangedValue+"%";
+	$(".qBarVal").text(qBarChangedValue);
+	//$(".sickbed").css("zoom",qBarChangedValue); //hxy 2023-01-12 st
+	$("#transSeatArea").css("zoom",qBarChangedValue);  //ed
+}
+
+function plantObsRoomBtn(){
+	if($(".sickbed-selected").length){
+		$(".sickbed-selected").click();	
+	}
+	ArrPatSeat();
+}
+
+function plantPatBtn(){
+	if (!$("#"+lantNoPatSeatId).hasClass("sickbed-selected")){
+		seatClickFun($("#"+lantNoPatSeatId),"plantPatBtn");
+	}
+	ArrPatSeat();
+}
+
+
+function clickQueryItm(_this){
+	$("#filterValue").val("");
+	
+	if(!$(_this).hasClass("queryItmActive")){
+		$(".queryItm").removeClass("queryItmActive");
+	}
+	$(_this).toggleClass("queryItmActive");
+	
+	///速度太慢走前台
+	if($(".queryItmActive").length){
+		if($(".queryItmActive").attr("filterType")=="HasNoExecOrd"){
+			$(".sickbed").not(".hasSyOrd").hide();
+			return;
+		}
+	}
+
+	var filterValue = $(".queryItmActive").length?$(_this).attr("filterValue"):"";
+	var filterType = $(_this).attr("filterType");
+	againData(filterType,filterValue);
+}
+
+
+
+///扩展功能，针对jq提供删除某个css元素的功能
+$.fn.removeCss=function(toDelete) {
+	var props = $(this).attr('style').split(';');
+	var tmp = -1;
+	for( var p=0; p<props.length; p++) {
+		if(props[p].indexOf(toDelete)!== -1 ) {
+		    tmp=p
+		}
+	}
+	if(tmp !== -1) {
+        props.splice(tmp,1);
+    }
+    
+	return $(this).attr('style',props.join(';'));
+}

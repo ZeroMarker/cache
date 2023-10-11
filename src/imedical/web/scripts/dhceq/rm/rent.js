@@ -24,19 +24,23 @@ function initDocument()
 	if ($.trim(startTime)!="")$('#RPlanBegin').datetimebox({value: startTime});
 	var startTime=getElementValue("CurDateTime");
 	if ($.trim(startTime)!="")$('#RPlanEnd').datetimebox({value: startTime});
-	
-	initLookUp();
-	initButton(); //按钮初始化
 	defindTitleStyle();
+	//Modify by zc0079 先初始化,再赋值  begin
+	initRentStatus();  
+	initReturnStatus();
+	//Modify by zc0079 先初始化,再赋值  begin
 	fillData();
 	setRequiredElements("RFromLocDR_DeptDesc^RShareItemDR_SIDesc^RRequestLocDR_DeptDesc^RRequestUserDR_UName"); //必填项 Modify by zx 2020-04-24
 	initEditFields(getElementValue("ApproveSetDR"),getElementValue("CurRole"),getElementValue("Action"));
-	initApproveButton();
+	//initApproveButton();  //modified by LMH 20230206 UI
 	setEnabled();
-	initRentStatus();
-	initReturnStatus();
+	initShowBtn(); //added by LMH 20230207 UI 只读页面下按钮不显示
+    initApproveButtonNew(); //added by LMH 20230206 UI 审批按钮初始化
+	//initButton(); //按钮初始化
+	//initButtonWidth();
+	initLookUp();  //Modified By QW20220517 BUG:QW0161 调整位置
 	setDataTime();
-	initButtonWidth();
+	//showBtnIcon('BSave^BDelete^BSubmit^BCancelSubmit^BApprove1^BApprove2^BApprove3^BApprove4^BApprove5',false); //modified by LMH 20230206 动态设置是否极简显示按钮图标
 	//Modify by zc 2020-05-20 ZC0073  费用信息调整 begin
 	//$('#RWorkLoad').blur(function(){totalFee_Change()});
 	totalFee_Change();
@@ -48,7 +52,12 @@ function initDocument()
 		singlelookup("FromMoveUser","PLAT.L.EQUser","","");
 		singlelookup("ToMoveUser","PLAT.L.EQUser","","");
 	}
-	//Modify by zc 2020-05-20 ZC0073  费用信息调整 end
+	//added by LMH 20230324  价格提示框文字极简和炫彩文字颜色调整
+    if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+	    $('#PriceInfo').css('color','#339EFF')
+    }else{
+	    $('#PriceInfo').css('color','#017BCE')
+    }
 }
 
 function setEnabled()
@@ -106,13 +115,21 @@ function setEnabled()
 		$("#RenturnInfo").hide(); //Modify by zc 2020-05-20 ZC0073
 		if (ReadOnly=="1") 
 		{
-			$("#RenturnInfo").show(); //Modify by zc 2020-05-20 ZC0073
+			//Modify by zx 2020-08-29 BUG ZX0105 明细查询时显示信息调整
 			disableAllElements();
 			if (Status=="3")
 			{
 				tableID="tDHCEQRentAffix_Return";
-				initAffixInfo(); //Modify by zx 2020-05-18 Bug ZX0088
+				initAffixInfo();
 				$("#AffixLoan").hide();
+				$("#RenturnInfo").show();
+				$('#AffixReturn').accordion("unselect",0);   //Modefied by zc0101 2021-5-13  不显示附件信息
+			}
+			else if(Status=="2")
+			{
+				tableID="tDHCEQRentAffix_Loan";
+				initAffixInfo();
+				$("#AffixReturn").hide();
 			}
 			else
 			{
@@ -124,10 +141,11 @@ function setEnabled()
 		else
 		{
 			tableID="tDHCEQRentAffix_Loan";
+			//Modify by zx 2020-08-28 BUG ZX0105
+			initAffixInfo();
 			$("#AffixReturn").hide();
-			$("#AffixLoan").hide();
+			//$("#AffixLoan").hide();
 		}
-		
 	}
 }
 
@@ -230,7 +248,16 @@ function fillData()
 		setElement("RRentManagerDR_UName",curUserName);
 		//Modify by zx 2020-04-21 Bug ZX0084
 		var startTime=getElementValue("CurDateTime");
-		if ($.trim(startTime)!="")$('#RStart').datetimebox({value: startTime});
+		//Modefied by zc0079 2020-07-10  开始日期应取当前赋值时间  begin
+		//if ($.trim(startTime)!="")$('#RStart').datetimebox({value: startTime});
+		if (($.trim(startTime)!="")&&(getElementValue("RStartDate")==""))
+		{
+			$('#RStart').datetimebox({value: startTime});
+			var vRStart=startTime.split(" ");
+			setElement("RStartDate",vRStart[0]);
+			setElement("RStartTime",vRStart[1]);
+		}
+		//Modefied by zc0079 2020-07-10  开始日期应取当前赋值时间  end
 	}
 	else if(Action=="ZL_Return")
 	{
@@ -238,7 +265,16 @@ function fillData()
 		setElement("RReturnManagerDR_UName",curUserName);
 		//Modify by zx 2020-04-21 Bug ZX0084
 		var returnTime=getElementValue("CurDateTime");
-		if ($.trim(returnTime)!="")$('#RReturn').datetimebox({value: returnTime});
+		//Modefied by zc0079 2020-07-10  结束日期应取当前赋值时间  begin
+		//if ($.trim(returnTime)!="")$('#RReturn').datetimebox({value: returnTime});
+		if (($.trim(returnTime)!="")&&(getElementValue("RReturnDate")==""))
+		{
+			$('#RReturn').datetimebox({value: returnTime});
+			var vRReturn=returnTime.split(" ");
+			setElement("RReturnDate",vRReturn[0]);
+			setElement("RReturnTime",vRReturn[1]);
+		}
+		//Modefied by zc0079 2020-07-10  结束日期应取当前赋值时间  begin
 	}
 }
 
@@ -311,6 +347,8 @@ function BApprove_Clicked()
 
 function getAffixInfo(action)
 {
+	//Modify by zx 2020-12-10 BUG ZX0121 可编辑行需要结束编辑
+	if(editIndex != undefined) $("#"+tableID).datagrid('endEdit', editIndex);
 	var rows = $("#"+tableID).datagrid('getRows');
 	var RowCount=rows.length;
 	var val=""
@@ -460,12 +498,17 @@ function totalFee_Change()
 	var price=getElementValue("RPrice")
 	if (price=="") price=0
 	price=parseFloat(price);
-	var workLoad=getElementValue("RWorkLoad")
-	if (workLoad=="") workLoad=0
+	var workLoad=getElementValue("RWorkLoad");
+	//Modify by zx 2020-08-20 BUG ZX0105 时长为空时赋值0 
+	if (workLoad=="")
+	{
+		workLoad=0;
+		setElement("RWorkLoad",workLoad)
+	}
 	workLoad=parseFloat(workLoad);
 	var tmpValue=(price.toFixed(2)*1)*(workLoad.toFixed(2)*1);
 	tmpValue=parseFloat(tmpValue);
-	setElement("RTotalFee",tmpValue.toFixed(2))
+	//setElement("RTotalFee",tmpValue.toFixed(2))  /// Modefied by zc0111 2021-12-29 成本价格取后台计算值
 }
 
 //重新加载转移单
@@ -475,6 +518,9 @@ function reloadRent(type, rowID)
 	{
 		websys_showModal("options").mth();
 		url="dhceq.rm.rentrequest.csp?RowID="+rowID;
+		if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
 	    window.location.href= url;
 	}
 	else
@@ -628,7 +674,24 @@ function reduceFee_Change()
 		setElement("RHold2","")
 		return ;
 	}
-	var tmpValue=(price.toFixed(2)*1)*(reduce.toFixed(2)*1);
-	tmpValue=parseFloat(tmpValue);
-	setElement("RHold4",tmpValue.toFixed(2))
+	/// Modefied by zc0111 2021-12-29   减少费用计算 begin
+	//var tmpValue=(price.toFixed(2)*1)*(reduce.toFixed(2)*1);
+	//tmpValue=parseFloat(tmpValue);
+	//setElement("RHold4",tmpValue.toFixed(2))
+	var tmpValue=tkMakeServerCall("web.DHCEQ.RM.BUSRent","GetReduceFeeByRResourcePrice",getElementValue("RResourcePriceDR"),reduce);
+	setElement("RHold4",tmpValue)
+	/// Modefied by zc0111 2021-12-29	减少费用计算 end
+}
+/**
+*@description 由界面参数ReadOnly控制按钮是否显示 1 不显示 ""显示
+*@author LMH 20230207
+*@params 无
+*@return 无
+*/
+function initShowBtn(){
+	if(getElementValue('ReadOnly')){
+		$('#showBtn').hide();
+	}else{
+		$('#showBtn').parent().css('top','329px');
+	}
 }

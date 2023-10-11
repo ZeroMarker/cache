@@ -17,7 +17,11 @@ var PageLogicObj = {
 	m_Grid : "",
 	m_Diag_HiscodeCombox: "",
 	m_Diag_TypeCombox: "",
-	m_Win : ""
+	m_Win : "",
+	m_ExtOrgGrid:"",
+	m_ExtOrgWin:"",
+	m_ExtOrgCombox : "",
+	m_Diag_ExtOrgCombox:""
 	
 }
 
@@ -42,18 +46,30 @@ function Init(){
 			var data = $(this).combobox('getData');
 			$(this).combobox("select",data[0].TCTEDTRowId);
 			PageLogicObj.m_TypeComboxValue = data[0].TCTEDTRowId;
+			findConfig();
 		},
 		onSelect: function () {
 			findConfig();
 		}
 	});
+	PageLogicObj.m_ExtOrgCombox = $HUI.combobox("#i-extorg", {
+		url:$URL+"?ClassName=web.DHCDocExtData&QueryName=ExtOrgDataQuery&Active=Y&ResultSetType=array",
+		valueField:'ExtOrgRowid',
+		textField:'TExtOrgDesc',
+		//editable:false,
+		onSelect: function () {
+			findConfig();
+		}
+	});
 	PageLogicObj.m_Grid = InitGrid();
+	PageLogicObj.m_ExtOrgGrid = InitExtOrgGrid();
 }
 function InitEvent(){
 	$("#i-find").click(findConfig);
 	$("#i-add").click(function(){opDialog("add")});
 	$("#i-edit").click(function(){opDialog("edit")});
 	$("#i-delete").click(function(){deConfig()});
+	$("#i-ExtOrg").click(ExtOrgHandle);
 	$(document.body).bind("keydown",BodykeydownHandler)
 }
 
@@ -67,6 +83,8 @@ function InitGrid(){
 		{field:'THISDesc',title:'HIS名称',width:100},
 		{field:'TMUCCode',title:'外部代码',width:100},
 		{field:'TMUCDesc',title:'外部名称',width:100},
+		{field:'TMUCExtOrgDr',title:'外部机构id',width:60,hidden:true},
+		{field:'TMUCExtOrg',title:'外部机构',width:100},
 		{field:'TActiveFlag',title:'可用标识',width:100},
 		{field:'HidRowid',title:'ID',width:60,hidden:true}
     ]]
@@ -101,11 +119,36 @@ function InitGrid(){
 				text:'删除',
 				id:'i-delete',
 				iconCls: 'icon-cancel'
+			},'-',{
+				id:"tip",
+				iconCls: 'icon-help',
+				handler: function(){
+					InitTip();
+					$("#tip").popover('show');
+				}
 			}
-		]
+		],
+		onDblClickRow:function(index, row){
+			opDialog("edit");
+		}
 	});
 	
 	return DurDataGrid;
+}
+
+function InitTip(){
+	var _content = "<ul class='tip_class'><li style='font-weight:bold'>使用说明</li>" + 
+		"<li>根据HIS字典表ID获取对照数据接口：</li>" + 
+		"<li><span>##class(web.DHCDocExtData).GetExtData</li></span>" + 
+		"<li><span>说明:</span>代码类型、HIS字典表ID不能为空,机构代码为空则取未维护机构的通用对照数据</li>" +
+		"<li><span>入参:</span>代码类型、HIS字典表ID、机构代码</li>" +
+		"<li><span>出参:</span>0^外部代码_$C(1)_外部名称</li>" +
+		"<li><span>出参:</span>非0^错误信息</li>" +
+		'<li><span>示例:</span>##class(web.DHCDocExtData).GetExtData("freq",1,"01")</li>'
+	$("#tip").popover({
+		trigger:'hover',
+		content:_content
+	});
 }
 
 //编辑或新增
@@ -149,6 +192,15 @@ function opDialog(action) {
 			$("#i-diag-hisname").val(record.HISDesc);	//attr("disabled","disabled");
 		}
 	});
+	PageLogicObj.m_Diag_ExtOrgCombox = $HUI.combobox("#i-diag-ExtOrg", {
+		url:$URL+"?ClassName=web.DHCDocExtData&QueryName=ExtOrgDataQuery&Active=Y&ResultSetType=array",
+		valueField:'ExtOrgRowid',
+		textField:'TExtOrgDesc',
+		filter:function(q, row){
+			var opts = $(this).combobox('options');
+			return row[opts.textField].toUpperCase().indexOf(q.toUpperCase()) >= 0;
+		}
+	});
 	if (action == "add") {
 		//$("#i-action").val("add");
 		PageLogicObj.m_Diag_HiscodeCombox.setValue("");
@@ -156,7 +208,7 @@ function opDialog(action) {
 		$("#i-diag-wbcode").val("");
 		$("#i-diag-wbname").val("");
 		$("#i-diag-active").checkbox("uncheck")
-		
+		PageLogicObj.m_Diag_ExtOrgCombox.setValue("");
 	} else {
 		//$("#i-action").val("edit");
 		// HISCodeRowId
@@ -169,7 +221,7 @@ function opDialog(action) {
 		} else {
 			$("#i-diag-active").checkbox("uncheck")
 		}
-		
+		PageLogicObj.m_Diag_ExtOrgCombox.setValue(selected.TMUCExtOrgDr);
 	}
 	
 	var cWin = $HUI.window('#i-dialog', {
@@ -177,7 +229,6 @@ function opDialog(action) {
 		iconCls: _icon,
 		modal: true,
 		minimizable:false,
-		maximizable:false,
 		maximizable:false,
 		collapsible:false,
 		onClose: function () {
@@ -218,6 +269,8 @@ function saveCfg() {
 	var type = PageLogicObj.m_TypeCombox.getValue();
 	var hisCodeId = PageLogicObj.m_Diag_HiscodeCombox.getValue();
 	var hisCode = PageLogicObj.m_Diag_HiscodeCombox.getText();
+	var ExtOrgId = PageLogicObj.m_Diag_ExtOrgCombox.getValue();
+	var ExtOrg = PageLogicObj.m_Diag_ExtOrgCombox.getText();
 	var hisname = $("#i-diag-hisname").val();
 	var wbcode = $("#i-diag-wbcode").val();
 	var wbname = $("#i-diag-wbname").val();
@@ -227,8 +280,8 @@ function saveCfg() {
 	} else {
 		active = "N"
 	}
-	var paraInStr = type + "^" + hisCodeId + "^" + hisCode + "^" + hisname + "^" + wbcode + "^" + wbname + "^" + active;
-	var paraUpStr = hisCodeId + "^" + hisCode + "^" + hisname + "^" + wbcode + "^" + wbname + "^" + active;
+	var paraInStr = type + "^" + hisCodeId + "^" + hisCode + "^" + hisname + "^" + wbcode + "^" + wbname + "^" + active +"^"+ ExtOrgId;
+	var paraUpStr = hisCodeId + "^" + hisCode + "^" + hisname + "^" + wbcode + "^" + wbname + "^" + active +"^"+ ExtOrgId;
 	if (hisCodeId == "") {
 		$.messager.alert('提示','HIS代码不能为空!',"info");
 		return false;
@@ -244,7 +297,7 @@ function saveCfg() {
 	
 	var methodName = "ModifyExtData";
 	if (action == "add") {
-		rpResult = tkMakeServerCall("web.DHCDocExtData","RepeatExtData",type,hisCodeId);
+		rpResult = tkMakeServerCall("web.DHCDocExtData","RepeatExtData",type,hisCodeId,"",ExtOrgId);
 		if ( rpResult == "R") {
 			$.messager.alert('提示','记录已存在!',"info");
 			return false;
@@ -256,7 +309,8 @@ function saveCfg() {
 			Instr:paraInStr
 		},function (responseText){
 			if(responseText == 0) {
-				$.messager.alert('提示','新增成功！',"info");
+				//$.messager.alert('提示','新增成功！',"info");
+				$.messager.popover({msg: '新增成功！',type:'success',timeout: 1000});
 				PageLogicObj.m_Win.close();
 				PageLogicObj.m_Grid.reload();
 				
@@ -266,7 +320,7 @@ function saveCfg() {
 			}	
 		})
 	} else {
-		rpResult = tkMakeServerCall("web.DHCDocExtData","RepeatExtData",type,hisCodeId,id);
+		rpResult = tkMakeServerCall("web.DHCDocExtData","RepeatExtData",type,hisCodeId,id,ExtOrgId);
 		if ( rpResult == "R") {
 			$.messager.alert('提示','记录已存在!',"info");
 			return false;
@@ -278,7 +332,8 @@ function saveCfg() {
 			MUCRowid:id
 		},function (responseText){
 			if(responseText == 0) {
-				$.messager.alert('提示','修改成功！',"info");
+				//$.messager.alert('提示','修改成功！',"info");
+				$.messager.popover({msg: '修改成功！',type:'success',timeout: 1000});
 				PageLogicObj.m_Win.close();
 				PageLogicObj.m_Grid.reload();
 				
@@ -294,11 +349,16 @@ function saveCfg() {
 function findConfig () {
 	//var text = PageLogicObj.m_ArcimCombox.getText();
 	var SelectTypeCode = PageLogicObj.m_TypeCombox.getValue();
-	
+	var Code = $("#i-code").val();
+	var Desc = $("#i-desc").val();
+	var SelectExtOrg = PageLogicObj.m_ExtOrgCombox.getValue();
 	PageLogicObj.m_Grid.reload({
 		ClassName : "web.DHCDocExtData",
 		QueryName : "ExtDataQuery",
-		SelectTypeCode: SelectTypeCode
+		SelectTypeCode: SelectTypeCode,
+		Code: Code,
+		Desc: Desc,
+		SelectExtOrg:SelectExtOrg
 	});
 }
 
@@ -321,6 +381,17 @@ function BodykeydownHandler(e){
         }else{   
             keyEvent=true;   
         }   
+    }else if (keyCode==13) {
+		if ((SrcObj.tagName=="A")||(SrcObj.tagName=="INPUT")) {
+			var myComName=SrcObj.id;
+			if (myComName=="i-code"){
+				findConfig();
+			}else if(myComName=="i-desc"){
+				findConfig();
+			}
+			return true;
+		}
+		return true;
     }else{   
         keyEvent=false;   
     }   
@@ -330,3 +401,163 @@ function BodykeydownHandler(e){
 }
 
 
+function ExtOrgHandle(){
+	var cWin = $HUI.dialog('#i-ExtOrg-dialog', {
+		title: "外部机构维护",
+		width:680,
+		height:500,
+		iconCls: "icon-save",
+		modal: true,
+		minimizable:false,
+		maximizable:false,
+		collapsible:false,
+		onClose: function () {
+		}
+	});
+	$("#i-diag-ExtOrgCode,#i-diag-ExtOrgDesc").val("");
+	$("#i-diag-ExtOrgActive").checkbox('setValue',false);
+	PageLogicObj.m_ExtOrgWin = cWin;
+	findExtOrg();
+	$('#i-ExtOrg-dialog').window('open');
+}
+
+function InitExtOrgGrid(){
+	var columns = [[
+		{field:'TExtOrgCode',title:'机构代码',width:100},
+		{field:'TExtOrgDesc',title:'机构描述',width:100},
+		{field:'TExtOrgActiveFlag',title:'可用标识',width:100},
+		{field:'ExtOrgRowid',title:'ID',width:60,hidden:true}
+    ]]
+	var ExtOrgDataGrid = $("#tabExtOrg").datagrid({
+		fit : true,
+		border : false,
+		striped : true,
+		singleSelect : true,
+		fitColumns : true,
+		rownumbers:true,
+		//autoRowHeight : false,
+		pagination : true,  
+		pageSize: 10,
+		pageList : [10,20,50],
+		idField:'ExtOrgRowid',
+		columns :columns,
+		toolbar:[{
+				text:'新增',
+				id:'i-extadd',
+				iconCls: 'icon-add',
+				handler:function(){
+					SaveExtOrg("add")	
+				}
+			},{
+				text:'修改',
+				id:'i-extedit',
+				iconCls: 'icon-write-order',
+				handler:function(){
+					SaveExtOrg("edit")	
+				}
+			}
+		],
+		onSelect:function(index,row){
+			SetSelRowData(row)	
+		},
+		onUnselect:function(index, row){
+			$("#i-diag-ExtOrgCode,#i-diag-ExtOrgDesc").val("");
+			$("#i-diag-ExtOrgActive").checkbox('uncheck');
+		},
+		onBeforeSelect:function(index, row){
+			var selrow=PageLogicObj.m_ExtOrgGrid.datagrid('getSelected');
+			if (selrow){
+				var oldIndex=PageLogicObj.m_ExtOrgGrid.datagrid('getRowIndex',selrow);
+				if (oldIndex==index){
+					PageLogicObj.m_ExtOrgGrid.datagrid('unselectRow',index);
+					return false;
+				}
+			}
+		}
+	});
+	
+	return ExtOrgDataGrid;
+}
+
+function SetSelRowData(row){
+	$("#i-diag-ExtOrgCode").val(row["TExtOrgCode"]);
+	$("#i-diag-ExtOrgDesc").val(row["TExtOrgDesc"]);
+	var ActiveFlag=row["TExtOrgActiveFlag"];
+	if (ActiveFlag=="Y") {
+		$("#i-diag-ExtOrgActive").checkbox('check');
+	}else{
+		$("#i-diag-ExtOrgActive").checkbox('uncheck');
+	}
+}
+
+function SaveExtOrg(param){
+	var Code=$("#i-diag-ExtOrgCode").val();
+	var Desc=$("#i-diag-ExtOrgDesc").val();
+	var Rowid="";
+	if(param=="edit"){
+		var row=PageLogicObj.m_ExtOrgGrid.datagrid("getSelected");
+		if(row){
+			Rowid=row.ExtOrgRowid;
+		}
+		if(Rowid==""){
+			$.messager.alert("提示","请选择一行数据.","warning")	
+			return false;
+		}
+	}
+	if(Code==""){
+		$.messager.alert("提示","机构代码不能为空.","warning",function(){
+			$('#i-diag-ExtOrgCode').next('span').find('input').focus();		
+		})	
+		return false;
+	}
+	if(Desc==""){
+		$.messager.alert("提示","机构描述不能为空.","warning",function(){
+			$('#i-diag-ExtOrgDesc').next('span').find('input').focus();	
+		})	
+		return false;
+	}
+	var ActiveFlag=$HUI.checkbox("#i-diag-ExtOrgActive").getValue();
+	if(ActiveFlag){
+		ActiveFlag="Y";
+	}else{
+		ActiveFlag="N";
+	}
+	
+	$.cm({
+		ClassName:"web.DHCDocExtData",
+		MethodName:"SaveExtOrg",
+		Code:Code,
+		Desc:Desc,
+		Active:ActiveFlag,
+		Rowid:Rowid,
+		dataType:"text"
+	},function(val){
+		if(val==0){
+			$.messager.popover({msg:"操作成功!",type:'success',timeout: 1000})	
+			findExtOrg();
+		}else{
+			var msg="操作失败!"
+			if(val=="1"){
+				msg=msg+"存在重复的代码数据."	
+			}
+			else if(val=="2"){
+				msg=msg+"存在重复的描述数据."	
+			}
+			else{
+				msg=msg+"错误代码:"+val;
+			}
+			$.messager.alert("错误",msg,"error")	
+		}	
+	})
+}
+function findExtOrg(){
+	$.cm({
+	    ClassName : "web.DHCDocExtData",
+	    QueryName : "ExtOrgDataQuery",
+	    Pagerows:PageLogicObj.m_ExtOrgGrid.datagrid("options").pageSize,
+	    rows:99999
+	},function(GridData){
+		PageLogicObj.m_ExtOrgGrid.datagrid("unselectAll");
+		PageLogicObj.m_ExtOrgGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+	}); 
+}

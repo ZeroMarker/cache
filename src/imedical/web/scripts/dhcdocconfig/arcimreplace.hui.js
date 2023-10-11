@@ -36,8 +36,15 @@ $(function(){
 		//事件初始化
 		InitEvent();
 	}
+	InitCache();
 })
-
+function InitCache(){
+	var hasCache = $.DHCDoc.hasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
+}
 function Init(){
 	InitDataGrid();
 	InitArcimCombox("i-arcim", PageLogicObj, "search");
@@ -47,9 +54,12 @@ function Init(){
 		textField:'text',
 		data:[
 			{id:'ARCOS',text:'医嘱套'},{id:'TMPL',text:'医嘱模板'},{id:'USE',text:'常用用法维护'}
+			,{id:'CureAppend',text:'治疗项目绑定医嘱'},{id:'LabAppend',text:'检验绑定医嘱'},{id:'SkinAppend',text:'皮试绑定医嘱'}
+			,{id:'ItemListAppend',text:'附加医嘱绑定-按医嘱'},{id:'CatListAppend',text:'附加医嘱绑定-按子类'},{id:'CMPrescTypeLinkFee',text:'草药录入设置-处方剂型关联费用'}
+			,{id:'ArcWardAppend',text:'病区绑定医嘱设置'}
 		]
 	})
-	
+
 	PageLogicObj.m_UserCombox = $HUI.combobox("#i-user", {
 		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.CommonFunction&QueryName=LookUpUser&desc=&ResultSetType=array&HospId="+$HUI.combogrid('#_HospUserList').getValue(),
 		valueField:'ID',
@@ -153,6 +163,7 @@ function InitArcimCombox(selector, OBJ , type) {
 
 function InitDataGrid(){
 	var columns = [[
+		{field:'index',checkbox:true},
 		{field:'cfgType',title:'维护类型',width:60},
 		{field:'desc',title:'描述',width:300},
 		{field:'RowId',title:'RowId',width:50}
@@ -161,9 +172,10 @@ function InitDataGrid(){
 		fit : true,
 		border : false,
 		striped : true,
-		singleSelect : true,
+		singleSelect : false,
 		fitColumns : true,
 		rownumbers:true,
+		idField:'index',
 		//autoRowHeight : false,
 		pagination : true,  
 		headerCls:'panel-header-gray',
@@ -189,27 +201,59 @@ function InitDataGrid(){
 				var detailArr = rowData.detail.split("!");
 				result = '<table style="padding:10px;">';
 				for (var i=0; i<detailArr.length; i++) {
-					var curRecord = detailArr[i].split("^")
+					var curRecord = detailArr[i].split("^");
+					curRecord.push("","","","","","","","","","");
 					var id = curRecord[0],name=curRecord[1],type=curRecord[2];
-					result = result + '<tr>' +
-								'<td style="border:0;padding:2px;padding-right:30px"><p><span class="title">'+ colName1 + ': </span>' + type + '</p></td>' +
-								'<td style="border:0;padding:2px;padding-right:30px"><p><span class="title">描述: </span>' + name + '</p></td>' +
-								'<td style="border:0;padding:2px;padding-right:30px"><p><span class="title">ID: </span>' + id + '</p></td>' +
-							'</tr>';
+					var DoseStr=curRecord[3],Instr=curRecord[4];
+					var PackQty=curRecord[5],RecLocDesc=curRecord[6];
+					var SpecDesc=curRecord[7];
+					if ((rowData.cfgType == "医嘱套")&&(type.indexOf("||")<0)) {
+						colName1="医嘱套ID";
+					}else{
+						if (rowData.cfgType == "医嘱套") {
+							colName1 = "医嘱项ID"
+						} else {
+							colName1 = "类型"
+						}
+					}
+					result = result + '<tr>';
+					result = result + '<td style="border:0;padding:2px;padding-right:30px"><p><span class="title">'+ colName1 + ': </span>' + type + '</p></td>';
+					result = result + '<td style="border:0;padding:2px;padding-right:30px"><p><span class="title">描述: </span>' + name + '</p></td>';
+					if (DoseStr!=""){
+						result = result + '<td style="border:0;padding:2px;padding-right:30px"><p><span class="title">单次剂量: </span>' + DoseStr + '</p></td>';	
+					}
+					if (Instr!=""){
+						result = result + '<td style="border:0;padding:2px;padding-right:30px"><p><span class="title">用法: </span>' + Instr + '</p></td>';	
+					}
+					if (PackQty!=""){
+						result = result + '<td style="border:0;padding:2px;padding-right:30px"><p><span class="title">数量: </span>' + PackQty + '</p></td>';	
+					}
+					if (RecLocDesc!=""){
+						result = result + '<td style="border:0;padding:2px;padding-right:30px"><p><span class="title">接收科室: </span>' + RecLocDesc + '</p></td>';	
+					}
+					if (SpecDesc!=""){
+						result = result + '<td style="border:0;padding:2px;padding-right:30px"><p><span class="title">标本: </span>' + SpecDesc + '</p></td>';	
+					}
+					result = result + '<td style="border:0;padding:2px;padding-right:30px"><p><span class="title">ID: </span>' + id + '</p></td>';
+					result = result + '</tr>';
 				}	
 				result = result + '</table>';
 			} else {
 				var detailArr = rowData.detail.split("^");
-				var Dose = detailArr[0],Instr = detailArr[1],PHFreq = detailArr[2],Durat = detailArr[3],TPAAdmType = detailArr[4];
+				var Dose = detailArr[0],Instr = detailArr[1],PHFreq = detailArr[2],Durat = detailArr[3],TPAAdmType = detailArr[4],PackQty=detailArr[5];
+				
 				result = "<p style='padding:10px;'>" +
 						"<span class='title'>单次剂量: </span><span class='title3'>" + Dose + "</span>" + 
 						"<span class='title'>用法: </span><span class='title3'>" + Instr + "</span>" + 
 						"<span class='title'>频次: </span><span class='title3'>" + PHFreq + "</span>" + 
 						"<span class='title'>疗程: </span><span class='title3'>" + Durat + "</span>" + 
-						"<span class='title'>就诊类型: </span><span class='title3'>" + TPAAdmType + "</span>" + 
+						"<span class='title'>数量: </span><span class='title3'>" + PackQty + "</span>" + 
 						"</p>";
 			}
 			return result;
+		},
+		onBeforeLoad:function(param){
+			$("#i-grid").datagrid('unselectAll');
 		},
 		columns :columns,
 		toolbar:[{
@@ -224,25 +268,32 @@ function InitDataGrid(){
 
 //编辑或新增
 function replaceConfig() {
-	var selected = PageLogicObj.m_Grid.getSelected();
+	var selected = PageLogicObj.m_Grid.getSelections();
 	var _title = "", _icon = "" ;
 	$("#i-tip").val();
-	if (!selected) {
+	if (selected.length==0) {
 		$("#i-tip").html("替换所有");
-		$("#dg-yzt").checkbox("enable");
-		$("#dg-tpl").checkbox("enable");
-		$("#dg-use").checkbox("enable");
-		$("#dg-yzt").checkbox("check");
-		$("#dg-tpl").checkbox("check");
-		$("#dg-use").checkbox("uncheck");
+		$("#selectAll").checkbox("enable").checkbox('check');
+		$("input[id^='dg-']").each(function(index,obj){
+			if (obj.type!="checkbox"){return true}
+			$(obj).checkbox("enable");
+			$(obj).checkbox("check");
+		});
+		
+		//$("#dg-use").checkbox("uncheck");
 	} else {
-		$("#i-tip").html("替换当前所选择->" + selected.cfgType + ": " + selected.RowId);
-		$("#dg-yzt").checkbox("disable");
-		$("#dg-tpl").checkbox("disable");
-		$("#dg-use").checkbox("disable");
-		$("#dg-yzt").checkbox("uncheck");
-		$("#dg-tpl").checkbox("uncheck");
-		$("#dg-use").checkbox("uncheck");
+		if (selected.length>1) {
+			$("#i-tip").html("替换当前所选择");
+		}else{
+			$("#i-tip").html("替换当前所选择->" + selected[0].cfgType + ": " + selected[0].RowId);
+		}
+		$("#selectAll").checkbox("disable").checkbox('uncheck');
+		$("input[id^='dg-']").each(function(index,obj){
+			if (obj.type!="checkbox"){return true}
+			$(obj).checkbox("disable");
+			$(obj).checkbox("uncheck");
+		});
+		
 	}
 	_title = "替换医嘱项";
 	_icon = "icon-w-edit";
@@ -307,8 +358,7 @@ function deConfig () {
 
 //保存字典信息
 function saveCfg() {
-	var selected = PageLogicObj.m_Grid.getSelected();
-	
+	var selected = PageLogicObj.m_Grid.getSelections();
 	var carcim = PageLogicObj.m_CCombox.getValue()||"";
 	var rarcim = PageLogicObj.m_RCombox.getValue()||"";
 	if (carcim == "") {
@@ -323,16 +373,30 @@ function saveCfg() {
 		$.messager.alert('提示','所替换的和原先的相同...' , "info");
 		return false;
 	}
+	var HospId=$HUI.combogrid('#_HospUserList').getValue();
 	var id = "", atype = "";
+	var selectTypeStr="";
 	var para = carcim + "^" + rarcim;
-	if (selected) {
-		atype = selected.cfgCode;
-		id = selected.RowId;
-		//alert(selected.acostype);;
+	if (selected.length>0) {
+		for (var i=0;i<selected.length;i++){
+			var atype = selected[i].cfgCode;
+			var id = selected[i].RowId;
+			if (selectTypeStr=="") selectTypeStr=atype+"^"+id;
+			else selectTypeStr=selectTypeStr+String.fromCharCode(1)+atype+"^"+id;
+		}
+		//atype = selected.cfgCode;
+		//id = selected.RowId;
 	} else {
 		var yzt = $("#dg-yzt").checkbox("getValue");
 		var tpl = $("#dg-tpl").checkbox("getValue");
 		var use = $("#dg-use").checkbox("getValue");
+		var CureAppend = $("#dg-CureAppend").checkbox("getValue");
+		var LabAppend = $("#dg-LabAppend").checkbox("getValue");
+		var SkinAppend = $("#dg-SkinAppend").checkbox("getValue");
+		var ItemListAppend = $("#dg-ItemListAppend").checkbox("getValue");
+		var CatListAppend = $("#dg-CatListAppend").checkbox("getValue");
+		var CMPrescTypeLinkFee = $("#dg-CMPrescTypeLinkFee").checkbox("getValue");
+		var ArcWardAppend = $("#dg-ArcWardAppend").checkbox("getValue");
 		if (yzt) {
 			if (atype == "") atype = "ARCOS"
 			else atype = atype + "^" + "ARCOS";
@@ -341,26 +405,46 @@ function saveCfg() {
 			if (atype == "") atype = "TMPL"
 			else atype = atype + "^" + "TMPL";
 		}
-		if (use) {
-			if (atype == "") atype = "USE"
-			else atype = atype + "^" + "USE";
+		if (use) {if (atype == ""){atype = "USE"}else{atype = atype + "^" + "USE";}};
+		if (CureAppend) {if (atype == ""){atype = "CureAppend"}else{atype = atype + "^" + "CureAppend";}};
+		if (LabAppend) {if (atype == ""){atype = "LabAppend"}else{atype = atype + "^" + "LabAppend";}};
+		if (SkinAppend) {if (atype == ""){atype = "SkinAppend"}else{atype = atype + "^" + "SkinAppend";}};
+		if (ItemListAppend) {if (atype == ""){atype = "ItemListAppend"}else{atype = atype + "^" + "ItemListAppend";}};
+		if (CatListAppend) {if (atype == ""){atype = "CatListAppend"}else{atype = atype + "^" + "CatListAppend";}};
+		if (CMPrescTypeLinkFee) {if (atype == ""){atype = "CMPrescTypeLinkFee"}else{atype = atype + "^" + "CMPrescTypeLinkFee";}};
+		if (ArcWardAppend) {if (atype == ""){atype = "ArcWardAppend"}else{atype = atype + "^" + "ArcWardAppend";}};
+	}
+	if (atype==""){
+		$.messager.alert('提示','请选择至少一项进行替换' , "info");
+		return false;
+	}
+	$.messager.confirm("警告", "批量替换医嘱前请核实绑定数据的单次剂量单位、数量单位、接收科室、标本等信息是否能正确使用，否则将导致严重问题，是否继续？", function (r) {
+		if (r) {
+			Deal();
+		}else{
+			return
+		}
+	});
+
+	function Deal(){
+		if (selectTypeStr) {
+			var result = tkMakeServerCall("DHCDoc.DHCDocConfig.CommonFunction","SaveArcimReplaceBySel", selectTypeStr, para,HospId);
+		}else{
+			var result = tkMakeServerCall("DHCDoc.DHCDocConfig.CommonFunction","SaveArcimReplace", id, atype, para,HospId);
+		}
+		if (result == 1) {
+			PageLogicObj.m_Win.close();
+			PageLogicObj.m_Grid.reload();
+			$.messager.alert('提示','保存成功...' , "info");
+			return true;
+		} else if (result == 2) {
+			$.messager.alert('提示','所替换的医嘱项不存在...' , "info");
+			return false;
+		} else {
+			$.messager.alert('提示','保存失败...' , "info");
+			return false;
 		}
 	}
-	var HospId=$HUI.combogrid('#_HospUserList').getValue();
-	var result = tkMakeServerCall("DHCDoc.DHCDocConfig.CommonFunction","SaveArcimReplace", id, atype, para,HospId);
-	if (result == 1) {
-		PageLogicObj.m_Win.close();
-		PageLogicObj.m_Grid.reload();
-		$.messager.alert('提示','保存成功...' , "info");
-		return true;
-	} else if (result == 2) {
-		$.messager.alert('提示','所替换的医嘱项不存在...' , "info");
-		return false;
-	} else {
-		$.messager.alert('提示','保存失败...' , "info");
-		return false;
-	}
-	
 	
 	
 }
@@ -371,9 +455,10 @@ function resetConfig() {
 	PageLogicObj.m_UserCombox.setValue("");
 	PageLogicObj.m_Grid.reload({
 		ClassName : "DHCDoc.DHCDocConfig.CommonFunction",
-		QueryName : "QryReplaceArcim"
+		QueryName : "QryReplaceArcim",
+		arcimrow: "",
+		HospId:$HUI.combogrid('#_HospUserList').getValue()
 	});
-	
 }
 function findConfig () {
 	var text = PageLogicObj.m_ArcimCombox.getText();
@@ -418,5 +503,15 @@ function BodykeydownHandler(e){
         e.preventDefault();   
     }   
 }
-
+function selectAllChkChange(e,value){
+	$("input[id^='dg-']").each(function(index,obj){
+		if (obj.type=="checkbox"){
+			if (value) {
+				$(obj).checkbox("check");
+			}else{
+				$(obj).checkbox("uncheck");
+			}
+		}
+	});
+}
 

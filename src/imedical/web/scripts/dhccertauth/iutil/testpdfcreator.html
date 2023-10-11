@@ -1,0 +1,123 @@
+﻿<html>
+<head>
+    <title>测试PDF打印机</title>
+    
+    <script type="text/javascript" src="./CA_PDFCreator.js"></script>
+	
+  <script type="text/javascript" language="javascript">
+	
+	var pdfName = "";
+	var pdfAllName = "";
+	var defPrinter = "";
+	
+	function test() {
+		try {
+			clearLog();
+			
+			var ver = pdfCreator.getVersion();
+			recordLog("Version:"+ver);
+			
+			var pdfName = "test";
+			pdfCreator.SetPDFName(pdfName);
+            pdfCreator.SetOutPath("");
+            pdfAllName = pdfCreator.GetOutPath() + pdfCreator.GetPDFName() + ".pdf";
+			recordLog("文件名称:"+pdfAllName);
+			
+			defPrinter = pdfCreator.GetDefaultPrinter();
+			recordLog("默认打印机名称:"+defPrinter);
+			
+			window.print(window.document.body.innerHTML);
+			ret = pdfCreator.chkPDFCreated(pdfAllName,5000,1000);
+			recordLog("打印生成PDF结果:"+ret);
+			
+		} catch(e) { 
+			alert(e.message); 
+			recordLog("异常:"+e.message);
+		}	
+	}
+	
+	function testaync() {
+		try {
+			clearLog();
+			
+			var ver = pdfCreator.getVersion();
+			recordLog("01 Version:"+ver);
+			
+			pdfName = ca_pdfcreator.genTS();
+			pdfCreator.SetPDFName(pdfName);
+            pdfCreator.SetOutPath("");
+            pdfAllName = pdfCreator.GetOutPath() + pdfCreator.GetPDFName() + ".pdf";
+			recordLog("02 文件名称:"+pdfAllName);
+			
+			defPrinter = pdfCreator.GetDefaultPrinter();
+			recordLog("03 默认打印机名称:"+defPrinter);
+			
+			if ("PDFCreator" != defPrinter) {
+				pdfCreator.SwitchDefaultPrinter("PDFCreator");
+				recordLog("04 切换默认打印机为:"+"PDFCreator");
+				recordLog("   切换后默认打印机名称:"+pdfCreator.GetDefaultPrinter());
+			}
+			
+			printWindow();
+			
+		} catch(e) { 
+			alert(e.message); 
+			recordLog("异常:"+e.message);
+		}	
+	}
+	
+	function printWindow() {
+		window.print(window.document.body.innerHTML);
+		
+		setTimeout("checkCreated()",3000);
+	}
+	
+	function checkCreated() {
+		ret = pdfCreator.chkPDFCreated(pdfAllName,5000,1000);
+		recordLog("05 打印生成PDF结果:"+ret);
+		
+		if (defPrinter != "") {
+			pdfCreator.SwitchDefaultPrinter(defPrinter);
+			recordLog("06 切换默认打印机为:"+defPrinter);
+			recordLog("   切换后默认打印机名称:"+pdfCreator.GetDefaultPrinter());
+		}
+	}
+	
+	function delpdf() {
+		ret = pdfCreator.DelPDF(pdfAllName);
+		recordLog("删除PDF结果:"+ret);
+	}
+	
+	function recordLog(txt) {
+		document.getElementById("log").value = document.getElementById("log").value + "\r\n" + txt;
+	}
+	function clearLog() {
+		document.getElementById("log").value = "";
+	}
+	
+    </script>
+    
+ </head>
+    
+<body>    
+    
+	<div id="cadiv" align="center" valign="middle" style="overflow:auto;width:500px;height:50px">
+		<form id="caAuditForm" name="caAuditForm" width="500px" height="100px" style="margin-right: 0px;margin-bottom: 0px;margin-top: 0px;">
+			<tr>
+			<td align="center" colspan="2">
+			<input type="button" id="submit" name="submit" onclick="test()" value="测试打印" style="font-family: Tahoma,Verdana,Helvetica;font-size: 14px;border:none;background:inherit;padding-left:0px;padding-right:0px;width:80px;text-align:center;"/>
+			<input type="button" id="submit" name="submit" onclick="testaync()" value="测试异步打印" style="font-family: Tahoma,Verdana,Helvetica;font-size: 14px;border:none;background:inherit;padding-left:0px;padding-right:0px;width:80px;text-align:center;"/>
+			<input type="button" id="submit" name="submit" onclick="delpdf()" value="删除PDF" style="font-family: Tahoma,Verdana,Helvetica;font-size: 14px;border:none;background:inherit;padding-left:0px;padding-right:0px;width:80px;text-align:center;"/>
+			</td>
+			</tr>
+			</table> 
+		</form>
+	</div>
+
+	<div id="cadiv2" align="center" valign="middle" style="overflow:auto;width:800px;height:500px">
+	    <textarea id="log" rows="30" cols="80" title="日志:"></textarea>
+    </div>
+        
+</body>
+
+</html>

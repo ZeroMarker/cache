@@ -205,7 +205,7 @@ function Query() {
         }
         var raqSrc=PRCPRINT.RaqPrint(raqObj)
 	    $("iframe").attr("src",raqSrc);
-    } else if (radioValue == "科室处方点评合格率统计") {
+    } else if (radioValue == "科室处方点评合理率统计") {
         var raqObj = {
             raqName: "PHA_PRC_QueryPassRateByLoc.raq",
             raqParams: {
@@ -224,7 +224,7 @@ function Query() {
         }
         var raqSrc=PRCPRINT.RaqPrint(raqObj)
 	    $("iframe").attr("src",raqSrc);
-    } else if (radioValue == "科室不合格处方原因统计(仅综合点评)") {
+    } else if (radioValue == "科室不合理处方原因统计(仅综合点评)") {
         var raqObj = {
             raqName: "PHA_PRC_QueryUnPassDataByLocRea.raq",
             raqParams: {
@@ -311,7 +311,7 @@ function SearchComments(){
 	var result = $("#conNoResult").combobox('getValue')||'';
 	var phaUserId = $("#conPharmacist").combobox('getValue')||'';
 	var state = $("#conSubmit").combobox('getValue')||'';
-	var parStr = wayId + "^" + result + "^" + phaUserId + "^" + state;
+	var parStr = wayId + "^" + result + "^" + phaUserId + "^" + state +"^"+ "二次点评";
 	
 	$("#gridFindNo").datagrid("query", {
 		findFlag: '1',

@@ -92,15 +92,15 @@ function ExportDataToExcel(strMethodGetServer,strMethodGetData,strTemplateName,s
 		//以上为拼接Excel打印代码为字符串
 	
 		CmdShell.notReturn =1;   //设置无结果调用，不阻塞调用
-		var rtn = CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
+		var rtn = CmdShell.CurrentUserEvalJs(Str);   //通过中间件运行打印程序 
 	}
 
 	return true;
 }
 //新三联打印
 function ExportDataToExcelNew(strMethodGetServer,strMethodGetData,strTemplateName,strArguments,strSwitchPrint,strFlagIdS){
-	
-	if ("undefined"==typeof EnableLocalWeb ||0==EnableLocalWeb ){  //未开启使用中间件 或 老项目，然仍用老的方式运行	
+	var SignImg = GetUserImg(ReportID);   //取签名图片
+	if ("undefined"==typeof EnableLocalWeb ||0==EnableLocalWeb || (BrowserVer=="isIE11")){  //未开启使用中间件 或 老项目，然仍用老的方式运行	
 		var TemplatePath = $m({                  
 			ClassName:"DHCMed.Service",
 			MethodName:"GetTemplatePath"
@@ -116,7 +116,12 @@ function ExportDataToExcelNew(strMethodGetServer,strMethodGetData,strTemplateNam
 		xlBook=xls.Workbooks.Add(FileName);
 		xlSheet=xlBook.Worksheets.Item(1);	
 		var flg = tkMakeServerCall("DHCMed.DTHService.ReportSrv","DMReportThreePrintNew","fillxlSheet",strArguments,strSwitchPrint,strFlagIdS);
-
+		if (SignImg) {
+		   	xlSheet.Shapes.AddPicture(SignImg,'1','1','250','150','50','17'); //插入图片方法(文件名、链接、saveWithDocument、左侧、顶部、宽度、高度)
+		   	xlSheet.Shapes.AddPicture(SignImg,'1','1','250','390','50','17');
+		   	xlSheet.Shapes.AddPicture(SignImg,'1','1','250','640','50','17');
+	   	}
+	   	
 		//打印预览
 		xls.visible=true;
 		xlSheet.PrintPreview();
@@ -147,6 +152,9 @@ function ExportDataToExcelNew(strMethodGetServer,strMethodGetData,strTemplateNam
 		    Str += "var xlBook = xlApp.Workbooks.Add('" +FileName+ "');"  //标点符号很重要，值都是''引起来才能使用
 		    Str += "var xlSheet = xlBook.Worksheets.Item(1);"
 	        Str += RepString 	  //后面一定不能有;
+	        Str +=((SignImg)?("xlSheet.Shapes.AddPicture('" +SignImg+ "','1','1','250','150','50','17');"):"")            //插入图片方法(文件名、链接、saveWithDocument、左侧、顶部、宽度、高度)
+	        Str +=((SignImg)?("xlSheet.Shapes.AddPicture('" +SignImg+ "','1','1','250','390','50','17');"):"")
+	        Str +=((SignImg)?("xlSheet.Shapes.AddPicture('" +SignImg+ "','1','1','250','640','50','17');"):"")
 	        Str += "xlSheet.PrintOut();"
 	        Str += "xlApp.Visible = false;"
 	        Str += "xlApp.UserControl = false;"
@@ -159,7 +167,7 @@ function ExportDataToExcelNew(strMethodGetServer,strMethodGetData,strTemplateNam
 
 		//以上为拼接Excel打印代码为字符串	
 		CmdShell.notReturn =1;   //设置无结果调用，不阻塞调用
-		var rtn = CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
+		var rtn = CmdShell.CurrentUserEvalJs(Str);   //通过中间件运行打印程序 
 
 	}
 	return true;
@@ -167,7 +175,8 @@ function ExportDataToExcelNew(strMethodGetServer,strMethodGetData,strTemplateNam
 
 //新二联打印
 function ExportTwoDataToExcelNew(strMethodGetServer,strMethodGetData,strTemplateName,strArguments,strFlagIdS) {
-	if ("undefined"==typeof EnableLocalWeb ||0==EnableLocalWeb ){  //未开启使用中间件 或 老项目，然仍用老的方式运行	
+	var SignImg = GetUserImg(ReportID);   //取签名图片
+	if ("undefined"==typeof EnableLocalWeb ||0==EnableLocalWeb || (BrowserVer=="isIE11") ){  //未开启使用中间件 或 老项目，然仍用老的方式运行	
 		var TemplatePath = $m({                  
 			ClassName:"DHCMed.Service",
 			MethodName:"GetTemplatePath"
@@ -183,7 +192,10 @@ function ExportTwoDataToExcelNew(strMethodGetServer,strMethodGetData,strTemplate
 		xlBook=xls.Workbooks.Add(FileName);
 		xlSheet=xlBook.Worksheets.Item(1);
 		var flg = tkMakeServerCall("DHCMed.DTHService.ReportSrv","DMTwoReportPrintNew","fillxlSheet",strArguments,strFlagIdS);
-		
+		if (SignImg) {
+		   	xlSheet.Shapes.AddPicture(SignImg,'1','1','78','390','50','17'); //插入图片方法(文件名、链接、saveWithDocument、左侧、顶部、宽度、高度)
+	   	}
+	   	
 		//打印预览
 		xls.visible=true;
 		xlSheet.PrintPreview();
@@ -214,7 +226,8 @@ function ExportTwoDataToExcelNew(strMethodGetServer,strMethodGetData,strTemplate
 		    Str += "var xlApp = new ActiveXObject('Excel.Application');"
 		    Str += "var xlBook = xlApp.Workbooks.Add('" +FileName+ "');"  //标点符号很重要，值都是''引起来才能使用
 		    Str += "var xlSheet = xlBook.Worksheets.Item(1);"
-	        Str += RepString 	  //后面一定不能有;	    
+	        Str += RepString 	  //后面一定不能有;
+	        Str +=((SignImg)?("xlSheet.Shapes.AddPicture('" +SignImg+ "','1','1','78','390','50','17');"):"")            //插入图片方法(文件名、链接、saveWithDocument、左侧、顶部、宽度、高度)
 	        Str += "xlSheet.PrintOut();"
 	        Str += "xlApp.Visible = false;"
 	        Str += "xlApp.UserControl = false;"
@@ -226,7 +239,7 @@ function ExportTwoDataToExcelNew(strMethodGetServer,strMethodGetData,strTemplate
 	        Str += "return 1;}());";
 		//以上为拼接Excel打印代码为字符串
 		CmdShell.notReturn =1;   //设置无结果调用，不阻塞调用
-		var rtn = CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
+		var rtn = CmdShell.CurrentUserEvalJs(Str);   //通过中间件运行打印程序 
 	}
 
 	return true;
@@ -296,7 +309,7 @@ function ExportTwoDataToExcel(strMethodGetServer,strMethodGetData,strTemplateNam
 	        Str += "return 1;}());";
 		//以上为拼接Excel打印代码为字符串	
 		CmdShell.notReturn =1;   //设置无结果调用，不阻塞调用
-		var rtn = CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
+		var rtn = CmdShell.CurrentUserEvalJs(Str);   //通过中间件运行打印程序 
 	}
 
 	return true;
@@ -363,7 +376,7 @@ function ExportBaseDataToExcel(strMethodGetServer,strMethodGetData,strTemplateNa
 	        Str += "return 1;}());";
 		//以上为拼接Excel打印代码为字符串	
 		CmdShell.notReturn =1;   //设置无结果调用，不阻塞调用
-		var rtn = CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
+		var rtn = CmdShell.CurrentUserEvalJs(Str);   //通过中间件运行打印程序 
 	}
 
 	return true;
@@ -433,7 +446,7 @@ function ExportChildDataToExcel(aReportID) {
 			Str += "return 1;}());";
 		//以上为拼接Excel打印代码为字符串
 		CmdShell.notReturn =1;   //设置无结果调用，不阻塞调用
-		var rtn = CmdShell.EvalJs(Str);   //通过中间件运行打印程序 
+		var rtn = CmdShell.CurrentUserEvalJs(Str);   //通过中间件运行打印程序 
 	}
 
 	return true;
@@ -505,7 +518,7 @@ function ExportMaDataToExcel(aReportID) {
 		//以上为拼接Excel打印代码为字符串
 
 		CmdShell.notReturn =1;   //设置无结果调用，不阻塞调用
-		var rtn = CmdShell.EvalJs(Str);   //通过中间件运行打印程序 	
+		var rtn = CmdShell.CurrentUserEvalJs(Str);   //通过中间件运行打印程序 	
 	}
 	return true;
 }
@@ -574,4 +587,56 @@ function fillxlSheetStr(cxlSheet,cData,cRow,cCol)
 	}
 	 
 	return RepString; 
+}
+
+
+function GetUserImg(ReportID) {
+	var SignImg="";
+	var SignID = tkMakeServerCall("DHCMed.CA.SignVerify","GetRepSignID","DTH","DTH",ReportID,"S");
+	if (SignID != "") {
+		SignImg = $m({
+			ClassName:"DHCMed.CA.SignVerify",
+			MethodName:"SaveSignImg",
+			aSignID: SignID
+		},false);
+		if (SignImg!='') {
+			var ImgUrl = window.location.href;
+			ImgUrl = ImgUrl.substring(0,ImgUrl.lastIndexOf('/'));
+			ImgUrl = ImgUrl.substring(0,ImgUrl.lastIndexOf('/'));
+			SignImg = ImgUrl + SignImg + SignID + '.gif';
+		}
+	}
+	return SignImg;
+}
+
+function GetUserSignImg(aUserID) {	
+	var ImgBase64 = tkMakeServerCall("CA.BICAService","GetImageByUserID",aUserID);
+
+	if ((BrowserVer=="isLessIE11")||(BrowserVer=="isIE11")) { //IE浏览器
+		var BaseImg= new ActiveXObject("Base64IMGSave.ClsSaveBase64IMG");
+		var sReigstNo = aUserID;
+		var sFiletype= "gif"
+	    var rtn=BaseImg.WriteFile(sReigstNo,ImgBase64,sFiletype);   //C盘位置需能够访问，否则图片存在目录不在C://目录
+	    if(!rtn){
+	          //alert("签名图片转换错误");
+	          return false;
+	     }  
+		return true;
+	}else{	
+		if (EnableLocalWeb==1) {  //非IE浏览器，且启用中间件
+			var sReigstNo = aUserID;
+			var sFiletype= "gif"
+			var Str ="(function test(x){"
+	    	Str +="var BaseImg= new ActiveXObject('Base64IMGSave.ClsSaveBase64IMG');"
+	    	Str +="var rtn=BaseImg.WriteFile('"+sReigstNo+"','"+ImgBase64+"','"+sFiletype+"');"
+		    Str += "return 1;}());";
+			CmdShell.notReturn =0;   
+			var rtn = CmdShell.CurrentUserEvalJs(Str);   //通过中间件运行打印程序
+			if (rtn.status=="200") {
+				return true;
+			}else {
+				return false;
+			}
+		}
+	}
 }

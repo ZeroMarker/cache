@@ -1,5 +1,5 @@
 //名称	DHCPENoResultItems.hisui.js
-//功能	无结果项目查询
+//功能	未回传结果项目查询
 //创建	2019.06.10
 //创建人  xy
 
@@ -254,32 +254,24 @@ function BFind_click()
 	var ArrivedFlag=$("#ArrivedFlag").checkbox('getValue');
 	if(ArrivedFlag){
 		var columns =[[
-			{field:'Name',width:'200',title:'姓名'},
-			{field:'RegNo',width:'200',title:'登记号'},
-			{field:'ARCIMDesc',width:'550',title:'项目'},
-			{field:'Date',width:'200',title:'到达日期'},
+			{field:'Name',width:'300',title:'姓名'},
+			{field:'RegNo',width:'300',title:'登记号'},
+			{field:'ARCIMDesc',width:'600',title:'项目'},
+			{field:'Date',width:'300',title:'到达日期'},
 						 
 		]];
 	}else{
 		var columns =[[
-			{field:'Name',width:'200',title:'姓名'},
-			{field:'RegNo',width:'200',title:'登记号'},
-			{field:'ARCIMDesc',width:'550',title:'项目'},
-			{field:'TReceivedDate',width:'200',title:'收表日期'},
+			{field:'Name',width:'300',title:'姓名'},
+			{field:'RegNo',width:'300',title:'登记号'},
+			{field:'ARCIMDesc',width:'600',title:'项目'},
+			{field:'TReceivedDate',width:'300',title:'收表日期'},
 						 
 		]];
 	}
 
-/*
-	$("#NoResultItemGrid").datagrid('load',{
-			ClassName:"web.DHCPE.Report.NoResultItems",
-			QueryName:"NoResultItems",
-			DateFrom:$("#DateFrom").datebox('getValue'),
-		    DateTo:$("#DateTo").datebox('getValue'),
-			ArrivedFlag:$HUI.checkbox('#ArrivedFlag').getValue() ? "on" : "",
-			RecLocID:$("#RecLoc").combogrid('getValue'),   
-		});	*/
-		$HUI.datagrid("#NoResultItemGrid",{
+
+	$HUI.datagrid("#NoResultItemGrid",{
 		url:$URL,
 		fit : true,
 		border : false,
@@ -299,7 +291,8 @@ function BFind_click()
 			DateFrom:$("#DateFrom").datebox('getValue'),
 		    DateTo:$("#DateTo").datebox('getValue'),
 			ArrivedFlag:$HUI.checkbox('#ArrivedFlag').getValue() ? "on" : "",
-			RecLocID:$("#RecLoc").combogrid('getValue'),    
+			RecLocID:$("#RecLoc").combogrid('getValue'),  
+			CurLocID:session['LOGON.CTLOCID'] 
 
 		},
 		columns:columns,
@@ -309,12 +302,13 @@ function BFind_click()
 
 
 var columns =[[
-			{field:'Name',width:'200',title:'姓名'},
-			{field:'RegNo',width:'200',title:'登记号'},
-			{field:'ARCIMDesc',width:'550',title:'项目'},
-			{field:'TReceivedDate',width:'200',title:'收表日期'},
+			{field:'Name',width:'300',title:'姓名'},
+			{field:'RegNo',width:'300',title:'登记号'},
+			{field:'ARCIMDesc',width:'600',title:'项目'},
+			{field:'TReceivedDate',width:'300',title:'收表日期'},
 						 
 		]];
+
 function InitNoResultItemDataGrid()
 {
 	$HUI.datagrid("#NoResultItemGrid",{
@@ -338,6 +332,7 @@ function InitNoResultItemDataGrid()
 		    DateTo:$("#DateTo").datebox('getValue'),
 			ArrivedFlag:"",
 			RecLocID:"",   
+			CurLocID:session['LOGON.CTLOCID'] 
 
 		},
 		columns:columns,
@@ -359,6 +354,7 @@ function InitCombobox()
 		textField:'Desc',
 		onBeforeLoad:function(param){
 			param.ctlocdesc = param.q;
+			param.hospId = session['LOGON.HOSPID'];
 		},
 		
 		columns:[[

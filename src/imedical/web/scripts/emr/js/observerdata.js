@@ -85,13 +85,19 @@ $('#save').click(function()
         
 	});
 	window.returnValue = result;
-	window.close();
+	closeWindow();
 })
 
 //关闭窗口
 $('#close').click(function()
 {
 	window.returnValue = false;
+	closeWindow();
+})
+
+//关闭窗口
+function closeWindow()
+{
 	if (openWay == "editor")
 	{
 		parent.closeDialog("observerDialog");
@@ -101,5 +107,5 @@ $('#close').click(function()
 		//兼容showModalDialog写法
 		window.close();	
 	}
-})
+}
 

@@ -548,7 +548,7 @@ function PrintLabelLodop(){
 	LODOP.ADD_PRINT_TEXTA("instruc",69,67,52,20,"静脉滴注");
 	LODOP.ADD_PRINT_RECT(90,9,248,1,0,1);
 	LODOP.ADD_PRINT_RECT(111,11,248,1,0,1);
-	LODOP.ADD_PRINT_TEXT(93,13,246,16,"药品      厂家      规格     剂量   数量...(省略)");
+	LODOP.ADD_PRINT_TEXT(93,13,246,16,"药品      生产企业      规格     剂量   数量...(省略)");
 	LODOP.ADD_PRINT_SHAPE(4,237,1,"100%",1,0,1,"#000000");
 	LODOP.ADD_PRINT_SHAPE(4,278,0,"100%",1,0,1,"#000000");
 	LODOP.ADD_PRINT_TEXT(240,7,227,20,"医嘱:300滴/分 常量   就得用");

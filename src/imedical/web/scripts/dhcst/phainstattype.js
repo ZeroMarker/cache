@@ -5,7 +5,7 @@
  */
 var SessionLoc = session['LOGON.CTLOCID'];
 var SessionUser = session['LOGON.USERID'];
-var HospId=""
+var HospId=session['LOGON.HOSPID'];
 $(function() {
 	InitHospCombo(); //加载医院
     InitGridDict();
@@ -21,50 +21,38 @@ $(function() {
     $("#btnAddPoli").on("click", AddTypeCat);
     $("#btnSavePoli").on("click", SaveTypeCat);
     $("#btnDelPoli").on("click", DeleteTypeCat);
-    //别名
-	$('#txtAlias').on('keypress', function(event) {
-    if (event.keyCode == "13") {
-            QueryDetail();
-        }
-    });
+
+    /// 未维护药品别名
+    $('#txtAlias').searchbox({
+	    searcher:function(value,name){
+	    QueryDetail();
+	    },
+	    width:400,
+	    prompt:$g('请选择分类小类后输入别名进行检索...')
+	}); 
+	$(".icon-help").popover({title:$g('提示'),width:"400",content:$g("1.不用于业务管控，只用于统计的，都在这里维护添加;<br> 2.没有分类标准的，医院自己定标准，只用于统计的，在这里维护;")});
 });
 
 function InitHospCombo() {
-    var hospAutFlag = tkMakeServerCall('PHA.FACE.IN.Com', 'GetHospAut');
-    if (hospAutFlag === 'Y') {
-        $('#lyMainView').layout('add', {
-            region: 'north',
-            border: false,
-            title: '',
-            height: '40',
-            bodyCls: 'pha-ly-hosp',
-            content:
-                '<div style="padding-left:10px;">' +
-                '   <div class="pha-row">' +
-                '       <div class="pha-col">' +
-                '           <label id="_HospListLabel" style="color:red;" class="r-label">医院</label>' +
-                '       </div>' +
-                '   	<div class="pha-col">' +
-                '       	<input id="_HospList" class="textbox"/>' +
-                '   	</div>' +
-                '	</div>' +
-                '</div>'
-        });
-
-        var genObj = GenHospComp('PHAIN_StatType');
-        //增加选择事件
-        $('#_HospList').combogrid('options').onSelect = function (index, record) {
-            HospId= record.HOSPRowId;
-				    $('#gridTypeLink').datagrid('query', {
-				        inputStr: HospId
-				    });
-            
-            	
-           
-        };
-    }
+    var hospComp = GenHospComp("PHAIN_StatType",'', { width: 300 });
+    hospComp.options().onSelect = function (rowIndex, rowData) {
+        PHA_COM.Session.HOSPID = rowData.HOSPRowId;
+        PHA_COM.Session.ALL = [PHA_COM.Session.USERID, PHA_COM.Session.CTLOCID, PHA_COM.Session.GROUPID, PHA_COM.Session.HOSPID].join('^');
+        Query();
+    };
+    var defHosp = $cm(
+        {
+            dataType: 'text',
+            ClassName: 'web.DHCBL.BDP.BDPMappingHOSP',
+            MethodName: 'GetDefHospIdByTableName',
+            tableName: 'PHAIN_StatType',
+            HospID: PHA_COM.Session.HOSPID
+        },
+        false
+    );
+    PHA_COM.Session.HOSPID = defHosp;
+    PHA_COM.Session.ALL = [PHA_COM.Session.USERID, PHA_COM.Session.CTLOCID, PHA_COM.Session.GROUPID, PHA_COM.Session.HOSPID].join('^');
 }
-
 
 function InitGridDict() {
 }
@@ -78,7 +66,7 @@ function InitStatType() {
                 field: 'code',
                 title: '代码',
                 width: 200,
-                halign: 'center',
+                halign: 'left',
                 align: 'left',
                 editor: {
                     type: 'validatebox',
@@ -90,7 +78,7 @@ function InitStatType() {
                 field: 'desc',
                 title: '描述',
                 width: 200,
-                halign: 'center',
+                halign: 'left',
                 align: 'left',
                 editor: {
                     type: 'validatebox',
@@ -102,7 +90,7 @@ function InitStatType() {
                 field: 'remarks',
                 title: '备注',
                 width: 200,
-                halign: 'center',
+                halign: 'left',
                 align: 'left',
                 editor: {
                     type: 'validatebox',
@@ -117,7 +105,9 @@ function InitStatType() {
         url: $URL,
         queryParams: {
             ClassName: "web.DHCST.PHAINSTATTYPESET",
-            QueryName: "QueryStatType"
+            QueryName: "QueryStatType",
+            page	: 1, 
+        	rows	: 99999
         },
         pagination: false,
         fitColumns: true,
@@ -141,24 +131,31 @@ function InitStatType() {
             QueryTypeCat();
         }
     };
-    DHCPHA_HUI_COM.Grid.Init("gridTypeLink", dataGridOption);
+    PHA.Grid("gridTypeLink", dataGridOption);
 }
 
 /// 保存统计报表类型
 function SaveTypeLink() {
     $('#gridTypeLink').datagrid('endEditing');
-    var HospId=$('#_HospList').combogrid("getValue");
-    
+    var HospId = $('#_HospList').combogrid("getValue");
+    if (CheckEditorVal('gridTypeLink', ['code', 'desc']) == false) {
+	    return;
+	}
+	
     var gridChanges = $('#gridTypeLink').datagrid('getChanges')
     var gridChangeLen = gridChanges.length;
     if (gridChangeLen == 0) {
-        $.messager.alert("提示", "没有需要保存的数据", "warning");
+	    PHA.Popover({ showType: 'show', msg: $g('没有需要保存的数据'), type: 'alert' });
         return;
     }
     var paramsStr = "";
     for (var i = 0; i < gridChangeLen; i++) {
         var iData = gridChanges[i];
-        var params = (iData.rowid || "") + "^" + (iData.code || "")+"^" + (iData.desc || "")+"^" + (iData.remarks || "")+"^"+HospId;
+        var rowid = (iData.rowid || "");
+        var code = (iData.code || "");
+        var desc = (iData.desc || "");
+        var remarks = (iData.remarks || "");
+        var params = rowid + "^" + code + "^" + desc + "^" + remarks + "^" + HospId;
         paramsStr = (paramsStr == "") ? params : paramsStr + "!!" + params;
     }
     var saveRet = tkMakeServerCall("web.DHCST.PHAINSTATTYPESET", "SaveStatType", paramsStr);
@@ -166,7 +163,7 @@ function SaveTypeLink() {
     var saveVal = saveArr[0];
     var saveInfo = saveArr[1];
     if (saveVal < 0) {
-        $.messager.alert("提示", saveInfo, "warning");
+        PHA.Popover({ showType: 'show', msg:saveInfo, type: 'alert' });
     }
     $('#gridTypeLink').datagrid("reload");
 }
@@ -175,7 +172,7 @@ function SaveTypeLink() {
 function DeleteType() {
     var gridSelect = $("#gridTypeLink").datagrid("getSelected");
     if (gridSelect == null) {
-        $.messager.alert("提示", "请选择需要删除的记录!", "warning");
+	    PHA.Popover({ showType: 'show', msg:"请选择需要删除的记录!", type: 'alert' });
         return;
     }
     $.messager.confirm('确认对话框', '确定删除吗？', function(r) {
@@ -186,7 +183,15 @@ function DeleteType() {
                 $('#gridTypeLink').datagrid("deleteRow", rowIndex);
             } else {
                 var delRet = tkMakeServerCall("web.DHCST.PHAINSTATTYPESET", "DeleteType", pinst);
-                $('#gridTypeLink').datagrid("reload");
+                var delRetArr = delRet.split('^')
+                if (delRetArr[0] == 0) {
+                    $('#gridTypeLink').datagrid("reload");
+                }
+                else {
+                    PHA.Popover({ showType: 'show', msg:delRetArr[1], type: 'alert' });
+                     return;
+                }
+                
             }
         }
     })
@@ -201,7 +206,7 @@ function InitTypeCat() {
                 field: 'code',
                 title: '代码',
                 width: 200,
-                halign: 'center',
+                halign: 'left',
                 align: 'left',
                 editor: {
                     type: 'validatebox',
@@ -213,7 +218,7 @@ function InitTypeCat() {
                 field: 'desc',
                 title: '描述',
                 width: 200,
-                halign: 'center',
+                halign: 'left',
                 align: 'left',
                 editor: {
                     type: 'validatebox',
@@ -229,6 +234,8 @@ function InitTypeCat() {
         queryParams: {
             ClassName: "web.DHCST.PHAINSTATTYPESET",
             QueryName: "QueryStatTypeCat",
+            page	: 1, 
+        	rows	: 99999
         },
         pagination: false,
         fitColumns: true,
@@ -254,7 +261,7 @@ function InitTypeCat() {
             $("#InciDetail").datagrid("clear");
         }
     };
-    DHCPHA_HUI_COM.Grid.Init("gridTypeCat", dataGridOption);
+    PHA.Grid("gridTypeCat", dataGridOption);
 }
 
 //初始化已分类药品列表
@@ -264,9 +271,9 @@ function InitStatInciDetail() {
         [	      
                 
         	{ field: "rowid", title: 'rowid',width: 100, hidden: true },
-            { field: "code", title: '代码',width: 100,halign: 'center',align: 'left'},
-            { field: 'desc', title: '描述', width: 240,halign: 'center',align: 'left'},
-            { field: 'operate', title: '操作', width: 60,halign: 'center',align: 'center',formatter: statusFormatter}
+        	{ field: 'operate', title: '操作', width: 60,halign: 'center',align: 'left',formatter: statusFormatter},
+            { field: "code", title: '代码',width: 100,halign: 'left',align: 'left'},
+            { field: 'desc', title: '描述', width: 240,halign: 'left',align: 'left'}
         ]
     ];
     var dataGridOption = {
@@ -276,6 +283,11 @@ function InitStatInciDetail() {
             QueryName: "QueryStatInci"
         },
         pagination: true,
+        showRefresh: false,
+        showPageList: false,
+        afterPageText:'',
+        beforePageText:'',
+        displayMsg:'共 {total} 条记录',
         fitColumns: true,
         fit: true,
         rownumbers: true,
@@ -290,7 +302,7 @@ function InitStatInciDetail() {
         onLoadSuccess: function() {
         }
     };
-    DHCPHA_HUI_COM.Grid.Init("StatInciDetail", dataGridOption);
+    PHA.Grid("StatInciDetail", dataGridOption);
     
 }
 //初始化未分类药品列表
@@ -299,9 +311,10 @@ function InitInciDetail() {
     var columns = [
         [	
         	{ field: "rowid", title: 'rowid',width: 100, hidden: true },
-            { field: "code", title: '代码',width: 100,halign: 'center',align: 'left'},
-            { field: 'desc', title: '描述', width: 240,halign: 'center',align: 'left'},
-            { field: 'operate', title: '操作', width: 60,halign: 'center',align: 'center',formatter: statusFormatter}
+        	{ field: 'operate', title: '操作', width: 60,halign: 'center',align: 'center',formatter: statusFormatter},
+            { field: "code", title: '代码',width: 100,halign: 'left',align: 'left'},
+            { field: 'desc', title: '描述', width: 240,halign: 'left',align: 'left'}
+            
         ]
     ];
     var dataGridOption = {
@@ -312,6 +325,11 @@ function InitInciDetail() {
         },
         toolbar:"#toolbar",  //保持不改变高度
         pagination: true,
+        showRefresh: false,
+        showPageList: false,
+        afterPageText:'',
+        beforePageText:'',
+        displayMsg:'共 {total} 条记录',
         fitColumns: true,
         fit: true,
         rownumbers: true,
@@ -326,28 +344,38 @@ function InitInciDetail() {
         onLoadSuccess: function() {
         }
     };
-    DHCPHA_HUI_COM.Grid.Init("InciDetail", dataGridOption);
+    PHA.Grid("InciDetail", dataGridOption);
 }
 /// 保存报表分类
 function SaveTypeCat() {
     var gridPOLSelect = $('#gridTypeLink').datagrid('getSelected');
-    var phaLocId=$('#_HospList').combobox("getValue")||"";
+    if (gridPOLSelect == null) {
+	    PHA.Popover({ showType: 'show', msg:"上面请报表类型!", type: 'alert' });
+        return;
+    }
+    var phaLocId = $('#_HospList').combobox("getValue")||"";
     var pinst = gridPOLSelect.rowid;
     if (pinst == "") {
-        $.messager.alert("提示", "上面请报表类型", "warning");
+	    PHA.Popover({ showType: 'show', msg:"上面请报表类型", type: 'alert' });
         return;
     }
     $('#gridTypeCat').datagrid('endEditing');
+    if (CheckEditorVal('gridTypeCat', ['code', 'desc']) == false) {
+	    return;
+	}
     var gridChanges = $('#gridTypeCat').datagrid('getChanges')
     var gridChangeLen = gridChanges.length;
     if (gridChangeLen == 0) {
-        $.messager.alert("提示", "没有需要保存的数据", "warning");
+	    PHA.Popover({ showType: 'show', msg:"没有需要保存的数据", type: 'alert' });
         return;
     }
     var paramsStr = "";
     for (var i = 0; i < gridChangeLen; i++) {
         var iData = gridChanges[i];
-        var params =pinst  + "^" +(iData.rowid|| "")+ "^" +(iData.code|| "")+"^"+ (iData.desc || "");
+        var rowid = (iData.rowid|| "");
+        var code = (iData.code|| "");
+        var desc = (iData.desc || "");
+        var params = pinst  + "^" + rowid + "^" + code + "^" + desc;
         paramsStr = (paramsStr == "") ? params : paramsStr + "!!" + params;
     }
     var saveRet = tkMakeServerCall("web.DHCST.PHAINSTATTYPESET", "SaveStatTypeCat", paramsStr);
@@ -355,7 +383,7 @@ function SaveTypeCat() {
     var saveVal = saveArr[0];
     var saveInfo = saveArr[1];
     if (saveVal < 0) {
-        $.messager.alert("提示", saveInfo, "warning");
+	    PHA.Popover({ showType: 'show', msg:saveInfo, type: 'alert' });
     }
     $('#gridTypeCat').datagrid("reload");
 }
@@ -367,7 +395,9 @@ function QueryTypeCat() {
         pinst=gridSelect.rowid || "";
     }
     $('#gridTypeCat').datagrid('query', {
-        pinst: pinst
+        pinst: pinst,
+        page	: 1, 
+        rows	: 99999
     });
 }
 
@@ -375,7 +405,7 @@ function QueryTypeCat() {
 function DeleteTypeCat() {
     var gridSelect = $("#gridTypeCat").datagrid("getSelected");
     if (gridSelect == null) {
-        $.messager.alert("提示", "请选择需要删除的记录!", "warning");
+	    PHA.Popover({ showType: 'show', msg:"请选择需要删除的记录!", type: 'alert' });
         return;
     }
     $.messager.confirm('确认对话框', '确定删除吗？', function(r) {
@@ -386,13 +416,20 @@ function DeleteTypeCat() {
                 $('#gridTypeCat').datagrid("deleteRow", rowIndex);
             } else {
                 var delRet = tkMakeServerCall("web.DHCST.PHAINSTATTYPESET", "DeleteTypeCat", pinsc);
-                $('#gridTypeCat').datagrid("reload");
+                var delRetArr = delRet.split('^')
+                if (delRetArr[0] == 0) {
+                    $('#gridTypeCat').datagrid("reload");
+                }
+                else {
+                    PHA.Popover({ showType: 'show', msg:delRetArr[1], type: 'alert' });
+                     return;
+                }
             }
         }
     })
 }
 
-/// 报表类型增加
+/// 报表类型新增
 function AddTypeLink() {
     $("#gridTypeLink").datagrid('addNewRow', {
         editField: 'code'
@@ -400,7 +437,7 @@ function AddTypeLink() {
     $("#gridTypeCat").datagrid("clear");
 }
 
-/// 报表分类增加
+/// 报表分类新增
 function AddTypeCat() {
     var pinst = GetSelectrowid();
     if (pinst == "") {
@@ -413,12 +450,12 @@ function AddTypeCat() {
 function GetSelectrowid() {
     var gridSelect = $('#gridTypeLink').datagrid('getSelected');
     if (gridSelect == null) {
-        $.messager.alert("提示", "请先选中需要增加分类的报表类型", "warning");
+	    PHA.Popover({ showType: 'show', msg:"请先选中需要新增分类小类的大类！", type: 'alert' });
         return "";
     }
     var pinst = gridSelect.rowid || "";
     if (pinst == "") {
-        $.messager.alert("提示", "请先保存报表类型", "warning");
+	    PHA.Popover({ showType: 'show', msg:"请先保存分类大类！", type: 'alert' });
         return "";
     }
     return pinst;
@@ -439,14 +476,24 @@ function QueryInciDetail(SelectrowData) {
         inputStr: param
     });
 }
+
+function Query(){
+	$('#gridTypeLink').datagrid('query', {
+        inputStr: PHA_COM.Session.HOSPID,
+        page	: 1, 
+        rows	: 99999
+    });
+}
+
+
 //查询未分类药品
 function QueryDetail()
 {
-	var incAlias = $("#txtAlias").val().trim();
+	var incAlias = $('#txtAlias').searchbox("getValue");
 	var SelectrowData = $('#gridTypeCat').datagrid('getSelected');
 	var pinsc = SelectrowData.rowid || "";
 	if (pinsc=="") { 
-		$.messager.alert("提示", "请选择报表分类", "warning");
+		PHA.Popover({ showType: 'show', msg:"请选择分类小类", type: 'alert' });
         return ;
         }
 	var param=pinsc+"!!"+incAlias+"!!"+HospId;
@@ -459,17 +506,40 @@ function QueryDetail()
 function statusFormatter(value, rowData, rowIndex){
 	//好像对象传不进去,转成字符串就传进去了,对应函数内再取值又成了对象
 	var dataString=JSON.stringify(rowData)
-	var IndexString=JSON.stringify(rowIndex)
-	if (value=="0"){
+    var IndexString = JSON.stringify(rowIndex)
+    if (value == "0") {
+        if (PHA_COM.IsLiteCss) {
+            return "<span onclick='addInci("+ dataString +",+"+IndexString+")' class='icon-add'></span>";
+        }
+        else {
+            return "<span onclick='addInci("+ dataString +",+"+IndexString+")' class='icon-add'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";
+        }
+    }
+    else {
+        if (PHA_COM.IsLiteCss) {
+            return "<span onclick='delInci("+ dataString +",+"+IndexString+")' class='icon-cancel'></span>";
+        }
+        else {
+            return "<span onclick='delInci("+ dataString +",+"+IndexString+")' class='icon-cancel'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";
+        }
+    }
+
+   /* 
+	if (value=="0" && PHA_COM.IsLiteCss){
 		
 		//return "<a href='#' onclick='addInci("+ dataString +",+"+IndexString+")'><img src='../scripts/dhcpha/jQuery/themes/icons/edit_add.png' border=0/></a>";
-		return "<a href='#' onclick='addInci("+ dataString +",+"+IndexString+")'><img src='../scripts_lib/hisui-0.1.0/dist/css/icons/add.png' border=0/></a>";
-	}else{
+		return "<span onclick='addInci("+ dataString +",+"+IndexString+")' class='icon-add'></span>";
+	}else if(value=="0" && (!PHA_COM.IsLiteCss)){
+        return "<span onclick='addInci("+ dataString +",+"+IndexString+")' class='icon-add'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";
+    }else if(value=='1' && PHA_COM.IsLiteCss){
 		
 		//return "<a href='#' onclick='delInci("+ dataString +",+"+IndexString+")'><img src='../scripts/dhcpha/jQuery/themes/icons/edit_remove.png' border=0/></a>";
-		return "<a href='#' onclick='delInci("+ dataString +",+"+IndexString+")'><img src='../scripts_lib/hisui-0.1.0/dist/css/icons/edit_remove.png' border=0/></a>";
+		return "<span onclick='delInci("+ dataString +",+"+IndexString+")' class='icon-cancel'></span>";
 
-	}  
+	} else{
+        return "<span onclick='delInci("+ dataString +",+"+IndexString+")' class='icon-cancel'>&nbsp;&nbsp;&nbsp;&nbsp;</span>";
+    }
+    */
 }
 
 /// 添加药品 haha--对象
@@ -479,12 +549,12 @@ function addInci(rowData,Index) {
     var selectRowData = $('#gridTypeCat').datagrid('getSelected');
     var pinsc = selectRowData.rowid || "";
     if (pinsc=="") {
-		$.messager.alert("提示", "请选择报表分类或保存已选分类", "warning");
+	    PHA.Popover({ showType: 'show', msg:"请选择一个条分类小类！", type: 'alert' });
 		return;
 		}
 	var inci=rowData.rowid || ""
 	if (inci=="") {
-		$.messager.alert("提示", "请选择要添加的药品", "warning");
+		PHA.Popover({ showType: 'show', msg:"请选择要添加的药品！", type: 'alert' });
 		return;
 		}
     var saveRet = tkMakeServerCall("web.DHCST.PHAINSTATTYPESET", "addInci", pinsc,inci);
@@ -492,7 +562,7 @@ function addInci(rowData,Index) {
     var saveVal = saveArr[0];
     var saveInfo = saveArr[1];
     if (saveVal < 0) {
-        $.messager.alert("提示", saveInfo, "warning");
+	    PHA.Popover({ showType: 'show', msg:saveInfo, type: 'alert' });
     }
     $('#InciDetail').datagrid("deleteRow", Index);
     $('#InciDetail').datagrid("reload");
@@ -504,7 +574,7 @@ function addInci(rowData,Index) {
 /// 删除药品
 function delInci(rowData,Index) {
     if (rowData == null) {
-        $.messager.alert("提示", "请选择需要删除的记录!", "warning");
+	    PHA.Popover({ showType: 'show', msg:"请选择需要删除的记录!", type: 'alert' });
         return;
     }
     $.messager.confirm('确认对话框', '确定删除吗？', function(r) {
@@ -519,4 +589,58 @@ function delInci(rowData,Index) {
             }
         }
     })
+}
+
+// 验证表格编辑框的值
+// Huxt 2020-09-21
+function CheckEditorVal(gridId, fieldsArr){
+	var fieldTitle = GetFieldTitle(gridId);
+	var $GRID = $('#' + gridId);
+	var rowsData = $GRID.datagrid('getRows');
+	var mRows = rowsData.length;
+	for (var i = 0; i < mRows; i++) {
+		var mRowData = rowsData[i];
+		for (var j = 0; j < fieldsArr.length; j++) {
+			var oneField = fieldsArr[j];
+			var cellVal = mRowData[oneField] || "";
+			var cellEdVal = "";
+			var ed = $GRID.datagrid('getEditor', {index:i, field:oneField});
+			if (ed != null && ed !== undefined) {
+				cellEdVal = $(ed.target).val();
+			}
+			if (cellVal == "" && cellEdVal == "") {
+				$.messager.popover({
+					msg: "第" + (i + 1) + "行, " + fieldTitle[oneField] + "不能为空!!!",
+					type: 'alert',
+					timeout: 1000
+				});
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+// 获取field与title的对照, 返回格式: {field:title, field:title, ...}
+function GetFieldTitle(gridId){
+	var $GRID = $('#' + gridId);
+	var gridOpts = $GRID.datagrid('options');
+	if (gridOpts.FieldTitle) {
+		return $GRID.datagrid('options').FieldTitle;
+	}
+	var mFieldTitle = {};
+	var columns = gridOpts.columns;
+	var sColumns = columns[0];
+	for (var c = 0; c < sColumns.length; c++) {
+		var oneCol = sColumns[c];
+		mFieldTitle[oneCol.field] = oneCol.title;
+	}
+	gridOpts.FieldTitle = mFieldTitle;
+	return mFieldTitle;
+}
+
+function OpenHelpWin()
+{	
+	//$(".icon-help").popover({trigger:'manual',placement:'bottom',title:'HUI关于',content:'content'});
+	//$(".icon-help").popover('show');
 }

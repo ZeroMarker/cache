@@ -20,7 +20,7 @@ function initDocument(){
    	$HUI.datagrid("#stateinfodatagrid",{
 		url:$URL,
 		queryParams:{
-		    	ClassName:"web.DHCEQStateInfo",
+		    	ClassName:"web.DHCEQ.BA.BUSStateInfo",
 	        	QueryName:"GetStateInfo",
         		PFileNo:getElementValue("FileNo"),
        		 	PNo:getElementValue("No"),
@@ -28,15 +28,15 @@ function initDocument(){
         		PRecordDate:"",
         		PRecordFlag:1
 		},
-		//Modified By QW20181031 需求号:733009
+		singleSelect:true,
 		cache: false,
 		columns:Columns,
+		striped : true,
 		border:false,
 		pagination:true,
 		pageSize:10,
 		pageNumber:1,
 		pageList:[10,20,30,40,50],
-		//End By QW20181031 需求号:733009
 		onLoadSuccess:function(){
 			
 		}
@@ -49,7 +49,7 @@ function BFind_Clicked()
 	$HUI.datagrid("#stateinfodatagrid",{    
     url:$URL, 
     queryParams:{
-        ClassName:"web.DHCEQStateInfo",
+        ClassName:"web.DHCEQ.BA.BUSStateInfo",
         QueryName:"GetStateInfo",
        		PFileNo:getElementValue("FileNo"),
        		PNo:getElementValue("No"),
@@ -59,8 +59,9 @@ function BFind_Clicked()
         	PLoc:getElementValue("LocDR"), 
         	PUser :getElementValue("UserDR"), 
         	PStartDate: getElementValue("StartDate"), 
-        	PEndDate:getElementValue("EndDate")
-    },
+        	PEndDate:getElementValue("EndDate"),
+        	TMPFileNo:getElementValue("TMPFileNo")
+    	},
     });
 }
 

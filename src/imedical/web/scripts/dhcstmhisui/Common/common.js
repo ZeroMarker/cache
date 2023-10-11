@@ -1,51 +1,52 @@
-/**¹«¹²js·½·¨
- */
-var PmRunQianUrl = "dhccpmrunqianreport.csp";   //ÈóÇ¬±¨±íµ÷ÓÃdhcstm.pmrunqianreport.csp ¹Ì¶¨toolbar¡£dhccpmrunqianreport.csp£¬¹«Ë¾°æ±¾
-var CommParObj=GetAppPropValue("DHCSTCOMMONM");
-var App_MenuCspName=TRELOADPAGE;
-var FormBlockJson={};
-var FormMustInput=[];
-var ButtonCountObj={};
-var gWinWidth = $(window).width() * 0.9;	//Ä¬ÈÏµ¯³ö´°¿ÚµÄ¿í¶È¸ß¶È,ÊÊÓ¦µ±Ç°´°¿ÚµÄ´óĞ¡
+ï»¿// å…¬å…±jsæ–¹æ³•
+HISUIStyleCode = typeof HISUIStyleCode === 'undefined' ? 'blue' : HISUIStyleCode;
+var PmRunQianUrl = 'dhccpmrunqianreport.csp'; // æ¶¦ä¹¾æŠ¥è¡¨è°ƒç”¨dhcstm.pmrunqianreport.csp å›ºå®štoolbarã€‚dhccpmrunqianreport.cspï¼Œå…¬å¸ç‰ˆæœ¬
+var CommParObj = GetAppPropValue('DHCSTCOMMONM');
+var FormBlockJson = {};
+var FormMustInput = [];
+var ButtonCountObj = {};
+var gWinWidth = $(window).width() * 0.9;	// é»˜è®¤å¼¹å‡ºçª—å£çš„å®½åº¦é«˜åº¦,é€‚åº”å½“å‰çª—å£çš„å¤§å°
 var gWinHeight = $(window).height() * 0.9;
 var gGridHeight = $(window).height() * 0.6;
-var PrintMethod=1;  //ÆÕÍ¨µ¥¾İ´òÓ¡·½Ê½ 0-Lodop 1-RQ
-var HVBarcodePrintMethod=0;  //¸ßÖµÌõÂë´òÓ¡·½Ê½ 0-Lodop 1-XML(Ö§³ÖIE)
-var StkGrpHospid="";
+var PrintMethod = 1; // æ™®é€šå•æ®æ‰“å°æ–¹å¼ 0-Lodop 1-RQ
+var StkGrpHospid = '';
+var SerUseObj = GetSerUseObj();
+var HISVersion = GetHISVersion();
+var RQSuffix = GetRQSuffix();
 /**
- * ÎªstringÌí¼ÓstartWith·½·¨
+ * ä¸ºstringæ·»åŠ startWithæ–¹æ³•
  * @param str
  * @returns
  */
 String.prototype.startWith = function(str) {
-	var regexp = eval("/^" + str + "/");
+	var regexp = eval('/^' + str + '/');
 	return regexp.test(this);
 };
 /**
- * ÎªstringÌí¼ÓleftPad·½·¨
+ * ä¸ºstringæ·»åŠ leftPadæ–¹æ³•
  * @param str
  * @returns
  */
-leftPad = function (str,paddingChar,len) {
-        if (str.length < len) { for (; str.length < len; str = paddingChar + str) { } }
-        return str;
-    };
- String.prototype.leftPad = function (paddingChar,len) { return leftPad(this, paddingChar,len); };
+leftPad = function(str, paddingChar, len) {
+	if (str.length < len) { for (; str.length < len; str = paddingChar + str) { } }
+	return str;
+};
+String.prototype.leftPad = function(paddingChar, len) { return leftPad(this, paddingChar, len); };
 
 /**
- * »ñÈ¡ÈÕÆÚ
+ * è·å–æ—¥æœŸ
  * 
  * @param expr
- *            ±í´ïÊ½£¨¿ÉÒÔÊÇ×Ö·û´®£¨ÈÕÆÚ±í´ïÊ½£©¡¢Êı×Ö£¨ºÁÃëÖµ£©¡¢»òÕßDate£©
+ *            è¡¨è¾¾å¼ï¼ˆå¯ä»¥æ˜¯å­—ç¬¦ä¸²ï¼ˆæ—¥æœŸè¡¨è¾¾å¼ï¼‰ã€æ•°å­—ï¼ˆæ¯«ç§’å€¼ï¼‰ã€æˆ–è€…Dateï¼‰
  * @param delimiter
- *            £¨½öµ±exprÎª×Ö·û´®Ê±´Ë²ÎÊıÉúĞ§£©
+ *            ï¼ˆä»…å½“exprä¸ºå­—ç¬¦ä¸²æ—¶æ­¤å‚æ•°ç”Ÿæ•ˆï¼‰
  * @returns Date
  */
 function getDate(expr, delimiter) {
 	var result = null;
 	if (null != expr) {
-		if (typeof (expr) == "string") {
-			var _delimiter = "-";
+		if (typeof (expr) === 'string') {
+			var _delimiter = '-';
 			if (delimiter) {
 				_delimiter = delimiter;
 			}
@@ -62,21 +63,19 @@ function getDate(expr, delimiter) {
 }
 
 /**
- * ±È½ÏÁ½¸öÈÕÆÚ
+ * æ¯”è¾ƒä¸¤ä¸ªæ—¥æœŸ
  * 
  * @param date1
- *            ±í´ïÊ½£¨¿ÉÒÔÊÇ×Ö·û´®£¨ÈÕÆÚ±í´ïÊ½£©¡¢Êı×Ö£¨ºÁÃëÖµ£©¡¢»òÕßDate£©
+ *            è¡¨è¾¾å¼ï¼ˆå¯ä»¥æ˜¯å­—ç¬¦ä¸²ï¼ˆæ—¥æœŸè¡¨è¾¾å¼ï¼‰ã€æ•°å­—ï¼ˆæ¯«ç§’å€¼ï¼‰ã€æˆ–è€…Dateï¼‰
  * @param date2
- *            ±í´ïÊ½£¨¿ÉÒÔÊÇ×Ö·û´®£¨ÈÕÆÚ±í´ïÊ½£©¡¢Êı×Ö£¨ºÁÃëÖµ£©¡¢»òÕßDate£©
+ *            è¡¨è¾¾å¼ï¼ˆå¯ä»¥æ˜¯å­—ç¬¦ä¸²ï¼ˆæ—¥æœŸè¡¨è¾¾å¼ï¼‰ã€æ•°å­—ï¼ˆæ¯«ç§’å€¼ï¼‰ã€æˆ–è€…Dateï¼‰
  * @returns true: date1 > date2, false: date1 < date2, null:
- *          date1»òdate2²»ÊÇÒ»¸öÓĞĞ§µÄÈÕÆÚ±í´ïÊ½
+ *          date1æˆ–date2ä¸æ˜¯ä¸€ä¸ªæœ‰æ•ˆçš„æ—¥æœŸè¡¨è¾¾å¼
  */
 function compareDate(date1, date2) {
 	var result = null;
-
-	var d1 = getDate(date1);
-	var d2 = getDate(date2);
-
+	var d1 = FormatDate(date1);
+	var d2 = FormatDate(date2);
 	if (d1 != null && d2 != null) {
 		return d1.getTime() > d2.getTime();
 	}
@@ -84,17 +83,17 @@ function compareDate(date1, date2) {
 }
 
 /**
- * ÈÕÆÚÏà¼õ£¬·µ»ØÁ½¸öÈÕÆÚÏà²îµÄÌìÊı£¬ÈÕÆÚ²»·ÖÇ°ºó
+ * æ—¥æœŸç›¸å‡ï¼Œè¿”å›ä¸¤ä¸ªæ—¥æœŸç›¸å·®çš„å¤©æ•°ï¼Œæ—¥æœŸä¸åˆ†å‰å
  * 
  * @param date1
- *            ¿ÉÒÔÊÇ×Ö·û´®£¨yyyy-mm-dd£©¡¢Êı×Ö¡¢»òDate
+ *            å¯ä»¥æ˜¯å­—ç¬¦ä¸²ï¼ˆyyyy-mm-ddï¼‰ã€æ•°å­—ã€æˆ–Date
  * @param date2
- *            ¿ÉÒÔÊÇ×Ö·û´®£¨yyyy-mm-dd£©¡¢Êı×Ö¡¢»òDate
+ *            å¯ä»¥æ˜¯å­—ç¬¦ä¸²ï¼ˆyyyy-mm-ddï¼‰ã€æ•°å­—ã€æˆ–Date
  * @param delimiter
- *            ÈÕÆÚµÄ·Ö¸ô·û£¬Ä¬ÈÏÎª¡°-¡±
- * @returns ·µ»ØÁ½¸öÈÕÆÚÏà²îµÄÌìÊı
+ *            æ—¥æœŸçš„åˆ†éš”ç¬¦ï¼Œé»˜è®¤ä¸ºâ€œ-â€
+ * @returns è¿”å›ä¸¤ä¸ªæ—¥æœŸç›¸å·®çš„å¤©æ•°
  */
-function dateDiff(date1, date2, delimiter) {
+/* function dateDiff(date1, date2, delimiter) {
 	var result = null;
 
 	var sRDate = getDate(date1, delimiter);
@@ -109,52 +108,28 @@ function dateDiff(date1, date2, delimiter) {
 	}
 
 	return result;
-}
+}*/
 
 /**
- * ¼òµ¥ÈÕÆÚ¸ñÊ½»¯
- * 
- * @param date
- *            ÈÕÆÚ
- * @param delimiter
- *            ·Ö¸ô·û£¬¿ÉÑ¡£¬Ä¬ÈÏÎª¡°-¡±
- * @returns ·µ»ØĞÎÊ½Èç¡°yyyy-mm-dd¡±µÄ¸ñÊ½
- */
-function simpleDateFormat(date, delimiter) {
-	var result = null;
-	if (null != date) {
-		var _delimiter = "-";
-		if (delimiter) {
-			_delimiter = delimiter;
-		}
-		var month = date.getMonth() + 1;
-		return date.getFullYear() + _delimiter
-				+ (month > 9 ? month : "0" + month) + _delimiter
-				+ (date.getDate() > 9 ? date.getDate() : "0" + date.getDate());
-	}
-
-	return result;
-}
-/**
- * »ñÈ¡±êÇ©¶¨ÒåÔÚclassÉÏµÄÊôĞÔÖµ
+ * è·å–æ ‡ç­¾å®šä¹‰åœ¨classä¸Šçš„å±æ€§å€¼
  * 
  * @param obj
- *            ¶ÔÏó£¨dom¶ÔÏó|jQuery¶ÔÏó|±êÇ©id£©
+ *            å¯¹è±¡ï¼ˆdomå¯¹è±¡|jQueryå¯¹è±¡|æ ‡ç­¾idï¼‰
  * @param propertyName
  * @returns
  */
 function getClassProperty(obj, propertyName) {
-	var result = "";
+	var result = '';
 	if (obj) {
 		var _obj;
-		if ("string" == typeof (obj)) {
+		if ('string' === typeof (obj)) {
 			_obj = document.getElementById(obj);
-		} else if ("object" == typeof (obj)) {
+		} else if ('object' === typeof (obj)) {
 			_obj = (obj instanceof jQuery) ? obj[0] : obj;
 		}
 		if (_obj && _obj.className) {
-			var regex = eval("/\\[\\s*?" + propertyName
-					+ "\\s*?=\\s*?([^\\]]*)\\s*?\\]/");// ¶¯Ì¬ÕıÔò±í´ïÊ½
+			var regex = eval('/\\[\\s*?' + propertyName
+					+ '\\s*?=\\s*?([^\\]]*)\\s*?\\]/');// åŠ¨æ€æ­£åˆ™è¡¨è¾¾å¼
 			var matches = _obj.className.match(regex);
 			if (matches) {
 				result = matches[1];
@@ -165,33 +140,33 @@ function getClassProperty(obj, propertyName) {
 }
 
 /**
- * ÔÚ±êÇ©µÄclassÉÏ×Ô¶¨ÒåÊôĞÔ£¨classÖĞÌí¼Ó±í´ïÊ½¸ñÊ½¡°[p=pvalue]¡±£©
+ * åœ¨æ ‡ç­¾çš„classä¸Šè‡ªå®šä¹‰å±æ€§ï¼ˆclassä¸­æ·»åŠ è¡¨è¾¾å¼æ ¼å¼â€œ[p=pvalue]â€ï¼‰
  * 
  * @param obj
- *            ¶ÔÏó£¨dom¶ÔÏó|jQuery¶ÔÏó|±êÇ©id£©
+ *            å¯¹è±¡ï¼ˆdomå¯¹è±¡|jQueryå¯¹è±¡|æ ‡ç­¾idï¼‰
  * @param propertyName
- *            ÊôĞÔÃû
+ *            å±æ€§å
  * @param propertyValue
- *            ÊôĞÔÖµ
+ *            å±æ€§å€¼
  * @returns
  */
 function setClassProperty(obj, propertyName, propertyValue) {
 	var _obj;
 	if (obj) {
-		if ("string" == typeof (obj)) {
-			_obj = jQuery("#" + obj);
-		} else if ("object" == typeof (obj)) {
+		if ('string' === typeof (obj)) {
+			_obj = jQuery('#' + obj);
+		} else if ('object' === typeof (obj)) {
 			_obj = (obj instanceof jQuery) ? obj : jQuery(obj);
 		}
 		if (_obj) {
-			_obj.addClass("[" + propertyName + "=" + propertyValue + "]");
+			_obj.addClass('[' + propertyName + '=' + propertyValue + ']');
 		}
 	}
 	return _obj;
 }
 
 /**
- * »ñÈ¡jQuery°ü×°¹ıµÄdom¶ÔÏó
+ * è·å–jQueryåŒ…è£…è¿‡çš„domå¯¹è±¡
  * 
  * @param obj
  * @returns
@@ -200,24 +175,24 @@ function getJqueryDomElement(obj) {
 	var value = null;
 	if (obj) {
 		var type = typeof (obj);
-		if ("string" == type) {
+		if ('string' == type) {
 			var _obj = jQuery.trim(obj);
-			if (_obj.indexOf("#") > -1 || _obj.indexOf(".") > -1
-					&& /^\./i.test(_obj) || _obj.indexOf(":") > -1
-					|| _obj.indexOf(" ") > -1 || _obj.indexOf("=") > -1
-					|| _obj.indexOf("[") > -1) {// ¼òµ¥ÅĞ¶ÏÊÇ·ñÊÇjQueryÑ¡ÔñÆ÷
+			if (_obj.indexOf('#') > -1 || _obj.indexOf('.') > -1
+					&& /^\./i.test(_obj) || _obj.indexOf(':') > -1
+					|| _obj.indexOf(' ') > -1 || _obj.indexOf('=') > -1
+					|| _obj.indexOf('[') > -1) { // ç®€å•åˆ¤æ–­æ˜¯å¦æ˜¯jQueryé€‰æ‹©å™¨
 				value = jQuery(_obj);
 			} else {
 				_obj = _obj.replace(/\./g, '\\.');
-				value = jQuery("#" + _obj);
+				value = jQuery('#' + _obj);
 			}
-		} else if ("object" == type) {
+		} else if ('object' == type) {
 			if (obj instanceof jQuery) {
 				value = obj;
 			} else {
 				value = jQuery(obj);
 			}
-		} else if ("function" == type) {
+		} else if ('function' == type) {
 			value = obj();
 		}
 	}
@@ -225,13 +200,13 @@ function getJqueryDomElement(obj) {
 }
 
 /**
- * »ñÈ¡domÔªËØÖµ
+ * è·å–domå…ƒç´ å€¼
  * 
  * @param obj
- *            domÔªËØµÄid | jQueryÑ¡ÔñÆ÷ | dom¶ÔÏó | jQuery¶ÔÏó
- * @returns Ã»ÓĞ»ñÈ¡µ½ÖµÊ±·µ»Ønull
+ *            domå…ƒç´ çš„id | jQueryé€‰æ‹©å™¨ | domå¯¹è±¡ | jQueryå¯¹è±¡
+ * @returns æ²¡æœ‰è·å–åˆ°å€¼æ—¶è¿”å›null
  */
-function getDomElementValue(obj) {
+/* function getDomElementValue(obj) {
 	var value = null;
 	if (obj) {
 		var type = typeof (obj);
@@ -239,7 +214,7 @@ function getDomElementValue(obj) {
 			var _obj = jQuery.trim(obj);
 			if (_obj.indexOf("#") > -1 || _obj.indexOf(".") > -1
 					|| _obj.indexOf(":") > -1 || _obj.indexOf(" ") > -1
-					|| _obj.indexOf("=") > -1 || _obj.indexOf("[") > -1) {// ¼òµ¥ÅĞ¶ÏÊÇ·ñÊÇjQueryÑ¡ÔñÆ÷
+					|| _obj.indexOf("=") > -1 || _obj.indexOf("[") > -1) {// ç®€å•åˆ¤æ–­æ˜¯å¦æ˜¯jQueryé€‰æ‹©å™¨
 
 				value = jQuery(_obj).val();
 			} else {
@@ -256,80 +231,10 @@ function getDomElementValue(obj) {
 		}
 	}
 	return value;
-}
+}*/
 
 /**
- * »ñÈ¡ÈÕÆÚÕûĞÎ×Ö·û´®
- * 
- * @param date1
- *            ÈÕÆÚ¶ÔÏó»òÈÕÆÚ×Ö·û´®£¨Ö§³Öyyyy-mm-dd¡¢yyyy/mm/dd¡¢yyyymmdd£©
- * @returns {Date}
- */
-function getDateIntStr(date1) {
-	var d1 = null;
-	if (date1 instanceof Date) {
-		var d1 = new Date();
-		var month = date1.getMonth() + 1;
-		var date = date1.getDate();
-		d1 = "" + date1.getFullYear() + (month > 9 ? month : '0' + month)
-				+ (date > 9 ? date : '0' + date);
-	} else if ("string" == typeof (date1)) {
-		if (/^\d{4}-\d{2}-\d{2}$/.test(date1)) {
-			d1 = date1.replace(/-/g, "");
-		} else if (/^\d{4}\/\d{2}\/\d{2}$/.test(date1)) {
-			d1 = date1.replace(/\//g, "");
-		} else if (/^\d{8}$/.test(date1)) {
-			d1 = date1;
-		}
-	}
-	return d1;
-}
-
-/**
- * ±È½ÏÁ½¸öÈÕÆÚ
- * 
- * @param date1
- * @param date2
- * @returns {Number} -2:´«ÈëÁËÎªnullµÄ²ÎÊı£¬-1:date1 < date2£¬0:date1 = date2£¬1:date1 >
- *          date2
- */
-function dateCompare(date1, date2) {
-	var result = -2;
-	if (date1 && date2) {
-		var d1 = getDateIntStr(date1);
-		var d2 = getDateIntStr(date2);
-		if (null != d1 && null != d2) {
-			var d1Int = parseInt(d1);
-			var d2Int = parseInt(d2);
-
-			if (d1Int > d2Int) {
-				result = 1;
-			} else if (d1Int == d2Int) {
-				result = 0;
-			} else {
-				result = -1;
-			}
-		}
-	}
-	return result;
-}
-/**
- * ×ÔÊÊÓ¦iframe¸ß¶È
- * 
- * @param iframe
- *            ¿ÉÒÔÊÇ£ºiframeÔªËØµÄid | jQueryÑ¡ÔñÆ÷ | dom¶ÔÏó | jQuery¶ÔÏó
- */
-function autoHeightIFrame(iframe) {
-	var jqIFrame = getJqueryDomElement(iframe);
-
-	if (jQuery.browser.chrome) {
-		jqIFrame.height(jqIFrame.contents().find("body")[0].scrollHeight + 50);
-	} else {
-		jqIFrame.height(jqIFrame.contents().find("body")[0].clientHeight + 50);
-	}
-}
-/**
- * ÈÕÆÚ¸ñÊ½»¯
+ * æ—¥æœŸæ ¼å¼åŒ–
  * 
  * @see yyyy-MM-dd HH:mm:ss
  */
@@ -345,124 +250,99 @@ Date.prototype.format = function(mask) {
 		return zeros + value;
 	};
 	return mask
-			.replace(
-					/"[^"]*"|'[^']*'|\b(?:d{1,4}|m{1,4}|yy(?:yy)?|([hHMstT])\1?|[lLZ])\b/g,
-					function($0) {
-						switch ($0) {
-						case 'd':
-							return d.getDate();
-						case 'dd':
-							return zeroize(d.getDate());
-						case 'ddd':
-							return [ 'Sun', 'Mon', 'Tue', 'Wed', 'Thr', 'Fri',
-									'Sat' ][d.getDay()];
-						case 'dddd':
-							return [ 'Sunday', 'Monday', 'Tuesday',
-									'Wednesday', 'Thursday', 'Friday',
-									'Saturday' ][d.getDay()];
-						case 'M':
-							return d.getMonth() + 1;
-						case 'MM':
-							return zeroize(d.getMonth() + 1);
-						case 'MMM':
-							return [ 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-									'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec' ][d
-									.getMonth()];
-						case 'MMMM':
-							return [ 'January', 'February', 'March', 'April',
-									'May', 'June', 'July', 'August',
-									'September', 'October', 'November',
-									'December' ][d.getMonth()];
-						case 'yy':
-							return String(d.getFullYear()).substr(2);
-						case 'yyyy':
-							return d.getFullYear();
-						case 'h':
-							return d.getHours() % 12 || 12;
-						case 'hh':
-							return zeroize(d.getHours() % 12 || 12);
-						case 'H':
-							return d.getHours();
-						case 'HH':
-							return zeroize(d.getHours());
-						case 'm':
-							return d.getMinutes();
-						case 'mm':
-							return zeroize(d.getMinutes());
-						case 's':
-							return d.getSeconds();
-						case 'ss':
-							return zeroize(d.getSeconds());
-						case 'l':
-							return zeroize(d.getMilliseconds(), 3);
-						case 'L':
-							var m = d.getMilliseconds();
-							if (m > 99)
-								m = Math.round(m / 10);
-							return zeroize(m);
-						case 'tt':
-							return d.getHours() < 12 ? 'am' : 'pm';
-						case 'TT':
-							return d.getHours() < 12 ? 'AM' : 'PM';
-						case 'Z':
-							return d.toUTCString().match(/[A-Z]+$/);
-						default:
-							return $0.substr(1, $0.length - 2);
-						}
-					});
+		.replace(
+			/"[^"]*"|'[^']*'|\b(?:d{1,4}|m{1,4}|yy(?:yy)?|([hHMstT])\1?|[lLZ])\b/g,
+			function($0) {
+				switch ($0) {
+					case 'd':
+						return d.getDate();
+					case 'dd':
+						return zeroize(d.getDate());
+					case 'ddd':
+						return ['Sun', 'Mon', 'Tue', 'Wed', 'Thr', 'Fri',
+							'Sat'][d.getDay()];
+					case 'dddd':
+						return ['Sunday', 'Monday', 'Tuesday',
+							'Wednesday', 'Thursday', 'Friday',
+							'Saturday'][d.getDay()];
+					case 'M':
+						return d.getMonth() + 1;
+					case 'MM':
+						return zeroize(d.getMonth() + 1);
+					case 'MMM':
+						return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+							'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d
+							.getMonth()];
+					case 'MMMM':
+						return ['January', 'February', 'March', 'April',
+							'May', 'June', 'July', 'August',
+							'September', 'October', 'November',
+							'December'][d.getMonth()];
+					case 'yy':
+						return String(d.getFullYear()).substr(2);
+					case 'yyyy':
+						return d.getFullYear();
+					case 'h':
+						return d.getHours() % 12 || 12;
+					case 'hh':
+						return zeroize(d.getHours() % 12 || 12);
+					case 'H':
+						return d.getHours();
+					case 'HH':
+						return zeroize(d.getHours());
+					case 'm':
+						return d.getMinutes();
+					case 'mm':
+						return zeroize(d.getMinutes());
+					case 's':
+						return d.getSeconds();
+					case 'ss':
+						return zeroize(d.getSeconds());
+					case 'l':
+						return zeroize(d.getMilliseconds(), 3);
+					case 'L':
+						var m = d.getMilliseconds();
+						if (m > 99)
+							m = Math.round(m / 10);
+						return zeroize(m);
+					case 'tt':
+						return d.getHours() < 12 ? 'am' : 'pm';
+					case 'TT':
+						return d.getHours() < 12 ? 'AM' : 'PM';
+					case 'Z':
+						return d.toUTCString().match(/[A-Z]+$/);
+					default:
+						return $0.substr(1, $0.length - 2);
+				}
+			});
 };
-function toUtf8(str) {
-	var out, i, len, c;
-	out = "";
-	len = str.length;
-	for (i = 0; i < len; i++) {
-		c = str.charCodeAt(i);
-		if ((c >= 0x0001) && (c <= 0x007F)) {
-			out += str.charAt(i);
-		} else if (c > 0x07FF) {
-			out += String.fromCharCode(0xE0 | ((c >> 12) & 0x0F));
-			out += String.fromCharCode(0x80 | ((c >> 6) & 0x3F));
-			out += String.fromCharCode(0x80 | ((c >> 0) & 0x3F));
-		} else {
-			out += String.fromCharCode(0xC0 | ((c >> 6) & 0x1F));
-			out += String.fromCharCode(0x80 | ((c >> 0) & 0x3F));
-		}
-	}
-	return out;
-}
 
-//ÊÇ·ñÎª¿Õ("",null,undefined)
-function isEmpty(strVal) {
-	if (strVal == '' || strVal == null || strVal == undefined) {
-		return true;
-	} else {
-		return false;
-	}
+/**
+ * åˆ¤æ–­å˜é‡æ˜¯å¦ä¸ºç©º(null, undefined, ''), ç©ºæ•°ç»„äº¦ä¸ºempty
+ * @param {} v
+ * @param {} allowBlank æ˜¯å¦å…è®¸ä¸º'', é»˜è®¤false
+ * @return {}
+ */
+function isEmpty(v, allowBlank) {
+	return v === null || v === undefined || (($.isArray(v) && !v.length)) || (!allowBlank ? v === '' : false);
 }
-function isNumber(v){
+function isNumber(v) {
 	return typeof v === 'number' && isFinite(v);
 }
 
-function ChangeEmptyToStr(value){
-	if(isEmpty(value)){
-		value = '';
-	}
-	return value;
-}
-
 /*
- * Éî²ãcopy(object)
+ * æ·±å±‚copy(object)
  */
-function DeepClone(source){
-	const targetObj = source.constructor === Array ? [] : {};		// ÅĞ¶Ï¸´ÖÆµÄÄ¿±êÊÇÊı×é»¹ÊÇ¶ÔÏó
-	for(var keys in source){
-		if(source.hasOwnProperty(keys)){
-			if(source[keys] && typeof source[keys] === 'object'){
-				//Èç¹ûÖµÊÇ¶ÔÏó£¬¾Íµİ¹éÒ»ÏÂ
+function DeepClone(source) {
+	var targetObj = source.constructor === Array ? [] : {};		// åˆ¤æ–­å¤åˆ¶çš„ç›®æ ‡æ˜¯æ•°ç»„è¿˜æ˜¯å¯¹è±¡
+	for (var keys in source) {
+		if (source.hasOwnProperty(keys)) {
+			if (source[keys] && typeof source[keys] === 'object') {
+				// å¦‚æœå€¼æ˜¯å¯¹è±¡ï¼Œå°±é€’å½’ä¸€ä¸‹
 				targetObj[keys] = source[keys].constructor === Array ? [] : {};
 				targetObj[keys] = DeepClone(source[keys]);
-			}else{
-				//Èç¹û²»ÊÇ£¬¾ÍÖ±½Ó¸³Öµ
+			} else {
+				// å¦‚æœä¸æ˜¯ï¼Œå°±ç›´æ¥èµ‹å€¼
 				targetObj[keys] = source[keys];
 			}
 		}
@@ -470,30 +350,30 @@ function DeepClone(source){
 	return targetObj;
 }
 
-//ÏÔÊ¾Òş²ØÕÚÕÖ²ã
-function showMask(){
-	$.busyLoadFull("show",{text: "´¦ÀíÖĞÇëÉÔºó ...", background: "rgba(51,153,255, 0.7)", animate: "slide" });
+// æ˜¾ç¤ºéšè—é®ç½©å±‚
+function showMask() {
+	$.busyLoadFull('show', { text: 'å¤„ç†ä¸­è¯·ç¨å ...', background: 'rgba(51,153,255, 0.7)', animate: 'slide' });
 }
-//Òş²ØÕÚÕÖ²ã
-function hideMask(){
-	$.busyLoadFull("hide", { animate: "fade" });
+// éšè—é®ç½©å±‚
+function hideMask() {
+	$.busyLoadFull('hide', { animate: 'fade' });
 }
-/**combo Formatter
- * ÓÃÓÚGridÁĞ  comboäÖÈ¾
+/** combo Formatter
+ * ç”¨äºGridåˆ—  comboæ¸²æŸ“
  * @param {} combo
  * @param {} valueField
  * @param {} textField
  * @return {}
- * ps: ÒòEasyUI-editorµÄ´¦Àí·½Ê½, ½çÃæformatter½¨ÒéÍ¨¹ıÈçÏÂ·½Ê½½øĞĞ(...µ¥Ñ¡...):
- * 		1.editor-combo¶¨Òå,dataÊôĞÔÍ¬²½·½·¨»ñÈ¡Êı¾İ;
- * 		2.editor-comboµÄonSelectÊÂ¼şÖĞ,ÉèÖÃµ±Ç°±à¼­ĞĞÖĞ¶ÔÓ¦textFieldµÄ×Ö¶ÎÖµ
- */ 
-function CommonFormatter(combo,valueField,textField,DataGrid){
-	if(typeof textField == 'undefined'){
-		//½ö°´RowId½øĞĞcombo-fammatter
-		return function(value,row,index){
+ * ps: å› EasyUI-editorçš„å¤„ç†æ–¹å¼, ç•Œé¢formatterå»ºè®®é€šè¿‡å¦‚ä¸‹æ–¹å¼è¿›è¡Œ(...å•é€‰...):
+ * 		1.editor-comboå®šä¹‰,dataå±æ€§åŒæ­¥æ–¹æ³•è·å–æ•°æ®;
+ * 		2.editor-comboçš„onSelectäº‹ä»¶ä¸­,è®¾ç½®å½“å‰ç¼–è¾‘è¡Œä¸­å¯¹åº”textFieldçš„å­—æ®µå€¼
+ */
+function CommonFormatter(combo, valueField, textField, DataGrid) {
+	if (typeof textField === 'undefined') {
+		// ä»…æŒ‰RowIdè¿›è¡Œcombo-fammatter
+		return function(value, row, index) {
 			var FindIndex = -1;
-			try{
+			try {
 				var ComboData = combo.options.data;
 				for (var i = 0, Len = ComboData.length; i < Len; i++) {
 					if (ComboData[i][combo.options.valueField] == value) {
@@ -501,236 +381,242 @@ function CommonFormatter(combo,valueField,textField,DataGrid){
 						break;
 					}
 				}
-			}catch(e){}
-			return (FindIndex != -1)? combo.options.data[FindIndex][combo.options.textField] : '';
-		}
-	}else{
-		return function(value,row,index){
-			if(isEmpty(value)){
+			} catch (e) {}
+			return (FindIndex != -1) ? combo.options.data[FindIndex][combo.options.textField] : '';
+		};
+	} else {
+		return function(value, row, index) {
+			if (isEmpty(value)) {
 				return '';
 			}
 
 			var ComboData = combo.options.data;
 			var ComboValueField = combo.options.valueField;
 			var ComboTextField = combo.options.textField;
-			if(!isEmpty(ComboData)){
-				for (var i = 0, Len = ComboData.length; i < Len; i++){
+			if (!isEmpty(ComboData)) {
+				for (var i = 0, Len = ComboData.length; i < Len; i++) {
 					if (ComboData[i][ComboValueField] == value) {
-						row[textField]=ComboData[i][ComboTextField];
+						row[textField] = ComboData[i][ComboTextField];
 						break;
 					}
 				}
 			}
-			//Í¨¹ıRowÀïµÄtextField
-			if(row[textField]) {
+			// é€šè¿‡Rowé‡Œçš„textField
+			if (row[textField]) {
 				return row[textField];
 			}
 			return value;
-		}
+		};
 	}
 }
 
 /*
- * ²¼¶ûÀàĞÍFormatter: Í³Ò»Ê¹ÓÃ"ÊÇ","·ñ"
+ * å¸ƒå°”ç±»å‹Formatter: ç»Ÿä¸€ä½¿ç”¨"æ˜¯","å¦"
  */
-function BoolFormatter(value, row, index){
+function BoolFormatter(value, row, index) {
 	var FormatValue = value;
-	var ValueStr = isEmpty(value)? '' : (value + '');
-	if((ValueStr == 'Y') || (ValueStr == '1')){
-		FormatValue = 'ÊÇ';
-	}else if((ValueStr == 'N') || (ValueStr == '0')){
-		FormatValue = '·ñ';
+	var ValueStr = isEmpty(value) ? '' : (value + '');
+	if ((ValueStr == 'Y') || (ValueStr == '1')) {
+		FormatValue = 'æ˜¯';
+	} else if ((ValueStr == 'N') || (ValueStr == '0')) {
+		FormatValue = 'å¦';
 	}
 	return FormatValue;
 }
-/**È«¾Ö±äÁ¿
-*ÈÕÆÚ¸ñÊ½¶¨Òå
-* »ñÈ¡ÏµÍ³ÈÕÆÚ¸ñÊ½ÅäÖÃ
+
+// Numberç±»å‹æ’åºå…¬ç”¨æ–¹æ³•
+function NumberSorter(a, b) {
+	var number1 = parseFloat(a);
+	var number2 = parseFloat(b);
+	return (number1 > number2 ? 1 : -1);
+}
+
+/** å…¨å±€å˜é‡
+*æ—¥æœŸæ ¼å¼å®šä¹‰
+* è·å–ç³»ç»Ÿæ—¥æœŸæ ¼å¼é…ç½®
 *    1 MM/DD/YYYY
 *    3 YYYY-MM-DD
 *    4 DD/MM/YYYY
-*/    
-var ARG_DATEFORMAT=tkMakeServerCall('websys.Conversions', 'DateFormat');
-/**×ª»»ÈÕÆÚ¸ñÊ½
- * fillblock ÖĞÊ¹ÓÃ
+*/
+var ARG_DATEFORMAT = tkMakeServerCall('websys.Conversions', 'DateFormat');
+/** è½¬æ¢æ—¥æœŸæ ¼å¼
+ * fillblock ä¸­ä½¿ç”¨
  */
-function FormatDate(date){
-	if(isEmpty(date))
-	{
+function FormatDate(date) {
+	if (isEmpty(date)) {
 		return '';
 	}
-	var y,m,d
-	var date=date.toString()
-	///Y-m-d
-	if((date.indexOf("-")!=-1)){
-		y=date.split("-")[0];
-		m=date.split("-")[1]-1;
-		d=date.split("-")[2];
-	}else if(ARG_DATEFORMAT==1){
-		y=date.split("/")[2];
-		m=date.split("/")[0]-1;
-		d=date.split("/")[1];
-	}else{
-		y=date.split("/")[2];
-		m=date.split("/")[1]-1;
-		d=date.split("/")[0];
+	var y, m, d;
+	var date = date.toString();
+	// /Y-m-d
+	if ((date.indexOf('-') != -1)) {
+		y = date.split('-')[0];
+		m = date.split('-')[1] - 1;
+		d = date.split('-')[2];
+	} else if (date.indexOf('/') != -1) {
+		y = date.split('/')[2];
+		m = date.split('/')[1] - 1;
+		d = date.split('/')[0];
+	} else {
+		var y = date.substring(0, 4);
+		var m = date.substring(4, 6) - 1;
+		var d = date.substring(6, 8);
 	}
-	return new Date(y,m,d);
+	return new Date(y, m, d);
 }
 
 /**
- * Ê±¼ä¼ä¸ô¼ÆËã
- * @param {Ê±¼ä¶ÔÏó} date
- * @param {ÒªÌí¼ÓµÄÊ±¼ä¼ä¸ô} interval
- * @param {ÒªÌí¼ÓµÄÊ±¼ä¼ä¸ôµÄ¸öÊı} number
- * @return {ĞÂµÄÊ±¼ä¶ÔÏó}
+ * æ—¶é—´é—´éš”è®¡ç®—
+ * @param {æ—¶é—´å¯¹è±¡} date
+ * @param {è¦æ·»åŠ çš„æ—¶é—´é—´éš”} interval
+ * @param {è¦æ·»åŠ çš„æ—¶é—´é—´éš”çš„ä¸ªæ•°} number
+ * @return {æ–°çš„æ—¶é—´å¯¹è±¡}
  */
-function DateAdd(date,interval,number){
-	switch(interval){
-	case "y": 
-		date.setFullYear(date.getFullYear()+number);
-		return date;
-		break;
-	case "q":
-		date.setMonth(date.getMonth()+number*3);
-		return date;
-		break;
-	case "m":
-		date.setMonth(date.getMonth()+number);
-		return date;
-		break;
-	case "w":
-		date.setDate(date.getDate()+number*7);
-		return date;
-		break;
-	case "d":
-		date.setDate(date.getDate()+number);
-		return date;
-		break;
-	case "h":
-		date.setHours(date.getHours()+number);
-		return date;
-		break;
-	case "m":
-		date.setMinutes(date.getMinutes()+number);
-		return date;
-		break;
-	case "s":
-		date.setSeconds(date.getSeconds()+number);
-		return date;
-		break;
-	default:
-		date.setDate(d.getDate()+number);
-		return date;
-		break;
+function DateAdd(date, interval, number) {
+	switch (interval) {
+		case 'y':
+			date.setFullYear(date.getFullYear() + number);
+			return date;
+			break;
+		case 'q':
+			date.setMonth(date.getMonth() + number * 3);
+			return date;
+			break;
+		case 'm':
+			date.setMonth(date.getMonth() + number);
+			return date;
+			break;
+		case 'w':
+			date.setDate(date.getDate() + number * 7);
+			return date;
+			break;
+		case 'd':
+			date.setDate(date.getDate() + number);
+			return date;
+			break;
+		case 'h':
+			date.setHours(date.getHours() + number);
+			return date;
+			break;
+		case 'm':
+			date.setMinutes(date.getMinutes() + number);
+			return date;
+			break;
+		case 's':
+			date.setSeconds(date.getSeconds() + number);
+			return date;
+			break;
+		default:
+			date.setDate(d.getDate() + number);
+			return date;
+			break;
 	}
 }
 
 DateFormatter = $.fn.datebox.defaults.formatter;
-
-/**È«¾Ö±äÁ¿session
+function GetMenuId() {
+	var pathname = window.location.pathname;
+	var search = window.location.search;
+	var mainmenuflag = pathname.indexOf('dhcstmhui.menu.csp') != -1 ? true : false;
+	var websysflag = pathname.indexOf('websys.csp') != -1 ? true : false;
+	var MENUID = '';
+	if (mainmenuflag) {
+		MENUID = search.split('MENU=')[1].split('&')[0];
+	}
+	if (websysflag) {
+		MENUID = (search.split('TMENU=')[1]).split('&')[0];
+	}
+	return MENUID;
+}
+/** å…¨å±€å˜é‡session
  * 
  */
 var gGroupId = session['LOGON.GROUPID'];
 var gUserId = session['LOGON.USERID'];
 var gLocId = session['LOGON.CTLOCID'];
 var gHospId = session['LOGON.HOSPID'];
-var gLocObj = {RowId: gLocId, Description: gLocDesc};	//È±Ê¡µÇÂ¼¿ÆÊÒµÄobject
-var gSessionStr = gUserId +"^"+ gGroupId +"^"+ gLocId +"^"+ gHospId;
-/**session¶ÔÏó
+var gLocObj = { RowId: gLocId, Description: gLocDesc };	// ç¼ºçœç™»å½•ç§‘å®¤çš„object
+var gSessionStr = gUserId + '^' + gGroupId + '^' + gLocId + '^' + gHospId;
+var MENUID = GetMenuId();
+/** sessionå¯¹è±¡
  */
-var sessionObj={gUserId:session['LOGON.USERID'],gLocId:session['LOGON.CTLOCID'],gGroupId:session['LOGON.GROUPID'],gHospId:session['LOGON.HOSPID']}
+var sessionObj = { gUserId: session['LOGON.USERID'], gLocId: session['LOGON.CTLOCID'], gGroupId: session['LOGON.GROUPID'], gHospId: session['LOGON.HOSPID'], MENUID: MENUID };
 
-/**Ìí¼Ósession²ÎÊıµ½²ÎÊı¶ÔÏó
+/** æ·»åŠ sessionå‚æ•°åˆ°å‚æ•°å¯¹è±¡
  * @param {} obj
- * @return {} Ìí¼ÓsessionµÄobj
+ * @return {} æ·»åŠ sessionçš„obj
  */
-function addSessionParams(obj){
-	var _options={}
-	_options=jQuery.extend(true,_options,obj,sessionObj);
-	return _options
+function addSessionParams(obj) {
+	var _options = {};
+	_options = jQuery.extend(true, _options, obj, sessionObj);
+	return _options;
 }
 
 /**
- * »ñÈ¡µ±Ç°Ä£¿éµÄ²ÎÊıÖµ(object¸ñÊ½), ²ÎÊıÖµ = PropValueObj.²ÎÊıÃû³Æ
+ * è·å–å½“å‰æ¨¡å—çš„å‚æ•°å€¼(objectæ ¼å¼), å‚æ•°å€¼ = PropValueObj.å‚æ•°åç§°
  * @param {} AppName
  * @param {} LocId
- * @return {} ²ÎÊıÖµµÄobject¸ñÊ½Êı¾İ
+ * @return {} å‚æ•°å€¼çš„objectæ ¼å¼æ•°æ®
  */
-function GetAppPropValue(AppName, LocId){
-	if(isEmpty(LocId)){
+function GetAppPropValue(AppName, LocId) {
+	if (isEmpty(LocId)) {
 		var LocId = session['LOGON.CTLOCID'];
 	}
-	var LogUser= session['LOGON.USERID'];
-	var LogGroup= session['LOGON.GROUPID'];
-	var Param=LogGroup+"^"+LocId+"^"+LogUser;
+	var LogUser = session['LOGON.USERID'];
+	var LogGroup = session['LOGON.GROUPID'];
+	var Param = LogGroup + '^' + LocId + '^' + LogUser;
 	var PropValueObj = $.cm({
-		ClassName:"web.DHCSTMHUI.Common.AppCommon",
-		MethodName:"GetAppPropStr",
-		AppName:AppName,
-		Param:Param
-	},false);
+		ClassName: 'web.DHCSTMHUI.Common.AppCommon',
+		MethodName: 'GetAppPropStr',
+		AppName: AppName,
+		Param: Param
+	}, false);
 	return PropValueObj;
 }
 
-function AddComboData(Combo, Value, Text){
+function AddComboData(Combo, Value, Text) {
+	if (isEmpty(Value) && isEmpty(Text)) {
+		return;
+	}
 	var ComboData = Combo.combobox('getData');
 	var ValueField = Combo.combobox('options').valueField, TextField = Combo.combobox('options').textField;
 	var Len = ComboData.length;
-	for(var i = 0; i < Len; i++){
-		if(ComboData[i][ValueField] == Value){
+	for (var i = 0; i < Len; i++) {
+		if (ComboData[i][ValueField] == Value) {
 			return;
 		}
 	}
-	var DataObjStr = "{" + ValueField + ":'" + Value + "'," + TextField + ":'" + Text + "'}";
-	var DataObj = eval("(" + DataObjStr + ")");
+	var DataObjStr = '{' + ValueField + ":'" + Value + "'," + TextField + ":'" + Text + "'}";
+	var DataObj = eval('(' + DataObjStr + ')');
 	ComboData[ComboData.length] = DataObj;
 	Combo.combobox('loadData', ComboData);
 }
 
 /**
- * ¸ÄÔì³ÉÏÔÊ¾´òÓ¡Ğèµ÷ÓÃµÄ×Ö·û´®
- * @param {String} str: Ö±½Ó´òÓ¡µÄÈóÇ¬ÃüÁî×Ö·û´®
- * TranslateRQStr("{a.raq(a1=b1;a2=b2;a3=b3;a4=b4)}")
+ * å…¬ç”¨å•æ®æ‰“å°è®°å½•(æ‰“å°åè°ƒç”¨)
+ * @param {ç±»å‹} Type
+ * @param {ä¸»è¡¨rowid} Pointer
+ * @param {è‡ªåŠ¨æ‰“å°æ ‡å¿—} AutoFlag
+ * @return {æ‰“å°ç»“æœ} 0:æˆåŠŸ, <0:å¤±è´¥
  */
-function TranslateRQStr(str){
-	var rqReg = /^\{.+\.raq\((.+\=.*)(;.+\=.*)*\)\}$/;
-	if(!rqReg.test(str)){
-		return;
-	}
-	str = str.substring(1,str.length-1);
-	var raqNameIndex = str.indexOf(".raq(")+4;
-	var raqName = str.substring(0,raqNameIndex);
-	var parStr = str.substring(raqNameIndex+1,str.length-1)
-	var newParStr = parStr.replace(/;/g,"&");
-	var newStr = raqName+"&"+newParStr;
-	return newStr;
-}
-/**
- * ¹«ÓÃµ¥¾İ´òÓ¡¼ÇÂ¼(´òÓ¡ºóµ÷ÓÃ)
- * @param {ÀàĞÍ} Type
- * @param {Ö÷±írowid} Pointer
- * @param {×Ô¶¯´òÓ¡±êÖ¾} AutoFlag
- * @return {´òÓ¡½á¹û} 0:³É¹¦, <0:Ê§°Ü
- */
-function Common_PrintLog(Type, Pointer, AutoFlag,PrintNum){
-	PrintNum = typeof(PrintNum)=='undefined'? '1' : PrintNum;
-	var Ret = tkMakeServerCall('web.DHCSTMHUI.Common.UtilCommon', 'BillPrintLog', Type, Pointer, AutoFlag, gUserId,PrintNum);
-	if(Ret !== '0'){
-		Msg.info('warning', 'µ¥¾İ´òÓ¡ÈÕÖ¾¼ÇÂ¼Ê§°Ü!');
+function Common_PrintLog(Type, Pointer, AutoFlag, PrintNum) {
+	PrintNum = typeof (PrintNum) === 'undefined' ? '1' : PrintNum;
+	var Ret = tkMakeServerCall('web.DHCSTMHUI.Common.UtilCommon', 'BillPrintLog', Type, Pointer, AutoFlag, gUserId, PrintNum);
+	if (Ret !== '0') {
+		$UI.msg('alert', 'å•æ®æ‰“å°æ—¥å¿—è®°å½•å¤±è´¥!', 'warning');
 	}
 	return Ret;
 }
 
 /**
- * »ñÈ¡´òÓ¡Ä£Ê½:
- * »ñÈ¡´òÓ¡Ä£Ê½:
- * @param {¿ÆÊÒrowid} LocId
- * @param {Àà×érowid} ScgId
+ * è·å–æ‰“å°æ¨¡å¼:
+ * è·å–æ‰“å°æ¨¡å¼:
+ * @param {ç§‘å®¤rowid} LocId
+ * @param {ç±»ç»„rowid} ScgId
  * @return {String}
  */
-function GetPrintMode(LocId,ScgId){
-	if(LocId==''){
+function GetPrintMode(LocId, ScgId) {
+	if (LocId == '') {
 		return '';
 	}
 	var PrintMode = $.m({
@@ -738,316 +624,348 @@ function GetPrintMode(LocId,ScgId){
 		MethodName: 'GetModByLocScg',
 		LocId: LocId,
 		ScgId: ScgId
-	},false);
+	}, false);
 	return PrintMode;
 }
 
 /**
- * ¸ÄÔì³ÉÏÔÊ¾´òÓ¡Ğèµ÷ÓÃµÄ×Ö·û´®
- * @param {String} str: Ö±½Ó´òÓ¡µÄÈóÇ¬ÃüÁî×Ö·û´®
+ * æ”¹é€ æˆæ˜¾ç¤ºæ‰“å°éœ€è°ƒç”¨çš„å­—ç¬¦ä¸²
+ * @param {String} str: ç›´æ¥æ‰“å°çš„æ¶¦ä¹¾å‘½ä»¤å­—ç¬¦ä¸²
  * TranslateRQStr("{a.raq(a1=b1;a2=b2;a3=b3;a4=b4)}")
  */
-function TranslateRQStr(Str){
+function TranslateRQStr(Str) {
 	var RaqReg = /^\{.+\.raq\((.+\=.*)(;.+\=.*)*\)\}$/;
-	if(!RaqReg.test(Str)){
-		$UI.msg('alert','ÈóÇ¬±í´ïÊ½´íÎó, ÇëºËÊµ!', 'warning');
+	var RpxReg = /^\{.+\.rpx\((.+\=.*)(;.+\=.*)*\)\}$/;
+	if (!RaqReg.test(Str) && !RpxReg.test(Str)) {
+		$UI.msg('alert', 'æ¶¦ä¹¾è¡¨è¾¾å¼é”™è¯¯, è¯·æ ¸å®!', 'warning');
 		return;
 	}
-	Str = Str.substring(1,Str.length-1);
-	var RaqNameIndex = Str.indexOf(".raq(")+4;
-	var RaqName = Str.substring(0,RaqNameIndex);
-	var ParStr = Str.substring(RaqNameIndex+1,Str.length-1)
-	var NewParStr = ParStr.replace(/;/g,"&");
-	var NewStr = RaqName+"&"+NewParStr;
+	Str = Str.substring(1, Str.length - 1);
+	var RaqNameIndex = Str.indexOf('.raq(') + 4;
+	if (RaqNameIndex < 4) {
+		RaqNameIndex = Str.indexOf('.rpx(') + 4;
+	}
+	var RaqName = Str.substring(0, RaqNameIndex);
+	var ParStr = Str.substring(RaqNameIndex + 1, Str.length - 1);
+	var NewParStr = ParStr.replace(/;/g, '&');
+	var NewStr = RaqName + '&' + NewParStr;
 	return NewStr;
 }
 
 /**
- * ÈóÇ¬Ô¤ÀÀ´òÓ¡
- * @param {} parameter(raq²ÎÊı´®, ´°¿Ú¿í¶È, ´°¿Ú¸ß¶È)
+ * æ¶¦ä¹¾é¢„è§ˆæ‰“å°
+ * @param {} parameter(raqå‚æ•°ä¸², çª—å£å®½åº¦, çª—å£é«˜åº¦)
  */
 function DHCSTM_DHCCPM_RQPrint(parameter) {
-	var args = arguments.length
-	//var width = gWinWidth;
-	//var height= gWinHeight;
+	var args = arguments.length;
+	// var width = gWinWidth;
+	// var height= gWinHeight;
 	var width = 600;
 	var height = 500;
-	var parm = ""
-	if(args>=1){
-		if (arguments[0]==""){
-			$UI.msg('alert',"ÇëÊäÈë±¨±íÃû³ÆºÍ±¨±í²ÎÊı");
+	var parm = '';
+	if (args >= 1) {
+		if (arguments[0] == '') {
+			$UI.msg('alert', 'è¯·è¾“å…¥æŠ¥è¡¨åç§°å’ŒæŠ¥è¡¨å‚æ•°');
 			return;
 		}
-		parm=arguments[0];
+		parm = arguments[0];
 	}
-	if(args>=2){
-		if(arguments[1]!=""){
-			width=arguments[1];
+	if (args >= 2) {
+		if (arguments[1] != '') {
+			width = arguments[1];
 		}
 	}
-	if(args>=3){
-		if(arguments[2]!=""){
-			height=arguments[2];
+	if (args >= 3) {
+		if (arguments[2] != '') {
+			height = arguments[2];
 		}
 	}
-	DHCCPM_RQPrint(parm,width,height)
+	DHCCPM_RQPrint(parm, width, height);
 }
 
- //·µ»ØÈ¡±¸×¢ÀàĞÍ×Ö¶ÎÊ±£¬±¸×¢ĞĞÖ®¼äµÄÉè¶¨·Ö¸ô·û ;
-function xMemoDelim() 
-{
-	var realkey  = String.fromCharCode(3);  
-	return ";"; //realkey;
+// è¿”å›å–å¤‡æ³¨ç±»å‹å­—æ®µæ—¶ï¼Œå¤‡æ³¨è¡Œä¹‹é—´çš„è®¾å®šåˆ†éš”ç¬¦ ;ï¼ˆä¸åå°ä¿æŒä¸€è‡´ï¼‰
+function xMemoDelim() {
+	var realkey = String.fromCharCode(3);
+	return '|'; // realkey;
 }
 
-//¶ÔºóÌ¨·µ»ØµÄ±¸×¢×Ö¶Î¼ÓÒÔ´¦Àí-¼´Ê¹ÓÃ»Ø³µ»»ĞĞ·û $c(13,10) Ìæ»»$c(3)
-function handleMemo(memo,token) 
-{
-	var xx='';
-	var ss=memo.split(token);
-	for (var i=0;i<ss.length;i++)
-	{
-		if (xx=='') {xx=ss[i];}
-		else{
-			xx=xx+'\n'+ss[i];
+// å¯¹åå°è¿”å›çš„å¤‡æ³¨å­—æ®µåŠ ä»¥å¤„ç†-å³ä½¿ç”¨å›è½¦æ¢è¡Œç¬¦ $c(13,10) æ›¿æ¢$c(3)
+function handleMemo(memo, token) {
+	var xx = '';
+	var ss = memo.split(token);
+	for (var i = 0; i < ss.length; i++) {
+		if (xx == '') { xx = ss[i]; } else {
+			xx = xx + '\n' + ss[i];
 		}
 	}
 	return xx;
 }
 
 function banBackSpace(e) {
-	var ev=e||window.event;
-	//»ñÈ¡event¶ÔÏó
-	var obj=ev.target||ev.srcElement;
-	//»ñÈ¡ÊÂ¼şÔ´
-	var t=obj.type||obj.getAttribute('type');
-	//»ñÈ¡ÊÂ¼şÔ´ÀàĞÍ
-	//»ñÈ¡×÷ÎªÅĞ¶ÏÌõ¼şµÄÊÂ¼şÀàĞÍ
-	var vReadOnly=obj.readOnly;
-	var vDisabled=obj.disabled;
-	//´¦ÀíundefinedÖµÇé¿ö
-	vReadOnly=(vReadOnly==undefined)?false:vReadOnly;
-	vDisabled=(vDisabled==undefined)?true:vDisabled;
-	//µ±ÇÃBackspace¼üÊ±£¬ÊÂ¼şÔ´ÀàĞÍÎªÃÜÂë»òµ¥ĞĞ¡¢¶àĞĞÎÄ±¾µÄ£¬
-	//²¢ÇÒreadOnlyÊôĞÔÎªtrue»òdisabledÊôĞÔÎªtrueµÄ£¬ÔòÍË¸ñ¼üÊ§Ğ§
-	var flag1=ev.keyCode==8&&(t=="password"||t=="text"||t=="textarea")&&(vReadOnly==true||vDisabled==true);
-	//µ±ÇÃBackspace¼üÊ±£¬ÊÂ¼şÔ´ÀàĞÍ·ÇÃÜÂë»òµ¥ĞĞ¡¢¶àĞĞÎÄ±¾µÄ£¬ÔòÍË¸ñ¼üÊ§Ğ§
-	var flag2=ev.keyCode==8&&t!="password"&&t!="text"&&t!="textarea";
-	//ÅĞ¶Ï
-	if(flag2||flag1)return false;
+	var ev = e || window.event;
+	// è·å–eventå¯¹è±¡
+	var obj = ev.target || ev.srcElement;
+	// è·å–äº‹ä»¶æº
+	var t = obj.type || obj.getAttribute('type');
+	// è·å–äº‹ä»¶æºç±»å‹
+	// è·å–ä½œä¸ºåˆ¤æ–­æ¡ä»¶çš„äº‹ä»¶ç±»å‹
+	var vReadOnly = obj.readOnly;
+	var vDisabled = obj.disabled;
+	// å¤„ç†undefinedå€¼æƒ…å†µ
+	vReadOnly = (vReadOnly == undefined) ? false : vReadOnly;
+	vDisabled = (vDisabled == undefined) ? true : vDisabled;
+	// å½“æ•²Backspaceé”®æ—¶ï¼Œäº‹ä»¶æºç±»å‹ä¸ºå¯†ç æˆ–å•è¡Œã€å¤šè¡Œæ–‡æœ¬çš„ï¼Œ
+	// å¹¶ä¸”readOnlyå±æ€§ä¸ºtrueæˆ–disabledå±æ€§ä¸ºtrueçš„ï¼Œåˆ™é€€æ ¼é”®å¤±æ•ˆ
+	var flag1 = ev.keyCode == 8 && (t == 'password' || t == 'text' || t == 'textarea') && (vReadOnly == true || vDisabled == true);
+	// å½“æ•²Backspaceé”®æ—¶ï¼Œäº‹ä»¶æºç±»å‹éå¯†ç æˆ–å•è¡Œã€å¤šè¡Œæ–‡æœ¬çš„ï¼Œåˆ™é€€æ ¼é”®å¤±æ•ˆ
+	var flag2 = ev.keyCode == 8 && t != 'password' && t != 'text' && t != 'textarea';
+	// åˆ¤æ–­
+	if (flag2 || flag1) return false;
 }
-//½ûÖ¹ÍË¸ñ¼ü ×÷ÓÃÓÚFirefox¡¢Opera
-document.onkeypress=banBackSpace;
-//½ûÖ¹ÍË¸ñ¼ü ×÷ÓÃÓÚIE¡¢Chrome
-document.onkeydown=banBackSpace;
+// ç¦æ­¢é€€æ ¼é”® ä½œç”¨äºFirefoxã€Opera
+document.onkeypress = banBackSpace;
+// ç¦æ­¢é€€æ ¼é”® ä½œç”¨äºIEã€Chrome
+document.onkeydown = banBackSpace;
 
-/*2018-7-4
+/* 2018-7-4
  * xuchao
- * grid µ¼³ö
+ * grid å¯¼å‡º
  * */
-function ExportExcel(data,cm){
-	//´¦ÀícmÒş²Ø checkbox
-	var cmafter=[];
-	for(var i=0; i<cm.length; i++){
+function ExportExcel(data, cm, footerdata) {
+	// å¤„ç†cméšè— checkbox
+	var cmafter = [];
+	for (var i = 0; i < cm.length; i++) {
 		var obj = cm[i];
-		if(obj.checkbox||obj.hidden){
+		if (obj.checkbox || obj.hidden || obj.allowExport === false) {
 			continue;
 		}
 		cmafter.push(obj);
 	}
-	var exceldata=[];
-	var rowobj=[];
-	var rowslen=data.length;
+	var exceldata = [];
+	var rowobj = [];
+	var rowslen = data.length;
 	
+	$('#ExportDataGrid').remove();		// å¦‚æœå¤šä¸ªç•Œé¢åŒæ—¶å¯¼å‡º,éœ€åœ¨è¯¥idä¸­å¢åŠ gridid
 	var TableHtml = "<div><table id='ExportDataGrid'><tr>";
-	//ExcelµÚÒ»ĞĞ´æ·Å±êÌâ
-	for (var n=0;n<cmafter.length;n++){
+	// Excelç¬¬ä¸€è¡Œå­˜æ”¾æ ‡é¢˜
+	for (var n = 0; n < cmafter.length; n++) {
 		var reTag = /<(?:.|\s)*?>/g;
-		var HeaderTitle = cmafter[n].title.replace(reTag,"");
+		var HeaderTitle = cmafter[n].title.replace(reTag, '');
 		rowobj.push(HeaderTitle);
-		TableHtml += "<td style='vnd.ms-excel.numberformat:@'>" + HeaderTitle + "</td>";
+		TableHtml += "<td style='vnd.ms-excel.numberformat:@'>" + HeaderTitle + '</td>';
 	}
 	exceldata.push(rowobj);
 	TableHtml += '</tr>';
 	
-	for (var k=0;k<rowslen;k++){
-		TableHtml += "<tr>";
-		var Record=data[k];
-		rowobj=[];
-		for (var j=0;j<cmafter.length;j++){
-			var colDataIndex=cmafter[j].field;
+	var XLSXJson = [], XLSXRow = {};
+	
+	for (var k = 0; k < rowslen; k++) {
+		TableHtml += '<tr>';
+		var Record = data[k];
+		rowobj = [];
+		for (var j = 0; j < cmafter.length; j++) {
+			var colDataIndex = cmafter[j].field;
 			var colRenderer = cmafter[j].formatter;
-			var cellValue=Record[colDataIndex];
-			if(!isEmpty(colRenderer)&&colRenderer.toString().replace(/\s/g,'')!="function(value){returnvalue;}"
-			&& cmafter[j].checkbox!==true){
-				var cellValue = cmafter[j].formatter(cellValue,Record,k);
+			var cellValue = Record[colDataIndex];
+			if (!isEmpty(colRenderer) && colRenderer.toString().replace(/\s/g, '') != 'function(value){returnvalue;}'
+			&& cmafter[j].checkbox !== true && RegExp('href').test(colRenderer.toString()) !== true) {
+				cellValue = cmafter[j].formatter(cellValue, Record, k);
 			}
-			//var regExpPattern=/^(-?\d*)(\.?\d*)$/;
-			//if(cellValue!="" && regExpPattern.test(cellValue)){
-				//rowobj.push("\'"+cellValue);
-			//}else{
-				rowobj.push(cellValue);
-			//}
-			TableHtml += "<td style='vnd.ms-excel.numberformat:@'>" + cellValue + "</td>";
+			if (isEmpty(cellValue)) {
+				cellValue = '';
+			}
+			rowobj.push(cellValue);
+			XLSXRow[cmafter[j]['title']] = cellValue;
+			TableHtml += "<td style='vnd.ms-excel.numberformat:@'>" + cellValue + '</td>';
 		}
-		TableHtml += "</tr>";
+		TableHtml += '</tr>';
 		exceldata.push(rowobj);
+		XLSXJson.push(XLSXRow), XLSXRow = {};
 	}
-	TableHtml += "</table></div>";
+	// å¢åŠ åˆè®¡è¡Œ	
+	if (!isEmpty(footerdata)) {
+		TableHtml += '<tr>';
+		rowobj = [];
+		for (var m = 0; m < cmafter.length; m++) {
+			var colIndex = cmafter[m].field;
+			var footervalue = footerdata[0][colIndex];
+			if (isEmpty(footervalue)) {
+				footervalue = '';
+			}
+			rowobj.push(footervalue);
+			XLSXRow[cmafter[m]['title']] = footervalue;
+			TableHtml += "<td style='vnd.ms-excel.numberformat:@'>" + footervalue + '</td>';
+		}
+		TableHtml += '</tr>';
+		exceldata.push(rowobj);
+		XLSXJson.push(XLSXRow), XLSXRow = {};
+	}
+	TableHtml += '</table></div>';
 	$(document.body).append(TableHtml);
 	
-	//'ExportDataGrid'¸ÃidÓÃÓÚchromeµÈä¯ÀÀÆ÷; exceldataÓÃÓÚIE11
-	ExportUtil.toExcel('ExportDataGrid', exceldata, new Date().getTime()+"ĞÂµ¼³öÎÄ¼ş.xls");
+	var FileName = new Date().getTime() + 'æ–°å¯¼å‡ºæ–‡ä»¶.xlsx';
+	// '#ExportDataGrid'è¯¥idç”¨äºchromeç­‰æµè§ˆå™¨; exceldataç”¨äºIE11; XLSXJson-ç”¨äºXLSXæ’ä»¶å¯¼å‡ºExcel
+	ExportUtil.toExcel('#ExportDataGrid', exceldata, FileName, XLSXJson);
+	$('#ExportDataGrid').remove();
 }
 /**
- * ÅĞ¶ÏÒµÎñµ¥¾İÊÇ·ñ¸ßÖµµ¥
- * @param {Ö÷±írowid} Pointer
- * @param {ÀàĞÍ} Type
- * @return {ÅĞ¶Ï½á¹û} Y:¸ßÖµµ¥, ·ñÔò:µÍÖµµ¥
+ * åˆ¤æ–­ä¸šåŠ¡å•æ®æ˜¯å¦é«˜å€¼å•
+ * @param {ä¸»è¡¨rowid} Pointer
+ * @param {ç±»å‹} Type
+ * @return {åˆ¤æ–­ç»“æœ} Y:é«˜å€¼å•, å¦åˆ™:ä½å€¼å•
  */
-function GetCertDocHVFlag(Pointer, Type){
-	var Ret = tkMakeServerCall('web.DHCSTMHUI.Common.UtilCommon', 'GetCertDocHVFlag',Pointer, Type);
+function GetCertDocHVFlag(Pointer, Type) {
+	var Ret = tkMakeServerCall('web.DHCSTMHUI.Common.UtilCommon', 'GetCertDocHVFlag', Pointer, Type);
 	return Ret;
 }
-/*cm ´¦ÀíÖĞµ÷ÓÃ 
- * ²éÕÒcm ÖĞµÄ obj
- * Æ¥Åä field
+/* cm å¤„ç†ä¸­è°ƒç”¨ 
+ * æŸ¥æ‰¾cm ä¸­çš„ obj
+ * åŒ¹é… field
  */
-var FindCmObj=function(_cm,field){
-	var len=_cm.length
-	for(var i=0;i<len;i++){
-		if(_cm[i].field==field){
-		 return _cm[i];
-		};
+var FindCmObj = function(_cm, field) {
+	var len = _cm.length;
+	for (var i = 0; i < len; i++) {
+		if (_cm[i].field == field) {
+			return _cm[i];
+		}
 	}
 	return {};
-}
+};
 
 /**
- * ²Ëµ¥Ìø×ªºó,hrefÖĞ¿ÉÄÜ´«µİÒ»Ğ©±äÁ¿
- * ´Ë·½·¨ÔÚÇå¿Õ¹ı³Ìºó·½µ÷ÓÃ
- * ¸Ä¶¯locationºó½çÃæ»áÖØĞÂ¼ÓÔØ
- * 20200512 Ôö¼Óvalue±äÁ¿Öµ£¬±äÁ¿Ê¹ÓÃºóÖÃÎª¿Õ
+ * èœå•è·³è½¬å,hrefä¸­å¯èƒ½ä¼ é€’ä¸€äº›å˜é‡
+ * æ­¤æ–¹æ³•åœ¨æ¸…ç©ºè¿‡ç¨‹åæ–¹è°ƒç”¨
+ * æ”¹åŠ¨locationåç•Œé¢ä¼šé‡æ–°åŠ è½½
+ * 20200512 å¢åŠ valueå˜é‡å€¼ï¼Œå˜é‡ä½¿ç”¨åç½®ä¸ºç©º
  */
-function CheckLocationHref(value){
+function CheckLocationHref(value) {
 	var pathname = location.pathname;
 	var search = location.search;
 	var mainmenuflag = (pathname.indexOf('dhcstmhui.menu.csp') != -1 || pathname.indexOf('dhcstm.menu.csp') != -1)
 		? true : false;
-	var websysflag = pathname.indexOf('websys.csp') != -1? true : false;
+	var websysflag = pathname.indexOf('websys.csp') != -1 ? true : false;
 
-	//dhcstmhui.menu.cspÊÇ²à²Ëµ¥Ä£Ê½ÓÃµ½µÄ
-	//websys.cspÊÇÍ·²Ëµ¥Ä£Ê½ÓÃµ½µÄ
-	//ÈôÎª½çÃæÌø×ªµÄ²Ëµ¥,Ê¹ÓÃµÄÊÇÃ÷ÎÄcsp(ÖîÈçdhcstm.ingdrec.csp)
+	// dhcstmhui.menu.cspæ˜¯ä¾§èœå•æ¨¡å¼ç”¨åˆ°çš„
+	// websys.cspæ˜¯å¤´èœå•æ¨¡å¼ç”¨åˆ°çš„
+	// è‹¥ä¸ºç•Œé¢è·³è½¬çš„èœå•,ä½¿ç”¨çš„æ˜¯æ˜æ–‡csp(è¯¸å¦‚dhcstmhui.ingdrec.csp)
 
-	if((!mainmenuflag && !websysflag) && (search!="")&&(value=="")){
-		location.search = "";
+	if ((!mainmenuflag && !websysflag) && (search != '') && (value == '')) {
+		location.search = '';
 	}
 }
 
 /**
- * ¿ØÖÆ°´Å¥ÊÇ·ñ¿ÉÓÃ
- * @param {} Obj: ±ÈÈç {'#SearchBT':true, '#SaveBT':false}
+ * æ§åˆ¶æŒ‰é’®æ˜¯å¦å¯ç”¨
+ * @param {} Obj: æ¯”å¦‚ {'#SearchBT':true, '#SaveBT':false}
  */
 function ChangeButtonEnable(Obj) {
-	for(var Btn in Obj){
+	for (var Btn in Obj) {
 		var IsEnable = Obj[Btn] == true ? 'enable' : 'disable';
 		$(Btn).linkbutton(IsEnable);
-		if(isEmpty(ButtonCountObj[Btn])){
-			ButtonCountObj[Btn]=1;
-		}else{
-			ButtonCountObj[Btn]=ButtonCountObj[Btn]+1;
+		if (isEmpty(ButtonCountObj[Btn])) {
+			ButtonCountObj[Btn] = 1;
+		} else {
+			ButtonCountObj[Btn] = ButtonCountObj[Btn] + 1;
 		}
 	}
-}
-/**
- * ÖØĞÂÃüÃûÁĞµÄfield,×·¼Ó
- */
-function changefieldval(rowsData,columns)
-{
-	if((isEmpty(rowsData))||(isEmpty(columns))||(rowsData.length<=0)){
-		return;
-	}
-	var arrData=[];
-	for(var i=0; i<rowsData.length; i++){
-		var row = rowsData[i];
-		var tmprow=row;
-		for (var col in columns[0]){
-			if(!isEmpty(columns[0][col].alias)){
-				var field=columns[0][col].field;
-				var Alias=columns[0][col].alias;
-				var AddRowObj={};
-				AddRowObj[Alias]=row[field];
-				tmprow=$.extend(tmprow,AddRowObj);
-			}
-		}
-		arrData.unshift(tmprow);
-	}
-	return arrData;
 }
 
 /**
- * datagridĞĞÈ¾É«·½·¨
+ * datagridè¡ŒæŸ“è‰²æ–¹æ³•
  * @param {gridObj} Grid
- * @param {ĞĞË÷Òı} RowIndex
- * @param {ÁĞÃû³Æ,Ğè¾ß±¸Î¨Ò»ĞÔ} Field
- * @param {ÑÕÉ«} Color
- * @param {ÒªÈ¾É«µÄÁĞÃû³Æ} ColorField, ²»ÉèÖÃÊ±ÕûĞĞÈ¾É«
+ * @param {è¡Œç´¢å¼•} RowIndex
+ * @param {åˆ—åç§°,éœ€å…·å¤‡å”¯ä¸€æ€§} Field
+ * @param {é¢œè‰²} Color
+ * @param {è¦æŸ“è‰²çš„åˆ—åç§°} ColorField, ä¸è®¾ç½®æ—¶æ•´è¡ŒæŸ“è‰²
  */
-function SetGridBgColor(Grid, RowIndex, Field, Color, ColorField){
+function SetGridBgColor(Grid, RowIndex, Field, Color, ColorField) {
 	var RowId = Grid.getRows()[RowIndex][Field];
-	var Panel =  Grid.getPanel();
+	var Panel = Grid.getPanel();
 	var trs = Panel.find('div.datagrid-body tr');
-	trs.each(function(i, tr){
-		var td = $(this).children('td[field="' + Field + '"]');		// È¡³öĞĞÖĞ
-		var TextValue = td.children('div').text();				// È¡³ö¸ÃÁĞµÄÖµ
-		if(TextValue == RowId){
-			if(!isEmpty(ColorField)){
-				var ColorTd = $(this).children('td[field="'+ColorField+'"]');
-				ColorTd.css({'background-color': Color});
-			}else{
-				$(tr).css({'background-color': Color});
+	Color = GetColorHexCode(Color);
+	trs.each(function(i, tr) {
+		var td = $(this).children('td[field="' + Field + '"]');		// å–å‡ºè¡Œä¸­
+		var TextValue = td.children('div').text();				// å–å‡ºè¯¥åˆ—çš„å€¼
+		if (TextValue == RowId) {
+			if (!isEmpty(ColorField)) {
+				var ColorTd = $(this).children('td[field="' + ColorField + '"]');
+				ColorTd.css({ 'background-color': Color });
+			} else {
+				$(tr).css({ 'background-color': Color });
 			}
 			return false;
 		}
 	});
 }
-
 /**
- * ĞŞ¸ÄdatagridĞĞ(¸ñ×Ó)ÑùÊ½
- * @param {gridObj} Grid
- * @param {ĞĞË÷Òı} RowIndex
- * @param {ÁĞÃû³Æ,Ğè¾ß±¸Î¨Ò»ĞÔ} Field
- * @param {ÒªÉèÖÃµÄÁĞÃû³Æ,Îª¿ÕÊ±´¦ÀíÕûĞĞ} ColorField
- * @param {ÑùÊ½Ãû³Æ,µÚÒ»¸ö×Ö·ûÎª¼ÓºÅ»òÕß¼õºÅ} OperateCss
- * 		±ÈÈç .ClassRed:{color:red;}, ÕâÀïÈë²ÎOperateCss¿ÉÒÔÎª+ClassRed»òÕß-ClassRed
+ * æ ¹æ®ç³»ç»Ÿé£æ ¼ è¿”å›å¯¹åº”çš„è§„èŒƒèƒŒæ™¯é¢œè‰²åå…­è¿›åˆ¶ä»£ç 
+ * @param {é¢œè‰²ä»£ç } colorCode
+ * @returns 
  */
-function SetGridCss(Grid, RowIndex, Field, ColorField, OperateCss){
+function GetColorHexCode(colorCode) {
+	var ColorHexCode = colorCode;	// è‹¥æ²¡æœ‰å¯¹åº”çš„HISUIè§„èŒƒèƒŒæ™¯è‰²åå…­è¿›åˆ¶ä»£ç ï¼Œä½¿ç”¨ä¼ å…¥çš„é¢œè‰²ä»£ç 
+	// [ç‚«å½© , æç®€]
+	// æœˆä»½æ•°å­—ä»£ç ç”¨äºæ•ˆæœŸé¢„è­¦ç•Œé¢
+	var ColorObj = {
+		red: ['#FF5252', '#FF3D3D'],
+		yellow: ['#FFB746', '#FFB300'],
+		blue: ['#449BE2', '#339EFF'],
+		green: ['#2AB66A', '#28BA05'],
+		orange: ['#FF793E', '#F68300'],
+		month0: ['#EE4F38', '#EE0F0F'],
+		month1: ['#FD930C', '#FFB300'],
+		month2: ['#D17604', '#F68300'],
+		month3: ['#955606', '#CF8A3B'],
+		month4: ['#8BE550', '#67E14A'],
+		month5: ['#50B90C', '#12AA2C'],
+		month6: ['#328100', '#1A8700'],
+		month7: ['#449BE3', '#339EFF'],
+		month8: ['#0670C7', '#007BE9'],
+		month9: ['#125891', '#0059A8'],
+		month10: ['#D952D1', '#F17AE9'],
+		month11: ['#C10EB5', '#A863F8'],
+		month12: ['#891083', '#A346C4']
+	};
+	if (!isEmpty(ColorObj[colorCode])) {
+		ColorHexCode = (HISUIStyleCode === 'lite') ? (ColorObj[colorCode][1]) : (ColorObj[colorCode][0]);
+	}
+	return ColorHexCode;
+}
+/**
+ * ä¿®æ”¹datagridè¡Œ(æ ¼å­)æ ·å¼
+ * @param {gridObj} Grid
+ * @param {è¡Œç´¢å¼•} RowIndex
+ * @param {åˆ—åç§°,éœ€å…·å¤‡å”¯ä¸€æ€§} Field
+ * @param {è¦è®¾ç½®çš„åˆ—åç§°,ä¸ºç©ºæ—¶å¤„ç†æ•´è¡Œ} ColorField
+ * @param {æ ·å¼åç§°,ç¬¬ä¸€ä¸ªå­—ç¬¦ä¸ºåŠ å·æˆ–è€…å‡å·} OperateCss
+ * 		æ¯”å¦‚ .ClassRed:{color:red;}, è¿™é‡Œå…¥å‚OperateCsså¯ä»¥ä¸º+ClassRedæˆ–è€…-ClassRed
+ */
+function SetGridCss(Grid, RowIndex, Field, ColorField, OperateCss) {
 	var AddDelType = OperateCss.charAt(0);
 	var Css = OperateCss;
-	if(AddDelType == '+' || AddDelType == '-'){
+	if (AddDelType == '+' || AddDelType == '-') {
 		Css = OperateCss.substring(1, OperateCss.length);
-	}else{
+	} else {
 		AddDelType = '+';
 	}
 	var RowId = Grid.getRows()[RowIndex][Field];
-	var Panel =  Grid.getPanel();
+	var Panel = Grid.getPanel();
 	var trs = Panel.find('div.datagrid-body tr');
-	trs.each(function(i, tr){
-		var td = $(this).children('td[field="' + Field + '"]');		// È¡³öĞĞÖĞ
-		var TextValue = td.children('div').text();				// È¡³ö¸ÃÁĞµÄÖµ
-		if(TextValue == RowId){
-			if(!isEmpty(ColorField)){
-				var ColorTd = $(this).children('td[field="'+ColorField+'"]');
-				if(AddDelType == '+'){
+	trs.each(function(i, tr) {
+		var td = $(this).children('td[field="' + Field + '"]');		// å–å‡ºè¡Œä¸­
+		var TextValue = td.children('div').text();				// å–å‡ºè¯¥åˆ—çš„å€¼
+		if (TextValue == RowId) {
+			if (!isEmpty(ColorField)) {
+				var ColorTd = $(this).children('td[field="' + ColorField + '"]');
+				if (AddDelType == '+') {
 					ColorTd.addClass(Css);
-				}else{
+				} else {
 					ColorTd.removeClass(Css);
 				}
-			}else{
-				if(AddDelType == '+'){
+			} else {
+				if (AddDelType == '+') {
 					$(tr).addClass(Css);
-				}else{
+				} else {
 					$(tr).removeClass(Css);
 				}
 			}
@@ -1056,87 +974,432 @@ function SetGridCss(Grid, RowIndex, Field, ColorField, OperateCss){
 	});
 }
 
-///XuChao
-///20181120
-///ÖØĞÂÉèÖÃ¸ß¶È
-///layout border  µ÷Õûsouth»òÕßnorth
-function ResetHeight(){
-	var c=$("body");
-	var h=$(window).height()*0.4;
-	var pn=$("body").layout('panel','north');
-	var ps=$("body").layout('panel','south'); 
-	var p="";
-	var pnFlag=$("table:empty",pn);
-	var psFlag=$("table:empty",ps);
-	if(pn[0]&&pnFlag.length){p=pn;}
-	else if(ps[0]&&psFlag.length){p=ps;}
-	if(p==""){return;};
-	var oldHeight=p.panel('panel').outerHeight(); //»ñµÃpanel µÄÔ­¸ß¶È
-	p.panel('resize',{height:h}); //ÉèÖÃ panel ĞÂ¸ß¶È
-	var newHeight=p.panel('panel').outerHeight();
-	c.layout('resize',{height:c.height()+newHeight-oldHeight});  //ÖØĞÂÉèÖÃÕû¸ö²¼¾ÖµÄ¸ß¶È
+// /XuChao
+// /20181120
+// /é‡æ–°è®¾ç½®é«˜åº¦
+// /layout border  è°ƒæ•´southæˆ–è€…north
+function ResetHeight() {
+	var c = $('body');
+	var h = $(window).height() * 0.4;
+	var pn = $('body').layout('panel', 'north');
+	var ps = $('body').layout('panel', 'south');
+	var p = '';
+	var pnFlag = $('table:empty', pn);
+	var psFlag = $('table:empty', ps);
+	if (pn[0] && pnFlag.length) { p = pn; } else if (ps[0] && psFlag.length) { p = ps; }
+	if (p == '') { return; }
+	var oldHeight = p.panel('panel').outerHeight(); // è·å¾—panel çš„åŸé«˜åº¦
+	p.panel('resize', { height: h }); // è®¾ç½® panel æ–°é«˜åº¦
+	var newHeight = p.panel('panel').outerHeight();
+	c.layout('resize', { height: c.height() + newHeight - oldHeight }); // é‡æ–°è®¾ç½®æ•´ä¸ªå¸ƒå±€çš„é«˜åº¦
 }
-///ÎÄµµ¼ÓÔØÍê³Éºó µ÷Õû
+// /æ–‡æ¡£åŠ è½½å®Œæˆå è°ƒæ•´
 $(
-	function(){
+	function() {
 		ResetHeight();
 	}
-)
+);
 
 /**
- * ²éÑ¯Ğ¡ÊıÎ»Êı
- * FmtType - ²ÎÊıÃû³Æ
+ * æŸ¥è¯¢å°æ•°ä½æ•°
+ * FmtType - å‚æ•°åç§°
  */
-function GetFmtNum(FmtType){
-	var FmtDecLen = tkMakeServerCall("web.DHCSTMHUI.Util.DrugUtil", "DecLenByFmtType", FmtType, gHospId);
+function GetFmtNum(FmtType) {
+	var FmtDecLen = tkMakeServerCall('web.DHCSTMHUI.Util.DrugUtil', 'DecLenByFmtType', FmtType, gHospId);
 	return FmtDecLen;
 }
 
 /**
- * ²¹Áã
- * inputNum - Ô­Êı¾İ
- * numLength - Êı¾İ³¤¶È
+ * è¡¥é›¶
+ * inputNum - åŸæ•°æ®
+ * numLength - æ•°æ®é•¿åº¦
  */
 function NumZeroPadding(inputNum, numLength) {
-	if (inputNum == "") {
+	if (inputNum == '') {
 		return inputNum;
 	}
 	var inputNumLen = inputNum.length;
 	if (inputNumLen > numLength) {
-		Msg.info("warning", "ÊäÈë´íÎó!");
+		$UI.msg('warning', 'è¾“å…¥é”™è¯¯!');
 		return;
 	}
 	for (var i = 1; i <= numLength - inputNumLen; i++) {
-		inputNum = "0" + inputNum;
+		inputNum = '0' + inputNum;
 	}
 	return inputNum;
 }
 /**
- *Àà×é²ÎÊıÒ½ÔºID
+ *ç±»ç»„å‚æ•°åŒ»é™¢ID
  */
 function setStkGrpHospid(HospId) {
-	StkGrpHospid=HospId;
+	StkGrpHospid = HospId;
 }
 
 /**
- * Ö÷½çÃæÌí¼ÓÒ³Ç©-¹«ÓÃ·½·¨
- * @param {±êÌâ} Title: ´Ë×Ö¶Î¼òÃ÷¶óÒª¼´¿É,·½·¨ÖĞ¿É¸ù¾İcspºóÌ¨»ñÈ¡
- * @param {urlµØÖ·} URL
+ * ä¸»ç•Œé¢æ·»åŠ é¡µç­¾-å…¬ç”¨æ–¹æ³•
+ * @param {æ ‡é¢˜} Title: æ­¤å­—æ®µç®€æ˜æ‰¼è¦å³å¯,æ–¹æ³•ä¸­å¯æ ¹æ®cspåå°è·å–
+ * @param {urlåœ°å€} URL
  */
-function Common_AddTab(Title, URL){
-	if(URL.indexOf('dhcstmhui.menu.csp') == -1){
+function Common_AddTab(Title, URL) {
+	var MenuId;
+	if (URL.indexOf('dhcstmhui.menu.csp') == -1) {
 		var CspName = URL.split('?')[0];
-		if(!isEmpty(CspName)){
+		if (!isEmpty(CspName)) {
 			var MenuArr = $.cm({
 				ClassName: 'web.DHCSTMHUI.Common.UtilCommon',
 				MethodName: 'GetMenuInfoByCsp',
 				CspName: CspName
 			}, false);
+			MenuId = MenuArr['MenuId'];
 			var Caption = MenuArr['Caption'];
-			if(!isEmpty(Caption)){
-				Title = Caption;			//¸ù¾İcsp»ñÈ¡²Ëµ¥Ãû³Æ
+			if (!isEmpty(MenuId)) {
+				Title = Caption;			// æ ¹æ®cspè·å–èœå•åç§°
 			}
 		}
 	}
-	window.parent.addTab(Title, URL);
+	URL = CommonFillUrl(URL);
+	if (!isEmpty(window.parent.addTab)) {
+		// dhcstmhui.main.cspèœå•æ¨¡å¼
+		window.parent.addTab(Title, URL);
+	} else if (!isEmpty(window.parent.showNavTab) && !isEmpty(MenuId)) {
+		// websys.frames.js
+		// å…¼å®¹åŸºç¡€å¹³å°ä¾§èœå•æ¨¡å¼
+		window.parent.showNavTab({ menuId: MenuId, menuName: Title, menuHref: URL, parentId: 0, iconUrl: '' });
+		var iframeTab = window.parent.document.getElementById('iframe_' + MenuId);
+		// åŸºç¡€å¹³å°ä¾§èœå•æ¨¡å¼,å¯¹äºå·²ç»æ‰“å¼€çš„èœå•ä¸å†åˆ·æ–°, è¿™é‡Œå•ç‹¬å¤„ç†
+		if (!isEmpty(iframeTab)) {
+			$(iframeTab).attr('src', URL);
+		}
+	} else {
+		location.href = URL;
+	}
+}
+
+/**
+ * æˆªå–ç‰¹æ®Šå­—ç¬¦å‰çš„æè¿°è¿”å›
+ */
+function TranslateDesc(Str) {
+	var SpecialStr = '!,@,#,$,%,^,&,*,(,),_,+,ï¼,@,#,ï¿¥,%,&,*,ï¼ˆ,ï¼‰,â€”â€”';
+	var SpecialStrArr = SpecialStr.split(',');
+	var index = -1;
+	for (var i = 0; i < SpecialStrArr.length; i++) {
+		var tmpSpecial = SpecialStrArr[i];
+		var SpecialIndex = Str.indexOf(tmpSpecial);
+		if ((index == -1) || ((SpecialIndex >= 0) && (SpecialIndex < index))) {
+			index = SpecialIndex;
+		}
+	}
+	var NewStr = Str;
+	if (index > 0) {
+		NewStr = Str.substring(0, index);
+	}
+	return NewStr;
+}
+
+/**
+ * 01,10,044001500111,81966722,173.79,20170524,17884534745749991611,BE2D
+	1:
+	2ï¼šå‘ç¥¨ç§ç±»ä»£ç ï¼Œ10-å¢å€¼ç¨ç”µå­æ™®é€šå‘ç¥¨ï¼›04-å¢å€¼ç¨æ™®é€šå‘ç¥¨ï¼›01-å¢å€¼ç¨ä¸“ç”¨å‘ç¥¨
+	3ï¼šå‘ç¥¨ä»£ç 
+	4ï¼šå‘ç¥¨å·ç 
+	5ï¼šå¼€ç¥¨é‡‘é¢
+	6ï¼šä»£è¡¨å¼€ç¥¨æ—¥æœŸ
+	7ï¼šå‘ç¥¨æ ¡éªŒç ï¼Œå¢å€¼ç¨ä¸“ç”¨å‘ç¥¨æ˜¯æ²¡æœ‰æ ¡éªŒç çš„ï¼Œæ²¡æœ‰åˆ™ä¸ºç©ºå­—ç¬¦ä¸²
+	8ï¼šéšæœºäº§ç”Ÿçš„æœºå¯†ä¿¡æ¯
+ */
+function GetInvInfo(InvInfo) {
+	if (isEmpty(InvInfo)) {
+		return '';
+	}
+	var gInvObj = {};
+	if (InvInfo.indexOf(',') > 0) {
+		var InvArray = InvInfo.split(',');
+		if (InvArray.length != 8) {
+			return false;
+		}
+		var InvCode = InvArray[2];
+		var InvNo = InvArray[3];
+		var InvAmt = InvArray[4];
+		var InvDate = InvArray[5];
+		var VeCode = InvArray[6];
+		InvDate = DateFormatter(FormatDate(InvDate));
+		gInvObj = {
+			InvCode: InvCode,
+			InvNo: InvNo,
+			InvAmt: InvAmt,
+			InvDate: InvDate,
+			VeCode: VeCode
+		};
+	} else {
+		return '';
+	}
+	return gInvObj;
+}
+/**
+ *	å¯¼å…¥æ•°æ®æ—¶æ£€æŸ¥æ—¥æœŸæ ¼å¼æ˜¯å¦æ­£ç¡®(åŒ…æ‹¬éªŒè¯å¹³é—°å¹´2æœˆ29)
+ *	Excelå¯¼å…¥åŠå…¥åº“åˆ¶å•ç•Œé¢å¯¼å…¥åŠŸèƒ½ä½¿ç”¨
+ */
+function CheckDateForm(Date, Type) {
+	// /YYYY-MM-DD
+	var reg1 = /^(([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})-(((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)-(0[1-9]|[12][0-9]|30))|(02-(0[1-9]|[1][0-9]|2[0-8]))))|((([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))-02-29)$/;
+	// /YYYY.MM.DD
+	var reg2 = /^(([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})\.(((0[13578]|1[02])\.(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)\.(0[1-9]|[12][0-9]|30))|(02\.(0[1-9]|[1][0-9]|2[0-8]))))|((([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))\.02\.29)$/;
+	// /YYYY/MM/DD
+	var reg3 = /^(([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})\/(((0[13578]|1[02])\/(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)\/(0[1-9]|[12][0-9]|30))|(02\/(0[1-9]|[1][0-9]|2[0-8]))))|((([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))\/02\/29)$/;
+	// /DD/MM/YYYY
+	var reg4 = /^(((0[1-9]|[12][0-9]|3[01])\/((0[13578]|1[02]))|((0[1-9]|[12][0-9]|30)\/(0[469]|11))|(0[1-9]|[1][0-9]|2[0-8])\/(02))\/([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3}))|(29\/02\/(([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00)))$/;
+	// /YYYYMMDD
+	var reg5 = /^(([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})(((0[13578]|1[02])(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)(0[1-9]|[12][0-9]|30))|(02(0[1-9]|[1][0-9]|2[0-8]))))|((([0-9]{2})(0[48]|[2468][048]|[13579][26])|((0[48]|[2468][048]|[3579][26])00))0229)$/;
+	if ((Type == 'Y-m-d') && reg1.test(Date)) {
+		return true;
+	} else if ((Type == 'd/m/Y') && reg4.test(Date)) {
+		return true;
+	} else if ((isEmpty(Type)) && (reg1.test(Date) || reg2.test(Date) || reg3.test(Date) || reg4.test(Date) || reg5.test(Date))) {
+		return true;
+	} else {
+		return false;
+	}
+}
+/**
+ * è·å–æ¥å£å¯ç”¨æ ‡å¿—
+ */
+function GetSerUseObj(HospId) {
+	if (isEmpty(HospId)) {
+		HospId = session['LOGON.HOSPID'];
+	}
+	SerUseObj = $.cm({
+		ClassName: 'web.DHCSTMHUI.ServiceConfig',
+		MethodName: 'GetAllSerUseFlag',
+		HospId: HospId
+	}, false);
+	
+	return SerUseObj;
+}
+
+/**
+ * èµ„è´¨æ£€æµ‹å…¬å…±æ–¹æ³•
+ * @param {} CheckCertObj {Inci:**, Manf:**, Vendor:**, Inclb: **}
+ * @param {} CheckType Warn/In/Out/Use ä¸­çš„æŸä¸ªæ§åˆ¶,ä¸ä¼ æ—¶æŒ‰Warnè­¦ç¤ºå¤„ç†
+ * @return {Boolean}
+ */
+function Common_CheckCert(CheckCertObj, CheckType) {
+	CheckType = CheckType || 'Warn';
+	var CheckObj = $.cm({
+		ClassName: 'web.DHCSTMHUI.DHCCertDetail',
+		MethodName: 'Check',
+		Params: JSON.stringify(addSessionParams(CheckCertObj))
+	}, false);
+	var CheckTypeDesc = '';
+	if (CheckType == 'In') {
+		CheckTypeDesc = 'èµ„è´¨æ§åˆ¶,ä¸å…è®¸é‡‡è´­';
+	} else if (CheckType == 'Out') {
+		CheckTypeDesc = 'èµ„è´¨æ§åˆ¶,ä¸å…è®¸å‡ºåº“';
+	} else if (CheckType == 'Use') {
+		CheckTypeDesc = 'èµ„è´¨æ§åˆ¶,ä¸å…è®¸ä¸´åºŠä½¿ç”¨';
+	}
+	if ((CheckType != 'Warn') && !isEmpty(CheckObj[CheckType])) {
+		$UI.msg('error', CheckTypeDesc + ':' + CheckObj[CheckType]);
+		return false;
+	} else if (!isEmpty(CheckObj['Warn'])) {
+		$UI.msg('alert', 'èµ„è´¨æŠ¥è­¦:' + CheckObj['Warn']);
+	}
+	return true;
+}
+
+/**
+ * localStorageçš„setItemæ–¹æ³•å°è£…
+ * @param {} Key æˆ‘ä»¬å»ºè®®ä½¿ç”¨id, ä¸æ¨èè‡ªè¡Œå‘½å
+ * @param {} Value
+ */
+function SetLocalStorage(Key, Value) {
+	if (isEmpty(Key)) {
+		return;
+	}
+	if (window.localStorage) {
+		window.localStorage.setItem(Key, Value);
+	}
+}
+
+/**
+ * localStorageçš„getItemæ–¹æ³•å°è£…
+ * @param {} Key
+ * @param {} ClearNull boolå‹, é»˜è®¤ä¸ºtrue, ä¸ºtrueæ—¶,è‹¥å–å€¼éç©ºä½†comboä¸‹æ‹‰æ¡†(ç±»ä¼¼æƒ…å½¢)æ²¡å€¼, åšæ¸…é™¤å¤„ç†;
+ * @return {String}
+ */
+function GetLocalStorage(Key, ClearNull) {
+	if (isEmpty(Key) || !window.localStorage) {
+		return '';
+	}
+	if (ClearNull == undefined) {
+		ClearNull = true;
+	}
+	var KeyValue = window.localStorage.getItem(Key);
+	if (isEmpty(KeyValue)) {
+		KeyValue = '';
+	} else {
+		// å¦‚æœæ˜¯combo, éå†å½“å‰æ•°æ®
+		if ($('#' + Key).hasClass('combobox-f')) {
+			var ExistFlag = false;
+			var ValueField = $('#' + Key).combobox('options')['valueField'];
+			var ComboData = $('#' + Key).combobox('getData');
+			for (var i = 0, Len = ComboData.length; i < Len; i++) {
+				var Record = ComboData[i];
+				if (Record[ValueField] == KeyValue) {
+					ExistFlag = true;
+					break;
+				}
+			}
+			if (ExistFlag === false) {
+				KeyValue = '';
+				if (ClearNull) {
+					window.localStorage.removeItem(Key);
+				}
+			}
+		}
+	}
+	return KeyValue;
+}
+// /è·å–å°æ•°ä½æ•°
+function GetDecLen(Value) {
+	var DecLen = 0;
+	var DecStr = Value.toString().split('.')[1];
+	if (!isEmpty(DecStr)) {
+		var DecLen = DecStr.length;
+	}
+	return DecLen;
+}
+// æ£€æŸ¥å•ä½åˆ‡æ¢æ˜¯å¦è¶…è¿‡FmtQTYå°æ•°ä½æ•°
+// æ•°é‡ä¸èƒ½è¶…è¿‡FormatQTYçš„å°æ•°ä½æ•°;
+// åˆ‡æ¢åˆ°å…¥åº“å•ä½ && è½¬æ¢å› å­>1, é‚£ä¹ˆæ•°é‡*å•ä½factor å¿…é¡»æ˜¯ä¸ªæ•´æ•°;
+function CheckFmtQty(Fac, NewUomType, Qty) {
+	var FmtQTY = CommParObj.FmtQTY;
+	var FmtDecLen = 2;	// ç¼ºçœæ˜¾ç¤º2ä½
+	if (!isEmpty(FmtQTY)) {
+		FmtDecLen = GetDecLen(FmtQTY);
+	}
+	var QtyDecLen = GetDecLen(Qty);
+	if (QtyDecLen > FmtDecLen) {
+		$UI.msg('alert', 'æ•°é‡ä¸å…è®¸è¶…è¿‡' + FmtDecLen + 'ä½å°æ•°!');
+		return false;
+	}
+	if ((NewUomType == 'PUom') && (Fac > 1)) {
+		var PurQty = accMul(Number(Qty), Number(Fac));
+		var PurQtyDecLen = GetDecLen(PurQty);
+		if (PurQtyDecLen != 0) {
+			$UI.msg('alert', 'æ•°é‡(å…¥åº“å•ä½)*å•ä½è½¬æ¢ç³»æ•°å¿…é¡»æ˜¯æ•´æ•°!');
+			return false;
+		}
+	}
+	return true;
+}
+/**
+ * è·å–HISç‰ˆæœ¬å·
+ */
+function GetHISVersion() {
+	var Version = $.m({
+		ClassName: 'web.DHCSTMHUI.StkTypeM',
+		MethodName: 'sssHISVersion'
+	}, false);
+	
+	return Version;
+}
+/**
+ * æ ¹æ®HISç‰ˆæœ¬å·è·å–æ¶¦ä¹¾æŠ¥è¡¨åç¼€
+ */
+function GetRQSuffix() {
+	var Suffix = '.rpx';
+	if (HISVersion < 8.5) {
+		Suffix = '.raq';
+	}
+	return Suffix;
+}
+/** æŠ¥è¡¨éƒ¨åˆ†å…¬å…±è°ƒç”¨*/
+/* --æ–°å¢æ ‡ç­¾--*/
+function AddStatTab(title, url, Id) {
+	if (isEmpty(title) || isEmpty(url) || isEmpty(Id)) {
+		return;
+	}
+	var content = CreateFrame(url);
+	if ($(Id).tabs('exists', title)) {
+		$(Id).tabs('select', title); // é€‰ä¸­å¹¶åˆ·æ–°
+		var currTab = $(Id).tabs('getSelected');
+		if (url != undefined && currTab.panel('options').title != 'æŠ¥è¡¨') {
+			$(Id).tabs('update', {
+				tab: currTab,
+				options: {
+					content: content
+				}
+			});
+		}
+	} else {
+		$(Id).tabs('add', {
+			title: title,
+			content: content,
+			closable: true
+		});
+	}
+}
+function CreateFrame(url) {
+	url = CommonFillUrl(url);
+	var s = '<iframe scrolling="auto" frameborder="0" src="' + url + '" style="width:100%;height:98%;"></iframe>';
+	return s;
+}
+
+function CommonFillUrl(url) {
+	if (url.indexOf('MWToken') <= 0) {
+		if (url.indexOf('?') <= 0) {
+			url += '?MWToken=' + websys_getMWToken();
+		} else {
+			url += '&MWToken=' + websys_getMWToken();
+		}
+	}
+	return url;
+}
+
+/* --å…³é—­æ‰€æœ‰æ ‡ç­¾--*/
+function CloseStatTab(Id) {
+	if (isEmpty(Id)) {
+		return;
+	}
+	var Tabs = $(Id).tabs('tabs');
+	var Tiles = new Array();
+	var Len = Tabs.length;
+	if (Len > 0) {
+		for (var j = 0; j < Len; j++) {
+			var Title = Tabs[j].panel('options').title;
+			if (Title != 'æŠ¥è¡¨') {
+				Tiles.push(Title);
+			}
+		}
+		for (var i = 0; i < Tiles.length; i++) {
+			$(Id).tabs('close', Tiles[i]);
+		}
+	}
+}
+function GetReportStyle(Id) {
+	if (HISUIStyleCode == 'lite') {
+		$(Id).removeClass('ReportImage');
+		$(Id).addClass('LiteReportImage');
+		$('#tabs').tabs('update', {
+			tab: $(Id),
+			options: {
+				iconCls: ''
+			}
+		});
+	}
+}
+/**
+  * åˆ¤æ–­MWTokenæ–¹æ³•æ˜¯å¦å­˜åœ¨
+  * websys_getMWToken()è·å¾—å½“å‰ç•Œé¢æˆ–é¡¶å±‚ç•Œé¢çš„ MWToken å€¼
+  * websys_writeMWToken(url)æŠŠå½“å‰ç•Œé¢æˆ–é¡¶å±‚ç•Œé¢çš„ MWToken å‚æ•°å†™å…¥ url ä¸­
+  */
+if (typeof websys_getMWToken === 'undefined') {
+	websys_getMWToken = function() {
+		return '';
+	};
+}
+if (typeof websys_writeMWToken === 'undefined') {
+	websys_writeMWToken = function(url) {
+		return url;
+	};
 }

@@ -15,19 +15,19 @@ $(function () {
 
 function Query() {
     var inputStr = SessionLoc + "^" + $("#dateStart").datebox("getValue") + "^" + $("#dateEnd").datebox("getValue");
-    var tabTitle = $('#tabsOne').tabs('getSelected').panel('options').title;
+    var tabTitleCode = $('#tabsOne').tabs('getSelected').panel('options').code;
     var className = "";
     var queryName = "";
     var eChartId = "";
-    if (tabTitle == "配置量") {
+    if (tabTitleCode == "配置量") {
         className = "web.DHCSTPIVAS.Charts.LinePS60";
         queryName = "QueryDateCnt";
         eChartId = "eChartPS60";
-    } else if (tabTitle == "退药量") {
+    } else if (tabTitleCode == "退药量") {
         className = "web.DHCSTPIVAS.Charts.LineReturn";
         queryName = "QueryDateCnt"; 
-        eChartId = "eChartReturn";
-    } else if (tabTitle == "排批修改量") {
+        eChartId ="eChartReturn";
+    } else if (tabTitleCode == "排批修改量") {
         className = "web.DHCSTPIVAS.Charts.LinePS3";
         queryName = "QueryDateCnt";   
         eChartId = "eChartPS3";
@@ -44,9 +44,9 @@ function Query() {
         var seriesData = [];
         var dataLen = retData.length;
         if (dataLen > 0) {
-            $("#"+eChartId).removeClass("dhcpha-no-data")
-		    var lineHtml='<div id="'+eChartId+"Chart"+'" style="width:100%;height:100%"></div>'
-			$("#"+eChartId).html(lineHtml);
+            $("#"+eChartId).removeClass("pha-pivas-no-data")
+            var lineHtml='<div id="'+eChartId+"Chart"+'" style="width:100%;height:100%"></div>'
+            $("#"+eChartId).html(lineHtml);
             for (var i = 0; i < dataLen; i++) {
                 var data = retData[i];
                 var xAxisVal = data.cnt;
@@ -60,7 +60,7 @@ function Query() {
             }, eChartId+"Chart");
         }else{
             $("#"+eChartId).html("");
-            $("#"+eChartId).addClass("dhcpha-no-data")
+            $("#"+eChartId).addClass("pha-pivas-no-data")
         }
     })
 }
@@ -85,9 +85,9 @@ function ShowEChart(eData, eId) {
                 formatter: function (value) {
                     //x轴的文字改为竖版显示
                     if (value.indexOf("/")>=0){
-                    	return value.split("/")[1] + "\n" + value.split("/")[0];
-	                }
-	                return value.split("-")[1] + "\n" + value.split("-")[2];
+                        return value.split("/")[1] + "\n" + value.split("/")[0];
+                    }
+                    return value.split("-")[1] + "\n" + value.split("-")[2];
                 }
             }
         },

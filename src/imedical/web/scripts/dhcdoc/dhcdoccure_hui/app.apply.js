@@ -159,31 +159,26 @@ function CancelApply(DCARowId){
 			if (r){
 				$.m({
 					ClassName:"DHCDoc.DHCDocCure.Apply",
-					MethodName:"CancelCureApply",
+					MethodName:"CancelAppBroker",
 					'DCARowId':DCARowId,
-					'UserID':session['LOGON.USERID'],
+					'UserID':session['LOGON.USERID']
 				},function testget(value){
-					if(value == "0"){
-						$.messager.show({title:"提示",msg:"撤销成功"});
-						//window.returnValue = true;
+					var Code=value.split("^")[0];
+					var ErrMsg=value.split("^")[1];
+					if(Code == "0"){
+						$.messager.popover({msg: '撤销成功！',type:'success',timeout: 2000});
 						websys_showModal('hide');
 						websys_showModal('options').CureApplyDataGridLoad();
 						websys_showModal("close");
 					}else{
-						if(value=="100")value="已经有预约记录或者治疗记录,不允许撤销";
-						else if(value=="101")value="该治疗申请已经完成,不允许撤销";
-						else if(value=="102")value="该治疗申请存在已治疗的记录,不允许撤销"
-						else if(value=="103")value="该治疗申请已撤销,不允许撤销"
-						else if(value=="104")value="该治疗申请已分配,不允许撤销"
-						$.messager.alert("提示","撤销失败,"+value);
+						$.messager.alert("提示","撤销失败,"+ErrMsg,"warning");
 						return false;
 					}				
-					
 				});
 			}
 		})
 	}else{
-		$.messager.alert("提示","申请单信息获取错误");
+		$.messager.alert("提示","申请单信息获取错误","warning");
 		return false;
 	}
 			

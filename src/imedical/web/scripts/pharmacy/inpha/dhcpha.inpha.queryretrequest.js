@@ -5,83 +5,117 @@
  */
 var SessionLoc = session['LOGON.CTLOCID'];
 var SessionUser = session['LOGON.USERID'];
-var SessionWard = session['LOGON.WARDID'] || "";
+var SessionWard = session['LOGON.WARDID'] || '';
 var HospId = session['LOGON.HOSPID'];
 var PatNoLen = DHCPHA_STORE.Constant.PatNoLen;
-var DefPhaLocInfo = tkMakeServerCall("web.DHCSTKUTIL", "GetDefaultPhaLoc", SessionLoc);
-var DefPhaLocId = DefPhaLocInfo.split("^")[0] || "";
-var DefPhaLocDesc = DefPhaLocInfo.split("^")[1] || "";
+var DefPhaLocInfo = tkMakeServerCall('web.DHCSTKUTIL', 'GetDefaultPhaLoc', SessionLoc);
+var DefPhaLocId = DefPhaLocInfo.split('^')[0] || '';
+var DefPhaLocDesc = DefPhaLocInfo.split('^')[1] || '';
 var Loaded = 0;
 $(function () {
     InitDict();
     InitGridRequest();
     InitGridRequestDetail();
+    $('#btnFind').on('click', Query);
+    $('#btnClear').on('click', ClearHandler);
+    $('#btnPrint').on('click', Print);
+    $('#btnPrnReqItm').on('click', PrintDetail);
+    $('#btnRefund').on('click', Refund);
+    $('#btnDefaultLoc').on('click', SetDefaultLoc);
+    $('#btnDelReqItm').on('click', DeleteReqItm);
+    window.resizeTo(screen.availWidth - 6, screen.availHeight - 100);
+    window.moveTo(3, 90);
+    InitSettings();
+    $('.dhcpha-win-mask').fadeOut();
     $('#txtPatNo').on('keypress', function (event) {
-        if (window.event.keyCode == "13") {
-            var patNo = $.trim($("#txtPatNo").val());
-            if (patNo != "") {
+        if (window.event.keyCode == '13') {
+            var patNo = $.trim($('#txtPatNo').val());
+            if (patNo != '') {
                 var newPatNo = DHCPHA_TOOLS.PadZero(patNo, PatNoLen);
                 $(this).val(newPatNo);
-                var patInfo = tkMakeServerCall("web.DHCSTPharmacyCommon", "GetPatInfoByNo", newPatNo);
-                $("#txtPatName").val(patInfo.split("^")[0] || "");
+                // var patInfo = tkMakeServerCall('web.DHCSTPharmacyCommon', 'GetPatInfoByNo', newPatNo);
+                // $('#txtPatName').val(patInfo.split('^')[0] || '');
                 Query();
             } else {
-                $("#txtPatName").val("");
+                // $('#txtPatName').val('');
             }
         }
     });
-    $("#btnFind").on("click", Query);
-    $("#btnPrint").on("click", Print);
-    $("#btnRefund").on("click", Refund);
-    $("#btnDefaultLoc").on("click", SetDefaultLoc);
-    $("#btnDelReqItm").on("click", DeleteReqItm);
-    if (LoadAdmId != "") {
-        var patInfo = tkMakeServerCall("web.DHCINPHA.Request", "PatInfo", LoadAdmId);
-        $("#txtPatNo").val(patInfo.split("^")[0] || "");
-        $("#txtPatName").val(patInfo.split("^")[1] || "");
-    }
-    window.resizeTo(screen.availWidth - 6, (screen.availHeight - 100));
-    window.moveTo(3, 90);
 });
 
 function InitDict() {
-    DHCPHA_HUI_COM.ComboBox.Init({
-        Id: 'cmbWard',
-        Type: 'Ward'
-    }, {
-        onLoadSuccess: function () {
-            if (Loaded < 2) {
-                var datas = $("#cmbWard").combobox("getData");
-                for (var i = 0; i < datas.length; i++) {
-                    if (datas[i].RowId == SessionWard) {
-                        $("#cmbWard").combobox("select", datas[i].RowId);
-                    }
-                }
-                Loaded++;
-            }
+    if (session['LOGON.WARDID'] == '') {
+        var disableState = false;
+    } else {
+        var disableState = true;
+    }
+    DHCPHA_HUI_COM.ComboBox.Init(
+        {
+            Id: 'cmbWard',
+            Type: 'Ward'
         },
-        width: 273
-    });
-    DHCPHA_HUI_COM.ComboBox.Init({
-        Id: 'cmbPhaLoc',
-        Type: 'PhaLoc'
-    }, {
-        defaultFilter: 4,
-        mode: "local",
-        onLoadSuccess: function () {
-            if (Loaded < 2) {
-                $("#cmbPhaLoc").combobox("setValue", DefPhaLocId);
-                Loaded++;
+        {
+            disabled: disableState,
+            onLoadSuccess: function () {
+                if (Loaded < 2) {
+                    var datas = $('#cmbWard').combobox('getData');
+                    for (var i = 0; i < datas.length; i++) {
+                        if (datas[i].RowId == SessionWard) {
+                            $('#cmbWard').combobox('select', datas[i].RowId);
+                        }
+                    }
+                    Loaded++;
+                }
+            },
+            width: 278
+        }
+    );
+    DHCPHA_HUI_COM.ComboBox.Init(
+        {
+            Id: 'cmbPhaLoc',
+            Type: 'PhaLoc'
+        },
+        {
+            defaultFilter: 4,
+            mode: 'local',
+            onLoadSuccess: function () {
+                if (Loaded < 2) {
+                    $('#cmbPhaLoc').combobox('setValue', DefPhaLocId);
+                    Loaded++;
+                }
             }
         }
+    );
+    $('#dateStart').datebox('setValue', DHCPHA_TOOLS.Today());
+    $('#dateEnd').datebox('setValue', DHCPHA_TOOLS.Today());
+    var inciWidth = 278;
+    if (window.HISUIStyleCode && window.HISUIStyleCode == 'lite') {
+        inciWidth = 271;
+    }
+    var opts = $.extend({}, PHA_STORE.INCItm('Y'), {
+        width: inciWidth
     });
-    $("#dateStart").datebox("setValue", DHCPHA_TOOLS.Today());
-    $("#dateEnd").datebox("setValue", DHCPHA_TOOLS.Today());
+    PHA.LookUp('conInci', opts);
 }
+/**
+ * 患者列表, 勾选或者取消勾选时
+ */
+function patientTreeCheckChangeHandle() {
+    LoadAdmId = EpisodeIDStr;
+    Query();
+}
+
+function LoadPatInfo() {
+    // var patInfo = tkMakeServerCall('web.DHCINPHA.Request', 'PatInfo', LoadAdmId);
+    // $('#txtPatNo').val(patInfo.split('^')[0] || '');
+    // $('#txtPatName').val(patInfo.split('^')[1] || '');
+}
+
 // 申请单列表
 function InitGridRequest() {
     var columns = [
-        [{
+        [
+            {
                 field: 'gridRequestSelect',
                 checkbox: true
             },
@@ -92,25 +126,33 @@ function InitGridRequest() {
                 formatter: function (value, row, index) {
                     var status = row.reqStatus;
                     var refundStatus = row.refundStatus;
-                    var statusDiv = "<div style='background:white;color:black;padding-left:8px;border-bottom:1px dashed #cccccc;'>" + status + "</div>";
-                    if (status == "退药完成") {
+                    var hasRefuse = row.hasRefuse;
+                    var statusDiv = "<div style='background:white;color:black;padding-left:8px;border-bottom:1px dashed #cccccc;'>" + status + '</div>';
+                    if (status == '退药完成') {
                         statusDiv = '<div style="background:#e3f7ff;color:#1278b8;padding-left:8px;border-bottom:1px dashed #cccccc;">' + status + '</div>';
-                    } else if (status == "部分退药") {
+                    } else if (status == '部分退药') {
                         statusDiv = '<div style="background:#fff3dd;color:#ff7e00;padding-left:8px;border-bottom:1px dashed #cccccc;">' + status + '</div>';
                     }
-                    var refundStatusDiv = "<div style='background:white;color:black;padding-left:8px;'>" + refundStatus + "</div>";
-                    if (refundStatus == "退费完成") {
+                    var refundStatusDiv = "<div style='background:white;color:black;padding-left:8px;'>" + refundStatus + '</div>';
+                    if (refundStatus == '退费完成') {
                         refundStatusDiv = '<div style="background:#e3f7ff;color:#1278b8;padding-left:8px;">' + refundStatus + '</div>';
-                    } else if (refundStatus == "部分退费") {
+                    } else if (refundStatus == '部分退费') {
                         refundStatusDiv = '<div style="background:#fff3dd;color:#ff7e00;padding-left:8px;">' + refundStatus + '</div>';
                     }
-                    return '<div style="margin:0px -8px;font-weight:bold;">' + statusDiv + refundStatusDiv + "</div>";
+                    var hasRefuseDiv = '';
+                    if (hasRefuse === 'Y') {
+                        hasRefuseDiv = '<div style="background-color:#ffe3e3;color:#ff3d2c;padding-left:8px;border-top:1px dashed #ccc">存在拒绝</div>';
+                    }
+                    return '<div style="margin:0px -8px;;">' + statusDiv + refundStatusDiv + hasRefuseDiv + '</div>';
                 }
             },
             {
                 field: 'reqNo',
                 title: '申请单号',
-                width: 200
+                width: 200,
+                formatter: function (value) {
+                    return '<div style="direction: rtl;overflow:hidden;">' + value + '</div>';
+                }
             },
             {
                 field: 'reqDate',
@@ -157,7 +199,7 @@ function InitGridRequest() {
         ]
     ];
     var dataGridOption = {
-        url: "",
+        url: '',
         fit: true,
         border: false,
         singleSelect: false,
@@ -168,7 +210,7 @@ function InitGridRequest() {
         pageSize: 50,
         pageList: [50, 100, 300, 500],
         pagination: true,
-        toolbar: "#gridRequestBar",
+        toolbar: '#gridRequestBar',
         onUncheck: function (rowIndex, rowData) {
             if (rowData) {
                 QueryDetail();
@@ -189,25 +231,29 @@ function InitGridRequest() {
             $('#gridRequestDetail').datagrid('clear');
             $('#gridRequest').datagrid('uncheckAll');
         }
-    }
-    DHCPHA_HUI_COM.Grid.Init("gridRequest", dataGridOption);
+    };
+    DHCPHA_HUI_COM.Grid.Init('gridRequest', dataGridOption);
 }
 // 获取参数
 function QueryParams() {
     var stDate = $('#dateStart').datebox('getValue');
     var edDate = $('#dateEnd').datebox('getValue');
-    var wardId = $('#cmbWard').combobox("getValue");
-    var phaLocId = $('#cmbPhaLoc').combobox("getValue");
+    var wardId = $('#cmbWard').combobox('getValue');
+    var phaLocId = $('#cmbPhaLoc').combobox('getValue');
     var patNo = $('#txtPatNo').val().trim();
-    var reqStatus = "A"
-    var advRefundFlag = ""
-    var incId = ""
-    var docFlag = ""
-    if (($('#advrefundflag').is(':checked')) == true) {
-        advRefundFlag = "Y";
+    var reqStatus = 'A';
+    var advRefundFlag = '';
+    var incId = $('#conInci').lookup('getValue');
+    var docFlag = '';
+    if ($('#advrefundflag').is(':checked') == true) {
+        advRefundFlag = 'Y';
     }
-
-    return stDate + "^" + edDate + "^" + wardId + "^" + phaLocId + "^" + reqStatus + "^" + patNo + "^" + docFlag + "^" + incId + "^" + advRefundFlag + "^" + HospId;
+    var hasRefuseFlag = $('#hasrefuseflag').is(':checked') == true ? 'Y' : '';
+    var admIdStr = EpisodeIDStr.split('^').join(',');
+    if (patNo !== '') {
+        admIdStr = '';
+    }
+    return [stDate, edDate, wardId, phaLocId, reqStatus, patNo, docFlag, incId, advRefundFlag, HospId, hasRefuseFlag, admIdStr].join('^');
 }
 // 查询
 function Query() {
@@ -215,8 +261,8 @@ function Query() {
     $('#gridRequest').datagrid({
         url: $URL,
         queryParams: {
-            ClassName: "web.DHCINPHA.QueryRetReq",
-            QueryName: "QueryRequest",
+            ClassName: 'web.DHCINPHA.QueryRetReq',
+            QueryName: 'QueryRequest',
             inputStr: params
         }
     });
@@ -225,7 +271,8 @@ function Query() {
 // 申请单明细列表
 function InitGridRequestDetail() {
     var columns = [
-        [{
+        [
+            {
                 field: 'gridRequestDetailSelect',
                 checkbox: true
             },
@@ -243,19 +290,22 @@ function InitGridRequestDetail() {
                 formatter: function (value, row, index) {
                     var status = row.reqStatus;
                     var refundStatus = row.refundStatus;
-                    var statusDiv = "<div style='background:white;color:black;padding-left:8px;border-bottom:1px dashed #cccccc;'>" + status + "</div>";
-                    if (status == "退药完成") {
+                    var statusDiv = "<div style='background:white;color:black;padding-left:8px;border-bottom:1px dashed #cccccc;'>" + status + '</div>';
+                    if (status == '退药完成') {
                         statusDiv = '<div style="background:#e3f7ff;color:#1278b8;padding-left:8px;border-bottom:1px dashed #cccccc;">' + status + '</div>';
-                    } else if (status == "部分退药") {
+                    } else if (status == '部分退药') {
                         statusDiv = '<div style="background:#fff3dd;color:#ff7e00;padding-left:8px;border-bottom:1px dashed #cccccc;">' + status + '</div>';
+                    } else if (status == '拒绝退药') {
+                        statusDiv = '<div style="background-color:#ffe3e3;color:#ff3d2c;padding-left:8px;border-bottom:1px dashed #cccccc;">' + status + '</div>';
                     }
-                    var refundStatusDiv = "<div style='background:white;color:black;padding-left:8px;'>" + refundStatus + "</div>";
-                    if (refundStatus == "退费完成") {
+
+                    var refundStatusDiv = "<div style='background:white;color:black;padding-left:8px;'>" + refundStatus + '</div>';
+                    if (refundStatus == '退费完成') {
                         refundStatusDiv = '<div style="background:#e3f7ff;color:#1278b8;padding-left:8px;">' + refundStatus + '</div>';
-                    } else if (refundStatus == "部分退费") {
+                    } else if (refundStatus == '部分退费') {
                         refundStatusDiv = '<div style="background:#fff3dd;color:#ff7e00;padding-left:8px;">' + refundStatus + '</div>';
                     }
-                    return '<div style="margin:0px -8px;font-weight:bold;">' + statusDiv + refundStatusDiv + "</div>";
+                    return '<div style="margin:0px -8px;">' + statusDiv + refundStatusDiv + '</div>';
                 }
             },
             {
@@ -274,9 +324,13 @@ function InitGridRequestDetail() {
                 width: 100
             },
             {
+                field: 'doseDateTime',
+                title: '用药时间'
+            },
+            {
                 field: 'incDesc',
                 title: '药品名称',
-                width: 180
+                width: 200
             },
             {
                 field: 'bUomDesc',
@@ -331,7 +385,7 @@ function InitGridRequestDetail() {
             },
             {
                 field: 'manfDesc',
-                title: '厂家',
+                title: '生产企业',
                 width: 100,
                 align: 'left'
             },
@@ -352,22 +406,37 @@ function InitGridRequestDetail() {
                 width: 125
             },
             {
+                field: 'oeori',
+                title: '医嘱ID',
+                width: 75
+            },
+            {
+                field: 'priority',
+                title: '医嘱类型',
+                width: 100
+            },
+            {
                 field: 'reqNo',
-                title: '申请单号',
-                width: 120,
-                hidden: false
+                title: '申请单号'
+            },
+            {
+                field: 'refuseData',
+                title: '拒绝退药信息',
+                width: 250
             },
             {
                 field: 'encryptLevel',
                 title: '病人密级',
                 width: 80,
-                align: 'left'
+                align: 'left',
+                hidden: true
             },
             {
                 field: 'patLevel',
                 title: '病人级别',
                 width: 80,
-                align: 'left'
+                align: 'left',
+                hidden: true
             },
             {
                 field: 'cyFlag',
@@ -390,7 +459,7 @@ function InitGridRequestDetail() {
         ]
     ];
     var dataGridOption = {
-        url: "",
+        url: '',
         fit: true,
         border: false,
         singleSelect: false,
@@ -401,22 +470,18 @@ function InitGridRequestDetail() {
         pageSize: 999,
         pageList: [999],
         pagination: false,
-        toolbar: "#gridRequestDetailBar",
-        onSelect: function (rowIndex, rowData) {
-
-        },
-        onUnselect: function (rowIndex, rowData) {
-
-        },
+        toolbar: '#gridRequestDetailBar',
+        onSelect: function (rowIndex, rowData) {},
+        onUnselect: function (rowIndex, rowData) {},
         onLoadSuccess: function () {
             $('#gridRequestDetail').datagrid('uncheckAll');
         },
         onCheck: function (rowIndex, rowData) {
-            if (rowData.needGrpRet != "Y") {
+            if (rowData.needGrpRet != 'Y') {
                 return;
             }
             var cyFlag = rowData.cyFlag;
-            if (cyFlag == "Y") {
+            if (cyFlag == 'Y') {
                 DHCPHA_HUI_COM.Grid.LinkCheck.Init({
                     CurRowIndex: rowIndex,
                     GridId: 'gridRequestDetail',
@@ -435,11 +500,11 @@ function InitGridRequestDetail() {
             }
         },
         onUncheck: function (rowIndex, rowData) {
-            if (rowData.needGrpRet != "Y") {
+            if (rowData.needGrpRet != 'Y') {
                 return;
             }
             var cyFlag = rowData.cyFlag;
-            if (cyFlag == "Y") {
+            if (cyFlag == 'Y') {
                 DHCPHA_HUI_COM.Grid.LinkCheck.Init({
                     CurRowIndex: rowIndex,
                     GridId: 'gridRequestDetail',
@@ -457,23 +522,26 @@ function InitGridRequestDetail() {
                 });
             }
         }
-    }
-    DHCPHA_HUI_COM.Grid.Init("gridRequestDetail", dataGridOption);
+    };
+    DHCPHA_HUI_COM.Grid.Init('gridRequestDetail', dataGridOption);
 }
 // 查询明细
 function QueryDetail() {
     var reqIdStr = GetCheckedReqId();
-    if ((reqIdStr == null) || (reqIdStr == "")) {
+    if (reqIdStr == null || reqIdStr == '') {
         //$.messager.alert("提示", "请先选择记录", "warning");
         //return;
     }
+    var inputStr = '';
+    var incId = $('#conInci').lookup('getValue');
+    if (incId != '') inputStr = '^^^^^^^' + incId + '^';
     $('#gridRequestDetail').datagrid({
         url: $URL,
         queryParams: {
-            ClassName: "web.DHCINPHA.QueryRetReq",
-            QueryName: "QueryReqItm",
+            ClassName: 'web.DHCINPHA.QueryRetReq',
+            QueryName: 'QueryReqItm',
             reqIdStr: reqIdStr,
-            inputStr: ""
+            inputStr: inputStr
         }
     });
 }
@@ -489,7 +557,7 @@ function GetCheckedReqId() {
             reqIdArr.push(reqId);
         }
     }
-    return reqIdArr.join(",");
+    return reqIdArr.join(',');
 }
 // 获取选中记录的申请明细的id
 function GetCheckedReqItmArr() {
@@ -502,23 +570,23 @@ function GetCheckedReqItmArr() {
             reqItmArr.push(reqItmRowId);
         }
     }
-    return reqItmArr.join("^");
+    return reqItmArr.join('^');
 }
 
 function Refund() {
     var reqIdStr = GetCheckedReqId();
-    if (reqIdStr == "") {
-        $.messager.alert("提示", "请选择需要提前退费的记录", "warning");
+    if (reqIdStr == '') {
+        $.messager.alert('提示', '请选择需要提前退费的记录', 'warning');
         return;
     }
-    $.messager.confirm("确认提示", "您确定要提前退费吗?", function (r) {
+    $.messager.confirm('确认提示', '您确定要提前退费吗?', function (r) {
         if (r) {
-            var saveRet = tkMakeServerCall("web.DHCINPHA.Request", "RefundReqMulti", reqIdStr, SessionUser);
-            var saveArr = saveRet.split("^");
+            var saveRet = tkMakeServerCall('web.DHCINPHA.Request', 'RefundReqMulti', reqIdStr, SessionUser);
+            var saveArr = saveRet.split('^');
             var saveVal = saveArr[0];
             var saveInfo = saveArr[1];
             if (saveVal < 0) {
-                $.messager.alert("提示", saveInfo, "warning");
+                $.messager.alert('提示', saveInfo, 'warning');
                 return;
             }
             Query();
@@ -528,68 +596,161 @@ function Refund() {
 
 function DeleteReqItm() {
     var reqItmIdStr = GetCheckedReqItmArr();
-    if (reqItmIdStr == "") {
-        $.messager.alert("提示", "请先勾选需要删除的记录", "warning");
+    if (reqItmIdStr == '') {
+        $.messager.alert('提示', '请先勾选需要删除的记录', 'warning');
         return;
     }
-    $.messager.confirm("删除提示", "您确认删除明细吗?", function (r) {
+    $.messager.confirm('删除提示', '您确认删除明细吗?', function (r) {
         if (r) {
-            var delRet = tkMakeServerCall("web.DHCINPHA.Request", "DeleteItms", reqItmIdStr);
-            var delRetArr = delRet.split("^");
+            var delRet = tkMakeServerCall('web.DHCINPHA.Request', 'DeleteItms', reqItmIdStr);
+            var delRetArr = delRet.split('^');
             var delVal = delRetArr[0];
             var delInfo = delRetArr[1];
             if (delVal < 0) {
-                $.messager.alert("提示", delInfo, "warning");
+                $.messager.alert('提示', delInfo, 'warning');
                 //return;
             }
-            QueryDetail();
+            if (delVal == 1) Query();
+            else QueryDetail();
         }
     });
-
-
 }
 
 function SetDefaultLoc() {
-    var PhaLoc = $('#cmbPhaLoc').combobox("getValue") || "";
-    var PhaLocDesc = $('#cmbPhaLoc').combobox("getText") || "";
-    if (PhaLoc == "") {
+    var PhaLoc = $('#cmbPhaLoc').combobox('getValue') || '';
+    var PhaLocDesc = $('#cmbPhaLoc').combobox('getText') || '';
+    if (PhaLoc == '') {
         //$.messager.alert("提示", "请先选择发药科室", "warning");
         //return;
     }
-    if (SessionLoc == "") {
+    if (SessionLoc == '') {
         return;
     }
-    var confirmText = "确认将 " + PhaLocDesc + " 设置成默认科室吗?";
-    if (PhaLoc == "") {
-        confirmText = "确认默认科室设置为空吗?";
+    var confirmText = '确认将 ' + PhaLocDesc + ' 设置成默认科室吗?';
+    if (PhaLoc == '') {
+        confirmText = '确认默认科室设置为空吗?';
     }
-    $.messager.confirm("确认提示", confirmText, function (r) {
+    $.messager.confirm('确认提示', confirmText, function (r) {
         if (r) {
-            var saveRet = tkMakeServerCall("web.DHCSTRETREQUEST", "SetDefaultPhaLoc", PhaLoc, SessionLoc);
-            var saveArr = saveRet.split("^");
+            var saveRet = tkMakeServerCall('web.DHCSTRETREQUEST', 'SetDefaultPhaLoc', PhaLoc, SessionLoc);
+            var saveArr = saveRet.split('^');
             var saveVal = saveArr[0];
             var saveInfo = saveArr[1];
             if (saveVal == 0) {
-                $.messager.alert("提示", "设置成功", "info");
+                $.messager.alert('提示', '设置成功', 'info');
                 return;
             }
         }
     });
 }
 
-/// 打印申请单
-function Print() {
-    var reqIdStr = GetCheckedReqId();
-    if (reqIdStr == "") {
-        $.messager.alert("提示", "请勾选需要打印的退药申请单", "warning");
+function InitSettings() {
+    var logonStr = [session['LOGON.GROUPID'], session['LOGON.CTLOCID'], session['LOGON.USERID'], session['LOGON.HOSPID']].join('^');
+    var preReturnFee = tkMakeServerCall('web.DHCST.Common.AppCommon', 'GetAppPropValue', 'DHCSTPHARETREQ', 'PreReturnFee', logonStr);
+    if (preReturnFee === 'Y') {
+        $('#gridRequestBar table').show();
+    }
+}
+
+function PrintRequest(req, reqItmStr) {
+    var prtDataStr = tkMakeServerCall('PHA.IP.Print.Request', 'GetData', req, reqItmStr);
+    var prtData = JSON.parse(prtDataStr);
+
+    if (prtData.template === '') {
         return;
     }
-    var hospDesc = tkMakeServerCall("web.DHCSTKUTIL", "GetHospName", session['LOGON.HOSPID']);
-    var webFormatDate = $.fn.datebox.defaults.formatter(new Date());
-    var RQDTFormat = "yyyy-MM-dd HH:mm:ss";
-    if (webFormatDate.indexOf("/") >= 0) {
-        RQDTFormat = "dd/MM/yyyy HH:mm:ss";
+    prtData.para.printUserName = session['LOGON.USERNAME'];
+    PRINTCOM.XML({
+        printBy: 'lodop',
+        XMLTemplate: prtData.template,
+        data: {
+            Para: prtData.para,
+            List: prtData.list
+        },
+        listColAlign: { qty: 'right', sp: 'right', spAmt: 'right' },
+        preview: false,
+        listAutoWrap: false,
+        aptListFields: ['label21', 'printUserName', 'label23', 'printDateTime', 'sumAmtLabel', 'sumAmt', 'yuan'],
+        listBorder: { style: 4, startX: 1, endX: 200 },
+        page: { rows: 25, x: 90, y: 270, fontname: '宋体', fontbold: 'false', fontsize: '14', format: '{1}/{2}' }
+    });
+    var ret = tkMakeServerCall('web.DHCSTRETREQUEST', 'updatePrintFlag', req);
+    if (typeof App_MenuCsp !== 'undefined') {
+        PHA_LOG.Operate({
+            operate: 'P',
+            logInput: JSON.stringify({ reqItmStr: reqItmStr.substr(0, 30) }),
+            // logInput: logParams,
+            type: 'User.DHCPhaRetRequest',
+            pointer: req,
+            origData: '',
+            remarks: App_MenuName + ' - 退药单'
+        });
     }
-    var fileName = "DHCST_INPHA_退药申请单.raq&reqIdStr=" + reqIdStr + "&userName=" + session['LOGON.USERNAME'] + "&hospDesc=" + hospDesc + "&RQDTFormat=" + RQDTFormat;
-    DHCCPM_RQPrint(fileName, 800, 600)
+}
+
+function Print() {
+    var reqIdStr = GetCheckedReqId();
+    if (reqIdStr == '') {
+        $.messager.alert('提示', '请勾选需要打印的退药申请单', 'warning');
+        return;
+    }
+    var reqArr = reqIdStr.split(',');
+    for (var i = 0, length = reqArr.length; i < length; i++) {
+        var req = reqArr[i];
+        if (!req) {
+            continue;
+        }
+        var chkReqRet = tkMakeServerCall('PHA.IP.Print.Request', 'CheckReqDataIsNull', req);
+        if (chkReqRet == 0) {
+            var nullNum = i + 1;
+            $.messager.alert('提示', '您选择的第' + nullNum + '条退药申请单没数据！', 'warning');
+            continue;
+        }
+        PrintRequest(req, '');
+    }
+}
+
+function PrintDetail() {
+    var reqItmIdStr = GetCheckedReqItmArr();
+    if (reqItmIdStr == '') {
+        $.messager.alert('提示', '请先勾选需要打印的明细', 'warning');
+        return;
+    }
+    var ret = tkMakeServerCall('PHA.IP.Print.Request', 'GetReqItmGroupByReq', reqItmIdStr);
+    if (ret == '') return;
+    var retArr = ret.split('!!');
+    for (var j = 0; j < retArr.length; j++) {
+        var data = retArr[j];
+        var req = data.split('@')[0];
+        if (req == '') continue;
+        var reqItmStr = data.split('@')[1];
+        PrintRequest(req, reqItmStr);
+    }
+}
+
+/// 打印申请单
+// function PrintRunQian() {
+//     var reqIdStr = GetCheckedReqId();
+//     if (reqIdStr == '') {
+//         $.messager.alert('提示', '请勾选需要打印的退药申请单', 'warning');
+//         return;
+//     }
+//     var hospDesc = tkMakeServerCall('web.DHCSTKUTIL', 'GetHospName', session['LOGON.HOSPID']);
+//     var webFormatDate = $.fn.datebox.defaults.formatter(new Date());
+//     var RQDTFormat = 'yyyy-MM-dd HH:mm:ss';
+//     if (webFormatDate.indexOf('/') >= 0) {
+//         RQDTFormat = 'dd/MM/yyyy HH:mm:ss';
+//     }
+//     var fileName = 'DHCST_INPHA_退药申请单.raq&reqIdStr=' + reqIdStr + '&userName=' + session['LOGON.USERNAME'] + '&hospDesc=' + hospDesc + '&RQDTFormat=' + RQDTFormat;
+//     DHCCPM_RQPrint(fileName, 800, 600);
+// }
+//
+function ClearHandler() {
+    $('#dateStart').datebox('setValue', 't');
+    $('#dateEnd').datebox('setValue', 't');
+    $('#txtPatNo').val('');
+    $('#txtPatName').val('');
+    $('#conInci').lookup('clear');
+    $HUI.checkbox('#advrefundflag').setValue(false);
+    $HUI.checkbox('#hasrefuseflag').setValue(false);
 }

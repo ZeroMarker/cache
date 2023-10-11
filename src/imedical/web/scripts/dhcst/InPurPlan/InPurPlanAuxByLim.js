@@ -6,17 +6,17 @@
 Ext.onReady(function() {
 	var userId = session['LOGON.USERID'];
 	var LocId=session['LOGON.CTLOCID']
-
+	var gGroupId=session['LOGON.GROUPID']
 	Ext.QuickTips.init();
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 	
 		// 订购部门
 	var PurLoc = new Ext.ux.LocComboBox({
-		fieldLabel : '采购部门',
+		fieldLabel : $g('采购部门'),
 		id : 'PurLoc',
 		name : 'PurLoc',
 		anchor : '90%',
-		emptyText : '采购部门...',
+		emptyText : $g('采购部门...'),
 		groupId:session['LOGON.GROUPID'],
 		listeners : {
 			'select' : function(e) {
@@ -41,9 +41,9 @@ Ext.onReady(function() {
 
 			// 补货标准取整比例
 		var RepLevFac =new Ext.form.NumberField({
-			fieldLabel : '补货标准取整比例',
+			fieldLabel : $g('补货标准取整比例'),
 			id : 'RepLevFac',
-			emptyText:'0-1之间的小数',
+			emptyText:$g('0-1之间的小数'),
 			name : 'RepLevFac',
 			anchor : '90%',
 			enableKeyEvents:true,
@@ -51,7 +51,7 @@ Ext.onReady(function() {
 				'keyup':function(e){
 
 					if(Ext.getCmp('RepLevFac').getRawValue()>1){
-						Msg.info("warning", "只能录0-1之间的小数!");
+						Msg.info("warning", $g("只能录0-1之间的小数!"));
                         Ext.getCmp('RepLevFac').setValue('');
 					}
 				}
@@ -69,7 +69,7 @@ Ext.onReady(function() {
 	}); 
 	// 库存分类
 var M_StkCat = new Ext.ux.ComboBox({
-	fieldLabel : '库存分类',
+	fieldLabel : $g('库存分类'),
 	id : 'M_StkCat',
 	name : 'M_StkCat',
 	store : StkCatStore,
@@ -80,8 +80,8 @@ var M_StkCat = new Ext.ux.ComboBox({
 
 	// 查询按钮
 	var SearchBT = new Ext.Toolbar.Button({
-				text : '查询',
-				tooltip : '点击查询',
+				text : $g('查询'),
+				tooltip : $g('点击查询'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_find',
@@ -104,12 +104,12 @@ var M_StkCat = new Ext.ux.ComboBox({
 			zbflagstr=1;
 		}
 		if (PurLoc == undefined || PurLoc.length <= 0) {
-			Msg.info("warning", "请选择采购部门!");
+			Msg.info("warning",$g( "请选择采购部门!"));
 			return;
 		}
 
 		//科室id,类组id,补货标准取整比例
-		var ListParam=PurLoc+'^'+stkgrp+'^'+fac+'^'+userId+"^"+zbflagstr+"^"+stkCatId;					
+		var ListParam=PurLoc+'^'+stkgrp+'^'+fac+'^'+userId+"^"+zbflagstr+"^"+stkCatId+"^"+gGroupId;					
 		DetailStore.load({params:{start:0, limit:999,strParam:ListParam}});
 	}
 	
@@ -151,31 +151,31 @@ function save(){
 			url: DictUrl+'inpurplanaction.csp?actiontype=save',
 			params:{purNo:purNo,locId:locId,stkGrpId:stkGrpId,userId:userId,data:data},
 			failure: function(result, request) {
-				Msg.info("error","请检查网络连接!");
+				Msg.info("error",$g("请检查网络连接!"));
 			},
 			success: function(result, request) {
 				var jsonData = Ext.util.JSON.decode( result.responseText );
 				if (jsonData.success=='true') {
-					Msg.info("success","保存成功!");
+					Msg.info("success",$g("保存成功!"));
 				
 					location.href="dhcst.inpurplan.csp?planNnmber="+jsonData.info+'&locId='+locId+'&zbFlag='+zbflagstr;
 				}else{
 					if(jsonData.info==-1){
-						Msg.info("error","科室或人员为空!");
+						Msg.info("error",$g("科室或人员为空!"));
 					}else if(jsonData.info==-99){
-						Msg.info("error","加锁失败!");
+						Msg.info("error",$g("加锁失败!"));
 					}else if(jsonData.info==-2){
-						Msg.info("error","生成计划单号失败!");
+						Msg.info("error",$g("生成计划单号失败!"));
 					}else if(jsonData.info==-3){
-						Msg.info("error","保存计划单失败!");
+						Msg.info("error",$g("保存计划单失败!"));
 					}else if(jsonData.info==-4){
-						Msg.info("error","未找到需更新的计划单!");
+						Msg.info("error",$g("未找到需更新的计划单!"));
 					}else if(jsonData.info==-5){
-						Msg.info("error","保存计划单明细失败,不能生成计划单!如果药品较少请检查是否有不可用药品");
+						Msg.info("error",$g("保存计划单明细失败,不能生成计划单!如果药品较少请检查是否有不可用药品"));
 					}else if(jsonData.info==-7){
-						Msg.info("error","失败药品：部分明细保存不成功，提示不成功的药品!"+jsonData.info);
+						Msg.info("error",$g("失败药品：部分明细保存不成功，提示不成功的药品!")+jsonData.info);
 					}else{
-						Msg.info("error","保存失败!"+jsonData.info);
+						Msg.info("error",$g("保存失败!")+jsonData.info);
 					}
 				}
 			},
@@ -186,8 +186,8 @@ function save(){
 
 	// 清空按钮
 	var ClearBT = new Ext.Toolbar.Button({
-				text : '清屏',
-				tooltip : '点击清屏(Alt+C)',
+				text : $g('清屏'),
+				tooltip : $g('点击清屏(Alt+C)'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_clearscreen',
@@ -211,8 +211,8 @@ function save(){
 
 	// 保存按钮
 	var SaveBT = new Ext.Toolbar.Button({
-				text : '保存',
-				tooltip : '点击保存',
+				text : $g('保存'),
+				tooltip : $g('点击保存'),
 				width : 70,
 				height : 30,
 				iconCls : 'page_save',
@@ -225,7 +225,7 @@ function save(){
     
 	var HelpBT = new Ext.Button({
 		　　　　id:'HelpBtn',
-				text : '帮助',
+				text : $g('帮助'),
 				width : 70,
 				height : 30,
 				renderTo: Ext.get("tipdiv"),
@@ -239,7 +239,7 @@ function save(){
   
 			// 单位
 	var CTUom = new Ext.form.ComboBox({
-				fieldLabel : '单位',
+				fieldLabel : $g('单位'),
 				id : 'CTUom',
 				name : 'CTUom',
 				anchor : '90%',
@@ -249,7 +249,7 @@ function save(){
 				displayField : 'Description',
 				allowBlank : false,
 				triggerAction : 'all',
-				emptyText : '单位...',
+				emptyText : $g('单位...'),
 				selectOnFocus : true,
 				forceSelection : true,
 				minChars : 1,
@@ -320,7 +320,7 @@ function save(){
 		
 		var cell = DetailGrid.getSelectionModel().getSelectedCell();
 		if (cell == null) {
-			Msg.info("warning", "没有选中行!");
+			Msg.info("warning", $g("没有选中行!"));
 			return;
 		}
 		// 选中行
@@ -339,10 +339,11 @@ function save(){
 				url : DetailUrl,
 				method : "POST"
 			});
-	// 指定列参数
+	// 指定列参数  
 	var fields = [ "Inci","InciCode","InciDesc", "Spec","PurUomId", "PurUomDesc", "PurQty",
 			 "VenDesc", "ManfDesc","StkQty","Rp","CarrierDesc", "MaxQty","MinQty","RepQty","LevelQty",
-			 "BUomId","ConFac","VenId","ManfId","CarrierId","RepLev",{name:'Qty',convert:function(v,rec){return rec.PurQty;}},"ApcWarn","StkCatDesc"];
+			 "BUomId","ConFac","VenId","ManfId","CarrierId","RepLev","Qty","ApcWarn","StkCatDesc"];
+			 //{name:'Qty',convert:function(v,rec){return rec.PurQty;}}
 			
 	// 支持分页显示的读取方式
 	var reader = new Ext.data.JsonReader({
@@ -384,38 +385,38 @@ function save(){
 	
 	var nm = new Ext.grid.RowNumberer();
 	var DetailCm = new Ext.grid.ColumnModel([nm, {
-				header : "药品Id",
+				header : $g("药品Id"),
 				dataIndex : 'Inci',
 				width : 80,
 				align : 'left',
 				sortable : true,
 				hidden : true
 			}, {
-				header : '药品代码',
+				header : $g('药品代码'),
 				dataIndex : 'InciCode',
 				width : 80,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '药品名称',
+				header : $g('药品名称'),
 				dataIndex : 'InciDesc',
 				width : 180,
 				align : 'left',
 				sortable : true
 			}, {
-				header : '库存分类',
+				header : $g('库存分类'),
 				dataIndex : 'StkCatDesc',
 				width : 180,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "建议采购量",
+				header : $g("建议采购量"),
 				dataIndex : 'PurQty',
 				width : 80,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "实际采购量",
+				header : $g("实际采购量"),
 				dataIndex : 'Qty',
 				width : 80,
 				align : 'right',
@@ -428,11 +429,11 @@ function save(){
 							if (e.getKey() == Ext.EventObject.ENTER) {
 								var qty = field.getValue();
 								if (qty == null || qty.length <= 0) {
-									Msg.info("warning", "采购数量不能为空!");
+									Msg.info("warning", $g("采购数量不能为空!"));
 									return;
 								}
 								if (qty < 0) {
-									Msg.info("warning", "采购数量不能小于0!");
+									Msg.info("warning", $g("采购数量不能小于0!"));
 									return;
 								}									
 							}
@@ -440,7 +441,7 @@ function save(){
 					}
 				})
 			}, {
-				header : "单位",
+				header : $g("单位"),
 				dataIndex : 'PurUomId',
 				width : 80,
 				align : 'left',
@@ -448,68 +449,68 @@ function save(){
 				renderer : Ext.util.Format.comboRenderer2(CTUom,"PurUomId","PurUomDesc"), // pass combo instance to reusable renderer					
 				editor : new Ext.grid.GridEditor(CTUom)
 			}, {
-				header : "供应商",
+				header : $g("经营企业"),
 				dataIndex : 'VenDesc',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "厂商",
+				header : $g("生产企业"),
 				dataIndex : 'ManfDesc',
 				width : 100,
 				align : 'left',
 				sortable : true
 			}, {
-				header : "进价",
+				header : $g("进价"),
 				dataIndex : 'Rp',
 				width : 60,
 				align : 'right',
 				
 				sortable : true
 			}, {
-				header : "采购科室库存",
+				header : $g("采购科室库存"),
 				dataIndex : 'StkQty',
 				width : 80,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "库存上限",
+				header : $g("库存上限"),
 				dataIndex : 'MaxQty',
 				width : 80,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "库存下限",
+				header : $g("库存下限"),
 				dataIndex : 'MinQty',
 				width : 80,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "标准库存",
+				header : $g("标准库存"),
 				dataIndex : 'RepQty',
 				width : 80,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "参考库存",
+				header : $g("参考库存"),
 				dataIndex : 'LevelQty',
 				width : 80,
 				align : 'right',
 				sortable : true
 			}, {
-				header : "补货标准",
+				header : $g("补货标准"),
 				dataIndex : 'RepLev',
 				width : 80,
 				align : 'right',
 				sortable : true
 			},{
-				header : "配送商",
+				header : $g("配送企业"),
 				dataIndex : 'CarrierDesc',
 				width : 80,
 				align : 'right',
 				sortable : true
 			},{
-				header : "资质信息",
+				header : $g("资质信息"),
 				dataIndex : 'ApcWarn',
 				width : 140,
 				align : 'right',
@@ -519,15 +520,15 @@ function save(){
 
 	var DeleteItmBT=new Ext.Toolbar.Button({
 		id:'DeleteItmBT',
-		text:'删除一条',
+		text:$g('删除一条'),
 		iconCls:'page_delete',
 		handler:function(){
 			deleteDetail();
 		}
 	});
 	var GridColSetBT = new Ext.Toolbar.Button({
-	text:'列设置',
-    tooltip:'列设置',
+	text:$g('列设置'),
+    tooltip:$g('列设置'),
     iconCls:'page_gear',
     //	width : 70,
     //	height : 30,
@@ -588,7 +589,7 @@ function save(){
 		tbar : [SearchBT, '-', ClearBT,'-',SaveBT,'-',HelpBT],		
 		items : [{
 			xtype:'fieldset',
-			title:'查询条件',
+			title:$g('查询条件'),
 			style : DHCSTFormStyle.FrmPaddingV,
 			layout: 'column',    // Specifies that the items will now be arranged in columns		
 			defaults: {border:false},  
@@ -603,13 +604,13 @@ function save(){
 				items : [            // create instance immediately
 		            {
 		                region: 'north',
-		                title:'采购计划单制单-依据库存上下限',
+		                title:$g('采购计划单制单-依据库存上下限'),
 		                height: DHCSTFormStyle.FrmHeight(2), // give north and south regions a height
 		                layout: 'fit', // specify layout manager for items
 		                items:HisListTab
 		            }, {
 		                region: 'center',
-		                title: '明细',			               
+		                title: $g('明细'),			               
 		                layout: 'fit', // specify layout manager for items
 		                items: DetailGrid       
 		               
@@ -656,8 +657,7 @@ function save(){
         width: 500,
         anchorOffset: 50,
 		hideDelay : 9000,
-        html: "<font size=3 color=blue>补货标准>=1,且补货标准取整比例不为空：建议采购量=补货标准*N,N=M+R" +  "      M=(标准库存-科室库存)/补货标准，取整数部分" +
-				"((标准库存-科室库存)#补货标准)/补货标准<补货标准取整比例时，R=0,否则R=1,#代表取余" +"     补货标准<1,或补货标准取整比例为空，建议采购量=标准库存-科室库存</font>"
+        html: $g("<font size=3 color=blue>补货标准>=1,且补货标准取整比例不为空：建议采购量=补货标准*N,N=M+R     M=(标准库存-科室库存)/补货标准，取整数部分((标准库存-科室库存)#补货标准)/补货标准<补货标准取整比例时，R=0,否则R=1,#代表取余     补货标准<1,或补货标准取整比例为空，建议采购量=标准库存-科室库存</font>")
     });
 
 

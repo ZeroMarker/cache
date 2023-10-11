@@ -1,0 +1,4646 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25" zv="Cache for Windows (x86-64) 2016.2.3 (Build 903_10_20040U)" ts="2020-10-23 16:42:46">
+<CSP name="scripts/pha/ip/v4/box.js" application="/imedical/web/" default="1"><![CDATA[
+/**
+ * 名称:	 住院移动药房-物流箱交接
+ * 编写人:	 yunhaibao
+ * 编写日期: 2020-03-14
+ */
+var PHA_IP_BOX = {
+    WardFlag: session['LOGON.WARDID'] != '' ? 'Y' : 'N'
+};
+$(function () {
+    InitGridBox();
+    $('#conBoxNo').on('keypress', function (event) {
+        if (window.event.keyCode == '13') {
+            $('#conUser').val('');
+            Query();
+        }
+    });
+    $('#conUser').on('keypress', function (event) {
+        if (window.event.keyCode == '13') {
+            CheckIn();
+        }
+    });
+});
+
+function InitGridBox() {
+    var columns = [
+        [
+            {
+                field: 'phb',
+                title: '物流箱ID',
+                width: 100,
+                hidden: true
+            },
+            {
+                field: 'no',
+                title: '物流箱号',
+                width: 200
+            },
+            {
+                field: 'num',
+                title: '物流箱数',
+                width: 75
+            },
+            {
+                field: 'phUserName',
+                title: '药房交接人',
+                width: 100
+            },
+            {
+                field: 'phDateTime',
+                title: '药房交接时间',
+                width: 155
+            },
+            {
+                field: 'logisticsUserName',
+                title: '物流人员',
+                width: 100
+            },
+            {
+                field: 'wardUserName',
+                title: '病区交接人',
+                width: 100
+            },
+            {
+                field: 'wardDateTime',
+                title: '病区交接时间',
+                width: 155
+            },
+            {
+                field: 'wardChkUserName',
+                title: '病区核对人',
+                width: 100
+            },
+            {
+                field: 'wardChkDateTime',
+                title: '病区核对时间',
+                width: 155
+            }
+        ]
+    ];
+    var dataGridOption = {
+        url: '',
+        pagination: false,
+        columns: columns,
+        fitColumns: false,
+        toolbar: '#gridBoxBar',
+        onLoadSuccess: function () {
+            $('#conBoxNo').val('');
+            $('#conUser').focus();
+        }
+    };
+
+    PHA.Grid('gridBox', dataGridOption);
+}
+
+function Query() {
+    var boxNo = $('#conBoxNo').val().trim();
+
+    var ret = $.cm(
+        {
+            ClassName: 'PHA.IP.Box.Query',
+            MethodName: 'CheckScan',
+            boxNo: boxNo,
+            loc: session['LOGON.CTLOCID'],
+            wardFlag: PHA_IP_BOX.WardFlag,
+            dataType: 'text'
+        },
+        false
+    );
+    if (ret.split('^')[0] < 0) {
+        PHA.Popover({
+            msg: ret.split('^')[1],
+            type: 'alert'
+        });
+        $('#conBoxNo').val('').focus();
+        //return;
+    }
+
+    $('#gridBox').datagrid('options').url = $URL;
+    $('#gridBox').datagrid('query', {
+        ClassName: 'PHA.IP.Box.Query',
+        QueryName: 'PHBox',
+        boxNo: boxNo,
+        rows: 999
+    });
+}
+
+function CheckIn() {
+    var rows = $('#gridBox').datagrid('getRows');
+    if (rows.length === 0) {
+        PHA.Popover({
+            msg: '明细无数据',
+            type: 'alert'
+        });
+        return;
+    }
+    var userCode = $('#conUser').val().trim();
+    if (userCode === '') {
+        PHA.Popover({
+            msg: '请扫描或录入工号,回车操作',
+            type: 'alert'
+        });
+        return;
+    }
+    var phb = rows[0].phb;
+    var pJson = {
+        phb: phb,
+        userCode: userCode
+    };
+    var retJson = $.cm(
+        {
+            ClassName: 'PHA.IP.Data.Api',
+            MethodName: 'HandleInAll',
+            pClassName: 'PHA.IP.Box.Save',
+            pMethodName: 'UpdateHandler',
+            pJsonStr: JSON.stringify([pJson])
+        },
+        false
+    );
+    if (retJson.success === 'N') {
+        // var msg = PHAIP_COM.DataApi.Msg(retJson);
+        var msg = retJson.message;
+        PHA.Popover({
+            msg: msg,
+            type: 'alert'
+        });
+    } else {
+        PHA.Popover({
+            msg: '签收成功',
+            type: 'success'
+        });
+        $('#conUser').val('');
+        $('#conBoxNo').val('').focus();
+    }
+}
+]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/boxquery.js" application="/imedical/web/" default="1"><![CDATA[
+/**
+ * 名称:	 住院移动药房-物流箱查询
+ * 编写人:	 yunhaibao
+ * 编写日期: 2020-03-14
+ */
+var PHA_IP_BOXQUERY = {
+    WardFlag: (session['LOGON.WARDID'] || '') != '' ? 'Y' : 'N'
+};
+$(function () {
+    InitDict();
+    InitGridWard();
+    InitGridBox();
+    $('#btnFind').on('click', Query);
+    $('#btnCancel').on('click', Cancel);
+});
+function InitDict() {
+    $('#conStartDate').datebox('setValue', 't');
+    $('#conEndDate').datebox('setValue', 't');
+    PHA.ComboBox('conPhaLoc', {
+        url: PHA_STORE.Pharmacy('IP').url,
+        panelHeight: 'auto',
+        onLoadSuccess: function (data) {
+            if (PHA_IP_BOXQUERY.WardFlag != 'Y') {
+                $(this).combobox('selectDefault', session['LOGON.CTLOCID']);
+            }
+        },
+        onSelect: function () {}
+    });
+    PHA.ComboBox('conStat', {
+        data: [
+            { RowId: 1, Description: '正常' },
+            { RowId: 2, Description: '已取消' }
+        ],
+        panelHeight: 'auto',
+        onSelect: function () {}
+    });
+    $('#conStat').combobox('setValue', 1);
+}
+function InitGridWard() {
+    var columns = [
+        [
+            {
+                field: 'wardLoc',
+                title: 'wardLoc',
+                width: 200,
+                hidden: true
+            },
+            {
+                field: 'wardLocDesc',
+                title: '病区',
+                width: 250
+            }
+        ]
+    ];
+    var dataGridOption = {
+        url: '',
+        pagination: false,
+        columns: columns,
+        fitColumns: true,
+        onLoadSuccess: function () {
+            $('#gridBox').datagrid('clear');
+        },
+        onSelect: function () {
+            QueryBox();
+        }
+    };
+    PHA.Grid('gridWard', dataGridOption);
+}
+
+function InitGridBox() {
+    var columns = [
+        [
+            {
+                field: 'phb',
+                title: 'phb',
+                width: 200,
+                hidden: true
+            },
+            {
+                field: 'wardLocDesc',
+                title: '病区科室',
+                width: 200
+            },
+            {
+                field: 'no',
+                title: '装箱条码',
+                width: 200,
+                align: 'center'
+            },
+            {
+                field: 'num',
+                title: '箱数',
+                width: 100,
+                align: 'center'
+            },
+            {
+                field: 'inciCnt',
+                title: '品种数',
+                width: 100,
+                align: 'center'
+            },
+            {
+                field: 'createDateTime',
+                title: '装箱时间',
+                width: 155,
+                align: 'center'
+            },
+            {
+                field: 'remark',
+                title: '备注',
+                width: 200
+            }
+        ]
+    ];
+    var dataGridOption = {
+        url: '',
+        pagination: false,
+        columns: columns,
+        fitColumns: false,
+        toolbar: '#gridBoxBar'
+    };
+    PHA.Grid('gridBox', dataGridOption);
+}
+
+function Query() {
+    $('#gridWard').datagrid('clear');
+    var pJson = GetQueryParamsJson();
+    if (pJson.loc === '') {
+        PHA.Popover({
+            msg: '请选择药房',
+            type: 'alert'
+        });
+        return;
+    }
+
+    $('#gridWard').datagrid('options').url = $URL;
+    $('#gridWard').datagrid('query', {
+        ClassName: 'PHA.IP.BoxQuery.Query',
+        QueryName: 'WardLoc',
+        pJsonStr: JSON.stringify(pJson),
+        rows: 999
+    });
+}
+function QueryBox() {
+    var pJson = GetQueryParamsJson();
+    if (pJson.loc === '') {
+        PHA.Popover({
+            msg: '请选择药房',
+            type: 'alert'
+        });
+        return;
+    }
+
+    $('#gridBox').datagrid('options').url = $URL;
+    $('#gridBox').datagrid('query', {
+        ClassName: 'PHA.IP.BoxQuery.Query',
+        QueryName: 'PHBox',
+        pJsonStr: JSON.stringify(pJson),
+        rows: 999
+    });
+}
+function GetQueryParamsJson() {
+    var wardLoc = '';
+    var gridSel = $('#gridWard').datagrid('getSelected');
+    if (gridSel != null) {
+        wardLoc = gridSel.wardLoc;
+    }
+
+    var retJson = {
+        loc: $('#conPhaLoc').combobox('getValue') || '',
+        startDate: $('#conStartDate').datebox('getValue') || '',
+        endDate: $('#conEndDate').datebox('getValue') || '',
+        startTime: $('#conStartTime').timespinner('getValue') || '',
+        endTime: $('#conEndTime').timespinner('getValue') || '',
+        stat: $('#conStat').combobox('getValue') || '',
+        wardLoc: wardLoc
+    };
+    return retJson;
+}
+
+function Cancel() {
+    var gridSel = $('#gridBox').datagrid('getSelected');
+    if (gridSel === null) {
+        PHA.Popover({
+            msg: '请先选中需要取消的记录',
+            type: 'alert'
+        });
+        return;
+    }
+    var pJson = {
+        phb: gridSel.phb
+    };
+    var retJson = $.cm(
+        {
+            ClassName: 'PHA.IP.Data.Api',
+            MethodName: 'HandleInAll',
+            pClassName: 'PHA.IP.BoxQuery.Save',
+            pMethodName: 'CancelHandler',
+            pJsonStr: JSON.stringify([pJson])
+        },
+        false
+    );
+    if (retJson.success === 'N') {
+        // var msg = PHAIP_COM.DataApi.Msg(retJson);
+        var msg = retJson.message;
+        PHA.Alert('提示', msg, 'warning');
+    } else {
+        $('#gridBox').datagrid('reload');
+    }
+}
+
+function Print(){
+    var gridSel = $('#gridBox').datagrid('getSelected');
+    if (gridSel === null) {
+        PHA.Popover({
+            msg: '请先选中需要打印的记录',
+            type: 'alert'
+        });
+        return;
+    }
+
+    PHA_IP_MOBPRINT.Box([gridSel.phb]);
+
+}]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/com.js" application="/imedical/web/" default="1"><![CDATA[
+/**
+ * 编写者:   yunhaibao
+ * 编写日期: 2020-04-12
+ * 说明:    住院药房公共JS
+ */
+var PHAIP_COM = {
+    DataApi: {
+        Msg: function (msgJson) {
+            var messageStr = msgJson.message;
+            messageArr = messageStr.split('</br>');
+            messageStr = messageArr.slice(0, 5).join('</li><li style="padding-left:13px;padding-top:5px;">');
+            // if (messageArr.length > 5) {
+            //     messageStr += '</li><li style="padding-left:13px">. . . ';
+            // }
+            var msg = '';
+            msg += '<div style="line-height:32px">';
+            msg += '    <span style="color:#757575;font-weight:bold">总记录:' + msgJson.recordCnt + '</span>';
+            msg += '    <span style="padding-left:10px;color:#00B69C;font-weight:bold">成功:' + msgJson.succCnt + '</span>';
+            msg += '    <span style="padding-left:10px;color:#FFA804;font-weight:bold">失败:' + msgJson.failCnt + '</span>';
+            msg += '</div>';
+            msg += '<div style="border-top:1px solid #cccccc;margin-left:-40px;margin-top:10px"></div>';
+            msg += '<div style="color:#757575;padding-top:10px;margin-left:-13px">';
+            msg += '    <ul style="list-style-type:disc;">';
+            msg += '        <li style="padding-left:13px">' + messageStr + '</li>';
+            msg += '    </ul>';
+            msg += '</div>';
+            return msg;
+        }
+    }
+};
+]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/css/ui.css" application="/imedical/web/" default="1"><![CDATA[
+/* 住院药房 */
+
+.phaip-grid-cell-wrap {
+    overflow: hidden;
+    white-space: normal;
+}
+
+.phaip-grid-cell-important {
+    color: red;
+}
+.phaip-grid-cell-warning {
+    color: yellow;
+}
+
+.pha-datebox {
+    width: 120px;
+}
+
+.pha-timespinner {
+    width: 100px;
+}
+]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/dispcheck.js" application="/imedical/web/" default="1"><![CDATA[
+/**
+ * 名称:	 住院移动药房-物流箱查询
+ * 编写人:	 yunhaibao
+ * 编写日期: 2020-03-14
+ */
+
+var PHA_IP_DISPCHECK = {
+    WardFlag: (session['LOGON.WARDID'] || '') !== '' ? 'Y' : 'N',
+    RowStyler: function (rowIndex, rowData) {
+        var needDispQty = rowData.needDispQty;
+        var realDispQty = rowData.realDispQty;
+        if (needDispQty > realDispQty) {
+            return 'background-color:#FFE0EA';
+        } else if (needDispQty < realDispQty) {
+            return 'background-color:#C8F6F1';
+        }
+    }
+};
+
+$(function () {
+    $('#lyDetail')
+        .layout('panel', 'north')
+        .panel('resize', { height: $('#lyDetail').height() / 2 });
+    $('#lyDetail').layout('resize');
+    InitDict();
+    InitGridPhac();
+    InitGridPhacInci();
+    InitGridPhacOrder();
+    $('#btnFind').on('click', QueryPhac);
+    $('#btnClean').on('click', CleanHandler);
+    $('#btnPass').on('click', Pass);
+    $('#btnSend').on('click', Send);
+    $('#conUser').on('keypress', function (event) {
+        if (window.event.keyCode == '13') {
+            SetConUser();
+        }
+    });
+});
+
+function InitDict() {
+    $('#conStartDate').datebox('setValue', 't');
+    $('#conEndDate').datebox('setValue', 't');
+    $('#conStartTime').timespinner('setValue', '00:00:00');
+    $('#conEndTime').timespinner('setValue', '23:59:59');
+    PHA.ComboBox('conPhaLoc', {
+        url: PHA_STORE.Pharmacy('IP').url,
+        panelHeight: 'auto',
+        onLoadSuccess: function (data) {
+            if (PHA_IP_DISPCHECK.WardFlag != 'Y') {
+                $(this).combobox('selectDefault', session['LOGON.CTLOCID']);
+            }
+        },
+        onSelect: function (data) {
+            PHA.ComboBox('conDrugCat', {
+                url: PHAIP_STORE.StkDrugGroup().url + '&loc=' + data.RowId,
+                panelHeight: 'auto'
+            });
+        }
+    });
+    PHA.ComboBox('conWardLoc', {
+        url: PHA_STORE.WardLoc().url
+    });
+}
+
+function InitGridPhac() {
+    var columns = [
+        [
+            {
+                field: 'phac',
+                title: 'phac',
+                width: 50,
+                hidden: true
+            },
+            {
+                field: 'select',
+                checkbox: true
+            },
+            {
+                field: 'phacNo',
+                title: '发药单号',
+                width: 200
+                // ,
+                // formatter: function(value, row, index) {
+                // 	return '<div style="overflow:hidden;white-space: normal;">'+value+'</div>'
+                // }
+            },
+            {
+                field: 'wardDesc',
+                title: '病区',
+                width: 150
+            },
+            {
+                field: 'printDateTime',
+                title: '打印时间',
+                width: 155
+            },
+            {
+                field: 'printUserName',
+                title: '打印人',
+                width: 100
+            },
+            {
+                field: 'operDateTime',
+                title: '配药确认时间',
+                width: 155
+            },
+            {
+                field: 'operUserName',
+                title: '配药确认人',
+                width: 100
+            },
+            {
+                field: 'collectDateTime',
+                title: '发药确认时间',
+                width: 155
+            },
+            {
+                field: 'collectUserName',
+                title: '发药确认人',
+                width: 100
+            },
+            {
+                field: 'statusDesc',
+                title: '当前状态',
+                width: 100,
+                styler: function (value, row, index) {
+                    if (value == '已打印') {
+                        return 'font-weight:bold;';
+                    } else if (value == '已配药确认') {
+                        return 'background-color:#e3f7ff;color:#1278b8;font-weight:bold;';
+                    } else if (value == '已发药确认') {
+                        return 'background-color:#e2ffde;color:#3c763d;font-weight:bold;';
+                    }
+                    return '';
+                }
+            }
+        ]
+    ];
+    var dataGridOption = {
+        url: '',
+        pagination: true,
+        columns: columns,
+        fitColumns: false,
+        toolbar: '#gridPhacBar',
+        singleSelect: false,
+        onCheck: function (rowIndex, rowData) {
+            QueryPhacDetail();
+        },
+        onUncheck: function (rowIndex, rowData) {
+            QueryPhacDetail();
+        },
+        onCheckAll: function () {
+            QueryPhacDetail();
+        },
+        onUncheckAll: function () {
+            QueryPhacDetail();
+        },
+        onLoadSuccess: function () {
+            $(this).datagrid('uncheckAll');
+            $('#gridPhacInci').datagrid('clear');
+            $('#gridPhacOrder').datagrid('clear');
+        }
+    };
+    PHA.Grid('gridPhac', dataGridOption);
+}
+
+function InitGridPhacInci() {
+    var columns = [
+        [
+            {
+                field: 'inciDesc',
+                title: '药品名称',
+                width: 300
+            },
+            {
+                field: 'manfDesc',
+                title: '生产企业',
+                width: 135
+            },
+            {
+                field: 'realQty',
+                title: '实发数量',
+                width: 70,
+                align: 'right'
+            },
+            {
+                field: 'dispQty',
+                title: '医嘱数量',
+                width: 70,
+                align: 'right'
+            },
+            {
+                field: 'resQty',
+                title: '冲减数量',
+                width: 70,
+                align: 'right'
+            },
+            {
+                field: 'uomDesc',
+                title: '单位',
+                width: 70
+            }
+        ]
+    ];
+    var dataGridOption = {
+        url: '',
+        pagination: false,
+        columns: columns,
+        fitColumns: false,
+        rowStyler: PHA_IP_DISPCHECK.RowStyler,
+        onSelect: function (rowIndex, rowData) {},
+        onLoadSuccess: function (data) {}
+    };
+    PHA.Grid('gridPhacInci', dataGridOption);
+}
+function InitGridPhacOrder() {
+    var columns = [
+        [
+            {
+                field: 'bedNo',
+                title: '床号',
+                width: 100
+            },
+            {
+                field: 'patNo',
+                title: '登记号',
+                width: 100
+            },
+            {
+                field: 'patName',
+                title: '姓名',
+                width: 100
+            },
+            {
+                field: 'doseDate',
+                title: '用药日期',
+                width: 100
+            },
+            {
+                field: 'inciDesc',
+                title: '药品名称',
+                width: 300
+            },
+            {
+                field: 'manfDesc',
+                title: '生产企业',
+                width: 135
+            },
+            {
+                field: 'realQty',
+                title: '实发数量',
+                width: 70,
+                align: 'right'
+            },
+            {
+                field: 'dispQty',
+                title: '医嘱数量',
+                width: 70,
+                align: 'right'
+            },
+            {
+                field: 'resQty',
+                title: '冲减数量',
+                width: 70,
+                align: 'right'
+            },
+            {
+                field: 'uomDesc',
+                title: '单位',
+                width: 70
+            }
+        ]
+    ];
+    var dataGridOption = {
+        url: '',
+        pagination: false,
+        columns: columns,
+        fitColumns: false,
+        rowStyler: PHA_IP_DISPCHECK.RowStyler
+    };
+    PHA.Grid('gridPhacOrder', dataGridOption);
+}
+
+function QueryPhac() {
+    var pJson = GetQueryParamsJson();
+    if (pJson.loc === '') {
+        PHA.Popover({
+            msg: '请选择药房',
+            type: 'alert'
+        });
+        return;
+    }
+    // if (pJson.user === '') {
+    //     PHA.Popover({
+    //         msg: '请先输入工号确认身份',
+    //         type: 'alert'
+    //     });
+    //     return;
+    // }
+    $('#gridPhac').datagrid('options').url = $URL;
+    $('#gridPhac').datagrid('query', {
+        ClassName: 'PHA.IP.DispCheck.Query',
+        QueryName: 'PHACollected',
+        pJsonStr: JSON.stringify(pJson)
+    });
+}
+function QueryPhacDetail() {
+    var gridChk = $('#gridPhac').datagrid('getChecked');
+    var phacArr = [];
+    for (var i = 0; i < gridChk.length; i++) {
+        var phac = gridChk[i].phac;
+        phacArr.push(phac);
+    }
+    var pJson = {
+        phacStr: phacArr.join('^')
+    };
+    $('#gridPhacInci').datagrid('options').url = $URL;
+    $('#gridPhacInci').datagrid('query', {
+        ClassName: 'PHA.IP.DispCheck.Query',
+        QueryName: 'PHACollectedInci',
+        pJsonStr: JSON.stringify(pJson),
+        rows: 999
+    });
+    $('#gridPhacOrder').datagrid('options').url = $URL;
+    $('#gridPhacOrder').datagrid('query', {
+        ClassName: 'PHA.IP.DispCheck.Query',
+        QueryName: 'PHACollectedOrder',
+        pJsonStr: JSON.stringify(pJson),
+        rows: 999
+    });
+}
+
+// 查询条件的JSON
+function GetQueryParamsJson() {
+    return {
+        startDate: $('#conStartDate').datebox('getValue'),
+        endDate: $('#conEndDate').datebox('getValue'),
+        startTime: $('#conStartTime').timespinner('getValue'),
+        endTime: $('#conEndTime').timespinner('getValue'),
+        loc: $('#conPhaLoc').combobox('getValue'),
+        user: $('#conUser').val(),
+        wardLoc: $('#conWardLoc').combobox('getValue'),
+        phacNo: $('#conPhacNo').val(),
+        drugCat: $('#conDrugCat').combobox('getValue'),
+        checkType: CHECKTYPE,
+        checked: $('#conChecked').checkbox('getValue') === true ? 'Y' : 'N',
+        unCheck: $('#conUnCheck').checkbox('getValue') === true ? 'Y' : 'N'
+    };
+}
+
+function Pass() {
+    var gridChk = $('#gridPhac').datagrid('getChecked');
+    var pJson = [];
+    for (var i = 0; i < gridChk.length; i++) {
+        var statusDesc = gridChk[i].statusDesc;
+        //        if (statusDesc.indexOf('发药') >= 0) {
+        //            continue;
+        //        }
+        var phac = gridChk[i].phac;
+        pJson.push({
+            phac: phac,
+            user: session['LOGON.USERID'],
+            checkType: CHECKTYPE
+        });
+    }
+    if (pJson.length === 0) {
+        PHA.Popover({
+            msg: '请先选中需要确认的记录',
+            type: 'alert'
+        });
+        return;
+    }
+    var retJson = $.cm(
+        {
+            ClassName: 'PHA.IP.Data.Api',
+            MethodName: 'HandleInOne',
+            pClassName: 'PHA.IP.DispCheck.Save',
+            pMethodName: 'UpdateHandler',
+            pJsonStr: JSON.stringify(pJson)
+        },
+        false
+    );
+    if (retJson.success === 'N') {
+        var msg = PHAIP_COM.DataApi.Msg(retJson);
+        PHA.Alert('提示', msg, 'warning');
+    }
+    $('#gridPhac').datagrid('reload');
+}
+
+function SetConUser() {
+    var userCode = $('#conUser').val();
+    if (userCode === '') {
+        $('#conUserName,#conUserLoc').text('');
+        return;
+    }
+
+    var retJson = $.cm(
+        {
+            ClassName: 'PHA.IP.COM.Method',
+            MethodName: 'GetUserDataByCode',
+            userCode: userCode
+        },
+        false
+    );
+    var userName = retJson.userName || '';
+    $('#conUserName').text(userName);
+    $('#conUserLoc').text(retJson.userLocDesc || '');
+    if (userName === '') {
+        PHA.Popover({
+            msg: '您的工号有误,请核实并重新输入',
+            type: 'alert'
+        });
+    }
+}
+
+function Send() {
+    return;
+    var gridSel = $('#gridPhac').datagrid('getSelected');
+    if (gridSel === null) {
+        PHA.Popover({
+            msg: '请先选中需要发送的的记录',
+            type: 'alert'
+        });
+        return;
+    }
+    PHA.Confirm('提示', '您确认重新发送数据到包药机吗?', function () {
+        PHA.Alert('提示', '自己调吧,哈哈', 'warning');
+    });
+}
+
+function CleanHandler() {
+    $('#conStartDate').datebox('setValue', 't');
+    $('#conEndDate').datebox('setValue', 't');
+    $('#conStartTime').timespinner('setValue', '00:00:00');
+    $('#conEndTime').timespinner('setValue', '23:59:59');
+    if (PHA_IP_DISPCHECK.WardFlag != 'Y') {
+        $('#conPhaLoc').combobox('selectDefault', session['LOGON.CTLOCID']);
+    }
+    $('#conWardLoc').combobox('clear');
+    $('#conPhacNo').val('');
+    $('#conDrugCat').combobox('clear');
+    $('#gridPhac').datagrid('clear');
+    $('#conChecked').checkbox('setValue', false);
+    $('#conUnCheck').checkbox('setValue', true);
+}
+]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/dispscan.js" application="/imedical/web/" default="1"><![CDATA[
+/**
+ * 名称:	 住院药房 - 住院工作量补录
+ * 编写人:	 yunhaibao
+ * 编写日期: 2020-10-13
+ */
+var PHA_IP_DISPSCAN = {
+    NoLen: 0
+};
+$(function () {
+    InitDict();
+    InitNoPre();
+    InitGridPhac();
+    InitGridPhacInci();
+    $('#conPhacNo').on('keypress', function (event) {
+        if (window.event.keyCode == '13') {
+            var fullNo = GetFullPhacNo($('#conPhacNo').val());
+            $('#conPhacNo').val(fullNo);
+            Query();
+            $('#conPhacNo').val('');
+        }
+    });
+    $('#btnOk').on('click', CheckIn);
+    $('#btnClean').on('click', Clean);
+    InitKeyDownHandler();
+});
+function InitKeyDownHandler() {
+    $(document).keydown(function (event) {
+        if (event.keyCode == 115) {
+            //F4
+            Clean();
+            event.preventDefault ? event.preventDefault() : (event.returnValue = false);
+        }
+
+        if (event.keyCode == 113) {
+            //F2
+            event.preventDefault ? event.preventDefault() : (event.returnValue = false);
+            CheckIn();
+        }
+        if (event.keyCode == 117) {
+            //F6
+            event.preventDefault ? event.preventDefault() : (event.returnValue = false);
+            $('#conPhacNo').val('').focus();
+        }
+    });
+}
+
+function InitDict() {
+    PHA.ComboBox('conOperateUser', {
+        url: PHA_STORE.SSUser(session['LOGON.CTLOCID']).url
+    });
+    PHA.ComboBox('conCollectUser', {
+        url: PHA_STORE.SSUser(session['LOGON.CTLOCID']).url
+    });
+}
+function InitNoPre() {
+    $.cm(
+        {
+            ClassName: 'PHA.IP.DispScan.Query',
+            MethodName: 'GetPhacNoData',
+            loc: session['LOGON.CTLOCID']
+        },
+        function (data) {
+            PHA_IP_DISPSCAN.NoLen = data.length;
+            $('#conNoPre').val(data.pre);
+        }
+    );
+}
+function InitGridPhac() {
+    var columns = [
+        [
+            {
+                field: 'propDesc',
+                title: '类型',
+                width: 30,
+                align: 'center'
+            },
+            {
+                field: 'propVal',
+                title: '值',
+                width: 70,
+                styler: function () {
+                    return 'font-weight:bold';
+                }
+            },
+            { field: 'phac', title: 'phac', width: 30, align: 'center', hidden: true },
+            { field: 'loc', title: 'loc', width: 30, align: 'center', hidden: true }
+        ]
+    ];
+    var dataGridOption = {
+        url: '',
+        pagination: false,
+        columns: columns,
+        fitColumns: true,
+        toolbar: [],
+        onLoadSuccess: function () {}
+    };
+
+    PHA.Grid('gridPhac', dataGridOption);
+}
+function InitGridPhacInci() {
+    var columns = [
+        [
+            {
+                field: 'phac',
+                title: 'phac',
+                width: 100,
+                hidden: true
+            },
+            {
+                field: 'inciDesc',
+                title: '药品名称',
+                width: 300
+            },
+            {
+                field: 'spec',
+                title: '规格',
+                width: 150
+            },
+            {
+                field: 'manfDesc',
+                title: '厂家',
+                width: 200
+            },
+            {
+                field: 'qty',
+                title: '应发数量',
+                align: 'right',
+                width: 100
+            },
+            {
+                field: 'resQty',
+                title: '冲减数量',
+                align: 'right',
+                width: 100
+            },
+            {
+                field: 'realQty',
+                title: '实发数量',
+
+                align: 'right',
+                width: 100
+            }
+        ]
+    ];
+    var dataGridOption = {
+        url: '',
+        pagination: true,
+        pageList: [500, 1000],
+        pageNumber: 1,
+        pageSize: 500,
+        columns: columns,
+        fitColumns: false,
+        toolbar: [],
+        onLoadSuccess: function () {
+            // 有数据给提示
+            // $('#conBoxNo').val('');
+            // $('#conUser').focus();
+        }
+    };
+
+    PHA.Grid('gridPhacInci', dataGridOption);
+}
+
+function Query() {
+    var phacNo = $('#conPhacNo').val().trim();
+    var pJson = {
+        phacNo: phacNo
+    };
+    $('#gridPhac').datagrid('options').url = $URL;
+    $('#gridPhac').datagrid('query', {
+        ClassName: 'PHA.IP.DispScan.Query',
+        QueryName: 'PHACollected',
+        pJsonStr: JSON.stringify(pJson),
+        rows: 999
+    });
+    $('#gridPhacInci').datagrid('options').url = $URL;
+    $('#gridPhacInci').datagrid('query', {
+        ClassName: 'PHA.IP.DispScan.Query',
+        QueryName: 'PHACollectedInci',
+        pJsonStr: JSON.stringify(pJson),
+        rows: 999
+    });
+}
+
+function CheckIn() {
+    var warnMsg = '';
+    var rows = $('#gridPhac').datagrid('getRows');
+    if (rows.length === 0) {
+        warnMsg = '请先查询出发药单';
+    }
+    var operateUser = $('#conOperateUser').combobox('getValue') || '';
+    var collectUser = $('#conCollectUser').combobox('getValue') || '';
+    if (operateUser === '') {
+        warnMsg = '请选择配药人';
+    }
+    if (collectUser === '') {
+        warnMsg = '请选择发药人';
+    }
+    if (warnMsg !== '') {
+        PHA.Popover({
+            msg: warnMsg,
+            type: 'alert'
+        });
+        return;
+    }
+    if (rows[0].loc !== session['LOGON.CTLOCID']) {
+        PHA.Popover({
+            msg: '该发药单不为您所登录的科室的单据, 无法确认',
+            type: 'alert'
+        });
+        return;
+    }
+    var phac = rows[0].phac;
+    var ret = $.cm(
+        {
+            ClassName: 'PHA.IP.DispScan.Save',
+            MethodName: 'SaveHandler',
+            phac: phac,
+            operateUser: operateUser,
+            collectUser: collectUser,
+            logonStr: PHA_COM.Session.All,
+            dataType: 'text'
+        },
+        false
+    );
+    var retArr = ret.split('^');
+    if (retArr[0] < 0) {
+        PHA.Popover({
+            msg: retArr[1],
+            type: 'alert'
+        });
+    } else {
+        $('#gridPhac, #gridPhacInci').datagrid('clear');
+    }
+    $('#conPhacNo').focus();
+}
+
+function GetFullPhacNo(no) {
+    if (PHA_IP_DISPSCAN.NoLen === 0) {
+        return no;
+    }
+
+    var pre = $('#conNoPre').val();
+    if (no.indexOf(pre) >= 0) {
+        return no;
+    }
+    if (no.length > pre.length) {
+        return no;
+    }
+    var noLen = no.length;
+    var needLen = PHA_IP_DISPSCAN.NoLen - noLen;
+    for (var i = 1; i <= needLen; i++) {
+        no = '0' + no;
+    }
+    return pre + no;
+}
+
+function Clean() {
+    InitNoPre();
+    $('#conOperateUser, #conCollectUser').combobox('clear');
+    $('#conPhacNo').val('');
+    $('#gridPhac, #gridPhacInci').datagrid('clear');
+}
+]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/drawdisp.js" application="/imedical/web/" default="1"><![CDATA[
+/**
+ * 名称:	 住院移动药房-取药发药
+ * 编写人:	 yunhaibao
+ * 编写日期: 2020-04-29
+ */
+$(function () {
+    PHA_IP_DRAWDISP_NS();
+});
+var PHA_IP_DRAWDISP_NS = function () {
+    // 空间变量
+    var PHA_IP_DRAWDISP = {
+        WardFlag: (session['LOGON.WARDID'] || '') != '' ? 'Y' : 'N',
+        RowStyler: function (rowIndex, rowData) {
+            var needDispQty = rowData.needDispQty;
+            var realDispQty = rowData.realDispQty;
+            if (needDispQty > realDispQty) {
+                return 'background-color:#FFE0EA';
+            } else if (needDispQty < realDispQty) {
+                return 'background-color:#C8F6F1';
+            }
+        }
+    };
+
+    // 初始化
+    InitDict();
+    InitGridDraw();
+    InitGridDrawInc();
+    InitGridDrawOrder();
+
+    // 事件
+    $('#btnFind').on('click', QueryDraw);
+    $('#conUser').on('keypress', function (event) {
+        if (window.event.keyCode == '13') {
+            SetConUser();
+        }
+    });
+
+    // 函数
+    function InitDict() {
+        $('#conStartDate').datebox('setValue', 't');
+        $('#conEndDate').datebox('setValue', 't');
+        PHA.ComboBox('conPhaLoc', {
+            url: PHA_STORE.Pharmacy('IP').url,
+            panelHeight: 'auto',
+            onLoadSuccess: function (data) {
+                if (PHA_IP_DRAWDISP.WardFlag != 'Y') {
+                    $(this).combobox('selectDefault', session['LOGON.CTLOCID']);
+                }
+            },
+            onSelect: function () {}
+        });
+        PHA.ComboBox('conWardLoc', {
+            url: PHA_STORE.CTLoc().url
+        });
+    }
+    function InitGridDraw() {
+        var columns = [
+            [
+                {
+                    field: 'phdw',
+                    title: 'phdw',
+                    width: 100,
+                    hidden: true
+                },
+                {
+                    field: 'wardLoc',
+                    title: 'wardLoc',
+                    width: 100,
+                    hidden: true
+                },
+                {
+                    field: 'wardLocDesc',
+                    title: '病区',
+                    width: 150,
+                    formatter: function (value, row, index) {
+                        return '<div style="overflow:hidden;white-space: normal;">' + value + '</div>';
+                    }
+                },
+                {
+                    field: 'phdwNo',
+                    title: '备药单号',
+                    width: 150
+                },
+                {
+                    field: 'completeDateTime',
+                    title: '备药时间',
+                    width: 155
+                },
+                {
+                    field: 'completeUserName',
+                    title: '备药人',
+                    width: 100
+                }
+            ]
+        ];
+        var dataGridOption = {
+            url: '',
+            pagination: false,
+            columns: columns,
+            fitColumns: false,
+            toolbar: '#gridDrawBar',
+            onSelect: function (rowIndex, rowData) {
+                QueryDrawInc();
+                QueryDrawOrder();
+            },
+            onLoadSuccess: function () {
+                $('#gridDrawInc').datagrid('clear');
+                $('#gridDrawOrder').datagrid('clear');
+            }
+        };
+        PHA.Grid('gridDraw', dataGridOption);
+    }
+
+    function InitGridDrawInc() {
+        var columns = [
+            [
+                {
+                    field: 'status',
+                    title: '状态',
+                    width: 100
+                },
+                {
+                    field: 'inciDesc',
+                    title: '药品名称',
+                    width: 250,
+                    formatter: function (value, row, index) {
+                        return '<div class="phaip-grid-cell-wrap">' + value + '</div>';
+                    }
+                },
+                {
+                    field: 'realDispQty',
+                    title: '实发',
+                    align: 'center',
+                    width: 60
+                },
+                {
+                    field: 'reqQty',
+                    title: '申请',
+                    align: 'center',
+                    width: 60
+                },
+                {
+                    field: 'drawQty',
+                    title: '备药',
+                    align: 'center',
+                    width: 60
+                },
+                {
+                    field: 'refQty',
+                    title: '拒绝',
+                    align: 'center',
+                    width: 60
+                },
+                {
+                    field: 'cancelQty',
+                    title: '撤消',
+                    align: 'center',
+                    width: 60
+                },
+                {
+                    field: 'backQty',
+                    title: '撤回',
+                    align: 'center',
+                    width: 60
+                },
+                {
+                    field: 'spec',
+                    title: '规格',
+                    width: 70
+                },
+                {
+                    field: 'manfDesc',
+                    title: '生产企业',
+                    width: 150
+                },
+                {
+                    field: 'stkBinDesc',
+                    title: '货位',
+                    width: 140
+                }
+            ]
+        ];
+        var dataGridOption = {
+            url: '',
+            pagination: false,
+            columns: columns,
+            fitColumns: false
+        };
+        PHA.Grid('gridDrawInc', dataGridOption);
+    }
+    function InitGridDrawOrder() {
+        var columns = [
+            [
+                {
+                    field: 'status',
+                    title: '状态',
+                    width: 100
+                },
+                {
+                    field: 'docLocDesc',
+                    title: '开单科室',
+                    width: 100
+                },
+                {
+                    field: 'bedNo',
+                    title: '床号',
+                    width: 60
+                },
+                {
+                    field: 'patNo',
+                    title: '登记号',
+                    width: 100
+                },
+                {
+                    field: 'patName',
+                    title: '姓名',
+                    width: 100
+                },
+                {
+                    field: 'inciDesc',
+                    title: '药品名称',
+                    width: 250,
+                    formatter: function (value, row, index) {
+                        return '<div class="phaip-grid-cell-wrap">' + value + '</div>';
+                    }
+                },
+                {
+                    field: 'realDispQty',
+                    title: '实发',
+                    align: 'center',
+                    width: 60
+                },
+                {
+                    field: 'reqQty',
+                    title: '申请',
+                    align: 'center',
+                    width: 60
+                },
+                {
+                    field: 'drawQty',
+                    title: '备药',
+                    align: 'center',
+                    width: 60
+                },
+                {
+                    field: 'refQty',
+                    title: '拒绝',
+                    align: 'center',
+                    width: 60
+                },
+                {
+                    field: 'cancelQty',
+                    title: '撤消',
+                    align: 'center',
+                    width: 60
+                },
+                {
+                    field: 'backQty',
+                    title: '撤回',
+                    align: 'center',
+                    width: 60
+                },
+                {
+                    field: 'uomDesc',
+                    title: '单位',
+                    width: 60
+                },
+                {
+                    field: 'dosage',
+                    title: '剂量',
+                    width: 100
+                },
+                {
+                    field: 'freqDesc',
+                    title: '频次',
+                    width: 60
+                },
+                {
+                    field: 'instruDesc',
+                    title: '用法',
+                    width: 100
+                },
+                {
+                    field: 'doseDateTime',
+                    title: '用药时间',
+                    width: 155
+                },
+                {
+                    field: 'spec',
+                    title: '规格',
+                    width: 70
+                },
+                {
+                    field: 'manfDesc',
+                    title: '生产企业',
+                    width: 150,
+                    formatter: function (value, row, index) {
+                        return '<div class="phaip-grid-cell-wrap">' + value + '</div>';
+                    }
+                }
+            ]
+        ];
+        var dataGridOption = {
+            url: '',
+            pagination: true,
+            columns: columns,
+            fitColumns: false,
+            pageSize: 100,
+            pageList: [100, 300, 500]
+        };
+        PHA.Grid('gridDrawOrder', dataGridOption);
+    }
+
+    function QueryDraw() {
+        var pJson = GetQueryParamsJson();
+        if (pJson.loc === '') {
+            PHA.Popover({
+                msg: '请选择药房',
+                type: 'alert'
+            });
+            return;
+        }
+
+        $('#gridDraw').datagrid('options').url = $URL;
+        $('#gridDraw').datagrid('query', {
+            ClassName: 'PHA.IP.DrawDisp.Query',
+            QueryName: 'PHDraw',
+            pJsonStr: JSON.stringify(pJson),
+            rows: 999
+        });
+    }
+
+    // 查询条件的JSON
+    function GetQueryParamsJson() {
+        var retJson = {
+            wardLoc: $('#conWardLoc').combobox('getValue') || '',
+            loc: $('#conPhaLoc').combobox('getValue') || '',
+            startDate: $('#conStartDate').datebox('getValue') || '',
+            endDate: $('#conEndDate').datebox('getValue') || '',
+            startTime: $('#conStartTime').timespinner('getValue') || '',
+            endTime: $('#conEndTime').timespinner('getValue') || '',
+            connectNo: $('#conConnectNo').val().trim(),
+            patNo: $('#conPatNo').val().trim()
+        };
+        return retJson;
+    }
+
+    function QueryDrawInc() {
+        var gridSel = $('#gridDraw').datagrid('getSelected');
+        if (gridSel === null) {
+            $('#gridDrawInc').datagrid('clear');
+            $('#gridDrawOrder').datagrid('clear');
+            return;
+        }
+        var pJson = {
+            phdwStr: gridSel.phdw
+        };
+        $('#gridDrawInc').datagrid('options').url = $URL;
+        $('#gridDrawInc').datagrid('query', {
+            ClassName: 'PHA.IP.DrawDisp.Query',
+            QueryName: 'PHDrawInc',
+            pJsonStr: JSON.stringify(pJson),
+            rows: 999
+        });
+    }
+    function QueryDrawOrder() {
+        var gridSel = $('#gridDraw').datagrid('getSelected');
+        if (gridSel === null) {
+            $('#gridDrawInc').datagrid('clear');
+            $('#gridDrawOrder').datagrid('clear');
+            return;
+        }
+        var pJson = {
+            phdwStr: gridSel.phdw
+        };
+        $('#gridDrawOrder').datagrid('options').url = $URL;
+        $('#gridDrawOrder').datagrid('query', {
+            ClassName: 'PHA.IP.DrawDisp.Query',
+            QueryName: 'PHDrawOrder',
+            pJsonStr: JSON.stringify(pJson)
+        });
+    }
+    function SetConUser() {
+        var userCode = $('#conUser').val();
+        if (userCode === '') {
+            $('#conUserName,#conUserLoc').text('');
+            return;
+        }
+    
+        var retJson = $.cm(
+            {
+                ClassName: 'PHA.IP.COM.Method',
+                MethodName: 'GetUserDataByCode',
+                userCode: userCode
+            },
+            false
+        );
+        var userName = retJson.userName || '';
+        $('#conUserName').text(userName);
+        $('#conUserLoc').text(retJson.userLocDesc || '');
+        if (userName === '') {
+            PHA.Popover({
+                msg: '您的工号有误,请核实并重新输入',
+                type: 'alert'
+            });
+        }
+    }
+    
+};
+]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/drawsort.js" application="/imedical/web/" default="1"><![CDATA[
+/**
+ * 名称:	 住院移动药房-备药规则维护
+ * 编写人:	 yunhaibao
+ * 编写日期: 2020-04-14
+ */
+
+$(function () {
+    InitDict();
+    InitGridDrawSort();
+    InitGridDrawSortItm();
+    PHA.SearchBox('conAlias', {
+        width: 265,
+        searcher: QueryDrawSortItm,
+        placeholder: '请输入药品名称或货位码回车查询...'
+    });
+    $('#btnAdd').on('click', function () {
+        var loc = $('#conPhaLoc').combobox('getValue');
+        if (loc === '') {
+            PHA.Popover({
+                msg: '请先选择药房',
+                type: 'alert'
+            });
+        } else {
+            $('#gridDrawSort').datagrid('addNewRow', {
+                defaultRow: { phdwsLoc: loc }
+            });
+            QueryDrawSortItm();
+        }
+    });
+    $('#btnFind').on('click', QueryDrawSort);
+    $('#btnSave').on('click', Save);
+    $('#btnDelete').on('click', Delete);
+    // $('#btnSaveItm').on('click', SaveItm);
+});
+function InitDict() {
+    PHA.ComboBox('conPhaLoc', {
+        url: PHA_STORE.Pharmacy('IP').url,
+        width: 223,
+        editable: false,
+        panelHeight: 'auto',
+        onLoadSuccess: function (data) {
+            $(this).combobox('selectDefault', session['LOGON.CTLOCID']);
+        },
+        onSelect: function () {
+            QueryDrawSort();
+        }
+    });
+}
+
+function InitGridDrawSort() {
+    var columns = [
+        [
+            {
+                field: 'phdws',
+                title: 'ID',
+                width: 100,
+                hidden: true
+            },
+            {
+                field: 'phdwsLoc',
+                title: '药房ID',
+                width: 100,
+                hidden: true
+            },
+            {
+                field: 'phdwsCode',
+                title: '代码',
+                width: 100,
+                editor: {
+                    type: 'validatebox',
+                    options: {
+                        required: true
+                    }
+                }
+            },
+            {
+                field: 'phdwsDesc',
+                title: '名称',
+                width: 100,
+                editor: {
+                    type: 'validatebox',
+                    options: {
+                        required: true
+                    }
+                }
+            }
+        ]
+    ];
+    var dataGridOption = {
+        pagination: false,
+        columns: columns,
+        fitColumns: true,
+        toolbar: '#gridDrawSortBar',
+        onClickRow: function (rowIndex, rowData) {
+            $(this).datagrid('endEditing');
+            if ($(this).datagrid('options').editIndex == undefined) {
+                QueryDrawSortItm();
+            }
+        },
+        onDblClickRow: function (rowIndex, rowData) {
+            $(this).datagrid('beginEditRow', {
+                rowIndex: rowIndex,
+                editField: 'phdwsCode'
+            });
+        }
+    };
+    PHA.Grid('gridDrawSort', dataGridOption);
+}
+function InitGridDrawSortItm() {
+    var columns = [
+        [
+            {
+                field: 'phdsi',
+                title: '货位码',
+                width: 200,
+                hidden: true
+            },
+            {
+                field: 'stkBin',
+                title: '货位码',
+                width: 200,
+                hidden: true
+            },
+            {
+                field: 'stkBinDesc',
+                title: '货位码',
+                width: 200
+            },
+            {
+                field: 'sn',
+                title: '货位顺序',
+                width: 100,
+                align: 'right',
+                editor: {
+                    type: 'numberbox',
+                    options: {
+                        required: false
+                    }
+                },
+                formatter: function (value, row, index) {
+                    return '<span style="color:#15b398;font-weight:bold;border-bottom: 5px solid #E6EEF8;font-size:16px" >' + value + '</span>';
+                }
+            },
+            {
+                field: 'inciDescStr',
+                title: '货位已关联的药品',
+                width: $('#panelSortItm').width() - 320
+            }
+        ]
+    ];
+    var dataGridOption = {
+        pagination: true,
+        pageSize: 100,
+        pageList: [30, 50, 100, 300],
+        columns: columns,
+        fitColumns: false,
+        toolbar: '#gridDrawSortItmBar',
+        onClickRow: function (rowIndex, rowData) {},
+        onClickCell: function (rowIndex, field, value) {
+            if (field === 'sn') {
+                $(this).datagrid('beginEditRow', {
+                    rowIndex: rowIndex,
+                    editField: field
+                });
+            } else {
+                $(this).datagrid('endEditing');
+                SaveItm();
+            }
+        },
+        onEndEdit: function (rowIndex, rowData) {
+            // 保存啊
+        }
+    };
+    PHA.Grid('gridDrawSortItm', dataGridOption);
+}
+
+function QueryDrawSort() {
+    var loc = $('#conPhaLoc').combobox('getValue');
+    var pJson = {
+        loc: loc
+    };
+    $('#gridDrawSort').datagrid('options').url = $URL;
+    $('#gridDrawSort').datagrid('query', {
+        ClassName: 'PHA.IP.DrawSort.Query',
+        QueryName: 'PHDrawSort',
+        rows: 9999,
+        pJsonStr: JSON.stringify(pJson)
+    });
+}
+
+function QueryDrawSortItm() {
+    var gridSelect = $('#gridDrawSort').datagrid('getSelected');
+    if (gridSelect === null) {
+        PHA.Popover({
+            msg: '请先选择左侧备药规则记录',
+            type: 'alert'
+        });
+        return;
+    }
+    var alias = $('#conAlias').searchbox('getValue') || '';
+    var pJson = {
+        phdws: gridSelect.phdws || '',
+        alias: alias
+    };
+    $('#gridDrawSortItm').datagrid('options').url = $URL;
+    $('#gridDrawSortItm').datagrid('query', {
+        ClassName: 'PHA.IP.DrawSort.Query',
+        QueryName: 'PHDrawSortItm',
+        pJsonStr: JSON.stringify(pJson)
+    });
+}
+
+function Save() {
+    var $grid = $('#gridDrawSort');
+    if ($grid.datagrid('endEditing') === false) {
+        PHA.Popover({
+            msg: '请先完成必填项数据',
+            type: 'alert'
+        });
+        return;
+    }
+    var gridChanges = $grid.datagrid('getChanges');
+    var gridChangeLen = gridChanges.length;
+    if (gridChangeLen == 0) {
+        PHA.Popover({
+            msg: '没有需要保存的数据',
+            type: 'alert'
+        });
+        return;
+    }
+
+    var repeatObj = $grid.datagrid('checkRepeat', [['phdwsCode'], ['phdwsDesc']]);
+    if (typeof repeatObj.pos === 'number') {
+        PHA.Popover({
+            msg: '第' + (repeatObj.pos + 1) + '、' + (repeatObj.repeatPos + 1) + '行:' + repeatObj.titleArr.join('、') + '重复',
+            type: 'alert'
+        });
+        return;
+    }
+
+    var dataArr = [];
+    for (var i = 0; i < gridChangeLen; i++) {
+        var iData = gridChanges[i];
+        if ($grid.datagrid('getRowIndex', iData) < 0) {
+            continue;
+        }
+        var iJson = {
+            phdws: iData.phdws || '',
+            phdwsLoc: iData.phdwsLoc,
+            phdwsCode: iData.phdwsCode,
+            phdwsDesc: iData.phdwsDesc
+        };
+        dataArr.push(iJson);
+    }
+    var retJson = $.cm(
+        {
+            ClassName: 'PHA.IP.Data.Api',
+            MethodName: 'HandleInAll',
+            pClassName: 'PHA.IP.DrawSort.Save',
+            pMethodName: 'SaveHandler',
+            pJsonStr: JSON.stringify(dataArr)
+        },
+        false
+    );
+    if (retJson.success === 'N') {
+        var msg = PHAIP_COM.DataApi.Msg(retJson);
+        PHA.Alert('提示', msg, 'warning');
+    } else {
+        $grid.datagrid('query', {});
+    }
+}
+
+function Delete() {
+    var gridSelect = $('#gridDrawSort').datagrid('getSelected') || '';
+    if (gridSelect === '') {
+        PHA.Popover({
+            msg: '请先选中需要删除的记录',
+            type: 'alert'
+        });
+        return;
+    }
+    PHA.ConfirmPrompt('删除提示', '您正在操作 <span style="color:red;font-weight:bold">删除</span>', function () {
+        var rowID = gridSelect.phdws || '';
+        var rowIndex = $('#gridDrawSort').datagrid('getRowIndex', gridSelect);
+        if (rowID != '') {
+            var dataArr = [];
+            dataArr.push(rowID);
+            var retJson = $.cm(
+                {
+                    ClassName: 'PHA.IP.Data.Api',
+                    MethodName: 'HandleInAll',
+                    pClassName: 'PHA.IP.DrawSort.Save',
+                    pMethodName: 'Delete',
+                    pJsonStr: JSON.stringify(dataArr)
+                },
+                false
+            );
+            if (retJson.success === 'false') {
+                PHA.Alert('提示', retJson.message, 'warning');
+            }
+        }
+        $('#gridDrawSort').datagrid('deleteRow', rowIndex);
+        $('#gridDrawSortItm').datagrid('clear');
+    });
+}
+
+function SaveItm() {
+    var $grid = $('#gridDrawSortItm');
+    $grid.datagrid('endEditing');
+    var gridDrawSortSelect = $('#gridDrawSort').datagrid('getSelected');
+    if (gridDrawSortSelect === null) {
+        PHA.Popover({
+            msg: '请先选择左侧备药规则',
+            type: 'alert'
+        });
+        return;
+    }
+    var phdws = gridDrawSortSelect.phdws || '';
+    if (phdws === '') {
+        PHA.Popover({
+            msg: '请先保存您选择的备药规则',
+            type: 'alert'
+        });
+        return;
+    }
+
+    var gridChanges = $grid.datagrid('getChanges');
+    var gridChangeLen = gridChanges.length;
+    if (gridChangeLen == 0) {
+        return;
+    }
+
+    var dataArr = [];
+    for (var i = 0; i < gridChangeLen; i++) {
+        var warnMsg = '';
+        var iData = gridChanges[i];
+        var sn = iData.sn || '';
+        if (sn != '') {
+            if (isNaN(sn)) {
+                warnMsg = '请输入数字';
+            } else if (parseInt(sn) < 0) {
+                warnMsg = '不能输入负数';
+            }
+        }
+        if (warnMsg != '') {
+            PHA.Popover({
+                msg: warnMsg,
+                type: 'alert'
+            });
+            return;
+        }
+        var iJson = {
+            phdws: phdws,
+            phdwsi: iData.phdwsi,
+            stkBin: iData.stkBin,
+            sn: sn
+        };
+        dataArr.push(iJson);
+    }
+    var retJson = $.cm(
+        {
+            ClassName: 'PHA.IP.Data.Api',
+            MethodName: 'HandleInAll',
+            pClassName: 'PHA.IP.DrawSort.Save',
+            pMethodName: 'SaveItmHandler',
+            pJsonStr: JSON.stringify(dataArr)
+        },
+        false
+    );
+    if (retJson.success === 'N') {
+        PHA.Alert('提示', PHAIP_COM.DataApi.Msg(retJson), 'warning');
+    }
+    $grid.datagrid('reload');
+}
+]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/mobprint.js" application="/imedical/web/" default="1"><![CDATA[
+/**
+ * 名称:	 住院药房 - 移动药房相关打印
+ * 编写人:	 yunhaibao
+ * 编写日期: 2020-08-13
+ */
+var PHA_IP_MOBPRINT = {
+    // 封箱贴
+    Box: function (boxArr) {
+	    var boxArrStr = boxArr;
+	    if (typeof boxArrStr === 'object'){
+			 boxArrStr = JSON.stringify(boxArrStr);
+		}
+        var prtData = tkMakeServerCall('PHA.IP.Print.Box', 'GetJsonData', boxArrStr);
+        var prtArr = JSON.parse(prtData);
+        for (var i = 0; i < prtArr.length; i++) {
+            var prtJson = prtArr[i];
+            var newPrtJson = {
+	        	Para:prtJson,
+	        	List:[]
+	        }
+            var xmlPrtObj = DHCSTXMLPrint_JsonToXml(newPrtJson);
+            DHCSTGetXMLConfig('PHAIPBOX');          
+            DHCSTPrintFun(xmlPrtObj.xmlPara, xmlPrtObj.xmlList);
+        }
+    },
+    // 固化单
+    Connect: function (noArr) {
+	    var noArrStr = noArr;
+	    if (typeof noArrStr === 'object'){
+			 noArrStr = JSON.stringify(noArrStr);
+		}
+        var prtData = tkMakeServerCall('PHA.IP.Print.Connect', 'GetJsonData', noArrStr);
+        var prtArr = JSON.parse(prtData);
+        for (var i = 0; i < prtArr.length; i++) {
+            var prtJson = prtArr[i];
+            var newPrtJson = {
+	        	Para:prtJson,
+	        	List:[]
+	        }
+            var xmlPrtObj = DHCSTXMLPrint_JsonToXml(newPrtJson);
+            DHCSTGetXMLConfig('PHAIPCONNECT');          
+            DHCSTPrintFun(xmlPrtObj.xmlPara, xmlPrtObj.xmlList);
+        }
+    },  
+    // 备药单 
+    Draw: function (drawArr, rePrint) {
+	    rePrint = rePrint || '';
+	    var PIVASLODOP = getLodop();
+	    var drawArrStr = drawArr;
+	    if (typeof drawArrStr === 'object'){
+			 drawArrStr = JSON.stringify(drawArrStr);
+		}	    
+		var prtData = tkMakeServerCall('PHA.IP.Print.Draw', 'GetJsonData', drawArrStr);
+	    var prtArr = JSON.parse(prtData);
+	    
+	    // 放一个任务里, 当表格
+	    PIVASLODOP.PRINT_INIT('PHAIPMOBDRAW');
+        PIVASLODOP.SET_PRINT_STYLE('FontName', 'Microsoft Yahei');
+	    var htmlArr = [];
+	    htmlArr.push('<table>'); 
+        for (var prtI = 0; prtI < prtArr.length; prtI++) {
+            var prtJson = prtArr[prtI];
+            
+            var rows = prtJson.rows;
+			if (rows.length === 0){
+				continue;
+			}
+			
+			var phdwNo = prtJson.phdwNo;
+			var phac = prtJson.phac;
+			// 加抬头
+			htmlArr.push('<tr>'); 
+	        htmlArr.push('	<td style="text-align:center;width:5mm">序号</td>');
+	        htmlArr.push('	<td style="text-align:center;width:5mm">药品名称</td>');
+	        htmlArr.push('	<td style="text-align:center;width:5mm"></td>');
+	        htmlArr.push('	<td style="text-align:center;width:5mm">序号</td>');
+	        htmlArr.push('	<td style="text-align:center;width:5mm">序号</td>');
+	        htmlArr.push('	<td style="text-align:center;width:5mm">序号</td>');
+            htmlArr.push('	<td style='width:" + ('70mm') + "'>" + ' 药品名称' + '</td>';
+            htmlArr.push('	<td style='width:" + ('30mm') + "'>" + ' 商品名' + '</td>';
+            htmlArr.push('	<td style='width:" + ('30mm') + "'>" + ' 规格' + '</td>';
+			htmlArr.push('	<td style='width:" + ('25mm') + "'>" + ' 厂家' + '</td>';
+            htmlArr.push('	<td style='width:" + ('20mm') + ";text-align:center'>" + '实发' + '</td>';
+            htmlArr.push('	<td style='width:" + ('15mm') + ";text-align:center'>" + '缺药' + '</td>';		
+			htmlArr.push('</tr>'); 
+			
+			// 加行标题
+			
+			
+            var html =
+                '<style>table,td,th {border: 1px solid black;border-style: solid;border-collapse: collapse;font-size:' +
+                ('14') +
+                ';font-family:Microsoft Yahei} table{table-layout:fixed;display:table;width:200mm} tfoot,th{ border:none;font-size:' +
+                ('14') +
+                ';text-align:left} tfoot,th,tr,td{font-weight:normal}</style><table>';
+            html =   ' <table border=1 style="width:200mm;border-collapse:collapse;table-layout:fixed;" >'
+            html += "<thead style='font-weight:bold;'>";
+            html += "	<td style='text-align:center;width:" + ('5mm') + "'>" + ' 序' + '</td>';
+            html += "	<td style='width:" + ('70mm') + "'>" + ' 药品名称' + '</td>';
+            html += "	<td style='width:" + ('30mm') + "'>" + ' 商品名' + '</td>';
+            html += "	<td style='width:" + ('30mm') + "'>" + ' 规格' + '</td>';
+			html += "	<td style='width:" + ('25mm') + "'>" + ' 厂家' + '</td>';
+            html += "	<td style='width:" + ('20mm') + ";text-align:center'>" + '实发' + '</td>';
+            html += "	<td style='width:" + ('15mm') + ";text-align:center'>" + '缺药' + '</td>';
+            html += '</thead>';
+            html += '<tbody>';
+            var totalAmt = 0;
+            for (var i = 0; i < rows.length; i++) {
+                var rowData = rows[i];
+                html += '<tr>';
+                html += '	<td style="text-align:center;height:6mm;width:5mm">' + rowData.seqNo + '</td>';
+                html += '	<td style="width:70mm;white-space: nowrap;overflow:hidden;">' + rowData.inciDesc + '</td>';
+                html += '	<td style="text-align:left;width:30mm;"><div style="white-space: nowrap;overflow:hidden">' + rowData.goodName + '</div></td>';
+                html += '	<td style="text-align:left;width:30mm;"><div>' + rowData.spec + '</div></td>';
+                html += '	<td style="text-align:left;width:25mm;"><div>' + rowData.manfDesc + '</div></td>';
+//                html += '	<td style="text-align:center;width:15mm">' + rowData.orderQty + '</td>';
+				html += '	<td style="text-align:center;width:20mm">' + rowData.lastQty + '</td>';
+				html += '	<td style="text-align:center;width:15mm">' + rowData.lessQty + '</td>';
+//                html += '	<td style="text-align:center;width:15mm">' + rowData.inBox + '</td>';
+                html += '</tr>';
+//                totalAmt = totalAmt + (1*rowData.spAmt);
+            }
+            html += '</tbody>';
+            html += '<tfoot>';
+//            html += '	<tr>';
+//            html += '		<th colspan=4 style="text-align:left">总金额</th>';
+//            html += '		<th colspan=2 style="text-align:right">' + totalAmt.toFixed(2) + '</th>';
+//            html += '		<th colspan=5 style="text-align:right"></th>';
+//            html += '	</tr>';
+            html += '	<tr>';
+            html += '		<th colspan=11 style="text-align:left;height:8mm">备药人: '+prtJson.pyUserName+'　　　　　　　　　　核对人: '+prtJson.fyUserName+'　　　　　　　　　　领药人: </th>';
+            html += '	</tr>';
+            html += '</tfoot>';       
+            html += '</table>';
+            // 内部控制缩放,此处不用
+            PIVASLODOP.ADD_PRINT_TABLE('25mm', '2mm', '190mm', '240mm', html);     
+            PIVASLODOP.PRINT();
+        }	
+        htmlArr.push('</table>'); 
+	}
+};
+]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/nurcheck.js" application="/imedical/web/" default="1"><![CDATA[
+/**
+ * 名称:	 住院移动药房-物流箱查询
+ * 编写人:	 yunhaibao
+ * 编写日期: 2020-03-14
+ */
+
+var PHA_IP_NURCHECK = {
+    WardFlag: session['LOGON.WARDID'] != '' ? 'Y' : 'N',
+    RowStyler: function (rowIndex, rowData) {
+        var needDispQty = rowData.needDispQty;
+        var realDispQty = rowData.realDispQty;
+        if (needDispQty > realDispQty) {
+            return 'background-color:#FFE0EA';
+        } else if (needDispQty < realDispQty) {
+            return 'background-color:#C8F6F1';
+        }
+    }
+};
+
+$(function () {
+    InitDict();
+    InitGridPhac();
+    InitGridPhacInci();
+    InitGridPhacPatInci();
+    $('#btnFind').on('click', QueryPhac);
+    $('#btnClean').on('click', QueryPhacInci);
+    $('#btnPass').on('click', Pass);
+    $('#conUser').on('keypress', function (event) {
+        if (window.event.keyCode == '13') {
+            SetConUser();
+        }
+    });
+});
+
+function InitDict() {
+    $('#conStartDate').datebox('setValue', 't');
+    $('#conEndDate').datebox('setValue', 't');
+    PHA.ComboBox('conPhaLoc', {
+        url: PHA_STORE.Pharmacy('IP').url,
+        panelHeight: 'auto',
+        onLoadSuccess: function (data) {
+            if (PHA_IP_NURCHECK.WardFlag != 'Y') {
+                $(this).combobox('selectDefault', session['LOGON.CTLOCID']);
+            }
+        },
+        onSelect: function () {}
+    });
+}
+
+function InitGridPhac() {
+    var columns = [
+        [
+            {
+                field: 'phacNo',
+                title: '发药单号',
+                width: 200
+                // ,
+                // formatter: function(value, row, index) {
+                // 	return '<div style="overflow:hidden;white-space: normal;">'+value+'</div>'
+                // }
+            },
+            {
+                field: 'collectDateTime',
+                title: '发药时间',
+                width: 155
+            },
+            {
+                field: 'operateUserName',
+                title: '发药人',
+                width: 100
+            },
+            {
+                field: 'auditDateTime',
+                title: '核对时间',
+                width: 155
+            },
+            {
+                field: 'auditUserName',
+                title: '核对人',
+                width: 100
+            },
+            {
+                field: 'wardDesc',
+                title: '病区',
+                width: 100
+            }
+        ]
+    ];
+    var dataGridOption = {
+        url: '',
+        pagination: false,
+        columns: columns,
+        fitColumns: false,
+        toolbar: '#gridPhacBar',
+        onSelect: function (rowIndex, rowData) {
+            QueryPhacInci();
+        },
+        onLoadSuccess: function () {
+            $('#gridPhacInci').datagrid('clear');
+        }
+    };
+    PHA.Grid('gridPhac', dataGridOption);
+}
+
+function InitGridPhacInci() {
+    var columns = [
+        [
+            {
+                field: 'phacItmLbIDStr',
+                title: 'phacItmLbIDStr',
+                width: 200,
+                hidden: true
+            },
+            {
+                field: 'inciDesc',
+                title: '药品名称',
+                width: 300
+            },
+            {
+                field: 'spec',
+                title: '规格',
+                width: 100
+            },
+            {
+                field: 'uomDesc',
+                title: '单位',
+                width: 100
+            },
+            {
+                field: 'needDispQty',
+                title: '应发数量',
+                width: 100,
+                align: 'right'
+            },
+            {
+                field: 'realDispQty',
+                title: '实发数量',
+                width: 100,
+                align: 'right'
+            }
+        ]
+    ];
+    var dataGridOption = {
+        url: '',
+        pagination: false,
+        columns: columns,
+        fitColumns: false,
+        rowStyler: PHA_IP_NURCHECK.RowStyler,
+        onSelect: function (rowIndex, rowData) {
+            QueryPhacPatInci();
+        },
+        onLoadSuccess: function (data) {
+            $('#gridPhacPatInci').datagrid('clear');
+            if (data.total > 0) {
+                $('#gridPhacInci').datagrid('selectRow', 0);
+            }
+        }
+    };
+    PHA.Grid('gridPhacInci', dataGridOption);
+}
+function InitGridPhacPatInci() {
+    var columns = [
+        [
+            {
+                field: 'bedNo',
+                title: '床号',
+                width: 100
+            },
+            {
+                field: 'patNo',
+                title: '登记号',
+                width: 100
+            },
+            {
+                field: 'patName',
+                title: '姓名',
+                width: 100
+            },
+            {
+                field: 'doseDate',
+                title: '用药日期',
+                width: 100
+            },
+            {
+                field: 'needDispQty',
+                title: '应发数量',
+                width: 100,
+                align: 'right'
+            },
+            {
+                field: 'realDispQty',
+                title: '实发数量',
+                width: 100,
+                align: 'right'
+            }
+        ]
+    ];
+    var dataGridOption = {
+        url: '',
+        pagination: false,
+        columns: columns,
+        fitColumns: false,
+        rowStyler: PHA_IP_NURCHECK.RowStyler
+    };
+    PHA.Grid('gridPhacPatInci', dataGridOption);
+}
+
+function QueryPhac() {
+    var pJson = GetQueryParamsJson();
+    if (pJson.loc === '') {
+        PHA.Popover({
+            msg: '请选择药房',
+            type: 'alert'
+        });
+        return;
+    }
+    if (pJson.user === '') {
+        PHA.Popover({
+            msg: '请先输入工号确认身份',
+            type: 'alert'
+        });
+        return;
+    }
+    $('#gridPhac').datagrid('options').url = $URL;
+    $('#gridPhac').datagrid('query', {
+        ClassName: 'PHA.IP.NurCheck.Query',
+        QueryName: 'PHACollected',
+        pJsonStr: JSON.stringify(pJson),
+        rows: 999
+    });
+}
+function QueryPhacInci() {
+    var gridSel = $('#gridPhac').datagrid('getSelected');
+    if (gridSel === null) {
+        $('#gridPhacInci').datagrid('clear');
+        return;
+    }
+    var pJson = {
+        phac: gridSel.phac
+    };
+    $('#gridPhacInci').datagrid('options').url = $URL;
+    $('#gridPhacInci').datagrid('query', {
+        ClassName: 'PHA.IP.NurCheck.Query',
+        QueryName: 'PHACollectedInci',
+        pJsonStr: JSON.stringify(pJson),
+        rows: 999
+    });
+}
+function QueryPhacPatInci() {
+    var gridSel = $('#gridPhacInci').datagrid('getSelected');
+    if (gridSel === null) {
+        $('#gridPhacPatInci').datagrid('clear');
+        return;
+    }
+    var pJson = {
+        phacItmLbIDStr: gridSel.phacItmLbIDStr
+    };
+    $('#gridPhacPatInci').datagrid('options').url = $URL;
+    $('#gridPhacPatInci').datagrid('query', {
+        ClassName: 'PHA.IP.NurCheck.Query',
+        QueryName: 'PHACollectedPatInci',
+        pJsonStr: JSON.stringify(pJson),
+        rows: 999
+    });
+}
+// 查询条件的JSON
+function GetQueryParamsJson() {
+    var startDate = $('#conStartDate').datebox('getValue');
+    var endDate = $('#conEndDate').datebox('getValue');
+    var loc = $('#conPhaLoc').combobox('getValue');
+    var auditFlag = $('#conAudit').checkbox('getValue') === true ? 'Y' : 'N';
+    var user = $('#conUser').val();
+    var retJson = {
+        startDate: startDate,
+        endDate: endDate,
+        loc: loc,
+        auditFlag: auditFlag,
+        user: user
+    };
+    return retJson;
+}
+
+function Pass() {
+    var gridSel = $('#gridPhac').datagrid('getSelected');
+    if (gridSel === null) {
+        PHA.Popover({
+            msg: '请先选中需要核对的记录',
+            type: 'alert'
+        });
+        return;
+    }
+    var user = $('#conUser').val();
+    if (user === '') {
+        PHA.Popover({
+            msg: '请先输入工号确认身份',
+            type: 'alert'
+        });
+        return;
+    }
+    var pJson = {
+        phac: gridSel.phac,
+        user: user
+    };
+    var retJson = $.cm(
+        {
+            ClassName: 'PHA.IP.Data.Api',
+            MethodName: 'HandleInAll',
+            pClassName: 'PHA.IP.NurCheck.Save',
+            pMethodName: 'UpdateHandler',
+            pJsonStr: JSON.stringify([pJson])
+        },
+        false
+    );
+    if (retJson.success === 'N') {
+        var msg = PHAIP_COM.DataApi.Msg(retJson);
+        PHA.Alert('提示', msg, 'warning');
+    } else {
+        $('#gridPhac').datagrid('reload');
+    }
+}
+
+function SetConUser() {
+    var userCode = $('#conUser').val();
+    if (userCode === '') {
+        $('#conUserName,#conUserLoc').text('');
+        return;
+    }
+
+    var retJson = $.cm(
+        {
+            ClassName: 'PHA.IP.COM.Method',
+            MethodName: 'GetUserDataByCode',
+            userCode: userCode
+        },
+        false
+    );
+    var userName = retJson.userName || '';
+    $('#conUserName').text(userName);
+    $('#conUserLoc').text(retJson.userLocDesc || '');
+    if (userName === '') {
+        PHA.Popover({
+            msg: '您的工号有误,请核实并重新输入',
+            type: 'alert'
+        });
+    }
+}
+]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/phdraw.js" application="/imedical/web/" default="1"><![CDATA[
+/**
+ * 名称:	 住院移动药房-备药单查询
+ * 编写人:	 yunhaibao
+ * 编写日期: 2020-05-07
+ */
+
+$(function () {
+    PHA_IP_PHDRAW_NS();
+});
+
+var PHA_IP_PHDRAW_NS = function () {
+    var PHA_IP_PHDRAW = {
+        WardFlag: (session['LOGON.WARDID'] || '') !== '' ? 'Y' : 'N'
+    };
+
+    InitDict();
+    InitGridPhDraw();
+    InitGridPhDrawInc();
+    $('#btnFind').on('click', Query);
+
+    function InitDict() {
+        $('#conStartDate').datebox('setValue', 't');
+        $('#conEndDate').datebox('setValue', 't');
+        PHA.ComboBox('conPhaLoc', {
+            url: PHA_STORE.Pharmacy('IP').url,
+            panelHeight: 'auto',
+            onLoadSuccess: function (data) {
+                if (PHA_IP_PHDRAW.WardFlag != 'Y') {
+                    $(this).combobox('selectDefault', session['LOGON.CTLOCID']);
+                }
+            },
+            onSelect: function () {}
+        });
+        PHA.ComboBox('conWardLoc', {
+            url: PHA_STORE.WardLoc().url
+        });
+        PHA.ComboBox('conDrawType', {
+            url: PHAIP_STORE.PHAIPReqType().url,
+            panelHeight: 'auto'
+        });
+        PHA.ComboBox('conDrawStatus', {
+            url: PHA_STORE.ComDictionaryAsCode('DrawStatus').url,
+            panelHeight: 'auto'
+        });
+        PHA.ComboBox('conBoxStatus', {
+            url: PHA_STORE.ComDictionaryAsCode('BoxStatus').url,
+            panelHeight: 'auto'
+        });
+    }
+
+    function InitGridPhDraw() {
+        var columns = [
+            [
+                {
+                    field: 'phdw',
+                    title: '备药单ID',
+                    width: 100,
+                    hidden: true
+                },
+                {
+                    field: 'drawNo',
+                    title: '备药单号',
+                    width: 150
+                },
+                {
+                    field: 'wardLocDesc',
+                    title: '病区',
+                    width: 150
+                },
+                {
+                    field: 'typeDesc',
+                    title: '类型',
+                    width: 65
+                },
+                {
+                    field: 'statusDesc',
+                    title: '备药状态',
+                    width: 100
+                },
+                {
+                    field: 'boxStatusDesc',
+                    title: '物流箱状态',
+                    width: 155
+                },
+                {
+                    field: 'createUserName',
+                    title: '建单人',
+                    width: 100
+                },
+                {
+                    field: 'createDateTime',
+                    title: '建单时间',
+                    width: 155
+                },
+                {
+                    field: 'completeUserName',
+                    title: '完成人',
+                    width: 100
+                },
+                {
+                    field: 'completeDateTime',
+                    title: '完成时间',
+                    width: 155
+                },
+                {
+                    field: 'packUserName',
+                    title: '装箱人',
+                    width: 100
+                },
+                {
+                    field: 'packDateTime',
+                    title: '装箱时间',
+                    width: 155
+                },
+                {
+                    field: 'connectNo',
+                    title: '固化单号',
+                    width: 150
+                }
+            ]
+        ];
+        var dataGridOption = {
+            url: '',
+            pagination: true,
+            columns: columns,
+            fitColumns: false,
+            onSelect: function () {
+                QueryInc();
+            }
+        };
+        PHA.Grid('gridPhDraw', dataGridOption);
+    }
+
+    function InitGridPhDrawInc() {
+        var columns = [
+            [
+                {
+                    field: 'phdwi',
+                    title: '备药子表ID',
+                    width: 155,
+                    hidden: true
+                },
+                {
+                    field: 'inciCode',
+                    title: '药品代码',
+                    width: 150
+                },
+                {
+                    field: 'inciDesc',
+                    title: '药品名称',
+                    width: 350
+                },
+                {
+                    field: 'qty',
+                    title: '数量',
+                    width: 50
+                },
+                {
+                    field: 'bUomDesc',
+                    title: '单位',
+                    width: 50
+                },
+                {
+                    field: 'completeUserName',
+                    title: '备药人',
+                    width: 100
+                },
+                {
+                    field: 'completeDateTime',
+                    title: '备药时间',
+                    width: 155
+                },
+                {
+                    field: 'packUserName',
+                    title: '装箱人',
+                    width: 100
+                },
+                {
+                    field: 'packDateTime',
+                    title: '装箱时间',
+                    width: 155
+                },
+                {
+                    field: 'compFlag',
+                    title: '备药完成',
+                    width: 60
+                },
+                {
+                    field: 'compPackFlag',
+                    title: '装箱完成',
+                    width: 60
+                }
+            ]
+        ];
+        var dataGridOption = {
+            url: '',
+            pagination: false,
+            columns: columns
+        };
+        PHA.Grid('gridPhDrawInc', dataGridOption);
+    }
+
+    function Query() {
+        $('#gridPhDrawInc').datagrid('clear');
+        var pJson = GetQueryParamsJson();
+        if (pJson.loc === '') {
+            PHA.Popover({
+                msg: '请选择药房',
+                type: 'alert'
+            });
+            return;
+        }
+
+        $('#gridPhDraw').datagrid('options').url = $URL;
+        $('#gridPhDraw').datagrid('query', {
+            ClassName: 'PHA.IP.PhDraw.Query',
+            QueryName: 'PHDraw',
+            pJsonStr: JSON.stringify(pJson),
+            rows: 999
+        });
+    }
+
+    function QueryInc() {
+        var gridSel = $('#gridPhDraw').datagrid('getSelected');
+        if (gridSel === null) {
+            $('#gridPhDrawInc').datagrid('clear');
+        }
+        var pJson = {
+            phdw: gridSel.phdw
+        };
+        $('#gridPhDrawInc').datagrid('options').url = $URL;
+        $('#gridPhDrawInc').datagrid('query', {
+            ClassName: 'PHA.IP.PhDraw.Query',
+            QueryName: 'PHDrawInc',
+            pJsonStr: JSON.stringify(pJson)
+        });
+    }
+
+    function GetQueryParamsJson() {
+        var phdw = '';
+        var gridSel = $('#gridPhDraw').datagrid('getSelected');
+        if (gridSel != null) {
+            phdw = gridSel.phdw;
+        }
+
+        return {
+            loc: $('#conPhaLoc').combobox('getValue') || '',
+            wardLoc: $('#conWardLoc').combobox('getValue') || '',
+            startDate: $('#conStartDate').datebox('getValue') || '',
+            endDate: $('#conEndDate').datebox('getValue') || '',
+            startTime: $('#conStartTime').timespinner('getValue') || '',
+            endTime: $('#conEndTime').timespinner('getValue') || '',
+            drawType: $('#conDrawType').combobox('getValue') || '',
+            drawStatus: $('#conDrawStatus').combobox('getValue') || '',
+            boxStatus: $('#conBoxStatus').combobox('getValue') || '',
+            phacNo: $('#conPhacNo').val().trim() || '',
+            drawNo: $('#conDrawNo').val().trim() || '',
+            drawUser: $('#conDrawUser').val().trim() || '',
+            phdw: phdw
+        };
+    }
+};
+]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/phreq.js" application="/imedical/web/" default="1"><![CDATA[
+/**
+ * 名称:	 住院移动药房-领药单查询
+ * 编写人:	 yunhaibao
+ * 编写日期: 2020-05-06
+ */
+var PHA_IP_PHREQ = {
+    WardFlag: (session['LOGON.WARDID'] || '') != '' ? 'Y' : 'N'
+};
+$(function () {
+    InitDict();
+    InitGridPhReq();
+    InitGridPhReqItm();
+    $('#btnFind').on('click', Query);
+
+});
+function InitDict() {
+    $('#conStartDate').datebox('setValue', 't');
+    $('#conEndDate').datebox('setValue', 't');
+    PHA.ComboBox('conPhaLoc', {
+        url: PHA_STORE.Pharmacy('IP').url,
+        panelHeight: 'auto',
+        onLoadSuccess: function (data) {
+            if (PHA_IP_PHREQ.WardFlag != 'Y') {
+                $(this).combobox('selectDefault', session['LOGON.CTLOCID']);
+            }
+        },
+        onSelect: function () {}
+    });
+    PHA.ComboBox('conWardLoc', {
+        url: PHA_STORE.CTLoc().url
+    });
+    PHA.ComboBox('conReqType', {
+        url: PHAIP_STORE.PHAIPReqType().url,
+        panelHeight: 'auto'
+    });
+    PHA.ComboBox('conReqStatus', {
+        url: PHA_STORE.ComDictionaryAsCode('InPhReqStatus').url,
+        panelHeight: 'auto'
+    });
+    PHA.ComboBox('conBoxStatus', {
+        url: PHA_STORE.ComDictionaryAsCode('BoxStatus').url,
+        panelHeight: 'auto'
+    });
+}
+function InitGridPhReq() {
+    var columns = [
+        [
+            {
+                field: 'phr',
+                title: '领药单ID',
+                width: 100,
+                hidden: true
+            },
+            {
+                field: 'reqNo',
+                title: '领药单号',
+                width: 150
+            },
+            {
+                field: 'wardLocDesc',
+                title: '病区',
+                width: 150
+            },
+            {
+                field: 'locDesc',
+                title: '药房',
+                width: 150,
+                hidden: true
+            },
+            {
+                field: 'reqUserName',
+                title: '申请人',
+                width: 100
+            },
+            {
+                field: 'reqDateTime',
+                title: '申请时间',
+                width: 155
+            },
+            {
+                field: 'reqTypeDesc',
+                title: '类型',
+                width: 65
+            },
+            {
+                field: 'reqStatusDesc',
+                title: '请领状态',
+                width: 100
+            },
+            {
+                field: 'drawNo',
+                title: '备药单号',
+                width: 150
+            },
+            {
+                field: 'cancelUserName',
+                title: '撤消人',
+                width: 100
+            },
+            {
+                field: 'cancelDateTime',
+                title: '撤消时间',
+                width: 155
+            },
+            {
+                field: 'connectNo',
+                title: '固化单号',
+                width: 150
+            },
+            {
+                field: 'alertDrawUserName',
+                title: '提醒药房备药人',
+                width: 120
+            },
+            {
+                field: 'alertDrawDateTime',
+                title: '提醒药房备药时间',
+                width: 155
+            },
+            {
+                field: 'boxStatusDesc',
+                title: '物流箱状态',
+                width: 155
+            }
+        ]
+    ];
+    var dataGridOption = {
+        url: '',
+        pagination: true,
+        columns: columns,
+        fitColumns: false,
+        onSelect: function () {
+            QueryItm();
+        }
+    };
+    PHA.Grid('gridPhReq', dataGridOption);
+}
+
+function InitGridPhReqItm() {
+    var columns = [
+        [
+            {
+                field: 'phrItmID',
+                title: '领药子表ID',
+                width: 155,
+                hidden: true
+            },
+            {
+                field: 'inciCode',
+                title: '药品代码',
+                width: 150
+            },
+            {
+                field: 'inciDesc',
+                title: '药品名称',
+                width: 350
+            },
+            {
+                field: 'qty',
+                title: '数量',
+                width: 50
+            },
+            {
+                field: 'bUomDesc',
+                title: '单位',
+                width: 50
+            },
+            {
+                field: 'statusDesc',
+                title: '状态',
+                width: 100
+            },
+            {
+                field: 'cancelUserName',
+                title: '撤消人',
+                width: 100
+            },
+            {
+                field: 'cancelDateTime',
+                title: '撤消时间',
+                width: 155
+            },
+            {
+                field: 'bedNo',
+                title: '床号',
+                width: 100
+            },
+            {
+                field: 'patNo',
+                title: '登记号',
+                width: 100
+            },
+            {
+                field: 'patName',
+                title: '姓名',
+                width: 100
+            }
+        ]
+    ];
+    var dataGridOption = {
+        url: '',
+        pagination: false,
+        columns: columns
+    };
+    PHA.Grid('gridPhReqItm', dataGridOption);
+}
+
+function Query() {
+    $('#gridPhReqItm').datagrid('clear');
+    var pJson = GetQueryParamsJson();
+    if (pJson.loc === '') {
+        PHA.Popover({
+            msg: '请选择药房',
+            type: 'alert'
+        });
+        return;
+    }
+
+    $('#gridPhReq').datagrid('options').url = $URL;
+    $('#gridPhReq').datagrid('query', {
+        ClassName: 'PHA.IP.PhReq.Query',
+        QueryName: 'InPhReq',
+        pJsonStr: JSON.stringify(pJson),
+        rows: 999
+    });
+}
+
+function QueryItm() {
+    var gridSel = $('#gridPhReq').datagrid('getSelected');
+    if (gridSel === null) {
+        $('#gridPhReqItm').datagrid('clear');
+    }
+    var pJson = {
+        phr: gridSel.phr
+    };
+    $('#gridPhReqItm').datagrid('options').url = $URL;
+    $('#gridPhReqItm').datagrid('query', {
+        ClassName: 'PHA.IP.PhReq.Query',
+        QueryName: 'InPhReqItm',
+        pJsonStr: JSON.stringify(pJson)
+    });
+}
+
+function GetQueryParamsJson() {
+    var phb = '';
+    var gridSel = $('#gridPhReq').datagrid('getSelected');
+    if (gridSel != null) {
+        phb = gridSel.phb;
+    }
+    return {
+        loc: $('#conPhaLoc').combobox('getValue') || '',
+        wardLoc: $('#conWardLoc').combobox('getValue') || '',
+        startDate: $('#conStartDate').datebox('getValue') || '',
+        endDate: $('#conEndDate').datebox('getValue') || '',
+        startTime: $('#conStartTime').timespinner('getValue') || '',
+        endTime: $('#conEndTime').timespinner('getValue') || '',
+        reqType: $('#conReqType').combobox('getValue') || '',
+        reqStatus: $('#conReqStatus').combobox('getValue') || '',
+        boxStatus: $('#conBoxStatus').combobox('getValue') || '',
+        reqNo: $('#conReqNo').val().trim() || '',
+        drawNo: $('#conDrawNo').val().trim() || '',
+        connectNo: $('#conConnectNo').val().trim() || '',
+        patNo: $('#conPatNo').val().trim() || ''
+    };
+}
+]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/rep.ordmonitor.js" application="/imedical/web/" default="1"><![CDATA[
+/**
+ * 模块: 	 配液中心配液医嘱审核统计
+ * 编写日期: 2018-04-03
+ * 编写人:   yunhaibao
+ */
+
+$(function () {
+    InitDict();
+    $('#btnFind').on('click', Find);
+});
+
+function InitDict() {
+    var conWidth = 253;
+    $('#conStartDate,#conEndDate').datebox('setValue', 't');
+    PHA.ComboBox('conPhaLoc', {
+        url: PHA_STORE.Pharmacy('IP').url,
+        panelHeight: 'auto',
+        width: conWidth,
+        onLoadSuccess: function (data) {
+            $(this).combobox('selectDefault', session['LOGON.CTLOCID']);
+        },
+        onSelect: function () {}
+    });
+    PHA.ComboBox('conWardLoc', {
+        width: conWidth,
+        url: PHA_STORE.WardLoc().url
+    });
+    PHA.ComboBox('conDocLoc', {
+        width: conWidth,
+        url: PHA_STORE.DocLoc().url
+    });
+    PHA.ComboBox('conPassStat', {
+        data: [
+            { RowId: 1, Description: '通过' },
+            { RowId: 2, Description: '拒绝' },
+            { RowId: 3, Description: '接受' }
+        ],
+        panelHeight: 'auto',
+        width: conWidth,
+        onSelect: function () {}
+    });
+    PHA.ComboBox('conUser', {
+        width: conWidth,
+        url: PHA_STORE.SSUser().url
+    });
+    // 审核状态
+    // 是药品
+    var opts = $.extend({}, PHA_STORE.INCItm('Y'), {
+        width: 253
+    });
+    PHA.LookUp('conInci', opts);
+}
+function Find() {
+    var curTabOpts = $('#tabsReport').tabs('getSelected').panel('options');
+    var groupType = curTabOpts.groupType;
+    var pJson = GetParamsJson();
+    var pJsonStr = JSON.stringify(pJson);
+    var raqName = 'PHA_IP_OrdMonitor_Group.rpx';
+    if (groupType === 'REASON') {
+        raqName = 'PHA_IP_OrdMonitor_Reason.rpx';
+    }
+    if (groupType === 'ORDER') {
+        raqName = 'PHA_IP_OrdMonitor_Order.rpx';
+    }
+    var raqUrl = 'dhccpmrunqianreport.csp?reportName=' + raqName + '&pJsonStr=' + pJsonStr + '&groupType=' + groupType;
+    $('[groupType=' + groupType + ']').attr('src', raqUrl);
+}
+function GetParamsJson() {
+    return {
+        loc: $('#conPhaLoc').combobox('getValue') || '',
+        startDate: $('#conStartDate').datebox('getValue') || '',
+        endDate: $('#conEndDate').datebox('getValue') || '',
+        startTime: $('#conStartTime').timespinner('getValue') || '',
+        endTime: $('#conEndTime').timespinner('getValue') || '',
+        passStat: $('#conPassStat').combobox('getValue') || '',
+        wardLoc: $('#conWardLoc').combobox('getValue') || '',
+        docLoc: $('#conDocLoc').combobox('getValue') || '',
+        user: $('#conUser').combobox('getValue') || '',
+        inci: $('#conInci').lookup('getValue') || '',
+        reasonDesc: $('#conReason').val() || ''
+    };
+}
+]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/reqboard.js" application="/imedical/web/" default="1"><![CDATA[
+var PHA_IP_REQBOARD = {
+    Params: $.cm(
+        {
+            ClassName: 'PHA.IP.ReqBoard.Query',
+            MethodName: 'GetAppParams',
+            loc: session['LOGON.CTLOCID']
+        },
+        false
+    ),
+    PHAIPReqType: $.cm(
+        {
+            ClassName: 'PHA.IP.ReqBoard.Query',
+            QueryName: 'PHAIPReqType'
+        },
+        false
+    ),
+    Dialog: {
+        width: $(window).width() * 0.85,
+        height: $(window).height() * 0.85
+    }
+};
+$(function () {
+    InitPageNav();
+    InitWardPage();
+    InitGridPhReqItm();
+    InitDialogStyle();
+    InitGridPhReq();
+
+    $('.pha-mob-ward').on('click', function (e) {
+        $('.pha-mob-ward').removeClass('pha-ward-select');
+        $(e.target).closest('.pha-mob-ward').addClass('pha-ward-select');
+        var wardLocTarget = $(e.target).closest('.pha-mob-ward');
+        ShowDiagPhReq();
+    });
+    var startDate = PHA_UTIL.GetDate('t-10');
+    $('#conStartDate').datebox('setValue', startDate);
+    $('#conEndDate').datebox('setValue', 't');
+    $('#btnFindPhReq').on('click', QueryPhReq);
+    $('#btnConnectPhReq').on('click', ConnectPhReq);
+    // $('#conStartPrev').on('click',function(){
+    // 日期前后选择
+    // })
+    // 定时刷新
+    var intervalSeconds = PHA_IP_REQBOARD.Params.refreshTime;
+    setInterval(function () {
+        var diagShow = $('#diagPhReq').parent().css('display');
+        if (diagShow === 'none') {
+            Query();
+        }
+    }, intervalSeconds);
+    Query();
+    RefreshTime();
+});
+function RefreshTime() {
+    setInterval(function () {
+        var curNow = new Date();
+        var week;
+        switch (curNow.getDay()) {
+            case 1:
+                week = '星期一';
+                break;
+            case 2:
+                week = '星期二';
+                break;
+            case 3:
+                week = '星期三';
+                break;
+            case 4:
+                week = '星期四';
+                break;
+            case 5:
+                week = '星期五';
+                break;
+            case 6:
+                week = '星期六';
+                break;
+            default:
+                week = '星期日';
+        }
+        var years = curNow.getFullYear();
+        var month = PadZero(curNow.getMonth() + 1);
+        var days = PadZero(curNow.getDate());
+        var hours = PadZero(curNow.getHours());
+        var minutes = PadZero(curNow.getMinutes());
+        var seconds = PadZero(curNow.getSeconds());
+        var ndate = $.fn.datebox.defaults.formatter(new Date());
+        $('#clockTime').html(hours + ':' + minutes + ':' + seconds + '   ' + week);
+        $('#clockDate').html(ndate);
+    }, 1000);
+
+    function PadZero(num) {
+        if (num < 10) {
+            return '0' + num;
+        }
+        return num;
+    }
+}
+
+// 根据定位绘制
+function MakeWardBody(wardJson) {
+    var colNum = PHA_IP_REQBOARD.Params.wardSeatTblCol; // 田字格占几列
+    var prtJson = PHA_IP_REQBOARD.PHAIPReqType;
+    var cellCnt = prtJson.total;
+    var prtRows = prtJson.rows;
+    // 构建table行列
+    var tblHtml = '';
+    var cellTR = '';
+    var cnt = 0;
+    for (var i = 0; i < cellCnt; i++) {
+        cnt++;
+        var rem = cnt % colNum; // 余数0就该换行了
+        var prtDesc = prtRows[i].prtDesc;
+        var prtID = 'prt-' + prtRows[i].prt;
+        var cellTD = '';
+        cellTD += '<td>';
+        cellTD += '    <div class="pha-ward-cell">';
+        cellTD += '        <div id=' + prtID + '>' + '<span style="visibility:hidden">空<span>' + '</div>';
+        cellTD += '    </div>';
+        cellTD += '</td>';
+        cellTR += cellTD;
+        if (rem === 0 || cnt === cellCnt) {
+            tblHtml += '<tr>' + cellTR + '</tr>';
+            cellTR = '';
+        }
+    }
+
+    var wardBodyHtml = '';
+    wardBodyHtml += '<div class="pha-mob-ward" id="wardLoc-' + wardJson.wardLoc + '">';
+    wardBodyHtml += '    <div class="ward-title" style="overflow:hidden;height:25px;">';
+    wardBodyHtml += '       ' + wardJson.wardLocDesc;
+    wardBodyHtml += '    </div>';
+    wardBodyHtml += '    <table cellspacing=0 cellpadding=0>';
+    wardBodyHtml += tblHtml;
+    wardBodyHtml += '    </table>';
+    wardBodyHtml += '</div>';
+
+    return wardBodyHtml;
+}
+
+// 按行列初始化位置
+function InitWardPage() {
+    var pJson = {
+        loc: session['LOGON.CTLOCID']
+    };
+    var wardMapJson = $.cm(
+        {
+            ClassName: 'PHA.IP.ReqBoard.Query',
+            QueryName: 'WardLocBoard',
+            pJsonStr: JSON.stringify(pJson)
+        },
+        false
+    );
+    if (wardMapJson.total === 0) {
+        PHA.Popover({
+            msg: '尚未配置需送药病区,请先配置',
+            type: 'alert'
+        });
+        return;
+    }
+    var colNum = PHA_IP_REQBOARD.Params.wardSeatCol;
+    var wardRows = wardMapJson.rows;
+    var cnt = 0;
+    var len = wardRows.length;
+    var wardHtml = '<table>';
+    var wardTR = '';
+    for (var i = 0; i < len; i++) {
+        cnt++;
+        var rem = cnt % colNum;
+        var wardTD = MakeWardBody(wardRows[i]);
+        wardTD = '<td style="width:10%">' + wardTD + '</td>';
+        wardTR += wardTD;
+        if (rem === 0 || cnt === len) {
+            wardHtml += '<tr>' + wardTR + '</tr>';
+            wardTR = '';
+        }
+    }
+    wardHtml += '</table>';
+    $('#tblWard').append(wardHtml);
+}
+
+function Query() {
+    var pJson = {
+        loc: session['LOGON.CTLOCID']
+    };
+    $.cm(
+        {
+            ClassName: 'PHA.IP.ReqBoard.Query',
+            MethodName: 'GetWardInPhReqRows',
+            pJsonStr: JSON.stringify(pJson)
+        },
+        function (data) {
+            // 效率啥的无所谓,这点数据不用考虑了,虽然还能优化
+            $('.ward-title').removeClass('ward-title-notify');
+            $('.pha-ward-cell div').html('<span style="visibility:hidden">空<span>');
+            data.forEach(function (wardJson) {
+                var wardLoc = wardJson.wardLoc;
+                var prt = wardJson.prt;
+                var prtDesc = wardJson.prtDesc;
+                var prtCnt = wardJson.prtCnt;
+                var prtColor = $('.pha-mob-tag-' + prt).css('background-color');
+                var prtDescHtml = '<div style="color:' + prtColor + '">' + prtCnt + '</div>';
+                $('#wardLoc-' + wardLoc + ' #prt-' + prt).html(prtDescHtml);
+                $('#wardLoc-' + wardLoc + ' .ward-title').addClass('ward-title-notify');
+            });
+        }
+    );
+}
+
+function InitPageNav() {
+    var prtJson = PHA_IP_REQBOARD.PHAIPReqType;
+    var cellCnt = prtJson.total;
+    var prtRows = prtJson.rows;
+    var navHtml = '';
+    for (var i = 0; i < prtRows.length; i++) {
+        var prtRowData = prtRows[i];
+        var prt = prtRowData.prt;
+        var divHtml = '<div class="pha-mob-tag pha-mob-tag-' + prt + '" style="color:white;background:' + prtRowData.prtColor + '">' + prtRowData.prtDesc + '</div>';
+        navHtml += divHtml;
+    }
+    navHtml += '<div class="pha-mob-tag" style="color:white;background:#46C6BD;margin-left:10px">通知备药</div>';
+    $('#navNotifyBar').html(navHtml);
+}
+
+// 按类别初始化多个表格
+function InitGridPhReq() {
+    var colOperate = {
+        field: 'phrOperate',
+        title: '查看',
+        width: 50,
+        align: 'center',
+        formatter: function (value, rowData, rowIndex) {
+            if (rowData.prtDesc || '' != '') {
+                return '<img title="查看明细" onclick="ShowDiagPhReqItm()" src="../scripts_lib/hisui-0.1.0/dist/css/icons/search.png" style="border:0px;cursor:pointer">';
+            }
+        }
+    };
+    var columns = [
+        [
+            {
+                field: 'phr',
+                title: 'phr',
+                width: 100,
+                hidden: true
+            },
+            {
+                field: 'itmChk',
+                checkbox: true
+            },
+            {
+                field: 'phrNo',
+                title: '单号',
+                width: 150,
+                sortable: false
+            },
+            {
+                field: 'prtDesc',
+                title: '类型',
+                width: 50,
+                hidden: true
+            }
+        ]
+    ];
+    var dataGridOption = {
+        checking: false,
+        pagination: false,
+        columns: columns,
+        fitColumns: true,
+        border: true,
+        singleSelect: false,
+        headerCls: 'panel-header-gray',
+        bodyCls: 'panel-body-gray',
+        title: '',
+        showFooter: true
+    };
+
+    // 遍历类型
+    var prtJson = PHA_IP_REQBOARD.PHAIPReqType;
+    var cellCnt = prtJson.total;
+    var prtRows = prtJson.rows;
+    // 计算宽度,注意边距10px
+    var phreqOpts = $('#diagPhReq').dialog('options');
+    var phreqWidth = parseInt(phreqOpts.width);
+    var phreqHeight = parseInt(phreqOpts.height) - 140;
+    var oneWidth = parseInt((phreqWidth - 50) / 4); // 按一屏四个显示,多了后排
+    var containerWidth = parseInt((oneWidth + 10) * cellCnt + 10) - 1;
+    var gridHtml = '';
+    prtRows.forEach(function (prtRowData) {
+        var prt = prtRowData.prt;
+        var gridID = 'gridPhReq-' + prt;
+        var divHtml = '<div class="pha-ward-fix" style="width:' + oneWidth + 'px;height:' + phreqHeight + 'px;"><table id="' + gridID + '"></table></div>';
+        gridHtml += divHtml;
+    });
+    $('#containerPhReq').css('width', containerWidth);
+    $('#containerPhReq').append(gridHtml);
+    var gridOpts = JSON.stringify(dataGridOption);
+    prtRows.forEach(function (prtRowData) {
+        var prt = prtRowData.prt;
+        var gridID = 'gridPhReq-' + prt;
+        var dataOptions = JSON.parse(gridOpts);
+        var prtColor = $('.pha-mob-tag-' + prt).css('background-color');
+        dataOptions.title = '<div style="color:' + prtColor + ';font-weight:bold">' + prtRowData.prtDesc + '</div>';
+        dataOptions.columns[0].push(colOperate);
+        dataOptions.onLoadSuccess = function () {
+            $('#' + gridID).datagrid('clearChecked');
+        };
+        dataOptions.loadFilter = function (data) {
+            data.footer = [
+                {
+                    phrNo: '<div>记录数' + '<span style="padding-left:10px">' + data.total + '</span></div>'
+                }
+            ];
+            return data;
+        };
+        PHA.Grid(gridID, dataOptions);
+    });
+}
+function InitGridPhReqItm() {
+    var columns = [
+        [
+            {
+                field: 'inciDesc',
+                title: '药品名称',
+                width: 300
+            },
+
+            {
+                field: 'qtyUom',
+                title: '请领数量',
+                width: 75
+            },
+            {
+                field: 'patNo',
+                title: '登记号',
+                width: 100
+            },
+            {
+                field: 'patName',
+                title: '姓名',
+                width: 100
+            },
+            {
+                field: 'bedNo',
+                title: '床号',
+                width: 100
+            },
+            {
+                field: 'doseDateTime',
+                title: '用药时间',
+                width: 150
+            },
+            {
+                field: 'prescNo',
+                title: '处方号',
+                width: 125
+            }
+        ]
+    ];
+    var dataGridOption = {
+        pagination: false,
+        columns: columns,
+        fitColumns: false,
+        border: true,
+        headerCls: 'panel-header-gray',
+        bodyCls: 'panel-body-gray',
+        toolbar: '',
+        onClickRow: function (rowIndex, rowData) {}
+    };
+    PHA.Grid('gridPhReqItm', dataGridOption);
+}
+function InitDialogStyle() {
+    $('#diagPhReq').dialog({
+        width: $(window).width() * 0.85,
+        height: $(window).height() * 0.85,
+        title: '固化请领单'
+    });
+    // $('#diagPhReqItm')
+    //     .dialog({
+    //         width: $(window).width() * 0.75,
+    //         height: $(window).height() * 0.75,
+    //         title: '请领单明细'
+    //     })
+    //     .dialog('open');
+}
+function ShowDiagPhReqItm() {
+    var $target = $(event.target);
+    var phr = $target.closest('tr[datagrid-row-index]').find('[field="phr"]').text();
+    $('#diagPhReqItm')
+        .dialog({
+            width: $(window).width() * 0.75,
+            height: $(window).height() * 0.75,
+            title: '请领单明细'
+        })
+        .dialog('open');
+
+    var $grid = $('#gridPhReqItm');
+    var pJson = {
+        phr: phr
+    };
+    $grid.datagrid('options').url = $URL;
+    $grid.datagrid('query', {
+        ClassName: 'PHA.IP.ReqBoard.Query',
+        QueryName: 'InPhReqItm',
+        rows: 9999,
+        pJsonStr: JSON.stringify(pJson)
+    });
+}
+function ShowDiagPhReq() {
+    QueryPhReq();
+    var wardLocSel = $('.pha-ward-select');
+    var wardLocDesc = wardLocSel.find('.ward-title').text();
+    $('#diagPhReq')
+        .dialog({
+            title: '固化请领单 - ' + wardLocDesc
+        })
+        .dialog('open');
+}
+
+function QueryPhReq() {
+    var startDate = $('#conStartDate').datebox('getValue');
+    var endDate = $('#conEndDate').datebox('getValue');
+    var wardLocSel = $('.pha-ward-select');
+    var wardLocID = wardLocSel.attr('id');
+    $('[id^=gridPhReq-]').each(function (index, data) {
+        var gridID = data.id;
+        var $grid = $('#' + gridID);
+        var pJson = {
+            prt: gridID.split('-')[1],
+            startDate: startDate,
+            endDate: endDate,
+            loc: session['LOGON.CTLOCID'],
+            wardLoc: wardLocID.split('-')[1]
+        };
+
+        $grid.datagrid('options').url = $URL;
+        $grid.datagrid('query', {
+            ClassName: 'PHA.IP.ReqBoard.Query',
+            QueryName: 'InPhReq',
+            rows: 9999,
+            pJsonStr: JSON.stringify(pJson)
+        });
+    });
+}
+
+// 固化请领单
+function ConnectPhReq() {
+    var phrStrArr = [];
+    $('[id^=gridPhReq-]').each(function (index, data) {
+        var gridID = data.id;
+        var $grid = $('#' + gridID);
+        var gridChecked = $grid.datagrid('getChecked');
+        if (gridChecked === '') {
+            return;
+        }
+        var phrArr = [];
+        for (var i = 0; i < gridChecked.length; i++) {
+            var phr = gridChecked[i].phr;
+            phrArr.push(phr);
+        }
+        var phrStr = phrArr.join('^');
+        if (phrArr != '') {
+            phrStrArr.push(phrStr);
+        }
+    });
+    var phrStrArrStr = JSON.stringify(phrStrArr);
+    if (phrStrArrStr === '[]') {
+        PHA.Popover({
+            msg: '请先选择需要固化的请领单',
+            type: 'alert'
+        });
+        return;
+    }
+    var retJson = $.cm(
+        {
+            ClassName: 'PHA.IP.Data.Api',
+            MethodName: 'HandleInAll',
+            pClassName: 'PHA.IP.ReqBoard.Save',
+            pMethodName: 'UpdateMultiHandler',
+            pJsonStr: phrStrArrStr
+        },
+        false
+    );
+    if (retJson.success === 'N') {
+        var msg = PHAIP_COM.DataApi.Msg(retJson);
+        PHA.Alert('提示', msg, 'warning');
+    } else {
+        if (retJson.data != '') {
+            // 打印固化单去吧
+            PHA.Alert('需要打印固化单,没做呢', retJson.data, 'warning');
+        }
+        QueryPhReq();
+    }
+}
+]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/reqtype.js" application="/imedical/web/" default="1"><![CDATA[
+/**
+ * 名称:	 住院移动药房-请领类型维护
+ * 编写人:	 yunhaibao
+ * 编写日期: 2020-4-03
+ */
+var GRID_PRTTYPE;
+$(function () {
+    InitDict();
+    InitGridDict();
+    InitGridReqType();
+    InitGridDrugGroup();
+    $('#btnAdd').on('click', function () {
+        var loc = $('#conPhaLoc').combobox('getValue') || '';
+        if (loc === '') {
+            PHA.Popover({
+                msg: '请先选择药房',
+                type: 'alert'
+            });
+            return;
+        }
+        $('#gridReqType').datagrid('addNewRow', {
+            defaultRow: { loc: loc }
+        });
+        QueryDrugGroup();
+    });
+    $('#btnSave').on('click', Save);
+    $('#btnDelete').on('click', Delete);
+    $('#btnSaveItm').on('click', SaveItm);
+    $('#btnFind').on('click', QueryReqType);
+
+    QueryDrugGroup();
+});
+
+function InitDict() {
+    PHA.ComboBox('conPhaLoc', {
+        url: PHA_STORE.Pharmacy('IP').url,
+        width: 223,
+        editable: false,
+        panelHeight: 'auto',
+        onLoadSuccess: function (data) {
+            $(this).combobox('selectDefault', session['LOGON.CTLOCID']);
+        },
+        onSelect: function () {
+            QueryReqType();
+        }
+    });
+}
+function InitGridDict() {
+    GRID_PRTTYPE = PHA.EditGrid.ComboBox({
+        required: true,
+        tipPosition: 'top',
+        url: PHA_STORE.ComDictionaryAsCode('IPReqType').url,
+        panelHeight: 'auto',
+        editable: false
+    });
+}
+
+function InitGridReqType() {
+    var columns = [
+        [
+            {
+                field: 'prt',
+                title: 'prt',
+                width: 100,
+                hidden: true
+            },
+            {
+                field: 'prtDesc',
+                title: '名称',
+                width: 150,
+                editor: {
+                    type: 'validatebox',
+                    options: {
+                        required: true
+                    }
+                }
+            },
+            {
+                field: 'prtTypeDesc',
+                title: '名称描述',
+                width: 150,
+                hidden: true
+            },
+            {
+                field: 'prtType',
+                title: '类型',
+                width: 150,
+                editor: GRID_PRTTYPE,
+                descField: 'prtTypeDesc',
+                formatter: function (value, row, index) {
+                    return row.prtTypeDesc;
+                }
+            },
+            {
+                field: 'prtColor',
+                title: '背景色',
+                width: 100,
+                editor: {
+                    type: 'validatebox',
+                    options: {
+                        required: false
+                    }
+                }
+            },
+            {
+                field: 'colorPre',
+                title: '预览',
+                width: 60,
+                styler: function (value, rowData) {
+                    var prtColor = rowData.prtColor || '';
+                    if (prtColor !== '') {
+                        return 'background-color:' + prtColor;
+                    }
+                }
+            },
+            {
+                field: 'loc',
+                title: 'loc',
+                width: 150,
+                hidden: true
+            }
+        ]
+    ];
+    var dataGridOption = {
+        pagination: false,
+        columns: columns,
+        fitColumns: true,
+        toolbar: '#gridReqTypeBar',
+        onClickRow: function (rowIndex, rowData) {
+            $(this).datagrid('endEditing');
+            if ($(this).datagrid('options').editIndex == undefined) {
+                QueryDrugGroup();
+            }
+        },
+        onDblClickRow: function (rowIndex, rowData) {
+            $(this).datagrid('beginEditRow', {
+                rowIndex: rowIndex,
+                editField: 'prtDesc'
+            });
+        }
+    };
+    PHA.Grid('gridReqType', dataGridOption);
+}
+function InitGridDrugGroup() {
+    var columns = [
+        [
+            {
+                field: 'prti',
+                title: 'prti',
+                width: 100,
+                hidden: true
+            },
+            {
+                field: 'itmChk',
+                checkbox: true
+            },
+            {
+                field: 'sdg',
+                title: 'sdg',
+                width: 300,
+                hidden: true
+            },
+            {
+                field: 'sdgCode',
+                title: '代码',
+                width: 100
+            },
+            {
+                field: 'sdgDesc',
+                title: '名称',
+                width: 300
+            },
+            {
+                field: 'otherPrtDesc',
+                title: 'otherPrtDesc',
+                width: 300,
+                hidden: true
+            }
+        ]
+    ];
+    var dataGridOption = {
+        pagination: false,
+        columns: columns,
+        fitColumns: true,
+        toolbar: '#gridDrugGroupBar',
+        singleSelect: false,
+        onCheck: function (rowIndex, rowData) {
+            if (rowData.otherPrtDesc != '') {
+                $(this).datagrid('uncheckRow', rowIndex);
+                PHA.Popover({
+                    msg: rowData.sdgDesc + ' 已关联 ' + rowData.otherPrtDesc,
+                    type: 'alert'
+                });
+            }
+        },
+        onSelect: function (rowIndex, rowData) {
+            if (rowData.otherPrtDesc != '') {
+                $(this).datagrid('unselectRow', rowIndex);
+                PHA.Popover({
+                    msg: rowData.sdgDesc + ' 已关联 ' + rowData.otherPrtDesc,
+                    type: 'alert'
+                });
+            }
+        },
+        onLoadSuccess: function (data) {
+            $(this).datagrid('uncheckAll');
+            var row0Data = data.rows[0];
+            if (row0Data) {
+                var rows = $(this).datagrid('getRows');
+                var rowsLen = rows.length;
+                for (var index = rowsLen - 1; index >= 0; index--) {
+                    var rowData = rows[index];
+                    var prti = rowData.prti;
+                    if (prti != '') {
+                        $(this).datagrid('checkRow', index);
+                    }
+                }
+            }
+        }
+    };
+    PHA.Grid('gridDrugGroup', dataGridOption);
+}
+
+function Delete() {
+    var gridSelect = $('#gridReqType').datagrid('getSelected') || '';
+    if (gridSelect === '') {
+        PHA.Popover({
+            msg: '请先选中需要删除的记录',
+            type: 'alert',
+            timeout: 1000
+        });
+        return;
+    }
+    PHA.ConfirmPrompt('删除提示', '您正在操作 <span style="color:red;font-weight:bold">删除</span>', function () {
+        var rowID = gridSelect.prt || '';
+        var rowIndex = $('#gridReqType').datagrid('getRowIndex', gridSelect);
+        if (rowID != '') {
+            var dataArr = [];
+            dataArr.push(rowID);
+
+            var retJson = $.cm(
+                {
+                    ClassName: 'PHA.IP.Data.Api',
+                    MethodName: 'HandleInAll',
+                    pClassName: 'PHA.IP.ReqType.Save',
+                    pMethodName: 'Delete',
+                    pJsonStr: JSON.stringify(dataArr)
+                },
+                false
+            );
+            if (retJson.success === 'false') {
+                PHA.Alert('提示', retJson.message, 'warning');
+            }
+        }
+        $('#gridReqType').datagrid('deleteRow', rowIndex);
+        QueryDrugGroup();
+    });
+}
+function Save() {
+    var $gridReqType = $('#gridReqType');
+    if ($gridReqType.datagrid('endEditing') === false) {
+        PHA.Popover({
+            msg: '请先完成必填项数据',
+            type: 'alert'
+        });
+        return;
+    }
+    var gridChanges = $gridReqType.datagrid('getChanges');
+    var gridChangeLen = gridChanges.length;
+    if (gridChangeLen == 0) {
+        PHA.Popover({
+            msg: '没有需要保存的数据',
+            type: 'alert'
+        });
+        return;
+    }
+
+    var repeatObj = $gridReqType.datagrid('checkRepeat', [['prtDesc']]);
+    if (typeof repeatObj.pos === 'number') {
+        PHA.Popover({
+            msg: '第' + (repeatObj.pos + 1) + '、' + (repeatObj.repeatPos + 1) + '行:' + repeatObj.titleArr.join('、') + '重复',
+            type: 'alert'
+        });
+        return;
+    }
+
+    var dataArr = [];
+    for (var i = 0; i < gridChangeLen; i++) {
+        var iData = gridChanges[i];
+        if ($gridReqType.datagrid('getRowIndex', iData) < 0) {
+            continue;
+        }
+        var iJson = {
+            prt: iData.prt,
+            prtDesc: iData.prtDesc,
+            prtType: iData.prtType,
+            prtColor: iData.prtColor,
+            loc: iData.loc
+        };
+        dataArr.push(iJson);
+    }
+    var retJson = $.cm(
+        {
+            ClassName: 'PHA.IP.Data.Api',
+            MethodName: 'HandleInAll',
+            pClassName: 'PHA.IP.ReqType.Save',
+            pMethodName: 'SaveHandler',
+            pJsonStr: JSON.stringify(dataArr)
+        },
+        false
+    );
+    if (retJson.success === 'N') {
+        var msg = PHAIP_COM.DataApi.Msg(retJson);
+        PHA.Alert('提示', msg, 'warning');
+    } else {
+        $gridReqType.datagrid('reload');
+    }
+}
+
+function SaveItm() {
+    var $gridReqType = $('#gridReqType');
+    var gridReqTypeSelect = $gridReqType.datagrid('getSelected');
+    if (gridReqTypeSelect === null) {
+        PHA.Popover({
+            msg: '请先选择请领类型',
+            type: 'alert'
+        });
+        return;
+    }
+    var prt = gridReqTypeSelect.prt || '';
+    if (prt === '') {
+        PHA.Popover({
+            msg: '请先保存您选择请领类型',
+            type: 'alert'
+        });
+        return;
+    }
+    var $gridDrugGroup = $('#gridDrugGroup');
+    var gridRows = $gridDrugGroup.datagrid('getRows');
+    var gridChecked = $gridDrugGroup.datagrid('getChecked');
+    var dataArr = [];
+    for (var i = 0; i < gridRows.length; i++) {
+        var chkFlag = '';
+        var rowData = gridRows[i];
+        if (gridChecked.indexOf(rowData) >= 0) {
+            chkFlag = 'Y';
+        } else {
+            chkFlag = 'N';
+        }
+        var iJson = {
+            prt: prt,
+            prti: rowData.prti || '',
+            sdg: rowData.sdg || '',
+            chkFlag: chkFlag
+        };
+        dataArr.push(iJson);
+    }
+    var retJson = $.cm(
+        {
+            ClassName: 'PHA.IP.Data.Api',
+            MethodName: 'HandleInAll',
+            pClassName: 'PHA.IP.ReqType.Save',
+            pMethodName: 'SaveItmHandler',
+            pJsonStr: JSON.stringify(dataArr)
+        },
+        false
+    );
+    if (retJson.success === 'N') {
+        PHA.Alert('提示', PHAIP_COM.DataApi.Msg(retJson), 'warning');
+    }
+    $gridDrugGroup.datagrid('reload');
+}
+
+function QueryReqType() {
+    var loc = $('#conPhaLoc').combobox('getValue') || '';
+    if (loc === '') {
+        $('#gridReqType').datagrid('clear');
+        return;
+    }
+    var pJson = {
+        loc: loc
+    };
+    $('#gridReqType').datagrid('options').url = $URL;
+    $('#gridReqType').datagrid('query', {
+        ClassName: 'PHA.IP.ReqType.Query',
+        QueryName: 'PHAIPReqType',
+        rows: 9999,
+        pJsonStr: JSON.stringify(pJson)
+    });
+}
+
+function QueryDrugGroup() {
+    var gridSelect = $('#gridReqType').datagrid('getSelected');
+    var prt = '';
+    if (gridSelect != null) {
+        prt = gridSelect.prt || '';
+    }
+    var pJson = {
+        prt: prt,
+        hosp: session['LOGON.HOSPID']
+    };
+    $('#gridDrugGroup').datagrid('options').url = $URL;
+    $('#gridDrugGroup').datagrid('query', {
+        ClassName: 'PHA.IP.ReqType.Query',
+        QueryName: 'DHCStkDrugGroup',
+        rows: 9999,
+        pJsonStr: JSON.stringify(pJson)
+    });
+}
+]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/sendloc.js" application="/imedical/web/" default="1"><![CDATA[
+/**
+ * 名称:	 住院移动药房-送药科室维护
+ * 编写人:	 yunhaibao
+ * 编写日期: 2020-03-14
+ */
+
+$(function () {
+    InitDict();
+    InitGridWardLoc();
+    InitGridSendLoc();
+    PHA.SearchBox('conWardAlias', {
+        width: 265,
+        searcher: QueryWardLoc,
+        placeholder: '请输入简拼或名称回车查询...'
+    });
+    $('#btnFind').on('click', function () {
+        QuerySendLoc();
+    });
+    $('#btnSave').on('click', Save);
+    $('#btnDelete').on('click', Delete);
+    QueryWardLoc();
+});
+function InitDict() {
+    PHA.ComboBox('conPhaLoc', {
+        url: PHA_STORE.Pharmacy('IP').url,
+        width: 192,
+        editable: false,
+        panelHeight: 'auto',
+        onLoadSuccess: function (data) {
+            $(this).combobox('selectDefault', session['LOGON.CTLOCID']);
+        },
+        onSelect: function () {
+            QuerySendLoc();
+        }
+    });
+}
+function InitGridSendLoc() {
+    var columns = [
+        [
+            {
+                field: 'phsl',
+                title: 'phsl',
+                width: 100,
+                hidden: true
+            },
+            {
+                field: 'loc',
+                title: '药房',
+                width: 100,
+                hidden: true
+            },
+            {
+                field: 'wardLoc',
+                title: '病区',
+                width: 100,
+                hidden: true
+            },
+            {
+                field: 'wardLocDesc',
+                title: '病区',
+                width: 250
+            },
+            {
+                field: 'sendFlag',
+                title: '是否送药',
+                width: 100,
+                align: 'center',
+                editor: {
+                    type: 'icheckbox',
+                    options: {
+                        on: 'Y',
+                        off: 'N'
+                    }
+                },
+                formatter: function (value, row, index) {
+                    if (value == 'Y') {
+                        return PHA_COM.Fmt.Grid.Yes.Chinese;
+                    } else {
+                        return '';
+                    }
+                }
+            },
+            {
+                field: 'wardQue',
+                title: '显示序号',
+                width: 100,
+                editor: {
+                    type: 'numberbox',
+                    options: {
+                        required: false
+                    }
+                }
+            },
+            {
+                field: 'sendFreqDesc',
+                title: '送药频率名称',
+                width: 100,
+                editor: {
+                    type: 'validatebox',
+                    options: {
+                        required: false
+                    }
+                }
+            },
+
+            {
+                field: 'sendFreqFac',
+                title: '送药频率系数',
+                width: 100,
+                editor: {
+                    type: 'numberbox',
+                    options: {
+                        required: false
+                    }
+                }
+            },
+            {
+                field: 'sendFac',
+                title: '付数系数',
+                width: 100,
+                editor: {
+                    type: 'numberbox',
+                    options: {
+                        required: false
+                    }
+                }
+            }
+        ]
+    ];
+    var dataGridOption = {
+        url: $URL,
+        pagination: false,
+        columns: columns,
+        fitColumns: false,
+        rownumbers: true,
+        toolbar: '#gridSendLocBar',
+        onClickRow: function (rowIndex, rowData) {
+            $(this).datagrid('endEditing');
+            if ($(this).datagrid('options').editIndex == undefined) {
+            }
+        },
+        onDblClickRow: function (rowIndex, rowData) {
+            $(this).datagrid('beginEditRow', {
+                rowIndex: rowIndex
+            });
+        },
+        onLoadSuccess:function(){
+            QueryWardLoc();
+        }
+    };
+    PHA.Grid('gridSendLoc', dataGridOption);
+}
+function InitGridWardLoc() {
+    var columns = [
+        [
+            {
+                field: 'wardLoc',
+                title: '病区',
+                width: 200,
+                hidden: true
+            },
+            {
+                field: 'wardLocDesc',
+                title: '病区',
+                width: 100
+            },
+            {
+                field: 'wardOperate',
+                title: '操作',
+                width: 20,
+                align: 'center',
+                formatter: function (value, rowData, rowIndex) {
+                    return '<img title="加入到送药科室列表" onclick="AddToSendLoc()" src="../scripts_lib/hisui-0.1.0/dist/css/icons/add.png" style="border:0px;cursor:pointer">';
+                }
+            }
+        ]
+    ];
+    var dataGridOption = {
+        url: $URL,
+        pagination: false,
+        columns: columns,
+        fitColumns: true,
+        rownumbers: true,
+        toolbar: '#gridWardLocBar'
+    };
+    PHA.Grid('gridWardLoc', dataGridOption);
+}
+
+function AddToSendLoc() {
+    var loc = $('#conPhaLoc').combobox('getValue');
+    if (loc === '') {
+        PHA.Popover({
+            msg: '请先选择药房',
+            type: 'alert'
+        });
+        return;
+    }
+    var $target = $(event.target);
+    var rowIndex = $target.closest('tr[datagrid-row-index]').attr('datagrid-row-index');
+    var rowData = $('#gridWardLoc').datagrid('getRows')[rowIndex];
+    var sendLocData = {
+        wardLoc: rowData.wardLoc,
+        wardLocDesc: rowData.wardLocDesc,
+        loc: loc
+    };
+    $('#gridWardLoc').datagrid('deleteRow', rowIndex);
+    $('#gridSendLoc').datagrid('appendRow', sendLocData);
+    var rowLen = $('#gridSendLoc').datagrid('getRows').length;
+    $('#gridSendLoc').datagrid('beginEditRow', {
+        rowIndex: rowLen - 1
+    });
+
+    $('#gridWardLoc').datagrid('loadData', $('#gridWardLoc').datagrid('getRows'));
+}
+
+function QuerySendLoc() {
+    var loc = $('#conPhaLoc').combobox('getValue');
+    var pJson = {
+        loc: loc
+    };
+    $('#gridSendLoc').datagrid('query', {
+        ClassName: 'PHA.IP.SendLoc.Query',
+        QueryName: 'PHSendLoc',
+        rows: 9999,
+        pJsonStr: JSON.stringify(pJson)
+    });
+}
+
+function QueryWardLoc() {
+    var loc = $('#conPhaLoc').combobox('getValue');
+    var wardAlias = $('#conWardAlias').searchbox('getValue');
+    var wardLocArr = [];
+    var $gridSendLoc = $('#gridSendLoc');
+    var rows = $gridSendLoc.datagrid('getRows');
+    if (rows) {
+        for (var i = 0; i < rows.length; i++) {
+            var wardLoc = rows[i].wardLoc;
+            wardLocArr.push(wardLoc);
+        }
+    }
+
+    var pJson = {
+        wardAlias: wardAlias,
+        hosp: session['LOGON.HOSPID'],
+        loc: loc,
+        wardLocStr: wardLocArr.join(',')
+    };
+    $('#gridWardLoc').datagrid('query', {
+        ClassName: 'PHA.IP.SendLoc.Query',
+        QueryName: 'WardLoc',
+        rows: 9999,
+        pJsonStr: JSON.stringify(pJson)
+    });
+}
+
+function Delete() {
+    var $grid = $('#gridSendLoc');
+    var gridSelect = $grid.datagrid('getSelected') || '';
+    if (gridSelect === '') {
+        PHA.Popover({
+            msg: '请先选中需要删除的记录',
+            type: 'alert'
+        });
+        return;
+    }
+    PHA.Confirm('删除提示', '您正在操作 <span style="color:red;font-weight:bold">删除</span>', function () {
+        var rowID = gridSelect.phsl || '';
+        var rowIndex = $grid.datagrid('getRowIndex', gridSelect);
+        if (rowID != '') {
+            var dataArr = [];
+            dataArr.push(rowID);
+            var retJson = $.cm(
+                {
+                    ClassName: 'PHA.IP.Data.Api',
+                    MethodName: 'HandleInAll',
+                    pClassName: 'PHA.IP.SendLoc.Save',
+                    pMethodName: 'Delete',
+                    pJsonStr: JSON.stringify(dataArr)
+                },
+                false
+            );
+            if (retJson.success === 'false') {
+                PHA.Alert('提示', retJson.message, 'warning');
+            }
+        }
+        $grid.datagrid('deleteRow', rowIndex);
+        QueryWardLoc();
+    });
+}
+
+function Save() {
+    var $grid = $('#gridSendLoc');
+    if ($grid.datagrid('endEditing') === false) {
+        PHA.Popover({
+            msg: '请先完成必填项数据',
+            type: 'alert'
+        });
+        return;
+    }
+    var gridChanges = $grid.datagrid('getChanges');
+    var gridChangeLen = gridChanges.length;
+    if (gridChangeLen == 0) {
+        PHA.Popover({
+            msg: '没有需要保存的数据',
+            type: 'alert'
+        });
+        return;
+    }
+    var dataArr = [];
+    for (var i = 0; i < gridChangeLen; i++) {
+        var iData = gridChanges[i];
+        if ($grid.datagrid('getRowIndex', iData) < 0) {
+            continue;
+        }
+        var iJson = {
+            phsl: iData.phsl || '',
+            loc: iData.loc,
+            wardLoc: iData.wardLoc,
+            sendFlag: iData.sendFlag,
+            sendFreqDesc: iData.sendFreqDesc,
+            sendFreqFac: iData.sendFreqFac,
+            sendFac: iData.sendFac,
+            wardQue: iData.wardQue
+        };
+        dataArr.push(iJson);
+    }
+    var retJson = $.cm(
+        {
+            ClassName: 'PHA.IP.Data.Api',
+            MethodName: 'HandleInAll',
+            pClassName: 'PHA.IP.SendLoc.Save',
+            pMethodName: 'SaveHandler',
+            pJsonStr: JSON.stringify(dataArr)
+        },
+        false
+    );
+    if (retJson.success === 'N') {
+        var msg = PHAIP_COM.DataApi.Msg(retJson);
+        PHA.Alert('提示', msg, 'warning');
+    } else {
+        $grid.datagrid('reload');
+    }
+}
+]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/store.js" application="/imedical/web/" default="1"><![CDATA[
+/**
+ * 名称:	 住院药房公共-数据集集合
+ * 编写人:	 yunhaibao
+ * 编写日期: 2020-05-06
+ */
+
+var PHAIP_STORE = {
+    Url: $URL + '?ResultSetType=Array&',
+    RowUrl: $URL + '?ResultSetType=Array&',
+    // 领药类型
+    PHAIPReqType: function () {
+        return {
+            url: this.Url + 'ClassName=PHA.IP.COM.Store&QueryName=PHAIPReqType'
+        };
+    },
+    // 请领状态
+    InPhReqStatus: function () {
+        return {
+            url: this.Url + 'ClassName=PHA.IP.COM.Store&QueryName=InPhReqStatus'
+        };
+    },
+    // 物流箱状态
+    BoxStatus: function () {
+        return {
+            url: this.Url + 'ClassName=PHA.IP.COM.Store&QueryName=BoxStatus'
+        };
+    },
+    // 发药类别
+    StkDrugGroup: function () {
+        return {
+            url: this.Url + 'ClassName=PHA.IP.COM.Store&QueryName=StkDrugGroup'
+        };
+    }
+};
+]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/userward.js" application="/imedical/web/" default="1"><![CDATA[
+/**
+ * 名称:	 住院移动药房-用户关联病区
+ * 编写人:	 yunhaibao
+ * 编写日期: 2020-08-25
+ */
+
+$(function () {
+    InitGridWardLoc();
+    InitGridUser();
+    PHA.SearchBox('conUserAlias', {
+        width: 265,
+        searcher: QueryUser,
+        placeholder: '请输入别名回车查询...'
+    });
+    PHA.SearchBox('conWardAlias', {
+        width: 265,
+        searcher: QueryWardLoc,
+        placeholder: '请输入简拼或名称回车查询...'
+    });
+    $('#btnSave').on('click', Save);
+});
+function InitGridUser() {
+    var columns = [
+        [
+            {
+                field: 'user',
+                title: 'user',
+                width: 125,
+                hidden: true
+            },
+            {
+                field: 'userCode',
+                title: '人员工号',
+                width: 100
+            },
+            {
+                field: 'userName',
+                title: '人员姓名',
+                width: 100
+            }
+        ]
+    ];
+    var dataGridOption = {
+        url: $URL,
+        queryParams: {
+            ClassName: 'PHA.IP.UserWard.Query',
+            QueryName: 'SSUserData',
+            pJsonStr: JSON.stringify({ loc: session['LOGON.CTLOCID'] })
+        },
+        fitColumns: true,
+        toolbar: '#gridUserBar',
+        columns: columns,
+        pagination: false,
+        onClickRow: function (rowIndex, rowData) {
+            QueryWardLoc();
+        },
+        onLoadSuccess: function () {}
+    };
+    PHA.Grid('gridUser', dataGridOption);
+}
+
+function InitGridWardLoc() {
+    var columns = [
+        [
+            {
+                field: 'itmChk',
+                checkbox: true
+            },
+            {
+                field: 'wardLoc',
+                title: '病区',
+                width: 200,
+                hidden: true
+            },
+            {
+                field: 'wardLocDesc',
+                title: '病区',
+                width: 400
+            }
+        ]
+    ];
+    var dataGridOption = {
+        url: $URL,
+        pagination: false,
+        columns: columns,
+        fitColumns: false,
+        rownumbers: true,
+        singleSelect: false,
+        toolbar: '#gridWardLocBar',
+        onLoadSuccess: function (data) {
+            $(this).datagrid('uncheckAll');
+            var row0Data = data.rows[0];
+            if (row0Data) {
+                var rows = $(this).datagrid('getRows');
+                var rowsLen = rows.length;
+                for (var index = rowsLen - 1; index >= 0; index--) {
+                    var rowData = rows[index];
+                    var ipuw = rowData.ipuw;
+                    if (ipuw != '') {
+                        $(this).datagrid('checkRow', index);
+                    }
+                }
+            }
+        }
+    };
+    PHA.Grid('gridWardLoc', dataGridOption);
+}
+
+function QueryUser() {
+    var pJson = {
+        alias: $('#conUserAlias').searchbox('getValue'),
+        loc: session['LOGON.CTLOCID']
+    };
+    $('#gridUser').datagrid('query', {
+        rows: 9999,
+        pJsonStr: JSON.stringify(pJson)
+    });
+}
+function QueryWardLoc() {
+    var gridSelect = $('#gridUser').datagrid('getSelected');
+    if (gridSelect === null) {
+        $('#gridWardLoc').datagrid('clear');
+        return;
+    }
+    var pJson = {
+        alias: $('#conWardAlias').searchbox('getValue'),
+        loc: session['LOGON.CTLOCID'],
+        user: gridSelect.user
+    };
+    $('#gridWardLoc').datagrid('query', {
+        ClassName: 'PHA.IP.UserWard.Query',
+        QueryName: 'WardLocData',
+        rows: 9999,
+        pJsonStr: JSON.stringify(pJson)
+    });
+}
+
+function Save() {
+    var gridSelect = $('#gridUser').datagrid('getSelected');
+    if (gridSelect === null) {
+        PHA.Popover({
+            msg: '请先选中用户记录',
+            type: 'alert',
+            timeout: 1000
+        });
+        return;
+    }
+    var user = gridSelect.user;
+    var loc = session['LOGON.CTLOCID'];
+   
+    var $grid = $('#gridWardLoc');
+    var gridRows = $grid.datagrid('getRows');
+    var gridChecked = $grid.datagrid('getChecked');
+    var dataArr = [];
+    for (var i = 0; i < gridRows.length; i++) {
+        var chkFlag = '';
+        var rowData = gridRows[i];
+        if (gridChecked.indexOf(rowData) >= 0) {
+            chkFlag = 'Y';
+        } else {
+            chkFlag = 'N';
+        }
+	    var ipuw = rowData.ipuw;
+	    var wardLoc = rowData.wardLoc;
+	    var iJson = {
+            user: user,
+            loc: loc,
+            ipuw: ipuw,
+            wardLoc: wardLoc,
+            chkFlag: chkFlag
+        };
+        dataArr.push(iJson);
+    }
+    var retJson = $.cm(
+        {
+            ClassName: 'PHA.IP.Data.Api',
+            MethodName: 'HandleInAll',
+            pClassName: 'PHA.IP.UserWard.Save',
+            pMethodName: 'SaveHandler',
+            pJsonStr: JSON.stringify(dataArr)
+        },
+        false
+    );
+
+    if (retJson.success === 'N') {
+        PHA.Alert('提示', PHAIP_COM.DataApi.Msg(retJson), 'warning');
+    }
+    $grid.datagrid('reload');
+}
+]]></CSP>
+
+
+<CSP name="scripts/pha/ip/v4/ux.js" application="/imedical/web/" default="1"><![CDATA[
+var PHA_IP_UX = {
+    ReqTimeLine: function (phr) {
+        var winID = 'PHA_IP_UX_ReqTimeLine';
+        if ($('#' + winID).text() != '') {
+            $('#' + winID).html('');
+        } else {
+            var winDiv = '<div id="' + winID + '" style="overflow:hidden"><div id="stepss" style="padding:10px;height:90px"></div></div>';
+            $('body').append(winDiv);
+        }
+        $.cm(
+            {
+                ClassName: 'PHA.IP.COM.TimeLine',
+                QueryName: 'InPhReq',
+                phr: phr
+            },
+            function (retJson) {
+                $('#' + winID).window({
+                    title: ' 领药单时间轴',
+                    collapsible: false,
+                    iconCls: 'icon-w-clock',
+                    border: false,
+                    closed: true,
+                    modal: false,
+                    maximizable: false,
+                    minimizable: false,
+                    width: $(window).width() - 20,
+                    left: 10,
+                    top: 10,
+                    onBeforeClose: function () {
+                        $('#' + winID).remove();
+                    }
+                });
+                $('#' + winID).window('open');
+
+                $('#stepss').hstep({
+                    //showNumber:false,
+                    stepWidth: 200,
+                    currentInd: 3,
+                    onSelect: function (ind, item) {
+                        console.log(item);
+                    },
+                    //titlePostion:'top',
+                    items: [
+                        {
+                            title: '挂号',
+                            context: '<div>王二</div><div>2020-07-03 09:10</div>'
+                        },
+                        {
+                            title: '就诊',
+                            context: '<div>张三</div> 2020-07-03 10:10'
+                        },
+                        {
+                            title: '收费',
+                            context: '<div>李四</div> 2020-07-03 11:10'
+                        },
+                        {
+                            title: '取药'
+                        },
+                        {
+                            title: '完成'
+                        }
+                    ]
+                });
+            }
+        );
+    }
+};
+]]></CSP>
+</Export>

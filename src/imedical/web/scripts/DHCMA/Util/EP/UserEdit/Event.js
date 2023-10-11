@@ -27,6 +27,23 @@ function InitHISUIWinEvent(obj){
 		$("#delIcon").on('click',function(){
 			obj.btnDelete_click();
 		});
+		$("#btnTask").on('click',function(){
+			//##Class(DHCMA.Util.EPy.SSUserSrv).SyncSSUser(
+			var USERID=session['DHCMA.USERID']
+			$m({
+				ClassName:"DHCMA.Util.EPy.SSUserSrv",
+				MethodName:"SyncSSUser",
+				aSYSDr:USERID!=""?USERID.split("!!")[1]:""
+			},function(flg){
+				if (parseInt(flg) > 0) {
+					$.messager.popover({msg: '同步成功！',type:'success',timeout: 1000});
+					obj.dictList.reload() ;//刷新当前页
+				}else{
+					$.messager.alert("错误提示", "同步任务执行失败!Error=" + flg, 'info');
+					//obj.dictList.reload() ;//刷新当前页
+				}
+			});
+		});
 	};	
 	//双击编辑事件
 	obj.gridProduct_onDbselect = function(rd){

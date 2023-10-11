@@ -176,7 +176,7 @@ function InitInfSuPosWinEvent(obj){
 			$('#cboKeyCate').combobox('setText',CateDesc);
 			$('#cboPRI').combobox('setValue',PRIID);
 			$('#cboPRI').combobox('setText',PRIDesc);
-			$('#txtKeyWord').val(KeyWord);
+			$('#txtKeyWord').val(KeyWord).validatebox("validate");
 			$('#txtNote').val(Note);	
 			$('#chkProperty').checkbox('setValue',(Property=="包含" ? true:false));
 			$('#chkIsCurrent').checkbox('setValue',(IsCurrent==1 ? true:false));
@@ -191,7 +191,7 @@ function InitInfSuPosWinEvent(obj){
 			var Diagnos = rd["Diagnos"];
 			$('#cboInfPos').combobox('setValue',InfPosID);
 			$('#cboInfPos').combobox('setText',InfPos);
-			$('#txtDiag').val(Diagnos);	
+			$('#txtDiag').val(Diagnos).validatebox("validate");	
 			
 			$('#InfSuPosEdit').show();
 			obj.InfSuPosEdit();
@@ -231,12 +231,11 @@ function InitInfSuPosWinEvent(obj){
 		},false);
 	
 		if (parseInt(flg) <= 0) {
-			if(parseInt(flg)==-2)
-			{
+			if(parseInt(flg)==-2) {
 				$.messager.alert("失败提示", "更新数据失败,疑似诊断不允许重复!", 'info');
-			}
-			else
+			}else {
 				$.messager.alert("失败提示", "更新数据失败!返回码=" + flg, 'info');
+			}
 			return;
 		}else {
 			$HUI.dialog('#InfSuPosEdit').close();
@@ -258,6 +257,10 @@ function InitInfSuPosWinEvent(obj){
 		var Property = $('#chkProperty').checkbox('getValue')? '1':'0';
 		var IsCurrent = $('#chkIsCurrent').checkbox('getValue')? '1':'0';
 		
+		if (!SuPosID){
+			$('#cboSuPos').combobox('clear'); 
+			errinfo = errinfo + "疑似诊断必填!<br>";
+		}
 		if (!KeyWord){
 			errinfo = errinfo + "关键词不允许为空!<br>";
 		}
@@ -318,7 +321,11 @@ function InitInfSuPosWinEvent(obj){
 					},false);
 
 					if (parseInt(flg) < 0) {
-						$.messager.alert("失败提示","删除数据失败!提示码=" + flg, 'info');
+						if (parseInt(flg)=='-777') {
+							$.messager.alert("错误提示","-777：当前无删除权限，请启用删除权限后再删除记录!",'info');
+						}else {
+							$.messager.alert("失败提示","删除数据失败!提示码=" + flg, 'info');
+						}
 						return;
 					} else {
 						$.messager.popover({msg: '删除成功！',type:'success',timeout: 1000});

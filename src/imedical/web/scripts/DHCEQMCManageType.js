@@ -1,11 +1,14 @@
-var SelectedRow = 0;
+var SelectedRow = -1;	//hisui改造：修改开始行号  Add By DJ 2018-10-12
 var rowid=0;
 function BodyLoadHandler() 
-{	
-    InitUserInfo(); //系统参数
-	InitEvent();	
-	disabled(true);//灰化
-	//InitPageNumInfo("DHCEQMCManageType.ManageType","DHCEQMCManageType");	
+{
+	$("body").parent().css("overflow-y","hidden");  //Add By DJ 2018-10-12 hiui-改造 去掉y轴 滚动条
+	$("#tDHCEQMCManageType").datagrid({showRefresh:false,showPageList:false,afterPageText:'',beforePageText:''});   //Add By DJ 2018-10-12 hisui改造：隐藏翻页条内容
+	InitUserInfo(); //系统参数
+	InitEvent();
+	initButtonWidth();	//hisui改造 Add By DJ 2018-10-12
+	initPanelHeaderStyle();//hisui改造 add by zyq 2023-02-02
+	disabled(true);//灰化	
 }
 function InitEvent()
 {
@@ -87,7 +90,7 @@ function BDelete_Click()
 	var encmeth=GetElementValue("GetUpdate");
 	if (encmeth=="") 
 	{
-	alertShow(t[-2201]);////修改 by GR0006 2014-09-04 t[3001]不存在，t[-2201]：操作失败
+	messageShow("","","",t[-2201]);////修改 by GR0006 2014-09-04 t[3001]不存在，t[-2201]：操作失败
 	return;
 	}
 	var result=cspRunServerMethod(encmeth,rowid,'1');
@@ -99,33 +102,19 @@ function BDelete_Click()
 		location.reload();	
 	}
 }
-///选择表格行触发此方法
-function SelectRowHandler()
-	{
-	var eSrc=window.event.srcElement;
-	var objtbl=document.getElementById('tDHCEQMCManageType');//+组件名 就是你的组件显示 Query 结果的部分
-	var rows=objtbl.rows.length;
-	
-	var lastrowindex=rows - 1;
-	
-	var rowObj=getRow(eSrc);
-	
-	var selectrow=rowObj.rowIndex;
-	//alertShow("selectrow"+selectrow)
-	if (!selectrow)	 return;
-	if (SelectedRow==selectrow)	{
+///hisui改造： Add By DJ 2018-10-12
+function SelectRowHandler(index,rowdata){
+	if (index==SelectedRow){
 		Clear();
-		disabled(true);//灰化	
-		SelectedRow=0;
-		rowid=0;
-		SetElement("RowID","");
+		SelectedRow= -1;
+		disabled(true); 
+		$('#tDHCEQMCManageType').datagrid('unselectAll'); 
+		return;
 		}
-	else{
-		SelectedRow=selectrow;
-		rowid=GetElementValue("TRowIDz"+SelectedRow);
-		SetData(rowid);//调用函数
-		disabled(false);//反灰化
-		}
+		
+	SetData(rowdata.TRowID); 
+	disabled(false)  
+    SelectedRow = index;
 }
 function Clear()
 {
@@ -134,7 +123,7 @@ function Clear()
 	SetElement("Desc","");
 	SetElement("Remark","");
 	}
-// add by zx 2015-08-20 Bug ZX0029
+
 function SetData(rowid)
 {
 	var encmeth=GetElementValue("GetData");

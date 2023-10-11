@@ -7,6 +7,7 @@
  * 
  */
 $(function(){
+	InitCache();
 	$('#i-tab-para-center').simpledatagrid({
 		queryParams: {
 			ClassName:"DHCAnt.KSS.Config.Function",
@@ -209,4 +210,11 @@ function reloadGrid() {
 			Arg1:type,
 			ArgCnt:1
 	});
+}
+function InitCache () {
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
 }

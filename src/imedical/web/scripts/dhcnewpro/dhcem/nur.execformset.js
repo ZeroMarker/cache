@@ -203,6 +203,22 @@ function LoadList(methodName,areaId,execFormID){
 
 		for (key in jsonData){
 			var listItmData=jsonData[key];
+			///允许为空
+			if(key=="AllowNull"){
+				$(".ppDiv").find(".panel-title").removeClass("allowNull");
+				
+				if(listItmData!=""){
+					var listItmDataArr = listItmData.split("#");
+					for (var k=0;k<listItmDataArr.length;k++){
+						var thisItm = listItmDataArr[k];
+						var $thisTitleDom = $(".ppDiv[data-code='"+thisItm+"']").find(".panel-title");
+						$thisTitleDom.addClass("allowNull");
+					}	
+				}
+				return;		
+			}
+			
+			///属性展示
 			var id="";
 			if(key=="ExecDis") id="execProPanelDis";
 			if(key=="ExecPro") id="execProPanelPro";
@@ -506,6 +522,7 @@ function proSave(){
 	var execFormID = rowsData.ID;
 	
 	var allSaveDataArr=[],allSaveData="";
+	var allowNullDataArr=[],allowNullData="";
 	$(".execProTab").find(".ppDiv").each(function(){
 		var itmSaveDataArr=[],itmSaveData="";	
 		var itmAllLen = $(this).find(".checkTwo").length;
@@ -515,7 +532,16 @@ function proSave(){
 		}
 		itmSaveData = proSetCode+String.fromCharCode(2)+itmSaveDataArr.join("#");
 		allSaveDataArr.push(itmSaveData);
+		
+		var isAllowNull=$(this).find(".allowNull").length;
+		if(isAllowNull){
+			allowNullDataArr.push(proSetCode);
+		}
 	})
+	
+		///允许为空的属性
+	allowNullData = allowNullDataArr.join("#");
+	allSaveDataArr.push("AllowNull"+String.fromCharCode(2)+allowNullData);
 	
 	allSaveData  = allSaveDataArr.join("!@!");
 	
@@ -698,6 +724,18 @@ function saveRow(){
 		}else if ((jsonString == "-2")||((jsonString == "-4"))){
 			$.messager.alert('提示','描述重复,请核实后再试！','warning');
 			return;
+		}
+		if(jsonString==0){
+			$.messager.alert('提示','请前往医生站【显示信息配置-打印目录信息配置】该配置界面完善配置xml模板、数据源等内容','warning');
+			var lnk = "opdoc.treatprintmainconfig.csp";
+			websys_showModal({
+				url: lnk,
+				iconCls:"icon-w-paper",
+				title: $g('显示信息配置-打印目录信息配置'),
+				closed: true,
+				onClose:function(){
+				}
+			});
 		}
 		$('#main').datagrid('reload'); //重新加载
 	})
@@ -938,6 +976,12 @@ function InitExecPrintSetTable(){
 			onSelect:function(option){
 				var ed=$("#execPrintSetTable").datagrid('getEditor',{index:editBRow,field:'OrdLinkID'});
 				$(ed.target).val(option.value);
+			},
+			onChange:function(newValue,oldValue){
+				if(newValue==""){
+					var ed=$("#execPrintSetTable").datagrid('getEditor',{index:editBRow,field:'OrdLinkID'});
+					$(ed.target).val("");
+				}
 			}
 		}
 	}
@@ -949,9 +993,12 @@ function InitExecPrintSetTable(){
 	 */
 	var columns=[[
 		{field:'RowName',title:'列名',width:120,editor:textEditor,align:'center'},
-		{field:'RowWidth',title:'列宽(mm)',width:120,editor:textEditor,align:'center'},
+		{field:'RowWidth',title:'列宽(mm)',width:70,editor:textEditor,align:'center'},
 		{field:'OrdLinkID',title:'医嘱关联ID',width:100,editor:textEditor,hidden:true,align:'center'},
-		{field:'OrdLinkDesc',title:'医嘱关联',width:200,editor:OrdLinkEditor,align:'center'},
+		{field:'OrdLinkDesc',title:'医嘱关联',width:130,editor:OrdLinkEditor,align:'center'},
+		{field:'CustCode',title:'自定义',width:120,editor:textEditor,align:'center'},
+		{field:'IsMergeRow',title:'合并列(Y/N)',width:70,editor:textEditor,align:'center'},
+		{field:'IsOnlyShowMain',title:'只显主医嘱(Y/N)',width:70,editor:textEditor,align:'center'},
 		{field:'APOrdNum',title:'操作',width:200,align:'center',formatter:cellStyler}
 	]];
 	
@@ -1001,6 +1048,9 @@ function saveEpstRow(){
 		var rowName = getValueByField(obj,"RowName");
 		var rowWidth = getValueByField(obj,"RowWidth");
 		var ordLinkID = getValueByField(obj,"OrdLinkID");
+		var custCode = getValueByField(obj,"CustCode"); 
+		var isMergeRow = getValueByField(obj,"IsMergeRow");
+		var isOnlyShowMain = getValueByField(obj,"IsOnlyShowMain");
 		if((rowName=="")||(rowWidth=="")){
 			$.messager.alert("提示","列名或宽度不能为空!","warning"); 
 			isValidOk=0;
@@ -1011,7 +1061,7 @@ function saveEpstRow(){
 			isValidOk=0;
 			return false;
 		}
-		var tmp=rowName +"|"+ rowWidth +"|"+ ordLinkID;
+		var tmp=rowName +"|"+ rowWidth +"|"+ ordLinkID +"|"+isMergeRow +"|"+isOnlyShowMain+"|"+custCode;
 		dataList.push(tmp);
 	});
 	
@@ -1059,7 +1109,7 @@ function insertEpstRow(){
 	
 	$("#execPrintSetTable").datagrid('insertRow', {
 		index: addIndex, // 行数从0开始计算
-		row: {RowName:'', RowWidth:'', OrdLinkID:'', OrdLinkDesc:''}
+		row: {RowName:'', RowWidth:'', OrdLinkID:'', OrdLinkDesc:'',IsMergeRow:'',IsOnlyShowMain:'',CustCode:''}
 	});
 	
 	$("#execPrintSetTable").datagrid('beginEdit', addIndex);//开启编辑并传入要编辑的行

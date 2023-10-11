@@ -1,117 +1,67 @@
-var init = function() {
-	//œ˚∂æ∞¸œ¬¿≠¡–±Ì
-    var OprBox = $HUI.combobox('#OprPkg', {
-        url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPackage&ResultSetType=array&typeDetial=1',
-        valueField: 'RowId',
-        textField: 'Description'
+Ôªøvar init = function() {
+	$HUI.combobox('#CurLocation', {
+		valueField: 'RowId',
+		textField: 'Description',
+		data: CurLocationData
 	});
-    
 
-	/*--∞¥≈• ¬º˛--*/
-	$UI.linkbutton('#QueryBT',{
-		onClick:function(){
-			var ParamsObj=$UI.loopBlock('#Conditions')
-			/* if(isEmpty(ParamsObj.StartDate)){
-				$UI.msg('alert','ø™ º»’∆⁄≤ªƒ‹Œ™ø’!');
-				return;
-			}
-			if(isEmpty(ParamsObj.EndDate)){
-				$UI.msg('alert','Ωÿ÷π»’∆⁄≤ªƒ‹Œ™ø’!');
-				return;
-			} */
-			
-			var Params=JSON.stringify(ParamsObj);
-			//alert(Params);
-			Params=encodeUrlStr(Params)
+	var PkgParams = JSON.stringify(addSessionParams({ BDPHospital: gHospId, TypeDetail: '1' }));
+	$HUI.combobox('#OprPkg', {
+		url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetPkg&ResultSetType=array&Params=' + PkgParams,
+		valueField: 'RowId',
+		textField: 'Description'
+	});
+	$UI.linkbutton('#QueryBT', {
+		onClick: function() {
+			var ParamsObj = $UI.loopBlock('#Conditions');
+			var Params = JSON.stringify(ParamsObj);
+			Params = encodeUrlStr(Params);
 			var CheckedRadioObj = $("input[name='ReportType']:checked");
-			var CheckedValue=CheckedRadioObj.val();
-			var CheckedTitle=CheckedRadioObj.attr("label")
-			var Conditions=GetConditions(ParamsObj)
-			var Url=CheckedUrl(CheckedValue,Params,Conditions)
-			AddTab(CheckedTitle,Url);
+			var CheckedValue = CheckedRadioObj.val();
+			var CheckedTitle = CheckedRadioObj.attr('label');
+			var Conditions = GetConditions(ParamsObj);
+			Conditions = encodeUrlStr(Conditions);
+			var Url = CheckedUrl(CheckedValue, Params, Conditions);
+			AddStatTab(CheckedTitle, Url, '#tabs');
 		}
 	});
-	///∆¥Ω”url
-	function CheckedUrl(Checked,Params,Conditions){
-		//alert(Params);
-		//alert(Conditions);
-		//»Îø‚µ•¡–±Ì
-		if('FlagPackageProcessTrans'==Checked){
-			p_URL = PmRunQianUrl+'?reportName=CSSD_HUI_CSSDLocationTrans.raq&Params='+Params+'&Conditions='+Conditions;
+	// ÊãºÊé•url
+	function CheckedUrl(Checked, Params, Conditions) {
+		var FrameUrl = '';
+		if ('FlagPkgCurLocation' === Checked) {
+			FrameUrl = PmRunQianUrl + '?reportName=CSSD_HUI_CSSDLocationTrans.raq&Params=' + Params + '&Conditions=' + Conditions;
 		}
-		return p_URL;
+		return FrameUrl;
 	}
-	//◊È÷Ø≤È—ØÃıº˛
-	function GetConditions(ParamsObj){
-		//ªÒ»°≤È—ØÃıº˛¡–±Ì
-		var Conditions=""
-		if(ParamsObj.StartDate!=""){
-			Conditions=Conditions+" Õ≥º∆ ±º‰: "+ParamsObj.StartDate
+	// ÁªÑÁªáÊü•ËØ¢Êù°‰ª∂
+	function GetConditions(ParamsObj) {
+		// Ëé∑ÂèñÊü•ËØ¢Êù°‰ª∂ÂàóË°®
+		var Conditions = '';
+		if (!isEmpty(ParamsObj.StartDate)) {
+			Conditions = Conditions + ' ÁªüËÆ°Êó∂Èó¥: ' + ParamsObj.StartDate;
 		}
-		if(ParamsObj.EndDate!=""){
-			Conditions=Conditions+"~ "+ParamsObj.EndDate
+		if (!isEmpty(ParamsObj.EndDate)) {
+			Conditions = Conditions + ' ~ ' + ParamsObj.EndDate;
 		}
 		return Conditions;
 	}
-	function AddTab(title, url) {
-		if ($('#tabs').tabs('exists', title)) {
-			$('#tabs').tabs('select', title); //—°÷–≤¢À¢–¬
-			var currTab = $('#tabs').tabs('getSelected');
-			if (url != undefined && currTab.panel('options').title != '±®±Ì') {
-				$('#tabs').tabs('update', {
-					tab: currTab,
-					options: {
-						content: createFrame(url)
-					}
-				})
-			}
-		} else {
-			var content = createFrame(url);
-			$('#tabs').tabs('add', {
-				title: title,
-				content: content,
-				closable: true
-			});
-		}
-	}
-	function createFrame(url) {
-		var s = '<iframe scrolling="auto" frameborder="0" src="' + url + '" style="width:100%;height:98%;"></iframe>';
-		return s;
-	}
-	
-	$UI.linkbutton('#ClearBT',{
-		onClick:function(){
+	$UI.linkbutton('#ClearBT', {
+		onClick: function() {
 			Default();
 		}
 	});
-	
-	/*--∞Û∂®øÿº˛--*/
-	
-	/*--…Ë÷√≥ı º÷µ--*/
-	var Default=function(){
+	/* --ËÆæÁΩÆÂàùÂßãÂÄº--*/
+	var Default = function() {
 		$UI.clearBlock('#Conditions');
 		$UI.clearBlock('#ReportConditions');
-		var DefaultValue={
-			StartDate:new Date(),
-			EndDate:new Date(),
-			}
-		$UI.fillBlock('#Conditions',DefaultValue)
-		var Tabs=$('#tabs').tabs('tabs')
-		var Tiles = new Array();
-		var Len = Tabs.length;
-		if(Len>0){
-			for(var j=0;j<Len;j++){
-				var Title = Tabs[j].panel('options').title;
-				if(Title!='±®±Ì'){
-					Tiles.push(Title);
-				}
-			}
-			for(var i=0;i<Tiles.length;i++){
-				$('#tabs').tabs('close', Tiles[i]);
-			}
-		}
-		
+		var DefaultValue = {
+			StartDate: new Date(),
+			EndDate: new Date()
+		};
+		$UI.fillBlock('#Conditions', DefaultValue);
+		CloseStatTab('#tabs');
+		GetReportStyle('#Report');
 	};
-	Default()
-}
+	Default();
+};
 $(init);

@@ -9,6 +9,8 @@ $(function(){
 	InitEvent();
 	//表格数据初始化
 	hospComp.jdata.options.onSelect = function(e,t){
+		$("#code,#name").val("");
+		$("#StartDate,#EndDate").datebox('setValue','');
 		RBCClinicServiceGroupTabDataGridLoad();
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){
@@ -77,7 +79,7 @@ function InitRBCClinicServiceGroupTabDataGrid(){
 				}
 			}
 		}
-	}); 
+	}).datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}); 
 	return RBCClinicServiceGroupTabDataGrid;
 }
 function SetSelRowData(row){
@@ -101,7 +103,7 @@ function RBCClinicServiceGroupTabDataGridLoad(){
 	    HospID:HospID,
 	    Pagerows:PageLogicObj.m_RBCClinicServiceGroupTabDataGrid.datagrid("options").pageSize,rows:99999
 	},function(GridData){
-		PageLogicObj.m_RBCClinicServiceGroupTabDataGrid.datagrid({loadFilter:DocToolsHUI.lib.pagerFilter}).datagrid('loadData',GridData);
+		PageLogicObj.m_RBCClinicServiceGroupTabDataGrid.datagrid('unselectAll').datagrid('loadData',GridData);
 	});
 }
 function AddClickHandle(){

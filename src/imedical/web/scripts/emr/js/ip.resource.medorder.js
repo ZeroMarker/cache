@@ -3,7 +3,7 @@ $(function(){
 	strXml = convertToXml(scheme);
 	var interface = $(strXml).find("interface").text();
 	var display = $(strXml).find("display").text();
-	$("#comboxEpisode").hide();
+	$("#comboxEpisode").css('display','none');
 	initEpisodeList("#EpisodeList");
 	setDataGird(display,interface);
     $HUI.radio("[name='episode']",{
@@ -11,20 +11,30 @@ $(function(){
             var value = $(e.target).attr("value");
             if (value === "allEpisode")
             {
-				$("#comboxEpisode").show(); 
+				$("#comboxEpisode").css('display','inline');; 
 	        } 
 	        else
 	        {
-				$("#comboxEpisode").hide();
+				$("#comboxEpisode").css('display','none');
  				$("#EpisodeList").combogrid('hidePanel');
 				queryData();
 				initQuoteList("#quoteList");		        
 		    }
         }
     });
-    
+    $('#btnorders').keywords({
+        singleSelect:true,
+        items:[
+            {text:emrTrans('临时医嘱'),id:'nordersBtn',selected:true},
+            {text:emrTrans('长期医嘱'),id:'sordersBtn'},
+            {text:emrTrans('出院带药'),id:'oordersBtn'}
+        ],
+        onClick:function(v){
+            toggleBtn(v.id);
+        }
+    });   
     $HUI.radio("#currentEpisode").setValue(true);
-    $('#btnorders').trigger("click");
+/*     $('#btnorders').trigger("click");
     
     $("#btnorders").click(function(){
 		initData("norders");
@@ -34,14 +44,31 @@ $(function(){
 	})
   	$("#btoorders").click(function(){
 		initData("oorders");
-	})
+	}) */
+	$("#OrderQuery").click(function () {
+		queryData();
+    })	
 });
 
-
+function toggleBtn(tabId)
+{
+    if (tabId == "nordersBtn")
+    {
+	  initData("norders");
+    }
+    else if(tabId == "sordersBtn")
+    {
+	  initData("sorders");
+    }
+    else
+    {
+	  initData("oorders");
+	}     
+}
 function initData(gridId)
 {
 	selectedGridId = gridId;
-	$(".btn-group button").removeClass("focus");
+ 	//$(".btn-group button").removeClass("focus");
 	if (selectedGridId == "norders")
 	{
 		$("#norders").parent().parent().parent().css("display","block");
@@ -118,7 +145,8 @@ function initDataGrid(id,columns,type,display,interface)
 	    columns:columns,
 	    remoteSort:false,
         sortName: 'OrdCreateDate,OrdCreateTime', 
-	    sortOrder:'desc',
+	    sortOrder:'desc,desc',
+	    border:false,
 	    rowStyler:function(index,row){
 		    if (row.Reflag == "Parent"){
 			    return 'background-color:#CBE8F6;';
@@ -127,7 +155,7 @@ function initDataGrid(id,columns,type,display,interface)
 		view: detailview,
 		detailFormatter: function(rowIndex, rowData){
 			if (rowData.Reflag == "Parent"){
-				return '<div style="padding:2px"><table id="Sub-' + rowIndex + '"></table></div>';
+				return '<div style="padding:2px"><table class="Sub-' + rowIndex + '"></table></div>';
 			}
 		},
 		onExpandRow: function(index,row){
@@ -144,7 +172,7 @@ function initDataGrid(id,columns,type,display,interface)
 						epsodeIds = epsodeIds + values[i];
 					}	
 				}
-				$('#Sub-'+index).datagrid({
+				$('.Sub-'+index).datagrid({
 					loadMsg:'数据装载中......',
 					autoRowHeight:true,
 					url:'../EMRservice.Ajax.orderData.cls?Action=GetSubOrderData&OrderType='+type+'&EpisodeID='+epsodeIds+'&OEItemID='+row.OEItemID+'&InterFace='+encodeURI(encodeURI(interface)),
@@ -171,25 +199,25 @@ function initDataGrid(id,columns,type,display,interface)
 		},
 		onCheck:function(rowIndex,rowData){
 			if (rowData.Reflag == "Parent"){
-				$('#Sub-'+rowIndex).datagrid('checkAll');
+				$('.Sub-'+rowIndex).datagrid('checkAll');
 			}
 		},
 		onUncheck:function(rowIndex,rowData){
 			if (rowData.Reflag == "Parent"){
-				$('#Sub-'+rowIndex).datagrid('uncheckAll');
+				$('.Sub-'+rowIndex).datagrid('uncheckAll');
 			}
 		},
 		onCheckAll:function(rows){
 			for(var i=0;i<rows.length;i++){
 				if (rows[i].Reflag == "Parent"){
-					$('#Sub-'+i).datagrid('checkAll');
+					$('.Sub-'+i).datagrid('checkAll');
 				}
 			}
 		},
 		onUncheckAll:function(rows){
 			for (var i=0;i<rows.length;i++){
 				if (rows[i].Reflag == "Parent"){
-					$('#Sub-'+i).datagrid('uncheckAll');
+					$('.Sub-'+i).datagrid('uncheckAll');
 				}
 			}
 		},
@@ -229,11 +257,31 @@ function getParam()
 			epsodeIds = epsodeIds + values[i];
 		}	
 	}
+	var searchInput = $('#searchMedorder').searchbox('getValue');
+	var startDate = $("#startDate").datebox("getValue");
+	var endDate = $("#endDate").datebox("getValue");	
 	var param = {
-		EpisodeID:epsodeIds
+		EpisodeID:epsodeIds,
+		SearchInput:searchInput,
+		StartDate:startDate,
+		EndDate:endDate
 	};
 	return param;		
 }
+
+//搜索框回车查询
+$("#searchInput").keydown(function(){
+	if(event.keyCode == 13)
+	{
+		queryData();
+	}	
+});
+
+$('#searchMedorder').searchbox({ 
+    searcher:function(value,name){ 
+    	queryData();
+    }          
+  });
 
 //引用数据
 function getData()
@@ -244,6 +292,9 @@ function getData()
 	referenceChild = [];
 	var id = selectedGridId //getSelectGridId();
 	var checkedItems = $('#'+id).datagrid('getChecked');
+	checkedItems = setArrValue(checkedItems);
+	// 将数据按照时间倒叙排序
+	checkedItems.sort(compareOrdDT("OrdCreateDateTime","inverted"));	
 	var allItems = $('#'+id).datagrid('getRows');
 	if (allItems.length == 0) return;
 	var refScheme = getRefScheme("scheme>reference>"+id+">parent:eq("+idx+")>item");
@@ -254,12 +305,14 @@ function getData()
     childseparate = childseparate=="plus"?"+":"\n";
 	var seq = $(strXml).find("scheme>reference>"+id+">seq").text();
 	seq = seq==""?"parent":seq;
-	getCheck(id,checkedItems,refScheme,refSubScheme,childseparate,seq);
-	getOnlyChildCheck(id,allItems,refScheme,refSubScheme,childseparate,seq);
+    var childlinenum = $(strXml).find("scheme>reference>"+id+">childlinenum").text();
+    childlinenum = childlinenum=="Y"?"@":"";
+    getCheck(id,checkedItems,refScheme,refSubScheme,childseparate,seq,childlinenum);
+    getOnlyChildCheck(id,allItems,refScheme,refSubScheme,childseparate,seq,childlinenum);
 	var result = "";
 	if (seq == "parent")
 	{
-		result = getParentSeqData(id,checkedItems,refScheme,refSubScheme,separate,childseparate);
+        result = getParentSeqData(id,checkedItems,refScheme,refSubScheme,separate,childseparate,childlinenum);
 	}else if (seq == "child"){
 		result = getChildSeqData(id,checkedItems,refScheme,refSubScheme,separate);
 	}
@@ -270,7 +323,7 @@ function getData()
 }
 
 //普通医嘱或者主医嘱勾选情况
-function getCheck(id,checkedItems,refScheme,refSubScheme,childseparate,seq)
+function getCheck(id,checkedItems,refScheme,refSubScheme,childseparate,seq,childlinenum)
 {
 	$.each(checkedItems, function(index, item){
 		var parent = "";
@@ -279,7 +332,7 @@ function getCheck(id,checkedItems,refScheme,refSubScheme,childseparate,seq)
 		rowArray.push(rowIndex);
 		var checkedsubItems = "";
 		if (item["Reflag"] == "Parent"){
-			checkedsubItems = $('#Sub-'+rowIndex).datagrid('getChecked');
+			checkedsubItems = $('.Sub-'+rowIndex).datagrid('getChecked');
 		}
 		for (i=0;i<refScheme.length;i++ ){
 			//判断引用字段是否为空
@@ -312,18 +365,22 @@ function getCheck(id,checkedItems,refScheme,refSubScheme,childseparate,seq)
 				if (seq == "parent")
 				{
 					if (checkedsubItems.length-1 > index){
-						child = child + childseparate + "  ";
+                        if (childlinenum != ""){
+                            child = child + childseparate + childlinenum;
+                        }else{
+                            child = child + childseparate + "  ";
+                        }
 					}
 				}
 			});
-			$('#Sub-'+rowIndex).datagrid('uncheckAll');
+			$('.Sub-'+rowIndex).datagrid('uncheckAll');
 		}
 		referenceChild[rowIndex] = child;
 	});       
 }
 
 //只有子医嘱勾选情况
-function getOnlyChildCheck(id,allItems,refScheme,refSubScheme,childseparate,seq)
+function getOnlyChildCheck(id,allItems,refScheme,refSubScheme,childseparate,seq,childlinenum)
 {
 	$.each(allItems, function(index, item){
 		var parent = "";
@@ -331,9 +388,10 @@ function getOnlyChildCheck(id,allItems,refScheme,refSubScheme,childseparate,seq)
 		var rowIndex = $('#'+id).datagrid('getRowIndex',item["OEItemID"]);
 		if ($.inArray(rowIndex,rowArray) == -1)
 		{
+			rowArray.push(rowIndex);
 			var checkedsubItems = "";
 			if (item["Reflag"] == "Parent"){
-				checkedsubItems = $('#Sub-'+rowIndex).datagrid('getChecked');
+				checkedsubItems = $('.Sub-'+rowIndex).datagrid('getChecked');
 			}
 			referenceParent[rowIndex] = parent;
 			//关联医嘱
@@ -352,11 +410,15 @@ function getOnlyChildCheck(id,allItems,refScheme,refSubScheme,childseparate,seq)
 					if (seq == "parent")
 					{
 						if (checkedsubItems.length-1 > index){
-							child = child + childseparate + "  ";
-						}
+                            if (childlinenum != ""){
+                                child = child + childseparate + childlinenum;
+                            }else{
+                                child = child + childseparate + "  ";
+                            }
+                        }
 					}
 				});
-				$('#Sub-'+rowIndex).datagrid('uncheckAll');
+				$('.Sub-'+rowIndex).datagrid('uncheckAll');
 			}
 			referenceChild[rowIndex] = child;
 		}
@@ -364,19 +426,38 @@ function getOnlyChildCheck(id,allItems,refScheme,refSubScheme,childseparate,seq)
 }
 
 //关联医嘱父项在前的引用格式
-function getParentSeqData(id,checkedItems,refScheme,refSubScheme,separate,childseparate)
+function getParentSeqData(id,checkedItems,refScheme,refSubScheme,separate,childseparate,childlinenum)
 {
+    //序号勾选标识
+    var numFlag = $("#orderNum")[0].checked;
 	var result = "",num = 1;
-	for (i=0;i<referenceParent.length;i++ ){
+	for (j=0;j<rowArray.length;j++ ){
+		var i = rowArray[j];
 		if ((referenceParent[i] != "")||(referenceChild[i] != ""))
 		{
-			result = result + num + ".";
-			result = result + referenceParent[i];
-			if ((referenceChild[i] != "")&&(referenceParent[i] != ""))
-			{
-				result = result + childseparate + "  ";
+            if (numFlag){
+                result = result + num + ".";
+            }
+            result = result + referenceParent[i];
+            
+            if (referenceChild[i] != "")
+            {
+                if (referenceParent[i] != "")
+                {
+                    result = result + childseparate;
+                }
+                if (childlinenum != ""){
+                    $.each(referenceChild[i].split(childlinenum), function(index, item){
+                        if (numFlag){
+                            var childNum = index + 1;
+                            result = result + num + "." + childNum;
+                        }
+                        result = result + "  " + item;
+                    });
+                }else{
+                    result = result + "  " + referenceChild[i];
+                }
 			}
-			result = result + referenceChild[i];
 			result = result + separate;
 			num = num + 1;
 		}
@@ -386,11 +467,16 @@ function getParentSeqData(id,checkedItems,refScheme,refSubScheme,separate,childs
 //关联医嘱子项在前的引用格式
 function getChildSeqData(id,checkedItems,refScheme,refSubScheme,separate)
 {
+    //序号勾选标识
+    var numFlag = $("#orderNum")[0].checked;
 	var result = "",num = 1;
-	for (i=0;i<referenceParent.length;i++ ){
+	for (j=0;j<rowArray.length;j++ ){
+		var i = rowArray[j];
 		if ((referenceParent[i] != "")||(referenceChild[i] != ""))
 		{
-			result = result + num + ".";
+            if (numFlag){
+                result = result + num + ".";
+            }
 			result = result + referenceChild[i];
 			if ((referenceChild[i] != "")&&(referenceParent[i] != ""))
 			{
@@ -402,5 +488,27 @@ function getChildSeqData(id,checkedItems,refScheme,refSubScheme,separate)
 		}
 	}
 	return result; 
+}
+
+function setArrValue(data)
+{
+	if(data.length == 0) return
+	for(var i = 0; i < data.length; i++)
+	{
+		data[i].OrdCreateDateTime = data[i].OrdCreateDate+" "+data[i].OrdCreateTime
+	}
+	return data
+}
+
+function compareOrdDT(prop,align){
+	return function(a,b){
+        var value1=a[prop].replace(/-/g,"/");
+        var value2=b[prop].replace(/-/g,"/");
+        if(align=="positive"){//正序
+            return new Date(value1)-new Date(value2);
+        }else if(align=="inverted"){//倒序
+            return new Date(value2)-new Date(value1);
+        }
+	}
 }
 

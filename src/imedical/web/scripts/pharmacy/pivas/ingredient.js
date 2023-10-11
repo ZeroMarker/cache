@@ -15,6 +15,7 @@ $(function() {
         SavePhcIngredient();
     });
     $('#btnDelete').on('click', DeleteHandler);
+    PHA_UX.Translate({ buttonID: 'btnTranslate', gridID: 'gridIngredient', idField: 'ingredId', sqlTableName: 'PHC_Ingredient' });
     $('.dhcpha-win-mask').remove();
 });
 
@@ -80,6 +81,7 @@ function InitGridIngredient() {
             QueryName: 'PHCIngredient'
         },
         columns: columns,
+        rownumbers: true,
         toolbar: '#gridIngredientBar',
         onClickRow: function(rowIndex, rowData) {
             if (rowData) {

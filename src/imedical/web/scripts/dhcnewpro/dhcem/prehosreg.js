@@ -140,6 +140,7 @@ function SaveHosReg(){
 		}else{
 			RegID=jsonString
 			$.messager.alert("提示:","保存成功！","info",function(){
+				window.parent.frames["TRAK_main"].QryDisAmbMan();  ///刷新列表
 				window.location.reload();
 				if (window.opener){
 					window.opener.QryDisAmbMan()
@@ -156,6 +157,8 @@ function GetPreHosRegInfo(MaID){
 	runClassMethod("web.DHCEMPreHosReg","GetPreHosRegInfo",{"MaID":MaID},function(jsonString){
 		var jsonObject = jsonString;
 		if (jsonObject != null){
+			
+			$('#EpisodeID').text(jsonObject.EpisodeID);
 			
 			$HUI.datebox("#DepartDate").setValue(jsonObject.DepartDate);	/// 出诊日期
 			$("#DepartTime").val(jsonObject.DepartTime); 					/// 出诊时间
@@ -202,6 +205,7 @@ function CancelRelReg(){
 		}
 		if (jsonString == 0){
 			$.messager.alert("提示:","取消关联成功！","info",function(){
+				window.parent.frames["TRAK_main"].QryDisAmbMan();  ///刷新列表
 				window.location.reload();
 				if (window.opener){
 					window.opener.QryDisAmbMan()
@@ -272,7 +276,8 @@ function SetEmPcsTime(id){
 
 //取消
 function CancelHosReg(){
-	window.close();
+	websys_showModal("close");
+	return;
 }
 
 /// 内容为 undefined 显示空

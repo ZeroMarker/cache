@@ -2,7 +2,7 @@
 /// CreateDate: 2016-12-14
 //  Descript:座位类别维护维护
 
-var editRow="";editparamRow="";  //当前编辑行号
+var editRow="",editparamRow="",clicknum="";  //当前编辑行号
 var dataArray=[{"value":"Y","text":"是"},{"value":"N","text":"否"}]; //hxy 2018-10-12
 $(function(){	
 	hospComp = GenHospComp("DHC_EmPatSeatCat");  //hxy 2020-05-22 st
@@ -75,9 +75,10 @@ $(function(){
 		loadMsg: '正在加载信息...',
 		pagination:true,
 	    onDblClickRow: function (rowIndex, rowData) {//双击选择行编辑
-            if (editRow != "") {
-                $("#seatcatlist").datagrid('endEdit', editRow); 
-            } 
+	    	clicknum=rowIndex;
+            if(editRow>="0"){
+				$("#seatcatlist").datagrid('endEdit', editRow);//结束编辑，传入之前编辑的行
+			}
             $("#seatcatlist").datagrid('beginEdit', rowIndex); 
             
             editRow = rowIndex; 
@@ -99,15 +100,16 @@ $(function(){
     });
     
     // 查找按钮绑定单击事件
-    $('#find').bind('click',function(event){
+   /* $('#find').bind('click',function(event){
          findSeatStatus(); //调用查询
     });
- 
+ */
 })
 
 // 插新行
 function insertRow()
 {
+	clicknum="";
 	var HospDr=hospComp.getValue(); //hxy 2020-05-22
 	if(editRow>="0"){
 		$("#seatcatlist").datagrid('endEdit', editRow);//结束编辑，传入之前编辑的行
@@ -189,11 +191,17 @@ function saveRow()
 }
 
 function formatterSeatColor(value,row,index){
+	if((value=="")||(value==undefined)){
+		value=row.seatcolorvalue;
+	}
 	return value;
 }
 
 function stylerSeatColor(value,row,index){
 	var ret="";
+	if((value=="")||(value==undefined)){
+		value=row.seatcolorvalue;
+	}
 	if(value!=""){
 		ret = "background-color:"+value;
 	}
@@ -246,6 +254,12 @@ $.extend($.fn.datagrid.defaults.editors, {
 			
 		},
 		setValue: function(target, value){	
+			if((value=="")||(value==undefined)){
+				if(clicknum>="0"){
+					var tbed=$('#seatcatlist').datagrid('getRows')[clicknum];
+					value=tbed.seatcolorvalue;
+				}
+			}
 			if(value!=""&&value!=undefined) $(target).val(value.split("#")[1]);
 		},
 		resize: function(target, width){

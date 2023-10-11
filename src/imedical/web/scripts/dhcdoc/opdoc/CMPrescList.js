@@ -59,6 +59,8 @@ function Init(){
 function InitEvent(){
 	$("#CopyOrd").click(CopyClickHandler);
 	$("#BFind").click(LoadOutPatientDataGrid);
+	$("#UpdateCookMode").click(OpenCookModeWin);
+	$("#SaveCookMode").click(UpdatePrescNoCookMode);
 	$(document.body).bind("keydown",BodykeydownHandler);
 	$HUI.checkbox("#selAllPresno",{
 	   onChecked:function(event,value){
@@ -170,7 +172,7 @@ function PatMedKeydownHandler(e){
 				dataType:"text"
 			},false);
 			if(Ret==""){
-				$.messager.alert("提示","病案号【"+PatMed+ "】对应患者不存在!","info",function(){
+				$.messager.alert("提示",$g("病案号【")+PatMed+ $g("】对应患者不存在!"),"info",function(){
 					$("#Patmed").focus();
 				});
 			}else{
@@ -227,7 +229,7 @@ function InitCMPrescListDataGrid(){
 		*/
 		{field:'prescno',title:'选择',align:'center',width:50,
 			formatter: function(value,row,index){
-				return "<input class='row-checkbox' type='checkbox' id='"+"checkOnePrescAll_"+index+"'>";
+				return "<input class='row-checkbox' type='checkbox' name='PrescCheck' id='"+"checkOnePrescAll_"+index+"'>";
 			}
 		},
 		{field:'b1',title:'处方号',width:400},
@@ -487,7 +489,7 @@ function CopyClickHandler(){
 							dhcsys_alert("提示",ret.split("^")[1]);
 							return false;
 						}else{
-							if (dhcsys_confirm(ret.split("^")[1]+",是否继续复制?")) {
+							if (dhcsys_confirm(ret.split("^")[1]+$g(",是否继续复制?"))) {
 								continue
 							}else{
 								return false;
@@ -507,10 +509,158 @@ function CopyClickHandler(){
 		$.messager.alert("提示","协定处方不可与其他医嘱一起复制!");
 		return false;
 	}
-	websys_showModal('hide');
-	websys_showModal('options').AddCopyItemToListFromQuery(Copyary);
-	websys_showModal("close");
+	var PrescArr=new Array();
+	$('input[name=PrescCheck]:checked').each(function(){
+		var index=$(this).attr('id').split('_')[1];
+		var PrescNo=Data.rows[index]["b1"].split(':')[1].split(' ')[0];
+		if(!PrescNo) return true;
+		if(PrescArr.indexOf(PrescNo)==-1) PrescArr.push(PrescNo);
+	});
+    var MainSreenFlag=websys_getAppScreenIndex();
+	if(PrescArr.length==1){
+		$.messager.confirm('提示','是否复制处方用法用量信息?',function(r){
+			if(MainSreenFlag!=0){
+				if(r){
+					websys_emit("onPrescListChange",{"PrescInfo":PrescArr[0],copyFlag:true});
+				}else{
+					websys_emit("onCopyCMPresc",Copyary);
+				}
+			}else{
+                websys_showModal('hide');
+                if(r){
+                    websys_showModal('options').PrescListChange(PrescArr[0],true);
+                }else{
+                    websys_showModal('options').AddCopyItemToListFromQuery(Copyary);
+                }
+                websys_showModal("close");
+            }
+		});
+		return;
+	}
+    if(MainSreenFlag!=0){
+		websys_emit("onCopyCMPresc",Copyary);
+	}else{
+        websys_showModal('hide');
+        websys_showModal('options').AddCopyItemToListFromQuery(Copyary);
+        websys_showModal("close");
+    }
 }
 function ReadCardClickHandler(){
 	var myrtn=DHCACC_GetAccInfo7(CardTypeCallBack);
+}
+function OpenCookModeWin(){
+	var cookmode="";
+	var selPrescArr=new Array();
+	/*var rows=CMPrescListDataGrid.datagrid('getSelections');        
+	for (var i=0;i<rows.length;i++){
+		var prescno=rows[i].prescno;
+		if (!prescno) continue;
+		if (("^"+selPrescArr.join("^")+"^").indexOf("^"+prescno+"^")>=0) continue;
+		selPrescArr.push(prescno);
+		cookmode=rows[i].cookmode;
+	}*/
+   var rows=CMPrescListDataGrid.datagrid('getRows');
+   var $check=$("input[id*='checkOnePrescAll_']"); 
+   for (var i=0;i<$check.length;i++){
+	   if($("#checkOnePrescAll_"+i).is(':checked')) {
+		   var prescno=rows[i].prescno;
+		   if (!prescno) continue;
+		   if (("^"+selPrescArr.join("^")+"^").indexOf("^"+prescno+"^")>=0) continue;
+		   selPrescArr.push(prescno);
+		   cookmode=rows[i].cookmode;
+	   }
+   }
+	var selPrescStr=selPrescArr.join("^");
+	if (selPrescStr =="") {
+		$.messager.alert("提示","请选择需要修改煎药方式的处方!");
+		return false;
+	}else if(selPrescArr.length >1){
+		$.messager.alert("提示","请选择单条处方!");
+		return false;
+	}
+	var rtnValue = $.cm({
+		ClassName:"web.UDHCPrescriptQueryCM",
+		MethodName:"CheckBeforeUpdateCookMode",
+		dataType:"text",
+		PrescNo:selPrescArr.join("^"),
+		dataType:"text"
+    },false);
+	if (rtnValue !="") {
+		$.messager.alert("提示",rtnValue);
+		return false;
+	}
+	InitCookType(cookmode,prescno);
+	$("#cookModeDialog").window("open");
+}
+//初始化煎药类型
+function InitCookType(cookType,prescno){
+	$.cm({
+		ClassName:'DHCDoc.OPDoc.CMOrderEntry',
+		MethodName:'GetCMComList',
+		ComboName:'CookMode',
+		ExpStr:ServerObj.EpisodeID+'^^'+prescno
+	},function(data){
+		var newData=new Array();
+		$.each(data,function(){
+			if(this.Desc!=cookType){
+				newData.push(this);
+			}
+		});
+		$('#CookModelist').combobox({
+	    	valueField:'RowID',   
+			textField:'Desc',
+			editable:false,
+			data:newData
+		});
+	});
+}
+function UpdatePrescNoCookMode(){
+	var NewCookMode=$("#CookModelist").combobox('getText');
+	var NewCookModeDr=$("#CookModelist").combobox('getValue');
+	if (!NewCookModeDr) NewCookModeDr="",NewCookMode="";
+	var cookmode="";
+	var selPrescArr=new Array();
+	/*var rows=CMPrescListDataGrid.datagrid('getSelections');        
+	for (var i=0;i<rows.length;i++){
+		var prescno=rows[i].prescno;
+		if (!prescno) continue;
+		if (("^"+selPrescArr.join("^")+"^").indexOf("^"+prescno+"^")>=0) continue;
+		selPrescArr.push(prescno);
+		cookmode=rows[i].cookmode;
+	}*/
+	var rows=CMPrescListDataGrid.datagrid('getRows');
+    var $check=$("input[id*='checkOnePrescAll_']"); 
+    for (var i=0;i<$check.length;i++){
+	   if($("#checkOnePrescAll_"+i).is(':checked')) {
+		   var prescno=rows[i].prescno;
+		   if (!prescno) continue;
+		   if (("^"+selPrescArr.join("^")+"^").indexOf("^"+prescno+"^")>=0) continue;
+		   selPrescArr.push(prescno);
+		   cookmode=rows[i].cookmode;
+	   }
+    }
+	var PrescNo=selPrescArr.join("^");
+	$.messager.confirm("确认对话框", $g("是否确定将处方")+"<font color=red>"+PrescNo+"</font>"+$g("原煎药方式：")+"<font color=red>"+cookmode+"</font> "+$g("修改为：")+"<font color=red>"+NewCookMode+"</font>？", function (r) {
+		if (r) {
+			var LogonInfo=session['LOGON.CTLOCID']+"^"+session['LOGON.GROUPID']+"^"+session['LOGON.USERID']+"^"+session['LOGON.HOSPID'];
+			var rtn = $.cm({
+				ClassName:"web.UDHCPrescriptQueryCM",
+				MethodName:"UpdateCookMode",
+				dataType:"text",
+				PrescNo:PrescNo,
+				NewCookModeDr:NewCookModeDr,
+				LogonInfo:LogonInfo,
+				dataType:"text"
+		    },false);
+		    if (rtn.split("^")[0] ==0) {
+			    $.messager.alert("提示","煎药费申请成功！如果之前已经缴纳了煎药费请到收费处退费，然后再缴纳新的煎药费!","info",function(){
+					$("#cookModeDialog").window("close");
+					LoadOutPatientDataGrid();
+				});
+			}else{
+				$.messager.alert("提示",$g("修改煎药费失败！")+rtn.split("^")[1]);
+			}
+		}
+	});
+	
 }

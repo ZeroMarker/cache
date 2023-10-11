@@ -48,7 +48,7 @@
 	        originWindow:window,
 	        closable:false,
 			width:880,
-			height:420,
+			height:460,
 			dataRow:{ReportID:ReportID},  
 			onBeforeClose:function(){
 				obj.gridLoad();  //刷新当前页
@@ -66,7 +66,7 @@
 	        originWindow:window,
 	        closable:false,
 			width:880,
-			height:420,
+			height:460,
 			dataRow:{ReportID:ReportID},  
 			onBeforeClose:function(){
 				obj.gridLoad();  //刷新当前页

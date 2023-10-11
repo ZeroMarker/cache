@@ -22,6 +22,15 @@
 			if ($.trim(kssConfig.SMANYCONSULT) != "1") {
 				kssConfig.CONDEPNUM = 1;
 			};
+			kssConfig.DEFAULTCONDEP = undefined;
+			kssConfig.DEFAULTCONDOC = undefined;
+			kssConfig.DEFAULTCONDEP1 = ((typeof kssConfig.DEFAULTCONDEP1 =="undefined")||(kssConfig.DEFAULTCONDEP1==0))?"":kssConfig.DEFAULTCONDEP1;
+			kssConfig.DEFAULTCONDEP2 = ((typeof kssConfig.DEFAULTCONDEP2 =="undefined")||(kssConfig.DEFAULTCONDEP2==0))?"":kssConfig.DEFAULTCONDEP2;
+			kssConfig.DEFAULTCONDEP3 = ((typeof kssConfig.DEFAULTCONDEP3 =="undefined")||(kssConfig.DEFAULTCONDEP3==0))?"":kssConfig.DEFAULTCONDEP3;
+			kssConfig.DEFAULTCONDOC1 = ((typeof kssConfig.DEFAULTCONDOC1 =="undefined")||(kssConfig.DEFAULTCONDOC1==0))?"":kssConfig.DEFAULTCONDOC1;
+			kssConfig.DEFAULTCONDOC2 = ((typeof kssConfig.DEFAULTCONDOC2 =="undefined")||(kssConfig.DEFAULTCONDOC2==0))?"":kssConfig.DEFAULTCONDOC2;
+			kssConfig.DEFAULTCONDOC3 = ((typeof kssConfig.DEFAULTCONDOC3 =="undefined")||(kssConfig.DEFAULTCONDOC3==0))?"":kssConfig.DEFAULTCONDOC3;
+
 		},
 		initConfigLayout: function (kssConfig) {
 			//计算各面板的高度,DHCANT-V4.1.2中增加配置
@@ -114,7 +123,11 @@
 							param.Arg1=session['LOGON.CTLOCID'];
 							param.ArgCnt=1;
 						},
+						value:kssConfig.DEFAULTCONDEP1,
 						onSelect:function(record) {
+							if (typeof record == "undefined") {
+								return false;
+							}
 							$('#i-consulation-panel-row1-condoc').simplecombobox('clear');
 							$('#i-consulation-panel-row1-condoc').simplecombobox({
 								onBeforeLoad: function(param){
@@ -165,8 +178,18 @@
 							param.ClassName="DHCAnt.KSS.MainInterface";
 							param.QueryName="QryConsultationDoc";
 							param.ModuleName="combobox";
-							param.Arg1="";
+							param.Arg1=kssConfig.DEFAULTCONDEP1;
 							param.ArgCnt=1;
+						},
+						//value:kssConfig.DEFAULTCONDOC1		//放在加载成功之后赋值，不然切换会诊科室时有问题
+						onLoadSuccess: function (data) {
+							if (data.length>0) {
+								if ($.hisui.indexOfArray(data,"id",kssConfig.DEFAULTCONDOC1)>-1){
+									$(this).combobox("select",kssConfig.DEFAULTCONDOC1);
+								}else{
+									$(this).combobox("select","");
+								}
+							}
 						}
 					});
 					if ($.trim(kssConfig.SMANYCONSULT) == "1") {
@@ -181,7 +204,11 @@
 										param.Arg1=session['LOGON.CTLOCID'];
 										param.ArgCnt=1;
 									},
+									value:kssConfig.DEFAULTCONDEP3,
 									onSelect:function(record) {
+										if (typeof record == "undefined") {
+											return false;
+										}
 										$('#i-consulation-panel-row3-condoc').simplecombobox('clear');
 										$('#i-consulation-panel-row3-condoc').simplecombobox({
 											onBeforeLoad: function(param){
@@ -221,8 +248,18 @@
 										param.ClassName="DHCAnt.KSS.MainInterface";
 										param.QueryName="QryConsultationDoc";
 										param.ModuleName="combobox";
-										param.Arg1="";
+										param.Arg1=kssConfig.DEFAULTCONDEP3;
 										param.ArgCnt=1;
+									},
+									//value:kssConfig.DEFAULTCONDOC3		//放在加载成功之后赋值，不然切换会诊科室时有问题
+									onLoadSuccess: function (data) {
+										if (data.length>0) {
+											if ($.hisui.indexOfArray(data,"id",kssConfig.DEFAULTCONDOC3)>-1){
+												$(this).combobox("select",kssConfig.DEFAULTCONDOC3);
+											}else{
+												$(this).combobox("select","");
+											}
+										}
 									}
 								})
 								//break;
@@ -236,7 +273,11 @@
 										param.Arg1=session['LOGON.CTLOCID'];
 										param.ArgCnt=1;
 									},
+									value:kssConfig.DEFAULTCONDEP2,
 									onSelect:function(record) {
+										if (typeof record == "undefined") {
+											return false;
+										}
 										$('#i-consulation-panel-row2-condoc').simplecombobox('clear');
 										$('#i-consulation-panel-row2-condoc').simplecombobox({
 											onBeforeLoad: function(param){
@@ -279,8 +320,18 @@
 										param.ClassName="DHCAnt.KSS.MainInterface";
 										param.QueryName="QryConsultationDoc";
 										param.ModuleName="combobox";
-										param.Arg1="";
+										param.Arg1=kssConfig.DEFAULTCONDEP2;
 										param.ArgCnt=1;
+									},
+									//value:kssConfig.DEFAULTCONDOC2		//放在加载成功之后赋值，不然切换会诊科室时有问题
+									onLoadSuccess: function (data) {
+										if (data.length>0) {
+											if ($.hisui.indexOfArray(data,"id",kssConfig.DEFAULTCONDOC1)>-1){
+												$(this).combobox("select",kssConfig.DEFAULTCONDOC2);
+											}else{
+												$(this).combobox("select","");
+											}
+										}
 									}
 								})
 							  break;
@@ -325,7 +376,8 @@
 				$("#i-kss3Info").removeClass("c-item-hidden");
 				$("#i-kss3Info-panel").simplepanel({
 					headerCls:'panel-header-gray',
-					title:"<span style='margin-left:8px;'>特抗药相关</span>",
+					//title:"<span style='margin-left:8px;'>特抗药相关</span>",
+					title:"特抗药相关",
 					maximizable:false,
 					collapsible:false,
 					height:kss3PanelHieght,
@@ -358,13 +410,15 @@
 			$("#i-baseinfo-drug-content-drugname").text(drugInfoObj.drugDesc);
 			$("#i-baseinfo-drug-content-drugform").text(drugInfoObj.drugForm);
 			$("#i-baseinfo-drug-content-ddd").text("DDD：" + drugInfoObj.drugDDD);
+			/*
 			if (PARAMObj.OrderPoisonCode == "KSS3") {
 				drugPoisonDesc = "特殊级";
 			} else if (PARAMObj.OrderPoisonCode == "KSS2"){
 				drugPoisonDesc = "限制级";
 			} else {
 				drugPoisonDesc = "非限制级";
-			};
+			};*/
+			drugPoisonDesc = drugInfoObj.phoDesc;
 			var sprator = "&nbsp;&nbsp;&nbsp;&nbsp;";
 			var drugHtmlInfo = drugInfoObj.drugDesc + sprator + drugInfoObj.drugForm + sprator + drugPoisonDesc + sprator + "DDD：" + drugInfoObj.drugDDD;
 			var docHtmlInfo = docInfoObj.docName + sprator + docInfoObj.ctCarPrvTpDesc;
@@ -374,10 +428,10 @@
 			// BaseInfo DIY DISPLAY
 			var displayText = "";
 			for (var j = 0; j < kssConfig.processInfo.length; j++ ) {
-				if (kssConfig.processInfo[j] == "F") displayText = displayText + "> 需科室预审 ";
-				if (kssConfig.processInfo[j] == "H") displayText = displayText + "> 需会诊";
-				if (kssConfig.processInfo[j] == "S") displayText = displayText + "> 需科室审核";
-				if (kssConfig.processInfo[j] == "U") displayText = displayText + "> 需最终审核";
+				if (kssConfig.processInfo[j] == "F") displayText = displayText + "> "+$g("需科室预审");
+				if (kssConfig.processInfo[j] == "H") displayText = displayText + "> "+$g("需会诊");
+				if (kssConfig.processInfo[j] == "S") displayText = displayText + "> "+$g("需科室审核");
+				if (kssConfig.processInfo[j] == "U") displayText = displayText + "> "+$g("需最终审核");
 			};
 			if ($.trim(displayText) == "") {
 				displayText = "无";
@@ -450,7 +504,7 @@
 			
 			//是否送检
 			$("#i-useaim-aetiology-panel-islab").localcombobox({
-				data: [{id: '1', text: '是'}, {id: '0',text: '否'}],
+				data: [{id: '1', text: $g('是')}, {id: '0',text: $g('否')}],
 				value: 0,
 				onLoadSuccess: function(){
 					var result = $.InvokeMethod("DHCAnt.KSS.FunctionExtend","ChkSubmitType", PARAMObj.ArcimRowid, "", session['LOGON.HOSPID']);
@@ -512,6 +566,7 @@
 				columns:[[
 					{field:'OpName',title:'手术名称',width:100},
 					{field:'operCut',title:'手术切口',width:100},
+					{field:'OPAStatus',title:'手术状态',width:100},
 					{field:'StartDateStr',title:'手术开始时间',width:100},
 					{field:'id',title:'id',width:100,hidden:true},
 				]],
@@ -678,54 +733,98 @@
 					};
 				};
 			};
+			if (PARAMObj.LocalMode == 2) {
+				
+				$HUI.combobox("#JLUom", {
+					url:$URL+"?ClassName=DHCAnt.KSS.Common.Query&QueryName=QryDoseUom&arcim="+PARAMObj.ArcimRowid+"&ResultSetType=array",
+					valueField:'id',
+					textField:'text',
+					blurValidValue:true,
+					onLoadSuccess: function () {
+						var data = $(this).combobox('getData');
+						if (data.length>0) {
+							$(this).combobox("select",data[0].id);
+						}
+					}
+				});	
+				
+				$HUI.combobox("#Instruc", {
+					url:$URL+"?ClassName=web.UDHCFavItemNew&QueryName=CombListFind&CombName=ItemInstruction&ResultSetType=array",
+					valueField:'CombValue',
+					textField:'CombDesc',
+					defaultFilter:4,
+					blurValidValue:true
+				});	
+				
+				$HUI.combobox("#Freq", {
+					url:$URL+"?ClassName=web.UDHCFavItemNew&QueryName=CombListFind&CombName=ItemFrequence&ResultSetType=array",
+					valueField:'CombValue',
+					defaultFilter:4,
+					textField:'CombDesc',
+					blurValidValue:true
+					
+				});
+				
+				$HUI.combobox("#Prior", {
+					url:$URL+"?ClassName=DHCAnt.KSS.Common.Query&QueryName=QryOrderPrior&ResultSetType=array",
+					valueField:'id',
+					defaultFilter:4,
+					textField:'text',
+					value:PARAMObj.OrderPriorRowid||"",
+					blurValidValue:true
+					
+				});
+				
+			}
+
 		},
 		validateUseAim: function(saveMainObj) {	//验证使用目的是否合法
 			if (!saveMainObj.useaim) {
-				$.messager.alert('提示','使用目的不能为空!','info');
+				websys_getTop().$.messager.alert('提示','使用目的不能为空!','info');
 				return false;
 			};
 			if (!saveMainObj.usedrugIndication) {
-				$.messager.alert('提示','用药指征不能为空!','info');
+				websys_getTop().$.messager.alert('提示','用药指征不能为空!','info');
 				return false;
 			};
 			if (!saveMainObj.infectionSite) {
-				$.messager.alert('提示','感染部位不能为空!','info');
+				websys_getTop().$.messager.alert('提示','感染部位不能为空!','info');
 				return false;
 			};
 			if (saveMainObj.useaimText.indexOf("预防-手术")>=0) {
 				if (!saveMainObj.usedrugTime) {
-					$.messager.alert('提示','用药时机不能为空!','info');
+					websys_getTop().$.messager.alert('提示','用药时机不能为空!','info');
 					return false;
 				};
 				if (saveMainObj.operIds.length==0) {
-					$.messager.alert('提示','请选择手术记录!','info');
+					websys_getTop().$.messager.alert('提示','请选择手术记录!','info');
 					return false;
 				};
 			};
 			if ((saveMainObj.useaimText.indexOf("药敏")>=0) && (saveMainObj.sensitiveIds.length==0)) {
-				$.messager.alert('提示','请选择药敏记录!','info');
+				websys_getTop().$.messager.alert('提示','请选择药敏记录!','info');
 				return false;
 			};
 			if ((saveMainObj.SKSS3IND == 1) && (saveMainObj.OrderPoisonCode == "KSS3")) {
 				if (!saveMainObj.kss3Indication) {
-					$.messager.alert('提示','请选择特抗药指征!','info');
+					websys_getTop().$.messager.alert('提示','请选择特抗药指征!','info');
 					return false;
 				};
 			};
 			if ( (saveMainObj.SBJ) && (!saveMainObj.zBj) && ($.trim(saveMainObj.SBJ) == "1") ) {
-				$.messager.alert('提示','请选择致病菌!','info');
-				return false;
+				//websys_getTop().$.messager.alert('提示','请选择致病菌!','info');
+				//return false;
 			};
 			if (($.trim(saveMainObj.SUSEDRUGTIME) == "1")&&(PARAMObj.PAAdmType=="I")) {
 				if (!saveMainObj.pretime) {
-					$.messager.alert('提示','请选填写预计用药天数!','info');
+					websys_getTop().$.messager.alert('提示','请选填写预计用药天数!','info');
 					return false;
 				};
 				var existDays = $("#i-useaim-drugtime-existime").val();
 				if (existDays <= "0") {
 					$("#i-useaim-drugtime-extensionreason").removeAttr("disabled");
 					if ($.trim(saveMainObj.extensionreason) == "") {
-						$.messager.alert('提示','请填写延长用药原因!','info');
+						websys_getTop().$.messager.alert('提示','请填写延长用药原因!','info');
 						return false;
 					};
 				}
@@ -736,7 +835,7 @@
 		},
 		validateApplyInfo: function (applyMainObj){
 			if ((applyMainObj.isEm)&&(!applyMainObj.emreason)) {
-				$.messager.alert('提示','请填写越级使用原因!','info');
+				websys_getTop().$.messager.alert('提示','请填写越级使用原因!','info');
 				$("#i-apply-panel-emreason").validatebox({   
 					required: true,
 					missingMessage:'请输入越级使用原因...',
@@ -750,17 +849,17 @@
 			switch ($.trim(consultMainObj.CONDEPNUM)) {
 				case "3":
 					if ((!consultMainObj.consultDoc3)||(!consultMainObj.consultDep3)) {
-						$.messager.alert('提示','会诊科室和会诊医生不能为空!','info');
+						websys_getTop().$.messager.alert('提示','会诊科室和会诊医生不能为空!','info');
 						return false;
 					}
 				case "2":
 					if ((!consultMainObj.consultDoc2)||(!consultMainObj.consultDep2)) {
-						$.messager.alert('提示','会诊科室和会诊医生不能为空!','info');
+						websys_getTop().$.messager.alert('提示','会诊科室和会诊医生不能为空!','info');
 						return false;
 					}
 				default:
 					if ((!consultMainObj.consultDoc1)||(!consultMainObj.consultDep1)) {
-						$.messager.alert('提示','会诊科室和会诊医生不能为空!','info');
+						websys_getTop().$.messager.alert('提示','会诊科室和会诊医生不能为空!','info');
 						return false;
 					}
 			}

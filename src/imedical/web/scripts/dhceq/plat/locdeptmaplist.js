@@ -58,14 +58,16 @@ function BSyncChecked_Click()
 		messageShow("","","","未选中数据！")
 	    return;
 	}
+	var ErrMsg=""		//czf 2021-01-22 begin
 	jQuery.each(rows, function(rowIndex, rowData){
 		result = tkMakeServerCall("web.DHCEQ.Plat.CTDepartment","SyncDeptSingle",rowData.TCTLocID)
 		eval("result="+result)
 		if(result.SQLCODE!="0"){	//modified by csj 2020-03-31
-			messageShow("","","",result.Data)
-		}else{
-			initMapList()
+			var ErrStr=rowData.TCTLocCodeDesc+"同步错误,错误信息:"+result.Data
+			if(ErrMsg=="") ErrMsg=ErrStr
+			else ErrMsg=ErrMsg+";"+ErrStr
 		}
-		
 	}); 
+	if(ErrMsg!=""){messageShow("","","",ErrMsg)}
+	else {initMapList();}		//czf 2021-01-22 end
 }

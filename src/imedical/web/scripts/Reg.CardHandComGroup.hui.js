@@ -12,8 +12,9 @@ $(function(){
 })
 function Init(){
 	//初始化界面上ComboBox
-	InitComboBox()
-	InitDataGrid()
+	InitComboBox();
+	InitDataGrid();
+	InitCache();
 }
 function InitEvent(){
 	//定义新增按钮事件
@@ -22,6 +23,13 @@ function InitEvent(){
 	$("#Bsearch").bind("click",DataListLoad)
 	$("#BClear").bind("click",ClearClick)
 	//$("#Delete").bind("click",DeleteClick)
+}
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
+	}
 }
 function InitDataGrid(){
 	//,:%String,DefualtProvince:%String,:%String,:%String,:%String,:%String

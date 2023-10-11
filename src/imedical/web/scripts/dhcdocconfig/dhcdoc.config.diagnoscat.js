@@ -9,6 +9,9 @@ var PAADMTypeStr=[{"code":"I","desc":"InPatient"},{"code":"O","desc":"OutPatient
 var DCTypeStr=[{"code":"S","desc":"特殊病"},{"code":"M","desc":"慢性病"},{"code":"C","desc":"押金"}];
 $(function(){
 	InitHospList();
+	InitCache();
+	InitMRCIDLookup();
+	InitARCIDLookup();
 });
 function InitHospList()
 {
@@ -18,6 +21,13 @@ function InitHospList()
 	}
 	hospComp.jdata.options.onLoadSuccess= function(data){
 		InitDiagnosCatGrid();
+	}
+}
+function InitCache(){
+	var hasCache = $.DHCDoc.ConfigHasCache();
+	if (hasCache!=1) {
+		$.DHCDoc.CacheConfigPage();
+		$.DHCDoc.storageConfigPageCache();
 	}
 }
 function InitDiagnosCatGrid(){
@@ -136,14 +146,11 @@ function InitDiagnosCatGrid(){
 						if(value=="0"){
 							DiagnosCatDataGrid.datagrid("endEdit", editRow);
                 			editRow = undefined;
-							DiagnosCatDataGrid.datagrid('load');
-           					DiagnosCatDataGrid.datagrid('unselectAll');
-           					//$.messager.alert({title:"提示",msg:"保存成功"});           					
+							DiagnosCatDataGrid.datagrid('unselectAll').datagrid('load');
 						}else{
 							$.messager.alert('提示',"保存失败:"+value);
 							return false;
 						}
-						editRow = undefined;
 					}else{
 						var value=$.m({
 							ClassName:"DHCDoc.DHCDocConfig.DiagnosCat",
@@ -154,8 +161,7 @@ function InitDiagnosCatGrid(){
 						if(value=="0"){
 							DiagnosCatDataGrid.datagrid("endEdit", editRow);
                 			editRow = undefined;
-							DiagnosCatDataGrid.datagrid('load');
-           					DiagnosCatDataGrid.datagrid('unselectAll');
+							DiagnosCatDataGrid.datagrid('unselectAll').datagrid('load');
            					//$.messager.alert({title:"提示",msg:"保存成功"});           					
 						}else{
 							if (value=="-1"){
@@ -167,7 +173,6 @@ function InitDiagnosCatGrid(){
 							}
 							return false;
 						}
-						editRow = undefined;
 					}
 			}
 		  }             
@@ -345,6 +350,7 @@ function InitDiagnosCatGrid(){
 }
 function InitDiagnosCatDetail()
 {
+	$("#MRCIDLookup").lookup("setValue",'').lookup('setText','');
 	var DiagnosCatDetailToolBar = [{
             text: '增加',
             iconCls: 'icon-add',
@@ -514,6 +520,11 @@ function InitDiagnosCatDetail()
 		toolbar:DiagnosCatDetailToolBar,
 		onBeforeLoad:function(param){
 		   editRow2 = undefined;
+		   var MRCIDLookup = $("#MRCIDLookup").lookup("getValue");
+		   if (typeof MRCIDLookup == "undefined"){
+		       MRCIDLookup = "";
+		   }
+		   //$("#ItemSelList").datagrid("load",{"params":arRepID});
 		   if (DiagnosCatDetailDataGrid)  DiagnosCatDetailDataGrid.datagrid("unselectAll").datagrid("rejectChanges");
 	       var DCRowid="";
 	       var rows = DiagnosCatDataGrid.datagrid("getSelected"); 
@@ -521,13 +532,86 @@ function InitDiagnosCatDetail()
 	       if(DCRowid=="") return 
 	       param.ClassName ='DHCDoc.DHCDocConfig.DiagnosCat';
 	       param.QueryName ='GetDiagnosCatDetail';
-	       param.DCRowid =DCRowid;	
+	       param.DCRowid =DCRowid;
+	       param.MRCRowid =MRCIDLookup;		
 	       //param.ArgCnt =1;
 	   }
 	});
+	
 };
+function InitARCIDLookup(){
+	$("#ARCIDLookup").lookup({
+		panelWidth:450,
+		panelHeight:350,
+		url:$URL,
+        mode:'remote',
+        method:"Get",
+        idField:'ArcimRowID',
+	    textField:'ArcimDesc',
+        columns:[[  
+       		{field:'ArcimDesc',title:'名称',width:400,sortable:true},
+			{field:'ArcimRowID',title:'ID',width:120,sortable:true},
+        ]],
+        pagination:true,
+        isCombo:true,
+        minQueryLen:0,
+        delay:'200',
+        queryOnSameQueryString:true,
+        queryParams:{ClassName: 'DHCDoc.DHCDocConfig.ArcItemConfig',QueryName: 'FindAllItem'},
+        onBeforeLoad:function(param){
+	        if (param['q']) {
+				var desc=param['q'];
+			}else{
+				//return false;
+			}
+			param = $.extend(param,{Alias:desc,HospId:$HUI.combogrid('#_HospList').getValue()});
+	    },onSelect:function(ind,item){
+		    $('#tabDiagnosCatItem').datagrid("load",{param:""});
+		} 
+    }).change(function(){
+		if($(this).val()==''){
+			$("#ARCIDLookup").lookup("setValue",'');
+			$('#tabDiagnosCatItem').datagrid("load",{param:""});
+		}
+	});
+}
+function InitMRCIDLookup(){
+	$("#MRCIDLookup").lookup({
+		panelWidth:450,
+		panelHeight:350,
+		url:$URL,
+        mode:'remote',
+        method:"Get",
+        idField:'MRCIDRowId',
+	    textField:'MRCIDDesc',
+        columns:[[  
+       		{field:'MRCIDDesc',title:'名称',width:350},
+	         {field:'MRCIDRowId',title:'ID',width:50}
+        ]],
+        pagination:true,
+        isCombo:true,
+        minQueryLen:0,
+        delay:'200',
+        queryOnSameQueryString:true,
+        queryParams:{ClassName: 'DHCDoc.DHCDocConfig.CNMedCode',QueryName: 'FindDiagnoseList'},
+        onBeforeLoad:function(param){
+	        if (param['q']) {
+				var desc=param['q'];
+			}
+			param = $.extend(param,{desc:desc,HospId:$HUI.combogrid('#_HospList').getValue()});
+	    },onSelect:function(ind,item){
+		    $('#tabDiagnosCatDetail').datagrid("load",{param:""});
+		}
+    }).change(function(){
+		if($(this).val()==''){
+			$("#MRCIDLookup").lookup("setValue",'');
+			$('#tabDiagnosCatDetail').datagrid("load",{param:""});
+		}
+	});
+}
 function InitDiagnosCatItem()
 {
+	$('#ARCIDLookup').lookup('setValue','').lookup('setText','');
 	var DiagnosCatItemToolBar = [{
             text: '增加',
             iconCls: 'icon-add',
@@ -662,6 +746,7 @@ function InitDiagnosCatItem()
 		                             required: true,
 		                             panelWidth:450,
 									 panelHeight:290,
+									 delay: 500,  
 		                             idField:'ArcimRowID',
 		                             textField:'ArcimDesc',
 		                            value:'',//缺省值 
@@ -750,12 +835,17 @@ function InitDiagnosCatItem()
 			editRow3 = undefined;
 		   if (DiagnosCatItemDataGrid)  DiagnosCatItemDataGrid.datagrid("unselectAll").datagrid("rejectChanges");
 	       var DCRowid="";
+	       var ARCIDLookup = $("#ARCIDLookup").lookup("getValue");
+		   if (typeof ARCIDLookup == "undefined"){
+		       ARCIDLookup = "";
+		   }
 	       var rows = DiagnosCatDataGrid.datagrid("getSelected"); 
 		   if(rows) DCRowid=rows.DCRowid
 	       if(DCRowid=="") return 
 	       param.ClassName ='DHCDoc.DHCDocConfig.DiagnosCat';
 	       param.QueryName ='GetDiagnosCatItem';
 	       param.DCRowid =DCRowid;	
+	       param.ARCIMRowid=ARCIDLookup;
 	       //param.ArgCnt =1;
 	   }
 	});

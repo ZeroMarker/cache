@@ -46,6 +46,7 @@ function setDataGrid(interface)
 	    pagination:true,
 	    singleSelect:false,
 	    fit:true,
+	    border:false,
 	    columns:getColumnScheme("scheme>show>item")
   });
 }
@@ -109,15 +110,22 @@ function getData()
 	var checkedItems = $('#vitalsigns').datagrid('getChecked');
 	var result = "";
 	$.each(checkedItems, function(index, item){
+		var subresult="";
 		for (i=0;i<refScheme.length;i++ ){ 
 			if (item[refScheme[i].code]!="")
 			{
-				result = result + refScheme[i].desc + item[refScheme[i].code] + refScheme[i].separate;
+				subresult = subresult + refScheme[i].desc + item[refScheme[i].code] + refScheme[i].separate;
 			}
 		}
-		if (checkedItems.length-1 > index)
+		if (subresult!="")
 		{
-			result = result + separate;
+			result = result + subresult;
+			
+			if (checkedItems.length-1 > index)
+			{
+				//如果数据为空，不插入分隔符
+				result = result + separate;
+			}
 		}
 	}); 
 	var param = {"action":"insertText","text":result}

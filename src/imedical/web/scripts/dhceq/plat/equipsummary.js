@@ -4,15 +4,19 @@ var queryParams={ClassName:"web.DHCEQ.Plat.CTChartsDefine",QueryName:"EquipSumma
 jQuery(document).ready(function()
 {
 	defindTitleStyle();
-	initEquipSummary();
+	//initEquipSummary();
 	initEchartsObjMap();
-	initChartsDefine("EQLocEquipAmount1^EQLocEquipNum1^EQEquipTypeNumPercent","");
+	initChartsDefine("EQLocEquipNum1^EQLocEquipAmount1^EQStatCatNumPercent^EQYearNum^EQYearAmount^EQEquipTypeNumPercent","");
 });
 function initEchartsObjMap()
 {
+	EchartsObjMap["EQYearNum"]="YearEquipNumAmount"
+	EchartsObjMap["EQYearAmount"]="YearEquipNumAmount"
 	EchartsObjMap["EQLocEquipNum1"]="LocEquipNumAmount"
 	EchartsObjMap["EQLocEquipAmount1"]="LocEquipNumAmount"
+	EchartsObjMap["EQStatCatNumPercent"]="EQStatCatNumPercent"
 	EchartsObjMap["EQEquipTypeNumPercent"]="EquipTypePercent"
+	
 }
 function initEquipSummary()
 {

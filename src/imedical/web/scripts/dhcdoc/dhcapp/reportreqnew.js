@@ -1082,7 +1082,7 @@ function sendExaReqDetail(){
 		return;
 	}
 	/// 保存模板数据
-	runClassMethod("web.DHCAPPExaReport","save",{"pid":pid, "ListData":mItmListData},function(jsonString){
+	runClassMethod("web.DHCAPPExaReport","save",{"pid":pid, "ListData":mItmListData,"LgParams":websys_getSessionStr()},function(jsonString){
 		if (jsonString < 0){
 			$.messager.alert("提示:","检查申请单发送失败，失败原因:"+jsonString);
 		}else{

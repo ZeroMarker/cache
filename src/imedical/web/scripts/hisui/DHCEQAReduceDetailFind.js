@@ -27,11 +27,31 @@ function InitPage()
 	var obj=document.getElementById("BClear");		//Mozy	984437	2019-8-5
 	if (obj) obj.onclick=BClear_Click;
 }
-
+///modify by mwz 20220117 mwz0057
 function BPrint_Click()
 {
-	///元素?GetRepPath?GetReportData
-	///
+	var ObjTJob=$('#tDHCEQAReduceDetailFind').datagrid('getData');
+	// MZY0118	2550023		2022-03-28
+	if(ObjTJob.rows.length<=0)
+	{
+		messageShow("","","","没有数据!");
+		return;
+	}
+	if (!CheckColset("EQAReduceList"))
+	{
+		messageShow('','','提示',"导出数据列未设置!");
+		return ;
+	}
+	if (ObjTJob.rows[0]["TJob"])  TJob=ObjTJob.rows[0]["TJob"];
+	if (TJob=="")  return;
+	var PrintFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo",'990062');
+	if (PrintFlag=="1")
+	{
+		var url="dhccpmrunqianreport.csp?reportName=DHCEQAReduceDetailExport.raq&CurTableName=EQAReduceList&CurUserID="+session['LOGON.USERID']+"&CurGroupID="+session['LOGON.GROUPID']+"&Job="+TJob
+    	window.open(url,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0');   //
+	}
+	else
+	{
 	var templateName="DHCEQAReduceDetailFindSP.xls";
 	var isSave=1;
 	var savefilename=GetFileName();
@@ -40,6 +60,7 @@ function BPrint_Click()
 	//var colset="1:4^2:0^3:5^4:6^5:2^6:9^7:10^8:11^9:10^10:13^11:14";///列x1:输出结果第y1位^列x2:输出结果第y2位.....
 	var colset="1:0^2:1^3:2^4:3^5:4^6:5^7:6";///列x1:输出结果第y1位^列x2:输出结果第y2位.....
 	PrintEQReport(templateName,isSave,savefilename,colset);
+	}
 }
 
 function PrintEQReportHeader(xlsheet)

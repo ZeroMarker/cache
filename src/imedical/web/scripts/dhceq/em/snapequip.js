@@ -10,6 +10,7 @@ jQuery(document).ready
 );
 function initDocument()
 {
+	initUserInfo();  ///Add By zc0096 20210121 session值初始化
 	initPanel();
 }
 function initPanel()
@@ -92,6 +93,7 @@ function initDHCEQSnapEquipList()
 	        QueryName:"GetEquipList",
 	        vData:"^IsOut=N^IsDisused=N^",
 	        SnapShotID:$('#SnapShotDR').val(),
+	        Ejob:getElementValue("Job")  // Modified By QW20210705 BUG:QW0136 增加入参Ejob修正合计错误
 	    },
 	    border : false,
 		striped : true,
@@ -110,7 +112,7 @@ function initDHCEQSnapEquipList()
                 text:'导出',
                 handler: function(){
                      BSaveExcel_Click();
-                }},'----------',
+                }},
                 {
                 iconCls: 'icon-set-col',
                 text:'导出列设置',
@@ -135,6 +137,7 @@ function BFind_Clicked()
 	        QueryName:"GetEquipList",
 	        vData:lnk,
 	        SnapShotID:$('#SnapShotDR').val(),
+	        Ejob:getElementValue("Job")  // Modified By QW20210705 BUG:QW0136 增加入参Ejob修正合计错误
 	    },
 	    onLoadSuccess: function (data) {
 			InitToolbarForAmountInfo();
@@ -183,9 +186,35 @@ function GetLnk()
 }
 function BSaveExcel_Click() //导出
 {	
-	var vData=GetLnk();
-	PrintDHCEQEquipNew("Equip",1,getElementValue("Job"),vData,"SnapEquipList",50);	//Mozy	914705	2019-5-27
-	return
+	//Modefied by zc0093  润乾导出修改 2021-01-07 begin
+	var PrintFlag=tkMakeServerCall("web.DHCEQCommon","GetSysInfo",'990062');
+	if (PrintFlag=="1")
+	{
+		var Rows = $('#tDHCEQSnapEquipList').datagrid('getRows');
+		var RowCount=Rows.length;
+		if(RowCount<=0){
+			messageShow("","","","没有数据!")
+			return;
+		}
+		// MZY0121	2587810		2022-04-15
+		if (!CheckColset("Equip"))
+		{
+			messageShow('popover','alert','提示',"导出数据列未设置!")
+			return ;
+		}
+		var url="dhccpmrunqianreport.csp?reportName=DHCEQSnapEquipExport.raq&CurTableName=Equip&CurUserID="+session['LOGON.USERID']+"&CurGroupID="+session['LOGON.GROUPID']+"&Job="+getElementValue("Job")
+    	if ('function'==typeof websys_getMWToken){		//czf 2023-03-14 token启用参数传递
+			url += "&MWToken="+websys_getMWToken()
+		}
+    	window.open(url,'_blank','toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes,width=890,height=650,left=120,top=0');   //
+	}
+	else
+	{
+		var vData=GetLnk();
+		PrintDHCEQEquipNew("Equip",1,getElementValue("Job"),vData,"SnapEquipList",50);	//Mozy	914705	2019-5-27
+		return
+	}
+	//Modefied by zc0093  润乾导出修改 2021-01-07 end
 }
 function BColSet_Click() //导出数据列设置
 {
@@ -197,6 +226,7 @@ function BColSet_Click() //导出数据列设置
 }
 // 台账明细菜单栏中显示合计信息
 function InitToolbarForAmountInfo() {
-	var Data = tkMakeServerCall("web.DHCEQ.EM.BUSSnapShot","GetEquipSumInfo",'');  //Modefied by zc0044 2018-11-22 修改调用方法名称
+	var Ejob=getElementValue("Job");  // Add By QW20210705 BUG:QW0136 增加入参Ejob修正合计错误
+	var Data = tkMakeServerCall("web.DHCEQ.EM.BUSSnapShot","GetEquipSumInfo",'',Ejob);  // Modified By QW20210705 BUG:QW0136 增加入参Ejob修正合计错误
 	$("#sumTotal").html(Data);	
 }

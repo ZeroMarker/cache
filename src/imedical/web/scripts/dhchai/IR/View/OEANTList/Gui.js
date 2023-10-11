@@ -48,7 +48,11 @@ function InitOEANTListWin(){
 			{"data": "AntUsePurpose"},
 			{"data": "OEFreqDesc"},
 			{"data": "OEInstruc"},
-			{"data": "OEDoseQty"},
+			{"data": "OEDoseQty",
+				"render": function (data, type, row) {
+					return row["OEDoseQty"] + '' + row["OEDoseQtyUom"];
+				}
+			},
 			{"data": "OrdID","visible" : false}
 		]
 		,"fnDrawCallback": function (oSettings) {

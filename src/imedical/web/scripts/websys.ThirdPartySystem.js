@@ -22,7 +22,7 @@ document.body.onload=function(){
 	
 }
 function GenAES7KeyObj_click(){
-	aes7PaddingKeyObj.value = md5(new Date().toUTCString()).slice(0,16);
+	aes7PaddingKeyObj.value = md5(new Date().toUTCString()); //.slice(0,16);
 }
 function check(){
 	if(codeobj.value=="") {alert("«Î ‰»Î¥˙¬Î");return false;}

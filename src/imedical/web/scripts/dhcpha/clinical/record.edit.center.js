@@ -312,7 +312,7 @@ function girdDoc(tempParam)
 }
 //安装插件提示
 function setUpPlug (){
-	var result = window.open("emr.record.downloadplugin.csp?PluginUrl=" +pluginUrl,"","dialogHeight:100px;dialogWidth:200px;resizable:yes;status:no");
+	var result = window.showModalDialog("emr.record.downloadplugin.csp?PluginUrl=" +pluginUrl+"&MWToken="+websys_getMWToken(),"","dialogHeight:100px;dialogWidth:200px;resizable:yes;status:no");
 	if (result)
 	{
 		window.location.reload();
@@ -745,7 +745,7 @@ function saveDocument()
 	if ((documentContext.status.curAction == "print")&&(modifyResult.Modified == "True"))
 	{
 		var text = '药历 "' +param.text + '" 已打印，是否确认保存修改！';
-		var returnValues = window.open("emr.printprompt.csp",text,"dialogHeight:150px;dialogWidth:350px;resizable:no;status:no;scroll:yes;");
+		var returnValues = window.showModalDialog("emr.printprompt.csp?MWToken="+websys_getMWToken(),text,"dialogHeight:150px;dialogWidth:350px;resizable:no;status:no;scroll:yes;");
 		if (returnValues == "cancel") return;
 	}
 	if (revokeSignedDocument(modifyResult))
@@ -987,7 +987,7 @@ function audit(signProperty)
 		var signParam = {"canRevokCheck":canRevokCheck,"cellName":signProperty.Name};
 		var signParamStr = base64encode(utf16to8(escape(JSON.stringify(signParam))));
 		var usernameStr = base64encode(utf16to8(encodeURI(userName)))
-		var iframeContent = "<iframe id='iframeSignCA' scrolling='auto' frameborder='0' src='emr.ip.signca.csp?UserName="+usernameStr+"&UserID="+userID+"&OpenFlag="+openFlag+"&UserLocID="+userLocID+"&EpisodeID="+episodeID+"&SignParamStr="+signParamStr+"&openWay=editor' style='width:340px; height:235px; display:block;'></iframe>"
+		var iframeContent = "<iframe id='iframeSignCA' scrolling='auto' frameborder='0' src='emr.ip.signca.csp?MWToken="+websys_getMWToken()+"&UserName="+usernameStr+"&UserID="+userID+"&OpenFlag="+openFlag+"&UserLocID="+userLocID+"&EpisodeID="+episodeID+"&SignParamStr="+signParamStr+"&openWay=editor' style='width:340px; height:235px; display:block;'></iframe>"
 		var arr = {"signProperty":signProperty,"tmpInstanceId":tmpInstanceId}
 		createModalDialog("CASignDialog","CA签名","360","285","iframeSignCA",iframeContent,signCACallBack,arr)
 		
@@ -1003,7 +1003,7 @@ function audit(signProperty)
 		var signParam = {"canRevokCheck":canRevokCheck,"cellName":signProperty.Name};
 		var signParamStr = base64encode(utf16to8(escape(JSON.stringify(signParam))));
 		
-		var iframeContent = "<iframe id='iframeSign' scrolling='auto' frameborder='0' src='dhcpha.clinical.record.sign.csp?UserName="+userName+"&UserCode="+userCode+"&OpenFlag="+openFlag+"&UserLocID="+userLocID+"&EpisodeID="+episodeID+"&SignParamStr="+signParamStr+"&openWay=sign' style='width:360px; height:255px; display:block;'></iframe>"
+		var iframeContent = "<iframe id='iframeSign' scrolling='auto' frameborder='0' src='dhcpha.clinical.record.sign.csp?MWToken="+websys_getMWToken()+"&UserName="+userName+"&UserCode="+userCode+"&OpenFlag="+openFlag+"&UserLocID="+userLocID+"&EpisodeID="+episodeID+"&SignParamStr="+signParamStr+"&openWay=sign' style='width:360px; height:255px; display:block;'></iframe>"
 		var arr = {"signProperty":signProperty,"tmpInstanceId":tmpInstanceId,"documentContext":documentContext}
 		createModalDialog("SignDialog","系统签名","385","295","iframeSign",iframeContent,signCallBack,arr)
 		//var returnValues = websys_createWindow("dhcpha.clinical.record.sign.csp?UserName="+userName+"&UserCode="+userCode+"&OpenFlag="+openFlag,signParam,"dialogHeight:220px;dialogWidth:300px;resizable:yes;status:no");
@@ -1844,7 +1844,7 @@ function GetObserverData()
 					"patientID":patientID,
 					"userID":userID
 				};
-	        	returnValues = window.open("emr.observerdata.csp",array,"dialogWidth:607px;dialogHeight:313px;resizable:yes;center:yes;status:no");
+	        	returnValues = window.showModalDialog("emr.observerdata.csp?MWToken="+websys_getMWToken(),array,"dialogWidth:607px;dialogHeight:313px;resizable:yes;center:yes;status:no");
 	        }
         } 
     });
@@ -2105,7 +2105,7 @@ function eventRequestSign(commandJson)
 	 if (getModifyStatus().Modified == "True")
 	 {
 		 var text = '  签名前，请先保存药历！';
-		 returnValues = window.open("emr.prompt.csp",text,"dialogHeight:180px;dialogWidth:350px;resizable:yes;status:no;scroll:no;");
+		 returnValues = window.showModalDialog("emr.prompt.csp?MWToken="+websys_getMWToken(),text,"dialogHeight:180px;dialogWidth:350px;resizable:yes;status:no;scroll:no;");
          if (returnValues != "save")
          {
 	         return;
@@ -2213,7 +2213,7 @@ function reference(action)
 		    	split: true,
 		    	content: reference
 			});
-			$("#framReference").attr("src","dhcpha.clinical.record.edit.reference.east.csp");
+			$("#framReference").attr("src","dhcpha.clinical.record.edit.reference.east.csp?MWToken="+websys_getMWToken());
 		
 			//基础平台日志
 			setOperationLog(param,"EMR.Reference");
@@ -2237,7 +2237,7 @@ function reference(action)
 		    	split: true,
 		    	content: reference
 			});
-			$("#framReference").attr("src","dhcpha.clinical.record.edit.reference.south.csp");
+			$("#framReference").attr("src","dhcpha.clinical.record.edit.reference.south.csp?MWToken="+websys_getMWToken());
 		
 			//基础平台日志
 			setOperationLog(param,"EMR.Reference");

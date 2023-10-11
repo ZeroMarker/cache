@@ -25,7 +25,7 @@ $(function () {
 	$("#btn-clear").on("click", ClearConditions);
 	$('#btn-export').on('click', function () { //点击导出
 		if ($('#mzyptjdg' ).datagrid("getRows").length <=1) {
-			dhcphaMsgBox.alert("没有统计数据!");
+			dhcphaMsgBox.alert($g("没有统计数据!"));
 			return;
 		}
 		ExportAllToExcel("mzyptjdg")
@@ -70,91 +70,91 @@ function InitMZYPTJList() {
 	//定义columns
 	var columns = [[{
 				field: 'TPhDate',
-				title: '日期',
+				title: $g("日期"),
 				width: 90,
 				align: 'center',
 				sortable: true
 			}, {
 				field: 'TPmiNo',
-				title: '登记号',
+				title: $g("登记号"),
 				width: 90,
 				align: 'center',
 				sortable: true
 			}, {
 				field: 'TPatName',
-				title: '姓名',
+				title: $g("姓名"),
 				width: 100,
 				align: 'left',
 				sortable: true
 			}, {
 				field: 'TPatSex',
-				title: '性别',
+				title: $g("性别"),
 				width: 40,
 				align: 'center'
 			}, {
 				field: 'TPatAge',
-				title: '年龄',
+				title: $g("年龄"),
 				width: 75,
 				align: 'center'
 			}, {
 				field: 'TPatSN',
-				title: '证件号码',
+				title: $g("证件号码"),
 				width: 180,
 				align: 'center'
 			}, {
 				field: 'TMR',
-				title: '诊断',
+				title: $g("诊断"),
 				width: 200
 			}, {
 				field: 'TPrescNo',
-				title: '处方号',
+				title: $g("处方号"),
 				width: 120,
 				align: 'center',
 				sortable: true
 			}, {
 				field: 'TPhDesc',
-				title: '药品名称',
+				title: $g("药品名称"),
 				width: 200,
 				sortable: true
 			}, {
 				field: 'TPhQty',
-				title: '数量',
+				title: $g("数量"),
 				width: 60,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'TPhUom',
-				title: '单位',
+				title: $g("单位"),
 				width: 60
 			}, {
 				field: 'TPhMoney',
-				title: '金额',
+				title: $g("金额"),
 				width: 60,
 				align: 'right',
 				sortable: true
 			}, {
 				field: 'TIncBatCode',
-				title: '批号',
+				title: $g("批号"),
 				width: 100
 			}, {
 				field: 'TYF',
-				title: '用法',
+				title: $g("用法"),
 				width: 80
 			}, {
 				field: 'TPatLoc',
-				title: '科别',
+				title: $g("科别"),
 				width: 120
 			}, {
 				field: 'TDoctor',
-				title: '医生',
+				title: $g("医生"),
 				width: 80
 			}, {
 				field: 'TFYUser',
-				title: '发药人',
+				title: $g("发药人"),
 				width: 80
 			}, {
 				field: 'TBZ',
-				title: '备注',
+				title: $g("备注"),
 				width: 100
 			}
 		]];
@@ -179,7 +179,7 @@ function Query() {
 	}
 	var poisonCatId = $("#sel-poison").val();
 	if (poisonCatId == null) {
-		dhcphaMsgBox.alert("管制分类为必选项！");
+		dhcphaMsgBox.alert($g("管制分类为必选项！"));
 		return;
 	}
 	var tmpSplit = DHCPHA_CONSTANT.VAR.SPLIT;

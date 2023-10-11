@@ -39,15 +39,20 @@ function save(){
 				$("#datagrid").datagrid('reload')
 			}else if(data==1){
 				$.messager.alert("提示","PIS代码已存在,不能重复保存!"); 
-				$("#datagrid").datagrid('reload')
+				return
+				//$("#datagrid").datagrid('reload')
 			}else if(data==2){
 				$.messager.alert("提示","PIS描述已存在,不能重复保存!"); 
-				$("#datagrid").datagrid('reload')
+				return
+				//$("#datagrid").datagrid('reload')
 			}else if(data==3){
 				$.messager.alert("提示","HIS描述,已经被对照，不能重复对照!"); 
-				$("#datagrid").datagrid('reload')
+				return
+				//$("#datagrid").datagrid('reload')
 			}else{	
-				$.messager.alert('提示','保存失败:'+data);				
+				$.messager.alert('提示','保存失败:'+data);
+				return
+				//$("#datagrid").datagrid('reload')				
 			}
 			$("#datagrid").datagrid('reload')
 		});	

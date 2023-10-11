@@ -1,0 +1,16 @@
+Ext.onReady(function () {
+	Ext.QuickTips.init(); //初始化所有Tips
+	var tabPanel = new Ext.Panel({
+			// activeTab : 0,
+			//title:"预算支出控制",
+			layout:'border',
+			region : 'center',
+			items : [querypanel, itemGrid]//添加Tabs
+		});
+	var mainPanel = new Ext.Viewport({
+			layout : 'border',
+			items : tabPanel,
+			renderTo : 'mainPanel'
+		});
+
+});

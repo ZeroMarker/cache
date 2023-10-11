@@ -25,10 +25,11 @@ var DEC_PRESC = {
 			return;	
 		}
 		_opts = _opts || {};
+		var defWidth = 780;
 		if(parseInt(_opts.width)>0) { 	//mm单位转换px
 			_opts.width = (new unitConversion().mmConversionPx(parseInt(_opts.width)));
 		}else{
-			_opts.width = 700;
+			_opts.width = defWidth;
 		}
 		var _conHtmlId = _opts.divId || "divPreLayout";
 		var _defOpts = {
@@ -37,25 +38,55 @@ var DEC_PRESC = {
 		    headerCls: 'panel-header-gray',
 		    bodyCls: 'panel-body-gray',
 		    iconCls: 'icon-paper',
-		    width: 700,
+		    width: defWidth,
 		    title: "处方预览",
-		    content: '<div id="' + _conHtmlId + '"></div>'
+		    content: _opts.contentType === 'div' ? '<div id="' + _conHtmlId + '"></div>' : '<iframe id="' + _conHtmlId + '" style="border:0px;width:100%;height:100%"></iframe>'
 		}
 		var nOpts = $.extend({}, _defOpts, _opts)
 		$('#'+_Id).layout('add', nOpts);
+		$('#'+_conHtmlId).parent().css('overflow', 'hidden');
 		return _conHtmlId;
 	},
 	/**
 	 * Presc 处方预览显示
 	 * @param {String} _Id : 用于显示的html元素id
 	 * @param {Object} _opts 
-	 *					_opts.PrescNo : 处方号
-	 *					_opts.AdmType : 就诊类型（I/O）
-	 *					_opts.PrtType : 类型(预览/打印),可缺省,默认为预览
-	 *					_opts.zf : 正方/底方,默认底方
-	 *					_opts.CY : 正方/底方,默认底方
+	 *                 _opts.PrescNo : 处方号
+	 *                 _opts.AdmType : 就诊类型（I/O）
+	 *                 _opts.PrtType : 类型(预览/打印),可缺省,默认为预览
+	 *                 _opts.zf : 正方/底方,默认底方
+	 *                 _opts.CY : 正方/底方,默认底方
+	 * modified: 修改为统一的处方预览方式. Huxt 2023-04-13
 	 */
 	Presc: function(_Id, _opts){
+		// 获取数据
+		var _data = DEC_PRESC.Data(_opts);
+		if(_data == null){
+			return;
+		}
+		// 显示预览
+		PRINTCOM.XML({
+			printBy: 'inv',
+			XMLTemplate: _data.Templet,
+			data: _data,
+			iframeID: _Id,
+			preview: {
+				showButtons: true,
+				buttonsAlign: 'bottom',
+				backgroundColor: DEC_PRESC.Background,
+				bodyColor: DEC_PRESC.Background
+			},
+			listItem: {
+				styler: function(value, rowData, rowIndex){
+					var stockFlag = String.fromCharCode(1);
+					if ((value || '').indexOf(stockFlag) > 0){
+						return 'color:red;';
+					}
+				}
+			}
+		});
+		
+		/*
 		DEC_PRESC.Clear(_Id);
 		var _data = DEC_PRESC.Data(_opts);
 		if(_data == null){ return; }
@@ -71,6 +102,7 @@ var DEC_PRESC = {
 			DEC_PRESC.View(_Id, _data, _page);
 			_page++;
 		}
+		*/
 	},
 	/**
 	 * Data 获取数据,并设置默认值
@@ -99,12 +131,16 @@ var DEC_PRESC = {
 			DEC_PRESC.Row = _data.List.length;
 		}
 		var _title = _data.Para.PrescTitle;
-		if(_title.indexOf("毒麻")>"-1"){
+		/* 与 scripts/pharmacy/common/js/dhcpha.common.prescpreview.js 中的判断保持一致 */
+		if((_title.indexOf("毒")>"-1")||(_title.indexOf("麻")>"-1")||(_title.indexOf("精神")>"-1")){
 			DEC_PRESC.Background="#F5A89A";
 	    }else if(_title.indexOf("儿科")>"-1"){
 			DEC_PRESC.Background="#90EE90";
 	    }else if(_title.indexOf("急诊")>"-1"){
 			DEC_PRESC.Background="#FFFF96";
+	    }
+	    else {
+			DEC_PRESC.Background="#FFFFFF";
 	    }
 		return _data;
 	},

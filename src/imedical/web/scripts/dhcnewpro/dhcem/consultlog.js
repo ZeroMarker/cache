@@ -17,14 +17,14 @@ OpenCsLogWin = function(){
 		collapsible:true,
 		border:true,
 		closed:"true",
-		iconCls:'icon-paper',
+		iconCls:'icon-w-paper', //hxy 2023-02-07 
 		collapsible: false,
         minimizable: false,
         maximizable: false,
         resizable: false
 	};
 	InitLogGrid();  /// 初始定义窗口DataGrid
-	new WindowUX('会诊日志详情', 'LogWinDiv', (window.screen.availWidth-500), '400', option).Init();
+	new WindowUX('会诊日志详情', 'LogWinDiv', (window.screen.availWidth-740), '400', option).Init();
 	//$("#LogWin").html();
 }
 
@@ -45,11 +45,13 @@ function InitLogGrid(){
 		{field:'LgDate',title:'日期',width:100,align:'center'},
 		{field:'LgTime',title:"时间",width:100,align:'center'},
 		{field:'LgUser',title:"操作人",width:100},
-		{field:'LogNotes',title:"备注",width:500,formatter:SetCellField}
+		{field:'LogNotes',title:"备注",width:400,formatter:SetCellField}
 	]];
 	
 	///  定义datagrid
 	var option = {
+		border:true, //hxy 2023-02-07 st
+		bodyCls:'panel-header-gray', //ed
 		//showHeader:false,
 		fitColumn:true,
 		rownumbers : false,
@@ -61,7 +63,12 @@ function InitLogGrid(){
         }
 	};
 	
-	var uniturl = $URL+"?ClassName=web.DHCEMConsultQuery&MethodName=JsonCsLog&itmID="+CstItmID;
+	var ReqFlag=""; //会诊处理-申请列表-会诊日志详情中未显示非首行医生的操作记录;
+	if(parent.$("#QReqBtn").hasClass("btn-blue-select")){
+		ReqFlag=1;
+	}
+	
+	var uniturl = $URL+"?ClassName=web.DHCEMConsultQuery&MethodName=JsonCsLog&itmID="+CstItmID+"&ReqFlag="+ReqFlag;
 	new ListComponent('LogWin', columns, uniturl, option).Init();
 }
 

@@ -1,280 +1,529 @@
-var init = function () {
-	var IsBdData = [{ "RowId":"Y", "Description":" «"},{ "RowId":"N", "Description":"∑Ò"}]
-	var NotUseFlagData = [{ "RowId":"Y", "Description":" «"},{ "RowId":"N", "Description":"∑Ò"}]
-	var IsBdCombox = {
-		type: 'combobox',
-		options: {
-			data: IsBdData,
-			valueField: 'RowId',
-			textField: 'Description'
+Ôªø// Êú∫Âô®ËÆæÁΩÆ
+var init = function() {
+	var HospId = gHospId;
+	var TableName = 'CSSD_MachineConfig';
+	function InitHosp() {
+		var hospComp = InitHospCombo(TableName, gSessionStr);
+		if (typeof hospComp === 'object') {
+			HospId = $HUI.combogrid('#_HospList').getValue();
+			$('#_HospList').combogrid('options').onSelect = function(index, record) {
+				HospId = record.HOSPRowId;
+				Query();
+			};
 		}
-	}
-	
-	var NotUseFlagCombox = {
-		type: 'combobox',
-		options: {
-			data: NotUseFlagData,
-			valueField: 'RowId',
-			textField: 'Description'
-		}
+		Query();
 	}
 
-	var MachineTypeDataSearch =[{'RowId':'','Description':'»´≤ø'},{'RowId':'sterilizer','Description':'√æ˙∆˜'},{'RowId':'washer','Description':'«Âœ¥ª˙'}]
-	var MachineTypeBoxSearch = $HUI.combobox('#MachineType', {
-		data:MachineTypeDataSearch,
-		valueField: 'RowId',
-		textField: 'Description'
-	});
-	var machineTypeBoxComboxSearch = {
-		type: 'combobox',
-		options: {
-			data: MachineTypeDataSearch,
-			valueField: 'RowId',
-			textField: 'Description',
-			required:true
-		}
-	} 
-	
-	var MachineTypeData =[{'RowId':'sterilizer','Description':'√æ˙∆˜'},{'RowId':'washer','Description':'«Âœ¥ª˙'}]
-	var MachineTypeBox = $HUI.combobox( {
-		data:MachineTypeData,
-		valueField: 'RowId',
-		textField: 'Description'
-	});
-	var machineTypeBoxCombox = {
-		type: 'combobox',
-		options: {
-			data: MachineTypeData,
-			valueField: 'RowId',
-			textField: 'Description',
-			required:true
-		}
-	} 	
-	
-	///√æ˙≥µœ¬¿≠ ˝æ›
-	var AllSterCarBox = {
-		type: 'combobox',
-		options: {
-			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetAllSterCar&ResultSetType=array',
-			valueField: 'RowId',
-			textField: 'Description',
-			onSelect: function (record) {
-				var rows = MachineInfoGrid.getRows();
-				var row = rows[MachineInfoGrid.editIndex];
-				row.SterCarName = record.Description;
+	$HUI.tabs('#DetailTabs', {
+		onSelect: function(title, index) {
+			if (title === 'ÁÅ≠ËèåÂô®') {
+				Query('sterilizer');
+			} else if (title === 'Ê∏ÖÊ¥óÊú∫') {
+				Query('washer');
 			}
 		}
-	};
-	
-	///√æ˙∑Ω Ωœ¬¿≠ ˝æ›
-	var TempTypeCombox = {
+	});
+
+	// ÁÅ≠ËèåÊñπÂºè
+	var SterTypeCombox = {
 		type: 'combobox',
 		options: {
 			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetSterType&ResultSetType=array&isSter=Y',
 			valueField: 'RowId',
 			textField: 'Description',
-			onSelect: function (record) {
-				var rows = MachineInfoGrid.getRows();
-				var row = rows[MachineInfoGrid.editIndex];
+			required: true,
+			onSelect: function(record) {
+				var rows = SterMachineGrid.getRows();
+				var row = rows[SterMachineGrid.editIndex];
 				row.TempTypeDesc = record.Description;
+			},
+			onBeforeLoad: function(param) {
+				param.Params = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
 			}
 		}
 	};
+	// Ê∏ÖÊ¥óÊñπÂºè
+	var CleanTypeCombox = {
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCleanType&ResultSetType=array',
+			valueField: 'RowId',
+			textField: 'Description',
+			onSelect: function(record) {
+				var rows = CleanMachineGrid.getRows();
+				var row = rows[CleanMachineGrid.editIndex];
+				row.TempTypeDesc = record.Description;
+			},
+			onBeforeLoad: function(param) {
+				param.Params = JSON.stringify(addSessionParams({ BDPHospital: HospId, IsManual: 'Y' }));
+			}
+		}
+	};
+	var SterSupLocCombox = {
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + JSON.stringify(addSessionParams({ Type: 'SupLoc' })),
+			valueField: 'RowId',
+			textField: 'Description',
+			required: true,
+			onSelect: function(record) {
+				var rows = SterMachineGrid.getRows();
+				var row = rows[SterMachineGrid.editIndex];
+				row.SupLocDesc = record.Description;
+			}
+		}
+	};
+	var CleanSupLocCombox = {
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + JSON.stringify(addSessionParams({ Type: 'SupLoc' })),
+			valueField: 'RowId',
+			textField: 'Description',
+			required: true,
+			onSelect: function(record) {
+				var rows = CleanMachineGrid.getRows();
+				var row = rows[CleanMachineGrid.editIndex];
+				row.SupLocDesc = record.Description;
+			}
+		}
+	};
+	// ÁÅ≠ËèåÊû∂
+	var SterCarBox = {
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetAllSterCar&ResultSetType=array&PackTypeDetail=' + 6,
+			valueField: 'RowId',
+			textField: 'Description',
+			onSelect: function(record) {
+				var rows = SterMachineGrid.getRows();
+				var row = rows[SterMachineGrid.editIndex];
+				row.SterCarName = record.Description;
+			},
+			onBeforeLoad: function(param) {
+				param.Params = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			}
+		}
+	};
+	// ÂéÇÂïÜÔºà‰∏çÂå∫ÂàÜÊú∫Âô®Á±ªÂûãÔºâ
+	var SterManfBox = {
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetFirm&ResultSetType=array',
+			valueField: 'RowId',
+			textField: 'Description',
+			onBeforeLoad: function(param) {
+				param.Params = JSON.stringify(addSessionParams({ BDPHospital: HospId, MachineType: 'SW' }));
+			},
+			onSelect: function(record) {
+				var rows = SterMachineGrid.getRows();
+				var row = rows[SterMachineGrid.editIndex];
+				row.ManufactureDesc = record.Description;
+			}
+		}
+	};
+	var CleanManfBox = {
+		type: 'combobox',
+		options: {
+			url: $URL + '?ClassName=web.CSSDHUI.Common.Dicts&QueryName=GetFirm&ResultSetType=array',
+			valueField: 'RowId',
+			textField: 'Description',
+			onBeforeLoad: function(param) {
+				param.Params = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
+			},
+			onSelect: function(record) {
+				var rows = CleanMachineGrid.getRows();
+				var row = rows[CleanMachineGrid.editIndex];
+				row.ManufactureDesc = record.Description;
+			}
+		}
+	};
+	// ÁÅ≠ËèåÂô®Êú∫Âô®ÂûãÂè∑
+	var SterModelBox = {
+		type: 'combobox',
+		options: {
+			valueField: 'RowId',
+			textField: 'Description',
+			onShowPanel: function() {
+				$(this).combobox('loadData', SterilizerData);
+			}
+		}
+	};
+	// Ê∏ÖÊ¥óÊú∫Êú∫Âô®ÂûãÂè∑
+	var CleanModelBox = {
+		type: 'combobox',
+		options: {
+			valueField: 'RowId',
+			textField: 'Description',
+			onShowPanel: function() {
+				$(this).combobox('loadData', WasherData);
+			}
+		}
+	};
+	// ÊµãÊºè
+	var LeakCombox = {
+		type: 'combobox',
+		options: {
+			data: LeakData,
+			valueField: 'RowId',
+			textField: 'Description'
+		}
+	};
 
-	
-	$UI.linkbutton('#QueryBT',{ 
-		onClick:function(){
-			var Params = JSON.stringify($UI.loopBlock('MachineTB'));
-			MachineInfoGrid.load({
+	var BioPeriodCombox = {
+		type: 'combobox',
+		options: {
+			data: PeriodData,
+			valueField: 'RowId',
+			textField: 'Description'
+		}
+	};
+
+	var Query = function(Tab) {
+		var Params;
+		Tab = Tab || 'sterilizer';		// ÈªòËÆ§Êü•ËØ¢ÁÅ≠ËèåÂô®
+		if (Tab === 'sterilizer') {
+			Params = JSON.stringify(addSessionParams({ BDPHospital: HospId, MachineType: 'sterilizer' }));
+			SterMachineGrid.load({
+				ClassName: 'web.CSSDHUI.System.MachineConfig',
+				QueryName: 'QueryMachineInfo',
+				Params: Params
+			});
+		} else if (Tab === 'washer') {
+			Params = JSON.stringify(addSessionParams({ BDPHospital: HospId, MachineType: 'washer' }));
+			CleanMachineGrid.load({
 				ClassName: 'web.CSSDHUI.System.MachineConfig',
 				QueryName: 'QueryMachineInfo',
 				Params: Params
 			});
 		}
-	});
-	$UI.linkbutton('#AddBT',{ 
-		onClick:function(){
-			MachineInfoGrid.commonAddRow();
-		}
-	});
-	$UI.linkbutton('#ClearBT',{ 
-		onClick:function(){
-			$UI.clearBlock('MachineTB');
-			$UI.clear(MachineInfoGrid);
-		}
-	});
-	$UI.linkbutton('#SaveBT',{ 
-		onClick:function(){
-			var Rows=MachineInfoGrid.getChangesData();
-			if(isEmpty(Rows)){
-				//$UI.msg('alert','√ª”––Ë“™±£¥Êµƒ–≈œ¢!');
-				return;
-		}
-			$.cm({
-				ClassName: 'web.CSSDHUI.System.MachineConfig',
-				MethodName: 'SaveMachineInfo',
-				Params: JSON.stringify(Rows)
-			},function(jsonData){
-				if(jsonData.success==0){
-					$UI.msg('success',jsonData.msg);
-					MachineInfoGrid.reload();
-				}else{
-					$UI.msg('error',jsonData.msg);
-				 }
-			});
-		}
-	});
-	$UI.linkbutton('#DeleteBT',{ 
-		onClick:function(){
-			MachineInfoGrid.commonDeleteRow();
-			var rowMachine = $('#MachineInfoGrid').datagrid('getSelected');
-			if(!isEmpty(rowMachine)&&!isEmpty(rowMachine.RowId)){
-				$UI.msg('alert','“—Œ¨ª§ª˙∆˜ ˝æ›÷ªƒ‹Õ£”√,≤ªƒ‹…æ≥˝');
-			}
-			//Delete();
-		}
-	});
-	function Delete(){
-		var Rows=MachineInfoGrid.getSelectedData()
-		if(isEmpty(Rows)){
-			//$UI.msg('alert','√ª”–—°÷–µƒ–≈œ¢!')
-			return;
-		}
-		$.messager.confirm("≤Ÿ◊˜Ã· æ","ƒ˙»∑∂®“™÷¥––…æ≥˝≤Ÿ◊˜¬£ø",function(data){
-			if(data){
-				$.cm({
-					ClassName: 'web.CSSDHUI.System.MachineConfig',
-					MethodName: 'DeleteMachineInfo',
-					Params: JSON.stringify(Rows)
-					},function(jsonData){
-						if(jsonData.success==0){
-							$UI.msg('success',jsonData.msg);
-							MachineInfoGrid.reload()
-						}else{
-						 	$UI.msg('error',jsonData.msg);
-						}
-					});
-			}
-		});
-	}
-	$UI.linkbutton('#ReloadBT',{ 
-		onClick:function(){
-			MachineConfigSyn();
-		}
-	});
-	var MachineInfoGridCm = [[{
-			title: 'RowId',
-			field: 'RowId',
-			width: 10,
-			hidden: true
-		},{
-			title: '¥˙¬Î',
-			field: 'Key',
-			width: 100,
-			editor:{type:'validatebox',options:{required:true}}
-		}, {
-			title:'±√˚',
-			field:'Alias',
-			width:100,
-			editor:{type:'validatebox',options:{required:true}}
-		},{
-			title: 'ª˙∆˜∫≈',
-			align:'right',
-			field: 'MachineNum',
-			width: 100,
-			editor:{type:'validatebox',options:{required:true}}	
-		}, {
-			title: 'ª˙∆˜¿‡–Õ',
-			field: 'MachineType',
-			width: 100,
-			formatter: CommonFormatter(machineTypeBoxCombox,'MachineType','MachineTypeDesc'),
-			editor:machineTypeBoxCombox
-		},{
-			title: 'Œ¬∂»¿‡–Õ',
-			align:'center',
-			field: 'TempType',
-			width:100,
-			formatter: CommonFormatter(TempTypeCombox, 'TempType', 'TempTypeDesc'),
-			editor: TempTypeCombox
-		},{
-			title: '√æ˙≥µ',
-			align:'center',
-			field: 'SterCar',
-			width:150,
-			formatter: CommonFormatter(AllSterCarBox, 'SterCar', 'SterCarName'),
-			editor: AllSterCarBox
-		},{
-			title: '◊∞‘ÿ ˝¡ø',
-			field: 'LoadNum',
-			align: 'right',
-			width: 100,
-			editor: {type: 'numberbox'}
-		}, {
-			title: '≥ß…Ã',
-			field: 'Manufacture',
-			width:150,
-			editor:{type:'validatebox',options:{}}
-		}, {
-			title: ' ˝æ›¬∑æ∂',
-			field: 'DataPath',
-			width:300,
-			editor:{type:'validatebox',options:{}}
-		}, {
-			title: '¿©’π¿‡–Õ',
-			field: 'ExtType',
-			width:150,
-			editor:{type:'validatebox',options:{}}
-		},{
-			title:' «∑ÒBD≤‚ ‘',
-			align:'center',
-			field:'IsBd',
-			width:100,
-			formatter: CommonFormatter(IsBdCombox,'IsBd','IsBdDesc'),
-			editor:IsBdCombox
-		},{
-			title: ' «∑Ò∆Ù”√',
-			align:'center',
-			field: 'NotUseFlag',
-			width:100,
-			formatter: CommonFormatter(NotUseFlagCombox, 'NotUseFlag', 'NotUseFlagDesc'),
-			editor: NotUseFlagCombox
-		}
-	]];
-	function MachineConfigSyn(){
-		$.cm({
-			ClassName: 'web.CSSDHUI.System.MachineConfig',
-			MethodName: 'MachineConfigSyn'
-		},function(jsonData){
-			if(jsonData.success==0){
-				$UI.msg('success','≤Œøº÷µÕ¨≤Ω≥…π¶£°');
-				MachineInfoGrid.reload();
-			}else{
-				$UI.msg('error',jsonData.msg);
-			}
-		});
 	};
-	var MachineInfoGrid = $UI.datagrid('#MachineInfoGrid', {
-		lazy:false,
+
+	// ÊâìÂç∞Êú∫Âô®Êù°Á†Å
+	$UI.linkbutton('#PrintBT', {
+		onClick: function() {
+			var rowMain = $('#SterMachineGrid').datagrid('getSelected');
+			if (!isEmpty(rowMain)) {
+				var Code = rowMain.MachineNum;
+				var Description = rowMain.Alias;
+				printCodeDict(Code, Description);
+			}
+		}
+	});
+
+	var SterMachineGrid = $UI.datagrid('#SterMachineGrid', {
 		queryParams: {
 			ClassName: 'web.CSSDHUI.System.MachineConfig',
 			QueryName: 'QueryMachineInfo'
 		},
-		columns: MachineInfoGridCm,
-		//deleteRowParams: {
-			//ClassName: 'web.CSSDHUI.System.MachineConfig',
-			//MethodName: 'DeleteMachineInfo'
-		//},
-		toolbar: '#MachineTB',
-//		toolbar:[{
-//            text: '≤Œøº÷µ',
-//            iconCls: 'icon-reload',
-//            handler: function () {
-//                MachineConfigSyn();
-//        }}],
-
-		onClickCell: function (index, filed, value) {
-			MachineInfoGrid.commonClickCell(index, filed);
+		beforeDelFn: function() {
+			var rowMachine = $('#SterMachineGrid').datagrid('getSelected');
+			if (!isEmpty(rowMachine) && !isEmpty(rowMachine.RowId)) {
+				$UI.msg('alert', 'Â∑≤Áª¥Êä§Êú∫Âô®Êï∞ÊçÆÂè™ËÉΩÂÅúÁî®,‰∏çËÉΩÂà†Èô§');
+			}
+			return false;
+		},
+		beforeAddFn: function() {
+			var DefaultData = { NotUseFlag: 'Y' };
+			return DefaultData;
+		},
+		toolbar: [
+			{
+				text: 'ÊâìÂç∞',
+				iconCls: 'icon-print',
+				handler: function() {
+					var rowMain = $('#SterMachineGrid').datagrid('getSelected');
+					if (!isEmpty(rowMain)) {
+						var Code = rowMain.MachineNum;
+						var Description = rowMain.Alias;
+						printCodeDict(Code, Description);
+					}
+				}
+			}, {
+				text: 'Âà∑Êñ∞',
+				iconCls: 'icon-reload',
+				handler: function() {
+					Query('sterilizer');
+				}
+			}
+		],
+		saveDataFn: function() {
+			var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId, MachineType: 'sterilizer' }));
+			var Rows = SterMachineGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows === false) {
+				$UI.msg('alert', 'Â≠òÂú®Êú™Â°´ÂÜôÁöÑÂøÖÂ°´È°πÔºå‰∏çËÉΩ‰øùÂ≠ò!');
+				return;
+			}
+			showMask();
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.MachineConfig',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows),
+				Others: Others
+			}, function(jsonData) {
+				hideMask();
+				if (jsonData.success === 0) {
+					$UI.msg('success', '‰øùÂ≠òÊàêÂäüÔºÅ');
+					SterMachineGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		columns: [[
+			{
+				title: 'RowId',
+				field: 'RowId',
+				width: 60,
+				hidden: true
+			}, {
+				title: '‰ª£Á†Å',
+				align: 'center',
+				field: 'MachineNum',
+				width: 50,
+				editor: { type: 'numberbox', options: { required: true, min: 1, max: 99 }}
+			}, {
+				title: 'ÂêçÁß∞',
+				field: 'Alias',
+				width: 100,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'ÁÅ≠ËèåÊñπÂºè',
+				align: 'left',
+				field: 'TempType',
+				width: 100,
+				formatter: CommonFormatter(SterTypeCombox, 'TempType', 'TempTypeDesc'),
+				editor: SterTypeCombox
+			}, {
+				title: '‰æõÂ∫îÁßëÂÆ§',
+				field: 'SupLocId',
+				width: 120,
+				formatter: CommonFormatter(SterSupLocCombox, 'SupLocId', 'SupLocDesc'),
+				editor: SterSupLocCombox
+			}, {
+				title: 'ÁÅ≠ËèåÊû∂',
+				align: 'left',
+				field: 'SterCar',
+				width: 100,
+				formatter: CommonFormatter(SterCarBox, 'SterCar', 'SterCarName'),
+				editor: SterCarBox
+			}, {
+				title: 'Ë£ÖËΩΩÊï∞Èáè',
+				field: 'LoadNum',
+				align: 'right',
+				width: 80,
+				editor: { type: 'numberbox', options: { min: 1 }}
+			}, {
+				title: 'ÂéÇÂïÜ',
+				field: 'Manufacture',
+				width: 150,
+				formatter: CommonFormatter(SterManfBox, 'Manufacture', 'ManufactureDesc'),
+				editor: SterManfBox
+			}, {
+				title: 'Êú∫Âô®ÂûãÂè∑',
+				field: 'Model',
+				width: 130,
+				formatter: CommonFormatter(SterModelBox, 'Model', 'Model'),
+				editor: SterModelBox
+			}, {
+				title: 'Êñá‰ª∂ÂâçÁºÄ',
+				field: 'FileNamePrefix',
+				width: 80,
+				editor: { type: 'validatebox', options: {}}
+			}, {
+				title: 'ÊµãÊºè',
+				align: 'center',
+				field: 'IsLeak',
+				width: 80,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter,
+				hidden: true
+			}, {
+				title: 'ÊµãÊºèÂë®Êúü',
+				align: 'center',
+				field: 'LeakTime',
+				width: 80,
+				formatter: CommonFormatter(LeakCombox, 'LeakTime', 'LeakTimeDesc'),
+				editor: LeakCombox
+			}, {
+				title: 'BDÊµãËØï',
+				align: 'center',
+				field: 'IsBd',
+				width: 80,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}, {
+				title: 'ÁîüÁâ©ÁõëÊµãÂë®Êúü',
+				align: 'center',
+				field: 'BioTime',
+				width: 110,
+				formatter: CommonFormatter(BioPeriodCombox, 'BioTime', 'BioTimeDesc'),
+				editor: BioPeriodCombox
+			}, {
+				title: 'ÂêØÁî®',
+				align: 'center',
+				field: 'NotUseFlag',
+				width: 80,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}, {
+				title: 'Êâ©Â±ïÁ±ªÂûã',
+				field: 'ExtType',
+				width: 80,
+				hidden: true,
+				editor: { type: 'validatebox', options: {}}
+			}
+		]],
+		showAddSaveItems: true,
+		pagination: false,
+		remoteSort: false,
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			SterMachineGrid.commonClickRow(index, row);
 		}
 	});
-}
+
+	var CleanMachineGrid = $UI.datagrid('#CleanMachineGrid', {
+		queryParams: {
+			ClassName: 'web.CSSDHUI.System.MachineConfig',
+			QueryName: 'QueryMachineInfo'
+		},
+		beforeDelFn: function() {
+			var rowMachine = $('#CleanMachineGrid').datagrid('getSelected');
+			if (!isEmpty(rowMachine) && !isEmpty(rowMachine.RowId)) {
+				$UI.msg('alert', 'Â∑≤Áª¥Êä§Êú∫Âô®Êï∞ÊçÆÂè™ËÉΩÂÅúÁî®,‰∏çËÉΩÂà†Èô§');
+			}
+			return false;
+		},
+		beforeAddFn: function() {
+			var DefaultData = { NotUseFlag: 'Y' };
+			return DefaultData;
+		},
+		toolbar: [
+			{
+				text: 'ÊâìÂç∞',
+				iconCls: 'icon-print',
+				handler: function() {
+					var rowMain = $('#CleanMachineGrid').datagrid('getSelected');
+					if (!isEmpty(rowMain)) {
+						var Code = rowMain.MachineNum;
+						var Description = rowMain.Alias;
+						printCodeDict(Code, Description);
+					}
+				}
+			}, {
+				text: 'Âà∑Êñ∞',
+				iconCls: 'icon-reload',
+				handler: function() {
+					Query('washer');
+				}
+			}
+		],
+		saveDataFn: function() {
+			var Others = JSON.stringify(addSessionParams({ BDPHospital: HospId, MachineType: 'washer' }));
+			var Rows = CleanMachineGrid.getChangesData();
+			if (isEmpty(Rows)) {
+				return;
+			}
+			if (Rows === false) {
+				$UI.msg('alert', 'Â≠òÂú®Êú™Â°´ÂÜôÁöÑÂøÖÂ°´È°πÔºå‰∏çËÉΩ‰øùÂ≠ò!');
+				return;
+			}
+			showMask();
+			$.cm({
+				ClassName: 'web.CSSDHUI.System.MachineConfig',
+				MethodName: 'jsSave',
+				Params: JSON.stringify(Rows),
+				Others: Others
+			}, function(jsonData) {
+				hideMask();
+				if (jsonData.success === 0) {
+					$UI.msg('success', '‰øùÂ≠òÊàêÂäüÔºÅ');
+					CleanMachineGrid.reload();
+				} else {
+					$UI.msg('error', jsonData.msg);
+				}
+			});
+		},
+		columns: [[
+			{
+				title: 'RowId',
+				field: 'RowId',
+				width: 60,
+				hidden: true
+			}, {
+				title: '‰ª£Á†Å',
+				align: 'center',
+				field: 'MachineNum',
+				width: 50,
+				editor: { type: 'numberbox', options: { required: true, min: 1, max: 99 }}
+			}, {
+				title: 'ÂêçÁß∞',
+				field: 'Alias',
+				width: 100,
+				editor: { type: 'validatebox', options: { required: true }}
+			}, {
+				title: 'Ê∏ÖÊ¥óÊñπÂºè',
+				align: 'left',
+				field: 'TempType',
+				width: 100,
+				formatter: CommonFormatter(CleanTypeCombox, 'TempType', 'TempTypeDesc'),
+				editor: CleanTypeCombox
+			}, {
+				title: '‰æõÂ∫îÁßëÂÆ§',
+				field: 'SupLocId',
+				width: 120,
+				formatter: CommonFormatter(CleanSupLocCombox, 'SupLocId', 'SupLocDesc'),
+				editor: CleanSupLocCombox
+			}, {
+				title: 'ÂéÇÂïÜ',
+				field: 'Manufacture',
+				width: 150,
+				formatter: CommonFormatter(CleanManfBox, 'Manufacture', 'ManufactureDesc'),
+				editor: CleanManfBox
+			}, {
+				title: 'Êú∫Âô®ÂûãÂè∑',
+				field: 'Model',
+				width: 150,
+				formatter: CommonFormatter(CleanModelBox, 'Model', 'Model'),
+				editor: CleanModelBox
+			}, {
+				title: 'Êñá‰ª∂ÂâçÁºÄ',
+				field: 'FileNamePrefix',
+				width: 80,
+				editor: { type: 'validatebox', options: {}}
+			}, {
+				title: 'Â§ö‰ªì',
+				align: 'center',
+				field: 'MulBinFlag',
+				width: 80,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}, {
+				title: 'ÂêØÁî®',
+				align: 'center',
+				field: 'NotUseFlag',
+				width: 80,
+				editor: { type: 'checkbox', check: 'checked', options: { on: 'Y', off: 'N' }},
+				formatter: BoolFormatter
+			}, {
+				title: 'Êâ©Â±ïÁ±ªÂûã',
+				field: 'ExtType',
+				width: 80,
+				hidden: true,
+				editor: { type: 'validatebox', options: {}}
+			}
+		]],
+		showAddSaveItems: true,
+		pagination: false,
+		remoteSort: false,
+		fitColumns: true,
+		onClickRow: function(index, row) {
+			CleanMachineGrid.commonClickRow(index, row);
+		}
+	});
+	InitHosp();
+};
 $(init);

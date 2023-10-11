@@ -179,6 +179,9 @@ function InitReportWinEvent(obj){
 		var rd = obj.layerRep_rd;
 		var RepStatus = rd["RepStatus"];
 		var Paadm = rd["Paadm"];
+		
+		var type = /(^[0-9]\d*$)/;　　//正整数+0
+	
 		layer.config({extend:'layerskin/style.css'});
 		obj.layerIdxICURep = layer.open({
 				skin: 'btn-all-blue',
@@ -192,6 +195,11 @@ function InitReportWinEvent(obj){
 				btnAlign: 'c',
 				yes: function(index, layero){
 				  	//保存
+				  	var APACHE = $.form.GetValue("FormVo.APACHE");
+				  	if ((APACHE!="")&&((!type.test(APACHE))||(APACHE>71))){
+						layer.msg('APACHEⅡ评分数据错误，请录入不大于71的0-9的数字',{time: 2000,icon: 2});
+						return;
+					}
 					var ret = obj.RepSave("3","1");
 					if(parseInt(ret)>0)
 					{
@@ -206,6 +214,11 @@ function InitReportWinEvent(obj){
 					}
 				},
 				btn2: function(index, layero){
+					var APACHE = $.form.GetValue("FormVo.APACHE");
+				  	if ((APACHE!="")&&((!type.test(APACHE))||(APACHE>71))){
+						layer.msg('APACHEⅡ评分数据错误，请录入不大于71的0-9的数字',{time: 2000,icon: 2});
+						return;
+					}
 					//提交
 					var ret = obj.RepSave("3","2");
 					if(parseInt(ret)>0)
@@ -317,6 +330,7 @@ function InitReportWinEvent(obj){
 					$.form.SetValue("FormVo.pAdmDate",rd["PAAdmDate"]);
 					$.form.SetValue("FormVo.pDisDate",rd["PADischDate"]);
 					$.form.SetValue("FormVo.pDisDate",rd["PADischDate"]);
+					$.form.SetValue("FormVo.APACHE",rd["APACHEScore"]);
 				},
 				cancel: function(index){ 
 					obj.ReportID ="";
@@ -509,6 +523,18 @@ function InitReportWinEvent(obj){
 						layer.msg('置管地点不可以为空!',{icon: 2});
 						return;	
 					}
+					var IRIsInf = $.form.GetValue("chkIRIsInf");
+					var IRInfDate = $.form.GetValue("txtIRInfDate");
+					var IRInfSymptoms = $.form.GetValue("cboIRInfSymptoms");
+					if ((IRIsInf=='1')&&(!IRInfSymptoms)) {
+						layer.alert("是否感染选择“是”时，必须填写感染症状！",{icon: 2});
+						return;
+					}
+					if ((IRIsInf=='1')&&(!IRInfDate)) {
+						layer.alert("是否感染选择“是”时，必须填写感染日期！",{icon: 2});
+						return;
+					}
+
 				  	//保存数据入库
 					obj.LayerPICC_Save();
 					//表格加载数据
@@ -628,13 +654,7 @@ function InitReportWinEvent(obj){
 		var IRInfSymptoms = $.form.GetValue("cboIRInfSymptoms");
 		var IRBacteria = "";  //病原体
 		var UpdateUserDr = $.LOGON.USERID;   //$.LOGON.USERID
-		/*
-		if (LocCode == '') {
-			layer.alert("科室代码不允许为空");
-			return;
-		}
-		*/
-		
+	
 		var InputStr = ID;
 		InputStr += "^" + Paadm;
 		InputStr += "^" + LocID;
@@ -717,6 +737,18 @@ function InitReportWinEvent(obj){
 						layer.msg('置管地点不可以为空!',{icon: 2});
 						return;						
 					}
+					var IRIsInf = $.form.GetValue("chkIRIsInfV");
+					var IRInfDate = $.form.GetValue("txtIRInfDateV");
+					var IRInfSymptoms = $.form.GetValue("cboIRInfSymptomsV");
+					if ((IRIsInf=='1')&&(!IRInfSymptoms)) {
+						layer.alert("是否感染选择“是”时，必须填写感染症状！",{icon: 2});
+						return;
+					}
+					if ((IRIsInf=='1')&&(!IRInfDate)) {
+						layer.alert("是否感染选择“是”时，必须填写感染日期！",{icon: 2});
+						return;
+					}
+
 				  	//保存数据入库
 					obj.LayerVAP_Save();
 					//表格加载数据
@@ -733,12 +765,16 @@ function InitReportWinEvent(obj){
 						//ifCreated 事件应该在插件初始化之前绑定 ifUnchecked
 						//alert(event.type + ' callback'); 
 						$('#txtIRInfDateV').attr("disabled",false);
+						$('#cboIRInfSymptomsV').attr("disabled",false);
 					});
 					$('#chkIRIsInfV').on('ifUnchecked', function(event){ 
 						//ifCreated 事件应该在插件初始化之前绑定 ifUnchecked
 						//alert(event.type + ' callback'); 
 						$('#txtIRInfDateV').val("");
 						$('#txtIRInfDateV').attr("disabled",true);
+						$.form.SetValue('cboIRInfSymptomsV','');
+						$('#cboIRInfSymptomsV').attr("disabled",true);
+
 					});
 					var rdVAP = obj.layerVAP_rd;
 					var rdICUOEItems = obj.gridICUOEItems.rows({selected: true}).data().toArray()[0];
@@ -780,10 +816,16 @@ function InitReportWinEvent(obj){
 						{
 							$('#txtIRInfDateV').val("");
 							$('#txtIRInfDateV').attr("disabled",true);
+							$.form.SetValue('cboIRInfSymptomsV','');
+							$('#cboIRInfSymptomsV').attr("disabled",true);
 						}
 						if(rdVAP["IRInfDate"]!="")
 						{
 							$.form.DateRender("txtIRInfDateV",rdVAP["IRInfDate"],"top-right");	
+						}
+						if(rdVAP["IRInfSymptoms"]!="")
+						{
+							$("#cboIRInfSymptomsV").val(rdVAP["IRInfSymptoms"]).trigger("change"); 
 						}
 						
 					}
@@ -791,6 +833,8 @@ function InitReportWinEvent(obj){
 					{
 						$('#txtIRInfDateV').val("");
 						$('#txtIRInfDateV').attr("disabled",true);
+						$.form.SetValue('cboIRInfSymptomsV','');
+						$('#cboIRInfSymptomsV').attr("disabled",true);
 					}
 				}
 		});
@@ -812,15 +856,10 @@ function InitReportWinEvent(obj){
 		var IROperLoc = $.form.GetValue("cboIROperLocV");
 		var IRIsInf = $.form.GetValue("chkIRIsInfV");
 		var IRInfDate = $.form.GetValue("txtIRInfDateV");
-		var IRInfSymptoms = "";
+		var IRInfSymptoms = $.form.GetValue("cboIRInfSymptomsV");
 		var IRBacteria = "";  //病原体
 		var UpdateUserDr = $.LOGON.USERID;   //$.LOGON.USERID
-		/*
-		if (LocCode == '') {
-			layer.alert("科室代码不允许为空");
-			return;
-		}
-		*/
+
 		
 		var InputStr = ID;
 		InputStr += "^" + Paadm;
@@ -901,6 +940,18 @@ function InitReportWinEvent(obj){
 						layer.msg('置管地点不可以为空!',{icon: 2});
 						return;						
 					}
+					var IRIsInf = $.form.GetValue("chkIRIsInfU");
+					var IRInfDate = $.form.GetValue("txtIRInfDateU");
+					var IRInfSymptoms = $.form.GetValue("cboIRInfSymptomsU");
+					if ((IRIsInf=='1')&&(!IRInfSymptoms)) {
+						layer.alert("是否感染选择“是”时，必须填写感染症状！",{icon: 2});
+						return;
+					}
+					if ((IRIsInf=='1')&&(!IRInfDate)) {
+						layer.alert("是否感染选择“是”时，必须填写感染日期！",{icon: 2});
+						return;
+					}
+
 				  	//保存数据入库
 					obj.LayerUC_Save();
 					//表格加载数据
@@ -917,12 +968,16 @@ function InitReportWinEvent(obj){
 						//ifCreated 事件应该在插件初始化之前绑定 ifUnchecked
 						//alert(event.type + ' callback'); 
 						$('#txtIRInfDateU').attr("disabled",false);
+						$('#cboIRInfSymptomsU').attr("disabled",false);
 					});
 					$('#chkIRIsInfU').on('ifUnchecked', function(event){ 
 						//ifCreated 事件应该在插件初始化之前绑定 ifUnchecked
 						//alert(event.type + ' callback'); 
 						$('#txtIRInfDateU').val("");
 						$('#txtIRInfDateU').attr("disabled",true);
+						$.form.SetValue('cboIRInfSymptomsU','');
+						$('#cboIRInfSymptomsU').attr("disabled",true);
+
 					});
 					var rdUC = obj.layerUC_rd;
 					var rdICUOEItems = obj.gridICUOEItems.rows({selected: true}).data().toArray()[0];
@@ -964,17 +1019,24 @@ function InitReportWinEvent(obj){
 						{
 							$('#txtIRInfDateU').val("");
 							$('#txtIRInfDateU').attr("disabled",true);
+							$.form.SetValue('cboIRInfSymptomsU','');
+							$('#cboIRInfSymptomsU').attr("disabled",true);
 						}
 						if(rdUC["IRInfDate"]!="")
 						{
 							$.form.DateRender("txtIRInfDateU",rdUC["IRInfDate"],"top-right");	
 						}
-						
+						if(rdUC["IRInfSymptoms"]!="")
+						{
+							$("#cboIRInfSymptomsU").val(rdUC["IRInfSymptoms"]).trigger("change"); 
+						}
 					}
 					else
 					{
 						$('#txtIRInfDateU').val("");
 						$('#txtIRInfDateU').attr("disabled",true);
+						$.form.SetValue('cboIRInfSymptomsU','');
+						$('#cboIRInfSymptomsU').attr("disabled",true);
 					}
 				}
 		});
@@ -996,16 +1058,10 @@ function InitReportWinEvent(obj){
 		var IROperLoc = $.form.GetValue("cboIROperLocU");
 		var IRIsInf = $.form.GetValue("chkIRIsInfU");
 		var IRInfDate = $.form.GetValue("txtIRInfDateU");
-		var IRInfSymptoms = "";
+		var IRInfSymptoms = $.form.GetValue("cboIRInfSymptomsU");
 		var IRBacteria = "";  //病原体
 		var UpdateUserDr = $.LOGON.USERID;   //$.LOGON.USERID
-		/*
-		if (LocCode == '') {
-			layer.alert("科室代码不允许为空");
-			return;
-		}
-		*/
-		
+	
 		var InputStr = ID;
 		InputStr += "^" + Paadm;
 		InputStr += "^" + LocID;
@@ -1287,6 +1343,30 @@ function InitReportWinEvent(obj){
 				{"data": "Age"},
 				{"data": "PAAdmDate"},
 				{"data": "PADischDate"},
+				{"data": "InfInfo",
+					 render: function ( data, type, row ) {
+
+						if (!data){
+						  	return "";
+					  	}else {
+					  		var strList = data.split("^");
+						  	var len = strList.length;	   
+						    var strRet ="";
+						  	for (var indx=0;indx<len;indx++){
+							  	var ReportID =strList[indx].split(" ")[0];
+							  	var InfDate =strList[indx].split(" ")[1];
+							  	var InfPos =strList[indx].split(" ")[2];
+							  	var InfSub =strList[indx].split(" ")[3];
+								if (InfSub) {
+									InfPos = InfPos+"("+InfSub+")"
+								}
+							  	var RepStatus =strList[indx].split(" ")[4];
+						        strRet +="<span style='line-height:30px;'>"+ InfDate+" "+InfPos+"&nbsp;&nbsp;"+RepStatus+"</span></br>";
+						  	}
+						  	return strRet;
+						}	
+					}
+				},
 				{"data": "AdmWardDesc"},
 				{"data": "PAAdmBed"},
 				{
@@ -1352,25 +1432,25 @@ function InitReportWinEvent(obj){
 					$('td', row).eq(5).addClass('warning');
 				}
 				if ( data.IsVAP=="1") {
-					$('td', row).eq(8).addClass('success');
+					$('td', row).eq(9).addClass('success');
 				}
 				else if(data.IsVAP=="2")
 				{
-					$('td', row).eq(8).addClass('warning');
+					$('td', row).eq(9).addClass('warning');
 				}
 				if ( data.IsUC=="1") {
-					$('td', row).eq(9).addClass('success');
+					$('td', row).eq(10).addClass('success');
 				}
 				else if(data.IsUC=="2")
 				{
-					$('td', row).eq(9).addClass('warning');
+					$('td', row).eq(10).addClass('warning');
 				}
 				if ( data.IsPICC=="1") {
-					$('td', row).eq(10).addClass('success');
+					$('td', row).eq(11).addClass('success');
 				}
 				else if(data.IsPICC=="2")
 				{
-					$('td', row).eq(10).addClass('warning');
+					$('td', row).eq(11).addClass('warning');
 				}
 			}
 			,"fnDrawCallback": function (oSettings) {
@@ -1498,6 +1578,29 @@ function InitReportWinEvent(obj){
 					{"data": "Age"},
 					{"data": "PAAdmDate"},
 					{"data": "PADischDate"},
+					{"data": "InfInfo",
+						 render: function ( data, type, row ) {
+							if (!data.InfInfo){
+							  	return "";
+						  	}else {
+						  		var strList = data.InfInfo.split("^");
+							  	var len = strList.length;	   
+							    var strRet ="";
+							  	for (var indx=0;indx<len;indx++){
+								  	var ReportID =strList[indx].split(" ")[0];
+								  	var InfDate =strList[indx].split(" ")[1];
+								  	var InfPos =strList[indx].split(" ")[2];
+								  	var InfSub =strList[indx].split(" ")[3];
+									if (InfSub) {
+										InfPos = InfPos+"("+InfSub+")"
+									}
+								  	var RepStatus =strList[indx].split(" ")[4];
+							        strRet +="<span>"+" "+InfPos+"&nbsp;&nbsp;"+RepStatus+"</span></br>";
+							  	}
+							  	return strRet;
+							}	
+						}
+					},
 					{"data": "AdmWardDesc"},
 					{"data": "PAAdmBed"},
 					{"data": "PatWeight"},
@@ -1553,18 +1656,18 @@ function InitReportWinEvent(obj){
 						$('td', row).eq(5).addClass('warning');
 					}
 					if ( data.IsVAP=="1") {
-						$('td', row).eq(9).addClass('success');
+						$('td', row).eq(10).addClass('success');
 					}
 					else if(data.IsVAP=="2")
 					{
-						$('td', row).eq(9).addClass('warning');
+						$('td', row).eq(10).addClass('warning');
 					}
 					if ( data.IsPICC=="1") {
-						$('td', row).eq(10).addClass('success');
+						$('td', row).eq(11).addClass('success');
 					}
 					else if(data.IsPICC=="2")
 					{
-						$('td', row).eq(10).addClass('warning');
+						$('td', row).eq(11).addClass('warning');
 					}
 				}
 				,"fnDrawCallback": function (oSettings) {
@@ -1741,6 +1844,7 @@ function InitReportWinEvent(obj){
 						}
 					}
 					,{"data": "IRInfDate"}
+					,{"data": "IRInfSymptomsDesc"}
 				]
 				,"createdRow": function ( row, data, index ) {
 					if ( data.IsCheck=="1") {
@@ -1798,6 +1902,7 @@ function InitReportWinEvent(obj){
 						}
 					}
 					,{"data": "IRInfDate"}
+					,{"data": "IRInfSymptomsDesc"}
 				],"createdRow": function ( row, data, index ) {
 					if ( data.IsCheck=="1") {
 						$('td', row).parent().addClass('text-success');
@@ -1839,6 +1944,7 @@ function InitReportWinEvent(obj){
 		var IRLinkOPSs = "";  //
 		var IRLinkMRBs = "";
 		var IRLinkInvOpers = "";  //
+		var IRLinkPreFactDrs =""; //易感因素
 		var IRLinkICUUCs = "";  //
 		
 		var IRLinkICUVAPs ="";  //呼吸机
@@ -1851,12 +1957,15 @@ function InitReportWinEvent(obj){
 		var IROutLocDr ="";    //出科方向
 		var IRInDate =""; //入科时间
 		var IROutDate=""; //出科时间 
-		var IRAPACHEScore="";   //APACHEⅡ评分
+		   
 		var IROutIntubats=""; //出ICU带管情况 List # 分割多个值
 		var IROut48Intubats=""; //出ICU48带管情况 list  # 分割多个值
-			
+		
+		//APACHEⅡ评分
+		var IRAPACHEScore = $.form.GetValue("FormVo.APACHE");
 		if(repType == "2")
 		{
+			var IRAPACHEScore = $.form.GetValue("FormVo.APACHEN");
 			//新生儿
 			obj.gridNUC.data().each( function (d) {
 				if(IRLinkICUUCs=="")
@@ -1954,12 +2063,12 @@ function InitReportWinEvent(obj){
 		InputStr += "^" + IRLinkOPSs;
 		InputStr += "^" + IRLinkMRBs;
 		InputStr += "^" + IRLinkInvOpers;
+		InputStr += "^" + IRLinkPreFactDrs;
 		InputStr += "^" + IRLinkICUUCs;
 		InputStr += "^" + IRLinkICUVAPs;
 		InputStr += "^" + IRLinkICUPICCs;
-		InputStr += "^" + IRDiagnosisBasis;
-		InputStr += "^" + IRDiseaseCourse;
 		InputStr += "^" + IRInLocDr;
+		InputStr += "^" + IROutLocDr;	
 		InputStr += "^" + IRInDate;
 		InputStr += "^" + IROutDate;
 		InputStr += "^" + IRAPACHEScore;  
@@ -2052,9 +2161,8 @@ function InitReportWinEvent(obj){
 		InputStr += "^" + IRLinkICUUCs;
 		InputStr += "^" + IRLinkICUVAPs;
 		InputStr += "^" + IRLinkICUPICCs;
-		InputStr += "^" + IRDiagnosisBasis;
-		InputStr += "^" + IRDiseaseCourse;
 		InputStr += "^" + IRInLocDr;
+		InputStr += "^" + IROutLocDr;
 		InputStr += "^" + IRInDate;
 		InputStr += "^" + IROutDate;
 		InputStr += "^" + IRAPACHEScore;  

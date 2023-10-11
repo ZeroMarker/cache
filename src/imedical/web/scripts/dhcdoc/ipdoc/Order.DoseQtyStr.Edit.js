@@ -106,7 +106,7 @@ function update_onclick(){
 		clear_onclick();
 		LoadOrdItemDoseQtyList();
 	}else{
-		$.messager.alert("失败",rtn);
+		$.messager.alert("失败",rtnArr[1]);
 	}
 }
 function clear_onclick(){
@@ -168,6 +168,7 @@ function InitOrdItemDoseQtyList(){
 		
 	]];
 	var tabdatagrid=$('#OrdItemDoseQtyList').datagrid({  
+		toolbar:[],
 		fit : true,
 		border : false,
 		striped : true,

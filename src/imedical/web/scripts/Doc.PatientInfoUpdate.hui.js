@@ -9,7 +9,8 @@ var PageLogicObj={
 	m_CardRegMustFillInArr:[],
 	m_CardRegJumpSeqArr:[],
 	IsCheckVerification:0,	//验证开启标志
-	m_SelectIndex:0   //当前选中行
+	m_SelectIndex:0,   //当前选中行
+	AutoChange:0
 }
 $(function(){
 	//初始化
@@ -26,7 +27,7 @@ $(window).load(function() {
 	}
 	for (var i=0;i<PageLogicObj.m_CardRegMustFillInArr.length;i++){
 		var id=PageLogicObj.m_CardRegMustFillInArr[i]['id'];
-		$("label[for="+id+"]").addClass("clsRequired");
+		if(id!="") $("label[for="+id+"]").addClass("clsRequired");
 	}
 });
 function Init(){
@@ -50,6 +51,7 @@ function InitEvent(){
 	$("#BOtherCredType").click(OtherCredTypeInput);
 	$("#ReadRegInfo").click(ReadRegInfoOnClick);
 	$("#TelHome").keydown(TelHomeKeyDown);
+	$("#BFindPat").click(BFindPatHandle)
 	DisableBtn("ReadRegInfo",true);
 	document.onkeydown = DocumentOnKeyDown;
 }
@@ -80,7 +82,8 @@ function PageHandle(){
 	LoadLocalFlag();
 	//设备类型
 	LoadIEType();
-	
+	InitLanguageCombo()
+	InitEDUCombo()
 	InitPatRegConfig();
 }
 function InitPatListTabDataGrid(){
@@ -88,10 +91,11 @@ function InitPatListTabDataGrid(){
 		{field:'TID',title:'',hidden:'true'},
 		{field:'TPAPERID',title:'',hidden:'true'},
 		{field:'TPAPMINo',title:'登记号',width:100,align:'left'},
-		{field:'TPAPERName',title:'姓名',width:100,align:'left'},
-		{field:'TPAPERSex',title:'性别',width:50,align:'left'},
-		{field:'TPAPERAge',title:'年龄',width:50},
+		{field:'TPAPERName',title:'姓名',width:80,align:'left'},
+		{field:'TPAPERSex',title:'性别',width:40,align:'left'},
+		{field:'TPAPERAge',title:'年龄',width:40},
 		{field:'TPAPERDob',title:'出生日期',width:100},   
+		{field:'PatActive',title:'状态',width:40}, 
 		{field:'TPAPERSocialStatus',title:'患者类型',width:80},  
 		{field:'TPAPMICardType',title:'证件类型',width:100},    
 		{field:'TPAPMIDVAnumber',title:'证件号码',width:170}
@@ -113,7 +117,7 @@ function InitPatListTabDataGrid(){
 		onSelect:function(index, row){
 			SetSelPatInfo(row);
 			DisableBtn("ReadRegInfo",false);
-			PageLogicObj.m_SelectIndex=index;
+			//PageLogicObj.m_SelectIndex=index;
 		},onBeforeUncheck:function(index, row){
 			var oldSelRow=$(this).datagrid('getSelected');
 			var oldSelIndex=$(this).datagrid('getRowIndex',oldSelRow);
@@ -124,9 +128,14 @@ function InitPatListTabDataGrid(){
 				return false;
 			}
 		},onLoadSuccess:function(data){
-			if (data['rows'].length>0){
+			if ((data['rows'].length>0)&&(PageLogicObj.AutoChange==0)){
 				//$(this).datagrid('selectRow',0);
 				$(this).datagrid('selectRow',PageLogicObj.m_SelectIndex);
+			}
+			PageLogicObj.AutoChange=0
+		},rowStyler:function(index, row) {
+			if(row['PatActive']=="无效") {
+				return "background-color:#C7D7E7";
 			}
 		}
 	}); 
@@ -134,6 +143,9 @@ function InitPatListTabDataGrid(){
 	return PatListTabDataGrid;
 }
 function FindPatList(){
+	$(".hisui-combobox").combobox('select','');
+	var Data=$("#IEType").combobox("getData")
+	$("#IEType").combobox("select",Data[0]["HGRowID"]);
 	$.cm({
 	    ClassName : "web.DHCBL.Patient.DHCPatient",
 	    QueryName : "SelectByPAPERID",
@@ -177,6 +189,18 @@ function SetSelPatInfo(row){
 	var PatOccupationDR=row['TPAPEROccupationDR'];
 	if (PatOccupationDR==0) PatOccupationDR="";
 	$("#Vocation").combobox('select',PatOccupationDR);
+	var CardTypeID=row['TCardType'];
+    if (CardTypeID!=""){
+        var CardCreadType=$.cm({
+            ClassName:"web.UDHCOPOtherLB",
+            MethodName:"ReadCredTypeExp",
+            JSFunName:"GetCredTypeToHUIJson",
+            ListName:"",
+            HospId:session["LOGON.HOSPID"], 
+            CardTypeID:CardTypeID
+        },false);
+        $("#CredType").combobox("loadData",CardCreadType);
+    }
 	var data=$("#CredType").combobox("getData");
 	for (var i=0;i<data.length;i++){
 		var id=data[i]["id"];
@@ -186,17 +210,72 @@ function SetSelPatInfo(row){
 		}
 	}
 	$("#CountryDescLookUpRowID").val(row['TPAPERCountryDR']);
-	$("#CountryHouse").combobox('select',row['TCountryHouseDR']);
-	$("#ProvinceInfoLookUpRowID").combobox('select',row['TPAPERCTProvinceDR']);
+	//$("#CountryHouse").combobox('select',row['TCountryHouseDR']);
+	var data=$("#CountryHouse").combobox("getData");
+	for (var i=0;i<data.length;i++){
+		var id=data[i]["id"];
+		if (id.split("^")[0]==row['TCountryHouseDR']){
+			$("#CountryHouse").combobox("select",data[i]["id"]);
+			break;
+		}
+	}
+	//$("#ProvinceInfoLookUpRowID").combobox('select',row['TPAPERCTProvinceDR']);
+		var data=$("#ProvinceInfoLookUpRowID").combobox("getData");
+	for (var i=0;i<data.length;i++){
+		var id=data[i]["id"];
+		if (id.split("^")[0]==row['TPAPERCTProvinceDR']){
+			$("#ProvinceInfoLookUpRowID").combobox("select",data[i]["id"]);
+			break;
+		}
+	}
 	LoadCity(row['TPAPERCTProvinceDR'])
-	$("#CityDescLookUpRowID").combobox('select',row['TPAPERCityCodeDR']);
-	$("#ZipLookUpRowID").combobox('select',row['TPAPERZipDR']);
+	//$("#CityDescLookUpRowID").combobox('select',row['TPAPERCityCodeDR']);
+		var data=$("#CityDescLookUpRowID").combobox("getData");
+	for (var i=0;i<data.length;i++){
+		var id=data[i]["id"];
+		if (id.split("^")[0]==row['TPAPERCityCodeDR']){
+			$("#CityDescLookUpRowID").combobox("select",data[i]["id"]);
+			break;
+		}
+	}
+	//StreetNow
+	//$("#ZipLookUpRowID").combobox('select',row['TPAPERZipDR']);
+		var data=$("#ZipLookUpRowID").combobox("getData");
+	for (var i=0;i<data.length;i++){
+		var id=data[i]["id"];
+		if (id.split("^")[0]==row['TPAPERZipDR']){
+			$("#ZipLookUpRowID").combobox("select",data[i]["id"]);
+			break;
+		}
+	}
+	
+	var data=$("#CityAreaLookUpRowID").combobox("getData");
+	for (var i=0;i<data.length;i++){
+		var id=data[i]["id"];
+		if (id.split("^")[0]==row['TPAPERCityAreaDR']){
+			$("#CityAreaLookUpRowID").combobox("select",data[i]["id"]);
+			break;
+		}
+	}
+	
+	var data=$("#StreetNow").combobox("getData");
+	for (var i=0;i<data.length;i++){
+		var id=data[i]["id"];
+		if (id.split("^")[0]==row['StreetNow']){
+			$("#StreetNow").combobox("select",data[i]["id"]);
+			break;
+		}
+	}
 	$("#PoliticalLevel").combobox('select',row['TPoliticalLevel']);
 	$("#SecretLevel").combobox('select',row['TSecretLevel']);
 	$("#HCPDR").combobox('select',row['TPAPERHCPDR']);
 	$("#CTRelationDR").combobox('select',row['TPAPERCTRLTDR']);
 	$("#Sex").combobox('select',row['TPAPERSexDR']);
 	$("#PAPERMarital").combobox('select',row['TPAPERMarital']);
+	$("#PAPMILangPrimDR").combobox('select',row['PAPMILangPrimDR']);
+	$("#PAPMILangSecondDR").combobox('select',row['PAPMILangSecondDR']);
+	$("#Education").combobox('select',row['PAPMIEducation']);
+	//PAPMILangPrimDR,PAPMILangSecondDR,PAPMIEducation
 	$("#ForeignAddress").val(row['ForeignAddress']);
 	$("#ForeignIDCard").val(row['ForeignIDCard']);
 	var data=$("#ForeignCredType").combobox("getData");
@@ -209,6 +288,11 @@ function SetSelPatInfo(row){
 	}
 	GetOtherInform(row);
 	PageLogicObj.m_LogStr=GetFormerStr();
+	if(!LimitBirthTime()) {
+		$("label[for=BirthTime]").addClass("clsRequired");
+	}else{
+		$("label[for=BirthTime]").removeClass("clsRequired");
+	}
 }
 function GetOtherInform(row){
 	// 获取病案号,医保号等信息
@@ -301,18 +385,12 @@ function LoadCredType(){
 	});
 }
 function LoadPatType(){
-	$.m({
-		ClassName:"web.UDHCOPOtherLB",
-		MethodName:"ReadPatType",
-		JSFunName:"GetPatTypeToHUIJson",
-		ListName:""
-	},function(Data){
 		var cbox = $HUI.combobox("#PatType", {
 				valueField: 'id',
 				textField: 'text', 
 				//editable:false,
 				blurValidValue:true,
-				data: JSON.parse(Data),
+				data: JSON.parse(ServerObj.DefaultPatTypePara),
 				filter: function(q, row){
 					if (q=="") return true;
 					if (row["text"].indexOf(q.toUpperCase())>=0) return true;
@@ -329,7 +407,6 @@ function LoadPatType(){
 					return false;
 				}
 		 });
-	});
 }
 function LoadMarital(){
 	$.m({
@@ -530,7 +607,7 @@ function LoadCountry(){
 				valueField: 'id',
 				textField: 'text', 
 				editable:true,
-				//blurValidValue:true,
+				blurValidValue:true,
 				data: JSON.parse(Data),
 				filter: function(q, row){
 					if (q=="") return true;
@@ -549,7 +626,7 @@ function LoadCountry(){
 				},
 				onSelect:function(rec){
 					if (!rec) return;
-					var id=$(this).combobox("getValue");
+					var id=rec.id; //$(this).combobox("getValue");
 					$("#CityDescLookUpRowID").combobox('select','');
 					LoadProvince(id);
 					LoadZip();
@@ -571,7 +648,7 @@ function LoadProvince(CountryId){
 			valueField: 'id',
 			textField: 'text', 
 			editable:true,
-			//blurValidValue:true,
+			blurValidValue:true,
 			data: JSON.parse(Data),
 			filter: function(q, row){
 				if (q=="") return true;
@@ -590,12 +667,16 @@ function LoadProvince(CountryId){
 			},
 			onSelect:function(rec){
 				//加载市信息
-				var id=$(this).combobox("getValue");
+				if (typeof rec=="undefined") return ;
+				var id=rec.id; //$(this).combobox("getValue");
 				LoadCity(id);
 				LoadZip();
+				$("#CityAreaLookUpRowID").combobox('select','');
+				$("#StreetNow").combobox('select','');
 			},
 			onChange:function(newValue,oldValue){
 				if (newValue==""){
+					$("#CityAreaLookUpRowID").combobox('select','');
 					$("#CityDescLookUpRowID").combobox('select','');
 				}
 			}
@@ -632,12 +713,16 @@ function LoadCity(ProvinceId){
 			},
 			onSelect:function(rec){
 				LoadZip();
+				if (!rec) return;
+				LoadArea(rec.id)
+				$("#StreetNow").combobox('select','');
 			},onLoadSuccess:function(){
 				$("#CityDescLookUpRowID").combobox('select','');
 			},
 			onChange:function(newValue,oldValue){
 				if (newValue==""){
 					$("#ZipLookUpRowID").combobox('select','');
+					$("#StreetNow").combobox('select','');
 				}
 			}
 	 });
@@ -675,24 +760,38 @@ function LoadLocalFlag(){
 	 });
 }
 function BUpdateClickHandle(){
+	//患者住院期间控制只允许在住院登记界面修改患者基本信息
+	var rtn=CheckInHos();
+    if (!rtn){return false;} 
 	var rtn=CheckNull();
-    if (!rtn){return false;}
-    var Rtn=CheckMedNo();              
-    if (!Rtn){return false;}           
+    if (!rtn){return false;}           
     var YBflag=checkPatYBCode();
 	if(YBflag==false){return false;}
+    var Rtn=CheckMedNo();              
+    if (!Rtn){return false;}
 	var returnvalue=UpdateOtherInform();
 	if (returnvalue!=0) {
 		$.messager.alert("提示","更新失败");
 		return false;
 	}
 	var row=PageLogicObj.m_PatListTabDataGrid.datagrid('getSelected');
+	var CityDescLookUpRowID=getComValue("CityDescLookUpRowID")
+	var ProvinceInfoLookUpRowID=getComValue("ProvinceInfoLookUpRowID")
+	var CityAreaLookUpRowID=getComValue("CityAreaLookUpRowID")
+	if (ProvinceInfoLookUpRowID==""){
+		CityDescLookUpRowID=""
+		CityAreaLookUpRowID=""
+	}
+	if (CityDescLookUpRowID==""){
+		CityAreaLookUpRowID=""
+	}
 	//构造服务端解析对象
 	var ParseInfo=["PAPMIRowID="+row['TID'],
 	                //"PAPERCityAreaDR=",
 	                "CityDescLookUpRowID="+getComValue("CityDescLookUpRowID"),
 	                "CountryDescLookUpRowID="+$("#CountryDescLookUpRowID").val(),
 	                "ProvinceInfoLookUpRowID="+getComValue("ProvinceInfoLookUpRowID"),
+	                "CityAreaLookUpRowID="+getComValue("CityAreaLookUpRowID"),
 	                "Birth="+$("#Birth").val(),
 	                //"PAPEREducationDR=",
 	                "EMail="+$("#EMail").val(),
@@ -721,20 +820,32 @@ function BUpdateClickHandle(){
 	                "PatYBCode="+$("#PatYBCode").val(),       //医保号
 	                "Company="+$("#Company").val(),       //工作单位
 	                "BirthTime="+$("#BirthTime").timespinner('getValue'),
-	                "ForeignAddress="+$("#ForeignAddress").val(), //联系人地址
 	                "ForeignIDCard="+$("#ForeignIDCard").val(),
-	                "ForeignCredType="+getComValue("ForeignCredType")]      
+	                "ForeignAddress="+$("#ForeignAddress").val(), //联系人地址
+	                "ForeignCredType="+getComValue("ForeignCredType"),
+	                "UserDR="+session['LOGON.USERID'],
+	                "PAPMILangPrimDR="+getComValue("PAPMILangPrimDR"),
+	                "PAPMILangSecondDR="+getComValue("PAPMILangSecondDR"),
+	                "Education="+getComValue("Education"),
+	                
+	                
+	                "StreetNow="+getComValue("StreetNow")
+	                
+	                
+	                ]      
 	var PAPerson=GetEntityClassInfoToXML(ParseInfo);
 	var returnvalue=$.cm({
 	    ClassName : "web.DHCBL.Patient.DHCPatientBuilder",
 	    MethodName : "DHCPatientUpdate",
+		hospId:session['LOGON.HOSPID'],
 	    PAPersonInfo:PAPerson,
 	    dataType:"text"
 	},false);
 	if(returnvalue=='0'){
-		$.messager.alert("提示","更新成功!","info",function(){
-			FindPatList();
-			//如果是从挂号界面打开的则当更新完就关闭此界面
+		$.messager.popover({msg: '更新成功!',type:'success',timeout: 1000});
+		FindPatList();
+		//如果是从挂号界面打开的则当更新完就关闭此界面
+		if (ServerObj.CardNo!=""){
 			var cardno=$("#CardNo").val();
 			if (window.name=="QueryReg"){
 				var Parobj=window.opener
@@ -743,7 +854,11 @@ function BUpdateClickHandle(){
 				window.close();
 				//Parobj.websys_setfocus('CardNo');
 			}
-		});
+			if ((window.parent)&&(window.parent.SetPassCardNo)&&(cardno!="")){
+				window.parent.SetPassCardNo(cardno);
+				window.parent.destroyDialog("Project");
+			}
+		}
 	}else{
 		$.messager.alert("提示","更新失败!");
 		return false;
@@ -752,9 +867,13 @@ function BUpdateClickHandle(){
 //验证必填字段
 function CheckNull(){
 	var row=PageLogicObj.m_PatListTabDataGrid.datagrid('getSelected');
-	if(!row){
+	if (!row){
 		$.messager.alert("提示","请选择一条记录!");
 		return false;	
+	}
+	if (row["TNewPatNo"] != "") {
+		$.messager.alert("提示", "保存失败：该登记号已经被合并无法使用，保留的登记号为 <font color=red>"+row["TNewPatNo"]+"</font>");
+		return false;
 	}
 	var CardNo=$("#CardNo").val();
 	if (CardNo!=""){
@@ -791,6 +910,7 @@ function CheckNull(){
 		var myrtn=true;
 		for (var i=0;i<PageLogicObj.m_CardRegMustFillInArr.length;i++){
 			var id=PageLogicObj.m_CardRegMustFillInArr[i]['id'];
+			if (id=="CredNo") continue;
 			var text=PageLogicObj.m_CardRegMustFillInArr[i]['text'];
 			var val=getValue(id);
 			if (val==""){
@@ -1043,9 +1163,18 @@ function CheckNull(){
 	}
 	if(CheckBirthAndBirthTime()){
 		$.messager.alert("提示","出生日期是当天的,出生时间不能大于当前时间,请核实!","info",function(){
-				$("#BirthTime").focus();
+			$("#BirthTime").focus();
 		});
 		return false;
+	}
+	if(!LimitBirthTime() && myBirthTime=="") {
+		$("label[for=BirthTime]").addClass("clsRequired");
+		$.messager.alert("提示","年龄小于"+ServerObj.LimitBirthTimeByAge+"天需填写出生时间","info",function(){
+			$("#BirthTime").focus();
+		});
+		return false;
+	}else{
+		$("label[for=BirthTime]").removeClass("clsRequired");
 	}
 	var myTelHome=$("#TelHome").val();
     if (myTelHome==""){
@@ -1349,6 +1478,7 @@ function CardNoKeyDownCallBack(myrtn){
 			var PatientNo=myary[5];
 			var CardNo=myary[1]
 			$('#CardNo').val(CardNo);
+			$('#SPAPERNo').val(PatientNo);
 			FindPatList();
 			break;
 	}
@@ -1416,8 +1546,10 @@ function InsuranceNoKeydown(e){
 		}
 		if (Rtn>0) {
 			var src="reg.cardsearchquery.hui.csp?InsuranceNo="+InsuNo;
+			if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
 			var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
-			createModalDialog("OtherCredTypeManager","患者查询", 1260, PageLogicObj.dh,"icon-w-find","",$code,"");
+			createModalDialog("FindPatReg","患者查询", $(window).width()-100, $(window).height()-80,"icon-w-find","",$code,"");
+			PageLogicObj.AutoChange=1
 		}
 	}
 }
@@ -1501,6 +1633,21 @@ function SetPAPMINoLenth(){
 				PAPMINo="0"+PAPMINo;
 			}
 		}
+		var NewPatNo=$.cm({
+		    ClassName: "web.DHCPATCardUnite",
+		    MethodName: "GetCardUnitNewByOld",
+		    OldPatientNo: PAPMINo,
+		    dataType:"text"
+		},false);
+		if (NewPatNo!="") {
+			$.messager.confirm("提示", "该登记号已经被合并无法使用，保留的登记号为 <font color=red>"+NewPatNo+"</font>，是否自动使用新登记号进行检索？", function(r) {
+	            if (r) {
+	                $("#SPAPERNo").val(NewPatNo);
+	                FindPatList();
+	                return;
+	            }
+	        });
+		}
 		$("#SPAPERNo").val(PAPMINo);	
 	}
 }
@@ -1555,6 +1702,11 @@ function PAPERDobOnblur(){
 			$("#Birth").focus();
 		});
 		return false;
+	}
+	if(!LimitBirthTime()) {
+		$("label[for=BirthTime]").addClass("clsRequired");
+	}else{
+		$("label[for=BirthTime]").removeClass("clsRequired");
 	}
 }
 function BirthTimeOnblur(){
@@ -1621,9 +1773,10 @@ function getNowFormatDate() {
     return currentdate;
 } 
 function OtherCredTypeInput(){
- 	var src="doc.othercredtype.hui.csp?OtherCardInfo="+$("#OtherCardInfo").val();;
+ 	var src="doc.othercredtype.hui.csp?OtherCardInfo="+$("#OtherCardInfo").val();
+	 if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
 	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
-	createModalDialog("OtherCredTypeManager","其他证件管理", "500", "350","icon-w-epr","",$code,"");	
+	createModalDialog("OtherCredTypeManager","其他证件管理", "500", "371","icon-w-epr","",$code,"");	
 } 
 function createModalDialog(id, _title, _width, _height, _icon,_btntext,_content,_event){
     $("body").append("<div id='"+id+"' class='hisui-dialog'></div>");
@@ -1767,19 +1920,24 @@ function ReadRegInfoOnClick(){
 }
 function SetPatInfoByXML(XMLStr) {
 	XMLStr = "<?xml version='1.0' encoding='gb2312'?>" + XMLStr
-	var xmlDoc = DHCDOM_CreateXMLDOM();
+	//var xmlDoc = DHCDOM_CreateXMLDOM();
+	var xmlDoc=DHCDOM_CreateXMLDOMNew(XMLStr);
     oldPersonMessage=[];
-	xmlDoc.async = false;
+	/*xmlDoc.async = false;
 	xmlDoc.loadXML(XMLStr);
 	if (xmlDoc.parseError.errorCode != 0) {
 		alert(xmlDoc.parseError.reason);
 		return;
-	}
+	}*/
 	var nodes = xmlDoc.documentElement.childNodes;
 	if (nodes.length<=0){return;}
 	for (var i = 0; i < nodes.length; i++) {
-		var myItemName = nodes(i).nodeName;
-		var myItemValue = nodes(i).text;
+		
+		var myItemName = getNodeName(nodes,i);	//nodes(i).nodeName;
+		var myItemValue = getNodeValue(nodes,i)	//nodes(i).text;
+		if (myItemName=="Age"){
+			continue
+		}
 		if ((myItemName=="OtherCardInfo")&&(myItemValue!="")) {
 			myItemValue=myItemValue.replace(/@/g,"^");
 		}
@@ -1788,11 +1946,14 @@ function SetPatInfoByXML(XMLStr) {
 			var oldinfo=_$id.val()
 			if ((oldinfo!="")&&(oldinfo!=myItemValue)){
 				lableName = $('label[for="'+ myItemName +'"]').text();
-				$.messager.confirm('确认对话框',lableName+"和读取信息不一致，是否覆盖信息?", function(r){
+				(function(_$id,myItemValue){
+					$.messager.confirm('确认对话框',lableName+"和读取信息不一致，是否覆盖信息?", function(r){
 						if (r){	
-				        _$id.val(myItemValue);
+				        	_$id.val(myItemValue);
 						}
 					});
+				})(_$id,myItemValue)
+				
 				}else if (oldinfo==""){
 					_$id.val(myItemValue);
 				}
@@ -1877,4 +2038,169 @@ function TelHomeKeyDown(e) {
 function ShowVerification(Content) {
 	$("#VerificationCode").text(Content)
 	$("#Verification").window("open")
+}
+
+function BFindPatHandle(){
+	var src="reg.cardsearchquery.hui.csp";   
+	if(typeof websys_writeMWToken=='function') src=websys_writeMWToken(src);
+	var $code ="<iframe width='100%' height='100%' scrolling='auto' frameborder='0' src='"+src+"'></iframe>" ;
+	createModalDialog("FindPatReg","患者查询", $(window).width()-100, $(window).height()-80,"icon-w-find","",$code,"");
+}
+
+function CardSearchCallBack(cardno,Regno,patientid){
+	$("#SPAPERID,#SPAPERName,#SPAPERNo,#CardNo,#OutMedicareNo,#InMedicareNo,#EmMedicare,#CardTypeNew").val("");
+	$("#SPAPERNo").val(Regno);
+	FindPatList();
+}
+function LimitBirthTime() {
+	var LimitFlag=true
+	var Birth=$("#Birth").val();
+	var DaysBetween=$.cm({
+		ClassName:"web.DHCDocCommon",
+		MethodName:"GetDaysBetween",
+		FromDate:Birth,
+		dataType:"text"
+	},false);
+	if(DaysBetween!="") {
+		if(parseInt(DaysBetween)<=parseInt(ServerObj.LimitBirthTimeByAge)) {
+			LimitFlag=false
+		}
+	}
+	return LimitFlag
+}
+function CheckInHos() {
+	var row=PageLogicObj.m_PatListTabDataGrid.datagrid('getSelected');
+	
+	var InHosFlag=$.cm({
+		ClassName:"web.DHCDocOrderCommon",
+		MethodName:"CheckPatInIPAdmission",
+		PatientID:row['TID'],
+		HospID:session['LOGON.HOSPID'],
+		dataType:"text"
+	},false);
+	//alert(InHosFlag)
+	if (InHosFlag==1){
+		$.messager.alert('提示','患者住院期间请到住院登记界面修改患者信息!',"info");
+		return false;
+		
+	}
+	return true;
+}
+///如果国籍中维护了默认语言可以讲语言默认到母语1上
+function DefLanguage(CountryID) {
+	if (CountryID==""){
+		var CountryID = $("#CountryDescLookUpRowID").combobox('getValue');
+		if (CountryID=="") return ;
+	}
+	$.m({
+		ClassName:"web.DHCBL.CTBASEIF.ICTCardRegLB",
+		MethodName:"GetDefLanByCountry",
+		CountryID:CountryID
+	},function(Data){
+		$("#PAPMILangPrimDR").combobox('select',Data);
+	});	
+	return true;
+}
+function InitLanguageCombo(){
+	$.m({
+		ClassName:"web.DHCBL.CTBASEIF.ICTCardRegLB",
+		MethodName:"GetLANJsonInfo",	
+	},function(Data){
+		var cbox = $HUI.combobox("#PAPMILangPrimDR,#PAPMILangSecondDR", {
+				valueField: 'id',
+				textField: 'text', 
+				//editable:false,
+				//width:115,
+				data: JSON.parse(Data)
+		 });	 
+	});
+}
+function InitEDUCombo(){
+	$.m({
+		ClassName:"web.DHCBL.CTBASEIF.ICTCardRegLB",
+		MethodName:"GetEDUJsonInfo",
+	},function(Data){
+		var cbox = $HUI.combobox("#Education", {
+				valueField: 'id',
+				textField: 'text', 
+				//editable:false,
+				data: JSON.parse(Data)
+		 });
+	});
+}
+function StreetSelectHandler(AreaID) {
+	var StreetId=""
+	var StreetId="StreetNow";
+	var AreaValue=$("#"+AreaID).combobox("getValue")
+	if (StreetId!="") {
+		var Data=$.m({
+			ClassName:"web.DHCBL.CTBASEIF.ICTCardRegLB",
+			MethodName:"ReadBaseData",
+			dataType:"text",
+			TabName:"CTLocalityType",
+			QueryInfo:AreaValue+"^^^HUIJSON"
+		},false);
+		var cbox = $HUI.combobox("#"+StreetId, {
+			valueField: 'id',
+			textField: 'text', 
+			editable:true,
+			blurValidValue:true,
+			data: JSON.parse(Data),
+			filter: function(q, row){
+				if (q=="") return true;
+				if (row["text"].indexOf(q.toUpperCase())>=0) return true;
+				var find=0;
+				for (var i=0;i<row["AliasStr"].split("^").length;i++){
+					if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0){
+						find=1;
+						break;
+					}
+				}
+				if (find==1) return true;
+				return false;
+			},
+			onSelect:function(rec){
+				if (rec!=undefined){
+					
+				}
+			},onChange:function(newValue,oldValue){
+				
+				
+			}
+	 });
+	}
+}
+function LoadArea(cityId){
+	var areaId="CityAreaLookUpRowID";
+	var Data=$.m({
+		ClassName:"web.DHCBL.CTBASEIF.ICTCardRegLB",
+		MethodName:"ReadBaseData",
+		dataType:"text",
+		TabName:"CTCITYAREA",
+		QueryInfo:cityId+"^^^HUIJSON"
+	},false);
+	var cbox = $HUI.combobox("#"+areaId, {
+			valueField: 'id',
+			textField: 'text', 
+			editable:true,
+			blurValidValue:true,
+			data: JSON.parse(Data),
+			filter: function(q, row){
+				if (q=="") return true;
+				if (row["text"].indexOf(q.toUpperCase())>=0) return true;
+				var find=0;
+				for (var i=0;i<row["AliasStr"].split("^").length;i++){
+					if (row["AliasStr"].split("^")[i].indexOf(q.toUpperCase()) >= 0){
+						find=1;
+						break;
+					}
+				}
+				if (find==1) return true;
+				return false;
+			},
+			onSelect:function(row) {
+				//CityAreaSelectHandler(areaId)
+				StreetSelectHandler(areaId)
+			}
+	 });
 }

@@ -21,7 +21,7 @@ function DHCSTPrintFun(inpara,inlist){
         
 		if ((rtn)){
 			var PObj=new ActiveXObject("DHCOPPrint.ClsBillPrint")
-			var rtn=PObj.ToPrintDoc(inpara,inlist,docobj);
+			var rtn=PObj.ToPrintHDLP(inpara,inlist,docobj);
 		}
 	}catch(e){
 		alert(e.message);
@@ -389,7 +389,9 @@ var DHCSTXMLPrint_Preview={
 	            else {
 	                ctrlHtml = ctrlHtml + 'style="POSITION: absolute;border-color:000000;border-left-style:solid;border-width:1px;TOP:' + BeginY + 'px; LEFT:' + BeginX + 'px;width:' + width + 'px;height:'+height+'px;"></div>';
 	            }
-	        }
+	        }else{
+		    	ctrlHtml = ctrlHtml + '"></div>';
+		    }
 			this.Html+=ctrlHtml;
 	    }
 	},
@@ -400,17 +402,18 @@ var DHCSTXMLPrint_Preview={
 	        if (oneNode.nodeType==3){
 		    	continue;
 		    }
-	        var cId = getNewCtrlId("img");
+	        var cId = this.GetNewCtrlId("img");
 	        var ctrlHtml = "<img ctrlType='img' id=" + cId + " name=" + oneNode.getAttribute("name");
-	        ctrlHtml = ctrlHtml + " style='position:absolute;left:" + convertPtToPx(oneNode.getAttribute("xcol")) + "px;top:" + convertPtToPx(oneNode.getAttribute("yrow")) + "px;' ";
+	        ctrlHtml = ctrlHtml + " style='position:absolute;left:" + this.ConvertPtToPx(oneNode.getAttribute("xcol")) + "px;top:" + this.ConvertPtToPx(oneNode.getAttribute("yrow")) + "px;' ";
 	        if (oneNode.getAttribute("defaultvalue") != "") {
-	            ctrlHtml = ctrlHtml + "imgSrc='" + oneNode.getAttribute("defaultvalue") + "' ";
+	            ctrlHtml = ctrlHtml + "Src='" + oneNode.getAttribute("defaultvalue") + "' ";
 	        }
+	        var RePrtHeadFlag=oneNode.getAttribute("RePrtHeadFlag");
 	        if (RePrtHeadFlag != "N") {
 	            ctrlHtml = ctrlHtml + "RePrtHeadFlag='" + RePrtHeadFlag + "' ";
 	        }
 	        ctrlHtml = ctrlHtml + "/>";
-	        setCtrlHtml(cId, ctrlHtml);	
+	        this.Html+=ctrlHtml;
 	     }
 	},
 	ToList:function(listNodes){
@@ -567,5 +570,8 @@ var DHCSTXMLPrint_Preview={
 			this.NewCtrlArr[ctrlType] = 1;
 		}
 		return ctrlType + "_" + this.NewCtrlArr[ctrlType];
+	},
+	setCtrlHtml:function(cId, ctrlHtml) {
+		this.Html += ctrlHtml;
 	}
 }

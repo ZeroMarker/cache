@@ -94,15 +94,20 @@ function ViewOperation(value,row,index)
 function AppendFileSwitchAndView(ftpappendfilename){
 	var DHCEQTomcatServer=getElementValue("DHCEQTomcatServer")
 	var url=DHCEQTomcatServer+"DHCEQOfficeView/uploadfile.jsp?ftpappendfilename="+ftpappendfilename;
-	showWindow(url,"文件预览","","","icon-w-paper","modal","","","large"); 
+	showWindow(url,"文件预览","","","icon-w-paper","modal","","","large");
 	//window.open(DHCEQTomcatServer+"DHCEQOfficeView/uploadfile.jsp?ftpappendfilename="+ftpappendfilename,'_blank',"toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes"); //add by zx 2017-08-09 BUG ZX0038
 }
 function DownLoadOperation(value,row,index)
 {
 	//Modify by zx 2020-05-07 文件预览点击问题修改 BUG ZX0086
 	var ftpappendfilename=tkMakeServerCall("web.DHCEQ.Process.DHCEQAppendFile","GetFtpStreamSrcByAFRowID",row.TRowID);
-	//var btn="<a onclick='window.open(&quot;"+ftpappendfilename+"&quot;)'><img border=0 complete='complete' src='../scripts_lib/hisui-0.1.0/dist/css/icons/download.png' /></a>";
-	var btn="<a onclick='showWindow(&quot;"+ftpappendfilename+"&quot;,&quot;文件下载&quot;,&quot;&quot;,&quot;&quot;,&quot;icon-w-paper&quot;,&quot;modal&quot;,&quot;&quot;,&quot;&quot;,&quot;middle&quot;)'><img border=0 complete='complete' src='../scripts_lib/hisui-0.1.0/dist/css/icons/download.png'/></a>";
+	//Modefied by zc 2021-1-19 修正下载弹出空白窗口 begin
+	if ('function'==typeof websys_getMWToken){		//czf 2023-02-14 token启用参数传递
+		ftpappendfilename += "&MWToken="+websys_getMWToken()
+	}
+	var btn="<a onclick='window.open(&quot;"+ftpappendfilename+"&quot;)'><img border=0 complete='complete' src='../scripts_lib/hisui-0.1.0/dist/css/icons/download.png' /></a>";
+	//var btn="<a onclick='showWindow(&quot;"+ftpappendfilename+"&quot;,&quot;文件下载&quot;,&quot;&quot;,&quot;&quot;,&quot;icon-w-paper&quot;,&quot;modal&quot;,&quot;&quot;,&quot;&quot;,&quot;middle&quot;)'><img border=0 complete='complete' src='../scripts_lib/hisui-0.1.0/dist/css/icons/download.png'/></a>";
+	//Modefied by zc 2021-1-19 修正下载弹出空白窗口 end
 	return btn;
 }
 function DeleteOperation(value,row,index)
@@ -120,6 +125,9 @@ function Delete(RowID)
 {
 	$.post("dhceq.process.appendfileaction.csp?&actiontype=DeleteAppendFile&RowID="+RowID, "", function(text, status) {
                             if(status=="success"){
+	                            //modified by sjh SJH0044 2020-01-18
+	                            var truthBeTold = window.confirm("是否删除此条记录？");  
+								if (!truthBeTold) return;	
                                 $.messager.alert("提示", "删除成功");
                                 $('#tDHCEQFileFind').datagrid('reload');
                             }
@@ -144,7 +152,8 @@ function BAdd_Clicked(){
 	setElement("ADocName","")
 	setElement("Remark","")
 	setElement("AppendFileType","")
-	setElement("FileName","")
+	//setElement("FileName","")
+	$('#FileName').filebox('clear');
 	$HUI.dialog('#UpLoadFile').open();
 	$('#tDHCEQFileFind').datagrid('unselectAll')
 }
@@ -153,14 +162,13 @@ function initAppendFileTypeData()
 	var PicTypesJson=tkMakeServerCall("web.DHCEQ.Process.DHCEQCPicSourceType","GetPicTypeMenu",getElementValue("CurrentSourceType"),"","1")
 	var vdata=eval(PicTypesJson)
 	var AppendFileType = $HUI.combobox('#AppendFileType',
-					{
+	{
 		valueField:'id', 
 		textField:'text',
 		selectOnNavigation:false,
 		panelHeight:"auto",
 		data:vdata,
-		
-});
+	});
 }
 function UpDate(list)
 {
@@ -178,13 +186,30 @@ function BSave_Clicked()
     {     
        	RowID=selected.TRowID;
     }
-    if (checkMustItemNull()) return;
+    if (getElementValue("AppendFileType")=="")
+	{
+		messageShow('popover','error','错误提示','文件类型不能为空!');
+		return;
+	}
+	var FileObj=$('#FileName').filebox('files');
+	if (FileObj.length==0)
+	{
+		messageShow('popover','error','错误提示','请选择文件!');
+		return;
+	}
+	if (getElementValue("ADocName")=="")
+	{
+		messageShow('popover','error','错误提示','资料名称不能为空!');
+		return;
+	}
+    
+    //if (checkMustItemNull()) return;
 	//Moidefied by zc0064 2020-4-8  资料名称等传入后台乱码问题处理 begin
     //var str="&SourceType="+getElementValue("CurrentSourceType")+"&SourceID="+getElementValue("CurrentSourceID")+"&AppendFileTypeDR="+$('#AppendFileType').combobox('getValue')+"&DocName="+getElementValue("ADocName")+"&Remark="+getElementValue("Remark")
 	var str="&SourceType="+getElementValue("CurrentSourceType")+"&SourceID="+getElementValue("CurrentSourceID")+"&AppendFileTypeDR="+$('#AppendFileType').combobox('getValue')+"&DocName="+encodeURIComponent(getElementValue("ADocName"))+"&Remark="+encodeURIComponent(getElementValue("Remark"))
 	//Moidefied by zc0064 2020-4-8  资料名称等传入后台乱码问题处理 begin
 	var formData = new FormData();
-    formData.append('FileStream', $('#FileName')[0].files[0]);
+    formData.append('FileStream', $('#FileName').filebox('files')[0]);		//$('#FileName')[0].files[0]
     document.getElementById("BSave").style.display = 'none'
 	$.ajax({
                 url : 'dhceq.process.appendfileaction.csp?&actiontype=UploadByFtpStream&RowID='+RowID+str,
@@ -215,17 +240,16 @@ function BSave_Clicked()
 
 function setEnabled()
 {
-	var Status=getElementValue("Status");
-	if (Status>0)
-	{
-		document.getElementById("BAdd").style.display = 'none'
-		document.getElementById("BSave").style.display = 'none'
-	}
-	if (getElementValue("ReadOnly")!="")
-	{
-		document.getElementById("BAdd").style.display = 'none'
-		document.getElementById("BSave").style.display = 'none'
-	}
+    var Status=getElementValue("Status");
+    ///modified by ZY20230420 bug:3455840
+    if (Status>1)
+    {
+        document.getElementById("BAdd").style.display = 'none'
+        document.getElementById("BSave").style.display = 'none'
+    }
+    if (+getElementValue("ReadOnly")>0)
+    {
+        document.getElementById("BAdd").style.display = 'none'
+        document.getElementById("BSave").style.display = 'none'
+    }
 }
-
-

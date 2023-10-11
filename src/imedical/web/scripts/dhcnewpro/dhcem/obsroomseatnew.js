@@ -1,8 +1,13 @@
 ///creator:qqa
 ///creatDate:2017-10-24
 var IsInitTable=false;
+var ThisBedDataId="";
+var seatWith="",seatHeight="";
+var HOSOPEN = ""; //用户大会
 $(function(){
 	initParam();
+	
+	initPage();
 	
 	initSet();
 	
@@ -13,6 +18,8 @@ $(function(){
 	initSeat();
 	
 	initMethod();
+	
+	//LoadMoreScr(); //用户大会
 
 })
 
@@ -26,7 +33,19 @@ function initSet(){
 	}
 }
 
+function initPage(){
+	
+	if(BEDLAYOUTDEF==1){
+		$HUI.switchbox("#switch2").setValue(false);
+	}
+	
+	return;
+}
+
 function initParam(){
+	
+	HOSOPEN = getParam("hosOpen");  // 是否是HOS调用 //用户大会
+	
 	obsPatTable = {
 		table:"",
 		checkIndex:"",  //指针：指向datagrid当前选中的行	
@@ -60,6 +79,11 @@ function initParam(){
 	
 	seatNum={
 		allSeatNum:0,  //人数
+		chkLevOne:0,
+		chkLevTwo:0,
+		chkLevThree:0,
+		chkLevFourA:0,
+		chkLevFourB:0,
 		hasPatSeatNum:0, //在床人数
 		makeSeatNum:0,//包床人数
 	}
@@ -89,11 +113,19 @@ function initParam(){
 //初始化所有界面元素的方法
 function initMethod(){
 	addObsAreaMethod();	  //等候区点击方法
-	$(".planPat-Btn:contains('安排')").on('click',planOrClearPat);   //安排按钮
-	$(".planPat-Btn:contains('取消')").on('click',closeWindow);   //安排按钮
-	$(".dis-Btn:contains('更新')").on('click',disHospPat);
-	$(".cancel-Btn:contains('更新')").on('click',cancelAccPat);
-	
+//	$(".planPat-Btn:contains('安排')").on('click',planOrClearPat);   //安排按钮
+//	$(".planPat-Btn:contains('取消')").on('click',closeWindow);   //安排按钮
+//	$(".dis-Btn:contains('更新')").on('click',disHospPat);
+//	$(".cancel-Btn:contains('更新')").on('click',cancelAccPat);
+	$("#PlanBtn").on('click',planOrClearPat);   //安排按钮 //hxy 2022-12-19 改描述为ID
+	$("#AboliBtn").on('click',closeWindow);   //安排按钮
+	$("#UpdBtn").on('click',disHospPat);  // 离院更新按钮
+	$("#DisAboliBtn").on('click',closeWindow);   // 离院取消按钮
+	$("#UpdaBtn").on('click',cancelAccPat);
+	$("#top_btn_ord").on({
+		mouseover : function(){topBtnOrdOver()} ,
+		mouseout : function(){topBtnOrdOut()} 
+	})
 	$(".opbtn-makeSeatBtn").on('click',makeSeat);
 	$(".opbtn-upSeatBtn").on('click',upSeatWin);
 	$(".opbtn-cancelAcc").on('click',cancelAcc);
@@ -101,6 +133,22 @@ function initMethod(){
 	$("#upObsBtn").on('click',planPatToObs);/*hxy 2018-07-02*/
 	$("#prtStraps").on('click',prtStraps);
 	$("#transBed").on('click',transtBed);
+	$("#patGreenWay").on('click',showGreenRec);
+	$('#filterValue').on('keypress',filterValue_KeyPress);
+	$("#emPatChange").on('click',emPatChange);
+	$("#doccancel").bind('click',DoCancel);  /// 主管医生取消
+	$("#docsure").bind('click',DocSure);  /// 主管医生确定
+}
+
+function topBtnOrdOver(){
+	if($(".hasSyOrd").length){
+		$(".hasSyOrd").find(".seatBody").css("background","yellow");
+	}
+}
+function topBtnOrdOut(){
+	if($(".hasSyOrd").length){
+		$(".hasSyOrd").find(".seatBody").css("background","#fff");
+	}
 }
 
 //换床
@@ -121,6 +169,47 @@ function upSeatWin(){
 	globleParam.planModel = "UP";  
 	loadPlanPatWin(patAdm);
 	return; 	
+}
+
+function emPatChange(){
+
+	var patAdm="";
+	var  selPatData= $("#obsPatTable").datagrid("getSelections");  //加载面板
+
+	if(selPatData.length){
+		patAdm = selPatData[0].AdmID;
+	}else{
+		patAdm = selSeatPat.adm;
+	}
+	
+	if(patAdm===""){
+		$.messager.alert("提示","未选留观室病人！");	
+		return;
+	}
+	
+	var lnk = "dhcem.visitstat.csp?EpisodeID="+patAdm;
+	var winwidth="1200";
+	if(screen.availWidth-50<winwidth){
+		winwidth=screen.availWidth-50;
+	}
+	var iLeft = ($(window).width()-winwidth)/2; //获得窗口的水平位置;
+	var iTop=($(window).height()-700)/2; //获得窗口的垂直位置;
+	websys_showModal({
+		url: lnk,
+		width:winwidth,
+		height:700,
+		left:iLeft,
+		top:iTop,
+		iconCls:"icon-w-paper",
+		title: $g('急诊患者状态改变'),
+		closed: true,
+		onClose:function(){
+				
+		}
+	});
+	
+	return ;
+		
 }
 
 //撤销结算
@@ -175,38 +264,52 @@ function disHospWin(){
 	}
 	var isControl=0,abnOrdInfo="";
 	
-	var retInfo=serverCall("web.DHCEMPatChange","GetAbnormalOrder",{'EpisodeID':patAdm});
-	if(retInfo!=0){
-		isControl=retInfo.split(",")[0];
-		abnOrdInfo=retInfo.substring(2,retInfo.length);
-	}
+	//var retInfo=serverCall("web.DHCEMPatChange","GetAbnormalOrder",{'EpisodeID':patAdm,'LgParams':LgParams});
+	runClassMethod("web.DHCEMPatChange","GetAbnormalOrder",
+		{
+			"EpisodeID":patAdm,
+			"LgParams":LgParams
+		},function(data){
+			var retInfo=data;
+			if(retInfo.length!=0){
+				isControl=retInfo[0].ifCanOper;
+				abnOrdInfo=(retInfo[0].abnormalMsgs)[0].abnormalMsg;
+			}
+		},'json',false)	
+	
 	if(abnOrdInfo!=""){
 		if(isControl!=0){
-			$.messager.alert("提示:","请先处理需关注医嘱！需关注医嘱信息:"+abnOrdInfo,"info",function(){
+			$.messager.alert("提示:","有医嘱需要处理，请先处理！","info",function(){/// 2022-07-29 cy  请先处理需关注医嘱！需关注医嘱信息:  +abnOrdInfo
 				websys_createWindow("../csp/nur.hisui.orderNeedCare.csp?EpisodeID="+patAdm+"&defaultTypeCode=D","","width='"+window.screen.availHeight-100+"' height='"+window.screen.availWidth-100+"'");
 			});
 			return;
 		}
 	}
-	
+	/// 2022-11-03 cy  获取入观时间
+	var InSeatDateInfo=serverCall("web.DHCEMObsRoomSeat","GetFirstInSeatDateDesc",{'Adm':patAdm});
+	var InSeatDate="",InSeatTime="";
+	if(InSeatDateInfo!=""){
+		InSeatDate=InSeatDateInfo.split(" ")[0];
+		InSeatTime=InSeatDateInfo.split(" ")[1];
+	}
 	
 	if((isControl==0)&&(abnOrdInfo!="")){			///需关注医嘱未配置管控，只提示。
 		$.messager.confirm('提示', '存在需处理医嘱，是否确定离院操作?', function(result){  
         	if(result) {
-	        	openDisWin(patAdm,curDate,curTime);
+	        	openDisWin(patAdm,curDate,curTime,InSeatDate,InSeatTime);
 	        }
 	    })
 	}else{
-		openDisWin(patAdm,curDate,curTime);
+		openDisWin(patAdm,curDate,curTime,InSeatDate,InSeatTime);
 	}
 	
 }
 
-function openDisWin(patAdm,curDate,curTime){
+function openDisWin(patAdm,curDate,curTime,InSeatDate,InSeatTime){
 	$("#disPatWin").window("open");
 	$("#disPatWin-disPatAdm").val(patAdm);
-	$("#disPatWin-disStDate").datebox("setValue",curDate);
-	$('#disPatWin-disStTime').timespinner('setValue',curTime);
+	$("#disPatWin-disStDate").datebox("setValue",InSeatDate); /// 2022-11-03 cy  离院弹窗 开始日期应显示入观日期
+	$('#disPatWin-disStTime').timespinner('setValue',InSeatTime); /// 2022-11-03 cy  离院弹窗 开始时间应显示入观日时间
 	$("#disPatWin-disDate").datebox("setValue",curDate);
 	$('#disPatWin-disTime').timespinner('setValue',curTime);
 	$('#disPatWin-DischargeNote').combobox("setValue","");	
@@ -228,10 +331,21 @@ function transtBed(){
 	}
 	
 	var lnk = "dhcem.rotatingbed.csp?EpisodeID="+patAdm;
+	var winwidth="1200";
+	if(screen.availWidth-50<winwidth){
+		winwidth=screen.availWidth-50;
+	}
+	var iLeft = ($(window).width()-winwidth)/2; //获得窗口的水平位置;
+	var iTop=($(window).height()-700)/2; //获得窗口的垂直位置;
+
 	websys_showModal({
 		url: lnk,
+		width:winwidth,
+		left:iLeft,
+		height:700,
+		top:iTop,
 		iconCls:"icon-w-paper",
-		title: '留观患者床位转移',
+		title: $g('留观患者床位转移'),
 		closed: true,
 		onClose:function(){}
 	});
@@ -271,6 +385,10 @@ function disHospPat(){
 	var disHospDate = $HUI.datebox("#disPatWin-disDate").getValue("");
 	var disHospTime =  $HUI.timespinner('#disPatWin-disTime').getValue();
 	var dischargeNote = $('#disPatWin-DischargeNote').combobox("getText");
+	if(dischargeNote==""){
+		$.messager.alert("提示","离院原因不能为空!");
+		return;
+	}
 	runClassMethod("web.DHCEMPatChange","SetPatChargeStatusNew",
 		{"EpisodeID":Adm,
 		"StatusDate":disHospDate,
@@ -295,8 +413,9 @@ function makeSeat(){
 
 //左上角安排按钮
 function planPatToObs(){
+	
 	if(selSeatPat.adm==="") {
-		$.messager.alert("提示","未选中床位图病人！");
+		//$.messager.alert("提示","未选中床位图病人！");
 		return;
 	}
 	globleParam.planModel = "C";  
@@ -391,6 +510,15 @@ function reloadObsAreaAndSeat(){
 		WardDr:CurWardDr
 	})
 	
+	loadBedView(CurWardDr);
+}
+
+///其他界面操作刷新床位图提供局部刷新方法
+function localRefresh(){
+	reloadObsAreaAndSeat();	
+}
+
+function loadBedView(CurWardDr){
 	loadSeat(CurWardDr);
 
 	obsPatTable.checkIndex="";
@@ -408,7 +536,7 @@ function reloadObsAreaAndSeat(){
 	$HUI.window("#disPatWin").close();
 	$HUI.window("#cancelWin").close();
 	$HUI.datagrid('#obsPatTable').resize();
-	$HUI.datagrid('#disHospTable').resize();
+	$HUI.datagrid('#disHospTable').resize();	
 }
 
 ///初始化table:只走一遍
@@ -424,7 +552,7 @@ function initTable(){
 	]];
 
 	$HUI.datagrid('#obsPatTable',{
-		url:LINK_CSP+"?ClassName=web.DHCEMObsRoomSeat&MethodName=GetCurWardObsPat&WardDr="+CurWardDr,
+		url:LINK_CSP+"?ClassName=web.DHCEMObsRoomSeat&MethodName=GetCurWardObsPat&WardDr="+CurWardDr+"&LgParams="+LgParams,
 		fit:true,
 		height:'150px',
 		rownumbers:false,
@@ -432,7 +560,7 @@ function initTable(){
 		pageSize:5,
 		pageList:[5,10,15],
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		showHeader:false,
 		pagination:false,
     	onSelect: function (rowIndex, rowData) {
@@ -444,20 +572,21 @@ function initTable(){
 	    	initDragAndDrop();
 	    },
 	    onRowContextMenu: function (e, rowIndex, rowData) { 
-	    	return true;
 	    	/// 增加右键菜单 2019-02-21 bianshuai
 			e.preventDefault(); //阻止浏览器捕获右键事件
-				
+			$(this).datagrid("clearSelections"); //取消所有选中项
+            		$(this).datagrid("selectRow", rowIndex); //根据索引选中该行
 			if(!validIsCheckPat()){
 				$.messager.alert("提示","未选中任何留观室病人！");
 				return;
 			}
-			
+			disableMenuItm($g("等候")+","+$g("腕带"));
 			$HUI.menu('#menu').show({ 
 	           //显示右键菜单  
 	           left: e.pageX,//在鼠标点击处显示菜单  
 	           top: e.pageY  
 			});
+			return true;
 	    }
 	});
 	
@@ -473,7 +602,7 @@ function initTable(){
 		pageSize:40,  
 		pageList:[40,80], 
 	    singleSelect:true,
-		loadMsg: '正在加载信息...',
+		loadMsg: $g('正在加载信息...'),
 		showHeader:false,
 		rownumbers : false,
 		showPageList : false,
@@ -484,8 +613,22 @@ function initTable(){
      	onLoadSuccess:function(rowData){
 	    	$("#disHospNumber").html(rowData.total);
 	    }
-     	
 	});
+}
+
+function disableMenuItm(menuDesc){
+	
+	var allMenuArr = [$g("出院"),$g("状态改变"),$g("等候"),$g("腕带"),$g("转移"),$g("绿色通道")]; 
+	var menuArr=menuDesc.split(",");
+	for(i in allMenuArr){
+		var item = $('#menu').menu('findItem', allMenuArr[i]);
+		if(menuArr.indexOf(allMenuArr[i])<0){
+			$('#menu').menu('enableItem', item.target);
+		}else{
+			$('#menu').menu('disableItem', item.target);
+		}
+	}
+	return;
 }
 
 function validIsCheckPat(){
@@ -508,10 +651,10 @@ function initDragAndDrop(){
 	$HUI.droppable(('.onDroppable'),{
 		accept: '.onDraggable',
 		onDragEnter:function(e,source){
-			$(this).find(".seatcontent").css({"border":"3px solid #6b6fc7"});
+			//$(this).find(".seatcontent").css({"border":"3px solid #6b6fc7"});
 		},
 		onDragLeave: function(e,source){
-			$(this).find(".seatcontent").css({"border":"1px solid #ccc"});
+			//$(this).find(".seatcontent").css({"border":"1px solid #ccc"});
 		},
 		onDrop: function(e,source){
 			$(this).find(".seatcontent").css({"border":"1px solid #ccc"});
@@ -617,11 +760,17 @@ function checkOrUnCheckSeat($this)
 	if($seatCont.hasClass("active")){  //指针赋
 		selSeatPat.seatID =$this.attr("data-id");
 		selSeatPat.adm =$this.attr("data-adm");
-		  setEprMenuForm($this.attr("data-adm"),"");   
+		setEprMenuForm($this.attr("data-adm"),"");   
+		LoadMoreScr(); //用户大会
+		setPanelPatInfo(selSeatPat.adm, ""); //用户大会
+		
 	}else{
+		setPanelPatInfo(selSeatPat.adm, ""); //用户大会
 		selSeatPat.seatID ="";
 		selSeatPat.adm =""; 
 		setEprMenuForm("","");  
+		
+		LoadLoginScr(); //用户大会
 	}
 	
 	$(".seat").not($this).each(function(){
@@ -639,7 +788,7 @@ function initSeat(){
 
 function initPatIncon(CurWardID){
 	PatInconData="";
-	runClassMethod("web.DHCEMObsRoomSeat","GetWardIconInfo",{"WardID":CurWardID},function(data){
+	runClassMethod("web.DHCEMObsRoomSeat","GetWardIconInfo",{"WardID":CurWardID,"LgParams":LgParams},function(data){
 		PatInconData = data;
 		showSeatIcon();
 	})
@@ -654,30 +803,33 @@ function loadSeat(CurWardID){
 
 
 function showSeatIcon(){
-
-	if(PatInconData==""){
-		if(seatTimeCount<10){
-			setTimeout("showSeatIcon()",500);
-			seatTimeCount++;
-			return;
-		}else{
-			seatTimeCount=0;	
-		}
-		
-	}
-		
 	for (var i=0;i<PatInconData.length;i++){
 		var itm = PatInconData[i];
 		var seatID = itm.SeatID;
 		var iconHtmlText = itm.IconHtmlText;
-		$(".seatbodyicon[seatID='"+seatID+"']").html(iconHtmlText);
+		if($(".seatbodyicon[seatID='"+seatID+"']").parent().parent().parent().parent().attr("data-adm")){
+			$(".seatbodyicon[seatID='"+seatID+"']").html(iconHtmlText);
+			if(itm.IsHasSyOrd){
+				seatNum.hasAllOrdNum++;
+				$(".seatbodyicon[seatID='"+seatID+"']").parent().parent().parent().parent().addClass("hasSyOrd");
+			}
+		}
 	}
+	
+	///设置含有未执行医嘱人数
+	if($("#filterValue").val()){
+		return;	
+	}
+	if($(".queryItmActive").length){
+		return;	
+	}
+	$("#top_btn_ord").html(seatNum.hasAllOrdNum);
 }
 
 function showCurWardPatNum(){
-	$(".online").html("病区床数:"+seatNum.allSeatNum);
-	$(".unline").html("安排人数:"+seatNum.hasPatSeatNum);
-	$(".makeseat").html("包床人数:"+seatNum.makeSeatNum);	
+	$(".online").html($g("病区床数")+":"+seatNum.allSeatNum);
+	$(".unline").html($g("安排人数")+":"+seatNum.hasPatSeatNum);
+	$(".makeseat").html($g("包床人数")+":"+seatNum.makeSeatNum);	
 }
 
 function setCellLabelNoDrag(value, rowData, rowIndex){
@@ -694,34 +846,65 @@ function setCellLabel(value, rowData, rowIndex, mode){
 	mode==1?dragClass="onDraggable":"";
 	
 	var tooltipStr =rowData.PatName+","+rowData.PatSex+","+rowData.PatAge+","+rowData.PatType;
-	var htmlstr =  	    '<div class="celllabel '+dragClass+'" title="'+tooltipStr+'" class="hisui-tooltip" ';
+	var htmlstr =  	    '<div class="celllabel '+""+'" title="'+tooltipStr+'" class="hisui-tooltip" ';
 	var htmlstr = htmlstr +'data-adm="'+rowData.AdmID+'">'
-	var htmlstr = htmlstr+'<span class="l-btn-left l-btn-icon-left"><span class="l-btn-text">';
-	var htmlstr = htmlstr+rowData.PatName;
+	var htmlstr = htmlstr+'<span class="">';
 	//var htmlstr = htmlstr+'</span><span class="l-btn-icon icon-readothercard">&nbsp;</span></span>';
-	if(rowData.PatSex=="男"){//hxy
-		var htmlstr = htmlstr+'</span><span class="l-btn-icon pat_man">&nbsp;</span></span>';
-	}else if(rowData.PatSex=="女"){
-		var htmlstr = htmlstr+'</span><span class="l-btn-icon pat_woman">&nbsp;</span></span>';
+	if((rowData.PatSex==$g("男"))||(rowData.ChPatSex=="男")){//hxy
+		var htmlstr = htmlstr+'<span class="pat_man">&nbsp;</span>';
+	}else if((rowData.PatSex==$g("女"))||(rowData.ChPatSex=="女")){
+		var htmlstr = htmlstr+'<span class="pat_woman">&nbsp;</span>';
 	}else{
-		var htmlstr = htmlstr+'</span><span class="l-btn-icon pat_noman">&nbsp;</span></span>';	
+		var htmlstr = htmlstr+'<span class="pat_noman">&nbsp;</span>';	
 	}
+	var htmlstr = htmlstr+'<span class="pat_name">'+rowData.PatName+'</span>';
+	if(rowData.DischargeDate){
+		htmlstr = htmlstr+' '+rowData.DischargeDate+' '+rowData.DischargeTime;	
+	}
+	if(rowData.IsNewObsPat=="Y"){
+		var htmlstr = htmlstr+'<span class="obsPatTableTag">'+$g('新入')+'</span>'
+	}
+	if(rowData.IsHasSyOrd=="1"){
+		var htmlstr = htmlstr+'<span class="obsPatTableTag">'+$g('需执')+'</span>';
+	}
+	if(rowData.IsReCall=="Y"){
+		var htmlstr = htmlstr+'<span class="obsPatTableTag">'+$g('召回')+'</span>';
+	}
+	if(rowData.IsTransPat=="Y"){
+		var htmlstr = htmlstr+'<span class="obsPatTableTag">'+$g('转入')+'</span>';	
+	}
+	var htmlstr = htmlstr+'</span>';
 	htmlstr = htmlstr +'</div>';
 	return htmlstr;
 }
 
 function clearAllSeat(){
 	$(".obsseat").empty();
-	seatNum.allSeatNum=0;
-	seatNum.makeSeatNum=0;
-	seatNum.hasPatSeatNum=0;
+	seatNum={
+		allSeatNum:0,  //人数
+		chkLevOne:0,
+		chkLevTwo:0,
+		chkLevThree:0,
+		chkLevFourA:0,
+		chkLevFourB:0,
+		hasAllOrdNum:0,
+		hasAllOrdNum:0,
+		hasPatSeatNum:0, //在床人数
+		makeSeatNum:0,//包床人数
+	}
 	seatPointer=0;
 }
 function addAllSeat(CurWardID){
 	loadingShowOrHide("show");
+	var filterValue = $("#filterValue").val();
+	var filterType = $("#filterCombo").combobox("getValue");
+	if($(".queryItmActive").length){
+		filterType=$(".queryItmActive").attr("filterType");
+		filterValue=$(".queryItmActive").attr("filterValue");
+	}
 	
-	runClassMethod("web.DHCEMObsRoomSeat","GetWardSeatInfo",{"WardID":CurWardID},function(data){
-		
+	var otherParams=filterType+"^"+filterValue;
+	runClassMethod("web.DHCEMObsRoomSeat","GetWardSeatInfo",{"WardID":CurWardID,"LgParams":LgParams,"OtherParams":otherParams},function(data){
 		
 		setLastRowY(data.SeatData);
 		
@@ -729,16 +912,39 @@ function addAllSeat(CurWardID){
 		for(i=0;i<data.SeatData.length;i++){
 			addSeat(data.SeatData[i]);	
 		}
-		
+		setTopNumber();
 		addObsRoom(data.ObsRoomData); //初始化等候区
-		InitLocNum(data.Pid);	
+		InitLocNum(data.AdmLocData);	
 		showCurWardPatNum();
 		addSeatMethod();      		//床位点击方法
 		initPatIncon(CurWardID); 	//初始化图标数据	
 		initAccordion();
 		initTable();
 		loadingShowOrHide("hide");
+		initChangeBedViewPosition();
+		showBlankBed();
 	},'json',true)		
+}
+
+function initChangeBedViewPosition(){
+	var obj={value:$HUI.switchbox("#switch2").getValue()};
+	changeBedViewPosition(obj);
+}
+
+function setTopNumber(){
+	if($("#filterValue").val()){
+		return;	
+	}
+	if($(".queryItmActive").length){
+		return;	
+	}
+	$("#top_btn_all").html(seatNum.allSeatNum);
+	$("#top_btn_one").html(seatNum.chkLevOne);
+	$("#top_btn_two").html(seatNum.chkLevTwo);
+	$("#top_btn_three").html(seatNum.chkLevThree);
+	$("#top_btn_foura").html(seatNum.chkLevFourA);
+	$("#top_btn_fourb").html(seatNum.chkLevFourB);
+	//$("#top_btn_ord").html(seatNum.hasAllOrdNum);
 }
 
 function setLastRowY(seatData){
@@ -759,38 +965,48 @@ function loadingShowOrHide(mode){
 	}
 }
 
-function InitLocNum(SumPid){
+function showBlankBed(){
+	if(($("#filterValue").val())||($(".queryItmActive").length)){
+		$(".seat").each(function(){
+			$(this).find(".patName").text()?"":$(this).hide();
+		})
+	}
+	return;
+}
+
+function InitLocNum(data){
 	
-	SumPid=SumPid;    //Pid
-	runClassMethod("web.DHCEMObsRoomSeat","GetLocBySeatNum",{"pid":SumPid},function(data){
-		var jsonObjArr = data;
-		var htmlstr="";
-		htmlstr="<span style='font-weight:bold;font-size:15px!important;'>在床情况:</span>";
-		var ToalNum=0; //
-		for (var i=0; i<jsonObjArr.length; i++){
-			if(htmlstr==""){
-				htmlstr="<span style='font-weight:bold;font-size:15px!important;'>"+jsonObjArr[i].LocDesc+"："+"</span>"+"<span style='font-size:12px!important;font-weight:bold;'>"+jsonObjArr[i].Num+"人"+"</span>";	
-			}else{
-				if(jsonObjArr[i].LocDesc.indexOf("72小时")>-1){
-					htmlstr=htmlstr+"<br>"+"<span style='font-weight:bold;font-size:15px!important;'>"+jsonObjArr[i].LocDesc+"："+"</span>"+"<span style='font-size:13px!important;font-weight:bold;'>"+jsonObjArr[i].Num+"人"+"</span>";				
-				}else{
-					htmlstr=htmlstr+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+"<span style='font-weight:bold;font-size:15px!important;'>"+jsonObjArr[i].LocDesc+"："+"</span>"+"<span style='font-size:13px!important;font-weight:bold;'>"+jsonObjArr[i].Num+"人"+"</span>";		
-				}
-			}
-			//计算
-			if(jsonObjArr[i].LocDesc.indexOf("72小时")<0){
-				if(ToalNum==0){
-				   ToalNum=parseInt(jsonObjArr[i].Num);
-				}else{
-				   ToalNum=	parseInt(ToalNum)+parseInt(jsonObjArr[i].Num);
-				}
-			}
+	if($("#filterValue").val()){
+		return;	
+	}
+	if($(".queryItmActive").length){
+		return;	
+	}
+	showAdmLoc(data);		
+}
+
+function showAdmLoc(data){
+	var jsonObjArr = data;
+	var thisHtml="";
+	for (var i=0; i<jsonObjArr.length; i++){
+		var LocDesc=jsonObjArr[i].LocDesc;
+		var LocDescOld=LocDesc;
+		var filterType="AdmLoc";
+		if (LocDesc==$g("超过72小时")){
+			filterType="Out72Hours";
+			LocDesc = '<span style="color:red;font-weight: 500;">'+$g('超过72小时')+'</span>'
 		}
 		
-		$("#LocAdmNum").html(htmlstr+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+"<span style='font-weight:bold;font-size:18px!important;'>在床总人数：</span>"+"<span style='font-weight:bold;font-size:15px!important;'>"+ToalNum+"人"+"</span>");
-	},'json',false)
-		
+		thisHtml==""?"":thisHtml=thisHtml+"<span class='dymLocDom' style='display: inline-block;width:15px;'></span>";
+		thisHtml=thisHtml+"<span class='queryItm' onclick='clickQueryItm(this)' filterType='"+filterType+"' filterValue='"+LocDescOld+"'>"
+		thisHtml=thisHtml+	"<span style='color:black;' class='dymLocDom'>"+LocDesc+"</span><span class='showNumberSpan dymLocDom'>"+jsonObjArr[i].Num+"</span>";
+		thisHtml=thisHtml+"</span>";
+	}
+	if($(".dymLocDom").length) $(".dymLocDom").remove();
+	$("#topLoc").after(thisHtml);
+	return;
 }
+
 
 function addObsRoom(data){
 	//下面是dom操作
@@ -871,19 +1087,51 @@ function addSeatMethod(){
 			//下面设置选中css以及对床位指针赋值
 			checkOrUnCheckSeat($(this));
 		}).bind("contextmenu", function(e){
-			return true;
 			/// 增加右键菜单 2019-02-21 bianshuai
 			e.preventDefault(); //阻止浏览器捕获右键事件
+			
 			if(!validIsCheckPat()){
-				$.messager.alert("提示","未选中任何留观室病人！");
-				return;
+				if(ThisBedDataId){
+					$(".seat[data-id='"+ThisBedDataId+"']").click();
+				}else{
+					$.messager.alert("提示","未选中任何留观室病人！");
+					return;
+				}
+			}else{
+				if($(".seat[data-id='"+ThisBedDataId+"']").attr("data-adm")){
+					if(!$(".seat[data-id='"+ThisBedDataId+"']").find(".seatcontent").hasClass("active")){
+						$(".seat[data-id='"+ThisBedDataId+"']").click();
+					}
+				}else{
+					return;	
+				}	
 			}
+			disableMenuItm("");
 			$HUI.menu('#menu').show({ 
 	           //显示右键菜单  
 	           left: e.pageX,//在鼠标点击处显示菜单  
 	           top: e.pageY  
 			});
 		});
+		
+		
+		$(this).on({
+			mouseover : function(){
+				if(!$(this).attr("data-adm")){
+					return;	
+				}
+				$(this).find(".sickbedOpPanel").show();
+				ThisBedDataId=$(this).attr("data-id");
+			} ,
+			mouseout : function(){
+				if(!$(this).attr("data-adm")){
+					return;	
+				}
+				$(this).find(".sickbedOpPanel").hide();
+				ThisBedDataId="";
+			} 
+		}) ;
+		
 	})
 
 }
@@ -912,15 +1160,15 @@ function loadPlanPatInfoWin(Adm){
 	//加载安排座位的win
 	clearDate();
 	$HUI.window("#planPatWin").open();
-	runClassMethod("web.DHCEMObsRoomSeat","GetPlanPatInfo",{"Adm":Adm},function(data){
+	runClassMethod("web.DHCEMObsRoomSeat","GetPlanPatJsonData",{"Adm":Adm},function(data){
 		$HUI.datebox("#planWinPat-StDate").setValue(curDate);
 		$HUI.timespinner("#planWinPat-StTime").setValue(curTime);
-		$("#planPatTable-Name").val(data.PatInfo.PatName);
-		$("#planWinPat-RegNo").val(data.PatInfo.PatNo);
-		$("#planPatTable-Sex").val(data.PatInfo.PatSex);
-		$("#planWinPat-WardDesc").val(data.AdmInfo.WardDesc);
-		$("#planPatTable-Loc").val(data.AdmInfo.QueDepDesc);
-		$("#planPatTable-Balance").val(data.AdmInfo.Deposit);
+		$("#planPatTable-Name").val(data.PatName);
+		$("#planWinPat-RegNo").val(data.PatNo);
+		$("#planPatTable-Sex").val(data.PatSex);
+		$("#planWinPat-WardDesc").val(data.WardDesc);
+		$("#planPatTable-Loc").val(data.QueDepDesc);
+		$("#planPatTable-Balance").val(data.Deposit);
 		initCombogrid(data);   //在打开window时候加载数据 
 		$("#planPatTable-UserId").val(UserCode);
 	},'json');
@@ -1043,7 +1291,7 @@ function initCombogrid(data){
 	});
 
 	if(globleParam.planModel === "C"){
-		$('#planWinPat-SeatNo').combogrid('setValue',"等候区");
+		$('#planWinPat-SeatNo').combogrid('setValue',$g("等候区"));
 		$("#planWinPat-SeatNo").combogrid("disable");
 	}else if (globleParam.planModel === "M"){
 		$('#planWinPat-SeatNo').combogrid('setValue',selMovePat.seatID);	
@@ -1052,7 +1300,7 @@ function initCombogrid(data){
 	}else{
 		$('#planWinPat-SeatNo').combogrid('setValue',selSeatPat.planSeatID);
 	}
-	var url = LINK_CSP+"?ClassName=web.DHCEMObsRoomSeat&MethodName=GetListDocInfo&LocDr="+data.AdmInfo.QueDepDr;
+	var url = LINK_CSP+"?ClassName=web.DHCEMObsRoomSeat&MethodName=GetListDocInfo&LocDr="+CurLocID;
 	
 	///  定义columns
 	var columns=[[
@@ -1073,24 +1321,28 @@ function initCombogrid(data){
 	})
 	
 	
-	if(data.AdmInfo.MainNurID=="0") data.AdmInfo.MainNurID="";
-	if(data.AdmInfo.MainNurID2=="0") data.AdmInfo.MainNurID2="";
+	if(data.MainNurID=="0") data.MainNurID="";
+	if(data.MainNurID2=="0") data.MainNurID2="";
 	//$("#planPatTable-Doc").combogrid("setValue",data.AdmInfo.QueDocCode);
-	$("#planPatTable-Doc").combogrid("setValue",data.AdmInfo.QueDocDesc);
-	$("#planPatTable-Nur1").combogrid("setValue",data.AdmInfo.MainNurID);
-	$("#planPatTable-Nur2").combogrid("setValue",data.AdmInfo.MainNurID2);
+	$("#planPatTable-Doc").combogrid("setValue",data.QueDocDesc);
+	$("#planPatTable-Nur1").combogrid("setValue",data.MainNurID);
+	$("#planPatTable-Nur2").combogrid("setValue",data.MainNurID2);
 }
 
 ///增加床位
 function addSeat(data){
 	statPatNum(data);
 	bedIsStop(data.BedTipMessage);
-	var seatWith = data.BEDPositionWidth;     	//床宽
-	var seatHeight= data.BEDPositionHeight;		//床高
+	seatWith = data.BEDPositionWidth;     	//床宽
+	seatHeight= data.BEDPositionHeight;		//床高
+	var seatContWith=parseInt(seatWith)-4; 
+	var seatContHeight=parseInt(seatHeight)-4;
+	var seatBorderWith=parseInt(seatWith)+100; 
+	var seatBorderHeight=parseInt(seatHeight)+100;
 	var seatTop = data.BEDPositionTop;			//TOP值
 	var seatLeft = data.BEDPositionLeft;		//LEFT值
 	var seatID = data.BedID;					//床ID
-	var seatTitleHeight=35;						//Title高度
+	var seatTitleHeight=33;						//Title高度
 	var sestTitleFontSize=12;					//Title字体大小
 	var seatTitleColor="#000"				    //界面title的颜色
 	var seatTitleHtml="" ;                      //床位Title的Html
@@ -1100,27 +1352,43 @@ function addSeat(data){
 	//var curWardName= $("#obsLocTabs").dhccTabs("getSelectTab").attr("title");  //当前病区名字
 	var curWardName= curWrad.wardDesc;
 	var seatName = data.BEDCode;				//床名字
-	var patInfoHtmlText = data.PatInfoHtmlText     //显示病人信息
-	var hasPatFlag = data.PatInfo===""?false:true; //有人标志
+	var patInfoHtmlText = getTableHtml(data.PatInfo,seatWith)    //显示病人信息
+	var hasPatFlag = Object.keys(data.PatInfo).length===0?false:true; //有人标志
 	var patSex=hasPatFlag===true?data.PatInfo.PatSex:"";
 	var drop="";
 	var seadDrop="";
 	var seatColor ="#FFF"; 							//界面床的颜色
 	var isMakeFlag="";							//包床标志
 	var patAdm ="" ; 							//绑定床位Adm
-    var seatTitleBgColor=""              //界面title的背景色 hxy 2018-04-25
+    var seatTitleBgColor="rgb(147, 112, 219)"              //界面title的背景色 hxy 2018-04-25
 	var patObsDateColor="#000";				    //留观时间字体颜色
 	var setImgUrl="";
+	var sexcontent="";
 	if (hasPatFlag) {
 		seadDrop="seatOnDrag"
 		drop = "";
 		//seatColor = patSex==="男"?"#8EDBFF":"#FAC8D4";
-		if(patSex==="男"){
-			setImgUrl = "../images/man.png";	
-		}else if(patSex==="女"){
-			setImgUrl = "../images/woman.png";
+		if((patSex===$g("男"))||(data.PatInfo.ChPatSex=="男")){
+			if(HISUIStyleCode==="lite"){
+				setImgUrl = "../images/man_lite.png";
+			}else{
+				setImgUrl = "../images/man.png";
+			}
+			sexcontent="mancontent"	;
+		}else if((patSex===$g("女"))||(data.PatInfo.ChPatSex=="女")){
+			if(HISUIStyleCode==="lite"){
+				setImgUrl = "../images/woman_lite.png";
+			}else{
+				setImgUrl = "../images/woman.png";
+			}
+			sexcontent="womancontent"	;
 		}else{
-			setImgUrl = "../images/unman.png";	
+			if(HISUIStyleCode==="lite"){
+				setImgUrl = "../images/unman_lite.png";
+			}else{
+				setImgUrl = "../images/unman.png";
+			}
+			sexcontent="unmancontent";
 		}
 	}
 	if (!hasPatFlag) {
@@ -1129,14 +1397,13 @@ function addSeat(data){
 		
 	}
 	if(data.BEDStatus.statusCode==="U"){   		//包床
-		data.PatInfo.PatName =data.PatInfo.PatName+"包床";
-		seatTitleBgColor="#BBBBBB"  //hxy 2018-04-25
+		data.PatInfo.PatName =data.PatInfo.PatName+$g("包床");
 		isMakeFlag="Y";			
 	}else{
 		isMakeFlag="N" ;                       //包床标志  				
 	}
 	
-	if(data.PatInfo!==""){
+	if(Object.keys(data.PatInfo).length){
 		patAdm = data.PatInfo.PaAdm;
 	}
 	
@@ -1152,17 +1419,17 @@ function addSeat(data){
 	var patName = data.PatInfo.PatName==undefined?"":data.PatInfo.PatName;
 	var PatObsDate = data.PatInfo.PatObsDate==undefined?"":data.PatInfo.PatObsDate;
 	var PatCareLevel = data.PatInfo.CareLevel==undefined?"":data.PatInfo.CareLevel;
-	var titleName = patName.length>3?patName.substring(0,3)+"..":patName;
-	if (PatCareLevel == "特级"){
-		seatTitleBgColor="#F0F0F0";
-		patObsDateColor="#fff";
-		seatTitleColor="#fff";
+	//var titleName = patName.length>3?patName.substring(0,3)+"..":patName;
+	var titleName = patName;
+	var nurseLevel=(data.PatInfo.NurseLevel||"");
+	var isHasSyOrd=(data.PatInfo.IsHasSyOrd||"");
+	if(nurseLevel){
+		if(nurseLevel==1) seatTitleBgColor=	"red";
+		if(nurseLevel==2) seatTitleBgColor=	"orange";
+		if(nurseLevel==3) seatTitleBgColor=	"#d0d018";
+		if(nurseLevel==4) seatTitleBgColor=	"#66d466";
+		if(nurseLevel==5) seatTitleBgColor=	"#66d466";
 	}
-	if (PatCareLevel == "一级"){
-		seatTitleBgColor="#F0F0F0";
-	}
-	if (PatCareLevel == "二级"){seatTitleBgColor="#FFB746";}
-	if (PatCareLevel == "三级"){seatTitleBgColor="#2AB66A";}
 	
 	if(hasPatFlag){
 		if(data.BEDStatus.statusCode==="U") IconHtml = "";
@@ -1172,21 +1439,31 @@ function addSeat(data){
 	}
 	
 	seatTitleHtml = 			  ""
-	seatTitleHtml = seatTitleHtml+	"<span class='saatName' style='background:"+seatTitleBgColor+"'>"+seatName+"</span>"
-	seatTitleHtml = seatTitleHtml+	"<span class='patName disBlock'>"+titleName+"</span>"
+	seatTitleHtml = seatTitleHtml+	"<span class='saatName' style='font-weight: 700;color:"+seatTitleBgColor+"'>"+seatName+"</span>"
+	seatTitleHtml = seatTitleHtml+	"<span class='patName disBlock'>"+titleName+"&nbsp;</span>"
 	seatTitleHtml = seatTitleHtml+	"<span class='obsDate disBlock'>"+PatObsDate+"</span>"
 	
-	var htmlStr = 		   "<div class='seat "+drop+"' data-id='"+seatID+"' data-adm='"+patAdm+"' data-make='"+isMakeFlag+"' style='width:"+seatWith+";height:"+seatHeight+";top:"+seatTop+";left:"+seatLeft+"'>"
-	var htmlStr = htmlStr+		"<div class='seatcontent' style='background:"+seatColor+"'>" //seatColor hxy 2018-04-25
-	var htmlStr = htmlStr+			"<div class='seattitle "+seadDrop+"' style='color:"+seatTitleColor+";height:"+seatTitleHeight+";font-size:"+sestTitleFontSize+";line-height:"+seatTitleHeight+"px'>"+"&nbsp;"+seatTitleHtml+"</div>" //hxy 2018-04-25
-	var htmlStr = htmlStr+			"<div class='seatbody' style='width:100%'>"
-	var htmlStr = htmlStr+				"<div class='seatbodyname' style='height:"+seatBodyNameHeight+"'>";
-	var htmlStr = htmlStr+					"<IMG class='seatSexImg' align='top' SRC='"+setImgUrl+"' title='' border=0/>";
-	var htmlStr = htmlStr+					patInfoHtmlText;
-	var htmlStr = htmlStr+				"</div>"   //姓名部分
-	var htmlStr = htmlStr+				"<div class='seatbodyicon' style='height:"+seatBodyIconHeight+"' seatID='"+seatID+"'>";
-	var htmlStr = htmlStr+					IconHtml
-	var htmlStr = htmlStr+				"</div>"          //图标部分
+	var htmlStr = 		   "<div class='seat "+drop+" "+(isHasSyOrd?"hasSyOrd":"")+"' data-id='"+seatID+"' data-adm='"+patAdm+"' data-make='"+isMakeFlag+"' style='position:absolute;width:"+seatWith+";height:"+seatHeight+";top:"+seatTop+";left:"+seatLeft+"'>"
+	var htmlStr = htmlStr+		"<div class='seatcontent "+sexcontent+"' style='position:relative;'>" //seatColor hxy 2018-04-25
+	var htmlStr = htmlStr+			"<div class='seatSelectBorder' style='width:"+seatBorderWith+"px;height:"+seatBorderHeight+"px;'></div>"
+	var htmlStr = htmlStr+			"<div class='sickbedOpPanel'>";
+	var htmlStr = htmlStr+			"<img src='../scripts_lib/hisui-0.1.0/dist/css/icons/check_reg.png' onclick='smalOpClick(\"ly\")'/>";
+	var htmlStr = htmlStr+			"<div style='height:5px;'></div>";
+	var htmlStr = htmlStr+			"<img src='../scripts_lib/hisui-0.1.0/dist/css/icons/print.png' onclick='smalOpClick(\"wd\")'/>";
+	var htmlStr = htmlStr+			"<div style='height:5px;'></div>";
+	var htmlStr = htmlStr+			"<img src='../scripts_lib/hisui-0.1.0/dist/css/icons/change_loc.png'/ onclick='smalOpClick(\"zy\")'><br/>";
+	var htmlStr = htmlStr+			"</div>";
+	var htmlStr = htmlStr+			"<div class='bedBody "+sexcontent+"' style='width:"+seatContWith+"px;height:"+seatContHeight+"px;position: absolute;top:2px;left:2px;z-index:1;'>"
+	var htmlStr = htmlStr+				"<div class='seattitle "+seadDrop+"' style='color:"+seatTitleColor+";height:"+seatTitleHeight+";font-size:"+sestTitleFontSize+";line-height:"+seatTitleHeight+"px'>"+seatTitleHtml+"</div>"
+	var htmlStr = htmlStr+				"<div class='seatbody' style='width:100%'>"
+	var htmlStr = htmlStr+					"<div class='seatbodyname' style='height:"+seatBodyNameHeight+"'>";
+	var htmlStr = htmlStr+						"<IMG class='seatSexImg' align='top' SRC='"+setImgUrl+"' title='' border=0/>";
+	var htmlStr = htmlStr+						patInfoHtmlText;
+	var htmlStr = htmlStr+					"</div>"   //姓名部分
+	var htmlStr = htmlStr+					"<div class='seatbodyicon' style='height:"+seatBodyIconHeight+"' seatID='"+seatID+"'>";
+	var htmlStr = htmlStr+						IconHtml
+	var htmlStr = htmlStr+					"</div>"          //图标部分
+	var htmlStr = htmlStr+				"</div>"
 	var htmlStr = htmlStr+			"</div>"
 	var htmlStr = htmlStr+		"</div>"
 	var htmlStr = htmlStr+"</div>";
@@ -1194,25 +1471,25 @@ function addSeat(data){
 	//alert(data.PatInfo.MRDiagnos==undefined?"":data.PatInfo.MRDiagnos.replace(",","<br>"));
 	$(".obsseat").append($(htmlStr));
 	
-	var tooltipPos="";
-	lastRowY>parseInt(seatTop)?tooltipPos="bottom":tooltipPos="top";
+	var tooltipPos="bottom";
+	//parseInt(seatLeft)<50?tooltipPos="right":"";
+	lastRowY>parseInt(seatTop)?"":tooltipPos="top";
+	//lastRowY>parseInt(seatTop)?tooltipPos="bottom":tooltipPos="top";
 	
 	if(data.PatInfo.PaAdm!=undefined){
 		if(isMakeFlag=="Y") return;
 		$(".seat[data-id='"+seatID+"']").tooltip({
 			position: tooltipPos,
 			trackMouse:true,
-		    content:'<div style="">' +
-		                '<div>姓名：'+data.PatInfo.PatName+'</div>' +
-		                '<div>年龄：'+data.PatInfo.PatAge+'</div>' +
-		                '<div>性别：'+data.PatInfo.PatSex+'</div>' +
-		                '<div>类型：'+data.PatInfo.PatType+'</div>' +
-		                '<div>费别：'+data.PatInfo.AdmReason+'</div>' +
-		                '<div>登记号：'+data.PatInfo.PatNo+'</div>' +
-		                '<div>诊断：<br>'+(data.PatInfo.MRDiagnos==undefined?"":data.PatInfo.MRDiagnos.replace(/##/g,"<br>"))+'</div>' +
-		            	'<div>号别：'+data.PatInfo.QueDepDesc+"("+data.PatInfo.AdmCare+")"+'</div>' +
-		            	'<div>余额：'+data.PatInfo.Deposit+'</div>' +
-		            	'<div>入留观时间：'+data.PatInfo.PatObsDateDesc+'</div>' +
+		    content:'<div style="width:250px;">' +
+		    			'<div>'+$g('登记号')+'：'+data.PatInfo.PatNo+'</div>' +
+		    			'<div class="tool-bar-line" style="margin-top:3px;border-bottom-color:#cccccc;border-bottom-width:1px; border-bottom-style:dashed;"></div>'+
+		               	'<div>'+$g('级别')+'：'+setCell(data.PatInfo.NurseLevel)+'</div>' +
+		                '<div>'+$g('类型')+'：'+data.PatInfo.PatType+'</div>' +
+		                '<div>'+$g('费别')+'：'+data.PatInfo.AdmReason+'</div>' +
+		                '<div>'+$g('诊断')+'：'+(data.PatInfo.MRDiagnos==undefined?"":data.PatInfo.MRDiagnos.replace(/##/g,","))+'</div>' +  //<br>
+		            	'<div>'+$g('号别')+'：'+data.PatInfo.QueDepDesc+"("+data.PatInfo.AdmCare+")"+'</div>' +
+		            	'<div>'+$g('入留观时间')+'：'+data.PatInfo.PatObsDateDesc+'</div>' +
 		            '</div>',
 		    onShow: function(){
 				
@@ -1221,6 +1498,36 @@ function addSeat(data){
 	}
 }
 
+function getTableHtml(itmPatData,seatWith){
+	if(itmPatData.PatNo==undefined){
+		return "";
+	}
+	var patSex =itmPatData.PatSex
+	patSex.length>1?patSex=patSex.substring(0,2):"";
+	var tableWidth=parseInt(seatWith)-60+"px";
+	var PatInfoHtml = "<table class='bedtable' style='table-layout:fixed;width:"+tableWidth+"'>"
+	//PatInfoHtml =PatInfoHtml+"<tr><td style='white-space:nowrap;width:40px;text-align: right;'>ID:</td><td>"+itmPatData.PatNo+"</td></tr>" 
+	//PatInfoHtml =PatInfoHtml+"<tr><td style='white-space:nowrap;width:40px;text-align: right;'>"+$g("姓名")+":</td><td>"+itmPatData.PatName+"</td></tr>"
+	PatInfoHtml =PatInfoHtml+"<tr><td style='white-space:nowrap;width:40px;text-align: right;'>"+patSex+";</td><td>"+itmPatData.PatAge+"</td></tr>"	//sex and age
+	//PatInfoHtml =PatInfoHtml+"<tr><td style='white-space:nowrap;width:40px;text-align: right;'>分级:</td><td>"+setCell(itmPatData.NurseLevel)+"</td></tr>"   //name and regNo hxy 2018-04-25 ed
+	PatInfoHtml =PatInfoHtml+"<tr><td class='bedtdtext'>"+$g("费别")+":</td><td>"+itmPatData.AdmReason+"</td></tr>"
+	PatInfoHtml =PatInfoHtml+"<tr><td class='bedtdtext'>"+$g("诊断")+":</td><td style='white-space:nowrap;text-overflow:ellipsis;overflow: hidden;'>"+itmPatData.MRDiagnos.split("##")[0]+"</td></tr>"
+	PatInfoHtml =PatInfoHtml+"<tr><td class='bedtdtext'>"+$g("入观")+":</td><td style='white-space:nowrap;text-overflow:ellipsis;overflow: hidden;'>"+itmPatData.PatObsDateDesc.split(" ")[0]+"</td></tr>"
+	PatInfoHtml =PatInfoHtml+"</table>"
+	return PatInfoHtml;
+}
+
+
+function setCell(value){
+	var thisBackColor="";
+	if(value=="1"){value=$g("Ⅰ级"),thisBackColor="red";}
+	if(value=="2"){value=$g("Ⅱ级"),thisBackColor="orange";}
+	if(value=="3"){value=$g("Ⅲ级"),thisBackColor="#d0d018";}
+	if(value=="4"){value=$g("Ⅳa级"),thisBackColor="#66d466";}
+	if(value=="5"){value=$g("Ⅳb级"),thisBackColor="#66d466";}
+	
+	return "<span style='border-radius:5px;color:"+thisBackColor+"'>"+value+"</span>";
+}
 
 function bedIsStop(){
 	if(arguments[0]!==""){
@@ -1230,7 +1537,29 @@ function bedIsStop(){
 }
 
 function statPatNum(data){
-	seatNum.allSeatNum++;
+	if(data.PatInfo.PaAdm!=undefined){
+		seatNum.allSeatNum++;
+		var nurseLevel=data.PatInfo.NurseLevel;
+		var isHasSyOrd=data.PatInfo.IsHasSyOrd;
+		if(nurseLevel==1){
+			seatNum.chkLevOne++;
+		}
+		if(nurseLevel==2){
+			seatNum.chkLevTwo++;
+		}
+		if(nurseLevel==3){
+			seatNum.chkLevThree++;
+		}
+		if(nurseLevel==4){
+			seatNum.chkLevFourA++;
+		}
+		if(nurseLevel==5){
+			seatNum.chkLevFourB++;
+		}
+		if(isHasSyOrd=="1"){
+			seatNum.hasAllOrdNum++;
+		}
+	}
 	if(data.BEDStatus.statusCode==="U") seatNum.makeSeatNum++;
 	if(data.PatInfo===""){
 		if(data.BEDStatus.statusCode!=="U") seatNum.hasPatSeatNum++;
@@ -1254,6 +1583,10 @@ function initCombo(){
 			var wardId =option.id;
 			curWrad.wardId = option.id;
 			curWrad.wardDesc = option.text;		
+			if($(".queryItmActive").length){
+				$(".queryItmActive").removeClass("queryItmActive");
+			}
+			$("#filterValue").val("");
 			reloadObsAreaAndSeat();
 	    },
 	    onLoadSuccess:function(data){
@@ -1273,6 +1606,32 @@ function initCombo(){
 			      
 		}
 	})
+	
+	//主管医生
+	$HUI.combobox("#ChargDoc",{
+		url:$URL+"?ClassName=web.DHCEMObsRoomSeat&MethodName=GetListDocInfo&LocDr="+CurLocID,
+		valueField:'CtPcpId',
+		textField:'CtPcpName',
+		mode:'remote',
+		onSelect:function(option){
+			
+	    }	
+	})
+	
+	var comboData = [
+		{ "id": "PatNo", "text": $g("登记号") }, 
+		{ "id": "PatName", "text": $g("姓名") },
+		{ "id": "PatSex", "text": $g("性别") },
+		{ "id": "Diagnos", "text": $g("诊断") },
+		{ "id": "AdmLoc", "text": $g("就诊科室") },
+		{ "id": "Care", "text": $g("号别") }
+	];
+	$HUI.combobox('#filterCombo',{
+		valueField:'id',
+		textField:'text',
+		data:comboData
+	});
+	$HUI.combobox('#filterCombo').setValue("PatNo");
 }
 
 
@@ -1304,6 +1663,7 @@ function initAccordion(){
 }
 
 var setEprMenuForm = function(adm,papmi){
+/*if ((!(typeof window.parent.SetChildPatNo == "function"))&&(!(typeof window.parent.ChangePerson === "function"))) {
 	var frm = dhcsys_getmenuform();
 	if((frm) &&(frm.EpisodeID.value != adm)){
 		frm.EpisodeID.value = adm; 			//DHCDocMainView.EpisodeID;
@@ -1311,15 +1671,321 @@ var setEprMenuForm = function(adm,papmi){
 		if(frm.AnaesthesiaID) frm.AnaesthesiaID.value = "";
 		if(frm.PPRowId) frm.PPRowId.value = "";
 	}
+}*/
+	var frm=window.parent.document.forms["fEPRMENU"];	
+	if((frm) &&(frm.EpisodeID)){
+		frm.EpisodeID.value=adm;
+	}		
 }
 
 
 ///打印腕带
 function prtStraps(){
 	if(selSeatPat.adm==="") {
-		$.messager.alert("提示","患者必须安排床位后才能打印腕带！");
+		//$.messager.alert("提示","患者必须安排床位后才能打印腕带！");
 		return;
 	}
 	newProPrtWd("",selSeatPat.adm,CurHospID);
 	return;
 }
+
+function showGreenRec(){
+	
+	var patAdm="";
+	var  selPatData= $("#obsPatTable").datagrid("getSelections");  //加载面板
+
+	if(selPatData.length){
+		patAdm = selPatData[0].AdmID;
+	}else{
+		patAdm = selSeatPat.adm;
+	}
+	
+	if(patAdm==="") {
+		$.messager.alert("提示","未选中患者！");
+		return;
+	}
+	
+	// var LinkUrl ='dhcem.green.rec.csp?EpisodeID='+adm
+	var lnk = 'dhcem.green.rec.csp?EpisodeID='+patAdm;
+	var winwidth="1200";
+	if(screen.availWidth-50<winwidth){
+		winwidth=screen.availWidth-50;
+	}
+	var iLeft = ($(window).width()-winwidth)/2; //获得窗口的水平位置;
+	var iTop=($(window).height()-700)/2; //获得窗口的垂直位置;
+	websys_showModal({
+		url: lnk,
+		width:winwidth,
+		height:700,
+		left:iLeft,
+		top:iTop,
+		iconCls:"icon-w-paper",
+		title: $g('绿色通道'),
+		closed: true,
+		onClose:function(){
+			initPatIncon(curWrad.wardId);	
+		}
+	});
+	return;
+}
+
+function smalOpClick(type){
+	event.stopPropagation();
+	if(!$(".seat[data-id='"+ThisBedDataId+"']").find(".seatcontent").hasClass("active")){
+		$(".seat[data-id='"+ThisBedDataId+"']").click();
+	}
+	if(type=="ly"){
+		$("#disHosp").click();	
+	}
+	if(type=="wd"){
+		$("#prtStraps").click();	
+	}
+	if(type=="zy"){
+		$("#transBed").click();	
+	}
+	return false;
+}
+
+
+function qBarOp(type){
+	var qBarNowValue=$(".qBarVal").text();
+	var qBarChangedValue="";
+	if(type==="add"){
+		qBarChangedValue=parseInt(qBarNowValue)+5;
+	}
+	if(type==="sub"){
+		qBarChangedValue=parseInt(qBarNowValue)-5;
+	}
+	if(type==="reset"){
+		qBarChangedValue=100;
+	}
+	qBarChangedValue=qBarChangedValue+"%";
+	$(".qBarVal").text(qBarChangedValue);
+	$(".seat").css("zoom",qBarChangedValue);
+}
+
+function changeSeatView(obj){
+	return;
+	//var seatWith="",seatHeight="";
+	if(obj.value){
+		$(".seat").css({"height":"37px","transition":"height 0.2s"});
+		$(".seatBody").css({"height":"33px","transition":"height 0.2s"});
+		$(".seat").each(function(){
+			var thisTop=parseInt($(this).css("top"));
+			var changeTop=thisTop-(parseInt(seatHeight)-43);
+			if(changeTop>0){
+				$(this).css("top",changeTop+"px");	
+			}
+		})
+	}else{
+		
+	}
+	return;
+}
+
+
+function filterValue_KeyPress(e){
+	if(e.keyCode == 13){
+		$HUI.tooltip(".seat").hide();
+		//$(".seat").each(function(){$(this).tooltip("hide")})
+		
+		if($(".queryItmActive").length){
+			$(".queryItmActive").removeClass("queryItmActive");
+		}
+		
+		var filterType=$HUI.combobox('#filterCombo').getValue();
+		
+		if(filterType==="PatNo"){
+			var filterValue=$('#filterValue').val();
+			$('#filterValue').val(GetWholePatNo(filterValue));
+		}
+		
+		var CurWardID = curWrad.wardId ;
+		loadSeat(CurWardID);
+	}
+}
+
+
+///补0病人登记号
+function GetWholePatNo(EmPatNo){
+
+	///  判断登记号是否为空
+	var EmPatNo=$.trim(EmPatNo);
+	if (EmPatNo == ""){
+		return;
+	}
+	
+	///  登记号长度值
+	runClassMethod("web.DHCEMPatCheckLevCom","GetPatRegNoLen",{},function(jsonString){
+
+		var patLen = jsonString;
+		var plen = EmPatNo.length;
+		if (EmPatNo.length > patLen){
+			$.messager.alert('错误提示',"登记号输入错误！");
+			return;
+		}
+
+		for (var i=1;i<=patLen-plen;i++){
+			EmPatNo="0"+EmPatNo;  
+		}
+	},'',false)
+	
+	return EmPatNo;
+}
+
+function changeBedViewPosition(obj){
+	if(obj.value){
+		$('.seat').each(function(){
+			$(this).css("position","absolute");
+			//$(this).removeCss("float");
+			$(this).removeCss("margin");
+		})
+	}else{
+		$('.seat').each(function(){
+			$(this).removeCss("position");
+			//$(this).removeCss("top");
+			//$(this).removeCss("left");
+			$(this).css({margin:"6px"});		
+		})
+	}
+	return;
+}
+
+function clickQueryItm(_this){
+	$("#filterValue").val("");
+	//if(!$(_this).hasClass("queryItmActive")){ //hxy 2022-09-30 st 选了分级再选需处理==分级+需处理，未显示分级的选中样式
+	if((!$(_this).hasClass("queryItmActive"))&&($(_this).attr("filterType")!="HasNoExecOrd")){ //ed
+		$(".queryItm").removeClass("queryItmActive");
+	}
+	$(_this).toggleClass("queryItmActive");
+	
+	///速度太慢走前台
+	if($(".queryItmActive").length){
+		//if($(".queryItmActive:eq(1)").attr("filterType")=="HasNoExecOrd"){ //hxy 2022-09-30 st
+		if(($(".queryItmActive:eq(0)").attr("filterType")=="HasNoExecOrd")||($(".queryItmActive:eq(1)").attr("filterType")=="HasNoExecOrd")){ //ed
+			$(".seat").not(".hasSyOrd").hide();
+			return;
+		}
+	}
+	
+	
+	var CurWardID = curWrad.wardId ;
+	loadSeat(CurWardID);
+}
+
+function ChargeDoc(){
+	$HUI.window("#DocWin").open();	
+	loadGetPrvDoc()
+}
+
+/// 主管医生
+function loadGetPrvDoc(){
+	var EpisodeID="";
+	var  selPatData= $("#obsPatTable").datagrid("getSelections");  //加载面板
+
+	if(selPatData.length){
+		EpisodeID = selPatData[0].AdmID;
+	}else{
+		EpisodeID = selSeatPat.adm;
+	}
+	
+	if(EpisodeID===""){
+		$.messager.alert("提示","未选患者！");	
+		return;
+	}
+	$HUI.combobox("#ChargDoc").setValue("");
+	$("#nowChargDocid").val("");
+	$("#nowChargDoc").html("");
+	runClassMethod("web.DHCEMObsRoomSeat","GetPrvDoc",{"EpisodeID": EpisodeID},function(retData){
+		$("#nowChargDocid").val(retData.split("^")[0]);
+		$("#nowChargDoc").html(retData.split("^")[1]);
+		$('#ChargDoc').combobox('reload',$URL+"?ClassName=web.DHCEMObsRoomSeat&MethodName=GetListDocInfo&LocDr="+retData.split("^")[2]);  
+	},"text")
+}
+
+function  DoCancel(){
+	$HUI.window("#DocWin").close();
+	
+}
+
+/// 指定主管医生 yangyongtao 2019-04-19
+function  DocSure(){
+	var EpisodeID="";
+	var  selPatData= $("#obsPatTable").datagrid("getSelections");  //加载面板
+
+	if(selPatData.length){
+		EpisodeID = selPatData[0].AdmID;
+	}else{
+		EpisodeID = selSeatPat.adm;
+	}
+	if (EpisodeID == ""){
+		$.messager.alert("提示:","请先选择病人，再进行此操作！","warning");
+		return;
+	}
+	var nowChargDocid=$("#nowChargDocid").val();
+	var ChargDoc = $HUI.combobox("#ChargDoc").getValue();
+	ChargDoc?"":ChargDoc="";
+	if((nowChargDocid!="")&&(ChargDoc!="")&&(nowChargDocid==ChargDoc)){
+		$.messager.alert("提示:","指定主管医生重复，请重新选择主管医生！","warning");
+		return;
+	}
+	runClassMethod("web.DHCEMObsRoomSeat","UpdPrvDoc",{'EpisodeID':EpisodeID,'ChargDoc':ChargDoc},
+  	function(data){
+    	if(data=="0"){ 
+        	$.messager.alert("提示:","修改成功！","success");
+        	$HUI.window("#DocWin").close();
+    	}
+   	},"text");
+}
+
+///扩展功能，针对jq提供删除某个css元素的功能
+$.fn.removeCss=function(toDelete) {
+	var props = $(this).attr('style').split(';');
+	var tmp = -1;
+	for( var p=0; p<props.length; p++) {
+		if(props[p].indexOf(toDelete)!== -1 ) {
+		    tmp=p
+		}
+	}
+	if(tmp !== -1) {
+        props.splice(tmp,1);
+    }
+    
+	return $(this).attr('style',props.join(';'));
+}
+
+/// 设置病人信息到框架中  hos   bianshuai  2022-11-10
+function setPanelPatInfo(EpisodeID, PatientID){
+
+    if(HOSOPEN){
+	    if(window.opener){
+		   var nowUrl = window.opener.location.href;
+		   window.opener.location.href = changeURLArgs(nowUrl,{EpisodeID:EpisodeID,PatientID:PatientID});
+		}
+		window.close();
+	}
+}
+
+/// 病历查看:超融合
+function LoadMoreScr(){
+
+	var Obj={
+		EpisodeID:selSeatPat.adm
+	}
+	
+	websys_emit("onObsRoomSeat",Obj);
+}
+
+
+/// 
+function LoadLoginScr(){
+
+	var Obj={
+		
+	}
+	
+	//websys_emit("onHISLogonSuccess",Obj);
+}
+
+
+

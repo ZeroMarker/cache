@@ -182,6 +182,7 @@ function BClear_click()
 	$("#OrdSetsDesc").combogrid('setValue',"");
 	$("#PatFeeType").combobox('setValue',"");
 	$("#HMService").combobox('setValue',"");
+	$("#IfInsert").combobox('setValue',"");
 	var valbox = $HUI.validatebox("#HPCode,#HPCode", {
 			required: false,
 	});
@@ -231,6 +232,10 @@ function InitCombobox()
 		onBeforeLoad:function(param){
 			param.Set = param.q;
 			param.Type = "ItemSet";
+			param.LocID=session['LOGON.CTLOCID'];
+			param.hospId=session['LOGON.HOSPID'];
+			param.UserID=session['LOGON.USERID']
+
 		},
 		columns:[[
 		    {field:'OrderSetId',title:'ID',width:80},

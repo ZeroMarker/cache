@@ -14,14 +14,13 @@ function InitItemStatWinEvent(obj){
 			obj.EntityAbbrev=QCEntityAbbrev
 			$HUI.combobox('#cboIndexSta',
 			    {
-					url:$URL+'?ClassName=DHCMA.CPW.SDS.QCIndexSrv&QueryName=QryEntityIndex&ResultSetType=Array'+'&aParRef='+obj.EntityID,
+					url:$URL+'?ClassName=DHCMA.CPW.SDS.QCIndexSrv&QueryName=QryEntityIndex&ResultSetType=Array'+'&aParRef='+obj.EntityID+'&aActive=1',
 					valueField:'RaqName',
 					textField:'BTDesc',
 					editable:false,
 					groupField:'IndexCat'	  
 			    }) 
 			$HUI.dialog('#winQCEntity').close();
-			ReportFrame.src="../scripts/DHCMA/CPW/SDStat/ItemStat/SDNoDataTips.html"
 		}
 	//查询按钮
 	$("#btnQuery").on('click',function(){

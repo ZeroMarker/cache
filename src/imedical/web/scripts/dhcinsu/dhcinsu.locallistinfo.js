@@ -6,7 +6,7 @@
  * Description: 本地人员名单维护
  */
  var GV = {
-	UPDATEDATAID : '',	
+	UPDATEDATAID : ''
 }
  $(function () { 
 	 
@@ -51,7 +51,7 @@ function init_dg() {
 			{field:'TZZYB',title:'家庭邮编',width:150 },
 			{field:'TiDate',title:'操作日期',width:150 },
 			{field:'TStaDate',title:'生效日期',width:150 },
-			{field:'SubCate',title:'结束日期',width:150 },
+			{field:'TEndDate',title:'结束日期',width:150 },
 			{field:'TYearStrDate',title:'年度开始时间',width:150 },
 			{field:'TMZQFD',title:'门诊起付段',width:150 },
 			{field:'TMZLJ',title:'门诊自负段累计',width:150 },
@@ -59,6 +59,7 @@ function init_dg() {
 			{field:'TNDLJ',title:'年度累计',width:150 },
 			{field:'TZYCS',title:'住院次数',width:150 },	
 			{field:'TTZLX',title:'转诊通知类型',width:150 },
+			{field:'TTZLXDesc',title:'转诊通知类型描述',width:150},
 			{field:'TZCYYDM',title:'转出医院代码',width:150 },
 			{field:'TZCKSMC',title:'转出门诊科室名称',width:150 },
 			{field:'TZCBQMC',title:'转出病区名称',width:150 },	
@@ -66,13 +67,14 @@ function init_dg() {
 			{field:'TZRYYDH',title:'转入医院代码',width:150 },
 			{field:'TZRKSMC',title:'门诊转入指定科室',width:150 },
 			{field:'TZRBQMC',title:'转入指定病区名称',width:150 },	
-			{field:'TXXLXDesc',title:'信息类型',width:150 },
+			{field:'TXXLXDesc',title:'信息类型',width:150 ,hidden:true},
 			{field:'TAdmReaDesc',title:'费别',width:150 },	
 			{field:'TFYIDDesc',title:'费用性质',width:150 },
 			{field:'TFFXZIDDesc',title:'付费性质',width:150 },
 			{field:'TRZIDDesc',title:'职退情况',width:150 },	
 			{field:'TJBIDDesc',title:'职级代码',width:150 },
 			{field:'TDWXZDMDesc',title:'单位性质',width:150},
+			
 			{field:'TRowid',title:'TRowid',width:150,hidden:true},
 			{field:'TAdmReasonDr',title:'TRowid',width:150,hidden:true}
 		]];
@@ -88,7 +90,7 @@ function init_dg() {
 		pageSize: 20,
 		pageList: [20, 30, 40, 50],
 		columns: dgColumns,
-		toolbar: '#tToolBar',
+		toolbar: '#tToolBar'
 	});
 }
 /*
@@ -100,12 +102,13 @@ function init_AdmReason(){
 		textField: 'READesc',
 		url: $URL,
 		onBeforeLoad:function(param){
-			param.ClassName = 'DHCBILLConfig.DHCBILLSysType';
+			param.ClassName = 'INSU.COM.BaseData';
 			param.QueryName = 'FindAdmReason';
 			param.ResultSetType = 'array';
 			param.Code = '';
 			param.Desc = '';
 			param.HospId = PUBLIC_CONSTANT.SESSION.HOSPID; //+ DingSH 20200601
+			param.ExpStr ="Y|"; //+ DingSH 20200601
 		},
 		onSelect:function(data){
 		}
@@ -152,7 +155,6 @@ $('#BtnClear').bind('click', function () {
 	setValueById('FYQB','');
 	setValueById('FYLB','');
 	setValueById('PADepCode','');
-	initLoadGrid();
 })
 /*
  * 新增
@@ -184,11 +186,13 @@ function importFun(filePath){
 	    $.messager.alert('提示', '请选择文件！！', 'error');
 	    return ;
     }
-    
     var ErrMsg="";     //错误数据
     var errRowNums=0;  //错误行数
     var sucRowNums=0;  //导入成功的行数
-    
+    if(filePath.split('.')[1] != "xlsx" && filePath.split('.')[1]!="xls"){
+		$.messager.alert('提示','请选择正确的文件格式','info');
+		return;    
+	}
 	xlApp = new ActiveXObject("Excel.Application"); 
 	xlBook = xlApp.Workbooks.open(filePath); 
 	xlBook.worksheets(1).select(); 
@@ -268,12 +272,35 @@ function importFun(filePath){
  */
 $('#BtnSavePro').bind('click', function () {
 	try{
+		var BirthDate=getValueById('INLOCCSNY');
+		var NowDate=getDefStDate(0);
+		var checkFlag = DHCINSUCheckDate(BirthDate,NowDate);
+		if(checkFlag==0){
+			$.messager.alert('提示','出生日期不能大于今天','error');
+			return;	
+		}	
+		var StDate=getValueById('INLOCStaDate');
+		var EndDate=getValueById('INLOCEndDate');
+		checkFlag = DHCINSUCheckDate(StDate,EndDate);
+		if((checkFlag==0)&&(EndDate!="")){
+			$.messager.alert('提示','有效日期不能大于结束日期','error');
+			return;	
+		}		
+		var BZNYDate=getValueById('INLOCBZNY');
+		checkFlag = DHCINSUCheckDate(BZNYDate,NowDate);
+		if((checkFlag==0)&&(BZNYDate!="")){
+			$.messager.alert('提示','办证日期不能大于今天','error');
+			return;	
+		}	
 		var tmpObj = new Object();
 		var saveTable=$('#addInfo').find('input');
 		checkData(); //是否有效数据
 		$.each(saveTable, function (index, rowData) {
 			INSUcheckText(rowData.value, $('#Label' + rowData.id).text(), "^ < > '"); //特殊字符
 			rowData.id != '' ? tmpObj[rowData.id] = getValueById(rowData.id) : '';
+			if(rowData.id != '' && rowData.id.indexOf('Date')>0){
+				tmpObj[rowData.id]=tkMakeServerCall("web.DHCINSULOCInfo","TransDate",getValueById(rowData.id)); 
+			}
 		});		
 		var xmlStr=json2xml(tmpObj,"")
 		var rtn=tkMakeServerCall("web.DHCINSULOCInfo", "SaveLocalInfo", xmlStr, GV.UPDATEDATAID);
@@ -426,7 +453,7 @@ function init_LocalListProWin(){
 		data:[
 			{
 				'id':'TZLX1',
-				'desc':'延期通知',
+				'desc':'延期通知'
 			},
 			{
 				'id':'TZLX0',
@@ -442,12 +469,13 @@ function init_LocalListProWin(){
 		url: $URL,
 		editable:false,
 		onBeforeLoad:function(param){
-			param.ClassName = 'DHCBILLConfig.DHCBILLSysType';
+			param.ClassName = 'INSU.COM.BaseData';
 			param.QueryName = 'FindAdmReason';
 			param.ResultSetType = 'array';
 			param.Code = '';
 			param.Desc = '';
 			param.HospId = PUBLIC_CONSTANT.SESSION.HOSPID; //+ DingSH 20200601
+			param.ExpStr ="Y|"; //+ DingSH 20200601
 		},
 		onLoadSuccess:function(data){
 			if(data.length > 0){

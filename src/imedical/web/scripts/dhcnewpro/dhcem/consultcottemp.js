@@ -9,12 +9,13 @@ function initcolumns()
 {
 	/// 主诉datagrid
 	var symcolumns=[[
-		{field:'CotText',title:'会诊意见',width:430},
+		{field:'CotText',title:'会诊意见',width:430,formatter:setCellLabel},
 		{field:'CotID',title:'会诊ID',width:50,hidden:true}
 	]];
 	
 	///  定义datagrid  
 	var symoption = {
+		fitColumns:true, //hxy 2023-02-24
 		height:200,
 		rownumbers : true,
 		singleSelect : true,
@@ -40,9 +41,10 @@ function quotesymdata()
 		$.messager.alert("提示", "请选择要引用的数据！");
 		return;
 		}
-	window.parent.$("#ConsOpinion").val(rowsData.CotText);
+	window.parent.$("#ConsOpinion").val($_TrsTxtToSymbol(rowsData.CotText));
 	parent.$('#winonline').window('close');
 }
+
 /// 删除主诉模板
 function deletesymrow()
 {
@@ -50,21 +52,24 @@ function deletesymrow()
 	var UserID = window.parent.session['LOGON.USERID'];
 	var LocID = window.parent.session['LOGON.CTLOCID'];
 	var rowsData = $("#patcotlist").datagrid('getSelected'); //选中要删除的行
-	if (rowsData != null)
-	{
-		debugger;
-		if((rowsData.CotLoc!="")&&(rowsData.CotLoc!=LocID)){
-			$.messager.alert("提示","没有权限删除!");
-			return;
-		}
+	if (rowsData != null){
 		
-		if((rowsData.CotUser!="")&&(rowsData.CotUser!=UserID)){
-			$.messager.alert("提示","没有权限删除!");
-			return;
-		}
-		
-		runClassMethod("web.DHCEMConsult","DeleteCot",{"CotID":rowsData.CotID},function(jsonString){
-			$HUI.datagrid("#patcotlist").reload();
+		$.messager.confirm('提示','确认要删除选中的模板吗？', function(b){
+			if (b){
+				if((rowsData.CotLoc!="")&&(rowsData.CotLoc!=LocID)){
+					$.messager.alert("提示","没有权限删除!");
+					return;
+				}
+				
+				if((rowsData.CotUser!="")&&(rowsData.CotUser!=UserID)){
+					$.messager.alert("提示","没有权限删除!");
+					return;
+				}
+				
+				runClassMethod("web.DHCEMConsult","DeleteCot",{"CotID":rowsData.CotID},function(jsonString){
+					$HUI.datagrid("#patcotlist").reload();
+				})
+			}
 		})
 	}
 }
@@ -82,6 +87,7 @@ function quoteprehisdata()
 	window.parent.$("#arDisHis").val(rowsData.PatPreHis);
 	parent.$('#winonline').window('close');
 }
+
 /// 删除现病史模板
 function deleteprehisrow()
 {
@@ -195,6 +201,10 @@ function signpersonalmodel()
 	var Saveas=window.parent.LgUserID
 	var uniturl = LINK_CSP+"?ClassName=web.DHCAPPExaReportQuery&MethodName=QuerySignPersonalFormat&params="+Saveas;
 	$('#patsignlist').datagrid({url:uniturl});
+}
+
+function setCellLabel(value, rowData, rowIndex){
+	return $_TrsTxtToSymbol(value);
 }
 /// JQuery 初始化页面
 $(function(){initPageDefault(); })

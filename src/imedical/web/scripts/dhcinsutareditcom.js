@@ -7,6 +7,15 @@
 var GUser=session['LOGON.USERID'];
 var HospDr='';
 var GlobalInsuType = '';
+$.extend($.fn.validatebox.defaults.rules, {
+	checkZfblMaxAmt: {    
+	    validator: function(value) {
+		    return (value >=0)&&(value<=1);
+		},
+		message: "输入值不能小于0大于1"
+	}
+});
+
 $(function () {
 	var Rq = INSUGetRequest();
 	var rowid = Rq["InItmRowid"];
@@ -22,7 +31,7 @@ $(function () {
 	Initflzb1();	// 分类指标1
 	Initflzb2();	// 分类指标2
 	//$('#lsfxmbm').combobox('reload');
-	init_lxmlbCombobox(); //项目类别
+	//init_lxmlbCombobox(); //项目类别
 	if(rowid!=""){
 		disableById("lsfxmbm") ; //如果是新增则不禁用	在此处可根据情况添加 不允许医保办手动更改的  条目
 	}else{
@@ -57,8 +66,17 @@ $(function () {
 //医保项目名称回车事件
 $("#lxmmc").keyup(function(e) { lxmmc_onkeyup(e);});  
 
-$('.textbox').blur(function (e) {
-			INSUcheckText(this.value);
+$('.textbox').blur(function (e){
+	        try
+	        {
+			  INSUcheckText(this.value); 
+	        }
+	        catch(ex)
+	        {
+		        e.target.value="";
+			    e.target.focus(); 
+		     }
+			
 	});
 
 
@@ -95,7 +113,7 @@ function checkData() {
 	var inValiddatebox = $('.validatebox-invalid');
 	if(inValiddatebox.length > 0){ //validdatebox
 		rtn = false;
-		$.messager.alert('提示', '必填项不能为空' , 'error');
+		$.messager.alert('提示', '数据验证失败' , 'error');
 	}
 	return rtn;
 }
@@ -129,8 +147,12 @@ function InitSfxmbmCmb() {
 		onSelect: function (rec) {
 			// tangzf 2019-8-9 新增医保目录 切换医保类型时  加载combobox----------
 			//var InsuType=rec.cCode;
-			INSULoadDicData('lsfdlbmdesc','FeeType' + GlobalInsuType);  // 加载费用分类
-			INSULoadDicData('ltjdm','AKA065' + GlobalInsuType);  // 加载项目等级
+			//INSULoadDicData('lsfdlbmdesc','FeeType' + GlobalInsuType);  // 加载费用分类
+			//INSULoadDicData('ltjdm','AKA065' + GlobalInsuType);  // 加载项目等级
+			//INSULoadDicData('lxmlb','AKE003' + GlobalInsuType);  // 加载项目类别
+			INSULoadDicData('lsfdlbmdesc','med_chrgitm_type' + GlobalInsuType);  // 加载费用分类
+			INSULoadDicData('ltjdm','chrgitm_lv' + GlobalInsuType);  // 加载项目等级
+			INSULoadDicData('lxmlb','list_type' + GlobalInsuType);  // 加载项目类别
 			// tangzf 2019-8-9 新增医保目录 切换医保类型时  加载combobox----------	 
 		}			 			 
 	});
@@ -230,7 +252,7 @@ function UpdateInItm() {
 	$.m({
 		ClassName: "web.INSUTarItemsCom",
 		MethodName: "CheckInsu",
-		type: "GET",
+		type: "POST",
 		InStr: InStr
 	}, function (rtn) {
 		if ((rtn > 0) & (rtn != getValueById("lrowid"))) {
@@ -241,7 +263,7 @@ function UpdateInItm() {
 			$.m({
 				ClassName: "web.INSUTarItemsCom",
 				MethodName: "Update",
-				type: "GET",
+				type: "POST",
 				itmjs: "",
 				itmjsex: "",
 				InString: InStr
@@ -495,7 +517,7 @@ function ChkValErr() {
 */
 // ???此处是写死 还是通过医保字典取?
 function init_lxmlbCombobox() {
-	$('#lxmlb').combobox({
+	/*$('#lxmlb').combobox({
 		editable: false,
 		valueField: 'id',
 		textField: 'text',
@@ -513,7 +535,7 @@ function init_lxmlbCombobox() {
 				'text': '服务设施'
 			}
 		]
-	})
+	})*/
 }
  
 

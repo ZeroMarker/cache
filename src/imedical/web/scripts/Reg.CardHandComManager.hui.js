@@ -263,6 +263,14 @@ function CheckBefore(){
 		$("#DateFrom").focus()
 		return false
 	}
+	var EquipPort=$.trim($("#EquipPort").val())
+	if((EquipPort!="1")&&(EquipPort!="0")&&(EquipPort!="3")&&(EquipPort!="2")&&(EquipPort!="4")&&(EquipPort!="5")){
+		var EquipPortflag=dhcsys_confirm("设备端口号为空，可以填写0,1,2,3,4,5；是否继续保存?")
+		if(!EquipPortflag){
+			$("#DateFrom").focus()
+			return false
+		}
+	}
 	return true 
 }
 ///加载设备数据

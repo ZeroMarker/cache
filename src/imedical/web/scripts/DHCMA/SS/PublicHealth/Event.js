@@ -37,7 +37,7 @@ function InitPublicHealthWinEvent(obj){
 	
 	obj.LoadData = function(){
 		//判断设置公共卫生首页权限
-		if (!tDHCMAModuleRole){
+		if (Object.keys(tDHCMAModuleRole).length < 1){
 			$("#divMain").empty();//清空主区域内容
 			htmlStr='<div class="noresult">'
 					+ 	'<div class="nodata"><p>未配置产品权限!</p></div>'
@@ -58,6 +58,9 @@ function InitPublicHealthWinEvent(obj){
 			},function(txtData){
 				var cnt = txtData;
 				$("#cntUnRepEpd").html(cnt);
+				if (cnt>0) {
+					$("#cntUnRepEpd").css('display','block');
+				}
 			});
 			//传染病报告未审核数量
 			$m({
@@ -69,6 +72,9 @@ function InitPublicHealthWinEvent(obj){
 			},function(txtData){
 				var cnt = txtData;
 				$("#cntUnChkEpd").html(cnt);
+				if (cnt>0) {
+					$("#cntUnChkEpd").css('display','block');
+				}
 			});
 			
 			//传染病未报科室汇总
@@ -133,6 +139,9 @@ function InitPublicHealthWinEvent(obj){
 			},function(txtData){
 				var cnt = txtData;
 				$("#cntUnChkDth").html(cnt);
+				if (cnt>0) {
+					$("#cntUnChkDth").css('display','block');
+				}
 			});
 			
 			//儿童死亡证报告未审核数量
@@ -145,6 +154,9 @@ function InitPublicHealthWinEvent(obj){
 			},function(txtData){
 				var cnt = txtData;
 				$("#cntUnChkChildDth").html(cnt);
+				if (cnt>0) {
+					$("#cntUnChkChildDth").css('display','block');
+				}
 			});
 			
 			//死亡患者科室汇总
@@ -185,8 +197,59 @@ function InitPublicHealthWinEvent(obj){
 				aDateTo    : obj.now,
 				aLoc	   : session['LOGON.CTLOCID']
 			},function(txtData){
-				var cnt = txtData;
-				$("#cntUnChkCD1").html(cnt);
+				if (txtData != '') {
+					var CDTypeList=txtData.split('^');
+					for (var i=0; i<CDTypeList.length; i++) {
+						if (CDTypeList[i] == '') {
+							continue;
+						}
+						var CDTypeCntArr=CDTypeList[i].split(':');
+						var CDType=CDTypeCntArr[0];
+						var cnt=CDTypeCntArr[1];
+						
+						if (CDType=='ZLK') {
+							$("#cntUnChkCDZLK").html(cnt);
+							if (cnt>0) {
+								$("#cntUnChkCDZLK").css('display','block');
+							}
+						}
+						if ((CDType=='XNXG')&&(cnt>0)) {
+							$("#cdxnxgtodo1").css('display','block');
+							$("#cntUnChkCDXNXG").html(cnt);
+							$("#cntUnChkCDXNXG").css('display','block');
+						}
+						if ((CDType=='GWZS')&&(cnt>0)) {
+							$("#cdgwzstodo1").css('display','block');
+							$("#cntUnChkCDGWZS").html(cnt);
+							$("#cntUnChkCDGWZS").css('display','block');
+						}
+						if ((CDType=='NYZD')&&(cnt>0)) {
+							$("#cdnyzdtodo1").css('display','block');
+							$("#cntUnChkCDNYZD").html(cnt);
+							$("#cntUnChkCDNYZD").css('display','block');
+						}
+						if ((CDType=='YSZYB')&&(cnt>0)) {
+							$("#cdyszybtodo1").css('display','block');
+							$("#cntUnChkCDYSZYB").html(cnt);
+							$("#cntUnChkCDYSZYB").css('display','block');
+						}
+						if ((CDType=='SHK')&&(cnt>0)) {
+							$("#cdshktodo1").css('display','block');
+							$("#cntUnChkCDSHK").html(cnt);
+							$("#cntUnChkCDSHK").css('display','block');
+						}
+						if ((CDType=='FZYCO')&&(cnt>0)) {
+							$("#cdfzycotodo1").css('display','block');
+							$("#cntUnChkCDFZYCO").html(cnt);
+							$("#cntUnChkCDFZYCO").css('display','block');
+						}
+						if ((CDType=='TNB')&&(cnt>0)) {
+							$("#cdtnbtodo1").css('display','block');
+							$("#cntUnChkCDTNB").html(cnt);
+							$("#cntUnChkCDTNB").css('display','block');
+						}
+					}
+				}
 			});
 			
 		} else {
@@ -205,6 +268,9 @@ function InitPublicHealthWinEvent(obj){
 			},function(txtData){
 				var cnt = txtData;
 				$("#cntUnChkFbd").html(cnt);
+				if (cnt>0) {
+					$("#cntUnChkFbd").css('display','block');
+				}
 			});
 			
 		} else {
@@ -223,10 +289,30 @@ function InitPublicHealthWinEvent(obj){
 			},function(txtData){
 				var cnt = txtData;
 				$("#cntUnChkSmd").html(cnt);
+				if (cnt>0) {
+					$("#cntUnChkSmd").css('display','block');
+				}
 			});
 			
 		} else {
 			$("#smdtodo1").css("display", "none");
+		}
+		// 慢阻肺主页内容
+		if ((tDHCMAModuleRole['COP']==1)||(tDHCMAModuleRole['Super']==1)){
+			// 慢阻肺未审核
+			$m({
+				ClassName  : "DHCMA.COP.IRS.ReportSrv",
+				MethodName : "GetUnChkCOPReportCnt",
+				aDateFrom  : obj.lastMonth,
+				aDateTo    : obj.now,
+				aLoc	   : session['LOGON.CTLOCID']
+			},function(txtData){
+				var cnt = txtData;
+				$("#cntUnChkCop").html(cnt);
+			});
+			
+		} else {
+			$("#coptodo1").css("display", "none");
 		}
 	}
 	
@@ -665,6 +751,9 @@ function btnUnRepEpd_Click(){
 	        originWindow:window,
 			width:1340,
 			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
 		});
 }
 
@@ -676,8 +765,11 @@ function btnUnChkEpd_Click(){
 			title:'传染病报告查询',
 			iconCls:'icon-w-epr',  
 	        originWindow:window,
-			width:1340,
+			width:1440,
 			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
 		});
 }
 //死亡未审
@@ -690,6 +782,9 @@ function btnUnChkDth_Click(){
 	        originWindow:window,
 			width:1340,
 			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
 		});
 }
 //儿童死亡未审
@@ -702,23 +797,14 @@ function btnUnChkChildDth_Click(){
 	        originWindow:window,
 			width:1340,
 			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
-		});
-}
-//肿瘤报卡未审
-function btnUnChkCD1_Click(){
-	var strUrl = "./dhcma.cd.crreportzlkqry.csp?1=1&2=2"
-	    websys_showModal({
-			url:strUrl,
-			title:'肿瘤报告查询',
-			iconCls:'icon-w-epr',  
-	        originWindow:window,
-			width:1340,
-			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
 		});
 }
 //食源性疾病未审核
 function btnUnChkFbd_Click(){
-	var strUrl = "./dhcma.fbd.qrybydate.csp?1=1&2=2"
+	var strUrl = "./dhcma.fbd.qrybydate.csp?1=1&LocFlag=" + 1;
 	    websys_showModal({
 			url:strUrl,
 			title:'食源性疾病报告查询',
@@ -726,6 +812,9 @@ function btnUnChkFbd_Click(){
 	        originWindow:window,
 			width:1340,
 			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
 		});
 }
 //精神性疾病未审核
@@ -738,5 +827,150 @@ function btnUnChkSmd_Click(){
 	        originWindow:window,
 			width:1340,
 			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
+		});
+}
+
+//肿瘤报卡未审
+function btnUnChkCDZLK_Click(){
+	var strUrl = "./dhcma.cd.crreportzlkqry.csp?1=1&LocFlag="+ 1;
+	    websys_showModal({
+			url:strUrl,
+			title:'肿瘤报告查询',
+			iconCls:'icon-w-epr',  
+	        originWindow:window,
+			width:1460,
+			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
+		});
+}
+//心脑血管未审
+function btnUnChkCDXNXG_Click(){
+	var strUrl = "./dhcma.cd.crreportxnxgqry.csp?1=1&LocFlag="+ 1;
+	    websys_showModal({
+			url:strUrl,
+			title:'心脑血管事件报告查询',
+			iconCls:'icon-w-epr',  
+	        originWindow:window,
+			width:1460,
+			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
+		});
+}
+
+//高温中暑未审
+function btnUnChkCDGWZS_Click(){
+	var strUrl = "./dhcma.cd.crreportgwzs.csp?1=1&LocFlag="+ 1;
+	    websys_showModal({
+			url:strUrl,
+			title:'高温中暑报告查询',
+			iconCls:'icon-w-epr',  
+	        originWindow:window,
+			width:1460,
+			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
+		});
+}
+
+//农药中毒未审
+function btnUnChkCDNYZD_Click(){
+	var strUrl = "./dhcma.cd.crreportnyzdqry.csp?1=1&LocFlag="+ 1;
+	    websys_showModal({
+			url:strUrl,
+			title:'农药中毒报告查询',
+			iconCls:'icon-w-epr',  
+	        originWindow:window,
+			width:1460,
+			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
+		});
+}
+
+//疑似职业病未审
+function btnUnChkCDYSZYB_Click(){
+	var strUrl = "./dhcma.cd.crreportyszyb.csp?1=1&LocFlag="+ 1;
+	    websys_showModal({
+			url:strUrl,
+			title:'疑似职业病报告查询',
+			iconCls:'icon-w-epr',  
+	        originWindow:window,
+			width:1460,
+			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
+		});
+}
+
+//伤害卡未审
+function btnUnChkCDSHK_Click(){
+	var strUrl = "./dhcma.cd.crreportshk.csp?1=1&LocFlag="+ 1;
+	    websys_showModal({
+			url:strUrl,
+			title:'意外伤害监测报告查询',
+			iconCls:'icon-w-epr',  
+	        originWindow:window,
+			width:1460,
+			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
+		});
+}
+
+//一氧化碳中毒未审
+function btnUnChkCDFZYCO_Click(){
+	var strUrl = "./dhcma.cd.crreportfzycoqry.csp?1=1&LocFlag="+ 1;
+	    websys_showModal({
+			url:strUrl,
+			title:'非职业一氧化碳中毒报告查询',
+			iconCls:'icon-w-epr',  
+	        originWindow:window,
+			width:1460,
+			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
+		});
+}
+
+//糖尿病未审
+function btnUnChkCDTNB_Click(){
+	var strUrl = "./dhcma.cd.crreporttnbqry.csp?1=1&LocFlag="+ 1;
+	    websys_showModal({
+			url:strUrl,
+			title:'糖尿病报告查询',
+			iconCls:'icon-w-epr',  
+	        originWindow:window,
+			width:1460,
+			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
+		});
+}
+// 慢阻肺疾病未审核
+function btnUnChkCop_Click(){
+	var strUrl = "./dhcma.cop.ir.reportqry.csp?1=1&2=2"
+	    websys_showModal({
+			url:strUrl,
+			title:'慢阻肺报告查询',
+			iconCls:'icon-w-epr',  
+	        originWindow:window,
+			width:1340,
+			height:'90%',  //8.2以上版本支持百分比，8.2以下的用具体像素，如height:window.screen.availHeight-80,
+			onBeforeClose:function(){
+				window.location.reload();  //刷新当前界面
+			} 
 		});
 }

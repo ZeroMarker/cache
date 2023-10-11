@@ -6,12 +6,14 @@
 PHA_COM.App.Csp = "pha.prc.v2.config.instruc.csp";
 PHA_COM.App.Name = "PRC.ConFig.Instruc";
 PHA_COM.App.Load = "";
+var hospID = PHA_COM.Session.HOSPID;
 $(function () {
 	InitGridInst();
     InitGridForm();
     InitGridPrcInst();
     InitEvents();
     InitSetDefVal();
+    InitHospCombo();
 });
 
 function InitEvents(){
@@ -36,6 +38,7 @@ function InitGridInst() {
         queryParams: {
             ClassName: 'PHA.PRC.ConFig.Instruc',
             QueryName: 'SelectInstruc',
+            hospID: hospID,
             rows:999
         },
         columns: columns,
@@ -47,8 +50,7 @@ function InitGridInst() {
         onDblClickRow:function(rowIndex,rowData){
 	        var instId = rowData.instId;
 	        SavePrcInst(instId,'');
-		}   
-		
+		}
     };
     PHA.Grid("gridInst", dataGridOption);
 }
@@ -67,6 +69,7 @@ function InitGridForm() {
         queryParams: {
             ClassName: 'PHA.PRC.ConFig.Instruc',
             QueryName: 'SelectForm',
+            hospID: hospID,
             rows:999
         },
         columns: columns,
@@ -99,6 +102,7 @@ function InitGridPrcInst() {
         queryParams: {
             ClassName: 'PHA.PRC.ConFig.Instruc',
             QueryName: 'SelectPrcInst',
+            hospID: hospID,
             rows:999
         },
         columns: columns,
@@ -111,7 +115,6 @@ function InitGridPrcInst() {
 			PHA.Confirm("删除提示", delInfo, function () {
 				Delete(prcInstId);
 			})
-	        
 		}   
     };
     PHA.Grid("gridPrcInst", dataGridOption);
@@ -119,9 +122,7 @@ function InitGridPrcInst() {
 
 /// 界面信息初始化
 function InitSetDefVal() {
-	
-	var type=tkMakeServerCall("PHA.PRC.ConFig.Instruc","GetPrcInstType")
-	//alert("type:"+type)
+	var type=tkMakeServerCall("PHA.PRC.ConFig.Instruc", "CheckExistInst", hospID);
 	if (type=="form"){
 		$('#tabsInstForm').tabs('select', "剂型");
 		$('#tabsInstForm').tabs('disableTab', "用法");
@@ -133,9 +134,7 @@ function InitSetDefVal() {
 	else{
 		$('#tabsInstForm').tabs('enableTab', "用法");	
 		$('#tabsInstForm').tabs('enableTab', "剂型");	
-		}
-	
-
+	}
 }
 
 /// 批量增加注射剂用法
@@ -146,7 +145,7 @@ function SavePrcInstBat(){
 	if (tabIndex=="0"){		//按用法保存
 		var rows = $('#gridInst').datagrid('getSelections')
 	    if (rows.length == 0) {
-		    $.messager.alert("提示", "请先勾选需要增加的用法", "warning");
+		    PHA.Popover({msg: "请先勾选需要增加的用法", type: "alert"});
 	        return;
 	    }
 	    for (var pnum = 0; pnum < rows.length; pnum++) {
@@ -156,14 +155,13 @@ function SavePrcInstBat(){
 		    }else{
 			    instStr = instStr + "^" + instId
 			}
-	    
     	}
 	}
     else if (tabIndex=="1"){
 	    var rows = $('#gridForm').datagrid('getSelections')
 	    if (rows.length == 0) {
-		    $.messager.alert("提示", "请先勾选需要增加的剂型", "warning");
-	        return;
+		    PHA.Popover({msg: "请先勾选需要增加的剂型", type: "alert"});
+			return;
 	    }
 	    for (var pnum = 0; pnum < rows.length; pnum++) {
 	        var formId = rows[pnum].formId;
@@ -172,11 +170,10 @@ function SavePrcInstBat(){
 		    }else{
 			    formStr = formStr + "^" + formId
 			}
-	    
     	}
 	}
 
-    var saveBatRet = tkMakeServerCall("PHA.PRC.ConFig.Instruc", "SavePrcInstByBat", instStr, formStr);
+    var saveBatRet = tkMakeServerCall("PHA.PRC.ConFig.Instruc", "SavePrcInstByBat", instStr, formStr, hospID);
     var saveBatArr = saveBatRet.split("^");
     var saveBatVal = saveBatArr[0];
     var saveBatInfo = saveBatArr[1];
@@ -184,16 +181,13 @@ function SavePrcInstBat(){
         $.messager.alert("提示", saveBatInfo, "warning");
     }
     else{
-	    $.messager.alert("提示", "增加成功", "success");
+	    PHA.Popover({msg: "增加成功", type: "success"});
 	}
-	$('#gridInst').datagrid("reload");
-	$('#gridForm').datagrid("reload");
-    $('#gridPrcInst').datagrid("reload");
-	
+    ReloadData();
 }
 
 function SavePrcInst(instId,formId) {
-    var saveRet = tkMakeServerCall("PHA.PRC.ConFig.Instruc", "SavePrcInst",instId, formId);
+    var saveRet = tkMakeServerCall("PHA.PRC.ConFig.Instruc", "SavePrcInst",instId, formId, hospID);
     var saveArr = saveRet.split("^");
     var saveVal = saveArr[0];
     var saveInfo = saveArr[1];
@@ -201,10 +195,9 @@ function SavePrcInst(instId,formId) {
         $.messager.alert("提示", saveInfo, "warning");
     }
     else{
-	    $.messager.alert("提示", "增加成功", "success");
+	    PHA.Popover({msg: "增加成功", type: "success"});
 	}
-    $('#gridPrcInst').datagrid("reload");
-    InitSetDefVal() ;
+    ReloadData();
 }
 
 /// 批量删除
@@ -225,10 +218,9 @@ function DelPrcInstBat(){
 		    }else{
 			    prcInstIdStr = prcInstIdStr + "^" + prcInstId
 			}
-		    
 	    }
 
-	    var delBatRet = tkMakeServerCall("PHA.PRC.ConFig.Instruc", "DelPrcInstByBat", prcInstIdStr);
+	    var delBatRet = tkMakeServerCall("PHA.PRC.ConFig.Instruc", "DelPrcInstByBat", prcInstIdStr, hospID);
 	    var delBatArr = delBatRet.split("^");
 	    var delBatVal = delBatArr[0];
 	    var delBatInfo = delBatArr[1];
@@ -236,16 +228,14 @@ function DelPrcInstBat(){
 	        $.messager.alert("提示", delBatInfo, "warning");
 	    }
 	    else{
-		    $.messager.alert("提示", "删除成功", "success");
+		    PHA.Popover({msg: "删除成功", type: "success"});
 		}
-	    $('#gridPrcInst').datagrid("reload");
-	    InitSetDefVal() ;
+	    ReloadData();
     })
 }
 
 function Delete(prcInstId) {
-	
-    var saveRet = tkMakeServerCall("PHA.PRC.ConFig.Instruc", "DelPrcInst", prcInstId);
+    var saveRet = tkMakeServerCall("PHA.PRC.ConFig.Instruc", "DelPrcInst", prcInstId, hospID);
     var saveArr = saveRet.split("^");
     var saveVal = saveArr[0];
     var saveInfo = saveArr[1];
@@ -253,10 +243,27 @@ function Delete(prcInstId) {
         $.messager.alert("提示", saveInfo, "warning");
     }
     else{
-	    $.messager.alert("提示", "删除成功", "success");
+	    PHA.Popover({msg: "删除成功", type: "success"});
 	}
-    $('#gridPrcInst').datagrid("reload");
-    InitSetDefVal() ;
+    ReloadData();
+}
+
+function ReloadData(){
+	$('#gridPrcInst').datagrid("query", {hospID: hospID});
+	$('#gridInst').datagrid("query", {hospID: hospID});
+	$('#gridForm').datagrid("query", {hospID: hospID});
+	InitSetDefVal();
+}
+
+function InitHospCombo() {
+	var genHospObj = PRC_STORE.AddHospCom({tableName: "DHC_PHCNTSINSTRUC"});
+	if (typeof genHospObj ==='object'){
+        genHospObj.options().onSelect =  function(index, record) {	
+        	hospID = record.HOSPRowId;
+            ReloadData();
+        }
+        hospID = genHospObj.getValue();
+    }
 }
 
 

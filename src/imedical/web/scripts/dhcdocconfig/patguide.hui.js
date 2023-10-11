@@ -40,6 +40,7 @@ function Init(){
 	InitFind();
 	InitMainGrid();
 	InitCenterGrid();
+	InitArcimList();
 }
 function InitEvent(){
 	InitLeftEvent();
@@ -211,6 +212,17 @@ function dg1Dialog(ac) {
 			var OECatDR = "";
 			PageLogicObj.m_dg1_oecat.clear();
 			PageLogicObj.m_dg1_prj.clear();
+			$('#dg1-arcitem').val("");
+			$('#dg1-arcitem').combogrid("options").value=""
+			if (inType == "OEARCItem") {
+				$('#dg1-arcitem').combogrid('enable');
+				PageLogicObj.m_dg1_oecat.disable();
+				PageLogicObj.m_dg1_prj.disable();
+			} else {
+				$('#dg1-arcitem').combogrid('disable');
+				PageLogicObj.m_dg1_oecat.enable();
+				PageLogicObj.m_dg1_prj.enable();
+			};
 			if (inType == "OECatItem") {
 				PageLogicObj.m_dg1_oecat.enable();
 			} else {
@@ -287,12 +299,35 @@ function dg1Dialog(ac) {
 		$("#dg1-isDetail").checkbox("uncheck");
 		$("#dg1-etime").timespinner("clear");
 		$("#dg1-stime").timespinner("clear");
+		$('#dg1-arcitem').combogrid("setText","");
+		$('#dg1-arcitem').combogrid("options").value=""
+		$('#dg1-arcitem').combogrid("setValue","");
 		_title = "新增", _icon="icon-w-add";
 	} else {
 		$("#dg1-action").val("edit");
 		$("#dg1-id").val(selected.PGId);
-		
+		var inType = selected.PGType;
+		var OECatDR = selected.OECat;
 		PageLogicObj.m_dg1_type.setValue(selected.PGType);
+		if (inType == "OEARCItem") {
+				$('#dg1-arcitem').combogrid('enable');
+				PageLogicObj.m_dg1_oecat.disable();
+				PageLogicObj.m_dg1_prj.disable();
+				$('#dg1-arcitem').combogrid("setValue",selected.PGPrjDR);
+				$('#dg1-arcitem').combogrid("setText",selected.PGPrj);
+				
+				$('#dg1-arcitem').combogrid("options").value=selected.PGPrjDR
+			} else {
+				$('#dg1-arcitem').combogrid("setText","");
+				$('#dg1-arcitem').combogrid("options").value=""
+				$('#dg1-arcitem').combogrid("setValue","");
+				$('#dg1-arcitem').combogrid('disable');
+				PageLogicObj.m_dg1_oecat.enable();
+				PageLogicObj.m_dg1_prj.enable();
+				var url = $URL+"?ClassName=DHCDoc.DHCDocConfig.PatGuide&QueryName=QryPrjDesc&inType="+inType+"&OECatDR="+OECatDR+"&ResultSetType=array&HospID="+$HUI.combogrid('#_HospList').getValue();
+				PageLogicObj.m_dg1_prj.reload(url);
+				PageLogicObj.m_dg1_prj.setValue(selected.PGPrjDR);
+			};
 		//加载医嘱大类
 		if (selected.PGType == "OECatItem") {
 			PageLogicObj.m_dg1_oecat.enable();
@@ -303,9 +338,6 @@ function dg1Dialog(ac) {
 		//加载项目
 		var inType = selected.PGType;
 		var OECatDR = selected.OECat;
-		var url = $URL+"?ClassName=DHCDoc.DHCDocConfig.PatGuide&QueryName=QryPrjDesc&inType="+inType+"&OECatDR="+OECatDR+"&ResultSetType=array&HospID="+$HUI.combogrid('#_HospList').getValue();
-		PageLogicObj.m_dg1_prj.reload(url);
-		PageLogicObj.m_dg1_prj.setValue(selected.PGPrjDR);
 
 		PageLogicObj.m_dg1_ordLoc.setValue(selected.PGOrdLoc);
 		PageLogicObj.m_dg1_acceptLoc.setValue(selected.PGAcceptLoc);
@@ -351,6 +383,8 @@ function saveDG1 () {
 	var site = $.trim( $("#dg1-site").val() );
 	var isDetail = 0; //$("#dg1-isDetail").checkbox("getValue")?1:0;
 	var HospID=$HUI.combogrid('#_HospList').getValue();
+	var ArcimRowid = $('#dg1-arcitem').combogrid('getValue'); 
+	if (ArcimRowid!="") prj=ArcimRowid
 	var inPara = id + "^" + type + "^" + prj + "^" + ordLoc + "^" + acceptLoc + "^" + stime;
 	inPara = inPara + "^" + etime + "^" + site + "^" + isDetail +"^"+ HospID;
 	if (type == "") {
@@ -596,6 +630,44 @@ function BodykeydownHandler(e){
         e.preventDefault();   
     }   
 }
-
+function InitArcimList()
+{
+	$('#dg1-arcitem').combogrid({
+		panelWidth:500,
+		panelHeight:400,
+		delay: 500,    
+		mode: 'remote',    
+		url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ItemOrderQtyLimit&QueryName=FindItem",
+		//url:$URL+"?ClassName=DHCDoc.DHCDocConfig.ArcItemConfig&QueryName=FindAllItem",
+		fitColumns: true,   
+		striped: true,   
+		editable:true,   
+		pagination : true,//是否分页   
+		rownumbers:true,//序号   
+		collapsible:false,//是否可折叠的   
+		fit: true,//自动大小   
+		pageSize: 10,//每页显示的记录条数，默认为10   
+		pageList: [10],//可以设置每页记录条数的列表   
+		method:'post', 
+		idField: 'ArcimRowID',    
+		textField: 'ArcimDesc',    
+		columns: [[    
+			{field:'ArcimDesc',title:'名称',width:400,sortable:true},
+			{field:'ArcimRowID',title:'ID',width:120,sortable:true},
+			{field:'selected',title:'ID',width:120,sortable:true,hidden:true}
+		]],
+		onSelect: function (){
+			var selected = $('#dg1-arcitem').combogrid('grid').datagrid('getSelected');  
+			if (selected) { 
+			  $('#dg1-arcitem').combogrid("options").value=selected.ArcimRowID;
+			}
+		 },
+		 onBeforeLoad:function(param){
+             var desc=param['q'];
+             var HospId=$HUI.combogrid('#_HospList').getValue();
+             param = $.extend(param,{Alias:param["q"],HospId:HospId});
+         }
+	});
+};
 
 

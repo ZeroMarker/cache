@@ -13,6 +13,7 @@ function InitviewScreen(){
 			multiple:true,
 			rowStyle:'checkbox', //显示成勾选行形式
 			selectOnNavigation:false,
+			blurValidValue:true,
 			panelHeight:"auto",
 			editable:false
 	    })
@@ -23,111 +24,134 @@ function InitviewScreen(){
 			textField:'Desc',
 	    	onSelect:function(rd){
 		    	HospID=rd.OID;
-		    	var url =$URL+'?ClassName=DHCMA.Util.EPS.LocationSrv&QueryName=QryLocInfo&ResultSetType=Array&aHospID='+HospID+'&aAdmType=I';
+		    	var url =$URL+'?ClassName=DHCMA.Util.EPS.LocationSrv&QueryName=QryLocInfo&ResultSetType=Array&aHospID='+HospID+'&aAdmType=I&aType=E';
         		$('#LocDic').combobox('setValue','');
         		$('#LocDic').combobox('reload', url);
 		   },
 		   onLoadSuccess:function(){
 			   	Common_SetValue('Hospital',HospID);
-			   	$('#search').click();
 			   }		    
 	    } )	
 	$HUI.combobox('#LocDic',
 	    {
-			url:$URL+'?ClassName=DHCMA.Util.EPS.LocationSrv&QueryName=QryLocInfo&ResultSetType=Array&aHospID='+HospID+'&aAdmType=I',
+		    defaultFilter:4,
+			url:$URL+'?ClassName=DHCMA.Util.EPS.LocationSrv&QueryName=QryLocInfo&ResultSetType=Array&aHospID='+HospID+'&aAdmType=I&aType=E',
 			valueField:'OID',
-			textField:'Desc'		    
+			textField:'Desc',
+			blurValidValue:true,
+			onSelect:function(rd){
+		    	LocID=rd.OID;
+		    	var url=$URL+'?ClassName=DHCMA.Util.EPS.CareProvSrv&QueryName=QryCareProvInfo&ResultSetType=Array&aLocID='+LocID+"&aTypeCode=D";
+        		$('#DocDic').combobox('setValue','');
+        		$('#DocDic').combobox('reload', url);
+		   }		    
 	    })
 	$HUI.combobox('#DocDic',
 	    {
+		    defaultFilter:4,
+		    blurValidValue:true,
 			url:$URL+'?ClassName=DHCMA.Util.EPS.CareProvSrv&QueryName=QryCareProvInfo&ResultSetType=Array',
 			valueField:'OID',
 			textField:'Desc'	  
 	    })
 	$HUI.combobox('#QCDic',
 	    {
+		    defaultFilter:4,
+			multiple:true,
+			rowStyle:'checkbox', //显示成勾选行形式
+			selectOnNavigation:false,
+		    blurValidValue:true,
 			url:$URL+'?ClassName=DHCMA.CPW.SDS.QCEntitySrv&QueryName=QryQCEntity&ResultSetType=Array',
 			valueField:'BTID',
 			textField:'BTDesc'	  
 	    })
-	    
+	 $HUI.combobox('#DateType',
+	    {
+		    data:[
+		    	{'DateType':'InEntiy','Desc':$g("入组日期")},
+		    	{'DateType':'OutHosp','Desc':$g("出院日期")}
+		    ],
+			valueField:'DateType',
+			textField:'Desc'
+	    }) 
+	Common_SetValue('DateType','OutHosp');
     $HUI.linkbutton('#search',{
 	    iconCls:'icon-w-find'
-	    }) 
+	}) 
 	$HUI.linkbutton('#updoAll',{
 	    iconCls:'icon-w-msg'
-	    }) 
+	}) 
+
 	if ((tDHCMedMenuOper['admin'])||(tDHCMedMenuOper['HosAdmin']))
 	 {
 		 UpAdmin=true;
 	}else {
 		Common_SetValue('LocDic',session['DHCMA.CTLOCID']);
+		Common_SetValue('DocDic',session['DHCMA.CarePID']);
 		$("#LocDic").combobox('disable'); 
 		$("#Hospital").combobox('disable'); 
-		//var frm  = dhcsys_getmenuform();
+		if (session['DHCMA.CarePID'])	//能取到用户信息，限定登录用户
+		{
+			$("#DocDic").combobox('disable');
+		}
+		$('#updoAll').hide();			//非管理员权限，不显示批量上报按钮
 	 }
 	obj.gridQCMrList = $HUI.datagrid("#gridQCMrList",{
 		fit:true,
 		pagination: true, //如果为true, 则在DataGrid控件底部显示分页工具栏
-		displayMsg: "当前表格显示 {from} 到 {to} ,共 {total} 条记录",
 		singleSelect: false,
 		//定义是否设置基于该行内容的行高度。设置为 false，则可以提高加载性能
 		autoRowHeight: false,
 		striped:true,
 		rownumbers:true, 
-		loadMsg:'数据加载中...',
 		pageSize: 10,
 		pageList : [10,50],
-	    url:$URL,
-	    bodyCls:'no-border',
-	    queryParams:{
-		    ClassName:"DHCMA.CPW.SDS.QCMrListSrv",
-			QueryName:"QryQCMrListByDate"
-	    },
+		idField:"RowID",
 		columns:[[
-			{field:'checked',checkbox:'true',align:'center',width:30,auto:false},
-			{field:'QCEntityDesc',title:'单病种',width:'200',align:'center',sortable:true},
-			{field:'QCInDateT',title:'入单日期',width:'200',align:'center',sortable:true},
-			{field:'QCCurrStatus',title:'当前状态',width:'80',align:'center',sortable:true,
+			{field:'checked',checkbox:'true',align:'left',width:30,auto:false},
+			{field:'QCEntityDesc',title:'管理病种',width:'200',align:'left',sortable:true},
+			{field:'QCInDateT',title:'入单日期',width:'200',align:'left',sortable:true},
+			{field:'LocDesc',title:'管理科室',width:'150',align:'left',sortable:true},
+			{field:'QCCurrStatus',title:'当前状态',width:'80',align:'left',sortable:true,
 				formatter: function(value,row,index){
 						var ExcludeInfo=row.ExcludeInfo
 						var reg = new RegExp( ',' , "g" )
 						ExcludeInfo=ExcludeInfo.replace(reg,"<br>")
 						if (value=="O") {
-							return '<a title="'+ExcludeInfo+'" class="hisui-tooltip grid-tips" onclick=objScreen.StatusToggle("'+value+"\","+row.RowID+","+row.QCEntityID+')><span style="color:red;">'+row.QCCurrStatusDesc+'</span></a>';
+							return '<a title="'+ExcludeInfo+'" class="hisui-tooltip grid-tips" onclick=objScreen.StatusToggle("'+value+"\","+row.RowID+","+row.QCEntityID+')><span style="color:red;">'+$g(row.QCCurrStatusDesc)+'</span></a>';
 							
 						}else if (value=="I") {
-							return '<a title="'+ExcludeInfo+'" class="hisui-tooltip grid-tips" onclick=objScreen.StatusToggle("'+value+"\","+row.RowID+","+row.QCEntityID+')><span style="color:green;">'+row.QCCurrStatusDesc+'</span></a>';
+							return '<a title="'+ExcludeInfo+'" class="hisui-tooltip grid-tips" onclick=objScreen.StatusToggle("'+value+"\","+row.RowID+","+row.QCEntityID+')><span style="color:green;">'+$g(row.QCCurrStatusDesc)+'</span></a>';
 						}else{
 							if (ExcludeInfo=="") {
-									return row.QCCurrStatusDesc;
+									return $g(row.QCCurrStatusDesc);
 							}else{
-								 	return '<a title="'+ExcludeInfo+'" class="hisui-tooltip grid-tips" >'+row.QCCurrStatusDesc+'</a>';
+								 	return '<a title="'+ExcludeInfo+'" class="hisui-tooltip grid-tips" >'+$g(row.QCCurrStatusDesc)+'</a>';
 							}
 						}
 				}
 			},
-			{field:'MrNo',title:'病案号',width:'120',align:'center',align:'center'},
-			{field:'PatName',title:'患者姓名',width:'150',align:'center',sortable:false},
-			{field:'DocName',title:'管床医生',width:'150',align:'center',sortable:false},
-			{field:'AdmDate',title:'入院日期',width:'120',align:'center',sortable:true},
-			{field:'DisDate',title:'出院日期',width:'120',align:'center',sortable:true},
-			{field:'RowID',title:'住院病历',width:'150',align:'center',sortable:true,
+			{field:'MrNo',title:'病案号',width:'120',align:'left'},
+			{field:'PatName',title:'患者姓名',width:'150',align:'left',sortable:false},
+			{field:'DocName',title:'管理医生',width:'150',align:'left',sortable:false},
+			{field:'AdmDate',title:'入院日期',width:'120',align:'left',sortable:true},
+			{field:'DisDate',title:'出院日期',width:'120',align:'left',sortable:true},
+			{field:'RowID',title:'住院病历',width:'150',align:'left',sortable:true,
 				formatter: function(value,row,index){
 						var paadm=row.EpisodeID.split('!!')[0]
 						var patientID=row.PatID
-						return " <a href='#' class='hisui-linkbutton hover-dark' style='cursor:pointer' onclick='objScreen.DisplayEPRView(\"" + paadm + "\",\"" + patientID + "\");'>病历浏览</a>";
+						return " <a href='#' class='hisui-linkbutton hover-dark' style='cursor:pointer' onclick='objScreen.DisplayEPRView(\"" + paadm + "\",\"" + patientID + "\");'>"+$g('病历浏览')+"</a>";
 				}			
 			
-			},{field:'QCEntityID',title:'上传<br>接口平台',width:'100',align:'center',id:'UpForm',sortable:true,hidden:UpAdmin?false:true,
+			},{field:'EpisodeID',title:'上传<br>接口平台',width:'100',align:'left',id:'UpForm',sortable:true,hidden:UpAdmin?false:true,
 				formatter: function(value,row,index){
 						if (row.QCCurrStatus=="Up") {
-							return '<span style="color:green;">已上传</span>';
-						}else if(row.QCCurrStatus=="Check"){
-							return '<a href="#" class="hisui-linkbutton" onclick=objScreen.UpForm('+row.RowID+","+"\"\""+')>上传</a>';
+							return '<span style="color:green;">'+$g('已上传')+'</span>';
+						}else if (row.QCCurrStatus=="Check" || row.QCCurrStatus=="tUp") {
+							return '<a href="#" class="hisui-linkbutton" onclick=objScreen.UpForm('+row.RowID+","+"\"\""+')>'+$g('上传')+'</a>';
 						}else{
 							//return '<a href="#" class="hisui-linkbutton" onclick=objScreen.UpForm('+row.RowID+","+"\"\""+')>上传</a>';
-							return '<a class="hisui-linkbutton" style="color:black;">待审核</a>';
+							return '<a class="hisui-linkbutton" style="color:black;">'+$g('待审核')+'</a>';
 						}
 						
 				}			
@@ -139,8 +163,8 @@ function InitviewScreen(){
 				obj.gridQCMrList_onDbselect(rowData);
 			}
 		}
-		,onLoadSuccess:function(rowIndex,rowData){
-			HISUIHtml.call()
+		,onLoadSuccess:function(rowData){
+			$('#gridQCMrList').datagrid('loaded');
 		}
 	});
 	InitWinEvent(obj);	

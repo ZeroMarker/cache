@@ -23,22 +23,19 @@ function init_User(){
 	
 	$HUI.combobox(('#TUser'),{
 		defaultFilter:'4',
-		valueField: 'TUsrRowid',
-		textField: 'TUsrName',
+		valueField: 'RowId',
+		textField: 'Desc',
 		url:$URL,
+		onBeforeLoad:function(param){
+			param.ClassName = 'INSU.COM.BaseData';
+			param.QueryName= 'FindSSUser';
+			param.HospId = session['LOGON.HOSPID'];
+			param.ResultSetType = 'array';
+		},
 		onSelect:function(){
 		},
 		onLoadSuccess:function(data){
 
-		}
-		,onBeforeLoad: function(param) {
-			param.ClassName = 'DHCBILLConfig.DHCBILLOthConfig';
-			param.QueryName= 'FindGroupUser';
-			param.Grp = '';
-			param.Usr = "";
-			param.HospId = HospDr;
-			param.ResultSetType = 'array';
-			return true;
 		}		
 	})	
 }
@@ -53,7 +50,7 @@ function init_AdmType(){
     		},{
     			"id" : '2',
     			"text":"住院"	
-    		}],
+    		}]
 	})
 					
 }
@@ -89,8 +86,8 @@ function init_dg(){
 			{field:'INSExpStr2',title:'是否上传签到',width:150},
 			{field:'INSExpStr3',title:'特殊情况说明',width:150},
 			{field:'INSYWLX',title:'业务类型',width:150}, //空:全部、 1:门诊、2:住院
-			{field:'INSHospDr',title:'院区',width:150,hidden:true},
-			{field:'INSUserDr',width:150,hidden:true },
+			{field:'INSHospDr',title:'院区',width:150},
+			{field:'INSUserDr',width:150,hidden:true }
 			
 		]];
 	// 初始化DataGrid
@@ -117,18 +114,18 @@ function signInClick(){
 		$.messager.alert('提示','医保类型不能为空','info');
 		return;
 	}
-	var Handle = 0;
+	var Handle = 1;
 	var UserId = session['LOGON.USERID'];
 	var HospId = session['LOGON.HOSPID'];
 	var AdmType = getValueById('TAdmType')
 	var ExpString = getValueById('TINSUType') + '^^' + AdmType + '^' +  HospId;
 	var rtn = InsuASSignIn(Handle,UserId,ExpString);
-	if(rtn == '0'){
-		$.messager.alert('提示','签到失败：' + rtn ,'info',function(){
+	if(rtn == 1){
+		$.messager.alert('提示','签到成功' ,'info',function(){
 			loadDataGrid();
 		});	
 	}else{
-		$.messager.alert('提示','签到成功' ,'info',function(){
+		$.messager.alert('提示','签到失败：' + rtn ,'info',function(){
 			loadDataGrid();
 		});		
 	}
@@ -152,12 +149,12 @@ function signOutClick(){
 	var AdmType = getValueById('TAdmType')
 	var ExpString = getValueById('TINSUType') + '^^' + AdmType + '^' + SelectRow.INSBusiNo + '^' +   HospId;
 	var rtn = InsuASSignOut(Handle,UserId,ExpString);
-	if(rtn == '0'){
-		$.messager.alert('提示','签退失败：' + rtn,'info',function(){
+	if(rtn == '1'){
+			$.messager.alert('提示','签退成功：' + rtn ,'info',function(){
 			loadDataGrid();
 		});	
 	}else{
-		$.messager.alert('提示','签退成功：' + rtn ,'info',function(){
+	        $.messager.alert('提示','签退失败：' + rtn,'info',function(){
 			loadDataGrid();
 		});	
 	}
@@ -173,8 +170,8 @@ function loadDataGrid(){
 	    EndDate : getValueById('TEndDate'),
 	    User : getValueById('TUser'),
 	    HospId : session['LOGON.HOSPID'],
-	    AdmType:getValueById('TAdmType'),
-	    INSUType:getValueById('TINSUType')
+	    INSUType : getValueById('TINSUType'),
+	    AdmType : ''
 	}	
     loadDataGridStore('dg',queryParams);
 } 

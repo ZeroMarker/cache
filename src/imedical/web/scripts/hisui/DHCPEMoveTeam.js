@@ -40,22 +40,40 @@ function SelectRowHandler(index,rowdata) {
 
 		}
 	
-	
+		var SucFlag=0,ErrName=""
 	iPIADMRowIdArr=iPIADMRowId.split("^");
 	for (var i=0;i<iPIADMRowIdArr.length;i++)
 	{
 		iPIADMRowId=iPIADMRowIdArr[i];
 		
 		var Ret=tkMakeServerCall("web.DHCPE.CancelPE","CancelPE",iPIADMRowId,"I",0)
-   
+        var PIADM=iPIADMRowId+"^CRM";
+  		var BaseInfo=tkMakeServerCall("web.DHCPE.BarPrint","GetPersonInfo",PIADM)
+        var Name=BaseInfo.split("^")[1];
+
 		var iPIBIDR=tkMakeServerCall("web.DHCPE.PreIADM","GetPIBIByPIADM",iPIADMRowId)
 		var flag=tkMakeServerCall("web.DHCPE.PreIADM","InsertIADMInGTeam",iPIBIDR,iParRef,PGTeam)
 		var flag=flag.split("^")
-		if ('0'==flag[0]) {
+		if ('0'!=flag[0]) {
 			
-			$.messager.alert("提示","转组成功","success");    
+			if(ErrName=="") {var ErrName=Name;}
+			else{var ErrName=ErrName+" "+Name;} 
 		}
+		
+		if(i==iPIADMRowIdArr.length-1){var SucFlag=1;}
+		
+
 	}
+	if ('1'==SucFlag) {
+		
+		    if(ErrName!=""){
+				$.messager.alert("提示",ErrName+"转组失败","error");
+			} 
+			else{
+				$.messager.alert("提示","转组完成","success"); 
+			} 
+		}
+
 		//window.close();
 		window.opener.$("#TeamGrid").datagrid('load',{ClassName:"web.DHCPE.PreGTeam",QueryName:"SearchGTeam",ParRef:iParRef});
 	

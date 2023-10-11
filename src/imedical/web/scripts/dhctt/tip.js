@@ -551,7 +551,8 @@ DHC.Ajax.req = function ( config ) {
 			var url = config.url || "#";	
 			var data = config.data || {} ;	//json
 			var dataType = config.dataType || "";	//requesttext json request
-			var async = config.async || true;			
+			var async = config.async || true;		
+			if (window.websys_getMWToken) data['MWToken'] = websys_getMWToken();	
 			data = DHC.jsonToUrl( data );
 			req.onreadystatechange = function ( XMLHttpRequestProgressEvent ) {					
 				if(req.readyState == 4) {
@@ -730,7 +731,7 @@ DHC.Tip.prototype = {
 		var upperLastValue = word.toUpperCase();
 		var tmpobj={};
 		var arr = this.arrStore;
-		if(arr.length){
+		if (arr && arr.length){
 			for (var i = 0; i<=arr.length-1; i++) {
 			 	if(arr[i].toUpperCase().indexOf(upperLastValue)>-1){		 		
 			 		tmpobj[arr[i]] = arr[i];

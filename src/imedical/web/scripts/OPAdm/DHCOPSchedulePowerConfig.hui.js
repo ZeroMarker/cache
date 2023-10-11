@@ -119,12 +119,14 @@ function InitLocListTabDataGrid(){
 			PageLogicObj.m_ResListTabDataGrid.datagrid("reload");
 			PageLogicObj.m_PoweredListTabDataGrid.datagrid("reload");
 		},onUncheckAll:function(rows){
-			if (PageLogicObj.m_ResListTabDataGrid!=""){
-				PageLogicObj.m_ResListTabDataGrid.datagrid("uncheckAll").datagrid('loadData', {"total":0,"rows":[]});
-			}
-			if (PageLogicObj.m_PoweredListTabDataGrid!=""){
-				PageLogicObj.m_PoweredListTabDataGrid.datagrid("uncheckAll").datagrid('reload');
-			}
+			setTimeout(function() { 
+				if (PageLogicObj.m_ResListTabDataGrid!=""){
+					PageLogicObj.m_ResListTabDataGrid.datagrid("uncheckAll").datagrid('loadData', {"total":0,"rows":[]});
+				}
+				if (PageLogicObj.m_PoweredListTabDataGrid!=""){
+					PageLogicObj.m_PoweredListTabDataGrid.datagrid("uncheckAll").datagrid('reload');
+				}
+			},500);
 		},
 		onCheckAll:function(){
 			if (PageLogicObj.m_ResListTabDataGrid=="") {
@@ -257,13 +259,13 @@ function BSavePowerClick(){
 		$.messager.alert("提示","没有需要保存的数据!");
 		return false;
 	}
-	var rows=PageLogicObj.m_ResListTabDataGrid.datagrid('getSelections');
-	if (PageLogicObj.m_ResListTabDataGrid=="") {
+	var rows=PageLogicObj.m_ResListTabDataGrid.datagrid('getRows');
+	if (rows.length==0) {
 		$.messager.alert("提示","没有需要保存的数据!");
 		return false;
 	}
 	var GridSelectArr=PageLogicObj.m_ResListTabDataGrid.datagrid('getSelections');
-	var inPara="";
+	var inPara="",outPara="";
 	for (var i=0;i<rows.length;i++){
 		//var RowID=rows[i].RowID;
 		var ResRowId=rows[i].ResRowId;
@@ -271,6 +273,9 @@ function BSavePowerClick(){
 		if ($.hisui.indexOfArray(GridSelectArr,"ResRowId",ResRowId)>=0) {
 			if (inPara == "") inPara = ResRowId;
 			else  inPara = inPara + "^" + ResRowId;
+		}else{
+			if (outPara == "") outPara = ResRowId;
+			else  outPara = outPara + "!" + ResRowId;
 		}
 	}
 	$.m({
@@ -278,9 +283,11 @@ function BSavePowerClick(){
 	    MethodName:"SaveSchedulePower",
 	    UserId:UserId,
 	    Depstr:Depstr,
-	    inPara:inPara
+	    inPara:inPara,
+		outPara:outPara
 	},function(rtn){
 		if(rtn==0){
+			$("#FindRes").searchbox('setValue',''); 
 			$.messager.popover({msg:'授权保存成功',type:'success',timeout:1000});
 			PageLogicObj.m_LocListTabDataGrid.datagrid("uncheckAll");
 		}

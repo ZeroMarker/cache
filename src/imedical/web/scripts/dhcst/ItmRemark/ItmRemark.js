@@ -39,7 +39,7 @@ var ItmRemarkGridDs = new Ext.data.Store({
 var ItmRemarkGridCm = new Ext.grid.ColumnModel([
 	 new Ext.grid.RowNumberer(),
 	 {
-        header:"名称",
+        header:$g("名称"),
         dataIndex:'Desc',
         width:300,
         align:'left',
@@ -61,8 +61,8 @@ var ItmRemarkGridCm = new Ext.grid.ColumnModel([
 //初始化默认排序功能
 ItmRemarkGridCm.defaultSortable = true;
 var addItmRemark = new Ext.Toolbar.Button({
-	text:'新建',
-    tooltip:'新建',
+	text:$g('新建'),
+    tooltip:$g('新建'),
     iconCls:'page_add',
 	width : 70,
 	height : 30,
@@ -72,8 +72,8 @@ var addItmRemark = new Ext.Toolbar.Button({
 });
 
 var saveItmRemark = new Ext.Toolbar.Button({
-	text:'保存',
-    tooltip:'保存',
+	text:$g('保存'),
+    tooltip:$g('保存'),
     iconCls:'page_save',
 	width : 70,
 	height : 30,
@@ -92,20 +92,20 @@ function Save(){
 			}
 		}
 	}
-	var mask=ShowLoadMask(Ext.getBody(),"处理中请稍候...");
+	var mask=ShowLoadMask(Ext.getBody(),$g("处理中请稍候..."));
 	Ext.Ajax.request({
 		url: ItmRemarkUrl+'?actiontype=Save',
 		params:{listData:dataArr.join("^")},
 		failure: function(result, request) {
 			mask.hide();
-			Msg.info("error", "请检查网络连接!");
+			Msg.info("error", $g("请检查网络连接!"));
 			ItmRemarkGridDs.commitChanges();
 		},
 		success: function(result, request) {
 			var jsonData = Ext.util.JSON.decode( result.responseText );
 			 mask.hide();
 			if (jsonData.success=='true') {
-				Msg.info("success", "保存成功!");
+				Msg.info("success", $g("保存成功!"));
 			}else{
 			}
 			ItmRemarkGridDs.commitChanges();
@@ -116,15 +116,15 @@ function Save(){
 }
 
 var deleteItmRemark = new Ext.Toolbar.Button({
-	text:'删除',
-    tooltip:'删除',
+	text:$g('删除'),
+    tooltip:$g('删除'),
     iconCls:'page_delete',
 	width : 70,
 	height : 30,
 	handler:function(){
 		var cell = ItmRemarkGrid.getSelectionModel().getSelectedCell();
 		if(cell==null){
-			Msg.info("warning", "请选择数据!");
+			Msg.info("warning", $g("请选择数据!"));
 			return false;
 		}else{
 			var record = ItmRemarkGrid.getStore().getAt(cell[0]);
@@ -155,7 +155,7 @@ Ext.onReady(function(){
 	Ext.BLANK_IMAGE_URL = Ext.BLANK_IMAGE_URL;
 	
 	var panel = new Ext.Panel({
-		title:'批准文号前缀维护',
+		title:$g('批准文号前缀维护'),
 		region:'center',
 		items:[ItmRemarkGrid]                                 
 	});

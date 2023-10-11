@@ -221,11 +221,25 @@ function AddVirItem(){
 	}
 	var tmphiscode=selHisData.code;
 	var tmphisdesc=selHisData.desc;
-	var tmptype=$('#right-Type').combobox('getValue');
-	var tmptypedesc=$('#right-Type').combobox('getText');
+	//var tmptype=$('#right-Type').combobox('getValue'); //- DingSH 20200917
+    //var tmptypedesc=$('#right-Type').combobox('getText');
+	//var tmptype=$('#Type').combogrid('getValue'); 
+	//var tmptypedesc=('#Type').combogrid('getText');
+	var tmptype="",tmptypedesc=""
+	var Typegd=$('#Type').combogrid('grid')
+	if(Typegd){
+	  var TypeGdRow=Typegd.datagrid('getSelected');
+	  if(TypeGdRow){
+		tmptype = TypeGdRow.cCode;
+		tmptypedesc = TypeGdRow.cDesc;
+	     }
+	}
+	
+	
+	txtVirCode
 	var tmpsaveinfo=tmphiscode+"^"+tmphisdesc+"^"+tmptype;
 	var txtVirCode=getValueById('txtVirCode');
-	
+	var InsuType = getValueById('insuType');
 	if(txtVirCode == '' || txtVirCode == undefined ){
 		$.messager.alert('提示','新增虚拟项目时,自定义代码不能为空','info');
 		return;	
@@ -235,9 +249,9 @@ function AddVirItem(){
 	$.messager.confirm('请确认','你确认要给:'+tmphisdesc+"增加一条类别为 "+tmptypedesc+" 的虚拟收费项目吗?",function(fb){
 		if(fb){
 			
-			var savecode=tkMakeServerCall("web.DHCINSUTarConTar","TarChange","","",tmphiscode+"^"+tmptype+"^"+txtVirCode,PUBLIC_CONSTANT.SESSION.HOSPID);
+			var savecode=tkMakeServerCall("web.DHCINSUTarConTar","TarChange","","",tmphiscode+"^"+tmptype+"^"+txtVirCode+"^"+InsuType,PUBLIC_CONSTANT.SESSION.HOSPID);
 			if(eval(savecode)>=0){ 
-				var UpdateStr=""+"^"+selHisData.rowid+"^"+tmphiscode+"^"+eval(savecode)+"^"+""+"^"+tmptype+"^"+GetToday()+"^"+$('#insuType').combobox('getValue')+"^"+"^" + PUBLIC_CONSTANT.SESSION.HOSPID;
+				var UpdateStr=""+"^"+selHisData.rowid+"^"+tmphiscode+"^"+eval(savecode)+"^"+""+"^"+tmptype+"^"+getValueById('dd')+"^"+$('#insuType').combobox('getValue')+"^"+"^" + PUBLIC_CONSTANT.SESSION.HOSPID;
 				var savecode=tkMakeServerCall("web.DHCINSUTarConTar","Update","","",UpdateStr)
 				if(eval(savecode)>=0){
 					MSNShow('提示','操作成功！',2000);
@@ -379,12 +393,18 @@ function QueryINSUTarInfoNew(){
 	// tangzf 2020-6-17 使用HISUI接口 加载数据
 	var QClase = getValueById('right-QClase');
 	var KeyWords = getValueById('right-KeyWords');
-	var Type = $('#right-Type').combobox('getValue'); //项目类别
+	//var Type = $('#right-Type').combobox('getValue'); //项目类别 -DingSH 20200917
+	//var TypeDesc = $('#right-Type').combobox('getText'); //项目类别描述
+	
+	var Type = $('#Type').combobox('getValue'); //项目类别
+	var TypeDesc = $('#Type').combobox('getText'); //项目类别描述
+	
+	
 	var ConType = "N"; 
 	var InsuType = ''; //$('#insuType').combobox('getValue'); 
 	var VirmTarFlag = 'Y' // 虚拟收费项目标志
 	
-	var tmpurl = KeyWords + GV.ArgSpl + QClase + GV.ArgSpl+ Type + GV.ArgSpl + ConType + GV.ArgSpl + VirmTarFlag + GV.ArgSpl + InsuType + GV.ArgSpl + PUBLIC_CONSTANT.SESSION.HOSPID;	
+	var tmpurl = KeyWords + GV.ArgSpl + QClase + GV.ArgSpl+ Type + GV.ArgSpl + ConType + GV.ArgSpl + VirmTarFlag + GV.ArgSpl + InsuType + GV.ArgSpl + PUBLIC_CONSTANT.SESSION.HOSPID+GV.ArgSpl + TypeDesc;	
 	var QueryParam = {
 		ClassName:'web.DHCINSUTarConTar' ,
 		QueryName: 'QueryTarInfo',
@@ -500,7 +520,7 @@ function init_InsuType(){
  */
 function init_Type(){
 	//var dicurl=jsonQueryUrl+'web.INSUDicDataCom'+SplCode+"GetDicJSONInfo"+SplCode+"SpeItmType^^";	//GV.ArgSpl
-	$('.Type').combogrid({  
+	$('#Type').combogrid({  
 	    idField:'cCode',   
 	    textField:'cDesc', 
         panelWidth:200,   
@@ -519,11 +539,37 @@ function init_Type(){
 	        {field:'cDesc',title:'描述',width:100}
 	        
 	    ]],
+	    loadFilter:function(data){
+		    for(var i in data.rows){
+				if(data.rows[i].cDesc == "基本医疗"){
+					data.rows.splice(i,1);
+				}
+			}
+			  return data
+		    },
+	    
 	    onLoadSuccess:function(data){
 		    setValueById('Type',data.rows[0].cCode);
-		    setValueById('right-Type',data.rows[0].cCode);
+		    setValueById('right-Type',data.rows[0].cDesc);
 		}
 	});	
+	$('#Type').combogrid({  
+	    onSelect:function(rec){
+		    	var code=$('#Type').combobox('getValue');
+	            var desc=$('#Type').combobox('getText');
+	             setValueById('right-Type',desc);
+	             var SelectRow = $('#dg').datagrid('getSelected');
+	             if(SelectRow){
+	               ConGridQuery();
+	             }
+	             QueryINSUTarInfoNew()
+		    },
+	    
+	  
+	});	
+	
+	
+	
 }
 /*
  * 对照关系
@@ -718,7 +764,7 @@ function selectHospCombHandle(){
 	$('#insuType').combogrid('grid').datagrid('reload');
 	//$('#BSYType').combobox('clear');
 	$('#Type').combogrid('grid').datagrid('reload');
-	$('#right-Type').combogrid('grid').datagrid('reload');	
+	//$('#right-Type').combogrid('grid').datagrid('reload');	
 	GetConDateByConfig();
 	Query();
 }

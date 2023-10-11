@@ -1,8 +1,9 @@
-//µã»÷Ò½ÖöÉóºË°´Å¥Ê±,×îºóÒ»²½µ÷ÓÃ´Ë·½·¨
-//¼ì²éÂ·¾¶ÍâÒ½Öö,²¢Ìí¼Ó±äÒìÔ­Òò
-//Èë²Î,aEpisodeID:¾ÍÕïID,aOrdItemList:Ò½ÖöÏîIDÆ´³ÉµÄ´®(^)
+ï»¿//ç‚¹å‡»åŒ»å˜±å®¡æ ¸æŒ‰é’®æ—¶,æœ€åä¸€æ­¥è°ƒç”¨æ­¤æ–¹æ³•
+//æ£€æŸ¥è·¯å¾„å¤–åŒ»å˜±,å¹¶æ·»åŠ å˜å¼‚åŸå› 
+//å…¥å‚,aEpisodeID:å°±è¯ŠID,aOrdItemList:åŒ»å˜±é¡¹IDæ‹¼æˆçš„ä¸²(^)
 function checkOrdItemToVar(aEpisodeID,aOrdItemList,callBackFun){
-	//¼ì²é¾ÍÕïÀàĞÍ£¬ÃÅÕïÀàĞÍ²»¼ì²éÂ·¾¶ÍâÒ½Öö
+
+	//æ£€æŸ¥å°±è¯Šç±»å‹ï¼Œé—¨è¯Šç±»å‹ä¸æ£€æŸ¥è·¯å¾„å¤–åŒ»å˜±
 	var PAAdmType =$cm({
 		ClassName:"DHCMA.Util.IO.FromHisSrv",
 		MethodName:"GetPAAdmType",
@@ -14,12 +15,7 @@ function checkOrdItemToVar(aEpisodeID,aOrdItemList,callBackFun){
 		return;	
 	}
 	
-	if ((!aEpisodeID)||(aOrdItemList=="")) {
-		callBackFun(false);
-		return;
-	}
-	
-	//¸ñÊ½»¯´«ÈëµÄÒ½Öö´®£¬È¥µô¶àÓà","
+	//æ ¼å¼åŒ–ä¼ å…¥çš„åŒ»å˜±ä¸²ï¼Œå»æ‰å¤šä½™","
 	var tmpArr=aOrdItemList.split(",");
 	var tmpOrdItemStr="";
 	for (var i=0;i<tmpArr.length;i++){
@@ -28,71 +24,70 @@ function checkOrdItemToVar(aEpisodeID,aOrdItemList,callBackFun){
 	}
 	aOrdItemList=tmpOrdItemStr.substr(1,tmpOrdItemStr.length);
 	
-	//ÅĞ¶ÏÊÇ·ñ¼ì²é
-	var IsAddVar=$m({ClassName:"DHCMA.CPW.CPS.InterfaceSrv",MethodName:"IsAddVar"},false);
-	if(parseInt(IsAddVar)>0){
-		var runQuery =$cm({
-			ClassName:'DHCMA.CPW.CPS.InterfaceSrv',
-			QueryName:'QryCPWVarOrder',
-			aEpisodeID: aEpisodeID,
-			aOEItmMastList: aOrdItemList,
-			alocID: session['LOGON.CTLOCID'],
-			aWardID: session['LOGON.WARDID']
-		},false);
-		if(runQuery){
-			var dataLen = runQuery.rows.length;
-			if(dataLen>0){	//ÓĞÂ·¾¶ÍâÒ½Öö£¬µ¯´°Ìí¼Ó±äÒìÔ­Òò
-				var strUrl = "./dhcma.cpw.io.var.csp?1=1" + "&EpisodeID=" + aEpisodeID + "&OEItmMastList=" + aOrdItemList;
-				websys_showModal({
-					url:strUrl,
-					title:'Ôö¼ÓÒ½Öö',
-					//closable:false,
-					width:1000,height:500,
-					onBeforeClose:function(OrdItemList){
-						if(OrdItemList!=0){
-							var ret=$m({ClassName:"DHCMA.CPW.CPS.InterfaceSrv",MethodName:"DeleteTmpVarOrd",aFlg:"Y"},false)
-							if (websys_showModal("options").CallBackFunc) {
-								websys_showModal("options").CallBackFunc(false);
+	if ((!aEpisodeID)||(aOrdItemList=="")) {
+		callBackFun(true);
+		return;
+	}
+	
+	new Promise(function(resolve,reject){
+		//åˆ¤æ–­æ˜¯å¦æ£€æŸ¥
+		var IsAddVar=$m({ClassName:"DHCMA.CPW.CPS.InterfaceSrv",MethodName:"IsAddVar",aLgnHospID:session['LOGON.HOSPID']},false);
+		if(parseInt(IsAddVar)>0){
+			var runQuery =$cm({ClassName:'DHCMA.CPW.CPS.InterfaceSrv',QueryName:'QryCPWVarOrder',aEpisodeID: aEpisodeID,aOEItmMastList: aOrdItemList,alocID: session['LOGON.CTLOCID'],aWardID: session['LOGON.WARDID']},false);			
+			if(runQuery){
+				var sendArg=-1;
+				var dataLen = runQuery.rows.length;
+				if(dataLen>0){	//æœ‰è·¯å¾„å¤–åŒ»å˜±ï¼Œå¼¹çª—æ·»åŠ å˜å¼‚åŸå› 
+					var strUrl = "./dhcma.cpw.io.var.csp?1=1" + "&EpisodeID=" + aEpisodeID + "&OEItmMastList=" + aOrdItemList;
+					var varOrdTitle = $g('æ·»åŠ è·¯å¾„å¤–åŒ»å˜±å˜å¼‚')
+					websys_showModal({
+						url:strUrl,
+						title:varOrdTitle,
+						//closable:false,
+						width:1000,height:500,
+						onOptionFun:function(OrdItemList){						
+							sendArg=parseInt(OrdItemList);						
+							if(OrdItemList!=0){
+								var ret=$m({ClassName:"DHCMA.CPW.CPS.InterfaceSrv",MethodName:"DeleteTmpVarOrd",aFlg:"Y"},false)
 							}else{
-								window.returnValue = false;	//·µ»Ø¸øÒ½ÉúÕ¾
+								//æ¸…é™¤ä¸´æ—¶æ•°æ®
+								var ret=$m({ClassName:"DHCMA.CPW.CPS.InterfaceSrv",MethodName:"DeleteTmpVarOrd",aFlg:"N"},false)
+								resolve(true);
 							}
-						}else{
-							//Çå³ıÁÙÊ±Êı¾İ
-							var ret=$m({ClassName:"DHCMA.CPW.CPS.InterfaceSrv",MethodName:"DeleteTmpVarOrd",aFlg:"N"},false)
-							if (websys_showModal("options").CallBackFunc) {
-								websys_showModal("options").CallBackFunc(true);
-							}else{
-								window.returnValue = true;	//·µ»Ø¸øÒ½ÉúÕ¾
+						},
+						onClose:function(){
+							if (sendArg!=0){
+								resolve(false);	
 							}
 						}
-					},
-					CallBackFunc:function(result){
-						//websys_showModal("close");
-						callBackFun(result)
-					}
-				})
+					})
+				}else{
+					resolve(true);	
+				}				
 			}else{
-				callBackFun(true);
-			}
-		}
-	}else{
-		callBackFun(true);
-	}
+				resolve(true);	
+			}			
+		}else{
+			resolve(true);	
+		}		
+	}).then(function(ret){
+		 callBackFun(ret);
+	})
 }
 
-//µã»÷°´Å¥Ê±µ÷ÓÃ´Ë·½·¨
-//µ¯´°,²¢Ìí¼ÓÁÙ´²Â·¾¶Ò½Ööµ½Ò½ÖöÂ¼ÈëÒ³Ãæ
-//Èë²Î,aEpisodeID:¾ÍÕïID£¬aOrderType:Î÷Ò©W/ÖĞ²İÒ©C£¬addOEORIByCPW:Ò½ÉúÕ¾Ìí¼ÓÒ½Öö·½·¨£¬¾ÍÕïÀàĞÍÇø·Öµ÷ÓÃÒ³Ãæ
+//ç‚¹å‡»æŒ‰é’®æ—¶è°ƒç”¨æ­¤æ–¹æ³•
+//å¼¹çª—,å¹¶æ·»åŠ ä¸´åºŠè·¯å¾„åŒ»å˜±åˆ°åŒ»å˜±å½•å…¥é¡µé¢
+//å…¥å‚,aEpisodeID:å°±è¯ŠIDï¼ŒaOrderType:è¥¿è¯W/ä¸­è‰è¯Cï¼ŒaddOEORIByCPW:åŒ»ç”Ÿç«™æ·»åŠ åŒ»å˜±æ–¹æ³•ï¼Œå°±è¯Šç±»å‹åŒºåˆ†è°ƒç”¨é¡µé¢
 function addOrdItemToDoc(aEpisodeID,aOrderType,addOEORIByCPW,aPAAdmType){
 	if ((!aEpisodeID)||(!aOrderType)) return;
 	if (typeof(addOEORIByCPW)!="function") return;
 	var strUrl="",msgTitle="";
 	if (aPAAdmType=='O'){
 		strUrl = "./dhcma.cpw.io.oporder.csp?1=1" + "&EpisodeID=" + aEpisodeID+ "&OrderType=" + aOrderType;
-		msgTitle = 'Ìí¼ÓÃÅÕïÁÙ´²Â·¾¶Ò½Öö';
+		msgTitle = $g('æ·»åŠ é—¨è¯Šä¸´åºŠè·¯å¾„åŒ»å˜±');
 	} else {
 		strUrl = "./dhcma.cpw.io.order.csp?1=1" + "&EpisodeID=" + aEpisodeID + "&OrderType=" + aOrderType;
-		msgTitle = 'Ìí¼Ó×¡ÔºÁÙ´²Â·¾¶Ò½Öö';
+		msgTitle = $g('æ·»åŠ ä½é™¢ä¸´åºŠè·¯å¾„åŒ»å˜±');
 	}
 	websys_showModal({
 		url:strUrl,

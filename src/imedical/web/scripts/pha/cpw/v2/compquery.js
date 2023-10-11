@@ -5,9 +5,9 @@
  */
 var COLUMNS = [
 	{field:"AdmDr", title:'AdmDr', width:90, hidden:true},
-	{field:'Ward', title:'病区', width:150},
-	{field:'PatNo', title:'登记号', width:100},
-	{field:'PatName', title:'姓名', width:80}
+	{field:'Ward', title:$g('病区'), width:150},
+	{field:'PatNo', title:$g('登记号'), width:100},
+	{field:'PatName', title:$g('姓名'), width:80}
 ];
 $(function(){
 	InitDict();
@@ -75,7 +75,6 @@ var InitColumns = function(){
 			var formatterFun;
 			
 			var sliceInd = findIndex(COLUMNS, this.id);
-			console.log(sliceInd+"-"+ this.id)
 			if(sliceInd > -1){
 				return true;	
 			}
@@ -110,7 +109,7 @@ var findIndex = function(array, item){
 var InitPatList = function(){
 	var gridOption = {
 		fit: true,
-		title: '临床药学综合查询',
+		title: $g('临床药学综合查询'),
 		singleSelect: true,
 		columns: [COLUMNS],
 		//nowrap: false,
@@ -199,8 +198,8 @@ function showPatMonWin(EpisodeID, type, point){
 		minimizable:false,					
 		maximized:true						
 	};
-	new WindowUX('病人药学监测信息查询', 'newItmWin', '950', '550', option).Init();
-	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.perpharservice.csp?EpisodeID='+EpisodeID+'&bsType='+type+'&bsPoint='+point+'"></iframe>';
+	new WindowUX($g('病人药学监测信息查询'), 'newItmWin', '950', '550', option).Init();
+	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.perpharservice.csp?EpisodeID='+EpisodeID+'&bsType='+type+'&bsPoint='+point+'&MWToken='+websys_getMWToken()+'"></iframe>';
 	$("#newItmWin").html(iframe);  
 }
 /**
@@ -226,7 +225,7 @@ function adrFormmatter(value, rowData, rowIndex){
 			var recordID=recordParaArr[0];         	//表单填写记录ID
 			var RepID=recordParaArr[1];             //报告ID   
 			var RepStaus=recordParaArr[2];          //表单状态
-			if (RepStaus=="未提交"){
+			if (RepStaus==$g("未提交")){
 				RepStaus=""; 						//报告为未提交，传参为空
 			}
 			var RepTypeDr=recordParaArr[3];         //报告类型Dr
@@ -257,7 +256,7 @@ function showEditWin(recordID,RepStaus,RepTypeDr,RepTypeCode,RepType,editFlag,Re
 	if($('#win').is(":visible")){return;}  
 	$('body').append('<div id="win"></div>');
 	$('#win').window({
-		title:'报告编辑',
+		title:$g('报告编辑'),
 		collapsible:true,
 		border:false,
 		closed:"true",
@@ -266,7 +265,7 @@ function showEditWin(recordID,RepStaus,RepTypeDr,RepTypeCode,RepType,editFlag,Re
 	});
 	var iframe='<iframe scrolling="yes" width=100% height=100% frameborder="0" src="dhcadv.layoutform.csp?recordId='
 		+recordID+'&RepStaus='+RepStaus+'&RepTypeDr='+RepTypeDr+'&code='+RepTypeCode+'&desc='+RepType+'&editFlag='
-		+editFlag+'&RepID='+RepID+'&adrReceive='+adrReceive+'&winflag='+1+'"></iframe>';
+		+editFlag+'&RepID='+RepID+'&adrReceive='+adrReceive+'&winflag='+1+'&MWToken='+websys_getMWToken()+'"></iframe>';
 	$('#win').html(iframe);
 	$('#win').window('open');
 }
@@ -305,8 +304,8 @@ function showMedRecWin(EpisodeID){
 		minimizable:false,					
 		maximized:true						
 	};
-	new WindowUX('药历', 'newItmWin', '950', '550', option).Init();
-	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.drugbrows.csp?EpisodeID='+EpisodeID+'"></iframe>';
+	new WindowUX($g('药历'), 'newItmWin', '950', '550', option).Init();
+	var iframe='<iframe scrolling="yes" width=100% height=100%  frameborder="0" src="dhcpha.clinical.drugbrows.csp?EpisodeID='+EpisodeID+'&MWToken='+websys_getMWToken()+'"></iframe>';
 	$("#newItmWin").html(iframe);  
 }
 function Clear(){

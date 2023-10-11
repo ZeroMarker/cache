@@ -6,20 +6,25 @@ var init = function(){
 	var ServerObj = $HUI.combogrid("#ServerName",{
 		panelWidth:500,
 		panelHeight:400,
-		//url:$URL+"?ClassName=web.DHCVISVoiceSet&QueryName=LookUpServer",
-		url:$URL,
-		queryParams:{
-			ClassName:"web.DHCVISVoiceSet",
-			QueryName:"LookUpServer",
-			txtServerName:""
-		},
+		url:$URL+"?ClassName=web.DHCVISVoiceSet&QueryName=LookUpServer",
+		//url:$URL,
+		//queryParams:{
+		//	ClassName:"web.DHCVISVoiceSet",
+		//	QueryName:"LookUpServer",
+		//	txtServerName:""
+		//},
 		mode:'remote',
 		delay:200,
 		idField:'ServerId',
 		textField:'ServerName',
 		onBeforeLoad:function(param){
 			param.txtServerName = param.q;
+			param.clientFlag = "Y";
 		},
+		onShowPanel:function () {
+			var ServerName=ServerObj.getText();
+			$('#ServerName').combogrid('grid').datagrid('reload',{q: ServerName});
+    	},
 		columns:[[
 			{field:'ServerName',title:'服务器名称',width:100},
 			{field:'ServerIP',title:'服务器IP',width:100},
@@ -41,6 +46,10 @@ var init = function(){
 		onBeforeLoad:function(param){
 			param.txtCTLocId = param.q;
 		},
+		onShowPanel:function () {
+			var PharmacyName=PharmacyObj.getText();
+			$('#ClientLinkRoom').combogrid('grid').datagrid('reload',{q: PharmacyName});
+    	},
 		columns:[[
 			{field:'TLocDesc',title:'LocDesc',width:120},
 			{field:'TLocId',title:'LocId',width:90},
@@ -66,6 +75,10 @@ var init = function(){
 			param.Desc = param.q;
 			
 		},
+		onShowPanel:function () {
+			var DeptName=DeptObj.getText();
+			$('#ClientLinkDoc').combogrid('grid').datagrid('reload',{q: DeptName});
+    	},
 		columns:[[
 			{field:'CTRowId',title:'科室ID',width:90},
 			{field:'CTDesc',title:'科室',width:130}
@@ -87,6 +100,10 @@ var init = function(){
 			param.typeDesc = param.q;
 			
 		},
+		onShowPanel:function () {
+			var ClientNoteName=ClientNoteObj.getText();
+			$('#ClientNote').combogrid('grid').datagrid('reload',{q: ClientNoteName});
+    	},
 		columns:[[
 		    
 		    {field:'TypeId',title:'TypeId',width:50},
@@ -123,7 +140,7 @@ var init = function(){
 			{field:'ClientLinkRoomId',title:'ClientLinkRoomId',width:90,hidden:true},
 			{field:'ClientLinkDoc',title:'关联科室',width:90},
 			{field:'ClientLinkDocId',title:'ClientLinkDocId',width:90,hidden:true},
-			{field:'ClientNote',title:'ClientNote',width:90},
+			{field:'ClientNote',title:'关联队列类型',width:120},
 			{field:'ClientNoteId',title:'ClientNoteId',width:90,hidden:true},
 			{field:'ClientVoiceTopIP',title:'声音终端IP',width:90},
 			{field:'ClientTopIP',title:'诊室终端IP',width:90},

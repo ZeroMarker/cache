@@ -54,26 +54,16 @@ function InitMBRListInfoWinEvent(obj){
 						layer.msg('多耐分类未维护隔离医嘱，请先维护隔离医嘱!', {icon: 2});
 						return false;
 					}
-				}else{
-					layer.msg('多耐分类未维护隔离医嘱，请先维护隔离医嘱!', {icon: 2});
-					return false;
-				}
-				layer.open({
-					type: 1,
-					zIndex: 100,
-					area: ['600px','240px'],
-					skin: 'layer-class',
-					title: '处置隔离编辑', 
-					content: $('#layer'),
-					btn: ['下隔离医嘱','取消'],
-					btnAlign: 'c',
-					yes: function(index, layero){
-						var MRBShieldDesc = $.form.GetText("cboMRBIsoOEOrd");
+					else if (arrDT.length==1)
+					{
+						//唯一的隔离医嘱时就直接下隔离医嘱
+						var firstObj = arrDT[0];
+						var MRBShieldDesc = firstObj.BTOrdDesc;
 						if ((MRBShieldDesc=="")||(MRBShieldDesc=='--请选择--')){
-							layer.msg('请选择隔离医嘱!', {icon: 0});
+							layer.msg('维护的隔离医嘱名称不正确，请确认!', {icon: 0});
 							return false;
 						}
-					  	// 调用接口下隔离医嘱
+						// 调用接口下隔离医嘱
 					  	var ret = $.Tool.RunServerMethod('DHCHAI.DP.OEItmMast','SaveOrderItem',EpisodeDr,MRBShieldDesc,session['LOGON.USERID'],session['LOGON.CTLOCID']);
 						if(parseInt(ret)>0){
 							// Exec 方法功能处理消息
@@ -82,17 +72,54 @@ function InitMBRListInfoWinEvent(obj){
 								//var ret = $.Tool.RunServerMethod('websys.DHCMessageInterface','Exec',"","1079",Paadm,"","ResultID="+ResultID,session['LOGON.USERID']);
 							}
 							layer.msg('处置成功,已下隔离医嘱!', {icon: 1});
-							layer.close(index);	
 							obj.gridMBRInfo.ajax.reload(function(){},false);					
 						}else{
 							layer.msg('处置失败!', {icon: 2});
 							return false;
 						}
-					},
-					success: function(layero){
-						var button = layero.find(".layui-layer-btn0");
-					}	
-				});
+					}
+					else{
+						layer.open({
+							type: 1,
+							zIndex: 100,
+							area: ['600px','240px'],
+							skin: 'layer-class',
+							title: '处置隔离编辑', 
+							content: $('#layer'),
+							btn: ['下隔离医嘱','取消'],
+							btnAlign: 'c',
+							yes: function(index, layero){
+								var MRBShieldDesc = $.form.GetText("cboMRBIsoOEOrd");
+								if ((MRBShieldDesc=="")||(MRBShieldDesc=='--请选择--')){
+									layer.msg('请选择隔离医嘱!', {icon: 0});
+									return false;
+								}
+							  	// 调用接口下隔离医嘱
+							  	var ret = $.Tool.RunServerMethod('DHCHAI.DP.OEItmMast','SaveOrderItem',EpisodeDr,MRBShieldDesc,session['LOGON.USERID'],session['LOGON.CTLOCID']);
+								if(parseInt(ret)>0){
+									// Exec 方法功能处理消息
+									if(DetailsId!=""){
+										var ret = $.Tool.RunServerMethod('websys.DHCMessageInterface','ExecAll',DetailsId);
+										//var ret = $.Tool.RunServerMethod('websys.DHCMessageInterface','Exec',"","1079",Paadm,"","ResultID="+ResultID,session['LOGON.USERID']);
+									}
+									layer.msg('处置成功,已下隔离医嘱!', {icon: 1});
+									layer.close(index);	
+									obj.gridMBRInfo.ajax.reload(function(){},false);					
+								}else{
+									layer.msg('处置失败!', {icon: 2});
+									return false;
+								}
+							},
+							success: function(layero){
+								var button = layero.find(".layui-layer-btn0");
+							}	
+						});
+					}
+				}else{
+					layer.msg('多耐分类未维护隔离医嘱，请先维护隔离医嘱!', {icon: 2});
+					return false;
+				}
+				
 			}else{
 				var MRBShieldDesc = ISOOEOrdDesc;
 			  	// 调用接口下隔离医嘱

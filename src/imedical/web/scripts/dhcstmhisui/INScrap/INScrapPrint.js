@@ -1,41 +1,40 @@
 
-function PrintINScrap(Inscrap, AutoFlag){
-	if(Inscrap==null || Inscrap==''){
+function PrintINScrap(Inscrap, AutoFlag) {
+	if (isEmpty(Inscrap)) {
 		return;
 	}
 	
-	var INScrapObj = $.cm({
+	AutoFlag = typeof (AutoFlag) === 'undefined' ? 'N' : AutoFlag;
+	var MainObj = GetMainData(Inscrap);
+	var ScgId = MainObj.ScgStk;
+	var RecLoc = MainObj.SupLoc;
+	var PrintMode = GetPrintMode(RecLoc, ScgId);
+	var RaqName = 'DHCSTM_HUI_INScrap_Common.raq';
+	if (PrintMode != '') {
+		RaqName = 'DHCSTM_HUI_INScrap_Common_' + PrintMode + '.raq';
+	}
+	fileName = '{' + RaqName + '(Parref=' + Inscrap + ')}';
+	if (InScrapParamObj.IndirPrint != 'N') {
+		fileName = TranslateRQStr(fileName);
+		DHCSTM_DHCCPM_RQPrint(fileName);
+	} else {
+		DHCCPM_RQDirectPrint(fileName);
+	}
+	Common_PrintLog('D', Inscrap, AutoFlag);
+}
+/*
+ * description:取报损主表信息
+ * params: ingr:报损主表id
+ * return:
+*/
+function GetMainData(Inscrap) {
+	if (isEmpty(Inscrap)) {
+		return;
+	}
+	var MainObj = $.cm({
 		ClassName: 'web.DHCSTMHUI.DHCINScrap',
 		MethodName: 'Select',
 		Inscrap: Inscrap
-	},false);
-	AutoFlag = typeof(AutoFlag)=='undefined'? 'N' : AutoFlag;
-	
-	fileName="{DHCSTM_HUI_INScrap_Common.raq(Parref="+Inscrap+")}";
-	if(InScrapParamObj.IndirPrint!="N")
-	{
-		fileName=TranslateRQStr(fileName);
-		DHCSTM_DHCCPM_RQPrint(fileName);
-	}
-	else{
-		DHCCPM_RQDirectPrint(fileName);
-	}
-		Common_PrintLog('D', Inscrap, AutoFlag);
+	}, false);
+	return MainObj;
 }
-
-
-
-/*function PrintMBPL(inscrap,HospID,user){
-     if(inscrap==null || inscrap==''){
-        return;
-    }
-    var url='dhcstm.inscrapaction.csp?actiontype=PrintMBPL&inscrapRowid='+inscrap+'&HospId='+gHospId+'&user='+gUserId;
-    var responseText=ExecuteDBSynAccess(url);
-    var jsonData=Ext.util.JSON.decode(responseText);
-    if(jsonData.success=='true'){
-        mainData=jsonData.info;
-        if(mainData!=0){
-            Msg.info('error','插入数据失败');
-        }
-    }
-}*/

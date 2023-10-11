@@ -2,41 +2,68 @@
 
 $(function() {
 	init_Layout();
-	var obj = document.getElementById('add');
-	if (obj) {
-		obj.onclick = Add_Click;
-	}
-	var obj = document.getElementById('BtnRestore');
-	if (obj) {
-		obj.onclick = Restore_Click;
-	}
-	var numobj = document.getElementById('number');
-	if (numobj) {
-		numobj.onkeyup = celendno;
-	}
-	var obj = document.getElementById("stdate1");
-	if (obj) {
-		obj.onkeydown = getstdate;
-		if (obj.value == "") {
-			getdate();
-		}
-	}
-	var obj = document.getElementById("enddate1");
-	if (obj) {
-		obj.onkeydown = getenddate;
-		if (obj.value == "") {
-			getdate();
-		}
-	}
 	
-	var obj = document.getElementById("delete");
-	if (obj) {
-		obj.onclick = delete_Click;
-	}
-	var printobj = document.getElementById("Print");
-	if (printobj) {
-		printobj.onclick = Print_Click;
-	}
+	$HUI.linkbutton('#add', {
+		onClick: function () {
+			Add_Click();
+		}
+	});
+	
+	$HUI.linkbutton('#delete', {
+		onClick: function () {
+			delete_Click();
+		}
+	});
+	
+	$HUI.linkbutton('#Print', {
+		onClick: function () {
+			Print_Click();
+		}
+	});
+	
+	//恢复发放(目前没有使用)
+	$HUI.linkbutton('#BtnRestore', {
+		onClick: function () {
+			Restore_Click();
+		}
+	});
+	
+	$HUI.numberbox('#number', {
+		min: 1,
+		isKeyupChange: true,
+		onChange: function (newValue, oldValue) {
+			celendno();
+		}
+	});
+	
+	//类型
+    $("#type").combobox({
+        panelHeight: 'auto',
+		url: $URL + '?ClassName=web.UDHCJFInvprt&QueryName=FindInvType&ResultSetType=array',
+		valueField: 'code',
+		textField: 'text',
+		editable: false,
+		onChange: function(newValue, oldValue) {
+			getinvmax();
+		}
+    });
+    
+    //购入人员
+    $("#buyer").combobox({
+        panelHeight: 150,
+		url: $URL + '?ClassName=web.UDHCJFInvprt&QueryName=FindInvBuyer&ResultSetType=array',
+		valueField: 'id',
+		textField: 'text',
+		defaultFilter: 4,
+		selectOnNavigation: false,
+		onBeforeLoad: function (param) {
+			param.hospId = session['LOGON.HOSPID'];
+		},
+		onChange: function(newValue, oldValue) {
+			setValueById("userid", (newValue || ""));
+		}
+    });
+    
 });
 
 /**
@@ -62,102 +89,10 @@ function getinvmax() {
 	});
 }
 
-function getdate() {
-	var encmeth = getValueById('today');
-	if (cspRunServerMethod(encmeth, 'setdate_val', '', '') == '1') {};
-}
-
-function setdate_val(value) {
-	var enddate1 = document.getElementById('enddate1');
-	var enddate = document.getElementById('enddate');
-	var stdate1 = document.getElementById('stdate1');
-	var stdate = document.getElementById('stdate');
-	today = value;
-	curdate = value;
-	var curdate1 = value;
-	var str = curdate.split("/");
-	curdate = str[2] + "-" + str[1] + "-" + str[0];
-	if (enddate1.value == "") {
-		enddate1.value = curdate;
-		enddate.value = curdate1;
-	}
-	if (stdate1.value == "") {
-		stdate1.value = curdate;
-		stdate.value = curdate1;
-	}
-	checkdate();
-}
-
-function checkdate() {
-	var end1obj = document.getElementById('enddate1');
-	var endobj = document.getElementById('enddate');
-	var enddate1 = document.getElementById('enddate1').value;
-	var stdate1 = document.getElementById('stdate1').value;
-	if ((enddate1 != "") & (stdate1 != "")) {
-		var date = enddate1.split("-");
-		var date1 = stdate1.split("-");
-		if (eval(date1[0]) > eval(date[0])) {
-			end1obj.value = "";
-			end1obj.value = "";
-			DHCWeb_HISUIalert(t['17']);
-			return;
-		}
-		if (eval(date1[1]) > eval(date[1])) {
-			end1obj.value = "";
-			end1obj.value = "";
-			DHCWeb_HISUIalert(t['17']);
-			return;
-		}
-		if (eval(date1[2]) > eval(date[2])) {
-			end1obj.value = "";
-			end1obj.value = "";
-			DHCWeb_HISUIalert(t['17']);
-			return;
-		}
-	}
-}
-
-function getstdate() {
-	var key = websys_getKey(e);
-	if (key == 13) {
-		var mybirth = getValueById("stdate1");
-		if ((mybirth == "") || ((mybirth.length != 8) && ((mybirth.length != 10)))) {
-			var obj = document.getElementById("stdate1");
-			obj.className = 'clsInvalid';
-			focusById("stdate1");
-			return websys_cancel();
-		} else {
-			var obj = document.getElementById("stdate1");
-			obj.className = 'clsvalid';
-		}
-		if ((mybirth.length == 8)) {
-			var mybirth = mybirth.substring(0, 4) + "-" + mybirth.substring(4, 6) + "-" + mybirth.substring(6, 8);
-			setValueById("stdate1", mybirth);
-		}
-		var myrtn = DHCWeb_IsDate(mybirth, "-");
-		if (!myrtn) {
-			var obj = document.getElementById("stdate1");
-			obj.className = 'clsInvalid';
-			focusById("stdate1");
-			return websys_cancel();
-		} else {
-			var obj = document.getElementById("stdate1");
-			obj.className = 'clsvalid';
-		}
-		checkdate();
-		var obj = document.getElementById("stdate1");
-		var str1 = obj.value.split("-");
-		var str2 = str1[2] + "/" + str1[1] + "/" + str1[0];
-		var stdateobj = document.getElementById("stdate");
-		stdateobj.value = str2;
-		focusById('enddate1');
-	}
-}
-
 function delete_Click() {
 	var row = $HUI.datagrid("#tUDHCJFInvprtBuy").getSelected();
 	if (!row || !row.TRowid) {
-		DHCWeb_HISUIalert('请选择要删除的记录');
+		$.messager.popover({msg: '请选择要删除的记录', type: 'info'});
 		return;
 	}
 	var rowId = row.TRowid;
@@ -175,51 +110,14 @@ function delete_Click() {
 					});
 					break;
 				case "-2":
-					$.messager.alert("提示", "此号段已使用，不能删除", "info");
+					$.messager.popover({msg: '此号段已使用，不能删除', type: 'info'});
 					break;
 				default:
-					$.messager.alert("提示", "删除失败：" + rtn, "error");
+					$.messager.popover({msg: '删除失败：' + rtn, type: 'error'});
 				}
 			});
 		}
 	});
-}
-
-function getenddate() {
-	var key = websys_getKey(e);
-	if (key == 13) {
-		var mybirth = getValueById("enddate1");
-		if ((mybirth == "") || ((mybirth.length != 8) && ((mybirth.length != 10)))) {
-			var obj = document.getElementById("enddate1");
-			obj.className = 'clsInvalid';
-			focusById("enddate1");
-			return websys_cancel();
-		} else {
-			var obj = document.getElementById("enddate1");
-			obj.className = 'clsvalid';
-		}
-		if ((mybirth.length == 8)) {
-			var mybirth = mybirth.substring(0, 4) + "-" + mybirth.substring(4, 6) + "-" + mybirth.substring(6, 8);
-			setValueById("enddate1", mybirth);
-		}
-		var myrtn = DHCWeb_IsDate(mybirth, "-");
-		if (!myrtn) {
-			var obj = document.getElementById("enddate1");
-			obj.className = 'clsInvalid';
-			focusById("enddate1");
-			return websys_cancel();
-		} else {
-			var obj = document.getElementById("enddate1");
-			obj.className = 'clsvalid';
-		}
-		checkdate();
-		var obj = document.getElementById("enddate1");
-		var str1 = obj.value.split("-");
-		var str2 = str1[2] + "/" + str1[1] + "/" + str1[0];
-		var enddateobj = document.getElementById("enddate");
-		enddateobj.value = str2;
-		focusById('Find');
-	}
 }
 
 function Add_Click() {
@@ -232,52 +130,44 @@ function Add_Click() {
 	var useflag = "";
 	//add by zhl anh
 	if (userid == "") {
-		DHCWeb_HISUIalert(t['14']);
+		$.messager.popover({msg: '购入人不能为空', type: 'info'});
 		focusById('buyer');
 		return;
 	}
 	if (type == "") {
-		DHCWeb_HISUIalert(t['13']);
+		$.messager.popover({msg: '发票类型不能为空', type: 'info'});
 		focusById('type');
 		return;
 	}
-	if (startno == "" || endno == "") {
-		DHCWeb_HISUIalert(t['01']);
+	if ((startno == "") || (endno == "")) {
+		$.messager.popover({msg: '起始号码或结束号码不能为空', type: 'info'});
 		focusById('endno');
 		return;
 	}
 	if (!checkno(startno)) {
-		DHCWeb_HISUIalert(t['02']);
+		$.messager.popover({msg: '起始号码输入有误', type: 'info'});
 		focusById('Startno');
 		return;
 	}
 	if (!checkno(endno)) {
-		DHCWeb_HISUIalert(t['03']);
+		$.messager.popover({msg: '结束号码输入有误', type: 'info'});
 		focusById('endno');
 		return;
 	}
 	if (parseInt(endno, 10) < parseInt(startno, 10)) {
-		DHCWeb_HISUIalert(t['04']);
+		$.messager.popover({msg: '结束号码不能小于开始号码，请重新输入', type: 'info'});
 		focusById('endno');
 		return;
 	}
 	if (endno.length != startno.length) {
-		DHCWeb_HISUIalert(t['05']);
+		$.messager.popover({msg: '结束号码的长度不等于开始号码的长度,请重新输入', type: 'info'});
 		focusById('endno');
 		return;
 	}
-	/*
-	var encmeth = getValueById('getbuynote');
-	var buynum = cspRunServerMethod(encmeth, '', '', startno, endno,type);
-	if (eval(buynum) > 0) {
-		DHCWeb_HISUIalert(t['09']);
-		return;
-	}
-	*/
-	var userid = getValueById("user");
+	
 	$.messager.confirm("确认", "确定购入从[<font color='red'>" + title + startno + "</font>]到[<font color='red'>" + title + endno + "</font>]的发票？", function(r) {
 		if (r) {
-			var str = "^^" + type + "^" + buyuser + "^^" + startno + "^" + endno + "^^" + userid + "^^" + useflag + "^" + title;
+			var str = "^^" + type + "^" + buyuser + "^^" + startno + "^" + endno + "^^" + session['LOGON.USERID'] + "^^" + useflag + "^" + title;
 			$.m({
 				ClassName: "web.UDHCJFInvprt",
 				MethodName: "dhcamtmaginsert",
@@ -287,20 +177,30 @@ function Add_Click() {
 				switch(rtn) {
 				case "0":
 					$.messager.alert("提示", "购入成功", "success", function() {
-						$("#Find").click();
+						reloadMenuPanel();
 					});
 					break;
 				case "-505":
-					DHCWeb_HISUIalert(t['09']);
+					$.messager.popover({msg: '发票已经购入，不能重复购入', type: 'info'});
 					break;
 				default:
-					DHCWeb_HISUIalert("购入失败：" + rtn);
+					$.messager.popover({msg: '购入失败：' + rtn, type: 'error'});
 				}
 			});
 		}
 	});
 }
 
+/**
+* 购入成功后重新获取新的发票号段
+*/
+function reloadMenuPanel() {
+	$('#number').numberbox('clear');
+	setValueById('endno', '');
+	getinvmax();            //购入成功后重新获取新的发票号段
+	$('#Find').click();
+}
+	
 function checkno(inputtext) {
 	var checktext = "1234567890";
 	for (var i = 0; i < inputtext.length; i++) {
@@ -338,20 +238,20 @@ function celendno() {
 function Restore_Click() {
 	var row = $HUI.datagrid("#tUDHCJFInvprtBuy").getSelected();
 	if (!row || !row.TRowid) {
-		DHCWeb_HISUIalert('请先选择一行');
+		$.messager.popover({msg: '请选择一条记录', type: 'info'});
 		return;
 	}
 	var returnFlag = rowData.TReturnFlag;
 	if (returnFlag == "") {
-		DHCWeb_HISUIalert(t['18']);
+		$.messager.popover({msg: '此收据不是退回收据或已经退回', type: 'info'});
 		return;
 	}
 	var rowId = row.TRowid;
 	var encmeth = getValueById('GetRestore');
 	if (cspRunServerMethod(encmeth, rowId) == 0) {
-		DHCWeb_HISUIalert(t['19']);
+		$.messager.popover({msg: '保存成功', type: 'success'});
 	} else {
-		DHCWeb_HISUIalert(t['20']);
+		$.messager.popover({msg: '保存失败', type: 'error'});
 	}
 	$("#Find").click();
 }
@@ -365,40 +265,14 @@ function Print_Click() {
 	var type = getValueById('type');
 	var buyer = getValueById('buyer');
 	var hospId = getValueById('hospId');
-	var fileName = "DHCBILL-InvBuyList.rpx" + "&type=" + type+ "&stdate=" + stDate + "&enddate=" + endDate + "&buyer=" + buyer;
-	fileName += "&hospId=" + hospId;
-	DHCCPM_RQPrint(fileName, 1200, 750);
+	var fileName = "DHCBILL-InvBuyList.rpx" + "&type=" + type+ "&stdate=" + stDate + "&enddate=" + endDate;
+	fileName += "&buyer=" + buyer + "&hospId=" + hospId;
+	var maxHeight = ($(window).height() || 550) * 0.8;
+	var maxWidth = ($(window).width() || 1366) * 0.8;
+	DHCCPM_RQPrint(fileName, maxWidth, maxHeight);
 }
 
 function init_Layout() {
-	$('#cStartno').parent().parent().css("width","71px");
+	$('#cStartno').parent().parent().css("width", "71px");
 	DHCWeb_ComponentLayout();
-	
-	//类型
-    $("#type").combobox({
-        panelHeight: 'auto',
-		url: $URL + '?ClassName=web.UDHCJFInvprt&QueryName=FindInvType&ResultSetType=array',
-		valueField: 'code',
-		textField: 'text',
-		editable: false,
-		onChange: function(newValue, oldValue) {
-			getinvmax();
-		}
-    });
-    
-    //购入人员
-    $("#buyer").combobox({
-        panelHeight: 150,
-		url: $URL + '?ClassName=web.UDHCJFInvprt&QueryName=FindInvBuyer&ResultSetType=array',
-		valueField: 'id',
-		textField: 'text',
-		defaultFilter: 4,
-		selectOnNavigation: false,
-		onBeforeLoad: function (param) {
-			param.hospId = session['LOGON.HOSPID'];
-		},
-		onChange: function(newValue, oldValue) {
-			setValueById("userid", (newValue || ""));
-		}
-    });
 }

@@ -1,0 +1,328 @@
+﻿/// Function:HOS 组织部门
+/// Creator: 钟荣枫
+var SAVE_ACTION_URL = "../csp/dhc.bdp.ext.entitydatatrans.csp?pClassName=web.DHCBL.CT.HOSDepartment&pClassMethod=SaveEntity&pEntityName=web.Entity.CT.HOSDepartment";
+var DELETE_ACTION_URL = "../csp/dhc.bdp.ext.datatrans.csp?pClassName=web.DHCBL.CT.HOSDepartment&pClassMethod=DeleteData";
+
+var init = function(){
+    
+    var URL_Icon="../scripts/bdp/Framework/icons/";
+    var windowHight = document.documentElement.clientHeight;        //可获取到高度
+    var windowWidth = document.documentElement.clientWidth;
+    var columns =[[  
+                    {field:'ID',title:'ID',hidden:true},
+                    {field:'DEPTCode',title:'代码',width:180,sortable:true},
+                    {field:'DEPTDesc',title:'名称',width:180,sortable:true}, 
+                    
+                    {field:'DEPTAbbrev',title:'部门简称',width:100,sortable:true}, 
+                    {field:'DEPTIntro',title:'部门简介',width:100,sortable:true}, 
+                    {field:'DEPTDeptCode',title:'上级部门',width:160,sortable:true},
+                    
+                    {field:'DEPTORGCode',title:'所属机构',width:160,sortable:true},
+                    {field:'DEPTORGACCode',title:'行政类型',width:160,sortable:true},
+                    
+                    {field:'DEPTAddress',title:'部门地址',width:100,sortable:true},
+                    {field:'DEPTTel',title:'联系电话',width:100,sortable:true},
+                    {field:'DEPTFax',title:'传真',width:100,sortable:true},
+                    {field:'DEPTEmail',title:'邮箱',width:100,sortable:true},
+                    {field:'DEPTFoundDate',title:'建立日期',width:100,sortable:true},
+                    {field:'DEPTCancelDate',title:'注销日期',width:100,sortable:true},
+
+                    {field:'DEPTActivity',title:'是否有效',align:'center',width:80,sortable:true,formatter:ReturnFlagIcon},                    
+                    {field:'DEPTStartDate',title:'开始日期',width:180,sortable:true}, 
+                    {field:'DEPTEndDate',title:'结束日期',width:180,sortable:true}, 
+                    {field:'DEPTSeqNo',title:'排序号',width:60,sortable:true}, 
+                    {field:'DEPTPYCode',title:'拼音码',width:80,sortable:true},
+                    {field:'DEPTWBCode',title:'五笔码',width:80,sortable:true},                   
+                    {field:'DEPTMark',title:'备注',width:100,sortable:true},                  
+                ]];
+    var mygrid = $HUI.datagrid("#mygrid",{
+        url: $URL,
+         queryParams:{
+            ClassName:"web.DHCBL.CT.HOSDepartment",
+            QueryName:"GetList"
+        }, 
+        columns: columns,  //列信息
+        ClassTableName:'CT.BDP.CT.HOSDepartment',
+        SQLTableName:'CT_BDP_CT.HOS_Department',
+        pagination: true,   //pagination    boolean 设置为 true，则在数据网格（datagrid）底部显示分页工具栏。
+        pageSize:20,
+        pageList:[5,10,15,20,25,30,50,75,100,200,300], 
+        singleSelect:true,
+        idField:'ID', 
+        rownumbers:true,    //设置为 true，则显示带有行号的列。
+        //fitColumns:true, //设置为 true，则会自动扩大或缩小列的尺寸以适应网格的宽度并且防止水平滚动 
+        onDblClickRow:function(rowIndex,rowData){
+            UpdateData();
+        }
+    });
+
+
+
+    //上级部门下拉框 
+    $('#DEPTDeptCode').combobox({ 
+        url:$URL+"?ClassName=web.DHCBL.CT.HOSDepartment&QueryName=GetDataForCmb1&ResultSetType=array",
+        valueField:'ID',
+        textField:'DEPTDesc'
+    });
+  
+
+    //所属机构下拉框 
+    $('#DEPTORGCode').combobox({ 
+        url:$URL+"?ClassName=web.DHCBL.CT.HOSOrganization&QueryName=GetDataForCmb1&ResultSetType=array",
+        valueField:'ID',
+        textField:'ORGDesc'
+    });      
+    //行政类型下拉框 
+    $('#DEPTORGACCode').combobox({ 
+        url:$URL+"?ClassName=web.DHCBL.CT.HOSOrgAdminType&QueryName=GetDataForCmb1&ResultSetType=array",
+        valueField:'ID',
+        textField:'ORGACDesc'
+    });
+
+
+    
+
+   //搜索回车事件
+    $('#TextDesc,#TextCode').keyup(function(event){
+        if(event.keyCode == 13) {
+          SearchFunLib();
+        }
+    });  
+    //查询按钮
+    $("#btnSearch").click(function (e) { 
+         SearchFunLib();
+     })  
+     
+    //重置按钮
+    $("#btnRefresh").click(function (e) { 
+         ClearFunLib();
+     })  
+    
+    //点击添加按钮
+    $("#btnAdd").click(function(e){
+        AddData();
+    });
+    //点击修改按钮
+    $("#btnUpdate").click(function(e){
+        UpdateData();
+    });
+    //点击删除按钮
+    $("#btnDel").click(function (e) { 
+            DeleteData();
+    }); 
+    
+     //查询方法
+    function SearchFunLib(){
+        var code=$.trim($("#TextCode").val());
+        var desc=$.trim($('#TextDesc').val());
+        $('#mygrid').datagrid('load',  { 
+            ClassName:"web.DHCBL.CT.HOSDepartment",
+            QueryName:"GetList" ,   
+            'code':code,    
+            'desc': desc
+        });
+        $('#mygrid').datagrid('unselectAll');
+    }
+    
+    //重置方法
+    function ClearFunLib()
+    {
+        $("#TextCode").val("");
+        $("#TextDesc").val("");
+        $('#mygrid').datagrid('load',  { 
+            ClassName:"web.DHCBL.CT.HOSDepartment",
+            QueryName:"GetList"
+        });
+        $('#mygrid').datagrid('unselectAll');
+    }
+    //失焦事件
+     $('#DEPTDesc').bind('blur',function(){
+          var DEPTDesc=$("#DEPTDesc").val()  
+          var PYCode=tkMakeServerCall("web.DHCBL.BDP.FunLib","GetPYCODE",DEPTDesc) 
+          var WBCode=tkMakeServerCall("web.DHCBL.BDP.FunLib","GetSWBCODE",DEPTDesc,1) 
+          $("#DEPTPYCode").val(PYCode)
+          $("#DEPTWBCode").val(WBCode)                                           
+      });
+     //点击新增按钮
+    function AddData() { 
+        $("#myWin").show(); 
+        
+        $('#DEPTDeptCode,#DEPTORGCode,#DEPTORGACCode').combobox("reload")        
+
+        var myWin = $HUI.dialog("#myWin",{
+            iconCls:'icon-w-add',
+            resizable:true,
+            title:'新增',
+            modal:true,
+            buttonAlign : 'center',
+            buttons:[{
+                text:'保存',
+                //iconCls:'icon-save',
+                id:'save_btn',
+                handler:function(){
+                    SaveFunLib("");
+                }
+            },{
+                text:'关闭',
+                //iconCls:'icon-cancel',
+                handler:function(){
+                    myWin.close();
+                }
+            }]
+        }); 
+        $('#form-save').form("clear"); 
+        $HUI.checkbox("#DEPTActivity").setValue(true);
+        $('#DEPTStartDate').datebox('setValue', getCurentDateStr());
+        $("#save_btn").removeClass("l-btn l-btn-small").addClass("l-btn l-btn-small green");
+    }
+    
+
+    //点击修改按钮
+    function UpdateData() {
+        $('#DEPTDeptCode,#DEPTORGCode,#DEPTORGACCode').combobox("reload")
+        var record = mygrid.getSelected(); 
+        if (record){  
+                     
+             //调用后台openData方法给表单赋值
+            var id = record.ID;
+            $.cm({
+                ClassName:"web.DHCBL.CT.HOSDepartment",
+                MethodName:"OpenData",
+                id:id
+            },function(jsonData){ 
+                /*//滚动条回到最上面
+                $("#DEPTCode").focus()
+                $("#DEPTCode").blur() 
+*/
+                if (jsonData.DEPTActivity=="Y")
+                {
+                    $HUI.checkbox("#DEPTActivity").setValue(true);    
+                }else{
+                    $HUI.checkbox("#DEPTActivity").setValue(false);
+                }                
+                $('#form-save').form("load",jsonData);
+                
+            });
+            $("#myWin").show(); 
+            var myWin = $HUI.dialog("#myWin",{
+                iconCls:'icon-w-edit',
+                resizable:true,
+                title:'修改',
+                modal:true,
+                buttons:[{
+                    text:'保存',
+                    //iconCls:'icon-save',
+                    id:'save_btn',
+                    handler:function(){
+                        SaveFunLib(id);
+                    }
+                },{
+                    text:'关闭',
+                    //iconCls:'icon-cancel',
+                    handler:function(){
+                        myWin.close();
+                    }
+                }]
+            }); 
+            $("#save_btn").removeClass("l-btn l-btn-small").addClass("l-btn l-btn-small green"); 
+        }else{
+            $.messager.alert('错误提示','请先选择一条记录!',"error");
+        }
+    }
+    
+    ///新增、更新
+    function SaveFunLib(id)
+    {            
+        var code=$.trim($("#DEPTCode").val());
+        var desc=$.trim($("#DEPTDesc").val());
+        var datefrom=$("#DEPTStartDate").datebox("getValue");
+        var dateto=$("#DEPTEndDate").datebox("getValue");
+        if (code=="")
+        {
+            $.messager.alert('错误提示','代码不能为空!',"error");
+            return;
+        }
+        if (desc=="")
+        {
+            $.messager.alert('错误提示','名称不能为空!',"error");
+            return;
+        }
+        if (datefrom=="")
+        {
+            $.messager.alert('错误提示','开始日期不能为空!',"error");
+            return;
+        }
+        if (datefrom != "" && dateto != "") {   
+            if (datefrom >dateto) {
+                $.messager.alert('错误提示','开始日期不能大于结束日期!',"error"); 
+                return;
+            }
+        }
+        $.messager.confirm('提示', "确认要保存数据吗?", function(r){
+            if (r){
+                $('#form-save').form('submit', { 
+                    url: SAVE_ACTION_URL,                     
+                    success: function (data) { 
+                        var data=eval('('+data+')'); 
+                        if (data.success == 'true') { 
+                            $.messager.popover({msg: '提交成功！',type:'success',timeout: 1000}); 
+                            $('#mygrid').datagrid('reload');  // 重新载入当前页面数据 
+                            $('#mygrid').datagrid('unselectAll');
+                            $('#myWin').dialog('close'); // close a dialog
+                        } 
+                        else { 
+                            var errorMsg ="保存失败！"
+                            if (data.errorinfo) {
+                                errorMsg =errorMsg+ '<br/>错误信息:' + data.errorinfo
+                            }
+                            $.messager.alert('操作提示',errorMsg,"error");
+                        } 
+                    } 
+             });
+        }
+    })
+     
+   }
+
+    ///删除
+    function DeleteData()
+    {    
+        //更新
+        var row = $("#mygrid").datagrid("getSelected"); 
+        if (!(row))
+        {   $.messager.alert('错误提示','请先选择一条记录!',"error");
+            return;
+        } 
+        $.messager.confirm('提示', '确定要删除所选的数据吗?', function(r){
+            if (r){ 
+                var rowid=row.ID; 
+                $.ajax({
+                    url:DELETE_ACTION_URL,  
+                    data:{"id":rowid},  
+                    type:"POST",   
+                    //dataType:"TEXT",  
+                    success: function(data){
+                              var data=eval('('+data+')'); 
+                              if (data.success == 'true') {  
+                                $.messager.popover({msg: '删除成功！',type:'success',timeout: 1000}); 
+                                $('#mygrid').datagrid('reload');  // 重新载入当前页面数据  
+                                $('#mygrid').datagrid('unselectAll');
+                              } 
+                              else { 
+                                var errorMsg ="删除失败！"
+                                if (data.info) {
+                                    errorMsg =errorMsg+ '<br/>错误信息:' + data.info
+                                }
+                                 $.messager.alert('操作提示',errorMsg,"error");
+                    
+                            }           
+                    }  
+                }) 
+            }
+        });
+    } 
+
+    HISUI_Funlib_Translation('mygrid');
+    HISUI_Funlib_Sort('mygrid'); 
+};
+$(init);

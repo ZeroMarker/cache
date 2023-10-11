@@ -259,7 +259,8 @@ function RegNo_keydown(e)
 				//判断是否未付费、是否存在另外未总检的记录
 				var ret=tkMakeServerCall("web.DHCPE.DHCPEIAdm","HadNoGenRecord",ArriveRecord);
 				if (ret!=""){
-					alert(ret);
+					//alert(ret);
+					 $.messager.alert("提示",ret,"info"); 
 					return false;
 				}else{
 					var ret=tkMakeServerCall("web.DHCPE.DHCPEIAdm","IAdmArrived",ArriveRecord);
@@ -340,4 +341,12 @@ function SelectRowHandler(index,rowdata) {
    
 	//ShowCurRecord(selectrow);
 
+}
+
+function SelectName(value)
+{
+	if (value=="") return;
+	var ValueArr=value.split("^");
+	$("#Name").val(ValueArr[1])
+	
 }

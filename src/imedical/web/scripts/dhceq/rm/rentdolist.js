@@ -1,6 +1,15 @@
 var columns=getCurColumnsInfo("RM.G.Queue.Rent","","",""); 
 var rentListColumns=getCurColumnsInfo("RM.G.Rent.RentList","","",""); //add by csj 2020-02-10 待提交申请单列定义
 $(function(){
+	//added by LMH 20230421 UI 增加上外边框,上边框颜色动态调整
+	if ((typeof(HISUIStyleCode)!='undefined')&&(HISUIStyleCode=="lite")){
+		// 极简版
+		$('#tRentTable').css({'border-top':'1px solid #E2E2E2'})
+		$('#tUnSubmitTable').css({'border-top':'1px solid #E2E2E2'})
+    }else{
+		$('#tRentTable').css({'border-top':'1px solid #CCC'})
+		$('#tUnSubmitTable').css({'border-top':'1px solid #CCC'})
+	}
 	initDocument();
 	$(function(){$("#Loading").fadeOut("fast");});
 });
@@ -21,7 +30,7 @@ function initDocument()
 		},
 	    fit:true,
 	    singleSelect:true,
-	    rownumbers: true,
+	    //rownumbers: true,
 	    columns:columns,
 		pagination:true,
 		pageSize:15,
@@ -64,7 +73,7 @@ function initUnSubmitRentList()
 	},
     fit:true,
     singleSelect:false,
-    rownumbers: true,
+     //rownumbers: true,
     columns:rentListColumns,	//modified by csj 2020-02-10 待提交申请单输出列
 	pagination:true,
 	pageSize:15,

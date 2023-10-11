@@ -1,6 +1,7 @@
-var init = function () {
+var ReqTemplateFlag = false;
+var init = function() {
 	$HUI.radio("[name='ReqMode']", {
-		onChecked: function (e, value) {
+		onChecked: function(e, value) {
 			var ReqMode = $("input[name='ReqMode']:checked").val();
 			if (ReqMode == '0') {
 				$('#UserGrp').combobox({
@@ -14,24 +15,33 @@ var init = function () {
 		}
 	});
 	var LocParams = JSON.stringify(addSessionParams({
-				Type: 'Login'
-			}));
+		Type: 'Login'
+	}));
 	var LocBox = $HUI.combobox('#LocId', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + LocParams,
-			valueField: 'RowId',
-			textField: 'Description'
-		});
-	//专业组
+		url: $URL + '?ClassName=web.DHCSTMHUI.Common.Dicts&QueryName=GetCTLoc&ResultSetType=array&Params=' + LocParams,
+		valueField: 'RowId',
+		textField: 'Description',
+		onSelect: function(record) {
+			var LocId = record['RowId'];
+			$('#UserGrp').combobox('clear');
+			$('#UserGrp').combobox('reload', $URL
+					+ '?ClassName=web.DHCSTMHUI.DHCSubLocUserGroup&QueryName=GetLocGrp&ResultSetType=Array&Params='
+					+ JSON.stringify({
+						SubLoc: LocId
+					}));
+		}
+	});
+	// 专业组
 	var UserGrpParams = JSON.stringify(addSessionParams({
-				User: gUserId,
-				SubLoc: gLocId,
-				ReqFlag: "1"
-			}));
+		User: gUserId,
+		SubLoc: gLocId,
+		ReqFlag: '1'
+	}));
 	var UserGrpBox = $HUI.combobox('#UserGrp', {
-			url: $URL + '?ClassName=web.DHCSTMHUI.DHCSubLocUserGroup&QueryName=GetUserGrp&ResultSetType=array&Params=' + UserGrpParams,
-			valueField: 'RowId',
-			textField: 'Description'
-		});
+		url: $URL + '?ClassName=web.DHCSTMHUI.DHCSubLocUserGroup&QueryName=GetUserGrp&ResultSetType=array&Params=' + UserGrpParams,
+		valueField: 'RowId',
+		textField: 'Description'
+	});
 
 	var UomCombox = {
 		type: 'combobox',
@@ -40,8 +50,10 @@ var init = function () {
 			valueField: 'RowId',
 			textField: 'Description',
 			required: true,
+			tipPosition: 'bottom',
 			mode: 'remote',
-			onBeforeLoad: function (param) {
+			editable: false,
+			onBeforeLoad: function(param) {
 				var Select = MainGrid.getRows()[MainGrid.editIndex];
 				if (!isEmpty(Select)) {
 					param.Inci = Select.InciId;
@@ -49,28 +61,28 @@ var init = function () {
 			}
 		}
 	};
-	var HandlerParams = function () {
-		var Scg = $("#Scg").combotree('getValue');
-		var LocId = $("#LocId").combo('getValue');
-		var ReqLoc = $("#LocId").combo('getValue');
+	var HandlerParams = function() {
+		var Scg = $('#Scg').combotree('getValue');
+		var LocId = $('#LocId').combo('getValue');
+		var ReqLoc = $('#LocId').combo('getValue');
 		var QtyFlag = '0';
-		var ChargeFlag="";
-		var AllowChargeMat=GetAppPropValue('DHCSTINDISPM').AllowChargeMat;
-		if (AllowChargeMat!="Y"){ChargeFlag="N";}
+		var ChargeFlag = '';
+		var AllowChargeMat = GetAppPropValue('DHCSTINDISPM').AllowChargeMat;
+		if (AllowChargeMat != 'Y') { ChargeFlag = 'N'; }
 		var Obj = {
 			StkGrpRowId: Scg,
-			StkGrpType: "M",
+			StkGrpType: 'M',
 			Locdr: LocId,
-			NotUseFlag: "N",
+			NotUseFlag: 'N',
 			QtyFlag: QtyFlag,
 			ToLoc: ReqLoc,
-			ReqModeLimited: "",
-			NoLocReq: "N",
-			ChargeFlag:ChargeFlag
+			ReqModeLimited: '',
+			NoLocReq: 'N',
+			ChargeFlag: ChargeFlag
 		};
-		return Obj
-	}
-	var SelectRow = function (row) {
+		return Obj;
+	};
+	var SelectRow = function(row) {
 		var Rows = MainGrid.getRows();
 		var Row = Rows[MainGrid.editIndex];
 		MainGrid.updateRow({
@@ -91,166 +103,170 @@ var init = function () {
 			Row.SpAmt = accMul(Number(Row.Qty), Number(Row.Sp));
 			Row.RpAmt = accMul(Number(Row.Qty), Number(Row.Rp));
 		}
-		setTimeout(function () {
+		setTimeout(function() {
 			MainGrid.refreshRow();
 			MainGrid.startEditingNext('InciDesc');
 		}, 0);
-	}
+	};
 
-	var MainCm = [[{
-				title: 'RowId',
-				field: 'RowId',
-				width: 50,
-				saveCol: true,
-				hidden: true
-			}, {
-				title: '物资RowId',
-				field: 'InciId',
-				width: 50,
-				saveCol: true,
-				hidden: true
-			}, {
-				title: '物资代码',
-				field: 'InciCode',
-				width: 100
-			}, {
-				title: '物资名称',
-				field: 'InciDesc',
-				editor: InciEditor(HandlerParams, SelectRow),
-				width: 150
-			}, {
-				title: "规格",
-				field: 'Spec',
-				width: 100
-			}, {
-				title: "厂商",
-				field: 'Manf',
-				width: 150
-			}, {
-				title: "数量",
-				field: 'Qty',
-				width: 80,
-				saveCol: true,
-				editor: {
-					type: 'numberbox',
-					options: {
-						min: 0,
-						required: true
-					}
-				},
-				align: 'right'
-			}, {
-				title: "单位",
-				field: 'UomId',
-				saveCol: true,
-				formatter: CommonFormatter(UomCombox, 'UomId', 'UomDesc'),
-				editor: UomCombox,
-				width: 80
-			}, {
-				title: "售价",
-				field: 'Sp',
-				width: 80,
-				align: 'right'
-			}, {
-				title: "售价金额",
-				field: 'SpAmt',
-				width: 100,
-				align: 'right'
-			}, {
-				title: '备注',
-				field: 'Remark',
-				editor: {
-					type: 'validatebox'
-				},
-				saveCol: true,
-				width: 150
-			}, {
-				title: '状态',
-				field: 'Status',
-				width: 90,
-				formatter: function (value, row, index) {
-					if (value == "G") {
-						return "待处理";
-					} else if (value == "D") {
-						return "已处理";
-					} else if (value == "X") {
-						return "已作废";
-					} else if (value == "R") {
-						return "已拒绝";
-					}
+	var MainCm = [[
+		{
+			title: 'RowId',
+			field: 'RowId',
+			width: 50,
+			saveCol: true,
+			hidden: true
+		}, {
+			title: '物资RowId',
+			field: 'InciId',
+			width: 50,
+			saveCol: true,
+			hidden: true
+		}, {
+			title: '物资代码',
+			field: 'InciCode',
+			width: 150
+		}, {
+			title: '物资名称',
+			field: 'InciDesc',
+			editor: InciEditor(HandlerParams, SelectRow),
+			width: 180
+		}, {
+			title: '规格',
+			field: 'Spec',
+			width: 100
+		}, {
+			title: '生产厂家',
+			field: 'Manf',
+			width: 150
+		}, {
+			title: '数量',
+			field: 'Qty',
+			width: 80,
+			saveCol: true,
+			editor: {
+				type: 'numberbox',
+				options: {
+					min: 0,
+					tipPosition: 'bottom',
+					required: true,
+					precision: GetFmtNum('FmtQTY')
+				}
+			},
+			align: 'right'
+		}, {
+			title: '单位',
+			field: 'UomId',
+			saveCol: true,
+			formatter: CommonFormatter(UomCombox, 'UomId', 'UomDesc'),
+			editor: UomCombox,
+			width: 80
+		}, {
+			title: '售价',
+			field: 'Sp',
+			width: 80,
+			align: 'right'
+		}, {
+			title: '售价金额',
+			field: 'SpAmt',
+			width: 100,
+			align: 'right'
+		}, {
+			title: '备注',
+			field: 'Remark',
+			editor: {
+				type: 'validatebox'
+			},
+			saveCol: true,
+			width: 150
+		}, {
+			title: '状态',
+			field: 'Status',
+			width: 90,
+			formatter: function(value, row, index) {
+				if (value == 'G') {
+					return '待处理';
+				} else if (value == 'D') {
+					return '已处理';
+				} else if (value == 'X') {
+					return '已作废';
+				} else if (value == 'R') {
+					return '已拒绝';
 				}
 			}
-		]];
+		}
+	]];
 
 	var MainGrid = $UI.datagrid('#MainGrid', {
-			queryParams: {
-				ClassName: 'web.DHCSTMHUI.DHCINDispReqItm',
-				QueryName: 'DHCINDispReqItm'
-			},
-			deleteRowParams: {
-				ClassName: 'web.DHCSTMHUI.DHCINDispReqItm',
-				MethodName: 'jsDelete'
-			},
-			columns: MainCm,
-			remoteSort: false,
-			showBar: true,
-			showAddDelItems: true,
-			onClickCell: function (index, field, value) {
-				MainGrid.commonClickCell(index, field, value);
-			},
-			onBeforeCellEdit: function (index, field) {
-				if ($HUI.checkbox('#CompFlag').getValue()) {
-					$UI.msg("alert", "已经完成，不能修改!");
-					return false;
-				}
-			},
-			onEndEdit: function (index, row, changes) {
-				var Editors = $(this).datagrid('getEditors', index);
-				for (var i = 0; i < Editors.length; i++) {
-					var Editor = Editors[i];
-					if (Editor.field == 'Qty') {
-						var Qty = row.Qty;
-						if (!isEmpty(Qty)) {
-							row.SpAmt = accMul(Number(row.Qty), Number(row.Sp));
-							row.RpAmt = accMul(Number(row.Qty), Number(row.Rp));
-						}
-					}
-				}
-			},
-			beforeDelFn: function () {
-				if ($HUI.checkbox('#CompFlag').getValue()) {
-					$UI.msg("alert", "已经完成，不能删除选中行!");
-					return false;
-				}
-			},
-			beforeAddFn: function () {
-				if ($HUI.checkbox('#CompFlag').getValue()) {
-					$UI.msg("alert", "已经完成，不能增加一行!");
-					return false;
-				}
-				if (isEmpty($HUI.combobox("#LocId").getValue())) {
-					$UI.msg("alert", "科室不能为空!");
-					return false;
-				};
-			},
-			onLoadSuccess: function (data) {
-				var RowId = $('#RowId').val();
-				if (isEmpty(RowId)) {
-					for (var i = 0; i < data.rows.length; i++) {
-						data.rows[i].RowId = '';
+		queryParams: {
+			ClassName: 'web.DHCSTMHUI.DHCINDispReqItm',
+			QueryName: 'DHCINDispReqItm',
+			query2JsonStrict: 1
+		},
+		deleteRowParams: {
+			ClassName: 'web.DHCSTMHUI.DHCINDispReqItm',
+			MethodName: 'jsDelete'
+		},
+		columns: MainCm,
+		remoteSort: false,
+		showBar: true,
+		showAddDelItems: true,
+		onClickRow: function(index, row) {
+			MainGrid.commonClickRow(index, row);
+		},
+		onBeforeEdit: function(index, row) {
+			if ($HUI.checkbox('#CompFlag').getValue()) {
+				$UI.msg('alert', '已经完成，不能修改!');
+				return false;
+			}
+		},
+		onEndEdit: function(index, row, changes) {
+			var Editors = $(this).datagrid('getEditors', index);
+			for (var i = 0; i < Editors.length; i++) {
+				var Editor = Editors[i];
+				if (Editor.field == 'Qty') {
+					var Qty = row.Qty;
+					if (!isEmpty(Qty)) {
+						row.SpAmt = accMul(Number(row.Qty), Number(row.Sp));
+						row.RpAmt = accMul(Number(row.Qty), Number(row.Rp));
 					}
 				}
 			}
-		});
+		},
+		beforeDelFn: function() {
+			if ($HUI.checkbox('#CompFlag').getValue()) {
+				$UI.msg('alert', '已经完成，不能删除选中行!');
+				return false;
+			}
+		},
+		beforeAddFn: function() {
+			if ($HUI.checkbox('#CompFlag').getValue()) {
+				$UI.msg('alert', '已经完成，不能增加一行!');
+				return false;
+			}
+			if (isEmpty($HUI.combobox('#LocId').getValue())) {
+				$UI.msg('alert', '科室不能为空!');
+				return false;
+			}
+		},
+		onLoadSuccess: function(data) {
+			var RowId = $('#RowId').val();
+			if (isEmpty(RowId)) {
+				for (var i = 0; i < data.rows.length; i++) {
+					data.rows[i].RowId = '';
+				}
+			}
+		}
+	});
 
 	$UI.linkbutton('#QueryBT', {
-		onClick: function () {
+		onClick: function() {
 			FindWin(Select);
 		}
 	});
 
 	$UI.linkbutton('#ClearBT', {
-		onClick: function () {
+		onClick: function() {
 			$UI.clearBlock('#Conditions');
 			$UI.clear(MainGrid);
 			setEditEnable();
@@ -259,12 +275,12 @@ var init = function () {
 	});
 
 	$UI.linkbutton('#SaveBT', {
-		onClick: function () {
+		onClick: function() {
 			var MainObj = $UI.loopBlock('#Conditions');
 			var IsChange = $UI.isChangeBlock('#Conditions');
 			var SelectedRow = MainGrid.getSelected();
 			if (isEmpty(SelectedRow) && IsChange == false) {
-				$UI.msg('alert', "没有需要保存的内容!");
+				$UI.msg('alert', '没有需要保存的内容!');
 				return;
 			}
 			if (MainObj['CompFlag'] == 'Y') {
@@ -272,32 +288,44 @@ var init = function () {
 				return;
 			}
 			if (isEmpty(MainObj['LocId'])) {
-				$UI.msg('alert', '请选择科室!')
+				$UI.msg('alert', '请选择科室!');
 				return;
 			}
 			var ReqMode = $("input[name='ReqMode']:checked").val();
 			if ((ReqMode == '0') && (isEmpty(MainObj['UserGrp']))) {
-				$UI.msg('alert', '请选择专业组!')
+				$UI.msg('alert', '请选择专业组!');
 				return;
 			}
 			var Main = JSON.stringify(MainObj);
-			var Detail = MainGrid.getChangesData();
-			if (Detail === false){	//未完成编辑或明细为空
+
+			var RowId = $('#RowId').val();
+			if (ReqTemplateFlag && isEmpty(RowId)) {
+				// 按模板制单
+				var DetailObj = MainGrid.getRowsData();
+			} else {
+				var DetailObj = MainGrid.getChangesData();
+			}
+			if (DetailObj === false) {
+				return;
+			} else if (DetailObj.length == 0 && IsChange == false) {
+				$UI.msg('alert', '没有需要保存的内容!');
 				return;
 			}
-			if (isEmpty(Detail)){	//明细不变
-				$UI.msg("alert", "没有需要保存的明细!");
+			var CheckLocReqModeFlag = tkMakeServerCall('web.DHCSTMHUI.DHCINDispReq', 'CheckLocReqMode', ReqMode, MainObj['LocId'], gUserId, MainObj['UserGrp']);
+			if (CheckLocReqModeFlag == 'N') {
+				$UI.msg('alert', '当前选择的科室与人员或专业组不匹配!');
 				return;
 			}
 			$.cm({
 				ClassName: 'web.DHCSTMHUI.DHCINDispReq',
 				MethodName: 'jsSave',
 				Main: Main,
-				Detail: JSON.stringify(Detail)
-			}, function (jsonData) {
+				Detail: JSON.stringify(DetailObj)
+			}, function(jsonData) {
 				if (jsonData.success === 0) {
 					$UI.msg('success', jsonData.msg);
 					Select(jsonData.rowid);
+					ReqTemplateFlag = false;
 				} else {
 					$UI.msg('error', jsonData.msg);
 				}
@@ -305,7 +333,7 @@ var init = function () {
 		}
 	});
 	$UI.linkbutton('#DelBT', {
-		onClick: function () {
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			var DsrqId = ParamsObj['RowId'];
 			if (isEmpty(DsrqId)) {
@@ -320,7 +348,7 @@ var init = function () {
 		}
 	});
 	$UI.linkbutton('#ComBT', {
-		onClick: function () {
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			var DsrqId = ParamsObj['RowId'];
 			if (isEmpty(DsrqId)) {
@@ -335,7 +363,7 @@ var init = function () {
 				ClassName: 'web.DHCSTMHUI.DHCINDispReq',
 				MethodName: 'SetComp',
 				Dsrq: DsrqId
-			}, function (jsonData) {
+			}, function(jsonData) {
 				if (jsonData.success === 0) {
 					$UI.msg('success', jsonData.msg);
 					Select(jsonData.rowid);
@@ -346,7 +374,7 @@ var init = function () {
 		}
 	});
 	$UI.linkbutton('#CanComBT', {
-		onClick: function () {
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			var DsrqId = ParamsObj['RowId'];
 			if (isEmpty(DsrqId)) {
@@ -361,7 +389,7 @@ var init = function () {
 				ClassName: 'web.DHCSTMHUI.DHCINDispReq',
 				MethodName: 'CancelComp',
 				Dsrq: DsrqId
-			}, function (jsonData) {
+			}, function(jsonData) {
 				if (jsonData.success === 0) {
 					$UI.msg('success', jsonData.msg);
 					Select(jsonData.rowid);
@@ -372,7 +400,7 @@ var init = function () {
 		}
 	});
 	$UI.linkbutton('#CancelBT', {
-		onClick: function () {
+		onClick: function() {
 			var ParamsObj = $UI.loopBlock('#Conditions');
 			var DsrqId = ParamsObj['RowId'];
 			if (isEmpty(DsrqId)) {
@@ -387,11 +415,51 @@ var init = function () {
 		}
 	});
 	$UI.linkbutton('#PrintBT', {
-		onClick: function () {
+		onClick: function() {
 			PrintINDispReq($('#RowId').val());
 		}
 	});
-
+	$UI.linkbutton('#TemplateBT', {
+		onClick: function() {
+			TemplateWin(Select, TemplateSelect);
+		}
+	});
+	
+	function TemplateSelect(DspReqId, DspReqiIdStr) {
+		$UI.clearBlock('#Conditions');
+		$UI.clear(MainGrid);
+		ReqTemplateFlag = true;
+		$.cm({
+			ClassName: 'web.DHCSTMHUI.DHCINDispReq',
+			MethodName: 'Select',
+			Dsrq: DspReqId
+		}, function(jsonData) {
+			$('#LocId').combobox('setValue', jsonData.LocId.RowId);
+			$('#Scg').combotree('setValue', jsonData.Scg);
+			if (jsonData.ReqMode == 0) {
+				$HUI.radio('#ReqByList').setValue(true);
+				if (jsonData.UserGrp.RowId != '') {
+					$('#UserGrp').combobox('setValue', jsonData.UserGrp.RowId);
+				}
+			} else {
+				$HUI.radio('#ReqByUser').setValue(true);
+			}
+			if ($HUI.checkbox('#CompFlag').getValue()) {
+				setEditDisable();
+			} else {
+				setEditEnable();
+			}
+		});
+		var ParamsObj = { DspReqiIdStr: DspReqiIdStr };
+		var Params = JSON.stringify(ParamsObj);
+		MainGrid.load({
+			ClassName: 'web.DHCSTMHUI.DHCINDispReqItm',
+			QueryName: 'DHCINDispReqItm',
+			query2JsonStrict: 1,
+			Parref: DspReqId,
+			Params: Params
+		});
+	}
 	function CancelReq() {
 		var ParamsObj = $UI.loopBlock('#Conditions');
 		var DsrqId = ParamsObj['RowId'];
@@ -399,7 +467,7 @@ var init = function () {
 			ClassName: 'web.DHCSTMHUI.DHCINDispReq',
 			MethodName: 'CancelReq',
 			Dsrq: DsrqId
-		}, function (jsonData) {
+		}, function(jsonData) {
 			if (jsonData.success === 0) {
 				$UI.msg('success', jsonData.msg);
 				Select(jsonData.rowid);
@@ -416,7 +484,7 @@ var init = function () {
 			ClassName: 'web.DHCSTMHUI.DHCINDispReq',
 			MethodName: 'Delete',
 			DsrqId: DsrqId
-		}, function (jsonData) {
+		}, function(jsonData) {
 			if (jsonData.success === 0) {
 				$UI.msg('success', jsonData.msg);
 				$UI.clearBlock('#Conditions');
@@ -429,8 +497,8 @@ var init = function () {
 	}
 
 	function setEditDisable() {
-		$HUI.combobox("#LocId").disable();
-		$HUI.combobox("#Scg").disable();
+		$HUI.combobox('#LocId').disable();
+		$HUI.combobox('#Scg').disable();
 		ChangeButtonEnable({
 			'#DelBT': false,
 			'#ComBT': false,
@@ -441,8 +509,8 @@ var init = function () {
 	}
 
 	function setEditEnable() {
-		$HUI.combobox("#LocId").enable();
-		$HUI.combobox("#Scg").enable();
+		$HUI.combobox('#LocId').enable();
+		$HUI.combobox('#Scg').enable();
 		ChangeButtonEnable({
 			'#DelBT': true,
 			'#ComBT': true,
@@ -459,7 +527,7 @@ var init = function () {
 			ClassName: 'web.DHCSTMHUI.DHCINDispReq',
 			MethodName: 'Select',
 			Dsrq: Dsrq
-		}, function (jsonData) {
+		}, function(jsonData) {
 			$UI.fillBlock('#Conditions', jsonData);
 			if ($HUI.checkbox('#CompFlag').getValue()) {
 				setEditDisable();
@@ -470,10 +538,11 @@ var init = function () {
 		MainGrid.load({
 			ClassName: 'web.DHCSTMHUI.DHCINDispReqItm',
 			QueryName: 'DHCINDispReqItm',
+			query2JsonStrict: 1,
 			Parref: Dsrq
 		});
 	}
 
 	SetDefaValues();
-}
+};
 $(init);

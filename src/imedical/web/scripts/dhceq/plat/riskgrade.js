@@ -20,10 +20,12 @@ function initPanel()
 //初始化查询头面板
 function initTopPanel()
 {
-	initButtonWidth();
+	//showBtnIcon('BFind',false); //modified by LMH 20230202 动态设置是否极简显示按钮图标
+	//initButtonWidth(); //modified by LMH 20230302 UI
 	jQuery('#BFind').on("click", BFind_Clicked);
 	defindTitleStyle();
 	initMessage("");   //Modefied by zc 2018-12-21  zc0047  修改弹出提示undefined
+	initLookUp();	//CZF0134 2021-02-23
 	setRequiredElements("Code^Desc")
 	initDHCEQCRiskGrade();			//初始化表格
 
@@ -37,6 +39,8 @@ function CombineData()
 	val+="^"+$("#MinValue").val();
 	val+="^"+$("#MaxValue").val();
 	val+="^"+$("#Remark").val();
+	val+="^"+$("#CycleNum").val();		//CZF0134 2021-02-23
+	val+="^"+$("#CycleUnitDR").val();
 	return val;
 }
 
@@ -83,6 +87,9 @@ function FillData(rowid)
 			$('#MinValue').val(list[2]);
 			$('#MaxValue').val(list[3]);
 			$('#Remark').val(list[4]);
+			$('#CycleNum').val(list[6]);	//CZF0134 2021-02-23
+			$('#CycleUnitDR').val(list[7]);
+			$('#CycleUnit').val(list[8]);
 		}
 	});
 }
@@ -94,6 +101,9 @@ function ClearElement()
 	$('#MinValue').val("");
 	$('#MaxValue').val("");
 	$('#Remark').val("");
+	$('#CycleNum').val("");		//CZF0134 2021-02-23
+	$('#CycleUnitDR').val("");
+	$('#CycleUnit').val("");
 }
 function BFind_Clicked()
 {
@@ -219,9 +229,9 @@ function initDHCEQCRiskGrade()
 			MaxValue:getElementValue("MaxValue"),
 	    },
 	    //border : false,
-	    fie:true,
+	    fit:true,  //midified by LMH 20230202 UI布局调整 错误修改
 	    singleSelect:true,
-		fitColumns:true,
+		//fitColumns:true, //midified by LMH 20230202 UI布局调整
 		pagination:true,
     	columns:[[
 			{field:'TRowID',title:'TRowID',width:0,align:'center',hidden:true},
@@ -229,6 +239,9 @@ function initDHCEQCRiskGrade()
 			{field:'TDesc',title:'描述',width:250,align:'center'},
 			{field:'TMinValue',title:'最小值',width:100,align:'center'},
 			{field:'TMaxValue',title:'最大值',width:100,align:'center'},
+			{field:'TCycle',title:'周期',width:100,align:'center'},		//CZF0134 2021-02-23
+			{field:'TCycleNum',title:'周期',width:20,align:'center',hidden:true},
+			{field:'TCycleUnitDR',title:'TCycleUnitDR',width:20,align:'center',hidden:true},
 			{field:'TRemark',title:'备注',width:100,align:'center'},
 		]],
     	toolbar:[
@@ -254,4 +267,10 @@ function initDHCEQCRiskGrade()
 		onClickRow:function(rowIndex,rowData){OnclickRow();},
 
 });
+}
+//CZF0134 2021-02-23
+function setSelectValue(vElementID,item)
+{
+	setElement(vElementID+"DR",item.TRowID)
+	
 }

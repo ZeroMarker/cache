@@ -1,78 +1,80 @@
 // 名称:收费类型维护
 // 编写日期:2018-8-9
-
 var init = function() {
-	var HospId=gHospId;
-	var TableName="DHC_ItmChargeType";
+	var HospId = gHospId;
+	var TableName = 'DHC_ItmChargeType';
 	function InitHosp() {
-		var hospComp=InitHospCombo(TableName,gSessionStr);
-		if (typeof hospComp ==='object'){
-			HospId=$HUI.combogrid('#_HospList').getValue();
-			Query();
-			$('#_HospList').combogrid("options").onSelect=function(index,record){
-				HospId=record.HOSPRowId;
+		var hospComp = InitHospCombo(TableName, gSessionStr);
+		if (typeof hospComp === 'object') {
+			HospId = $HUI.combogrid('#_HospList').getValue();
+			$('#_HospList').combogrid('options').onSelect = function(index, record) {
+				HospId = record.HOSPRowId;
 				Query();
 			};
 		}
+		Query();
 	}
-	function Query(){
-		var Params=JSON.stringify(addSessionParams({BDPHospital:HospId}));
+	function Query() {
+		var Params = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
 		ItmChargeTypeGrid.load({
 			ClassName: 'web.DHCSTMHUI.ItmChargeType',
 			QueryName: 'SelectAll',
+			query2JsonStrict: 1,
 			Params: Params
 		});
 	}
 	
 	$UI.linkbutton('#AddBT', {
-		onClick: function(){
+		onClick: function() {
 			ItmChargeTypeGrid.commonAddRow();
 		}
 	});
 
 	$UI.linkbutton('#SaveBT', {
-		onClick: function(){
-			var Rows=ItmChargeTypeGrid.getChangesData();
-			if (Rows === false){	//未完成编辑或明细为空
+		onClick: function() {
+			var Rows = ItmChargeTypeGrid.getChangesData();
+			if (Rows === false) {	// 未完成编辑或明细为空
 				return;
 			}
-			if (isEmpty(Rows)){	//明细不变
-				$UI.msg("alert", "没有需要保存的明细!");
+			if (isEmpty(Rows)) {	// 明细不变
+				$UI.msg('alert', '没有需要保存的明细!');
 				return;
 			}
-			var MainObj=JSON.stringify(addSessionParams({BDPHospital:HospId}));
+			var MainObj = JSON.stringify(addSessionParams({ BDPHospital: HospId }));
 			$.cm({
 				ClassName: 'web.DHCSTMHUI.ItmChargeType',
 				MethodName: 'Save',
 				Main: MainObj,
 				Params: JSON.stringify(Rows)
-			},function(jsonData){
-				if(jsonData.success==0){
-					$UI.msg('success',jsonData.msg);
+			}, function(jsonData) {
+				if (jsonData.success == 0) {
+					$UI.msg('success', jsonData.msg);
 					ItmChargeTypeGrid.commonReload();
-				}else{
-					$UI.msg('error',jsonData.msg);
+				} else {
+					$UI.msg('error', jsonData.msg);
 				}
 			});
 		}
 	});
 
-	var ItmChargeTypeCm = [[{
+	var ItmChargeTypeCm = [[
+		{
 			title: 'RowId',
 			field: 'RowId',
-			hidden: true
+			hidden: true,
+			width: 60
 		}, {
 			title: '代码',
 			field: 'Code',
-			width:300,
-			fitColumns:true,
-			editor:{type:'validatebox',options:{required:true}}
+			width: 300,
+			fitColumns: true,
+			editor: { type: 'validatebox', options: { required: true }}
 		}, {
 			title: '描述',
 			field: 'Description',
-			width:300,
-			fitColumns:true,
-			editor:{type:'validatebox',options:{required:true}}
+			width: 300,
+			fitColumns: true,
+			editor: { type: 'validatebox', options: { required: true }}
 		}
 	]];
 	
@@ -80,17 +82,17 @@ var init = function() {
 		url: $URL,
 		queryParams: {
 			ClassName: 'web.DHCSTMHUI.ItmChargeType',
-			QueryName: 'SelectAll'
+			QueryName: 'SelectAll',
+			query2JsonStrict: 1
 		},
 		columns: ItmChargeTypeCm,
 		toolbar: '#ItmChargeTypeTB',
-		sortName: 'RowId',  
+		sortName: 'RowId',
 		sortOrder: 'Desc',
-		lazy:false,
-		onClickCell: function(index, filed ,value){
-			ItmChargeTypeGrid.commonClickCell(index,filed)
+		onClickRow: function(index, row) {
+			ItmChargeTypeGrid.commonClickRow(index, row);
 		}
-	})
+	});
 	InitHosp();
-}
+};
 $(init);
